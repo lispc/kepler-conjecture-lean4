@@ -1,0 +1,14 @@
+# Lean / Lake
+.lake/
+lake-manifest.json
+*.olean
+*.ilean
+*.trace
+
+# 证书体量大，走外部存储 + 哈希登记（PLAN.md §5/§6）
+certificates/*
+!certificates/README.md
+
+# 参考库为只读克隆，hash 记入 reference/LOCK.md
+reference/flyspeck/
+reference/kepler98/
