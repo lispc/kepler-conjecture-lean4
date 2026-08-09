@@ -1,7 +1,5 @@
--- Root module of the Kepler conjecture formalization project.
--- See PLAN.md for the overall plan and module layout.
-import Kepler.Statement
-import Kepler.LP.HelloChecker
+-- Executable graph enumeration core ported from Isabelle AFP "Flyspeck-Tame".
+-- See PLAN.md and the per-file headers for the source correspondence.
 import Kepler.Graphs.ListAux
 import Kepler.Graphs.Rotation
 import Kepler.Graphs.Graph

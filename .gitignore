@@ -12,3 +12,6 @@ certificates/*
 # 参考库为只读克隆，hash 记入 reference/LOCK.md
 reference/flyspeck/
 reference/kepler98/
+
+# 第三方源码解压目录（原件 tar 包在 reference/_distfiles/，可复现）
+pipeline/graphs/tools/plantri55/
