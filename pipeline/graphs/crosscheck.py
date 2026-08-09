@@ -119,7 +119,9 @@ if __name__ == "__main__":
 
     p = int(sys.argv[1])
     ml = sys.argv[2]
-    raw = E.enumerate_seed(p)
+    depth = int(sys.argv[3]) if len(sys.argv) > 3 else 4
+    procs = int(sys.argv[4]) if len(sys.argv) > 4 else 96
+    raw = E.enumerate_seed_parallel(p, depth=depth, procs=procs)
     codes = {}
     for g in raw:
         c = canonical(E.fgraph(g))

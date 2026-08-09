@@ -465,13 +465,13 @@ def fgraph(g):
     """ArchCompAux.thy fgraph."""
     return [list(f[0]) for f in faces(g)]
 
-def enumerate_seed(p, limit=None):
-    """BFS from Seed p over next_tame; returns final graphs found."""
+def enumerate_from(g, p):
+    """All final tame graphs reachable from g via next_tame p (DFS)."""
     seen = set()
     finals_found = []
-    queue = [Seed(p)]
-    while queue:
-        g = queue.pop()
+    stack = [g]
+    while stack:
+        g = stack.pop()
         key = repr(g)
         if key in seen:
             continue
@@ -479,11 +479,46 @@ def enumerate_seed(p, limit=None):
         if finalGraph(g):
             finals_found.append(g)
             continue
-        for g2 in next_tame(p, g):
-            queue.append(g2)
-        if limit and len(seen) > limit:
-            break
+        stack.extend(next_tame(p, g))
     return finals_found
+
+def frontier(p, depth):
+    """BFS from Seed p for `depth` expansion levels; returns the frontier
+    (non-final graphs at that depth) as shard roots for parallel enumeration."""
+    level = [Seed(p)]
+    for _ in range(depth):
+        nxt = []
+        seen = set()
+        for g in level:
+            if finalGraph(g):
+                continue
+            for g2 in next_tame(p, g):
+                k = repr(g2)
+                if k not in seen:
+                    seen.add(k)
+                    nxt.append(g2)
+        level = nxt
+    return level
+
+def enumerate_seed(p, limit=None):
+    """BFS from Seed p over next_tame; returns final graphs found."""
+    return enumerate_from(Seed(p), p)
+
+def _worker(arg):
+    g, p = arg
+    return enumerate_from(g, p)
+
+def enumerate_seed_parallel(p, depth=3, procs=64):
+    """Shard the search tree at `depth` levels and enumerate in parallel."""
+    import multiprocessing as mp
+    roots = frontier(p, depth)
+    print(f"p={p}: {len(roots)} shard roots at depth {depth}", flush=True)
+    with mp.Pool(procs) as pool:
+        results = pool.map(_worker, [(g, p) for g in roots], chunksize=1)
+    out = []
+    for r in results:
+        out.extend(r)
+    return out
 
 if __name__ == "__main__":
     import sys
