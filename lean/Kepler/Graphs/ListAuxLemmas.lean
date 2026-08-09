@@ -843,4 +843,126 @@ theorem notin_removeKey1 [BEq α] [LawfulBEq α] (a : α) (b : β) (ps : List (�
   have hmem := (List.mem_filter.mp h).2
   simp at hmem
 
+/-! ### More `splitAt`/`replace` lemmas (ported for `FaceDivisionProps1`) -/
+
+section SplitAtMore
+
+variable [BEq α] [LawfulBEq α]
+
+/-- ListAux.thy: splitAt_ram3 -/
+theorem splitAt_ram3 {r₁ r₂ : α} {vs : List α}
+    (h : r₂ ∉ (splitAt r₁ vs).1) (h1 : r₁ ∈ vs) (h2 : r₂ ∈ vs) (h12 : r₁ ≠ r₂) :
+    r₂ ∈ (splitAt r₁ vs).2 := by
+  have hram := splitAt_ram h1
+  rw [hram, List.mem_append, List.mem_cons] at h2
+  rcases h2 with h2 | h2 | h2
+  · exact absurd h2 h
+  · exact absurd h2.symm h12
+  · exact h2
+
+/-- Contraposed form of `splitAt_ram3` (no direct Isabelle counterpart). -/
+theorem splitAt_mem_fst_of_not_mem_snd {r₁ r₂ : α} {vs : List α}
+    (h : r₂ ∉ (splitAt r₁ vs).2) (h1 : r₁ ∈ vs) (h2 : r₂ ∈ vs) (h12 : r₁ ≠ r₂) :
+    r₂ ∈ (splitAt r₁ vs).1 := by
+  have hram := splitAt_ram h1
+  rw [hram, List.mem_append, List.mem_cons] at h2
+  rcases h2 with h2 | h2 | h2
+  · exact h2
+  · exact absurd h2.symm h12
+  · exact absurd h2 h
+
+/-- ListAux.thy: splitAt_dist_ram_all -/
+theorem splitAt_dist_ram_all {vs : List α} (hd : vs.Nodup) {a b c : List α} {r₁ r₂ : α}
+    (h : vs = a ++ r₁ :: b ++ r₂ :: c) :
+    (a, b) = splitAt r₁ (splitAt r₂ vs).1 ∧
+    (c, []) = splitAt r₁ (splitAt r₂ vs).2 ∧
+    (a, []) = splitAt r₂ (splitAt r₁ vs).1 ∧
+    (b, c) = splitAt r₂ (splitAt r₁ vs).2 ∧
+    c = (splitAt r₂ vs).2 ∧ a = (splitAt r₁ vs).1 := by
+  have h1 : vs = a ++ r₁ :: (b ++ r₂ :: c) := by rw [h]; simp [List.append_assoc]
+  have hsp2 : (a ++ r₁ :: b, c) = splitAt r₂ vs := splitAt_dist_ram hd h
+  have hsp1 : (a, b ++ r₂ :: c) = splitAt r₁ vs := splitAt_dist_ram hd h1
+  have hd2 : ((a ++ r₁ :: b) ++ r₂ :: c).Nodup := h ▸ hd
+  have hd1 : (a ++ r₁ :: (b ++ r₂ :: c)).Nodup := h1 ▸ hd
+  have hr1c : r₁ ∉ c := by
+    have hdis := (List.nodup_append.mp hd2).2.2
+    have hr1 : r₁ ∈ a ++ r₁ :: b := List.mem_append_right _ List.mem_cons_self
+    intro hc
+    exact hdis _ hr1 _ (List.mem_cons_of_mem _ hc) rfl
+  have hr2a : r₂ ∉ a := by
+    have hdis := (List.nodup_append.mp hd1).2.2
+    have hr2 : r₂ ∈ r₁ :: (b ++ r₂ :: c) :=
+      List.mem_cons_of_mem _ (List.mem_append_right _ List.mem_cons_self)
+    intro hm
+    exact hdis _ hm _ hr2 rfl
+  have hab : (a ++ r₁ :: b).Nodup := (List.nodup_append.mp hd2).1
+  have hbc : (b ++ r₂ :: c).Nodup := (List.nodup_cons.mp (List.nodup_append.mp hd1).2.1).2
+  have h21 : (a, b) = splitAt r₁ (a ++ r₁ :: b) := splitAt_dist_ram hab rfl
+  have h22 : (b, c) = splitAt r₂ (b ++ r₂ :: c) := splitAt_dist_ram hbc rfl
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rw [show (splitAt r₂ vs).1 = a ++ r₁ :: b from congrArg Prod.fst hsp2.symm]
+    exact h21
+  · rw [show (splitAt r₂ vs).2 = c from congrArg Prod.snd hsp2.symm]
+    exact (splitAt_no_ram hr1c).symm
+  · rw [show (splitAt r₁ vs).1 = a from congrArg Prod.fst hsp1.symm]
+    exact (splitAt_no_ram hr2a).symm
+  · rw [show (splitAt r₁ vs).2 = b ++ r₂ :: c from congrArg Prod.snd hsp1.symm]
+    exact h22
+  · exact congrArg Prod.snd hsp2
+  · exact congrArg Prod.fst hsp1
+
+end SplitAtMore
+
+section FilterReplace
+
+variable [BEq α] [LawfulBEq α]
+
+/-- ListAux.thy: length_filter_replace1 -/
+theorem length_filter_replace1 {P : α → Bool} {x : α} {ys xs : List α}
+    (hx : x ∈ xs) (hP : P x = false) :
+    ((replace x ys xs).filter P).length = (xs.filter P).length + (ys.filter P).length := by
+  induction xs with
+  | nil => exact absurd hx List.not_mem_nil
+  | cons z zs ih =>
+    rw [List.mem_cons] at hx
+    by_cases hz : z = x
+    · subst hz
+      simp only [replace, beq_self_eq_true, ↓reduceIte]
+      rw [List.filter_append, List.length_append,
+        List.filter_cons_of_neg (by simpa using hP)]
+      omega
+    · have hb : ¬ (z == x) = true := fun h => hz (beq_iff_eq.mp h)
+      simp only [replace, if_neg hb, List.filter_cons]
+      have hxs : x ∈ zs := hx.resolve_left (fun h => hz h.symm)
+      by_cases hpz : P z
+      · rw [if_pos hpz, if_pos hpz, List.length_cons, List.length_cons, ih hxs]
+        omega
+      · rw [if_neg hpz, if_neg hpz, ih hxs]
+
+/-- ListAux.thy: length_filter_replace2 -/
+theorem length_filter_replace2 {P : α → Bool} {x : α} {ys xs : List α}
+    (hx : x ∈ xs) (hP : P x = true) :
+    ((replace x ys xs).filter P).length = (xs.filter P).length + (ys.filter P).length - 1 := by
+  induction xs with
+  | nil => exact absurd hx List.not_mem_nil
+  | cons z zs ih =>
+    rw [List.mem_cons] at hx
+    by_cases hz : z = x
+    · subst hz
+      simp only [replace, beq_self_eq_true, ↓reduceIte]
+      rw [List.filter_append, List.length_append,
+        List.filter_cons_of_pos (by simpa using hP), List.length_cons]
+      omega
+    · have hb : ¬ (z == x) = true := fun h => hz (beq_iff_eq.mp h)
+      simp only [replace, if_neg hb, List.filter_cons]
+      have hxs : x ∈ zs := hx.resolve_left (fun h => hz h.symm)
+      by_cases hpz : P z
+      · rw [if_pos hpz, if_pos hpz, List.length_cons, List.length_cons, ih hxs]
+        have hA : 0 < (zs.filter P).length :=
+          List.length_pos_of_mem (List.mem_filter.mpr ⟨hxs, hP⟩)
+        omega
+      · rw [if_neg hpz, if_neg hpz, ih hxs]
+
+end FilterReplace
+
 end Kepler.Graphs

@@ -32,6 +32,23 @@ structure Face where
 
 instance : Inhabited Face := ⟨⟨[], false⟩⟩
 
+/-- The derived `BEq Face` is lawful (needed for `splitAt`/`replace` lemmas
+over face lists). -/
+instance : LawfulBEq Face where
+  eq_of_beq {a b} h := by
+    obtain ⟨vs₁, fin₁⟩ := a
+    obtain ⟨vs₂, fin₂⟩ := b
+    have h' : (vs₁ == vs₂ && fin₁ == fin₂) = true := h
+    rw [Bool.and_eq_true, beq_iff_eq, beq_iff_eq] at h'
+    obtain ⟨e1, e2⟩ := h'
+    rw [e1, e2]
+  rfl := by
+    intro a
+    obtain ⟨vs, fin⟩ := a
+    show (vs == vs && fin == fin) = true
+    rw [beq_self_eq_true, beq_self_eq_true]
+    rfl
+
 /-- `Graph.thy: final :: face ⇒ bool`. -/
 def Face.final (f : Face) : Bool := f.isFinal
 
