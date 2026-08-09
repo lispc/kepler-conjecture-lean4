@@ -7,6 +7,7 @@ import Kepler.Graphs.RotationLemmas
 import Kepler.Graphs.Graph
 import Kepler.Graphs.GraphProps
 import Kepler.Graphs.Enumerator
+import Kepler.Graphs.EnumeratorProps
 import Kepler.Graphs.FaceDivision
 import Kepler.Graphs.Plane
 import Kepler.Graphs.Plane1

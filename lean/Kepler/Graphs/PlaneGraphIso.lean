@@ -292,18 +292,6 @@ theorem is_iso_Cons {φ : α → β} {F₁ : List α} {Fs₁' : fgraph α} {Fs�
       ∃ F₂ ∈ Fs₂, F₁.length = F₂.length ∧ is_pr_iso φ Fs₁' (Fs₂.erase F₂) ∧
         (∃ n, F₁.map φ = F₂.rotate n) ∧
         Set.InjOn φ ({v | v ∈ F₁} ∪ ⋃ F ∈ {F | F ∈ Fs₁'}, {v | v ∈ F}) := by
-  have hU : (⋃ F ∈ {F | F ∈ F₁ :: Fs₁'}, {v | v ∈ F}) =
-      {v | v ∈ F₁} ∪ ⋃ F ∈ {F | F ∈ Fs₁'}, {v | v ∈ F} := by
-    ext v
-    simp only [Set.mem_iUnion, Set.mem_setOf_eq, Set.mem_union]
-    constructor
-    · rintro ⟨F, hF, hv⟩
-      rcases List.mem_cons.mp hF with rfl | hF
-      · exact Or.inl hv
-      · exact Or.inr ⟨F, hF, hv⟩
-    · rintro (hv | ⟨F, hF, hv⟩)
-      · exact ⟨F₁, List.mem_cons_self, hv⟩
-      · exact ⟨F, List.mem_cons_of_mem _ hF, hv⟩
   constructor
   · rintro ⟨hH, hinj⟩
     obtain ⟨hH1, hH2⟩ := hH
@@ -343,7 +331,7 @@ theorem is_iso_Cons {φ : α → β} {F₁ : List α} {Fs₁' : fgraph α} {Fs�
         simp only [Set.mem_iUnion, Set.mem_setOf_eq] at hx ⊢
         obtain ⟨F, hF, hxF⟩ := hx
         exact ⟨F, List.mem_cons_of_mem _ hF, hxF⟩
-    · rw [← hU]; exact hinj
+    · rw [← biUnion_cons_setOf]; exact hinj
   · rintro ⟨F₂, hF₂, hlen, hiso, ⟨n, hn⟩, hinj⟩
     obtain ⟨hH, -⟩ := hiso
     obtain ⟨hH1, hH2⟩ := hH
@@ -362,8 +350,297 @@ theorem is_iso_Cons {φ : α → β} {F₁ : List α} {Fs₁' : fgraph α} {Fs�
           exact hcase ((List.mem_erase_of_ne hne).mpr hF')
         subst hFF
         exact ⟨F₁, List.mem_cons_self, cong_sym ⟨n, hn⟩⟩
-    · rw [hU]; exact hinj
+    · rw [biUnion_cons_setOf]; exact hinj
 
 end IsoCons
+
+
+/-- Node-set of a cons fgraph, as a union (auxiliary for `is_iso_Cons` and
+the correctness proofs). -/
+theorem biUnion_cons_setOf (F₁ : List α) (Fs₁ : fgraph α) :
+    (⋃ F ∈ {F | F ∈ F₁ :: Fs₁}, {v | v ∈ F}) =
+      {v | v ∈ F₁} ∪ ⋃ F ∈ {F | F ∈ Fs₁}, {v | v ∈ F} := by
+  ext v
+  simp only [Set.mem_iUnion, Set.mem_setOf_eq, Set.mem_union]
+  constructor
+  · rintro ⟨F, hF, hv⟩
+    rcases List.mem_cons.mp hF with rfl | hF
+    · exact Or.inl hv
+    · exact Or.inr ⟨F, hF, hv⟩
+  · rintro (hv | ⟨F, hF, hv⟩)
+    · exact ⟨F₁, List.mem_cons_self, hv⟩
+    · exact ⟨F, List.mem_cons_of_mem _ hF, hv⟩
+
+section MapLayer
+
+/-- Isabelle's partial maps `'a ⇀ 'b` as functions into `Option`.
+`map_of`: earlier entries override later ones
+(Isabelle: `map_of ((x,y)#ps) = (map_of ps)(x ↦ y)`). -/
+def mapOf [DecidableEq α] : List (α × β) → α → Option β
+  | [], _ => none
+  | (x, y) :: ps, z => if z = x then some y else mapOf ps z
+
+@[simp] theorem mapOf_nil [DecidableEq α] (x : α) :
+    mapOf ([] : List (α × β)) x = none := rfl
+
+theorem mapOf_cons [DecidableEq α] (a : α) (b : β) (ps : List (α × β)) (x : α) :
+    mapOf ((a, b) :: ps) x = if x = a then some b else mapOf ps x := rfl
+
+/-- Isabelle's `dom m`. -/
+def mapDom (m : α → Option β) : Set α := {x | (m x).isSome}
+
+/-- Isabelle's `f ⊆ₘ g` (`map_le`). -/
+def mapLe (m m' : α → Option β) : Prop := ∀ x ∈ mapDom m, m x = m' x
+
+/-- Isabelle's `m ++ m'` (`map_add`, right-biased). -/
+def mapAdd (m m' : α → Option β) : α → Option β := fun x =>
+  match m' x with
+  | some v => some v
+  | none => m x
+
+theorem mapAdd_apply (m m' : α → Option β) (x : α) :
+    mapAdd m m' x = (match m' x with | some v => some v | none => m x) := rfl
+
+theorem mapAdd_eq_left {m m' : α → Option β} {x : α} (h : m' x = none) :
+    mapAdd m m' x = m x := by rw [mapAdd_apply, h]
+
+theorem mapAdd_eq_right {m m' : α → Option β} {x : α} {v : β} (h : m' x = some v) :
+    mapAdd m m' x = some v := by rw [mapAdd_apply, h]
+
+/-- `dom (m ++ m') = dom m ∪ dom m'`. -/
+theorem mapAdd_dom {m m' : α → Option β} : mapDom (mapAdd m m') = mapDom m ∪ mapDom m' := by
+  ext x
+  cases hx' : m' x with
+  | none => simp [mapDom, mapAdd_eq_left hx', hx']
+  | some v => simp [mapDom, mapAdd_eq_right hx', hx']
+
+theorem mapLe_trans {m₁ m₂ m₃ : α → Option β} (h₁ : mapLe m₁ m₂) (h₂ : mapLe m₂ m₃) :
+    mapLe m₁ m₃ := fun x hx => (h₁ x hx).trans (h₂ x (h₁ x hx ▸ hx))
+
+/-- Isabelle's `map_add_le_mapE`. -/
+theorem mapAdd_le_mapE {m m' h : α → Option β} (hl : mapLe (mapAdd m m') h) : mapLe m' h := by
+  intro x hx
+  cases hx' : m' x with
+  | none => simp [mapDom, hx'] at hx
+  | some v =>
+    have e := hl x (by rw [mapDom, Set.mem_setOf_eq, mapAdd_eq_right hx']; rfl)
+    rwa [mapAdd_eq_right hx'] at e
+
+/-- Isabelle's `map_add_le_mapI`. -/
+theorem mapAdd_le_mapI {m m' h : α → Option β} (hl : mapLe m h) (hr : mapLe m' h) :
+    mapLe (mapAdd m m') h := by
+  intro x hx
+  cases hx' : m' x with
+  | some v =>
+    rw [mapAdd_eq_right hx']
+    exact hr x (by rw [mapDom, Set.mem_setOf_eq, hx']; rfl)
+  | none =>
+    rw [mapAdd_eq_left hx']
+    apply hl x
+    rw [mapAdd_dom] at hx
+    rcases hx with hx | hx
+    · exact hx
+    · simp [mapDom, hx'] at hx
+
+/-- Isabelle's `map_compatI`. -/
+theorem map_compatI {m m' : α → Option β} {h : α → β} (hl : mapLe m (some ∘ h))
+    (hr : mapLe m' (some ∘ h)) : mapLe m (mapAdd m m') := by
+  intro x hx
+  cases hx' : m' x with
+  | none => exact (mapAdd_eq_left hx').symm
+  | some v =>
+    have e1 := hr x (by rw [mapDom, Set.mem_setOf_eq, hx']; rfl)
+    have e2 := hl x hx
+    rw [hx'] at e1
+    rw [mapAdd_eq_right hx']
+    exact e2.trans e1.symm
+
+/-- Isabelle's `inj_on_map_add_Un` (strengthened: the individual `inj_on`
+hypotheses are unnecessary). -/
+theorem injOn_mapAdd {m m' : α → Option β} {f : α → β}
+    (hl : mapLe m (some ∘ f)) (hr : mapLe m' (some ∘ f))
+    (hf : Set.InjOn f (mapDom m' ∪ mapDom m)) :
+    Set.InjOn (mapAdd m m') (mapDom m' ∪ mapDom m) := by
+  have key : ∀ x ∈ mapDom m' ∪ mapDom m, mapAdd m m' x = some (f x) := by
+    intro x hx
+    rcases hx with hx | hx
+    · cases hx' : m' x with
+      | none => simp [mapDom, hx'] at hx
+      | some v =>
+        have e := hr x hx
+        rw [hx'] at e
+        rw [mapAdd_eq_right hx']
+        exact e
+    · cases hx' : m' x with
+      | some v =>
+        have e := hr x (by rw [mapDom, Set.mem_setOf_eq, hx']; rfl)
+        rw [hx'] at e
+        rw [mapAdd_eq_right hx']
+        exact e
+      | none =>
+        rw [mapAdd_eq_left hx']
+        exact hl x hx
+  intro x hx y hy hxy
+  rw [key x hx, key y hy] at hxy
+  exact hf hx hy (Option.some.inj hxy)
+
+/-- Isabelle's `map_of_zip_eq_SomeD` variant: membership form, no distinctness
+needed. -/
+theorem mem_of_mapOf_eq_some [DecidableEq α] {ps : List (α × β)} {x : α} {y : β} :
+    mapOf ps x = some y → (x, y) ∈ ps := by
+  induction ps with
+  | nil => simp [mapOf]
+  | cons p ps ih =>
+    obtain ⟨a, b⟩ := p
+    by_cases h : x = a
+    · subst h
+      rw [mapOf_cons, if_pos rfl]
+      intro hh
+      exact List.mem_cons.mpr (Or.inl (by rw [Option.some.inj hh]))
+    · rw [mapOf_cons, if_neg h]
+      intro hh
+      exact List.mem_cons.mpr (Or.inr (ih hh))
+
+/-- With distinct keys, `mapOf` lookup is exactly list membership. -/
+theorem mapOf_eq_some_iff [DecidableEq α] {ps : List (α × β)}
+    (hd : (ps.map Prod.fst).Nodup) {x : α} {y : β} :
+    mapOf ps x = some y ↔ (x, y) ∈ ps := by
+  induction ps with
+  | nil => simp [mapOf]
+  | cons p ps ih =>
+    obtain ⟨a, b⟩ := p
+    have hd' : (ps.map Prod.fst).Nodup := (List.nodup_cons.mp hd).2
+    have ha : a ∉ ps.map Prod.fst := (List.nodup_cons.mp hd).1
+    by_cases h : x = a
+    · subst h
+      rw [mapOf_cons, if_pos rfl]
+      constructor
+      · intro hh
+        exact List.mem_cons.mpr (Or.inl (by rw [Option.some.inj hh]))
+      · intro hh
+        rcases List.mem_cons.mp hh with hh | hh
+        · obtain ⟨-, rfl⟩ := (Prod.mk.injEq _ _ _ _).mp hh
+          rfl
+        · exact absurd (List.mem_map_of_mem hh) ha
+    · rw [mapOf_cons, if_neg h]
+      constructor
+      · intro hh
+        exact List.mem_cons.mpr (Or.inr ((ih hd').mp hh))
+      · intro hh
+        rcases List.mem_cons.mp hh with hh | hh
+        · exact absurd (congrArg Prod.fst hh) h
+        · exact (ih hd').mpr hh
+
+/-- The domain of `mapOf ps` is the set of first components. -/
+theorem isSome_mapOf_iff [DecidableEq α] (ps : List (α × β)) (x : α) :
+    (mapOf ps x).isSome ↔ x ∈ ps.map Prod.fst := by
+  induction ps with
+  | nil => simp [mapOf]
+  | cons p ps ih =>
+    obtain ⟨a, b⟩ := p
+    by_cases h : x = a
+    · subst h
+      simp [mapOf_cons]
+    · simp [mapOf_cons, h, ih]
+
+/-- Isabelle's `[simp]` lemma `distinct(map snd xys) ⟹ inj_on (map_of xys)
+(dom (map_of xys))`. -/
+theorem injOn_mapOf [DecidableEq α] {ps : List (α × β)}
+    (hd : (ps.map Prod.snd).Nodup) : Set.InjOn (mapOf ps) (mapDom (mapOf ps)) := by
+  induction ps with
+  | nil => intro x hx; simp [mapDom] at hx
+  | cons p ps ih =>
+    obtain ⟨a, b⟩ := p
+    have hd' : (ps.map Prod.snd).Nodup := (List.nodup_cons.mp hd).2
+    have hb : b ∉ ps.map Prod.snd := (List.nodup_cons.mp hd).1
+    intro x hx y hy hxy
+    by_cases hxa : x = a
+    · by_cases hya : y = a
+      · exact hxa.trans hya.symm
+      · subst hxa
+        rw [mapOf_cons, if_pos rfl, mapOf_cons, if_neg hya] at hxy
+        -- hxy : some b = mapOf ps y
+        have hmem : (y, b) ∈ ps := mem_of_mapOf_eq_some hxy.symm
+        exact absurd (List.mem_map_of_mem hmem) hb
+    · by_cases hya : y = a
+      · subst hya
+        rw [mapOf_cons, if_pos rfl, mapOf_cons, if_neg hxa] at hxy
+        have hmem : (x, b) ∈ ps := mem_of_mapOf_eq_some hxy
+        exact absurd (List.mem_map_of_mem hmem) hb
+      · rw [mapOf_cons, if_neg hxa, mapOf_cons, if_neg hya] at hxy
+        apply ih hd'
+        · rw [mapDom, Set.mem_setOf_eq] at hx ⊢
+          rw [mapOf_cons, if_neg hxa] at hx
+          exact hx
+        · rw [mapDom, Set.mem_setOf_eq] at hy ⊢
+          rw [mapOf_cons, if_neg hya] at hy
+          exact hy
+        · exact hxy
+
+/-- Isabelle's `map_upd_submap` inlined into an induction:
+`map_of_zip_submap`. -/
+theorem mapOf_zip_submap [DecidableEq α] {xs : List α} {ys : List β} {f : α → β}
+    (hlen : xs.length = ys.length) (hd : xs.Nodup) :
+    mapLe (mapOf (xs.zip ys)) (some ∘ f) ↔ xs.map f = ys := by
+  induction xs generalizing ys with
+  | nil =>
+    cases ys with
+    | nil => simp [mapLe, mapDom]
+    | cons y ys => simp at hlen
+  | cons x xs ih =>
+    cases ys with
+    | nil => simp at hlen
+    | cons y ys =>
+      simp only [List.length_cons, Nat.succ.injEq] at hlen
+      have hd' : xs.Nodup := (List.nodup_cons.mp hd).2
+      have hx : x ∉ xs := (List.nodup_cons.mp hd).1
+      rw [List.zip_cons_cons, List.map_cons, List.cons.injEq, ih hlen hd']
+      constructor
+      · intro h
+        constructor
+        · have hxd : x ∈ mapDom (mapOf ((x, y) :: xs.zip ys)) := by
+            rw [mapDom, Set.mem_setOf_eq, mapOf_cons, if_pos rfl]
+            rfl
+          have e := h x hxd
+          rw [mapOf_cons, if_pos rfl] at e
+          exact (Option.some.inj e).symm
+        · intro z hz
+          have hmem : z ∈ xs := by
+            have hm := (isSome_mapOf_iff (xs.zip ys) z).mp hz
+            rwa [List.map_fst_zip (by have h2 := List.length_zip (l₁ := xs) (l₂ := ys); omega)] at hm
+          have hzx : z ≠ x := fun he => hx (he ▸ hmem)
+          have hz' : z ∈ mapDom (mapOf ((x, y) :: xs.zip ys)) := by
+            rw [mapDom, Set.mem_setOf_eq] at hz ⊢
+            rw [mapOf_cons, if_neg hzx]
+            exact hz
+          have e := h z hz'
+          rwa [mapOf_cons, if_neg hzx] at e
+      · rintro ⟨h1, h2⟩
+        intro z hz
+        by_cases hzx : z = x
+        · subst hzx
+          rw [mapOf_cons, if_pos rfl]
+          -- goal: some y = (some ∘ f) x
+          rw [← h1]
+        · rw [mapOf_cons, if_neg hzx]
+          apply h2
+          rw [mapDom, Set.mem_setOf_eq] at hz ⊢
+          rw [mapOf_cons, if_neg hzx] at hz
+          exact hz
+
+theorem mapOf_append [DecidableEq α] (l₁ l₂ : List (α × β)) (x : α) :
+    mapOf (l₁ ++ l₂) x = mapAdd (mapOf l₂) (mapOf l₁) x := by
+  induction l₁ with
+  | nil => simp [mapAdd_apply]
+  | cons p l₁ ih =>
+    obtain ⟨a, b⟩ := p
+    rw [List.cons_append, mapOf_cons, mapAdd_apply, mapOf_cons]
+    by_cases h : x = a
+    · subst h
+      simp
+    · simp only [h, ↓reduceIte]
+      rw [ih, mapAdd_apply]
+
+end MapLayer
 
 end Kepler.Graphs
