@@ -54,6 +54,19 @@ Tame / Generator / TameEnum。含全部常量表（squanderTarget=15410 等）�
   避免一次性 decide 爆炸。具体拆分在打通 10 张小案例后定稿。
 - **同构检查**：不移植 `iso_test` 搜索算法；证书携带显式同构见证，
   checker 只做代入验证（廉价）。
+  **重要（2026-08-09 对拍发现）**：Archive 比对用的 `iso_fgraph`/`iso_test`
+  （PlaneGraphIso.thy:834-878）允许**镜像**——`iso_test g1 g2 ≡
+  pr_iso_test g1 g2 ∨ pr_iso_test g1 (map rev g2)`。checker 验证同构见证时
+  必须同样允许面列表整体反转，否则 Tri 种子会多出 3 个"假extra"图。
+
+### 不受信生成器对拍状态（pipeline/graphs/）
+
+- `enumerate.py`：`next_tame` 枚举的 Python 直译（与 Lean 移植同源）。
+- `crosscheck.py`：dart-BFS 规范化（含镜像取小）+ Archive 比对。
+- **p=0（Tri）对拍通过**：枚举 501 张原始图 → 9 个同构类，
+  与 Archive 的 9 张完全一致（双向无差异）。
+- p=1（Quad，1253 张）对拍运行中；Pent/Hex（16080/2373）待跑，
+  预计需要多核并行（128 核可用）。
 
 ### 交叉核对状态
 
