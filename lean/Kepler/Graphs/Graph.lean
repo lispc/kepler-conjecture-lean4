@@ -16,6 +16,7 @@ of range; the generator never triggers these cases — see `Invariants.thy`):
 - `hd` ↦ `List.head!`, `last` ↦ `List.getLast!`
 -/
 import Kepler.Graphs.Rotation
+import Mathlib.Data.Set.Defs
 
 namespace Kepler.Graphs
 
@@ -59,6 +60,11 @@ def Face.nextVertices (f : Face) (n : Nat) (v : Vertex) : Vertex :=
 /-- `Graph.thy: prevVertex` (`f⁻¹ ∙ v`). -/
 def Face.prevVertex (f : Face) (v : Vertex) : Vertex :=
   nextElem f.vertices.reverse f.vertices.getLast! v
+
+/-- `Graph.thy: edges_face` (`ℰ f ≡ {(a, f ∙ a) | a. a ∈ 𝒱 f}`), as a set of
+vertex pairs. -/
+def Face.edges (f : Face) : Set (Vertex × Vertex) :=
+  {p | p.1 ∈ f.vertices ∧ f.nextVertex p.1 = p.2}
 
 /-- `Graph.thy: triangle`. -/
 def triangle (f : Face) : Bool := f.vertices.length == 3

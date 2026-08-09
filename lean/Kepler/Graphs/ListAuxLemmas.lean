@@ -18,14 +18,56 @@ Deliberately skipped:
 - `splitAt_rotate_pair_conv`: superseded in this port by
   `RotationLemmas.rotate_eq_rotate_to_of_cons`;
 - `splitAt_take`/`splitAt_drop`, `fst_splitAt_last`, `fst/snd_splitAt_rev`,
-  `fst/snd_splitAt_upt` (not needed for the Rotation port);
-- `split_between` (a 50-line case bash; can be ported later if needed).
+  `fst/snd_splitAt_upt` (not needed for the Rotation port).
+
+Added for the `GraphProps` port: `length3D`/`length4D`, `split_between`, and
+two auxiliary `splitAt`-over-append lemmas (`splitAtRec_eq_append`,
+`splitAt_append_of_not_mem`, no direct Isabelle counterpart).
 -/
 import Kepler.Graphs.ListAux
 
 namespace Kepler.Graphs
 
 variable {α β : Type _}
+
+/-! ### length decomposition -/
+
+/-- ListAux.thy: length3D -/
+theorem length3D {xs : List α} (h : xs.length = 3) : ∃ x y z, xs = [x, y, z] := by
+  cases xs with
+  | nil => simp at h
+  | cons x xs =>
+    cases xs with
+    | nil => simp at h
+    | cons y xs =>
+      cases xs with
+      | nil => simp at h
+      | cons z xs =>
+        cases xs with
+        | nil => exact ⟨x, y, z, rfl⟩
+        | cons w ws =>
+          simp only [List.length_cons] at h
+          omega
+
+/-- ListAux.thy: length4D -/
+theorem length4D {xs : List α} (h : xs.length = 4) : ∃ a b c d, xs = [a, b, c, d] := by
+  cases xs with
+  | nil => simp at h
+  | cons a xs =>
+    cases xs with
+    | nil => simp at h
+    | cons b xs =>
+      cases xs with
+      | nil => simp at h
+      | cons c xs =>
+        cases xs with
+        | nil => simp at h
+        | cons d xs =>
+          cases xs with
+          | nil => exact ⟨a, b, c, d, rfl⟩
+          | cons e es =>
+            simp only [List.length_cons] at h
+            omega
 
 /-! ### splitAt -/
 
@@ -126,6 +168,45 @@ theorem splitAt_2 {v c : α} {vs : List α} (hv : v ∈ vs) {a b : List α}
   · rw [splitAt_no_ram hc] at hab
     obtain ⟨rfl, rfl⟩ := hab
     exact Or.inl hv
+
+/-- Auxiliary (no direct Isabelle counterpart): the accumulated prefix of
+`splitAtRec` is just appended to the `splitAt` result. -/
+theorem splitAtRec_eq_append {c : α} (bs vs : List α) :
+    splitAtRec c bs vs = (bs ++ (splitAt c vs).1, (splitAt c vs).2) := by
+  induction vs generalizing bs with
+  | nil => simp [splitAtRec, splitAt]
+  | cons a as ih =>
+    by_cases h : a = c
+    · subst h
+      simp [splitAtRec, splitAt]
+    · have hb : (a == c) = false := beq_eq_false_iff_ne.mpr h
+      have e : splitAt c (a :: as) = ([a] ++ (splitAt c as).1, (splitAt c as).2) := by
+        have hia := ih [a]
+        simpa [splitAt, splitAtRec, hb] using hia
+      have e2 : splitAtRec c bs (a :: as) = splitAtRec c (bs ++ [a]) as := by
+        rw [show splitAtRec c bs (a :: as) =
+            if (a == c) then (bs, as) else splitAtRec c (bs ++ [a]) as from rfl,
+          if_neg (fun h' => h (beq_iff_eq.mp h'))]
+      rw [e2, ih (bs ++ [a]), e]
+      show ((bs ++ [a]) ++ (splitAt c as).1, (splitAt c as).2) =
+        (bs ++ ([a] ++ (splitAt c as).1), (splitAt c as).2)
+      rw [List.append_assoc]
+
+/-- Auxiliary (no direct Isabelle counterpart): `splitAt` over an append when
+the key avoids the prefix. -/
+theorem splitAt_append_of_not_mem {c : α} {us : List α}
+    (h : c ∉ us) (vs : List α) :
+    splitAt c (us ++ vs) = (us ++ (splitAt c vs).1, (splitAt c vs).2) := by
+  induction us with
+  | nil => rfl
+  | cons a as ih =>
+    have hca : (a == c) = false :=
+      beq_eq_false_iff_ne.mpr (fun e => h (List.mem_cons.mpr (Or.inl e.symm)))
+    have has : c ∉ as := fun hm => h (List.mem_cons_of_mem _ hm)
+    have e1 : splitAt c ((a :: as) ++ vs) = splitAtRec c [a] (as ++ vs) := by
+      simp [splitAt, splitAtRec, hca]
+    rw [e1, splitAtRec_eq_append, ih has]
+    rfl
 
 end SplitAt
 
@@ -275,6 +356,13 @@ theorem between_def (vs : List α) (r₁ r₂ : α) :
   obtain ⟨pre, post⟩ := splitAt r₁ vs
   rfl
 
+/-- Auxiliary (no direct Isabelle counterpart): `between` computed from an
+explicit `splitAt` result. -/
+theorem between_of_splitAt {vs : List α} {r₁ r₂ : α} {a b : List α}
+    (h : splitAt r₁ vs = (a, b)) :
+    between vs r₁ r₂ = if b.contains r₂ then (splitAt r₂ b).1 else b ++ (splitAt r₂ a).1 := by
+  rw [between_def, h]
+
 variable [LawfulBEq α]
 
 /-- ListAux.thy: inbetween_inset -/
@@ -319,6 +407,197 @@ theorem set_between_id {x y : α} {xs : List α} (hd : xs.Nodup) (hx : x ∈ xs)
     · exact List.mem_append_right _ h
     · exact absurd h hyx
     · exact List.mem_append_left _ h
+
+/-- ListAux.thy: split_between. The Isabelle proof is a long case bash on
+`split_list`; here we compute all the `splitAt`s explicitly via
+`splitAt_dist_ram` (the list is `Nodup`, so every occurrence split is unique). -/
+theorem split_between [DecidableEq α] {vs : List α} {r v u : α}
+    (hd : vs.Nodup) (hr : r ∈ vs) (hv : v ∈ vs) (hu : u ∈ between vs r v) :
+    between vs r v =
+      (if r = u then [] else between vs r u ++ [u]) ++ between vs u v := by
+  obtain ⟨A, B, hAB⟩ := List.append_of_mem hr
+  have hsp : (A, B) = splitAt r vs := splitAt_dist_ram hd hAB
+  have hd' : (A ++ r :: B).Nodup := hAB ▸ hd
+  obtain ⟨hdA, hdrB, hdisj⟩ := List.nodup_append.mp hd'
+  obtain ⟨hrB, hdB⟩ := List.nodup_cons.mp hdrB
+  have hrA : r ∉ A := fun h => hdisj r h r List.mem_cons_self rfl
+  have hnotAB : ∀ x ∈ A, x ∉ B :=
+    fun x hx hxB => hdisj x hx x (List.mem_cons_of_mem _ hxB) rfl
+  have hopen : ∀ w : α, between vs r w =
+      if B.contains w then (splitAt w B).1 else B ++ (splitAt w A).1 := by
+    intro w
+    rw [between_def, ← hsp]
+  by_cases hvB : v ∈ B
+  · -- Case 1: `v` occurs after `r`
+    obtain ⟨C, D, hCD⟩ := List.append_of_mem hvB
+    have hdB' : (C ++ v :: D).Nodup := hCD ▸ hdB
+    obtain ⟨hdC, hdvD, -⟩ := List.nodup_append.mp hdB'
+    have hspB : (C, D) = splitAt v B := splitAt_dist_ram hdB hCD
+    have hb1 : between vs r v = C := by
+      rw [hopen v, if_pos (List.contains_iff_mem.mpr hvB), ← hspB]
+    have huC : u ∈ C := hb1 ▸ hu
+    obtain ⟨E, F, hEF⟩ := List.append_of_mem huC
+    have huB : u ∈ B := by
+      rw [hCD]
+      exact List.mem_append_left _ huC
+    have hru : r ≠ u := fun h => hrB (h.symm ▸ huB)
+    have hB_eq : B = E ++ u :: (F ++ v :: D) := by
+      rw [hCD, hEF]
+      simp [List.append_assoc]
+    have hspuB : (E, F ++ v :: D) = splitAt u B := splitAt_dist_ram hdB hB_eq
+    have hb2 : between vs r u = E := by
+      rw [hopen u, if_pos (List.contains_iff_mem.mpr huB), ← hspuB]
+    have hvs_eq : vs = (A ++ r :: E) ++ u :: (F ++ v :: D) := by
+      rw [hAB, hCD, hEF]
+      simp [List.append_assoc]
+    have hspuvs : (A ++ r :: E, F ++ v :: D) = splitAt u vs := splitAt_dist_ram hd hvs_eq
+    have hdFvD : (F ++ v :: D).Nodup := by
+      have h : (E ++ u :: (F ++ v :: D)).Nodup := hB_eq ▸ hdB
+      exact (List.nodup_cons.mp (List.nodup_append.mp h).2.1).2
+    have hspv : (F, D) = splitAt v (F ++ v :: D) := splitAt_dist_ram hdFvD rfl
+    have hb3 : between vs u v = F := by
+      have hcv : (F ++ v :: D).contains v = true :=
+        List.contains_iff_mem.mpr (List.mem_append_right F List.mem_cons_self)
+      rw [between_def, ← hspuvs]
+      show (if (F ++ v :: D).contains v then (splitAt v (F ++ v :: D)).1
+            else (F ++ v :: D) ++ (splitAt v (A ++ r :: E)).1) = F
+      rw [if_pos hcv, ← hspv]
+    rw [hb1, if_neg hru, hb2, hb3, hEF]
+    simp [List.append_assoc]
+  · -- Case 2: `v` does not occur after `r`
+    have hcontB : ¬ (B.contains v = true) := mt List.contains_iff_mem.mp hvB
+    have hvA : v ∈ A ∨ v = r := by
+      have h1 : v ∈ A ++ r :: B := hAB ▸ hv
+      rcases List.mem_append.mp h1 with h | h
+      · exact Or.inl h
+      · exact (List.mem_cons.mp h).elim Or.inr (fun h => absurd h hvB)
+    rcases hvA with hvA | rfl
+    · -- Case 2a: `v` occurs before `r`
+      obtain ⟨C, D, hCD⟩ := List.append_of_mem hvA
+      have hdA' : (C ++ v :: D).Nodup := hCD ▸ hdA
+      obtain ⟨hdC, -, -⟩ := List.nodup_append.mp hdA'
+      have hspvA : (C, D) = splitAt v A := splitAt_dist_ram hdA hCD
+      have hb1 : between vs r v = B ++ C := by
+        rw [hopen v, if_neg hcontB, ← hspvA]
+      have huBC : u ∈ B ++ C := hb1 ▸ hu
+      by_cases huB : u ∈ B
+      · -- `u` occurs after `r`
+        obtain ⟨E, F, hEF⟩ := List.append_of_mem huB
+        have hru : r ≠ u := fun h => hrB (h.symm ▸ huB)
+        have hspuB : (E, F) = splitAt u B := splitAt_dist_ram hdB hEF
+        have hb2 : between vs r u = E := by
+          rw [hopen u, if_pos (List.contains_iff_mem.mpr huB), ← hspuB]
+        have hvs_eq : vs = (A ++ r :: E) ++ u :: F := by
+          rw [hAB, hEF]
+          simp [List.append_assoc]
+        have hspuvs : (A ++ r :: E, F) = splitAt u vs := splitAt_dist_ram hd hvs_eq
+        have hdArE : (A ++ r :: E).Nodup := (List.nodup_append.mp (hvs_eq ▸ hd)).1
+        have hvF : v ∉ F := by
+          intro h
+          apply hvB
+          rw [hEF]
+          exact List.mem_append_right E (List.mem_cons_of_mem u h)
+        have hspvArE : (C, D ++ r :: E) = splitAt v (A ++ r :: E) := by
+          apply splitAt_dist_ram hdArE
+          rw [hCD]
+          simp [List.append_assoc]
+        have hcontvF : ¬ ((F : List α).contains v = true) := mt List.contains_iff_mem.mp hvF
+        have hb3 : between vs u v = F ++ C := by
+          rw [between_def, ← hspuvs, if_neg hcontvF]
+          show F ++ (splitAt v (A ++ r :: E)).1 = F ++ C
+          rw [← hspvArE]
+        rw [hb1, if_neg hru, hb2, hb3, hEF]
+        simp [List.append_assoc]
+      · -- `u` occurs between `v` and `r`
+        have huC : u ∈ C := (List.mem_append.mp huBC).resolve_left huB
+        obtain ⟨E, F, hEF⟩ := List.append_of_mem huC
+        have huA' : u ∈ A := by
+          rw [hCD]
+          exact List.mem_append_left _ huC
+        have hru : r ≠ u := fun h => hrA (h.symm ▸ huA')
+        have huB' : u ∉ B := hnotAB u huA'
+        have hspuA : (E, F ++ v :: D) = splitAt u A := by
+          apply splitAt_dist_ram hdA
+          rw [hCD, hEF]
+          simp [List.append_assoc]
+        have hb2 : between vs r u = B ++ E := by
+          rw [hopen u, if_neg (mt List.contains_iff_mem.mp huB'), ← hspuA]
+        have hvs_eq : vs = E ++ u :: (F ++ v :: D ++ r :: B) := by
+          rw [hAB, hCD, hEF]
+          simp [List.append_assoc]
+        have hspuvs : (E, F ++ v :: D ++ r :: B) = splitAt u vs :=
+          splitAt_dist_ram hd hvs_eq
+        have hdFr : (F ++ v :: D ++ r :: B).Nodup := by
+          have h : (E ++ u :: (F ++ v :: D ++ r :: B)).Nodup := hvs_eq ▸ hd
+          exact (List.nodup_cons.mp (List.nodup_append.mp h).2.1).2
+        have hspv : (F, D ++ r :: B) = splitAt v (F ++ v :: D ++ r :: B) := by
+          apply splitAt_dist_ram hdFr
+          simp [List.append_assoc]
+        have hb3 : between vs u v = F := by
+          have hcv : (F ++ v :: D ++ r :: B).contains v = true := by
+            simp
+          rw [between_def, ← hspuvs]
+          show (if (F ++ v :: D ++ r :: B).contains v then
+                  (splitAt v (F ++ v :: D ++ r :: B)).1
+                else (F ++ v :: D ++ r :: B) ++ (splitAt v E).1) = F
+          rw [if_pos hcv, ← hspv]
+        rw [hb1, if_neg hru, hb2, hb3, hEF]
+        simp [List.append_assoc]
+    · -- Case 2b: `v = r` (the `rfl` pattern substituted `r` by `v`)
+      have hspA : splitAt v A = (A, []) := splitAt_no_ram hrA
+      have hb1 : between vs v v = B ++ A := by
+        rw [hopen v, if_neg (mt List.contains_iff_mem.mp hrB), hspA]
+      have huBA : u ∈ B ++ A := hb1 ▸ hu
+      by_cases huB : u ∈ B
+      · -- `u` occurs after `v`
+        obtain ⟨E, F, hEF⟩ := List.append_of_mem huB
+        have hru : v ≠ u := fun h => hrB (h.symm ▸ huB)
+        have hspuB : (E, F) = splitAt u B := splitAt_dist_ram hdB hEF
+        have hb2 : between vs v u = E := by
+          rw [hopen u, if_pos (List.contains_iff_mem.mpr huB), ← hspuB]
+        have hvs_eq : vs = (A ++ v :: E) ++ u :: F := by
+          rw [hAB, hEF]
+          simp [List.append_assoc]
+        have hspuvs : (A ++ v :: E, F) = splitAt u vs := splitAt_dist_ram hd hvs_eq
+        have hdArE : (A ++ v :: E).Nodup := (List.nodup_append.mp (hvs_eq ▸ hd)).1
+        have hrF : v ∉ F := by
+          intro h
+          apply hrB
+          rw [hEF]
+          exact List.mem_append_right E (List.mem_cons_of_mem u h)
+        have hspArE : (A, E) = splitAt v (A ++ v :: E) := splitAt_dist_ram hdArE rfl
+        have hcontrF : ¬ ((F : List α).contains v = true) := mt List.contains_iff_mem.mp hrF
+        have hb3 : between vs u v = F ++ A := by
+          rw [between_def, ← hspuvs, if_neg hcontrF]
+          show F ++ (splitAt v (A ++ v :: E)).1 = F ++ A
+          rw [← hspArE]
+        rw [hb1, if_neg hru, hb2, hb3, hEF]
+        simp [List.append_assoc]
+      · -- `u` occurs before `v`
+        have huA : u ∈ A := (List.mem_append.mp huBA).resolve_left huB
+        obtain ⟨E, F, hEF⟩ := List.append_of_mem huA
+        have hru : v ≠ u := fun h => hrA (h.symm ▸ huA)
+        have huB' : u ∉ B := hnotAB u huA
+        have hspuA : (E, F) = splitAt u A := splitAt_dist_ram hdA hEF
+        have hb2 : between vs v u = B ++ E := by
+          rw [hopen u, if_neg (mt List.contains_iff_mem.mp huB'), ← hspuA]
+        have hvs_eq : vs = E ++ u :: (F ++ v :: B) := by
+          rw [hAB, hEF]
+          simp [List.append_assoc]
+        have hspuvs : (E, F ++ v :: B) = splitAt u vs := splitAt_dist_ram hd hvs_eq
+        have hdFrB : (F ++ v :: B).Nodup := by
+          have h : (E ++ u :: (F ++ v :: B)).Nodup := hvs_eq ▸ hd
+          exact (List.nodup_cons.mp (List.nodup_append.mp h).2.1).2
+        have hspFrB : (F, B) = splitAt v (F ++ v :: B) := splitAt_dist_ram hdFrB rfl
+        have hb3 : between vs u v = F := by
+          have hcv : (F ++ v :: B).contains v = true :=
+            List.contains_iff_mem.mpr (List.mem_append_right F List.mem_cons_self)
+          rw [between_def, ← hspuvs]
+          show (if (F ++ v :: B).contains v then (splitAt v (F ++ v :: B)).1
+                else (F ++ v :: B) ++ (splitAt v E).1) = F
+          rw [if_pos hcv, ← hspFrB]
+        rw [hb1, if_neg hru, hb2, hb3, hEF]
+        simp [List.append_assoc]
 
 end Between
 
