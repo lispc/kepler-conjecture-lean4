@@ -12,8 +12,9 @@ import Kepler.Graphs.Graph
 namespace Kepler.Graphs
 
 /-- Function iteration, mirroring Isabelle's `(f ^^ n) x`:
-`iterate f 0 x = x`, `iterate f (n+1) x = f (iterate f n x)`. -/
-private def iterate (f : α → α) : Nat → α → α
+`iterate f 0 x = x`, `iterate f (n+1) x = f (iterate f n x)`.
+(Public so that `EnumeratorProps.lean` can reason about `(enumAppend nmax ^^ n)`.) -/
+def iterate (f : α → α) : Nat → α → α
   | 0, x => x
   | n + 1, x => f (iterate f n x)
 

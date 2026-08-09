@@ -13,4 +13,6 @@ import Kepler.Graphs.Plane1
 import Kepler.Graphs.Tame
 import Kepler.Graphs.Generator
 import Kepler.Graphs.TameEnum
+import Kepler.Graphs.ListSum
+import Kepler.Graphs.TameProps
 import Kepler.Graphs.Sanity
