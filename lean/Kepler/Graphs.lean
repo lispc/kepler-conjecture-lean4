@@ -26,4 +26,5 @@ import Kepler.Graphs.PlaneGraphIso
 import Kepler.Graphs.ListSum
 import Kepler.Graphs.TameProps
 import Kepler.Graphs.PlaneProps
+import Kepler.Graphs.Plane1Props
 import Kepler.Graphs.Sanity
