@@ -31,3 +31,4 @@ import Kepler.Graphs.ScoreProps
 import Kepler.Graphs.Sanity
 import Kepler.Graphs.LowerBound
 import Kepler.Graphs.GeneratorProps
+import Kepler.Graphs.TameEnumProps
