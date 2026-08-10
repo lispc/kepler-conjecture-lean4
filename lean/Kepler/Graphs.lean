@@ -11,6 +11,7 @@ import Kepler.Graphs.Enumerator
 import Kepler.Graphs.EnumeratorProps
 import Kepler.Graphs.FaceDivision
 import Kepler.Graphs.FaceDivisionProps1
+import Kepler.Graphs.FaceDivisionProps2
 import Kepler.Graphs.Plane
 import Kepler.Graphs.Plane1
 import Kepler.Graphs.Tame
