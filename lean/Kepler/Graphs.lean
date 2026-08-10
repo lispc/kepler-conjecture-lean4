@@ -16,6 +16,7 @@ import Kepler.Graphs.FaceDivisionProps3
 import Kepler.Graphs.FaceDivisionProps4
 import Kepler.Graphs.InvariantsA
 import Kepler.Graphs.InvariantsB
+import Kepler.Graphs.InvariantsC
 import Kepler.Graphs.Plane
 import Kepler.Graphs.Plane1
 import Kepler.Graphs.Tame
