@@ -563,6 +563,385 @@ theorem splitFace_holds_facesAt_distinct {g : Graph} {v w : Vertex} {f : Face} {
     simp only [normFaces, List.map_cons, List.map_nil, List.mem_singleton]
     exact neq12
 
+/-- Auxiliary (ListAux.thy `replace6`, as an iff for nodup lists containing
+the replaced element). -/
+private theorem mem_replace_of_nodup {x y : α} {newfs : List α} {xs : List α}
+    [BEq α] [LawfulBEq α] (hd : xs.Nodup) (hx : x ∈ xs) :
+    y ∈ replace x newfs xs ↔ y ∈ newfs ∨ y ∈ xs ∧ y ≠ x := by
+  induction xs with
+  | nil => exact absurd hx List.not_mem_nil
+  | cons a as ih =>
+    rw [List.mem_cons] at hx
+    have hd' : as.Nodup := (List.nodup_cons.mp hd).2
+    have ha : a ∉ as := (List.nodup_cons.mp hd).1
+    by_cases hax : a = x
+    · subst a
+      simp only [replace, beq_self_eq_true, ↓reduceIte, List.mem_append, List.mem_cons]
+      constructor
+      · rintro (h | h)
+        · exact Or.inl h
+        · exact Or.inr ⟨Or.inr h, fun h' => ha (h' ▸ h)⟩
+      · rintro (h | ⟨h, hne⟩)
+        · exact Or.inl h
+        · rcases h with rfl | h
+          · exact absurd rfl hne
+          · exact Or.inr h
+    · have hb : ¬ (a == x) = true := fun h => hax (beq_iff_eq.mp h)
+      simp only [replace, if_neg hb, List.mem_cons]
+      have hxs : x ∈ as := hx.resolve_left (fun h => hax h.symm)
+      rw [ih hd' hxs]
+      constructor
+      · rintro (rfl | h | ⟨h, hne⟩)
+        · exact Or.inr ⟨Or.inl rfl, hax⟩
+        · exact Or.inl h
+        · exact Or.inr ⟨Or.inr h, hne⟩
+      · rintro (h | ⟨h, hne⟩)
+        · exact Or.inr (Or.inl h)
+        · rcases h with rfl | h
+          · exact Or.inl rfl
+          · exact Or.inr (Or.inr ⟨h, hne⟩)
+
+/-- Invariants.thy: splitFace_holds_facesAt_eq -/
+theorem splitFace_holds_facesAt_eq {g' : Graph} {v a : Vertex} {f' : Face} {n : Nat}
+    (pre_F : pre_splitFace g' v a f' (List.range' g'.countVertices n))
+    (mgp : minGraphProps g') :
+    facesAt_eq (splitFace g' v a f' (List.range' g'.countVertices n)).2.2 := by
+  have hva : v ≠ a := pre_F.2.2.2.2.2.2.2.2.1
+  have hdf : f'.vertices.Nodup := pre_F.2.2.1
+  have hf' : f' ∈ g'.faces := pre_F.1
+  have hv : v < g'.countVertices := minGraphProps9' mgp hf' pre_F.2.2.2.2.2.2.1
+  have ha : a < g'.countVertices := minGraphProps9' mgp hf' pre_F.2.2.2.2.2.2.2.1
+  have hpre : pre_split_face f' v a (List.range' g'.countVertices n) :=
+    pre_splitFace_pre_split_face pre_F
+  have hpb : pre_between f'.vertices v a := pre_split_face_p_between hpre
+  have hd1 : (between f'.vertices v a).Nodup := between_distinct hdf
+  have hd2 : (between f'.vertices a v).Nodup := between_distinct hdf
+  have vert12 : (split_face f' v a (List.range' g'.countVertices n)).1.vertices =
+      (List.range' g'.countVertices n).reverse ++
+        (v :: between f'.vertices v a ++ [a]) := rfl
+  have vert21 : (split_face f' v a (List.range' g'.countVertices n)).2.vertices =
+      (a :: between f'.vertices a v ++ [v]) ++ List.range' g'.countVertices n := rfl
+  have vertFrom : verticesFrom f' v =
+      v :: between f'.vertices v a ++ a :: between f'.vertices a v :=
+    verticesFrom_ram1 hpre
+  have vert_f' : ∀ x, x ∈ f'.vertices ↔
+      x ∈ between f'.vertices v a ∨ x ∈ between f'.vertices a v ∨ x = a ∨ x = v := by
+    intro x
+    rw [cong_mem (verticesFrom_congs pre_F.2.2.2.2.2.2.1), vertFrom]
+    simp only [List.mem_cons, List.mem_append]
+    tauto
+  have hfs : (splitFace g' v a f' (List.range' g'.countVertices n)).2.2.faces =
+      replace f' [(split_face f' v a (List.range' g'.countVertices n)).2] g'.faces ++
+        [(split_face f' v a (List.range' g'.countVertices n)).1] := rfl
+  have hmem_faces : ∀ F, F ∈ (splitFace g' v a f' (List.range' g'.countVertices n)).2.2.faces ↔
+      F = (split_face f' v a (List.range' g'.countVertices n)).1 ∨
+        F = (split_face f' v a (List.range' g'.countVertices n)).2 ∨
+        F ∈ g'.faces ∧ F ≠ f' := by
+    intro F
+    rw [hfs, List.mem_append, List.mem_singleton,
+      mem_replace_of_nodup (minGraphProps11' mgp) hf', List.mem_singleton]
+    tauto
+  have hf'At : ∀ {x}, x ∈ f'.vertices → f' ∈ g'.faceListAt[x]! :=
+    fun hx => minGraphProps7' mgp hf' hx
+  have hmemF : ∀ {x : Nat}, x < g'.countVertices → ∀ {F : Face},
+      F ∈ g'.faceListAt[x]! → F ∈ g'.faces ∧ x ∈ F.vertices := by
+    intro x hx F hF
+    have hlt : x < g'.faceListAt.length := by rw [minGraphProps4 mgp]; exact hx
+    rw [getElem!_pos g'.faceListAt x hlt] at hF
+    have hd : g'.facesAt x = g'.faceListAt[x] := (List.getElem_eq_getD []).symm
+    have hxF : F ∈ g'.facesAt x := hd ▸ hF
+    exact ⟨minGraphProps5 mgp (List.mem_range.mpr hx) hxF,
+      minGraphProps6 mgp (List.mem_range.mpr hx) hxF⟩
+  have hnotR : ∀ y < g'.countVertices, y ∉ List.range' g'.countVertices n := by
+    intro y hy hr
+    obtain ⟨i, hi, rfl⟩ := List.mem_range'.mp hr
+    rw [Nat.one_mul] at hy
+    exact absurd (Nat.lt_of_le_of_lt (Nat.le_add_right _ _) hy) (Nat.lt_irrefl _)
+  have hFL : (splitFace g' v a f' (List.range' g'.countVertices n)).2.2.faceListAt =
+      replacefacesAt [a] f' [(split_face f' v a (List.range' g'.countVertices n)).1,
+          (split_face f' v a (List.range' g'.countVertices n)).2]
+        (replacefacesAt [v] f' [(split_face f' v a (List.range' g'.countVertices n)).2,
+            (split_face f' v a (List.range' g'.countVertices n)).1]
+          (replacefacesAt (between f'.vertices a v) f'
+            [(split_face f' v a (List.range' g'.countVertices n)).2]
+            (replacefacesAt (between f'.vertices v a) f'
+              [(split_face f' v a (List.range' g'.countVertices n)).1] g'.faceListAt))) ++
+        List.replicate (List.range' g'.countVertices n).length
+          [(split_face f' v a (List.range' g'.countVertices n)).1,
+            (split_face f' v a (List.range' g'.countVertices n)).2] := rfl
+  have hlen1 : (replacefacesAt (between f'.vertices v a) f'
+        [(split_face f' v a (List.range' g'.countVertices n)).1] g'.faceListAt).length =
+      g'.countVertices := by
+    rw [replacefacesAt_length]; exact minGraphProps4 mgp
+  have hlen2 : (replacefacesAt (between f'.vertices a v) f'
+        [(split_face f' v a (List.range' g'.countVertices n)).2]
+        (replacefacesAt (between f'.vertices v a) f'
+          [(split_face f' v a (List.range' g'.countVertices n)).1] g'.faceListAt)).length =
+      g'.countVertices := by
+    rw [replacefacesAt_length]; exact hlen1
+  have hlen3 : (replacefacesAt [v] f' [(split_face f' v a (List.range' g'.countVertices n)).2,
+          (split_face f' v a (List.range' g'.countVertices n)).1]
+        (replacefacesAt (between f'.vertices a v) f'
+          [(split_face f' v a (List.range' g'.countVertices n)).2]
+          (replacefacesAt (between f'.vertices v a) f'
+            [(split_face f' v a (List.range' g'.countVertices n)).1] g'.faceListAt))).length =
+      g'.countVertices := by
+    rw [replacefacesAt_eq, replacefacesAt2_length]; exact hlen2
+  have hlen4 : (replacefacesAt [a] f' [(split_face f' v a (List.range' g'.countVertices n)).1,
+          (split_face f' v a (List.range' g'.countVertices n)).2]
+        (replacefacesAt [v] f' [(split_face f' v a (List.range' g'.countVertices n)).2,
+            (split_face f' v a (List.range' g'.countVertices n)).1]
+          (replacefacesAt (between f'.vertices a v) f'
+            [(split_face f' v a (List.range' g'.countVertices n)).2]
+            (replacefacesAt (between f'.vertices v a) f'
+              [(split_face f' v a (List.range' g'.countVertices n)).1]
+                g'.faceListAt)))).length = g'.countVertices := by
+    rw [replacefacesAt_eq, replacefacesAt2_length]; exact hlen3
+  intro x hx F
+  rw [splitFace_add_vertices_direct g' v a f' n] at hx
+  have hxlt : x < (splitFace g' v a f' (List.range' g'.countVertices n)).2.2.faceListAt.length := by
+    rw [hFL, List.length_append, hlen4, List.length_replicate, List.length_range']
+    rcases List.mem_append.mp hx with hx | hx
+    · exact lt_of_lt_of_le (List.mem_range.mp hx) (Nat.le_add_right _ _)
+    · obtain ⟨i, hi, rfl⟩ := List.mem_range'.mp hx
+      rw [Nat.one_mul]
+      exact Nat.add_lt_add_left hi _
+  have ex : (splitFace g' v a f' (List.range' g'.countVertices n)).2.2.faceListAt.getD x [] =
+      (splitFace g' v a f' (List.range' g'.countVertices n)).2.2.faceListAt[x]! := by
+    rw [getElem!_pos _ x hxlt]
+    exact (List.getElem_eq_getD []).symm
+  show F ∈ (splitFace g' v a f' (List.range' g'.countVertices n)).2.2.faceListAt.getD x [] ↔ _
+  rw [ex, hFL]
+  by_cases hxg : x < g'.countVertices
+  · rw [getElem!_append_left (by rw [hlen4]; exact hxg)]
+    by_cases hxa : x = a
+    · subst x
+      have e : (replacefacesAt [a] f' [(split_face f' v a (List.range' g'.countVertices n)).1,
+            (split_face f' v a (List.range' g'.countVertices n)).2]
+          (replacefacesAt [v] f' [(split_face f' v a (List.range' g'.countVertices n)).2,
+              (split_face f' v a (List.range' g'.countVertices n)).1]
+            (replacefacesAt (between f'.vertices a v) f'
+              [(split_face f' v a (List.range' g'.countVertices n)).2]
+              (replacefacesAt (between f'.vertices v a) f'
+                [(split_face f' v a (List.range' g'.countVertices n)).1]
+                  g'.faceListAt))))[a]! =
+          replace f' [(split_face f' v a (List.range' g'.countVertices n)).1,
+            (split_face f' v a (List.range' g'.countVertices n)).2] (g'.faceListAt[a]!) := by
+        rw [replacefacesAt_nth2 (by rw [hlen3]; exact ha),
+          replacefacesAt_notin (show a ∉ [v] from fun h => hva (List.mem_singleton.mp h).symm),
+          replacefacesAt_notin (between_not_r1 hdf),
+          replacefacesAt_notin (between_not_r2 hdf)]
+      rw [e, mem_replace_of_nodup (normFaces_distinct (minGraphProps8a' mgp ha))
+        (hf'At pre_F.2.2.2.2.2.2.2.1), List.mem_pair]
+      constructor
+      · rintro ((rfl | rfl) | ⟨hF, hne⟩)
+        · exact ⟨(hmem_faces _).mpr (Or.inl rfl), by
+            rw [vert12]
+            exact List.mem_append_right _ (List.mem_cons_of_mem _
+              (List.mem_append_right _ (List.mem_singleton_self _)))⟩
+        · exact ⟨(hmem_faces _).mpr (Or.inr (Or.inl rfl)), by
+            rw [vert21]
+            exact List.mem_append_left _ List.mem_cons_self⟩
+        · obtain ⟨hFg, haF⟩ := hmemF ha hF
+          exact ⟨(hmem_faces _).mpr (Or.inr (Or.inr ⟨hFg, hne⟩)), haF⟩
+      · rintro ⟨hFg, haF⟩
+        rw [hmem_faces] at hFg
+        rcases hFg with rfl | rfl | ⟨hFg, hne⟩
+        · exact Or.inl (Or.inl rfl)
+        · exact Or.inl (Or.inr rfl)
+        · exact Or.inr ⟨minGraphProps7' mgp hFg haF, hne⟩
+    · by_cases hxv : x = v
+      · subst x
+        have e : (replacefacesAt [a] f' [(split_face f' v a (List.range' g'.countVertices n)).1,
+              (split_face f' v a (List.range' g'.countVertices n)).2]
+            (replacefacesAt [v] f' [(split_face f' v a (List.range' g'.countVertices n)).2,
+                (split_face f' v a (List.range' g'.countVertices n)).1]
+              (replacefacesAt (between f'.vertices a v) f'
+                [(split_face f' v a (List.range' g'.countVertices n)).2]
+                (replacefacesAt (between f'.vertices v a) f'
+                  [(split_face f' v a (List.range' g'.countVertices n)).1]
+                    g'.faceListAt))))[v]! =
+            replace f' [(split_face f' v a (List.range' g'.countVertices n)).2,
+              (split_face f' v a (List.range' g'.countVertices n)).1] (g'.faceListAt[v]!) := by
+          rw [replacefacesAt_notin (show v ∉ [a] from fun h => hva (List.mem_singleton.mp h)),
+            replacefacesAt_nth2 (by rw [hlen2]; exact hv),
+            replacefacesAt_notin (between_not_r2 hdf),
+            replacefacesAt_notin (between_not_r1 hdf)]
+        rw [e, mem_replace_of_nodup (normFaces_distinct (minGraphProps8a' mgp hv))
+          (hf'At pre_F.2.2.2.2.2.2.1), List.mem_pair]
+        constructor
+        · rintro ((rfl | rfl) | ⟨hF, hne⟩)
+          · exact ⟨(hmem_faces _).mpr (Or.inr (Or.inl rfl)), by
+              rw [vert21]
+              exact List.mem_append_left _ (List.mem_cons_of_mem _
+                (List.mem_append_right _ List.mem_cons_self))⟩
+          · exact ⟨(hmem_faces _).mpr (Or.inl rfl), by
+              rw [vert12]
+              exact List.mem_append_right _ List.mem_cons_self⟩
+          · obtain ⟨hFg, hvF⟩ := hmemF hv hF
+            exact ⟨(hmem_faces _).mpr (Or.inr (Or.inr ⟨hFg, hne⟩)), hvF⟩
+        · rintro ⟨hFg, hvF⟩
+          rw [hmem_faces] at hFg
+          rcases hFg with rfl | rfl | ⟨hFg, hne⟩
+          · exact Or.inl (Or.inr rfl)
+          · exact Or.inl (Or.inl rfl)
+          · exact Or.inr ⟨minGraphProps7' mgp hFg hvF, hne⟩
+      · have e : (replacefacesAt [a] f' [(split_face f' v a (List.range' g'.countVertices n)).1,
+              (split_face f' v a (List.range' g'.countVertices n)).2]
+            (replacefacesAt [v] f' [(split_face f' v a (List.range' g'.countVertices n)).2,
+                (split_face f' v a (List.range' g'.countVertices n)).1]
+              (replacefacesAt (between f'.vertices a v) f'
+                [(split_face f' v a (List.range' g'.countVertices n)).2]
+                (replacefacesAt (between f'.vertices v a) f'
+                  [(split_face f' v a (List.range' g'.countVertices n)).1]
+                    g'.faceListAt))))[x]! =
+            (replacefacesAt (between f'.vertices a v) f'
+              [(split_face f' v a (List.range' g'.countVertices n)).2]
+              (replacefacesAt (between f'.vertices v a) f'
+                [(split_face f' v a (List.range' g'.countVertices n)).1] g'.faceListAt))[x]! := by
+          rw [replacefacesAt_notin (show x ∉ [a] from fun h => hxa (List.mem_singleton.mp h)),
+            replacefacesAt_notin (show x ∉ [v] from fun h => hxv (List.mem_singleton.mp h))]
+        rw [e]
+        by_cases hx1 : x ∈ between f'.vertices v a
+        · have hx2 : x ∉ between f'.vertices a v := between_inter_empty hpb hx1
+          have e2 : (replacefacesAt (between f'.vertices a v) f'
+                [(split_face f' v a (List.range' g'.countVertices n)).2]
+                (replacefacesAt (between f'.vertices v a) f'
+                  [(split_face f' v a (List.range' g'.countVertices n)).1]
+                    g'.faceListAt))[x]! =
+              replace f' [(split_face f' v a (List.range' g'.countVertices n)).1]
+                (g'.faceListAt[x]!) := by
+            rw [replacefacesAt_notin hx2,
+              replacefacesAt_in hx1 hd1 (by rw [minGraphProps4 mgp]; exact hxg)]
+          rw [e2, mem_replace_of_nodup (normFaces_distinct (minGraphProps8a' mgp hxg))
+            (hf'At (inbetween_inset hx1)), List.mem_singleton]
+          constructor
+          · rintro (rfl | ⟨hF, hne⟩)
+            · exact ⟨(hmem_faces _).mpr (Or.inl rfl), by
+                rw [vert12]
+                exact List.mem_append_right _ (List.mem_cons_of_mem _
+                  (List.mem_append_left _ hx1))⟩
+            · obtain ⟨hFg, hxF⟩ := hmemF hxg hF
+              exact ⟨(hmem_faces _).mpr (Or.inr (Or.inr ⟨hFg, hne⟩)), hxF⟩
+          · rintro ⟨hFg, hxF⟩
+            rw [hmem_faces] at hFg
+            rcases hFg with rfl | rfl | ⟨hFg, hne⟩
+            · exact Or.inl rfl
+            · exfalso
+              rw [vert21] at hxF
+              rcases List.mem_append.mp hxF with hxF | hxF
+              · rcases List.mem_cons.mp hxF with h | hxF
+                · exact hxa h
+                · rcases List.mem_append.mp hxF with hxF | hxF
+                  · exact hx2 hxF
+                  · exact hxv (List.mem_singleton.mp hxF)
+              · exact hnotR x hxg hxF
+            · exact Or.inr ⟨minGraphProps7' mgp hFg hxF, hne⟩
+        · by_cases hx2 : x ∈ between f'.vertices a v
+          · have e2 : (replacefacesAt (between f'.vertices a v) f'
+                  [(split_face f' v a (List.range' g'.countVertices n)).2]
+                  (replacefacesAt (between f'.vertices v a) f'
+                    [(split_face f' v a (List.range' g'.countVertices n)).1]
+                      g'.faceListAt))[x]! =
+                replace f' [(split_face f' v a (List.range' g'.countVertices n)).2]
+                  (g'.faceListAt[x]!) := by
+              rw [replacefacesAt_in hx2 hd2 (by rw [hlen1]; exact hxg),
+                replacefacesAt_notin hx1]
+            rw [e2, mem_replace_of_nodup (normFaces_distinct (minGraphProps8a' mgp hxg))
+              (hf'At (inbetween_inset hx2)), List.mem_singleton]
+            constructor
+            · rintro (rfl | ⟨hF, hne⟩)
+              · exact ⟨(hmem_faces _).mpr (Or.inr (Or.inl rfl)), by
+                  rw [vert21]
+                  exact List.mem_append_left _ (List.mem_cons_of_mem _
+                    (List.mem_append_left _ hx2))⟩
+              · obtain ⟨hFg, hxF⟩ := hmemF hxg hF
+                exact ⟨(hmem_faces _).mpr (Or.inr (Or.inr ⟨hFg, hne⟩)), hxF⟩
+            · rintro ⟨hFg, hxF⟩
+              rw [hmem_faces] at hFg
+              rcases hFg with rfl | rfl | ⟨hFg, hne⟩
+              · exfalso
+                rw [vert12] at hxF
+                rcases List.mem_append.mp hxF with hxF | hxF
+                · exact hnotR x hxg (List.mem_reverse.mp hxF)
+                · rcases List.mem_cons.mp hxF with h | hxF
+                  · exact hxv h
+                  · rcases List.mem_append.mp hxF with hxF | hxF
+                    · exact hx1 hxF
+                    · exact hxa (List.mem_singleton.mp hxF)
+              · exact Or.inl rfl
+              · exact Or.inr ⟨minGraphProps7' mgp hFg hxF, hne⟩
+          · have e2 : (replacefacesAt (between f'.vertices a v) f'
+                  [(split_face f' v a (List.range' g'.countVertices n)).2]
+                  (replacefacesAt (between f'.vertices v a) f'
+                    [(split_face f' v a (List.range' g'.countVertices n)).1]
+                      g'.faceListAt))[x]! = g'.faceListAt[x]! := by
+              rw [replacefacesAt_notin hx2, replacefacesAt_notin hx1]
+            rw [e2]
+            constructor
+            · intro hF
+              obtain ⟨hFg, hxF⟩ := hmemF hxg hF
+              have hne : F ≠ f' := by
+                intro hFe
+                subst hFe
+                rcases (vert_f' x).mp hxF with h | h | h | h
+                · exact hx1 h
+                · exact hx2 h
+                · exact hxa h
+                · exact hxv h
+              exact ⟨(hmem_faces _).mpr (Or.inr (Or.inr ⟨hFg, hne⟩)), hxF⟩
+            · rintro ⟨hFg, hxF⟩
+              rw [hmem_faces] at hFg
+              rcases hFg with rfl | rfl | ⟨hFg, hne⟩
+              · exfalso
+                rw [vert12] at hxF
+                rcases List.mem_append.mp hxF with hxF | hxF
+                · exact hnotR x hxg (List.mem_reverse.mp hxF)
+                · rcases List.mem_cons.mp hxF with h | hxF
+                  · exact hxv h
+                  · rcases List.mem_append.mp hxF with hxF | hxF
+                    · exact hx1 hxF
+                    · exact hxa (List.mem_singleton.mp hxF)
+              · exfalso
+                rw [vert21] at hxF
+                rcases List.mem_append.mp hxF with hxF | hxF
+                · rcases List.mem_cons.mp hxF with h | hxF
+                  · exact hxa h
+                  · rcases List.mem_append.mp hxF with hxF | hxF
+                    · exact hx2 hxF
+                    · exact hxv (List.mem_singleton.mp hxF)
+                · exact hnotR x hxg hxF
+              · exact minGraphProps7' mgp hFg hxF
+  · have hxn : x - g'.countVertices < (List.range' g'.countVertices n).length := by
+      rw [List.length_range']
+      rcases List.mem_append.mp hx with hx | hx
+      · exact absurd (List.mem_range.mp hx) hxg
+      · obtain ⟨i, hi, rfl⟩ := List.mem_range'.mp hx
+        rw [Nat.one_mul, Nat.add_sub_cancel_left]
+        exact hi
+    rw [getElem!_append_right (by rw [hlen4]; exact Nat.le_of_not_lt hxg)
+      (by rw [hlen4, List.length_replicate]; exact hxn)]
+    rw [hlen4, getElem!_pos _ _ (by rw [List.length_replicate]; exact hxn),
+      List.getElem_replicate, List.mem_pair]
+    have hxR : x ∈ List.range' g'.countVertices n := by
+      rcases List.mem_append.mp hx with hx | hx
+      · exact absurd (List.mem_range.mp hx) hxg
+      · exact hx
+    constructor
+    · rintro (rfl | rfl)
+      · exact ⟨(hmem_faces _).mpr (Or.inl rfl), by
+          rw [vert12]
+          exact List.mem_append_left _ (List.mem_reverse.mpr hxR)⟩
+      · exact ⟨(hmem_faces _).mpr (Or.inr (Or.inl rfl)), by
+          rw [vert21]
+          exact List.mem_append_right _ hxR⟩
+    · rintro ⟨hFg, hxF⟩
+      rw [hmem_faces] at hFg
+      rcases hFg with rfl | rfl | ⟨hFg, hne⟩
+      · exact Or.inl rfl
+      · exact Or.inr rfl
+      · exact absurd (List.mem_range.mp (minGraphProps9 mgp hFg hxF)) hxg
+
 /-- Invariants.thy: help (1) -/
 theorem ne_head!_of_not_mem [Inhabited α] {xs : List α} {x : α} (hxs : xs ≠ [])
     (hx : x ∉ xs) : x ≠ xs.head! :=
