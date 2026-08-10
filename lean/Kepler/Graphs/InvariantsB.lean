@@ -942,6 +942,280 @@ theorem splitFace_holds_facesAt_eq {g' : Graph} {v a : Vertex} {f' : Face} {n : 
       · exact Or.inr rfl
       · exact absurd (List.mem_range.mp (minGraphProps9 mgp hFg hxF)) hxg
 
+/-- Auxiliary (cf. FaceDivisionProps3 `nodup_not_is_sublist_self`, kept
+`private` there): a nodup list cannot contain `[x, x]` as a sublist. -/
+private theorem nodup_not_is_sublist_self' {x : Vertex} {L : List Vertex} (hd : L.Nodup) :
+    ¬ is_sublist [x, x] L := by
+  rintro ⟨as, bs, h⟩
+  have hd' : (as ++ [x, x] ++ bs).Nodup := h ▸ hd
+  have h1 : (as ++ [x, x]).Nodup := (List.nodup_append.mp hd').1
+  have h2 : [x, x].Nodup := (List.nodup_append.mp h1).2.1
+  exact (List.nodup_cons.mp h2).1 List.mem_cons_self
+
+/-- Auxiliary: if `[x, y]` is a sublist of `x :: M ++ [y]` with `y ∉ M` and
+`x ∉ M` (and `x ≠ y`), then `M = []`. -/
+private theorem eq_nil_of_is_sublist {x y : Vertex} {M : List Vertex}
+    (hy : y ∉ M) (hx : x ∉ M) (hxy : x ≠ y)
+    (h : is_sublist [x, y] (x :: M ++ [y])) : M = [] := by
+  obtain ⟨as, bs, hL⟩ := h
+  cases as with
+  | nil =>
+    simp only [List.nil_append, List.cons_append] at hL
+    have h2 := (List.cons.inj hL).2
+    cases M with
+    | nil => rfl
+    | cons c cs =>
+      simp only [List.cons_append] at h2
+      have h3 : c = y := (List.cons.inj h2).1
+      exact absurd (h3 ▸ (List.mem_cons_self : c ∈ c :: cs)) hy
+  | cons c as' =>
+    simp only [List.cons_append] at hL
+    have h2 := (List.cons.inj hL).2
+    have hmem : x ∈ M ++ [y] := by
+      rw [h2]
+      exact List.mem_append_left _ (List.mem_append_right _ List.mem_cons_self)
+    rcases List.mem_append.mp hmem with hmem | hmem
+    · exact absurd hmem hx
+    · exact absurd (List.mem_singleton.mp hmem) hxy
+
+/-- Invariants.thy: split_face_edge_disj (membership form of the empty
+intersection `ℰ f₁ ∩ ℰ f₂ = {}`) -/
+theorem split_face_edge_disj {f f₁ f₂ : Face} {a b : Vertex} {vs : List Vertex}
+    (hp : pre_split_face f a b vs) (hsplit : (f₁, f₂) = split_face f a b vs)
+    (hlen : 3 ≤ f.vertices.length)
+    (hvs : vs = [] → (a, b) ∉ f.edges ∧ (b, a) ∉ f.edges) :
+    ∀ e ∈ f₁.edges, e ∉ f₂.edges := by
+  have hdf : f.vertices.Nodup := hp.1
+  have hdvs : vs.Nodup := hp.2.1
+  have hdisj : ∀ x ∈ f.vertices, x ∉ vs := hp.2.2.1
+  have ha : a ∈ f.vertices := hp.2.2.2.1
+  have hb : b ∈ f.vertices := hp.2.2.2.2.1
+  have hab : a ≠ b := hp.2.2.2.2.2
+  have havs : a ∉ vs := hdisj a ha
+  have hbvs : b ∉ vs := hdisj b hb
+  have hB12mem : ∀ x ∈ between f.vertices a b, x ∈ f.vertices :=
+    fun x hx => inbetween_inset hx
+  have hB21mem : ∀ x ∈ between f.vertices b a, x ∈ f.vertices :=
+    fun x hx => inbetween_inset hx
+  have e1 : f₁ = (split_face f a b vs).1 := congrArg Prod.fst hsplit
+  have e2 : f₂ = (split_face f a b vs).2 := congrArg Prod.snd hsplit
+  have hE1 : f₁.edges = Edges (b :: vs.reverse ++ [a]) ∪
+      Edges (a :: between f.vertices a b ++ [b]) := e1 ▸ edges_split_face1 hp
+  have hE2 : f₂.edges = Edges (a :: vs ++ [b]) ∪
+      Edges (b :: between f.vertices b a ++ [a]) := e2 ▸ edges_split_face2 hp
+  have hN1 : (b :: vs.reverse ++ [a]).Nodup := by
+    rw [List.cons_append]
+    apply List.nodup_cons.mpr
+    constructor
+    · simp only [List.mem_append, List.mem_reverse, List.mem_singleton, not_or]
+      exact ⟨fun hm => hbvs hm, fun hm => hab hm.symm⟩
+    · apply List.nodup_append.mpr
+      refine ⟨List.nodup_reverse.mpr hdvs, List.nodup_singleton _, ?_⟩
+      intro x hx y hy hxy
+      have hxa : x = a := hxy.trans (List.mem_singleton.mp hy)
+      exact havs (hxa ▸ List.mem_reverse.mp hx)
+  have hN2 : (a :: vs ++ [b]).Nodup := by
+    rw [List.cons_append]
+    apply List.nodup_cons.mpr
+    constructor
+    · simp only [List.mem_append, List.mem_singleton, not_or]
+      exact ⟨fun hm => havs hm, fun hm => hab hm⟩
+    · apply List.nodup_append.mpr
+      refine ⟨hdvs, List.nodup_singleton _, ?_⟩
+      intro x hx y hy hxy
+      have hxb : x = b := hxy.trans (List.mem_singleton.mp hy)
+      exact hbvs (hxb ▸ hx)
+  have hNQ1 : (a :: between f.vertices a b ++ [b]).Nodup := between_distinct_r12 hdf hab
+  have hNQ2 : (b :: between f.vertices b a ++ [a]).Nodup :=
+    between_distinct_r12 hdf hab.symm
+  have hglP : (b :: vs.reverse ++ [a]).getLast! = a := getLast!_concat _ _
+  intro e he1 he2
+  obtain ⟨x, y⟩ := e
+  rw [hE1] at he1
+  rw [hE2] at he2
+  rcases he1 with hP1 | hQ1 <;> rcases he2 with hP2 | hQ2
+  · -- `Edges (b :: vs.reverse ++ [a])` vs `Edges (a :: vs ++ [b])`: reverses
+    have hrev : (a :: vs ++ [b]).reverse = b :: vs.reverse ++ [a] := by
+      simp [List.reverse_cons, List.reverse_append]
+    rw [← hrev] at hP1
+    have hcon : (x, y) ∈ Edges (a :: vs ++ [b]).reverse ∩ Edges (a :: vs ++ [b]) :=
+      ⟨hP1, hP2⟩
+    rw [Edges_rev_disj hN2] at hcon
+    exact (Set.mem_empty_iff_false _).mp hcon
+  · -- `Edges (b :: vs.reverse ++ [a])` vs `Edges (b :: between f.vertices b a ++ [a])`
+    have hx : x = a ∨ x = b := by
+      have hx1 := (in_Edges_in_set hP1).1
+      have hx2 := (in_Edges_in_set hQ2).1
+      rcases List.mem_cons.mp hx1 with h | hx1
+      · exact Or.inr h
+      · rcases List.mem_append.mp hx1 with hx1 | hx1
+        · have hxv : x ∈ vs := List.mem_reverse.mp hx1
+          rcases List.mem_cons.mp hx2 with h | hx2
+          · exact absurd (h ▸ hxv) hbvs
+          · rcases List.mem_append.mp hx2 with hx2 | hx2
+            · exact absurd hxv (hdisj x (hB21mem x hx2))
+            · exact absurd ((List.mem_singleton.mp hx2) ▸ hxv) havs
+        · exact Or.inl (List.mem_singleton.mp hx1)
+    have hy : y = a ∨ y = b := by
+      have hy1 := (in_Edges_in_set hP1).2
+      have hy2 := (in_Edges_in_set hQ2).2
+      rcases List.mem_cons.mp hy1 with h | hy1
+      · exact Or.inr h
+      · rcases List.mem_append.mp hy1 with hy1 | hy1
+        · have hyv : y ∈ vs := List.mem_reverse.mp hy1
+          rcases List.mem_cons.mp hy2 with h | hy2
+          · exact absurd (h ▸ hyv) hbvs
+          · rcases List.mem_append.mp hy2 with hy2 | hy2
+            · exact absurd hyv (hdisj y (hB21mem y hy2))
+            · exact absurd ((List.mem_singleton.mp hy2) ▸ hyv) havs
+        · exact Or.inl (List.mem_singleton.mp hy1)
+    rcases hx with hx | hx <;> rcases hy with hy | hy <;> subst x <;> subst y
+    · exact nodup_not_is_sublist_self' hN1 hP1
+    · exact is_sublist_notlast hN1 hglP.symm hP1
+    · have hB21nil : between f.vertices b a = [] :=
+        eq_nil_of_is_sublist (between_not_r2 hdf) (between_not_r1 hdf) hab.symm hQ2
+      have hvsnil : vs = [] := by
+        have h : vs.reverse = [] :=
+          eq_nil_of_is_sublist (fun hm => havs (List.mem_reverse.mp hm))
+            (fun hm => hbvs (List.mem_reverse.mp hm)) hab.symm hP1
+        cases vs with
+        | nil => rfl
+        | cons c cs => simp at h
+      have hne : is_nextElem f.vertices b a :=
+        is_nextElem_between_empty' hB21nil hdf hb ha hab.symm
+      exact (hvs hvsnil).2 ((is_nextElem_edges_eq hdf).mpr hne)
+    · exact nodup_not_is_sublist_self' hN1 hP1
+  · -- `Edges (a :: between f.vertices a b ++ [b])` vs `Edges (a :: vs ++ [b])`
+    have hx : x = a ∨ x = b := by
+      have hx1 := (in_Edges_in_set hQ1).1
+      have hx2 := (in_Edges_in_set hP2).1
+      rcases List.mem_cons.mp hx1 with h | hx1
+      · exact Or.inl h
+      · rcases List.mem_append.mp hx1 with hx1 | hx1
+        · rcases List.mem_cons.mp hx2 with h | hx2
+          · exact absurd (h ▸ hx1) (between_not_r1 hdf)
+          · rcases List.mem_append.mp hx2 with hx2 | hx2
+            · exact absurd hx2 (hdisj x (hB12mem x hx1))
+            · exact absurd ((List.mem_singleton.mp hx2) ▸ hx1) (between_not_r2 hdf)
+        · exact Or.inr (List.mem_singleton.mp hx1)
+    have hy : y = a ∨ y = b := by
+      have hy1 := (in_Edges_in_set hQ1).2
+      have hy2 := (in_Edges_in_set hP2).2
+      rcases List.mem_cons.mp hy1 with h | hy1
+      · exact Or.inl h
+      · rcases List.mem_append.mp hy1 with hy1 | hy1
+        · rcases List.mem_cons.mp hy2 with h | hy2
+          · exact absurd (h ▸ hy1) (between_not_r1 hdf)
+          · rcases List.mem_append.mp hy2 with hy2 | hy2
+            · exact absurd hy2 (hdisj y (hB12mem y hy1))
+            · exact absurd ((List.mem_singleton.mp hy2) ▸ hy1) (between_not_r2 hdf)
+        · exact Or.inr (List.mem_singleton.mp hy1)
+    rcases hx with hx | hx <;> rcases hy with hy | hy <;> subst x <;> subst y
+    · exact nodup_not_is_sublist_self' hNQ1 hQ1
+    · have hB12nil : between f.vertices a b = [] :=
+        eq_nil_of_is_sublist (between_not_r2 hdf) (between_not_r1 hdf) hab hQ1
+      have hvsnil : vs = [] :=
+        eq_nil_of_is_sublist hbvs havs hab hP2
+      have hne : is_nextElem f.vertices a b :=
+        is_nextElem_between_empty' hB12nil hdf ha hb hab
+      exact (hvs hvsnil).1 ((is_nextElem_edges_eq hdf).mpr hne)
+    · have hglQ1 : (a :: between f.vertices a b ++ [b]).getLast! = b := getLast!_concat _ _
+      exact is_sublist_notlast hNQ1 hglQ1.symm hQ1
+    · exact nodup_not_is_sublist_self' hNQ1 hQ1
+  · -- `Edges (a :: between f.vertices a b ++ [b])` vs
+    -- `Edges (b :: between f.vertices b a ++ [a])`: `Edges_compl`
+    have hcon : (x, y) ∈ Edges (a :: between f.vertices a b ++ [b]) ∩
+        Edges (b :: between f.vertices b a ++ [a]) := ⟨hQ1, hQ2⟩
+    rw [Edges_compl hdf ha hb hab] at hcon
+    exact (Set.mem_empty_iff_false _).mp hcon
+
+/-- Invariants.thy: splitFace_edge_disj -/
+theorem splitFace_edge_disj {g g' : Graph} {u v : Vertex} {f f₁ f₂ : Face}
+    {vs : List Vertex} (mgp : minGraphProps g) (pre : pre_splitFace g u v f vs)
+    (FDG : (f₁, f₂, g') = splitFace g u v f vs) : edges_disj g' := by
+  have disj : edges_disj g := mgp.2.2.2.2.2.2.2.1
+  have hfg : f ∈ g.faces := pre_splitFace_oldF pre
+  have hsplit : (f₁, f₂) = split_face f u v vs := splitFace_split_face hfg FDG
+  have hpsf : pre_split_face f u v vs := pre_splitFace_pre_split_face pre
+  have h12 : ∀ e ∈ f₁.edges, e ∉ f₂.edges :=
+    split_face_edge_disj hpsf hsplit (mgp_vertices3 mgp hfg) (by
+      intro hvsnil
+      rcases pre.2.2.2.2.2.2.2.2.2 with ⟨h1, h2, -, -⟩ | hne
+      · exact ⟨h1, h2⟩
+      · exact absurd hvsnil hne)
+  have h21 : ∀ e ∈ f₂.edges, e ∉ f₁.edges := fun e he2 he1 => h12 e he1 he2
+  -- the edges of the two new faces avoid the edges of every old face ≠ f
+  have hold : ∀ f' ∈ g.faces, f' ≠ f → (f₁.edges ∪ f₂.edges) ∩ f'.edges = ∅ := by
+    intro f' hf' hf'f
+    ext e
+    simp only [Set.mem_inter_iff, Set.mem_empty_iff_false, iff_false, not_and]
+    intro he12 hef'
+    have hcontra1 : ∀ {p q : Vertex}, p ∈ vs → (p, q) ∈ f'.edges → False :=
+      fun hpvs he => pre.2.2.2.2.1 _ (minGraphProps9 mgp hf' (in_edges_in_vertices he).1) hpvs
+    have hcontra2 : ∀ {p q : Vertex}, q ∈ vs → (p, q) ∈ f'.edges → False :=
+      fun hqvs he => pre.2.2.2.2.1 _ (minGraphProps9 mgp hf' (in_edges_in_vertices he).2) hqvs
+    by_cases hvsnil : vs = []
+    · subst hvsnil
+      have hE := split_face_edges_f12_f21_vs hpsf hsplit
+      obtain ⟨p, q⟩ := e
+      rw [hE] at he12
+      simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff, Prod.mk.injEq]
+        at he12
+      have huv : (u, v) ∉ g.edges ∧ (v, u) ∉ g.edges := by
+        rcases pre.2.2.2.2.2.2.2.2.2 with ⟨-, -, h3, h4⟩ | hne
+        · exact ⟨h3, h4⟩
+        · exact absurd rfl hne
+      rcases he12 with hef | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+      · exact mgp_edges_disj mgp hf'f hf' hfg hef' hef
+      · exact huv.2 ⟨f', hf', hef'⟩
+      · exact huv.1 ⟨f', hf', hef'⟩
+    · have hE := split_face_edges_f12_f21 hpsf hsplit hvsnil
+      obtain ⟨p, q⟩ := e
+      rw [hE] at he12
+      simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff, Prod.mk.injEq]
+        at he12
+      rcases he12 with ((hef | h) | h) | h
+      · exact mgp_edges_disj mgp hf'f hf' hfg hef' hef
+      · rcases h with ⟨rfl, -⟩ | ⟨-, rfl⟩ | ⟨rfl, -⟩ | ⟨-, rfl⟩
+        · exact hcontra1 (head!_mem hvsnil) hef'
+        · exact hcontra2 (head!_mem hvsnil) hef'
+        · exact hcontra1 (getLast!_mem hvsnil) hef'
+        · exact hcontra2 (getLast!_mem hvsnil) hef'
+      · exact hcontra1 (in_Edges_in_set h).1 hef'
+      · exact hcontra1 (List.mem_reverse.mp (in_Edges_in_set h).1) hef'
+  -- assemble: case split on whether each face is new or old
+  intro F hF F' hF' hFF' e heF heF'
+  have hFd := (set_faces_splitFace mgp hfg pre FDG F).mp hF
+  have hF'd := (set_faces_splitFace mgp hfg pre FDG F').mp hF'
+  rcases hFd with hFd | hFd | ⟨hFold, hFf⟩ <;> rcases hF'd with hF'd | hF'd | ⟨hF'old, hF'f⟩
+  · subst F; subst F'; exact absurd rfl hFF'
+  · subst F; subst F'; exact h12 e heF heF'
+  · subst F
+    have hcon : e ∈ (f₁.edges ∪ f₂.edges) ∩ F'.edges := ⟨Set.mem_union_left _ heF, heF'⟩
+    rw [hold F' hF'old hF'f] at hcon
+    exact (Set.mem_empty_iff_false _).mp hcon
+  · subst F; subst F'; exact h21 e heF heF'
+  · subst F; subst F'; exact absurd rfl hFF'
+  · subst F
+    have hcon : e ∈ (f₁.edges ∪ f₂.edges) ∩ F'.edges := ⟨Set.mem_union_right _ heF, heF'⟩
+    rw [hold F' hF'old hF'f] at hcon
+    exact (Set.mem_empty_iff_false _).mp hcon
+  · subst F'
+    have hcon : e ∈ (f₁.edges ∪ f₂.edges) ∩ F.edges := ⟨Set.mem_union_left _ heF', heF⟩
+    rw [hold F hFold hFf] at hcon
+    exact (Set.mem_empty_iff_false _).mp hcon
+  · subst F'
+    have hcon : e ∈ (f₁.edges ∪ f₂.edges) ∩ F.edges := ⟨Set.mem_union_right _ heF', heF⟩
+    rw [hold F hFold hFf] at hcon
+    exact (Set.mem_empty_iff_false _).mp hcon
+  · exact disj F hFold F' hF'old hFF' e heF heF'
+
+/-- Invariants.thy: splitFace_edges_disj2 -/
+theorem splitFace_edges_disj2 {g : Graph} {u v : Vertex} {f : Face} {vs : List Vertex}
+    (mgp : minGraphProps g) (pre : pre_splitFace g u v f vs) :
+    edges_disj (splitFace g u v f vs).2.2 :=
+  splitFace_edge_disj mgp pre rfl
+
 /-- Invariants.thy: help (1) -/
 theorem ne_head!_of_not_mem [Inhabited α] {xs : List α} {x : α} (hxs : xs ≠ [])
     (hx : x ∉ xs) : x ≠ xs.head! :=
