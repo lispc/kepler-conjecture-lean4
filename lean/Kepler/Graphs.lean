@@ -34,3 +34,5 @@ import Kepler.Graphs.GeneratorProps
 import Kepler.Graphs.TameEnumProps
 import Kepler.Graphs.RelativeCompleteness
 import Kepler.Graphs.Worklist
+import Kepler.Graphs.CertCheck
+import Kepler.Graphs.CertTri
