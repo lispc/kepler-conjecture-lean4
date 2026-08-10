@@ -10,24 +10,23 @@ Source: `reference/afp-flyspeck-tame/Invariants.thy`
 
 Conventions follow `InvariantsA.lean` / `InvariantsB.lean`.
 
-Porting status (second pass): ported are the `makeFaceFinal` subsection
-(1913–2063, complete), `subdivFace'_holds_minGraphProps` (2066),
-`FaceDivsionGraph_one_final_but` (2106), `one_final_but_makeFaceFinal` (2320),
-`one_final_subdivFace'` (2340), `neighbors_edges` (2419), `no_self_edges`
-(2434), `duplicateEdge_is_duplicateEdge_eq` (2442),
-`incrIndexList_less_eq` / `incrIndexList_less` (2471–2481), and the
-increasing-properties subsection (2631–2775: `subdivFace'_incr`,
-`splitFace_incr_faces`, `subdivFace'_incr_faces`, `two_faces_subdivFace'`).
+Porting status: complete. All of block C is ported: the `makeFaceFinal`
+subsection (1913–2063), the `subdivFace'` subsection (2064–2497), the `Seed`
+subsection (2498–2628), the increasing-properties subsection (2629–2775) and
+the main invariant theorems (2776–2827).
 
-Still to port (continuation): the `Seed` subsection (2483–2547;
-`Seed_holds_facesAt_distinct`/`faces_distinct` need the unported ListAux
-lemmas `fst/snd_splitAt_upt`, `fst/snd_splitAt_rev`, `upt_conv_Cons`),
-`pre_subdivFace_indexToVertexList` (2550), `next_plane0_via_subdivFace'`
-(2678), `next_plane0_incr` (2703), `next_plane0_incr_faces` (2753), and the
-main theorems `inv_genPoly` (2778) and `inv_inv_next_plane0` (2817), which
-depend on the above. (`inv_inv_next_plane0`: this project's `invariant`
-takes `P : Graph → Bool` while `inv` is a `Prop`, so use the unfolded form
-`∀ g g', g' ∈ next_plane0 p g → inv g → inv g'` with a comment.)
+Notes on deviations from the source:
+- `MakeFaceFinal_edges_sym` is proved via `edges_makeFaceFinal` (the source
+  unfolds the definitions instead).
+- `inv_inv_next_plane0`: this project's `invariant` (`TameProps.lean`) takes
+  `P : Graph → Bool` while `inv` is a `Prop`, so the statement is the unfolded
+  invariance form `∀ g g', g' ∈ next_plane0 p g → inv g → inv g'`
+  (definitionally Isabelle's `invariant inv next_plane0_p`).
+- Auxiliary lemmas: `mem_replace_iff` (ListAux.thy `replace6`; a copy of the
+  private `mem_replace_of_nodup` in `InvariantsB.lean`), `facesAt_makeFaceFinal`,
+  `filter_replace_singleton_of_false`, `is_nextElem_rev_aux`,
+  `seed_facesAt`, `normFace_seed_final/nonfinal`, `seed_normFaces_nodup`.
+  `Edges_if` is the `(input)` abbreviation of the source, made a private def.
 -/
 import Kepler.Graphs.InvariantsB
 
@@ -943,5 +942,481 @@ theorem duplicateEdge_is_duplicateEdge_eq {g : Graph} {f : Face} {a b : Vertex}
   · rintro (⟨hab, hnab, hnba⟩ | ⟨hba, hnba, hnab⟩)
     · exact aux hab hnab hnba
     · exact aux (minGraphProps10 mgp hba) hnab hnba
+
+
+/-- Invariants.thy: pre_subdivFace_indexToVertexList -/
+theorem pre_subdivFace_indexToVertexList {g : Graph} {f : Face} {v : Vertex}
+    {i : Nat} {e : List Nat}
+    (mgp : minGraphProps g) (hf : f ∈ nonFinals g) (hv : v ∈ f.vertices)
+    (he : e ∈ enumerator i f.vertices.length)
+    (containsNot : containsDuplicateEdge g f v e ≠ true) (hi : 2 < i) :
+    pre_subdivFace g f v (indexToVertexList f v e) := by
+  have le : e.length = i := enumerator_length2 he hi
+  have hfg : f ∈ g.faces := (List.mem_filter.mp hf).1
+  have hnf : f.final = false := Bool.eq_false_iff.mpr (by
+    have h := (List.mem_filter.mp hf).2
+    intro hf'
+    rw [hf'] at h
+    exact Bool.noConfusion h)
+  have le_vf : 2 < f.vertices.length := minGraphProps2 mgp hfg
+  have dist_f : f.vertices.Nodup := minGraphProps3 mgp hfg
+  have hincr : incrIndexList e e.length f.vertices.length := by
+    have h := enumerator_correctness hi (by omega) he
+    rwa [← le] at h
+  have hface : pre_subdivFace_face f v (indexToVertexList f v e) :=
+    indexToVertexList_pre_subdivFace_face hnf dist_f hv (by omega) hincr
+  have hn2 : indexToVertexList f v e = natToVertexList v f e :=
+    indexToVertexList_natToVertexList_eq dist_f hv
+      (fun x hx => enumerator_bound he (by omega) hx) (enumerator_not_empty he)
+      (enumerator_hd he)
+  refine ⟨hface, ?_⟩
+  rw [hn2]
+  rintro ⟨j, hj, hmatch⟩
+  rw [natToVertexList_length hincr] at hj
+  have containsNot' : ¬ containsDuplicateEdge' g f v e :=
+    fun h => containsNot ((containsDuplicateEdge_eq g f v e).mpr h)
+  by_cases hj0 : j = 0
+  · subst hj0
+    have e0 := natToVertexList_nth_0 (v := v) hincr (by omega)
+    have e1 := natToVertexList_nth_Suc (v := v) hincr (n := 0) (by omega)
+    rw [e0] at hmatch
+    by_cases heq : e[0]! = e[1]!
+    · rw [if_pos heq] at e1
+      rw [e1] at hmatch
+      exact hmatch
+    · rw [if_neg heq] at e1
+      rw [e1] at hmatch
+      have hlt : e[0]! < e[1]! := incrIndexList_less hincr (by omega) heq
+      have hdup : duplicateEdge g f (f.nextVertices e[0]! v)
+          (f.nextVertices e[1]! v) = true :=
+        (duplicateEdge_is_duplicateEdge_eq mgp hfg (nextVertices_in_face hv _)
+          (nextVertices_in_face hv _)).mpr hmatch
+      exact containsNot' ⟨by omega, Or.inr ⟨hdup, hlt⟩⟩
+  · have hj' : j - 1 + 1 = j := by omega
+    have e1 := natToVertexList_nth_Suc (v := v) hincr (n := j - 1) (by omega)
+    rw [hj'] at e1
+    have e2 := natToVertexList_nth_Suc (v := v) hincr (n := j) (by omega)
+    rw [e1] at hmatch
+    by_cases heq1 : e[j - 1]! = e[j]!
+    · rw [if_pos heq1] at hmatch
+      exact hmatch
+    · rw [if_neg heq1] at hmatch
+      by_cases heq2 : e[j]! = e[j + 1]!
+      · rw [if_pos heq2] at e2
+        rw [e2] at hmatch
+        exact hmatch
+      · rw [if_neg heq2] at e2
+        rw [e2] at hmatch
+        have hlt1 : e[j - 1]! < e[j]! := by
+          have h := incrIndexList_less (n := j - 1) hincr (by omega)
+            (by rw [hj']; exact heq1)
+          rwa [hj'] at h
+        have hlt2 : e[j]! < e[j + 1]! :=
+          incrIndexList_less (n := j) hincr (by omega) heq2
+        have hj'' : j - 1 + 2 = j + 1 := by omega
+        have hdup : duplicateEdge g f (f.nextVertices e[j]! v)
+            (f.nextVertices e[j + 1]! v) = true :=
+          (duplicateEdge_is_duplicateEdge_eq mgp hfg (nextVertices_in_face hv _)
+            (nextVertices_in_face hv _)).mpr hmatch
+        have hcd : containsDuplicateEdge' g f v e := by
+          refine ⟨by omega, Or.inl ⟨j - 1, by omega, ?_, ?_, ?_⟩⟩
+          · rw [hj', hj'']
+            exact hdup
+          · rw [hj']
+            exact hlt1
+          · rw [hj', hj'']
+            exact hlt2
+        exact containsNot' hcd
+
+/-- Invariants.thy: next_plane0_via_subdivFace' -/
+theorem next_plane0_via_subdivFace' {P : Graph → Graph → Prop} {p : Nat} {g g' : Graph}
+    (mgp : minGraphProps g) (gg' : g' ∈ next_plane0 p g)
+    (hP : ∀ (f : Face) (v' v : Vertex) (n : Nat) (g : Graph) (ovs : List (Option Vertex)),
+      minGraphProps g → pre_subdivFace' g f v' v n ovs → f ∈ g.faces →
+        P g (subdivFace' g f v n ovs)) :
+    P g g' := by
+  have hfin : g.final ≠ true := by
+    intro h
+    unfold next_plane0 at gg'
+    rw [if_pos h] at gg'
+    exact absurd gg' List.not_mem_nil
+  unfold next_plane0 at gg'
+  rw [if_neg hfin] at gg'
+  simp only [List.mem_flatMap] at gg'
+  obtain ⟨f, hf, v, hv, i, hi, hg'⟩ := gg'
+  have hi2 : 2 < i := by
+    rw [List.mem_range'] at hi
+    omega
+  have hg'' : g' ∈ (((enumerator i f.vertices.length).filter
+      (fun is => !containsDuplicateEdge g f v is)).map (indexToVertexList f v)).map
+      (subdivFace g f) := hg'
+  simp only [List.mem_map, List.mem_filter] at hg''
+  obtain ⟨is, ⟨e, ⟨he, hce⟩, hie⟩, hsub⟩ := hg''
+  have containsNot : containsDuplicateEdge g f v e ≠ true := by
+    intro h
+    rw [h] at hce
+    exact Bool.noConfusion hce
+  have hfg : f ∈ g.faces := (List.mem_filter.mp hf).1
+  have pre_add := pre_subdivFace_indexToVertexList mgp hf hv he containsNot hi2
+  have pre_is : pre_subdivFace g f v is := hie ▸ pre_add
+  have hne : is ≠ [] :=
+    List.ne_nil_of_length_pos (by have h2 := pre_is.1.2.2.2.2.2.2.2.1; omega)
+  have pre_addSnd : pre_subdivFace' g f v v 0 is.tail :=
+    pre_subdivFace_pre_subdivFace' hv ((List.cons_head!_tail hne).symm ▸ pre_is)
+  have e : g' = subdivFace' g f v 0 is.tail := by
+    rw [← hsub]
+    exact subdivFace_subdivFace'_eq pre_is
+  rw [e]
+  exact hP f v v 0 g is.tail mgp pre_addSnd hfg
+
+/-- Invariants.thy: next_plane0_incr -/
+theorem next_plane0_incr {P Q : Graph → Graph → Prop} {p : Nat} {g g' : Graph}
+    (Ptrans : ∀ x y z, Q x y → P y z → P x z)
+    (mkFin : ∀ f g, f ∈ g.faces → f.final = false → P g (makeFaceFinal f g))
+    (fdg_incr : ∀ g u v f vs, pre_splitFace g u v f vs →
+      Q g (splitFace g u v f vs).2.2)
+    (mgp : minGraphProps g) (gg' : g' ∈ next_plane0 p g) : P g g' :=
+  next_plane0_via_subdivFace' mgp gg' fun f v' v n g ovs hmgp hpre hf =>
+    subdivFace'_incr Ptrans mkFin fdg_incr hpre hmgp hf
+
+/-- Invariants.thy: next_plane0_incr_faces -/
+theorem next_plane0_incr_faces {p : Nat} {g g' : Graph}
+    (mgp : minGraphProps g) (gg' : g' ∈ next_plane0 p g) :
+    (finals g').length = (finals g).length + 1 ∧
+      (nonFinals g).length - 1 ≤ (nonFinals g').length :=
+  next_plane0_incr
+    (P := fun g g' =>
+      (finals g').length = (finals g).length + 1 ∧
+        (nonFinals g).length - 1 ≤ (nonFinals g').length)
+    (Q := fun g g' =>
+      finals g' = finals g ∧ (nonFinals g').length = (nonFinals g).length + 1)
+    (fun x y z hxy hyz => by
+      obtain ⟨h1, h2⟩ := hxy
+      obtain ⟨h3, h4⟩ := hyz
+      exact ⟨by rw [h3, h1], by omega⟩)
+    (fun f' g' hf' hfin' =>
+      ⟨len_finals_makeFaceFinal hf' hfin',
+        by rw [len_nonFinals_makeFaceFinal hfin' hf']⟩)
+    (fun g' u' v' f' vs' hpre => splitFace_incr_faces hpre)
+    mgp gg'
+
+/-! ### Main invariant theorems -/
+
+/-- Invariants.thy: inv_genPoly -/
+theorem inv_genPoly {g g' : Graph} {f : Face} {v : Vertex} {i : Nat}
+    (inv_g : inv g) (polygen : g' ∈ generatePolygon i v f g)
+    (hf : f ∈ nonFinals g) (hi : 2 < i) (hv : v ∈ f.vertices) : inv g' := by
+  have mgp : minGraphProps g := inv_g.1
+  have h1 : one_final g := inv_g.2.1
+  have hg'' : g' ∈ (((enumerator i f.vertices.length).filter
+      (fun is => !containsDuplicateEdge g f v is)).map (indexToVertexList f v)).map
+      (subdivFace g f) := polygen
+  simp only [List.mem_map, List.mem_filter] at hg''
+  obtain ⟨is, ⟨e, ⟨he, hce⟩, hie⟩, hsub⟩ := hg''
+  have containsNot : containsDuplicateEdge g f v e ≠ true := by
+    intro h
+    rw [h] at hce
+    exact Bool.noConfusion hce
+  have hfg : f ∈ g.faces := (List.mem_filter.mp hf).1
+  have pre_add := pre_subdivFace_indexToVertexList mgp hf hv he containsNot hi
+  have pre_is : pre_subdivFace g f v is := hie ▸ pre_add
+  have hne : is ≠ [] :=
+    List.ne_nil_of_length_pos (by have h2 := pre_is.1.2.2.2.2.2.2.2.1; omega)
+  have pre_addSnd : pre_subdivFace' g f v v 0 is.tail :=
+    pre_subdivFace_pre_subdivFace' hv ((List.cons_head!_tail hne).symm ▸ pre_is)
+  have e : g' = subdivFace' g f v 0 is.tail := by
+    rw [← hsub]
+    exact subdivFace_subdivFace'_eq pre_is
+  refine ⟨?_, ?_, ?_⟩
+  · rw [e]
+    exact subdivFace'_holds_minGraphProps pre_addSnd hfg mgp
+  · rw [e]
+    exact one_final_subdivFace' pre_addSnd mgp hfg (one_final_antimono h1)
+  · rw [e]
+    exact two_faces_subdivFace' pre_addSnd mgp hfg (inv_two_faces inv_g)
+
+/-- Invariants.thy: inv_inv_next_plane0. NB: this project's `invariant`
+(`TameProps.lean`) takes `P : Graph → Bool` while `inv` is a `Prop`, so the
+statement is the unfolded invariance form `∀ g g', g' ∈ next_plane0 p g →
+inv g → inv g'` (definitionally the same as Isabelle's `invariant inv
+next_plane0_p`). -/
+theorem inv_inv_next_plane0 {p : Nat} :
+    ∀ g g', g' ∈ next_plane0 p g → inv g → inv g' := by
+  intro g g' hg' hinv
+  by_cases hfin : g.final = true
+  · unfold next_plane0 at hg'
+    rw [if_pos hfin] at hg'
+    exact absurd hg' List.not_mem_nil
+  · unfold next_plane0 at hg'
+    rw [if_neg hfin] at hg'
+    simp only [List.mem_flatMap] at hg'
+    obtain ⟨f, hf, v, hv, i, hi, hg''⟩ := hg'
+    have hi2 : 2 < i := by
+      rw [List.mem_range'] at hi
+      omega
+    exact inv_genPoly hinv hg'' hf hi2 hv
+
+/-! ### Invariants of `Seed` -/
+
+/-- Invariants.thy: minVertex_zero1 -/
+theorem minVertex_zero1 {z : Nat} : minVertex (Face.mk (List.range (z + 1)) true) = 0 := by
+  show min_list (List.range (z + 1)) = 0
+  rw [List.range_eq_range']
+  have h : List.range' 0 (z + 1) = 0 :: List.range' 1 z :=
+    upt_conv_Cons (i := 0) (j := z + 1) (by omega)
+  rw [h]
+  simp only [min_list]
+  by_cases hz : (List.range' 1 z).isEmpty = true
+  · rw [if_pos hz]
+  · rw [if_neg hz]
+    omega
+
+/-- Invariants.thy: minVertex_zero2 -/
+theorem minVertex_zero2 {z : Nat} :
+    minVertex (Face.mk (List.range (z + 1)).reverse false) = 0 := by
+  show min_list (List.range (z + 1)).reverse = 0
+  induction z with
+  | zero => rfl
+  | succ z ih =>
+    rw [List.range_succ, List.reverse_append]
+    show min_list ([z + 1] ++ (List.range (z + 1)).reverse) = 0
+    rw [show [z + 1] ++ (List.range (z + 1)).reverse =
+        (z + 1) :: (List.range (z + 1)).reverse from rfl]
+    simp only [min_list]
+    have hne : ((List.range (z + 1)).reverse).isEmpty = false := by
+      cases hr : (List.range (z + 1)).reverse with
+      | nil =>
+        have h2 := congrArg List.reverse hr
+        rw [List.reverse_reverse, List.reverse_nil] at h2
+        rw [List.range_eq_nil] at h2
+        omega
+      | cons x xs => rfl
+    rw [if_neg (by simp [hne]), ih]
+    omega
+
+/-- Invariants.thy: Seed_holds_minGraphProps' -/
+theorem Seed_holds_minGraphProps' {p : Nat} : minGraphProps' (Seed p) := by
+  intro f hf
+  have hf' : f ∈ [Face.mk (List.range (p + 3)) true,
+      Face.mk (List.range (p + 3)).reverse false] := hf
+  simp only [List.mem_cons, List.mem_singleton, List.not_mem_nil, or_false] at hf'
+  rcases hf' with rfl | rfl
+  · exact ⟨by rw [List.length_range]; omega, List.nodup_range⟩
+  · exact ⟨by rw [List.length_reverse, List.length_range]; omega,
+      nodup_reverse.mpr List.nodup_range⟩
+
+/-- Auxiliary: `facesAt` of the `Seed` wheel at an in-range vertex. -/
+private theorem seed_facesAt {p : Nat} {v : Vertex} (hlt : v < p + 3) :
+    (Seed p).facesAt v =
+      [Face.mk (List.range (p + 3)) true, Face.mk (List.range (p + 3)).reverse false] := by
+  show (List.replicate (p + 3) _).getD v [] = _
+  rw [List.getD_eq_getElem?_getD, List.getElem?_replicate, if_pos hlt]
+  rfl
+
+/-- Invariants.thy: Seed_holds_facesAt_eq -/
+theorem Seed_holds_facesAt_eq {p : Nat} : facesAt_eq (Seed p) := by
+  intro v hv f
+  have hlt : v < p + 3 := List.mem_range.mp hv
+  rw [seed_facesAt hlt]
+  have hface : (Seed p).faces =
+      [Face.mk (List.range (p + 3)) true, Face.mk (List.range (p + 3)).reverse false] := rfl
+  rw [hface]
+  simp only [List.mem_cons, List.mem_singleton, List.not_mem_nil, or_false]
+  constructor
+  · rintro (rfl | rfl)
+    · exact ⟨Or.inl rfl, List.mem_range.mpr hlt⟩
+    · exact ⟨Or.inr rfl, List.mem_reverse.mpr (List.mem_range.mpr hlt)⟩
+  · exact And.left
+
+/-- Auxiliary: `is_nextElem` transfers to the reversed list with swapped
+endpoints. -/
+private theorem is_nextElem_rev_aux [Inhabited α] {a b : α} {vs : List α}
+    (h : is_nextElem vs a b) : is_nextElem vs.reverse b a := by
+  rcases h with h | ⟨hne, h1, h2⟩
+  · exact Or.inl (is_sublist_rev.mpr h)
+  · refine Or.inr ⟨?_, by rw [getLast!_reverse]; exact h2,
+      by rw [head!_reverse]; exact h1⟩
+    intro hr
+    rw [List.reverse_eq_nil_iff] at hr
+    exact hne hr
+
+/-- Invariants.thy: Seed_holds_faces_subset -/
+theorem Seed_holds_faces_subset {p : Nat} : faces_subset (Seed p) := by
+  intro f hf v hv
+  have hf' : f ∈ [Face.mk (List.range (p + 3)) true,
+      Face.mk (List.range (p + 3)).reverse false] := hf
+  simp only [List.mem_cons, List.mem_singleton, List.not_mem_nil, or_false] at hf'
+  rcases hf' with rfl | rfl
+  · exact hv
+  · exact List.mem_reverse.mp hv
+
+/-- Invariants.thy: Seed_holds_edges_sym -/
+theorem Seed_holds_edges_sym {p : Nat} : edges_sym (Seed p) := by
+  intro a b hab
+  obtain ⟨f, hf, he⟩ := hab
+  have hf' : f ∈ [Face.mk (List.range (p + 3)) true,
+      Face.mk (List.range (p + 3)).reverse false] := hf
+  simp only [List.mem_cons, List.mem_singleton, List.not_mem_nil, or_false] at hf'
+  have hd2 : (List.range (p + 3)).reverse.Nodup := nodup_reverse.mpr List.nodup_range
+  rcases hf' with rfl | rfl
+  · refine ⟨Face.mk (List.range (p + 3)).reverse false, ?_, ?_⟩
+    · show Face.mk (List.range (p + 3)).reverse false ∈
+        [Face.mk (List.range (p + 3)) true, Face.mk (List.range (p + 3)).reverse false]
+      exact List.mem_cons_of_mem _ (List.mem_singleton_self _)
+    · exact (is_nextElem_edges_eq hd2).mpr
+        (is_nextElem_rev_aux ((is_nextElem_edges_eq List.nodup_range).mp he))
+  · refine ⟨Face.mk (List.range (p + 3)) true, ?_, ?_⟩
+    · show Face.mk (List.range (p + 3)) true ∈
+        [Face.mk (List.range (p + 3)) true, Face.mk (List.range (p + 3)).reverse false]
+      exact List.mem_cons_self
+    · have h3 := is_nextElem_rev_aux ((is_nextElem_edges_eq hd2).mp he)
+      rw [List.reverse_reverse] at h3
+      exact (is_nextElem_edges_eq List.nodup_range).mpr h3
+
+/-- Invariants.thy: Seed_holds_edges_disj -/
+theorem Seed_holds_edges_disj {p : Nat} : edges_disj (Seed p) := by
+  intro f hf f' hf' hne e he
+  have hf2 : f ∈ [Face.mk (List.range (p + 3)) true,
+      Face.mk (List.range (p + 3)).reverse false] := hf
+  have hf3 : f' ∈ [Face.mk (List.range (p + 3)) true,
+      Face.mk (List.range (p + 3)).reverse false] := hf'
+  simp only [List.mem_cons, List.mem_singleton, List.not_mem_nil, or_false] at hf2 hf3
+  have hd1 : (List.range (p + 3)).Nodup := List.nodup_range
+  have hd2 : (List.range (p + 3)).reverse.Nodup := nodup_reverse.mpr List.nodup_range
+  rcases hf2 with rfl | rfl <;> rcases hf3 with rfl | rfl
+  · exact absurd rfl hne
+  · intro h2
+    have h1 := (is_nextElem_edges_eq hd1).mp he
+    have h3 := is_nextElem_rev_aux ((is_nextElem_edges_eq hd2).mp h2)
+    rw [List.reverse_reverse] at h3
+    have hc := is_nextElem_circ hd1 h1 h3
+    rw [List.length_range] at hc
+    omega
+  · intro h2
+    have h1 := (is_nextElem_edges_eq hd1).mp h2
+    have h3 := is_nextElem_rev_aux ((is_nextElem_edges_eq hd2).mp he)
+    rw [List.reverse_reverse] at h3
+    have hc := is_nextElem_circ hd1 h1 h3
+    rw [List.length_range] at hc
+    omega
+  · exact absurd rfl hne
+
+/-- Auxiliary: normFace of the Seed wheel's final face. -/
+private theorem normFace_seed_final {p : Nat} :
+    normFace (Face.mk (List.range (p + 3)) true) = 0 :: List.range' 1 (p + 2) := by
+  show verticesFrom (Face.mk (List.range (p + 3)) true)
+      (minVertex (Face.mk (List.range (p + 3)) true)) = _
+  rw [minVertex_zero1]
+  have de : List.range (p + 3) = [] ++ 0 :: List.range' 1 (p + 2) :=
+    List.range_eq_range'.symm ▸ upt_conv_Cons (i := 0) (j := p + 3) (by omega)
+  have hsp : ([], List.range' 1 (p + 2)) = splitAt 0 (List.range (p + 3)) :=
+    splitAt_dist_ram List.nodup_range de
+  show 0 :: (splitAt 0 (List.range (p + 3))).2 ++ (splitAt 0 (List.range (p + 3))).1 =
+    0 :: List.range' 1 (p + 2)
+  rw [← hsp]
+  show (0 :: List.range' 1 (p + 2)) ++ [] = 0 :: List.range' 1 (p + 2)
+  rw [List.append_nil]
+
+/-- Auxiliary: normFace of the Seed wheel's nonfinal face. -/
+private theorem normFace_seed_nonfinal {p : Nat} :
+    normFace (Face.mk (List.range (p + 3)).reverse false) =
+      0 :: (List.range' 1 (p + 2)).reverse := by
+  show verticesFrom (Face.mk (List.range (p + 3)).reverse false)
+      (minVertex (Face.mk (List.range (p + 3)).reverse false)) = _
+  rw [minVertex_zero2]
+  have de : List.range (p + 3) = [] ++ 0 :: List.range' 1 (p + 2) :=
+    List.range_eq_range'.symm ▸ upt_conv_Cons (i := 0) (j := p + 3) (by omega)
+  have de2 : (List.range (p + 3)).reverse = (List.range' 1 (p + 2)).reverse ++ 0 :: [] := by
+    rw [de]
+    simp [List.reverse_cons]
+  have hsp2 : ((List.range' 1 (p + 2)).reverse, []) =
+      splitAt 0 (List.range (p + 3)).reverse :=
+    splitAt_dist_ram (nodup_reverse.mpr List.nodup_range) de2
+  show 0 :: (splitAt 0 (List.range (p + 3)).reverse).2 ++
+      (splitAt 0 (List.range (p + 3)).reverse).1 = _
+  rw [← hsp2]
+  rfl
+
+/-- Auxiliary: the two normFaces of the Seed wheel are distinct. -/
+private theorem seed_normFaces_nodup {p : Nat} :
+    (normFaces [Face.mk (List.range (p + 3)) true,
+      Face.mk (List.range (p + 3)).reverse false]).Nodup := by
+  simp only [normFaces, List.map_cons, List.map_nil]
+  rw [normFace_seed_final, normFace_seed_nonfinal]
+  apply List.nodup_cons.mpr
+  refine ⟨?_, List.nodup_singleton _⟩
+  simp only [List.mem_singleton]
+  intro h
+  have e2 := congrArg List.getLast! h
+  have gL : (0 :: List.range' 1 (p + 2)).getLast! = p + 2 := by
+    have hne : List.range' 1 (p + 2) ≠ [] := by
+      rw [List.range'_ne_nil_iff]
+      omega
+    rw [getLast!_cons_of_ne_nil hne, show p + 2 = (p + 1) + 1 from rfl,
+      List.range'_concat, getLast!_concat]
+    omega
+  have gR : (0 :: (List.range' 1 (p + 2)).reverse).getLast! = 1 := by
+    have hne : (List.range' 1 (p + 2)).reverse ≠ [] := by
+      intro hrw
+      rw [List.reverse_eq_nil_iff] at hrw
+      rw [List.range'_eq_nil_iff] at hrw
+      omega
+    rw [getLast!_cons_of_ne_nil hne, getLast!_reverse]
+    have hc : List.range' 1 (p + 2) = 1 :: List.range' 2 (p + 1) :=
+      upt_conv_Cons (i := 1) (j := p + 3) (by omega)
+    rw [hc, List.head!_cons]
+  rw [gL, gR] at e2
+  omega
+
+/-- Invariants.thy: Seed_holds_facesAt_distinct -/
+theorem Seed_holds_facesAt_distinct {p : Nat} : facesAt_distinct (Seed p) := by
+  intro v hv
+  have hlt : v < p + 3 := List.mem_range.mp hv
+  rw [seed_facesAt hlt]
+  exact seed_normFaces_nodup
+
+/-- Invariants.thy: Seed_holds_faces_distinct -/
+theorem Seed_holds_faces_distinct {p : Nat} : faces_distinct (Seed p) := by
+  show (normFaces [Face.mk (List.range (p + 3)) true,
+      Face.mk (List.range (p + 3)).reverse false]).Nodup
+  exact seed_normFaces_nodup
+
+/-- Invariants.thy: Seed_holds_faceListAt_len -/
+theorem Seed_holds_faceListAt_len {p : Nat} : faceListAt_len (Seed p) := by
+  show (List.replicate (p + 3) _).length = p + 3
+  rw [List.length_replicate]
+
+/-- Invariants.thy: face_face_op_Seed -/
+theorem face_face_op_Seed {p : Nat} : face_face_op (Seed p) := by
+  intro h
+  exact absurd rfl h
+
+/-- Invariants.thy: one_final_Seed -/
+theorem one_final_Seed {p : Nat} : one_final (Seed p) := by
+  intro f hf hfin a b hab _
+  have hf' : f ∈ [Face.mk (List.range (p + 3)) true,
+      Face.mk (List.range (p + 3)).reverse false] := hf
+  simp only [List.mem_cons, List.mem_singleton, List.not_mem_nil, or_false] at hf'
+  rcases hf' with rfl | rfl
+  · exact Bool.noConfusion hfin
+  · refine Or.inr ⟨Face.mk (List.range (p + 3)) true, ?_, rfl, ?_⟩
+    · show Face.mk (List.range (p + 3)) true ∈
+        [Face.mk (List.range (p + 3)) true, Face.mk (List.range (p + 3)).reverse false]
+      exact List.mem_cons_self
+    · have hd2 : (List.range (p + 3)).reverse.Nodup := nodup_reverse.mpr List.nodup_range
+      have h3 := is_nextElem_rev_aux ((is_nextElem_edges_eq hd2).mp hab)
+      rw [List.reverse_reverse] at h3
+      exact (is_nextElem_edges_eq List.nodup_range).mpr h3
+
+/-- Invariants.thy: two_face_Seed -/
+theorem two_face_Seed {p : Nat} : 2 ≤ (Seed p).faces.length :=
+  Nat.le_refl _
+
+/-- Invariants.thy: inv_Seed -/
+theorem inv_Seed {p : Nat} : inv (Seed p) :=
+  ⟨⟨Seed_holds_minGraphProps', Seed_holds_facesAt_eq, Seed_holds_faceListAt_len,
+    Seed_holds_facesAt_distinct, Seed_holds_faces_distinct, Seed_holds_faces_subset,
+    Seed_holds_edges_sym, Seed_holds_edges_disj, face_face_op_Seed⟩,
+    one_final_Seed, two_face_Seed⟩
 
 end Kepler.Graphs

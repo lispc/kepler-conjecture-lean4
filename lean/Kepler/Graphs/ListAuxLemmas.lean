@@ -1073,4 +1073,89 @@ theorem replace_distinct [BEq α] [LawfulBEq α] {fs newfs : List α} {oldf : α
 
 end DistinctReplace
 
+/-! ### `splitAt` over ranges and reversals (for the `Seed` invariants) -/
+
+section SplitAtRange
+
+/-- ListAux.thy: upt_conv_Cons (`upt i j = [i..<j]` is `List.range' i (j - i)`). -/
+theorem upt_conv_Cons {i j : Nat} (h : i < j) :
+    List.range' i (j - i) = i :: List.range' (i + 1) (j - i - 1) :=
+  List.range'_eq_cons_iff.mpr ⟨rfl, by omega, by rw [Nat.add_comm i 1]⟩
+
+/-- ListAux.thy: fst_splitAt_upt -/
+theorem fst_splitAt_upt {i j k : Nat} (h1 : j ≤ i) (h2 : i < k) :
+    (splitAt i (List.range' j (k - j))).1 = List.range' j (i - j) := by
+  have hd : (List.range' j (k - j)).Nodup := List.nodup_range'
+  have hde : List.range' j (k - j) =
+      List.range' j (i - j) ++ i :: List.range' (i + 1) (k - i - 1) := by
+    rw [show k - j = (i - j) + (k - i) from by omega, ← List.range'_append,
+      show j + 1 * (i - j) = i from by omega,
+      upt_conv_Cons (show i < k from by omega)]
+  have h := splitAt_dist_ram hd hde
+  exact (congrArg Prod.fst h).symm
+
+/-- ListAux.thy: snd_splitAt_upt -/
+theorem snd_splitAt_upt {i j k : Nat} (h1 : j ≤ i) (h2 : i < k) :
+    (splitAt i (List.range' j (k - j))).2 = List.range' (i + 1) (k - i - 1) := by
+  have hd : (List.range' j (k - j)).Nodup := List.nodup_range'
+  have hde : List.range' j (k - j) =
+      List.range' j (i - j) ++ i :: List.range' (i + 1) (k - i - 1) := by
+    rw [show k - j = (i - j) + (k - i) from by omega, ← List.range'_append,
+      show j + 1 * (i - j) = i from by omega,
+      upt_conv_Cons (show i < k from by omega)]
+  have h := splitAt_dist_ram hd hde
+  exact (congrArg Prod.snd h).symm
+
+/-- Auxiliary (Mathlib `List.nodup_reverse`), reproved here to keep this
+file's imports minimal. -/
+theorem nodup_reverse {xs : List α} : xs.reverse.Nodup ↔ xs.Nodup := by
+  induction xs with
+  | nil => exact Iff.rfl
+  | cons x xs ih =>
+    simp only [List.reverse_cons, List.nodup_cons]
+    constructor
+    · intro h
+      obtain ⟨h2, -, h3⟩ := List.nodup_append.mp h
+      refine ⟨?_, ih.mp h2⟩
+      intro hx
+      exact h3 x (List.mem_reverse.mpr hx) x List.mem_cons_self rfl
+    · rintro ⟨hx, hd⟩
+      refine List.nodup_append.mpr ⟨ih.mpr hd,
+        List.nodup_cons.mpr ⟨List.not_mem_nil, List.nodup_nil⟩, ?_⟩
+      intro a ha b hb
+      rw [List.mem_singleton] at hb
+      subst hb
+      intro hab
+      exact hx (List.mem_reverse.mp (hab ▸ ha))
+
+/-- ListAux.thy: fst_splitAt_rev -/
+theorem fst_splitAt_rev [BEq α] [LawfulBEq α] {xs : List α} {x : α}
+    (hd : xs.Nodup) (hx : x ∈ xs) :
+    (splitAt x xs.reverse).1 = (splitAt x xs).2.reverse := by
+  obtain ⟨a, b, hab⟩ := List.append_of_mem hx
+  have hsp : (a, b) = splitAt x xs := splitAt_dist_ram hd hab
+  have hdn : xs.reverse.Nodup := nodup_reverse.mpr hd
+  have hrev : xs.reverse = b.reverse ++ x :: a.reverse := by
+    rw [hab]
+    simp [List.reverse_append, List.reverse_cons, List.append_assoc]
+  have hsp2 : (b.reverse, a.reverse) = splitAt x xs.reverse :=
+    splitAt_dist_ram hdn hrev
+  rw [← hsp, ← hsp2]
+
+/-- ListAux.thy: snd_splitAt_rev -/
+theorem snd_splitAt_rev [BEq α] [LawfulBEq α] {xs : List α} {x : α}
+    (hd : xs.Nodup) (hx : x ∈ xs) :
+    (splitAt x xs.reverse).2 = (splitAt x xs).1.reverse := by
+  obtain ⟨a, b, hab⟩ := List.append_of_mem hx
+  have hsp : (a, b) = splitAt x xs := splitAt_dist_ram hd hab
+  have hdn : xs.reverse.Nodup := nodup_reverse.mpr hd
+  have hrev : xs.reverse = b.reverse ++ x :: a.reverse := by
+    rw [hab]
+    simp [List.reverse_append, List.reverse_cons, List.append_assoc]
+  have hsp2 : (b.reverse, a.reverse) = splitAt x xs.reverse :=
+    splitAt_dist_ram hdn hrev
+  rw [← hsp, ← hsp2]
+
+end SplitAtRange
+
 end Kepler.Graphs
