@@ -965,4 +965,112 @@ theorem length_filter_replace2 {P : α → Bool} {x : α} {ys xs : List α}
 
 end FilterReplace
 
+/-! ### distinct replace -/
+
+section DistinctReplace
+
+/-- ListAux.thy: distinct_set_replace (membership form of the set equality) -/
+theorem distinct_set_replace [BEq α] [LawfulBEq α] {x : α} {ys xs : List α}
+    (hd : xs.Nodup) (z : α) :
+    z ∈ replace x ys xs ↔
+      (if x ∈ xs then (z ∈ xs ∧ z ≠ x) ∨ z ∈ ys else z ∈ xs) := by
+  induction xs with
+  | nil => simp [replace]
+  | cons w ws ih =>
+    simp only [List.nodup_cons] at hd
+    by_cases hwx : w = x
+    · subst hwx
+      have h1 : replace w ys (w :: ws) = ys ++ ws := by simp [replace]
+      rw [h1, List.mem_append, if_pos List.mem_cons_self]
+      constructor
+      · rintro (h | h)
+        · exact Or.inr h
+        · exact Or.inl ⟨List.mem_cons_of_mem w h, fun e => hd.1 (e ▸ h)⟩
+      · rintro (⟨h, hne⟩ | h)
+        · rcases List.mem_cons.mp h with rfl | h
+          · exact absurd rfl hne
+          · exact Or.inr h
+        · exact Or.inl h
+    · have h1 : replace x ys (w :: ws) = w :: replace x ys ws := by simp [replace, hwx]
+      rw [h1, List.mem_cons, ih hd.2]
+      by_cases hx : x ∈ ws
+      · have hx' : x ∈ w :: ws := List.mem_cons_of_mem w hx
+        rw [if_pos hx, if_pos hx']
+        constructor
+        · rintro (rfl | (⟨h, hne⟩ | h))
+          · exact Or.inl ⟨List.mem_cons_self, hwx⟩
+          · exact Or.inl ⟨List.mem_cons_of_mem w h, hne⟩
+          · exact Or.inr h
+        · rintro (⟨h, hne⟩ | h)
+          · rcases List.mem_cons.mp h with rfl | h
+            · exact Or.inl rfl
+            · exact Or.inr (Or.inl ⟨h, hne⟩)
+          · exact Or.inr (Or.inr h)
+      · have hx' : x ∉ w :: ws := fun h => hx ((List.mem_cons.mp h).resolve_left (Ne.symm hwx))
+        rw [if_neg hx, if_neg hx']
+        constructor
+        · rintro (rfl | h)
+          · exact List.mem_cons_self
+          · exact List.mem_cons_of_mem w h
+        · intro h
+          rcases List.mem_cons.mp h with rfl | h
+          · exact Or.inl rfl
+          · exact Or.inr h
+
+/-- ListAux.thy: distinct_replace -/
+theorem distinct_replace [BEq α] [LawfulBEq α] {fs newFs : List α} {oldF : α}
+    (hd : fs.Nodup) (hdn : newFs.Nodup)
+    (hsub : ∀ x ∈ fs, x ∈ newFs → x = oldF) : (replace oldF newFs fs).Nodup := by
+  induction fs with
+  | nil => simp [replace]
+  | cons f fs ih =>
+    simp only [List.nodup_cons] at hd
+    by_cases hf : f = oldF
+    · subst hf
+      have h1 : replace f newFs (f :: fs) = newFs ++ fs := by simp [replace]
+      rw [h1, List.nodup_append]
+      refine ⟨hdn, hd.2, ?_⟩
+      intro x hx y hy heq
+      subst heq
+      have hxo : x = f := hsub x (List.mem_cons_of_mem f hy) hx
+      exact hd.1 (hxo ▸ hy)
+    · have h1 : replace oldF newFs (f :: fs) = f :: replace oldF newFs fs := by
+        simp [replace, hf]
+      rw [h1, List.nodup_cons]
+      refine ⟨?_, ih hd.2 (fun x hx => hsub x (List.mem_cons_of_mem f hx))⟩
+      intro hfm
+      rcases replace5 hfm with h | h
+      · exact hd.1 h
+      · exact hf (hsub f List.mem_cons_self h)
+
+/-- ListAux.thy: replace_replace -/
+theorem replace_replace [BEq α] [LawfulBEq α] {oldf : α} {newfs xs : List α}
+    (ho : oldf ∉ newfs) (hd : xs.Nodup) :
+    replace oldf newfs (replace oldf newfs xs) = replace oldf newfs xs := by
+  induction xs with
+  | nil => rfl
+  | cons x xs ih =>
+    simp only [List.nodup_cons] at hd
+    by_cases hx : x = oldf
+    · subst hx
+      have h1 : replace x newfs (x :: xs) = newfs ++ xs := by simp [replace]
+      rw [h1, replace_append, if_neg ho, replace2 hd.1]
+    · have h2 : replace oldf newfs (x :: xs) = x :: replace oldf newfs xs := by
+        simp [replace, hx]
+      have h3 : replace oldf newfs (x :: replace oldf newfs xs) =
+          x :: replace oldf newfs (replace oldf newfs xs) := by simp [replace, hx]
+      rw [h2, h3, ih hd.2]
+
+/-- ListAux.thy: replace_distinct -/
+theorem replace_distinct [BEq α] [LawfulBEq α] {fs newfs : List α} {oldf : α}
+    (hd : fs.Nodup) (hdn : newfs.Nodup)
+    (hsub : oldf ∈ fs → ∀ x ∈ newfs, x ∈ fs → x = oldf) :
+    (replace oldf newfs fs).Nodup := by
+  by_cases ho : oldf ∈ fs
+  · exact distinct_replace hd hdn (fun x hxs hxn => hsub ho x hxn hxs)
+  · rw [replace2 ho]
+    exact hd
+
+end DistinctReplace
+
 end Kepler.Graphs

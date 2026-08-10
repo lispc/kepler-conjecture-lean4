@@ -392,6 +392,112 @@ theorem inv_finals_nonempty {g : Graph} (h : inv g) : finals g ≠ [] := by
 
 end MinGraphProps
 
+/-! ### containsDuplicateEdge -/
+
+section ContainsDuplicateEdge
+
+/-- Invariants.thy: containsUnacceptableEdgeSnd' -/
+def containsUnacceptableEdgeSnd' (N : Nat → Nat → Bool) (is : List Nat) : Prop :=
+  ∃ k : Nat, k < is.length - 2 ∧
+    N is[k + 1]! is[k + 2]! = true ∧ is[k]! < is[k + 1]! ∧ is[k + 1]! < is[k + 2]!
+
+/-- Invariants.thy: containsUnacceptableEdgeSnd_eq -/
+theorem containsUnacceptableEdgeSnd_eq (N : Nat → Nat → Bool) (v : Nat) (is : List Nat) :
+    containsUnacceptableEdgeSnd N v is = true ↔ containsUnacceptableEdgeSnd' N (v :: is) := by
+  induction is generalizing v with
+  | nil => simp [containsUnacceptableEdgeSnd, containsUnacceptableEdgeSnd']
+  | cons i is ih =>
+    cases is with
+    | nil => simp [containsUnacceptableEdgeSnd, containsUnacceptableEdgeSnd']
+    | cons i' is' =>
+      show (if v < i ∧ i < i' ∧ N i i' = true then (true : Bool)
+            else containsUnacceptableEdgeSnd N i (i' :: is')) = true ↔
+        containsUnacceptableEdgeSnd' N (v :: i :: i' :: is')
+      by_cases hc : v < i ∧ i < i' ∧ N i i' = true
+      · rw [if_pos hc]
+        constructor
+        · intro _
+          refine ⟨0, by simp, ?_, ?_, ?_⟩
+          · show N i i' = true
+            exact hc.2.2
+          · show (v :: i :: i' :: is')[0]! < (v :: i :: i' :: is')[1]!
+            simpa using hc.1
+          · show (v :: i :: i' :: is')[1]! < (v :: i :: i' :: is')[2]!
+            simpa using hc.2.1
+        · intro _
+          rfl
+      · rw [if_neg hc, ih]
+        constructor
+        · rintro ⟨k, hk, hN, h1, h2⟩
+          refine ⟨k + 1, by simp only [List.length_cons] at hk ⊢; omega, ?_, ?_, ?_⟩
+          · simpa only [List.getElem!_cons_succ] using hN
+          · simpa only [List.getElem!_cons_succ] using h1
+          · simpa only [List.getElem!_cons_succ] using h2
+        · rintro ⟨k, hk, hN, h1, h2⟩
+          cases k with
+          | zero =>
+            simp only [List.getElem!_cons_succ, List.getElem!_cons_zero] at hN h1 h2
+            exact absurd ⟨h1, h2, hN⟩ hc
+          | succ k' =>
+            refine ⟨k', by simp only [List.length_cons] at hk ⊢; omega, ?_, ?_, ?_⟩
+            · simpa only [List.getElem!_cons_succ] using hN
+            · simpa only [List.getElem!_cons_succ] using h1
+            · simpa only [List.getElem!_cons_succ] using h2
+
+/-- Plane.thy: containsDuplicateEdge' (ported here for the equivalence lemmas of
+Invariants.thy; Isabelle's Boolean coercions are rendered as `= true`). -/
+def containsDuplicateEdge' (g : Graph) (f : Face) (v : Vertex) (is : List Nat) : Prop :=
+  2 ≤ is.length ∧
+    ((∃ k : Nat, k < is.length - 2 ∧
+        duplicateEdge g f (f.nextVertices is[k + 1]! v) (f.nextVertices is[k + 2]! v) = true ∧
+        is[k]! < is[k + 1]! ∧ is[k + 1]! < is[k + 2]!) ∨
+      (duplicateEdge g f (f.nextVertices is[0]! v) (f.nextVertices is[1]! v) = true ∧
+        is[0]! < is[1]!))
+
+/-- Invariants.thy: containsDuplicateEdge_eq1 -/
+theorem containsDuplicateEdge_eq1 (g : Graph) (f : Face) (v : Vertex) (is : List Nat) :
+    containsDuplicateEdge g f v is = true ↔ containsDuplicateEdge' g f v is := by
+  cases is with
+  | nil => simp [containsDuplicateEdge, containsUnacceptableEdge, containsDuplicateEdge']
+  | cons a is =>
+    cases is with
+    | nil => simp [containsDuplicateEdge, containsUnacceptableEdge, containsDuplicateEdge']
+    | cons aa lista =>
+      simp only [containsDuplicateEdge, containsUnacceptableEdge]
+      by_cases hc : a < aa ∧
+          duplicateEdge g f (f.nextVertices a v) (f.nextVertices aa v) = true
+      · rw [if_pos hc]
+        constructor
+        · intro _
+          refine ⟨by simp, Or.inr ⟨?_, ?_⟩⟩
+          · show duplicateEdge g f (f.nextVertices (a :: aa :: lista)[0]! v)
+                (f.nextVertices (a :: aa :: lista)[1]! v) = true
+            simpa using hc.2
+          · show (a :: aa :: lista)[0]! < (a :: aa :: lista)[1]!
+            simpa using hc.1
+        · intro _
+          rfl
+      · rw [if_neg hc, containsUnacceptableEdgeSnd_eq]
+        constructor
+        · intro h
+          exact ⟨by simp, Or.inl h⟩
+        · intro h
+          obtain ⟨-, hdisj⟩ := h
+          rcases hdisj with h | ⟨hN, hlt⟩
+          · exact h
+          · simp only [List.getElem!_cons_zero, List.getElem!_cons_succ] at hN hlt
+            exact absurd ⟨hlt, hN⟩ hc
+
+/-- Invariants.thy: containsDuplicateEdge_eq. In Isabelle both sides are `bool`
+functions and extensionally equal; here `containsDuplicateEdge'` is a `Prop`
+(the Boolean coercion is rendered as `= true`), so the equality is stated
+pointwise as an `Iff`. -/
+theorem containsDuplicateEdge_eq (g : Graph) (f : Face) (v : Vertex) (is : List Nat) :
+    containsDuplicateEdge g f v is = true ↔ containsDuplicateEdge' g f v is :=
+  containsDuplicateEdge_eq1 g f v is
+
+end ContainsDuplicateEdge
+
 /-! ### replacefacesAt -/
 
 section ReplacefacesAt
@@ -417,6 +523,481 @@ theorem replacefacesAt_eq (ns : List Nat) (oldf : Face) (newfs : List Face)
     · rw [dif_neg h, if_neg h]
       exact ih _
 
+/-- Auxiliary: `getElem!` on `List.set` at the updated index. -/
+theorem getElem!_set_self {α : Type*} [Inhabited α] {l : List α} {i : Nat} {a : α}
+    (h : i < l.length) : (l.set i a)[i]! = a := by
+  rw [getElem!_pos _ i (by rw [List.length_set]; exact h), List.getElem_set_self]
+
+/-- Auxiliary: `getElem!` on `List.set` at a different index. -/
+theorem getElem!_set_ne {α : Type*} [Inhabited α] {l : List α} {i j : Nat} {a : α}
+    (h : i ≠ j) : (l.set j a)[i]! = l[i]! := by
+  rw [List.getElem!_eq_getElem?_getD, List.getElem?_set_ne (Ne.symm h),
+    List.getElem!_eq_getElem?_getD]
+
+/-- Invariants.thy: replacefacesAt2_notin -/
+theorem replacefacesAt2_notin {i : Nat} {is : List Nat} {olfF : Face} {newFs : List Face}
+    {Fss : List (List Face)} (hi : i ∉ is) :
+    (replacefacesAt2 is olfF newFs Fss)[i]! = Fss[i]! := by
+  induction is generalizing Fss with
+  | nil => rfl
+  | cons j js ih =>
+    simp only [List.mem_cons, not_or] at hi
+    simp only [replacefacesAt2]
+    by_cases hj : j < Fss.length
+    · rw [if_pos hj, ih hi.2, getElem!_set_ne hi.1]
+    · rw [if_neg hj, ih hi.2]
+
+/-- Invariants.thy: replacefacesAt2_in -/
+theorem replacefacesAt2_in {i : Nat} {is : List Nat} {olfF : Face} {newFs : List Face}
+    {Fss : List (List Face)} (hi : i ∈ is) (hd : is.Nodup) (hlt : i < Fss.length) :
+    (replacefacesAt2 is olfF newFs Fss)[i]! = replace olfF newFs Fss[i]! := by
+  revert hlt hd hi
+  induction is generalizing Fss with
+  | nil => intro hi hd hlt; simp at hi
+  | cons j js ih =>
+    intro hi hd hlt
+    simp only [List.mem_cons] at hi
+    simp only [List.nodup_cons] at hd
+    simp only [replacefacesAt2]
+    by_cases hj : j < Fss.length
+    · rw [if_pos hj]
+      rcases hi with rfl | hjs
+      · rw [replacefacesAt2_notin hd.1, getElem!_set_self hj]
+      · have hij : i ≠ j := fun e => hd.1 (e ▸ hjs)
+        rw [ih (Fss := Fss.set j (replace olfF newFs Fss[j]!)) hjs hd.2
+          (by rw [List.length_set]; exact hlt), getElem!_set_ne hij]
+    · rw [if_neg hj]
+      rcases hi with rfl | hjs
+      · exact absurd hlt hj
+      · exact ih hjs hd.2 hlt
+
+/-- Invariants.thy: distinct_replacefacesAt21 -/
+theorem distinct_replacefacesAt21 {i : Nat} {is : List Nat} {olfF : Face}
+    {newFs : List Face} {Fss : List (List Face)} (hlt : i < Fss.length) (hi : i ∈ is)
+    (hd : is.Nodup) (hF : Fss[i]!.Nodup) (hN : newFs.Nodup)
+    (hsub : ∀ x ∈ Fss[i]!, x ∈ newFs → x = olfF) :
+    ((replacefacesAt2 is olfF newFs Fss)[i]!).Nodup := by
+  rw [replacefacesAt2_in hi hd hlt]
+  exact distinct_replace hF hN hsub
+
+/-- Invariants.thy: distinct_replacefacesAt22 -/
+theorem distinct_replacefacesAt22 {i : Nat} {is : List Nat} {olfF : Face}
+    {newFs : List Face} {Fss : List (List Face)} (hlt : i < Fss.length) (hi : i ∉ is)
+    (hd : is.Nodup) (hF : Fss[i]!.Nodup) (hN : newFs.Nodup)
+    (hsub : ∀ x ∈ Fss[i]!, x ∈ newFs → x = olfF) :
+    ((replacefacesAt2 is olfF newFs Fss)[i]!).Nodup := by
+  rw [replacefacesAt2_notin hi]
+  exact hF
+
+/-- Invariants.thy: distinct_replacefacesAt2_2 -/
+theorem distinct_replacefacesAt2_2 {i : Nat} {is : List Nat} {olfF : Face}
+    {newFs : List Face} {Fss : List (List Face)} (hlt : i < Fss.length) (hd : is.Nodup)
+    (hF : Fss[i]!.Nodup) (hN : newFs.Nodup)
+    (hsub : ∀ x ∈ Fss[i]!, x ∈ newFs → x = olfF) :
+    ((replacefacesAt2 is olfF newFs Fss)[i]!).Nodup := by
+  by_cases hi : i ∈ is
+  · exact distinct_replacefacesAt21 hlt hi hd hF hN hsub
+  · exact distinct_replacefacesAt22 hlt hi hd hF hN hsub
+
+/-- Invariants.thy: replacefacesAt2_nth1 -/
+theorem replacefacesAt2_nth1 {k : Nat} {ns : List Nat} {oldf : Face} {newfs : List Face}
+    {F : List (List Face)} (hk : k ∉ ns) :
+    (replacefacesAt2 ns oldf newfs F)[k]! = F[k]! :=
+  replacefacesAt2_notin hk
+
+/-- Invariants.thy: replacefacesAt2_nth1' -/
+theorem replacefacesAt2_nth1' {k : Nat} {ns : List Nat} {oldf : Face} {newfs : List Face}
+    {F : List (List Face)} (hk : k ∈ ns) (hlt : k < F.length) (hd : ns.Nodup) :
+    (replacefacesAt2 ns oldf newfs F)[k]! = replace oldf newfs F[k]! :=
+  replacefacesAt2_in hk hd hlt
+
+/-- Invariants.thy: replacefacesAt2_nth2 -/
+theorem replacefacesAt2_nth2 {k : Nat} {oldf : Face} {newfs : List Face}
+    {F : List (List Face)} (hk : k < F.length) :
+    (replacefacesAt2 [k] oldf newfs F)[k]! = replace oldf newfs F[k]! := by
+  simp only [replacefacesAt2, if_pos hk]
+  exact getElem!_set_self hk
+
+/-- Invariants.thy: replacefacesAt2_length -/
+@[simp]
+theorem replacefacesAt2_length {nvs : List Nat} {f' : Face} {f'' : List Face}
+    {vs : List (List Face)} :
+    (replacefacesAt2 nvs f' f'' vs).length = vs.length := by
+  induction nvs generalizing vs with
+  | nil => rfl
+  | cons n ns ih =>
+    simp only [replacefacesAt2]
+    by_cases h : n < vs.length
+    · rw [if_pos h, ih, List.length_set]
+    · rw [if_neg h, ih]
+
+/-- Invariants.thy: replacefacesAt2_nth -/
+theorem replacefacesAt2_nth {k : Nat} {ns : List Nat} {oldf : Face} {newfs : List Face}
+    {F : List (List Face)} (hk : k ∈ ns) (hlt : k < F.length) (ho : oldf ∉ newfs)
+    (hF : F[k]!.Nodup) (hN : newfs.Nodup)
+    (hsub : oldf ∈ F[k]! → ∀ x ∈ newfs, x ∈ F[k]! → x = oldf) :
+    (replacefacesAt2 ns oldf newfs F)[k]! = replace oldf newfs F[k]! := by
+  revert hsub hF hlt hk
+  induction ns generalizing F with
+  | nil => intro hk hlt hF hsub; simp at hk
+  | cons n ns ih =>
+    intro hk hlt hF hsub
+    simp only [List.mem_cons] at hk
+    simp only [replacefacesAt2]
+    by_cases hn : n < F.length
+    · rw [if_pos hn]
+      by_cases hkn : k = n
+      · subst hkn
+        have hself : (F.set k (replace oldf newfs F[k]!))[k]! = replace oldf newfs F[k]! :=
+          getElem!_set_self (l := F) (a := replace oldf newfs F[k]!) hlt
+        have hsubR : oldf ∈ (F.set k (replace oldf newfs F[k]!))[k]! →
+            ∀ x ∈ newfs, x ∈ (F.set k (replace oldf newfs F[k]!))[k]! → x = oldf := by
+          intro hoR x hxn hxR
+          rw [hself] at hoR hxR
+          rw [distinct_set_replace hF oldf] at hoR
+          by_cases hoF : oldf ∈ F[k]!
+          · rw [if_pos hoF] at hoR
+            rcases hoR with ⟨-, hne⟩ | hnw
+            · exact absurd rfl hne
+            · exact absurd hnw ho
+          · rw [if_neg hoF] at hoR
+            exact absurd hoR hoF
+        by_cases hks : k ∈ ns
+        · rw [ih (F := F.set k (replace oldf newfs F[k]!)) hks
+            (by rw [List.length_set]; exact hlt)
+            (by rw [hself]; exact replace_distinct hF hN hsub) hsubR, hself,
+            replace_replace ho hF]
+        · rw [replacefacesAt2_notin hks, hself]
+      · rcases hk with rfl | hks
+        · exact absurd rfl hkn
+        · have hne : (F.set n (replace oldf newfs F[n]!))[k]! = F[k]! :=
+            getElem!_set_ne hkn
+          rw [ih (F := F.set n (replace oldf newfs F[n]!)) hks
+            (by rw [List.length_set]; exact hlt) (by rw [hne]; exact hF)
+            (by rw [hne]; exact hsub), hne]
+    · rw [if_neg hn]
+      rcases hk with rfl | hks
+      · exact absurd hlt hn
+      · exact ih hks hlt hF hsub
+
+/-- Invariants.thy: replacefacesAt_notin -/
+theorem replacefacesAt_notin {i : Nat} {is : List Nat} {olfF : Face} {newFs : List Face}
+    {Fss : List (List Face)} (hi : i ∉ is) :
+    (replacefacesAt is olfF newFs Fss)[i]! = Fss[i]! := by
+  rw [replacefacesAt_eq]
+  exact replacefacesAt2_notin hi
+
+/-- Invariants.thy: replacefacesAt_in -/
+theorem replacefacesAt_in {i : Nat} {is : List Nat} {olfF : Face} {newFs : List Face}
+    {Fss : List (List Face)} (hi : i ∈ is) (hd : is.Nodup) (hlt : i < Fss.length) :
+    (replacefacesAt is olfF newFs Fss)[i]! = replace olfF newFs Fss[i]! := by
+  rw [replacefacesAt_eq]
+  exact replacefacesAt2_in hi hd hlt
+
+/-- Invariants.thy: replacefacesAt_length -/
+@[simp]
+theorem replacefacesAt_length {nvs : List Nat} {f' f'' : Face} {vs : List (List Face)} :
+    (replacefacesAt nvs f' [f''] vs).length = vs.length := by
+  rw [replacefacesAt_eq]
+  exact replacefacesAt2_length
+
+/-- Invariants.thy: replacefacesAt_nth2 -/
+theorem replacefacesAt_nth2 {k : Nat} {oldf : Face} {newfs : List Face}
+    {F : List (List Face)} (hk : k < F.length) :
+    (replacefacesAt [k] oldf newfs F)[k]! = replace oldf newfs F[k]! := by
+  rw [replacefacesAt_eq]
+  exact replacefacesAt2_nth2 hk
+
+/-- Invariants.thy: replacefacesAt_nth -/
+theorem replacefacesAt_nth {k : Nat} {ns : List Nat} {oldf : Face} {newfs : List Face}
+    {F : List (List Face)} (hk : k ∈ ns) (hlt : k < F.length) (ho : oldf ∉ newfs)
+    (hF : F[k]!.Nodup) (hN : newfs.Nodup)
+    (hsub : oldf ∈ F[k]! → ∀ x ∈ newfs, x ∈ F[k]! → x = oldf) :
+    (replacefacesAt ns oldf newfs F)[k]! = replace oldf newfs F[k]! := by
+  rw [replacefacesAt_eq]
+  exact replacefacesAt2_nth hk hlt ho hF hN hsub
+
+/-- Invariants.thy: replacefacesAt2_5 -/
+theorem replacefacesAt2_5 {x : Face} {ns : List Nat} {oldf : Face} {newfs : List Face}
+    {F : List (List Face)} {k : Nat}
+    (h : x ∈ (replacefacesAt2 ns oldf newfs F)[k]!) : x ∈ F[k]! ∨ x ∈ newfs := by
+  induction ns generalizing F with
+  | nil => exact Or.inl h
+  | cons n ns ih =>
+    simp only [replacefacesAt2] at h
+    by_cases hn : n < F.length
+    · rw [if_pos hn] at h
+      rcases ih h with h | h
+      · by_cases hkn : k = n
+        · subst hkn
+          rw [getElem!_set_self (l := F) (a := replace oldf newfs F[k]!) hn] at h
+          rcases replace5 h with h | h
+          · exact Or.inl h
+          · exact Or.inr h
+        · rw [getElem!_set_ne hkn] at h
+          exact Or.inl h
+      · exact Or.inr h
+    · rw [if_neg hn] at h
+      exact ih h
+
+/-- Invariants.thy: replacefacesAt_Nil -/
+@[simp]
+theorem replacefacesAt_Nil (f : Face) (fs : List Face) (F : List (List Face)) :
+    replacefacesAt [] f fs F = F :=
+  rfl
+
+/-- Invariants.thy: replacefacesAt_Cons -/
+@[simp]
+theorem replacefacesAt_Cons (n : Nat) (ns : List Nat) (f : Face) (fs : List Face)
+    (F : List (List Face)) :
+    replacefacesAt (n :: ns) f fs F =
+      if n < F.length then replacefacesAt ns f fs (F.set n (replace f fs F[n]!))
+      else replacefacesAt ns f fs F := by
+  simp only [replacefacesAt, mapAt]
+  by_cases h : n < F.length
+  · rw [dif_pos h, if_pos h, getElem!_pos F n h]
+  · rw [dif_neg h, if_neg h]
+
+/-- Invariants.thy: len_nth_repAt -/
+@[simp]
+theorem len_nth_repAt {is : List Nat} {x y : Face} {xs : List (List Face)} {i : Nat}
+    (hi : i < xs.length) : (replacefacesAt is x [y] xs)[i]!.length = (xs[i]!).length := by
+  rw [replacefacesAt_eq]
+  revert hi
+  induction is generalizing xs with
+  | nil => intro hi; rfl
+  | cons n ns ih =>
+    intro hi
+    simp only [replacefacesAt2]
+    by_cases hn : n < xs.length
+    · rw [if_pos hn, ih (xs := xs.set n (replace x [y] xs[n]!))
+        (by rw [List.length_set]; exact hi)]
+      by_cases hin : i = n
+      · subst hin
+        rw [getElem!_set_self (l := xs) (a := replace x [y] xs[i]!) hn]
+        exact length_replace1
+      · rw [getElem!_set_ne hin]
+    · rw [if_neg hn, ih hi]
+
 end ReplacefacesAt
+
+/-! ### normFace -/
+
+section NormFace
+
+/-- Invariants.thy: minVertex_in -/
+theorem minVertex_in {f : Face} (h : f.vertices ≠ []) : minVertex f ∈ f.vertices :=
+  min_list_mem h
+
+/-- Invariants.thy: minVertex_eq_if_vertices_eq (membership form of the set equality) -/
+theorem minVertex_eq_if_vertices_eq {f f' : Face}
+    (h : ∀ v, v ∈ f.vertices ↔ v ∈ f'.vertices) : minVertex f = minVertex f' := by
+  by_cases hf : f.vertices = []
+  · have hf' : f'.vertices = [] := by
+      by_contra hne
+      obtain ⟨w, hw⟩ := List.exists_mem_of_ne_nil _ hne
+      rw [hf] at h
+      exact absurd ((h w).mpr hw) List.not_mem_nil
+    simp [minVertex, hf, hf']
+  · have hf' : f'.vertices ≠ [] := by
+      intro hne
+      rw [hne] at h
+      apply hf
+      rw [List.eq_nil_iff_forall_not_mem]
+      intro v hv
+      exact List.not_mem_nil ((h v).mp hv)
+    apply le_antisymm
+    · exact min_list_le ((h _).mpr (min_list_mem hf'))
+    · exact min_list_le ((h _).mp (min_list_mem hf))
+
+/-- Invariants.thy: normFace_replace_in -/
+theorem normFace_replace_in {a oldF : Face} {newFs fs : List Face}
+    (h : normFace a ∈ normFaces (replace oldF newFs fs)) :
+    normFace a ∈ normFaces newFs ∨ normFace a ∈ normFaces fs := by
+  obtain ⟨x, hx, hxa⟩ := List.mem_map.mp h
+  rcases replace5 hx with hx | hx
+  · exact Or.inr (List.mem_map.mpr ⟨x, hx, hxa⟩)
+  · exact Or.inl (List.mem_map.mpr ⟨x, hx, hxa⟩)
+
+/-- Invariants.thy: distinct_replace_norm -/
+theorem distinct_replace_norm {fs newFs : List Face} {oldF : Face}
+    (hd : (normFaces fs).Nodup) (hdn : (normFaces newFs).Nodup)
+    (hsub : ∀ x ∈ normFaces fs, x ∉ normFaces newFs) :
+    (normFaces (replace oldF newFs fs)).Nodup := by
+  induction fs with
+  | nil => exact List.nodup_nil
+  | cons f fs ih =>
+    simp only [normFaces, List.map_cons, List.nodup_cons] at hd
+    by_cases hf : f = oldF
+    · subst hf
+      have h1 : replace f newFs (f :: fs) = newFs ++ fs := by simp [replace]
+      rw [h1]
+      show ((newFs ++ fs).map normFace).Nodup
+      rw [List.map_append, List.nodup_append]
+      refine ⟨hdn, hd.2, ?_⟩
+      intro x hx y hy hxy
+      exact hsub y (List.mem_cons_of_mem _ hy) (hxy ▸ hx)
+    · have h1 : replace oldF newFs (f :: fs) = f :: replace oldF newFs fs := by
+        simp [replace, hf]
+      rw [h1]
+      show (normFace f :: normFaces (replace oldF newFs fs)).Nodup
+      rw [List.nodup_cons]
+      refine ⟨?_, ih hd.2 (fun x hx => hsub x (List.mem_cons_of_mem _ hx))⟩
+      intro hm
+      rcases normFace_replace_in hm with h | h
+      · exact hsub (normFace f) List.mem_cons_self h
+      · exact hd.1 h
+
+/-- Invariants.thy: distinct_replacefacesAt1_norm -/
+theorem distinct_replacefacesAt1_norm {i : Nat} {is : List Nat} {oldF : Face}
+    {newFs : List Face} {Fss : List (List Face)} (hlt : i < Fss.length) (hi : i ∈ is)
+    (hd : is.Nodup) (hF : (normFaces Fss[i]!).Nodup) (hN : (normFaces newFs).Nodup)
+    (hsub : ∀ x ∈ normFaces Fss[i]!, x ∉ normFaces newFs) :
+    (normFaces ((replacefacesAt is oldF newFs Fss)[i]!)).Nodup := by
+  rw [replacefacesAt_in hi hd hlt]
+  exact distinct_replace_norm hF hN hsub
+
+/-- Invariants.thy: distinct_replacefacesAt2_norm -/
+theorem distinct_replacefacesAt2_norm {i : Nat} {is : List Nat} {oldF : Face}
+    {newFs : List Face} {Fss : List (List Face)} (hlt : i < Fss.length) (hi : i ∉ is)
+    (hd : is.Nodup) (hF : (normFaces Fss[i]!).Nodup) (hN : (normFaces newFs).Nodup)
+    (hsub : ∀ x ∈ normFaces Fss[i]!, x ∉ normFaces newFs) :
+    (normFaces ((replacefacesAt is oldF newFs Fss)[i]!)).Nodup := by
+  rw [replacefacesAt_notin hi]
+  exact hF
+
+/-- Invariants.thy: distinct_replacefacesAt_norm -/
+theorem distinct_replacefacesAt_norm {i : Nat} {is : List Nat} {olfF : Face}
+    {newFs : List Face} {Fss : List (List Face)} (hlt : i < Fss.length) (hd : is.Nodup)
+    (hF : (normFaces Fss[i]!).Nodup) (hN : (normFaces newFs).Nodup)
+    (hsub : ∀ x ∈ normFaces Fss[i]!, x ∉ normFaces newFs) :
+    (normFaces ((replacefacesAt is olfF newFs Fss)[i]!)).Nodup := by
+  by_cases hi : i ∈ is
+  · exact distinct_replacefacesAt1_norm hlt hi hd hF hN hsub
+  · exact distinct_replacefacesAt2_norm hlt hi hd hF hN hsub
+
+/-- Invariants.thy: normFace_in_cong -/
+theorem normFace_in_cong {g : Graph} {f : Face} (hne : f.vertices ≠ [])
+    (hmg : minGraphProps g) (h : normFace f ∈ normFaces g.faces) :
+    ∃ f' ∈ g.faces, cong f.vertices f'.vertices := by
+  obtain ⟨f', hf', hff'⟩ := List.mem_map.mp h
+  refine ⟨f', hf', ?_⟩
+  have c1 : cong f.vertices (normFace f) := verticesFrom_congs (minVertex_in hne)
+  have hne' : f'.vertices ≠ [] := mgp_vertices_nonempty hmg hf'
+  have c2 : cong f'.vertices (normFace f') := verticesFrom_congs (minVertex_in hne')
+  rw [← hff'] at c1
+  exact cong_trans c1 (cong_sym c2)
+
+/-- Invariants.thy: normFace_neq -/
+theorem normFace_neq {f f' : Face} {a : Vertex} (ha : a ∈ f.vertices)
+    (ha' : a ∉ f'.vertices) (hne : f'.vertices ≠ []) : normFace f ≠ normFace f' := by
+  intro e
+  have haf : a ∈ normFace f :=
+    (set_verticesFrom (minVertex_in (List.ne_nil_of_mem ha)) a).mpr ha
+  have haf' : a ∉ normFace f' := fun hx => ha' ((set_verticesFrom (minVertex_in hne) a).mp hx)
+  exact haf' (e ▸ haf)
+
+/-- Invariants.thy: split_face_f12_f21_neq_norm -/
+theorem split_face_f12_f21_neq_norm {oldF f12 f21 : Face} {ram₁ ram₂ : Vertex}
+    {vs : List Vertex} (hp : pre_split_face oldF ram₁ ram₂ vs)
+    (holdF : 2 < oldF.vertices.length) (h12 : 2 < f12.vertices.length)
+    (h21 : 2 < f21.vertices.length)
+    (hsplit : (f12, f21) = split_face oldF ram₁ ram₂ vs) :
+    normFace f12 ≠ normFace f21 := by
+  have hf12 : f12.vertices =
+      vs.reverse ++ (ram₁ :: between oldF.vertices ram₁ ram₂ ++ [ram₂]) := by
+    have h1 : f12 = (split_face oldF ram₁ ram₂ vs).1 := congrArg Prod.fst hsplit
+    rw [h1]
+    rfl
+  have hf21 : f21.vertices =
+      (ram₂ :: between oldF.vertices ram₂ ram₁ ++ [ram₁]) ++ vs := by
+    have h2 : f21 = (split_face oldF ram₁ ram₂ vs).2 := congrArg Prod.snd hsplit
+    rw [h2]
+    rfl
+  have hd : oldF.vertices.Nodup := hp.1
+  have mem_vertices_of_B12 : ∀ x ∈ between oldF.vertices ram₁ ram₂,
+      x ∈ oldF.vertices := by
+    intro x hx
+    have hxv : x ∈ verticesFrom oldF ram₁ := by
+      rw [verticesFrom_ram1 hp]
+      exact List.mem_cons_of_mem _ (List.mem_append_left _ hx)
+    exact (set_verticesFrom hp.2.2.2.1 x).mp hxv
+  have mem_vertices_of_B21 : ∀ x ∈ between oldF.vertices ram₂ ram₁,
+      x ∈ oldF.vertices := by
+    intro x hx
+    have hxv : x ∈ verticesFrom oldF ram₁ := by
+      rw [verticesFrom_ram1 hp]
+      exact List.mem_cons_of_mem _
+        (List.mem_append_right _ (List.mem_cons_of_mem _ hx))
+    exact (set_verticesFrom hp.2.2.2.1 x).mp hxv
+  cases hB21 : between oldF.vertices ram₂ ram₁ with
+  | nil =>
+    cases hB12 : between oldF.vertices ram₁ ram₂ with
+    | nil =>
+      exfalso
+      have hvf : verticesFrom oldF ram₁ = [ram₁, ram₂] := by
+        have h := verticesFrom_ram1 hp
+        rw [hB12, hB21] at h
+        simpa using h
+      have hlen : (verticesFrom oldF ram₁).length = oldF.vertices.length :=
+        verticesFrom_length hd hp.2.2.2.1
+      rw [hvf] at hlen
+      simp at hlen
+      omega
+    | cons a lista =>
+      have haB : a ∈ between oldF.vertices ram₁ ram₂ := by
+        rw [hB12]
+        exact List.mem_cons_self
+      apply normFace_neq (f := f12) (f' := f21) (a := a)
+      · rw [hf12, hB12]
+        exact List.mem_append_right _
+          (List.mem_cons_of_mem _ (List.mem_append_left _ List.mem_cons_self))
+      · rw [hf21, hB21]
+        intro ha
+        have ha' : a = ram₂ ∨ a = ram₁ ∨ a ∈ vs := by
+          rcases List.mem_append.mp ha with ha | ha
+          · rcases List.mem_cons.mp ha with h | h
+            · exact Or.inl h
+            · exact Or.inr (Or.inl (by simpa using h))
+          · exact Or.inr (Or.inr ha)
+        rcases ha' with rfl | rfl | hav
+        · exact between_not_r2 hd haB
+        · exact between_not_r1 hd haB
+        · exact hp.2.2.1 a (mem_vertices_of_B12 a haB) hav
+      · rw [hf21]
+        simp
+  | cons b listb =>
+    have hbB : b ∈ between oldF.vertices ram₂ ram₁ := by
+      rw [hB21]
+      exact List.mem_cons_self
+    apply Ne.symm
+    apply normFace_neq (f := f21) (f' := f12) (a := b)
+    · rw [hf21, hB21]
+      exact List.mem_append_left _
+        (List.mem_cons_of_mem _ (List.mem_append_left _ List.mem_cons_self))
+    · rw [hf12]
+      intro hb
+      rcases List.mem_append.mp hb with hbv | hb
+      · exact hp.2.2.1 b (mem_vertices_of_B21 b hbB) (List.mem_reverse.mp hbv)
+      · rcases List.mem_cons.mp hb with hbr1 | hb
+        · exact between_not_r2 (ram₁ := ram₂) (ram₂ := ram₁) hd (hbr1 ▸ hbB)
+        · rcases List.mem_append.mp hb with hb12 | hb2
+          · have hdn : (verticesFrom oldF ram₁).Nodup :=
+              verticesFrom_distinct hd hp.2.2.2.1
+            rw [verticesFrom_ram1 hp] at hdn
+            have h2 := (List.nodup_cons.mp hdn).2
+            have h3 := List.nodup_append.mp h2
+            exact h3.2.2 b hb12 b (List.mem_cons_of_mem _ hbB) rfl
+          · rw [List.mem_singleton] at hb2
+            exact between_not_r1 (ram₁ := ram₂) (ram₂ := ram₁) hd (hb2 ▸ hbB)
+    · rw [hf12]
+      simp
+
+/-- Invariants.thy: normFace_in -/
+theorem normFace_in {f : Face} {fs : List Face} (h : f ∈ fs) :
+    normFace f ∈ normFaces fs :=
+  List.mem_map.mpr ⟨f, h, rfl⟩
+
+end NormFace
 
 end Kepler.Graphs
