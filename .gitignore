@@ -15,3 +15,4 @@ reference/kepler98/
 
 # 第三方源码解压目录（原件 tar 包在 reference/_distfiles/，可复现）
 pipeline/graphs/tools/plantri55/
+__pycache__/

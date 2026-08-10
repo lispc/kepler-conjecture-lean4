@@ -33,3 +33,4 @@ import Kepler.Graphs.LowerBound
 import Kepler.Graphs.GeneratorProps
 import Kepler.Graphs.TameEnumProps
 import Kepler.Graphs.RelativeCompleteness
+import Kepler.Graphs.Worklist

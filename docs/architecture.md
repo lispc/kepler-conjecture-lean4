@@ -59,43 +59,45 @@ Tame / Generator / TameEnum。含全部常量表（squanderTarget=15410 等）�
   pr_iso_test g1 g2 ∨ pr_iso_test g1 (map rev g2)`。checker 验证同构见证时
   必须同样允许面列表整体反转，否则 Tri 种子会多出 3 个"假extra"图。
 
-### 枚举树证书：具体设计（2026-08-10 定稿，Tri 试点验证中）
+### 枚举完备性：native_decide 分片方案（2026-08-10 定稿，替代逐节点内核重放）
 
-AFP 的 `samet`/`tameEnumFilter`（trie + worklist + `by eval`）**不移植**。
-我们的替代：把 `Relative_Completeness` 的 locale 假设换成 4 条逐点事实
-`same_p : ∀ g, TameEnumP p g → inIso g.fgraph Archive`（p = 0..3），
-每条由对应种子的**枚举树证书**在内核重放后导出。证书与 checker 设计：
+**背景**（实测，详见 DECISIONS.md 2026-08-10 条目）：全树 18.7 亿节点
+（AFP `ArchStat.thy` 官方数字），内核 `decide` 重放差 4-5 个数量级不可行；
+枚举无非对称证书；模同构去重对本枚举器数学上不成立。经人类批准，
+枚举闭包计算改用**限定范围 native_decide**。
 
-- **证书内容**（每种子的枚举树，Python 生成、不受信）：
-  节点数组，每节点 = 完整 `Graph` 记录 + 父节点下标；
-  终节点（final）额外带：Archive 条目下标 + 同构见证（顶点映射表 + 镜像标志）。
-- **逐节点重放**（唯一的重计算）：对每个节点内核 `decide`
-  `next_tame p g = children`（children 由证书给出）。一次性 Replay 整棵树
-  ≈ 362k 次单步求值（Tri 501 / Quad 29318 / Pent 302410 / Hex 29740）。
-  **实测**（`pipeline/graphs/kern_probe.py` 生成探针）：Tri 各深度节点
-  全树 7 个探针共 4.3s；Pent 首子路径 13 个探针（子节点数 10-74）
-  共 2m13s ≈ 10s/节点（含大字面量 elaboration）。外推全量 362k 节点
-  ≈ 950 核时，百核并行约 8-10 小时墙钟——可接受，即为 Phase 2 的
-  `make reprove` 成本。分块到多模块由 lake 并行。
-- **闭包定理**（通用，证一次）：节点集 S 含 `Seed p` 且对每个非 final
-  `g ∈ S` 有 `next_tame p g` 的孩子都在 S，则 `RTranCl (next_tame p) (Seed p) g`
-  蕴含 `g ∈ S`（对 RTranCl 归纳）。
-- **可达性证明零成本复用**：节点按拓扑序处理，`RTranCl` 证明由父节点的
-  RTranCl + 父节点重放等式的成员关系直接组装（`.succs`），不重复求值。
-- **终节点 `inIso` 导出**：`RTranCl + final` ⇒ `TameEnumP` ⇒
-  `mgp_TameEnum` ⇒ `minGraphProps g` ⇒ `mgp_pre_iso_test`（fgraph 侧前提）；
-  Archive 条目侧 `pre_iso_test` 由 `decide`；代入 `iso_test_correct`
-  （PlaneGraphIso.lean 已移植的 `iso_correct` 的 corollary）得
-  `g.fgraph ≃ archiveEntry`，加上条目成员关系即 `inIso g.fgraph Archive`。
-- **Archive 数据**：`pipeline/graphs/ml_to_lean.py` 把 4 个 .ML 原样转成
+**架构**：
+
+- `Kepler.Graphs.Worklist`（通用，纯内核证明）：带精确去重的工作列表循环
+  `loop succs check fuel work done : Option Bool`（fuel 截断免终止性证明）。
+  核心定理（对任意 fuel 成立）：
+  `loop succs check fuel [r] ∅ = some true` 蕴含
+  `∀ g, RTranCl succs r g → check g = true`。
+  不变量：`R(work₀) ⊆ done ∪ R(work)` 且 `done` 相对 `work` 封闭
+  （`d ∈ done ⇒ succs d ⊆ done ∪ R(work)`）且 `done` 中元素都通过了 check。
+  另有 `frontier_cut` 引理：S ∋ Seed 且 `x ∈ S ⇒ succs x ⊆ S ∪ F`
+  蕴含可达 g 满足 `g ∈ S ∨ ∃ h ∈ F, RTranCl h g`（用于分片粘接）。
+- 每种子一个 `check g := !g.final || (pre_iso_test_b g.fgraph && bucketIso g)`，
+  其中 `bucketIso` 按 hash 分桶查 Archive + `iso_test`；
+  正确性：`check g = true → g.final → inIso g.fgraph Archive`
+  （`iso_test_correct` + Archive 侧 `pre_iso_test` 一次性 decide +
+  分桶 membership 引理为通用折叠定理，无需逐条 decide）。
+- **分片**（仅为并行，不改变数学）：证书数据 = 浅层节点集 S（BFS < d 层）
+  + 边界层 F；浅层逐节点 `next_tame p g = children` 用 native_decide 核验，
+  `frontier_cut` 给出 `g ∈ S ∨ RTranCl F g`；F 中每个根 r 一个分片定理
+  `∃ fuel, loop (next_tame p) (check p) fuel [r] ∅ = some true`（native_decide）。
+  每个 final g 要么 ∈ S（数据直接给出 inIso 见证），要么被某分片覆盖。
+- 预计算力：native 编译代码 ~20-55 核时（对照 AFP 11h），
+  百核并行 ~15-35 分钟墙钟。
+- **Tri 交叉校验**：Tri（312k 节点 ≈ 26 核时）另做纯内核 `decide` 版，
+  与 native 路径跑同一套 `loop`/`check` 代码，双向印证。
+- 早前"逐节点内核重放"证书设计（2026-08-10 上午版）仅保留于 Tri 交叉校验；
+  `Cert.lean` 的 `closure_mem` 定理两者共用。
+- Archive 数据：`pipeline/graphs/ml_to_lean.py` 转成
   `lean/Kepler/Graphs/ArchiveData/{Tri,Quad,Pent,Hex}.lean`
   （`TriData/QuadData/PentData/HexData : List (List (List Nat))`，
   19715 张共 ~4.9MB；需 `set_option maxRecDepth + maxHeartbeats 0`，
   注意 docstring 不能放在 `set_option ... in` 之前，否则解析失败）。
-- **信任边界不变**：Python 侧一切不受信；内核重放失败 = 证书无效。
-  `Graph` 记录的派生字段（faceListAt/heights）无需一致性检查——
-  RTranCl 链从 `Seed p` 出发逐步经 `next_tame` 等式建立，记录字段再怪
-  也不影响"它是 next_tame 后代"这一事实。
 
 ### 不受信生成器对拍状态（pipeline/graphs/）
 
