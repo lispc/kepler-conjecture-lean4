@@ -30,3 +30,4 @@ import Kepler.Graphs.Plane1Props
 import Kepler.Graphs.ScoreProps
 import Kepler.Graphs.Sanity
 import Kepler.Graphs.LowerBound
+import Kepler.Graphs.GeneratorProps
