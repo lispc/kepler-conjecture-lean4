@@ -59,6 +59,44 @@ Tame / Generator / TameEnum。含全部常量表（squanderTarget=15410 等）�
   pr_iso_test g1 g2 ∨ pr_iso_test g1 (map rev g2)`。checker 验证同构见证时
   必须同样允许面列表整体反转，否则 Tri 种子会多出 3 个"假extra"图。
 
+### 枚举树证书：具体设计（2026-08-10 定稿，Tri 试点验证中）
+
+AFP 的 `samet`/`tameEnumFilter`（trie + worklist + `by eval`）**不移植**。
+我们的替代：把 `Relative_Completeness` 的 locale 假设换成 4 条逐点事实
+`same_p : ∀ g, TameEnumP p g → inIso g.fgraph Archive`（p = 0..3），
+每条由对应种子的**枚举树证书**在内核重放后导出。证书与 checker 设计：
+
+- **证书内容**（每种子的枚举树，Python 生成、不受信）：
+  节点数组，每节点 = 完整 `Graph` 记录 + 父节点下标；
+  终节点（final）额外带：Archive 条目下标 + 同构见证（顶点映射表 + 镜像标志）。
+- **逐节点重放**（唯一的重计算）：对每个节点内核 `decide`
+  `next_tame p g = children`（children 由证书给出）。一次性 Replay 整棵树
+  ≈ 362k 次单步求值（Tri 501 / Quad 29318 / Pent 302410 / Hex 29740）。
+  **实测**（`pipeline/graphs/kern_probe.py` 生成探针）：Tri 各深度节点
+  全树 7 个探针共 4.3s；Pent 首子路径 13 个探针（子节点数 10-74）
+  共 2m13s ≈ 10s/节点（含大字面量 elaboration）。外推全量 362k 节点
+  ≈ 950 核时，百核并行约 8-10 小时墙钟——可接受，即为 Phase 2 的
+  `make reprove` 成本。分块到多模块由 lake 并行。
+- **闭包定理**（通用，证一次）：节点集 S 含 `Seed p` 且对每个非 final
+  `g ∈ S` 有 `next_tame p g` 的孩子都在 S，则 `RTranCl (next_tame p) (Seed p) g`
+  蕴含 `g ∈ S`（对 RTranCl 归纳）。
+- **可达性证明零成本复用**：节点按拓扑序处理，`RTranCl` 证明由父节点的
+  RTranCl + 父节点重放等式的成员关系直接组装（`.succs`），不重复求值。
+- **终节点 `inIso` 导出**：`RTranCl + final` ⇒ `TameEnumP` ⇒
+  `mgp_TameEnum` ⇒ `minGraphProps g` ⇒ `mgp_pre_iso_test`（fgraph 侧前提）；
+  Archive 条目侧 `pre_iso_test` 由 `decide`；代入 `iso_test_correct`
+  （PlaneGraphIso.lean 已移植的 `iso_correct` 的 corollary）得
+  `g.fgraph ≃ archiveEntry`，加上条目成员关系即 `inIso g.fgraph Archive`。
+- **Archive 数据**：`pipeline/graphs/ml_to_lean.py` 把 4 个 .ML 原样转成
+  `lean/Kepler/Graphs/ArchiveData/{Tri,Quad,Pent,Hex}.lean`
+  （`TriData/QuadData/PentData/HexData : List (List (List Nat))`，
+  19715 张共 ~4.9MB；需 `set_option maxRecDepth + maxHeartbeats 0`，
+  注意 docstring 不能放在 `set_option ... in` 之前，否则解析失败）。
+- **信任边界不变**：Python 侧一切不受信；内核重放失败 = 证书无效。
+  `Graph` 记录的派生字段（faceListAt/heights）无需一致性检查——
+  RTranCl 链从 `Seed p` 出发逐步经 `next_tame` 等式建立，记录字段再怪
+  也不影响"它是 next_tame 后代"这一事实。
+
 ### 不受信生成器对拍状态（pipeline/graphs/）
 
 - `enumerate.py`：`next_tame` 枚举的 Python 直译（与 Lean 移植同源）。
