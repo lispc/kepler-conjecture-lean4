@@ -41,53 +41,8 @@ import Kepler.Graphs.Worklist
 
 namespace Kepler.Graphs
 
-/-- Needed for `l[i]!` on graph lists (certificate data indexing). -/
-instance : Inhabited Graph := ⟨graph 0⟩
-
-/-- Resolve a tagged child index: `(true, j)` ↦ frontier node `j`,
-`(false, j)` ↦ top node `j`. -/
-def resolveChild (S F : List Graph) (t : Bool × Nat) : Graph :=
-  if t.1 then F[t.2]! else S[t.2]!
-
-/-! ### Generic replay → closure lemma -/
-
-/-- If the tagged children tables `C` replay `next_tame p` exactly on every
-node of `S` (with in-range indices), then `S` is closed under `next_tame p`
-up to the frontier `F`. -/
-theorem closed_of_replay {p : Nat} {S F : List Graph} {C : List (List (Bool × Nat))}
-    (hlen : C.length = S.length)
-    (hreplay : (List.range S.length).all (fun i =>
-        decide (next_tame p S[i]! = (C[i]!).map (resolveChild S F))) = true)
-    (hbounds : (List.range C.length).all (fun i => (C[i]!).all (fun t =>
-        (t.1 && decide (t.2 < F.length)) ||
-          (!t.1 && decide (t.2 < S.length)))) = true) :
-    ∀ x ∈ S, ∀ c ∈ next_tame p x, c ∈ S ∨ c ∈ F := by
-  intro x hx c hc
-  obtain ⟨i, hi, rfl⟩ := List.mem_iff_getElem.mp hx
-  have hiC : i < C.length := hlen ▸ hi
-  have hrep : next_tame p S[i]! = (C[i]!).map (resolveChild S F) :=
-    of_decide_eq_true ((List.all_eq_true.mp hreplay) i (List.mem_range.mpr hi))
-  rw [getElem!_pos S i hi] at hrep
-  rw [hrep] at hc
-  obtain ⟨t, ht, htc⟩ := List.mem_map.mp hc
-  subst htc
-  have hbnd := (List.all_eq_true.mp
-    ((List.all_eq_true.mp hbounds) i (List.mem_range.mpr hiC))) t ht
-  cases htb : t.1 with
-  | true =>
-    right
-    simp only [htb, Bool.true_and, Bool.not_true, Bool.false_and, Bool.or_false,
-      decide_eq_true_eq] at hbnd
-    have hr : resolveChild S F t = F[t.2]! := by simp [resolveChild, htb]
-    rw [hr, getElem!_pos F t.2 hbnd]
-    exact List.getElem_mem _
-  | false =>
-    left
-    simp only [htb, Bool.false_and, Bool.not_false, Bool.true_and, Bool.false_or,
-      decide_eq_true_eq] at hbnd
-    have hr : resolveChild S F t = S[t.2]! := by simp [resolveChild, htb]
-    rw [hr, getElem!_pos S t.2 hbnd]
-    exact List.getElem_mem _
+/- `resolveChild` / `closed_of_replay` / `top_final_archive_of_no_finals`
+live in CertCheck.lean (shared with the generated seed wirings). -/
 
 /-! ### Tri top replay (native_decide) and closure -/
 
@@ -111,17 +66,6 @@ theorem tri_top_closed : ∀ x ∈ TriTop, ∀ c ∈ next_tame 0 x,
   closed_of_replay rfl tri_top_replay tri_top_bounds
 
 /-! ### Top final coverage (Tri: vacuous) -/
-
-/-- If no node of `S` is final, the Archive membership obligation on `S` is
-vacuous.  (Seeds with a nonempty finals table replace this by per-entry
-certificate checks.) -/
-theorem top_final_archive_of_no_finals {S : List Graph}
-    (h : (S.all (fun g => !g.final)) = true) :
-    ∀ g ∈ S, g.final = true → inIso g.fgraph Archive := by
-  intro g hg hfin
-  have hnf : (!g.final) = true := (List.all_eq_true.mp h) g hg
-  rw [hfin, Bool.not_true] at hnf
-  simp at hnf
 
 theorem tri_top_no_finals : (TriTop.all (fun g => !g.final)) = true := by
   native_decide
