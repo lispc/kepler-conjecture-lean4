@@ -99,6 +99,8 @@ import Kepler.Graphs.CertShards.QuadR.K077
 import Kepler.Graphs.CertShards.QuadR.K078
 import Kepler.Graphs.CertShards.QuadR.K079
 
+set_option maxRecDepth 100000
+
 namespace Kepler.Graphs
 
 /-- Replay: every top node's `next_tame 1` children are exactly its tagged

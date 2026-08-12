@@ -98,6 +98,8 @@ import Kepler.Graphs.CertData.{name}Top
 import Kepler.Graphs.Worklist
 {imports}
 
+set_option maxRecDepth 100000
+
 namespace Kepler.Graphs
 
 /-- Replay: every top node's `next_tame {p}` children are exactly its tagged

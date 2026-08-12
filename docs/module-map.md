@@ -52,14 +52,18 @@ Volume（体积、楔、立体角测度） ← Trig（三角、方位角）
 - [x] PlaneGraphIso + QuasiOrder（≃ 关系、iso_test 含镜像分支 + 正确性）
 - [x] FaceDivisionProps（4958 行全量，含 pre_subdivFace'_Some1' 大证明）
 - [x] Invariants（2827 行全量：minGraphProps/inv、主不变量定理）
-- [ ] PlaneProps（进行中：37 条已移植，剩 3 条大证明）
-- [ ] Plane1Props
-- [ ] ScoreProps + LowerBound（tame13a 下界正确性）
-- [ ] GeneratorProps + TameEnumProps（剪枝保持 tame 可达性）
-- [ ] Completeness 组装（→ `tame_classification`，G2）
+- [x] PlaneProps（全量）
+- [x] Plane1Props
+- [x] ScoreProps + LowerBound（tame13a 下界正确性）
+- [x] GeneratorProps + TameEnumProps（剪枝保持 tame 可达性）
+- [x] Completeness 组装（→ `tame_classification`，**G2 已于 2026-08-12 闭合**：
+  三种子 575 分片证书 + 接线 + 总装构建通过，公理审计干净，
+  详见 `docs/architecture.md` 枚举完备性节"建成状态"）
 - [x] 不受信生成器对拍：四种子 19715 张与 Archive 双向一致
 
 ## G2 之后待办（证书层）
 
-- [ ] 逐图可达性见证 + 权重见证 + 同构见证的证书格式落地（`docs/architecture.md` Phase 2 节）
-- [ ] Lean checker 重放证书 + `tame_classification` 闭合（验收门 G2）
+- [x] ~~逐图可达性见证 + 权重见证 + 同构见证的证书格式落地~~
+  （已被 native_decide 分片方案取代，见 DECISIONS.md 2026-08-10）
+- [x] ~~Lean checker 重放证书 + `tame_classification` 闭合（验收门 G2）~~（已闭合）
+- [ ] （可选）Tri 种子纯内核 `decide` 交叉校验（与 native 路径同一套 loop/check）

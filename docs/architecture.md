@@ -70,6 +70,8 @@ Tame / Generator / TameEnum。含全部常量表（squanderTarget=15410 等）�
 
 - `Kepler.Graphs.Worklist`（通用，纯内核证明）：带精确去重的工作列表循环
   `loop succs check fuel work done : Option Bool`（fuel 截断免终止性证明）。
+  （**建成版注**：最终实现简化为无去重的 `loop succs check fuel ws`，
+  精确重复 pop 实测 ~0；闭包证明见 `loop_some_true`。）
   核心定理（对任意 fuel 成立）：
   `loop succs check fuel [r] ∅ = some true` 蕴含
   `∀ g, RTranCl succs r g → check g = true`。
@@ -98,6 +100,33 @@ Tame / Generator / TameEnum。含全部常量表（squanderTarget=15410 等）�
   （`TriData/QuadData/PentData/HexData : List (List (List Nat))`，
   19715 张共 ~4.9MB；需 `set_option maxRecDepth + maxHeartbeats 0`，
   注意 docstring 不能放在 `set_option ... in` 之前，否则解析失败）。
+
+**建成状态（2026-08-12，G2 闭合，`tame_classification` 构建通过）**：
+
+- 分片布局（`pipeline/graphs/{shardgen,reshardgen,childsplitgen}.py` 生成）：
+  粗分片 fuel 4M（Quad/Hex G=100、Pent G=50）→ 失败区间细分（fuel 50M，
+  QuadR/HexR G=5、PentR G=10）→ 超重 root 逐根拆分（G=1，PentR2/PentR3
+  fuel 300M、HexR2 fuel 400M）。最终 575 个分片文件全部通过：
+  Quad 12+80、Pent 142+16+30+10、Hex 66+219+5（另有每种子 4 条顶层
+  native_decide：top_replay/top_bounds/no_finals/archive_pre）。
+- 超重 root 实测（loopCount 探针，native 编译 ~4-11K pops/s）：
+  Pent 有 9 个 4M-59M pops 的 root（j=74 最大 58,815,032 pops），
+  j=0/j=1 更大（分片在 fuel 300M 内通过，单分片墙钟 15-23h）；
+  全部 check=true，无 archive 失配。轻 root 典型值仅数百 pops，
+  分布极重尾，适合递归拆分。
+- 递归拆分预案（本次未启用，已验证可用）：`WorklistSplit.lean`
+  （`loop_mono`/`loop_append`/`loop_list_of_forall`/
+  `loop_singleton_of_children`，纯内核），可把任意超重 root 按其
+  `next_tame` 子图再拆一层并行；组装结构（`interval_cases` + 逐子图
+  分片定理）已经 axiom 桩预验证。
+- 接线文件（`CertQuad/Pent/Hex.lean`）需 `set_option maxRecDepth 100000`
+  （嵌套 dite 链 92-286 分支 + `frontier.length` 的 `rfl` 归约）。
+- 公理审计（`#print axioms tame_classification`）：仅
+  `propext`/`Classical.choice`/`Quot.sound` + 600 个 native_decide
+  信任公理（tri 9、quad 16、quadr 80、pent 146、pentr 16、pentr2 30、
+  pentr3 10、hex 70、hexr 219、hexr2 5），全部在上述限定范围内，无 sorry。
+- 端到端墙钟：粗分片主构建 ~6.7h（220/239 一次通过），细分/逐根
+  收尾 ~1.5 天（主要耗在 Pent j=0/j=1 两个 ~10⁸ pops 级 root 上）。
 
 ### 不受信生成器对拍状态（pipeline/graphs/）
 
