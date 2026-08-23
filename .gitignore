@@ -10,8 +10,11 @@ certificates/*
 !certificates/README.md
 
 # 参考库为只读克隆，hash 记入 reference/LOCK.md
+# （带斜杠匹配目录克隆；不带斜杠匹配 symlink——搬迁后可能以 symlink 形式存在）
 reference/flyspeck/
 reference/kepler98/
+reference/flyspeck
+reference/kepler98
 
 # 第三方源码解压目录（原件 tar 包在 reference/_distfiles/，可复现）
 pipeline/graphs/tools/plantri55/

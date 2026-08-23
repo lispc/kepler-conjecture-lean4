@@ -114,6 +114,12 @@ Tame / Generator / TameEnum。含全部常量表（squanderTarget=15410 等）�
   j=0/j=1 更大（分片在 fuel 300M 内通过，单分片墙钟 15-23h）；
   全部 check=true，无 archive 失配。轻 root 典型值仅数百 pops，
   分布极重尾，适合递归拆分。
+- j=0/j=1 精确 pops（2026-08-23 补测，Python 枚举器按 Worklist.loop
+  无去重语义计数，split_depth=4 并行；CPython 与 PyPy 两次独立
+  计数结果逐位一致）：**j=0 = 204,531,909 pops，j=1 = 132,292,386 pops**。
+  计数脚本 `pipeline/graphs/popcount_par.py`（基于
+  `pipeline/graphs/enumerate.py` 的 `frontier(2,3)` + `next_tame`；
+  对 PyPy 3.11 兼容，实测 ~4× 快于 CPython）。
 - 递归拆分预案（本次未启用，已验证可用）：`WorklistSplit.lean`
   （`loop_mono`/`loop_append`/`loop_list_of_forall`/
   `loop_singleton_of_children`，纯内核），可把任意超重 root 按其

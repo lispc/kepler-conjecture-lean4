@@ -13,3 +13,7 @@ import Kepler.Graphs.Tame
 import Kepler.Graphs.Generator
 import Kepler.Graphs.TameEnum
 import Kepler.Graphs.Sanity
+-- The full Phase 2 cert chain (Cert*/CertShards/TameClassification) lives under
+-- `Kepler.Graphs`; import it so the default target covers G2 end to end
+-- (otherwise `lake build` / `make reprove` silently skips the shard files).
+import Kepler.Graphs
