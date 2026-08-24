@@ -4,7 +4,7 @@ Port of the HOL Light Flyspeck hypermap theory (core definition layer).
 Source: `reference/flyspeck/text_formalization/hypermap/hypermap.hl`
 (Flyspeck book formalization, Tran Nam Trung, 2010).
 
-Coverage:
+Coverage (block 1, core definitions):
 - `hypermap.hl` lines 25–205, all definitions: `res`, `orbit_map`, the
   `hypermap` type with accessors (`dart`/`edge_map`/`node_map`/`face_map`),
   `edge`/`node`/`face`, `go_one_step`/`is_path`/`is_in_component`/
@@ -18,6 +18,59 @@ Coverage:
   `orbit_subset`, `in_orbit_lemma`, `lemma_in_orbit`, `orbit_one_point`,
   `lemma_orbit_finite`, plus the inverse-equation corollaries of
   `edge_map o node_map o face_map = I` (cf. lines 211–220).
+
+Coverage (block 2, orbit iteration / components / orbit counting):
+- Orbit iteration and equivalence: `orbit_cyclic` (308), `power_permutation`
+  (321), `inverse_power_function` (366), `edge/node/face_map_inverse_
+  representation` (374–386), `node/face_map_injective` (388–395),
+  `lemma_dart_invariant` and variants (412–431), `finite_order` (753),
+  `inverse_element_lemma` (770), `inverse_relation` (805),
+  `power_power_relation` (812), `orbit_sym` (835), `orbit_trans` (849),
+  `partition_orbit` (861), `card_orbit_le` (876),
+  `lemma_orbit_convolution_map` (1203), `lemma_nondegenerate_convolution`
+  (1213), plus `lemma_orbit_identity` (2123, pulled forward as
+  `orbitMap_eq_of_mem`).
+- Cyclic and inverse map relations: `cyclic_maps` (887, as
+  `perm_mul_eq_one_rotate`), `hypermap_cyclic` (913),
+  `inverse_hypermap_maps` (923), `inverse2_hypermap_maps` (937).
+- Connected hypermaps: `connected_hypermap` (1000).
+- Components: `lemma_subpath` (1258, as `isPath_mono` in block 1),
+  `lemma_path_subset` (1263), `lemma_component_subset` (1272),
+  `lemma_edge/node/face_subset` (1277–1284, as `*_subset_darts` in block 1),
+  `lemma_component_reflect` (1286, as `mem_combComponent_self`),
+  `lemma_def_path` (1292), `edge/node/face_path` (1300–1307) with
+  `lemma_edge/node/face_path` (1309–1325), `glue` (637, as `gluePaths`)
+  with `first/second_glue_evaluation` (642–651), `lemma_glue_paths` (1329),
+  `concatenate_two_paths`/`concatenate_paths` (1351–1363),
+  `lemma_component_trans` (1365, as `isInComponent_trans` in block 1),
+  `lemma_reverse_path` (1372), `lemma_component_symmetry` (1417),
+  `partition_components` (1423), `lemma_partition_by_components` (1439);
+  plus `isInComponent_equivalence` (the equivalence-relation closure).
+- Orbit counting: `finite_orbits_lemma` (1053, as `setOfOrbits_finite` in
+  block 1), `lemma_partition` (1060), `card_partition_formula` (1146),
+  `lemma_card_lower_bound` (1167), `lemma_card_eq` (1185), and the
+  Euler-type bound `lemmaTGJISOK` (1228, as `darts_card_le`).
+
+Explicitly skipped (with reason; nothing is silently omitted):
+- 397–407 `label_*_TAC`: HOL tactic plumbing, no Lean counterpart needed.
+- 435–466 `IMAGE_SEG`/`FINITE_SERIES`/`CARD_FINITE_SERIES_(LE|EQ)`/`LEMMA_INJ`:
+  subsumed by `Set.ncard_image_le` over `Finset.range` (used in
+  `card_orbit_le`); the injective-cardinality variant has no downstream
+  consumer in the ported range.
+- 468–536 arithmetic scratch lemmas: subsumed by `omega`/Mathlib.
+- 540–634 `is_inj_list`/`support_of_sequence` machinery: only consumed by
+  the join/walkup counting theory later in the file (out of scope here);
+  path concatenation is proved directly via `gluePaths`.
+- 690–732 `join`/`lemma_join_inj_lists`: same reason (disjoint-join version
+  of glueing, unused in the ported range).
+- 736–749 `inj_iterate_lemma`: `finite_order` is proved via the induced
+  permutation on the subtype `↥s` and `pow_card_eq_one` instead.
+- 948–996 `lemmaZHQCZLX`: standalone side fact (simple+plain hypermaps have
+  no node-fixed darts); not needed by the counting/component chain.
+- 1003–1042 singleton/pair cardinality helpers: subsumed by
+  `Set.ncard_singleton`/`Set.ncard_pair`.
+- 1067–1144 `lemma_card_of_disjoint_covering`: replaced by Mathlib's
+  `Set.Finite.ncard_biUnion`.
 
 Type correspondences (HOL Light ↦ Lean 4):
 - `(A)hypermap` (a 4-tuple carrying `FINITE`/`permutes` side conditions,
@@ -47,6 +100,10 @@ Design choices (deviating from the task sketch where noted):
 -/
 import Mathlib.GroupTheory.Perm.Basic
 import Mathlib.Data.Set.Card
+import Mathlib.GroupTheory.OrderOfElement
+import Mathlib.Data.Fintype.Perm
+import Mathlib.Algebra.BigOperators.Finprod
+import Mathlib.Data.Set.Card.Arithmetic
 
 namespace Kepler.Text
 
@@ -470,6 +527,581 @@ def NodeNondegenerate (H : Hypermap α) : Prop := ∀ x ∈ H.darts, H.nodeMap x
 
 /-- `hypermap.hl`:203 `is_face_nondegenerate`。 -/
 def FaceNondegenerate (H : Hypermap α) : Prop := ∀ x ∈ H.darts, H.faceMap x ≠ x
+
+end Hypermap
+
+/-! ## 轨道迭代与有限阶（`hypermap.hl`:308–881 选摘） -/
+
+section PermIteration
+
+variable {α : Type*} {f : Equiv.Perm α} {s : Finset α} {x y z : α}
+
+/-- `hypermap.hl`:321 `power_permutation`。 -/
+theorem PermutesOn.pow (hf : PermutesOn f s) : ∀ n : ℕ, PermutesOn (f ^ n) s := by
+  intro n
+  induction n with
+  | zero => intro x hx; simp
+  | succ k ih => intro x hx; rw [pow_succ', Equiv.Perm.mul_apply, ih x hx, hf x hx]
+
+/-- `f ^ m` 的不动点被任意次幂保持（`hypermap.hl`:255 `power_map_fix_point` 的幂形式）。 -/
+theorem pow_fix_pow (f : Equiv.Perm α) {m : ℕ} (h : (f ^ m) x = x) :
+    ∀ q : ℕ, ((f ^ m) ^ q) x = x := by
+  intro q
+  induction q with
+  | zero => simp
+  | succ q ih => rw [pow_succ', Equiv.Perm.mul_apply, ih, h]
+
+/-- `hypermap.hl`:308 `orbit_cyclic`。 -/
+theorem orbit_cyclic (f : Equiv.Perm α) {m : ℕ} (hm : m ≠ 0) (h : (f ^ m) x = x) :
+    orbitMap f x = (fun k => (f ^ k) x) '' ↑(Finset.range m) := by
+  ext y
+  constructor
+  · rintro ⟨n, rfl⟩
+    have key : (f ^ (n % m)) x = (f ^ n) x := by
+      conv_rhs => rw [← Nat.mod_add_div n m]
+      rw [pow_add, Equiv.Perm.mul_apply, pow_mul, pow_fix_pow f h]
+    exact ⟨n % m, Finset.mem_range.mpr (Nat.mod_lt n (Nat.pos_of_ne_zero hm)), key⟩
+  · rintro ⟨k, -, rfl⟩
+    exact pow_apply_mem_orbitMap f k x
+
+/-- `hypermap.hl`:876 `card_orbit_le`。 -/
+theorem card_orbit_le (f : Equiv.Perm α) {n : ℕ} (hn : n ≠ 0) (h : (f ^ n) x = x) :
+    (orbitMap f x).ncard ≤ n := by
+  rw [orbit_cyclic f hn h]
+  calc ((fun k => (f ^ k) x) '' ↑(Finset.range n)).ncard
+      ≤ (↑(Finset.range n) : Set ℕ).ncard :=
+        Set.ncard_image_le (Finset.range n).finite_toSet
+    _ = n := by rw [Set.ncard_coe_finset, Finset.card_range]
+
+/-- `hypermap.hl`:753 `finite_order`。
+（经 `↥s` 上的诱导置换与有限群的 `pow_card_eq_one` 证明，取代 HOL 的
+`inj_iterate_lemma` 鸽巢路线。） -/
+theorem PermutesOn.exists_pow_eq_one (hf : PermutesOn f s) : ∃ n : ℕ, n ≠ 0 ∧ f ^ n = 1 := by
+  classical
+  have hiff : ∀ a : α, a ∈ s ↔ f a ∈ s :=
+    fun a => ⟨hf.apply_mem, fun h => by
+      by_contra ha
+      exact ha ((hf a ha) ▸ h)⟩
+  let fs : Equiv.Perm s := Equiv.subtypeEquiv f hiff
+  have hpow : ∀ k : ℕ, ∀ a : ↥s, ((fs ^ k) a : α) = (f ^ k) a := by
+    intro k
+    induction k with
+    | zero => intro a; rfl
+    | succ k ih =>
+      intro a
+      calc ((fs ^ (k + 1)) a : α) = (fs ((fs ^ k) a) : α) := by
+            rw [pow_succ', Equiv.Perm.mul_apply]
+        _ = f ((fs ^ k) a : α) := rfl
+        _ = f ((f ^ k) a) := by rw [ih a]
+        _ = (f ^ (k + 1)) a := by rw [pow_succ', Equiv.Perm.mul_apply]
+  obtain ⟨n, hnpos, hn⟩ : ∃ n : ℕ, n ≠ 0 ∧ fs ^ n = 1 :=
+    ⟨Fintype.card (Equiv.Perm ↥s),
+      Nat.pos_iff_ne_zero.mp (Fintype.card_pos_iff.mpr ⟨1⟩), pow_card_eq_one⟩
+  refine ⟨n, hnpos, ?_⟩
+  ext x
+  rw [Equiv.Perm.one_apply]
+  by_cases hx : x ∈ s
+  · have h1 : (fs ^ n) ⟨x, hx⟩ = ⟨x, hx⟩ := by rw [hn]; rfl
+    have h2 : (f ^ n) x = x := by
+      have := hpow n ⟨x, hx⟩
+      rw [h1] at this
+      exact this.symm
+    exact h2
+  · exact hf.pow n x hx
+
+/-- `hypermap.hl`:770 `inverse_element_lemma`。 -/
+theorem PermutesOn.exists_pow_eq_inv (hf : PermutesOn f s) : ∃ j : ℕ, f⁻¹ = f ^ j := by
+  obtain ⟨n, hn, hfn⟩ := hf.exists_pow_eq_one
+  obtain ⟨k, rfl⟩ : ∃ k : ℕ, n = k + 1 := ⟨n - 1, by omega⟩
+  refine ⟨k, ?_⟩
+  have h1 : f * f ^ k = 1 := by rw [← pow_succ']; exact hfn
+  exact (eq_inv_of_mul_eq_one_right h1).symm
+
+/-- `hypermap.hl`:805 `inverse_relation`。 -/
+theorem PermutesOn.exists_pow_apply_eq (hf : PermutesOn f s) (h : y = f x) :
+    ∃ k : ℕ, x = (f ^ k) y := by
+  obtain ⟨j, hj⟩ := hf.exists_pow_eq_inv
+  refine ⟨j, ?_⟩
+  have hx : x = f⁻¹ y := by
+    rw [h, ← Equiv.Perm.mul_apply, inv_mul_cancel, Equiv.Perm.one_apply]
+  rw [hj] at hx
+  exact hx
+
+/-- `hypermap.hl`:812 `power_power_relation`。 -/
+theorem PermutesOn.exists_pow_apply_eq_of_pow (hf : PermutesOn f s) (h : (f ^ n) x = y) :
+    ∃ j : ℕ, x = (f ^ j) y := by
+  obtain ⟨j, hj⟩ := (hf.pow n).exists_pow_apply_eq h.symm
+  exact ⟨n * j, by rw [pow_mul]; exact hj⟩
+
+/-- `hypermap.hl`:366 `inverse_power_function`。 -/
+theorem pow_apply_iff_inv_pow_apply (f : Equiv.Perm α) (n : ℕ) (x y : α) :
+    y = (f ^ n) x ↔ x = (f⁻¹ ^ n) y := by
+  rw [inv_pow]
+  constructor
+  · intro h
+    rw [h, ← Equiv.Perm.mul_apply, inv_mul_cancel, Equiv.Perm.one_apply]
+  · intro h
+    rw [h, ← Equiv.Perm.mul_apply, mul_inv_cancel, Equiv.Perm.one_apply]
+
+/-- `hypermap.hl`:835 `orbit_sym`（有限支撑下逆向可达蕴含正向可达）。 -/
+theorem orbitMap_sym (hf : PermutesOn f s) (h : x ∈ orbitMap f y) : y ∈ orbitMap f x := by
+  obtain ⟨n, hn⟩ := h
+  obtain ⟨j, hj⟩ := hf.exists_pow_apply_eq_of_pow hn
+  exact ⟨j, hj.symm⟩
+
+/-- `hypermap.hl`:849 `orbit_trans`。 -/
+theorem orbitMap_trans (h₁ : x ∈ orbitMap f y) (h₂ : y ∈ orbitMap f z) :
+    x ∈ orbitMap f z := by
+  obtain ⟨n, rfl⟩ := h₁
+  obtain ⟨m, hm⟩ := h₂
+  exact ⟨n + m, by rw [pow_add, Equiv.Perm.mul_apply, hm]⟩
+
+/-- `hypermap.hl`:2123 `lemma_orbit_identity`（提前移植，供划分引理使用）。 -/
+theorem orbitMap_eq_of_mem (hf : PermutesOn f s) (h : x ∈ orbitMap f y) :
+    orbitMap f x = orbitMap f y := by
+  ext t
+  exact ⟨fun ht => orbitMap_trans ht h, fun ht => orbitMap_trans ht (orbitMap_sym hf h)⟩
+
+/-- `hypermap.hl`:861 `partition_orbit`。 -/
+theorem orbitMap_disjoint_or_eq (hf : PermutesOn f s) (x y : α) :
+    orbitMap f x ∩ orbitMap f y = ∅ ∨ orbitMap f x = orbitMap f y := by
+  by_cases h : (orbitMap f x ∩ orbitMap f y).Nonempty
+  · obtain ⟨t, htx, hty⟩ := h
+    exact Or.inr ((orbitMap_eq_of_mem hf htx).symm.trans (orbitMap_eq_of_mem hf hty))
+  · exact Or.inl (Set.not_nonempty_iff_eq_empty.mp h)
+
+/-- `hypermap.hl`:1203 `lemma_orbit_convolution_map`。 -/
+theorem orbitMap_of_mul_self_eq_one (h : f * f = 1) (x : α) :
+    orbitMap f x = {x, f x} := by
+  have h2 : (f ^ 2) x = x := by
+    rw [pow_two, h, Equiv.Perm.one_apply]
+  rw [orbit_cyclic f (m := 2) (by omega) h2]
+  have hr : (Finset.range 2 : Finset ℕ) = {0, 1} := rfl
+  rw [hr, Finset.coe_insert, Finset.coe_singleton, Set.image_insert_eq, Set.image_singleton]
+  have h0 : (f ^ 0) x = x := by simp
+  have h1 : (f ^ 1) x = f x := by simp
+  rw [h0, h1]
+
+/-- `hypermap.hl`:1213 `lemma_nondegenerate_convolution`。 -/
+theorem orbitMap_finite_ncard_two (hf : PermutesOn f s) (h2 : f * f = 1)
+    (hfix : ∀ x ∈ s, f x ≠ x) (hx : x ∈ s) :
+    (orbitMap f x).Finite ∧ (orbitMap f x).ncard = 2 :=
+  ⟨orbitMap_finite hf x, by
+    rw [orbitMap_of_mul_self_eq_one h2 x]
+    exact Set.ncard_pair (hfix x hx).symm⟩
+
+/-- `a * b * c = 1` 的轮换（`hypermap.hl`:887 `cyclic_maps` 的群论核心）。 -/
+theorem perm_mul_eq_one_rotate {a b c : Equiv.Perm α} (h : a * b * c = 1) : b * c * a = 1 := by
+  have h' : a * (b * c) = 1 := by rw [← mul_assoc]; exact h
+  have hbc : b * c = a⁻¹ := eq_inv_of_mul_eq_one_right h'
+  calc b * c * a = a⁻¹ * a := by rw [hbc]
+    _ = 1 := inv_mul_cancel a
+
+end PermIteration
+
+/-- `hypermap.hl`:637 `glue`。两条路径的拼接：前 `n` 步走 `p`，之后走 `q`。 -/
+def gluePaths {α : Type*} (p q : ℕ → α) (n : ℕ) : ℕ → α :=
+  fun i => if i ≤ n then p i else q (i - n)
+
+/-- `hypermap.hl`:642 `first_glue_evaluation`（含 :639 `start_glue_evaluation` 的 `i = 0` 情形）。 -/
+theorem gluePaths_apply_le {α : Type*} {p q : ℕ → α} {n i : ℕ} (h : i ≤ n) :
+    gluePaths p q n i = p i := if_pos h
+
+/-- `hypermap.hl`:645 `second_glue_evaluation`。 -/
+theorem gluePaths_apply_add {α : Type*} {p q : ℕ → α} {n : ℕ} (h : p n = q 0) (i : ℕ) :
+    gluePaths p q n (n + i) = q i := by
+  rcases i with _ | i
+  · simp only [gluePaths, Nat.add_zero, if_pos le_rfl]
+    exact h
+  · have hle : ¬n + (i + 1) ≤ n := by omega
+    simp [gluePaths, hle]
+
+namespace Hypermap
+
+variable {α : Type*} [DecidableEq α] {x y z : α}
+
+/-- `hypermap.hl`:374 `edge_map_inverse_representation`。 -/
+theorem edgeMap_inverse_representation (H : Hypermap α) (x y : α) :
+    y = H.edgeMap x ↔ x = H.edgeMap.symm y := by
+  constructor
+  · intro h; rw [h]; exact (Equiv.symm_apply_apply _ _).symm
+  · intro h; rw [h]; exact (Equiv.apply_symm_apply _ _).symm
+
+/-- `hypermap.hl`:379 `node_map_inverse_representation`。 -/
+theorem nodeMap_inverse_representation (H : Hypermap α) (x y : α) :
+    y = H.nodeMap x ↔ x = H.nodeMap.symm y := by
+  constructor
+  · intro h; rw [h]; exact (Equiv.symm_apply_apply _ _).symm
+  · intro h; rw [h]; exact (Equiv.apply_symm_apply _ _).symm
+
+/-- `hypermap.hl`:384 `face_map_inverse_representation`。 -/
+theorem faceMap_inverse_representation (H : Hypermap α) (x y : α) :
+    y = H.faceMap x ↔ x = H.faceMap.symm y := by
+  constructor
+  · intro h; rw [h]; exact (Equiv.symm_apply_apply _ _).symm
+  · intro h; rw [h]; exact (Equiv.apply_symm_apply _ _).symm
+
+/-- `hypermap.hl`:388 `node_map_injective`。 -/
+theorem nodeMap_injective (H : Hypermap α) (x y : α) :
+    H.nodeMap x = H.nodeMap y ↔ x = y := H.nodeMap.injective.eq_iff
+
+/-- `hypermap.hl`:393 `face_map_injective`。 -/
+theorem faceMap_injective (H : Hypermap α) (x y : α) :
+    H.faceMap x = H.faceMap y ↔ x = y := H.faceMap.injective.eq_iff
+
+/-- `hypermap.hl`:412 `lemma_dart_invariant`。 -/
+theorem dart_invariant (H : Hypermap α) (hx : x ∈ H.darts) :
+    H.edgeMap x ∈ H.darts ∧ H.nodeMap x ∈ H.darts ∧ H.faceMap x ∈ H.darts :=
+  ⟨H.edgeMap_apply_mem hx, H.nodeMap_apply_mem hx, H.faceMap_apply_mem hx⟩
+
+/-- `hypermap.hl`:415 `lemma_dart_invariant_power_node`。 -/
+theorem dart_invariant_power_node (H : Hypermap α) (hx : x ∈ H.darts) (n : ℕ) :
+    (H.nodeMap ^ n) x ∈ H.darts := H.nodeMap_permutes.pow_apply_mem n hx
+
+/-- `hypermap.hl`:419 `lemma_dart_invariant_power_face`。 -/
+theorem dart_invariant_power_face (H : Hypermap α) (hx : x ∈ H.darts) (n : ℕ) :
+    (H.faceMap ^ n) x ∈ H.darts := H.faceMap_permutes.pow_apply_mem n hx
+
+/-- `hypermap.hl`:423 `lemma_dart_inveriant_under_inverse_maps`（源文件名拼写如此）。 -/
+theorem dart_invariant_under_inverse_maps (H : Hypermap α) (hx : x ∈ H.darts) :
+    H.edgeMap.symm x ∈ H.darts ∧ H.nodeMap.symm x ∈ H.darts ∧ H.faceMap.symm x ∈ H.darts :=
+  ⟨H.edgeMap_symm_apply_mem hx, H.nodeMap_symm_apply_mem hx, H.faceMap_symm_apply_mem hx⟩
+
+/-- `hypermap.hl`:913 `hypermap_cyclic`。 -/
+theorem hypermap_cyclic (H : Hypermap α) :
+    H.nodeMap * H.faceMap * H.edgeMap = 1 ∧ H.faceMap * H.edgeMap * H.nodeMap = 1 :=
+  ⟨perm_mul_eq_one_rotate H.comp_eq_one,
+    perm_mul_eq_one_rotate (perm_mul_eq_one_rotate H.comp_eq_one)⟩
+
+/-- `hypermap.hl`:923 `inverse_hypermap_maps`。 -/
+theorem inverse_hypermap_maps (H : Hypermap α) :
+    H.edgeMap⁻¹ = H.nodeMap * H.faceMap ∧ H.nodeMap⁻¹ = H.faceMap * H.edgeMap ∧
+      H.faceMap⁻¹ = H.edgeMap * H.nodeMap := by
+  refine ⟨H.nodeMap_mul_faceMap.symm, ?_, by rw [H.faceMap_eq_inv, inv_inv]⟩
+  have h : H.nodeMap * (H.faceMap * H.edgeMap) = 1 := by
+    rw [← mul_assoc]; exact H.hypermap_cyclic.1
+  exact (eq_inv_of_mul_eq_one_right h).symm
+
+/-- `hypermap.hl`:937 `inverse2_hypermap_maps`。 -/
+theorem inverse2_hypermap_maps (H : Hypermap α) :
+    H.edgeMap = H.faceMap⁻¹ * H.nodeMap⁻¹ ∧ H.nodeMap = H.edgeMap⁻¹ * H.faceMap⁻¹ ∧
+      H.faceMap = H.nodeMap⁻¹ * H.edgeMap⁻¹ := by
+  obtain ⟨h1, h2, h3⟩ := H.inverse_hypermap_maps
+  refine ⟨?_, ?_, ?_⟩
+  · calc H.edgeMap = (H.edgeMap⁻¹)⁻¹ := (inv_inv _).symm
+      _ = (H.nodeMap * H.faceMap)⁻¹ := by rw [h1]
+      _ = H.faceMap⁻¹ * H.nodeMap⁻¹ := mul_inv_rev _ _
+  · calc H.nodeMap = (H.nodeMap⁻¹)⁻¹ := (inv_inv _).symm
+      _ = (H.faceMap * H.edgeMap)⁻¹ := by rw [h2]
+      _ = H.edgeMap⁻¹ * H.faceMap⁻¹ := mul_inv_rev _ _
+  · calc H.faceMap = (H.faceMap⁻¹)⁻¹ := (inv_inv _).symm
+      _ = (H.edgeMap * H.nodeMap)⁻¹ := by rw [h3]
+      _ = H.nodeMap⁻¹ * H.edgeMap⁻¹ := mul_inv_rev _ _
+
+/-- `hypermap.hl`:1292 `lemma_def_path`。 -/
+theorem isPath_iff (H : Hypermap α) (p : ℕ → α) (n : ℕ) :
+    H.isPath p n ↔ ∀ i < n, H.goOneStep (p i) (p (i + 1)) := by
+  constructor
+  · intro h i hi
+    exact H.goOneStep_of_isPath h (Nat.succ_le_of_lt hi)
+  · intro h
+    induction n with
+    | zero => trivial
+    | succ k ih =>
+      rw [H.isPath_succ]
+      exact ⟨ih (fun i hi => h i (Nat.lt_succ_of_lt hi)), h k (Nat.lt_succ_self k)⟩
+
+/-- `hypermap.hl`:1300 `edge_path`。 -/
+def edgePath (H : Hypermap α) (x : α) (i : ℕ) : α := (H.edgeMap ^ i) x
+
+/-- `hypermap.hl`:1303 `node_path`。 -/
+def nodePath (H : Hypermap α) (x : α) (i : ℕ) : α := (H.nodeMap ^ i) x
+
+/-- `hypermap.hl`:1306 `face_path`。 -/
+def facePath (H : Hypermap α) (x : α) (i : ℕ) : α := (H.faceMap ^ i) x
+
+theorem edgePath_zero (H : Hypermap α) (x : α) : H.edgePath x 0 = x := by simp [edgePath]
+
+theorem nodePath_zero (H : Hypermap α) (x : α) : H.nodePath x 0 = x := by simp [nodePath]
+
+theorem facePath_zero (H : Hypermap α) (x : α) : H.facePath x 0 = x := by simp [facePath]
+
+/-- `hypermap.hl`:1309 `lemma_edge_path`。 -/
+theorem isPath_edgePath (H : Hypermap α) (x : α) (k : ℕ) : H.isPath (H.edgePath x) k := by
+  induction k with
+  | zero => trivial
+  | succ k ih =>
+    rw [H.isPath_succ]
+    refine ⟨ih, Or.inl ?_⟩
+    show (H.edgeMap ^ (k + 1)) x = H.edgeMap ((H.edgeMap ^ k) x)
+    rw [pow_succ', Equiv.Perm.mul_apply]
+
+/-- `hypermap.hl`:1315 `lemma_node_path`。 -/
+theorem isPath_nodePath (H : Hypermap α) (x : α) (k : ℕ) : H.isPath (H.nodePath x) k := by
+  induction k with
+  | zero => trivial
+  | succ k ih =>
+    rw [H.isPath_succ]
+    refine ⟨ih, Or.inr (Or.inl ?_)⟩
+    show (H.nodeMap ^ (k + 1)) x = H.nodeMap ((H.nodeMap ^ k) x)
+    rw [pow_succ', Equiv.Perm.mul_apply]
+
+/-- `hypermap.hl`:1321 `lemma_face_path`。 -/
+theorem isPath_facePath (H : Hypermap α) (x : α) (k : ℕ) : H.isPath (H.facePath x) k := by
+  induction k with
+  | zero => trivial
+  | succ k ih =>
+    rw [H.isPath_succ]
+    refine ⟨ih, Or.inr (Or.inr ?_)⟩
+    show (H.faceMap ^ (k + 1)) x = H.faceMap ((H.faceMap ^ k) x)
+    rw [pow_succ', Equiv.Perm.mul_apply]
+
+/-- `hypermap.hl`:1263 `lemma_path_subset`。 -/
+theorem path_mem_darts (H : Hypermap α) (hx : x ∈ H.darts) {p : ℕ → α} {n : ℕ}
+    (hp0 : p 0 = x) (hp : H.isPath p n) : p n ∈ H.darts := by
+  induction n with
+  | zero => rw [hp0]; exact hx
+  | succ k ih =>
+    rw [H.isPath_succ] at hp
+    rcases hp.2 with h | h | h
+    · rw [h]; exact H.edgeMap_apply_mem (ih hp.1)
+    · rw [h]; exact H.nodeMap_apply_mem (ih hp.1)
+    · rw [h]; exact H.faceMap_apply_mem (ih hp.1)
+
+/-- `hypermap.hl`:1272 `lemma_component_subset`。 -/
+theorem combComponent_subset_darts (H : Hypermap α) (hx : x ∈ H.darts) :
+    H.combComponent x ⊆ ↑H.darts := by
+  rintro y ⟨p, n, hp0, hpn, hp⟩
+  rw [← hpn]
+  exact H.path_mem_darts hx hp0 hp
+
+/-- `hypermap.hl`:1329 `lemma_glue_paths`。 -/
+theorem isPath_gluePaths (H : Hypermap α) {p q : ℕ → α} {n m : ℕ}
+    (hp : H.isPath p n) (hq : H.isPath q m) (h : p n = q 0) :
+    H.isPath (gluePaths p q n) (n + m) := by
+  rw [H.isPath_iff] at hp hq ⊢
+  intro i hi
+  by_cases hin : i < n
+  · rw [gluePaths_apply_le hin.le, gluePaths_apply_le (by omega)]
+    exact hp i hin
+  · obtain ⟨j, rfl⟩ : ∃ j : ℕ, i = n + j := ⟨i - n, by omega⟩
+    have h2 : gluePaths p q n (n + j + 1) = q (j + 1) := by
+      rw [add_assoc]
+      exact gluePaths_apply_add h (j + 1)
+    rw [gluePaths_apply_add h j, h2]
+    exact hq j (by omega)
+
+/-- `hypermap.hl`:1351 `concatenate_two_paths`。 -/
+theorem concatenate_two_paths (H : Hypermap α) {p q : ℕ → α} {n m : ℕ}
+    (hp : H.isPath p n) (hq : H.isPath q m) (h : p n = q 0) :
+    ∃ g : ℕ → α, g 0 = p 0 ∧ g (n + m) = q m ∧ H.isPath g (n + m) ∧
+      (∀ i ≤ n, g i = p i) ∧ (∀ i ≤ m, g (n + i) = q i) :=
+  ⟨gluePaths p q n, gluePaths_apply_le (Nat.zero_le n), gluePaths_apply_add h m,
+    H.isPath_gluePaths hp hq h, fun _ hi => gluePaths_apply_le hi,
+    fun i _ => gluePaths_apply_add h i⟩
+
+/-- `hypermap.hl`:1360 `concatenate_paths`。 -/
+theorem concatenate_paths (H : Hypermap α) {p q : ℕ → α} {n m : ℕ}
+    (hp : H.isPath p n) (hq : H.isPath q m) (h : p n = q 0) :
+    ∃ g : ℕ → α, g 0 = p 0 ∧ g (n + m) = q m ∧ H.isPath g (n + m) := by
+  obtain ⟨g, h0, hm, hg, -, -⟩ := H.concatenate_two_paths hp hq h
+  exact ⟨g, h0, hm, hg⟩
+
+/-- `hypermap.hl`:1372 `lemma_reverse_path`。 -/
+theorem reverse_path (H : Hypermap α) {p : ℕ → α} {n : ℕ} (hp : H.isPath p n) :
+    ∃ q : ℕ → α, ∃ m : ℕ, q 0 = p n ∧ q m = p 0 ∧ H.isPath q m := by
+  induction n with
+  | zero => exact ⟨p, 0, rfl, rfl, hp⟩
+  | succ k ih =>
+    rw [H.isPath_succ] at hp
+    obtain ⟨q, m, hq0, hqm, hq⟩ := ih hp.1
+    rcases hp.2 with hstep | hstep | hstep
+    · obtain ⟨j, hj⟩ := H.edgeMap_permutes.exists_pow_apply_eq hstep
+      obtain ⟨g, hg0, hgm, hgpath, -, -⟩ :=
+        H.concatenate_two_paths (H.isPath_edgePath (p (k + 1)) j) hq
+          (hj.symm.trans hq0.symm)
+      exact ⟨g, j + m, hg0.trans (H.edgePath_zero _), hgm.trans hqm, hgpath⟩
+    · obtain ⟨j, hj⟩ := H.nodeMap_permutes.exists_pow_apply_eq hstep
+      obtain ⟨g, hg0, hgm, hgpath, -, -⟩ :=
+        H.concatenate_two_paths (H.isPath_nodePath (p (k + 1)) j) hq
+          (hj.symm.trans hq0.symm)
+      exact ⟨g, j + m, hg0.trans (H.nodePath_zero _), hgm.trans hqm, hgpath⟩
+    · obtain ⟨j, hj⟩ := H.faceMap_permutes.exists_pow_apply_eq hstep
+      obtain ⟨g, hg0, hgm, hgpath, -, -⟩ :=
+        H.concatenate_two_paths (H.isPath_facePath (p (k + 1)) j) hq
+          (hj.symm.trans hq0.symm)
+      exact ⟨g, j + m, hg0.trans (H.facePath_zero _), hgm.trans hqm, hgpath⟩
+
+/-- `hypermap.hl`:1417 `lemma_component_symmetry` 的 `isInComponent` 形式。 -/
+theorem isInComponent_symm (H : Hypermap α) (h : H.isInComponent x y) :
+    H.isInComponent y x := by
+  obtain ⟨p, n, hp0, hpn, hp⟩ := h
+  obtain ⟨q, m, hq0, hqm, hq⟩ := H.reverse_path hp
+  exact ⟨q, m, hq0.trans hpn, hqm.trans hp0, hq⟩
+
+/-- `hypermap.hl`:1417 `lemma_component_symmetry`。 -/
+theorem combComponent_symmetry (H : Hypermap α) (h : y ∈ H.combComponent x) :
+    x ∈ H.combComponent y := H.isInComponent_symm h
+
+/-- `is_in_component` 是等价关系（`hypermap.hl` 中 refl/symmetry/trans 三引理的闭环）。 -/
+theorem isInComponent_equivalence (H : Hypermap α) : Equivalence H.isInComponent :=
+  ⟨H.isInComponent_refl, H.isInComponent_symm, H.isInComponent_trans⟩
+
+/-- `hypermap.hl`:1423 `partition_components`。 -/
+theorem partition_components (H : Hypermap α) (x y : α) :
+    H.combComponent x = H.combComponent y ∨ H.combComponent x ∩ H.combComponent y = ∅ := by
+  by_cases h : (H.combComponent x ∩ H.combComponent y).Nonempty
+  · obtain ⟨t, htx, hty⟩ := h
+    left
+    ext u
+    constructor
+    · intro hu
+      exact H.isInComponent_trans (H.isInComponent_trans hty (H.isInComponent_symm htx)) hu
+    · intro hu
+      exact H.isInComponent_trans (H.isInComponent_trans htx (H.isInComponent_symm hty)) hu
+  · right
+    exact Set.not_nonempty_iff_eq_empty.mp h
+
+/-- dart 集合外的点自成组件（`hypermap.hl` 组件计数理论中 `FINITE` 前提的来源之一）。 -/
+theorem combComponent_eq_singleton_of_not_mem (H : Hypermap α) (hx : x ∉ H.darts) :
+    H.combComponent x = {x} := by
+  ext y
+  constructor
+  · rintro ⟨p, n, hp0, hpn, hp⟩
+    have key : ∀ i ≤ n, p i = x := by
+      intro i
+      induction i with
+      | zero => intro _; exact hp0
+      | succ k ih =>
+        intro hkn
+        have hk : p k = x := ih (Nat.le_of_succ_le hkn)
+        rcases H.goOneStep_of_isPath hp hkn with h | h | h
+        · rw [h, hk, H.edgeMap_permutes x hx]
+        · rw [h, hk, H.nodeMap_permutes x hx]
+        · rw [h, hk, H.faceMap_permutes x hx]
+    rw [Set.mem_singleton_iff, ← hpn]
+    exact key n le_rfl
+  · intro hy
+    rw [Set.mem_singleton_iff] at hy
+    rw [hy]
+    exact H.mem_combComponent_self x
+
+/-- 组合组件有限（`hypermap.hl` 组件计数的前提）。 -/
+theorem combComponent_finite (H : Hypermap α) (x : α) : (H.combComponent x).Finite := by
+  by_cases hx : x ∈ H.darts
+  · exact H.darts.finite_toSet.subset (H.combComponent_subset_darts hx)
+  · rw [H.combComponent_eq_singleton_of_not_mem hx]
+    exact Set.finite_singleton x
+
+/-- `hypermap.hl`:1439 `lemma_partition_by_components`。 -/
+theorem sUnion_setOfComponents (H : Hypermap α) : ↑H.darts = ⋃₀ H.setOfComponents := by
+  ext x
+  rw [Set.mem_sUnion]
+  constructor
+  · intro hx
+    exact ⟨H.combComponent x, ⟨x, hx, rfl⟩, H.mem_combComponent_self x⟩
+  · rintro ⟨t, ⟨y, hy, rfl⟩, hxt⟩
+    exact H.combComponent_subset_darts hy hxt
+
+end Hypermap
+
+/-! ## 轨道计数（`hypermap.hl`:1051–1201 选摘） -/
+
+section OrbitCounting
+
+variable {α : Type*} {f : Equiv.Perm α} {s : Finset α} {x : α}
+
+/-- `hypermap.hl`:1060 `lemma_partition`。 -/
+theorem sUnion_setOfOrbits (hf : PermutesOn f s) : (↑s : Set α) = ⋃₀ setOfOrbits s f := by
+  ext x
+  rw [Set.mem_sUnion]
+  constructor
+  · intro hx
+    exact ⟨orbitMap f x, ⟨x, hx, rfl⟩, mem_orbitMap_self f x⟩
+  · rintro ⟨t, ⟨y, hy, rfl⟩, hxt⟩
+    exact orbitMap_subset_of_permutesOn hf hy hxt
+
+/-- `hypermap.hl`:1146 `card_partition_formula`
+（`lemma_card_of_disjoint_covering`（1067）由 Mathlib 的 `Set.Finite.ncard_biUnion` 替代）。 -/
+theorem ncard_eq_finsum_orbits (hf : PermutesOn f s) :
+    (↑s : Set α).ncard = ∑ᶠ u ∈ setOfOrbits s f, u.ncard := by
+  have hfin : (setOfOrbits s f).Finite := setOfOrbits_finite s f
+  have hfin' : ∀ u ∈ setOfOrbits s f, u.Finite := by
+    intro u hu
+    obtain ⟨x, -, rfl⟩ := hu
+    exact orbitMap_finite hf x
+  have hdisj : (setOfOrbits s f).PairwiseDisjoint id := by
+    intro u hu v hv hne
+    obtain ⟨x, -, rfl⟩ := hu
+    obtain ⟨y, -, rfl⟩ := hv
+    rcases orbitMap_disjoint_or_eq hf x y with h | h
+    · exact Set.disjoint_iff_inter_eq_empty.mpr h
+    · exact absurd h hne
+  calc (↑s : Set α).ncard = (⋃₀ setOfOrbits s f).ncard := by rw [sUnion_setOfOrbits hf]
+    _ = (⋃ u ∈ setOfOrbits s f, u).ncard := by rw [Set.sUnion_eq_biUnion]
+    _ = ∑ᶠ u ∈ setOfOrbits s f, u.ncard := hfin.ncard_biUnion hfin' hdisj
+
+/-- `hypermap.hl`:1185 `lemma_card_eq`。 -/
+theorem ncard_eq_mul_numberOfOrbits (hf : PermutesOn f s) {m : ℕ}
+    (h : ∀ x ∈ s, (orbitMap f x).ncard = m) :
+    (↑s : Set α).ncard = m * numberOfOrbits s f := by
+  classical
+  have hfin := setOfOrbits_finite s f
+  rw [ncard_eq_finsum_orbits hf, finsum_mem_eq_finite_toFinset_sum _ hfin]
+  have hsum : ∀ u ∈ hfin.toFinset, u.ncard = m := by
+    intro u hu
+    rw [hfin.mem_toFinset] at hu
+    obtain ⟨x, hx, rfl⟩ := hu
+    exact h x hx
+  rw [Finset.sum_congr rfl hsum, Finset.sum_const, smul_eq_mul]
+  have hcard : numberOfOrbits s f = hfin.toFinset.card := Set.ncard_eq_toFinset_card _ hfin
+  rw [hcard, Nat.mul_comm]
+
+/-- `hypermap.hl`:1167 `lemma_card_lower_bound`。 -/
+theorem mul_numberOfOrbits_le_ncard (hf : PermutesOn f s) {m : ℕ}
+    (h : ∀ x ∈ s, m ≤ (orbitMap f x).ncard) :
+    m * numberOfOrbits s f ≤ (↑s : Set α).ncard := by
+  classical
+  have hfin := setOfOrbits_finite s f
+  rw [ncard_eq_finsum_orbits hf, finsum_mem_eq_finite_toFinset_sum _ hfin]
+  have hsum : ∀ u ∈ hfin.toFinset, m ≤ u.ncard := by
+    intro u hu
+    rw [hfin.mem_toFinset] at hu
+    obtain ⟨x, hx, rfl⟩ := hu
+    exact h x hx
+  have hcard : m * numberOfOrbits s f = ∑ u ∈ hfin.toFinset, m := by
+    rw [Finset.sum_const, smul_eq_mul]
+    have hc : numberOfOrbits s f = hfin.toFinset.card := Set.ncard_eq_toFinset_card _ hfin
+    rw [hc, Nat.mul_comm]
+  rw [hcard]
+  exact Finset.sum_le_sum hsum
+
+end OrbitCounting
+
+namespace Hypermap
+
+variable {α : Type*} [DecidableEq α]
+
+/-- `hypermap.hl`:1000 `connected_hypermap`。 -/
+def Connected (H : Hypermap α) : Prop := H.numberOfComponents = 1
+
+/-- `hypermap.hl`:1228 `lemmaTGJISOK`：连通 + plain + planar 且边非退化、节点度数 ≥ 3
+的 hypermap 中 dart 数的上界（Euler 公式的推论）。 -/
+theorem darts_card_le (H : Hypermap α) (hconn : H.Connected) (hplain : H.Plain)
+    (hplanar : H.Planar)
+    (hnondeg : ∀ x ∈ H.darts, H.edgeMap x ≠ x ∧ 3 ≤ (H.node x).ncard) :
+    H.darts.card ≤ 6 * H.numberOfFaces - 12 := by
+  have hedge : ∀ x ∈ H.darts, (H.edge x).ncard = 2 := fun x hx =>
+    (orbitMap_finite_ncard_two H.edgeMap_permutes hplain (fun y hy => (hnondeg y hy).1) hx).2
+  have hD : H.darts.card = 2 * H.numberOfEdges := by
+    have h := ncard_eq_mul_numberOfOrbits H.edgeMap_permutes hedge
+    rwa [Set.ncard_coe_finset] at h
+  have hN : 3 * H.numberOfNodes ≤ H.darts.card := by
+    have h := mul_numberOfOrbits_le_ncard H.nodeMap_permutes (fun x hx => (hnondeg x hx).2)
+    rwa [Set.ncard_coe_finset] at h
+  unfold Connected at hconn
+  unfold Planar at hplanar
+  omega
 
 end Hypermap
 
