@@ -11,7 +11,56 @@ SoPlex 8.0.3；CMake 4.4.2 官方二进制解压于 /dev/shm，仅构建期使�
   精确最优解 x=1, y=2，目标值 3。
 - `hello-frac.lp` — 右端项改为 5/5 的变体，最优解 x=y=5/3，目标值 10/3，
   用于验证分数形式输出。
+- `rand-12x20.lp` / `rand-30x40.lp` — `gen_rand.py` 生成的随机有界可行 LP
+  （整数系数、全非负矩阵、每列至少一个正元故目标有界）。
 - `exact.set` — SoPlex 精确模式参数集（复制自源码包 `settings/exact.set`）。
+- `gen_rand.py` — 随机 LP 生成器：`gen_rand.py ROWS COLS SEED > file.lp`。
+- `socert.py` — 不受信转换器：SoPlex 精确解 → Lean 证书（见下节）。
+
+## 全链路试点：求解器 → 证书 → Lean checker → 定理（2026-08-24 打通）
+
+`socert.py`（**不受信**，可用任意技巧；信任全部由 Lean 侧内核 `decide`
+重放建立）把一个 .lp 文件变成 `lean/Kepler/LP/Cert<Name>.lean`：
+
+1. 解析 .lp 子集（Maximize/Minimize、带标签的线性 `<=`/`>=` 约束、
+   整数/分数/小数码系数、默认非负界；暂不支持 `=` 约束与 Bounds 段，
+   数据通分后必须为整数）为 (c, A, b)；
+2. 调 `soplex --loadset=exact.set -X -Y -c file.lp`，要求
+   "Solved to optimality" 与原始/对偶精确检验通过；
+3. 解析有理原始/对偶解（`-Y` 段按约束名给出分数乘子，缺失为 0）；
+4. 用 Fraction 精确算术做不受信验证：x ≥ 0、A·x ≤ b、y ≥ 0、
+   Aᵀy ≥ c、cᵀx = bᵀy（强对偶，任一失败即大声报错）；
+5. 通分：D = lcm(y 的分母)，Y = D·y，G = bᵀY（即 y = Y/D、γ = G/D），
+   按 `Kepler.LP.Cert` 的 `(numVars, c, A, Y, D, G)` 稀疏格式发射 Lean 文件：
+   `dual_check := by decide`（内核重放）+ `bound`（经 `checkDual_sound`
+   得到"所有有理可行点目标值 ≤ γ"）+ 原始解为整数时附 `primal_check`。
+
+用法（在 `pipeline/lp/` 下）：
+
+```sh
+python3 socert.py hello.lp            # → lean/Kepler/LP/CertHello.lean
+python3 socert.py hello-frac.lp       # → CertHelloFrac.lean（γ = 10/3，primal 为分数故跳过）
+python3 gen_rand.py 12 20 7 > rand-12x20.lp
+python3 socert.py rand-12x20.lp       # → CertRand12x20.lean
+cd ../../lean && lake build Kepler.LP.CertHello Kepler.LP.CertHelloFrac \
+  Kepler.LP.CertRand12x20 Kepler.LP.CertRand30x40
+```
+
+已验证结果（内核 `decide` 闭合，公理仅 propext/Classical.choice/Quot.sound）：
+
+| LP | 规模 | γ（最优值） | `dual_check` 构建耗时 |
+|---|---|---|---|
+| hello | 2×2 | 3 | 秒级 |
+| hello-frac | 2×2 | 10/3 | 秒级 |
+| rand-12x20 | 12×20, 163 nz | 19969/111 | ~78 s |
+| rand-30x40 | 30×40, 850 nz | 44669256618739/149705792664 | ~83 s（全模块 119 s） |
+
+**规模观察**：checker 每列重新扫描所有行支撑（`colDotI` → 每行
+`coeffs.get j`），内核代价 ~O(变量数 × 非零元数) 次 whnf 归约；30×40
+需 ~83 s，说明 >10² 规模必须走 Cert.lean 文件头注释里的分片
+（sharding）/转置预计算路线，试点的 `decide` 直放只适合小案例。
+
+## 精确模式用法（已验证）
 
 ## 精确模式用法（已验证）
 
