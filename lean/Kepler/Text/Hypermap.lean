@@ -106,6 +106,44 @@ Explicitly skipped in this range:
 - 1698 `lemma_hypermap_rep`: under the structure encoding the projections
   of `⟨D, e, n, f, _⟩` hold by `rfl` (cf. `lemma_edge_walkup`).
 
+Coverage (block 4, fine orbit structure / planar index / walkup orbits):
+- Fine orbit structure (1982–2097): `power_sequence` (1982, as
+  `powerSeq`), `inj_orbit` (1984, defined directly without the
+  `is_inj_list` detour), `lemma_def_inj_orbit` (1995, as `injOrbit_iff`),
+  `lemma_inj_orbit` (2000, as `injOrbit_iff_pairwise`),
+  `elim_power_function` (820, as `Perm.pow_apply_eq_pow_apply_cancel`),
+  `inj_orbit_step` (2003, as `PermutesOn.injOrbit_step`; the `permutes`
+  hypothesis is kept for fidelity although the `Equiv.Perm` proof only
+  needs injectivity), `lemma_subset_orbit` (2022), `lemma_segment_orbit`
+  (2027, as `PermutesOn.injOrbit_of_lt_ncard`), `lemma_cycle_orbit` (2039,
+  as `PermutesOn.pow_ncard_orbitMap_apply_self`), `lemma_index_on_orbit`
+  (2064), `lemma_congruence_on_orbit` (2076).
+- Merge/split classification (2103–2113, definitions only).
+- Orbit identities (2115–2164): `INVERSE_EVALUATION` (2115),
+  `lemma_orbit_identity` (2123, already ported as `orbitMap_eq_of_mem`),
+  `lemma_edge/node/face_identity` (2138–2144), `lemma_orbit_power` (2152),
+  `lemma_inverse_in_orbit` (2159).
+- Planarity (2168–2260): `planar_index` (2170, over `ℤ` instead of HOL's
+  `&`/ℝ — equivalent for the counting arguments and omega-friendly),
+  `lemma_planar_hypermap` (2175), `lemma_null_hypermap_planar_index`
+  (2179), `lemma_shift_component_invariant` (2190),
+  `lemma_planar_invariant_shift` (2251), `in_orbit_map1` (2258).
+- `lemma_orbit_eq` (2263), `lemma_not_in_orbit_powers` (2275).
+- Walkup orbit equalities (2286–2507): `lemma_walkup_nodes` (2286) and
+  `lemma_walkup_faces` (2397), both as instances of a single generic
+  lemma `walkup_orbits_delete` (the two HOL proofs are verbatim copies
+  with `node_map`/`face_map` exchanged).
+
+Explicitly skipped in this range:
+- 1988 `lemma_inj_orbit_via_list`: goes through the `is_inj_list`
+  machinery skipped in block 2; `injOrbit` is given equivalent
+  characterizations (`injOrbit_iff`, `injOrbit_iff_pairwise`) instead.
+- 2147 `lemma_in_disjoint`: set-theoretic triviality (Mathlib).
+- 2508–2706 `lemma_walkup_first/second_edge_eq`, `lemma_walkup_edges`:
+  left for the next block (walkup edge-set equalities).
+- 2708 onwards (`in_set_of_orbits`, representation lemmas, component
+  walkups, planar-index computations): left for the next block.
+
 Type correspondences (HOL Light ↦ Lean 4):
 - `(A)hypermap` (a 4-tuple carrying `FINITE`/`permutes` side conditions,
   `hypermap.hl`:83–93) ↦ `structure Hypermap` with a `Finset` of darts and
@@ -1724,6 +1762,400 @@ theorem edgeMap_walkup (H : Hypermap α) (x y : α) :
       exact h1
     rw [key, hF (H.edgeMap y) hey1 hey2, hN (H.faceMap (H.edgeMap y)) hfey1 hfey2]
     exact H.nfe_apply y
+
+end Hypermap
+
+/-! ## 轨道的精细结构（`hypermap.hl`:1982–2097） -/
+
+section InjOrbit
+
+variable {α : Type*} {p : Equiv.Perm α} {s : Finset α} {x y : α}
+
+/-- `hypermap.hl`:1982 `power_sequence`。 -/
+def powerSeq (p : Equiv.Perm α) (x : α) : ℕ → α := fun i => (p ^ i) x
+
+/-- `hypermap.hl`:1984 `inj_orbit`（不经 `is_inj_list`，直接递归定义）。 -/
+def injOrbit (p : Equiv.Perm α) (x : α) : ℕ → Prop
+  | 0 => True
+  | n + 1 => injOrbit p x n ∧ (∀ j ≤ n, (p ^ (n + 1)) x ≠ (p ^ j) x)
+
+theorem injOrbit_succ (p : Equiv.Perm α) (x : α) (n : ℕ) :
+    injOrbit p x (n + 1) ↔ injOrbit p x n ∧ (∀ j ≤ n, (p ^ (n + 1)) x ≠ (p ^ j) x) := Iff.rfl
+
+/-- `hypermap.hl`:1995 `lemma_def_inj_orbit`。 -/
+theorem injOrbit_iff (p : Equiv.Perm α) (x : α) (n : ℕ) :
+    injOrbit p x n ↔ ∀ i j : ℕ, i ≤ n → j < i → (p ^ i) x ≠ (p ^ j) x := by
+  constructor
+  · intro h
+    induction n with
+    | zero => intro i j hi hj; omega
+    | succ k ih =>
+      rw [injOrbit_succ] at h
+      intro i j hi hj
+      rcases (by omega : i ≤ k ∨ i = k + 1) with hik | rfl
+      · exact ih h.1 i j hik hj
+      · exact h.2 j (by omega)
+  · intro h
+    induction n with
+    | zero => trivial
+    | succ k ih =>
+      rw [injOrbit_succ]
+      refine ⟨ih (fun i j hi hj => h i j (hi.trans k.le_succ) hj), fun j hj => ?_⟩
+      exact h (k + 1) j (by omega) (by omega)
+
+/-- `hypermap.hl`:2000 `lemma_inj_orbit`。 -/
+theorem injOrbit_iff_pairwise (p : Equiv.Perm α) (x : α) (n : ℕ) :
+    injOrbit p x n ↔ ∀ i j : ℕ, i ≤ n → j ≤ n → (p ^ i) x = (p ^ j) x → i = j := by
+  rw [injOrbit_iff]
+  constructor
+  · intro h i j hi hj heq
+    rcases lt_trichotomy i j with hlt | heq' | hgt
+    · exact absurd heq.symm (h j i hj hlt)
+    · exact heq'
+    · exact absurd heq (h i j hi hgt)
+  · intro h i j hi hj hcon
+    have := h i j hi (hj.le.trans hi) hcon
+    omega
+
+/-- `hypermap.hl`:820 `elim_power_function`。 -/
+theorem Perm.pow_apply_eq_pow_apply_cancel (p : Equiv.Perm α) {m k : ℕ} {x : α}
+    (h : (p ^ (m + k)) x = (p ^ m) x) : (p ^ k) x = x := by
+  rw [pow_add, Equiv.Perm.mul_apply] at h
+  exact (p ^ m).injective h
+
+/-- `hypermap.hl`:2003 `inj_orbit_step`。 -/
+theorem PermutesOn.injOrbit_step (_hp : PermutesOn p s) (h : injOrbit p x n)
+    (hne : (p ^ (n + 1)) x ≠ x) : injOrbit p x (n + 1) := by
+  rw [injOrbit_succ]
+  refine ⟨h, fun j hj hcon => ?_⟩
+  by_cases hj0 : j = 0
+  · subst hj0
+    exact hne (by simpa using hcon)
+  · obtain ⟨d, rfl⟩ : ∃ d : ℕ, j = d + 1 := ⟨j - 1, by omega⟩
+    have hsplit : n + 1 = (d + 1) + (n - d) := by omega
+    have hfix : (p ^ (n - d)) x = x := by
+      apply Perm.pow_apply_eq_pow_apply_cancel (m := d + 1) (k := n - d)
+      rw [← hsplit]; exact hcon
+    rw [injOrbit_iff] at h
+    exact h (n - d) 0 (by omega) (by omega) hfix
+
+/-- `hypermap.hl`:2022 `lemma_subset_orbit`。 -/
+theorem image_range_le_subset_orbitMap (p : Equiv.Perm α) (x : α) (n : ℕ) :
+    (fun i => (p ^ i) x) '' ↑(Finset.range (n + 1)) ⊆ orbitMap p x := by
+  rintro y ⟨i, -, rfl⟩
+  exact pow_apply_mem_orbitMap p i x
+
+/-- `injOrbit` 时前 `n + 1` 个幂两两不同（`hypermap.hl`:585 `lemma_size_list` 的轨道版）。 -/
+theorem ncard_image_range_le_of_injOrbit (p : Equiv.Perm α) (x : α) {n : ℕ}
+    (h : injOrbit p x n) :
+    ((fun i => (p ^ i) x) '' ↑(Finset.range (n + 1))).ncard = n + 1 := by
+  rw [injOrbit_iff_pairwise] at h
+  have hinj : Set.InjOn (fun i => (p ^ i) x) ↑(Finset.range (n + 1)) := by
+    intro i hi j hj hij
+    have hi' : i < n + 1 := Finset.mem_range.mp (Finset.mem_coe.mp hi)
+    have hj' : j < n + 1 := Finset.mem_range.mp (Finset.mem_coe.mp hj)
+    exact h i j (by omega) (by omega) hij
+  rw [hinj.ncard_image, Set.ncard_coe_finset, Finset.card_range]
+
+/-- `hypermap.hl`:2027 `lemma_segment_orbit`。 -/
+theorem PermutesOn.injOrbit_of_lt_ncard (hp : PermutesOn p s) :
+    ∀ {m : ℕ}, m < (orbitMap p x).ncard → injOrbit p x m := by
+  intro m
+  induction m with
+  | zero => intro _; trivial
+  | succ k ih =>
+    intro hkm
+    have h1 : injOrbit p x k := ih (by omega)
+    apply hp.injOrbit_step h1
+    intro hcon
+    have hle := card_orbit_le p (by omega : k + 1 ≠ 0) hcon
+    omega
+
+/-- `hypermap.hl`:2039 `lemma_cycle_orbit`。 -/
+theorem PermutesOn.pow_ncard_orbitMap_apply_self (hp : PermutesOn p s) (x : α) :
+    (p ^ ((orbitMap p x).ncard)) x = x := by
+  have hfin := orbitMap_finite hp x
+  have hpos : 0 < (orbitMap p x).ncard := by
+    rw [Set.ncard_pos hfin]; exact ⟨x, mem_orbitMap_self p x⟩
+  set c := (orbitMap p x).ncard with hc
+  by_contra hne
+  have hm : injOrbit p x (c - 1) := hp.injOrbit_of_lt_ncard (by omega)
+  have hstep : injOrbit p x c := by
+    have h := hp.injOrbit_step hm (by rwa [(by omega : c - 1 + 1 = c)])
+    rwa [(by omega : c - 1 + 1 = c)] at h
+  have hcard := ncard_image_range_le_of_injOrbit p x hstep
+  have hsub := image_range_le_subset_orbitMap p x c
+  have hle := Set.ncard_le_ncard hsub hfin
+  rw [hcard] at hle
+  omega
+
+/-- `hypermap.hl`:2064 `lemma_index_on_orbit`。 -/
+theorem PermutesOn.exists_lt_ncard_pow_apply (hp : PermutesOn p s)
+    (hy : y ∈ orbitMap p x) : ∃ n : ℕ, n < (orbitMap p x).ncard ∧ y = (p ^ n) x := by
+  have hfin := orbitMap_finite hp x
+  have hpos : 0 < (orbitMap p x).ncard := by
+    rw [Set.ncard_pos hfin]; exact ⟨x, mem_orbitMap_self p x⟩
+  rw [orbit_cyclic p hpos.ne' (hp.pow_ncard_orbitMap_apply_self x)] at hy
+  obtain ⟨n, hn, rfl⟩ := hy
+  exact ⟨n, Finset.mem_range.mp hn, rfl⟩
+
+/-- `hypermap.hl`:2076 `lemma_congruence_on_orbit`。 -/
+theorem PermutesOn.exists_mul_ncard_add_of_pow_eq (hp : PermutesOn p s) {n m : ℕ}
+    (hn : n < (orbitMap p x).ncard) (h : (p ^ n) x = (p ^ m) x) :
+    ∃ q : ℕ, m = q * (orbitMap p x).ncard + n := by
+  have hfin := orbitMap_finite hp x
+  have hpos : 0 < (orbitMap p x).ncard := by
+    rw [Set.ncard_pos hfin]; exact ⟨x, mem_orbitMap_self p x⟩
+  set c := (orbitMap p x).ncard with hc
+  obtain ⟨q, r, hqr, hr⟩ : ∃ q r : ℕ, m = q * c + r ∧ r < c :=
+    ⟨m / c, m % c, by rw [Nat.mul_comm]; exact (Nat.div_add_mod m c).symm,
+      Nat.mod_lt m hpos⟩
+  have hcycle : ((p ^ c) ^ q) x = x := pow_fix_pow p (hp.pow_ncard_orbitMap_apply_self x) q
+  have heq : (p ^ r) x = (p ^ n) x := by
+    rw [h]
+    have hm : m = r + q * c := by rw [hqr, Nat.add_comm]
+    rw [hm, pow_add, Equiv.Perm.mul_apply, pow_mul', hcycle]
+  have hinj : injOrbit p x (c - 1) := hp.injOrbit_of_lt_ncard (by omega)
+  rw [injOrbit_iff_pairwise] at hinj
+  have hrn : r = n := hinj r n (by omega) (by omega) heq
+  exact ⟨q, by rw [hqr, hrn]⟩
+
+/-- `hypermap.hl`:2115 `INVERSE_EVALUATION`（`⁻¹` 形式）。 -/
+theorem PermutesOn.exists_pow_inv_apply (hp : PermutesOn p s) (x : α) :
+    ∃ j : ℕ, p⁻¹ x = (p ^ j) x := by
+  obtain ⟨j, hj⟩ := hp.exists_pow_eq_inv
+  exact ⟨j, by rw [← hj]⟩
+
+/-- `hypermap.hl`:2115 `INVERSE_EVALUATION`（`symm` 形式）。 -/
+theorem PermutesOn.exists_pow_symm_apply (hp : PermutesOn p s) (x : α) :
+    ∃ j : ℕ, p.symm x = (p ^ j) x := hp.exists_pow_inv_apply x
+
+/-- `hypermap.hl`:2152 `lemma_orbit_power`。 -/
+theorem PermutesOn.orbitMap_pow_apply (hp : PermutesOn p s) (n : ℕ) (x : α) :
+    orbitMap p x = orbitMap p ((p ^ n) x) :=
+  (orbitMap_eq_of_mem hp (pow_apply_mem_orbitMap p n x)).symm
+
+/-- `hypermap.hl`:2159 `lemma_inverse_in_orbit`。 -/
+theorem PermutesOn.symm_apply_mem_orbitMap (hp : PermutesOn p s) (x : α) :
+    p.symm x ∈ orbitMap p x := by
+  obtain ⟨j, hj⟩ := hp.exists_pow_symm_apply x
+  rw [hj]
+  exact pow_apply_mem_orbitMap p j x
+
+/-- `hypermap.hl`:2258 `in_orbit_map1`。 -/
+theorem apply_mem_orbitMap (f : Equiv.Perm α) (x : α) : f x ∈ orbitMap f x :=
+  pow_apply_mem_orbitMap f 1 x
+
+/-- `hypermap.hl`:2263 `lemma_orbit_eq`。 -/
+theorem orbitMap_eq_of_pow_apply_eq (p q : Equiv.Perm α) (x : α)
+    (h : ∀ n : ℕ, (p ^ n) x = (q ^ n) x) : orbitMap p x = orbitMap q x := by
+  ext y
+  constructor
+  · rintro ⟨n, rfl⟩
+    exact ⟨n, (h n).symm⟩
+  · rintro ⟨n, rfl⟩
+    exact ⟨n, h n⟩
+
+/-- `hypermap.hl`:2275 `lemma_not_in_orbit_powers`。 -/
+theorem PermutesOn.pow_apply_ne_pow_apply_of_not_mem (hp : PermutesOn p s)
+    (hy : y ∉ orbitMap p x) (n m : ℕ) : (p ^ n) y ≠ (p ^ m) x := by
+  intro hcon
+  apply hy
+  have h1 : (p ^ m) x ∈ orbitMap p y := by
+    have h2 : (p ^ n) y ∈ orbitMap p ((p ^ n) y) := mem_orbitMap_self _ _
+    rw [← hp.orbitMap_pow_apply n y] at h2
+    rwa [hcon] at h2
+  have h3 : orbitMap p y = orbitMap p x :=
+    (orbitMap_eq_of_mem hp h1).symm.trans (hp.orbitMap_pow_apply m x).symm
+  exact h3.symm ▸ mem_orbitMap_self p y
+
+end InjOrbit
+
+namespace Hypermap
+
+variable {α : Type*} [DecidableEq α] {x y z : α}
+
+/-- `hypermap.hl`:2103 `is_edge_merge`。 -/
+def IsEdgeMerge (H : Hypermap α) (x : α) : Prop :=
+  H.DartNondegenerate x ∧ H.nodeMap x ∉ H.edge x
+
+/-- `hypermap.hl`:2105 `is_node_merge`。 -/
+def IsNodeMerge (H : Hypermap α) (x : α) : Prop :=
+  H.DartNondegenerate x ∧ H.faceMap x ∉ H.node x
+
+/-- `hypermap.hl`:2107 `is_face_merge`。 -/
+def IsFaceMerge (H : Hypermap α) (x : α) : Prop :=
+  H.DartNondegenerate x ∧ H.edgeMap x ∉ H.face x
+
+/-- `hypermap.hl`:2109 `is_edge_split`。 -/
+def IsEdgeSplit (H : Hypermap α) (x : α) : Prop :=
+  H.DartNondegenerate x ∧ H.nodeMap x ∈ H.edge x
+
+/-- `hypermap.hl`:2111 `is_node_split`。 -/
+def IsNodeSplit (H : Hypermap α) (x : α) : Prop :=
+  H.DartNondegenerate x ∧ H.faceMap x ∈ H.node x
+
+/-- `hypermap.hl`:2113 `is_face_split`。 -/
+def IsFaceSplit (H : Hypermap α) (x : α) : Prop :=
+  H.DartNondegenerate x ∧ H.edgeMap x ∈ H.face x
+
+/-- `hypermap.hl`:2138 `lemma_edge_identity`。 -/
+theorem edge_eq_of_mem (H : Hypermap α) (hy : y ∈ H.edge x) : H.edge x = H.edge y :=
+  (orbitMap_eq_of_mem H.edgeMap_permutes hy).symm
+
+/-- `hypermap.hl`:2141 `lemma_node_identity`。 -/
+theorem node_eq_of_mem (H : Hypermap α) (hy : y ∈ H.node x) : H.node x = H.node y :=
+  (orbitMap_eq_of_mem H.nodeMap_permutes hy).symm
+
+/-- `hypermap.hl`:2144 `lemma_face_identity`。 -/
+theorem face_eq_of_mem (H : Hypermap α) (hy : y ∈ H.face x) : H.face x = H.face y :=
+  (orbitMap_eq_of_mem H.faceMap_permutes hy).symm
+
+/-- `hypermap.hl`:2170 `planar_index`（HOL 用 `&` 嵌入 ℝ；我们用 `ℤ`，
+对计数论证等价且可用 `omega` 收尾）。 -/
+noncomputable def planarIndex (H : Hypermap α) : ℤ :=
+  H.numberOfEdges + H.numberOfNodes + H.numberOfFaces - H.darts.card -
+    2 * H.numberOfComponents
+
+/-- `hypermap.hl`:2175 `lemma_planar_hypermap`。 -/
+theorem planar_iff_planarIndex_eq_zero (H : Hypermap α) :
+    H.Planar ↔ H.planarIndex = 0 := by
+  unfold Planar planarIndex
+  omega
+
+/-- `hypermap.hl`:2179 `lemma_null_hypermap_planar_index`。 -/
+theorem planarIndex_eq_zero_of_darts_card_eq_zero (H : Hypermap α)
+    (h : H.darts.card = 0) : H.planarIndex = 0 := by
+  have hd : H.darts = ∅ := Finset.card_eq_zero.mp h
+  have ho : ∀ f : Equiv.Perm α, setOfOrbits H.darts f = ∅ := fun f => by
+    ext u; simp [setOfOrbits, hd]
+  have hc : H.setPartComponents H.darts = ∅ := by
+    ext u; simp [setPartComponents, hd]
+  simp [planarIndex, numberOfEdges, numberOfNodes, numberOfFaces, numberOfComponents,
+    edgeSet, nodeSet, faceSet, setOfComponents, ho, hc, h]
+
+/-- `hypermap.hl`:2190 `lemma_shift_component_invariant`。 -/
+theorem setOfComponents_shift (H : Hypermap α) :
+    H.setOfComponents = H.shift.setOfComponents := by
+  have hstep : ∀ x y : α, H.goOneStep x y ↔ H.shift.goOneStep x y := by
+    intro x y
+    show (_ ∨ _ ∨ _) ↔ (_ ∨ _ ∨ _)
+    tauto
+  have hpath : ∀ (p : ℕ → α) (n : ℕ), H.isPath p n ↔ H.shift.isPath p n := by
+    intro p n
+    rw [H.isPath_iff, H.shift.isPath_iff]
+    exact forall_congr' fun i => forall_congr' fun _ => hstep _ _
+  have hcomp : ∀ x y : α, H.isInComponent x y ↔ H.shift.isInComponent x y := by
+    intro x y
+    show (∃ p : ℕ → α, ∃ n : ℕ, p 0 = x ∧ p n = y ∧ H.isPath p n) ↔
+      ∃ p : ℕ → α, ∃ n : ℕ, p 0 = x ∧ p n = y ∧ H.shift.isPath p n
+    exact exists_congr fun p => exists_congr fun n =>
+      and_congr (Iff.refl _) (and_congr (Iff.refl _) (hpath p n))
+  have hcc : ∀ x : α, H.combComponent x = H.shift.combComponent x := by
+    intro x
+    ext y
+    exact hcomp x y
+  show H.setPartComponents H.darts = H.shift.setPartComponents H.shift.darts
+  ext u
+  constructor
+  · rintro ⟨x, hx, rfl⟩
+    exact ⟨x, hx, (hcc x).symm⟩
+  · rintro ⟨x, hx, rfl⟩
+    exact ⟨x, hx, hcc x⟩
+
+/-- `hypermap.hl`:2251 `lemma_planar_invariant_shift`。 -/
+theorem planarIndex_shift (H : Hypermap α) : H.planarIndex = H.shift.planarIndex := by
+  have hE : H.shift.numberOfEdges = H.numberOfNodes := rfl
+  have hN : H.shift.numberOfNodes = H.numberOfFaces := rfl
+  have hF : H.shift.numberOfFaces = H.numberOfEdges := rfl
+  have hD : H.shift.darts.card = H.darts.card := rfl
+  have hC := H.setOfComponents_shift
+  unfold planarIndex numberOfComponents
+  rw [hE, hN, hF, hD, hC]
+  omega
+
+/-- `hypermap.hl`:2286/2397 `lemma_walkup_nodes`/`lemma_walkup_faces` 的统一形式。
+`p` 取 `nodeMap`（对应 walkup 后 `p' = (edgeWalkup x).nodeMap`）或 `faceMap`。 -/
+theorem walkup_orbits_delete (H : Hypermap α) {x : α} (_hx : x ∈ H.darts)
+    {p p' : Equiv.Perm α} (hp : PermutesOn p H.darts)
+    (heval : p' x = x ∧ p' (p.symm x) = p x ∧
+      ∀ y : α, y ≠ x → y ≠ p.symm x → p' y = p y)
+    (hp' : PermutesOn p' (H.darts.erase x)) :
+    setOfOrbits H.darts p \ {orbitMap p x} =
+      setOfOrbits (H.darts.erase x) p' \ {orbitMap p' (p.symm x)} := by
+  obtain ⟨j, hj⟩ := hp.exists_pow_symm_apply x
+  ext u
+  simp only [Set.mem_sdiff, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨⟨y, hy, rfl⟩, hne⟩
+    have hyx : y ∉ orbitMap p x := fun hcon => hne (orbitMap_eq_of_mem hp hcon)
+    have hyx2 : y ≠ x := fun h => hne (by rw [h])
+    have hpow : ∀ m : ℕ, (p ^ m) y = (p' ^ m) y := by
+      intro m
+      induction m with
+      | zero => rfl
+      | succ m ih =>
+        rw [pow_succ', Equiv.Perm.mul_apply, ih]
+        have h1 : (p' ^ m) y ≠ x := by
+          rw [← ih]
+          exact hp.pow_apply_ne_pow_apply_of_not_mem hyx m 0
+        have h2 : (p' ^ m) y ≠ p.symm x := by
+          rw [← ih, hj]
+          exact hp.pow_apply_ne_pow_apply_of_not_mem hyx m j
+        rw [← heval.2.2 _ h1 h2, pow_succ', Equiv.Perm.mul_apply]
+    have hu : orbitMap p y = orbitMap p' y := orbitMap_eq_of_pow_apply_eq p p' y hpow
+    refine ⟨⟨y, Finset.mem_erase.mpr ⟨hyx2, hy⟩, hu.symm⟩, ?_⟩
+    intro hcon
+    have hmem : p.symm x ∈ orbitMap p y := by
+      have h1 : p.symm x ∈ orbitMap p' (p.symm x) := mem_orbitMap_self _ _
+      rwa [← hcon] at h1
+    rw [hj] at hmem
+    have h3 : orbitMap p x = orbitMap p y :=
+      (hp.orbitMap_pow_apply j x).trans (orbitMap_eq_of_mem hp hmem)
+    exact hyx (h3.symm ▸ mem_orbitMap_self p y)
+  · rintro ⟨⟨y, hy, rfl⟩, hne⟩
+    rw [Finset.mem_erase] at hy
+    obtain ⟨hyx2, hyD⟩ := hy
+    have hpow : ∀ m : ℕ, (p ^ m) y = (p' ^ m) y := by
+      intro m
+      induction m with
+      | zero => rfl
+      | succ m ih =>
+        rw [pow_succ', Equiv.Perm.mul_apply, ih]
+        have h1 : (p' ^ m) y ≠ x := by
+          have hsub : (p' ^ m) y ∈ H.darts.erase x :=
+            hp'.pow_apply_mem m (Finset.mem_erase.mpr ⟨hyx2, hyD⟩)
+          exact (Finset.mem_erase.mp hsub).1
+        have h2 : (p' ^ m) y ≠ p.symm x := by
+          intro hcon
+          apply hne
+          have hmem : p.symm x ∈ orbitMap p' y := hcon ▸ pow_apply_mem_orbitMap p' m y
+          exact (orbitMap_eq_of_mem hp' hmem).symm
+        rw [← heval.2.2 _ h1 h2, pow_succ', Equiv.Perm.mul_apply]
+    refine ⟨⟨y, hyD, orbitMap_eq_of_pow_apply_eq p p' y hpow⟩, ?_⟩
+    intro hcon
+    apply hne
+    have hmem : p.symm x ∈ orbitMap p x := hj ▸ pow_apply_mem_orbitMap p j x
+    rw [← hcon] at hmem
+    exact (orbitMap_eq_of_mem hp' hmem).symm
+
+/-- `hypermap.hl`:2286 `lemma_walkup_nodes`。 -/
+theorem nodeSet_walkup (H : Hypermap α) {x : α} (hx : x ∈ H.darts) :
+    H.nodeSet \ {H.node x} =
+      (H.edgeWalkup x).nodeSet \ {(H.edgeWalkup x).node (H.nodeMap.symm x)} :=
+  H.walkup_orbits_delete hx H.nodeMap_permutes
+    ⟨(H.nodeMap_walkup x x).1, (H.nodeMap_walkup x x).2.1,
+      fun y h1 h2 => (H.nodeMap_walkup x y).2.2 ⟨h1, h2⟩⟩
+    (H.edgeWalkup x).nodeMap_permutes
+
+/-- `hypermap.hl`:2397 `lemma_walkup_faces`。 -/
+theorem faceSet_walkup (H : Hypermap α) {x : α} (hx : x ∈ H.darts) :
+    H.faceSet \ {H.face x} =
+      (H.edgeWalkup x).faceSet \ {(H.edgeWalkup x).face (H.faceMap.symm x)} :=
+  H.walkup_orbits_delete hx H.faceMap_permutes
+    ⟨(H.faceMap_walkup x x).1, (H.faceMap_walkup x x).2.1,
+      fun y h1 h2 => (H.faceMap_walkup x y).2.2 ⟨h1, h2⟩⟩
+    (H.edgeWalkup x).faceMap_permutes
 
 end Hypermap
 
