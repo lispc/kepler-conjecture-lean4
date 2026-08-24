@@ -255,6 +255,36 @@ Explicitly skipped in this range:
 - 9614+ `iso` (hypermap isomorphism): far ahead in the file; will be
   reached in file order.
 
+Coverage (block 8, walkup contour preservation and elimination):
+- `lemma_eliminate_dart_ouside_Moebius_contour` (5061, as
+  `isMoebiusContour_edgeWalkup_of_not_mem_support`; the HOL label-tactic
+  case analysis is factored through three key lemmas converting
+  node/face map relations across the walkup seam).
+- `lemmaQZTPGJV` (5279, as `exists_injContour_of_isContour`: every
+  contour refines to an injective contour with the same endpoints).
+- Face/node walkup facts (5627–5689): `dart_(face|node)_walkup`
+  (5629/5662, `rfl` under the structure encoding),
+  `lemma_card_(face|node)_walkup_dart` (5636/5669),
+  `face_map_face_walkup` (5641), `node_map_face_walkup` (5652),
+  `node_map_node_walkup` (5675), `face_map_node_walkup` (5683) — these
+  are literally `edgeMap_walkup`/`nodeMap_walkup`/`faceMap_walkup`
+  instantiated at `shift H`/`shift (shift H)`, one line each.
+- `lemma_face_walkup_second_segment_contour` (5691, as
+  `isInjContour_faceWalkup_shift`), `lemma_face_walkup_eliminate_dart_
+  on_Moebius_contour` (5774, as `isInjContour_faceWalkup_eliminate`),
+  `lemma_node_walkup_second_segment_contour` (5888, as
+  `isInjContour_nodeWalkup_shift`), `lemma_node_walkup_eliminate_dart_
+  on_Moebius_contour` (5969, as `isInjContour_nodeWalkup_eliminate`).
+  Seam avoidance is driven by the new `ne_of_pairwise` helper on the
+  injective path.
+
+Explicitly skipped in this range:
+- 5406–5626 `lemma_minimum_Moebius_hypermap`: still open (belongs with
+  the Jordan applications).
+- 6080–6696 `lemmaLIPYTUI` (the combinatorial Jordan curve theorem):
+  the ~615-line multi-case induction; all its prerequisites up to this
+  line are now ported, the theorem itself is the next block's target.
+
 Type correspondences (HOL Light ↦ Lean 4):
 - `(A)hypermap` (a 4-tuple carrying `FINITE`/`permutes` side conditions,
   `hypermap.hl`:83–93) ↦ `structure Hypermap` with a `Finset` of darts and
@@ -4368,6 +4398,385 @@ theorem setOfComponents_eq_singleton (H : Hypermap α) {x : α}
     rw [Set.mem_singleton_iff] at hu
     rw [hu]
     exact ⟨x, hx, rfl⟩
+
+/-- `hypermap.hl`:5061 `lemma_eliminate_dart_ouside_Moebius_contour`。
+`x` 避开整个 contour 时，walkup 保持 Moebius contour（`nodeMap_walkup`/
+`faceMap_walkup` 的第三分量在接缝外逐点成立）。 -/
+theorem isMoebiusContour_edgeWalkup_of_not_mem_support (H : Hypermap α) {p : ℕ → α} {k : ℕ}
+    (hp : H.IsMoebiusContour p k) {x : α}
+    (hx : x ∉ (fun i => p i) '' ↑(Finset.range (k + 1))) :
+    (H.edgeWalkup x).IsMoebiusContour p k := by
+  have hni : ∀ i ≤ k, p i ≠ x := by
+    intro i hi hcon
+    exact hx ⟨i, Finset.mem_coe.mpr (Finset.mem_range.mpr (by omega)), hcon⟩
+  obtain ⟨hinj, i, j, hi0, hij, hjk, h1, h2⟩ := hp
+  have keyN : ∀ a ≤ k, ∀ b ≤ k, H.nodeMap (p a) = p b →
+      (H.edgeWalkup x).nodeMap (p a) = p b := by
+    intro a ha b hb hab
+    have h3 : p a ≠ H.nodeMap.symm x := by
+      intro hcon
+      apply hx
+      refine ⟨b, Finset.mem_coe.mpr (Finset.mem_range.mpr (by omega)), ?_⟩
+      show p b = x
+      rw [← hab, hcon]
+      exact Equiv.apply_symm_apply _ _
+    exact ((H.nodeMap_walkup x (p a)).2.2 ⟨hni a ha, h3⟩).trans hab
+  have keyNs : ∀ a ≤ k, ∀ b ≤ k, H.nodeMap.symm (p a) = p b →
+      (H.edgeWalkup x).nodeMap.symm (p a) = p b := by
+    intro a ha b hb hab
+    have h4 : (H.edgeWalkup x).nodeMap (p b) = p a :=
+      keyN b hb a ha ((Equiv.symm_apply_eq H.nodeMap).mp hab).symm
+    exact (Equiv.symm_apply_eq (H.edgeWalkup x).nodeMap).mpr h4.symm
+  have keyF : ∀ a ≤ k, ∀ b ≤ k, H.faceMap (p a) = p b →
+      (H.edgeWalkup x).faceMap (p a) = p b := by
+    intro a ha b hb hab
+    have h3 : p a ≠ H.faceMap.symm x := by
+      intro hcon
+      apply hx
+      refine ⟨b, Finset.mem_coe.mpr (Finset.mem_range.mpr (by omega)), ?_⟩
+      show p b = x
+      rw [← hab, hcon]
+      exact Equiv.apply_symm_apply _ _
+    exact ((H.faceMap_walkup x (p a)).2.2 ⟨hni a ha, h3⟩).trans hab
+  have hcont : (H.edgeWalkup x).isInjContour p k := by
+    rw [H.isInjContour_iff p k] at hinj
+    rw [(H.edgeWalkup x).isInjContour_iff p k]
+    refine ⟨?_, hinj.2⟩
+    rw [(H.edgeWalkup x).isContour_iff]
+    intro a ha
+    have hstep := (H.isContour_iff p k).mp hinj.1 a ha
+    rcases hstep with hstep | hstep
+    · exact Or.inl (keyF a (by omega) (a + 1) (by omega) hstep.symm).symm
+    · exact Or.inr (keyNs a (by omega) (a + 1) (by omega) hstep.symm).symm
+  refine ⟨hcont, i, j, hi0, hij, hjk, ?_, ?_⟩
+  · exact (keyN 0 (by omega) j (by omega) h1.symm).symm
+  · exact (keyN i (by omega) k (by omega) h2.symm).symm
+
+/-- `hypermap.hl`:5279 `lemmaQZTPGJV`：contour 可提取为同端点的 inj contour。 -/
+theorem exists_injContour_of_isContour (H : Hypermap α) {p : ℕ → α} {n : ℕ}
+    (hp : H.isContour p n) :
+    ∃ q : ℕ → α, ∃ m : ℕ, m ≤ n ∧ q 0 = p 0 ∧ q m = p n ∧ H.isInjContour q m ∧
+      (∀ i < m, ∃ j : ℕ, i ≤ j ∧ j < n ∧ q i = p j ∧ q (i + 1) = p (j + 1)) := by
+  induction n with
+  | zero => exact ⟨p, 0, Nat.le_refl 0, rfl, rfl, trivial, fun i hi => by omega⟩
+  | succ n ihn =>
+    rw [H.isContour_succ] at hp
+    obtain ⟨q, m, hmn, hq0, hqm, hq, hseg⟩ := ihn hp.1
+    by_cases hk : ∃ k ≤ m, q k = p (n + 1)
+    · obtain ⟨k, hkm, hkeq⟩ := hk
+      refine ⟨q, k, by omega, hq0, hkeq, H.isInjContour_mono hq hkm, fun i hi => ?_⟩
+      obtain ⟨j, hij, hjn, h1, h2⟩ := hseg i (by omega)
+      exact ⟨j, hij, by omega, h1, h2⟩
+    · -- 在末尾接一段常值路径 `p (n+1)`（长度 1）
+      have hdisj : ∀ i ≤ m, ∀ j ≤ 0, (fun _ => p (n + 1)) j ≠ q i := by
+        intro i hi j hj
+        simp only
+        intro hcon
+        apply hk
+        exact ⟨i, hi, hcon.symm⟩
+      obtain ⟨g, hg0, hgm, hgpath, hg1, hg2⟩ := H.concatenate_two_disjoint_contours hq
+        (by trivial : H.isInjContour (fun _ => p (n + 1)) 0) (by simpa [hqm] using hp.2) hdisj
+      refine ⟨g, m + 1, by omega, hg0.trans hq0, hgm, hgpath, ?_⟩
+      intro i hi
+      rcases (by omega : i < m ∨ i = m) with him | hie
+      · obtain ⟨j, hij, hjn, h1, h2⟩ := hseg i him
+        refine ⟨j, hij, by omega, ?_, ?_⟩
+        · rw [hg1 i (by omega)]; exact h1
+        · rw [hg1 (i + 1) (by omega)]; exact h2
+      · refine ⟨n, by omega, by omega, ?_, ?_⟩
+        · rw [hie, hg1 m (Nat.le_refl m)]
+          exact hqm
+        · rw [hie, show m + 1 = m + 0 + 1 from by omega, hg2 0 (by omega)]
+
+/-- `hypermap.hl`:5629 `dart_face_walkup`。 -/
+theorem darts_faceWalkup (H : Hypermap α) (x : α) :
+    (H.faceWalkup x).darts = H.darts.erase x := rfl
+
+/-- `hypermap.hl`:5636 `lemma_card_face_walkup_dart`。 -/
+theorem card_faceWalkup_dart (H : Hypermap α) {x : α} (hx : x ∈ H.darts) :
+    H.darts.card = (H.faceWalkup x).darts.card + 1 := by
+  show H.darts.card = (H.darts.erase x).card + 1
+  rw [Finset.card_erase_of_mem hx]
+  have hpos : 0 < H.darts.card := Finset.card_pos.mpr ⟨x, hx⟩
+  omega
+
+/-- `hypermap.hl`:5662 `dart_node_walkup`。 -/
+theorem darts_nodeWalkup (H : Hypermap α) (x : α) :
+    (H.nodeWalkup x).darts = H.darts.erase x := rfl
+
+/-- `hypermap.hl`:5669 `lemma_card_node_walkup_dart`。 -/
+theorem card_nodeWalkup_dart (H : Hypermap α) {x : α} (hx : x ∈ H.darts) :
+    H.darts.card = (H.nodeWalkup x).darts.card + 1 := by
+  show H.darts.card = (H.darts.erase x).card + 1
+  rw [Finset.card_erase_of_mem hx]
+  have hpos : 0 < H.darts.card := Finset.card_pos.mpr ⟨x, hx⟩
+  omega
+
+/-- `hypermap.hl`:5641 `face_map_face_walkup`（即 `edgeMap_walkup` 在 `shift²` 上的实例）。 -/
+theorem faceMap_faceWalkup (H : Hypermap α) (x y : α) :
+    (H.faceWalkup x).faceMap x = x ∧
+    (H.edgeMap x ≠ x ∧ H.faceMap x ≠ x →
+      (H.faceWalkup x).faceMap (H.edgeMap x) = H.faceMap x) ∧
+    (H.nodeMap⁻¹ x ≠ x ∧ H.faceMap⁻¹ x ≠ x →
+      (H.faceWalkup x).faceMap (H.faceMap⁻¹ x) = H.nodeMap⁻¹ x) ∧
+    (y ≠ x ∧ y ≠ H.faceMap⁻¹ x ∧ y ≠ H.edgeMap x →
+      (H.faceWalkup x).faceMap y = H.faceMap y) :=
+  (H.shift.shift).edgeMap_walkup x y
+
+/-- `hypermap.hl`:5652 `node_map_face_walkup`（即 `faceMap_walkup` 在 `shift²` 上的实例）。 -/
+theorem nodeMap_faceWalkup (H : Hypermap α) (x y : α) :
+    (H.faceWalkup x).nodeMap x = x ∧
+    (H.faceWalkup x).nodeMap (H.nodeMap.symm x) = H.nodeMap x ∧
+    (y ≠ x ∧ y ≠ H.nodeMap.symm x → (H.faceWalkup x).nodeMap y = H.nodeMap y) :=
+  (H.shift.shift).faceMap_walkup x y
+
+/-- `hypermap.hl`:5675 `node_map_node_walkup`（即 `edgeMap_walkup` 在 `shift` 上的实例）。 -/
+theorem nodeMap_nodeWalkup (H : Hypermap α) (x y : α) :
+    (H.nodeWalkup x).nodeMap x = x ∧
+    (H.faceMap x ≠ x ∧ H.nodeMap x ≠ x →
+      (H.nodeWalkup x).nodeMap (H.faceMap x) = H.nodeMap x) ∧
+    (H.edgeMap⁻¹ x ≠ x ∧ H.nodeMap⁻¹ x ≠ x →
+      (H.nodeWalkup x).nodeMap (H.nodeMap⁻¹ x) = H.edgeMap⁻¹ x) ∧
+    (y ≠ x ∧ y ≠ H.nodeMap⁻¹ x ∧ y ≠ H.faceMap x →
+      (H.nodeWalkup x).nodeMap y = H.nodeMap y) :=
+  (H.shift).edgeMap_walkup x y
+
+/-- `hypermap.hl`:5683 `face_map_node_walkup`（即 `nodeMap_walkup` 在 `shift` 上的实例）。 -/
+theorem faceMap_nodeWalkup (H : Hypermap α) (x y : α) :
+    (H.nodeWalkup x).faceMap x = x ∧
+    (H.nodeWalkup x).faceMap (H.faceMap.symm x) = H.faceMap x ∧
+    (y ≠ x ∧ y ≠ H.faceMap.symm x → (H.nodeWalkup x).faceMap y = H.faceMap y) :=
+  (H.shift).nodeMap_walkup x y
+
+/-- inj 序列中不同下标对应不同点的常用形式。 -/
+theorem ne_of_pairwise {α : Type*} [DecidableEq α] {p : ℕ → α} {k : ℕ}
+    (hinj : ∀ i j : ℕ, i ≤ k → j ≤ k → p i = p j → i = j) {a b : ℕ}
+    (ha : a ≤ k) (hb : b ≤ k) (hab : a ≠ b) : p a ≠ p b :=
+  fun hcon => hab (hinj a b ha hb hcon)
+
+/-- `hypermap.hl`:5691 `lemma_face_walkup_second_segment_contour`。 -/
+theorem isInjContour_faceWalkup_shift (H : Hypermap α) {p : ℕ → α} {k m : ℕ}
+    (hp : H.isInjContour p k) (hm : m < k) (hstep : H.nodeMap (p (m + 1)) = p m) :
+    (H.faceWalkup (p m)).isInjContour (shiftPath p (m + 1)) (k - (m + 1)) := by
+  have hinj := H.isInjContour_pairwise hp
+  have hcont := H.isContour_of_isInjContour hp
+  rw [(H.faceWalkup (p m)).isInjContour_iff]
+  refine ⟨?_, fun i j hi hj hcon =>
+    absurd (hinj (m + 1 + j) (m + 1 + i) (by omega) (by omega) hcon) (by omega)⟩
+  rw [(H.faceWalkup (p m)).isContour_iff]
+  intro i hi
+  have hst := (H.isContour_iff p k).mp hcont (m + 1 + i) (by omega)
+  show (H.faceWalkup (p m)).oneStepContour (p (m + 1 + i)) (p ((m + 1 + i) + 1))
+  rcases hst with hst | hst
+  · -- f 步：用 `faceMap_faceWalkup` 第 4 分量
+    have hne1 := ne_of_pairwise hinj (by omega) (by omega) (by omega : m + 1 + i ≠ m)
+    have hne2 : p (m + 1 + i) ≠ H.faceMap.symm (p m) := by
+      intro hcon
+      have h1 : p ((m + 1 + i) + 1) = p m := by
+        rw [hst, hcon]; exact Equiv.apply_symm_apply _ _
+      exact absurd (hinj ((m + 1 + i) + 1) m (by omega) (by omega) h1) (by omega)
+    have hne3 : p (m + 1 + i) ≠ H.edgeMap (p m) := by
+      intro hcon
+      have h1 : H.nodeMap (p ((m + 1 + i) + 1)) = p m := by
+        have h2 : H.faceMap (H.edgeMap (p m)) = p ((m + 1 + i) + 1) := (hcon ▸ hst).symm
+        rw [← h2]; exact H.nfe_apply (p m)
+      have h3 := H.nodeMap.injective (h1.trans hstep.symm)
+      exact absurd (hinj ((m + 1 + i) + 1) (m + 1) (by omega) (by omega) h3) (by omega)
+    exact Or.inl (hst.trans ((H.faceMap_faceWalkup (p m) _).2.2.2 ⟨hne1, hne2, hne3⟩).symm)
+  · -- n⁻¹ 步：用 `nodeMap_faceWalkup` 第 3 分量
+    have hne1 := ne_of_pairwise hinj (by omega) (by omega)
+      (by omega : (m + 1 + i) + 1 ≠ m)
+    have hne2 : p ((m + 1 + i) + 1) ≠ H.nodeMap.symm (p m) := by
+      intro hcon
+      have h1 : H.nodeMap (p ((m + 1 + i) + 1)) = p m := by
+        rw [hcon]; exact Equiv.apply_symm_apply _ _
+      have h2 := H.nodeMap.injective (h1.trans hstep.symm)
+      exact absurd (hinj ((m + 1 + i) + 1) (m + 1) (by omega) (by omega) h2) (by omega)
+    have h4 : H.nodeMap (p ((m + 1 + i) + 1)) = p (m + 1 + i) :=
+      ((Equiv.symm_apply_eq H.nodeMap).mp hst.symm).symm
+    have h5 : (H.faceWalkup (p m)).nodeMap (p ((m + 1 + i) + 1)) = p (m + 1 + i) :=
+      ((H.nodeMap_faceWalkup (p m) _).2.2 ⟨hne1, hne2⟩).trans h4
+    exact Or.inr ((Equiv.symm_apply_eq (H.faceWalkup (p m)).nodeMap).mpr h5.symm).symm
+
+/-- `hypermap.hl`:5774 `lemma_face_walkup_eliminate_dart_on_Moebius_contour`。 -/
+theorem isInjContour_faceWalkup_eliminate (H : Hypermap α) {p : ℕ → α} {k m : ℕ}
+    (hp : H.isInjContour p k) (hm0 : 0 < m) (hm : m < k)
+    (hstep : H.nodeMap (p (m + 1)) = p m) :
+    (H.faceWalkup (p m)).isInjContour p (m - 1) ∧
+      (H.faceWalkup (p m)).isInjContour (shiftPath p (m + 1)) (k - m - 1) ∧
+      (H.faceWalkup (p m)).oneStepContour (p (m - 1)) (p (m + 1)) := by
+  have hinj := H.isInjContour_pairwise hp
+  have hcont := H.isContour_of_isInjContour hp
+  refine ⟨?_, H.isInjContour_faceWalkup_shift hp hm hstep, ?_⟩
+  · rw [(H.faceWalkup (p m)).isInjContour_iff]
+    refine ⟨?_, fun i j hi hj hcon => absurd (hinj i j (by omega) (by omega) hcon.symm) (by omega)⟩
+    rw [(H.faceWalkup (p m)).isContour_iff]
+    intro i hi
+    have hst := (H.isContour_iff p k).mp hcont i (by omega)
+    rcases hst with hst | hst
+    · have hne1 := ne_of_pairwise hinj (by omega) (by omega) (by omega : i ≠ m)
+      have hne2 : p i ≠ H.faceMap.symm (p m) := by
+        intro hcon
+        have h1 : p (i + 1) = p m := by
+          rw [hst, hcon]; exact Equiv.apply_symm_apply _ _
+        exact absurd (hinj (i + 1) m (by omega) (by omega) h1) (by omega)
+      have hne3 : p i ≠ H.edgeMap (p m) := by
+        intro hcon
+        have h1 : H.nodeMap (p (i + 1)) = p m := by
+          have h2 : H.faceMap (H.edgeMap (p m)) = p (i + 1) := (hcon ▸ hst).symm
+          rw [← h2]; exact H.nfe_apply (p m)
+        have h3 := H.nodeMap.injective (h1.trans hstep.symm)
+        exact absurd (hinj (i + 1) (m + 1) (by omega) (by omega) h3) (by omega)
+      exact Or.inl (hst.trans ((H.faceMap_faceWalkup (p m) _).2.2.2 ⟨hne1, hne2, hne3⟩).symm)
+    · have hne1 := ne_of_pairwise hinj (by omega) (by omega) (by omega : i + 1 ≠ m)
+      have hne2 : p (i + 1) ≠ H.nodeMap.symm (p m) := by
+        intro hcon
+        have h1 : H.nodeMap (p (i + 1)) = p m := by
+          rw [hcon]; exact Equiv.apply_symm_apply _ _
+        have h2 := H.nodeMap.injective (h1.trans hstep.symm)
+        exact absurd (hinj (i + 1) (m + 1) (by omega) (by omega) h2) (by omega)
+      have h4 : H.nodeMap (p (i + 1)) = p i := ((Equiv.symm_apply_eq H.nodeMap).mp hst.symm).symm
+      have h5 : (H.faceWalkup (p m)).nodeMap (p (i + 1)) = p i :=
+        ((H.nodeMap_faceWalkup (p m) _).2.2 ⟨hne1, hne2⟩).trans h4
+      exact Or.inr ((Equiv.symm_apply_eq (H.faceWalkup (p m)).nodeMap).mpr h5.symm).symm
+  · -- 连接步：`p (m-1) → p (m+1)`
+    have hst := (H.isContour_iff p k).mp hcont (m - 1) (by omega)
+    rw [(by omega : m - 1 + 1 = m)] at hst
+    rcases hst with hst | hst
+    · -- H 中 `p (m-1) →f p m`：用 `faceMap_faceWalkup` 第 3 分量
+      have hL : p (m - 1) = H.faceMap.symm (p m) := by
+        rw [hst]; exact (Equiv.symm_apply_apply _ _).symm
+      have hcond1 : H.nodeMap⁻¹ (p m) ≠ p m := by
+        show H.nodeMap.symm (p m) ≠ p m
+        have h1 : H.nodeMap.symm (p m) = p (m + 1) :=
+          (Equiv.symm_apply_eq H.nodeMap).mpr hstep.symm
+        rw [h1]
+        exact ne_of_pairwise hinj (by omega) (by omega) (by omega : m + 1 ≠ m)
+      have hcond2 : H.faceMap⁻¹ (p m) ≠ p m := by
+        show H.faceMap.symm (p m) ≠ p m
+        rw [← hL]
+        exact ne_of_pairwise hinj (by omega) (by omega) (by omega : m - 1 ≠ m)
+      have h1 : (H.faceWalkup (p m)).faceMap (p (m - 1)) = H.nodeMap⁻¹ (p m) := by
+        rw [hL]
+        exact (H.faceMap_faceWalkup (p m) (p m)).2.2.1 ⟨hcond1, hcond2⟩
+      have h2 : H.nodeMap.symm (p m) = p (m + 1) :=
+        (Equiv.symm_apply_eq H.nodeMap).mpr hstep.symm
+      exact Or.inl (h1.trans h2).symm
+    · -- H 中 `n (p m) = p (m-1)`：用 `nodeMap_faceWalkup` 第 2 分量
+      have hL : H.nodeMap (p m) = p (m - 1) := ((Equiv.symm_apply_eq H.nodeMap).mp hst.symm).symm
+      have h1 : (H.faceWalkup (p m)).nodeMap (p (m + 1)) = H.nodeMap (p m) := by
+        have h2 : p (m + 1) = H.nodeMap.symm (p m) :=
+          ((Equiv.symm_apply_eq H.nodeMap).mpr hstep.symm).symm
+        rw [h2]
+        exact (H.nodeMap_faceWalkup (p m) (p m)).2.1
+      exact Or.inr (((Equiv.symm_apply_eq (H.faceWalkup (p m)).nodeMap).mpr
+        (h1.trans hL).symm).symm)
+
+/-- `hypermap.hl`:5888 `lemma_node_walkup_second_segment_contour`。 -/
+theorem isInjContour_nodeWalkup_shift (H : Hypermap α) {p : ℕ → α} {k m : ℕ}
+    (hp : H.isInjContour p k) (hm : m < k) (hstep : p (m + 1) = H.faceMap (p m)) :
+    (H.nodeWalkup (p m)).isInjContour (shiftPath p (m + 1)) (k - (m + 1)) := by
+  have hinj := H.isInjContour_pairwise hp
+  have hcont := H.isContour_of_isInjContour hp
+  rw [(H.nodeWalkup (p m)).isInjContour_iff]
+  refine ⟨?_, fun i j hi hj hcon =>
+    absurd (hinj (m + 1 + j) (m + 1 + i) (by omega) (by omega) hcon) (by omega)⟩
+  rw [(H.nodeWalkup (p m)).isContour_iff]
+  intro i hi
+  have hst := (H.isContour_iff p k).mp hcont (m + 1 + i) (by omega)
+  show (H.nodeWalkup (p m)).oneStepContour (p (m + 1 + i)) (p ((m + 1 + i) + 1))
+  rcases hst with hst | hst
+  · have hne1 := ne_of_pairwise hinj (by omega) (by omega) (by omega : m + 1 + i ≠ m)
+    have hne2 : p (m + 1 + i) ≠ H.faceMap.symm (p m) := by
+      intro hcon
+      have h1 : p ((m + 1 + i) + 1) = p m := by
+        rw [hst, hcon]; exact Equiv.apply_symm_apply _ _
+      exact absurd (hinj ((m + 1 + i) + 1) m (by omega) (by omega) h1) (by omega)
+    exact Or.inl (hst.trans ((H.faceMap_nodeWalkup (p m) _).2.2 ⟨hne1, hne2⟩).symm)
+  · have hne1 := ne_of_pairwise hinj (by omega) (by omega)
+      (by omega : (m + 1 + i) + 1 ≠ m)
+    have hne2 : p ((m + 1 + i) + 1) ≠ H.nodeMap⁻¹ (p m) := by
+      intro hcon
+      have h1 : H.nodeMap (p ((m + 1 + i) + 1)) = p m := by
+        rw [hcon]; exact Equiv.apply_symm_apply _ _
+      have h2 : p (m + 1 + i) = p m := by
+        have h3 := ((Equiv.symm_apply_eq H.nodeMap).mp hst.symm).symm
+        rw [h1] at h3
+        exact h3.symm
+      exact absurd (hinj (m + 1 + i) m (by omega) (by omega) h2) (by omega)
+    have hne3 : p ((m + 1 + i) + 1) ≠ H.faceMap (p m) := by
+      rw [← hstep]
+      exact ne_of_pairwise hinj (by omega) (by omega)
+        (by omega : (m + 1 + i) + 1 ≠ m + 1)
+    have h4 : H.nodeMap (p ((m + 1 + i) + 1)) = p (m + 1 + i) :=
+      ((Equiv.symm_apply_eq H.nodeMap).mp hst.symm).symm
+    have h5 : (H.nodeWalkup (p m)).nodeMap (p ((m + 1 + i) + 1)) = p (m + 1 + i) :=
+      ((H.nodeMap_nodeWalkup (p m) _).2.2.2 ⟨hne1, hne2, hne3⟩).trans h4
+    exact Or.inr ((Equiv.symm_apply_eq (H.nodeWalkup (p m)).nodeMap).mpr h5.symm).symm
+
+/-- `hypermap.hl`:5969 `lemma_node_walkup_eliminate_dart_on_Moebius_contour`。 -/
+theorem isInjContour_nodeWalkup_eliminate (H : Hypermap α) {p : ℕ → α} {k m : ℕ}
+    (hp : H.isInjContour p k) (hm0 : 0 < m) (hm : m < k)
+    (hstep : p (m + 1) = H.faceMap (p m)) :
+    (H.nodeWalkup (p m)).isInjContour p (m - 1) ∧
+      (H.nodeWalkup (p m)).isInjContour (shiftPath p (m + 1)) (k - m - 1) ∧
+      (H.nodeWalkup (p m)).oneStepContour (p (m - 1)) (p (m + 1)) := by
+  have hinj := H.isInjContour_pairwise hp
+  have hcont := H.isContour_of_isInjContour hp
+  refine ⟨?_, H.isInjContour_nodeWalkup_shift hp hm hstep, ?_⟩
+  · rw [(H.nodeWalkup (p m)).isInjContour_iff]
+    refine ⟨?_, fun i j hi hj hcon => absurd (hinj i j (by omega) (by omega) hcon.symm) (by omega)⟩
+    rw [(H.nodeWalkup (p m)).isContour_iff]
+    intro i hi
+    have hst := (H.isContour_iff p k).mp hcont i (by omega)
+    rcases hst with hst | hst
+    · have hne1 := ne_of_pairwise hinj (by omega) (by omega) (by omega : i ≠ m)
+      have hne2 : p i ≠ H.faceMap.symm (p m) := by
+        intro hcon
+        have h1 : p (i + 1) = p m := by
+          rw [hst, hcon]; exact Equiv.apply_symm_apply _ _
+        exact absurd (hinj (i + 1) m (by omega) (by omega) h1) (by omega)
+      exact Or.inl (hst.trans ((H.faceMap_nodeWalkup (p m) _).2.2 ⟨hne1, hne2⟩).symm)
+    · have hne1 := ne_of_pairwise hinj (by omega) (by omega) (by omega : i + 1 ≠ m)
+      have hne2 : p (i + 1) ≠ H.nodeMap⁻¹ (p m) := by
+        intro hcon
+        have h1 : H.nodeMap (p (i + 1)) = p m := by
+          rw [hcon]; exact Equiv.apply_symm_apply _ _
+        have h2 : p i = p m := by
+          have h3 := ((Equiv.symm_apply_eq H.nodeMap).mp hst.symm).symm
+          rw [h1] at h3
+          exact h3.symm
+        exact absurd (hinj i m (by omega) (by omega) h2) (by omega)
+      have hne3 : p (i + 1) ≠ H.faceMap (p m) := by
+        rw [← hstep]
+        exact ne_of_pairwise hinj (by omega) (by omega) (by omega : i + 1 ≠ m + 1)
+      have h4 : H.nodeMap (p (i + 1)) = p i := ((Equiv.symm_apply_eq H.nodeMap).mp hst.symm).symm
+      have h5 : (H.nodeWalkup (p m)).nodeMap (p (i + 1)) = p i :=
+        ((H.nodeMap_nodeWalkup (p m) _).2.2.2 ⟨hne1, hne2, hne3⟩).trans h4
+      exact Or.inr ((Equiv.symm_apply_eq (H.nodeWalkup (p m)).nodeMap).mpr h5.symm).symm
+  · have hst := (H.isContour_iff p k).mp hcont (m - 1) (by omega)
+    rw [(by omega : m - 1 + 1 = m)] at hst
+    rcases hst with hst | hst
+    · -- H 中 `p (m-1) →f p m`：`fNode (f⁻¹ (p m)) = f (p m) = p (m+1)`
+      have hL : p (m - 1) = H.faceMap.symm (p m) := by
+        rw [hst]; exact (Equiv.symm_apply_apply _ _).symm
+      have h1 : (H.nodeWalkup (p m)).faceMap (p (m - 1)) = H.faceMap (p m) := by
+        rw [hL]
+        exact (H.faceMap_nodeWalkup (p m) (p m)).2.1
+      exact Or.inl (h1.trans hstep.symm).symm
+    · -- H 中 `n (p m) = p (m-1)`：`nodeNode (f (p m)) = n (p m)`
+      have hL : H.nodeMap (p m) = p (m - 1) := ((Equiv.symm_apply_eq H.nodeMap).mp hst.symm).symm
+      have hcond1 : H.faceMap (p m) ≠ p m := by
+        rw [← hstep]
+        exact ne_of_pairwise hinj (by omega) (by omega) (by omega : m + 1 ≠ m)
+      have hcond2 : H.nodeMap (p m) ≠ p m := by
+        rw [hL]
+        exact ne_of_pairwise hinj (by omega) (by omega) (by omega : m - 1 ≠ m)
+      have h1 : (H.nodeWalkup (p m)).nodeMap (p (m + 1)) = H.nodeMap (p m) := by
+        rw [hstep]
+        exact (H.nodeMap_nodeWalkup (p m) (p m)).2.1 ⟨hcond1, hcond2⟩
+      exact Or.inr (((Equiv.symm_apply_eq (H.nodeWalkup (p m)).nodeMap).mpr
+        (h1.trans hL).symm).symm)
 
 end Hypermap
 
