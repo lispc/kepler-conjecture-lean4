@@ -213,6 +213,48 @@ Explicitly skipped in this range:
 - 4017 `lemma_card_eq_reflect`: triviality.
 - 4790 onwards (double walkups, convolutions, `iso`, ...): next block.
 
+Coverage (block 7, convolution / Moebius contour basics):
+- Convolution (4793–4935, complete): `convolution_rep` (4793, as
+  `mul_self_eq_one_iff_eq_inv`), `convolution_inv` (4801),
+  `convolution_belong` (4816, as `PermutesOn.mul_self_eq_one_iff`),
+  `edge_convolution` (4834), `edge_map_convolution` (4843),
+  `lemma_convolution_evaluation` (4850), `lemma_orbit_of_size_2` (4869),
+  `NODE_OF_SIZE_2` (4895), `power_permutation_outside_domain` (4905),
+  `lemma_(node|face)_exception` (4915–4925), `lemma_simple_hypermap`
+  (4927, as `Simple.apply`).
+- Moebius contour basics (4939–5058): `is_Moebius_contour` (4941),
+  `lemma_contour_in_dart` (4943), `lemma_darts_in_contour` (4964, with
+  the point set written as the image of `Finset.range`), `lemma_first_
+  dart_on_inj_contour` (4975), `lemma_darts_on_Moebius_contour` (5006),
+  `lemma_Moebius_contour_points_subset_darts` (5029),
+  `lemma_darts_is_Moebius_contour` (5045),
+  `lemma_point_(not_)in_support_of_sequence` (5053–5058).
+- Path shifting/joining (5174–5276): `shift_path` (5174),
+  `lemma_shift_contour` (5178), `lemma_shift_inj_contour` (5191),
+  `join` (690, as `joinPaths`) with its evaluations, `lemma_join_contours`
+  (5204), `lemma_join_inj_contours` (5237), `is_glueing` (653, as
+  `IsGlueing`), `lemma_glue_inj_contours` (5249),
+  `concatenate_two_contours` (5257),
+  `concatenate_two_disjoint_contours` (5266). The join/glue injective
+  lemmas are re-proved directly via `isInjContour_iff`'s pairwise
+  characterization, bypassing the skipped `is_inj_list` machinery.
+- `lemma_one_step_contour` (5353, as `oneStepContour_iff`),
+  `lemma_only_one_orbit` (5360), `lemma_only_one_component` (5383).
+
+Explicitly skipped in this range:
+- 5061–5173 `lemma_eliminate_dart_ouside_Moebius_contour`: walkup
+  preservation of Moebius contours (~110 lines); left for the Jordan
+  chain block.
+- 5279–5352 `lemmaQZTPGJV` (contour-to-injective-contour extraction):
+  needed only by the Jordan curve theorem; left for that block.
+- 5406–5626 `lemma_minimum_Moebius_hypermap` (order-3 Moebius
+  hypermap): large standalone construction; left for the Jordan chain.
+- 5627 onwards (`dart_face_walkup`, node/face walkup map lemmas,
+  `lemmaLIPYTUI`): the combinatorial Jordan curve theorem chain; next
+  block(s).
+- 9614+ `iso` (hypermap isomorphism): far ahead in the file; will be
+  reached in file order.
+
 Type correspondences (HOL Light ↦ Lean 4):
 - `(A)hypermap` (a 4-tuple carrying `FINITE`/`permutes` side conditions,
   `hypermap.hl`:83–93) ↦ `structure Hypermap` with a `Finset` of darts and
@@ -3885,6 +3927,447 @@ theorem planar_walkup (H : Hypermap α) {x : α} (hx : x ∈ H.darts) (hplanar :
   have h2 := (H.nodeWalkup x).planarIndex_le_zero
   have h3 := (H.faceWalkup x).planarIndex_le_zero
   refine ⟨?_, ?_, ?_⟩ <;> rw [planar_iff_planarIndex_eq_zero] <;> omega
+
+end Hypermap
+
+/-! ## Convolution（`hypermap.hl`:4793–4935） -/
+
+/-- `hypermap.hl`:4793 `convolution_rep`。 -/
+theorem mul_self_eq_one_iff_eq_inv {α : Type*} (p : Equiv.Perm α) :
+    p * p = 1 ↔ p = p⁻¹ := by
+  constructor
+  · intro h; exact eq_inv_of_mul_eq_one_left h
+  · intro h; nth_rewrite 1 [h]; exact inv_mul_cancel p
+
+/-- `hypermap.hl`:4801 `convolution_inv`。 -/
+theorem mul_self_eq_one_iff_inv_mul_self {α : Type*} (p : Equiv.Perm α) :
+    p * p = 1 ↔ p⁻¹ * p⁻¹ = 1 := by
+  constructor
+  · intro h
+    rw [← mul_inv_rev, h, inv_one]
+  · intro h
+    have h2 : p * p = (p⁻¹ * p⁻¹)⁻¹ := by rw [mul_inv_rev, inv_inv]
+    rw [h2, h, inv_one]
+
+/-- `hypermap.hl`:4816 `convolution_belong`。 -/
+theorem PermutesOn.mul_self_eq_one_iff {α : Type*} {p : Equiv.Perm α} {s : Finset α}
+    (hp : PermutesOn p s) : p * p = 1 ↔ ∀ x ∈ s, p (p x) = x := by
+  constructor
+  · intro h x _
+    have : (p * p) x = (1 : Equiv.Perm α) x := by rw [h]
+    rwa [Equiv.Perm.mul_apply, Equiv.Perm.one_apply] at this
+  · intro h
+    ext x
+    by_cases hx : x ∈ s
+    · rw [Equiv.Perm.mul_apply, h x hx, Equiv.Perm.one_apply]
+    · rw [Equiv.Perm.mul_apply, hp x hx, hp x hx, Equiv.Perm.one_apply]
+
+namespace Hypermap
+
+variable {α : Type*} [DecidableEq α] {x y z : α}
+
+/-- `hypermap.hl`:4834 `edge_convolution`。 -/
+theorem plain_iff_node_face_mul_apply (H : Hypermap α) :
+    H.Plain ↔ ∀ x ∈ H.darts, H.nodeMap (H.faceMap (H.nodeMap (H.faceMap x))) = x := by
+  unfold Plain
+  rw [mul_self_eq_one_iff_inv_mul_self]
+  have h1 : H.edgeMap⁻¹ = H.nodeMap * H.faceMap := H.inverse_hypermap_maps.1
+  rw [h1, PermutesOn.mul_self_eq_one_iff (H.nodeMap_permutes.mul H.faceMap_permutes)]
+  exact forall_congr' fun x => forall_congr' fun _ => by
+    rw [Equiv.Perm.mul_apply, Equiv.Perm.mul_apply]
+
+/-- `hypermap.hl`:4843 `edge_map_convolution`。 -/
+theorem plain_iff_edgeMap_eq (H : Hypermap α) :
+    H.Plain ↔ H.edgeMap = H.nodeMap * H.faceMap := by
+  unfold Plain
+  rw [mul_self_eq_one_iff_eq_inv, H.inverse_hypermap_maps.1]
+
+/-- `hypermap.hl`:4850 `lemma_convolution_evaluation`。 -/
+theorem PermutesOn.apply_apply_self_iff_ncard_le_two {α : Type*} {p : Equiv.Perm α} {s : Finset α}
+    {x : α} (hp : PermutesOn p s) : p (p x) = x ↔ (orbitMap p x).ncard ≤ 2 := by
+  constructor
+  · intro h
+    have h2 : (p ^ 2) x = x := by
+      rw [pow_two, Equiv.Perm.mul_apply, h]
+    exact card_orbit_le p (by omega) h2
+  · intro h
+    by_cases hfix : p x = x
+    · simp [hfix]
+    · have hfin := orbitMap_finite hp x
+      have hge : 2 ≤ (orbitMap p x).ncard := by
+        have hsub : ({x, p x} : Set α) ⊆ orbitMap p x :=
+          Set.pair_subset (mem_orbitMap_self p x) (apply_mem_orbitMap p x)
+        have h2 := Set.ncard_le_ncard hsub hfin
+        rwa [Set.ncard_pair (Ne.symm hfix)] at h2
+      have hcard : (orbitMap p x).ncard = 2 := by omega
+      have hcycle := hp.pow_ncard_orbitMap_apply_self x
+      rw [hcard, pow_two, Equiv.Perm.mul_apply] at hcycle
+      exact hcycle
+
+/-- `hypermap.hl`:4869 `lemma_orbit_of_size_2`。 -/
+theorem PermutesOn.ncard_orbit_eq_two_iff {α : Type*} {p : Equiv.Perm α} {s : Finset α}
+    {x : α} (hp : PermutesOn p s) :
+    (orbitMap p x).ncard = 2 ↔ p x ≠ x ∧ p (p x) = x := by
+  constructor
+  · intro h
+    have hle : (orbitMap p x).ncard ≤ 2 := by omega
+    have hpp : p (p x) = x := (PermutesOn.apply_apply_self_iff_ncard_le_two hp).mpr hle
+    refine ⟨?_, hpp⟩
+    intro hfix
+    have h1 : orbitMap p x = {x} := (orbitMap_singleton_iff p x).mpr hfix
+    rw [h1, Set.ncard_singleton] at h
+    omega
+  · rintro ⟨hfix, hpp⟩
+    have hle : (orbitMap p x).ncard ≤ 2 := (PermutesOn.apply_apply_self_iff_ncard_le_two hp).mp hpp
+    have hge : 2 ≤ (orbitMap p x).ncard := by
+      have hsub : ({x, p x} : Set α) ⊆ orbitMap p x :=
+        Set.pair_subset (mem_orbitMap_self p x) (apply_mem_orbitMap p x)
+      have h2 := Set.ncard_le_ncard hsub (orbitMap_finite hp x)
+      rwa [Set.ncard_pair (Ne.symm hfix)] at h2
+    omega
+
+/-- `hypermap.hl`:4905 `power_permutation_outside_domain`。 -/
+theorem PermutesOn.pow_apply_eq_self_of_not_mem {α : Type*} {p : Equiv.Perm α} {s : Finset α}
+    {x : α} (hp : PermutesOn p s) (hx : x ∉ s) (n : ℕ) : (p ^ n) x = x :=
+  hp.pow n x hx
+
+/-- `hypermap.hl`:4895 `NODE_OF_SIZE_2`。 -/
+theorem node_ncard_eq_two_iff (H : Hypermap α) (x : α) :
+    (H.node x).ncard = 2 ↔ H.nodeMap x ≠ x ∧ H.nodeMap (H.nodeMap x) = x :=
+  PermutesOn.ncard_orbit_eq_two_iff H.nodeMap_permutes
+
+/-- `hypermap.hl`:4915 `lemma_node_exception`。 -/
+theorem node_eq_singleton_of_not_mem (H : Hypermap α) (hx : x ∉ H.darts) :
+    H.node x = {x} := (orbitMap_singleton_iff H.nodeMap x).mpr (H.nodeMap_permutes x hx)
+
+/-- `hypermap.hl`:4921 `lemma_face_exception`。 -/
+theorem face_eq_singleton_of_not_mem (H : Hypermap α) (hx : x ∉ H.darts) :
+    H.face x = {x} := (orbitMap_singleton_iff H.faceMap x).mpr (H.faceMap_permutes x hx)
+
+/-- `hypermap.hl`:4927 `lemma_simple_hypermap`。 -/
+theorem Simple.apply (H : Hypermap α) (hs : H.Simple) (x : α) :
+    H.node x ∩ H.face x = {x} := by
+  by_cases hx : x ∈ H.darts
+  · exact hs x hx
+  · rw [H.node_eq_singleton_of_not_mem hx, H.face_eq_singleton_of_not_mem hx,
+      Set.inter_self]
+
+/-! ## Moebius contour（`hypermap.hl`:4939–5058） -/
+
+/-- `hypermap.hl`:4941 `is_Moebius_contour`。 -/
+def IsMoebiusContour (H : Hypermap α) (p : ℕ → α) (k : ℕ) : Prop :=
+  H.isInjContour p k ∧
+    ∃ i j : ℕ, 0 < i ∧ i ≤ j ∧ j < k ∧ p j = H.nodeMap (p 0) ∧ p k = H.nodeMap (p i)
+
+/-- `hypermap.hl`:4943 `lemma_contour_in_dart`。 -/
+theorem contour_mem_darts (H : Hypermap α) {p : ℕ → α} {n : ℕ}
+    (hp0 : p 0 ∈ H.darts) (hp : H.isContour p n) : p n ∈ H.darts := by
+  induction n with
+  | zero => exact hp0
+  | succ k ih =>
+    rw [H.isContour_succ] at hp
+    rcases hp.2 with h | h
+    · rw [h]; exact H.faceMap_apply_mem (ih hp.1)
+    · rw [h]; exact H.nodeMap_symm_apply_mem (ih hp.1)
+
+/-- `hypermap.hl`:4964 `lemma_darts_in_contour`。 -/
+theorem contour_support_subset_darts (H : Hypermap α) {p : ℕ → α} {n : ℕ}
+    (hp0 : p 0 ∈ H.darts) (hp : H.isContour p n) :
+    (fun i => p i) '' ↑(Finset.range (n + 1)) ⊆ ↑H.darts := by
+  rintro y ⟨i, hi, rfl⟩
+  have hi' : i < n + 1 := Finset.mem_range.mp (Finset.mem_coe.mp hi)
+  exact H.contour_mem_darts hp0 (H.isContour_mono hp (by omega))
+
+/-- `hypermap.hl`:4975 `lemma_first_dart_on_inj_contour`。 -/
+theorem first_dart_mem_of_injContour (H : Hypermap α) {p : ℕ → α} {n : ℕ}
+    (hn : 0 < n) (hp : H.isInjContour p n) : p 0 ∈ H.darts := by
+  by_contra h0
+  have key : ∀ m ≤ n, p m = p 0 := by
+    intro m
+    induction m with
+    | zero => intro _; rfl
+    | succ k ih =>
+      intro hkn
+      have hk : p k = p 0 := ih (by omega)
+      have hstep : H.oneStepContour (p k) (p (k + 1)) := by
+        have hcont : H.isContour p n := (H.isInjContour_iff p n).mp hp |>.1
+        exact (H.isContour_iff p n).mp hcont k (by omega)
+      rcases hstep with h | h
+      · rw [h, hk, H.faceMap_permutes _ h0]
+      · rw [h, hk, H.nodeMap_permutes.symm _ h0]
+  have hinj := (H.isInjContour_iff p n).mp hp |>.2
+  exact hinj n 0 (by omega) (by omega) (key n le_rfl).symm
+
+/-- `isInjContour` 的两两不同形式（`injOrbit_iff_pairwise` 的 contour 版）。 -/
+theorem isInjContour_pairwise (H : Hypermap α) {p : ℕ → α} {n : ℕ}
+    (hp : H.isInjContour p n) : ∀ i j : ℕ, i ≤ n → j ≤ n → p i = p j → i = j := by
+  have hinj := (H.isInjContour_iff p n).mp hp |>.2
+  intro i j hi hj heq
+  rcases lt_trichotomy i j with hlt | heq' | hgt
+  · exact absurd heq (hinj j i hj hlt)
+  · exact heq'
+  · exact absurd heq.symm (hinj i j hi hgt)
+
+/-- `hypermap.hl`:5006 `lemma_darts_on_Moebius_contour`。 -/
+theorem darts_on_Moebius_contour (H : Hypermap α) {p : ℕ → α} {k : ℕ}
+    (hp : H.IsMoebiusContour p k) :
+    2 ≤ k ∧ p 0 ∈ H.darts ∧ k + 1 ≤ H.darts.card := by
+  obtain ⟨hinj, i, j, hi0, hij, hjk, -, -⟩ := hp
+  refine ⟨by omega, ?_, ?_⟩
+  · exact H.first_dart_mem_of_injContour (by omega) hinj
+  · have hp0 : p 0 ∈ H.darts := H.first_dart_mem_of_injContour (by omega) hinj
+    have hsub := H.contour_support_subset_darts hp0 (H.isContour_of_isInjContour hinj)
+    have hinjOn : Set.InjOn p ↑(Finset.range (k + 1)) := by
+      intro a ha b hb hab
+      have ha' : a < k + 1 := Finset.mem_range.mp (Finset.mem_coe.mp ha)
+      have hb' : b < k + 1 := Finset.mem_range.mp (Finset.mem_coe.mp hb)
+      exact H.isInjContour_pairwise hinj a b (by omega) (by omega) hab
+    have hcard : ((fun i => p i) '' ↑(Finset.range (k + 1))).ncard = k + 1 := by
+      rw [hinjOn.ncard_image, Set.ncard_coe_finset, Finset.card_range]
+    have hle := Set.ncard_le_ncard hsub H.darts.finite_toSet
+    rw [hcard, Set.ncard_coe_finset] at hle
+    exact hle
+
+/-- `hypermap.hl`:5029 `lemma_Moebius_contour_points_subset_darts`。 -/
+theorem Moebius_contour_points_subset_darts (H : Hypermap α) {p : ℕ → α} {k : ℕ}
+    (hp : H.IsMoebiusContour p k) :
+    (fun i => p i) '' ↑(Finset.range (k + 1)) ⊆ ↑H.darts ∧
+      ((fun i => p i) '' ↑(Finset.range (k + 1))).ncard = k + 1 := by
+  obtain ⟨h2, hp0, -⟩ := H.darts_on_Moebius_contour hp
+  refine ⟨H.contour_support_subset_darts hp0 (H.isContour_of_isInjContour hp.1), ?_⟩
+  obtain ⟨hinj, -⟩ := hp
+  have hinjOn : Set.InjOn p ↑(Finset.range (k + 1)) := by
+    intro a ha b hb hab
+    have ha' : a < k + 1 := Finset.mem_range.mp (Finset.mem_coe.mp ha)
+    have hb' : b < k + 1 := Finset.mem_range.mp (Finset.mem_coe.mp hb)
+    exact H.isInjContour_pairwise hinj a b (by omega) (by omega) hab
+  rw [hinjOn.ncard_image, Set.ncard_coe_finset, Finset.card_range]
+
+/-- `hypermap.hl`:5045 `lemma_darts_is_Moebius_contour`。 -/
+theorem darts_eq_of_Moebius_contour (H : Hypermap α) {p : ℕ → α} {k : ℕ}
+    (hp : H.IsMoebiusContour p k) (hcard : k + 1 = H.darts.card) :
+    ↑H.darts = (fun i => p i) '' ↑(Finset.range (k + 1)) := by
+  obtain ⟨hsub, hncard⟩ := H.Moebius_contour_points_subset_darts hp
+  exact (Set.eq_of_subset_of_ncard_le hsub (by rw [hncard, hcard, Set.ncard_coe_finset])
+    H.darts.finite_toSet).symm
+
+/-- `hypermap.hl`:5053 `lemma_point_in_support_of_sequence`。 -/
+theorem mem_support_iff {α : Type*} {p : ℕ → α} {k : ℕ} {x : α} :
+    x ∈ (fun i => p i) '' ↑(Finset.range (k + 1)) ↔ ∃ j ≤ k, x = p j := by
+  constructor
+  · rintro ⟨j, hj, rfl⟩
+    exact ⟨j, Finset.mem_range.mp hj |> Nat.lt_succ_iff.mp, rfl⟩
+  · rintro ⟨j, hj, rfl⟩
+    exact ⟨j, Finset.mem_range.mpr (by omega), rfl⟩
+
+/-- `hypermap.hl`:5055 `lemma_point_not_in_support_of_sequence`。 -/
+theorem not_mem_support_iff {α : Type*} {p : ℕ → α} {k : ℕ} {x : α} :
+    x ∉ (fun i => p i) '' ↑(Finset.range (k + 1)) ↔ ∀ j ≤ k, x ≠ p j := by
+  rw [mem_support_iff]
+  constructor
+  · intro h j hj hcon
+    exact h ⟨j, hj, hcon⟩
+  · intro h hmem
+    obtain ⟨j, hj, hcon⟩ := hmem
+    exact h j hj hcon
+
+/-- `hypermap.hl`:5174 `shift_path`。 -/
+def shiftPath {α : Type*} (p : ℕ → α) (l : ℕ) : ℕ → α := fun i => p (l + i)
+
+/-- `hypermap.hl`:5178 `lemma_shift_contour`。 -/
+theorem isContour_shiftPath (H : Hypermap α) {p : ℕ → α} {n : ℕ}
+    (hp : H.isContour p n) (l : ℕ) (hl : l ≤ n) : H.isContour (shiftPath p l) (n - l) := by
+  rw [H.isContour_iff] at hp ⊢
+  intro i hi
+  have h := hp (l + i) (by omega)
+  have h' : H.oneStepContour (p (l + i)) (p (l + (i + 1))) := by
+    rw [(by omega : l + (i + 1) = l + i + 1)]
+    exact h
+  exact h'
+
+/-- `hypermap.hl`:5191 `lemma_shift_inj_contour`。 -/
+theorem isInjContour_shiftPath (H : Hypermap α) {p : ℕ → α} {n : ℕ}
+    (hp : H.isInjContour p n) (l : ℕ) (hl : l ≤ n) :
+    H.isInjContour (shiftPath p l) (n - l) := by
+  rw [H.isInjContour_iff] at hp ⊢
+  refine ⟨H.isContour_shiftPath hp.1 l hl, fun i j hi hj => ?_⟩
+  exact hp.2 (l + i) (l + j) (by omega) (by omega)
+
+/-- `hypermap.hl`:690 `join`（两路径的无缝拼接，中间不共享端点）。 -/
+def joinPaths {α : Type*} (p q : ℕ → α) (n : ℕ) : ℕ → α :=
+  fun i => if i ≤ n then p i else q (i - n - 1)
+
+/-- `hypermap.hl`:693 `first_join_evaluation`。 -/
+theorem joinPaths_apply_le {α : Type*} {p q : ℕ → α} {n i : ℕ} (h : i ≤ n) :
+    joinPaths p q n i = p i := if_pos h
+
+/-- `hypermap.hl`:697 `second_join_evaluation`。 -/
+theorem joinPaths_apply_add {α : Type*} {p q : ℕ → α} {n : ℕ} (i : ℕ) :
+    joinPaths p q n (n + (i + 1)) = q i := by
+  have hle : ¬n + (i + 1) ≤ n := by omega
+  have hsub : n + (i + 1) - n - 1 = i := by omega
+  simp [joinPaths, hle]
+
+/-- `hypermap.hl`:5204 `lemma_join_contours`。 -/
+theorem isContour_joinPaths (H : Hypermap α) {p q : ℕ → α} {n m : ℕ}
+    (hp : H.isContour p n) (hq : H.isContour q m) (h : H.oneStepContour (p n) (q 0)) :
+    H.isContour (joinPaths p q n) (n + m + 1) := by
+  rw [H.isContour_iff] at hp hq ⊢
+  intro i hi
+  by_cases hin : i < n
+  · rw [joinPaths_apply_le hin.le, joinPaths_apply_le (by omega)]
+    exact hp i hin
+  · rcases (by omega : i = n ∨ n + 1 ≤ i) with hie | hin'
+    · rw [hie, joinPaths_apply_le le_rfl]
+      have h1 : joinPaths p q n (n + 1) = q 0 := by
+        show joinPaths p q n (n + (0 + 1)) = q 0
+        exact joinPaths_apply_add 0
+      rw [h1]
+      exact h
+    · obtain ⟨j, rfl⟩ : ∃ j : ℕ, i = n + (j + 1) := ⟨i - (n + 1), by omega⟩
+      have hj : j < m := by omega
+      rw [joinPaths_apply_add j, show n + (j + 1) + 1 = n + ((j + 1) + 1) from by omega,
+        joinPaths_apply_add (j + 1)]
+      exact hq j hj
+
+/-- `hypermap.hl`:5237 `lemma_join_inj_contours`。 -/
+theorem isInjContour_joinPaths (H : Hypermap α) {p q : ℕ → α} {n m : ℕ}
+    (hp : H.isInjContour p n) (hq : H.isInjContour q m)
+    (h : H.oneStepContour (p n) (q 0))
+    (hdisj : ∀ i ≤ n, ∀ j ≤ m, p i ≠ q j) :
+    H.isInjContour (joinPaths p q n) (n + m + 1) := by
+  rw [H.isInjContour_iff] at hp hq ⊢
+  refine ⟨H.isContour_joinPaths hp.1 hq.1 h, fun i j hi hj => ?_⟩
+  have hpj := hp.2
+  have hqj := hq.2
+  by_cases hi1 : i ≤ n
+  · rw [joinPaths_apply_le hi1, joinPaths_apply_le (by omega)]
+    exact hpj i j hi1 hj
+  · obtain ⟨i', rfl⟩ : ∃ i' : ℕ, i = n + (i' + 1) := ⟨i - (n + 1), by omega⟩
+    have hi'm : i' ≤ m := by omega
+    rw [joinPaths_apply_add i']
+    by_cases hj1 : j ≤ n
+    · rw [joinPaths_apply_le hj1]
+      exact hdisj j hj1 i' hi'm
+    · obtain ⟨j', rfl⟩ : ∃ j' : ℕ, j = n + (j' + 1) := ⟨j - (n + 1), by omega⟩
+      have hj' : j' < i' := by omega
+      rw [joinPaths_apply_add j']
+      exact hqj i' j' hi'm (by omega)
+
+/-- `is_glueing`（`hypermap.hl`:653）：`glue` 的无重叠拼接条件。 -/
+def IsGlueing {α : Type*} (p q : ℕ → α) (n m : ℕ) : Prop :=
+  p n = q 0 ∧ ∀ j : ℕ, 1 ≤ j → j ≤ m → q j ∉ (fun i => p i) '' ↑(Finset.range (n + 1))
+
+/-- `hypermap.hl`:5249 `lemma_glue_inj_contours`。 -/
+theorem isInjContour_gluePaths (H : Hypermap α) {p q : ℕ → α} {n m : ℕ}
+    (hp : H.isInjContour p n) (hq : H.isInjContour q m) (hg : IsGlueing p q n m) :
+    H.isInjContour (gluePaths p q n) (n + m) := by
+  obtain ⟨hg0, hgdisj⟩ := hg
+  rw [H.isInjContour_iff] at hp hq ⊢
+  refine ⟨H.isContour_gluePaths hp.1 hq.1 hg0, fun i j hi hj => ?_⟩
+  have hpj := hp.2
+  have hqj := hq.2
+  by_cases hi1 : i ≤ n
+  · rw [gluePaths_apply_le hi1, gluePaths_apply_le (by omega)]
+    exact hpj i j hi1 hj
+  · obtain ⟨i', rfl⟩ : ∃ i' : ℕ, i = n + i' := ⟨i - n, by omega⟩
+    have hi'0 : 1 ≤ i' := by omega
+    have hi'm : i' ≤ m := by omega
+    rw [gluePaths_apply_add hg0 i']
+    by_cases hj1 : j ≤ n
+    · rw [gluePaths_apply_le hj1]
+      intro hcon
+      exact hgdisj i' hi'0 hi'm ⟨j, Finset.mem_coe.mpr (Finset.mem_range.mpr (by omega)), hcon⟩
+    · obtain ⟨j', rfl⟩ : ∃ j' : ℕ, j = n + j' := ⟨j - n, by omega⟩
+      have hj'0 : 1 ≤ j' := by omega
+      have hj'lt : j' < i' := by omega
+      rw [gluePaths_apply_add hg0 j']
+      exact hqj i' j' hi'm (by omega)
+
+/-- `hypermap.hl`:5257 `concatenate_two_contours`。 -/
+theorem concatenate_two_contours (H : Hypermap α) {p q : ℕ → α} {n m : ℕ}
+    (hp : H.isInjContour p n) (hq : H.isInjContour q m) (h : p n = q 0)
+    (hdisj : ∀ j : ℕ, 0 < j → j ≤ m → ∀ i ≤ n, q j ≠ p i) :
+    ∃ g : ℕ → α, g 0 = p 0 ∧ g (n + m) = q m ∧ H.isInjContour g (n + m) ∧
+      (∀ i ≤ n, g i = p i) ∧ (∀ i ≤ m, g (n + i) = q i) := by
+  have hg : IsGlueing p q n m := by
+    refine ⟨h, fun j hj1 hjm hmem => ?_⟩
+    obtain ⟨i, hi, hiq⟩ := hmem
+    have hi_le : i ≤ n := Nat.lt_succ_iff.mp (Finset.mem_range.mp (Finset.mem_coe.mp hi))
+    exact hdisj j (by omega) hjm i hi_le hiq.symm
+  exact ⟨gluePaths p q n, gluePaths_apply_le (Nat.zero_le n), gluePaths_apply_add h m,
+    H.isInjContour_gluePaths hp hq hg, fun i hi => gluePaths_apply_le hi,
+    fun i _ => gluePaths_apply_add h i⟩
+
+/-- `hypermap.hl`:5266 `concatenate_two_disjoint_contours`。 -/
+theorem concatenate_two_disjoint_contours (H : Hypermap α) {p q : ℕ → α} {n m : ℕ}
+    (hp : H.isInjContour p n) (hq : H.isInjContour q m)
+    (h : H.oneStepContour (p n) (q 0))
+    (hdisj : ∀ i ≤ n, ∀ j ≤ m, q j ≠ p i) :
+    ∃ g : ℕ → α, g 0 = p 0 ∧ g (n + m + 1) = q m ∧ H.isInjContour g (n + m + 1) ∧
+      (∀ i ≤ n, g i = p i) ∧ (∀ i ≤ m, g (n + i + 1) = q i) :=
+  ⟨joinPaths p q n, joinPaths_apply_le (Nat.zero_le n),
+    by rw [show n + m + 1 = n + (m + 1) from by omega, joinPaths_apply_add m],
+    H.isInjContour_joinPaths hp hq h (fun i hi j hj => (hdisj i hi j hj).symm),
+    fun i hi => joinPaths_apply_le hi, fun i _ => joinPaths_apply_add i⟩
+
+/-- `hypermap.hl`:5353 `lemma_one_step_contour`。 -/
+theorem oneStepContour_iff (H : Hypermap α) (x y : α) :
+    H.oneStepContour x y ↔ y = H.faceMap x ∨ x = H.nodeMap y := by
+  unfold oneStepContour
+  constructor
+  · rintro (h | h)
+    · exact Or.inl h
+    · exact Or.inr ((Equiv.symm_apply_eq H.nodeMap).mp h.symm)
+  · rintro (h | h)
+    · exact Or.inl h
+    · exact Or.inr (((Equiv.symm_apply_eq H.nodeMap).mpr h).symm)
+
+/-- `hypermap.hl`:5360 `lemma_only_one_orbit`。 -/
+theorem PermutesOn.setOfOrbits_eq_singleton {α : Type*} {p : Equiv.Perm α} {s : Finset α}
+    {x : α} (hp : PermutesOn p s) (h : orbitMap p x = ↑s) :
+    setOfOrbits s p = {orbitMap p x} := by
+  have hx : x ∈ s := by
+    have h1 : x ∈ orbitMap p x := mem_orbitMap_self p x
+    rw [h] at h1
+    exact Finset.mem_coe.mp h1
+  ext u
+  constructor
+  · rintro ⟨y, hy, rfl⟩
+    rw [Set.mem_singleton_iff]
+    have hne : (orbitMap p y ∩ orbitMap p x).Nonempty := by
+      refine ⟨y, mem_orbitMap_self p y, ?_⟩
+      have hsub := orbitMap_subset_of_permutesOn hp hy
+      rw [← h] at hsub
+      exact hsub (mem_orbitMap_self p y)
+    rcases orbitMap_disjoint_or_eq hp y x with hdis | heq
+    · exact absurd hne (hdis.symm ▸ Set.not_nonempty_empty)
+    · exact heq
+  · intro hu
+    rw [Set.mem_singleton_iff] at hu
+    rw [hu, h]
+    exact ⟨x, hx, h⟩
+
+/-- `hypermap.hl`:5383 `lemma_only_one_component`。 -/
+theorem setOfComponents_eq_singleton (H : Hypermap α) {x : α}
+    (h : H.combComponent x = ↑H.darts) : H.setOfComponents = {H.combComponent x} := by
+  have hx : x ∈ H.darts := by
+    have h1 : x ∈ H.combComponent x := H.mem_combComponent_self x
+    rw [h] at h1
+    exact Finset.mem_coe.mp h1
+  ext u
+  constructor
+  · rintro ⟨y, hy, rfl⟩
+    rw [Set.mem_singleton_iff]
+    have hne : (H.combComponent y ∩ H.combComponent x).Nonempty :=
+      ⟨y, H.mem_combComponent_self y, by rw [h]; exact Finset.mem_coe.mp hy⟩
+    rcases H.partition_components y x with heq | hdis
+    · exact heq
+    · exact absurd hne (hdis.symm ▸ Set.not_nonempty_empty)
+  · intro hu
+    rw [Set.mem_singleton_iff] at hu
+    rw [hu]
+    exact ⟨x, hx, rfl⟩
 
 end Hypermap
 
