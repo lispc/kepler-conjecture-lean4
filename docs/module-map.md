@@ -33,13 +33,13 @@ Volume（体积、楔、立体角测度） ← Trig（三角、方位角）
 | 1 Close Packing（陈述） | `general/` | `Kepler/Statement.lean` | ✅ 陈述完成（G1），证明体 sorry（ sanctioned） |
 | 2 Trigonometry | `trigonometry/` | `Kepler/Text/Trig.lean` | ⬜ 未开始 |
 | 3 Volume | `volume/` | `Kepler/Text/Volume.lean` | ⬜ 未开始 |
-| 4 Hypermap | `hypermap/` | `Kepler/Text/Hypermap.lean` | 🟡 至轨道精细结构 + planar_index + walkup 轨道等式（hypermap.hl ~2500 行），walkup 组件/计数定理待做（图枚举侧见 Phase 2，hypermap_of_fan 桥接待做） |
+| 4 Hypermap | `hypermap/` | `Kepler/Text/Hypermap.lean` | 🟡 至 walkup 边/组件集合等式（hypermap.hl ~3500 行，2744–3025 edge split/merge 待做），planar-index 计数链待做（图枚举侧见 Phase 2，hypermap_of_fan 桥接待做） |
 | 5 Fan | `fan/` | `Kepler/Text/Fan.lean` | ⬜ 未开始 |
 | 6 Packing | `packing/` | `Kepler/Text/Packing.lean` | 🟡 `Packing`/`finite_inter_ball` 已在 Statement.lean |
 | 7 Local Fan | `local/` + `leg/` | `Kepler/Text/LocalFan.lean` | ⬜ 未开始 |
 | 8 Tame Hypermap | `tame/` | Phase 2 已覆盖图侧；`Kepler/Text/TameHypermap.lean`（hypermap 版 tame + 与 fgraph 桥接） | 🟡 图枚举链进行中（见下） |
 | 9 组装（Final Conclusion） | `general/the_kepler_conjecture.hl` | `Kepler/Text/Assembly.lean` | ⬜ 未开始 |
-| 非线性不等式 | `nonlinear/` | Phase 4（`Kepler/Interval/`） | ⬜ 未开始 |
+| 非线性不等式 | `nonlinear/` | Phase 4（`Kepler/Interval/`：`Basic` 二进制有理数端点区间算术 + `checkPos` soundness） | 🟡 区间 checker 试点进行中（Kepler/Interval） |
 | LP | `formal_lp/` | Phase 3（`Kepler/LP/`：`HelloChecker` 占位 + `Cert` 稀疏整数化对偶/原始证书 checker） | 🟡 VIPR 风格 checker 试点进行中 |
 
 ## Phase 2 引理移植进度（tame 图枚举完备性，AFP Flyspeck-Tame 对照）
