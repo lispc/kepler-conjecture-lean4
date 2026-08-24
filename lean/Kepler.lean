@@ -17,3 +17,5 @@ import Kepler.Graphs.Sanity
 -- `Kepler.Graphs`; import it so the default target covers G2 end to end
 -- (otherwise `lake build` / `make reprove` silently skips the shard files).
 import Kepler.Graphs
+-- Phase 5: 文字证明移植 —— hypermap 核心定义层
+import Kepler.Text.Hypermap
