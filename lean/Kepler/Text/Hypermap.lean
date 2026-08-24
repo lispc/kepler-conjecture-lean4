@@ -176,6 +176,43 @@ Explicitly skipped in this range:
   `lemma_planar_index_on_*`, `lemmaFOAGLPA`): the planar-index counting
   chain proper, left for the next block.
 
+Coverage (block 6, planar-index counting chain, complete):
+- Edge split/merge infrastructure (2744–3025): `lemma_complement_two_edges`
+  (2744), `lemma_(edge|node|face)_map_walkup_in_dart` (2791–2817),
+  `lemma_walkup_support_edges` (2819), `lemma_in_edge`/`lemma_in_edge2`
+  (2850–2853), `lemma_edge_cycle` (2855), `lemma_edge_split` (2860),
+  `lemma_edge_merge` (2966). The two HOL proofs' shared power-chain
+  (`(e'^i)(e x) = (e^i)(e x)` outside the seam) is factored through
+  `injOrbit` avoidance conditions.
+- Degenerate walkups (3509–3880): `edge/node/face_degenerate_walkup_*`
+  map evaluations (3511–3649), `edge_degenerate_walkup_(first|second|
+  third)_eq` (3654–3804), `lemma_shift_cycle` (3806, as `shift_cycle`),
+  `lemma_eq_iff_shift_eq` (3811), `lemma_degenerate_walkup_(first|
+  second)_eq` (3818–3878). `lemma_hypermap_eq` (1689) is realized as
+  `Hypermap.ext'`; map equalities use the `comp_eq_one` cancellation
+  `nodeMap_eq_of_edgeMap_faceMap_eq`.
+- Planar-index counting (3883–4790, complete): `component_at_isolated_
+  dart` (3883), CARD helpers as `ncard_diff_singleton_mem`/
+  `ncard_diff_pair_mem` (3913–3935), `NODE/FACE_NOT_EMPTY` (3951–3968),
+  `FINITE_HYPERMAP_ORBITS`/`FINITE_HYPERMAP_COMPONENTS` (3970–3989,
+  already in block 1), `WALKUP_EXCEPTION_COMPONENT` (3989),
+  `lemma_in_components` (4003), `lemma_different_(edges|nodes|faces)`
+  (4019–4047), `lemma_planar_index_on_walkup_at_(isolated|edge_degenerate|
+  degenerate)_dart` (4053–4426), `lemma_card_walkup_dart` (4432),
+  `lemma_splitting_case_count_edges` (4440), `lemma_merge_case_count_edges`
+  (4491), `lemma_walkup_count_(nodes|faces)` (4540–4584),
+  `lemma_walkup_count_(splitting|not_splitting)_components` (4589–4636),
+  `is_splitting_component` (4639, as `IsSplittingComponent`),
+  `lemma_planar_index_on_nondegenerate` (4641), `lemma_desc_planar_index`
+  (4705, as `planarIndex_le_edgeWalkup`), `lemmaBISHKQW` (4721, as
+  `planarIndex_le_walkups`), **`lemmaFOAGLPA`** (4741, as
+  `planarIndex_le_zero`, by induction on the dart count), and
+  **`lemmaSGCOSXK`** (4771, as `planar_walkup`).
+
+Explicitly skipped in this range:
+- 4017 `lemma_card_eq_reflect`: triviality.
+- 4790 onwards (double walkups, convolutions, `iso`, ...): next block.
+
 Type correspondences (HOL Light ↦ Lean 4):
 - `(A)hypermap` (a 4-tuple carrying `FINITE`/`permutes` side conditions,
   `hypermap.hl`:83–93) ↦ `structure Hypermap` with a `Finset` of darts and
@@ -2620,6 +2657,1234 @@ theorem setOfComponents_walkup (H : Hypermap α) {x : α} (hx : x ∈ H.darts) :
     apply h8
     rw [← hcon]
     exact (H.edgeWalkup x).mem_combComponent_self y
+
+/-- `hypermap.hl`:2744 `lemma_complement_two_edges`。 -/
+theorem complement_two_edges (H : Hypermap α) (hx : x ∈ H.darts) (hy : y ∈ H.darts) :
+    H.edge x ∪ H.edge y = ↑H.darts \ ⋃₀ (H.edgeSet \ {H.edge x, H.edge y}) := by
+  ext z
+  constructor
+  · intro hz
+    have key : z ∉ ⋃₀ (H.edgeSet \ {H.edge x, H.edge y}) := by
+      intro hmem
+      rw [Set.mem_sUnion] at hmem
+      obtain ⟨t, ht, hzt⟩ := hmem
+      obtain ⟨htE, htnot⟩ := ht
+      obtain ⟨v, hv, rfl⟩ := htE
+      have hzv : H.edge v = H.edge z := H.edge_eq_of_mem hzt
+      rw [Set.mem_insert_iff, Set.mem_singleton_iff, not_or] at htnot
+      rcases hz with hz1 | hz1
+      · exact htnot.1 (hzv.trans (H.edge_eq_of_mem hz1).symm)
+      · exact htnot.2 (hzv.trans (H.edge_eq_of_mem hz1).symm)
+    rcases hz with hz | hz
+    · exact ⟨H.edge_subset_darts hx hz, key⟩
+    · exact ⟨H.edge_subset_darts hy hz, key⟩
+  · intro hz
+    obtain ⟨hzD, hznot⟩ := hz
+    by_cases hx' : H.edge z = H.edge x
+    · exact Or.inl (hx' ▸ H.mem_edge_self z)
+    · by_cases hy' : H.edge z = H.edge y
+      · exact Or.inr (hy' ▸ H.mem_edge_self z)
+      · exfalso
+        apply hznot
+        apply Set.mem_sUnion.mpr
+        exact ⟨H.edge z, ⟨(H.mem_darts_iff_edge_mem z).mp hzD, by
+          rw [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+          exact ⟨hx', hy'⟩⟩, H.mem_edge_self z⟩
+
+/-- `hypermap.hl`:2791 `lemma_edge_map_walkup_in_dart`。 -/
+theorem edgeMap_walkup_mem_darts (H : Hypermap α) (hx : x ∈ H.darts)
+    (h : H.edgeMap x ≠ x) :
+    H.edgeMap x ∈ (H.edgeWalkup x).darts ∧ H.edgeMap⁻¹ x ∈ (H.edgeWalkup x).darts := by
+  show H.edgeMap x ∈ H.darts.erase x ∧ H.edgeMap⁻¹ x ∈ H.darts.erase x
+  exact ⟨Finset.mem_erase.mpr ⟨h, H.edgeMap_apply_mem hx⟩,
+    Finset.mem_erase.mpr ⟨(Perm_apply_ne_self_iff_symm _ _).mp h, H.edgeMap_symm_apply_mem hx⟩⟩
+
+/-- `hypermap.hl`:2801 `lemma_node_map_walkup_in_dart`。 -/
+theorem nodeMap_walkup_mem_darts (H : Hypermap α) (hx : x ∈ H.darts)
+    (h : H.nodeMap x ≠ x) :
+    H.nodeMap x ∈ (H.edgeWalkup x).darts ∧ H.nodeMap⁻¹ x ∈ (H.edgeWalkup x).darts := by
+  show H.nodeMap x ∈ H.darts.erase x ∧ H.nodeMap⁻¹ x ∈ H.darts.erase x
+  exact ⟨Finset.mem_erase.mpr ⟨h, H.nodeMap_apply_mem hx⟩,
+    Finset.mem_erase.mpr ⟨(Perm_apply_ne_self_iff_symm _ _).mp h, H.nodeMap_symm_apply_mem hx⟩⟩
+
+/-- `hypermap.hl`:2810 `lemma_face_map_walkup_in_dart`。 -/
+theorem faceMap_walkup_mem_darts (H : Hypermap α) (hx : x ∈ H.darts)
+    (h : H.faceMap x ≠ x) :
+    H.faceMap x ∈ (H.edgeWalkup x).darts ∧ H.faceMap⁻¹ x ∈ (H.edgeWalkup x).darts := by
+  show H.faceMap x ∈ H.darts.erase x ∧ H.faceMap⁻¹ x ∈ H.darts.erase x
+  exact ⟨Finset.mem_erase.mpr ⟨h, H.faceMap_apply_mem hx⟩,
+    Finset.mem_erase.mpr ⟨(Perm_apply_ne_self_iff_symm _ _).mp h, H.faceMap_symm_apply_mem hx⟩⟩
+
+/-- `hypermap.hl`:2819 `lemma_walkup_support_edges`。 -/
+theorem walkup_support_edges (H : Hypermap α) (hx : x ∈ H.darts)
+    (hnd : H.DartNondegenerate x) :
+    H.edge x ∪ H.edge (H.nodeMap x) =
+      {x} ∪ ((H.edgeWalkup x).edge (H.nodeMap x) ∪
+        (H.edgeWalkup x).edge (H.edgeMap⁻¹ x)) := by
+  have hnx : H.nodeMap x ∈ H.darts := H.nodeMap_apply_mem hx
+  have h1 := H.complement_two_edges hx hnx
+  have hnxG : H.nodeMap x ∈ (H.edgeWalkup x).darts :=
+    (H.nodeMap_walkup_mem_darts hx hnd.2.1).1
+  have hexG : H.edgeMap⁻¹ x ∈ (H.edgeWalkup x).darts :=
+    (H.edgeMap_walkup_mem_darts hx hnd.1).2
+  have h2 := (H.edgeWalkup x).complement_two_edges hnxG hexG
+  have h3 := H.edgeSet_walkup hx
+  have hxU : x ∉ ⋃₀ (H.edgeSet \ {H.edge x, H.edge (H.nodeMap x)}) := by
+    intro hmem
+    rw [Set.mem_sUnion] at hmem
+    obtain ⟨t, ht, hxt⟩ := hmem
+    obtain ⟨htE, htnot⟩ := ht
+    obtain ⟨u, hu, rfl⟩ := htE
+    have h4 : H.edge u = H.edge x := H.edge_eq_of_mem hxt
+    rw [Set.mem_insert_iff, Set.mem_singleton_iff, not_or] at htnot
+    exact htnot.1 h4
+  rw [h3] at hxU
+  rw [h1, h3, h2]
+  ext z
+  simp only [Set.mem_sdiff, Set.mem_union, Set.mem_singleton_iff]
+  constructor
+  · intro ⟨hzD, hzU⟩
+    by_cases hzx : z = x
+    · exact Or.inl hzx
+    · exact Or.inr ⟨Finset.mem_coe.mpr (Finset.mem_erase.mpr ⟨hzx, hzD⟩), hzU⟩
+  · intro hz
+    rcases hz with rfl | ⟨hzE, hzU⟩
+    · exact ⟨hx, hxU⟩
+    · exact ⟨(Finset.mem_erase.mp (Finset.mem_coe.mp hzE)).2, hzU⟩
+
+/-- `hypermap.hl`:2850 `lemma_in_edge`。 -/
+theorem mem_edge_iff (H : Hypermap α) (x y : α) :
+    y ∈ H.edge x ↔ ∃ j : ℕ, y = (H.edgeMap ^ j) x := by
+  constructor
+  · rintro ⟨j, hj⟩; exact ⟨j, hj.symm⟩
+  · rintro ⟨j, hj⟩; exact ⟨j, hj.symm⟩
+
+/-- `hypermap.hl`:2853 `lemma_in_edge2`。 -/
+theorem pow_edgeMap_mem_edge (H : Hypermap α) (x : α) (n : ℕ) :
+    (H.edgeMap ^ n) x ∈ H.edge x := pow_apply_mem_orbitMap _ _ _
+
+/-- `hypermap.hl`:2855 `lemma_edge_cycle`。 -/
+theorem edgeMap_pow_card_edge (H : Hypermap α) (x : α) :
+    (H.edgeMap ^ ((H.edge x).ncard)) x = x :=
+  H.edgeMap_permutes.pow_ncard_orbitMap_apply_self x
+
+/-- 幂链辅助：`(p ^ (k - 1)) (p x) = (p ^ k) x`（`k ≥ 1`）。 -/
+theorem Perm.pow_pred_apply {α : Type*} (p : Equiv.Perm α) {k : ℕ} (hk : 0 < k) (x : α) :
+    (p ^ (k - 1)) (p x) = (p ^ k) x := by
+  rw [← Equiv.Perm.mul_apply, ← pow_succ, Nat.sub_add_cancel hk]
+
+/-- `hypermap.hl`:2860 `lemma_edge_split`（split 情形：walkup 把 `x` 所在的边拆开）。 -/
+theorem edge_split (H : Hypermap α) {x : α} (hx : x ∈ H.darts) (hsplit : H.IsEdgeSplit x) :
+    H.faceMap⁻¹ x ∉ (H.edgeWalkup x).edge (H.nodeMap x) ∧
+      H.edge x = {x} ∪ ((H.edgeWalkup x).edge (H.nodeMap x) ∪
+        (H.edgeWalkup x).edge (H.faceMap⁻¹ x)) := by
+  obtain ⟨hnd, hnx⟩ := hsplit
+  set e' := (H.edgeWalkup x).edgeMap with he'
+  -- `n x = (e^k) x` 且 `k + 1 < card (edge x)`
+  obtain ⟨k, hklt, hkeq⟩ := H.edgeMap_permutes.exists_lt_ncard_pow_apply hnx
+  have hEc : (orbitMap H.edgeMap x).ncard = (H.edge x).ncard := rfl
+  rw [hEc] at hklt
+  have hk0 : k ≠ 0 := by
+    intro h0
+    rw [h0] at hkeq
+    simp at hkeq
+    exact hnd.2.1 hkeq
+  have hfk : H.faceMap⁻¹ x = (H.edgeMap ^ (k + 1)) x := by
+    have h1 : H.faceMap⁻¹ x = H.edgeMap (H.nodeMap x) := by
+      rw [H.inverse_hypermap_maps.2.2]; rfl
+    rw [h1, hkeq, pow_succ', Equiv.Perm.mul_apply]
+  have hk1 : k + 1 < (H.edge x).ncard := by
+    by_contra hge
+    have hkc : k + 1 = (H.edge x).ncard := by omega
+    have hfx : H.faceMap x = x := by
+      have h2 : H.faceMap⁻¹ x = x := by
+        rw [hfk, hkc]
+        exact H.edgeMap_pow_card_edge x
+      exact (Perm_apply_eq_self_iff_symm _ _).mpr h2
+    exact hnd.2.2 hfx
+  -- 幂链：`i < k` 时 `(e'^i) (e x) = (e^i) (e x)`
+  have hinj : injOrbit H.edgeMap x ((H.edge x).ncard - 1) := by
+    apply H.edgeMap_permutes.injOrbit_of_lt_ncard
+    rw [hEc]
+    omega
+  rw [injOrbit_iff_pairwise] at hinj
+  have hpart2 : e' (H.nodeMap x) = H.edgeMap x := (H.edgeMap_walkup x x).2.1 ⟨hnd.2.1, hnd.1⟩
+  have hchain : ∀ i < k, (e' ^ i) (H.edgeMap x) = (H.edgeMap ^ i) (H.edgeMap x) := by
+    intro i
+    induction i with
+    | zero => intro _; rfl
+    | succ i ih =>
+      intro hik
+      rw [pow_succ', Equiv.Perm.mul_apply, ih (by omega)]
+      have hpa : (H.edgeMap ^ i) (H.edgeMap x) = (H.edgeMap ^ (i + 1)) x :=
+        Perm.pow_pred_apply (p := H.edgeMap) (k := i + 1) (by omega) x
+      have h1 : (H.edgeMap ^ i) (H.edgeMap x) ≠ x := by
+        rw [hpa]
+        intro hcon
+        have h2 := hinj (i + 1) 0 (by omega) (by omega) (by simpa using hcon)
+        omega
+      have h2 : (H.edgeMap ^ i) (H.edgeMap x) ≠ H.edgeMap⁻¹ x := by
+        rw [hpa]
+        intro hcon
+        have h3 : (H.edgeMap ^ (i + 2)) x = x := by
+          have h4 : H.edgeMap ((H.edgeMap ^ (i + 1)) x) = x := by
+            rw [hcon]; show H.edgeMap (H.edgeMap.symm x) = x; exact Equiv.apply_symm_apply _ _
+          rwa [pow_succ', Equiv.Perm.mul_apply]
+        have h5 := hinj (i + 2) 0 (by omega) (by omega) (by simpa using h3)
+        omega
+      have h3 : (H.edgeMap ^ i) (H.edgeMap x) ≠ H.nodeMap x := by
+        rw [hpa, hkeq]
+        intro hcon
+        have h4 := hinj (i + 1) k (by omega) (by omega) hcon
+        omega
+      rw [(H.edgeMap_walkup x _).2.2.2 ⟨h1, h2, h3⟩, pow_succ', Equiv.Perm.mul_apply]
+  -- `(e'^k) (n x) = n x`，故 `orbit e' (n x)` 由前 `k` 个幂组成
+  have hcycle : (e' ^ k) (H.nodeMap x) = H.nodeMap x := by
+    rw [(by omega : k = k - 1 + 1), pow_succ, Equiv.Perm.mul_apply, hpart2,
+      hchain (k - 1) (by omega)]
+    have hpa : (H.edgeMap ^ (k - 1)) (H.edgeMap x) = (H.edgeMap ^ k) x :=
+      Perm.pow_pred_apply (p := H.edgeMap) (k := k) (by omega) x
+    rw [hpa, ← hkeq]
+  have horb : (H.edgeWalkup x).edge (H.nodeMap x) =
+      (fun m => (e' ^ m) (H.nodeMap x)) '' ↑(Finset.range k) := orbit_cyclic e' hk0 hcycle
+  refine ⟨?_, ?_⟩
+  · -- `f⁻¹ x = (e^(k+1)) x ∉ orbit e' (n x)`：与前 `k` 个幂比对并用 `injOrbit` 排除
+    intro hmem
+    rw [horb] at hmem
+    obtain ⟨m, hmk, hm⟩ := hmem
+    change (e' ^ m) (H.nodeMap x) = H.faceMap⁻¹ x at hm
+    rw [hfk] at hm
+    have hmk' : m < k := Finset.mem_range.mp hmk
+    rcases (by omega : m = 0 ∨ 1 ≤ m) with rfl | hm1
+    · simp at hm
+      have h4 : (H.edgeMap ^ (k + 1)) x = (H.edgeMap ^ k) x := hm.symm.trans hkeq
+      have h5 := hinj (k + 1) k (by omega) (by omega) h4
+      omega
+    · have h4 : (e' ^ m) (H.nodeMap x) = (H.edgeMap ^ m) x := by
+        conv_lhs => rw [(by omega : m = m - 1 + 1)]
+        rw [pow_succ, Equiv.Perm.mul_apply, hpart2, hchain (m - 1) (by omega)]
+        exact Perm.pow_pred_apply (p := H.edgeMap) (k := m) (by omega) x
+      rw [h4] at hm
+      have h5 := hinj (k + 1) m (by omega) (by omega) hm.symm
+      omega
+  · -- `edge H x = {x} ∪ G.edge (n x) ∪ G.edge (f⁻¹ x)`：由 `walkup_support_edges` 代入两条恒等
+    have hsup := H.walkup_support_edges hx hnd
+    have hid1 : H.edge (H.nodeMap x) = H.edge x := (H.edge_eq_of_mem hnx).symm
+    have hpart3 : e' (H.edgeMap⁻¹ x) = H.faceMap⁻¹ x :=
+      (H.edgeMap_walkup x x).2.2.1
+        ⟨(Perm_apply_ne_self_iff_symm _ _).mp hnd.2.2,
+          (Perm_apply_ne_self_iff_symm _ _).mp hnd.1⟩
+    have hid2 : (H.edgeWalkup x).edge (H.edgeMap⁻¹ x) = (H.edgeWalkup x).edge (H.faceMap⁻¹ x) :=
+      (H.edgeWalkup x).edge_eq_of_mem (hpart3 ▸ (H.edgeWalkup x).pow_edgeMap_mem_edge _ 1)
+    rw [hid1, Set.union_self, hid2] at hsup
+    exact hsup
+
+/-- `hypermap.hl`:2966 `lemma_edge_merge`（merge 情形）。 -/
+theorem edge_merge (H : Hypermap α) {x : α} (hx : x ∈ H.darts) (hmerge : H.IsEdgeMerge x) :
+    {x} ∪ (H.edgeWalkup x).edge (H.nodeMap x) = H.edge x ∪ H.edge (H.nodeMap x) := by
+  obtain ⟨hnd, hnx⟩ := hmerge
+  set e' := (H.edgeWalkup x).edgeMap with he'
+  -- `e⁻¹ x = (e^k) x`，`1 ≤ k < card (edge x)`
+  have hinv : H.edgeMap⁻¹ x ∈ H.edge x := H.edgeMap_permutes.symm_apply_mem_orbitMap x
+  obtain ⟨k, hklt, hkeq⟩ := H.edgeMap_permutes.exists_lt_ncard_pow_apply hinv
+  have hEc : (orbitMap H.edgeMap x).ncard = (H.edge x).ncard := rfl
+  rw [hEc] at hklt
+  have hk0 : k ≠ 0 := by
+    intro h0
+    rw [h0] at hkeq
+    simp at hkeq
+    exact (Perm_apply_ne_self_iff_symm _ _).mp hnd.1 hkeq
+  have hinj : injOrbit H.edgeMap x ((H.edge x).ncard - 1) := by
+    apply H.edgeMap_permutes.injOrbit_of_lt_ncard
+    rw [hEc]
+    omega
+  rw [injOrbit_iff_pairwise] at hinj
+  have hpart2 : e' (H.nodeMap x) = H.edgeMap x := (H.edgeMap_walkup x x).2.1 ⟨hnd.2.1, hnd.1⟩
+  have hchain : ∀ i < k, (e' ^ i) (H.edgeMap x) = (H.edgeMap ^ i) (H.edgeMap x) := by
+    intro i
+    induction i with
+    | zero => intro _; rfl
+    | succ i ih =>
+      intro hik
+      rw [pow_succ', Equiv.Perm.mul_apply, ih (by omega)]
+      have hpa : (H.edgeMap ^ i) (H.edgeMap x) = (H.edgeMap ^ (i + 1)) x :=
+        Perm.pow_pred_apply (p := H.edgeMap) (k := i + 1) (by omega) x
+      have h1 : (H.edgeMap ^ i) (H.edgeMap x) ≠ x := by
+        rw [hpa]
+        intro hcon
+        have h2 := hinj (i + 1) 0 (by omega) (by omega) (by simpa using hcon)
+        omega
+      have h2 : (H.edgeMap ^ i) (H.edgeMap x) ≠ H.edgeMap⁻¹ x := by
+        rw [hpa, hkeq]
+        intro hcon
+        have h3 := hinj (i + 1) k (by omega) (by omega) hcon
+        omega
+      have h3 : (H.edgeMap ^ i) (H.edgeMap x) ≠ H.nodeMap x := by
+        rw [hpa]
+        intro hcon
+        exact hnx ⟨i + 1, hcon⟩
+      rw [(H.edgeMap_walkup x _).2.2.2 ⟨h1, h2, h3⟩, pow_succ', Equiv.Perm.mul_apply]
+  -- `(e'^k) (n x) = e⁻¹ x`，故 `G.edge (e⁻¹ x) = G.edge (n x)`
+  have hcycle : (e' ^ k) (H.nodeMap x) = H.edgeMap⁻¹ x := by
+    rw [(by omega : k = k - 1 + 1), pow_succ, Equiv.Perm.mul_apply, hpart2,
+      hchain (k - 1) (by omega)]
+    have hpa : (H.edgeMap ^ (k - 1)) (H.edgeMap x) = (H.edgeMap ^ k) x :=
+      Perm.pow_pred_apply (p := H.edgeMap) (k := k) (by omega) x
+    rw [hpa, ← hkeq]
+  have hid : (H.edgeWalkup x).edge (H.edgeMap⁻¹ x) = (H.edgeWalkup x).edge (H.nodeMap x) :=
+    ((H.edgeWalkup x).edge_eq_of_mem ⟨k, hcycle⟩).symm
+  have hsup := H.walkup_support_edges hx hnd
+  rw [hid, Set.union_self] at hsup
+  exact hsup.symm
+
+end Hypermap
+
+/-- `hypermap.hl`:1689 `lemma_hypermap_eq` 的结构版：hypermap 由 dart 集合与三个映射决定。 -/
+theorem Hypermap.ext' {α : Type*} [DecidableEq α] {H1 H2 : Hypermap α}
+    (hd : H1.darts = H2.darts) (he : H1.edgeMap = H2.edgeMap)
+    (hn : H1.nodeMap = H2.nodeMap) (hf : H1.faceMap = H2.faceMap) : H1 = H2 := by
+  rcases H1 with ⟨D1, e1, n1, f1, a1, b1, c1, d1⟩
+  rcases H2 with ⟨D2, e2, n2, f2, a2, b2, c2, d2⟩
+  obtain ⟨rfl, rfl, rfl, rfl⟩ : D1 = D2 ∧ e1 = e2 ∧ n1 = n2 ∧ f1 = f2 := ⟨hd, he, hn, hf⟩
+  rfl
+
+namespace Hypermap
+
+variable {α : Type*} [DecidableEq α] {x y z : α}
+
+/-- `(H.edgeWalkup x).edgeMap z = w` 的正规形（`edgeMap_walkup` 证明中 `key` 的独立版本）。 -/
+theorem edgeWalkup_edgeMap_eq_iff (H : Hypermap α) (x z w : α) :
+    (H.edgeWalkup x).edgeMap z = w ↔
+      (Equiv.swap x (H.nodeMap x) * H.nodeMap)
+        ((Equiv.swap x (H.faceMap x) * H.faceMap) w) = z := by
+  show ((Equiv.swap x (H.faceMap x) * H.faceMap)⁻¹ *
+    (Equiv.swap x (H.nodeMap x) * H.nodeMap)⁻¹) z = w ↔ _
+  rw [Equiv.Perm.mul_apply, Perm_inv_apply_inv_apply_iff]
+
+/-- `hypermap.hl`:3511 `edge_degenerate_walkup_edge_map`。 -/
+theorem edge_degenerate_walkup_edgeMap (H : Hypermap α) {x : α} (_hx : x ∈ H.darts)
+    (h : H.edgeMap x = x) (y : α) : (H.edgeWalkup x).edgeMap y = H.edgeMap y := by
+  by_cases hyx : y = x
+  · rw [hyx, (H.edgeMap_walkup x y).1, h]
+  · by_cases hyn : y = H.nodeMap x
+    · subst hyn
+      have hfe : H.faceMap x = H.nodeMap.symm x := (H.edgeMap_fixed_iff x).mp h
+      rw [H.edgeWalkup_edgeMap_eq_iff]
+      have hen : H.edgeMap (H.nodeMap x) = H.faceMap⁻¹ x := by
+        rw [H.inverse_hypermap_maps.2.2]; rfl
+      rw [hen]
+      have h3 : (Equiv.swap x (H.faceMap x) * H.faceMap) (H.faceMap⁻¹ x) = H.faceMap x :=
+        (H.faceMap_walkup x x).2.1
+      rw [h3, hfe]
+      exact (H.nodeMap_walkup x x).2.1
+    · exact (H.edgeMap_walkup x y).2.2.2 ⟨hyx, by
+        have h2 : H.edgeMap⁻¹ x = x := (Perm_apply_eq_self_iff_symm _ _).mp h
+        rwa [h2], hyn⟩
+
+/-- `hypermap.hl`:3540 `node_degenerate_walkup_node_map`。 -/
+theorem node_degenerate_walkup_nodeMap (H : Hypermap α) {x : α} (_hx : x ∈ H.darts)
+    (h : H.nodeMap x = x) (y : α) : (H.edgeWalkup x).nodeMap y = H.nodeMap y := by
+  by_cases hyx : y = x
+  · rw [hyx, (H.nodeMap_walkup x y).1, h]
+  · have h2 : H.nodeMap.symm x = x := (Perm_apply_eq_self_iff_symm _ _).mp h
+    exact (H.nodeMap_walkup x y).2.2 ⟨hyx, by rwa [h2]⟩
+
+/-- `hypermap.hl`:3553 `node_degenerate_walkup_edge_map`。 -/
+theorem node_degenerate_walkup_edgeMap (H : Hypermap α) {x : α} (_hx : x ∈ H.darts)
+    (h : H.nodeMap x = x) :
+    (H.edgeWalkup x).edgeMap x = x ∧ (H.edgeWalkup x).edgeMap (H.edgeMap⁻¹ x) = H.edgeMap x ∧
+      ∀ y : α, y ≠ x → y ≠ H.edgeMap⁻¹ x → (H.edgeWalkup x).edgeMap y = H.edgeMap y := by
+  refine ⟨(H.edgeMap_walkup x x).1, ?_,
+    fun y h1 h2 => (H.edgeMap_walkup x y).2.2.2 ⟨h1, h2, by rwa [h]⟩⟩
+  rw [H.edgeWalkup_edgeMap_eq_iff]
+  have hef : H.edgeMap x = H.faceMap.symm x := (H.nodeMap_fixed_iff x).mp h
+  by_cases hfx : H.faceMap x = x
+  · have he : H.edgeMap x = x := by
+      rw [hef]; exact (Perm_apply_eq_self_iff_symm _ _).mp hfx
+    have he2 : H.edgeMap⁻¹ x = x := (Perm_apply_eq_self_iff_symm _ _).mp he
+    have h1 : (Equiv.swap x (H.faceMap x) * H.faceMap) x = x := by
+      rw [Equiv.Perm.mul_apply, Equiv.swap_apply_right]
+    have h2 : (Equiv.swap x (H.nodeMap x) * H.nodeMap) x = x := by
+      rw [Equiv.Perm.mul_apply, Equiv.swap_apply_right]
+    rw [he, he2, h1, h2]
+  · have h4 : (Equiv.swap x (H.faceMap x) * H.faceMap) (H.faceMap.symm x) = H.faceMap x := by
+      rw [Equiv.Perm.mul_apply, Equiv.apply_symm_apply, Equiv.swap_apply_left]
+    rw [hef, h4]
+    have h3 : (Equiv.swap x (H.nodeMap x) * H.nodeMap) (H.faceMap x) = H.nodeMap (H.faceMap x) :=
+      (H.nodeMap_walkup x (H.faceMap x)).2.2 ⟨hfx, by
+        rwa [(Perm_apply_eq_self_iff_symm _ _).mp h]⟩
+    rw [h3]
+    show H.nodeMap (H.faceMap x) = H.edgeMap⁻¹ x
+    rw [H.inverse_hypermap_maps.1]; rfl
+
+/-- `hypermap.hl`:3588 `face_degenerate_walkup_face_map`。 -/
+theorem face_degenerate_walkup_faceMap (H : Hypermap α) {x : α} (_hx : x ∈ H.darts)
+    (h : H.faceMap x = x) (y : α) : (H.edgeWalkup x).faceMap y = H.faceMap y := by
+  by_cases hyx : y = x
+  · rw [hyx, (H.faceMap_walkup x y).1, h]
+  · have h2 : H.faceMap.symm x = x := (Perm_apply_eq_self_iff_symm _ _).mp h
+    exact (H.faceMap_walkup x y).2.2 ⟨hyx, by rwa [h2]⟩
+
+/-- `hypermap.hl`:3602 `face_degenerate_walkup_edge_map`。 -/
+theorem face_degenerate_walkup_edgeMap (H : Hypermap α) {x : α} (_hx : x ∈ H.darts)
+    (h : H.faceMap x = x) :
+    (H.edgeWalkup x).edgeMap x = x ∧ (H.edgeWalkup x).edgeMap (H.edgeMap⁻¹ x) = H.edgeMap x ∧
+      ∀ y : α, y ≠ x → y ≠ H.edgeMap⁻¹ x → (H.edgeWalkup x).edgeMap y = H.edgeMap y := by
+  have hne : H.nodeMap x = H.edgeMap.symm x := (H.faceMap_fixed_iff x).mp h
+  refine ⟨(H.edgeMap_walkup x x).1, ?_,
+    fun y h1 h2 => (H.edgeMap_walkup x y).2.2.2 ⟨h1, h2, by rwa [hne]⟩⟩
+  rw [H.edgeWalkup_edgeMap_eq_iff]
+  by_cases hex : H.edgeMap x = x
+  · have he2 : H.edgeMap⁻¹ x = x := (Perm_apply_eq_self_iff_symm _ _).mp hex
+    have h1 : (Equiv.swap x (H.faceMap x) * H.faceMap) x = x := by
+      rw [Equiv.Perm.mul_apply, Equiv.swap_apply_right]
+    have h2 : (Equiv.swap x (H.nodeMap x) * H.nodeMap) x = x := by
+      rw [Equiv.Perm.mul_apply, Equiv.swap_apply_right]
+    rw [hex, he2, h1, h2]
+  · have h2 : H.edgeMap x ≠ H.faceMap.symm x := by
+      intro hcon
+      apply hex
+      have h1 : H.faceMap (H.edgeMap x) = x := by
+        rw [hcon]; show H.faceMap (H.faceMap.symm x) = x; exact Equiv.apply_symm_apply _ _
+      have h2' : x = H.nodeMap x := (H.nfe_apply x).symm.trans (congrArg H.nodeMap h1)
+      rw [hne] at h2'
+      exact ((Equiv.symm_apply_eq H.edgeMap).mp h2'.symm).symm
+    have hfx : (Equiv.swap x (H.faceMap x) * H.faceMap) (H.edgeMap x) = H.faceMap (H.edgeMap x) :=
+      (H.faceMap_walkup x (H.edgeMap x)).2.2 ⟨hex, h2⟩
+    rw [hfx]
+    have hfe : H.faceMap (H.edgeMap x) = H.nodeMap.symm x :=
+      ((Equiv.symm_apply_eq H.nodeMap).mpr (H.nfe_apply x).symm).symm
+    have h5 : (Equiv.swap x (H.nodeMap x) * H.nodeMap) (H.nodeMap.symm x) = H.nodeMap x := by
+      rw [Equiv.Perm.mul_apply, Equiv.apply_symm_apply, Equiv.swap_apply_left]
+    rw [hfe, h5, hne]
+    show H.edgeMap.symm x = H.edgeMap⁻¹ x
+    rfl
+
+/-- 两个 hypermap 的 `edgeMap`、`faceMap` 相等则 `nodeMap` 相等（`comp_eq_one` 的消去）。 -/
+theorem nodeMap_eq_of_edgeMap_faceMap_eq {α : Type*} [DecidableEq α] {H1 H2 : Hypermap α}
+    (he : H1.edgeMap = H2.edgeMap) (hf : H1.faceMap = H2.faceMap) :
+    H1.nodeMap = H2.nodeMap := by
+  have h1 : H1.nodeMap * H1.faceMap = H1.edgeMap⁻¹ := H1.nodeMap_mul_faceMap
+  have h2 : H2.nodeMap * H2.faceMap = H2.edgeMap⁻¹ := H2.nodeMap_mul_faceMap
+  rw [he, hf] at h1
+  exact mul_right_cancel (h1.trans h2.symm)
+
+/-- `hypermap.hl`:3654 `edge_degenerate_walkup_first_eq`。 -/
+theorem edge_degenerate_walkup_first_eq (H : Hypermap α) {x : α} (hx : x ∈ H.darts)
+    (h : H.edgeMap x = x) : H.nodeWalkup x = H.edgeWalkup x := by
+  have hE1 : (H.nodeWalkup x).edgeMap = H.edgeMap := by
+    show Equiv.swap x (H.edgeMap x) * H.edgeMap = H.edgeMap
+    rw [h, Equiv.swap_self]; exact one_mul _
+  have hE2 : (H.edgeWalkup x).edgeMap = H.edgeMap :=
+    Equiv.ext fun y => H.edge_degenerate_walkup_edgeMap hx h y
+  have hE : (H.nodeWalkup x).edgeMap = (H.edgeWalkup x).edgeMap := hE1.trans hE2.symm
+  exact Hypermap.ext' rfl hE (nodeMap_eq_of_edgeMap_faceMap_eq hE rfl) rfl
+
+/-- `hypermap.hl`:3722 `edge_degenerate_walkup_second_eq`。 -/
+theorem edge_degenerate_walkup_second_eq (H : Hypermap α) {x : α} (hx : x ∈ H.darts)
+    (h : H.edgeMap x = x) : H.faceWalkup x = H.edgeWalkup x := by
+  have hE1 : (H.faceWalkup x).edgeMap = H.edgeMap := by
+    show Equiv.swap x (H.edgeMap x) * H.edgeMap = H.edgeMap
+    rw [h, Equiv.swap_self]; exact one_mul _
+  have hE2 : (H.edgeWalkup x).edgeMap = H.edgeMap :=
+    Equiv.ext fun y => H.edge_degenerate_walkup_edgeMap hx h y
+  have hE : (H.faceWalkup x).edgeMap = (H.edgeWalkup x).edgeMap := hE1.trans hE2.symm
+  have hN : (H.faceWalkup x).nodeMap = (H.edgeWalkup x).nodeMap := rfl
+  have hF : (H.faceWalkup x).faceMap = (H.edgeWalkup x).faceMap := by
+    have h1 : (H.faceWalkup x).edgeMap * (H.faceWalkup x).nodeMap =
+        (H.faceWalkup x).faceMap⁻¹ := (H.faceWalkup x).edgeMap_mul_nodeMap
+    have h2 : (H.edgeWalkup x).edgeMap * (H.edgeWalkup x).nodeMap =
+        (H.edgeWalkup x).faceMap⁻¹ := (H.edgeWalkup x).edgeMap_mul_nodeMap
+    rw [hE, hN] at h1
+    exact inv_injective (h1.symm.trans h2)
+  exact Hypermap.ext' rfl hE hN hF
+
+/-- `hypermap.hl`:3797 `edge_degenerate_walkup_third_eq`。 -/
+theorem edge_degenerate_walkup_third_eq (H : Hypermap α) {x : α} (hx : x ∈ H.darts)
+    (h : H.edgeMap x = x) : H.nodeWalkup x = H.faceWalkup x :=
+  (H.edge_degenerate_walkup_first_eq hx h).trans (H.edge_degenerate_walkup_second_eq hx h).symm
+
+/-- `hypermap.hl`:3806 `lemma_shift_cycle`。 -/
+theorem shift_cycle (H : Hypermap α) : H.shift.shift.shift = H :=
+  Hypermap.ext' rfl rfl rfl rfl
+
+/-- `hypermap.hl`:3811 `lemma_eq_iff_shift_eq`。 -/
+theorem eq_iff_shift_eq (H H' : Hypermap α) : H = H' ↔ H.shift = H'.shift := by
+  constructor
+  · intro h; subst h; rfl
+  · intro h
+    apply Hypermap.ext'
+    · change H.shift.darts = H'.shift.darts; rw [h]
+    · change H.shift.faceMap = H'.shift.faceMap; rw [h]
+    · change H.shift.edgeMap = H'.shift.edgeMap; rw [h]
+    · change H.shift.nodeMap = H'.shift.nodeMap; rw [h]
+
+/-- `hypermap.hl`:3818 `lemma_degenerate_walkup_first_eq`。 -/
+theorem degenerate_walkup_first_eq (H : Hypermap α) {x : α} (hx : x ∈ H.darts)
+    (h : H.DartDegenerate x) : H.nodeWalkup x = H.edgeWalkup x := by
+  rcases h with he | hn | hf
+  · exact H.edge_degenerate_walkup_first_eq hx he
+  · have h1 : (H.shift).edgeMap x = x := hn
+    have h2 := (H.shift).edge_degenerate_walkup_second_eq hx h1
+    have h3 : (H.edgeWalkup x).shift = (H.shift).edgeWalkup x := by
+      have h4 : (H.shift).faceWalkup x = (H.edgeWalkup x).shift := by
+        show ((H.shift.shift.shift).edgeWalkup x).shift = (H.edgeWalkup x).shift
+        rw [H.shift_cycle]
+      rw [h4] at h2
+      exact h2
+    show (H.shift.edgeWalkup x).shift.shift = H.edgeWalkup x
+    rw [← h3]
+    exact (H.edgeWalkup x).shift_cycle
+  · have h1 : (H.shift.shift).edgeMap x = x := hf
+    have h2 := (H.shift.shift).edge_degenerate_walkup_third_eq hx h1
+    have h3 : (H.edgeWalkup x).shift.shift = (H.shift.edgeWalkup x).shift := by
+      have h4 : (H.shift.shift).nodeWalkup x = (H.edgeWalkup x).shift.shift := by
+        show ((H.shift.shift.shift).edgeWalkup x).shift.shift = _
+        rw [H.shift_cycle]
+      have h5 : (H.shift.shift).faceWalkup x = (H.shift.edgeWalkup x).shift := by
+        show ((H.shift.shift.shift.shift).edgeWalkup x).shift = _
+        rw [show H.shift.shift.shift.shift = H.shift from H.shift.shift_cycle]
+      rw [h4, h5] at h2
+      exact h2
+    show (H.shift.edgeWalkup x).shift.shift = H.edgeWalkup x
+    rw [← h3]
+    exact (H.edgeWalkup x).shift_cycle
+
+/-- `hypermap.hl`:3851 `lemma_degenerate_walkup_second_eq`。 -/
+theorem degenerate_walkup_second_eq (H : Hypermap α) {x : α} (hx : x ∈ H.darts)
+    (h : H.DartDegenerate x) : H.faceWalkup x = H.edgeWalkup x := by
+  rcases h with he | hn | hf
+  · exact H.edge_degenerate_walkup_second_eq hx he
+  · have h1 : (H.shift).edgeMap x = x := hn
+    have h2 := (H.shift).edge_degenerate_walkup_third_eq hx h1
+    have h3 : (H.shift.shift.edgeWalkup x).shift.shift = (H.edgeWalkup x).shift := by
+      have h4 : (H.shift).faceWalkup x = (H.edgeWalkup x).shift := by
+        show ((H.shift.shift.shift).edgeWalkup x).shift = _
+        rw [H.shift_cycle]
+      rw [h4] at h2
+      exact h2
+    show (H.shift.shift.edgeWalkup x).shift = H.edgeWalkup x
+    have h5 := congrArg Hypermap.shift h3
+    rw [(H.shift.shift.edgeWalkup x).shift_cycle] at h5
+    rw [h5]
+    exact (H.edgeWalkup x).shift_cycle
+  · have h1 : (H.shift.shift).edgeMap x = x := hf
+    have h2 := (H.shift.shift).edge_degenerate_walkup_first_eq hx h1
+    have h3 : (H.edgeWalkup x).shift.shift = (H.shift.shift).edgeWalkup x := by
+      have h4 : (H.shift.shift).nodeWalkup x = (H.edgeWalkup x).shift.shift := by
+        show ((H.shift.shift.shift).edgeWalkup x).shift.shift = _
+        rw [H.shift_cycle]
+      rw [h4] at h2
+      exact h2
+    show (H.shift.shift.edgeWalkup x).shift = H.edgeWalkup x
+    rw [← h3]
+    exact (H.edgeWalkup x).shift_cycle
+
+end Hypermap
+
+/-- `s \ {x}` 的基数（`hypermap.hl`:3919 `CARD_MINUS_ONE` 的 `Set.ncard` 版）。 -/
+theorem ncard_diff_singleton_mem {α : Type*} {s : Set α} {x : α} (hx : x ∈ s) (hf : s.Finite) :
+    (s \ {x}).ncard = s.ncard - 1 := by
+  have h1 : insert x (s \ {x}) = s := by
+    ext y
+    simp only [Set.mem_insert_iff, Set.mem_sdiff, Set.mem_singleton_iff]
+    constructor
+    · rintro (rfl | ⟨hy, -⟩)
+      · exact hx
+      · exact hy
+    · intro hy
+      by_cases hyx : y = x
+      · exact Or.inl hyx
+      · exact Or.inr ⟨hy, hyx⟩
+  have h2 := Set.ncard_insert_of_notMem (s := s \ {x}) (a := x) (by simp) hf.sdiff
+  rw [h1] at h2
+  omega
+
+/-- `s \ {x, y}` 的基数（`hypermap.hl`:3932 `CARD_MINUS_DIFF_TWO_SET` 的 `Set.ncard` 版）。 -/
+theorem ncard_diff_pair_mem {α : Type*} {s : Set α} {x y : α}
+    (hxy : x ≠ y) (hx : x ∈ s) (hy : y ∈ s) (hf : s.Finite) :
+    (s \ {x, y}).ncard = s.ncard - 2 := by
+  have hsd : s \ {x, y} = (s \ {x}) \ {y} := by
+    ext z
+    simp only [Set.mem_sdiff, Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  have hym : y ∈ s \ {x} := Set.mem_sdiff_of_mem hy (by
+    simp only [Set.mem_singleton_iff]
+    exact fun h => hxy h.symm)
+  rw [hsd, ncard_diff_singleton_mem hym hf.sdiff, ncard_diff_singleton_mem hx hf]
+  have hsub : ({x, y} : Set α) ⊆ s := Set.pair_subset hx hy
+  have h2 := Set.ncard_le_ncard hsub hf
+  rw [Set.ncard_pair hxy] at h2
+  omega
+
+/-- 轨道是单点集则该点就是轨道的点（`hypermap.hl`:1044 `orbit_single_lemma` 的逆用）。 -/
+theorem eq_of_orbit_eq_singleton {α : Type*} {f : Equiv.Perm α} {x y : α}
+    (h : orbitMap f y = {x}) : y = x := by
+  have h1 : y ∈ orbitMap f y := mem_orbitMap_self f y
+  rw [h] at h1
+  exact Set.mem_singleton_iff.mp h1
+
+namespace Hypermap
+
+variable {α : Type*} [DecidableEq α] {x y z : α}
+
+/-- `hypermap.hl`:3883 `component_at_isolated_dart`。 -/
+theorem combComponent_eq_singleton_of_isolated (H : Hypermap α) (hx : H.IsolatedDart x) :
+    H.combComponent x = {x} := by
+  obtain ⟨he, hn, hf⟩ := hx
+  ext y
+  constructor
+  · rintro ⟨p, n, hp0, hpn, hp⟩
+    have key : ∀ i ≤ n, p i = x := by
+      intro i
+      induction i with
+      | zero => intro _; exact hp0
+      | succ k ih =>
+        intro hkn
+        have hk : p k = x := ih (Nat.le_of_succ_le hkn)
+        rcases H.goOneStep_of_isPath hp hkn with h | h | h
+        · rw [h, hk, he]
+        · rw [h, hk, hn]
+        · rw [h, hk, hf]
+    rw [Set.mem_singleton_iff, ← hpn]
+    exact key n le_rfl
+  · intro hy
+    rw [Set.mem_singleton_iff] at hy
+    rw [hy]
+    exact H.mem_combComponent_self x
+
+/-- `hypermap.hl`:3951 `NODE_NOT_EMPTY`（edge/face 版一并给出）。 -/
+theorem one_le_edge_ncard (H : Hypermap α) (x : α) : 1 ≤ (H.edge x).ncard := by
+  show 0 < (H.edge x).ncard
+  rw [Set.ncard_pos (H.edge_finite x)]
+  exact ⟨x, H.mem_edge_self x⟩
+
+theorem one_le_node_ncard (H : Hypermap α) (x : α) : 1 ≤ (H.node x).ncard := by
+  show 0 < (H.node x).ncard
+  rw [Set.ncard_pos (H.node_finite x)]
+  exact ⟨x, H.mem_node_self x⟩
+
+theorem one_le_face_ncard (H : Hypermap α) (x : α) : 1 ≤ (H.face x).ncard := by
+  show 0 < (H.face x).ncard
+  rw [Set.ncard_pos (H.face_finite x)]
+  exact ⟨x, H.mem_face_self x⟩
+
+/-- `hypermap.hl`:3989 `WALKUP_EXCEPTION_COMPONENT`。 -/
+theorem combComponent_walkup_singleton (H : Hypermap α) (x : α) :
+    (H.edgeWalkup x).combComponent x = {x} :=
+  (H.edgeWalkup x).combComponent_eq_singleton_of_isolated
+    ⟨(H.edgeMap_walkup x x).1, (H.nodeMap_walkup x x).1, (H.faceMap_walkup x x).1⟩
+
+/-- `hypermap.hl`:4003 `lemma_in_components`。 -/
+theorem mem_darts_iff_combComponent_mem (H : Hypermap α) (x : α) :
+    x ∈ H.darts ↔ H.combComponent x ∈ H.setOfComponents := by
+  constructor
+  · intro hx
+    exact ⟨x, hx, rfl⟩
+  · rintro ⟨y, hy, h⟩
+    have hsub := H.combComponent_subset_darts hy
+    rw [h] at hsub
+    exact hsub (H.mem_combComponent_self x)
+
+/-- `hypermap.hl`:4019 `lemma_different_edges`。 -/
+theorem edge_ne_of_not_mem (H : Hypermap α) (h : x ∉ H.edge y) : H.edge x ≠ H.edge y := by
+  intro hcon
+  exact h (hcon ▸ H.mem_edge_self x)
+
+/-- `hypermap.hl`:4029 `lemma_different_nodes`。 -/
+theorem node_ne_of_not_mem (H : Hypermap α) (h : x ∉ H.node y) : H.node x ≠ H.node y := by
+  intro hcon
+  exact h (hcon ▸ H.mem_node_self x)
+
+/-- `hypermap.hl`:4039 `lemma_different_faces`。 -/
+theorem face_ne_of_not_mem (H : Hypermap α) (h : x ∉ H.face y) : H.face x ≠ H.face y := by
+  intro hcon
+  exact h (hcon ▸ H.mem_face_self x)
+
+/-- `hypermap.hl`:4053 `lemma_planar_index_on_walkup_at_isolated_dart`。 -/
+theorem planarIndex_edgeWalkup_isolated (H : Hypermap α) {x : α} (hx : x ∈ H.darts)
+    (hiso : H.IsolatedDart x) : H.planarIndex = (H.edgeWalkup x).planarIndex := by
+  obtain ⟨he, hn, hf⟩ := hiso
+  have he' : (H.edgeWalkup x).edgeMap x = x := (H.edgeMap_walkup x x).1
+  have hn' : (H.edgeWalkup x).nodeMap x = x := (H.nodeMap_walkup x x).1
+  have hf' : (H.edgeWalkup x).faceMap x = x := (H.faceMap_walkup x x).1
+  -- X1: 边数
+  have hX1 : H.numberOfEdges = (H.edgeWalkup x).numberOfEdges + 1 := by
+    have hE1 : H.edge x = {x} := (orbitMap_singleton_iff H.edgeMap x).mpr he
+    have hE2 : H.edge (H.nodeMap x) = {x} := by rw [hn]; exact hE1
+    have hG2 : (H.edgeWalkup x).edge (H.nodeMap x) = {x} := by
+      rw [hn]; exact (orbitMap_singleton_iff (H.edgeWalkup x).edgeMap x).mpr he'
+    have hG3 : (H.edgeWalkup x).edge (H.edgeMap⁻¹ x) = {x} := by
+      have h3 : H.edgeMap⁻¹ x = x := (Perm_apply_eq_self_iff_symm _ _).mp he
+      rw [h3]; exact (orbitMap_singleton_iff (H.edgeWalkup x).edgeMap x).mpr he'
+    have hmem : ({x} : Set α) ∈ H.edgeSet := ⟨x, hx, hE1⟩
+    have hnmem : ({x} : Set α) ∉ (H.edgeWalkup x).edgeSet := by
+      rintro ⟨y, hy, hys⟩
+      exact (Finset.mem_erase.mp hy).1 (eq_of_orbit_eq_singleton hys)
+    have hdiff := H.edgeSet_walkup hx
+    simp only [hE1, hE2, hG2, hG3, Set.pair_eq_singleton] at hdiff
+    have hncard := congrArg Set.ncard hdiff
+    rw [ncard_diff_singleton_mem hmem H.edgeSet_finite,
+      Set.sdiff_singleton_eq_self hnmem] at hncard
+    have hpos : 1 ≤ H.edgeSet.ncard := by
+      show 0 < H.edgeSet.ncard
+      rw [Set.ncard_pos H.edgeSet_finite]; exact ⟨{x}, hmem⟩
+    unfold numberOfEdges
+    omega
+  -- X2: 节点数
+  have hX2 : H.numberOfNodes = (H.edgeWalkup x).numberOfNodes + 1 := by
+    have hE1 : H.node x = {x} := (orbitMap_singleton_iff H.nodeMap x).mpr hn
+    have hG1 : (H.edgeWalkup x).node (H.nodeMap.symm x) = {x} := by
+      have h3 : H.nodeMap.symm x = x := (Perm_apply_eq_self_iff_symm _ _).mp hn
+      rw [h3]; exact (orbitMap_singleton_iff (H.edgeWalkup x).nodeMap x).mpr hn'
+    have hmem : ({x} : Set α) ∈ H.nodeSet := ⟨x, hx, hE1⟩
+    have hnmem : ({x} : Set α) ∉ (H.edgeWalkup x).nodeSet := by
+      rintro ⟨y, hy, hys⟩
+      exact (Finset.mem_erase.mp hy).1 (eq_of_orbit_eq_singleton hys)
+    have hdiff := H.nodeSet_walkup hx
+    simp only [hE1, hG1] at hdiff
+    have hncard := congrArg Set.ncard hdiff
+    rw [ncard_diff_singleton_mem hmem H.nodeSet_finite,
+      Set.sdiff_singleton_eq_self hnmem] at hncard
+    have hpos : 1 ≤ H.nodeSet.ncard := by
+      show 0 < H.nodeSet.ncard
+      rw [Set.ncard_pos H.nodeSet_finite]; exact ⟨{x}, hmem⟩
+    unfold numberOfNodes
+    omega
+  -- X3: 面数
+  have hX3 : H.numberOfFaces = (H.edgeWalkup x).numberOfFaces + 1 := by
+    have hE1 : H.face x = {x} := (orbitMap_singleton_iff H.faceMap x).mpr hf
+    have hG1 : (H.edgeWalkup x).face (H.faceMap.symm x) = {x} := by
+      have h3 : H.faceMap.symm x = x := (Perm_apply_eq_self_iff_symm _ _).mp hf
+      rw [h3]; exact (orbitMap_singleton_iff (H.edgeWalkup x).faceMap x).mpr hf'
+    have hmem : ({x} : Set α) ∈ H.faceSet := ⟨x, hx, hE1⟩
+    have hnmem : ({x} : Set α) ∉ (H.edgeWalkup x).faceSet := by
+      rintro ⟨y, hy, hys⟩
+      exact (Finset.mem_erase.mp hy).1 (eq_of_orbit_eq_singleton hys)
+    have hdiff := H.faceSet_walkup hx
+    simp only [hE1, hG1] at hdiff
+    have hncard := congrArg Set.ncard hdiff
+    rw [ncard_diff_singleton_mem hmem H.faceSet_finite,
+      Set.sdiff_singleton_eq_self hnmem] at hncard
+    have hpos : 1 ≤ H.faceSet.ncard := by
+      show 0 < H.faceSet.ncard
+      rw [Set.ncard_pos H.faceSet_finite]; exact ⟨{x}, hmem⟩
+    unfold numberOfFaces
+    omega
+  -- X4: 组件数
+  have hX4 : H.numberOfComponents = (H.edgeWalkup x).numberOfComponents + 1 := by
+    have hC1 : H.combComponent x = {x} := H.combComponent_eq_singleton_of_isolated ⟨he, hn, hf⟩
+    have hC3 : (H.edgeWalkup x).combComponent (H.nodeMap x) = {x} := by
+      rw [hn]; exact H.combComponent_walkup_singleton x
+    have hC4 : (H.edgeWalkup x).combComponent (H.edgeMap⁻¹ x) = {x} := by
+      have h3 : H.edgeMap⁻¹ x = x := (Perm_apply_eq_self_iff_symm _ _).mp he
+      rw [h3]; exact H.combComponent_walkup_singleton x
+    have hmem : ({x} : Set α) ∈ H.setOfComponents := ⟨x, hx, hC1⟩
+    have hnmem : ({x} : Set α) ∉ (H.edgeWalkup x).setOfComponents := by
+      rintro ⟨y, hy, hys⟩
+      have hyx : y = x := by
+        have h1 : y ∈ (H.edgeWalkup x).combComponent y :=
+          (H.edgeWalkup x).mem_combComponent_self y
+        rw [hys] at h1
+        exact Set.mem_singleton_iff.mp h1
+      exact (Finset.mem_erase.mp hy).1 hyx
+    have hdiff := H.setOfComponents_walkup hx
+    simp only [hC1, hC3, hC4, Set.pair_eq_singleton] at hdiff
+    have hncard := congrArg Set.ncard hdiff
+    rw [ncard_diff_singleton_mem hmem H.setOfComponents_finite,
+      Set.sdiff_singleton_eq_self hnmem] at hncard
+    have hpos : 1 ≤ H.setOfComponents.ncard := by
+      show 0 < H.setOfComponents.ncard
+      rw [Set.ncard_pos H.setOfComponents_finite]; exact ⟨{x}, hmem⟩
+    unfold numberOfComponents
+    omega
+  -- X5: dart 数
+  have hX5 : H.darts.card = (H.edgeWalkup x).darts.card + 1 := by
+    show H.darts.card = (H.darts.erase x).card + 1
+    rw [Finset.card_erase_of_mem hx]
+    have hpos : 0 < H.darts.card := Finset.card_pos.mpr ⟨x, hx⟩
+    omega
+  unfold planarIndex
+  rw [hX1, hX2, hX3, hX4, hX5]
+  push_cast
+  ring
+
+/-- `hypermap.hl`:4228 `lemma_planar_index_on_walkup_at_edge_degenerate_dart`。 -/
+theorem planarIndex_edgeWalkup_edge_degenerate (H : Hypermap α) {x : α} (hx : x ∈ H.darts)
+    (hdeg : H.IsEdgeDegenerate x) : H.planarIndex = (H.edgeWalkup x).planarIndex := by
+  obtain ⟨he, hn, hf⟩ := hdeg
+  -- X1: 边数 `E_H = E_G + 1`
+  have hX1 : H.numberOfEdges = (H.edgeWalkup x).numberOfEdges + 1 := by
+    have hE1 : H.edge x = {x} := (orbitMap_singleton_iff H.edgeMap x).mpr he
+    have hG1 : (H.edgeWalkup x).edge x = {x} :=
+      (orbitMap_singleton_iff (H.edgeWalkup x).edgeMap x).mpr (H.edgeMap_walkup x x).1
+    have hEne1 : H.edge (H.nodeMap x) ≠ ({x} : Set α) := by
+      intro hcon
+      exact hn (eq_of_orbit_eq_singleton hcon)
+    have hGne1 : (H.edgeWalkup x).edge (H.nodeMap x) ≠ ({x} : Set α) := by
+      intro hcon
+      exact hn (eq_of_orbit_eq_singleton hcon)
+    have hE2 : H.edgeMap⁻¹ x = x := (Perm_apply_eq_self_iff_symm _ _).mp he
+    have hG3 : (H.edgeWalkup x).edge (H.edgeMap⁻¹ x) = {x} := by
+      rw [hE2]; exact hG1
+    have hmem1 : ({x} : Set α) ∈ H.edgeSet := ⟨x, hx, hE1⟩
+    have hmem2 : H.edge (H.nodeMap x) ∈ H.edgeSet :=
+      ⟨H.nodeMap x, H.nodeMap_apply_mem hx, rfl⟩
+    have hnmem : ({x} : Set α) ∉ (H.edgeWalkup x).edgeSet := by
+      rintro ⟨y, hy, hys⟩
+      exact (Finset.mem_erase.mp hy).1 (eq_of_orbit_eq_singleton hys)
+    have hGmem2 : (H.edgeWalkup x).edge (H.nodeMap x) ∈ (H.edgeWalkup x).edgeSet :=
+      ⟨H.nodeMap x, (H.nodeMap_walkup_mem_darts hx hn).1, rfl⟩
+    have hdiff := H.edgeSet_walkup hx
+    rw [hE1, hG3] at hdiff
+    have hncard := congrArg Set.ncard hdiff
+    rw [ncard_diff_pair_mem hEne1.symm hmem1 hmem2 H.edgeSet_finite,
+      show (H.edgeWalkup x).edgeSet \ {(H.edgeWalkup x).edge (H.nodeMap x), {x}} =
+        ((H.edgeWalkup x).edgeSet \ {{x}}) \ {(H.edgeWalkup x).edge (H.nodeMap x)} from by
+        ext u
+        simp only [Set.mem_sdiff, Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto,
+      Set.sdiff_singleton_eq_self hnmem,
+      ncard_diff_singleton_mem hGmem2 (H.edgeWalkup x).edgeSet_finite] at hncard
+    have hpos : 2 ≤ H.edgeSet.ncard := by
+      have hsub : ({{x}, H.edge (H.nodeMap x)} : Set (Set α)) ⊆ H.edgeSet :=
+        Set.pair_subset hmem1 hmem2
+      have h2 := Set.ncard_le_ncard hsub H.edgeSet_finite
+      rwa [Set.ncard_pair hEne1.symm] at h2
+    have hpos2 : 1 ≤ (H.edgeWalkup x).edgeSet.ncard := by
+      show 0 < (H.edgeWalkup x).edgeSet.ncard
+      rw [Set.ncard_pos (H.edgeWalkup x).edgeSet_finite]
+      exact ⟨(H.edgeWalkup x).edge (H.nodeMap x), hGmem2⟩
+    unfold numberOfEdges
+    omega
+  -- X2: 节点数不变
+  have hX2 : H.numberOfNodes = (H.edgeWalkup x).numberOfNodes := by
+    have hdiff := H.nodeSet_walkup hx
+    have hmem1 : H.node x ∈ H.nodeSet := ⟨x, hx, rfl⟩
+    have hmem2 : (H.edgeWalkup x).node (H.nodeMap.symm x) ∈ (H.edgeWalkup x).nodeSet :=
+      ⟨H.nodeMap.symm x, (H.nodeMap_walkup_mem_darts hx hn).2, rfl⟩
+    have hncard := congrArg Set.ncard hdiff
+    rw [ncard_diff_singleton_mem hmem1 H.nodeSet_finite,
+      ncard_diff_singleton_mem hmem2 (H.edgeWalkup x).nodeSet_finite] at hncard
+    have hpos1 : 1 ≤ H.nodeSet.ncard := by
+      show 0 < H.nodeSet.ncard
+      rw [Set.ncard_pos H.nodeSet_finite]; exact ⟨H.node x, hmem1⟩
+    have hpos2 : 1 ≤ (H.edgeWalkup x).nodeSet.ncard := by
+      show 0 < (H.edgeWalkup x).nodeSet.ncard
+      rw [Set.ncard_pos (H.edgeWalkup x).nodeSet_finite]
+      exact ⟨(H.edgeWalkup x).node (H.nodeMap.symm x), hmem2⟩
+    unfold numberOfNodes
+    omega
+  -- X4: 面数不变
+  have hX4 : H.numberOfFaces = (H.edgeWalkup x).numberOfFaces := by
+    have hdiff := H.faceSet_walkup hx
+    have hmem1 : H.face x ∈ H.faceSet := ⟨x, hx, rfl⟩
+    have hmem2 : (H.edgeWalkup x).face (H.faceMap.symm x) ∈ (H.edgeWalkup x).faceSet :=
+      ⟨H.faceMap.symm x, (H.faceMap_walkup_mem_darts hx hf).2, rfl⟩
+    have hncard := congrArg Set.ncard hdiff
+    rw [ncard_diff_singleton_mem hmem1 H.faceSet_finite,
+      ncard_diff_singleton_mem hmem2 (H.edgeWalkup x).faceSet_finite] at hncard
+    have hpos1 : 1 ≤ H.faceSet.ncard := by
+      show 0 < H.faceSet.ncard
+      rw [Set.ncard_pos H.faceSet_finite]; exact ⟨H.face x, hmem1⟩
+    have hpos2 : 1 ≤ (H.edgeWalkup x).faceSet.ncard := by
+      show 0 < (H.edgeWalkup x).faceSet.ncard
+      rw [Set.ncard_pos (H.edgeWalkup x).faceSet_finite]
+      exact ⟨(H.edgeWalkup x).face (H.faceMap.symm x), hmem2⟩
+    unfold numberOfFaces
+    omega
+  -- X5: 组件数不变
+  have hX5 : H.numberOfComponents = (H.edgeWalkup x).numberOfComponents := by
+    have hdiff := H.setOfComponents_walkup hx
+    have hG1 : (H.edgeWalkup x).combComponent x = {x} := H.combComponent_walkup_singleton x
+    have hG3 : (H.edgeWalkup x).combComponent (H.edgeMap⁻¹ x) = {x} := by
+      have hE2 : H.edgeMap⁻¹ x = x := (Perm_apply_eq_self_iff_symm _ _).mp he
+      rw [hE2]; exact hG1
+    have hnmem : ({x} : Set α) ∉ (H.edgeWalkup x).setOfComponents := by
+      rintro ⟨y, hy, hys⟩
+      have hyx : y = x := by
+        have h1 : y ∈ (H.edgeWalkup x).combComponent y :=
+          (H.edgeWalkup x).mem_combComponent_self y
+        rw [hys] at h1
+        exact Set.mem_singleton_iff.mp h1
+      exact (Finset.mem_erase.mp hy).1 hyx
+    have hGne2 : (H.edgeWalkup x).combComponent (H.nodeMap x) ≠ ({x} : Set α) := by
+      intro hcon
+      apply hn
+      have h1 : H.nodeMap x ∈ (H.edgeWalkup x).combComponent (H.nodeMap x) :=
+        (H.edgeWalkup x).mem_combComponent_self _
+      rw [hcon] at h1
+      exact Set.mem_singleton_iff.mp h1
+    have hmem1 : H.combComponent x ∈ H.setOfComponents := ⟨x, hx, rfl⟩
+    have hGmem2 : (H.edgeWalkup x).combComponent (H.nodeMap x) ∈
+        (H.edgeWalkup x).setOfComponents :=
+      ⟨H.nodeMap x, (H.nodeMap_walkup_mem_darts hx hn).1, rfl⟩
+    rw [hG3] at hdiff
+    have hncard := congrArg Set.ncard hdiff
+    rw [ncard_diff_singleton_mem hmem1 H.setOfComponents_finite,
+      show (H.edgeWalkup x).setOfComponents \
+          {(H.edgeWalkup x).combComponent (H.nodeMap x), {x}} =
+        ((H.edgeWalkup x).setOfComponents \ {{x}}) \
+          {(H.edgeWalkup x).combComponent (H.nodeMap x)} from by
+        ext u
+        simp only [Set.mem_sdiff, Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto,
+      Set.sdiff_singleton_eq_self hnmem,
+      ncard_diff_singleton_mem hGmem2 (H.edgeWalkup x).setOfComponents_finite] at hncard
+    have hpos1 : 1 ≤ H.setOfComponents.ncard := by
+      show 0 < H.setOfComponents.ncard
+      rw [Set.ncard_pos H.setOfComponents_finite]; exact ⟨H.combComponent x, hmem1⟩
+    have hpos2 : 1 ≤ (H.edgeWalkup x).setOfComponents.ncard := by
+      show 0 < (H.edgeWalkup x).setOfComponents.ncard
+      rw [Set.ncard_pos (H.edgeWalkup x).setOfComponents_finite]
+      exact ⟨(H.edgeWalkup x).combComponent (H.nodeMap x), hGmem2⟩
+    unfold numberOfComponents
+    omega
+  -- X6: dart 数
+  have hX6 : H.darts.card = (H.edgeWalkup x).darts.card + 1 := by
+    show H.darts.card = (H.darts.erase x).card + 1
+    rw [Finset.card_erase_of_mem hx]
+    have hpos : 0 < H.darts.card := Finset.card_pos.mpr ⟨x, hx⟩
+    omega
+  unfold planarIndex
+  rw [hX1, hX2, hX4, hX5, hX6]
+  push_cast
+  ring
+
+/-- `hypermap.hl`:4398 `lemma_planar_index_on_walkup_at_degenerate_dart`。 -/
+theorem planarIndex_edgeWalkup_degenerate (H : Hypermap α) {x : α} (hx : x ∈ H.darts)
+    (hdeg : H.DartDegenerate x) : H.planarIndex = (H.edgeWalkup x).planarIndex := by
+  rw [H.dartDegenerate_iff] at hdeg
+  rcases hdeg with hiso | hedeg | hndeg | hfdeg
+  · exact H.planarIndex_edgeWalkup_isolated hx hiso
+  · exact H.planarIndex_edgeWalkup_edge_degenerate hx hedeg
+  · -- node 退化：经 shift 归约到 edge 退化
+    obtain ⟨he, hn, hf⟩ := hndeg
+    have hdeg' : (H.shift).IsEdgeDegenerate x := ⟨hn, hf, he⟩
+    have h1 := (H.shift).planarIndex_edgeWalkup_edge_degenerate hx hdeg'
+    have h2 : (H.shift).planarIndex = H.planarIndex := H.planarIndex_shift.symm
+    have h3 : ((H.shift).edgeWalkup x).planarIndex = (H.nodeWalkup x).planarIndex := by
+      show ((H.shift).edgeWalkup x).planarIndex =
+        (((H.shift).edgeWalkup x).shift.shift).planarIndex
+      rw [← ((H.shift).edgeWalkup x).shift.planarIndex_shift]
+      exact ((H.shift).edgeWalkup x).planarIndex_shift
+    have h4 : H.nodeWalkup x = H.edgeWalkup x :=
+      H.degenerate_walkup_first_eq hx ((H.dartDegenerate_iff x).mpr (Or.inr (Or.inr (Or.inl ⟨he, hn, hf⟩))))
+    rw [← h2, h1, h3, h4]
+  · -- face 退化：经 shift² 归约
+    obtain ⟨he, hn, hf⟩ := hfdeg
+    have hdeg' : (H.shift.shift).IsEdgeDegenerate x := ⟨hf, he, hn⟩
+    have h1 := (H.shift.shift).planarIndex_edgeWalkup_edge_degenerate hx hdeg'
+    have h2 : (H.shift.shift).planarIndex = H.planarIndex :=
+      (H.shift.planarIndex_shift).symm.trans H.planarIndex_shift.symm
+    have h3 : ((H.shift.shift).edgeWalkup x).planarIndex = (H.faceWalkup x).planarIndex :=
+      ((H.shift.shift).edgeWalkup x).planarIndex_shift
+    have h4 : H.faceWalkup x = H.edgeWalkup x :=
+      H.degenerate_walkup_second_eq hx ((H.dartDegenerate_iff x).mpr (Or.inr (Or.inr (Or.inr ⟨he, hn, hf⟩))))
+    rw [← h2, h1, h3, h4]
+
+/-- `hypermap.hl`:4432 `lemma_card_walkup_dart`。 -/
+theorem card_walkup_dart (H : Hypermap α) {x : α} (hx : x ∈ H.darts) :
+    H.darts.card = (H.edgeWalkup x).darts.card + 1 := by
+  show H.darts.card = (H.darts.erase x).card + 1
+  rw [Finset.card_erase_of_mem hx]
+  have hpos : 0 < H.darts.card := Finset.card_pos.mpr ⟨x, hx⟩
+  omega
+
+/-- `hypermap.hl`:4440 `lemma_splitting_case_count_edges`。 -/
+theorem splitting_case_count_edges (H : Hypermap α) {x : α} (hx : x ∈ H.darts)
+    (hsplit : H.IsEdgeSplit x) : H.numberOfEdges + 1 = (H.edgeWalkup x).numberOfEdges := by
+  obtain ⟨hnd, hnx⟩ := hsplit
+  have hmem1 : H.edge x ∈ H.edgeSet := ⟨x, hx, rfl⟩
+  have hid : H.edge (H.nodeMap x) = H.edge x := (H.edge_eq_of_mem hnx).symm
+  have hpart3 : (H.edgeWalkup x).edgeMap (H.edgeMap⁻¹ x) = H.faceMap⁻¹ x :=
+    (H.edgeMap_walkup x x).2.2.1
+      ⟨(Perm_apply_ne_self_iff_symm _ _).mp hnd.2.2,
+        (Perm_apply_ne_self_iff_symm _ _).mp hnd.1⟩
+  have hmem_f : H.faceMap⁻¹ x ∈ (H.edgeWalkup x).edge (H.edgeMap⁻¹ x) := by
+    have h1 := (H.edgeWalkup x).pow_edgeMap_mem_edge (H.edgeMap⁻¹ x) 1
+    rw [pow_one, hpart3] at h1
+    exact h1
+  have hid2 : (H.edgeWalkup x).edge (H.faceMap⁻¹ x) = (H.edgeWalkup x).edge (H.edgeMap⁻¹ x) :=
+    ((H.edgeWalkup x).edge_eq_of_mem hmem_f).symm
+  have hne : (H.edgeWalkup x).edge (H.nodeMap x) ≠ (H.edgeWalkup x).edge (H.edgeMap⁻¹ x) := by
+    intro hcon
+    have h1 := (H.edge_split hx ⟨hnd, hnx⟩).1
+    apply h1
+    have h2 : H.faceMap⁻¹ x ∈ (H.edgeWalkup x).edge (H.faceMap⁻¹ x) :=
+      (H.edgeWalkup x).mem_edge_self _
+    rwa [hid2, ← hcon] at h2
+  have hGmem1 : (H.edgeWalkup x).edge (H.nodeMap x) ∈ (H.edgeWalkup x).edgeSet :=
+    ⟨H.nodeMap x, (H.nodeMap_walkup_mem_darts hx hnd.2.1).1, rfl⟩
+  have hGmem2 : (H.edgeWalkup x).edge (H.edgeMap⁻¹ x) ∈ (H.edgeWalkup x).edgeSet :=
+    ⟨H.edgeMap⁻¹ x, (H.edgeMap_walkup_mem_darts hx hnd.1).2, rfl⟩
+  have hdiff := H.edgeSet_walkup hx
+  rw [hid, Set.pair_eq_singleton] at hdiff
+  have hncard := congrArg Set.ncard hdiff
+  rw [ncard_diff_singleton_mem hmem1 H.edgeSet_finite,
+    ncard_diff_pair_mem hne hGmem1 hGmem2 (H.edgeWalkup x).edgeSet_finite] at hncard
+  have hpos1 : 1 ≤ H.edgeSet.ncard := by
+    show 0 < H.edgeSet.ncard
+    rw [Set.ncard_pos H.edgeSet_finite]; exact ⟨H.edge x, hmem1⟩
+  have hpos2 : 2 ≤ (H.edgeWalkup x).edgeSet.ncard := by
+    have hsub : ({(H.edgeWalkup x).edge (H.nodeMap x), (H.edgeWalkup x).edge (H.edgeMap⁻¹ x)} :
+        Set (Set α)) ⊆ (H.edgeWalkup x).edgeSet := Set.pair_subset hGmem1 hGmem2
+    have h2 := Set.ncard_le_ncard hsub (H.edgeWalkup x).edgeSet_finite
+    rwa [Set.ncard_pair hne] at h2
+  unfold numberOfEdges
+  omega
+
+/-- `hypermap.hl`:4491 `lemma_merge_case_count_edges`。 -/
+theorem merge_case_count_edges (H : Hypermap α) {x : α} (hx : x ∈ H.darts)
+    (hmerge : H.IsEdgeMerge x) : H.numberOfEdges = (H.edgeWalkup x).numberOfEdges + 1 := by
+  obtain ⟨hnd, hnx⟩ := hmerge
+  have hne : H.edge x ≠ H.edge (H.nodeMap x) := (H.edge_ne_of_not_mem hnx).symm
+  have hmem1 : H.edge x ∈ H.edgeSet := ⟨x, hx, rfl⟩
+  have hmem2 : H.edge (H.nodeMap x) ∈ H.edgeSet := ⟨H.nodeMap x, H.nodeMap_apply_mem hx, rfl⟩
+  have hinv : H.edgeMap⁻¹ x ∈ H.edge x := H.edgeMap_permutes.symm_apply_mem_orbitMap x
+  have hme := H.edge_merge hx ⟨hnd, hnx⟩
+  have hid : (H.edgeWalkup x).edge (H.edgeMap⁻¹ x) = (H.edgeWalkup x).edge (H.nodeMap x) := by
+    have h1 : H.edgeMap⁻¹ x ∈ ({x} ∪ (H.edgeWalkup x).edge (H.nodeMap x) : Set α) := by
+      rw [hme]; exact Set.mem_union_left _ hinv
+    rcases h1 with h2 | h2
+    · exfalso
+      exact (Perm_apply_ne_self_iff_symm _ _).mp hnd.1 (Set.mem_singleton_iff.mp h2)
+    · exact ((H.edgeWalkup x).edge_eq_of_mem h2).symm
+  have hGmem1 : (H.edgeWalkup x).edge (H.nodeMap x) ∈ (H.edgeWalkup x).edgeSet :=
+    ⟨H.nodeMap x, (H.nodeMap_walkup_mem_darts hx hnd.2.1).1, rfl⟩
+  have hdiff := H.edgeSet_walkup hx
+  rw [hid, Set.pair_eq_singleton] at hdiff
+  have hncard := congrArg Set.ncard hdiff
+  rw [ncard_diff_pair_mem hne hmem1 hmem2 H.edgeSet_finite,
+    ncard_diff_singleton_mem hGmem1 (H.edgeWalkup x).edgeSet_finite] at hncard
+  have hpos1 : 2 ≤ H.edgeSet.ncard := by
+    have hsub : ({H.edge x, H.edge (H.nodeMap x)} : Set (Set α)) ⊆ H.edgeSet :=
+      Set.pair_subset hmem1 hmem2
+    have h2 := Set.ncard_le_ncard hsub H.edgeSet_finite
+    rwa [Set.ncard_pair hne] at h2
+  have hpos2 : 1 ≤ (H.edgeWalkup x).edgeSet.ncard := by
+    show 0 < (H.edgeWalkup x).edgeSet.ncard
+    rw [Set.ncard_pos (H.edgeWalkup x).edgeSet_finite]
+    exact ⟨(H.edgeWalkup x).edge (H.nodeMap x), hGmem1⟩
+  unfold numberOfEdges
+  omega
+
+/-- `hypermap.hl`:4540 `lemma_walkup_count_nodes`。 -/
+theorem walkup_count_nodes (H : Hypermap α) {x : α} (hx : x ∈ H.darts)
+    (hnd : H.DartNondegenerate x) : H.numberOfNodes = (H.edgeWalkup x).numberOfNodes := by
+  have hdiff := H.nodeSet_walkup hx
+  have hmem1 : H.node x ∈ H.nodeSet := ⟨x, hx, rfl⟩
+  have hmem2 : (H.edgeWalkup x).node (H.nodeMap.symm x) ∈ (H.edgeWalkup x).nodeSet :=
+    ⟨H.nodeMap.symm x, (H.nodeMap_walkup_mem_darts hx hnd.2.1).2, rfl⟩
+  have hncard := congrArg Set.ncard hdiff
+  rw [ncard_diff_singleton_mem hmem1 H.nodeSet_finite,
+    ncard_diff_singleton_mem hmem2 (H.edgeWalkup x).nodeSet_finite] at hncard
+  have hpos1 : 1 ≤ H.nodeSet.ncard := by
+    show 0 < H.nodeSet.ncard
+    rw [Set.ncard_pos H.nodeSet_finite]; exact ⟨H.node x, hmem1⟩
+  have hpos2 : 1 ≤ (H.edgeWalkup x).nodeSet.ncard := by
+    show 0 < (H.edgeWalkup x).nodeSet.ncard
+    rw [Set.ncard_pos (H.edgeWalkup x).nodeSet_finite]
+    exact ⟨(H.edgeWalkup x).node (H.nodeMap.symm x), hmem2⟩
+  unfold numberOfNodes
+  omega
+
+/-- `hypermap.hl`:4563 `lemma_walkup_count_faces`。 -/
+theorem walkup_count_faces (H : Hypermap α) {x : α} (hx : x ∈ H.darts)
+    (hnd : H.DartNondegenerate x) : H.numberOfFaces = (H.edgeWalkup x).numberOfFaces := by
+  have hdiff := H.faceSet_walkup hx
+  have hmem1 : H.face x ∈ H.faceSet := ⟨x, hx, rfl⟩
+  have hmem2 : (H.edgeWalkup x).face (H.faceMap.symm x) ∈ (H.edgeWalkup x).faceSet :=
+    ⟨H.faceMap.symm x, (H.faceMap_walkup_mem_darts hx hnd.2.2).2, rfl⟩
+  have hncard := congrArg Set.ncard hdiff
+  rw [ncard_diff_singleton_mem hmem1 H.faceSet_finite,
+    ncard_diff_singleton_mem hmem2 (H.edgeWalkup x).faceSet_finite] at hncard
+  have hpos1 : 1 ≤ H.faceSet.ncard := by
+    show 0 < H.faceSet.ncard
+    rw [Set.ncard_pos H.faceSet_finite]; exact ⟨H.face x, hmem1⟩
+  have hpos2 : 1 ≤ (H.edgeWalkup x).faceSet.ncard := by
+    show 0 < (H.edgeWalkup x).faceSet.ncard
+    rw [Set.ncard_pos (H.edgeWalkup x).faceSet_finite]
+    exact ⟨(H.edgeWalkup x).face (H.faceMap.symm x), hmem2⟩
+  unfold numberOfFaces
+  omega
+
+/-- `hypermap.hl`:4589 `lemma_walkup_count_splitting_components`。 -/
+theorem walkup_count_splitting_components (H : Hypermap α) {x : α} (hx : x ∈ H.darts)
+    (hnd : H.DartNondegenerate x)
+    (hsplit : (H.edgeWalkup x).combComponent (H.nodeMap x) ≠
+      (H.edgeWalkup x).combComponent (H.edgeMap⁻¹ x)) :
+    H.numberOfComponents + 1 = (H.edgeWalkup x).numberOfComponents := by
+  have hdiff := H.setOfComponents_walkup hx
+  have hmem1 : H.combComponent x ∈ H.setOfComponents := ⟨x, hx, rfl⟩
+  have hGmem1 : (H.edgeWalkup x).combComponent (H.nodeMap x) ∈
+      (H.edgeWalkup x).setOfComponents :=
+    ⟨H.nodeMap x, (H.nodeMap_walkup_mem_darts hx hnd.2.1).1, rfl⟩
+  have hGmem2 : (H.edgeWalkup x).combComponent (H.edgeMap⁻¹ x) ∈
+      (H.edgeWalkup x).setOfComponents :=
+    ⟨H.edgeMap⁻¹ x, (H.edgeMap_walkup_mem_darts hx hnd.1).2, rfl⟩
+  have hncard := congrArg Set.ncard hdiff
+  rw [ncard_diff_singleton_mem hmem1 H.setOfComponents_finite,
+    ncard_diff_pair_mem hsplit hGmem1 hGmem2 (H.edgeWalkup x).setOfComponents_finite] at hncard
+  have hpos1 : 1 ≤ H.setOfComponents.ncard := by
+    show 0 < H.setOfComponents.ncard
+    rw [Set.ncard_pos H.setOfComponents_finite]; exact ⟨H.combComponent x, hmem1⟩
+  have hpos2 : 2 ≤ (H.edgeWalkup x).setOfComponents.ncard := by
+    have hsub : ({(H.edgeWalkup x).combComponent (H.nodeMap x),
+        (H.edgeWalkup x).combComponent (H.edgeMap⁻¹ x)} : Set (Set α)) ⊆
+        (H.edgeWalkup x).setOfComponents := Set.pair_subset hGmem1 hGmem2
+    have h2 := Set.ncard_le_ncard hsub (H.edgeWalkup x).setOfComponents_finite
+    rwa [Set.ncard_pair hsplit] at h2
+  unfold numberOfComponents
+  omega
+
+/-- `hypermap.hl`:4616 `lemma_walkup_count_not_splitting_components`。 -/
+theorem walkup_count_not_splitting_components (H : Hypermap α) {x : α} (hx : x ∈ H.darts)
+    (hnd : H.DartNondegenerate x)
+    (hnsplit : (H.edgeWalkup x).combComponent (H.nodeMap x) =
+      (H.edgeWalkup x).combComponent (H.edgeMap⁻¹ x)) :
+    H.numberOfComponents = (H.edgeWalkup x).numberOfComponents := by
+  have hdiff := H.setOfComponents_walkup hx
+  rw [hnsplit, Set.pair_eq_singleton] at hdiff
+  have hmem1 : H.combComponent x ∈ H.setOfComponents := ⟨x, hx, rfl⟩
+  have hGmem1 : (H.edgeWalkup x).combComponent (H.edgeMap⁻¹ x) ∈
+      (H.edgeWalkup x).setOfComponents :=
+    ⟨H.edgeMap⁻¹ x, (H.edgeMap_walkup_mem_darts hx hnd.1).2, rfl⟩
+  have hncard := congrArg Set.ncard hdiff
+  rw [ncard_diff_singleton_mem hmem1 H.setOfComponents_finite,
+    ncard_diff_singleton_mem hGmem1 (H.edgeWalkup x).setOfComponents_finite] at hncard
+  have hpos1 : 1 ≤ H.setOfComponents.ncard := by
+    show 0 < H.setOfComponents.ncard
+    rw [Set.ncard_pos H.setOfComponents_finite]; exact ⟨H.combComponent x, hmem1⟩
+  have hpos2 : 1 ≤ (H.edgeWalkup x).setOfComponents.ncard := by
+    show 0 < (H.edgeWalkup x).setOfComponents.ncard
+    rw [Set.ncard_pos (H.edgeWalkup x).setOfComponents_finite]
+    exact ⟨(H.edgeWalkup x).combComponent (H.edgeMap⁻¹ x), hGmem1⟩
+  unfold numberOfComponents
+  omega
+
+/-- `hypermap.hl`:4639 `is_splitting_component`。 -/
+def IsSplittingComponent (H : Hypermap α) (x : α) : Prop :=
+  (H.edgeWalkup x).combComponent (H.nodeMap x) ≠ (H.edgeWalkup x).combComponent (H.edgeMap⁻¹ x)
+
+/-- merge 情形下两个接缝组件相等（`hypermap.hl`:4641 证明中的 `J1`）。 -/
+theorem merge_combComponent_eq (H : Hypermap α) {x : α} (hx : x ∈ H.darts)
+    (hmerge : H.IsEdgeMerge x) :
+    (H.edgeWalkup x).combComponent (H.nodeMap x) =
+      (H.edgeWalkup x).combComponent (H.edgeMap⁻¹ x) := by
+  obtain ⟨hnd, hnx⟩ := hmerge
+  have hinv : H.edgeMap⁻¹ x ∈ H.edge x := H.edgeMap_permutes.symm_apply_mem_orbitMap x
+  have hme := H.edge_merge hx ⟨hnd, hnx⟩
+  have h1 : H.edgeMap⁻¹ x ∈ ({x} ∪ (H.edgeWalkup x).edge (H.nodeMap x) : Set α) := by
+    rw [hme]; exact Set.mem_union_left _ hinv
+  rcases h1 with h2 | h2
+  · exfalso
+    exact (Perm_apply_ne_self_iff_symm _ _).mp hnd.1 (Set.mem_singleton_iff.mp h2)
+  · have h3 : H.edgeMap⁻¹ x ∈ (H.edgeWalkup x).combComponent (H.nodeMap x) :=
+      (H.edgeWalkup x).edge_subset_component _ h2
+    exact (H.edgeWalkup x).combComponent_eq_of_mem h3
+
+/-- `hypermap.hl`:4641 `lemma_planar_index_on_nondegenerate`。 -/
+theorem planarIndex_edgeWalkup_nondegenerate (H : Hypermap α) {x : α}
+    (hx : x ∈ H.darts) (hnd : H.DartNondegenerate x) :
+    (H.IsEdgeSplit x ∧ ¬ H.IsSplittingComponent x →
+      H.planarIndex + 2 = (H.edgeWalkup x).planarIndex) ∧
+    (¬(H.IsEdgeSplit x ∧ ¬ H.IsSplittingComponent x) →
+      H.planarIndex = (H.edgeWalkup x).planarIndex) := by
+  have hN := H.walkup_count_nodes hx hnd
+  have hF := H.walkup_count_faces hx hnd
+  have hD := H.card_walkup_dart hx
+  constructor
+  · intro ⟨hsplit, hnsplit⟩
+    have hE := H.splitting_case_count_edges hx hsplit
+    have hC := H.walkup_count_not_splitting_components hx hnd (not_not.mp hnsplit)
+    unfold planarIndex
+    omega
+  · intro h
+    by_cases hsplit : H.IsEdgeSplit x
+    · have hsc : H.IsSplittingComponent x := by
+        by_contra hcon
+        exact h ⟨hsplit, hcon⟩
+      have hE := H.splitting_case_count_edges hx hsplit
+      have hC := H.walkup_count_splitting_components hx hnd hsc
+      unfold planarIndex
+      omega
+    · have hmerge : H.IsEdgeMerge x := ⟨hnd, fun hcon => hsplit ⟨hnd, hcon⟩⟩
+      have hE := H.merge_case_count_edges hx hmerge
+      have hC := H.walkup_count_not_splitting_components hx hnd
+        (H.merge_combComponent_eq hx hmerge)
+      unfold planarIndex
+      omega
+
+/-- `hypermap.hl`:4705 `lemma_desc_planar_index`。 -/
+theorem planarIndex_le_edgeWalkup (H : Hypermap α) {x : α} (hx : x ∈ H.darts) :
+    H.planarIndex ≤ (H.edgeWalkup x).planarIndex := by
+  rcases H.dartNondegenerate_or_dartDegenerate x with hnd | hdeg
+  · obtain ⟨h1, h2⟩ := H.planarIndex_edgeWalkup_nondegenerate hx hnd
+    by_cases h : H.IsEdgeSplit x ∧ ¬ H.IsSplittingComponent x
+    · have h3 := h1 h
+      omega
+    · have h3 := h2 h
+      omega
+  · have h3 := H.planarIndex_edgeWalkup_degenerate hx hdeg
+    omega
+
+/-- `hypermap.hl`:4721 `lemmaBISHKQW`。 -/
+theorem planarIndex_le_walkups (H : Hypermap α) {x : α} (hx : x ∈ H.darts) :
+    H.planarIndex ≤ (H.edgeWalkup x).planarIndex ∧
+      H.planarIndex ≤ (H.nodeWalkup x).planarIndex ∧
+        H.planarIndex ≤ (H.faceWalkup x).planarIndex := by
+  refine ⟨H.planarIndex_le_edgeWalkup hx, ?_, ?_⟩
+  · have h1 : (H.shift).planarIndex ≤ ((H.shift).edgeWalkup x).planarIndex :=
+      (H.shift).planarIndex_le_edgeWalkup hx
+    rw [← H.planarIndex_shift] at h1
+    have h2 : ((H.shift).edgeWalkup x).planarIndex = (H.nodeWalkup x).planarIndex := by
+      show ((H.shift).edgeWalkup x).planarIndex =
+        (((H.shift).edgeWalkup x).shift.shift).planarIndex
+      rw [← ((H.shift).edgeWalkup x).shift.planarIndex_shift]
+      exact ((H.shift).edgeWalkup x).planarIndex_shift
+    rwa [h2] at h1
+  · have h1 : (H.shift.shift).planarIndex ≤ ((H.shift.shift).edgeWalkup x).planarIndex :=
+      (H.shift.shift).planarIndex_le_edgeWalkup hx
+    have h2 : H.planarIndex = (H.shift.shift).planarIndex :=
+      H.planarIndex_shift.trans (H.shift.planarIndex_shift)
+    rw [← h2] at h1
+    have h3 : ((H.shift.shift).edgeWalkup x).planarIndex = (H.faceWalkup x).planarIndex :=
+      ((H.shift.shift).edgeWalkup x).planarIndex_shift
+    rwa [h3] at h1
+
+/-- `hypermap.hl`:4741 `lemmaFOAGLPA`（Euler 主定理：`planar_index ≤ 0`）。 -/
+theorem planarIndex_le_zero (H : Hypermap α) : H.planarIndex ≤ 0 := by
+  have key : ∀ n : ℕ, ∀ H : Hypermap α, H.darts.card ≤ n → H.planarIndex ≤ 0 := by
+    intro n
+    induction n with
+    | zero =>
+      intro H h
+      have h0 : H.darts.card = 0 := by omega
+      rw [H.planarIndex_eq_zero_of_darts_card_eq_zero h0]
+    | succ n ihn =>
+      intro H h
+      by_cases hd : H.darts = ∅
+      · rw [H.planarIndex_eq_zero_of_darts_card_eq_zero (Finset.card_eq_zero.mpr hd)]
+      · obtain ⟨x, hx⟩ := Finset.nonempty_iff_ne_empty.mpr hd
+        have h1 := H.planarIndex_le_edgeWalkup hx
+        have h2 : (H.edgeWalkup x).planarIndex ≤ 0 := by
+          apply ihn
+          show (H.darts.erase x).card ≤ n
+          rw [Finset.card_erase_of_mem hx]
+          omega
+        omega
+  exact key H.darts.card H le_rfl
+
+/-- `hypermap.hl`:4771 `lemmaSGCOSXK`。 -/
+theorem planar_walkup (H : Hypermap α) {x : α} (hx : x ∈ H.darts) (hplanar : H.Planar) :
+    (H.edgeWalkup x).Planar ∧ (H.nodeWalkup x).Planar ∧ (H.faceWalkup x).Planar := by
+  rw [H.planar_iff_planarIndex_eq_zero] at hplanar
+  obtain ⟨hE, hN, hF⟩ := H.planarIndex_le_walkups hx
+  have h1 := (H.edgeWalkup x).planarIndex_le_zero
+  have h2 := (H.nodeWalkup x).planarIndex_le_zero
+  have h3 := (H.faceWalkup x).planarIndex_le_zero
+  refine ⟨?_, ?_, ?_⟩ <;> rw [planar_iff_planarIndex_eq_zero] <;> omega
 
 end Hypermap
 

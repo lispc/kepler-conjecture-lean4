@@ -33,7 +33,7 @@ Volume（体积、楔、立体角测度） ← Trig（三角、方位角）
 | 1 Close Packing（陈述） | `general/` | `Kepler/Statement.lean` | ✅ 陈述完成（G1），证明体 sorry（ sanctioned） |
 | 2 Trigonometry | `trigonometry/` | `Kepler/Text/Trig.lean` | ⬜ 未开始 |
 | 3 Volume | `volume/` | `Kepler/Text/Volume.lean` | ⬜ 未开始 |
-| 4 Hypermap | `hypermap/` | `Kepler/Text/Hypermap.lean` | 🟡 至 walkup 边/组件集合等式（hypermap.hl ~3500 行，2744–3025 edge split/merge 待做），planar-index 计数链待做（图枚举侧见 Phase 2，hypermap_of_fan 桥接待做） |
+| 4 Hypermap | `hypermap/` | `Kepler/Text/Hypermap.lean` | 🟡 至 planar-index 计数链完成（hypermap.hl ~4790 行，Euler 主定理 lemmaFOAGLPA 已证），double walkup/iso 待做（图枚举侧见 Phase 2，hypermap_of_fan 桥接待做） |
 | 5 Fan | `fan/` | `Kepler/Text/Fan.lean` | ⬜ 未开始 |
 | 6 Packing | `packing/` | `Kepler/Text/Packing.lean` | 🟡 `Packing`/`finite_inter_ball` 已在 Statement.lean |
 | 7 Local Fan | `local/` + `leg/` | `Kepler/Text/LocalFan.lean` | ⬜ 未开始 |
