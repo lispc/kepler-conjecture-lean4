@@ -13,6 +13,10 @@
 |---|---|---|---|
 | AFP Flyspeck-Tame | `reference/afp-flyspeck-tame` | `afp-Flyspeck-Tame-current.tar.gz`，2026-08-09 自 isa-afp.org，sha256 `3a0ed0fa89a9812e4952350bcea2a3cee77f32483a3bb35931596df10973f164`（原件存 `reference/_distfiles/`） | tame 图枚举完备性证明蓝本（Phase 2 核心参考） |
 | plantri v5.5 源码 | `pipeline/graphs/tools/plantri55` | `plantri55.tar.gz`，2026-08-09 自 users.cecs.anu.edu.au/~bdm/plantri/，sha256 `911cdf5bcca7294eb80f8f79fefc148183f7ba81da15b3aa4d6d2401a3bc7ded` | 交叉验证生成器（仅报警用） |
+| GMP 6.3.0 源码 | `pipeline/tools/gmp-6.3.0` | `gmp-6.3.0.tar.xz`，2026-08-24 自 gmplib.org/download/gmp/，sha256 `a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898`（原件存 `reference/_distfiles/`） | 精确有理算术库，SoPlex exact 模式依赖 |
+| m4 1.4.19 源码 | `pipeline/tools/m4-1.4.19` | `m4-1.4.19.tar.xz`，2026-08-24 自 ftp.gnu.org/gnu/m4/，sha256 `63aede5c6d33b6d9b13511cd0be2cac046f2e70fd0a07aa9573a04a82783af96`（原件存 `reference/_distfiles/`） | GMP 构建期依赖（本机无系统 m4） |
+| CMake 4.4.2 官方二进制 | 解压即用（/dev/shm，易失） | `cmake-4.4.2-linux-x86_64.tar.gz`，2026-08-24 自 github.com/Kitware/CMake releases，sha256 `3ada9a3f5d8a85413579bdd0ea6aa8e8da86efdd6d15c91a1afa517f2021956c`（原件存 `reference/_distfiles/`） | SoPlex 构建工具（本机无系统 cmake） |
+| SoPlex 8.0.3 源码 | `pipeline/tools/soplex-8.0.3` | `soplex-8.0.3.tar.gz`，2026-08-24 自 github.com/scipopt/soplex tag `v8.0.3`，sha256 `224eca4c49a2509a2a893a1d4b63e510e2ddb4ff374699cc6afc36f12af4e621`（原件存 `reference/_distfiles/`） | 精确有理 LP 求解器（Phase 3 核心，GMP 开启） |
 
 ## 关键文件索引（Phase 1/2 会用到）
 

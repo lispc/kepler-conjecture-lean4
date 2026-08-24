@@ -18,4 +18,8 @@ reference/kepler98
 
 # 第三方源码解压目录（原件 tar 包在 reference/_distfiles/，可复现）
 pipeline/graphs/tools/plantri55/
+# 编译产物的安装前缀（GMP/m4/SoPlex 等，可由 _distfiles 重建，不入 git）
+pipeline/tools/
+# cmake 为纯构建期工具，tar 包较大（62M），sha256 已入 LOCK.md，可按需重下
+reference/_distfiles/cmake-*.tar.gz
 __pycache__/
