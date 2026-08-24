@@ -33,7 +33,7 @@ Volume（体积、楔、立体角测度） ← Trig（三角、方位角）
 | 1 Close Packing（陈述） | `general/` | `Kepler/Statement.lean` | ✅ 陈述完成（G1），证明体 sorry（ sanctioned） |
 | 2 Trigonometry | `trigonometry/` | `Kepler/Text/Trig.lean` | ⬜ 未开始 |
 | 3 Volume | `volume/` | `Kepler/Text/Volume.lean` | ⬜ 未开始 |
-| 4 Hypermap | `hypermap/` | `Kepler/Text/Hypermap.lean` | 🟡 核心定义层 + 轨道/组件/计数引理层（hypermap.hl ~1450 行）完成，contour/walkup 待做（图枚举侧见 Phase 2，hypermap_of_fan 桥接待做） |
+| 4 Hypermap | `hypermap/` | `Kepler/Text/Hypermap.lean` | 🟡 定义层 + 轨道/组件/计数 + contour/walkup 基础（hypermap.hl ~1980 行）完成，walkup 计数理论待做（图枚举侧见 Phase 2，hypermap_of_fan 桥接待做） |
 | 5 Fan | `fan/` | `Kepler/Text/Fan.lean` | ⬜ 未开始 |
 | 6 Packing | `packing/` | `Kepler/Text/Packing.lean` | 🟡 `Packing`/`finite_inter_ball` 已在 Statement.lean |
 | 7 Local Fan | `local/` + `leg/` | `Kepler/Text/LocalFan.lean` | ⬜ 未开始 |

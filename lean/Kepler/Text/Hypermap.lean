@@ -72,6 +72,40 @@ Explicitly skipped (with reason; nothing is silently omitted):
 - 1067–1144 `lemma_card_of_disjoint_covering`: replaced by Mathlib's
   `Set.Finite.ncard_biUnion`.
 
+Coverage (block 3, contour paths and walkup basics):
+- Contour paths (1453–1628, complete): `one_step_contour` (1455),
+  `is_contour` (1457), `lemma_subcontour` (1460, as `isContour_mono`),
+  `lemma_def_contour` (1468, as `isContour_iff`), `lemma_glue_contours`
+  (1473, as `isContour_gluePaths`), `concatenate_contours` (1495),
+  `node_contour` (1508), `face_contour` (1512), `lemma_node_contour`
+  (1514), `lemma_face_contour` (1522), `existence_contour` (1530, proved
+  directly by induction + `PermutesOn.exists_pow_eq_inv`/
+  `exists_pow_apply_eq` instead of HOL's detour),
+  `is_inj_contour` (1597), `lemma_sub_inj_contour` (1601, as
+  `isInjContour_mono`), `lemma_def_inj_contour` (1608, as
+  `isInjContour_iff`).
+- Walkup basics (1632–1978): `isolated_dart`/`is_(edge|node|face)_degenerate`
+  (1632–1641), `degenerate_lemma` (1644, as `dartDegenerate_iff`),
+  `lemma_category_darts` (1670), `shift`/`shift_lemma`/
+  `double_shift_lemma` (1706–1717), `edge_walkup`/`node_walkup`/
+  `face_walkup`/double walkups (1721–1731), `walkup_permutes` (1733, as
+  `PermutesOn.swap_mul_erase`), `PERMUTES_COMPOSITION` (1748, as
+  `PermutesOn.mul`), `lemma_edge_walkup` (1751, `rfl` under the structure
+  encoding), `node_map_walkup` (1781), `face_map_walkup` (1798),
+  `lemma_(edge|node|face)_degenerate` (1815–1852),
+  `fixed_point_lemma` (1854), `non_fixed_point_lemma` (1864),
+  `lemma_inverse_maps_at_nondegenerate_dart` (1868),
+  `aux_permutes_conversion` (1872, as `Perm_inv_apply_inv_apply_iff`),
+  `edge_map_walkup` (1880, as `edgeMap_walkup`; the proof goes through the
+  `aux_permutes_conversion` normal form instead of HOL's label-tactic chain).
+
+Explicitly skipped in this range:
+- 1681–1696 `lemma_pair_*`/`lemma_hypermap_eq`: artifacts of HOL's
+  4-tuple encoding of hypermaps; Lean's `structure Hypermap` has
+  `ext`/proof irrelevance built in.
+- 1698 `lemma_hypermap_rep`: under the structure encoding the projections
+  of `⟨D, e, n, f, _⟩` hold by `rfl` (cf. `lemma_edge_walkup`).
+
 Type correspondences (HOL Light ↦ Lean 4):
 - `(A)hypermap` (a 4-tuple carrying `FINITE`/`permutes` side conditions,
   `hypermap.hl`:83–93) ↦ `structure Hypermap` with a `Finset` of darts and
@@ -1102,6 +1136,594 @@ theorem darts_card_le (H : Hypermap α) (hconn : H.Connected) (hplain : H.Plain)
   unfold Connected at hconn
   unfold Planar at hplanar
   omega
+
+end Hypermap
+
+/-! ## Contour paths（`hypermap.hl`:1453–1628） -/
+
+namespace Hypermap
+
+variable {α : Type*} [DecidableEq α] {x y z : α}
+
+/-- `hypermap.hl`:1455 `one_step_contour`：沿 `faceMap` 一步或沿 `nodeMap.symm` 一步。 -/
+def oneStepContour (H : Hypermap α) (x y : α) : Prop :=
+  y = H.faceMap x ∨ y = H.nodeMap.symm x
+
+/-- `hypermap.hl`:1457 `is_contour`。 -/
+def isContour (H : Hypermap α) (p : ℕ → α) : ℕ → Prop
+  | 0 => True
+  | n + 1 => isContour H p n ∧ oneStepContour H (p n) (p (n + 1))
+
+theorem isContour_succ (H : Hypermap α) (p : ℕ → α) (n : ℕ) :
+    H.isContour p (n + 1) ↔ H.isContour p n ∧ H.oneStepContour (p n) (p (n + 1)) := Iff.rfl
+
+/-- `hypermap.hl`:1460 `lemma_subcontour`。 -/
+theorem isContour_mono (H : Hypermap α) {p : ℕ → α} {n m : ℕ}
+    (h : H.isContour p n) (hmn : m ≤ n) : H.isContour p m := by
+  induction n generalizing m with
+  | zero =>
+    obtain rfl : m = 0 := Nat.eq_zero_of_le_zero hmn
+    exact h
+  | succ k ih =>
+    rw [H.isContour_succ] at h
+    rcases (by omega : m ≤ k ∨ m = k + 1) with hle | heq
+    · exact ih h.1 hle
+    · subst heq
+      exact (H.isContour_succ p k).mpr h
+
+/-- 长 contour 的第 `j` 步是合法步（`j + 1 ≤ n`）。 -/
+theorem oneStepContour_of_isContour (H : Hypermap α) {p : ℕ → α} {n j : ℕ}
+    (h : H.isContour p n) (hj : j + 1 ≤ n) : H.oneStepContour (p j) (p (j + 1)) :=
+  ((H.isContour_succ p j).mp (H.isContour_mono h hj)).2
+
+/-- `hypermap.hl`:1468 `lemma_def_contour`。 -/
+theorem isContour_iff (H : Hypermap α) (p : ℕ → α) (n : ℕ) :
+    H.isContour p n ↔ ∀ i < n, H.oneStepContour (p i) (p (i + 1)) := by
+  constructor
+  · intro h i hi
+    exact H.oneStepContour_of_isContour h (Nat.succ_le_of_lt hi)
+  · intro h
+    induction n with
+    | zero => trivial
+    | succ k ih =>
+      rw [H.isContour_succ]
+      exact ⟨ih (fun i hi => h i (Nat.lt_succ_of_lt hi)), h k (Nat.lt_succ_self k)⟩
+
+/-- `hypermap.hl`:1473 `lemma_glue_contours`。 -/
+theorem isContour_gluePaths (H : Hypermap α) {p q : ℕ → α} {n m : ℕ}
+    (hp : H.isContour p n) (hq : H.isContour q m) (h : p n = q 0) :
+    H.isContour (gluePaths p q n) (n + m) := by
+  rw [H.isContour_iff] at hp hq ⊢
+  intro i hi
+  by_cases hin : i < n
+  · rw [gluePaths_apply_le hin.le, gluePaths_apply_le (by omega)]
+    exact hp i hin
+  · obtain ⟨j, rfl⟩ : ∃ j : ℕ, i = n + j := ⟨i - n, by omega⟩
+    have h2 : gluePaths p q n (n + j + 1) = q (j + 1) := by
+      rw [add_assoc]
+      exact gluePaths_apply_add h (j + 1)
+    rw [gluePaths_apply_add h j, h2]
+    exact hq j (by omega)
+
+/-- `hypermap.hl`:1495 `concatenate_contours`。 -/
+theorem concatenate_contours (H : Hypermap α) {p q : ℕ → α} {n m : ℕ}
+    (hp : H.isContour p n) (hq : H.isContour q m) (h : p n = q 0) :
+    ∃ g : ℕ → α, g 0 = p 0 ∧ g (n + m) = q m ∧ H.isContour g (n + m) ∧
+      (∀ i ≤ n, g i = p i) ∧ (∀ i ≤ m, g (n + i) = q i) :=
+  ⟨gluePaths p q n, gluePaths_apply_le (Nat.zero_le n), gluePaths_apply_add h m,
+    H.isContour_gluePaths hp hq h, fun _ hi => gluePaths_apply_le hi,
+    fun i _ => gluePaths_apply_add h i⟩
+
+/-- `hypermap.hl`:1508 `node_contour`。 -/
+def nodeContour (H : Hypermap α) (x : α) (i : ℕ) : α := (H.nodeMap.symm ^ i) x
+
+/-- `hypermap.hl`:1512 `face_contour`（即 `face_path`）。 -/
+def faceContour (H : Hypermap α) (x : α) (i : ℕ) : α := (H.faceMap ^ i) x
+
+theorem nodeContour_zero (H : Hypermap α) (x : α) : H.nodeContour x 0 = x := by
+  simp [nodeContour]
+
+theorem faceContour_zero (H : Hypermap α) (x : α) : H.faceContour x 0 = x := by
+  simp [faceContour]
+
+/-- `hypermap.hl`:1514 `lemma_node_contour`。 -/
+theorem isContour_nodeContour (H : Hypermap α) (x : α) (k : ℕ) :
+    H.isContour (H.nodeContour x) k := by
+  induction k with
+  | zero => trivial
+  | succ k ih =>
+    rw [H.isContour_succ]
+    refine ⟨ih, Or.inr ?_⟩
+    show (H.nodeMap.symm ^ (k + 1)) x = H.nodeMap.symm ((H.nodeMap.symm ^ k) x)
+    rw [pow_succ', Equiv.Perm.mul_apply]
+
+/-- `hypermap.hl`:1522 `lemma_face_contour`。 -/
+theorem isContour_faceContour (H : Hypermap α) (x : α) (k : ℕ) :
+    H.isContour (H.faceContour x) k := by
+  induction k with
+  | zero => trivial
+  | succ k ih =>
+    rw [H.isContour_succ]
+    refine ⟨ih, Or.inl ?_⟩
+    show (H.faceMap ^ (k + 1)) x = H.faceMap ((H.faceMap ^ k) x)
+    rw [pow_succ', Equiv.Perm.mul_apply]
+
+/-- `hypermap.hl`:1530 `existence_contour`：任意 path 可改写为同端点的 contour。
+（证明路线与 HOL 不同：edge 步 = `nodeMap.symm` 一步 + `faceMap` 的幂；
+node 步 = `nodeMap.symm` 的幂，均来自有限阶。） -/
+theorem existence_contour (H : Hypermap α) {p : ℕ → α} {n : ℕ} (hp : H.isPath p n) :
+    ∃ q : ℕ → α, ∃ m : ℕ, q 0 = p 0 ∧ q m = p n ∧ H.isContour q m := by
+  induction n with
+  | zero => exact ⟨p, 0, rfl, rfl, trivial⟩
+  | succ k ih =>
+    rw [H.isPath_succ] at hp
+    obtain ⟨q, m, hq0, hqm, hq⟩ := ih hp.1
+    rcases hp.2 with hstep | hstep | hstep
+    · -- edge 步：`p (k+1) = edgeMap (p k)`，拆为 `nodeMap.symm` 一步 + `faceMap ^ j`。
+      obtain ⟨j, hj⟩ := H.faceMap_permutes.exists_pow_eq_inv
+      have h1 : H.edgeMap (p k) = (H.faceMap ^ j) (H.nodeMap⁻¹ (p k)) := by
+        rw [H.inverse2_hypermap_maps.1, Equiv.Perm.mul_apply, hj]
+      obtain ⟨g1, hg10, hg1m, hg1c, -, -⟩ :=
+        H.concatenate_contours hq (H.isContour_nodeContour (q m) 1)
+          (H.nodeContour_zero (q m)).symm
+      have hg1v : g1 (m + 1) = H.nodeMap.symm (q m) := by
+        rw [hg1m]
+        show (H.nodeMap.symm ^ 1) (q m) = H.nodeMap.symm (q m)
+        simp
+      obtain ⟨g2, hg20, hg2m, hg2c, -, -⟩ :=
+        H.concatenate_contours hg1c (H.isContour_faceContour (H.nodeMap.symm (q m)) j)
+          (by rw [hg1v]; exact (H.faceContour_zero _).symm)
+      refine ⟨g2, m + 1 + j, hg20.trans (hg10.trans hq0), ?_, hg2c⟩
+      rw [hg2m]
+      show (H.faceMap ^ j) (H.nodeMap.symm (q m)) = p (k + 1)
+      rw [hqm]
+      exact (hstep.trans h1).symm
+    · -- node 步：`p (k+1) = nodeMap (p k)`，即 `p (k+1) = (nodeMap.symm ^ j) (p k)`。
+      have hback : p k = H.nodeMap.symm (p (k + 1)) := by
+        rw [hstep]; exact (Equiv.symm_apply_apply _ _).symm
+      obtain ⟨j, hj⟩ := H.nodeMap_permutes.symm.exists_pow_apply_eq hback
+      obtain ⟨g, hg0, hgm, hgc, -, -⟩ :=
+        H.concatenate_contours hq (H.isContour_nodeContour (q m) j)
+          (H.nodeContour_zero (q m)).symm
+      refine ⟨g, m + j, hg0.trans hq0, ?_, hgc⟩
+      rw [hgm, hqm]
+      show (H.nodeMap.symm ^ j) (p k) = p (k + 1)
+      exact hj.symm
+    · -- face 步：一步 `faceContour`。
+      obtain ⟨g, hg0, hgm, hgc, -, -⟩ :=
+        H.concatenate_contours hq (H.isContour_faceContour (q m) 1)
+          (H.faceContour_zero (q m)).symm
+      refine ⟨g, m + 1, hg0.trans hq0, ?_, hgc⟩
+      rw [hgm, hqm]
+      show (H.faceMap ^ 1) (p k) = p (k + 1)
+      rw [pow_one]
+      exact hstep.symm
+
+/-- `hypermap.hl`:1597 `is_inj_contour`。 -/
+def isInjContour (H : Hypermap α) (p : ℕ → α) : ℕ → Prop
+  | 0 => True
+  | n + 1 => isInjContour H p n ∧ oneStepContour H (p n) (p (n + 1)) ∧
+      (∀ i ≤ n, p i ≠ p (n + 1))
+
+theorem isInjContour_succ (H : Hypermap α) (p : ℕ → α) (n : ℕ) :
+    H.isInjContour p (n + 1) ↔ H.isInjContour p n ∧ H.oneStepContour (p n) (p (n + 1)) ∧
+      (∀ i ≤ n, p i ≠ p (n + 1)) := Iff.rfl
+
+/-- `hypermap.hl`:1601 `lemma_sub_inj_contour`。 -/
+theorem isInjContour_mono (H : Hypermap α) {p : ℕ → α} {n m : ℕ}
+    (h : H.isInjContour p n) (hmn : m ≤ n) : H.isInjContour p m := by
+  induction n generalizing m with
+  | zero =>
+    obtain rfl : m = 0 := Nat.eq_zero_of_le_zero hmn
+    exact h
+  | succ k ih =>
+    rw [H.isInjContour_succ] at h
+    rcases (by omega : m ≤ k ∨ m = k + 1) with hle | heq
+    · exact ih h.1 hle
+    · subst heq
+      exact (H.isInjContour_succ p k).mpr h
+
+theorem isContour_of_isInjContour (H : Hypermap α) {p : ℕ → α} {n : ℕ}
+    (h : H.isInjContour p n) : H.isContour p n := by
+  induction n with
+  | zero => trivial
+  | succ k ih =>
+    rw [H.isInjContour_succ] at h
+    exact (H.isContour_succ p k).mpr ⟨ih h.1, h.2.1⟩
+
+/-- `hypermap.hl`:1608 `lemma_def_inj_contour`。 -/
+theorem isInjContour_iff (H : Hypermap α) (p : ℕ → α) (n : ℕ) :
+    H.isInjContour p n ↔
+      H.isContour p n ∧ (∀ i j : ℕ, i ≤ n → j < i → p j ≠ p i) := by
+  constructor
+  · intro h
+    induction n with
+    | zero => exact ⟨trivial, fun i j hi hj => by omega⟩
+    | succ k ih =>
+      rw [H.isInjContour_succ] at h
+      obtain ⟨hcont, hinj⟩ := ih h.1
+      refine ⟨(H.isContour_succ p k).mpr ⟨hcont, h.2.1⟩, fun i j hi hj => ?_⟩
+      rcases (by omega : i ≤ k ∨ i = k + 1) with hik | rfl
+      · exact hinj i j hik hj
+      · exact h.2.2 j (by omega)
+  · rintro ⟨hcont, hinj⟩
+    induction n with
+    | zero => trivial
+    | succ k ih =>
+      rw [H.isInjContour_succ]
+      refine ⟨ih (H.isContour_mono hcont k.le_succ) (fun i j hi hj => hinj i j
+        (hi.trans k.le_succ) hj), (H.isContour_succ p k).mp hcont |>.2, fun i hi => ?_⟩
+      exact hinj (k + 1) i (by omega) (by omega)
+
+end Hypermap
+
+/-! ## Walkup 基础（`hypermap.hl`:1632–1978） -/
+
+/-- `hypermap.hl`:1854 `fixed_point_lemma`。 -/
+theorem Perm_apply_eq_self_iff_symm {α : Type*} (f : Equiv.Perm α) (x : α) :
+    f x = x ↔ f.symm x = x := by
+  constructor
+  · intro h
+    calc f.symm x = f.symm (f x) := by rw [h]
+      _ = x := f.symm_apply_apply x
+  · intro h
+    calc f x = f (f.symm x) := by rw [h]
+      _ = x := f.apply_symm_apply x
+
+/-- `hypermap.hl`:1864 `non_fixed_point_lemma`。 -/
+theorem Perm_apply_ne_self_iff_symm {α : Type*} (f : Equiv.Perm α) (x : α) :
+    f x ≠ x ↔ f.symm x ≠ x := not_congr (Perm_apply_eq_self_iff_symm f x)
+
+/-- `hypermap.hl`:1748 `PERMUTES_COMPOSITION`。 -/
+theorem PermutesOn.mul {α : Type*} {f g : Equiv.Perm α} {s : Finset α}
+    (hf : PermutesOn f s) (hg : PermutesOn g s) : PermutesOn (f * g) s := by
+  intro x hx
+  rw [Equiv.Perm.mul_apply, hg x hx, hf x hx]
+
+/-- `hypermap.hl`:1733 `walkup_permutes`。 -/
+theorem PermutesOn.swap_mul_erase {α : Type*} [DecidableEq α] {f : Equiv.Perm α} {s : Finset α}
+    (hf : PermutesOn f s) (x : α) :
+    PermutesOn (Equiv.swap x (f x) * f) (s.erase x) := by
+  intro y hy
+  have hyx : y = x ∨ y ∉ s := by
+    by_cases h : y = x
+    · exact Or.inl h
+    · exact Or.inr (fun hys => hy (Finset.mem_erase.mpr ⟨h, hys⟩))
+  rcases hyx with rfl | hys
+  · rw [Equiv.Perm.mul_apply, Equiv.swap_apply_right]
+  · by_cases hyx : y = x
+    · subst hyx
+      rw [Equiv.Perm.mul_apply, Equiv.swap_apply_right]
+    · rw [Equiv.Perm.mul_apply, hf y hys,
+        Equiv.swap_apply_of_ne_of_ne hyx (fun hyfx => hyx (f.injective (by
+          rw [← hyfx, hf y hys])))]
+
+namespace Hypermap
+
+variable {α : Type*} [DecidableEq α] {x y z : α}
+
+/-- `hypermap.hl`:1632 `isolated_dart`。 -/
+def IsolatedDart (H : Hypermap α) (x : α) : Prop :=
+  H.edgeMap x = x ∧ H.nodeMap x = x ∧ H.faceMap x = x
+
+/-- `hypermap.hl`:1634 `is_edge_degenerate`。 -/
+def IsEdgeDegenerate (H : Hypermap α) (x : α) : Prop :=
+  H.edgeMap x = x ∧ H.nodeMap x ≠ x ∧ H.faceMap x ≠ x
+
+/-- `hypermap.hl`:1637 `is_node_degenerate`。 -/
+def IsNodeDegenerate (H : Hypermap α) (x : α) : Prop :=
+  H.edgeMap x ≠ x ∧ H.nodeMap x = x ∧ H.faceMap x ≠ x
+
+/-- `hypermap.hl`:1640 `is_face_degenerate`。 -/
+def IsFaceDegenerate (H : Hypermap α) (x : α) : Prop :=
+  H.edgeMap x ≠ x ∧ H.nodeMap x ≠ x ∧ H.faceMap x = x
+
+/-- `hypermap.hl`:1644 `degenerate_lemma`。 -/
+theorem dartDegenerate_iff (H : Hypermap α) (x : α) :
+    H.DartDegenerate x ↔ H.IsolatedDart x ∨ H.IsEdgeDegenerate x ∨
+      H.IsNodeDegenerate x ∨ H.IsFaceDegenerate x := by
+  -- 任意两个映射固定 `x` ⟹ 第三个也固定（由三条逆映射等式 + `fixed_point_lemma`）
+  have fix_of_two {a b c : Equiv.Perm α} (hinv : a⁻¹ = b * c)
+      (hb : b x = x) (hc : c x = x) : a x = x := by
+    have h1 : a⁻¹ x = x := by rw [hinv, Equiv.Perm.mul_apply, hc, hb]
+    have h2 : a = a⁻¹.symm := rfl
+    rw [h2]
+    exact (Perm_apply_eq_self_iff_symm a⁻¹ x).mp h1
+  have fixF : H.edgeMap x = x → H.nodeMap x = x → H.faceMap x = x :=
+    fix_of_two H.inverse_hypermap_maps.2.2
+  have fixN : H.edgeMap x = x → H.faceMap x = x → H.nodeMap x = x :=
+    fun he hf => fix_of_two H.inverse_hypermap_maps.2.1 hf he
+  have fixE : H.nodeMap x = x → H.faceMap x = x → H.edgeMap x = x :=
+    fix_of_two H.inverse_hypermap_maps.1
+  constructor
+  · rintro (he | hn | hf)
+    · by_cases hn : H.nodeMap x = x
+      · by_cases hf : H.faceMap x = x
+        · exact Or.inl ⟨he, hn, hf⟩
+        · exact absurd (fixF he hn) hf
+      · by_cases hf : H.faceMap x = x
+        · exact absurd (fixN he hf) hn
+        · exact Or.inr (Or.inl ⟨he, hn, hf⟩)
+    · by_cases he : H.edgeMap x = x
+      · by_cases hf : H.faceMap x = x
+        · exact Or.inl ⟨he, hn, hf⟩
+        · exact absurd (fixF he hn) hf
+      · by_cases hf : H.faceMap x = x
+        · exact absurd (fixE hn hf) he
+        · exact Or.inr (Or.inr (Or.inl ⟨he, hn, hf⟩))
+    · by_cases he : H.edgeMap x = x
+      · by_cases hn : H.nodeMap x = x
+        · exact Or.inl ⟨he, hn, hf⟩
+        · exact absurd (fixN he hf) hn
+      · by_cases hn : H.nodeMap x = x
+        · exact absurd (fixE hn hf) he
+        · exact Or.inr (Or.inr (Or.inr ⟨he, hn, hf⟩))
+  · rintro (⟨he, -, -⟩ | ⟨he, -, -⟩ | ⟨-, hn, -⟩ | ⟨-, -, hf⟩)
+    · exact Or.inl he
+    · exact Or.inl he
+    · exact Or.inr (Or.inl hn)
+    · exact Or.inr (Or.inr hf)
+
+/-- `hypermap.hl`:1670 `lemma_category_darts`。 -/
+theorem dartNondegenerate_or_dartDegenerate (H : Hypermap α) (x : α) :
+    H.DartNondegenerate x ∨ H.DartDegenerate x := by
+  by_cases he : H.edgeMap x = x
+  · exact Or.inr (Or.inl he)
+  · by_cases hn : H.nodeMap x = x
+    · exact Or.inr (Or.inr (Or.inl hn))
+    · by_cases hf : H.faceMap x = x
+      · exact Or.inr (Or.inr (Or.inr hf))
+      · exact Or.inl ⟨he, hn, hf⟩
+
+/-- `hypermap.hl`:1706 `shift`：轮换三个映射的角色（`hypermap_cyclic` 保证仍是 hypermap）。 -/
+def shift (H : Hypermap α) : Hypermap α where
+  darts := H.darts
+  edgeMap := H.nodeMap
+  nodeMap := H.faceMap
+  faceMap := H.edgeMap
+  edgeMap_permutes := H.nodeMap_permutes
+  nodeMap_permutes := H.faceMap_permutes
+  faceMap_permutes := H.edgeMap_permutes
+  comp_eq_one := H.hypermap_cyclic.1
+
+/-- `hypermap.hl`:1708 `shift_lemma`。 -/
+theorem shift_lemma (H : Hypermap α) :
+    H.darts = H.shift.darts ∧ H.edgeMap = H.shift.faceMap ∧
+      H.nodeMap = H.shift.edgeMap ∧ H.faceMap = H.shift.nodeMap :=
+  ⟨rfl, rfl, rfl, rfl⟩
+
+/-- `hypermap.hl`:1715 `double_shift_lemma`。 -/
+theorem double_shift_lemma (H : Hypermap α) :
+    H.darts = H.shift.shift.darts ∧ H.edgeMap = H.shift.shift.nodeMap ∧
+      H.nodeMap = H.shift.shift.faceMap ∧ H.faceMap = H.shift.shift.edgeMap :=
+  ⟨rfl, rfl, rfl, rfl⟩
+
+/-- `hypermap.hl`:1721 `edge_walkup`：删去 dart `x` 并把其邻接关系"短路"的 hypermap。 -/
+def edgeWalkup (H : Hypermap α) (x : α) : Hypermap α where
+  darts := H.darts.erase x
+  edgeMap := (Equiv.swap x (H.faceMap x) * H.faceMap)⁻¹ *
+    (Equiv.swap x (H.nodeMap x) * H.nodeMap)⁻¹
+  nodeMap := Equiv.swap x (H.nodeMap x) * H.nodeMap
+  faceMap := Equiv.swap x (H.faceMap x) * H.faceMap
+  edgeMap_permutes :=
+    (H.faceMap_permutes.swap_mul_erase x).symm.mul (H.nodeMap_permutes.swap_mul_erase x).symm
+  nodeMap_permutes := H.nodeMap_permutes.swap_mul_erase x
+  faceMap_permutes := H.faceMap_permutes.swap_mul_erase x
+  comp_eq_one := by
+    generalize Equiv.swap x (H.faceMap x) * H.faceMap = F
+    generalize Equiv.swap x (H.nodeMap x) * H.nodeMap = N
+    rw [mul_assoc F⁻¹ N⁻¹ N, inv_mul_cancel, mul_one, inv_mul_cancel]
+
+/-- `hypermap.hl`:1723 `node_walkup`。 -/
+def nodeWalkup (H : Hypermap α) (x : α) : Hypermap α := (H.shift.edgeWalkup x).shift.shift
+
+/-- `hypermap.hl`:1725 `face_walkup`。 -/
+def faceWalkup (H : Hypermap α) (x : α) : Hypermap α := (H.shift.shift.edgeWalkup x).shift
+
+/-- `hypermap.hl`:1727 `double_edge_walkup`。 -/
+def doubleEdgeWalkup (H : Hypermap α) (x y : α) : Hypermap α := (H.edgeWalkup x).edgeWalkup y
+
+/-- `hypermap.hl`:1729 `double_node_walkup`。 -/
+def doubleNodeWalkup (H : Hypermap α) (x y : α) : Hypermap α := (H.nodeWalkup x).nodeWalkup y
+
+/-- `hypermap.hl`:1731 `double_face_walkup`。 -/
+def doubleFaceWalkup (H : Hypermap α) (x y : α) : Hypermap α := (H.faceWalkup x).faceWalkup y
+
+/-- `hypermap.hl`:1751 `lemma_edge_walkup`（structure 编码下即定义展开）。 -/
+theorem lemma_edge_walkup (H : Hypermap α) (x : α) :
+    (H.edgeWalkup x).darts = H.darts.erase x ∧
+    (H.edgeWalkup x).edgeMap = (Equiv.swap x (H.faceMap x) * H.faceMap)⁻¹ *
+      (Equiv.swap x (H.nodeMap x) * H.nodeMap)⁻¹ ∧
+    (H.edgeWalkup x).nodeMap = Equiv.swap x (H.nodeMap x) * H.nodeMap ∧
+    (H.edgeWalkup x).faceMap = Equiv.swap x (H.faceMap x) * H.faceMap :=
+  ⟨rfl, rfl, rfl, rfl⟩
+
+/-- `hypermap.hl`:1781 `node_map_walkup`。 -/
+theorem nodeMap_walkup (H : Hypermap α) (x y : α) :
+    (H.edgeWalkup x).nodeMap x = x ∧
+    (H.edgeWalkup x).nodeMap (H.nodeMap.symm x) = H.nodeMap x ∧
+    (y ≠ x ∧ y ≠ H.nodeMap.symm x → (H.edgeWalkup x).nodeMap y = H.nodeMap y) := by
+  refine ⟨?_, ?_, ?_⟩
+  · show (Equiv.swap x (H.nodeMap x) * H.nodeMap) x = x
+    rw [Equiv.Perm.mul_apply, Equiv.swap_apply_right]
+  · show (Equiv.swap x (H.nodeMap x) * H.nodeMap) (H.nodeMap.symm x) = H.nodeMap x
+    rw [Equiv.Perm.mul_apply, Equiv.apply_symm_apply, Equiv.swap_apply_left]
+  · intro ⟨hyx, hys⟩
+    show (Equiv.swap x (H.nodeMap x) * H.nodeMap) y = H.nodeMap y
+    rw [Equiv.Perm.mul_apply,
+      Equiv.swap_apply_of_ne_of_ne
+        (fun h => hys ((H.nodeMap_inverse_representation y x).mp h.symm))
+        (fun h => hyx (H.nodeMap.injective h))]
+
+/-- `hypermap.hl`:1798 `face_map_walkup`。 -/
+theorem faceMap_walkup (H : Hypermap α) (x y : α) :
+    (H.edgeWalkup x).faceMap x = x ∧
+    (H.edgeWalkup x).faceMap (H.faceMap.symm x) = H.faceMap x ∧
+    (y ≠ x ∧ y ≠ H.faceMap.symm x → (H.edgeWalkup x).faceMap y = H.faceMap y) := by
+  refine ⟨?_, ?_, ?_⟩
+  · show (Equiv.swap x (H.faceMap x) * H.faceMap) x = x
+    rw [Equiv.Perm.mul_apply, Equiv.swap_apply_right]
+  · show (Equiv.swap x (H.faceMap x) * H.faceMap) (H.faceMap.symm x) = H.faceMap x
+    rw [Equiv.Perm.mul_apply, Equiv.apply_symm_apply, Equiv.swap_apply_left]
+  · intro ⟨hyx, hys⟩
+    show (Equiv.swap x (H.faceMap x) * H.faceMap) y = H.faceMap y
+    rw [Equiv.Perm.mul_apply,
+      Equiv.swap_apply_of_ne_of_ne
+        (fun h => hys ((H.faceMap_inverse_representation y x).mp h.symm))
+        (fun h => hyx (H.faceMap.injective h))]
+
+/-- `edgeMap * nodeMap * faceMap` 作用在任意点上恒等（`comp_eq_one` 的应用形式）。 -/
+theorem enf_apply (H : Hypermap α) (x : α) : H.edgeMap (H.nodeMap (H.faceMap x)) = x := by
+  have h := congrFun (congrArg DFunLike.coe H.comp_eq_one) x
+  simpa [Equiv.Perm.mul_apply] using h
+
+/-- `hypermap_cyclic` 第一个轮换的应用形式。 -/
+theorem nfe_apply (H : Hypermap α) (x : α) : H.nodeMap (H.faceMap (H.edgeMap x)) = x := by
+  have h := congrFun (congrArg DFunLike.coe H.hypermap_cyclic.1) x
+  simpa [Equiv.Perm.mul_apply] using h
+
+/-- `hypermap_cyclic` 第二个轮换的应用形式。 -/
+theorem fen_apply (H : Hypermap α) (x : α) : H.faceMap (H.edgeMap (H.nodeMap x)) = x := by
+  have h := congrFun (congrArg DFunLike.coe H.hypermap_cyclic.2) x
+  simpa [Equiv.Perm.mul_apply] using h
+
+/-- `hypermap.hl`:1815 `lemma_edge_degenerate`。 -/
+theorem edgeMap_fixed_iff (H : Hypermap α) (x : α) :
+    H.edgeMap x = x ↔ H.faceMap x = H.nodeMap.symm x := by
+  constructor
+  · intro h
+    have h1 : H.nodeMap (H.faceMap x) = x := H.edgeMap.injective (by rw [H.enf_apply, h])
+    have h2 := (Equiv.symm_apply_apply H.nodeMap (H.faceMap x)).symm
+    rw [h1] at h2
+    exact h2
+  · intro h
+    have h1 := H.enf_apply x
+    rw [h, Equiv.apply_symm_apply] at h1
+    exact h1
+
+/-- `hypermap.hl`:1828 `lemma_node_degenerate`。 -/
+theorem nodeMap_fixed_iff (H : Hypermap α) (x : α) :
+    H.nodeMap x = x ↔ H.edgeMap x = H.faceMap.symm x := by
+  constructor
+  · intro h
+    have h1 : H.faceMap (H.edgeMap x) = x := H.nodeMap.injective (by rw [H.nfe_apply, h])
+    have h2 := (Equiv.symm_apply_apply H.faceMap (H.edgeMap x)).symm
+    rw [h1] at h2
+    exact h2
+  · intro h
+    have h1 := H.nfe_apply x
+    rw [h, Equiv.apply_symm_apply] at h1
+    exact h1
+
+/-- `hypermap.hl`:1841 `lemma_face_degenerate`。 -/
+theorem faceMap_fixed_iff (H : Hypermap α) (x : α) :
+    H.faceMap x = x ↔ H.nodeMap x = H.edgeMap.symm x := by
+  constructor
+  · intro h
+    have h1 : H.edgeMap (H.nodeMap x) = x := H.faceMap.injective (by rw [H.fen_apply, h])
+    have h2 := (Equiv.symm_apply_apply H.edgeMap (H.nodeMap x)).symm
+    rw [h1] at h2
+    exact h2
+  · intro h
+    have h1 := H.fen_apply x
+    rw [h, Equiv.apply_symm_apply] at h1
+    exact h1
+
+/-- `hypermap.hl`:1868 `lemma_inverse_maps_at_nondegenerate_dart`。 -/
+theorem inverse_maps_at_nondegenerate_dart (H : Hypermap α) (hx : H.DartNondegenerate x) :
+    H.edgeMap.symm x ≠ x ∧ H.nodeMap.symm x ≠ x ∧ H.faceMap.symm x ≠ x :=
+  ⟨(Perm_apply_ne_self_iff_symm _ _).mp hx.1,
+   (Perm_apply_ne_self_iff_symm _ _).mp hx.2.1,
+   (Perm_apply_ne_self_iff_symm _ _).mp hx.2.2⟩
+
+/-- `hypermap.hl`:1872 `aux_permutes_conversion`（`Equiv.Perm` 版本无需 permutes 前提）。 -/
+theorem Perm_inv_apply_inv_apply_iff {α : Type*} (f g : Equiv.Perm α) (x y : α) :
+    f⁻¹ (g⁻¹ x) = y ↔ g (f y) = x := by
+  show f.symm (g.symm x) = y ↔ g (f y) = x
+  rw [Equiv.symm_apply_eq, Equiv.symm_apply_eq, eq_comm]
+
+/-- `hypermap.hl`:1880 `edge_map_walkup`。
+（证明统一走 `Perm_inv_apply_inv_apply_iff` 正规形：`e' z = w ⟺ n' (f' w) = z`。） -/
+theorem edgeMap_walkup (H : Hypermap α) (x y : α) :
+    (H.edgeWalkup x).edgeMap x = x ∧
+    (H.nodeMap x ≠ x ∧ H.edgeMap x ≠ x →
+      (H.edgeWalkup x).edgeMap (H.nodeMap x) = H.edgeMap x) ∧
+    (H.faceMap⁻¹ x ≠ x ∧ H.edgeMap⁻¹ x ≠ x →
+      (H.edgeWalkup x).edgeMap (H.edgeMap⁻¹ x) = H.faceMap⁻¹ x) ∧
+    (y ≠ x ∧ y ≠ H.edgeMap⁻¹ x ∧ y ≠ H.nodeMap x →
+      (H.edgeWalkup x).edgeMap y = H.edgeMap y) := by
+  set n' := Equiv.swap x (H.nodeMap x) * H.nodeMap with hn'
+  set f' := Equiv.swap x (H.faceMap x) * H.faceMap with hf'
+  have key : ∀ z w : α, (H.edgeWalkup x).edgeMap z = w ↔ n' (f' w) = z := by
+    intro z w
+    show ((f'⁻¹ * n'⁻¹) z = w) ↔ n' (f' w) = z
+    rw [Equiv.Perm.mul_apply, Perm_inv_apply_inv_apply_iff]
+  have hNx : n' x = x := (H.nodeMap_walkup x y).1
+  have hFx : f' x = x := (H.faceMap_walkup x y).1
+  have hNsy : n' (H.nodeMap.symm x) = H.nodeMap x := (H.nodeMap_walkup x y).2.1
+  have hFsy : f' (H.faceMap.symm x) = H.faceMap x := (H.faceMap_walkup x y).2.1
+  have hN : ∀ z : α, z ≠ x → z ≠ H.nodeMap.symm x → n' z = H.nodeMap z :=
+    fun z h1 h2 => (H.nodeMap_walkup x z).2.2 ⟨h1, h2⟩
+  have hF : ∀ z : α, z ≠ x → z ≠ H.faceMap.symm x → f' z = H.faceMap z :=
+    fun z h1 h2 => (H.faceMap_walkup x z).2.2 ⟨h1, h2⟩
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [key, hFx, hNx]
+  · -- `e' (n x) = e x`，即 `n' (f' (e x)) = n x`：用 `f (e x) = n⁻¹ x`（`nfe_apply`）。
+    intro ⟨hn, he⟩
+    have hfe : H.faceMap (H.edgeMap x) = H.nodeMap.symm x :=
+      ((Equiv.symm_apply_eq H.nodeMap).mpr (H.nfe_apply x).symm).symm
+    have hey : H.edgeMap x ≠ H.faceMap.symm x := by
+      intro hcon
+      apply hn
+      have h1 : H.faceMap (H.edgeMap x) = x := by
+        rw [hcon]; exact Equiv.apply_symm_apply _ _
+      calc H.nodeMap x = H.nodeMap (H.faceMap (H.edgeMap x)) := by rw [h1]
+        _ = x := H.nfe_apply x
+    rw [key, hF (H.edgeMap x) he hey, hfe, hNsy]
+  · -- `e' (e⁻¹ x) = f⁻¹ x`，即 `n' (f' (f⁻¹ x)) = e⁻¹ x`：用 `f' (f⁻¹ x) = f x` 与 `n (f x) = e⁻¹ x`。
+    intro ⟨hf, he⟩
+    have hfx : H.faceMap x ≠ x := by
+      intro hcon
+      apply hf
+      calc H.faceMap⁻¹ x = H.faceMap⁻¹ (H.faceMap x) := by rw [hcon]
+        _ = x := Equiv.symm_apply_apply _ _
+    have hfx2 : H.faceMap x ≠ H.nodeMap.symm x := by
+      intro hcon
+      apply he
+      have h1 : H.edgeMap x = x := by
+        have h2 := H.enf_apply x
+        rw [hcon, Equiv.apply_symm_apply] at h2
+        exact h2
+      calc H.edgeMap⁻¹ x = H.edgeMap⁻¹ (H.edgeMap x) := by rw [h1]
+        _ = x := Equiv.symm_apply_apply _ _
+    have hFx' : f' (H.faceMap⁻¹ x) = H.faceMap x := hFsy
+    rw [key, hFx', hN (H.faceMap x) hfx hfx2]
+    show H.nodeMap (H.faceMap x) = H.edgeMap⁻¹ x
+    rw [H.inverse_hypermap_maps.1, Equiv.Perm.mul_apply]
+  · -- `e' y = e y`，即 `n' (f' (e y)) = y`：两端都用第三分量求值。
+    intro ⟨hy1, hy2, hy3⟩
+    have hey1 : H.edgeMap y ≠ x := by
+      intro hcon
+      exact hy2 ((Equiv.symm_apply_eq H.edgeMap).mpr hcon.symm).symm
+    have hey2 : H.edgeMap y ≠ H.faceMap.symm x := by
+      intro hcon
+      apply hy3
+      have h1 : H.faceMap (H.edgeMap y) = x := by
+        rw [hcon]; exact Equiv.apply_symm_apply _ _
+      calc y = H.nodeMap (H.faceMap (H.edgeMap y)) := (H.nfe_apply y).symm
+        _ = H.nodeMap x := by rw [h1]
+    have hfey1 : H.faceMap (H.edgeMap y) ≠ x := by
+      intro hcon
+      exact hy3 (by rw [← H.nfe_apply y, hcon])
+    have hfey2 : H.faceMap (H.edgeMap y) ≠ H.nodeMap.symm x := by
+      intro hcon
+      apply hy1
+      have h1 : H.nodeMap (H.faceMap (H.edgeMap y)) = x := by
+        rw [hcon]; exact Equiv.apply_symm_apply _ _
+      rw [H.nfe_apply] at h1
+      exact h1
+    rw [key, hF (H.edgeMap y) hey1 hey2, hN (H.faceMap (H.edgeMap y)) hfey1 hfey2]
+    exact H.nfe_apply y
 
 end Hypermap
 
