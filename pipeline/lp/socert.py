@@ -15,12 +15,22 @@ re-checking with kernel `decide` via `Kepler.LP.Cert`):
   6. emit `lean/Kepler/LP/<Module>.lean` with `checkDual ... = true := by decide`
      and a `bound` theorem via `checkDual_sound`.
 
-Supported .lp subset (pilot): `Maximize`/`Minimize`, one `obj:`-style
-optional label, `Subject To` with one labelled linear constraint per line,
+Supported .lp subset: `Maximize`/`Minimize`, one `obj:`-style optional
+label, `Subject To` with one labelled linear constraint per line,
 comparators `<=` `>=` (`<`/`>` treated the same), integer/fraction/decimal
 coefficients, default bounds x >= 0. NOT supported (loud error): `=`
-constraints, Bounds/General/Binary sections, non-integral data after parsing
-(data must be integral; the *certificate* is what gets 通分/scaled).
+constraints (split them beforehand, e.g. with flatten_lp.py),
+Bounds/General/Binary sections.
+
+Rational (non-integral) data are accepted: rows and objective are scaled
+row-wise by their denominator lcms at emission time so the emitted Lean
+certificate is integral.  The dual multipliers are scaled accordingly:
+with row scale s_i and objective scale s_c, y'_i = s_c·y_i/s_i, then
+Y = D·y' with D = lcm(denominators of y') — the integerized certificate
+(Y, D, G) with G = b_intᵀY certifies c_intᵀx ≤ G/D = s_c·(original γ).
+For `>=` rows the parser negates the row to `<=` form; the corresponding
+SoPlex dual multiplier is sign-flipped (SoPlex reports <= 0 for `>=` rows
+of a maximization).
 
 Usage:
   socert.py INPUT.lp [-o OUT.lean] [--module NAME] [--soplex PATH] [--settings PATH]
@@ -93,12 +103,13 @@ _CMP_RE = re.compile(r"(<=|>=|<|>|=)")
 
 
 class LPData:
-    """max c^T x s.t. A x <= b, x >= 0; integral data."""
+    """max c^T x s.t. A x <= b, x >= 0; rational (Fraction) data."""
 
     def __init__(self):
         self.vars: list[str] = []
         self.c: list[Fraction] = []
         self.rows: list[tuple[str, list[Fraction], Fraction]] = []  # (name, coeffs, rhs)
+        self.flipped: list[bool] = []  # row i was negated from an original `>=`
 
 
 def parse_lp(path: Path) -> LPData:
@@ -150,7 +161,7 @@ def parse_lp(path: Path) -> LPData:
     for v in obj_coeffs:
         register(v)
 
-    raw_rows: list[tuple[str, dict[str, Fraction], Fraction]] = []
+    raw_rows: list[tuple[str, dict[str, Fraction], Fraction, bool]] = []
     for line in con_lines:
         if ":" not in line:
             raise ValueError(f"constraint without label (pilot requires labels): {line}")
@@ -167,28 +178,24 @@ def parse_lp(path: Path) -> LPData:
         for v, k in rc.items():
             coeffs[v] = coeffs.get(v, Fraction(0)) - k
         rhs_val = rconst - lconst
-        if cmp_ in (">=", ">"):
+        flipped = cmp_ in (">=", ">")
+        if flipped:
             coeffs = {v: -k for v, k in coeffs.items()}
             rhs_val = -rhs_val
         elif cmp_ == "=":
-            raise ValueError(f"equality constraints not supported (pilot): {line}")
+            raise ValueError(f"equality constraints not supported "
+                             f"(split them with flatten_lp.py first): {line}")
         for v in coeffs:
             register(v)
-        raw_rows.append((name, coeffs, rhs_val))
+        raw_rows.append((name, coeffs, rhs_val, flipped))
 
     n = len(data.vars)
     vidx = {v: j for j, v in enumerate(data.vars)}
     data.c = [sense * obj_coeffs.get(v, Fraction(0)) for v in data.vars]
-    for name, coeffs, rhs_val in raw_rows:
+    for name, coeffs, rhs_val, flipped in raw_rows:
         row = [coeffs.get(v, Fraction(0)) for v in data.vars]
         data.rows.append((name, row, rhs_val))
-
-    # pilot: integral data only
-    all_coeffs = list(data.c) + [k for _, row, _ in data.rows for k in row]
-    all_coeffs += [rhs for _, _, rhs in data.rows]
-    bad = [k for k in all_coeffs if k.denominator != 1]
-    if bad:
-        raise ValueError(f"non-integral LP data not supported (pilot): {bad[:3]}")
+        data.flipped.append(flipped)
     _ = n, vidx
     return data
 
@@ -272,6 +279,10 @@ x ≥ 0, A·x ≤ b, y ≥ 0, Aᵀy ≥ c, cᵀx = bᵀy (strong duality).
 -/
 import Kepler.LP.Cert
 
+-- deep list literals and the kernel `decide` re-check need headroom
+set_option maxRecDepth 100000
+set_option maxHeartbeats 0
+
 namespace Kepler.LP.{mod}
 
 /-- The LP, sparse integer data (`{lp_path.name}`). -/
@@ -325,7 +336,10 @@ def main() -> int:
     dual = _parse_solution_section(out, "Dual solution", "All other dual values")
 
     x = [prim.get(v, Fraction(0)) for v in data.vars]
-    y = [dual.get(name, Fraction(0)) for name, _, _ in data.rows]
+    # SoPlex reports duals <= 0 for `>=` rows of a maximization; those rows
+    # were negated into `<=` form at parse time, so flip the sign back.
+    y = [(-1 if f else 1) * dual.get(name, Fraction(0))
+         for f, (name, _, _) in zip(data.flipped, data.rows)]
 
     # exact untrusted validation
     for j, v in enumerate(x):
@@ -342,11 +356,31 @@ def main() -> int:
     obj_y = sum(rhs * y[i] for i, (_, _, rhs) in enumerate(data.rows))
     assert obj_x == obj_y, f"duality gap: cᵀx={obj_x} ≠ bᵀy={obj_y}"
 
-    D = 1
-    for v in y:
-        D = _lcm(D, v.denominator)
-    Y = [int(v * D) for v in y]
-    G = sum(int(rhs) * Y[i] for i, (_, _, rhs) in enumerate(data.rows))
+    # ---- integerize the data and the dual certificate (see module docstring)
+    def denom_lcm(vals) -> int:
+        d = 1
+        for v in vals:
+            d = _lcm(d, v.denominator)
+        return d
+
+    s_c = denom_lcm(data.c)
+    c_int = [int(k * s_c) for k in data.c]
+    row_scales = [denom_lcm(list(row) + [rhs]) for _, row, rhs in data.rows]
+    rows_int = [([int(k * s) for k in row], int(rhs * s))
+                for s, (_, row, rhs) in zip(row_scales, data.rows)]
+    y_scaled = [s_c * v / s for v, s in zip(y, row_scales)]
+    D = denom_lcm(y_scaled)
+    Y = [int(v * D) for v in y_scaled]
+    G = sum(rhs * Y[i] for i, (_, rhs) in enumerate(rows_int))
+    # integer-level double check of what the kernel will verify
+    for j in range(len(data.vars)):
+        lhs = sum(row[j] * Y[i] for i, (row, _) in enumerate(rows_int))
+        assert lhs >= D * c_int[j], f"integerized dual column {j} violated"
+    assert G == D * s_c * obj_y, "integerized bound mismatch"
+
+    data.c = c_int
+    data.rows = [(name, row, rhs)
+                 for (name, _, _), (row, rhs) in zip(data.rows, rows_int)]
 
     mod = args.module or module_name_for(args.lp.stem)
     out_path = args.out or (REPO / "lean/Kepler/LP" / f"{mod}.lean")

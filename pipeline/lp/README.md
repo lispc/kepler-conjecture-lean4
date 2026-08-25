@@ -60,6 +60,100 @@ cd ../../lean && lake build Kepler.LP.CertHello Kepler.LP.CertHelloFrac \
 需 ~83 s，说明 >10² 规模必须走 Cert.lean 文件头注释里的分片
 （sharding）/转置预计算路线，试点的 `decide` 直放只适合小案例。
 
+## 真实图再生试点（2026-08-24，hypermap 204880136538）
+
+从 Flyspeck easy 证书出发，端到端复刻一张真实 tame 图的 LP 上界证明：
+**证书分支树 → 数据段 → glpsol 展开 .lp → SoPlex exact → socert → Lean**。
+选图：`easy_1.dat` 第 1 号证书（15 节点、21 面：5 四边形 + 16 三角形），
+分支树为**单终端**（precision=3, infeasible=false）——根 LP 一次解决，
+无需复刻分支。链路各环节：
+
+1. **证书解析** `parse_lpcert.py`：纯 Python OCaml-Marshal 读器（小格式
+   魔数 84 95 a6 be；int64 为 custom block `"_j"`；共享引用按对象表偏移），
+   解出 `lp_certificate list`（类型见 `formal_lp/hypermap/main/lp_certificate.hl`）。
+   `easy_1.dat`：424 张图，终端数直方图 1→370、5→30、9→8、…、49→2；
+   370 张单终端图全部 infeasible=false。
+2. **数据段生成** `gen_data.py`：Python 重实现 `convert_to_list3`（超图串
+   →面表）、`order_list`（分支排序：6/4/5/3 面分组，组内按节点出现数
+   降序、稳定）、`mk_order_bb`（根 bb：所有 apex/edge/node 集合为空）、
+   `modify_hex_cases`（六边形面移入 std56_flat_free；本图无六边形）、
+   `ampl_of_bb`（~20 条 set/param 赋值）。输出与 `lpproc.ml` 逐条对照。
+3. **模型**：`head.mod + body.mod` 施加与 `build_certificates.hl:50-65`
+   （`make_models false` → model2）相同的三条 sed：删 `main: sum ln >= 12`、
+   目标改为 `maximize objective: sum{i in node} ln[i];`、删 `lnsum_def`。
+   语义：max Σln（证书语义即"所有可行点 Σln ≤ γ"，γ < 12 即 Flyspeck
+   的 `scriptL > 12` 终端条件）。
+4. **展开**：`glpsol -m model2.mod -d data.txt --wcpxlp out.lp`
+   （GLPK 5.0，构建见 `reference/LOCK.md`）。glpsol 生成即是对数据段的
+   强校验（`within` 声明全部通过；dart 数 68 = 2E 与 Euler 公式一致）。
+   本图：1654 行 × 913 列，浮点最优 11.77525932，与单终端证书一致
+   （≤ 11.9999 阈值）。注意 .lp 文本常数是 glpsol 的 15 位小数打印
+   （π → 3.14159265358979）——Flyspeck 自己的证书管线同样以 .lp 文本
+   为准（LP-HL.exe 读的就是它），故这是忠实复刻而非额外舍入。
+5. **扁平化** `flatten_lp.py`：等式拆 `__le`/`__ge` 两行、Bounds 段转为
+   显式行（默认下界 0 保持隐式）、自由变量（仅报表变量 ynsum/sqdeficit）
+   正负拆分。所有常数按精确有限小数输出（SoPlex `readmode=1` 精确读入；
+   **不要**在此步整数化——×10¹⁴ 的行缩放会使 SoPlex 浮点预处理的
+   容差校验误判 infeasible，整数化已移到 socert 发射期）。转换等价性由
+   glpsol 复解确认（目标值逐位一致）。
+6. **求解+证书** `socert.py`（已扩展：接受有理数据，发射期按行通分；
+   SoPlex 对 max 问题的 `>=` 行报告**负**对偶乘子，解析时按行翻转符号；
+   大证书自动加 `set_option maxRecDepth 100000`——深列表字面量与内核
+   `decide` 都需要）。SoPlex exact 求解仅 **2.75 s**（"Solved to
+   optimality"，原始/对偶精确检验 violation = 0）。
+7. **Lean**：`lean/Kepler/LP/CertPilot204880136538.lean`（830 KB，
+   915 变量 × 3882 行 × 8056 非零；D 为 ~300 位整数，γ = G/D ≈ 11.77525932，
+   距阈值 12 余量 0.2247）。**不**加入 `Kepler.lean` 主 import 树，
+   按需 `lake build Kepler.LP.CertPilot204880136538`。
+
+复现（在 `pipeline/lp/` 下）：
+
+```sh
+python3 parse_lpcert.py ../../reference/flyspeck/formal_lp/glpk/binary/easy_1.dat
+python3 gen_data.py --from-dat ../../reference/flyspeck/formal_lp/glpk/binary/easy_1.dat \
+  --index 1 > pilot/data_204880136538.txt
+cat ../../reference/flyspeck/formal_lp/glpk/{head,body}.mod > pilot/model2.mod
+sed -i -e 's/main:.*//' \
+  -e 's/maximize objective:.*/maximize objective: sum{i in node} ln[i];/' \
+  -e 's/lnsum_def:.*//' pilot/model2.mod
+../tools/glpk-5.0/bin/glpsol -m pilot/model2.mod -d pilot/data_204880136538.txt \
+  --wcpxlp pilot/pilot_204880136538.lp
+python3 flatten_lp.py pilot/pilot_204880136538.lp pilot/pilot_204880136538_flat.lp
+python3 socert.py pilot/pilot_204880136538_flat.lp --module CertPilot204880136538
+cd ../../lean && lake build Kepler.LP.CertPilot204880136538
+```
+
+**`lake build Kepler.LP.CertPilot204880136538` 三次尝试（2026-08-24）**：
+
+| 尝试 | 设置 | 结果 |
+|---|---|---|
+| 1 | 默认 | 2m26s 失败：`maximum recursion depth`（深列表字面量与 `decide` 归约都触发） |
+| 2 | `maxRecDepth 100000` | 4m02s 失败：`whnf` 达 `maxHeartbeats` 上限（elaborator 侧 `decide` 求值） |
+| 3 | `maxRecDepth 100000` + `maxHeartbeats 0` | 运行 2h06m 后人工终止：lean worker 满速单核，RSS 线性涨至 29.8GB 无收敛迹象 |
+
+按 rand-30x40（83 s）的 O(变量数 × 非零元数) 内核代价外推，本实例
+（915 变量 × 8056 非零，Y 为 ~300 位整数）需数天级机时与数百 GB 内存，
+**确认全量化前必须先落地 `Cert.lean` 文件头注释里的分片/转置预计算
+路线**——这是本试点的主要后续工作项，与 Phase 3 试点结论一致。
+socert 生成的小证书（hello/rand 系列，同一代码路径）内核闭合早已验证，
+故路线可行性不受此瓶颈影响：缺的是内核重放的扩展性，不是链路本身。
+
+### 全量化（19700 图）初步估计
+
+- 证书解析：~27 s/文件（424 图），20 个 easy 文件 ~10 min 一次性。
+- 单图链路：gen_data ~1 s + glpsol ~0.6 s + flatten ~2 s + SoPlex exact
+  ~3 s + socert ~3.5 min（瓶颈：Fraction 大整数通分/不受信验证，可优化
+  一至两个数量级）。多数图为单终端；多终端图需按分支树逐终端复刻
+  （分支结构在证书中，但分支语义——split4/split5/6 的 apex 集合构造——
+  尚未重实现，见"未做"）。
+- **Lean 内核 `decide` 是主要瓶颈**：915×3882 规模远超 rand-30x40（83 s）
+  外推范围，必须落地 `Cert.lean` 文件头注释里的分片（sharding）/转置
+  预计算路线后才能全量化。
+- 未做：分支节点（非根）数据段（apex_sup_flat/apex_flat/apex_A/apex4/5、
+  d_edge_*、node_*、std3_big/small 集合的构造，即 `switch3/4/5/6` 与
+  `modify_bb` 的重实现）；infeasible 终端（easy_1.dat 仅第 0 号图一例，
+  需要不可行证书的 Farkas 形式，`Cert.lean` 当前只支持对偶上界）。
+
 ## 精确模式用法（已验证）
 
 ## 精确模式用法（已验证）
