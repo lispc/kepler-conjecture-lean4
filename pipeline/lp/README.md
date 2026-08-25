@@ -60,6 +60,47 @@ cd ../../lean && lake build Kepler.LP.CertHello Kepler.LP.CertHelloFrac \
 需 ~83 s，说明 >10² 规模必须走 Cert.lean 文件头注释里的分片
 （sharding）/转置预计算路线，试点的 `decide` 直放只适合小案例。
 
+## 分片原型设计（2026-08-25，方案记录 → `Cert.lean` "Sharded checking" 节）
+
+**问题**：`checkDual` 的最贵合取项是列循环 `AᵀY ≥ D·c`——`colDotI` 每列
+重扫全部行支撑，内核工作量 ~ `numVars × nnz` 次归约。真实图试点
+（915 变量 × 3882 行 × 8056 非零，Y 为 ~300 位整数）单块 `decide` 实测
+25304 s（7h）；43,078 个终端 LP 裸跑完全不可行。
+
+**分片粒度选择**：候选有二——(a) 按对偶约束逐列（列循环拆分），
+(b) 按约束行分组。选 **(a) 逐列分片**：成本驱动项就是列循环，列间无
+任何数据依赖，每列工作量 ~O(nnz) 完全均匀；行分组拆的是廉价合取项
+（`wf` 扫描 O(nnz) 与 `bᵀY` 一次性求值），留在 `checkDualBase` 里一次
+`decide` 即可。
+
+**结构**（`Cert.lean` 新增，通用部分只证一次）：
+
+- `checkDualBase lp Y D G` — 除列循环外的一切（D>0、尺寸、wf、Y≥0、bᵀY≤G）；
+- `checkDualCols lp Y D s len` — 列循环限制在 `[s, s+len)`；
+- `checkDualColShards lp Y D n k count` — `&&` 链聚合 count 片（对 count
+  结构递归，内核友好；片 i 覆盖 `[i·k, i·k+min k (n−i·k))`）；
+- `checkDualColShards_correct/sound` + `checkDual_of_shards` — 一次性通用
+  组装：片数覆盖 `numVars ≤ count·k` 时合回 `checkDual = true`。
+
+**生成布局**（`socert.py --shard-cols K`，模块目录 `Kepler/LP/<Mod>/`）：
+
+- `Data.lean`：字面量只**阐明一次**（`lp`/`certY`/`certD`/`certG`），
+  附 `base_check := by decide`；
+- `Cols<i>.lean`：每片一个独立模块一个定理
+  `shard_<i> : checkDualCols lp certY certD s len = true := by decide`——
+  相互无依赖，可任意并行构建，单进程内存有界；
+- `Assembly.lean`：链式组装 `cols_<i+1> := Bool.and_eq_true_iff.mpr
+  ⟨cols_<i>, shard_<i>⟩`（**term 模式，不做内核重算**），`dual_check`
+  经 `checkDual_of_shards`，`bound` 经 `checkDual_sound`，外加 Flyspeck
+  终端条件 `gamma_lt : certG < 12·certD := by decide` 与
+  `bound_lt : cᵀx < 12`。
+
+组装链是 O(片数) 的 elaborator 工作，内核不重新求值任何片；每片内核
+`decide` 只扫 `len` 列 × 全部行支撑。信任基不变（零 sorry、零
+native_decide、零自引入 axiom）。
+
+实测数据与复现命令见"真实图再生试点"小节末尾。
+
 ## 真实图再生试点（2026-08-24，hypermap 204880136538）
 
 从 Flyspeck easy 证书出发，端到端复刻一张真实 tame 图的 LP 上界证明：
@@ -137,6 +178,45 @@ cd ../../lean && lake build Kepler.LP.CertPilot204880136538
 路线**——这是本试点的主要后续工作项，与 Phase 3 试点结论一致。
 socert 生成的小证书（hello/rand 系列，同一代码路径）内核闭合早已验证，
 故路线可行性不受此瓶颈影响：缺的是内核重放的扩展性，不是链路本身。
+
+### 分片原型实测（2026-08-25，hypermap 204880136538，方案见上文"分片原型设计"）
+
+`socert.py --shard-cols 1 --terminal-bound 12` 生成
+`lean/Kepler/LP/Pilot204880136538/`（Data + 915 个单列 Cols 分片 +
+Assembly），`build_shards.py` 进程池并行构建（oleans 写入 lake 规范路径
+`.lake/build/lib/lean/...`——Lean 的 `SearchPath.findWithExt` 按包根
+`Kepler/` 取第一个 LEAN_PATH 条目，独立输出树不可行，这是本机实测
+确认的行为）。结果（全部 `decide` 内核闭合，`#print axioms` 仅
+propext/Classical.choice/Quot.sound，`gamma_lt` 零公理）：
+
+| 阶段 | 内容 | 耗时 |
+|---|---|---|
+| Data | 字面量阐明（830KB）+ `base_check`（wf/尺寸/Y≥0/bᵀY≤G） | 198 s（wall 3m41s，RSS 7.9GB） |
+| 915 列分片 | 单片 = 1 列 × 3882 行支撑扫描 + ~13s 进程启动；无争用采样 **42 s/片**（净 decide ≈ 28 s，与 25304s/915 ≈ 27.7s 吻合）；96 并发满载 med 131 s / max 150 s | **wall 1255 s（21 min）**，sum 117308 s（争用膨胀） |
+| Assembly | 915 个 term 模式链式组装 + `dual_check` + `bound` + `gamma_lt`/`bound_lt` | 65.5 s |
+| **端到端** | Data + 分片 + Assembly | **≈ 1542 s（25.7 min）** |
+
+**相对单块 25304 s（7h02m）加速 ≈ 16.4×**（96 并发且与机器上其他负载
+争用；无争用理论值 ~50×：单片 42 s × 915 / 128 + 固定开销 ≈ 6-8 min）。
+关键性质：每片内存有界（~1.5GB/进程，96 并发峰值 ~150GB/503GB）、
+失败可单片重试（`--only`）、组装不做内核重算。
+
+**对 43,078 终端 LP 的外推**：分片把墙钟压到 ~26 min/LP，但总内核工作量
+不变（O(numVars×nnz) ≈ 7.1 core-h/LP + 915×13s 启动 ≈ 3.3 core-h；k=8
+可把启动开销降到 ~0.4 core-h）。按 7h core/LP 估计：43078 × 7h ≈
+34 core-年，128 核 ≈ **~100 天**——分片单独不足以全量化。出路是
+`Cert.lean` 头注释记录的转置（列主序）证书表示：对偶检查变为 O(nnz)，
+单 LP 内核时间降至 ~30 s 量级（43,078 LP ≈ 1-2 core-天），届时瓶颈转为
+每 LP 的 Data 字面量阐明（~4 min，可分片或优化）。这是下一步主工作项。
+
+复现：
+
+```sh
+python3 socert.py pilot/pilot_204880136538_flat.lp --module Pilot204880136538 \
+  --shard-cols 1 --terminal-bound 12
+cd ../../lean && lake build Kepler.LP.Pilot204880136538.Data
+cd ../pipeline/lp && python3 build_shards.py Pilot204880136538 --procs 96
+```
 
 ### 全量化（19700 图）初步估计
 

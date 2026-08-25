@@ -159,10 +159,29 @@ Tame / Generator / TameEnum。含全部常量表（squanderTarget=15410 等）�
 - plantri v5.5 已编译（`pipeline/graphs/tools/plantri55/`），
   作为独立交叉验证生成器（仅报警用，不入证明）。
 
-## Phase 3 — LP（占位）
+## Phase 3 — LP
 
-VIPR 证书 + 有理数 checker，见 PLAN.md §4。设计待 Phase 3 启动时补充。
+稀疏整数对偶证书路线（VIPR 风格，全程 Int 以适配内核归约）：
+`Kepler/LP/Cert.lean` 定义 `checkDual` 与弱对偶 `checkDual_sound`；
+`pipeline/lp/socert.py` 把 SoPlex 精确模式（`-X/-Y` 有理输出）转换为
+Lean 证书。真实图 204880136538（915 变量 × 3882 行）已端到端闭合。
 
-## Phase 4 — 非线性不等式（占位）
+**分片**（2026-08-25）：`checkDual` 的最贵合取项（列循环 `AᵀY ≥ D·c`）
+按列拆片——`checkDualBase`（其余合取项一次 `decide`）+ `Cols<i>.lean`
+（每片一个独立模块 `by decide`）+ `Assembly.lean`（term 模式链式组装经
+`checkDual_of_shards`，内核不重算）。实测：单块 `decide` 25304 s →
+分片端到端 **≈1542 s（16.4×，96 并发）**，单片内存有界、失败可重试。
+用法见 `pipeline/lp/README.md`。
 
-dReal δ-证迹 / Arb 盒子剖分证书。设计待 Phase 4 启动时补充。
+**全量化外推**：43,078 个终端 LP（19700 easy + 15 hard 图）按 ~7 core-h/LP
+估计 ≈ 34 core-年，分片单独不够；下一步是 `Cert.lean` 头注释记录的
+转置（列主序）证书表示，把对偶检查降为 O(nnz)（目标 ~30 s/LP）。
+
+## Phase 4 — 非线性不等式
+
+区间算术证书路线：`Kepler/Interval/Basic.lean` 定义二进制有理数
+（dyadic `m·2^e`）端点的区间算术 + 表达式 AST（`IExpr`）与
+`checkPos_sound`（盒上 f>0 的雏形）。求解侧工具链已验证：dReal
+4.21.06.2（δ-完备决策）+ MPFR 4.2.2 + FLINT 3.3.1（内置 Arb），
+见 `pipeline/interval/README.md`。下一步：除法/√/超越函数层与
+分支定界证书格式。

@@ -52,19 +52,26 @@
   ## Scaling considerations (kernel `decide` on `Int`)
 
   `Int` ops reduce in the kernel via `Nat` (GMP-accelerated literals), and
-  the checker is a structural fold over the supports, so `decide` cost is
-  linear in the total number of stored coefficients — fine for the pilot
-  cases below. For ~10⁵-row instances the plan is:
-  1. *Sharding*: emit each column constraint (`AᵀY ≥ D·c`), each row
-     evaluation (`A·x ≤ b`) and the final bound as independent `decide`
-     theorems in shard files (the `Kepler.Graphs.CertShards` pattern),
-     then assemble with `checkDual_sound`/`checkPrimal_sound`.
+  the checker is a structural fold over the supports. The dominant cost is
+  the column loop `AᵀY ≥ D·c`: `colDotI` rescans every row's support per
+  column, i.e. ~ `numVars × nnz` kernel reductions (measured 2026-08-24/25:
+  83 s for a 40-var/850-nnz random LP; ~7 h for the 915-var/8056-nnz
+  real-graph pilot `CertPilot204880136538` in one monolithic `decide`).
+  The realized scale-out design (see the "Sharded checking" section):
+  1. *Column sharding*: split `AᵀY ≥ D·c` into shards of `k` columns, each
+     an independent `by decide` theorem in its own module
+     (`checkDualCols`), reassembled once and for all by
+     `checkDual_of_shards`. Data lives in a shared `Data` module so the
+     830 KB of literals is elaborated once, not per shard.
   2. Keep certificates `Int`-valued (this file) — no `Rat` normalization
      anywhere in the checked data path.
   3. Solver hookup: an untrusted script parses the exact rational solver
      output (SoPlex/QSopt_ex VIPR), clears denominators, and prints
      `(numVars, c, A, Y, D, G)` in this sparse `(index, coeff)` format;
-     the Lean side only re-checks.
+     the Lean side only re-checks. (`pipeline/lp/socert.py --shard-cols`.)
+  4. *Future work*: a transposed (column-major) certificate representation
+     would make the dual check `O(nnz)` instead of `O(numVars × nnz)`;
+     it needs a faithfulness proof relating the column lists to `A`.
 
   Downstream wiring: `Kepler.lean` (import), `docs/module-map.md`.
 -/
@@ -361,6 +368,103 @@ theorem checkPrimal_sound (lp : LPI) (x : List Int) (h : checkPrimal lp x = true
     rw [SparseI.dotRat_map_cast]
     exact Int.cast_le.mpr (of_decide_eq_true (hxA r hr))
 
+/-! ## Sharded checking (scale-out of the column loop)
+
+`checkDual`'s expensive conjunct is the column loop `AᵀY ≥ D·c` over
+`List.range lp.numVars`: `colDotI` rescans every row's support per column,
+so the kernel cost is ~ `numVars × nnz` reductions (measured: 7 h for the
+915-var real-graph pilot in one monolithic `decide`). For large LPs we split
+the column loop into shards of `k` columns, each closed by its own kernel
+`decide` in its own module (⇒ parallel builds, bounded per-process memory),
+and reassemble generically — the math below is proved once; per-LP shard
+files contain only literals and `by decide`:
+
+- `checkDualBase` — everything except the column loop;
+- `checkDualCols lp Y D s len` — the column loop over `[s, s + len)`;
+- `checkDualColShards lp Y D n k count` — shards `count-1, …, 0` (shard `i`
+  covers `[i·k, i·k + min k (n - i·k))`), chained by `&&`;
+- `checkDual_of_shards` — reassembly into `checkDual lp Y D G = true`,
+  given coverage `lp.numVars ≤ count * k`.
+
+The checker functions stay structural recursions on the support lists, so
+each shard's `decide` needs no well-founded recursion and reduces fast. -/
+
+/-- Column-constraint check (`AᵀY ≥ D·c`) restricted to `[s, s + len)`. -/
+def checkDualCols (lp : LPI) (Y : List Int) (D : ℕ) (s len : ℕ) : Bool :=
+  (List.range' s len).all (fun j => rleI ((D : Int) * lp.c.get j) (colDotI lp.A Y j))
+
+/-- `checkDual` minus the column conjunct: `D > 0`, sizes, well-formedness,
+`Y ≥ 0`, and the global bound `bᵀY ≤ G`. -/
+def checkDualBase (lp : LPI) (Y : List Int) (D : ℕ) (G : Int) : Bool :=
+  decide (0 < D) &&
+  decide (Y.length = lp.A.length) &&
+  lp.c.wf lp.numVars &&
+  lp.A.all (fun r => r.coeffs.wf lp.numVars) &&
+  Y.all (fun v => rleI 0 v) &&
+  rleI (dotLI (lp.A.map RowI.rhs) Y) G
+
+/-- Aggregation of column shards: `checkDualColShards lp Y D n k count`
+checks shards `0, …, count-1`, shard `i` covering columns
+`[i*k, i*k + min k (n - i*k))`. Structural in `count` (kernel-friendly). -/
+def checkDualColShards (lp : LPI) (Y : List Int) (D : ℕ) (n k : ℕ) : ℕ → Bool
+  | 0 => true
+  | count + 1 =>
+    checkDualColShards lp Y D n k count &&
+      checkDualCols lp Y D (count * k) (min k (n - count * k))
+
+/-- `List.range` splits at `a`: the all-checks distribute over the split. -/
+theorem range_all_split (p : ℕ → Bool) (a l : ℕ) :
+    (List.range (a + l)).all p = ((List.range a).all p && (List.range' a l).all p) := by
+  rw [List.range_eq_range', List.range_eq_range', ← List.range'_append, Nat.zero_add,
+    Nat.one_mul, List.all_append]
+
+/-- Correctness of the shard aggregation: passing `count` shards covers
+columns `[0, min n (count*k))`. -/
+theorem checkDualColShards_correct (lp : LPI) (Y : List Int) (D n k : ℕ) :
+    ∀ count, checkDualColShards lp Y D n k count = true →
+      (List.range (min n (count * k))).all
+        (fun j => rleI ((D : Int) * lp.c.get j) (colDotI lp.A Y j)) = true := by
+  intro count
+  induction count with
+  | zero => intro _; simp
+  | succ c ih =>
+    intro h
+    simp only [checkDualColShards, Bool.and_eq_true] at h
+    obtain ⟨hprev, hshard⟩ := h
+    by_cases hnk : n ≤ c * k
+    · have e1 : min n ((c + 1) * k) = n := by
+        rw [Nat.succ_mul]; exact min_eq_left (le_trans hnk (Nat.le_add_right _ _))
+      rw [e1]
+      have h2 := ih hprev
+      rwa [min_eq_left hnk] at h2
+    · have hnk := Nat.lt_of_not_ge hnk
+      have e2 : min n ((c + 1) * k) = c * k + min k (n - c * k) := by
+        rw [Nat.succ_mul]; omega
+      rw [e2, range_all_split, Bool.and_eq_true]
+      have hp := ih hprev
+      rw [min_eq_right hnk.le] at hp
+      exact ⟨hp, hshard⟩
+
+/-- With coverage `n ≤ count * k`, the shards cover all of `[0, n)`. -/
+theorem checkDualColShards_sound (lp : LPI) (Y : List Int) (D n k count : ℕ)
+    (hcov : n ≤ count * k)
+    (h : checkDualColShards lp Y D n k count = true) :
+    (List.range n).all
+      (fun j => rleI ((D : Int) * lp.c.get j) (colDotI lp.A Y j)) = true := by
+  have h2 := checkDualColShards_correct lp Y D n k count h
+  rwa [min_eq_left hcov] at h2
+
+/-- Reassembly: base checks + column shards give the full `checkDual`. -/
+theorem checkDual_of_shards (lp : LPI) (Y : List Int) (D : ℕ) (G : Int) (k count : ℕ)
+    (hcov : lp.numVars ≤ count * k)
+    (hbase : checkDualBase lp Y D G = true)
+    (hcols : checkDualColShards lp Y D lp.numVars k count = true) :
+    checkDual lp Y D G = true := by
+  simp only [checkDual, checkDualBase, Bool.and_eq_true] at hbase ⊢
+  obtain ⟨⟨⟨⟨⟨hD, hylen⟩, hcwf⟩, hAwf⟩, hY0⟩, hb⟩ := hbase
+  exact ⟨⟨⟨⟨⟨⟨hD, hylen⟩, hcwf⟩, hAwf⟩, hY0⟩,
+    checkDualColShards_sound lp Y D lp.numVars k count hcov hcols⟩, hb⟩
+
 /-! ## Small pilot cases (kernel `decide` only, no `native_decide`)
 
 ### Case 1: max x+y s.t. 2x+y ≤ 4, x+2y ≤ 5 (optimum 3)
@@ -435,5 +539,31 @@ theorem exLP1_bound (x : List Rat) (hxlen : x.length = exLP1.numVars)
     exLP1.c.dotRat x ≤ 5 := by
   have h := checkDual_sound exLP1 [1] 1 5 exLP1_dual_check x hxlen hx0 hxA
   rwa [show ((5 : Int) : Rat) / ((1 : ℕ) : Rat) = 5 by norm_num] at h
+
+/-! ### Case 3: the sharded path on `exLP` (same certificate, k = 1, 2 shards)
+
+Locks the sharded-checking API used by `socert.py --shard-cols`: base checks
+and the shard chain are closed independently, then reassembled by
+`checkDual_of_shards`; the shard chain links are term-mode (`Bool.and_eq_true_iff.mpr`)
+so assembly is O(#shards), not a kernel re-evaluation. -/
+
+theorem exLP_base_check : checkDualBase exLP [1, 1] 3 9 = true := by decide
+
+/-- Shard 0: column 0 (`AᵀY ≥ 3·c` restricted to `[0, 1)`). -/
+theorem exLP_shard_0 : checkDualCols exLP [1, 1] 3 0 1 = true := by decide
+
+/-- Shard 1: column 1. -/
+theorem exLP_shard_1 : checkDualCols exLP [1, 1] 3 1 1 = true := by decide
+
+theorem exLP_cols_0 : checkDualColShards exLP [1, 1] 3 2 1 0 = true := rfl
+
+theorem exLP_cols_1 : checkDualColShards exLP [1, 1] 3 2 1 (0 + 1) = true :=
+  Bool.and_eq_true_iff.mpr ⟨exLP_cols_0, exLP_shard_0⟩
+
+theorem exLP_cols_2 : checkDualColShards exLP [1, 1] 3 2 1 (1 + 1) = true :=
+  Bool.and_eq_true_iff.mpr ⟨exLP_cols_1, exLP_shard_1⟩
+
+theorem exLP_dual_check_sharded : checkDual exLP [1, 1] 3 9 = true :=
+  checkDual_of_shards exLP [1, 1] 3 9 1 2 (by decide) exLP_base_check exLP_cols_2
 
 end Kepler.LP

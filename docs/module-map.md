@@ -40,7 +40,7 @@ Volume（体积、楔、立体角测度） ← Trig（三角、方位角）
 | 8 Tame Hypermap | `tame/` | Phase 2 已覆盖图侧；`Kepler/Text/TameHypermap.lean`（hypermap 版 tame + 与 fgraph 桥接） | 🟡 图枚举链进行中（见下） |
 | 9 组装（Final Conclusion） | `general/the_kepler_conjecture.hl` | `Kepler/Text/Assembly.lean` | ⬜ 未开始 |
 | 非线性不等式 | `nonlinear/` | Phase 4（`Kepler/Interval/`：`Basic` 二进制有理数端点区间算术 + `checkPos` soundness） | 🟡 区间 checker 试点进行中（Kepler/Interval） |
-| LP | `formal_lp/` | Phase 3（`Kepler/LP/`：`HelloChecker` 占位 + `Cert` 稀疏整数化对偶/原始证书 checker） | 🟡 VIPR 风格 checker 试点进行中 |
+| LP | `formal_lp/` | Phase 3（`Kepler/LP/`：`Cert` 稀疏整数对偶证书 checker + 逐列分片 `checkDualColShards`；`Pilot204880136538/` 真实图 915 片端到端闭合） | 🟡 真实图试点已闭合；全量化待转置证书表示（见 architecture.md Phase 3） |
 
 ## Phase 2 引理移植进度（tame 图枚举完备性，AFP Flyspeck-Tame 对照）
 
