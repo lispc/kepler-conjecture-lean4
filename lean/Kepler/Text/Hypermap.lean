@@ -308,6 +308,58 @@ Coverage (block 9, the combinatorial Jordan curve theorem):
   - the `support ≠ darts` case closes via
     `isMoebiusContour_edgeWalkup_of_not_mem_support` + the induction.
 
+Coverage (block 10, loop theory and `iso` prerequisites, 6699–7757):
+- `loop` type (6699, as `structure Loop`: dart `Finset` + cyclic permutation
+  filling it) and its API: `invMap`/`card`/`preCard` (6715–6723),
+  `is_loop` (6726, as `Loop.IsLoopOf`), `path_of_loop` (6730, as
+  `Loop.pathOf`), `lemma_transitive_permutation` (6775, as
+  `Loop.eq_orbitMap_of_mem`), `lemma_card_dart_of_loop` (6785, as
+  `Loop.card_pos`), `lemma_order_loop_map` (6802, as `Loop.pow_card_eq_one`),
+  `lemma_congruence_on_loop` (6816, as `Loop.congruence`), inverse/fix
+  lemmas (6824–6864), `lemma_loop_map_power_representation` (6871, as
+  `Loop.exists_pow_apply`), `loop_index` (6889, as `Loop.index` via
+  `Classical.choose`) + `determine_loop_index` (6917), membership lemmas
+  (6892–6913), `support_loop_sub_dart` (6931, as
+  `Loop.darts_subset_of_isLoopOf`), `lemma_loop_contour` (6953, as
+  `Loop.isContour_pathOf`), `lemma_inj_path_of_loop` (6964, as
+  `Loop.injOrbit_iff_le_preCard`), `let_order_for_loop` (6984, as
+  `Loop.isInjContour_pathOf`).
+- samsara (7003–7232): `lemma_list_loop_map`/`samsara` (7003/7019) are
+  implemented directly as `Loop.samsara` (with `samsaraInv`/`samsaraPerm`),
+  bypassing HOL's SKOLEM `new_specification`; `samsara_formula` (7021, as
+  `Loop.samsara_apply`), `evaluation_samsara` (7033, as
+  `Loop.samsara_apply_last`/`samsara_apply_of_lt`), `lemma_suc_mod` (7124)
+  inlined into `lemma_from_index` (7133, as `Loop.from_index` + mirrored
+  `Loop.from_index'`), `lemma_permutes_via_surjetive` (7048) bypassed by the
+  direct two-sided inverse construction, `lemma_samsara_permute` (7141, as
+  `Loop.samsaraPerm_permutes`), `lemma_samsara_power` (7163, as
+  `Loop.samsaraPerm_pow_apply`), `lemma_generate_loop` (7181, as
+  `Loop.ofPath`), `lemma_make_contour_loop` (7197, as
+  `Loop.isLoopOf_ofPath`), `lemma_dart_loop_via_path` (7217, as
+  `Loop.darts_eq_pathSupport_pathOf`), `lemma_in_dart_of_loop` (7227, as
+  `Loop.mem_darts_iff_mem_pathSupport`).
+- `lemmaILTXRQD` (7235, as `Hypermap.first_last_step_exclusive`: for a loop
+  `L` and an injective contour of length `k ≥ 2` touching `L` only at its
+  endpoints, with no Moebius contours, a node-first step forbids a
+  face-last step and vice versa; both branches build a Moebius contour via
+  `concatenate_two_contours`).
+- face/node loop facts (7465–7555): `inj_orbit_imp_inj_face_contour`
+  (as `isInjContour_faceContour_of_injOrbit`), `lemma_inj_face_contour`,
+  `lemma_face_cycle` (`pow_card_face_apply_self`),
+  `lemma_orbit_inverse_map_eq` (7483, as `PermutesOn.orbitMap_symm`),
+  `inj_orbit_imp_inj_node_contour`, `lemma_inj_node_contour`,
+  `lemma_node_cycle` (`pow_card_node_apply_self`), `lemma_node_inverse_cycle`
+  (`pow_card_node_symm_apply_self`), `lemma_node_contour_connection`
+  (`nodeContour_connection`), `lemma_via_inverse_node_map`
+  (`exists_pow_nodeMap_symm_apply_of_mem_node`).
+- `lemmaICJHAOQ` (7557, as
+  `Hypermap.not_exists_face_step_contour_meeting_node`): no contour of
+  length ≥ 1 leaves a loop with a face step, ends on a different node, and
+  meets the loop again on that node (Moebius-free hypermaps). Both `num_WOP`
+  minimal-index choices are `Nat.find`; the final step applies
+  `first_last_step_exclusive` directly instead of re-deriving a Moebius
+  contour.
+
 Type correspondences (HOL Light ↦ Lean 4):
 - `(A)hypermap` (a 4-tuple carrying `FINITE`/`permutes` side conditions,
   `hypermap.hl`:83–93) ↦ `structure Hypermap` with a `Finset` of darts and
@@ -5389,6 +5441,801 @@ theorem not_exists_isMoebiusContour_of_planar {α : Type*} [DecidableEq α]
           omega
         exact ihn (H.edgeWalkup a) hcard' hplanar' ⟨p, k, hmoe'⟩
   exact key H.darts.card H le_rfl hplanar
+
+end Hypermap
+
+/-! ## Loop 理论（`hypermap.hl`:6699–6964） -/
+
+/-- `hypermap.hl`:6699–6724 `loop` 类型：dart 集合 + 充满它的循环置换。
+（HOL 用 `new_type_definition` 包装二元组；我们直接用 structure。） -/
+structure Loop (α : Type*) [DecidableEq α] where
+  /-- dart 集合（`dart_of_loop`）。 -/
+  darts : Finset α
+  /-- 环映射（`loop_map`）。 -/
+  map : Equiv.Perm α
+  /-- `loop_lemma` 的 `permutes` 合取项。 -/
+  map_permutes : PermutesOn map darts
+  /-- 循环性：存在基点其轨道充满整个环（`orbit_map (SND L) x = FST L`）。 -/
+  cyclic : ∃ x ∈ darts, orbitMap map x = ↑darts
+
+namespace Loop
+
+variable {α : Type*} [DecidableEq α] {L : Loop α} {x y : α}
+
+/-- `hypermap.hl`:6715 `inv_loop_map`。 -/
+def invMap (L : Loop α) : Equiv.Perm α := L.map.symm
+
+/-- `hypermap.hl`:6720 `card_dart_of_loop`。 -/
+def card (L : Loop α) : ℕ := L.darts.card
+
+/-- `hypermap.hl`:6723 `pre_card_dart_of_loop`。 -/
+def preCard (L : Loop α) : ℕ := L.darts.card - 1
+
+/-- `hypermap.hl`:6726 `is_loop`。 -/
+def IsLoopOf (H : Hypermap α) (L : Loop α) : Prop :=
+  ∀ x ∈ L.darts, H.oneStepContour x (L.map x)
+
+/-- `hypermap.hl`:6730 `path_of_loop`。 -/
+def pathOf (L : Loop α) (x : α) (k : ℕ) : α := (L.map ^ k) x
+
+/-- `hypermap.hl`:6775 `lemma_transitive_permutation`。 -/
+theorem eq_orbitMap_of_mem (L : Loop α) (hx : x ∈ L.darts) :
+    ↑L.darts = orbitMap L.map x := by
+  obtain ⟨y, hy, hyorb⟩ := L.cyclic
+  have h1 : x ∈ orbitMap L.map y := by
+    rw [hyorb]; exact Finset.mem_coe.mp hx
+  rw [← hyorb]
+  exact (orbitMap_eq_of_mem L.map_permutes h1).symm
+
+/-- `hypermap.hl`:6785 `lemma_card_dart_of_loop`。 -/
+theorem card_pos (L : Loop α) :
+    L.darts ≠ ∅ ∧ 0 < L.card ∧ L.card = L.preCard + 1 := by
+  obtain ⟨y, hy, -⟩ := L.cyclic
+  have hne : L.darts.Nonempty := ⟨y, hy⟩
+  have hc : 0 < L.darts.card := Finset.card_pos.mpr hne
+  refine ⟨Finset.nonempty_iff_ne_empty.mp hne, hc, ?_⟩
+  show L.darts.card = L.darts.card - 1 + 1
+  omega
+
+/-- `hypermap.hl`:6802 `lemma_order_loop_map`。 -/
+theorem pow_card_eq_one (L : Loop α) : L.map ^ L.card = 1 := by
+  ext x
+  rw [Equiv.Perm.one_apply]
+  by_cases hx : x ∈ L.darts
+  · have h1 : ↑L.darts = orbitMap L.map x := L.eq_orbitMap_of_mem hx
+    have h2 := L.map_permutes.pow_ncard_orbitMap_apply_self x
+    rw [← h1, Set.ncard_coe_finset] at h2
+    exact h2
+  · exact L.map_permutes.pow L.card x hx
+
+/-- `hypermap.hl`:6816 `lemma_congruence_on_loop`。 -/
+theorem congruence (L : Loop α) (hx : x ∈ L.darts) {n m : ℕ}
+    (hn : n ≤ L.preCard) (h : (L.map ^ n) x = (L.map ^ m) x) :
+    ∃ q : ℕ, m = q * L.card + n := by
+  have h1 : ↑L.darts = orbitMap L.map x := L.eq_orbitMap_of_mem hx
+  have hnc : (orbitMap L.map x).ncard = L.darts.card := by
+    rw [← h1, Set.ncard_coe_finset]
+  have hc : 0 < L.darts.card := L.card_pos.2.1
+  have hn' : n < (orbitMap L.map x).ncard := by
+    rw [hnc]
+    have hn2 : n ≤ L.darts.card - 1 := hn
+    omega
+  obtain ⟨q, hq⟩ := L.map_permutes.exists_mul_ncard_add_of_pow_eq hn' h
+  rw [hnc] at hq
+  exact ⟨q, hq⟩
+
+/-- `hypermap.hl`:6824 `lemma_inv_loop_map_and_loop_map_outside_loop`。 -/
+theorem fix_of_not_mem (L : Loop α) (hx : x ∉ L.darts) :
+    L.invMap x = x ∧ L.map x = x :=
+  ⟨L.map_permutes.symm x hx, L.map_permutes x hx⟩
+
+/-- `hypermap.hl`:6836 `lemma_power_inv_loop_map_and_loop_map_outside_loop`。 -/
+theorem pow_fix_of_not_mem (L : Loop α) (hx : x ∉ L.darts) (m : ℕ) :
+    (L.invMap ^ m) x = x ∧ (L.map ^ m) x = x :=
+  ⟨L.map_permutes.symm.pow m x hx, L.map_permutes.pow m x hx⟩
+
+/-- `hypermap.hl`:6845 `lemma_inverse_on_loop`。 -/
+theorem inverse_on_loop (L : Loop α) :
+    L.map = L.invMap⁻¹ ∧ L.invMap = L.map⁻¹ := ⟨Equiv.symm_symm _, rfl⟩
+
+/-- `hypermap.hl`:6852 `lemma_inverse_evaluation`。 -/
+theorem inverse_evaluation (L : Loop α) (x : α) :
+    L.invMap (L.map x) = x ∧ L.map (L.invMap x) = x :=
+  ⟨Equiv.symm_apply_apply _ _, Equiv.apply_symm_apply _ _⟩
+
+/-- `hypermap.hl`:6857 `lemma_second_inverse_on_loop`。 -/
+theorem pow_inverse_on_loop (L : Loop α) (m : ℕ) :
+    L.map ^ m = (L.invMap ^ m)⁻¹ ∧ L.invMap ^ m = (L.map ^ m)⁻¹ := by
+  rw [show L.invMap = L.map⁻¹ from rfl, ← inv_pow, ← inv_pow, inv_inv]
+  exact ⟨rfl, rfl⟩
+
+/-- `hypermap.hl`:6864 `lemma_second_inverse_evaluation`。 -/
+theorem pow_inverse_evaluation (L : Loop α) (x : α) (m : ℕ) :
+    (L.map ^ m) ((L.invMap ^ m) x) = x ∧ (L.invMap ^ m) ((L.map ^ m) x) = x := by
+  have h1 : L.map ^ m = (L.invMap ^ m)⁻¹ := (L.pow_inverse_on_loop m).1
+  have h2 : L.invMap ^ m = (L.map ^ m)⁻¹ := (L.pow_inverse_on_loop m).2
+  constructor
+  · rw [h1]; exact Equiv.symm_apply_apply _ _
+  · rw [h2]; exact Equiv.symm_apply_apply _ _
+
+/-- `hypermap.hl`:6871 `lemma_loop_map_power_representation`。 -/
+theorem exists_pow_apply (L : Loop α) (hx : x ∈ L.darts) (hy : y ∈ L.darts) :
+    ∃ k : ℕ, k ≤ L.preCard ∧ y = (L.map ^ k) x := by
+  have h1 : ↑L.darts = orbitMap L.map x := L.eq_orbitMap_of_mem hx
+  have hmem : y ∈ orbitMap L.map x := h1 ▸ Finset.mem_coe.mp hy
+  have hpos : 0 < (orbitMap L.map x).ncard := by
+    rw [← h1, Set.ncard_coe_finset]
+    exact L.card_pos.2.1
+  have hcard : (orbitMap L.map x).ncard = L.darts.card := by
+    rw [← h1, Set.ncard_coe_finset]
+  rw [orbit_cyclic L.map hpos.ne' (L.map_permutes.pow_ncard_orbitMap_apply_self x)] at hmem
+  obtain ⟨k, hk, hkeq⟩ := hmem
+  refine ⟨k, ?_, hkeq.symm⟩
+  have hk' : k < L.darts.card := by
+    have := Finset.mem_range.mp hk
+    omega
+  have hc : 0 < L.darts.card := L.card_pos.2.1
+  show k ≤ L.darts.card - 1
+  omega
+
+/-- `hypermap.hl`:6889 `loop_index`（经 `Classical.choose` 实现 `new_specification`）。 -/
+noncomputable def index (L : Loop α) (x y : α) : ℕ :=
+  if h : x ∈ L.darts ∧ y ∈ L.darts then Classical.choose (L.exists_pow_apply h.1 h.2) else 0
+
+/-- `loop_index` 的规范（`lemma_loop_index` 的 specification 部分）。 -/
+theorem index_spec (L : Loop α) (hx : x ∈ L.darts) (hy : y ∈ L.darts) :
+    L.index x y ≤ L.preCard ∧ y = (L.map ^ L.index x y) x := by
+  unfold index
+  rw [dif_pos ⟨hx, hy⟩]
+  exact Classical.choose_spec (L.exists_pow_apply hx hy)
+
+/-- `hypermap.hl`:6917 `determine_loop_index`。 -/
+theorem index_eq_of_pow_apply (L : Loop α) (hx : x ∈ L.darts) {k : ℕ}
+    (hk : k ≤ L.preCard) (h : y = (L.map ^ k) x) : L.index x y = k := by
+  by_cases hy : y ∈ L.darts
+  · have hmspec := L.index_spec hx hy
+    -- `index ≤ preCard ∧ y = (map^index) x`；幂相等 ⟹ 下标相等（injOrbit）
+    have hinj : injOrbit L.map x L.preCard := by
+      apply L.map_permutes.injOrbit_of_lt_ncard
+      rw [← L.eq_orbitMap_of_mem hx, Set.ncard_coe_finset]
+      have hc : 0 < L.darts.card := L.card_pos.2.1
+      show L.darts.card - 1 < L.darts.card
+      omega
+    rw [injOrbit_iff_pairwise] at hinj
+    have heq : (L.map ^ L.index x y) x = (L.map ^ k) x := by
+      rw [← hmspec.2, h]
+    exact hinj _ _ hmspec.1 hk heq
+  · -- y ∉ darts 与 spec 矛盾
+    exfalso
+    exact hy (h.symm ▸ L.map_permutes.pow_apply_mem k hx)
+
+/-- `hypermap.hl`:6892 `lemma_power_loop_map_in_loop`。 -/
+theorem pow_map_mem (L : Loop α) (hx : x ∈ L.darts) (k : ℕ) :
+    (L.map ^ k) x ∈ L.darts := L.map_permutes.pow_apply_mem k hx
+
+/-- `hypermap.hl`:6899 `lemma_in_dart_of_loop_loop`。 -/
+theorem mem_iff_exists_pow (L : Loop α) (hx : x ∈ L.darts) (y : α) :
+    y ∈ L.darts ↔ ∃ i ≤ L.preCard, y = (L.map ^ i) x := by
+  constructor
+  · exact L.exists_pow_apply hx
+  · rintro ⟨i, -, rfl⟩
+    exact L.pow_map_mem hx i
+
+/-- `hypermap.hl`:6902 `lemma_loop_map_in_loop`。 -/
+theorem map_mem (L : Loop α) (hx : x ∈ L.darts) : L.map x ∈ L.darts := by
+  have h := L.pow_map_mem hx 1
+  rwa [pow_one] at h
+
+/-- `hypermap.hl`:6906/6913 `lemma_(power_)inv_loop_map_in_loop`。 -/
+theorem pow_invMap_mem (L : Loop α) (hx : x ∈ L.darts) (k : ℕ) :
+    (L.invMap ^ k) x ∈ L.darts := L.map_permutes.symm.pow_apply_mem k hx
+
+theorem invMap_mem (L : Loop α) (hx : x ∈ L.darts) : L.invMap x ∈ L.darts := by
+  have h := L.pow_invMap_mem hx 1
+  rwa [pow_one] at h
+
+/-- `hypermap.hl`:6931 `support_loop_sub_dart`。 -/
+theorem darts_subset_of_isLoopOf {H : Hypermap α} {L : Loop α}
+    (hloop : IsLoopOf H L) (hxH : x ∈ H.darts) (hxL : x ∈ L.darts) :
+    L.darts ⊆ H.darts := by
+  intro y hy
+  obtain ⟨k, -, rfl⟩ := (L.mem_iff_exists_pow hxL y).mp hy
+  induction k with
+  | zero => simpa using hxH
+  | succ k ih =>
+    rw [pow_succ', Equiv.Perm.mul_apply]
+    have hmem : (L.map ^ k) x ∈ L.darts := L.pow_map_mem hxL k
+    rcases hloop _ hmem with h | h
+    · rw [h]; exact H.faceMap_apply_mem (ih hmem)
+    · rw [h]; exact H.nodeMap_symm_apply_mem (ih hmem)
+
+/-- `hypermap.hl`:6953 `lemma_loop_contour`。 -/
+theorem isContour_pathOf {H : Hypermap α} {L : Loop α} (hloop : IsLoopOf H L)
+    (hx : x ∈ L.darts) (n : ℕ) : H.isContour (L.pathOf x) n := by
+  rw [H.isContour_iff]
+  intro i hi
+  show H.oneStepContour ((L.map ^ i) x) ((L.map ^ (i + 1)) x)
+  rw [pow_succ', Equiv.Perm.mul_apply]
+  exact hloop _ (L.pow_map_mem hx i)
+
+end Loop
+
+/-! ## samsara：由路径生成环（`hypermap.hl`:6964–7232） -/
+
+namespace Loop
+
+variable {α : Type*} [DecidableEq α] {L : Loop α} {x y : α}
+
+/-- `hypermap.hl`:6964 `lemma_inj_path_of_loop`。 -/
+theorem injOrbit_iff_le_preCard (L : Loop α) (hx : x ∈ L.darts) (n : ℕ) :
+    n ≤ L.preCard ↔ injOrbit L.map x n := by
+  have h1 : ↑L.darts = orbitMap L.map x := L.eq_orbitMap_of_mem hx
+  have hnc : (orbitMap L.map x).ncard = L.darts.card := by
+    rw [← h1, Set.ncard_coe_finset]
+  have hc : 0 < L.darts.card := L.card_pos.2.1
+  constructor
+  · intro hn
+    apply L.map_permutes.injOrbit_of_lt_ncard
+    rw [hnc]
+    have hn2 : n ≤ L.darts.card - 1 := hn
+    omega
+  · intro hinj
+    by_contra hn
+    rw [injOrbit_iff] at hinj
+    have hnl : L.darts.card ≤ n := by
+      have hpre : L.preCard = L.darts.card - 1 := rfl
+      omega
+    have hne : (L.map ^ L.darts.card) x ≠ (L.map ^ 0) x := hinj _ _ hnl (by omega)
+    have hfix : (L.map ^ L.darts.card) x = x := by
+      rw [show L.darts.card = L.card from rfl, L.pow_card_eq_one, Equiv.Perm.one_apply]
+    rw [hfix, pow_zero, Equiv.Perm.one_apply] at hne
+    exact hne rfl
+
+/-- `hypermap.hl`:6984 `let_order_for_loop`。 -/
+theorem isInjContour_pathOf {H : Hypermap α} {L : Loop α} (hloop : IsLoopOf H L)
+    (hx : x ∈ L.darts) :
+    H.isInjContour (L.pathOf x) L.preCard ∧
+    H.oneStepContour (L.pathOf x L.preCard) (L.pathOf x 0) := by
+  refine ⟨?_, ?_⟩
+  · rw [H.isInjContour_iff]
+    refine ⟨isContour_pathOf hloop hx L.preCard, ?_⟩
+    have hinj : injOrbit L.map x L.preCard :=
+      (L.injOrbit_iff_le_preCard hx L.preCard).mp le_rfl
+    rw [injOrbit_iff] at hinj
+    intro i j hi hj
+    exact (hinj i j hi hj).symm
+  · have hmem : (L.map ^ L.preCard) x ∈ L.darts := L.pow_map_mem hx L.preCard
+    have hstep := hloop _ hmem
+    have hfix : L.map ((L.map ^ L.preCard) x) = x := by
+      have h1 : (L.map ^ (L.preCard + 1)) x = x := by
+        rw [(L.card_pos.2.2).symm, L.pow_card_eq_one, Equiv.Perm.one_apply]
+      rw [pow_succ', Equiv.Perm.mul_apply] at h1
+      exact h1
+    have h0 : L.pathOf x 0 = x := by
+      show ((L.map : Equiv.Perm α) ^ 0) x = x
+      rw [pow_zero, Equiv.Perm.one_apply]
+    rw [hfix] at hstep
+    rw [h0]
+    exact hstep
+
+/-- `is_inj_list`（直接成对定义，对应 `lemma_inj_list2` 的展开形式）。 -/
+def IsInjList (p : ℕ → α) (n : ℕ) : Prop :=
+  ∀ i j : ℕ, i ≤ n → j ≤ n → p i = p j → i = j
+
+/-- `support_of_sequence` 的 Finset 版。 -/
+def pathSupport (p : ℕ → α) (n : ℕ) : Finset α := (Finset.range (n + 1)).image p
+
+/-- `hypermap.hl`:`lemma_in_support_of_sequence` 的 Finset 版。 -/
+theorem mem_pathSupport {p : ℕ → α} {n : ℕ} {y : α} :
+    y ∈ pathSupport p n ↔ ∃ j ≤ n, p j = y := by
+  rw [pathSupport, Finset.mem_image]
+  constructor
+  · rintro ⟨j, hj, rfl⟩
+    exact ⟨j, Nat.lt_succ_iff.mp (Finset.mem_range.mp hj), rfl⟩
+  · rintro ⟨j, hj, rfl⟩
+    exact ⟨j, Finset.mem_range.mpr (Nat.lt_succ_iff.mpr hj), rfl⟩
+
+/-- `hypermap.hl`:7019 `samsara`（`new_specification` 的显式实现）：
+把路径点 `p j` 送到 `p ((j+1) % (n+1))`，其余点不动。 -/
+def samsara (p : ℕ → α) (n : ℕ) (y : α) : α :=
+  if h : y ∈ pathSupport p n then p ((Nat.find (mem_pathSupport.mp h) + 1) % (n + 1)) else y
+
+/-- `samsara` 的逆映射：把 `p j` 送到 `p ((j+n) % (n+1))`。 -/
+def samsaraInv (p : ℕ → α) (n : ℕ) (y : α) : α :=
+  if h : y ∈ pathSupport p n then p ((Nat.find (mem_pathSupport.mp h) + n) % (n + 1)) else y
+
+/-- `hypermap.hl`:7021 `samsara_formula`。 -/
+theorem samsara_apply (p : ℕ → α) (n : ℕ) (hinj : IsInjList p n) {j : ℕ} (hj : j ≤ n) :
+    samsara p n (p j) = p ((j + 1) % (n + 1)) := by
+  have h : p j ∈ pathSupport p n := mem_pathSupport.mpr ⟨j, hj, rfl⟩
+  unfold samsara
+  rw [dif_pos h]
+  have hspec := Nat.find_spec (mem_pathSupport.mp h)
+  have hfi : Nat.find (mem_pathSupport.mp h) = j := hinj _ _ hspec.1 hj hspec.2
+  rw [hfi]
+
+/-- `samsaraInv` 的对应公式。 -/
+theorem samsaraInv_apply (p : ℕ → α) (n : ℕ) (hinj : IsInjList p n) {j : ℕ} (hj : j ≤ n) :
+    samsaraInv p n (p j) = p ((j + n) % (n + 1)) := by
+  have h : p j ∈ pathSupport p n := mem_pathSupport.mpr ⟨j, hj, rfl⟩
+  unfold samsaraInv
+  rw [dif_pos h]
+  have hspec := Nat.find_spec (mem_pathSupport.mp h)
+  have hfi : Nat.find (mem_pathSupport.mp h) = j := hinj _ _ hspec.1 hj hspec.2
+  rw [hfi]
+
+/-- `hypermap.hl`:7033 `evaluation_samsara` 的第一部分。 -/
+theorem samsara_apply_last (p : ℕ → α) (n : ℕ) (hinj : IsInjList p n) :
+    samsara p n (p n) = p 0 := by
+  rw [samsara_apply p n hinj le_rfl, Nat.mod_self]
+
+/-- `evaluation_samsara` 的第二部分。 -/
+theorem samsara_apply_of_lt (p : ℕ → α) (n : ℕ) (hinj : IsInjList p n) {j : ℕ}
+    (hj : j < n) : samsara p n (p j) = p (j + 1) := by
+  rw [samsara_apply p n hinj (by omega), Nat.mod_eq_of_lt (by omega : j + 1 < n + 1)]
+
+/-- `hypermap.hl`:7133 `lemma_from_index`。 -/
+theorem from_index {n j : ℕ} (hj : j ≤ n) : ((j + n) % (n + 1) + 1) % (n + 1) = j := by
+  rcases Nat.eq_zero_or_pos j with rfl | hj0
+  · rw [Nat.zero_add, Nat.mod_eq_of_lt (Nat.lt_succ_self n)]
+    exact Nat.mod_self _
+  · rw [show j + n = (j - 1) + (n + 1) by omega, Nat.add_mod_right,
+      Nat.mod_eq_of_lt (by omega : j - 1 < n + 1), show j - 1 + 1 = j by omega,
+      Nat.mod_eq_of_lt (by omega : j < n + 1)]
+
+/-- `lemma_from_index` 的镜像（`samsara` 左逆方向的指标恒等式）。 -/
+theorem from_index' {n j : ℕ} (hj : j ≤ n) : ((j + 1) % (n + 1) + n) % (n + 1) = j := by
+  rcases eq_or_lt_of_le hj with h | hlt
+  · rw [h, Nat.mod_self, Nat.zero_add, Nat.mod_eq_of_lt (Nat.lt_succ_self n)]
+  · rw [Nat.mod_eq_of_lt (by omega : j + 1 < n + 1),
+      show j + 1 + n = j + (n + 1) by omega, Nat.add_mod_right,
+      Nat.mod_eq_of_lt (by omega : j < n + 1)]
+
+/-- `samsara` 与 `samsaraInv` 互逆，升级成置换（`lemma_samsara_permute` 的核心）。 -/
+noncomputable def samsaraPerm {p : ℕ → α} {n : ℕ} (hinj : IsInjList p n) : Equiv.Perm α where
+  toFun := samsara p n
+  invFun := samsaraInv p n
+  left_inv y := by
+    by_cases h : y ∈ pathSupport p n
+    · obtain ⟨i, hi, rfl⟩ := mem_pathSupport.mp h
+      rw [samsara_apply p n hinj hi,
+        samsaraInv_apply p n hinj (Nat.lt_succ_iff.mp (Nat.mod_lt _ (Nat.succ_pos n)))]
+      congr 1
+      exact from_index' hi
+    · have h1 : samsara p n y = y := by unfold samsara; rw [dif_neg h]
+      rw [h1]
+      unfold samsaraInv
+      rw [dif_neg h]
+  right_inv y := by
+    by_cases h : y ∈ pathSupport p n
+    · obtain ⟨i, hi, rfl⟩ := mem_pathSupport.mp h
+      rw [samsaraInv_apply p n hinj hi,
+        samsara_apply p n hinj (Nat.lt_succ_iff.mp (Nat.mod_lt _ (Nat.succ_pos n)))]
+      congr 1
+      exact from_index hi
+    · have h1 : samsaraInv p n y = y := by unfold samsaraInv; rw [dif_neg h]
+      rw [h1]
+      unfold samsara
+      rw [dif_neg h]
+
+/-- `samsaraPerm` 的求值（`samsara_apply` 的置换形式）。 -/
+theorem samsaraPerm_apply {p : ℕ → α} {n : ℕ} (hinj : IsInjList p n) {j : ℕ} (hj : j ≤ n) :
+    (samsaraPerm hinj) (p j) = p ((j + 1) % (n + 1)) := samsara_apply p n hinj hj
+
+/-- `hypermap.hl`:7141 `lemma_samsara_permute`（置换版本只需"集合外不动"）。 -/
+theorem samsaraPerm_permutes {p : ℕ → α} {n : ℕ} (hinj : IsInjList p n) :
+    PermutesOn (samsaraPerm hinj) (pathSupport p n) := by
+  intro y hy
+  show samsara p n y = y
+  unfold samsara
+  rw [dif_neg hy]
+
+/-- `hypermap.hl`:7163 `lemma_samsara_power`。 -/
+theorem samsaraPerm_pow_apply (p : ℕ → α) (n : ℕ) (hinj : IsInjList p n) :
+    ((samsaraPerm hinj) ^ (n + 1)) (p 0) = p 0 ∧
+    ∀ j ≤ n, ((samsaraPerm hinj) ^ j) (p 0) = p j := by
+  have key : ∀ j ≤ n, ((samsaraPerm hinj) ^ j) (p 0) = p j := by
+    intro j
+    induction j with
+    | zero => intro _; rw [pow_zero, Equiv.Perm.one_apply]
+    | succ k ih =>
+      intro hkn
+      rw [pow_succ', Equiv.Perm.mul_apply, ih (by omega)]
+      show samsara p n (p k) = p (k + 1)
+      exact samsara_apply_of_lt p n hinj (by omega)
+  refine ⟨?_, key⟩
+  rw [pow_succ', Equiv.Perm.mul_apply, key n le_rfl]
+  show samsara p n (p n) = p 0
+  exact samsara_apply_last p n hinj
+
+/-- `hypermap.hl`:7181 `lemma_generate_loop`：由单射路径构造 `Loop`。 -/
+noncomputable def ofPath (p : ℕ → α) (n : ℕ) (hinj : IsInjList p n) : Loop α where
+  darts := pathSupport p n
+  map := samsaraPerm hinj
+  map_permutes := samsaraPerm_permutes hinj
+  cyclic := by
+    refine ⟨p 0, ?_, ?_⟩
+    · rw [mem_pathSupport]; exact ⟨0, Nat.zero_le _, rfl⟩
+    · rw [orbit_cyclic _ (Nat.succ_ne_zero n) (samsaraPerm_pow_apply p n hinj).1,
+        pathSupport, Finset.coe_image]
+      apply Set.image_congr
+      intro k hk
+      have hk' : k ≤ n := Nat.lt_succ_iff.mp (Finset.mem_range.mp (Finset.mem_coe.mp hk))
+      exact (samsaraPerm_pow_apply p n hinj).2 k hk'
+
+/-- `hypermap.hl`:7197 `lemma_make_contour_loop`。 -/
+theorem isLoopOf_ofPath {H : Hypermap α} {p : ℕ → α} {n : ℕ}
+    (hinj : H.isInjContour p n) (hclose : H.oneStepContour (p n) (p 0)) :
+    IsLoopOf H (ofPath p n (H.isInjContour_pairwise hinj)) := by
+  intro y hy
+  obtain ⟨j, hj, rfl⟩ := mem_pathSupport.mp hy
+  have hpw : IsInjList p n := H.isInjContour_pairwise hinj
+  show H.oneStepContour (p j) (samsara p n (p j))
+  rcases eq_or_lt_of_le hj with h | hlt
+  · rw [h, samsara_apply_last p n hpw]
+    exact hclose
+  · rw [samsara_apply_of_lt p n hpw hlt]
+    have hcont : H.isContour p n := ((H.isInjContour_iff p n).mp hinj).1
+    exact (H.isContour_iff p n).mp hcont j hlt
+
+/-- `hypermap.hl`:7217 `lemma_dart_loop_via_path`。 -/
+theorem darts_eq_pathSupport_pathOf (L : Loop α) (hx : x ∈ L.darts) :
+    L.darts = pathSupport (L.pathOf x) L.preCard := by
+  have hfix : (L.map ^ (L.preCard + 1)) x = x := by
+    rw [(L.card_pos.2.2).symm, L.pow_card_eq_one, Equiv.Perm.one_apply]
+  apply Finset.coe_inj.mp
+  rw [L.eq_orbitMap_of_mem hx,
+    orbit_cyclic L.map (Nat.succ_ne_zero L.preCard) hfix, pathSupport, Finset.coe_image]
+  exact Set.image_congr fun k _ => rfl
+
+/-- `hypermap.hl`:7227 `lemma_in_dart_of_loop`。 -/
+theorem mem_darts_iff_mem_pathSupport (L : Loop α) (hx : x ∈ L.darts) (y : α) :
+    y ∈ L.darts ↔ y ∈ pathSupport (L.pathOf x) L.preCard := by
+  rw [L.darts_eq_pathSupport_pathOf hx]
+
+end Loop
+
+/-- `hypermap.hl`:7483 `lemma_orbit_inverse_map_eq`：置换的逆生成同一轨道。 -/
+theorem PermutesOn.orbitMap_symm {α : Type*} {f : Equiv.Perm α} {s : Finset α}
+    (hp : PermutesOn f s) (x : α) : orbitMap f.symm x = orbitMap f x := by
+  ext y
+  constructor
+  · rintro ⟨n, hn⟩
+    have hx : x = (f ^ n) y := (pow_apply_iff_inv_pow_apply f n y x).mpr hn.symm
+    exact orbitMap_sym hp ⟨n, hx.symm⟩
+  · rintro ⟨n, hn⟩
+    have hx : x = (f⁻¹ ^ n) y := (pow_apply_iff_inv_pow_apply f n x y).mp hn.symm
+    exact orbitMap_sym hp.symm ⟨n, hx.symm⟩
+
+namespace Hypermap
+
+variable {α : Type*} [DecidableEq α]
+
+/-- `hypermap.hl`:7235 `lemmaILTXRQD`：无 Moebius contour 时，
+只在端点接触环 `L` 的单射 contour（长度 `k ≥ 2`）首步与末步类型互斥：
+首步沿 `nodeMap.symm` 则末步不能沿 `faceMap`，首步沿 `faceMap` 则末步不能沿 `nodeMap.symm`。
+（HOL 证明中的辅助事实 `1 ≤ pre_card_dart_of_loop L` 在移植中未被使用，略去。） -/
+theorem first_last_step_exclusive (H : Hypermap α) (L : Loop α) (p : ℕ → α) (k : ℕ)
+    (hloop : Loop.IsLoopOf H L) (hinj : H.isInjContour p k) (hk : 2 ≤ k)
+    (hp0 : p 0 ∈ L.darts) (hpk : p k ∈ L.darts)
+    (hmid : ∀ i : ℕ, 0 < i → i < k → p i ∉ L.darts)
+    (hmoeb : ∀ (q : ℕ → α) (m : ℕ), ¬ H.IsMoebiusContour q m) :
+    (p 1 = H.nodeMap.symm (p 0) → p k ≠ H.faceMap (p (k - 1))) ∧
+    (p 1 = H.faceMap (p 0) → p k ≠ H.nodeMap.symm (p (k - 1))) := by
+  have hpw : ∀ i j : ℕ, i ≤ k → j < i → p j ≠ p i :=
+    ((H.isInjContour_iff p k).mp hinj).2
+  constructor
+  · -- 首步为 node 步：`p 1 = n⁻¹ (p 0)`
+    intro h10 hkn
+    have hG10 : p 0 = H.nodeMap (p 1) :=
+      (H.nodeMap_inverse_representation (p 1) (p 0)).mpr h10
+    have hG15 : L.pathOf (p k) 0 = p k := by
+      show ((L.map : Equiv.Perm α) ^ 0) (p k) = p k
+      rw [pow_zero, Equiv.Perm.one_apply]
+    have hG4 : p 0 ∈ Loop.pathSupport (L.pathOf (p k)) L.preCard :=
+      (L.mem_darts_iff_mem_pathSupport hpk (p 0)).mp hp0
+    have hG6 : ∀ i : ℕ, 0 < i → i < k →
+        p i ∉ Loop.pathSupport (L.pathOf (p k)) L.preCard :=
+      fun i hi1 hi2 hmem =>
+        hmid i hi1 hi2 ((L.mem_darts_iff_mem_pathSupport hpk (p i)).mpr hmem)
+    obtain ⟨hG16, hclose⟩ := Loop.isInjContour_pathOf hloop hpk
+    rw [hG15] at hclose
+    rcases hclose with hA | hB
+    · -- 末步闭环沿 `faceMap`：`p k = f (ploop n)`，与 `hkn` 合得 `ploop n = p (k-1)` ∈ support，矛盾
+      have hEq : L.pathOf (p k) L.preCard = p (k - 1) :=
+        H.faceMap.injective (hA.symm.trans hkn)
+      have hmem : p (k - 1) ∈ Loop.pathSupport (L.pathOf (p k)) L.preCard := by
+        rw [← hEq]
+        exact Loop.mem_pathSupport.mpr ⟨L.preCard, le_rfl, rfl⟩
+      exact hG6 (k - 1) (by omega) (by omega) hmem
+    · -- 末步闭环沿 `nodeMap.symm`：`ploop n = n (p k)`，拼接出 Moebius contour
+      have hG17 : L.pathOf (p k) L.preCard = H.nodeMap (p k) :=
+        (H.nodeMap_inverse_representation (p k) (L.pathOf (p k) L.preCard)).mpr hB
+      have hG18 : H.isInjContour (shiftPath p 1) (k - 1) :=
+        H.isInjContour_shiftPath hinj 1 (by omega)
+      have hG20 : shiftPath p 1 (k - 1) = L.pathOf (p k) 0 := by
+        rw [hG15]
+        show p (1 + (k - 1)) = p k
+        rw [show 1 + (k - 1) = k by omega]
+      have hdisj : ∀ j : ℕ, 0 < j → j ≤ L.preCard → ∀ i ≤ k - 1,
+          L.pathOf (p k) j ≠ shiftPath p 1 i := by
+        intro j hj0 hjn i hik heq
+        rcases eq_or_lt_of_le hik with h | hilt
+        · rw [h, hG20] at heq
+          exact ((H.isInjContour_iff _ _).mp hG16).2 j 0 hjn hj0 heq.symm
+        · have heq2 : L.pathOf (p k) j = p (i + 1) :=
+            heq.trans (by show p (1 + i) = p (i + 1); congr 1; omega)
+          have hmem : p (i + 1) ∈ Loop.pathSupport (L.pathOf (p k)) L.preCard :=
+            Loop.mem_pathSupport.mpr ⟨j, hjn, heq2⟩
+          exact hG6 (i + 1) (by omega) (by omega) hmem
+      obtain ⟨g, hg0, hgm, hginj, hg1, hg2⟩ :=
+        H.concatenate_two_contours hG18 hG16 hG20 hdisj
+      have hG26 : g (k - 1) = p k := (hg1 (k - 1) le_rfl).trans (hG20.trans hG15)
+      obtain ⟨j, hjn, hjeq⟩ := Loop.mem_pathSupport.mp hG4
+      have hG30 : j < L.preCard := by
+        rcases eq_or_lt_of_le hjn with h | h
+        · exfalso
+          rw [h] at hjeq
+          have e1 : p 0 = H.nodeMap (p k) := hjeq.symm.trans hG17
+          have e2 : p k = p 1 := H.nodeMap.injective (e1.symm.trans hG10)
+          exact hpw k 1 le_rfl (by omega) e2.symm
+        · exact h
+      have e3 : g (k - 1 + j) = H.nodeMap (g 0) := by
+        have hg0' : g 0 = p 1 := hg0
+        rw [hg2 j hjn, hjeq, hG10, hg0']
+      have e4 : g (k - 1 + L.preCard) = H.nodeMap (g (k - 1)) := by
+        rw [hgm, hG17, hG26]
+      exact hmoeb g (k - 1 + L.preCard)
+        ⟨hginj, k - 1, k - 1 + j, by omega, Nat.le_add_right _ _,
+          Nat.add_lt_add_left hG30 _, e3, e4⟩
+  · -- 首步为 face 步：`p 1 = f (p 0)`
+    intro h10 hkn
+    have hG12 : p (k - 1) = H.nodeMap (p k) := by
+      rw [hkn]; exact (Equiv.apply_symm_apply _ _).symm
+    have hTP : L.map (p 0) ∈ L.darts := L.map_mem hp0
+    obtain ⟨hG16, hclose⟩ := Loop.isInjContour_pathOf hloop hTP
+    have hF4 : L.pathOf (L.map (p 0)) L.preCard = p 0 := by
+      have e1 : (L.map ^ (L.preCard + 1)) (p 0) = p 0 := by
+        rw [(L.card_pos.2.2).symm, L.pow_card_eq_one, Equiv.Perm.one_apply]
+      have e2 : (L.map ^ (L.preCard + 1)) (p 0) = (L.map ^ L.preCard) (L.map (p 0)) := by
+        rw [pow_succ, Equiv.Perm.mul_apply]
+      rw [e2] at e1
+      exact e1
+    have hG5 : p k ∈ Loop.pathSupport (L.pathOf (L.map (p 0))) L.preCard :=
+      (L.mem_darts_iff_mem_pathSupport hTP (p k)).mp hpk
+    have hG6 : ∀ i : ℕ, 0 < i → i < k →
+        p i ∉ Loop.pathSupport (L.pathOf (L.map (p 0))) L.preCard :=
+      fun i hi1 hi2 hmem =>
+        hmid i hi1 hi2 ((L.mem_darts_iff_mem_pathSupport hTP (p i)).mpr hmem)
+    rw [hF4] at hclose
+    rcases hclose with hA | hB
+    · -- 闭环沿 `faceMap` 回到 `p 0`：`ploop 0 = f (p 0) = p 1` ∈ support，矛盾
+      have e1 : p 1 = L.pathOf (L.map (p 0)) 0 := (hA.trans h10.symm).symm
+      have hmem : p 1 ∈ Loop.pathSupport (L.pathOf (L.map (p 0))) L.preCard :=
+        Loop.mem_pathSupport.mpr ⟨0, Nat.zero_le _, e1.symm⟩
+      exact hG6 1 (by omega) (by omega) hmem
+    · -- 闭环沿 `nodeMap.symm` 回到 `p 0`：`p 0 = n (ploop 0)`，拼接出 Moebius contour
+      have hG17 : p 0 = H.nodeMap (L.pathOf (L.map (p 0)) 0) :=
+        (H.nodeMap_inverse_representation (L.pathOf (L.map (p 0)) 0) (p 0)).mpr hB
+      have hG18 : H.isInjContour p (k - 1) := H.isInjContour_mono hinj (by omega)
+      have hdisj : ∀ j : ℕ, 0 < j → j ≤ k - 1 → ∀ i ≤ L.preCard,
+          p j ≠ L.pathOf (L.map (p 0)) i := by
+        intro j hj0 hjk i hi heq
+        have hmem : p j ∈ Loop.pathSupport (L.pathOf (L.map (p 0))) L.preCard :=
+          Loop.mem_pathSupport.mpr ⟨i, hi, heq.symm⟩
+        exact hG6 j hj0 (by omega) hmem
+      obtain ⟨g, hg0, hgm, hginj, hg1, hg2⟩ :=
+        H.concatenate_two_contours hG16 hG18 hF4 hdisj
+      have hG26 : g L.preCard = L.pathOf (L.map (p 0)) L.preCard := hg1 _ le_rfl
+      obtain ⟨j, hjn, hjeq⟩ := Loop.mem_pathSupport.mp hG5
+      have hG29 : 0 < j := by
+        rcases Nat.eq_zero_or_pos j with h | h
+        · exfalso
+          have hjeq0 : L.pathOf (L.map (p 0)) 0 = p k := h ▸ hjeq
+          have e1 : p (k - 1) = p 0 := by
+            rw [← hjeq0] at hG12
+            exact hG12.trans hG17.symm
+          exact hpw (k - 1) 0 (by omega) (by omega) e1.symm
+        · exact h
+      have e3 : g L.preCard = H.nodeMap (g 0) := by
+        rw [hG26, hF4, hG17, hg0]
+      have e4 : g (L.preCard + (k - 1)) = H.nodeMap (g j) := by
+        rw [hgm, hg1 j hjn, hjeq, hG12]
+      exact hmoeb g (L.preCard + (k - 1))
+        ⟨hginj, j, L.preCard, hG29, hjn,
+          Nat.lt_add_of_pos_right (by omega : 0 < k - 1), e3, e4⟩
+
+/-! ## face/node 环事实与 `lemmaICJHAOQ`（`hypermap.hl`:7465–7757） -/
+
+/-- `hypermap.hl`:7465 `inj_orbit_imp_inj_face_contour`。 -/
+theorem isInjContour_faceContour_of_injOrbit (H : Hypermap α) (x : α) {k : ℕ}
+    (h : injOrbit H.faceMap x k) : H.isInjContour (H.faceContour x) k := by
+  rw [H.isInjContour_iff]
+  rw [injOrbit_iff] at h
+  exact ⟨H.isContour_faceContour x k, fun i j hi hj => (h i j hi hj).symm⟩
+
+/-- `hypermap.hl`:7472 `lemma_inj_face_contour`。 -/
+theorem isInjContour_faceContour (H : Hypermap α) (x : α) {k : ℕ}
+    (hk : k < (H.face x).ncard) : H.isInjContour (H.faceContour x) k :=
+  H.isInjContour_faceContour_of_injOrbit x (H.faceMap_permutes.injOrbit_of_lt_ncard hk)
+
+/-- `hypermap.hl`:7479 `lemma_face_cycle`。 -/
+theorem pow_card_face_apply_self (H : Hypermap α) (x : α) :
+    (H.faceMap ^ (H.face x).ncard) x = x :=
+  H.faceMap_permutes.pow_ncard_orbitMap_apply_self x
+
+/-- `hypermap.hl`:7500 `inj_orbit_imp_inj_node_contour`。 -/
+theorem isInjContour_nodeContour_of_injOrbit (H : Hypermap α) (x : α) {k : ℕ}
+    (h : injOrbit H.nodeMap.symm x k) : H.isInjContour (H.nodeContour x) k := by
+  rw [H.isInjContour_iff]
+  rw [injOrbit_iff] at h
+  exact ⟨H.isContour_nodeContour x k, fun i j hi hj => (h i j hi hj).symm⟩
+
+/-- `hypermap.hl`:7508 `lemma_inj_node_contour`。 -/
+theorem isInjContour_nodeContour (H : Hypermap α) (x : α) {k : ℕ}
+    (hk : k < (H.node x).ncard) : H.isInjContour (H.nodeContour x) k := by
+  apply H.isInjContour_nodeContour_of_injOrbit x
+  apply H.nodeMap_permutes.symm.injOrbit_of_lt_ncard
+  rw [PermutesOn.orbitMap_symm H.nodeMap_permutes x]
+  exact hk
+
+/-- `hypermap.hl`:7518 `lemma_node_cycle`。 -/
+theorem pow_card_node_apply_self (H : Hypermap α) (x : α) :
+    (H.nodeMap ^ (H.node x).ncard) x = x :=
+  H.nodeMap_permutes.pow_ncard_orbitMap_apply_self x
+
+/-- `hypermap.hl`:7521 `lemma_node_inverse_cycle`。 -/
+theorem pow_card_node_symm_apply_self (H : Hypermap α) (x : α) :
+    (H.nodeMap.symm ^ (H.node x).ncard) x = x := by
+  have h := H.pow_card_node_apply_self x
+  exact ((pow_apply_iff_inv_pow_apply H.nodeMap (H.node x).ncard x x).mp h.symm).symm
+
+/-- `hypermap.hl`:7529 `lemma_node_contour_connection`。 -/
+theorem nodeContour_connection (H : Hypermap α) {x y : α} (hy : y ∈ H.node x) :
+    ∃ k : ℕ, k < (H.node x).ncard ∧ H.nodeContour x 0 = x ∧ H.nodeContour x k = y ∧
+      H.isInjContour (H.nodeContour x) k := by
+  have horb : orbitMap H.nodeMap.symm x = H.node x :=
+    PermutesOn.orbitMap_symm H.nodeMap_permutes x
+  have hy' : y ∈ orbitMap H.nodeMap.symm x := by
+    rw [horb]; exact hy
+  obtain ⟨k, hk, hkeq⟩ := H.nodeMap_permutes.symm.exists_lt_ncard_pow_apply hy'
+  have hk' : k < (H.node x).ncard := by
+    rw [← horb]; exact hk
+  exact ⟨k, hk', H.nodeContour_zero x, hkeq.symm, H.isInjContour_nodeContour x hk'⟩
+
+/-- `hypermap.hl`:7552 `lemma_via_inverse_node_map`。 -/
+theorem exists_pow_nodeMap_symm_apply_of_mem_node (H : Hypermap α) {x y : α}
+    (hy : y ∈ H.node x) :
+    ∃ j : ℕ, j < (H.node x).ncard ∧ y = (H.nodeMap.symm ^ j) x := by
+  obtain ⟨j, hj, -, hjk, -⟩ := H.nodeContour_connection hy
+  exact ⟨j, hj, hjk.symm⟩
+
+/-- `hypermap.hl`:7557 `lemmaICJHAOQ`：无 Moebius contour 时，不存在长度 ≥ 1 的 contour
+从环 `L` 出发、首步沿 `faceMap`、终点在与起点不同的 node 上、且终点 node 仍接触 `L`。
+（HOL 证明经 `lemmaILTXRQD` 反推出 Moebius contour；`first_last_step_exclusive`
+的结论本身即矛盾，故移植中直接收尾。） -/
+theorem not_exists_face_step_contour_meeting_node (H : Hypermap α) (L : Loop α)
+    (hloop : Loop.IsLoopOf H L)
+    (hmoeb : ∀ (q : ℕ → α) (m : ℕ), ¬ H.IsMoebiusContour q m) :
+    ¬ ∃ (p : ℕ → α) (k : ℕ), 1 ≤ k ∧ H.isContour p k ∧ p 0 ∈ L.darts ∧
+      (∀ i : ℕ, 0 < i → i ≤ k → p i ∉ L.darts) ∧
+      p 1 = H.faceMap (p 0) ∧ H.node (p 0) ≠ H.node (p k) ∧
+      ∃ y : α, y ∈ H.node (p k) ∧ y ∈ L.darts := by
+  classical
+  rintro ⟨p, k, hk1, hcont, hp0, hmid, h1f, hne, y, hy1, hy2⟩
+  -- `s`：`p s ∈ node (p k)` 的最小指标（`num_WOP`）
+  obtain ⟨s, ⟨hsk, hps⟩, hmin⟩ : ∃ s : ℕ, (s ≤ k ∧ p s ∈ H.node (p k)) ∧
+      ∀ m < s, ¬ (m ≤ k ∧ p m ∈ H.node (p k)) := by
+    have hex : ∃ s : ℕ, s ≤ k ∧ p s ∈ H.node (p k) := ⟨k, le_rfl, mem_orbitMap_self _ _⟩
+    exact ⟨Nat.find hex, Nat.find_spec hex, fun m hm => Nat.find_min hex hm⟩
+  have hnodes : H.node (p k) = H.node (p s) := H.node_eq_of_mem hps
+  have h0s : p 0 ≠ p s := by
+    intro hcon
+    exact hne (by rw [hcon]; exact hnodes.symm)
+  have hs0 : 0 < s := by
+    rcases Nat.eq_zero_or_pos s with h | h
+    · exfalso; exact h0s (by rw [h])
+    · exact h
+  have hconts : H.isContour p s := H.isContour_mono hcont hsk
+  have hpsL : p s ∉ L.darts := hmid s hs0 hsk
+  -- `t`：`nodeContour (p s)` 上落在 `L` 中的最小正指标
+  obtain ⟨t, ⟨ht1, ht2⟩, hmin2⟩ : ∃ t : ℕ,
+      (t < (H.node (p s)).ncard ∧ H.nodeContour (p s) t ∈ L.darts) ∧
+      ∀ m < t, ¬ (m < (H.node (p s)).ncard ∧ H.nodeContour (p s) m ∈ L.darts) := by
+    have hex2 : ∃ u : ℕ, u < (H.node (p s)).ncard ∧ H.nodeContour (p s) u ∈ L.darts := by
+      obtain ⟨u, hu1, -, hu3, -⟩ := H.nodeContour_connection (hnodes ▸ hy1)
+      exact ⟨u, hu1, hu3.symm ▸ hy2⟩
+    exact ⟨Nat.find hex2, Nat.find_spec hex2, fun m hm => Nat.find_min hex2 hm⟩
+  have ht0 : 0 < t := by
+    rcases Nat.eq_zero_or_pos t with h | h
+    · exfalso
+      rw [h, H.nodeContour_zero] at ht2
+      exact hpsL ht2
+    · exact h
+  -- 提取单射子 contour `w`（`lemmaQZTPGJV`）
+  obtain ⟨w, d, hds, hw0, hwd, hwinj, hseg⟩ := H.exists_injContour_of_isContour hconts
+  have hd0 : 0 < d := by
+    rcases Nat.eq_zero_or_pos d with h | h
+    · exfalso
+      rw [h] at hwd
+      exact h0s (hw0 ▸ hwd)
+    · exact h
+  have hw0L : w 0 ∈ L.darts := by rw [hw0]; exact hp0
+  -- `w` 的内部点与终点都避开 `L`
+  have hF27 : ∀ i : ℕ, 0 < i → i ≤ d → w i ∉ L.darts := by
+    intro i hi0 hid hmem
+    rcases eq_or_lt_of_le hid with h | h
+    · rw [h, hwd] at hmem
+      exact hpsL hmem
+    · obtain ⟨j, hij, hjs, hwi, -⟩ := hseg i h
+      rw [hwi] at hmem
+      exact hmid j (by omega) (by omega) hmem
+  -- `w` 的首步仍是 face 步
+  have hF28 : w 1 = H.faceMap (w 0) := by
+    have hG7 : L.map (w 0) ∈ L.darts := L.map_mem hw0L
+    have hstep1 : w 1 = H.faceMap (w 0) ∨ w 1 = H.nodeMap.symm (w 0) :=
+      (H.isContour_iff w d).mp ((H.isInjContour_iff w d).mp hwinj).1 0 hd0
+    rcases hloop (w 0) hw0L with hA | hB
+    · exfalso
+      have hp1L : p 1 ∈ L.darts := by
+        have e : p 1 = L.map (w 0) := by
+          rw [h1f, ← hw0]
+          exact hA.symm
+        rw [e]; exact hG7
+      exact hmid 1 (by omega) hk1 hp1L
+    · rcases hstep1 with h1 | h1
+      · exact h1
+      · exfalso
+        have hw1L : w 1 ∈ L.darts := by
+          rw [h1, ← hB]; exact hG7
+        exact hF27 1 (by omega) (by omega) hw1L
+  -- `nodeContour (w d)` 的长度-`t` 前段是单射 contour
+  have hF29 : H.isInjContour (H.nodeContour (w d)) t := by
+    apply H.isInjContour_nodeContour
+    rw [hwd]; exact ht1
+  have hF30 : H.nodeContour (w d) 0 = w d := H.nodeContour_zero _
+  -- 两段路径内部不相交
+  have hdisj : ∀ j : ℕ, 0 < j → j ≤ t → ∀ i ≤ d, H.nodeContour (w d) j ≠ w i := by
+    intro j hj0 hjt i hid heq
+    rcases eq_or_lt_of_le hid with h | h
+    · rw [h, ← hF30] at heq
+      exact ((H.isInjContour_iff _ _).mp hF29).2 j 0 hjt hj0 heq.symm
+    · obtain ⟨u, hiu, hus, hwi, -⟩ := hseg i h
+      have hmem : w i ∈ H.node (p k) := by
+        rw [hnodes, ← hwd, ← heq]
+        have h1 : H.nodeContour (w d) j ∈ orbitMap H.nodeMap.symm (w d) :=
+          pow_apply_mem_orbitMap _ _ _
+        rwa [PermutesOn.orbitMap_symm H.nodeMap_permutes] at h1
+      rw [hwi] at hmem
+      exact hmin u (by omega) ⟨by omega, hmem⟩
+  -- 拼接成长度 `d + t` 的单射 contour
+  obtain ⟨g, hg0, hgm, hginj, hg1, hg2⟩ :=
+    H.concatenate_two_contours hwinj hF29 hF30.symm hdisj
+  -- 拼接结果的内部点都避开 `L`
+  have hM6 : ∀ i : ℕ, 0 < i → i < d + t → g i ∉ L.darts := by
+    intro i hi0 hidt hmem
+    rcases le_or_gt i d with hid | hid
+    · rw [hg1 i hid] at hmem
+      exact hF27 i hi0 hid hmem
+    · obtain ⟨l, hl⟩ : ∃ l : ℕ, i = d + (l + 1) := ⟨i - d - 1, by omega⟩
+      have hlt : l + 1 < t := by omega
+      rw [hl, hg2 (l + 1) (by omega)] at hmem
+      have hmem' : H.nodeContour (p s) (l + 1) ∈ L.darts := hwd ▸ hmem
+      exact hmin2 (l + 1) hlt ⟨by omega, hmem'⟩
+  have ht2' : H.nodeContour (w d) t ∈ L.darts := hwd.symm ▸ ht2
+  have hg0L : g 0 ∈ L.darts := by rw [hg0]; exact hw0L
+  have hgdtL : g (d + t) ∈ L.darts := by rw [hgm]; exact ht2'
+  have hg1f : g 1 = H.faceMap (g 0) := by
+    rw [hg1 1 (by omega), hF28, hg0]
+  have hgdt : g (d + t) = H.nodeMap.symm (g (d + t - 1)) := by
+    rw [hgm]
+    have e1 : g (d + (t - 1)) = H.nodeContour (w d) (t - 1) := hg2 (t - 1) (by omega)
+    rw [show d + t - 1 = d + (t - 1) by omega, e1]
+    show (H.nodeMap.symm ^ t) (w d) = H.nodeMap.symm ((H.nodeMap.symm ^ (t - 1)) (w d))
+    conv_lhs => rw [(by omega : t = (t - 1) + 1)]
+    rw [pow_succ', Equiv.Perm.mul_apply]
+  exact (H.first_last_step_exclusive L g (d + t) hloop hginj (by omega) hg0L hgdtL
+    hM6 hmoeb).2 hg1f hgdt
 
 end Hypermap
 
