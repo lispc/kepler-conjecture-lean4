@@ -440,10 +440,30 @@ Coverage (block 12, quotient maps and hypermap isomorphism, 8544–9684):
   `Set.BijOn.comp`). `COMPOSE_INJ`/`COMPOSE_SURJ`/`COMPOSE_BIJ`/`BIJ_INVERSE`
   (9518–9563) are subsumed by Mathlib's `Set.BijOn` API and `bijOnInvFun`.
 
-Explicitly skipped in this range:
-- 9459–9514 `f_quotient_via_atom_choice`/`n_quotient_via_atom_choice`/
-  `e_quotient_via_atom_choice`: used by the quotient faces/nodes
-  characterization (9685+); deferred to the next block.
+Coverage (block 13, quotient faces/nodes, 9459–9514 + 9685–10000):
+- `f_quotient_via_atom_choice`/`n_quotient_via_atom_choice` (9459/9474, as
+  `fQuotient_via_atomChoice`/`nQuotient_via_atomChoice`),
+  `e_quotient_via_atom_choice` (9489, as `eQuotientPerm_via_atomChoice`;
+  stated for the quotient `edgeMap = fP⁻¹ * nP⁻¹` since `e_quotient` is not
+  separately defined).
+- quotient faces (9688–9825): `atoms_of_loop` (9688, as `atomsOfLoop`),
+  `lemma_in_atoms_of_loop2` (`atom_mem_atomsOfLoop`), `lemma_atoms_of_loop_eq`
+  (`atomsOfLoop_inj`), `lemma_atoms_of_loop_is_face` (9715, as
+  `atomsOfLoop_eq_orbitMap_fQuotientPerm`), `lemma_atoms_of_loop_finite`
+  (`atomsOfLoop_finite`), **`lemmaQuotientFace`** (9792, as
+  `faceSet_quotient`: the quotient's faces are exactly the per-loop atom
+  families), `lemmaQF` (9816, as `face_quotient_atom`). `lemma_sub_support`
+  (9825) is Mathlib's `Set.subset_sUnion_of_mem`.
+- quotient nodes (9829–10000): `support_node` (9829, as `supportNode`;
+  carries the `IsNormalFamily` hypothesis since our `quotientHypermap`
+  requires it), `lemma_node_sub_darts_of_family` (`node_subset_dartsOfFamily`),
+  `lemma_in_node`/`lemma_in_node2` (`mem_node_iff`/`pow_nodeMap_mem_node`),
+  `lemma_atom_choice_sub_node` (`atomChoice_subset_node`),
+  **`lemma_QuotientNode`** (9944, as `node_quotient_atomChoice`: the
+  quotient's node over `atomChoice x` is the `atomChoice`-image of
+  `node H x`; core induction is `supportNode_atomChoice`, 9860),
+  `lemma_in_QN` (`atomChoice_mem_node_quotient_iff`), `lemma_in_node3`
+  (`mem_node_of_atomChoice_mem_node_quotient`).
 
 Type correspondences (HOL Light ↦ Lean 4):
 - `(A)hypermap` (a 4-tuple carrying `FINITE`/`permutes` side conditions,
@@ -7678,6 +7698,391 @@ theorem headTail_mem_atomChoice (H : Hypermap α) {NF : Set (Loop α)}
     exact H.atomChoice_self_mem hnf _
   · rw [(H.atomChoice_at_margin hnf x).2]
     exact H.atomChoice_self_mem hnf _
+
+/-! ## 商映射经 `atomChoice` 的求值（`hypermap.hl`:9459–9514） -/
+
+/-- `hypermap.hl`:9459 `f_quotient_via_atom_choice`。 -/
+theorem fQuotient_via_atomChoice (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) (hx : x ∈ dartsOfFamily NF) :
+    H.faceMap (H.headOfAtom NF x) ∈ dartsOfFamily NF ∧
+    H.faceMap (H.headOfAtom NF x) =
+      H.tailOfAtom NF (H.faceMap (H.headOfAtom NF x)) ∧
+    H.fQuotient NF (H.atomChoice NF x) =
+      H.atomChoice NF (H.faceMap (H.headOfAtom NF x)) := by
+  obtain ⟨L, hL, hxL⟩ := hx
+  obtain ⟨hf1, -, hf3, -⟩ := H.faceMap_on_margin hnf hL hxL
+  refine ⟨⟨L, hL, hf1⟩, hf3, ?_⟩
+  rw [H.atomChoice_eq_atom hnf hL hxL, H.fQuotient_atom hnf hL hxL,
+    H.atomChoice_eq_atom hnf hL hf1]
+
+/-- `hypermap.hl`:9474 `n_quotient_via_atom_choice`。 -/
+theorem nQuotient_via_atomChoice (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) (hx : x ∈ dartsOfFamily NF) :
+    H.nodeMap (H.tailOfAtom NF x) ∈ dartsOfFamily NF ∧
+    H.nodeMap (H.tailOfAtom NF x) =
+      H.headOfAtom NF (H.nodeMap (H.tailOfAtom NF x)) ∧
+    H.nQuotient NF (H.atomChoice NF x) =
+      H.atomChoice NF (H.nodeMap (H.tailOfAtom NF x)) := by
+  obtain ⟨L, hL, hxL⟩ := hx
+  obtain ⟨L', hL', hm, heq⟩ := H.nodeMap_tail_eq_headOfAtom hnf hL hxL
+  refine ⟨⟨L', hL', hm⟩, heq, ?_⟩
+  rw [H.atomChoice_eq_atom hnf hL hxL, H.nQuotient_atom hnf hL hL' hxL hm,
+    H.atomChoice_eq_atom hnf hL' hm]
+
+/-- `hypermap.hl`:9489 `e_quotient_via_atom_choice`。
+（`e_quotient` 未单列定义；此处给出商 `edgeMap = fP⁻¹ * nP⁻¹` 的求值。） -/
+theorem eQuotientPerm_via_atomChoice (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) (hx : x ∈ dartsOfFamily NF) :
+    H.edgeMap (H.headOfAtom NF x) ∈ dartsOfFamily NF ∧
+    H.edgeMap (H.headOfAtom NF x) = H.headOfAtom NF (H.edgeMap (H.headOfAtom NF x)) ∧
+    ((H.fQuotientPerm hnf)⁻¹ * (H.nQuotientPerm hnf)⁻¹) (H.atomChoice NF x) =
+      H.atomChoice NF (H.edgeMap (H.headOfAtom NF x)) := by
+  obtain ⟨L, hL, hxL⟩ := hx
+  have hheadL := (H.headTailOfAtom_mem_darts hnf hL hxL).1
+  set w := H.nodeMap.symm (H.headOfAtom NF x) with hw
+  obtain ⟨P0, hP0, hm0, hteq0⟩ := H.nodeMap_symm_head_eq_tailOfAtom hnf hL hxL
+  rw [← hw] at hm0 hteq0
+  -- 关键等式
+  have e1 : H.nodeMap (H.tailOfAtom NF w) = H.headOfAtom NF x :=
+    (congrArg H.nodeMap hteq0.symm).trans (Equiv.apply_symm_apply _ _)
+  have hedge : H.edgeMap (H.headOfAtom NF x) = H.faceMap.symm w := by
+    rw [hw, H.inverse2_hypermap_maps.1, Equiv.Perm.mul_apply]
+    rfl
+  have hzP : H.faceMap.symm w ∈ P0.darts := by
+    have e := (H.faceMap_on_margin hnf hP0 hm0).2.1
+    rw [hteq0.symm] at e
+    exact e
+  have e2 : H.headOfAtom NF (H.faceMap.symm w) = H.faceMap.symm w := by
+    have e := (H.faceMap_on_margin hnf hP0 hm0).2.2.2
+    rw [hteq0.symm] at e
+    exact e.symm
+  -- nQ 与 fQ 的逆求值
+  have hm0L : H.nodeMap (H.tailOfAtom NF w) ∈ L.darts := e1.symm ▸ hheadL
+  have hnQ : H.nQuotient NF (H.atomChoice NF w) = H.atomChoice NF x := by
+    rw [H.atomChoice_eq_atom hnf hP0 hm0, H.nQuotient_atom hnf hP0 hL hm0 hm0L, e1,
+      ← H.atomChoice_eq_atom hnf hL hheadL]
+    exact ((H.atomChoice_at_margin hnf x).2).symm
+  have hninv : (H.nQuotientPerm hnf)⁻¹ (H.atomChoice NF x) = H.atomChoice NF w := by
+    show (H.nQuotientPerm hnf).symm (H.atomChoice NF x) = H.atomChoice NF w
+    rw [Equiv.symm_apply_eq, H.nQuotientPerm_apply]
+    exact hnQ.symm
+  have hfQ : H.fQuotient NF (H.atomChoice NF (H.faceMap.symm w)) = H.atomChoice NF w := by
+    rw [H.atomChoice_eq_atom hnf hP0 hzP, H.fQuotient_atom hnf hP0 hzP, e2,
+      Equiv.apply_symm_apply]
+    exact (H.atomChoice_eq_atom hnf hP0 hm0).symm
+  refine ⟨?_, ?_, ?_⟩
+  · rw [hedge]; exact ⟨P0, hP0, hzP⟩
+  · rw [hedge]; exact e2.symm
+  · rw [Equiv.Perm.mul_apply, hedge, hninv]
+    show (H.fQuotientPerm hnf).symm (H.atomChoice NF w) =
+      H.atomChoice NF (H.faceMap.symm w)
+    rw [Equiv.symm_apply_eq, H.fQuotientPerm_apply]
+    exact hfQ.symm
+
+/-! ## 商 hypermap 的面（`hypermap.hl`:9685–9825） -/
+
+/-- `hypermap.hl`:9688 `atoms_of_loop`（蓝皮书中的 `F(L)`）。 -/
+def atomsOfLoop (H : Hypermap α) (L : Loop α) : Set (Set α) :=
+  {a | ∃ x ∈ L.darts, a = H.atom L x}
+
+/-- `hypermap.hl`:9690 `lemma_in_atoms_of_loop2`。 -/
+theorem atom_mem_atomsOfLoop (H : Hypermap α) (L : Loop α) (hx : x ∈ L.darts) :
+    H.atom L x ∈ H.atomsOfLoop L := ⟨x, hx, rfl⟩
+
+/-- `hypermap.hl`:9693 `lemma_atoms_of_loop_eq`。 -/
+theorem atomsOfLoop_inj (H : Hypermap α) {NF : Set (Loop α)} {L L' : Loop α}
+    (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hL' : L' ∈ NF)
+    (heq : H.atomsOfLoop L = H.atomsOfLoop L') : L = L' := by
+  obtain ⟨-, x, -, hxL⟩ := hnf.1 L hL
+  have hmem : H.atom L x ∈ H.atomsOfLoop L := H.atom_mem_atomsOfLoop L hxL
+  rw [heq] at hmem
+  obtain ⟨y, hyL', hy⟩ := hmem
+  have hyx : y ∈ H.atom L x := hy ▸ H.atom_reflect L' y
+  have hyL : y ∈ L.darts := H.mem_darts_of_mem_atom hxL hyx
+  exact hnf.eq_of_mem_of_mem hL hL' hyL hyL'
+
+/-- `hypermap.hl`:9715 `lemma_atoms_of_loop_is_face`：
+环的原子族是商 hypermap 中该环对应的面（`fQuotientPerm` 的轨道）。 -/
+theorem atomsOfLoop_eq_orbitMap_fQuotientPerm (H : Hypermap α) {NF : Set (Loop α)}
+    {L : Loop α} (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hx : x ∈ L.darts) :
+    H.atomsOfLoop L = orbitMap (H.fQuotientPerm hnf) (H.atom L x) := by
+  have stepA : ∀ m : ℕ, ∀ u v : α, u ∈ L.darts → v ∈ L.darts →
+      v = (L.map ^ m) u →
+      ∃ j : ℕ, H.atom L v = ((H.fQuotientPerm hnf) ^ j) (H.atom L u) := by
+    intro m
+    induction m with
+    | zero =>
+      intro u v hu hv huv
+      rw [pow_zero, Equiv.Perm.one_apply] at huv
+      exact ⟨0, by rw [pow_zero, Equiv.Perm.one_apply, huv]⟩
+    | succ m ih =>
+      intro u v hu hv huv
+      have hvw : v = (L.map ^ m) (L.map u) := by
+        rw [huv, ← Equiv.Perm.mul_apply, ← pow_succ]
+      by_cases hcase : L.map u = H.nodeMap.symm u
+      · -- node 步：atom (map u) = atom u
+        have habs : H.atom L (L.map u) = H.atom L u :=
+          (H.atom_eq_of_mem
+            (H.map_mem_atom_of_eq_node_symm (H.atom_reflect L u) hcase)).symm
+        obtain ⟨j, hj⟩ := ih (L.map u) v (L.map_mem hu) hv hvw
+        exact ⟨j, by rw [habs] at hj; exact hj⟩
+      · -- face 步：fQ (atom u) = atom (map u)
+        have hhu : H.headOfAtom NF u = u :=
+          H.headOfAtom_eq hnf hL hu (H.atom_reflect L u) hcase
+        have hfu : H.faceMap u = L.map u := by
+          have e := H.map_headOfAtom_eq_faceMap hnf hL hu
+          rw [hhu] at e
+          exact e.symm
+        have hstep : H.atom L (L.map u) = (H.fQuotientPerm hnf) (H.atom L u) := by
+          rw [H.fQuotientPerm_apply, H.fQuotient_atom hnf hL hu, hhu, hfu]
+        obtain ⟨j, hj⟩ := ih (L.map u) v (L.map_mem hu) hv hvw
+        refine ⟨j + 1, ?_⟩
+        calc H.atom L v = ((H.fQuotientPerm hnf) ^ j) (H.atom L (L.map u)) := hj
+        _ = ((H.fQuotientPerm hnf) ^ j) ((H.fQuotientPerm hnf) (H.atom L u)) := by
+          rw [hstep]
+        _ = ((H.fQuotientPerm hnf) ^ (j + 1)) (H.atom L u) := by
+          rw [pow_succ, Equiv.Perm.mul_apply]
+  have stepB : ∀ m : ℕ, ∀ u ∈ L.darts, ∃ y ∈ L.darts,
+      ((H.fQuotientPerm hnf) ^ m) (H.atom L u) = H.atom L y := by
+    intro m
+    induction m with
+    | zero => intro u hu; exact ⟨u, hu, by rw [pow_zero, Equiv.Perm.one_apply]⟩
+    | succ m ih =>
+      intro u hu
+      obtain ⟨y, hy, hy'⟩ := ih u hu
+      refine ⟨H.faceMap (H.headOfAtom NF y), (H.faceMap_on_margin hnf hL hy).1, ?_⟩
+      rw [pow_succ', Equiv.Perm.mul_apply, hy', H.fQuotientPerm_apply,
+        H.fQuotient_atom hnf hL hy]
+  ext a
+  constructor
+  · rintro ⟨y, hy, rfl⟩
+    obtain ⟨n, -, hn⟩ := L.exists_pow_apply hx hy
+    obtain ⟨j, hj⟩ := stepA n x y hx hy hn
+    exact ⟨j, hj.symm⟩
+  · rintro ⟨n, rfl⟩
+    obtain ⟨y, hy, hy'⟩ := stepB n x hx
+    rw [hy']
+    exact H.atom_mem_atomsOfLoop L hy
+
+/-- `hypermap.hl`:9783 `lemma_atoms_of_loop_finite`。 -/
+theorem atomsOfLoop_finite (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α}
+    (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) : (H.atomsOfLoop L).Finite := by
+  obtain ⟨-, x, -, hxL⟩ := hnf.1 L hL
+  rw [H.atomsOfLoop_eq_orbitMap_fQuotientPerm hnf hL hxL]
+  exact orbitMap_finite (H.quotientHypermap hnf).faceMap_permutes _
+
+/-- `hypermap.hl`:9792 `lemmaQuotientFace`：商 hypermap 的面正好是各环的原子族。 -/
+theorem faceSet_quotient (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) :
+    (H.quotientHypermap hnf).faceSet = {a | ∃ L ∈ NF, a = H.atomsOfLoop L} := by
+  ext a
+  constructor
+  · rintro ⟨b, hb, rfl⟩
+    have hb' : b ∈ H.atomsOfFamily NF :=
+      (H.atomsOfFamily_finite hnf).mem_toFinset.mp hb
+    obtain ⟨L, hL, x, hx, rfl⟩ := hb'
+    exact ⟨L, hL, (H.atomsOfLoop_eq_orbitMap_fQuotientPerm hnf hL hx).symm⟩
+  · rintro ⟨L, hL, rfl⟩
+    obtain ⟨-, x, -, hxL⟩ := hnf.1 L hL
+    refine ⟨H.atom L x, ?_, ?_⟩
+    · exact (H.atomsOfFamily_finite hnf).mem_toFinset.mpr
+        (H.atom_mem_atomsOfFamily hL hxL)
+    · show orbitMap (H.fQuotientPerm hnf) (H.atom L x) = H.atomsOfLoop L
+      exact (H.atomsOfLoop_eq_orbitMap_fQuotientPerm hnf hL hxL).symm
+
+/-- `hypermap.hl`:9816 `lemmaQF`。 -/
+theorem face_quotient_atom (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α}
+    (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hx : x ∈ L.darts) :
+    (H.quotientHypermap hnf).face (H.atom L x) = H.atomsOfLoop L := by
+  show orbitMap (H.fQuotientPerm hnf) (H.atom L x) = H.atomsOfLoop L
+  exact (H.atomsOfLoop_eq_orbitMap_fQuotientPerm hnf hL hx).symm
+
+/-! ## 商 hypermap 的节点（`hypermap.hl`:9827–10000） -/
+
+/-- `hypermap.hl`:9831 `lemma_node_sub_darts_of_family`。 -/
+theorem node_subset_dartsOfFamily (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) (hx : x ∈ dartsOfFamily NF) :
+    H.node x ⊆ dartsOfFamily NF := by
+  rintro y ⟨n, rfl⟩
+  exact H.nodeMap_pow_mem_dartsOfFamily hnf hx n
+
+/-- `hypermap.hl`:9839/9842 `lemma_in_node`/`lemma_in_node2`。 -/
+theorem mem_node_iff (H : Hypermap α) (x y : α) :
+    y ∈ H.node x ↔ ∃ n : ℕ, y = (H.nodeMap ^ n) x :=
+  ⟨fun ⟨n, hn⟩ => ⟨n, hn.symm⟩, fun ⟨n, hn⟩ => ⟨n, hn.symm⟩⟩
+
+theorem pow_nodeMap_mem_node (H : Hypermap α) (x : α) (n : ℕ) :
+    (H.nodeMap ^ n) x ∈ H.node x := pow_apply_mem_orbitMap _ _ _
+
+/-- `hypermap.hl`:9844 `lemma_atom_choice_sub_node`。 -/
+theorem atomChoice_subset_node (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) (x : α) : H.atomChoice NF x ⊆ H.node x := by
+  by_cases hx : x ∈ dartsOfFamily NF
+  · obtain ⟨L, hL, hxL⟩ := hx
+    rw [H.atomChoice_eq_atom hnf hL hxL]
+    exact H.atom_subset_node L x
+  · rw [H.atomChoice_of_not_mem hx]
+    exact Set.singleton_subset_iff.mpr (mem_orbitMap_self _ _)
+
+/-- `hypermap.hl`:9829 `support_node`（需要正规性假设来构造商 hypermap）。 -/
+noncomputable def supportNode (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) (a : Set α) : Set α :=
+  ⋃₀ ((H.quotientHypermap hnf).node a)
+
+/-- `hypermap.hl`:9860 `lemma_support_QN`。 -/
+theorem supportNode_atomChoice (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) (hx : x ∈ dartsOfFamily NF) :
+    H.supportNode hnf (H.atomChoice NF x) = H.node x := by
+  have hxa : H.atomChoice NF x ∈ (H.atomsOfFamily_finite hnf).toFinset :=
+    (H.atomsOfFamily_finite hnf).mem_toFinset.mpr
+      ((H.atomChoice_mem_atomsOfFamily_iff hnf x).mpr hx)
+  ext y
+  constructor
+  · rintro ⟨t, ht, hyt⟩
+    obtain ⟨n, rfl⟩ := ht
+    -- 商节点里的原子幂都包含于 node x
+    have claim : ∀ i : ℕ, ((H.nQuotientPerm hnf) ^ i) (H.atomChoice NF x) ⊆
+        H.node x := by
+      intro i
+      induction i with
+      | zero =>
+        rw [pow_zero, Equiv.Perm.one_apply]
+        exact H.atomChoice_subset_node hnf x
+      | succ i ih =>
+        rw [pow_succ', Equiv.Perm.mul_apply]
+        have hmem : ((H.nQuotientPerm hnf) ^ i) (H.atomChoice NF x) ∈
+            H.atomsOfFamily NF := by
+          have h2 := (H.quotientHypermap hnf).nodeMap_permutes.pow_apply_mem i hxa
+          exact (H.atomsOfFamily_finite hnf).mem_toFinset.mp h2
+        obtain ⟨y', hy', heq⟩ := (H.atom_iff_eq_atomChoice hnf _).mp hmem
+        rw [heq, H.nQuotientPerm_apply, (H.nQuotient_via_atomChoice hnf hy').2.2]
+        have hyy' : y' ∈ H.atomChoice NF y' := H.atomChoice_self_mem hnf y'
+        have hy'x : H.node x = H.node y' := H.node_eq_of_mem (ih (heq ▸ hyy'))
+        have hn1 : H.node (H.tailOfAtom NF y') =
+            H.node (H.nodeMap (H.tailOfAtom NF y')) :=
+          H.node_eq_of_mem (apply_mem_orbitMap _ _)
+        have hn2 : H.node y' = H.node (H.tailOfAtom NF y') :=
+          H.node_eq_of_mem
+            ((H.atomChoice_subset_node hnf y') (H.headTail_mem_atomChoice hnf y').1)
+        calc H.atomChoice NF (H.nodeMap (H.tailOfAtom NF y'))
+            ⊆ H.node (H.nodeMap (H.tailOfAtom NF y')) :=
+              H.atomChoice_subset_node hnf _
+        _ = H.node (H.tailOfAtom NF y') := hn1.symm
+        _ = H.node y' := hn2.symm
+        _ = H.node x := hy'x.symm
+    exact claim n hyt
+  · intro hy
+    obtain ⟨i, rfl⟩ := (H.mem_node_iff x y).mp hy
+    -- 正向：（nodeMap^i）x 落在商节点的某个原子幂里
+    have claim : ∀ i : ℕ, ∃ j : ℕ, (H.nodeMap ^ i) x ∈
+        ((H.nQuotientPerm hnf) ^ j) (H.atomChoice NF x) := by
+      intro i
+      induction i with
+      | zero =>
+        refine ⟨0, ?_⟩
+        rw [pow_zero, Equiv.Perm.one_apply]
+        exact H.atomChoice_self_mem hnf x
+      | succ i ih =>
+        obtain ⟨k, hk⟩ := ih
+        have hy'd : (H.nodeMap ^ i) x ∈ dartsOfFamily NF :=
+          H.nodeMap_pow_mem_dartsOfFamily hnf hx i
+        have hmem : ((H.nQuotientPerm hnf) ^ k) (H.atomChoice NF x) ∈
+            H.atomsOfFamily NF := by
+          have h2 := (H.quotientHypermap hnf).nodeMap_permutes.pow_apply_mem k hxa
+          exact (H.atomsOfFamily_finite hnf).mem_toFinset.mp h2
+        obtain ⟨y', hy', heq⟩ := (H.atom_iff_eq_atomChoice hnf _).mp hmem
+        have hy'd := hy'
+        obtain ⟨L, hL, hy'L⟩ := hy'
+        have hy'mem : (H.nodeMap ^ i) x ∈ H.atom L y' := by
+          have e := hk
+          rw [heq, H.atomChoice_eq_atom hnf hL hy'L] at e
+          exact e
+        by_cases hcase : (H.nodeMap ^ i) x =
+          H.nodeMap.symm (L.invMap ((H.nodeMap ^ i) x))
+        · -- 边界情形：node 步被吸收，j = k 不变
+          refine ⟨k, ?_⟩
+          have e1 : L.invMap ((H.nodeMap ^ i) x) = (H.nodeMap ^ (i + 1)) x := by
+            have e := congrArg H.nodeMap hcase
+            rw [Equiv.apply_symm_apply] at e
+            rw [pow_succ', Equiv.Perm.mul_apply]
+            exact e.symm
+          have e2 : L.invMap ((H.nodeMap ^ i) x) ∈ H.atom L y' :=
+            H.invMap_mem_atom_of_eq hy'mem hcase
+          rw [← e1, heq, H.atomChoice_eq_atom hnf hL hy'L]
+          exact e2
+        · -- 一般情形：tail y' = (nodeMap^i) x，j = k+1
+          refine ⟨k + 1, ?_⟩
+          rw [pow_succ', Equiv.Perm.mul_apply, heq, H.nQuotientPerm_apply,
+            (H.nQuotient_via_atomChoice hnf hy'd).2.2]
+          have htail : H.tailOfAtom NF y' = (H.nodeMap ^ i) x :=
+            H.tailOfAtom_eq hnf hL hy'L hy'mem hcase
+          rw [htail]
+          have e : H.nodeMap ((H.nodeMap ^ i) x) = (H.nodeMap ^ (i + 1)) x := by
+            rw [pow_succ', Equiv.Perm.mul_apply]
+          rw [e]
+          exact H.atomChoice_self_mem hnf _
+    obtain ⟨j, hj⟩ := claim i
+    exact ⟨((H.nQuotientPerm hnf) ^ j) (H.atomChoice NF x), ⟨j, rfl⟩, hj⟩
+
+/-- `hypermap.hl`:9944 `lemma_QuotientNode`。 -/
+theorem node_quotient_atomChoice (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) (hx : x ∈ dartsOfFamily NF) :
+    (H.quotientHypermap hnf).node (H.atomChoice NF x) =
+      {a | ∃ y ∈ H.node x, a = H.atomChoice NF y} := by
+  ext a
+  constructor
+  · intro ha
+    have hsub : (H.quotientHypermap hnf).node (H.atomChoice NF x) ⊆
+        ↑((H.atomsOfFamily_finite hnf).toFinset) :=
+      orbitMap_subset_of_permutesOn (H.quotientHypermap hnf).nodeMap_permutes
+        ((H.atomsOfFamily_finite hnf).mem_toFinset.mpr
+          ((H.atomChoice_mem_atomsOfFamily_iff hnf x).mpr hx))
+    have ha' : a ∈ H.atomsOfFamily NF :=
+      (H.atomsOfFamily_finite hnf).mem_toFinset.mp (hsub ha)
+    obtain ⟨y, hy, rfl⟩ := (H.atom_iff_eq_atomChoice hnf a).mp ha'
+    refine ⟨y, ?_, rfl⟩
+    have h1 : y ∈ H.supportNode hnf (H.atomChoice NF x) :=
+      ⟨H.atomChoice NF y, ha, H.atomChoice_self_mem hnf y⟩
+    rw [H.supportNode_atomChoice hnf hx] at h1
+    exact h1
+  · rintro ⟨y, hy, rfl⟩
+    have h1 : y ∈ H.supportNode hnf (H.atomChoice NF x) := by
+      rw [H.supportNode_atomChoice hnf hx]
+      exact hy
+    obtain ⟨t, ht, hyt⟩ := h1
+    have hsub : (H.quotientHypermap hnf).node (H.atomChoice NF x) ⊆
+        ↑((H.atomsOfFamily_finite hnf).toFinset) :=
+      orbitMap_subset_of_permutesOn (H.quotientHypermap hnf).nodeMap_permutes
+        ((H.atomsOfFamily_finite hnf).mem_toFinset.mpr
+          ((H.atomChoice_mem_atomsOfFamily_iff hnf x).mpr hx))
+    have ht' : t ∈ H.atomsOfFamily NF :=
+      (H.atomsOfFamily_finite hnf).mem_toFinset.mp (hsub ht)
+    obtain ⟨z, hz, rfl⟩ := (H.atom_iff_eq_atomChoice hnf t).mp ht'
+    rw [H.atomChoice_eq_of_mem hnf hyt]
+    exact ht
+
+/-- `hypermap.hl`:9980 `lemma_in_QN`。 -/
+theorem atomChoice_mem_node_quotient_iff (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) (hx : x ∈ dartsOfFamily NF) (y : α) :
+    H.atomChoice NF y ∈ (H.quotientHypermap hnf).node (H.atomChoice NF x) ↔
+    y ∈ H.node x := by
+  rw [H.node_quotient_atomChoice hnf hx]
+  constructor
+  · rintro ⟨a, ha, heq⟩
+    have h1 : y ∈ H.atomChoice NF a := heq ▸ H.atomChoice_self_mem hnf y
+    have h2 := (H.atomChoice_subset_node hnf a) h1
+    have h3 : H.node a = H.node x := (H.node_eq_of_mem ha).symm
+    rw [h3] at h2
+    exact h2
+  · intro hy
+    exact ⟨y, hy, rfl⟩
+
+/-- `hypermap.hl`:9998 `lemma_in_node3`。 -/
+theorem mem_node_of_atomChoice_mem_node_quotient (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) (hx : x ∈ dartsOfFamily NF) {y : α}
+    (h : H.atomChoice NF y ∈ (H.quotientHypermap hnf).node (H.atomChoice NF x)) :
+    y ∈ H.node x :=
+  (H.atomChoice_mem_node_quotient_iff hnf hx y).mp h
 
 /-! ## hypermap 同构（`hypermap.hl`:9612–9684） -/
 
