@@ -285,6 +285,29 @@ Explicitly skipped in this range:
   the ~615-line multi-case induction; all its prerequisites up to this
   line are now ported, the theorem itself is the next block's target.
 
+Coverage (block 9, the combinatorial Jordan curve theorem):
+- `lemma_minimum_Moebius_hypermap` (5406, as
+  `not_planar_of_Moebius_contour_card_three`: a hypermap with 3 darts
+  carrying a Moebius contour is non-planar — the three-step analysis
+  forces `f (p 2) = p 0`, all three orbits and the component fill the
+  dart set, giving `1+1+1 = 3+2·1`).
+- **`lemmaLIPYTUI`** (6080, as `Hypermap.not_exists_isMoebiusContour_of_planar`:
+  planar hypermaps carry no Moebius contour). Ported completely, with
+  the four case branches factored out as standalone theorems:
+  - `isMoebiusContour_nodeWalkup_branch` / `isMoebiusContour_faceWalkup_branch`
+    (the `m < t` cases; the shorter Moebius contour on the walkup is
+    `concatenate_two_disjoint_contours` of the two eliminate segments,
+    indices `m, t-1`),
+  - `isMoebiusContour_nodeWalkup_branch_eq_f` /
+    `isMoebiusContour_faceWalkup_branch_eq_n` (the `m = t > 1` cases,
+    single shifted segment, indices `m-1, m-1`),
+  - `isMoebiusContour_nodeWalkup_branch_one_f` /
+    `isMoebiusContour_faceWalkup_branch_one_n` (the `m = t = 1, 2 < k`
+    cases, concatenate with the length-0 tail segment, indices `1, 1`),
+  - the `k = 2` case closes via `not_planar_of_Moebius_contour_card_three`;
+  - the `support ≠ darts` case closes via
+    `isMoebiusContour_edgeWalkup_of_not_mem_support` + the induction.
+
 Type correspondences (HOL Light ↦ Lean 4):
 - `(A)hypermap` (a 4-tuple carrying `FINITE`/`permutes` side conditions,
   `hypermap.hl`:83–93) ↦ `structure Hypermap` with a `Finset` of darts and
@@ -4777,6 +4800,595 @@ theorem isInjContour_nodeWalkup_eliminate (H : Hypermap α) {p : ℕ → α} {k 
         exact (H.nodeMap_nodeWalkup (p m) (p m)).2.1 ⟨hcond1, hcond2⟩
       exact Or.inr (((Equiv.symm_apply_eq (H.nodeWalkup (p m)).nodeMap).mpr
         (h1.trans hL).symm).symm)
+
+end Hypermap
+
+/-- `hypermap.hl`:5406 `lemma_minimum_Moebius_hypermap`：3 个 dart 的 hypermap
+有 Moebius contour 则非平面（LIPYTUI 的 `k = 2` 收尾分支）。 -/
+theorem not_planar_of_Moebius_contour_card_three {α : Type*} [DecidableEq α]
+    (H : Hypermap α) (hcard : H.darts.card = 3)
+    (hmoe : ∃ p : ℕ → α, ∃ k : ℕ, H.IsMoebiusContour p k) : ¬ H.Planar := by
+  obtain ⟨p, k, hp⟩ := hmoe
+  obtain ⟨h2k, hp0, hks⟩ := H.darts_on_Moebius_contour hp
+  have hk : k = 2 := by omega
+  subst hk
+  have hsup : ↑H.darts = (fun i => p i) '' ↑(Finset.range (2 + 1)) :=
+    H.darts_eq_of_Moebius_contour hp (by rw [hcard])
+  obtain ⟨hinj, i, j, hi0, hij, hjk, h1, h2⟩ := hp
+  have hij12 : i = 1 ∧ j = 1 := by omega
+  obtain ⟨rfl, rfl⟩ := hij12
+  -- `p 1 = n (p 0)`，`p 2 = n (p 1)`
+  have hF8 : p 2 = H.nodeMap (p 1) := h2
+  -- inj 事实
+  have hF9 : p 1 ≠ p 0 := ((H.isInjContour_iff p 2 |>.mp hinj).2 1 0 (by omega) (by omega)).symm
+  have hF10 : p 2 ≠ p 1 := ((H.isInjContour_iff p 2 |>.mp hinj).2 2 1 (by omega) (by omega)).symm
+  have hF11 : p 2 ≠ p 0 := ((H.isInjContour_iff p 2 |>.mp hinj).2 2 0 (by omega) (by omega)).symm
+  have hcont := H.isContour_of_isInjContour hinj
+  -- 第 0 步必为 f 步（n⁻¹ 步给 `n (p 1) = p 0 = p 2`，矛盾）
+  have hF12 : p 1 = H.faceMap (p 0) := by
+    have hst := (H.isContour_iff p 2).mp hcont 0 (by omega)
+    rcases hst with hst | hst
+    · exact hst
+    · exfalso
+      have h3 : H.nodeMap (p 1) = p 0 := ((Equiv.symm_apply_eq H.nodeMap).mp hst.symm).symm
+      exact hF11 (hF8.trans h3)
+  -- 第 1 步必为 f 步（n⁻¹ 步给 `n (p 2) = p 1 = n (p 0)`，单射矛盾）
+  have hF14 : p 2 = H.faceMap (p 1) := by
+    have hst := (H.isContour_iff p 2).mp hcont 1 (by omega)
+    rcases hst with hst | hst
+    · exact hst
+    · exfalso
+      have h3 : H.nodeMap (p 2) = p 1 := ((Equiv.symm_apply_eq H.nodeMap).mp hst.symm).symm
+      exact hF11 (H.nodeMap.injective (h3.trans h1))
+  -- `f (p 2) = p 0`（`f (p 2) ∈ darts` 三选一，其余两个与单射矛盾）
+  have hp2 : p 2 ∈ H.darts := by
+    show p 2 ∈ (↑H.darts : Set α)
+    rw [hsup]
+    exact ⟨2, Finset.mem_coe.mpr (Finset.mem_range.mpr (by omega)), rfl⟩
+  have hp1 : p 1 ∈ H.darts := by
+    show p 1 ∈ (↑H.darts : Set α)
+    rw [hsup]
+    exact ⟨1, Finset.mem_coe.mpr (Finset.mem_range.mpr (by omega)), rfl⟩
+  have hF17 : H.faceMap (p 2) = p 0 := by
+    have hmem : H.faceMap (p 2) ∈ (↑H.darts : Set α) :=
+      Finset.mem_coe.mpr (H.faceMap_apply_mem hp2)
+    rw [hsup] at hmem
+    obtain ⟨a, ha, haeq⟩ := hmem
+    have ha' : a < 3 := Finset.mem_range.mp (Finset.mem_coe.mp ha)
+    rcases (by omega : a = 0 ∨ a = 1 ∨ a = 2) with rfl | rfl | rfl
+    · exact haeq.symm
+    · exact absurd (H.faceMap.injective (haeq.symm.trans hF12)) hF11
+    · exact absurd (H.faceMap.injective (haeq.symm.trans hF14)) hF10
+  -- 三条轨道都充满整个 dart 集
+  have hF20 : orbitMap H.faceMap (p 0) = ↑H.darts := by
+    apply Set.Subset.antisymm (orbitMap_subset_of_permutesOn H.faceMap_permutes hp0)
+    rw [hsup]
+    rintro y ⟨a, ha, rfl⟩
+    have ha' : a < 3 := Finset.mem_range.mp (Finset.mem_coe.mp ha)
+    rcases (by omega : a = 0 ∨ a = 1 ∨ a = 2) with rfl | rfl | rfl
+    · exact mem_orbitMap_self _ _
+    · show p 1 ∈ orbitMap H.faceMap (p 0)
+      rw [hF12]
+      exact apply_mem_orbitMap _ _
+    · exact ⟨2, by rw [pow_two, Equiv.Perm.mul_apply, ← hF12, ← hF14]⟩
+  have hF21 : orbitMap H.nodeMap (p 0) = ↑H.darts := by
+    apply Set.Subset.antisymm (orbitMap_subset_of_permutesOn H.nodeMap_permutes hp0)
+    rw [hsup]
+    rintro y ⟨a, ha, rfl⟩
+    have ha' : a < 3 := Finset.mem_range.mp (Finset.mem_coe.mp ha)
+    rcases (by omega : a = 0 ∨ a = 1 ∨ a = 2) with rfl | rfl | rfl
+    · exact mem_orbitMap_self _ _
+    · show p 1 ∈ orbitMap H.nodeMap (p 0)
+      rw [h1]
+      exact apply_mem_orbitMap _ _
+    · exact ⟨2, by rw [pow_two, Equiv.Perm.mul_apply, ← h1, ← hF8]⟩
+  -- `e (p 1) = p 2`，`e (p 2) = p 0`（`enf_apply` 的推论）
+  have hE1 : H.edgeMap (p 1) = p 2 := by
+    have h3 : H.edgeMap (H.nodeMap (H.faceMap (p 2))) = p 2 := H.enf_apply (p 2)
+    rw [hF17, ← h1] at h3
+    exact h3
+  have hE2 : H.edgeMap (p 2) = p 0 := by
+    have h3 : H.edgeMap (H.nodeMap (H.faceMap (p 0))) = p 0 := H.enf_apply (p 0)
+    rw [← hF12, ← hF8] at h3
+    exact h3
+  have hF22 : orbitMap H.edgeMap (p 1) = ↑H.darts := by
+    apply Set.Subset.antisymm (orbitMap_subset_of_permutesOn H.edgeMap_permutes hp1)
+    rw [hsup]
+    rintro y ⟨a, ha, rfl⟩
+    have ha' : a < 3 := Finset.mem_range.mp (Finset.mem_coe.mp ha)
+    rcases (by omega : a = 0 ∨ a = 1 ∨ a = 2) with rfl | rfl | rfl
+    · exact ⟨2, by rw [pow_two, Equiv.Perm.mul_apply, hE1, hE2]⟩
+    · exact mem_orbitMap_self _ _
+    · show p 2 ∈ orbitMap H.edgeMap (p 1)
+      rw [← hE1]
+      exact apply_mem_orbitMap _ _
+  -- 一个组件、一条边、一个节点、一个面
+  have hF23 : H.combComponent (p 0) = ↑H.darts := by
+    apply Set.Subset.antisymm (H.combComponent_subset_darts hp0)
+    rw [← hF21]
+    exact H.node_subset_component (p 0)
+  have hC : H.numberOfComponents = 1 := by
+    show H.setOfComponents.ncard = 1
+    rw [H.setOfComponents_eq_singleton hF23, Set.ncard_singleton]
+  have hN : H.numberOfNodes = 1 := by
+    show (setOfOrbits H.darts H.nodeMap).ncard = 1
+    rw [Hypermap.PermutesOn.setOfOrbits_eq_singleton H.nodeMap_permutes hF21, Set.ncard_singleton]
+  have hE : H.numberOfEdges = 1 := by
+    show (setOfOrbits H.darts H.edgeMap).ncard = 1
+    rw [Hypermap.PermutesOn.setOfOrbits_eq_singleton H.edgeMap_permutes hF22, Set.ncard_singleton]
+  have hF : H.numberOfFaces = 1 := by
+    show (setOfOrbits H.darts H.faceMap).ncard = 1
+    rw [Hypermap.PermutesOn.setOfOrbits_eq_singleton H.faceMap_permutes hF20, Set.ncard_singleton]
+  intro hplanar
+  unfold Hypermap.Planar at hplanar
+  rw [hN, hE, hF, hC, hcard] at hplanar
+  omega
+
+namespace Hypermap
+
+variable {α : Type*} [DecidableEq α]
+
+end Hypermap
+
+namespace Hypermap
+
+variable {α : Type*} [DecidableEq α]
+
+/-- LIPYTUI 分支 (b)：`m < t` 且第 `m` 步为 f 步时，Moebius contour 迁移到 nodeWalkup。 -/
+theorem isMoebiusContour_nodeWalkup_branch (H : Hypermap α) {p : ℕ → α} {k m t : ℕ}
+    (hp : H.IsMoebiusContour p k) (hm : 0 < m) (_hmt : m ≤ t) (htk : t < k)
+    (hpt : p t = H.nodeMap (p 0)) (hpk : p k = H.nodeMap (p m)) (hlt : m < t)
+    (hst : p (m + 1) = H.faceMap (p m)) :
+    ∃ g : ℕ → α, (H.nodeWalkup (p m)).IsMoebiusContour g (k - 1) := by
+  obtain ⟨hinj, -⟩ := hp
+  have hinjp := H.isInjContour_pairwise hinj
+  obtain ⟨h4, h5, h6⟩ := H.isInjContour_nodeWalkup_eliminate hinj hm (by omega) hst
+  have hdisj : ∀ i ≤ m - 1, ∀ j ≤ k - m - 1, (shiftPath p (m + 1)) j ≠ p i := by
+    intro i hi j hj hcon
+    have := hinjp (m + 1 + j) i (by omega) (by omega) hcon
+    omega
+  obtain ⟨g, hg0, hgm, hgpath, hg1, hg2⟩ :=
+    (H.nodeWalkup (p m)).concatenate_two_disjoint_contours h4 h5 h6 hdisj
+  have hgpath' : (H.nodeWalkup (p m)).isInjContour g (k - 1) := by
+    have h1 : m - 1 + (k - m - 1) + 1 = k - 1 := by omega
+    rwa [h1] at hgpath
+  refine ⟨g, hgpath', m, t - 1, by omega, by omega, by omega, ?_, ?_⟩
+  · have hN : (H.nodeWalkup (p m)).nodeMap (p 0) = H.nodeMap (p 0) := by
+      have hne1 : p 0 ≠ p m := fun hcon => absurd (hinjp 0 m (by omega) (by omega) hcon) (by omega)
+      have hne2 : p 0 ≠ H.nodeMap⁻¹ (p m) := by
+        intro hcon
+        have h1 : H.nodeMap (p 0) = p m := by
+          rw [hcon]; exact Equiv.apply_symm_apply _ _
+        have h2 : p t = p m := hpt.trans h1
+        exact absurd (hinjp t m (by omega) (by omega) h2) (by omega)
+      have hne3 : p 0 ≠ H.faceMap (p m) := by
+        intro hcon
+        have h1 : p 0 = p (m + 1) := hcon.trans hst.symm
+        exact absurd (hinjp 0 (m + 1) (by omega) (by omega) h1) (by omega)
+      exact (H.nodeMap_nodeWalkup (p m) _).2.2.2 ⟨hne1, hne2, hne3⟩
+    have hgt : g (t - 1) = p t := by
+      have h1 := hg2 (t - m - 1) (by omega)
+      rw [(by omega : (m - 1) + (t - m - 1) + 1 = t - 1)] at h1
+      refine h1.trans ?_
+      show p (m + 1 + (t - m - 1)) = p t
+      rw [(by omega : m + 1 + (t - m - 1) = t)]
+    rw [hg0, hN, hgt, hpt]
+  · have hgm' : g m = p (m + 1) := by
+      have h1 := hg2 0 (by omega)
+      rw [(by omega : (m - 1) + 0 + 1 = m)] at h1
+      refine h1.trans ?_
+      show p (m + 1 + 0) = p (m + 1)
+      rw [Nat.add_zero]
+    have hNk : (H.nodeWalkup (p m)).nodeMap (p (m + 1)) = H.nodeMap (p m) := by
+      have hne1 : H.faceMap (p m) ≠ p m := by
+        rw [← hst]
+        exact fun hcon => absurd (hinjp (m + 1) m (by omega) (by omega) hcon) (by omega)
+      have hne2 : H.nodeMap (p m) ≠ p m := by
+        rw [← hpk]
+        exact fun hcon => absurd (hinjp k m (by omega) (by omega) hcon) (by omega)
+      rw [hst]
+      exact (H.nodeMap_nodeWalkup (p m) (p m)).2.1 ⟨hne1, hne2⟩
+    have hgk : g (k - 1) = p k := by
+      have h1 := hg2 (k - m - 1) (by omega)
+      rw [(by omega : (m - 1) + (k - m - 1) + 1 = k - 1)] at h1
+      refine h1.trans ?_
+      show p (m + 1 + (k - m - 1)) = p k
+      rw [(by omega : m + 1 + (k - m - 1) = k)]
+    rw [hgk, hgm', hNk, hpk]
+
+/-- LIPYTUI 分支 (c)：`m < t` 且第 `m` 步为 n⁻¹ 步时，Moebius contour 迁移到 faceWalkup。 -/
+theorem isMoebiusContour_faceWalkup_branch (H : Hypermap α) {p : ℕ → α} {k m t : ℕ}
+    (hp : H.IsMoebiusContour p k) (hm : 0 < m) (_hmt : m ≤ t) (htk : t < k)
+    (hpt : p t = H.nodeMap (p 0)) (hpk : p k = H.nodeMap (p m)) (hlt : m < t)
+    (hst : p (m + 1) = H.nodeMap.symm (p m)) :
+    ∃ g : ℕ → α, (H.faceWalkup (p m)).IsMoebiusContour g (k - 1) := by
+  obtain ⟨hinj, -⟩ := hp
+  have hinjp := H.isInjContour_pairwise hinj
+  have hst' : H.nodeMap (p (m + 1)) = p m := ((Equiv.symm_apply_eq H.nodeMap).mp hst.symm).symm
+  obtain ⟨h4, h5, h6⟩ := H.isInjContour_faceWalkup_eliminate hinj hm (by omega) hst'
+  have hdisj : ∀ i ≤ m - 1, ∀ j ≤ k - m - 1, (shiftPath p (m + 1)) j ≠ p i := by
+    intro i hi j hj hcon
+    have := hinjp (m + 1 + j) i (by omega) (by omega) hcon
+    omega
+  obtain ⟨g, hg0, hgm, hgpath, hg1, hg2⟩ :=
+    (H.faceWalkup (p m)).concatenate_two_disjoint_contours h4 h5 h6 hdisj
+  have hgpath' : (H.faceWalkup (p m)).isInjContour g (k - 1) := by
+    have h1 : m - 1 + (k - m - 1) + 1 = k - 1 := by omega
+    rwa [h1] at hgpath
+  refine ⟨g, hgpath', m, t - 1, by omega, by omega, by omega, ?_, ?_⟩
+  · have hN : (H.faceWalkup (p m)).nodeMap (p 0) = H.nodeMap (p 0) := by
+      have hne1 : p 0 ≠ p m := fun hcon => absurd (hinjp 0 m (by omega) (by omega) hcon) (by omega)
+      have hne2 : p 0 ≠ H.nodeMap.symm (p m) := by
+        intro hcon
+        have h1 : H.nodeMap (p 0) = p m := by
+          rw [hcon]; exact Equiv.apply_symm_apply _ _
+        have h2 : p t = p m := hpt.trans h1
+        exact absurd (hinjp t m (by omega) (by omega) h2) (by omega)
+      exact (H.nodeMap_faceWalkup (p m) _).2.2 ⟨hne1, hne2⟩
+    have hgt : g (t - 1) = p t := by
+      have h1 := hg2 (t - m - 1) (by omega)
+      rw [(by omega : (m - 1) + (t - m - 1) + 1 = t - 1)] at h1
+      refine h1.trans ?_
+      show p (m + 1 + (t - m - 1)) = p t
+      rw [(by omega : m + 1 + (t - m - 1) = t)]
+    rw [hg0, hN, hgt, hpt]
+  · have hgm' : g m = p (m + 1) := by
+      have h1 := hg2 0 (by omega)
+      rw [(by omega : (m - 1) + 0 + 1 = m)] at h1
+      refine h1.trans ?_
+      show p (m + 1 + 0) = p (m + 1)
+      rw [Nat.add_zero]
+    have hNk : (H.faceWalkup (p m)).nodeMap (p (m + 1)) = H.nodeMap (p m) := by
+      rw [hst]
+      exact (H.nodeMap_faceWalkup (p m) (p m)).2.1
+    have hgk : g (k - 1) = p k := by
+      have h1 := hg2 (k - m - 1) (by omega)
+      rw [(by omega : (m - 1) + (k - m - 1) + 1 = k - 1)] at h1
+      refine h1.trans ?_
+      show p (m + 1 + (k - m - 1)) = p k
+      rw [(by omega : m + 1 + (k - m - 1) = k)]
+    rw [hgk, hgm', hNk, hpk]
+
+/-- LIPYTUI 分支 (d1)：`m = t > 1` 且第 0 步为 f 步时，Moebius contour
+迁移到 `nodeWalkup (p 0)`（路径 `shiftPath p 1`，长度 `k - 1`，下标 `(m-1, m-1)`）。 -/
+theorem isMoebiusContour_nodeWalkup_branch_eq_f (H : Hypermap α) {p : ℕ → α} {k m : ℕ}
+    (hp : H.IsMoebiusContour p k) (hm : 1 < m) (hmk : m < k)
+    (hpm : p m = H.nodeMap (p 0)) (hpk : p k = H.nodeMap (p m))
+    (hst : p 1 = H.faceMap (p 0)) :
+    ∃ g : ℕ → α, (H.nodeWalkup (p 0)).IsMoebiusContour g (k - 1) := by
+  obtain ⟨hinj, -⟩ := hp
+  have hinjp := H.isInjContour_pairwise hinj
+  have h5 := H.isInjContour_nodeWalkup_shift hinj (by omega) hst
+  have h5' : (H.nodeWalkup (p 0)).isInjContour (shiftPath p 1) (k - 1) := by
+    have h1 : k - (0 + 1) = k - 1 := by omega
+    rwa [h1] at h5
+  refine ⟨shiftPath p 1, h5', m - 1, m - 1, by omega, by omega, by omega, ?_, ?_⟩
+  · -- `g (m-1) = nodeMap G (g 0)`：`g 0 = p 1 = f (p 0)` 由第 2 分量求值
+    have hN : (H.nodeWalkup (p 0)).nodeMap (p 1) = H.nodeMap (p 0) := by
+      have hne1 : H.faceMap (p 0) ≠ p 0 := by
+        rw [← hst]
+        exact fun hcon => absurd (hinjp 1 0 (by omega) (by omega) hcon) (by omega)
+      have hne2 : H.nodeMap (p 0) ≠ p 0 := by
+        rw [← hpm]
+        exact fun hcon => absurd (hinjp m 0 (by omega) (by omega) hcon) (by omega)
+      rw [hst]
+      exact (H.nodeMap_nodeWalkup (p 0) (p 0)).2.1 ⟨hne1, hne2⟩
+    show (shiftPath p 1) (m - 1) = (H.nodeWalkup (p 0)).nodeMap ((shiftPath p 1) 0)
+    show p (1 + (m - 1)) = (H.nodeWalkup (p 0)).nodeMap (p (1 + 0))
+    rw [(by omega : 1 + (m - 1) = m), (by omega : (1 : ℕ) + 0 = 1), hN, hpm]
+  · -- `g (k-1) = nodeMap G (g (m-1))`：`nodeMap G (p m) = n (p m)` 由第 4 分量求值
+    have hN : (H.nodeWalkup (p 0)).nodeMap (p m) = H.nodeMap (p m) := by
+      have hne1 : p m ≠ p 0 :=
+        fun hcon => absurd (hinjp m 0 (by omega) (by omega) hcon) (by omega)
+      have hne2 : p m ≠ H.nodeMap⁻¹ (p 0) := by
+        intro hcon
+        have h1 : H.nodeMap (p m) = p 0 := by
+          rw [hcon]; exact Equiv.apply_symm_apply _ _
+        have h2 : p k = p 0 := hpk.trans h1
+        exact absurd (hinjp k 0 (by omega) (by omega) h2) (by omega)
+      have hne3 : p m ≠ H.faceMap (p 0) := by
+        intro hcon
+        have h1 : p m = p 1 := hcon.trans hst.symm
+        exact absurd (hinjp m 1 (by omega) (by omega) h1) (by omega)
+      exact (H.nodeMap_nodeWalkup (p 0) _).2.2.2 ⟨hne1, hne2, hne3⟩
+    show (shiftPath p 1) (k - 1) = (H.nodeWalkup (p 0)).nodeMap ((shiftPath p 1) (m - 1))
+    show p (1 + (k - 1)) = (H.nodeWalkup (p 0)).nodeMap (p (1 + (m - 1)))
+    rw [(by omega : 1 + (k - 1) = k), (by omega : 1 + (m - 1) = m), hN, hpk]
+
+/-- LIPYTUI 分支 (d2)：`m = t > 1` 且第 0 步为 n⁻¹ 步时，Moebius contour
+迁移到 `faceWalkup (p 0)`。 -/
+theorem isMoebiusContour_faceWalkup_branch_eq_n (H : Hypermap α) {p : ℕ → α} {k m : ℕ}
+    (hp : H.IsMoebiusContour p k) (hm : 1 < m) (hmk : m < k)
+    (hpm : p m = H.nodeMap (p 0)) (hpk : p k = H.nodeMap (p m))
+    (hst : p 1 = H.nodeMap.symm (p 0)) :
+    ∃ g : ℕ → α, (H.faceWalkup (p 0)).IsMoebiusContour g (k - 1) := by
+  obtain ⟨hinj, -⟩ := hp
+  have hinjp := H.isInjContour_pairwise hinj
+  have hst' : H.nodeMap (p 1) = p 0 := ((Equiv.symm_apply_eq H.nodeMap).mp hst.symm).symm
+  have h5 := H.isInjContour_faceWalkup_shift hinj (by omega) hst'
+  have h5' : (H.faceWalkup (p 0)).isInjContour (shiftPath p 1) (k - 1) := by
+    have h1 : k - (0 + 1) = k - 1 := by omega
+    rwa [h1] at h5
+  refine ⟨shiftPath p 1, h5', m - 1, m - 1, by omega, by omega, by omega, ?_, ?_⟩
+  · -- `g (m-1) = nodeMap G (g 0)`：`nodeMap G (n⁻¹ (p 0)) = n (p 0)`（第 2 分量）
+    have hN : (H.faceWalkup (p 0)).nodeMap (p 1) = H.nodeMap (p 0) := by
+      rw [hst]
+      exact (H.nodeMap_faceWalkup (p 0) (p 0)).2.1
+    show (shiftPath p 1) (m - 1) = (H.faceWalkup (p 0)).nodeMap ((shiftPath p 1) 0)
+    show p (1 + (m - 1)) = (H.faceWalkup (p 0)).nodeMap (p (1 + 0))
+    rw [(by omega : 1 + (m - 1) = m), (by omega : (1 : ℕ) + 0 = 1), hN, hpm]
+  · have hN : (H.faceWalkup (p 0)).nodeMap (p m) = H.nodeMap (p m) := by
+      have hne1 : p m ≠ p 0 :=
+        fun hcon => absurd (hinjp m 0 (by omega) (by omega) hcon) (by omega)
+      have hne2 : p m ≠ H.nodeMap.symm (p 0) := by
+        intro hcon
+        have h1 : H.nodeMap (p m) = p 0 := by
+          rw [hcon]; exact Equiv.apply_symm_apply _ _
+        have h2 : p k = p 0 := hpk.trans h1
+        exact absurd (hinjp k 0 (by omega) (by omega) h2) (by omega)
+      exact (H.nodeMap_faceWalkup (p 0) _).2.2 ⟨hne1, hne2⟩
+    show (shiftPath p 1) (k - 1) = (H.faceWalkup (p 0)).nodeMap ((shiftPath p 1) (m - 1))
+    show p (1 + (k - 1)) = (H.faceWalkup (p 0)).nodeMap (p (1 + (m - 1)))
+    rw [(by omega : 1 + (k - 1) = k), (by omega : 1 + (m - 1) = m), hN, hpk]
+
+/-- LIPYTUI 分支 (e1)：`m = t = 1` 且 `2 < k`、第 `k-1` 步为 f 步时，
+Moebius contour 迁移到 `nodeWalkup (p (k-1))`（拼接 `p[0..k-2]` 与 `p[k]`，
+下标 `(1, 1)`，长度 `k - 1`）。 -/
+theorem isMoebiusContour_nodeWalkup_branch_one_f (H : Hypermap α) {p : ℕ → α} {k : ℕ}
+    (hp : H.IsMoebiusContour p k) (hk : 2 < k)
+    (hp1 : p 1 = H.nodeMap (p 0)) (hpk : p k = H.nodeMap (p 1))
+    (hst : p k = H.faceMap (p (k - 1))) :
+    ∃ g : ℕ → α, (H.nodeWalkup (p (k - 1))).IsMoebiusContour g (k - 1) := by
+  obtain ⟨hinj, -⟩ := hp
+  have hinjp := H.isInjContour_pairwise hinj
+  have hst' : p ((k - 1) + 1) = H.faceMap (p (k - 1)) := by
+    rw [(by omega : k - 1 + 1 = k)]
+    exact hst
+  obtain ⟨h4, h5, h6⟩ := H.isInjContour_nodeWalkup_eliminate hinj (by omega) (by omega) hst'
+  have hdisj : ∀ i ≤ k - 1 - 1, ∀ j ≤ k - (k - 1) - 1, (shiftPath p ((k - 1) + 1)) j ≠ p i := by
+    intro i hi j hj hcon
+    have hjk : j = 0 := by omega
+    rw [hjk] at hcon
+    have hcon' : p k = p i := by
+      have h1 : (shiftPath p ((k - 1) + 1)) 0 = p k := by
+        show p ((k - 1) + 1 + 0) = p k
+        rw [(by omega : (k - 1) + 1 + 0 = k)]
+      rwa [h1] at hcon
+    exact absurd (hinjp k i (by omega) (by omega) hcon') (by omega)
+  obtain ⟨g, hg0, hgm, hgpath, hg1, hg2⟩ :=
+    (H.nodeWalkup (p (k - 1))).concatenate_two_disjoint_contours h4 h5 h6 hdisj
+  have hgpath' : (H.nodeWalkup (p (k - 1))).isInjContour g (k - 1) := by
+    have h1 : k - 1 - 1 + (k - (k - 1) - 1) + 1 = k - 1 := by omega
+    rwa [h1] at hgpath
+  refine ⟨g, hgpath', 1, 1, by omega, by omega, by omega, ?_, ?_⟩
+  · -- `g 1 = nodeMap G (g 0)`：`nodeMap G (p 0) = n (p 0) = p 1`（第 4 分量）
+    have hN : (H.nodeWalkup (p (k - 1))).nodeMap (p 0) = H.nodeMap (p 0) := by
+      have hne1 : p 0 ≠ p (k - 1) :=
+        fun hcon => absurd (hinjp 0 (k - 1) (by omega) (by omega) hcon) (by omega)
+      have hne2 : p 0 ≠ H.nodeMap⁻¹ (p (k - 1)) := by
+        intro hcon
+        have h1 : H.nodeMap (p 0) = p (k - 1) := by
+          rw [hcon]; exact Equiv.apply_symm_apply _ _
+        have h2 : p 1 = p (k - 1) := hp1.trans h1
+        exact absurd (hinjp 1 (k - 1) (by omega) (by omega) h2) (by omega)
+      have hne3 : p 0 ≠ H.faceMap (p (k - 1)) := by
+        intro hcon
+        have h1 : p 0 = p k := hcon.trans hst.symm
+        exact absurd (hinjp 0 k (by omega) (by omega) h1) (by omega)
+      exact (H.nodeMap_nodeWalkup (p (k - 1)) _).2.2.2 ⟨hne1, hne2, hne3⟩
+    have hg1' : g 1 = p 1 := hg1 1 (by omega)
+    rw [hg1', hg0, hN, hp1]
+  · -- `g (k-1) = nodeMap G (g 1)`：`nodeMap G (p 1) = n (p 1) = p k`（第 4 分量）
+    have hN : (H.nodeWalkup (p (k - 1))).nodeMap (p 1) = H.nodeMap (p 1) := by
+      have hne1 : p 1 ≠ p (k - 1) :=
+        fun hcon => absurd (hinjp 1 (k - 1) (by omega) (by omega) hcon) (by omega)
+      have hne2 : p 1 ≠ H.nodeMap⁻¹ (p (k - 1)) := by
+        intro hcon
+        have h1 : H.nodeMap (p 1) = p (k - 1) := by
+          rw [hcon]; exact Equiv.apply_symm_apply _ _
+        have h2 : p k = p (k - 1) := hpk.trans h1
+        exact absurd (hinjp k (k - 1) (by omega) (by omega) h2) (by omega)
+      have hne3 : p 1 ≠ H.faceMap (p (k - 1)) := by
+        intro hcon
+        have h1 : p 1 = p k := hcon.trans hst.symm
+        exact absurd (hinjp 1 k (by omega) (by omega) h1) (by omega)
+      exact (H.nodeMap_nodeWalkup (p (k - 1)) _).2.2.2 ⟨hne1, hne2, hne3⟩
+    have hgk : g (k - 1) = p k := by
+      have h1 := hg2 (k - (k - 1) - 1) (by omega)
+      rw [(by omega : (k - 1 - 1) + (k - (k - 1) - 1) + 1 = k - 1)] at h1
+      refine h1.trans ?_
+      show p ((k - 1) + 1 + (k - (k - 1) - 1)) = p k
+      rw [(by omega : (k - 1) + 1 + (k - (k - 1) - 1) = k)]
+    have hg1' : g 1 = p 1 := hg1 1 (by omega)
+    rw [hgk, hg1', hN, hpk]
+
+/-- LIPYTUI 分支 (e2)：`m = t = 1` 且 `2 < k`、第 `k-1` 步为 n⁻¹ 步时，
+Moebius contour 迁移到 `faceWalkup (p (k-1))`。 -/
+theorem isMoebiusContour_faceWalkup_branch_one_n (H : Hypermap α) {p : ℕ → α} {k : ℕ}
+    (hp : H.IsMoebiusContour p k) (hk : 2 < k)
+    (hp1 : p 1 = H.nodeMap (p 0)) (hpk : p k = H.nodeMap (p 1))
+    (hst : p k = H.nodeMap.symm (p (k - 1))) :
+    ∃ g : ℕ → α, (H.faceWalkup (p (k - 1))).IsMoebiusContour g (k - 1) := by
+  obtain ⟨hinj, -⟩ := hp
+  have hinjp := H.isInjContour_pairwise hinj
+  have hst' : H.nodeMap (p k) = p (k - 1) := ((Equiv.symm_apply_eq H.nodeMap).mp hst.symm).symm
+  have hst'' : H.nodeMap (p ((k - 1) + 1)) = p (k - 1) := by
+    rw [(by omega : k - 1 + 1 = k)]
+    exact hst'
+  obtain ⟨h4, h5, h6⟩ := H.isInjContour_faceWalkup_eliminate hinj (by omega) (by omega) hst''
+  have hdisj : ∀ i ≤ k - 1 - 1, ∀ j ≤ k - (k - 1) - 1, (shiftPath p ((k - 1) + 1)) j ≠ p i := by
+    intro i hi j hj hcon
+    have hjk : j = 0 := by omega
+    rw [hjk] at hcon
+    have hcon' : p k = p i := by
+      have h1 : (shiftPath p ((k - 1) + 1)) 0 = p k := by
+        show p ((k - 1) + 1 + 0) = p k
+        rw [(by omega : (k - 1) + 1 + 0 = k)]
+      rwa [h1] at hcon
+    exact absurd (hinjp k i (by omega) (by omega) hcon') (by omega)
+  obtain ⟨g, hg0, hgm, hgpath, hg1, hg2⟩ :=
+    (H.faceWalkup (p (k - 1))).concatenate_two_disjoint_contours h4 h5 h6 hdisj
+  have hgpath' : (H.faceWalkup (p (k - 1))).isInjContour g (k - 1) := by
+    have h1 : k - 1 - 1 + (k - (k - 1) - 1) + 1 = k - 1 := by omega
+    rwa [h1] at hgpath
+  refine ⟨g, hgpath', 1, 1, by omega, by omega, by omega, ?_, ?_⟩
+  · -- `g 1 = nodeMap G (g 0)`：`nodeMap G (p 0) = n (p 0) = p 1`（第 3 分量）
+    have hN : (H.faceWalkup (p (k - 1))).nodeMap (p 0) = H.nodeMap (p 0) := by
+      have hne1 : p 0 ≠ p (k - 1) :=
+        fun hcon => absurd (hinjp 0 (k - 1) (by omega) (by omega) hcon) (by omega)
+      have hne2 : p 0 ≠ H.nodeMap.symm (p (k - 1)) := by
+        intro hcon
+        have h1 : H.nodeMap (p 0) = p (k - 1) := by
+          rw [hcon]; exact Equiv.apply_symm_apply _ _
+        have h2 : p 1 = p (k - 1) := hp1.trans h1
+        exact absurd (hinjp 1 (k - 1) (by omega) (by omega) h2) (by omega)
+      exact (H.nodeMap_faceWalkup (p (k - 1)) _).2.2 ⟨hne1, hne2⟩
+    have hg1' : g 1 = p 1 := hg1 1 (by omega)
+    rw [hg1', hg0, hN, hp1]
+  · -- `g (k-1) = nodeMap G (g 1)`：`nodeMap G (p 1) = n (p 1) = p k`（第 3 分量）
+    have hN : (H.faceWalkup (p (k - 1))).nodeMap (p 1) = H.nodeMap (p 1) := by
+      have hne1 : p 1 ≠ p (k - 1) :=
+        fun hcon => absurd (hinjp 1 (k - 1) (by omega) (by omega) hcon) (by omega)
+      have hne2 : p 1 ≠ H.nodeMap.symm (p (k - 1)) := by
+        intro hcon
+        have h1 : H.nodeMap (p 1) = p (k - 1) := by
+          rw [hcon]; exact Equiv.apply_symm_apply _ _
+        have h2 : p k = p (k - 1) := hpk.trans h1
+        exact absurd (hinjp k (k - 1) (by omega) (by omega) h2) (by omega)
+      exact (H.nodeMap_faceWalkup (p (k - 1)) _).2.2 ⟨hne1, hne2⟩
+    have hgk : g (k - 1) = p k := by
+      have h1 := hg2 (k - (k - 1) - 1) (by omega)
+      rw [(by omega : (k - 1 - 1) + (k - (k - 1) - 1) + 1 = k - 1)] at h1
+      refine h1.trans ?_
+      show p ((k - 1) + 1 + (k - (k - 1) - 1)) = p k
+      rw [(by omega : (k - 1) + 1 + (k - (k - 1) - 1) = k)]
+    have hg1' : g 1 = p 1 := hg1 1 (by omega)
+    rw [hgk, hg1', hN, hpk]
+
+/-- `hypermap.hl`:6080 `lemmaLIPYTUI`（组合 Jordan 曲线定理：
+平面 hypermap 上不存在 Moebius contour）。 -/
+theorem not_exists_isMoebiusContour_of_planar {α : Type*} [DecidableEq α]
+    (H : Hypermap α) (hplanar : H.Planar) :
+    ¬ ∃ p : ℕ → α, ∃ k : ℕ, H.IsMoebiusContour p k := by
+  have key : ∀ n : ℕ, ∀ H : Hypermap α, H.darts.card ≤ n → H.Planar →
+      ¬ ∃ p : ℕ → α, ∃ k : ℕ, H.IsMoebiusContour p k := by
+    intro n
+    induction n with
+    | zero =>
+      intro H hcard hplanar ⟨p, k, hp⟩
+      obtain ⟨h2, hp0, hks⟩ := H.darts_on_Moebius_contour hp
+      omega
+    | succ n ihn =>
+      intro H hcard hplanar ⟨p, k, hp⟩
+      obtain ⟨hsub, hncard⟩ := H.Moebius_contour_points_subset_darts hp
+      by_cases hfull : (fun i => p i) '' ↑(Finset.range (k + 1)) = ↑H.darts
+      · -- support 全覆盖：Moebius 下标 `m ≤ t` 分类
+        obtain ⟨hinj, m, t, hm0, hmt, htk, hpt, hpk⟩ := hp
+        by_cases hlt : m < t
+        · -- (b)/(c)：第 `m` 步分类
+          have hst := (H.isContour_iff p k).mp (H.isContour_of_isInjContour hinj) m (by omega)
+          have hpmd : p m ∈ H.darts :=
+            Finset.mem_coe.mp (hsub ⟨m, Finset.mem_coe.mpr (Finset.mem_range.mpr (by omega)), rfl⟩)
+          rcases hst with hst | hst
+          · obtain ⟨g, hmoe'⟩ := H.isMoebiusContour_nodeWalkup_branch
+              ⟨hinj, m, t, hm0, hmt, htk, hpt, hpk⟩ hm0 hmt htk hpt hpk hlt hst
+            have hplanar' := (H.planar_walkup hpmd hplanar).2.1
+            have hcard' : (H.nodeWalkup (p m)).darts.card ≤ n := by
+              have h1 := H.card_nodeWalkup_dart hpmd
+              show (H.darts.erase (p m)).card ≤ n
+              rw [Finset.card_erase_of_mem hpmd]
+              omega
+            exact ihn (H.nodeWalkup (p m)) hcard' hplanar' ⟨g, k - 1, hmoe'⟩
+          · obtain ⟨g, hmoe'⟩ := H.isMoebiusContour_faceWalkup_branch
+              ⟨hinj, m, t, hm0, hmt, htk, hpt, hpk⟩ hm0 hmt htk hpt hpk hlt hst
+            have hplanar' := (H.planar_walkup hpmd hplanar).2.2
+            have hcard' : (H.faceWalkup (p m)).darts.card ≤ n := by
+              have h1 := H.card_faceWalkup_dart hpmd
+              show (H.darts.erase (p m)).card ≤ n
+              rw [Finset.card_erase_of_mem hpmd]
+              omega
+            exact ihn (H.faceWalkup (p m)) hcard' hplanar' ⟨g, k - 1, hmoe'⟩
+        · -- m = t
+          have htm : t = m := by omega
+          by_cases hm1 : 1 < m
+          · -- (d)：第 0 步分类
+            have hpk' : p k = H.nodeMap (p t) := by rw [htm]; exact hpk
+            have hst := (H.isContour_iff p k).mp (H.isContour_of_isInjContour hinj) 0 (by omega)
+            have hp0d : p 0 ∈ H.darts := H.first_dart_mem_of_injContour (by omega) hinj
+            rcases hst with hst | hst
+            · obtain ⟨g, hmoe'⟩ := H.isMoebiusContour_nodeWalkup_branch_eq_f
+                ⟨hinj, t, t, by omega, Nat.le_refl t, htk, hpt, hpk'⟩ (by omega) (by omega) hpt hpk' hst
+              have hplanar' := (H.planar_walkup hp0d hplanar).2.1
+              have hcard' : (H.nodeWalkup (p 0)).darts.card ≤ n := by
+                have h1 := H.card_nodeWalkup_dart hp0d
+                show (H.darts.erase (p 0)).card ≤ n
+                rw [Finset.card_erase_of_mem hp0d]
+                omega
+              exact ihn (H.nodeWalkup (p 0)) hcard' hplanar' ⟨g, k - 1, hmoe'⟩
+            · obtain ⟨g, hmoe'⟩ := H.isMoebiusContour_faceWalkup_branch_eq_n
+                ⟨hinj, t, t, by omega, Nat.le_refl t, htk, hpt, hpk'⟩ (by omega) (by omega) hpt hpk' hst
+              have hplanar' := (H.planar_walkup hp0d hplanar).2.2
+              have hcard' : (H.faceWalkup (p 0)).darts.card ≤ n := by
+                have h1 := H.card_faceWalkup_dart hp0d
+                show (H.darts.erase (p 0)).card ≤ n
+                rw [Finset.card_erase_of_mem hp0d]
+                omega
+              exact ihn (H.faceWalkup (p 0)) hcard' hplanar' ⟨g, k - 1, hmoe'⟩
+          · -- (e)：m = 1
+            have hm1' : m = 1 := by omega
+            subst hm1'
+            by_cases hk2 : 2 < k
+            · have hst := (H.isContour_iff p k).mp (H.isContour_of_isInjContour hinj) (k - 1)
+                (by omega)
+              rw [(by omega : k - 1 + 1 = k)] at hst
+              have hpkd : p (k - 1) ∈ H.darts :=
+                Finset.mem_coe.mp (hsub ⟨k - 1,
+                  Finset.mem_coe.mpr (Finset.mem_range.mpr (by omega)), rfl⟩)
+              rcases hst with hst | hst
+              · obtain ⟨g, hmoe'⟩ := H.isMoebiusContour_nodeWalkup_branch_one_f
+                  ⟨hinj, 1, 1, by omega, Nat.le_refl 1, by omega, htm ▸ hpt, hpk⟩ hk2 (htm ▸ hpt) hpk hst
+                have hplanar' := (H.planar_walkup hpkd hplanar).2.1
+                have hcard' : (H.nodeWalkup (p (k - 1))).darts.card ≤ n := by
+                  have h1 := H.card_nodeWalkup_dart hpkd
+                  show (H.darts.erase (p (k - 1))).card ≤ n
+                  rw [Finset.card_erase_of_mem hpkd]
+                  omega
+                exact ihn (H.nodeWalkup (p (k - 1))) hcard' hplanar' ⟨g, k - 1, hmoe'⟩
+              · obtain ⟨g, hmoe'⟩ := H.isMoebiusContour_faceWalkup_branch_one_n
+                  ⟨hinj, 1, 1, by omega, Nat.le_refl 1, by omega, htm ▸ hpt, hpk⟩ hk2 (htm ▸ hpt) hpk hst
+                have hplanar' := (H.planar_walkup hpkd hplanar).2.2
+                have hcard' : (H.faceWalkup (p (k - 1))).darts.card ≤ n := by
+                  have h1 := H.card_faceWalkup_dart hpkd
+                  show (H.darts.erase (p (k - 1))).card ≤ n
+                  rw [Finset.card_erase_of_mem hpkd]
+                  omega
+                exact ihn (H.faceWalkup (p (k - 1))) hcard' hplanar' ⟨g, k - 1, hmoe'⟩
+            · -- k = 2：由 3 阶最小 Moebius hypermap 的不可平面性收尾
+              have hk2' : k = 2 := by omega
+              subst hk2'
+              have hp' : H.IsMoebiusContour p 2 :=
+                ⟨hinj, 1, 1, by omega, Nat.le_refl 1, by omega, htm ▸ hpt, hpk⟩
+              have h3 : H.darts.card = 3 := by
+                rw [← Set.ncard_coe_finset, ← hfull, hncard]
+              exact absurd hplanar (not_planar_of_Moebius_contour_card_three H h3 ⟨p, 2, hp'⟩)
+      · -- (a)：support ≠ darts：在 edgeWalkup 上消去一个 dart
+        have ⟨a, haD, haout⟩ : ∃ a ∈ H.darts,
+            a ∉ (fun i => p i) '' ↑(Finset.range (k + 1)) := by
+          by_contra hc
+          apply hfull
+          apply Set.Subset.antisymm hsub
+          intro x hx
+          by_contra hxout
+          exact hc ⟨x, Finset.mem_coe.mp hx, hxout⟩
+        have hmoe' := H.isMoebiusContour_edgeWalkup_of_not_mem_support hp haout
+        have hplanar' := (H.planar_walkup haD hplanar).1
+        have hcard' : (H.edgeWalkup a).darts.card ≤ n := by
+          have h1 := H.card_walkup_dart haD
+          show (H.darts.erase a).card ≤ n
+          rw [Finset.card_erase_of_mem haD]
+          omega
+        exact ihn (H.edgeWalkup a) hcard' hplanar' ⟨p, k, hmoe'⟩
+  exact key H.darts.card H le_rfl hplanar
 
 end Hypermap
 
