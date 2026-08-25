@@ -360,6 +360,48 @@ Coverage (block 10, loop theory and `iso` prerequisites, 6699–7757):
   `first_last_step_exclusive` directly instead of re-deriving a Moebius
   contour.
 
+Coverage (block 11, atoms and normal loop families, 7758–8543):
+- atom theory (7758–8118): `is_node_going` (7760, as `Hypermap.IsNodeGoing`),
+  `atom` (7767, as `Hypermap.atom`), `atom_reflect`/`atom_sym`,
+  `lemma_transitive_going`/`lemma_on_way_going`/`lemma_second_on_way_going`
+  (as `IsNodeGoing.trans`/`on_way`/`second_on_way`), `atom_trans`,
+  `lemma_atom_sub_loop` (`atom_subset_darts`), `lemma_atom_out_side_loop`
+  (`atom_eq_singleton_of_not_mem`), `lemma_atom_sub_node`
+  (`atom_subset_node`), `lemma_atom_finite` (`atom_finite`),
+  `lemma_identity_atom` (`atom_eq_of_mem`), `lemma_atom_absorb_quark`/
+  `lemma_second_absorb_quark` (`map_mem_atom_of_eq_node_symm`/
+  `invMap_mem_atom_of_eq`), `lemma_border_of_atom` (8047, as
+  `exists_border_of_atom`). `loop_map_and_loop_darts`/
+  `inv_loop_map_and_loop_darts` (8043/8045) are subsumed by
+  `Loop.map_permutes`; HOL's `power_inverse_element_lemma` is ported as
+  `PermutesOn.exists_pow_apply_eq_inv_pow`.
+- normal families (8120–8383): `is_normal` (8122, as
+  `Hypermap.IsNormalFamily` on `Set (Loop α)` — `Finset` impossible, no
+  `DecidableEq (Loop α)`), `lemm_nornal_loop_sub_dart`
+  (`darts_subset_darts_of_isNormalFamily`), `atoms_of_family`/`darts_of_family`
+  (`atomsOfFamily`/`dartsOfFamily`, the latter defined directly by the
+  existential characterization), `lemma_in_loop`/`lemma_in_dart`,
+  `lemma_support_and_atoms` (`dartsOfFamily_eq_sUnion_atomsOfFamily`; HOL's
+  `is_normal` hypothesis is unused and dropped), `lemma_finite_support`
+  (`dartsOfFamily_subset_darts` + `dartsOfFamily_finite`),
+  `lemma_in_support(2)` (`mem_dartsOfFamily(_iff)`), `lemma_node_in_support2`
+  (`nodeMap_pow_mem_dartsOfFamily`), `lemma_loop_outside_node`
+  (`not_darts_subset_node_of_isNormalFamily`), `disjoint_loops`
+  (`IsNormalFamily.eq_of_mem_of_mem`), `atom_choice` (8287, as
+  `Hypermap.atomChoice` via `Classical.choose`) + `first_unique_atom_choice`/
+  `unique_atom_choice` (`atomChoice_of_not_mem`/`atomChoice_eq_atom`),
+  `lemma_in_quotient` (`atom_mem_atomsOfFamily`), `lemma_finite_atoms_of_family`
+  (`atomsOfFamily_finite`), `lemma_finite_normal_loops`
+  (`isNormalFamily_finite_and_card_le`, via a choice function on the
+  `dartsOfFamily` subtype and `Nat.card` accounting).
+- head/tail of atom (8385–8543): `lemma_border_of_atom2` (as
+  `exists_head_tail` + `headTailOfAtom_of_not_mem`), `head_of_atom`/
+  `tail_of_atom` (8414, as `headOfAtom`/`tailOfAtom` via
+  `headTailOfAtom` with `Classical.choose`), `lemma_unique_head_of_atom`/
+  `lemma_unique_tail_of_atom` (`headOfAtom_eq`/`tailOfAtom_eq`),
+  `head_of_atom_on_loop`/`tail_of_atom_on_loop`
+  (`headOfAtom_mem_atom`/`tailOfAtom_mem_atom`).
+
 Type correspondences (HOL Light ↦ Lean 4):
 - `(A)hypermap` (a 4-tuple carrying `FINITE`/`permutes` side conditions,
   `hypermap.hl`:83–93) ↦ `structure Hypermap` with a `Finset` of darts and
@@ -5907,6 +5949,24 @@ theorem PermutesOn.orbitMap_symm {α : Type*} {f : Equiv.Perm α} {s : Finset α
     have hx : x = (f⁻¹ ^ n) y := (pow_apply_iff_inv_pow_apply f n x y).mp hn.symm
     exact orbitMap_sym hp.symm ⟨n, hx.symm⟩
 
+/-- `hypermap.hl`:`power_inverse_element_lemma`（8047 等处使用）：
+有限支撑置换的逆幂可达可改写为正幂可达。 -/
+theorem PermutesOn.exists_pow_apply_eq_inv_pow {α : Type*} {p : Equiv.Perm α} {s : Finset α}
+    (hp : PermutesOn p s) (n : ℕ) (x : α) : ∃ j : ℕ, (p⁻¹ ^ n) x = (p ^ j) x := by
+  induction n with
+  | zero => exact ⟨0, rfl⟩
+  | succ k ih =>
+    obtain ⟨j, hj⟩ := ih
+    rw [pow_succ', Equiv.Perm.mul_apply, hj]
+    rcases Nat.eq_zero_or_pos j with rfl | hj0
+    · rw [pow_zero, Equiv.Perm.one_apply]
+      exact hp.exists_pow_inv_apply x
+    · refine ⟨j - 1, ?_⟩
+      have e : p ((p ^ (j - 1)) x) = (p ^ j) x := by
+        conv_rhs => rw [show j = (j - 1) + 1 from by omega]
+        rw [pow_succ', Equiv.Perm.mul_apply]
+      rw [← e, ← Equiv.Perm.mul_apply, inv_mul_cancel, Equiv.Perm.one_apply]
+
 namespace Hypermap
 
 variable {α : Type*} [DecidableEq α]
@@ -6236,6 +6296,572 @@ theorem not_exists_face_step_contour_meeting_node (H : Hypermap α) (L : Loop α
     rw [pow_succ', Equiv.Perm.mul_apply]
   exact (H.first_last_step_exclusive L g (d + t) hloop hginj (by omega) hg0L hgdtL
     hM6 hmoeb).2 hg1f hgdt
+
+/-! ## 原子：环的划分（`hypermap.hl`:7758–8118） -/
+
+variable {H : Hypermap α} {x y z : α}
+
+/-- `hypermap.hl`:7760 `is_node_going`：环映射幂与 `nodeMap.symm` 幂沿途一致。 -/
+def IsNodeGoing (H : Hypermap α) (L : Loop α) (x y : α) : Prop :=
+  ∃ k : ℕ, y = (L.map ^ k) x ∧ ∀ i ≤ k, (L.map ^ i) x = (H.nodeMap.symm ^ i) x
+
+/-- `hypermap.hl`:7767 `atom`。直观上，环被原子划分。 -/
+def atom (H : Hypermap α) (L : Loop α) (x : α) : Set α :=
+  {y | H.IsNodeGoing L x y ∨ H.IsNodeGoing L y x}
+
+/-- `hypermap.hl`:7773 `atom_reflect`。 -/
+theorem atom_reflect (H : Hypermap α) (L : Loop α) (x : α) : x ∈ H.atom L x :=
+  Or.inl ⟨0, rfl, fun i hi => by rw [Nat.le_zero.mp hi, pow_zero, pow_zero]⟩
+
+/-- `hypermap.hl`:7782 `atom_sym`。 -/
+theorem atom_sym (H : Hypermap α) {L : Loop α} {x y : α} (h : y ∈ H.atom L x) :
+    x ∈ H.atom L y := h.symm
+
+/-- `hypermap.hl`:7787 `lemma_transitive_going`。 -/
+theorem IsNodeGoing.trans {L : Loop α} (h1 : H.IsNodeGoing L x y)
+    (h2 : H.IsNodeGoing L y z) : H.IsNodeGoing L x z := by
+  obtain ⟨m, hm1, hm2⟩ := h1
+  obtain ⟨k, hk1, hk2⟩ := h2
+  refine ⟨k + m, ?_, ?_⟩
+  · rw [pow_add, Equiv.Perm.mul_apply, ← hm1, hk1]
+  · intro i hi
+    rcases le_or_gt i m with him | him
+    · exact hm2 i him
+    · obtain ⟨j, rfl⟩ : ∃ j, i = m + j := ⟨i - m, by omega⟩
+      have hjm : j ≤ k := by omega
+      have e1 : (L.map ^ (m + j)) x = (L.map ^ j) y := by
+        rw [Nat.add_comm m j, pow_add, Equiv.Perm.mul_apply, ← hm1]
+      rw [e1, hk2 j hjm, hm1, hm2 m le_rfl, ← Equiv.Perm.mul_apply, ← pow_add,
+        Nat.add_comm j m]
+
+/-- `hypermap.hl`:7814 `lemma_on_way_going`。 -/
+theorem IsNodeGoing.on_way {L : Loop α} (h1 : H.IsNodeGoing L x y)
+    (h2 : H.IsNodeGoing L x z) : H.IsNodeGoing L y z ∨ H.IsNodeGoing L z y := by
+  obtain ⟨m, hm1, hm2⟩ := h1
+  obtain ⟨k, hk1, hk2⟩ := h2
+  rcases le_or_gt m k with hmk | hmk
+  · obtain ⟨d, rfl⟩ : ∃ d, k = m + d := ⟨k - m, by omega⟩
+    left
+    refine ⟨d, ?_, ?_⟩
+    · rw [Nat.add_comm m d, pow_add, Equiv.Perm.mul_apply, ← hm1] at hk1
+      exact hk1
+    · intro i hi
+      have e1 : (L.map ^ i) y = (L.map ^ (i + m)) x := by
+        rw [pow_add, Equiv.Perm.mul_apply, ← hm1]
+      rw [e1, hk2 (i + m) (by omega), hm1, hm2 m le_rfl, ← Equiv.Perm.mul_apply,
+        ← pow_add]
+  · obtain ⟨d, rfl⟩ : ∃ d, m = k + d := ⟨m - k, by omega⟩
+    right
+    refine ⟨d, ?_, ?_⟩
+    · rw [Nat.add_comm k d, pow_add, Equiv.Perm.mul_apply, ← hk1] at hm1
+      exact hm1
+    · intro i hi
+      have e1 : (L.map ^ i) z = (L.map ^ (i + k)) x := by
+        rw [pow_add, Equiv.Perm.mul_apply, ← hk1]
+      rw [e1, hm2 (i + k) (by omega), hk1, hk2 k le_rfl, ← Equiv.Perm.mul_apply,
+        ← pow_add]
+
+/-- `hypermap.hl`:7864 `lemma_second_on_way_going`。 -/
+theorem IsNodeGoing.second_on_way {L : Loop α} (h1 : H.IsNodeGoing L x z)
+    (h2 : H.IsNodeGoing L y z) : H.IsNodeGoing L x y ∨ H.IsNodeGoing L y x := by
+  obtain ⟨m, hm1, hm2⟩ := h1
+  obtain ⟨k, hk1, hk2⟩ := h2
+  rcases le_or_gt m k with hmk | hmk
+  · obtain ⟨d, rfl⟩ : ∃ d, k = m + d := ⟨k - m, by omega⟩
+    right
+    refine ⟨d, ?_, fun i hi => hk2 i (by omega)⟩
+    have e2 : (L.map ^ m) x = (L.map ^ m) ((L.map ^ d) y) := by
+      have e := hm1.symm.trans hk1
+      rwa [pow_add, Equiv.Perm.mul_apply] at e
+    have e3 := congrArg (⇑(L.invMap ^ m)) e2
+    rw [(L.pow_inverse_evaluation x m).2, (L.pow_inverse_evaluation _ m).2] at e3
+    exact e3
+  · obtain ⟨d, rfl⟩ : ∃ d, m = k + d := ⟨m - k, by omega⟩
+    left
+    refine ⟨d, ?_, fun i hi => hm2 i (by omega)⟩
+    have e2 : (L.map ^ k) y = (L.map ^ k) ((L.map ^ d) x) := by
+      have e := hk1.symm.trans hm1
+      rwa [pow_add, Equiv.Perm.mul_apply] at e
+    have e3 := congrArg (⇑(L.invMap ^ k)) e2
+    rw [(L.pow_inverse_evaluation y k).2, (L.pow_inverse_evaluation _ k).2] at e3
+    exact e3
+
+/-- `hypermap.hl`:7901 `atom_trans`。 -/
+theorem atom_trans (H : Hypermap α) {L : Loop α} {x y z : α} (h1 : x ∈ H.atom L y)
+    (h2 : y ∈ H.atom L z) : x ∈ H.atom L z := by
+  rcases h1 with h1 | h1 <;> rcases h2 with h2 | h2
+  · exact Or.inl (h2.trans h1)
+  · exact (h1.on_way h2).symm
+  · exact (h1.second_on_way h2).symm
+  · exact Or.inr (h1.trans h2)
+
+/-- `hypermap.hl`:7910 `lemma_atom_sub_loop`。 -/
+theorem atom_subset_darts (H : Hypermap α) (L : Loop α) (hx : x ∈ L.darts) :
+    H.atom L x ⊆ ↑L.darts := by
+  rintro y (⟨k, hk, -⟩ | ⟨k, hk, -⟩)
+  · rw [hk]; exact L.pow_map_mem hx k
+  · by_cases hy : y ∈ L.darts
+    · exact hy
+    · have hxy : x = y := hk.trans (L.pow_fix_of_not_mem hy k).2
+      exact hxy ▸ hx
+
+/-- `hypermap.hl`:7923 `lemma_atom_out_side_loop`。 -/
+theorem atom_eq_singleton_of_not_mem (H : Hypermap α) (L : Loop α)
+    (hx : x ∉ L.darts) : H.atom L x = {x} := by
+  ext y
+  simp only [Set.mem_singleton_iff]
+  constructor
+  · rintro (⟨k, hk, -⟩ | ⟨k, hk, -⟩)
+    · rw [hk, (L.pow_fix_of_not_mem hx k).2]
+    · have h := congrArg (⇑(L.invMap ^ k)) hk
+      rw [(L.pow_inverse_evaluation y k).2] at h
+      rw [h.symm, (L.pow_fix_of_not_mem hx k).1]
+  · intro hy
+    rw [hy]; exact H.atom_reflect L x
+
+/-- `hypermap.hl`:7944 `lemma_atom_sub_node`。 -/
+theorem atom_subset_node (H : Hypermap α) (L : Loop α) (x : α) :
+    H.atom L x ⊆ H.node x := by
+  rintro y (⟨k, hk, hagree⟩ | ⟨k, hk, hagree⟩)
+  · have h2 : y ∈ orbitMap H.nodeMap.symm x := ⟨k, (hk.trans (hagree k le_rfl)).symm⟩
+    have h3 : y ∈ orbitMap H.nodeMap x :=
+      (PermutesOn.orbitMap_symm H.nodeMap_permutes x) ▸ h2
+    exact h3
+  · have h2 : x = (H.nodeMap.symm ^ k) y := hk.trans (hagree k le_rfl)
+    have h3 : y = (H.nodeMap ^ k) x :=
+      (pow_apply_iff_inv_pow_apply H.nodeMap k x y).mpr h2
+    exact ⟨k, h3.symm⟩
+
+/-- `hypermap.hl`:7962 `lemma_atom_finite`。 -/
+theorem atom_finite (H : Hypermap α) (L : Loop α) (x : α) :
+    (H.atom L x).Finite ∧ 1 ≤ (H.atom L x).ncard := by
+  have hfin : (H.atom L x).Finite :=
+    (orbitMap_finite H.nodeMap_permutes x).subset (H.atom_subset_node L x)
+  exact ⟨hfin, (Set.ncard_pos hfin).mpr ⟨x, H.atom_reflect L x⟩⟩
+
+/-- `hypermap.hl`:7975 `lemma_identity_atom`。 -/
+theorem atom_eq_of_mem (H : Hypermap α) {L : Loop α} {x y : α}
+    (h : y ∈ H.atom L x) : H.atom L x = H.atom L y := by
+  ext z
+  exact ⟨fun hz => H.atom_trans hz (H.atom_sym h), fun hz => H.atom_trans hz h⟩
+
+/-- `hypermap.hl`:7994 `lemma_atom_absorb_quark`。 -/
+theorem map_mem_atom_of_eq_node_symm (H : Hypermap α) {L : Loop α} {x y : α}
+    (h : y ∈ H.atom L x) (hqn : L.map y = H.nodeMap.symm y) :
+    L.map y ∈ H.atom L x := by
+  rw [H.atom_eq_of_mem h]
+  show H.IsNodeGoing L y (L.map y) ∨ H.IsNodeGoing L (L.map y) y
+  refine Or.inl ⟨1, by rw [pow_one], ?_⟩
+  intro i hi
+  rcases (by omega : i = 0 ∨ i = 1) with rfl | rfl
+  · rw [pow_zero, pow_zero]
+  · rw [pow_one, pow_one]
+    exact hqn
+
+/-- `hypermap.hl`:8018 `lemma_second_absorb_quark`。 -/
+theorem invMap_mem_atom_of_eq (H : Hypermap α) {L : Loop α} {x y : α}
+    (h : y ∈ H.atom L x) (hqn : y = H.nodeMap.symm (L.invMap y)) :
+    L.invMap y ∈ H.atom L x := by
+  rw [H.atom_eq_of_mem h]
+  show H.IsNodeGoing L y (L.invMap y) ∨ H.IsNodeGoing L (L.invMap y) y
+  refine Or.inr ⟨1, ?_, ?_⟩
+  · rw [pow_one]
+    exact (L.inverse_evaluation y).2.symm
+  · intro i hi
+    rcases (by omega : i = 0 ∨ i = 1) with rfl | rfl
+    · rw [pow_zero, pow_zero]
+    · rw [pow_one, pow_one, (L.inverse_evaluation y).2]
+      exact hqn
+
+/-- `hypermap.hl`:8047 `lemma_border_of_atom`（SKOLEM 前的存在形式）。
+`loop_map_and_loop_darts`/`inv_loop_map_and_loop_darts`（8043/8045）
+由 `Loop.map_permutes` 及其 `.symm` 直接取代，不再单列。 -/
+theorem exists_border_of_atom (H : Hypermap α) (L : Loop α) (x : α)
+    (hx : x ∈ L.darts)
+    (hyz : ∃ y ∈ L.darts, ∃ z ∈ L.darts, H.node y ≠ H.node z) :
+    ∃ h ∈ H.atom L x, ∃ t ∈ H.atom L x,
+      L.map h ≠ H.nodeMap.symm h ∧ t ≠ H.nodeMap.symm (L.invMap t) := by
+  -- 若原子内所有点都是 node 步，则整个环等于该原子，与 node 分裂矛盾
+  have hexh : ∃ a ∈ H.atom L x, L.map a ≠ H.nodeMap.symm a := by
+    by_contra hcon
+    have hcon : ∀ a ∈ H.atom L x, L.map a = H.nodeMap.symm a := by
+      intro a ha
+      by_contra hne
+      exact hcon ⟨a, ha, hne⟩
+    have hall : ∀ k : ℕ, (L.map ^ k) x ∈ H.atom L x := by
+      intro k
+      induction k with
+      | zero => exact H.atom_reflect L x
+      | succ k ih =>
+        rw [pow_succ', Equiv.Perm.mul_apply]
+        exact H.map_mem_atom_of_eq_node_symm ih (hcon _ ih)
+    have hdart : (↑L.darts : Set α) = H.atom L x := by
+      ext y
+      constructor
+      · intro hy
+        obtain ⟨k, -, hkeq⟩ := L.exists_pow_apply hx (Finset.mem_coe.mp hy)
+        rw [hkeq]; exact hall k
+      · intro hy
+        exact H.atom_subset_darts L hx hy
+    obtain ⟨y, hy, z, hz, hne⟩ := hyz
+    have hy' : y ∈ H.atom L x := hdart ▸ Finset.mem_coe.mpr hy
+    have hz' : z ∈ H.atom L x := hdart ▸ Finset.mem_coe.mpr hz
+    have h1 : H.node x = H.node y := H.node_eq_of_mem (H.atom_subset_node L x hy')
+    have h2 : H.node x = H.node z := H.node_eq_of_mem (H.atom_subset_node L x hz')
+    exact hne (h1.symm.trans h2)
+  -- 对称地处理 invMap 方向
+  have hext : ∃ a ∈ H.atom L x, a ≠ H.nodeMap.symm (L.invMap a) := by
+    by_contra hcon
+    have hcon : ∀ a ∈ H.atom L x, a = H.nodeMap.symm (L.invMap a) := by
+      intro a ha
+      by_contra hne
+      exact hcon ⟨a, ha, hne⟩
+    have hall : ∀ k : ℕ, (L.invMap ^ k) x ∈ H.atom L x := by
+      intro k
+      induction k with
+      | zero => exact H.atom_reflect L x
+      | succ k ih =>
+        rw [pow_succ', Equiv.Perm.mul_apply]
+        exact H.invMap_mem_atom_of_eq ih (hcon _ ih)
+    have hdart : (↑L.darts : Set α) = H.atom L x := by
+      ext y
+      constructor
+      · intro hy
+        obtain ⟨k, -, hkeq⟩ := L.exists_pow_apply hx (Finset.mem_coe.mp hy)
+        rw [hkeq, L.inverse_on_loop.1]
+        have hperm : PermutesOn L.invMap L.darts := L.map_permutes.symm
+        obtain ⟨j, hj⟩ := hperm.exists_pow_apply_eq_inv_pow k x
+        rw [hj]; exact hall j
+      · intro hy
+        exact H.atom_subset_darts L hx hy
+    obtain ⟨y, hy, z, hz, hne⟩ := hyz
+    have hy' : y ∈ H.atom L x := hdart ▸ Finset.mem_coe.mpr hy
+    have hz' : z ∈ H.atom L x := hdart ▸ Finset.mem_coe.mpr hz
+    have h1 : H.node x = H.node y := H.node_eq_of_mem (H.atom_subset_node L x hy')
+    have h2 : H.node x = H.node z := H.node_eq_of_mem (H.atom_subset_node L x hz')
+    exact hne (h1.symm.trans h2)
+  obtain ⟨h, hh, hne1⟩ := hexh
+  obtain ⟨t, ht, hne2⟩ := hext
+  exact ⟨h, hh, t, ht, hne1, hne2⟩
+
+/-! ## 正规环族与商的准备（`hypermap.hl`:8120–8383） -/
+
+/-- `hypermap.hl`:8122 `is_normal`：正规环族的四条公理。
+（HOL 用 `(A)loop -> bool`；我们用 `Set (Loop α)`，有限性另行证明。） -/
+def IsNormalFamily (H : Hypermap α) (NF : Set (Loop α)) : Prop :=
+  (∀ L ∈ NF, Loop.IsLoopOf H L ∧ ∃ x ∈ H.darts, x ∈ L.darts) ∧
+  (∀ L ∈ NF, ∃ y ∈ L.darts, ∃ z ∈ L.darts, H.node y ≠ H.node z) ∧
+  (∀ L ∈ NF, ∀ L' ∈ NF, ∀ x : α, x ∈ L.darts → x ∈ L'.darts → L = L') ∧
+  (∀ L ∈ NF, ∀ x y : α, x ∈ L.darts → y ∈ H.node x → ∃ L' ∈ NF, y ∈ L'.darts)
+
+/-- `hypermap.hl`:8131 `lemm_nornal_loop_sub_dart`。 -/
+theorem darts_subset_darts_of_isNormalFamily (H : Hypermap α) {NF : Set (Loop α)}
+    {L : Loop α} (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) : ↑L.darts ⊆ ↑H.darts := by
+  obtain ⟨hloop, x, hxH, hxL⟩ := hnf.1 L hL
+  exact Finset.coe_subset.mpr (Loop.darts_subset_of_isLoopOf hloop hxH hxL)
+
+/-- `hypermap.hl`:8139 `atoms_of_family`。 -/
+def atomsOfFamily (H : Hypermap α) (NF : Set (Loop α)) : Set (Set α) :=
+  {a | ∃ L ∈ NF, ∃ x ∈ L.darts, a = H.atom L x}
+
+/-- `hypermap.hl`:8141 `darts_of_family`（直接写成等价的存在形式；
+对应 `lemma_in_support` 的 ⟸ 即定义本身）。 -/
+def dartsOfFamily (NF : Set (Loop α)) : Set α := {x | ∃ L ∈ NF, x ∈ L.darts}
+
+/-- `hypermap.hl`:8143 `lemma_in_loop`。 -/
+theorem mem_darts_of_mem_atom (H : Hypermap α) {L : Loop α} (hx : x ∈ L.darts)
+    (hy : y ∈ H.atom L x) : y ∈ L.darts :=
+  Finset.mem_coe.mp (H.atom_subset_darts L hx hy)
+
+/-- `hypermap.hl`:8152 `lemma_in_dart`。 -/
+theorem mem_darts_of_isNormalFamily (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α}
+    (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hx : x ∈ L.darts) : x ∈ H.darts :=
+  Finset.mem_coe.mp (H.darts_subset_darts_of_isNormalFamily hnf hL (Finset.mem_coe.mpr hx))
+
+/-- `hypermap.hl`:8203/8206 `lemma_in_support2`/`lemma_in_support`。 -/
+theorem mem_dartsOfFamily {NF : Set (Loop α)} {L : Loop α} {x : α}
+    (hL : L ∈ NF) (hx : x ∈ L.darts) : x ∈ dartsOfFamily NF := ⟨L, hL, hx⟩
+
+theorem mem_dartsOfFamily_iff {NF : Set (Loop α)} {x : α} :
+    x ∈ dartsOfFamily NF ↔ ∃ L ∈ NF, x ∈ L.darts := Iff.rfl
+
+/-- `hypermap.hl`:8159 `lemma_support_and_atoms`。
+（HOL 假设了 `is_normal`，但证明只用 `atom_subset_darts`；移植中省去该假设。） -/
+theorem dartsOfFamily_eq_sUnion_atomsOfFamily (H : Hypermap α) {NF : Set (Loop α)} :
+    dartsOfFamily NF = ⋃₀ H.atomsOfFamily NF := by
+  ext y
+  constructor
+  · rintro ⟨L, hL, hy⟩
+    exact ⟨H.atom L y, ⟨L, hL, y, hy, rfl⟩, H.atom_reflect L y⟩
+  · rintro ⟨a, ⟨L, hL, x, hx, rfl⟩, hy⟩
+    exact ⟨L, hL, H.mem_darts_of_mem_atom hx hy⟩
+
+/-- `hypermap.hl`:8187 `lemma_finite_support`。 -/
+theorem dartsOfFamily_subset_darts (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) : dartsOfFamily NF ⊆ ↑H.darts :=
+  fun _ ⟨_L, hL, hy⟩ => H.mem_darts_of_isNormalFamily hnf hL hy
+
+theorem dartsOfFamily_finite (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) : (dartsOfFamily NF).Finite :=
+  H.darts.finite_toSet.subset (H.dartsOfFamily_subset_darts hnf)
+
+/-- `hypermap.hl`:8218 `lemma_node_in_support2`。 -/
+theorem nodeMap_pow_mem_dartsOfFamily (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) (hx : x ∈ dartsOfFamily NF) (n : ℕ) :
+    (H.nodeMap ^ n) x ∈ dartsOfFamily NF := by
+  induction n with
+  | zero => simpa using hx
+  | succ k ih =>
+    rw [pow_succ', Equiv.Perm.mul_apply]
+    obtain ⟨L, hL, hik⟩ := ih
+    obtain ⟨L', hL', hyL'⟩ :=
+      hnf.2.2.2 L hL _ _ hik (apply_mem_orbitMap _ _)
+    exact ⟨L', hL', hyL'⟩
+
+/-- `hypermap.hl`:8240 `lemma_loop_outside_node`。 -/
+theorem not_darts_subset_node_of_isNormalFamily (H : Hypermap α) {NF : Set (Loop α)}
+    {L : Loop α} (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (x : α) :
+    ¬ (↑L.darts : Set α) ⊆ H.node x := by
+  intro hsub
+  obtain ⟨y, hy, z, hz, hne⟩ := hnf.2.1 L hL
+  have h1 : H.node x = H.node y := H.node_eq_of_mem (hsub (Finset.mem_coe.mpr hy))
+  have h2 : H.node x = H.node z := H.node_eq_of_mem (hsub (Finset.mem_coe.mpr hz))
+  exact hne (h1.symm.trans h2)
+
+/-- `hypermap.hl`:8254 `disjoint_loops`。 -/
+theorem IsNormalFamily.eq_of_mem_of_mem {NF : Set (Loop α)} {L L' : Loop α}
+    (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hL' : L' ∈ NF)
+    (hx : x ∈ L.darts) (hx' : x ∈ L'.darts) : L = L' :=
+  hnf.2.2.1 L hL L' hL' x hx hx'
+
+/-- `hypermap.hl`:8287 `atom_choice` 的显式实现（绕过 SKOLEM）：
+在 `dartsOfFamily` 内取所属环的原子（由 `Classical.choose` 选环），否则退化为单点。 -/
+noncomputable def atomChoice (H : Hypermap α) (NF : Set (Loop α)) (x : α) : Set α :=
+  open Classical in
+  if h : x ∈ dartsOfFamily NF then H.atom (Classical.choose h) x else {x}
+
+/-- `hypermap.hl`:8289 `first_unique_atom_choice` 的第一部分。 -/
+theorem atomChoice_of_not_mem (H : Hypermap α) {NF : Set (Loop α)}
+    (hx : x ∉ dartsOfFamily NF) : H.atomChoice NF x = {x} := by
+  unfold atomChoice
+  rw [dif_neg hx]
+
+/-- `hypermap.hl`:8305 `unique_atom_choice`（含 8289 的第二部分）。 -/
+theorem atomChoice_eq_atom (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α}
+    (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hx : x ∈ L.darts) :
+    H.atomChoice NF x = H.atom L x := by
+  have hmem : x ∈ dartsOfFamily NF := ⟨L, hL, hx⟩
+  unfold atomChoice
+  rw [dif_pos hmem]
+  obtain ⟨hL', hx'⟩ := Classical.choose_spec hmem
+  rw [hnf.eq_of_mem_of_mem hL' hL hx' hx]
+
+/-- `hypermap.hl`:8310 `lemma_in_quotient`。 -/
+theorem atom_mem_atomsOfFamily (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α}
+    (hL : L ∈ NF) (hx : x ∈ L.darts) : H.atom L x ∈ H.atomsOfFamily NF :=
+  ⟨L, hL, x, hx, rfl⟩
+
+/-- `hypermap.hl`:8317 `lemma_finite_atoms_of_family`。 -/
+theorem atomsOfFamily_finite (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) : (H.atomsOfFamily NF).Finite := by
+  have himg : H.atomChoice NF '' dartsOfFamily NF = H.atomsOfFamily NF := by
+    ext a
+    constructor
+    · rintro ⟨y, hy, rfl⟩
+      obtain ⟨L, hL, hyL⟩ := hy
+      rw [H.atomChoice_eq_atom hnf hL hyL]
+      exact H.atom_mem_atomsOfFamily hL hyL
+    · rintro ⟨L, hL, y, hyL, rfl⟩
+      exact ⟨y, mem_dartsOfFamily hL hyL, H.atomChoice_eq_atom hnf hL hyL⟩
+  rw [← himg]
+  exact Set.Finite.image _ (H.dartsOfFamily_finite hnf)
+
+/-- `hypermap.hl`:8342 `lemma_finite_normal_loops`。 -/
+theorem isNormalFamily_finite_and_card_le (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) : NF.Finite ∧ NF.ncard ≤ H.darts.card := by
+  classical
+  -- 选择函数：支撑内的每个 dart 选一条包含它的环
+  have key : ∀ x : dartsOfFamily NF, ∃ L ∈ NF, (x : α) ∈ L.darts := fun x => x.2
+  set f : dartsOfFamily NF → Loop α := fun x => Classical.choose (key x) with hf
+  have hf_spec : ∀ x : dartsOfFamily NF, f x ∈ NF ∧ (x : α) ∈ (f x).darts :=
+    fun x => Classical.choose_spec (key x)
+  have hrange : Set.range f = NF := by
+    ext L
+    constructor
+    · rintro ⟨x, rfl⟩
+      exact (hf_spec x).1
+    · intro hL
+      obtain ⟨-, y, hyH, hyL⟩ := hnf.1 L hL
+      have hy : y ∈ dartsOfFamily NF := ⟨L, hL, hyL⟩
+      refine ⟨⟨y, hy⟩, ?_⟩
+      exact hnf.eq_of_mem_of_mem (hf_spec ⟨y, hy⟩).1 hL (hf_spec ⟨y, hy⟩).2 hyL
+  have hfin : (dartsOfFamily NF).Finite := H.dartsOfFamily_finite hnf
+  haveI : Finite (dartsOfFamily NF) := Set.finite_coe_iff.mpr hfin
+  refine ⟨?_, ?_⟩
+  · rw [← hrange]
+    exact Set.finite_range f
+  · rw [← hrange]
+    calc (Set.range f).ncard ≤ (Set.univ : Set (dartsOfFamily NF)).ncard := by
+          rw [← Set.image_univ]
+          exact Set.ncard_image_le Set.finite_univ
+      _ = Nat.card (dartsOfFamily NF) := Set.ncard_univ ↥(dartsOfFamily NF)
+      _ = (dartsOfFamily NF).ncard := Nat.card_coe_set_eq (dartsOfFamily NF)
+      _ ≤ H.darts.card := by
+          rw [← Set.ncard_coe_finset]
+          exact Set.ncard_le_ncard (H.dartsOfFamily_subset_darts hnf) H.darts.finite_toSet
+
+/-! ## 原子的 head/tail（`hypermap.hl`:8385–8543） -/
+
+/-- `hypermap.hl`:8385 `lemma_border_of_atom2` 的存在形式（单环版，pair 打包）。 -/
+theorem exists_head_tail (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α}
+    (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hx : x ∈ L.darts) :
+    ∃ p : α × α, p.1 ∈ H.atom L x ∧ p.2 ∈ H.atom L x ∧
+      L.map p.1 ≠ H.nodeMap.symm p.1 ∧ p.2 ≠ H.nodeMap.symm (L.invMap p.2) := by
+  obtain ⟨y, hy, z, hz, hne⟩ := hnf.2.1 L hL
+  obtain ⟨h, hh, t, ht, h1, h2⟩ := H.exists_border_of_atom L x hx ⟨y, hy, z, hz, hne⟩
+  exact ⟨(h, t), hh, ht, h1, h2⟩
+
+/-- `hypermap.hl`:8414 `heads_and_tails` 的显式实现（绕过 SKOLEM/new_specification）。 -/
+noncomputable def headTailOfAtom (H : Hypermap α) (NF : Set (Loop α)) (x : α) : α × α :=
+  open Classical in
+  if h : x ∈ dartsOfFamily NF ∧ H.IsNormalFamily NF then
+    Classical.choose
+      (H.exists_head_tail h.2 (Classical.choose_spec h.1).1 (Classical.choose_spec h.1).2)
+  else (x, x)
+
+/-- `hypermap.hl`:8414 `head_of_atom`。 -/
+noncomputable def headOfAtom (H : Hypermap α) (NF : Set (Loop α)) (x : α) : α :=
+  (H.headTailOfAtom NF x).1
+
+/-- `hypermap.hl`:8414 `tail_of_atom`。 -/
+noncomputable def tailOfAtom (H : Hypermap α) (NF : Set (Loop α)) (x : α) : α :=
+  (H.headTailOfAtom NF x).2
+
+/-- `lemma_border_of_atom2` 的支撑外合取项。 -/
+theorem headTailOfAtom_of_not_mem (H : Hypermap α) {NF : Set (Loop α)}
+    (hx : x ∉ dartsOfFamily NF) :
+    H.headOfAtom NF x = x ∧ H.tailOfAtom NF x = x := by
+  have h : ¬ (x ∈ dartsOfFamily NF ∧ H.IsNormalFamily NF) := fun hh => hx hh.1
+  unfold headOfAtom tailOfAtom headTailOfAtom
+  rw [dif_neg h]
+  exact ⟨rfl, rfl⟩
+
+/-- `heads_and_tails` 的规范：支撑内的 head/tail 属于所属环的原子且满足边界条件。 -/
+theorem headTailOfAtom_spec (H : Hypermap α) {NF : Set (Loop α)}
+    (hnf : H.IsNormalFamily NF) (hx : x ∈ dartsOfFamily NF) :
+    ∃ L ∈ NF, x ∈ L.darts ∧
+      H.headOfAtom NF x ∈ H.atom L x ∧ H.tailOfAtom NF x ∈ H.atom L x ∧
+      L.map (H.headOfAtom NF x) ≠ H.nodeMap.symm (H.headOfAtom NF x) ∧
+      H.tailOfAtom NF x ≠ H.nodeMap.symm (L.invMap (H.tailOfAtom NF x)) := by
+  have h : x ∈ dartsOfFamily NF ∧ H.IsNormalFamily NF := ⟨hx, hnf⟩
+  have hspec := Classical.choose_spec
+    (H.exists_head_tail h.2 (Classical.choose_spec h.1).1 (Classical.choose_spec h.1).2)
+  unfold headOfAtom tailOfAtom headTailOfAtom
+  rw [dif_pos h]
+  exact ⟨Classical.choose h.1, (Classical.choose_spec h.1).1, (Classical.choose_spec h.1).2,
+    hspec⟩
+
+/-- `hypermap.hl`:8416 `lemma_unique_head_of_atom`。 -/
+theorem headOfAtom_eq (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {y : α}
+    (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hx : x ∈ L.darts)
+    (hy : y ∈ H.atom L x) (hne : L.map y ≠ H.nodeMap.symm y) :
+    H.headOfAtom NF x = y := by
+  obtain ⟨L', hL', hx', hh, -, hmap, -⟩ := H.headTailOfAtom_spec hnf ⟨L, hL, hx⟩
+  have hLL : L' = L := hnf.eq_of_mem_of_mem hL' hL hx' hx
+  subst L'
+  have hatom : H.atom L x = H.atom L y := H.atom_eq_of_mem hy
+  have hh' : H.headOfAtom NF x ∈ H.atom L y := hatom ▸ hh
+  rcases hh' with ⟨k, hk, hagree⟩ | ⟨k, hk, hagree⟩
+  · rcases Nat.eq_zero_or_pos k with rfl | hk0
+    · rw [pow_zero, Equiv.Perm.one_apply] at hk
+      exact hk
+    · exfalso
+      have e := hagree 1 (by omega)
+      rw [pow_one, pow_one] at e
+      exact hne e
+  · rcases Nat.eq_zero_or_pos k with rfl | hk0
+    · rw [pow_zero, Equiv.Perm.one_apply] at hk
+      exact hk.symm
+    · exfalso
+      have e := hagree 1 (by omega)
+      rw [pow_one, pow_one] at e
+      exact hmap e
+
+/-- `hypermap.hl`:8455 `lemma_unique_tail_of_atom`。 -/
+theorem tailOfAtom_eq (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {y : α}
+    (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hx : x ∈ L.darts)
+    (hy : y ∈ H.atom L x) (hne : y ≠ H.nodeMap.symm (L.invMap y)) :
+    H.tailOfAtom NF x = y := by
+  obtain ⟨L', hL', hx', -, ht, -, htinv⟩ := H.headTailOfAtom_spec hnf ⟨L, hL, hx⟩
+  have hLL : L' = L := hnf.eq_of_mem_of_mem hL' hL hx' hx
+  subst L'
+  have hatom : H.atom L x = H.atom L y := H.atom_eq_of_mem hy
+  have ht' : H.tailOfAtom NF x ∈ H.atom L y := hatom ▸ ht
+  rcases ht' with ⟨k, hk, hagree⟩ | ⟨k, hk, hagree⟩
+  · -- `tail = (map^k) y`：k > 0 时 tail = n.symm (invMap tail)，矛盾
+    rcases Nat.eq_zero_or_pos k with rfl | hk0
+    · rw [pow_zero, Equiv.Perm.one_apply] at hk
+      exact hk
+    · exfalso
+      have e1 : H.tailOfAtom NF x = (H.nodeMap.symm ^ k) y := hk.trans (hagree k le_rfl)
+      have e2 : L.invMap (H.tailOfAtom NF x) = (L.map ^ (k - 1)) y := by
+        have h1 : L.invMap (H.tailOfAtom NF x) = L.invMap ((L.map ^ k) y) :=
+          congrArg L.invMap hk
+        rw [show k = (k - 1) + 1 from by omega, pow_succ', Equiv.Perm.mul_apply,
+          (L.inverse_evaluation _).1] at h1
+        exact h1
+      have e3 : (L.map ^ (k - 1)) y = (H.nodeMap.symm ^ (k - 1)) y :=
+        hagree (k - 1) (by omega)
+      have e4 : H.tailOfAtom NF x = H.nodeMap.symm (L.invMap (H.tailOfAtom NF x)) := by
+        calc H.tailOfAtom NF x = (H.nodeMap.symm ^ k) y := e1
+        _ = H.nodeMap.symm ((H.nodeMap.symm ^ (k - 1)) y) := by
+          conv_lhs => rw [show k = (k - 1) + 1 from by omega]
+          rw [pow_succ', Equiv.Perm.mul_apply]
+        _ = H.nodeMap.symm ((L.map ^ (k - 1)) y) := by rw [← e3]
+        _ = H.nodeMap.symm (L.invMap (H.tailOfAtom NF x)) := by rw [← e2]
+      exact htinv e4
+  · -- `y = (map^k) tail`：k > 0 时 y = n.symm (invMap y)，矛盾
+    rcases Nat.eq_zero_or_pos k with rfl | hk0
+    · rw [pow_zero, Equiv.Perm.one_apply] at hk
+      exact hk.symm
+    · exfalso
+      have e1 : y = (H.nodeMap.symm ^ k) (H.tailOfAtom NF x) := hk.trans (hagree k le_rfl)
+      have e2 : L.invMap y = (L.map ^ (k - 1)) (H.tailOfAtom NF x) := by
+        have h1 : L.invMap y = L.invMap ((L.map ^ k) (H.tailOfAtom NF x)) :=
+          congrArg L.invMap hk
+        rw [show k = (k - 1) + 1 from by omega, pow_succ', Equiv.Perm.mul_apply,
+          (L.inverse_evaluation _).1] at h1
+        exact h1
+      have e3 : (L.map ^ (k - 1)) (H.tailOfAtom NF x) =
+          (H.nodeMap.symm ^ (k - 1)) (H.tailOfAtom NF x) := hagree (k - 1) (by omega)
+      have e4 : y = H.nodeMap.symm (L.invMap y) := by
+        calc y = (H.nodeMap.symm ^ k) (H.tailOfAtom NF x) := e1
+        _ = H.nodeMap.symm ((H.nodeMap.symm ^ (k - 1)) (H.tailOfAtom NF x)) := by
+          conv_lhs => rw [show k = (k - 1) + 1 from by omega]
+          rw [pow_succ', Equiv.Perm.mul_apply]
+        _ = H.nodeMap.symm ((L.map ^ (k - 1)) (H.tailOfAtom NF x)) := by rw [← e3]
+        _ = H.nodeMap.symm (L.invMap y) := by rw [← e2]
+      exact hne e4
+
+/-- `hypermap.hl`:8514 `head_of_atom_on_loop`。 -/
+theorem headOfAtom_mem_atom (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α}
+    (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hx : x ∈ L.darts) :
+    H.headOfAtom NF x ∈ H.atom L x ∧
+    L.map (H.headOfAtom NF x) ≠ H.nodeMap.symm (H.headOfAtom NF x) := by
+  obtain ⟨L', hL', hx', hh, -, hmap, -⟩ := H.headTailOfAtom_spec hnf ⟨L, hL, hx⟩
+  have hLL : L' = L := hnf.eq_of_mem_of_mem hL' hL hx' hx
+  subst L'
+  exact ⟨hh, hmap⟩
+
+/-- `hypermap.hl`:8529 `tail_of_atom_on_loop`。 -/
+theorem tailOfAtom_mem_atom (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α}
+    (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hx : x ∈ L.darts) :
+    H.tailOfAtom NF x ∈ H.atom L x ∧
+    H.tailOfAtom NF x ≠ H.nodeMap.symm (L.invMap (H.tailOfAtom NF x)) := by
+  obtain ⟨L', hL', hx', -, ht, -, htinv⟩ := H.headTailOfAtom_spec hnf ⟨L, hL, hx⟩
+  have hLL : L' = L := hnf.eq_of_mem_of_mem hL' hL hx' hx
+  subst L'
+  exact ⟨ht, htinv⟩
 
 end Hypermap
 
