@@ -496,6 +496,54 @@ Coverage (block 14, face collections, 10003–10641):
   `S = faceCollection` step is the card chain, `S = NF` is direct subset
   antisymmetry via `disjoint_loops`).
 
+Coverage (block 15, complement contours, 10643–11173):
+- definitions: `is_no_double_joins` (10647, as `IsNoDoubleJoins`; consumed
+  by the restricted-hypermap theory of block 16), `complement_index`
+  (10652, as `complementIndex`), `complement0` (10656, as
+  `complementAux`, a level-indexed path) and `complement` (10662, as
+  `complementPt`, the diagonal point `complementAux x n n`; the contour is
+  `fun i => complementPt x i`). HOL's `join` (690) was already ported in
+  block 8 as `joinPaths`.
+- node nondegeneracy arithmetic: `lemma_node_nondegenerate` (10664, as
+  `nodeNondegenerate_two_le`), `lemma_in_node1` (10680, as
+  `nodeMap_mem_node_of_mem_node`).
+- complement-index monotonicity: `lemma_increasing_index_one` (10685, as
+  `complementIndex_lt_succ`), `lemma_increasing_index` (10705, as
+  `complementIndex_lt_of_lt`, plus the ≤ variant), `lemma_lower_bound_index`
+  (10718, as `le_complementIndex`).
+- prefix stability of `complement0`: `lemma_segment_complement` (10725, as
+  `complementAux_segment` — proved by joining at the pivot with
+  `joinPaths_apply_le`, simpler than HOL's well-founded recursion),
+  `lemma_indepentdent_complement`/`lemma_evaluation_complement`
+  (10756/10769, unified as `complementPath_eq_aux_of_le_ci`).
+- pure strictly-increasing-sequence theory: `lemma_inc_monotone`,
+  `lemma_inc_injective`, `lemma_inc_not_decreasing` (10782–10814, as
+  `strictInc_lt_iff`/`strictInc_eq_iff`/`strictInc_le_iff`),
+  `lemma_num_partition` (10817, as `strictInc_partition` — via
+  `Nat.find` minimality instead of HOL's `num_MAX`/`num_WOP`),
+  `index_representation` (10880, as `exists_add_between`),
+  `lemma_num_partition2` (10890, as `strictInc_partition₂`).
+- **`lemma_complement_path`** (10920): split into
+  `complementPath_compIndex_eval` → `complementPt_compIndex_eval` (pivot
+  evaluation), `complementPt_compIndex_succ_eval` (post-pivot evaluation),
+  `faceMap_complementPt_pivot` (`faceMap` steps across a pivot; uses the
+  Plain identity `nodeMap = edgeMap * faceMap.symm`),
+  `complementPt_add_eval` (intra-segment evaluation along
+  `nodeMap.symm`) and `isContour_complementPt`. The contour proof needs
+  only the two disjuncts of `one_step_contour`: pivots are `faceMap` steps,
+  intra-segment points are trivially `nodeMap.symm` steps.
+- generic helpers (root level): `strictInc_*` strictly-increasing sequence
+  theory, `Perm.symm_pow_pred_apply` (the `p ^ n x = x` ⟹
+  `p⁻¹^(n-1) x = p x` pattern behind `LT_SUC_PRE`-style arguments),
+  power-cancellation forms and `orbitMap_pow_inj` (window injectivity on
+  an orbit, used to kill coincidences against `CARD` bounds).
+- **`lemma_inj_complement`** (11014, as `isInjContour_complementPt`):
+  injectivity of the complement path up to
+  `PRE (complementIndex x (CARD (face x)))`. Coincidences are trapped by
+  `simple_hypermap` (`node ∩ face = {dart}`) after showing the candidate
+  point lies in both orbits, then killed by orbit-window injectivity on
+  the face or node orbit.
+
 Type correspondences (HOL Light ↦ Lean 4):
 - `(A)hypermap` (a 4-tuple carrying `FINITE`/`permutes` side conditions,
   `hypermap.hl`:83–93) ↦ `structure Hypermap` with a `Finset` of darts and
@@ -8773,4 +8821,748 @@ theorem faceCollection_eq_and_iso_of_card_le (H : Hypermap α) {NF : Set (Loop �
 
 end Hypermap
 
+/-! ## 严格递增序列的反射理论（`hypermap.hl`:10782–10918） -/
+
+section StrictInc
+
+variable {f : ℕ → ℕ} {i j : ℕ}
+
+theorem strictInc_lt_iff (hf : ∀ i, f i < f (i + 1)) :
+    i < j ↔ f i < f j := by
+  have fwd : ∀ a b : ℕ, a < b → f a < f b := by
+    intro a b
+    induction b with
+    | zero => intro h; exact absurd h (Nat.not_lt_zero a)
+    | succ k ih =>
+      intro h
+      rcases Nat.lt_or_ge a k with hlt | hge
+      · exact lt_trans (ih hlt) (hf k)
+      · have hak : a = k := le_antisymm (Nat.le_of_lt_succ h) hge
+        rw [hak]
+        exact hf k
+  constructor
+  · exact fwd i j
+  · intro h
+    rcases lt_trichotomy i j with h1 | h2 | h3
+    · exact h1
+    · rw [h2] at h
+      exact absurd h (Nat.lt_irrefl (f j))
+    · exact absurd h (Nat.not_lt.2 (Nat.le_of_lt (fwd j i h3)))
+
+theorem strictInc_eq_iff (hf : ∀ i, f i < f (i + 1)) :
+    i = j ↔ f i = f j := by
+  constructor
+  · intro h; rw [h]
+  · intro h
+    rcases lt_trichotomy i j with h1 | h2 | h3
+    · exfalso; have := (strictInc_lt_iff hf).mp h1; omega
+    · exact h2
+    · exfalso; have := (strictInc_lt_iff hf).mp h3; omega
+
+theorem strictInc_le_iff (hf : ∀ i, f i < f (i + 1)) :
+    i ≤ j ↔ f i ≤ f j := by
+  constructor
+  · intro h
+    rcases lt_or_eq_of_le h with h1 | h2
+    · exact ((strictInc_lt_iff hf).mp h1).le
+    · rw [h2]
+  · intro h
+    by_contra hc
+    have := (strictInc_lt_iff hf).mp (Nat.not_le.mp hc)
+    omega
+
+theorem strictInc_partition (hf0 : f 0 = 0) (hf : ∀ i, f i < f (i + 1)) (n : ℕ) :
+    (∃ k, n = f k) ∨ ∃ j, f j < n ∧ n < f (j + 1) := by
+  have hfle : ∀ k, k ≤ f k := by
+    intro k
+    induction k with
+    | zero => rw [hf0]
+    | succ l ih => have := hf l; omega
+  have hex : ∃ k, n ≤ f k := ⟨n, hfle n⟩
+  have hkspec : n ≤ f (Nat.find hex) := Nat.find_spec hex
+  by_cases heq : n = f (Nat.find hex)
+  · exact Or.inl ⟨Nat.find hex, heq⟩
+  · right
+    have hkpos : 0 < Nat.find hex := by
+      rcases Nat.eq_zero_or_pos (Nat.find hex) with hc | hkpos
+      · rw [hc, hf0] at hkspec heq
+        omega
+      · exact hkpos
+    refine ⟨Nat.find hex - 1, ?_, ?_⟩
+    · refine Nat.not_le.1 (Nat.find_min hex ?_)
+      omega
+    · rw [show Nat.find hex - 1 + 1 = Nat.find hex from by omega]
+      omega
+
+theorem exists_add_between {m n u : ℕ} (h1 : m < n) (h2 : n < u) :
+    ∃ j, 1 ≤ j ∧ j < u - m ∧ n = m + j :=
+  ⟨n - m, by omega⟩
+
+theorem strictInc_partition₂ (hf0 : f 0 = 0) (hf : ∀ i, f i < f (i + 1)) (n : ℕ) :
+    n = 0 ∨ ∃ p q, 1 ≤ q ∧ q ≤ f (p + 1) - f p ∧ n = f p + q := by
+  rcases strictInc_partition hf0 hf n with h1 | h2
+  · obtain ⟨k, hk⟩ := h1
+    cases k with
+    | zero => left; omega
+    | succ l =>
+      right
+      refine ⟨l, f (l + 1) - f l, ?_, le_rfl, ?_⟩
+      · have h2 := hf l; omega
+      · rw [hk]
+        have h2 := hf l
+        omega
+  · obtain ⟨j, hj1, hj2⟩ := h2
+    right
+    exact ⟨j, n - f j, by omega, by omega, by omega⟩
+
+end StrictInc
+
+/-! ## 置换幂的窗口单射与逆幂求值 -/
+
+section PermWindow
+
+variable {α : Type*} {p : Equiv.Perm α}
+
+/-- `p ^ n x = x` 时末位逆幂求值：`(p.symm^(n-1)) x = p x`
+（`LT_SUC_PRE` 类论证的置换形式）。 -/
+theorem Perm.symm_pow_pred_apply {x : α} {n : ℕ} (hn : 0 < n) (h : (p ^ n) x = x) :
+    (p.symm ^ (n - 1)) x = p x := by
+  obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by omega⟩
+  have hiff : p x = (p.symm ^ m) x ↔ x = (p ^ m) (p x) :=
+    pow_apply_iff_inv_pow_apply p⁻¹ m x (p x)
+  refine (hiff.mpr ?_).symm
+  rw [show (p ^ m) (p x) = (p ^ (m + 1)) x from by
+    rw [← Equiv.Perm.mul_apply, pow_succ]]
+  exact h.symm
+
+/-- 用逆幂消去正幂：`(p.symm^t)((p^s) w) = (p^(s-t)) w`（`t ≤ s`）。 -/
+theorem perm_inv_pow_pow_apply {s t : ℕ} (hst : t ≤ s) (w : α) :
+    (p.symm ^ t) ((p ^ s) w) = (p ^ (s - t)) w := by
+  have hsplit : (p ^ s) w = (p ^ t) ((p ^ (s - t)) w) := by
+    have hts : t + (s - t) = s := by omega
+    rw [← Equiv.Perm.mul_apply, ← pow_add, hts]
+  have hcanc : (p.symm ^ t) * (p ^ t) = 1 :=
+    inv_mul_cancel (a := p ^ t)
+  calc (p.symm ^ t) ((p ^ s) w) = (p.symm ^ t) ((p ^ t) ((p ^ (s - t)) w)) := by rw [hsplit]
+    _ = ((p.symm ^ t) * (p ^ t)) ((p ^ (s - t)) w) := (Equiv.Perm.mul_apply _ _ _).symm
+    _ = (p ^ (s - t)) w := by rw [hcanc, Equiv.Perm.one_apply]
+
+/-- 用正幂消去逆幂（次数相同）：`(p^t)((p.symm^t) w) = w`。 -/
+theorem perm_pow_inv_pow_apply {t : ℕ} (w : α) :
+    (p ^ t) ((p.symm ^ t) w) = w := by
+  have heq : (p ^ t) ((p.symm ^ t) w) = ((p ^ t) * (p.symm ^ t)) w :=
+    (Equiv.Perm.mul_apply _ _ _).symm
+  have hc : (p ^ t) * (p.symm ^ t) = 1 :=
+    mul_inv_cancel (a := p ^ t)
+  rw [heq, hc, Equiv.Perm.one_apply]
+
+/-- 用正幂消去逆幂（逆向占优）：`(p^t)((p.symm^s) w) = (p.symm^(s-t)) w`。 -/
+theorem perm_pow_symm_pow_apply_le {s t : ℕ} (hst : t ≤ s) (w : α) :
+    (p ^ t) ((p.symm ^ s) w) = (p.symm ^ (s - t)) w := by
+  have hsplit : (p.symm ^ s) w = (p.symm ^ t) ((p.symm ^ (s - t)) w) := by
+    have hts : t + (s - t) = s := by omega
+    rw [← Equiv.Perm.mul_apply, ← pow_add, hts]
+  have hc : (p ^ t) * (p.symm ^ t) = 1 :=
+    mul_inv_cancel (a := p ^ t)
+  calc (p ^ t) ((p.symm ^ s) w) = (p ^ t) ((p.symm ^ t) ((p.symm ^ (s - t)) w)) := by rw [hsplit]
+    _ = ((p ^ t) * (p.symm ^ t)) ((p.symm ^ (s - t)) w) := (Equiv.Perm.mul_apply _ _ _).symm
+    _ = (p.symm ^ (s - t)) w := by rw [hc, Equiv.Perm.one_apply]
+
+/-- 用正幂消去逆幂（正向占优）：`(p^t)((p.symm^s) w) = (p^(t-s)) w`。 -/
+theorem perm_pow_symm_pow_apply_ge {s t : ℕ} (hst : s ≤ t) (w : α) :
+    (p ^ t) ((p.symm ^ s) w) = (p ^ (t - s)) w := by
+  have hsplit : (p ^ t) ((p.symm ^ s) w) = (p ^ (t - s)) ((p ^ s) ((p.symm ^ s) w)) := by
+    have ht : t = (t - s) + s := by omega
+    conv_lhs => rw [ht, pow_add, Equiv.Perm.mul_apply]
+  rw [hsplit, perm_pow_inv_pow_apply]
+
+/-- 轨道窗口内的幂单射：`a < b < |orbit|` 且 `(p^a) x = (p^b) x` 时矛盾。
+（`lemma_segment_orbit` 的消耗端。） -/
+theorem orbitMap_pow_inj {s : Finset α} (hp : PermutesOn p s)
+    {x : α} {a b : ℕ} (hab : a < b) (hb : b < (orbitMap p x).ncard)
+    (h : (p ^ a) x = (p ^ b) x) : False := by
+  obtain ⟨m, rfl⟩ : ∃ m, b = a + m := ⟨b - a, by omega⟩
+  have hfix : (p ^ m) x = x := by
+    have h2 : (p ^ (a + m)) x = (p ^ a) x := h.symm
+    exact Perm.pow_apply_eq_pow_apply_cancel p h2
+  rcases Nat.lt_or_ge m (orbitMap p x).ncard with hlt | hge
+  · have hinj := (injOrbit_iff_pairwise p x m).mp (hp.injOrbit_of_lt_ncard hlt)
+    have h0m : (0:ℕ) = m :=
+      hinj 0 m (by omega) (by omega)
+        (by show (p ^ 0) x = (p ^ m) x; simpa using hfix.symm)
+    omega
+  · omega
+
+end PermWindow
+
+/-! ## 补等值线：定义与单调性（`hypermap.hl`:10643–10781） -/
+
+namespace Hypermap
+
+variable {α : Type*} [DecidableEq α] {x y z w : α}
+
+/-- `hypermap.hl`:10647 `is_no_double_joins`。restricted hypermap 的合取项；
+其性质在后续块（restricted/tame 理论）中使用。 -/
+def IsNoDoubleJoins (H : Hypermap α) : Prop :=
+  ∀ u v : α, u ∈ H.darts → v ∈ H.node u → H.edgeMap v ∈ H.node (H.edgeMap u) → u = v
+
+/-- 逆 face 幂保持 dart。 -/
+theorem faceMap_symm_pow_mem_darts (H : Hypermap α) (hx : x ∈ H.darts) (k : ℕ) :
+    (H.faceMap.symm ^ k) x ∈ H.darts :=
+  H.faceMap_permutes.symm.pow_apply_mem k hx
+
+/-- 逆 node 幂保持 dart。 -/
+theorem nodeMap_symm_pow_mem_darts (H : Hypermap α) (hx : x ∈ H.darts) (k : ℕ) :
+    (H.nodeMap.symm ^ k) x ∈ H.darts :=
+  H.nodeMap_permutes.symm.pow_apply_mem k hx
+
+/-- `hypermap.hl`:10664 `lemma_node_nondegenerate`：
+node 非退化 ⟺ 每个 dart 的 node 至少二元。 -/
+theorem nodeNondegenerate_two_le (H : Hypermap α) :
+    H.NodeNondegenerate ↔ ∀ u ∈ H.darts, 2 ≤ (H.node u).ncard := by
+  constructor
+  · intro h u hu
+    by_contra hcon
+    push_neg at hcon
+    have h1 : (H.node u).ncard = 1 :=
+      le_antisymm (Nat.le_of_lt_succ hcon) (one_le_node_ncard H u)
+    obtain ⟨v, hv⟩ := Set.ncard_eq_one.mp h1
+    have hx' : u ∈ H.node u := H.mem_node_self u
+    have hy' : H.nodeMap u ∈ H.node u := H.pow_nodeMap_mem_node u 1
+    rw [hv] at hx' hy'
+    refine h u hu ?_
+    have e1 := Set.mem_singleton_iff.1 hx'
+    have e2 := Set.mem_singleton_iff.1 hy'
+    rw [e2, ← e1]
+  · intro h u hu hfix
+    have hcard : (H.node u).ncard ≤ 1 := by
+      have heq : H.node u = orbitMap H.nodeMap u := rfl
+      rw [heq, orbitMap_eq_singleton hfix]
+      simp
+    have hge := h u hu
+    omega
+
+/-- `hypermap.hl`:10680 `lemma_in_node1`。 -/
+theorem nodeMap_mem_node_of_mem_node (H : Hypermap α) (hy : y ∈ H.node x) :
+    H.nodeMap y ∈ H.node x := by
+  obtain ⟨k, rfl⟩ := (H.mem_node_iff x y).mp hy
+  have heq : H.nodeMap ((H.nodeMap ^ k) x) = (H.nodeMap ^ (k + 1)) x := by
+    rw [pow_succ']
+    rfl
+  rw [heq]
+  exact H.pow_nodeMap_mem_node x (k + 1)
+
+/-- 逆 face 幂所在点的 node 至少二元（补指数递增的来源）。 -/
+theorem two_le_node_ncard_faceSymm (H : Hypermap α) (hnn : H.NodeNondegenerate)
+    (hx : x ∈ H.darts) (k : ℕ) :
+    2 ≤ (H.node ((H.faceMap.symm ^ k) x)).ncard :=
+  H.nodeNondegenerate_two_le.mp hnn _ (H.faceMap_symm_pow_mem_darts hx k)
+
+/-- `hypermap.hl`:10652 `complement_index`：第 `i` 个分段点 =
+前 `i` 段的 `PRE(CARD(node ·))` 累加。 -/
+noncomputable def complementIndex (H : Hypermap α) (x : α) : ℕ → ℕ
+  | 0 => 0
+  | n + 1 => complementIndex H x n + Nat.pred (H.node ((H.faceMap.symm ^ (n + 1)) x)).ncard
+
+/-- `hypermap.hl`:10656 `complement0`：第 `n` 层补路径 =
+前缀接上从 `invNode(invFace^(SUC n) x)` 出发的 node contour
+（HOL 的 `join` 已移植为 `joinPaths`，中间不共享端点）。 -/
+noncomputable def complementAux (H : Hypermap α) (x : α) : ℕ → ℕ → α
+  | 0, j => (H.nodeMap.symm ^ j) (H.nodeMap x)
+  | n + 1, j =>
+      joinPaths (fun t => complementAux H x n t)
+        (fun k => (H.nodeMap.symm ^ k)
+          (H.nodeMap.symm ((H.faceMap.symm ^ (n + 1)) x)))
+        (complementIndex H x n) j
+
+/-- `hypermap.hl`:10662 `complement`：第 `n` 层补路径的第 `n` 个点。
+补等值线即 `fun i => complementPt H x i`。 -/
+noncomputable def complementPt (H : Hypermap α) (x : α) (n : ℕ) : α :=
+  complementAux H x n n
+
+theorem complementIndex_zero_eq (H : Hypermap α) (x : α) :
+    H.complementIndex x 0 = 0 := rfl
+
+theorem complementIndex_succ_eq (H : Hypermap α) (x : α) (n : ℕ) :
+    H.complementIndex x (n + 1)
+      = H.complementIndex x n
+        + Nat.pred ((H.node ((H.faceMap.symm ^ (n + 1)) x)).ncard) :=
+  rfl
+
+/-- 递增步长的显式形式（`PRE` 已消去，供算术推理消费）。 -/
+theorem complementIndex_succ_eq_sub (H : Hypermap α) (hnn : H.NodeNondegenerate)
+    (hx : x ∈ H.darts) (n : ℕ) :
+    H.complementIndex x (n + 1)
+      = H.complementIndex x n + ((H.node ((H.faceMap.symm ^ (n + 1)) x)).ncard - 1) :=
+  H.complementIndex_succ_eq x n
+
+
+/-- `hypermap.hl`:10685 `lemma_increasing_index_one`。 -/
+theorem complementIndex_lt_succ (H : Hypermap α) (hnn : H.NodeNondegenerate)
+    (hx : x ∈ H.darts) (n : ℕ) :
+    H.complementIndex x n < H.complementIndex x (n + 1) := by
+  have hstep := H.complementIndex_succ_eq_sub hnn hx n
+  have hN := H.two_le_node_ncard_faceSymm hnn hx (n + 1)
+  omega
+
+/-- `hypermap.hl`:10705 `lemma_increasing_index`。 -/
+theorem complementIndex_lt_of_lt (H : Hypermap α) (hnn : H.NodeNondegenerate)
+    (hx : x ∈ H.darts) {n m : ℕ} (h : n < m) :
+    H.complementIndex x n < H.complementIndex x m := by
+  obtain ⟨k, rfl⟩ : ∃ k, m = n + k + 1 := ⟨m - n - 1, by omega⟩
+  induction k with
+  | zero => simpa using H.complementIndex_lt_succ hnn hx n
+  | succ l ih =>
+    have hl : n < n + l + 1 := by omega
+    exact lt_trans (ih hl) (H.complementIndex_lt_succ hnn hx _)
+
+theorem complementIndex_le_of_le (H : Hypermap α) (hnn : H.NodeNondegenerate)
+    (hx : x ∈ H.darts) {n m : ℕ} (h : n ≤ m) :
+    H.complementIndex x n ≤ H.complementIndex x m := by
+  rcases eq_or_lt_of_le h with h1 | h1
+  · rw [h1]
+  · exact (H.complementIndex_lt_of_lt hnn hx h1).le
+
+/-- `hypermap.hl`:10718 `lemma_lower_bound_index`。 -/
+theorem le_complementIndex (H : Hypermap α) (hnn : H.NodeNondegenerate)
+    (hx : x ∈ H.darts) (n : ℕ) : n ≤ H.complementIndex x n := by
+  induction n with
+  | zero => rw [H.complementIndex_zero_eq]
+  | succ k ih =>
+    have hs := H.complementIndex_lt_succ hnn hx k
+    have heq := H.complementIndex_succ_eq x k
+    omega
+
+/-- `hypermap.hl`:10725 `lemma_segment_complement`：短层是长层的前缀。
+只需在分段点处用 `joinPaths_apply_le`。 -/
+theorem complementAux_segment (H : Hypermap α) (hnn : H.NodeNondegenerate)
+    (hx : x ∈ H.darts) :
+    ∀ n i, i ≤ n → ∀ j, j ≤ H.complementIndex x i →
+      complementAux H x i j = complementAux H x n j := by
+  intro n
+  induction n with
+  | zero =>
+    intro i hi j _
+    obtain rfl : i = 0 := Nat.eq_zero_of_le_zero hi
+    exact rfl
+  | succ k ih =>
+    intro i hi j hj
+    rcases Nat.lt_or_ge i (k + 1) with hlt | heq
+    · have hik : H.complementIndex x i ≤ H.complementIndex x k :=
+        H.complementIndex_le_of_le hnn hx (by omega)
+      have hjk : j ≤ H.complementIndex x k := by omega
+      have hstep : complementAux H x (k + 1) j
+          = joinPaths (complementAux H x k)
+              (fun t => (H.nodeMap.symm ^ t)
+                (H.nodeMap.symm ((H.faceMap.symm ^ (k + 1)) x)))
+              (H.complementIndex x k) j := rfl
+      rw [hstep, joinPaths_apply_le hjk]
+      exact ih i (by omega) j hj
+    · obtain rfl : i = k + 1 := le_antisymm hi heq
+      exact rfl
+
+/-- 求值归约：下标 `n` 不超过某分段点时，层数可换成该分段点。
+统一了 HOL 的 `lemma_indepentdent_complement` 与 `lemma_evaluation_complement`。 -/
+theorem complementPath_eq_aux_of_le_ci (H : Hypermap α) (hnn : H.NodeNondegenerate)
+    (hx : x ∈ H.darts) {n i : ℕ} (h : n ≤ H.complementIndex x i) :
+    complementAux H x n n = complementAux H x i n := by
+  rcases le_total i n with hin | hin
+  · have hseg := H.complementAux_segment hnn hx n i hin n h
+    exact hseg.symm
+  · have h1 := H.le_complementIndex hnn hx n
+    exact H.complementAux_segment hnn hx i n hin n h1
+
+end Hypermap
+
+/-! ## 补等值线的求值公式与单射性（`hypermap.hl`:10920–11172） -/
+
+namespace Hypermap
+
+variable {α : Type*} [DecidableEq α] {x y z w : α}
+
+/-- 合并相邻逆幂的辅助等式。 -/
+private theorem symm_pow_succ_symm_apply (H : Hypermap α) (r : ℕ) (v : α) :
+    (H.nodeMap.symm ^ r) (H.nodeMap.symm v) = (H.nodeMap.symm ^ (r + 1)) v := by
+  rw [← Equiv.Perm.mul_apply, ← pow_succ]
+
+/-- 层 `i+1` 的补路径在分段点后第 `j` 步（`1 ≤ j`）沿 `invNode` 前进。 -/
+theorem complementAux_succ_add_eval (H : Hypermap α) (hnn : H.NodeNondegenerate)
+    (hx : x ∈ H.darts) (i j : ℕ) (hj : 1 ≤ j) :
+    complementAux H x (i + 1) (H.complementIndex x i + j)
+      = (H.nodeMap.symm ^ j) ((H.faceMap.symm ^ (i + 1)) x) := by
+  obtain ⟨t, rfl⟩ : ∃ t, j = t + 1 := ⟨j - 1, by omega⟩
+  show joinPaths (complementAux H x i)
+    (fun r => (H.nodeMap.symm ^ r)
+      (H.nodeMap.symm ((H.faceMap.symm ^ (i + 1)) x)))
+    (H.complementIndex x i) (H.complementIndex x i + (t + 1)) = _
+  rw [joinPaths_apply_add, H.symm_pow_succ_symm_apply]
+
+/-- 结论四（10920 结论中第四条）：段内求值。 -/
+theorem complementPt_add_eval (H : Hypermap α) (hnn : H.NodeNondegenerate)
+    (hx : x ∈ H.darts) (i j : ℕ) (hj : 1 ≤ j)
+    (hlt : j < (H.node ((H.faceMap.symm ^ (i + 1)) x)).ncard) :
+    complementPt H x (H.complementIndex x i + j)
+      = (H.nodeMap.symm ^ j) ((H.faceMap.symm ^ (i + 1)) x) := by
+  have hev : complementAux H x (H.complementIndex x i + j) (H.complementIndex x i + j)
+      = complementAux H x (i + 1) (H.complementIndex x i + j) :=
+    H.complementPath_eq_aux_of_le_ci hnn hx (by
+      have hs := H.complementIndex_succ_eq_sub hnn hx i
+      omega)
+  show complementAux H x _ _ = _
+  rw [hev, H.complementAux_succ_add_eval hnn hx i j hj]
+
+/-- 结论二（10920 第二条）：分段点后一步。 -/
+theorem complementPt_compIndex_succ_eval (H : Hypermap α) (hnn : H.NodeNondegenerate)
+    (hx : x ∈ H.darts) (i : ℕ) :
+    complementPt H x (H.complementIndex x i + 1)
+      = H.nodeMap.symm ((H.faceMap.symm ^ (i + 1)) x) :=
+  H.complementPt_add_eval hnn hx i 1 (by omega) (by
+    have := H.two_le_node_ncard_faceSymm hnn hx (i + 1)
+    omega)
+
+/-- Plain hypermap 的恒等式：`nodeMap = edgeMap ∘ faceMap⁻¹`。 -/
+theorem nodeMap_eq_edgeMap_mul_faceMap_symm (H : Hypermap α) (hplain : H.Plain) :
+    H.nodeMap = H.edgeMap * H.faceMap.symm := by
+  apply Equiv.Perm.ext
+  intro v
+  have hnf : ∀ u, H.nodeMap (H.faceMap u) = H.edgeMap u := by
+    intro u
+    have hs := congrArg (fun q : Equiv.Perm α => q u) H.comp_eq_one
+    simp only [Equiv.Perm.mul_apply, Equiv.Perm.one_apply] at hs
+    have hee : ∀ w, H.edgeMap (H.edgeMap w) = w := fun w => by
+      have h := congrArg (fun q : Equiv.Perm α => q w) hplain
+      simpa using h
+    have h2 := congrArg H.edgeMap hs
+    rw [hee] at h2
+    exact h2
+  show H.nodeMap v = H.edgeMap (H.faceMap.symm v)
+  have h6 := hnf (H.faceMap.symm v)
+  rwa [Equiv.apply_symm_apply] at h6
+
+/-- 结论一（10920 第一条）：分段点处的求值。 -/
+theorem complementPt_compIndex_eval (H : Hypermap α) (hnn : H.NodeNondegenerate)
+    (hx : x ∈ H.darts) (i : ℕ) :
+    complementPt H x (H.complementIndex x i) = H.nodeMap ((H.faceMap.symm ^ i) x) := by
+  induction i with
+  | zero => rfl
+  | succ k ih =>
+    have hN2 : 2 ≤ (H.node ((H.faceMap.symm ^ (k + 1)) x)).ncard :=
+      H.two_le_node_ncard_faceSymm hnn hx (k + 1)
+    have hfix : (H.nodeMap ^ (H.node ((H.faceMap.symm ^ (k + 1)) x)).ncard)
+        ((H.faceMap.symm ^ (k + 1)) x) = (H.faceMap.symm ^ (k + 1)) x :=
+      H.pow_card_node_apply_self _
+    have hfin : (H.nodeMap.symm ^ ((H.node ((H.faceMap.symm ^ (k + 1)) x)).ncard - 1))
+        ((H.faceMap.symm ^ (k + 1)) x)
+        = H.nodeMap ((H.faceMap.symm ^ (k + 1)) x) :=
+      Perm.symm_pow_pred_apply (p := H.nodeMap) (x := _) (by omega) hfix
+    have hlast : complementPt H x (H.complementIndex x (k + 1))
+        = (H.nodeMap.symm ^ ((H.node ((H.faceMap.symm ^ (k + 1)) x)).ncard - 1))
+            ((H.faceMap.symm ^ (k + 1)) x) := by
+      have hsub := H.complementIndex_succ_eq_sub hnn hx k
+      show complementAux H x
+        (H.complementIndex x k +
+          ((H.node ((H.faceMap.symm ^ (k + 1)) x)).ncard - 1))
+        (H.complementIndex x k +
+          ((H.node ((H.faceMap.symm ^ (k + 1)) x)).ncard - 1)) = _
+      have hev : complementAux H x (H.complementIndex x k +
+          ((H.node ((H.faceMap.symm ^ (k + 1)) x)).ncard - 1))
+          (H.complementIndex x k +
+            ((H.node ((H.faceMap.symm ^ (k + 1)) x)).ncard - 1))
+          = complementAux H x (k + 1) (H.complementIndex x k +
+              ((H.node ((H.faceMap.symm ^ (k + 1)) x)).ncard - 1)) :=
+        H.complementPath_eq_aux_of_le_ci hnn hx (by omega)
+      rw [hev]
+      exact H.complementAux_succ_add_eval hnn hx k
+        ((H.node ((H.faceMap.symm ^ (k + 1)) x)).ncard - 1) (by omega)
+    rw [hlast, hfin]
+
+/-- 结论三（10920 第三条）：跨分段点是 `faceMap` 步。 -/
+theorem faceMap_complementPt_pivot (H : Hypermap α) (hplain : H.Plain)
+    (hnn : H.NodeNondegenerate) (hx : x ∈ H.darts) (i : ℕ) :
+    H.faceMap (complementPt H x (H.complementIndex x i))
+      = complementPt H x (H.complementIndex x i + 1) := by
+  rw [H.complementPt_compIndex_eval hnn hx i,
+      H.complementPt_compIndex_succ_eval hnn hx i]
+  have hshift : (H.faceMap.symm ^ (i + 1)) x = H.faceMap.symm ((H.faceMap.symm ^ i) x) := by
+    rw [pow_succ']; rfl
+  rw [hshift]
+  have hnpt : ∀ u, H.nodeMap u = H.edgeMap (H.faceMap.symm u) := fun u =>
+    congrArg (fun q : Equiv.Perm α => q u)
+      (H.nodeMap_eq_edgeMap_mul_faceMap_symm hplain)
+  have hnspt : ∀ v, H.nodeMap.symm v = H.faceMap (H.edgeMap v) := by
+    intro v
+    have hev : H.edgeMap (H.edgeMap v) = v := by
+      have h := congrArg (fun q : Equiv.Perm α => q v) hplain
+      simpa using h
+    have h1 := hnpt (H.faceMap (H.edgeMap v))
+    rw [Equiv.symm_apply_apply, hev] at h1
+    exact (Equiv.symm_apply_eq _).mpr h1.symm
+  rw [hnpt, hnspt]
+
+/-- 结论五（10920 第五条）：补等值线是 contour。 -/
+theorem isContour_complementPt (H : Hypermap α) (hplain : H.Plain)
+    (hnn : H.NodeNondegenerate) (hx : x ∈ H.darts) (n : ℕ) :
+    H.isContour (fun t => complementPt H x t) n := by
+  rw [H.isContour_iff]
+  intro i hi
+  rcases strictInc_partition (H.complementIndex_zero_eq x)
+      (H.complementIndex_lt_succ hnn hx) i with ⟨k, hk⟩ | ⟨t, ht1, ht2⟩
+  · subst hk
+    exact Or.inl (H.faceMap_complementPt_pivot hplain hnn hx k).symm
+  · obtain ⟨j', hj'1, hj'2, hj'3⟩ := exists_add_between ht1 ht2
+    have hdiff : H.complementIndex x (t + 1) - H.complementIndex x t
+        = (H.node ((H.faceMap.symm ^ (t + 1)) x)).ncard - 1 := by
+      have hs := H.complementIndex_succ_eq_sub hnn hx t
+      omega
+    have hN2 : 2 ≤ (H.node ((H.faceMap.symm ^ (t + 1)) x)).ncard :=
+      H.two_le_node_ncard_faceSymm hnn hx (t + 1)
+    have hjN : j' < (H.node ((H.faceMap.symm ^ (t + 1)) x)).ncard := by omega
+    have key1 := H.complementPt_add_eval hnn hx t j' hj'1 hjN
+    have key2 := H.complementPt_add_eval hnn hx t (j' + 1) (by omega) (by omega)
+    refine Or.inr ?_
+    have hstep1 : complementPt H x (i + 1)
+        = complementPt H x (H.complementIndex x t + (j' + 1)) := by
+      rw [hj'3, Nat.add_assoc]
+    have hstep2 : complementPt H x i
+        = complementPt H x (H.complementIndex x t + j') := by
+      rw [hj'3]
+    rw [hstep1, hstep2, key1, key2, pow_succ']
+    rfl
+
+/-- `hypermap.hl`:11014 `lemma_inj_complement`：补等值线在
+`PRE (complementIndex x (CARD (face x)))` 范围内单射。 -/
+theorem isInjContour_complementPt (H : Hypermap α) (hplain : H.Plain) (hsimple : H.Simple)
+    (hnn : H.NodeNondegenerate) (hx : x ∈ H.darts) :
+    H.isInjContour (fun t => complementPt H x t)
+      (Nat.pred (H.complementIndex x (H.face x).ncard)) := by
+  have hF1 : 1 ≤ (H.face x).ncard := one_le_face_ncard H x
+  have hKF : (H.face x).ncard ≤ H.complementIndex x (H.face x).ncard :=
+    H.le_complementIndex hnn hx _
+  have hKeq : Nat.pred (H.complementIndex x (H.face x).ncard) + 1
+      = H.complementIndex x (H.face x).ncard := by
+    obtain ⟨c, hc⟩ : ∃ c, H.complementIndex x (H.face x).ncard = c + 1 :=
+      ⟨H.complementIndex x (H.face x).ncard - 1, by omega⟩
+    rw [hc]; simp
+  -- 主不相撞引理：范围内的两点重合必导致矛盾
+  have main : ∀ a b : ℕ, a < b → b ≤ Nat.pred (H.complementIndex x (H.face x).ncard) →
+      complementPt H x a ≠ complementPt H x b := by
+    intro a b hab hbK heq
+    have hbF : b < H.complementIndex x (H.face x).ncard := by omega
+    have hb1 : b ≠ 0 := by omega
+    rcases strictInc_partition₂ (H.complementIndex_zero_eq x)
+        (H.complementIndex_lt_succ hnn hx) b with h0 | ⟨m, kp, hkp1, hkp2, hbrep⟩
+    · exact absurd h0 hb1
+    -- 记号：zM := invFace^(m+1) x，N_m := CARD(node zM) ≥ 2
+    have hzmdart : (H.faceMap.symm ^ (m + 1)) x ∈ H.darts :=
+      H.faceMap_symm_pow_mem_darts hx (m + 1)
+    have hNm2 : 2 ≤ (H.node ((H.faceMap.symm ^ (m + 1)) x)).ncard :=
+      H.two_le_node_ncard_faceSymm hnn hx (m + 1)
+    have hkpNm : kp ≤ (H.node ((H.faceMap.symm ^ (m + 1)) x)).ncard - 1 := by
+      have hs := H.complementIndex_succ_eq_sub hnn hx m
+      omega
+    have hbval : complementPt H x b = (H.nodeMap.symm ^ kp) ((H.faceMap.symm ^ (m + 1)) x) := by
+      rw [hbrep]
+      exact H.complementPt_add_eval hnn hx m kp hkp1 (by omega)
+    rw [hbval] at heq
+    rcases Nat.eq_zero_or_pos a with ha0 | hapos
+    · -- 情形 a = 0：node(zM) 与 node(x) 相交、zM ∈ face x，简单性给出 zM = x
+      subst ha0
+      have hp0 : complementPt H x 0 = H.nodeMap x := rfl
+      rw [hp0] at heq
+      -- heq : nodeMap x = invN^kp zM
+      have hm1 : (H.nodeMap.symm ^ kp) ((H.faceMap.symm ^ (m + 1)) x)
+          ∈ H.node ((H.faceMap.symm ^ (m + 1)) x) :=
+        H.nodeMap_symm_pow_mem_node_self _ kp
+      have hm2 : H.nodeMap x ∈ H.node x := H.pow_nodeMap_mem_node x 1
+      rw [← heq] at hm1
+      have e1 := H.node_eq_of_mem hm1
+      have e2 := H.node_eq_of_mem hm2
+      have horb : H.node ((H.faceMap.symm ^ (m + 1)) x) = H.node x := e1.trans e2.symm
+      have hzmNx : (H.faceMap.symm ^ (m + 1)) x ∈ H.node x := by
+        rw [← horb]; exact H.mem_node_self _
+      have hzmFx : (H.faceMap.symm ^ (m + 1)) x ∈ H.face x := by
+        have hmem : (H.faceMap.symm ^ (m + 1)) x ∈ orbitMap H.faceMap.symm x :=
+          ⟨m + 1, rfl⟩
+        rwa [PermutesOn.orbitMap_symm H.faceMap_permutes x] at hmem
+      have hzxRaw : (H.faceMap.symm ^ (m + 1)) x = x := by
+        have hin : (H.faceMap.symm ^ (m + 1)) x ∈ H.node x ∩ H.face x :=
+          ⟨hzmNx, hzmFx⟩
+        rw [hsimple x hx] at hin
+        exact Set.mem_singleton_iff.mp hin
+      rw [hzxRaw] at heq
+      -- heq : nodeMap x = invN^kp x；末端值强制 kp = N_x - 1，否则 node 窗口矛盾
+      have hNx1 : 0 < (H.node x).ncard := one_le_node_ncard H x
+      have hlast := Perm.symm_pow_pred_apply (p := H.nodeMap) (x := x)
+        hNx1 (H.pow_card_node_apply_self x)
+      rw [← hlast] at heq
+      have hNeq : (H.node ((H.faceMap.symm ^ (m + 1)) x)).ncard = (H.node x).ncard := by
+        rw [← horb]
+      by_cases hkpeq : kp = (H.node x).ncard - 1
+      · -- b = ci(m+1)，且 m+1 < F：面轨道窗口矛盾（invF^{m+1} x = x）
+        have hbci : b = H.complementIndex x (m + 1) := by
+          have hs := H.complementIndex_succ_eq_sub hnn hx m
+          rw [hzxRaw] at hs
+          omega
+        have hltF : m + 1 < (H.face x).ncard := by
+          have hsub2 : H.complementIndex x (m + 1)
+              < H.complementIndex x (H.face x).ncard := by
+            rw [← hbci]
+            exact hbF
+          exact (strictInc_lt_iff (H.complementIndex_lt_succ hnn hx)).mpr hsub2
+        refine orbitMap_pow_inj (H.faceMap_permutes.symm) (x := x) (a := 0) (b := m + 1)
+          (by omega)
+          (by rw [PermutesOn.orbitMap_symm H.faceMap_permutes x]; exact hltF)
+          (show x = (H.faceMap.symm ^ (m + 1)) x from hzxRaw.symm)
+      · -- kp 未取到末端：node 轨道窗口矛盾
+        refine orbitMap_pow_inj (H.nodeMap_permutes.symm) (x := x)
+          (a := kp) (b := (H.node x).ncard - 1) (by omega)
+          (by
+            rw [PermutesOn.orbitMap_symm H.nodeMap_permutes x]
+            have h2c : (orbitMap H.nodeMap x).ncard = (H.node x).ncard := rfl
+            omega)
+          heq.symm
+    · -- 情形 0 < a：两侧分段表示
+      rcases strictInc_partition₂ (H.complementIndex_zero_eq x)
+          (H.complementIndex_lt_succ hnn hx) a with h0 | ⟨u, vp, hvp1, hvp2, harep⟩
+      · exact absurd h0 (by omega)
+      have hvpNu : vp ≤ (H.node ((H.faceMap.symm ^ (u + 1)) x)).ncard - 1 := by
+        have hs := H.complementIndex_succ_eq_sub hnn hx u
+        omega
+      have haval : complementPt H x a =
+          (H.nodeMap.symm ^ vp) ((H.faceMap.symm ^ (u + 1)) x) := by
+        rw [harep]
+        exact H.complementPt_add_eval hnn hx u vp hvp1 (by omega)
+      rw [haval] at heq
+      -- heq : invN^vp zU = invN^kp zM（zU := invFace^(u+1) x）
+      -- 次序与界：u < F、m < F、u ≤ m
+      have huF : u < (H.face x).ncard := by
+        have h1 : H.complementIndex x u < a := by
+          have h2 := H.le_complementIndex hnn hx u
+          omega
+        have h3 : H.complementIndex x u < H.complementIndex x (H.face x).ncard := by
+          omega
+        exact (strictInc_lt_iff (H.complementIndex_lt_succ hnn hx)).mpr h3
+      have hmF : m < (H.face x).ncard := by
+        have h1 : H.complementIndex x m < b := by
+          have h2 := H.le_complementIndex hnn hx m
+          omega
+        have h3 : H.complementIndex x m < H.complementIndex x (H.face x).ncard := by
+          omega
+        exact (strictInc_lt_iff (H.complementIndex_lt_succ hnn hx)).mpr h3
+      have hum : u ≤ m := by
+        have h1 : H.complementIndex x u < a := by
+          have h2 := H.le_complementIndex hnn hx u
+          omega
+        have h4 : b ≤ H.complementIndex x (m + 1) := by
+          have hs := H.complementIndex_succ_eq_sub hnn hx m
+          omega
+        have h5 : H.complementIndex x u < H.complementIndex x (m + 1) := by omega
+        have h6 := (strictInc_lt_iff (H.complementIndex_lt_succ hnn hx)).mpr h5
+        omega
+      -- z_U 落在 z_M 的 face 轨道与 node 轨道内
+      have hzmu_face : (H.faceMap.symm ^ (u + 1)) x
+          ∈ H.face ((H.faceMap.symm ^ (m + 1)) x) := by
+        have hexp : (H.faceMap.symm ^ (m - u)) ((H.faceMap.symm ^ (u + 1)) x)
+            = (H.faceMap.symm ^ (m + 1)) x := by
+          have hex : (m + 1 : ℕ) = (m - u) + (u + 1) := by omega
+          have hsplit : (H.faceMap.symm ^ ((m - u) + (u + 1))) x
+              = (H.faceMap.symm ^ (m - u)) ((H.faceMap.symm ^ (u + 1)) x) := by
+            rw [pow_add]
+            rfl
+          rw [hex, hsplit]
+        have hzuF : (H.faceMap.symm ^ (u + 1)) x
+            = (H.faceMap ^ (m - u)) ((H.faceMap.symm ^ (m + 1)) x) := by
+          have happL := perm_pow_inv_pow_apply (p := H.faceMap) (t := m - u)
+            ((H.faceMap.symm ^ (u + 1)) x)
+          rw [hexp] at happL
+          exact happL.symm
+        rw [hzuF]
+        exact H.pow_faceMap_mem_face _ (m - u)
+      have hzmu_node : (H.faceMap.symm ^ (u + 1)) x
+          ∈ H.node ((H.faceMap.symm ^ (m + 1)) x) := by
+        rcases lt_trichotomy vp kp with h1 | h2 | h3
+        · -- vp < kp：两侧同施 nodeMap^vp
+          have hL := perm_pow_symm_pow_apply_le (p := H.nodeMap)
+            (s := kp) (t := vp) (by omega) ((H.faceMap.symm ^ (m + 1)) x)
+          have hR := perm_pow_inv_pow_apply (p := H.nodeMap) (t := vp)
+            ((H.faceMap.symm ^ (u + 1)) x)
+          have hfXY := congrArg (H.nodeMap ^ vp) heq
+          rw [hR, hL] at hfXY
+          rw [hfXY]
+          exact H.nodeMap_symm_pow_mem_node_self _ (kp - vp)
+        · -- vp = kp：幂单射给出 z_U = z_M
+          rw [← h2] at heq
+          have hzz0 : (H.faceMap.symm ^ (m + 1)) x
+              = (H.faceMap.symm ^ (u + 1)) x :=
+            (H.nodeMap.symm ^ vp).injective heq |>.symm
+          rw [← hzz0]
+          exact H.mem_node_self _
+        · -- kp < vp：两侧同施 nodeMap^vp，右侧余量落在 z_M 的 node 轨道内
+          have hL := perm_pow_symm_pow_apply_ge (p := H.nodeMap)
+            (s := kp) (t := vp) (by omega) ((H.faceMap.symm ^ (m + 1)) x)
+          have hR := perm_pow_inv_pow_apply (p := H.nodeMap) (t := vp)
+            ((H.faceMap.symm ^ (u + 1)) x)
+          have hfXY := congrArg (H.nodeMap ^ vp) heq
+          rw [hR, hL] at hfXY
+          -- hfXY : z_U = nodeMap^{vp-kp} z_M
+          rw [hfXY]
+          exact H.pow_nodeMap_mem_node _ (vp - kp)
+      -- 简单性收口：z_U = z_M
+      have hzz : (H.faceMap.symm ^ (u + 1)) x = (H.faceMap.symm ^ (m + 1)) x := by
+        have hin : (H.faceMap.symm ^ (u + 1)) x
+            ∈ H.node ((H.faceMap.symm ^ (m + 1)) x)
+              ∩ H.face ((H.faceMap.symm ^ (m + 1)) x) :=
+          ⟨hzmu_node, hzmu_face⟩
+        rw [hsimple _ hzmdart] at hin
+        exact Set.mem_singleton_iff.mp hin
+      by_cases hum2 : u = m
+      · -- 同段：u=m 后窗口单射强制 vp = kp，否则矛盾；相等则 a = b 矛盾
+        rw [hum2] at heq harep
+        -- heq : invN^vp (invF^(m+1) x) = invN^kp (invF^(m+1) x)
+        rcases lt_trichotomy vp kp with h1 | h2 | h3
+        · refine orbitMap_pow_inj (H.nodeMap_permutes.symm)
+            (x := (H.faceMap.symm ^ (m + 1)) x) (a := vp) (b := kp) (by omega)
+            (by
+              rw [PermutesOn.orbitMap_symm H.nodeMap_permutes]
+              have h2c : (orbitMap H.nodeMap ((H.faceMap.symm ^ (m + 1)) x)).ncard
+                = (H.node ((H.faceMap.symm ^ (m + 1)) x)).ncard := rfl
+              omega)
+            heq
+        · rw [h2] at harep
+          omega
+        · refine orbitMap_pow_inj (H.nodeMap_permutes.symm)
+            (x := (H.faceMap.symm ^ (m + 1)) x) (a := kp) (b := vp) (by omega)
+            (by
+              rw [PermutesOn.orbitMap_symm H.nodeMap_permutes]
+              have h2c : (orbitMap H.nodeMap ((H.faceMap.symm ^ (m + 1)) x)).ncard
+                = (H.node ((H.faceMap.symm ^ (m + 1)) x)).ncard := rfl
+              omega)
+            heq.symm
+      · -- u < m：面轨道窗口矛盾
+        have hfeq : (H.faceMap.symm ^ (u + 1)) x = (H.faceMap.symm ^ (m + 1)) x := hzz
+        rcases Nat.lt_or_ge (m + 1) (H.face x).ncard with hlt | hge
+        · refine orbitMap_pow_inj (H.faceMap_permutes.symm) (x := x)
+            (a := u + 1) (b := m + 1) (by omega)
+            (by rw [PermutesOn.orbitMap_symm H.faceMap_permutes x]; exact hlt) hfeq
+        · have hmeq : m + 1 = (H.face x).ncard := by omega
+          have hFx : (H.faceMap.symm ^ (H.face x).ncard) x = x := by
+            have hpc := H.pow_card_face_apply_self x
+            have hstep2 : x = (H.faceMap.symm ^ (H.face x).ncard) x :=
+              (pow_apply_iff_inv_pow_apply H.faceMap (H.face x).ncard x x).mp hpc.symm
+            exact hstep2.symm
+          rw [hmeq] at hfeq
+          rw [hFx] at hfeq
+          refine orbitMap_pow_inj (H.faceMap_permutes.symm) (x := x)
+            (a := 0) (b := u + 1) (by omega)
+            (by
+              rw [PermutesOn.orbitMap_symm H.faceMap_permutes x]
+              have h2c : (orbitMap H.faceMap x).ncard = (H.face x).ncard := rfl
+              omega)
+            (show x = (H.faceMap.symm ^ (u + 1)) x from hfeq.symm)
+  rw [H.isInjContour_iff]
+  refine ⟨H.isContour_complementPt hplain hnn hx _, ?_⟩
+  intro i j hij hji hcontra
+  exact main j i hji hij hcontra
+
+end Hypermap
 end Kepler.Text
