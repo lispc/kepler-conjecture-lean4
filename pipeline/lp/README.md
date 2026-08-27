@@ -218,6 +218,46 @@ cd ../../lean && lake build Kepler.LP.Pilot204880136538.Data
 cd ../pipeline/lp && python3 build_shards.py Pilot204880136538 --procs 96
 ```
 
+### 列主序（--col-major）模板（2026-08-27）
+
+`socert.py --col-major` 输出 `Kepler.LP.ColMajor` 的转置证书：矩阵按列存
+（`LPCM.cs`：每变量一个 `(cⱼ, 列)` 对），对偶检查降为 O(nnz)——列不等式
+`D·cⱼ ≤ Σ a·Yᵢ` 一次线性扫该列支撑，不再像行主序 `colDotI` 那样逐列重扫
+全部行支撑（行主序单块 25304 s 的根源）。
+
+- 数据：`cs`/`b` 分块 `def`（`cs_0..`/`b_0..`），每个 `cs_i` 的内层列字面量
+  加 `: ColI` 类型标注——否则 `List (Int × ColI)` 嵌套字面量的 pending-MVar
+  合成在 ~30 列处超线性爆炸（实测阈值；已内置到模板）。
+- `certY` 是平面 `List Int`；发射的定理在 `decide` 内用瞬态树
+  `ITree.ofList certY d`（`d` 取最小 `2^d ≥ b.length`）。
+- 装配：`base_check`（`checkDualCMTBaseFlat`，**锁步 `dotLI` 的 O(n) 基检查**，
+  避免树索引的二次方 `bDotTP`）+ `cols_check`（`checkDualCMTCols`，O(nnz)），
+  经 `checkDualCMTF_split`/`checkDualCMTF_sound` 组装；
+  终端条件 `gamma_lt`/`bound_lt` 同分片版。
+
+```sh
+python3 socert.py pilot/pilot_204880136538_flat.lp --col-major \
+  --module PilotCM204880136538 --terminal-bound 12
+cd ../../lean && lake build Kepler.LP.PilotCM204880136538.Data
+lake build Kepler.LP.PilotCM204880136538.Assembly
+# 或单文件基准（Data+Assembly 合并）：
+lake env lean Kepler/LP/PilotCM204880136538/Bench.lean
+```
+
+**实测（本机单核，2026-08-27）**：真实图 204880136538（915 变量 × 3882 行
+× 8056 非零，Y 约 900 位）——字面量阐明 423 s + flat `base_check` decide
+49 s + `cols_check` decide ~169 s ≈ 端到端 ~650 s 单核，且 base/cols 两个
+decide 相互独立可并行。相对行主序单块 25304 s 约 39×，相对 96 并发分片
+端到端 1542 s 约 2.4×。`base_check` 从树索引版（~113 s）降到 49 s（锁步
+`dotLI`，消除 `s+1` 单射链的二次索引代价）。
+
+**瓶颈定位**：`cols_check`（8056 项）约 169 s 与 `dotLI`（3882 项）约 42 s
+之比 ≈ nnz 比，逐项 ~11 ms/900 位乘——瓶颈是**大整数归约本身**（Y 位宽
+~900，gcd(Y,D)=1 不可缩），不是树结构或查找。树/字面量阐明约 423 s 是每
+LP 固定成本（同行主序量级）。目标 ~30 s/LP 在"内核 `decide` 重放 ~12k 次
+900 位乘"下不可达（本机单核标定 ~360 pops/s）；现实取舍：单 LP ~11 min
+单核，或 Data/cols 双 decide 并行 ~7-8 min，仍显著优于行主序分片基线。
+
 ### 全量化（19700 图）初步估计
 
 - 证书解析：~27 s/文件（424 图），20 个 easy 文件 ~10 min 一次性。
