@@ -11732,5 +11732,332 @@ theorem mem_loop2Transform_of_pow_invNode {H : Hypermap α} {NF : Set (Loop α)}
     (Or.inr ⟨H.complementIndex (H.hypZ NF L x) i₂ + j, by omega, by omega, ?_⟩)
   rw [hw, hev]
 
+
+/-- `hypermap.hl`:12869 的第一合取项（F16）：
+两条新环的下标和恰好分割 `L` 的前基数。 -/
+theorem transform_index_sum (H : Hypermap α) {NF : Set (Loop α)}
+    {hnf : H.IsNormalFamily NF} {L : Loop α} {x : α}
+    (hmark : H.IsMarked NF hnf L x) (hLnot : L ∉ H.finalLoops NF) :
+    L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x))
+      + (L.index (H.hypZ NF L x) (H.hypY NF L x) + 1) = L.preCard := by
+  have hsplit : H.IsSplitCondition NF L x := H.split_marked_loop hmark hLnot
+  obtain ⟨hres, hnf, hL, -, hx, -⟩ := id hsplit
+  have hq := H.hqymrtx hmark hLnot
+  have hy := H.on_hypY hsplit
+  have had := H.on_adding_darts hmark hLnot
+  have hzd := hq.1
+  have hyd := hy.1
+  have hmyL : L.map (H.hypY NF L x) ∈ L.darts := L.pow_map_mem hyd 1
+  have hizL : L.invMap (H.hypZ NF L x) ∈ L.darts := L.invMap_mem hzd
+  have hkey : L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x))
+      = L.index (L.map (H.hypY NF L x)) (L.invMap (H.hypZ NF L x)) := by
+    rw [← had.1, ← had.2]
+  rw [hkey]
+  set nz := L.index (H.hypZ NF L x) (H.hypY NF L x) with hnzd
+  set ny := L.index (L.map (H.hypY NF L x)) (L.invMap (H.hypZ NF L x)) with hnyd
+  have hnz := L.index_spec hzd hyd
+  have hny := L.index_spec hmyL hizL
+  have hcard : L.darts.card = L.preCard + 1 := L.card_pos.2.2
+  rcases eq_or_lt_of_le hnz.1 with heq | hlt
+  · exfalso
+    have hone : (L.map ^ (L.preCard + 1)) (H.hypZ NF L x) = H.hypZ NF L x := by
+      have h1 : (L.map ^ L.darts.card) (H.hypZ NF L x) = H.hypZ NF L x := by
+        show (L.map ^ L.card) _ = _
+        rw [L.pow_card_eq_one, Equiv.Perm.one_apply]
+      rw [hcard] at h1
+      exact h1
+    have hstep : L.map (H.hypY NF L x) = H.hypZ NF L x := by
+      have e1 : H.hypY NF L x = (L.map ^ L.preCard) (H.hypZ NF L x) := by
+        have h2 := hnz.2
+        rw [heq] at h2
+        exact h2
+      show L.map (H.hypY NF L x) = _
+      rw [e1, ← Equiv.Perm.mul_apply, ← pow_succ', hone]
+    have hzy : H.hypZ NF L x = H.nodeMap.symm (H.hypY NF L x) := by
+      rw [← had.1, hstep]
+    have hzn : H.hypZ NF L x ∈ H.node (H.hypY NF L x) := by
+      rw [hzy]
+      exact H.nodeMap_symm_mem_node (mem_orbitMap_self _ _)
+    exact (H.on_hypZ hsplit).1 (H.node_eq_of_mem hzn)
+  · -- nz < preCard：z = (L.map^(ny+1+nz+1)) z，同余分解
+    have hzstep : H.hypZ NF L x = (L.map ^ (ny + 1 + (nz + 1))) (H.hypZ NF L x) := by
+      have e1 : H.hypZ NF L x = L.map (L.invMap (H.hypZ NF L x)) := by
+        show _ = L.map (L.map.symm _)
+        exact (Equiv.apply_symm_apply _ _).symm
+      have e2 : L.map (L.invMap (H.hypZ NF L x))
+          = (L.map ^ (ny + 1)) (L.map (H.hypY NF L x)) := by
+        rw [hny.2, pow_succ', Equiv.Perm.mul_apply]
+      have e3 : L.map (H.hypY NF L x) = (L.map ^ (nz + 1)) (H.hypZ NF L x) := by
+        rw [hnz.2, pow_succ', Equiv.Perm.mul_apply]
+      have e4 : ∀ (a b : ℕ) (w : α),
+          (L.map ^ a) ((L.map ^ b) w) = (L.map ^ (a + b)) w := by
+        intro a b w
+        rw [pow_add, Equiv.Perm.mul_apply]
+      calc H.hypZ NF L x = L.map (L.invMap (H.hypZ NF L x)) := e1
+        _ = (L.map ^ (ny + 1)) (L.map (H.hypY NF L x)) := e2
+        _ = (L.map ^ (ny + 1)) ((L.map ^ (nz + 1)) (H.hypZ NF L x)) := by rw [e3]
+        _ = (L.map ^ (ny + 1 + (nz + 1))) (H.hypZ NF L x) := e4 (ny + 1) (nz + 1) _
+    have h0 : (L.map ^ (0 : ℕ)) (H.hypZ NF L x) = H.hypZ NF L x := by
+      rw [pow_zero, Equiv.Perm.one_apply]
+    have hz' : (L.map ^ (0 : ℕ)) (H.hypZ NF L x)
+        = (L.map ^ (ny + 1 + (nz + 1))) (H.hypZ NF L x) := h0.trans hzstep
+    obtain ⟨q, hq2⟩ := L.congruence hzd (Nat.zero_le _) hz'
+    cases q with
+    | zero =>
+      rw [show (0 : ℕ) * L.card = 0 from Nat.zero_mul _, Nat.add_zero] at hq2
+      omega
+    | succ q =>
+      have hc2 : L.card = L.preCard + 1 := hcard
+      by_cases hq1 : q = 0
+      · subst hq1
+        rw [show (0 + 1) * L.card = L.preCard + 1 from by
+              simp [hc2], Nat.add_zero] at hq2
+        omega
+      · exfalso
+        have hge : 2 * L.card ≤ (q + 1) * L.card := by
+          have h1 : 2 ≤ q + 1 := by omega
+          exact Nat.mul_le_mul_right _ h1
+        rw [hc2] at hq2 hge
+        have hnyl := hny.1
+        have hnzl := hnz.1
+        have hnzt := hlt
+        omega
+
+
+/-- `hypermap.hl`:12869 `lemma_disjoint_new_loops`：
+两条新环的成员不相交、都不在原族中，且二者恰好分割 `L` 的 dart。 -/
+theorem disjoint_new_loops (H : Hypermap α) {NF : Set (Loop α)}
+    {hnf : H.IsNormalFamily NF} {L : Loop α} {x : α}
+    (hmark : H.IsMarked NF hnf L x) (hLnot : L ∉ H.finalLoops NF) :
+    L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x))
+        + (L.index (H.hypZ NF L x) (H.hypY NF L x) + 1) = L.preCard ∧
+    (∀ u, u ∈ (H.loop1Transform hmark hLnot).darts →
+      u ∉ (H.loop2Transform hmark hLnot).darts) ∧
+    (∀ u, u ∈ (H.loop2Transform hmark hLnot).darts →
+      u ∉ (H.loop1Transform hmark hLnot).darts) ∧
+    H.loop1Transform hmark hLnot ∉ NF ∧ H.loop2Transform hmark hLnot ∉ NF ∧
+    (∀ u, u ∈ L.darts → u ∈ (H.loop1Transform hmark hLnot).darts
+      ∨ u ∈ (H.loop2Transform hmark hLnot).darts) := by
+  have hsplit : H.IsSplitCondition NF L x := H.split_marked_loop hmark hLnot
+  obtain ⟨hres, hnf, hL, -, hx, -⟩ := id hsplit
+  have hq := H.hqymrtx hmark hLnot
+  have hy := H.on_hypY hsplit
+  have had := H.on_adding_darts hmark hLnot
+  have hnn : H.NodeNondegenerate := hres.nodeNondegenerate
+  have hzz : H.hypZ NF L x = (H.faceMap ^ (H.hypP NF L x + 1)) (H.hypY NF L x) := rfl
+  have hzd := hq.1
+  have hyd := hy.1
+  have hyH : H.hypY NF L x ∈ H.darts := H.mem_darts_of_isNormalFamily hnf hL hyd
+  have hzH : H.hypZ NF L x ∈ H.darts := H.mem_darts_of_isNormalFamily hnf hL hzd
+  have hmyL : L.map (H.hypY NF L x) ∈ L.darts := L.pow_map_mem hyd 1
+  have hizL : L.invMap (H.hypZ NF L x) ∈ L.darts := L.invMap_mem hzd
+  have hnz := L.index_spec hzd hyd
+  have hid2 := L.index_spec
+    (show H.nodeMap.symm (H.hypY NF L x) ∈ L.darts by
+      have h1 : H.nodeMap.symm (H.hypY NF L x) = (L.map ^ 1) (H.hypY NF L x) := by
+        rw [pow_one]; exact hy.2.1.symm
+      rw [h1]; exact L.pow_map_mem hyd 1)
+    (show H.nodeMap (H.hypZ NF L x) ∈ L.darts by
+      rw [← had.2]; exact L.invMap_mem hzd)
+  set nz := L.index (H.hypZ NF L x) (H.hypY NF L x) with hnzd
+  set id2 := L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x)) with hid2d
+  have F16 : id2 + (nz + 1) = L.preCard := H.transform_index_sum hmark hLnot
+  have hcard : L.darts.card = L.preCard + 1 := L.card_pos.2.2
+  have hpowL : ∀ (a b : ℕ) (w : α),
+      (L.map ^ (a + b)) w = (L.map ^ a) ((L.map ^ b) w) := by
+    intro a b w
+    rw [pow_add, Equiv.Perm.mul_apply]
+  -- 窗口单射性（False 形式，供轨道矛盾）
+  have hinjW : ∀ i j : ℕ, i < j → j ≤ L.preCard →
+      (L.map ^ i) (H.hypZ NF L x) = (L.map ^ j) (H.hypZ NF L x) → False := by
+    intro i j hij hjpc h
+    have hb : j < (orbitMap L.map (H.hypZ NF L x)).ncard := by
+      rw [← L.eq_orbitMap_of_mem hzd, Set.ncard_coe_finset, hcard]
+      omega
+    exact orbitMap_pow_inj L.map_permutes hij hb h
+  -- L.map y = (L.map^(nz+1)) z
+  have hmapyz : L.map (H.hypY NF L x)
+      = (L.map ^ (nz + 1)) (H.hypZ NF L x) := by
+    rw [hnz.2, pow_succ', Equiv.Perm.mul_apply]
+  -- 幂消去辅助：nodeMap^b ∘ symm^b = id
+  have hcancel2 : ∀ (b : ℕ) (w : α),
+      (H.nodeMap ^ b) ((H.nodeMap.symm ^ b) w) = w := by
+    intro b
+    induction b with
+    | zero => intro w; simp
+    | succ c ih =>
+      intro w
+      rw [pow_succ H.nodeMap c, Equiv.Perm.mul_apply,
+        pow_succ' H.nodeMap.symm c, Equiv.Perm.mul_apply, Equiv.apply_symm_apply]
+      exact ih w
+  -- 主不相交性（F17）
+  have F17 : ∀ u, u ∈ (H.loop1Transform hmark hLnot).darts →
+      u ∉ (H.loop2Transform hmark hLnot).darts := by
+    intro u u1 u2
+    rcases (H.mem_loop1Transform_iff hmark hLnot).mp u1 with
+      ⟨t, htnz, hut⟩ | ⟨d, hd1, hdm, hud⟩
+    · rcases (H.mem_loop2Transform_iff hmark hLnot).mp u2 with
+        ⟨k, hkny, huk⟩ | ⟨e, he1, heK, hue⟩
+      · -- u = (L.map^t) z = (L.map^k)(nodeMap.symm y)：窗口单射矛盾
+        have huA : u = (L.map ^ t) (H.hypZ NF L x) := hut
+        have huB : u = (L.map ^ (k + 1)) (H.hypY NF L x) := by
+          have e1 : (L.map ^ k) (H.nodeMap.symm (H.hypY NF L x))
+              = (L.map ^ (k + 1)) (H.hypY NF L x) := by
+            rw [show H.nodeMap.symm (H.hypY NF L x)
+                = (L.map ^ 1) (H.hypY NF L x) from by rw [pow_one]; exact hy.2.1.symm]
+            rw [← Equiv.Perm.mul_apply, ← pow_add]
+          rw [huk]
+          exact e1
+        have hzB : u = (L.map ^ (k + 1 + nz)) (H.hypZ NF L x) := by
+          rw [huB, hnz.2, hpowL (k + 1) nz (H.hypZ NF L x)]
+        rcases Nat.lt_or_ge t (k + 1 + nz) with hlt | hge
+        · exact hinjW t (k + 1 + nz) hlt (by omega) (by rw [← huA, hzB])
+        · exact hinjW (k + 1 + nz) t (by omega) (by omega) (by rw [← huA, hzB])
+      · -- u = (L.map^t) z ∈ 族；u = 补路径点：node 传递矛盾
+        obtain ⟨a, b, ham, hb1, hbnc, hedecomp⟩ :=
+          H.exists_complementIndex_decomp hnn hzH he1 heK
+        have hev : complementPt H (H.hypZ NF L x)
+            (H.complementIndex (H.hypZ NF L x) a + b)
+            = (H.nodeMap.symm ^ b) ((H.faceMap.symm ^ (a + 1)) (H.hypZ NF L x)) :=
+          H.complementPt_add_eval hnn hzH a b hb1 hbnc
+        have hred : (H.faceMap.symm ^ (a + 1)) (H.hypZ NF L x)
+            = (H.faceMap ^ (H.hypP NF L x - a)) (H.hypY NF L x) := by
+          rw [hzz, pow_symm_pow_cancel H.faceMap (by omega) (H.hypY NF L x)]
+          rw [show H.hypP NF L x + 1 - (a + 1) = H.hypP NF L x - a from by omega]
+        have hug : u = (H.nodeMap.symm ^ b)
+            ((H.faceMap ^ (H.hypP NF L x - a)) (H.hypY NF L x)) := by
+          rw [hue, hedecomp, hev, hred]
+        have hfam : u ∈ dartsOfFamily NF :=
+          mem_dartsOfFamily hL (by rw [hut]; exact L.pow_map_mem hzd t)
+        have hgnot : (H.faceMap ^ (H.hypP NF L x - a)) (H.hypY NF L x) ∉ dartsOfFamily NF :=
+          (H.hypP_spec hsplit).1 (H.hypP NF L x - a) (by omega) (by omega)
+        have hnodesub := H.node_subset_dartsOfFamily hnf hfam
+        have hnodeeq : H.node u = H.node ((H.faceMap ^ (H.hypP NF L x - a))
+          (H.hypY NF L x)) := by
+          rw [hug]
+          exact (H.node_eq_of_mem (H.nodeMap_symm_pow_mem_node_self _ b)).symm
+        have hgself : (H.faceMap ^ (H.hypP NF L x - a)) (H.hypY NF L x)
+            ∈ H.node ((H.faceMap ^ (H.hypP NF L x - a)) (H.hypY NF L x)) :=
+          mem_orbitMap_self _ _
+        rw [← hnodeeq] at hgself
+        exact hgnot (hnodesub hgself)
+    · rcases (H.mem_loop2Transform_iff hmark hLnot).mp u2 with
+        ⟨k, hkny, huk⟩ | ⟨e, he1, heK, hue⟩
+      · -- u = (faceMap^d) y ∉ 族；u = (L.map^k)(invNode y) ∈ 族
+        have hudF : (H.faceMap ^ d) (H.hypY NF L x) ∉ dartsOfFamily NF :=
+          (H.hypP_spec hsplit).1 d hd1 hdm
+        have hfam : u ∈ dartsOfFamily NF := by
+          refine mem_dartsOfFamily hL ?_
+          rw [huk, ← hy.2.1]
+          exact L.pow_map_mem hmyL k
+        exact hudF (by rw [← hud]; exact hfam)
+      · -- 双补段：simple 环节点单射矛盾
+        obtain ⟨a, b, ham, hb1, hbnc, hedecomp⟩ :=
+          H.exists_complementIndex_decomp hnn hzH he1 heK
+        have hev : complementPt H (H.hypZ NF L x)
+            (H.complementIndex (H.hypZ NF L x) a + b)
+            = (H.nodeMap.symm ^ b) ((H.faceMap.symm ^ (a + 1)) (H.hypZ NF L x)) :=
+          H.complementPt_add_eval hnn hzH a b hb1 hbnc
+        have hred : (H.faceMap.symm ^ (a + 1)) (H.hypZ NF L x)
+            = (H.faceMap ^ (H.hypP NF L x - a)) (H.hypY NF L x) := by
+          rw [hzz, pow_symm_pow_cancel H.faceMap (by omega) (H.hypY NF L x)]
+          rw [show H.hypP NF L x + 1 - (a + 1) = H.hypP NF L x - a from by omega]
+        have hug : u = (H.nodeMap.symm ^ b)
+            ((H.faceMap ^ (H.hypP NF L x - a)) (H.hypY NF L x)) := by
+          rw [hue, hedecomp, hev, hred]
+        obtain ⟨p, hp1⟩ : ∃ p, H.hypP NF L x - a = p + 1 :=
+          ⟨H.hypP NF L x - a - 1, by omega⟩
+        -- w' := (faceMap^(p+1)) y 同时落在 node u 与 face u 中
+        have hw' : (H.nodeMap ^ b) u
+            = (H.faceMap ^ (p + 1)) (H.hypY NF L x) := by
+          rw [hug, hcancel2 b _, hp1]
+        have hwin : (H.faceMap ^ (p + 1)) (H.hypY NF L x) ∈ H.node u := by
+          rw [H.mem_node_iff]
+          exact ⟨b, hw'.symm⟩
+        have huface : H.face u = H.face (H.hypY NF L x) := by
+          rw [hud]
+          exact (H.face_eq_of_mem (pow_apply_mem_orbitMap _ _ _)).symm
+        have hwface : (H.faceMap ^ (p + 1)) (H.hypY NF L x)
+            ∈ H.face (H.hypY NF L x) := pow_apply_mem_orbitMap _ _ _
+        have hudarts : u ∈ H.darts := by
+          rw [hud]; exact H.dart_invariant_power_face hyH d
+        have hsimp : (H.faceMap ^ (p + 1)) (H.hypY NF L x) ∈ ({u} : Set α) := by
+          have hsi := hres.simple u hudarts
+          have hm : (H.faceMap ^ (p + 1)) (H.hypY NF L x) ∈ H.node u ∩ H.face u :=
+            ⟨hwin, by rw [huface]; exact hwface⟩
+          rw [hsi] at hm
+          exact hm
+        have hweis : (H.faceMap ^ (p + 1)) (H.hypY NF L x) = u := Set.mem_singleton_iff.mp hsimp
+        -- 代回：u = (invNode^b) u 而 b ≥ 1 —— node 等值线单射矛盾
+        have huu : (H.nodeMap.symm ^ b) u = u := by
+          have hstep : (H.nodeMap.symm ^ b) u
+              = (H.nodeMap.symm ^ b) ((H.faceMap ^ (p + 1)) (H.hypY NF L x)) := by
+            rw [hweis]
+          rw [hstep, ← hp1]
+          exact hug.symm
+        have hncu : (H.node u).ncard = (H.node ((H.faceMap ^ (p + 1))
+          (H.hypY NF L x))).ncard := by rw [hweis]
+        have hbnc' : b < (H.node u).ncard := by
+          have h1 : b < (H.node ((H.faceMap ^ (p + 1)) (H.hypY NF L x))).ncard := by
+            rw [← hp1, ← hred]; exact hbnc
+          rw [hweis] at h1
+          exact h1
+        have hpair := H.isInjContour_nodeContour u (k := (H.node u).ncard - 1)
+          (by omega)
+        have hpairlist := H.isInjContour_pairwise hpair
+        have hbb : b = 0 := hpairlist b 0 (by omega) (by omega)
+          (by show (H.nodeMap.symm ^ b) u = (H.nodeMap.symm ^ (0 : ℕ)) u
+              rw [huu, pow_zero, Equiv.Perm.one_apply])
+        omega
+  -- 对称方向
+  have F17' : ∀ u, u ∈ (H.loop2Transform hmark hLnot).darts →
+      u ∉ (H.loop1Transform hmark hLnot).darts := fun u u2 u1 => F17 u u1 u2
+  -- 两新环不在 NF 中（F18）
+  have F18a : H.loop1Transform hmark hLnot ∉ NF := by
+    intro hNF1
+    have hLl : L = H.loop1Transform hmark hLnot :=
+      hnf.2.2.1 L hL _ hNF1 (H.hypZ NF L x) hzd (H.on_loop1Transform hmark hLnot).2.1
+    have hu2 : L.map (H.hypY NF L x) ∈ (H.loop2Transform hmark hLnot).darts := by
+      refine (H.mem_loop2Transform_iff hmark hLnot).mpr (Or.inl ⟨0, by omega, ?_⟩)
+      show L.map (H.hypY NF L x) = (L.map ^ 0) (H.nodeMap.symm (H.hypY NF L x))
+      rw [pow_zero, Equiv.Perm.one_apply, ← hy.2.1]
+    have hu1 : L.map (H.hypY NF L x) ∈ (H.loop1Transform hmark hLnot).darts := by
+      rw [← hLl]; exact hmyL
+    exact F17 _ hu1 hu2
+  have F18b : H.loop2Transform hmark hLnot ∉ NF := by
+    intro hNF2
+    have hwL : L.map (H.hypY NF L x) ∈ L.darts := hmyL
+    have hw2 : L.map (H.hypY NF L x) ∈ (H.loop2Transform hmark hLnot).darts := by
+      refine (H.mem_loop2Transform_iff hmark hLnot).mpr (Or.inl ⟨0, by omega, ?_⟩)
+      show L.map (H.hypY NF L x) = (L.map ^ 0) (H.nodeMap.symm (H.hypY NF L x))
+      rw [pow_zero, Equiv.Perm.one_apply, ← hy.2.1]
+    have hLl : L = H.loop2Transform hmark hLnot :=
+      hnf.2.2.1 L hL _ hNF2 (L.map (H.hypY NF L x)) hwL hw2
+    exact F17 _ (H.on_loop1Transform hmark hLnot).2.1 (by rw [← hLl]; exact hzd)
+  -- L 的 dart 被两新环分割（F19）
+  refine ⟨F16, F17, F17', F18a, F18b, ?_⟩
+  intro u hu
+  obtain ⟨nu, hnupc, hnu⟩ := L.exists_pow_apply hzd hu
+  rcases Nat.lt_or_ge nu (nz + 1) with hlt | hge
+  · refine Or.inl ?_
+    have hp := (H.on_loop1Transform hmark hLnot).2.2.2.1 nu (show nu ≤ nz by omega)
+    have hmemz : H.hypZ NF L x ∈ (H.loop1Transform hmark hLnot).darts :=
+      (H.on_loop1Transform hmark hLnot).2.1
+    have hpow := (H.loop1Transform hmark hLnot).pow_map_mem hmemz nu
+    rw [hp, ← hnu] at hpow
+    exact hpow
+  · obtain ⟨q, hq1⟩ : ∃ q, nu = q + (nz + 1) :=
+      ⟨nu - nz - 1, by omega⟩
+    have hnuge : nz + 1 ≤ nu := hge
+    have hq2 : q ≤ id2 := by
+      have h1 : nu ≤ L.preCard := hnupc
+      have h2 : id2 + (nz + 1) = L.preCard := F16
+      have h3 : nu = q + (nz + 1) := hq1
+      omega
+    refine Or.inr ((H.mem_loop2Transform_iff hmark hLnot).mpr
+      (Or.inl ⟨q, hq2, ?_⟩))
+    show u = (L.map ^ q) (H.nodeMap.symm (H.hypY NF L x))
+    rw [hnu, hq1, hpowL q (nz + 1) (H.hypZ NF L x), ← hmapyz, ← hy.2.1]
+
 end Hypermap
 end Kepler.Text
