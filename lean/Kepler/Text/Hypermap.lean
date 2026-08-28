@@ -11267,5 +11267,223 @@ theorem path2Transform_loop (H : Hypermap α) {NF : Set (Loop α)}
     exact h3
   rw [hgoal]
 
+
+/-- 单射路径的支撑集大小（`pathSupport` 的基数为 `n + 1`）。 -/
+theorem card_pathSupport {p : ℕ → α} {n : ℕ} (hinj : Loop.IsInjList p n) :
+    (Loop.pathSupport p n).card = n + 1 := by
+  unfold Loop.pathSupport
+  rw [Finset.card_image_of_injOn]
+  · simp
+  · intro a ha b hb hab
+    have h1 := Finset.mem_range.mp (Finset.mem_coe.mp ha)
+    have h2 := Finset.mem_range.mp (Finset.mem_coe.mp hb)
+    exact hinj a b (Nat.lt_succ_iff.mp h1) (Nat.lt_succ_iff.mp h2) hab
+
+/-- `hypermap.hl`:12318 `loop1_transform`（由路径构造环；单射性证明来自
+`lemma_path1_transform_loop`）。 -/
+noncomputable def loop1Transform (H : Hypermap α) {NF : Set (Loop α)}
+    {hnf : H.IsNormalFamily NF} {L : Loop α} {x : α}
+    (hmark : H.IsMarked NF hnf L x) (hLnot : L ∉ H.finalLoops NF) : Loop α :=
+  Loop.ofPath (H.path1Transform NF L x) (H.card1Transform NF L x)
+    (H.isInjContour_pairwise (H.path1Transform_loop hmark hLnot).1)
+
+/-- `hypermap.hl`:12322 `loop2_transform`。 -/
+noncomputable def loop2Transform (H : Hypermap α) {NF : Set (Loop α)}
+    {hnf : H.IsNormalFamily NF} {L : Loop α} {x : α}
+    (hmark : H.IsMarked NF hnf L x) (hLnot : L ∉ H.finalLoops NF) : Loop α :=
+  Loop.ofPath (H.path2Transform NF L x) (H.card2Transform NF L x)
+    (H.isInjContour_pairwise (H.path2Transform_loop hmark hLnot).1)
+
+/-- `hypermap.hl`:12546 `family_transform`。 -/
+noncomputable def familyTransform (H : Hypermap α) {NF : Set (Loop α)}
+    {hnf : H.IsNormalFamily NF} {L : Loop α} {x : α}
+    (hmark : H.IsMarked NF hnf L x) (hLnot : L ∉ H.finalLoops NF) : Set (Loop α) :=
+  NF \ {L} ∪ {H.loop1Transform hmark hLnot, H.loop2Transform hmark hLnot}
+
+/-- `hypermap.hl`:12550 `lemma_on_loop1_transform`。 -/
+theorem on_loop1Transform (H : Hypermap α) {NF : Set (Loop α)}
+    {hnf : H.IsNormalFamily NF} {L : Loop α} {x : α}
+    (hmark : H.IsMarked NF hnf L x) (hLnot : L ∉ H.finalLoops NF) :
+    H.path1Transform NF L x 0 = H.hypZ NF L x ∧
+      H.hypZ NF L x ∈ (H.loop1Transform hmark hLnot).darts ∧
+      (H.loop1Transform hmark hLnot).preCard = H.card1Transform NF L x ∧
+      (∀ i ≤ L.index (H.hypZ NF L x) (H.hypY NF L x),
+        ((H.loop1Transform hmark hLnot).map ^ i) (H.hypZ NF L x)
+          = (L.map ^ i) (H.hypZ NF L x)) ∧
+      (∀ i ≤ H.hypP NF L x,
+        ((H.loop1Transform hmark hLnot).map
+            ^ (L.index (H.hypZ NF L x) (H.hypY NF L x) + i)) (H.hypZ NF L x)
+          = (H.faceMap ^ i) (H.hypY NF L x)) := by
+  have hmain := H.path1Transform_loop hmark hLnot
+  have hq := H.hqymrtx hmark hLnot
+  have hy := H.on_hypY (H.split_marked_loop hmark hLnot)
+  have hzd : H.hypZ NF L x ∈ L.darts := hq.1
+  have hyd : H.hypY NF L x ∈ L.darts := hy.1
+  have hinj : Loop.IsInjList (H.path1Transform NF L x) (H.card1Transform NF L x) :=
+    H.isInjContour_pairwise hmain.1
+  have hdarts : (H.loop1Transform hmark hLnot).darts
+      = Loop.pathSupport (H.path1Transform NF L x) (H.card1Transform NF L x) := rfl
+  have hmap : (H.loop1Transform hmark hLnot).map
+      = Loop.samsaraPerm hinj := rfl
+  have hp0 : H.path1Transform NF L x 0 = H.hypZ NF L x := by
+    show gluePaths (L.pathOf (H.hypZ NF L x)) (H.faceContour (H.hypY NF L x))
+      (L.index (H.hypZ NF L x) (H.hypY NF L x)) 0 = _
+    rw [gluePaths_apply_le (Nat.zero_le _)]
+    show ((L.map : Equiv.Perm α) ^ 0) _ = _
+    rw [pow_zero, Equiv.Perm.one_apply]
+  have hg0 : L.pathOf (H.hypZ NF L x) (L.index (H.hypZ NF L x) (H.hypY NF L x))
+      = H.faceContour (H.hypY NF L x) 0 := by
+    rw [H.faceContour_zero]
+    exact (L.index_spec hzd hyd).2.symm
+  have hcard : (Loop.pathSupport (H.path1Transform NF L x)
+      (H.card1Transform NF L x)).card = H.card1Transform NF L x + 1 :=
+    card_pathSupport hinj
+  refine ⟨hp0, ?_, ?_, ?_, ?_⟩
+  · rw [hdarts, ← hp0]
+    exact Loop.mem_pathSupport.mpr ⟨0, Nat.zero_le _, rfl⟩
+  · show (H.loop1Transform hmark hLnot).darts.card - 1 = _
+    rw [hdarts, hcard]
+    omega
+  · intro i hi
+    have hzbase : ((H.loop1Transform hmark hLnot).map ^ i) (H.hypZ NF L x)
+        = (Loop.samsaraPerm hinj ^ i) (H.path1Transform NF L x 0) := by
+      rw [hmap, hp0]
+    have hle : i ≤ H.card1Transform NF L x := by
+      show i ≤ L.index (H.hypZ NF L x) (H.hypY NF L x) + H.hypP NF L x
+      omega
+    have hpow := (Loop.samsaraPerm_pow_apply (H.path1Transform NF L x)
+      (H.card1Transform NF L x) hinj).2 i hle
+    rw [hzbase, hpow]
+    show gluePaths (L.pathOf (H.hypZ NF L x)) (H.faceContour (H.hypY NF L x))
+      (L.index (H.hypZ NF L x) (H.hypY NF L x)) i = _
+    rw [gluePaths_apply_le hi]
+    rfl
+  · intro i hi
+    have hzbase : ((H.loop1Transform hmark hLnot).map
+          ^ (L.index (H.hypZ NF L x) (H.hypY NF L x) + i)) (H.hypZ NF L x)
+        = (Loop.samsaraPerm hinj ^ (L.index (H.hypZ NF L x) (H.hypY NF L x) + i))
+            (H.path1Transform NF L x 0) := by
+      rw [hmap, hp0]
+    have hle : L.index (H.hypZ NF L x) (H.hypY NF L x) + i
+        ≤ H.card1Transform NF L x := by
+      show L.index (H.hypZ NF L x) (H.hypY NF L x) + i
+        ≤ L.index (H.hypZ NF L x) (H.hypY NF L x) + H.hypP NF L x
+      omega
+    have hpow := (Loop.samsaraPerm_pow_apply (H.path1Transform NF L x)
+      (H.card1Transform NF L x) hinj).2 _ hle
+    rw [hzbase, hpow]
+    show gluePaths (L.pathOf (H.hypZ NF L x)) (H.faceContour (H.hypY NF L x))
+      (L.index (H.hypZ NF L x) (H.hypY NF L x))
+      (L.index (H.hypZ NF L x) (H.hypY NF L x) + i) = _
+    rw [gluePaths_apply_add hg0 i]
+    rfl
+
+/-- `hypermap.hl`:12598 `lemma_on_loop2_transform`。 -/
+theorem on_loop2Transform (H : Hypermap α) {NF : Set (Loop α)}
+    {hnf : H.IsNormalFamily NF} {L : Loop α} {x : α}
+    (hmark : H.IsMarked NF hnf L x) (hLnot : L ∉ H.finalLoops NF) :
+    H.path2Transform NF L x 0 = H.nodeMap.symm (H.hypY NF L x) ∧
+      H.nodeMap.symm (H.hypY NF L x) ∈ (H.loop2Transform hmark hLnot).darts ∧
+      (H.loop2Transform hmark hLnot).preCard = H.card2Transform NF L x ∧
+      (∀ i ≤ L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x)),
+        ((H.loop2Transform hmark hLnot).map ^ i) (H.nodeMap.symm (H.hypY NF L x))
+          = (L.map ^ i) (H.nodeMap.symm (H.hypY NF L x))) ∧
+      (∀ i ≤ H.complementIndex (H.hypZ NF L x) (H.hypP NF L x),
+        ((H.loop2Transform hmark hLnot).map
+            ^ (L.index (H.nodeMap.symm (H.hypY NF L x))
+                (H.nodeMap (H.hypZ NF L x)) + i)) (H.nodeMap.symm (H.hypY NF L x))
+          = complementPt H (H.hypZ NF L x) i) := by
+  have hsplit : H.IsSplitCondition NF L x := H.split_marked_loop hmark hLnot
+  obtain ⟨hres', hnf, hL, -, -, -⟩ := id hsplit
+  have hq := H.hqymrtx hmark hLnot
+  have hzd' : H.hypZ NF L x ∈ L.darts := hq.1
+  have hyd' : H.hypY NF L x ∈ L.darts := (H.on_hypY hsplit).1
+  have hzH' : H.hypZ NF L x ∈ H.darts := H.mem_darts_of_isNormalFamily hnf hL hzd'
+  have hmain := H.path2Transform_loop hmark hLnot
+  have hy := H.on_hypY hsplit
+  have hinj : Loop.IsInjList (H.path2Transform NF L x) (H.card2Transform NF L x) :=
+    H.isInjContour_pairwise hmain.1
+  have hdarts : (H.loop2Transform hmark hLnot).darts
+      = Loop.pathSupport (H.path2Transform NF L x) (H.card2Transform NF L x) := rfl
+  have hmap : (H.loop2Transform hmark hLnot).map
+      = Loop.samsaraPerm hinj := rfl
+  have hp0 : H.path2Transform NF L x 0 = H.nodeMap.symm (H.hypY NF L x) := by
+    show gluePaths (L.pathOf (H.nodeMap.symm (H.hypY NF L x)))
+      (complementPt H (H.hypZ NF L x))
+      (L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x))) 0 = _
+    rw [gluePaths_apply_le (Nat.zero_le _)]
+    show ((L.map : Equiv.Perm α) ^ 0) _ = _
+    rw [pow_zero, Equiv.Perm.one_apply]
+  have hg0 : L.pathOf (H.nodeMap.symm (H.hypY NF L x))
+        (L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x)))
+      = complementPt H (H.hypZ NF L x) 0 := by
+    have huL : H.nodeMap.symm (H.hypY NF L x) ∈ L.darts := by
+      have h1 : H.nodeMap.symm (H.hypY NF L x) = (L.map ^ 1) (H.hypY NF L x) := by
+        rw [pow_one]; exact hy.2.1.symm
+      rw [h1]
+      exact L.pow_map_mem hyd' 1
+    have hvL : H.nodeMap (H.hypZ NF L x) ∈ L.darts := by
+      rw [← (H.on_adding_darts hmark hLnot).2]
+      exact L.invMap_mem hzd'
+    have hid := L.index_spec huL hvL
+    have hcp0 : complementPt H (H.hypZ NF L x) 0 = H.nodeMap (H.hypZ NF L x) := by
+      have h1 : H.complementIndex (H.hypZ NF L x) 0 = 0 := H.complementIndex_zero_eq _
+      have h2 := H.complementPt_compIndex_eval
+        (hres'.nodeNondegenerate) hzH' 0
+      rw [h1, pow_zero, Equiv.Perm.one_apply] at h2
+      exact h2
+    rw [hcp0]
+    show ((L.map : Equiv.Perm α) ^ L.index (H.nodeMap.symm (H.hypY NF L x))
+        (H.nodeMap (H.hypZ NF L x))) (H.nodeMap.symm (H.hypY NF L x))
+      = H.nodeMap (H.hypZ NF L x)
+    rw [← hid.2]
+  have hcard : (Loop.pathSupport (H.path2Transform NF L x)
+      (H.card2Transform NF L x)).card = H.card2Transform NF L x + 1 :=
+    card_pathSupport hinj
+  refine ⟨hp0, ?_, ?_, ?_, ?_⟩
+  · rw [hdarts, ← hp0]
+    exact Loop.mem_pathSupport.mpr ⟨0, Nat.zero_le _, rfl⟩
+  · show (H.loop2Transform hmark hLnot).darts.card - 1 = _
+    rw [hdarts, hcard]
+    omega
+  · intro i hi
+    have hubase : ((H.loop2Transform hmark hLnot).map ^ i)
+          (H.nodeMap.symm (H.hypY NF L x))
+        = (Loop.samsaraPerm hinj ^ i) (H.path2Transform NF L x 0) := by
+      rw [hmap, hp0]
+    have hle : i ≤ H.card2Transform NF L x := by
+      show i ≤ L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x))
+        + H.complementIndex (H.hypZ NF L x) (H.hypP NF L x)
+      omega
+    have hpow := (Loop.samsaraPerm_pow_apply (H.path2Transform NF L x)
+      (H.card2Transform NF L x) hinj).2 i hle
+    rw [hubase, hpow]
+    show gluePaths (L.pathOf (H.nodeMap.symm (H.hypY NF L x)))
+      (complementPt H (H.hypZ NF L x))
+      (L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x))) i = _
+    rw [gluePaths_apply_le hi]
+    rfl
+  · intro i hi
+    have hubase : ((H.loop2Transform hmark hLnot).map
+          ^ (L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x)) + i))
+          (H.nodeMap.symm (H.hypY NF L x))
+        = (Loop.samsaraPerm hinj ^ (L.index (H.nodeMap.symm (H.hypY NF L x))
+            (H.nodeMap (H.hypZ NF L x)) + i)) (H.path2Transform NF L x 0) := by
+      rw [hmap, hp0]
+    have hle : L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x)) + i
+        ≤ H.card2Transform NF L x := by
+      show L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x)) + i
+        ≤ L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x))
+          + H.complementIndex (H.hypZ NF L x) (H.hypP NF L x)
+      omega
+    have hpow := (Loop.samsaraPerm_pow_apply (H.path2Transform NF L x)
+      (H.card2Transform NF L x) hinj).2 _ hle
+    rw [hubase, hpow]
+    show gluePaths (L.pathOf (H.nodeMap.symm (H.hypY NF L x)))
+      (complementPt H (H.hypZ NF L x))
+      (L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x)))
+      (L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x)) + i) = _
+    rw [gluePaths_apply_add hg0 i]
+
 end Hypermap
 end Kepler.Text
