@@ -1,4 +1,4 @@
-# 交接文档（Handoff）— 2026-08-25
+# 交接文档（Handoff）— 2026-08-28
 
 > 面向接手者。本文件描述项目现状、验证纪律、环境细节、待办与优先级。
 > 长期设计决策见 `DECISIONS.md`，阶段计划见 `PLAN.md`，模块对照见
@@ -6,11 +6,12 @@
 
 ## 0. 一句话现状
 
-仓库 `github.com:lispc/kepler-conjecture-lean4`（main @ `966496b`）全绿：
+仓库 `github.com:lispc/kepler-conjecture-lean4`（main @ `c16c602`）全绿：
 `make check`（build + 公理审计）通过，唯一 sorry 是 `Statement.lean:111`
-的 sanctioned Phase-1 占位。Phase 2 已闭合；Phase 3 试点闭合并完成
-分片提速；Phase 4 工具链与 checker 核心就绪；Phase 5 文字证明移植至
-hypermap.hl 的 78%。
+的 sanctioned Phase-1 占位。Phase 2 已闭合；Phase 3 列主序证书表示落地
+（试点 650s/LP，30s 目标实测不可达，已留档）；Phase 4 工具链 + 区间
+checker 核心就绪（超越层进行中）；Phase 5 文字证明移植至 hypermap.hl 的
+**87.3%（11858/13575）**。
 
 ## 1. 项目目标（不变）
 
@@ -41,7 +42,7 @@ PLAN.md 与各 README）。
   585 个 native_decide 分片全量重建需 ~7 天。
 - 公理审计：`lean/scripts/AxiomAudit.lean`（`make check` 覆盖）。
 
-### Phase 3 — LP（🟡 试点闭合 + 分片落地；全量化待转置表示）
+### Phase 3 — LP（🟡 列主序表示已落地；全量化为纯算力问题）
 
 - 链路：Flyspeck easy 证书 → `parse_lpcert.py` → `gen_data.py` →
   GLPK 5.0 展开 → `flatten_lp.py` → SoPlex 8.0.3 精确模式
@@ -50,18 +51,22 @@ PLAN.md 与各 README）。
   → `socert.py` 生成 Lean 证书 → `Kepler/LP/Cert.lean` 稀疏整数对偶
   checker（`checkDual_sound` 弱对偶）。
 - 真实图 204880136538（915 变量 × 3882 行 × 8056 非零）端到端闭合：
-  `Kepler/LP/Pilot204880136538/`（Data + 915 列分片 + Assembly），
-  `bound_lt`（目标 < 12）公理仅标准三公理。
-- **分片实测**（commit `b16300b`）：单块 `decide` 25304s（7h）→
-  逐列分片 96 并发端到端 1542s（26min，16.4×）。生成：
-  `socert.py --shard-cols K --terminal-bound 12`；构建：
-  `pipeline/lp/build_shards.py <Module> --procs 96`（单片失败可 `--only`
-  重试）。
-- **全量化瓶颈与下一步（高优先级）**：43,078 LP × ~7 core-h ≈ 34 core-年，
-  分片不够。出路是 `Cert.lean` 头注释记录的**转置（列主序）证书表示**：
-  对偶检查从 O(numVars×nnz) 降为 O(nnz)，目标 ~30s/LP（≈15 core-天
-  全量）。需要：列主序版 `checkDual` + 一致性/组装 soundness 引理 +
-  `socert.py` 输出列主序数据。
+  行主序 `Kepler/LP/Pilot204880136538/` + 列主序
+  `Kepler/LP/PilotCM204880136538/`（commit `3cbe979`）。
+- **列主序（转置）表示已落地**：`Kepler/LP/ColMajor.lean`（928 行）：
+  `LPCM`（cs/b 字段）+ `ITree` + flat 锁步 base checker
+  `checkDualCMTBaseFlat`/`checkDualCMTF`（避免一元 succ 链的二次方
+  归约）+ `checkDualCMT_sound`/`checkDualCMTF_sound`（直接弱对偶，
+  公理仅标准三）；`socert.py --col-major` 同步（分块 def + `: ColI`
+  标注防 pending-MVar 超线性爆炸）。
+- **实测与结论**（`pipeline/lp/PILOTCM_PERF_NOTES.md` 留档）：单核
+  端到端 ~650s（行主序单块 25304s 的 39×；base 49s / cols 169s /
+  字面量阐明 423s）。**30s/LP 目标不可达**：内核 decide 重放 ~12k 次
+  ~900 位大整数乘 ≈130s 算术下限 + ~420s 字面量阐明。后续出路：
+  求解侧取更小分母证书（减小 Y 位宽）或 Data/cols 双 decide 并行。
+- 全量化（43,078 LP × ~650s ≈ 325 核·天）：纯算力排程问题，可用
+  `socert.py --col-major` + `build_shards.py` 风格并发；是否值得投入
+  待与整体进度权衡（见 §6）。
 - formal_lp 侦察结论：19715 图 = 19700 easy + 15 hard；hard_7 单图
   9,080 个 LP；阈值语义 = 每图 scriptL > 12；注意 model2.mod 被 sed 删过
   `main: sum ln >= 12`（详见 `pipeline/lp/README.md` 与 docs/hard-cases.md）。
@@ -79,13 +84,17 @@ PLAN.md 与各 README）。
 ### Phase 5 — 文字证明（🟡 进行中，人力主线）
 
 - 路线：Hypermap（ch4 库）→ Fan（ch5）→ LocalFan（ch7）→ Assembly（ch9）。
-- `Kepler/Text/Hypermap.lean` 8776 行，覆盖
+- `Kepler/Text/Hypermap.lean` 10414 行，覆盖
   `reference/flyspeck/text_formalization/hypermap/hypermap.hl` 至
-  **10641/13575（78%）**。已过最难部分：Euler 主定理、组合 Jordan 曲线
+  **11858/13575（87.3%）**。已过最难部分：Euler 主定理、组合 Jordan 曲线
   定理、loop/atom/正规环族、商 hypermap、Iso、face collections、
-  XWCNBMA、lemmaSTKBEPH。每块头注有覆盖/跳过对照表。
-- **下一块**：hypermap.hl 10643 起——dihedral hypermaps、restricted
-  hypermap `is_restricted`（11174）与 tame 前置，至全书收尾（估计 2–3 块）。
+  XWCNBMA、lemmaSTKBEPH；block 15（10643–11173 补等值线与单射性，
+  `366e1e3`）与 block 16（11174–11858 受限 hypermap/final loops/split
+  condition/hyp'm/S/y/p/z 选择函数族，`c16c602`）已提交。每块头注有
+  覆盖/跳过对照表。
+- **下一块**：hypermap.hl 11861 起——`lemmaLoopSeparation` + Moebius
+  contour 平面性理论（非平面性归约），随后 is_transform 机器
+  （12308–13495）与全书收尾（估计 2 块）。
 - 移植惯例：对应 HOL 行号写头注；Mathlib 已有的跳过并注明；零 sorry、
   零 native_decide、零自引入 axiom；每块 `lake build Kepler` 全绿 +
   公理抽查后才提交。
@@ -138,18 +147,24 @@ PLAN.md 与各 README）。
   要由主 agent 起自己的后台监控接管。
 - quota（403 usage limit）会周期性断；断了等恢复后 resume agent 即可，
   上下文保留。
+- **子代理中断事故与恢复（2026-08-27/28 实录）**：Task 工具可能报
+  "Endpoint unavailable" 类瞬时错误，但子代理的产物仍会落入工作区
+  （可能是后台继续执行）。恢复流程：主 agent 接手产物 → 与最新 API
+  对照找 stale 引用 → 修复尾部错误 → 独立验证（编译/公理/红线）→
+  提交。重发任务书时把"当前状态 + stale 风险 + 可中断性（增量落盘）"
+  写进去。
 
 ## 6. 待办队列（按建议优先级）
 
-1. **Phase 5 收尾**（风险最低、惯性最大）：Hypermap 第 15 块起
-   （dihedral/restricted/tame 前置，hypermap.hl 10643–13575，约 2–3 块），
-   然后开 `Kepler/Text/Fan.lean`（ch5）。
-2. **Phase 3 转置证书表示**（收益最大的硬骨头）：列主序 `checkDual` +
-   soundness + socert 输出，目标 ~30s/LP；随后谈 43,078 全量化才有意义。
-3. **Phase 4 超越函数层**：除法/√/Taylor 中点半径；长线投入。
+1. **Phase 5 收尾**（风险最低、惯性最大）：Hypermap 第 17 块起
+   （Moebius contour 平面性 11861–~12300、is_transform 机器 12308–13495、
+   收尾至 13575，约 2 块），然后开 `Kepler/Text/Fan.lean`（ch5）。
+2. **Phase 4 超越函数层**（子代理并行中）：`Kepler/Interval/` 除法/√/
+   Taylor 中点半径；`docs/architecture.md` Phase 4 节随之细化。
+3. Phase 3 全量化决策：43,078 × ~650s ≈ 325 核·天纯算力；或先做
+   小分母证书降位宽（需求解侧配合）。暂缓，待 Phase 5 推进后再权衡。
 4. Phase 5 后续：Fan → LocalFan → Assembly；`docs/module-map.md` 随块更新。
-5. 零散：`string_archive.txt` 解析级核对（bonus）；architecture.md
-   Phase 4 节细化。
+5. 零散：`string_archive.txt` 解析级核对（bonus）。
 
 ## 7. 已知坑（教训汇总）
 
@@ -164,15 +179,37 @@ PLAN.md 与各 README）。
 - SoPlex 的 Objective 行是浮点近似，证书数值只取 `-X`/`-Y` 有理输出。
 - 大批量改文件时保持文件可编译；用脚本批量替换时注意保留文件尾的
   `end` 标记（曾出过截断事故，已恢复零损失）。
+- **本 Mathlib 的 `pow_succ : a^(n+1) = a^n * a`（左结合）**；
+  `pow_succ' : a^(n+1) = a * a^n`。迭代式 `(f^(n+1)) w = f ((f^n) w)`
+  的证明要用 `pow_succ'`（block 15/16 反复踩）。
+- **`rw [pow_add]` 会误匹配指数里内嵌的 `m+1`**（模式 `?a^(?m+?n)` 先
+  命中最早出现的子项）。幂合并一律走 `have hpow : ∀ a b w,
+  (f^a)((f^b) w) = (f^(a+b)) w` 型辅助引理（显式指数实例化）。
+- **证明内多态局部 `have`（`∀ {β : Type*}`）导致内核
+  "constant has level params [u_1,u_2]" 提交失败**——按用到的类型
+  单型化（α 一份、Set α 一份）。
+- `dartsOfFamily`/`mem_dartsOfFamily` **不带 H 参数**（H.dartsOfFamily
+  是无效点记法）；`dartsInFinalLoops` 才带。
+- 由选择函数定义的 `hypY`/`hypZ` 等对 `rw [hp0]`（p=0）不透明：先
+  `have hh : (f^(p+1)) w = w := hzy` 型中间命题（此时 hypP 才句法出现）
+  再 `rw [hp0] at hh`。
+- `obtain ⟨…⟩ := h` 会**消耗** h；之后还要用就 `obtain … := id h`。
+- `intro h` 在 `≠` 目标上直接给出正等式 `h : a = b`（可用于 rw），
+  不要绕 `by_contra`。
+- `H.face x` 与 `orbitMap H.faceMap x` 只 defeq：`rw [Set.ncard_pos …]`
+  之类的模式匹配认 orbitMap 形态时，先 `have h1 : … (orbitMap …) …`
+  再 `exact h1`（defeq 桥接），不要直接 rw。
+- 大证明用原始项展开（少用 `set`）；`set` 的 let 绑定会让后续 rw/omega
+  原子分裂。
 
 ## 8. 快速自检（接手后第一件事）
 
 ```sh
 cd /home/scroll/repos/kepler-conjecture-lean4
 export PATH="$HOME/.elan/bin:$PATH"
-git log --oneline -3            # 应见 966496b 或更新
+git log --oneline -3            # 应见 c16c602 或更新
 make check                      # build + 公理审计，应全绿
-wc -l lean/Kepler/Text/Hypermap.lean   # 8776（截至 2026-08-25）
+wc -l lean/Kepler/Text/Hypermap.lean   # 10414（截至 2026-08-28）
 ```
 
 若 `.lake` 缓存完好，全量 build 约几分钟（除 CertShards 外均为增量）。
