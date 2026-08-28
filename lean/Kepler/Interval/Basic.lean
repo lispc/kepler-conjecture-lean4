@@ -37,10 +37,10 @@
     `y·m ∈ [min (c·m) (d·m), max (c·m) (d·m)]`), chained as
     `min₄ ≤ min (a*c, b*c) ≤ x*c` etc.
   - *Total evaluator, no `Option`.* Since `+ - × Neg` are total and always
-    sound, `IExpr.eval` returns a `DInterval` directly. The `Option` from
-    the design guidance is deferred: it becomes necessary once
-    division/reciprocal or transcendental extensions can fail on a box
-    (wrapping later is a local change to `eval`/`eval_mem`).
+    sound, the arithmetic-only `IExpr` of the first pilot returned a
+    `DInterval` directly. Division, `√` and the transcendental nodes *can*
+    fail on a box, so the extended AST `Kepler.Interval.Expr.IExpr` evaluates
+    into `Option DInterval` (`none` = check failed, never unsound).
   - *No well-formedness requirement.* `DInterval.mem` never assumes
     `lo ≤ hi` (an empty interval is vacuously sound); `DInterval.wf` is an
     optional checker for certificate hygiene.
@@ -51,24 +51,30 @@
   (the lower endpoint of the interval evaluation of `e` over `box` has a
   positive mantissa), then for every real assignment `ρ` pointwise inside
   `box`, `0 < e.evalReal ρ`. This is exactly the per-leaf certificate of
-  the branch-and-bound scheme; a future `Kepler.Interval.Cert` will add box
+  the branch-and-bound scheme; `Kepler.Interval.Cert` adds the box
   splitting trees whose leaves carry these checks (sharded `decide`s, the
   `Kepler.Graphs.CertShards` pattern).
 
   ## Next steps (interface notes for follow-up phases)
 
-  - *Division/reciprocal*: only when `0 ∉` divisor interval; the result is a
-    dyadic *approximation with explicit error* at a chosen precision `p`
-    (floor/ceil of `m·2^p / m'` in `Int`), i.e. `Option`-valued ops on top
-    of this layer. Same pattern for `√` (stretch goal: `Int.sqrt` gives
-    `⌊√n⌋² ≤ n < (⌊√n⌋+1)²`; scale the mantissa by `2^(2k)` first).
-  - *Transcendentals* (sin, arctan, …): verified Taylor/rational bounds
-    packaged as "dyadic value + dyadic radius"; suggest a midpoint-radius
-    wrapper instead of complicating this endpoint layer.
+  - *Division/reciprocal* (**done**): `Kepler.Interval.Div` — `divFloorQ`
+    with an explicit one-ulp error, `DInterval.recip`/`div` in `Option`.
+  - *Square roots* (**done**): `Kepler.Interval.Sqrt` — certificate-based
+    `Dyadic.sqrtI` (the caller supplies the root mantissa; the kernel only
+    checks `s² ≤ n < (s+1)²` in `Int`).
+  - *Transcendentals* (**done, base layer**): `Kepler.Interval.Trans` —
+    verified alternating-Taylor enclosures for `sin`/`cos`/`arctan`
+    packaged as dyadic intervals/balls, plus π-shift range reduction.
+    They enter the AST through the `.trans` node of
+    `Kepler.Interval.Expr.IExpr`.
+  - *Expression AST* (**moved**): `IExpr`/`checkPos` and the pilot
+    examples now live in `Kepler.Interval.Expr`, where the extended AST
+    (`.div`/`.sqrt`/`.trans`, `Option`-valued evaluation) can see the
+    `Div`/`Sqrt`/`Trans` layers without import cycles.
   - *Tightness*: interval evaluation is conservative (see
-    `exSquare_conservative`: `x²` on `[-1,1]` evaluates to `[-1,1]`, not
-    `[0,1]`); the branch-and-bound loop must refine boxes — by design the
-    checker only needs the leaf checks.
+    `exSquare_conservative` in `Expr.lean`: `x²` on `[-1,1]` evaluates to
+    `[-1,1]`, not `[0,1]`); the branch-and-bound loop must refine boxes —
+    by design the checker only needs the leaf checks.
 
   Downstream wiring: `Kepler.lean` (import), `docs/module-map.md`.
 -/
@@ -228,6 +234,47 @@ theorem isPos_iff (d : Dyadic) : d.isPos = true ↔ 0 < d.toReal := by
 theorem toReal_pos_of_isPos {d : Dyadic} (h : d.isPos = true) : 0 < d.toReal :=
   d.isPos_iff.mp h
 
+/-- Strict boolean `<` (mirror of `ble`; kernel-decidable). -/
+def blt (a b : Dyadic) : Bool := !ble b a
+
+theorem blt_iff (a b : Dyadic) : blt a b = true ↔ toRat a < toRat b := by
+  unfold blt
+  constructor
+  · intro h
+    have h' : ble b a = false := by simp at h; exact h
+    exact toRat_lt_of_ble_false h'
+  · intro h
+    have h' : ble b a = false := by
+      cases hb : ble b a with
+      | false => rfl
+      | true =>
+          have hle := (ble_iff b a).mp hb
+          exact absurd h (by linarith)
+    simp only [Bool.not_eq_true', h']
+
+/-- Boolean `≤` lifted to `ℝ` (semantic bridge used by the interval-level
+transcendental wrappers in `Trans.lean`). -/
+theorem ble_toReal {a b : Dyadic} (h : ble a b = true) : a.toReal ≤ b.toReal :=
+  Rat.cast_le.mpr ((ble_iff a b).mp h)
+
+theorem blt_toReal {a b : Dyadic} (h : blt a b = true) : a.toReal < b.toReal :=
+  Rat.cast_lt.mpr ((blt_iff a b).mp h)
+
+/-- Nonnegativity (exact: the sign of a dyadic is the sign of its mantissa). -/
+def isNN (d : Dyadic) : Bool := decide (0 ≤ d.m)
+
+theorem isNN_iff (d : Dyadic) : d.isNN = true ↔ 0 ≤ d.toReal := by
+  have hp : (0:ℝ) < (2:ℝ)^d.e := zpow_pos (by norm_num) d.e
+  simp only [isNN, decide_eq_true_eq, toReal_def]
+  constructor
+  · intro h
+    exact mul_nonneg (by exact_mod_cast h) (le_of_lt hp)
+  · intro h
+    rcases le_or_gt 0 d.m with hm | hm
+    · exact hm
+    · exact absurd (mul_neg_of_neg_of_pos (show ((d.m : ℤ):ℝ) < 0 by exact_mod_cast hm) hp)
+        (by linarith)
+
 end Dyadic
 
 /-! ## Real helper lemmas for interval multiplication -/
@@ -352,145 +399,5 @@ theorem mem_mul {I J : DInterval} {x y : ℝ} (hx : I.mem x) (hy : J.mem y) :
     exact hhi
 
 end DInterval
-
-/-! ## Interval expressions and the positivity checker -/
-
-/-- Simple interval expression AST: constants, variables, `+ - × Neg`.
-（暂不含除法/超越函数；它们将以"近似 + 显式误差界"在后续层加入。） -/
-inductive IExpr (n : ℕ) : Type where
-  | const (d : Dyadic) : IExpr n
-  | var (i : Fin n) : IExpr n
-  | neg (e : IExpr n) : IExpr n
-  | add (e₁ e₂ : IExpr n) : IExpr n
-  | sub (e₁ e₂ : IExpr n) : IExpr n
-  | mul (e₁ e₂ : IExpr n) : IExpr n
-deriving Repr
-
-namespace IExpr
-
-/-- Interval evaluation over a box (total: every op is sound). -/
-def eval {n : ℕ} : IExpr n → (Fin n → DInterval) → DInterval
-  | .const d, _ => ⟨d, d⟩
-  | .var i, box => box i
-  | .neg e, box => DInterval.neg (e.eval box)
-  | .add e₁ e₂, box => DInterval.add (e₁.eval box) (e₂.eval box)
-  | .sub e₁ e₂, box => DInterval.sub (e₁.eval box) (e₂.eval box)
-  | .mul e₁ e₂, box => DInterval.mul (e₁.eval box) (e₂.eval box)
-
-/-- Real evaluation under a real assignment. -/
-def evalReal {n : ℕ} : IExpr n → (Fin n → ℝ) → ℝ
-  | .const d, _ => d.toReal
-  | .var i, ρ => ρ i
-  | .neg e, ρ => -e.evalReal ρ
-  | .add e₁ e₂, ρ => e₁.evalReal ρ + e₂.evalReal ρ
-  | .sub e₁ e₂, ρ => e₁.evalReal ρ - e₂.evalReal ρ
-  | .mul e₁ e₂, ρ => e₁.evalReal ρ * e₂.evalReal ρ
-
-/-- **Soundness of interval evaluation**: the interval value contains the real
-value for every assignment pointwise inside the box. -/
-theorem eval_mem {n : ℕ} (e : IExpr n) (box : Fin n → DInterval) (ρ : Fin n → ℝ)
-    (hρ : ∀ i, (box i).mem (ρ i)) : (e.eval box).mem (e.evalReal ρ) := by
-  induction e with
-  | const d => exact ⟨le_rfl, le_rfl⟩
-  | var i => exact hρ i
-  | neg e ih => exact DInterval.mem_neg ih
-  | add e₁ e₂ ih₁ ih₂ => exact DInterval.mem_add ih₁ ih₂
-  | sub e₁ e₂ ih₁ ih₂ => exact DInterval.mem_sub ih₁ ih₂
-  | mul e₁ e₂ ih₁ ih₂ => exact DInterval.mem_mul ih₁ ih₂
-
-end IExpr
-
-/-- The positivity checker: kernel-decidable, all arithmetic in `Int`. -/
-def checkPos {n : ℕ} (e : IExpr n) (box : Fin n → DInterval) : Bool :=
-  (e.eval box).lo.isPos
-
-/-- **Core checker theorem (雏形)**: if `checkPos` passes, the expression is
-strictly positive at every real assignment pointwise inside the box. -/
-theorem checkPos_sound {n : ℕ} (e : IExpr n) (box : Fin n → DInterval)
-    (h : checkPos e box = true) (ρ : Fin n → ℝ) (hρ : ∀ i, (box i).mem (ρ i)) :
-    0 < e.evalReal ρ :=
-  lt_of_lt_of_le (Dyadic.toReal_pos_of_isPos h) (e.eval_mem box ρ hρ).1
-
-/-! ## Small pilot cases (kernel `decide` only, no `native_decide`) -/
-
-/-- Box `[1,2]²`. -/
-def exBoxPos : Fin 2 → DInterval := fun _ => ⟨⟨1, 0⟩, ⟨2, 0⟩⟩
-
-/-- `x·y` on two variables. -/
-def exExprMul : IExpr 2 := .mul (.var 0) (.var 1)
-
-/-- Accept: `x·y > 0` on `[1,2]²` (interval evaluation gives `[1,4]`). -/
-theorem exMul_accept : checkPos exExprMul exBoxPos = true := by decide
-
-/-- Reject: `x·y` on `[-2,1]²` evaluates to `[-2,4]` — the min-of-four-corners
-logic is exercised (corner `(-2)·1 = -2` wins). -/
-theorem exMul_reject :
-    checkPos exExprMul (fun _ : Fin 2 => ⟨⟨-2, 0⟩, ⟨1, 0⟩⟩) = false := by decide
-
-/-- Conservative reject: `x·x` on `[-1,1]` evaluates to `[-1,1]` although the
-true range is `[0,1]` — motivates box refinement (branch and bound). -/
-theorem exSquare_conservative :
-    checkPos (.mul (.var 0) (.var 0)) (fun _ : Fin 1 => ⟨⟨-1, 0⟩, ⟨1, 0⟩⟩) = false := by
-  decide
-
-/-- Accept: `3 - x` on `[0,2]` evaluates to `[1,3]` (sub/neg path). -/
-theorem exSub_accept :
-    checkPos (.sub (.const ⟨3, 0⟩) (.var 0)) (fun _ : Fin 1 => ⟨⟨0, 0⟩, ⟨2, 0⟩⟩) = true := by
-  decide
-
-/-- Box for the dyadic-alignment case: `[1/2, 3/4]`. -/
-def exBoxDy : Fin 1 → DInterval := fun _ => ⟨⟨1, -1⟩, ⟨3, -2⟩⟩
-
-/-- `x - 1/4`（二进制有理数，指数为负）。 -/
-def exExprDy : IExpr 1 := .sub (.var 0) (.const ⟨1, -2⟩)
-
-/-- Accept: `x - 1/4` on `[1/2, 3/4]` evaluates to `[1/4, 1/2]` —
-exercises exponent alignment with negative exponents. -/
-theorem exDy_accept : checkPos exExprDy exBoxDy = true := by decide
-
-/-- Precision stress case: `x - 2⁻²⁰` on `[1/2, 1]` (mantissas ~2¹⁹; kernel
-`decide` on `Int` handles this trivially). -/
-theorem exPrecise_accept :
-    checkPos (.sub (.var 0) (.const ⟨1, -20⟩))
-      (fun _ : Fin 1 => ⟨⟨1, -1⟩, ⟨1, 0⟩⟩) = true := by decide
-
-/-- The optional box well-formedness check, kernel-verified. -/
-theorem exBox_wf : (exBoxPos 0).wf = true := by decide
-
-/-- End-to-end: from the kernel-checked certificate to a real inequality
-(`x·y > 0` on `[1,2]²`). -/
-theorem exMul_end_to_end (x y : ℝ) (hx0 : 1 ≤ x) (hx1 : x ≤ 2) (hy0 : 1 ≤ y)
-    (hy1 : y ≤ 2) : 0 < x * y := by
-  have hmem : ∀ i : Fin 2, (exBoxPos i).mem (![x, y] i) := by
-    intro i
-    fin_cases i
-    · exact ⟨by simpa [exBoxPos] using hx0, by simpa [exBoxPos] using hx1⟩
-    · exact ⟨by simpa [exBoxPos] using hy0, by simpa [exBoxPos] using hy1⟩
-  have h := checkPos_sound exExprMul exBoxPos exMul_accept ![x, y] hmem
-  simpa [exExprMul, IExpr.evalReal] using h
-
-/-- End-to-end with genuine dyadic arithmetic: `x - 1/4 > 0` on `[1/2, 3/4]`. -/
-theorem exDy_end_to_end (x : ℝ) (hx0 : 1 / 2 ≤ x) (hx1 : x ≤ 3 / 4) : 0 < x - 1 / 4 := by
-  have hlo : Dyadic.toReal ⟨1, -1⟩ = 1 / 2 := by
-    rw [Dyadic.toReal_def]
-    norm_num
-  have hhi : Dyadic.toReal ⟨3, -2⟩ = 3 / 4 := by
-    rw [Dyadic.toReal_def]
-    norm_num
-  have hconst : Dyadic.toReal ⟨1, -2⟩ = 1 / 4 := by
-    rw [Dyadic.toReal_def]
-    norm_num
-  have hmem : ∀ i : Fin 1, (exBoxDy i).mem ((fun _ => x) i) := by
-    intro i
-    fin_cases i
-    constructor
-    · show Dyadic.toReal ⟨1, -1⟩ ≤ x
-      rw [hlo]
-      exact hx0
-    · show x ≤ Dyadic.toReal ⟨3, -2⟩
-      rw [hhi]
-      exact hx1
-  have h := checkPos_sound exExprDy exBoxDy exDy_accept (fun _ => x) hmem
-  simpa [exExprDy, IExpr.evalReal, hconst] using h
 
 end Kepler.Interval

@@ -134,6 +134,26 @@ theorem sqrtI_mem {d : Dyadic} {s : Int} {I : DInterval} {x : ℝ}
   rw [hxsq] at h1 h2
   exact ⟨h1, h2⟩
 
+/-- Case analysis on a successful `sqrtI`: the kernel-checked conjunction
+yields `0 ≤ s`, `0 ≤ d.m` (nonnegative radicand) and the two bracketing
+inequalities (mirrors `Dyadic.divFloorQ_cases` in `Div.lean`). -/
+theorem sqrtI_cases {d : Dyadic} {s : Int} {I : DInterval}
+    (h : d.sqrtI s = some I) :
+    0 ≤ s ∧ 0 ≤ d.m ∧ s * s ≤ d.m * 2 ^ (d.e % 2).toNat
+      ∧ d.m * 2 ^ (d.e % 2).toNat < (s + 1) * (s + 1) := by
+  unfold sqrtI at h
+  split at h
+  · next hs => exact hs
+  · exact absurd h (by simp)
+
+/-- A successful `sqrtI` certificate implies a nonnegative radicand (used by
+the `.sqrt` node of `Kepler.Interval.Expr.IExpr`). -/
+theorem sqrtI_nonneg {d : Dyadic} {s : Int} {I : DInterval}
+    (h : d.sqrtI s = some I) : 0 ≤ d.toReal := by
+  obtain ⟨_, hm, _, _⟩ := sqrtI_cases h
+  rw [toReal_def]
+  exact mul_nonneg (by exact_mod_cast hm) (zpow_nonneg (by norm_num) d.e)
+
 end Dyadic
 
 /-! ## Pilot: `√2 ∈ [1.4142, 1.4143]` (kernel `decide` only) -/

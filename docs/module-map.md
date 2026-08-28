@@ -39,7 +39,7 @@ Volume（体积、楔、立体角测度） ← Trig（三角、方位角）
 | 7 Local Fan | `local/` + `leg/` | `Kepler/Text/LocalFan.lean` | ⬜ 未开始 |
 | 8 Tame Hypermap | `tame/` | Phase 2 已覆盖图侧；`Kepler/Text/TameHypermap.lean`（hypermap 版 tame + 与 fgraph 桥接） | 🟡 图枚举链进行中（见下） |
 | 9 组装（Final Conclusion） | `general/the_kepler_conjecture.hl` | `Kepler/Text/Assembly.lean` | ⬜ 未开始 |
-| 非线性不等式 | `nonlinear/` | Phase 4（`Kepler/Interval/`：`Basic` 二进制有理数端点区间算术 + `checkPos` soundness；`Div` 除法/倒数（`divFloorQ` 显式误差，`Option` 语义）；`Sqrt` 证书式平方根（内核仅验证 `s²≤n<(s+1)²`）；`Ball` 中点半径包装 + 与 `DInterval` 双向换算；`Trans` Leibniz 交替级数界 + `sin` 的 Taylor dyadic 区间/球（[0,1]）） | 🟡 区间 checker 试点进行中（Kepler/Interval；除法/√/超越层已落地，公理仅标准三） |
+| 非线性不等式 | `nonlinear/` | Phase 4（`Kepler/Interval/`：`Basic` 二进制有理数端点区间算术；`Div` 除法/倒数（`divFloorQ` 显式误差，`Option` 语义）；`Sqrt` 证书式平方根（内核仅验证 `s²≤n<(s+1)²`）；`Ball` 中点半径包装 + 与 `DInterval` 双向换算；`Trans` Leibniz 交替级数界 + sin/cos/arctan 的 Taylor dyadic 区间/球 + π-shift 范围缩减（`sinRed`）；`Expr` 扩节点 AST（div/sqrt/trans + Option 求值 + `checkPos_sound`）；`Cert` 分支定界二分树（`BBTree.covers`/`bb_sound`，叶为内核 decide 的 checkPos）） | 🟡 区间 checker 试点进行中（Kepler/Interval；除法/√/超越/AST/分支定界格式已落地，公理仅标准三） |
 | LP | `formal_lp/` | Phase 3（`Kepler/LP/`：`Cert` 稀疏整数对偶证书 checker + 逐列分片 `checkDualColShards`；`Pilot204880136538/` 真实图 915 片端到端闭合） | 🟡 真实图试点已闭合；全量化待转置证书表示（见 architecture.md Phase 3） |
 
 ## Phase 2 引理移植进度（tame 图枚举完备性，AFP Flyspeck-Tame 对照）

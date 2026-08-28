@@ -12,8 +12,13 @@ import Kepler.Interval.Div
 import Kepler.Interval.Sqrt
 -- Phase 4: 中点半径包装（dyadic 中心+半径，与 DInterval 双向换算）
 import Kepler.Interval.Ball
--- Phase 4: 超越层（Leibniz 交替级数界 + sin 的 Taylor dyadic 区间/球，[0,1]）
+-- Phase 4: 超越层（Leibniz 交替级数界 + sin/cos/arctan 的 Taylor dyadic 区间/球，
+-- π-shift 范围缩减）
 import Kepler.Interval.Trans
+-- Phase 4: 扩节点表达式层（IExpr 的 div/sqrt/trans 节点 + Option 求值 + checkPos soundness）
+import Kepler.Interval.Expr
+-- Phase 4: 分支定界证书树（二分盒树 + covers/bb_sound，叶为内核 decide 的 checkPos）
+import Kepler.Interval.Cert
 import Kepler.Graphs.ListAux
 import Kepler.Graphs.Rotation
 import Kepler.Graphs.Graph
