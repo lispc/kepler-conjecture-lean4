@@ -544,6 +544,50 @@ Coverage (block 15, complement contours, 10643–11173):
   point lies in both orbits, then killed by orbit-window injectivity on
   the face or node orbit.
 
+Coverage (block 16, restricted hypermaps / final loops / split condition,
+11174–11858):
+- definitions: `is_restricted` (11174, as `IsRestricted`, with the HOL
+  `GET_*` destructuring macros as dot-accessors), `final_loops` (11177, as
+  `finalLoops`), `darts_in_final_loops` (11180, as `dartsInFinalLoops`),
+  `is_split_condition` (11410, as `IsSplitCondition`), `hyp'S` (11472, as
+  `hypS`, an image of `Set.Icc`), `hyp'y`/`hyp'z` (11505/11779, as
+  `hypY`/`hypZ`), `empty_flagged`/`s_flagged` (11488/11496, as
+  `EmptyFlagged`/`SFlagged`), `is_marked` (11747, as `IsMarked`, with the
+  normal-family proof hoisted to a parameter because `quotientHypermap`
+  consumes it).
+- final-loop membership: `is_in_darts_in_final_loops`,
+  `lemma_in_darts_in_final_loops`, `lemma_not_in_darts_in_final_loops`
+  (11184–11199); `lemma_power_final_loops_loop_map` (11215),
+  `lemma_true_loop1`/`lemma_true_loop` (11225/11266, as
+  `mem_finalLoops_iff_pow_eq`/`mem_finalLoops_iff_darts_eq`).
+- loop-map dichotomy: `lemma_loop_map_on_normal_loop`,
+  `lemma_loop_map_exclusive`, `lemma_head_of_atom_via_restricted`,
+  `lemma_tail_of_atom_via_restricted`, `lemma_tail_of_atom`,
+  `lemma_singleton_atom` (11306–11381, as
+  `loopMap_eq_faceMap_or_nodeMap_symm`, `loopMap_eq_faceMap_iff`,
+  `headOfAtom_eq_self_iff`, `tailOfAtom_eq_self_iff`,
+  `tailOfAtom_eq_iff_of_mem_atom`, `atom_eq_singleton_iff`).
+- Skolem functions: `hyp'm` (11442, as `hypM` via `Classical.choose` on
+  `exists_hyp_m`, mirroring HOL's `new_specification`; the strengthened
+  induction replaces HOL's `num_WF` contrapositive), `hyp'p` (11745, as
+  `hypP` via `Nat.findX` on the least face-return of `hyp'y`).
+- bounds: `lemma_bound_hyp_m` (11444, as `hypM_lt_face`, division-modulo
+  reduction along `pow_card_face_apply_self`), `lemma_congruence_on_face`
+  (11467), `lemma_loop_eq_face` (11507, as `darts_eq_face_of_period`),
+  `lemma_hyp_m_and_length_atoms_of_loop` (11664, as
+  `hypM_lt_atomsOfLoop`; the two cases follow HOL but are reorganized as:
+  singleton-atom collapse violating the loop-map dichotomy, and orbit
+  periodicity `atom L x = atom L hyp'y` contradicting `on_hypY`).
+- quotient-face contour: `lemma_face_contour_on_loop` (11562, as
+  `faceContour_on_loop`, on `fQuotientPerm` rather than the quotient
+  hypermap to keep rewriting syntactic), `lemma_atom_on_inside_dart`
+  (11654), `lemma_on_hyp_y`/`lemma_on_hyp_z` (11522/11785, as `on_hypY`/
+  `on_hypZ`), `lemma_yz_in_face` (11782), `lemma_marked_dart` (11755, as
+  `marked_dart`), `lemma_split_marked_loop` (11772, as
+  `split_marked_loop`).
+- HOL's `CONJ3`/`CONJ4` tactic abbreviations (11558–11560) have no Lean
+  counterpart.
+
 Type correspondences (HOL Light ↦ Lean 4):
 - `(A)hypermap` (a 4-tuple carrying `FINITE`/`permutes` side conditions,
   `hypermap.hl`:83–93) ↦ `structure Hypermap` with a `Finset` of darts and
@@ -9563,6 +9607,852 @@ theorem isInjContour_complementPt (H : Hypermap α) (hplain : H.Plain) (hsimple 
   refine ⟨H.isContour_complementPt hplain hnn hx _, ?_⟩
   intro i j hij hji hcontra
   exact main j i hji hij hcontra
+
+/-! ## 受限 hypermap 与 final loops（`hypermap.hl`:11174–11408） -/
+
+/-- `hypermap.hl`:11174 `is_restricted`。 -/
+def IsRestricted (H : Hypermap α) : Prop :=
+  H.darts ≠ ∅ ∧ H.Planar ∧ H.Plain ∧ H.Connected ∧ H.Simple ∧ H.IsNoDoubleJoins ∧
+    H.EdgeNondegenerate ∧ H.NodeNondegenerate ∧
+    ∀ x ∈ H.darts, 3 ≤ (H.face x).ncard
+
+/-- HOL `GET_PLANAR_PROPERTY` 等拆解宏的访问引理。 -/
+theorem IsRestricted.planar {H : Hypermap α} (h : H.IsRestricted) : H.Planar := h.2.1
+
+theorem IsRestricted.plain {H : Hypermap α} (h : H.IsRestricted) : H.Plain := h.2.2.1
+
+theorem IsRestricted.connected {H : Hypermap α} (h : H.IsRestricted) : H.Connected :=
+  h.2.2.2.1
+
+theorem IsRestricted.simple {H : Hypermap α} (h : H.IsRestricted) : H.Simple := h.2.2.2.2.1
+
+theorem IsRestricted.noDoubleJoins {H : Hypermap α} (h : H.IsRestricted) :
+    H.IsNoDoubleJoins := h.2.2.2.2.2.1
+
+theorem IsRestricted.edgeNondegenerate {H : Hypermap α} (h : H.IsRestricted) :
+    H.EdgeNondegenerate := h.2.2.2.2.2.2.1
+
+theorem IsRestricted.nodeNondegenerate {H : Hypermap α} (h : H.IsRestricted) :
+    H.NodeNondegenerate := h.2.2.2.2.2.2.2.1
+
+theorem IsRestricted.three_le_ncard_face {H : Hypermap α} (h : H.IsRestricted)
+    {x : α} (hx : x ∈ H.darts) : 3 ≤ (H.face x).ncard :=
+  h.2.2.2.2.2.2.2.2 x hx
+
+/-- `hypermap.hl`:11177 `final_loops`。 -/
+def finalLoops (H : Hypermap α) (NF : Set (Loop α)) : Set (Loop α) :=
+  {L | L ∈ NF ∧ ∃ x ∈ L.darts, L = H.loopOfFace x}
+
+/-- `hypermap.hl`:11180 `darts_in_final_loops`。 -/
+def dartsInFinalLoops (H : Hypermap α) (NF : Set (Loop α)) : Set α :=
+  ⋃ L ∈ H.finalLoops NF, (L.darts : Set α)
+
+/-- `hypermap.hl`:11184 `is_in_darts_in_final_loops`。 -/
+theorem mem_dartsInFinalLoops (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {x : α}
+    (hx : x ∈ L.darts) (hL : L ∈ H.finalLoops NF) :
+    x ∈ H.dartsInFinalLoops NF :=
+  Set.mem_iUnion₂.mpr ⟨L, hL, Finset.mem_coe.mpr hx⟩
+
+/-- `hypermap.hl`:11187 `lemma_in_darts_in_final_loops`。 -/
+theorem mem_dartsInFinalLoops_iff (H : Hypermap α) {NF : Set (Loop α)} {x : α} :
+    x ∈ H.dartsInFinalLoops NF ↔ ∃ L ∈ H.finalLoops NF, x ∈ L.darts := by
+  constructor
+  · intro hmem
+    rw [dartsInFinalLoops, Set.mem_iUnion₂] at hmem
+    obtain ⟨L, hL, hx⟩ := hmem
+    exact ⟨L, hL, Finset.mem_coe.mp hx⟩
+  · rintro ⟨L, hL, hx⟩
+    exact H.mem_dartsInFinalLoops hx hL
+
+/-- `hypermap.hl`:11199 `lemma_not_in_darts_in_final_loops`。 -/
+theorem not_mem_dartsInFinalLoops (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α}
+    {x : α} (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hLnot : L ∉ H.finalLoops NF)
+    (hx : x ∈ L.darts) : x ∉ H.dartsInFinalLoops NF := by
+  intro hmem
+  obtain ⟨L', hL', hx'⟩ := H.mem_dartsInFinalLoops_iff.mp hmem
+  have hL'NF : L' ∈ NF := by
+    obtain ⟨h1, -⟩ := id hL'
+    exact h1
+  have hLL : L' = L := hnf.eq_of_mem_of_mem hL'NF hL hx' hx
+  rw [hLL] at hL'
+  exact hLnot hL'
+
+/-- `hypermap.hl`:11215 `lemma_power_final_loops_loop_map`。 -/
+theorem pow_faceMap_eq_pow_map_final (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α}
+    {x : α} (hL : L ∈ H.finalLoops NF) (hx : x ∈ L.darts) (n : ℕ) :
+    (H.faceMap ^ n) x = (L.map ^ n) x := by
+  obtain ⟨-, y, hy, rfl⟩ := hL
+  have hxy : x ∈ H.face y := by
+    rw [← H.loopOfFace_darts]
+    exact Finset.mem_coe.mpr hx
+  rw [H.loopOfFace_congr (H.face_eq_of_mem hxy)]
+  exact (H.loopOfFace_map_pow_apply (mem_orbitMap_self _ _) n).symm
+
+/-- `hypermap.hl`:11225 `lemma_true_loop1`。 -/
+theorem mem_finalLoops_iff_pow_eq (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α}
+    (hres : H.IsRestricted) (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) :
+    L ∈ H.finalLoops NF ↔
+      ∃ x ∈ L.darts, ∀ n : ℕ, (H.faceMap ^ n) x = (L.map ^ n) x := by
+  constructor
+  · intro hfin
+    obtain ⟨-, x, hx, -⟩ := id hfin
+    exact ⟨x, hx, fun n => H.pow_faceMap_eq_pow_map_final hfin hx n⟩
+  · rintro ⟨x, hx, hpow⟩
+    refine ⟨hL, x, hx, ?_⟩
+    have hco : ↑L.darts = H.face x := by
+      rw [L.eq_orbitMap_of_mem hx]
+      exact orbitMap_eq_of_pow_apply_eq L.map H.faceMap x (fun n => (hpow n).symm)
+    apply Loop.ext
+    · show L.darts = H.faceFinset x
+      apply Finset.coe_inj.mp
+      rw [hco]
+      exact (H.faceFinset_coe x).symm
+    · apply Equiv.ext_iff.mpr
+      intro z
+      by_cases hz : z ∈ L.darts
+      · have hzf : z ∈ H.face x := by
+          rw [← hco]; exact Finset.mem_coe.mpr hz
+        obtain ⟨k, hk⟩ := id hzf
+        have hzk : (L.map ^ k) x = z := by rw [← hk, hpow k]
+        have h1 : (H.loopOfFace x).map z = H.faceMap z := by
+          show res H.faceMap (H.faceFinset x) z = H.faceMap z
+          exact res_apply_of_mem ((H.mem_faceFinset x z).mpr hzf)
+        have h2 : L.map z = H.faceMap z := by
+          have hiter : ∀ (f : Equiv.Perm α) (m : ℕ) (w : α), (f ^ (m + 1)) w = f ((f ^ m) w) :=
+            fun f m w => by rw [pow_succ', Equiv.Perm.mul_apply]
+          calc L.map z = (L.map ^ (k + 1)) x := by rw [← hzk, hiter]
+            _ = (H.faceMap ^ (k + 1)) x := (hpow (k + 1)).symm
+            _ = H.faceMap z := by rw [hiter, hk]
+        rw [h1, h2]
+      · have hzf : z ∉ H.faceFinset x := fun hc => hz (by
+          have h1 : z ∈ H.face x := (H.mem_faceFinset x z).mp hc
+          rw [← hco] at h1
+          exact Finset.mem_coe.mp h1)
+        have h1 : (H.loopOfFace x).map z = z := by
+          show res H.faceMap (H.faceFinset x) z = z
+          exact res_apply_of_not_mem hzf
+        rw [h1, L.map_permutes z hz]
+
+/-- `hypermap.hl`:11266 `lemma_true_loop`。 -/
+theorem mem_finalLoops_iff_darts_eq_face (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α}
+    (hres : H.IsRestricted) (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) :
+    L ∈ H.finalLoops NF ↔ ∃ x : α, ↑L.darts = H.face x := by
+  constructor
+  · intro hfin
+    obtain ⟨x, hx, hpow⟩ := (H.mem_finalLoops_iff_pow_eq hres hnf hL).mp hfin
+    refine ⟨x, ?_⟩
+    rw [L.eq_orbitMap_of_mem hx]
+    exact orbitMap_eq_of_pow_apply_eq L.map H.faceMap x (fun n => (hpow n).symm)
+  · rintro ⟨x, hdarts⟩
+    have hxd : x ∈ L.darts := by
+      have hx1 : x ∈ H.face x := mem_orbitMap_self _ _
+      rw [← hdarts] at hx1
+      exact Finset.mem_coe.mp hx1
+    refine (H.mem_finalLoops_iff_pow_eq hres hnf hL).mpr ⟨x, hxd, ?_⟩
+    intro n
+    induction n with
+      | zero => rw [pow_zero, pow_zero]
+      | succ k ih =>
+        rw [pow_succ', pow_succ', Equiv.Perm.mul_apply, Equiv.Perm.mul_apply, ih]
+        have hyd : (L.map ^ k) x ∈ L.darts := L.pow_map_mem hxd k
+        have hydart : (L.map ^ k) x ∈ H.darts :=
+          H.mem_darts_of_isNormalFamily hnf hL hyd
+        have hyface : (L.map ^ k) x ∈ H.face x := by
+          rw [← hdarts]; exact Finset.mem_coe.mpr hyd
+        have hstep : L.map ((L.map ^ k) x) = H.faceMap ((L.map ^ k) x) ∨
+            L.map ((L.map ^ k) x) = H.nodeMap.symm ((L.map ^ k) x) :=
+          (hnf.1 L hL).1 _ hyd
+        rcases hstep with hb | hb
+        · exact hb.symm
+        · exfalso
+          have hzdart : L.map ((L.map ^ k) x) ∈ L.darts := L.map_permutes.apply_mem hyd
+          have hzface : L.map ((L.map ^ k) x) ∈ H.face x := by
+            rw [← hdarts]; exact Finset.mem_coe.mpr hzdart
+          have hzface' : L.map ((L.map ^ k) x) ∈ H.face ((L.map ^ k) x) := by
+            rw [← H.face_eq_of_mem hyface]
+            exact hzface
+          have hznode : L.map ((L.map ^ k) x) ∈ H.node ((L.map ^ k) x) := by
+            rw [hb]
+            exact H.nodeMap_symm_mem_node (mem_orbitMap_self _ _)
+          have hsi : H.node ((L.map ^ k) x) ∩ H.face ((L.map ^ k) x) = {(L.map ^ k) x} :=
+            Hypermap.Simple.apply H hres.simple ((L.map ^ k) x)
+          have hzmem : L.map ((L.map ^ k) x) ∈
+              H.node ((L.map ^ k) x) ∩ H.face ((L.map ^ k) x) := ⟨hznode, hzface'⟩
+          rw [hsi] at hzmem
+          have hz : L.map ((L.map ^ k) x) = (L.map ^ k) x :=
+            Set.mem_singleton_iff.mp hzmem
+          have hnsy : H.nodeMap.symm ((L.map ^ k) x) = (L.map ^ k) x := hb.symm.trans hz
+          have e1 : H.nodeMap (H.nodeMap.symm ((L.map ^ k) x)) = (L.map ^ k) x :=
+            Equiv.apply_symm_apply _ _
+          rw [hnsy] at e1
+          exact hres.nodeNondegenerate _ hydart e1
+
+/-- `hypermap.hl`:11306 `lemma_loop_map_on_normal_loop`。 -/
+theorem loopMap_eq_faceMap_or_nodeMap_symm (H : Hypermap α) {NF : Set (Loop α)}
+    {L : Loop α} {x : α} (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hx : x ∈ L.darts) :
+    L.map x = H.faceMap x ∨ L.map x = H.nodeMap.symm x :=
+  (hnf.1 L hL).1 x hx
+
+/-- `hypermap.hl`:11314 `lemma_loop_map_exclusive`。 -/
+theorem loopMap_eq_faceMap_iff (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {x : α}
+    (hres : H.IsRestricted) (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hx : x ∈ L.darts) :
+    L.map x = H.faceMap x ↔ L.map x ≠ H.nodeMap.symm x := by
+  have hEF : H.faceMap x ≠ H.nodeMap.symm x :=
+    H.edgeNondegenerate_iff.mp hres.edgeNondegenerate x
+      (H.mem_darts_of_isNormalFamily hnf hL hx)
+  rcases H.loopMap_eq_faceMap_or_nodeMap_symm hnf hL hx with h | h
+  · rw [h]
+    exact ⟨fun _ => hEF, fun _ => rfl⟩
+  · rw [h]
+    exact ⟨fun hcon _ => hEF hcon.symm, fun hne => absurd rfl hne⟩
+
+/-- `hypermap.hl`:11327 `lemma_head_of_atom_via_restricted`。 -/
+theorem headOfAtom_eq_self_iff (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {x : α}
+    (hres : H.IsRestricted) (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hx : x ∈ L.darts) :
+    H.headOfAtom NF x = x ↔ L.map x = H.faceMap x := by
+  constructor
+  · intro hh
+    obtain ⟨-, hmap⟩ := H.headOfAtom_mem_atom hnf hL hx
+    rw [hh] at hmap
+    rcases H.loopMap_eq_faceMap_or_nodeMap_symm hnf hL hx with h | h
+    · exact h
+    · exact absurd h hmap
+  · intro hmap
+    exact H.headOfAtom_eq hnf hL hx (H.atom_reflect L x)
+      ((H.loopMap_eq_faceMap_iff hres hnf hL hx).mp hmap)
+
+/-- `hypermap.hl`:11340 `lemma_tail_of_atom_via_restricted`。 -/
+theorem tailOfAtom_eq_self_iff (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {x : α}
+    (hres : H.IsRestricted) (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hx : x ∈ L.darts) :
+    H.tailOfAtom NF x = x ↔ x = H.faceMap (L.invMap x) := by
+  have hy : L.invMap x ∈ L.darts := L.map_permutes.symm_apply_mem hx
+  constructor
+  · intro ht
+    obtain ⟨-, htne⟩ := H.tailOfAtom_mem_atom hnf hL hx
+    rw [ht] at htne
+    rcases H.loopMap_eq_faceMap_or_nodeMap_symm hnf hL hy with h | h
+    · exact ((L.inverse_evaluation x).2.symm.trans h)
+    · exact absurd ((L.inverse_evaluation x).2.symm.trans h) htne
+  · intro hxfe
+    have hne : x ≠ H.nodeMap.symm (L.invMap x) := by
+      intro hcon
+      exact (H.edgeNondegenerate_iff.mp hres.edgeNondegenerate (L.invMap x)
+        (H.mem_darts_of_isNormalFamily hnf hL hy)) (hxfe.symm.trans hcon)
+    exact H.tailOfAtom_eq hnf hL hx (H.atom_reflect L x) hne
+
+/-- `hypermap.hl`:11373 `lemma_tail_of_atom`。 -/
+theorem tailOfAtom_eq_iff_of_mem_atom (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α}
+    {x y : α} (hres : H.IsRestricted) (hnf : H.IsNormalFamily NF) (hL : L ∈ NF)
+    (hx : x ∈ L.darts) (hy : y ∈ H.atom L x) :
+    H.tailOfAtom NF x = y ↔ y = H.faceMap (L.invMap y) := by
+  have hyd : y ∈ L.darts := H.mem_darts_of_mem_atom hx hy
+  have hchg := H.headTailOfAtom_congr hnf hL hx hy
+  constructor
+  · intro ht
+    have hty : H.tailOfAtom NF y = y := by
+      rw [hchg.2]
+      exact ht
+    exact (H.tailOfAtom_eq_self_iff hres hnf hL hyd).mp hty
+  · intro hyf
+    have hty : H.tailOfAtom NF y = y :=
+      (H.tailOfAtom_eq_self_iff hres hnf hL hyd).mpr hyf
+    rw [← hchg.2]
+    exact hty
+
+/-- `hypermap.hl`:11381 `lemma_singleton_atom`。 -/
+theorem atom_eq_singleton_iff (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {x : α}
+    (hres : H.IsRestricted) (hnf : H.IsNormalFamily NF) (hL : L ∈ NF) (hx : x ∈ L.darts) :
+    H.atom L x = {x} ↔ L.map x = H.faceMap x ∧ H.faceMap (L.invMap x) = x := by
+  constructor
+  · intro hatom
+    obtain ⟨hhead, -⟩ := H.headOfAtom_mem_atom hnf hL hx
+    rw [hatom] at hhead
+    have hh := Set.mem_singleton_iff.mp hhead
+    obtain ⟨htail, -⟩ := H.tailOfAtom_mem_atom hnf hL hx
+    rw [hatom] at htail
+    have ht := Set.mem_singleton_iff.mp htail
+    exact ⟨(H.headOfAtom_eq_self_iff hres hnf hL hx).mp hh,
+      ((H.tailOfAtom_eq_self_iff hres hnf hL hx).mp ht).symm⟩
+  · rintro ⟨hmap, hinv⟩
+    have hh : H.headOfAtom NF x = x := (H.headOfAtom_eq_self_iff hres hnf hL hx).mpr hmap
+    have ht : H.tailOfAtom NF x = x :=
+      (H.tailOfAtom_eq_self_iff hres hnf hL hx).mpr hinv.symm
+    exact H.atom_one_point hnf hL hx (hh.trans ht.symm)
+
+/-! ## split condition 与 hyp'm/S/y（`hypermap.hl`:11410–11556） -/
+
+/-- `hypermap.hl`:11410 `is_split_condition`。 -/
+def IsSplitCondition (H : Hypermap α) (NF : Set (Loop α)) (L : Loop α) (x : α) : Prop :=
+  H.IsRestricted ∧ H.IsNormalFamily NF ∧ L ∈ NF ∧ L ∉ H.finalLoops NF ∧
+    x ∈ L.darts ∧ H.headOfAtom NF x = x
+
+/-- `hypermap.hl`:11413 `lemma_hyp_m_Exists`。 -/
+theorem exists_hyp_m (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {x : α}
+    (hsplit : H.IsSplitCondition NF L x) :
+    ∃ m : ℕ, (∀ i ≤ m + 1, (L.map ^ i) x = (H.faceMap ^ i) x) ∧
+      (L.map ^ (m + 2)) x ≠ (H.faceMap ^ (m + 2)) x := by
+  obtain ⟨hres, hnf, hL, hLnot, hx, hhead⟩ := id hsplit
+  by_contra hcon
+  push_neg at hcon
+  have base1 : (L.map ^ 1) x = (H.faceMap ^ 1) x := by
+    rw [pow_one, pow_one]
+    exact (H.headOfAtom_eq_self_iff hres hnf hL hx).mp hhead
+  have hall : ∀ n : ℕ, ∀ m ≤ n, (L.map ^ m) x = (H.faceMap ^ m) x := by
+    intro n
+    induction n with
+    | zero =>
+      intro m hm
+      have hm0 : m = 0 := Nat.le_zero.mp hm
+      subst hm0
+      rw [pow_zero, pow_zero]
+    | succ k ih =>
+      intro m hm
+      rcases Nat.lt_or_ge m (k + 1) with hlt | hge
+      · exact ih m (Nat.lt_succ_iff.mp hlt)
+      · have hmK : m = k + 1 := Nat.le_antisymm hm hge
+        subst hmK
+        cases k with
+        | zero => exact base1
+        | succ k' =>
+          exact hcon k' (fun i hi => ih i hi)
+  exact hLnot ((H.mem_finalLoops_iff_pow_eq hres hnf hL).mpr
+    ⟨x, hx, fun n => (hall n n le_rfl).symm⟩)
+
+/-- `hypermap.hl`:11442 `hyp'm`（`new_specification` 的选择函数实现）。 -/
+noncomputable def hypM (H : Hypermap α) (NF : Set (Loop α)) (L : Loop α) (x : α) : ℕ :=
+  open Classical in
+  if h : H.IsSplitCondition NF L x then Classical.choose (H.exists_hyp_m h) else 0
+
+/-- `hyp'm` 的规范（`lemma_hyp_m` 的 specification 部分）。 -/
+theorem hypM_spec (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {x : α}
+    (hsplit : H.IsSplitCondition NF L x) :
+    (∀ i ≤ H.hypM NF L x + 1, (L.map ^ i) x = (H.faceMap ^ i) x) ∧
+      (L.map ^ (H.hypM NF L x + 2)) x ≠ (H.faceMap ^ (H.hypM NF L x + 2)) x := by
+  have h := Classical.choose_spec (H.exists_hyp_m hsplit)
+  rw [show H.hypM NF L x = Classical.choose (H.exists_hyp_m hsplit) from dif_pos hsplit]
+  exact h
+
+/-- `hypermap.hl`:11444 `lemma_bound_hyp_m`。 -/
+theorem hypM_lt_face (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {x : α}
+    (hsplit : H.IsSplitCondition NF L x) :
+    H.hypM NF L x + 1 < (H.face x).ncard := by
+  obtain ⟨hres, hnf, hL, hLnot, hx, -⟩ := id hsplit
+  have hspec := H.hypM_spec hsplit
+  by_contra hcon
+  push_neg at hcon
+  have hcpos : 0 < (H.face x).ncard := by
+    have h1 : 0 < (orbitMap H.faceMap x).ncard := by
+      rw [Set.ncard_pos (orbitMap_finite H.faceMap_permutes x)]
+      exact ⟨x, mem_orbitMap_self _ _⟩
+    exact h1
+  have hall : ∀ n : ℕ, (L.map ^ n) x = (H.faceMap ^ n) x := by
+    intro n
+    obtain ⟨q, r, hqr, hr⟩ : ∃ q r : ℕ, n = r + q * (H.face x).ncard ∧ r < (H.face x).ncard :=
+      ⟨n / (H.face x).ncard, n % (H.face x).ncard,
+        by rw [Nat.mul_comm]; exact (Nat.mod_add_div n (H.face x).ncard).symm,
+        Nat.mod_lt n hcpos⟩
+    have hfixF : (H.faceMap ^ (q * (H.face x).ncard)) x = x := by
+      rw [pow_mul']
+      exact pow_fix_pow H.faceMap (H.pow_card_face_apply_self x) q
+    have hfixL : (L.map ^ (q * (H.face x).ncard)) x = x := by
+      have h1 : (L.map ^ (H.face x).ncard) x = (H.faceMap ^ (H.face x).ncard) x :=
+        hspec.1 _ (by omega)
+      rw [pow_mul']
+      refine pow_fix_pow L.map ?_ q
+      rw [h1]
+      exact H.pow_card_face_apply_self x
+    calc (L.map ^ n) x = (L.map ^ (r + q * (H.face x).ncard)) x := by rw [hqr]
+      _ = (L.map ^ r) x := by rw [pow_add, Equiv.Perm.mul_apply, hfixL]
+      _ = (H.faceMap ^ r) x := hspec.1 r (by omega)
+      _ = (H.faceMap ^ (r + q * (H.face x).ncard)) x := by
+          rw [pow_add, Equiv.Perm.mul_apply, hfixF]
+      _ = (H.faceMap ^ n) x := by rw [hqr]
+  exact hLnot ((H.mem_finalLoops_iff_pow_eq hres hnf hL).mpr
+    ⟨x, hx, fun n => (hall n).symm⟩)
+
+/-- `hypermap.hl`:11467 `lemma_congruence_on_face`。 -/
+theorem exists_mul_ncard_add_of_pow_eq_face (H : Hypermap α) {x : α} {n m : ℕ}
+    (hn : n < (H.face x).ncard) (h : (H.faceMap ^ n) x = (H.faceMap ^ m) x) :
+    ∃ q : ℕ, m = q * (H.face x).ncard + n :=
+  H.faceMap_permutes.exists_mul_ncard_add_of_pow_eq hn h
+
+/-- `hypermap.hl`:11472 `hyp'S`。 -/
+noncomputable def hypS (H : Hypermap α) (NF : Set (Loop α)) (L : Loop α) (x : α) : Set α :=
+  (fun i : ℕ => (H.faceMap ^ i) x) '' Set.Icc 1 (H.hypM NF L x)
+
+/-- `hypermap.hl`:11475 `lemma_hyp_S_sub_loop`。 -/
+theorem hypS_subset_darts (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {x : α}
+    (hsplit : H.IsSplitCondition NF L x) :
+    H.hypS NF L x ⊆ ↑L.darts := by
+  intro z hz
+  rw [hypS, Set.mem_image] at hz
+  obtain ⟨i, hi, rfl⟩ := hz
+  rw [Set.mem_Icc] at hi
+  have hP := (H.hypM_spec hsplit).1 i (by omega)
+  rw [← hP]
+  exact Finset.mem_coe.mpr (L.pow_map_mem hsplit.2.2.2.2.1 i)
+
+/-- `hypermap.hl`:11488 `empty_flagged`（书中的 flag 定义在商 hypermap 上，
+此处按覆盖 hypermap 表述）。 -/
+def EmptyFlagged (H : Hypermap α) (NF : Set (Loop α)) : Prop :=
+  (∀ x ∈ H.dartsInFinalLoops NF, ∀ y ∈ H.dartsInFinalLoops NF,
+      ∃ p : ℕ → α, ∃ k : ℕ, p 0 = x ∧ p k = y ∧ H.isContour p k ∧
+        ↑(Loop.pathSupport p k) ⊆ H.dartsInFinalLoops NF) ∧
+  (∀ L ∈ NF, ∀ x ∈ L.darts, L ∉ H.finalLoops NF →
+      H.edgeMap (H.headOfAtom NF x) ∈ H.dartsInFinalLoops NF)
+
+/-- `hypermap.hl`:11496 `s_flagged`。 -/
+def SFlagged (H : Hypermap α) (NF : Set (Loop α)) (L : Loop α) (x : α) : Prop :=
+  (∀ u ∈ H.dartsInFinalLoops NF, ∀ v ∈ H.dartsInFinalLoops NF,
+      ∃ p : ℕ → α, ∃ k : ℕ, p 0 = u ∧ p k = v ∧ H.isContour p k ∧
+        ↑(Loop.pathSupport p k) ⊆ H.dartsInFinalLoops NF) ∧
+  (∀ L' ∈ NF, ∀ y ∈ L'.darts, L' ∉ H.finalLoops NF →
+      H.headOfAtom NF y ∉ H.hypS NF L x →
+      H.edgeMap (H.headOfAtom NF y) ∈ H.dartsInFinalLoops NF ∪ H.hypS NF L x)
+
+/-- `hypermap.hl`:11505 `hyp'y`。 -/
+noncomputable def hypY (H : Hypermap α) (NF : Set (Loop α)) (L : Loop α) (x : α) : α :=
+  (H.faceMap ^ (H.hypM NF L x + 1)) x
+
+/-- `hypermap.hl`:11507 `lemma_loop_eq_face`。 -/
+theorem darts_eq_face_of_period (H : Hypermap α) {L : Loop α} {x : α} {n : ℕ}
+    (hn : 1 ≤ n) (hx : x ∈ L.darts)
+    (hagree : ∀ i ≤ n, (L.map ^ i) x = (H.faceMap ^ i) x)
+    (hfix : (L.map ^ n) x = x) :
+    ↑L.darts = H.face x ∧ L.darts.card ≤ n := by
+  have hnn : n ≠ 0 := by omega
+  have hfacefix : (H.faceMap ^ n) x = x := (hagree n le_rfl).symm.trans hfix
+  have hEqImg : (fun k : ℕ => (L.map ^ k) x) '' ↑(Finset.range n)
+      = (fun k : ℕ => (H.faceMap ^ k) x) '' ↑(Finset.range n) :=
+    Set.image_congr (fun k hk => hagree k (Nat.le_of_lt (Finset.mem_range.mp hk)))
+  have hco : ↑L.darts = H.face x :=
+    (L.eq_orbitMap_of_mem hx).trans
+      ((orbit_cyclic L.map hnn hfix).trans
+        (hEqImg.trans (orbit_cyclic H.faceMap hnn hfacefix).symm))
+  refine ⟨hco, ?_⟩
+  have himg : ((fun k : ℕ => (L.map ^ k) x) '' ↑(Finset.range n)) = H.face x :=
+    hEqImg.trans (orbit_cyclic H.faceMap hnn hfacefix).symm
+  have hf2 : L.darts = (Finset.range n).image (fun k : ℕ => (L.map ^ k) x) := by
+    apply Finset.coe_inj.mp
+    rw [Finset.coe_image, hco, himg]
+  have hle := Finset.card_image_le (f := fun k : ℕ => (L.map ^ k) x) (s := Finset.range n)
+  rw [Finset.card_range] at hle
+  rw [hf2]
+  exact hle
+
+/-- `hypermap.hl`:11522 `lemma_on_hyp_y`。 -/
+theorem on_hypY (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {x : α}
+    (hsplit : H.IsSplitCondition NF L x) :
+    H.hypY NF L x ∈ L.darts ∧
+      L.map (H.hypY NF L x) = H.nodeMap.symm (H.hypY NF L x) ∧
+      H.node (H.hypY NF L x) ≠ H.node x := by
+  obtain ⟨hres, hnf, hL, -, hx, -⟩ := id hsplit
+  have hspec := H.hypM_spec hsplit
+  have hyy : H.hypY NF L x = (H.faceMap ^ (H.hypM NF L x + 1)) x := rfl
+  rw [hyy]
+  have hy1 : (L.map ^ (H.hypM NF L x + 1)) x = (H.faceMap ^ (H.hypM NF L x + 1)) x :=
+    hspec.1 _ (by omega)
+  have hyd : (H.faceMap ^ (H.hypM NF L x + 1)) x ∈ L.darts := by
+    rw [← hy1]
+    exact L.pow_map_mem hx _
+  have hiter : ∀ (f : Equiv.Perm α) (k : ℕ) (w : α), (f ^ (k + 1)) w = f ((f ^ k) w) :=
+    fun f k w => by rw [pow_succ', Equiv.Perm.mul_apply]
+  have hnodesym : L.map ((H.faceMap ^ (H.hypM NF L x + 1)) x)
+      = H.nodeMap.symm ((H.faceMap ^ (H.hypM NF L x + 1)) x) := by
+    rcases H.loopMap_eq_faceMap_or_nodeMap_symm hnf hL hyd with h | h
+    · exfalso
+      refine hspec.2 ?_
+      calc (L.map ^ (H.hypM NF L x + 2)) x
+          = L.map ((L.map ^ (H.hypM NF L x + 1)) x) := hiter L.map _ x
+        _ = L.map ((H.faceMap ^ (H.hypM NF L x + 1)) x) := by rw [hy1]
+        _ = H.faceMap ((H.faceMap ^ (H.hypM NF L x + 1)) x) := h
+        _ = (H.faceMap ^ (H.hypM NF L x + 2)) x := (hiter H.faceMap _ x).symm
+    · exact h
+  refine ⟨hyd, hnodesym, ?_⟩
+  intro hnodeq
+  have hfx : (H.faceMap ^ (H.hypM NF L x + 1)) x ∈ H.face x :=
+    H.pow_faceMap_mem_face x _
+  have hny : (H.faceMap ^ (H.hypM NF L x + 1)) x ∈ H.node ((H.faceMap ^ (H.hypM NF L x + 1)) x) :=
+    mem_orbitMap_self _ _
+  rw [hnodeq] at hny
+  have hnx : (H.faceMap ^ (H.hypM NF L x + 1)) x ∈ H.node x := hny
+  have hsi : H.node x ∩ H.face x = {x} := Hypermap.Simple.apply H hres.simple x
+  have hmem : (H.faceMap ^ (H.hypM NF L x + 1)) x ∈ H.node x ∩ H.face x := ⟨hnx, hfx⟩
+  rw [hsi] at hmem
+  have hyx : (H.faceMap ^ (H.hypM NF L x + 1)) x = x := Set.mem_singleton_iff.mp hmem
+  have hmapx : L.map x = H.nodeMap.symm x := by rw [← hyx]; exact hnodesym
+  have hf1 := hspec.1 1 (by omega)
+  rw [pow_one, pow_one] at hf1
+  exact (H.edgeNondegenerate_iff.mp hres.edgeNondegenerate x
+    (H.mem_darts_of_isNormalFamily hnf hL hx)) (hf1.symm.trans hmapx)
+
+/-! ## 商面等值线与 hyp'm 的原子族上界（`hypermap.hl`:11562–11716） -/
+
+/-- `hypermap.hl`:11562 `lemma_face_contour_on_loop`。 -/
+theorem faceContour_on_loop (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {x : α}
+    {m : ℕ} (hres : H.IsRestricted) (hnf : H.IsNormalFamily NF) (hL : L ∈ NF)
+    (hx : x ∈ L.darts) (hhead : H.headOfAtom NF x = x)
+    (hagree : ∀ i ≤ m + 1, (L.map ^ i) x = (H.faceMap ^ i) x) :
+    (∀ i, 1 ≤ i → i ≤ m → H.atom L ((L.map ^ i) x) = {(H.faceMap ^ i) x}) ∧
+    (∀ i, 1 ≤ i → i ≤ m →
+      (H.fQuotientPerm hnf ^ i) (H.atom L x) = {(H.faceMap ^ i) x}) ∧
+    (H.fQuotientPerm hnf ^ (m + 1)) (H.atom L x)
+      = H.atom L ((H.faceMap ^ (m + 1)) x) := by
+  have hiter : ∀ (f : Equiv.Perm α) (k : ℕ) (w : α),
+      (f ^ (k + 1)) w = f ((f ^ k) w) := fun f k w => by
+    rw [pow_succ', Equiv.Perm.mul_apply]
+  have hiterS : ∀ (f : Equiv.Perm (Set α)) (k : ℕ) (w : Set α),
+      (f ^ (k + 1)) w = f ((f ^ k) w) := fun f k w => by
+    rw [pow_succ', Equiv.Perm.mul_apply]
+  -- 单点原子上的商面映射
+  have hfq : ∀ u : α, u ∈ L.darts → H.atom L u = {u} →
+      H.fQuotientPerm hnf (H.atom L u) = H.atom L (H.faceMap u) := by
+    intro u hu hatom
+    rw [H.fQuotientPerm_apply hnf, H.fQuotient_atom hnf hL hu]
+    have hhh := (H.headOfAtom_mem_atom hnf hL hu).1
+    rw [hatom] at hhh
+    have huu : H.headOfAtom NF u = u := Set.mem_singleton_iff.mp hhh
+    rw [huu]
+  -- 第一部分
+  have part1 : ∀ i, 1 ≤ i → i ≤ m → H.atom L ((L.map ^ i) x) = {(H.faceMap ^ i) x} := by
+    intro i hi1 hi2
+    obtain ⟨d, hd⟩ : ∃ d : ℕ, i = d + 1 := ⟨i - 1, by omega⟩
+    subst hd
+    have hye : (L.map ^ (d + 1)) x = (H.faceMap ^ (d + 1)) x :=
+      hagree (d + 1) (by omega)
+    have hyd : (H.faceMap ^ (d + 1)) x ∈ L.darts := by
+      rw [← hye]
+      exact L.pow_map_mem hx _
+    rw [hye, H.atom_eq_singleton_iff hres hnf hL hyd]
+    constructor
+    · have e1 := hagree (d + 2) (by omega)
+      have e2 := hiter L.map (d + 1) x
+      have e3 := hiter H.faceMap (d + 1) x
+      calc L.map ((H.faceMap ^ (d + 1)) x)
+          = L.map ((L.map ^ (d + 1)) x) := by rw [hye]
+        _ = (L.map ^ (d + 2)) x := e2.symm
+        _ = (H.faceMap ^ (d + 2)) x := e1
+        _ = H.faceMap ((H.faceMap ^ (d + 1)) x) := e3
+    · have e0 : L.invMap ((H.faceMap ^ (d + 1)) x) = (L.map ^ d) x := by
+        rw [← hye, hiter L.map d x]
+        exact (L.inverse_evaluation _).1
+      rw [e0]
+      have e4 := hagree d (by omega)
+      calc H.faceMap ((L.map ^ d) x)
+          = H.faceMap ((H.faceMap ^ d) x) := by rw [e4]
+        _ = (H.faceMap ^ (d + 1)) x := (hiter H.faceMap d x).symm
+  -- 第二部分
+  have part2 : ∀ i, 1 ≤ i → i ≤ m →
+      (H.fQuotientPerm hnf ^ i) (H.atom L x) = {(H.faceMap ^ i) x} := by
+    intro i hi1 hi2
+    induction i with
+    | zero => omega
+    | succ d hd =>
+      rcases Nat.eq_zero_or_pos d with rfl | hd0
+      · show (H.fQuotientPerm hnf) (H.atom L x) = {H.faceMap x}
+        rw [H.fQuotientPerm_apply hnf, H.fQuotient_atom hnf hL hx, hhead]
+        have hmf1 : L.map x = H.faceMap x := by
+          have h := hagree 1 (by omega)
+          rw [pow_one, pow_one] at h
+          exact h
+        have h1 := part1 1 (by omega) (by omega)
+        rw [pow_one, pow_one, hmf1] at h1
+        exact h1
+      · have hdIH := hd hd0 (by omega)
+        have hdagree : (L.map ^ d) x = (H.faceMap ^ d) x := hagree d (by omega)
+        have hud : (H.faceMap ^ d) x ∈ L.darts := by
+          rw [← hdagree]
+          exact L.pow_map_mem hx _
+        have hu1 := part1 d hd0 (by omega)
+        rw [hdagree] at hu1
+        rw [hiterS (H.fQuotientPerm hnf) d (H.atom L x), hdIH, ← hu1,
+          hfq _ hud hu1, ← hiter H.faceMap d x]
+        have hp := part1 (d + 1) (by omega) (by omega)
+        rw [hagree (d + 1) (by omega)] at hp
+        exact hp
+  refine ⟨part1, part2, ?_⟩
+  rcases Nat.eq_zero_or_pos m with rfl | hm1
+  · show (H.fQuotientPerm hnf) (H.atom L x) = H.atom L (H.faceMap x)
+    rw [H.fQuotientPerm_apply hnf, H.fQuotient_atom hnf hL hx, hhead]
+  · have hmIH := part2 m (by omega) (by omega)
+    have hdagree : (L.map ^ m) x = (H.faceMap ^ m) x := hagree m (by omega)
+    have hud : (H.faceMap ^ m) x ∈ L.darts := by
+      rw [← hdagree]
+      exact L.pow_map_mem hx _
+    have hu1 := part1 m (by omega) (by omega)
+    rw [hdagree] at hu1
+    rw [hiterS (H.fQuotientPerm hnf) m (H.atom L x), hmIH, ← hu1,
+      hfq _ hud hu1, ← hiter H.faceMap m x]
+
+/-- `hypermap.hl`:11654 `lemma_atom_on_inside_dart`。 -/
+theorem atom_on_inside_dart (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {x : α}
+    (hsplit : H.IsSplitCondition NF L x) :
+    (∀ i, 1 ≤ i → i ≤ H.hypM NF L x →
+      (H.fQuotientPerm hsplit.2.1 ^ i) (H.atom L x) = {(H.faceMap ^ i) x}) ∧
+    (H.fQuotientPerm hsplit.2.1 ^ (H.hypM NF L x + 1)) (H.atom L x)
+      = H.atom L (H.hypY NF L x) := by
+  have hmain := H.faceContour_on_loop hsplit.1 hsplit.2.1 hsplit.2.2.1 hsplit.2.2.2.2.1
+    hsplit.2.2.2.2.2 (H.hypM_spec hsplit).1
+  exact ⟨hmain.2.1, hmain.2.2⟩
+
+/-- `hypermap.hl`:11664 `lemma_hyp_m_and_length_atoms_of_loop`。 -/
+theorem hypM_lt_atomsOfLoop (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {x : α}
+    (hsplit : H.IsSplitCondition NF L x) :
+    H.hypM NF L x + 1 < (H.atomsOfLoop L).ncard := by
+  obtain ⟨hres, hnf, hL, hLnot, hx, hhead⟩ := id hsplit
+  have hspec := H.hypM_spec hsplit
+  have hiter : ∀ (f : Equiv.Perm α) (k : ℕ) (w : α),
+      (f ^ (k + 1)) w = f ((f ^ k) w) := fun f k w => by
+    rw [pow_succ', Equiv.Perm.mul_apply]
+  have hagree : ∀ i ≤ H.hypM NF L x + 1, (L.map ^ i) x = (H.faceMap ^ i) x := hspec.1
+  have hcpos : 1 ≤ (H.atomsOfLoop L).ncard := by
+    have h1 : 0 < (H.atomsOfLoop L).ncard := by
+      rw [Set.ncard_pos (H.atomsOfLoop_finite hnf hL)]
+      exact ⟨H.atom L x, H.atom_mem_atomsOfLoop L hx⟩
+    omega
+  have hcycle : (H.fQuotientPerm hnf ^ (H.atomsOfLoop L).ncard) (H.atom L x)
+      = H.atom L x := by
+    have h1 := (H.quotientHypermap hnf).faceMap_permutes.pow_ncard_orbitMap_apply_self
+      (H.atom L x)
+    have hc2 : (orbitMap (H.quotientHypermap hnf).faceMap (H.atom L x)).ncard
+        = (H.atomsOfLoop L).ncard := by
+      rw [← H.face_quotient_atom hnf hL hx]
+      rfl
+    rw [hc2] at h1
+    exact h1
+  by_contra hcon
+  push_neg at hcon
+  have hmain := H.atom_on_inside_dart hsplit
+  rcases Nat.lt_or_ge (H.atomsOfLoop L).ncard (H.hypM NF L x + 1) with hlt | hge
+  · -- ncard ≤ hypM：原子退化为单点，与 hyp'y 的节点方向矛盾
+    exfalso
+    have hpart2C := hmain.1 (H.atomsOfLoop L).ncard hcpos (by omega)
+    have hsingle : H.atom L x = {(H.faceMap ^ (H.atomsOfLoop L).ncard) x} := by
+      rw [← hpart2C, hcycle]
+    have hxm : x ∈ H.atom L x := H.atom_reflect L x
+    rw [hsingle] at hxm
+    obtain ⟨s, hseq, hs1, hsle⟩ : ∃ s : ℕ,
+        H.hypM NF L x + 1 = s + (H.atomsOfLoop L).ncard ∧ 1 ≤ s ∧
+        s ≤ H.hypM NF L x :=
+      ⟨H.hypM NF L x + 1 - (H.atomsOfLoop L).ncard, by omega, by omega, by omega⟩
+    have hpart3 := hmain.2
+    have hpart2s := hmain.1 s hs1 hsle
+    have hstep : (H.fQuotientPerm hsplit.2.1 ^ (H.hypM NF L x + 1)) (H.atom L x)
+        = {(H.faceMap ^ s) x} := by
+      rw [hseq, pow_add, Equiv.Perm.mul_apply, hcycle]
+      exact hpart2s
+    have hm : H.hypY NF L x ∈ H.atom L (H.hypY NF L x) := H.atom_reflect L _
+    rw [← hpart3, hstep] at hm
+    have hyx : H.hypY NF L x = (H.faceMap ^ s) x := Set.mem_singleton_iff.mp hm
+    have hyin : H.hypY NF L x ∈ L.darts := (H.on_hypY hsplit).1
+    have h1 := hagree s (by omega)
+    have hf1 : H.faceMap (H.hypY NF L x) = (H.faceMap ^ (s + 1)) x := by
+      rw [hyx]
+      exact (hiter H.faceMap s x).symm
+    have hm1 : L.map (H.hypY NF L x) = (H.faceMap ^ (s + 1)) x := by
+      have e1 := hiter L.map s x
+      have e2 := hiter H.faceMap s x
+      calc L.map (H.hypY NF L x)
+          = L.map ((H.faceMap ^ s) x) := by rw [hyx]
+        _ = L.map ((L.map ^ s) x) := by rw [h1]
+        _ = (L.map ^ (s + 1)) x := e1.symm
+        _ = (H.faceMap ^ (s + 1)) x := hagree (s + 1) (by omega)
+    have hfin : H.faceMap (H.hypY NF L x) = H.nodeMap.symm (H.hypY NF L x) := by
+      rw [← (H.on_hypY hsplit).2.1, hm1, hf1]
+    exact (H.edgeNondegenerate_iff.mp hres.edgeNondegenerate (H.hypY NF L x)
+      (H.mem_darts_of_isNormalFamily hnf hL hyin)) hfin
+  · -- ncard = hypM + 1：atom L hypY = atom L x，节点相同与 on_hypY 矛盾
+    exfalso
+    have hpart3 := hmain.2
+    have hCe : (H.atomsOfLoop L).ncard = H.hypM NF L x + 1 := le_antisymm hcon hge
+    rw [hCe] at hcycle
+    rw [hcycle] at hpart3
+    have hm : H.hypY NF L x ∈ H.atom L (H.hypY NF L x) := H.atom_reflect L _
+    rw [← hpart3] at hm
+    have hnx : H.hypY NF L x ∈ H.node x := H.atom_subset_node L x hm
+    have hnodeeq : H.node (H.hypY NF L x) = H.node x :=
+      orbitMap_eq_of_mem H.nodeMap_permutes hnx
+    exact (H.on_hypY hsplit).2.2 hnodeeq
+
+/-! ## hyp'p、标记与 hyp'z（`hypermap.hl`:11717–11858） -/
+
+open Classical in
+/-- `hypermap.hl`:11717 `lemma_hyp_p_Exists`。 -/
+theorem exists_hyp_p (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {x : α}
+    (hsplit : H.IsSplitCondition NF L x) :
+    ∃ p : ℕ, (∀ i, 1 ≤ i → i ≤ p →
+        (H.faceMap ^ i) (H.hypY NF L x) ∉ dartsOfFamily NF) ∧
+      (H.faceMap ^ (p + 1)) (H.hypY NF L x) ∈ dartsOfFamily NF := by
+  obtain ⟨hres, hnf, hL, hLnot, hx, -⟩ := id hsplit
+  have hc := H.hypM_lt_face hsplit
+  have hrex : ∃ r : ℕ, 1 ≤ r ∧ (H.faceMap ^ r) (H.hypY NF L x) = x := by
+    refine ⟨(H.face x).ncard - (H.hypM NF L x + 1), by omega, ?_⟩
+    have hy : H.hypY NF L x = (H.faceMap ^ (H.hypM NF L x + 1)) x := rfl
+    have hcomp : (H.faceMap ^ ((H.face x).ncard - (H.hypM NF L x + 1)
+          + (H.hypM NF L x + 1))) x
+        = (H.faceMap ^ ((H.face x).ncard - (H.hypM NF L x + 1)))
+          ((H.faceMap ^ (H.hypM NF L x + 1)) x) := by
+      rw [pow_add, Equiv.Perm.mul_apply]
+    have hsum : (H.face x).ncard - (H.hypM NF L x + 1) + (H.hypM NF L x + 1)
+        = (H.face x).ncard := by omega
+    rw [hy, ← hcomp, hsum]
+    exact H.pow_card_face_apply_self x
+  obtain ⟨r, hr1, hrx⟩ := hrex
+  obtain ⟨n, ⟨hn1, hnmem⟩, hmin⟩ := Nat.findX
+    (p := fun n => 1 ≤ n ∧ (H.faceMap ^ n) (H.hypY NF L x) ∈ dartsOfFamily NF)
+    ⟨r, hr1, by rw [hrx]; exact mem_dartsOfFamily hL hx⟩
+  refine ⟨n - 1, ?_, ?_⟩
+  · intro i hi1 hi2 hcon
+    exact hmin i (by omega) ⟨hi1, hcon⟩
+  · have hn1' : n - 1 + 1 = n := by omega
+    rw [hn1']
+    exact hnmem
+
+/-- `hypermap.hl`:11745 `hyp'p`（`new_specification` 的选择函数实现）。 -/
+noncomputable def hypP (H : Hypermap α) (NF : Set (Loop α)) (L : Loop α) (x : α) : ℕ :=
+  open Classical in
+  if h : H.IsSplitCondition NF L x then Classical.choose (H.exists_hyp_p h) else 0
+
+/-- `hyp'p` 的规范（`lemma_hyp_p` 的 specification 部分）。 -/
+theorem hypP_spec (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {x : α}
+    (hsplit : H.IsSplitCondition NF L x) :
+    (∀ i, 1 ≤ i → i ≤ H.hypP NF L x →
+        (H.faceMap ^ i) (H.hypY NF L x) ∉ dartsOfFamily NF) ∧
+      (H.faceMap ^ (H.hypP NF L x + 1)) (H.hypY NF L x) ∈ dartsOfFamily NF := by
+  have h := Classical.choose_spec (H.exists_hyp_p hsplit)
+  rw [show H.hypP NF L x = Classical.choose (H.exists_hyp_p hsplit) from dif_pos hsplit]
+  exact h
+
+/-- `hypermap.hl`:11747 `is_marked`（商 hypermap 需要 `IsNormalFamily` 证明，
+故将其提升为参数，合取项中不再重复）。 -/
+def IsMarked (H : Hypermap α) (NF : Set (Loop α)) (hnf : H.IsNormalFamily NF)
+    (L : Loop α) (x : α) : Prop :=
+  H.IsRestricted ∧ L ∈ NF ∧ x ∈ L.darts ∧ L.map x = H.faceMap x ∧
+    (H.quotientHypermap hnf).Simple ∧ (H.quotientHypermap hnf).NodeNondegenerate ∧
+    H.edgeMap x ∈ H.dartsInFinalLoops NF ∧
+    (L ∈ H.finalLoops NF → H.EmptyFlagged NF) ∧
+    (L ∉ H.finalLoops NF → H.SFlagged NF L x)
+
+/-- `hypermap.hl`:11755 `lemma_marked_dart`。 -/
+theorem marked_dart (H : Hypermap α) {NF : Set (Loop α)} {hnf : H.IsNormalFamily NF}
+    {L : Loop α} {x : α} (hmark : H.IsMarked NF hnf L x) :
+    H.headOfAtom NF x = x ∧ H.nodeMap.symm x ∈ H.dartsInFinalLoops NF := by
+  obtain ⟨hres, hL, hx, hmap, -, -, hedge, -, -⟩ := hmark
+  refine ⟨(H.headOfAtom_eq_self_iff hres hnf hL hx).mpr hmap, ?_⟩
+  obtain ⟨L', hL', hedL'⟩ := H.mem_dartsInFinalLoops_iff.mp hedge
+  have h1 : (H.faceMap ^ 1) (H.edgeMap x) = (L'.map ^ 1) (H.edgeMap x) :=
+    (H.pow_faceMap_eq_pow_map_final hL' hedL' 1)
+  rw [pow_one, pow_one] at h1
+  have h2 : H.nodeMap.symm x = H.faceMap (H.edgeMap x) := by
+    have he : H.nodeMap⁻¹ = H.faceMap * H.edgeMap := (H.inverse_hypermap_maps).2.1
+    calc H.nodeMap.symm x = H.nodeMap⁻¹ x := rfl
+      _ = (H.faceMap * H.edgeMap) x := by rw [he]
+      _ = H.faceMap (H.edgeMap x) := Equiv.Perm.mul_apply _ _ _
+  rw [h2, h1]
+  exact H.mem_dartsInFinalLoops (L'.pow_map_mem hedL' 1) hL'
+
+/-- `hypermap.hl`:11772 `lemma_split_marked_loop`。 -/
+theorem split_marked_loop (H : Hypermap α) {NF : Set (Loop α)}
+    {hnf : H.IsNormalFamily NF} {L : Loop α} {x : α}
+    (hmark : H.IsMarked NF hnf L x) (hLnot : L ∉ H.finalLoops NF) :
+    H.IsSplitCondition NF L x := by
+  obtain ⟨hres, hL, hx, -, -, -, -, -, -⟩ := id hmark
+  exact ⟨hres, hnf, hL, hLnot, hx, (H.marked_dart hmark).1⟩
+
+/-- `hypermap.hl`:11779 `hyp'z`。 -/
+noncomputable def hypZ (H : Hypermap α) (NF : Set (Loop α)) (L : Loop α) (x : α) : α :=
+  (H.faceMap ^ (H.hypP NF L x + 1)) (H.hypY NF L x)
+
+/-- `hypermap.hl`:11782 `lemma_yz_in_face`。 -/
+theorem hypY_hypZ_mem_face (H : Hypermap α) (NF : Set (Loop α)) (L : Loop α) (x : α) :
+    H.hypY NF L x ∈ H.face x ∧ H.hypZ NF L x ∈ H.face x := by
+  have h1 : H.hypY NF L x ∈ H.face x := H.pow_faceMap_mem_face x _
+  have h2 : H.hypZ NF L x ∈ H.face (H.hypY NF L x) := by
+    show (H.faceMap ^ (H.hypP NF L x + 1)) (H.hypY NF L x) ∈ _
+    exact pow_apply_mem_orbitMap _ _ _
+  rw [← H.face_eq_of_mem h1] at h2
+  exact ⟨h1, h2⟩
+
+/-- `hypermap.hl`:11785 `lemma_on_hyp_z`。 -/
+theorem on_hypZ (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α} {x : α}
+    (hsplit : H.IsSplitCondition NF L x) :
+    H.node (H.hypY NF L x) ≠ H.node (H.hypZ NF L x) ∧
+      H.hypP NF L x + 1 < (H.face x).ncard := by
+  obtain ⟨hres, hnf, hL, hLnot, hx, -⟩ := id hsplit
+  have hspec := H.hypM_spec hsplit
+  have hpspec := H.hypP_spec hsplit
+  have hagree : ∀ i ≤ H.hypM NF L x + 1, (L.map ^ i) x = (H.faceMap ^ i) x := hspec.1
+  have hyin : H.hypY NF L x ∈ L.darts := (H.on_hypY hsplit).1
+  have hyH : H.hypY NF L x ∈ H.darts := by
+    have hxH : x ∈ H.darts := H.mem_darts_of_isNormalFamily hnf hL hx
+    exact H.faceMap_permutes.pow_apply_mem _ hxH
+  have hw : H.hypY NF L x = (H.faceMap ^ (H.hypM NF L x + 1)) x := rfl
+  have hpow : ∀ (a b : ℕ) (w : α),
+      (H.faceMap ^ a) ((H.faceMap ^ b) w) = (H.faceMap ^ (a + b)) w := by
+    intro a b w
+    rw [pow_add, Equiv.Perm.mul_apply]
+  refine ⟨?_, ?_⟩
+  · intro hnodeeq
+    have hyzface : H.hypZ NF L x ∈ H.face (H.hypY NF L x) := by
+      show (H.faceMap ^ (H.hypP NF L x + 1)) (H.hypY NF L x) ∈ _
+      exact pow_apply_mem_orbitMap _ _ _
+    have hzz : H.hypZ NF L x ∈ H.node (H.hypZ NF L x) := mem_orbitMap_self _ _
+    rw [← hnodeeq] at hzz
+    have hsi := Hypermap.Simple.apply H hres.simple (H.hypY NF L x)
+    have hmem : H.hypZ NF L x ∈ H.node (H.hypY NF L x) ∩ H.face (H.hypY NF L x) :=
+      ⟨hzz, hyzface⟩
+    rw [hsi] at hmem
+    have hzy : H.hypZ NF L x = H.hypY NF L x := Set.mem_singleton_iff.mp hmem
+    rcases Nat.eq_zero_or_pos (H.hypP NF L x) with hp0 | hp1
+    · exfalso
+      have hfix : H.faceMap (H.hypY NF L x) = H.hypY NF L x := by
+        have hh : (H.faceMap ^ (H.hypP NF L x + 1)) (H.hypY NF L x)
+            = H.hypY NF L x := hzy
+        rw [hp0, Nat.zero_add, pow_one] at hh
+        exact hh
+      have hsing : H.face (H.hypY NF L x) = {H.hypY NF L x} :=
+        (orbitMap_singleton_iff _ _).mpr hfix
+      have hc1 : (H.face (H.hypY NF L x)).ncard = 1 := by rw [hsing]; simp
+      have h3 := hres.three_le_ncard_face hyH
+      omega
+    · exfalso
+      have hp1eq : (H.faceMap ^ (H.hypP NF L x + 1)) (H.hypY NF L x) = H.hypY NF L x :=
+        hzy
+      -- faceMap 幂可交换且单射 ⟹ (faceMap^(p+1)) x = x
+      have key : (H.faceMap ^ (H.hypP NF L x + 1)) x = x := by
+        have hinj : (H.faceMap ^ (H.hypM NF L x + 1))
+            ((H.faceMap ^ (H.hypP NF L x + 1)) x)
+            = (H.faceMap ^ (H.hypM NF L x + 1)) x := by
+          rw [hpow _ _ x, show H.hypM NF L x + 1 + (H.hypP NF L x + 1)
+              = H.hypP NF L x + 1 + (H.hypM NF L x + 1) from by omega,
+            ← hpow _ _ x, ← hw]
+          exact hp1eq
+        exact (H.faceMap ^ (H.hypM NF L x + 1)).injective hinj
+      -- 违反 hyp'p 规范：(faceMap^p) hypY = (faceMap^m) x ∈ dartsOfFamily
+      have hviol : (H.faceMap ^ H.hypP NF L x) (H.hypY NF L x)
+          ∈ dartsOfFamily NF := by
+        rw [hw, hpow _ _ x, show H.hypP NF L x + (H.hypM NF L x + 1)
+            = H.hypM NF L x + (H.hypP NF L x + 1) from by omega, ← hpow _ _ x,
+          key, ← hagree (H.hypM NF L x) (by omega)]
+        exact mem_dartsOfFamily hL (L.pow_map_mem hx _)
+      exact hpspec.1 (H.hypP NF L x) hp1 (Nat.le_refl _) hviol
+  · by_contra hcon
+    push_neg at hcon
+    have hxH : x ∈ H.darts := H.mem_darts_of_isNormalFamily hnf hL hx
+    have h3 : 3 ≤ (H.face x).ncard := hres.three_le_ncard_face hxH
+    have hc1 : 1 ≤ (H.face x).ncard - 1 := by omega
+    have hnotmem := hpspec.1 ((H.face x).ncard - 1) hc1 (by omega)
+    have hstep : (H.faceMap ^ ((H.face x).ncard - 1))
+        ((H.faceMap ^ (H.hypM NF L x + 1)) x)
+        = (H.faceMap ^ H.hypM NF L x) x := by
+      rw [hpow _ _ x, show (H.face x).ncard - 1 + (H.hypM NF L x + 1)
+          = H.hypM NF L x + (H.face x).ncard from by omega, ← hpow _ _ x,
+        H.pow_card_face_apply_self x]
+    have hmem : (H.faceMap ^ ((H.face x).ncard - 1)) (H.hypY NF L x)
+        ∈ dartsOfFamily NF := by
+      rw [hw, hstep, ← hagree (H.hypM NF L x) (by omega)]
+      exact mem_dartsOfFamily hL (L.pow_map_mem hx _)
+    exact hnotmem hmem
 
 end Hypermap
 end Kepler.Text
