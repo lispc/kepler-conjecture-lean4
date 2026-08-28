@@ -8,6 +8,24 @@
 所有工具均为用户态安装，位于 `pipeline/tools/`，无需 sudo。源码 tar 包原件存
 `reference/_distfiles/`，锁定信息见 `reference/LOCK.md`。
 
+## Lean 侧区间 checker（证书验证层）
+
+求解器输出（dReal δ-证明 / Arb 球）需转换为 Lean 内核可检查的证书，由
+`lean/Kepler/Interval/` 的 checker 验证（检查层只用 `Int`/dyadic ——
+内核不能归约 `Rat` 算术；语义层在 ℝ 上陈述 soundness）：
+
+| 文件 | 内容 |
+|---|---|
+| `Basic.lean` | dyadic `m·2^e` 端点区间 `+ - × Neg`、`IExpr` AST、`checkPos_sound` |
+| `Div.lean` | `divFloorQ`（粒度 `2^out` 的带显式 ulp 误差除法）、区间 `recip`/`div` |
+| `Sqrt.lean` | 证书式 `sqrtI`（内核仅验证 `s²≤n<(s+1)²`；`Int.sqrt` 不可内核归约） |
+| `Ball.lean` | 中点半径包装 `Ball`、与 `DInterval` 双向换算、sound 的球算术 |
+| `Trans.lean` | Leibniz 交替级数界 + `sin` 的 Taylor dyadic 区间/球（[0,1]） |
+
+证书生成约定：求解侧用 MPFR/Arb（或 Python）算出各 `out` 粒度下的
+mantissa（如 √ 的 `s`、Taylor 各项的 floor），Lean 侧 `decide` 只做
+大整数比较与 `Int` 算术重放。
+
 ## 目录
 
 | 路径 | 内容 |

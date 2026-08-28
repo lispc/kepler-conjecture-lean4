@@ -83,7 +83,7 @@ namespace Kepler.Interval
 structure Dyadic where
   m : Int
   e : Int
-deriving Repr
+  deriving Repr, DecidableEq
 
 namespace Dyadic
 
@@ -278,7 +278,7 @@ theorem mul_mem_Icc {a b c d x y : ℝ} (hax : a ≤ x) (hxb : x ≤ b) (hcy : c
 structure DInterval where
   lo : Dyadic
   hi : Dyadic
-deriving Repr
+  deriving Repr, DecidableEq
 
 namespace DInterval
 

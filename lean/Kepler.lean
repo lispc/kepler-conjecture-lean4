@@ -6,6 +6,14 @@ import Kepler.LP.HelloChecker
 import Kepler.LP.Cert
 -- Phase 4: 区间算术证书 checker 试点（二进制有理数端点区间 + soundness，内核 decide 检验）
 import Kepler.Interval.Basic
+-- Phase 4: 除法/倒数（divFloorQ 显式误差，Option 语义）+ 区间 recip/div
+import Kepler.Interval.Div
+-- Phase 4: 证书式平方根（内核只验证 s²≤n<(s+1)²，Int.sqrt 不可内核归约）
+import Kepler.Interval.Sqrt
+-- Phase 4: 中点半径包装（dyadic 中心+半径，与 DInterval 双向换算）
+import Kepler.Interval.Ball
+-- Phase 4: 超越层（Leibniz 交替级数界 + sin 的 Taylor dyadic 区间/球，[0,1]）
+import Kepler.Interval.Trans
 import Kepler.Graphs.ListAux
 import Kepler.Graphs.Rotation
 import Kepler.Graphs.Graph

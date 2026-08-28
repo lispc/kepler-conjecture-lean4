@@ -183,5 +183,40 @@ Lean 证书。真实图 204880136538（915 变量 × 3882 行）已端到端闭�
 （dyadic `m·2^e`）端点的区间算术 + 表达式 AST（`IExpr`）与
 `checkPos_sound`（盒上 f>0 的雏形）。求解侧工具链已验证：dReal
 4.21.06.2（δ-完备决策）+ MPFR 4.2.2 + FLINT 3.3.1（内置 Arb），
-见 `pipeline/interval/README.md`。下一步：除法/√/超越函数层与
-分支定界证书格式。
+见 `pipeline/interval/README.md`。
+
+**除法/超越层已落地**（2026-08-28，全部零 sorry、零 native_decide、
+公理仅标准三）：
+
+- `Kepler/Interval/Div.lean`：`Dyadic.divFloorQ a b out` —— 在输出粒度
+  `2^out` 下对 `a/b` 取底的 dyadic（`(a.m·2^k)/b.m`，`Int` 除法；负除数
+  补偿 `-1`），带显式单 ulp 误差界（`divFloorQ_spec`/`divFloorQ_err`）；
+  `Option` 语义（`b.m = 0` 或粒度无缩放空间则 `none`）。
+  `DInterval.recip`（0 不在闭包内的区间取倒数，像 = `[1/hi, 1/lo]`，
+  `recip_sound` 于 ℝ）与 `DInterval.div = I·recip J`（`div_sound`）。
+- `Kepler/Interval/Sqrt.lean`：**证书式平方根** —— 关键发现：Lean 的
+  `Nat.sqrt`/`Int.sqrt` 基于 `Nat.sqrt.iter`，内核 `decide` **不能归约**；
+  故改为调用方提供根的尾数 `s`，内核只验证两个大整数不等式
+  `s² ≤ m·2^(e%2) < (s+1)²`（`sqrtI`+`sqrtI_sound`，用
+  `d.e = 2·⌊e/2⌋ + (e%2)` 的换算）。精度由放缩尾数控制；试点
+  `sqrt2_bounds`：`1.4142 ≤ √2 ≤ 1.4143`（`sqrt2_cert` 仅依赖
+  `[propext]`）。BnB 接口 `sqrtI_mem`。
+- `Kepler/Interval/Ball.lean`：中点半径包装 `Ball = ⟨c, r⟩`
+  （`mem` 于 ℝ），与 `DInterval` 双向精确换算（`midRadius`：对齐指数后
+  指数减半即 `(lo+hi)/2`、`(hi-lo)/2` 均为精确 dyadic）；sound 的
+  `add/neg/sub/mul`（乘积半径 `|c₁|r₂ + r₁(|c₂|+r₂)`）—— 超越函数
+  "dyadic 值 + dyadic 半径" 的载体。
+- `Kepler/Interval/Trans.lean`：**Leibniz 交替级数界**（自含证明
+  `abs_sub_partial_le`：剥壳尾和 + 配对归纳 + `hasSum_nat_add_iff`/
+  `tendsto_sum_nat` 取极限）⇒ `sin_abs_sub_partial_le`（[0,1] 上
+  Mathlib `Real.hasSum_sin` 的显式余项）。检查层 `taylorIter`：通用
+  逐项外向舍入（`divFloorQ` 按奇偶性进/舍）的交替 Taylor 累加器 +
+  单 ulp 向上舍入的余项 `1/(2N+1)!` ⇒ `sinInterval`/`sinBall`
+  （`sinInterval_sound`/`sinBall_sound` 于 ℝ）。**注意：[0,1] 外的
+  变量缩减未做**（需周期性/对称性归约后再用）。试点：
+  `sinPilot_real`（`0.4794 < sin(1/2)`，5 项 + 粒度 2⁻²⁰，区间宽 7 ulp，
+  `decide` 闭合）与 `sinBallPilot_real`（球形式端到端）。
+
+下一步：`IExpr` 扩展（div/sqrt/trans 节点，`Option` 评估器）、
+分支定界证书格式（叶携带 `checkPos` 类检查 + `CertShards` 式分片）、
+cos/arctan（`taylorIter` 已泛型，实例化即可）、范围缩减。
