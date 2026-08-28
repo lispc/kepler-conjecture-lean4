@@ -6,13 +6,13 @@
 
 ## 0. 一句话现状
 
-仓库 `github.com:lispc/kepler-conjecture-lean4`（main @ `9543c2f`）全绿：
+仓库 `github.com:lispc/kepler-conjecture-lean4`（main @ `dca325e`）全绿：
 `make check`（build + 公理审计）通过，唯一 sorry 是 `Statement.lean:111`
 的 sanctioned Phase-1 占位。Phase 2 已闭合；Phase 3 列主序证书表示落地
 （试点 650s/LP，30s 目标实测不可达，已留档）；Phase 4 除法/√/Ball/Taylor
-sin 层落地（`220244e`，Leibniz 余项界 + 证书式 √）；Phase 5 文字证明移植至
-hypermap.hl 的 **90.7%（12307/13575）**（Block 17 含 270 行大证明
-lemmaHQYMRTX）。
+sin 层落地（`220244e`，Leibniz 余项界 + 证书式 √）；Phase 5 文字证明 **hypermap.hl 全书移植完毕（13575/13575 = 100%）**：
+Block 18 transform 机器收官，含主定理 AQIUNPP1（normal_family_transform）
+与 disjoint_new_loops 的四情形不相交论证。
 
 ## 1. 项目目标（不变）
 
@@ -97,11 +97,11 @@ PLAN.md 与各 README）。
   `366e1e3`）与 block 16（11174–11858 受限 hypermap/final loops/split
   condition/hyp'm/S/y/p/z 选择函数族，`c16c602`）已提交。每块头注有
   覆盖/跳过对照表。
-- Block 17 已完成（`9543c2f`）：`lemmaLoopSeparation`（环分离 → 非平面）、
-  `lemmaHQYMRTX`（270 行大证明：hyp'z 入环且偏离面迭代，两条 contour
-  拼接路线）、`hyp'q` + `lemmaParameters`。
-- **下一块**：hypermap.hl 12308 起——path1_transform / is_transform 机器
-  （hypermap 变换，约 1200 行）与全书收尾（估计 1–2 块）。
+- **hypermap.hl 全书收官**（`c722f04`–`dca325e`，Block 18 五连）：path/
+  card/loop/family transform 定义与路径引理、on_loop 幂求值、成员刻画、
+  transform_index_sum + disjoint_new_loops（四情形：窗口单射/node 传递/
+  simple 单点 + nodeContour 单射）、normal_family_transform（AQIUNPP1）。
+- **下一目标**：开 Fan.lean（ch5 fan 理论）；hypermap 层已就绪。
 - 移植惯例：对应 HOL 行号写头注；Mathlib 已有的跳过并注明；零 sorry、
   零 native_decide、零自引入 axiom；每块 `lake build Kepler` 全绿 +
   公理抽查后才提交。
@@ -214,9 +214,9 @@ PLAN.md 与各 README）。
 ```sh
 cd /home/scroll/repos/kepler-conjecture-lean4
 export PATH="$HOME/.elan/bin:$PATH"
-git log --oneline -3            # 应见 9543c2f 或更新
+git log --oneline -3            # 应见 dca325e 或更新
 make check                      # build + 公理审计，应全绿
-wc -l lean/Kepler/Text/Hypermap.lean   # 10903（截至 2026-08-28）
+wc -l lean/Kepler/Text/Hypermap.lean   # 12294（截至 2026-08-28，全书 100%）
 ```
 
 若 `.lake` 缓存完好，全量 build 约几分钟（除 CertShards 外均为增量）。
