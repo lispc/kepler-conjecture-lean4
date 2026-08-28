@@ -588,6 +588,37 @@ Coverage (block 16, restricted hypermaps / final loops / split condition,
 - HOL's `CONJ3`/`CONJ4` tactic abbreviations (11558–11560) have no Lean
   counterpart.
 
+Coverage (block 17, loop separation / hyp'q, 11854–12307; block 18, the
+transform machine, 12308–13575 — **the whole book, 100%**):
+- `lemmaLoopSeparation` (11854, as `loopSeparation`), `lemmaHQYMRTX`
+  (11865, as `hqymrtx`, the 270-line planarity argument), `lemma_hyp_q`
+  (12127, as `exists_hyp_q` + `hypQ`/`hypQ_spec`), `lemmaParameters`
+  (12217, as `parameters`).
+- transform machine: `path1/card1/path2/card2_transform` (12308–12316,
+  as `path1Transform`/`card1Transform`/`path2Transform`/`card2Transform`),
+  `lemma_path1/2_transform_loop` (12326/12452, as
+  `path1Transform_loop`/`path2Transform_loop`), `lemma_complement_index`
+  (12375, as `exists_complementIndex_decomp`), `reduce_exponent` (12395,
+  as `pow_symm_pow_cancel`), `lemma_on_adding_darts` (12404, as
+  `on_adding_darts`), `loop1/loop2/family_transform` (12318–12546, as
+  `loop1Transform`/`loop2Transform`/`familyTransform`, with
+  `Loop.ofPath` consuming the injectivity proof), `lemma_on_loop1/2_
+  transform` (12550/12598, as `on_loop1Transform`/`on_loop2Transform`),
+  `lemma_in_couple` (12548, inlined via `Set.mem_insert_iff`),
+  `lemma_node_outside_darts_of_family` (12659, as
+  `node_outside_dartsOfFamily`), `lemma_in_loop1/2_transform(_2)`
+  (12677–12865, as `mem_loop1Transform_iff`/`mem_loop2Transform_iff` +
+  the two `_of_pow_*` corollaries), `lemma_disjoint_new_loops` (12869, as
+  `transform_index_sum` + `disjoint_new_loops`; the four collision cases
+  use window injectivity on the loop orbit, node transport with
+  `hyp'p`, and the `simple` singleton with nodeContour injectivity),
+  `lemma_normal_family_transform` (13152, as `normal_family_transform` —
+  **AQIUNPP1**, the chapter's main theorem).
+- `square_edge_convolution` (13486) had already been ported as
+  `plain_iff_node_face_mul_apply` (4843).  Lines 13496–13575 are aliases
+  (`AQIUNPP1`, `lemma_card_inverse_map_eq` = `lemma_orbit_inverse_map_eq`,
+  already ported as `PermutesOn.orbitMap_symm`) and renaming comments.
+
 Type correspondences (HOL Light ↦ Lean 4):
 - `(A)hypermap` (a 4-tuple carrying `FINITE`/`permutes` side conditions,
   `hypermap.hl`:83–93) ↦ `structure Hypermap` with a `Finset` of darts and
