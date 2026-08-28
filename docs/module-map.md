@@ -33,7 +33,7 @@ Volume（体积、楔、立体角测度） ← Trig（三角、方位角）
 | 1 Close Packing（陈述） | `general/` | `Kepler/Statement.lean` | ✅ 陈述完成（G1），证明体 sorry（ sanctioned） |
 | 2 Trigonometry | `trigonometry/` | `Kepler/Text/Trig.lean` | ⬜ 未开始 |
 | 3 Volume | `volume/` | `Kepler/Text/Volume.lean` | ⬜ 未开始 |
-| 4 Hypermap | `hypermap/` | `Kepler/Text/Hypermap.lean` | 🟡 覆盖 hypermap.hl 至 11858/13575（87.3%）：Jordan 曲线、Euler 主定理、loop/atom/正规环族、商 hypermap、`Iso`、face collections（`XWCNBMA`/`lemmaSTKBEPH`）、补等值线（10643–11173）、受限 hypermap/final loops/split condition/hyp'm·S·y·p·z 选择函数族（11174–11858，`IsMarked`/`on_hypZ` 等）已移植；Moebius contour 平面性（11861+）与 is_transform 机器待做 |
+| 4 Hypermap | `hypermap/` | `Kepler/Text/Hypermap.lean` | 🟡 覆盖 hypermap.hl 至 12307/13575（90.7%）：Jordan 曲线、Euler 主定理、loop/atom/正规环族、商 hypermap、`Iso`、face collections（`XWCNBMA`/`lemmaSTKBEPH`）、补等值线（10643–11173）、受限 hypermap/final loops/split condition/hyp'm·S·y·p·q·z 选择函数族与 `lemmaHQYMRTX`（11174–12307，`IsMarked`/`on_hypZ`/`loopSeparation`/`parameters` 等）已移植；is_transform 机器（12308+）待做 |
 | 5 Fan | `fan/` | `Kepler/Text/Fan.lean` | ⬜ 未开始 |
 | 6 Packing | `packing/` | `Kepler/Text/Packing.lean` | 🟡 `Packing`/`finite_inter_ball` 已在 Statement.lean |
 | 7 Local Fan | `local/` + `leg/` | `Kepler/Text/LocalFan.lean` | ⬜ 未开始 |

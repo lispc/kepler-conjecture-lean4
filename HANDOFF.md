@@ -6,12 +6,13 @@
 
 ## 0. 一句话现状
 
-仓库 `github.com:lispc/kepler-conjecture-lean4`（main @ `c16c602`）全绿：
+仓库 `github.com:lispc/kepler-conjecture-lean4`（main @ `9543c2f`）全绿：
 `make check`（build + 公理审计）通过，唯一 sorry 是 `Statement.lean:111`
 的 sanctioned Phase-1 占位。Phase 2 已闭合；Phase 3 列主序证书表示落地
-（试点 650s/LP，30s 目标实测不可达，已留档）；Phase 4 工具链 + 区间
-checker 核心就绪（超越层进行中）；Phase 5 文字证明移植至 hypermap.hl 的
-**87.3%（11858/13575）**。
+（试点 650s/LP，30s 目标实测不可达，已留档）；Phase 4 除法/√/Ball/Taylor
+sin 层落地（`220244e`，Leibniz 余项界 + 证书式 √）；Phase 5 文字证明移植至
+hypermap.hl 的 **90.7%（12307/13575）**（Block 17 含 270 行大证明
+lemmaHQYMRTX）。
 
 ## 1. 项目目标（不变）
 
@@ -71,15 +72,19 @@ PLAN.md 与各 README）。
   9,080 个 LP；阈值语义 = 每图 scriptL > 12；注意 model2.mod 被 sed 删过
   `main: sum ln >= 12`（详见 `pipeline/lp/README.md` 与 docs/hard-cases.md）。
 
-### Phase 4 — 非线性（🟡 工具链 + checker 核心）
+### Phase 4 — 非线性（🟡 除法/√/Ball/Taylor 层已落地）
 
 - 工具链已验证：dReal 4.21.06.2（deb 解压）+ MPFR 4.2.2 + FLINT 3.3.1
   （内置 Arb），见 `pipeline/interval/README.md`。
-- `Kepler/Interval/Basic.lean`（490 行）：dyadic（`m·2^e`）端点区间算术 +
-  `IExpr` AST + `checkPos_sound`（盒上 f>0 雏形）。文件头 "Next steps"
-  写了下一块接口建议。
-- **下一步**：除法/√/超越函数层（Taylor 中点半径），分支定界证书格式
-  （docs/architecture.md Phase 4 节待补）。
+- `Kepler/Interval/`（5 文件 1886 行，`220244e`）：`Basic.lean`（dyadic
+  ±×、DInterval、IExpr、checkPos_sound）+ `Div.lean`（divFloorQ 输出指数制
+  精度 + 显式一 ulp 误差；recip/div soundness）+ `Sqrt.lean`（**证书式**
+  sqrtI：Nat.sqrt 内核不可归约，调用方供根尾数、内核只做两个大整数比较；
+  √2∈[1.4142,1.4143] decide 试点）+ `Ball.lean`（中点半径双向换算）+
+  `Trans.lean`（Leibniz 交替级数余项界配对归纳 + taylorIter 泛型检查层 +
+  sin soundness，sin(1/2) 试点区间仅 7 ulp 宽）。
+- **下一步**：IExpr 扩 div/sqrt/trans 节点（eval 改 Option）、cos/arctan
+  实例化、sin 范围缩减放宽、分支定界证书格式。
 
 ### Phase 5 — 文字证明（🟡 进行中，人力主线）
 
@@ -92,9 +97,11 @@ PLAN.md 与各 README）。
   `366e1e3`）与 block 16（11174–11858 受限 hypermap/final loops/split
   condition/hyp'm/S/y/p/z 选择函数族，`c16c602`）已提交。每块头注有
   覆盖/跳过对照表。
-- **下一块**：hypermap.hl 11861 起——`lemmaLoopSeparation` + Moebius
-  contour 平面性理论（非平面性归约），随后 is_transform 机器
-  （12308–13495）与全书收尾（估计 2 块）。
+- Block 17 已完成（`9543c2f`）：`lemmaLoopSeparation`（环分离 → 非平面）、
+  `lemmaHQYMRTX`（270 行大证明：hyp'z 入环且偏离面迭代，两条 contour
+  拼接路线）、`hyp'q` + `lemmaParameters`。
+- **下一块**：hypermap.hl 12308 起——path1_transform / is_transform 机器
+  （hypermap 变换，约 1200 行）与全书收尾（估计 1–2 块）。
 - 移植惯例：对应 HOL 行号写头注；Mathlib 已有的跳过并注明；零 sorry、
   零 native_decide、零自引入 axiom；每块 `lake build Kepler` 全绿 +
   公理抽查后才提交。
@@ -207,9 +214,9 @@ PLAN.md 与各 README）。
 ```sh
 cd /home/scroll/repos/kepler-conjecture-lean4
 export PATH="$HOME/.elan/bin:$PATH"
-git log --oneline -3            # 应见 c16c602 或更新
+git log --oneline -3            # 应见 9543c2f 或更新
 make check                      # build + 公理审计，应全绿
-wc -l lean/Kepler/Text/Hypermap.lean   # 10414（截至 2026-08-28）
+wc -l lean/Kepler/Text/Hypermap.lean   # 10903（截至 2026-08-28）
 ```
 
 若 `.lake` 缓存完好，全量 build 约几分钟（除 CertShards 外均为增量）。
