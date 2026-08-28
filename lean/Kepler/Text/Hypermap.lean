@@ -11485,5 +11485,252 @@ theorem on_loop2Transform (H : Hypermap α) {NF : Set (Loop α)}
       (L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x)) + i) = _
     rw [gluePaths_apply_add hg0 i]
 
+
+/-- `hypermap.hl`:12659 `lemma_node_outside_darts_of_family`。 -/
+theorem node_outside_dartsOfFamily (H : Hypermap α) {NF : Set (Loop α)} {L : Loop α}
+    {x : α} (hsplit : H.IsSplitCondition NF L x) {i : ℕ} (hi1 : 1 ≤ i)
+    (him : i ≤ H.hypP NF L x) :
+    ∀ w, w ∈ H.node ((H.faceMap ^ i) (H.hypY NF L x)) → w ∉ dartsOfFamily NF := by
+  obtain ⟨hres, hnf, hL, -, -, -⟩ := id hsplit
+  intro w hwn hfam
+  have hznot : (H.faceMap ^ i) (H.hypY NF L x) ∉ dartsOfFamily NF :=
+    (H.hypP_spec hsplit).1 i hi1 him
+  have hnodesub := H.node_subset_dartsOfFamily hnf hfam
+  have hneq : H.node ((H.faceMap ^ i) (H.hypY NF L x)) = H.node w :=
+    H.node_eq_of_mem hwn
+  have hself : (H.faceMap ^ i) (H.hypY NF L x)
+      ∈ H.node ((H.faceMap ^ i) (H.hypY NF L x)) := mem_orbitMap_self _ _
+  rw [hneq] at hself
+  exact hznot (hnodesub hself)
+
+/-- `hypermap.hl`:12677 `lemma_in_loop1_transform`（`12548 lemma_in_couple`
+经 `Set.mem_insert_iff` 内联）。 -/
+theorem mem_loop1Transform_iff {H : Hypermap α} {NF : Set (Loop α)}
+    {hnf : H.IsNormalFamily NF} {L : Loop α} {x : α}
+    (hmark : H.IsMarked NF hnf L x) (hLnot : L ∉ H.finalLoops NF) {w : α} :
+    w ∈ (H.loop1Transform hmark hLnot).darts ↔
+      (∃ i, i ≤ L.index (H.hypZ NF L x) (H.hypY NF L x)
+        ∧ w = (L.map ^ i) (H.hypZ NF L x)) ∨
+      (∃ i, 1 ≤ i ∧ i ≤ H.hypP NF L x ∧ w = (H.faceMap ^ i) (H.hypY NF L x)) := by
+  have hq := H.hqymrtx hmark hLnot
+  have hzd := hq.1
+  have hyd := (H.on_hypY (H.split_marked_loop hmark hLnot)).1
+  have hg0 : L.pathOf (H.hypZ NF L x) (L.index (H.hypZ NF L x) (H.hypY NF L x))
+      = H.faceContour (H.hypY NF L x) 0 := by
+    rw [H.faceContour_zero]
+    exact (L.index_spec hzd hyd).2.symm
+  have hmem : w ∈ (H.loop1Transform hmark hLnot).darts ↔
+      ∃ j, j ≤ H.card1Transform NF L x ∧ H.path1Transform NF L x j = w := by
+    have h1 : (H.loop1Transform hmark hLnot).darts
+        = @Loop.pathSupport α _ (H.path1Transform NF L x)
+            (H.card1Transform NF L x) := rfl
+    rw [h1]
+    exact Loop.mem_pathSupport
+  constructor
+  · intro hwm
+    obtain ⟨j, hjn, hwj⟩ := hmem.mp hwm
+    by_cases hj : j ≤ L.index (H.hypZ NF L x) (H.hypY NF L x)
+    · refine Or.inl ⟨j, hj, ?_⟩
+      have hgp : H.path1Transform NF L x j = L.pathOf (H.hypZ NF L x) j := by
+        show gluePaths (L.pathOf (H.hypZ NF L x)) (H.faceContour (H.hypY NF L x))
+          (L.index (H.hypZ NF L x) (H.hypY NF L x)) j = _
+        exact gluePaths_apply_le hj
+      rw [hgp] at hwj
+      exact hwj.symm
+    · obtain ⟨i, rfl⟩ : ∃ i, j = L.index (H.hypZ NF L x) (H.hypY NF L x) + i :=
+        ⟨j - L.index (H.hypZ NF L x) (H.hypY NF L x), by omega⟩
+      have hi1 : 1 ≤ i := by omega
+      have him : i ≤ H.hypP NF L x := by
+        have hle : L.index (H.hypZ NF L x) (H.hypY NF L x) + i
+            ≤ L.index (H.hypZ NF L x) (H.hypY NF L x) + H.hypP NF L x := hjn
+        omega
+      refine Or.inr ⟨i, hi1, him, ?_⟩
+      have hg : H.path1Transform NF L x
+          (L.index (H.hypZ NF L x) (H.hypY NF L x) + i)
+          = H.faceContour (H.hypY NF L x) i := gluePaths_apply_add hg0 i
+      rw [hg] at hwj
+      exact hwj.symm
+  · intro h
+    rcases h with ⟨i, hi, rfl⟩ | ⟨i, hi1, hile, rfl⟩
+    · have hle : i ≤ H.card1Transform NF L x := by
+        show i ≤ L.index (H.hypZ NF L x) (H.hypY NF L x) + H.hypP NF L x
+        omega
+      refine hmem.mpr ⟨i, hle, ?_⟩
+      have hgp : H.path1Transform NF L x i = L.pathOf (H.hypZ NF L x) i := by
+        show gluePaths (L.pathOf (H.hypZ NF L x)) (H.faceContour (H.hypY NF L x))
+          (L.index (H.hypZ NF L x) (H.hypY NF L x)) i = _
+        exact gluePaths_apply_le hi
+      rw [hgp]
+      rfl
+    · have hle : L.index (H.hypZ NF L x) (H.hypY NF L x) + i
+          ≤ H.card1Transform NF L x := by
+        show L.index (H.hypZ NF L x) (H.hypY NF L x) + i
+          ≤ L.index (H.hypZ NF L x) (H.hypY NF L x) + H.hypP NF L x
+        omega
+      refine hmem.mpr ⟨L.index (H.hypZ NF L x) (H.hypY NF L x) + i, hle, ?_⟩
+      have hg : H.path1Transform NF L x
+          (L.index (H.hypZ NF L x) (H.hypY NF L x) + i)
+          = H.faceContour (H.hypY NF L x) i := gluePaths_apply_add hg0 i
+      rw [hg]
+      rfl
+
+/-- `hypermap.hl`:12730 `lemma_in_loop1_transform2`。 -/
+theorem mem_loop1Transform_of_pow_face {H : Hypermap α} {NF : Set (Loop α)}
+    {hnf : H.IsNormalFamily NF} {L : Loop α} {x : α}
+    (hmark : H.IsMarked NF hnf L x) (hLnot : L ∉ H.finalLoops NF) {w : α} {i : ℕ}
+    (hi1 : 1 ≤ i) (him : i ≤ H.hypP NF L x)
+    (hw : w = (H.faceMap ^ i) (H.hypY NF L x)) :
+    w ∈ (H.loop1Transform hmark hLnot).darts :=
+  (H.mem_loop1Transform_iff hmark hLnot).mpr (Or.inr ⟨i, hi1, him, hw⟩)
+
+/-- `hypermap.hl`:12733 `lemma_in_loop2_transform`。 -/
+theorem mem_loop2Transform_iff {H : Hypermap α} {NF : Set (Loop α)}
+    {hnf : H.IsNormalFamily NF} {L : Loop α} {x : α}
+    (hmark : H.IsMarked NF hnf L x) (hLnot : L ∉ H.finalLoops NF) {w : α} :
+    w ∈ (H.loop2Transform hmark hLnot).darts ↔
+      (∃ i, i ≤ L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x))
+        ∧ w = (L.map ^ i) (H.nodeMap.symm (H.hypY NF L x))) ∨
+      (∃ i, 1 ≤ i ∧ i ≤ H.complementIndex (H.hypZ NF L x) (H.hypP NF L x)
+        ∧ w = complementPt H (H.hypZ NF L x) i) := by
+  have hsplit : H.IsSplitCondition NF L x := H.split_marked_loop hmark hLnot
+  obtain ⟨hres, hnf, hL, -, hx, -⟩ := id hsplit
+  have hq := H.hqymrtx hmark hLnot
+  have hy := H.on_hypY hsplit
+  have had := H.on_adding_darts hmark hLnot
+  have hnn : H.NodeNondegenerate := hres.nodeNondegenerate
+  have hzd : H.hypZ NF L x ∈ L.darts := hq.1
+  have hyd : H.hypY NF L x ∈ L.darts := hy.1
+  have hzH : H.hypZ NF L x ∈ H.darts := H.mem_darts_of_isNormalFamily hnf hL hzd
+  have huL : H.nodeMap.symm (H.hypY NF L x) ∈ L.darts := by
+    have h1 : H.nodeMap.symm (H.hypY NF L x) = (L.map ^ 1) (H.hypY NF L x) := by
+      rw [pow_one]; exact hy.2.1.symm
+    rw [h1]
+    exact L.pow_map_mem hyd 1
+  have hvL : H.nodeMap (H.hypZ NF L x) ∈ L.darts := by
+    rw [← had.2]
+    exact L.invMap_mem hzd
+  have hg0 : L.pathOf (H.nodeMap.symm (H.hypY NF L x))
+        (L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x)))
+      = complementPt H (H.hypZ NF L x) 0 := by
+    have hcp0 : complementPt H (H.hypZ NF L x) 0 = H.nodeMap (H.hypZ NF L x) := by
+      have h1 : H.complementIndex (H.hypZ NF L x) 0 = 0 := H.complementIndex_zero_eq _
+      have h2 := H.complementPt_compIndex_eval hnn hzH 0
+      rw [h1, pow_zero, Equiv.Perm.one_apply] at h2
+      exact h2
+    rw [hcp0]
+    show ((L.map : Equiv.Perm α) ^ L.index (H.nodeMap.symm (H.hypY NF L x))
+        (H.nodeMap (H.hypZ NF L x))) (H.nodeMap.symm (H.hypY NF L x))
+      = H.nodeMap (H.hypZ NF L x)
+    rw [← (L.index_spec huL hvL).2]
+  have hmem : w ∈ (H.loop2Transform hmark hLnot).darts ↔
+      ∃ j, j ≤ H.card2Transform NF L x ∧ H.path2Transform NF L x j = w := by
+    have h1 : (H.loop2Transform hmark hLnot).darts
+        = @Loop.pathSupport α _ (H.path2Transform NF L x)
+            (H.card2Transform NF L x) := rfl
+    rw [h1]
+    exact Loop.mem_pathSupport
+  constructor
+  · intro hwm
+    obtain ⟨j, hjn, hwj⟩ := hmem.mp hwm
+    by_cases hj : j ≤ L.index (H.nodeMap.symm (H.hypY NF L x))
+        (H.nodeMap (H.hypZ NF L x))
+    · refine Or.inl ⟨j, hj, ?_⟩
+      have hgp : H.path2Transform NF L x j
+          = L.pathOf (H.nodeMap.symm (H.hypY NF L x)) j := by
+        show gluePaths (L.pathOf (H.nodeMap.symm (H.hypY NF L x)))
+          (complementPt H (H.hypZ NF L x))
+          (L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x))) j = _
+        exact gluePaths_apply_le hj
+      rw [hgp] at hwj
+      exact hwj.symm
+    · obtain ⟨i, rfl⟩ : ∃ i, j = L.index (H.nodeMap.symm (H.hypY NF L x))
+          (H.nodeMap (H.hypZ NF L x)) + i :=
+        ⟨j - L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x)), by omega⟩
+      have hi1 : 1 ≤ i := by omega
+      have him : i ≤ H.complementIndex (H.hypZ NF L x) (H.hypP NF L x) := by
+        have hle : L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x)) + i
+            ≤ L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x))
+              + H.complementIndex (H.hypZ NF L x) (H.hypP NF L x) := hjn
+        omega
+      refine Or.inr ⟨i, hi1, him, ?_⟩
+      have hg : H.path2Transform NF L x
+          (L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x)) + i)
+          = complementPt H (H.hypZ NF L x) i := gluePaths_apply_add hg0 i
+      rw [hg] at hwj
+      exact hwj.symm
+  · intro h
+    rcases h with ⟨i, hi, rfl⟩ | ⟨i, hi1, hile, rfl⟩
+    · have hle : i ≤ H.card2Transform NF L x := by
+        show i ≤ L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x))
+          + H.complementIndex (H.hypZ NF L x) (H.hypP NF L x)
+        omega
+      refine hmem.mpr ⟨i, hle, ?_⟩
+      have hgp : H.path2Transform NF L x i
+          = L.pathOf (H.nodeMap.symm (H.hypY NF L x)) i := by
+        show gluePaths (L.pathOf (H.nodeMap.symm (H.hypY NF L x)))
+          (complementPt H (H.hypZ NF L x))
+          (L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x))) i = _
+        exact gluePaths_apply_le hi
+      rw [hgp]
+      rfl
+    · have hle : L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x)) + i
+          ≤ H.card2Transform NF L x := by
+        show L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x)) + i
+          ≤ L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x))
+            + H.complementIndex (H.hypZ NF L x) (H.hypP NF L x)
+        omega
+      refine hmem.mpr ⟨L.index (H.nodeMap.symm (H.hypY NF L x))
+        (H.nodeMap (H.hypZ NF L x)) + i, hle, ?_⟩
+      have hg : H.path2Transform NF L x
+          (L.index (H.nodeMap.symm (H.hypY NF L x)) (H.nodeMap (H.hypZ NF L x)) + i)
+          = complementPt H (H.hypZ NF L x) i := gluePaths_apply_add hg0 i
+      rw [hg]
+
+
+/-- `hypermap.hl`:12865 `lemma_in_loop2_transform2`。 -/
+theorem mem_loop2Transform_of_pow_invNode {H : Hypermap α} {NF : Set (Loop α)}
+    {hnf : H.IsNormalFamily NF} {L : Loop α} {x : α}
+    (hmark : H.IsMarked NF hnf L x) (hLnot : L ∉ H.finalLoops NF) {w : α} {i j : ℕ}
+    (hi1 : 1 ≤ i) (him : i ≤ H.hypP NF L x) (hj1 : 1 ≤ j)
+    (hjlt : j < (H.node ((H.faceMap ^ i) (H.hypY NF L x))).ncard)
+    (hw : w = (H.nodeMap.symm ^ j) ((H.faceMap ^ i) (H.hypY NF L x))) :
+    w ∈ (H.loop2Transform hmark hLnot).darts := by
+  have hsplit : H.IsSplitCondition NF L x := H.split_marked_loop hmark hLnot
+  obtain ⟨hres, hnf, hL, -, hx, -⟩ := id hsplit
+  have hnn : H.NodeNondegenerate := hres.nodeNondegenerate
+  have hq := H.hqymrtx hmark hLnot
+  have hzd : H.hypZ NF L x ∈ L.darts := hq.1
+  have hzH : H.hypZ NF L x ∈ H.darts := H.mem_darts_of_isNormalFamily hnf hL hzd
+  have hzz : H.hypZ NF L x = (H.faceMap ^ (H.hypP NF L x + 1)) (H.hypY NF L x) := rfl
+  -- 指标 i₂ := m - i 使 (invFace^(i₂+1)) z = (faceMap^i) y
+  set i₂ := H.hypP NF L x - i with hi₂def
+  have hred : (H.faceMap.symm ^ (i₂ + 1)) (H.hypZ NF L x)
+      = (H.faceMap ^ i) (H.hypY NF L x) := by
+    rw [hzz, pow_symm_pow_cancel H.faceMap (by omega) (H.hypY NF L x)]
+    rw [show H.hypP NF L x + 1 - (i₂ + 1) = i from by omega]
+  -- 步长与上界
+  have hstep := H.complementIndex_succ_eq_sub hnn hzH i₂
+  have hnc2 : 2 ≤ (H.node ((H.faceMap.symm ^ (i₂ + 1)) (H.hypZ NF L x))).ncard :=
+    H.two_le_node_ncard_faceSymm hnn hzH (i₂ + 1)
+  have hnodeeq : H.node ((H.faceMap.symm ^ (i₂ + 1)) (H.hypZ NF L x))
+      = H.node ((H.faceMap ^ i) (H.hypY NF L x)) := by
+    rw [hred]
+  have hjlt' : j < (H.node ((H.faceMap.symm ^ (i₂ + 1)) (H.hypZ NF L x))).ncard := by
+    rw [hnodeeq]
+    exact hjlt
+  have hmono : H.complementIndex (H.hypZ NF L x) i₂
+      ≤ H.complementIndex (H.hypZ NF L x) (i₂ + 1) :=
+    H.complementIndex_le_of_le hnn hzH (by omega)
+  have hmono2 : H.complementIndex (H.hypZ NF L x) (i₂ + 1)
+      ≤ H.complementIndex (H.hypZ NF L x) (H.hypP NF L x) :=
+    H.complementIndex_le_of_le hnn hzH (by omega)
+  -- 求值并落入 loop2
+  have hev : complementPt H (H.hypZ NF L x) (H.complementIndex (H.hypZ NF L x) i₂ + j)
+      = (H.nodeMap.symm ^ j) ((H.faceMap ^ i) (H.hypY NF L x)) := by
+    rw [H.complementPt_add_eval hnn hzH i₂ j hj1 hjlt', hred]
+  refine (H.mem_loop2Transform_iff hmark hLnot).mpr
+    (Or.inr ⟨H.complementIndex (H.hypZ NF L x) i₂ + j, by omega, by omega, ?_⟩)
+  rw [hw, hev]
+
 end Hypermap
 end Kepler.Text
