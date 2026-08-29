@@ -409,8 +409,8 @@ private theorem crossSmul' (t : ℝ) (p r : Fin 3 → ℝ) :
 
 /-- 同轴（e3 = f3）两个右手 ON 标架的平面 ℂ 坐标相差一个单位复数倍。 -/
 theorem on3_axis_change (he : Orthonormal3 e1 e2 e3) (hf : Orthonormal3 f1 f2 f3)
-    (h3 : e3 = f3) (x : V3) :
-    ∃ u : ℂ, ‖u‖ = 1 ∧
+    (h3 : e3 = f3) :
+    ∃ u : ℂ, ‖u‖ = 1 ∧ ∀ x : V3,
       ((x ⬝ᵥ e1) + (x ⬝ᵥ e2) * I = u * ((x ⬝ᵥ f1) + (x ⬝ᵥ f2) * I)) := by
   have heC := he
   have hfC := hf
@@ -499,29 +499,12 @@ theorem on3_axis_change (he : Orthonormal3 e1 e2 e3) (hf : Orthonormal3 f1 f2 f3
         _ = b * 0 + a * 1 := by rw [hacbd, hdet]
         _ = a := by ring
   -- x 的 e-坐标用 f-坐标表出
-  have hxexp := on3_expand hf x
   have hf3e1 : inner ℝ f3 e1 = 0 := by
     rw [← h3, show inner ℝ e3 e1 = (e3 : V3) ⬝ᵥ e1 from (inner_eq_dot e3 e1),
       dotProduct_comm (e3 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ), hee13]
   have hf3e2 : inner ℝ f3 e2 = 0 := by
     rw [← h3, show inner ℝ e3 e2 = (e3 : V3) ⬝ᵥ e2 from (inner_eq_dot e3 e2),
       dotProduct_comm (e3 : Fin 3 → ℝ) (e2 : Fin 3 → ℝ), hee23]
-  have hxe1 : x ⬝ᵥ e1 = (x ⬝ᵥ f1) * a + (x ⬝ᵥ f2) * c := by
-    have hin : inner ℝ x e1
-        = (x ⬝ᵥ f1) * inner ℝ f1 e1 + (x ⬝ᵥ f2) * inner ℝ f2 e1 := by
-      conv_lhs => rw [hxexp]
-      rw [inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
-        real_inner_smul_left, hf3e1, mul_zero, add_zero]
-    rw [inner_eq_dot x e1, inner_eq_dot f1 e1, inner_eq_dot f2 e1] at hin
-    exact hin
-  have hxe2 : x ⬝ᵥ e2 = (x ⬝ᵥ f1) * b + (x ⬝ᵥ f2) * d := by
-    have hin : inner ℝ x e2
-        = (x ⬝ᵥ f1) * inner ℝ f1 e2 + (x ⬝ᵥ f2) * inner ℝ f2 e2 := by
-      conv_lhs => rw [hxexp]
-      rw [inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
-        real_inner_smul_left, hf3e2, mul_zero, add_zero]
-    rw [inner_eq_dot x e2, inner_eq_dot f1 e2, inner_eq_dot f2 e2] at hin
-    exact hin
   refine ⟨a + b * I, ?_, ?_⟩
   · have hsq : ‖a + b * I‖ ^ 2 = a * a + b * b := by
       rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
@@ -532,7 +515,25 @@ theorem on3_axis_change (he : Orthonormal3 e1 e2 e3) (hf : Orthonormal3 f1 f2 f3
     rcases sq_eq_one_iff.mp (hsq.trans hab) with h' | h'
     · exact h'
     · linarith
-  · rw [hxe1, hxe2, hcd'.1, hcd'.2]
+  · intro x
+    have hxexp := on3_expand hf x
+    have hxe1 : x ⬝ᵥ e1 = (x ⬝ᵥ f1) * a + (x ⬝ᵥ f2) * c := by
+      have hin : inner ℝ x e1
+          = (x ⬝ᵥ f1) * inner ℝ f1 e1 + (x ⬝ᵥ f2) * inner ℝ f2 e1 := by
+        conv_lhs => rw [hxexp]
+        rw [inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+          real_inner_smul_left, hf3e1, mul_zero, add_zero]
+      rw [inner_eq_dot x e1, inner_eq_dot f1 e1, inner_eq_dot f2 e1] at hin
+      exact hin
+    have hxe2 : x ⬝ᵥ e2 = (x ⬝ᵥ f1) * b + (x ⬝ᵥ f2) * d := by
+      have hin : inner ℝ x e2
+          = (x ⬝ᵥ f1) * inner ℝ f1 e2 + (x ⬝ᵥ f2) * inner ℝ f2 e2 := by
+        conv_lhs => rw [hxexp]
+        rw [inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+          real_inner_smul_left, hf3e2, mul_zero, add_zero]
+      rw [inner_eq_dot x e2, inner_eq_dot f1 e2, inner_eq_dot f2 e2] at hin
+      exact hin
+    rw [hxe1, hxe2, hcd'.1, hcd'.2]
     rw [Complex.ext_iff]
     constructor
     · simp only [Complex.add_re, Complex.add_im, Complex.I_re, Complex.I_im,
@@ -601,5 +602,344 @@ theorem exists_angle_diff (a b : ℂ) (ha : a ≠ 0) :
       push_cast
       ring
     rw [hfin, Complex.norm_mul_exp_arg_mul_I b]
+
+
+/-- 相位乘法：`e^{i arg E} • (n e^{it}) = n e^{i(t + arg E)}`。 -/
+private theorem exp_mul_polar (E : ℂ) (t : ℝ) (z : ℂ) (n : ℝ)
+    (hp : z = n * Complex.exp (t * I)) :
+    Complex.exp (Complex.arg E * I) * z = n * Complex.exp ((t + Complex.arg E) * I) := by
+  rw [hp, mul_left_comm, ← Complex.exp_add]
+  congr 1
+  congr 1
+  ring
+
+
+/-! ## AzimSpec 的满足性 -/
+
+/-- 轴向量的平面分量正交性。 -/
+theorem axis_perp (hax : (w - v : V3) = dist w v • e3) (he : Orthonormal3 e1 e2 e3) :
+    (w - v : V3) ⬝ᵥ e1 = 0 ∧ (w - v : V3) ⬝ᵥ e2 = 0 := by
+  obtain ⟨-, -, -, -, he13, he23, -⟩ := he
+  have h1 : inner ℝ (w - v) e1 = (dist w v) * inner ℝ e3 e1 := by
+    rw [hax, real_inner_smul_left]
+  have h2 : inner ℝ (w - v) e2 = (dist w v) * inner ℝ e3 e2 := by
+    rw [hax, real_inner_smul_left]
+  rw [inner_eq_dot, inner_eq_dot] at h1 h2
+  rw [dotProduct_comm (e3 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ), he13, mul_zero] at h1
+  rw [dotProduct_comm (e3 : Fin 3 → ℝ) (e2 : Fin 3 → ℝ), he23, mul_zero] at h2
+  exact ⟨h1, h2⟩
+
+/-- ℂ 坐标等式 → V3 表示（AzimSpec 身体的构造方向）。 -/
+theorem rep_of_zOf {v w : V3} (he : Orthonormal3 e1 e2 e3)
+    (hax : (w - v : V3) = dist w v • e3) (hw : w ≠ v)
+    (y : V3) (τ ρ : ℝ) (hy : zOf e1 e2 (y - v) = ρ * Complex.exp (τ * I)) :
+    y - v = (ρ * Real.cos τ) • e1 + (ρ * Real.sin τ) • e2
+      + (((y - v : V3) ⬝ᵥ e3) / dist w v) • (w - v) := by
+  have hd : 0 < dist w v := dist_pos.mpr hw
+  have hz : (y - v : V3) ⬝ᵥ e1 + (y - v : V3) ⬝ᵥ e2 * I
+      = ↑(ρ * Real.cos τ) + ↑(ρ * Real.sin τ) * I := by
+    show zOf e1 e2 (y - v) = _
+    rw [hy, Complex.exp_mul_I]
+    push_cast
+    ring
+  have h1 : (y - v : V3) ⬝ᵥ e1 = ρ * Real.cos τ := by
+    have h := congrArg Complex.re hz
+    simpa [Complex.cos_ofReal_re, Complex.sin_ofReal_re] using h
+  have h2 : (y - v : V3) ⬝ᵥ e2 = ρ * Real.sin τ := by
+    have h := congrArg Complex.im hz
+    simpa [Complex.cos_ofReal_im, Complex.sin_ofReal_re] using h
+  have hexp := on3_expand he (y - v)
+  rw [h1, h2] at hexp
+  rw [hax, smul_smul, div_mul_cancel₀ _ hd.ne']
+  exact hexp
+
+/-- V3 表示 → ℂ 坐标等式。 -/
+theorem zOf_of_rep {v w : V3} (he : Orthonormal3 e1 e2 e3)
+    (hax : (w - v : V3) = dist w v • e3)
+    {y : V3} {τ ρ hY : ℝ}
+    (hy : y - v = (ρ * Real.cos τ) • e1 + (ρ * Real.sin τ) • e2 + hY • (w - v)) :
+    zOf e1 e2 (y - v) = ρ * Complex.exp (τ * I) := by
+  obtain ⟨hp1, hp2⟩ := axis_perp hax he
+  have hd1 : (y - v : V3) ⬝ᵥ e1 = ρ * Real.cos τ := by
+    have hin : inner ℝ (y - v) e1 = inner ℝ
+        ((ρ * Real.cos τ) • e1 + (ρ * Real.sin τ) • e2 + hY • (w - v)) e1 := by
+      conv_lhs => rw [hy]
+    rw [inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+      real_inner_smul_left] at hin
+    simp only [inner_eq_dot, show (w - v : V3) ⬝ᵥ e1 = 0 from hp1,
+      dotProduct_comm (e2 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ), he.1, he.2.2.2.1,
+      mul_zero, mul_one, add_zero] at hin
+    exact hin
+  have hd2 : (y - v : V3) ⬝ᵥ e2 = ρ * Real.sin τ := by
+    have hin : inner ℝ (y - v) e2 = inner ℝ
+        ((ρ * Real.cos τ) • e1 + (ρ * Real.sin τ) • e2 + hY • (w - v)) e2 := by
+      conv_lhs => rw [hy]
+    rw [inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+      real_inner_smul_left] at hin
+    simp only [inner_eq_dot, show (w - v : V3) ⬝ᵥ e2 = 0 from hp2, he.2.1,
+      he.2.2.2.1, mul_zero, mul_one, zero_add, add_zero] at hin
+    exact hin
+  show (y - v : V3) ⬝ᵥ e1 + (y - v : V3) ⬝ᵥ e2 * I = _
+  rw [hd1, hd2, Complex.exp_mul_I]
+  push_cast
+  ring
+
+/-- z 坐标非零 ↔ 非共线。 -/
+theorem zOf_ne_zero_iff {v w : V3} (he : Orthonormal3 e1 e2 e3)
+    (hax : (w - v : V3) = dist w v • e3) (hw : w ≠ v) (y : V3) :
+    zOf e1 e2 (y - v) ≠ 0 ↔ ¬ Collinear3 v w y := by
+  have hd : 0 < dist w v := dist_pos.mpr hw
+  obtain ⟨hp1, hp2⟩ := axis_perp hax he
+  constructor
+  · intro hz hcol
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul hw).mp hcol
+    apply hz
+    have hd1 : (y - v : V3) ⬝ᵥ e1 = 0 := by
+      rw [hc, show ((c : ℝ) • (w - v) : V3) ⬝ᵥ e1 = c * ((w - v : V3) ⬝ᵥ e1) from by
+        rw [← inner_eq_dot, ← inner_eq_dot, real_inner_smul_left], hp1, mul_zero]
+    have hd2 : (y - v : V3) ⬝ᵥ e2 = 0 := by
+      rw [hc, show ((c : ℝ) • (w - v) : V3) ⬝ᵥ e2 = c * ((w - v : V3) ⬝ᵥ e2) from by
+        rw [← inner_eq_dot, ← inner_eq_dot, real_inner_smul_left], hp2, mul_zero]
+    show (y - v : V3) ⬝ᵥ e1 + (y - v : V3) ⬝ᵥ e2 * I = 0
+    rw [hd1, hd2]
+    norm_num
+  · intro hcol
+    intro hz0
+    apply hcol
+    have hre : (y - v : V3) ⬝ᵥ e1 = 0 := by
+      have h := congrArg Complex.re hz0
+      simp only [zOf, Complex.add_re, Complex.mul_re, Complex.mul_im, Complex.I_re,
+        Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, mul_zero, sub_zero,
+        add_zero, mul_one, zero_add, sub_self] at h
+      simpa using h
+    have him : (y - v : V3) ⬝ᵥ e2 = 0 := by
+      have h := congrArg Complex.im hz0
+      simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+        Complex.ofReal_re, Complex.ofReal_im, mul_zero, mul_one, add_zero,
+        zero_add] at h
+      simpa using h
+    have hexp := on3_expand he (y - v)
+    rw [hre, him, zero_smul, zero_smul, zero_add, zero_add] at hexp
+    refine (collinear3_iff_smul hw).mpr ⟨((y - v : V3) ⬝ᵥ e3) / dist w v, ?_⟩
+    rw [hax, smul_smul, div_mul_cancel₀ _ hd.ne']
+    exact hexp
+
+
+/-- AzimSpec 在非退化情形可满足（flyspeck.ml AZIM_EXISTS）。 -/
+theorem azimSpec_exists (h1 : ¬ Collinear3 v w w1) (h2 : ¬ Collinear3 v w w2) :
+    ∃ θ, AzimSpec v w w1 w2 θ := by
+  have hwv : w ≠ v := fun he => h1 (collinear3_of_eq he)
+  obtain ⟨f1, f2, f3, hf, halign⟩ := exists_on3_eq_smul (w - v) (sub_ne_zero.mpr hwv)
+  have haxf : (w - v : V3) = dist w v • f3 := by
+    rw [dist_eq_norm]
+    exact halign
+  have hzf1 : zOf f1 f2 (w1 - v) ≠ 0 := (zOf_ne_zero_iff hf haxf hwv w1).mpr h1
+  have hzf2 : zOf f1 f2 (w2 - v) ≠ 0 := (zOf_ne_zero_iff hf haxf hwv w2).mpr h2
+  obtain ⟨θ, hθ0, hθ1, hθmain⟩ := exists_angle_diff (zOf f1 f2 (w1 - v))
+    (zOf f1 f2 (w2 - v)) hzf1
+  refine ⟨θ, hθ0, hθ1, ((w1 - v : V3) ⬝ᵥ f3) / dist w v,
+    ((w2 - v : V3) ⬝ᵥ f3) / dist w v, ?_⟩
+  intro e1 e2 e3 he hax hw
+  have he3f : e3 = f3 := by
+    have hc : dist w v ≠ 0 := dist_ne_zero.mpr hwv
+    have hsub : dist w v • e3 - dist w v • f3 = 0 := by
+      rw [← hax, ← haxf, sub_self]
+    rw [← smul_sub] at hsub
+    refine sub_eq_zero.mp ?_
+    exact smul_eq_zero.mp hsub |>.resolve_left hc
+  obtain ⟨u, hu1, hu⟩ := on3_axis_change he hf he3f
+  have hue : u = Complex.exp (Complex.arg u * I) := by
+    have hp := Complex.norm_mul_exp_arg_mul_I u
+    rw [hu1, Complex.ofReal_one, one_mul] at hp
+    exact hp.symm
+  have hfpol1 : zOf f1 f2 (w1 - v)
+      = ‖zOf f1 f2 (w1 - v)‖ * Complex.exp (Complex.arg (zOf f1 f2 (w1 - v)) * I) :=
+    (Complex.norm_mul_exp_arg_mul_I _).symm
+  have hmain' := hθmain _ hfpol1
+  have hz1e : zOf e1 e2 (w1 - v)
+      = ((‖zOf f1 f2 (w1 - v)‖ : ℝ) : ℂ) * Complex.exp
+        ((Complex.arg (zOf f1 f2 (w1 - v)) + Complex.arg u) * I) := by
+    show (w1 - v : V3) ⬝ᵥ e1 + (w1 - v : V3) ⬝ᵥ e2 * I = _
+    rw [hu (w1 - v),
+      show ((w1 - v : V3) ⬝ᵥ f1) + (w1 - v : V3) ⬝ᵥ f2 * I
+        = zOf f1 f2 (w1 - v) from rfl]
+    conv_lhs => rw [hue, hfpol1]
+    rw [mul_left_comm, ← Complex.exp_add]
+    congr 1
+    congr 1
+    push_cast
+    ring
+  have hz2e : zOf e1 e2 (w2 - v)
+      = ((‖zOf f1 f2 (w2 - v)‖ : ℝ) : ℂ) * Complex.exp
+        ((Complex.arg (zOf f1 f2 (w1 - v)) + θ + Complex.arg u) * I) := by
+    show (w2 - v : V3) ⬝ᵥ e1 + (w2 - v : V3) ⬝ᵥ e2 * I = _
+    rw [hu (w2 - v),
+      show ((w2 - v : V3) ⬝ᵥ f1) + (w2 - v : V3) ⬝ᵥ f2 * I
+        = zOf f1 f2 (w2 - v) from rfl]
+    conv_lhs => rw [hue, hmain']
+    rw [mul_left_comm, ← Complex.exp_add]
+    congr 1
+    congr 1
+    push_cast
+    ring
+  have hr1 : 0 < ‖zOf f1 f2 (w1 - v)‖ := norm_pos_iff.mpr hzf1
+  have hr2 : 0 < ‖zOf f1 f2 (w2 - v)‖ := norm_pos_iff.mpr hzf2
+  have hz1e' : zOf e1 e2 (w1 - v)
+      = ‖zOf f1 f2 (w1 - v)‖ * Complex.exp
+        (((Complex.arg (zOf f1 f2 (w1 - v)) + Complex.arg u : ℝ) : ℂ) * I) := by
+    rw [hz1e]
+    congr 1
+    congr 1
+    push_cast
+    ring
+  have hz2e' : zOf e1 e2 (w2 - v)
+      = ‖zOf f1 f2 (w2 - v)‖ * Complex.exp
+        (((Complex.arg (zOf f1 f2 (w1 - v)) + θ + Complex.arg u : ℝ) : ℂ) * I) := by
+    rw [hz2e]
+    congr 1
+    congr 1
+    push_cast
+    ring
+  have hrep1 := rep_of_zOf he hax hwv w1
+    (Complex.arg (zOf f1 f2 (w1 - v)) + Complex.arg u) ‖zOf f1 f2 (w1 - v)‖ hz1e'
+  have hrep2 := rep_of_zOf he hax hwv w2
+    (Complex.arg (zOf f1 f2 (w1 - v)) + θ + Complex.arg u) ‖zOf f1 f2 (w2 - v)‖ hz2e'
+  refine ⟨Complex.arg (zOf f1 f2 (w1 - v)) + Complex.arg u,
+    ‖zOf f1 f2 (w1 - v)‖, ‖zOf f1 f2 (w2 - v)‖, ?_, ?_, hr1, hr2⟩
+  · rw [show ((w1 - v : V3) ⬝ᵥ f3) = ((w1 - v : V3) ⬝ᵥ e3) from by rw [he3f]]
+    exact hrep1
+  · rw [show ((w2 - v : V3) ⬝ᵥ f3) = ((w2 - v : V3) ⬝ᵥ e3) from by rw [he3f],
+      show Complex.arg (zOf f1 f2 (w1 - v)) + Complex.arg u + θ
+        = Complex.arg (zOf f1 f2 (w1 - v)) + θ + Complex.arg u from by ring]
+    exact hrep2
+
+/-- AzimSpec 见证唯一（flyspeck.ml AZIM_UNIQUE 的角色）。 -/
+theorem azimSpec_unique (hwv : w ≠ v)
+    (hθ : AzimSpec v w w1 w2 θ) (hθ' : AzimSpec v w w1 w2 θ') : θ = θ' := by
+  unfold AzimSpec at hθ hθ'
+  obtain ⟨hb0, hb1, h1v, h2v, hframes⟩ := hθ
+  obtain ⟨hb0', hb1', h1v', h2v', hframes'⟩ := hθ'
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (w - v) (sub_ne_zero.mpr hwv)
+  have hax : (w - v : V3) = dist w v • f3 := by
+    rw [dist_eq_norm]
+    exact halign
+  obtain ⟨ψ, r1, r2, hrep1, hrep2, hr1, hr2⟩ := hframes f1 f2 f3 hon hax hwv
+  obtain ⟨ψ', r1', r2', hrep1', hrep2', hr1', hr2'⟩ := hframes' f1 f2 f3 hon hax hwv
+  have hz1 : zOf f1 f2 (w1 - v) = r1 * Complex.exp (ψ * I) := zOf_of_rep hon hax hrep1
+  have hz1' : zOf f1 f2 (w1 - v) = r1' * Complex.exp (ψ' * I) := zOf_of_rep hon hax hrep1'
+  have hz2 : zOf f1 f2 (w2 - v) = r2 * Complex.exp ((ψ + θ) * I) := by
+    have h := zOf_of_rep hon hax hrep2
+    rw [h]
+    congr 1
+    congr 1
+    push_cast
+    ring
+  have hz2' : zOf f1 f2 (w2 - v) = r2' * Complex.exp ((ψ' + θ') * I) := by
+    have h := zOf_of_rep hon hax hrep2'
+    rw [h]
+    congr 1
+    congr 1
+    push_cast
+    ring
+  have hnE : ∀ t : ℝ, ‖Complex.exp (t * I)‖ = 1 := by
+    intro t
+    rw [Complex.norm_exp,
+      show ((t : ℂ) * Complex.I).re = 0 from by simp [Complex.mul_re],
+      Real.exp_zero]
+  have key1 : r1 = r1' := by
+    have e1 : ‖zOf f1 f2 (w1 - v)‖ = r1 := by
+      rw [hz1, Complex.norm_mul, hnE, Complex.norm_real, Real.norm_eq_abs,
+        abs_of_pos hr1, mul_one]
+    have e2 : ‖zOf f1 f2 (w1 - v)‖ = r1' := by
+      rw [hz1', Complex.norm_mul, hnE, Complex.norm_real, Real.norm_eq_abs,
+        abs_of_pos hr1', mul_one]
+    rw [← e1, e2]
+  have key2 : r2 = r2' := by
+    have e1 : ‖zOf f1 f2 (w2 - v)‖ = r2 := by
+      rw [hz2, Complex.norm_mul,
+        show ((ψ : ℂ) + (θ : ℂ)) * Complex.I = ((ψ + θ : ℝ) : ℂ) * Complex.I from by
+          push_cast; ring,
+        hnE (ψ + θ), Complex.norm_real, Real.norm_eq_abs, abs_of_pos hr2, mul_one]
+    have e2 : ‖zOf f1 f2 (w2 - v)‖ = r2' := by
+      rw [hz2', Complex.norm_mul,
+        show ((ψ' : ℂ) + (θ' : ℂ)) * Complex.I = ((ψ' + θ' : ℝ) : ℂ) * Complex.I from by
+          push_cast; ring,
+        hnE (ψ' + θ'), Complex.norm_real, Real.norm_eq_abs, abs_of_pos hr2', mul_one]
+    rw [← e1, e2]
+  have hee1 : Complex.exp (ψ * I) = Complex.exp (ψ' * I) := by
+    have hc : ((r1 : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hr1.ne'
+    refine mul_left_cancel₀ hc ?_
+    have := hz1.symm.trans hz1'
+    rwa [← key1] at this
+  have hee2 : Complex.exp ((ψ + θ) * I) = Complex.exp ((ψ' + θ') * I) := by
+    have hc : ((r2 : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hr2.ne'
+    refine mul_left_cancel₀ hc ?_
+    have := hz2.symm.trans hz2'
+    rwa [← key2] at this
+  obtain ⟨n, hn⟩ := Complex.exp_eq_exp_iff_exists_int.mp hee1
+  obtain ⟨m, hm⟩ := Complex.exp_eq_exp_iff_exists_int.mp hee2
+  have hpsiI : ψ * I = (ψ' + (n:ℝ) * (2 * Real.pi)) * I := by
+    rw [hn]
+    push_cast
+    ring
+  have hpsi : ψ = ψ' + (n:ℝ) * (2 * Real.pi) := by
+    have hc2 : ((ψ : ℝ) : ℂ) * Complex.I
+        = ((ψ' + (n:ℝ) * (2 * Real.pi) : ℝ) : ℂ) * Complex.I := by
+      push_cast
+      rw [hpsiI]
+      push_cast
+      ring
+    have hc3 : ((ψ : ℝ) : ℂ) = ((ψ' + (n:ℝ) * (2 * Real.pi) : ℝ) : ℂ) :=
+      mul_right_cancel₀ Complex.I_ne_zero hc2
+    exact_mod_cast hc3
+  have hsumI : (ψ + θ) * I = (ψ' + θ' + (m:ℝ) * (2 * Real.pi)) * I := by
+    rw [hm]
+    push_cast
+    ring
+  have hsum : ψ + θ = ψ' + θ' + (m:ℝ) * (2 * Real.pi) := by
+    have hc2 : (((ψ + θ : ℝ) : ℂ)) * Complex.I
+        = ((ψ' + θ' + (m:ℝ) * (2 * Real.pi) : ℝ) : ℂ) * Complex.I := by
+      push_cast
+      rw [hsumI]
+      push_cast
+      ring
+    have hc3 : ((ψ + θ : ℝ) : ℂ)
+        = ((ψ' + θ' + (m:ℝ) * (2 * Real.pi) : ℝ) : ℂ) :=
+      mul_right_cancel₀ Complex.I_ne_zero hc2
+    exact_mod_cast hc3
+  have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
+  have hk : θ - θ' = 2 * Real.pi * ((m - n : ℤ) : ℝ) := by
+    rw [hpsi] at hsum
+    push_cast
+    linarith
+  have hzero : (m - n : ℤ) = 0 := by
+    rcases Int.lt_trichotomy (m - n) 0 with hneg | heq | hpos
+    · exfalso
+      have h1 : (m - n : ℤ) ≤ -1 := by omega
+      have hle : ((m - n : ℤ) : ℝ) ≤ -1 := by exact_mod_cast h1
+      have hprod : 2 * Real.pi * ((m - n : ℤ) : ℝ) ≤ -2 * Real.pi := by
+        have hmul := mul_le_mul_of_nonneg_right hle h2pi.le
+        linarith
+      linarith [hk, hprod, hb0, hb1, hb0', hb1']
+    · exact heq
+    · exfalso
+      have h1 : (m - n : ℤ) ≥ 1 := by omega
+      have hge : ((m - n : ℤ) : ℝ) ≥ 1 := by exact_mod_cast h1
+      have hprod : 2 * Real.pi * ((m - n : ℤ) : ℝ) ≥ 2 * Real.pi := by
+        have hmul := mul_le_mul_of_nonneg_right hge h2pi.le
+        linarith
+      linarith [hk, hprod, hb0, hb1, hb0', hb1']
+  rw [hzero] at hk
+  norm_num at hk
+  linarith
+
+/-- 非退化情形下 azim 由 spec 决定（flyspeck.ml SELECT_CONV 的角色）。 -/
+theorem azim_eq_of_spec (h1 : ¬ Collinear3 v w w1) (h2 : ¬ Collinear3 v w w2)
+    {θ : ℝ} (hθ : AzimSpec v w w1 w2 θ) : azim v w w1 w2 = θ := by
+  have hwv : w ≠ v := fun he => h1 (collinear3_of_eq he)
+  show (if Collinear3 v w w1 ∨ Collinear3 v w w2 then (0:ℝ)
+      else Classical.epsilon (AzimSpec v w w1 w2)) = θ
+  rw [if_neg (by rintro (h | h); exacts [h1 h, h2 h])]
+  exact azimSpec_unique hwv (Classical.epsilon_spec (azimSpec_exists h1 h2)) hθ
 
 end Kepler.Geom
