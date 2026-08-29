@@ -126,6 +126,15 @@ PLAN.md 与各 README）。
   → fan_misc 155 → fan 2895 → CFYXFTY 1446 → hypermap_and_fan 2767 →
   planarity 15463 → Conforming 17033 → polyhedron 3200 → topology 4718，
   全目录 49,452 行；hypermap_iso 1174 后置）。
+  进度：**F1 完成**（`d700c2a`，fan_defs.hl 全部定义：FAN/sigmaFan/
+  dartOfFan/e·n·fFanPair/wDartFan/azimFan/fullySurrounded 等；
+  hypermapOfFan 与 conforming_bijection 暂缓待 σ-置换定理）；
+  **F2 完成**（`2816877`，fan_misc.hl 可独立部分：inverse1SigmaFan/
+  extensionSigmaFan_eq_res/in_setOfEdge；其余三引理依赖 fan.hl 的
+  permutes_sigma_fan）。**F3 = azim 基础引理层**（flyspeck.ml 的
+  AZIM_REFL/AZIM_SYMM/AZIM_INSERT 等，源已持久化
+  `/home/scroll/hol-light-ref/Multivariate-flyspeck.ml`）→
+  sigma_fan_in_set_of_edge → permutes_sigma_fan → fan_misc 收尾。
 - 移植惯例：对应 HOL 行号写头注；Mathlib 已有的跳过并注明；零 sorry、
   零 native_decide、零自引入 axiom；每块 `lake build Kepler` 全绿 +
   公理抽查后才提交。
