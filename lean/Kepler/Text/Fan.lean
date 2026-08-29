@@ -224,8 +224,51 @@ def fan80 (x : V3) (V : Set V3) (E : Set (Set V3)) : Prop :=
   ∀ v u : V3, {v, u} ∈ E →
     0 < azim x v u (sigmaFan x V E v u) ∧ azim x v u (sigmaFan x V E v u) < Real.pi
 
+
+/-! ## fan_misc.hl（155 行）的可独立部分
+
+其余三引理（`INVERSE_SIGMA_FAN`、`EXTENSION_SIGMA_FAN_INJECTIVE`、
+`INVERSE_SIGMA_FAN_EQ_INVERSE1_SIGMA_FAN`）依赖 fan.hl 的
+`permutes_sigma_fan`/`INVERSE1_SIGMA_FAN`（σ-置换理论，进而依赖
+flyspeck.ml 的 azim 基础引理层 AZIM_REFL/AZIM_SYMM 等）——排入 F3。 -/
+
+/-- HOL fan_misc `inverse1_sigma_fan`（ε-形式的三条件逆）。 -/
+noncomputable def inverse1SigmaFan (x : V3) (V : Set V3) (E : Set (Set V3))
+    (v : V3) : V3 → V3 :=
+  Classical.epsilon (fun g => (∀ w : V3, {v, w} ∈ E → {v, g w} ∈ E) ∧
+    (∀ w : V3, {v, w} ∈ E → sigmaFan x V E v (g w) = w) ∧
+    (∀ w : V3, {v, w} ∈ E → g (sigmaFan x V E v w) = w))
+
+/-- HOL fan_misc `EXTENSION_SIGMA_FAN_EQ_RES`。 -/
+theorem extensionSigmaFan_eq_res (x : V3) (V : Set V3) (E : Set (Set V3))
+    (v : V3) :
+    extensionSigmaFan x V E v = res (sigmaFan x V E v) (setOfEdge v V E) := by
+  funext u
+  unfold extensionSigmaFan res
+  by_cases hu : u ∈ setOfEdge v V E <;> simp [hu]
+
+/-- HOL fan_misc `IN_SET_OF_EDGE`。 -/
+theorem in_setOfEdge (V : Set V3) (E : Set (Set V3)) (v w : V3)
+    (hsub : ⋃₀ E ⊆ V) (hd : (v, w) ∈ dart1OfFan V E) :
+    v ∈ V ∧ w ∈ V ∧ w ∈ setOfEdge v V E ∧ v ∈ setOfEdge w V E := by
+  have he : {v, w} ∈ E := hd
+  have hv : v ∈ V := hsub (Set.mem_sUnion.mpr ⟨{v, w}, he, by simp⟩)
+  have hw : w ∈ V := hsub (Set.mem_sUnion.mpr ⟨{v, w}, he, by simp⟩)
+  have he' : {w, v} ∈ E := by
+    have h2 : ({w, v} : Set V3) = ({v, w} : Set V3) := by
+      apply Set.ext; intro a; simp; tauto
+    rw [h2]; exact he
+  exact ⟨hv, hw, ⟨he, hw⟩, ⟨he', hv⟩⟩
+
+/-- HOL fan_misc `FAN_IN_SET_OF_EDGE`。 -/
+theorem FAN_in_setOfEdge (x : V3) (V : Set V3) (E : Set (Set V3)) (v w : V3)
+    (hfan : FAN x V E) (he : {v, w} ∈ E) :
+    v ∈ V ∧ w ∈ V ∧ w ∈ setOfEdge v V E ∧ v ∈ setOfEdge w V E :=
+  in_setOfEdge V E v w hfan.1 he
+
 end Kepler.Text.Fan
 
-/- 计划（下一块）：`hypermapOfFan`（证明参数化：e/n/f_fan 的 PermesOn +
-循环性在 fan.hl 后续块）、`conforming_bijection`（需 Hypermap.faceSet）、
-fan_misc.hl（155 行）。 -/
+/- 计划（F3）：azim 基础引理层（flyspeck.ml 的 AZIM_REFL/AZIM_SYMM 等）→
+fan.hl 的 sigma_fan_in_set_of_edge/permutes_sigma_fan/INVERSE1_SIGMA_FAN →
+fan_misc 剩余三引理；随后 hypermapOfFan（证明参数化）与
+conforming_bijection（需 Hypermap.faceSet）。 -/
