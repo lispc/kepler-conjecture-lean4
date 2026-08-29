@@ -43,7 +43,7 @@ PLAN.md 与各 README）。
   585 个 native_decide 分片全量重建需 ~7 天。
 - 公理审计：`lean/scripts/AxiomAudit.lean`（`make check` 覆盖）。
 
-### Phase 3 — LP（🟡 列主序表示已落地；全量化为纯算力问题）
+### Phase 3 — LP（🟢 全量化生产运行中，2026-08-29 启动）
 
 - 链路：Flyspeck easy 证书 → `parse_lpcert.py` → `gen_data.py` →
   GLPK 5.0 展开 → `flatten_lp.py` → SoPlex 8.0.3 精确模式
@@ -65,9 +65,24 @@ PLAN.md 与各 README）。
   字面量阐明 423s）。**30s/LP 目标不可达**：内核 decide 重放 ~12k 次
   ~900 位大整数乘 ≈130s 算术下限 + ~420s 字面量阐明。后续出路：
   求解侧取更小分母证书（减小 Y 位宽）或 Data/cols 双 decide 并行。
-- 全量化（43,078 LP × ~650s ≈ 325 核·天）：纯算力排程问题，可用
-  `socert.py --col-major` + `build_shards.py` 风格并发；是否值得投入
-  待与整体进度权衡（见 §6）。
+- **全量化生产已启动**（子代理搭建，2026-08-29）：
+  - 43,078 终端全部从 OCaml Marshal 档案解析（easy 23,640 / hard 19,438），
+    19,715 张图与仓库 CertData 完全对账（缺 0 多 0）。
+  - Y 来源定案：档案 int64 乘子 = glpk 浮点对偶 ×10^p（舍入值，语义不同），
+    生产走 **SoPlex exact 复解**（试点图逐字节复现 Data.lean）；档案用于
+    枚举/对账/浮点交叉校验（easy 多终端 4,403/4,403 零失配）。
+  - 驱动：`/dev/shm/lprun/driver.py`，独立 LEAN_PATH 输出树（不碰仓库
+    .lake），44 worker（实测 ~10G RSS/worker），工件即删，日志
+    `results.jsonl` 每 5 分钟备份 `/home/scroll/lprun-logs/`。
+  - **批次 1（单终端 19,237）运行中**：PID 1111334（nohup，断点续跑），
+    截至 2026-08-29 晚 **1,130/19,237 done，0 fail，148.7 终端/h**，
+    ETA ~5 天；批次 2a（easy 多终端 4,403）看门狗 `chain2a.sh`
+    （PID 1123156）接力，追加 ~34h。
+  - **hard 19,438 挂起**：hard_1 ~19% 终端 LP 值偏差 ±0.003–0.03 未定位
+    根因（已排除端口 bug/打印精度/序约定；fail-loud 断言在位，Lean 复检
+    保证跑过的必真）；修复 branch.py 重放后再排程。
+  - 进程/磁盘审计（2026-08-29）：无游离过期子代理进程；`/dev/shm/lprun`
+    稳定 ~1.5G（work/ 即清即删）；`/tmp/opencode` 陈旧探针已清。
 - formal_lp 侦察结论：19715 图 = 19700 easy + 15 hard；hard_7 单图
   9,080 个 LP；阈值语义 = 每图 scriptL > 12；注意 model2.mod 被 sed 删过
   `main: sum ln >= 12`（详见 `pipeline/lp/README.md` 与 docs/hard-cases.md）。
