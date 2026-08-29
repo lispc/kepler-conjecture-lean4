@@ -22,8 +22,10 @@ Mathlib 对应：`EuclideanSpace ℝ (Fin 3)`（= HOL `real^3`）、
 import Mathlib.LinearAlgebra.CrossProduct
 import Mathlib.Analysis.InnerProductSpace.EuclideanDist
 import Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
+import Mathlib.Analysis.SpecialFunctions.Complex.Log
 
 open Classical
+open Complex
 
 namespace Kepler.Geom
 
@@ -60,5 +62,544 @@ noncomputable def azim (v w w1 w2 : V3) : ℝ :=
 /-- HOL `wedge v0 v1 w1 w2`（flyspeck.ml:3714）：两条方位射线之间的开楔形。 -/
 def wedge (v0 v1 w1 w2 : V3) : Set V3 :=
   {y | ¬ Collinear3 v0 v1 y ∧ 0 < azim v0 v1 w1 y ∧ azim v0 v1 w1 y < azim v0 v1 w1 w2}
+
+/-! ## Pi 型桥接（`EuclideanSpace` 与 `Fin 3 → ℝ`）
+
+本节把 V3 上的点积（`⬝ᵥ`，实际定义在 Pi 侧）、内积与 crossProduct 统一起来。 -/
+
+theorem inner_eq_dot (x y : V3) : inner ℝ x y = x ⬝ᵥ y := by
+  rw [EuclideanSpace.inner_eq_star_dotProduct]
+  simp [dotProduct_comm]
+
+theorem norm_sq_eq_dot (x : V3) : ‖x‖ ^ 2 = x ⬝ᵥ x := by
+  rw [show ‖x‖ ^ 2 = inner ℝ x x from by rw [real_inner_self_eq_norm_sq], inner_eq_dot]
+
+theorem coe_toLp (p : Fin 3 → ℝ) : ((WithLp.toLp 2 p : V3) : Fin 3 → ℝ) = p :=
+  WithLp.ofLp_toLp 2 p
+
+theorem inner_toLp (p q : Fin 3 → ℝ) :
+    inner ℝ (WithLp.toLp 2 p : V3) (WithLp.toLp 2 q : V3) = p ⬝ᵥ q := by
+  rw [inner_eq_dot, coe_toLp, coe_toLp]
+
+/-! ## 三点共线特征 -/
+
+theorem collinear3_iff_smul (hw : w ≠ v) :
+    Collinear3 v w w1 ↔ ∃ c : ℝ, w1 - v = c • (w - v) := by
+  constructor
+  · intro h
+    obtain ⟨p₀, vec, hall⟩ := (collinear_iff_exists_forall_eq_smul_vadd
+      ({v, w, w1} : Set V3)).mp h
+    obtain ⟨r1, h1⟩ := hall v (by simp)
+    obtain ⟨r2, h2⟩ := hall w (by simp)
+    obtain ⟨r3, h3⟩ := hall w1 (by simp)
+    have hvw : w - v = (r2 - r1) • vec := by
+      rw [h2, h1, vadd_eq_add, vadd_eq_add]; module
+    have hw1 : w1 - v = (r3 - r1) • vec := by
+      rw [h3, h1, vadd_eq_add, vadd_eq_add]; module
+    have hr : r2 - r1 ≠ 0 := by
+      intro he
+      apply hw
+      have hz : w - v = 0 := by rw [hvw, he, zero_smul]
+      exact sub_eq_zero.mp hz
+    have key : ((r3 - r1) / (r2 - r1)) * (r2 - r1) = r3 - r1 := div_mul_cancel₀ _ hr
+    refine ⟨(r3 - r1) / (r2 - r1), ?_⟩
+    rw [hw1, hvw, smul_smul, key]
+  · intro ⟨c, hc⟩
+    refine (collinear_iff_exists_forall_eq_smul_vadd ({v, w, w1} : Set V3)).mpr ⟨v, w - v, ?_⟩
+    intro p hp
+    rw [Set.mem_insert_iff] at hp
+    rcases hp with rfl | hp
+    · exact ⟨0, by simp⟩
+    rw [Set.mem_insert_iff] at hp
+    rcases hp with rfl | hp
+    · exact ⟨1, by simp⟩
+    rw [Set.mem_singleton_iff] at hp
+    refine ⟨c, ?_⟩
+    rw [hp, vadd_eq_add, ← hc]
+    abel
+
+theorem collinear3_of_eq (he : w = v) : Collinear3 v w w1 := by
+  rw [he]
+  have hset : ({v, v, w1} : Set V3) = {v, w1} := by ext x; simp
+  show Collinear ℝ ({v, v, w1} : Set V3)
+  rw [hset]
+  exact collinear_pair ℝ v w1
+
+/-- 任一非零向量上存在右手 ON 标架（`exists_on3_eq_smul` 的辅助 dot 事实）。 -/
+theorem dot_toLp (p : Fin 3 → ℝ) (y : V3) :
+    (WithLp.toLp 2 p : V3) ⬝ᵥ y = p ⬝ᵥ (y : Fin 3 → ℝ) := by
+  have hy : y = (WithLp.toLp 2 ((y : Fin 3 → ℝ)) : V3) := (WithLp.toLp_ofLp 2 _).symm
+  rw [hy, ← inner_eq_dot, inner_toLp, WithLp.ofLp_toLp]
+
+/-- `v ⬝ᵥ v > 0 ↔ v ≠ 0`（Pi 侧）。 -/
+theorem dot_self_pos_iff {m : Type} [Fintype m] (v : m → ℝ) :
+    0 < v ⬝ᵥ v ↔ v ≠ 0 := by
+  have hnn : 0 ≤ v ⬝ᵥ v := by
+    simp only [dotProduct]
+    exact Finset.sum_nonneg fun i _ => mul_self_nonneg (v i)
+  constructor
+  · intro h he
+    rw [he, zero_dotProduct] at h
+    exact absurd h (by norm_num)
+  · intro h
+    by_contra hle
+    have h0 : v ⬝ᵥ v = 0 := le_antisymm (le_of_not_gt hle) hnn
+    have hall : ∀ i ∈ (Finset.univ : Finset m), v i * v i = 0 :=
+      (Finset.sum_eq_zero_iff_of_nonneg fun i _ => mul_self_nonneg (v i)).mp h0
+    apply h
+    funext i
+    have hvi : v i = 0 := mul_self_eq_zero.mp (hall i (Finset.mem_univ i))
+    rw [hvi]
+    rfl
+
+/-! ## ON 标架基本性质 -/
+
+theorem on3_linearIndependent (h : Orthonormal3 e1 e2 e3) :
+    LinearIndependent ℝ (![e1, e2, e3] : Fin 3 → V3) := by
+  obtain ⟨h11, h22, h33, h12, h13, h23, -⟩ := h
+  rw [Fintype.linearIndependent_iff]
+  intro g hg
+  rw [Fin.sum_univ_three] at hg
+  simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+    Matrix.tail_cons, Matrix.head_cons] at hg
+  have key : ∀ j : Fin 3, g j = 0 := by
+    intro j
+    have d0 : (g 0 • e1 + g 1 • e2 + g 2 • e3) ⬝ᵥ e1 = 0 := by rw [hg]; simp
+    have d1 : (g 0 • e1 + g 1 • e2 + g 2 • e3) ⬝ᵥ e2 = 0 := by rw [hg]; simp
+    have d2 : (g 0 • e1 + g 1 • e2 + g 2 • e3) ⬝ᵥ e3 = 0 := by rw [hg]; simp
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, smul_dotProduct] at d0 d1 d2
+    simp only [dotProduct_comm (e2 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ),
+      dotProduct_comm (e3 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ),
+      dotProduct_comm (e3 : Fin 3 → ℝ) (e2 : Fin 3 → ℝ),
+      smul_eq_mul, mul_zero, add_zero, zero_add, mul_one, h11, h12, h13, h22, h23, h33]
+      at d0 d1 d2
+    fin_cases j
+    · exact d0
+    · exact d1
+    · exact d2
+  intro i
+  exact key i
+
+noncomputable def on3_basis (h : Orthonormal3 e1 e2 e3) : Module.Basis (Fin 3) ℝ V3 :=
+  basisOfLinearIndependentOfCardEqFinrank (on3_linearIndependent h) (by simp)
+
+theorem on3_expand (h : Orthonormal3 e1 e2 e3) (u : V3) :
+    u = (u ⬝ᵥ e1) • e1 + (u ⬝ᵥ e2) • e2 + (u ⬝ᵥ e3) • e3 := by
+  have hcopy := h
+  obtain ⟨h11, h22, h33, h12, h13, h23, -⟩ := hcopy
+  have hb : ((on3_basis h : Module.Basis (Fin 3) ℝ V3) : Fin 3 → V3) =
+      (![e1, e2, e3] : Fin 3 → V3) := coe_basisOfLinearIndependentOfCardEqFinrank _ _
+  have hsum : ∑ i, ((on3_basis h).repr u i) • (![e1, e2, e3] : Fin 3 → V3) i = u := by
+    have hs := (on3_basis h).sum_repr u
+    rwa [hb] at hs
+  have hrep : ∀ j : Fin 3, ((on3_basis h).repr u) j =
+      u ⬝ᵥ (![e1, e2, e3] : Fin 3 → V3) j := by
+    intro j
+    fin_cases j
+    · show ((on3_basis h).repr u) 0 = u ⬝ᵥ (![e1, e2, e3] : Fin 3 → V3) 0
+      have hcong := congrArg (fun x : V3 => x ⬝ᵥ (![e1, e2, e3] : Fin 3 → V3) 0) hsum
+      simp only [Fin.sum_univ_three, WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct,
+        smul_dotProduct, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+        Matrix.tail_cons, Matrix.head_cons,
+        dotProduct_comm (e2 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ),
+        dotProduct_comm (e3 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ), smul_eq_mul, mul_one, mul_zero,
+        add_zero, zero_add, h11, h12, h13] at hcong ⊢
+      exact hcong
+    · show ((on3_basis h).repr u) 1 = u ⬝ᵥ (![e1, e2, e3] : Fin 3 → V3) 1
+      have hcong := congrArg (fun x : V3 => x ⬝ᵥ (![e1, e2, e3] : Fin 3 → V3) 1) hsum
+      simp only [Fin.sum_univ_three, WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct,
+        smul_dotProduct, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+        Matrix.tail_cons, Matrix.head_cons,
+        dotProduct_comm (e3 : Fin 3 → ℝ) (e2 : Fin 3 → ℝ),
+        smul_eq_mul, mul_one, mul_zero, add_zero, zero_add, h11, h12, h22, h23] at hcong ⊢
+      exact hcong
+    · show ((on3_basis h).repr u) 2 = u ⬝ᵥ (![e1, e2, e3] : Fin 3 → V3) 2
+      have hcong := congrArg (fun x : V3 => x ⬝ᵥ (![e1, e2, e3] : Fin 3 → V3) 2) hsum
+      simp only [Fin.sum_univ_three, WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct,
+        smul_dotProduct, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+        Matrix.tail_cons, Matrix.head_cons,
+        smul_eq_mul, mul_one, mul_zero, add_zero, zero_add, h11, h13, h23, h33] at hcong ⊢
+      exact hcong
+  conv_lhs => rw [← hsum]
+  simp only [Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_two, Matrix.tail_cons, Matrix.head_cons]
+  rw [hrep 0, hrep 1, hrep 2]
+  simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+    Matrix.tail_cons, Matrix.head_cons]
+
+/-! ## 右手标架的 cross 恒等式 -/
+
+/-- ON 右手标架满足 `e1 × e2 = e3`（Pi 侧）。 -/
+theorem on3_cross (h : Orthonormal3 e1 e2 e3) :
+    crossProduct (e1 : Fin 3 → ℝ) (e2 : Fin 3 → ℝ) = (e3 : Fin 3 → ℝ) := by
+  have hcopy := h
+  obtain ⟨h11, h22, h33, h12, h13, h23, hpos⟩ := hcopy
+  set X : V3 := (WithLp.toLp 2 (crossProduct (e1 : Fin 3 → ℝ) (e2 : Fin 3 → ℝ)) : V3) with hX
+  have hx1 : X ⬝ᵥ e1 = 0 := by
+    rw [hX, dot_toLp, ← cross_anticomm (e2 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ), neg_dotProduct,
+      dotProduct_comm (crossProduct (e2 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ)) (e1 : Fin 3 → ℝ),
+      dot_cross_self, neg_zero]
+  have hx2 : X ⬝ᵥ e2 = 0 := by
+    rw [hX, dot_toLp,
+      dotProduct_comm (crossProduct (e1 : Fin 3 → ℝ) (e2 : Fin 3 → ℝ)) (e2 : Fin 3 → ℝ),
+      dot_cross_self]
+  have hrpos : 0 < X ⬝ᵥ e3 := by
+    rw [hX, dot_toLp]
+    exact hpos
+  have he3n : ‖e3‖ ^ 2 = 1 := by
+    rw [norm_sq_eq_dot]
+    exact h33
+  have hnormsq : ‖X‖ ^ 2 = 1 := by
+    rw [norm_sq_eq_dot, hX, dot_toLp, coe_toLp, cross_dot_cross,
+      dotProduct_comm (e2 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ), h11, h22, h12]
+    norm_num
+  have hexp : X = (X ⬝ᵥ e1) • e1 + (X ⬝ᵥ e2) • e2 + (X ⬝ᵥ e3) • e3 := on3_expand h X
+  rw [hx1, hx2, zero_smul, zero_smul, zero_add, zero_add] at hexp
+  have hcoe : (X ⬝ᵥ e3) ^ 2 = 1 := by
+    have h2 : ‖X‖ ^ 2 = ‖(X ⬝ᵥ e3) • e3‖ ^ 2 := by conv_lhs => rw [hexp]
+    rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg (le_of_lt hrpos), mul_pow, he3n] at h2
+    rw [hnormsq] at h2
+    linarith [sq_nonneg (X ⬝ᵥ e3)]
+  have hval : X ⬝ᵥ e3 = 1 := by
+    rcases sq_eq_one_iff.mp hcoe with he | he
+    · exact he
+    · linarith
+  have hXe3 : X = e3 := by rw [hexp, hval, one_smul]
+  have hcoe' : (X : Fin 3 → ℝ) = (e3 : Fin 3 → ℝ) :=
+    congrArg (fun x : V3 => (x : Fin 3 → ℝ)) hXe3
+  rwa [coe_toLp] at hcoe'
+
+/-- 任一非零向量上存在右手 ON 标架使其第三轴与该向量同向。 -/
+theorem exists_on3_eq_smul (u : V3) (hu : u ≠ 0) :
+    ∃ e1 e2 e3 : V3, Orthonormal3 e1 e2 e3 ∧ u = ‖u‖ • e3 := by
+  have hnorm : 0 < ‖u‖ := norm_pos_iff.mpr hu
+  set c : Fin 3 → ℝ :=
+    if (u : Fin 3 → ℝ) 1 = 0 ∧ (u : Fin 3 → ℝ) 2 = 0 then
+      crossProduct (u : Fin 3 → ℝ) (![0, 1, 0] : Fin 3 → ℝ)
+    else crossProduct (u : Fin 3 → ℝ) (![1, 0, 0] : Fin 3 → ℝ) with hc
+  have hcz : c ≠ 0 := by
+    by_cases hz : (u : Fin 3 → ℝ) 1 = 0 ∧ (u : Fin 3 → ℝ) 2 = 0
+    · have hu0 : (u : Fin 3 → ℝ) 0 ≠ 0 := by
+        intro h0
+        apply hu
+        have hall : ∀ i, (u : Fin 3 → ℝ) i = 0 := by
+          intro i; fin_cases i
+          · exact h0
+          · exact hz.1
+          · exact hz.2
+        have hz2 : u ⬝ᵥ u = 0 := by
+          simp only [dotProduct, hall]
+          simp
+        have h3 : ‖u‖ ^ 2 = 0 := by rw [norm_sq_eq_dot]; exact hz2
+        have h4 : ‖u‖ = 0 := by
+          exact (pow_eq_zero_iff two_ne_zero).mp h3
+        exact (norm_eq_zero).mp h4
+      intro he
+      rw [hc, if_pos hz, cross_apply] at he
+      have h2 := congrFun he 2
+      simp only [Matrix.cons_val_two, Matrix.tail_cons, Matrix.head_cons,
+        Matrix.cons_val_zero, Matrix.cons_val_one, Pi.zero_apply] at h2
+      norm_num at h2
+      exact hu0 h2
+    · intro he
+      rw [hc, if_neg hz, cross_apply] at he
+      have h2 := congrFun he 1
+      have h3 := congrFun he 2
+      simp only [Matrix.cons_val_one, Matrix.cons_val_two, Matrix.tail_cons,
+        Matrix.head_cons, Matrix.cons_val_zero, Pi.zero_apply] at h2 h3
+      norm_num at h2 h3
+      exact hz ⟨h3, h2⟩
+  have hcu : (u : Fin 3 → ℝ) ⬝ᵥ c = 0 := by
+    by_cases hz : (u : Fin 3 → ℝ) 1 = 0 ∧ (u : Fin 3 → ℝ) 2 = 0
+    · rw [hc, if_pos hz,
+        dotProduct_comm (u : Fin 3 → ℝ) (crossProduct (u : Fin 3 → ℝ)
+          (![0, 1, 0] : Fin 3 → ℝ)),
+        ← cross_anticomm (![0, 1, 0] : Fin 3 → ℝ) (u : Fin 3 → ℝ),
+        neg_dotProduct,
+        dotProduct_comm (crossProduct (![0, 1, 0] : Fin 3 → ℝ) (u : Fin 3 → ℝ))
+          (u : Fin 3 → ℝ),
+        dot_cross_self, neg_zero]
+    · rw [hc, if_neg hz,
+        dotProduct_comm (u : Fin 3 → ℝ) (crossProduct (u : Fin 3 → ℝ)
+          (![1, 0, 0] : Fin 3 → ℝ)),
+        ← cross_anticomm (![1, 0, 0] : Fin 3 → ℝ) (u : Fin 3 → ℝ),
+        neg_dotProduct,
+        dotProduct_comm (crossProduct (![1, 0, 0] : Fin 3 → ℝ) (u : Fin 3 → ℝ))
+          (u : Fin 3 → ℝ),
+        dot_cross_self, neg_zero]
+  -- x1 与 e1
+  have hx1u : inner ℝ (WithLp.toLp 2 c : V3) u = 0 := by
+    rw [inner_eq_dot, dot_toLp, dotProduct_comm]
+    exact hcu
+  have hx1n : 0 < ‖(WithLp.toLp 2 c : V3)‖ := by
+    have h1 : ‖(WithLp.toLp 2 c : V3)‖ ^ 2 = c ⬝ᵥ c := by
+      rw [norm_sq_eq_dot, dot_toLp, coe_toLp]
+    have h2 : 0 < c ⬝ᵥ c := (dot_self_pos_iff c).mpr hcz
+    have h3 : 0 < ‖(WithLp.toLp 2 c : V3)‖ ^ 2 := by rw [h1]; exact h2
+    by_contra hle
+    push_neg at hle
+    have hz' : ‖(WithLp.toLp 2 c : V3)‖ = 0 := le_antisymm hle (norm_nonneg _)
+    rw [hz'] at h3
+    exact absurd h3 (by norm_num)
+  set e1 : V3 := ‖(WithLp.toLp 2 c : V3)‖⁻¹ • (WithLp.toLp 2 c : V3) with he1
+  set e3 : V3 := ‖u‖⁻¹ • u with he3
+  have he1n : ‖e1‖ = 1 := by
+    rw [he1, norm_smul, Real.norm_eq_abs, abs_of_pos (inv_pos.mpr hx1n),
+      inv_mul_cancel₀ hx1n.ne']
+  have he3n : ‖e3‖ = 1 := by
+    rw [he3, norm_smul, Real.norm_eq_abs, abs_of_pos (inv_pos.mpr hnorm),
+      inv_mul_cancel₀ hnorm.ne']
+  have he11 : e1 ⬝ᵥ e1 = 1 := by
+    rw [← inner_eq_dot, real_inner_self_eq_norm_sq, he1n]; norm_num
+  have he33 : e3 ⬝ᵥ e3 = 1 := by
+    rw [← inner_eq_dot, real_inner_self_eq_norm_sq, he3n]; norm_num
+  have he13 : e1 ⬝ᵥ e3 = 0 := by
+    rw [← inner_eq_dot, real_inner_smul_left, real_inner_smul_right, hx1u]; norm_num
+  set e2 : V3 := (WithLp.toLp 2 (crossProduct (e3 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ)) : V3)
+    with he2
+  have he22 : e2 ⬝ᵥ e2 = 1 := by
+    have hd : e2 ⬝ᵥ e2 = (e3 : Fin 3 → ℝ) ⬝ᵥ (e3 : Fin 3 → ℝ) *
+        ((e1 : Fin 3 → ℝ) ⬝ᵥ (e1 : Fin 3 → ℝ)) -
+      (e3 : Fin 3 → ℝ) ⬝ᵥ (e1 : Fin 3 → ℝ) * ((e1 : Fin 3 → ℝ) ⬝ᵥ (e3 : Fin 3 → ℝ)) := by
+      rw [he2, dot_toLp, coe_toLp, cross_dot_cross]
+    rw [he33, he11, dotProduct_comm (e3 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ), he13] at hd
+    rw [hd]; norm_num
+  have he12 : e1 ⬝ᵥ e2 = 0 := by
+    rw [he2, coe_toLp, dot_cross_self]
+  have he23 : e2 ⬝ᵥ e3 = 0 := by
+    rw [he2, dot_toLp, ← cross_anticomm (e1 : Fin 3 → ℝ) (e3 : Fin 3 → ℝ),
+      neg_dotProduct,
+      dotProduct_comm (crossProduct (e1 : Fin 3 → ℝ) (e3 : Fin 3 → ℝ)) (e3 : Fin 3 → ℝ),
+      dot_cross_self, neg_zero]
+  have hpos : 0 < crossProduct (e1 : Fin 3 → ℝ) (e2 : Fin 3 → ℝ) ⬝ᵥ (e3 : Fin 3 → ℝ) := by
+    have hq : crossProduct (e1 : Fin 3 → ℝ) (crossProduct (e3 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ))
+        = ((e1 : Fin 3 → ℝ) ⬝ᵥ (e1 : Fin 3 → ℝ)) • (e3 : Fin 3 → ℝ) -
+          ((e3 : Fin 3 → ℝ) ⬝ᵥ (e1 : Fin 3 → ℝ)) • (e1 : Fin 3 → ℝ) :=
+      cross_cross_eq_smul_sub_smul' _ _ _
+    have he2coe : (e2 : Fin 3 → ℝ) = crossProduct (e3 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ) := by
+      rw [he2, coe_toLp]
+    rw [he2coe, hq, sub_dotProduct, smul_dotProduct, smul_dotProduct, he11, he33, he13,
+      smul_eq_mul, smul_eq_mul, mul_zero, sub_zero, mul_one]
+    norm_num
+  refine ⟨e1, e2, e3, ⟨he11, he22, he33, he12, he13, he23, hpos⟩, ?_⟩
+  rw [he3, smul_smul, mul_inv_cancel₀ hnorm.ne', one_smul]
+
+/-! ## 标架变换与 ℂ 坐标 -/
+
+private theorem crossAdd (p q r : Fin 3 → ℝ) :
+    crossProduct (p + q) r = crossProduct p r + crossProduct q r := by
+  funext i
+  fin_cases i <;> simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_two, Matrix.tail_cons, Matrix.head_cons, Pi.add_apply]
+
+private theorem crossSmul (t : ℝ) (p r : Fin 3 → ℝ) :
+    crossProduct (t • p) r = t • crossProduct p r := by
+  funext i
+  fin_cases i <;> simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_two, Matrix.tail_cons, Matrix.head_cons, Pi.smul_apply]
+
+private theorem crossAdd' (p q r : Fin 3 → ℝ) :
+    crossProduct p (q + r) = crossProduct p q + crossProduct p r := by
+  rw [← cross_anticomm (q + r) p, ← cross_anticomm q p, ← cross_anticomm r p, crossAdd,
+    neg_add]
+
+private theorem crossSmul' (t : ℝ) (p r : Fin 3 → ℝ) :
+    crossProduct p (t • r) = t • crossProduct p r := by
+  rw [← cross_anticomm (t • r) p, crossSmul, ← cross_anticomm p r, smul_neg, neg_neg]
+
+/-- 同轴（e3 = f3）两个右手 ON 标架的平面 ℂ 坐标相差一个单位复数倍。 -/
+theorem on3_axis_change (he : Orthonormal3 e1 e2 e3) (hf : Orthonormal3 f1 f2 f3)
+    (h3 : e3 = f3) (x : V3) :
+    ∃ u : ℂ, ‖u‖ = 1 ∧
+      ((x ⬝ᵥ e1) + (x ⬝ᵥ e2) * I = u * ((x ⬝ᵥ f1) + (x ⬝ᵥ f2) * I)) := by
+  have heC := he
+  have hfC := hf
+  obtain ⟨hee11, hee22, hee33, hee12, hee13, hee23, -⟩ := heC
+  obtain ⟨hff11, hff22, hff33, hff12, hff13, hff23, -⟩ := hfC
+  set a := f1 ⬝ᵥ e1 with ha
+  set b := f1 ⬝ᵥ e2 with hb
+  set c := f2 ⬝ᵥ e1 with hc
+  set d := f2 ⬝ᵥ e2 with hd
+  have hf1e3 : f1 ⬝ᵥ e3 = 0 := by rw [h3]; exact hff13
+  have hf2e3 : f2 ⬝ᵥ e3 = 0 := by rw [h3]; exact hff23
+  have hf1exp : f1 = a • e1 + b • e2 := by
+    have hexp := on3_expand he f1
+    rw [show f1 ⬝ᵥ e1 = a from rfl, show f1 ⬝ᵥ e2 = b from rfl, hf1e3, zero_smul,
+      add_zero] at hexp
+    exact hexp
+  have hf2exp : f2 = c • e1 + d • e2 := by
+    have hexp := on3_expand he f2
+    rw [show f2 ⬝ᵥ e1 = c from rfl, show f2 ⬝ᵥ e2 = d from rfl, hf2e3, zero_smul,
+      add_zero] at hexp
+    exact hexp
+  have hbilin : ∀ (p q : V3), (p ⬝ᵥ q = _) := fun _ _ => rfl
+  have h1a : f1 ⬝ᵥ f1 = a * a + b * b := by
+    have h : (a • e1 + b • e2) ⬝ᵥ (a • e1 + b • e2) = a * a + b * b := by
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+        smul_dotProduct, dotProduct_smul, smul_eq_mul, dotProduct_comm (e2 : Fin 3 → ℝ)
+          (e1 : Fin 3 → ℝ), hee11, hee22, hee12, mul_zero, add_zero]
+      ring
+    rw [hf1exp]
+    exact h
+  have hab : a * a + b * b = 1 := by rw [← h1a]; exact hff11
+  have h1c : f2 ⬝ᵥ f2 = c * c + d * d := by
+    have h : (c • e1 + d • e2) ⬝ᵥ (c • e1 + d • e2) = c * c + d * d := by
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+        smul_dotProduct, dotProduct_smul, smul_eq_mul, dotProduct_comm (e2 : Fin 3 → ℝ)
+          (e1 : Fin 3 → ℝ), hee11, hee22, hee12, mul_zero, add_zero]
+      ring
+    rw [hf2exp]
+    exact h
+  have hcd : c * c + d * d = 1 := by rw [← h1c]; exact hff22
+  have h1x : f1 ⬝ᵥ f2 = a * c + b * d := by
+    have h : (a • e1 + b • e2) ⬝ᵥ (c • e1 + d • e2) = a * c + b * d := by
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+        smul_dotProduct, dotProduct_smul, smul_eq_mul, dotProduct_comm (e2 : Fin 3 → ℝ)
+          (e1 : Fin 3 → ℝ), hee11, hee22, hee12, mul_zero, add_zero]
+      ring
+    rw [hf1exp, hf2exp]
+    exact h
+  have hacbd : a * c + b * d = 0 := by rw [← h1x]; exact hff12
+  -- 行列式恒等式：ad - bc = 1
+  have hE1E2 : crossProduct (e1 : Fin 3 → ℝ) (e2 : Fin 3 → ℝ) = (e3 : Fin 3 → ℝ) :=
+    on3_cross he
+  have h3coe : (e3 : Fin 3 → ℝ) = (f3 : Fin 3 → ℝ) := congrArg (fun z : V3 =>
+    (z : Fin 3 → ℝ)) h3
+  have hf12cross : crossProduct (f1 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ) = (f3 : Fin 3 → ℝ) :=
+    on3_cross hf
+  have hcoe1 : (f1 : Fin 3 → ℝ) = a • (e1 : Fin 3 → ℝ) + b • (e2 : Fin 3 → ℝ) := by
+    have h := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hf1exp
+    simpa only [WithLp.ofLp_add, WithLp.ofLp_smul] using h
+  have hcoe2 : (f2 : Fin 3 → ℝ) = c • (e1 : Fin 3 → ℝ) + d • (e2 : Fin 3 → ℝ) := by
+    have h := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hf2exp
+    simpa only [WithLp.ofLp_add, WithLp.ofLp_smul] using h
+  have hexp2 : crossProduct (f1 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ)
+      = (a * d - b * c) • (e3 : Fin 3 → ℝ) := by
+    rw [hcoe1, hcoe2, crossAdd, crossAdd', crossAdd', crossSmul, crossSmul, crossSmul,
+      crossSmul, crossSmul', crossSmul', crossSmul', crossSmul',
+      cross_self (e1 : Fin 3 → ℝ), cross_self (e2 : Fin 3 → ℝ), hE1E2,
+      ← cross_anticomm (e1 : Fin 3 → ℝ) (e2 : Fin 3 → ℝ), hE1E2]
+    module
+  have hdet : a * d - b * c = 1 := by
+    have w1 : crossProduct (f1 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ) ⬝ᵥ (e3 : Fin 3 → ℝ)
+        = 1 := by
+      rw [hf12cross, h3coe, hff33]
+    have w2 : crossProduct (f1 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ) ⬝ᵥ (e3 : Fin 3 → ℝ)
+        = (a * d - b * c) * 1 := by
+      rw [hexp2, smul_dotProduct, hee33, smul_eq_mul, mul_one]
+    linarith
+  have hcd' : c = -b ∧ d = a := by
+    constructor
+    · calc c = (a * a + b * b) * c := by rw [hab, one_mul]
+        _ = a * (a * c + b * d) - b * (a * d - b * c) := by ring
+        _ = a * 0 - b * 1 := by rw [hacbd, hdet]
+        _ = -b := by ring
+    · calc d = (a * a + b * b) * d := by rw [hab, one_mul]
+        _ = b * (a * c + b * d) + a * (a * d - b * c) := by ring
+        _ = b * 0 + a * 1 := by rw [hacbd, hdet]
+        _ = a := by ring
+  -- x 的 e-坐标用 f-坐标表出
+  have hxexp := on3_expand hf x
+  have hf3e1 : inner ℝ f3 e1 = 0 := by
+    rw [← h3, show inner ℝ e3 e1 = (e3 : V3) ⬝ᵥ e1 from (inner_eq_dot e3 e1),
+      dotProduct_comm (e3 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ), hee13]
+  have hf3e2 : inner ℝ f3 e2 = 0 := by
+    rw [← h3, show inner ℝ e3 e2 = (e3 : V3) ⬝ᵥ e2 from (inner_eq_dot e3 e2),
+      dotProduct_comm (e3 : Fin 3 → ℝ) (e2 : Fin 3 → ℝ), hee23]
+  have hxe1 : x ⬝ᵥ e1 = (x ⬝ᵥ f1) * a + (x ⬝ᵥ f2) * c := by
+    have hin : inner ℝ x e1
+        = (x ⬝ᵥ f1) * inner ℝ f1 e1 + (x ⬝ᵥ f2) * inner ℝ f2 e1 := by
+      conv_lhs => rw [hxexp]
+      rw [inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+        real_inner_smul_left, hf3e1, mul_zero, add_zero]
+    rw [inner_eq_dot x e1, inner_eq_dot f1 e1, inner_eq_dot f2 e1] at hin
+    exact hin
+  have hxe2 : x ⬝ᵥ e2 = (x ⬝ᵥ f1) * b + (x ⬝ᵥ f2) * d := by
+    have hin : inner ℝ x e2
+        = (x ⬝ᵥ f1) * inner ℝ f1 e2 + (x ⬝ᵥ f2) * inner ℝ f2 e2 := by
+      conv_lhs => rw [hxexp]
+      rw [inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+        real_inner_smul_left, hf3e2, mul_zero, add_zero]
+    rw [inner_eq_dot x e2, inner_eq_dot f1 e2, inner_eq_dot f2 e2] at hin
+    exact hin
+  refine ⟨a + b * I, ?_, ?_⟩
+  · have hsq : ‖a + b * I‖ ^ 2 = a * a + b * b := by
+      rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+      simp only [Complex.I_re, Complex.I_im, Complex.add_re, Complex.add_im,
+        Complex.mul_re, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+        mul_zero, add_zero, mul_one, zero_add, sub_self]
+    have hnn : 0 ≤ ‖a + b * I‖ := norm_nonneg _
+    rcases sq_eq_one_iff.mp (hsq.trans hab) with h' | h'
+    · exact h'
+    · linarith
+  · rw [hxe1, hxe2, hcd'.1, hcd'.2]
+    rw [Complex.ext_iff]
+    constructor
+    · simp only [Complex.add_re, Complex.add_im, Complex.I_re, Complex.I_im,
+        Complex.mul_re, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+        mul_zero, add_zero, sub_zero]
+      ring
+    · simp only [Complex.add_re, Complex.add_im, Complex.I_re, Complex.I_im,
+        Complex.mul_re, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+        mul_zero, add_zero, sub_zero]
+      ring
+
+
+/-! ## ℂ 角差主值 -/
+
+/-- 标架平面坐标的 ℂ 像。 -/
+def zOf (a b x : V3) : ℂ := (x ⬝ᵥ a) + (x ⬝ᵥ b) * I
+
+/-- 相位差主值（AZIM_EXISTS 的 2D 核心）。 -/
+theorem exists_angle_diff (a b : ℂ) (ha : a ≠ 0) :
+    ∃ θ : ℝ, 0 ≤ θ ∧ θ < 2 * Real.pi ∧
+      ∀ ψ : ℝ, a = ‖a‖ * Complex.exp (ψ * I) → b = ‖b‖ * Complex.exp ((ψ + θ) * I) := by
+  have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
+  set θ : ℝ := Complex.arg b - Complex.arg a
+      - (Int.floor ((Complex.arg b - Complex.arg a) / (2 * Real.pi)) : ℝ) * (2 * Real.pi)
+    with hθdef
+  by_cases hb : b = 0
+  · refine ⟨0, le_refl 0, by positivity, ?_⟩
+    intro ψ _
+    rw [hb]
+    norm_num
+  refine ⟨θ, ?_, ?_, ?_⟩
+  · have h1 := Int.floor_le ((Complex.arg b - Complex.arg a) / (2 * Real.pi))
+    have hkx := (le_div_iff₀ h2pi).mp h1
+    linarith
+  · have h2 : (Complex.arg b - Complex.arg a) / (2 * Real.pi)
+        < (Int.floor ((Complex.arg b - Complex.arg a) / (2 * Real.pi)) : ℝ) + 1 :=
+      Int.lt_floor_add_one _
+    have hxk := (div_lt_iff₀ h2pi).mp h2
+    linarith
+  · intro ψ hψ
+    have hna : ‖a‖ ≠ 0 := norm_ne_zero_iff.mpr ha
+    have hnb : ‖b‖ ≠ 0 := norm_ne_zero_iff.mpr hb
+    have hexp : Complex.exp (ψ * I) = Complex.exp (Complex.arg a * I) := by
+      have hc : ((‖a‖ : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hna
+      exact mul_left_cancel₀ hc (hψ.symm.trans (Complex.norm_mul_exp_arg_mul_I a).symm)
+    obtain ⟨n, hn⟩ := Complex.exp_eq_exp_iff_exists_int.mp hexp
+    have hpsi : ψ = Complex.arg a + (n:ℝ) * (2 * Real.pi) := by
+      have hI2 : ((ψ : ℝ) : ℂ) * Complex.I
+          = ((Complex.arg a + (n:ℝ) * (2 * Real.pi) : ℝ) : ℂ) * Complex.I := by
+        rw [hn]
+        push_cast
+        ring
+      have h3 : ((ψ : ℝ) : ℂ)
+          = ((Complex.arg a + (n:ℝ) * (2 * Real.pi) : ℝ) : ℂ) :=
+        mul_right_cancel₀ Complex.I_ne_zero hI2
+      exact_mod_cast h3
+    have hpsic : ((ψ : ℝ) : ℂ)
+        = ((Complex.arg a + (n:ℝ) * (2 * Real.pi) : ℝ) : ℂ) := by
+      exact_mod_cast hpsi
+    have hfin : Complex.exp ((↑ψ + ↑θ) * I) = Complex.exp (Complex.arg b * I) := by
+      rw [Complex.exp_eq_exp_iff_exists_int]
+      refine ⟨n - Int.floor ((Complex.arg b - Complex.arg a) / (2 * Real.pi)), ?_⟩
+      rw [hpsic]
+      push_cast
+      rw [hθdef]
+      push_cast
+      ring
+    rw [hfin, Complex.norm_mul_exp_arg_mul_I b]
 
 end Kepler.Geom
