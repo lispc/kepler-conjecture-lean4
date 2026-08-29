@@ -18,6 +18,7 @@ import Kepler.Interval.Trans
 -- Phase 4: 扩节点表达式层（IExpr 的 div/sqrt/trans 节点 + Option 求值 + checkPos soundness）
 import Kepler.Interval.Expr
 import Kepler.Geom.Azim
+import Kepler.Geom.Aff
 -- Phase 4: 分支定界证书树（二分盒树 + covers/bb_sound，叶为内核 decide 的 checkPos）
 import Kepler.Interval.Cert
 import Kepler.Graphs.ListAux
