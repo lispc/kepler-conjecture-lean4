@@ -942,4 +942,151 @@ theorem azim_eq_of_spec (h1 : ¬ Collinear3 v w w1) (h2 : ¬ Collinear3 v w w2)
   rw [if_neg (by rintro (h | h); exacts [h1 h, h2 h])]
   exact azimSpec_unique hwv (Classical.epsilon_spec (azimSpec_exists h1 h2)) hθ
 
+
+/-- azim 取值范围（下界）。 -/
+theorem azim_nonneg (v w w1 w2 : V3) : 0 ≤ azim v w w1 w2 := by
+  unfold azim
+  split
+  · norm_num
+  · rename_i hnd
+    obtain ⟨ha, hb⟩ := not_or.mp hnd
+    exact (Classical.epsilon_spec (azimSpec_exists ha hb)).1
+
+/-- azim 取值范围（上界）。 -/
+theorem azim_lt_two_pi (v w w1 w2 : V3) : azim v w w1 w2 < 2 * Real.pi := by
+  unfold azim
+  split
+  · positivity
+  · rename_i hnd
+    obtain ⟨ha, hb⟩ := not_or.mp hnd
+    exact (Classical.epsilon_spec (azimSpec_exists ha hb)).2.1
+
+/-- AZIM_REFL：`azim v w y y = 0`。 -/
+theorem azim_self (v w y : V3) : azim v w y y = 0 := by
+  by_cases hcol : Collinear3 v w y
+  · unfold azim
+    rw [if_pos (Or.inl hcol)]
+  · have hwv : w ≠ v := fun he => hcol (collinear3_of_eq he)
+    obtain ⟨f1, f2, f3, hf, halign⟩ := exists_on3_eq_smul (w - v) (sub_ne_zero.mpr hwv)
+    have haxf : (w - v : V3) = dist w v • f3 := by
+      rw [dist_eq_norm]
+      exact halign
+    refine azim_eq_of_spec hcol hcol ⟨le_refl 0, by positivity,
+      ((y - v : V3) ⬝ᵥ f3) / dist w v, ((y - v : V3) ⬝ᵥ f3) / dist w v, ?_⟩
+    intro e1 e2 e3 he hax hw
+    have hc : dist w v ≠ 0 := dist_ne_zero.mpr hwv
+    have he3f : e3 = f3 := by
+      have hsub : dist w v • e3 - dist w v • f3 = 0 := by
+        rw [← hax, ← haxf, sub_self]
+      rw [← smul_sub] at hsub
+      refine sub_eq_zero.mp ?_
+      exact smul_eq_zero.mp hsub |>.resolve_left hc
+    have hz : zOf e1 e2 (y - v) ≠ 0 := (zOf_ne_zero_iff he hax hw y).mpr hcol
+    have hpolar : zOf e1 e2 (y - v)
+        = ‖zOf e1 e2 (y - v)‖ * Complex.exp (Complex.arg (zOf e1 e2 (y - v)) * I) :=
+      (Complex.norm_mul_exp_arg_mul_I _).symm
+    have hrep := rep_of_zOf he hax hw y (Complex.arg (zOf e1 e2 (y - v)))
+      ‖zOf e1 e2 (y - v)‖ hpolar
+    refine ⟨Complex.arg (zOf e1 e2 (y - v)), ‖zOf e1 e2 (y - v)‖,
+      ‖zOf e1 e2 (y - v)‖, ?_, ?_, norm_pos_iff.mpr hz, norm_pos_iff.mpr hz⟩
+    · rw [show ((y - v : V3) ⬝ᵥ f3) = ((y - v : V3) ⬝ᵥ e3) from by rw [he3f]]
+      exact hrep
+    · rw [add_zero]
+      rw [show ((y - v : V3) ⬝ᵥ f3) = ((y - v : V3) ⬝ᵥ e3) from by rw [he3f]]
+      exact hrep
+
+
+/-- HOL flyspeck.ml:2166 `azim` 主定理：值域 + 完整 spec（退化时 r 为 0）。 -/
+theorem azim_master (v w w1 w2 : V3) :
+    0 ≤ azim v w w1 w2 ∧ azim v w w1 w2 < 2 * Real.pi ∧
+    ∃ h1 h2 : ℝ, ∀ e1 e2 e3 : V3, Orthonormal3 e1 e2 e3 →
+      (w - v : V3) = dist w v • e3 → w ≠ v →
+      ∃ psi r1 r2 : ℝ,
+        (w1 - v : V3) = (r1 * Real.cos psi) • e1 + (r1 * Real.sin psi) • e2
+          + h1 • (w - v) ∧
+        (w2 - v : V3) = (r2 * Real.cos (psi + azim v w w1 w2)) • e1
+          + (r2 * Real.sin (psi + azim v w w1 w2)) • e2 + h2 • (w - v) ∧
+        (¬ Collinear3 v w w1 → 0 < r1) ∧ (¬ Collinear3 v w w2 → 0 < r2) := by
+  refine ⟨azim_nonneg v w w1 w2, azim_lt_two_pi v w w1 w2, ?_⟩
+  by_cases hwv : w = v
+  · exact ⟨0, 0, fun _ _ _ _ _ hw => (hw hwv).elim⟩
+  obtain ⟨f1, f2, f3, hf, halign⟩ := exists_on3_eq_smul (w - v) (sub_ne_zero.mpr hwv)
+  have haxf : (w - v : V3) = dist w v • f3 := by
+    rw [dist_eq_norm]
+    exact halign
+  have he3f : ∀ e1 e2 e3 : V3, Orthonormal3 e1 e2 e3 →
+      (w - v : V3) = dist w v • e3 → e3 = f3 := by
+    intro e1 e2 e3 _ hax
+    have hc : dist w v ≠ 0 := dist_ne_zero.mpr hwv
+    have hsub : dist w v • e3 - dist w v • f3 = 0 := by
+      rw [← hax, ← haxf, sub_self]
+    rw [← smul_sub] at hsub
+    exact sub_eq_zero.mp (smul_eq_zero.mp hsub |>.resolve_left hc)
+  by_cases hcol1 : Collinear3 v w w1
+  · by_cases hcol2 : Collinear3 v w w2
+    · have hz : azim v w w1 w2 = 0 := by
+        unfold azim
+        rw [if_pos (Or.inl hcol1)]
+      rw [hz]
+      obtain ⟨c1, hc1⟩ := (collinear3_iff_smul hwv).mp hcol1
+      obtain ⟨c2, hc2⟩ := (collinear3_iff_smul hwv).mp hcol2
+      refine ⟨c1, c2, ?_⟩
+      intro e1 e2 e3 he hax _
+      refine ⟨0, 0, 0, ?_, ?_, fun hn => absurd hcol1 hn, fun hn => absurd hcol2 hn⟩
+      · rw [hc1]; simp
+      · rw [hc2]; simp
+    · have hz : azim v w w1 w2 = 0 := by
+        unfold azim
+        rw [if_pos (Or.inl hcol1)]
+      rw [hz]
+      obtain ⟨c1, hc1⟩ := (collinear3_iff_smul hwv).mp hcol1
+      refine ⟨c1, ((w2 - v : V3) ⬝ᵥ f3) / dist w v, ?_⟩
+      intro e1 e2 e3 he hax _
+      have hzne : zOf e1 e2 (w2 - v) ≠ 0 := (zOf_ne_zero_iff he hax hwv w2).mpr hcol2
+      have hpolar : zOf e1 e2 (w2 - v)
+          = ‖zOf e1 e2 (w2 - v)‖ * Complex.exp
+            (Complex.arg (zOf e1 e2 (w2 - v)) * I) :=
+        (Complex.norm_mul_exp_arg_mul_I _).symm
+      have hrep2 := rep_of_zOf he hax hwv w2 (Complex.arg (zOf e1 e2 (w2 - v)))
+        ‖zOf e1 e2 (w2 - v)‖ hpolar
+      refine ⟨Complex.arg (zOf e1 e2 (w2 - v)), 0, ‖zOf e1 e2 (w2 - v)‖, ?_, ?_,
+        fun hn => absurd hcol1 hn, fun _ => norm_pos_iff.mpr hzne⟩
+      · rw [hc1]; simp
+      · rw [add_zero]
+        rw [show ((w2 - v : V3) ⬝ᵥ f3) = ((w2 - v : V3) ⬝ᵥ e3) from by
+          rw [he3f e1 e2 e3 he hax]]
+        exact hrep2
+  · by_cases hcol2 : Collinear3 v w w2
+    · have hz : azim v w w1 w2 = 0 := by
+        unfold azim
+        rw [if_pos (Or.inr hcol2)]
+      rw [hz]
+      obtain ⟨c2, hc2⟩ := (collinear3_iff_smul hwv).mp hcol2
+      refine ⟨((w1 - v : V3) ⬝ᵥ f3) / dist w v, c2, ?_⟩
+      intro e1 e2 e3 he hax _
+      have hzne : zOf e1 e2 (w1 - v) ≠ 0 := (zOf_ne_zero_iff he hax hwv w1).mpr hcol1
+      have hpolar : zOf e1 e2 (w1 - v)
+          = ‖zOf e1 e2 (w1 - v)‖ * Complex.exp
+            (Complex.arg (zOf e1 e2 (w1 - v)) * I) :=
+        (Complex.norm_mul_exp_arg_mul_I _).symm
+      have hrep1 := rep_of_zOf he hax hwv w1 (Complex.arg (zOf e1 e2 (w1 - v)))
+        ‖zOf e1 e2 (w1 - v)‖ hpolar
+      refine ⟨Complex.arg (zOf e1 e2 (w1 - v)), ‖zOf e1 e2 (w1 - v)‖, 0, ?_, ?_,
+        fun _ => norm_pos_iff.mpr hzne, fun hn => absurd hcol2 hn⟩
+      · rw [show ((w1 - v : V3) ⬝ᵥ f3) = ((w1 - v : V3) ⬝ᵥ e3) from by
+          rw [he3f e1 e2 e3 he hax]]
+        exact hrep1
+      · rw [add_zero]
+        rw [hc2]
+        simp
+    · have hspec : AzimSpec v w w1 w2 (azim v w w1 w2) := by
+        unfold azim
+        rw [if_neg (by rintro (h | h); exacts [hcol1 h, hcol2 h])]
+        exact Classical.epsilon_spec (azimSpec_exists hcol1 hcol2)
+      unfold AzimSpec at hspec
+      obtain ⟨-, -, h1f, h2f, hframes⟩ := hspec
+      exact ⟨h1f, h2f, fun e1 e2 e3 he hax hw => by
+        obtain ⟨psi, r1, r2, rep1, rep2, hr1, hr2⟩ := hframes e1 e2 e3 he hax hw
+        exact ⟨psi, r1, r2, rep1, rep2, fun _ => hr1, fun _ => hr2⟩⟩
+
 end Kepler.Geom
