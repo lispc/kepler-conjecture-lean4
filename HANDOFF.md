@@ -101,7 +101,16 @@ PLAN.md 与各 README）。
   card/loop/family transform 定义与路径引理、on_loop 幂求值、成员刻画、
   transform_index_sum + disjoint_new_loops（四情形：窗口单射/node 传递/
   simple 单点 + nodeContour 单射）、normal_family_transform（AQIUNPP1）。
-- **下一目标**：开 Fan.lean（ch5 fan 理论）；hypermap 层已就绪。
+- **Fan 已开动**：几何前置层 `Kepler/Geom/Azim.lean` 落地（`V3`/`Orthonormal3`/
+  `Collinear3`/`AzimSpec`/`azim`，源 = HOL Light `Multivariate/flyspeck.ml`，
+  持久副本 `/home/scroll/hol-light-ref/`）。azim 源定位过程：text_formalization
+  的 sphere.hl 只消费不定义；真源是 HOL Light 本体（GitHub `jrh13/hol-light`
+  master `Multivariate/flyspeck.ml`:2148）。**下一块**：`Geom/Aff.lean`
+  （lin_combo/affsign/sgn_*/aff_ge，flyspeck.ml:685–699；HOL 集合和无限集废值
+  语义 → Lean 用 `Set.Finite` 显式化），随后 `Text/Fan.lean`（fan_defs.hl 304 行
+  → fan_misc 155 → fan 2895 → CFYXFTY 1446 → hypermap_and_fan 2767 →
+  planarity 15463 → Conforming 17033 → polyhedron 3200 → topology 4718，
+  全目录 49,452 行；hypermap_iso 1174 后置）。
 - 移植惯例：对应 HOL 行号写头注；Mathlib 已有的跳过并注明；零 sorry、
   零 native_decide、零自引入 axiom；每块 `lake build Kepler` 全绿 +
   公理抽查后才提交。
