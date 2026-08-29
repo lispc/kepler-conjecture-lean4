@@ -131,10 +131,16 @@ PLAN.md 与各 README）。
   hypermapOfFan 与 conforming_bijection 暂缓待 σ-置换定理）；
   **F2 完成**（`2816877`，fan_misc.hl 可独立部分：inverse1SigmaFan/
   extensionSigmaFan_eq_res/in_setOfEdge；其余三引理依赖 fan.hl 的
-  permutes_sigma_fan）。**F3 = azim 基础引理层**（flyspeck.ml 的
-  AZIM_REFL/AZIM_SYMM/AZIM_INSERT 等，源已持久化
-  `/home/scroll/hol-light-ref/Multivariate-flyspeck.ml`）→
-  sigma_fan_in_set_of_edge → permutes_sigma_fan → fan_misc 收尾。
+  permutes_sigma_fan）。**F3 azim 基础引理层已完成**（`ac2f514`+
+  `3136903`+`a26d661`，三个子块，Azim.lean ~1050 行）：桥接层（ofLp/
+  toLp 边界统一）→ 三点共线特征 → ON 标架（展开/on3_cross/存在/同轴变换
+  on3_axis_change）→ ℂ 角差主值 exists_angle_diff → AzimSpec 存在/唯一/
+  取值（= AZIM_EXISTS/AZIM_UNIQUE/SELECT_CONV 角色）→ 值域 + azim_self
+  （AZIM_REFL）+ azim_master（= flyspeck.ml:2166 完整主定理，弱化正性
+  四情形分解）。**F4（下一块）**：AZIM_EQ 族（AZIM_EQ/AZIM_EQ_0/
+  AZIM_EQ_0_ALT/AZIM_EQ_ALT/AZIM_COMPL/AZIM_EQ_0_SYM——走 azim_master +
+  zOf-框架表征 + affGt_pair_iff 放 Geom/Aff.lean）→ fan.hl 的 SIGMA_FAN
+  spec → sigma_fan_in_set_of_edge → permutes_sigma_fan → fan_misc 收尾。
 - 移植惯例：对应 HOL 行号写头注；Mathlib 已有的跳过并注明；零 sorry、
   零 native_decide、零自引入 axiom；每块 `lake build Kepler` 全绿 +
   公理抽查后才提交。
