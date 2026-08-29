@@ -57,4 +57,8 @@ noncomputable def azim (v w w1 w2 : V3) : ℝ :=
   if Collinear3 v w w1 ∨ Collinear3 v w w2 then 0
   else Classical.epsilon (AzimSpec v w w1 w2)
 
+/-- HOL `wedge v0 v1 w1 w2`（flyspeck.ml:3714）：两条方位射线之间的开楔形。 -/
+def wedge (v0 v1 w1 w2 : V3) : Set V3 :=
+  {y | ¬ Collinear3 v0 v1 y ∧ 0 < azim v0 v1 w1 y ∧ azim v0 v1 w1 y < azim v0 v1 w1 w2}
+
 end Kepler.Geom
