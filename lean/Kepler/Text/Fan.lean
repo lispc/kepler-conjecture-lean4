@@ -663,6 +663,108 @@ theorem permutes_sigma_fan (hfan : FAN x V E) (hu : u ∈ setOfEdge v V E) :
   · intro a ha
     rw [extensionSigmaFan, if_pos ha]
 
+
+/-- 有限集上的抽屉原理：映内 + 单射 ⟹ 满射。 -/
+private theorem finite_surjOf_inj {f : V3 → V3} {S : Set V3} (hfin : S.Finite)
+    (hmaps : ∀ a ∈ S, f a ∈ S) (hinj : ∀ a ∈ S, ∀ b ∈ S, f a = f b → a = b) :
+    ∀ b ∈ S, ∃ a ∈ S, f a = b := by
+  have hinj' : Set.InjOn f S := fun a ha b hb hab => hinj a ha b hb hab
+  have hcard : (f '' S).ncard = S.ncard := hinj'.ncard_image
+  have hle : f '' S ⊆ S := fun y hy => by
+    obtain ⟨a, ha, rfl⟩ := hy
+    exact hmaps a ha
+  intro b hb
+  by_contra hnb
+  have hsub2 : f '' S ⊆ S \ {b} := by
+    intro y hy
+    refine ⟨hle hy, ?_⟩
+    intro hyb
+    rw [Set.mem_singleton_iff] at hyb
+    obtain ⟨a, haS, hay⟩ := (Set.mem_image f S y).mp hy
+    rw [hyb] at hay
+    exact hnb ⟨a, haS, hay⟩
+  have hpsub : S \ {b} ⊂ S := by
+    refine ⟨fun y hy => hy.1, ?_⟩
+    intro heq
+    have hmem : b ∈ S \ {b} := heq hb
+    exact absurd hmem.2 (by simp)
+  have h2 : (S \ {b}).ncard < S.ncard := Set.ncard_lt_ncard hpsub hfin
+  have hfin2 : (S \ {b}).Finite := hfin.subset (fun y hy => hy.1)
+  have h3 : (f '' S).ncard ≤ (S \ {b}).ncard :=
+    Set.ncard_le_ncard hsub2 hfin2
+  omega
+
+/-- σ 在 setOfEdge 上的双射性。 -/
+theorem sigma_bijOn (hfan : FAN x V E) (hu : u ∈ setOfEdge v V E) :
+    Set.BijOn (sigmaFan x V E v) (setOfEdge v V E) (setOfEdge v V E) := by
+  refine ⟨fun a ha => sigma_fan_in_setOfEdge hfan ha,
+    fun a ha b hb heq => mono_sigma_fan hfan ha hb heq, ?_⟩
+  intro b hb
+  exact finite_surjOf_inj (remark_finite_fan1 v V E hfan.2.2.1.1)
+    (fun a ha => sigma_fan_in_setOfEdge hfan ha)
+    (fun a ha b hb heq => mono_sigma_fan hfan ha hb heq) b hb
+
+/-- HOL fan_misc:43 `INVERSE_SIGMA_FAN`（extension 的双逆）。 -/
+theorem inverse_sigma_fan_comp (hfan : FAN x V E) (hu : u ∈ setOfEdge v V E) :
+    (inverseSigmaFan x V E v) ∘ (extensionSigmaFan x V E v) = id
+      ∧ (extensionSigmaFan x V E v) ∘ (inverseSigmaFan x V E v) = id := by
+  obtain ⟨hmaps, hinjon, hid⟩ := permutes_sigma_fan hfan hu
+  have hbij : Function.Bijective (extensionSigmaFan x V E v) := by
+    constructor
+    · intro a b hab
+      by_cases ha : a ∈ setOfEdge v V E
+      · have hax : extensionSigmaFan x V E v a = sigmaFan x V E v a := by
+          rw [extensionSigmaFan, if_neg (by simpa using ha)]
+        by_cases hb : b ∈ setOfEdge v V E
+        · have hbx : extensionSigmaFan x V E v b = sigmaFan x V E v b := by
+            rw [extensionSigmaFan, if_neg (by simpa using hb)]
+          rw [hax, hbx] at hab
+          exact mono_sigma_fan hfan ha hb hab
+        · rw [hax, hid b hb] at hab
+          -- hab : σ a = b；σ a ∈ S 与 b ∉ S 矛盾
+          have hsa := sigma_fan_in_setOfEdge hfan ha
+          rw [hab] at hsa
+          exact absurd hsa hb
+      · have hax : extensionSigmaFan x V E v a = a := hid a ha
+        by_cases hb : b ∈ setOfEdge v V E
+        · rw [hax, extensionSigmaFan, if_neg (by simpa using hb)] at hab
+          -- hab : a = σ b；σ b ∈ S 与 a ∉ S 矛盾
+          have hsb := sigma_fan_in_setOfEdge hfan hb
+          rw [← hab] at hsb
+          exact absurd hsb ha
+        · rw [hax, hid b hb] at hab
+          exact hab
+    · intro y
+      by_cases hy : y ∈ setOfEdge v V E
+      · obtain ⟨a, ha, hay⟩ :=
+          finite_surjOf_inj (remark_finite_fan1 v V E hfan.2.2.1.1)
+            (fun c hc => sigma_fan_in_setOfEdge hfan hc)
+            (fun c hc d hd heq => mono_sigma_fan hfan hc hd heq) y hy
+        refine ⟨a, ?_⟩
+        rw [extensionSigmaFan, if_neg (by simpa using ha)]
+        exact hay
+      · exact ⟨y, hid y hy⟩
+  unfold inverseSigmaFan
+  constructor
+  · funext y
+    exact Function.leftInverse_invFun hbij.1 y
+  · funext y
+    exact Function.rightInverse_invFun hbij.2 y
+
+/-- HOL fan_misc `EXTENSION_SIGMA_FAN_INJECTIVE`。 -/
+theorem extension_sigma_fan_injective (hfan : FAN x V E)
+    (hu : u ∈ setOfEdge v V E) :
+    ∀ w1 w2, extensionSigmaFan x V E v w1 = extensionSigmaFan x V E v w2
+      → w1 = w2 := by
+  intro w1 w2 heq
+  have hinv : ∀ y, inverseSigmaFan x V E v (extensionSigmaFan x V E v y) = y := by
+    intro y
+    have h := (inverse_sigma_fan_comp hfan hu).1
+    exact congrFun h y
+  calc w1 = inverseSigmaFan x V E v (extensionSigmaFan x V E v w1) := (hinv w1).symm
+    _ = inverseSigmaFan x V E v (extensionSigmaFan x V E v w2) := by rw [heq]
+    _ = w2 := hinv w2
+
 end Kepler.Text.Fan
 
 /- 计划（F3）：azim 基础引理层（flyspeck.ml 的 AZIM_REFL/AZIM_SYMM 等）→
