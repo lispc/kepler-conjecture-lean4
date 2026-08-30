@@ -872,8 +872,15 @@ theorem nFanPair_mem_dart1 (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1Of
   exact (properties_of_setOfEdge_fan x V E a (sigmaFan x V E a b) hfan).mpr hσ
 
 theorem fFanPair_mem_dart1 (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
-    fFanPair x V E d ∈ dart1OfFan V E :=
-  sorry
+    fFanPair x V E d ∈ dart1OfFan V E := by
+  obtain ⟨a, b⟩ := d
+  simp only [dart1OfFan, Set.mem_setOf_eq, fFanPair]
+  -- {b, inverseSigmaFan x V E b a} ∈ E
+  -- 由 INVERSE1：{b, inverse1 b a} ∈ E；由 eq_inverse1：inverse = inverse1
+  have hab : {a, b} ∈ E := hd
+  have hba : {b, a} ∈ E := by rwa [Set.pair_comm]
+  have h1 : {b, inverse1SigmaFan x V E b a} ∈ E := (INVERSE1_SIGMA_FAN hfan).1 a hba
+  rwa [inverse_sigma_fan_eq_inverse1 hfan hba] at h1
 
 theorem mono_eFanPair {a b : V3 × V3} (ha : a ∈ dart1OfFan V E)
     (hb : b ∈ dart1OfFan V E) (heq : eFanPair V E a = eFanPair V E b) : a = b := by
@@ -922,8 +929,21 @@ theorem sur_fFanPair (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V 
 
 /-- HOL `condition_hypermap_fan`：e ∘ n ∘ f1 = I on dart1。 -/
 theorem condition_hypermap_fan (hfan : FAN x V E) :
-    ∀ d ∈ dart1OfFan V E, eFanPair V E (nFanPair x V E (fFanPair x V E d)) = d :=
-  sorry
+    ∀ d ∈ dart1OfFan V E, eFanPair V E (nFanPair x V E (fFanPair x V E d)) = d := by
+  intro ⟨a, b⟩ hd
+  simp only [eFanPair, nFanPair, fFanPair]
+  -- e(n(f(a,b))) = e(n(b, inv_b(a))) = e(b, σ_b(inv_b(a))) = (σ_b(inv_b(a)), b)
+  -- 需要 σ_b(inv_b(a)) = a
+  have hba : {b, a} ∈ E := by rwa [Set.pair_comm]
+  -- inv_b(a) = inv1_b(a)
+  have hinv : inverseSigmaFan x V E b a = inverse1SigmaFan x V E b a :=
+    (inverse_sigma_fan_eq_inverse1 hfan hba).symm
+  -- σ_b(inv1_b(a)) = a（INVERSE1 的第二个条件）
+  have hσinv : sigmaFan x V E b (inverse1SigmaFan x V E b a) = a :=
+    (INVERSE1_SIGMA_FAN hfan).2.1 a hba
+  congr 1
+  rw [hinv]
+  exact hσinv
 
 /-- HOL `plain_hypermap_fan`：e² = I on dart1。 -/
 theorem eFanPair_sq :
@@ -945,8 +965,18 @@ theorem e_fan_no_fix (hfan : FAN x V E) :
 
 /-- HOL `f_fan_no_fix_point`。 -/
 theorem f_fan_no_fix (hfan : FAN x V E) :
-    ∀ d ∈ dart1OfFan V E, fFanPair x V E d ≠ d :=
-  sorry
+    ∀ d ∈ dart1OfFan V E, fFanPair x V E d ≠ d := by
+  obtain ⟨hsub, hgraph, _, hfan2, hfan6, _⟩ := hfan
+  intro ⟨a, b⟩ hd heq
+  simp only [fFanPair] at heq
+  have h1 : b = a := (Prod.ext_iff.mp heq).1
+  have hd' : (a, a) ∈ dart1OfFan V E := by
+    simp only [dart1OfFan, Set.mem_setOf_eq] at hd ⊢
+    rw [h1] at hd; exact hd
+  have he : {a} ∈ E := by
+    simp only [dart1OfFan, Set.mem_setOf_eq] at hd'
+    simpa using hd'
+  exact hfan6 {a} he (collinear_pair ℝ x a)
 
 /-- 有限支撑双射 → Equiv.Perm（identity outside finset）。 -/
 noncomputable def Equiv.Perm.ofFiniteSupport {α : Type*} [DecidableEq α]
