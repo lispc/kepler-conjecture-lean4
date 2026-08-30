@@ -47,6 +47,70 @@ def affLt (s t : Set V3) : Set V3 := {v | Affsign (fun x => x < 0) s t v}
 /-- HOL `aff_le = affsign sgn_le`。 -/
 def affLe (s t : Set V3) : Set V3 := {v | Affsign (fun x => x ≤ 0) s t v}
 
+/-- 三点并集的 toFinset 求和分解。 -/
+private theorem sum_union_pair_singleton {f : V3 → ℝ} {v0 v1 x : V3}
+    (hfin : ({v0, v1} ∪ {x} : Set V3).Finite) (hv0v1 : v0 ≠ v1) (hx0 : x ≠ v0)
+    (hx1 : x ≠ v1) :
+    ∑ w ∈ hfin.toFinset, f w = f v0 + f v1 + f x := by
+  have h3 : hfin.toFinset = ({v0, v1, x} : Finset V3) := by
+    apply Finset.ext
+    intro w
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  rw [h3, Finset.sum_insert (by simp [hv0v1, Ne.symm hx0]),
+    Finset.sum_insert (by simp [Ne.symm hx1]), Finset.sum_singleton]
+  ring
+
+/-- 三点并集的 toFinset 向量和分解。 -/
+private theorem sum_union_pair_singleton_v {f : V3 → ℝ} {v0 v1 x : V3}
+    (hfin : ({v0, v1} ∪ {x} : Set V3).Finite) (hv0v1 : v0 ≠ v1) (hx0 : x ≠ v0)
+    (hx1 : x ≠ v1) :
+    ∑ w ∈ hfin.toFinset, f w • w = f v0 • v0 + f v1 • v1 + f x • x := by
+  have h3 : hfin.toFinset = ({v0, v1, x} : Finset V3) := by
+    apply Finset.ext
+    intro w
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  rw [h3, Finset.sum_insert (by simp [hv0v1, Ne.symm hx0]),
+    Finset.sum_insert (by simp [Ne.symm hx1]), Finset.sum_singleton]
+  abel
+
+/-- HOL AFF_GT_2_1 的射线刻画：三点互异时
+`y ∈ aff_gt {v0,v1} {x} ↔ ∃ c>0, ∃ h, y - v0 = c•(x - v0) + h•(v1 - v0)`。 -/
+theorem affGt_pair_iff {v0 v1 x y : V3} (hv0v1 : v0 ≠ v1) (hx0 : x ≠ v0)
+    (hx1 : x ≠ v1) :
+    y ∈ affGt {v0, v1} {x} ↔
+      ∃ c : ℝ, 0 < c ∧ ∃ h : ℝ, y - v0 = c • (x - v0) + h • (v1 - v0) := by
+  have hfin : ({v0, v1} ∪ {x} : Set V3).Finite :=
+    ((Set.finite_singleton v1).insert v0).union (Set.finite_singleton x)
+  constructor
+  · rintro ⟨f, hfin', hsum, hpos, hone⟩
+    have hxm : x ∈ ({v0, v1} ∪ {x} : Set V3) :=
+      Set.mem_union_right _ (Set.mem_singleton x)
+    rw [sum_union_pair_singleton_v hfin' hv0v1 hx0 hx1] at hsum
+    rw [sum_union_pair_singleton hfin' hv0v1 hx0 hx1] at hone
+    have hf0 : f v0 = 1 - f v1 - f x := by linarith
+    refine ⟨f x, hpos x (Set.mem_singleton x), f v1, ?_⟩
+    rw [hsum, hf0]
+    module
+  · rintro ⟨c, hc, h, hy⟩
+    refine ⟨fun z => if z = x then c else if z = v1 then h else 1 - c - h, hfin, ?_, ?_, ?_⟩
+    · rw [sum_union_pair_singleton_v hfin hv0v1 hx0 hx1]
+      simp only [if_neg (Ne.symm hx0), if_neg hv0v1, if_neg (Ne.symm hx1),
+        if_pos rfl, if_true]
+      rw [show y = (y - v0) + v0 from (sub_add_cancel y v0).symm, hy]
+      module
+    · intro w hw
+      simp only [Set.mem_singleton_iff] at hw
+      rcases hw with rfl
+      simpa using hc
+    · rw [sum_union_pair_singleton hfin hv0v1 hx0 hx1]
+      simp only [if_neg (Ne.symm hx0), if_neg hv0v1, if_neg (Ne.symm hx1),
+        if_pos rfl, if_true]
+      ring
+
 end Kepler.Geom
 
 /- 计划中的首批引理（下一块）：（flyspeck.ml:732，
