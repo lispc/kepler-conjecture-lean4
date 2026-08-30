@@ -145,12 +145,17 @@ PLAN.md 与各 README）。
   **F4b 完成**（`af4d9da`，Fan.lean σ-链起步）：remark_finite_fan1、
   properties_of_setOfEdge(_fan)、exists_sigmaFan、**SIGMA_FAN**（ε-witness
   三条件）、sigma_fan_in_setOfEdge。
-  **F4c（下一块）**：mono_sigma_fan 依赖链——CYCLIC_SET_EDGE_FAN /
-  subset_cyclic_set_fan / sum2_azim_fan / UNIQUE_AZIM_POINT_FAN /
-  UNIQUE_AZIM_0_POINT_FAN（fan.hl:711–1900，HOL 证明已定位）→
-  permutes_sigma_fan（PERMUTES_FINITE_INJECTIVE 路线）→ fan_misc 收尾
-  （INVERSE_SIGMA_FAN / EXTENSION_SIGMA_FAN_INJECTIVE /
-  INVERSE_SIGMA_FAN_EQ_INVERSE1）→ hypermapOfFan。
+  **F4c 完成**（`9e0db40`，permutes_sigma_fan = fan.hl:1974 核心落地）：
+  fan_not_collinear、unique1_point_fan（UNIQUE1_POINT_FAN：fan7 半空间交
+  + affGe_ray + h≥0/h<0 翻转）、unique_azim0/azim_point_fan、
+  **sum2_azim_fan**（角加法——绕开 cyclic_set 800 行机制，zOf 标架极表示
+  + 消公共相位 + 区间整除）、**mono_sigma_fan**（σ 单射：双最小性 + 角加法
+  + 三补角四情形）、**permutes_sigma_fan**（映射内+单射+集外恒等）。
+  Aff.lean 补 Affsign.of_triple / affGe_ray / 求和分解引理。
+  **F5（下一块）**：fan_misc 收尾（INVERSE_SIGMA_FAN = extension⁻¹∘extension
+  = I 之类，fan_misc.hl:43–70，用 permutes_sigma_fan + sigma_fan_in_setOfEdge）
+  → hypermapOfFan（证明参数化：extensionSigmaFan 的 Equiv.Perm 化 +
+  PermesOn）→ fan.hl 其余（d1_fan/e1_fan/e2_fan/e3_fan 区域）。
 - 移植惯例：对应 HOL 行号写头注；Mathlib 已有的跳过并注明；零 sorry、
   零 native_decide、零自引入 axiom；每块 `lake build Kepler` 全绿 +
   公理抽查后才提交。
