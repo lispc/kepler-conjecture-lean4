@@ -846,15 +846,38 @@ theorem inverse_sigma_fan_eq_inverse1 (hfan : FAN x V E) (hw : {v, w} ∈ E) :
 关键路径：dart1 有限 → e/n/f 保持 dart1 + 单射 + 满射 →
 Equiv.Perm（有限支撑双射）→ PermutesOn + comp_eq_one → Hypermap。 -/
 
+/-- HOL fan.hl `set_edges_is_finite_fan`：FAN(x,V,E) → FINITE E。
+    证明路线：UNIONS E ⊆ V → E ⊆ 𝒫(V)；V.Finite → 𝒫(V).Finite（via Finset.powerset）。 -/
+theorem setEdgesFiniteFan (hfan : FAN x V E) : E.Finite :=
+  sorry
+
 /-- HOL fan.hl `finite_dart1_fan`。 -/
 theorem finite_dart1_fan (hfan : FAN x V E) :
-    (dart1OfFan V E).Finite :=
-  sorry
+    (dart1OfFan V E).Finite := by
+  have hV : V.Finite := hfan.2.2.1.1
+  have hs : ↑hV.toFinset = V := hV.coe_toFinset
+  have hS : (↑(hV.toFinset.product hV.toFinset) : Set (V3 × V3)).Finite :=
+    (hV.toFinset.product hV.toFinset).finite_toSet
+  refine hS.subset ?_
+  intro d hd
+  simp only [dart1OfFan, Set.mem_setOf_eq] at hd
+  exact (Finset.mem_coe.mpr (Finset.mem_product.mpr
+    ⟨by rw [← Finset.mem_coe, hs]; exact hfan.1 (Set.mem_sUnion.mpr ⟨{d.1, d.2}, hd, by simp⟩),
+     by rw [← Finset.mem_coe, hs]; exact hfan.1 (Set.mem_sUnion.mpr ⟨{d.1, d.2}, hd, by simp⟩)⟩))
 
 /-- HOL fan.hl `finite_d_fan`。 -/
 theorem finite_dart_fan (hfan : FAN x V E) :
-    (dartOfFan V E).Finite :=
-  sorry
+    (dartOfFan V E).Finite := by
+  have h1 : (dart1OfFan V E).Finite := finite_dart1_fan hfan
+  have hV : V.Finite := hfan.2.2.1.1
+  -- dartOfFan = {(v,v) | v ∈ V, setOfEdge v = ∅} ∪ dart1OfFan
+  -- {(v,v)} ⊆ image of V under diagonal, hence finite
+  have hdiag : ((fun v : V3 => (v, v)) '' V).Finite := hV.image _
+  have hsub : {d : V3 × V3 | d.1 = d.2 ∧ d.1 ∈ V ∧ setOfEdge d.1 V E = ∅} ⊆
+      (fun v : V3 => (v, v)) '' V := by
+    intro d ⟨h1, h2, _⟩
+    exact ⟨d.1, h2, by simp [Prod.ext_iff, h1]⟩
+  exact (hdiag.subset hsub).union h1
 
 theorem eFanPair_mem_dart1 {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
     eFanPair V E d ∈ dart1OfFan V E := by
@@ -901,8 +924,21 @@ theorem mono_nFanPair (hfan : FAN x V E) {a b : V3 × V3} (ha : a ∈ dart1OfFan
   congr 1; exact mono_sigma_fan hfan ha2 hb2 h2
 
 theorem mono_fFanPair (hfan : FAN x V E) {a b : V3 × V3} (ha : a ∈ dart1OfFan V E)
-    (hb : b ∈ dart1OfFan V E) (heq : fFanPair x V E a = fFanPair x V E b) : a = b :=
-  sorry
+    (hb : b ∈ dart1OfFan V E) (heq : fFanPair x V E a = fFanPair x V E b) : a = b := by
+  obtain ⟨a1, a2⟩ := a; obtain ⟨b1, b2⟩ := b
+  simp only [fFanPair, Prod.mk.injEq] at heq
+  obtain ⟨rfl, h2⟩ := heq
+  -- h2 : inverseSigmaFan a2 a1 = inverseSigmaFan a2 b1
+  -- 由 left-inverse：ext_a(inv_a(a1)) = a1, ext_a(inv_a(b1)) = b1
+  have ha_e : {a2, a1} ∈ E := by rwa [Set.pair_comm]
+  have hb_e : {a2, b1} ∈ E := by rwa [Set.pair_comm]
+  have ha1_mem : a1 ∈ setOfEdge a2 V E :=
+    ⟨ha_e, hfan.1 (Set.mem_sUnion.mpr ⟨{a2, a1}, ha_e, by simp⟩)⟩
+  have heq1 : extensionSigmaFan x V E a2 (inverseSigmaFan x V E a2 a1) = a1 :=
+    congrFun (inverse_sigma_fan_comp hfan ha1_mem).2 a1
+  have heq2 : extensionSigmaFan x V E a2 (inverseSigmaFan x V E a2 b1) = b1 :=
+    congrFun (inverse_sigma_fan_comp hfan ha1_mem).2 b1
+  rw [← heq1, ← heq2, h2]
 
 theorem sur_eFanPair {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
     ∃ d' ∈ dart1OfFan V E, eFanPair V E d' = d := by
@@ -924,8 +960,24 @@ theorem sur_nFanPair (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V 
   exact Prod.ext rfl hσ
 
 theorem sur_fFanPair (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
-    ∃ d' ∈ dart1OfFan V E, fFanPair x V E d' = d :=
-  sorry
+    ∃ d' ∈ dart1OfFan V E, fFanPair x V E d' = d := by
+  obtain ⟨a, b⟩ := d
+  have hb : b ∈ setOfEdge a V E :=
+    ⟨hd, hfan.1 (Set.mem_sUnion.mpr ⟨{a, b}, hd, by simp⟩)⟩
+  have hσb : sigmaFan x V E a b ∈ setOfEdge a V E := sigma_fan_in_setOfEdge hfan hb
+  refine ⟨(sigmaFan x V E a b, a), ?_, ?_⟩
+  · -- {σ_a(b), a} ∈ E
+    have h1 : {a, sigmaFan x V E a b} ∈ E :=
+      (properties_of_setOfEdge_fan x V E a (sigmaFan x V E a b) hfan).mpr hσb
+    simp only [dart1OfFan, Set.mem_setOf_eq]
+    rwa [Set.pair_comm]
+  · simp only [fFanPair]
+    congr 1
+    -- inverseSigmaFan x V E a (sigmaFan x V E a b) = b
+    have hext : extensionSigmaFan x V E a b = sigmaFan x V E a b := by
+      rw [extensionSigmaFan, if_neg (by simpa using hb)]
+    rw [← hext]
+    exact congrFun (inverse_sigma_fan_comp hfan hb).1 b
 
 /-- HOL `condition_hypermap_fan`：e ∘ n ∘ f1 = I on dart1。 -/
 theorem condition_hypermap_fan (hfan : FAN x V E) :
