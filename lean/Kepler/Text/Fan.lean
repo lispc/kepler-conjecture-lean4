@@ -266,6 +266,71 @@ theorem FAN_in_setOfEdge (x : V3) (V : Set V3) (E : Set (Set V3)) (v w : V3)
     v ∈ V ∧ w ∈ V ∧ w ∈ setOfEdge v V E ∧ v ∈ setOfEdge w V E :=
   in_setOfEdge V E v w hfan.1 he
 
+
+/-! ## σ-链起步：SIGMA_FAN spec 与集隶属（fan.hl:324/330/552/565） -/
+
+/-- HOL fan.hl:324 `remark_finite_fan1`。 -/
+theorem remark_finite_fan1 (v : V3) (V : Set V3) (E : Set (Set V3))
+    (hV : V.Finite) : (setOfEdge v V E).Finite :=
+  hV.subset (fun w hw => hw.2)
+
+/-- HOL fan.hl:330 `properties_of_set_of_edge`。 -/
+theorem properties_of_setOfEdge (v : V3) (V : Set V3) (E : Set (Set V3)) (u : V3)
+    (hsub : ⋃₀ E ⊆ V) : ({v, u} ∈ E ↔ u ∈ setOfEdge v V E) := by
+  constructor
+  · intro he
+    refine ⟨he, ?_⟩
+    exact hsub (Set.mem_sUnion.mpr ⟨{v, u}, he, by simp⟩)
+  · intro h
+    exact h.1
+
+/-- HOL fan.hl `exists_sigma_fan`（最小方位角见证的存在性）。 -/
+theorem exists_sigmaFan (hne : setOfEdge v V E ≠ {u}) (hfan : FAN x V E)
+    (hu : u ∈ setOfEdge v V E) :
+    ∃ w : V3, w ∈ setOfEdge v V E ∧ w ≠ u ∧
+      ∀ w1 ∈ setOfEdge v V E, w1 ≠ u → azim x v u w ≤ azim x v u w1 := by
+  obtain ⟨hsub, -, ⟨hV, -⟩, -⟩ := hfan
+  have hfin := remark_finite_fan1 v V E hV
+  -- setOfEdge \ {u} 非空
+  have hne2 : (setOfEdge v V E \ {u}).Nonempty := by
+    by_contra hempty
+    apply hne
+    rw [Set.eq_singleton_iff_unique_mem]
+    refine ⟨hu, ?_⟩
+    intro w hw
+    by_contra hwu
+    exact hempty ⟨w, ⟨hw, by simp [hwu]⟩⟩
+  -- 有限非空实值集存在最小元
+  have hfin2 : (setOfEdge v V E \ {u}).Finite :=
+    hfin.subset (fun w hw => hw.1)
+  obtain ⟨w, hwmem, hwmin⟩ :=
+    Set.exists_min_image (setOfEdge v V E \ {u}) (fun w => azim x v u w) hfin2 hne2
+  rw [Set.mem_sdiff, Set.mem_singleton_iff] at hwmem
+  exact ⟨w, hwmem.1, hwmem.2, fun w1 hw1 hw1u => hwmin w1 ⟨hw1, by simp [hw1u]⟩⟩
+
+
+/-- HOL fan.hl:552 `SIGMA_FAN`（σ 的 ε-witness 三条件）。 -/
+theorem SIGMA_FAN (hne : setOfEdge v V E ≠ {u}) (hfan : FAN x V E)
+    (hu : u ∈ setOfEdge v V E) :
+    sigmaFan x V E v u ∈ setOfEdge v V E ∧ sigmaFan x V E v u ≠ u ∧
+      ∀ w1 ∈ setOfEdge v V E, w1 ≠ u → azim x v u (sigmaFan x V E v u) ≤ azim x v u w1 := by
+  unfold sigmaFan
+  rw [if_neg hne]
+  exact Classical.epsilon_spec (exists_sigmaFan hne hfan hu)
+
+/-- HOL fan.hl:565 `sigma_fan_in_set_of_edge`。 -/
+theorem sigma_fan_in_setOfEdge (hfan : FAN x V E) (hu : u ∈ setOfEdge v V E) :
+    sigmaFan x V E v u ∈ setOfEdge v V E := by
+  by_cases h : setOfEdge v V E = {u}
+  · rw [sigmaFan, if_pos h, h]
+    exact Set.mem_singleton u
+  · exact (SIGMA_FAN h hfan hu).1
+
+/-- HOL fan.hl:337 `properties_of_set_of_edge_fan`。 -/
+theorem properties_of_setOfEdge_fan (x : V3) (V : Set V3) (E : Set (Set V3)) (v u : V3)
+    (hfan : FAN x V E) : {v, u} ∈ E ↔ u ∈ setOfEdge v V E :=
+  properties_of_setOfEdge v V E u hfan.1
+
 end Kepler.Text.Fan
 
 /- 计划（F3）：azim 基础引理层（flyspeck.ml 的 AZIM_REFL/AZIM_SYMM 等）→
