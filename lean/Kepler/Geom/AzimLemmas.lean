@@ -105,7 +105,7 @@ theorem angle_eq_of_exp_eq {α β : ℝ} (hα0 : 0 ≤ α) (hα1 : α < 2 * Real
   rw [hn0, Int.cast_zero, zero_mul, add_zero] at hα2
   exact hα2
 
-private theorem exp_add_I (a b : ℝ) :
+theorem exp_add_I (a b : ℝ) :
     Complex.exp (((a + b : ℝ) : ℂ) * I)
       = Complex.exp (((a : ℝ) : ℂ) * I) * Complex.exp (((b : ℝ) : ℂ) * I) := by
   push_cast

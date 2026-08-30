@@ -57,7 +57,7 @@ private theorem sum_union_pair_singleton {f : V3 → ℝ} {v0 v1 x : V3}
     intro w
     simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
       Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
-    tauto
+    try tauto
   rw [h3, Finset.sum_insert (by simp [hv0v1, Ne.symm hx0]),
     Finset.sum_insert (by simp [Ne.symm hx1]), Finset.sum_singleton]
   ring
@@ -72,7 +72,7 @@ private theorem sum_union_pair_singleton_v {f : V3 → ℝ} {v0 v1 x : V3}
     intro w
     simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
       Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
-    tauto
+    try tauto
   rw [h3, Finset.sum_insert (by simp [hv0v1, Ne.symm hx0]),
     Finset.sum_insert (by simp [Ne.symm hx1]), Finset.sum_singleton]
   abel
@@ -110,6 +110,98 @@ theorem affGt_pair_iff {v0 v1 x y : V3} (hv0v1 : v0 ≠ v1) (hx0 : x ≠ v0)
       simp only [if_neg (Ne.symm hx0), if_neg hv0v1, if_neg (Ne.symm hx1),
         if_pos rfl, if_true]
       ring
+
+
+/-- 单点 ∪ 单点 的标量/向量和分解。 -/
+theorem sum_insert_single_s {f : V3 → ℝ} {x v : V3}
+    (hfin : ({x} ∪ {v} : Set V3).Finite) (hxv : x ≠ v) :
+    ∑ w ∈ hfin.toFinset, f w = f x + f v := by
+  have h2 : hfin.toFinset = ({x, v} : Finset V3) := by
+    apply Finset.ext
+    intro w
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_singleton_iff,
+      Finset.mem_insert, Finset.mem_singleton]
+    try tauto
+  rw [h2, Finset.sum_insert (by simp [hxv]), Finset.sum_singleton]
+
+theorem sum_insert_single_v {f : V3 → ℝ} {x v : V3}
+    (hfin : ({x} ∪ {v} : Set V3).Finite) (hxv : x ≠ v) :
+    ∑ w ∈ hfin.toFinset, f w • w = f x • x + f v • v := by
+  have h2 : hfin.toFinset = ({x, v} : Finset V3) := by
+    apply Finset.ext
+    intro w
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_singleton_iff,
+      Finset.mem_insert, Finset.mem_singleton]
+    try tauto
+  rw [h2, Finset.sum_insert (by simp [hxv]), Finset.sum_singleton]
+
+/-- 单点 ∪ 两点集 的标量/向量和分解。 -/
+theorem sum_insert_pair_s {f : V3 → ℝ} {x v u : V3}
+    (hfin : ({x} ∪ {v, u} : Set V3).Finite) (hxv : x ≠ v) (hxu : x ≠ u)
+    (hvu : v ≠ u) :
+    ∑ w ∈ hfin.toFinset, f w = f x + f v + f u := by
+  have h3 : hfin.toFinset = ({x, v, u} : Finset V3) := by
+    apply Finset.ext
+    intro w
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    try tauto
+  rw [h3, Finset.sum_insert (by simp [hxv, hxu]), Finset.sum_insert (by simp [hvu])]
+  simp only [Finset.sum_singleton]
+  ring
+
+theorem sum_insert_pair_v {f : V3 → ℝ} {x v u : V3}
+    (hfin : ({x} ∪ {v, u} : Set V3).Finite) (hxv : x ≠ v) (hxu : x ≠ u)
+    (hvu : v ≠ u) :
+    ∑ w ∈ hfin.toFinset, f w • w = f x • x + f v • v + f u • u := by
+  have h3 : hfin.toFinset = ({x, v, u} : Finset V3) := by
+    apply Finset.ext
+    intro w
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    try tauto
+  rw [h3, Finset.sum_insert (by simp [hxv, hxu]), Finset.sum_insert (by simp [hvu])]
+  simp only [Finset.sum_singleton]
+  abel
+
+/-- 三点组合的 affsign 见证（构造方向）。 -/
+theorem Affsign.of_triple {sgn : ℝ → Prop} {x v u y : V3} (t1 t2 : ℝ)
+    (h1 : sgn t1) (h2 : sgn t2)
+    (hy : y = (1 - t1 - t2) • x + t1 • v + t2 • u)
+    (hxv : x ≠ v) (hxu : x ≠ u) (hvu : v ≠ u) :
+    Affsign sgn {x} {v, u} y := by
+  have hfin2 : ({x} ∪ {v, u} : Set V3).Finite :=
+    (Set.finite_singleton x).union ((Set.finite_singleton u).insert v)
+  refine ⟨fun z => if z = v then t1 else if z = u then t2 else 1 - t1 - t2,
+    hfin2, ?_, ?_, ?_⟩
+  · rw [sum_insert_pair_v
+        (f := fun z => if z = v then t1 else if z = u then t2 else 1 - t1 - t2)
+        hfin2 hxv hxu hvu]
+    rw [if_pos (rfl : v = v), if_neg (Ne.symm hvu), if_pos (rfl : u = u),
+      if_neg hxv, if_neg hxu, hy]
+  · intro z hz
+    rcases hz with rfl | rfl
+    · simp only [if_pos rfl]
+      exact h1
+    · simp only [if_neg (Ne.symm hvu), if_pos rfl]
+      exact h2
+  · rw [sum_insert_pair_s
+        (f := fun z => if z = v then t1 else if z = u then t2 else 1 - t1 - t2)
+        hfin2 hxv hxu hvu]
+    rw [if_pos (rfl : v = v), if_neg (Ne.symm hvu), if_pos (rfl : u = u),
+      if_neg hxv, if_neg hxu]
+    ring
+
+/-- aff_ge {x} {v} 的射线提取。 -/
+theorem affGe_ray {x v y : V3} (hxv : x ≠ v) (hmem : y ∈ affGe {x} {v}) :
+    ∃ t : ℝ, y - x = t • (v - x) := by
+  obtain ⟨f, hfin, hsum, -, hone⟩ := hmem
+  rw [sum_insert_single_s hfin hxv] at hone
+  rw [sum_insert_single_v hfin hxv] at hsum
+  refine ⟨f v, ?_⟩
+  have hfx : f x = 1 - f v := by linarith
+  rw [hsum, hfx]
+  module
 
 end Kepler.Geom
 

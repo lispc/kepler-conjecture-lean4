@@ -17,11 +17,12 @@ aff_ge 词汇，见 `Kepler/Geom/Azim.lean` 与 `Kepler/Geom/Aff.lean`）。
   `Set.ncard` 的无限集取 0 约定蕴含。
 -/
 
-import Kepler.Geom.Azim
+import Kepler.Geom.AzimLemmas
 import Kepler.Geom.Aff
 import Mathlib.Topology.Connected.Basic
 
 open Classical
+open Complex
 
 namespace Kepler.Text.Fan
 
@@ -330,6 +331,337 @@ theorem sigma_fan_in_setOfEdge (hfan : FAN x V E) (hu : u ∈ setOfEdge v V E) :
 theorem properties_of_setOfEdge_fan (x : V3) (V : Set V3) (E : Set (Set V3)) (v u : V3)
     (hfan : FAN x V E) : {v, u} ∈ E ↔ u ∈ setOfEdge v V E :=
   properties_of_setOfEdge v V E u hfan.1
+
+
+/-! ## 唯一性与角加法（fan.hl:612/634/711/726/1646） -/
+
+/-- 边与原点不共线（fan6 的直接推论）。 -/
+theorem fan_not_collinear (hfan : FAN x V E) (he : {v, u} ∈ E) :
+    ¬ Collinear3 x v u :=
+  hfan.2.2.2.2.1 _ he
+
+theorem fan_mem_of_edge (hfan : FAN x V E) (he : {v, u} ∈ E) :
+    v ∈ V ∧ u ∈ V := by
+  obtain ⟨hsub, -⟩ := hfan
+  exact ⟨hsub (Set.mem_sUnion.mpr ⟨{v, u}, he, by simp⟩),
+    hsub (Set.mem_sUnion.mpr ⟨{v, u}, he, by simp⟩)⟩
+
+/-- HOL fan.hl:634 `UNIQUE1_POINT_FAN`（aff_gt 射线上的点唯一）。 -/
+theorem unique1_point_fan (hfan : FAN x V E) (hu : {v, u} ∈ E) (hw : {v, w} ∈ E)
+    (hmem : w ∈ affGt {x, v} {u}) : u = w := by
+  obtain ⟨hsub, hgraph, hf1, hfan2, hfan6, hfan7⟩ := hfan
+  obtain ⟨hvV, huV⟩ := fan_mem_of_edge ⟨hsub, hgraph, hf1, hfan2, hfan6, hfan7⟩ hu
+  obtain ⟨-, hwV⟩ := fan_mem_of_edge ⟨hsub, hgraph, hf1, hfan2, hfan6, hfan7⟩ hw
+  have hnc : ¬ Collinear3 x v u := hfan6 _ hu
+  have hncw : ¬ Collinear3 x v w := hfan6 _ hw
+  have hxv : x ≠ v := fun he => hfan2 (he ▸ hvV)
+  have hxu : x ≠ u := fun he => hfan2 (he ▸ huV)
+  have hxw : x ≠ w := fun he => hfan2 (he ▸ hwV)
+  have hvu : v ≠ u := by
+    intro he
+    apply hnc
+    rw [he]
+    exact collinear3_pair_right rfl
+  have hvw : v ≠ w := by
+    intro he
+    apply hncw
+    rw [he]
+    exact collinear3_pair_right rfl
+  obtain ⟨c, hc, h, hcoeff⟩ := affGt_pair_iff (v0 := x) (v1 := v) (x := u)
+    (y := w) hxv (Ne.symm hxu) (Ne.symm hvu) |>.mp hmem
+  have hcne : c ≠ 0 := ne_of_gt hc
+  have hin : {v, u} ∈ E ∪ {s | ∃ a ∈ V, s = {a}} := Or.inl hu
+  have hin2 : {v, w} ∈ E ∪ {s | ∃ a ∈ V, s = {a}} := Or.inl hw
+  by_contra huw
+  have hint : ({v, u} ∩ {v, w} : Set V3) = {v} := by
+    ext z
+    simp only [Set.mem_inter_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+    constructor
+    · rintro ⟨hz1 | hz1, hz2 | hz2⟩
+      all_goals first
+        | exact hz2
+        | exact hz1
+        | exact absurd (hz1.symm.trans hz2) huw
+        | exact absurd (hz1.symm.trans hz2) (Ne.symm hvu)
+        | exact absurd (hz1.symm.trans hz2) hvw
+    · intro rfl
+      exact ⟨Or.inl rfl, Or.inl rfl⟩
+  have hinter : affGe {x} {v, u} ∩ affGe {x} {v, w} = affGe {x} {v} := by
+    rw [hfan7 {v, u} hin {v, w} hin2, hint]
+  have hcontra : ∀ t : ℝ, u - x = t • (v - x) → False := fun t ht =>
+    hnc ((collinear3_iff_smul (w := v) (v := x) (w1 := u) (Ne.symm hxv)).mpr
+      ⟨t, ht⟩)
+  by_cases hge : 0 ≤ h
+  · have hwmem1 : w ∈ affGe {x} {v, u} := by
+      show Affsign (fun r => 0 ≤ r) {x} {v, u} w
+      refine Affsign.of_triple h c hge hc.le ?_ hxv hxu hvu
+      rw [show w = (w - x) + x from (sub_add_cancel w x).symm, hcoeff]
+      module
+    have hwmem2 : w ∈ affGe {x} {v, w} := by
+      show Affsign (fun r => 0 ≤ r) {x} {v, w} w
+      exact Affsign.of_triple 0 1 le_rfl zero_le_one (by module) hxv hxw hvw
+    obtain ⟨t, ht⟩ := affGe_ray (x := x) (v := v) hxv
+      ((hinter ▸ Set.mem_inter hwmem1 hwmem2) : w ∈ affGe {x} {v})
+    have hkey : c • (u - x) = t • (v - x) - h • (v - x) := by
+      rw [eq_sub_iff_add_eq, ← hcoeff, ht]
+    rcases eq_or_ne t h with rfl | hne
+    · rw [sub_self] at hkey
+      rcases smul_eq_zero.mp hkey with h0 | h0
+      · exact hcne h0
+      · exact hxu (sub_eq_zero.mp h0).symm
+    · exact hcontra ((t - h) / c) (by
+        have h1 : c • (u - x) = c • (((t - h) / c) • (v - x)) := by
+          rw [smul_smul, mul_div_cancel₀ _ hcne, sub_smul]
+          exact hkey
+        have h2 := smul_eq_zero.mp (by rw [smul_sub, h1, sub_self] : c • ((u - x) -
+          ((t - h) / c) • (v - x)) = 0)
+        rcases h2 with h3 | h3
+        · exact absurd h3 hcne
+        · exact sub_eq_zero.mp h3)
+  · have hlt : h < 0 := lt_of_not_ge hge
+    have hco1 : c • (u - x) = (w - x) - h • (v - x) := by
+      rw [eq_sub_iff_add_eq, hcoeff]
+    have hux : u - x = (1 / c) • (w - x) + (-h / c) • (v - x) := by
+      have h1 : c • (u - x) = c • ((1 / c) • (w - x) + (-h / c) • (v - x)) := by
+        rw [smul_add, smul_smul, smul_smul,
+          mul_div_cancel₀ _ hcne, one_smul,
+          show c * (-h / c) = -h by field_simp, hco1, sub_eq_add_neg, neg_smul]
+      have h2 := smul_eq_zero.mp (by rw [smul_sub, h1, sub_self] :
+        c • ((u - x) - ((1 / c) • (w - x) + (-h / c) • (v - x))) = 0)
+      rcases h2 with h3 | h3
+      · exact absurd h3 hcne
+      · exact sub_eq_zero.mp h3
+    have humem1 : u ∈ affGe {x} {v, u} := by
+      show Affsign (fun r => 0 ≤ r) {x} {v, u} u
+      exact Affsign.of_triple 0 1 le_rfl zero_le_one (by module) hxv hxu hvu
+    have humem2 : u ∈ affGe {x} {v, w} := by
+      show Affsign (fun r => 0 ≤ r) {x} {v, w} u
+      have hlt0 : (0:ℝ) < -h / c := by
+        have h1 : (0:ℝ) < -h := by linarith
+        positivity
+      refine Affsign.of_triple (-h / c) (1 / c) hlt0.le (by positivity)
+        ?_ hxv hxw hvw
+      rw [show u = (u - x) + x from (sub_add_cancel u x).symm, hux]
+      module
+    obtain ⟨t, ht⟩ := affGe_ray (x := x) (v := v) hxv
+      ((hinter ▸ Set.mem_inter humem1 humem2) : u ∈ affGe {x} {v})
+    exact hcontra t ht
+
+
+
+/-- HOL fan.hl:726 `UNIQUE_AZIM_0_POINT_FAN`。 -/
+theorem unique_azim0_point_fan (hfan : FAN x V E) (hu : {v, u} ∈ E)
+    (hw : {v, w} ∈ E) (h0 : azim x v u w = 0) : u = w :=
+  unique1_point_fan hfan hu hw
+    ((azim_eq_zero_iff_alt (v0 := x) (v1 := v) (w := u) (x := w)
+      (fan_not_collinear hfan hu) (fan_not_collinear hfan hw)).mp h0)
+
+/-- HOL fan.hl:711 `UNIQUE_AZIM_POINT_FAN`。 -/
+theorem unique_azim_point_fan (hfan : FAN x V E) (hu : {v, u} ∈ E)
+    (hw : {v, w} ∈ E) (hw1 : {v, w1} ∈ E)
+    (heq : azim x v u w = azim x v u w1) : w = w1 :=
+  unique1_point_fan (v := v) (u := w) (w := w1) hfan hw hw1
+    ((azim_eq_azim_iff (v0 := x) (v1 := v) (w := u) (x := w) (y := w1)
+      (fan_not_collinear hfan hu) (fan_not_collinear hfan hw)
+      (fan_not_collinear hfan hw1)).mp heq)
+
+/-- HOL fan.hl:1646 `sum2_azim_fan`（三点角加法；证明走标架极表示，
+不经 cyclic_set 机制）。 -/
+theorem sum2_azim_fan (hfan : FAN x V E)
+    (hu : {v, u} ∈ E) (hw1 : {v, w1} ∈ E) (hw2 : {v, w2} ∈ E)
+    (hle : azim x v u w1 ≤ azim x v u w2) :
+    azim x v u w2 = azim x v u w1 + azim x v w1 w2 := by
+  obtain ⟨hsub, -, -, hfan2, hfan6, -⟩ := hfan
+  have hvV : v ∈ V := hsub (Set.mem_sUnion.mpr ⟨{v, u}, hu, by simp⟩)
+  have hxv : v ≠ x := by
+    intro he
+    rw [he] at hvV
+    exact hfan2 hvV
+  have hncu : ¬ Collinear3 x v u := hfan6 _ hu
+  have hnc1 : ¬ Collinear3 x v w1 := hfan6 _ hw1
+  have hnc2 : ¬ Collinear3 x v w2 := hfan6 _ hw2
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (v - x)
+    (sub_ne_zero.mpr (fun he => hxv he))
+  have hax : (v - x : V3) = dist v x • f3 := by
+    rw [dist_eq_norm]
+    exact halign
+  obtain ⟨ψ, ru, r1, hru, hr1, hzu, hzw1⟩ := azim_frame_spec hncu hnc1 hon hax hxv
+  obtain ⟨ψ2, ru2, r2, hru2, hr2, hzu2, hzw2⟩ := azim_frame_spec hncu hnc2 hon hax hxv
+  obtain ⟨ψ', r1', r2', hr1', hr2', hzw1', hzw2'⟩ :=
+    azim_frame_spec hnc1 hnc2 hon hax hxv
+  -- z_u 的两种极表示 ⟹ e^{iψ} = e^{iψ2}
+  have hψu : Complex.exp (((ψ : ℝ) : ℂ) * I)
+      = Complex.exp (((ψ2 : ℝ) : ℂ) * I) :=
+    exp_pos_mul_eq hru hru2 (hzu.symm.trans hzu2)
+  -- z_{w1} 两种表示 ⟹ e^{i(ψ+θ1)} = e^{iψ'}
+  have hE2 : Complex.exp ((((ψ + azim x v u w1 : ℝ) : ℂ)) * I)
+      = Complex.exp (((ψ' : ℝ) : ℂ) * I) :=
+    exp_pos_mul_eq hr1 hr1' (hzw1.symm.trans hzw1')
+  -- z_{w2} 两种表示 ⟹ e^{i(ψ2+θ2)} = e^{i(ψ'+φ)}
+  have hE1' : Complex.exp ((((ψ2 + azim x v u w2 : ℝ) : ℂ)) * I)
+      = Complex.exp ((((ψ' + azim x v w1 w2 : ℝ) : ℂ)) * I) :=
+    exp_pos_mul_eq hr2 hr2' (hzw2.symm.trans hzw2')
+  rw [exp_add_I, exp_add_I] at hE1'
+  rw [exp_add_I] at hE2
+  rw [hψu.symm] at hE1'
+  -- hE1' : e^{iψ} * e^{iθ2} = e^{iψ'} * e^{iφ}; hE2 : e^{iψ} * e^{iθ1} = e^{iψ'}
+  rw [← hE2] at hE1'
+  have hE3 : Complex.exp (((azim x v u w2 : ℝ) : ℂ) * I)
+      = Complex.exp ((((azim x v u w1 + azim x v w1 w2 : ℝ) : ℂ)) * I) := by
+    have hkey : Complex.exp (((ψ : ℝ) : ℂ) * I)
+        * Complex.exp (((azim x v u w2 : ℝ) : ℂ) * I)
+      = Complex.exp (((ψ : ℝ) : ℂ) * I)
+        * Complex.exp ((((azim x v u w1 + azim x v w1 w2 : ℝ) : ℂ)) * I) := by
+      rw [hE1', mul_assoc, ← exp_add_I]
+    exact mul_left_cancel₀ (Complex.exp_ne_zero _) hkey
+  obtain ⟨n, hn⟩ := Complex.exp_eq_exp_iff_exists_int.mp hE3
+  have hc2 : ((azim x v u w2 : ℝ) : ℂ) * Complex.I
+      = ((((azim x v u w1 + azim x v w1 w2 : ℝ)
+          + (n:ℝ) * (2 * Real.pi) : ℝ) : ℂ)) * Complex.I := by
+    rw [hn]
+    push_cast
+    ring
+  have hc3 : azim x v u w2
+      = azim x v u w1 + azim x v w1 w2 + (n:ℝ) * (2 * Real.pi) := by
+    exact_mod_cast mul_right_cancel₀ Complex.I_ne_zero hc2
+  have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
+  have hr1'0 : (0:ℝ) ≤ azim x v u w1 := azim_nonneg x v u w1
+  have hr2'0 : (0:ℝ) ≤ azim x v w1 w2 := azim_nonneg x v w1 w2
+  have hr3'0 : (0:ℝ) ≤ azim x v u w2 := azim_nonneg x v u w2
+  have hr3'1 : azim x v u w2 < 2 * Real.pi := azim_lt_two_pi x v u w2
+  have hφ1 : azim x v w1 w2 < 2 * Real.pi := azim_lt_two_pi x v w1 w2
+  rcases Int.lt_trichotomy n 0 with hneg | hzero | hpos
+  · exfalso
+    have hle2 : ((n:ℤ) : ℝ) ≤ -1 := by
+      have := (by omega : (n : ℤ) ≤ -1)
+      exact_mod_cast this
+    have hmul : (n:ℝ) * (2 * Real.pi) ≤ (-1:ℝ) * (2 * Real.pi) :=
+      mul_le_mul_of_nonneg_right hle2 h2pi.le
+    linarith
+  · rw [hzero] at hc3
+    simp only [Int.cast_zero, zero_mul, add_zero] at hc3
+    exact hc3
+  · exfalso
+    have hge : ((n:ℤ) : ℝ) ≥ 1 := by
+      have := (by omega : (n : ℤ) ≥ 1)
+      exact_mod_cast this
+    have hmul : (n:ℝ) * (2 * Real.pi) ≥ (1:ℝ) * (2 * Real.pi) :=
+      mul_le_mul_of_nonneg_right hge h2pi.le
+    linarith
+
+
+
+/-! ## σ 的单射性与置换性（fan.hl:1974 `permutes_sigma_fan`） -/
+
+set_option maxHeartbeats 800000 in
+/-- 邻集内 σ 的单射性（HOL `mono_sigma_fan` 的实质）。 -/
+theorem mono_sigma_fan (hfan : FAN x V E) (hu : u ∈ setOfEdge v V E)
+    (hw : w ∈ setOfEdge v V E)
+    (heq : sigmaFan x V E v u = sigmaFan x V E v w) : u = w := by
+  by_cases hne : setOfEdge v V E = {u}
+  · -- 单点情形：w = u
+    have hwu : w = u := by
+      have := hne ▸ hw
+      simpa using this
+    exact hwu.symm
+  · by_contra huw
+    have hne2 : setOfEdge v V E ≠ {w} := by
+      intro he
+      have huw' : u = w := by
+        have hmem : u ∈ ({w} : Set V3) := by rw [← he]; exact hu
+        simpa using hmem
+      exact huw huw'
+    obtain ⟨hsu, hsne, hsmin⟩ := SIGMA_FAN hne hfan hu
+    obtain ⟨hsw, hsne2, hsmin2⟩ := SIGMA_FAN hne2 hfan hw
+    rw [← heq] at hsne2 hsmin2
+    -- 边与非退化
+    have hsu' : {v, sigmaFan x V E v u} ∈ E :=
+      (properties_of_setOfEdge_fan x V E v (sigmaFan x V E v u) hfan).mpr hsu
+    have hu' : {v, u} ∈ E := (properties_of_setOfEdge_fan x V E v u hfan).mpr hu
+    have hw' : {v, w} ∈ E := (properties_of_setOfEdge_fan x V E v w hfan).mpr hw
+    -- 极小性
+    have h1 : azim x v u (sigmaFan x V E v u) ≤ azim x v u w := hsmin w hw (fun heq2 => huw heq2.symm)
+    have h2 : azim x v w (sigmaFan x V E v u) ≤ azim x v w u :=
+      hsmin2 u hu (fun heq2 => huw heq2)
+    -- 角加法
+    have hA : azim x v u w = azim x v u (sigmaFan x V E v u) + azim x v (sigmaFan x V E v u) w :=
+      sum2_azim_fan hfan hu' hsu' hw' h1
+    have hB : azim x v w u = azim x v w (sigmaFan x V E v u) + azim x v (sigmaFan x V E v u) u :=
+      sum2_azim_fan hfan hw' hsu' hu' h2
+    -- 三补角
+    have hC1 : azim x v (sigmaFan x V E v u) w
+        = if azim x v w (sigmaFan x V E v u) = 0 then 0 else 2 * Real.pi - azim x v w (sigmaFan x V E v u) :=
+      azim_compl (z := x) (w := v) (w1 := w) (w2 := sigmaFan x V E v u)
+        (fan_not_collinear hfan hw') (fan_not_collinear hfan hsu')
+    have hC2 : azim x v (sigmaFan x V E v u) u
+        = if azim x v u (sigmaFan x V E v u) = 0 then 0 else 2 * Real.pi - azim x v u (sigmaFan x V E v u) :=
+      azim_compl (z := x) (w := v) (w1 := u) (w2 := sigmaFan x V E v u)
+        (fan_not_collinear hfan hu') (fan_not_collinear hfan hsu')
+    have hC3 : azim x v w u
+        = if azim x v u w = 0 then 0 else 2 * Real.pi - azim x v u w :=
+      azim_compl (z := x) (w := v) (w1 := u) (w2 := w)
+        (fan_not_collinear hfan hu') (fan_not_collinear hfan hw')
+    have hnn1 : (0:ℝ) ≤ azim x v u (sigmaFan x V E v u) := azim_nonneg x v u (sigmaFan x V E v u)
+    have hnn2 : (0:ℝ) ≤ azim x v w (sigmaFan x V E v u) := azim_nonneg x v w (sigmaFan x V E v u)
+    have hnn3 : (0:ℝ) ≤ azim x v (sigmaFan x V E v u) w := azim_nonneg x v (sigmaFan x V E v u) w
+    have hnn4 : (0:ℝ) ≤ azim x v (sigmaFan x V E v u) u := azim_nonneg x v (sigmaFan x V E v u) u
+    have hlt : azim x v u (sigmaFan x V E v u) < 2 * Real.pi := azim_lt_two_pi x v u (sigmaFan x V E v u)
+    have hlt2 : azim x v u w < 2 * Real.pi := azim_lt_two_pi x v u w
+    have hlt3 : azim x v w (sigmaFan x V E v u) < 2 * Real.pi := azim_lt_two_pi x v w (sigmaFan x V E v u)
+    -- 情形分解
+    rcases eq_or_ne (azim x v u w) 0 with hz1 | hz1
+    · -- u→w 角为 0：由 A 得 sigmaFan x V E v u→w、u→sigmaFan x V E v u 均为 0 ⟹ sigmaFan x V E v u = u 矛盾
+      exfalso
+      rw [hz1] at hA
+      have hz2 : azim x v u (sigmaFan x V E v u) = 0 := by
+        have := hA
+        linarith
+      exact hsne (unique_azim0_point_fan (x := x) (V := V) (E := E) (v := v)
+        (u := u) (w := sigmaFan x V E v u) hfan hu' hsu' hz2).symm
+    · -- u→w 角非 0
+      rw [if_neg hz1] at hC3
+      rcases eq_or_ne (azim x v w (sigmaFan x V E v u)) 0 with hz3 | hz3
+      · -- w→sigmaFan x V E v u 角为 0 ⟹ w = σ w，与 σ w ≠ w 矛盾
+        exfalso
+        -- w = σ u；但 σ u = σ w 且 σ w ≠ w ⟹ 矛盾
+        have hws : w = sigmaFan x V E v u :=
+          unique_azim0_point_fan (x := x) (V := V) (E := E) (v := v)
+            (u := w) (w := sigmaFan x V E v u) hfan hw' hsu' hz3
+        exact hsne2 (heq ▸ hws.symm)
+      · rw [if_neg hz3] at hC1
+        rcases eq_or_ne (azim x v u (sigmaFan x V E v u)) 0 with hz2 | hz2
+        · exfalso
+          exact hsne (unique_azim0_point_fan (x := x) (V := V) (E := E) (v := v)
+            (u := u) (w := sigmaFan x V E v u) hfan hu' hsu' hz2).symm
+        · rw [if_neg hz2] at hC2
+          -- 纯算术矛盾：B + C1/C2/C3 + A
+          exfalso
+          have hsum3 : azim x v u w
+              = azim x v u (sigmaFan x V E v u) + azim x v w (sigmaFan x V E v u) := by
+            linarith
+          have hsum1 : azim x v w u
+              = (2 * Real.pi - azim x v w (sigmaFan x V E v u))
+                + (2 * Real.pi - azim x v u (sigmaFan x V E v u)) := by
+            linarith
+          have hsum2 : azim x v w u = 2 * Real.pi - azim x v u w := by
+            linarith
+          linarith
+
+/-- HOL fan.hl:1974 `permutes_sigma_fan`（setOfEdge 上的置换性）。 -/
+theorem permutes_sigma_fan (hfan : FAN x V E) (hu : u ∈ setOfEdge v V E) :
+    (∀ a ∈ setOfEdge v V E, extensionSigmaFan x V E v a ∈ setOfEdge v V E)
+      ∧ (∀ a ∈ setOfEdge v V E, ∀ b ∈ setOfEdge v V E,
+          extensionSigmaFan x V E v a = extensionSigmaFan x V E v b → a = b)
+      ∧ (∀ a ∉ setOfEdge v V E, extensionSigmaFan x V E v a = a) := by
+  refine ⟨fun a ha => ?_, ?_, ?_⟩
+  · rw [extensionSigmaFan, if_neg (by simpa using ha)]
+    exact sigma_fan_in_setOfEdge hfan ha
+  · intro a ha b hb heq
+    rw [extensionSigmaFan, if_neg (by simpa using ha),
+      extensionSigmaFan, if_neg (by simpa using hb)] at heq
+    exact mono_sigma_fan hfan ha hb heq
+  · intro a ha
+    rw [extensionSigmaFan, if_pos ha]
 
 end Kepler.Text.Fan
 
