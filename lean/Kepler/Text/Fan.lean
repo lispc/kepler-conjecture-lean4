@@ -1032,14 +1032,45 @@ theorem f_fan_no_fix (hfan : FAN x V E) :
 
 /-- 有限支撑双射 → Equiv.Perm（identity outside finset）。 -/
 noncomputable def Equiv.Perm.ofFiniteSupport {α : Type*} [DecidableEq α]
-    (s : Finset α) (f : α → α) : Equiv.Perm α :=
-  sorry
+    (s : Finset α) (f : α → α) (hf : Set.BijOn f ↑s ↑s) : Equiv.Perm α :=
+  let g : α → α := fun x => if x ∈ s then f x else x
+  Equiv.ofBijective g (by
+    constructor
+    · intro a b h
+      by_cases ha : a ∈ s <;> by_cases hb : b ∈ s
+      · simp only [g, ha, hb, ite_true] at h
+        exact hf.injOn (Finset.mem_coe.mpr ha) (Finset.mem_coe.mpr hb) h
+      · simp only [g, ha, hb, ite_true, ite_false] at h
+        exact absurd (h ▸ hf.mapsTo (Finset.mem_coe.mpr ha)) hb
+      · simp only [g, ha, hb, ite_false, ite_true] at h
+        exact absurd (h.symm ▸ hf.mapsTo (Finset.mem_coe.mpr hb)) ha
+      · simp only [g, ha, hb, ite_false] at h; exact h
+    · intro y
+      by_cases hy : y ∈ s
+      · obtain ⟨x, hx, hfx⟩ := hf.surjOn (Finset.mem_coe.mpr hy)
+        exact ⟨x, by simp [g, Finset.mem_coe.mp hx, hfx]⟩
+      · exact ⟨y, by simp [g, hy]⟩)
 
 /-- fan e/n/f 映射的 PermutesOn。 -/
 theorem eFanPair_permutes (hfan : FAN x V E) : True := sorry
 
 /-- HOL fan.hl:2875 `AAUHTVE` — hypermap 分量恒等式。 -/
 theorem hypermap_comp_eq_one (hfan : FAN x V E) : True := sorry
+
+/-- BijOn for `res f ↑s` from BijOn for `f` on the corresponding set. -/
+theorem bijOn_res {α : Type*} [DecidableEq α] {f : α → α} {s : Set α}
+    {fs : Finset α} (hs : ↑fs = s)
+    (hf : Set.BijOn f s s) : Set.BijOn (res f ↑fs) ↑fs ↑fs := sorry
+
+/-- `res f ↑s` bij → Equiv.Perm。 -/
+noncomputable def extendPerm {α : Type*} [DecidableEq α] (s : Finset α) (f : α → α)
+    (hf : Set.BijOn (res f ↑s) ↑s ↑s) : Equiv.Perm α :=
+  Equiv.ofBijective (res f ↑s) (by sorry)
+
+/-- `extendPerm` permutes `s`。 -/
+theorem extendPerm_permutes {α : Type*} [DecidableEq α] {s : Finset α} {f : α → α}
+    {hf : Set.BijOn (res f ↑s) ↑s ↑s} :
+    PermutesOn (extendPerm s f hf) s := sorry
 
 /-- HOL fan_defs.hl `hypermap_of_fan`（proof-parameterized）。 -/
 noncomputable def hypermapOfFan (x : V3) (V : Set V3) (E : Set (Set V3))
