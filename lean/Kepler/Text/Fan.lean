@@ -19,6 +19,7 @@ aff_ge 词汇，见 `Kepler/Geom/Azim.lean` 与 `Kepler/Geom/Aff.lean`）。
 
 import Kepler.Geom.AzimLemmas
 import Kepler.Geom.Aff
+import Kepler.Text.Hypermap
 import Mathlib.Topology.Connected.Basic
 
 open Classical
@@ -108,15 +109,15 @@ def contractedDart (p : V3 × V3 × V3 × V3) : V3 × V3 := (p.2.1, p.2.2.1)
 def eFanPair (V : Set V3) (E : Set (Set V3)) (d : V3 × V3) : V3 × V3 :=
   (d.2, d.1)
 
-/-- HOL `n_fan_pair (V,E) (v,w) = (v, σ_v w)`（原点取 `vec 0`）。 -/
-noncomputable def nFanPair (V : Set V3) (E : Set (Set V3)) (d : V3 × V3) :
+/-- HOL `n_fan_pair (V,E) (v,w) = (v, σ_v w)`（apex 参数化）。 -/
+noncomputable def nFanPair (x : V3) (V : Set V3) (E : Set (Set V3)) (d : V3 × V3) :
     V3 × V3 :=
-  (d.1, sigmaFan 0 V E d.1 d.2)
+  (d.1, sigmaFan x V E d.1 d.2)
 
-/-- HOL `f_fan_pair (V,E) (v,w) = (w, σ⁻¹_ w v)`。 -/
-noncomputable def fFanPair (V : Set V3) (E : Set (Set V3)) (d : V3 × V3) :
+/-- HOL `f_fan_pair (V,E) (v,w) = (w, σ⁻¹_ w v)`（apex 参数化）。 -/
+noncomputable def fFanPair (x : V3) (V : Set V3) (E : Set (Set V3)) (d : V3 × V3) :
     V3 × V3 :=
-  (d.2, inverseSigmaFan 0 V E d.2 d.1)
+  (d.2, inverseSigmaFan x V E d.2 d.1)
 
 /-- HOL `res f s`（sphere.hl:503）：集合外恒等的限制。 -/
 noncomputable def res {α : Type*} (f : α → α) (s : Set α) : α → α :=
@@ -128,22 +129,24 @@ noncomputable def eFanPairExt (V : Set V3) (E : Set (Set V3)) :
     V3 × V3 → V3 × V3 :=
   fun d => if d ∈ dart1OfFan V E then eFanPair V E d else d
 
-/-- HOL `n_fan_pair_ext`。 -/
-noncomputable def nFanPairExt (V : Set V3) (E : Set (Set V3)) : V3 × V3 → V3 × V3 :=
-  fun d => if d ∈ dart1OfFan V E then nFanPair V E d else d
+/-- HOL `n_fan_pair_ext`（apex 参数化）。 -/
+noncomputable def nFanPairExt (x : V3) (V : Set V3) (E : Set (Set V3)) :
+    V3 × V3 → V3 × V3 :=
+  fun d => if d ∈ dart1OfFan V E then nFanPair x V E d else d
 
-/-- HOL `f_fan_pair_ext`。 -/
-noncomputable def fFanPairExt (V : Set V3) (E : Set (Set V3)) : V3 × V3 → V3 × V3 :=
-  fun d => if d ∈ dart1OfFan V E then fFanPair V E d else d
+/-- HOL `f_fan_pair_ext`（apex 参数化）。 -/
+noncomputable def fFanPairExt (x : V3) (V : Set V3) (E : Set (Set V3)) :
+    V3 × V3 → V3 × V3 :=
+  fun d => if d ∈ dart1OfFan V E then fFanPair x V E d else d
 
 theorem eFanPairExt_eq (V : Set V3) (E : Set (Set V3)) :
     eFanPairExt V E = res (eFanPair V E) (dart1OfFan V E) := rfl
 
-theorem nFanPairExt_eq (V : Set V3) (E : Set (Set V3)) :
-    nFanPairExt V E = res (nFanPair V E) (dart1OfFan V E) := rfl
+theorem nFanPairExt_eq (x : V3) (V : Set V3) (E : Set (Set V3)) :
+    nFanPairExt x V E = res (nFanPair x V E) (dart1OfFan V E) := rfl
 
-theorem fFanPairExt_eq (V : Set V3) (E : Set (Set V3)) :
-    fFanPairExt V E = res (fFanPair V E) (dart1OfFan V E) := rfl
+theorem fFanPairExt_eq (x : V3) (V : Set V3) (E : Set (Set V3)) :
+    fFanPairExt x V E = res (fFanPair x V E) (dart1OfFan V E) := rfl
 
 /-! ## x/y 区域与楔形（fan_defs.hl:155–234） -/
 
@@ -838,9 +841,130 @@ theorem inverse_sigma_fan_eq_inverse1 (hfan : FAN x V E) (hw : {v, w} ∈ E) :
     congrFun (inverse_sigma_fan_comp hfan hwS).2 w
   exact extension_sigma_fan_injective hfan hwS _ _ (hg1.trans hg2.symm)
 
+/-! ## Phase 5 Fan F6：hypermap 构造（fan.hl:2088–2890）
+
+关键路径：dart1 有限 → e/n/f 保持 dart1 + 单射 + 满射 →
+Equiv.Perm（有限支撑双射）→ PermutesOn + comp_eq_one → Hypermap。 -/
+
+/-- HOL fan.hl `finite_dart1_fan`。 -/
+theorem finite_dart1_fan (hfan : FAN x V E) :
+    (dart1OfFan V E).Finite :=
+  sorry
+
+/-- HOL fan.hl `finite_d_fan`。 -/
+theorem finite_dart_fan (hfan : FAN x V E) :
+    (dartOfFan V E).Finite :=
+  sorry
+
+theorem eFanPair_mem_dart1 {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    eFanPair V E d ∈ dart1OfFan V E := by
+  obtain ⟨a, b⟩ := d
+  simp only [dart1OfFan, Set.mem_setOf_eq, eFanPair] at *
+  rwa [Set.pair_comm]
+
+theorem nFanPair_mem_dart1 (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    nFanPair x V E d ∈ dart1OfFan V E := by
+  obtain ⟨a, b⟩ := d
+  simp only [dart1OfFan, Set.mem_setOf_eq, nFanPair] at *
+  have hb : b ∈ setOfEdge a V E :=
+    ⟨hd, hfan.1 (Set.mem_sUnion.mpr ⟨{a, b}, hd, by simp⟩)⟩
+  have hσ : sigmaFan x V E a b ∈ setOfEdge a V E := sigma_fan_in_setOfEdge hfan hb
+  exact (properties_of_setOfEdge_fan x V E a (sigmaFan x V E a b) hfan).mpr hσ
+
+theorem fFanPair_mem_dart1 (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    fFanPair x V E d ∈ dart1OfFan V E :=
+  sorry
+
+theorem mono_eFanPair {a b : V3 × V3} (ha : a ∈ dart1OfFan V E)
+    (hb : b ∈ dart1OfFan V E) (heq : eFanPair V E a = eFanPair V E b) : a = b := by
+  obtain ⟨a1, a2⟩ := a; obtain ⟨b1, b2⟩ := b
+  simp only [eFanPair] at heq
+  have ⟨h2, h1⟩ := Prod.mk.inj heq
+  exact Prod.ext h1 h2
+
+theorem mono_nFanPair (hfan : FAN x V E) {a b : V3 × V3} (ha : a ∈ dart1OfFan V E)
+    (hb : b ∈ dart1OfFan V E) (heq : nFanPair x V E a = nFanPair x V E b) : a = b := by
+  obtain ⟨a1, a2⟩ := a; obtain ⟨b1, b2⟩ := b
+  simp only [nFanPair, Prod.mk.injEq] at heq
+  obtain ⟨rfl, h2⟩ := heq
+  have ha2 : a2 ∈ setOfEdge a1 V E :=
+    ⟨ha, hfan.1 (Set.mem_sUnion.mpr ⟨{a1, a2}, ha, by simp⟩)⟩
+  have hb2 : b2 ∈ setOfEdge a1 V E :=
+    ⟨hb, hfan.1 (Set.mem_sUnion.mpr ⟨{a1, b2}, hb, by simp⟩)⟩
+  congr 1; exact mono_sigma_fan hfan ha2 hb2 h2
+
+theorem mono_fFanPair (hfan : FAN x V E) {a b : V3 × V3} (ha : a ∈ dart1OfFan V E)
+    (hb : b ∈ dart1OfFan V E) (heq : fFanPair x V E a = fFanPair x V E b) : a = b :=
+  sorry
+
+theorem sur_eFanPair {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    ∃ d' ∈ dart1OfFan V E, eFanPair V E d' = d := by
+  obtain ⟨a, b⟩ := d
+  refine ⟨(b, a), ?_, ?_⟩
+  · rwa [dart1OfFan, Set.mem_setOf_eq, Set.pair_comm]
+  · simp [eFanPair]
+
+theorem sur_nFanPair (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    ∃ d' ∈ dart1OfFan V E, nFanPair x V E d' = d := by
+  obtain ⟨a, b⟩ := d
+  have hb : b ∈ setOfEdge a V E :=
+    ⟨hd, hfan.1 (Set.mem_sUnion.mpr ⟨{a, b}, hd, by simp⟩)⟩
+  obtain ⟨hmaps, _, hsurj⟩ := sigma_bijOn hfan hb
+  have hsurjw : ∃ u ∈ setOfEdge a V E, sigmaFan x V E a u = b :=
+    (Set.mem_image (sigmaFan x V E a) (setOfEdge a V E) b).mp (@hsurj b hb)
+  obtain ⟨u, hu, hσ⟩ := hsurjw
+  refine ⟨(a, u), (properties_of_setOfEdge_fan x V E a u hfan).mpr hu, ?_⟩
+  exact Prod.ext rfl hσ
+
+theorem sur_fFanPair (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    ∃ d' ∈ dart1OfFan V E, fFanPair x V E d' = d :=
+  sorry
+
+/-- HOL `condition_hypermap_fan`：e ∘ n ∘ f1 = I on dart1。 -/
+theorem condition_hypermap_fan (hfan : FAN x V E) :
+    ∀ d ∈ dart1OfFan V E, eFanPair V E (nFanPair x V E (fFanPair x V E d)) = d :=
+  sorry
+
+/-- HOL `plain_hypermap_fan`：e² = I on dart1。 -/
+theorem eFanPair_sq :
+    ∀ d ∈ dart1OfFan V E, eFanPair V E (eFanPair V E d) = d := by
+  intro ⟨a, b⟩ _
+  simp [eFanPair]
+
+/-- HOL `e_fan_no_fix_point`。 -/
+theorem e_fan_no_fix (hfan : FAN x V E) :
+    ∀ d ∈ dart1OfFan V E, eFanPair V E d ≠ d := by
+  obtain ⟨hsub, hgraph, _, hfan2, hfan6, _⟩ := hfan
+  intro ⟨a, b⟩ hd heq
+  simp only [eFanPair] at heq
+  obtain ⟨rfl, _⟩ := heq
+  have he : {a} ∈ E := by
+    simp only [dart1OfFan, Set.mem_setOf_eq] at hd
+    convert hd using 2; ext; simp
+  exact hfan6 {a} he (collinear_pair ℝ x a)
+
+/-- HOL `f_fan_no_fix_point`。 -/
+theorem f_fan_no_fix (hfan : FAN x V E) :
+    ∀ d ∈ dart1OfFan V E, fFanPair x V E d ≠ d :=
+  sorry
+
+/-- 有限支撑双射 → Equiv.Perm（identity outside finset）。 -/
+noncomputable def Equiv.Perm.ofFiniteSupport {α : Type*} [DecidableEq α]
+    (s : Finset α) (f : α → α) : Equiv.Perm α :=
+  sorry
+
+/-- fan e/n/f 映射的 PermutesOn。 -/
+theorem eFanPair_permutes (hfan : FAN x V E) : True := sorry
+
+/-- HOL fan.hl:2875 `AAUHTVE` — hypermap 分量恒等式。 -/
+theorem hypermap_comp_eq_one (hfan : FAN x V E) : True := sorry
+
+/-- HOL fan_defs.hl `hypermap_of_fan`（proof-parameterized）。 -/
+noncomputable def hypermapOfFan (x : V3) (V : Set V3) (E : Set (Set V3))
+    (hfan : FAN x V E) : Hypermap (V3 × V3) :=
+  sorry
+
 end Kepler.Text.Fan
 
-/- 计划（F3）：azim 基础引理层（flyspeck.ml 的 AZIM_REFL/AZIM_SYMM 等）→
-fan.hl 的 sigma_fan_in_set_of_edge/permutes_sigma_fan/INVERSE1_SIGMA_FAN →
-fan_misc 剩余三引理；随后 hypermapOfFan（证明参数化）与
-conforming_bijection（需 Hypermap.faceSet）。 -/
+/- 计划（F6）：hypermapOfFan 证明参数化 → conforming_bijection（需
+Hypermap.faceSet）→ fan.hl d1_fan/e1/e2/e3_fan 区域引理。 -/
