@@ -137,10 +137,20 @@ PLAN.md 与各 README）。
   on3_axis_change）→ ℂ 角差主值 exists_angle_diff → AzimSpec 存在/唯一/
   取值（= AZIM_EXISTS/AZIM_UNIQUE/SELECT_CONV 角色）→ 值域 + azim_self
   （AZIM_REFL）+ azim_master（= flyspeck.ml:2166 完整主定理，弱化正性
-  四情形分解）。**F4（下一块）**：AZIM_EQ 族（AZIM_EQ/AZIM_EQ_0/
-  AZIM_EQ_0_ALT/AZIM_EQ_ALT/AZIM_COMPL/AZIM_EQ_0_SYM——走 azim_master +
-  zOf-框架表征 + affGt_pair_iff 放 Geom/Aff.lean）→ fan.hl 的 SIGMA_FAN
-  spec → sigma_fan_in_set_of_edge → permutes_sigma_fan → fan_misc 收尾。
+  四情形分解）。**F4a 完成**（`3086223`，AzimLemmas.lean 新文件 + Aff.lean）：
+  affGt_pair_iff（射线刻画）、zOf 线性性、exp 周期工具（exp_pos_mul_eq /
+  angle_eq_of_exp_eq）、azim_frame_spec（标架极表示）、rep_smul_of_zOf、
+  **azim_eq_azim_iff（AZIM_EQ）**、ALT、EQ_0、EQ_0_ALT、
+  **azim_compl（AZIM_COMPL）**、COMPL_EQ_0、EQ_0_SYM。
+  **F4b 完成**（`af4d9da`，Fan.lean σ-链起步）：remark_finite_fan1、
+  properties_of_setOfEdge(_fan)、exists_sigmaFan、**SIGMA_FAN**（ε-witness
+  三条件）、sigma_fan_in_setOfEdge。
+  **F4c（下一块）**：mono_sigma_fan 依赖链——CYCLIC_SET_EDGE_FAN /
+  subset_cyclic_set_fan / sum2_azim_fan / UNIQUE_AZIM_POINT_FAN /
+  UNIQUE_AZIM_0_POINT_FAN（fan.hl:711–1900，HOL 证明已定位）→
+  permutes_sigma_fan（PERMUTES_FINITE_INJECTIVE 路线）→ fan_misc 收尾
+  （INVERSE_SIGMA_FAN / EXTENSION_SIGMA_FAN_INJECTIVE /
+  INVERSE_SIGMA_FAN_EQ_INVERSE1）→ hypermapOfFan。
 - 移植惯例：对应 HOL 行号写头注；Mathlib 已有的跳过并注明；零 sorry、
   零 native_decide、零自引入 axiom；每块 `lake build Kepler` 全绿 +
   公理抽查后才提交。
