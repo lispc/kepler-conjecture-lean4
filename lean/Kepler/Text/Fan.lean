@@ -765,6 +765,79 @@ theorem extension_sigma_fan_injective (hfan : FAN x V E)
     _ = inverseSigmaFan x V E v (extensionSigmaFan x V E v w2) := by rw [heq]
     _ = w2 := hinv w2
 
+/-! ## INVERSE1_SIGMA_FAN 的 ε-spec（fan.hl:2052 / fan_misc.hl:60） -/
+
+/-- 满足三条件的 σ-逆之存在性（`sigma_bijOn` 的 choose 见证）。 -/
+theorem exists_inverse1_sigma_fan (hfan : FAN x V E) :
+    ∃ g : V3 → V3,
+      (∀ w : V3, {v, w} ∈ E → {v, g w} ∈ E) ∧
+      (∀ w : V3, {v, w} ∈ E → sigmaFan x V E v (g w) = w) ∧
+      (∀ w : V3, {v, w} ∈ E → g (sigmaFan x V E v w) = w) := by
+  by_cases hS : ∃ u ∈ setOfEdge v V E, True
+  · obtain ⟨u, hu, -⟩ := hS
+    obtain ⟨hmaps, hinj, hsurj⟩ := sigma_bijOn hfan hu
+    let g : V3 → V3 := fun w =>
+      if h : ∃ u ∈ setOfEdge v V E, sigmaFan x V E v u = w then h.choose else w
+    refine ⟨g, ?_, ?_, ?_⟩
+    · intro w he
+      have hw : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp he
+      have hsurjw : ∃ u ∈ setOfEdge v V E, sigmaFan x V E v u = w := @hsurj w hw
+      have hg : g w = hsurjw.choose := dif_pos hsurjw
+      rw [hg]
+      exact (properties_of_setOfEdge_fan x V E v hsurjw.choose hfan).mpr
+        hsurjw.choose_spec.1
+    · intro w he
+      have hw : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp he
+      have hsurjw : ∃ u ∈ setOfEdge v V E, sigmaFan x V E v u = w := @hsurj w hw
+      have hg : g w = hsurjw.choose := dif_pos hsurjw
+      rw [hg]
+      exact hsurjw.choose_spec.2
+    · intro w he
+      have hw : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp he
+      have hex : ∃ u ∈ setOfEdge v V E, sigmaFan x V E v u = sigmaFan x V E v w :=
+        ⟨w, hw, rfl⟩
+      have hg : g (sigmaFan x V E v w) = hex.choose := dif_pos hex
+      have hchoose_eq : hex.choose = w :=
+        hinj hex.choose_spec.1 hw hex.choose_spec.2
+      rw [hg, hchoose_eq]
+  · -- setOfEdge 空：三条件平凡
+    have hSempty : setOfEdge v V E = ∅ := by
+      ext w; exact ⟨fun hw => hS ⟨w, hw, trivial⟩, fun h => h.elim⟩
+    refine ⟨id, ?_, ?_, ?_⟩
+    · intro w he
+      have hw : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp he
+      exact absurd (hSempty ▸ hw) (by simp)
+    · intro w he
+      have hw : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp he
+      exact absurd (hSempty ▸ hw) (by simp)
+    · intro w he
+      have hw : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp he
+      exact absurd (hSempty ▸ hw) (by simp)
+
+/-- HOL fan.hl:2052 `INVERSE1_SIGMA_FAN`（ε-逆的三条件）。 -/
+theorem INVERSE1_SIGMA_FAN (hfan : FAN x V E) :
+    (∀ w : V3, {v, w} ∈ E → {v, inverse1SigmaFan x V E v w} ∈ E) ∧
+    (∀ w : V3, {v, w} ∈ E → sigmaFan x V E v (inverse1SigmaFan x V E v w) = w) ∧
+    (∀ w : V3, {v, w} ∈ E → inverse1SigmaFan x V E v (sigmaFan x V E v w) = w) := by
+  unfold inverse1SigmaFan
+  exact Classical.epsilon_spec (exists_inverse1_sigma_fan hfan)
+
+/-- HOL fan_misc `INVERSE_SIGMA_FAN_EQ_INVERSE1_SIGMA_FAN`。 -/
+theorem inverse_sigma_fan_eq_inverse1 (hfan : FAN x V E) (hw : {v, w} ∈ E) :
+    inverse1SigmaFan x V E v w = inverseSigmaFan x V E v w := by
+  have hwS : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp hw
+  have hg0 : {v, inverse1SigmaFan x V E v w} ∈ E := (INVERSE1_SIGMA_FAN hfan).1 w hw
+  have hgσ : sigmaFan x V E v (inverse1SigmaFan x V E v w) = w :=
+    (INVERSE1_SIGMA_FAN hfan).2.1 w hw
+  have hgs : inverse1SigmaFan x V E v w ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v (inverse1SigmaFan x V E v w) hfan).mp hg0
+  have hg1 : extensionSigmaFan x V E v (inverse1SigmaFan x V E v w) = w := by
+    rw [extensionSigmaFan, if_neg (by simpa using hgs)]
+    exact hgσ
+  have hg2 : extensionSigmaFan x V E v (inverseSigmaFan x V E v w) = w :=
+    congrFun (inverse_sigma_fan_comp hfan hwS).2 w
+  exact extension_sigma_fan_injective hfan hwS _ _ (hg1.trans hg2.symm)
+
 end Kepler.Text.Fan
 
 /- 计划（F3）：azim 基础引理层（flyspeck.ml 的 AZIM_REFL/AZIM_SYMM 等）→
