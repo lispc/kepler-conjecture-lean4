@@ -152,10 +152,15 @@ PLAN.md 与各 README）。
   + 消公共相位 + 区间整除）、**mono_sigma_fan**（σ 单射：双最小性 + 角加法
   + 三补角四情形）、**permutes_sigma_fan**（映射内+单射+集外恒等）。
   Aff.lean 补 Affsign.of_triple / affGe_ray / 求和分解引理。
-  **F5（下一块）**：fan_misc 收尾（INVERSE_SIGMA_FAN = extension⁻¹∘extension
-  = I 之类，fan_misc.hl:43–70，用 permutes_sigma_fan + sigma_fan_in_setOfEdge）
-  → hypermapOfFan（证明参数化：extensionSigmaFan 的 Equiv.Perm 化 +
-  PermesOn）→ fan.hl 其余（d1_fan/e1_fan/e2_fan/e3_fan 区域）。
+  **F5a 完成**（`ed57294`）：finite_surjOf_inj（抽屉原理）、
+  sigma_bijOn（σ 的 BijOn）、**inverse_sigma_fan_comp**
+  （= INVERSE_SIGMA_FAN：extension 全类型双射 ⟹ invFun 左右逆）、
+  extension_sigma_fan_injective。
+  **F5b（下一块）**：INVERSE1_SIGMA_FAN 的 ε-spec（σ-逆三条件——用
+  choose-见证：surjOn 取原像 + mono 定唯一性）与
+  INVERSE_SIGMA_FAN_EQ_INVERSE1_SIGMA_FAN → hypermapOfFan
+  （证明参数化：extensionSigmaFan 的 Equiv.Perm 化 + PermesOn）→
+  fan.hl 其余（d1_fan/e1/e2/e3_fan 区域）。
 - 移植惯例：对应 HOL 行号写头注；Mathlib 已有的跳过并注明；零 sorry、
   零 native_decide、零自引入 axiom；每块 `lake build Kepler` 全绿 +
   公理抽查后才提交。
