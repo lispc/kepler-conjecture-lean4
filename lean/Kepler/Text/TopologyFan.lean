@@ -415,4 +415,63 @@ theorem cyclic_power_sigmaFan (x : V3) (V : Set V3) (E : Set (Set V3))
       (iterates_mem_setOfEdge hfan v u hu_soe (i - j)) hu_soe hstep
   exact key_lemma_cyclic x V E hfan hvu (i - j) (by omega) (by omega) hfix
 
+/-- HOL topology.hl:701 `ORDER_POWER_SIGMA_FAN`：σ 的第 n = CARD(soe)
+次迭代回原点（全循环闭合）。证明重构：前 n 个迭代两两不同
+（cyclic_power_sigmaFan）⟹ 截段像集是 soe 的 n 元子集 ⟹ 相等；
+σ^[n]u ∈ soe = 截段 ⟹ 有重复 ⟹ 更短周期，与 key_lemma 矛盾。 -/
+theorem order_power_sigmaFan (x : V3) (V : Set V3) (E : Set (Set V3))
+    (hfan : FAN x V E) {v u : V3} (hvu : {v, u} ∈ E)
+    (hn : n = (setOfEdge v V E).ncard) :
+    (sigmaFan x V E v)^[n] u = u := by
+  have hu_soe : u ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  -- 前 n 个迭代像集 ⊆ soe 且基数 n
+  have hseg : (fun k : ℕ => (sigmaFan x V E v)^[k] u) '' (Set.Iio n)
+      ⊆ setOfEdge v V E := by
+    rintro w ⟨k, _, rfl⟩
+    exact iterates_mem_setOfEdge hfan v u hu_soe k
+  have hinj_seg : Set.InjOn (fun k : ℕ => (sigmaFan x V E v)^[k] u) (Set.Iio n) := by
+    intro k hk_mem l hl_mem heq
+    have hk : k < n := Set.mem_Iio.mp hk_mem
+    have hl : l < n := Set.mem_Iio.mp hl_mem
+    rcases lt_trichotomy k l with h | h | h
+    · exact absurd heq.symm (cyclic_power_sigmaFan x V E hfan hvu l k
+        (by rw [← hn]; omega) h)
+    · exact h
+    · exact absurd heq (cyclic_power_sigmaFan x V E hfan hvu k l
+        (by rw [← hn]; omega) h)
+  have hcard_seg : ((fun k : ℕ => (sigmaFan x V E v)^[k] u) '' (Set.Iio n)).ncard =
+      n := by
+    rw [Set.InjOn.ncard_image hinj_seg, Set.ncard_Iio_nat]
+  -- 截段像集 = soe（n 元子集含于 n 元 soe）
+  have hseg_eq : (fun k : ℕ => (sigmaFan x V E v)^[k] u) '' (Set.Iio n)
+      = setOfEdge v V E := by
+    by_contra hne
+    have hss := Set.ncard_lt_ncard (lt_of_le_of_ne hseg hne)
+      (remark_finite_fan1 v V E hfan.2.2.1.1)
+    rw [hcard_seg] at hss
+    omega
+  -- σ^[n] u ∈ soe = 截段 → 与某 σ^[k] u (k < n) 重合 → 更短周期矛盾
+  have hmem_seg : (sigmaFan x V E v)^[n] u ∈
+      (fun k : ℕ => (sigmaFan x V E v)^[k] u) '' (Set.Iio n) := by
+    rw [hseg_eq]
+    exact iterates_mem_setOfEdge hfan v u hu_soe n
+  obtain ⟨k, hk, hk_eq⟩ := hmem_seg
+  have hk' : k < n := Set.mem_Iio.mp hk
+  have hk_eq' : (sigmaFan x V E v)^[k] u = (sigmaFan x V E v)^[n] u := hk_eq
+  rcases Nat.eq_zero_or_pos k with h0k | h0k
+  · rw [h0k, Function.iterate_zero] at hk_eq'
+    exact hk_eq'.symm
+  have hsplit : (sigmaFan x V E v)^[n] u =
+      (sigmaFan x V E v)^[k] ((sigmaFan x V E v)^[n - k] u) := by
+    have hadd : k + (n - k) = n := by omega
+    rw [← Function.iterate_add_apply, hadd]
+  have hrep : (sigmaFan x V E v)^[n - k] u = u := by
+    have heq2 : (sigmaFan x V E v)^[k] u =
+        (sigmaFan x V E v)^[k] ((sigmaFan x V E v)^[n - k] u) := by
+      rw [← hsplit]; exact hk_eq'
+    exact (iterates_injOn_setOfEdge hfan v k hu_soe
+      (iterates_mem_setOfEdge hfan v u hu_soe (n - k)) heq2).symm
+  exact absurd hrep (key_lemma_cyclic x V E hfan hvu (n - k)
+    (by omega) (by omega))
+
 end Kepler.Text
