@@ -1,4 +1,4 @@
-# 交接文档（Handoff）— 2026-08-28
+# 交接文档（Handoff）— 2026-08-31
 
 > 面向接手者。本文件描述项目现状、验证纪律、环境细节、待办与优先级。
 > 长期设计决策见 `DECISIONS.md`，阶段计划见 `PLAN.md`，模块对照见
@@ -156,11 +156,31 @@ PLAN.md 与各 README）。
   sigma_bijOn（σ 的 BijOn）、**inverse_sigma_fan_comp**
   （= INVERSE_SIGMA_FAN：extension 全类型双射 ⟹ invFun 左右逆）、
   extension_sigma_fan_injective。
-  **F5b（下一块）**：INVERSE1_SIGMA_FAN 的 ε-spec（σ-逆三条件——用
-  choose-见证：surjOn 取原像 + mono 定唯一性）与
-  INVERSE_SIGMA_FAN_EQ_INVERSE1_SIGMA_FAN → hypermapOfFan
-  （证明参数化：extensionSigmaFan 的 Equiv.Perm 化 + PermesOn）→
-  fan.hl 其余（d1_fan/e1/e2/e3_fan 区域）。
+   **F5b 完成**（`0eaa4b3`）：INVERSE1_SIGMA_FAN、
+   inverse_sigma_fan_eq_inverse1。
+   **F6a 完成**（`97dc326`）：nFanPair/fFanPair apex 参数化、
+   eFanPair/nFanPair 单满射、condition_hypermap_fan、e_fan_no_fix。
+   **F6b 完成**（`d239cf6`）：fFanPair 单满射、e∘n∘f=I。
+   **F6c 完成**（`ec280ba`）：finite_dart1_fan、finite_dart_fan、
+   mono/sur_fFanPair。
+   **F6d 完成**（`f8f5d7f`）：**hypermapOfFan 完整构造落地，Fan.lean
+   全文件 sorry-free**——setEdgesFiniteFan、bijOn_res、extendPerm、
+   extendPerm_permutes、hypermapOfFan x V E hfan（完整 Hypermap：
+   darts=finite dart1，e/n/f 经 bijOn_res+extendPerm，comp_eq_one 经
+   Equiv.Perm.ext）、edgePermutesOfFan/compEqOneOfFan 派生引理。
+   中途纪律事故：`776213f` 曾把 7 个 sorry 骨架提交进 main，`f8f5d7f`
+   全部闭合恢复红线（教训见 §7 已知坑）。
+   **F7 完成**（`9319f7e`+`f511675`，**fan.hl 2897 行全书收官**）：
+   edge_ne_of_fan（remark1 互异性）、nFanPair_iterate（power_n_fan）、
+   distinct_nodes、edge_lie_different_nodes、
+   dartOfFan_eq_dart1_of_surrounded（fully_surrounded_is_non_isolated）、
+   **AAUHTVE**（hypermapOfFan 分量性质总打包）。dart 为二元组移植、
+   apex 参数化。
+   **topology.hl 开工**（`b248721`，新文件 Text/TopologyFan.lean，
+   4718 行 / 113 项，仅依赖 sphere+fan——地基已齐）：block 1
+   card_sigmaFan_image（CARD_SIGMA_FAN）。后续按块推进
+   （MONO_AZIM_SIGMA_FAN → set_of_orbits_points_fan 轨道计数 →
+   azim_i/wedge2/wedge3 → rcone/ball/cone 区域）。
 - 移植惯例：对应 HOL 行号写头注；Mathlib 已有的跳过并注明；零 sorry、
   零 native_decide、零自引入 axiom；每块 `lake build Kepler` 全绿 +
   公理抽查后才提交。
@@ -251,6 +271,21 @@ PLAN.md 与各 README）。
 - **`rw [pow_add]` 会误匹配指数里内嵌的 `m+1`**（模式 `?a^(?m+?n)` 先
   命中最早出现的子项）。幂合并一律走 `have hpow : ∀ a b w,
   (f^a)((f^b) w) = (f^(a+b)) w` 型辅助引理（显式指数实例化）。
+- **Finset/Set coercion 与 `res`/`▸`/`rw`/`simp` 的不兼容（已解决，
+  `f8f5d7f`）**：`res f ↑s` 展开后 ite 条件是 `a ∈ ↑s`（Set），而
+  `by_cases ha : a ∈ s` 给的是 Finset 级，句法不匹配导致 simp/rw/▸ 全哑。
+  **正解（专家方案 1）**：`by_cases ha : a ∈ (↑s : Set α)` 直接对 Set 命题
+  分情形，ite 条件句法一致，simp 合同直接点燃。配套教训：
+  (a) `simp only` 把条件化成 `True`/`False` 后不自动折叠 ite——嵌套 ite
+  场景必须在 simp only 列表显式加 `if_true`/`if_false`，否则内层未折叠
+  会污染外层条件匹配；(b) `Equiv.Perm` 等式不要用裸 `ext d`（dart 是
+  `V3 × V3` 会被深拆到 ofLp 坐标级），用 `refine Equiv.Perm.ext fun d => ?_`；
+  (c) `Set.BijOn` 是 And 三元组（MapsTo ∧ InjOn ∧ SurjOn），`.1/.2.1/.2.2`
+  取分量；`Set.SurjOn` 应用是半隐式 `⦃x⦄`，`hf.2.2 hy` 直接给 image 成员
+  可 obtain 三元组；(d) `E.Finite` 从 FAN 的最短路径就是 Mathlib 的
+  `Set.powerset` + `Set.Finite.powerset` + `.subset`（4 行）。
+  (e) **纪律教训**：带 sorry 的骨架绝不上 main（曾短暂违反，`776213f`
+  引入 7 个 sorry，`f8f5d7f` 全部闭合恢复红线）。
 - **证明内多态局部 `have`（`∀ {β : Type*}`）导致内核
   "constant has level params [u_1,u_2]" 提交失败**——按用到的类型
   单型化（α 一份、Set α 一份）。
