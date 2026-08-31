@@ -201,6 +201,18 @@ PLAN.md 与各 README）。
    后续：cyclic_power_sigma_fan（j<i 全不撞）→
    CARD_SET_OF_ORBITS_POINTS_FAN（**CARD orbit = CARD soe，单循环
    核心结论**）。
+   **block 6 完成（`63ade1d`，topology.hl:490–700 收官，比 HOL 原证明
+   短一半）**：**orbit_eq_setOfEdge——σ 单循环性**（HOL 走
+   CYCLIC_SET_EDGE_FAN 800 行机制未移植，重构 ~130 行：轨道 σ-双不变
+   （closure + ncard + 单射 → σ(orbit)=orbit ⟹ 迭代永出轨道）+
+   mono_azim 严格递增链（等号由 unique_azim_point_fan + SIGMA_FAN
+   排除不动点）+ 有限性鸽笼（lt_trichotomy）⟹ 矛盾）。
+   配套：iterates_mem/injOn_setOfEdge、card_orbits_eq_setOfEdge
+   （CARD_SET_OF_ORBITS_POINTS_FAN）、key_lemma_cyclic（无短周期）、
+   cyclic_power_sigmaFan（循环长内两两不同）。
+   **下一块**：topology.hl:700 起（azim_i_fan / wedge2 / wedge3 定义
+   区域，793/996/1237 行），之后 rcone/ball/cone（2289+）、
+   r_fan 坐标系（3580+）、change_spherical（3652+）。
 - 移植惯例：对应 HOL 行号写头注；Mathlib 已有的跳过并注明；零 sorry、
   零 native_decide、零自引入 axiom；每块 `lake build Kepler` 全绿 +
   公理抽查后才提交。
