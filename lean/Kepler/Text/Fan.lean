@@ -1078,6 +1078,19 @@ theorem edge_lie_different_nodes (hfan : FAN x V E) (n : ℕ) (a : V3 × V3)
   simp only [nFanPair_iterate, Prod.mk.injEq] at heq
   exact edge_ne_of_fan hfan ha heq.1.symm
 
+/-- HOL fan.hl:2832+2843 `fully_surrounded_is_non_isolated_fan` /
+`dartset_fully_surrounded_is_non_isolated_fan`（二元组移植）：FAN +
+每点度数 > 1 ⟹ 无孤立点，即 `dartOfFan = dart1OfFan`。 -/
+theorem dartOfFan_eq_dart1_of_surrounded (hfan : FAN x V E)
+    (hdeg : ∀ v ∈ V, 1 < (setOfEdge v V E).ncard) :
+    dartOfFan V E = dart1OfFan V E := by
+  rw [dartOfFan, Set.union_eq_right]
+  rintro ⟨v, w⟩ ⟨-, hv, hsoe⟩
+  simp only at hv hsoe
+  have h1 := hdeg _ hv
+  rw [hsoe, Set.ncard_empty] at h1
+  simp at h1
+
 /-- 有限支撑双射 → Equiv.Perm（identity outside finset）。 -/
 noncomputable def Equiv.Perm.ofFiniteSupport {α : Type*} [DecidableEq α]
     (s : Finset α) (f : α → α) (hf : Set.BijOn f ↑s ↑s) : Equiv.Perm α :=
@@ -1209,6 +1222,31 @@ theorem compEqOneOfFan (hfan : FAN x V E) :
     (hypermapOfFan x V E hfan).edgeMap * (hypermapOfFan x V E hfan).nodeMap *
       (hypermapOfFan x V E hfan).faceMap = 1 :=
   (hypermapOfFan x V E hfan).comp_eq_one
+
+/-- HOL fan.hl:2872 `AAUHTVE`（二元组 dart1 版本）：hypermapOfFan 的
+分量性质总打包。 -/
+theorem AAUHTVE (hfan : FAN x V E) :
+    (dart1OfFan V E).Finite ∧
+    PermutesOn (hypermapOfFan x V E hfan).edgeMap (hypermapOfFan x V E hfan).darts ∧
+    PermutesOn (hypermapOfFan x V E hfan).nodeMap (hypermapOfFan x V E hfan).darts ∧
+    PermutesOn (hypermapOfFan x V E hfan).faceMap (hypermapOfFan x V E hfan).darts ∧
+    (hypermapOfFan x V E hfan).edgeMap * (hypermapOfFan x V E hfan).nodeMap *
+      (hypermapOfFan x V E hfan).faceMap = 1 ∧
+    (∀ d ∈ dart1OfFan V E, eFanPair V E (eFanPair V E d) = d) ∧
+    (∀ d ∈ dart1OfFan V E, eFanPair V E d ≠ d) ∧
+    (∀ d ∈ dart1OfFan V E, fFanPair x V E d ≠ d) ∧
+    (∀ k l : ℕ, ∀ d ∈ dart1OfFan V E,
+      (nFanPair x V E)^[k] (eFanPair V E d) =
+        eFanPair V E ((nFanPair x V E)^[l] d) →
+      (nFanPair x V E)^[l] d = d) ∧
+    (∀ n : ℕ, ∀ d ∈ dart1OfFan V E,
+      eFanPair V E d ≠ (nFanPair x V E)^[n] d) :=
+  ⟨finite_dart1_fan hfan, edgePermutesOfFan hfan,
+    (hypermapOfFan x V E hfan).nodeMap_permutes,
+    (hypermapOfFan x V E hfan).faceMap_permutes, compEqOneOfFan hfan,
+    eFanPair_sq, e_fan_no_fix hfan, f_fan_no_fix hfan,
+    fun k l d hd => distinct_nodes x V E k l d,
+    fun n d hd => edge_lie_different_nodes hfan n d hd⟩
 
 end Kepler.Text.Fan
 
