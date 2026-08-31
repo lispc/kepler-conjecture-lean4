@@ -847,9 +847,12 @@ theorem inverse_sigma_fan_eq_inverse1 (hfan : FAN x V E) (hw : {v, w} ∈ E) :
 Equiv.Perm（有限支撑双射）→ PermutesOn + comp_eq_one → Hypermap。 -/
 
 /-- HOL fan.hl `set_edges_is_finite_fan`：FAN(x,V,E) → FINITE E。
-    证明路线：UNIONS E ⊆ V → E ⊆ 𝒫(V)；V.Finite → 𝒫(V).Finite（via Finset.powerset）。 -/
-theorem setEdgesFiniteFan (hfan : FAN x V E) : E.Finite :=
-  sorry
+    证明路线：UNIONS E ⊆ V → E ⊆ 𝒫(V)；V.Finite → 𝒫(V).Finite。 -/
+theorem setEdgesFiniteFan (hfan : FAN x V E) : E.Finite := by
+  have hV : V.Finite := hfan.2.2.1.1
+  have hsub : E ⊆ Set.powerset V := fun e he => fun v hv =>
+    hfan.1 (Set.mem_sUnion.mpr ⟨e, he, hv⟩)
+  exact hV.powerset.subset hsub
 
 /-- HOL fan.hl `finite_dart1_fan`。 -/
 theorem finite_dart1_fan (hfan : FAN x V E) :
@@ -1051,31 +1054,116 @@ noncomputable def Equiv.Perm.ofFiniteSupport {α : Type*} [DecidableEq α]
         exact ⟨x, by simp [g, Finset.mem_coe.mp hx, hfx]⟩
       · exact ⟨y, by simp [g, hy]⟩)
 
-/-- fan e/n/f 映射的 PermutesOn。 -/
-theorem eFanPair_permutes (hfan : FAN x V E) : True := sorry
-
-/-- HOL fan.hl:2875 `AAUHTVE` — hypermap 分量恒等式。 -/
-theorem hypermap_comp_eq_one (hfan : FAN x V E) : True := sorry
-
-/-- BijOn for `res f ↑s` from BijOn for `f` on the corresponding set. -/
+/-- BijOn on `s` lifts to BijOn of `res f ↑fs` on `↑fs`（Set 层 membership
+分情形，`res` 的 ite 条件 `d ∈ ↑fs` 与 `hd` 句法一致，simp 合同直接点燃）。 -/
 theorem bijOn_res {α : Type*} [DecidableEq α] {f : α → α} {s : Set α}
     {fs : Finset α} (hs : ↑fs = s)
-    (hf : Set.BijOn f s s) : Set.BijOn (res f ↑fs) ↑fs ↑fs := sorry
+    (hf : Set.BijOn f s s) : Set.BijOn (res f ↑fs) ↑fs ↑fs := by
+  have hmem : ∀ d, d ∈ (↑fs : Set α) ↔ d ∈ s := fun d => by rw [hs]
+  refine ⟨fun d hd => ?_, fun a ha b hb hfab => ?_, fun y hy => ?_⟩
+  · simp only [res, hd]
+    exact hmem _ |>.mpr (hf.1 (hmem _ |>.mp hd))
+  · simp only [res, ha, hb] at hfab
+    exact hf.2.1 (hmem _ |>.mp ha) (hmem _ |>.mp hb) hfab
+  · simp only [res, hy]
+    obtain ⟨x, hx, hfx⟩ := hf.2.2 (hmem _ |>.mp hy)
+    refine ⟨x, hmem _ |>.mpr hx, ?_⟩
+    simp only [res, hmem _ |>.mpr hx]
+    exact hfx
 
-/-- `res f ↑s` bij → Equiv.Perm。 -/
+/-- `res f ↑s` bij → Equiv.Perm（by_cases 直接对 Set 命题分情形）。 -/
 noncomputable def extendPerm {α : Type*} [DecidableEq α] (s : Finset α) (f : α → α)
     (hf : Set.BijOn (res f ↑s) ↑s ↑s) : Equiv.Perm α :=
-  Equiv.ofBijective (res f ↑s) (by sorry)
+  Equiv.ofBijective (res f ↑s) (by
+    constructor
+    · intro a b h
+      by_cases ha : a ∈ (↑s : Set α) <;> by_cases hb : b ∈ (↑s : Set α)
+      · exact hf.2.1 ha hb h
+      · simp only [res, ha, hb] at h
+        have hma := hf.1 ha
+        simp only [res, ha] at hma
+        rw [h] at hma
+        exact absurd hma hb
+      · simp only [res, ha, hb] at h
+        have hmb := hf.1 hb
+        simp only [res, hb] at hmb
+        rw [← h] at hmb
+        exact absurd hmb ha
+      · simp only [res, ha, hb] at h; exact h
+    · intro y
+      by_cases hy : y ∈ (↑s : Set α)
+      · obtain ⟨x, hx, hfx⟩ := hf.2.2 hy
+        exact ⟨x, hfx⟩
+      · exact ⟨y, if_neg hy⟩)
 
 /-- `extendPerm` permutes `s`。 -/
 theorem extendPerm_permutes {α : Type*} [DecidableEq α] {s : Finset α} {f : α → α}
     {hf : Set.BijOn (res f ↑s) ↑s ↑s} :
-    PermutesOn (extendPerm s f hf) s := sorry
+    PermutesOn (extendPerm s f hf) s := by
+  intro x hx
+  have hnot : x ∉ (↑s : Set α) := fun hmem => hx (Finset.mem_coe.mp hmem)
+  show (extendPerm s f hf) x = x
+  rw [show (extendPerm s f hf) x = (res f ↑s) x from by
+    simp only [extendPerm, Equiv.ofBijective_apply]]
+  exact if_neg hnot
 
 /-- HOL fan_defs.hl `hypermap_of_fan`（proof-parameterized）。 -/
 noncomputable def hypermapOfFan (x : V3) (V : Set V3) (E : Set (Set V3))
     (hfan : FAN x V E) : Hypermap (V3 × V3) :=
-  sorry
+  have hD := finite_dart1_fan hfan
+  have hs : ↑hD.toFinset = dart1OfFan V E := hD.coe_toFinset
+  -- dart1OfFan 层的 Set 级 BijOn（e/n/f 各一）
+  have hset_e : Set.BijOn (eFanPair V E) (dart1OfFan V E) (dart1OfFan V E) :=
+    ⟨fun d hd => eFanPair_mem_dart1 hd,
+     fun a ha b hb heq => by
+       have heq2 : eFanPair V E (eFanPair V E a) = eFanPair V E (eFanPair V E b) :=
+         congrArg (eFanPair V E) heq
+       rw [← eFanPair_sq a ha, heq2, eFanPair_sq b hb],
+     fun y hy => ⟨eFanPair V E y, eFanPair_mem_dart1 hy, eFanPair_sq y hy⟩⟩
+  have hset_n : Set.BijOn (nFanPair x V E) (dart1OfFan V E) (dart1OfFan V E) :=
+    ⟨fun d hd => nFanPair_mem_dart1 hfan hd,
+     fun a ha b hb heq => mono_nFanPair hfan ha hb heq,
+     fun y hy => sur_nFanPair hfan hy⟩
+  have hset_f : Set.BijOn (fFanPair x V E) (dart1OfFan V E) (dart1OfFan V E) :=
+    ⟨fun d hd => fFanPair_mem_dart1 hfan hd,
+     fun a ha b hb heq => mono_fFanPair hfan ha hb heq,
+     fun y hy => sur_fFanPair hfan hy⟩
+  -- 提升 Finset 层
+  have hbij_e := bijOn_res hs hset_e
+  have hbij_n := bijOn_res hs hset_n
+  have hbij_f := bijOn_res hs hset_f
+  { darts := hD.toFinset
+    edgeMap := extendPerm hD.toFinset (eFanPair V E) hbij_e
+    nodeMap := extendPerm hD.toFinset (nFanPair x V E) hbij_n
+    faceMap := extendPerm hD.toFinset (fFanPair x V E) hbij_f
+    edgeMap_permutes := extendPerm_permutes
+    nodeMap_permutes := extendPerm_permutes
+    faceMap_permutes := extendPerm_permutes
+    comp_eq_one := by
+      have hmemS : ∀ d, d ∈ (↑hD.toFinset : Set (V3 × V3)) ↔ d ∈ dart1OfFan V E :=
+        fun d => by rw [hs]
+      refine Equiv.Perm.ext fun d => ?_
+      simp only [Equiv.Perm.mul_apply, Equiv.Perm.one_apply]
+      by_cases hd : d ∈ (↑hD.toFinset : Set (V3 × V3))
+      · have hfd : fFanPair x V E d ∈ (↑hD.toFinset : Set (V3 × V3)) :=
+          hmemS _ |>.mpr (fFanPair_mem_dart1 hfan (hmemS _ |>.mp hd))
+        have hnfd : nFanPair x V E (fFanPair x V E d) ∈ (↑hD.toFinset : Set (V3 × V3)) :=
+          hmemS _ |>.mpr (nFanPair_mem_dart1 hfan
+            (fFanPair_mem_dart1 hfan (hmemS _ |>.mp hd)))
+        simp only [extendPerm, Equiv.ofBijective_apply, res, hd, hfd, hnfd, if_true]
+        exact condition_hypermap_fan hfan d (hmemS _ |>.mp hd)
+      · simp only [extendPerm, Equiv.ofBijective_apply, res, hd, if_false] }
+
+/-- HOL fan.hl `edge_map permutes dart` 分量（hypermapOfFan 打包后的一行引理）。 -/
+theorem edgePermutesOfFan (hfan : FAN x V E) :
+    PermutesOn (hypermapOfFan x V E hfan).edgeMap (hypermapOfFan x V E hfan).darts :=
+  (hypermapOfFan x V E hfan).edgeMap_permutes
+
+/-- HOL fan.hl:2875 `AAUHTVE` — hypermap 分量恒等式（打包一行引理）。 -/
+theorem compEqOneOfFan (hfan : FAN x V E) :
+    (hypermapOfFan x V E hfan).edgeMap * (hypermapOfFan x V E hfan).nodeMap *
+      (hypermapOfFan x V E hfan).faceMap = 1 :=
+  (hypermapOfFan x V E hfan).comp_eq_one
 
 end Kepler.Text.Fan
 
