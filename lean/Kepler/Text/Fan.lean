@@ -1033,6 +1033,51 @@ theorem f_fan_no_fix (hfan : FAN x V E) :
     simpa using hd'
   exact hfan6 {a} he (collinear_pair ℝ x a)
 
+/-! ## n-迭代与 distinct nodes（fan.hl:2247–2294） -/
+
+/-- HOL fan.hl:423 `remark1_fan` 的互异性分量：`{v,w} ∈ E → v ≠ w`。 -/
+theorem edge_ne_of_fan (hfan : FAN x V E) (he : {v, w} ∈ E) : v ≠ w := by
+  intro hveq
+  refine fan_not_collinear hfan he ?_
+  rw [hveq]
+  show Collinear ℝ ({x, w, w} : Set V3)
+  simpa using collinear_pair ℝ x w
+
+/-- HOL fan.hl:2255 `power_n_fan`：n-迭代在点对上的显式形态
+（二元组移植；纯定义推论，无需 FAN）。 -/
+theorem nFanPair_iterate (x : V3) (V : Set V3) (E : Set (Set V3))
+    (v w : V3) (l : ℕ) :
+    (nFanPair x V E)^[l] (v, w) = (v, (sigmaFan x V E v)^[l] w) := by
+  induction l with
+  | zero => simp
+  | succ l ih =>
+    rw [Function.iterate_succ_apply', ih, Function.iterate_succ_apply']
+    simp [nFanPair]
+
+/-- HOL fan.hl:2267 `distinct_nodes`（二元组形态；纯定义推论）。 -/
+theorem distinct_nodes (x : V3) (V : Set V3) (E : Set (Set V3))
+    (k l : ℕ) (a : V3 × V3) :
+    (nFanPair x V E)^[k] (eFanPair V E a) = eFanPair V E ((nFanPair x V E)^[l] a) →
+    (nFanPair x V E)^[l] a = a := by
+  obtain ⟨v, w⟩ := a
+  intro heq
+  simp only [eFanPair, nFanPair_iterate, Prod.mk.injEq] at heq
+  obtain ⟨h1, _⟩ := heq
+  show (nFanPair x V E)^[l] (v, w) = (v, w)
+  rw [nFanPair_iterate, ← h1]
+
+/-- HOL fan.hl:2283 `edge_lie_different_nodes`（二元组形态）：e a 与
+n-迭代 a 不相等（否则第一分量给 v = w，违反 FAN 互异性）。 -/
+theorem edge_lie_different_nodes (hfan : FAN x V E) (n : ℕ) (a : V3 × V3)
+    (ha : a ∈ dart1OfFan V E) :
+    eFanPair V E a ≠ (nFanPair x V E)^[n] a := by
+  obtain ⟨v, w⟩ := a
+  simp only [dart1OfFan, Set.mem_setOf_eq] at ha
+  simp only [eFanPair]
+  intro heq
+  simp only [nFanPair_iterate, Prod.mk.injEq] at heq
+  exact edge_ne_of_fan hfan ha heq.1.symm
+
 /-- 有限支撑双射 → Equiv.Perm（identity outside finset）。 -/
 noncomputable def Equiv.Perm.ofFiniteSupport {α : Type*} [DecidableEq α]
     (s : Finset α) (f : α → α) (hf : Set.BijOn f ↑s ↑s) : Equiv.Perm α :=
