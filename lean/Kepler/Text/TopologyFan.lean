@@ -240,4 +240,179 @@ theorem exists_inverse_in_orbits (hfan : FAN x V E) (hvu : {v, u} ∈ E)
     Set.exists_min_image (setOfOrbitsPointsFan x V E v u) (azim1 x v y) hfin hne
   exact ⟨w, hw, fun hwy => hy (hwy ▸ hw), fun w1 hw1 _ => hmin w1 hw1⟩
 
+/-! ## 单循环性（topology.hl:490–700 重构：key_lemma_cyclic_fan 基础） -/
+
+/-- σ 的迭代保持 setOfEdge 成员。 -/
+theorem iterates_mem_setOfEdge (hfan : FAN x V E) (v w : V3)
+    (hw : w ∈ setOfEdge v V E) (m : ℕ) :
+    (sigmaFan x V E v)^[m] w ∈ setOfEdge v V E := by
+  induction m with
+  | zero => exact hw
+  | succ m ih =>
+    rw [Function.iterate_succ']
+    exact sigma_fan_in_setOfEdge hfan ih
+
+/-- σ 的迭代在 setOfEdge 上单射。 -/
+theorem iterates_injOn_setOfEdge (hfan : FAN x V E) (v : V3) (m : ℕ) :
+    Set.InjOn (sigmaFan x V E v)^[m] (setOfEdge v V E) := by
+  induction m with
+  | zero => intro x _ y _ h; simpa using h
+  | succ m ih =>
+    intro x hx y hy heq
+    rw [Function.iterate_succ_apply', Function.iterate_succ_apply'] at heq
+    refine ih hx hy (mono_sigma_fan hfan (iterates_mem_setOfEdge hfan v x hx m)
+      (iterates_mem_setOfEdge hfan v y hy m) heq)
+
+/-- HOL topology.hl:490 区域（`key_lemma_cyclic_fan` 的重构基础）：
+**σ-轨道 = setOfEdge**（单循环性）。重构证明：反设 a ∈ soe \ orbit。
+(a) 轨道在 σ 下不变（封闭 + ncard + 单射 ⟹ 满），故 σ-迭代永不回 u；
+(b) 于是 mono_azim_sigmaFan 沿迭代链严格递增（等号情形由
+unique_azim_point_fan + SIGMA_FAN 第二条件排除）；
+(c) soe 有限迫使迭代序列重复，与严格递增矛盾。 -/
+theorem orbit_eq_setOfEdge (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
+    setOfOrbitsPointsFan x V E v u = setOfEdge v V E := by
+  refine Set.Subset.antisymm (orbits_subset_setOfEdge hfan hvu) ?_
+  intro a ha_soe
+  by_contra ha_not
+  have h_a_soe : a ∈ setOfEdge v V E := ha_soe
+  have h_a_edge : {v, a} ∈ E := (properties_of_setOfEdge_fan x V E v a hfan).mpr ha_soe
+  have hu_soe : u ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  -- (a) σ(orbit) = orbit
+  have hcl : (sigmaFan x V E v) '' setOfOrbitsPointsFan x V E v u ⊆
+      setOfOrbitsPointsFan x V E v u := by
+    rintro w ⟨b, hb, rfl⟩
+    exact sigma_mem_orbits x V E v u b hb
+  have hinj_o : Set.InjOn (sigmaFan x V E v) (setOfOrbitsPointsFan x V E v u) :=
+    fun b hb c hc heq => mono_sigma_fan hfan
+      (orbits_subset_setOfEdge hfan hvu hb) (orbits_subset_setOfEdge hfan hvu hc) heq
+  have hncard : ((sigmaFan x V E v) '' setOfOrbitsPointsFan x V E v u).ncard =
+      (setOfOrbitsPointsFan x V E v u).ncard := Set.InjOn.ncard_image hinj_o
+  have hfin := finite_orbits_sigmaFan hfan hvu
+  have himg_eq : (sigmaFan x V E v) '' setOfOrbitsPointsFan x V E v u =
+      setOfOrbitsPointsFan x V E v u := by
+    by_contra hne2
+    have hss := Set.ncard_lt_ncard (lt_of_le_of_ne hcl hne2) hfin
+    rw [hncard] at hss
+    omega
+  -- σ^k a ∉ orbit ∀k（归纳：σ(orbit) = orbit ⟹ σ⁻¹(orbit) = orbit）
+  have hnot_orbit : ∀ k : ℕ, (sigmaFan x V E v)^[k] a ∉
+      setOfOrbitsPointsFan x V E v u := by
+    intro k
+    induction k with
+    | zero => exact ha_not
+    | succ k ih =>
+      intro hk
+      rw [Function.iterate_succ_apply'] at hk
+      have hmem : (sigmaFan x V E v) ((sigmaFan x V E v)^[k] a) ∈
+          (sigmaFan x V E v) '' setOfOrbitsPointsFan x V E v u := by
+        rw [himg_eq]; exact hk
+      obtain ⟨b, hb, hb_eq⟩ := hmem
+      have hkey : b = (sigmaFan x V E v)^[k] a :=
+        mono_sigma_fan hfan (orbits_subset_setOfEdge hfan hvu hb)
+          (iterates_mem_setOfEdge hfan v a ha_soe k) hb_eq
+      exact ih (by rw [← hkey]; exact hb)
+  have hnot_u : ∀ k : ℕ, (sigmaFan x V E v)^[k] a ≠ u := by
+    intro k he
+    apply hnot_orbit k
+    rw [he]
+    exact mem_orbits_self x V E v u
+  -- (b) 严格递增链
+  have hstrict : ∀ k : ℕ,
+      azim x v u ((sigmaFan x V E v)^[k] a) <
+        azim x v u ((sigmaFan x V E v)^[k + 1] a) := by
+    intro k
+    have h1 : (sigmaFan x V E v)^[k] a ∈ setOfEdge v V E :=
+      iterates_mem_setOfEdge hfan v a ha_soe k
+    have h2 : (sigmaFan x V E v)^[k + 1] a ∈ setOfEdge v V E :=
+      iterates_mem_setOfEdge hfan v a ha_soe (k + 1)
+    have h1e : {v, (sigmaFan x V E v)^[k] a} ∈ E :=
+      (properties_of_setOfEdge_fan x V E v _ hfan).mpr h1
+    have h2e : {v, (sigmaFan x V E v)^[k + 1] a} ∈ E :=
+      (properties_of_setOfEdge_fan x V E v _ hfan).mpr h2
+    have hne1 : sigmaFan x V E v ((sigmaFan x V E v)^[k] a) ≠ u := fun he =>
+      hnot_u (k + 1) (by rwa [Function.iterate_succ_apply'])
+    have hle := mono_azim_sigmaFan hfan hvu h1e hne1
+    by_contra hge
+    push_neg at hge
+    rw [Function.iterate_succ_apply'] at hge
+    have heq := le_antisymm hge hle
+    have heq' : azim x v u ((sigmaFan x V E v)^[k] a) =
+        azim x v u ((sigmaFan x V E v)^[k + 1] a) := by
+      rw [Function.iterate_succ_apply']; exact heq.symm
+    have hpt := unique_azim_point_fan hfan hvu h1e h2e heq'
+    rw [Function.iterate_succ_apply'] at hpt
+    have hne_soe : setOfEdge v V E ≠ {(sigmaFan x V E v)^[k] a} := by
+      intro h
+      rw [h] at hu_soe
+      exact hnot_u k (Set.mem_singleton_iff.mp hu_soe).symm
+    exact (SIGMA_FAN hne_soe hfan h1).2.1 hpt.symm
+  -- 严格链的传递
+  have hchain : ∀ i j : ℕ, i < j →
+      azim x v u ((sigmaFan x V E v)^[i] a) <
+        azim x v u ((sigmaFan x V E v)^[j] a) := by
+    intro i j hij
+    induction j with
+    | zero => exact absurd hij (Nat.not_lt_zero i)
+    | succ j ihj =>
+      rcases Nat.lt_succ_iff_lt_or_eq.mp hij with h | h
+      · exact lt_trans (ihj h) (hstrict j)
+      · exact h ▸ hstrict j
+  -- (c) soe 有限 ⟹ 迭代序列必有重复 ⟹ 与严格链矛盾
+  have hfin_a : (setOfOrbitsPointsFan x V E v a).Finite :=
+    finite_orbits_sigmaFan hfan h_a_edge
+  have hrep : ∃ i j : ℕ, i < j ∧
+      (sigmaFan x V E v)^[i] a = (sigmaFan x V E v)^[j] a := by
+    by_contra hno
+    push_neg at hno
+    have hinj_seq : Function.Injective fun k : ℕ => (sigmaFan x V E v)^[k] a := by
+      intro i j hij
+      rcases lt_trichotomy i j with h | h | h
+      · exact absurd hij (hno i j h)
+      · exact h
+      · exact absurd hij.symm (hno j i h)
+    have hinf : (Set.range fun k : ℕ => (sigmaFan x V E v)^[k] a).Infinite :=
+      (Set.infinite_range_iff hinj_seq).mpr (by infer_instance)
+    have hreq : (Set.range fun k : ℕ => (sigmaFan x V E v)^[k] a) =
+        setOfOrbitsPointsFan x V E v a := rfl
+    exact hinf.not_finite (by rw [hreq]; exact hfin_a)
+  obtain ⟨i, j, hij, heq⟩ := hrep
+  have hfinal := hchain i j hij
+  rw [← heq] at hfinal
+  exact lt_irrefl _ hfinal
+
+/-- HOL topology.hl:656 `CARD_SET_OF_ORBITS_POINTS_FAN`：轨道基数 =
+边集基数（σ 单循环的核心结论）。 -/
+theorem card_orbits_eq_setOfEdge (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
+    (setOfOrbitsPointsFan x V E v u).ncard = (setOfEdge v V E).ncard := by
+  rw [orbit_eq_setOfEdge hfan hvu]
+
+/-- HOL topology.hl:490 `key_lemma_cyclic_fan`：`0 < i < CARD(soe)` ⟹
+σ 的第 i 次迭代不回原点（周期 = 全循环长）。 -/
+theorem key_lemma_cyclic (x : V3) (V : Set V3) (E : Set (Set V3))
+    (hfan : FAN x V E) {v u : V3} (hvu : {v, u} ∈ E)
+    (i : ℕ) (hi : 0 < i) (hin : i < (setOfEdge v V E).ncard) :
+    (sigmaFan x V E v)^[i] u ≠ u := by
+  intro h0
+  have hcard := card_orbits_le_period x V E v u i h0 (Nat.ne_of_gt hi)
+  rw [orbit_eq_setOfEdge hfan hvu] at hcard
+  omega
+
+/-- HOL topology.hl:620 `cyclic_power_sigma_fan`：`j < i < CARD(soe)` ⟹
+前 i 次迭代两两不同。 -/
+theorem cyclic_power_sigmaFan (x : V3) (V : Set V3) (E : Set (Set V3))
+    (hfan : FAN x V E) {v u : V3} (hvu : {v, u} ∈ E)
+    (i j : ℕ) (hin : i < (setOfEdge v V E).ncard) (hij : j < i) :
+    (sigmaFan x V E v)^[i] u ≠ (sigmaFan x V E v)^[j] u := by
+  intro heq
+  have hu_soe : u ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  have hstep : (sigmaFan x V E v)^[j] ((sigmaFan x V E v)^[i - j] u)
+      = (sigmaFan x V E v)^[j] u := by
+    have hadd : j + (i - j) = i := by omega
+    rw [← Function.iterate_add_apply, hadd]
+    exact heq
+  have hfix : (sigmaFan x V E v)^[i - j] u = u :=
+    iterates_injOn_setOfEdge hfan v j
+      (iterates_mem_setOfEdge hfan v u hu_soe (i - j)) hu_soe hstep
+  exact key_lemma_cyclic x V E hfan hvu (i - j) (by omega) (by omega) hfix
+
 end Kepler.Text
