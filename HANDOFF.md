@@ -181,6 +181,26 @@ PLAN.md 与各 README）。
    card_sigmaFan_image（CARD_SIGMA_FAN）。后续按块推进
    （MONO_AZIM_SIGMA_FAN → set_of_orbits_points_fan 轨道计数 →
    azim_i/wedge2/wedge3 → rcone/ball/cone 区域）。
+   **blocks 2–5 已提交**（`1f37a28`+后续）：
+   mono_azim_sigmaFan（**重构证明不走 cyclic_set 机制**：SIGMA_FAN
+   第三条件 + sum2_azim_fan + azim_compl，退化由 azim_self/
+   unique_azim0_point_fan 排除）、complementSet/union_aff/
+   ifAzimsFan/轨道定义/addition_sigmaFan/image_power_map_points/
+   fix_point_sigmaFan/轨道封闭性/orbits_subset/card_le/finite、
+   **orbits_eq_series**（周期轨道=有限截段，Nat.mod_add_div +
+   fix_point）、card_orbits_le_period（Set.ncard_Iio_nat，需
+   import Order.Interval.Set.Nat）、azim1 + exists_inverse_in_orbits
+   （Set.exists_min_image——**注意名字**：不是 dot 记法的
+   Finite.exists_min_image）。
+   **下一块（topology.hl:490 key_lemma_cyclic_fan，重构计划已定）**：
+   0 < i < CARD(soe) → σ^[i] u ≠ u。归纳 + 反设周期 SUC i，链：
+   card_orbits_le_period → orbit ⊊ soe → 取 a ∈ soe\orbit →
+   w := σ^[i] u（σ w = u）→ azim 链 (i) SIGMA_FAN 条件（u 基准）
+   (ii) AZIM_COMPL×2 + mono_azim(w 基准) 拼接 (iii) azim x v w a =
+   azim x v w u → UNIQUE_AZIM_POINT_FAN → a = u ∈ orbit 矛盾。
+   后续：cyclic_power_sigma_fan（j<i 全不撞）→
+   CARD_SET_OF_ORBITS_POINTS_FAN（**CARD orbit = CARD soe，单循环
+   核心结论**）。
 - 移植惯例：对应 HOL 行号写头注；Mathlib 已有的跳过并注明；零 sorry、
   零 native_decide、零自引入 axiom；每块 `lake build Kepler` 全绿 +
   公理抽查后才提交。
