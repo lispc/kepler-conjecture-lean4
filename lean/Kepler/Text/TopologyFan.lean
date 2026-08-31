@@ -222,4 +222,22 @@ theorem card_orbits_le_period (x : V3) (V : Set V3) (E : Set (Set V3))
       ≤ (Set.Iio i).ncard := Set.ncard_image_le
     _ = i := Set.ncard_Iio_nat i
 
+/-- HOL fan.hl:503 `azim1`：反向方位角（`2π - azim`）。 -/
+noncomputable def azim1 (x v u w : V3) : ℝ :=
+  2 * Real.pi - azim x v u w
+
+/-- HOL topology.hl:427 `exists_inverse_in_orbits_sigma_fan`：轨道上
+azim1-最小元存在（y ∉ 轨道；有限非空集取最小）。 -/
+theorem exists_inverse_in_orbits (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (y : V3) (hy : y ∉ setOfOrbitsPointsFan x V E v u) :
+    ∃ w ∈ setOfOrbitsPointsFan x V E v u, w ≠ y ∧
+      ∀ w1 ∈ setOfOrbitsPointsFan x V E v u, w1 ≠ y →
+        azim1 x v y w ≤ azim1 x v y w1 := by
+  have hfin := finite_orbits_sigmaFan hfan hvu
+  have hne : (setOfOrbitsPointsFan x V E v u).Nonempty :=
+    ⟨u, mem_orbits_self x V E v u⟩
+  obtain ⟨w, hw, hmin⟩ :=
+    Set.exists_min_image (setOfOrbitsPointsFan x V E v u) (azim1 x v y) hfin hne
+  exact ⟨w, hw, fun hwy => hy (hwy ▸ hw), fun w1 hw1 _ => hmin w1 hw1⟩
+
 end Kepler.Text
