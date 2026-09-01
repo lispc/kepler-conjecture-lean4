@@ -211,8 +211,37 @@ PLAN.md 与各 README）。
    （CARD_SET_OF_ORBITS_POINTS_FAN）、key_lemma_cyclic（无短周期）、
    cyclic_power_sigmaFan（循环长内两两不同）。
    **下一块**：topology.hl:700 起（azim_i_fan / wedge2 / wedge3 定义
-   区域，793/996/1237 行），之后 rcone/ball/cone（2289+）、
-   r_fan 坐标系（3580+）、change_spherical（3652+）。
+    区域，793/996/1237 行），之后 rcone/ball/cone（2289+）、
+    r_fan 坐标系（3580+）、change_spherical（3652+）。
+    **blocks 7–8 已提交**（`d65a8b3`/`a5b9ab4`，topology.hl:701–850 收官）：
+    order_power_sigmaFan（σ^[CARD] u = u 全循环闭合）、azimIfan/
+    mono_azim_power_sigmaFan（带 hne 前提）、azim_lt_power_sigmaFan
+    （严格版，等号由 unique_azim_point_fan + SIGMA_FAN 排除）、
+    two_le_ncard_of_ne、sum_if_azims/sum_eq_if_azims、
+    **sum_azims_eq_2pi（绕一圈角和 = 2π）**。
+    **block 9 已提交（`6cc2129`，topology.hl:851–1234 收官）**：
+    sum_azim_power_sigmaFan（三点角链式分解）、sum1_ifAzimsFan、
+    ulekuub 打包、**wedge2_fan = aff_gt 整块**：
+    affine_hull_2_fan（两点仿射包凸组合刻画，走
+    mem_affineSpan_pair_iff_exists_lineMap_eq）、
+    collinear3_iff_mem_affineSpan（两点共线 ⟺ 仿射包成员，
+    collinear3_iff_smul + lineMap 桥接）、affGt_of_triple/
+    azim_of_affGt_combo（th1：aff_gt 组合保持 azim，走
+    azim_eq_azim_iff——**AZIM_EQ 早已在 AzimLemmas 落地**）、
+    complementSet_noncollinear（th2）、complementSet_of_combo
+    （COMPLEMENT_SET_FAN）、affGt_subset_wedge2Fan/
+    wedge2Fan_subset_affGt/wedge2Fan_eq_affGt/wedge2Fan_eq_affGt_fan。
+    **注意编译陷阱**：`module` 无参数（用 `.instances` ring1 收集标量
+    假设，向量等式假设需先 rw 成标量/直接 rw）；`inv_smul_smul` 需
+    [Group]，ℝ 用 `inv_smul_smul₀`；`line[ℝ,x,v]` 与 `affineSpan ℝ
+    {x,v}` 定义等价（rfl）但 rw 不折叠——用 `rw [affine_hull_2_fan]`
+    正向而非 `change + rw [←]`；`(s1-t1)/t3 • x` 需显式括号
+    `((s1-t1)/t3) • x` 防 HDiv ℝ V3 解析；`sub_eq_iff_eq_add` 正向 rw。
+    **下一块**：topology.hl:1237（wedge3_fan = w_dart_fan，需先补
+    IN2_ORBITS_FAN/remark_power_map_points/sum3/sum4_azim_fan——
+    在 fan.hl 有原定义，未移植）；之后 UNION_FAN（1344）、
+    rcone/ball/cone（2289+）、r_fan 坐标系（3580+）、
+    change_spherical（3652+）。
 - 移植惯例：对应 HOL 行号写头注；Mathlib 已有的跳过并注明；零 sorry、
   零 native_decide、零自引入 axiom；每块 `lake build Kepler` 全绿 +
   公理抽查后才提交。
