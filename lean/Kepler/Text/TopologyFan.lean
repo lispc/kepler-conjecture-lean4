@@ -665,4 +665,309 @@ theorem sum_azims_eq_2pi (hfan : FAN x V E) (hvu : {v, u} ∈ E)
     if_pos (show (setOfEdge v V E).ncard - 1 + 1 =
       (setOfEdge v V E).ncard by omega)]
 
+/-- HOL topology.hl:908 `SUM_AZIM_POWER_SIGMA_FAN`：第 j 步到第 i 步的
+角增量 = azim（链式分解）。即 `azim (pm j) (pm i)` 型三点角恒等式。 -/
+theorem sum_azim_power_sigmaFan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (hne_u : setOfEdge v V E ≠ {u})
+    (i j : ℕ) (hji : j < i) (hin : i < (setOfEdge v V E).ncard) :
+    azim x v u ((sigmaFan x V E v)^[i] u) =
+      azim x v u ((sigmaFan x V E v)^[j] u) +
+        azim x v ((sigmaFan x V E v)^[j] u) ((sigmaFan x V E v)^[i] u) := by
+  have hle : azim x v u ((sigmaFan x V E v)^[j] u) ≤
+      azim x v u ((sigmaFan x V E v)^[i] u) :=
+    le_of_lt (azim_lt_power_sigmaFan hfan hvu hne_u i j hji hin)
+  have hu_soe : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  have hw_j : {v, (sigmaFan x V E v)^[j] u} ∈ E :=
+    (properties_of_setOfEdge_fan x V E v _ hfan).mpr
+      (iterates_mem_setOfEdge hfan v u hu_soe j)
+  have hw_i : {v, (sigmaFan x V E v)^[i] u} ∈ E :=
+    (properties_of_setOfEdge_fan x V E v _ hfan).mpr
+      (iterates_mem_setOfEdge hfan v u hu_soe i)
+  exact sum2_azim_fan hfan hvu hw_j hw_i hle
+
+/-- HOL topology.hl:954 `SUM1_IFAZIMS_FAN`：if_azims 差异 = 三点角增量
+（j < i < ncard 时 if_azims 未到终局分支，直接退化为
+sum_azim_power_sigmaFan）。 -/
+theorem sum1_ifAzimsFan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (hne_u : setOfEdge v V E ≠ {u})
+    (i j : ℕ) (hji : j < i) (hin : i < (setOfEdge v V E).ncard) :
+    ifAzimsFan x V E v u i =
+      ifAzimsFan x V E v u j +
+        azim x v ((sigmaFan x V E v)^[j] u) ((sigmaFan x V E v)^[i] u) := by
+  have hni : i ≠ (setOfEdge v V E).ncard := by omega
+  have hnj : j ≠ (setOfEdge v V E).ncard := by omega
+  rw [ifAzimsFan, ifAzimsFan, if_neg hni, if_neg hnj]
+  exact sum_azim_power_sigmaFan hfan hvu hne_u i j hji hin
+
+/-- HOL topology.hl:973 `ULEKUUB`：if_azims 差异恒等式 与 绕一圈角和
+= 2π 的合取打包（后者取 `1 < CARD(soe)` 前提形）。 -/
+theorem ulekuub (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (hne_u : setOfEdge v V E ≠ {u})
+    (h1n : (1:ℕ) < (setOfEdge v V E).ncard) :
+    (∀ i j : ℕ, j < i → i < (setOfEdge v V E).ncard →
+      ifAzimsFan x V E v u i =
+        ifAzimsFan x V E v u j +
+          azim x v ((sigmaFan x V E v)^[j] u) ((sigmaFan x V E v)^[i] u)) ∧
+    (∑ k ∈ Finset.range (setOfEdge v V E).ncard, azimIfan x V E v u k
+      = 2 * Real.pi) := by
+  constructor
+  · intro i j hji hin
+    exact sum1_ifAzimsFan hfan hvu hne_u i j hji hin
+  · exact sum_azims_eq_2pi hfan hvu hne_u
+
+/-! ## 楔形分解（topology.hl:996–1234 重构）
+
+wedge2_fan = aff_gt 的关键是 `azim_eq_azim_iff`（AZIM_EQ，已在
+AzimLemmas 落地）：`azim x v u w = azim x v u y ↔ y ∈ aff_gt {x,v} {w}`。
+HOL 此块的 aff_gt 组合不变性（th1）、补集判定（th2/COMPLEMENT_SET_FAN）
+与两向包含（aff_gt_subset_wedge_fan2 / wedge_fan2_subset_aff_gt）都从此
+出发重述。 -/
+
+/-- HOL topology.hl:996 `wedge2_fan`：if_azims 等值面 ∩ 仿射补集。 -/
+noncomputable def wedge2Fan (x : V3) (V : Set V3) (E : Set (Set V3)) (v u : V3)
+    (i : ℕ) : Set V3 :=
+  {y | ifAzimsFan x V E v u i = azim x v u y ∧ y ∈ complementSet x v}
+
+/-- HOL topology.hl:1002 `affine_hull_2_fan`：两点仿射包的凸组合刻画
+（HOL `aff {x,v}` ↔ Mathlib `affineSpan ℝ {x,v}`）。 -/
+theorem affine_hull_2_fan (x v : V3) :
+    (affineSpan ℝ ({x, v} : Set V3) : Set V3) =
+      {y | ∃ t1 t2 : ℝ, t1 + t2 = 1 ∧ y = t1 • x + t2 • v} := by
+  ext y
+  constructor
+  · intro hy
+    obtain ⟨r, hr⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp hy
+    refine ⟨1 - r, r, by ring, ?_⟩
+    have hlm : y = r • (v - x) + x := by
+      rw [← hr]
+      simp [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add]
+    rw [hlm]
+    module
+  · rintro ⟨t1, t2, ht, hy⟩
+    rw [hy]
+    refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨t2, ?_⟩
+    rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add]
+    have ht' : 1 - t2 = t1 := by linarith
+    rw [← ht']
+    module
+
+/-- 两点 collinear ↔ 仿射包成员（两点互异时）。 -/
+theorem collinear3_iff_mem_affineSpan {v0 v1 y : V3} (hv0v1 : v0 ≠ v1) :
+    Collinear3 v0 v1 y ↔
+      y ∈ (affineSpan ℝ ({v0, v1} : Set V3) : Set V3) := by
+  constructor
+  · intro hc
+    by_cases hy0 : y = v0
+    · rw [hy0]
+      exact left_mem_affineSpan_pair _ _ _
+    by_cases hy1 : y = v1
+    · rw [hy1]
+      exact right_mem_affineSpan_pair _ _ _
+    obtain ⟨c, hsmul⟩ := (collinear3_iff_smul (w := v1) (v := v0) hv0v1.symm).mp hc
+    refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨c, ?_⟩
+    rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add]
+    exact (sub_eq_iff_eq_add.mp hsmul).symm
+  · intro hy
+    obtain ⟨r, hr⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp hy
+    by_cases hy1 : y = v1
+    · rw [hy1]
+      exact collinear3_pair_right (v0 := v0) (v1 := v1) rfl
+    have hsmul : y - v0 = r • (v1 - v0) := by
+      rw [← hr]
+      simp [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add]
+    exact (collinear3_iff_smul (w := v1) (v := v0) hv0v1.symm).mpr ⟨r, hsmul⟩
+
+/-- affGt 三点组合：`y = t1•x + t2•v + t3•w`（t3 > 0, t1+t2+t3 = 1）
+落在 `aff_gt {x,v} {w}` 中。 -/
+theorem affGt_of_triple {x v w y : V3} (t1 t2 t3 : ℝ) (ht3 : 0 < t3)
+    (ht : t1 + t2 + t3 = 1) (hy : y = t1 • x + t2 • v + t3 • w)
+    (hxv : x ≠ v) (hxw : x ≠ w) (hvw : v ≠ w) :
+    y ∈ affGt {x, v} {w} := by
+  refine (affGt_pair_iff (v0 := x) (v1 := v) (x := w) (y := y)
+    hxv (Ne.symm hxw) (Ne.symm hvw)).mpr ⟨t3, ht3, t2, ?_⟩
+  have ht1 : t1 = 1 - t2 - t3 := by linarith
+  rw [hy, ht1]
+  module
+
+/-- HOL topology.hl:1080 `th1`：aff_gt 组合保持 azim（组合点与 w 同向，
+因 y - x = t3•(w - x) + t2•(v - x)，投影平面内成正倍数）。 -/
+theorem azim_of_affGt_combo (hu : ¬ Collinear3 x v u) (hw : ¬ Collinear3 x v w)
+    (t1 t2 t3 : ℝ) (ht3 : 0 < t3) (ht : t1 + t2 + t3 = 1)
+    (hy : y = t1 • x + t2 • v + t3 • w) :
+    azim x v u w = azim x v u y := by
+  have hxv : x ≠ v := fun he => hw (collinear3_of_eq (v := x) (w := v) (w1 := w) he.symm)
+  have hxw : x ≠ w := fun he => hw
+    (collinear3_pair_left (v0 := x) (v1 := v) (x := w) he.symm)
+  have hvw : v ≠ w := by
+    intro he
+    rw [he] at hw
+    exact hw (collinear3_pair_right (v0 := x) (v1 := w) rfl)
+  have hygt : y ∈ affGt {x, v} {w} := affGt_of_triple t1 t2 t3 ht3 ht hy hxv hxw hvw
+  have hyncol : ¬ Collinear3 x v y := by
+    intro hc
+    have hline : y ∈ (affineSpan ℝ ({x, v} : Set V3) : Set V3) :=
+      (collinear3_iff_mem_affineSpan hxv).mp hc
+    rw [affine_hull_2_fan] at hline
+    obtain ⟨s1, s2, hs, hcombo⟩ := hline
+    have hsum : (s1 - t1) / t3 + (s2 - t2) / t3 = 1 := by
+      field_simp [ht3.ne']
+      linarith
+    have hcombo' : t1 • x + t2 • v + t3 • w = s1 • x + s2 • v := by
+      rw [hy] at hcombo
+      exact hcombo
+    have hq : t3 • w = (s1 - t1) • x + (s2 - t2) • v := by
+      have hh1 : t3 • w = s1 • x + s2 • v - t1 • x - t2 • v := by
+        rw [← hcombo']
+        module
+      rw [hh1]
+      module
+    have hsub : ((s1 - t1) / t3) • x + ((s2 - t2) / t3) • v = w := by
+      have hq' : ((s1 - t1) / t3) • x + ((s2 - t2) / t3) • v = (t3⁻¹ : ℝ) • (t3 • w) := by
+        rw [hq]
+        rw [smul_add, smul_smul, smul_smul]
+        congr 1 <;> congr 1
+        · field_simp [ht3.ne']
+        · field_simp [ht3.ne']
+      rw [hq']
+      exact inv_smul_smul₀ ht3.ne' w
+    have hwsp : w ∈ (affineSpan ℝ ({x, v} : Set V3) : Set V3) := by
+      rw [affine_hull_2_fan]
+      exact ⟨(s1 - t1) / t3, (s2 - t2) / t3, hsum, hsub.symm⟩
+    exact hw ((collinear3_iff_mem_affineSpan hxv).mpr hwsp)
+  exact (azim_eq_azim_iff (v0 := x) (v1 := v) (w := u) (x := w) (y := y) hu hw hyncol).mpr hygt
+
+/-- HOL topology.hl:1099 `th2`：`x ≠ v` 时补集中的点不与 x,v 共线
+（共线 ⟹ 在仿射包中，与补集定义矛盾）。 -/
+theorem complementSet_noncollinear {x v y : V3} (hxv : x ≠ v)
+    (hy : y ∈ complementSet x v) : ¬ Collinear3 x v y := by
+  intro hc
+  have hline : y ∈ (affineSpan ℝ ({x, v} : Set V3) : Set V3) :=
+    (collinear3_iff_mem_affineSpan hxv).mp hc
+  exact hy hline
+
+/-- HOL topology.hl:1110 `COMPLEMENT_SET_FAN`：aff_gt 组合点的补集判定
+（t3 ≠ 0 保证组合方向偏离仿射包）。 -/
+theorem complementSet_of_combo {x v w y : V3} (t1 t2 t3 : ℝ)
+    (hw : w ∉ (affineSpan ℝ ({x, v} : Set V3) : Set V3))
+    (ht3 : t3 ≠ 0) (ht : t1 + t2 + t3 = 1)
+    (hy : y = t1 • x + t2 • v + t3 • w) :
+    y ∈ complementSet x v := by
+  intro hyaff
+  rw [affine_hull_2_fan] at hyaff
+  obtain ⟨s1, s2, hs, hcombo⟩ := hyaff
+  have hcombo' : t1 • x + t2 • v + t3 • w = s1 • x + s2 • v := by
+    rw [hy] at hcombo
+    exact hcombo
+  have hsum : (s1 - t1) / t3 + (s2 - t2) / t3 = 1 := by
+    field_simp [ht3]
+    linarith
+  have hq : t3 • w = (s1 - t1) • x + (s2 - t2) • v := by
+    have hh1 : t3 • w = s1 • x + s2 • v - t1 • x - t2 • v := by
+      rw [← hcombo']
+      module
+    rw [hh1]
+    module
+  have hsub : ((s1 - t1) / t3) • x + ((s2 - t2) / t3) • v = w := by
+    have hq' : ((s1 - t1) / t3) • x + ((s2 - t2) / t3) • v = (t3⁻¹ : ℝ) • (t3 • w) := by
+      rw [hq]
+      rw [smul_add, smul_smul, smul_smul]
+      congr 1 <;> congr 1
+      · field_simp [ht3]
+      · field_simp [ht3]
+    rw [hq']
+    exact inv_smul_smul₀ ht3 w
+  apply hw
+  rw [affine_hull_2_fan]
+  exact ⟨(s1 - t1) / t3, (s2 - t2) / t3, hsum, hsub.symm⟩
+
+/-- HOL topology.hl:1141 `aff_gt_subset_wedge_fan2`：`i ≠ CARD` 且非共线
+时 aff_gt 的楔形位于 wedge2_fan 中（azim 相等由 azim_of_affGt_combo，
+补集由 complementSet_of_combo）。 -/
+theorem affGt_subset_wedge2Fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (i : ℕ) (hin : i ≠ (setOfEdge v V E).ncard)
+    (hncu : ¬ Collinear3 x v u)
+    (hncw : ¬ Collinear3 x v ((sigmaFan x V E v)^[i] u)) :
+    affGt {x, v} {(sigmaFan x V E v)^[i] u} ⊆ wedge2Fan x V E v u i := by
+  set w := (sigmaFan x V E v)^[i] u
+  intro y hy
+  rw [wedge2Fan]
+  have hxv : x ≠ v := fun he => hncw
+    (collinear3_of_eq (v := x) (w := v) (w1 := (sigmaFan x V E v)^[i] u) he.symm)
+  have hxw : x ≠ (sigmaFan x V E v)^[i] u :=
+    fun he => hncw (collinear3_pair_left (v0 := x) (v1 := v)
+      (x := (sigmaFan x V E v)^[i] u) he.symm)
+  have hvw : v ≠ (sigmaFan x V E v)^[i] u :=
+    fun he => hncw (collinear3_pair_right (v0 := x) (v1 := v)
+      (x := (sigmaFan x V E v)^[i] u) he.symm)
+  obtain ⟨c, hc, hh, hcoeff⟩ :=
+    (affGt_pair_iff (v0 := x) (v1 := v) (x := (sigmaFan x V E v)^[i] u)
+      (y := y) hxv (Ne.symm hxw) (Ne.symm hvw)).mp hy
+  have hcombo : y = (1 - c - hh) • x + hh • v + c • (sigmaFan x V E v)^[i] u := by
+    rw [sub_eq_iff_eq_add] at hcoeff
+    rw [hcoeff]
+    module
+  constructor
+  · rw [ifAzimsFan, if_neg hin]
+    symm
+    exact (azim_of_affGt_combo hncu hncw (t1 := 1 - c - hh) (t2 := hh) (t3 := c)
+      hc (by ring) hcombo).symm
+  · rw [complementSet]
+    intro hyaff
+    have hwsp : (sigmaFan x V E v)^[i] u ∉
+        (affineSpan ℝ ({x, v} : Set V3) : Set V3) :=
+      fun hwa => hncw ((collinear3_iff_mem_affineSpan hxv).mpr hwa)
+    exact (complementSet_of_combo (x := x) (v := v)
+      (w := (sigmaFan x V E v)^[i] u)
+      (t1 := 1 - c - hh) (t2 := hh) (t3 := c) hwsp hc.ne' (by ring) hcombo) hyaff
+
+/-- HOL topology.hl:1171 `wedge_fan2_subset_aff_gt`：wedge2_fan 的成员
+（非共线、不在仿射包）落在 aff_gt 中。 -/
+theorem wedge2Fan_subset_affGt (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (i : ℕ) (hin : i ≠ (setOfEdge v V E).ncard)
+    (hncu : ¬ Collinear3 x v u)
+    (hncw : ¬ Collinear3 x v ((sigmaFan x V E v)^[i] u)) :
+    wedge2Fan x V E v u i ⊆ affGt {x, v} {(sigmaFan x V E v)^[i] u} := by
+  intro y hy
+  rw [wedge2Fan] at hy
+  obtain ⟨haz, hcomp⟩ := hy
+  have hxv : x ≠ v := fun he => hncu
+    (collinear3_of_eq (v := x) (w := v) (w1 := u) he.symm)
+  have hxw : x ≠ (sigmaFan x V E v)^[i] u :=
+    fun he => hncw (collinear3_pair_left (v0 := x) (v1 := v)
+      (x := (sigmaFan x V E v)^[i] u) he.symm)
+  have hvw : v ≠ (sigmaFan x V E v)^[i] u :=
+    fun he => hncw (collinear3_pair_right (v0 := x) (v1 := v)
+      (x := (sigmaFan x V E v)^[i] u) he.symm)
+  have hyncol : ¬ Collinear3 x v y := complementSet_noncollinear hxv hcomp
+  rw [ifAzimsFan, if_neg hin] at haz
+  exact (azim_eq_azim_iff (v0 := x) (v1 := v) (w := u) (x := (sigmaFan x V E v)^[i] u)
+    (y := y) hncu hncw hyncol).mp haz
+
+/-- HOL topology.hl:1196 `wedge_fan2_equal_aff_gt`：双包含。 -/
+theorem wedge2Fan_eq_affGt (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (i : ℕ) (hin : i ≠ (setOfEdge v V E).ncard)
+    (hncu : ¬ Collinear3 x v u)
+    (hncw : ¬ Collinear3 x v ((sigmaFan x V E v)^[i] u)) :
+    wedge2Fan x V E v u i = affGt {x, v} {(sigmaFan x V E v)^[i] u} :=
+  Set.Subset.antisymm
+    (wedge2Fan_subset_affGt hfan hvu i hin hncu hncw)
+    (affGt_subset_wedge2Fan hfan hvu i hin hncu hncw)
+
+/-- HOL topology.hl:1212 `wedge_fan2_equal_aff_gt_fan`：FAN 前提下
+`i ≠ CARD` ⟹ wedge2_fan = aff_gt（fan6 保证非共线）。 -/
+theorem wedge2Fan_eq_affGt_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (i : ℕ) (hin : i ≠ (setOfEdge v V E).ncard) :
+    wedge2Fan x V E v u i = affGt {x, v} {(sigmaFan x V E v)^[i] u} := by
+  have hu_soe : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  have hw_soe : (sigmaFan x V E v)^[i] u ∈ setOfEdge v V E :=
+    iterates_mem_setOfEdge hfan v u hu_soe i
+  have hw_edge : {v, (sigmaFan x V E v)^[i] u} ∈ E :=
+    (properties_of_setOfEdge_fan x V E v _ hfan).mpr hw_soe
+  have hncu : ¬ Collinear3 x v u := fan_not_collinear hfan hvu
+  have hncw : ¬ Collinear3 x v ((sigmaFan x V E v)^[i] u) :=
+    fan_not_collinear hfan hw_edge
+  exact wedge2Fan_eq_affGt hfan hvu i hin hncu hncw
+
 end Kepler.Text
