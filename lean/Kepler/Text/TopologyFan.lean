@@ -21,6 +21,8 @@ each commit.
 import Kepler.Text.Fan
 import Mathlib.Order.Interval.Set.Nat
 
+set_option maxHeartbeats 3000000
+
 namespace Kepler.Text
 
 open Kepler.Geom
@@ -473,5 +475,194 @@ theorem order_power_sigmaFan (x : V3) (V : Set V3) (E : Set (Set V3))
       (iterates_mem_setOfEdge hfan v u hu_soe (n - k)) heq2).symm
   exact absurd hrep (key_lemma_cyclic x V E hfan hvu (n - k)
     (by omega) (by omega))
+
+/-! ## 绕圈角和（topology.hl:793–850 重构） -/
+
+/-- HOL topology.hl:793 `azim_i_fan`：第 i 步的角增量。 -/
+noncomputable def azimIfan (x : V3) (V : Set V3) (E : Set (Set V3)) (v u : V3)
+    (i : ℕ) : ℝ :=
+  azim x v ((sigmaFan x V E v)^[i] u) ((sigmaFan x V E v)^[i + 1] u)
+
+/-- HOL topology.hl:205 `MONO_AZIM_POWER_SIGMA_FAN`：azim 沿迭代不减
+（前提 `pm (i+1) ≠ u`，即 HOL 原版前提；无前提版数学上不成立）。 -/
+theorem mono_azim_power_sigmaFan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (i : ℕ) (hne : (sigmaFan x V E v)^[i + 1] u ≠ u) :
+    azim x v u ((sigmaFan x V E v)^[i] u) ≤
+      azim x v u ((sigmaFan x V E v)^[i + 1] u) := by
+  have hu_soe : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  have h1 : {v, (sigmaFan x V E v)^[i] u} ∈ E :=
+    (properties_of_setOfEdge_fan x V E v _ hfan).mpr
+      (iterates_mem_setOfEdge hfan v u hu_soe i)
+  have hs : (sigmaFan x V E v)^[i + 1] u =
+      sigmaFan x V E v ((sigmaFan x V E v)^[i] u) :=
+    Function.iterate_succ_apply' (sigmaFan x V E v) i u
+  have hne' : sigmaFan x V E v ((sigmaFan x V E v)^[i] u) ≠ u := by
+    intro hc
+    apply hne
+    rw [hs]
+    exact hc
+  rw [hs]
+  exact mono_azim_sigmaFan hfan hvu h1 hne'
+
+/-- HOL topology.hl:851 `AZIM_LE_POWER_SIGMA_FAN`（严格版）：`j < i <
+CARD(soe)` ⟹ azim 沿迭代严格递增。单步严格性：等号给
+unique_azim_point_fan 的不动点，违反 SIGMA_FAN 第二条件（`soe ≠
+{pm k}`：k = 0 时由 `soe ≠ {u}`，0 < k 时由 key_lemma）。 -/
+theorem azim_lt_power_sigmaFan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (hne_u : setOfEdge v V E ≠ {u})
+    (i j : ℕ) (hji : j < i) (hin : i < (setOfEdge v V E).ncard) :
+    azim x v u ((sigmaFan x V E v)^[j] u) <
+      azim x v u ((sigmaFan x V E v)^[i] u) := by
+  have hu_soe : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  -- 单步严格（k+1 在循环长内：mono 前提与 key_lemma 都需要）
+  have hstrict1 : ∀ k : ℕ, k + 1 < (setOfEdge v V E).ncard →
+      azim x v u ((sigmaFan x V E v)^[k] u) <
+        azim x v u ((sigmaFan x V E v)^[k + 1] u) := by
+    intro k hk
+    by_contra hge
+    push_neg at hge
+    have hne1 := key_lemma_cyclic x V E hfan hvu (k + 1) (by omega) hk
+    have heq := le_antisymm hge (mono_azim_power_sigmaFan hfan hvu k hne1)
+    have h1e : {v, (sigmaFan x V E v)^[k] u} ∈ E :=
+      (properties_of_setOfEdge_fan x V E v _ hfan).mpr
+        (iterates_mem_setOfEdge hfan v u hu_soe k)
+    have h2e : {v, (sigmaFan x V E v)^[k + 1] u} ∈ E :=
+      (properties_of_setOfEdge_fan x V E v _ hfan).mpr
+        (iterates_mem_setOfEdge hfan v u hu_soe (k + 1))
+    have hpt := unique_azim_point_fan hfan hvu h1e h2e heq.symm
+    -- soe ≠ {pm k}
+    have hne_soe : setOfEdge v V E ≠ {(sigmaFan x V E v)^[k] u} := by
+      intro h
+      rcases Nat.eq_zero_or_pos k with h0k | h0k
+      · rw [h0k, Function.iterate_zero_apply] at h
+        exact hne_u h
+      · rw [h] at hu_soe
+        exact key_lemma_cyclic x V E hfan hvu k h0k
+          (by omega) (Set.mem_singleton_iff.mp hu_soe).symm
+    have hs2 : (sigmaFan x V E v)^[k + 1] u =
+        sigmaFan x V E v ((sigmaFan x V E v)^[k] u) :=
+      Function.iterate_succ_apply' _ k u
+    rw [hs2] at hpt
+    exact (SIGMA_FAN hne_soe hfan
+      (iterates_mem_setOfEdge hfan v u hu_soe k)).2.1 hpt.symm
+  -- 链传播（所有步 k+1 ≤ i < n）
+  have hchain : ∀ p q : ℕ, p < q → q ≤ i →
+      azim x v u ((sigmaFan x V E v)^[p] u) <
+        azim x v u ((sigmaFan x V E v)^[q] u) := by
+    intro p q hpq hqi
+    induction q with
+    | zero => exact absurd hpq (Nat.not_lt_zero p)
+    | succ q ihq =>
+      rcases Nat.lt_succ_iff_lt_or_eq.mp hpq with h | h
+      · exact lt_trans (ihq h (Nat.le_of_succ_le_succ (by omega)))
+          (hstrict1 q (by omega))
+      · rw [h]; exact hstrict1 q (by omega)
+  exact hchain j i hji (Nat.le_refl i)
+
+/-- HOL topology.hl:735 前置：`soe ≠ {u}` ⟹ `2 ≤ CARD(soe)`
+（u 与某 w ≠ u 同在 soe，{u,w} 嵌入 + ncard_pair）。 -/
+theorem two_le_ncard_of_ne (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (hne_u : setOfEdge v V E ≠ {u}) :
+    (2:ℕ) ≤ (setOfEdge v V E).ncard := by
+  have hu_soe : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  obtain ⟨w, hw_soe, hwu⟩ : ∃ w ∈ setOfEdge v V E, w ≠ u := by
+    by_contra hall
+    push_neg at hall
+    exact hne_u
+      (Set.eq_singleton_iff_nonempty_unique_mem.mpr ⟨⟨u, hu_soe⟩, fun x hx => hall x hx⟩)
+  have hsub : ({u, w} : Set V3) ⊆ setOfEdge v V E := by
+    intro x hx
+    rcases Set.mem_insert_iff.mp hx with rfl | hx
+    · exact hu_soe
+    · rw [Set.mem_singleton_iff] at hx
+      rw [hx]
+      exact hw_soe
+  have hnc2 : ({u, w} : Set V3).ncard = 2 := Set.ncard_pair (Ne.symm hwu)
+  have hle := Set.ncard_le_ncard hsub (remark_finite_fan1 v V E hfan.2.2.1.1)
+  omega
+
+/-- HOL topology.hl:735 `SUM_IF_AZIMS_FAN`：if_azims 的递推
+（`ifAzims (i+1) = ifAzims i + azimIfan i`）。终局分支由
+azim_compl 补角 + unique_azim0 + key_lemma 拼合；中间分支由
+sum2_azim_fan 直接给出。 -/
+theorem sum_if_azims (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (i : ℕ) (hi1 : 0 < i) (hin : i < (setOfEdge v V E).ncard) :
+    ifAzimsFan x V E v u (i + 1) =
+      ifAzimsFan x V E v u i + azimIfan x V E v u i := by
+  have hu_soe : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  have hncu : ¬ Collinear3 x v u := fan_not_collinear hfan hvu
+  have hpmi_soe : (sigmaFan x V E v)^[i] u ∈ setOfEdge v V E :=
+    iterates_mem_setOfEdge hfan v u hu_soe i
+  have hpmi_edge : {v, (sigmaFan x V E v)^[i] u} ∈ E :=
+    (properties_of_setOfEdge_fan x V E v _ hfan).mpr hpmi_soe
+  have hncpm : ¬ Collinear3 x v ((sigmaFan x V E v)^[i] u) :=
+    fan_not_collinear hfan hpmi_edge
+  have hi_ne : i ≠ (setOfEdge v V E).ncard := Nat.ne_of_lt hin
+  rw [ifAzimsFan, ifAzimsFan, if_neg hi_ne]
+  rcases Nat.eq_or_lt_of_le (Nat.succ_le_of_lt hin) with h1n | h1n
+  · -- i + 1 = n：终局分支，if_azims(i+1) = 2π，azimIfan i = azim (pm i) u
+    rw [Nat.succ_eq_add_one] at h1n
+    have hpm : (sigmaFan x V E v)^[i + 1] u = u :=
+      order_power_sigmaFan x V E hfan hvu h1n
+    have h0 : azim x v u ((sigmaFan x V E v)^[i] u) ≠ 0 := by
+      intro h0
+      have huw : u = (sigmaFan x V E v)^[i] u :=
+        unique_azim0_point_fan hfan hvu hpmi_edge h0
+      exact key_lemma_cyclic x V E hfan hvu i hi1 hin huw.symm
+    rw [h1n, if_pos rfl, azimIfan, hpm, azim_compl hncu hncpm, if_neg h0]
+    ring
+  · -- i + 1 < n：中间分支，sum2_azim_fan 直接给出
+    have hpm1_soe : (sigmaFan x V E v)^[i + 1] u ∈ setOfEdge v V E :=
+      iterates_mem_setOfEdge hfan v u hu_soe (i + 1)
+    have hpm1_edge : {v, (sigmaFan x V E v)^[i + 1] u} ∈ E :=
+      (properties_of_setOfEdge_fan x V E v _ hfan).mpr hpm1_soe
+    have hne1 := key_lemma_cyclic x V E hfan hvu (i + 1) (by omega) (by omega)
+    have hle := mono_azim_power_sigmaFan hfan hvu i hne1
+    rw [if_neg (by omega : ¬(i + 1 = (setOfEdge v V E).ncard)), azimIfan]
+    exact sum2_azim_fan hfan hvu hpmi_edge hpm1_edge hle
+
+/-- HOL topology.hl:795 `SUM_EQ_IF_AZIMS_FAN`：前 i+1 步角增量之和 =
+if_azims (i+1)（对 i 归纳）。 -/
+theorem sum_eq_if_azims (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (hne_u : setOfEdge v V E ≠ {u})
+    (i : ℕ) (hin : i < (setOfEdge v V E).ncard) :
+    ∑ k ∈ Finset.range (i + 1), azimIfan x V E v u k =
+      ifAzimsFan x V E v u (i + 1) := by
+  induction i with
+  | zero =>
+    have h1n : (1:ℕ) ≠ (setOfEdge v V E).ncard := by
+      have := two_le_ncard_of_ne hfan hvu hne_u
+      omega
+    rw [show Finset.range (0 + 1) = {0} from rfl, Finset.sum_singleton, azimIfan,
+      ifAzimsFan, if_neg h1n, Function.iterate_zero_apply, Nat.zero_add]
+  | succ i ih =>
+    have hin' : i < (setOfEdge v V E).ncard := by omega
+    rw [Finset.range_add_one, Finset.sum_insert (Finset.notMem_range_self), ih hin',
+      add_comm (azimIfan x V E v u (i + 1)) (ifAzimsFan x V E v u (i + 1)),
+      sum_if_azims hfan hvu (i + 1) (by omega) (by omega)]
+
+/-- HOL topology.hl:833 `SUM_AZIMS_EQ_2PI_FAN`：**绕一圈角和 = 2π**
+（σ 循环的几何本质）。 -/
+theorem sum_azims_eq_2pi (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (hne_u : setOfEdge v V E ≠ {u}) :
+    ∑ k ∈ Finset.range (setOfEdge v V E).ncard, azimIfan x V E v u k
+      = 2 * Real.pi := by
+  have h1n : (1:ℕ) < (setOfEdge v V E).ncard := by
+    have := two_le_ncard_of_ne hfan hvu hne_u
+    omega
+  have h := sum_eq_if_azims hfan hvu hne_u
+    ((setOfEdge v V E).ncard - 1)
+    (by omega)
+  have hrange : Finset.range ((setOfEdge v V E).ncard - 1 + 1)
+      = Finset.range (setOfEdge v V E).ncard := by
+    congr 1; omega
+  rw [hrange] at h
+  rw [h, ifAzimsFan,
+    if_pos (show (setOfEdge v V E).ncard - 1 + 1 =
+      (setOfEdge v V E).ncard by omega)]
 
 end Kepler.Text
