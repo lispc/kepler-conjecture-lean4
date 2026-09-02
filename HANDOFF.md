@@ -237,11 +237,17 @@ PLAN.md 与各 README）。
     {x,v}` 定义等价（rfl）但 rw 不折叠——用 `rw [affine_hull_2_fan]`
     正向而非 `change + rw [←]`；`(s1-t1)/t3 • x` 需显式括号
     `((s1-t1)/t3) • x` 防 HDiv ℝ V3 解析；`sub_eq_iff_eq_add` 正向 rw。
-    **下一块**：topology.hl:1237（wedge3_fan = w_dart_fan，需先补
-    IN2_ORBITS_FAN/remark_power_map_points/sum3/sum4_azim_fan——
-    在 fan.hl 有原定义，未移植）；之后 UNION_FAN（1344）、
-    rcone/ball/cone（2289+）、r_fan 坐标系（3580+）、
-    change_spherical（3652+）。
+    **block 10 已提交（`e5808fc`，topology.hl:1237–1386 收官）**：
+    wedge3Fan 定义、sum5_azim_fan（三点角加法 φ≤θ₂ 版）、wDartFan_of_ncard_gt_one
+    （wedge3 → wedge）、pm_noncollinear、fan_x_ne_v、mem_complementSet_iff_noncollinear、
+    azim_translate_le/lt（sum3/sum4 换底桥接）、azim_no_wrap（无回绕前提）、
+    azim_upper_translate_mp/mpr（上界换底）、azim_compl_ne_zero
+    （缓存 helper 避免 if_neg 超时）、**wDart_eq_wedge3_fan**
+    （w_dart = wedge3，topology.hl:1248）。无 sorry。
+    **下一块**：UNION_FAN（topology.hl:1344，含 eq_set_wdart_fan 1670、
+    eq_set_aff_gt 1774、UNION1_FAN 1814、disjoint_set_fan 系列、VBTIKLP 2113）；
+    之后 rcone/ball/cone（2289+）、r_fan 坐标系（3580+）、
+    change_spherical（3652+），目标移植至 4718 全书完成。
 - 移植惯例：对应 HOL 行号写头注；Mathlib 已有的跳过并注明；零 sorry、
   零 native_decide、零自引入 axiom；每块 `lake build Kepler` 全绿 +
   公理抽查后才提交。
