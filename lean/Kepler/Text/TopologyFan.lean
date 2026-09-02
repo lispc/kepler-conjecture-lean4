@@ -27,6 +27,7 @@ namespace Kepler.Text
 
 open Kepler.Geom
 open Kepler.Text.Fan
+open Complex
 
 variable {x v u w : V3} {V : Set V3} {E : Set (Set V3)}
 
@@ -969,5 +970,176 @@ theorem wedge2Fan_eq_affGt_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
   have hncw : ¬ Collinear3 x v ((sigmaFan x V E v)^[i] u) :=
     fan_not_collinear hfan hw_edge
   exact wedge2Fan_eq_affGt hfan hvu i hin hncu hncw
+
+/-! ## wedge3 与轨道楔形（topology.hl:1237–1343 重构）
+
+前置引理（fan.hl）：IN2_ORBITS_FAN（迭代仍为边）、
+remark_power_map_points（迭代点全体性质）、sum3/sum4_azim_fan
+（无 E 前提的三点角加法）。wedge3_fan 在 wedge2 基础上加严格上下界。
+w_dart_eq_wedge3_fan 重构：楔形成员 ⟺ azim 落在 [if_azims i, if_azims
+(SUC i)) 开区间——上界由 SUM_AZIM_POWER_SIGMA_FAN + sum_if_azims
+展开，下界由 azim_lt_power_sigmaFan + sum1_ifAzimsFan 得。 -/
+
+/-- HOL fan.hl:1056 `IN2_ORBITS_FAN`：σ-迭代保持边。 -/
+theorem in2_orbits_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E) (i : ℕ) :
+    {v, (sigmaFan x V E v)^[i] u} ∈ E := by
+  have hu_soe : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  exact (properties_of_setOfEdge_fan x V E v _ hfan).mpr
+    (iterates_mem_setOfEdge hfan v u hu_soe i)
+
+/-- HOL fan.hl `remark_power_map_points`：迭代点全体性质
+（边、共线、互异、仿射包外）。 -/
+theorem remark_power_map_points (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (i : ℕ) :
+    (sigmaFan x V E v)^[i] u ∈ setOfEdge v V E ∧
+    {v, (sigmaFan x V E v)^[i] u} ∈ E ∧
+    ¬ Collinear3 x v ((sigmaFan x V E v)^[i] u) ∧
+    x ≠ (sigmaFan x V E v)^[i] u ∧
+    v ≠ (sigmaFan x V E v)^[i] u ∧
+    (sigmaFan x V E v)^[i] u ∉
+      (affineSpan ℝ ({x, v} : Set V3) : Set V3) := by
+  have hu_soe : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  have hw_soe : (sigmaFan x V E v)^[i] u ∈ setOfEdge v V E :=
+    iterates_mem_setOfEdge hfan v u hu_soe i
+  have hw_edge : {v, (sigmaFan x V E v)^[i] u} ∈ E :=
+    (properties_of_setOfEdge_fan x V E v _ hfan).mpr hw_soe
+  have hncw : ¬ Collinear3 x v ((sigmaFan x V E v)^[i] u) :=
+    fan_not_collinear hfan hw_edge
+  have hxv : x ≠ v := by
+    intro he
+    exact fan_not_collinear hfan hvu
+      (collinear3_of_eq (v := x) (w := v) (w1 := u) he.symm)
+  constructor
+  · exact hw_soe
+  constructor
+  · exact hw_edge
+  constructor
+  · exact hncw
+  constructor
+  · intro he
+    exact hncw (collinear3_pair_left (v0 := x) (v1 := v) (x := (sigmaFan x V E v)^[i] u) he.symm)
+  constructor
+  · intro he
+    exact hncw (collinear3_pair_right (v0 := x) (v1 := v) (x := (sigmaFan x V E v)^[i] u) he.symm)
+  · intro hwa
+    exact hncw ((collinear3_iff_mem_affineSpan hxv).mpr hwa)
+
+/-- 三点角加法的标架核心：给定非共线，`azim x v u w2` 与
+`azim x v u w1 + azim x v w1 w2` 相差 `n·2π`。 -/
+private theorem azim_sum_core (hxv : v ≠ x) (hncu : ¬ Collinear3 x v u)
+    (hnc1 : ¬ Collinear3 x v w1) (hnc2 : ¬ Collinear3 x v w2) :
+    ∃ n : ℤ, azim x v u w2 =
+      azim x v u w1 + azim x v w1 w2 + (n : ℝ) * (2 * Real.pi) := by
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (v - x)
+    (sub_ne_zero.mpr (fun he => hxv he))
+  have hax : (v - x : V3) = dist v x • f3 := by
+    rw [dist_eq_norm]
+    exact halign
+  obtain ⟨ψ, ru, r1, hru, hr1, hzu, hzw1⟩ := azim_frame_spec hncu hnc1 hon hax hxv
+  obtain ⟨ψ2, ru2, r2, hru2, hr2, hzu2, hzw2⟩ := azim_frame_spec hncu hnc2 hon hax hxv
+  obtain ⟨ψ', r1', r2', hr1', hr2', hzw1', hzw2'⟩ :=
+    azim_frame_spec hnc1 hnc2 hon hax hxv
+  have hψu : Complex.exp (((ψ : ℝ) : ℂ) * I)
+      = Complex.exp (((ψ2 : ℝ) : ℂ) * I) :=
+    exp_pos_mul_eq hru hru2 (hzu.symm.trans hzu2)
+  have hE2 : Complex.exp ((((ψ + azim x v u w1 : ℝ) : ℂ)) * I)
+      = Complex.exp (((ψ' : ℝ) : ℂ) * I) :=
+    exp_pos_mul_eq hr1 hr1' (hzw1.symm.trans hzw1')
+  have hE1' : Complex.exp ((((ψ2 + azim x v u w2 : ℝ) : ℂ)) * I)
+      = Complex.exp ((((ψ' + azim x v w1 w2 : ℝ) : ℂ)) * I) :=
+    exp_pos_mul_eq hr2 hr2' (hzw2.symm.trans hzw2')
+  rw [exp_add_I, exp_add_I] at hE1'
+  rw [exp_add_I] at hE2
+  rw [hψu.symm] at hE1'
+  rw [← hE2] at hE1'
+  have hE3 : Complex.exp (((azim x v u w2 : ℝ) : ℂ) * I)
+      = Complex.exp ((((azim x v u w1 + azim x v w1 w2 : ℝ) : ℂ)) * I) := by
+    have hkey : Complex.exp (((ψ : ℝ) : ℂ) * I)
+        * Complex.exp (((azim x v u w2 : ℝ) : ℂ) * I)
+      = Complex.exp (((ψ : ℝ) : ℂ) * I)
+        * Complex.exp ((((azim x v u w1 + azim x v w1 w2 : ℝ) : ℂ)) * I) := by
+      rw [hE1', mul_assoc, ← exp_add_I]
+    exact mul_left_cancel₀ (Complex.exp_ne_zero _) hkey
+  obtain ⟨n, hn⟩ := Complex.exp_eq_exp_iff_exists_int.mp hE3
+  refine ⟨n, ?_⟩
+  have hc2 : ((azim x v u w2 : ℝ) : ℂ) * Complex.I
+      = ((((azim x v u w1 + azim x v w1 w2 : ℝ)
+          + (n:ℝ) * (2 * Real.pi) : ℝ) : ℂ)) * Complex.I := by
+    rw [hn]
+    push_cast
+    ring
+  exact_mod_cast mul_right_cancel₀ Complex.I_ne_zero hc2
+
+/-- HOL fan.hl:1698 `sum4_azim_fan`：三点角加法（`azim x v u w1 ≤
+azim x v u w2` 版本，无 E 前提）。 -/
+theorem sum4_azim_fan (hxv : v ≠ x) (hncu : ¬ Collinear3 x v u)
+    (hnc1 : ¬ Collinear3 x v w1) (hnc2 : ¬ Collinear3 x v w2)
+    (hle : azim x v u w1 ≤ azim x v u w2) :
+    azim x v u w2 = azim x v u w1 + azim x v w1 w2 := by
+  obtain ⟨n, hc3⟩ := azim_sum_core hxv hncu hnc1 hnc2
+  have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
+  have hr1'0 : (0:ℝ) ≤ azim x v u w1 := azim_nonneg x v u w1
+  have hr2'0 : (0:ℝ) ≤ azim x v w1 w2 := azim_nonneg x v w1 w2
+  have hr3'0 : (0:ℝ) ≤ azim x v u w2 := azim_nonneg x v u w2
+  have hr3'1 : azim x v u w2 < 2 * Real.pi := azim_lt_two_pi x v u w2
+  have hφ1 : azim x v w1 w2 < 2 * Real.pi := azim_lt_two_pi x v w1 w2
+  rcases Int.lt_trichotomy n 0 with hneg | hzero | hpos
+  · exfalso
+    have hle2 : ((n:ℤ) : ℝ) ≤ -1 := by
+      have := (by omega : (n : ℤ) ≤ -1)
+      exact_mod_cast this
+    have hmul : (n:ℝ) * (2 * Real.pi) ≤ (-1:ℝ) * (2 * Real.pi) :=
+      mul_le_mul_of_nonneg_right hle2 h2pi.le
+    linarith
+  · rw [hzero] at hc3
+    simp only [Int.cast_zero, zero_mul, add_zero] at hc3
+    exact hc3
+  · exfalso
+    have hge : ((n:ℤ) : ℝ) ≥ 1 := by
+      have := (by omega : (n : ℤ) ≥ 1)
+      exact_mod_cast this
+    have hmul : (n:ℝ) * (2 * Real.pi) ≥ (1:ℝ) * (2 * Real.pi) :=
+      mul_le_mul_of_nonneg_right hge h2pi.le
+    linarith
+
+/-- HOL fan.hl:1597 `sum3_azim_fan`：三点角加法（`azim x v u w1 +
+azim x v w1 w2 < 2π` 版本）。 -/
+theorem sum3_azim_fan (hxv : v ≠ x) (hncu : ¬ Collinear3 x v u)
+    (hnc1 : ¬ Collinear3 x v w1) (hnc2 : ¬ Collinear3 x v w2)
+    (hlt : azim x v u w1 + azim x v w1 w2 < 2 * Real.pi) :
+    azim x v u w2 = azim x v u w1 + azim x v w1 w2 := by
+  obtain ⟨n, hc3⟩ := azim_sum_core hxv hncu hnc1 hnc2
+  have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
+  have hr1'0 : (0:ℝ) ≤ azim x v u w1 := azim_nonneg x v u w1
+  have hr2'0 : (0:ℝ) ≤ azim x v w1 w2 := azim_nonneg x v w1 w2
+  have hr3'0 : (0:ℝ) ≤ azim x v u w2 := azim_nonneg x v u w2
+  have hr3'1 : azim x v u w2 < 2 * Real.pi := azim_lt_two_pi x v u w2
+  rcases Int.lt_trichotomy n 0 with hneg | hzero | hpos
+  · exfalso
+    have hle2 : ((n:ℤ) : ℝ) ≤ -1 := by
+      have := (by omega : (n : ℤ) ≤ -1)
+      exact_mod_cast this
+    have hmul : (n:ℝ) * (2 * Real.pi) ≤ (-1:ℝ) * (2 * Real.pi) :=
+      mul_le_mul_of_nonneg_right hle2 h2pi.le
+    linarith
+  · rw [hzero] at hc3
+    simp only [Int.cast_zero, zero_mul, add_zero] at hc3
+    exact hc3
+  · exfalso
+    have hge : ((n:ℤ) : ℝ) ≥ 1 := by
+      have := (by omega : (n : ℤ) ≥ 1)
+      exact_mod_cast this
+    have hmul : (n:ℝ) * (2 * Real.pi) ≥ (1:ℝ) * (2 * Real.pi) :=
+      mul_le_mul_of_nonneg_right hge h2pi.le
+    linarith
+
+/-- HOL topology.hl:1237 `wedge3_fan`：if_azims 严格上/下界间的楔形
+（开区间版 wedge2）。 -/
+noncomputable def wedge3Fan (x : V3) (V : Set V3) (E : Set (Set V3)) (v u : V3)
+    (i : ℕ) : Set V3 :=
+  {y | ifAzimsFan x V E v u i < azim x v u y ∧
+    azim x v u y < ifAzimsFan x V E v u (i + 1) ∧ y ∈ complementSet x v}
 
 end Kepler.Text
