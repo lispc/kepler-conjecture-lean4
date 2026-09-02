@@ -21,7 +21,7 @@ each commit.
 import Kepler.Text.Fan
 import Mathlib.Order.Interval.Set.Nat
 
-set_option maxHeartbeats 3000000
+set_option maxHeartbeats 5000000 in
 
 namespace Kepler.Text
 
@@ -1141,5 +1141,246 @@ noncomputable def wedge3Fan (x : V3) (V : Set V3) (E : Set (Set V3)) (v u : V3)
     (i : ℕ) : Set V3 :=
   {y | ifAzimsFan x V E v u i < azim x v u y ∧
     azim x v u y < ifAzimsFan x V E v u (i + 1) ∧ y ∈ complementSet x v}
+
+/-- HOL fan.hl:1755 `sum5_azim_fan`：三点角加法（`azim x v w1 w2 ≤
+azim x v u w2` 版本，无 E 前提）。 -/
+theorem sum5_azim_fan (hxv : v ≠ x) (hncu : ¬ Collinear3 x v u)
+    (hnc1 : ¬ Collinear3 x v w1) (hnc2 : ¬ Collinear3 x v w2)
+    (hle : azim x v w1 w2 ≤ azim x v u w2) :
+    azim x v u w2 = azim x v u w1 + azim x v w1 w2 := by
+  obtain ⟨n, hc3⟩ := azim_sum_core hxv hncu hnc1 hnc2
+  have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
+  have hr1'0 : (0:ℝ) ≤ azim x v u w1 := azim_nonneg x v u w1
+  have hr1'1 : azim x v u w1 < 2 * Real.pi := azim_lt_two_pi x v u w1
+  have hr2'0 : (0:ℝ) ≤ azim x v w1 w2 := azim_nonneg x v w1 w2
+  have hr3'1 : azim x v u w2 < 2 * Real.pi := azim_lt_two_pi x v u w2
+  rcases Int.lt_trichotomy n 0 with hneg | hzero | hpos
+  · exfalso
+    have hle2 : ((n:ℤ) : ℝ) ≤ -1 := by exact_mod_cast (by omega : (n : ℤ) ≤ -1)
+    have hmul : (n:ℝ) * (2 * Real.pi) ≤ (-1:ℝ) * (2 * Real.pi) :=
+      mul_le_mul_of_nonneg_right hle2 h2pi.le
+    linarith [hle, hc3, hr1'1, hmul]
+  · rw [hzero] at hc3
+    simp only [Int.cast_zero, zero_mul, add_zero] at hc3
+    exact hc3
+  · exfalso
+    have hge : ((n:ℤ) : ℝ) ≥ 1 := by exact_mod_cast (by omega : (n : ℤ) ≥ 1)
+    have hmul : (n:ℝ) * (2 * Real.pi) ≥ (1:ℝ) * (2 * Real.pi) :=
+      mul_le_mul_of_nonneg_right hge h2pi.le
+    linarith [hr1'0, hr2'0, hr3'1, hmul, hc3]
+
+/-- `i < CARD(soe)` 时 `ifAzims i = azim x v u (σ^i u)`（定义直接）。 -/
+theorem ifAzimsFan_eq_azim (x : V3) (V : Set V3) (E : Set (Set V3)) (v u : V3)
+    (i : ℕ) (hin : i < (setOfEdge v V E).ncard) :
+    ifAzimsFan x V E v u i = azim x v u ((sigmaFan x V E v)^[i] u) := by
+  rw [ifAzimsFan, if_neg (by omega)]
+
+/-- `w_dart_fan x V E (x,v,pm i,pm(SUC i))`（CARD > 1 时）展开为
+`wedge x v (pm i) (pm(SUC i))`。 -/
+theorem wDartFan_of_ncard_gt_one (hfan : FAN x V E) {v u : V3} (hvu : {v, u} ∈ E)
+    (hcard : 1 < (setOfEdge v V E).ncard) (i : ℕ) :
+    wDartFan x V E (x, v, (sigmaFan x V E v)^[i] u, (sigmaFan x V E v)^[i + 1] u)
+      = wedge x v ((sigmaFan x V E v)^[i] u) ((sigmaFan x V E v)^[i + 1] u) := by
+  rw [wDartFan, if_pos hcard]
+  congr 2
+  rw [Function.iterate_succ_apply']
+
+/-- `i < CARD` 时 pm i 与 pm(SUC i) 的非共线（remark_power_map_points）。 -/
+private theorem pm_noncollinear (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (hin : i < (setOfEdge v V E).ncard) :
+    ¬ Collinear3 x v ((sigmaFan x V E v)^[i] u) :=
+  (remark_power_map_points hfan hvu i).2.2.1
+
+/-- `x ≠ v`（FAN 下的非退化，fan_not_collinear 的分量）。 -/
+private theorem fan_x_ne_v (hfan : FAN x V E) (hvu : {v, u} ∈ E) : x ≠ v := by
+  intro he
+  exact fan_not_collinear hfan hvu
+    (collinear3_of_eq (v := x) (w := v) (w1 := u) he.symm)
+
+/-- 非共线点与补集的互化（x ≠ v 时）。 -/
+private theorem mem_complementSet_iff_noncollinear (hfan : FAN x V E)
+    (hvu : {v, u} ∈ E) (y : V3) :
+    y ∈ complementSet x v ↔ ¬ Collinear3 x v y := by
+  have hxv : x ≠ v := fan_x_ne_v hfan hvu
+  constructor
+  · exact complementSet_noncollinear hxv
+  · intro hnc
+    intro hyaff
+    exact hnc ((collinear3_iff_mem_affineSpan hxv).mpr hyaff)
+
+/-- `azim_compl` when the azim is known nonzero: avoids the `ite` wrapper
+and the expensive `rw [if_neg h]` tactic. -/
+private theorem azim_compl_ne_zero {z w w1 w2 : V3}
+    (hnc1 : ¬ Collinear3 z w w1) (hnc2 : ¬ Collinear3 z w w2)
+    (h : azim z w w1 w2 ≠ 0) :
+    azim z w w2 w1 = 2 * Real.pi - azim z w w1 w2 := by
+  rw [azim_compl hnc1 hnc2, if_neg h]
+
+/-- 三点角分解的换底引理（sum4）：`azim x v u y = azim x v u (pm i) + azim x v (pm i) y`
+（给定 `azim x v u (pm i) ≤ azim x v u y`）。 -/
+private theorem azim_translate_le (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (hin : i < (setOfEdge v V E).ncard) (y : V3)
+    (hyncol : ¬ Collinear3 x v y)
+    (hle : azim x v u ((sigmaFan x V E v)^[i] u) ≤ azim x v u y) :
+    azim x v u y =
+      azim x v u ((sigmaFan x V E v)^[i] u) +
+        azim x v ((sigmaFan x V E v)^[i] u) y := by
+  have hnc_pm : ¬ Collinear3 x v ((sigmaFan x V E v)^[i] u) := pm_noncollinear hfan hvu hin
+  have hncu : ¬ Collinear3 x v u := fan_not_collinear hfan hvu
+  have hvx : v ≠ x := (fan_x_ne_v hfan hvu).symm
+  exact sum4_azim_fan hvx hncu hnc_pm hyncol hle
+
+/-- 三点角分解（`azim x v u (pm i) + azim x v (pm i) y < 2π` 时，即 sum3
+应用；用于方向 `0 < azim x v (pm i) y ⟹ ifAzims i < azim x v u y`）。 -/
+private theorem azim_translate_lt (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (hin : i < (setOfEdge v V E).ncard) (y : V3)
+    (hyncol : ¬ Collinear3 x v y)
+    (hlt : azim x v u ((sigmaFan x V E v)^[i] u) +
+        azim x v ((sigmaFan x V E v)^[i] u) y < 2 * Real.pi) :
+    azim x v u y =
+      azim x v u ((sigmaFan x V E v)^[i] u) +
+        azim x v ((sigmaFan x V E v)^[i] u) y := by
+  have hnc_pm : ¬ Collinear3 x v ((sigmaFan x V E v)^[i] u) := pm_noncollinear hfan hvu hin
+  have hncu : ¬ Collinear3 x v u := fan_not_collinear hfan hvu
+  have hvx : v ≠ x := (fan_x_ne_v hfan hvu).symm
+  exact sum3_azim_fan hvx hncu hnc_pm hyncol hlt
+
+/-- 上界换底（⟹）：`azim x v u y < ifAzims (SUC i)`（配合下界
+`ifAzims i < azim x v u y`）⟹ `azim x v (pm i) y < azim x v (pm i) (pm(SUC i))`。
+下界保证 sum4 分解适用。 -/
+private theorem azim_upper_translate_mp (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (hne_u : setOfEdge v V E ≠ {u}) (hcard : 1 < (setOfEdge v V E).ncard)
+    (hin : i < (setOfEdge v V E).ncard) (y : V3)
+    (hyncol : ¬ Collinear3 x v y)
+    (hlo : ifAzimsFan x V E v u i < azim x v u y)
+    (hhi : azim x v u y < ifAzimsFan x V E v u (i + 1)) :
+    azim x v ((sigmaFan x V E v)^[i] u) y <
+      azim x v ((sigmaFan x V E v)^[i] u) ((sigmaFan x V E v)^[i + 1] u) := by
+  have hle_pm : azim x v u ((sigmaFan x V E v)^[i] u) ≤ azim x v u y := by
+    rw [← ifAzimsFan_eq_azim x V E v u i hin]
+    exact le_of_lt hlo
+  have htrans := azim_translate_le hfan hvu hin y hyncol hle_pm
+  by_cases hne_i : i + 1 = (setOfEdge v V E).ncard
+  · -- SUC i = CARD：pm(SUC i) = u，ifAzims (SUC i) = 2π
+    have hpm : (sigmaFan x V E v)^[i + 1] u = u :=
+      order_power_sigmaFan x V E hfan hvu hne_i
+    have hθ0 : azim x v u ((sigmaFan x V E v)^[i] u) ≠ 0 := by
+      intro hθ
+      exact key_lemma_cyclic x V E hfan hvu i (by omega : 0 < i)
+        (by omega : i < (setOfEdge v V E).ncard)
+        (unique_azim0_point_fan hfan hvu (in2_orbits_fan hfan hvu i) hθ)
+    have hcomp1 : azim x v ((sigmaFan x V E v)^[i] u) u =
+        2 * Real.pi - azim x v u ((sigmaFan x V E v)^[i] u) :=
+      azim_compl_ne_zero (fan_not_collinear hfan hvu)
+        (pm_noncollinear hfan hvu hin) hθ0
+    rw [ifAzimsFan, if_pos hne_i] at hhi
+    rw [hpm]
+    linarith [htrans, hcomp1, hhi]
+  · -- SUC i < CARD：常规链式分解
+    have hsuc : i + 1 < (setOfEdge v V E).ncard := by omega
+    have hstep := sum_azim_power_sigmaFan hfan hvu hne_u (i + 1) i (by omega) hsuc
+    rw [ifAzimsFan_eq_azim x V E v u (i + 1) hsuc] at hhi
+    linarith
+
+/-- 无回绕前提：`azim x v u (pm i) + azim x v (pm i) y < 2π`
+（由 `azim x v (pm i) y < azim x v (pm i) (pm(SUC i))` 与步长关系给出）。 -/
+private theorem azim_no_wrap (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (hne_u : setOfEdge v V E ≠ {u}) (hcard : 1 < (setOfEdge v V E).ncard)
+    (hin : i < (setOfEdge v V E).ncard) (y : V3)
+    (hyncol : ¬ Collinear3 x v y)
+    (hne : azim x v ((sigmaFan x V E v)^[i] u) y <
+      azim x v ((sigmaFan x V E v)^[i] u) ((sigmaFan x V E v)^[i + 1] u)) :
+    azim x v u ((sigmaFan x V E v)^[i] u) +
+        azim x v ((sigmaFan x V E v)^[i] u) y < 2 * Real.pi := by
+  by_cases hne_i : i + 1 = (setOfEdge v V E).ncard
+  · -- SUC i = CARD：pm(SUC i) = u，补角给出 ≤ 2π
+    have hpm : (sigmaFan x V E v)^[i + 1] u = u :=
+      order_power_sigmaFan x V E hfan hvu hne_i
+    have hθ0 : azim x v u ((sigmaFan x V E v)^[i] u) ≠ 0 := by
+      intro hθ
+      exact key_lemma_cyclic x V E hfan hvu i (by omega : 0 < i)
+        (by omega : i < (setOfEdge v V E).ncard)
+        (unique_azim0_point_fan hfan hvu (in2_orbits_fan hfan hvu i) hθ)
+    have hcomp1 : azim x v ((sigmaFan x V E v)^[i] u) u =
+        2 * Real.pi - azim x v u ((sigmaFan x V E v)^[i] u) :=
+      azim_compl_ne_zero (fan_not_collinear hfan hvu)
+        (pm_noncollinear hfan hvu hin) hθ0
+    rw [hpm] at hne
+    linarith [hcomp1, hne]
+  · -- SUC i < CARD：步长 = 差，且 pm(SUC i) 的 azim < 2π
+    have hsuc : i + 1 < (setOfEdge v V E).ncard := by omega
+    have hstep := sum_azim_power_sigmaFan hfan hvu hne_u (i + 1) i (by omega) hsuc
+    have hlt2 : azim x v u ((sigmaFan x V E v)^[i + 1] u) < 2 * Real.pi :=
+      azim_lt_two_pi x v u ((sigmaFan x V E v)^[i + 1] u)
+    linarith [hstep, hlt2, hne]
+
+/-- 上界换底（⟸）：`azim x v (pm i) y < azim x v (pm i) (pm(SUC i))`
+⟹ `azim x v u y < ifAzims (SUC i)`。用 sum3 分解（无回绕由
+azim_no_wrap 保证）。 -/
+private theorem azim_upper_translate_mpr (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (hne_u : setOfEdge v V E ≠ {u}) (hcard : 1 < (setOfEdge v V E).ncard)
+    (hin : i < (setOfEdge v V E).ncard) (y : V3)
+    (hyncol : ¬ Collinear3 x v y)
+    (hne : azim x v ((sigmaFan x V E v)^[i] u) y <
+      azim x v ((sigmaFan x V E v)^[i] u) ((sigmaFan x V E v)^[i + 1] u)) :
+    azim x v u y < ifAzimsFan x V E v u (i + 1) := by
+  have hlt_sum := azim_no_wrap hfan hvu hne_u hcard hin y hyncol hne
+  have htrans := azim_translate_lt hfan hvu hin y hyncol hlt_sum
+  by_cases hne_i : i + 1 = (setOfEdge v V E).ncard
+  · -- SUC i = CARD：ifAzims (SUC i) = 2π
+    rw [ifAzimsFan, if_pos hne_i]
+    linarith [htrans, hlt_sum]
+  · -- SUC i < CARD：链式分解
+    have hsuc : i + 1 < (setOfEdge v V E).ncard := by omega
+    have hstep := sum_azim_power_sigmaFan hfan hvu hne_u (i + 1) i (by omega) hsuc
+    rw [ifAzimsFan_eq_azim x V E v u (i + 1) hsuc]
+    linarith [htrans, hstep, hne]
+
+/-- HOL topology.hl:1248 `w_dart_eq_wedge3_fan`：w_dart（从 pm i 到
+pm(SUC i) 的楔形）= wedge3（if_azims 区间楔形）。核心：两个换底
+（下界 `0 < azim (pm i) y ⟺ ifAzims i < azim u y`、上界
+`azim (pm i) y < azim (pm i) (pm(SUC i)) ⟺ azim u y < ifAzims (SUC i)`）
+由 sum3/sum4/sum_azim_power + ifAzims 定义拼合。 -/
+theorem wDart_eq_wedge3_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (hin : i < (setOfEdge v V E).ncard)
+    (hcard : 1 < (setOfEdge v V E).ncard) :
+    wDartFan x V E (x, v, (sigmaFan x V E v)^[i] u, (sigmaFan x V E v)^[i + 1] u)
+      = wedge3Fan x V E v u i := by
+  have hne_u : setOfEdge v V E ≠ {u} := by
+    intro he
+    have h1n : (1:ℕ) < (setOfEdge v V E).ncard := hcard
+    rw [he] at h1n
+    simp at h1n
+  rw [wDartFan_of_ncard_gt_one hfan hvu hcard i]
+  ext y
+  rw [wedge, wedge3Fan]
+  constructor
+  · -- y ∈ wedge ⟹ y ∈ wedge3
+    rintro ⟨hnc, hlo, hhi⟩
+    have hyncol : ¬ Collinear3 x v y := hnc
+    -- 下界：无回绕（由 hhi 步长保证）⟹ sum3 分解 ⟹ ifAzims i < azim u y
+    have hlt_sum := azim_no_wrap hfan hvu hne_u hcard hin y hyncol hhi
+    have htrans := azim_translate_lt hfan hvu hin y hyncol hlt_sum
+    constructor
+    · rw [ifAzimsFan_eq_azim x V E v u i hin]
+      linarith [htrans, hlo]
+    constructor
+    · exact azim_upper_translate_mpr hfan hvu hne_u hcard hin y hyncol hhi
+    · exact (mem_complementSet_iff_noncollinear hfan hvu y).mpr hnc
+  · -- y ∈ wedge3 ⟹ y ∈ wedge
+    rintro ⟨hlo, hhi, hcomp⟩
+    have hyncol : ¬ Collinear3 x v y :=
+      (mem_complementSet_iff_noncollinear hfan hvu y).mp hcomp
+    -- 下界反向：ifAzims i < azim u y ⟹ sum4 分解（hle 前提）
+    have hle_pm : azim x v u ((sigmaFan x V E v)^[i] u) ≤ azim x v u y := by
+      rw [← ifAzimsFan_eq_azim x V E v u i hin]
+      exact le_of_lt hlo
+    have htrans := azim_translate_le hfan hvu hin y hyncol hle_pm
+    constructor
+    · exact hyncol
+    constructor
+    · rw [ifAzimsFan_eq_azim x V E v u i hin] at hlo
+      linarith [htrans, hlo]
+    · exact azim_upper_translate_mp hfan hvu hne_u hcard hin y hyncol hlo hhi
 
 end Kepler.Text
