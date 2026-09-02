@@ -1383,4 +1383,163 @@ theorem wDart_eq_wedge3_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
       linarith [htrans, hlo]
     · exact azim_upper_translate_mp hfan hvu hne_u hcard hin y hyncol hlo hhi
 
+/-- HOL topology.hl:1654 `aff_subset_aff_ge`：DISJOINT {x,v} {w} ⟹
+aff {x,v} ⊆ aff_ge {x,v} {w}。 -/
+theorem aff_subset_aff_ge {x v w : V3} (hdisj : Set.Disjoint {x, v} {w}) :
+    affineSpan ℝ {x, v} ⊆ affGe {x, v} {w} := by
+  intro y hy
+  rw [affineSpan_pair] at hy
+  obtain ⟨a, b, hab, rfl⟩ := hy
+  have hvx : v ≠ x :=
+    Set.disjoint_iff_forall_ne.mp hdisj (Or.inl rfl) (Or.inl rfl) ▸ Ne.rfl
+  have hxw : x ≠ w :=
+    Set.disjoint_iff_forall_ne.mp hdisj (Or.inl rfl) (Or.inr rfl) ▸ Ne.rfl
+  have hvw : v ≠ w :=
+    Set.disjoint_iff_forall_ne.mp hdisj (Or.inr rfl) (Or.inr rfl) ▸ Ne.rfl
+  have hfin : ({x, v} ∪ {w} : Set V3).Finite :=
+    ((Set.finite_singleton v).insert x).union (Set.finite_singleton w)
+  refine ⟨fun z => if z = x then a else if z = v then b else 0, hfin, ?_, ?_, ?_⟩
+  · have h3 : hfin.toFinset = {x, v, w} := by
+      apply Finset.ext; intro z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+        Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+      exact ⟨fun h => by rcases h with (rfl | rfl | rfl) <;> simp,
+        fun h => by rcases Finset.mem_insert.mp h with (rfl | h) <;>
+          [exact Or.inl (Or.inl rfl); rcases Finset.mem_singleton.mp h with rfl <;> exact Or.inr rfl]⟩
+    rw [h3, Finset.sum_insert (by simp [Ne, Ne.symm hxw]),
+      Finset.sum_insert (by simp [Ne, hvw]), Finset.sum_singleton]
+    simp only [ite_smul, smul_add]
+    split_ifs <;> simp_all [smul_add]
+  · intro z hz
+    simp only [Set.Finite.mem_toFinset, Set.mem_union] at hz
+    rcases hz with (h | h) <;> simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h
+    all_goals simp_all
+    · linarith
+  · have h3 : hfin.toFinset = {x, v, w} := by
+      apply Finset.ext; intro z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+        Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+      exact ⟨fun h => by rcases h with (rfl | rfl | rfl) <;> simp,
+        fun h => by rcases Finset.mem_insert.mp h with (rfl | h) <;>
+          [exact Or.inl (Or.inl rfl); rcases Finset.mem_singleton.mp h with rfl <;> exact Or.inr rfl]⟩
+    rw [h3, Finset.sum_insert (by simp [Ne, Ne.symm hxw]),
+      Finset.sum_insert (by simp [Ne, hvw]), Finset.sum_singleton]
+    simp only [if_neg (Ne.symm hxw), if_neg (Ne.symm hvw)]
+    linarith
+
+/-- HOL topology.hl:1670 `eq_set_wdart_fan`：w_dart 集 = wedge3 集。
+WLOG 利用 wDart_eq_wedge3_fan 与 orbit 覆盖性质。 -/
+theorem eq_set_wdart_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
+    (fun w : V3 => wDartFan x V E (x, v, w, sigmaFan x V E v w)) '' {w | {v, w} ∈ E} =
+      (fun i : ℕ => wedge3Fan x V E v u i) '' {i | 0 ≤ i ∧ i < (setOfEdge v V E).ncard} := by
+  ext y; constructor
+  · -- wDart ⟹ wedge3：给定 y = wDartFan(x,v,w,σw) 且 {v,w}∈E
+    rintro ⟨w, hwE, rfl⟩
+    have hne_u : setOfEdge v V E ≠ {u} := by
+      intro he; have h1n : (1:ℕ) < (setOfEdge v V E).ncard :=
+        (Set.card_mono (Set.finite_singleton u ▸ by rw [he]; exact Set.finite_singleton u)) ▸ by simp
+      omega
+    -- w ∈ setOfEdge, so w = σ^j u for some j
+    have hwc : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp hwE
+    obtain ⟨j, hj, rfl⟩ := iterates_mem_sigmaFan hfan hvu |>.mp <|
+      orbit_eq_setOfEdge hfan hvu ▸ Set.mem_image_of_mem (sigmaFan x V E v) hwc
+    -- Now y = wDartFan(x,v,σ^j u,σ^(j+1) u)
+    refine ⟨j, ?_, by rw [wDartFan_of_ncard_gt_one hfan hvu
+      (by omega : 1 < (setOfEdge v V E).ncard) j]; rfl⟩
+    exact ⟨Nat.zero_le j, hj⟩
+  · -- wedge3 ⟹ wDart：给定 y ∈ wedge3Fan i
+    rintro ⟨i, ⟨hi0, hi⟩, rfl⟩
+    have hne_u : setOfEdge v V E ≠ {u} := by
+      intro he; have h1n : (1:ℕ) < (setOfEdge v V E).ncard :=
+        (Set.card_mono (Set.finite_singleton u ▸ by rw [he]; exact Set.finite_singleton u)) ▸ by simp
+      omega
+    have hcard : 1 < (setOfEdge v V E).ncard := by
+      by_contra h; push_neg at h
+      have h1 : (setOfEdge v V E).ncard ≤ 1 := Nat.eq_zero_or_one_of_le_zero h ▸ le_refl 1
+      omega
+    -- σ^i u ∈ setOfEdge
+    have hi_mem : (sigmaFan x V E v)^[i] u ∈ setOfEdge v V E :=
+      iterates_mem_orbits x V E v u i |>.mpr (orbit_eq_setOfEdge hfan hvu ▸ by exact Set.mem_image_of_mem _ (properties_of_setOfEdge_fan x V E v u hfan |>.mp hvu))
+    have hwE : {v, (sigmaFan x V E v)^[i] u} ∈ E :=
+      (properties_of_setOfEdge_fan x V E v ((sigmaFan x V E v)^[i] u) hfan).mpr hi_mem
+    refine ⟨(sigmaFan x V E v)^[i] u, hwE, ?_⟩
+    rw [wDartFan_of_ncard_gt_one hfan hvu hcard i]
+    exact (wDart_eq_wedge3_fan hfan hvu (by omega : i < (setOfEdge v V E).ncard) hcard).symm
+
+/-- 非零 azim 的下界：azim ≥ 0 且 ≠ 0 则 > 0。 -/
+private theorem azim_pos_of_ne_zero {x v u w : V3}
+    (h : azim x v u w ≠ 0) : 0 < azim x v u w :=
+  lt_of_le_of_ne (azim_nonneg x v u w) (Ne.symm h)
+
+/-- HOL topology.hl:1344 `UNION_FAN`：UNIV = aff ∪ ⋃wedge3 ∪ ⋃wedge2。
+核心思路：任一点 y，要么在 aff{x,v} 中（共线），要么在某个 wedge3 或 wedge2 中
+（非共线时按 azim 角度确定区间）。 -/
+theorem UNION_FAN (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
+    (Set.univ : Set V3) =
+      affineSpan ℝ {x, v} ∪
+      (⋃ i ∈ {i | 0 ≤ i ∧ i < (setOfEdge v V E).ncard}, wedge3Fan x V E v u i) ∪
+      (⋃ i ∈ {i | 0 ≤ i ∧ i < (setOfEdge v V E).ncard}, wedge2Fan x V E v u i) := by
+  ext y; simp only [Set.mem_union, Set.mem_iUnion, Set.mem_univ, iff_true]
+  by_cases hcoll : Collinear3 x v y
+  · exact Or.inl ((collinear3_iff_mem_affineSpan (fan_x_ne_v hfan hvu)).mp hcoll)
+  · right
+    have hxv : x ≠ v := fan_x_ne_v hfan hvu
+    have hncu : ¬ Collinear3 x v u := fan_not_collinear hfan hvu
+    -- ifAzims 值在 [0,2π) 中：ifAzims 0 = 0，ifAzims n = 2π
+    -- y 的 azim 角落入某个区间
+    have hθ0 : 0 ≤ azim x v u y := azim_nonneg x v u y
+    have hθ1 : azim x v u y < 2 * Real.pi := azim_lt_two_pi x v u y
+    by_cases hθ : azim x v u y = 0
+    · -- azim = 0：y 在 ifAzims 0 = 0 的等值面上，属于 wedge2Fan 0
+      have hne_u : setOfEdge v V E ≠ {u} := by
+        intro he
+        exact absurd (two_le_ncard_of_ne hfan hvu he) (by omega)
+      have h1n : (1:ℕ) < (setOfEdge v V E).ncard :=
+        two_le_ncard_of_ne hfan hvu hne_u
+      have hcomp : y ∈ complementSet x v :=
+        (mem_complementSet_iff_noncollinear hfan hvu y).mpr hcoll
+      -- ifAzimsFan 0 = azim x v u u = 0（因 0 ≠ ncard）
+      have hif0 : ifAzimsFan x V E v u 0 = 0 := by
+        rw [ifAzimsFan_eq_azim x V E v u 0 (by omega)]
+        exact azim_self x v u
+      right; left
+      exact ⟨0, ⟨Nat.zero_le _, by omega⟩, hif0 ▸ hθ, hcomp⟩
+    · -- azim > 0：找区间
+      have hθpos : 0 < azim x v u y := azim_pos_of_ne_zero hθ
+      -- Nat.find 找到第一个 ifAzims > azim y 的索引
+      have h_exists : ∃ i, i ≤ (setOfEdge v V E).ncard ∧
+          ifAzimsFan x V E v u i > azim x v u y := by
+        exact ⟨(setOfEdge v V E).ncard, le_refl _,
+          by rw [ifAzimsFan, if_pos rfl]; exact hθ1⟩
+      let i := Nat.find h_exists
+      have hi_bound : i ≤ (setOfEdge v V E).ncard := (Nat.find_spec h_exists).1
+      have hi_gt : ifAzimsFan x V E v u i > azim x v u y := (Nat.find_spec h_exists).2
+      -- i > 0 因为 ifAzims 0 = 0 ≤ azim
+      have hi0 : 0 < i := by
+        by_contra hi0
+        push_neg at hi0
+        have := Nat.eq_zero_of_not_pos hi0
+        subst this
+        simp [ifAzimsFan] at hi_gt
+        linarith [azim_nonneg x v u y]
+      have hin : i - 1 < (setOfEdge v V E).ncard := by omega
+      -- ifAzims (i-1) ≤ azim < ifAzims i
+      have hle_prev : ifAzimsFan x V E v u (i - 1) ≤ azim x v u y := by
+        by_contra hgt
+        have hlt : azim x v u y < ifAzimsFan x V E v u (i - 1) := lt_of_not_ge hgt
+        -- i-1 也满足条件，与 i 的最小性矛盾
+        exact absurd ⟨i - 1, by omega, hlt⟩ (Nat.find_min h_exists (by omega))
+      -- y 在 complementSet 中（非共线）
+      have hcomp : y ∈ complementSet x v :=
+        (mem_complementSet_iff_noncollinear hfan hvu y).mpr hcoll
+      -- 分情况：azim 恰好等于某个 ifAzims（边界）或在区间内（内部）
+      by_cases heq : azim x v u y = ifAzimsFan x V E v u (i - 1)
+      · -- 边界情况：azim = ifAzims (i-1)，y 在 wedge2Fan (i-1) 中
+        right; left
+        exact ⟨i - 1, ⟨by omega, by omega⟩, ⟨hcomp, heq⟩⟩
+      · -- 内部情况：ifAzims (i-1) < azim < ifAzims i，y 在 wedge3Fan (i-1) 中
+        left
+        exact ⟨i - 1, ⟨by omega, by omega⟩, ⟨hcomp,
+          lt_of_le_of_ne hle_prev (Ne.symm heq), hi_gt⟩⟩
+
 end Kepler.Text
