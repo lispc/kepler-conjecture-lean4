@@ -1542,4 +1542,79 @@ theorem UNION_FAN (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
         exact ⟨i - 1, ⟨by omega, by omega⟩, ⟨hcomp,
           lt_of_le_of_ne hle_prev (Ne.symm heq), hi_gt⟩⟩
 
+/-- HOL topology.hl:1670 `eq_set_wdart_fan`：w_dart 集 = wedge3 集。 -/
+theorem eq_set_wdart_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
+    (fun w : V3 => wDartFan x V E (x, v, w, sigmaFan x V E v w)) '' {w | {v, w} ∈ E} =
+      (fun i : ℕ => wedge3Fan x V E v u i) '' {i | 0 ≤ i ∧ i < (setOfEdge v V E).ncard} := by
+  ext y; constructor
+  · rintro ⟨w, hwE, rfl⟩
+    have hne_u : setOfEdge v V E ≠ {u} := by
+      intro he
+      exact absurd (two_le_ncard_of_ne hfan hvu he) (by omega : ¬1 < 1)
+    have hwc : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp hwE
+    obtain ⟨j, hj, rfl⟩ := iterates_mem_sigmaFan hfan hvu |>.mp <|
+      orbit_eq_setOfEdge hfan hvu ▸ Set.mem_image_of_mem (sigmaFan x V E v) hwc
+    refine ⟨j, ?_, by
+      rw [wDartFan_of_ncard_gt_one hfan hvu
+        (by omega : 1 < (setOfEdge v V E).ncard) j]; rfl⟩
+    exact ⟨Nat.zero_le j, hj⟩
+  · rintro ⟨i, ⟨hi0, hi⟩, rfl⟩
+    have hne_u : setOfEdge v V E ≠ {u} := by
+      intro he
+      exact absurd (two_le_ncard_of_ne hfan hvu he) (by omega : ¬1 < 1)
+    have hcard : 1 < (setOfEdge v V E).ncard := by omega
+    have hi_mem : (sigmaFan x V E v)^[i] u ∈ setOfEdge v V E :=
+      iterates_mem_setOfEdge hfan v u
+        ((properties_of_setOfEdge_fan x V E v u hfan).mp hvu) i
+    have hwE : {v, (sigmaFan x V E v)^[i] u} ∈ E :=
+      (properties_of_setOfEdge_fan x V E v _ hfan).mpr hi_mem
+    refine ⟨(sigmaFan x V E v)^[i] u, hwE, ?_⟩
+    rw [wDartFan_of_ncard_gt_one hfan hvu hcard i]
+    exact (wDart_eq_wedge3_fan hfan hvu (by omega : i < (setOfEdge v V E).ncard) hcard).symm
+
+/-- HOL topology.hl:1774 `eq_set_aff_gt`：aff_gt 集 = wedge2 集。
+利用 wedge_fan2_equal_aff_gt_fan（block 9）双包含。 -/
+theorem eq_set_aff_gt (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
+    (fun w : V3 => affGt {x, v} {w}) '' {w | {v, w} ∈ E} =
+      (fun i : ℕ => wedge2Fan x V E v u i) '' {i | 0 ≤ i ∧ i < (setOfEdge v V E).ncard} := by
+  ext y; constructor
+  · rintro ⟨w, hwE, rfl⟩
+    have hwc : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp hwE
+    obtain ⟨j, hj, rfl⟩ := iterates_mem_sigmaFan hfan hvu |>.mp <|
+      orbit_eq_setOfEdge hfan hvu ▸ Set.mem_image_of_mem (sigmaFan x V E v) hwc
+    refine ⟨j, ⟨Nat.zero_le j, hj⟩, ?_⟩
+    have hjne : j ≠ (setOfEdge v V E).ncard := Nat.ne_of_lt hj
+    exact (wedge_fan2_equal_aff_gt_fan hfan hvu hjne).symm
+  · rintro ⟨i, ⟨hi0, hi⟩, rfl⟩
+    have hi_mem : (sigmaFan x V E v)^[i] u ∈ setOfEdge v V E :=
+      iterates_mem_setOfEdge hfan v u
+        ((properties_of_setOfEdge_fan x V E v u hfan).mp hvu) i
+    have hwE : {v, (sigmaFan x V E v)^[i] u} ∈ E :=
+      (properties_of_setOfEdge_fan x V E v _ hfan).mpr hi_mem
+    refine ⟨(sigmaFan x V E v)^[i] u, hwE, ?_⟩
+    have hjne : i ≠ (setOfEdge v V E).ncard := Nat.ne_of_lt hi
+    exact wedge_fan2_equal_aff_gt_fan hfan hvu hjne
+
+/-- HOL topology.hl:1814 `UNION1_FAN`：UNIV = aff ∪ ⋃wDart ∪ ⋃aff_gt。
+由 UNION_FAN + eq_set_wdart_fan + eq_set_aff_gt 直接替换。 -/
+theorem UNION1_FAN (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
+    (Set.univ : Set V3) =
+      affineSpan ℝ {x, v} ∪
+      (⋃ w ∈ {w | {v, w} ∈ E},
+        wDartFan x V E (x, v, w, sigmaFan x V E v w)) ∪
+      (⋃ w ∈ {w | {v, w} ∈ E}, affGt {x, v} {w}) := by
+  have h := UNION_FAN hfan hvu
+  have hw := eq_set_wdart_fan hfan hvu
+  have ha := eq_set_aff_gt hfan hvu
+  rw [h, hw, ha]
+  -- The wedge3 and wedge2 unions are already in UNION_FAN form;
+  -- after rewriting, they become the wDart and aff_gt unions
+  simp only [Set.mem_union, Set.mem_iUnion, Set.mem_univ, iff_true]
+  intro y
+  rcases (Set.mem_union.mp ((show _ = _ from h ▸ rfl).symm ▸ Set.mem_univ y)) with
+    h | h | h
+  · exact Or.inl h
+  · right; left; exact h
+  · right; right; exact h
+
 end Kepler.Text
