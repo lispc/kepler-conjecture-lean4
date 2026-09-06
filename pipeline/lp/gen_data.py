@@ -146,7 +146,13 @@ def ampl_of_bb(bb) -> str:
 
     def wheretriplemod(x):
         # face index of the face whose rotation starts with the triple x[:3]
-        return rots.index([x[0], x[1], x[2]]) % len(fs)
+        # (lpproc.ml wheretriplemod compares the first 3 nodes of each
+        # rotation; needed for apex darts of faces longer than 3)
+        t3 = [x[0], x[1], x[2]]
+        for i, r in enumerate(rots):
+            if r[:3] == t3:
+                return i % len(fs)
+        raise ValueError(f"wheretriplemod: {t3} not found")
 
     def list_of(xs):
         return " ".join(str(i) for i in xs)
