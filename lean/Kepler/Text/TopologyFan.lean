@@ -2895,4 +2895,327 @@ theorem exists_ballsets_fan (hfan : FAN x V E) (hv : v ∉ ({v1, w1} : Set V3))
 def coneGeFan (x : V3) (s : Set V3) : Set V3 :=
   {y | ∃ a : ℝ, ∃ z : V3, 0 ≤ a ∧ z ∈ s ∧ y = a • (z - x) + x}
 
+/-! ## cone 区域：交为空与 rcone 控制（topology.hl:2704–3296）
+
+cone_ge_fan_inter_aff_ge_is_empty（核心：归一化点 y1 = ‖y-x‖⁻¹•(y-x)+x
+同时落在球面、aff_ge 与 ballsets 中，与 exists_ballsets_fan 矛盾）、
+rcone_subset_cone（rcone 条件经 Cauchy 控制归一化点距离）、
+rw_dart_fan 与 avoids 系列、CTVTAQA（FAN 对边集子集封闭）。 -/
+
+/-- HOL topology.hl:2704 `cone_ge_fan_inter_aff_ge_is_empty`：
+∃ h>0, cone(ballsets(A,h)∩S) ∩ aff_ge{x}{v1,w1} = {x}。 -/
+theorem cone_ge_fan_inter_aff_ge_is_empty (hfan : FAN x V E)
+    (hv : v ∉ ({v1, w1} : Set V3)) (he1 : {v1, w1} ∈ E) (he : {v, w} ∈ E) :
+    ∃ h : ℝ, 0 < h ∧
+      coneGeFan x (ballsetsFan (affGe {x} {v} ∩ ballnormFan x) h ∩ ballnormFan x) ∩
+        affGe {x} {v1, w1} = {x} := by
+  have hnc : ¬ Collinear3 x v w := fan_not_collinear hfan he
+  have hnc1 : ¬ Collinear3 x v1 w1 := fan_not_collinear hfan he1
+  have hvx : v ≠ x := fun he2 => hnc (collinear3_of_eq (v := x) (w := v) (w1 := w) he2)
+  have hdisj1 : Disjoint ({x} : Set V3) {v1, w1} := by
+    rw [Set.disjoint_singleton_left]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+    exact ⟨fun he2 => hnc1 (collinear3_of_eq (v := x) (w := v1) (w1 := w1) he2.symm),
+      fun he2 => hnc1 (collinear3_pair_left he2.symm)⟩
+  have hv1w1 : v1 ≠ w1 := fun he2 => hnc1
+    (collinear3_pair_right (v0 := x) (v1 := v1) (x := w1) he2.symm)
+  obtain ⟨h, hh0, hh⟩ := exists_ballsets_fan hfan hv he1 he
+  refine ⟨h, hh0, ?_⟩
+  ext y
+  constructor
+  · rintro ⟨⟨a, z, ha, hz, hy⟩, hyB⟩
+    by_cases hyx : y = x
+    · rw [Set.mem_singleton_iff]
+      exact hyx
+    · exfalso
+      -- 归一化点 y1 = ‖y-x‖⁻¹•(y-x)+x：球面 + aff_ge + ballsets 三属，矛盾
+      have hyne : ‖y - x‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hyx)
+      rw [mem_affGe_singleton_pair hdisj1 hv1w1] at hyB
+      obtain ⟨t1, t2, t3, ht2, ht3, hsum, hyaff⟩ := hyB
+      -- y - x = a • (z - x)，‖y - x‖ = a（z 在球面上），a > 0
+      have ha0 : a ≠ 0 := by
+        intro h0
+        apply hyx
+        rw [hy, h0]
+        module
+      have hapos : 0 < a := lt_of_le_of_ne ha (Ne.symm ha0)
+      have hnorm : ‖y - x‖ = a := by
+        have h1 : y - x = a • (z - x) := by rw [hy]; module
+        have hzn : ‖z - x‖ = 1 := by
+          have h2 : dist x z = 1 := hz.2
+          rw [dist_eq_norm] at h2
+          rw [← h2, norm_sub_rev]
+        rw [h1, norm_smul, Real.norm_of_nonneg (le_of_lt hapos), hzn, mul_one]
+      -- y1 = z
+      have hy1z : ‖y - x‖⁻¹ • (y - x) + x = z := by
+        rw [hnorm, show y - x = a • (z - x) from by rw [hy]; module,
+          inv_smul_smul₀ (ne_of_gt hapos)]
+        module
+      -- y1 ∈ ballnorm
+      have hy1norm : ‖y - x‖⁻¹ • (y - x) + x ∈ ballnormFan x := by
+        rw [ballnormFan]
+        simp only [Set.mem_setOf_eq]
+        rw [dist_eq_norm,
+          show x - (‖y - x‖⁻¹ • (y - x) + x) = -(‖y - x‖⁻¹ • (y - x)) from by module,
+          norm_neg, norm_smul, Real.norm_of_nonneg (inv_nonneg.mpr (norm_nonneg _)),
+          inv_mul_cancel₀ hyne]
+      -- y1 ∈ aff_ge {x} {v1, w1}（系数按 d = ‖y-x‖⁻¹ 缩放）
+      have hy1aff : ‖y - x‖⁻¹ • (y - x) + x ∈ affGe {x} {v1, w1} := by
+        rw [mem_affGe_singleton_pair hdisj1 hv1w1]
+        refine ⟨1 - ‖y - x‖⁻¹ + ‖y - x‖⁻¹ * t1, ‖y - x‖⁻¹ * t2, ‖y - x‖⁻¹ * t3,
+          mul_nonneg (inv_nonneg.mpr (norm_nonneg _)) ht2,
+          mul_nonneg (inv_nonneg.mpr (norm_nonneg _)) ht3,
+          by linear_combination ‖y - x‖⁻¹ * hsum, ?_⟩
+        rw [hyaff]
+        module
+      -- y1 ∈ ballsets A h（y1 = z）
+      have hy1A : ‖y - x‖⁻¹ • (y - x) + x ∈
+          ballsetsFan (affGe {x} {v} ∩ ballnormFan x) h := hy1z ▸ hz.1
+      have hy1mem : ‖y - x‖⁻¹ • (y - x) + x ∈
+          ballsetsFan (affGe {x} {v} ∩ ballnormFan x) h ∩
+            (affGe {x} {v1, w1} ∩ ballnormFan x) := ⟨hy1A, hy1aff, hy1norm⟩
+      exact (Set.mem_empty_iff_false _).mp (hh ▸ hy1mem)
+  · -- x ∈ LHS：a = 0，z0 = ‖v-x‖⁻¹•(v-x)+x ∈ ballsets A h ∩ S
+    intro hyx
+    rw [Set.mem_singleton_iff] at hyx
+    subst y
+    have hnv : ‖v - x‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hvx)
+    have hz0norm : ‖v - x‖⁻¹ • (v - x) + x ∈ ballnormFan x := by
+      rw [ballnormFan]
+      simp only [Set.mem_setOf_eq]
+      rw [dist_eq_norm,
+        show x - (‖v - x‖⁻¹ • (v - x) + x) = -(‖v - x‖⁻¹ • (v - x)) from by module,
+        norm_neg, norm_smul, Real.norm_of_nonneg (inv_nonneg.mpr (norm_nonneg _)),
+        inv_mul_cancel₀ hnv]
+    have hz0A : ‖v - x‖⁻¹ • (v - x) + x ∈ affGe {x} {v} ∩ ballnormFan x := by
+      refine ⟨?_, hz0norm⟩
+      rw [mem_affGe_singleton hvx.symm]
+      exact ⟨1 - ‖v - x‖⁻¹, ‖v - x‖⁻¹, inv_nonneg.mpr (norm_nonneg _), by ring,
+        by module⟩
+    refine ⟨⟨0, ‖v - x‖⁻¹ • (v - x) + x, le_refl 0, ⟨?_, hz0norm⟩, by module⟩, ?_⟩
+    · exact ⟨‖v - x‖⁻¹ • (v - x) + x, by rw [dist_self]; exact hh0, hz0A⟩
+    · -- x ∈ aff_ge {x} {v1, w1}：系数 (1, 0, 0)
+      rw [mem_affGe_singleton_pair hdisj1 hv1w1]
+      exact ⟨1, 0, 0, by norm_num, by norm_num, by norm_num, by module⟩
+
+/-- HOL topology.hl:2874 `subset_by_inequality_fan`：h < h1 时 cone 交
+随 ballsets 半径单调。 -/
+theorem subset_by_inequality_fan (hfan : FAN x V E) (hv : v ∉ ({v1, w1} : Set V3))
+    (he1 : {v1, w1} ∈ E) (he : {v, w} ∈ E) (h h1 : ℝ) (hh : h < h1) :
+    coneGeFan x (ballsetsFan (affGe {x} {v} ∩ ballnormFan x) h ∩ ballnormFan x) ∩
+      affGe {x} {v1, w1} ⊆
+    coneGeFan x (ballsetsFan (affGe {x} {v} ∩ ballnormFan x) h1 ∩ ballnormFan x) ∩
+      affGe {x} {v1, w1} := by
+  have hsub : ballsetsFan (affGe {x} {v} ∩ ballnormFan x) h ⊆
+      ballsetsFan (affGe {x} {v} ∩ ballnormFan x) h1 := by
+    intro y hy
+    obtain ⟨p, hpd, hp⟩ := hy
+    exact ⟨p, hpd.trans hh, hp⟩
+  intro y ⟨⟨a, z, ha, hz, hy⟩, hyB⟩
+  exact ⟨⟨a, z, ha, ⟨hsub hz.1, hz.2⟩, hy⟩, hyB⟩
+
+/-- HOL topology.hl:2900 `cone_ge_fan_inter_aff_ge_is_empty_fan`：
+∃ h, 1 > h > 0，cone 交 ⊆ {x}（h ≥ 1 时用 1/2 缩减）。 -/
+theorem cone_ge_fan_inter_aff_ge_is_empty_fan (hfan : FAN x V E)
+    (hv : v ∉ ({v1, w1} : Set V3)) (he1 : {v1, w1} ∈ E) (he : {v, w} ∈ E) :
+    ∃ h : ℝ, 1 > h ∧ h > 0 ∧
+      coneGeFan x (ballsetsFan (affGe {x} {v} ∩ ballnormFan x) h ∩ ballnormFan x) ∩
+        affGe {x} {v1, w1} ⊆ {x} := by
+  obtain ⟨h, hh0, hh⟩ := cone_ge_fan_inter_aff_ge_is_empty hfan hv he1 he
+  by_cases h1 : 1 ≤ h
+  · refine ⟨1 / 2, by norm_num, by norm_num, ?_⟩
+    exact (subset_by_inequality_fan hfan hv he1 he (1 / 2) h (by linarith)).trans
+      hh.subset
+  · push_neg at h1
+    exact ⟨h, h1, hh0, hh.subset⟩
+
+/-- HOL topology.hl:2936 `rcone_subset_cone`：h1 = (2 - h²)/2 时
+rcone x v h1 ⊆ cone(ballsets(A,h)∩S)（归一化点距离经点积条件控制）。 -/
+theorem rcone_subset_cone (hfan : FAN x V E) (he : {v, w} ∈ E) (h0 : 0 < h)
+    (h1 : h < 1) :
+    ∃ h1 : ℝ, 1 > h1 ∧ h1 > 0 ∧
+      rconeFan x v h1 ⊆
+        coneGeFan x
+          (ballsetsFan (affGe {x} {v} ∩ ballnormFan x) h ∩ ballnormFan x) := by
+  have hnc : ¬ Collinear3 x v w := fan_not_collinear hfan he
+  have hvx : v ≠ x := fun he2 => hnc (collinear3_of_eq (v := x) (w := v) (w1 := w) he2)
+  have hnv : ‖v - x‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hvx)
+  have hnvp : 0 < ‖v - x‖ := norm_pos_iff.mpr (sub_ne_zero.mpr hvx)
+  have hsq0 : 0 < h ^ 2 := sq_pos_of_pos h0
+  have hsq1 : h ^ 2 < 1 := by nlinarith [h0, h1, mul_lt_mul_of_pos_left h1 h0]
+  refine ⟨(2 - h ^ 2) / 2, by linarith, by linarith, ?_⟩
+  intro y hy
+  rw [rconeFan] at hy
+  simp only [Set.mem_setOf_eq] at hy
+  by_cases hyx : y = x
+  · -- y = x：rcone 条件给出 0 > 0，矛盾
+    subst hyx
+    have hz : (y - y : V3) ⬝ᵥ (v - y) = 0 := by
+      rw [sub_self]
+      exact zero_dot _
+    rw [hz] at hy
+    simp at hy
+  · have hyne : ‖y - x‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hyx)
+    have hnyp : 0 < ‖y - x‖ := norm_pos_iff.mpr (sub_ne_zero.mpr hyx)
+    refine ⟨‖y - x‖, ‖y - x‖⁻¹ • (y - x) + x, norm_nonneg _, ⟨?_, ?_⟩, ?_⟩
+    · -- z ∈ ballsets A h：证人 z1 = ‖v-x‖⁻¹•(v-x)+x，dist z1 z < h
+      refine ⟨‖v - x‖⁻¹ • (v - x) + x, ?_, ⟨?_, ?_⟩⟩
+      · -- dist z1 z < h：平方比较（点积条件控制 ⟪v1', z'⟫ > (2-h²)/2）
+        have hz1z : (‖v - x‖⁻¹ • (v - x) + x) - (‖y - x‖⁻¹ • (y - x) + x) =
+            ‖v - x‖⁻¹ • (v - x) - ‖y - x‖⁻¹ • (y - x) := by module
+        rw [dist_eq_norm, hz1z]
+        have hv1 : inner ℝ (‖v - x‖⁻¹ • (v - x)) (‖v - x‖⁻¹ • (v - x)) = 1 := by
+          rw [real_inner_smul_left, real_inner_smul_right, real_inner_self_eq_norm_sq]
+          field_simp [hnv]
+        have hz1 : inner ℝ (‖y - x‖⁻¹ • (y - x)) (‖y - x‖⁻¹ • (y - x)) = 1 := by
+          rw [real_inner_smul_left, real_inner_smul_right, real_inner_self_eq_norm_sq]
+          field_simp [hyne]
+        have hD : (v - x) ⬝ᵥ (y - x) > ‖y - x‖ * ‖v - x‖ * ((2 - h ^ 2) / 2) := by
+          rw [dist_eq_norm, dist_eq_norm] at hy
+          simp only [coe_sub] at hy ⊢
+          rw [dotProduct_comm (((y : V3) : Fin 3 → ℝ) - ((x : V3) : Fin 3 → ℝ))
+            (((v : V3) : Fin 3 → ℝ) - ((x : V3) : Fin 3 → ℝ))] at hy
+          exact hy
+        have hdot : (2 - h ^ 2) / 2 <
+            inner ℝ (‖v - x‖⁻¹ • (v - x)) (‖y - x‖⁻¹ • (y - x)) := by
+          rw [real_inner_smul_left, real_inner_smul_right, inner_eq_dot]
+          calc (2 - h ^ 2) / 2
+              = ‖v - x‖⁻¹ * (‖y - x‖⁻¹ * (‖y - x‖ * ‖v - x‖ * ((2 - h ^ 2) / 2))) := by
+                field_simp [hnv, hyne]
+            _ < ‖v - x‖⁻¹ * (‖y - x‖⁻¹ * ((v - x) ⬝ᵥ (y - x))) :=
+                mul_lt_mul_of_pos_left
+                  (mul_lt_mul_of_pos_left hD (inv_pos.mpr hnyp)) (inv_pos.mpr hnvp)
+        have hsq : ‖‖v - x‖⁻¹ • (v - x) - ‖y - x‖⁻¹ • (y - x)‖ ^ 2 < h ^ 2 := by
+          rw [← real_inner_self_eq_norm_sq, inner_sub_left, inner_sub_right,
+            inner_sub_right, hv1, hz1]
+          nlinarith [hdot, real_inner_comm (‖y - x‖⁻¹ • (y - x)) (‖v - x‖⁻¹ • (v - x))]
+        exact (pow_lt_pow_iff_left₀ (norm_nonneg _) (le_of_lt h0)
+          (by norm_num : (2 : ℕ) ≠ 0)).mp hsq
+      · -- z1 ∈ aff_ge {x} {v}
+        rw [mem_affGe_singleton hvx.symm]
+        exact ⟨1 - ‖v - x‖⁻¹, ‖v - x‖⁻¹, inv_nonneg.mpr (norm_nonneg _), by ring,
+          by module⟩
+      · -- z1 ∈ ballnormFan x
+        rw [ballnormFan]
+        simp only [Set.mem_setOf_eq]
+        rw [dist_eq_norm,
+          show x - (‖v - x‖⁻¹ • (v - x) + x) = -(‖v - x‖⁻¹ • (v - x)) from by module,
+          norm_neg, norm_smul, Real.norm_of_nonneg (inv_nonneg.mpr (norm_nonneg _)),
+          inv_mul_cancel₀ hnv]
+    · -- z ∈ ballnormFan x
+      rw [ballnormFan]
+      simp only [Set.mem_setOf_eq]
+      rw [dist_eq_norm,
+        show x - (‖y - x‖⁻¹ • (y - x) + x) = -(‖y - x‖⁻¹ • (y - x)) from by module,
+        norm_neg, norm_smul, Real.norm_of_nonneg (inv_nonneg.mpr (norm_nonneg _)),
+        inv_mul_cancel₀ hyne]
+    · -- y = ‖y-x‖ • (z - x) + x
+      rw [show ‖y - x‖⁻¹ • (y - x) + x - x = ‖y - x‖⁻¹ • (y - x) from by module]
+      rw [smul_inv_smul₀ hyne]
+      module
+
+/-- HOL topology.hl:3110 `origin_not_in_rcone_fan`。 -/
+theorem origin_not_in_rcone_fan (x v : V3) (h : ℝ) : x ∉ rconeFan x v h := by
+  intro hy
+  rw [rconeFan] at hy
+  simp only [Set.mem_setOf_eq] at hy
+  have hz : (x - x : V3) ⬝ᵥ (v - x) = 0 := by
+    rw [sub_self]
+    exact zero_dot _
+  rw [hz] at hy
+  simp at hy
+
+/-- HOL topology.hl:3118 `inter_is_empty`：∃ h1, 1 > h1 > 0，
+rcone x v h1 ∩ aff_ge {x} {v1,w1} = ∅。 -/
+theorem inter_is_empty (hfan : FAN x V E) (hv : v ∉ ({v1, w1} : Set V3))
+    (he1 : {v1, w1} ∈ E) (he : {v, w} ∈ E) :
+    ∃ h1 : ℝ, 1 > h1 ∧ h1 > 0 ∧ rconeFan x v h1 ∩ affGe {x} {v1, w1} = ∅ := by
+  obtain ⟨h, hh1, hh0, hh⟩ := cone_ge_fan_inter_aff_ge_is_empty_fan hfan hv he1 he
+  obtain ⟨h1, hh1', hh0', hsub⟩ := rcone_subset_cone hfan he hh0 hh1
+  refine ⟨h1, hh1', hh0', ?_⟩
+  have hsub2 : rconeFan x v h1 ∩ affGe {x} {v1, w1} ⊆ {x} :=
+    (Set.inter_subset_inter_left _ hsub).trans hh
+  ext y
+  simp only [Set.mem_empty_iff_false, iff_false]
+  intro hy
+  have hyx : y = x := Set.mem_singleton_iff.mp (hsub2 hy)
+  exact origin_not_in_rcone_fan x v h1 (hyx ▸ hy.1)
+
+/-- HOL topology.hl:3174 `rw_dart_fan`：w_dart ∩ rcone。 -/
+def rwDartFan (x : V3) (V : Set V3) (E : Set (Set V3))
+    (p : V3 × V3 × V3 × V3) (h : ℝ) : Set V3 :=
+  wDartFan x V E p ∩ rconeFan x p.2.1 h
+
+/-- HOL topology.hl:3178 `avoids_fan`：v ∉ {v1,w1} 时 rw_dart 避开
+aff_ge {x} {v1,w1}（inter_is_empty 的推論）。 -/
+theorem avoids_fan (hfan : FAN x V E) (hv : v ∉ ({v1, w1} : Set V3))
+    (he1 : {v1, w1} ∈ E) (he : {v, w} ∈ E) (w2 : V3) :
+    ∃ h : ℝ, 1 > h ∧ h > 0 ∧
+      rwDartFan x V E (x, v, w, w2) h ∩ affGe {x} {v1, w1} = ∅ := by
+  obtain ⟨h1, hh1, hh0, hh⟩ := inter_is_empty hfan hv he1 he
+  exact ⟨h1, hh1, hh0, by
+    rw [rwDartFan]
+    show wDartFan x V E (x, v, w, w2) ∩ rconeFan x v h1 ∩ affGe {x} {v1, w1} = ∅
+    rw [Set.inter_assoc, hh, Set.inter_empty]⟩
+
+/-- HOL topology.hl:3197 `avoids1_fan`：同顶点情形（IBZWFFH 的推论）。 -/
+theorem avoids1_fan (hfan : FAN x V E) (he : {v, w} ∈ E) (he1 : {v, w1} ∈ E) :
+    ∃ h : ℝ, 1 > h ∧ h > 0 ∧
+      rwDartFan x V E (x, v, w, sigmaFan x V E v w) h ∩ affGe {x} {v, w1} = ∅ := by
+  refine ⟨1 / 2, by norm_num, by norm_num, ?_⟩
+  rw [rwDartFan]
+  exact Set.eq_empty_of_subset_empty
+    ((Set.inter_subset_inter Set.inter_subset_left (Set.Subset.refl _)).trans
+      (IBZWFFH hfan he he1).subset)
+
+/-- HOL topology.hl:3214 `finish_avoids_fan`：v ∈ {v1,w1} 与否统一。 -/
+theorem finish_avoids_fan (hfan : FAN x V E) (he : {v, w} ∈ E) (he1 : {v1, w1} ∈ E) :
+    ∃ h : ℝ, 1 > h ∧ h > 0 ∧
+      rwDartFan x V E (x, v, w, sigmaFan x V E v w) h ∩ affGe {x} {v1, w1} = ∅ := by
+  by_cases hv : v ∈ ({v1, w1} : Set V3)
+  · simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hv
+    rcases hv with hveq | hveq
+    · -- v = v1：消去 v1
+      subst hveq
+      exact avoids1_fan hfan he he1
+    · -- v = w1：消去 w1，换序后用 avoids1_fan
+      subst hveq
+      have he1' : ({v, v1} : Set V3) ∈ E := Set.pair_comm v1 v ▸ he1
+      obtain ⟨h, hh1, hh0, hh⟩ := avoids1_fan hfan he he1'
+      exact ⟨h, hh1, hh0, by rw [Set.pair_comm v1 v]; exact hh⟩
+  · exact avoids_fan hfan hv he1 he (sigmaFan x V E v w)
+
+/-- HOL topology.hl:3253 `continuous_set_fan`：rw_dart 随半径单调
+（h1 ≤ h 时缩小）。 -/
+theorem continuous_set_fan (hfan : FAN x V E) (he : {v, w} ∈ E) (h h1 : ℝ)
+    (hle : h1 ≤ h) :
+    rwDartFan x V E (x, v, w, sigmaFan x V E v w) h ⊆
+      rwDartFan x V E (x, v, w, sigmaFan x V E v w) h1 := by
+  intro y hy
+  obtain ⟨hy1, hy2⟩ := hy
+  refine ⟨hy1, ?_⟩
+  rw [rconeFan] at hy2 ⊢
+  simp only [Set.mem_setOf_eq] at hy2 ⊢
+  have hmul : dist y x * dist v x * h1 ≤ dist y x * dist v x * h :=
+    mul_le_mul_of_nonneg_left hle (mul_nonneg dist_nonneg dist_nonneg)
+  linarith
+
+/-- HOL topology.hl:3282 `CTVTAQA`：FAN 对边集子集封闭。 -/
+theorem CTVTAQA (hfan : FAN x V E) (hE1 : E1 ⊆ E) : FAN x V E1 := by
+  obtain ⟨hsub, hgraph, hfan1, hfan2, hfan6, hfan7⟩ := hfan
+  refine ⟨(Set.sUnion_subset_sUnion hE1).trans hsub, fun e he => hgraph e (hE1 he),
+    hfan1, hfan2, fun e he => hfan6 e (hE1 he), fun e1 he1 e2 he2 =>
+      hfan7 e1 (he1.elim (fun h => Or.inl (hE1 h)) Or.inr) e2
+        (he2.elim (fun h => Or.inl (hE1 h)) Or.inr)⟩
+
+/-- HOL topology.hl:3291 `expand_edge_graph_fan`：边 = 二元素集。 -/
+theorem expand_edge_graph_fan (hfan : FAN x V E) (he : e ∈ E) :
+    ∃ v w : V3, e = {v, w} := by
+  obtain ⟨hfin, hcard⟩ := hfan.2.1 e he
+  obtain ⟨v, w, hvw, hfin'⟩ := Finset.card_eq_two.mp hcard
+  refine ⟨v, w, ?_⟩
+  have h2 : e = hfin.toFinset := (Set.Finite.coe_toFinset hfin).symm
+  rw [h2, hfin']
+  simp
+
 end Kepler.Text
