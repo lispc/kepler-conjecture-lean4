@@ -3218,4 +3218,242 @@ theorem expand_edge_graph_fan (hfan : FAN x V E) (he : e ∈ E) :
   rw [h2, hfin']
   simp
 
+/-! ## finish_avoids1 与 rw_dart_avoids（topology.hl:3396–3578）
+
+finish_avoids1_fan：rw_dart 避开 E' 全体边的 aff_ge 并（对 E'.toFinset
+作 Finset.induction，插入步用 finish_avoids_fan + continuous_set_fan 取
+max）。rw_dart_avoids_fan：rw_dart ⊆ yfan（= UNIV \ xfan）。 -/
+
+/-- HOL topology.hl:3396 `finish_avoids1_fan`。 -/
+theorem finish_avoids1_fan (hfan : FAN x V E) (he : {v, w} ∈ E)
+    (hE' : E' ⊆ E) :
+    ∃ h : ℝ, 1 > h ∧ h > 0 ∧
+      rwDartFan x V E (x, v, w, sigmaFan x V E v w) h ∩
+        {y | ∃ e ∈ E', y ∈ affGe {x} e} = ∅ := by
+  have hE'fin : E'.Finite := (setEdgesFiniteFan hfan).subset hE'
+  -- 对边集作 Finset 归纳（HOL 的 CARD 归纳的 insert 形）
+  have key : ∀ s : Finset (Set V3), (↑s : Set (Set V3)) ⊆ E →
+      ∃ h : ℝ, 1 > h ∧ h > 0 ∧
+        rwDartFan x V E (x, v, w, sigmaFan x V E v w) h ∩
+          {y | ∃ e ∈ (↑s : Set (Set V3)), y ∈ affGe {x} e} = ∅ := by
+    intro s
+    induction s using Finset.induction with
+    | empty =>
+      intro hsub
+      refine ⟨1 / 2, by norm_num, by norm_num, ?_⟩
+      rw [show {y : V3 | ∃ e ∈ (↑(∅ : Finset (Set V3)) : Set (Set V3)),
+          y ∈ affGe {x} e} = ∅ from by
+        ext y
+        simp only [Finset.coe_empty, Set.mem_setOf_eq, Set.mem_empty_iff_false,
+          iff_false]
+        rintro ⟨e, he, -⟩
+        exact he]
+      exact Set.inter_empty _
+    | @insert e t ht ih =>
+      intro hsub
+      -- e ∈ E 且 t ⊆ E
+      have heE : e ∈ E := hsub (Finset.mem_coe.mpr (Finset.mem_insert_self e t))
+      have htE : (↑t : Set (Set V3)) ⊆ E := fun e2 he2 =>
+        hsub (Finset.mem_coe.mpr (Finset.mem_insert_of_mem (Finset.mem_coe.mp he2)))
+      -- 单边 e = {v', w'} 由 finish_avoids_fan，t 由 IH；取 h1 = max
+      obtain ⟨v', w', he'⟩ := expand_edge_graph_fan hfan heE
+      obtain ⟨h', hh1', hh0', hh'⟩ := finish_avoids_fan hfan he (he' ▸ heE)
+      obtain ⟨ht', hht1, hht0, hht⟩ := ih htE
+      refine ⟨max h' ht', by simp [hh1', hht1], by simp [hh0', hht0], ?_⟩
+      -- 目标集合分解为 affGe {x} e ∪ （t 上的并）
+      have hunion : {y : V3 | ∃ e2 ∈ (↑(insert e t) : Set (Set V3)),
+          y ∈ affGe {x} e2} =
+          affGe {x} e ∪ {y | ∃ e2 ∈ (↑t : Set (Set V3)), y ∈ affGe {x} e2} := by
+        ext y
+        simp only [Finset.coe_insert, Set.mem_insert_iff, Set.mem_setOf_eq,
+          Set.mem_union]
+        constructor
+        · rintro ⟨e2, rfl | he2t, hy⟩
+          · exact Or.inl hy
+          · exact Or.inr ⟨e2, he2t, hy⟩
+        · rintro (hy | ⟨e2, he2t, hy⟩)
+          · exact ⟨e, Or.inl rfl, hy⟩
+          · exact ⟨e2, Or.inr he2t, hy⟩
+      rw [hunion, Set.inter_union_distrib_left]
+      have hdart1 : rwDartFan x V E (x, v, w, sigmaFan x V E v w) (max h' ht') ∩
+          affGe {x} e = ∅ := by
+        rw [he']
+        exact Set.eq_empty_of_subset_empty
+          ((Set.inter_subset_inter_left _
+            (continuous_set_fan hfan he (max h' ht') h' (le_max_left _ _))).trans
+            hh'.subset)
+      have hdartt : rwDartFan x V E (x, v, w, sigmaFan x V E v w) (max h' ht') ∩
+          {y | ∃ e2 ∈ (↑t : Set (Set V3)), y ∈ affGe {x} e2} = ∅ := by
+        exact Set.eq_empty_of_subset_empty
+          ((Set.inter_subset_inter_left _
+            (continuous_set_fan hfan he (max h' ht') ht' (le_max_right _ _))).trans
+            hht.subset)
+      rw [hdart1, hdartt, Set.union_empty]
+  obtain ⟨h, hh1, hh0, hh⟩ := key hE'fin.toFinset (by
+    intro e he2
+    exact hE' (hE'fin.mem_toFinset.mp he2))
+  refine ⟨h, hh1, hh0, ?_⟩
+  rw [show {y : V3 | ∃ e ∈ E', y ∈ affGe {x} e} =
+      {y : V3 | ∃ e ∈ (↑hE'fin.toFinset : Set (Set V3)), y ∈ affGe {x} e} from by
+    ext y
+    simp only [Set.mem_setOf_eq, Finset.mem_coe, Set.Finite.mem_toFinset]]
+  exact hh
+
+/-- HOL topology.hl:3553 `rw_dart_avoids_fan`：rw_dart ⊆ yfan。 -/
+theorem rw_dart_avoids_fan (hfan : FAN x V E) (he : {v, w} ∈ E) :
+    ∃ h : ℝ, 1 > h ∧ h > 0 ∧
+      rwDartFan x V E (x, v, w, sigmaFan x V E v w) h ⊆ yfan x V E := by
+  obtain ⟨h, hh1, hh0, hh⟩ := finish_avoids1_fan hfan he (Set.Subset.refl E)
+  refine ⟨h, hh1, hh0, ?_⟩
+  rw [yfan]
+  exact Set.subset_diff.mpr ⟨Set.subset_univ _,
+    Set.disjoint_iff_inter_eq_empty.mpr hh⟩
+
+/-! ## r_fan 坐标半空间（topology.hl:3580–3650）
+
+r_fan 及六个半空间定义、r_fan_is_inter_halfspace、凸性与开性
+（CONVEX/OPEN_HALFSPACE_COMPONENT_LT/GT 由分量映射的连续性 +
+直接组合论证给出）、r_is_connected_fan（CONVEX_CONNECTED）。 -/
+
+/-- HOL topology.hl:3580 `r_fan`（HOL `y$1` 1-指标 ↔ `y 0` Fin 3 0-指标）。 -/
+def rFan (a b c : ℝ) : Set V3 :=
+  {y | y (0 : Fin 3) > 0 ∧ y (1 : Fin 3) > a ∧ y (1 : Fin 3) < b ∧
+    y (2 : Fin 3) > 0 ∧ y (2 : Fin 3) < c}
+
+/-- HOL topology.hl:3584 `r1_le_fan`。 -/
+def r1LeFan (a : ℝ) : Set V3 := {y | y (0 : Fin 3) > a}
+
+/-- HOL topology.hl:3587 `r2_le_fan`。 -/
+def r2LeFan (a : ℝ) : Set V3 := {y | y (1 : Fin 3) > a}
+
+/-- HOL topology.hl:3591 `r3_le_fan`。 -/
+def r3LeFan (a : ℝ) : Set V3 := {y | y (2 : Fin 3) > a}
+
+/-- HOL topology.hl:3595 `r1_ge_fan`。 -/
+def r1GeFan (a : ℝ) : Set V3 := {y | y (0 : Fin 3) < a}
+
+/-- HOL topology.hl:3598 `r2_ge_fan`。 -/
+def r2GeFan (a : ℝ) : Set V3 := {y | y (1 : Fin 3) < a}
+
+/-- HOL topology.hl:3600 `r3_ge_fan`。 -/
+def r3GeFan (a : ℝ) : Set V3 := {y | y (2 : Fin 3) < a}
+
+/-- HOL topology.hl:3605 `r_fan_is_inter_halfspace`。 -/
+theorem r_fan_is_inter_halfspace (a b c : ℝ) :
+    rFan a b c = r1LeFan 0 ∩ r2LeFan a ∩ r2GeFan b ∩ r3LeFan 0 ∩ r3GeFan c := by
+  ext y
+  simp only [rFan, r1LeFan, r2LeFan, r2GeFan, r3LeFan, r3GeFan, Set.mem_inter_iff,
+    Set.mem_setOf_eq]
+  tauto
+
+/-- 分量半空间的凸性与开性（HOL CONVEX/OPEN_HALFSPACE_COMPONENT_LT 的
+角色：{y | y i < a}）。 -/
+private theorem convex_isOpen_component_lt (i : Fin 3) (a : ℝ) :
+    Convex ℝ {y : V3 | y i < a} ∧ IsOpen {y : V3 | y i < a} := by
+  refine ⟨?_, ?_⟩
+  · intro y hy z hz p q hp hq hpq
+    simp only [Set.mem_setOf_eq] at hy hz ⊢
+    have h1 : ((p • y + q • z : V3) i) = p * (y i) + q * (z i) := by
+      simp [PiLp.smul_apply, PiLp.add_apply, smul_eq_mul]
+    rw [h1]
+    have hpa : p * (y i) ≤ p * a := mul_le_mul_of_nonneg_left hy.le hp
+    have hqa : q * (z i) ≤ q * a := mul_le_mul_of_nonneg_left hz.le hq
+    have hsum : p * a + q * a = a := by rw [← add_mul, hpq, one_mul]
+    by_cases hp0 : p = 0
+    · subst hp0
+      have hq1 : q = 1 := by linarith
+      subst hq1
+      linarith [hz]
+    · have hp' : 0 < p := lt_of_le_of_ne hp (Ne.symm hp0)
+      have hpa' : p * (y i) < p * a := mul_lt_mul_of_pos_left hy hp'
+      linarith [hpa', hqa, hsum]
+  · have hcont : Continuous (fun y : V3 => y.ofLp i) :=
+      PiLp.continuous_apply (p := 2) (β := fun _ : Fin 3 => ℝ) i
+    exact isOpen_Iio.preimage hcont
+
+/-- 分量半空间的凸性与开性（HOL CONVEX/OPEN_HALFSPACE_COMPONENT_GT 的
+角色：{y | y i > a}）。 -/
+private theorem convex_isOpen_component_gt (i : Fin 3) (a : ℝ) :
+    Convex ℝ {y : V3 | y i > a} ∧ IsOpen {y : V3 | y i > a} := by
+  refine ⟨?_, ?_⟩
+  · intro y hy z hz p q hp hq hpq
+    simp only [Set.mem_setOf_eq] at hy hz ⊢
+    have h1 : ((p • y + q • z : V3) i) = p * (y i) + q * (z i) := by
+      simp [PiLp.smul_apply, PiLp.add_apply, smul_eq_mul]
+    rw [h1]
+    have hpa : p * (y i) ≥ p * a := mul_le_mul_of_nonneg_left hy.le hp
+    have hqa : q * (z i) ≥ q * a := mul_le_mul_of_nonneg_left hz.le hq
+    have hsum : p * a + q * a = a := by rw [← add_mul, hpq, one_mul]
+    by_cases hp0 : p = 0
+    · subst hp0
+      have hq1 : q = 1 := by linarith
+      subst hq1
+      linarith [hz]
+    · have hp' : 0 < p := lt_of_le_of_ne hp (Ne.symm hp0)
+      have hpa' : p * (y i) > p * a := mul_lt_mul_of_pos_left hy hp'
+      linarith [hpa', hqa, hsum]
+  · have hcont : Continuous (fun y : V3 => y.ofLp i) :=
+      PiLp.continuous_apply (p := 2) (β := fun _ : Fin 3 => ℝ) i
+    exact isOpen_Ioi.preimage hcont
+
+/-- HOL topology.hl:3613 `r1_ge_is_convex_fan`。 -/
+theorem r1_ge_is_convex_fan (a : ℝ) :
+    Convex ℝ (r1GeFan a) ∧ IsOpen (r1GeFan a) :=
+  convex_isOpen_component_lt 0 a
+
+/-- HOL topology.hl:3616 `r2_ge_is_convex_fan`。 -/
+theorem r2_ge_is_convex_fan (a : ℝ) :
+    Convex ℝ (r2GeFan a) ∧ IsOpen (r2GeFan a) :=
+  convex_isOpen_component_lt 1 a
+
+/-- HOL topology.hl:3619 `r3_ge_is_convex_fan`。 -/
+theorem r3_ge_is_convex_fan (a : ℝ) :
+    Convex ℝ (r3GeFan a) ∧ IsOpen (r3GeFan a) :=
+  convex_isOpen_component_lt 2 a
+
+/-- HOL topology.hl:3622 `r1_le_is_convex_fan`。 -/
+theorem r1_le_is_convex_fan (a : ℝ) :
+    Convex ℝ (r1LeFan a) ∧ IsOpen (r1LeFan a) :=
+  convex_isOpen_component_gt 0 a
+
+/-- HOL topology.hl:3625 `r2_le_is_convex_fan`。 -/
+theorem r2_le_is_convex_fan (a : ℝ) :
+    Convex ℝ (r2LeFan a) ∧ IsOpen (r2LeFan a) :=
+  convex_isOpen_component_gt 1 a
+
+/-- HOL topology.hl:3628 `r3_le_is_convex_fan`。 -/
+theorem r3_le_is_convex_fan (a : ℝ) :
+    Convex ℝ (r3LeFan a) ∧ IsOpen (r3LeFan a) :=
+  convex_isOpen_component_gt 2 a
+
+/-- HOL topology.hl:3631 `r_is_connected_fan`。注意：HOL `connected` 在
+空集上为真，Mathlib `IsConnected` 要求 Nonempty（rFan 在 a ≥ b 或 c ≤ 0
+时为空）——故此处用无 Nonempty 前提的 `IsPreconnected`（HOL
+`CONVEX_CONNECTED` ↔ Mathlib `Convex.isPreconnected`）。 -/
+theorem r_is_connected_fan (a b c : ℝ) :
+    IsPreconnected (rFan a b c) ∧ Convex ℝ (rFan a b c) ∧ IsOpen (rFan a b c) := by
+  have hconv : Convex ℝ (rFan a b c) := by
+    rw [r_fan_is_inter_halfspace]
+    exact ((((convex_isOpen_component_gt 0 0).1.inter
+      (convex_isOpen_component_gt 1 a).1).inter
+      (convex_isOpen_component_lt 1 b).1).inter
+      (convex_isOpen_component_gt 2 0).1).inter
+      (convex_isOpen_component_lt 2 c).1
+  exact ⟨hconv.isPreconnected, hconv, by
+    rw [r_fan_is_inter_halfspace]
+    exact ((((convex_isOpen_component_gt 0 0).2.inter
+      (convex_isOpen_component_gt 1 a).2).inter
+      (convex_isOpen_component_lt 1 b).2).inter
+      (convex_isOpen_component_gt 2 0).2).inter
+      (convex_isOpen_component_lt 2 c).2⟩
+
+/-- HOL topology.hl:3652 `change_spherical_coordinate_fan`（HOL `t$1`=r、
+`t$2`=θ、`t$3`=φ，1-指标 ↔ Fin 3 的 0/1/2）。 -/
+noncomputable def changeSphericalCoordinateFan (x v u : V3) : V3 → V3 :=
+  fun t => x + (t (0 : Fin 3) * Real.cos (t (1 : Fin 3)) * Real.sin (t (2 : Fin 3))) •
+      e1Fan x v u +
+    (t (0 : Fin 3) * Real.sin (t (1 : Fin 3)) * Real.sin (t (2 : Fin 3))) •
+      e2Fan x v u +
+    (t (0 : Fin 3) * Real.cos (t (2 : Fin 3))) • e3Fan x v u
+
 end Kepler.Text
