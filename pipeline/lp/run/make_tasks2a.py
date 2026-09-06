@@ -57,9 +57,8 @@ def get_values(key, xs):
     return [v for k, v in xs if k == key]
 
 
-# modify_bb field keys -> bb dict keys (face/dart fields only; the "jq"
-# jump-queue is a no-op for the fields the easy switches use, and easy
-# switches never pass vfields, so node_* lists stay as they are).
+# modify_bb field keys -> bb dict keys.  The "jq" jump-queue is a no-op for
+# the fields the switches use (no "jq" keys ever passed).
 _FIELD_MAP = {
     "bt": "std3_big",
     "st": "std3_small",
@@ -74,10 +73,20 @@ _FIELD_MAP = {
     "e_200_225": "d_edge_200_225",
 }
 
+# vfield keys (node bound lists; used by the hard-cases node numerics and
+# switch_node) -> bb dict keys.
+_VFIELD_MAP = {
+    "218_252": "node_218_252",
+    "236_252": "node_236_252",
+    "218_236": "node_218_236",
+    "200_218": "node_200_218",
+}
 
-def modify_bb(bb, drop1std, fields):
-    """lpproc.ml:219 modify_bb, specialized to drop1std/fields as used by
-    switch3..6 (no "jq" fields, no vfields).  add key xs t = nub(vals @ t)."""
+
+def modify_bb(bb, drop1std, fields, vfields=()):
+    """lpproc.ml:219 modify_bb, specialized to drop1std/fields/vfields as used
+    by switch3..6, switch_std3/edge/node and the hard numerics (no "jq"
+    fields).  add key xs t = nub(vals @ t)."""
     out = dict(bb)
     std = bb["std_faces_not_super"]
     if drop1std:
@@ -85,6 +94,10 @@ def modify_bb(bb, drop1std, fields):
     # else: jump_queue "jq" [] std == nub(std) == std (faces are distinct)
     for key, dest in _FIELD_MAP.items():
         vals = get_values(key, fields)
+        if vals:
+            out[dest] = gen_data.nub(vals + bb[dest])
+    for key, dest in _VFIELD_MAP.items():
+        vals = get_values(key, vfields)
         if vals:
             out[dest] = gen_data.nub(vals + bb[dest])
     return out
