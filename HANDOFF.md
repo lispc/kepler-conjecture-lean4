@@ -82,19 +82,19 @@ PLAN.md 与各 README）。
   - 驱动：`/dev/shm/lprun/driver.py`，独立 LEAN_PATH 输出树（不碰仓库
     .lake），44 worker（实测 ~10G RSS/worker），工件即删，日志
     `results.jsonl` 每 5 分钟备份 `/home/scroll/lprun-logs/`。
-  - **批次 1（单终端 19,237）已完成**：19,235 pass / **2 fail**
-    （`206218905887_t0`、`103566096247_t0`——SoPlex 精确模式 ~30s 放弃，
-    非内核拒绝；处置通道：glpsol --exact / SoPlex 浮点 warm-start /
-    QSopt_ex / 系数缩放，LP 已在 `/dev/shm/retry/` 重新生成）。
-  - **批次 2a（easy 多终端 4,403）**：曾因 driver.py:88
-    `task["hypermap_string"]` 直取撞上 batch2a 任务的 `data_text` schema
-    而全灭（4,403 × KeyError，2026-09-03）；已修为 `.get(...) or ""`
-    （generate() 本就支持 data_text/slack_infeasible 参数），2026-09-06
-    以 44 workers 重启。注：batch2a 中 41 个任务带 `infeasible` 标记，
-    走 slack 列证不可行（terminal_bound=0）。
+  - **easy 全部闭合（2026-09-06，23,640/23,640 终端内核验证通过）**：
+    批次 1（root LP 19,237）+ 批次 2a（分支终端 4,403）。其中 8 个
+    SoPlex 精确模式解不动（2 个 bound-12 + 6 个 slack infeasible），
+    全部走 **`pipeline/lp/run/glpsol_dual.py`** 通道闭合：glpsol --exact
+    基状态 → Fraction 稀疏高斯消元精确解对偶（Markowitz 主元，零浮点）
+    → 整数化 → 内核 decide（49–214s/个）。数值自洽：bᵀY 与 glpsol
+    目标值差 ≤ 1.4e-9（打印舍入内）。账目落 `results.jsonl`
+    （备份 `~/lprun-logs/`，后写覆盖语义，8 个旧 130 记录已被 pass 覆盖）。
   - **hard 19,438 挂起**：hard_1 ~19% 终端 LP 值偏差 ±0.003–0.03 未定位
     根因（已排除端口 bug/打印精度/序约定；fail-loud 断言在位，Lean 复检
-    保证跑过的必真）；修复 branch.py 重放后再排程。
+    保证跑过的必真）；修复 branch.py 重放后再排程。注意：原 branch.py
+    随 tmpfs 丢失，但 `make_tasks2a.py`（已入 git）的分裂树重放框架
+    可复用重建。
   - 进程/磁盘审计（2026-08-29）：无游离过期子代理进程；`/dev/shm/lprun`
     稳定 ~1.5G（work/ 即清即删）；`/tmp/opencode` 陈旧探针已清。
 - formal_lp 侦察结论：19715 图 = 19700 easy + 15 hard；hard_7 单图
