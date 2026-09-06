@@ -1810,9 +1810,53 @@ theorem disjoint_fan1 (hfan : FAN x V E) (hvw : {v, w} ∈ E) :
         exact h1 h2
       · rw [if_neg hsoe0, Set.empty_inter]
 
-/-- HOL topology.hl:1853 `disjoint_set_fan`：w_dart ∩ aff_gt = ∅
-（wedge3 与 wedge2 不交的推论：azim 区间严格分离）。 -/
-theorem disjoint_set_fan (hfan : FAN x V E) (hvw : {v, w} ∈ E)
+/-- aff_gt ⊆ aff_ge：同一组系数，严格正 ⟹ 非负。 -/
+private theorem affGt_subset_affGe (s t : Set V3) : affGt s t ⊆ affGe s t := by
+  rintro y ⟨f, hfin, hsum, hpos, hone⟩
+  exact ⟨f, hfin, hsum, fun w hw => le_of_lt (hpos w hw), hone⟩
+
+/-- `disjoint_set_fan` 的 w = w1 自交情形：w_dart(x,v,w,σw) 与
+aff_gt {x,v} {w} 不交（CARD > 1 时 wedge3 0 与 wedge2 0 的 azim 下界
+严格分离；CARD = 1 时 w_dart = UNIV \ aff_ge 而 aff_gt ⊆ aff_ge）。 -/
+private theorem wDart_self_inter_affGt (hfan : FAN x V E) (hvw : {v, w} ∈ E) :
+    wDartFan x V E (x, v, w, sigmaFan x V E v w) ∩ affGt {x, v} {w} = ∅ := by
+  have hEw : w ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v w hfan).mp hvw
+  have hn_pos : 0 < (setOfEdge v V E).ncard :=
+    Nat.pos_of_ne_zero (fun h =>
+      Set.nonempty_iff_ne_empty.mp ⟨w, hEw⟩
+        ((Set.ncard_eq_zero (remark_finite_fan1 v V E hfan.2.2.1.1)).mp h))
+  by_cases hcard : 1 < (setOfEdge v V E).ncard
+  · have hwDart0 := wDart_eq_wedge3_fan hfan hvw hn_pos hcard
+    rw [Function.iterate_succ_apply', Function.iterate_zero_apply] at hwDart0
+    have hgt0 : affGt {x, v} {w} = wedge2Fan x V E v w 0 := by
+      have h := (wedge2Fan_eq_affGt_fan hfan hvw 0
+        (by omega : 0 ≠ (setOfEdge v V E).ncard)).symm
+      rwa [Function.iterate_zero_apply] at h
+    rw [hwDart0, hgt0]
+    ext y
+    simp only [Set.mem_inter_iff, Set.mem_empty_iff_false, iff_false, not_and]
+    rintro ⟨hlo, -, -⟩ ⟨hz, -⟩
+    linarith
+  · -- CARD = 1：soe = {w}，wDart = UNIV \ aff_ge
+    have hcard1 : (setOfEdge v V E).ncard = 1 := by omega
+    have hsoe : setOfEdge v V E = {w} := by
+      obtain ⟨a, ha⟩ := Set.ncard_eq_one.mp hcard1
+      rw [ha, Set.mem_singleton_iff] at hEw
+      rw [ha, hEw]
+    have hunfold : wDartFan x V E (x, v, w, sigmaFan x V E v w) =
+        Set.univ \ affGe {x, v} {w} := by
+      rw [wDartFan, if_neg (by omega : ¬ (setOfEdge v V E).ncard > 1), if_pos hsoe]
+    rw [hunfold]
+    ext y
+    simp only [Set.mem_diff, Set.mem_univ, true_and, Set.mem_inter_iff,
+      Set.mem_empty_iff_false, iff_false, not_and]
+    intro hyge hygt
+    exact hyge (affGt_subset_affGe _ _ hygt)
+
+/-- HOL topology.hl:1853 `disjoint_set_fan` 的 w ≠ w1 情形（block 13 原
+`disjoint_set_fan`）：wedge3 与 wedge2 的 azim 区间严格分离。 -/
+private theorem disjoint_set_fan_of_ne (hfan : FAN x V E) (hvw : {v, w} ∈ E)
     (hvw1 : {v, w1} ∈ E) (hw1ne : w ≠ w1) :
     wDartFan x V E (x, v, w, sigmaFan x V E v w) ∩ affGt {x, v} {w1} = ∅ := by
   have hEw : w ∈ setOfEdge v V E :=
@@ -1851,6 +1895,17 @@ theorem disjoint_set_fan (hfan : FAN x V E) (hvw : {v, w} ∈ E)
     rw [← ifAzimsFan_eq_azim x V E v w 1 (by omega : 1 < (setOfEdge v V E).ncard),
       ← ifAzimsFan_eq_azim x V E v w j hj] at hstr
     linarith
+
+/-- HOL topology.hl:1853 `disjoint_set_fan`：w_dart ∩ aff_gt = ∅。
+HOL 原文无 `w ≠ w1` 前提：w ≠ w1 时由 disjoint_set_fan_of_ne（azim 区间
+严格分离），w = w1 时由 wDart_self_inter_affGt 给出。 -/
+theorem disjoint_set_fan (hfan : FAN x V E) (hvw : {v, w} ∈ E)
+    (hvw1 : {v, w1} ∈ E) :
+    wDartFan x V E (x, v, w, sigmaFan x V E v w) ∩ affGt {x, v} {w1} = ∅ := by
+  by_cases hww1 : w = w1
+  · subst hww1
+    exact wDart_self_inter_affGt hfan hvw
+  · exact disjoint_set_fan_of_ne hfan hvw hvw1 hww1
 
 /-- HOL topology.hl:1977 `disjoint_fan2`：不同边的 w_dart 互不相交。
 （wedge3Fan 的 azim 区间严格分离）。 -/
@@ -1896,5 +1951,296 @@ theorem disjoint_fan2 (hfan : FAN x V E) (hvw : {v, w} ∈ E)
         ← ifAzimsFan_eq_azim x V E v w j hj] at hstr
       exact le_of_lt hstr
   linarith
+
+/-! ## disjoint 系列余部与 VBTIKLP（topology.hl:2033–2288）
+
+disjoint_fan3（aff ∩ aff_gt 不交）、remark3_fan（aff_gt 两两不交）、
+VBTIKLP（UNION1 + 不交性打包）、disjiont_union_fan、
+aff_ge_subset_aff_gt_union_aff、IBZWFFH（w_dart ∩ aff_ge = ∅）与
+aff_ge_inter_aff_ge（扇形 = 两个半平面之交）。前置：AFF_GE_2_1 /
+AFF_GE_1_2 的三点组合刻画（成员形式）。 -/
+
+/-- HOL fan.hl:580 `AFF_GE_2_1`（成员形式）：y ∈ aff_ge {x,v} {w} ⟺
+三点组合（仅 w 系数非负）。HOL 前提仅 DISJOINT {x,v} {w}（给出
+x≠w、v≠w），此处另取 x ≠ v 以展开三点和（HOL 由 AFF_TAC 内部处理
+x = v 退化）。 -/
+theorem mem_affGe_pair {x v w : V3} (hdisj : Disjoint ({x, v} : Set V3) {w})
+    (hxv : x ≠ v) {y : V3} :
+    y ∈ affGe {x, v} {w} ↔
+      ∃ t1 t2 t3 : ℝ, 0 ≤ t3 ∧ t1 + t2 + t3 = 1 ∧
+        y = t1 • x + t2 • v + t3 • w := by
+  have hxw : x ≠ w := Set.disjoint_iff_forall_ne.mp hdisj (Or.inl rfl) rfl
+  have hvw' : v ≠ w := Set.disjoint_iff_forall_ne.mp hdisj (Or.inr rfl) rfl
+  constructor
+  · rintro ⟨f, hfin, hsum, hpos, hone⟩
+    have h3 : hfin.toFinset = ({x, v, w} : Finset V3) := by
+      ext z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+        Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+      tauto
+    have hxnotmem : x ∉ ({v, w} : Finset V3) := by
+      simp only [Finset.mem_insert, Finset.mem_singleton, not_or]
+      exact ⟨hxv, hxw⟩
+    rw [h3, Finset.sum_insert hxnotmem,
+      Finset.sum_insert (Finset.notMem_singleton.mpr hvw'),
+      Finset.sum_singleton] at hsum hone
+    exact ⟨f x, f v, f w, hpos w (Set.mem_singleton w), by linarith,
+      by rw [hsum]; module⟩
+  · rintro ⟨t1, t2, t3, ht3, hsum, hy⟩
+    have hfin : ({x, v} ∪ {w} : Set V3).Finite :=
+      ((Set.finite_singleton v).insert x).union (Set.finite_singleton w)
+    have h3 : hfin.toFinset = ({x, v, w} : Finset V3) := by
+      ext z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+        Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+      tauto
+    have hxnotmem : x ∉ ({v, w} : Finset V3) := by
+      simp only [Finset.mem_insert, Finset.mem_singleton, not_or]
+      exact ⟨hxv, hxw⟩
+    rw [show t1 = 1 - t2 - t3 from by linarith] at hy
+    refine ⟨fun z => if z = w then t3 else if z = v then t2 else 1 - t2 - t3,
+      hfin, ?_, ?_, ?_⟩
+    · rw [h3, Finset.sum_insert hxnotmem,
+        Finset.sum_insert (Finset.notMem_singleton.mpr hvw'), Finset.sum_singleton]
+      simp only [eq_self_iff_true, if_true, if_neg hxv, if_neg hxw, if_neg hvw']
+      rw [hy]; module
+    · intro z hz
+      rcases Set.mem_singleton_iff.mp hz with rfl
+      simp only [eq_self_iff_true, if_true]
+      exact ht3
+    · rw [h3, Finset.sum_insert hxnotmem,
+        Finset.sum_insert (Finset.notMem_singleton.mpr hvw'), Finset.sum_singleton]
+      simp only [eq_self_iff_true, if_true, if_neg hxv, if_neg hxw, if_neg hvw']
+      ring
+
+/-- HOL fan.hl:590 `AFF_GE_1_2`（成员形式）：y ∈ aff_ge {x} {v,w} ⟺
+三点组合（v、w 系数非负）。HOL 前提仅 DISJOINT {x} {v,w}，此处另取
+v ≠ w（HOL 由 AFF_TAC 内部处理 v = w 退化）。 -/
+theorem mem_affGe_singleton_pair {x v w : V3}
+    (hdisj : Disjoint ({x} : Set V3) {v, w}) (hvw' : v ≠ w) {y : V3} :
+    y ∈ affGe {x} {v, w} ↔
+      ∃ t1 t2 t3 : ℝ, 0 ≤ t2 ∧ 0 ≤ t3 ∧ t1 + t2 + t3 = 1 ∧
+        y = t1 • x + t2 • v + t3 • w := by
+  have hxv : x ≠ v := Set.disjoint_iff_forall_ne.mp hdisj rfl (Or.inl rfl)
+  have hxw : x ≠ w := Set.disjoint_iff_forall_ne.mp hdisj rfl (Or.inr rfl)
+  constructor
+  · rintro ⟨f, hfin, hsum, hpos, hone⟩
+    have h3 : hfin.toFinset = ({x, v, w} : Finset V3) := by
+      ext z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+        Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+      try tauto
+    have hxnotmem : x ∉ ({v, w} : Finset V3) := by
+      simp only [Finset.mem_insert, Finset.mem_singleton, not_or]
+      exact ⟨hxv, hxw⟩
+    rw [h3, Finset.sum_insert hxnotmem,
+      Finset.sum_insert (Finset.notMem_singleton.mpr hvw'),
+      Finset.sum_singleton] at hsum hone
+    exact ⟨f x, f v, f w, hpos v (Set.mem_insert v {w}),
+      hpos w (Set.mem_insert_of_mem v (Set.mem_singleton w)), by linarith,
+      by rw [hsum]; module⟩
+  · rintro ⟨t1, t2, t3, ht2, ht3, hsum, hy⟩
+    rw [show t1 = 1 - t2 - t3 from by linarith] at hy
+    exact Affsign.of_triple t2 t3 ht2 ht3 hy hxv hxw hvw'
+
+/-- HOL topology.hl:2033 `disjoint_fan3`：aff{x,v} ∩ aff_gt {x,v} {w} = ∅。
+aff 与 AFF_GT_2_1 两式相减得 t3•w = 仿射组合，t3 > 0 缩放后
+w ∈ aff{x,v}，与 ¬collinear 矛盾。 -/
+theorem disjoint_fan3 (hfan : FAN x V E) (hvw : {v, w} ∈ E) :
+    (affineSpan ℝ ({x, v} : Set V3) : Set V3) ∩ affGt {x, v} {w} = ∅ := by
+  have hncw : ¬ Collinear3 x v w := fan_not_collinear hfan hvw
+  have hxv : x ≠ v := fan_x_ne_v hfan hvw
+  have hxw : x ≠ w := fun he => hncw (collinear3_pair_left he.symm)
+  have hvw' : v ≠ w := fun he => hncw (collinear3_pair_right he.symm)
+  ext y
+  simp only [Set.mem_inter_iff, Set.mem_empty_iff_false, iff_false, not_and]
+  intro hyaff hygt
+  rw [affine_hull_2_fan] at hyaff
+  obtain ⟨t1, t2, ht, rfl⟩ := hyaff
+  rw [affGt_pair_iff hxv hxw.symm hvw'.symm] at hygt
+  obtain ⟨c, hc, h, hy⟩ := hygt
+  -- c • (w - x) = (t1 - 1 + h) • x + (t2 - h) • v
+  have h1 : c • (w - x) = (t1 - 1 + h) • x + (t2 - h) • v := by
+    have h2 : c • (w - x) = t1 • x + t2 • v - x - h • (v - x) := by
+      rw [hy]; module
+    rw [h2]; module
+  have hmem : w ∈ (affineSpan ℝ ({x, v} : Set V3) : Set V3) := by
+    rw [affine_hull_2_fan]
+    have hc' : c ≠ 0 := ne_of_gt hc
+    refine ⟨1 + c⁻¹ * (t1 - 1 + h), c⁻¹ * (t2 - h), ?_, ?_⟩
+    · have hsum : t1 - 1 + h + (t2 - h) = 0 := by linarith
+      linear_combination c⁻¹ * hsum
+    · have h3 : w = x + c⁻¹ • (c • (w - x)) := by
+        rw [inv_smul_smul₀ hc']; module
+      rw [h3, h1]; module
+  exact hncw ((collinear3_iff_mem_affineSpan hxv).mpr hmem)
+
+/-- HOL topology.hl:2072 `remark3_fan`：不同边的 aff_gt 互不相交
+（w1 = σ^i w，i > 0 时两侧化为 wedge2Fan 0 与 wedge2Fan i，交成员给
+azim x v w w1 = 0，UNIQUE_AZIM_0_POINT_FAN 得 w = w1，矛盾）。 -/
+theorem remark3_fan (hfan : FAN x V E) (hvw : {v, w} ∈ E)
+    (hvw1 : {v, w1} ∈ E) (hww1 : w ≠ w1) :
+    affGt {x, v} {w} ∩ affGt {x, v} {w1} = ∅ := by
+  have hEw1 : w1 ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v w1 hfan).mp hvw1
+  obtain ⟨i, hi, rfl⟩ := iterates_mem_sigmaFan hfan hvw hEw1
+  have hne_i0 : i ≠ 0 := fun he => hww1 (by simp [he])
+  have hn_pos : 0 < (setOfEdge v V E).ncard := by omega
+  have hgt0 : affGt {x, v} {w} = wedge2Fan x V E v w 0 := by
+    have h := (wedge2Fan_eq_affGt_fan hfan hvw 0
+      (by omega : 0 ≠ (setOfEdge v V E).ncard)).symm
+    rwa [Function.iterate_zero_apply] at h
+  have hgti : affGt {x, v} {(sigmaFan x V E v)^[i] w} = wedge2Fan x V E v w i :=
+    (wedge2Fan_eq_affGt_fan hfan hvw i (Nat.ne_of_lt hi)).symm
+  rw [hgt0, hgti]
+  ext y
+  simp only [Set.mem_inter_iff, Set.mem_empty_iff_false, iff_false, not_and]
+  rintro ⟨hz0, -⟩ ⟨hzi, -⟩
+  have haz0 : azim x v w ((sigmaFan x V E v)^[0] w) = 0 := azim_self x v w
+  rw [ifAzimsFan_eq_azim x V E v w 0 hn_pos, haz0] at hz0
+  rw [ifAzimsFan_eq_azim x V E v w i hi] at hzi
+  have hazim : azim x v w ((sigmaFan x V E v)^[i] w) = 0 := hzi.trans hz0.symm
+  exact hww1 (unique_azim0_point_fan hfan hvw hvw1 hazim)
+
+/-- HOL topology.hl:2113 `VBTIKLP`：UNION1_FAN 与全部不交性的合取打包。 -/
+theorem VBTIKLP (hfan : FAN x V E) :
+    (∀ v u : V3, {v, u} ∈ E →
+      (Set.univ : Set V3) =
+        (affineSpan ℝ ({x, v} : Set V3) : Set V3) ∪
+        (⋃ w ∈ {w | {v, w} ∈ E},
+          wDartFan x V E (x, v, w, sigmaFan x V E v w)) ∪
+        (⋃ w ∈ {w | {v, w} ∈ E}, affGt {x, v} {w})) ∧
+    (∀ v w : V3, {v, w} ∈ E →
+      wDartFan x V E (x, v, w, sigmaFan x V E v w) ∩
+        (affineSpan ℝ ({x, v} : Set V3) : Set V3) = ∅) ∧
+    (∀ v w w1 : V3, {v, w} ∈ E → {v, w1} ∈ E →
+      wDartFan x V E (x, v, w, sigmaFan x V E v w) ∩ affGt {x, v} {w1} = ∅) ∧
+    (∀ v w w1 : V3, {v, w} ∈ E → {v, w1} ∈ E → w ≠ w1 →
+      wDartFan x V E (x, v, w, sigmaFan x V E v w) ∩
+      wDartFan x V E (x, v, w1, sigmaFan x V E v w1) = ∅) ∧
+    (∀ v w w1 : V3, {v, w} ∈ E → {v, w1} ∈ E → w ≠ w1 →
+      affGt {x, v} {w} ∩ affGt {x, v} {w1} = ∅) ∧
+    (∀ v w : V3, {v, w} ∈ E →
+      (affineSpan ℝ ({x, v} : Set V3) : Set V3) ∩ affGt {x, v} {w} = ∅) :=
+  ⟨fun v u h => UNION1_FAN hfan h,
+   fun v w h => disjoint_fan1 hfan h,
+   fun v w w1 h h1 => disjoint_set_fan hfan h h1,
+   fun v w w1 h h1 hne => disjoint_fan2 hfan h h1 hne,
+   fun v w w1 h h1 hne => remark3_fan hfan h h1 hne,
+   fun v w h => disjoint_fan3 hfan h⟩
+
+/-- HOL topology.hl:2155 `disjiont_union_fan`：w_dart ∩ (aff ∪ aff_gt) = ∅
+（UNION_OVER_INTER + disjoint_set_fan + disjoint_fan1）。 -/
+theorem disjiont_union_fan (hfan : FAN x V E) (hvw : {v, w} ∈ E)
+    (hvw1 : {v, w1} ∈ E) :
+    wDartFan x V E (x, v, w, sigmaFan x V E v w) ∩
+      ((affineSpan ℝ ({x, v} : Set V3) : Set V3) ∪ affGt {x, v} {w1}) = ∅ := by
+  rw [Set.inter_union_distrib_left, disjoint_set_fan hfan hvw hvw1,
+    disjoint_fan1 hfan hvw, Set.union_empty]
+
+/-- HOL topology.hl:2167 `aff_ge_subset_aff_gt_union_aff`：
+aff_ge {x} {v,w} ⊆ aff_gt {x,v} {w} ∪ aff{x,v}
+（t3 = 0 时落入 aff，0 < t3 时落入 aff_gt）。 -/
+theorem aff_ge_subset_aff_gt_union_aff (hfan : FAN x V E) (hvw : {v, w} ∈ E) :
+    affGe {x} {v, w} ⊆
+      affGt {x, v} {w} ∪ (affineSpan ℝ ({x, v} : Set V3) : Set V3) := by
+  have hncw : ¬ Collinear3 x v w := fan_not_collinear hfan hvw
+  have hxv : x ≠ v := fan_x_ne_v hfan hvw
+  have hxw : x ≠ w := fun he => hncw (collinear3_pair_left he.symm)
+  have hvw' : v ≠ w := fun he => hncw (collinear3_pair_right he.symm)
+  have hdisj : Disjoint ({x} : Set V3) {v, w} := by
+    rw [Set.disjoint_singleton_left]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+    exact ⟨hxv, hxw⟩
+  intro y hy
+  rw [mem_affGe_singleton_pair hdisj hvw'] at hy
+  obtain ⟨t1, t2, t3, ht2, ht3, hsum, hy⟩ := hy
+  by_cases ht3' : t3 = 0
+  · -- t3 = 0：y ∈ aff{x,v}
+    right
+    rw [affine_hull_2_fan]
+    exact ⟨t1, t2, by linarith, by rw [hy, ht3', zero_smul, add_zero]⟩
+  · -- 0 < t3：y ∈ aff_gt {x,v} {w}
+    left
+    have ht3pos : 0 < t3 := lt_of_le_of_ne ht3 (Ne.symm ht3')
+    rw [affGt_pair_iff hxv hxw.symm hvw'.symm]
+    exact ⟨t3, ht3pos, t2, by
+      rw [hy, show t1 = 1 - t2 - t3 from by linarith]; module⟩
+
+/-- HOL topology.hl:2205 `IBZWFFH`：w_dart ∩ aff_ge {x} {v,w1} = ∅
+（aff_ge ⊆ aff_gt ∪ aff 与 disjiont_union_fan 的推论）。 -/
+theorem IBZWFFH (hfan : FAN x V E) (hvw : {v, w} ∈ E) (hvw1 : {v, w1} ∈ E) :
+    wDartFan x V E (x, v, w, sigmaFan x V E v w) ∩ affGe {x} {v, w1} = ∅ := by
+  have hsub := aff_ge_subset_aff_gt_union_aff hfan hvw1
+  have hdis := disjiont_union_fan hfan hvw hvw1
+  rw [Set.union_comm] at hsub
+  exact Set.eq_empty_of_subset_empty
+    ((Set.inter_subset_inter_right _ hsub).trans hdis.subset)
+
+/-- HOL topology.hl:2227 `aff_ge_inter_aff_ge`：¬collinear {x,v,w} 时
+aff_ge {x} {v,w} = aff_ge {x,v} {w} ∩ aff_ge {x,w} {v}。
+反向：两式相减得 (t3 - t2')•w = 仿射组合；t3 ≠ t2' 时缩放给出
+w ∈ aff{x,v}，与 ¬collinear 矛盾，故 t3 = t2'，直接读出三点组合。 -/
+theorem aff_ge_inter_aff_ge {x v w : V3} (hnc : ¬ Collinear3 x v w) :
+    affGe {x} {v, w} = affGe {x, v} {w} ∩ affGe {x, w} {v} := by
+  have hxv : x ≠ v := fun he => hnc (collinear3_of_eq (v := x) (w := v) (w1 := w)
+    he.symm)
+  have hxw : x ≠ w := fun he => hnc (collinear3_pair_left he.symm)
+  have hvw' : v ≠ w := fun he => hnc (collinear3_pair_right he.symm)
+  have hdisj1 : Disjoint ({x} : Set V3) {v, w} := by
+    rw [Set.disjoint_singleton_left]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+    exact ⟨hxv, hxw⟩
+  have hdisj2 : Disjoint ({x, v} : Set V3) {w} := by
+    rw [Set.disjoint_singleton_right]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+    exact ⟨fun he => hnc (collinear3_pair_left he),
+      fun he => hnc (collinear3_pair_right he)⟩
+  have hdisj3 : Disjoint ({x, w} : Set V3) {v} := by
+    rw [Set.disjoint_singleton_right]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+    exact ⟨fun he => hnc (collinear3_of_eq (v := x) (w := v) (w1 := w) he),
+      fun he => hnc (collinear3_pair_right he.symm)⟩
+  ext y
+  constructor
+  · intro hy
+    rw [mem_affGe_singleton_pair hdisj1 hvw'] at hy
+    obtain ⟨t1, t2, t3, ht2, ht3, hsum, hy⟩ := hy
+    constructor
+    · rw [mem_affGe_pair hdisj2 hxv]
+      exact ⟨t1, t2, t3, ht3, hsum, hy⟩
+    · rw [mem_affGe_pair hdisj3 hxw]
+      exact ⟨t1, t3, t2, ht2, by linarith, by rw [hy]; module⟩
+  · rintro ⟨hy1, hy2⟩
+    rw [mem_affGe_pair hdisj2 hxv] at hy1
+    rw [mem_affGe_pair hdisj3 hxw] at hy2
+    obtain ⟨t1, t2, t3, ht3, hsum1, hy1⟩ := hy1
+    obtain ⟨t1', t2', t3', ht3', hsum2, hy2⟩ := hy2
+    -- 两式相减：(t3 - t2')•w = (t1' - t1)•x + (t3' - t2)•v
+    have hsub : (t3 - t2') • w = (t1' - t1) • x + (t3' - t2) • v := by
+      have h12 : t1 • x + t2 • v + t3 • w = t1' • x + t2' • w + t3' • v := by
+        rw [← hy1, ← hy2]
+      calc (t3 - t2') • w
+          = (t1 • x + t2 • v + t3 • w) - (t1 • x + t2 • v + t2' • w) := by module
+        _ = (t1' • x + t2' • w + t3' • v) - (t1 • x + t2 • v + t2' • w) := by
+          rw [h12]
+        _ = (t1' - t1) • x + (t3' - t2) • v := by module
+    by_cases hz : t3 - t2' = 0
+    · -- t3 = t2'：y 的三点组合由第二式系数读出
+      -- （0 ≤ t3' 来自第二式，0 ≤ t2' = t3 来自第一式）
+      rw [mem_affGe_singleton_pair hdisj1 hvw']
+      have ht3eq : t3 = t2' := sub_eq_zero.mp hz
+      exact ⟨t1', t3', t2', ht3', by linarith, by linarith, by rw [hy2]; module⟩
+    · -- t3 ≠ t2'：w ∈ aff{x,v}，与 ¬collinear 矛盾
+      exfalso
+      have hwmem : w ∈ (affineSpan ℝ ({x, v} : Set V3) : Set V3) := by
+        rw [affine_hull_2_fan]
+        refine ⟨(t3 - t2')⁻¹ * (t1' - t1), (t3 - t2')⁻¹ * (t3' - t2), ?_, ?_⟩
+        · have hsum3 : (t1' - t1) + (t3' - t2) = t3 - t2' := by linarith
+          rw [← mul_add, hsum3, inv_mul_cancel₀ hz]
+        · have h4 : w = (t3 - t2')⁻¹ • ((t3 - t2') • w) :=
+            (inv_smul_smul₀ hz w).symm
+          rw [h4, hsub]; module
+      exact hnc ((collinear3_iff_mem_affineSpan hxv).mpr hwmem)
 
 end Kepler.Text
