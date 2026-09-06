@@ -3456,4 +3456,180 @@ noncomputable def changeSphericalCoordinateFan (x v u : V3) : V3 → V3 :=
       e2Fan x v u +
     (t (0 : Fin 3) * Real.cos (t (2 : Fin 3))) • e3Fan x v u
 
+/-! ## 球坐标下的 azim 展开（topology.hl:3666–3814）
+
+REAL_CONTINUOUS_AT_COMPONENT（3666）：Mathlib 已由
+`PiLp.continuous_apply` 覆盖，跳过。
+one_edge_fan（3692）：CARD ≤ 1 时 soe = {u}。
+azim_fan（3724）：定义。
+expand_elements_by_azim_fan（3729）：球坐标点的 azim = θ，
+经 azim_eq_of_spec（AZIM_UNIQUE 的角色）+ e-标架基准 +
+on3_axis_change 的单位复数旋转传递。 -/
+
+/-- HOL topology.hl:3692 `one_edge_fan`：CARD ≤ 1 时 set_of_edge = {u}。 -/
+theorem one_edge_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (hcard : ¬ (1 < (setOfEdge v V E).ncard)) :
+    setOfEdge v V E = {u} := by
+  have hu_soe : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  have hle : (setOfEdge v V E).ncard ≤ 1 := by
+    by_contra h; push_neg at h; exact hcard h
+  have hsub : ({u} : Set V3) ⊆ setOfEdge v V E := Set.singleton_subset_iff.mpr hu_soe
+  have h1 : (setOfEdge v V E).ncard ≤ ({u} : Set V3).ncard := by
+    rw [Set.ncard_singleton]; exact hle
+  exact (Set.eq_of_subset_of_ncard_le hsub h1
+    (remark_finite_fan1 v V E hfan.2.2.1.1)).symm
+
+/-- HOL topology.hl:3724 `azim_fan`。 -/
+noncomputable def azimFan (x : V3) (V : Set V3) (E : Set (Set V3)) (v w : V3) : ℝ :=
+  if 1 < (setOfEdge v V E).ncard then azim x v w (sigmaFan x V E v w) else 2 * Real.pi
+
+/-- HOL fan.hl:1197 `e1_cross_e2_dot_e3_fan`：e-标架右手系。 -/
+theorem e1Fan_cross_e2Fan_dot (hnc : ¬ Collinear3 x v u) :
+    0 < (cross3 (e1Fan x v u) (e2Fan x v u)) ⬝ᵥ (e3Fan x v u) := by
+  have hvx : v ≠ x := fun he => hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) he)
+  have h : cross3 (e1Fan x v u) (e2Fan x v u) = e3Fan x v u := by
+    rw [e1Fan, cross3_cross3, dot_coe, dot_coe, e2Fan_dot_self hnc,
+      dot_comm (e3Fan x v u) (e2Fan x v u), e2Fan_dot_e3 hnc]
+    module
+  rw [h, e3Fan_dot_self hvx u]
+  norm_num
+
+/-- HOL fan.hl:1205 `orthonormal_e1_e2_e3_fan`。 -/
+theorem orthonormal_e1Fan_e2Fan_e3Fan (hnc : ¬ Collinear3 x v u) :
+    Orthonormal3 (e1Fan x v u) (e2Fan x v u) (e3Fan x v u) := by
+  have hvx : v ≠ x := fun he => hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) he)
+  exact ⟨e1Fan_dot_self hnc, e2Fan_dot_self hnc, e3Fan_dot_self hvx u,
+    e1Fan_dot_e2 hnc, e1Fan_dot_e3 hnc, e2Fan_dot_e3 hnc, by
+      rw [← coe_cross3, dot_coe]
+      exact e1Fan_cross_e2Fan_dot hnc⟩
+
+/-- HOL topology.hl:3729 `expand_elements_by_azim_fan`：球坐标点的 azim。
+经 azim_eq_of_spec（AZIM_UNIQUE 的角色）：e-标架为基准，任意 aligned
+标架由 on3_axis_change 的单位复数旋转传递（同 azimSpec_exists 的
+桥接模式）。 -/
+theorem expand_elements_by_azim_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (x1 x2 x3 : ℝ) (hx1 : 0 < x1) (hx2 : 0 ≤ x2) (hx2' : x2 < 2 * Real.pi)
+    (hx3 : 0 < x3) (hx3' : x3 < Real.pi / 2) :
+    azim x v u (x + (x1 * Real.cos x2 * Real.sin x3) • e1Fan x v u +
+      (x1 * Real.sin x2 * Real.sin x3) • e2Fan x v u +
+      (x1 * Real.cos x3) • e3Fan x v u) = x2 := by
+  have hnc : ¬ Collinear3 x v u := fan_not_collinear hfan hvu
+  have hvx : v ≠ x := fun he => hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) he)
+  have hnv : ‖v - x‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hvx)
+  have hframe : Orthonormal3 (e1Fan x v u) (e2Fan x v u) (e3Fan x v u) :=
+    orthonormal_e1Fan_e2Fan_e3Fan hnc
+  have haxf : (v - x : V3) = dist v x • e3Fan x v u := by
+    rw [e3Fan, dist_eq_norm, smul_smul, mul_inv_cancel₀ hnv, one_smul]
+  -- (v-x) ⬝ᵥ e3 = ‖v - x‖
+  have hvxe3 : (v - x) ⬝ᵥ e3Fan x v u = ‖v - x‖ := by
+    rw [e3Fan, coe_smul, dotProduct_smul, smul_eq_mul, ← norm_sq_eq_dot]
+    have h2 : ‖v - x‖⁻¹ * ‖v - x‖ ^ 2 = ‖v - x‖ := by field_simp [hnv]
+    exact h2
+  -- 记 y 与标架点积分量
+  set y : V3 := x + (x1 * Real.cos x2 * Real.sin x3) • e1Fan x v u +
+    (x1 * Real.sin x2 * Real.sin x3) • e2Fan x v u +
+    (x1 * Real.cos x3) • e3Fan x v u with hy
+  -- y 的 rep（zOf_of_rep 的输入形）
+  have hyrep : y - x = ((x1 * Real.sin x3) * Real.cos x2) • e1Fan x v u +
+      ((x1 * Real.sin x3) * Real.sin x2) • e2Fan x v u +
+      ((x1 * Real.cos x3) * ‖v - x‖⁻¹) • (v - x) := by
+    have h3 : (x1 * Real.cos x3) • e3Fan x v u =
+        ((x1 * Real.cos x3) * ‖v - x‖⁻¹) • (v - x) := by
+      rw [e3Fan, smul_smul]
+    rw [show y - x = (x1 * Real.cos x2 * Real.sin x3) • e1Fan x v u +
+        (x1 * Real.sin x2 * Real.sin x3) • e2Fan x v u +
+        (x1 * Real.cos x3) • e3Fan x v u from by rw [hy]; module, h3]
+    module
+  -- u 的 rep：u - x = T1•e1 + T3•e3（e2 分量为 0），ρ = T1，τ = 0
+  have hurep : u - x = (((u - x) ⬝ᵥ e1Fan x v u) * Real.cos 0) • e1Fan x v u +
+      (((u - x) ⬝ᵥ e1Fan x v u) * Real.sin 0) • e2Fan x v u +
+      (((u - x) ⬝ᵥ e3Fan x v u) * ‖v - x‖⁻¹) • (v - x) := by
+    have hcoord := coord_eq_sum (e1Fan_dot_self hnc) (e2Fan_dot_self hnc)
+      (e3Fan_dot_self hvx u) (e1Fan_dot_e2 hnc) (e1Fan_dot_e3 hnc) (e2Fan_dot_e3 hnc)
+      (u - x)
+    rw [dot_e2Fan hnc, zero_smul, add_zero] at hcoord
+    rw [Real.cos_zero, Real.sin_zero, mul_zero, zero_smul, add_zero, mul_one]
+    conv_lhs => rw [hcoord]
+    rw [show (((u - x) ⬝ᵥ e3Fan x v u) * ‖v - x‖⁻¹) • (v - x) =
+        ((u - x) ⬝ᵥ e3Fan x v u) • e3Fan x v u from by
+      rw [e3Fan, smul_smul]]
+  -- zOf 计算
+  have hzy_f : zOf (e1Fan x v u) (e2Fan x v u) (y - x) =
+      ((x1 * Real.sin x3 : ℝ) : ℂ) * Complex.exp (x2 * I) :=
+    zOf_of_rep hframe haxf hyrep
+  have hzu_f : zOf (e1Fan x v u) (e2Fan x v u) (u - x) =
+      (((u - x) ⬝ᵥ e1Fan x v u : ℝ) : ℂ) * Complex.exp ((0 : ℝ) * I) :=
+    zOf_of_rep hframe haxf hurep
+  -- 非共线（azim_eq_of_spec 的前提）
+  have h2 : ¬ Collinear3 x v y := by
+    have h := (zOf_ne_zero_iff hframe haxf hvx y).mp ?_
+    · exact h
+    · rw [hzy_f]
+      exact mul_ne_zero (by
+        exact_mod_cast (mul_ne_zero hx1.ne'
+          (Real.sin_pos_of_pos_of_lt_pi hx3 (by linarith [hx3', Real.pi_pos])).ne'))
+        (Complex.exp_ne_zero _)
+  -- 主目标经 azim_eq_of_spec
+  apply azim_eq_of_spec (fan_not_collinear hfan hvu) h2
+  refine ⟨hx2, hx2', ((u - x) ⬝ᵥ e3Fan x v u) / dist v x,
+    (x1 * Real.cos x3) / dist v x, ?_⟩
+  intro e1 e2 e3 he hax hw
+  -- 同轴：e3 = e3Fan
+  have he3f : e3 = e3Fan x v u := by
+    have hc : dist v x ≠ 0 := dist_ne_zero.mpr hvx
+    have hsub : dist v x • e3 - dist v x • e3Fan x v u = 0 := by
+      rw [← hax, ← haxf, sub_self]
+    rw [← smul_sub] at hsub
+    exact sub_eq_zero.mp ((smul_eq_zero.mp hsub).resolve_left hc)
+  obtain ⟨urot, hurot1, hurot⟩ := on3_axis_change he hframe he3f
+  set ψ := Complex.arg urot with hψ
+  have hue : urot = Complex.exp (ψ * I) := by
+    have hp := Complex.norm_mul_exp_arg_mul_I urot
+    rw [hurot1, Complex.ofReal_one, one_mul] at hp
+    rw [hψ]
+    exact hp.symm
+  -- u 侧 zOf
+  have hz1e : zOf e1 e2 (u - x) =
+      (((u - x) ⬝ᵥ e1Fan x v u : ℝ) : ℂ) * Complex.exp ((ψ : ℂ) * I) := by
+    show (u - x : V3) ⬝ᵥ e1 + (u - x : V3) ⬝ᵥ e2 * I = _
+    rw [hurot (u - x),
+      show (u - x : V3) ⬝ᵥ e1Fan x v u + (u - x : V3) ⬝ᵥ e2Fan x v u * I
+        = zOf (e1Fan x v u) (e2Fan x v u) (u - x) from rfl]
+    rw [hzu_f, hue]
+    rw [show ((0 : ℝ) : ℂ) * I = (0 : ℂ) from by simp]
+    rw [Complex.exp_zero, mul_one]
+    ring
+  -- y 侧 zOf
+  have hz2e : zOf e1 e2 (y - x) =
+      ((x1 * Real.sin x3 : ℝ) : ℂ) * Complex.exp (((ψ + x2 : ℝ) : ℂ) * I) := by
+    show (y - x : V3) ⬝ᵥ e1 + (y - x : V3) ⬝ᵥ e2 * I = _
+    rw [hurot (y - x),
+      show (y - x : V3) ⬝ᵥ e1Fan x v u + (y - x : V3) ⬝ᵥ e2Fan x v u * I
+        = zOf (e1Fan x v u) (e2Fan x v u) (y - x) from rfl]
+    rw [hzy_f, hue, mul_left_comm, ← Complex.exp_add]
+    congr 1
+    congr 1
+    push_cast
+    ring
+  -- rep 回填
+  have hT1 : 0 < (u - x) ⬝ᵥ e1Fan x v u := udot_e1Fan hnc
+  have hr2 : 0 < x1 * Real.sin x3 :=
+    mul_pos hx1 (Real.sin_pos_of_pos_of_lt_pi hx3 (by linarith [hx3', Real.pi_pos]))
+  refine ⟨ψ, (u - x) ⬝ᵥ e1Fan x v u, x1 * Real.sin x3, ?_, ?_, hT1, hr2⟩
+  · have hrep := rep_of_zOf he hax hw u ψ ((u - x) ⬝ᵥ e1Fan x v u) hz1e
+    rw [he3f] at hrep
+    exact hrep
+  · have hrep := rep_of_zOf he hax hw y (ψ + x2) (x1 * Real.sin x3) hz2e
+    have hye3 : (y - x) ⬝ᵥ e3Fan x v u = x1 * Real.cos x3 := by
+      rw [hyrep]
+      rw [← inner_eq_dot, inner_add_left, inner_add_left, real_inner_smul_left,
+        real_inner_smul_left, real_inner_smul_left]
+      rw [inner_eq_dot, inner_eq_dot, inner_eq_dot, e1Fan_dot_e3 hnc,
+        e2Fan_dot_e3 hnc, hvxe3]
+      simp only [mul_zero, add_zero, zero_add]
+      rw [mul_assoc, inv_mul_cancel₀ hnv, mul_one]
+    rw [he3f, hye3] at hrep
+    exact hrep
+
 end Kepler.Text
