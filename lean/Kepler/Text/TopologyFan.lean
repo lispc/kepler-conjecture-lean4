@@ -21,7 +21,7 @@ each commit.
 import Kepler.Text.Fan
 import Mathlib.Order.Interval.Set.Nat
 
-set_option maxHeartbeats 5000000 in
+set_option maxHeartbeats 5000000
 
 namespace Kepler.Text
 
@@ -476,6 +476,34 @@ theorem order_power_sigmaFan (x : V3) (V : Set V3) (E : Set (Set V3))
       (iterates_mem_setOfEdge hfan v u hu_soe (n - k)) heq2).symm
   exact absurd hrep (key_lemma_cyclic x V E hfan hvu (n - k)
     (by omega) (by omega))
+
+/-- Every `w ∈ setOfEdge v V E` is `(sigmaFan x V E v)^[j] u` for some
+`j < ncard`.  Proof: orbit = setOfEdge (by `orbit_eq_setOfEdge`),
+`σ^[ncard] u = u` (by `order_power_sigmaFan`), so `σ^[i] u = σ^[i mod ncard] u`
+and `i mod ncard < ncard`. -/
+theorem iterates_mem_sigmaFan (hfan : FAN x V E) {v u : V3} (hvu : {v, u} ∈ E)
+    {w : V3} (hw : w ∈ setOfEdge v V E) :
+    ∃ j, j < (setOfEdge v V E).ncard ∧ (sigmaFan x V E v)^[j] u = w := by
+  have hu_soe : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  have hmem : w ∈ setOfOrbitsPointsFan x V E v u :=
+    (orbit_eq_setOfEdge hfan hvu).symm ▸ hw
+  obtain ⟨i, hi⟩ := hmem
+  set n := (setOfEdge v V E).ncard
+  have hn_pos : 0 < n := by
+    show 0 < (setOfEdge v V E).ncard
+    exact Nat.pos_of_ne_zero (fun h =>
+      Set.nonempty_iff_ne_empty.mp ⟨u, hu_soe⟩
+        ((Set.ncard_eq_zero (remark_finite_fan1 v V E hfan.2.2.1.1)).mp h))
+  have hperiod : (sigmaFan x V E v)^[n] u = u :=
+    order_power_sigmaFan x V E hfan hvu rfl
+  have hmod_eq : (sigmaFan x V E v)^[i] u =
+      (sigmaFan x V E v)^[i % n] u := by
+    conv_lhs => rw [show i = i % n + n * (i / n) from (Nat.mod_add_div i n).symm]
+    rw [Function.iterate_add_apply, Nat.mul_comm n (i / n),
+      show (sigmaFan x V E v)^[i / n * n] u = u from
+        fix_point_sigmaFan x V E v u (i / n) n hperiod]
+  exact ⟨i % n, Nat.mod_lt _ hn_pos, hmod_eq ▸ hi⟩
 
 /-! ## 绕圈角和（topology.hl:793–850 重构） -/
 
@@ -1268,10 +1296,11 @@ private theorem azim_upper_translate_mp (hfan : FAN x V E) (hvu : {v, u} ∈ E)
       intro hθ
       exact key_lemma_cyclic x V E hfan hvu i (by omega : 0 < i)
         (by omega : i < (setOfEdge v V E).ncard)
-        (unique_azim0_point_fan hfan hvu (in2_orbits_fan hfan hvu i) hθ)
+        (unique_azim0_point_fan hfan hvu (in2_orbits_fan hfan hvu i) hθ).symm
     have hcomp1 : azim x v ((sigmaFan x V E v)^[i] u) u =
         2 * Real.pi - azim x v u ((sigmaFan x V E v)^[i] u) :=
-      azim_compl_ne_zero (fan_not_collinear hfan hvu)
+      azim_compl_ne_zero (z := x) (w := v) (w1 := u)
+        (w2 := (sigmaFan x V E v)^[i] u) (fan_not_collinear hfan hvu)
         (pm_noncollinear hfan hvu hin) hθ0
     rw [ifAzimsFan, if_pos hne_i] at hhi
     rw [hpm]
@@ -1300,10 +1329,11 @@ private theorem azim_no_wrap (hfan : FAN x V E) (hvu : {v, u} ∈ E)
       intro hθ
       exact key_lemma_cyclic x V E hfan hvu i (by omega : 0 < i)
         (by omega : i < (setOfEdge v V E).ncard)
-        (unique_azim0_point_fan hfan hvu (in2_orbits_fan hfan hvu i) hθ)
+        (unique_azim0_point_fan hfan hvu (in2_orbits_fan hfan hvu i) hθ).symm
     have hcomp1 : azim x v ((sigmaFan x V E v)^[i] u) u =
         2 * Real.pi - azim x v u ((sigmaFan x V E v)^[i] u) :=
-      azim_compl_ne_zero (fan_not_collinear hfan hvu)
+      azim_compl_ne_zero (z := x) (w := v) (w1 := u)
+        (w2 := (sigmaFan x V E v)^[i] u) (fan_not_collinear hfan hvu)
         (pm_noncollinear hfan hvu hin) hθ0
     rw [hpm] at hne
     linarith [hcomp1, hne]
@@ -1385,86 +1415,56 @@ theorem wDart_eq_wedge3_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
 
 /-- HOL topology.hl:1654 `aff_subset_aff_ge`：DISJOINT {x,v} {w} ⟹
 aff {x,v} ⊆ aff_ge {x,v} {w}。 -/
-theorem aff_subset_aff_ge {x v w : V3} (hdisj : Set.Disjoint {x, v} {w}) :
-    affineSpan ℝ {x, v} ⊆ affGe {x, v} {w} := by
+theorem aff_subset_aff_ge {x v w : V3} (hdisj : Disjoint ({x, v} : Set V3) {w}) :
+    (affineSpan ℝ ({x, v} : Set V3) : Set V3) ⊆ affGe {x, v} {w} := by
   intro y hy
-  rw [affineSpan_pair] at hy
+  rw [affine_hull_2_fan] at hy
   obtain ⟨a, b, hab, rfl⟩ := hy
-  have hvx : v ≠ x :=
-    Set.disjoint_iff_forall_ne.mp hdisj (Or.inl rfl) (Or.inl rfl) ▸ Ne.rfl
-  have hxw : x ≠ w :=
-    Set.disjoint_iff_forall_ne.mp hdisj (Or.inl rfl) (Or.inr rfl) ▸ Ne.rfl
-  have hvw : v ≠ w :=
-    Set.disjoint_iff_forall_ne.mp hdisj (Or.inr rfl) (Or.inr rfl) ▸ Ne.rfl
   have hfin : ({x, v} ∪ {w} : Set V3).Finite :=
     ((Set.finite_singleton v).insert x).union (Set.finite_singleton w)
-  refine ⟨fun z => if z = x then a else if z = v then b else 0, hfin, ?_, ?_, ?_⟩
-  · have h3 : hfin.toFinset = {x, v, w} := by
-      apply Finset.ext; intro z
+  by_cases hvx : v = x
+  · -- 退化情形 v = x：subst 消去 x（全替换为 v），取系数 v↦1、其余↦0
+    subst hvx
+    have hxw : v ≠ w := Set.disjoint_iff_forall_ne.mp hdisj (Or.inl rfl) rfl
+    have h2 : hfin.toFinset = ({v, w} : Finset V3) := by
+      ext z
       simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
         Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
-      exact ⟨fun h => by rcases h with (rfl | rfl | rfl) <;> simp,
-        fun h => by rcases Finset.mem_insert.mp h with (rfl | h) <;>
-          [exact Or.inl (Or.inl rfl); rcases Finset.mem_singleton.mp h with rfl <;> exact Or.inr rfl]⟩
-    rw [h3, Finset.sum_insert (by simp [Ne, Ne.symm hxw]),
-      Finset.sum_insert (by simp [Ne, hvw]), Finset.sum_singleton]
-    simp only [ite_smul, smul_add]
-    split_ifs <;> simp_all [smul_add]
-  · intro z hz
-    simp only [Set.Finite.mem_toFinset, Set.mem_union] at hz
-    rcases hz with (h | h) <;> simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h
-    all_goals simp_all
-    · linarith
-  · have h3 : hfin.toFinset = {x, v, w} := by
-      apply Finset.ext; intro z
+      tauto
+    refine ⟨fun z => if z = v then 1 else 0, hfin, ?_, ?_, ?_⟩
+    · rw [h2, Finset.sum_insert (Finset.notMem_singleton.mpr hxw), Finset.sum_singleton]
+      simp only [eq_self_iff_true, if_true, if_neg (Ne.symm hxw),
+        one_smul, zero_smul, add_zero]
+      rw [← add_smul, hab, one_smul]
+    · intro z hz
+      rcases Set.mem_singleton_iff.mp hz with rfl
+      simp only [if_neg (Ne.symm hxw), le_refl]
+    · rw [h2, Finset.sum_insert (Finset.notMem_singleton.mpr hxw), Finset.sum_singleton]
+      simp only [eq_self_iff_true, if_true, if_neg (Ne.symm hxw), add_zero]
+  · -- 非退化：取系数 x↦a, v↦b, w↦0
+    have hxw : x ≠ w := Set.disjoint_iff_forall_ne.mp hdisj (Or.inl rfl) rfl
+    have hvw : v ≠ w := Set.disjoint_iff_forall_ne.mp hdisj (Or.inr rfl) rfl
+    have h3 : hfin.toFinset = ({x, v, w} : Finset V3) := by
+      ext z
       simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
         Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
-      exact ⟨fun h => by rcases h with (rfl | rfl | rfl) <;> simp,
-        fun h => by rcases Finset.mem_insert.mp h with (rfl | h) <;>
-          [exact Or.inl (Or.inl rfl); rcases Finset.mem_singleton.mp h with rfl <;> exact Or.inr rfl]⟩
-    rw [h3, Finset.sum_insert (by simp [Ne, Ne.symm hxw]),
-      Finset.sum_insert (by simp [Ne, hvw]), Finset.sum_singleton]
-    simp only [if_neg (Ne.symm hxw), if_neg (Ne.symm hvw)]
-    linarith
-
-/-- HOL topology.hl:1670 `eq_set_wdart_fan`：w_dart 集 = wedge3 集。
-WLOG 利用 wDart_eq_wedge3_fan 与 orbit 覆盖性质。 -/
-theorem eq_set_wdart_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
-    (fun w : V3 => wDartFan x V E (x, v, w, sigmaFan x V E v w)) '' {w | {v, w} ∈ E} =
-      (fun i : ℕ => wedge3Fan x V E v u i) '' {i | 0 ≤ i ∧ i < (setOfEdge v V E).ncard} := by
-  ext y; constructor
-  · -- wDart ⟹ wedge3：给定 y = wDartFan(x,v,w,σw) 且 {v,w}∈E
-    rintro ⟨w, hwE, rfl⟩
-    have hne_u : setOfEdge v V E ≠ {u} := by
-      intro he; have h1n : (1:ℕ) < (setOfEdge v V E).ncard :=
-        (Set.card_mono (Set.finite_singleton u ▸ by rw [he]; exact Set.finite_singleton u)) ▸ by simp
-      omega
-    -- w ∈ setOfEdge, so w = σ^j u for some j
-    have hwc : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp hwE
-    obtain ⟨j, hj, rfl⟩ := iterates_mem_sigmaFan hfan hvu |>.mp <|
-      orbit_eq_setOfEdge hfan hvu ▸ Set.mem_image_of_mem (sigmaFan x V E v) hwc
-    -- Now y = wDartFan(x,v,σ^j u,σ^(j+1) u)
-    refine ⟨j, ?_, by rw [wDartFan_of_ncard_gt_one hfan hvu
-      (by omega : 1 < (setOfEdge v V E).ncard) j]; rfl⟩
-    exact ⟨Nat.zero_le j, hj⟩
-  · -- wedge3 ⟹ wDart：给定 y ∈ wedge3Fan i
-    rintro ⟨i, ⟨hi0, hi⟩, rfl⟩
-    have hne_u : setOfEdge v V E ≠ {u} := by
-      intro he; have h1n : (1:ℕ) < (setOfEdge v V E).ncard :=
-        (Set.card_mono (Set.finite_singleton u ▸ by rw [he]; exact Set.finite_singleton u)) ▸ by simp
-      omega
-    have hcard : 1 < (setOfEdge v V E).ncard := by
-      by_contra h; push_neg at h
-      have h1 : (setOfEdge v V E).ncard ≤ 1 := Nat.eq_zero_or_one_of_le_zero h ▸ le_refl 1
-      omega
-    -- σ^i u ∈ setOfEdge
-    have hi_mem : (sigmaFan x V E v)^[i] u ∈ setOfEdge v V E :=
-      iterates_mem_orbits x V E v u i |>.mpr (orbit_eq_setOfEdge hfan hvu ▸ by exact Set.mem_image_of_mem _ (properties_of_setOfEdge_fan x V E v u hfan |>.mp hvu))
-    have hwE : {v, (sigmaFan x V E v)^[i] u} ∈ E :=
-      (properties_of_setOfEdge_fan x V E v ((sigmaFan x V E v)^[i] u) hfan).mpr hi_mem
-    refine ⟨(sigmaFan x V E v)^[i] u, hwE, ?_⟩
-    rw [wDartFan_of_ncard_gt_one hfan hvu hcard i]
-    exact (wDart_eq_wedge3_fan hfan hvu (by omega : i < (setOfEdge v V E).ncard) hcard).symm
+      tauto
+    have hxnotmem : x ∉ ({v, w} : Finset V3) := by
+      simp only [Finset.mem_insert, Finset.mem_singleton, not_or]
+      exact ⟨Ne.symm hvx, hxw⟩
+    refine ⟨fun z => if z = x then a else if z = v then b else 0, hfin, ?_, ?_, ?_⟩
+    · rw [h3, Finset.sum_insert hxnotmem,
+        Finset.sum_insert (Finset.notMem_singleton.mpr hvw), Finset.sum_singleton]
+      simp only [eq_self_iff_true, if_true, if_neg hvx, if_neg (Ne.symm hxw),
+        if_neg (Ne.symm hvw), zero_smul, add_zero]
+    · intro z hz
+      rcases Set.mem_singleton_iff.mp hz with rfl
+      simp only [if_neg (Ne.symm hxw), if_neg (Ne.symm hvw), le_refl]
+    · rw [h3, Finset.sum_insert hxnotmem,
+        Finset.sum_insert (Finset.notMem_singleton.mpr hvw), Finset.sum_singleton]
+      simp only [eq_self_iff_true, if_true, if_neg hvx, if_neg (Ne.symm hxw),
+        if_neg (Ne.symm hvw), add_zero]
+      exact hab
 
 /-- 非零 azim 的下界：azim ≥ 0 且 ≠ 0 则 > 0。 -/
 private theorem azim_pos_of_ne_zero {x v u w : V3}
@@ -1476,34 +1476,33 @@ private theorem azim_pos_of_ne_zero {x v u w : V3}
 （非共线时按 azim 角度确定区间）。 -/
 theorem UNION_FAN (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
     (Set.univ : Set V3) =
-      affineSpan ℝ {x, v} ∪
+      (affineSpan ℝ ({x, v} : Set V3) : Set V3) ∪
       (⋃ i ∈ {i | 0 ≤ i ∧ i < (setOfEdge v V E).ncard}, wedge3Fan x V E v u i) ∪
       (⋃ i ∈ {i | 0 ≤ i ∧ i < (setOfEdge v V E).ncard}, wedge2Fan x V E v u i) := by
-  ext y; simp only [Set.mem_union, Set.mem_iUnion, Set.mem_univ, iff_true]
+  ext y; simp only [Set.mem_union, Set.mem_iUnion, Set.mem_univ, true_iff]
+  have hn_pos : 0 < (setOfEdge v V E).ncard := by
+    have hu_soe : u ∈ setOfEdge v V E :=
+      (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+    exact Nat.pos_of_ne_zero (fun h =>
+      Set.nonempty_iff_ne_empty.mp ⟨u, hu_soe⟩
+        ((Set.ncard_eq_zero (remark_finite_fan1 v V E hfan.2.2.1.1)).mp h))
   by_cases hcoll : Collinear3 x v y
-  · exact Or.inl ((collinear3_iff_mem_affineSpan (fan_x_ne_v hfan hvu)).mp hcoll)
-  · right
-    have hxv : x ≠ v := fan_x_ne_v hfan hvu
-    have hncu : ¬ Collinear3 x v u := fan_not_collinear hfan hvu
+  · exact Or.inl (Or.inl ((collinear3_iff_mem_affineSpan (fan_x_ne_v hfan hvu)).mp hcoll))
+  · have hncu : ¬ Collinear3 x v u := fan_not_collinear hfan hvu
     -- ifAzims 值在 [0,2π) 中：ifAzims 0 = 0，ifAzims n = 2π
     -- y 的 azim 角落入某个区间
     have hθ0 : 0 ≤ azim x v u y := azim_nonneg x v u y
     have hθ1 : azim x v u y < 2 * Real.pi := azim_lt_two_pi x v u y
     by_cases hθ : azim x v u y = 0
     · -- azim = 0：y 在 ifAzims 0 = 0 的等值面上，属于 wedge2Fan 0
-      have hne_u : setOfEdge v V E ≠ {u} := by
-        intro he
-        exact absurd (two_le_ncard_of_ne hfan hvu he) (by omega)
-      have h1n : (1:ℕ) < (setOfEdge v V E).ncard :=
-        two_le_ncard_of_ne hfan hvu hne_u
       have hcomp : y ∈ complementSet x v :=
         (mem_complementSet_iff_noncollinear hfan hvu y).mpr hcoll
       -- ifAzimsFan 0 = azim x v u u = 0（因 0 ≠ ncard）
       have hif0 : ifAzimsFan x V E v u 0 = 0 := by
-        rw [ifAzimsFan_eq_azim x V E v u 0 (by omega)]
+        rw [ifAzimsFan_eq_azim x V E v u 0 hn_pos]
         exact azim_self x v u
-      right; left
-      exact ⟨0, ⟨Nat.zero_le _, by omega⟩, hif0 ▸ hθ, hcomp⟩
+      right
+      exact ⟨0, ⟨Nat.zero_le _, hn_pos⟩, hif0.trans hθ.symm, hcomp⟩
     · -- azim > 0：找区间
       have hθpos : 0 < azim x v u y := azim_pos_of_ne_zero hθ
       -- Nat.find 找到第一个 ifAzims > azim y 的索引
@@ -1517,74 +1516,186 @@ theorem UNION_FAN (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
       -- i > 0 因为 ifAzims 0 = 0 ≤ azim
       have hi0 : 0 < i := by
         by_contra hi0
-        push_neg at hi0
-        have := Nat.eq_zero_of_not_pos hi0
-        subst this
-        simp [ifAzimsFan] at hi_gt
-        linarith [azim_nonneg x v u y]
+        have h0 := Nat.eq_zero_of_not_pos hi0
+        rw [h0] at hi_gt
+        have haz0 : azim x v u ((sigmaFan x V E v)^[0] u) = 0 := azim_self x v u
+        rw [ifAzimsFan_eq_azim x V E v u 0 hn_pos, haz0] at hi_gt
+        exact absurd hi_gt (not_lt_of_ge hθ0)
       have hin : i - 1 < (setOfEdge v V E).ncard := by omega
       -- ifAzims (i-1) ≤ azim < ifAzims i
       have hle_prev : ifAzimsFan x V E v u (i - 1) ≤ azim x v u y := by
         by_contra hgt
         have hlt : azim x v u y < ifAzimsFan x V E v u (i - 1) := lt_of_not_ge hgt
         -- i-1 也满足条件，与 i 的最小性矛盾
-        exact absurd ⟨i - 1, by omega, hlt⟩ (Nat.find_min h_exists (by omega))
+        exact absurd ⟨by omega, hlt⟩ (Nat.find_min h_exists (by omega : i - 1 < i))
       -- y 在 complementSet 中（非共线）
       have hcomp : y ∈ complementSet x v :=
         (mem_complementSet_iff_noncollinear hfan hvu y).mpr hcoll
       -- 分情况：azim 恰好等于某个 ifAzims（边界）或在区间内（内部）
       by_cases heq : azim x v u y = ifAzimsFan x V E v u (i - 1)
       · -- 边界情况：azim = ifAzims (i-1)，y 在 wedge2Fan (i-1) 中
-        right; left
-        exact ⟨i - 1, ⟨by omega, by omega⟩, ⟨hcomp, heq⟩⟩
+        right
+        exact ⟨i - 1, ⟨by omega, by omega⟩, heq.symm, hcomp⟩
       · -- 内部情况：ifAzims (i-1) < azim < ifAzims i，y 在 wedge3Fan (i-1) 中
-        left
-        exact ⟨i - 1, ⟨by omega, by omega⟩, ⟨hcomp,
-          lt_of_le_of_ne hle_prev (Ne.symm heq), hi_gt⟩⟩
+        left; right
+        have hhi : azim x v u y < ifAzimsFan x V E v u (i - 1 + 1) := by
+          rw [show i - 1 + 1 = i from by omega]
+          exact hi_gt
+        exact ⟨i - 1, ⟨by omega, by omega⟩,
+          lt_of_le_of_ne hle_prev (Ne.symm heq), hhi, hcomp⟩
 
-/-- HOL topology.hl:1670 `eq_set_wdart_fan`：w_dart 集 = wedge3 集。 -/
+/-- HOL topology.hl:1670 `eq_set_wdart_fan` 证明内的 CARD = 1 分支
+（HOL 第二 DISJ_CASES：ncard = 1 ⟹ soe = {u}、i = 0）：wDartFan 展开到
+`UNIV \ aff_ge {x,v} {u}` 分支，wedge3Fan 0 因 ifAzims 0 = 0、ifAzims 1 = 2π
+化为 `{y ∈ complementSet | azim ≠ 0}`；两者相等由 AZIM_EQ_0_GE_ALT
+（`azim x v u y = 0 ⟺ y ∈ affGe {x,v} {u}`，非共线下）+ aff ⊆ aff_ge 给出。 -/
+theorem wDart_eq_wedge3_of_ncard_eq_one (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (hcard : (setOfEdge v V E).ncard = 1) :
+    wDartFan x V E (x, v, u, sigmaFan x V E v u) = wedge3Fan x V E v u 0 := by
+  have hu_soe : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  have hsoe : setOfEdge v V E = {u} := by
+    obtain ⟨a, ha⟩ := Set.ncard_eq_one.mp hcard
+    rw [ha, Set.mem_singleton_iff] at hu_soe
+    rw [ha, hu_soe]
+  have hncu : ¬ Collinear3 x v u := fan_not_collinear hfan hvu
+  have hxv : x ≠ v := fan_x_ne_v hfan hvu
+  have hif0 : ifAzimsFan x V E v u 0 = 0 := by
+    rw [ifAzimsFan, if_neg (by omega : ¬ 0 = (setOfEdge v V E).ncard)]
+    exact azim_self x v u
+  have hif1 : ifAzimsFan x V E v u (0 + 1) = 2 * Real.pi := by
+    rw [ifAzimsFan, if_pos (by omega : 0 + 1 = (setOfEdge v V E).ncard)]
+  have hunfold : wDartFan x V E (x, v, u, sigmaFan x V E v u) =
+      Set.univ \ affGe {x, v} {u} := by
+    rw [wDartFan, if_neg (by omega : ¬ (setOfEdge v V E).ncard > 1), if_pos hsoe]
+  have hdisj : Disjoint ({x, v} : Set V3) {u} := by
+    rw [Set.disjoint_singleton_right]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+    exact ⟨fun he => hncu (collinear3_pair_left he),
+      fun he => hncu (collinear3_pair_right he)⟩
+  -- AZIM_EQ_0_GE_ALT：非共线下 azim = 0 ⟺ y ∈ affGe
+  have key : ∀ y : V3, ¬ Collinear3 x v y →
+      (y ∈ affGe {x, v} {u} ↔ azim x v u y = 0) := by
+    intro y hyncol
+    constructor
+    · rintro ⟨f, hfin, hsum, hpos, hone⟩
+      have hxu : x ≠ u := fun he => hncu (collinear3_pair_left he.symm)
+      have hvu' : v ≠ u := fun he => hncu (collinear3_pair_right he.symm)
+      have h3 : hfin.toFinset = ({x, v, u} : Finset V3) := by
+        ext z
+        simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+          Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+        tauto
+      have hxnotmem : x ∉ ({v, u} : Finset V3) := by
+        simp only [Finset.mem_insert, Finset.mem_singleton, not_or]
+        exact ⟨hxv, hxu⟩
+      rw [h3, Finset.sum_insert hxnotmem,
+        Finset.sum_insert (Finset.notMem_singleton.mpr hvu'),
+        Finset.sum_singleton] at hsum hone
+      -- f u = 0 时 y ∈ aff{x,v}，与非共线矛盾；故 f u > 0，y ∈ affGt
+      have hfu0 : f u ≠ 0 := by
+        intro h0
+        apply hyncol
+        rw [collinear3_iff_mem_affineSpan hxv, affine_hull_2_fan]
+        exact ⟨f x, f v, by linarith, by rw [hsum, h0, zero_smul, add_zero]⟩
+      have hfu : 0 < f u := lt_of_le_of_ne (hpos u (Set.mem_singleton u)) (Ne.symm hfu0)
+      have hfx : f x = 1 - f v - f u := by linarith
+      have hGt : y ∈ affGt {x, v} {u} :=
+        (affGt_pair_iff hxv hxu.symm hvu'.symm).mpr ⟨f u, hfu, f v, by rw [hsum, hfx]; module⟩
+      exact (azim_eq_zero_iff_alt hncu hyncol).mpr hGt
+    · -- affGt ⊆ affGe（同一组系数，严格正 ⟹ 非负）
+      intro h0
+      obtain ⟨f, hfin, hsum, hpos, hone⟩ := (azim_eq_zero_iff_alt hncu hyncol).mp h0
+      exact ⟨f, hfin, hsum, fun w hw => le_of_lt (hpos w hw), hone⟩
+  rw [hunfold, wedge3Fan, hif0, hif1]
+  ext y
+  simp only [Set.mem_diff, Set.mem_univ, true_and, Set.mem_setOf_eq]
+  constructor
+  · intro hy
+    have hyaff : y ∉ (affineSpan ℝ ({x, v} : Set V3) : Set V3) :=
+      fun hya => hy (aff_subset_aff_ge hdisj hya)
+    have hyncol : ¬ Collinear3 x v y :=
+      fun hc => hyaff ((collinear3_iff_mem_affineSpan hxv).mp hc)
+    have haz : azim x v u y ≠ 0 := fun h0 => hy ((key y hyncol).mpr h0)
+    exact ⟨lt_of_le_of_ne (azim_nonneg x v u y) (Ne.symm haz),
+      azim_lt_two_pi x v u y, hyaff⟩
+  · rintro ⟨hlo, _hhi, hycomp⟩
+    have hyncol : ¬ Collinear3 x v y :=
+      fun hc => hycomp ((collinear3_iff_mem_affineSpan hxv).mp hc)
+    intro hyge
+    exact absurd ((key y hyncol).mp hyge) (ne_of_gt hlo)
+
+/-- HOL topology.hl:1670 `eq_set_wdart_fan`：w_dart 集 = wedge3 集。
+CARD > 1 时用 wDart_eq_wedge3_fan；CARD = 1（FAN 不排除一度顶点，
+HOL 同定理的第二 DISJ_CASES 分支）时用 wDart_eq_wedge3_of_ncard_eq_one。 -/
 theorem eq_set_wdart_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
     (fun w : V3 => wDartFan x V E (x, v, w, sigmaFan x V E v w)) '' {w | {v, w} ∈ E} =
       (fun i : ℕ => wedge3Fan x V E v u i) '' {i | 0 ≤ i ∧ i < (setOfEdge v V E).ncard} := by
-  ext y; constructor
-  · rintro ⟨w, hwE, rfl⟩
-    have hne_u : setOfEdge v V E ≠ {u} := by
-      intro he
-      exact absurd (two_le_ncard_of_ne hfan hvu he) (by omega : ¬1 < 1)
-    have hwc : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp hwE
-    obtain ⟨j, hj, rfl⟩ := iterates_mem_sigmaFan hfan hvu |>.mp <|
-      orbit_eq_setOfEdge hfan hvu ▸ Set.mem_image_of_mem (sigmaFan x V E v) hwc
-    refine ⟨j, ?_, by
-      rw [wDartFan_of_ncard_gt_one hfan hvu
-        (by omega : 1 < (setOfEdge v V E).ncard) j]; rfl⟩
-    exact ⟨Nat.zero_le j, hj⟩
-  · rintro ⟨i, ⟨hi0, hi⟩, rfl⟩
-    have hne_u : setOfEdge v V E ≠ {u} := by
-      intro he
-      exact absurd (two_le_ncard_of_ne hfan hvu he) (by omega : ¬1 < 1)
-    have hcard : 1 < (setOfEdge v V E).ncard := by omega
-    have hi_mem : (sigmaFan x V E v)^[i] u ∈ setOfEdge v V E :=
-      iterates_mem_setOfEdge hfan v u
-        ((properties_of_setOfEdge_fan x V E v u hfan).mp hvu) i
-    have hwE : {v, (sigmaFan x V E v)^[i] u} ∈ E :=
-      (properties_of_setOfEdge_fan x V E v _ hfan).mpr hi_mem
-    refine ⟨(sigmaFan x V E v)^[i] u, hwE, ?_⟩
-    rw [wDartFan_of_ncard_gt_one hfan hvu hcard i]
-    exact (wDart_eq_wedge3_fan hfan hvu (by omega : i < (setOfEdge v V E).ncard) hcard).symm
+  have hn_pos : 0 < (setOfEdge v V E).ncard := by
+    have hu_soe : u ∈ setOfEdge v V E :=
+      (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+    exact Nat.pos_of_ne_zero (fun h =>
+      Set.nonempty_iff_ne_empty.mp ⟨u, hu_soe⟩
+        ((Set.ncard_eq_zero (remark_finite_fan1 v V E hfan.2.2.1.1)).mp h))
+  by_cases hcard : 1 < (setOfEdge v V E).ncard
+  · -- CARD > 1（HOL 第一分支）
+    ext y; constructor
+    · rintro ⟨w, hwE, rfl⟩
+      have hwc : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp hwE
+      obtain ⟨j, hj, rfl⟩ := iterates_mem_sigmaFan hfan hvu hwc
+      refine ⟨j, ⟨Nat.zero_le j, hj⟩, ?_⟩
+      show wedge3Fan x V E v u j = wDartFan x V E (x, v, (sigmaFan x V E v)^[j] u,
+        sigmaFan x V E v ((sigmaFan x V E v)^[j] u))
+      have h := wDart_eq_wedge3_fan hfan hvu hj hcard
+      rw [Function.iterate_succ_apply'] at h
+      exact h.symm
+    · rintro ⟨i, ⟨hi0, hi⟩, rfl⟩
+      have hi_mem : (sigmaFan x V E v)^[i] u ∈ setOfEdge v V E :=
+        iterates_mem_setOfEdge hfan v u
+          ((properties_of_setOfEdge_fan x V E v u hfan).mp hvu) i
+      have hwE : {v, (sigmaFan x V E v)^[i] u} ∈ E :=
+        (properties_of_setOfEdge_fan x V E v _ hfan).mpr hi_mem
+      refine ⟨(sigmaFan x V E v)^[i] u, hwE, ?_⟩
+      show wDartFan x V E (x, v, (sigmaFan x V E v)^[i] u,
+        sigmaFan x V E v ((sigmaFan x V E v)^[i] u)) = wedge3Fan x V E v u i
+      have h := wDart_eq_wedge3_fan hfan hvu hi hcard
+      rw [Function.iterate_succ_apply'] at h
+      exact h
+  · -- CARD = 1（HOL 第二分支：soe = {u}，i = j = 0，w = u）
+    have hcard1 : (setOfEdge v V E).ncard = 1 := by omega
+    ext y; constructor
+    · rintro ⟨w, hwE, rfl⟩
+      have hwc : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp hwE
+      have hu_soe : u ∈ setOfEdge v V E :=
+        (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+      have hsoe : setOfEdge v V E = {u} := by
+        obtain ⟨a, ha⟩ := Set.ncard_eq_one.mp hcard1
+        rw [ha, Set.mem_singleton_iff] at hu_soe
+        rw [ha, hu_soe]
+      rw [hsoe, Set.mem_singleton_iff] at hwc
+      subst w
+      refine ⟨0, ⟨Nat.zero_le 0, by omega⟩, ?_⟩
+      show wedge3Fan x V E v u 0 = wDartFan x V E (x, v, u, sigmaFan x V E v u)
+      exact (wDart_eq_wedge3_of_ncard_eq_one hfan hvu hcard1).symm
+    · rintro ⟨i, ⟨hi0, hi⟩, rfl⟩
+      have hi0' : i = 0 := by omega
+      subst hi0'
+      refine ⟨u, hvu, ?_⟩
+      show wDartFan x V E (x, v, u, sigmaFan x V E v u) = wedge3Fan x V E v u 0
+      exact wDart_eq_wedge3_of_ncard_eq_one hfan hvu hcard1
 
 /-- HOL topology.hl:1774 `eq_set_aff_gt`：aff_gt 集 = wedge2 集。
-利用 wedge_fan2_equal_aff_gt_fan（block 9）双包含。 -/
+利用 wedge2Fan_eq_affGt_fan（block 9）双包含。 -/
 theorem eq_set_aff_gt (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
     (fun w : V3 => affGt {x, v} {w}) '' {w | {v, w} ∈ E} =
       (fun i : ℕ => wedge2Fan x V E v u i) '' {i | 0 ≤ i ∧ i < (setOfEdge v V E).ncard} := by
   ext y; constructor
   · rintro ⟨w, hwE, rfl⟩
     have hwc : w ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v w hfan).mp hwE
-    obtain ⟨j, hj, rfl⟩ := iterates_mem_sigmaFan hfan hvu |>.mp <|
-      orbit_eq_setOfEdge hfan hvu ▸ Set.mem_image_of_mem (sigmaFan x V E v) hwc
+    obtain ⟨j, hj, rfl⟩ := iterates_mem_sigmaFan hfan hvu hwc
     refine ⟨j, ⟨Nat.zero_le j, hj⟩, ?_⟩
-    have hjne : j ≠ (setOfEdge v V E).ncard := Nat.ne_of_lt hj
-    exact (wedge_fan2_equal_aff_gt_fan hfan hvu hjne).symm
+    show wedge2Fan x V E v u j = affGt {x, v} {(sigmaFan x V E v)^[j] u}
+    exact wedge2Fan_eq_affGt_fan hfan hvu j (Nat.ne_of_lt hj)
   · rintro ⟨i, ⟨hi0, hi⟩, rfl⟩
     have hi_mem : (sigmaFan x V E v)^[i] u ∈ setOfEdge v V E :=
       iterates_mem_setOfEdge hfan v u
@@ -1592,29 +1703,198 @@ theorem eq_set_aff_gt (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
     have hwE : {v, (sigmaFan x V E v)^[i] u} ∈ E :=
       (properties_of_setOfEdge_fan x V E v _ hfan).mpr hi_mem
     refine ⟨(sigmaFan x V E v)^[i] u, hwE, ?_⟩
-    have hjne : i ≠ (setOfEdge v V E).ncard := Nat.ne_of_lt hi
-    exact wedge_fan2_equal_aff_gt_fan hfan hvu hjne
+    show affGt {x, v} {(sigmaFan x V E v)^[i] u} = wedge2Fan x V E v u i
+    exact (wedge2Fan_eq_affGt_fan hfan hvu i (Nat.ne_of_lt hi)).symm
 
 /-- HOL topology.hl:1814 `UNION1_FAN`：UNIV = aff ∪ ⋃wDart ∪ ⋃aff_gt。
 由 UNION_FAN + eq_set_wdart_fan + eq_set_aff_gt 直接替换。 -/
 theorem UNION1_FAN (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
     (Set.univ : Set V3) =
-      affineSpan ℝ {x, v} ∪
+      (affineSpan ℝ ({x, v} : Set V3) : Set V3) ∪
       (⋃ w ∈ {w | {v, w} ∈ E},
         wDartFan x V E (x, v, w, sigmaFan x V E v w)) ∪
       (⋃ w ∈ {w | {v, w} ∈ E}, affGt {x, v} {w}) := by
-  have h := UNION_FAN hfan hvu
-  have hw := eq_set_wdart_fan hfan hvu
-  have ha := eq_set_aff_gt hfan hvu
-  rw [h, hw, ha]
-  -- The wedge3 and wedge2 unions are already in UNION_FAN form;
-  -- after rewriting, they become the wDart and aff_gt unions
-  simp only [Set.mem_union, Set.mem_iUnion, Set.mem_univ, iff_true]
-  intro y
-  rcases (Set.mem_union.mp ((show _ = _ from h ▸ rfl).symm ▸ Set.mem_univ y)) with
-    h | h | h
-  · exact Or.inl h
-  · right; left; exact h
-  · right; right; exact h
+  have h1 := UNION_FAN hfan hvu
+  have h2 := eq_set_wdart_fan hfan hvu
+  have h3 := eq_set_aff_gt hfan hvu
+  have key3 : (⋃ w ∈ {w | {v, w} ∈ E},
+        wDartFan x V E (x, v, w, sigmaFan x V E v w)) =
+      ⋃ i ∈ {i | 0 ≤ i ∧ i < (setOfEdge v V E).ncard}, wedge3Fan x V E v u i := by
+    ext y
+    simp only [Set.mem_iUnion]
+    constructor
+    · rintro ⟨w, hw, hy⟩
+      have hmem : wDartFan x V E (x, v, w, sigmaFan x V E v w) ∈
+          (fun w : V3 => wDartFan x V E (x, v, w, sigmaFan x V E v w)) ''
+            {w | {v, w} ∈ E} := ⟨w, hw, rfl⟩
+      rw [h2] at hmem
+      simp only [Set.mem_image, Set.mem_setOf_eq] at hmem
+      obtain ⟨i, hi, hiy⟩ := hmem
+      exact ⟨i, hi, hiy ▸ hy⟩
+    · rintro ⟨i, hi, hy⟩
+      have hmem : wedge3Fan x V E v u i ∈
+          (fun i : ℕ => wedge3Fan x V E v u i) ''
+            {i | 0 ≤ i ∧ i < (setOfEdge v V E).ncard} := ⟨i, hi, rfl⟩
+      rw [← h2] at hmem
+      simp only [Set.mem_image, Set.mem_setOf_eq] at hmem
+      obtain ⟨w, hw, hwy⟩ := hmem
+      exact ⟨w, hw, hwy ▸ hy⟩
+  have key2 : (⋃ w ∈ {w | {v, w} ∈ E}, affGt {x, v} {w}) =
+      ⋃ i ∈ {i | 0 ≤ i ∧ i < (setOfEdge v V E).ncard}, wedge2Fan x V E v u i := by
+    ext y
+    simp only [Set.mem_iUnion]
+    constructor
+    · rintro ⟨w, hw, hy⟩
+      have hmem : affGt {x, v} {w} ∈ (fun w : V3 => affGt {x, v} {w}) ''
+          {w | {v, w} ∈ E} := ⟨w, hw, rfl⟩
+      rw [h3] at hmem
+      simp only [Set.mem_image, Set.mem_setOf_eq] at hmem
+      obtain ⟨i, hi, hiy⟩ := hmem
+      exact ⟨i, hi, hiy ▸ hy⟩
+    · rintro ⟨i, hi, hy⟩
+      have hmem : wedge2Fan x V E v u i ∈
+          (fun i : ℕ => wedge2Fan x V E v u i) ''
+            {i | 0 ≤ i ∧ i < (setOfEdge v V E).ncard} := ⟨i, hi, rfl⟩
+      rw [← h3] at hmem
+      simp only [Set.mem_image, Set.mem_setOf_eq] at hmem
+      obtain ⟨w, hw, hwy⟩ := hmem
+      exact ⟨w, hw, hwy ▸ hy⟩
+  rw [h1, key3, key2]
+
+/-- HOL topology.hl:1944 `disjiont1_cor6dot1`：wedge3 ∩ aff = ∅
+（complementSet 与 affineSpan 不交的直接推论）。 -/
+theorem disjoint_wedge3_aff (x v u : V3) (V : Set V3) (E : Set (Set V3))
+    (i : ℕ) :
+    wedge3Fan x V E v u i ∩ affineSpan ℝ {x, v} = ∅ := by
+  ext y; simp only [Set.mem_inter_iff, Set.mem_empty_iff_false, iff_false]
+  rintro ⟨⟨_, _, hcomp⟩, _⟩
+  exact hcomp ‹y ∈ affineSpan ℝ {x, v}›
+
+/-- HOL topology.hl:1952 `disjoint_fan1`：w_dart ∩ aff = ∅。
+按 wDartFan 定义分四支：CARD > 1 时 wedge 含非共线条件；soe = {w} 时
+UNIV \ aff_ge 与 aff 不交（aff ⊆ aff_ge）；soe = ∅ 与 ∅ 两支平凡。 -/
+theorem disjoint_fan1 (hfan : FAN x V E) (hvw : {v, w} ∈ E) :
+    wDartFan x V E (x, v, w, sigmaFan x V E v w) ∩
+      (affineSpan ℝ ({x, v} : Set V3) : Set V3) = ∅ := by
+  have hncw : ¬ Collinear3 x v w := fan_not_collinear hfan hvw
+  rw [wDartFan]
+  by_cases hcard : 1 < (setOfEdge v V E).ncard
+  · -- wedge x v w (σw)：成员非共线，与 aff{x,v} 不交
+    rw [if_pos hcard]
+    ext y
+    simp only [Set.mem_inter_iff, Set.mem_empty_iff_false, iff_false, not_and]
+    intro hy hyaff
+    exact (mem_complementSet_iff_noncollinear hfan hvw y).mpr hy.1 hyaff
+  · rw [if_neg hcard]
+    by_cases hsoe : setOfEdge v V E = {w}
+    · -- UNIV \ aff_ge {x,v} {w}：aff{x,v} ⊆ aff_ge，故不交
+      rw [if_pos hsoe]
+      have hdisj : Disjoint ({x, v} : Set V3) {w} := by
+        rw [Set.disjoint_singleton_right]
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+        exact ⟨fun he => hncw (collinear3_pair_left he),
+          fun he => hncw (collinear3_pair_right he)⟩
+      ext y
+      simp only [Set.mem_diff, Set.mem_univ, true_and, Set.mem_inter_iff,
+        Set.mem_empty_iff_false, iff_false, not_and]
+      intro hyge hyaff
+      exact hyge (aff_subset_aff_ge hdisj hyaff)
+    · rw [if_neg hsoe]
+      by_cases hsoe0 : setOfEdge v V E = ∅
+      · -- UNIV \ aff：自身不交
+        rw [if_pos hsoe0]
+        ext y
+        simp only [Set.mem_diff, Set.mem_univ, true_and, Set.mem_inter_iff,
+          Set.mem_empty_iff_false, iff_false, not_and]
+        intro h1 h2
+        exact h1 h2
+      · rw [if_neg hsoe0, Set.empty_inter]
+
+/-- HOL topology.hl:1853 `disjoint_set_fan`：w_dart ∩ aff_gt = ∅
+（wedge3 与 wedge2 不交的推论：azim 区间严格分离）。 -/
+theorem disjoint_set_fan (hfan : FAN x V E) (hvw : {v, w} ∈ E)
+    (hvw1 : {v, w1} ∈ E) (hw1ne : w ≠ w1) :
+    wDartFan x V E (x, v, w, sigmaFan x V E v w) ∩ affGt {x, v} {w1} = ∅ := by
+  have hEw : w ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v w hfan).mp hvw
+  have hEw1 : w1 ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v w1 hfan).mp hvw1
+  obtain ⟨j, hj, rfl⟩ := iterates_mem_sigmaFan hfan hvw hEw1
+  have hne_j0 : j ≠ 0 := fun he => hw1ne (by simp [he])
+  have hcard : 1 < (setOfEdge v V E).ncard := by
+    by_contra hle
+    push_neg at hle
+    have h01 : (setOfEdge v V E).ncard = 0 ∨ (setOfEdge v V E).ncard = 1 := by omega
+    rcases h01 with h0 | h1
+    · rw [Set.ncard_eq_zero (remark_finite_fan1 v V E hfan.2.2.1.1)] at h0
+      rw [h0] at hEw
+      exact (Set.mem_empty_iff_false w).mp hEw
+    · obtain ⟨a, ha⟩ := Set.ncard_eq_one.mp h1
+      rw [ha, Set.mem_singleton_iff] at hEw hEw1
+      exact hw1ne (hEw.trans hEw1.symm)
+  have hne_u : setOfEdge v V E ≠ {w} := by
+    intro he; rw [he] at hcard; simp at hcard
+  have h0lt : (0 : ℕ) < (setOfEdge v V E).ncard := by omega
+  have hwDart0 := wDart_eq_wedge3_fan hfan hvw h0lt hcard
+  rw [Function.iterate_succ_apply', Function.iterate_zero_apply] at hwDart0
+  have haffgtj : affGt {x, v} {(sigmaFan x V E v)^[j] w} = wedge2Fan x V E v w j :=
+    (wedge2Fan_eq_affGt_fan hfan hvw j (by omega : j ≠ (setOfEdge v V E).ncard)).symm
+  rw [hwDart0, haffgtj]
+  ext y
+  simp only [Set.mem_inter_iff, Set.mem_empty_iff_false, iff_false]
+  rintro ⟨⟨_hlo, hhi, -⟩, hweq, -⟩
+  have hhi1 : azim x v w y < ifAzimsFan x V E v w 1 := hhi
+  by_cases hj1 : j = 1
+  · subst hj1; linarith
+  · have h1j : 1 < j := by omega
+    have hstr := azim_lt_power_sigmaFan hfan hvw hne_u j 1 h1j hj
+    rw [← ifAzimsFan_eq_azim x V E v w 1 (by omega : 1 < (setOfEdge v V E).ncard),
+      ← ifAzimsFan_eq_azim x V E v w j hj] at hstr
+    linarith
+
+/-- HOL topology.hl:1977 `disjoint_fan2`：不同边的 w_dart 互不相交。
+（wedge3Fan 的 azim 区间严格分离）。 -/
+theorem disjoint_fan2 (hfan : FAN x V E) (hvw : {v, w} ∈ E)
+    (hvw1 : {v, w1} ∈ E) (hw1ne : w ≠ w1) :
+    wDartFan x V E (x, v, w, sigmaFan x V E v w) ∩
+    wDartFan x V E (x, v, w1, sigmaFan x V E v w1) = ∅ := by
+  have hEw : w ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v w hfan).mp hvw
+  have hEw1 : w1 ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v w1 hfan).mp hvw1
+  obtain ⟨j, hj, rfl⟩ := iterates_mem_sigmaFan hfan hvw hEw1
+  have hne_j0 : j ≠ 0 := fun he => hw1ne (by simp [he])
+  have hcard : 1 < (setOfEdge v V E).ncard := by
+    by_contra hle
+    push_neg at hle
+    have h01 : (setOfEdge v V E).ncard = 0 ∨ (setOfEdge v V E).ncard = 1 := by omega
+    rcases h01 with h0 | h1
+    · rw [Set.ncard_eq_zero (remark_finite_fan1 v V E hfan.2.2.1.1)] at h0
+      rw [h0] at hEw
+      exact (Set.mem_empty_iff_false w).mp hEw
+    · obtain ⟨a, ha⟩ := Set.ncard_eq_one.mp h1
+      rw [ha, Set.mem_singleton_iff] at hEw hEw1
+      exact hw1ne (hEw.trans hEw1.symm)
+  have hne_u : setOfEdge v V E ≠ {w} := by
+    intro he; rw [he] at hcard; simp at hcard
+  have h0lt : (0 : ℕ) < (setOfEdge v V E).ncard := by omega
+  have hwDart0 := wDart_eq_wedge3_fan hfan hvw h0lt hcard
+  rw [Function.iterate_succ_apply', Function.iterate_zero_apply] at hwDart0
+  have hwDartj := wDart_eq_wedge3_fan hfan hvw hj hcard
+  rw [Function.iterate_succ_apply'] at hwDartj
+  rw [hwDart0, hwDartj]
+  ext y
+  simp only [Set.mem_inter_iff, Set.mem_empty_iff_false, iff_false]
+  rintro ⟨⟨_hlo, hhi, -⟩, ⟨hloj, -, -⟩⟩
+  have hhi1 : azim x v w y < ifAzimsFan x V E v w 1 := hhi
+  have h1j : 1 ≤ j := Nat.one_le_iff_ne_zero.mpr hne_j0
+  have hle1j : ifAzimsFan x V E v w 1 ≤ ifAzimsFan x V E v w j := by
+    rcases Nat.eq_or_lt_of_le h1j with h1 | h1
+    · rw [h1]
+    · have hstr := azim_lt_power_sigmaFan hfan hvw hne_u j 1 h1 hj
+      rw [← ifAzimsFan_eq_azim x V E v w 1 (by omega : 1 < (setOfEdge v V E).ncard),
+        ← ifAzimsFan_eq_azim x V E v w j hj] at hstr
+      exact le_of_lt hstr
+  linarith
 
 end Kepler.Text

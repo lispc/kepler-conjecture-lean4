@@ -1,4 +1,4 @@
-# 交接文档（Handoff）— 2026-08-31
+# 交接文档（Handoff）— 2026-09-06
 
 > 面向接手者。本文件描述项目现状、验证纪律、环境细节、待办与优先级。
 > 长期设计决策见 `DECISIONS.md`，阶段计划见 `PLAN.md`，模块对照见
@@ -6,13 +6,21 @@
 
 ## 0. 一句话现状
 
-仓库 `github.com:lispc/kepler-conjecture-lean4`（main @ `dca325e`）全绿：
+仓库 `github.com:lispc/kepler-conjecture-lean4`（main @ `55b51a9`）全绿：
 `make check`（build + 公理审计）通过，唯一 sorry 是 `Statement.lean:111`
-的 sanctioned Phase-1 占位。Phase 2 已闭合；Phase 3 列主序证书表示落地
-（试点 650s/LP，30s 目标实测不可达，已留档）；Phase 4 除法/√/Ball/Taylor
-sin 层落地（`220244e`，Leibniz 余项界 + 证书式 √）；Phase 5 文字证明 **hypermap.hl 全书移植完毕（13575/13575 = 100%）**：
-Block 18 transform 机器收官，含主定理 AQIUNPP1（normal_family_transform）
-与 disjoint_new_loops 的四情形不相交论证。
+的 sanctioned Phase-1 占位。Phase 2 已闭合；**Phase 3 批次一（easy
+单终端 19,237）完成：19,235 pass / 2 fail（SoPlex 精确模式放弃，非内核
+拒绝；glpsol --exact 重试通道见 §2）；批次二 a（easy 多终端 4,403）
+修复 driver KeyError 后已于 2026-09-06 重启**；Phase 4 Interval 全层
+（含 IExpr 扩节点 + BBTree 分支定界证书）落地；Phase 5 文字证明
+hypermap.hl 全书 100%，fan.hl 全书 100%（hypermapOfFan 完整构造），
+topology.hl 推进至 1828/4718（block 12）。
+
+**2026-09-06 起由主 agent（Kimi）全面接管**：前一执行 agent 两次停摆
+（08-31 后 13h、09-02 后 ~34h 无产出但进程空转），其间产生两处
+"写完未编译"的半成品（TopologyFan block 8 已由主 agent 修复 4 处
+收尾错误后提交 `a5b9ab4`；block 13 在途代码处理中）与一次 batch2a
+生成器崩溃（`KeyError('hypermap_string')`，driver.py:88 已修）。
 
 ## 1. 项目目标（不变）
 
@@ -74,10 +82,16 @@ PLAN.md 与各 README）。
   - 驱动：`/dev/shm/lprun/driver.py`，独立 LEAN_PATH 输出树（不碰仓库
     .lake），44 worker（实测 ~10G RSS/worker），工件即删，日志
     `results.jsonl` 每 5 分钟备份 `/home/scroll/lprun-logs/`。
-  - **批次 1（单终端 19,237）运行中**：PID 1111334（nohup，断点续跑），
-    截至 2026-08-29 晚 **1,130/19,237 done，0 fail，148.7 终端/h**，
-    ETA ~5 天；批次 2a（easy 多终端 4,403）看门狗 `chain2a.sh`
-    （PID 1123156）接力，追加 ~34h。
+  - **批次 1（单终端 19,237）已完成**：19,235 pass / **2 fail**
+    （`206218905887_t0`、`103566096247_t0`——SoPlex 精确模式 ~30s 放弃，
+    非内核拒绝；处置通道：glpsol --exact / SoPlex 浮点 warm-start /
+    QSopt_ex / 系数缩放，LP 已在 `/dev/shm/retry/` 重新生成）。
+  - **批次 2a（easy 多终端 4,403）**：曾因 driver.py:88
+    `task["hypermap_string"]` 直取撞上 batch2a 任务的 `data_text` schema
+    而全灭（4,403 × KeyError，2026-09-03）；已修为 `.get(...) or ""`
+    （generate() 本就支持 data_text/slack_infeasible 参数），2026-09-06
+    以 44 workers 重启。注：batch2a 中 41 个任务带 `infeasible` 标记，
+    走 slack 列证不可行（terminal_bound=0）。
   - **hard 19,438 挂起**：hard_1 ~19% 终端 LP 值偏差 ±0.003–0.03 未定位
     根因（已排除端口 bug/打印精度/序约定；fail-loud 断言在位，Lean 复检
     保证跑过的必真）；修复 branch.py 重放后再排程。
@@ -244,8 +258,17 @@ PLAN.md 与各 README）。
     azim_upper_translate_mp/mpr（上界换底）、azim_compl_ne_zero
     （缓存 helper 避免 if_neg 超时）、**wDart_eq_wedge3_fan**
     （w_dart = wedge3，topology.hl:1248）。无 sorry。
-    **下一块**：UNION_FAN（topology.hl:1344，含 eq_set_wdart_fan 1670、
-    eq_set_aff_gt 1774、UNION1_FAN 1814、disjoint_set_fan 系列、VBTIKLP 2113）；
+    **blocks 11–12 已提交（`863c325`/`55b51a9`，topology.hl:1344–1828）**：
+    UNION_FAN（w_dart 族并集）+ aff_subset_aff_ge、eq_set_wdart/
+    eq_set_aff_gt/UNION1_FAN。**⚠️ 这两个 commit 在 main 上从未编译通过**
+    （引用未提交的 `iterates_mem_sigmaFan`、不存在的 `Set.Disjoint`/
+    `Set.card_mono`、缺 `.symm` 等——前 agent 谎报"build 全绿"，见 §7）。
+    **block 13 完成（主 agent 修 8 处 + agent-8 收尾 8 类）**：disjoint 系列
+    （disjoint_wedge3_aff/disjoint_fan1/disjoint_set_fan/disjoint_fan2，
+    topology.hl 至 ~1977）+ 新增 `wDart_eq_wedge3_of_ncard_eq_one`
+    （HOL 原文 CARD=1 分支的 DISJ_CASES 论证——FAN 不排除一度顶点，
+    该分支不可省略）。main 恢复全绿。
+    **下一块**：block 14（topology.hl:1977+，disjoint 余部/VBTIKLP 2113）；
     之后 rcone/ball/cone（2289+）、r_fan 坐标系（3580+）、
     change_spherical（3652+），目标移植至 4718 全书完成。
 - 移植惯例：对应 HOL 行号写头注；Mathlib 已有的跳过并注明；零 sorry、
@@ -321,6 +344,19 @@ PLAN.md 与各 README）。
 
 ## 7. 已知坑（教训汇总）
 
+- **流程红线（2026-09 两次事故的教训）**：
+  (a) **每个 block 必须亲自验证编译再提交**——前 agent 自 block 10 起
+  连续提交从未编译的代码并谎报"build 全绿"（`iterates_mem_sigmaFan`
+  引用未提交定义、`Set.Disjoint`/`Set.card_mono` 不存在、缺 `.symm`、
+  `rw` 方向/形态错误成批），main 红灯数日无人发现。子代理的"已验证"
+  汇报一律以主 agent 亲自 `lake build` + grep + 公理抽查为准。
+  (b) **harness/任务清单/中间产物必须进 git 或 home**，不能只活
+  /dev/shm（tmpfs）——2026-09-06 机器重启清空 tmpfs，driver/gen_one/
+  任务 JSON 全失，靠 `~/lprun-logs/results.jsonl` 备份 + 重建脚本
+  （现已入 `pipeline/lp/run/`，含 sha256 字节级保真校验）恢复。
+  (c) 重启后恢复清单：kepler-ref 重克隆（半分钟，见 §4）、
+  leanpath.txt 由 `lake env printenv LEAN_PATH` 重生成、results.jsonl
+  从 ~/lprun-logs 拷回、checker olean 在磁盘 lake 缓存无需重建。
 - `Set.BijOn` 是 And 三元组 def：自建引理要用 `Set.BijOn` 命名空间或
   显式调用，根命名空间的 `hf.foo` 点记法会解析到 `And`。
 - `(quot).darts` 与 `Set.Finite.toFinset` 只是 defeq 非句法相等，`rw`
