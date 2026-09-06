@@ -2243,4 +2243,656 @@ theorem aff_ge_inter_aff_ge {x v w : V3} (hnc : ¬ Collinear3 x v w) :
           rw [h4, hsub]; module
       exact hnc ((collinear3_iff_mem_affineSpan hxv).mpr hwmem)
 
+/-! ## rcone 与 e-标架（topology.hl:2289–2534；fan.hl:1133–1260）
+
+rcone_fan 定义；e1/e2/e3_fan 标架（fan.hl，exp_aff_ge_by_dot 的载体）；
+aff_ge 的点积刻画（exp_aff_ge_by_dot / exp_aff_ge_by_dot_1_1）与闭性
+（closed_aff_ge_2_1 / closed_aff_ge_1_2 / closed_halfline_fan）。 -/
+
+/-- HOL topology.hl:2289 `rcone_fan`。 -/
+def rconeFan (x v : V3) (h : ℝ) : Set V3 :=
+  {y | (y - x) ⬝ᵥ (v - x) > dist y x * dist v x * h}
+
+/-- V3 上的叉积（Pi 侧 `crossProduct` 的提升；HOL `cross`）。 -/
+private noncomputable def cross3 (a b : V3) : V3 :=
+  WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ))
+
+/-- HOL fan.hl:1133 `e3_fan`：v - x 方向的单位向量。 -/
+noncomputable def e3Fan (x v u : V3) : V3 := (‖v - x‖⁻¹ : ℝ) • (v - x)
+
+/-- HOL fan.hl:1138 `e2_fan`：(u-x) 垂直于 e3 的分量方向的单位向量。 -/
+noncomputable def e2Fan (x v u : V3) : V3 :=
+  (‖cross3 (e3Fan x v u) (u - x)‖⁻¹ : ℝ) • cross3 (e3Fan x v u) (u - x)
+
+/-- HOL fan.hl:1140 `e1_fan`。 -/
+noncomputable def e1Fan (x v u : V3) : V3 := cross3 (e2Fan x v u) (e3Fan x v u)
+
+private theorem coe_cross3 (a b : V3) :
+    ((cross3 a b : V3) : Fin 3 → ℝ) = crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) :=
+  coe_toLp _
+
+private theorem dot_coe (a b : V3) :
+    (a : Fin 3 → ℝ) ⬝ᵥ (b : Fin 3 → ℝ) = a ⬝ᵥ b := by
+  rw [← dot_toLp, WithLp.toLp_ofLp]
+
+private theorem coe_smul (t : ℝ) (a : V3) :
+    ((t • a : V3) : Fin 3 → ℝ) = t • (a : Fin 3 → ℝ) := rfl
+
+private theorem crossProduct_smul_left (t : ℝ) (p r : Fin 3 → ℝ) :
+    crossProduct (t • p) r = t • crossProduct p r := by
+  funext i
+  fin_cases i <;> simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_two, Matrix.tail_cons, Matrix.head_cons, Pi.smul_apply]
+
+private theorem coe_add (a b : V3) :
+    ((a + b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) + (b : Fin 3 → ℝ) := rfl
+
+private theorem coe_sub (a b : V3) :
+    ((a - b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) - (b : Fin 3 → ℝ) := rfl
+
+private theorem coe_zero : ((0 : V3) : Fin 3 → ℝ) = 0 := rfl
+
+private theorem toLp_smul (t : ℝ) (p : Fin 3 → ℝ) :
+    (WithLp.toLp 2 (t • p) : V3) = t • (WithLp.toLp 2 p : V3) := by
+  rw [show t • (WithLp.toLp 2 p : V3) =
+      WithLp.toLp 2 ((t • (WithLp.toLp 2 p : V3) : Fin 3 → ℝ)) from
+    (WithLp.toLp_ofLp 2 _).symm]
+
+private theorem toLp_sub (p q : Fin 3 → ℝ) :
+    (WithLp.toLp 2 (p - q) : V3) =
+      (WithLp.toLp 2 p : V3) - (WithLp.toLp 2 q : V3) := by
+  rw [show (WithLp.toLp 2 p : V3) - (WithLp.toLp 2 q : V3) =
+      WithLp.toLp 2 (((WithLp.toLp 2 p : V3) - (WithLp.toLp 2 q : V3) : Fin 3 → ℝ)) from
+    (WithLp.toLp_ofLp 2 _).symm]
+
+/-- V3 侧 dot 代数（Pi 侧 dotProduct 引理的 term-mode 转接；V3 的 `⬝ᵥ`
+实例与 Pi 实例对 rw 而言形式不同，右侧带 • 的场合需先用 coe_smul 归一）。 -/
+private theorem smul_dot (t : ℝ) (a b : V3) : (t • a) ⬝ᵥ b = t * (a ⬝ᵥ b) :=
+  smul_dotProduct t (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+
+private theorem add_dot (a b c : V3) : (a + b) ⬝ᵥ c = a ⬝ᵥ c + b ⬝ᵥ c :=
+  add_dotProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)
+
+private theorem sub_dot (a b c : V3) : (a - b) ⬝ᵥ c = a ⬝ᵥ c - b ⬝ᵥ c :=
+  sub_dotProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)
+
+private theorem dot_sub (a b c : V3) : a ⬝ᵥ (b - c) = a ⬝ᵥ b - a ⬝ᵥ c :=
+  dotProduct_sub (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)
+
+private theorem zero_dot (a : V3) : (0 : V3) ⬝ᵥ a = 0 :=
+  zero_dotProduct (a : Fin 3 → ℝ)
+
+private theorem dot_comm (a b : V3) : a ⬝ᵥ b = b ⬝ᵥ a :=
+  dotProduct_comm (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+
+private theorem cross3_smul_left (t : ℝ) (a b : V3) :
+    cross3 (t • a) b = t • cross3 a b := by
+  rw [cross3, cross3, coe_smul, crossProduct_smul_left, toLp_smul]
+
+private theorem cross3_dot_left (a b : V3) : a ⬝ᵥ cross3 a b = 0 := by
+  rw [cross3, dotProduct_comm, dot_toLp, dotProduct_comm, triple_product_permutation]
+  exact dot_cross_self _ _
+
+private theorem cross3_dot_right (a b : V3) : b ⬝ᵥ cross3 a b = 0 := by
+  rw [cross3, dotProduct_comm, dot_toLp, dotProduct_comm]
+  exact dot_cross_self _ _
+
+private theorem cross3_cross3 (a b c : V3) :
+    cross3 (cross3 a b) c = ((a : Fin 3 → ℝ) ⬝ᵥ (c : Fin 3 → ℝ)) • b -
+      ((b : Fin 3 → ℝ) ⬝ᵥ (c : Fin 3 → ℝ)) • a := by
+  rw [cross3, cross3, coe_toLp, cross_cross_eq_smul_sub_smul, toLp_sub, toLp_smul,
+    toLp_smul, WithLp.toLp_ofLp, WithLp.toLp_ofLp]
+
+/-- HOL fan.hl:1152 `e3_is_normal_fan`。 -/
+theorem e3Fan_dot_self (hvx : v ≠ x) (u : V3) : e3Fan x v u ⬝ᵥ e3Fan x v u = 1 := by
+  have h1 : ‖v - x‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hvx)
+  rw [e3Fan, coe_smul, smul_dotProduct, dotProduct_smul, smul_eq_mul,
+    ← norm_sq_eq_dot, smul_eq_mul]
+  have h2 : ‖v - x‖⁻¹ * (‖v - x‖⁻¹ * ‖v - x‖ ^ 2) = 1 := by field_simp [h1]
+  exact h2
+
+/-- e3 × (u-x) ≠ 0（非共线 ⟹ (u-x) 有垂直于 (v-x) 的分量）。 -/
+theorem e3Fan_cross_ux_ne_zero (hnc : ¬ Collinear3 x v u) :
+    cross3 (e3Fan x v u) (u - x) ≠ 0 := by
+  intro hzero
+  have hvx : v ≠ x := fun he => hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) he)
+  -- |cross|² = |ux|² - (e3·ux)² = 0 ⟹ ux = t•e3 ⟹ 共线
+  have hsq : (u - x) ⬝ᵥ (u - x) =
+      ((u - x) ⬝ᵥ e3Fan x v u) * ((u - x) ⬝ᵥ e3Fan x v u) := by
+    have h1 : cross3 (e3Fan x v u) (u - x) ⬝ᵥ cross3 (e3Fan x v u) (u - x) = 0 := by
+      rw [hzero, coe_zero, zero_dotProduct]
+    rw [cross3, dot_toLp, coe_toLp, cross_dot_cross, dot_coe, dot_coe, dot_coe, dot_coe,
+      e3Fan_dot_self hvx u,
+      dotProduct_comm ((u - x : V3) : Fin 3 → ℝ) ((e3Fan x v u : V3) : Fin 3 → ℝ)] at h1
+    rw [← coe_sub]
+    rw [dot_comm (u - x) (e3Fan x v u)]
+    linarith [h1]
+  have hp : ((u - x) - ((u - x) ⬝ᵥ e3Fan x v u) • e3Fan x v u) ⬝ᵥ
+      ((u - x) - ((u - x) ⬝ᵥ e3Fan x v u) • e3Fan x v u) = 0 := by
+    have he3 : e3Fan x v u ⬝ᵥ e3Fan x v u = 1 := e3Fan_dot_self hvx u
+    rw [← coe_sub] at hsq
+    -- set 变量化：(u-x)、e3Fan 变为原子变量，绕开复合 coercion 的混合形态
+    set ux : V3 := u - x with hux
+    set e3 : V3 := e3Fan x v u with he3s
+    have hcomm : e3 ⬝ᵥ ux = ux ⬝ᵥ e3 := dot_comm _ _
+    have hp' : (ux - (ux ⬝ᵥ e3) • e3) ⬝ᵥ (ux - (ux ⬝ᵥ e3) • e3) = 0 := by
+      rw [sub_dot, dot_sub, dot_sub, coe_smul, coe_toLp, coe_toLp, smul_dotProduct,
+        dotProduct_smul, smul_dotProduct, dotProduct_smul, he3, hcomm]
+      simp only [smul_eq_mul] at hsq ⊢
+      nlinarith [hsq]
+    -- hp' 经 let 展开与目标 defeq
+    exact hp'
+  have hp0 : (u - x) - ((u - x) ⬝ᵥ e3Fan x v u) • e3Fan x v u = 0 := by
+    have h3 : ‖(u - x) - ((u - x) ⬝ᵥ e3Fan x v u) • e3Fan x v u‖ ^ 2 = 0 := by
+      rw [norm_sq_eq_dot]; exact hp
+    exact norm_eq_zero.mp ((pow_eq_zero_iff (by norm_num : (2:ℕ) ≠ 0)).mp h3)
+  have hux : u - x = ((u - x) ⬝ᵥ e3Fan x v u) • e3Fan x v u := sub_eq_zero.mp hp0
+  have h2 : ((u - x) ⬝ᵥ e3Fan x v u) • e3Fan x v u =
+      (((u - x) ⬝ᵥ e3Fan x v u) * ‖v - x‖⁻¹) • (v - x) := by
+    rw [e3Fan, smul_smul]
+  exact hnc ((collinear3_iff_smul hvx).mpr
+    ⟨((u - x) ⬝ᵥ e3Fan x v u) * ‖v - x‖⁻¹, by rw [← h2]; exact hux⟩)
+
+/-- HOL fan.hl:1158 `e2_is_normal_fan`。 -/
+theorem e2Fan_dot_self (hnc : ¬ Collinear3 x v u) : e2Fan x v u ⬝ᵥ e2Fan x v u = 1 := by
+  have hn : ‖cross3 (e3Fan x v u) (u - x)‖ ≠ 0 :=
+    norm_ne_zero_iff.mpr (e3Fan_cross_ux_ne_zero hnc)
+  rw [e2Fan, coe_smul, smul_dotProduct, dotProduct_smul, smul_eq_mul,
+    ← norm_sq_eq_dot, smul_eq_mul]
+  have h2 : ‖cross3 (e3Fan x v u) (u - x)‖⁻¹ *
+      (‖cross3 (e3Fan x v u) (u - x)‖⁻¹ * ‖cross3 (e3Fan x v u) (u - x)‖ ^ 2) = 1 := by
+    field_simp [hn]
+  exact h2
+
+/-- HOL fan.hl:1170 `e2_orthogonal_e3_fan`。 -/
+theorem e2Fan_dot_e3 (hnc : ¬ Collinear3 x v u) : e2Fan x v u ⬝ᵥ e3Fan x v u = 0 := by
+  rw [e2Fan, coe_smul, smul_dotProduct,
+    dotProduct_comm ((cross3 (e3Fan x v u) (u - x) : V3) : Fin 3 → ℝ)
+      ((e3Fan x v u : V3) : Fin 3 → ℝ),
+    cross3_dot_left, smul_zero]
+
+/-- HOL fan.hl:1176 `e1_is_normal_fan`。 -/
+theorem e1Fan_dot_self (hnc : ¬ Collinear3 x v u) : e1Fan x v u ⬝ᵥ e1Fan x v u = 1 := by
+  have hvx : v ≠ x := fun he => hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) he)
+  rw [e1Fan, cross3, dot_toLp, coe_toLp, cross_dot_cross, dot_coe, dot_coe, dot_coe,
+    dot_coe, e2Fan_dot_self hnc, e3Fan_dot_self hvx u,
+    dotProduct_comm ((e3Fan x v u : V3) : Fin 3 → ℝ) ((e2Fan x v u : V3) : Fin 3 → ℝ),
+    e2Fan_dot_e3 hnc]
+  ring
+
+/-- HOL fan.hl:1192 `e1_orthogonal_e2_fan`。 -/
+theorem e1Fan_dot_e2 (hnc : ¬ Collinear3 x v u) : e1Fan x v u ⬝ᵥ e2Fan x v u = 0 := by
+  rw [e1Fan,
+    dotProduct_comm ((cross3 (e2Fan x v u) (e3Fan x v u) : V3) : Fin 3 → ℝ)
+      ((e2Fan x v u : V3) : Fin 3 → ℝ)]
+  exact cross3_dot_left _ _
+
+/-- HOL fan.hl:1187 `e1_orthogonal_e3_fan`。 -/
+theorem e1Fan_dot_e3 (hnc : ¬ Collinear3 x v u) : e1Fan x v u ⬝ᵥ e3Fan x v u = 0 := by
+  rw [e1Fan,
+    dotProduct_comm ((cross3 (e2Fan x v u) (e3Fan x v u) : V3) : Fin 3 → ℝ)
+      ((e3Fan x v u : V3) : Fin 3 → ℝ)]
+  exact cross3_dot_right _ _
+
+/-- HOL fan.hl:1211 `dot_e2_fan`。 -/
+theorem dot_e2Fan (hnc : ¬ Collinear3 x v u) : (u - x) ⬝ᵥ e2Fan x v u = 0 := by
+  rw [e2Fan, coe_smul, dotProduct_smul, cross3_dot_right, smul_zero]
+
+/-- HOL fan.hl:1216 `vdot_e2_fan`。 -/
+theorem vdot_e2Fan (hnc : ¬ Collinear3 x v u) : (v - x) ⬝ᵥ e2Fan x v u = 0 := by
+  rw [e2Fan, coe_smul, dotProduct_smul, e3Fan, cross3_smul_left, coe_smul,
+    dotProduct_smul, cross3_dot_left, smul_zero, smul_zero]
+
+/-- e1 = n⁻¹ • ((u-x) - ((u-x)·e3)•e3)（Lagrange 展开；取点积前的中间形）。 -/
+private theorem e1Fan_eq (hnc : ¬ Collinear3 x v u) :
+    e1Fan x v u = ‖cross3 (e3Fan x v u) (u - x)‖⁻¹ •
+      ((u - x) - ((u - x) ⬝ᵥ e3Fan x v u) • e3Fan x v u) := by
+  have hvx : v ≠ x := fun he => hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) he)
+  rw [e1Fan, e2Fan, cross3_smul_left, cross3_cross3, dot_coe, dot_coe,
+    e3Fan_dot_self hvx u, one_smul]
+
+/-- HOL fan.hl:1222 `udot_e1_fan`。 -/
+theorem udot_e1Fan (hnc : ¬ Collinear3 x v u) : 0 < (u - x) ⬝ᵥ e1Fan x v u := by
+  have hvx : v ≠ x := fun he => hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) he)
+  have hn : 0 < ‖cross3 (e3Fan x v u) (u - x)‖ :=
+    norm_pos_iff.mpr (e3Fan_cross_ux_ne_zero hnc)
+  have h1 : (u - x) ⬝ᵥ e1Fan x v u = ‖cross3 (e3Fan x v u) (u - x)‖ := by
+    rw [e1Fan_eq hnc, coe_smul, dotProduct_smul,
+      coe_sub (u - x) (((u - x) ⬝ᵥ e3Fan x v u) • e3Fan x v u), coe_smul,
+      dotProduct_sub, dotProduct_smul, smul_eq_mul]
+    have hsq : (u - x) ⬝ᵥ (u - x) - ((u - x) ⬝ᵥ e3Fan x v u) *
+        ((u - x) ⬝ᵥ e3Fan x v u) =
+        cross3 (e3Fan x v u) (u - x) ⬝ᵥ cross3 (e3Fan x v u) (u - x) := by
+      rw [cross3, dot_toLp, coe_toLp, cross_dot_cross, dot_coe, dot_coe, dot_coe,
+        dot_coe, e3Fan_dot_self hvx u,
+        dotProduct_comm ((u - x : V3) : Fin 3 → ℝ) ((e3Fan x v u : V3) : Fin 3 → ℝ)]
+      simp only [coe_sub]
+      ring
+    simp only [coe_sub, smul_eq_mul] at hsq ⊢
+    rw [hsq, ← norm_sq_eq_dot]
+    have h2 : ‖cross3 (e3Fan x v u) (u - x)‖⁻¹ * ‖cross3 (e3Fan x v u) (u - x)‖ ^ 2 =
+        ‖cross3 (e3Fan x v u) (u - x)‖ := by
+      field_simp [ne_of_gt hn]
+    exact h2
+  rw [h1]
+  exact hn
+
+/-- HOL fan.hl:1247 `vdot_e1_fan`。 -/
+theorem vdot_e1Fan (hnc : ¬ Collinear3 x v u) : (v - x) ⬝ᵥ e1Fan x v u = 0 := by
+  rw [e1Fan, cross3, dotProduct_comm, dot_toLp, dotProduct_comm,
+    triple_product_permutation, e3Fan, coe_smul, crossProduct_smul_left, cross_self,
+    smul_zero, dotProduct_zero]
+
+/-- 标准正交三向量的坐标展开（HOL `ORTHONORMAL_IMP_SPANNING` + `SPAN_3`
+的角色：w = Σ (w·ei)•ei）。 -/
+private theorem coord_eq_sum {e1 e2 e3 : V3} (h1 : e1 ⬝ᵥ e1 = 1) (h2 : e2 ⬝ᵥ e2 = 1)
+    (h3 : e3 ⬝ᵥ e3 = 1) (h12 : e1 ⬝ᵥ e2 = 0) (h13 : e1 ⬝ᵥ e3 = 0)
+    (h23 : e2 ⬝ᵥ e3 = 0) (w : V3) :
+    w = (w ⬝ᵥ e1) • e1 + (w ⬝ᵥ e2) • e2 + (w ⬝ᵥ e3) • e3 := by
+  have hli : LinearIndependent ℝ ![e1, e2, e3] := by
+    rw [Fintype.linearIndependent_iff]
+    intro g hg i
+    have hd : ∀ e : V3, (g 0 • e1 + g 1 • e2 + g 2 • e3) ⬝ᵥ e = 0 := by
+      intro e
+      have hsum3 : g 0 • e1 + g 1 • e2 + g 2 • e3 =
+          ∑ j : Fin 3, g j • ![e1, e2, e3] j := by
+        simp only [Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+          Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons]
+      rw [hsum3, hg, zero_dot]
+    fin_cases i
+    · have h0 := hd e1
+      rw [coe_add, coe_add, coe_smul, coe_smul, coe_smul, add_dotProduct,
+        add_dotProduct, smul_dotProduct, smul_dotProduct, smul_dotProduct, h1,
+        dotProduct_comm ((e2 : V3) : Fin 3 → ℝ) ((e1 : V3) : Fin 3 → ℝ), h12,
+        dotProduct_comm ((e3 : V3) : Fin 3 → ℝ) ((e1 : V3) : Fin 3 → ℝ), h13] at h0
+      simpa using h0
+    · have h0 := hd e2
+      rw [coe_add, coe_add, coe_smul, coe_smul, coe_smul, add_dotProduct,
+        add_dotProduct, smul_dotProduct, smul_dotProduct, smul_dotProduct, h12, h2,
+        dotProduct_comm ((e3 : V3) : Fin 3 → ℝ) ((e2 : V3) : Fin 3 → ℝ), h23] at h0
+      simpa using h0
+    · have h0 := hd e3
+      rw [coe_add, coe_add, coe_smul, coe_smul, coe_smul, add_dotProduct,
+        add_dotProduct, smul_dotProduct, smul_dotProduct, smul_dotProduct,
+        h13, h23, h3] at h0
+      simpa using h0
+  have hspan : Submodule.span ℝ (Set.range ![e1, e2, e3]) = ⊤ :=
+    hli.span_eq_top_of_card_eq_finrank (by simp [finrank_euclideanSpace])
+  have hmem : w ∈ Submodule.span ℝ (Set.range ![e1, e2, e3]) :=
+    hspan.symm ▸ Submodule.mem_top
+  rw [Finsupp.mem_span_range_iff_exists_finsupp] at hmem
+  obtain ⟨c, hc⟩ := hmem
+  have hw : w = c 0 • e1 + c 1 • e2 + c 2 • e3 := by
+    rw [← hc, Finsupp.sum,
+      Finset.sum_subset (Finset.subset_univ _) (fun i _ hi => by
+        rw [Finsupp.notMem_support_iff.mp hi, zero_smul])]
+    simp only [Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons]
+  have hc0 : c 0 = w ⬝ᵥ e1 := by
+    rw [hw, coe_add, coe_add, coe_smul, coe_smul, coe_smul, add_dotProduct,
+      add_dotProduct, smul_dotProduct, smul_dotProduct, smul_dotProduct, h1,
+      dotProduct_comm ((e2 : V3) : Fin 3 → ℝ) ((e1 : V3) : Fin 3 → ℝ), h12,
+      dotProduct_comm ((e3 : V3) : Fin 3 → ℝ) ((e1 : V3) : Fin 3 → ℝ), h13]
+    ring
+  have hc1 : c 1 = w ⬝ᵥ e2 := by
+    rw [hw, coe_add, coe_add, coe_smul, coe_smul, coe_smul, add_dotProduct,
+      add_dotProduct, smul_dotProduct, smul_dotProduct, smul_dotProduct, h12, h2,
+      dotProduct_comm ((e3 : V3) : Fin 3 → ℝ) ((e2 : V3) : Fin 3 → ℝ), h23]
+    ring
+  have hc2 : c 2 = w ⬝ᵥ e3 := by
+    rw [hw, coe_add, coe_add, coe_smul, coe_smul, coe_smul, add_dotProduct,
+      add_dotProduct, smul_dotProduct, smul_dotProduct, smul_dotProduct,
+      h13, h23, h3]
+    ring
+  rw [hc0, hc1, hc2] at hw
+  exact hw
+
+/-- HOL topology.hl:2302 `exp_aff_ge_by_dot`：¬collinear {x,v,u} 时
+aff_ge {x,v} {u} 的点积刻画。 -/
+theorem exp_aff_ge_by_dot {x v u : V3} (hnc : ¬ Collinear3 x v u) :
+    affGe {x, v} {u} =
+      {w : V3 | (w - x) ⬝ᵥ e2Fan x v u = 0 ∧ 0 ≤ (w - x) ⬝ᵥ e1Fan x v u} := by
+  have hvx : v ≠ x := fun he => hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) he)
+  have hxv : x ≠ v := hvx.symm
+  have hdisj : Disjoint ({x, v} : Set V3) {u} := by
+    rw [Set.disjoint_singleton_right]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+    exact ⟨fun he => hnc (collinear3_pair_left he),
+      fun he => hnc (collinear3_pair_right he)⟩
+  ext w
+  constructor
+  · intro hy
+    rw [mem_affGe_pair hdisj hxv] at hy
+    obtain ⟨t1, t2, t3, ht3, hsum, hy⟩ := hy
+    have hwx : w - x = t2 • (v - x) + t3 • (u - x) := by
+      rw [hy, show t1 = 1 - t2 - t3 from by linarith]
+      module
+    constructor
+    · rw [hwx, coe_add, coe_smul, coe_smul, add_dotProduct, smul_dotProduct,
+        smul_dotProduct, vdot_e2Fan hnc, dot_e2Fan hnc]
+      ring
+    · rw [hwx, coe_add, coe_smul, coe_smul, add_dotProduct, smul_dotProduct,
+        smul_dotProduct, vdot_e1Fan hnc, smul_zero, zero_add, smul_eq_mul]
+      have hu1 := udot_e1Fan hnc
+      exact mul_nonneg ht3 (le_of_lt hu1)
+  · rintro ⟨he2, he1⟩
+    have hcoord := coord_eq_sum (e1Fan_dot_self hnc) (e2Fan_dot_self hnc)
+      (e3Fan_dot_self hvx u) (e1Fan_dot_e2 hnc) (e1Fan_dot_e3 hnc) (e2Fan_dot_e3 hnc)
+      (w - x)
+    rw [he2, zero_smul, add_zero] at hcoord
+    -- (u-x) = T1•e1 + T3•e3（dot_e2Fan 消去 e2 分量），T1 > 0，反解 e1；
+    -- set 使标量原子不透明，避免 rw 回归
+    have hux_coord := coord_eq_sum (e1Fan_dot_self hnc) (e2Fan_dot_self hnc)
+      (e3Fan_dot_self hvx u) (e1Fan_dot_e2 hnc) (e1Fan_dot_e3 hnc) (e2Fan_dot_e3 hnc)
+      (u - x)
+    rw [dot_e2Fan hnc, zero_smul, add_zero] at hux_coord
+    set A := (w - x) ⬝ᵥ e1Fan x v u with hA
+    set T1 := (u - x) ⬝ᵥ e1Fan x v u with hT1s
+    set T3 := (u - x) ⬝ᵥ e3Fan x v u with hT3s
+    set C := (w - x) ⬝ᵥ e3Fan x v u with hC
+    have hT1 : T1 ≠ 0 := by
+      rw [hT1s]; exact ne_of_gt (udot_e1Fan hnc)
+    have he1eq : e1Fan x v u = T1⁻¹ • ((u - x) - T3 • e3Fan x v u) := by
+      have h : T1 • e1Fan x v u = (u - x) - T3 • e3Fan x v u := by
+        conv_rhs => rw [hux_coord]
+        module
+      rw [← h, inv_smul_smul₀ hT1]
+    have hcoord2 : w - x = (A * T1⁻¹) • (u - x) +
+        ((C - A * T1⁻¹ * T3) * ‖v - x‖⁻¹) • (v - x) := by
+      conv_lhs => rw [hcoord]
+      rw [he1eq, e3Fan]; module
+    rw [mem_affGe_pair hdisj hxv]
+    refine ⟨1 - ((C - A * T1⁻¹ * T3) * ‖v - x‖⁻¹) - A * T1⁻¹,
+      (C - A * T1⁻¹ * T3) * ‖v - x‖⁻¹, A * T1⁻¹, ?_, by ring, ?_⟩
+    · rw [hA, hT1s]
+      exact mul_nonneg he1 (inv_nonneg.mpr (le_of_lt (udot_e1Fan hnc)))
+    · have : w = x + (w - x) := by module
+      conv_lhs => rw [this, hcoord2]
+      module
+
+/-- CLOSED_HYPERPLANE 的点积形式：{w | (w - x) ⬝ᵥ e = 0} 闭。 -/
+private theorem isClosed_dot_eq_zero (x e : V3) :
+    IsClosed {w : V3 | (w - x) ⬝ᵥ e = 0} := by
+  have hcont : Continuous fun w : V3 => (w - x) ⬝ᵥ e := by
+    have h : Continuous fun w : V3 => inner ℝ (w - x) e :=
+      (continuous_id.sub continuous_const).inner continuous_const
+    simp only [inner_eq_dot] at h
+    exact h
+  exact isClosed_singleton.preimage hcont
+
+/-- CLOSED_HALFSPACE_GE 的点积形式：{w | 0 ≤ (w - x) ⬝ᵥ e} 闭。 -/
+private theorem isClosed_dot_ge_zero (x e : V3) :
+    IsClosed {w : V3 | 0 ≤ (w - x) ⬝ᵥ e} := by
+  have hcont : Continuous fun w : V3 => (w - x) ⬝ᵥ e := by
+    have h : Continuous fun w : V3 => inner ℝ (w - x) e :=
+      (continuous_id.sub continuous_const).inner continuous_const
+    simp only [inner_eq_dot] at h
+    exact h
+  exact isClosed_Ici.preimage hcont
+
+/-- HOL topology.hl:2377 `closed_aff_ge_2_1`：¬collinear {x,v,u} 时
+aff_ge {x,v} {u} 闭。 -/
+theorem closed_aff_ge_2_1 {x v u : V3} (hnc : ¬ Collinear3 x v u) :
+    IsClosed (affGe {x, v} {u}) := by
+  rw [exp_aff_ge_by_dot hnc]
+  have h1 : {w : V3 | (w - x) ⬝ᵥ e2Fan x v u = 0 ∧ 0 ≤ (w - x) ⬝ᵥ e1Fan x v u} =
+      {w : V3 | (w - x) ⬝ᵥ e2Fan x v u = 0} ∩
+        {w : V3 | 0 ≤ (w - x) ⬝ᵥ e1Fan x v u} := by
+    ext w
+    simp only [Set.mem_inter_iff, Set.mem_setOf_eq]
+  rw [h1]
+  exact (isClosed_dot_eq_zero x _).inter (isClosed_dot_ge_zero x _)
+
+/-- HOL topology.hl:2405 `closed_aff_ge_1_2`：¬collinear {x,v,w} 时
+aff_ge {x} {v,w} 闭。 -/
+theorem closed_aff_ge_1_2 {x v w : V3} (hnc : ¬ Collinear3 x v w) :
+    IsClosed (affGe {x} {v, w}) := by
+  have hnc' : ¬ Collinear3 x w v := by
+    intro hc
+    have hset : ({x, w, v} : Set V3) = {x, v, w} := by
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    have hc' : Collinear ℝ ({x, w, v} : Set V3) := hc
+    have hc'' : Collinear ℝ ({x, v, w} : Set V3) := hset ▸ hc'
+    exact hnc hc''
+  rw [aff_ge_inter_aff_ge hnc]
+  exact (closed_aff_ge_2_1 hnc).inter (closed_aff_ge_2_1 hnc')
+
+/-- HOL topology.hl:2421 `AFF_GE_1_1`（成员形式）：y ∈ aff_ge {x} {v} ⟺
+两点组合（v 系数非负）。 -/
+theorem mem_affGe_singleton {x v : V3} (hxv : x ≠ v) {y : V3} :
+    y ∈ affGe {x} {v} ↔
+      ∃ t1 t2 : ℝ, 0 ≤ t2 ∧ t1 + t2 = 1 ∧ y = t1 • x + t2 • v := by
+  constructor
+  · rintro ⟨f, hfin, hsum, hpos, hone⟩
+    rw [sum_insert_single_s hfin hxv] at hone
+    rw [sum_insert_single_v hfin hxv] at hsum
+    exact ⟨f x, f v, hpos v (Set.mem_singleton v), hone, hsum⟩
+  · rintro ⟨t1, t2, ht2, hsum, hy⟩
+    have hfin : ({x} ∪ {v} : Set V3).Finite :=
+      (Set.finite_singleton x).union (Set.finite_singleton v)
+    refine ⟨fun z => if z = v then t2 else 1 - t2, hfin, ?_, ?_, ?_⟩
+    · rw [sum_insert_single_v hfin hxv]
+      simp only [eq_self_iff_true, if_true, if_neg hxv]
+      rw [show t1 = 1 - t2 from by linarith] at hy
+      exact hy
+    · intro z hz
+      rcases Set.mem_singleton_iff.mp hz with rfl
+      simp only [eq_self_iff_true, if_true]
+      exact ht2
+    · rw [sum_insert_single_s hfin hxv]
+      simp only [eq_self_iff_true, if_true, if_neg hxv]
+      ring
+
+/-- HOL topology.hl:2431 `exp_aff_ge_by_dot_1_1`：¬collinear {x,v,u} 时
+aff_ge {x} {v} 的点积刻画。 -/
+theorem exp_aff_ge_by_dot_1_1 {x v u : V3} (hnc : ¬ Collinear3 x v u) :
+    affGe {x} {v} =
+      {w : V3 | (w - x) ⬝ᵥ e2Fan x v u = 0 ∧ 0 ≤ (w - x) ⬝ᵥ e3Fan x v u ∧
+        (w - x) ⬝ᵥ e1Fan x v u = 0} := by
+  have hvx : v ≠ x := fun he => hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) he)
+  have hxv : x ≠ v := hvx.symm
+  have hdote3 : (v - x) ⬝ᵥ e3Fan x v u = ‖v - x‖ := by
+    have hn : ‖v - x‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hvx)
+    rw [e3Fan, coe_smul, dotProduct_smul, smul_eq_mul, ← norm_sq_eq_dot]
+    have h2 : ‖v - x‖⁻¹ * ‖v - x‖ ^ 2 = ‖v - x‖ := by field_simp [hn]
+    exact h2
+  ext w
+  constructor
+  · intro hy
+    rw [mem_affGe_singleton hxv] at hy
+    obtain ⟨t1, t2, ht2, hsum, hy⟩ := hy
+    have hwx : w - x = t2 • (v - x) := by
+      rw [hy, show t1 = 1 - t2 from by linarith]
+      module
+    refine ⟨?_, ?_, ?_⟩
+    · rw [hwx, coe_smul, smul_dotProduct, vdot_e2Fan hnc, smul_zero]
+    · rw [hwx, coe_smul, smul_dotProduct, hdote3, smul_eq_mul]
+      exact mul_nonneg ht2 (norm_nonneg _)
+    · rw [hwx, coe_smul, smul_dotProduct, vdot_e1Fan hnc, smul_zero]
+  · rintro ⟨he2, he3, he1⟩
+    have hcoord := coord_eq_sum (e1Fan_dot_self hnc) (e2Fan_dot_self hnc)
+      (e3Fan_dot_self hvx u) (e1Fan_dot_e2 hnc) (e1Fan_dot_e3 hnc) (e2Fan_dot_e3 hnc)
+      (w - x)
+    rw [he1, he2, zero_smul, zero_smul, add_zero, zero_add] at hcoord
+    set C := (w - x) ⬝ᵥ e3Fan x v u with hC
+    rw [mem_affGe_singleton hxv]
+    refine ⟨1 - C * ‖v - x‖⁻¹, C * ‖v - x‖⁻¹, ?_, by ring, ?_⟩
+    · rw [hC]; exact mul_nonneg he3 (inv_nonneg.mpr (norm_nonneg _))
+    · have : w = x + (w - x) := by module
+      conv_lhs => rw [this, hcoord, e3Fan]
+      module
+
+/-- HOL topology.hl:2486 `closed_halfline_fan`：¬collinear {x,v,u} 时
+aff_ge {x} {v} 闭。 -/
+theorem closed_halfline_fan {x v u : V3} (hnc : ¬ Collinear3 x v u) :
+    IsClosed (affGe {x} {v}) := by
+  rw [exp_aff_ge_by_dot_1_1 hnc]
+  have h1 : {w : V3 | (w - x) ⬝ᵥ e2Fan x v u = 0 ∧ 0 ≤ (w - x) ⬝ᵥ e3Fan x v u ∧
+      (w - x) ⬝ᵥ e1Fan x v u = 0} =
+      {w : V3 | (w - x) ⬝ᵥ e2Fan x v u = 0} ∩
+        ({w : V3 | (w - x) ⬝ᵥ e1Fan x v u = 0} ∩
+          {w : V3 | 0 ≤ (w - x) ⬝ᵥ e3Fan x v u}) := by
+    ext w
+    simp only [Set.mem_inter_iff, Set.mem_setOf_eq]
+    tauto
+  rw [h1]
+  exact (isClosed_dot_eq_zero x _).inter
+    ((isClosed_dot_eq_zero x _).inter (isClosed_dot_ge_zero x _))
+
+/-! ## 单位球面与分离（topology.hl:2535–2698）
+
+ballnorm_fan（单位球面）的闭/有界/紧性质，exist_fan（无交闭集与紧集的
+正分离，SEPARATE_CLOSED_COMPACT 的角色由 infDist 在紧集上的最小值给出），
+ballsets_fan 与 exists_ballsets_fan，cone_ge_fan 定义。 -/
+
+/-- HOL topology.hl:2535 `ballnorm_fan`：单位球面。 -/
+def ballnormFan (x : V3) : Set V3 := {y | dist x y = 1}
+
+private theorem ballnormFan_eq_sphere (x : V3) :
+    ballnormFan x = Metric.sphere x 1 := by
+  ext y
+  simp only [ballnormFan, Metric.sphere, Set.mem_setOf_eq, dist_comm]
+
+/-- HOL topology.hl:2538 `closed_ballnorm_fan`。 -/
+theorem closed_ballnorm_fan (x : V3) : IsClosed (ballnormFan x) := by
+  rw [ballnormFan_eq_sphere]
+  exact Metric.isClosed_sphere
+
+/-- HOL topology.hl:2548 `bounded_ballnorm_fan`。 -/
+theorem bounded_ballnorm_fan (x : V3) : Bornology.IsBounded (ballnormFan x) := by
+  rw [ballnormFan_eq_sphere]
+  exact Metric.isBounded_sphere
+
+/-- HOL topology.hl:2555 `bounded_ballnorm_fans`（有界子集的有界性）。 -/
+theorem bounded_ballnorm_fans (x v w : V3) :
+    Bornology.IsBounded (affGe {x} {v, w} ∩ ballnormFan x) :=
+  (bounded_ballnorm_fan x).subset Set.inter_subset_right
+
+/-- HOL topology.hl:2571 `closed_aff_ge_ballnorm_fan`。 -/
+theorem closed_aff_ge_ballnorm_fan {x v w : V3} (hnc : ¬ Collinear3 x v w) :
+    IsClosed (affGe {x} {v, w} ∩ ballnormFan x) :=
+  (closed_aff_ge_1_2 hnc).inter (closed_ballnorm_fan x)
+
+/-- HOL topology.hl:2581 `compact_aff_ge_ballnorm_fan`
+（BOUNDED_CLOSED_IMP_COMPACT）。 -/
+theorem compact_aff_ge_ballnorm_fan {x v w : V3} (hnc : ¬ Collinear3 x v w) :
+    IsCompact (affGe {x} {v, w} ∩ ballnormFan x) :=
+  Metric.isCompact_of_isClosed_isBounded (closed_aff_ge_ballnorm_fan hnc)
+    (bounded_ballnorm_fans x v w)
+
+/-- HOL topology.hl:2601 `closed_point_fan`。 -/
+theorem closed_point_fan {x v u : V3} (hnc : ¬ Collinear3 x v u) :
+    IsClosed (affGe {x} {v} ∩ ballnormFan x) :=
+  (closed_halfline_fan hnc).inter (closed_ballnorm_fan x)
+
+/-- aff_ge {x} ∅ = {x}（HOL `AFF_GE_EQ_AFFINE_HULL` + `AFFINE_SING`
+的退化情形）。 -/
+private theorem affGe_singleton_empty (x : V3) : affGe {x} ∅ = {x} := by
+  ext y
+  constructor
+  · rintro ⟨f, hfin, hsum, -, hone⟩
+    have h2 : hfin.toFinset = ({x} : Finset V3) := by
+      ext z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_singleton_iff,
+        Set.mem_empty_iff_false, or_false, Finset.mem_singleton]
+    rw [h2, Finset.sum_singleton] at hsum hone
+    have : y = x := by rw [hsum, hone, one_smul]
+    rw [this]
+    exact Set.mem_singleton x
+  · intro hy
+    rw [Set.mem_singleton_iff] at hy
+    have hfin : ({x} ∪ ∅ : Set V3).Finite :=
+      (Set.finite_singleton x).union Set.finite_empty
+    have h2 : hfin.toFinset = ({x} : Finset V3) := by
+      ext z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_singleton_iff,
+        Set.mem_empty_iff_false, or_false, Finset.mem_singleton]
+    refine ⟨fun _ => 1, hfin, ?_, ?_, ?_⟩
+    · rw [hy]
+      simp only [h2, Finset.sum_singleton, one_smul]
+    · intro z hz
+      exact ((Set.mem_empty_iff_false z).mp hz).elim
+    · simp only [h2, Finset.sum_singleton]
+
+/-- HOL topology.hl:2615 `exist_fan`：不相交的闭集 A = aff_ge{x}{v}∩S 与
+紧集 B = aff_ge{x}{v1,w1}∩S 正分离（SEPARATE_CLOSED_COMPACT 的角色由
+infDist 在紧集上的最小值给出；无交由 fan7 + dist x x = 0 ≠ 1 给出）。 -/
+theorem exist_fan (hfan : FAN x V E) (hv : v ∉ ({v1, w1} : Set V3))
+    (he1 : {v1, w1} ∈ E) (he : {v, w} ∈ E) :
+    ∃ h : ℝ, 0 < h ∧
+      ∀ y1 y2 : V3, y1 ∈ affGe {x} {v} ∩ ballnormFan x →
+        y2 ∈ affGe {x} {v1, w1} ∩ ballnormFan x → h ≤ dist y1 y2 := by
+  have hnc : ¬ Collinear3 x v w := fan_not_collinear hfan he
+  have hnc1 : ¬ Collinear3 x v1 w1 := fan_not_collinear hfan he1
+  have hvx : v ≠ x := fun he2 => hnc (collinear3_of_eq (v := x) (w := v) (w1 := w) he2)
+  have hv1x : v1 ≠ x := fun he2 => hnc1 (collinear3_of_eq (v := x) (w := v1) (w1 := w1) he2)
+  have hVv : v ∈ V := hfan.1 (Set.mem_sUnion.mpr ⟨{v, w}, he, Set.mem_insert v {w}⟩)
+  -- A ∩ B = ∅：fan7 + affGe {x} ∅ = {x} + dist x x = 0 ≠ 1
+  have h77 : affGe {x} {v} ∩ affGe {x} {v1, w1} = affGe {x} ({v} ∩ {v1, w1}) :=
+    hfan.2.2.2.2.2 {v} (Or.inr ⟨v, hVv, rfl⟩) {v1, w1} (Or.inl he1)
+  have hinter : ({v} : Set V3) ∩ {v1, w1} = ∅ := Set.singleton_inter_eq_empty.mpr hv
+  have hAB : (affGe {x} {v} ∩ ballnormFan x) ∩ (affGe {x} {v1, w1} ∩ ballnormFan x)
+      = ∅ := by
+    have h1 : (affGe {x} {v} ∩ ballnormFan x) ∩ (affGe {x} {v1, w1} ∩ ballnormFan x) =
+        (affGe {x} {v} ∩ affGe {x} {v1, w1}) ∩ ballnormFan x := by
+      ext y
+      simp only [Set.mem_inter_iff]
+      tauto
+    rw [h1, h77, hinter, affGe_singleton_empty]
+    ext y
+    simp only [Set.mem_inter_iff, Set.mem_singleton_iff, ballnormFan, Set.mem_setOf_eq,
+      Set.mem_empty_iff_false, iff_false, not_and]
+    intro hyx
+    rw [hyx, dist_self]
+    norm_num
+  have hB : IsCompact (affGe {x} {v1, w1} ∩ ballnormFan x) :=
+    compact_aff_ge_ballnorm_fan hnc1
+  have hA : IsClosed (affGe {x} {v} ∩ ballnormFan x) := closed_point_fan hnc
+  have hAne : (affGe {x} {v} ∩ ballnormFan x).Nonempty := by
+    have hn : ‖v - x‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hvx)
+    refine ⟨x + ‖v - x‖⁻¹ • (v - x), ?_, ?_⟩
+    · rw [mem_affGe_singleton hvx.symm]
+      exact ⟨1 - ‖v - x‖⁻¹, ‖v - x‖⁻¹, inv_nonneg.mpr (norm_nonneg _), by ring,
+        by module⟩
+    · rw [ballnormFan]
+      simp only [Set.mem_setOf_eq]
+      rw [dist_eq_norm,
+        show x - (x + ‖v - x‖⁻¹ • (v - x)) = -(‖v - x‖⁻¹ • (v - x)) from by module,
+        norm_neg, norm_smul, Real.norm_of_nonneg (inv_nonneg.mpr (norm_nonneg _)),
+        inv_mul_cancel₀ hn]
+  obtain ⟨h, hh0, hh⟩ := IsCompact.exists_forall_le' hB
+    (Metric.continuous_infDist_pt _).continuousOn
+    (fun y2 hy2 => by
+      have hy2not : y2 ∉ closure (affGe {x} {v} ∩ ballnormFan x) := by
+        rw [hA.closure_eq]
+        intro hmem
+        exact (Set.mem_empty_iff_false y2).mp (hAB ▸ ⟨hmem, hy2⟩)
+      exact (Metric.infDist_pos_iff_notMem_closure hAne).mp hy2not)
+  exact ⟨h, hh0, fun y1 y2 hy1 hy2 =>
+    (hh y2 hy2).trans (by rw [dist_comm]; exact Metric.infDist_le_dist_of_mem hy1)⟩
+
+/-- HOL topology.hl:2665 `ballsets_fan`：s 的开 h-邻域。 -/
+def ballsetsFan (s : Set V3) (h : ℝ) : Set V3 := {y | ∃ x, dist x y < h ∧ x ∈ s}
+
+/-- HOL topology.hl:2668 `exists_ballsets_fan`：exist_fan 的邻域形式。 -/
+theorem exists_ballsets_fan (hfan : FAN x V E) (hv : v ∉ ({v1, w1} : Set V3))
+    (he1 : {v1, w1} ∈ E) (he : {v, w} ∈ E) :
+    ∃ h : ℝ, 0 < h ∧
+      ballsetsFan (affGe {x} {v} ∩ ballnormFan x) h ∩
+        (affGe {x} {v1, w1} ∩ ballnormFan x) = ∅ := by
+  obtain ⟨h, hh0, hh⟩ := exist_fan hfan hv he1 he
+  refine ⟨h, hh0, ?_⟩
+  ext y
+  simp only [Set.mem_inter_iff, ballsetsFan, Set.mem_setOf_eq, Set.mem_empty_iff_false,
+    iff_false, not_and]
+  rintro ⟨z, hzd, hzA⟩ hyA2 hyB2
+  have hle := hh z y hzA ⟨hyA2, hyB2⟩
+  linarith
+
+/-- HOL topology.hl:2698 `cone_ge_fan`：以 x 为顶点的锥。 -/
+def coneGeFan (x : V3) (s : Set V3) : Set V3 :=
+  {y | ∃ a : ℝ, ∃ z : V3, 0 ≤ a ∧ z ∈ s ∧ y = a • (z - x) + x}
+
 end Kepler.Text
