@@ -2026,3 +2026,405 @@ theorem inequality3_aim_in_convex_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
     module
   exact (azim_cone_of_combo hncw hncv hθ0 hθπ t2 (t3 * t) (t3 * (1 - t)) ht2
     (mul_pos ht3 ht0) hyc).2
+
+/-- 仿射组合入三点仿射包（系数和为 1 的显式三元组合；
+`mem_affineSpan_triple_of_eq` 的对称版本）。 -/
+private theorem mem_affineSpan_of_combo {p q r z : V3} {c1 c2 c3 : ℝ}
+    (hsum : c1 + c2 + c3 = 1) (hcomb : z = c1 • p + c2 • q + c3 • r) :
+    z ∈ (affineSpan ℝ ({p, q, r} : Set V3) : Set V3) := by
+  have hc1 : c1 = 1 - c2 - c3 := by linarith
+  have hset : ({p, r, q} : Set V3) = ({p, q, r} : Set V3) := by
+    ext a; simp; tauto
+  rw [hcomb, hc1, ← hset]
+  exact mem_affineSpan_triple_of_eq (x := p) (p := r) (q := q) (c := c2) (h := c3)
+    (by module)
+
+/-- HOL planarity.hl:1714 `fan_run_in_small3_is_fan`：w1 与 u 相邻
+（`{u,w1} ∈ E`）时，小扰动扇区 `aff_gt {x} {v,(1-t)•u+t•w}` 与闭扇区
+`aff_ge {x} {u,w1}` 无交。重构证明：交点 y 的两组系数
+（`aff_gt_1_2`/`aff_ge_1_2`）给出
+(1) y 不在轴 xu 上（否则弦点 z(t) ∈ aff{x,v,u}，四点共面，与
+`continuous_coplanar_fan` 矛盾）；
+(2) w1 系数 t3' > 0（否则 y ∈ aff{x,u}），于是 y - x = t2'•(u-x) + t3'•(w1-x)
+给出 w1 ∈ aff_gt {x,u} {y}，`azim_eq_azim_iff_alt` 给
+azim x u w w1 = azim x u w y；
+(3) `inequality3_aim_in_convex_fan` 给 0 < azim x u w y < azim x u w v；
+(4) w1 = w 时 azim x u w w = 0 与 (3) 矛盾；否则 `SIGMA_FAN` 最小性
+azim x u w v ≤ azim x u w w1 = azim x u w y < azim x u w v 矛盾。 -/
+theorem fan_run_in_small3_is_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (huw1 : {u, w1} ∈ E)
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) (hsigma : sigmaFan x V E u w = v)
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi) :
+    ∃ t1 : ℝ, 0 < t1 ∧ t1 ≤ 1 ∧
+      ∀ t : ℝ, 0 < t → t < t1 →
+        affGt {x} {v, (1 - t) • u + t • w} ∩ affGe {x} {u, w1} = ∅ := by
+  obtain ⟨ta, ta0, ta1, hnc⟩ := exists_open_not_collinear hfan hvu huw
+  refine ⟨ta, ta0, ta1, ?_⟩
+  intro t ht0 htt1
+  have ht1 : t < 1 := lt_of_lt_of_le htt1 ta1
+  have hncz : ¬ Collinear3 x v ((1 - t) • u + t • w) := hnc t ht0.le (le_of_lt htt1)
+  have hncuv : ¬ Collinear3 x u v := by
+    refine fan_not_collinear hfan ?_
+    have h : ({u, v} : Set V3) = ({v, u} : Set V3) := by
+      ext a; simp; tauto
+    rw [h]; exact hvu
+  have hncw : ¬ Collinear3 x u w := fan_not_collinear hfan huw
+  have hncw1 : ¬ Collinear3 x u w1 := fan_not_collinear hfan huw1
+  have hxu : x ≠ u := fun he => hncw (collinear3_of_eq he.symm)
+  refine Set.eq_empty_iff_forall_notMem.mpr (fun y hy => ?_)
+  obtain ⟨hy1, hy2⟩ := hy
+  have hdisx : Disjoint ({x} : Set V3) ({v, (1 - t) • u + t • w} : Set V3) :=
+    disjoint_of_not_collinear3 hncz
+  rw [aff_gt_1_2 hdisx] at hy1
+  simp only [Set.mem_setOf_eq] at hy1
+  obtain ⟨t1', t2, t3, ht2, ht3, hsum, hyeq⟩ := hy1
+  -- (1) y 不在轴 xu 上
+  have hncy : ¬ Collinear3 x u y := by
+    intro hcol
+    obtain ⟨s, hsline⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp
+      ((collinear3_iff_mem_affineSpan hxu).mp hcol)
+    have hycombo : y = (1 - s) • x + s • u := by
+      rw [← hsline, AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add]; module
+    have hne : t3 ≠ 0 := ne_of_gt ht3
+    have heqy : t1' • x + t2 • v + t3 • ((1 - t) • u + t • w)
+        = (1 - s) • x + s • u := hyeq.symm.trans hycombo
+    have hzexpr : t3 • ((1 - t) • u + t • w)
+        = (1 - s) • x + s • u - (t1' • x + t2 • v) := by
+      calc t3 • ((1 - t) • u + t • w)
+          = (t1' • x + t2 • v + t3 • ((1 - t) • u + t • w))
+            - (t1' • x + t2 • v) := by module
+        _ = (1 - s) • x + s • u - (t1' • x + t2 • v) := by rw [heqy]
+    have hzmem : (1 - t) • u + t • w ∈
+        (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) := by
+      refine mem_affineSpan_of_combo (p := x) (q := v) (r := u)
+        (c1 := t3⁻¹ * (1 - s) - t3⁻¹ * t1') (c2 := -(t3⁻¹ * t2))
+        (c3 := t3⁻¹ * s) ?_ ?_
+      · calc t3⁻¹ * (1 - s) - t3⁻¹ * t1' + -(t3⁻¹ * t2) + t3⁻¹ * s
+            = t3⁻¹ * ((1 - s) - t1' - t2 + s) := by ring
+          _ = t3⁻¹ * t3 := by congr 1; linarith
+          _ = 1 := inv_mul_cancel₀ hne
+      · show (1 - t) • u + t • w = (t3⁻¹ * (1 - s) - t3⁻¹ * t1') • x
+          + -(t3⁻¹ * t2) • v + (t3⁻¹ * s) • u
+        calc (1 - t) • u + t • w
+            = t3⁻¹ • (t3 • ((1 - t) • u + t • w)) := by
+              rw [smul_smul, inv_mul_cancel₀ hne, one_smul]
+          _ = t3⁻¹ • ((1 - s) • x + s • u - (t1' • x + t2 • v)) := by rw [hzexpr]
+          _ = _ := by module
+    refine continuous_coplanar_fan x v u w hcop t (ne_of_gt ht0)
+      ⟨x, v, u, fun p hp => ?_⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | rfl | rfl | hzmem'
+    · exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+    · exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+    · exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+    · rw [hzmem']
+      exact SetLike.mem_coe.mpr hzmem
+  -- aff_ge 侧系数
+  have hdisw1 : Disjoint ({x} : Set V3) ({u, w1} : Set V3) :=
+    disjoint_of_not_collinear3 hncw1
+  rw [aff_ge_1_2 hdisw1] at hy2
+  simp only [Set.mem_setOf_eq] at hy2
+  obtain ⟨t1'', t2', t3', ht2', ht3', hsum', hyeq2⟩ := hy2
+  -- (2) t3' > 0，否则 y 落在轴上
+  have ht3'0 : 0 < t3' := by
+    by_contra hcon
+    push_neg at hcon
+    have h0 : t3' = 0 := le_antisymm hcon ht3'
+    refine hncy ((collinear3_iff_mem_affineSpan hxu).mpr
+      (mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨t2', ?_⟩))
+    rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add, hyeq2, h0, zero_smul,
+      add_zero]
+    have ht : t1'' = 1 - t2' := by linarith
+    rw [ht]
+    module
+  -- w1 ∈ aff_gt {x,u} {y}
+  have hyxc : y - x = t2' • (u - x) + t3' • (w1 - x) := by
+    have h1 : t1'' = 1 - t2' - t3' := by linarith
+    rw [hyeq2, h1]
+    module
+  have hyx : y ≠ x := fun he => hncy (collinear3_pair_left he)
+  have hyu : y ≠ u := fun he => hncy (collinear3_pair_right he)
+  have hne3 : t3' ≠ 0 := ne_of_gt ht3'0
+  have hmem : w1 ∈ affGt ({x, u} : Set V3) {y} := by
+    refine (affGt_pair_iff (v0 := x) (v1 := u) (x := y) (y := w1) hxu hyx hyu).mpr
+      ⟨t3'⁻¹, inv_pos.mpr ht3'0, -(t2' * t3'⁻¹), ?_⟩
+    show w1 - x = t3'⁻¹ • (y - x) + -(t2' * t3'⁻¹) • (u - x)
+    rw [hyxc, smul_add, smul_smul, smul_smul, inv_mul_cancel₀ hne3, one_smul]
+    module
+  have hazim : azim x u w w1 = azim x u w y :=
+    (azim_eq_azim_iff_alt hncw hncw1 hncy).mpr hmem
+  -- (3) 锥引理
+  obtain ⟨hBE, hYEU⟩ := inequality3_aim_in_convex_fan hfan hvu huw hθ0 hθπ
+    t ht0 ht1 t1' t2 t3 ht3 ht2 hsum
+  rw [← hyeq] at hBE hYEU
+  -- (4) 终局矛盾
+  rcases eq_or_ne w1 w with rfl | hw1w
+  · rw [azim_self] at hazim
+    linarith
+  · have hw1edge : w1 ∈ setOfEdge u V E :=
+      (properties_of_setOfEdge_fan x V E u w1 hfan).mp huw1
+    have hwedge : w ∈ setOfEdge u V E :=
+      (properties_of_setOfEdge_fan x V E u w hfan).mp huw
+    by_cases hsingle : setOfEdge u V E = {w}
+    · exact hw1w (by
+        rw [hsingle] at hw1edge
+        exact Set.mem_singleton_iff.mp hw1edge)
+    · obtain ⟨-, -, hmin⟩ := SIGMA_FAN hsingle hfan hwedge
+      have hle := hmin w1 hw1edge hw1w
+      rw [hsigma] at hle
+      linarith
+
+/-- 三点仿射包 membership 的双系数刻画（差落在 `span {b-a, c-a}`）。 -/
+private theorem exists_combo_of_mem_affineSpan3 {a b c z : V3}
+    (hz : z ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3)) :
+    ∃ d1 d2 : ℝ, z = a + d1 • (b - a) + d2 • (c - a) := by
+  have h1 : z -ᵥ a ∈ vectorSpan ℝ ({a, b, c} : Set V3) :=
+    vsub_mem_vectorSpan_of_mem_affineSpan_of_mem_affineSpan (SetLike.mem_coe.mp hz)
+      (mem_affineSpan ℝ (by simp))
+  rw [vectorSpan_eq_span_vsub_set_right ℝ
+    (by simp : a ∈ ({a, b, c} : Set V3))] at h1
+  have hle : Submodule.span ℝ ((· -ᵥ a) '' ({a, b, c} : Set V3)) ≤
+      Submodule.span ℝ ({b - a, c - a} : Set V3) := by
+    refine Submodule.span_le.mpr ?_
+    rintro p ⟨z', hz'set, hp⟩
+    dsimp only at hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz'set
+    rcases hz'set with hz' | hz' | hz'
+    · rw [← hp, hz', vsub_self]
+      exact Submodule.zero_mem _
+    · rw [← hp, hz', vsub_eq_sub]
+      exact Submodule.subset_span (by simp)
+    · rw [← hp, hz', vsub_eq_sub]
+      exact Submodule.subset_span (by simp)
+  obtain ⟨d1, d2, hd⟩ := Submodule.mem_span_pair.mp (hle h1)
+  have hd' : d1 • (b - a) + d2 • (c - a) = z - a := by
+    rw [hd, vsub_eq_sub]
+  refine ⟨d1, d2, ?_⟩
+  calc z = a + (z - a) := by abel
+    _ = a + (d1 • (b - a) + d2 • (c - a)) := by rw [hd']
+    _ = a + d1 • (b - a) + d2 • (c - a) := by abel
+
+/-- 共面提取的抽象 ℂ 核心：两组实系数组合共用一对复数 P、Q，且轴向组合
+为零、w 侧组合非零时，v 侧组合是 w 侧组合的实倍数。 -/
+private theorem complex_mul_of_span_two {P Q zv zw : ℂ}
+    {β1 β2 α1 α2 γ1 γ2 : ℝ}
+    (hzu : ((β1 : ℝ) : ℂ) * P + ((β2 : ℝ) : ℂ) * Q = 0)
+    (hzv : zv = ((α1 : ℝ) : ℂ) * P + ((α2 : ℝ) : ℂ) * Q)
+    (hzw : zw = ((γ1 : ℝ) : ℂ) * P + ((γ2 : ℝ) : ℂ) * Q)
+    (hβ : β1 ≠ 0 ∨ β2 ≠ 0) (hzw0 : zw ≠ 0) :
+    ∃ μ : ℝ, zv = ((μ : ℝ) : ℂ) * zw := by
+  by_cases hβ1 : β1 = 0
+  · have hβ2 : β2 ≠ 0 := by
+      rcases hβ with h | h
+      · exact absurd hβ1 h
+      · exact h
+    have hβ2' : ((β2 : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hβ2
+    have h1 : ((β2 : ℝ) : ℂ) * Q = 0 := by
+      have h1' := hzu
+      rw [hβ1, Complex.ofReal_zero, zero_mul, zero_add] at h1'
+      exact h1'
+    have hQ : Q = 0 := by
+      have h2 : Q = (((β2 : ℝ) : ℂ)⁻¹ * ((β2 : ℝ) : ℂ)) * Q := by
+        rw [inv_mul_cancel₀ hβ2', one_mul]
+      calc Q = (((β2 : ℝ) : ℂ)⁻¹ * ((β2 : ℝ) : ℂ)) * Q := h2
+        _ = ((β2 : ℝ) : ℂ)⁻¹ * (((β2 : ℝ) : ℂ) * Q) := by ring
+        _ = ((β2 : ℝ) : ℂ)⁻¹ * 0 := by rw [h1]
+        _ = 0 := by rw [mul_zero]
+    have hγ1 : γ1 ≠ 0 := by
+      intro h0
+      rw [hzw, h0, hQ] at hzw0
+      simp at hzw0
+    have hd1 : ((α1 / γ1 : ℝ) : ℂ) * ((γ1 : ℝ) : ℂ) = ((α1 : ℝ) : ℂ) := by
+      exact_mod_cast div_mul_cancel₀ α1 hγ1
+    refine ⟨α1 / γ1, ?_⟩
+    rw [hzv, hzw, hQ, mul_add, ← mul_assoc, hd1]
+    simp [mul_zero]
+  · have hβ1' : ((β1 : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hβ1
+    have hP : P = ((-(β2 / β1) : ℝ) : ℂ) * Q := by
+      have h1 : ((β1 : ℝ) : ℂ) * P = -((β2 : ℝ) : ℂ) * Q := by
+        linear_combination hzu
+      have h2 : P = (((β1 : ℝ) : ℂ)⁻¹ * ((β1 : ℝ) : ℂ)) * P := by
+        rw [inv_mul_cancel₀ hβ1', one_mul]
+      calc P = (((β1 : ℝ) : ℂ)⁻¹ * ((β1 : ℝ) : ℂ)) * P := h2
+        _ = ((β1 : ℝ) : ℂ)⁻¹ * (((β1 : ℝ) : ℂ) * P) := by ring
+        _ = ((β1 : ℝ) : ℂ)⁻¹ * (-((β2 : ℝ) : ℂ) * Q) := by rw [h1]
+        _ = ((-(β2 / β1) : ℝ) : ℂ) * Q := by
+            push_cast
+            field_simp [hβ1']
+    have hzvQ : zv = ((α2 - α1 * β2 / β1 : ℝ) : ℂ) * Q := by
+      rw [hzv, hP]; push_cast; ring
+    have hzwQ : zw = ((γ2 - γ1 * β2 / β1 : ℝ) : ℂ) * Q := by
+      rw [hzw, hP]; push_cast; ring
+    have hκ : γ2 - γ1 * β2 / β1 ≠ 0 := by
+      intro h0
+      rw [hzwQ, h0] at hzw0
+      simp at hzw0
+    have hd2 : (((α2 - α1 * β2 / β1 : ℝ) / (γ2 - γ1 * β2 / β1 : ℝ) : ℝ) : ℂ)
+        * ((γ2 - γ1 * β2 / β1 : ℝ) : ℂ) = ((α2 - α1 * β2 / β1 : ℝ) : ℂ) := by
+      exact_mod_cast div_mul_cancel₀ _ hκ
+    refine ⟨(α2 - α1 * β2 / β1) / (γ2 - γ1 * β2 / β1), ?_⟩
+    rw [hzvQ, hzwQ, ← mul_assoc, hd2]
+
+/-- HOL `AZIM_EQ_0_PI_EQ_COPLANAR`（Multivariate-flyspeck.ml:3161）的解析
+替代：四点 {x,u,v,w} 共面且 v、w 都不在轴 xu 上时，v-x 与 w-x 在轴向
+正交标架下的 ℂ 平面坐标成实倍数，故 θ = azim x u w v 的相位 e^{iθ} 为
+实数，即 sin θ = 0，结合 0 ≤ θ < 2π 得 θ ∈ {0, π}。 -/
+private theorem azim_eq_0_or_pi_of_coplanar {x u v w : V3}
+    (hncv : ¬ Collinear3 x u v) (hncw : ¬ Collinear3 x u w)
+    (hcop : Coplanar ({x, u, v, w} : Set V3)) :
+    azim x u w v = 0 ∨ azim x u w v = Real.pi := by
+  have hux : u ≠ x := fun he => hncw (collinear3_of_eq he)
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (u - x) (sub_ne_zero.mpr hux)
+  have hax : (u - x : V3) = dist u x • f3 := by rw [dist_eq_norm]; exact halign
+  have hzwne : zOf f1 f2 (w - x) ≠ 0 := (zOf_ne_zero_iff hon hax hux w).mpr hncw
+  obtain ⟨ψ, rb, ra, hrb, hra, hzwrep, hzvrep⟩ := azim_frame_spec hncw hncv hon hax hux
+  -- 共面性 → 公共平面表示 → ℂ 坐标实相关
+  obtain ⟨μ, hμ⟩ : ∃ μ : ℝ, zOf f1 f2 (v - x) = ((μ : ℝ) : ℂ) * zOf f1 f2 (w - x) := by
+    obtain ⟨a, b, c, hsub⟩ := hcop
+    have hxS : x ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+    have huS : u ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+    have hvS : v ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+    have hwS : w ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+    obtain ⟨ξ1, ξ2, hξ⟩ := exists_combo_of_mem_affineSpan3 hxS
+    obtain ⟨β1, β2, hβ⟩ := exists_combo_of_mem_affineSpan3 huS
+    obtain ⟨α1, α2, hα⟩ := exists_combo_of_mem_affineSpan3 hvS
+    obtain ⟨γ1, γ2, hγ⟩ := exists_combo_of_mem_affineSpan3 hwS
+    have hvx : v - x = (α1 - ξ1) • (b - a) + (α2 - ξ2) • (c - a) := by
+      rw [hα, hξ]; module
+    have hwx : w - x = (γ1 - ξ1) • (b - a) + (γ2 - ξ2) • (c - a) := by
+      rw [hγ, hξ]; module
+    have huxc : u - x = (β1 - ξ1) • (b - a) + (β2 - ξ2) • (c - a) := by
+      rw [hβ, hξ]; module
+    have hzlin : ∀ p q : V3, ∀ d1 d2 : ℝ, p - q = d1 • (b - a) + d2 • (c - a) →
+        zOf f1 f2 (p - q) = ((d1 : ℝ) : ℂ) * zOf f1 f2 (b - a)
+          + ((d2 : ℝ) : ℂ) * zOf f1 f2 (c - a) := by
+      intro p q d1 d2 hd
+      rw [hd, zOf_add, zOf_smul, zOf_smul]
+    have hzc := hzlin v x (α1 - ξ1) (α2 - ξ2) hvx
+    have hzd := hzlin w x (γ1 - ξ1) (γ2 - ξ2) hwx
+    have hzu0 := hzlin u x (β1 - ξ1) (β2 - ξ2) huxc
+    have hf3z : zOf f1 f2 f3 = 0 := by
+      obtain ⟨-, -, -, -, h13, h23, -⟩ := hon
+      unfold zOf
+      rw [dotProduct_comm f3 f1, dotProduct_comm f3 f2, h13, h23]
+      norm_num
+    rw [hax, zOf_smul, hf3z, mul_zero] at hzu0
+    have hne2 : β1 - ξ1 ≠ 0 ∨ β2 - ξ2 ≠ 0 := by
+      by_contra hcon
+      push_neg at hcon
+      apply hux
+      have hzero : u - x = 0 := by
+        rw [huxc, hcon.1, hcon.2]
+        module
+      exact sub_eq_zero.mp hzero
+    exact complex_mul_of_span_two hzu0.symm hzc hzd hne2 hzwne
+  -- 相位：ra • e^{i(ψ+θ)} = μ • rb • e^{iψ} ⟹ ra • e^{iθ} = μ • rb ∈ ℝ
+  have hkey : ((ra : ℝ) : ℂ) * Complex.exp (((azim x u w v : ℝ) : ℂ) * I)
+      = ((μ * rb : ℝ) : ℂ) := by
+    have h1 : ((ra : ℝ) : ℂ)
+          * Complex.exp ((((ψ + azim x u w v : ℝ) : ℂ)) * I)
+        = ((μ : ℝ) : ℂ) * (((rb : ℝ) : ℂ) * Complex.exp (((ψ : ℝ) : ℂ) * I)) := by
+      rw [← hzvrep, ← hzwrep]
+      exact hμ
+    have hexp : Complex.exp ((((ψ + azim x u w v : ℝ) : ℂ)) * I)
+        = Complex.exp (((ψ : ℝ) : ℂ) * I)
+          * Complex.exp (((azim x u w v : ℝ) : ℂ) * I) := by
+      rw [← Complex.exp_add]
+      congr 1
+      push_cast
+      ring
+    rw [hexp] at h1
+    have h2 : ((ra : ℝ) : ℂ) * Complex.exp (((azim x u w v : ℝ) : ℂ) * I)
+          * Complex.exp (((ψ : ℝ) : ℂ) * I)
+        = ((μ * rb : ℝ) : ℂ) * Complex.exp (((ψ : ℝ) : ℂ) * I) := by
+      push_cast
+      linear_combination h1
+    exact mul_right_cancel₀ (Complex.exp_ne_zero _) h2
+  have hsin : Real.sin (azim x u w v) = 0 := by
+    have h := congrArg Complex.im hkey
+    simp only [Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, cexp_sin_im,
+      mul_zero, add_zero, zero_mul] at h
+    rcases mul_eq_zero.mp h with h' | h'
+    · exact absurd h' (by exact_mod_cast (ne_of_gt hra))
+    · exact h'
+  obtain ⟨n, hn⟩ := Real.sin_eq_zero_iff.mp hsin
+  have hpi : (0:ℝ) < Real.pi := Real.pi_pos
+  have hn0 : (0:ℤ) ≤ n := by
+    by_contra hcon
+    push_neg at hcon
+    have hnle : ((n:ℤ) : ℝ) ≤ -1 := by exact_mod_cast (by omega)
+    have hθn : azim x u w v < 0 := by rw [← hn]; nlinarith [hnle, hpi]
+    exact absurd (azim_nonneg x u w v) (not_le.mpr hθn)
+  have hn2 : n < 2 := by
+    by_contra hcon
+    push_neg at hcon
+    have hnge : (2:ℝ) ≤ ((n:ℤ) : ℝ) := by exact_mod_cast (by omega)
+    have hθbig : 2 * Real.pi ≤ azim x u w v := by rw [← hn]; nlinarith [hnge, hpi]
+    exact absurd hθbig (not_le.mpr (azim_lt_two_pi x u w v))
+  rcases (show n = 0 ∨ n = 1 by omega) with rfl | rfl
+  · exact Or.inl (by rw [← hn]; push_cast; norm_num)
+  · exact Or.inr (by rw [← hn]; push_cast; norm_num)
+
+/-- HOL planarity.hl:1872 `properties_fully_surrounded`：扇区角严格介于
+0 与 π 之间时四点不共面（`AZIM_EQ_0_PI_EQ_COPLANAR` 的逆否形式）。 -/
+theorem properties_fully_surrounded (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi) :
+    ¬ Coplanar ({x, v, u, w} : Set V3) := by
+  intro hcop
+  have hncv : ¬ Collinear3 x u v := by
+    refine fan_not_collinear hfan ?_
+    have h : ({u, v} : Set V3) = ({v, u} : Set V3) := by ext a; simp; tauto
+    rw [h]; exact hvu
+  have hncw : ¬ Collinear3 x u w := fan_not_collinear hfan huw
+  have hset : ({x, u, v, w} : Set V3) = ({x, v, u, w} : Set V3) := by
+    ext a; simp; tauto
+  rw [← hset] at hcop
+  rcases azim_eq_0_or_pi_of_coplanar hncv hncw hcop with h | h
+  · linarith
+  · linarith
+
+/-- HOL planarity.hl:1897 证明内嵌引理 `lem`：`aff_ge {x} {v1,v} = aff_ge {x} {v,v1}`
+（集合参数的对称性）。 -/
+private theorem affGe_pair_comm {x a b : V3} :
+    affGe {x} {a, b} = affGe {x} {b, a} := by
+  have h : ({a, b} : Set V3) = ({b, a} : Set V3) := by
+    ext p; simp; tauto
+  rw [h]
+
+/-- HOL planarity.hl:1897 `fan_run_in_small_is_fan`：任意相邻边 {v1,w1} ∈ E
+的闭扇区都与小扰动扇区无交。按 HOL 分四情形：
+v1 = v 用 small2；v1 = u 用 small3（轴交换）；w1 = v 用 small2（换 v）；
+w1 = u 用 small3（换轴）；其余 {v,u} ∩ {v1,w1} = ∅ 用 small1。 -/
+theorem fan_run_in_small_is_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hv1w1 : {v1, w1} ∈ E)
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (hsigma : sigmaFan x V E u w = v) :
+    ∃ t1 : ℝ, 0 < t1 ∧ t1 ≤ 1 ∧
+      ∀ t : ℝ, 0 < t → t < t1 →
+        affGt {x} {v, (1 - t) • u + t • w} ∩ affGe {x} {v1, w1} = ∅ := by
+  have hcop := properties_fully_surrounded hfan hvu huw hθ0 hθπ
+  rcases eq_or_ne v1 v with rfl | hv1v
+  · exact fan_run_in_small2_is_fan hfan hvu huw hv1w1 hcop
+  rcases eq_or_ne v1 u with rfl | hv1u
+  · exact fan_run_in_small3_is_fan hfan hvu huw hv1w1 hcop hsigma hθ0 hθπ
+  rcases eq_or_ne w1 v with rfl | hw1v
+  · rw [affGe_pair_comm]
+    refine fan_run_in_small2_is_fan hfan hvu huw ?_ hcop
+    rw [show ({w1, v1} : Set V3) = ({v1, w1} : Set V3) from by
+      ext a; simp; tauto]
+    exact hv1w1
+  rcases eq_or_ne w1 u with rfl | hw1u
+  · rw [affGe_pair_comm]
+    refine fan_run_in_small3_is_fan hfan hvu huw ?_ hcop hsigma hθ0 hθπ
+    rw [show ({w1, v1} : Set V3) = ({v1, w1} : Set V3) from by
+      ext a; simp; tauto]
+    exact hv1w1
+  refine fan_run_in_small1_is_fan hfan ?_ hvu huw hv1w1 hcop
+  refine Set.disjoint_left.mpr ?_
+  intro a ha hb
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ha hb
+  rcases ha with hva | hua <;> rcases hb with hvb | hwb
+  · exact hv1v (hva.symm.trans hvb).symm
+  · exact hw1v (hva.symm.trans hwb).symm
+  · exact hv1u (hua.symm.trans hvb).symm
+  · exact hw1u (hua.symm.trans hwb).symm
