@@ -22,6 +22,8 @@ import Kepler.Geom.Aff
 import Kepler.Geom.AzimLemmas
 import Kepler.Text.Fan
 import Kepler.Text.TopologyFan
+-- Phase 5: 文字证明移植 —— planarity.hl（Fan 章的平面性部分）
+import Kepler.Text.Planarity
 -- Phase 4: 分支定界证书树（二分盒树 + covers/bb_sound，叶为内核 decide 的 checkPos）
 import Kepler.Interval.Cert
 import Kepler.Graphs.ListAux
