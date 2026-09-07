@@ -14,6 +14,17 @@ Coverage:
   形式）.
 - `COLLINEAR_VECTOR_ANGLE` (325) ↦ `collinear3_iff_vectorAngle`
   （`collinear {vec 0, x, y}` ↦ `Collinear3 0 x y`）.
+- `COLLINEAR_SIN_VECTOR_ANGLE` (334) ↦ `collinear3_iff_sin_vectorAngle`.
+- `COLLINEAR_SIN_VECTOR_ANGLE_IMP` (339) ↦ `sin_vectorAngle_eq_zero_imp`
+  （sin = 0 迫使夹角 ∈ {0, π}；若有一向量为 0 则夹角为 π/2 且 sin = 1，
+  矛盾，对应 HOL 证明中的 EQ_0_DIST/EQ_PI_DIST 部分）.
+- `VECTOR_ANGLE_EQ_0_RIGHT` (345) ↦ `vectorAngle_eq_zero_right`.
+- `VECTOR_ANGLE_EQ_0_LEFT` (356) ↦ `vectorAngle_eq_zero_left`.
+- `VECTOR_ANGLE_EQ_PI_RIGHT` (361) ↦ `vectorAngle_eq_pi_right`.
+- `VECTOR_ANGLE_EQ_PI_LEFT` (369) ↦ `vectorAngle_eq_pi_left`.
+- `COS_VECTOR_ANGLE` (374) ↦ `cos_vectorAngle`.
+- 辅助引理 `sin_vectorAngle_eq_zero_iff`（正弦为零 ↦ 夹角为 0 或 π，
+  对应 HOL `SIN_VECTOR_ANGLE_EQ_0`）.
 
 Key bridge: Mathlib 的 `InnerProductGeometry.angle` 定义为
 `arccos (inner/(‖·‖*‖·‖))`，无零向量特判；由垃圾约定（`inner 0 y = 0`、
@@ -142,3 +153,88 @@ theorem collinear3_iff_vectorAngle (hx : x ≠ 0) (hy : y ≠ 0) :
   · rintro (⟨_, c, _, rfl⟩ | ⟨_, c, _, rfl⟩)
     · exact ⟨c, rfl⟩
     · exact ⟨c, rfl⟩
+
+variable {z : V3}
+
+/-- 辅助引理（HOL `SIN_VECTOR_ANGLE_EQ_0`）：夹角正弦为零当且仅当夹角为
+0 或 π（正弦在开区间 (0, π) 内恒正）。 -/
+theorem sin_vectorAngle_eq_zero_iff :
+    Real.sin (vectorAngle x y) = 0 ↔ vectorAngle x y = 0 ∨ vectorAngle x y = Real.pi := by
+  constructor
+  · intro h
+    rcases eq_or_lt_of_le (vectorAngle_nonneg (x := x) (y := y)) with h0 | hpos
+    · exact Or.inl h0.symm
+    · rcases lt_or_eq_of_le (vectorAngle_le_pi (x := x) (y := y)) with hlt | heq
+      · exact absurd h (ne_of_gt (Real.sin_pos_of_pos_of_lt_pi hpos hlt))
+      · exact Or.inr heq
+  · rintro (h | h)
+    · rw [h, Real.sin_zero]
+    · rw [h, Real.sin_pi]
+
+/-- HOL Multivariate-geom.ml:334 `COLLINEAR_SIN_VECTOR_ANGLE`. -/
+theorem collinear3_iff_sin_vectorAngle (hx : x ≠ 0) (hy : y ≠ 0) :
+    Collinear3 0 x y ↔ Real.sin (vectorAngle x y) = 0 := by
+  rw [collinear3_iff_vectorAngle hx hy]
+  exact sin_vectorAngle_eq_zero_iff.symm
+
+/-- HOL Multivariate-geom.ml:339 `COLLINEAR_SIN_VECTOR_ANGLE_IMP`：正弦为零
+迫使夹角 ∈ {0, π}，而零向量夹角为 π/2（正弦为 1），故两向量均非零。 -/
+theorem sin_vectorAngle_eq_zero_imp (h : Real.sin (vectorAngle x y) = 0) :
+    x ≠ 0 ∧ y ≠ 0 ∧ Collinear3 0 x y := by
+  have hx : x ≠ 0 := by
+    intro h0
+    subst h0
+    rw [vectorAngle, if_pos (Or.inl rfl), Real.sin_pi_div_two] at h
+    exact one_ne_zero h
+  have hy : y ≠ 0 := by
+    intro h0
+    subst h0
+    rw [vectorAngle, if_pos (Or.inr rfl), Real.sin_pi_div_two] at h
+    exact one_ne_zero h
+  rcases sin_vectorAngle_eq_zero_iff.mp h with h0 | h0
+  · exact ⟨hx, hy, (collinear3_iff_vectorAngle hx hy).mpr (Or.inl h0)⟩
+  · exact ⟨hx, hy, (collinear3_iff_vectorAngle hx hy).mpr (Or.inr h0)⟩
+
+/-- HOL Multivariate-geom.ml:345 `VECTOR_ANGLE_EQ_0_RIGHT`：夹角为 0 时第二
+向量换成其正倍数，与第三向量的夹角不变（HOL 走 `VECTOR_ANGLE_LMUL`）。 -/
+theorem vectorAngle_eq_zero_right (h : vectorAngle x y = 0) :
+    vectorAngle x z = vectorAngle y z := by
+  obtain ⟨_, c, hc, rfl⟩ := vectorAngle_eq_zero_iff.mp h
+  rw [vectorAngle_eq_angle, vectorAngle_eq_angle,
+    InnerProductGeometry.angle_smul_left_of_pos x z hc]
+
+/-- HOL Multivariate-geom.ml:356 `VECTOR_ANGLE_EQ_0_LEFT`. -/
+theorem vectorAngle_eq_zero_left (h : vectorAngle x y = 0) :
+    vectorAngle z x = vectorAngle z y := by
+  rw [vectorAngle_comm (x := z) (y := x), vectorAngle_comm (x := z) (y := y),
+    vectorAngle_eq_zero_right h]
+
+/-- HOL Multivariate-geom.ml:361 `VECTOR_ANGLE_EQ_PI_RIGHT`：夹角为 π 时第二
+向量换成其负倍数，与第三向量的夹角关于 π 互补（HOL 走 `VECTOR_ANGLE_LNEG`）。 -/
+theorem vectorAngle_eq_pi_right (h : vectorAngle x y = Real.pi) :
+    vectorAngle x z = Real.pi - vectorAngle y z := by
+  obtain ⟨_, c, hc, rfl⟩ := vectorAngle_eq_pi_iff.mp h
+  rw [vectorAngle_eq_angle, vectorAngle_eq_angle,
+    InnerProductGeometry.angle_smul_left_of_neg x z hc,
+    InnerProductGeometry.angle_neg_left x z]
+  ring
+
+/-- HOL Multivariate-geom.ml:369 `VECTOR_ANGLE_EQ_PI_LEFT`. -/
+theorem vectorAngle_eq_pi_left (h : vectorAngle x y = Real.pi) :
+    vectorAngle z x = Real.pi - vectorAngle z y := by
+  rw [vectorAngle_comm (x := z) (y := x), vectorAngle_comm (x := z) (y := y),
+    vectorAngle_eq_pi_right h]
+
+/-- HOL Multivariate-geom.ml:374 `COS_VECTOR_ANGLE`：夹角余弦的显式公式，
+零向量退化时为 0（垃圾约定 cos π/2 = 0）。 -/
+theorem cos_vectorAngle :
+    Real.cos (vectorAngle x y) =
+      if x = 0 ∨ y = 0 then 0 else (x ⬝ᵥ y) / (‖x‖ * ‖y‖) := by
+  by_cases hx : x = 0
+  · subst hx
+    rw [vectorAngle, if_pos (Or.inl rfl), Real.cos_pi_div_two, if_pos (Or.inl rfl)]
+  by_cases hy : y = 0
+  · subst hy
+    rw [vectorAngle, if_pos (Or.inr rfl), Real.cos_pi_div_two, if_pos (Or.inr rfl)]
+  rw [if_neg (not_or.mpr ⟨hx, hy⟩), vectorAngle_eq_angle,
+    InnerProductGeometry.cos_angle, inner_eq_dot]
