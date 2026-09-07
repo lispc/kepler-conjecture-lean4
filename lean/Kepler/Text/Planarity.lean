@@ -2965,3 +2965,174 @@ theorem independent_run_edges_fan {x v u w : V3} {V : Set V3}
       calc (1 - a) • u + a • w = (((1 - a) • u + a • w) - x) + x := by module
         _ = (1 - -(g 0 * (g 2)⁻¹) - -(g 1 * (g 2)⁻¹)) • x +
             -(g 0 * (g 2)⁻¹) • v + -(g 1 * (g 2)⁻¹) • u := by rw [hp]; module
+
+/-! ## aff_lt 的显式刻画与 fan 非退化四点性质（planarity.hl:2515–2527）
+
+约定：HOL `DISJOINT {x,v} {w}` ↔ `x ∉ {w} ∧ v ∉ {w}`。 -/
+
+/-- HOL planarity.hl:2515 `AFF_LT_2_1`：`aff_lt {x,v} {w}` 的显式组合刻画。
+符号条件只落在 `w` 的系数上（`t3 < 0`）；`x = v`（并集去重为两点）单独处理。 -/
+theorem AFF_LT_2_1 (hdis : Disjoint ({x, v} : Set V3) {w}) :
+    affLt {x, v} {w} =
+      {y | ∃ t1 t2 t3 : ℝ, t3 < 0 ∧ t1 + t2 + t3 = 1 ∧
+        y = t1 • x + t2 • v + t3 • w} := by
+  have hdis' := Set.disjoint_left.mp hdis
+  have hxw : x ≠ w := by
+    intro he
+    exact hdis' (Set.mem_insert x {v}) (by rw [he]; simp)
+  have hvw : v ≠ w := by
+    intro he
+    exact hdis' (Set.mem_insert_of_mem x (Set.mem_singleton v)) (by rw [he]; simp)
+  ext y
+  simp only [affLt, Affsign, Set.mem_setOf_eq]
+  by_cases hxv : x = v
+  · -- 退化情形 x = v：并集去重后为 {x, w}。
+    constructor
+    · rintro ⟨f, hfin, hsum, hneg, hone⟩
+      have ht3 : f w < 0 := hneg w (by simp)
+      have hTeq : hfin.toFinset = ({x, w} : Finset V3) := by
+        apply Finset.ext
+        intro z
+        simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+          Set.mem_singleton_iff, hxv, Finset.mem_insert, Finset.mem_singleton]
+        tauto
+      rw [hTeq, Finset.sum_insert (by simp [hxw]), Finset.sum_singleton] at hsum hone
+      refine ⟨f x, 0, f w, ht3, by linarith, ?_⟩
+      rw [hsum]
+      module
+    · rintro ⟨t1, t2, t3, ht3, hone, hy⟩
+      have hfin : ({x, v} ∪ {w} : Set V3).Finite :=
+        ((Set.finite_singleton v).insert x).union (Set.finite_singleton w)
+      refine ⟨fun z => if z = x then t1 + t2 else t3, hfin, ?_, ?_, ?_⟩
+      · have hTeq : hfin.toFinset = ({x, w} : Finset V3) := by
+          apply Finset.ext
+          intro z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, hxv, Finset.mem_insert, Finset.mem_singleton]
+          tauto
+        rw [hTeq, Finset.sum_insert (by simp [hxw]), Finset.sum_singleton]
+        show y = (if x = x then t1 + t2 else t3) • x +
+          (if w = x then t1 + t2 else t3) • w
+        rw [if_pos (rfl : x = x), if_neg (Ne.symm hxw), hy, ← hxv, add_smul]
+      · intro z hz
+        simp only [Set.mem_singleton_iff] at hz
+        rw [hz]
+        show (if w = x then t1 + t2 else t3) < 0
+        rw [if_neg (Ne.symm hxw)]
+        exact ht3
+      · have hTeq : hfin.toFinset = ({x, w} : Finset V3) := by
+          apply Finset.ext
+          intro z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, hxv, Finset.mem_insert, Finset.mem_singleton]
+          tauto
+        rw [hTeq, Finset.sum_insert (by simp [hxw]), Finset.sum_singleton]
+        show (if x = x then t1 + t2 else t3) + (if w = x then t1 + t2 else t3) = 1
+        rw [if_pos (rfl : x = x), if_neg (Ne.symm hxw)]
+        linarith
+  · -- 一般情形 x ≠ v。
+    constructor
+    · rintro ⟨f, hfin, hsum, hneg, hone⟩
+      have ht3 : f w < 0 := hneg w (by simp)
+      have hTeq : hfin.toFinset = ({x, v, w} : Finset V3) := by
+        apply Finset.ext
+        intro z
+        simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+          Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+        tauto
+      rw [hTeq, Finset.sum_insert (by simp [hxv, hxw]), Finset.sum_insert (by simp [hvw]),
+        Finset.sum_singleton] at hsum hone
+      exact ⟨f x, f v, f w, ht3, by linarith, by rw [hsum]; abel⟩
+    · rintro ⟨t1, t2, t3, ht3, hone, hy⟩
+      have hfin : ({x, v} ∪ {w} : Set V3).Finite :=
+        ((Set.finite_singleton v).insert x).union (Set.finite_singleton w)
+      refine ⟨fun z => if z = v then t2 else if z = w then t3 else t1, hfin, ?_, ?_, ?_⟩
+      · have hTeq : hfin.toFinset = ({x, v, w} : Finset V3) := by
+          apply Finset.ext
+          intro z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+          tauto
+        rw [hTeq, Finset.sum_insert (by simp [hxv, hxw]),
+          Finset.sum_insert (by simp [hvw]), Finset.sum_singleton]
+        show y = (if x = v then t2 else if x = w then t3 else t1) • x +
+          ((if v = v then t2 else if v = w then t3 else t1) • v +
+            (if w = v then t2 else if w = w then t3 else t1) • w)
+        rw [if_neg hxv, if_neg hxw, if_pos (rfl : v = v),
+          if_neg (Ne.symm hvw), if_pos (rfl : w = w), hy]
+        abel
+      · intro z hz
+        simp only [Set.mem_singleton_iff] at hz
+        rw [hz]
+        show (if w = v then t2 else if w = w then t3 else t1) < 0
+        rw [if_neg (Ne.symm hvw), if_pos (rfl : w = w)]
+        exact ht3
+      · have hTeq : hfin.toFinset = ({x, v, w} : Finset V3) := by
+          apply Finset.ext
+          intro z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+          tauto
+        rw [hTeq, Finset.sum_insert (by simp [hxv, hxw]),
+          Finset.sum_insert (by simp [hvw]), Finset.sum_singleton]
+        show (if x = v then t2 else if x = w then t3 else t1) +
+          ((if v = v then t2 else if v = w then t3 else t1) +
+            (if w = v then t2 else if w = w then t3 else t1)) = 1
+        rw [if_neg hxv, if_neg hxw, if_pos (rfl : v = v),
+          if_neg (Ne.symm hvw), if_pos (rfl : w = w)]
+        linarith
+
+/-- HOL planarity.hl:2527 `properties_of_collinear4_points_fan`：
+`x,v,u` 不共线且 `v1 ∈ aff_gt {x} {v,u}` 时，`x,v1,v` 亦不共线。 -/
+theorem properties_of_collinear4_points_fan {v1 : V3} (hnc : ¬ Collinear3 x v u)
+    (hv1 : v1 ∈ affGt {x} {v, u}) : ¬ Collinear3 x v1 v := by
+  have hvx : x ≠ v := by
+    intro he
+    apply hnc
+    show Collinear ℝ ({x, v, u} : Set V3)
+    rw [he]
+    have hset : ({v, v, u} : Set V3) = {v, u} := by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]
+    exact collinear_pair ℝ v u
+  have hxu : x ≠ u := by
+    intro he
+    apply hnc
+    show Collinear ℝ ({x, v, u} : Set V3)
+    rw [he]
+    have hset : ({u, v, u} : Set V3) = {v, u} := by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]
+    exact collinear_pair ℝ v u
+  have hdis : Disjoint ({x} : Set V3) {v, u} := by
+    rw [Set.disjoint_singleton_left]
+    intro h
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h
+    rcases h with h' | h'
+    · exact hvx h'
+    · exact hxu h'
+  rw [aff_gt_1_2 hdis, Set.mem_setOf_eq] at hv1
+  obtain ⟨t1, t2, t3, ht2, ht3, hone, hv1c⟩ := hv1
+  intro hc
+  have ht3n : t3 ≠ 0 := ne_of_gt ht3
+  have hset : ({x, v1, v} : Set V3) = ({x, v, v1} : Set V3) := by
+    ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  have hc' : Collinear ℝ ({x, v, v1} : Set V3) := by
+    rw [← hset]
+    exact hc
+  obtain ⟨c, hcsmul⟩ := (collinear3_iff_smul (w := v) (v := x) hvx.symm).mp hc'
+  have step1 : v1 - x = t1 • x + t2 • v + t3 • u - (t1 + t2 + t3) • x := by
+    rw [hv1c, hone, one_smul]
+  have hv1x : v1 - x = t2 • (v - x) + t3 • (u - x) := by
+    rw [step1]
+    module
+  have hcc : c • (v - x) = t2 • (v - x) + t3 • (u - x) := by
+    rw [← hcsmul]
+    exact hv1x
+  have hkey : t3 • (u - x) = (c - t2) • (v - x) := by
+    calc t3 • (u - x) = c • (v - x) - t2 • (v - x) := by rw [hcc]; abel
+      _ = (c - t2) • (v - x) := by rw [sub_smul]
+  have hux : u - x = ((c - t2) / t3) • (v - x) := by
+    rw [div_eq_inv_mul, ← smul_smul, ← hkey, inv_smul_smul₀ ht3n]
+  exact hnc
+    ((collinear3_iff_smul (w := v) (v := x) hvx.symm).mpr ⟨(c - t2) / t3, hux⟩)
