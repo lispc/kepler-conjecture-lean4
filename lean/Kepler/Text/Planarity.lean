@@ -1290,3 +1290,192 @@ theorem injective_azim_coplanar (x v u w : V3) (hcop : ¬ Coplanar ({x, v, u, w}
   · rw [hz]
     exact mem_affineSpan_carrier (affineSpan_mono ℝ hsubpa
       (SetLike.mem_coe.mp hwpb))
+
+/-! ## 第八块：fan_run_in_small（planarity.hl:1266–1627）
+
+HOL `fan_run_in_small1_is_fan`（1266）：`separate1_sphere_fan` + 球面单
+位化数乘（`scale_aff_gt_fan`/`scale_aff_ge_fan` + `imp_norm_not_zero_fan`）
+把交点拉回 `ballnormFan`，与球面分离矛盾。
+HOL `fan_run_in_small21_is_fan`（1464）：按「是否存在 h 使方位角在弦上
+取到 w1 的方位角」分情形；核心推导（HOL 的 AFF_GT_1_2/AFF_GE_1_2 系数
+比较 + AZIM_EQ_0_GE/AZIM_EQ_ALT）由私有辅助 `azim_eq_of_mem_inter` 完成，
+两种情形分别用 `injective_azim_coplanar` 与原假设收尾。
+HOL `fan_run_in_small2_is_fan`（1627）：small21 的 t < t1 直接推论。 -/
+
+/-- HOL `imp_norm_not_zero_fan`：两点互异给出差向量范数非零。 -/
+private theorem imp_norm_not_zero_fan {a b : V3} (h : a ≠ b) : ‖b - a‖ ≠ 0 :=
+  norm_ne_zero_iff.mpr (sub_ne_zero.mpr (Ne.symm h))
+
+/-- HOL fan_run_in_small21_is_fan（planarity.hl:1464–1627）的核心推导：
+若 `y` 同时落在 `aff_gt {x} {v,(1-t)•u+t•w}` 与 `aff_ge {x} {v,w1}`
+（t > 0，且 u、w1、(1-t)•u+t•w 均与 x,v 不共线），则 w1 落在
+`aff_gt {x,v} {(1-t)•u+t•w}` 中，即 `azim x v u w1 = azim x v u z(t)`。
+HOL 路线：`aff_gt_1_2`/`aff_ge_1_2` 系数比较得 w1 与 z(t) 沿 v 方向的
+正倍数关系（`affGt_pair_iff`），再用 `azim_eq_azim_iff_alt`。 -/
+private theorem azim_eq_of_mem_inter {x v u w w1 : V3} (y : V3) (t : ℝ)
+    (hncu : ¬ Collinear3 x v u) (hncw1 : ¬ Collinear3 x v w1)
+    (hncz : ¬ Collinear3 x v ((1 - t) • u + t • w))
+    (hy1 : y ∈ affGt {x} {v, (1 - t) • u + t • w})
+    (hy2 : y ∈ affGe {x} {v, w1}) :
+    azim x v u w1 = azim x v u ((1 - t) • u + t • w) := by
+  have hxv : x ≠ v := fun he => hncu (collinear3_of_eq he.symm)
+  have hdisx : Disjoint ({x} : Set V3) {v, (1 - t) • u + t • w} :=
+    disjoint_of_not_collinear3 hncz
+  have hdisw1 : Disjoint ({x} : Set V3) {v, w1} :=
+    disjoint_of_not_collinear3 hncw1
+  rw [aff_gt_1_2 hdisx] at hy1
+  simp only [Set.mem_setOf_eq] at hy1
+  obtain ⟨a, b, g, -, hg, hsum, hyeq1⟩ := hy1
+  rw [aff_ge_1_2 hdisw1] at hy2
+  simp only [Set.mem_setOf_eq] at hy2
+  obtain ⟨a', b', d, -, hd, hsum', hyeq2⟩ := hy2
+  have ha : a = 1 - b - g := by linarith
+  have ha' : a' = 1 - b' - d := by linarith
+  have e1 : y - x = b • (v - x) + g • ((1 - t) • u + t • w - x) := by
+    rw [hyeq1, ha]; module
+  have e2 : y - x = b' • (v - x) + d • (w1 - x) := by
+    rw [hyeq2, ha']; module
+  have master : g • ((1 - t) • u + t • w - x) =
+      (b' - b) • (v - x) + d • (w1 - x) := by
+    have h12 : b • (v - x) + g • ((1 - t) • u + t • w - x) =
+        b' • (v - x) + d • (w1 - x) := e1.symm.trans e2
+    calc g • ((1 - t) • u + t • w - x)
+        = (b • (v - x) + g • ((1 - t) • u + t • w - x)) - b • (v - x) := by module
+      _ = (b' • (v - x) + d • (w1 - x)) - b • (v - x) := by rw [h12]
+      _ = (b' - b) • (v - x) + d • (w1 - x) := by module
+  by_cases hdz : d = 0
+  · -- 退化：z(t) - x 平行 v - x，与 ¬Collinear3 x v z(t) 矛盾
+    exfalso
+    apply hncz
+    have h1 : g • ((1 - t) • u + t • w - x) = (b' - b) • (v - x) := by
+      rw [master, hdz, zero_smul, add_zero]
+    have h2 : (1 - t) • u + t • w - x = (g⁻¹ * (b' - b)) • (v - x) := by
+      have h3 := congrArg (fun p : V3 => g⁻¹ • p) h1
+      rw [smul_smul, inv_mul_cancel₀ (ne_of_gt hg), one_smul, smul_smul] at h3
+      exact h3
+    have hvx : v ≠ x := fun he => hncu (collinear3_of_eq he)
+    exact (collinear3_iff_smul (v := x) (w := v) (w1 := (1 - t) • u + t • w) hvx).mpr
+      ⟨g⁻¹ * (b' - b), h2⟩
+  · -- d > 0：w1 - x 是 z(t) - x 的正倍数（沿 v - x 方向修正）
+    have hdpos : 0 < d := hd.lt_of_ne (Ne.symm hdz)
+    have hdd : d ≠ 0 := ne_of_gt hdpos
+    have h1 : d • (w1 - x) = g • ((1 - t) • u + t • w - x) - (b' - b) • (v - x) := by
+      have h0' : g • ((1 - t) • u + t • w - x) - (b' - b) • (v - x)
+          = (b' - b) • (v - x) + d • (w1 - x) - (b' - b) • (v - x) := by
+        rw [master]
+      rw [h0']; module
+    have h2 : w1 - x = (d⁻¹ * g) • ((1 - t) • u + t • w - x) +
+        (d⁻¹ * -(b' - b)) • (v - x) := by
+      have h3 := congrArg (fun p : V3 => d⁻¹ • p) h1
+      rw [smul_smul, inv_mul_cancel₀ hdd, one_smul, smul_sub, smul_smul, smul_smul] at h3
+      rw [h3]; module
+    have hxz : (1 - t) • u + t • w ≠ x := fun he => hncz (collinear3_pair_left he)
+    have hvz : (1 - t) • u + t • w ≠ v := fun he => hncz (collinear3_pair_right he)
+    have hmem : w1 ∈ affGt ({x, v} : Set V3) {((1 - t) • u + t • w : V3)} := by
+      refine (affGt_pair_iff (v0 := x) (v1 := v)
+        (x := (1 - t) • u + t • w) (y := w1) hxv hxz hvz).mpr ⟨d⁻¹ * g, ?_, _, h2⟩
+      exact mul_pos (inv_pos.mpr hdpos) hg
+    exact (azim_eq_azim_iff_alt hncu hncw1 hncz).mpr hmem
+
+/-- HOL planarity.hl:1464 `fan_run_in_small21_is_fan`：存在 t1 ∈ (0,1]
+使得 t ∈ (0,t1] 时扰动扇区与 `aff_ge {x} {v,w1}` 无交。按 HOL 分两情形：
+(A) 存在 h ∈ (0,1] 使 `azim x v u w1 = azim x v u ((1-h)•u+h•w)`：取
+t1 = min ta (h/2)，`injective_azim_coplanar` 给出 h = t 与 t ≤ h/2 矛盾；
+(B) 不存在：取 t1 = ta，直接与核心推导的方位角等式矛盾。 -/
+theorem fan_run_in_small21_is_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hvw1 : {v, w1} ∈ E)
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) :
+    ∃ t1 : ℝ, 0 < t1 ∧ t1 ≤ 1 ∧
+      ∀ t : ℝ, 0 < t → t ≤ t1 →
+        affGt {x} {v, (1 - t) • u + t • w} ∩ affGe {x} {v, w1} = ∅ := by
+  obtain ⟨ta, ta0, ta1, hnc⟩ := exists_open_not_collinear hfan hvu huw
+  have hncu : ¬ Collinear3 x v u := fan_not_collinear hfan hvu
+  have hncw1 : ¬ Collinear3 x v w1 := fan_not_collinear hfan hvw1
+  by_cases hex : ∃ h : ℝ, 0 < h ∧ h ≤ 1 ∧
+      azim x v u w1 = azim x v u ((1 - h) • u + h • w)
+  · -- 情形 A：方位角在弦上取到 w1 的方位角
+    obtain ⟨h, h0, h1, haz⟩ := hex
+    refine ⟨min ta (h / 2), lt_min ta0 (by linarith),
+      (min_le_left _ _).trans ta1, ?_⟩
+    intro t ht0 htle
+    refine Set.eq_empty_iff_forall_notMem.mpr (fun y hy => ?_)
+    have hle2 : t ≤ h / 2 := htle.trans (min_le_right _ _)
+    have hncz : ¬ Collinear3 x v ((1 - t) • u + t • w) :=
+      hnc t ht0.le (htle.trans (min_le_left _ _))
+    have hazt : azim x v u w1 = azim x v u ((1 - t) • u + t • w) :=
+      azim_eq_of_mem_inter y t hncu hncw1 hncz hy.1 hy.2
+    have hht : h = t := injective_azim_coplanar x v u w hcop h t (ne_of_gt h0)
+      (ne_of_gt ht0) (haz.symm.trans hazt)
+    linarith
+  · -- 情形 B：方位角在弦上取不到 w1 的方位角，直接矛盾
+    refine ⟨ta, ta0, ta1, ?_⟩
+    intro t ht0 htt
+    refine Set.eq_empty_iff_forall_notMem.mpr (fun y hy => ?_)
+    have hncz : ¬ Collinear3 x v ((1 - t) • u + t • w) := hnc t ht0.le htt
+    have hazt : azim x v u w1 = azim x v u ((1 - t) • u + t • w) :=
+      azim_eq_of_mem_inter y t hncu hncw1 hncz hy.1 hy.2
+    exact hex ⟨t, ht0, htt.trans ta1, hazt⟩
+
+/-- HOL planarity.hl:1627 `fan_run_in_small2_is_fan`：small21 的直接推论
+（同一 t1，`t < t1` 蕴含 `t ≤ t1`）。 -/
+theorem fan_run_in_small2_is_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hvw1 : {v, w1} ∈ E)
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) :
+    ∃ t1 : ℝ, 0 < t1 ∧ t1 ≤ 1 ∧
+      ∀ t : ℝ, 0 < t → t < t1 →
+        affGt {x} {v, (1 - t) • u + t • w} ∩ affGe {x} {v, w1} = ∅ := by
+  obtain ⟨t1, h0, h1, hb⟩ := fan_run_in_small21_is_fan hfan hvu huw hvw1 hcop
+  exact ⟨t1, h0, h1, fun t ht0 htt1 => hb t ht0 (le_of_lt htt1)⟩
+
+/-- HOL planarity.hl:1266 `fan_run_in_small1_is_fan`：小 t 时扰动扇区
+`aff_gt {x} {v,(1-t)•u+t•w}` 与不相交边 {v1,u1} 的闭扇区无交。HOL 路线：
+`separate1_sphere_fan`（球面分离）+ `th3`（= `disjoint_of_not_collinear3`）
++ `origin_is_not_aff_gt_fan`（x 不是交点）+ `imp_norm_not_zero_fan` 后
+单位化数乘（`scale_aff_gt_fan`/`scale_aff_ge_fan`）把交点拉回
+`ballnormFan x`，与球面分离矛盾。 -/
+theorem fan_run_in_small1_is_fan (hfan : FAN x V E)
+    (hdis : Disjoint ({v, u} : Set V3) {v1, u1}) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hv1u1 : {v1, u1} ∈ E)
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) :
+    ∃ t1 : ℝ, 0 < t1 ∧ t1 ≤ 1 ∧
+      ∀ t : ℝ, 0 < t → t < t1 →
+        affGt {x} {v, (1 - t) • u + t • w} ∩ affGe {x} {v1, u1} = ∅ := by
+  obtain ⟨ta, ta0, ta1, hnc⟩ := exists_open_not_collinear hfan hvu huw
+  obtain ⟨h, h0, h1, hsep⟩ := separate1_sphere_fan hfan hdis hvu huw hv1u1 hcop
+  refine ⟨min h ta, lt_min h0 ta0, (min_le_left _ _).trans h1, ?_⟩
+  intro t ht0 hth
+  have htta : t ≤ ta := le_of_lt (lt_of_lt_of_le hth (min_le_right _ _))
+  have hzcol : ¬ Collinear3 x v ((1 - t) • u + t • w) := hnc t ht0.le htta
+  have hxv : x ≠ v := fun he => hzcol (collinear3_of_eq he.symm)
+  have hdisx : Disjoint ({x} : Set V3) {v, (1 - t) • u + t • w} :=
+    disjoint_of_not_collinear3 hzcol
+  have hdis1 : Disjoint ({x} : Set V3) {v1, u1} :=
+    disjoint_of_not_collinear3 (fan_not_collinear hfan hv1u1)
+  have hz1 : (1 - t) • u + t • w ∉ (affineSpan ℝ ({x, v} : Set V3) : Set V3) := fun hm =>
+    hzcol ((collinear3_iff_mem_affineSpan hxv).mpr hm)
+  have hxnotin : x ∉ affGt {x} {v, (1 - t) • u + t • w} :=
+    origin_is_not_aff_gt_fan hz1 hdisx
+  refine Set.eq_empty_iff_forall_notMem.mpr (fun z hz => ?_)
+  have hxz : x ≠ z := by
+    intro he
+    subst he
+    exact hxnotin hz.1
+  have hn : ‖z - x‖ ≠ 0 := imp_norm_not_zero_fan hxz
+  have hpos : 0 < ‖z - x‖ := norm_pos_iff.mpr (sub_ne_zero.mpr (Ne.symm hxz))
+  have hs1 : ‖z - x‖⁻¹ • (z - x) + x ∈ affGt {x} {v, (1 - t) • u + t • w} :=
+    scale_aff_gt_fan hdisx z _ hz.1 (inv_pos.mpr hpos)
+  have hs2 : ‖z - x‖⁻¹ • (z - x) + x ∈ affGe {x} {v1, u1} :=
+    scale_aff_ge_fan hdis1 z _ hz.2 (inv_nonneg.mpr (norm_nonneg _))
+  have hs3 : ‖z - x‖⁻¹ • (z - x) + x ∈ ballnormFan x := by
+    rw [ballnormFan]
+    simp only [Set.mem_setOf_eq]
+    rw [dist_eq_norm,
+      show x - (‖z - x‖⁻¹ • (z - x) + x) = -(‖z - x‖⁻¹ • (z - x)) from by module,
+      norm_neg, norm_smul,
+      Real.norm_of_nonneg (inv_nonneg.mpr (norm_nonneg _)),
+      inv_mul_cancel₀ hn]
+  have hcontr : ‖z - x‖⁻¹ • (z - x) + x ∈
+      (affGt {x} {v, (1 - t) • u + t • w} ∩ affGe {x} {v1, u1} ∩ ballnormFan x : Set V3) :=
+    ⟨⟨hs1, hs2⟩, hs3⟩
+  rw [hsep t ht0 (lt_of_lt_of_le hth (min_le_left _ _)), Set.mem_empty_iff_false] at hcontr
+  exact hcontr
