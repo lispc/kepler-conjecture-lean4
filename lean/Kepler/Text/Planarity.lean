@@ -436,3 +436,181 @@ theorem bounded_convex_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
   have h2 := hC y hy
   rw [norm_norm] at h2
   exact lt_of_le_of_lt h2 (by linarith)
+
+/-! ## 第四块：小边附近的范数估计（planarity.hl:487、651、872）
+
+记 `a := (1-s)•v + s•u - x`（指向边 `vu` 上动点的向量）与
+`b := (1-s)•v + s •((1-t)•u + t•w) - x`（`u→w` 扰动后的对应向量）。
+两插值点都落在 `convexHull {v,u,w}` 内（`expansion_convex_fan`），由
+`separate_point_convex_fan` 与 x 的距离以 `h0 > 0` 为下界，故
+`‖a‖, ‖b‖ ≥ h0`：倒数有界，`‖a - b‖ = s*t*‖u-w‖` 随 t → 0。 -/
+
+/-- 实数辅助：正实数倒数之差的绝对值乘回分子
+（HOL 中 `inv_sub_inv` + 分式化简的封装）。 -/
+theorem abs_inv_sub_mul_self_eq {r1 r2 : ℝ} (h1 : 0 < r1) (h2 : 0 < r2) :
+    |r1⁻¹ - r2⁻¹| * r1 = |r2 - r1| / r2 := by
+  rw [inv_sub_inv h1.ne' h2.ne', abs_div, abs_mul, abs_of_pos h1, abs_of_pos h2]
+  field_simp
+
+/-- 恒等式 `u - ((1-t)•u + t•w) = t•(u-w)`（HOL 证明中反复出现的
+`VECTOR_ARITH` 步骤）。 -/
+theorem sub_interp_fan (t : ℝ) (u w : V3) :
+    u - ((1 - t) • u + t • w) = t • (u - w) := by
+  have e : (1 - t) • u = u - t • u := by rw [sub_smul, one_smul]
+  rw [e, sub_add_eq_sub_sub, sub_sub_cancel, smul_sub]
+
+/-- 恒等式：两个插值点（相对 x）之差。 -/
+theorem sub_interps_fan (s t : ℝ) (x v u w : V3) :
+    ((1 - s) • v + s • u - x) - ((1 - s) • v + s • ((1 - t) • u + t • w) - x) =
+      s • (u - ((1 - t) • u + t • w)) := by
+  have e : ((1 - s) • v + s • u - x) -
+      ((1 - s) • v + s • ((1 - t) • u + t • w) - x) =
+      s • u - s • ((1 - t) • u + t • w) := by abel
+  rw [e, smul_sub]
+
+/-- HOL planarity.hl:487 `inequality1_fan`：取 `h := min 1 (d*h0/‖u-w‖)`；
+`‖u - ((1-t)•u+t•w)‖ = t*‖u-w‖`，`‖b‖⁻¹ ≤ h0⁻¹`（b 点在凸包内）。 -/
+theorem inequality1_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) (d : ℝ) (hd : 0 < d) :
+    ∃ h : ℝ, 0 < h ∧ h ≤ 1 ∧
+      ∀ t : ℝ, 0 ≤ t → t < h → ∀ s : ℝ, 0 ≤ s → s ≤ 1 →
+        s * ‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹ *
+            ‖u - ((1 - t) • u + t • w)‖ < d := by
+  obtain ⟨h0, h0pos, h0b⟩ := separate_point_convex_fan hfan hvu huw hcop
+  have huwne : u ≠ w := edge_ne_of_fan hfan huw
+  have hnw : 0 < ‖u - w‖ := norm_pos_iff.mpr (sub_ne_zero.mpr huwne)
+  refine ⟨min 1 (d * h0 / ‖u - w‖),
+    lt_min zero_lt_one (div_pos (mul_pos hd h0pos) hnw), min_le_left _ _, ?_⟩
+  intro t ht0 hlt s hs0 hs1
+  have ht1 : t ≤ 1 := le_of_lt (lt_of_lt_of_le hlt (min_le_left _ _))
+  have hbn : h0 < ‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖ :=
+    h0b _ (expansion_convex_fan t s ht0 ht1 hs0 hs1)
+  have hsplit : t * ‖u - w‖ < d * h0 :=
+    (lt_div_iff₀ hnw).mp (lt_of_lt_of_le hlt (min_le_right _ _))
+  have hinv : ‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹ ≤ h0⁻¹ :=
+    inv_anti₀ h0pos (le_of_lt hbn)
+  have hle : s * ‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹ *
+      (t * ‖u - w‖) ≤ h0⁻¹ * (t * ‖u - w‖) := by
+    refine mul_le_mul_of_nonneg_right ?_ (mul_nonneg ht0 (norm_nonneg _))
+    have h1 : s * ‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹ ≤ 1 * h0⁻¹ :=
+      mul_le_mul hs1 hinv (inv_nonneg.mpr (norm_nonneg _)) zero_le_one
+    simpa using h1
+  have hfin : h0⁻¹ * (t * ‖u - w‖) < d := by
+    have hdiv : (t * ‖u - w‖) / h0 < d := (div_lt_iff₀ h0pos).mpr hsplit
+    rwa [div_eq_inv_mul] at hdiv
+  rw [sub_interp_fan, norm_smul, Real.norm_eq_abs, abs_of_nonneg ht0]
+  exact lt_of_le_of_lt hle hfin
+
+/-- HOL planarity.hl:651 `inequaility2_fan`（沿用 HOL 原拼写）。注意按 HOL
+原文，两个被数乘的向量都是 `a = (1-s)•v + s•u - x`（第二个的标度才是
+`‖b‖⁻¹`）。核心约化：`‖ ‖a‖⁻¹•a - ‖b‖⁻¹•a ‖ = |‖b‖ - ‖a‖|/‖b‖ ≤
+‖a - b‖/h0 = s*t*‖u-w‖/h0 < d`。 -/
+theorem inequaility2_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) (d : ℝ) (hd : 0 < d) :
+    ∃ h : ℝ, 0 < h ∧ h ≤ 1 ∧
+      ∀ t : ℝ, 0 ≤ t → t < h → ∀ s : ℝ, 0 ≤ s → s ≤ 1 →
+        ‖(‖(1 - s) • v + s • u - x‖⁻¹) • ((1 - s) • v + s • u - x) -
+            (‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹) •
+              ((1 - s) • v + s • u - x)‖ < d := by
+  obtain ⟨h0, h0pos, h0b⟩ := separate_point_convex_fan hfan hvu huw hcop
+  have huwne : u ≠ w := edge_ne_of_fan hfan huw
+  have hnw : 0 < ‖u - w‖ := norm_pos_iff.mpr (sub_ne_zero.mpr huwne)
+  refine ⟨min 1 (d * h0 / ‖u - w‖),
+    lt_min zero_lt_one (div_pos (mul_pos hd h0pos) hnw), min_le_left _ _, ?_⟩
+  intro t ht0 hlt s hs0 hs1
+  have ht1 : t ≤ 1 := le_of_lt (lt_of_lt_of_le hlt (min_le_left _ _))
+  have hpu : (1 - s) • v + s • u ∈ convexHull ℝ ({v, u, w} : Set V3) := by
+    have hmem : (1 - s) • v + s • ((1 - (0 : ℝ)) • u + (0 : ℝ) • w) ∈
+        convexHull ℝ ({v, u, w} : Set V3) :=
+      expansion_convex_fan 0 s (by norm_num) (by norm_num) hs0 hs1
+    simpa using hmem
+  have han : h0 < ‖(1 - s) • v + s • u - x‖ := h0b _ hpu
+  have hbn : h0 < ‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖ :=
+    h0b _ (expansion_convex_fan t s ht0 ht1 hs0 hs1)
+  have hapos : 0 < ‖(1 - s) • v + s • u - x‖ := lt_trans h0pos han
+  have hbpos : 0 < ‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖ :=
+    lt_trans h0pos hbn
+  have hkey : ‖(‖(1 - s) • v + s • u - x‖⁻¹) • ((1 - s) • v + s • u - x) -
+        (‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹) •
+          ((1 - s) • v + s • u - x)‖ =
+      |‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖ -
+          ‖(1 - s) • v + s • u - x‖| /
+        ‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖ := by
+    rw [← sub_smul, norm_smul, Real.norm_eq_abs,
+      abs_inv_sub_mul_self_eq hapos hbpos]
+  have h1 : |‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖ -
+      ‖(1 - s) • v + s • u - x‖| ≤
+      ‖((1 - s) • v + s • u - x) -
+        ((1 - s) • v + s • ((1 - t) • u + t • w) - x)‖ := by
+    have h11 := real_abs_sub_norm
+      ((1 - s) • v + s • ((1 - t) • u + t • w) - x) ((1 - s) • v + s • u - x)
+    rwa [norm_sub_rev ((1 - s) • v + s • ((1 - t) • u + t • w) - x)
+      ((1 - s) • v + s • u - x)] at h11
+  have h2 : ‖((1 - s) • v + s • u - x) -
+      ((1 - s) • v + s • ((1 - t) • u + t • w) - x)‖ = s * t * ‖u - w‖ := by
+    rw [sub_interps_fan s t x v u w, sub_interp_fan t u w, smul_smul, norm_smul,
+      Real.norm_eq_abs, abs_of_nonneg (mul_nonneg hs0 ht0)]
+  have hsplit : t * ‖u - w‖ < d * h0 :=
+    (lt_div_iff₀ hnw).mp (lt_of_lt_of_le hlt (min_le_right _ _))
+  have hinvb : ‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹ ≤ h0⁻¹ :=
+    inv_anti₀ h0pos (le_of_lt hbn)
+  rw [hkey, div_eq_mul_inv]
+  refine lt_of_le_of_lt (mul_le_mul h1 hinvb (inv_nonneg.mpr (norm_nonneg _))
+    (norm_nonneg _)) ?_
+  rw [h2]
+  have h3 : s * t ≤ 1 * t := mul_le_mul hs1 le_rfl ht0 zero_le_one
+  have hfin : (t * ‖u - w‖) * h0⁻¹ < d := by
+    have hdiv : (t * ‖u - w‖) / h0 < d := (div_lt_iff₀ h0pos).mpr hsplit
+    rw [div_eq_inv_mul] at hdiv
+    rw [mul_comm]
+    exact hdiv
+  calc s * t * ‖u - w‖ * h0⁻¹ ≤ (t * ‖u - w‖) * h0⁻¹ :=
+        mul_le_mul_of_nonneg_right (by
+          calc s * t * ‖u - w‖ ≤ (1 * t) * ‖u - w‖ :=
+                mul_le_mul_of_nonneg_right h3 (norm_nonneg _)
+            _ = t * ‖u - w‖ := by ring) (inv_nonneg.mpr h0pos.le)
+    _ < d := hfin
+
+/-- HOL planarity.hl:872 `exists_point_small_edges_fan`：单位化 a 与单位化 b
+之差小于 d。把差拆成 `‖a/‖a‖ - a/‖b‖‖ + ‖a/‖b‖ - b/‖b‖‖`，前者由
+`inequaility2_fan`（d/2）控制，后者 `= ‖‖b‖⁻¹•(a-b)‖ = s*‖b‖⁻¹*‖u-...‖`
+由 `inequality1_fan`（d/2）控制，三角不等式相加。 -/
+theorem exists_point_small_edges_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) (d : ℝ)
+    (hd : 0 < d) :
+    ∃ h : ℝ, 0 < h ∧ h ≤ 1 ∧
+      ∀ t : ℝ, 0 ≤ t → t < h → ∀ s : ℝ, 0 ≤ s → s ≤ 1 →
+        ‖(‖(1 - s) • v + s • u - x‖⁻¹) • ((1 - s) • v + s • u - x) -
+            (‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹) •
+              ((1 - s) • v + s • ((1 - t) • u + t • w) - x)‖ < d := by
+  have hd2 : 0 < d / 2 := by linarith
+  obtain ⟨h2, h2pos, h2le, h2b⟩ := inequaility2_fan hfan hvu huw hcop (d / 2) hd2
+  obtain ⟨h1, h1pos, _, h1b⟩ := inequality1_fan hfan hvu huw hcop (d / 2) hd2
+  refine ⟨min h1 h2, lt_min h1pos h2pos,
+    (min_le_right _ _).trans h2le, ?_⟩
+  intro t ht0 hlt s hs0 hs1
+  have B1 := h2b t ht0 (lt_of_lt_of_le hlt (min_le_right _ _)) s hs0 hs1
+  have B2 := h1b t ht0 (lt_of_lt_of_le hlt (min_le_left _ _)) s hs0 hs1
+  have B3 : ‖(‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹) •
+        ((1 - s) • v + s • u - x) -
+      (‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹) •
+        ((1 - s) • v + s • ((1 - t) • u + t • w) - x)‖ =
+      s * ‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹ *
+        ‖u - ((1 - t) • u + t • w)‖ := by
+    rw [← smul_sub, sub_interps_fan s t x v u w, smul_smul, norm_smul,
+      Real.norm_eq_abs,
+      abs_of_nonneg (mul_nonneg (inv_nonneg.mpr (norm_nonneg _)) hs0)]
+    ring
+  have hsplit : ‖(‖(1 - s) • v + s • u - x‖⁻¹) • ((1 - s) • v + s • u - x) -
+        (‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹) •
+          ((1 - s) • v + s • ((1 - t) • u + t • w) - x)‖ =
+      ‖((‖(1 - s) • v + s • u - x‖⁻¹) • ((1 - s) • v + s • u - x) -
+          (‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹) •
+            ((1 - s) • v + s • u - x)) +
+        ((‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹) •
+            ((1 - s) • v + s • u - x) -
+          (‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹) •
+            ((1 - s) • v + s • ((1 - t) • u + t • w) - x))‖ := by
+    rw [sub_add_sub_cancel]
+  rw [hsplit]
+  exact lt_of_le_of_lt (norm_add_le _ _) (by linarith)
