@@ -4072,4 +4072,255 @@ theorem rw_dart_is_image_set_spherical_coordinate (hfan : FAN x V E)
       · rw [azimFan, if_neg hcard]
         exact azim_lt_two_pi x v u y
 
+/-! ## rw_dart 的连通性、非空与 dart_leads_into（topology.hl:4436–4718，收尾）
+
+continuous_changeSphericalCoordinateFan（3673，block 18 跳过的前置，
+connected_rw_dart_fan 需要）；connected_rw_dart_fan（4436）；
+not_empty_rw_dart_fan（4477）；JGIYDLE（4526，四件打包）；
+dartLeadsInto（4555 定义，ε-算子）；exists_leads_into_fan（4565）；
+dartLeadsInto_spec（4619 `DART_LEADS_INTO`）；
+unique_dart_leads_into（4632）；
+dart_leads_into_mem_topologicalComponentYfan（4670）；
+isPreconnected_of_mem_topologicalComponentYfan（4704）；
+connected_dart_leads_into_fan（4711）。
+约定：HOL `connected` ↔ Mathlib `IsPreconnected`（沿用
+r_is_connected_fan 的注释；HOL 空集连通，Mathlib `IsConnected` 额外要求
+Nonempty）；HOL `connected_component s y` ↔ `connectedComponentIn s y`。 -/
+
+/-- HOL topology.hl:3673 `continuous_change_spherical_coordinate_fan`
+（HOL 逐点 `continuous at x`，此处取全局连续形；连通像论证只需
+ContinuousOn）。分量映射连续（PiLp.continuous_apply）+ 三角/乘法/
+数乘/加法封闭性。 -/
+theorem continuous_changeSphericalCoordinateFan (x v u : V3) :
+    Continuous (changeSphericalCoordinateFan x v u) := by
+  have hc : ∀ i : Fin 3, Continuous fun t : V3 => t i :=
+    fun i => PiLp.continuous_apply (p := 2) (β := fun _ : Fin 3 => ℝ) i
+  show Continuous fun t : V3 => x + (t (0 : Fin 3) * Real.cos (t (1 : Fin 3)) *
+      Real.sin (t (2 : Fin 3))) • e1Fan x v u +
+    (t (0 : Fin 3) * Real.sin (t (1 : Fin 3)) * Real.sin (t (2 : Fin 3))) •
+      e2Fan x v u +
+    (t (0 : Fin 3) * Real.cos (t (2 : Fin 3))) • e3Fan x v u
+  refine ((continuous_const.add ?_).add ?_).add ?_
+  · exact (((hc 0).mul (Real.continuous_cos.comp (hc 1))).mul
+      (Real.continuous_sin.comp (hc 2))).smul continuous_const
+  · exact (((hc 0).mul (Real.continuous_sin.comp (hc 1))).mul
+      (Real.continuous_sin.comp (hc 2))).smul continuous_const
+  · exact ((hc 0).mul (Real.continuous_cos.comp (hc 2))).smul continuous_const
+
+/-- HOL topology.hl:4436 `connected_rw_dart_fan`：0 < h < π/2 时
+rw_dart(cos h) 预连通。经 rw_dart_is_image_set_spherical_coordinate 化为
+rFan 的连续像；rFan 凸 ⟹ 预连通（r_is_connected_fan）。 -/
+theorem connected_rw_dart_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (h0 : 0 < h) (h1 : h < Real.pi / 2) :
+    IsPreconnected (rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos h)) := by
+  rw [← rw_dart_is_image_set_spherical_coordinate hfan hvu h0 h1]
+  exact (r_is_connected_fan _ _ _).1.image _
+    (continuous_changeSphericalCoordinateFan x v u).continuousOn
+
+/-- HOL topology.hl:4477 `not_empty_rw_dart_fan`：0 < h < π/2 时
+rw_dart(cos h) 非空（HOL `~(... = {})` ↔ `Set.Nonempty`）。经像刻画化为
+rFan 非空：CARD > 1 时 azimFan = azim x v u (σu) > 0（azim = 0 会导致
+u = σu，与 key_lemma_cyclic 矛盾），证人 (1, azim/2, h/2)；CARD ≤ 1 时
+azimFan = 2π，证人 (1, π, h/2)。 -/
+theorem not_empty_rw_dart_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (h0 : 0 < h) (h1 : h < Real.pi / 2) :
+    (rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos h)).Nonempty := by
+  rw [← rw_dart_is_image_set_spherical_coordinate hfan hvu h0 h1]
+  apply Set.Nonempty.image
+  by_cases hcard : 1 < (setOfEdge v V E).ncard
+  · -- CARD > 1：azimFan = azim x v u (σu)
+    have hσedge : {v, sigmaFan x V E v u} ∈ E := by
+      have hm := sigma_fan_in_setOfEdge hfan
+        ((properties_of_setOfEdge_fan x V E v u hfan).mp hvu)
+      simp only [setOfEdge, Set.mem_setOf_eq] at hm
+      exact hm.1
+    have hazim_pos : 0 < azim x v u (sigmaFan x V E v u) := by
+      rcases eq_or_lt_of_le (azim_nonneg x v u (sigmaFan x V E v u)) with h0' | h0'
+      · exfalso
+        have hσu : u = sigmaFan x V E v u :=
+          unique_azim0_point_fan hfan hvu hσedge h0'.symm
+        have h1ne := key_lemma_cyclic x V E hfan hvu 1 (by norm_num) hcard
+        apply h1ne
+        show sigmaFan x V E v u = u
+        exact hσu.symm
+      · exact h0'
+    refine ⟨WithLp.toLp 2 ![1, azim x v u (sigmaFan x V E v u) / 2, h / 2], ?_⟩
+    rw [rFan, azimFan, if_pos hcard, azim_self]
+    simp only [Set.mem_setOf_eq]
+    exact ⟨zero_lt_one, half_pos hazim_pos, half_lt_self hazim_pos,
+      half_pos h0, half_lt_self h0⟩
+  · -- CARD ≤ 1：azimFan = 2π
+    refine ⟨WithLp.toLp 2 ![1, Real.pi, h / 2], ?_⟩
+    rw [rFan, azimFan, if_neg hcard, azim_self]
+    simp only [Set.mem_setOf_eq]
+    exact ⟨zero_lt_one, Real.pi_pos, lt_two_mul_self Real.pi_pos,
+      half_pos h0, half_lt_self h0⟩
+
+/-- HOL topology.hl:4526 `JGIYDLE`：rw_dart 的四项性质打包（非空、
+随半径单调缩小、某半径避开 yfan、预连通）。 -/
+theorem jgiydle (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
+    (∀ h : ℝ, 0 < h → h < Real.pi / 2 →
+      (rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos h)).Nonempty) ∧
+    (∀ h h1 : ℝ, h1 ≤ h →
+      rwDartFan x V E (x, v, u, sigmaFan x V E v u) h ⊆
+        rwDartFan x V E (x, v, u, sigmaFan x V E v u) h1) ∧
+    (∃ h : ℝ, 1 > h ∧ h > 0 ∧
+      rwDartFan x V E (x, v, u, sigmaFan x V E v u) h ⊆ yfan x V E) ∧
+    (∀ h : ℝ, 0 < h → h < Real.pi / 2 →
+      IsPreconnected (rwDartFan x V E (x, v, u, sigmaFan x V E v u)
+        (Real.cos h))) :=
+  ⟨fun h h0 h1 => not_empty_rw_dart_fan hfan hvu h0 h1,
+   fun h h1 hle => continuous_set_fan hfan hvu h h1 hle,
+   rw_dart_avoids_fan hfan hvu,
+   fun h h0 h1 => connected_rw_dart_fan hfan hvu h0 h1⟩
+
+/-- HOL topology.hl:4555 `dart_leads_into`（HOL `@U` 选择算子 ↔
+`Classical.epsilon`）：dart (x,v,u) 引导进入的 yfan 连通分量。 -/
+noncomputable def dartLeadsInto (x : V3) (V : Set V3) (E : Set (Set V3))
+    (v u : V3) : Set V3 :=
+  Classical.epsilon (fun U : Set V3 => ∃ h : ℝ, 0 < h ∧ ∀ (s : ℝ) (y : V3),
+    0 < s → s < h →
+      y ∈ rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos s) →
+      rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos s) ⊆ U ∧
+        connectedComponentIn (yfan x V E) y = U)
+
+/-- HOL topology.hl:4565 `exists_leads_into_fan`：dart_leads_into 的
+刻画性质可满足。取 h'（rw_dart_avoids_fan 的半径）的 arccos 作为阈值：
+s < arccos h' ⟹ cos s > h' ⟹ rwDart(cos s) ⊆ rwDart(h') ⊆ yfan；
+rwDart(cos s) 预连通 ⟹ 落在 y 的连通分量里。 -/
+theorem exists_leads_into_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
+    ∃ U : Set V3, ∃ h : ℝ, 0 < h ∧ ∀ (s : ℝ) (y : V3),
+      0 < s → s < h →
+        y ∈ rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos s) →
+        rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos s) ⊆ U ∧
+          connectedComponentIn (yfan x V E) y = U := by
+  obtain ⟨hEM, hmono, ⟨h, hh1, hh0, hsuby⟩, hconn⟩ := jgiydle hfan hvu
+  have hb1 : -1 ≤ h := by linarith [hh0]
+  have hb2 : h ≤ 1 := le_of_lt hh1
+  have hac0 : 0 < Real.arccos h := Real.arccos_pos.mpr hh1
+  have haclt : Real.arccos h < Real.pi / 2 := Real.arccos_lt_pi_div_two.mpr hh0
+  have hcosac : Real.cos (Real.arccos h) = h := Real.cos_arccos hb1 hb2
+  obtain ⟨x', hx'⟩ := hEM (Real.arccos h) hac0 haclt
+  rw [hcosac] at hx'
+  refine ⟨connectedComponentIn (yfan x V E) x', Real.arccos h, hac0, ?_⟩
+  intro s y hs0 hslt hy
+  -- h < cos s（cos 在 [0,π] 严格递减）
+  have hcos : h < Real.cos s := by
+    have h2 := Real.cos_lt_cos_of_nonneg_of_le_pi (le_of_lt hs0)
+      (Real.arccos_le_pi h) hslt
+    rw [hcosac] at h2
+    exact h2
+  have hsub1 : rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos s) ⊆
+      rwDartFan x V E (x, v, u, sigmaFan x V E v u) h :=
+    hmono _ _ (le_of_lt hcos)
+  -- rwDart(h) ⊆ component x'
+  have hxg : rwDartFan x V E (x, v, u, sigmaFan x V E v u) h ⊆
+      connectedComponentIn (yfan x V E) x' := by
+    have hpre : IsPreconnected (rwDartFan x V E (x, v, u, sigmaFan x V E v u) h) := by
+      have hh := hconn (Real.arccos h) hac0 haclt
+      rwa [hcosac] at hh
+    exact hpre.subset_connectedComponentIn hx' hsuby
+  have hymem : y ∈ connectedComponentIn (yfan x V E) x' := hxg (hsub1 hy)
+  refine ⟨?_, (connectedComponentIn_eq hymem).symm⟩
+  have hpre2 := hconn s hs0 (lt_trans hslt haclt)
+  have hsub2 : rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos s) ⊆
+      yfan x V E := fun z hz => hsuby (hsub1 hz)
+  have hthis := hpre2.subset_connectedComponentIn hy hsub2
+  rwa [← connectedComponentIn_eq hymem] at hthis
+
+/-- HOL topology.hl:4619 `DART_LEADS_INTO`：dartLeadsInto 满足其
+刻画性质（ε-算子规范）。 -/
+theorem dartLeadsInto_spec (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
+    ∃ h : ℝ, 0 < h ∧ ∀ (s : ℝ) (y : V3), 0 < s → s < h →
+      y ∈ rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos s) →
+      rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos s) ⊆
+        dartLeadsInto x V E v u ∧
+        connectedComponentIn (yfan x V E) y = dartLeadsInto x V E v u :=
+  Classical.epsilon_spec (exists_leads_into_fan hfan hvu)
+
+/-- HOL topology.hl:4632 `unique_dart_leads_into`：满足刻画性质的集合
+唯一（取 s = min (min h h'/2) (π/3)，落在两个阈值之内，用非空公共点
+的连通分量传递相等）。 -/
+theorem unique_dart_leads_into (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (U : Set V3)
+    (hU : ∃ h : ℝ, 0 < h ∧ ∀ (s : ℝ) (y : V3), 0 < s → s < h →
+      y ∈ rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos s) →
+      rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos s) ⊆ U ∧
+        connectedComponentIn (yfan x V E) y = U) :
+    dartLeadsInto x V E v u = U := by
+  obtain ⟨h', hh'0, hU'⟩ := hU
+  obtain ⟨h, hh0, hspec⟩ := dartLeadsInto_spec hfan hvu
+  have hEM := (jgiydle hfan hvu).1
+  have hpi : 0 < Real.pi := Real.pi_pos
+  set s := min (min h h' / 2) (Real.pi / 3) with hsdef
+  have hs0 : 0 < s := by
+    rw [hsdef]
+    exact lt_min (div_pos (lt_min hh0 hh'0) two_pos) (by positivity)
+  have hslt_h : s < h := by
+    rw [hsdef]
+    exact lt_of_le_of_lt (min_le_left _ _)
+      (lt_of_lt_of_le (half_lt_self (lt_min hh0 hh'0)) (min_le_left _ _))
+  have hslt_h' : s < h' := by
+    rw [hsdef]
+    exact lt_of_le_of_lt (min_le_left _ _)
+      (lt_of_lt_of_le (half_lt_self (lt_min hh0 hh'0)) (min_le_right _ _))
+  have hslt_pi2 : s < Real.pi / 2 := by
+    rw [hsdef]
+    exact lt_of_le_of_lt (min_le_right _ _) (by linarith [Real.pi_pos])
+  obtain ⟨x', hx'⟩ := hEM s hs0 hslt_pi2
+  obtain ⟨-, heq1⟩ := hspec s x' hs0 hslt_h hx'
+  obtain ⟨-, heq2⟩ := hU' s x' hs0 hslt_h' hx'
+  exact heq1.symm.trans heq2
+
+/-- HOL topology.hl:4670
+`dart_leads_into_fan_in_topological_component_yfan`：dartLeadsInto 是
+yfan 的一个拓扑分量（取 h1 = min h (arccos h')/2 使 cos h1 > h'，
+rwDart(cos h1) ⊆ rwDart(h') ⊆ yfan，其中的点 y 落在 yfan 且其分量
+正是 dartLeadsInto）。 -/
+theorem dart_leads_into_mem_topologicalComponentYfan (hfan : FAN x V E)
+    (hvu : {v, u} ∈ E) :
+    dartLeadsInto x V E v u ∈ topologicalComponentYfan x V E := by
+  obtain ⟨h', hh'1, hh'0, hsub'⟩ := rw_dart_avoids_fan hfan hvu
+  obtain ⟨h, hh0, hspec⟩ := dartLeadsInto_spec hfan hvu
+  have hEM := (jgiydle hfan hvu).1
+  have hb'1 : -1 ≤ h' := by linarith [hh'0]
+  have hb'2 : h' ≤ 1 := le_of_lt hh'1
+  have hac0 : 0 < Real.arccos h' := Real.arccos_pos.mpr hh'1
+  have haclt : Real.arccos h' < Real.pi / 2 := Real.arccos_lt_pi_div_two.mpr hh'0
+  have hcosac : Real.cos (Real.arccos h') = h' := Real.cos_arccos hb'1 hb'2
+  -- h1 := min h (arccos h') / 2
+  have hh10 : 0 < min h (Real.arccos h') / 2 :=
+    div_pos (lt_min hh0 hac0) two_pos
+  have hh1lt : min h (Real.arccos h') / 2 < h :=
+    lt_of_lt_of_le (half_lt_self (lt_min hh0 hac0)) (min_le_left _ _)
+  have hh1ac : min h (Real.arccos h') / 2 < Real.arccos h' :=
+    lt_of_lt_of_le (half_lt_self (lt_min hh0 hac0)) (min_le_right _ _)
+  have hh1pi : min h (Real.arccos h') / 2 < Real.pi / 2 := lt_trans hh1ac haclt
+  -- h' ≤ cos h1
+  have hle : h' ≤ Real.cos (min h (Real.arccos h') / 2) := by
+    have h2 := Real.cos_lt_cos_of_nonneg_of_le_pi (le_of_lt hh10)
+      (Real.arccos_le_pi h') hh1ac
+    rw [hcosac] at h2
+    exact le_of_lt h2
+  obtain ⟨y, hy⟩ := hEM _ hh10 hh1pi
+  have hsub1 : rwDartFan x V E (x, v, u, sigmaFan x V E v u)
+        (Real.cos (min h (Real.arccos h') / 2)) ⊆
+      rwDartFan x V E (x, v, u, sigmaFan x V E v u) h' :=
+    (jgiydle hfan hvu).2.1 _ _ hle
+  obtain ⟨-, heq⟩ := hspec _ y hh10 hh1lt hy
+  have hyg : y ∈ yfan x V E := hsub' (hsub1 hy)
+  exact ⟨y, hyg, heq⟩
+
+/-- HOL topology.hl:4704 `in_topological_component_yfan_is_connected`。 -/
+theorem isPreconnected_of_mem_topologicalComponentYfan {U : Set V3}
+    (h : U ∈ topologicalComponentYfan x V E) : IsPreconnected U := by
+  obtain ⟨b, -, rfl⟩ := h
+  exact isPreconnected_connectedComponentIn
+
+/-- HOL topology.hl:4711 `connected_dart_leads_into_fan`。 -/
+theorem connected_dart_leads_into_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
+    IsPreconnected (dartLeadsInto x V E v u) :=
+  isPreconnected_of_mem_topologicalComponentYfan
+    (dart_leads_into_mem_topologicalComponentYfan hfan hvu)
+
 end Kepler.Text
