@@ -2810,3 +2810,158 @@ theorem JBDNJJB {u v w : V3} (h1 : ¬ Collinear3 0 u v) (h2 : ¬ Collinear3 0 u 
   have hM : ‖u‖ * r1 * r2 ≠ 0 := mul_ne_zero (mul_ne_zero huN hr1.ne') hr2.ne'
   refine ⟨(‖u‖ * r1 * r2)⁻¹, inv_pos.mpr (by positivity), ?_⟩
   rw [hX, ← mul_assoc, inv_mul_cancel₀ hM, one_mul]
+
+/-! ## 第十二块：azim 平移桥与 cross_dot 族（planarity.hl:2419–2493）
+
+`azim x a b c = azim 0 (a-x) (b-x) (c-x)`（azim 定义中所有量都以
+`w - v` 形式出现，平移不变）打通 `JBDNJJB`（原点形式）到一般顶点的
+混合积刻画。本块由主 agent 手写（两个 GLM 模型均在此卡住：flash 探索
+瘫痪，glm-5.3 超时未落码）。 -/
+
+/-- 平移保持三点共线。 -/
+private theorem collinear3_zero_sub {x a b : V3} :
+    Collinear3 x a b ↔ Collinear3 0 (a - x) (b - x) := by
+  by_cases ha : a = x
+  · subst ha
+    rw [sub_self]
+    constructor <;> · intro _; exact collinear3_of_eq rfl
+  · rw [collinear3_iff_smul ha, collinear3_iff_smul (sub_ne_zero.mpr ha)]
+    simp only [sub_zero]
+
+/-- `AzimSpec` 的平移不变性（所有量以差形式出现）。 -/
+private theorem azimSpec_sub {x a b c : V3} {θ : ℝ} :
+    AzimSpec x a b c θ ↔ AzimSpec 0 (a - x) (b - x) (c - x) θ := by
+  unfold AzimSpec
+  simp only [sub_zero, sub_ne_zero]
+  have hd : dist a x = dist (a - x) 0 := by rw [dist_eq_norm, dist_eq_norm, sub_zero]
+  rw [hd]
+
+/-- azim 平移桥：顶点移到原点（planarity.hl 全库反复使用的隐含事实）。 -/
+theorem azim_sub_self (x a b c : V3) :
+    azim x a b c = azim 0 (a - x) (b - x) (c - x) := by
+  unfold azim
+  rw [collinear3_zero_sub (x := x) (a := a) (b := b),
+    collinear3_zero_sub (x := x) (a := a) (b := c)]
+  have hpred : AzimSpec x a b c = AzimSpec 0 (a - x) (b - x) (c - x) :=
+    funext fun _ => propext azimSpec_sub
+  rw [hpred]
+
+/-- HOL planarity.hl:2453 `IMP_NORM_FAN`：互异点的范数事实包。 -/
+theorem IMP_NORM_FAN {va vb : V3} (h : va ≠ vb) :
+    ‖va - vb‖ ≠ 0 ∧ 0 ≤ ‖va - vb‖ ∧ 0 < ‖va - vb‖ ∧ 0 ≤ ‖va - vb‖⁻¹ ∧
+      0 < ‖va - vb‖⁻¹ ∧ ‖va - vb‖⁻¹ * ‖va - vb‖ = 1 := by
+  have h0 : ‖va - vb‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr h)
+  have hpos : 0 < ‖va - vb‖ := lt_of_le_of_ne (norm_nonneg _) (Ne.symm h0)
+  exact ⟨h0, norm_nonneg _, hpos, inv_nonneg.mpr (norm_nonneg _),
+    inv_pos.mpr hpos, inv_mul_cancel₀ h0⟩
+
+/-- HOL planarity.hl:2470 `cross_dot_fully_surrounded_fan`：`azim ∈ (0,π)`
+给出混合积严格为正（`JBDNJJB` 的 sin 桥 + sin 在开区间为正）。 -/
+theorem cross_dot_fully_surrounded_fan {x v1 v u1 : V3}
+    (h1 : ¬ Collinear3 x v1 u1) (h2 : ¬ Collinear3 x v1 v)
+    (h0 : 0 < azim x v1 v u1) (hpi : azim x v1 v u1 < Real.pi) :
+    0 < (crossProduct ((v1 - x : V3) : Fin 3 → ℝ) ((v - x : V3) : Fin 3 → ℝ)) ⬝ᵥ
+      ((u1 - x : V3) : Fin 3 → ℝ) := by
+  rw [azim_sub_self] at h0 hpi
+  have h1' : ¬ Collinear3 0 (v1 - x) (u1 - x) :=
+    fun h => h1 (collinear3_zero_sub.mpr h)
+  have h2' : ¬ Collinear3 0 (v1 - x) (v - x) :=
+    fun h => h2 (collinear3_zero_sub.mpr h)
+  obtain ⟨t, ht, hsin⟩ := JBDNJJB h2' h1'
+  have hsp := Real.sin_pos_of_pos_of_lt_pi h0 hpi
+  rw [hsin] at hsp
+  exact (mul_pos_iff_of_pos_left ht).mp hsp
+
+/-- HOL planarity.hl:2493 `cross_dot_fully_surrounded_ge_fan`：闭区间版。 -/
+theorem cross_dot_fully_surrounded_ge_fan {x v1 v u1 : V3}
+    (h1 : ¬ Collinear3 x v1 u1) (h2 : ¬ Collinear3 x v1 v)
+    (h0 : 0 ≤ azim x v1 v u1) (hpi : azim x v1 v u1 ≤ Real.pi) :
+    0 ≤ (crossProduct ((v1 - x : V3) : Fin 3 → ℝ) ((v - x : V3) : Fin 3 → ℝ)) ⬝ᵥ
+      ((u1 - x : V3) : Fin 3 → ℝ) := by
+  rw [azim_sub_self] at h0 hpi
+  have h1' : ¬ Collinear3 0 (v1 - x) (u1 - x) :=
+    fun h => h1 (collinear3_zero_sub.mpr h)
+  have h2' : ¬ Collinear3 0 (v1 - x) (v - x) :=
+    fun h => h2 (collinear3_zero_sub.mpr h)
+  obtain ⟨t, ht, hsin⟩ := JBDNJJB h2' h1'
+  have hsp := Real.sin_nonneg_of_nonneg_of_le_pi h0 hpi
+  rw [hsin] at hsp
+  exact nonneg_of_mul_nonneg_right hsp ht
+
+/-- HOL planarity.hl:2419 `independent_run_edges_fan`：内插边保持
+`{v-x, u-x, p-x}` 线性无关。直证（不走 HOL 的 NOT_COPLANAR_0_4 引理）：
+若相关，则或 `p-x ∈ span{v-x,u-x}`（四点共面，与
+`continuous_coplanar_fan` 矛盾），或 `v-x,u-x` 相关（`fan_not_collinear`
+矛盾）。 -/
+theorem independent_run_edges_fan {x v u w : V3} {V : Set V3}
+    {E : Set (Set V3)} {a : ℝ} (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (h80 : fan80 x V E) (hsigma : sigmaFan x V E u w = v)
+    (ha0 : 0 < a) (ha1 : a ≤ 1) :
+    LinearIndependent ℝ ![v - x, u - x, ((1 - a) • u + a • w) - x] := by
+  have hθ := h80 u w huw
+  rw [hsigma] at hθ
+  have hcop := properties_fully_surrounded hfan hvu huw hθ.1 hθ.2
+  have hcop2 := continuous_coplanar_fan x v u w hcop a (ne_of_gt ha0)
+  have hvx : v ≠ x := by
+    intro h
+    have hc : Collinear3 x v u := by rw [h]; exact collinear3_of_eq rfl
+    exact fan_not_collinear hfan hvu hc
+  have hux : u ≠ x := by
+    intro h
+    have hc : Collinear3 x v u := by rw [← h]; exact collinear3_pair_left rfl
+    exact fan_not_collinear hfan hvu hc
+  by_contra hdep
+  rw [Fintype.linearIndependent_iff] at hdep
+  push_neg at hdep
+  obtain ⟨g, hg, i, hi⟩ := hdep
+  rw [Fin.sum_univ_three] at hg
+  simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+    Matrix.cons_val_two, Matrix.tail_cons] at hg
+  by_cases h2 : g 2 = 0
+  · rw [h2, zero_smul, add_zero] at hg
+    have h01 : g 0 ≠ 0 ∨ g 1 ≠ 0 := by
+      fin_cases i
+      · exact Or.inl hi
+      · exact Or.inr hi
+      · exact False.elim (hi (by simpa using h2))
+    have hcol_of : g 1 ≠ 0 → Collinear3 x v u := by
+      intro h1
+      refine (collinear3_iff_smul hvx).mpr ⟨-(g 0 * (g 1)⁻¹), ?_⟩
+      have hg1 : g 1 • (u - x) = -(g 0 • (v - x)) := by
+        linear_combination (norm := module) hg
+      calc u - x = (g 1)⁻¹ • (g 1 • (u - x)) := (inv_smul_smul₀ h1 _).symm
+        _ = (g 1)⁻¹ • (-(g 0 • (v - x))) := by rw [hg1]
+        _ = -(g 0 * (g 1)⁻¹) • (v - x) := by
+          rw [smul_neg, smul_smul, neg_smul, mul_comm]
+    rcases h01 with h0 | h1
+    · by_cases h1' : g 1 = 0
+      · rw [h1', zero_smul, add_zero] at hg
+        rcases smul_eq_zero.mp hg with hh | hh
+        · exact absurd hh h0
+        · exact absurd (sub_eq_zero.mp hh) hvx
+      · exact absurd (hcol_of h1') (fan_not_collinear hfan hvu)
+    · exact absurd (hcol_of h1) (fan_not_collinear hfan hvu)
+  · have hp : ((1 - a) • u + a • w) - x =
+        (-(g 0 * (g 2)⁻¹)) • (v - x) + (-(g 1 * (g 2)⁻¹)) • (u - x) := by
+      have hz : g 2 • ((((1 - a) • u + a • w) - x) -
+          ((-(g 0 * (g 2)⁻¹)) • (v - x) + (-(g 1 * (g 2)⁻¹)) • (u - x))) = 0 := by
+        rw [smul_sub, smul_add, smul_smul, smul_smul]
+        have e1 : g 2 * -(g 0 * (g 2)⁻¹) = -(g 0) := by field_simp
+        have e2 : g 2 * -(g 1 * (g 2)⁻¹) = -(g 1) := by field_simp
+        rw [e1, e2, neg_smul, neg_smul]
+        linear_combination (norm := module) hg
+      rcases smul_eq_zero.mp hz with h | h
+      · exact absurd h h2
+      · exact eq_of_sub_eq_zero h
+    apply hcop2
+    refine ⟨x, v, u, fun z hz => ?_⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl | rfl
+    · exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+    · exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+    · exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+    · refine mem_affineSpan_of_combo (c1 := 1 - -(g 0 * (g 2)⁻¹) - -(g 1 * (g 2)⁻¹))
+        (c2 := -(g 0 * (g 2)⁻¹)) (c3 := -(g 1 * (g 2)⁻¹)) (by ring) ?_
+      calc (1 - a) • u + a • w = (((1 - a) • u + a • w) - x) + x := by module
+        _ = (1 - -(g 0 * (g 2)⁻¹) - -(g 1 * (g 2)⁻¹)) • x +
+            -(g 0 * (g 2)⁻¹) • v + -(g 1 * (g 2)⁻¹) • u := by rw [hp]; module
