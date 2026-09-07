@@ -33,12 +33,15 @@
 
 - [x] 证书链路全通：Flyspeck 证书解析 → LP 展开/扁平化 → SoPlex 精确求解 → 整数对偶证书 → Lean 内核弱对偶 checker（`Kepler/LP/Cert.lean`、`ColMajor.lean`）
 - [x] 试点图端到端闭合（行主序 + 列主序，`3cbe979`）
+## Phase 3 — 线性规划 ✅ 100%（2026-09-07 全闭合）
+
+- [x] 证书链路全通：Flyspeck 证书解析 → LP 展开/扁平化 → SoPlex 精确求解 → 整数对偶证书 → Lean 内核弱对偶 checker（`Kepler/LP/Cert.lean`、`ColMajor.lean`）
+- [x] 试点图端到端闭合（行主序 + 列主序，`3cbe979`）
 - [x] 生产 harness 入 git（`pipeline/lp/run/`：driver/gen_one/make_tasks/glpsol_dual）
 - [x] **easy 23,640/23,640 终端内核验证通过**（含 8 个 glpsol 通道救回例）
 - [x] hard_1 偏差根因修复（`d5e32af`：branch.py 逐节点数值收紧重放）
 - [x] hard 批次全量跑完：19,433/19,433，19,382 通过（99.74%）
-- [ ] 51 个失败例 glpsol 通道清账（**进行中**，全部 exit=130 SoPlex 数值放弃，非内核拒绝；47 个来自图 161847242261）
-- [ ] 清账后更新 HANDOFF + 汇总提交（Phase 3 正式闭合）
+- [x] **全部 43,078 个终端 LP 内核验证通过（2026-09-07）**：SoPlex 数值放弃的 51 例（47 个来自 hard_1 图 161847242261）全部经 glpsol 精确对偶通道闭合（`glpsol_dual.py`：基状态解析 → Fraction 高斯消元 → 整数化 → 内核 decide，~245s/例）。账本 `~/lprun-logs/results.jsonl`（43,078/43,078 exit=0）
 
 ## Phase 4 — 非线性不等式 🟡 工具链 ~100% / 量产 0%
 
@@ -56,7 +59,7 @@
 | hypermap/hypermap.hl | 13,575 | ✅ 全书收官 | 100% |
 | fan/fan.hl 系列（fan_defs/fan_misc/fan/CFYXFTY/hypermap_and_fan） | ~7,800 | ✅ 全书收官（hypermapOfFan 完整构造） | 100% |
 | fan/topology.hl | 4,718 | ✅ 全书收官（`36c37c6`，dart_leads_into 全套） | 100% |
-| fan/planarity.hl | 15,463 | 🟡 block 1（:35–122）已提交（`b537a34`）后**暂停** | ~1% |
+| fan/planarity.hl | 15,463 | 🟡 GLM worker 流水线推进中，覆盖至 :2911（`a745542`） | ~19% |
 | fan/Conforming.hl | 17,033 | ⬜ 未启动 | 0% |
 | fan/ 其余（polyhedron 等） | ~3,200 | ⬜ 未启动 | 0% |
 | packing/（Rogers/OXLZLEZ3/REUHADY…） | ~28,000 | ⬜ 未启动 | 0% |
@@ -68,6 +71,10 @@
 - [x] Azim 方位角全层（Azim/AzimLemmas：ON 标架、角加法、AZIM_EQ/COMPL 等）
 - [x] Aff 仿射符号层（affGe/affsign）
 - [x] vectorAngle 定义与连续性（Planarity.lean block 1）
+- [x] **Coplanar 移植**（`Kepler/Geom/Coplanar.lean`，757a33d）
+- [x] vector_angle/angle 引理族（`VectorAngleLemmas.lean`：SYM/RANGE/EQ_0/EQ_PI/sin/cos + 三点角 angle；`fe3855d`–`c8c81b9`）
+- [x] azim 平移桥 `azim_sub_self` + JBDNJJB 混合积 + cross_dot 族（`f16b544` 等）
+- [x] **Phase 5 生产模式切换**（2026-09-07）：opencode + GLM coding plan（glm-5.3-flash/5.3）工人 + Kimi 验收，模板 `docs/phase5-worker-template.md`
 - [ ] **coplanar 移植**（trig2.hl:1548；planarity.hl 从 :285 起大量使用——block 2 的前置缺口）
 - [ ] vector_angle 引理族（COLLINEAR_VECTOR_ANGLE 等，Multivariate-geom.ml:325+）
 

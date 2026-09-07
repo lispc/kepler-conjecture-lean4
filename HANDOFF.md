@@ -51,7 +51,16 @@ PLAN.md 与各 README）。
   585 个 native_decide 分片全量重建需 ~7 天。
 - 公理审计：`lean/scripts/AxiomAudit.lean`（`make check` 覆盖）。
 
-### Phase 3 — LP（🟢 全量化生产运行中，2026-08-29 启动）
+### Phase 3 — LP（✅ 全闭合，2026-09-07）
+
+- **全量对账：`results.jsonl` 按 id 去重后 43,078 个终端 LP 全部
+  exit=0 内核验证通过**（easy 23,640 + hard 19,438），账本备份
+  `~/lprun-logs/results.jsonl`。其中 SoPlex 精确模式数值放弃的 51 例
+  （47 例来自 hard_1 图 161847242261）全部经 `glpsol_dual.py` 通道闭合：
+  glpsol --exact（最慢一例 13.5h，slack 松弛 LP，目标值缓慢爬向 -0.0x，
+  数值无异常）→ Fraction 精确对偶 → 整数化 → 内核 decide（180–272s/例）。
+- hard_1 偏差根因（2026-09-06 修复，`d5e32af`）：丢失的 branch.py 用
+  easy 语义重放 hard 分裂树，漏了逐节点数值收紧；full 重放零违反。
 
 - 链路：Flyspeck easy 证书 → `parse_lpcert.py` → `gen_data.py` →
   GLPK 5.0 展开 → `flatten_lp.py` → SoPlex 8.0.3 精确模式
@@ -90,11 +99,8 @@ PLAN.md 与各 README）。
     → 整数化 → 内核 decide（49–214s/个）。数值自洽：bᵀY 与 glpsol
     目标值差 ≤ 1.4e-9（打印舍入内）。账目落 `results.jsonl`
     （备份 `~/lprun-logs/`，后写覆盖语义，8 个旧 130 记录已被 pass 覆盖）。
-  - **hard 19,438 挂起**：hard_1 ~19% 终端 LP 值偏差 ±0.003–0.03 未定位
-    根因（已排除端口 bug/打印精度/序约定；fail-loud 断言在位，Lean 复检
-    保证跑过的必真）；修复 branch.py 重放后再排程。注意：原 branch.py
-    随 tmpfs 丢失，但 `make_tasks2a.py`（已入 git）的分裂树重放框架
-    可复用重建。
+  - **（历史，已解决）hard 19,438 挂起**：hard_1 ~19% 终端 LP 值偏差
+    ±0.003–0.03——根因即上述 branch.py 重放 bug，修复后全量跑通并闭合。
   - 进程/磁盘审计（2026-08-29）：无游离过期子代理进程；`/dev/shm/lprun`
     稳定 ~1.5G（work/ 即清即删）；`/tmp/opencode` 陈旧探针已清。
 - formal_lp 侦察结论：19715 图 = 19700 easy + 15 hard；hard_7 单图
