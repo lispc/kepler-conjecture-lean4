@@ -767,3 +767,270 @@ theorem scale_aff_gt_fan (hdis : Disjoint ({x} : Set V3) {v, u}) (y : V3) (a : �
   have ht1 : t1 = 1 - t2 - t3 := by linarith
   rw [hyeq, ht1]
   module
+
+/-! ## 第六块：闭扇区的分离（planarity.hl:223、1228、965、1045）
+
+HOL `exist_close_fan`（223）：两条不相交边的闭扇区与单位球面之交是
+不相交紧集，`dist` 在紧集乘积上取到正的最小值。
+HOL `origin_is_not_aff_gt_fan`（1228）：`aff_gt` 的严格正系数把 x 拉出
+意味着 u 落在直线 `aff {x,v}` 上。
+HOL `same_projective_sphere_gt_fan`（965）：球面上的 `aff_gt` 点可写成
+凸组合 `(1-s)•v + s•p` 的径向单位化。
+HOL `separate1_sphere_fan`（1045）：小 t 时扰动扇区与另一边的闭扇区
+在球面上无交（前三者的组合，HOL 证明结构照搬）。 -/
+
+/-- HOL `th3` 的角色：`¬ Collinear3 x v w → x ∉ {v, w}`。 -/
+private theorem disjoint_of_not_collinear3 {x v w : V3} (hnc : ¬ Collinear3 x v w) :
+    Disjoint ({x} : Set V3) {v, w} := by
+  rw [Set.disjoint_iff_inter_eq_empty, Set.singleton_inter_eq_empty]
+  intro hmem
+  rcases Set.mem_insert_iff.mp hmem with he | he
+  · exact hnc (by rw [he]; exact collinear3_of_eq rfl)
+  · exact hnc (by rw [Set.mem_singleton_iff.mp he]; exact collinear3_pair_left rfl)
+
+/-- `aff_ge {x} ∅ = {x}`（TopologyFan 中同名私有引理的本地复制）。 -/
+private theorem affGe_empty_eq_singleton (x : V3) : affGe {x} ∅ = {x} := by
+  ext y
+  constructor
+  · rintro ⟨f, hfin, hsum, -, hone⟩
+    have h2 : hfin.toFinset = ({x} : Finset V3) := by
+      ext z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_singleton_iff,
+        Set.mem_empty_iff_false, or_false, Finset.mem_singleton]
+    rw [h2, Finset.sum_singleton] at hsum hone
+    have h : y = x := by rw [hsum, hone, one_smul]
+    rw [h]
+    exact Set.mem_singleton x
+  · intro hy
+    rw [Set.mem_singleton_iff] at hy
+    have hfin : ({x} ∪ ∅ : Set V3).Finite :=
+      (Set.finite_singleton x).union Set.finite_empty
+    have h2 : hfin.toFinset = ({x} : Finset V3) := by
+      ext z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_singleton_iff,
+        Set.mem_empty_iff_false, or_false, Finset.mem_singleton]
+    refine ⟨fun _ => 1, hfin, ?_, ?_, ?_⟩
+    · rw [hy]
+      simp only [h2, Finset.sum_singleton, one_smul]
+    · intro z hz
+      exact ((Set.mem_empty_iff_false z).mp hz).elim
+    · simp only [h2, Finset.sum_singleton]
+
+/-- `affGe {x} {v,w} ∩ ballnormFan x` 非空：取 v 方向的单位化点
+（`exist_fan`（TopologyFan）中同一构造的一般边版本）。 -/
+private theorem affGe_ballnorm_nonempty {x v w : V3} (hnc : ¬ Collinear3 x v w) :
+    (affGe {x} {v, w} ∩ ballnormFan x).Nonempty := by
+  have hvx : v ≠ x := by
+    intro he
+    apply hnc
+    rw [← he]
+    exact collinear3_of_eq rfl
+  have hn : ‖v - x‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hvx)
+  refine ⟨x + ‖v - x‖⁻¹ • (v - x), ?_, ?_⟩
+  · rw [aff_ge_1_2 (disjoint_of_not_collinear3 hnc)]
+    simp only [Set.mem_setOf_eq]
+    refine ⟨1 - ‖v - x‖⁻¹, ‖v - x‖⁻¹, 0, inv_nonneg.mpr (norm_nonneg _), by norm_num,
+      by ring, ?_⟩
+    module
+  · rw [ballnormFan]
+    simp only [Set.mem_setOf_eq]
+    rw [dist_eq_norm,
+      show x - (x + ‖v - x‖⁻¹ • (v - x)) = -(‖v - x‖⁻¹ • (v - x)) from by module,
+      norm_neg, norm_smul, Real.norm_of_nonneg (inv_nonneg.mpr (norm_nonneg _)),
+      inv_mul_cancel₀ hn]
+
+/-- HOL planarity.hl:223 `exist_close_fan`：FAN 下两条不相交边的闭扇区
+（与单位球面之交）正分离。B 紧、A 闭无交（fan7 + `affGe {x} ∅ = {x}` +
+`dist x x = 0 ≠ 1`），`infDist` 在 B 上取正的最小值（`SEPARATE_CLOSED_COMPACT`
+的角色，同 TopologyFan `exist_fan` 的收尾）。 -/
+theorem exist_close_fan (hfan : FAN x V E) (hdis : Disjoint ({v, w} : Set V3) {v1, w1})
+    (he1 : {v1, w1} ∈ E) (he : {v, w} ∈ E) :
+    ∃ h : ℝ, 0 < h ∧
+      ∀ y1 : V3, y1 ∈ affGe {x} {v, w} ∩ ballnormFan x →
+        ∀ y2 : V3, y2 ∈ affGe {x} {v1, w1} ∩ ballnormFan x → h ≤ dist y1 y2 := by
+  have hnc : ¬ Collinear3 x v w := fan_not_collinear hfan he
+  have hnc1 : ¬ Collinear3 x v1 w1 := fan_not_collinear hfan he1
+  have hAclosed : IsClosed (affGe {x} {v, w} ∩ ballnormFan x) :=
+    closed_aff_ge_ballnorm_fan hnc
+  have hBc : IsCompact (affGe {x} {v1, w1} ∩ ballnormFan x) :=
+    compact_aff_ge_ballnorm_fan hnc1
+  have hAne := affGe_ballnorm_nonempty hnc
+  have h77 : affGe {x} {v, w} ∩ affGe {x} {v1, w1} = affGe {x} ({v, w} ∩ {v1, w1}) :=
+    hfan.2.2.2.2.2 {v, w} (Or.inl he) {v1, w1} (Or.inl he1)
+  have hinter : {v, w} ∩ {v1, w1} = ∅ := Set.disjoint_iff_inter_eq_empty.mp hdis
+  have hint : (affGe {x} {v, w} ∩ ballnormFan x) ∩
+      (affGe {x} {v1, w1} ∩ ballnormFan x) = ∅ := by
+    have h1 : (affGe {x} {v, w} ∩ ballnormFan x) ∩
+        (affGe {x} {v1, w1} ∩ ballnormFan x) =
+        (affGe {x} {v, w} ∩ affGe {x} {v1, w1}) ∩ ballnormFan x := by
+      ext y
+      simp only [Set.mem_inter_iff]
+      tauto
+    rw [h1, h77, hinter, affGe_empty_eq_singleton]
+    ext y
+    simp only [Set.mem_inter_iff, Set.mem_singleton_iff, ballnormFan, Set.mem_setOf_eq,
+      Set.mem_empty_iff_false, iff_false, not_and]
+    intro hyx
+    rw [hyx, dist_self]
+    norm_num
+  obtain ⟨h, hh0, hh⟩ := IsCompact.exists_forall_le' hBc
+    (Metric.continuous_infDist_pt _).continuousOn
+    (fun y2 hy2 => by
+      have hy2not : y2 ∉ closure (affGe {x} {v, w} ∩ ballnormFan x) := by
+        rw [hAclosed.closure_eq]
+        intro hmem
+        exact (Set.mem_empty_iff_false y2).mp (hint ▸ ⟨hmem, hy2⟩)
+      exact (Metric.infDist_pos_iff_notMem_closure hAne).mp hy2not)
+  exact ⟨h, hh0, fun y1 hy1 y2 hy2 =>
+    (hh y2 hy2).trans (by rw [dist_comm]; exact Metric.infDist_le_dist_of_mem hy1)⟩
+
+/-- HOL planarity.hl:1228 `origin_is_not_aff_gt_fan`：u 不在直线
+`aff {x,v}` 上时 x ∉ aff_gt {x} {v,u}（`aff_gt_1_2` 的 t3 > 0 系数可解出
+u 为 x, v 的仿射组合）。 -/
+theorem origin_is_not_aff_gt_fan
+    (hu : u ∉ (affineSpan ℝ ({x, v} : Set V3) : Set V3))
+    (hdis : Disjoint ({x} : Set V3) {v, u}) : x ∉ affGt {x} {v, u} := by
+  intro hx
+  rw [aff_gt_1_2 hdis] at hx
+  simp only [Set.mem_setOf_eq] at hx
+  obtain ⟨t1, t2, t3, -, ht3, hone, hyeq⟩ := hx
+  refine hu ?_
+  have ht3ne : t3 ≠ 0 := ne_of_gt ht3
+  have ht1 : t1 = 1 - t2 - t3 := by linarith
+  rw [ht1] at hyeq
+  have hx' : (1 - t2 - t3) • x + t2 • v + t3 • u - x = 0 := sub_eq_zero.mpr hyeq.symm
+  have hexp : (1 - t2 - t3) • x + t2 • v + t3 • u - x =
+      t2 • (v - x) + t3 • (u - x) := by
+    module
+  rw [hexp] at hx'
+  have hd : u - x = (-(t2 / t3)) • (v - x) := by
+    have h2 : t3⁻¹ • (t2 • (v - x) + t3 • (u - x)) = (0 : V3) := by
+      rw [hx', smul_zero]
+    rw [smul_add, smul_smul, smul_smul, inv_mul_cancel₀ ht3ne, one_smul] at h2
+    rw [show t3⁻¹ * t2 = t2 / t3 from by field_simp] at h2
+    have h3 : u - x = -((t2 / t3) • (v - x)) :=
+      (eq_neg_iff_add_eq_zero.mpr (by rw [add_comm]; exact h2))
+    rw [h3, neg_smul]
+  refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨-(t2 / t3), ?_⟩
+  rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add, ← hd]
+  module
+
+/-- HOL planarity.hl:965 `same_projective_sphere_gt_fan`：球面上的
+`aff_gt` 点是凸组合 `(1-s)•v + s•p`（p 为 u→w 插值）的径向单位化。
+s := t3/(1-t1) 由 `aff_gt_1_2` 的系数齐次化而来。 -/
+theorem same_projective_sphere_gt_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (t : ℝ)
+    (hnc : ¬ Collinear3 x v ((1 - t) • u + t • w))
+    {y1 : V3} (hy1 : y1 ∈ affGt {x} {v, (1 - t) • u + t • w} ∩ ballnormFan x) :
+    ∃ s : ℝ, 0 ≤ s ∧ s ≤ 1 ∧
+      y1 = ‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹ •
+        ((1 - s) • v + s • ((1 - t) • u + t • w) - x) + x := by
+  have hdis : Disjoint ({x} : Set V3) {v, (1 - t) • u + t • w} :=
+    disjoint_of_not_collinear3 hnc
+  have hball : dist x y1 = 1 := hy1.2
+  have hy1' := hy1.1
+  rw [aff_gt_1_2 hdis] at hy1'
+  simp only [Set.mem_setOf_eq] at hy1'
+  obtain ⟨t1, t2, t3, ht2, ht3, hone, hyeq⟩ := hy1'
+  have hc : 0 < 1 - t1 := by linarith
+  have hcn : 1 - t1 ≠ 0 := ne_of_gt hc
+  refine ⟨t3 / (1 - t1), div_nonneg ht3.le hc.le,
+    by rw [div_le_one hc]; linarith, ?_⟩
+  have e2 : (1 - t1) * (t3 / (1 - t1)) = t3 := mul_div_cancel₀ t3 hcn
+  have e1 : (1 - t1) * (1 - t3 / (1 - t1)) = t2 := by
+    rw [mul_sub, mul_one, mul_div_cancel₀ t3 hcn]
+    linarith
+  have hyx : y1 - x = t2 • (v - x) + t3 • ((1 - t) • u + t • w - x) := by
+    rw [hyeq, show t1 = 1 - t2 - t3 from by linarith]
+    module
+  have hsplit : (1 - t1) • ((1 - t3 / (1 - t1)) • v +
+      (t3 / (1 - t1)) • ((1 - t) • u + t • w) - x) =
+      t2 • (v - x) + t3 • ((1 - t) • u + t • w - x) := by
+    have step : (1 - t1) • ((1 - t3 / (1 - t1)) • v +
+        (t3 / (1 - t1)) • ((1 - t) • u + t • w) - x) =
+        ((1 - t1) * (1 - t3 / (1 - t1))) • v +
+        ((1 - t1) * (t3 / (1 - t1))) • ((1 - t) • u + t • w) - (1 - t1) • x := by
+      rw [smul_sub, smul_add, smul_smul, smul_smul]
+    rw [step, e1, e2, show (1 - t1) = t2 + t3 from by linarith]
+    module
+  have hn1 : ‖y1 - x‖ = 1 := by
+    rw [dist_eq_norm] at hball
+    rwa [norm_sub_rev] at hball
+  have h2 : ∀ z : V3, (1 - t1) * ‖z‖ = ‖(1 - t1) • z‖ := by
+    intro z
+    rw [norm_smul, Real.norm_of_nonneg hc.le]
+  have hmul : (1 - t1) * ‖(1 - t3 / (1 - t1)) • v +
+      (t3 / (1 - t1)) • ((1 - t) • u + t • w) - x‖ = 1 := by
+    rw [h2, hsplit, ← hyx]
+    exact hn1
+  have hAnorm : ‖(1 - t3 / (1 - t1)) • v +
+      (t3 / (1 - t1)) • ((1 - t) • u + t • w) - x‖ = (1 - t1)⁻¹ :=
+    eq_inv_of_mul_eq_one_right hmul
+  have hinv : ‖(1 - t3 / (1 - t1)) • v +
+      (t3 / (1 - t1)) • ((1 - t) • u + t • w) - x‖⁻¹ = 1 - t1 := by
+    rw [hAnorm, inv_inv]
+  rw [hinv, hsplit, ← hyx, sub_add_cancel]
+
+/-- HOL planarity.hl:1045 `separate1_sphere_fan`：存在 h ∈ (0,1] 使得
+小 t 时扰动扇区 `aff_gt {x} {v,(1-t)•u+t•w}` 与另一边的闭扇区
+`aff_ge {x} {v1,u1}` 在单位球面上无交。HOL 证明：`exist_close_fan`
+分离 `{v,u}`/`{v1,u1}` 扇区，`exists_point_small_edges_fan` 保证扰动点
+的单位化贴近 `{v,u}` 扇区，`same_projective_sphere_gt_fan` 把交点改写为
+该单位化形式，矛盾。 -/
+theorem separate1_sphere_fan (hfan : FAN x V E)
+    (hdis : Disjoint ({v, u} : Set V3) {v1, u1}) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hv1u1 : {v1, u1} ∈ E) (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) :
+    ∃ h : ℝ, 0 < h ∧ h ≤ 1 ∧ ∀ t : ℝ, 0 < t → t < h →
+      affGt {x} {v, (1 - t) • u + t • w} ∩ affGe {x} {v1, u1} ∩ ballnormFan x = ∅ := by
+  obtain ⟨hc, hc0, hcsep⟩ := exist_close_fan hfan hdis hv1u1 hvu
+  obtain ⟨t1, t1pos, t1le, hnc⟩ := exists_open_not_collinear hfan hvu huw
+  obtain ⟨he, hepos, hele, hesm⟩ := exists_point_small_edges_fan hfan hvu huw hcop hc hc0
+  refine ⟨min (he / 2) t1, lt_min (by linarith) t1pos,
+    (min_le_right _ _).trans t1le, ?_⟩
+  intro t ht0 hth
+  refine Set.eq_empty_of_forall_notMem (fun z hz => ?_)
+  have ht1le' : t ≤ t1 := le_of_lt (lt_of_lt_of_le hth (min_le_right _ _))
+  have hthe : t < he := by
+    have h1 : t < he / 2 := lt_of_lt_of_le hth (min_le_left _ _)
+    linarith
+  have hnc' : ¬ Collinear3 x v ((1 - t) • u + t • w) := hnc t ht0.le ht1le'
+  obtain ⟨s, hs0, hs1, hzs⟩ := same_projective_sphere_gt_fan hfan hvu huw t hnc'
+    ⟨hz.1.1, hz.2⟩
+  have hconv : (1 - s) • v + s • u ∈ convexHull ℝ ({v, u} : Set V3) :=
+    expansion1_convex_fan s hs0 hs1
+  have hxconv : x ∉ convexHull ℝ ({v, u} : Set V3) :=
+    origin_point_not1_in_convex_fan hfan hvu
+  have hne : (1 - s) • v + s • u - x ≠ 0 := by
+    intro h0
+    exact hxconv ((sub_eq_zero.mp h0) ▸ hconv)
+  have hn : ‖(1 - s) • v + s • u - x‖ ≠ 0 := norm_ne_zero_iff.mpr hne
+  obtain ⟨y2, hy2def⟩ : ∃ y2 : V3, y2 = ‖(1 - s) • v + s • u - x‖⁻¹ •
+      ((1 - s) • v + s • u - x) + x := ⟨_, rfl⟩
+  have hy2ball : y2 ∈ ballnormFan x := by
+    rw [hy2def, ballnormFan]
+    simp only [Set.mem_setOf_eq]
+    rw [dist_eq_norm,
+      show x - (‖(1 - s) • v + s • u - x‖⁻¹ • ((1 - s) • v + s • u - x) + x) =
+        -(‖(1 - s) • v + s • u - x‖⁻¹ • ((1 - s) • v + s • u - x)) from by module,
+      norm_neg, norm_smul,
+      Real.norm_of_nonneg (inv_nonneg.mpr (norm_nonneg _)),
+      inv_mul_cancel₀ hn]
+  have hvune : Disjoint ({x} : Set V3) {v, u} :=
+    disjoint_of_not_collinear3 (fan_not_collinear hfan hvu)
+  have hy2aff : y2 ∈ affGe {x} {v, u} := by
+    rw [hy2def, aff_ge_1_2 hvune]
+    simp only [Set.mem_setOf_eq]
+    refine ⟨1 - ‖(1 - s) • v + s • u - x‖⁻¹,
+      ‖(1 - s) • v + s • u - x‖⁻¹ * (1 - s), ‖(1 - s) • v + s • u - x‖⁻¹ * s,
+      mul_nonneg (inv_nonneg.mpr (norm_nonneg _)) (by linarith : 0 ≤ 1 - s),
+      mul_nonneg (inv_nonneg.mpr (norm_nonneg _)) hs0,
+      by ring, by module⟩
+  have hsm := hesm t ht0.le hthe s hs0 hs1
+  have hdzy2 : dist z y2 =
+      ‖(‖(1 - s) • v + s • u - x‖⁻¹) • ((1 - s) • v + s • u - x) -
+        (‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹) •
+          ((1 - s) • v + s • ((1 - t) • u + t • w) - x)‖ := by
+    rw [dist_eq_norm, hzs, hy2def, add_sub_add_right_eq_sub, norm_sub_rev]
+  have hfinal : hc ≤ dist y2 z := hcsep y2 ⟨hy2aff, hy2ball⟩ z ⟨hz.1.2, hz.2⟩
+  rw [dist_comm y2 z, hdzy2] at hfinal
+  linarith
