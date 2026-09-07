@@ -3136,3 +3136,148 @@ theorem properties_of_collinear4_points_fan {v1 : V3} (hnc : ¬ Collinear3 x v u
     rw [div_eq_inv_mul, ← smul_smul, ← hkey, inv_smul_smul₀ ht3n]
   exact hnc
     ((collinear3_iff_smul (w := v) (v := x) hvx.symm).mpr ⟨(c - t2) / t3, hux⟩)
+
+/-! ## 第十五块：cross_dot_fully_surrounded1 族（planarity.hl:2561/2677） -/
+
+/-- 纯 `(Fin 3 → ℝ)` 侧的混合积代数引理：`X = t₂•W + t₃•Q`
+（`t₂, t₃ > 0`）且 `det[X, W, Z] > 0` 时 `det[X, Z, Q] > 0`
+（`cr_add_l`/`cr_smul_l` 为 `crossProduct` 左线性，仿 `JBDNJJB`
+内的同名局部引理）。 -/
+private theorem cross_dot_combo_pos {X W Z Q : Fin 3 → ℝ} {t2 t3 : ℝ}
+    (ht2 : 0 < t2) (ht3 : 0 < t3)
+    (hX : X = t2 • W + t3 • Q) (hA : 0 < (crossProduct X W) ⬝ᵥ Z) :
+    0 < (crossProduct X Z) ⬝ᵥ Q := by
+  have cr_add_l : ∀ p q s : Fin 3 → ℝ,
+      crossProduct (p + q) s = crossProduct p s + crossProduct q s := by
+    intro p q s
+    funext i
+    fin_cases i <;>
+      simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+        Matrix.tail_cons, Matrix.head_cons, Pi.add_apply] <;>
+      ring
+  have cr_smul_l : ∀ (c : ℝ) (p s : Fin 3 → ℝ),
+      crossProduct (c • p) s = c • crossProduct p s := by
+    intro c p s
+    funext i
+    fin_cases i <;>
+      simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+        Matrix.tail_cons, Matrix.head_cons, Pi.smul_apply] <;>
+      ring
+  have hexp : (crossProduct X Z) ⬝ᵥ Q = t2 * ((crossProduct W Z) ⬝ᵥ Q) := by
+    rw [hX, cr_add_l, cr_smul_l, cr_smul_l, add_dotProduct, smul_dotProduct,
+      smul_dotProduct, dotProduct_comm (crossProduct Q Z) Q, dot_self_cross, smul_zero,
+      add_zero, smul_eq_mul]
+  have hA' : (crossProduct X W) ⬝ᵥ Z = t3 * ((crossProduct Q W) ⬝ᵥ Z) := by
+    rw [hX, cr_add_l, cr_smul_l, cr_smul_l, add_dotProduct, cross_self W, smul_zero,
+      zero_dotProduct, zero_add, smul_dotProduct, smul_eq_mul]
+  have hperm : (crossProduct W Z) ⬝ᵥ Q = (crossProduct Q W) ⬝ᵥ Z := by
+    calc (crossProduct W Z) ⬝ᵥ Q = Q ⬝ᵥ crossProduct W Z := dotProduct_comm _ _
+      _ = Z ⬝ᵥ crossProduct Q W := (triple_product_permutation Z Q W).symm
+      _ = (crossProduct Q W) ⬝ᵥ Z := dotProduct_comm _ _
+  have hQW : 0 < (crossProduct Q W) ⬝ᵥ Z :=
+    (mul_pos_iff_of_pos_left ht3).mp (by rwa [hA'] at hA)
+  rw [hexp, hperm]
+  exact mul_pos ht2 hQW
+
+/-- HOL planarity.hl:2561 `cross_dot_fully_surrounded1_fan`：
+`aff_gt` 平面侧点的混合积严格为正。重构证明（不走 HOL 的
+`sum4_azim_fan`/`AZIM_EQ_PI_ALT` 路线）：把已有的
+`cross_dot_fully_surrounded_fan` 直接用于假设 `azim x v1 v u1` 得
+`det[v1-x, v-x, u1-x] > 0`，再由 `aff_gt_1_2` 展开仿射组合
+`v1 - x = t2•(v-x) + t3•(p-x)`（`t2, t3 > 0`）与混合积的
+多重线性（`cross_dot_combo_pos`）直接换算。 -/
+theorem cross_dot_fully_surrounded1_fan {v1 u1 : V3} {a : ℝ}
+    (hfan : FAN x V E) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hsigma : sigmaFan x V E u w = v) (ha0 : 0 < a) (ha1 : a < 1)
+    (h80 : fan80 x V E) (hnc : ¬ Collinear3 x v1 u1)
+    (hv1 : v1 ∈ affGt {x} {v, (1 - a) • u + a • w})
+    (h0 : 0 < azim x v1 v u1) (hpi : azim x v1 v u1 < Real.pi) :
+    0 < (crossProduct ((v1 - x : V3) : Fin 3 → ℝ) ((u1 - x : V3) : Fin 3 → ℝ)) ⬝ᵥ
+      ((((1 - a) • u + a • w - x : V3) : Fin 3 → ℝ)) := by
+  obtain ⟨hθ0, hθπ⟩ := h80 u w huw
+  rw [hsigma] at hθ0 hθπ
+  have hncvp : ¬ Collinear3 x v ((1 - a) • u + a • w) :=
+    not_collinear_is_properties_fully_surrounded hfan hvu huw hθ0 hθπ a ha0 ha1
+  have hv1v : ¬ Collinear3 x v1 v :=
+    properties_of_collinear4_points_fan hncvp hv1
+  have hA := cross_dot_fully_surrounded_fan hnc hv1v h0 hpi
+  have hxv : x ≠ v := fun he => hncvp (by rw [he]; exact collinear3_of_eq rfl)
+  have hxp : x ≠ (1 - a) • u + a • w :=
+    fun he => hncvp (by rw [he]; exact collinear3_pair_left rfl)
+  have hdis : Disjoint ({x} : Set V3) {v, (1 - a) • u + a • w} := by
+    rw [Set.disjoint_singleton_left]
+    intro hmem
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+    rcases hmem with h' | h'
+    · exact hxv h'
+    · exact hxp h'
+  rw [aff_gt_1_2 hdis, Set.mem_setOf_eq] at hv1
+  obtain ⟨t1, t2, t3, ht2, ht3, hone, hv1c⟩ := hv1
+  have step1 : v1 - x = t1 • x + t2 • v + t3 • ((1 - a) • u + a • w)
+      - (t1 + t2 + t3) • x := by
+    rw [hv1c, hone, one_smul]
+  have hvsub : v1 - x
+      = t2 • (v - x : V3) + t3 • (((1 - a) • u + a • w) - x : V3) := by
+    rw [step1]
+    module
+  have hv1coe : ((v1 - x : V3) : Fin 3 → ℝ)
+      = t2 • (((v - x : V3) : Fin 3 → ℝ))
+        + t3 • ((((1 - a) • u + a • w - x : V3) : Fin 3 → ℝ)) := by
+    have h := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hvsub
+    simpa only [WithLp.ofLp_add, WithLp.ofLp_smul] using h
+  exact cross_dot_combo_pos ht2 ht3 hv1coe hA
+
+/-- HOL planarity.hl:2677 `exists_cross_dot_fully_surrounded1_fan`：
+第 1 款的正性沿 `p ↦ (1-h)•p + h•u` 延拓一段正长度。展开
+`(1-h)•p + h•u - x = (p - x) - (h*a)•(w-u)` 后混合积是
+`A - h*a*B`（`A > 0` 为第 1 款）；`B ≤ 0` 时任意 `h > 0` 均可，
+`B > 0` 时取 `t` 为 `A/(a*B)/2` 与 `1/2` 的较小者。 -/
+theorem exists_cross_dot_fully_surrounded1_fan {v1 u1 : V3} {a : ℝ}
+    (hfan : FAN x V E) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hsigma : sigmaFan x V E u w = v) (ha0 : 0 < a) (ha1 : a < 1)
+    (h80 : fan80 x V E) (hnc : ¬ Collinear3 x v1 u1)
+    (hv1 : v1 ∈ affGt {x} {v, (1 - a) • u + a • w})
+    (h0 : 0 < azim x v1 v u1) (hpi : azim x v1 v u1 < Real.pi) :
+    ∃ t : ℝ, 0 < t ∧ t < 1 ∧ ∀ h : ℝ, 0 < h → h < t →
+      0 < (crossProduct ((v1 - x : V3) : Fin 3 → ℝ) ((u1 - x : V3) : Fin 3 → ℝ)) ⬝ᵥ
+        ((((1 - h) • ((1 - a) • u + a • w) + h • u - x : V3) : Fin 3 → ℝ)) := by
+  have hA := cross_dot_fully_surrounded1_fan hfan hvu huw hsigma ha0 ha1 h80 hnc hv1 h0 hpi
+  set C := (crossProduct ((v1 - x : V3) : Fin 3 → ℝ) ((u1 - x : V3) : Fin 3 → ℝ)) with hCdef
+  set D := C ⬝ᵥ ((((1 - a) • u + a • w) - x : V3) : Fin 3 → ℝ) with hDdef
+  set B := C ⬝ᵥ (((w - u : V3) : Fin 3 → ℝ)) with hBdef
+  have hvid : ∀ h : ℝ, ((1 - h) • ((1 - a) • u + a • w) + h • u - x : V3)
+      = (((1 - a) • u + a • w) - x : V3) - (h * a) • (w - u : V3) := by
+    intro h
+    module
+  have hcoe : ∀ h : ℝ,
+      ((((1 - h) • ((1 - a) • u + a • w) + h • u - x : V3)) : Fin 3 → ℝ)
+      = ((((1 - a) • u + a • w) - x : V3) : Fin 3 → ℝ)
+        - (h * a) • (((w - u : V3) : Fin 3 → ℝ)) := by
+    intro h
+    have hc := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) (hvid h)
+    simpa only [WithLp.ofLp_sub, WithLp.ofLp_smul] using hc
+  have hkey : ∀ h : ℝ,
+      C ⬝ᵥ ((((1 - h) • ((1 - a) • u + a • w) + h • u - x : V3) : Fin 3 → ℝ))
+        = D - h * a * B := by
+    intro h
+    rw [hcoe h, dotProduct_sub, dotProduct_smul, smul_eq_mul]
+  rcases le_or_gt B 0 with hB | hB
+  · refine ⟨1 / 2, by norm_num, by norm_num, ?_⟩
+    intro h hh0 _
+    rw [hkey h]
+    have hha : 0 ≤ h * a := mul_nonneg (le_of_lt hh0) (le_of_lt ha0)
+    have hnn : h * a * B ≤ 0 := mul_nonpos_of_nonneg_of_nonpos hha hB
+    linarith
+  · have hBpos : 0 < a * B := mul_pos ha0 hB
+    have hDpos : 0 < D / (a * B) := div_pos hA hBpos
+    refine ⟨min (D / (a * B) / 2) (1 / 2), lt_min (half_pos hDpos) (by norm_num),
+      lt_of_le_of_lt (min_le_right _ _) (by norm_num), ?_⟩
+    intro h hh0 hht
+    rw [hkey h]
+    have hlt : h < D / (a * B) :=
+      lt_of_lt_of_le hht
+        (le_trans (min_le_left _ _) (le_of_lt (half_lt_self hDpos)))
+    have hmul : h * (a * B) < D := (lt_div_iff₀ hBpos).mp hlt
+    have hs : h * a * B = h * (a * B) := by ring
+    rw [hs]
+    linarith
