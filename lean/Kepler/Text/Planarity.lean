@@ -2563,3 +2563,38 @@ theorem not_collinear_is_properties_fully_surrounded (hfan : FAN x V E)
     ¬ Collinear3 x v ((1 - t) • u + t • w) :=
   not_collinear_is_properties_fully_surrounded1 hfan hvu huw hθ0 hθπ t
     (le_of_lt ht0) (le_of_lt ht1)
+
+/-! ## 第十一块：小扰动扇区与 `xfan`/`yfan`（planarity.hl:2089/2107）
+
+HOL `fan_run_in_small_is_not_meet_xfan`（2089）对 `E' = E` 用
+`fan_run1_in_small_is_fan`：其中 `{v | ∃ e ∈ E, v ∈ aff_ge {x} e}` 即
+`Fan.lean:154` 定义的 `xfan x V E`（定义相等）。
+`fan_run_in_small_is_subset_yfan`（2107）由 `yfan = univ \ xfan`
+（Fan.lean:158）与上述无交性直接得到。 -/
+
+/-- HOL planarity.hl:2089 `fan_run_in_small_is_not_meet_xfan`：充分小的
+扰动扇区与边锥之并 `xfan x V E` 无交（取 `E' = E` 的
+`fan_run1_in_small_is_fan`）。 -/
+theorem fan_run_in_small_is_not_meet_xfan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (hsigma : sigmaFan x V E u w = v) :
+    ∃ h : ℝ, 0 < h ∧ h ≤ 1 ∧
+      ∀ s : ℝ, 0 < s → s < h →
+        affGt {x} {v, (1 - s) • u + s • w} ∩ xfan x V E = ∅ :=
+  fan_run1_in_small_is_fan hfan hvu huw Set.Subset.rfl hθ0 hθπ hsigma
+
+/-- HOL planarity.hl:2107 `fan_run_in_small_is_subset_yfan`：充分小的
+扰动扇区含于 `yfan x V E = univ \ xfan x V E`。 -/
+theorem fan_run_in_small_is_subset_yfan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (hsigma : sigmaFan x V E u w = v) :
+    ∃ h : ℝ, 0 < h ∧ h ≤ 1 ∧
+      ∀ s : ℝ, 0 < s → s < h →
+        affGt {x} {v, (1 - s) • u + s • w} ⊆ yfan x V E := by
+  obtain ⟨h, hp0, hp1, hp2⟩ :=
+    fan_run_in_small_is_not_meet_xfan hfan hvu huw hθ0 hθπ hsigma
+  refine ⟨h, hp0, hp1, fun s hs0 hsh z hz => ⟨Set.mem_univ z, fun hmem => ?_⟩⟩
+  have hmem2 : z ∈ (∅ : Set V3) := by
+    rw [← hp2 s hs0 hsh]
+    exact ⟨hz, hmem⟩
+  simp at hmem2
