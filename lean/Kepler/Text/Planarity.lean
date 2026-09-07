@@ -2428,3 +2428,138 @@ theorem fan_run_in_small_is_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
   · exact hw1v (hva.symm.trans hwb).symm
   · exact hv1u (hua.symm.trans hvb).symm
   · exact hw1u (hua.symm.trans hwb).symm
+
+/-! ## 第十块：`fan_run1_in_small_is_fan` 与不共线推论
+（planarity.hl:1948/2126/2224）
+
+HOL 的 `fan_run1_in_small_is_fan` 对 `CARD E'` 做归纳：先对任意有限边族
+（此处用 `Finset (Set V3)` 表示）给出 `h`；基例空集取 `h = 1/2`，归纳步把
+单条边的 `fan_run_in_small_is_fan` 与归纳假设的最小 `h` 合并（`min`），
+并集的无交性由 `Disjoint s (t ∪ u)` 分配到两侧。最后经
+`Set.Finite.toFinset` 换回子集 `E' ⊆ E`。 -/
+
+/-- `Graph E` 的展开：每条边都是两点集 `{v1, w1}`。 -/
+private theorem exists_pair_of_graphEdge {e : Set V3} (hgraph : Graph E) (he : e ∈ E) :
+    ∃ v1 w1 : V3, e = ({v1, w1} : Set V3) := by
+  obtain ⟨hfin, hcard⟩ := hgraph e he
+  have hcoe : (↑hfin.toFinset : Set V3) = e := hfin.coe_toFinset
+  obtain ⟨a, b, -, heq⟩ := Finset.card_eq_two.mp hcard
+  exact ⟨a, b, by rw [← hcoe, heq]; simp⟩
+
+/-- HOL planarity.hl:1948 `fan_run1_in_small_is_fan` 的有限归纳核：
+有限边族 `T ⊆ E` 时存在 `h ∈ (0,1]`，使小扰动扇区与
+`⋃ e ∈ T, aff_ge {x} e` 无交。 -/
+private theorem fan_run1_in_small_is_fan_finset (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (hsigma : sigmaFan x V E u w = v) (T : Finset (Set V3))
+    (hT : ∀ e ∈ T, e ∈ E) :
+    ∃ h : ℝ, 0 < h ∧ h ≤ 1 ∧
+      ∀ s : ℝ, 0 < s → s < h →
+        affGt {x} {v, (1 - s) • u + s • w} ∩ (⋃ e ∈ T, affGe {x} e) = ∅ := by
+  classical
+  induction T using Finset.induction_on with
+  | empty =>
+    refine ⟨1 / 2, by norm_num, by norm_num, ?_⟩
+    intro s _ _
+    simp
+  | insert e T heT ih =>
+    have heE : e ∈ E := hT e (Finset.mem_insert_self e T)
+    obtain ⟨v1, w1, hpair⟩ := exists_pair_of_graphEdge hfan.2.1 heE
+    have hepair : ({v1, w1} : Set V3) ∈ E := by rw [← hpair]; exact heE
+    obtain ⟨he, he0, he1, he2⟩ :=
+      fan_run_in_small_is_fan hfan hvu huw hepair hθ0 hθπ hsigma
+    rw [← hpair] at he2
+    obtain ⟨ht, ht0, ht1, ht2⟩ := ih (fun a ha => hT a (Finset.mem_insert_of_mem ha))
+    refine ⟨min he ht, lt_min he0 ht0, min_le_iff.mpr (Or.inl he1), ?_⟩
+    intro s hs0 hsm
+    rw [Finset.set_biUnion_insert, ← Set.disjoint_iff_inter_eq_empty,
+      Set.disjoint_union_right]
+    refine
+      ⟨Set.disjoint_iff_inter_eq_empty.mpr (he2 s hs0 (lt_of_lt_of_le hsm (min_le_left _ _))),
+        Set.disjoint_iff_inter_eq_empty.mpr (ht2 s hs0 (lt_of_lt_of_le hsm (min_le_right _ _)))⟩
+
+/-- HOL planarity.hl:1948 `fan_run1_in_small_is_fan`：`E' ⊆ E` 的
+任意（有限）边子集的闭扇区之并，都与充分小的扰动扇区无交。 -/
+theorem fan_run1_in_small_is_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hE' : E' ⊆ E)
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (hsigma : sigmaFan x V E u w = v) :
+    ∃ h : ℝ, 0 < h ∧ h ≤ 1 ∧
+      ∀ s : ℝ, 0 < s → s < h →
+        affGt {x} {v, (1 - s) • u + s • w} ∩ {z | ∃ e ∈ E', z ∈ affGe {x} e} = ∅ := by
+  have hfin : E'.Finite := (setEdgesFiniteFan hfan).subset hE'
+  obtain ⟨h, hp0, hp1, hp2⟩ :=
+    fan_run1_in_small_is_fan_finset hfan hvu huw hθ0 hθπ hsigma hfin.toFinset
+      (fun e he => hE' (hfin.mem_toFinset.mp he))
+  refine ⟨h, hp0, hp1, ?_⟩
+  intro s hs0 hsh
+  have hset : {z : V3 | ∃ e ∈ E', z ∈ affGe {x} e} =
+      ⋃ e ∈ hfin.toFinset, affGe {x} e := by
+    ext z
+    simp only [Set.mem_setOf_eq, Set.mem_iUnion, exists_prop]
+    exact exists_congr fun e => and_congr (hfin.mem_toFinset (a := e)).symm Iff.rfl
+  rw [hset]
+  exact hp2 s hs0 hsh
+
+/-- HOL planarity.hl:2126 `not_collinear_is_properties_fully_surrounded1`：
+`0 ≤ t ≤ 1` 时弦点 `(1-t)•u + t•w` 不与 `x, v` 共线。
+`t = 0`/`t = 1` 端点即 `u`/`w`；中间情形由 `x, v, 弦点` 共线推出
+`w ∈ aff{x,v,u}`，于是四点共面，与 `properties_fully_surrounded` 矛盾。 -/
+theorem not_collinear_is_properties_fully_surrounded1 (hfan : FAN x V E)
+    (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (t : ℝ) (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
+    ¬ Collinear3 x v ((1 - t) • u + t • w) := by
+  have hxv : x ≠ v := fun he =>
+    fan_not_collinear hfan hvu (collinear3_of_eq (v := x) (w := v) (w1 := u) he.symm)
+  rcases eq_or_lt_of_le ht0 with rfl | htmid
+  · intro hcol
+    simp only [sub_zero, one_smul, zero_smul, add_zero] at hcol
+    exact fan_not_collinear hfan hvu hcol
+  rcases eq_or_lt_of_le ht1 with rfl | htmid1
+  · intro hcol
+    simp only [sub_self, one_smul, zero_smul, zero_add] at hcol
+    exact properties_fully_surrounded hfan hvu huw hθ0 hθπ
+      (coplanar_of_mem_line' (p := u) ((collinear3_iff_mem_affineSpan hxv).mp hcol))
+  · intro hcol
+    have hne : t ≠ 0 := ne_of_gt htmid
+    have hmem : ((1 - t) • u + t • w : V3) ∈
+        (affineSpan ℝ ({x, v} : Set V3) : Set V3) :=
+      (collinear3_iff_mem_affineSpan hxv).mp hcol
+    have hmem3 : ((1 - t) • u + t • w : V3) ∈
+        affineSpan ℝ ({x, v, u} : Set V3) :=
+      affineSpan_mono ℝ subset_pair3 (SetLike.mem_coe.mp hmem)
+    have hu3 : (u : V3) ∈ affineSpan ℝ ({x, v, u} : Set V3) :=
+      mem_affineSpan ℝ (by simp)
+    have hdir : (t⁻¹ : ℝ) • ((1 - t) • u + t • w - u) ∈
+        (affineSpan ℝ ({x, v, u} : Set V3)).direction :=
+      Submodule.smul_mem _ _ (AffineSubspace.vsub_mem_direction hmem3 hu3)
+    have hw3 : (w : V3) ∈ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) := by
+      have hsplit : ((1 - t) • u + t • w - u : V3) = t • (w - u) := by module
+      have hadd : w = (t⁻¹ : ℝ) • ((1 - t) • u + t • w - u) +ᵥ u := by
+        rw [vadd_eq_add, hsplit, smul_smul, inv_mul_cancel₀ hne, one_smul, sub_add_cancel]
+      rw [hadd]
+      exact AffineSubspace.vadd_mem_of_mem_direction hdir hu3
+    refine properties_fully_surrounded hfan hvu huw hθ0 hθπ ⟨x, v, u, fun z hz => ?_⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with h1 | hz
+    · rw [h1]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+    rcases hz with h1 | hz
+    · rw [h1]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+    rcases hz with h1 | hz
+    · rw [h1]
+      exact SetLike.mem_coe.mpr hu3
+    · rw [hz]
+      exact hw3
+
+/-- HOL planarity.hl:2224 `not_collinear_is_properties_fully_surrounded`：
+开弦版本（`0 < t < 1`），直接引用 `…_surrounded1`。 -/
+theorem not_collinear_is_properties_fully_surrounded (hfan : FAN x V E)
+    (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (t : ℝ) (ht0 : 0 < t) (ht1 : t < 1) :
+    ¬ Collinear3 x v ((1 - t) • u + t • w) :=
+  not_collinear_is_properties_fully_surrounded1 hfan hvu huw hθ0 hθπ t
+    (le_of_lt ht0) (le_of_lt ht1)
