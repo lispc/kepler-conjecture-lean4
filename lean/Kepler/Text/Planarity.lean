@@ -1479,3 +1479,550 @@ theorem fan_run_in_small1_is_fan (hfan : FAN x V E)
     ⟨⟨hs1, hs2⟩, hs3⟩
   rw [hsep t ht0 (lt_of_lt_of_le hth (min_le_left _ _)), Set.mem_empty_iff_false] at hcontr
   exact hcontr
+
+/-! ## 第九块：AFF_GT_2_2 与 convex fan（planarity.hl:1646–1950）
+
+本块移植 planarity.hl 的 `AFF_GT_2_2`（1646）、`extension_in_aff_2_2_fan`
+（1658）、`inequality3_aim_in_convex_fan`（1688）、`fan_run_in_small3_is_fan`
+（1714）、`properties_fully_surrounded`（1872）、`fan_run_in_small_is_fan`
+（1897）。HOL 证明所用的 `WEDGE_LUNE_GT` 与 `AZIM_EQ_0_PI_EQ_COPLANAR`
+（Multivariate-flyspeck.ml:3805/3161，未在库中移植）由两个解析型私有引理
+`azim_cone_of_combo`、`azim_eq_0_or_pi_of_coplanar` 替代：都在轴向标准正交
+标架下把方位角化为极坐标相位，再用 sin/cos 恒等式收尾。 -/
+
+/-- HOL planarity.hl:1646 `AFF_GT_2_2`：`aff_gt {x,u} {v,w}` 的显式组合刻画。
+`Disjoint {x,u} {v,w}` 仅排除跨集合重合（`x ≠ v`、`u ≠ w` 等）；`x = u` 或
+`v = w` 时求和集按集合去重，正系数用对半拆分吸收（镜像 `aff_gt_1_2`）。 -/
+theorem affGt2_2 (hdis : Disjoint ({x, u} : Set V3) {v, w}) :
+    affGt {x, u} {v, w} =
+      {y | ∃ t1 t2 t3 t4 : ℝ, 0 < t3 ∧ 0 < t4 ∧ t1 + t2 + t3 + t4 = 1 ∧
+        y = t1 • x + t2 • u + t3 • v + t4 • w} := by
+  have hdis' := Set.disjoint_left.mp hdis
+  have hxv : x ≠ v := fun he => hdis' (Set.mem_insert _ _) (by rw [he]; simp)
+  have hxw : x ≠ w := fun he => hdis' (Set.mem_insert _ _) (by rw [he]; simp)
+  have huv : u ≠ v := fun he =>
+    hdis' (Set.mem_insert_of_mem _ (Set.mem_singleton u)) (by rw [he]; simp)
+  have huw : u ≠ w := fun he =>
+    hdis' (Set.mem_insert_of_mem _ (Set.mem_singleton u)) (by rw [he]; simp)
+  ext y
+  simp only [affGt, Set.mem_setOf_eq, Affsign]
+  constructor
+  · rintro ⟨f, hfin, hsum, hpos, hone⟩
+    have hfv : 0 < f v := hpos v (by simp)
+    have hfw : 0 < f w := hpos w (by simp)
+    by_cases hux : x = u
+    · by_cases hvw : v = w
+      · -- x = u，v = w：求和集为 {x, v}，两系数对半拆分
+        have hTeq : hfin.toFinset = ({x, v} : Finset V3) := by
+          apply Finset.ext
+          intro z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, hux, hvw, Finset.mem_insert, Finset.mem_singleton]
+          tauto
+        rw [hTeq] at hsum hone
+        rw [Finset.sum_insert (by simp [hxv]), Finset.sum_singleton] at hsum hone
+        refine ⟨f x / 2, f x / 2, f v / 2, f v / 2, by linarith, by linarith,
+          by linarith, ?_⟩
+        rw [hsum, ← hux, ← hvw]
+        module
+      · -- x = u：求和集为 {x, v, w}
+        have hTeq : hfin.toFinset = ({x, v, w} : Finset V3) := by
+          apply Finset.ext
+          intro z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, hux, Finset.mem_insert, Finset.mem_singleton]
+          tauto
+        rw [hTeq] at hsum hone
+        rw [Finset.sum_insert (by simp [hxv, hxw]), Finset.sum_insert (by simp [hvw]),
+          Finset.sum_singleton] at hsum hone
+        refine ⟨f x / 2, f x / 2, f v, f w, by linarith, by linarith,
+          by linarith, ?_⟩
+        rw [hsum, ← hux]
+        module
+    · by_cases hvw : v = w
+      · -- v = w：求和集为 {x, u, v}
+        have hTeq : hfin.toFinset = ({x, u, v} : Finset V3) := by
+          apply Finset.ext
+          intro z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, hvw, Finset.mem_insert, Finset.mem_singleton]
+          tauto
+        rw [hTeq] at hsum hone
+        rw [Finset.sum_insert (by simp [hux, hxv]), Finset.sum_insert (by simp [huv]),
+          Finset.sum_singleton] at hsum hone
+        refine ⟨f x, f u, f v / 2, f v / 2, by linarith, by linarith, by linarith, ?_⟩
+        rw [hsum, ← hvw]
+        module
+      · -- 四点互异：直接取系数
+        have hTeq : hfin.toFinset = ({x, u, v, w} : Finset V3) := by
+          apply Finset.ext
+          intro z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+          tauto
+        rw [hTeq] at hsum hone
+        rw [Finset.sum_insert (by simp [hux, hxv, hxw]),
+          Finset.sum_insert (by simp [huv, huw]), Finset.sum_insert (by simp [hvw]),
+          Finset.sum_singleton] at hsum hone
+        exact ⟨f x, f u, f v, f w, hfv, hfw, by linarith, by rw [hsum]; abel⟩
+  · rintro ⟨t1, t2, t3, t4, ht3, ht4, hone, hy⟩
+    have hfin0 : ({u, x} ∪ {w, v} : Set V3).Finite :=
+      ((Set.finite_singleton x).insert u).union ((Set.finite_singleton v).insert w)
+    have hfin : ({x, u} ∪ {v, w} : Set V3).Finite := hfin0.subset (by
+      intro z hz
+      simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+      tauto)
+    by_cases hux : x = u
+    · by_cases hvw : v = w
+      · -- x = u，v = w：u、w 折到 x、v 上，正系数合并
+        have hTeq : hfin.toFinset = ({x, v} : Finset V3) := by
+          apply Finset.ext
+          intro z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, hux, hvw, Finset.mem_insert, Finset.mem_singleton]
+          tauto
+        rw [← hux, ← hvw, ← add_smul] at hy
+        refine ⟨fun z => if z = x then t1 + t2 else t3 + t4, hfin, ?_, ?_, ?_⟩
+        · rw [hTeq, Finset.sum_insert (by simp [hxv]), Finset.sum_singleton]
+          show y = (if x = x then t1 + t2 else t3 + t4) • x
+            + (if v = x then t1 + t2 else t3 + t4) • v
+          rw [if_pos (show (x : V3) = x from rfl),
+            if_neg (show (v : V3) ≠ x from fun he => hxv he.symm), hy]
+          module
+        · intro z hz
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+          rcases hz with hzv | hzw
+          · rw [hzv]
+            show 0 < (if v = x then t1 + t2 else t3 + t4)
+            rw [if_neg (fun he => hxv he.symm)]
+            linarith
+          · rw [hzw]
+            show 0 < (if w = x then t1 + t2 else t3 + t4)
+            rw [if_neg (fun he => hxw he.symm)]
+            linarith
+        · rw [hTeq, Finset.sum_insert (by simp [hxv]), Finset.sum_singleton]
+          show (if x = x then t1 + t2 else t3 + t4)
+            + (if v = x then t1 + t2 else t3 + t4) = 1
+          rw [if_pos (show (x : V3) = x from rfl),
+            if_neg (show (v : V3) ≠ x from fun he => hxv he.symm)]
+          linarith
+      · -- x = u：函数在 {x, v, w} 上取值
+        have hTeq : hfin.toFinset = ({x, v, w} : Finset V3) := by
+          apply Finset.ext
+          intro z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, hux, Finset.mem_insert, Finset.mem_singleton]
+          tauto
+        rw [← hux, ← add_smul] at hy
+        refine ⟨fun z => if z = x then t1 + t2 else if z = v then t3 else t4, hfin, ?_, ?_, ?_⟩
+        · rw [hTeq, Finset.sum_insert (by simp [hxv, hxw]),
+            Finset.sum_insert (by simp [hvw]), Finset.sum_singleton]
+          show y = (if x = x then t1 + t2 else if x = v then t3 else t4) • x
+            + ((if v = x then t1 + t2 else if v = v then t3 else t4) • v
+              + (if w = x then t1 + t2 else if w = v then t3 else t4) • w)
+          rw [if_pos (show (x : V3) = x from rfl),
+            if_neg (show (v : V3) ≠ x from fun he => hxv he.symm),
+            if_pos (show (v : V3) = v from rfl),
+            if_neg (show (w : V3) ≠ x from fun he => hxw he.symm),
+            if_neg (show (w : V3) ≠ v from fun he => hvw he.symm), hy]
+          module
+        · intro z hz
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+          rcases hz with hzv | hz
+          · rw [hzv]
+            show 0 < (if v = x then t1 + t2 else if v = v then t3 else t4)
+            rw [if_neg (fun he => hxv he.symm), if_pos (rfl : v = v)]
+            exact ht3
+          · rw [hz]
+            show 0 < (if w = x then t1 + t2 else if w = v then t3 else t4)
+            rw [if_neg (fun he => hxw he.symm), if_neg (fun he => hvw he.symm)]
+            exact ht4
+        · rw [hTeq, Finset.sum_insert (by simp [hxv, hxw]),
+            Finset.sum_insert (by simp [hvw]), Finset.sum_singleton]
+          show (if x = x then t1 + t2 else if x = v then t3 else t4)
+            + ((if v = x then t1 + t2 else if v = v then t3 else t4)
+              + (if w = x then t1 + t2 else if w = v then t3 else t4)) = 1
+          rw [if_pos (show (x : V3) = x from rfl),
+            if_neg (show (v : V3) ≠ x from fun he => hxv he.symm),
+            if_pos (show (v : V3) = v from rfl),
+            if_neg (show (w : V3) ≠ x from fun he => hxw he.symm),
+            if_neg (show (w : V3) ≠ v from fun he => hvw he.symm)]
+          linarith
+    · by_cases hvw : v = w
+      · -- v = w：函数在 {x, u, v} 上取值，t3 + t4 合并
+        have hTeq : hfin.toFinset = ({x, u, v} : Finset V3) := by
+          apply Finset.ext
+          intro z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, hvw, Finset.mem_insert, Finset.mem_singleton]
+          tauto
+        rw [← hvw] at hy
+        refine ⟨fun z => if z = x then t1 else if z = u then t2 else t3 + t4, hfin, ?_, ?_, ?_⟩
+        · rw [hTeq, Finset.sum_insert (by simp [hux, hxv]),
+            Finset.sum_insert (by simp [huv]), Finset.sum_singleton]
+          show y = (if x = x then t1 else if x = u then t2 else t3 + t4) • x
+            + ((if u = x then t1 else if u = u then t2 else t3 + t4) • u
+              + (if v = x then t1 else if v = u then t2 else t3 + t4) • v)
+          rw [if_pos (show (x : V3) = x from rfl),
+            if_neg (show (u : V3) ≠ x from fun he => hux he.symm),
+            if_pos (show (u : V3) = u from rfl),
+            if_neg (show (v : V3) ≠ x from fun he => hxv he.symm),
+            if_neg (show (v : V3) ≠ u from fun he => huv he.symm), hy]
+          module
+        · intro z hz
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+          rcases hz with hzv | hz
+          · rw [hzv]
+            show 0 < (if v = x then t1 else if v = u then t2 else t3 + t4)
+            rw [if_neg (fun he => hxv he.symm), if_neg (fun he => huv he.symm)]
+            linarith
+          · rw [Set.mem_singleton_iff.mp hz]
+            show 0 < (if w = x then t1 else if w = u then t2 else t3 + t4)
+            rw [if_neg (fun he => hxw he.symm), if_neg (fun he => huw he.symm)]
+            linarith
+        · rw [hTeq, Finset.sum_insert (by simp [hux, hxv]),
+            Finset.sum_insert (by simp [huv]), Finset.sum_singleton]
+          show (if x = x then t1 else if x = u then t2 else t3 + t4)
+            + ((if u = x then t1 else if u = u then t2 else t3 + t4)
+              + (if v = x then t1 else if v = u then t2 else t3 + t4)) = 1
+          rw [if_pos (show (x : V3) = x from rfl),
+            if_neg (show (u : V3) ≠ x from fun he => hux he.symm),
+            if_pos (show (u : V3) = u from rfl),
+            if_neg (show (v : V3) ≠ x from fun he => hxv he.symm),
+            if_neg (show (v : V3) ≠ u from fun he => huv he.symm)]
+          linarith
+      · -- 四点互异
+        have hTeq : hfin.toFinset = ({x, u, v, w} : Finset V3) := by
+          apply Finset.ext
+          intro z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+          tauto
+        refine ⟨fun z => if z = x then t1 else if z = u then t2 else if z = v then t3
+          else t4, hfin, ?_, ?_, ?_⟩
+        · rw [hTeq, Finset.sum_insert (by simp [hux, hxv, hxw]),
+            Finset.sum_insert (by simp [huv, huw]), Finset.sum_insert (by simp [hvw]),
+            Finset.sum_singleton]
+          show y = (if x = x then t1 else if x = u then t2 else if x = v then t3 else t4) • x
+            + ((if u = x then t1 else if u = u then t2 else if u = v then t3 else t4) • u
+              + ((if v = x then t1 else if v = u then t2 else if v = v then t3 else t4) • v
+                + (if w = x then t1 else if w = u then t2 else if w = v then t3
+                  else t4) • w))
+          rw [if_pos (show (x : V3) = x from rfl),
+            if_neg (show (u : V3) ≠ x from fun he => hux he.symm),
+            if_pos (show (u : V3) = u from rfl),
+            if_neg (show (v : V3) ≠ x from fun he => hxv he.symm),
+            if_neg (show (v : V3) ≠ u from fun he => huv he.symm),
+            if_pos (show (v : V3) = v from rfl),
+            if_neg (show (w : V3) ≠ x from fun he => hxw he.symm),
+            if_neg (show (w : V3) ≠ u from fun he => huw he.symm),
+            if_neg (show (w : V3) ≠ v from fun he => hvw he.symm), hy]
+          module
+        · intro z hz
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+          rcases hz with hzv | hz
+          · rw [hzv]
+            show 0 < (if v = x then t1 else if v = u then t2 else if v = v then t3 else t4)
+            rw [if_neg (fun he => hxv he.symm), if_neg (fun he => huv he.symm),
+              if_pos (rfl : v = v)]
+            exact ht3
+          · rw [Set.mem_singleton_iff.mp hz]
+            show 0 < (if w = x then t1 else if w = u then t2 else if w = v then t3
+              else t4)
+            rw [if_neg (fun he => hxw he.symm), if_neg (fun he => huw he.symm),
+              if_neg (fun he => hvw he.symm)]
+            exact ht4
+        · rw [hTeq, Finset.sum_insert (by simp [hux, hxv, hxw]),
+            Finset.sum_insert (by simp [huv, huw]), Finset.sum_insert (by simp [hvw]),
+            Finset.sum_singleton]
+          show (if x = x then t1 else if x = u then t2 else if x = v then t3 else t4)
+            + ((if u = x then t1 else if u = u then t2 else if u = v then t3 else t4)
+              + ((if v = x then t1 else if v = u then t2 else if v = v then t3 else t4)
+                + (if w = x then t1 else if w = u then t2 else if w = v then t3
+                  else t4))) = 1
+          rw [if_pos (show (x : V3) = x from rfl),
+            if_neg (show (u : V3) ≠ x from fun he => hux he.symm),
+            if_pos (show (u : V3) = u from rfl),
+            if_neg (show (v : V3) ≠ x from fun he => hxv he.symm),
+            if_neg (show (v : V3) ≠ u from fun he => huv he.symm),
+            if_pos (show (v : V3) = v from rfl),
+            if_neg (show (w : V3) ≠ x from fun he => hxw he.symm),
+            if_neg (show (w : V3) ≠ u from fun he => huw he.symm),
+            if_neg (show (w : V3) ≠ v from fun he => hvw he.symm)]
+          linarith
+
+/-- HOL planarity.hl:1658 `extension_in_aff_2_2_fan`：弦 `v→w` 上的内点
+组合仍落在 `aff_gt {x,u} {w,v}` 中（`affGt2_2` 的系数代入）。 -/
+theorem extension_in_aff_2_2_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (t : ℝ) (ht0 : 0 < t) (ht1 : t < 1)
+    (t1 t2 t3 : ℝ) (ht3 : 0 < t3) (ht2 : 0 < t2) (hsum : t1 + t2 + t3 = 1) :
+    t1 • x + t2 • v + t3 • ((1 - t) • u + t • w) ∈ affGt {x, u} {w, v} := by
+  have huv : ({u, v} : Set V3) ∈ E := by
+    have h : ({u, v} : Set V3) = ({v, u} : Set V3) := by
+      ext z
+      simp [Set.mem_insert_iff]
+      tauto
+    rw [h]; exact hvu
+  have hncu : ¬ Collinear3 x u v := fan_not_collinear hfan huv
+  have hncw : ¬ Collinear3 x u w := fan_not_collinear hfan huw
+  have hxv : x ≠ v := by
+    intro he
+    exact hncu (collinear3_pair_left (v0 := x) (v1 := u) (x := v) he.symm)
+  have hxw : x ≠ w := by
+    intro he
+    exact hncw (collinear3_pair_left (v0 := x) (v1 := u) (x := w) he.symm)
+  have huvw : u ≠ w := by
+    intro he
+    exact hncw (collinear3_pair_right (v0 := x) (v1 := u) (x := w) he.symm)
+  have huvne : u ≠ v := by
+    intro he
+    exact hncu (collinear3_pair_right (v0 := x) (v1 := u) (x := v) he.symm)
+  have hdis : Disjoint ({x, u} : Set V3) {w, v} :=
+    Set.disjoint_left.mpr (by
+      intro a ha hb'
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ha hb'
+      rcases ha with rfl | rfl <;> rcases hb' with rfl | rfl
+      · exact hxw rfl
+      · exact hxv rfl
+      · exact huvw rfl
+      · exact huvne rfl)
+  rw [affGt2_2 hdis]
+  refine ⟨t1, t3 * (1 - t), t3 * t, t2, mul_pos ht3 ht0, ht2, ?_, ?_⟩
+  · linarith
+  · rw [smul_add, smul_smul, smul_smul]
+    module
+
+/-- 实数纯虚指数的实部/虚部（cos/sin 提取的受控重写形式）。 -/
+private theorem cexp_cos_re (r : ℝ) : (Complex.exp ((r : ℂ) * I)).re = Real.cos r := by
+  have h := congrArg Complex.re (Complex.exp_mul_I (r : ℂ))
+  simpa using h
+
+private theorem cexp_sin_im (r : ℝ) : (Complex.exp ((r : ℂ) * I)).im = Real.sin r := by
+  have h := congrArg Complex.im (Complex.exp_mul_I (r : ℂ))
+  simpa using h
+
+/-- 锥引理（`WEDGE_LUNE_GT`（Multivariate-flyspeck.ml:3805）在轴向标架下的
+解析核心）：`0 < azim x u w v < π` 时，`y - x` 是 `v - x`、`w - x`（正系数）
+与 `u - x`（任意系数）的组合，给出 `y` 不在轴 `xu` 上且
+`0 < azim x u w y < azim x u w v`。证明：取轴 `u - x` 的标准正交标架，
+`w`、`v` 的平面坐标写成极坐标 `e^{iψ}`、`e^{i(ψ+θv)}`，`y` 的平面坐标由
+线性性与 `zOf_axis` 化为 `e^{iψ}(A cosθv·i + …)`，比较与 `azim x u w y`
+的极坐标相位，用 `sin(ψ'+φ)`、`sin(φ-θv)` 的符号定出相位区间。 -/
+private theorem azim_cone_of_combo {x u w v y : V3}
+    (hncw : ¬ Collinear3 x u w) (hncv : ¬ Collinear3 x u v)
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (a b c : ℝ) (ha : 0 < a) (hb : 0 < b)
+    (hy : y - x = a • (v - x) + b • (w - x) + c • (u - x)) :
+    ¬ Collinear3 x u y ∧ 0 < azim x u w y ∧ azim x u w y < azim x u w v := by
+  have hux : u ≠ x := by
+    intro he
+    exact hncw (collinear3_of_eq (v := x) (w := u) (w1 := w) he)
+  obtain ⟨f1, f2, f3, hon, halign⟩ :=
+    exists_on3_eq_smul (u - x) (sub_ne_zero.mpr hux)
+  have hax : (u - x : V3) = dist u x • f3 := by rw [dist_eq_norm]; exact halign
+  obtain ⟨hp1, hp2⟩ := axis_perp hax hon
+  set θv := azim x u w v with hθvdef
+  obtain ⟨ψ, rb, ra, hrb, hra, hzw, hzv⟩ := azim_frame_spec hncw hncv hon hax hux
+  have hwrep := rep_of_zOf hon hax hux w ψ rb hzw
+  have hvrep := rep_of_zOf hon hax hux v (ψ + θv) ra hzv
+  -- y 的平面坐标：线性性 + 轴向分量归零
+  have hzline : zOf f1 f2 (y - x)
+      = ((a * ra : ℝ) : ℂ) * Complex.exp (((ψ + θv : ℝ) : ℂ) * I)
+        + ((b * rb : ℝ) : ℂ) * Complex.exp (((ψ : ℝ) : ℂ) * I) := by
+    have h1 : y - x = a • (v - x) + (b • (w - x) + c • (u - x)) := by
+      rw [hy]; abel
+    rw [h1, zOf_add, zOf_smul, zOf_add, zOf_smul, zOf_smul, zOf_axis hax hon, hzv, hzw]
+    push_cast
+    ring
+  have k1 : (y - x : V3) ⬝ᵥ f1
+      = a * (ra * Real.cos (ψ + θv)) + b * (rb * Real.cos ψ) := by
+    have h := congrArg Complex.re hzline
+    simp only [zOf, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
+      zero_add, mul_one, one_mul] at h
+    rw [cexp_cos_re, cexp_cos_re] at h
+    linarith
+  have k2 : (y - x : V3) ⬝ᵥ f2
+      = a * (ra * Real.sin (ψ + θv)) + b * (rb * Real.sin ψ) := by
+    have h := congrArg Complex.im hzline
+    simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
+      Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, sub_zero, add_zero,
+      zero_add, mul_one, one_mul] at h
+    rw [cexp_sin_im, cexp_sin_im] at h
+    linarith
+  have hsinpos : 0 < Real.sin θv :=
+    Real.sin_pos_of_mem_Ioo (Set.mem_Ioo.mpr ⟨hθ0, hθπ⟩)
+  have trig1 : ∀ A B α β γ : ℝ, (A * Real.sin α + B * Real.sin β) * Real.cos γ
+      - (A * Real.cos α + B * Real.cos β) * Real.sin γ
+      = A * Real.sin (α - γ) + B * Real.sin (β - γ) := by
+    intro A B α β γ
+    rw [Real.sin_sub, Real.sin_sub]
+    ring
+  have trig2 : ∀ A B α β γ : ℝ, (A * Real.cos α + B * Real.cos β) * Real.sin γ
+      - (A * Real.sin α + B * Real.sin β) * Real.cos γ
+      = A * Real.sin (γ - α) + B * Real.sin (γ - β) := by
+    intro A B α β γ
+    rw [Real.sin_sub, Real.sin_sub]
+    ring
+  by_cases hcy : Collinear3 x u y
+  · -- y 在轴上：平面坐标为 0，与 v、w 正系数组合的虚部矛盾
+    exfalso
+    have hz0 : zOf f1 f2 (y - x) = 0 := by
+      by_contra hne
+      exact (zOf_ne_zero_iff hon hax hux y).mp hne hcy
+    have hz1 : (y - x : V3) ⬝ᵥ f1 = 0 := by
+      have h := congrArg Complex.re hz0
+      simp only [zOf, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+        Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
+        zero_add, mul_one, one_mul] at h
+      exact h
+    have hz2 : (y - x : V3) ⬝ᵥ f2 = 0 := by
+      have h := congrArg Complex.im hz0
+      simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
+        Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, sub_zero, add_zero,
+        zero_add, mul_one, one_mul] at h
+      exact h
+    have hK1 : a * (ra * Real.cos (ψ + θv)) + b * (rb * Real.cos ψ) = 0 :=
+      k1.symm.trans hz1
+    have hK2 : a * (ra * Real.sin (ψ + θv)) + b * (rb * Real.sin ψ) = 0 :=
+      k2.symm.trans hz2
+    have hkey := trig2 (a * ra) (b * rb) (ψ + θv) ψ ψ
+    rw [show (ψ - (ψ + θv) : ℝ) = -θv from by ring, show (ψ - ψ : ℝ) = 0 from by ring,
+      Real.sin_zero, mul_zero, add_zero, Real.sin_neg, mul_neg] at hkey
+    rw [show ((a * ra) * Real.cos (ψ + θv) : ℝ) = a * (ra * Real.cos (ψ + θv)) from by ring,
+      show ((b * rb) * Real.cos ψ : ℝ) = b * (rb * Real.cos ψ) from by ring, hK1,
+      show ((a * ra) * Real.sin (ψ + θv) : ℝ) = a * (ra * Real.sin (ψ + θv)) from by ring,
+      show ((b * rb) * Real.sin ψ : ℝ) = b * (rb * Real.sin ψ) from by ring, hK2] at hkey
+    have hcon : a * (ra * Real.sin θv) = 0 := by
+      have hassoc : a * (ra * Real.sin θv) = a * ra * Real.sin θv := by ring
+      rw [hassoc]
+      linear_combination hkey
+    have hposA : 0 < a * (ra * Real.sin θv) := mul_pos ha (mul_pos hra hsinpos)
+    linarith
+  · obtain ⟨ψ', r1', ry, hr1', hry, hzw2, hzy⟩ :=
+      azim_frame_spec hncw hcy hon hax hux
+    have heq : Complex.exp (((ψ : ℝ) : ℂ) * I) = Complex.exp (((ψ' : ℝ) : ℂ) * I) :=
+      exp_pos_mul_eq hrb hr1' (hzw.symm.trans hzw2)
+    have hcs : Real.cos ψ = Real.cos ψ' ∧ Real.sin ψ = Real.sin ψ' := by
+      constructor
+      · have h := congrArg Complex.re heq
+        rw [cexp_cos_re, cexp_cos_re] at h
+        exact h
+      · have h := congrArg Complex.im heq
+        rw [cexp_sin_im, cexp_sin_im] at h
+        exact h
+    have cospv : Real.cos (ψ' + θv) = Real.cos (ψ + θv) := by
+      rw [Real.cos_add, Real.cos_add]
+      rw [hcs.2, hcs.1]
+    have sinpv : Real.sin (ψ' + θv) = Real.sin (ψ + θv) := by
+      rw [Real.sin_add, Real.sin_add]
+      rw [hcs.2, hcs.1]
+    have cosw : Real.cos ψ' = Real.cos ψ := hcs.1.symm
+    have sinw : Real.sin ψ' = Real.sin ψ := hcs.2.symm
+    set φ := azim x u w y with hφdef
+    have hy1' : (y - x : V3) ⬝ᵥ f1 = ry * Real.cos (ψ' + φ) := by
+      have h := congrArg Complex.re hzy
+      simp only [zOf, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+        Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
+        zero_add, mul_one, one_mul] at h
+      rw [cexp_cos_re] at h
+      linarith
+    have hy2' : (y - x : V3) ⬝ᵥ f2 = ry * Real.sin (ψ' + φ) := by
+      have h := congrArg Complex.im hzy
+      simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
+        Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, sub_zero, add_zero,
+        zero_add, mul_one, one_mul] at h
+      rw [cexp_sin_im] at h
+      linarith
+    have e1 : ry * Real.cos (ψ' + φ)
+        = a * (ra * Real.cos (ψ' + θv)) + b * (rb * Real.cos ψ') := by
+      rw [← hy1', cospv, cosw]
+      exact k1
+    have e2 : ry * Real.sin (ψ' + φ)
+        = a * (ra * Real.sin (ψ' + θv)) + b * (rb * Real.sin ψ') := by
+      rw [← hy2', sinpv, sinw]
+      exact k2
+    -- φ 的界：E1 给 sin φ > 0，故 0 < φ < π；E2 给 sin(φ - θv) < 0，故 φ < θv
+    have hpos1 : 0 < a * (ra * Real.sin θv) := mul_pos ha (mul_pos hra hsinpos)
+    have hE1 : ry * Real.sin φ = a * (ra * Real.sin θv) := by
+      have h := trig1 (a * ra) (b * rb) (ψ' + θv) ψ' ψ'
+      rw [show ((ψ' + θv) - ψ' : ℝ) = θv from by ring,
+        show (ψ' - ψ' : ℝ) = 0 from by ring, Real.sin_zero, mul_zero, add_zero] at h
+      calc ry * Real.sin φ
+          = ry * (Real.sin (ψ' + φ) * Real.cos ψ'
+            - Real.cos (ψ' + φ) * Real.sin ψ') := by
+            congr 1
+            rw [← Real.sin_sub, show (ψ' + φ - ψ' : ℝ) = φ from by ring]
+        _ = (ry * Real.sin (ψ' + φ)) * Real.cos ψ'
+            - (ry * Real.cos (ψ' + φ)) * Real.sin ψ' := by ring
+        _ = a * (ra * Real.sin θv) := by
+            rw [e2, e1]
+            linear_combination h
+    have hposry : 0 < ry * Real.sin φ := by rw [hE1]; exact hpos1
+    have hφ0 : 0 ≤ φ := azim_nonneg x u w y
+    have hφnz : φ ≠ 0 := by
+      intro h
+      rw [h, Real.sin_zero] at hposry
+      norm_num at hposry
+    have hφpos : 0 < φ := lt_of_le_of_ne hφ0 (Ne.symm hφnz)
+    have hφ2 : φ < 2 * Real.pi := azim_lt_two_pi x u w y
+    have hφltπ : φ < Real.pi := by
+      by_contra hc
+      push_neg at hc
+      have hnn : 0 ≤ Real.sin (φ - Real.pi) :=
+        Real.sin_nonneg_of_nonneg_of_le_pi (by linarith) (by linarith)
+      have hcon := mul_nonneg hry.le hnn
+      have hE : ry * Real.sin φ = -(ry * Real.sin (φ - Real.pi)) := by
+        have h3 : ry * Real.sin φ = ry * Real.sin ((φ - Real.pi) + Real.pi) := by
+          congr 1; ring
+        rw [h3, Real.sin_add, Real.cos_pi, Real.sin_pi]
+        ring
+      rw [hE1] at hE
+      linarith
+    refine ⟨hcy, hφpos, ?_⟩
+    by_contra hc
+    push_neg at hc
+    have hnn : 0 ≤ Real.sin (φ - θv) :=
+      Real.sin_nonneg_of_nonneg_of_le_pi (by linarith) (by linarith)
+    have hcon := mul_nonneg hry.le hnn
+    have hposB : 0 < b * (rb * Real.sin θv) := mul_pos hb (mul_pos hrb hsinpos)
+    have hE2 : ry * Real.sin (φ - θv) = -(b * (rb * Real.sin θv)) := by
+      have h := trig1 (a * ra) (b * rb) (ψ' + θv) ψ' (ψ' + θv)
+      rw [show ((ψ' + θv) - (ψ' + θv) : ℝ) = 0 from by ring,
+        show (ψ' - (ψ' + θv) : ℝ) = -θv from by ring, Real.sin_zero, mul_zero,
+        zero_add, Real.sin_neg, mul_neg] at h
+      calc ry * Real.sin (φ - θv)
+          = ry * (Real.sin (ψ' + φ) * Real.cos (ψ' + θv)
+            - Real.cos (ψ' + φ) * Real.sin (ψ' + θv)) := by
+            congr 1
+            rw [← Real.sin_sub, show (ψ' + φ - (ψ' + θv) : ℝ) = φ - θv from by ring]
+        _ = (ry * Real.sin (ψ' + φ)) * Real.cos (ψ' + θv)
+            - (ry * Real.cos (ψ' + φ)) * Real.sin (ψ' + θv) := by ring
+        _ = -(b * (rb * Real.sin θv)) := by
+            rw [e2, e1]
+            linear_combination h
+    rw [hE2] at hcon
+    linarith
+
+/-- HOL planarity.hl:1688 `inequality3_aim_in_convex_fan`：弦 `v→w` 内点的
+正组合的方位角严格落在 `0` 与 `azim x u w v` 之间（锥引理推论）。 -/
+theorem inequality3_aim_in_convex_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (t : ℝ) (ht0 : 0 < t) (ht1 : t < 1)
+    (t1 t2 t3 : ℝ) (ht3 : 0 < t3) (ht2 : 0 < t2) (hsum : t1 + t2 + t3 = 1) :
+    0 < azim x u w (t1 • x + t2 • v + t3 • ((1 - t) • u + t • w)) ∧
+      azim x u w (t1 • x + t2 • v + t3 • ((1 - t) • u + t • w)) < azim x u w v := by
+  have hncw : ¬ Collinear3 x u w := fan_not_collinear hfan huw
+  have hncv : ¬ Collinear3 x u v := fan_not_collinear hfan (by
+    have h : ({u, v} : Set V3) = ({v, u} : Set V3) := by
+      ext z
+      simp [Set.mem_insert_iff]
+      tauto
+    rw [h]; exact hvu)
+  have hyc : t1 • x + t2 • v + t3 • ((1 - t) • u + t • w) - x
+      = t2 • (v - x) + (t3 * t) • (w - x) + (t3 * (1 - t)) • (u - x) := by
+    have h1 : t1 = 1 - t2 - t3 := by linarith
+    rw [h1]
+    module
+  exact (azim_cone_of_combo hncw hncv hθ0 hθπ t2 (t3 * t) (t3 * (1 - t)) ht2
+    (mul_pos ht3 ht0) hyc).2
