@@ -1034,3 +1034,259 @@ theorem separate1_sphere_fan (hfan : FAN x V E)
   have hfinal : hc ≤ dist y2 z := hcsep y2 ⟨hy2aff, hy2ball⟩ z ⟨hz.1.2, hz.2⟩
   rw [dist_comm y2 z, hdzy2] at hfinal
   linarith
+
+/-! ## 第七块：fully surrounded 预备（planarity.hl:1336–1463）
+
+约定：HOL `{v,u} IN E` ↔ `{v, u} ∈ E`；`azim_fan`/`sigma_fan` 取
+Kepler/Text/Fan.lean 的 `Fan.azimFan`/`Fan.sigmaFan`；`coplanar` ↔
+`Coplanar`（含于某三点仿射包）。共面性的总体策略走仿射包闭性：把第四点
+写成已有点的仿射组合（lineMap），再对仿射包做单调性传递，避免维数论证。 -/
+
+/-- 组合辅助：子空间载合集的仿射包仍是子空间本身（点式传递）。 -/
+private theorem mem_affineSpan_carrier {S : AffineSubspace ℝ V3} {z : V3}
+    (hz : z ∈ (affineSpan ℝ (↑S : Set V3) : Set V3)) : z ∈ (S : Set V3) :=
+  affineSpan_le.mpr (Set.Subset.rfl) hz
+
+private theorem subset_pair3 {a b c : V3} : ({a, b} : Set V3) ⊆ ({a, b, c} : Set V3) := by
+  intro p hp
+  rcases Set.mem_insert_iff.mp hp with h1 | hp
+  · rw [h1]
+    exact Set.mem_insert _ _
+  · rw [Set.mem_singleton_iff.mp hp]
+    exact Set.mem_insert_of_mem _ (Set.mem_insert _ _)
+
+private theorem subset_pair4 {a b c d : V3} : ({c, d} : Set V3) ⊆ ({a, b, c, d} : Set V3) := by
+  intro p hp
+  rcases Set.mem_insert_iff.mp hp with h1 | hp
+  · rw [h1]
+    exact Set.mem_insert_of_mem _ (Set.mem_insert_of_mem _ (Set.mem_insert _ _))
+  · rw [Set.mem_singleton_iff.mp hp]
+    exact Set.mem_insert_of_mem _ (Set.mem_insert_of_mem _
+      (Set.mem_insert_of_mem _ (Set.mem_singleton_iff.mpr rfl)))
+
+/-- 组合辅助：仿射组合入三点仿射包
+（`y = x + c•(q-x) + h•(p-x)` 时 `y ∈ affineSpan {x,p,q}`）。 -/
+private theorem mem_affineSpan_triple_of_eq {x p q y : V3} {c h : ℝ}
+    (hy : y = x + c • (q - x) + h • (p - x)) :
+    y ∈ (affineSpan ℝ ({x, p, q} : Set V3) : Set V3) := by
+  have hxS : x ∈ affineSpan ℝ ({x, p, q} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hpS : p ∈ affineSpan ℝ ({x, p, q} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hqS : q ∈ affineSpan ℝ ({x, p, q} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hd3 : c • (q - x) ∈ (affineSpan ℝ ({x, p, q} : Set V3)).direction :=
+    Submodule.smul_mem _ c (AffineSubspace.vsub_mem_direction hqS hxS)
+  have hd4 : h • (p - x) ∈ (affineSpan ℝ ({x, p, q} : Set V3)).direction :=
+    Submodule.smul_mem _ h (AffineSubspace.vsub_mem_direction hpS hxS)
+  have hd5 : c • (q - x) + h • (p - x) ∈ (affineSpan ℝ ({x, p, q} : Set V3)).direction :=
+    Submodule.add_mem _ hd3 hd4
+  have hval : y = h • (p - x) +ᵥ (c • (q - x) +ᵥ x) := by
+    rw [hy, vadd_eq_add, vadd_eq_add]
+    abel
+  rw [hval]
+  exact AffineSubspace.vadd_mem_of_mem_direction hd4
+    (AffineSubspace.vadd_mem_of_mem_direction hd3 hxS)
+
+/-- 组合辅助：`p` 落在直线 `aff {x,v}` 上时四点 `{x,v,p,q}` 共面
+（见证取 `{x,v,q}`，`p` 由仿射包单调性传入）。 -/
+private theorem coplanar_of_mem_line {x v p q : V3}
+    (hp : p ∈ (affineSpan ℝ ({x, v} : Set V3) : Set V3)) :
+    Coplanar ({x, v, p, q} : Set V3) := by
+  refine ⟨x, v, q, fun z hz => ?_⟩
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+  rcases hz with h1 | hz
+  · rw [h1]
+    exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+  rcases hz with h1 | hz
+  · rw [h1]
+    exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+  rcases hz with h1 | hz
+  · rw [h1]
+    exact affineSpan_mono ℝ subset_pair3 (SetLike.mem_coe.mp hp)
+  · rw [hz]
+    exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+
+/-- 组合辅助：`q` 落在直线 `aff {x,v}` 上时四点 `{x,v,p,q}` 共面
+（`coplanar_of_mem_line` 的末位变体）。 -/
+private theorem coplanar_of_mem_line' {x v p q : V3}
+    (hq : q ∈ (affineSpan ℝ ({x, v} : Set V3) : Set V3)) :
+    Coplanar ({x, v, p, q} : Set V3) := by
+  refine ⟨x, v, p, fun z hz => ?_⟩
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+  rcases hz with h1 | hz
+  · rw [h1]
+    exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+  rcases hz with h1 | hz
+  · rw [h1]
+    exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+  rcases hz with h1 | hz
+  · rw [h1]
+    exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+  · rw [hz]
+    exact affineSpan_mono ℝ subset_pair3 (SetLike.mem_coe.mp hq)
+
+/-- HOL planarity.hl:1336 `fan81`：每条边张开的扇形角小于 π。 -/
+def fan81 (x : V3) (V : Set V3) (E : Set (Set V3)) : Prop :=
+  ∀ v u : V3, {v, u} ∈ E → Fan.azimFan x V E v u < Real.pi
+
+/-- HOL planarity.hl:1338 `fan80`：每条边对后继的方位角严格在 (0, π) 内。 -/
+def fan80 (x : V3) (V : Set V3) (E : Set (Set V3)) : Prop :=
+  ∀ v u : V3, {v, u} ∈ E →
+    0 < azim x v u (Fan.sigmaFan x V E v u) ∧
+      azim x v u (Fan.sigmaFan x V E v u) < Real.pi
+
+/-- HOL planarity.hl:1349 `continuous_coplanar_fan`：不共面四点中把 `w`
+换成线段 `u→w` 上的内点 `p_t = (1-t)•u + t•w`（t ≠ 0）仍不共面。
+重构证明（不走 HOL 的行列式展开）：`p_t = lineMap u w t` 落在
+`aff {u,p_t}` 中，而 `w = p_t + t⁻¹•(u - p_t)` 是 `u, p_t` 的仿射组合
+（系数和 1），故 `{x,v,u,w}` 整体落在 `{x,v,u,p_t}` 的仿射包内，再由
+Coplanar 的三点见证 `{a,b,c}` 单调传递。 -/
+theorem continuous_coplanar_fan (x v u w : V3) (hcop : ¬ Coplanar ({x, v, u, w} : Set V3))
+    (t : ℝ) (ht : t ≠ 0) :
+    ¬ Coplanar ({x, v, u, (1 - t) • u + t • w} : Set V3) := by
+  intro hc
+  apply hcop
+  obtain ⟨a, b, c, hsub⟩ := hc
+  have hwS : w ∈ (affineSpan ℝ ({x, v, u, (1 - t) • u + t • w} : Set V3) : Set V3) := by
+    have hw2 : w ∈ (affineSpan ℝ ({u, (1 - t) • u + t • w} : Set V3) : Set V3) := by
+      refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨t⁻¹, ?_⟩
+      rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add,
+        show (1 - t) • u + t • w - u = t • (w - u) from by module, smul_smul,
+        show t⁻¹ * t = 1 from by field_simp, one_smul]
+      abel
+    exact affineSpan_mono ℝ (subset_pair4 (a := x) (b := v))
+      (SetLike.mem_coe.mp hw2)
+  refine ⟨a, b, c, fun z hz => ?_⟩
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+  rcases hz with h1 | hz
+  · rw [h1]
+    exact hsub (by simp)
+  rcases hz with h1 | hz
+  · rw [h1]
+    exact hsub (by simp)
+  rcases hz with h1 | hz
+  · rw [h1]
+    exact hsub (by simp)
+  · rw [hz]
+    exact mem_affineSpan_carrier (affineSpan_mono ℝ hsub (SetLike.mem_coe.mp hwS))
+
+/-- HOL planarity.hl:1404 `injective_azim_coplanar`：沿弦 `u→w` 的参数化
+`t ↦ azim x v u ((1-t)•u + t•w)` 在不共面四点下是单射（a, b 均非零）。
+重构证明（避开 HOL 的行列式计算）：
+1. 由 `continuous_coplanar_fan` + 三点共线 ⇒ 共面，得 `¬Collinear3 x v u`、
+   `¬Collinear3 x v p_a`、`¬Collinear3 x v p_b`；
+2. HOL `AZIM_EQ`（`azim_eq_azim_iff`）：方位角相等给出
+   `p_a ∈ aff_gt {x,v} {p_b}`，其射线刻画（`affGt_pair_iff`）给出
+   `p_a - x = c•(p_b - x) + h•(v - x)`，故 `p_a ∈ aff {x,v,p_b}`，即
+   `{x,v,p_a,p_b}` 共面于某三点包 `{r,s,q}`；
+3. 若 `a ≠ b`，则 `u, w` 都是 `p_a, p_b` 的仿射组合
+   （`u = lineMap p_a p_b (a/(a-b))`、`w = lineMap p_a p_b ((a-1)/(a-b))`），
+   于是 `{x,v,u,w}` 也含于该三点包，与假设矛盾。故 `a = b`。 -/
+theorem injective_azim_coplanar (x v u w : V3) (hcop : ¬ Coplanar ({x, v, u, w} : Set V3))
+    (a b : ℝ) (ha : a ≠ 0) (hb : b ≠ 0)
+    (hazim : azim x v u ((1 - a) • u + a • w) = azim x v u ((1 - b) • u + b • w)) :
+    a = b := by
+  rcases eq_or_ne a b with hab | hab
+  · exact hab
+  exfalso
+  have hxv : x ≠ v := by
+    intro he
+    apply hcop
+    have h : ({x, v, u, w} : Set V3) = ({v, u, w} : Set V3) := by
+      rw [← he]
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [h]
+    exact coplanar_triple v u w
+  have huw : u ≠ w := by
+    intro he
+    apply hcop
+    have h : ({x, v, u, w} : Set V3) = ({x, v, u} : Set V3) := by
+      rw [← he]
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [h]
+    exact coplanar_triple x v u
+  have hncu : ¬ Collinear3 x v u := fun hcol =>
+    hcop (coplanar_of_mem_line ((collinear3_iff_mem_affineSpan hxv).mp hcol))
+  have hncpa : ¬ Collinear3 x v ((1 - a) • u + a • w) := fun hcol =>
+    continuous_coplanar_fan x v u w hcop a ha
+      (coplanar_of_mem_line' ((collinear3_iff_mem_affineSpan hxv).mp hcol))
+  have hncpb : ¬ Collinear3 x v ((1 - b) • u + b • w) := fun hcol =>
+    continuous_coplanar_fan x v u w hcop b hb
+      (coplanar_of_mem_line' ((collinear3_iff_mem_affineSpan hxv).mp hcol))
+  have hkey : (1 - a) • u + a • w ∈ affGt ({x, v} : Set V3)
+      {(1 - b) • u + b • w} :=
+    (azim_eq_azim_iff hncu hncpb hncpa).mp hazim.symm
+  have hpbx : (1 - b) • u + b • w ≠ x := fun he =>
+    hncpb (collinear3_pair_left he)
+  have hpbv : (1 - b) • u + b • w ≠ v := fun he =>
+    hncpb (collinear3_pair_right he)
+  obtain ⟨c, hc0, h, hline⟩ :=
+    (affGt_pair_iff (v0 := x) (v1 := v) (x := (1 - b) • u + b • w)
+      (y := (1 - a) • u + a • w) hxv hpbx hpbv).mp hkey
+  -- p_a ∈ aff {x, v, p_b}
+  have hxS : x ∈ affineSpan ℝ ({x, v, (1 - b) • u + b • w} : Set V3) :=
+    mem_affineSpan ℝ (by simp)
+  have hvS : v ∈ affineSpan ℝ ({x, v, (1 - b) • u + b • w} : Set V3) :=
+    mem_affineSpan ℝ (by simp)
+  have hpbS : (1 - b) • u + b • w ∈
+      affineSpan ℝ ({x, v, (1 - b) • u + b • w} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hpaS : (1 - a) • u + a • w ∈
+      (affineSpan ℝ ({x, v, (1 - b) • u + b • w} : Set V3) : Set V3) :=
+    mem_affineSpan_triple_of_eq
+      (show (1 - a) • u + a • w = x + c • ((1 - b) • u + b • w - x) + h • (v - x) from by
+        rw [show (1 - a) • u + a • w = x + ((1 - a) • u + a • w - x) from by abel, hline]
+        abel)
+  have hcoppa : Coplanar ({x, v, (1 - a) • u + a • w, (1 - b) • u + b • w} : Set V3) :=
+    ⟨x, v, (1 - b) • u + b • w, by
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with h1 | hz
+      · rw [h1]
+        exact SetLike.mem_coe.mpr hxS
+      rcases hz with h1 | hz
+      · rw [h1]
+        exact SetLike.mem_coe.mpr hvS
+      rcases hz with h1 | hz
+      · rw [h1]
+        exact hpaS
+      · rw [hz]
+        exact SetLike.mem_coe.mpr hpbS⟩
+  obtain ⟨r, s, q, hsub⟩ := hcoppa
+  have hsubpa : ({(1 - a) • u + a • w, (1 - b) • u + b • w} : Set V3) ⊆
+      (affineSpan ℝ ({r, s, q} : Set V3) : Set V3) := by
+    intro z hz
+    refine hsub ?_
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+    tauto
+  -- u 与 w 都是 p_a, p_b 的仿射组合（a ≠ b）
+  have hdiff : (1 - b) • u + b • w - ((1 - a) • u + a • w) = (a - b) • (u - w) := by
+    module
+  have hupa : u ∈ (affineSpan ℝ ({(1 - a) • u + a • w, (1 - b) • u + b • w} : Set V3) :
+      Set V3) := by
+    refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨a / (a - b), ?_⟩
+    rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add, hdiff, smul_smul,
+      show a / (a - b) * (a - b) = a from by field_simp]
+    module
+  have hwpb : w ∈ (affineSpan ℝ ({(1 - a) • u + a • w, (1 - b) • u + b • w} : Set V3) :
+      Set V3) := by
+    refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨(a - 1) / (a - b), ?_⟩
+    rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add, hdiff, smul_smul,
+      show (a - 1) / (a - b) * (a - b) = a - 1 from by field_simp]
+    module
+  refine hcop ⟨r, s, q, fun z hz => ?_⟩
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+  rcases hz with h1 | hz
+  · rw [h1]
+    exact hsub (by simp)
+  rcases hz with h1 | hz
+  · rw [h1]
+    exact hsub (by simp)
+  rcases hz with h1 | hz
+  · rw [h1]
+    exact mem_affineSpan_carrier (affineSpan_mono ℝ hsubpa
+      (SetLike.mem_coe.mp hupa))
+  · rw [hz]
+    exact mem_affineSpan_carrier (affineSpan_mono ℝ hsubpa
+      (SetLike.mem_coe.mp hwpb))
