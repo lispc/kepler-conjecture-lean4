@@ -2598,3 +2598,215 @@ theorem fan_run_in_small_is_subset_yfan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
     rw [← hp2 s hs0 hsh]
     exact ⟨hz, hmem⟩
   simp at hmem2
+
+/-! ## 第十二块：邻居集方位角最小元、半空间边元素与混合积符号
+（planarity.hl:2238/2273/2339） -/
+
+/-- HOL planarity.hl:2238 `exists_inf_element_fix_fan`：邻居集多于一点时，
+存在相对固定基准 `u1` 方位角最小的邻居（有限非空实数集取最小元，
+`Set.exists_min_image`；有限性由 `remark_finite_fan1`）。 -/
+theorem exists_inf_element_fix_fan (x v u1 : V3) (V : Set V3) (E : Set (Set V3))
+    (hfan : FAN x V E) (hv : v ∈ V) (hcard : 1 < (setOfEdge v V E).ncard) :
+    ∃ u ∈ setOfEdge v V E, ∀ w ∈ setOfEdge v V E, azim x v u1 u ≤ azim x v u1 w := by
+  have hfin : (setOfEdge v V E).Finite := remark_finite_fan1 v V E hfan.2.2.1.1
+  have hne : (setOfEdge v V E).Nonempty := by
+    by_contra h0
+    rw [Set.not_nonempty_iff_eq_empty.mp h0, Set.ncard_empty] at hcard
+    linarith
+  obtain ⟨a, ha, hmin⟩ :=
+    Set.exists_min_image (setOfEdge v V E) (fun z => azim x v u1 z) hfin hne
+  exact ⟨a, ha, fun z hz => hmin z hz⟩
+
+/-- HOL fan.hl:1802 `SUR_SIGMA_FAN`：σ 在邻居集上满射（有限集上的单射
+自映射必满；单射性即 `mono_sigma_fan`）。 -/
+private theorem sur_sigmaFan (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
+    ∃ w : V3, {v, w} ∈ E ∧ sigmaFan x V E v w = u := by
+  have hu : u ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  have hfin : (setOfEdge v V E).Finite := remark_finite_fan1 v V E hfan.2.2.1.1
+  haveI : Finite ↥(setOfEdge v V E) := hfin
+  have hinj : Function.Injective
+      (fun p : { z // z ∈ setOfEdge v V E } =>
+        (⟨sigmaFan x V E v p.1, sigma_fan_in_setOfEdge hfan p.2⟩ :
+          { z // z ∈ setOfEdge v V E })) := by
+    intro p q hpq
+    have hval : sigmaFan x V E v p.1 = sigmaFan x V E v q.1 :=
+      congrArg Subtype.val hpq
+    exact Subtype.ext (mono_sigma_fan hfan p.2 q.2 hval)
+  obtain ⟨p, hp⟩ :=
+    Finite.surjective_of_injective hinj (⟨u, hu⟩ : { z // z ∈ setOfEdge v V E })
+  have hval : sigmaFan x V E v p.1 = u := congrArg Subtype.val hp
+  exact ⟨p.1, (properties_of_setOfEdge_fan x V E v p.1 hfan).mpr p.2, hval⟩
+
+/-- HOL planarity.hl:2273 `exists_element_in_half_sapace_fan`：`fan80` 扇形下
+存在边 `{v,u}` 使 `azim x v u1 u ∈ (0, π)`。若最小元方位角已达 (0, π) 取
+最小元本身；`azim = 0` 时取 `σ`（`fan80` 给出 `azim x v u σ ∈ (0, π)`，由
+`sum4_azim_fan` 换算基准）；`π ≤ azim` 时由 `SUR_SIGMA_FAN` 的前驱 `w`
+（`azim x v w u ∈ (0, π)`）与 `sum5_azim_fan`、极小性矛盾。 -/
+theorem exists_element_in_half_sapace_fan (x v u1 w1 : V3) (V : Set V3) (E : Set (Set V3))
+    (hfan : FAN x V E) (hv : v ∈ V) (hcop : ¬ Coplanar ({x, v, u1, w1} : Set V3))
+    (hcard : 1 < (setOfEdge v V E).ncard) (h80 : fan80 x V E) :
+    ∃ u : V3, {v, u} ∈ E ∧ 0 < azim x v u1 u ∧ azim x v u1 u < Real.pi := by
+  have hxn : x ≠ v := by
+    intro he
+    apply hcop
+    have hset : ({x, v, u1, w1} : Set V3) = ({v, u1, w1} : Set V3) := by
+      rw [← he]
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset]
+    exact coplanar_triple v u1 w1
+  have hvx : v ≠ x := hxn.symm
+  have hncu1 : ¬ Collinear3 x v u1 := fun hcol =>
+    hcop (coplanar_of_mem_line ((collinear3_iff_mem_affineSpan hxn).mp hcol))
+  obtain ⟨umin, hminE, hmin⟩ :=
+    exists_inf_element_fix_fan x v u1 V E hfan hv hcard
+  have huE : {v, umin} ∈ E := (properties_of_setOfEdge_fan x V E v umin hfan).mpr hminE
+  have hncu : ¬ Collinear3 x v umin := fan_not_collinear hfan huE
+  obtain ⟨w, hwE, hwsig⟩ := sur_sigmaFan hfan huE
+  have hncw : ¬ Collinear3 x v w := fan_not_collinear hfan hwE
+  obtain ⟨h80w0, h80w1⟩ := h80 v w hwE
+  rw [hwsig] at h80w0 h80w1
+  rcases lt_or_ge (azim x v u1 umin) Real.pi with hlt | hge
+  · rcases lt_or_eq_of_le (azim_nonneg x v u1 umin) with hpos | hzero
+    · exact ⟨umin, huE, hpos, hlt⟩
+    · -- azim x v u1 umin = 0：取 σ umin，`sum4_azim_fan` 换算基准角
+      have hne : setOfEdge v V E ≠ {umin} := by
+        intro he
+        rw [he, Set.ncard_singleton] at hcard
+        linarith
+      obtain ⟨hsE, -, -⟩ := SIGMA_FAN hne hfan hminE
+      have hsE' : {v, sigmaFan x V E v umin} ∈ E :=
+        (properties_of_setOfEdge_fan x V E v (sigmaFan x V E v umin) hfan).mpr hsE
+      have h80u0 : 0 < azim x v umin (sigmaFan x V E v umin) := (h80 v umin huE).1
+      have h80u1 : azim x v umin (sigmaFan x V E v umin) < Real.pi := (h80 v umin huE).2
+      have hle : azim x v u1 umin ≤ azim x v u1 (sigmaFan x V E v umin) := hmin _ hsE
+      have hsum := sum4_azim_fan hvx hncu1 hncu (fan_not_collinear hfan hsE') hle
+      refine ⟨sigmaFan x V E v umin, hsE', ?_, ?_⟩
+      · rw [hsum]; linarith
+      · rw [hsum]; linarith
+  · -- π ≤ azim x v u1 umin：前驱 w 的角落在 (0, π) 内，与极小性矛盾
+    exfalso
+    have hle : azim x v w umin ≤ azim x v u1 umin := h80w1.le.trans hge
+    have hsum := sum5_azim_fan hvx hncu1 hncw hncu hle
+    have hminw : azim x v u1 umin ≤ azim x v u1 w :=
+      hmin w ((properties_of_setOfEdge_fan x V E v w hfan).mp hwE)
+    linarith
+
+/-- HOL planarity.hl:2339 `JBDNJJB`：`sin(azim 0 u v w)` 是混合积
+`(u × v) ⬝ w`（HOL `cross` 即 `crossProduct`）的正常数倍。证明：取 `u`
+方向的右手正交标架（`exists_on3_eq_smul`，`u = ‖u‖•e3`），`azim_frame_spec`
+给出 `v`、`w` 的平面极坐标 `z_v = r1 e^{iψ}`、`z_w = r2 e^{i(ψ+θ)}`（
+θ = azim 0 u v w）；由 `e3×e1 = e2`、`e3×e2 = -e1` 得
+`u × v = ‖u‖ r1 (cos ψ e2 - sin ψ e1)`，与 `w` 点乘得 `‖u‖ r1 r2 sin θ`。 -/
+theorem JBDNJJB {u v w : V3} (h1 : ¬ Collinear3 0 u v) (h2 : ¬ Collinear3 0 u w) :
+    ∃ t : ℝ, 0 < t ∧ Real.sin (azim 0 u v w) =
+      t * (crossProduct (u : Fin 3 → ℝ) (v : Fin 3 → ℝ)) ⬝ᵥ (w : Fin 3 → ℝ) := by
+  have hu0 : u ≠ 0 := by
+    intro he
+    exact h1 (by rw [he]; exact collinear3_of_eq rfl)
+  obtain ⟨e1, e2, e3, hon, hue⟩ := exists_on3_eq_smul u hu0
+  have hax : (u - 0 : V3) = dist u 0 • e3 := by
+    rw [sub_zero, dist_eq_norm, sub_zero]
+    exact hue
+  obtain ⟨psi, r1, r2, hr1, hr2, hzv, hzw⟩ :=
+    azim_frame_spec (v := 0) (w := u) (w1 := v) (w2 := w) h1 h2 hon hax hu0
+  -- 平面坐标的实虚部
+  have hv1 : (v : V3) ⬝ᵥ e1 = r1 * Real.cos psi := by
+    have h := congrArg Complex.re hzv
+    simp only [zOf, sub_zero, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
+      zero_add, mul_one, one_mul] at h
+    rw [cexp_cos_re] at h
+    exact h
+  have hv2 : (v : V3) ⬝ᵥ e2 = r1 * Real.sin psi := by
+    have h := congrArg Complex.im hzv
+    simp only [zOf, sub_zero, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
+      Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, sub_zero, add_zero,
+      zero_add, mul_one, one_mul] at h
+    rw [cexp_sin_im] at h
+    exact h
+  have hw1 : (w : V3) ⬝ᵥ e1 = r2 * Real.cos (psi + azim 0 u v w) := by
+    have h := congrArg Complex.re hzw
+    simp only [zOf, sub_zero, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
+      zero_add, mul_one, one_mul] at h
+    rw [cexp_cos_re] at h
+    exact h
+  have hw2 : (w : V3) ⬝ᵥ e2 = r2 * Real.sin (psi + azim 0 u v w) := by
+    have h := congrArg Complex.im hzw
+    simp only [zOf, sub_zero, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
+      Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, sub_zero, add_zero,
+      zero_add, mul_one, one_mul] at h
+    rw [cexp_sin_im] at h
+    exact h
+  -- 标架的叉积值
+  have hO := hon
+  obtain ⟨h11, h22, h33, h12, h13, h23, hpos⟩ := hO
+  have hc1 : crossProduct (e1 : Fin 3 → ℝ) (e2 : Fin 3 → ℝ) = (e3 : Fin 3 → ℝ) :=
+    on3_cross hon
+  have hc2 : crossProduct (e3 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ) = (e2 : Fin 3 → ℝ) := by
+    rw [← hc1, cross_cross_eq_smul_sub_smul, h11,
+      dotProduct_comm (e2 : Fin 3 → ℝ) (e1 : Fin 3 → ℝ), h12]
+    simp
+  have hc3 : crossProduct (e3 : Fin 3 → ℝ) (e2 : Fin 3 → ℝ) = -(e1 : Fin 3 → ℝ) := by
+    rw [← hc1, cross_cross_eq_smul_sub_smul, h12, h22]
+    simp
+  -- 叉积线性性（Azim.lean 中同名引理为 private，此处按同法重证）
+  have cr_add : ∀ p q s : Fin 3 → ℝ,
+      crossProduct p (q + s) = crossProduct p q + crossProduct p s := by
+    intro p q s
+    funext i
+    fin_cases i <;>
+      simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+        Matrix.tail_cons, Matrix.head_cons, Pi.add_apply] <;>
+      ring
+  have cr_smul : ∀ (c : ℝ) (p s : Fin 3 → ℝ),
+      crossProduct p (c • s) = c • crossProduct p s := by
+    intro c p s
+    funext i
+    fin_cases i <;>
+      simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+        Matrix.tail_cons, Matrix.head_cons, Pi.smul_apply] <;>
+      ring
+  have cl_smul : ∀ (c : ℝ) (p s : Fin 3 → ℝ),
+      crossProduct (c • p) s = c • crossProduct p s := by
+    intro c p s
+    funext i
+    fin_cases i <;>
+      simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+        Matrix.tail_cons, Matrix.head_cons, Pi.smul_apply] <;>
+      ring
+  -- 坐标在 Pi 侧的展开
+  have hucoe : (u : Fin 3 → ℝ) = ‖u‖ • ((e3 : Fin 3 → ℝ)) := by
+    have h := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hue
+    simpa only [WithLp.ofLp_smul] using h
+  have vrep := rep_of_zOf hon hax hu0 v psi r1 hzv
+  have hvcoe : (v : Fin 3 → ℝ)
+      = (r1 * Real.cos psi) • ((e1 : Fin 3 → ℝ))
+        + (r1 * Real.sin psi) • ((e2 : Fin 3 → ℝ))
+        + ((v ⬝ᵥ e3) / dist u 0) • (‖u‖ • ((e3 : Fin 3 → ℝ))) := by
+    have h := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) vrep
+    simpa only [sub_zero, WithLp.ofLp_add, WithLp.ofLp_smul, hucoe] using h
+  -- 主计算：混合积 = ‖u‖ r1 r2 sin θ
+  have htrig : ∀ X Y : ℝ, Real.cos Y * Real.sin X - Real.sin Y * Real.cos X
+      = Real.sin (X - Y) := by
+    intro X Y
+    rw [Real.sin_sub]
+    ring
+  have htrig' : Real.cos psi * Real.sin (psi + azim 0 u v w)
+      - Real.sin psi * Real.cos (psi + azim 0 u v w) = Real.sin (azim 0 u v w) := by
+    rw [htrig, add_sub_cancel_left]
+  have hX : (crossProduct (u : Fin 3 → ℝ) (v : Fin 3 → ℝ)) ⬝ᵥ (w : Fin 3 → ℝ)
+      = ‖u‖ * r1 * r2 * Real.sin (azim 0 u v w) := by
+    rw [hucoe, hvcoe, cl_smul, smul_dotProduct, cr_add, cr_add, cr_smul, cr_smul,
+      cr_smul, cr_smul, hc2, hc3, cross_self (e3 : Fin 3 → ℝ), smul_zero, smul_zero,
+      add_zero, add_dotProduct, smul_dotProduct, smul_dotProduct, neg_dotProduct,
+      dotProduct_comm (e2 : Fin 3 → ℝ) (w : Fin 3 → ℝ),
+      dotProduct_comm (e1 : Fin 3 → ℝ) (w : Fin 3 → ℝ), hw2, hw1]
+    simp only [smul_eq_mul]
+    linear_combination ‖u‖ * r1 * r2 * htrig'
+  have huN : ‖u‖ ≠ 0 := (norm_pos_iff.mpr hu0).ne'
+  have hM : ‖u‖ * r1 * r2 ≠ 0 := mul_ne_zero (mul_ne_zero huN hr1.ne') hr2.ne'
+  refine ⟨(‖u‖ * r1 * r2)⁻¹, inv_pos.mpr (by positivity), ?_⟩
+  rw [hX, ← mul_assoc, inv_mul_cancel₀ hM, one_mul]
