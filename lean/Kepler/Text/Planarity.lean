@@ -614,3 +614,156 @@ theorem exists_point_small_edges_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
     rw [sub_add_sub_cancel]
   rw [hsplit]
   exact lt_of_le_of_lt (norm_add_le _ _) (by linarith)
+
+/-! ## 第五块：aff_ge 显式刻画与锥的数乘封闭 -/
+
+/-- HOL `AFF_GE_1_2`：`aff_ge {x} {v,u}` 的显式组合刻画（`aff_gt_1_2`
+的非严格对偶：`0 <` 全部换成 `0 ≤`，证明逐行对应）。 -/
+theorem aff_ge_1_2 (hdis : Disjoint ({x} : Set V3) {v, u}) :
+    affGe {x} {v, u} =
+      {y | ∃ t1 t2 t3 : ℝ, 0 ≤ t2 ∧ 0 ≤ t3 ∧ t1 + t2 + t3 = 1 ∧
+        y = t1 • x + t2 • v + t3 • u} := by
+  have hdis' := Set.disjoint_left.mp hdis
+  have hxv : x ≠ v := by
+    intro he
+    exact hdis' (Set.mem_singleton x) (by rw [he]; simp)
+  have hxu : x ≠ u := by
+    intro he
+    exact hdis' (Set.mem_singleton x) (by rw [he]; simp)
+  ext y
+  simp only [affGe, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨f, hfin, hsum, hpos, hone⟩
+    by_cases hvu : v = u
+    · -- 退化情形 v = u：求和集合为 {x, v}，把系数 f v 对半拆成 t2 = t3。
+      have hfv : 0 ≤ f v := hpos v (by simp)
+      have hTeq : hfin.toFinset = ({x, v} : Finset V3) := by
+        apply Finset.ext
+        intro z
+        simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+          Set.mem_singleton_iff, hvu, Finset.mem_insert, Finset.mem_singleton]
+        tauto
+      rw [hTeq] at hsum hone
+      rw [Finset.sum_insert (by simp [hxv]), Finset.sum_singleton] at hone
+      rw [Finset.sum_insert (by simp [hxv]), Finset.sum_singleton] at hsum
+      have hsplit : ∀ c : ℝ, ∀ p : V3, (c / 2) • p + (c / 2) • p = c • p := by
+        intro c p
+        rw [← add_smul]
+        congr 1
+        ring
+      refine ⟨f x, f v / 2, f v / 2, by linarith, by linarith, by linarith, ?_⟩
+      rw [hsum, ← hvu, add_assoc, hsplit]
+    · have hTeq : hfin.toFinset = ({x, v, u} : Finset V3) := by
+        apply Finset.ext
+        intro z
+        simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+          Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+      rw [hTeq] at hsum hone
+      rw [Finset.sum_insert (by simp [hxv, hxu]), Finset.sum_insert (by simp [hvu]),
+        Finset.sum_singleton] at hone
+      rw [Finset.sum_insert (by simp [hxv, hxu]), Finset.sum_insert (by simp [hvu]),
+        Finset.sum_singleton] at hsum
+      exact ⟨f x, f v, f u, hpos v (by simp), hpos u (by simp), by linarith,
+        by rw [hsum]; abel⟩
+  · rintro ⟨t1, t2, t3, ht2, ht3, hone, hy⟩
+    have hfin : ({x} ∪ {v, u} : Set V3).Finite :=
+      (Set.finite_singleton x).union ((Set.finite_singleton u).insert v)
+    by_cases hvu : v = u
+    · -- 退化情形 v = u：t2 + t3 合并到 v 的系数上。
+      refine ⟨fun z => if z = v then t2 + t3 else t1, hfin, ?_, ?_, ?_⟩
+      · have hTeq : hfin.toFinset = ({x, v} : Finset V3) := by
+          apply Finset.ext
+          intro z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, hvu, Finset.mem_insert, Finset.mem_singleton]
+          tauto
+        rw [hTeq, Finset.sum_insert (by simp [hxv]), Finset.sum_singleton]
+        show y = (if x = v then t2 + t3 else t1) • x +
+          (if v = v then t2 + t3 else t1) • v
+        rw [if_neg hxv, if_pos (rfl : v = v), hy, ← hvu, add_assoc, ← add_smul]
+      · intro z hz
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+        rcases hz with hzv | hzu
+        · rw [hzv]
+          show 0 ≤ (if v = v then t2 + t3 else t1)
+          rw [if_pos (rfl : v = v)]
+          linarith
+        · rw [hzu]
+          show 0 ≤ (if u = v then t2 + t3 else t1)
+          rw [if_pos hvu.symm]
+          linarith
+      · have hTeq : hfin.toFinset = ({x, v} : Finset V3) := by
+          apply Finset.ext
+          intro z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, hvu, Finset.mem_insert, Finset.mem_singleton]
+          tauto
+        rw [hTeq, Finset.sum_insert (by simp [hxv]), Finset.sum_singleton]
+        show (if x = v then t2 + t3 else t1) + (if v = v then t2 + t3 else t1) = 1
+        rw [if_neg hxv, if_pos (rfl : v = v)]
+        linarith
+    · refine ⟨fun z => if z = v then t2 else if z = u then t3 else t1, hfin, ?_, ?_, ?_⟩
+      · have hTeq : hfin.toFinset = ({x, v, u} : Finset V3) := by
+          apply Finset.ext
+          intro z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+        rw [hTeq, Finset.sum_insert (by simp [hxv, hxu]),
+          Finset.sum_insert (by simp [hvu]), Finset.sum_singleton]
+        show y = (if x = v then t2 else if x = u then t3 else t1) • x +
+          ((if v = v then t2 else if v = u then t3 else t1) • v +
+            (if u = v then t2 else if u = u then t3 else t1) • u)
+        rw [if_neg hxv, if_neg hxu, if_pos (rfl : v = v),
+          if_neg (Ne.symm hvu), if_pos (rfl : u = u), hy]
+        abel
+      · intro z hz
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+        rcases hz with hzv | hzu
+        · rw [hzv]
+          show 0 ≤ (if v = v then t2 else if v = u then t3 else t1)
+          rw [if_pos (rfl : v = v)]
+          exact ht2
+        · rw [hzu]
+          show 0 ≤ (if u = v then t2 else if u = u then t3 else t1)
+          rw [if_neg (Ne.symm hvu), if_pos (rfl : u = u)]
+          exact ht3
+      · have hTeq : hfin.toFinset = ({x, v, u} : Finset V3) := by
+          apply Finset.ext
+          intro z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+        rw [hTeq, Finset.sum_insert (by simp [hxv, hxu]),
+          Finset.sum_insert (by simp [hvu]), Finset.sum_singleton]
+        show (if x = v then t2 else if x = u then t3 else t1) +
+          ((if v = v then t2 else if v = u then t3 else t1) +
+            (if u = v then t2 else if u = u then t3 else t1)) = 1
+        rw [if_neg hxv, if_neg hxu, if_pos (rfl : v = v),
+          if_neg (Ne.symm hvu), if_pos (rfl : u = u)]
+        linarith
+
+/-- `aff_ge {x} {v,u}` 对从 x 出发的非负数乘封闭：`a•(y-x)+x` 仍为
+非负组合，新系数 `⟨1-a*t2-a*t3, a*t2, a*t3⟩`。 -/
+theorem scale_aff_ge_fan (hdis : Disjoint ({x} : Set V3) {v, u}) (y : V3) (a : ℝ)
+    (hy : y ∈ affGe {x} {v, u}) (ha : 0 ≤ a) :
+    a • (y - x) + x ∈ affGe {x} {v, u} := by
+  rw [aff_ge_1_2 hdis] at hy ⊢
+  simp only [Set.mem_setOf_eq] at hy ⊢
+  obtain ⟨t1, t2, t3, ht2, ht3, hone, hyeq⟩ := hy
+  refine ⟨1 - a * t2 - a * t3, a * t2, a * t3, mul_nonneg ha ht2, mul_nonneg ha ht3,
+    by ring, ?_⟩
+  have ht1 : t1 = 1 - t2 - t3 := by linarith
+  rw [hyeq, ht1]
+  module
+
+/-- `aff_gt {x} {v,u}` 对从 x 出发的正数乘封闭（严格性由 `mul_pos` 保持）。 -/
+theorem scale_aff_gt_fan (hdis : Disjoint ({x} : Set V3) {v, u}) (y : V3) (a : ℝ)
+    (hy : y ∈ affGt {x} {v, u}) (ha : 0 < a) :
+    a • (y - x) + x ∈ affGt {x} {v, u} := by
+  rw [aff_gt_1_2 hdis] at hy ⊢
+  simp only [Set.mem_setOf_eq] at hy ⊢
+  obtain ⟨t1, t2, t3, ht2, ht3, hone, hyeq⟩ := hy
+  refine ⟨1 - a * t2 - a * t3, a * t2, a * t3, mul_pos ha ht2, mul_pos ha ht3,
+    by ring, ?_⟩
+  have ht1 : t1 = 1 - t2 - t3 := by linarith
+  rw [hyeq, ht1]
+  module
