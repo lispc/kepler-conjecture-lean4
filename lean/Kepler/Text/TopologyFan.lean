@@ -3632,4 +3632,444 @@ theorem expand_elements_by_azim_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
     rw [he3f, hye3] at hrep
     exact hrep
 
+/-- azimFan ≤ 2π（两个分支：azim_lt_two_pi / 平凡）。 -/
+private theorem azimFan_le_two_pi (x : V3) (V : Set V3) (E : Set (Set V3))
+    (v w : V3) : azimFan x V E v w ≤ 2 * Real.pi := by
+  rw [azimFan]
+  by_cases hcard : 1 < (setOfEdge v V E).ncard
+  · rw [if_pos hcard]
+    exact le_of_lt (azim_lt_two_pi x v w _)
+  · rw [if_neg hcard]
+
+/-! ## 球坐标重建与 rw_dart 的像刻画（topology.hl:3815–4436）
+
+arcVFan（sphere.hl:375 `arcV`）、spherical_coordinates_eFan
+（Multivariate-flyspeck.ml:3572 `SPHERICAL_COORDINATES` 的 e-标架特化：
+HOL 的 `(v + e1) IN aff_gt` 条件在 e1Fan 上由 (u-x)·e2Fan = 0 与
+(u-x)·e1Fan > 0 自动钉住 ψ = 0）、rw_dart_is_image_set_spherical_coordinate
+（本块主体）。 -/
+
+/-- HOL sphere.hl:375 `arcV`（HOL `acs` ↔ Mathlib `Real.arccos`；
+HOL 用 norm，此处用 dist——dist v u = ‖v - u‖）。 -/
+noncomputable def arcVFan (u v w : V3) : ℝ :=
+  Real.arccos (((v - u) ⬝ᵥ (w - u)) / (dist v u * dist w u))
+
+/-- 标准正交组合的范数平方（Parseval）。 -/
+private theorem norm_sq_combo {e1 e2 e3 : V3} (he : Orthonormal3 e1 e2 e3)
+    (a b c : ℝ) : ‖a • e1 + b • e2 + c • e3‖ ^ 2 = a ^ 2 + b ^ 2 + c ^ 2 := by
+  obtain ⟨h1, h2, h3, h12, h13, h23, -⟩ := he
+  rw [← real_inner_self_eq_norm_sq]
+  simp only [inner_add_left, inner_add_right, real_inner_smul_left,
+    real_inner_smul_right]
+  rw [inner_eq_dot, inner_eq_dot, inner_eq_dot, inner_eq_dot, inner_eq_dot,
+    inner_eq_dot, inner_eq_dot, inner_eq_dot, inner_eq_dot]
+  rw [h1, h2, h3, h12, h13, h23, dot_comm e2 e1, h12, dot_comm e3 e1, h13,
+    dot_comm e3 e2, h23]
+  ring
+
+/-- HOL Multivariate-flyspeck.ml:3572 `SPHERICAL_COORDINATES` 的 e-标架
+特化：y = x + dist•(cos θ sin φ e1 + sin θ sin φ e2 + cos φ e3)，
+θ = azim x v u y，φ = arcVFan x y v。 -/
+private theorem spherical_coordinates_eFan (hnc1 : ¬ Collinear3 x v u)
+    (hnc2 : ¬ Collinear3 x v y) :
+    y = x + (dist y x * Real.cos (azim x v u y) * Real.sin (arcVFan x y v)) •
+        e1Fan x v u +
+      (dist y x * Real.sin (azim x v u y) * Real.sin (arcVFan x y v)) •
+        e2Fan x v u +
+      (dist y x * Real.cos (arcVFan x y v)) • e3Fan x v u := by
+  have hvx : v ≠ x := fun he => hnc1 (collinear3_of_eq (v := x) (w := v) (w1 := u) he)
+  have hnv : ‖v - x‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hvx)
+  have hyx0 : y ≠ x := fun he => hnc2 (collinear3_pair_left he)
+  have hny : ‖y - x‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hyx0)
+  have hframe := orthonormal_e1Fan_e2Fan_e3Fan hnc1
+  have haxf : (v - x : V3) = ‖v - x‖ • e3Fan x v u := by
+    rw [e3Fan, smul_smul, mul_inv_cancel₀ hnv, one_smul]
+  have haxf' : (v - x : V3) = dist v x • e3Fan x v u := by
+    rw [dist_eq_norm]; exact haxf
+  -- azim_master 在 e 标架取值：u 的 rep 角度为 ψ，y 的为 ψ + azim
+  obtain ⟨-, -, h1, h2, hspec⟩ := azim_master x v u y
+  obtain ⟨ψ, r1, r2, hu_rep, hy_rep, hr1, hr2⟩ :=
+    hspec (e1Fan x v u) (e2Fan x v u) (e3Fan x v u) hframe haxf' hvx
+  -- ψ = 0：u 的 rep 的 e2 分量 = 0（dot_e2Fan）、e1 分量 > 0（udot_e1Fan）
+  have hue2 : inner ℝ (u - x) (e2Fan x v u) = 0 := by
+    rw [inner_eq_dot]
+    exact dot_e2Fan hnc1
+  have hue2' : inner ℝ (u - x) (e2Fan x v u) = r1 * Real.sin ψ := by
+    conv_lhs => rw [hu_rep]
+    rw [inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+      real_inner_smul_left, inner_eq_dot, inner_eq_dot, inner_eq_dot,
+      e1Fan_dot_e2 hnc1, e2Fan_dot_self hnc1, vdot_e2Fan hnc1]
+    ring
+  have hue1' : inner ℝ (u - x) (e1Fan x v u) = r1 * Real.cos ψ := by
+    conv_lhs => rw [hu_rep]
+    rw [inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+      real_inner_smul_left, inner_eq_dot, inner_eq_dot, inner_eq_dot,
+      e1Fan_dot_self hnc1, dot_comm (e2Fan x v u) (e1Fan x v u),
+      e1Fan_dot_e2 hnc1, vdot_e1Fan hnc1]
+    ring
+  have hT1 : 0 < inner ℝ (u - x) (e1Fan x v u) := by
+    rw [inner_eq_dot]
+    exact udot_e1Fan hnc1
+  rw [hue1'] at hT1
+  have hψ0 : Real.sin ψ = 0 := by
+    have h : r1 * Real.sin ψ = 0 := hue2'.symm.trans hue2
+    exact (mul_eq_zero.mp h).resolve_left (ne_of_gt (hr1 hnc1))
+  have hψ1 : Real.cos ψ = 1 := by
+    have hsc := Real.sin_sq_add_cos_sq ψ
+    rw [hψ0] at hsc
+    have hcos2 : Real.cos ψ ^ 2 = 1 := by linarith [hsc]
+    have hcos0 : 0 < Real.cos ψ :=
+      pos_of_mul_pos_right hT1 (le_of_lt (hr1 hnc1))
+    rcases (sq_eq_one_iff.mp hcos2) with h | h
+    · exact h
+    · linarith
+  have hcos : Real.cos (ψ + azim x v u y) = Real.cos (azim x v u y) := by
+    rw [Real.cos_add, hψ0, hψ1]; ring
+  have hsin : Real.sin (ψ + azim x v u y) = Real.sin (azim x v u y) := by
+    rw [Real.sin_add, hψ0, hψ1]; ring
+  rw [hcos, hsin] at hy_rep
+  -- 轴分量：(y-x)·e3Fan = h2 * ‖v-x‖
+  have hvxe3 : (v - x) ⬝ᵥ e3Fan x v u = ‖v - x‖ := by
+    rw [e3Fan, coe_smul, dotProduct_smul, smul_eq_mul, ← norm_sq_eq_dot]
+    have h2 : ‖v - x‖⁻¹ * ‖v - x‖ ^ 2 = ‖v - x‖ := by field_simp [hnv]
+    exact h2
+  have hye3 : inner ℝ (y - x) (e3Fan x v u) = h2 * ‖v - x‖ := by
+    conv_lhs => rw [hy_rep]
+    rw [inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+      real_inner_smul_left, inner_eq_dot, inner_eq_dot, inner_eq_dot,
+      e1Fan_dot_e3 hnc1, e2Fan_dot_e3 hnc1, hvxe3]
+    ring
+  -- (y-x)·(v-x) = h2·‖v-x‖²
+  have hyvx : (y - x) ⬝ᵥ (v - x) = h2 * ‖v - x‖ * ‖v - x‖ := by
+    have haxf2 : (WithLp.toLp 2 (v.ofLp - x.ofLp) : V3) = ‖v - x‖ • e3Fan x v u :=
+      haxf
+    rw [← inner_eq_dot, haxf2, real_inner_smul_right, hye3]
+    ring
+  -- cos φ 与 Cauchy-Schwarz 界
+  have hcb : |((y - x) ⬝ᵥ (v - x)) / (dist y x * dist v x)| ≤ 1 := by
+    have hdpos : (0:ℝ) < dist y x * dist v x :=
+      mul_pos (dist_pos.mpr hyx0) (dist_pos.mpr hvx)
+    rw [abs_div, abs_of_pos hdpos, div_le_one hdpos,
+      show dist y x * dist v x = ‖y - x‖ * ‖v - x‖ from by
+        rw [dist_eq_norm, dist_eq_norm], ← inner_eq_dot]
+    exact abs_real_inner_le_norm _ _
+  obtain ⟨hcb1, hcb2⟩ := abs_le.mp hcb
+  have hcosφ : Real.cos (arcVFan x y v) =
+      ((y - x) ⬝ᵥ (v - x)) / (dist y x * dist v x) := by
+    rw [arcVFan]
+    exact Real.cos_arccos hcb1 hcb2
+  -- dist y x · cos φ = h2·‖v-x‖
+  have hrcos : dist y x * Real.cos (arcVFan x y v) = h2 * ‖v - x‖ := by
+    rw [hcosφ, hyvx]
+    rw [show dist y x * dist v x = ‖y - x‖ * ‖v - x‖ from by
+      rw [dist_eq_norm, dist_eq_norm]]
+    rw [show dist y x = ‖y - x‖ from by rw [dist_eq_norm]]
+    field_simp [hny, hnv]
+  -- ‖y-x‖² = r2² + (h2·‖v-x‖)²（Parseval）
+  have haxial : h2 • (v - x) = (h2 * ‖v - x‖) • e3Fan x v u := by
+    conv_lhs => rw [haxf]
+    module
+  have hnorm2 : ‖y - x‖ ^ 2 = r2 ^ 2 + (h2 * ‖v - x‖) ^ 2 := by
+    have hrep : y - x = (r2 * Real.cos (azim x v u y)) • e1Fan x v u +
+        (r2 * Real.sin (azim x v u y)) • e2Fan x v u +
+        (h2 * ‖v - x‖) • e3Fan x v u := by
+      rw [hy_rep, haxial]
+    have h := norm_sq_combo hframe (r2 * Real.cos (azim x v u y))
+      (r2 * Real.sin (azim x v u y)) (h2 * ‖v - x‖)
+    rw [← hrep] at h
+    rw [h, mul_pow, mul_pow, ← mul_add, Real.cos_sq_add_sin_sq, mul_one]
+  -- r2 = dist y x · sin φ
+  have hr2 : r2 = dist y x * Real.sin (arcVFan x y v) := by
+    have h1 : (h2 * ‖v - x‖) ^ 2 = (dist y x * Real.cos (arcVFan x y v)) ^ 2 := by
+      rw [hrcos]
+    have hsin2 : Real.sin (arcVFan x y v) ^ 2 = 1 - Real.cos (arcVFan x y v) ^ 2 :=
+      Real.sin_sq _
+    have hpos : 0 ≤ dist y x * Real.sin (arcVFan x y v) :=
+      mul_nonneg dist_nonneg
+        (Real.sin_nonneg_of_nonneg_of_le_pi (Real.arccos_nonneg _)
+          (Real.arccos_le_pi _))
+    have hrc : dist y x = ‖y - x‖ := by rw [dist_eq_norm]
+    rw [← hrc] at hnorm2
+    have hsq : r2 ^ 2 = (dist y x * Real.sin (arcVFan x y v)) ^ 2 := by
+      have e2 : (dist y x * Real.sin (arcVFan x y v)) ^ 2 =
+          dist y x ^ 2 - (dist y x * Real.cos (arcVFan x y v)) ^ 2 := by
+        rw [mul_pow, mul_pow, hsin2]; ring
+      rw [e2, ← h1]
+      linarith [hnorm2]
+    exact (sq_eq_sq₀ (le_of_lt (hr2 hnc2)) hpos).mp hsq
+  -- 终组装
+  have hyfinal : y - x =
+      (dist y x * Real.cos (azim x v u y) * Real.sin (arcVFan x y v)) •
+        e1Fan x v u +
+      (dist y x * Real.sin (azim x v u y) * Real.sin (arcVFan x y v)) •
+        e2Fan x v u +
+      (dist y x * Real.cos (arcVFan x y v)) • e3Fan x v u := by
+    rw [hy_rep, haxial, hr2, hrcos]
+    module
+  conv_lhs => rw [show y = x + (y - x) from by module]
+  rw [hyfinal]
+  module
+
+/-- HOL topology.hl:3815 `rw_dart_is_image_set_spherical_coordinate`：
+球坐标映射在 r_fan 上的像 = rw_dart（CARD > 1 时为 wedge ∩ rcone(cos h)，
+CARD ≤ 1 时为 `univ \ aff_ge {x,v} {u}` ∩ rcone(cos h)）。
+证明重构：正向用 expand_elements_by_azim_fan（azim = t 1）、
+norm_sq_combo（dist = t 0）与 cos 在 [0,π] 严格递减（rcone 成员）；
+CARD ≤ 1 分支用 AZIM_EQ_0_GE_ALT（azim_eq_zero_iff_alt）排除 affGe。
+反向取证人 t = (dist y x, azim x v u y, arcVFan x y v)：arcV ∈ (0, h) 由
+rcone 条件 + 严格 Cauchy–Schwarz（inner_lt_norm_mul_iff_real，非共线
+给出严格性）+ arccos 在 [-1,1] 严格递减；重建等式即
+spherical_coordinates_eFan。 -/
+theorem rw_dart_is_image_set_spherical_coordinate (hfan : FAN x V E)
+    (hvu : {v, u} ∈ E) (h0 : 0 < h) (h1 : h < Real.pi / 2) :
+    changeSphericalCoordinateFan x v u ''
+        rFan (azim x v u u) (azimFan x V E v u) h =
+      rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos h) := by
+  have hnc : ¬ Collinear3 x v u := fan_not_collinear hfan hvu
+  have hvx : v ≠ x := fun he => hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) he)
+  have hxv : x ≠ v := fan_x_ne_v hfan hvu
+  have hnv : ‖v - x‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hvx)
+  have hnvpos : 0 < ‖v - x‖ := norm_pos_iff.mpr (sub_ne_zero.mpr hvx)
+  have hframe := orthonormal_e1Fan_e2Fan_e3Fan hnc
+  have haxf : (v - x : V3) = ‖v - x‖ • e3Fan x v u := by
+    rw [e3Fan, smul_smul, mul_inv_cancel₀ hnv, one_smul]
+  have hazu : azim x v u u = 0 := azim_self x v u
+  have hdisj : Disjoint ({x, v} : Set V3) {u} := by
+    rw [Set.disjoint_singleton_right]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+    exact ⟨fun he => hnc (collinear3_pair_left he),
+      fun he => hnc (collinear3_pair_right he)⟩
+  ext y
+  constructor
+  · -- 正向：像 ⊆ rwDart
+    rintro ⟨t, ht, rfl⟩
+    simp only [rFan, Set.mem_setOf_eq] at ht
+    obtain ⟨ht0, ht1lo, ht1hi, ht2lo, ht2hi⟩ := ht
+    rw [hazu] at ht1lo
+    have ht1lt : t 1 < 2 * Real.pi :=
+      lt_of_lt_of_le ht1hi (azimFan_le_two_pi x V E v u)
+    have ht2lt : t 2 < Real.pi / 2 := lt_trans ht2hi h1
+    have hs2 : 0 < Real.sin (t 2) :=
+      Real.sin_pos_of_pos_of_lt_pi ht2lo (by have := Real.pi_pos; linarith)
+    -- y - x 的分量展开
+    have hyrep : changeSphericalCoordinateFan x v u t - x =
+        (t 0 * Real.cos (t 1) * Real.sin (t 2)) • e1Fan x v u +
+        (t 0 * Real.sin (t 1) * Real.sin (t 2)) • e2Fan x v u +
+        (t 0 * Real.cos (t 2)) • e3Fan x v u := by
+      rw [show changeSphericalCoordinateFan x v u t = x +
+          (t 0 * Real.cos (t 1) * Real.sin (t 2)) • e1Fan x v u +
+          (t 0 * Real.sin (t 1) * Real.sin (t 2)) • e2Fan x v u +
+          (t 0 * Real.cos (t 2)) • e3Fan x v u from rfl]
+      module
+    -- azim y = t 1
+    have hyaz : azim x v u (changeSphericalCoordinateFan x v u t) = t 1 :=
+      expand_elements_by_azim_fan hfan hvu (t 0) (t 1) (t 2) ht0 (le_of_lt ht1lo)
+        ht1lt ht2lo ht2lt
+    -- 非共线：共线 ⟹ y - x 平行 v - x ⟹ e1/e2 分量同零，与 sin²+cos²=1 矛盾
+    have hncy : ¬ Collinear3 x v (changeSphericalCoordinateFan x v u t) := by
+      intro hc
+      obtain ⟨c, hc⟩ := (collinear3_iff_smul (w := v) (v := x) hvx).mp hc
+      have hd1 : inner ℝ (changeSphericalCoordinateFan x v u t - x) (e1Fan x v u) =
+          t 0 * Real.cos (t 1) * Real.sin (t 2) := by
+        conv_lhs => rw [hyrep]
+        rw [inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+          real_inner_smul_left, inner_eq_dot, inner_eq_dot, inner_eq_dot,
+          e1Fan_dot_self hnc, dot_comm (e2Fan x v u) (e1Fan x v u), e1Fan_dot_e2 hnc,
+          dot_comm (e3Fan x v u) (e1Fan x v u), e1Fan_dot_e3 hnc]
+        ring
+      have hd1' : inner ℝ (changeSphericalCoordinateFan x v u t - x) (e1Fan x v u) =
+          0 := by
+        conv_lhs => rw [hc]
+        rw [real_inner_smul_left, inner_eq_dot, vdot_e1Fan hnc, mul_zero]
+      have hcos0 : Real.cos (t 1) = 0 := by
+        have hh := hd1.symm.trans hd1'
+        rcases mul_eq_zero.mp hh with hh | hh
+        · rcases mul_eq_zero.mp hh with hh | hh
+          · exact absurd hh (ne_of_gt ht0)
+          · exact hh
+        · exact absurd hh (ne_of_gt hs2)
+      have hd2 : inner ℝ (changeSphericalCoordinateFan x v u t - x) (e2Fan x v u) =
+          t 0 * Real.sin (t 1) * Real.sin (t 2) := by
+        conv_lhs => rw [hyrep]
+        rw [inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+          real_inner_smul_left, inner_eq_dot, inner_eq_dot, inner_eq_dot,
+          e1Fan_dot_e2 hnc, e2Fan_dot_self hnc,
+          dot_comm (e3Fan x v u) (e2Fan x v u), e2Fan_dot_e3 hnc]
+        ring
+      have hd2' : inner ℝ (changeSphericalCoordinateFan x v u t - x) (e2Fan x v u) =
+          0 := by
+        conv_lhs => rw [hc]
+        rw [real_inner_smul_left, inner_eq_dot, vdot_e2Fan hnc, mul_zero]
+      have hsin0 : Real.sin (t 1) = 0 := by
+        have hh := hd2.symm.trans hd2'
+        rcases mul_eq_zero.mp hh with hh | hh
+        · rcases mul_eq_zero.mp hh with hh | hh
+          · exact absurd hh (ne_of_gt ht0)
+          · exact hh
+        · exact absurd hh (ne_of_gt hs2)
+      have hsc := Real.sin_sq_add_cos_sq (t 1)
+      rw [hsin0, hcos0] at hsc
+      norm_num at hsc
+    -- dist y x = t 0（Parseval + 三角恒等式）
+    have hdist : dist (changeSphericalCoordinateFan x v u t) x = t 0 := by
+      have h2 := norm_sq_combo hframe (t 0 * Real.cos (t 1) * Real.sin (t 2))
+        (t 0 * Real.sin (t 1) * Real.sin (t 2)) (t 0 * Real.cos (t 2))
+      rw [← hyrep] at h2
+      have htrig : (t 0 * Real.cos (t 1) * Real.sin (t 2)) ^ 2 +
+          (t 0 * Real.sin (t 1) * Real.sin (t 2)) ^ 2 + (t 0 * Real.cos (t 2)) ^ 2 =
+          t 0 ^ 2 := by
+        have e1 : (t 0 * Real.cos (t 1) * Real.sin (t 2)) ^ 2 +
+            (t 0 * Real.sin (t 1) * Real.sin (t 2)) ^ 2 =
+            t 0 ^ 2 * Real.sin (t 2) ^ 2 := by
+          rw [mul_pow, mul_pow, mul_pow, mul_pow, ← add_mul, ← mul_add,
+            Real.cos_sq_add_sin_sq, mul_one]
+        rw [e1, mul_pow, ← mul_add, Real.sin_sq_add_cos_sq, mul_one]
+      rw [dist_eq_norm]
+      exact (sq_eq_sq₀ (norm_nonneg _) (le_of_lt ht0)).mp (h2.trans htrig)
+    -- e3 分量与 rcone 点积
+    have hye3 : inner ℝ (changeSphericalCoordinateFan x v u t - x) (e3Fan x v u) =
+        t 0 * Real.cos (t 2) := by
+      conv_lhs => rw [hyrep]
+      rw [inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+        real_inner_smul_left, inner_eq_dot, inner_eq_dot, inner_eq_dot,
+        e1Fan_dot_e3 hnc, e2Fan_dot_e3 hnc, e3Fan_dot_self hvx u]
+      ring
+    have hyvx : (changeSphericalCoordinateFan x v u t - x) ⬝ᵥ (v - x) =
+        ‖v - x‖ * (t 0 * Real.cos (t 2)) := by
+      have haxf2 : (WithLp.toLp 2 (v.ofLp - x.ofLp) : V3) = ‖v - x‖ • e3Fan x v u :=
+        haxf
+      rw [← inner_eq_dot, haxf2, real_inner_smul_right, hye3]
+    -- 组装 wDart ∩ rcone
+    rw [rwDartFan]
+    refine ⟨?_, ?_⟩
+    · rw [wDartFan]
+      by_cases hcard : 1 < (setOfEdge v V E).ncard
+      · rw [if_pos (show (setOfEdge v V E).ncard > 1 from hcard)]
+        rw [wedge, Set.mem_setOf_eq]
+        show ¬ Collinear3 x v (changeSphericalCoordinateFan x v u t) ∧
+          0 < azim x v u (changeSphericalCoordinateFan x v u t) ∧
+          azim x v u (changeSphericalCoordinateFan x v u t) <
+            azim x v u (sigmaFan x V E v u)
+        refine ⟨hncy, by rw [hyaz]; exact ht1lo, ?_⟩
+        rw [hyaz]
+        rw [azimFan, if_pos hcard] at ht1hi
+        exact ht1hi
+      · have hsoe := one_edge_fan hfan hvu hcard
+        rw [if_neg (show ¬ (setOfEdge v V E).ncard > 1 from hcard), if_pos hsoe]
+        rw [Set.mem_sdiff]
+        refine ⟨Set.mem_univ _, fun hge => ?_⟩
+        obtain ⟨t1, t2, t3, ht3, hsum, hycombo⟩ := (mem_affGe_pair hdisj hxv).mp hge
+        rcases eq_or_lt_of_le ht3 with ht3 | ht3
+        · subst ht3
+          apply hncy
+          rw [collinear3_iff_mem_affineSpan hxv, affine_hull_2_fan]
+          refine ⟨t1, t2, by linarith, ?_⟩
+          rw [hycombo, zero_smul, add_zero]
+        · have hxu : x ≠ u := fun he => hnc (collinear3_pair_left he.symm)
+          have hvu' : v ≠ u := fun he => hnc (collinear3_pair_right he.symm)
+          have hgt := affGt_of_triple t1 t2 t3 ht3 hsum hycombo hxv hxu hvu'
+          have haz0 := (azim_eq_zero_iff_alt hnc hncy).mpr hgt
+          rw [hyaz] at haz0
+          linarith
+    · show (changeSphericalCoordinateFan x v u t - x) ⬝ᵥ (v - x) >
+        dist (changeSphericalCoordinateFan x v u t) x * dist v x * Real.cos h
+      rw [hyvx, hdist, show dist v x = ‖v - x‖ from by rw [dist_eq_norm]]
+      have hcos : Real.cos h < Real.cos (t 2) :=
+        Real.cos_lt_cos_of_nonneg_of_le_pi (le_of_lt ht2lo)
+          (by have := Real.pi_pos; linarith) ht2hi
+      calc t 0 * ‖v - x‖ * Real.cos h < t 0 * ‖v - x‖ * Real.cos (t 2) :=
+            mul_lt_mul_of_pos_left hcos (mul_pos ht0 hnvpos)
+        _ = ‖v - x‖ * (t 0 * Real.cos (t 2)) := by ring
+  · -- 反向：rwDart ⊆ 像
+    intro hy
+    rw [rwDartFan, Set.mem_inter_iff] at hy
+    obtain ⟨hyw, hyr⟩ := hy
+    have hyr' : (y - x) ⬝ᵥ (v - x) > dist y x * dist v x * Real.cos h := hyr
+    have hyx : y ≠ x := by
+      intro he
+      rw [he, sub_self, zero_dot, dist_self, zero_mul, zero_mul] at hyr'
+      exact lt_irrefl 0 hyr'
+    have hdy : 0 < dist y x := dist_pos.mpr hyx
+    have hdpos : (0:ℝ) < dist y x * dist v x := mul_pos hdy (dist_pos.mpr hvx)
+    rw [wDartFan] at hyw
+    -- 公共尾段：给定非共线与 azim 界，构造证人
+    have tail : ¬ Collinear3 x v y → azim x v u u < azim x v u y →
+        azim x v u y < azimFan x V E v u →
+        y ∈ changeSphericalCoordinateFan x v u ''
+          rFan (azim x v u u) (azimFan x V E v u) h := by
+      intro hncy hazlo hazhi
+      -- Cauchy–Schwarz 界：比值 ∈ [-1, 1]
+      have hzabs : |(y - x) ⬝ᵥ (v - x) / (dist y x * dist v x)| ≤ 1 := by
+        rw [abs_div, abs_of_pos hdpos, div_le_one hdpos,
+          show dist y x * dist v x = ‖y - x‖ * ‖v - x‖ from by
+            rw [dist_eq_norm, dist_eq_norm], ← inner_eq_dot]
+        exact abs_real_inner_le_norm _ _
+      have hzmem : (y - x) ⬝ᵥ (v - x) / (dist y x * dist v x) ∈ Set.Icc (-1) 1 :=
+        Set.mem_Icc.mpr (abs_le.mp hzabs)
+      -- 严格 < 1（非共线 ⟹ 严格 Cauchy–Schwarz）
+      have hzlt : (y - x) ⬝ᵥ (v - x) / (dist y x * dist v x) < 1 := by
+        rw [div_lt_one hdpos,
+          show dist y x * dist v x = ‖y - x‖ * ‖v - x‖ from by
+            rw [dist_eq_norm, dist_eq_norm], ← inner_eq_dot,
+          show (WithLp.toLp 2 (v.ofLp - x.ofLp) : V3) = v - x from rfl,
+          inner_lt_norm_mul_iff_real]
+        intro heq
+        apply hncy
+        refine (collinear3_iff_smul (w := v) (v := x) hvx).mpr ⟨‖y - x‖ / ‖v - x‖, ?_⟩
+        have e2 : y - x = (‖y - x‖ / ‖v - x‖) • (v - x) := by
+          have e3 : (‖y - x‖ / ‖v - x‖) • (v - x) = ‖v - x‖⁻¹ • (‖y - x‖ • (v - x)) := by
+            rw [div_eq_mul_inv, mul_comm ‖y - x‖ ‖v - x‖⁻¹, ← smul_smul]
+          rw [e3, ← heq, smul_smul, inv_mul_cancel₀ hnv, one_smul]
+        exact e2
+      -- arcV ∈ (0, h)
+      have hpos_arc : 0 < arcVFan x y v := by
+        show 0 < Real.arccos (((y - x) ⬝ᵥ (v - x)) / (dist y x * dist v x))
+        have hanti := Real.strictAntiOn_arccos hzmem
+          (show (1:ℝ) ∈ Set.Icc (-1) 1 from ⟨by norm_num, le_refl 1⟩) hzlt
+        rw [Real.arccos_one] at hanti
+        exact hanti
+      have harclt : arcVFan x y v < h := by
+        have hcoslt : Real.cos h < (y - x) ⬝ᵥ (v - x) / (dist y x * dist v x) := by
+          rw [lt_div_iff₀ hdpos]
+          calc Real.cos h * (dist y x * dist v x) = dist y x * dist v x * Real.cos h :=
+                by ring
+            _ < (y - x) ⬝ᵥ (v - x) := hyr'
+        have hanti := Real.strictAntiOn_arccos
+          (show Real.cos h ∈ Set.Icc (-1) 1 from ⟨Real.neg_one_le_cos h, Real.cos_le_one h⟩)
+          hzmem hcoslt
+        rw [Real.arccos_cos (le_of_lt h0) (by have := Real.pi_pos; linarith)] at hanti
+        show Real.arccos (((y - x) ⬝ᵥ (v - x)) / (dist y x * dist v x)) < h
+        exact hanti
+      -- 证人与重建等式
+      refine ⟨WithLp.toLp 2 ![dist y x, azim x v u y, arcVFan x y v], ?_, ?_⟩
+      · simp only [rFan, Set.mem_setOf_eq]
+        exact ⟨hdy, hazlo, hazhi, hpos_arc, harclt⟩
+      · show x + (dist y x * Real.cos (azim x v u y) * Real.sin (arcVFan x y v)) •
+            e1Fan x v u +
+          (dist y x * Real.sin (azim x v u y) * Real.sin (arcVFan x y v)) •
+            e2Fan x v u +
+          (dist y x * Real.cos (arcVFan x y v)) • e3Fan x v u = y
+        exact (spherical_coordinates_eFan hnc hncy).symm
+    by_cases hcard : 1 < (setOfEdge v V E).ncard
+    · rw [if_pos (show (setOfEdge v V E).ncard > 1 from hcard)] at hyw
+      rw [wedge, Set.mem_setOf_eq] at hyw
+      obtain ⟨hncy, hazlo, hazhi⟩ := hyw
+      refine tail hncy (by rw [hazu]; exact hazlo) ?_
+      rw [azimFan, if_pos hcard]
+      exact hazhi
+    · have hsoe := one_edge_fan hfan hvu hcard
+      rw [if_neg (show ¬ (setOfEdge v V E).ncard > 1 from hcard), if_pos hsoe] at hyw
+      rw [Set.mem_sdiff] at hyw
+      obtain ⟨-, hyw⟩ := hyw
+      have hncy : ¬ Collinear3 x v y := fun hc =>
+        hyw (aff_subset_aff_ge hdisj ((collinear3_iff_mem_affineSpan hxv).mp hc))
+      refine tail hncy ?_ ?_
+      · rw [hazu]
+        rcases eq_or_lt_of_le (azim_nonneg x v u y) with h0' | h0'
+        · exfalso
+          exact hyw (affGt_subset_affGe _ _ ((azim_eq_zero_iff_alt hnc hncy).mp h0'.symm))
+        · exact h0'
+      · rw [azimFan, if_neg hcard]
+        exact azim_lt_two_pi x v u y
+
 end Kepler.Text
