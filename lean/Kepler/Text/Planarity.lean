@@ -412,3 +412,27 @@ theorem origin_point_not1_in_convex_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E) 
       rw [neg_mul, mul_neg, neg_neg]
       exact div_mul_cancel₀ a hb
     rw [hkey]
+
+/-! ## 第三块：距离估计（planarity.hl:573、644） -/
+
+/-- HOL planarity.hl:644 `real_abs_sub_norm`（Mathlib
+`abs_norm_sub_norm_le` 的一行转述）。 -/
+theorem real_abs_sub_norm (x y : V3) : |‖x‖ - ‖y‖| ≤ ‖x - y‖ :=
+  abs_norm_sub_norm_le x y
+
+/-- HOL planarity.hl:573 `bounded_convex_fan`：两点凸包紧致，连续映射
+`y ↦ ‖y - x‖` 在其上有界，取界加 1 即得严格上界。 -/
+theorem bounded_convex_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
+    ∃ h : ℝ, 0 < h ∧ ∀ y ∈ convexHull ℝ ({v, u} : Set V3), ‖y - x‖ < h := by
+  have hfin : ({v, u} : Set V3).Finite := by simp
+  obtain ⟨C, hC⟩ := (Set.Finite.isCompact_convexHull (𝕜 := ℝ) hfin).exists_bound_of_continuousOn
+    (norm_origin_fan x).continuousOn
+  have hC0 : 0 ≤ C := by
+    have h := hC v (subset_convexHull ℝ _ (by simp))
+    rw [norm_norm] at h
+    exact le_trans (norm_nonneg _) h
+  refine ⟨C + 1, by linarith, ?_⟩
+  intro y hy
+  have h2 := hC y hy
+  rw [norm_norm] at h2
+  exact lt_of_le_of_lt h2 (by linarith)
