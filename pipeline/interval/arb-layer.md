@@ -44,14 +44,27 @@ Lean 内核可重放的证书，最终闭合 G4。
 - 输出证书 JSON：树结构 + 每叶的盒 + 每叶的 cert 参数
   （div 的 `out`、sqrt 的 `s₁ s₂`、atan 的 `N out`、guard 符号）。
 
-### 3. Lean 侧两处扩展（先于证书生成完成）
+### 3. Lean 侧扩展（先于证书生成完成）
 
 1. `IExpr.abs` 节点 + `DInterval.abs` + soundness（小）。
-2. `Cert.lean` 叶证书格式扩展：叶 = 盒 + guard 符号证书序列
+2. **`IExpr` 的 `TKind` 需补 `ln`**（2026-09-08 emit_rpn 实证：Flyspeck
+   `matan` 负分支是 ln 表达式，6 条记录真实到达，无法 atan 代数化）。
+3. `Cert.lean` 叶证书格式扩展：叶 = 盒 + guard 符号证书序列
    （每条是某 guard 表达式在叶盒上 `checkPos`/`checkNeg` 成功）
    + 末表达式 `checkPos`。`bb_sound` 相应推广
    （covers_point 仍按 midpoint 二分，guard 只是把"取哪支"变成
    内核可检查的决定树路径）。
+4. **析取案例**（emit_rpn 实证 58 条）：叶闭合 = 主 prog lo>0 或任一
+   `disj` 备选成立（比较型同样 lo>0；`var_lt` 型 hi_i<lo_j）。
+   证书层的叶需带"备选清单 + 命中哪条"。
+
+### 1′. `emit_rpn.py` ✅（2026-09-08 交付，flash 工人）
+
+- 176/176 生成（`out/cases/*.json`），自检 7 组全过，与 SMT 版交叉抽查
+  5 案例 vars/consts 一致。格式与偏离详见文件 docstring：
+  `ite` 用结构化 `{"ite":{cond,then,else,mode}}` 嵌套 RPN（弃用线性
+  guard_lt）；`acos/asin` 半角恒等式化掉；`>=` 按严格目标证更强；
+  `hminus` 作变量+外扩盒 [6/5,13/10]（sound 超集）；`==>` 前件丢弃同理。
 
 ### 4. `emit_lean.py` + G4 粘合（最深的一段，单独立项）
 

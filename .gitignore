@@ -24,3 +24,5 @@ pipeline/tools/
 reference/_distfiles/cmake-*.tar.gz
 __pycache__/
 pipeline/interval/out/smt/
+pipeline/interval/out/cases/
+pipeline/interval/out/dreal_log/
