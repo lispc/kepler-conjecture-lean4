@@ -4665,3 +4665,139 @@ theorem exist_close1_fan_of_fan80 {a : ℝ} (hfan : FAN x V E)
   obtain ⟨hθ0, hθπ⟩ := hfan80 u w huw
   rw [hsigma] at hθ0 hθπ
   exact exist_close1_fan hfan huv hv1w1 hvu huw hθ0 hθπ ha0 ha1 hEM
+
+/-! ## 第二十二块：inside 点的内性质（planarity.hl:5452–5593） -/
+
+/-- `collinear3_swap'` 的正向对偶（三点字面集的交换）。 -/
+private theorem collinear3_swap {x v u : V3} (h : Collinear3 x v u) : Collinear3 x u v := by
+  have hset : ({x, v, u} : Set V3) = ({x, u, v} : Set V3) := by
+    ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  show Collinear ℝ ({x, u, v} : Set V3)
+  rw [← hset]
+  exact h
+
+/-- HOL planarity.hl:5452 `properties_inside_collinear0_fan`：inside 点
+`(&1-a)%u + a%w` 与 `u` 不同线（`collinear1_fan`：反设共线则由
+`u' ∈ aff{x,u}` 解出 `w ∈ aff{x,u}`，矛盾）。 -/
+theorem properties_inside_collinear0_fan (a : ℝ) (ha0 : 0 < a) (ha1 : a < 1)
+    (hnc : ¬ Collinear3 x w u) : ¬ Collinear3 x ((1 - a) • u + a • w) u := by
+  intro hcol
+  have hxu : x ≠ u := fun he => hnc (by rw [he]; exact collinear3_pair_left rfl)
+  have hu'span : ((1 - a) • u + a • w : V3)
+      ∈ (affineSpan ℝ ({x, u} : Set V3) : Set V3) :=
+    (collinear3_iff_mem_affineSpan hxu).mp (collinear3_swap hcol)
+  obtain ⟨t, ht⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp hu'span
+  rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add] at ht
+  -- ht : (1 - a) • u + a • w = x + t • (u - x)
+  have hkey : a • w = (1 - t) • x + (t + a - 1) • u := by
+    refine sub_eq_zero.mp ?_
+    have e : a • w - ((1 - t) • x + (t + a - 1) • u)
+        = (1 - a) • u + a • w - (t • (u - x) + x) := by
+      module
+    rw [e, sub_eq_zero, ht]
+  have hane : a ≠ 0 := ne_of_gt ha0
+  have hdiv : w = (a⁻¹ * (1 - t)) • x + (a⁻¹ * (t + a - 1)) • u := by
+    have h6 := congrArg (fun z => a⁻¹ • z) hkey
+    rw [inv_smul_smul₀ hane, smul_add, smul_smul, smul_smul] at h6
+    exact h6
+  refine hnc (collinear3_swap ?_)
+  refine (collinear3_iff_mem_affineSpan hxu).mpr ?_
+  refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨a⁻¹ * (t + a - 1), ?_⟩
+  rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add, hdiv]
+  have hr : a⁻¹ * (1 - t) + a⁻¹ * (t + a - 1) = 1 := by
+    rw [← mul_add, show (1 - t) + (t + a - 1) = a from by ring, inv_mul_cancel₀ hane]
+  have h1mr : 1 - a⁻¹ * (t + a - 1) = a⁻¹ * (1 - t) := by linarith
+  rw [← h1mr]
+  module
+
+/-- HOL planarity.hl:5486 `properties_inside_collinear1_fan`：inside 点
+与 `w` 不同线（定理 1 代入 `w,u,1-a` + 集合换序）。 -/
+theorem properties_inside_collinear1_fan (a : ℝ) (ha0 : 0 < a) (ha1 : a < 1)
+    (hnc : ¬ Collinear3 x w u) : ¬ Collinear3 x ((1 - a) • u + a • w) w := by
+  have h1 := properties_inside_collinear0_fan (1 - a) (by linarith) (by linarith)
+    (collinear3_swap' hnc)
+  refine fun hcol => h1 ?_
+  rw [show 1 - (1 - a) = a from by ring, add_comm (a • w) ((1 - a) • u)]
+  exact hcol
+
+/-- HOL planarity.hl:5497 `properties1_inside_fan`：inside 点落在
+`aff_ge {x} {u,w}`（`AFF_GE_1_2`，取 `t1=&0, t2=&1-a, t3=a`）。 -/
+theorem properties1_inside_fan (a : ℝ) (hdis : Disjoint ({x} : Set V3) {u, w})
+    (ha0 : 0 < a) (ha1 : a < 1) : (1 - a) • u + a • w ∈ affGe {x} {u, w} := by
+  rw [aff_ge_1_2 hdis, Set.mem_setOf_eq]
+  exact ⟨0, 1 - a, a, by linarith, ha0.le, by norm_num, by simp⟩
+
+/-- HOL planarity.hl:5514 `properties_inside_collinear_fan`：非共线时
+inside 点与 `u`、`w` 都不同线（定理 1 + 定理 2 的合取）。 -/
+theorem properties_inside_collinear_fan (a : ℝ) (ha0 : 0 < a) (ha1 : a < 1)
+    (hnc : ¬ Collinear3 x u w) :
+    ¬ Collinear3 x ((1 - a) • u + a • w) u ∧ ¬ Collinear3 x ((1 - a) • u + a • w) w :=
+  ⟨properties_inside_collinear0_fan a ha0 ha1 (collinear3_swap' hnc),
+   properties_inside_collinear1_fan a ha0 ha1 (collinear3_swap' hnc)⟩
+
+/-- HOL planarity.hl:5525 `properties_inside_collinear1_fan`（HOL 中与
+：5486 重名，此处按任务改名）：非共线时射线 `{x,u}` 与
+`aff_ge {x} {inside, w}` 的交只在 `{x}`。 -/
+theorem properties_inside_collinear2_fan (a : ℝ) (hnc : ¬ Collinear3 x u w)
+    (ha0 : 0 < a) (ha1 : a < 1) :
+    affGe {x} {u} ∩ affGe {x} {(1 - a) • u + a • w, w} ⊆ affGe {x} ∅ := by
+  have hxu : x ≠ u := fun he => hnc (by rw [he]; exact collinear3_of_eq rfl)
+  have hdisva : Disjoint ({x} : Set V3) {(1 - a) • u + a • w, w} :=
+    disjoint_of_not_collinear3 (properties_inside_collinear_fan a ha0 ha1 hnc).2
+  intro y hy
+  obtain ⟨hsub1, hyB⟩ := (Set.mem_inter_iff y _ _).mp hy
+  obtain ⟨t1, t2, -, hsum12, hy1⟩ := affGe_single_coeff hxu hsub1
+  rw [aff_ge_1_2 hdisva, Set.mem_setOf_eq] at hyB
+  obtain ⟨t1', t2', t3, ht2'ge, ht3ge, hsum, hy2⟩ := hyB
+  rw [affGe_empty_eq_singleton, Set.mem_singleton_iff]
+  have heq : t1 • x + t2 • u
+      = t1' • x + t2' • ((1 - a) • u + a • w) + t3 • w := hy1.symm.trans hy2
+  -- 正性情形（t2' > 0 或 t3 > 0，两个子情形镜像，合并处理；HOL :5539 起）
+  have hposcase : (0 < t2' ∨ 0 < t3) → False := by
+    intro hpos
+    have hApos : 0 < t2' * a + t3 := by
+      rcases hpos with h | h
+      · exact lt_of_lt_of_le (mul_pos h ha0) (by linarith)
+      · have h2a : 0 ≤ t2' * a := mul_nonneg ht2'ge ha0.le
+        linarith
+    have hAne : t2' * a + t3 ≠ 0 := ne_of_gt hApos
+    -- 展开等式（HOL 的 VECTOR_ARITH 变形）
+    have heq' : t1 • x + t2 • u
+        = t1' • x + (t2' * (1 - a)) • u + (t2' * a) • w + t3 • w := by
+      rw [heq]
+      module
+    have hkey : (t2' * a + t3) • w = (t1 - t1') • x + (t2 - t2' * (1 - a)) • u := by
+      refine sub_eq_zero.mp ?_
+      have e : (t2' * a + t3) • w - ((t1 - t1') • x + (t2 - t2' * (1 - a)) • u)
+          = t1' • x + (t2' * (1 - a)) • u + (t2' * a) • w + t3 • w
+            - (t1 • x + t2 • u) := by
+        module
+      rw [e, sub_eq_zero, heq']
+    have hdiv : w = ((t2' * a + t3)⁻¹ * (t1 - t1')) • x
+        + ((t2' * a + t3)⁻¹ * (t2 - t2' * (1 - a))) • u := by
+      have h6 := congrArg (fun z => (t2' * a + t3)⁻¹ • z) hkey
+      rw [inv_smul_smul₀ hAne, smul_add, smul_smul, smul_smul] at h6
+      exact h6
+    refine absurd ((collinear3_iff_mem_affineSpan hxu).mpr ?_) hnc
+    refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr
+      ⟨(t2' * a + t3)⁻¹ * (t2 - t2' * (1 - a)), ?_⟩
+    rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add, hdiv]
+    have hring : t2' * (1 - a) + t2' * a = t2' := by ring
+    have hr : (t2' * a + t3)⁻¹ * (t1 - t1') + (t2' * a + t3)⁻¹ * (t2 - t2' * (1 - a)) = 1 := by
+      rw [← mul_add,
+        show (t1 - t1') + (t2 - t2' * (1 - a)) = t2' * a + t3 from by
+          linarith, inv_mul_cancel₀ hAne]
+    have h1mr : 1 - (t2' * a + t3)⁻¹ * (t2 - t2' * (1 - a))
+        = (t2' * a + t3)⁻¹ * (t1 - t1') := by linarith
+    rw [← h1mr]
+    module
+  -- 分类：t2' = t3 = 0 或其一为正（HOL 的 REAL_ARITH 二分）
+  rcases lt_or_eq_of_le ht2'ge with ht2'pos | ht2'0
+  · exact (hposcase (Or.inl ht2'pos)).elim
+  rcases lt_or_eq_of_le ht3ge with ht3pos | ht30
+  · exact (hposcase (Or.inr ht3pos)).elim
+  · -- 退化情形：y = t1' % x，且 t1' = 1，故 y = x
+    rw [← ht2'0, ← ht30] at hy2 hsum
+    have ht1' : t1' = 1 := by linarith
+    rw [hy2, ht1']
+    simp
