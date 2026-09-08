@@ -5273,3 +5273,91 @@ theorem exists_point_small_edges_not0_fan (hfan : FAN x V E)
         exact norm_add_le _ _
       _ < d := by
         linarith
+
+/-- HOL planarity.hl:6246 `separate1_sphere_not0_fan`：在起始参数 a>0 处扰动
+扇区 `aff_gt {x} {v,(1-t)•u+t•w}` 与另一边闭扇区 `aff_ge {x} {v1,u1}`
+在单位球面上无交（`separate1_sphere_fan` 的非零版本）。
+证法：`exist_close1_fan` 分离 a 处闭扇区与 {v1,u1} 闭扇区，
+`exists_point_small_edges_not0_fan` 保证单位化扰动贴近 a 扇区，
+`same_projective_sphere_gt_fan` 把交点改写为该单位化形式，
+矛盾。 -/
+theorem separate1_sphere_not0_fan (hfan : FAN x V E)
+    (hdis : Disjoint ({v, u} : Set V3) {v1, u1})
+    (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E) (hv1u1 : {v1, u1} ∈ E)
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3))
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (ha0 : 0 < a) (ha1 : a < 1)
+    (hEM : affGt {x} {v, (1 - a) • u + a • w} ∩
+      {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅) :
+    ∃ h : ℝ, a < h ∧ h ≤ 1 ∧
+      ∀ t : ℝ, a < t → t < h →
+        affGt {x} {v, (1 - t) • u + t • w} ∩ affGe {x} {v1, u1} ∩ ballnormFan x = ∅ := by
+  -- Step 1: exist_close1_fan gives separation bound h'
+  obtain ⟨h', hh'pos, hh'sep⟩ := exist_close1_fan hfan hdis hv1u1 hvu huw hθ0 hθπ ha0 ha1 hEM
+  -- Step 2: non-collinearity of the a-cone
+  have hnc_a : ¬ Collinear3 x v ((1 - a) • u + a • w) :=
+    not_collinear_is_properties_fully_surrounded hfan hvu huw hθ0 hθπ a ha0 ha1
+  -- Step 3: small edges bound with d = h'
+  obtain ⟨h₂, h₂a, h₂le, h₂b⟩ :=
+    exists_point_small_edges_not0_fan hfan hvu huw hcop h' a hh'pos ha0 ha1
+  -- Witness: h₂
+  refine ⟨h₂, h₂a, h₂le, ?_⟩
+  intro t ht_val hth
+  refine Set.eq_empty_of_forall_notMem (fun z hz => ?_)
+  have hzgt : z ∈ affGt {x} {v, (1 - t) • u + t • w} := hz.1.1
+  have hzge : z ∈ affGe {x} {v1, u1} := hz.1.2
+  have hzball : z ∈ ballnormFan x := hz.2
+  have hnc_t : ¬ Collinear3 x v ((1 - t) • u + t • w) :=
+    not_collinear_is_properties_fully_surrounded hfan hvu huw hθ0 hθπ t
+      (by linarith) (by linarith)
+  obtain ⟨s, hs0, hs1, hzs⟩ :=
+    same_projective_sphere_gt_fan hfan hvu huw t hnc_t ⟨hzgt, hzball⟩
+  have hxconv : x ∉ convexHull ℝ ({v, u, w} : Set V3) :=
+    origin_point_not_in_convex_fan hfan hvu huw hcop
+  have hne_a : (1 - s) • v + s • ((1 - a) • u + a • w) - x ≠ 0 := by
+    intro h0
+    have hconv : (1 - s) • v + s • ((1 - a) • u + a • w) ∈
+        convexHull ℝ ({v, u, w} : Set V3) :=
+      expansion_convex_fan a s ha0.le ha1.le hs0 hs1
+    exact hxconv ((sub_eq_zero.mp h0) ▸ hconv)
+  have hnya : ‖(1 - s) • v + s • ((1 - a) • u + a • w) - x‖ ≠ 0 :=
+    norm_ne_zero_iff.mpr hne_a
+  obtain ⟨y2, hy2def⟩ : ∃ y2 : V3, y2 =
+      ‖(1 - s) • v + s • ((1 - a) • u + a • w) - x‖⁻¹ •
+        ((1 - s) • v + s • ((1 - a) • u + a • w) - x) + x := ⟨_, rfl⟩
+  have hy2ball : y2 ∈ ballnormFan x := by
+    rw [hy2def, ballnormFan]
+    simp only [Set.mem_setOf_eq]
+    rw [dist_eq_norm,
+      show x - (‖(1 - s) • v + s • ((1 - a) • u + a • w) - x‖⁻¹ •
+        ((1 - s) • v + s • ((1 - a) • u + a • w) - x) + x) =
+        -(‖(1 - s) • v + s • ((1 - a) • u + a • w) - x‖⁻¹ •
+          ((1 - s) • v + s • ((1 - a) • u + a • w) - x)) from by module,
+      norm_neg, norm_smul,
+      Real.norm_of_nonneg (inv_nonneg.mpr (norm_nonneg _)),
+      inv_mul_cancel₀ hnya]
+  have hdis_av : Disjoint ({x} : Set V3) {v, (1 - a) • u + a • w} :=
+    disjoint_of_not_collinear3 hnc_a
+  have hy2ge : y2 ∈ affGe {x} {v, (1 - a) • u + a • w} := by
+    rw [hy2def, aff_ge_1_2 hdis_av]
+    simp only [Set.mem_setOf_eq]
+    refine ⟨1 - ‖(1 - s) • v + s • ((1 - a) • u + a • w) - x‖⁻¹,
+      ‖(1 - s) • v + s • ((1 - a) • u + a • w) - x‖⁻¹ * (1 - s),
+      ‖(1 - s) • v + s • ((1 - a) • u + a • w) - x‖⁻¹ * s,
+      mul_nonneg (inv_nonneg.mpr (norm_nonneg _)) (by linarith : 0 ≤ 1 - s),
+      mul_nonneg (inv_nonneg.mpr (norm_nonneg _)) hs0,
+      by ring, by module⟩
+  have hd2z : dist y2 z =
+      ‖(‖(1 - s) • v + s • ((1 - a) • u + a • w) - x‖⁻¹) •
+            ((1 - s) • v + s • ((1 - a) • u + a • w) - x) -
+          (‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹) •
+            ((1 - s) • v + s • ((1 - t) • u + t • w) - x)‖ := by
+    rw [dist_eq_norm, hzs, hy2def, add_sub_add_right_eq_sub]
+  have hsmall :
+      ‖(‖(1 - s) • v + s • ((1 - a) • u + a • w) - x‖⁻¹) •
+            ((1 - s) • v + s • ((1 - a) • u + a • w) - x) -
+          (‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹) •
+            ((1 - s) • v + s • ((1 - t) • u + t • w) - x)‖ < h' :=
+    h₂b t (le_of_lt ht_val) hth s hs0 hs1
+  have hsep : h' ≤ dist y2 z := hh'sep y2 ⟨hy2ge, hy2ball⟩ z ⟨hzge, hzball⟩
+  linarith
