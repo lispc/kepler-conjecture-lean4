@@ -3796,3 +3796,345 @@ theorem exists_cut_small_edges_fan {v1 u1 : V3} {a : ℝ}
   · rw [aff_gt_1_2 hdis2]
     exact ⟨1 + VA ⬝ᵥ A4 - VA ⬝ᵥ A3, -(VA ⬝ᵥ A4), VA ⬝ᵥ A3, hpos4, hpos5, by ring,
       hveq2⟩
+
+/-! ## 第十九块：aff_gt/aff_ge 子集关系族（planarity.hl:3094–3340）
+
+全部是仿射组合系数的代入/换算：`Affsign` 的符号条件落在第二个集合的
+系数上，故 `affGt {x,v} {w}`（两个第一集合点、一个第二集合点）只要求
+`w` 的系数为正。先备三个 `Affsign` 的显式三元/二元组合桥。 -/
+
+/-- `Affsign sgn {x,v} {w}`（三点互异）成员关系的显式系数提取。 -/
+private theorem affsign_extract3 {sgn : ℝ → Prop} {x v w y : V3}
+    (hxv : x ≠ v) (hxw : x ≠ w) (hvw : v ≠ w)
+    (h : Affsign sgn {x, v} {w} y) :
+    ∃ t1 t2 t3 : ℝ, sgn t3 ∧ t1 + t2 + t3 = 1 ∧ y = t1 • x + t2 • v + t3 • w := by
+  obtain ⟨f, hfin, hsum, hpos, hone⟩ := h
+  have hTeq : hfin.toFinset = ({x, v, w} : Finset V3) := by
+    apply Finset.ext
+    intro z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  rw [hTeq] at hsum hone
+  rw [Finset.sum_insert (by simp [hxv, hxw]), Finset.sum_insert (by simp [hvw]),
+    Finset.sum_singleton] at hsum hone
+  exact ⟨f x, f v, f w, hpos w (by simp), by linarith, by rw [hsum]; abel⟩
+
+/-- 显式三元组合构造 `Affsign sgn {x,v} {w}` 成员。 -/
+private theorem mem_affsign3 {sgn : ℝ → Prop} {x v w y : V3}
+    (hxv : x ≠ v) (hxw : x ≠ w) (hvw : v ≠ w)
+    {t1 t2 t3 : ℝ} (hsgn : sgn t3) (hsum : t1 + t2 + t3 = 1)
+    (hy : y = t1 • x + t2 • v + t3 • w) :
+    Affsign sgn {x, v} {w} y := by
+  have hfin : ({x, v} ∪ {w} : Set V3).Finite :=
+    ((Set.finite_singleton v).insert x).union (Set.finite_singleton w)
+  have hTeq : hfin.toFinset = ({x, v, w} : Finset V3) := by
+    apply Finset.ext
+    intro z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  refine ⟨fun z => if z = x then t1 else if z = v then t2 else if z = w then t3 else 0,
+    hfin, ?_, ?_, ?_⟩
+  · rw [hTeq, Finset.sum_insert (by simp [hxv, hxw]), Finset.sum_insert (by simp [hvw]),
+      Finset.sum_singleton]
+    show y = (if x = x then t1 else if x = v then t2 else if x = w then t3 else 0) • x +
+      ((if v = x then t1 else if v = v then t2 else if v = w then t3 else 0) • v +
+        (if w = x then t1 else if w = v then t2 else if w = w then t3 else 0) • w)
+    rw [if_pos (rfl : x = x), if_neg (Ne.symm hxv), if_pos (rfl : v = v),
+      if_neg (Ne.symm hxw), if_neg (Ne.symm hvw), if_pos (rfl : w = w), hy]
+    abel
+  · intro z hz
+    simp only [Set.mem_singleton_iff] at hz
+    rw [hz]
+    show sgn (if w = x then t1 else if w = v then t2 else if w = w then t3 else 0)
+    rw [if_neg (Ne.symm hxw), if_neg (Ne.symm hvw), if_pos (rfl : w = w)]
+    exact hsgn
+  · rw [hTeq, Finset.sum_insert (by simp [hxv, hxw]), Finset.sum_insert (by simp [hvw]),
+      Finset.sum_singleton]
+    show (if x = x then t1 else if x = v then t2 else if x = w then t3 else 0) +
+      ((if v = x then t1 else if v = v then t2 else if v = w then t3 else 0) +
+        (if w = x then t1 else if w = v then t2 else if w = w then t3 else 0)) = 1
+    rw [if_pos (rfl : x = x), if_neg (Ne.symm hxv), if_pos (rfl : v = v),
+      if_neg (Ne.symm hxw), if_neg (Ne.symm hvw), if_pos (rfl : w = w)]
+    linarith
+
+/-- `Affsign sgn {x} {v}`（两点互异）成员关系的显式系数提取。 -/
+private theorem affsign_extract2 {sgn : ℝ → Prop} {x v y : V3} (hxv : x ≠ v)
+    (h : Affsign sgn {x} {v} y) :
+    ∃ t1 t2 : ℝ, sgn t2 ∧ t1 + t2 = 1 ∧ y = t1 • x + t2 • v := by
+  obtain ⟨f, hfin, hsum, hpos, hone⟩ := h
+  have hTeq : hfin.toFinset = ({x, v} : Finset V3) := by
+    apply Finset.ext
+    intro z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_singleton_iff,
+      Finset.mem_insert, Finset.mem_singleton]
+    try tauto
+  rw [hTeq] at hsum hone
+  rw [Finset.sum_insert (by simp [hxv]), Finset.sum_singleton] at hsum hone
+  exact ⟨f x, f v, hpos v (by simp), hone, hsum⟩
+
+/-- HOL planarity.hl:3094 `aff_gt_subset_aff_ge`。 -/
+theorem aff_gt_subset_aff_ge (hdis : Disjoint ({x} : Set V3) {v, u}) :
+    affGt {x} {v, u} ⊆ affGe {x} {v, u} := by
+  intro y hy
+  rw [aff_gt_1_2 hdis, Set.mem_setOf_eq] at hy
+  rw [aff_ge_1_2 hdis, Set.mem_setOf_eq]
+  obtain ⟨t1, t2, t3, ht2, ht3, hone, hyeq⟩ := hy
+  exact ⟨t1, t2, t3, ht2.le, ht3.le, hone, hyeq⟩
+
+/-- HOL planarity.hl:3111 `aff_gt1_subset_aff_ge`：`v1 ∈ aff_ge {x} {v,u}`
+代入 `aff_gt {x} {v1,u}` 的组合，系数 `(s1+s2t1, s2t2, s2t3+s3)` 全部非负。 -/
+theorem aff_gt1_subset_aff_ge {v1 : V3} (hdis : Disjoint ({x} : Set V3) {v, u})
+    (hnc : ¬ Collinear3 x v1 u) (hv1 : v1 ∈ affGe {x} {v, u}) :
+    affGt {x} {v1, u} ⊆ affGe {x} {v, u} := by
+  rw [aff_ge_1_2 hdis, Set.mem_setOf_eq] at hv1
+  obtain ⟨t1, t2, t3, ht2, ht3, hone, hv1eq⟩ := hv1
+  intro y hy
+  rw [aff_gt_1_2 (disjoint_of_not_collinear3 hnc), Set.mem_setOf_eq] at hy
+  obtain ⟨s1, s2, s3, hs2, hs3, hone2, hyeq⟩ := hy
+  rw [aff_ge_1_2 hdis, Set.mem_setOf_eq]
+  refine ⟨s1 + s2 * t1, s2 * t2, s2 * t3 + s3, mul_nonneg hs2.le ht2,
+    add_nonneg (mul_nonneg hs2.le ht3) hs3.le, ?_, ?_⟩
+  · have hkey : s2 * (t1 + t2 + t3) = s2 := by rw [hone]; ring
+    linarith
+  · rw [hyeq, hv1eq]
+    module
+
+/-- HOL planarity.hl:3140 `aff_gt12_subset_aff_ge`：`aff_gt {x} {v1,v}` 版本，
+系数 `(s1+s2t1, s2t2+s3, s2t3)`。 -/
+theorem aff_gt12_subset_aff_ge {v1 : V3} (hdis : Disjoint ({x} : Set V3) {v, u})
+    (hnc : ¬ Collinear3 x v1 v) (hv1 : v1 ∈ affGe {x} {v, u}) :
+    affGt {x} {v1, v} ⊆ affGe {x} {v, u} := by
+  rw [aff_ge_1_2 hdis, Set.mem_setOf_eq] at hv1
+  obtain ⟨t1, t2, t3, ht2, ht3, hone, hv1eq⟩ := hv1
+  intro y hy
+  rw [aff_gt_1_2 (disjoint_of_not_collinear3 hnc), Set.mem_setOf_eq] at hy
+  obtain ⟨s1, s2, s3, hs2, hs3, hone2, hyeq⟩ := hy
+  rw [aff_ge_1_2 hdis, Set.mem_setOf_eq]
+  refine ⟨s1 + s2 * t1, s2 * t2 + s3, s2 * t3,
+    add_nonneg (mul_nonneg hs2.le ht2) hs3.le, mul_nonneg hs2.le ht3, ?_, ?_⟩
+  · have hkey : s2 * (t1 + t2 + t3) = s2 := by rw [hone]; ring
+    linarith
+  · rw [hyeq, hv1eq]
+    module
+
+/-- HOL planarity.hl:3169 `aff_gt2_subset_aff_ge`：`v1 ∈ aff_gt {x} {v,u}`
+（`v`、`u` 系数严格正）给出 `v`、`u` 在轴 `x—v1` 两侧，方位角为 π。
+重构：四点共面给 `azim ∈ {0, π}`（`azim_eq_0_or_pi_of_coplanar`）；`azim = 0`
+等价 `v ∈ aff_gt {x,v1} {u}`（`azim_eq_zero_iff`），两组系数联立消元得
+`v1 - x` 与 `u - x` 平行，与 `¬ Collinear3 x v1 u` 矛盾。 -/
+theorem aff_gt2_subset_aff_ge {v1 : V3} (hdis : Disjoint ({x} : Set V3) {v, u})
+    (hncu : ¬ Collinear3 x v1 u) (hncv : ¬ Collinear3 x v1 v)
+    (hv1 : v1 ∈ affGt {x} {v, u}) :
+    azim x v1 v u = Real.pi := by
+  have hdis' := Set.disjoint_left.mp hdis
+  have hxu : x ≠ u := by
+    intro he
+    exact hdis' (Set.mem_singleton x) (by rw [he]; simp)
+  have hxv1 : x ≠ v1 := by
+    intro he
+    exact hncv (by rw [he]; exact collinear3_of_eq rfl)
+  have hv1u : v1 ≠ u := by
+    intro he
+    exact hncu (by rw [he]; exact collinear3_pair_right rfl)
+  rw [aff_gt_1_2 hdis, Set.mem_setOf_eq] at hv1
+  obtain ⟨t1, t2, t3, ht2, ht3, hone, hv1eq⟩ := hv1
+  have hcop : Coplanar ({x, v1, u, v} : Set V3) := by
+    refine ⟨x, v, u, ?_⟩
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with hz | hz | hz | hz
+    · rw [hz]
+      exact mem_affineSpan_of_combo (c1 := 1) (c2 := 0) (c3 := 0) (by norm_num) (by module)
+    · rw [hz]
+      exact mem_affineSpan_of_combo hone hv1eq
+    · rw [hz]
+      exact mem_affineSpan_of_combo (c1 := 0) (c2 := 0) (c3 := 1) (by norm_num) (by module)
+    · rw [hz]
+      exact mem_affineSpan_of_combo (c1 := 0) (c2 := 1) (c3 := 0) (by norm_num) (by module)
+  rcases azim_eq_0_or_pi_of_coplanar (x := x) (u := v1) (v := u) (w := v) hncu hncv hcop
+    with h0 | hpi
+  · exfalso
+    rw [azim_eq_zero_iff hncv hncu] at h0
+    simp only [affGt, Set.mem_setOf_eq] at h0
+    obtain ⟨a, b, c, hc, hsum2, hv⟩ := affsign_extract3 hxv1 hxu hv1u h0
+    have hbc : 0 < t2 * c := mul_pos ht2 hc
+    -- (I) v1 - x = t2•(v-x) + t3•(u-x)；(II) v - x = b•(v1-x) + c•(u-x)
+    -- （模块恒等式需把标量和 t1+t2+t3=1 / a+b+c=1 显式拆出）
+    have e1 : (v1 - x : V3) - t2 • (v - x) - t3 • (u - x) = 0 := by
+      have hsplit : (v1 - x : V3) - t2 • (v - x) - t3 • (u - x)
+          = (v1 - t1 • x - t2 • v - t3 • u) + (t1 + t2 + t3 - 1) • x := by module
+      rw [hsplit]
+      have hvz : (v1 - t1 • x - t2 • v - t3 • u : V3) = 0 := by rw [hv1eq]; module
+      rw [hvz, hone]
+      simp
+    have e2 : (v - x : V3) - b • (v1 - x) - c • (u - x) = 0 := by
+      have hsplit : (v - x : V3) - b • (v1 - x) - c • (u - x)
+          = (v - a • x - b • v1 - c • u) + (a + b + c - 1) • x := by module
+      rw [hsplit]
+      have hvz : (v - a • x - b • v1 - c • u : V3) = 0 := by rw [hv]; module
+      rw [hvz, hsum2]
+      simp
+    have hstar : (1 - t2 * b) • (v1 - x : V3) = (t2 * c + t3) • (u - x) := by
+      have e4 : (1 - t2 * b) • (v1 - x : V3) - (t2 * c + t3) • (u - x) = 0 := by
+        have hsplit : (1 - t2 * b) • (v1 - x : V3) - (t2 * c + t3) • (u - x)
+            = ((v1 - x : V3) - t2 • (v - x) - t3 • (u - x))
+              + t2 • ((v - x : V3) - b • (v1 - x) - c • (u - x)) := by module
+        rw [hsplit, e1, e2]
+        simp
+      rw [sub_eq_zero] at e4
+      exact e4
+    by_cases hbt : t2 * b = 1
+    · rw [show (1 : ℝ) - t2 * b = 0 from by rw [hbt]; ring, zero_smul] at hstar
+      have hnonzero : t2 * c + t3 ≠ 0 := ne_of_gt (by linarith)
+      have hueq : (u - x : V3) = 0 := by
+        rcases smul_eq_zero.mp hstar.symm with h' | h'
+        · exact absurd h' hnonzero
+        · exact h'
+      exact hxu (sub_eq_zero.mp hueq).symm
+    · have hd1 : (t2 * c + t3 : ℝ) ≠ 0 := ne_of_gt (by linarith)
+      have hwmem : (u - x : V3)
+          = ((1 - t2 * b) / (t2 * c + t3)) • (v1 - x : V3) := by
+        calc (u - x : V3)
+            = (t2 * c + t3)⁻¹ • ((t2 * c + t3) • (u - x)) :=
+              (inv_smul_smul₀ hd1 _).symm
+          _ = (t2 * c + t3)⁻¹ • ((1 - t2 * b) • (v1 - x)) := by rw [hstar]
+          _ = ((1 - t2 * b) / (t2 * c + t3)) • (v1 - x) := by
+                rw [smul_smul, div_eq_inv_mul]
+      exact hncu ((collinear3_iff_smul (v := x) (w := v1) (w1 := u)
+        (Ne.symm hxv1 : v1 ≠ x)).mpr ⟨((1 - t2 * b) / (t2 * c + t3)), hwmem⟩)
+  · exact hpi
+
+/-- HOL planarity.hl:3205 `remove_variable_fan`：`t3 > 0` 时从
+`w = t1x + t2v + t3u` 解出 `u`。 -/
+theorem remove_variable_fan {w : V3} {t1 t2 t3 : ℝ} (ht3 : 0 < t3)
+    (hw : w = t1 • x + t2 • v + t3 • u) :
+    u = (t3⁻¹) • w - (t3⁻¹ * t1) • x - (t3⁻¹ * t2) • v := by
+  subst hw
+  have ht3ne : t3 ≠ 0 := ne_of_gt ht3
+  rw [smul_add, smul_add, smul_smul, smul_smul, smul_smul, inv_mul_cancel₀ ht3ne,
+    one_smul]
+  module
+
+/-- HOL planarity.hl:3283 `aff_gt3_subset_aff_gt`：`v1 ∈ aff_gt {x} {v,u}`
+代入 `aff_gt {x} {v,v1}` 的组合，系数 `(s1+s3t1, s2+s3t2, s3t3)` 全部严格正
+（除常数项）。 -/
+theorem aff_gt3_subset_aff_gt {v1 : V3} (hdis : Disjoint ({x} : Set V3) {v, u})
+    (hnc : ¬ Collinear3 x v v1) (hv1 : v1 ∈ affGt {x} {v, u}) :
+    affGt {x} {v, v1} ⊆ affGt {x} {v, u} := by
+  rw [aff_gt_1_2 hdis, Set.mem_setOf_eq] at hv1
+  obtain ⟨t1, t2, t3, ht2, ht3, hone, hv1eq⟩ := hv1
+  intro y hy
+  rw [aff_gt_1_2 (disjoint_of_not_collinear3 hnc), Set.mem_setOf_eq] at hy
+  obtain ⟨s1, s2, s3, hs2, hs3, hone2, hyeq⟩ := hy
+  rw [aff_gt_1_2 hdis, Set.mem_setOf_eq]
+  refine ⟨s1 + s3 * t1, s2 + s3 * t2, s3 * t3, add_pos hs2 (mul_pos hs3 ht2),
+    mul_pos hs3 ht3, ?_, ?_⟩
+  · have hkey : s3 * (t1 + t2 + t3) = s3 := by rw [hone]; ring
+    linarith
+  · rw [hyeq, hv1eq]
+    module
+
+/-- HOL planarity.hl:3311 `aff_ge1_subset_aff_ge`：`aff_ge {x} {v1,u}` 版本，
+系数与 aff_gt1 相同、全部非负。 -/
+theorem aff_ge1_subset_aff_ge {v1 : V3} (hdis : Disjoint ({x} : Set V3) {v, u})
+    (hnc : ¬ Collinear3 x v1 u) (hv1 : v1 ∈ affGe {x} {v, u}) :
+    affGe {x} {v1, u} ⊆ affGe {x} {v, u} := by
+  rw [aff_ge_1_2 hdis, Set.mem_setOf_eq] at hv1
+  obtain ⟨t1, t2, t3, ht2, ht3, hone, hv1eq⟩ := hv1
+  intro y hy
+  rw [aff_ge_1_2 (disjoint_of_not_collinear3 hnc), Set.mem_setOf_eq] at hy
+  obtain ⟨s1, s2, s3, hs2, hs3, hone2, hyeq⟩ := hy
+  rw [aff_ge_1_2 hdis, Set.mem_setOf_eq]
+  refine ⟨s1 + s2 * t1, s2 * t2, s2 * t3 + s3, mul_nonneg hs2 ht2,
+    add_nonneg (mul_nonneg hs2 ht3) hs3, ?_, ?_⟩
+  · have hkey : s2 * (t1 + t2 + t3) = s2 := by rw [hone]; ring
+    linarith
+  · rw [hyeq, hv1eq]
+    module
+
+/-- HOL planarity.hl:3340 `aff_ge_1_1_subset_aff_ge_fan`：`x ≠ v1` 时
+`aff_ge {x} {v1}` 的组合 `y = s1x + s2v1` 代入 `v1`，系数 `(s1+s2t1, s2t2, s2t3)`。 -/
+theorem aff_ge_1_1_subset_aff_ge_fan {v1 : V3} (hdis : Disjoint ({x} : Set V3) {v, u})
+    (hxv1 : x ≠ v1) (hv1 : v1 ∈ affGe {x} {v, u}) :
+    affGe {x} {v1} ⊆ affGe {x} {v, u} := by
+  rw [aff_ge_1_2 hdis, Set.mem_setOf_eq] at hv1
+  obtain ⟨t1, t2, t3, ht2, ht3, hone, hv1eq⟩ := hv1
+  intro y hy
+  simp only [affGe, Set.mem_setOf_eq, Affsign] at hy
+  obtain ⟨s1, s2, hs2, hssum, heq⟩ := affsign_extract2 hxv1 hy
+  rw [aff_ge_1_2 hdis, Set.mem_setOf_eq]
+  refine ⟨s1 + s2 * t1, s2 * t2, s2 * t3, mul_nonneg hs2 ht2, mul_nonneg hs2 ht3, ?_, ?_⟩
+  · have hkey : s2 * (t1 + t2 + t3) = s2 := by rw [hone]; ring
+    linarith
+  · rw [heq, hv1eq]
+    module
+
+/-- HOL planarity.hl:3228 `aff_gt_inter_aff_gt`：非退化三角形的开扇形是两个
+`aff_gt {x,·} {·}` 的交。⊆ 方向：同一组系数直接给出两个成员；⊇ 方向：两组
+`(a1,a2,a3)`/`(b1,b2,b3)` 系数相减，`w` 的系数差非零时解出
+`w ∈ aff {x,v}` 与不共线矛盾，为零时第二组系数即为 witness。 -/
+theorem aff_gt_inter_aff_gt (hnc : ¬ Collinear3 x v w) :
+    affGt {x} {v, w} = affGt {x, v} {w} ∩ affGt {x, w} {v} := by
+  have hxv : x ≠ v := by
+    intro he
+    exact hnc (by rw [he]; exact collinear3_of_eq rfl)
+  have hxw : x ≠ w := by
+    intro he
+    exact hnc (by rw [he]; exact collinear3_pair_left rfl)
+  have hvw : v ≠ w := by
+    intro he
+    exact hnc (by rw [he]; exact collinear3_pair_right (v0 := x) (v1 := w) (x := w) rfl)
+  have hdis : Disjoint ({x} : Set V3) {v, w} := disjoint_of_not_collinear3 hnc
+  ext y
+  constructor
+  · intro hy
+    rw [aff_gt_1_2 hdis, Set.mem_setOf_eq] at hy
+    obtain ⟨t1, t2, t3, ht2, ht3, hone, hyeq⟩ := hy
+    rw [Set.mem_inter_iff]
+    refine ⟨?_, ?_⟩
+    · simp only [affGt, Set.mem_setOf_eq]
+      exact mem_affsign3 (x := x) (v := v) (w := w) (t1 := t1) (t2 := t2) (t3 := t3)
+        hxv hxw hvw ht3 hone hyeq
+    · simp only [affGt, Set.mem_setOf_eq]
+      exact mem_affsign3 (x := x) (v := w) (w := v) (t1 := t1) (t2 := t3) (t3 := t2)
+        hxw hxv hvw.symm ht2 (by linarith) (by rw [hyeq]; abel)
+  · intro hy
+    obtain ⟨h1, h2⟩ := (Set.mem_inter_iff _ _ _).mp hy
+    simp only [affGt, Set.mem_setOf_eq] at h1 h2
+    obtain ⟨a1, a2, a3, ha3, hsumA, heqA⟩ := affsign_extract3 hxv hxw hvw h1
+    obtain ⟨b1, b2, b3, hb3, hsumB, heqB⟩ := affsign_extract3 hxw hxv hvw.symm h2
+    rw [aff_gt_1_2 hdis, Set.mem_setOf_eq]
+    by_cases hab : a3 = b2
+    · refine ⟨b1, b3, b2, hb3, by rw [← hab]; exact ha3, by linarith, ?_⟩
+      rw [heqB]
+      abel
+    · exfalso
+      have hsub : (a1 - b1) • x + (a2 - b3) • v + (a3 - b2) • w = 0 := by
+        have e : (a1 - b1) • x + (a2 - b3) • v + (a3 - b2) • w
+            = (a1 • x + a2 • v + a3 • w) - (b1 • x + b3 • v + b2 • w) := by module
+        have s1 : (a1 • x + a2 • v + a3 • w : V3) = y := heqA.symm
+        have s2 : (b1 • x + b3 • v + b2 • w : V3) = y := by rw [heqB]; abel
+        rw [e, s1, s2, sub_self]
+      have hne : a3 - b2 ≠ 0 := sub_ne_zero.mpr hab
+      have hmove : (a3 - b2) • w = (b1 - a1) • x + (b3 - a2) • v := by
+        have h0 : (a3 - b2) • w - ((b1 - a1) • x + (b3 - a2) • v) = 0 := by
+          rw [← hsub]
+          module
+        rw [sub_eq_zero] at h0
+        exact h0
+      have hwexp : w = ((b1 - a1) / (a3 - b2)) • x + ((b3 - a2) / (a3 - b2)) • v := by
+        calc w = (a3 - b2)⁻¹ • ((a3 - b2) • w) := (inv_smul_smul₀ hne w).symm
+          _ = (a3 - b2)⁻¹ • ((b1 - a1) • x + (b3 - a2) • v) := by rw [hmove]
+          _ = ((b1 - a1) / (a3 - b2)) • x + ((b3 - a2) / (a3 - b2)) • v := by
+              rw [smul_add, smul_smul, smul_smul, div_eq_inv_mul, div_eq_inv_mul]
+      have hc1 : (b1 - a1) / (a3 - b2) = 1 - (b3 - a2) / (a3 - b2) := by
+        field_simp
+        linarith
+      have hwmem : w ∈ (affineSpan ℝ ({x, v} : Set V3) : Set V3) := by
+        refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr
+          ⟨(b3 - a2) / (a3 - b2), ?_⟩
+        rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add, hwexp, hc1]
+        module
+      exact hnc (collinear3_iff_mem_affineSpan hxv |>.mpr hwmem)
