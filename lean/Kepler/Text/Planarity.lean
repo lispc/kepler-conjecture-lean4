@@ -5068,3 +5068,21 @@ theorem inequality1_not0_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
       norm_smul, Real.norm_eq_abs, abs_of_nonneg hta]
   rw [hident]
   exact lt_of_le_of_lt hle hfin
+
+/-- HOL planarity.hl:5878 `bounded_convex1_fan`：三点凸包紧致，连续映射
+`y ↦ ‖y - x‖` 在其上有界，取界加 1 即得严格上界。 -/
+theorem bounded_convex1_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E) :
+    ∃ h : ℝ, 0 < h ∧ ∀ y ∈ convexHull ℝ ({v, u, w} : Set V3), ‖y - x‖ < h := by
+  have hfin : ({v, u, w} : Set V3).Finite := by simp
+  obtain ⟨C, hC⟩ :=
+    (Set.Finite.isCompact_convexHull (𝕜 := ℝ) hfin).exists_bound_of_continuousOn
+      (norm_origin_fan x).continuousOn
+  have hC0 : 0 ≤ C := by
+    have h := hC v (subset_convexHull ℝ _ (by simp))
+    rw [norm_norm] at h
+    exact le_trans (norm_nonneg _) h
+  refine ⟨C + 1, by linarith, ?_⟩
+  intro y hy
+  have h2 := hC y hy
+  rw [norm_norm] at h2
+  exact lt_of_le_of_lt h2 (by linarith)
