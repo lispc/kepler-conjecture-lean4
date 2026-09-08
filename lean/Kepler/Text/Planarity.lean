@@ -5471,3 +5471,69 @@ theorem fan_run_in_small1_not0_is_fan (hfan : FAN x V E)
     · have hgt : a < t := lt_of_le_of_ne (le_of_not_gt hlt) (Ne.symm hta)
       exact hsmall t hgt hth
 
+
+/-- HOL planarity.hl:6479 `fan_run_in_small2_not0_is_fan`：存在 `t1 ∈ (a,1]`
+使 `t ∈ (0,t1)` 时扰动扇区 `aff_gt {x} {v,(1-t)•u+t•w}` 与边锥
+`aff_ge {x} {v,w1}` 无交。按 HOL 分两情形：(A) 存在 `h ∈ (a,1]` 使
+`azim x v u w1 = azim x v u ((1-h)•u+h•w)`，取 `t1 = h`，用
+`azim_eq_of_mem_inter` + `injective_azim_coplanar` 得 `h = t` 矛盾；
+(B) 不存在，取 `t1 = 1`，由 `azim_eq_of_mem_inter` 得方位角等式，代入
+否定假设把 `t<a`/`t=a`（用 `hEMs`/`hEM`）与 `a<t`（代入 `hex`）收尾。 -/
+theorem fan_run_in_small2_not0_is_fan (hfan : FAN x V E)
+    (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E) (hvw1 : {v, w1} ∈ E)
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3))
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (ha0 : 0 < a) (ha1 : a < 1)
+    (hEM : affGt {x} {v, (1 - a) • u + a • w} ∩
+      {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅)
+    (hEMs : ∀ s : ℝ, 0 < s → s < a →
+      affGt {x} {v, (1 - s) • u + s • w} ∩
+        {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅) :
+    ∃ t1 : ℝ, a < t1 ∧ t1 ≤ 1 ∧
+      ∀ t : ℝ, 0 < t → t < t1 →
+        affGt {x} {v, (1 - t) • u + t • w} ∩ affGe {x} {v, w1} = ∅ := by
+  have hncu : ¬ Collinear3 x v u := fan_not_collinear hfan hvu
+  have hncw1 : ¬ Collinear3 x v w1 := fan_not_collinear hfan hvw1
+  have hsubset : affGe {x} {v, w1} ⊆ {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} := by
+    intro y hy
+    exact ⟨{v, w1}, hvw1, hy⟩
+  by_cases hex : ∃ h : ℝ, a < h ∧ h ≤ 1 ∧
+      azim x v u w1 = azim x v u ((1 - h) • u + h • w)
+  · -- 情形 A：方位角在弦上取到 w1 的方位角，取 t1 = h
+    obtain ⟨h, h_ah, h_h1, haz⟩ := hex
+    refine ⟨h, h_ah, h_h1, ?_⟩
+    intro t ht0 hth
+    refine Set.eq_empty_iff_forall_notMem.mpr (fun y hy => ?_)
+    have ht1 : t < 1 := lt_of_lt_of_le hth h_h1
+    have hncz : ¬ Collinear3 x v ((1 - t) • u + t • w) :=
+      not_collinear_is_properties_fully_surrounded hfan hvu huw hθ0 hθπ t ht0 ht1
+    have hazt : azim x v u w1 = azim x v u ((1 - t) • u + t • w) :=
+      azim_eq_of_mem_inter y t hncu hncw1 hncz hy.1 hy.2
+    have h0h : 0 < h := lt_trans ha0 h_ah
+    have hht : h = t := injective_azim_coplanar x v u w hcop h t (ne_of_gt h0h)
+      (ne_of_gt ht0) (haz.symm.trans hazt)
+    exact ne_of_gt hth hht
+  · -- 情形 B：方位角在弦上取不到 w1 的方位角，取 t1 = 1
+    refine ⟨1, ha1, le_rfl, ?_⟩
+    intro t ht0 ht1
+    refine Set.eq_empty_iff_forall_notMem.mpr (fun y hy => ?_)
+    have hncz : ¬ Collinear3 x v ((1 - t) • u + t • w) :=
+      not_collinear_is_properties_fully_surrounded hfan hvu huw hθ0 hθπ t ht0 ht1
+    have hazt : azim x v u w1 = azim x v u ((1 - t) • u + t • w) :=
+      azim_eq_of_mem_inter y t hncu hncw1 hncz hy.1 hy.2
+    by_cases htless : t < a
+    · -- t < a：用 hEMs
+      have hcontra : y ∈ (∅ : Set V3) := by
+        rw [← hEMs t ht0 htless]
+        exact ⟨hy.1, hsubset hy.2⟩
+      exact Set.not_mem_empty y hcontra
+    · by_cases hteq : t = a
+      · -- t = a：用 hEM
+        subst t
+        have hcontra : y ∈ (∅ : Set V3) := by
+          rw [← hEM]
+          exact ⟨hy.1, hsubset hy.2⟩
+        exact Set.not_mem_empty y hcontra
+      · -- a < t：代入否定的 h 假设
+        have hale : a < t := lt_of_le_of_ne (le_of_not_gt htless) (Ne.symm hteq)
+        exact hex ⟨t, hale, le_of_lt ht1, hazt⟩
