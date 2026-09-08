@@ -192,19 +192,32 @@ def numeral_frac(node):
 
 
 # ----------------------------------------------------------- 精确外扩初等函数
+SQRT_GRID_Q = 30  # sqrt 有理外扩的网格精度（box 端点需要紧下界，如 √8≈2.8284271）
+
+
 def sqrt_floor_frac(a):
-    """sqrt(a) 的有理下界：isqrt 整数开方向下取整。要求 a >= 0。"""
-    n = a.numerator * a.denominator
-    s = math.isqrt(n)
-    return Fraction(s, a.denominator), (s * s == n)
+    """sqrt(a) 的有理下界（2^-SQRT_GRID_Q 网格，仍是有效下界）。要求 a >= 0。"""
+    g = 1 << SQRT_GRID_Q
+    # 最大 m 使 (m/g)^2 <= a：先估计再 ±1 校正，全程精确整数运算
+    m2 = a * g * g
+    m = math.isqrt(m2.numerator // m2.denominator)
+    while Fraction(m + 1, g) ** 2 <= a:
+        m += 1
+    while m > 0 and Fraction(m, g) ** 2 > a:
+        m -= 1
+    return Fraction(m, g), (Fraction(m, g) ** 2 == a)
 
 
 def sqrt_ceil_frac(a):
-    n = a.numerator * a.denominator
-    s = math.isqrt(n)
-    if s * s == n:
-        return Fraction(s, a.denominator)
-    return Fraction(s + 1, a.denominator)
+    """sqrt(a) 的有理上界（2^-SQRT_GRID_Q 网格，仍是有效上界）。要求 a >= 0。"""
+    g = 1 << SQRT_GRID_Q
+    m2 = a * g * g
+    m = math.isqrt(-(-m2.numerator // m2.denominator))
+    while Fraction(m, g) ** 2 < a:
+        m += 1
+    while m > 0 and Fraction(m - 1, g) ** 2 >= a:
+        m -= 1
+    return Fraction(m, g)
 
 
 def atan_pos_bounds(t):

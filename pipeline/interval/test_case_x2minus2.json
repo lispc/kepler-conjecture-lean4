@@ -1,0 +1,10 @@
+{
+  "id": "smoke x2minus2",
+  "orig_op": ">",
+  "vars": ["x"],
+  "box": [[{"num": 3, "den": 2}, {"num": 2, "den": 1}]],
+  "q": -30,
+  "prog": [["push_var", 0], ["push_var", 0], ["mul"], ["push_const", {"num": 2, "den": 1}], ["sub"]],
+  "notes": ["手写冒烟 a：x^2-2>0 在 x in [3/2,2]，根盒一步闭合（x^2-2 in [1/4,2]，lo>0）"],
+  "stats": {"ops": 5, "ite": 0, "depth": 1}
+}

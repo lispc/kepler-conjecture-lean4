@@ -1,0 +1,15 @@
+{
+  "id": "smoke ite cex",
+  "orig_op": ">",
+  "vars": ["x", "y"],
+  "box": [[{"num": 0, "den": 1}, {"num": 1, "den": 2}],
+          [{"num": 0, "den": 1}, {"num": 3, "den": 2}]],
+  "q": -30,
+  "prog": [{"ite": {
+    "cond": [["push_var", 1], ["push_const", {"num": 1, "den": 1}], ["sub"]],
+    "then": [["push_var", 0], ["push_const", {"num": 1, "den": 1}], ["add"]],
+    "else": [["push_var", 0], ["push_const", {"num": 1, "den": 1}], ["sub"]]
+  }}],
+  "notes": ["手写冒烟 b 对照：ite(y-1<0, x+1, x-1) > 0 在任务原文盒 x in [0,1/2], y in [0,3/2]。y>=1 时取 else 支 x-1 in [-1,-1/2]，hi<0 —— 断言在此盒上为假，驱动应报 COUNTEREXAMPLE（exit 1），验证 guard 分支选择与反例路径。"],
+  "stats": {"ops": 10, "ite": 1, "depth": 2}
+}

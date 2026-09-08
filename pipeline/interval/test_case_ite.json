@@ -1,0 +1,15 @@
+{
+  "id": "smoke ite guard",
+  "orig_op": ">",
+  "vars": ["x", "y"],
+  "box": [[{"num": 3, "den": 2}, {"num": 2, "den": 1}],
+          [{"num": 0, "den": 1}, {"num": 3, "den": 2}]],
+  "q": -30,
+  "prog": [{"ite": {
+    "cond": [["push_var", 1], ["push_const", {"num": 1, "den": 1}], ["sub"]],
+    "then": [["push_var", 0], ["push_const", {"num": 1, "den": 1}], ["add"]],
+    "else": [["push_var", 0], ["push_const", {"num": 1, "den": 1}], ["sub"]]
+  }}],
+  "notes": ["手写冒烟 b：ite(y-1<0, x+1, x-1) > 0。任务原文盒 x in [0,1/2] 下 else 支 x-1 <= -1/2 < 0 恒假（真反例，见 test_case_ite_cex.json）；此处取 x in [3/2,2] 使断言为真：y 边界 1 处 cond 跨 0 → STRADDLE 触发二分，最终闭合。"],
+  "stats": {"ops": 10, "ite": 1, "depth": 2}
+}
