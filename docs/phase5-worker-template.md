@@ -90,3 +90,11 @@ HARD RULES:
   auto-reject 会**立即杀死会话**（block 35 第一次就这么死的，零产出）。
   派工提示里绝不写"去读 reference/... 或 /dev/shm/... 的第 N 行"，
   需要对照的 HOL 段落一律粘贴进 prompt 正文。
+- **标量-标量乘积在 ascription 里用 `*` 不用 `•`**：`(1-t) • a • w`
+  （ℝ 与 ℝ 的 `•` 再走 `SMul ℝ ℝ` 实例展开）写在 `have h : T :=` 的
+  T 里会让 isDefEq 无限空转（whnf 心跳超时，加预算无用）。对齐被应用
+  引理结论的语法形式：标量乘写成 `((1-t) * a) • w`。
+  （block 36 实测：5M/20M/40M 全超时，改 `*` 后 21 秒出真实错误。）
+- **验收必须等进程自然退出**：`timeout N lake env lean ...` 被掐死时
+  error 输出可能尚未 flush，grep 到 0 是假绿。验收构建不设 timeout
+  或 timeout 远大于正常构建时长。
