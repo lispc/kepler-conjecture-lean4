@@ -64,6 +64,16 @@ HARD RULES:
 
 ## 路由规则（2026-09-08 起，含 flash 实测失败模式）
 
+**车道分工（用户 2026-09-08 定）**：
+
+- **big-pickle（opencode 免费）**：只做 Lean 定理移植（Phase 5）。
+  实测真产 4/4 零干预（block 23–26），速度 ~10–17 HOL 行/分钟，
+  质量/速度均 ≥ flash。同时只开一路（免费额度限流未测）。
+  失败升级链：big-pickle → glm-5.3（满血）→ 主 agent 亲手。
+- **glm-5.3-flash（GLM coding plan）**：Phase 4 代码任务（Python/C
+  流水线），以及 big-pickle  Lane 占用时的 Phase 5 备胎。
+- **glm-5.3（满血）**：big-pickle/flash 都失败的 Lean 硬块。
+
 派 flash 前按此分流，别等失败再升级：
 
 - **flash**：良构块（≤4 引理）、所需引理全部已存在、有同文件镜像模板
