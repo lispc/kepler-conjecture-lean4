@@ -35,6 +35,13 @@ Context:
 HARD RULES:
 1. Only create/modify the files listed in TASK. Never touch other files. Never use git.
 2. Zero sorry/admit/native_decide. Every theorem fully proved.
+   （例外：拆分中的巨块任务会显式标注"允许在指定分支位留 sorry"，
+   并指定 WIP 文件；此时只准在指定位置留，且最终块必须清零。）
+2b. **禁止整文件读取**：定位一律 `grep -n`，阅读一律
+   `sed -n 'A,Bp'` 且窗口 ≤100 行。整读大文件（>500 行）会导致
+   后续 API 请求静默失败、进程无错退出（已实锤多次）。
+2c. 开写时限：探索 ≤10 分钟就必须开始写第一行代码；超时直接按
+   已掌握的信息写，编译报错再修。
 3. Iterate `lake env lean <file>` until exit 0.
 4. If stuck on a lemma for >~25 minutes, replace it with a TODO comment in your
    report (NOT in the code — code must stay sorry-free; omit the lemma instead)
