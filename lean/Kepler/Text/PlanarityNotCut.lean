@@ -12,8 +12,12 @@ Coverage (slice 18a of block 18, planarity.hl:3667-5182):
   `t2' = 0` sub-branch of `[BLOCK18C]` (planarity.hl:3894-4043,
   `t3' <> 0`; mirror of 18b with `v' <-> w'`, `t2' <-> t3'`) are fully
   proved.
-- Remaining generic case left as a marked sorry:
-  `[BLOCK18D] planarity.hl:4044-5182` (`t3' <> 0`, `t2' <> 0`).
+- `[BLOCK18D]` first portion (planarity.hl:4044-4224, the generic case
+  `t3' <> 0`, `t2' <> 0`: aff_gt/aff_ge combinations plus the
+  non-collinearity chain `~collinear {x,x',w'}`, `~collinear {x,x',v'}`,
+  `~collinear {x,x',va}`, `~collinear {x,x',v}`) is fully proved.
+- Remaining azim case split left as a marked sorry:
+  `[BLOCK18D2] planarity.hl:4225-5182`.
 - HOL `remark1_fan`/`th3` (fan.hl:388,423) are not yet ported; the
   specific fragments needed here live below as private helpers.
 
@@ -71,12 +75,55 @@ private theorem disjoint_singleton_of_not_collinear3 {x p q : V3}
   · subst he
     exact h (collinear3_first_third x p)
 
+/-- 三点共线对换后两点（`Collinear3 x p q → Collinear3 x q p`）。 -/
+private theorem collinear3_swap {x p q : V3} (h : Collinear3 x p q) :
+    Collinear3 x q p := by
+  show Collinear ℝ ({x, q, p} : Set V3)
+  have h' : Collinear ℝ ({x, p, q} : Set V3) := h
+  rw [show ({x, p, q} : Set V3) = ({x, q, p} : Set V3) from by ext z; simp; tauto] at h'
+  exact h'
+
+/-- HOL planarity.hl:4099-4224 各非共线子目标的公共模式：若 `y` 与 `x`、`r`
+共线（`x ≠ r`），且 `y = c1•x + c2•q + c3•r`（`c1+c2+c3 = 1`，`c2 ≠ 0`），
+则 `q ∈ affineSpan {x, r}`（两点表示消去 `y`，孤立 `c2•q` 后除以 `c2`）。 -/
+private theorem mem_affineSpan_pair_of_collinear3 {x y q r : V3}
+    (hxr : x ≠ r) (hcol : Collinear3 x y r)
+    {c1 c2 c3 : ℝ} (hc2 : c2 ≠ 0) (hsum : c1 + c2 + c3 = 1)
+    (hyeq : y = c1 • x + c2 • q + c3 • r) :
+    q ∈ (affineSpan ℝ ({x, r} : Set V3) : Set V3) := by
+  -- 共线给出两点表示：y = (1-s)•x + s•r
+  obtain ⟨s, hys⟩ : ∃ s : ℝ, y = (1 - s) • x + s • r := by
+    obtain ⟨c, hc⟩ :=
+      (collinear3_iff_smul (v := x) (w := r) (w1 := y) (Ne.symm hxr)).mp
+        (collinear3_swap hcol)
+    exact ⟨c, by rw [sub_eq_iff_eq_add.mp hc]; module⟩
+  -- 与三点组合比较，孤立出 c2•q
+  have hkey : c2 • q = (1 - s - c1) • x + (s - c3) • r := by
+    have e : c1 • x + c2 • q + c3 • r = (1 - s) • x + s • r := by
+      rw [← hyeq, hys]
+    calc c2 • q
+        = (1 - s) • x + s • r - (c1 • x + c3 • r) := by
+          rw [← e]
+          module
+      _ = (1 - s - c1) • x + (s - c3) • r := by
+          module
+  -- 除以 c2，得到 q 的两点组合（系数和为 1）
+  have hq : q = ((1 - s - c1) / c2) • x + ((s - c3) / c2) • r := by
+    rw [← inv_smul_smul₀ hc2 q, hkey, smul_add, smul_smul, smul_smul]
+    module
+  rw [affine_hull_2_fan]
+  refine ⟨_, _, ?_, hq⟩
+  field_simp
+  linarith
+
 /-! ## 主定理（切片 18a） -/
 
 /-- HOL planarity.hl:3667 `not_cut_inside_fan`（`t3' = t2' = 0`
-（:3730-3776）、`[BLOCK18B]`（`t3' = 0`，`t2' ≠ 0`，:3777-3893）与
+（:3730-3776）、`[BLOCK18B]`（`t3' = 0`，`t2' ≠ 0`，:3777-3893）、
 `[BLOCK18C]` 的 `t2' = 0` 子分支（`t3' ≠ 0`，:3894-4043，18b 的镜像）
-均完整证明；剩余一般情形留待 `[BLOCK18D]`（:4044-5182）。 -/
+以及 `[BLOCK18D]` 首段（一般情形 `t2' ≠ 0` 且 `t3' ≠ 0` 的 aff 组合与
+非共线链，:4044-4224）均完整证明；剩余 azim 分情况留待
+`[BLOCK18D2]`（:4225-5182）。 -/
 theorem not_cut_inside_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
     (huw : {u, w} ∈ E) (hsigma : sigmaFan x V E u w = v) (ha0 : 0 < a)
     (ha1 : a < 1) (hcard : ∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard)
@@ -380,4 +427,69 @@ theorem not_cut_inside_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
           ∩ {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} := ⟨hp1', hp2'⟩
       rw [hEM ((1 - t) * a) h'0 h'1] at hfin
       simp at hfin
-    · sorry -- [BLOCK18D] planarity.hl:4044-5182
+    · -- HOL :4044-4224（t2' ≠ 0 且 t3' ≠ 0，结合 0 ≤ 得均正）
+      -- 基本正性
+      have ht2'pos : 0 < t2' := lt_of_le_of_ne ht2'0 (Ne.symm ht2z)
+      have ht3'pos : 0 < t3' := lt_of_le_of_ne ht3'0 (Ne.symm ht3z)
+      have ht2'ne : t2' ≠ 0 := ne_of_gt ht2'pos
+      have ht3'ne : t3' ≠ 0 := ne_of_gt ht3'pos
+      have ht3ne : t3 ≠ 0 := ne_of_gt ht30
+      -- 第 1 部分（HOL :4053-4062）：y ∈ aff_gt {x} {v',w'}，见证 t1',t2',t3'
+      have hygt' : y ∈ affGt {x} {v', w'} := by
+        rw [aff_gt_1_2 hdis']
+        exact ⟨t1', t2', t3', ht2'pos, ht3'pos, hsum', hyeq'⟩
+      -- 第 2 部分（HOL :4063-4071）：y ∈ aff_ge {x} {v',w'}，同见证
+      have hyge' : y ∈ affGe {x} {v', w'} := by
+        rw [aff_ge_1_2 hdis']
+        exact ⟨t1', t2', t3', ht2'0, ht3'0, hsum', hyeq'⟩
+      -- 第 3 部分（HOL :4072-4093）：y ∈ aff_gt/aff_ge {x} {v,z}，见证 t1,t2,t3
+      have hygt : y ∈ affGt {x} {v, (1 - a) • u + a • w} := by
+        rw [aff_gt_1_2 hdis]
+        exact ⟨t1, t2, t3, ht20, ht30, hsum, hyeq⟩
+      have hyge : y ∈ affGe {x} {v, (1 - a) • u + a • w} := by
+        rw [aff_ge_1_2 hdis]
+        exact ⟨t1, t2, t3, le_of_lt ht20, le_of_lt ht30, hsum, hyeq⟩
+      -- 第 4 部分（HOL :4099-4224）：非共线链，均经两点表示 + 系数分解矛盾
+      have hxv' : x ≠ v' := not_collinear3_left hnc'
+      have hxw' : x ≠ w' := not_collinear3_right hnc'
+      have hxz : x ≠ (1 - a) • u + a • w := not_collinear3_right hnc
+      -- 4a（HOL :4099-4125）：¬ Collinear3 x y w'
+      have hncw' : ¬ Collinear3 x y w' := by
+        intro hcol
+        have hmem := mem_affineSpan_pair_of_collinear3 hxw' hcol ht2'ne hsum' hyeq'
+        refine hnc' ?_
+        show Collinear ℝ ({x, v', w'} : Set V3)
+        have hcol2 : Collinear3 x w' v' := (collinear3_iff_mem_affineSpan hxw').mpr hmem
+        have hset : ({x, v', w'} : Set V3) = ({x, w', v'} : Set V3) := by
+          ext p; simp; tauto
+        rw [hset]
+        exact hcol2
+      -- 4b（HOL :4126-4151）：¬ Collinear3 x y v'
+      have hncv' : ¬ Collinear3 x y v' := by
+        intro hcol
+        have hyeq'' : y = t1' • x + t3' • w' + t2' • v' := by rw [hyeq']; module
+        have hmem := mem_affineSpan_pair_of_collinear3 hxv' hcol ht3'ne
+          (by linarith : t1' + t3' + t2' = 1) hyeq''
+        exact hnc' ((collinear3_iff_mem_affineSpan hxv').mpr hmem)
+      -- 4c（HOL :4152-4188）：¬ Collinear3 x y z
+      have hncz : ¬ Collinear3 x y ((1 - a) • u + a • w) := by
+        intro hcol
+        have hmem := mem_affineSpan_pair_of_collinear3 hxz hcol (ne_of_gt ht20) hsum hyeq
+        refine hnc ?_
+        show Collinear ℝ ({x, v, (1 - a) • u + a • w} : Set V3)
+        have hcol2 : Collinear3 x ((1 - a) • u + a • w) v :=
+          (collinear3_iff_mem_affineSpan hxz).mpr hmem
+        have hset : ({x, v, (1 - a) • u + a • w} : Set V3)
+            = ({x, (1 - a) • u + a • w, v} : Set V3) := by
+          ext p; simp; tauto
+        rw [hset]
+        exact hcol2
+      -- 4d（HOL :4189-4224）：¬ Collinear3 x y v
+      have hncv : ¬ Collinear3 x y v := by
+        intro hcol
+        have hyeq'v : y = t1 • x + t3 • ((1 - a) • u + a • w) + t2 • v := by
+          rw [hyeq]; module
+        have hmem := mem_affineSpan_pair_of_collinear3 hxv hcol ht3ne
+          (by linarith : t1 + t3 + t2 = 1) hyeq'v
+        exact hnc ((collinear3_iff_mem_affineSpan hxv).mpr hmem)
+      sorry -- [BLOCK18D2] planarity.hl:4225-5182
