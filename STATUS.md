@@ -1,8 +1,8 @@
-# 项目总进度（Status）— 2026-09-07
+# 项目总进度（Status）— 2026-09-08
 
-> 一页看板：各 Phase 完成度、已完成什么、还差什么。
+> 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新。
 > 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
-> 当前 main @ `b537a34`，`lake build Kepler` 全绿（9302 jobs），
+> 当前 main @ `43009f1`，`lake build Kepler` 全绿（9304 jobs），
 > 唯一 sorry 是 `Statement.lean:111` 的主定理占位（sanctioned，见 Phase 1）。
 
 图例：✅ 完成并验证 / 🟡 进行中 / ⬜ 未启动。完成度为行数或条目数口径的粗略估计。
@@ -20,46 +20,40 @@
 
 - [x] 堆积密度定义与主定理陈述 `the_kepler_conjecture`（`Kepler/Statement.lean`）
 - [x] 陈述保真性对照文档（`docs/statement-fidelity.md`）
-- [ ] 主定理**证明**本体（`Statement.lean:111` 的唯一 sanctioned sorry）——这是全项目的终点，依赖 Phase 2–5 全部闭合后在 Phase 6 装配
+- [ ] 主定理**证明**本体（`Statement.lean:111` 的唯一 sanctioned sorry）——全项目终点，Phase 6 装配
 
 ## Phase 2 — tame 平面图枚举 ✅ 100%（闭合）
 
 - [x] 19,715 张 tame 平面图全量枚举 + 内核验证（585 个 CertShards 分片）
 - [x] 公理审计通过（`make check`；601 个限定范围 native_decide 信任公理，零 sorryAx）
 - [x] 新机器全量重建验证过
-- [ ] （无剩余工作）⚠️ 红线：绝不 `rm -rf lean/.lake`，分片重建需 ~7 天
+- ⚠️ 红线：绝不 `rm -rf lean/.lake`，分片重建需 ~7 天
 
-## Phase 3 — 线性规划 🟢 ~99.9%（收尾中）
-
-- [x] 证书链路全通：Flyspeck 证书解析 → LP 展开/扁平化 → SoPlex 精确求解 → 整数对偶证书 → Lean 内核弱对偶 checker（`Kepler/LP/Cert.lean`、`ColMajor.lean`）
-- [x] 试点图端到端闭合（行主序 + 列主序，`3cbe979`）
 ## Phase 3 — 线性规划 ✅ 100%（2026-09-07 全闭合）
 
 - [x] 证书链路全通：Flyspeck 证书解析 → LP 展开/扁平化 → SoPlex 精确求解 → 整数对偶证书 → Lean 内核弱对偶 checker（`Kepler/LP/Cert.lean`、`ColMajor.lean`）
-- [x] 试点图端到端闭合（行主序 + 列主序，`3cbe979`）
-- [x] 生产 harness 入 git（`pipeline/lp/run/`：driver/gen_one/make_tasks/glpsol_dual）
-- [x] **easy 23,640/23,640 终端内核验证通过**（含 8 个 glpsol 通道救回例）
+- [x] 试点图端到端闭合（行主序 + 列主序，`3cbe979`）；生产 harness 入 git（`pipeline/lp/run/`）
+- [x] easy 23,640/23,640 终端内核验证通过
 - [x] hard_1 偏差根因修复（`d5e32af`：branch.py 逐节点数值收紧重放）
-- [x] hard 批次全量跑完：19,433/19,433，19,382 通过（99.74%）
-- [x] **全部 43,078 个终端 LP 内核验证通过（2026-09-07）**：SoPlex 数值放弃的 51 例（47 个来自 hard_1 图 161847242261）全部经 glpsol 精确对偶通道闭合（`glpsol_dual.py`：基状态解析 → Fraction 高斯消元 → 整数化 → 内核 decide，~245s/例）。账本 `~/lprun-logs/results.jsonl`（43,078/43,078 exit=0）
+- [x] **全部 43,078 个终端 LP 内核验证通过**：SoPlex 数值放弃的 51 例全部经 glpsol 精确对偶通道闭合（`glpsol_dual.py`，glpsol --exact 最慢 13.5h/例 + 内核 decide ~245s/例）。账本 `~/lprun-logs/results.jsonl`（43,078/43,078 exit=0）
 
-## Phase 4 — 非线性不等式 🟡 工具链 ~100% / 量产 0%
+## Phase 4 — 非线性不等式 🟡 工具链 100% / 量产 0%
 
 - [x] 区间算术全层（`Kepler/Interval/`：Basic/Div/Sqrt/Ball/Trans/Expr/BBTree 分支定界，`f3cea0f`）
 - [x] dyadic 精确算术、证书式 sqrt、Taylor/sin soundness、分支定界证书格式
-- [ ] **~993 个非线性不等式量产**（未启动；机器算力已释放，可随时开工）
+- [ ] **~993 个非线性不等式量产**（未启动；机器算力已空闲，待启动）
 - [ ] cos/arctan 实例化、sin 范围缩减放宽（按需）
 
 ## Phase 5 — 文字证明移植 🟡（人力主线，全项目最大头）
 
-蓝图：Hypermap(ch4) → Fan(ch5) → LocalFan(ch7) → Assembly(ch9)。
+**生产模式（2026-09-07 起）**：opencode + GLM coding plan（glm-5.3-flash 常规 / glm-5.3 攻坚）工人研磨，Kimi 主 agent 切分任务 + 验收（build/sorry/公理）+ 提交 + 卡壳手写兜底。模板：`docs/phase5-worker-template.md`。
 
 | 模块（HOL 源文件） | 行数 | 状态 | 完成度 |
 |---|---|---|---|
 | hypermap/hypermap.hl | 13,575 | ✅ 全书收官 | 100% |
 | fan/fan.hl 系列（fan_defs/fan_misc/fan/CFYXFTY/hypermap_and_fan） | ~7,800 | ✅ 全书收官（hypermapOfFan 完整构造） | 100% |
 | fan/topology.hl | 4,718 | ✅ 全书收官（`36c37c6`，dart_leads_into 全套） | 100% |
-| fan/planarity.hl | 15,463 | 🟡 GLM worker 流水线推进中，覆盖至 :2911（`a745542`） | ~19% |
+| fan/planarity.hl | 15,463 | 🟡 流水线推进中，覆盖至 :3340（`43009f1`） | ~22% |
 | fan/Conforming.hl | 17,033 | ⬜ 未启动 | 0% |
 | fan/ 其余（polyhedron 等） | ~3,200 | ⬜ 未启动 | 0% |
 | packing/（Rogers/OXLZLEZ3/REUHADY…） | ~28,000 | ⬜ 未启动 | 0% |
@@ -69,14 +63,13 @@
 已落地的公共地基（`Kepler/Geom/` + `Kepler/Text/`）：
 
 - [x] Azim 方位角全层（Azim/AzimLemmas：ON 标架、角加法、AZIM_EQ/COMPL 等）
-- [x] Aff 仿射符号层（affGe/affsign）
-- [x] vectorAngle 定义与连续性（Planarity.lean block 1）
-- [x] **Coplanar 移植**（`Kepler/Geom/Coplanar.lean`，757a33d）
-- [x] vector_angle/angle 引理族（`VectorAngleLemmas.lean`：SYM/RANGE/EQ_0/EQ_PI/sin/cos + 三点角 angle；`fe3855d`–`c8c81b9`）
+- [x] Aff 仿射符号层（affGe/affGt/affLt/affsign）
+- [x] Coplanar 移植（`Kepler/Geom/Coplanar.lean`，`757a33d`）
+- [x] vectorAngle/angle 引理族（`VectorAngleLemmas.lean`：SYM/RANGE/EQ_0/EQ_PI/sin/cos + 三点角；`fe3855d`–`c8c81b9`）
 - [x] azim 平移桥 `azim_sub_self` + JBDNJJB 混合积 + cross_dot 族（`f16b544` 等）
-- [x] **Phase 5 生产模式切换**（2026-09-07）：opencode + GLM coding plan（glm-5.3-flash/5.3）工人 + Kimi 验收，模板 `docs/phase5-worker-template.md`
-- [ ] **coplanar 移植**（trig2.hl:1548；planarity.hl 从 :285 起大量使用——block 2 的前置缺口）
-- [ ] vector_angle 引理族（COLLINEAR_VECTOR_ANGLE 等，Multivariate-geom.ml:325+）
+- [ ] 遗留去重：`Kepler.Text.fan80/fan81`（Planarity）与 `Kepler.Text.Fan.fan80/fan81`（Fan.lean:222）重复定义，待合并
+
+前方难点：planarity.hl:3667 `not_cut_inside_fan` 是 1,500 行单证明巨块，需拆分策略。
 
 ## Phase 6 — 集成与交付 ⬜
 
@@ -88,13 +81,13 @@
 
 ## 整体估计
 
-- **计算三线**（Phase 2/3/4）：图枚举 100%；LP ~99.9%（差 51 例清账）；非线性工具链就绪、量产 0%。
-- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology ≈ 26k 行 HOL 源；待移植 ≈ 93k 行（planarity/Conforming/packing/local/assembly）。按行数口径 **~22%**。
-- **全项目粗略完成度：~45%**（计算线权重低但已近完成；文字证明权重高、刚破两成）。
+- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性工具链就绪、量产 0%。
+- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + planarity 前段 ≈ 29k 行 HOL 源；待移植 ≈ 90k 行。按行数口径 **~24%**。
+- **全项目粗略完成度：~48%**。
 
 ## 验证纪律（每个提交前必做）
 
 1. `lake build Kepler` 全绿；
 2. `grep sorry/admit/native_decide` 零命中（Statement.lean:111 与 Graphs.Cert* 例外）；
 3. 新定理 `#print axioms` 仅 `[propext, Classical.choice, Quot.sound]`；
-4. 子代理不许 git commit，由主代理验证后代为提交。
+4. 工人 agent（opencode/GLM、子代理）不许 git commit，由主 agent 验证后代为提交。
