@@ -16,8 +16,14 @@ Coverage (slice 18a of block 18, planarity.hl:3667-5182):
   `t3' <> 0`, `t2' <> 0`: aff_gt/aff_ge combinations plus the
   non-collinearity chain `~collinear {x,x',w'}`, `~collinear {x,x',v'}`,
   `~collinear {x,x',va}`, `~collinear {x,x',v}`) is fully proved.
-- Remaining azim case split left as a marked sorry:
-  `[BLOCK18D2] planarity.hl:4225-5182`.
+- `[BLOCK18D2]` (planarity.hl:4225-4291, the azim case split of the
+  generic case: the `0 < azim x x' v w' < pi` branch and the
+  `pi < azim x x' v w'` branch, via `exists_cut_small_edges_fan`,
+  `aff_gt2_subset_aff_ge`, `sum5_azim_fan` and `aff_gt1_subset_aff_ge`)
+  is fully proved.
+- Remaining `azim = 0` / `azim = pi` sub-cases (handled together in HOL
+  via AZIM_EQ_0/AZIM_EQ_0_ALT) left as a marked sorry:
+  `[BLOCK18D3] planarity.hl:4292-5182`.
 - HOL `remark1_fan`/`th3` (fan.hl:388,423) are not yet ported; the
   specific fragments needed here live below as private helpers.
 
@@ -122,8 +128,9 @@ private theorem mem_affineSpan_pair_of_collinear3 {x y q r : V3}
 （:3730-3776）、`[BLOCK18B]`（`t3' = 0`，`t2' ≠ 0`，:3777-3893）、
 `[BLOCK18C]` 的 `t2' = 0` 子分支（`t3' ≠ 0`，:3894-4043，18b 的镜像）
 以及 `[BLOCK18D]` 首段（一般情形 `t2' ≠ 0` 且 `t3' ≠ 0` 的 aff 组合与
-非共线链，:4044-4224）均完整证明；剩余 azim 分情况留待
-`[BLOCK18D2]`（:4225-5182）。 -/
+非共线链，:4044-4224）均完整证明；`[BLOCK18D2]`（azim 分情况之
+`0 < azim < π` 与 `π < azim` 两支，:4225-4291）亦完整证明；剩余
+`azim = 0 / π` 分情况（HOL 中合并处理）留待 `[BLOCK18D3]`（:4292-5182）。 -/
 theorem not_cut_inside_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
     (huw : {u, w} ∈ E) (hsigma : sigmaFan x V E u w = v) (ha0 : 0 < a)
     (ha1 : a < 1) (hcard : ∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard)
@@ -492,4 +499,92 @@ theorem not_cut_inside_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
         have hmem := mem_affineSpan_pair_of_collinear3 hxv hcol ht3ne
           (by linarith : t1 + t3 + t2 = 1) hyeq'v
         exact hnc ((collinear3_iff_mem_affineSpan hxv).mpr hmem)
-      sorry -- [BLOCK18D2] planarity.hl:4225-5182
+      -- HOL :4225：按 azim x y v w' 是否落在 (0,π) 分情况
+      by_cases haz : 0 < azim x y v w' ∧ azim x y v w' < Real.pi
+      · -- HOL :4229-4247（Case A：azim x y v w' ∈ (0,π)）
+        obtain ⟨t, ht0, htlt1, hpm⟩ :=
+          exists_cut_small_edges_fan (v1 := y) (u1 := w') hfan hvu huw hsigma ha0 ha1 hfan80
+            hncw' hygt haz.1 haz.2
+        obtain ⟨p, hp⟩ := hpm
+        rw [Set.mem_inter_iff] at hp
+        obtain ⟨hp1, hp2⟩ := hp
+        have h1t : 0 < 1 - t := by linarith
+        have h'0 : 0 < (1 - t) * a := mul_pos h1t ha0
+        have h'1 : (1 - t) * a < a := by
+          have hm := mul_lt_mul_of_pos_right (show (1 - t : ℝ) < 1 by linarith) ha0
+          rwa [one_mul] at hm
+        -- 向量恒等式（HOL "YEU" 处的 VECTOR_ARITH）
+        have hid : (1 - (1 - t) * a) • u + ((1 - t) * a) • w
+            = (1 - t) • ((1 - a) • u + a • w) + t • u := by module
+        have hp1' : p ∈ affGt {x} {v, (1 - (1 - t) * a) • u + ((1 - t) * a) • w} := by
+          rw [hid]
+          exact hp1
+        -- HOL :4238 aff_gt1_subset_aff_ge：aff_gt {x} {y,w'} ⊆ aff_ge {x} {v',w'}
+        have hp2' : p ∈ {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} :=
+          ⟨{v', w'}, he', aff_gt1_subset_aff_ge hdis' hncw' hyge' hp2⟩
+        have hfin : p ∈ affGt {x} {v, (1 - (1 - t) * a) • u + ((1 - t) * a) • w}
+            ∩ {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} := ⟨hp1', hp2'⟩
+        rw [hEM ((1 - t) * a) h'0 h'1] at hfin
+        simp at hfin
+      · -- HOL :4248-4252：azim 非负（azim spec）+ 上界（< 2π）拆成
+        -- π < azim ∨ (azim = 0 ∨ azim = π)
+        have h0le : 0 ≤ azim x y v w' := azim_nonneg x y v w'
+        have hlt2π : azim x y v w' < 2 * Real.pi := azim_lt_two_pi x y v w'
+        have hB : Real.pi < azim x y v w' ∨
+            (azim x y v w' = 0 ∨ azim x y v w' = Real.pi) := by
+          rcases eq_or_lt_of_le h0le with hz | hpos
+          · exact Or.inr (Or.inl hz.symm)
+          · rcases eq_or_lt_of_le
+              (not_lt.mp (fun hcc => haz ⟨hpos, hcc⟩)) with heq | hgt
+            · exact Or.inr (Or.inr heq.symm)
+            · exact Or.inl hgt
+        rcases hB with hgt | hzπ
+        · -- HOL :4254-4291（π < azim x y v w'）
+          -- HOL :4255 aff_gt2_subset_aff_ge：azim x y v' w' = π
+          have hπ2 : azim x y v' w' = Real.pi :=
+            aff_gt2_subset_aff_ge hdis' hncw' hncv' hygt'
+          have hle : azim x y v' w' ≤ azim x y v w' := by
+            rw [hπ2]
+            exact le_of_lt hgt
+          -- HOL :4262 sum5_azim_fan：azim x y v w' = azim x y v v' + azim x y v' w'
+          have hsum5 := sum5_azim_fan (not_collinear3_left hncv).symm hncv hncv' hncw' hle
+          have hvv'0 : 0 < azim x y v v' := by linarith
+          have hvv'π : azim x y v v' < Real.pi := by linarith
+          obtain ⟨t, ht0, htlt1, hpm⟩ :=
+            exists_cut_small_edges_fan (v1 := y) (u1 := v') hfan hvu huw hsigma ha0 ha1 hfan80
+              hncv' hygt hvv'0 hvv'π
+          obtain ⟨p, hp⟩ := hpm
+          rw [Set.mem_inter_iff] at hp
+          obtain ⟨hp1, hp2⟩ := hp
+          have h1t : 0 < 1 - t := by linarith
+          have h'0 : 0 < (1 - t) * a := mul_pos h1t ha0
+          have h'1 : (1 - t) * a < a := by
+            have hm := mul_lt_mul_of_pos_right (show (1 - t : ℝ) < 1 by linarith) ha0
+            rwa [one_mul] at hm
+          -- 向量恒等式（HOL "YEU" 处的 VECTOR_ARITH）
+          have hid : (1 - (1 - t) * a) • u + ((1 - t) * a) • w
+              = (1 - t) • ((1 - a) • u + a • w) + t • u := by module
+          have hp1' : p ∈ affGt {x} {v, (1 - (1 - t) * a) • u + ((1 - t) * a) • w} := by
+            rw [hid]
+            exact hp1
+          -- HOL :4276-4278：集合对换 aff_ge {x} {w',v'} = aff_ge {x} {v',w'}
+          have hsetw : ({w', v'} : Set V3) = ({v', w'} : Set V3) := by
+            ext q; simp; tauto
+          have hdisw : Disjoint ({x} : Set V3) {w', v'} := by
+            rw [hsetw]
+            exact hdis'
+          have hygew : y ∈ affGe {x} {w', v'} := by
+            rw [hsetw]
+            exact hyge'
+          -- HOL :4282 aff_gt1_subset_aff_ge（作用于换序对 w',v'）
+          have hp2' : p ∈ {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} := by
+            refine ⟨{v', w'}, he', ?_⟩
+            rw [← hsetw]
+            exact aff_gt1_subset_aff_ge hdisw hncv' hygew hp2
+          have hfin : p ∈ affGt {x} {v, (1 - (1 - t) * a) • u + ((1 - t) * a) • w}
+              ∩ {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} := ⟨hp1', hp2'⟩
+          rw [hEM ((1 - t) * a) h'0 h'1] at hfin
+          simp at hfin
+        · -- HOL :4292-4645（azim = 0 或 azim = π：AZIM_EQ_0 / AZIM_EQ_0_ALT
+          -- 合并为单支，再按 w' ∈ aff_gt 分情况）
+          sorry -- [BLOCK18D3] planarity.hl:4292-4645 (azim = 0 or pi; w' IN aff_gt case split)
