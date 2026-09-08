@@ -5526,14 +5526,14 @@ theorem fan_run_in_small2_not0_is_fan (hfan : FAN x V E)
       have hcontra : y ∈ (∅ : Set V3) := by
         rw [← hEMs t ht0 htless]
         exact ⟨hy.1, hsubset hy.2⟩
-      exact Set.not_mem_empty y hcontra
+      exact Set.notMem_empty y hcontra
     · by_cases hteq : t = a
       · -- t = a：用 hEM
         subst t
         have hcontra : y ∈ (∅ : Set V3) := by
           rw [← hEM]
           exact ⟨hy.1, hsubset hy.2⟩
-        exact Set.not_mem_empty y hcontra
+        exact Set.notMem_empty y hcontra
       · -- a < t：代入否定的 h 假设
         have hale : a < t := lt_of_le_of_ne (le_of_not_gt htless) (Ne.symm hteq)
         exact hex ⟨t, hale, le_of_lt ht1, hazt⟩
