@@ -1676,3 +1676,150 @@ theorem exists_cross_dot_fully_surrounded2_fan_le {v1 u1 : V3} {a : ℝ}
     have hs : h * a * B = h * (a * B) := by ring
     rw [hs]
     linarith
+
+set_option maxHeartbeats 0 in
+/-- HOL planarity.hl:7650 `exists_cut_small_edges_fan_le`：闭区间版存在切割。
+前提与 `cross_dot_fully_surrounded1_fan_le` 相同；结论为存在 `0 < t < 1` 使得
+`affGt {x} {v,(1-t)•((1-a)•u+a•w)+t•u} ∩ affGt {x} {v1,u1}` 非空。 -/
+theorem exists_cut_small_edges_fan_le {v1 u1 : V3} {a : ℝ}
+    (hfan : FAN x V E) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hsigma : sigmaFan x V E u w = v) (ha0 : 0 < a) (ha1 : a ≤ 1)
+    (h80 : fan80 x V E) (hnc : ¬ Collinear3 x v1 u1)
+    (hv1 : v1 ∈ affGt {x} {v, (1 - a) • u + a • w})
+    (h0 : 0 < azim x v1 v u1) (hpi : azim x v1 v u1 < Real.pi) :
+    ∃ t : ℝ, 0 < t ∧ t < 1 ∧
+      ¬(affGt {x} {v, (1 - t) • ((1 - a) • u + a • w) + t • u} ∩
+          affGt {x} {v1, u1} = ∅) := by
+  set va' := (1 - a) • u + a • w with hva'_def
+  obtain ⟨t₁, ht₁0, ht₁1, ht₁⟩ :=
+    exists_cross_dot_fully_surrounded1_fan_le hfan hvu huw hsigma ha0 ha1 h80 hnc hv1 h0 hpi
+  obtain ⟨t₂, ht₂0, ht₂1, ht₂⟩ :=
+    exists_cross_dot_fully_surrounded2_fan_le hfan hvu huw hsigma ha0 ha1 h80 hnc hv1 h0 hpi
+  set ta := min t₁ t₂ / 2 with hta_def
+  have hta0 : 0 < ta := by rw [hta_def]; exact half_pos (lt_min ht₁0 ht₂0)
+  have hta1 : ta < 1 := by
+    rw [hta_def]; have : min t₁ t₂ < 1 := lt_of_le_of_lt (min_le_left _ _) ht₁1
+    linarith [half_lt_self (by linarith : 0 < (min t₁ t₂ : ℝ))]
+  have hta_t1 : ta < t₁ := by
+    rw [hta_def]; have hmin : 0 < min t₁ t₂ := lt_min ht₁0 ht₂0
+    linarith [half_lt_self hmin, min_le_left t₁ t₂]
+  have hta_t2 : ta < t₂ := by
+    rw [hta_def]; have hmin : 0 < min t₁ t₂ := lt_min ht₁0 ht₂0
+    linarith [half_lt_self hmin, min_le_right t₁ t₂]
+  obtain ⟨hθ0, hθπ⟩ := h80 u w huw
+  rw [hsigma] at hθ0 hθπ
+  have hncvp : ¬ Collinear3 x v va' := by
+    rw [hva'_def]; exact not_collinear_is_properties_fully_surrounded1 hfan hvu huw hθ0 hθπ a (le_of_lt ha0) ha1
+  have hv1v : ¬ Collinear3 x v1 v := properties_of_collinear4_points_fan hncvp hv1
+  have hCON : 0 < (crossProduct ((v1 - x : V3) : Fin 3 → ℝ) ((v - x : V3) : Fin 3 → ℝ)) ⬝ᵥ
+      ((u1 - x : V3) : Fin 3 → ℝ) := cross_dot_fully_surrounded_fan hnc hv1v h0 hpi
+  have hMA : 0 < (crossProduct ((v1 - x : V3) : Fin 3 → ℝ) ((u1 - x : V3) : Fin 3 → ℝ)) ⬝ᵥ
+      (((1 - ta) • va' + ta • u - x : V3) : Fin 3 → ℝ) := ht₁ ta hta0 hta_t1
+  have hBE : 0 < (crossProduct (((1 - ta) • va' + ta • u - x : V3) : Fin 3 → ℝ)
+      ((v - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((u1 - x : V3) : Fin 3 → ℝ) := ht₂ ta hta0 hta_t2
+  set a1 : Fin 3 → ℝ := ((v - x : V3) : Fin 3 → ℝ) with ha1_def
+  set a2 : Fin 3 → ℝ := (((1 - ta) • va' + ta • u - x : V3) : Fin 3 → ℝ) with ha2_def
+  set a3 : Fin 3 → ℝ := ((v1 - x : V3) : Fin 3 → ℝ) with ha3_def
+  set a4 : Fin 3 → ℝ := ((u1 - x : V3) : Fin 3 → ℝ) with ha4_def
+  set va := crossProduct a1 a2 with hva_def
+  set vb := crossProduct a3 a4 with hvb_def
+  have hvb_a2 : 0 < vb ⬝ᵥ a2 := by rwa [hvb_def, ha3_def, ha4_def, ha2_def]
+  have hvb_a1_neg : 0 < -(vb ⬝ᵥ a1) := by
+    rw [hvb_def, neg_pos]
+    rw [dotProduct_comm (crossProduct a3 a4) a1]
+    rw [triple_product_permutation a1 a3 a4]
+    rw [← cross_anticomm a1 a4]
+    rw [dotProduct_neg]
+    rw [neg_lt_zero]
+    rw [← triple_product_permutation a4 a3 a1]
+    rw [dotProduct_comm a4 (crossProduct a3 a1)]
+    exact hCON
+  have hncvp_ta : ¬ Collinear3 x v ((1 - (1 - ta) * a) • u + ((1 - ta) * a) • w) :=
+    not_collinear_is_properties_fully_surrounded1 hfan hvu huw hθ0 hθπ ((1 - ta) * a)
+      (mul_nonneg (sub_nonneg_of_le (le_of_lt hta1)) (le_of_lt ha0))
+      (mul_le_one₀ (sub_le_self _ (le_of_lt hta0)) (le_of_lt ha0) ha1)
+  have hvid : (1 - (1 - ta) * a) • u + ((1 - ta) * a) • w = (1 - ta) • va' + ta • u := by
+    rw [hva'_def]; module
+  have hncvp_ta' : ¬ Collinear3 x v ((1 - ta) • va' + ta • u) := hvid ▸ hncvp_ta
+  have hdis1 : Disjoint ({x} : Set V3) {v, (1 - ta) • va' + ta • u} := by
+    rw [Set.disjoint_singleton_left]; intro hmem
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+    rcases hmem with h' | h'
+    · exact hncvp (collinear3_of_eq (v := x) (w := v) (w1 := va') h'.symm)
+    · exact hncvp_ta' (collinear3_pair_left (v0 := x) (v1 := v)
+        (x := (1 - ta) • va' + ta • u) h'.symm)
+  have hdis2 : Disjoint ({x} : Set V3) {v1, u1} := by
+    rw [Set.disjoint_singleton_left]; intro hmem
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+    rcases hmem with h' | h'
+    · exact hnc (collinear3_of_eq (v := x) (w := v1) (w1 := u1) h'.symm)
+    · exact hnc (collinear3_pair_left (v0 := x) (v1 := v1) (x := u1) h'.symm)
+  have hva_a3_pos : 0 < va ⬝ᵥ a3 := by
+    rw [hva_def, ha1_def, ha2_def, ha3_def]
+    have hvid2 : (((1 - ta) • va' + ta • u - x : V3) : Fin 3 → ℝ) =
+        (1 - ta) • (((va' - x : V3)) : Fin 3 → ℝ) + ta • (((u - x : V3)) : Fin 3 → ℝ) := by
+      have hv : ((1 - ta) • va' + ta • u - x : V3) =
+          (1 - ta) • (va' - x : V3) + ta • (u - x : V3) := by
+        rw [hva'_def]; module
+      have h := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hv
+      rw [h]
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul]
+    have hcp1 : (crossProduct ((v - x : V3) : Fin 3 → ℝ) ((va' - x : V3) : Fin 3 → ℝ)) ⬝ᵥ
+        ((v1 - x : V3) : Fin 3 → ℝ) = 0 := coplanar_is_cross_fan hncvp hv1
+    have hcp2 : 0 < (crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ)) ⬝ᵥ
+        ((v1 - x : V3) : Fin 3 → ℝ) :=
+      lie_in_half_space_and_azim_le hfan hvu huw hsigma ha0 ha1 h80 hnc hv1 h0 hpi
+    rw [hvid2, (crossProduct _).map_add, add_dotProduct,
+      (crossProduct _).map_smul, (crossProduct _).map_smul,
+      smul_dotProduct, smul_dotProduct, hcp1, smul_zero, zero_add]
+    simpa [smul_eq_mul] using mul_pos hta0 hcp2
+  have hva_a4_neg : 0 < -(va ⬝ᵥ a4) := by
+    rw [hva_def, neg_pos]
+    rw [dotProduct_comm (crossProduct a1 a2) a4]
+    rw [triple_product_permutation a4 a1 a2]
+    rw [← cross_anticomm a4 a2]
+    rw [dotProduct_neg]
+    rw [neg_lt_zero]
+    rw [triple_product_permutation a1 a4 a2]
+    rw [dotProduct_comm a4 (crossProduct a2 a1)]
+    exact hBE
+  have hy1 : (x : V3) + (WithLp.toLp 2 (crossProduct vb va) : V3) ∈
+      affGt {x} {v, (1 - ta) • va' + ta • u} := by
+    rw [aff_gt_1_2 hdis1, Set.mem_setOf_eq]
+    refine ⟨1 - vb ⬝ᵥ a2 + vb ⬝ᵥ a1, vb ⬝ᵥ a2, -(vb ⬝ᵥ a1),
+      hvb_a2, hvb_a1_neg, by ring, ?_⟩
+    show (x : V3) + (WithLp.toLp 2 (crossProduct vb va) : V3) =
+      (1 - vb ⬝ᵥ a2 + vb ⬝ᵥ a1) • (x : V3) + (vb ⬝ᵥ a2) • (v : V3) +
+        (-(vb ⬝ᵥ a1)) • ((1 - ta) • va' + ta • u : V3)
+    have hlag1 : crossProduct vb va = (vb ⬝ᵥ a2) • a1 - (vb ⬝ᵥ a1) • a2 := by
+      rw [cross_cross_eq_smul_sub_smul']
+      rw [dotProduct_comm a1 vb]
+    have hv3eq : (WithLp.toLp 2 (crossProduct vb va) : V3) =
+        (vb ⬝ᵥ a2) • (v - x : V3) - (vb ⬝ᵥ a1) • ((1 - ta) • va' + ta • u - x : V3) := by
+      have h := congrArg (WithLp.toLp 2 : (Fin 3 → ℝ) → V3) hlag1
+      simpa only [WithLp.toLp_add, WithLp.toLp_sub, WithLp.toLp_smul,
+        WithLp.toLp_ofLp] using h
+    rw [hv3eq]; module
+  have hy2 : (x : V3) + (WithLp.toLp 2 (crossProduct vb va) : V3) ∈
+      affGt {x} {v1, u1} := by
+    rw [aff_gt_1_2 hdis2, Set.mem_setOf_eq]
+    refine ⟨1 + va ⬝ᵥ a4 - va ⬝ᵥ a3, -(va ⬝ᵥ a4), va ⬝ᵥ a3,
+      hva_a4_neg, hva_a3_pos, by ring, ?_⟩
+    show (x : V3) + (WithLp.toLp 2 (crossProduct vb va) : V3) =
+      (1 + va ⬝ᵥ a4 - va ⬝ᵥ a3) • (x : V3) + (-(va ⬝ᵥ a4)) • (v1 : V3) +
+        (va ⬝ᵥ a3) • (u1 : V3)
+    have hlag2 : crossProduct vb va = -(va ⬝ᵥ a4) • a3 + (va ⬝ᵥ a3) • a4 := by
+      rw [cross_cross_eq_smul_sub_smul]
+      rw [dotProduct_comm a3 va, dotProduct_comm a4 va, neg_smul]
+      abel
+    have hv3eq2 : (WithLp.toLp 2 (crossProduct vb va) : V3) =
+        -(va ⬝ᵥ a4) • (v1 - x : V3) + (va ⬝ᵥ a3) • (u1 - x : V3) := by
+      have h := congrArg (WithLp.toLp 2 : (Fin 3 → ℝ) → V3) hlag2
+      simpa only [WithLp.toLp_add, WithLp.toLp_sub, WithLp.toLp_smul,
+        WithLp.toLp_ofLp] using h
+    rw [hv3eq2]; module
+  refine ⟨ta, hta0, hta1, ?_⟩
+  intro hempty
+  have hmem := Set.mem_inter hy1 hy2
+  rw [hempty] at hmem
+  exact Set.notMem_empty _ hmem
