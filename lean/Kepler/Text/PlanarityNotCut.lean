@@ -1310,3 +1310,71 @@ theorem cut_in_edges_fan {a : ℝ} (hfan : FAN x V E) (hvu : {v, u} ∈ E)
   have hem : affGt {x} {v, (1 - a) • u + a • w} ∩ xfan x V E = ∅ :=
     not_cut_in_edges_fan hfan hvu huw hsigma ha0 haLt hcard hfan80
   exact hEM hem
+
+/-- 混合积的循环置换（Mathlib `triple_product_permutation` + 点积交换）。 -/
+private theorem cross_dot_cycle {X Y Z : Fin 3 → ℝ} :
+    crossProduct X Y ⬝ᵥ Z = crossProduct Y Z ⬝ᵥ X := by
+  rw [dotProduct_comm, triple_product_permutation, dotProduct_comm]
+
+/-- HOL planarity.hl:7303 `lie_in_half_space_and_azim_le`：`lie_in_half_space_and_azim`
+的闭区间版本（`a ≤ 1` 而非 `a < 1`）。`a = 1` 时弦点 `(1-a)•u + a•w` 即 `w`，
+`not_collinear_is_properties_fully_surrounded1`（`0 ≤ t ≤ 1`）覆盖端点；
+混合积分解与 `aff_gt_1_2` 展开逐字复用 `lie_in_half_space_and_azim`。 -/
+theorem lie_in_half_space_and_azim_le {v1 u1 : V3} {a : ℝ}
+    (hfan : FAN x V E) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hsigma : sigmaFan x V E u w = v) (ha0 : 0 < a) (ha1 : a ≤ 1)
+    (h80 : fan80 x V E) (hnc : ¬ Collinear3 x v1 u1)
+    (hv1 : v1 ∈ affGt {x} {v, (1 - a) • u + a • w})
+    (h0 : 0 < azim x v1 v u1) (hpi : azim x v1 v u1 < Real.pi) :
+    0 < crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((v1 - x : V3) : Fin 3 → ℝ) := by
+  obtain ⟨hθ0, hθπ⟩ := h80 u w huw
+  rw [hsigma] at hθ0 hθπ
+  have hncvp : ¬ Collinear3 x v ((1 - a) • u + a • w) :=
+    not_collinear_is_properties_fully_surrounded1 hfan hvu huw hθ0 hθπ a
+      (le_of_lt ha0) ha1
+  have hcon : 0 < crossProduct ((u - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((v - x : V3) : Fin 3 → ℝ) :=
+    cross_dot_fully_surrounded_fan (fun h => fan_not_collinear hfan hvu (collinear3_swap h))
+      (fan_not_collinear hfan huw) hθ0 hθπ
+  have hxv : x ≠ v := fun he => hncvp (by rw [he]; exact collinear3_of_eq rfl)
+  have hxp : x ≠ (1 - a) • u + a • w :=
+    fun he => hncvp (by rw [he]; exact collinear3_pair_left rfl)
+  have hdis : Disjoint ({x} : Set V3) {v, (1 - a) • u + a • w} := by
+    rw [Set.disjoint_singleton_left]
+    intro hmem
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+    rcases hmem with h' | h'
+    · exact hxv h'
+    · exact hxp h'
+  rw [aff_gt_1_2 hdis, Set.mem_setOf_eq] at hv1
+  obtain ⟨t1, t2, t3, ht2, ht3, hone, hv1c⟩ := hv1
+  have step1 : v1 - x = t1 • x + t2 • v + t3 • ((1 - a) • u + a • w)
+      - (t1 + t2 + t3) • x := by
+    rw [hv1c, hone, one_smul]
+  have hvsub : v1 - x
+      = t2 • (v - x : V3) + t3 • (((1 - a) • u + a • w) - x : V3) := by
+    rw [step1]
+    module
+  have hv1coe : ((v1 - x : V3) : Fin 3 → ℝ)
+      = t2 • ((v - x : V3) : Fin 3 → ℝ)
+        + t3 • ((((1 - a) • u + a • w - x : V3)) : Fin 3 → ℝ) := by
+    have h := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hvsub
+    simpa only [WithLp.ofLp_add, WithLp.ofLp_sub, WithLp.ofLp_smul] using h
+  have hpcoe : ((((1 - a) • u + a • w - x : V3)) : Fin 3 → ℝ)
+      = (1 - a) • ((u - x : V3) : Fin 3 → ℝ) + a • ((w - x : V3) : Fin 3 → ℝ) := by
+    have hv : ((1 - a) • u + a • w - x : V3)
+        = (1 - a) • (u - x : V3) + a • (w - x : V3) := by module
+    have h := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hv
+    simpa only [WithLp.ofLp_add, WithLp.ofLp_sub, WithLp.ofLp_smul] using h
+  have hz1 : crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((v - x : V3) : Fin 3 → ℝ) = 0 := by rw [dotProduct_comm, dot_self_cross]
+  have hz2 : crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((u - x : V3) : Fin 3 → ℝ) = 0 := by rw [dotProduct_comm, dot_cross_self]
+  have hcyc : crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((w - x : V3) : Fin 3 → ℝ)
+      = crossProduct ((u - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((v - x : V3) : Fin 3 → ℝ) := cross_dot_cycle
+  simp only [hv1coe, hpcoe, dotProduct_add, dotProduct_smul, smul_eq_mul, hz1, hz2,
+    mul_zero, zero_add, hcyc]
+  exact mul_pos ht3 (mul_pos ha0 hcon)
