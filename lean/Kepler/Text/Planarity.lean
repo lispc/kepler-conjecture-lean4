@@ -4956,3 +4956,65 @@ theorem lemma_proof1_fan {v1 w1 : V3} {a : ℝ} (hfan : FAN x V E)
     exact add_comm _ _
   rw [hpt]
   exact hyA
+
+/-! ## 第二十二块：planarity.hl:5683–5793（GRAPH、CARD_2_FAN、remark012_fan） -/
+
+/-- HOL planarity.hl:5683 `GRAPH`：`graph E` ↔ 每条边恰有两个元素
+（HOL `HAS_SIZE 2` = 有限且基数为 2；本仓库 `Graph` 是显式有限版，
+此处即双向 unfold）。 -/
+theorem GRAPH : Graph E ↔ ∀ e ∈ E, ∃ hf : e.Finite, hf.toFinset.card = 2 := by
+  constructor
+  · intro h e he
+    exact h e he
+  · intro h e he
+    exact h e he
+
+/-- HOL planarity.hl:5689 `CARD_2_FAN`：不同两点的对集基数为 2
+（HOL `CARD {v,w} = 2`，Mathlib `Set.ncard_pair` 的一行 wrapper，
+沿用本仓库 `Set.ncard` 约定）。 -/
+theorem CARD_2_FAN {v w : V3} (h : v ≠ w) : ({v, w} : Set V3).ncard = 2 :=
+  Set.ncard_pair h
+
+/-- HOL planarity.hl:5749 `remark012_fan`：边 `{u,w}` 上的 inside 点
+`(&1-a)%u + a%w`（`&0<a<&1`）不是顶点。
+路线（HOL :5749–5793）：反设 `v1 := (&1-a)%u+a%w ∈ V`；
+`fan_not_collinear` + `properties_inside_collinear_fan` 得 `v1≠u`、
+`v1≠w`，于是 `{u,w}∩{v1}=∅`；fan7 给
+`aff_ge {x} {u,w} ∩ aff_ge {x} {v1} = aff_ge {x} ∅ = {x}`；
+而 `v1` 同时属于两者（`properties1_inside_fan` 与单点仿射组合
+`AFF_GE_1_1`），故 `v1 = x`，与 fan2（`x∉V`）矛盾。 -/
+theorem remark012_fan {a : ℝ} (hfan : FAN x V E) (huw : {u, w} ∈ E)
+    (ha0 : 0 < a) (ha1 : a < 1) : (1 - a) • u + a • w ∉ V := by
+  set v1 := (1 - a) • u + a • w with hv1def
+  have hncuw : ¬ Collinear3 x u w := fan_not_collinear hfan huw
+  have hdisuw : Disjoint ({x} : Set V3) {u, w} := disjoint_of_not_collinear3 hncuw
+  have hmemA : v1 ∈ affGe {x} {u, w} := by
+    have h := properties1_inside_fan a hdisuw ha0 ha1
+    rwa [← hv1def] at h
+  have hpair := properties_inside_collinear_fan a ha0 ha1 hncuw
+  have hne1 : v1 ≠ u := fun he =>
+    hpair.1 (by rw [← hv1def, he]; exact collinear3_pair_right rfl)
+  have hne2 : v1 ≠ w := fun he =>
+    hpair.2 (by rw [← hv1def, he]; exact collinear3_pair_right rfl)
+  intro hmem
+  have hxv1 : x ≠ v1 := fun he => hfan.2.2.2.1 (by rw [he]; exact hmem)
+  have hint : ({u, w} : Set V3) ∩ {v1} = ∅ := by
+    ext z
+    constructor
+    · intro hz
+      obtain ⟨hz1, hz2⟩ := (Set.mem_inter_iff z _ _).mp hz
+      rw [Set.mem_singleton_iff] at hz2
+      rcases Set.mem_insert_iff.mp hz1 with h | h
+      · exact hne1 (hz2.symm.trans h)
+      · exact hne2 (hz2.symm.trans h)
+    · intro h
+      exact absurd h (by simp)
+  have h77 := hfan.2.2.2.2.2 {u, w} (Or.inl huw) {v1}
+    (Or.inr (Set.mem_setOf_eq.mpr ⟨v1, hmem, rfl⟩))
+  rw [hint, affGe_empty_eq_singleton] at h77
+  have hmemB : v1 ∈ affGe {x} {v1} :=
+    mem_affGe_single (t1 := 0) (t2 := 1) hxv1 (by norm_num) (by norm_num) (by simp)
+  have hv1x : v1 ∈ ({x} : Set V3) := by
+    rw [← h77]
+    exact ⟨hmemA, hmemB⟩
+  exact hxv1 (Set.mem_singleton_iff.mp hv1x).symm
