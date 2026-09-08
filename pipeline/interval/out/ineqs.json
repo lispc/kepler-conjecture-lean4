@@ -1,0 +1,6566 @@
+{
+ "records": [
+  {
+   "idv": "TSKAJXY-DERIVED",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": "TSKAJXY_DERIVED",
+   "line": 95,
+   "bounds": [
+    {
+     "lo": "#2.0",
+     "var": "y1",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y2",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y3",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "(( ~(critical_edge_y y1) /\\ ~(critical_edge_y y2) /\\ ~(critical_edge_y y3) /\\ ~(critical_edge_y y4) /\\ ~(critical_edge_y y5) /\\ ~(critical_edge_y y6) /\\ &0 < delta_y y1 y2 y3 y4 y5 y6 /\\ rad2_y y1 y2 y3 y4 y5 y6 < &2) ==> (gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun >= &0) )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Cfsqp",
+    "Xconvert",
+    "Derived",
+    "Branching",
+    "Eps",
+    "Sharp"
+   ],
+   "eps": 1e-12,
+   "parse_note": null
+  },
+  {
+   "idv": "TSKAJXY-TADIAMB",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 126,
+   "bounds": [
+    {
+     "lo": "&2 * hplus",
+     "var": "y1",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2 * hplus",
+     "var": "y2",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y3",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "( (y_of_x rad2_x y1 y2 y3 y4 y5 y6 > &2))",
+   "tags": [
+    "Flypaper",
+    "Tex",
+    "Cfsqp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "TSKAJXY-RIBCYXU",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 145,
+   "bounds": [
+    {
+     "lo": "#2.0",
+     "var": "y1",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y4",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun >= &0) )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Cfsqp",
+    "Xconvert",
+    "Branching",
+    "Eps",
+    "Sharp",
+    "Deprecated"
+   ],
+   "eps": 1e-12,
+   "parse_note": null
+  },
+  {
+   "idv": "TSKAJXY-RIBCYXU sharp",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 164,
+   "bounds": [
+    {
+     "lo": "#2.0",
+     "var": "y1",
+     "hi": "#2.001"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y2",
+     "hi": "#2.001"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y3",
+     "hi": "#2.001"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y4",
+     "hi": "#2.001"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y5",
+     "hi": "#2.001"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y6",
+     "hi": "#2.001"
+    }
+   ],
+   "body_raw": "(gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun >= &0)",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Cfsqp",
+    "Xconvert",
+    "Branching",
+    "Eps",
+    "Sharp"
+   ],
+   "eps": 1e-12,
+   "parse_note": null
+  },
+  {
+   "idv": "TSKAJXY-RIBCYXU sym",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 182,
+   "bounds": [
+    {
+     "lo": "#2.001",
+     "var": "y1",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y4",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > &0) \\/ (y1 < y2) \\/ (y1 < y3) \\/ (y1 < y4) \\/ (y1 < y5) \\/ (y1 < y6) \\/ (y2 < y3) \\/ (y2 < y5) \\/ (y2 < y6))",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Cfsqp",
+    "Xconvert",
+    "Branching"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "TSKAJXY-IYOUOBF",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 203,
+   "bounds": [
+    {
+     "lo": "&2 * hplus",
+     "var": "y1",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y4",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun >= &0) )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Cfsqp",
+    "Xconvert",
+    "Branching",
+    "Eps",
+    "Sharp",
+    "Deprecated"
+   ],
+   "eps": 1e-12,
+   "parse_note": null
+  },
+  {
+   "idv": "TSKAJXY-IYOUOBF sym",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 222,
+   "bounds": [
+    {
+     "lo": "&2 * hplus",
+     "var": "y1",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.001",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y4",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun >= &0) \\/ (y2 < y3 ) \\/ (y2 < y5) \\/ (y2 < y6) )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Cfsqp",
+    "Xconvert",
+    "Branching"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "TSKAJXY-IYOUOBF sharp v2",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 241,
+   "bounds": [
+    {
+     "lo": "&2 * hplus",
+     "var": "y1",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y2",
+     "hi": "#2.001"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y3",
+     "hi": "#2.001"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y4",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y5",
+     "hi": "#2.001"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y6",
+     "hi": "#2.001"
+    }
+   ],
+   "body_raw": "(gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun >= &0)",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Cfsqp",
+    "Xconvert",
+    "Branching",
+    "Eps",
+    "Sharp"
+   ],
+   "eps": 1e-12,
+   "parse_note": null
+  },
+  {
+   "idv": "TSKAJXY-WKGUESB",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 259,
+   "bounds": [
+    {
+     "lo": "&2 * hplus",
+     "var": "y1",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.01",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2 * hplus",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > &0) )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Branching",
+    "Cfsqp",
+    "Xconvert",
+    "Deprecated"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "TSKAJXY-WKGUESB sym",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 280,
+   "bounds": [
+    {
+     "lo": "&2 * hplus",
+     "var": "y1",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.01",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2 * hplus",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > &0) \\/ (y2 < y3) \\/ (y2 < y5) \\/ (y2 < y6) \\/ (y1 < y4) )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Branching",
+    "Cfsqp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "TSKAJXY-XLLIPLS",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 303,
+   "bounds": [
+    {
+     "lo": "&2 * hplus",
+     "var": "y1",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y2",
+     "hi": "#2.01"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y3",
+     "hi": "#2.01"
+    },
+    {
+     "lo": "&2 * hplus",
+     "var": "y4",
+     "hi": "#2.8"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y5",
+     "hi": "#2.01"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y6",
+     "hi": "#2.01"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > &0) )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Branching",
+    "Cfsqp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "TSKAJXY-eulerA",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 323,
+   "bounds": [
+    {
+     "lo": "#2.8 pow 2",
+     "var": "x1",
+     "hi": "&8"
+    },
+    {
+     "lo": "&4",
+     "var": "x2",
+     "hi": "#2.01 pow 2"
+    },
+    {
+     "lo": "&4",
+     "var": "x3",
+     "hi": "#2.01 pow 2"
+    },
+    {
+     "lo": "#2.8 pow 2",
+     "var": "x4",
+     "hi": "&8"
+    },
+    {
+     "lo": "&4",
+     "var": "x5",
+     "hi": "#2.01 pow 2"
+    },
+    {
+     "lo": "&4",
+     "var": "x6",
+     "hi": "#2.01 pow 2"
+    }
+   ],
+   "body_raw": "(&0 < eulerA_x x1 x2 x3 x4 x5 x6)",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Cfsqp"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "TSKAJXY-delta_x4",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 340,
+   "bounds": [
+    {
+     "lo": "&4",
+     "var": "x1",
+     "hi": "#2.01 pow 2"
+    },
+    {
+     "lo": "&4",
+     "var": "x2",
+     "hi": "#2.01 pow 2"
+    },
+    {
+     "lo": "#2.8 pow 2",
+     "var": "x3",
+     "hi": "&8"
+    },
+    {
+     "lo": "&4",
+     "var": "x4",
+     "hi": "#2.01 pow 2"
+    },
+    {
+     "lo": "&4",
+     "var": "x5",
+     "hi": "#2.01 pow 2"
+    },
+    {
+     "lo": "#2.8 pow 2",
+     "var": "x6",
+     "hi": "&8"
+    }
+   ],
+   "body_raw": "(&0 < delta_x4 x1 x2 x3 x4 x5 x6)",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Cfsqp"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "TSKAJXY-GXSABWC DIV",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 358,
+   "bounds": [
+    {
+     "lo": "#2.8 pow 2",
+     "var": "x1",
+     "hi": "&8"
+    },
+    {
+     "lo": "&4",
+     "var": "x2",
+     "hi": "#2.01 pow 2"
+    },
+    {
+     "lo": "&4",
+     "var": "x3",
+     "hi": "#2.01 pow 2"
+    },
+    {
+     "lo": "#2.8 pow 2",
+     "var": "x4",
+     "hi": "&8"
+    },
+    {
+     "lo": "&4",
+     "var": "x5",
+     "hi": "#2.01 pow 2"
+    },
+    {
+     "lo": "&4",
+     "var": "x6",
+     "hi": "#2.01 pow 2"
+    }
+   ],
+   "body_raw": "((&1 / &12 - ( (&2 * mm1 / pi) * (sol_euler_x_div_sqrtdelta x1 x2 x3 x4 x5 x6 + sol_euler345_x_div_sqrtdelta x1 x2 x3 x4 x5 x6 + sol_euler156_x_div_sqrtdelta x1 x2 x3 x4 x5 x6 + sol_euler246_x_div_sqrtdelta x1 x2 x3 x4 x5 x6) - (&8 * mm2 / pi) * ( ldih2_x_div_sqrtdelta_posbranch x1 x2 x3 x4 x5 x6 + ldih3_x_div_sqrtdelta_posbranch x1 x2 x3 x4 x5 x6 + ldih5_x_div_sqrtdelta_posbranch x1 x2 x3 x4 x5 x6 + ldih6_x_div_sqrtdelta_posbranch x1 x2 x3 x4 x5 x6 ) ) >= &0) \\/ (delta_x x1 x2 x3 x4 x5 x6 < &0) )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Cfsqp"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "ZTGIJCF0",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 446,
+   "bounds": [
+    {
+     "lo": "&1",
+     "var": "dummy",
+     "hi": "&1"
+    }
+   ],
+   "body_raw": "( &5 * a_spine5 + b_spine5 * &2 * pi > &0)",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Cfsqp"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": null,
+   "idv_expr": "Printf.sprintf \"ZTGIJCF4 %d %d %d %d 1821661595\" i3 i4 i5 i6",
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": "make_F4",
+   "line": 488,
+   "bounds": [],
+   "body_raw": null,
+   "tags": [
+    "Tex",
+    "Marchal",
+    "Cfsqp",
+    "Flypaper",
+    "Xconvert",
+    "Penalty",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": "idv field is an expression, not a string literal; ineq field is not a literal `ineq [...]' quotation: mk_ineq_F4 i3 i4 i5 i6",
+   "ineq_raw": "mk_ineq_F4 i3 i4 i5 i6"
+  },
+  {
+   "idv": "MKFKQWU",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 502,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2*hminus",
+     "var": "y2",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2*hminus",
+     "var": "y3",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2*hminus",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2*hminus",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "(y_of_x rad2_x y1 y2 y3 y4 y5 y6 > &2)",
+   "tags": [
+    "Flypaper",
+    "Tex",
+    "Cfsqp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "MKFKQWU halfwt",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 523,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2*hplus",
+     "var": "y2",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2*hminus",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "(y_of_x rad2_x y1 y2 y3 y4 y5 y6 > &2)",
+   "tags": [
+    "Flypaper",
+    "Tex",
+    "Cfsqp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "GLFVCVK4 2477216213",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 559,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > &0)\\/ (norm2hh y1 y2 y3 y4 y5 y6 < (hplus- hminus) pow 2) \\/ (y_of_x rad2_x y1 y2 y3 y4 y5 y6 > &2))",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "GLFVCVK4a 8328676778",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 586,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2 * hminus",
+     "var": "y4",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / &2 + beta_bump_force_y y1 y2 y3 y4 y5 y6 > &0)\\/ (y_of_x rad2_x y1 y2 y3 y4 y5 y6 > &2))",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Cfsqp",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "GLFVCVK4 2477216213 y4crit",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 623,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2 * hminus",
+     "var": "y2",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2 * hminus",
+     "var": "y4",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / &3 > #0.0057)\\/ (eta_y y1 y2 y6 pow 2 < #1.34 pow 2) \\/ (y_of_x rad2_x y1 y2 y3 y4 y5 y6 > &2))",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "GLFVCVK4 2477216213 y4supercrit",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 649,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2 * hplus",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / &2 > #0.0057)\\/ (eta_y y1 y2 y6 pow 2 < #1.34 pow 2) \\/ (y_of_x rad2_x y1 y2 y3 y4 y5 y6 > &2))",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "GLFVCVK4 2477216213 y4subcrit",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 675,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2 * hminus",
+     "var": "y2",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / &2 > #0.0057)\\/ (eta_y y1 y2 y6 pow 2 < #1.34 pow 2) \\/ (y_of_x rad2_x y1 y2 y3 y4 y5 y6 > &2))",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "BIXPCGW 6652007036 a2",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 701,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "((dih_y y1 y2 y3 y4 y5 y6 < #2.8) )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "BIXPCGW 7080972881 a2",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 721,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2 * hminus",
+     "var": "y2",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "((dih_y y1 y2 y3 y4 y5 y6 < #2.3) )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "BIXPCGW 1738910218 a2",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 739,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "( (dih_y y1 y2 y3 y4 y5 y6 < #2.3) )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "BIXPCGW b",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 758,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "( (delta4_y y1 y2 y3 y4 y5 y6 > &0) \\/ (delta_y y1 y2 y3 y4 y5 y6 > &60) \\/ (delta_y y1 y2 y3 y4 y5 y6 < &0))",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Penalty",
+    "Tex",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "BIXPCGW 7274157868 a",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 776,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2 * hplus",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > #0.0057) \\/ (dih_y y1 y2 y3 y4 y5 y6 < #2.3))",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "QITNPEA 9939613598",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 798,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2 * hplus",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun - #0.00457511 - #0.00609451*dih_y y1 y2 y3 y4 y5 y6 > #0.0) \\/ (y_of_x rad2_x y1 y2 y3 y4 y5 y6 > &2))",
+   "tags": [
+    "Marchal",
+    "Cfsqp",
+    "Flypaper",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": null,
+   "idv_expr": "Printf.sprintf \"QITNPEA1 %d %d 9063653052 A\" i3 i4",
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": "add_QITNPEA1",
+   "line": 846,
+   "bounds": [],
+   "body_raw": null,
+   "tags": [
+    "Tex",
+    "Marchal",
+    "Cfsqp",
+    "Flypaper",
+    "Xconvert",
+    "Penalty",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": "idv field is an expression, not a string literal; ineq field is not a literal `ineq [...]' quotation: mk_QITNPEA1 i3 i4",
+   "ineq_raw": "mk_QITNPEA1 i3 i4"
+  },
+  {
+   "idv": "QITNPEA 2134082733",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 864,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 *hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2 * hminus",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / &2 + beta_bump_lb - #0.213849 + #0.119482*dih_y y1 y2 y3 y4 y5 y6 > #0.0 ) \\/ (y_of_x rad2_x y1 y2 y3 y4 y5 y6 > &2))",
+   "tags": [
+    "Marchal",
+    "Cfsqp",
+    "Flypaper",
+    "Clusterlp",
+    "Xconvert",
+    "Tex",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "FHBVYXZv2 a",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 888,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > #0.0057)\\/ (y_of_x rad2_x y1 y2 y3 y4 y5 y6 > &2) \\/ (eta_y y1 y3 y5 pow 2 < #1.34 pow 2))",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Cfsqp",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "FHBVYXZ a",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 914,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > &0)\\/ (y_of_x rad2_x y1 y2 y3 y4 y5 y6 > &2) \\/ (eta_y y1 y2 y6 pow 2 < #1.34 pow 2))",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Cfsqp",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "FHBVYXZ b",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 942,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun + gamma3f y1 y2 y6 sqrt2 lmfun > &0)\\/ (y_of_x rad2_x y1 y2 y3 y4 y5 y6 > &2) \\/ (eta_y y1 y2 y6 pow 2 > #1.34 pow 2))",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Cfsqp",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "FWGKMBZ",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 967,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "(y_of_x delta_x y1 y2 y3 y4 y5 y6 > &0)",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Tex",
+    "Cfsqp",
+    "Xconvert",
+    "Branching"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "BIXPCGW 9455898160",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 985,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "(gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > -- #0.00569)",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "QITNPEA 5653753305",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1004,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "(gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun + #0.0659 - #0.042*dih_y y1 y2 y3 y4 y5 y6 > #0.0)",
+   "tags": [
+    "Marchal",
+    "Cfsqp",
+    "Flypaper",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "QITNPEA 6206775865",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1023,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2",
+     "var": "y4",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "(gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun + #0.0142852 - #0.00609451 *dih_y y1 y2 y3 y4 y5 y6 > #0.0)",
+   "tags": [
+    "Marchal",
+    "Cfsqp",
+    "Clusterlp",
+    "Flypaper",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "QITNPEA 5814748276",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1041,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2",
+     "var": "y4",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "(gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun - #0.00127562 + #0.00522841 * dih_y y1 y2 y3 y4 y5 y6 > #0.0)",
+   "tags": [
+    "Marchal",
+    "Cfsqp",
+    "Clusterlp",
+    "Flypaper",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "QITNPEA 3848804089",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1059,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2",
+     "var": "y4",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "(gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun - #0.161517 + #0.119482* dih_y y1 y2 y3 y4 y5 y6 > #0.0)",
+   "tags": [
+    "Marchal",
+    "Cfsqp",
+    "Clusterlp",
+    "Flypaper",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "QITNPEA  5400790175 a",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1103,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 *hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2 * hminus",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / &2 + beta_bump_lb > #0.0057) \\/ (y_of_x rad2_x y1 y2 y3 y4 y5 y6 > &2) \\/ (eta_y y1 y2 y6 pow 2 < #1.34 pow 2))",
+   "tags": [
+    "Marchal",
+    "Cfsqp",
+    "Flypaper",
+    "Clusterlp",
+    "Xconvert",
+    "Tex",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "QITNPEA  5400790175 b",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1121,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 *hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2 * hminus",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "((gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / &2 + beta_bump_lb + gamma3f y1 y2 y6 sqrt2 lmfun > #0.0057) \\/ (y_of_x rad2_x y1 y2 y3 y4 y5 y6 > &2) \\/ (eta_y y1 y2 y6 pow 2 > #1.34 pow 2))",
+   "tags": [
+    "Marchal",
+    "Cfsqp",
+    "Flypaper",
+    "Clusterlp",
+    "Xconvert",
+    "Tex",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "TEWNSCJ",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1146,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "( (y_of_x (gamma23_full8_x (h0cut y1)) y1 y2 y3 y4 y5 y6 > a_spine5 + b_spine5 * dih_y y1 y2 y3 y4 y5 y6) \\/ y_of_x rad2_x y1 y2 y3 y4 y5 y6 < &2 \\/ eta_y y1 y2 y6 pow 2 > #1.34 pow 2 \\/ eta_y y1 y3 y5 pow 2 > #1.34 pow 2 )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "PEMKWKU",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1169,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "( (y_of_x (gamma23_keep135_x (h0cut y1)) y1 y2 y3 y4 y5 y6 > a_spine5 + b_spine5 * dih_y y1 y2 y3 y4 y5 y6) \\/ y_of_x rad2_x y1 y2 y3 y4 y5 y6 < &2 \\/ dih_y y1 y2 y3 y4 y5 y6 > #1.074 \\/ eta_y y1 y2 y6 pow 2 > &2 \\/ eta_y y1 y2 y6 pow 2 < #1.34 pow 2 \\/ eta_y y1 y3 y5 pow 2 > #1.34 pow 2 )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "QITNPEAv2 4003532128",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1193,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "(( eta_y y1 y2 y6 pow 2 > #1.34 pow 2 ) \\/ (eta_y y1 y3 y5 pow 2 > #1.34 pow 2) \\/ (y_of_x rad2_x y1 y2 y3 y4 y5 y6 < &2) \\/ (y2 < y3) \\/ (y2 < y5) \\/ (y2 < y6) \\/ (y_of_x (gamma23_full8_x (h0cut y1)) y1 y2 y3 y4 y5 y6 - #0.00457511 - #0.00609451*dih_y y1 y2 y3 y4 y5 y6 > #0.0) )",
+   "tags": [
+    "Marchal",
+    "Cfsqp",
+    "Cfsqp_branch",
+    "Clusterlp",
+    "Flypaper",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "QITNPEA 3725403817",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1221,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "#2",
+     "var": "y4",
+     "hi": "#2.1"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "(dih_y y1 y2 y3 y4 y5 y6 < #1.56)",
+   "tags": [
+    "Marchal",
+    "Cfsqp",
+    "Clusterlp",
+    "Flypaper",
+    "Tex",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "TXQTPVC",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1241,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "( (y_of_x (gamma23_full8_x (h0cut y1)) y1 y2 y3 y4 y5 y6 > &3 * #0.0057) \\/ y_of_x rad2_x y1 y2 y3 y4 y5 y6 < &2 \\/ dih_y y1 y2 y3 y4 y5 y6 > #2.089 \\/ dih_y y1 y2 y3 y4 y5 y6 < #1.946 \\/ eta_y y1 y2 y6 pow 2 > #1.34 pow 2 \\/ eta_y y1 y3 y5 pow 2 > #1.34 pow 2 )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "IXPOTPA",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1265,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "sqrt8",
+     "var": "y4",
+     "hi": "&4 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "(let tan2lower = #3.07 in ( // Tan[Pi-2.089]^2 let tan2upper = #6.45 in ( // Tan[Pi-1.946]^2 delta_y y1 y2 y3 y4 y5 y6 < &0 \\/ delta4_y y1 y2 y3 y4 y5 y6 > &0 \\/ (&4 * x1_delta_y y1 y2 y3 y4 y5 y6 < tan2lower * delta4_squared_y y1 y2 y3 y4 y5 y6) \\/ (&4 * x1_delta_y y1 y2 y3 y4 y5 y6 > tan2upper * delta4_squared_y y1 y2 y3 y4 y5 y6) \\/ eta_y y1 y2 y6 pow 2 > #1.34 pow 2 \\/ eta_y y1 y3 y5 pow 2 > #1.34 pow 2 \\/ (y_of_x (gamma23_full8_x (h0cut y1)) y1 y2 y3 y4 y5 y6 > &3 * #0.0057))))",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split",
+    "Cfsqp_branch",
+    "Penalty"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "QITNPEA 4003532128 a",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1290,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "sqrt2",
+     "var": "y3",
+     "hi": "sqrt2"
+    },
+    {
+     "lo": "sqrt2",
+     "var": "y4",
+     "hi": "sqrt2"
+    },
+    {
+     "lo": "sqrt2",
+     "var": "y5",
+     "hi": "sqrt2"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "( (delta4_y y1 y2 y3 y4 y5 y6 > &25) \\/ (delta_y y1 y2 y3 y4 y5 y6 > #0.14) \\/ (delta_y y1 y2 y3 y4 y5 y6 < &0) )",
+   "tags": [
+    "Marchal",
+    "Cfsqp",
+    "Clusterlp",
+    "Flypaper",
+    "Tex",
+    "Xconvert",
+    "Branching"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "RQWUDDU",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1332,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "( dih_y y1 y2 y3 y4 y5 y6 > #0.76 \\/ eta_y y1 y2 y6 pow 2 > &2 \\/ eta_y y1 y3 y5 pow 2 > &2 )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "GCKBQEA",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1352,
+   "bounds": [
+    {
+     "lo": "&2 * hminus",
+     "var": "y1",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "( dih_y y1 y2 y3 y4 y5 y6 > #0.606 )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "QZECFIC wt0",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1371,
+   "bounds": [
+    {
+     "lo": "&1",
+     "var": "y1",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y2",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y3",
+     "hi": "&1"
+    },
+    {
+     "lo": "#2.01",
+     "var": "y4",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 *hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "( y_of_x (gamma3f_x_div_sqrtdelta (&1) (&1) (&1)) y1 y2 y3 y4 y5 y6 > &0 )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "QZECFIC wt0 corner",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1388,
+   "bounds": [
+    {
+     "lo": "&1",
+     "var": "y1",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y2",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y3",
+     "hi": "&1"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "#2.01"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "#2.01"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "#2.01"
+    }
+   ],
+   "body_raw": "( y_of_x (gamma3f_x_div_sqrtdelta (&1) (&1) (&1)) y1 y2 y3 y4 y5 y6 >= &0 )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Sharp",
+    "Eps"
+   ],
+   "eps": 1e-08,
+   "parse_note": null
+  },
+  {
+   "idv": "QZECFIC wt0 sqrt8",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1405,
+   "bounds": [
+    {
+     "lo": "&1",
+     "var": "y1",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y2",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y3",
+     "hi": "&1"
+    },
+    {
+     "lo": "&2 * hplus",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "( y_of_x (gamma3f_x_div_sqrtdelta (&0) (&1) (&1)) y1 y2 y3 y4 y5 y6 > &0 \\/ eta_y y4 y5 y6 pow 2 > &2 )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Widthcutoff",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "QZECFIC wt1",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1424,
+   "bounds": [
+    {
+     "lo": "sqrt2",
+     "var": "y1",
+     "hi": "sqrt2"
+    },
+    {
+     "lo": "sqrt2",
+     "var": "y2",
+     "hi": "sqrt2"
+    },
+    {
+     "lo": "sqrt2",
+     "var": "y3",
+     "hi": "sqrt2"
+    },
+    {
+     "lo": "&2 * hminus",
+     "var": "y4",
+     "hi": "&2 * hplus"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * hminus"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "( y_of_x (gamma3f_x_div_sqrtdelta (h0cut y4) (&1) (&1)) y1 y2 y3 y4 y5 y6 > #0.008 * y_of_x dih4_x_div_sqrtdelta_posbranch y1 y2 y3 y4 y5 y6 \\/ eta_y y4 y5 y6 pow 2 > &2 )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "QZECFIC wt2 A",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1442,
+   "bounds": [
+    {
+     "lo": "sqrt2",
+     "var": "y1",
+     "hi": "sqrt2"
+    },
+    {
+     "lo": "sqrt2",
+     "var": "y2",
+     "hi": "sqrt2"
+    },
+    {
+     "lo": "sqrt2",
+     "var": "y3",
+     "hi": "sqrt2"
+    },
+    {
+     "lo": "&2 * hminus",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2 * hminus",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * hminus"
+    }
+   ],
+   "body_raw": "( y_of_x (gamma3f_x_div_sqrtdelta (h0cut y4) (h0cut y5) (&1)) y1 y2 y3 y4 y5 y6 / &2 > #0.008 * y_of_x dih4_x_div_sqrtdelta_posbranch y1 y2 y3 y4 y5 y6 \\/ eta_y y4 y5 y6 pow 2 > &2 )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "CIHTIUM",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1461,
+   "bounds": [
+    {
+     "lo": "&1",
+     "var": "y1",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y2",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y3",
+     "hi": "&1"
+    },
+    {
+     "lo": "&2 * hminus",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2 * hminus",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2 * hminus",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "(eta_y y4 y5 y6 pow 2 > &2 )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "CJFZZDW",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1478,
+   "bounds": [
+    {
+     "lo": "&1",
+     "var": "y1",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y2",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y3",
+     "hi": "&1"
+    },
+    {
+     "lo": "&2 * hplus",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2 * hplus",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "(eta_y y4 y5 y6 pow 2 > &2 )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "JSPEVYT",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1495,
+   "bounds": [
+    {
+     "lo": "&1",
+     "var": "y1",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y2",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y3",
+     "hi": "&1"
+    },
+    {
+     "lo": "&2 * hminus",
+     "var": "y4",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2 * hminus",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "sqrt8"
+    }
+   ],
+   "body_raw": "(eta_y y4 y5 y6 pow 2 > (#1.34) pow 2 )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "GRKIBMP A V2",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1519,
+   "bounds": [
+    {
+     "lo": "(&2)",
+     "var": "y1",
+     "hi": "(&2 * hplus)"
+    },
+    {
+     "lo": "&1",
+     "var": "y2",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y3",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y4",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y5",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y6",
+     "hi": "&1"
+    }
+   ],
+   "body_raw": "(y_of_x (gamma2_x1_div_a_v2 (h0cut y1)) y1 y2 y3 y4 y5 y6 > #0.008 )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Branching",
+    "Split"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "GRKIBMP B V2",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1536,
+   "bounds": [
+    {
+     "lo": "(&2 * hplus)",
+     "var": "y1",
+     "hi": "(sqrt8)"
+    },
+    {
+     "lo": "&1",
+     "var": "y2",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y3",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y4",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y5",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y6",
+     "hi": "&1"
+    }
+   ],
+   "body_raw": "(y_of_x (gamma2_x1_div_a_v2 (&0)) y1 y2 y3 y4 y5 y6 >= &0 )",
+   "tags": [
+    "Marchal",
+    "Flypaper",
+    "Cfsqp",
+    "Clusterlp",
+    "Tex",
+    "Xconvert",
+    "Sharp",
+    "Eps",
+    "Branching"
+   ],
+   "eps": 1e-08,
+   "parse_note": null
+  },
+  {
+   "idv": null,
+   "idv_expr": "Printf.sprintf \"OXLZLEZ 6346351218 %d %d\" case r",
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": "add3q1h",
+   "line": 1569,
+   "bounds": [],
+   "body_raw": null,
+   "tags": [
+    "Tex",
+    "Marchal",
+    "Clusterlp",
+    "Branching",
+    "Flypaper",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": "ineq field is not a literal `ineq [...]' quotation: f; idv field is an expression, not a string literal",
+   "ineq_raw": "f"
+  },
+  {
+   "idv": "1965189142 34",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1587,
+   "bounds": [
+    {
+     "lo": "#1.0",
+     "var": "x1",
+     "hi": "#1.26"
+    },
+    {
+     "lo": "&1",
+     "var": "x2",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "x3",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "x4",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "x5",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "x6",
+     "hi": "&1"
+    }
+   ],
+   "body_raw": "(#0.591 - #0.0331 * &34 + #0.506 * lfun_y1 x1 x2 x3 x4 x5 x6 < &0)",
+   "tags": [
+    "Tex",
+    "Flypaper"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "1965189142 a",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1598,
+   "bounds": [
+    {
+     "lo": "#1.0",
+     "var": "x1",
+     "hi": "#1.26"
+    },
+    {
+     "lo": "#3.0",
+     "var": "x2",
+     "hi": "#34.0"
+    },
+    {
+     "lo": "&1",
+     "var": "x3",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "x4",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "x5",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "x6",
+     "hi": "&1"
+    }
+   ],
+   "body_raw": "(&2 * pi - &2 * asnFnhk x1 x2 x3 x4 x5 x6 > #0.591 - #0.0331 * x2 + #0.506 * lfun_y1 x1 x2 x3 x4 x5 x6)",
+   "tags": [
+    "Tex",
+    "Flypaper"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "8055810915",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1634,
+   "bounds": [
+    {
+     "lo": "&4",
+     "var": "x1",
+     "hi": "#2.52 pow 2"
+    },
+    {
+     "lo": "&4",
+     "var": "x2",
+     "hi": "&4"
+    },
+    {
+     "lo": "(&2 * h0) pow 2",
+     "var": "x3",
+     "hi": "(&2 * h0) pow 2"
+    },
+    {
+     "lo": "&1",
+     "var": "x4",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "x5",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "x6",
+     "hi": "&1"
+    }
+   ],
+   "body_raw": "(acs_sqrt_x1_d4 x1 x2 x3 x4 x5 x6 - pi/ (&6) + #0.797 < arclength_x_123 x1 x2 x3 x4 x5 x6)",
+   "tags": [
+    "Tex",
+    "Flypaper"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "6096597438 a",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1650,
+   "bounds": [
+    {
+     "lo": "#1.0",
+     "var": "h",
+     "hi": "#1.0"
+    }
+   ],
+   "body_raw": "(#0.591 - #0.0331 * &64 + #0.506 * lfun (&1) + #1.0 < &0)",
+   "tags": [
+    "Tex",
+    "Flypaper"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "6096597438 b",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1661,
+   "bounds": [
+    {
+     "lo": "#3.0",
+     "var": "x1",
+     "hi": "#64.0"
+    },
+    {
+     "lo": "&1",
+     "var": "x2",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "x3",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "x4",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "x5",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "x6",
+     "hi": "&1"
+    }
+   ],
+   "body_raw": "(&2 * pi - &2 * asn797k x1 x2 x3 x4 x5 x6 > #0.591 - #0.0331 * x1 + #0.506 * lfun (&1) + #1.0)",
+   "tags": [
+    "Tex",
+    "Flypaper"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "4717061266",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1698,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2*h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2*h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2*h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2*h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2*h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2*h0"
+    }
+   ],
+   "body_raw": "(delta_y y1 y2 y3 y4 y5 y6 > &0)",
+   "tags": [
+    "Flypaper",
+    "Main_estimate",
+    "Tex",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "SDCCMGA a",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1721,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&1",
+     "var": "y2",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y3",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y4",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y5",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y6",
+     "hi": "&1"
+    }
+   ],
+   "body_raw": "(arclength_y1 (&2) (&2 * h0) y1 y2 y3 y4 y5 y6 + arclength_y1 (&2) (&2 * h0) y1 y2 y3 y4 y5 y6 < arclength_y1 (&2*h0) (&2 * h0) y1 y2 y3 y4 y5 y6 + &2 * arc_hhn)",
+   "tags": [
+    "Tex",
+    "Flypaper",
+    "Cfsqp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "SDCCMGA b",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1737,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&1",
+     "var": "y2",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y3",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y4",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y5",
+     "hi": "&1"
+    },
+    {
+     "lo": "&1",
+     "var": "y6",
+     "hi": "&1"
+    }
+   ],
+   "body_raw": "(arclength_y1 (&2) (&2 * h0) y1 y2 y3 y4 y5 y6 + arclength_y1 (&2) (&2 * h0) y1 y2 y3 y4 y5 y6 < arclength_y1 (&2*h0) (&2) y1 y2 y3 y4 y5 y6 + pi / &3 + arc_hhn)",
+   "tags": [
+    "Tex",
+    "Flypaper",
+    "Cfsqp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "JNTEFVP 1",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1755,
+   "bounds": [
+    {
+     "lo": "&4",
+     "var": "x1",
+     "hi": "(&2 * h0) pow 2"
+    },
+    {
+     "lo": "&4",
+     "var": "x2",
+     "hi": "(&2 * h0) pow 2"
+    },
+    {
+     "lo": "&4",
+     "var": "x3",
+     "hi": "(&2 * h0) pow 2"
+    },
+    {
+     "lo": "&4",
+     "var": "x4",
+     "hi": "(&2 * h0) pow 2"
+    },
+    {
+     "lo": "&4",
+     "var": "x5",
+     "hi": "(&2 * h0) pow 2"
+    },
+    {
+     "lo": "&8",
+     "var": "x6",
+     "hi": "(&4 * h0) pow 2"
+    }
+   ],
+   "body_raw": "(delta_x4 x1 x2 x3 x4 x5 x6 > &0)",
+   "tags": [
+    "Tex",
+    "Cfsqp",
+    "Flypaper",
+    "Lp_aux",
+    "Tablelp"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "4652969746 1",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1775,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "#2.1771",
+     "var": "y4",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "#2.52"
+    }
+   ],
+   "body_raw": "(taum y1 y2 y3 y4 y5 y6 > #0.04)",
+   "tags": [
+    "Cfsqp",
+    "Tex",
+    "Tablelp",
+    "Flypaper",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "4652969746 2",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1792,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "#2.1771"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "#2.52"
+    }
+   ],
+   "body_raw": "(taum y1 y2 y3 y4 y5 y6 - #0.312 * (dih_y y1 y2 y3 y4 y5 y6 - &2 * pi/ &5) > #0.04 / &5)",
+   "tags": [
+    "Cfsqp",
+    "Tex",
+    "Tablelp",
+    "Flypaper",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "2570626711",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1811,
+   "bounds": [
+    {
+     "lo": "#2.0",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2 * h0",
+     "var": "y4",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "(dih_y y1 y2 y3 y4 y5 y6 > #1.15)",
+   "tags": [
+    "Cfsqp",
+    "Tablelp",
+    "Flypaper",
+    "Xconvert",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "3287695934",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1848,
+   "bounds": [
+    {
+     "lo": "#4.37",
+     "var": "y1",
+     "hi": "&4 * h0"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2 * h0",
+     "var": "y4",
+     "hi": "&4 * h0"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#2.0",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "(delta_y y1 y2 y3 y4 y5 y6 < &0)",
+   "tags": [
+    "Cfsqp",
+    "Tablelp",
+    "Xconvert",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "8673686234",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1876,
+   "bounds": [
+    {
+     "lo": "sqrt8",
+     "var": "y1",
+     "hi": "#3.0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "sqrt8",
+     "var": "y4",
+     "hi": "&4 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "((y2 + y3 + y5 + y6 - #7.99 > #2.75 * (y1 - sqrt8)) \\/ (delta_y y1 y2 y3 y4 y5 y6 < &0) \\/ (y4 < y1))",
+   "tags": [
+    "Cfsqp",
+    "Tex",
+    "Xconvert",
+    "Deprecated"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "8673686234 a",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1896,
+   "bounds": [
+    {
+     "lo": "sqrt8",
+     "var": "y1",
+     "hi": "#3.0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "#2.07"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "#2.07"
+    },
+    {
+     "lo": "sqrt8",
+     "var": "y4",
+     "hi": "&4 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "#2.07"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "#2.07"
+    }
+   ],
+   "body_raw": "((y2 + y3 + y5 + y6 - #7.99 - #0.00385 * delta_y y1 y2 y3 y4 y5 y6 > #2.75 * ((y1 + y4)/ &2 - sqrt8)) )",
+   "tags": [
+    "Cfsqp",
+    "Lp_aux",
+    "Tex",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "8673686234 b",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1914,
+   "bounds": [
+    {
+     "lo": "sqrt8",
+     "var": "y1",
+     "hi": "#3.0"
+    },
+    {
+     "lo": "#2.07",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#3.0",
+     "var": "y4",
+     "hi": "#3.0"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "((y2 + y3 + y5 + y6 - #7.99 > #2.75 * (y1 - sqrt8)) \\/ (delta_y y1 y2 y3 y4 y5 y6 < &0) )",
+   "tags": [
+    "Cfsqp",
+    "Lp_aux",
+    "Tex",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "8673686234 c",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1932,
+   "bounds": [
+    {
+     "lo": "sqrt8",
+     "var": "y1",
+     "hi": "#3.0"
+    },
+    {
+     "lo": "#2.07",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "sqrt8",
+     "var": "y4",
+     "hi": "#3.0"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "((y2 + y3 + y5 + y6 - #7.99 > #2.75 * ((y1 + y4)/ &2 - sqrt8)) \\/ (y2 + y3 + y5 + y6 - #7.99 - #0.00385 * delta_y y1 y2 y3 y4 y5 y6 > #2.75 * ((y1 + y4)/ &2 - sqrt8)) \\/ (delta_y y1 y2 y3 y4 y5 y6 < &0) )",
+   "tags": [
+    "Cfsqp",
+    "Lp_aux",
+    "Tex",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "6170936724",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1951,
+   "bounds": [
+    {
+     "lo": "&3",
+     "var": "y1",
+     "hi": "&3"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "sqrt8",
+     "var": "y4",
+     "hi": "&4 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "#2.52"
+    }
+   ],
+   "body_raw": "( y_of_x delta_x1 y1 y2 y3 y4 y5 y6 < &0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Tex",
+    "Penalty"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "7043724150 a",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1978,
+   "bounds": [],
+   "body_raw": "ineq (dart_std4 y1 y2 y3 y4 y5 y6 y7 y8 y9) (( tauq y1 y2 y3 y4 y5 y6 y7 y8 y9 + #4.72 * dih_y y1 y2 y3 y4 y5 y6 - #6.248 > #0.0) \\/ ( enclosed y1 y5 y6 y4 y2 y3 y7 y8 y9 < sqrt8 ) )",
+   "tags": [
+    "Cfsqp",
+    "Tablelp",
+    "Flypaper",
+    "Lp",
+    "Xconvert",
+    "Tex",
+    "Dim_red_backsym",
+    "Quad_cluster"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "7043724150 a reduced v2",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 1989,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2 * h0",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( taum y1 y2 y3 y4 y5 y6 + #4.72 * dih_y y1 y2 y3 y4 y5 y6 - #6.248 / &2 > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Lp_aux",
+    "Xconvert",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "6944699408 a",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2011,
+   "bounds": [],
+   "body_raw": "ineq (dart_std4 y1 y2 y3 y4 y5 y6 y7 y8 y9) (( tauq y1 y2 y3 y4 y5 y6 y7 y8 y9 + #0.972 * dih_y y1 y2 y3 y4 y5 y6 - #1.707 > #0.0) \\/ ( enclosed y1 y5 y6 y4 y2 y3 y7 y8 y9 < sqrt8 ))",
+   "tags": [
+    "Cfsqp",
+    "Tablelp",
+    "Flypaper",
+    "Lp",
+    "Xconvert",
+    "Tex",
+    "Dim_red_backsym",
+    "Quad_cluster"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "6944699408 a reduced",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2022,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2 * h0",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( taum y1 y2 y3 y4 y5 y6 + #0.972 * dih_y y1 y2 y3 y4 y5 y6 - #1.707 / &2 > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Lp_aux",
+    "Xconvert",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "4240815464 a",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2043,
+   "bounds": [],
+   "body_raw": "ineq (dart_std4 y1 y2 y3 y4 y5 y6 y7 y8 y9) (( tauq y1 y2 y3 y4 y5 y6 y7 y8 y9 + #0.7573 *dih_y y1 y2 y3 y4 y5 y6 - #1.433 > #0.0) \\/ ( enclosed y1 y5 y6 y4 y2 y3 y7 y8 y9 < sqrt8 ) \\/ ( delta_y y1 y2 y3 y4 y5 y6 < &0) \\/ ( delta_y y7 y2 y3 y4 y8 y9 < &0))",
+   "tags": [
+    "Cfsqp",
+    "Tablelp",
+    "Flypaper",
+    "Tex",
+    "Xconvert",
+    "Lp",
+    "Penalty",
+    "Dim_red_backsym",
+    "Quad_cluster"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "3397113841",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2056,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#3.36",
+     "var": "y4",
+     "hi": "#3.36"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( delta4_y y1 y2 y3 y4 y5 y6 < &0)",
+   "tags": [
+    "Xconvert",
+    "Lp_aux",
+    "Tablelp"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "6078657299",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2074,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#3.36",
+     "var": "y4",
+     "hi": "&4 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "(let tan2lower = #396.09 in ((&4 * x1_delta_y y1 y2 y3 y4 y5 y6 < tan2lower * delta4_squared_y y1 y2 y3 y4 y5 y6) \\/ // dih_y y1 y2 y3 y4 y5 y6 > #1.621 \\/ delta_y y1 y2 y3 y4 y5 y6 < &0))",
+   "tags": [
+    "Lp_aux",
+    "Tablelp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "8384429938",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2097,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#3.01",
+     "var": "y4",
+     "hi": "#3.36"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( // delta_y (&2 * h0) y2 y3 y4 (&2) (&2) > &98 \\/ y_of_x (delta_234_x ((&2 * h0) pow 2) (&4) (&4)) y1 y2 y3 y4 y5 y6 > &98 \\/ delta4_y y1 y2 y3 y4 y5 y6 < &0 )",
+   "tags": [
+    "Lp_aux",
+    "Tablelp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "9893763499",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2118,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#3.01",
+     "var": "y4",
+     "hi": "#3.36"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "raw": "(&2,y6,&2 * h0) // (&2,y7,&2 * h0)"
+    }
+   ],
+   "body_raw": "(let tan2lower = #396.09 in ((&4 * x1_delta_y y1 y2 y3 y4 y5 y6 < tan2lower * delta4_squared_y y1 y2 y3 y4 y5 y6) \\/ // dih_y y1 y2 y3 y4 y5 y6 > #1.621 \\/ // delta_y (&2 * h0) y2 y3 y4 (&2) (&2) > &98 \\/ y_of_x (delta_234_x ((&2 * h0) pow 2) (&4) (&4)) y1 y2 y3 y4 y5 y6 > &98 ))",
+   "tags": [
+    "Lp_aux",
+    "Tablelp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": "bounds item has 5 fields: '(&2,y6,&2 * h0) // (&2,y7,&2 * h0)'"
+  },
+  {
+   "idv": "5429228381",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2141,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#3.01",
+     "var": "y4",
+     "hi": "#3.36"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( taum y1 y2 y3 y4 y5 y6 > -- #0.07 \\/ y_of_x (delta_234_x ((&2 * h0) pow 2) (&4) (&4)) y1 y2 y3 y4 y5 y6 < &98 )",
+   "tags": [
+    "Lp_aux",
+    "Tablelp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "3508342905",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2161,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#3.01",
+     "var": "y4",
+     "hi": "#3.36"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( taum y1 y2 y3 y4 y5 y6 - #0.07 + #0.7573 * dih_y y1 y2 y3 y4 y5 y6 - #1.433 > &0 \\/ // dih_y y1 y2 y3 y4 y5 y6 > #1.621 \\/ // delta_y y1 y2 y3 y4 y5 y6 < &98 y_of_x (delta_234_x ((&2 * h0) pow 2) (&4) (&4)) y1 y2 y3 y4 y5 y6 < &98 )",
+   "tags": [
+    "Lp_aux",
+    "Tablelp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "2327525027",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2184,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#3.01",
+     "var": "y4",
+     "hi": "#3.36"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( &0 < delta_y y1 y2 y3 y4 y5 y6 \\/ y_of_x (delta_234_x ((&2 * h0) pow 2) (&4) (&4)) y1 y2 y3 y4 y5 y6 < &98 )",
+   "tags": [
+    "Lp_aux",
+    "Tablelp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "1611600345x",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2205,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#2.52",
+     "var": "y4",
+     "hi": "#3.01"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( taum y1 y2 y3 y4 y5 y6 > #0.10 - #0.0011 + #0.115 * (y3 - &2) + #0.135 * (y2 - &2) \\/ y2 < y3)",
+   "tags": [
+    "Lp_aux",
+    "Tablelp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "2608321088x",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2224,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#2.52",
+     "var": "y4",
+     "hi": "#3.01"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( taum y1 y2 y3 y4 y5 y6 + #0.10 - #0.0011 + #0.115 * (y3 - &2) + #0.135 * (y2 - &2) + #0.7573 * dih_y y1 y2 y3 y4 y5 y6 - #1.433 > &0 \\/ dih_y y1 y2 y3 y4 y5 y6 > #1.621 \\/ y2 < y3)",
+   "tags": [
+    "Lp_aux",
+    "Tablelp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "4240815464 a reduced",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2244,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2 * h0",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( taum y1 y2 y3 y4 y5 y6 + #0.7573 *dih_y y1 y2 y3 y4 y5 y6 - #1.433 / &2 > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Lp_aux",
+    "Tex",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "3862621143 revised",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2263,
+   "bounds": [],
+   "body_raw": "ineq (dart_std4 y1 y2 y3 y4 y5 y6 y7 y8 y9) (( tauq y1 y2 y3 y4 y5 y6 y7 y8 y9 - #0.453 * dih_y y1 y2 y3 y4 y5 y6 + #0.777 > #0.0) \\/ ( enclosed y1 y5 y6 y4 y2 y3 y7 y8 y9 < #3.01 ) \\/ ( delta_y y1 y2 y3 y4 y5 y6 < &0) \\/ (y4 < #2.9) \\/ ( delta_y y7 y2 y3 y4 y8 y9 < &0))",
+   "tags": [
+    "Cfsqp",
+    "Tablelp",
+    "Flypaper",
+    "Tex",
+    "Xconvert",
+    "Lp",
+    "Penalty",
+    "Dim_red_backsym",
+    "Quad_cluster"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "4092227918",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2278,
+   "bounds": [
+    {
+     "lo": "&4",
+     "var": "x1",
+     "hi": "&7"
+    },
+    {
+     "lo": "&4",
+     "var": "x2",
+     "hi": "&7"
+    },
+    {
+     "lo": "&4",
+     "var": "x3",
+     "hi": "&7"
+    },
+    {
+     "lo": "&4",
+     "var": "x4",
+     "hi": "&7"
+    },
+    {
+     "lo": "&8",
+     "var": "x5",
+     "hi": "&28"
+    },
+    {
+     "lo": "&4",
+     "var": "x6",
+     "hi": "&7"
+    }
+   ],
+   "body_raw": "( &0 < delta4_squared_x x1 x2 x3 x4 x5 x6 \\/ &0 < delta_x x1 x2 x3 x4 x5 x6 )",
+   "tags": [
+    "Lp_aux",
+    "Lp"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "8425800388",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2297,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#3.9",
+     "var": "y5",
+     "hi": "&4 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "(let tan2lower = #3.418 in ((&4 * x1_delta_y y1 y2 y3 y4 y5 y6 < tan2lower * delta4_squared_y y1 y2 y3 y4 y5 y6) \\/ delta_y y1 y2 y3 y4 y5 y6 < &0))",
+   "tags": [
+    "Lp_aux",
+    "Lp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "3253650737",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2319,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#3.01",
+     "var": "y5",
+     "hi": "#3.9"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( // dih_y y1 y2 y3 y4 y5 y6 < #1.41 &4 * x1_delta_y y1 y2 y3 y4 y5 y6 < #38.0 * delta4_squared_y y1 y2 y3 y4 y5 y6 )",
+   "tags": [
+    "Lp_aux",
+    "Lp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "6723997360",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2338,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#3.01",
+     "var": "y5",
+     "hi": "#3.9"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( &4 * x1_delta_y y1 y2 y3 y4 y5 y6 < #4.05 * delta4_squared_y y1 y2 y3 y4 y5 y6 \\/ //dih_y y1 y2 y3 y4 y5 y6 < #1.11 \\/ taum y1 y2 y3 y4 y5 y6 > #0.501 / &2 // delta_y y1 y2 y3 y4 y5 y6 < &16 \\/ )",
+   "tags": [
+    "Lp_aux",
+    "Lp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "1968758929",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2359,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#3.01",
+     "var": "y5",
+     "hi": "#3.9"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( &4 * x1_delta_y y1 y2 y3 y4 y5 y6 < #2.9 * delta4_squared_y y1 y2 y3 y4 y5 y6 \\/ taum y1 y2 y3 y4 y5 y6 > #0.21 // \\/ // dih_y y1 y2 y3 y4 y5 y6 < #1.04 \\/ // delta_y y1 y2 y3 y4 y5 y6 < &16 )",
+   "tags": [
+    "Lp_aux",
+    "Lp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "6404645741",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2379,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#3.01",
+     "var": "y5",
+     "hi": "#3.9"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( &4 * x1_delta_y y1 y2 y3 y4 y5 y6 < #1.914 * delta4_squared_y y1 y2 y3 y4 y5 y6 \\/ // dih_y y1 y2 y3 y4 y5 y6 < #0.945 \\/ taum y1 y2 y3 y4 y5 y6 > #0.155 // delta_y y1 y2 y3 y4 y5 y6 < &16 )",
+   "tags": [
+    "Lp_aux",
+    "Lp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "2513405547",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2400,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#3.01",
+     "var": "y5",
+     "hi": "#3.9"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( &4 * x1_delta_y y1 y2 y3 y4 y5 y6 < #6.8158 * delta4_squared_y y1 y2 y3 y4 y5 y6 \\/ taum y1 y2 y3 y4 y5 y6 > #0.316 // dih_y y1 y2 y3 y4 y5 y6 < #1.205 \\/ // delta_y y1 y2 y3 y4 y5 y6 < &16 )",
+   "tags": [
+    "Lp_aux",
+    "Lp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "8293089898",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2421,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "#3.01",
+     "var": "y5",
+     "hi": "#3.9"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( &4 * x1_delta_y y1 y2 y3 y4 y5 y6 < #0.833 * delta4_squared_y y1 y2 y3 y4 y5 y6 \\/ taum y1 y2 y3 y4 y5 y6 > -- #0.026 // dih_y y1 y2 y3 y4 y5 y6 < #0.74 \\/ // delta_y y1 y2 y3 y4 y5 y6 < &16 )",
+   "tags": [
+    "Lp_aux",
+    "Lp",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "3862621143 side",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2443,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2 * h0",
+     "var": "y5",
+     "hi": "#3.01"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( taum y1 y2 y3 y4 y5 y6 - #0.453 * dih_y y1 y2 y3 y4 y5 y6 + #0.777 / &2 > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Lp_aux",
+    "Tex",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "3862621143 front",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2459,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2 * h0",
+     "var": "y4",
+     "hi": "#2.9"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( taum y1 y2 y3 y4 y5 y6 + tame_table_d 2 1 - #0.453 * dih_y y1 y2 y3 y4 y5 y6 + #0.777 > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Lp_aux",
+    "Tex",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "3862621143 back",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2475,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "sqrt8",
+     "var": "y4",
+     "hi": "#3.01"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( taum y1 y2 y3 y4 y5 y6 > tame_table_d 2 1)",
+   "tags": [
+    "Cfsqp",
+    "Lp_aux",
+    "Tex",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "3862621143 a",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2494,
+   "bounds": [],
+   "body_raw": "ineq (dart_std4 y1 y2 y3 y4 y5 y6 y7 y8 y9) (( tauq y1 y2 y3 y4 y5 y6 y7 y8 y9 - #0.453 * dih_y y1 y2 y3 y4 y5 y6 + #0.777 > #0.0) \\/ ( enclosed y1 y5 y6 y4 y2 y3 y7 y8 y9 < sqrt8 ) \\/ ( delta_y y1 y2 y3 y4 y5 y6 < &0) \\/ ( delta_y y7 y2 y3 y4 y8 y9 < &0))",
+   "tags": [
+    "Cfsqp",
+    "Tablelp",
+    "Flypaper",
+    "Tex",
+    "Xconvert",
+    "Lp",
+    "Penalty",
+    "Dim_red_backsym",
+    "Quad_cluster",
+    "Deprecated"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "3862621143 a reduced",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2507,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y4",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2 * h0",
+     "var": "y5",
+     "hi": "sqrt8"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "( taum y1 y2 y3 y4 y5 y6 - #0.453 * dih_y y1 y2 y3 y4 y5 y6 + #0.777 / &2 > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Lp_aux",
+    "Tex",
+    "Xconvert",
+    "Deprecated"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "5691615370",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2523,
+   "bounds": [
+    {
+     "lo": "#3.0",
+     "var": "y1",
+     "hi": "#3.0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "#3.0",
+     "var": "y4",
+     "hi": "#3.0"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "#2.52"
+    }
+   ],
+   "body_raw": "((delta_y y1 y2 y3 y4 y5 y6 < &0) \\/ (y2 + y3 + y5 + y6 > #8.472) \\/ (y2 < y3) \\/ (y2 < y5) \\/ (y2 < y6 ) \\/ (y3 < y6))",
+   "tags": [
+    "Cfsqp",
+    "Lp_aux",
+    "Lp_aux",
+    "Main_estimate",
+    "Tex",
+    "Xconvert"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "3748250573",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2552,
+   "bounds": [
+    {
+     "lo": "&2 * h0",
+     "var": "y1",
+     "hi": "&4 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&2 * h0",
+     "var": "y4",
+     "hi": "&4 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "#2.52"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "#2.52"
+    }
+   ],
+   "body_raw": "( y_of_x ups_126 y1 y2 y3 y4 y5 y6 > &0 \\/ delta_y y1 y2 y3 y4 y5 y6 < &0 )",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp_aux",
+    "Tex",
+    "Penalty"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "5584033259",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2570,
+   "bounds": [
+    {
+     "lo": "&3",
+     "var": "y1",
+     "hi": "&4 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "#2.472"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "#2.472"
+    },
+    {
+     "lo": "&3",
+     "var": "y4",
+     "hi": "&4 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "#2.472"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "#2.472"
+    }
+   ],
+   "body_raw": "( y1 < &4 \\/ delta_y y1 y2 y3 y4 y5 y6 < &0 )",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Tex",
+    "Lp_aux",
+    "Penalty"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "9563139965D",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2620,
+   "bounds": [],
+   "body_raw": "ineq (dart4_diag3_b y1 y2 y3 y4 y5 y6 y7 y8 y9) ((tauq y1 y2 y3 y4 y5 y6 y7 y8 y9 > #0.467) \\/ (enclosed y1 y5 y6 y4 y2 y3 y7 y8 y9 < &3 ))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex",
+    "Penalty",
+    "Derived"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "9563139965 d",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2637,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&3",
+     "var": "y4",
+     "hi": "&3"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "#2.472"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "#2.472"
+    }
+   ],
+   "body_raw": "((taum y1 y2 y3 y4 y5 y6 + #0.5 * ( #8.472 / &2 - y5 - y6) > #0.467 / &2))",
+   "tags": [
+    "Cfsqp",
+    "Lp_aux",
+    "Main_estimate",
+    "Xconvert",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "9563139965 e",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2657,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&3",
+     "var": "y4",
+     "hi": "&3"
+    },
+    {
+     "lo": "#2.467",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "((taum y1 y2 y3 y4 y5 y6 > #0.467 - #0.115))",
+   "tags": [
+    "Cfsqp",
+    "Lp_aux",
+    "Main_estimate",
+    "Xconvert",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "9563139965 f",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2676,
+   "bounds": [
+    {
+     "lo": "&2",
+     "var": "y1",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y2",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y3",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&3",
+     "var": "y4",
+     "hi": "&3"
+    },
+    {
+     "lo": "&2",
+     "var": "y5",
+     "hi": "&2 * h0"
+    },
+    {
+     "lo": "&2",
+     "var": "y6",
+     "hi": "&2 * h0"
+    }
+   ],
+   "body_raw": "((taum y1 y2 y3 y4 y5 y6 > #0.115))",
+   "tags": [
+    "Cfsqp",
+    "Lp_aux",
+    "Main_estimate",
+    "Xconvert",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": null
+  },
+  {
+   "idv": "5735387903",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2709,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3 y1 y2 y3 y4 y5 y6) (dih_y y1 y2 y3 y4 y5 y6 > #0.852)",
+   "tags": [
+    "Cfsqp",
+    "Tablelp",
+    "Flypaper",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "5490182221",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2721,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3 y1 y2 y3 y4 y5 y6) (dih_y y1 y2 y3 y4 y5 y6 < #1.893)",
+   "tags": [
+    "Cfsqp",
+    "Tablelp",
+    "Flypaper",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "3296257235",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2735,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3 y1 y2 y3 y4 y5 y6) (taum y1 y2 y3 y4 y5 y6 + #0.626 * dih_y y1 y2 y3 y4 y5 y6 - #0.77 > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Tablelp",
+    "Flypaper",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "8519146937",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2743,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3 y1 y2 y3 y4 y5 y6) ( taum y1 y2 y3 y4 y5 y6 - #0.259 * dih_y y1 y2 y3 y4 y5 y6 + #0.32 > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Tablelp",
+    "Flypaper",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "4667071578",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2751,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3 y1 y2 y3 y4 y5 y6) ( taum y1 y2 y3 y4 y5 y6 - #0.507 * dih_y y1 y2 y3 y4 y5 y6 + #0.724 > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Tablelp",
+    "Flypaper",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "1395142356",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2759,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3 y1 y2 y3 y4 y5 y6) ( taum y1 y2 y3 y4 y5 y6 + #0.001 - #0.18 * (y1 + y2 + y3 - #6.0) - #0.125 * (y4 + y5 + y6 - #6.0) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "7394240696",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2769,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3 y1 y2 y3 y4 y5 y6) ( sol_y y1 y2 y3 y4 y5 y6 - #0.55125 - #0.196 * (y4 + y5 + y6 - #6.0) + #0.38 * (y1 + y2 + y3 - #6.0) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "7726998381",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2779,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3 y1 y2 y3 y4 y5 y6) ( -- sol_y y1 y2 y3 y4 y5 y6 + #0.5513 + #0.3232 * (y4 + y5 + y6 - #6.0) - #0.151 * (y1 + y2 + y3 - #6.0) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "4047599236",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2790,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3 y1 y2 y3 y4 y5 y6) ( (dih_y y1 y2 y3 y4 y5 y6) - #1.2308 + (#0.3639 * (y2 + y3 + y5 + y6 - #8.0)) - (#0.235 * (y1 - #2.0)) -(#0.685 * (y4 - #2.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "3526497018",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2800,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3 y1 y2 y3 y4 y5 y6) ( (--dih_y y1 y2 y3 y4 y5 y6) + #1.231 - (#0.152 * (y2 + y3 + y5 + y6 - #8.0))+ (#0.5 * (y1 - #2.0)) + (#0.773 * (y4 - #2.0))> #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "5957966880",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2811,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3 y1 y2 y3 y4 y5 y6) ( (rhazim y1 y2 y3 y4 y5 y6) - #1.2308 + (#0.3639 * (y2 + y3 + y5 + y6 - #8.0)) - (#0.6 * (y1 - #2.0)) -(#0.685 * (y4 - #2.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "3020140039",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2837,
+   "bounds": [],
+   "body_raw": "ineq (dartX y1 y2 y3 y4 y5 y6) ( (dih_y y1 y2 y3 y4 y5 y6) - #1.629 + (#0.402 * (y2 + y3 + y5 + y6 - #8.0)) - (#0.315 * (y1 - #2.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "9414951439",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2856,
+   "bounds": [],
+   "body_raw": "ineq (dartY y1 y2 y3 y4 y5 y6) ( (dih_y y1 y2 y3 y4 y5 y6) - #1.91 + (#0.458 * (y2 + y3 + y5 + y6 - #8.0)) - (#0.342 * (y1 - #2.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "9995621667",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2875,
+   "bounds": [],
+   "body_raw": "ineq (dart4_diag3 y1 y2 y3 y4 y5 y6) ( (dih_y y1 y2 y3 y4 y5 y6) - #2.09 + (#0.578 * (y2 + y3 + y5 + y6 - #8.0)) - (#0.54 * (y1 - #2.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "6988401556",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2897,
+   "bounds": [],
+   "body_raw": "ineq (apex_flat y1 y2 y3 y4 y5 y6) (taum y1 y2 y3 y4 y5 y6 > #0.103)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "8248508703",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2906,
+   "bounds": [],
+   "body_raw": "ineq (apex_flat y1 y2 y3 y4 y5 y6) ( (taum y1 y2 y3 y4 y5 y6) - #0.1 - (#0.265 * (y5 + y6 - #4.0)) - (#0.06 * (y4 - #2.52)) - (#0.16 * (y1 - #2.0)) - (#0.115 * (y2 + y3 - #4.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "3318775219",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2918,
+   "bounds": [],
+   "body_raw": "ineq (apex_flat y1 y2 y3 y4 y5 y6) ( (dih_y y1 y2 y3 y4 y5 y6) - #1.629 + (#0.414 * (y2 + y3 + y5 + y6 - #8.0)) - (#0.763 * (y4 - #2.52)) - (#0.315 * (y1 - #2.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "9922699028",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2930,
+   "bounds": [],
+   "body_raw": "ineq (apex_flat y1 y2 y3 y4 y5 y6) ( (--dih_y y1 y2 y3 y4 y5 y6) + #1.6294 - (#0.2213 * (y2 + y3 + y5 + y6 - #8.0)) + (#0.913 * (y4 - #2.52)) + (#0.728 * (y1 - #2.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "5000076558",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2942,
+   "bounds": [],
+   "body_raw": "ineq (apex_flat y1 y2 y3 y4 y5 y6) ( (dih2_y y1 y2 y3 y4 y5 y6) - #1.083 + (#0.6365 * (y1 - #2.0)) - (#0.198 * (y2 - #2.0)) + (#0.352 * (y3 - #2.0)) + (#0.416 * (y4 - #2.52)) - (#0.66 * (y5 - #2.0)) + (#0.071 * (y6 - #2.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "9251360200",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2957,
+   "bounds": [],
+   "body_raw": "ineq (apex_flat y1 y2 y3 y4 y5 y6) ( (rhazim y1 y2 y3 y4 y5 y6) - #1.629 - (#0.866 * (y1 - #2.0)) + (#0.3805 * (y2 + y3 - #4.0)) - (#0.841 * (y4 - #2.52)) + (#0.501 * (y5 + y6 - #4.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "9756015945",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2970,
+   "bounds": [],
+   "body_raw": "ineq (apex_flat y1 y2 y3 y4 y5 y6) ( (rhazim2 y1 y2 y3 y4 y5 y6) - #1.08 + (#0.6362 * (y1 - #2.0)) - (#0.565 * (y2 - #2.0)) + (#0.359 * (y3 - #2.0)) + (#0.416 * (y4 - #2.52)) - (#0.666 * (y5 - #2.0)) + (#0.061 * (y6 - #2.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "8082208587",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 2993,
+   "bounds": [],
+   "body_raw": "ineq (apex_A y1 y2 y3 y4 y5 y6) (taum y1 y2 y3 y4 y5 y6 > #0.2759)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "5760733457",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3003,
+   "bounds": [],
+   "body_raw": "ineq (apex_A y1 y2 y3 y4 y5 y6) (dih_y y1 y2 y3 y4 y5 y6 - #1.0705 -( #0.1 * (y1 - #2)) + (#0.424 * (y2 - #2.0)) + (#0.424 * (y3 - #2.0)) - (#0.594 * (y4 - #2.0)) + (#0.124 * (y5 - #2.52)) + (#0.124 * (y6 - #2.52)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "2563100177",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3016,
+   "bounds": [],
+   "body_raw": "ineq (apex_A y1 y2 y3 y4 y5 y6) ( rhazim y1 y2 y3 y4 y5 y6 - #1.0685 - (#0.4635 * (y1 - #2.0)) + (#0.424 * (y2 - #2.0)) + (#0.424 * (y3 - #2.0)) - (#0.594 * (y4 - #2.0)) + (#0.124 * (y5 - #2.52)) + (#0.124 * (y6 - #2.52)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "7931207804",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3031,
+   "bounds": [],
+   "body_raw": "ineq (apex_A y1 y2 y3 y4 y5 y6) ( taum y1 y2 y3 y4 y5 y6 - #0.27 + (#0.0295 * (y1 - #2.0)) - (#0.0778 * (y2 - #2.0)) - (#0.0778 * (y3 - #2.0)) - (#0.37 * (y4 - #2.0)) - (#0.27 * (y5 - #2.52)) - (#0.27 * (y6 - #2.52)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "9225295803",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3054,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3_small y1 y2 y3 y4 y5 y6) (taum y1 y2 y3 y4 y5 y6 + #0.0034 - (#0.166 * (y1 + y2 + y3 - #6.0)) - (#0.22 * (y4 + y5 + y6 - #6.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "9291937879",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3065,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3_small y1 y2 y3 y4 y5 y6) (dih_y y1 y2 y3 y4 y5 y6 - #1.23 - (#0.235 * (y1 - #2.0)) + (#0.362 * (y2 + y3 - #4.0)) - (#0.694 * (y4 - #2.0)) + (#0.26 * (y5 + y6 - #4.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "7761782916",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3081,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3_big y1 y2 y3 y4 y5 y6) ((taum y1 y2 y3 y4 y5 y6 - #0.05 - (#0.137 * (y1 + y2 + y3 - #6.0)) - (#0.17 * (y4 + y5 + y6 - #6.25)) > #0.0)\\/ (y4 + y5 + y6 < #6.25))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "6224332984",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3092,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3_big y1 y2 y3 y4 y5 y6) ((sol_y y1 y2 y3 y4 y5 y6 - #0.589 + (#0.39 * (y1 + y2 + y3 - #6.0)) - (#0.235 * (y4 + y5 + y6 - #6.25)) > #0.0) \\/ (y4 + y5 + y6 < #6.25))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "5451229371",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3112,
+   "bounds": [],
+   "body_raw": "ineq (apex_sup_flat y1 y2 y3 y4 y5 y6) (taum y1 y2 y3 y4 y5 y6 - #0.11 - #0.14132 * (y1 + (y2 + y3) / &2 - &4) - #0.38 * (y5 + y6 - &4) > &0)",
+   "tags": [
+    "Cfsqp",
+    "Tex",
+    "Xconvert",
+    "Lp"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "4840774900",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3123,
+   "bounds": [],
+   "body_raw": "ineq (apex_sup_flat y1 y2 y3 y4 y5 y6) ( taum y1 y2 y3 y4 y5 y6 - #0.1054 - #0.14132*(y1 + y2 / &2 + y3 / &2 - &4) - #0.36499*(y5 +y6 - &4) > &0)",
+   "tags": [
+    "Cfsqp",
+    "Tex",
+    "Xconvert",
+    "Lp"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "1642527039",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3134,
+   "bounds": [],
+   "body_raw": "ineq (apex_sup_flat y1 y2 y3 y4 y5 y6) ( taum y1 y2 y3 y4 y5 y6 - #0.128 - #0.053*((y5 +y6 - &4) - (#2.75/ &2)*(y4 - sqrt8)) > &0)",
+   "tags": [
+    "Cfsqp",
+    "Tex",
+    "Xconvert",
+    "Lp"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "7863247282",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3144,
+   "bounds": [],
+   "body_raw": "ineq (apex_sup_flat y1 y2 y3 y4 y5 y6) (taum y1 y2 y3 y4 y5 y6 - #0.053*((y5 +y6 - &4) - (#2.75/ &2)*(y4 - sqrt8)) - #0.12 - #0.14132*(y1 + y2 / &2 + y3 / &2 - &4) - #0.328*(y5 +y6 - &4) > &0)",
+   "tags": [
+    "Cfsqp",
+    "Tex",
+    "Xconvert",
+    "Lp"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "7718591733",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3155,
+   "bounds": [],
+   "body_raw": "ineq (apex_sup_flat y1 y2 y3 y4 y5 y6) (dih2_y y1 y2 y3 y4 y5 y6 - #0.955 - #0.2356*(y2 - &2) + #0.32*(y3 - &2) + #0.792*(y1 - &2) - #0.707*(y5 - &2) + #0.0844*(y6 - &2) + #0.821*(y4 - sqrt8) > &0)",
+   "tags": [
+    "Cfsqp",
+    "Tex",
+    "Xconvert",
+    "Lp"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "3566713650",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3167,
+   "bounds": [],
+   "body_raw": "ineq (apex_sup_flat y1 y2 y3 y4 y5 y6) ( -- dih_y y1 y2 y3 y4 y5 y6 + #1.911 + #1.01 *(y1 - &2) - #0.284*(y2 +y3 +y5 +y6 - &8) + #1.07*(y4 - sqrt8) > &0)",
+   "tags": [
+    "Cfsqp",
+    "Tex",
+    "Xconvert",
+    "Lp"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "1085358243",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3178,
+   "bounds": [],
+   "body_raw": "ineq (apex_sup_flat y1 y2 y3 y4 y5 y6) ( dih_y y1 y2 y3 y4 y5 y6 - #1.903 - #0.4*(y1 - &2) + #0.49688*(y2 +y3 +y5 +y6 - &8) -(y4 -sqrt8) > &0)",
+   "tags": [
+    "Cfsqp",
+    "Tex",
+    "Xconvert",
+    "Lp"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "9229542852",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3202,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3_mini y1 y2 y3 y4 y5 y6) (dih_y y1 y2 y3 y4 y5 y6 - #1.230 - (#0.2357 * (y1 - #2.0)) + (#0.2493 * (y2 + y3 - #4.0)) - (#0.682 * (y4 - #2.0)) + (#0.3035 * (y5 + y6 - #4.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "1550635295",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3214,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3_mini y1 y2 y3 y4 y5 y6) (--(dih_y y1 y2 y3 y4 y5 y6) + #1.232 + (#0.261 * (y1 - #2.0)) - (#0.203 * (y2 + y3 - #4.0)) + (#0.772 * (y4 - #2.0)) - (#0.191 * (y5 + y6 - #4.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "4491491732",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3226,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3_mini y1 y2 y3 y4 y5 y6) (taum y1 y2 y3 y4 y5 y6 + #0.0008 - (#0.1631 * (y1 + y2 + y3 - #6.0)) - (#0.2127 * (y4 + y5 + y6 - #6.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "8282573160",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3244,
+   "bounds": [],
+   "body_raw": "ineq (apex_flat_hll y1 y2 y3 y4 y5 y6) (taum y1 y2 y3 y4 y5 y6 - #0.1413 - (#0.214 * (y1 - #2.18)) - (#0.1259 * (y2 + y3 - #4.0)) - (#0.067 * (y4 - #2.52)) - (#0.241 * (y5 + y6 - #4.0)) > #0.0)",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "8611785756",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3264,
+   "bounds": [],
+   "body_raw": "ineq (dart_std3_big_200_218 y1 y2 y3 y4 y5 y6) ((sol_y y1 y2 y3 y4 y5 y6 - #0.589 + (#0.24 * (y1 + y2 + y3 - #6.0)) - (#0.16 * (y4 + y5 + y6 - #6.25)) > #0.0) \\/ (y4 + y5 + y6 < #6.25))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": null,
+   "idv_expr": "Printf.sprintf \"181212899 %d\" d",
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": "mk_iqd",
+   "line": 3326,
+   "bounds": [],
+   "body_raw": null,
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Derived",
+    "Tex"
+   ],
+   "eps": null,
+   "parse_note": "idv field is an expression, not a string literal; ineq field is not a literal `ineq [...]' quotation: all_forall ineq",
+   "ineq_raw": "all_forall ineq"
+  },
+  {
+   "idv": null,
+   "idv_expr": "s",
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": "iqd",
+   "line": 3454,
+   "bounds": [],
+   "body_raw": null,
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "idv field is an expression, not a string literal; ineq field is not a literal `ineq [...]' quotation: mk_tplate templateC (c:: t)",
+   "ineq_raw": "mk_tplate templateC (c:: t)"
+  },
+  {
+   "idv": "4750199435",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": "i4750199435",
+   "line": 3572,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_flat y1 y2 y3 y4 y5 y6) (--dih2_y y1 y2 y3 y4 y5 y6 + #0.0031 > -- #1.08346 + #0.288794 * (-- &2 + y1) + -- #0.292829 * (-- &2 + y2) + #0.036457 * (-- &2 + y3) + #0.348796 * (-- #2.52 + y4) + -- #0.762602 * (-- &2 + y5) + -- #0.112679 * (-- &2 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "8384511215",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": "i8384511215",
+   "line": 3597,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_flat y1 y2 y3 y4 y5 y6) (dih2_y y1 y2 y3 y4 y5 y6 + #0.0015 > #0.913186 + -- #0.390288 * (-- &2 + y1) + #0.115895 * (-- &2 + y2) + #0.164805 * (-- #2.52 + y3) + -- #0.271329 * (-- #2.82843 + y4) + #0.584817 * (-- &2 + y5) + -- #0.170218 * (-- &2 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "7819193535",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": "i7819193535",
+   "line": 3621,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (dart_std3_lw y1 y2 y3 y4 y5 y6) (dih2_y y1 y2 y3 y4 y5 y6 + #0.0011 > #1.16613 + -- #0.296776 * (-- &2 + y1) + #0.208935 * (-- &2 + y2) + -- #0.243302 * (-- &2 + y3) + -- #0.360575 * (-- #2.25 + y4) + #0.636205 * (-- &2 + y5) + -- #0.295156 * (-- &2 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "6987934000",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": "i6987934000",
+   "line": 3646,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (dart_mll_w y1 y2 y3 y4 y5 y6) (dih2_y y1 y2 y3 y4 y5 y6 + #0.0042 > #0.952682 + -- #0.268837 * (-- #2.36 + y1) + #0.130607 * (-- &2 + y2) + -- #0.168729 * (-- &2 + y3) + -- #0.0831764 * (-- #2.52 + y4) + #0.580152 * (-- &2 + y5) + #0.0656612 * (-- #2.25 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "7291663656",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": "i7291663656",
+   "line": 3664,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_flat y1 y2 y3 y4 y5 y6) (dih2_y y1 y2 y3 y4 y5 y6 + #0.0009 > #0.947391 + -- #0.637397 * (-- &2 + y1) + #0.120003 * (-- &2 + y2) + -- #0.100814 * (-- #2.3 + y3) + -- #0.302956 * (-- #2.65 + y4) + #0.547359 * (-- &2 + y5) + -- #0.157745 * (-- #2.2 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "2390583444",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": "i2390583444",
+   "line": 3682,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (dart_std3_mini y1 y2 y3 y4 y5 y6) (dih_y y1 y2 y3 y4 y5 y6 + #0.0012 > #1.08627 + #0.159149 * (-- &2 + y1) + -- #0.198496 * (-- #2.1 + y2) + -- #0.199306 * (-- #2.1 + y3) + #0.590083 * (-- &2 + y4) + -- #0.0888111 * (-- #2.25 + y5) + -- #0.0881846 * (-- #2.25 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "9641946727",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3722,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_flat_l y1 y2 y3 y4 y5 y6) (dih2_y y1 y2 y3 y4 y5 y6 + #0.0071 > #0.98362 + -- #0.264094 * (-- #2.18 + y1) + #0.149308 * (-- #2.18 + y2) + -- #0.312683 * (-- &2 + y3) + -- #0.282792 * (-- #2.65 + y4) + #0.581552 * (-- &2 + y5) + #0.143669 * (-- #2.3 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "4222324842",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3748,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_std3_lll_xww y1 y2 y3 y4 y5 y6) (dih_y y1 y2 y3 y4 y5 y6 + #0.0071 > #1.09969 + #0.146345 * (-- &2 + y1) + -- #0.160538 * (-- &2 + y2) + -- #0.151698 * (-- #2.14 + y3) + #0.61314 * (-- &2 + y4) + -- #0.236149 * (-- #2.25 + y5) + -- #0.242043 * (-- #2.25 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "5756588587",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3774,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_std3_lll_wxx y1 y2 y3 y4 y5 y6) (dih2_y y1 y2 y3 y4 y5 y6 + #0.0025 > #1.16613 + -- #0.296776 * (-- &2 + y1) + #0.208935 * (-- &2 + y2) + -- #0.196313 * (-- &2 + y3) + -- #0.360575 * (-- #2.25 + y4) + #0.652861 * (-- &2 + y5) + -- #0.218063 * (-- &2 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "3425739813",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3790,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_flat y1 y2 y3 y4 y5 y6) (--dih_y y1 y2 y3 y4 y5 y6 + #0.0011 > -- #1.67609 + -- #0.506322 * (-- #2.18 + y1) + #0.212075 * (-- #2.1 + y2) + #0.230669 * (-- #2.1 + y3) + -- #1.28579 * (-- #2.52 + y4) + #0.249199 * (-- &2 + y5) + #0.193545 * (-- &2 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "7316455966",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3807,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_std3_lll_wxx y1 y2 y3 y4 y5 y6) (dih2_y y1 y2 y3 y4 y5 y6 + #0.0050 > #1.02005 + -- #0.256494 * (-- #2.18 + y1) + #0.121497 * (-- &2 + y2) + -- #0.256494 * (-- &2 + y3) + -- #0.0116869 * (-- #2.52 + y4) + #0.598233 * (-- &2 + y5) + #0.0187672 * (-- #2.25 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "6410081357",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3823,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_std3_lll_wxx y1 y2 y3 y4 y5 y6) (--dih3_y y1 y2 y3 y4 y5 y6 + #0.0087 > -- #1.18616 + #0.436647 * (-- #2.18 + y1) + #0.032258 * (-- &2 + y2) + -- #0.289629 * (-- &2 + y3) + #0.397053 * (-- #2.52 + y4) + -- #0.0210289 * (-- &2 + y5) + -- #0.683341 * (-- #2.25 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "2923748598",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3839,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (dart_mll_n y1 y2 y3 y4 y5 y6) (--dih_y y1 y2 y3 y4 y5 y6 + #0.0083 > -- #1.29912 + -- #0.284457 * (-- #2.18 + y1) + #0.337354 * (-- &2 + y2) + #0.186287 * (-- &2 + y3) + -- #0.645382 * (-- #2.25 + y4) + #0.367671 * (-- #2.52 + y5) + #0.0536051 * (-- &2 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "4306175952",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3855,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (dart_mll_n y1 y2 y3 y4 y5 y6) (dih2_y y1 y2 y3 y4 y5 y6 + #0.0035 > #1.05036 + -- #0.222178 * (-- #2.18 + y1) + #0.132628 * (-- &2 + y2) + -- #0.219284 * (-- &2 + y3) + #0.00563427 * (-- #2.25 + y4) + #0.59096 * (-- &2 + y5) + -- #0.0771574 * (-- #2.52 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "2763799127",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3871,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_sup_flat y1 y2 y3 y4 y5 y6) (--dih3_y y1 y2 y3 y4 y5 y6 + #0.0076 > -- #0.956317 + #0.419124 * (-- &2 + y1) + -- #0.0753922 * (-- &2 + y2) + -- #0.252307 * (-- &2 + y3) + #0.5 * (-- #2.82843 + y4) + -- #0.246082 * (-- &2 + y5) + -- #0.788717 * (-- &2 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "5943578801",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3887,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_sup_flat y1 y2 y3 y4 y5 y6) (dih2_y y1 y2 y3 y4 y5 y6 + #0.0047 > #0.936544 + -- #0.636113 * (-- #2.1 + y1) + #0.140759 * (-- #2.1 + y2) + -- #0.0771734 * (-- #2.3 + y3) + -- #1.29068 * (-- #2.82843 + y4) + #0.591328 * (-- #2.1 + y5) + -- #0.0521775 * (-- #2.1 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "1836408787",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3913,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_std3_lhh y1 y2 y3 y4 y5 y6) (dih_y y1 y2 y3 y4 y5 y6 + #0.0012 > #1.01332 + #0.148615 * (-- &2 + y1) + -- #0.379006 * (-- #2.18 + y2) + -- #0.379441 * (-- #2.18 + y3) + #0.583676 * (-- &2 + y4) + -- #0.184708 * (-- #2.25 + y5) + -- #0.18471 * (-- #2.25 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "1248932983",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3929,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_std3_lhh y1 y2 y3 y4 y5 y6) (--dih2_y y1 y2 y3 y4 y5 y6 + #0.0059 > -- #1.33909 + #0.0724529 * (-- &2 + y1) + -- #0.486824 * (-- #2.18 + y2) + #0.317329 * (-- #2.18 + y3) + -- #0.00479451 * (-- &2 + y4) + -- #0.751179 * (-- #2.25 + y5) + #0.350857 * (-- #2.25 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "6725783616",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3947,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_flat y1 y2 y3 y4 y5 y6) (dih3_y y1 y2 y3 y4 y5 y6 + #0.0046 > #0.88473 + -- #0.443946 * (-- #2.36 + y1) + -- #0.244711 * (-- #2.1 + y2) + #0.205592 * (-- #2.1 + y3) + -- #0.739126 * (-- #2.55 + y4) + -- #0.127198 * (-- #2.1 + y5) + #0.61582 * (-- &2 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "9185711902",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3963,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_std3_hll y1 y2 y3 y4 y5 y6) (--dih3_y y1 y2 y3 y4 y5 y6 + #0.0116 > -- #1.30119 + #0.392915 * (-- #2.36 + y1) + #0.142563 * (-- #2.1 + y2) + -- #0.258747 * (-- #2.1 + y3) + #0.417088 * (-- #2.45 + y4) + -- #0.0606764 * (-- &2 + y5) + -- #0.637966 * (-- #2.45 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "6284721194",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3979,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_std3_hll y1 y2 y3 y4 y5 y6) (dih2_y y1 y2 y3 y4 y5 y6 + #0.0011 > #0.957661 + -- #0.250506 * (-- #2.36 + y1) + #0.145114 * (-- #2.1 + y2) + -- #0.0549376 * (-- #2.1 + y3) + -- #0.0384445 * (-- #2.45 + y4) + #0.5275 * (-- &2 + y5) + #0.118819 * (-- #2.45 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  },
+  {
+   "idv": "3137600529",
+   "idv_expr": null,
+   "source_file": "reference/flyspeck/text_formalization/nonlinear/ineq.hl",
+   "let_binding": null,
+   "line": 3995,
+   "bounds": [],
+   "body_raw": "!y1 y2 y3 y4 y5 y6. ineq (apex_flat_h y1 y2 y3 y4 y5 y6) (dih2_y y1 y2 y3 y4 y5 y6 + #0.0042 > #0.868174 + -- #0.701906 * (-- #2.25 + y1) + #0.136514 * (-- &2 + y2) + -- #0.209239 * (-- #2.18 + y3) + -- #0.493373 * (-- #2.65 + y4) + #0.537385 * (-- &2 + y5) + #0.0187672 * (-- #2.2 + y6))",
+   "tags": [
+    "Cfsqp",
+    "Xconvert",
+    "Lp",
+    "Lpsymmetry"
+   ],
+   "eps": null,
+   "parse_note": "ineq quotation without bounds list"
+  }
+ ],
+ "per_file_counts": {
+  "reference/flyspeck/text_formalization/nonlinear/ineq.hl": 181,
+  "reference/flyspeck/text_formalization/nonlinear/merge_ineq.hl": 0
+ }
+}
