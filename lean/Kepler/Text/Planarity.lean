@@ -4138,3 +4138,253 @@ theorem aff_gt_inter_aff_gt (hnc : ¬ Collinear3 x v w) :
         rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add, hwexp, hc1]
         module
       exact hnc (collinear3_iff_mem_affineSpan hxv |>.mpr hwmem)
+
+/-! ## 第二十块：分解引理与 fan7 推论（planarity.hl:3367–3662） -/
+
+/-- `affGe {x} ∅ = {x}`（TopologyFan 的 private 引理本地重证：`{x} ∪ ∅`
+的求和塌缩到单点，`f x = 1`）。 -/
+private theorem affGe_empty_singleton (x : V3) : affGe {x} ∅ = {x} := by
+  ext y
+  simp only [affGe, Set.mem_setOf_eq, Affsign, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨f, hfin, hsum, -, hone⟩
+    have hTeq : hfin.toFinset = ({x} : Finset V3) := by
+      ext z
+      simp
+    rw [hTeq, Finset.sum_singleton] at hsum hone
+    rw [hsum, hone, one_smul]
+  · intro heq
+    rw [heq]
+    have hfin : ({x} ∪ (∅ : Set V3)).Finite :=
+      (Set.finite_singleton x).union Set.finite_empty
+    have hTeq : hfin.toFinset = ({x} : Finset V3) := by
+      ext z
+      simp
+    refine ⟨fun _ => 1, hfin, ?_, ?_, ?_⟩
+    · rw [hTeq]
+      simp
+    · intro z hz
+      simp at hz
+    · rw [hTeq]
+      simp
+
+/-- `affGe {x} {v}` 的显式二元组合构造。 -/
+private theorem mem_affGe_single {x v y : V3} {t1 t2 : ℝ} (hxv : x ≠ v)
+    (ht2 : 0 ≤ t2) (hsum : t1 + t2 = 1) (hy : y = t1 • x + t2 • v) :
+    y ∈ affGe {x} {v} := by
+  simp only [affGe, Set.mem_setOf_eq, Affsign]
+  have hfin : ({x} ∪ {v} : Set V3).Finite :=
+    (Set.finite_singleton x).union (Set.finite_singleton v)
+  refine ⟨fun z => if z = v then t2 else t1, hfin, ?_, ?_, ?_⟩
+  · rw [sum_insert_single_v hfin hxv, if_neg hxv, if_pos rfl, hy]
+  · intro z hz
+    simp only [Set.mem_singleton_iff] at hz
+    rw [hz]
+    show (0 : ℝ) ≤ (if v = v then t2 else t1)
+    rw [if_pos rfl]
+    exact ht2
+  · rw [sum_insert_single_s hfin hxv, if_neg hxv, if_pos rfl, hsum]
+
+/-- HOL `AFF_GE_1_1`：`aff_ge {x} {u} ⊆ aff {x,u}`（`affGe_ray` +
+`lineMap`）。 -/
+private theorem affGe_single_subset_affineSpan {x u y : V3} (hxu : x ≠ u)
+    (hmem : y ∈ affGe {x} {u}) :
+    y ∈ (affineSpan ℝ ({x, u} : Set V3) : Set V3) := by
+  obtain ⟨t, ht⟩ := affGe_ray hxu hmem
+  refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨t, ?_⟩
+  rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add]
+  exact (sub_eq_iff_eq_add.mp ht).symm
+
+/-- HOL planarity.hl:3367 `decomposition_planar_by_angle_fan`：`w` 在
+`{x,v}`—`u` 侧的闭半平面时，`u` 落入开扇 `aff_gt {x} {v,w}` 或 `w` 的
+`(v,u)` 系数均非负（后者直接来自 `aff_ge {x,v} {u}` 的系数；前者由
+`t3 > 0` 解出 `u = t3⁻¹w - t3⁻¹t1 x - t3⁻¹t2 v`，`t2 < 0` 给正系数；
+`t3 = 0` 时 `w ∈ aff {x,v}` 与不共线矛盾）。 -/
+theorem decomposition_planar_by_angle_fan (hncu : ¬ Collinear3 x v u)
+    (hncw : ¬ Collinear3 x v w) (hw : w ∈ affGe ({x, v} : Set V3) {u}) :
+    u ∈ affGt {x} {v, w} ∨ w ∈ affGe {x} {v, u} := by
+  have hdisu : Disjoint ({x} : Set V3) {v, u} := disjoint_of_not_collinear3 hncu
+  have hdisw : Disjoint ({x} : Set V3) {v, w} := disjoint_of_not_collinear3 hncw
+  have hxv : x ≠ v := fun he => hncu (by rw [he]; exact collinear3_of_eq rfl)
+  have hxu : x ≠ u := fun he => hncu (by rw [he]; exact collinear3_pair_left rfl)
+  have hvu : v ≠ u := fun he => hncu (by rw [he]; exact collinear3_pair_right rfl)
+  simp only [affGe, Set.mem_setOf_eq] at hw
+  obtain ⟨t1, t2, t3, ht3, hsum, hweq⟩ := affsign_extract3 hxv hxu hvu hw
+  by_cases h3 : 0 < t3
+  · by_cases h2 : 0 ≤ t2
+    · refine Or.inr ?_
+      rw [aff_ge_1_2 hdisu, Set.mem_setOf_eq]
+      exact ⟨t1, t2, t3, h2, h3.le, hsum, hweq⟩
+    · refine Or.inl ?_
+      rw [aff_gt_1_2 hdisw, Set.mem_setOf_eq]
+      have h2' : t2 < 0 := not_le.mp h2
+      have hinv : 0 < t3⁻¹ := inv_pos.mpr h3
+      refine ⟨-(t3⁻¹ * t1), t3⁻¹ * -t2, t3⁻¹, mul_pos hinv (neg_pos.mpr h2'), hinv,
+        ?_, ?_⟩
+      · have h1 : 1 - t1 - t2 = t3 := by linarith
+        have h2'' : -(t3⁻¹ * t1) + t3⁻¹ * -t2 + t3⁻¹ = t3⁻¹ * (1 - t1 - t2) := by ring
+        rw [h2'', h1, inv_mul_cancel₀ (ne_of_gt h3)]
+      · rw [remove_variable_fan h3 hweq]
+        module
+  · exfalso
+    have ht3z : t3 = 0 := le_antisymm (not_lt.mp h3) ht3
+    have hweq' : w = t1 • x + t2 • v := by rw [hweq, ht3z]; simp
+    refine hncw ((collinear3_iff_mem_affineSpan hxv).mpr ?_)
+    refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨t2, ?_⟩
+    rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add, hweq']
+    have ht1 : t1 = 1 - t2 := by linarith
+    rw [ht1]
+    module
+
+/-- HOL planarity.hl:3424 `properties_of_fan7`：`v` 端点属于自身边的
+`aff_ge {x} {v,u}`，与 `aff_ge {x} {v1,u1}` 按 `fan7` 相交；交空给
+`v = x` 与 `x ∉ V` 矛盾，`v` 不在交集中则交集为 `{u}`，`aff_ge {x} {u}
+⊆ aff {x,u}` 与 fan6 不共线矛盾。 -/
+theorem properties_of_fan7 (hfan : FAN x V E) (hv : {v, u} ∈ E)
+    (hv1 : {v1, u1} ∈ E) (hmem : v ∈ affGe {x} {v1, u1}) : v = v1 ∨ v = u1 := by
+  have hnc : ¬ Collinear3 x v u := fan_not_collinear hfan hv
+  have hdis : Disjoint ({x} : Set V3) {v, u} := disjoint_of_not_collinear3 hnc
+  have hvV : v ∈ V := (fan_mem_of_edge hfan hv).1
+  have hmemvu : v ∈ affGe {x} {v, u} := by
+    rw [aff_ge_1_2 hdis, Set.mem_setOf_eq]
+    exact ⟨0, 1, 0, by norm_num, by norm_num, by norm_num, by module⟩
+  have h77 : affGe {x} ({v, u} : Set V3) ∩ affGe {x} {v1, u1}
+      = affGe {x} (({v, u} : Set V3) ∩ {v1, u1}) :=
+    hfan.2.2.2.2.2 {v, u} (Or.inl hv) {v1, u1} (Or.inl hv1)
+  have hint : v ∈ affGe {x} (({v, u} : Set V3) ∩ {v1, u1}) := by
+    rw [← h77]
+    exact (Set.mem_inter_iff _ _ _).mpr ⟨hmemvu, hmem⟩
+  by_cases hunem : ({v, u} : Set V3) ∩ {v1, u1} = ∅
+  · rw [hunem, affGe_empty_singleton] at hint
+    have heq : v = x := Set.mem_singleton_iff.mp hint
+    have hxV : x ∈ V := heq ▸ hvV
+    exact absurd hxV hfan.2.2.2.1
+  · by_cases hvIn : v ∈ ({v, u} : Set V3) ∩ {v1, u1}
+    · obtain ⟨-, h2⟩ := (Set.mem_inter_iff _ _ _).mp hvIn
+      rcases Set.mem_insert_iff.mp h2 with h | h
+      · exact Or.inl h
+      · exact Or.inr h
+    · obtain ⟨z0, hz1, hz2⟩ := Set.nonempty_iff_ne_empty.mpr hunem
+      have huIn : u ∈ ({v, u} : Set V3) ∩ {v1, u1} := by
+        rcases Set.mem_insert_iff.mp hz1 with h | h
+        · exact absurd (Set.mem_inter (Set.mem_insert v {u}) (h ▸ hz2)) hvIn
+        · exact Set.mem_inter (Set.mem_insert_of_mem v rfl) (h ▸ hz2)
+      have hInt : ({v, u} : Set V3) ∩ {v1, u1} = {u} := by
+        rw [Set.eq_singleton_iff_unique_mem]
+        refine ⟨huIn, ?_⟩
+        intro z hz
+        obtain ⟨hz1, hz2⟩ := (Set.mem_inter_iff _ _ _).mp hz
+        rcases Set.mem_insert_iff.mp hz1 with h | h
+        · exact absurd (Set.mem_inter (Set.mem_insert v {u}) (h ▸ hz2)) hvIn
+        · exact h
+      rw [hInt] at hint
+      have hxu : x ≠ u := fun he => hnc (by rw [he]; exact collinear3_pair_left rfl)
+      have hcol : Collinear3 x u v :=
+        (collinear3_iff_mem_affineSpan hxu).mpr
+          (affGe_single_subset_affineSpan hxu hint)
+      exact absurd hcol (collinear3_swap' hnc)
+
+/-- HOL planarity.hl:3491 `properties1_of_fan7`：`{v1}` 作为单点边
+（`v1 ∈ V`）落入 fan7 允许集，论证同 `properties_of_fan7`。 -/
+theorem properties1_of_fan7 (hfan : FAN x V E) (hv : {v, u} ∈ E)
+    (hv1 : {v1, u1} ∈ E) (hmem : v ∈ affGe {x} {v1}) : v = v1 := by
+  have hnc : ¬ Collinear3 x v u := fan_not_collinear hfan hv
+  have hdis : Disjoint ({x} : Set V3) {v, u} := disjoint_of_not_collinear3 hnc
+  have hvV : v ∈ V := (fan_mem_of_edge hfan hv).1
+  have hv1V : v1 ∈ V := (fan_mem_of_edge hfan hv1).1
+  have hmemvu : v ∈ affGe {x} {v, u} := by
+    rw [aff_ge_1_2 hdis, Set.mem_setOf_eq]
+    exact ⟨0, 1, 0, by norm_num, by norm_num, by norm_num, by module⟩
+  have h77 : affGe {x} ({v, u} : Set V3) ∩ affGe {x} {v1}
+      = affGe {x} (({v, u} : Set V3) ∩ {v1}) :=
+    hfan.2.2.2.2.2 {v, u} (Or.inl hv) {v1} (Or.inr ⟨v1, hv1V, rfl⟩)
+  have hint : v ∈ affGe {x} (({v, u} : Set V3) ∩ {v1}) := by
+    rw [← h77]
+    exact (Set.mem_inter_iff _ _ _).mpr ⟨hmemvu, hmem⟩
+  by_cases hunem : ({v, u} : Set V3) ∩ {v1} = ∅
+  · rw [hunem, affGe_empty_singleton] at hint
+    have heq : v = x := Set.mem_singleton_iff.mp hint
+    have hxV : x ∈ V := heq ▸ hvV
+    exact absurd hxV hfan.2.2.2.1
+  · by_cases hvIn : v ∈ ({v, u} : Set V3) ∩ {v1}
+    · obtain ⟨-, h2⟩ := (Set.mem_inter_iff _ _ _).mp hvIn
+      exact Set.mem_singleton_iff.mp h2
+    · obtain ⟨z0, hz1, hz2⟩ := Set.nonempty_iff_ne_empty.mpr hunem
+      have huIn : u ∈ ({v, u} : Set V3) ∩ {v1} := by
+        rcases Set.mem_insert_iff.mp hz1 with h | h
+        · exact absurd (Set.mem_inter (Set.mem_insert v {u}) (h ▸ hz2)) hvIn
+        · exact Set.mem_inter (Set.mem_insert_of_mem v rfl) (h ▸ hz2)
+      have hInt : ({v, u} : Set V3) ∩ {v1} = {u} := by
+        rw [Set.eq_singleton_iff_unique_mem]
+        refine ⟨huIn, ?_⟩
+        intro z hz
+        obtain ⟨hz1, hz2⟩ := (Set.mem_inter_iff _ _ _).mp hz
+        rcases Set.mem_insert_iff.mp hz1 with h | h
+        · exact absurd (Set.mem_inter (Set.mem_insert v {u}) (h ▸ hz2)) hvIn
+        · exact h
+      rw [hInt] at hint
+      have hxu : x ≠ u := fun he => hnc (by rw [he]; exact collinear3_pair_left rfl)
+      have hcol : Collinear3 x u v :=
+        (collinear3_iff_mem_affineSpan hxu).mpr
+          (affGe_single_subset_affineSpan hxu hint)
+      exact absurd hcol (collinear3_swap' hnc)
+
+/-- HOL planarity.hl:3554 `point_in_aff_ge`：三个生成点各以 `(1,0,0)`、
+`(0,1,0)`、`(0,0,1)` 为 witness。 -/
+theorem point_in_aff_ge (hnc : ¬ Collinear3 x v w) :
+    x ∈ affGe {x} {v, w} ∧ v ∈ affGe {x} {v, w} ∧ w ∈ affGe {x} {v, w} := by
+  have hdis := disjoint_of_not_collinear3 hnc
+  rw [aff_ge_1_2 hdis, Set.mem_setOf_eq]
+  refine ⟨?_, ?_, ?_⟩
+  · exact ⟨1, 0, 0, by norm_num, by norm_num, by norm_num, by module⟩
+  · exact ⟨0, 1, 0, by norm_num, by norm_num, by norm_num, by module⟩
+  · exact ⟨0, 0, 1, by norm_num, by norm_num, by norm_num, by module⟩
+
+/-- HOL planarity.hl:3585 `aff_ge_subset_aff_gt_union_aff_ge`：`t3 > 0`
+时 `y` 落入 `aff_gt {x,v} {w}`（`mem_affsign3`），`t3 = 0` 时
+`y = t1 x + t2 v` 落入 `aff_ge {x} {v}`（`mem_affGe_single`）。 -/
+theorem aff_ge_subset_aff_gt_union_aff_ge (hnc : ¬ Collinear3 x v w) :
+    affGe {x} {v, w} ⊆ affGt ({x, v} : Set V3) {w} ∪ affGe {x} {v} := by
+  have hdis := disjoint_of_not_collinear3 hnc
+  have hxv : x ≠ v := fun he => hnc (by rw [he]; exact collinear3_of_eq rfl)
+  have hxw : x ≠ w := fun he => hnc (by rw [he]; exact collinear3_pair_left rfl)
+  have hvw : v ≠ w := fun he => hnc (by rw [he]; exact collinear3_pair_right rfl)
+  intro y hy
+  rw [aff_ge_1_2 hdis, Set.mem_setOf_eq] at hy
+  obtain ⟨t1, t2, t3, ht2, ht3, hone, hyeq⟩ := hy
+  by_cases h3 : 0 < t3
+  · refine Set.mem_union_left _ ?_
+    simp only [affGt, Set.mem_setOf_eq]
+    exact mem_affsign3 hxv hxw hvw h3 hone hyeq
+  · refine Set.mem_union_right _ ?_
+    have ht3z : t3 = 0 := le_antisymm (not_lt.mp h3) ht3
+    have hs : t1 + t2 = 1 := by rw [← hone, ht3z]; ring
+    have hv2 : y = t1 • x + t2 • v := by rw [hyeq, ht3z]; simp
+    exact mem_affGe_single hxv ht2 hs hv2
+
+/-- HOL planarity.hl:3616 `pos_in_aff_ge_fan`。 -/
+theorem pos_in_aff_ge_fan {a : ℝ} (hdis : Disjoint ({x} : Set V3) {v, u})
+    (ha : 0 < a) (ha1 : a < 1) :
+    (1 - a) • v + a • u ∈ affGe {x} {v, u} := by
+  rw [aff_ge_1_2 hdis, Set.mem_setOf_eq]
+  refine ⟨0, 1 - a, a, by linarith, by linarith, by linarith, ?_⟩
+  module
+
+/-- HOL planarity.hl:3635 `aff_gt1_subset_aff_gt`：`v1 ∈ aff_gt {x} {v,u}`
+代入 `aff_gt {x} {v1,u}` 的组合，系数 `(s1+s2t1, s2t2, s2t3+s3)` 全部严格
+正（除常数项）。 -/
+theorem aff_gt1_subset_aff_gt {v1 : V3} (hdis : Disjoint ({x} : Set V3) {v, u})
+    (hnc : ¬ Collinear3 x v1 u) (hv1 : v1 ∈ affGt {x} {v, u}) :
+    affGt {x} {v1, u} ⊆ affGt {x} {v, u} := by
+  rw [aff_gt_1_2 hdis, Set.mem_setOf_eq] at hv1
+  obtain ⟨t1, t2, t3, ht2, ht3, hone, hv1eq⟩ := hv1
+  intro y hy
+  rw [aff_gt_1_2 (disjoint_of_not_collinear3 hnc), Set.mem_setOf_eq] at hy
+  obtain ⟨s1, s2, s3, hs2, hs3, hone2, hyeq⟩ := hy
+  rw [aff_gt_1_2 hdis, Set.mem_setOf_eq]
+  refine ⟨s1 + s2 * t1, s2 * t2, s2 * t3 + s3, mul_pos hs2 ht2,
+    add_pos (mul_pos hs2 ht3) hs3, ?_, ?_⟩
+  · have hkey : s2 * (t1 + t2 + t3) = s2 := by rw [hone]; ring
+    linarith
+  · rw [hyeq, hv1eq]
+    module
