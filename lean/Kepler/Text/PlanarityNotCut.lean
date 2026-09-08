@@ -1213,3 +1213,100 @@ theorem not_cut_inside_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
           · -- HOL :4812-5182（azim x y v w' = π：v 与 w' 角色对换的镜像）
             exact not_cut_inside_fan_azim_pi hfan hvu huw hsigma ha0 ha1 hcard hfan80
               hEM hθ0 hθπ he' hnc' hdis' hdis hygt' hyge' hygt hncw' hncv' hncz hncv hπ
+
+/-! ## `cut_in_edges_fan` / `not_cut_in_edges_fan`（planarity.hl:7038–7301）
+
+`not_cut_in_edges_fan`：若扰动点 `(1-a)•u + a•w`（`0 < a < 1`）不在被边锥
+之并 `xfan` 中（用 infimum 论证：`s1` 的下确界 `b` 处交集为空，
+`not_cut_inside_fan` 给出闭性输入，`fan_run1_in_small_not0_is_fan` 把空性
+延拓到 `(0,h')`，与 `b` 的最大下界性冲突）。`cut_in_edges_fan` 是其
+`a ≠ 1` 情形的一行归约。零 sorry。 -/
+theorem not_cut_in_edges_fan {a : ℝ} (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hsigma : sigmaFan x V E u w = v)
+    (ha0 : 0 < a) (ha1 : a < 1)
+    (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard)
+    (hfan80 : fan80 x V E) :
+    affGt {x} {v, (1 - a) • u + a • w} ∩ xfan x V E = ∅ := by
+  by_contra hnot
+  obtain ⟨hθ0, hθπ⟩ := hfan80 u w huw
+  rw [hsigma] at hθ0 hθπ
+  let s1 : Set ℝ := {h | 0 < h ∧ h < 1 ∧
+    ¬(affGt {x} {v, (1 - h) • u + h • w} ∩ xfan x V E = ∅)}
+  have ha_s1 : a ∈ s1 := by
+    simp [s1, ha0, ha1, hnot]
+  have hs1_ne : s1.Nonempty := ⟨a, ha_s1⟩
+  have hBddBelow_s1 : BddBelow s1 := by
+    refine ⟨0, ?_⟩
+    intro h hh
+    have hh' : 0 < h ∧ h < 1 ∧ ¬(affGt {x} {v, (1 - h) • u + h • w} ∩ xfan x V E = ∅) := by
+      simpa [s1] using hh
+    exact le_of_lt hh'.1
+  let b : ℝ := sInf s1
+  have hb_le_a : b ≤ a := by
+    dsimp [b]
+    exact csInf_le hBddBelow_s1 ha_s1
+  have hb1 : b < 1 := lt_of_le_of_lt hb_le_a ha1
+  have he1 : ∀ s : ℝ, 0 < s → s < b →
+      affGt {x} {v, (1 - s) • u + s • w} ∩
+        {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅ := by
+    intro s hs0 hsb
+    by_contra hneq
+    have hs1 : s ∈ s1 := by
+      simp [s1, hs0]
+      exact ⟨lt_trans hsb hb1, hneq⟩
+    have hb_le_s : b ≤ s := by
+      dsimp [b]
+      exact csInf_le hBddBelow_s1 hs1
+    linarith
+  obtain ⟨h0, h1_0, h1_le, h1_prop⟩ :=
+    fan_run_in_small_is_not_meet_xfan hfan hvu huw hθ0 hθπ hsigma
+  have hb0 : 0 < b := by
+    have hh0_le_b : h0 ≤ b := by
+      dsimp [b]
+      refine le_csInf hs1_ne ?_
+      intro t ht
+      have ht' : 0 < t ∧ t < 1 ∧ ¬(affGt {x} {v, (1 - t) • u + t • w} ∩ xfan x V E = ∅) := by
+        simpa [s1] using ht
+      have ht0 : 0 < t := ht'.1
+      have htneq : ¬(affGt {x} {v, (1 - t) • u + t • w} ∩ xfan x V E = ∅) := ht'.2.2
+      by_contra hnot0
+      have hlt : t < h0 := lt_of_not_ge hnot0
+      exact htneq (h1_prop t ht0 hlt)
+    exact lt_of_lt_of_le h1_0 hh0_le_b
+  have hncb : affGt {x} {v, (1 - b) • u + b • w} ∩
+      {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅ :=
+    not_cut_inside_fan hfan hvu huw hsigma hb0 hb1 hcard hfan80 he1
+  obtain ⟨h', hb_lt_h', _h'_le, h'_prop⟩ :=
+    fan_run1_in_small_not0_is_fan hfan hvu huw Set.Subset.rfl hθ0 hθπ hsigma hb0 hb1
+      hncb he1
+  have h'_le_b : h' ≤ b := by
+    dsimp [b]
+    refine le_csInf hs1_ne ?_
+    intro t ht
+    by_contra hnot0
+    have hlt : t < h' := lt_of_not_ge hnot0
+    have ht' : 0 < t ∧ t < 1 ∧ ¬(affGt {x} {v, (1 - t) • u + t • w} ∩ xfan x V E = ∅) := by
+      simpa [s1] using ht
+    have ht0 : 0 < t := ht'.1
+    have htneq : ¬(affGt {x} {v, (1 - t) • u + t • w} ∩ xfan x V E = ∅) := ht'.2.2
+    have hempt : affGt {x} {v, (1 - t) • u + t • w} ∩ xfan x V E = ∅ := by
+      change (affGt {x} {v, (1 - t) • u + t • w} ∩
+        {z | ∃ e ∈ E, z ∈ affGe {x} e} = ∅)
+      exact h'_prop t ht0 hlt
+    exact htneq hempt
+  linarith
+
+/-- HOL planarity.hl:7038 `cut_in_edges_fan`：由 `not_cut_in_edges_fan`
+一行归约（`a ≠ 1` 与 `a ≤ 1`、`0 < a` 合得 `a < 1`）。 -/
+theorem cut_in_edges_fan {a : ℝ} (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hsigma : sigmaFan x V E u w = v)
+    (ha0 : 0 < a) (ha1 : a ≤ 1)
+    (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard)
+    (hfan80 : fan80 x V E)
+    (hEM : ¬ (affGt {x} {v, (1 - a) • u + a • w} ∩ xfan x V E = ∅)) :
+    a = 1 := by
+  by_contra h1
+  have haLt : a < 1 := lt_of_le_of_ne ha1 h1
+  have hem : affGt {x} {v, (1 - a) • u + a • w} ∩ xfan x V E = ∅ :=
+    not_cut_in_edges_fan hfan hvu huw hsigma ha0 haLt hcard hfan80
+  exact hEM hem
