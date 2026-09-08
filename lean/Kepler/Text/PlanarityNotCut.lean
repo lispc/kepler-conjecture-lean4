@@ -8,9 +8,12 @@ Source: `reference/flyspeck/text_formalization/fan/planarity.hl`
 Coverage (slice 18a of block 18, planarity.hl:3667-5182):
 - `not_cut_inside_fan` (3667): statement setup plus the first small
   branch `t3' = 0 /\ t2' = 0` (HOL :3730-3776) fully proved.
-- Remaining branches are left as marked sorries:
-  `[BLOCK18B] planarity.hl:3777-3893` (`t3' = 0`, `t2' <> 0`),
-  `[BLOCK18C] planarity.hl:3894-5182` (`t3' <> 0`).
+- `[BLOCK18B] planarity.hl:3777-3893` (`t3' = 0`, `t2' <> 0`) and the
+  `t2' = 0` sub-branch of `[BLOCK18C]` (planarity.hl:3894-4043,
+  `t3' <> 0`; mirror of 18b with `v' <-> w'`, `t2' <-> t3'`) are fully
+  proved.
+- Remaining generic case left as a marked sorry:
+  `[BLOCK18D] planarity.hl:4044-5182` (`t3' <> 0`, `t2' <> 0`).
 - HOL `remark1_fan`/`th3` (fan.hl:388,423) are not yet ported; the
   specific fragments needed here live below as private helpers.
 
@@ -70,9 +73,10 @@ private theorem disjoint_singleton_of_not_collinear3 {x p q : V3}
 
 /-! ## 主定理（切片 18a） -/
 
-/-- HOL planarity.hl:3667 `not_cut_inside_fan`（切片 18a：陈述与第一个
-小分支 `t3' = t2' = 0`（:3730-3776）完整证明；`t2' ≠ 0` 与 `t3' ≠ 0`
-分支分别留待 `[BLOCK18B]`/`[BLOCK18C]`）。 -/
+/-- HOL planarity.hl:3667 `not_cut_inside_fan`（`t3' = t2' = 0`
+（:3730-3776）、`[BLOCK18B]`（`t3' = 0`，`t2' ≠ 0`，:3777-3893）与
+`[BLOCK18C]` 的 `t2' = 0` 子分支（`t3' ≠ 0`，:3894-4043，18b 的镜像）
+均完整证明；剩余一般情形留待 `[BLOCK18D]`（:4044-5182）。 -/
 theorem not_cut_inside_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
     (huw : {u, w} ∈ E) (hsigma : sigmaFan x V E u w = v) (ha0 : 0 < a)
     (ha1 : a < 1) (hcard : ∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard)
@@ -257,4 +261,123 @@ theorem not_cut_inside_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
           ∩ {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} := ⟨hp1', hp2'⟩
       rw [hEM ((1 - t) * a) h'0 h'1] at hfin
       simp at hfin
-  · sorry -- [BLOCK18C] planarity.hl:3894-5182
+  · -- HOL :3894-4043（t3' ≠ 0）：再分 t2' = 0 / t2' ≠ 0
+    by_cases ht2z : t2' = 0
+    · -- HOL :3894-4043（t3' ≠ 0，t2' = 0）：BLOCK18B 的镜像（v' ↔ w'，t2' ↔ t3'）
+      subst ht2z
+      -- 基本正性与系数关系
+      have ht3'pos : 0 < t3' := lt_of_le_of_ne ht3'0 (fun h => ht3z h.symm)
+      have ht3'ne : t3' ≠ 0 := ne_of_gt ht3'pos
+      have ht1 : t1 = 1 - t2 - t3 := by linarith
+      have ht1' : t1' = 1 - t3' := by linarith
+      -- 两个仿射组合分解合并（HOL :3894-3913 的系数方程）
+      have hA : t1' • x + (0 : ℝ) • v' + t3' • w'
+          = t1 • x + t2 • v + t3 • ((1 - a) • u + a • w) := hyeq'.symm.trans hyeq
+      have h2 : t3' • w' = (t3' - t2 - t3) • x + t2 • v + t3 • ((1 - a) • u + a • w) := by
+        have hz : t3' • w'
+            - ((t3' - t2 - t3) • x + t2 • v + t3 • ((1 - a) • u + a • w)) = 0 := by
+          have e1 : (t3' - t2 - t3) • x = t1 • x - t1' • x := by rw [ht1, ht1']; module
+          rw [e1]
+          rw [show t3' • w' - ((t1 • x - t1' • x) + t2 • v + t3 • ((1 - a) • u + a • w))
+              = (t1' • x + (0 : ℝ) • v' + t3' • w')
+                - (t1 • x + t2 • v + t3 • ((1 - a) • u + a • w)) from by module]
+          exact sub_eq_zero_of_eq hA
+        exact sub_eq_zero.mp hz
+      have hwx : t3' • (w' - x) = t2 • (v - x) + t3 • ((1 - a) • u + a • w - x) := by
+        rw [smul_sub, h2]
+        module
+      -- 第 2 部分（HOL :3994-4004）：w' ∈ aff_gt {x} {v,z}，显式见证系数
+      have hw' : w' = (1 - t3'⁻¹ * t2 - t3'⁻¹ * t3) • x + (t3'⁻¹ * t2) • v
+          + (t3'⁻¹ * t3) • ((1 - a) • u + a • w) := by
+        rw [← inv_smul_smul₀ ht3'ne w', h2, smul_add, smul_add, smul_smul, smul_smul, smul_smul]
+        have hc : t3'⁻¹ * (t3' - t2 - t3) = 1 - t3'⁻¹ * t2 - t3'⁻¹ * t3 := by
+          rw [mul_sub, mul_sub, inv_mul_cancel₀ ht3'ne]
+        rw [hc]
+      have hw'aff : w' ∈ affGt {x} {v, (1 - a) • u + a • w} := by
+        rw [aff_gt_1_2 hdis]
+        exact ⟨1 - t3'⁻¹ * t2 - t3'⁻¹ * t3, t3'⁻¹ * t2, t3'⁻¹ * t3,
+          mul_pos (inv_pos.mpr ht3'pos) ht20, mul_pos (inv_pos.mpr ht3'pos) ht30, by ring, hw'⟩
+      -- 第 1 部分（HOL :3914-3993）：~coplanar {x,w',v,u}
+      have hDne : (t2 + t3 : ℝ) ≠ 0 := by linarith
+      have hPFS : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+        properties_fully_surrounded hfan hvu huw hθ0 hθπ
+      have hncop1 : ¬ Coplanar ({x, v, u, (1 - a) • u + a • w} : Set V3) :=
+        continuous_coplanar_fan x v u w hPFS a (by linarith)
+      have hncop2 : ¬ Coplanar ({x, u, v, (1 - a) • u + a • w} : Set V3) := by
+        intro hc
+        apply hncop1
+        have hset : ({x, u, v, (1 - a) • u + a • w} : Set V3)
+            = ({x, v, u, (1 - a) • u + a • w} : Set V3) := by ext p; simp; tauto
+        rw [← hset]
+        exact hc
+      have htne : t3 * (t2 + t3)⁻¹ ≠ 0 :=
+        mul_ne_zero (ne_of_gt ht30) (inv_ne_zero hDne)
+      have hncop3 : ¬ Coplanar ({x, u, v,
+          (1 - t3 * (t2 + t3)⁻¹) • v + (t3 * (t2 + t3)⁻¹) • ((1 - a) • u + a • w)} : Set V3) :=
+        continuous_coplanar_fan x u v ((1 - a) • u + a • w) hncop2 (t3 * (t2 + t3)⁻¹) htne
+      have hncwxu : ¬ Coplanar ({x, w', v, u} : Set V3) := by
+        intro hcop4
+        obtain ⟨o1, o2, o3, hsub⟩ := hcop4
+        have hxo : x ∈ (affineSpan ℝ ({o1, o2, o3} : Set V3) : Set V3) := hsub (by simp)
+        have hw'o : w' ∈ (affineSpan ℝ ({o1, o2, o3} : Set V3) : Set V3) := hsub (by simp)
+        have hvo : v ∈ (affineSpan ℝ ({o1, o2, o3} : Set V3) : Set V3) := hsub (by simp)
+        have huo : u ∈ (affineSpan ℝ ({o1, o2, o3} : Set V3) : Set V3) := hsub (by simp)
+        -- 关键组合点：q = (1-c)•v + c•z = x + (t2+t3)⁻¹ • (t3' • (w' - x))（HOL :3946 附近）
+        have hqm : (1 - t3 * (t2 + t3)⁻¹) • v + (t3 * (t2 + t3)⁻¹) • ((1 - a) • u + a • w)
+            = x + (t2 + t3)⁻¹ • (t3' • (w' - x)) := by
+          rw [hwx]
+          rw [show t2 • (v - x) + t3 • ((1 - a) • u + a • w - x)
+              = t2 • v + t3 • ((1 - a) • u + a • w) - (t2 + t3) • x from by module]
+          rw [smul_sub, smul_smul, inv_mul_cancel₀ hDne, one_smul]
+          rw [show x + ((t2 + t3)⁻¹ • (t2 • v + t3 • ((1 - a) • u + a • w)) - x)
+              = (t2 + t3)⁻¹ • (t2 • v + t3 • ((1 - a) • u + a • w)) from by abel]
+          rw [smul_add, smul_smul, smul_smul]
+          have hc2 : 1 - t3 * (t2 + t3)⁻¹ = (t2 + t3)⁻¹ * t2 := by
+            field_simp
+            linarith
+          rw [hc2]
+          module
+        -- q 落在过 x, w' 的直线上，故落在同一平面内
+        have hqo : (1 - t3 * (t2 + t3)⁻¹) • v + (t3 * (t2 + t3)⁻¹) • ((1 - a) • u + a • w)
+            ∈ (affineSpan ℝ ({o1, o2, o3} : Set V3) : Set V3) := by
+          have hL := AffineMap.lineMap_mem ((t2 + t3)⁻¹ * t3') hxo hw'o
+          rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add] at hL
+          rw [hqm, smul_smul, add_comm]
+          exact hL
+        refine hncop3 ⟨o1, o2, o3, ?_⟩
+        intro p hp
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+        rcases hp with rfl | rfl | rfl | rfl
+        · exact hxo
+        · exact huo
+        · exact hvo
+        · exact hqo
+      -- 第 3 部分（HOL :4005-4043）：借助半空间元素与切边引理收尾
+      obtain ⟨-, hw'V⟩ := fan_mem_of_edge hfan he'
+      obtain ⟨u', hu'E, hu'0, hu'π⟩ :=
+        exists_element_in_half_sapace_fan x w' v u V E hfan hw'V hncwxu (hcard w' hw'V) hfan80
+      have hncwu' : ¬ Collinear3 x w' u' := fan_not_collinear hfan hu'E
+      obtain ⟨t, ht0, htlt1, hpm⟩ :=
+        exists_cut_small_edges_fan (v1 := w') (u1 := u') hfan hvu huw hsigma ha0 ha1 hfan80
+          hncwu' hw'aff hu'0 hu'π
+      obtain ⟨p, hp⟩ := hpm
+      rw [Set.mem_inter_iff] at hp
+      obtain ⟨hp1, hp2⟩ := hp
+      have h1t : 0 < 1 - t := by linarith
+      have h'0 : 0 < (1 - t) * a := mul_pos h1t ha0
+      have h'1 : (1 - t) * a < a := by
+        have hm := mul_lt_mul_of_pos_right (show (1 - t : ℝ) < 1 by linarith) ha0
+        rwa [one_mul] at hm
+      -- 向量恒等式（HOL "YEU" 处的 VECTOR_ARITH）
+      have hid : (1 - (1 - t) * a) • u + ((1 - t) * a) • w
+          = (1 - t) • ((1 - a) • u + a • w) + t • u := by module
+      have hp1' : p ∈ affGt {x} {v, (1 - (1 - t) * a) • u + ((1 - t) * a) • w} := by
+        rw [hid]
+        exact hp1
+      have hp2' : p ∈ {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} :=
+        ⟨{w', u'}, hu'E, aff_gt_subset_aff_ge (disjoint_singleton_of_not_collinear3 hncwu') hp2⟩
+      have hfin : p ∈ affGt {x} {v, (1 - (1 - t) * a) • u + ((1 - t) * a) • w}
+          ∩ {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} := ⟨hp1', hp2'⟩
+      rw [hEM ((1 - t) * a) h'0 h'1] at hfin
+      simp at hfin
+    · sorry -- [BLOCK18D] planarity.hl:4044-5182
