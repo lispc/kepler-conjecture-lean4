@@ -1,9 +1,0 @@
-{
-  "id": "6096597438 a",
-  "root_box": [[{"num": 1, "den": 1}, {"num": 1, "den": 1}]],
-  "leaves": [
-    {"box": [[{"num": 1, "den": 1}, {"num": 1, "den": 1}]], "hit": "main"}
-  ],
-  "nodes": 1,
-  "prec": 64
-}
