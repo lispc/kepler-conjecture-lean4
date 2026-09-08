@@ -5537,3 +5537,134 @@ theorem fan_run_in_small2_not0_is_fan (hfan : FAN x V E)
       · -- a < t：代入否定的 h 假设
         have hale : a < t := lt_of_le_of_ne (le_of_not_gt htless) (Ne.symm hteq)
         exact hex ⟨t, hale, le_of_lt ht1, hazt⟩
+
+/-- HOL planarity.hl:6674 `fan_run_in_small3_not0_is_fan`：w1 与 u 相邻
+（`{u,w1} ∈ E`）时，存在 `t1 ∈ (a,1]` 使 `t ∈ (0,t1)` 时扰动扇区
+`aff_gt {x} {v,(1-t)•u+t•w}` 与闭扇区 `aff_ge {x} {u,w1}` 无交。
+σ_fan 方位角最小性论证：交点 y 的两组系数给出
+(1) y 不在轴 xu 上（否则弦点 ∈ aff{x,v,u}，共面矛盾）；
+(2) w1 系数 > 0，`azim_eq_azim_iff_alt` 给 azim x u w w1 = azim x u w y；
+(3) `inequality3_aim_in_convex_fan` 给 0 < azim x u w y < azim x u w v；
+(4) `SIGMA_FAN` 最小性 azim x u w v ≤ azim x u w w1 与 (3) 矛盾。
+见证 t1 = 1，`not_collinear_is_properties_fully_surrounded` 保证全程非共线。 -/
+theorem fan_run_in_small3_not0_is_fan (hfan : FAN x V E)
+    (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E) (huw1 : {u, w1} ∈ E)
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) (hsigma : sigmaFan x V E u w = v)
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (ha0 : 0 < a) (ha1 : a < 1)
+    (hEM : affGt {x} {v, (1 - a) • u + a • w} ∩
+      {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅)
+    (hEMs : ∀ s : ℝ, 0 < s → s < a →
+      affGt {x} {v, (1 - s) • u + s • w} ∩
+        {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅) :
+    ∃ t1 : ℝ, a < t1 ∧ t1 ≤ 1 ∧
+      ∀ t : ℝ, 0 < t → t < t1 →
+        affGt {x} {v, (1 - t) • u + t • w} ∩ affGe {x} {u, w1} = ∅ := by
+  refine ⟨1, ha1, le_rfl, ?_⟩
+  intro t ht0 ht1
+  have hncz : ¬ Collinear3 x v ((1 - t) • u + t • w) :=
+    not_collinear_is_properties_fully_surrounded hfan hvu huw hθ0 hθπ t ht0 ht1
+  have hncuv : ¬ Collinear3 x u v := by
+    refine fan_not_collinear hfan ?_
+    have h : ({u, v} : Set V3) = ({v, u} : Set V3) := by
+      ext a; simp; tauto
+    rw [h]; exact hvu
+  have hncw : ¬ Collinear3 x u w := fan_not_collinear hfan huw
+  have hncw1 : ¬ Collinear3 x u w1 := fan_not_collinear hfan huw1
+  have hxu : x ≠ u := fun he => hncw (collinear3_of_eq he.symm)
+  refine Set.eq_empty_iff_forall_notMem.mpr (fun y hy => ?_)
+  obtain ⟨hy1, hy2⟩ := hy
+  have hdisx : Disjoint ({x} : Set V3) ({v, (1 - t) • u + t • w} : Set V3) :=
+    disjoint_of_not_collinear3 hncz
+  rw [aff_gt_1_2 hdisx] at hy1
+  simp only [Set.mem_setOf_eq] at hy1
+  obtain ⟨t1', t2, t3, ht2, ht3, hsum, hyeq⟩ := hy1
+  have hncy : ¬ Collinear3 x u y := by
+    intro hcol
+    obtain ⟨s, hsline⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp
+      ((collinear3_iff_mem_affineSpan hxu).mp hcol)
+    have hycombo : y = (1 - s) • x + s • u := by
+      rw [← hsline, AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add]; module
+    have hne : t3 ≠ 0 := ne_of_gt ht3
+    have heqy : t1' • x + t2 • v + t3 • ((1 - t) • u + t • w)
+        = (1 - s) • x + s • u := hyeq.symm.trans hycombo
+    have hzexpr : t3 • ((1 - t) • u + t • w)
+        = (1 - s) • x + s • u - (t1' • x + t2 • v) := by
+      calc t3 • ((1 - t) • u + t • w)
+          = (t1' • x + t2 • v + t3 • ((1 - t) • u + t • w))
+            - (t1' • x + t2 • v) := by module
+        _ = (1 - s) • x + s • u - (t1' • x + t2 • v) := by rw [heqy]
+    have hzmem : (1 - t) • u + t • w ∈
+        (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) := by
+      refine mem_affineSpan_of_combo (p := x) (q := v) (r := u)
+        (c1 := t3⁻¹ * (1 - s) - t3⁻¹ * t1') (c2 := -(t3⁻¹ * t2))
+        (c3 := t3⁻¹ * s) ?_ ?_
+      · calc t3⁻¹ * (1 - s) - t3⁻¹ * t1' + -(t3⁻¹ * t2) + t3⁻¹ * s
+            = t3⁻¹ * ((1 - s) - t1' - t2 + s) := by ring
+          _ = t3⁻¹ * t3 := by congr 1; linarith
+          _ = 1 := inv_mul_cancel₀ hne
+      · show (1 - t) • u + t • w = (t3⁻¹ * (1 - s) - t3⁻¹ * t1') • x
+          + -(t3⁻¹ * t2) • v + (t3⁻¹ * s) • u
+        calc (1 - t) • u + t • w
+            = t3⁻¹ • (t3 • ((1 - t) • u + t • w)) := by
+              rw [smul_smul, inv_mul_cancel₀ hne, one_smul]
+          _ = t3⁻¹ • ((1 - s) • x + s • u - (t1' • x + t2 • v)) := by rw [hzexpr]
+          _ = _ := by module
+    refine continuous_coplanar_fan x v u w hcop t (ne_of_gt ht0)
+      ⟨x, v, u, fun p hp => ?_⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | rfl | rfl | hzmem'
+    · exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+    · exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+    · exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+    · rw [hzmem']
+      exact SetLike.mem_coe.mpr hzmem
+  have hdisw1 : Disjoint ({x} : Set V3) ({u, w1} : Set V3) :=
+    disjoint_of_not_collinear3 hncw1
+  rw [aff_ge_1_2 hdisw1] at hy2
+  simp only [Set.mem_setOf_eq] at hy2
+  obtain ⟨t1'', t2', t3', ht2', ht3', hsum', hyeq2⟩ := hy2
+  have ht3'0 : 0 < t3' := by
+    by_contra hcon
+    push_neg at hcon
+    have h0 : t3' = 0 := le_antisymm hcon ht3'
+    refine hncy ((collinear3_iff_mem_affineSpan hxu).mpr
+      (mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨t2', ?_⟩))
+    rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add, hyeq2, h0, zero_smul,
+      add_zero]
+    have ht : t1'' = 1 - t2' := by linarith
+    rw [ht]
+    module
+  have hyxc : y - x = t2' • (u - x) + t3' • (w1 - x) := by
+    have h1 : t1'' = 1 - t2' - t3' := by linarith
+    rw [hyeq2, h1]
+    module
+  have hyx : y ≠ x := fun he => hncy (collinear3_pair_left he)
+  have hyu : y ≠ u := fun he => hncy (collinear3_pair_right he)
+  have hne3 : t3' ≠ 0 := ne_of_gt ht3'0
+  have hmem : w1 ∈ affGt ({x, u} : Set V3) {y} := by
+    refine (affGt_pair_iff (v0 := x) (v1 := u) (x := y) (y := w1) hxu hyx hyu).mpr
+      ⟨t3'⁻¹, inv_pos.mpr ht3'0, -(t2' * t3'⁻¹), ?_⟩
+    show w1 - x = t3'⁻¹ • (y - x) + -(t2' * t3'⁻¹) • (u - x)
+    rw [hyxc, smul_add, smul_smul, smul_smul, inv_mul_cancel₀ hne3, one_smul]
+    module
+  have hazim : azim x u w w1 = azim x u w y :=
+    (azim_eq_azim_iff_alt hncw hncw1 hncy).mpr hmem
+  obtain ⟨hBE, hYEU⟩ := inequality3_aim_in_convex_fan hfan hvu huw hθ0 hθπ
+    t ht0 ht1 t1' t2 t3 ht3 ht2 hsum
+  rw [← hyeq] at hBE hYEU
+  rcases eq_or_ne w1 w with rfl | hw1w
+  · rw [azim_self] at hazim
+    linarith
+  · have hw1edge : w1 ∈ setOfEdge u V E :=
+      (properties_of_setOfEdge_fan x V E u w1 hfan).mp huw1
+    have hwedge : w ∈ setOfEdge u V E :=
+      (properties_of_setOfEdge_fan x V E u w hfan).mp huw
+    by_cases hsingle : setOfEdge u V E = {w}
+    · exact hw1w (by
+        rw [hsingle] at hw1edge
+        exact Set.mem_singleton_iff.mp hw1edge)
+    · obtain ⟨-, -, hmin⟩ := SIGMA_FAN hsingle hfan hwedge
+      have hle := hmin w1 hw1edge hw1w
+      rw [hsigma] at hle
+      linarith
