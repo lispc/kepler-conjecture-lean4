@@ -5018,3 +5018,53 @@ theorem remark012_fan {a : ℝ} (hfan : FAN x V E) (huw : {u, w} ∈ E)
     rw [← h77]
     exact ⟨hmemA, hmemB⟩
   exact hxv1 (Set.mem_singleton_iff.mp hv1x).symm
+
+/-- HOL planarity.hl:5794 `inequality1_not0_fan`：`inequality1_fan` 的推广，
+下界从 `0` 改为 `a > 0`。关键恒等式
+`((1-a)•u + a•w) - ((1-t)•u + t•w) = (t-a)•(u-w)` 由 `module` 证，
+随后与 `inequality1_fan` 相同的分离-凸包估计链。 -/
+theorem inequality1_not0_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hcop : ¬ Coplanar ({x, v, u, w} : Set V3))
+    (d a : ℝ) (hd : 0 < d) (ha0 : 0 < a) (ha1 : a < 1) :
+    ∃ h : ℝ, a < h ∧ h ≤ 1 ∧
+      ∀ t : ℝ, a ≤ t → t < h → ∀ s : ℝ, 0 ≤ s → s ≤ 1 →
+        s * ‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹ *
+            ‖((1 - a) • u + a • w) - ((1 - t) • u + t • w)‖ < d := by
+  obtain ⟨h0, h0pos, h0b⟩ := separate_point_convex_fan hfan hvu huw hcop
+  have huwne : u ≠ w := edge_ne_of_fan hfan huw
+  have hnw : 0 < ‖u - w‖ := norm_pos_iff.mpr (sub_ne_zero.mpr huwne)
+  refine ⟨min 1 (a + d * h0 / ‖u - w‖),
+    lt_min ha1 (by linarith [div_pos (mul_pos hd h0pos) hnw]),
+    min_le_left _ _, ?_⟩
+  intro t ht0 hlt s hs0 hs1
+  have ht1 : t ≤ 1 := le_of_lt (lt_of_lt_of_le hlt (min_le_left _ _))
+  have hbn : h0 < ‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖ :=
+    h0b _ (expansion_convex_fan t s (le_trans ha0.le ht0) ht1 hs0 hs1)
+  have hta : 0 ≤ t - a := sub_nonneg.mpr ht0
+  have hsplit : (t - a) * ‖u - w‖ < d * h0 := by
+    have ht : t - a < d * h0 / ‖u - w‖ := by
+      linarith [lt_of_lt_of_le hlt (min_le_right _ _)]
+    rwa [lt_div_iff₀ hnw] at ht
+  have hinv : ‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹ ≤ h0⁻¹ :=
+    inv_anti₀ h0pos (le_of_lt hbn)
+  have hle :
+      s * ‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹ *
+          ((t - a) * ‖u - w‖) ≤ h0⁻¹ * ((t - a) * ‖u - w‖) := by
+    refine mul_le_mul_of_nonneg_right ?_ (mul_nonneg hta (norm_nonneg _))
+    have h1 :
+        s * ‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹ ≤ 1 * h0⁻¹ :=
+      mul_le_mul hs1 hinv (inv_nonneg.mpr (norm_nonneg _)) zero_le_one
+    simpa using h1
+  have hfin : h0⁻¹ * ((t - a) * ‖u - w‖) < d := by
+    have : h0⁻¹ * ((t - a) * ‖u - w‖) = ((t - a) * ‖u - w‖) / h0 := by
+      rw [div_eq_inv_mul, mul_comm]
+    rw [this]
+    exact (div_lt_iff₀ h0pos).mpr hsplit
+  have hident :
+      ‖((1 - a) • u + a • w) - ((1 - t) • u + t • w)‖ =
+        (t - a) * ‖u - w‖ := by
+    rw [show ((1 - a) • u + a • w) - ((1 - t) • u + t • w) =
+        (t - a) • (u - w) from by module,
+      norm_smul, Real.norm_eq_abs, abs_of_nonneg hta]
+  rw [hident]
+  exact lt_of_le_of_lt hle hfin
