@@ -1455,7 +1455,16 @@ def main():
                     help="dyadic 网格指数（步长 2^-q，默认 30）")
     ap.add_argument("--no-xcheck", action="store_true",
                     help="跳过与 SMT 输出的交叉抽查")
+    ap.add_argument("--ineqs", default="",
+                    help="不等式 AST JSON 路径，覆盖 AST_PATH")
+    ap.add_argument("--defs", default="",
+                    help="定义闭包 JSON 路径，覆盖 DEFS_PATH")
+    ap.add_argument("--outdir", default="",
+                    help="案例输出目录，覆盖 CASES_DIR")
     args = ap.parse_args()
+    ast_path = args.ineqs or AST_PATH
+    defs_path = args.defs or DEFS_PATH
+    cases_dir = args.outdir or CASES_DIR
 
     ok, bad = selftest()
     print("== 自检（Fraction 区间求值器 + dyadic 外扩） ==")
@@ -1465,15 +1474,15 @@ def main():
     if not ok:
         return 1
 
-    with open(AST_PATH) as f:
+    with open(ast_path) as f:
         data = json.load(f)
-    defs = load_defs(DEFS_PATH)
+    defs = load_defs(defs_path)
     darts = load_darts(INEQ_HL)
     recs = data["records"]
     wanted = None
     if args.ids.strip():
         wanted = set(s.strip() for s in args.ids.split(",") if s.strip())
-    os.makedirs(CASES_DIR, exist_ok=True)
+    os.makedirs(cases_dir, exist_ok=True)
 
     emitted, skipped = [], []
     tot_ops = tot_ite = tot_disj = tot_varlt = 0
@@ -1505,7 +1514,7 @@ def main():
             evs = "eval=ERR(%s)" % e
             eval_err += 1
 
-        path = os.path.join(CASES_DIR, safe_name(idv))
+        path = os.path.join(cases_dir, safe_name(idv))
         out = dict((k, v) for k, v in case.items() if not k.startswith("_"))
         with open(path, "w") as f:
             json.dump(out, f, default=frac_json, separators=(",", ":"))

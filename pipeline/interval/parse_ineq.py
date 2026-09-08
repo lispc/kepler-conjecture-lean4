@@ -9,6 +9,7 @@ tags, and eps.
 Stdlib only.  Usage:  python3 pipeline/interval/parse_ineq.py
 """
 
+import argparse
 import json
 import os
 import re
@@ -329,6 +330,26 @@ def parse_bounds_region(text, lo, hi, notes):
         if a >= b:
             continue
         if text[a] != "(" or text[b - 1] != ")":
+            # paren-less triple style (prep.hl): lo,var,hi
+            trip = []
+            s = a
+            depth = 0
+            for k in range(a, b):
+                c = text[k]
+                if c in "([{":
+                    depth += 1
+                elif c in ")]}":
+                    depth -= 1
+                elif c == "," and depth == 0:
+                    trip.append((s, k))
+                    s = k + 1
+            trip.append((s, b))
+            if len(trip) == 3:
+                toks = [normalize_ws(text[u:v]) for (u, v) in trip]
+                notes.append("bounds item without parens")
+                bounds.append({"lo": toks[0], "var": toks[1],
+                               "hi": toks[2]})
+                continue
             notes.append("bounds item is not a triple: %r"
                          % normalize_ws(text[a:b]))
             bounds.append({"raw": normalize_ws(text[a:b])})
@@ -528,9 +549,21 @@ def parse_file(relpath):
 
 
 def main():
+    ap = argparse.ArgumentParser(
+        description="Extract nonlinear-inequality records from .hl files.")
+    ap.add_argument("--files", default="",
+                    help="comma-separated .hl paths (repo-relative), "
+                         "overrides FILES")
+    ap.add_argument("--out", default="", help="output JSON path, "
+                    "overrides OUT_PATH")
+    args = ap.parse_args()
+    files = ([s.strip() for s in args.files.split(",") if s.strip()]
+             or FILES)
+    out_path = args.out or OUT_PATH
+
     all_records = []
     per_file = {}
-    for rel in FILES:
+    for rel in files:
         recs, xc = parse_file(rel)
         all_records.extend(recs)
         per_file[rel] = xc
@@ -538,8 +571,8 @@ def main():
     out = {"records": all_records,
            "per_file_counts": {rel: xc["records_parsed"]
                                for rel, xc in per_file.items()}}
-    os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
-    with open(OUT_PATH, "w", encoding="utf-8") as f:
+    os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
         json.dump(out, f, indent=1, ensure_ascii=False)
 
     print("=== parse_ineq summary ===")
@@ -561,7 +594,7 @@ def main():
     for r in noted:
         print("  - %s (line %d): %s" % (r["idv"] or r["idv_expr"],
                                         r["line"], r["parse_note"]))
-    print("wrote %s" % OUT_PATH)
+    print("wrote %s" % out_path)
     leftover_total = sum(len(xc["leftover_unparsed"])
                          for xc in per_file.values())
     if leftover_total != 0:

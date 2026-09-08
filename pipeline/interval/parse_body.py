@@ -36,6 +36,7 @@ Validation (all must pass, exit 0):
 Stdlib only.  Usage:  python3 pipeline/interval/parse_body.py
 """
 
+import argparse
 import json
 import os
 import re
@@ -431,7 +432,17 @@ def parse_body_raw(raw, where):
 
 # -------------------------------------------------------------------- main
 def main():
-    with open(IN_PATH) as f:
+    ap = argparse.ArgumentParser(
+        description="Parse body_raw HOL terms into ASTs.")
+    ap.add_argument("--in", dest="in_path", default="",
+                    help="input JSON path, overrides IN_PATH")
+    ap.add_argument("--out", dest="out_path", default="",
+                    help="output JSON path, overrides OUT_PATH")
+    args = ap.parse_args()
+    in_path = args.in_path or IN_PATH
+    out_path = args.out_path or OUT_PATH
+
+    with open(in_path) as f:
         data = json.load(f)
     recs = data["records"]
 
@@ -469,7 +480,8 @@ def main():
 
     out = {k: v for k, v in data.items() if k != "records"}
     out["records"] = out_recs
-    with open(OUT_PATH, "w") as f:
+    os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
+    with open(out_path, "w") as f:
         json.dump(out, f, indent=1, ensure_ascii=False)
 
     print("== parse_body.py summary ==")

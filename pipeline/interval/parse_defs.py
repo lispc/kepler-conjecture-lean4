@@ -34,6 +34,7 @@ report symbols with no definition.
 Stdlib only.  Usage:  python3 pipeline/interval/parse_defs.py
 """
 
+import argparse
 import glob
 import json
 import os
@@ -773,6 +774,17 @@ def is_stmt_var(sym):
 
 # ------------------------------------------------------------------- main
 def main():
+    ap = argparse.ArgumentParser(
+        description="Parse Flyspeck definitions + build closure defs.json.")
+    ap.add_argument("--in", dest="in_path", default="",
+                    help="inequality-AST JSON (closure roots), "
+                         "overrides AST_PATH")
+    ap.add_argument("--out", dest="out_path", default="",
+                    help="output JSON path, overrides OUT_PATH")
+    args = ap.parse_args()
+    ast_path = args.in_path or AST_PATH
+    out_path = args.out_path or OUT_PATH
+
     # ---- 1. extract + parse definitions from the two primary files
     defs, unsupported = {}, {}
     dup = Counter()
@@ -794,7 +806,7 @@ def main():
                                      "reason": reason}
 
     # ---- 2. closure roots from the inequality ASTs
-    with open(AST_PATH) as f:
+    with open(ast_path) as f:
         ast_data = json.load(f)
     roots, domains_bad, stmt_vars = set(), [], set()
     for rec in ast_data["records"]:
@@ -911,10 +923,10 @@ def main():
         "unsupported_names": sorted(unsupported),
         "fallback_sources": fallback_used,
     }
-    os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
-    with open(OUT_PATH, "w") as f:
+    os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
+    with open(out_path, "w") as f:
         json.dump(out, f, indent=1, ensure_ascii=False)
-    print("wrote %s" % OUT_PATH)
+    print("wrote %s" % out_path)
 
     if missing:
         print("NOTE: %d missing symbol(s) -- triage list above" % len(missing))
