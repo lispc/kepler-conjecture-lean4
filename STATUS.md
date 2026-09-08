@@ -2,7 +2,7 @@
 
 > 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新。
 > 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
-> 当前 main @ `43009f1`，`lake build Kepler` 全绿（9304 jobs），
+> 当前 main @ `8a81d0b`，`lake build Kepler` 全绿（9304 jobs），
 > 唯一 sorry 是 `Statement.lean:111` 的主定理占位（sanctioned，见 Phase 1）。
 
 图例：✅ 完成并验证 / 🟡 进行中 / ⬜ 未启动。完成度为行数或条目数口径的粗略估计。
@@ -37,12 +37,23 @@
 - [x] hard_1 偏差根因修复（`d5e32af`：branch.py 逐节点数值收紧重放）
 - [x] **全部 43,078 个终端 LP 内核验证通过**：SoPlex 数值放弃的 51 例全部经 glpsol 精确对偶通道闭合（`glpsol_dual.py`，glpsol --exact 最慢 13.5h/例 + 内核 decide ~245s/例）。账本 `~/lprun-logs/results.jsonl`（43,078/43,078 exit=0）
 
-## Phase 4 — 非线性不等式 🟡 工具链 100% / 量产 0%
+## Phase 4 — 非线性不等式 🟡 求解层 22% / 内核闭合 0%
 
 - [x] 区间算术全层（`Kepler/Interval/`：Basic/Div/Sqrt/Ball/Trans/Expr/BBTree 分支定界，`f3cea0f`）
 - [x] dyadic 精确算术、证书式 sqrt、Taylor/sin soundness、分支定界证书格式
-- [ ] **~993 个非线性不等式量产**（未启动；机器算力已空闲，待启动）
+- [x] 量产流水线（2026-09-08 一天内建成，`9673f92`–`8a81d0b`）：
+  `ineq.hl` 记录解析（181 条，grep 对账零残留）→ 公式 AST（176 条，往返零误差）
+  → 定义表（sphere.hl+nonlin_def.hl 348 个定义，依赖闭包 155 符号零缺失）
+  → SMT-LIB2 发射（176/176，dReal 逐文件解析零错误）
+- [x] **dReal 第一层批跑 pass 1**（δ=1e-3，300s/条）：**39/176 unsat 证掉**；
+  6 条 δ-sat（均为 Branching/Eps/Sharp 边界尖锐组，已逐条排除翻译错误）；
+  131 条超时 → pass 2（1800s/条）进行中
+- [ ] dReal 超时/δ-sat 案例 → Arb 球算术分支定界（第二层）
+- [ ] **求解结果 → Lean 内核证书闭合**（BBTree 分片 + checkPos，内核验收门 G4）
+- [ ] `ineqdata3q1h.hl` 7 条 Mathematica record（每条 5 不等式）单独解析
 - [ ] cos/arctan 实例化、sin 范围缩减放宽（按需）
+- 数字口径修正：旧文档"~993 个"为过时估计；实际底账 181 条记录
+  （+3q1h 的 35 条），子断言 ~23k 来自 Branching 定义域剖分
 
 ## Phase 5 — 文字证明移植 🟡（人力主线，全项目最大头）
 
@@ -53,7 +64,7 @@
 | hypermap/hypermap.hl | 13,575 | ✅ 全书收官 | 100% |
 | fan/fan.hl 系列（fan_defs/fan_misc/fan/CFYXFTY/hypermap_and_fan） | ~7,800 | ✅ 全书收官（hypermapOfFan 完整构造） | 100% |
 | fan/topology.hl | 4,718 | ✅ 全书收官（`36c37c6`，dart_leads_into 全套） | 100% |
-| fan/planarity.hl | 15,463 | 🟡 流水线推进中，覆盖至 :3340（`43009f1`） | ~22% |
+| fan/planarity.hl | 15,463 | 🟡 流水线推进中，覆盖至 :3635（`771fbcb`）；巨块 not_cut_inside_fan（:3667–5182）在 wip 分支切片推进，~85% | ~24% |
 | fan/Conforming.hl | 17,033 | ⬜ 未启动 | 0% |
 | fan/ 其余（polyhedron 等） | ~3,200 | ⬜ 未启动 | 0% |
 | packing/（Rogers/OXLZLEZ3/REUHADY…） | ~28,000 | ⬜ 未启动 | 0% |
@@ -69,7 +80,12 @@
 - [x] azim 平移桥 `azim_sub_self` + JBDNJJB 混合积 + cross_dot 族（`f16b544` 等）
 - [ ] 遗留去重：`Kepler.Text.fan80/fan81`（Planarity）与 `Kepler.Text.Fan.fan80/fan81`（Fan.lean:222）重复定义，待合并
 
-前方难点：planarity.hl:3667 `not_cut_inside_fan` 是 1,500 行单证明巨块，需拆分策略。
+前方难点攻坚中：planarity.hl:3667 `not_cut_inside_fan`（1,515 行单证明）已在
+`wip/not-cut-inside-fan` 分支切成 6 片（18a–18d4）：骨架+系数 2×2 分支+
+中点事实链+azim 三分裂前两案已绿；azim=0 支已证（结构拆为独立 private 引理，
+heartbeat 按 declaration 计的教训已沉淀）；仅剩 azim=π 镜像支 [BLOCK18D4]。
+生产经验：对称镜像分支可下沉 flash（18c 一次通过）；工人读不了 /tmp；
+单定理超 ~600 行必须拆 declaration。
 
 ## Phase 6 — 集成与交付 ⬜
 
@@ -81,9 +97,9 @@
 
 ## 整体估计
 
-- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性工具链就绪、量产 0%。
-- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + planarity 前段 ≈ 29k 行 HOL 源；待移植 ≈ 90k 行。按行数口径 **~24%**。
-- **全项目粗略完成度：~48%**。
+- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性流水线建成、dReal 第一层 39/176（求解层 22%），内核闭合 0%。
+- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + planarity 前段 ≈ 30k 行 HOL 源；待移植 ≈ 89k 行。按行数口径 **~25%**。
+- **全项目粗略完成度：~49%**。
 
 ## 验证纪律（每个提交前必做）
 
