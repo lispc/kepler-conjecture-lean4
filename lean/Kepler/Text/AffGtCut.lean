@@ -112,6 +112,55 @@ private theorem disjoint_of_nc3 {x p q : V3} (hnc : ¬ Collinear3 x p q) :
 private theorem pair_comm_set (a b : V3) : ({a, b} : Set V3) = ({b, a} : Set V3) := by
   ext z; simp; tauto
 
+/-- 三点（`x,p,v`）仿射组合落入仿射子空间：`c1•x + c2•p + c3•v`
+（系数和 1）仍在该子空间内（S3 中 `w ∈ P` 的载体，vadd/direction 闭包）。 -/
+private theorem mem_affineSpan_comb {S : AffineSubspace ℝ V3} {x p v y : V3} {c1 c2 c3 : ℝ}
+    (hx : x ∈ (S : Set V3)) (hp : p ∈ (S : Set V3)) (hv : v ∈ (S : Set V3))
+    (hsum : c1 + c2 + c3 = 1) (hy : y = c1 • x + c2 • p + c3 • v) :
+    y ∈ (S : Set V3) := by
+  have hd2 : c2 • (p - x) ∈ S.direction :=
+    Submodule.smul_mem _ c2 (AffineSubspace.vsub_mem_direction hp hx)
+  have hd3 : c3 • (v - x) ∈ S.direction :=
+    Submodule.smul_mem _ c3 (AffineSubspace.vsub_mem_direction hv hx)
+  have hval : y = (c2 • (p - x) + c3 • (v - x)) +ᵥ x := by
+    rw [hy, vadd_eq_add]
+    calc
+      c1 • x + c2 • p + c3 • v = x + c2 • (p - x) + c3 • (v - x) := by
+        rw [show c1 = 1 - c2 - c3 by linarith]
+        module
+      _ = (c2 • (p - x) + c3 • (v - x)) + x := by
+        abel
+  rw [hval]
+  exact AffineSubspace.vadd_mem_of_mem_direction (Submodule.add_mem _ hd2 hd3) hx
+
+/-- 消元辅助（S4-S6 共用）：`y` 与 `x,r` 共线且 `y = c1•x + c2•q + c3•r`
+（`c2 ≠ 0`，系数和 1）时 `q ∈ aff {x,r}`（两点表示后除以 `c2`）。 -/
+private theorem mem_affLine_of_collinear3 {x q r y : V3} {c1 c2 c3 : ℝ}
+    (hxr : x ≠ r) (hcol : Collinear3 x y r) (hc2 : c2 ≠ 0)
+    (hsum : c1 + c2 + c3 = 1) (hyeq : y = c1 • x + c2 • q + c3 • r) :
+    q ∈ (affineSpan ℝ ({x, r} : Set V3) : Set V3) := by
+  have hcol' : y ∈ (affineSpan ℝ ({x, r} : Set V3) : Set V3) :=
+    (collinear3_iff_mem_affineSpan (v0 := x) (v1 := r) (y := y) hxr).mp
+      (coll3_swap' hcol)
+  rw [affine_hull_2_fan] at hcol'
+  obtain ⟨t1, t2, htsum, hyt⟩ := hcol'
+  have hkey : c2 • q = (t1 - c1) • x + (t2 - c3) • r := by
+    have e : c1 • x + c2 • q + c3 • r = t1 • x + t2 • r := by
+      rw [← hyeq, hyt]
+    calc
+      c2 • q = t1 • x + t2 • r - (c1 • x + c3 • r) := by
+        rw [← e]
+        module
+      _ = (t1 - c1) • x + (t2 - c3) • r := by
+        module
+  have hq : q = ((t1 - c1) / c2) • x + ((t2 - c3) / c2) • r := by
+    rw [← inv_smul_smul₀ hc2 q, hkey, smul_add, smul_smul, smul_smul]
+    module
+  rw [affine_hull_2_fan]
+  refine ⟨_, _, ?_, hq⟩
+  field_simp
+  linarith
+
 /-! ## S1：退化情形 `t3' = t2' = 0`（HOL :7847-7888） -/
 
 /-- HOL :7847-7888（`t3' = 0 /\ t2' = 0` 支）：`y = s1 • x` 且
@@ -218,7 +267,47 @@ private theorem coplanar_transfer {x v u w p : V3} {a1 a2 a3 : ℝ}
     (hp : p = a1 • x + a2 • v + a3 • w)
     (hnc : ¬ Coplanar ({x, v, u, w} : Set V3)) :
     ¬ Coplanar ({x, p, v, u} : Set V3) := by
-  sorry
+  have ha3ne : a3 ≠ 0 := ne_of_gt ha3
+  intro hcop
+  obtain ⟨a, b, c, hsub⟩ := hcop
+  let S : AffineSubspace ℝ V3 := affineSpan ℝ ({a, b, c} : Set V3)
+  have hx : x ∈ (S : Set V3) := hsub (by simp)
+  have hpS : p ∈ (S : Set V3) := hsub (by simp)
+  have hv : v ∈ (S : Set V3) := hsub (by simp)
+  have hu : u ∈ (S : Set V3) := hsub (by simp)
+  -- w = a3⁻¹ • p - (a3⁻¹*a1) • x - (a3⁻¹*a2) • v（解出 w，系数和 1）
+  have hp3 : a3⁻¹ • p = (a3⁻¹ * a1) • x + (a3⁻¹ * a2) • v + w := by
+    rw [hp]
+    rw [smul_add, smul_add, smul_smul, smul_smul, smul_smul]
+    rw [show a3⁻¹ * a3 = 1 by rw [inv_mul_cancel₀ ha3ne]]
+    rw [one_smul]
+  have hw' : w = a3⁻¹ • p - (a3⁻¹ * a1) • x - (a3⁻¹ * a2) • v := by
+    rw [hp3]
+    abel
+  have hw : w = (-(a3⁻¹ * a1)) • x + a3⁻¹ • p + (-(a3⁻¹ * a2)) • v := by
+    calc
+      w = a3⁻¹ • p - (a3⁻¹ * a1) • x - (a3⁻¹ * a2) • v := hw'
+      _ = (-(a3⁻¹ * a1)) • x + a3⁻¹ • p + (-(a3⁻¹ * a2)) • v := by
+        module
+  have hsum' : -(a3⁻¹ * a1) + a3⁻¹ + -(a3⁻¹ * a2) = 1 := by
+    field_simp [ha3ne]
+    linarith
+  have hwS : w ∈ (S : Set V3) := mem_affineSpan_comb hx hpS hv hsum' hw
+  apply hnc
+  refine ⟨a, b, c, ?_⟩
+  intro z hz
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+  rcases hz with h1 | hz
+  · rw [h1]
+    exact hx
+  rcases hz with h1 | hz
+  · rw [h1]
+    exact hv
+  rcases hz with h1 | hz
+  · rw [h1]
+    exact hu
+  · rw [hz]
+    exact hwS
 
 /-! ## S4-S6：一般情形的四条非共线（HOL :8202-8330） -/
 
@@ -232,7 +321,13 @@ private theorem nc3_x'_of_combo {x p q y : V3} {a1 a2 a3 : ℝ}
     (ha2 : 0 < a2) (hsum : a1 + a2 + a3 = 1)
     (hyq : y = a1 • x + a2 • p + a3 • q)
     (hnc : ¬ Collinear3 x p q) : ¬ Collinear3 x y q := by
-  sorry
+  have ha2ne : a2 ≠ 0 := ne_of_gt ha2
+  have hxq : x ≠ q :=
+    fun he => hnc (collinear3_pair_left (v0 := x) (v1 := p) (x := q) he.symm)
+  intro hcol
+  have hspan : p ∈ (affineSpan ℝ ({x, q} : Set V3) : Set V3) :=
+    mem_affLine_of_collinear3 hxq hcol ha2ne hsum hyq
+  exact hnc (coll3_swap' ((collinear3_iff_mem_affineSpan hxq).mpr hspan))
 
 /-- HOL :8256-8291（SUBGOAL 9，`¬collinear {x,x',w}`）：`y = t1 • x +
 t2 • v + t3 • w`（`t2 > 0`，和 1）且 `¬Collinear3 x v w` 时
@@ -244,7 +339,13 @@ private theorem nc3_x'_w {x v w y : V3} {t1 t2 t3 : ℝ}
     (ht2 : 0 < t2) (hsum : t1 + t2 + t3 = 1)
     (hyeq : y = t1 • x + t2 • v + t3 • w)
     (hnc : ¬ Collinear3 x v w) : ¬ Collinear3 x y w := by
-  sorry
+  have ht2ne : t2 ≠ 0 := ne_of_gt ht2
+  have hxw : x ≠ w :=
+    fun he => hnc (collinear3_pair_left (v0 := x) (v1 := v) (x := w) he.symm)
+  intro hcol
+  have hspan : v ∈ (affineSpan ℝ ({x, w} : Set V3) : Set V3) :=
+    mem_affLine_of_collinear3 hxw hcol ht2ne hsum hyeq
+  exact hnc (coll3_swap' ((collinear3_iff_mem_affineSpan hxw).mpr hspan))
 
 /-- HOL :8292-8330（SUBGOAL 10，`¬collinear {x,x',v}`）：同 `nc3_x'_w`
 但解 `w`：若 `y ∈ aff {x,v}`，则 `t3 • w = (c1 - t1) • x + (c2 - t2) • v`
@@ -253,7 +354,16 @@ private theorem nc3_x'_v {x v w y : V3} {t1 t2 t3 : ℝ}
     (ht3 : 0 < t3) (hsum : t1 + t2 + t3 = 1)
     (hyeq : y = t1 • x + t2 • v + t3 • w)
     (hnc : ¬ Collinear3 x v w) : ¬ Collinear3 x y v := by
-  sorry
+  have ht3ne : t3 ≠ 0 := ne_of_gt ht3
+  have hxv : x ≠ v := fun he => hnc (collinear3_of_eq (v := x) (w := v) (w1 := w) he.symm)
+  have hsum2 : t1 + t3 + t2 = 1 := by linarith
+  have hy2 : y = t1 • x + t3 • w + t2 • v := by
+    rw [hyeq]
+    module
+  intro hcol
+  have hspan : w ∈ (affineSpan ℝ ({x, v} : Set V3) : Set V3) :=
+    mem_affLine_of_collinear3 hxv hcol ht3ne hsum2 hy2
+  exact hnc ((collinear3_iff_mem_affineSpan hxv).mpr hspan)
 
 /-! ## S7：切割/矛盾共用尾段（HOL 六处） -/
 
