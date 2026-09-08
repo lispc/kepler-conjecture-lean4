@@ -124,7 +124,39 @@ private theorem absurd_degenerate_x' {x v w y : V3} {s1 t1 t2 t3 : ℝ} (hs1 : s
     (hyx : y = s1 • x) (hyvw : y = t1 • x + t2 • v + t3 • w)
     (ht3 : 0 < t3) (htsum : t1 + t2 + t3 = 1)
     (hnc : ¬ Collinear3 x v w) : False := by
-  sorry
+  have ht3ne : t3 ≠ 0 := ne_of_gt ht3
+  have hxv : x ≠ v := by
+    intro he
+    apply hnc
+    exact collinear3_of_eq (v := x) (w := v) (w1 := w) he.symm
+  have hyx' : y = x := by
+    rw [hs1, one_smul] at hyx
+    exact hyx
+  -- 联立两组表达：t1•x + t2•v + t3•w = x
+  have h1 : t1 • x + t2 • v + t3 • w = x := by
+    rw [hyx'] at hyvw
+    exact hyvw.symm
+  have ht1 : t1 = 1 - t2 - t3 := by linarith
+  rw [ht1] at h1
+  have hz : (1 - t2 - t3) • x + t2 • v + t3 • w - x = 0 := sub_eq_zero.mpr h1
+  have hexp : (1 - t2 - t3) • x + t2 • v + t3 • w - x =
+      t2 • (v - x) + t3 • (w - x) := by
+    module
+  rw [hexp] at hz
+  -- 解出 w - x = (-(t2 / t3)) • (v - x)，故 w ∈ aff {x, v}
+  have hd : w - x = (-(t2 / t3)) • (v - x) := by
+    have h2 : t3⁻¹ • (t2 • (v - x) + t3 • (w - x)) = (0 : V3) := by
+      rw [hz, smul_zero]
+    rw [smul_add, smul_smul, smul_smul, inv_mul_cancel₀ ht3ne, one_smul] at h2
+    rw [show t3⁻¹ * t2 = t2 / t3 from by field_simp] at h2
+    have h3 : w - x = -((t2 / t3) • (v - x)) :=
+      (eq_neg_iff_add_eq_zero.mpr (by rw [add_comm]; exact h2))
+    rw [h3, neg_smul]
+  have hwspan : w ∈ (affineSpan ℝ ({x, v} : Set V3) : Set V3) := by
+    refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨-(t2 / t3), ?_⟩
+    rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add, ← hd]
+    module
+  exact hnc ((collinear3_iff_mem_affineSpan hxv).mpr hwspan)
 
 /-! ## S2：从两组系数解出端点落在 `affGt {x} {v,w}`（HOL :7890-7903,
 :7966-7976 与镜像 :8097-8114） -/
@@ -135,12 +167,39 @@ private theorem absurd_degenerate_x' {x v w y : V3} {s1 t1 t2 t3 : ℝ} (hs1 : s
 `p = (1 - s2⁻¹ * t2 - s2⁻¹ * t3) • x + (s2⁻¹ * t2) • v + (s2⁻¹ * t3) • w`，
 后两系数严格正，故 `p ∈ affGt {x} {v,w}`（`aff_gt_1_2`）。难度：良构。 -/
 private theorem mem_affGt_of_eq {x v w p : V3} {y : V3} {s1 s2 t1 t2 t3 : ℝ}
+    (hdis : Disjoint ({x} : Set V3) {v, w})
     (hs2 : 0 < s2) (hssum : s1 + s2 = 1)
     (hyp : y = s1 • x + s2 • p)
     (ht2 : 0 < t2) (ht3 : 0 < t3) (htsum : t1 + t2 + t3 = 1)
     (hyvw : y = t1 • x + t2 • v + t3 • w) :
     p ∈ affGt {x} {v, w} := by
-  sorry
+  have hs2ne : s2 ≠ 0 := ne_of_gt hs2
+  have hy2 : s1 • x + s2 • p = t1 • x + t2 • v + t3 • w := by
+    rw [← hyp]
+    exact hyvw
+  have hs2p : s2 • p = (t1 - s1) • x + t2 • v + t3 • w := by
+    calc
+      s2 • p = (t1 • x + t2 • v + t3 • w) - s1 • x := by
+        rw [← hy2]
+        module
+      _ = (t1 - s1) • x + t2 • v + t3 • w := by
+        module
+  have hxcoef : s2⁻¹ * (t1 - s1) = 1 - s2⁻¹ * t2 - s2⁻¹ * t3 := by
+    field_simp [hs2ne]
+    linarith
+  have hp : p = (1 - s2⁻¹ * t2 - s2⁻¹ * t3) • x + (s2⁻¹ * t2) • v +
+      (s2⁻¹ * t3) • w := by
+    have hp0 : p = s2⁻¹ • ((t1 - s1) • x + t2 • v + t3 • w) := by
+      calc
+        p = s2⁻¹ • (s2 • p) := by rw [inv_smul_smul₀ hs2ne]
+        _ = s2⁻¹ • ((t1 - s1) • x + t2 • v + t3 • w) := by rw [hs2p]
+    rw [hp0]
+    rw [smul_add, smul_add, smul_smul, smul_smul, smul_smul, hxcoef]
+  rw [aff_gt_1_2 hdis, Set.mem_setOf_eq]
+  refine ⟨1 - s2⁻¹ * t2 - s2⁻¹ * t3, s2⁻¹ * t2, s2⁻¹ * t3, ?_, ?_, ?_, hp⟩
+  · exact mul_pos (inv_pos.mpr hs2) ht2
+  · exact mul_pos (inv_pos.mpr hs2) ht3
+  · ring
 
 /-! ## S3：非共面性沿弦传递（HOL :7897-7965 及五处镜像） -/
 
@@ -346,7 +405,7 @@ theorem AFF_GT_CUT_XFAN_IMP_EDGE_FAN
     · -- HOL :7890-8013（S2 + S3 + S7）
       have hlt2' : 0 < t2' := lt_of_le_of_ne hge2' (Ne.symm ht2')
       have hv'gt : v' ∈ affGt {x} {v, w} :=
-        mem_affGt_of_eq hlt2' hsum2 hx'2 ht2 ht3 htsum hx'vw
+        mem_affGt_of_eq hdisvw hlt2' hsum2 hx'2 ht2 ht3 htsum hx'vw
       rw [aff_gt_1_2 hdisvw, Set.mem_setOf_eq] at hv'gt
       obtain ⟨s1, s2, s3, hs2, hs3, hssum, hsv⟩ := hv'gt
       have hv'gt' : v' ∈ affGt {x} {v, w} := by
@@ -370,7 +429,7 @@ theorem AFF_GT_CUT_XFAN_IMP_EDGE_FAN
       have hx'3 : x' = t1' • x + t3' • w' := by
         rw [hx'v'w', ht2']; simp
       have hw'gt : w' ∈ affGt {x} {v, w} :=
-        mem_affGt_of_eq hlt3' hsum3 hx'3 ht2 ht3 htsum hx'vw
+        mem_affGt_of_eq hdisvw hlt3' hsum3 hx'3 ht2 ht3 htsum hx'vw
       rw [aff_gt_1_2 hdisvw, Set.mem_setOf_eq] at hw'gt
       obtain ⟨s1, s2, s3, hs2, hs3, hssum, hsw⟩ := hw'gt
       have hw'gt' : w' ∈ affGt {x} {v, w} := by
