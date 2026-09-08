@@ -85,3 +85,8 @@ HARD RULES:
   "10 分钟内必须开写"规则对瘫痪无效，只能事前路由规避。
 - 瘫痪识别：监视器触发时若 git 无 diff 且 log 尾部还在 Read/Grep，
   即瘫痪，直接升级满血重派，不给第二次机会。
+- **HOL 原文必须粘进 prompt**：工人（opencode）读不了仓库外路径
+  （/dev/shm、/tmp、/home/scroll 其他目录）——external_directory 权限
+  auto-reject 会**立即杀死会话**（block 35 第一次就这么死的，零产出）。
+  派工提示里绝不写"去读 reference/... 或 /dev/shm/... 的第 N 行"，
+  需要对照的 HOL 段落一律粘贴进 prompt 正文。
