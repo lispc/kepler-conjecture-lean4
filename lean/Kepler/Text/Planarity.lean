@@ -5361,3 +5361,113 @@ theorem separate1_sphere_not0_fan (hfan : FAN x V E)
     h₂b t (le_of_lt ht_val) hth s hs0 hs1
   have hsep : h' ≤ dist y2 z := hh'sep y2 ⟨hy2ge, hy2ball⟩ z ⟨hzge, hzball⟩
   linarith
+
+/-- HOL planarity.hl:6383 `fan_run_in_small11_not0_is_fan`：在起始参数 a>0 处，
+扰动扇区 `aff_gt {x} {v,(1-t)•u+t•w}` 与不相交边 {v1,u1} 的闭扇区
+`aff_ge {x} {v1,u1}` 无交。证法仿 `fan_run_in_small1_is_fan`：
+`separate1_sphere_not0_fan` 给出球面分离界 h，取见证 min h 1；对
+`a<t<t1` 反设交点 z，`origin_is_not_aff_gt_fan` 得 z≠x 后单位化数乘
+（`scale_aff_gt_fan`/`scale_aff_ge_fan` + `imp_norm_not_zero_fan`）把 z
+拉回 `ballnormFan x` 得球面上的交点，与 `separate1_sphere_not0_fan` 的空集矛盾。 -/
+theorem fan_run_in_small11_not0_is_fan (hfan : FAN x V E)
+    (hdis : Disjoint ({v, u} : Set V3) {v1, u1}) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hv1u1 : {v1, u1} ∈ E)
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3))
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (ha0 : 0 < a) (ha1 : a < 1)
+    (hEM : affGt {x} {v, (1 - a) • u + a • w} ∩
+      {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅) :
+    ∃ t1 : ℝ, a < t1 ∧ t1 ≤ 1 ∧
+      ∀ t : ℝ, a < t → t < t1 →
+        affGt {x} {v, (1 - t) • u + t • w} ∩ affGe {x} {v1, u1} = ∅ := by
+  obtain ⟨h, h_a, h_le1, hsep⟩ :=
+    separate1_sphere_not0_fan hfan hdis hvu huw hv1u1 hcop hθ0 hθπ ha0 ha1 hEM
+  refine ⟨min h 1, lt_min h_a ha1, min_le_right h 1, ?_⟩
+  intro t ht_val hth
+  have hth' : t < h := lt_of_lt_of_le hth (min_le_left h 1)
+  have hzcol : ¬ Collinear3 x v ((1 - t) • u + t • w) :=
+    not_collinear_is_properties_fully_surrounded hfan hvu huw hθ0 hθπ t
+      (by linarith) (by linarith)
+  have hxv : x ≠ v := fun he => hzcol (collinear3_of_eq he.symm)
+  have hdisx : Disjoint ({x} : Set V3) {v, (1 - t) • u + t • w} :=
+    disjoint_of_not_collinear3 hzcol
+  have hdis1 : Disjoint ({x} : Set V3) {v1, u1} :=
+    disjoint_of_not_collinear3 (fan_not_collinear hfan hv1u1)
+  have hz1 : (1 - t) • u + t • w ∉ (affineSpan ℝ ({x, v} : Set V3) : Set V3) := fun hm =>
+    hzcol ((collinear3_iff_mem_affineSpan hxv).mpr hm)
+  have hxnotin : x ∉ affGt {x} {v, (1 - t) • u + t • w} :=
+    origin_is_not_aff_gt_fan hz1 hdisx
+  refine Set.eq_empty_iff_forall_notMem.mpr (fun z hz => ?_)
+  have hzgt : z ∈ affGt {x} {v, (1 - t) • u + t • w} := hz.1
+  have hzge : z ∈ affGe {x} {v1, u1} := hz.2
+  have hxz : x ≠ z := by
+    intro he
+    subst he
+    exact hxnotin hzgt
+  have hn : ‖z - x‖ ≠ 0 := imp_norm_not_zero_fan hxz
+  have hpos : 0 < ‖z - x‖ := norm_pos_iff.mpr (sub_ne_zero.mpr (Ne.symm hxz))
+  have hs1 : ‖z - x‖⁻¹ • (z - x) + x ∈ affGt {x} {v, (1 - t) • u + t • w} :=
+    scale_aff_gt_fan hdisx z _ hzgt (inv_pos.mpr hpos)
+  have hs2 : ‖z - x‖⁻¹ • (z - x) + x ∈ affGe {x} {v1, u1} :=
+    scale_aff_ge_fan hdis1 z _ hzge (inv_nonneg.mpr (norm_nonneg _))
+  have hs3 : ‖z - x‖⁻¹ • (z - x) + x ∈ ballnormFan x := by
+    rw [ballnormFan]
+    simp only [Set.mem_setOf_eq]
+    rw [dist_eq_norm,
+      show x - (‖z - x‖⁻¹ • (z - x) + x) = -(‖z - x‖⁻¹ • (z - x)) from by module,
+      norm_neg, norm_smul,
+      Real.norm_of_nonneg (inv_nonneg.mpr (norm_nonneg _)),
+      inv_mul_cancel₀ hn]
+  have hcontr : ‖z - x‖⁻¹ • (z - x) + x ∈
+      (affGt {x} {v, (1 - t) • u + t • w} ∩ affGe {x} {v1, u1} ∩ ballnormFan x : Set V3) :=
+    ⟨⟨hs1, hs2⟩, hs3⟩
+  rw [hsep t ht_val hth', Set.mem_empty_iff_false] at hcontr
+  exact hcontr
+
+/-- HOL planarity.hl:6454 `fan_run_in_small1_not0_is_fan`：定理
+`fan_run_in_small11_not0_is_fan` 的加强版。在 `0<s<a` 处额外要求扰动扇区
+与边锥之并无交（`hEMs`），从而结论区间放宽到 `0<t<t1`。证法：由定理 1 取得
+t1；对 `0<t<t1` 三分 `t=a`、`t<a`、`a<t`。前二者用 `hEM`（`t=a`）与
+`hEMs`（`t<a`），并把 `aff_ge {x} {v1,u1}` 经 `{v1,u1} ∈ E` 收入
+`{y | ∃ e, e∈E ∧ y ∈ aff_ge {x} e}` 得一缺口；后者用定理 1 结论。 -/
+theorem fan_run_in_small1_not0_is_fan (hfan : FAN x V E)
+    (hdis : Disjoint ({v, u} : Set V3) {v1, u1}) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hv1u1 : {v1, u1} ∈ E)
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3))
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (ha0 : 0 < a) (ha1 : a < 1)
+    (hEM : affGt {x} {v, (1 - a) • u + a • w} ∩
+      {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅)
+    (hEMs : ∀ s : ℝ, 0 < s → s < a →
+      affGt {x} {v, (1 - s) • u + s • w} ∩
+        {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅) :
+    ∃ t1 : ℝ, a < t1 ∧ t1 ≤ 1 ∧
+      ∀ t : ℝ, 0 < t → t < t1 →
+        affGt {x} {v, (1 - t) • u + t • w} ∩ affGe {x} {v1, u1} = ∅ := by
+  obtain ⟨t1, h_t1a, h_t1le, hsmall⟩ :=
+    fan_run_in_small11_not0_is_fan hfan hdis hvu huw hv1u1 hcop hθ0 hθπ ha0 ha1 hEM
+  refine ⟨t1, h_t1a, h_t1le, ?_⟩
+  intro t ht0 hth
+  have hsubset : affGe {x} {v1, u1} ⊆ {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} := by
+    intro y hy
+    exact ⟨{v1, u1}, hv1u1, hy⟩
+  by_cases hta : t = a
+  · subst t
+    refine Set.eq_empty_iff_forall_notMem.mpr (fun z hz => ?_)
+    have hz1 : z ∈ affGt {x} {v, (1 - a) • u + a • w} := hz.1
+    have hz2' : z ∈ {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} := hsubset hz.2
+    have hzall : z ∈ affGt {x} {v, (1 - a) • u + a • w} ∩
+        {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} := ⟨hz1, hz2'⟩
+    rw [hEM, Set.mem_empty_iff_false] at hzall
+    exact hzall
+  · by_cases hlt : t < a
+    · refine Set.eq_empty_iff_forall_notMem.mpr (fun z hz => ?_)
+      have hz1 : z ∈ affGt {x} {v, (1 - t) • u + t • w} := hz.1
+      have hz2' : z ∈ {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} := hsubset hz.2
+      have hzall : z ∈ affGt {x} {v, (1 - t) • u + t • w} ∩
+          {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} := ⟨hz1, hz2'⟩
+      rw [hEMs t ht0 hlt, Set.mem_empty_iff_false] at hzall
+      exact hzall
+    · have hgt : a < t := lt_of_le_of_ne (le_of_not_gt hlt) (Ne.symm hta)
+      exact hsmall t hgt hth
+
