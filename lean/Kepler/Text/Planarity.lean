@@ -4801,3 +4801,158 @@ theorem properties_inside_collinear2_fan (a : ℝ) (hnc : ¬ Collinear3 x u w)
     have ht1' : t1' = 1 := by linarith
     rw [hy2, ht1']
     simp
+
+/-- HOL flyspeck `AFF_GE_MONO_RIGHT` 的加强版（私有）：`S ⊆ T` 且 `{x} ∪ T`
+有限、`x ∉ T` 时 `affGe {x} S ⊆ affGe {x} T`。系数函数在 `{x} ∪ S` 外补 0
+延拓，求和用 `Finset.sum_subset` 搬到更大的 `{x} ∪ T` 上。 -/
+private theorem affGe_mono_right {x : V3} {S T : Set V3} (hST : S ⊆ T)
+    (hfin : ({x} ∪ T : Set V3).Finite) (hxT : x ∉ T) :
+    affGe {x} S ⊆ affGe {x} T := by
+  intro y hy
+  simp only [affGe, Set.mem_setOf_eq, Affsign] at hy ⊢
+  obtain ⟨f, hS, hyv, hpos, hsum⟩ := hy
+  have hsub : ({x} ∪ S : Set V3) ⊆ {x} ∪ T := by
+    intro z hz
+    simp only [Set.mem_union] at hz ⊢
+    rcases hz with h | h
+    · exact Or.inl h
+    · exact Or.inr (hST h)
+  have hsubfin : hS.toFinset ⊆ hfin.toFinset := by
+    intro z hz
+    simp only [Set.Finite.mem_toFinset] at hz ⊢
+    exact hsub hz
+  have hgv0 : ∀ z ∈ hfin.toFinset, z ∉ hS.toFinset →
+      (if z ∈ ({x} ∪ S : Set V3) then f z else 0) = 0 := by
+    intro z hz hzs
+    exact if_neg (fun hcon => hzs (by
+      simp only [Set.Finite.mem_toFinset]
+      exact hcon))
+  have hgvv : ∀ z ∈ hfin.toFinset, z ∉ hS.toFinset →
+      (if z ∈ ({x} ∪ S : Set V3) then f z else 0) • z = 0 := by
+    intro z hz hzs
+    rw [hgv0 z hz hzs, zero_smul]
+  refine ⟨fun z => if z ∈ ({x} ∪ S : Set V3) then f z else 0, hfin, ?_, ?_, ?_⟩
+  · show y = ∑ z ∈ hfin.toFinset, (if z ∈ ({x} ∪ S : Set V3) then f z else 0) • z
+    rw [hyv, ← Finset.sum_subset hsubfin hgvv]
+    exact Finset.sum_congr rfl
+      (fun z hz => by
+        simp only [Set.Finite.mem_toFinset] at hz
+        rw [if_pos hz])
+  · intro z hzT
+    show 0 ≤ (if z ∈ ({x} ∪ S : Set V3) then f z else 0)
+    by_cases hzS : z ∈ ({x} ∪ S : Set V3)
+    · rw [if_pos hzS]
+      simp only [Set.mem_union] at hzS
+      rcases hzS with h | h
+      · exact (hxT ((Set.mem_singleton_iff.mp h) ▸ hzT)).elim
+      · exact hpos z h
+    · rw [if_neg hzS]
+  · show ∑ z ∈ hfin.toFinset, (if z ∈ ({x} ∪ S : Set V3) then f z else 0) = 1
+    rw [← hsum, ← Finset.sum_subset hsubfin hgv0]
+    exact Finset.sum_congr rfl (fun z hz => by
+      simp only [Set.Finite.mem_toFinset] at hz
+      rw [if_pos hz])
+
+/-- HOL planarity.hl:5594 `lemma_proof0_fan`：inside 点 `(&1-a)%u + a%w` 的
+射线与另一条边 `aff_ge {x} {v1,w1}` 的交至多为 `{x}`。
+ HOL 路线：`remark1_fan` 两次取非共线；`properties1_inside_fan` +
+`aff_ge1_1_subset_aff_ge` 把射线并入 `aff_ge {x} {u,w}`；fan7 化交为
+`aff_ge {x} ({u,w} ∩ {v1,w1})`，由 `~(u IN {v1,w1})` 得 `⊆ {w}`，
+`affGe_mono_right` 收缩到 `aff_ge {x} {w}`；尾部 `AFF_GE_1_1` 系数展开，
+`t2 > 0` 时解出 `u ∈ aff {x,w}` 与非共线矛盾，`t2 = 0` 时 `y = x`。 -/
+theorem lemma_proof0_fan {v1 w1 : V3} {a : ℝ} (hfan : FAN x V E)
+    (hv1w1 : {v1, w1} ∈ E) (huw : {u, w} ∈ E)
+    (hu : u ∉ ({v1, w1} : Set V3)) (ha0 : 0 < a) (ha1 : a < 1) :
+    affGe {x} {(1 - a) • u + a • w} ∩ affGe {x} {v1, w1} ⊆ {x} := by
+  have hncuw : ¬ Collinear3 x u w := fan_not_collinear hfan huw
+  have hxw' : x ≠ w := fun he => hncuw (by rw [he]; exact collinear3_pair_left rfl)
+  have hdisuw : Disjoint ({x} : Set V3) {u, w} := disjoint_of_not_collinear3 hncuw
+  have hva_in : (1 - a) • u + a • w ∈ affGe {x} {u, w} :=
+    properties1_inside_fan a hdisuw ha0 ha1
+  have hxva : x ≠ (1 - a) • u + a • w := fun he =>
+    (properties_inside_collinear_fan a ha0 ha1 hncuw).1 (by
+      rw [← he]; exact collinear3_of_eq rfl)
+  have hsub1 : affGe {x} {(1 - a) • u + a • w} ⊆ affGe {x} {u, w} :=
+    aff_ge1_1_subset_aff_ge hdisuw hxva hva_in
+  have hw' : ({u, w} : Set V3) ∩ {v1, w1} ⊆ ({w} : Set V3) := by
+    intro z hz
+    obtain ⟨hz1, hz2⟩ := (Set.mem_inter_iff z _ _).mp hz
+    rcases Set.mem_insert_iff.mp hz1 with h | h
+    · exact absurd (h ▸ hz2) hu
+    · exact h
+  have h77 : affGe {x} ({u, w} : Set V3) ∩ affGe {x} {v1, w1}
+      = affGe {x} (({u, w} : Set V3) ∩ {v1, w1}) :=
+    hfan.2.2.2.2.2 {u, w} (Or.inl huw) {v1, w1} (Or.inl hv1w1)
+  have hmono : affGe {x} (({u, w} : Set V3) ∩ {v1, w1}) ⊆ affGe {x} {w} :=
+    affGe_mono_right hw' ((Set.finite_singleton x).union (Set.finite_singleton w))
+      (fun h => hxw' (Set.mem_singleton_iff.mp h))
+  intro y hy
+  obtain ⟨hyA, hyB⟩ := (Set.mem_inter_iff y _ _).mp hy
+  have hyw : y ∈ affGe {x} {w} := by
+    refine hmono ?_
+    rw [← h77]
+    exact ⟨hsub1 hyA, hyB⟩
+  obtain ⟨t1, t2, ht2ge, hsum12, hy1⟩ := affGe_single_coeff hxva hyA
+  obtain ⟨t1', t2', -, hsw, hy2⟩ := affGe_single_coeff hxw' hyw
+  rw [show t2' = 1 - t1' from by linarith] at hy2
+  -- 关键恒等式：t2(1-a) • u = ...（HOL :5600-5640，同 exist_close1_fan 尾段）
+  have hz0 : t1 • x + t2 • ((1 - a) • u + a • w) = t1' • x + (1 - t1') • w := by
+    rw [← hy1, ← hy2]
+  rw [show t1 = 1 - t2 from by linarith] at hz0
+  rw [smul_add, smul_smul, smul_smul] at hz0
+  have hcoeff : (t2 * (1 - a)) • u
+      = (t2 + t1' - 1) • x + ((1 - t1') - t2 * a) • w := by
+    refine sub_eq_zero.mp ?_
+    have e : (t2 * (1 - a)) • u - ((t2 + t1' - 1) • x + ((1 - t1') - t2 * a) • w)
+        = (1 - t2) • x + (t2 * (1 - a)) • u + (t2 * a) • w
+          - (t1' • x + (1 - t1') • w) := by
+      module
+    rw [e, sub_eq_zero, add_assoc]
+    exact hz0
+  rcases lt_or_eq_of_le ht2ge with ht2pos | ht2z
+  · -- t2 > 0：乘 inv 解出 u ∈ aff {x,w}，与 ¬Collinear3 x u w 矛盾
+    have hAne : t2 * (1 - a) ≠ 0 := ne_of_gt (mul_pos ht2pos (by linarith))
+    have hdiv : u = ((t2 * (1 - a))⁻¹ * (t2 + t1' - 1)) • x
+        + ((t2 * (1 - a))⁻¹ * ((1 - t1') - t2 * a)) • w := by
+      have h6 := congrArg (fun z => (t2 * (1 - a))⁻¹ • z) hcoeff
+      rw [inv_smul_smul₀ hAne, smul_add, smul_smul, smul_smul] at h6
+      exact h6
+    have hcol : u ∈ (affineSpan ℝ ({x, w} : Set V3) : Set V3) := by
+      refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr
+        ⟨(t2 * (1 - a))⁻¹ * ((1 - t1') - t2 * a), ?_⟩
+      rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add, hdiv]
+      have hr : (t2 * (1 - a))⁻¹ * (t2 + t1' - 1)
+          + (t2 * (1 - a))⁻¹ * ((1 - t1') - t2 * a) = 1 := by
+        rw [← mul_add,
+          show (t2 + t1' - 1) + ((1 - t1') - t2 * a) = t2 * (1 - a) from by ring,
+          inv_mul_cancel₀ hAne]
+      have h1mr : 1 - (t2 * (1 - a))⁻¹ * ((1 - t1') - t2 * a)
+          = (t2 * (1 - a))⁻¹ * (t2 + t1' - 1) := by linarith
+      rw [← h1mr]
+      module
+    exact absurd ((collinear3_iff_mem_affineSpan hxw').mpr hcol) (collinear3_swap' hncuw)
+  · -- t2 = 0：y = x
+    have hyx : y = x := by
+      rw [hy1, ← ht2z, show t1 = 1 from by linarith]
+      simp
+    rw [Set.mem_singleton_iff]
+    exact hyx
+
+/-- HOL planarity.hl:5669 `lemma_proof1_fan`：同 `lemma_proof0_fan` 但条件为
+`~(w IN {v1,w1})`。代入 `lemma_proof0_fan`（`u,w` 互换、`a ↦ 1-a`，
+`(1-(1-a))%w + (1-a)%u = (1-a)%u + a%w`）。 -/
+theorem lemma_proof1_fan {v1 w1 : V3} {a : ℝ} (hfan : FAN x V E)
+    (hv1w1 : {v1, w1} ∈ E) (huw : {u, w} ∈ E)
+    (hw : w ∉ ({v1, w1} : Set V3)) (ha0 : 0 < a) (ha1 : a < 1) :
+    affGe {x} {(1 - a) • u + a • w} ∩ affGe {x} {v1, w1} ⊆ {x} := by
+  have huw' : {w, u} ∈ E := by rw [Set.pair_comm w u]; exact huw
+  have hkey := lemma_proof0_fan (v1 := v1) (w1 := w1) (u := w) (w := u) (a := 1 - a)
+    hfan hv1w1 huw' hw (by linarith) (by linarith)
+  intro y hy
+  obtain ⟨hyA, hyB⟩ := (Set.mem_inter_iff y _ _).mp hy
+  refine hkey ⟨?_, hyB⟩
+  have hpt : (1 - (1 - a)) • w + (1 - a) • u = (1 - a) • u + a • w := by
+    rw [show (1 : ℝ) - (1 - a) = a from by ring]
+    exact add_comm _ _
+  rw [hpt]
+  exact hyA
