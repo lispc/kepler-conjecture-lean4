@@ -5668,3 +5668,127 @@ theorem fan_run_in_small3_not0_is_fan (hfan : FAN x V E)
       have hle := hmin w1 hw1edge hw1w
       rw [hsigma] at hle
       linarith
+
+/-- HOL planarity.hl:6834 `fan_run_in_small_not0_is_fan`：四情形组装。
+存在 `t1 ∈ (a,1]` 使 `t ∈ (0,t1)` 时扰动扇区与任意相邻边 `{v1,w1}` 的
+闭扇区无交。按 HOL 分四情形：
+v1 = v → `fan_run_in_small2_not0_is_fan`；
+v1 = u → `fan_run_in_small3_not0_is_fan`；
+w1 = v → `{v1,w1} = {w1,v1}` 后 `fan_run_in_small2_not0_is_fan`；
+w1 = u → `{v1,w1} = {w1,v1}` 后 `fan_run_in_small3_not0_is_fan`；
+其余 → `fan_run_in_small1_not0_is_fan`（`{v,u} ∩ {v1,w1} = ∅` 由
+边不交性质推出）。`properties_fully_surrounded`（:2370）给出所需 `¬ Coplanar`。 -/
+theorem fan_run_in_small_not0_is_fan (hfan : FAN x V E)
+    (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E) (hv1w1 : {v1, w1} ∈ E)
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (hsigma : sigmaFan x V E u w = v)
+    (ha0 : 0 < a) (ha1 : a < 1)
+    (hEM : affGt {x} {v, (1 - a) • u + a • w} ∩
+      {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅)
+    (hEMs : ∀ s : ℝ, 0 < s → s < a →
+      affGt {x} {v, (1 - s) • u + s • w} ∩
+        {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅) :
+    ∃ t1 : ℝ, a < t1 ∧ t1 ≤ 1 ∧
+      ∀ t : ℝ, 0 < t → t < t1 →
+        affGt {x} {v, (1 - t) • u + t • w} ∩ affGe {x} {v1, w1} = ∅ := by
+  have hcop := properties_fully_surrounded hfan hvu huw hθ0 hθπ
+  rcases eq_or_ne v1 v with rfl | hv1v
+  · exact fan_run_in_small2_not0_is_fan hfan hvu huw hv1w1 hcop hθ0 hθπ ha0 ha1 hEM hEMs
+  rcases eq_or_ne v1 u with rfl | hv1u
+  · exact fan_run_in_small3_not0_is_fan hfan hvu huw hv1w1 hcop hsigma hθ0 hθπ ha0 ha1 hEM hEMs
+  rcases eq_or_ne w1 v with rfl | hw1v
+  · rw [affGe_pair_comm]
+    refine fan_run_in_small2_not0_is_fan hfan hvu huw ?_ hcop hθ0 hθπ ha0 ha1 hEM hEMs
+    rw [show ({w1, v1} : Set V3) = ({v1, w1} : Set V3) from by
+      ext a; simp; tauto]
+    exact hv1w1
+  rcases eq_or_ne w1 u with rfl | hw1u
+  · rw [affGe_pair_comm]
+    refine fan_run_in_small3_not0_is_fan hfan hvu huw ?_ hcop hsigma hθ0 hθπ ha0 ha1 hEM hEMs
+    rw [show ({w1, v1} : Set V3) = ({v1, w1} : Set V3) from by
+      ext a; simp; tauto]
+    exact hv1w1
+  refine fan_run_in_small1_not0_is_fan hfan ?_ hvu huw hv1w1 hcop hθ0 hθπ ha0 ha1 hEM hEMs
+  refine Set.disjoint_left.mpr ?_
+  intro a ha hb
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ha hb
+  rcases ha with hva | hua <;> rcases hb with hvb | hwb
+  · exact hv1v (hva.symm.trans hvb).symm
+  · exact hw1v (hva.symm.trans hwb).symm
+  · exact hv1u (hua.symm.trans hvb).symm
+  · exact hw1u (hua.symm.trans hwb).symm
+
+/-- HOL planarity.hl:6888 `fan_run1_in_small_not0_is_fan` 的有限归纳核：
+有限边族 `T ⊆ E` 时存在 `h ∈ (a,1]`，使 `s ∈ (0,h)` 时扰动扇区与
+`⋃ e ∈ T, aff_ge {x} e` 无交。基例 `T = ∅` 取 `h = a + (1-a)/2`；
+归纳步把单条边 `fan_run_in_small_not0_is_fan` 与归纳假设用 `min` 合并。 -/
+private theorem fan_run1_in_small_not0_is_fan_finset (hfan : FAN x V E)
+    (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (hsigma : sigmaFan x V E u w = v)
+    (ha0 : 0 < a) (ha1 : a < 1)
+    (hEM : affGt {x} {v, (1 - a) • u + a • w} ∩
+      {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅)
+    (hEMs : ∀ s : ℝ, 0 < s → s < a →
+      affGt {x} {v, (1 - s) • u + s • w} ∩
+        {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅)
+    (T : Finset (Set V3)) (hT : ∀ e ∈ T, e ∈ E) :
+    ∃ h : ℝ, a < h ∧ h ≤ 1 ∧
+      ∀ s : ℝ, 0 < s → s < h →
+        affGt {x} {v, (1 - s) • u + s • w} ∩ (⋃ e ∈ T, affGe {x} e) = ∅ := by
+  classical
+  induction T using Finset.induction_on with
+  | empty =>
+    refine ⟨a + (1 - a) / 2, ?_, ?_, ?_⟩
+    · linarith
+    · linarith
+    · intro s _ _
+      simp
+  | insert e T heT ih =>
+    have heE : e ∈ E := hT e (Finset.mem_insert_self e T)
+    obtain ⟨v1, w1, hpair⟩ := exists_pair_of_graphEdge hfan.2.1 heE
+    have hepair : ({v1, w1} : Set V3) ∈ E := by rw [← hpair]; exact heE
+    obtain ⟨he, he_a, he1, he2⟩ :=
+      fan_run_in_small_not0_is_fan hfan hvu huw hepair hθ0 hθπ hsigma ha0 ha1 hEM hEMs
+    rw [← hpair] at he2
+    obtain ⟨ht, ht_a, ht1, ht2⟩ := ih (fun a ha => hT a (Finset.mem_insert_of_mem ha))
+    refine ⟨min he ht, lt_min he_a ht_a, min_le_iff.mpr (Or.inl he1), ?_⟩
+    intro s hs0 hsm
+    rw [Finset.set_biUnion_insert, ← Set.disjoint_iff_inter_eq_empty,
+      Set.disjoint_union_right]
+    refine
+      ⟨Set.disjoint_iff_inter_eq_empty.mpr (he2 s hs0 (lt_of_lt_of_le hsm (min_le_left _ _))),
+        Set.disjoint_iff_inter_eq_empty.mpr (ht2 s hs0 (lt_of_lt_of_le hsm (min_le_right _ _)))⟩
+
+/-- HOL planarity.hl:6888 `fan_run1_in_small_not0_is_fan`：`E' ⊆ E` 的
+任意（有限）边子集的闭扇区之并，都与充分小的扰动扇区无交（`not0` 版本）。
+结论区间为 `s ∈ (0,h)` 其中 `a < h ≤ 1`。由 `setEdgesFiniteFan` 得
+E 有限，`FINITE_SUBSET` 得 E' 有限，对 `CARD E'` 归纳得 `h`；经
+`Set.Finite.toFinset` 换回子集 `E' ⊆ E`。 -/
+theorem fan_run1_in_small_not0_is_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
+    (huw : {u, w} ∈ E) (hE' : E' ⊆ E)
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (hsigma : sigmaFan x V E u w = v)
+    (ha0 : 0 < a) (ha1 : a < 1)
+    (hEM : affGt {x} {v, (1 - a) • u + a • w} ∩
+      {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅)
+    (hEMs : ∀ s : ℝ, 0 < s → s < a →
+      affGt {x} {v, (1 - s) • u + s • w} ∩
+        {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅) :
+    ∃ h : ℝ, a < h ∧ h ≤ 1 ∧
+      ∀ s : ℝ, 0 < s → s < h →
+        affGt {x} {v, (1 - s) • u + s • w} ∩
+          {z | ∃ e ∈ E', z ∈ affGe {x} e} = ∅ := by
+  have hfin : E'.Finite := (setEdgesFiniteFan hfan).subset hE'
+  obtain ⟨h, hp_a, hp1, hp2⟩ :=
+    fan_run1_in_small_not0_is_fan_finset hfan hvu huw hθ0 hθπ hsigma ha0 ha1 hEM hEMs
+      hfin.toFinset (fun e he => hE' (hfin.mem_toFinset.mp he))
+  refine ⟨h, hp_a, hp1, ?_⟩
+  intro s hs0 hsh
+  have hset : {z : V3 | ∃ e ∈ E', z ∈ affGe {x} e} =
+      ⋃ e ∈ hfin.toFinset, affGe {x} e := by
+    ext z
+    simp only [Set.mem_setOf_eq, Set.mem_iUnion, exists_prop]
+    exact exists_congr fun e => and_congr (hfin.mem_toFinset (a := e)).symm Iff.rfl
+  rw [hset]
+  exact hp2 s hs0 hsh
