@@ -386,7 +386,24 @@ private theorem cut_contra {x v u w p q : V3} {V : Set V3} {E : Set (Set V3)}
     (hpgt : p ∈ affGt {x} {v, w})
     (h0 : 0 < azim x p v q) (hpi : azim x p v q < Real.pi)
     (hsub : affGt {x} {p, q} ⊆ xfan x V E) : False := by
-  sorry
+  obtain ⟨t, ht0, ht1, hcut⟩ :=
+    exists_cut_small_edges_fan_le (v1 := p) (u1 := q) (a := 1) hfan hvu huw hsigma
+      (by norm_num) (by norm_num) h80 hnc (by simpa using hpgt) h0 hpi
+  have hcut' : ¬(affGt {x} {v, (1 - t) • w + t • u} ∩ affGt {x} {p, q} = ∅) := by
+    simpa using hcut
+  have hempty : affGt {x} {v, (1 - t) • w + t • u} ∩ xfan x V E = ∅ := by
+    have hne := not_cut_in_edges_fan (a := 1 - t) hfan hvu huw hsigma (by linarith)
+      (by linarith) hcard h80
+    have hvs : (1 - (1 - t)) • u + (1 - t) • w = (1 - t) • w + t • u := by
+      module
+    rw [hvs] at hne
+    exact hne
+  obtain ⟨y, hy⟩ :=
+    (Set.nonempty_iff_ne_empty (s := affGt {x} {v, (1 - t) • w + t • u} ∩
+      affGt {x} {p, q})).mpr hcut'
+  have hy' : y ∈ affGt {x} {v, (1 - t) • w + t • u} ∧ y ∈ affGt {x} {p, q} := by
+    simpa using hy
+  exact (Set.eq_empty_iff_forall_notMem.mp hempty y) ⟨hy'.1, hsub hy'.2⟩
 
 /-! ## S8：`azim x x' v w' = 0` 的双否半支（HOL :8542-8712） -/
 
