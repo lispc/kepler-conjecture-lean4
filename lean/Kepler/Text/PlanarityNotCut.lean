@@ -27,9 +27,12 @@ Coverage (slice 18a of block 18, planarity.hl:3667-5182):
   `exists_cut_small_edges_fan` endings, then `decomposition_planar_by_
   angle_fan` + `properties_of_fan7`/`properties1_of_fan7` + the fan7
   intersection / singleton-intersection analysis) is fully proved.
-- The `azim = pi` sub-case is proved as the private lemma stub
-  `not_cut_inside_fan_azim_pi` whose body is the remaining marked sorry:
-  `[BLOCK18D4] planarity.hl:4812-5182` (mirror with `v`/`w'` swapped).
+- The `azim = pi` sub-case is proved as the private lemma
+  `not_cut_inside_fan_azim_pi` (`[BLOCK18D4] planarity.hl:4812-5182`):
+  the sum5_azim_fan reduction at HOL :4812-4817 yields
+  `azim x y v v' = 0`, after which the case is the azim = 0 branch with
+  `v'`/`w'` swapped (HOL :4818-5181 replays :4289-4810 inline), so it
+  delegates to `not_cut_inside_fan_azim0`.
 - HOL `remark1_fan`/`th3` (fan.hl:388,423) are not yet ported; the
   specific fragments needed here live below as private helpers.
 
@@ -707,7 +710,32 @@ private theorem not_cut_inside_fan_azim_pi {x v u w : V3} {V : Set V3}
     (hncz : ¬ Collinear3 x y ((1 - a) • u + a • w))
     (hncv : ¬ Collinear3 x y v)
     (hπ : azim x y v w' = Real.pi) : False := by
-  sorry -- [BLOCK18D4] planarity.hl:4812-5182 (azim = pi mirror case)
+  -- HOL :4812-4817（π 支的归约，"CUOI"+sum5_azim_fan）：由
+  -- y ∈ aff_gt {x} {v',w'} 得 azim x y v' w' = π（aff_gt2_subset_aff_ge，
+  -- 即 HOL 的 AZIM_EQ_PI 路线），与 hπ 经 sum5_azim_fan 相加得
+  -- azim x y v v' = 0。此后 :4818-5181 是 azim = 0 支（:4289-4810）在
+  -- v' 与 w' 角色对换下的逐行重放（HOL 未抽引理故整段复制），此处直接
+  -- 调用已抽出的 not_cut_inside_fan_azim0（v' ↦ w'，w' ↦ v'）。
+  have hxy : x ≠ y := fun he => hncv (by rw [he]; exact collinear3_of_eq rfl)
+  have hπ' : azim x y v' w' = Real.pi :=
+    aff_gt2_subset_aff_ge hdis' hncw' hncv' hygt'
+  have hsum := sum5_azim_fan hxy.symm hncv hncv' hncw' (by rw [hπ', hπ])
+  -- hsum : azim x y v w' = azim x y v v' + azim x y v' w'
+  have h0' : azim x y v v' = 0 := by
+    rw [hπ, hπ'] at hsum
+    linarith
+  -- 共用集合对换 {w', v'} = {v', w'}
+  have hswap : ({w', v'} : Set V3) = ({v', w'} : Set V3) := by
+    ext q; simp; tauto
+  exact not_cut_inside_fan_azim0 (v' := w') (w' := v') hfan hvu huw hsigma ha0 ha1
+    hcard hfan80 hEM hθ0 hθπ
+    (by rw [hswap]; exact he')
+    (fun h => hnc' (collinear3_swap h))
+    (by rw [hswap]; exact hdis')
+    hdis
+    (by rw [hswap]; exact hygt')
+    (by rw [hswap]; exact hyge')
+    hygt hncv' hncw' hncz hncv h0'
 
 /-- HOL planarity.hl:3667 `not_cut_inside_fan`（`t3' = t2' = 0`
 （:3730-3776）、`[BLOCK18B]`（`t3' = 0`，`t2' ≠ 0`，:3777-3893）、
@@ -717,8 +745,10 @@ private theorem not_cut_inside_fan_azim_pi {x v u w : V3} {V : Set V3}
 `0 < azim < π` 与 `π < azim` 两支，:4225-4291）亦完整证明；
 `[BLOCK18D3]`（`azim x y v w' = 0` 支，:4289-4810：w'/v' ∈ aff_gt 两半
 的不共面链 + 切边收尾，与双否半支的 decomposition_planar_by_angle_fan +
-fan7 相交分析）完整证明（抽出为私有引理 not_cut_inside_fan_azim0）；剩余 `azim = π`
-支（:4812-5182，镜像）留待 `[BLOCK18D4]`。 -/
+fan7 相交分析）完整证明（抽出为私有引理 not_cut_inside_fan_azim0）；
+`[BLOCK18D4]`（`azim x y v w' = π` 支，:4812-5182）完整证明（私有引理
+not_cut_inside_fan_azim_pi：sum5_azim_fan 归约得 `azim x y v v' = 0` 后
+调用 not_cut_inside_fan_azim0，v'/w' 对换）。零 sorry。 -/
 theorem not_cut_inside_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
     (huw : {u, w} ∈ E) (hsigma : sigmaFan x V E u w = v) (ha0 : 0 < a)
     (ha1 : a < 1) (hcard : ∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard)
