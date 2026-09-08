@@ -4388,3 +4388,280 @@ theorem aff_gt1_subset_aff_gt {v1 : V3} (hdis : Disjoint ({x} : Set V3) {v, u})
     linarith
   · rw [hyeq, hv1eq]
     module
+
+/-! ## 第二十一块：aff_ge 分解与 exist_close1_fan（planarity.hl:5182–5451）
+
+HOL `aff_ge_eq_aff_gt_union_aff_ge`（5187）：闭扇形 = 开扇形 ∪ 两条闭射线
+（⊆：`aff_ge_1_2` 系数按 `t2 = 0`/`t3 = 0` 退化；⊇：放宽系数条件）。
+HOL `AFFINE_HULL_1`（5264）：单点仿射包（Mathlib `coe_affineSpan_singleton`，
+风格同 TopologyFan `affine_hull_2_fan`）。
+HOL `aff_ge1_1_subset_aff_ge`（5272）：与 ：3340 已证的
+`aff_ge_1_1_subset_aff_ge_fan` 同命题（HOL 文件中的重复引理），按 5272
+的名字补充。
+HOL `exist_close1_fan`（5300）：EM 假设（`aff_gt {x} {v,va}` 与全体边锥
+无交，`va = (1-a)%u + a%w`）下，`aff_ge {x} {v,va} ∩ ballnorm_fan x` 与
+`aff_ge {x} {v1,w1} ∩ ballnorm_fan x` 正分离。无交性由 EM + 上述分解 +
+fan7 + `aff_ge1_1_subset_aff_ge` + 仿射无关性（`t2 > 0` 时解出
+`u ∈ aff {x,w}` 与 `¬collinear{x,u,w}` 矛盾）；收尾的
+`SEPARATE_CLOSED_COMPACT` 论证与 `exist_close_fan` 相同。 -/
+
+/-- `affGe {x} {v}` 成员的二元系数分解（HOL `AFF_GE_1_1` 的展开）。 -/
+private theorem affGe_single_coeff {x v y : V3} (hxv : x ≠ v) (hmem : y ∈ affGe {x} {v}) :
+    ∃ t1 t2 : ℝ, 0 ≤ t2 ∧ t1 + t2 = 1 ∧ y = t1 • x + t2 • v := by
+  simp only [affGe, Set.mem_setOf_eq, Affsign] at hmem
+  obtain ⟨f, hfin, hsum, hpos, hone⟩ := hmem
+  rw [sum_insert_single_v hfin hxv] at hsum
+  rw [sum_insert_single_s hfin hxv] at hone
+  exact ⟨f x, f v, hpos v (by simp), hone, hsum⟩
+
+/-- HOL planarity.hl:5187 `aff_ge_eq_aff_gt_union_aff_ge`：非共线时
+`aff_ge {x} {v,w} = aff_gt {x} {v,w} ∪ aff_ge {x} {v} ∪ aff_ge {x} {w}`。 -/
+theorem aff_ge_eq_aff_gt_union_aff_ge (hnc : ¬ Collinear3 x v w) :
+    affGe {x} {v, w} =
+      affGt {x} {v, w} ∪ affGe {x} {v} ∪ affGe {x} {w} := by
+  have hdis := disjoint_of_not_collinear3 hnc
+  have hxv : x ≠ v := fun he => hnc (by rw [he]; exact collinear3_of_eq rfl)
+  have hxw : x ≠ w := fun he => hnc (by rw [he]; exact collinear3_pair_left rfl)
+  ext y
+  constructor
+  · intro hy
+    rw [aff_ge_1_2 hdis, Set.mem_setOf_eq] at hy
+    obtain ⟨t1, t2, t3, ht2, ht3, hone, hyeq⟩ := hy
+    rcases lt_or_eq_of_le ht2 with h2 | h2
+    · rcases lt_or_eq_of_le ht3 with h3 | h3
+      · refine Set.mem_union_left _ (Set.mem_union_left _ ?_)
+        rw [aff_gt_1_2 hdis, Set.mem_setOf_eq]
+        exact ⟨t1, t2, t3, h2, h3, hone, hyeq⟩
+      · refine Set.mem_union_left _ (Set.mem_union_right _ ?_)
+        have hs : t1 + t2 = 1 := by linarith
+        have hy' : y = t1 • x + t2 • v := by rw [hyeq, h3.symm]; simp
+        exact mem_affGe_single hxv ht2 hs hy'
+    · refine Set.mem_union_right _ ?_
+      have hs : t1 + t3 = 1 := by linarith
+      have hy' : y = t1 • x + t3 • w := by rw [hyeq, h2.symm]; simp
+      exact mem_affGe_single hxw ht3 hs hy'
+  · intro hy
+    rw [Set.mem_union, Set.mem_union] at hy
+    rcases hy with (hy | hy) | hy
+    · rw [aff_gt_1_2 hdis, Set.mem_setOf_eq] at hy
+      obtain ⟨t1, t2, t3, h2, h3, hone, hyeq⟩ := hy
+      rw [aff_ge_1_2 hdis, Set.mem_setOf_eq]
+      exact ⟨t1, t2, t3, le_of_lt h2, le_of_lt h3, hone, hyeq⟩
+    · obtain ⟨s1, s2, hs2ge, hssum, hsy⟩ := affGe_single_coeff hxv hy
+      rw [aff_ge_1_2 hdis, Set.mem_setOf_eq]
+      exact ⟨s1, s2, 0, hs2ge, by norm_num, by linarith, by rw [hsy]; simp⟩
+    · obtain ⟨s1, s2, hs2ge, hssum, hsy⟩ := affGe_single_coeff hxw hy
+      rw [aff_ge_1_2 hdis, Set.mem_setOf_eq]
+      exact ⟨s1, 0, s2, by norm_num, hs2ge, by linarith, by rw [hsy]; simp⟩
+
+/-- HOL planarity.hl:5264 `AFFINE_HULL_1`：单点仿射包
+`affine hull {a} = {u % a | u = &1}`。 -/
+theorem AFFINE_HULL_1 (a : V3) :
+    (affineSpan ℝ ({a} : Set V3) : Set V3) = {y | ∃ u : ℝ, u = 1 ∧ y = u • a} := by
+  rw [AffineSubspace.coe_affineSpan_singleton]
+  ext y
+  simp only [Set.mem_singleton_iff, Set.mem_setOf_eq]
+  constructor
+  · intro hy
+    exact ⟨1, rfl, by rw [hy, one_smul]⟩
+  · rintro ⟨t, ht, hy⟩
+    rw [hy, ht, one_smul]
+
+/-- HOL planarity.hl:5272 `aff_ge1_1_subset_aff_ge`：与 ：3340 的
+`aff_ge_1_1_subset_aff_ge_fan` 同命题（HOL 文件中的第二次出现）。 -/
+theorem aff_ge1_1_subset_aff_ge {v1 : V3} (hdis : Disjoint ({x} : Set V3) {v, u})
+    (hxv1 : x ≠ v1) (hv1 : v1 ∈ affGe {x} {v, u}) :
+    affGe {x} {v1} ⊆ affGe {x} {v, u} :=
+  aff_ge_1_1_subset_aff_ge_fan hdis hxv1 hv1
+
+/-- HOL planarity.hl:5300 `exist_close1_fan`：EM 假设下两组扇形与单位球
+之交正距离分离（HOL 中的 `SEPARATE_CLOSED_COMPACT` 收尾，与
+`exist_close_fan` 相同）。 -/
+theorem exist_close1_fan {a : ℝ} (hfan : FAN x V E)
+    (huv : Disjoint ({v, u} : Set V3) {v1, w1}) (hv1w1 : {v1, w1} ∈ E)
+    (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (ha0 : 0 < a) (ha1 : a < 1)
+    (hEM : affGt {x} {v, (1 - a) • u + a • w} ∩
+      {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅) :
+    ∃ h : ℝ, 0 < h ∧
+      ∀ y1 : V3, y1 ∈ affGe {x} {v, (1 - a) • u + a • w} ∩ ballnormFan x →
+        ∀ y2 : V3, y2 ∈ affGe {x} {v1, w1} ∩ ballnormFan x → h ≤ dist y1 y2 := by
+  set va : V3 := (1 - a) • u + a • w with hva_def
+  -- HOL :5318 not_collinear_is_properties_fully_surrounded
+  have hnc : ¬ Collinear3 x v va :=
+    not_collinear_is_properties_fully_surrounded hfan hvu huw hθ0 hθπ a ha0 ha1
+  have hnc1 : ¬ Collinear3 x v1 w1 := fan_not_collinear hfan hv1w1
+  have hAclosed : IsClosed (affGe {x} {v, va} ∩ ballnormFan x) :=
+    closed_aff_ge_ballnorm_fan hnc
+  have hBc : IsCompact (affGe {x} {v1, w1} ∩ ballnormFan x) :=
+    compact_aff_ge_ballnorm_fan hnc1
+  have hAne := affGe_ballnorm_nonempty hnc
+  -- 关键无交性（HOL :5340-5451）
+  have hint : (affGe {x} {v, va} ∩ ballnormFan x) ∩
+      (affGe {x} {v1, w1} ∩ ballnormFan x) = ∅ := by
+    rw [Set.eq_empty_iff_forall_notMem]
+    intro y hy
+    obtain ⟨⟨hyA, hyball⟩, hyB, -⟩ := (Set.mem_inter_iff y _ _).mp hy
+    rw [aff_ge_eq_aff_gt_union_aff_ge hnc] at hyA
+    rcases hyA with (hy | hy) | hy
+    · -- 开扇形部分：直接与 EM 矛盾（{v1,w1} ∈ E）
+      have hmem : y ∈ (affGt {x} {v, va} ∩
+          {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e}) :=
+        Set.mem_inter hy ⟨{v1, w1}, hv1w1, hyB⟩
+      rw [hEM] at hmem
+      exact (Set.mem_empty_iff_false y).mp hmem
+    · -- aff_ge {x} {v} 部分：fan7 给出 {x}，再由球面排除
+      have hvV : v ∈ V := (fan_mem_of_edge hfan hvu).1
+      have h77 : affGe {x} ({v} : Set V3) ∩ affGe {x} {v1, w1}
+          = affGe {x} (({v} : Set V3) ∩ {v1, w1}) :=
+        hfan.2.2.2.2.2 {v} (Or.inr ⟨v, hvV, rfl⟩) {v1, w1} (Or.inl hv1w1)
+      have hvsub : ({v} : Set V3) ⊆ {v, u} := by
+        intro z hz
+        rw [Set.mem_singleton_iff] at hz
+        rw [hz]
+        exact Set.mem_insert v {u}
+      have hdis2 : Disjoint ({v} : Set V3) {v1, w1} :=
+        Set.disjoint_of_subset_left hvsub huv
+      rw [Set.disjoint_iff_inter_eq_empty.mp hdis2, affGe_empty_eq_singleton] at h77
+      have hymem : y ∈ affGe {x} ({v} : Set V3) ∩ affGe {x} {v1, w1} := ⟨hy, hyB⟩
+      rw [h77] at hymem
+      have hyx : y = x := hymem
+      rw [ballnormFan, Set.mem_setOf_eq] at hyball
+      rw [hyx, dist_self] at hyball
+      norm_num at hyball
+    · -- aff_ge {x} {va} 部分：⊆ aff_ge {x} {u,w}，再作平面论证
+      have hncuw : ¬ Collinear3 x u w := fan_not_collinear hfan huw
+      have hdisuw : Disjoint ({x} : Set V3) {u, w} := disjoint_of_not_collinear3 hncuw
+      have hxva : x ≠ va := by
+        intro he
+        exact hnc (by rw [he]; exact collinear3_pair_left rfl)
+      have hxw' : x ≠ w := by
+        intro he
+        exact hncuw (by rw [he]; exact collinear3_pair_left rfl)
+      have hva : va ∈ affGe {x} {u, w} := by
+        rw [aff_ge_1_2 hdisuw, Set.mem_setOf_eq]
+        refine ⟨0, 1 - a, a, by linarith, by linarith, by linarith, ?_⟩
+        rw [hva_def]
+        module
+      have hsub1 : affGe {x} {va} ⊆ affGe {x} {u, w} :=
+        aff_ge_1_1_subset_aff_ge_fan hdisuw hxva hva
+      obtain ⟨t1, t2, ht2ge, hsum12, hy1⟩ := affGe_single_coeff hxva hy
+      by_cases ht2z : t2 = 0
+      · -- t2 = 0：y = x，球面排除
+        have hyx : y = x := by
+          rw [hy1, ht2z, show t1 = 1 from by linarith]
+          simp
+        rw [ballnormFan, Set.mem_setOf_eq] at hyball
+        rw [hyx, dist_self] at hyball
+        norm_num at hyball
+      · -- t2 > 0：解出 u ∈ aff {x,w}，与 ¬Collinear3 x u w 矛盾
+        have ht2pos : 0 < t2 := lt_of_le_of_ne ht2ge (Ne.symm ht2z)
+        have hu'not : u ∉ ({v1, w1} : Set V3) := fun hum =>
+          Set.disjoint_left.mp huv (Set.mem_insert_of_mem v (Set.mem_singleton u)) hum
+        by_cases hw1 : w ∈ ({v1, w1} : Set V3)
+        · -- {u,w} ∩ {v1,w1} = {w}，y ∈ aff_ge {x} {w}
+          have hw' : ({u, w} : Set V3) ∩ {v1, w1} = {w} := by
+            rw [Set.eq_singleton_iff_unique_mem]
+            refine ⟨⟨Set.mem_insert_of_mem u (Set.mem_singleton w), hw1⟩, ?_⟩
+            intro z hz
+            obtain ⟨hz1, hz2⟩ := (Set.mem_inter_iff z _ _).mp hz
+            rcases Set.mem_insert_iff.mp hz1 with h | h
+            · exact absurd (h ▸ hz2) hu'not
+            · exact h
+          have h77 : affGe {x} ({u, w} : Set V3) ∩ affGe {x} {v1, w1}
+              = affGe {x} (({u, w} : Set V3) ∩ {v1, w1}) :=
+            hfan.2.2.2.2.2 {u, w} (Or.inl huw) {v1, w1} (Or.inl hv1w1)
+          rw [hw'] at h77
+          have hymem : y ∈ affGe {x} ({u, w} : Set V3) ∩ affGe {x} {v1, w1} :=
+            ⟨hsub1 hy, hyB⟩
+          rw [h77] at hymem
+          obtain ⟨t1', t2', -, hsw, hy2⟩ := affGe_single_coeff hxw' hymem
+          rw [show t2' = 1 - t1' from by linarith] at hy2
+          -- 关键恒等式：t2(1-a) • u = ... （HOL :5412-5449）
+          have hz0 : t1 • x + t2 • ((1 - a) • u + a • w)
+              = t1' • x + (1 - t1') • w := by
+            rw [← hva_def, ← hy1, ← hy2]
+          rw [show t1 = 1 - t2 from by linarith] at hz0
+          rw [smul_add, smul_smul, smul_smul] at hz0
+          have hcoeff : (t2 * (1 - a)) • u
+              = (t2 + t1' - 1) • x + ((1 - t1') - t2 * a) • w := by
+            refine sub_eq_zero.mp ?_
+            have e : (t2 * (1 - a)) • u
+                - ((t2 + t1' - 1) • x + ((1 - t1') - t2 * a) • w)
+                = (1 - t2) • x + (t2 * (1 - a)) • u + (t2 * a) • w
+                  - (t1' • x + (1 - t1') • w) := by
+              module
+            rw [e, sub_eq_zero, add_assoc]
+            exact hz0
+          have hAne : t2 * (1 - a) ≠ 0 :=
+            ne_of_gt (mul_pos ht2pos (by linarith))
+          have hdiv : u = ((t2 * (1 - a))⁻¹ * (t2 + t1' - 1)) • x
+              + ((t2 * (1 - a))⁻¹ * ((1 - t1') - t2 * a)) • w := by
+            have h6 := congrArg (fun z => (t2 * (1 - a))⁻¹ • z) hcoeff
+            rw [inv_smul_smul₀ hAne, smul_add, smul_smul, smul_smul] at h6
+            exact h6
+          have hcol : u ∈ (affineSpan ℝ ({x, w} : Set V3) : Set V3) := by
+            refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr
+              ⟨(t2 * (1 - a))⁻¹ * ((1 - t1') - t2 * a), ?_⟩
+            rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add, hdiv]
+            have hr : (t2 * (1 - a))⁻¹ * (t2 + t1' - 1)
+                + (t2 * (1 - a))⁻¹ * ((1 - t1') - t2 * a) = 1 := by
+              rw [← mul_add,
+                show (t2 + t1' - 1) + ((1 - t1') - t2 * a) = t2 * (1 - a) from by ring,
+                inv_mul_cancel₀ hAne]
+            have h1mr : 1 - (t2 * (1 - a))⁻¹ * ((1 - t1') - t2 * a)
+                = (t2 * (1 - a))⁻¹ * (t2 + t1' - 1) := by
+              linarith
+            rw [← h1mr]
+            module
+          exact absurd ((collinear3_iff_mem_affineSpan hxw').mpr hcol)
+            (collinear3_swap' hncuw)
+        · -- w ∉ {v1,w1}：交集为 ∅，y = x，球面排除
+          have hwempty : ({u, w} : Set V3) ∩ {v1, w1} = ∅ := by
+            rw [Set.eq_empty_iff_forall_notMem]
+            intro z hz
+            obtain ⟨hz1, hz2⟩ := (Set.mem_inter_iff z _ _).mp hz
+            rcases Set.mem_insert_iff.mp hz1 with h | h
+            · exact hu'not (h ▸ hz2)
+            · exact hw1 (h ▸ hz2)
+          have h77 : affGe {x} ({u, w} : Set V3) ∩ affGe {x} {v1, w1}
+              = affGe {x} (({u, w} : Set V3) ∩ {v1, w1}) :=
+            hfan.2.2.2.2.2 {u, w} (Or.inl huw) {v1, w1} (Or.inl hv1w1)
+          rw [hwempty, affGe_empty_eq_singleton] at h77
+          have hymem : y ∈ affGe {x} ({u, w} : Set V3) ∩ affGe {x} {v1, w1} :=
+            ⟨hsub1 hy, hyB⟩
+          rw [h77] at hymem
+          have hyx : y = x := Set.mem_singleton_iff.mp hymem
+          rw [ballnormFan, Set.mem_setOf_eq] at hyball
+          rw [hyx, dist_self] at hyball
+          norm_num at hyball
+  -- SEPARATE_CLOSED_COMPACT 收尾（同 exist_close_fan）
+  obtain ⟨h, hh0, hh⟩ := IsCompact.exists_forall_le' hBc
+    (Metric.continuous_infDist_pt _).continuousOn
+    (fun y2 hy2 => by
+      have hy2not : y2 ∉ closure (affGe {x} {v, va} ∩ ballnormFan x) := by
+        rw [hAclosed.closure_eq]
+        intro hmem
+        exact (Set.mem_empty_iff_false y2).mp (hint ▸ ⟨hmem, hy2⟩)
+      exact (Metric.infDist_pos_iff_notMem_closure hAne).mp hy2not)
+  exact ⟨h, hh0, fun y1 hy1 y2 hy2 =>
+    (hh y2 hy2).trans (by rw [dist_comm]; exact Metric.infDist_le_dist_of_mem hy1)⟩
+
+/-- `exist_close1_fan` 的 fan80 版本：azim 界由 `fan80` 作用于边 `{u,w}`
+再重写 `sigma_fan x V E u w = v` 得到（同
+`PlanarityNotCut.not_cut_inside_fan` 的开头；HOL :5300 的 azim 假设即由此
+导出，不需要 `set_of_edge` 基数假设）。 -/
+theorem exist_close1_fan_of_fan80 {a : ℝ} (hfan : FAN x V E)
+    (huv : Disjoint ({v, u} : Set V3) {v1, w1}) (hv1w1 : {v1, w1} ∈ E)
+    (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hsigma : sigmaFan x V E u w = v) (ha0 : 0 < a) (ha1 : a < 1)
+    (hfan80 : fan80 x V E)
+    (hEM : affGt {x} {v, (1 - a) • u + a • w} ∩
+      {y | ∃ e, e ∈ E ∧ y ∈ affGe {x} e} = ∅) :
+    ∃ h : ℝ, 0 < h ∧
+      ∀ y1 : V3, y1 ∈ affGe {x} {v, (1 - a) • u + a • w} ∩ ballnormFan x →
+        ∀ y2 : V3, y2 ∈ affGe {x} {v1, w1} ∩ ballnormFan x → h ≤ dist y1 y2 := by
+  obtain ⟨hθ0, hθπ⟩ := hfan80 u w huw
+  rw [hsigma] at hθ0 hθπ
+  exact exist_close1_fan hfan huv hv1w1 hvu huw hθ0 hθπ ha0 ha1 hEM
