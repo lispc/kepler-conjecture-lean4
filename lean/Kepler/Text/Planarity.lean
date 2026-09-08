@@ -5217,3 +5217,59 @@ theorem inequality2_not0_fan (hfan : FAN x V E) (hvu : {v, u} ∈ E)
           simpa [mul_assoc] using mul_lt_mul_of_pos_right htaK hc
         _ < d := hfin
     exact lt_of_le_of_lt hle hlt2
+
+/-- HOL planarity.hl:6153 `exists_point_small_edges_not0_fan`：`exists_point_small_edges_fan`
+的推广，`t` 的下界从 `0` 改为 `a > 0`。减数为
+`yt = (1-s)•v + s•((1-t)•u+t•w) - x` 本身（与 `inequality2_not0_fan` 不同），
+两个单位化向量分别是
+`ya = (1-s)•v + s•((1-a)•u+a•w) - x` 与 `yt`。 -/
+theorem exists_point_small_edges_not0_fan (hfan : FAN x V E)
+    (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3))
+    (d a : ℝ) (hd : 0 < d) (ha0 : 0 < a) (ha1 : a < 1) :
+    ∃ h : ℝ, a < h ∧ h ≤ 1 ∧
+      ∀ t : ℝ, a ≤ t → t < h → ∀ s : ℝ, 0 ≤ s → s ≤ 1 →
+        ‖(‖(1 - s) • v + s • ((1 - a) • u + a • w) - x‖⁻¹) •
+              ((1 - s) • v + s • ((1 - a) • u + a • w) - x) -
+            (‖(1 - s) • v + s • ((1 - t) • u + t • w) - x‖⁻¹) •
+              ((1 - s) • v + s • ((1 - t) • u + t • w) - x)‖ < d := by
+  have hd2 : 0 < d / 2 := by positivity
+  obtain ⟨h1, h1a, h1le, h1b⟩ :=
+    inequality2_not0_fan hfan hvu huw hcop (d / 2) a hd2 ha0 ha1
+  obtain ⟨h2, h2a, h2le, h2b⟩ :=
+    inequality1_not0_fan hfan hvu huw hcop (d / 2) a hd2 ha0 ha1
+  refine ⟨min h1 h2, ?_, ?_, ?_⟩
+  · exact lt_min h1a h2a
+  · exact le_trans (min_le_left h1 h2) h1le
+  · intro t ht0 hlt s hs0 hs1
+    have hlt1 : t < h1 := lt_of_lt_of_le hlt (min_le_left _ _)
+    have hlt2 : t < h2 := lt_of_lt_of_le hlt (min_le_right _ _)
+    let ya : V3 := (1 - s) • v + s • ((1 - a) • u + a • w) - x
+    let yt : V3 := (1 - s) • v + s • ((1 - t) • u + t • w) - x
+    change ‖(‖ya‖⁻¹) • ya - (‖yt‖⁻¹) • yt‖ < d
+    have h1r : ‖(‖ya‖⁻¹) • ya - (‖yt‖⁻¹) • ya‖ < d / 2 := by
+      dsimp [ya, yt] at h1b ⊢
+      exact h1b t ht0 hlt1 s hs0 hs1
+    have h2rn :
+        ‖(‖yt‖⁻¹) • (ya - yt)‖ =
+          s * ‖yt‖⁻¹ * ‖((1 - a) • u + a • w) - ((1 - t) • u + t • w)‖ := by
+      rw [show ya - yt = s • (((1 - a) • u + a • w) - ((1 - t) • u + t • w)) from by module,
+        smul_smul, norm_smul, Real.norm_eq_abs]
+      have hsa : 0 ≤ ‖yt‖⁻¹ * s :=
+        mul_nonneg (inv_nonneg.mpr (norm_nonneg _)) hs0
+      rw [abs_of_nonneg hsa]
+      ring
+    have h2r : ‖(‖yt‖⁻¹) • ya - (‖yt‖⁻¹) • yt‖ < d / 2 := by
+      rw [← smul_sub, h2rn]
+      dsimp [yt] at h2b ⊢
+      exact h2b t ht0 hlt2 s hs0 hs1
+    calc
+      ‖(‖ya‖⁻¹) • ya - (‖yt‖⁻¹) • yt‖ ≤
+          ‖(‖ya‖⁻¹) • ya - (‖yt‖⁻¹) • ya‖ +
+            ‖(‖yt‖⁻¹) • ya - (‖yt‖⁻¹) • yt‖ := by
+        rw [show (‖ya‖⁻¹) • ya - (‖yt‖⁻¹) • yt =
+              ((‖ya‖⁻¹) • ya - (‖yt‖⁻¹) • ya) +
+                ((‖yt‖⁻¹) • ya - (‖yt‖⁻¹) • yt) from by module]
+        exact norm_add_le _ _
+      _ < d := by
+        linarith
