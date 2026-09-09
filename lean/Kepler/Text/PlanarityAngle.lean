@@ -1007,7 +1007,43 @@ theorem scale_in_edges_fan {x v u w : V3}
     (hdis : Disjoint ({x} : Set V3) {v, u}) (hw : w ∈ affGt {x} {v, u}) :
     ∃ a t : ℝ, 0 < a ∧ 0 < t ∧ t < 1 ∧
       a • (w - x) = (1 - t) • v + t • u - x := by
-  sorry
+  rw [aff_gt_1_2 hdis] at hw
+  simp only [Set.mem_setOf_eq] at hw
+  obtain ⟨t1, t2, t3, ht2, ht3, hsum, hw_eq⟩ := hw
+  have hs : 0 < t2 + t3 := add_pos ht2 ht3
+  have hA : (t2 + t3)⁻¹ * (t2 + t3) = 1 := inv_mul_cancel₀ (ne_of_gt hs)
+  have ht : t3 / (t2 + t3) = (t2 + t3)⁻¹ * t3 := by
+    rw [div_eq_inv_mul, mul_comm]
+  have hx' : (t2 + t3)⁻¹ * t1 - (t2 + t3)⁻¹ = -1 := by
+    have h1 : t1 - 1 = -(t2 + t3) := by linarith
+    have hstep : (t2 + t3)⁻¹ * t1 - (t2 + t3)⁻¹
+        = (t2 + t3)⁻¹ * (t1 - 1) := by ring
+    rw [hstep, h1, mul_neg, hA]
+  have hv' : (t2 + t3)⁻¹ * t2 = 1 - (t2 + t3)⁻¹ * t3 := by
+    rw [eq_sub_iff_add_eq, ← mul_add, hA]
+  refine ⟨(t2 + t3)⁻¹, t3 / (t2 + t3), inv_pos.2 hs, div_pos ht3 hs, ?_, ?_⟩
+  · rw [div_lt_iff₀ hs]
+    linarith
+  · have hnx : (-1 : ℝ) • x = -x := by simp
+    calc (t2 + t3)⁻¹ • (w - x)
+        = ((t2 + t3)⁻¹ * t1 - (t2 + t3)⁻¹) • x + ((t2 + t3)⁻¹ * t2) • v
+            + ((t2 + t3)⁻¹ * t3) • u := by
+          rw [hw_eq, smul_sub, smul_add, smul_add, smul_smul, smul_smul, smul_smul]
+          have e2 : ((t2 + t3)⁻¹ * t1) • x + ((t2 + t3)⁻¹ * t2) • v
+                  + ((t2 + t3)⁻¹ * t3) • u - (t2 + t3)⁻¹ • x
+              = (((t2 + t3)⁻¹ * t1) • x - (t2 + t3)⁻¹ • x)
+                + ((t2 + t3)⁻¹ * t2) • v + ((t2 + t3)⁻¹ * t3) • u := by abel
+          rw [e2, sub_smul]
+      _ = (-1 : ℝ) • x + ((t2 + t3)⁻¹ * t2) • v + ((t2 + t3)⁻¹ * t3) • u := by
+          rw [hx']
+      _ = -x + ((t2 + t3)⁻¹ * t2) • v + ((t2 + t3)⁻¹ * t3) • u := by
+          rw [hnx]
+      _ = -x + (1 - (t2 + t3)⁻¹ * t3) • v + ((t2 + t3)⁻¹ * t3) • u := by
+          rw [hv']
+      _ = (1 - (t2 + t3)⁻¹ * t3) • v + ((t2 + t3)⁻¹ * t3) • u - x := by
+          abel
+      _ = (1 - t3 / (t2 + t3)) • v + (t3 / (t2 + t3)) • u - x := by
+          rw [← ht]
 
 /-- HOL planarity.hl:10020-10050 `aff_gt_imp_not_collinear`
 
