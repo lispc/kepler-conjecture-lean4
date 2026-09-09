@@ -2025,3 +2025,465 @@ theorem exists_cut_in_edge_fan {x v u w w1 : V3}
     _ = (1 / (s2 + s3)) • ((t1 - s1) • x + t2 • v + t3 • w1) := by rw [← h1']
     _ = ((t1 - s1) / (s2 + s3)) • x + (t2 / (s2 + s3)) • v
         + (t3 / (s2 + s3)) • w1 := by module
+
+/-! ## ROUND-UP：`notcoplanar_imp_notcollinear_fan` 及其四个推论
+
+HOL planarity.hl:9170-9295。四点不共面 ⇒ 三个三点不共线，进而
+`properties_of_fully_surrounded1_fan`（反射方位角）、`in_aff_2_2_fan`
+（弦点入 `aff_gt {x,v} {u,w}`）、`inequality4_aim_in_convex_fan`
+（弦点方位角严格夹在 0 与 `azim x v u w` 之间）。 -/
+
+/-- 实数纯虚指数的实部/虚部（`azim_cone_of_combo` 移植所需的受控重写）。
+HOL `WEDGE_LUNE_GT`（Multivariate-flyspeck.ml:3805）的解析核心在轴向标架下
+做极坐标提取时使用（本文件从 `Kepler.Text.Planarity` 私有复制）。 -/
+private theorem cexp_cos_re (r : ℝ) : (Complex.exp ((r : ℂ) * I)).re = Real.cos r := by
+  have h := congrArg Complex.re (Complex.exp_mul_I (r : ℂ))
+  simpa using h
+
+private theorem cexp_sin_im (r : ℝ) : (Complex.exp ((r : ℂ) * I)).im = Real.sin r := by
+  have h := congrArg Complex.im (Complex.exp_mul_I (r : ℂ))
+  simpa using h
+
+/-- 两点集含于三点集（`{a,b} ⊆ {a,b,c}`）。 -/
+private theorem subset_pair3 {a b c : V3} : ({a, b} : Set V3) ⊆ {a, b, c} := by
+  intro z hz
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+  tauto
+
+/-- 显式三元仿射组合入三点仿射包：`y = x + c•(q-x) + h•(p-x)` 时
+`y ∈ affineSpan {x,p,q}`（系数和为 1 的分解；Planarity.lean:1069 私有版）。 -/
+private theorem mem_affineSpan_triple_of_eq {x p q y : V3} {c h : ℝ}
+    (hy : y = x + c • (q - x) + h • (p - x)) :
+    y ∈ (affineSpan ℝ ({x, p, q} : Set V3) : Set V3) := by
+  have hxS : x ∈ affineSpan ℝ ({x, p, q} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hpS : p ∈ affineSpan ℝ ({x, p, q} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hqS : q ∈ affineSpan ℝ ({x, p, q} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hd3 : c • (q - x) ∈ (affineSpan ℝ ({x, p, q} : Set V3)).direction :=
+    Submodule.smul_mem _ c (AffineSubspace.vsub_mem_direction hqS hxS)
+  have hd4 : h • (p - x) ∈ (affineSpan ℝ ({x, p, q} : Set V3)).direction :=
+    Submodule.smul_mem _ h (AffineSubspace.vsub_mem_direction hpS hxS)
+  have hd5 : c • (q - x) + h • (p - x) ∈ (affineSpan ℝ ({x, p, q} : Set V3)).direction :=
+    Submodule.add_mem _ hd3 hd4
+  have hval : y = h • (p - x) +ᵥ (c • (q - x) +ᵥ x) := by
+    rw [hy, vadd_eq_add, vadd_eq_add]
+    abel
+  rw [hval]
+  exact AffineSubspace.vadd_mem_of_mem_direction hd4
+    (AffineSubspace.vadd_mem_of_mem_direction hd3 hxS)
+
+/-- 三点共线 ⇒ 加点仍共面：`Collinear3 x y z` 时
+`Coplanar (insert q {x,y,z})`（见证 `{x,y,q}`，`z` 经仿射包单调性纳入）。 -/
+private theorem coplanar_of_collinear {x y z q : V3} (hcol : Collinear3 x y z) :
+    Coplanar (insert q ({x, y, z} : Set V3)) := by
+  by_cases hxy : x = y
+  · subst hxy
+    rw [show (insert q ({x, x, z} : Set V3) : Set V3) = {q, x, z} from by ext a; simp; try tauto]
+    exact coplanar_triple q x z
+  · have hz : z ∈ (affineSpan ℝ ({x, y} : Set V3) : Set V3) :=
+      (collinear3_iff_mem_affineSpan hxy).mp hcol
+    refine ⟨x, y, q, fun z' hz' => ?_⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz'
+    rcases hz' with h1 | hz'
+    · rw [h1]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+    rcases hz' with h1 | hz'
+    · rw [h1]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+    rcases hz' with h1 | hz'
+    · rw [h1]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+    · rw [hz']
+      exact affineSpan_mono ℝ (subset_pair3 (a := x) (b := y) (c := q)) (SetLike.mem_coe.mp hz)
+
+set_option maxHeartbeats 0 in
+/-- 锥引理（HOL `WEDGE_LUNE_GT`，Multivariate-flyspeck.ml:3805）：`0 < azim x u w v < π`
+时，`y - x` 是 `v - x`、`w - x`（正系数）与 `u - x`（任意系数）的组合，则
+`y` 不在轴 `xu` 上且 `0 < azim x u w y < azim x u w v`（Planarity.lean:1811 私有版移植）。 -/
+private theorem azim_cone_of_combo {x u w v y : V3}
+    (hncw : ¬ Collinear3 x u w) (hncv : ¬ Collinear3 x u v)
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (a b c : ℝ) (ha : 0 < a) (hb : 0 < b)
+    (hy : y - x = a • (v - x) + b • (w - x) + c • (u - x)) :
+    ¬ Collinear3 x u y ∧ 0 < azim x u w y ∧ azim x u w y < azim x u w v := by
+  have hux : u ≠ x := by
+    intro he
+    exact hncw (collinear3_of_eq (v := x) (w := u) (w1 := w) he)
+  obtain ⟨f1, f2, f3, hon, halign⟩ :=
+    exists_on3_eq_smul (u - x) (sub_ne_zero.mpr hux)
+  have hax : (u - x : V3) = dist u x • f3 := by rw [dist_eq_norm]; exact halign
+  obtain ⟨hp1, hp2⟩ := axis_perp hax hon
+  set θv := azim x u w v with hθvdef
+  obtain ⟨ψ, rb, ra, hrb, hra, hzw, hzv⟩ := azim_frame_spec hncw hncv hon hax hux
+  have hwrep := rep_of_zOf hon hax hux w ψ rb hzw
+  have hvrep := rep_of_zOf hon hax hux v (ψ + θv) ra hzv
+  have hzline : zOf f1 f2 (y - x)
+      = ((a * ra : ℝ) : ℂ) * Complex.exp (((ψ + θv : ℝ) : ℂ) * I)
+        + ((b * rb : ℝ) : ℂ) * Complex.exp (((ψ : ℝ) : ℂ) * I) := by
+    have h1 : y - x = a • (v - x) + (b • (w - x) + c • (u - x)) := by
+      rw [hy]; abel
+    rw [h1, zOf_add, zOf_smul, zOf_add, zOf_smul, zOf_smul, zOf_axis hax hon, hzv, hzw]
+    push_cast
+    ring
+  have k1 : (y - x : V3) ⬝ᵥ f1
+      = a * (ra * Real.cos (ψ + θv)) + b * (rb * Real.cos ψ) := by
+    have h := congrArg Complex.re hzline
+    simp only [zOf, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
+      zero_add, mul_one, one_mul] at h
+    rw [cexp_cos_re, cexp_cos_re] at h
+    linarith
+  have k2 : (y - x : V3) ⬝ᵥ f2
+      = a * (ra * Real.sin (ψ + θv)) + b * (rb * Real.sin ψ) := by
+    have h := congrArg Complex.im hzline
+    simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
+      Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, sub_zero, add_zero,
+      zero_add, mul_one, one_mul] at h
+    rw [cexp_sin_im, cexp_sin_im] at h
+    linarith
+  have hsinpos : 0 < Real.sin θv :=
+    Real.sin_pos_of_mem_Ioo (Set.mem_Ioo.mpr ⟨hθ0, hθπ⟩)
+  have trig1 : ∀ A B α β γ : ℝ, (A * Real.sin α + B * Real.sin β) * Real.cos γ
+      - (A * Real.cos α + B * Real.cos β) * Real.sin γ
+      = A * Real.sin (α - γ) + B * Real.sin (β - γ) := by
+    intro A B α β γ
+    rw [Real.sin_sub, Real.sin_sub]
+    ring
+  have trig2 : ∀ A B α β γ : ℝ, (A * Real.cos α + B * Real.cos β) * Real.sin γ
+      - (A * Real.sin α + B * Real.sin β) * Real.cos γ
+      = A * Real.sin (γ - α) + B * Real.sin (γ - β) := by
+    intro A B α β γ
+    rw [Real.sin_sub, Real.sin_sub]
+    ring
+  by_cases hcy : Collinear3 x u y
+  · exfalso
+    have hz0 : zOf f1 f2 (y - x) = 0 := by
+      by_contra hne
+      exact (zOf_ne_zero_iff hon hax hux y).mp hne hcy
+    have hz1 : (y - x : V3) ⬝ᵥ f1 = 0 := by
+      have h := congrArg Complex.re hz0
+      simp only [zOf, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+        Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
+        zero_add, mul_one, one_mul] at h
+      exact h
+    have hz2 : (y - x : V3) ⬝ᵥ f2 = 0 := by
+      have h := congrArg Complex.im hz0
+      simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
+        Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, sub_zero, add_zero,
+        zero_add, mul_one, one_mul] at h
+      exact h
+    have hK1 : a * (ra * Real.cos (ψ + θv)) + b * (rb * Real.cos ψ) = 0 :=
+      k1.symm.trans hz1
+    have hK2 : a * (ra * Real.sin (ψ + θv)) + b * (rb * Real.sin ψ) = 0 :=
+      k2.symm.trans hz2
+    have hkey := trig2 (a * ra) (b * rb) (ψ + θv) ψ ψ
+    rw [show (ψ - (ψ + θv) : ℝ) = -θv from by ring, show (ψ - ψ : ℝ) = 0 from by ring,
+      Real.sin_zero, mul_zero, add_zero, Real.sin_neg, mul_neg] at hkey
+    rw [show ((a * ra) * Real.cos (ψ + θv) : ℝ) = a * (ra * Real.cos (ψ + θv)) from by ring,
+      show ((b * rb) * Real.cos ψ : ℝ) = b * (rb * Real.cos ψ) from by ring, hK1,
+      show ((a * ra) * Real.sin (ψ + θv) : ℝ) = a * (ra * Real.sin (ψ + θv)) from by ring,
+      show ((b * rb) * Real.sin ψ : ℝ) = b * (rb * Real.sin ψ) from by ring, hK2] at hkey
+    have hcon : a * (ra * Real.sin θv) = 0 := by
+      have hassoc : a * (ra * Real.sin θv) = a * ra * Real.sin θv := by ring
+      rw [hassoc]
+      linear_combination hkey
+    have hposA : 0 < a * (ra * Real.sin θv) := mul_pos ha (mul_pos hra hsinpos)
+    linarith
+  · obtain ⟨ψ', r1', ry, hr1', hry, hzw2, hzy⟩ :=
+      azim_frame_spec hncw hcy hon hax hux
+    have heq : Complex.exp (((ψ : ℝ) : ℂ) * I) = Complex.exp (((ψ' : ℝ) : ℂ) * I) :=
+      exp_pos_mul_eq hrb hr1' (hzw.symm.trans hzw2)
+    have hcs : Real.cos ψ = Real.cos ψ' ∧ Real.sin ψ = Real.sin ψ' := by
+      constructor
+      · have h := congrArg Complex.re heq
+        rw [cexp_cos_re, cexp_cos_re] at h
+        exact h
+      · have h := congrArg Complex.im heq
+        rw [cexp_sin_im, cexp_sin_im] at h
+        exact h
+    have cospv : Real.cos (ψ' + θv) = Real.cos (ψ + θv) := by
+      rw [Real.cos_add, Real.cos_add]
+      rw [hcs.2, hcs.1]
+    have sinpv : Real.sin (ψ' + θv) = Real.sin (ψ + θv) := by
+      rw [Real.sin_add, Real.sin_add]
+      rw [hcs.2, hcs.1]
+    have cosw : Real.cos ψ' = Real.cos ψ := hcs.1.symm
+    have sinw : Real.sin ψ' = Real.sin ψ := hcs.2.symm
+    set φ := azim x u w y with hφdef
+    have hy1' : (y - x : V3) ⬝ᵥ f1 = ry * Real.cos (ψ' + φ) := by
+      have h := congrArg Complex.re hzy
+      simp only [zOf, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+        Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
+        zero_add, mul_one, one_mul] at h
+      rw [cexp_cos_re] at h
+      linarith
+    have hy2' : (y - x : V3) ⬝ᵥ f2 = ry * Real.sin (ψ' + φ) := by
+      have h := congrArg Complex.im hzy
+      simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
+        Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, sub_zero, add_zero,
+        zero_add, mul_one, one_mul] at h
+      rw [cexp_sin_im] at h
+      linarith
+    have e1 : ry * Real.cos (ψ' + φ)
+        = a * (ra * Real.cos (ψ' + θv)) + b * (rb * Real.cos ψ') := by
+      rw [← hy1', cospv, cosw]
+      exact k1
+    have e2 : ry * Real.sin (ψ' + φ)
+        = a * (ra * Real.sin (ψ' + θv)) + b * (rb * Real.sin ψ') := by
+      rw [← hy2', sinpv, sinw]
+      exact k2
+    have hpos1 : 0 < a * (ra * Real.sin θv) := mul_pos ha (mul_pos hra hsinpos)
+    have hE1 : ry * Real.sin φ = a * (ra * Real.sin θv) := by
+      have h := trig1 (a * ra) (b * rb) (ψ' + θv) ψ' ψ'
+      rw [show ((ψ' + θv) - ψ' : ℝ) = θv from by ring,
+        show (ψ' - ψ' : ℝ) = 0 from by ring, Real.sin_zero, mul_zero, add_zero] at h
+      calc ry * Real.sin φ
+          = ry * (Real.sin (ψ' + φ) * Real.cos ψ'
+            - Real.cos (ψ' + φ) * Real.sin ψ') := by
+            congr 1
+            rw [← Real.sin_sub, show (ψ' + φ - ψ' : ℝ) = φ from by ring]
+        _ = (ry * Real.sin (ψ' + φ)) * Real.cos ψ'
+            - (ry * Real.cos (ψ' + φ)) * Real.sin ψ' := by ring
+        _ = a * (ra * Real.sin θv) := by
+            rw [e2, e1]
+            linear_combination h
+    have hposry : 0 < ry * Real.sin φ := by rw [hE1]; exact hpos1
+    have hφ0 : 0 ≤ φ := azim_nonneg x u w y
+    have hφnz : φ ≠ 0 := by
+      intro h
+      rw [h, Real.sin_zero] at hposry
+      norm_num at hposry
+    have hφpos : 0 < φ := lt_of_le_of_ne hφ0 (Ne.symm hφnz)
+    have hφ2 : φ < 2 * Real.pi := azim_lt_two_pi x u w y
+    have hφltπ : φ < Real.pi := by
+      by_contra hc
+      push_neg at hc
+      have hnn : 0 ≤ Real.sin (φ - Real.pi) :=
+        Real.sin_nonneg_of_nonneg_of_le_pi (by linarith) (by linarith)
+      have hcon := mul_nonneg hry.le hnn
+      have hE : ry * Real.sin φ = -(ry * Real.sin (φ - Real.pi)) := by
+        have h3 : ry * Real.sin φ = ry * Real.sin ((φ - Real.pi) + Real.pi) := by
+          congr 1; ring
+        rw [h3, Real.sin_add, Real.cos_pi, Real.sin_pi]
+        ring
+      rw [hE1] at hE
+      linarith
+    refine ⟨hcy, hφpos, ?_⟩
+    by_contra hc
+    push_neg at hc
+    have hnn : 0 ≤ Real.sin (φ - θv) :=
+      Real.sin_nonneg_of_nonneg_of_le_pi (by linarith) (by linarith)
+    have hcon := mul_nonneg hry.le hnn
+    have hposB : 0 < b * (rb * Real.sin θv) := mul_pos hb (mul_pos hrb hsinpos)
+    have hE2 : ry * Real.sin (φ - θv) = -(b * (rb * Real.sin θv)) := by
+      have h := trig1 (a * ra) (b * rb) (ψ' + θv) ψ' (ψ' + θv)
+      rw [show ((ψ' + θv) - (ψ' + θv) : ℝ) = 0 from by ring,
+        show (ψ' - (ψ' + θv) : ℝ) = -θv from by ring, Real.sin_zero, mul_zero,
+        zero_add, Real.sin_neg, mul_neg] at h
+      calc ry * Real.sin (φ - θv)
+          = ry * (Real.sin (ψ' + φ) * Real.cos (ψ' + θv)
+            - Real.cos (ψ' + φ) * Real.sin (ψ' + θv)) := by
+            congr 1
+            rw [← Real.sin_sub, show (ψ' + φ - (ψ' + θv) : ℝ) = φ - θv from by ring]
+        _ = (ry * Real.sin (ψ' + φ)) * Real.cos (ψ' + θv)
+            - (ry * Real.cos (ψ' + φ)) * Real.sin (ψ' + θv) := by ring
+        _ = -(b * (rb * Real.sin θv)) := by
+            rw [e2, e1]
+            linear_combination h
+    rw [hE2] at hcon
+    linarith
+
+/-- HOL planarity.hl:9173 `notcoplanar_imp_notcollinear_fan`：四点不共面
+⇒ 三组三点不共线（各 `by_contra` 后由 `coplanar_of_collinear` 得共面，
+与 `hcop` 矛盾）。 -/
+theorem notcoplanar_imp_notcollinear_fan {x v u w : V3}
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) :
+    ¬ Collinear3 x u w ∧ ¬ Collinear3 x v u ∧ ¬ Collinear3 x v w := by
+  constructor
+  · intro hcol
+    have hc := coplanar_of_collinear (x := x) (y := u) (z := w) (q := v) hcol
+    exact hcop (by
+      rw [show ({x, v, u, w} : Set V3) = insert v ({x, u, w} : Set V3) from
+        by ext z; simp; tauto]
+      exact hc)
+  · constructor
+    · intro hcol
+      have hc := coplanar_of_collinear (x := x) (y := v) (z := u) (q := w) hcol
+      exact hcop (by
+        rw [show ({x, v, u, w} : Set V3) = insert w ({x, v, u} : Set V3) from
+          by ext z; simp; tauto]
+        exact hc)
+    · intro hcol
+      have hc := coplanar_of_collinear (x := x) (y := v) (z := w) (q := u) hcol
+      exact hcop (by
+        rw [show ({x, v, u, w} : Set V3) = insert u ({x, v, w} : Set V3) from
+          by ext z; simp; tauto]
+        exact hc)
+
+/-- HOL planarity.hl:9184 `properties_of_fully_surrounded1_fan`：`azim x u w v ∈ (0,π)`
+且四点不共面时，反射方位角 `azim x v u w` 也在 `(0,π)`。`0 <` 侧：`azim = 0`
+⇒ `azim_eq_zero_iff` 给出 `u ∈ affGt{x,v}{w}`，`affGt_pair_iff` 分解
+`u-x = c•(w-x)+h•(v-x)` ⇒ `u ∈ affineSpan{x,v,w}` 共面矛盾；`< π` 侧：
+`azim ≥ π` 分两条，`cross_dot_fully_surrounded_ge_fan`（=π）与
+`azim_compl` 反射到 `azim x v w u ∈ (0,π)`（π<azim）各给
+`0 ≤ cross(v-x)(w-x)·(u-x)`，而 `hrel : cross(v-x)(w-x)·(u-x) = -P`（`P` 由
+给定 `hθ0,hθπ` 经 `cross_dot_fully_surrounded_fan` 为正），`linarith` 矛盾。 -/
+theorem properties_of_fully_surrounded1_fan {x v u w : V3}
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3))
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi) :
+    0 < azim x v u w ∧ azim x v u w < Real.pi := by
+  obtain ⟨h1, h2, h3⟩ := notcoplanar_imp_notcollinear_fan hcop
+  have h1u : ¬ Collinear3 x u v := fun hcol => h2 (collinear3_swap hcol)
+  have hxv : x ≠ v := not_collinear3_left h2
+  have hwx : w ≠ x := fun he => h3 (collinear3_pair_left (v0 := x) (v1 := v) (x := w) he)
+  have hwv : w ≠ v := fun he => h3 (collinear3_pair_right (v0 := x) (v1 := v) (x := w) he)
+  constructor
+  · -- 0 < azim x v u w
+    have hnonneg : 0 ≤ azim x v u w := azim_nonneg x v u w
+    rcases lt_or_eq_of_le hnonneg with hpos | h0eq
+    · exact hpos
+    · exfalso
+      have hmem : u ∈ affGt ({x, v} : Set V3) {w} :=
+        (azim_eq_zero_iff h2 h3).mp h0eq.symm
+      obtain ⟨c, hc, hcoef, hvec⟩ :=
+        (affGt_pair_iff (v0 := x) (v1 := v) (x := w) (y := u) hxv hwx hwv).mp hmem
+      have hu : u ∈ (affineSpan ℝ ({x, v, w} : Set V3) : Set V3) := by
+        have hcomb : u = x + c • (w - x) + hcoef • (v - x) := by
+          calc
+            u = x + (u - x) := by abel
+            _ = x + c • (w - x) + hcoef • (v - x) := by
+              rw [hvec]
+              abel
+        exact mem_affineSpan_triple_of_eq (x := x) (p := v) (q := w) (c := c) (h := hcoef) hcomb
+      have hcpl : Coplanar ({x, v, u, w} : Set V3) := by
+        refine ⟨x, v, w, fun z hz => ?_⟩
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+        rcases hz with hz | hz
+        · rw [hz]
+          exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+        rcases hz with hz | hz
+        · rw [hz]
+          exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+        rcases hz with hz | hz
+        · rw [hz]
+          exact hu
+        · rw [hz]
+          exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+      exact hcop hcpl
+  · -- azim x v u w < Real.pi
+    by_contra hnot
+    push_neg at hnot
+    have hposP : 0 < crossProduct ((u - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((v - x : V3) : Fin 3 → ℝ) := by
+      exact cross_dot_fully_surrounded_fan (v1 := u) (v := w) (u1 := v) h1u h1 hθ0 hθπ
+    have hrel : crossProduct ((v - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+          ((u - x : V3) : Fin 3 → ℝ)
+        = -crossProduct ((u - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+          ((v - x : V3) : Fin 3 → ℝ) := by
+      calc
+        crossProduct ((v - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+            ((u - x : V3) : Fin 3 → ℝ)
+            = crossProduct ((w - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+              ((v - x : V3) : Fin 3 → ℝ) :=
+              cross_dot_cycle (X := ((v - x : V3) : Fin 3 → ℝ)) (Y := ((w - x : V3) : Fin 3 → ℝ)) (Z := ((u - x : V3) : Fin 3 → ℝ))
+        _ = -crossProduct ((u - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+              ((v - x : V3) : Fin 3 → ℝ) := by
+              simpa only [(cross_anticomm ((u - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ)).symm]
+    have hrel' : crossProduct ((v - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+          ((u - x : V3) : Fin 3 → ℝ) = -(crossProduct ((u - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+          ((v - x : V3) : Fin 3 → ℝ)) := by
+      simpa only [neg_dotProduct] using hrel
+    rcases lt_or_eq_of_le hnot with hpi_lt | hpi_eq
+    · -- Real.pi < azim x v u w 情形（反射到 azim x v w u ∈ (0, π)）
+      have hne0 : azim x v u w ≠ 0 := ne_of_gt (lt_trans Real.pi_pos hpi_lt)
+      have hcompl : azim x v w u = 2 * Real.pi - azim x v u w := by
+        rw [azim_compl h2 h3, if_neg hne0]
+      have hw0 : 0 < azim x v w u := by
+        rw [hcompl]
+        linarith [azim_lt_two_pi x v u w]
+      have hwp : azim x v w u < Real.pi := by
+        rw [hcompl]
+        linarith [hpi_lt]
+      have hposQ : 0 < crossProduct ((v - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+          ((u - x : V3) : Fin 3 → ℝ) := by
+        exact cross_dot_fully_surrounded_fan (v1 := v) (v := w) (u1 := u) h2 h3 hw0 hwp
+      exfalso
+      linarith [hposP, hposQ, hrel']
+    · -- azim x v u w = Real.pi 情形
+      have hleQ : 0 ≤ crossProduct ((v - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+          ((u - x : V3) : Fin 3 → ℝ) := by
+        apply cross_dot_fully_surrounded_ge_fan (v1 := v) (v := w) (u1 := u) h2 h3
+        · have hcompl : azim x v w u = 2 * Real.pi - azim x v u w := by
+            rw [azim_compl h2 h3, if_neg (by rw [← hpi_eq]; norm_num)]
+          rw [hcompl]
+          linarith [azim_lt_two_pi x v u w]
+        · have hcompl : azim x v w u = 2 * Real.pi - azim x v u w := by
+            rw [azim_compl h2 h3, if_neg (by rw [← hpi_eq]; norm_num)]
+          rw [hcompl, hpi_eq]
+          linarith [Real.pi_pos]
+      exfalso
+      linarith [hposP, hleQ, hrel']
+
+/-- HOL planarity.hl:9241 `in_aff_2_2_fan`：弦点 `(1-t)•u + t•w`（`0 < t < 1`）
+与 `x`、`v` 的合成在 `aff_gt {x,v} {u,w}` 中。`affGt2_2` 给显式三/四系数
+`(t1, t2, t3(1-t), t3 t)`；不相交假设 `Disjoint {x,v} {u,w}` 由三点不共线
+（`disjoint_singleton_of_not_collinear3` + `v ≠ u`、`v ≠ w`）拼出。 -/
+theorem in_aff_2_2_fan {x v u w : V3} (hcop : ¬ Coplanar ({x, v, u, w} : Set V3))
+    (t : ℝ) (ht0 : 0 < t) (ht1 : t < 1)
+    (t1 t2 t3 : ℝ) (ht3 : 0 < t3) (hsum : t1 + t2 + t3 = 1) :
+    t1 • x + t2 • v + t3 • ((1 - t) • u + t • w) ∈ affGt ({x, v} : Set V3) {u, w} := by
+  obtain ⟨h1, h2, h3⟩ := notcoplanar_imp_notcollinear_fan hcop
+  have hcoluu : Collinear3 x u u := by
+    show Collinear ℝ ({x, u, u} : Set V3)
+    have hset : ({x, u, u} : Set V3) = {x, u} := by ext z; simp
+    rw [hset]
+    exact collinear_pair ℝ x u
+  have hcolww : Collinear3 x w w := by
+    show Collinear ℝ ({x, w, w} : Set V3)
+    have hset : ({x, w, w} : Set V3) = {x, w} := by ext z; simp
+    rw [hset]
+    exact collinear_pair ℝ x w
+  have hvne : v ≠ u := by
+    intro he
+    exact h2 (by rw [he]; exact hcoluu)
+  have hvwne : v ≠ w := by
+    intro he
+    exact h3 (by rw [he]; exact hcolww)
+  have hdisx : Disjoint ({x} : Set V3) {u, w} := disjoint_singleton_of_not_collinear3 h1
+  have hdisv : Disjoint ({v} : Set V3) {u, w} := by
+    rw [Set.disjoint_singleton_left]
+    intro hmem
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+    rcases hmem with he | he
+    · exact hvne he
+    · exact hvwne he
+  have hdis : Disjoint ({x, v} : Set V3) {u, w} := by
+    rw [show ({x, v} : Set V3) = ({x} ∪ {v} : Set V3) from by ext z; simp; tauto]
+    rw [Set.disjoint_union_left]
+    exact ⟨hdisx, hdisv⟩
+  simp only [affGt2_2 hdis, Set.mem_setOf_eq]
+  refine ⟨t1, t2, t3 * (1 - t), t3 * t, ?_, ?_, ?_, ?_⟩
+  · exact mul_pos ht3 (by linarith)
+  · exact mul_pos ht3 ht0
+  · nlinarith [hsum]
+  · module
+
+/-- HOL planarity.hl:9273 `inequality4_aim_in_convex_fan`：四点不共面且
+`0 < azim x u w v < π` 时，`u` 到 `w` 弦上内点 `(1-a)•u + a•w`（`0 < a < 1`）的
+方位角严格夹在 `0` 与 `azim x v u w` 之间（`azim_cone_of_combo` 以
+`(a, 1-a, 0)` 代入）。 -/
+theorem inequality4_aim_in_convex_fan {x v u w : V3} {a : ℝ}
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3))
+    (hθ0 : 0 < azim x u w v) (hθπ : azim x u w v < Real.pi)
+    (ha0 : 0 < a) (ha1 : a < 1) :
+    0 < azim x v u ((1 - a) • u + a • w) ∧
+      azim x v u ((1 - a) • u + a • w) < azim x v u w := by
+  obtain ⟨h1, h2, h3⟩ := notcoplanar_imp_notcollinear_fan hcop
+  have hρ := properties_of_fully_surrounded1_fan hcop hθ0 hθπ
+  set y : V3 := (1 - a) • u + a • w
+  have hyvec : y - x = a • (w - x) + (1 - a) • (u - x) + (0 : ℝ) • (v - x) := by
+    dsimp [y]
+    module
+  obtain ⟨hncy, h0y, hpy⟩ :=
+    azim_cone_of_combo (x := x) (u := v) (w := u) (v := w) (y := y) (a := a)
+      (b := 1 - a) (c := 0) h2 h3 hρ.1 hρ.2 ha0 (by linarith) hyvec
+  exact ⟨h0y, hpy⟩
