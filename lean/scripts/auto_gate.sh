@@ -35,9 +35,12 @@ fi
 grep -qE '(^| )error:' /tmp/auto_gate_build.log && fail "errors in build log"
 
 # 5. axioms whitelist on the target theorem (olean now exists)
+#    NB: full name = <file's namespace>.<THM>, NOT <module>.<THM>
+NS=$(grep -m1 -oE '^namespace [A-Za-z0-9_.]+' "$FILE" | awk '{print $2}')
+[ -n "$NS" ] || fail "no namespace found in $FILE"
 cat > "/tmp/AxCheck_$THM.lean" <<EOF
 import $MODULE
-#print axioms $MODULE.$THM
+#print axioms $NS.$THM
 EOF
 timeout 600 lake env lean "/tmp/AxCheck_$THM.lean" > /tmp/AxCheck_$THM.out 2>&1 \
   || fail "axioms check crashed, see /tmp/AxCheck_$THM.out"
