@@ -1069,7 +1069,30 @@ affineSpan characterization（Mathlib `collinear_iff`/
 theorem aff_gt_imp_not_collinear {x v u w : V3}
     (hnc : ¬ Collinear3 x v u) (hw : w ∈ affGt {x, v} {u}) :
     ¬ Collinear3 x v w := by
-  sorry
+  -- 基本非退化：x ≠ v、u ≠ x、u ≠ v（否则 hnc 直接矛盾）
+  have hxv : x ≠ v := fun he =>
+    hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) he.symm)
+  have hux : u ≠ x := fun he =>
+    hnc (collinear3_pair_left (v0 := x) (v1 := v) (x := u) he)
+  have huv : u ≠ v := fun he =>
+    hnc (collinear3_pair_right (v0 := x) (v1 := v) (x := u) he)
+  -- AFF_GT_2_1 的射线刻画：w - x = c•(u - x) + k•(v - x)，c > 0
+  obtain ⟨c, hc0, k, hw_eq⟩ := (affGt_pair_iff hxv hux huv).mp hw
+  -- 若 collinear {x,v,w}：w - x = c'•(v - x)
+  intro hcol
+  obtain ⟨c', hw_eq2⟩ := (collinear3_iff_smul (Ne.symm hxv)).mp hcol
+  have h1 : c • (u - x) + k • (v - x) = c' • (v - x) := by
+    rw [← hw_eq2, hw_eq]
+  have h3 : c • (u - x) = (c' - k) • (v - x) := by
+    rw [sub_smul, eq_sub_iff_add_eq]
+    exact h1
+  -- 除以 c > 0 得 u ∈ aff {x,v}，即 Collinear3 x v u，矛盾
+  have hcne : c ≠ 0 := hc0.ne'
+  exact hnc ((collinear3_iff_smul (Ne.symm hxv)).mpr ⟨c⁻¹ * (c' - k), by
+    calc u - x = (c⁻¹ * c) • (u - x) := by rw [inv_mul_cancel₀ hcne, one_smul]
+      _ = c⁻¹ • (c • (u - x)) := by rw [smul_smul]
+      _ = c⁻¹ • ((c' - k) • (v - x)) := by rw [h3]
+      _ = (c⁻¹ * (c' - k)) • (v - x) := by rw [smul_smul]⟩)
 
 /-- HOL planarity.hl:10051-10095 `conditions_in_rcone_fan`
 
