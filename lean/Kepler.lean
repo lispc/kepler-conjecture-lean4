@@ -26,6 +26,8 @@ import Kepler.Text.TopologyFan
 import Kepler.Text.Planarity
 -- Phase 5: planarity.hl:3667 not_cut_inside_fan（1,515 行单证明巨块，切片移植）
 import Kepler.Text.PlanarityNotCut
+-- Phase 5: planarity.hl:7788 AFF_GT_CUT_XFAN_IMP_EDGE_FAN（1,211 行单证明巨块，9 片切片移植）
+import Kepler.Text.AffGtCut
 import Kepler.Text.VectorAngleLemmas
 -- Phase 4: 分支定界证书树（二分盒树 + covers/bb_sound，叶为内核 decide 的 checkPos）
 import Kepler.Interval.Cert
