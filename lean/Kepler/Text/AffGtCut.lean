@@ -602,7 +602,64 @@ private theorem final_azim_pi {x v u w : V3} {V : Set V3} {E : Set (Set V3)}
     (hncw : ¬ Collinear3 x x' w) (hncv : ¬ Collinear3 x x' v)
     (hpi : azim x x' v w' = Real.pi) :
     {v, w} ∈ E := by
-  sorry
+  -- CUOI 归约（HOL :8714-8721）：aff_gt2_subset_aff_ge 给 azim x x' v' w' = π，
+  -- sum5_azim_fan 与 hpi 联立得 azim x x' v v' = 0
+  have hdis' : Disjoint ({x} : Set V3) {v', w'} := disjoint_of_nc3 hnc'
+  have hπ' : azim x x' v' w' = Real.pi :=
+    aff_gt2_subset_aff_ge hdis' hncw' hncv' hx'gt'
+  have hxx' : x' ≠ x := fun he => hncv (collinear3_of_eq he)
+  have hsum5 := sum5_azim_fan (x := x) (v := x') (u := v) (w1 := v')
+    (w2 := w') hxx' hncv hncv' hncw' (by rw [hπ', hpi])
+  have h0' : azim x x' v v' = 0 := by
+    rw [hpi, hπ'] at hsum5
+    linarith
+  -- 两半支共用的集合/非共面事实
+  have hdisvw : Disjoint ({x} : Set V3) {v, w} := disjoint_of_nc3 hncvw
+  have hcop : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan hvu huw hth0 hthpi
+  obtain ⟨hv'V, hw'V⟩ := fan_mem_of_edge hfan he'
+  -- w' ∈ affGt {x} {v,w} 半支（HOL :8727-8805，同主定理 :8391-8465）
+  by_cases hw'gt : w' ∈ affGt {x} {v, w}
+  · rw [aff_gt_1_2 hdisvw, Set.mem_setOf_eq] at hw'gt
+    obtain ⟨s1, s2, s3, hs2, hs3, hssum, hsw⟩ := hw'gt
+    have hw'gt' : w' ∈ affGt {x} {v, w} := by
+      rw [aff_gt_1_2 hdisvw]
+      exact ⟨s1, s2, s3, hs2, hs3, hssum, hsw⟩
+    have hcopw' : ¬ Coplanar ({x, w', v, u} : Set V3) :=
+      coplanar_transfer hs3 hssum hsw hcop
+    obtain ⟨u1, hu1, ha0, hapi⟩ :=
+      exists_element_in_half_sapace_fan x w' v u V E hfan hw'V hcopw'
+        (hcard w' hw'V) h80
+    have hncwu1 : ¬ Collinear3 x w' u1 := fan_not_collinear hfan hu1
+    have hsub : affGt {x} {w', u1} ⊆ xfan x V E := fun z hz =>
+      ⟨{w', u1}, hu1, aff_gt_subset_aff_ge (disjoint_of_nc3 hncwu1) hz⟩
+    exact (cut_contra hfan hvu huw hsigma hcard h80 hncwu1
+      hw'gt' ha0 hapi hsub).elim
+  · -- v' ∈ affGt {x} {v,w} 半支（HOL :8806-8884，同主定理 :8466-8541）
+    by_cases hv'gt : v' ∈ affGt {x} {v, w}
+    · rw [aff_gt_1_2 hdisvw, Set.mem_setOf_eq] at hv'gt
+      obtain ⟨s1, s2, s3, hs2, hs3, hssum, hsv⟩ := hv'gt
+      have hv'gt' : v' ∈ affGt {x} {v, w} := by
+        rw [aff_gt_1_2 hdisvw]
+        exact ⟨s1, s2, s3, hs2, hs3, hssum, hsv⟩
+      have hcopv' : ¬ Coplanar ({x, v', v, u} : Set V3) :=
+        coplanar_transfer hs3 hssum hsv hcop
+      obtain ⟨u1, hu1, ha0, hapi⟩ :=
+        exists_element_in_half_sapace_fan x v' v u V E hfan hv'V hcopv'
+          (hcard v' hv'V) h80
+      have hncvu1 : ¬ Collinear3 x v' u1 := fan_not_collinear hfan hu1
+      have hsub : affGt {x} {v', u1} ⊆ xfan x V E := fun z hz =>
+        ⟨{v', u1}, hu1, aff_gt_subset_aff_ge (disjoint_of_nc3 hncvu1) hz⟩
+      exact (cut_contra hfan hvu huw hsigma hcard h80 hncvu1
+        hv'gt' ha0 hapi hsub).elim
+    · -- 双否半支（HOL :8885-8998）：final_neither_azim0 在 v'↔w' 对换下的实例
+      exact final_neither_azim0 (v' := w') (w' := v') hfan hvu huw
+        (by rw [pair_comm_set w' v']; exact he')
+        (fun h => hnc' (coll3_swap' h))
+        hx'gt
+        (by rw [pair_comm_set w' v']; exact hx'gt')
+        (by rw [pair_comm_set w' v']; exact hx'ge')
+        hncv' hncw' hncw hncv hncvw h0' hv'gt hw'gt
 
 /-! ## 主定理（HOL planarity.hl:7788） -/
 
