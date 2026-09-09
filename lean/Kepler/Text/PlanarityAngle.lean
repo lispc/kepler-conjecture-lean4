@@ -425,12 +425,209 @@ FAN(x,V,E)/\ {v,u} IN E /\ {u,w} IN E
 - `point_in_aff_ge`（Kepler/Text/Planarity.lean:4334）、
   `pos_in_aff_ge_fan`（Kepler/Text/Planarity.lean:4366）、
   `aff_gt1_subset_aff_ge`（Kepler/Text/Planarity.lean:3888） -/
+
+private theorem collinear3_swap_anc {x p q : V3} (h : Collinear3 x p q) :
+    Collinear3 x q p := by
+  show Collinear ℝ ({x, q, p} : Set V3)
+  have h' : Collinear ℝ ({x, p, q} : Set V3) := h
+  rw [show ({x, p, q} : Set V3) = ({x, q, p} : Set V3) from by ext z; simp; tauto] at h'
+  exact h'
+
+private theorem collinear3_first_third_anc (x p : V3) : Collinear3 x p x := by
+  show Collinear ℝ ({x, p, x} : Set V3)
+  have h2 : ({x, p, x} : Set V3) = {x, p} := by ext z; simp; tauto
+  rw [h2]
+  exact collinear_pair ℝ x p
+
+private theorem not_collinear3_left_anc {x p q : V3} (h : ¬ Collinear3 x p q) :
+    x ≠ p := by
+  intro he
+  subst he
+  exact h (collinear3_of_eq rfl)
+
+private theorem not_collinear3_right_anc {x p q : V3} (h : ¬ Collinear3 x p q) :
+    x ≠ q := by
+  intro he
+  subst he
+  exact h (collinear3_first_third_anc x p)
+
+private theorem disjoint_singleton_of_not_collinear3_anc {x p q : V3}
+    (h : ¬ Collinear3 x p q) : Disjoint ({x} : Set V3) {p, q} := by
+  rw [Set.disjoint_singleton_left]
+  intro hmem
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+  rcases hmem with he | he
+  · subst he
+    exact h (collinear3_of_eq rfl)
+  · subst he
+    exact h (collinear3_first_third_anc x p)
+
+private theorem affGe_empty_anc (x : V3) : affGe {x} (∅ : Set V3) = {x} := by
+  ext y
+  simp only [affGe, Set.mem_setOf_eq, Affsign, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨f, hfin, hsum, -, hone⟩
+    have hTeq : hfin.toFinset = ({x} : Finset V3) := by
+      ext z
+      simp
+    rw [hTeq, Finset.sum_singleton] at hsum hone
+    rw [hsum, hone, one_smul]
+  · intro heq
+    rw [heq]
+    have hfin : ({x} ∪ (∅ : Set V3)).Finite :=
+      (Set.finite_singleton x).union Set.finite_empty
+    have hTeq : hfin.toFinset = ({x} : Finset V3) := by
+      ext z
+      simp
+    refine ⟨fun _ => 1, hfin, ?_, ?_, ?_⟩
+    · rw [hTeq]
+      simp
+    · intro z hz
+      simp at hz
+    · rw [hTeq]
+      simp
+
 theorem angle_is_small_fan {x v u w : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
     (hsigma : sigmaFan x V E u w = v) (hfan80 : fan80 x V E)
     (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard) :
     azim x v u w ≤ azim x v u (sigmaFan x V E v u) := by
-  sorry
+  have hvV : v ∈ V := (fan_mem_of_edge hfan hvu).1
+  have huV : u ∈ V := (fan_mem_of_edge hfan hvu).2
+  have hnc_vu : ¬ Collinear3 x v u := fan_not_collinear hfan hvu
+  have hxnv : x ≠ v := not_collinear3_left_anc hnc_vu
+  have hxv : v ≠ x := hxnv.symm
+  obtain ⟨hθ0, hθπ⟩ := hfan80 u w huw
+  rw [hsigma] at hθ0 hθπ
+  have hu_edge : u ∈ setOfEdge v V E := by
+    simp [setOfEdge, huV, hvu]
+  by_cases hne : setOfEdge v V E = {u}
+  · exfalso
+    have hgt : 1 < (setOfEdge v V E).ncard := hcard v hvV
+    rw [hne, Set.ncard_singleton] at hgt
+    norm_num at hgt
+  · have hσ := SIGMA_FAN hne hfan hu_edge
+    let w1 : V3 := sigmaFan x V E v u
+    have hσmem : w1 ∈ setOfEdge v V E := by dsimp [w1]; exact hσ.1
+    have hσne : w1 ≠ u := by dsimp [w1]; exact hσ.2.1
+    have hσmin : ∀ w1 ∈ setOfEdge v V E, w1 ≠ u →
+        azim x v u (sigmaFan x V E v u) ≤ azim x v u w1 := hσ.2.2
+    have hσpair : ({v, w1} ∈ E) ∧ w1 ∈ V := by
+      simpa [setOfEdge] using hσmem
+    have hv_w1 : {v, w1} ∈ E := hσpair.1
+    have hnc_vw1 : ¬ Collinear3 x v w1 := fan_not_collinear hfan hv_w1
+    obtain ⟨h0w1, hpiw1⟩ := hfan80 v u hvu
+    have hcop : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+      properties_fully_surrounded hfan hvu huw hθ0 hθπ
+    have hnc_pairs := notcoplanar_imp_notcollinear_fan hcop
+    have hnc_uw : ¬ Collinear3 x u w := hnc_pairs.1
+    have hnc_vw : ¬ Collinear3 x v w := hnc_pairs.2.2
+    have hfs1 := properties_of_fully_surrounded1_fan hcop hθ0 hθπ
+    have h0w : 0 < azim x v u w := hfs1.1
+    have hpiw : azim x v u w < Real.pi := hfs1.2
+    by_cases hle : azim x v u w ≤ azim x v u w1
+    · exact hle
+    · exfalso
+      have hlt : azim x v u w1 < azim x v u w := not_le.mp hle
+      have hle' : azim x v u w1 ≤ azim x v u w := le_of_lt hlt
+      have hsum := sum4_azim_fan hxv hnc_vu hnc_vw1 hnc_vw hle'
+      have h0w1w : 0 < azim x v w1 w := by
+        have hz : azim x v w1 w ≠ 0 := by
+          intro heq
+          have hrel : azim x v u w = azim x v u w1 := by rw [hsum, heq, add_zero]
+          linarith
+        exact lt_of_le_of_ne (azim_nonneg x v w1 w) (Ne.symm hz)
+      have hltw1w : azim x v w1 w < Real.pi := by
+        have hlepart : azim x v w1 w ≤ azim x v u w := by
+          have hz : 0 ≤ azim x v u w1 := azim_nonneg x v u w1
+          rw [hsum]
+          linarith
+        exact lt_of_le_of_lt hlepart hpiw
+      obtain ⟨a, ha0, ha1, hva_w1⟩ :=
+        exists_cut_in_edge_fan hnc_vw1 hnc_uw hnc_vu hnc_vw hθ0 hθπ h0w1 hpiw1 h0w1w hltw1w
+      have hnc_va : ¬ Collinear3 x v ((1 - a) • u + a • w) :=
+        not_collinear_is_properties_fully_surrounded hfan hvu huw hθ0 hθπ a ha0 ha1
+      rcases decomposition_planar_by_angle_fan hnc_vw1 hnc_va hva_w1 with hA | hB
+      · -- 支 A：w1 ∈ aff_gt {x} {v,va}，与 not_cut_in_edges_fan 矛盾
+        have hpt := point_in_aff_ge hnc_vw1
+        have hw1_ge : w1 ∈ affGe {x} {v, w1} := hpt.2.2
+        have hw1_xfan : w1 ∈ xfan x V E := ⟨{v, w1}, hv_w1, hw1_ge⟩
+        have hempty := not_cut_in_edges_fan hfan hvu huw hsigma ha0 ha1 hcard hfan80
+        have hcontra : w1 ∈ affGt {x} {v, (1 - a) • u + a • w} ∩ xfan x V E :=
+          ⟨hA, hw1_xfan⟩
+        have hnotmem : w1 ∉ affGt {x} {v, (1 - a) • u + a • w} ∩ xfan x V E := by
+          rw [hempty]
+          simp
+        exact hnotmem hcontra
+      · -- 支 B：va ∈ aff_ge {x} {v,w1}，fan7 交到 {u,w}∩{v,w1}，再分类
+        let S : Set V3 := ({u, w} : Set V3) ∩ {v, w1}
+        have hdis_uw : Disjoint ({x} : Set V3) {u, w} :=
+          disjoint_singleton_of_not_collinear3_anc hnc_uw
+        have hva_uw : (1 - a) • u + a • w ∈ affGe {x} {u, w} :=
+          pos_in_aff_ge_fan hdis_uw ha0 ha1
+        have hinter_va : (1 - a) • u + a • w ∈
+            affGe {x} {u, w} ∩ affGe {x} {v, w1} := ⟨hva_uw, hB⟩
+        have hf7 : fan7 x V E := hfan.2.2.2.2.2
+        have hin1 : ({u, w} : Set V3) ∈ E ∪ {s | ∃ v ∈ V, s = {v}} := Or.inl huw
+        have hin2 : ({v, w1} : Set V3) ∈ E ∪ {s | ∃ v ∈ V, s = {v}} := Or.inl hv_w1
+        have hfan7eq : affGe {x} {u, w} ∩ affGe {x} {v, w1} =
+            affGe {x} (S : Set V3) := by
+          dsimp [S]
+          exact hf7 {u, w} hin1 {v, w1} hin2
+        have hvaS : (1 - a) • u + a • w ∈ affGe {x} (S : Set V3) :=
+          hfan7eq ▸ hinter_va
+        have hu_vw1 : u ∉ ({v, w1} : Set V3) := by
+          intro hu
+          rcases Set.mem_insert_iff.mp hu with h | h
+          · exact edge_ne_of_fan hfan hvu h.symm
+          · exact hσne h.symm
+        have huS : u ∉ S := by
+          intro hus
+          exact hu_vw1 ((Set.mem_inter_iff _ _ _).mp hus).2
+        by_cases hwS : w ∈ S
+        · -- S = {w} ⟹ va ∈ aff_ge {x} {w} ⟹ u ∈ aff {x,w} 矛盾
+          have hSw : S = ({w} : Set V3) := by
+            apply Set.eq_singleton_iff_unique_mem.mpr
+            refine ⟨hwS, ?_⟩
+            intro q hq
+            rcases Set.mem_insert_iff.mp ((Set.mem_inter_iff _ _ _).mp hq).1 with
+              hq2 | hq2
+            · exact absurd (hq2 ▸ hq) huS
+            · exact hq2
+          have hvaW : (1 - a) • u + a • w ∈ affGe {x} ({w} : Set V3) := by
+            rw [← hSw]
+            exact hvaS
+          have hxw : x ≠ w := not_collinear3_right_anc hnc_uw
+          obtain ⟨d1, d2, hd2, hdsum, hzeq⟩ :=
+            (mem_affGe_singleton hxw).mp hvaW
+          have hxune : 1 - a ≠ 0 := by linarith
+          have hukey : (1 - a) • u = d1 • x + (d2 - a) • w := by
+            calc (1 - a) • u = ((1 - a) • u + a • w) - a • w := by module
+              _ = (d1 • x + d2 • w) - a • w := by rw [hzeq]
+              _ = d1 • x + (d2 - a) • w := by module
+          have huum : u = ((1 - a)⁻¹ * d1) • x + ((1 - a)⁻¹ * (d2 - a)) • w := by
+            calc u = (1 - a)⁻¹ • ((1 - a) • u) := (inv_smul_smul₀ hxune _).symm
+              _ = (1 - a)⁻¹ • (d1 • x + (d2 - a) • w) := by rw [hukey]
+              _ = ((1 - a)⁻¹ * d1) • x + ((1 - a)⁻¹ * (d2 - a)) • w := by
+                rw [smul_add, smul_smul, smul_smul]
+          have huumem : u ∈ (affineSpan ℝ ({x, w} : Set V3) : Set V3) := by
+            rw [affine_hull_2_fan]
+            exact ⟨_, _, by field_simp; linarith, huum⟩
+          exact hnc_uw (collinear3_swap_anc ((collinear3_iff_mem_affineSpan hxw).mpr huumem))
+        · -- S = ∅ ⟹ va = x 与 ¬Collinear3 x v va 矛盾
+          have hSe : S = (∅ : Set V3) := by
+            by_contra hneS
+            obtain ⟨q, hq⟩ := Set.nonempty_iff_ne_empty.mpr hneS
+            rcases Set.mem_insert_iff.mp ((Set.mem_inter_iff _ _ _).mp hq).1 with
+              hq2 | hq2
+            · exact huS (hq2 ▸ hq)
+            · exact hwS (hq2 ▸ hq)
+          have hvaE : (1 - a) • u + a • w ∈ affGe {x} (∅ : Set V3) := by
+            rw [← hSe]
+            exact hvaS
+          rw [affGe_empty_anc] at hvaE
+          have hzx : (1 - a) • u + a • w = x := Set.mem_singleton_iff.mp hvaE
+          exact hnc_va (by rw [hzx]; exact collinear3_first_third_anc x v)
 
 /-- HOL planarity.hl:9639-9679 `angle_is_smallpi_fan`
 
