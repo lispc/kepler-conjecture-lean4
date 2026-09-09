@@ -1120,6 +1120,76 @@ theorem conditions_in_rcone_fan {x v u w : V3} {s : ℝ}
     (hs : 0 < s) (hsπ : s < Real.pi / 2)
     (hu : u ∈ rconeFan x v (Real.cos s)) :
     w ∈ rconeFan x v (Real.cos s) := by
-  sorry
+  -- 非退化：x ∉ {v, u}（否则与 hnc 矛盾），故 {x} 与 {v,u} 不交
+  have hdis : Disjoint ({x} : Set V3) {v, u} := by
+    rw [Set.disjoint_singleton_left]
+    intro hmem
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+    rcases hmem with h | h
+    · exact hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) h.symm)
+    · exact hnc (collinear3_pair_left (v0 := x) (v1 := v) (x := u) h.symm)
+  -- 展开目标与假设，dist 全部换为范数
+  rw [rconeFan]
+  simp only [Set.mem_setOf_eq, dist_eq_norm]
+  rw [rconeFan] at hu
+  simp only [Set.mem_setOf_eq, dist_eq_norm] at hu
+  -- cos 的符号事实
+  have hcos_nn : 0 ≤ Real.cos s :=
+    le_of_lt (Real.cos_pos_of_mem_Ioo ⟨by linarith, hsπ⟩)
+  have hcos_le : Real.cos s ≤ 1 := Real.cos_le_one s
+  have hnp : 0 ≤ ‖v - x‖ := norm_nonneg _
+  -- aff_gt_1_2 分解：w = t1•x + t2•v + t3•u，t2,t3 > 0
+  have hw' : w ∈ {y : V3 | ∃ t1 t2 t3 : ℝ, 0 < t2 ∧ 0 < t3 ∧ t1 + t2 + t3 = 1 ∧
+      y = t1 • x + t2 • v + t3 • u} := by
+    rw [← aff_gt_1_2 hdis]
+    exact hw
+  obtain ⟨t1, t2, t3, ht2, ht3, htsum, hw_eq⟩ := hw'
+  -- w - x = t2•(v - x) + t3•(u - x)
+  have hwsub : w - x = t2 • (v - x) + t3 • (u - x) := by
+    have hxe : (t1 + t2 + t3) • x = x := by rw [htsum, one_smul]
+    have expand : t1 • x + t2 • v + t3 • u - x
+        = t2 • (v - x) + t3 • (u - x) + ((t1 + t2 + t3) • x - x) := by module
+    rw [hxe, sub_self, add_zero] at expand
+    rw [hw_eq]
+    exact expand
+  -- 点积展开
+  have hdot : (w - x) ⬝ᵥ (v - x)
+      = t2 * ((v - x) ⬝ᵥ (v - x)) + t3 * ((u - x) ⬝ᵥ (v - x)) := by
+    rw [hwsub, dot_add_left_anc, smul_dot_aux, smul_dot_aux]
+  have hself : (v - x) ⬝ᵥ (v - x) = ‖v - x‖ * ‖v - x‖ :=
+    (norm_sq_eq_dot (v - x)).symm.trans (pow_two _)
+  -- 三角不等式：|w-x| ≤ t2*|v-x| + t3*|u-x|
+  have htri : ‖w - x‖ ≤ t2 * ‖v - x‖ + t3 * ‖u - x‖ := by
+    rw [hwsub]
+    calc ‖t2 • (v - x) + t3 • (u - x)‖ ≤ ‖t2 • (v - x)‖ + ‖t3 • (u - x)‖ :=
+        norm_add_le _ _
+      _ = t2 * ‖v - x‖ + t3 * ‖u - x‖ := by
+        rw [norm_smul, norm_smul, Real.norm_eq_abs, Real.norm_eq_abs,
+          abs_of_pos ht2, abs_of_pos ht3]
+  -- 逐项估计并合并
+  rw [hdot, hself]
+  have s1 : t3 * ((u - x) ⬝ᵥ (v - x))
+      > t3 * (‖u - x‖ * ‖v - x‖ * Real.cos s) :=
+    mul_lt_mul_of_pos_left hu ht3
+  have hc1 : 0 ≤ 1 - Real.cos s := sub_nonneg.mpr hcos_le
+  have s2 : t2 * (‖v - x‖ * ‖v - x‖ * Real.cos s) ≤ t2 * (‖v - x‖ * ‖v - x‖) := by
+    have hppc : ‖v - x‖ * ‖v - x‖ * Real.cos s ≤ ‖v - x‖ * ‖v - x‖ := by
+      nlinarith [mul_nonneg (mul_nonneg hnp hnp) hc1]
+    exact mul_le_mul_of_nonneg_left hppc (le_of_lt ht2)
+  have e3 : (t2 * ‖v - x‖ + t3 * ‖u - x‖) * ‖v - x‖ * Real.cos s
+      ≥ ‖w - x‖ * ‖v - x‖ * Real.cos s := by
+    have h5 : ‖w - x‖ * Real.cos s ≤ (t2 * ‖v - x‖ + t3 * ‖u - x‖) * Real.cos s :=
+      mul_le_mul_of_nonneg_right htri hcos_nn
+    have h6 : ‖w - x‖ * Real.cos s * ‖v - x‖
+        ≤ (t2 * ‖v - x‖ + t3 * ‖u - x‖) * Real.cos s * ‖v - x‖ :=
+      mul_le_mul_of_nonneg_right h5 hnp
+    nlinarith [h6]
+  calc t2 * (‖v - x‖ * ‖v - x‖) + t3 * ((u - x) ⬝ᵥ (v - x))
+      > t2 * (‖v - x‖ * ‖v - x‖) + t3 * (‖u - x‖ * ‖v - x‖ * Real.cos s) :=
+        by linarith
+    _ ≥ t2 * (‖v - x‖ * ‖v - x‖ * Real.cos s) + t3 * (‖u - x‖ * ‖v - x‖ * Real.cos s) :=
+        by linarith
+    _ = (t2 * ‖v - x‖ + t3 * ‖u - x‖) * ‖v - x‖ * Real.cos s := by ring
+    _ ≥ ‖w - x‖ * ‖v - x‖ * Real.cos s := e3
 
 end Kepler.Text
