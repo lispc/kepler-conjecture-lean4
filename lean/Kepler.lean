@@ -28,6 +28,8 @@ import Kepler.Text.Planarity
 import Kepler.Text.PlanarityNotCut
 -- Phase 5: planarity.hl:7788 AFF_GT_CUT_XFAN_IMP_EDGE_FAN（1,211 行单证明巨块，9 片切片移植）
 import Kepler.Text.AffGtCut
+-- Phase 5: planarity.hl:9297 起 angle/rcone 段（自动化移植 harness：骨架定稿 + big-pickle 填空）
+import Kepler.Text.PlanarityAngle
 import Kepler.Text.VectorAngleLemmas
 -- Phase 4: 分支定界证书树（二分盒树 + covers/bb_sound，叶为内核 decide 的 checkPos）
 import Kepler.Interval.Cert
