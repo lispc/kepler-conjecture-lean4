@@ -4,14 +4,16 @@
 # Exit 0 = accept. Exit 1 = reject (reason printed, appended to /tmp/auto_gate.log).
 set -u
 export PATH="$HOME/.elan/bin:$PATH"
+cd "$(dirname "$0")/.."   # lean/ — git diff paths must be cwd-relative
 FILE="$1"; THM="$2"
 MODULE=$(echo "$FILE" | sed 's|/|.|g; s|\.lean$||')
 
 fail(){ echo "GATE-FAIL $THM: $*" | tee -a /tmp/auto_gate.log; exit 1; }
 
 # 1. only $FILE has tracked modifications vs HEAD
-changed=$(git diff HEAD --name-only)
-[ "$changed" = "$FILE" ] || fail "tracked changes: [$changed]"
+#    (--relative: paths shown relative to cwd, matching $FILE)
+changed=$(git diff HEAD --name-only --relative)
+[ "$changed" = "$FILE" ] || fail "tracked changes: [$changed] (expected only $FILE)"
 
 # 2. signature freeze: every deleted line must be a bare sorry line,
 #    and at least one sorry must actually be consumed
