@@ -44,8 +44,9 @@
 - [x] 量产流水线：`ineq.hl` 记录解析（181 条）→ 公式 AST（176 条）→ 定义表（348 定义依赖闭包零缺失）→ RPN case JSON（176/176，`f99dd04`）
 - [x] **bb_arb：C/FLINT 球算术分支定界器**（`8b7c3c4`）：RPN 求值 + dyadic 二分 + ite guard + disj + 证书 JSON 输出；sqrt8 端点精度 bug 已修（2⁻³⁰ 网格）
 - [x] y 空间直跑：**65/176 闭合**（dReal 41 + bb_arb 新增）
-- [x] **prep（x=y² 归一化，Flyspeck 官方形式）路线大胜**：812 条 prep 记录全解析 → 745 案例生成（四脚本 CLI 化，`59d3a1b`）；pass2 批跑（900s/4M 节点）**~98% 闭合率**（573 例时 561 闭合，2026-09-09 06:00 数据，仍在跑）
-- [ ] prep 残余案例家族级分析（y 空间未闭合 ~111 条的 prep 家族覆盖核对）→ 残余再定策略
+- [x] **prep（x=y² 归一化，Flyspeck 官方形式）路线大胜**：812 条 prep 记录全解析 → 745 案例生成（四脚本 CLI 化，`59d3a1b`）；pass1+pass2（900s/4M 节点）**745/745 全闭合（100%）**
+- [x] **家族级分析（2026-09-09）**：176 条不等式 = 68 y 空间闭合 + **92 条 prep 家族覆盖闭合（实质已解决）** + 16 条真残余（清单 `pipeline/interval/out/residue16.txt`：TSKAJXY 系 4 条、TEWNSCJ/PEMKWKU/TXQTPVC/IXPOTPA、QZECFIC wt0 ×2、GRKIBMP B V2 等）。**求解层合计 160/176（91%）**
+- [ ] 16 条真残余逐条定策略（GRKIBMP B V2 有真反例叶=尖锐边界组，需 ε 余量或弱编码；其余先试更大预算/域剖分）
 - [ ] **BBTree 证书 → Lean 内核闭合**（G4）：bb_arb 已能出 cert JSON；Lean 侧需扩展 IExpr（abs 节点）/TKind（ln）/Cert 叶（guard 符号 + disj 备选），规格在 `pipeline/interval/arb-layer.md` §3/§4
 - [ ] GRKIBMP_B_V2 尖锐边界组单独处理（我们把 ≥ 加强成严格 > 导致等号边界不可闭，需 ε 余量或弱编码）
 - [ ] `ineqdata3q1h.hl` 7 条 Mathematica record 单独解析
@@ -96,9 +97,9 @@
 
 ## 整体估计
 
-- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性：y 空间 65/176 + prep 路线 ~98% 案例闭合（求解层合计 ~85%），内核闭合 0%（G4 待开工）。
-- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + planarity 60% ≈ 36k 行 HOL 源；待移植 ≈ 84k 行。按行数口径 **~30%**。
-- **全项目粗略完成度：~52%**。
+- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 0%（G4 待开工）。
+- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + planarity 60% ≈ 36k 行 HOL 源；待移植 ≈ 84k 行。按行数口径 **~30%**。自动化 harness 已自证可行（首批 8 定理中 4 枚已无人干预过闸入库 wip）。
+- **全项目粗略完成度：~54%**。
 
 ## 验证纪律
 
