@@ -112,6 +112,13 @@ private theorem disjoint_of_nc3 {x p q : V3} (hnc : ¬ Collinear3 x p q) :
 private theorem pair_comm_set (a b : V3) : ({a, b} : Set V3) = ({b, a} : Set V3) := by
   ext z; simp; tauto
 
+/-- `affGt` 强于 `affGe`（`PlanarityNotCut` 私有 `affGt_subset_affGe'` 的本地镜像）。 -/
+private theorem affGt_subset_affGe_all {s t : Set V3} : affGt s t ⊆ affGe s t := by
+  intro z hz
+  simp only [affGt, affGe, Set.mem_setOf_eq, Affsign] at hz ⊢
+  obtain ⟨f, hfin, hv, hpos, hone⟩ := hz
+  exact ⟨f, hfin, hv, fun w hw => le_of_lt (hpos w hw), hone⟩
+
 /-- 三点（`x,p,v`）仿射组合落入仿射子空间：`c1•x + c2•p + c3•v`
 （系数和 1）仍在该子空间内（S3 中 `w ∈ P` 的载体，vadd/direction 闭包）。 -/
 private theorem mem_affineSpan_comb {S : AffineSubspace ℝ V3} {x p v y : V3} {c1 c2 c3 : ℝ}
@@ -405,6 +412,82 @@ private theorem cut_contra {x v u w p q : V3} {V : Set V3} {E : Set (Set V3)}
     simpa using hy
   exact (Set.eq_empty_iff_forall_notMem.mp hempty y) ⟨hy'.1, hsub hy'.2⟩
 
+set_option maxHeartbeats 20000000 in
+/-- `[S8]` 内层 `v = w'` 整链（HOL planarity.hl :8573-8624 与 :8661-8712
+两处共用，自 `final_neither_azim0` 的 16a/16b 抽出以控制心跳预算）：
+`azim x x' v' w' = π`（aff_gt2_subset_aff_ge）改写 `v' = v` 后经
+`azim_compl` 得 `azim x x' v v' = π`；`azim x x' v w = π` 与
+`sum4_azim_fan` 联立得 `azim x x' w v' = 0`，即 `w ∈ affGt {x,x'} {v'}`
+（affGt⊆affGe），第二次 `decomposition_planar_by_angle_fan` 拆：
+`v' ∈ affGt {x} {x',w}` 与 `v' ∉ affGt {x} {v,w}` 矛盾，或
+`w ∈ affGe {x} {v',w'}` 走 `properties_of_fan7 [w;u;v';w']` 得
+`w = v'`（此时 `{v,w} = {w',v'} ∈ E`）或 `w = w'`（azim 冲突 "XONG"）。难度：
+组装（π 角追逐 + decomposition/fan7 相交网）。 -/
+private theorem azim0_v_eq_w' {x v u w : V3} {V : Set V3} {E : Set (Set V3)}
+    {x' v' w' : V3}
+    (hfan : FAN x V E) (huw : {u, w} ∈ E) (he' : {v', w'} ∈ E)
+    (hdis' : Disjoint ({x} : Set V3) {v', w'})
+    (hncvw : ¬ Collinear3 x v w)
+    (hx'gt : x' ∈ affGt {x} {v, w}) (hx'gt' : x' ∈ affGt {x} {v', w'})
+    (hx'ge' : x' ∈ affGe {x} {v', w'})
+    (hncw' : ¬ Collinear3 x x' w') (hncv' : ¬ Collinear3 x x' v')
+    (hncw : ¬ Collinear3 x x' w) (hncv : ¬ Collinear3 x x' v)
+    (h0 : azim x x' v w' = 0)
+    (hnv' : ¬ (v' ∈ affGt {x} {v, w}))
+    (hvweq : v = w') : {v, w} ∈ E := by
+  have hdisvw : Disjoint ({x} : Set V3) {v, w} := disjoint_of_nc3 hncvw
+  -- :8573-8581：azim x x' v' w' = π，经 v = w' 改写为 azim x x' v' v = π
+  have hπ1 : azim x x' v' w' = Real.pi :=
+    aff_gt2_subset_aff_ge hdis' hncw' hncv' hx'gt'
+  rw [← hvweq] at hπ1
+  have hπ3 : azim x x' v v' = Real.pi := by
+    rw [azim_compl hncv' hncv,
+      if_neg (by rw [hπ1]; exact Real.pi_ne_zero), hπ1]
+    ring
+  have hπ4 : azim x x' v w = Real.pi :=
+    aff_gt2_subset_aff_ge hdisvw hncw hncv hx'gt
+  -- :8583-8593 `sum4_azim_fan`：azim x x' v v' = azim x x' v w
+  -- + azim x x' w v'，联立得 azim x x' w v' = 0
+  have hle : azim x x' v w ≤ azim x x' v v' := by
+    rw [hπ3, hπ4]
+  have hxx' : x' ≠ x := fun he => hncv (collinear3_of_eq he)
+  have hsum := sum4_azim_fan (x := x) (v := x') (u := v) (w1 := w) (w2 := v')
+    hxx' hncv hncw hncv' hle
+  have h0wv' : azim x x' w v' = 0 := by
+    rw [hπ3, hπ4] at hsum
+    linarith
+  -- 第二次 decomposition_planar_by_angle_fan（:8595-8615/:8661-8712）
+  have hwgt : w ∈ affGt ({x, x'} : Set V3) {v'} :=
+    (azim_eq_zero_iff hncw hncv').mp h0wv'
+  have hwge : w ∈ affGe ({x, x'} : Set V3) {v'} := affGt_subset_affGe_all hwgt
+  rcases decomposition_planar_by_angle_fan hncv' hncw hwge with h19a | h19b
+  · -- 块 19a：v' ∈ aff_gt {x} {x',w} 传回 aff_gt {x} {v,w} 矛盾
+    exact absurd (aff_gt1_subset_aff_gt hdisvw hncw hx'gt h19a) hnv'
+  · -- 块 19b：w ∈ aff_ge {x} {x',v'} 经 fan7 相交（HOL :8681-8700：
+    -- aff_ge1_subset_aff_ge [x;w';v';x'] 给 aff_ge {x} {x',v'} ⊆ aff_ge {x} {w',v'}）
+    have hdiswv' : Disjoint ({x} : Set V3) {w', v'} := by
+      rw [pair_comm_set w' v']
+      exact hdis'
+    have hx'wv' : x' ∈ affGe {x} {w', v'} := by
+      rw [pair_comm_set w' v']
+      exact hx'ge'
+    have hsub19b : affGe {x} {x', v'} ⊆ affGe {x} {w', v'} :=
+      aff_ge1_subset_aff_ge hdiswv' hncv' hx'wv'
+    have h19b' : w ∈ affGe {x} {v', w'} := by
+      rw [pair_comm_set v' w']
+      exact hsub19b h19b
+    rcases properties_of_fan7 hfan (by rw [pair_comm_set w u]; exact huw)
+      he' h19b' with hwv' | hww'
+    · -- 块 20a：w = v'，{v,w} = {w',v'} ∈ E
+      rw [hvweq, hwv']
+      rw [pair_comm_set v' w'] at he'
+      exact he'
+    · -- 块 20b "XONG"：w = w' 与 h0 + azim = π 冲突
+      have hπ5 : azim x x' v w' = Real.pi := by
+        rw [← hww']
+        exact hπ4
+      linarith [h0, hπ5, Real.pi_pos]
+
 /-! ## S8：`azim x x' v w' = 0` 的双否半支（HOL :8542-8712） -/
 
 /-- HOL :8542-8712（`azim x x' v w' = 0` 且 `w' ∉ affGt {x} {v,w}`、
@@ -433,17 +516,64 @@ azim0`，假设即分支处全部局部事实）：
   矛盾链关闭（17/18/19，:8676-8712）。难度：分析+组装（本文件最难片）。 -/
 private theorem final_neither_azim0 {x v u w : V3} {V : Set V3} {E : Set (Set V3)}
     {x' v' w' : V3}
-    (hfan : FAN x V E) (hvu : {v, u} ∈ E) (he' : {v', w'} ∈ E)
+    (hfan : FAN x V E) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E) (he' : {v', w'} ∈ E)
     (hnc' : ¬ Collinear3 x v' w')
     (hx'gt : x' ∈ affGt {x} {v, w})
     (hx'gt' : x' ∈ affGt {x} {v', w'})
     (hx'ge' : x' ∈ affGe {x} {v', w'})
     (hncw' : ¬ Collinear3 x x' w') (hncv' : ¬ Collinear3 x x' v')
     (hncw : ¬ Collinear3 x x' w) (hncv : ¬ Collinear3 x x' v)
+    (hncvw : ¬ Collinear3 x v w)
     (h0 : azim x x' v w' = 0)
     (hnw' : ¬ (w' ∈ affGt {x} {v, w})) (hnv' : ¬ (v' ∈ affGt {x} {v, w})) :
     {v, w} ∈ E := by
-  sorry
+  have hdis' : Disjoint ({x} : Set V3) {v', w'} := disjoint_of_nc3 hnc'
+  have hdisvw : Disjoint ({x} : Set V3) {v, w} := disjoint_of_nc3 hncvw
+  have hncvx' : ¬ Collinear3 x v x' := fun h => hncv (coll3_swap' h)
+  -- 前奏 :8377-8388：azim = 0 给出 w' ∈ affGt {x,x'} {v}（及 affGe 弱化）
+  have hw'v : w' ∈ affGt ({x, x'} : Set V3) {v} :=
+    (azim_eq_zero_iff_alt hncv hncw').mp h0
+  have hw'v' : w' ∈ affGe ({x, x'} : Set V3) {v} := affGt_subset_affGe_all hw'v
+  -- 块 16（:8542-8556）：¬(w' ∈ affGt {x} {x', v})
+  have h16 : ¬ (w' ∈ affGt {x} {x', v}) := by
+    intro hmem
+    rw [pair_comm_set x' v] at hmem
+    exact hnw' (aff_gt3_subset_aff_gt hdisvw hncvx' hx'gt hmem)
+  -- v = w' 情形整链（:8573-8624 与 :8661-8712 共用）
+  have hveq_case : v = w' → {v, w} ∈ E :=
+    azim0_v_eq_w' hfan huw he' hdis' hncvw hx'gt hx'gt' hx'ge'
+      hncw' hncv' hncw hncv h0 hnv'
+  -- 块 16a（:8557-8610）：decomposition_planar_by_angle_fan
+  rcases decomposition_planar_by_angle_fan hncv hncw' hw'v' with h17a | h17b
+  · -- 块 17a（:8565-8607）：v ∈ affGt {x} {x',w'}
+    have hvge : v ∈ affGe {x} {v', w'} :=
+      aff_gt1_subset_aff_ge hdis' hncw' hx'ge' h17a
+    rcases properties_of_fan7 hfan hvu he' hvge with hvv' | hvw'2
+    · -- 块 17a1（:8565-8610）：v = v' 与 azim x x' v' w' = π 矛盾
+      have hπ2 : azim x x' v' w' = Real.pi :=
+        aff_gt2_subset_aff_ge hdis' hncw' hncv' hx'gt'
+      rw [← hvv'] at hπ2
+      linarith [Real.pi_pos, hπ2]
+    · -- 块 17a2（:8607）：v = w' → [veq 链]
+      exact hveq_case hvw'2
+  · -- 块 17b（:8612-8712）：w' ∈ affGe {x} {x',v} 拆开
+    have h17b' : w' ∈ affGe {x} {v, x'} := by
+      rw [pair_comm_set v x']
+      exact h17b
+    rcases (Set.mem_union _ _ _).mp
+      (aff_ge_subset_aff_gt_union_aff_ge hncvx' h17b') with hB1 | hB2
+    · -- B1：w' ∈ aff_gt {x,v} {x'} 与 w' ∈ aff_gt {x,x'} {v}
+      -- 合成 aff_gt {x} {x',v}，抵触块 16
+      exact (h16 (by
+        rw [pair_comm_set x' v]
+        rw [aff_gt_inter_aff_gt hncvx']
+        exact ⟨hB1, hw'v⟩)).elim
+    · -- B2：w' ∈ affGe {x} {v}，经 properties1_of_fan7 得 w' = v
+      have he2 : ({w', v'} : Set V3) ∈ E := by
+        rw [show ({w', v'} : Set V3) = ({v', w'} : Set V3) from by
+          ext q; simp; tauto]
+        exact he'
+      exact hveq_case (properties1_of_fan7 hfan he2 hvu hB2).symm
 
 /-! ## S9：`azim x x' v w' = π` 支（HOL :8714-8998） -/
 
@@ -632,8 +762,8 @@ theorem AFF_GT_CUT_XFAN_IMP_EDGE_FAN
               exact (cut_contra hfan hvu huw hsigma hcard h80 hncvu1
                 hv'gt' ha0 hapi hsub).elim
             · -- HOL :8542-8712（S8）
-              exact final_neither_azim0 hfan hvu he' hnc' hx'gt0 hx'gt' hx'e0
-                hnc7 hnc8 hnc9 hnc10 h0.symm hw'gt hv'gt
+              exact final_neither_azim0 hfan hvu huw he' hnc' hx'gt0 hx'gt' hx'e0
+                hnc7 hnc8 hnc9 hnc10 hncvw h0.symm hw'gt hv'gt
         · -- 0 < azim 且 ≥ π
           have hpile : Real.pi ≤ azim x x' v w' :=
             le_of_not_gt (fun hlt => hmid ⟨hpos, hlt⟩)
