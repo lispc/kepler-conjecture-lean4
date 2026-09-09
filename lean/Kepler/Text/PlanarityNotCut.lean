@@ -1823,3 +1823,205 @@ theorem exists_cut_small_edges_fan_le {v1 u1 : V3} {a : ℝ}
   have hmem := Set.mem_inter hy1 hy2
   rw [hempty] at hmem
   exact Set.notMem_empty _ hmem
+
+/-! ## 切片 18e：planarity.hl:8999-9172 的四条定理 -/
+
+/-- HOL planarity.hl:8999 `DHVFGBC`：切割情形下弦点 `(1-a)•u + a•w` 必
+退化为 `w`（`a = 1`）且三向量线性无关。HOL 一行
+`MESON_TAC[independent_run_edges_fan;cut_in_edges_fan]`：在 Lean 中分别
+对 `independent_run_edges_fan`（Planarity.lean:2896）与 `cut_in_edges_fan`
+（本文件 :1301）做 MP 后合取。 -/
+theorem DHVFGBC {x v u w : V3} {V : Set V3} {E : Set (Set V3)} {a : ℝ}
+    (hfan : FAN x V E) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hsigma : sigmaFan x V E u w = v) (ha0 : 0 < a) (ha1 : a ≤ 1)
+    (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard)
+    (hfan80 : fan80 x V E)
+    (hEM : ¬ (affGt {x} {v, (1 - a) • u + a • w} ∩ xfan x V E = ∅)) :
+    a = 1 ∧ LinearIndependent ℝ ![v - x, u - x, ((1 - a) • u + a • w) - x] := by
+  exact ⟨cut_in_edges_fan hfan hvu huw hsigma ha0 ha1 hcard hfan80 hEM,
+    independent_run_edges_fan hfan hvu huw hfan80 hsigma ha0 ha1⟩
+
+/-- HOL planarity.hl:9032 `exists_in_aff_gt`：`¬collinear {x,v,u}` 时
+`aff_gt {x} {v,u}` 非空。见证 `y = 0•x + ½•v + ½•u`（`AFF_GT_1_2` 展开 +
+系数 `(0,½,½)` 的正性与和）。 -/
+theorem exists_in_aff_gt {x v u : V3} (hnc : ¬ Collinear3 x v u) :
+    ∃ y : V3, y ∈ affGt {x} {v, u} := by
+  have hdis : Disjoint ({x} : Set V3) {v, u} := disjoint_singleton_of_not_collinear3 hnc
+  refine ⟨(1 / 2 : ℝ) • v + (1 / 2 : ℝ) • u, ?_⟩
+  rw [aff_gt_1_2 hdis, Set.mem_setOf_eq]
+  exact ⟨0, 1 / 2, 1 / 2, by norm_num, by norm_num, by norm_num, by module⟩
+
+set_option maxHeartbeats 0 in
+/-- HOL planarity.hl:9045 `cut_inside_fan`：三组方位角 `azim ∈ (0,π)` 与
+四条非共线条件推出 `aff_ge {x,v} {w1}` 与 `aff_gt {x} {u,w}` 相交。
+见证点为 `x + (vb × va)`（`va = (v-x)×(w1-x)`，`vb = (w-x)×(u-x)`）。
+`AFF_GE_2_1`/`AFF_GT_1_2` 展开给出两侧的三点组合，系数由三重叉积恒等式
+`crossProduct vb va = (vb·a2)•a1 - (vb·a1)•a2`（及另一款）配平；三个系数的
+符号条件正是 `cross_dot_fully_surrounded_fan` 的三款混合积正性。 -/
+theorem cut_inside_fan {x v u w w1 : V3}
+    (hncw1 : ¬ Collinear3 x v w1) (hncuw : ¬ Collinear3 x u w)
+    (hncvu : ¬ Collinear3 x v u) (hncvw : ¬ Collinear3 x v w)
+    (h0_1 : 0 < azim x u w v) (hpi_1 : azim x u w v < Real.pi)
+    (h0_2 : 0 < azim x v u w1) (hpi_2 : azim x v u w1 < Real.pi)
+    (h0_3 : 0 < azim x v w1 w) (hpi_3 : azim x v w1 w < Real.pi) :
+    ¬ (affGe {x, v} {w1} ∩ affGt {x} {u, w} = ∅) := by
+  have hncuv : ¬ Collinear3 x u v := by
+    intro h
+    exact hncvu (collinear3_swap h)
+  have hCON : 0 < (crossProduct ((u - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ)) ⬝ᵥ
+      ((v - x : V3) : Fin 3 → ℝ) :=
+    cross_dot_fully_surrounded_fan hncuv hncuw h0_1 hpi_1
+  have hBE : 0 < (crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ)) ⬝ᵥ
+      ((w1 - x : V3) : Fin 3 → ℝ) :=
+    cross_dot_fully_surrounded_fan hncw1 hncvu h0_2 hpi_2
+  have hEM : 0 < (crossProduct ((v - x : V3) : Fin 3 → ℝ) ((w1 - x : V3) : Fin 3 → ℝ)) ⬝ᵥ
+      ((w - x : V3) : Fin 3 → ℝ) :=
+    cross_dot_fully_surrounded_fan hncvw hncw1 h0_3 hpi_3
+  set a1 : Fin 3 → ℝ := ((v - x : V3) : Fin 3 → ℝ) with ha1_def
+  set a2 : Fin 3 → ℝ := ((w1 - x : V3) : Fin 3 → ℝ) with ha2_def
+  set a3 : Fin 3 → ℝ := ((w - x : V3) : Fin 3 → ℝ) with ha3_def
+  set a4 : Fin 3 → ℝ := ((u - x : V3) : Fin 3 → ℝ) with ha4_def
+  set va := crossProduct a1 a2 with hva_def
+  set vb := crossProduct a3 a4 with hvb_def
+  have hCON' : 0 < (crossProduct a4 a3) ⬝ᵥ a1 := by
+    rw [ha4_def, ha3_def, ha1_def]
+    exact hCON
+  have hBE' : 0 < (crossProduct a1 a4) ⬝ᵥ a2 := by
+    rw [ha1_def, ha4_def, ha2_def]
+    exact hBE
+  have hEM' : 0 < (crossProduct a1 a2) ⬝ᵥ a3 := by
+    rw [ha1_def, ha2_def, ha3_def]
+    exact hEM
+  have hvb_a1 : (crossProduct a3 a4) ⬝ᵥ a1 = -((crossProduct a4 a3) ⬝ᵥ a1) := by
+    rw [← cross_anticomm a4 a3, neg_dotProduct]
+  have hpos1 : 0 ≤ -(vb ⬝ᵥ a1) := by
+    rw [hvb_def, hvb_a1, neg_neg]
+    exact le_of_lt hCON'
+  have hpos2 : 0 < va ⬝ᵥ a3 := by
+    simpa only [hva_def] using hEM'
+  have hva_a4 : (crossProduct a1 a2) ⬝ᵥ a4 = -((crossProduct a1 a4) ⬝ᵥ a2) := by
+    calc
+      (crossProduct a1 a2) ⬝ᵥ a4 = a4 ⬝ᵥ crossProduct a1 a2 := by rw [dotProduct_comm]
+      _ = a1 ⬝ᵥ crossProduct a2 a4 := by rw [triple_product_permutation]
+      _ = a1 ⬝ᵥ -(crossProduct a4 a2) := by rw [← cross_anticomm a4 a2]
+      _ = -(a1 ⬝ᵥ crossProduct a4 a2) := by rw [dotProduct_neg]
+      _ = -((crossProduct a1 a4) ⬝ᵥ a2) := by
+        rw [show a1 ⬝ᵥ crossProduct a4 a2 = (crossProduct a1 a4) ⬝ᵥ a2 from by
+          rw [dotProduct_comm, ← cross_dot_cycle]]
+  have hpos3 : 0 < -(va ⬝ᵥ a4) := by
+    rw [hva_def, hva_a4, neg_neg]
+    exact hBE'
+  have hxv : x ≠ v := not_collinear3_left hncw1
+  have hxw1 : x ≠ w1 := not_collinear3_right hncw1
+  have hvw1 : v ≠ w1 := fun h => hncw1
+    (collinear3_pair_right (v0 := x) (v1 := v) (x := w1) h.symm)
+  have hdisj1 : Disjoint ({x, v} : Set V3) {w1} := by
+    rw [Set.disjoint_singleton_right]
+    rw [Set.mem_insert_iff, Set.mem_singleton_iff]
+    rintro (hx | hv)
+    · exact hxw1 hx.symm
+    · exact hvw1 hv.symm
+  have hdisuw : Disjoint ({x} : Set V3) {u, w} :=
+    disjoint_singleton_of_not_collinear3 hncuw
+  have hlag1 : crossProduct vb va = (vb ⬝ᵥ a2) • a1 - (vb ⬝ᵥ a1) • a2 := by
+    rw [cross_cross_eq_smul_sub_smul']
+    rw [dotProduct_comm a1 vb]
+  have hy1 : (x : V3) + (WithLp.toLp 2 (crossProduct vb va) : V3)
+      ∈ affGe {x, v} {w1} := by
+    rw [mem_affGe_pair hdisj1 hxv]
+    refine ⟨1 - vb ⬝ᵥ a2 + vb ⬝ᵥ a1, vb ⬝ᵥ a2, -(vb ⬝ᵥ a1), hpos1, by ring, ?_⟩
+    show (x : V3) + (WithLp.toLp 2 (crossProduct vb va) : V3) =
+      (1 - vb ⬝ᵥ a2 + vb ⬝ᵥ a1) • (x : V3) + (vb ⬝ᵥ a2) • (v : V3)
+        + (-(vb ⬝ᵥ a1)) • (w1 : V3)
+    have hv3eq : (WithLp.toLp 2 (crossProduct vb va) : V3) =
+        (vb ⬝ᵥ a2) • (v - x : V3) - (vb ⬝ᵥ a1) • (w1 - x : V3) := by
+      have h := congrArg (WithLp.toLp 2 : (Fin 3 → ℝ) → V3) hlag1
+      simpa only [WithLp.toLp_add, WithLp.toLp_sub, WithLp.toLp_smul,
+        WithLp.toLp_ofLp] using h
+    rw [hv3eq]; module
+  have hlag2 : crossProduct vb va = -(va ⬝ᵥ a4) • a3 + (va ⬝ᵥ a3) • a4 := by
+    rw [cross_cross_eq_smul_sub_smul]
+    rw [dotProduct_comm a3 va, dotProduct_comm a4 va, neg_smul]
+    abel
+  have hy2 : (x : V3) + (WithLp.toLp 2 (crossProduct vb va) : V3)
+      ∈ affGt {x} {u, w} := by
+    rw [aff_gt_1_2 hdisuw, Set.mem_setOf_eq]
+    refine ⟨1 + va ⬝ᵥ a4 - va ⬝ᵥ a3, va ⬝ᵥ a3, -(va ⬝ᵥ a4),
+      hpos2, hpos3, by ring, ?_⟩
+    show (x : V3) + (WithLp.toLp 2 (crossProduct vb va) : V3) =
+      (1 + va ⬝ᵥ a4 - va ⬝ᵥ a3) • (x : V3) + (va ⬝ᵥ a3) • (u : V3)
+        + (-(va ⬝ᵥ a4)) • (w : V3)
+    have hv3eq2 : (WithLp.toLp 2 (crossProduct vb va) : V3) =
+        -(va ⬝ᵥ a4) • (w - x : V3) + (va ⬝ᵥ a3) • (u - x : V3) := by
+      have h := congrArg (WithLp.toLp 2 : (Fin 3 → ℝ) → V3) hlag2
+      simpa only [WithLp.toLp_add, WithLp.toLp_sub, WithLp.toLp_smul,
+        WithLp.toLp_ofLp] using h
+    rw [hv3eq2]; module
+  intro hempt
+  have hnmem : (x : V3) + (WithLp.toLp 2 (crossProduct vb va) : V3)
+      ∈ affGe {x, v} {w1} ∩ affGt {x} {u, w} := Set.mem_inter hy1 hy2
+  rw [hempt] at hnmem
+  exact Set.notMem_empty _ hnmem
+
+set_option maxHeartbeats 0 in
+/-- HOL planarity.hl:9118 `exists_cut_in_edge_fan`：`aff_gt {x} {u,w}` 中的
+点 `y = s1•x + s2•u + s3•w`（`s2,s3 > 0`）经叉积构造也在
+`aff_ge {x,v} {w1}` 中。取 `t = s3/(s2+s3)`，弦点 `(1-t)•u + t•w =
+(1/(s2+s3))•(s2•u + s3•w) = (1/(s2+s3))•(y - s1•x)`，用 `y` 的
+aff_ge 展开 `y = t1•x + t2•v + t3•w1` 反解系数
+`((t1-s1)/(s2+s3), t2/(s2+s3), t3/(s2+s3))`（和 1、`t3` 系数非负，
+`t` 的正性与 `t < 1` 由 `s2,s3 > 0`）。 -/
+theorem exists_cut_in_edge_fan {x v u w w1 : V3}
+    (hncw1 : ¬ Collinear3 x v w1) (hncuw : ¬ Collinear3 x u w)
+    (hncvu : ¬ Collinear3 x v u) (hncvw : ¬ Collinear3 x v w)
+    (h0_1 : 0 < azim x u w v) (hpi_1 : azim x u w v < Real.pi)
+    (h0_2 : 0 < azim x v u w1) (hpi_2 : azim x v u w1 < Real.pi)
+    (h0_3 : 0 < azim x v w1 w) (hpi_3 : azim x v w1 w < Real.pi) :
+    ∃ a : ℝ, 0 < a ∧ a < 1 ∧ (1 - a) • u + a • w ∈ affGe {x, v} {w1} := by
+  have hne := cut_inside_fan hncw1 hncuw hncvu hncvw h0_1 hpi_1 h0_2 hpi_2 h0_3 hpi_3
+  obtain ⟨y, hy⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  have hxv : x ≠ v := not_collinear3_left hncw1
+  have hxw1 : x ≠ w1 := not_collinear3_right hncw1
+  have hvw1 : v ≠ w1 := fun h => hncw1
+    (collinear3_pair_right (v0 := x) (v1 := v) (x := w1) h.symm)
+  have hdisj1 : Disjoint ({x, v} : Set V3) {w1} := by
+    rw [Set.disjoint_singleton_right]
+    rw [Set.mem_insert_iff, Set.mem_singleton_iff]
+    rintro (hx | hv)
+    · exact hxw1 hx.symm
+    · exact hvw1 hv.symm
+  obtain ⟨t1, t2, t3, ht3, hsum1, hyveq⟩ := (mem_affGe_pair hdisj1 hxv).mp hy.1
+  have hdisuw : Disjoint ({x} : Set V3) {u, w} :=
+    disjoint_singleton_of_not_collinear3 hncuw
+  have hy2' : y ∈ affGt {x} {u, w} := hy.2
+  rw [aff_gt_1_2 hdisuw, Set.mem_setOf_eq] at hy2'
+  obtain ⟨s1, s2, s3, hs2, hs3, hsum2, hyseq⟩ := hy2'
+  have hD : 0 < s2 + s3 := add_pos hs2 hs3
+  have hDne : s2 + s3 ≠ 0 := ne_of_gt hD
+  have ha0 : 0 < s3 / (s2 + s3) := div_pos hs3 hD
+  have hal1 : s3 / (s2 + s3) < 1 := by
+    rw [div_lt_one₀ hD]
+    linarith
+  have h1 : (s2 • u + s3 • w : V3) = y - s1 • x := by
+    rw [hyseq]; module
+  have h1' : (t1 - s1) • x + t2 • v + t3 • w1 = y - s1 • x := by
+    have h : (t1 - s1) • x + t2 • v + t3 • w1 = (t1 • x + t2 • v + t3 • w1) - s1 • x := by
+      module
+    rw [h, ← hyveq]
+  refine ⟨s3 / (s2 + s3), ha0, hal1, ?_⟩
+  rw [mem_affGe_pair hdisj1 hxv]
+  refine ⟨(t1 - s1) / (s2 + s3), t2 / (s2 + s3), t3 / (s2 + s3),
+    div_nonneg ht3 (le_of_lt hD), by field_simp [hDne]; linarith, ?_⟩
+  show (1 - s3 / (s2 + s3)) • u + (s3 / (s2 + s3)) • w
+      = ((t1 - s1) / (s2 + s3)) • x + (t2 / (s2 + s3)) • v
+        + (t3 / (s2 + s3)) • w1
+  calc
+    (1 - s3 / (s2 + s3)) • u + (s3 / (s2 + s3)) • w
+        = (s2 / (s2 + s3)) • u + (s3 / (s2 + s3)) • w := by
+          rw [show 1 - s3 / (s2 + s3) = s2 / (s2 + s3) from by
+            field_simp [hDne]; ring]
+    _ = (1 / (s2 + s3)) • (s2 • u + s3 • w) := by module
+    _ = (1 / (s2 + s3)) • (y - s1 • x) := by rw [h1]
+    _ = (1 / (s2 + s3)) • ((t1 - s1) • x + t2 • v + t3 • w1) := by rw [← h1']
+    _ = ((t1 - s1) / (s2 + s3)) • x + (t2 / (s2 + s3)) • v
+        + (t3 / (s2 + s3)) • w1 := by module
