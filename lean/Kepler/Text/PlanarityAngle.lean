@@ -1192,4 +1192,299 @@ theorem conditions_in_rcone_fan {x v u w : V3} {s : ℝ}
     _ = (t2 * ‖v - x‖ + t3 * ‖u - x‖) * ‖v - x‖ * Real.cos s := by ring
     _ ≥ ‖w - x‖ * ‖v - x‖ * Real.cos s := e3
 
+/-! ## 锥内取点与弦切割（planarity.hl:10096-10806，batch 2 skeleton） -/
+
+/-- HOL planarity.hl:10096-10328 `exists_point_inside_domain_cone_fan`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) v:real^3 u:real^3 w:real^3 s:real.
+FAN(x,V,E)/\ {v,u} IN E /\ {u,w} IN E
+/\ sigma_fan x V E u w = v
+/\ &0<s /\ s<pi/ &2
+/\ fan80(x,V,E)
+/\ (!v. v IN V==>CARD (set_of_edge v V E) >1)
+==>
+(?y:real^3. y IN rw_dart_fan x V E ((x:real^3),(u:real^3),(w:real^3),(w2:real^3)) (cos(s)) /\
+azim x v u y< azim x v u w)
+```
+
+证明思路：fan80(u,w) + hsigma 给 `0 < azim x u w v < π`，
+`properties_fully_surrounded` 给 ¬Coplanar {x,v,u,w}；分支
+`CARD(set_of_edge u) = 1` 与 hcard u 矛盾，故 CARD > 1，
+`not_empty_rw_dart_fan` 给 y ∈ rw_dart(cos s)（wedge 侧
+`azim x u w y < azim x u w v`，配合 `sum4_azim_fan` 与
+`azim_compl`、`azim_eq_zero_iff`（AZIM_EQ_0_PI_EQ_COPLANAR 的替代）
+排除 azim = 0/π 退化）。主构造 `v3 = ((y-x)×(u-x))×((v-x)×(w-x)) + x`
+与 `v4 = ½•v3 + ½•u`：`aff_gt_1_2` 展开系数
+（t1 = 1 - va⬝a2 + va⬝a3 等），正性由
+`cross_dot_fully_surrounded_fan` / `_ge_fan`（CROSS_LAGRANGE =
+Mathlib `cross_dot_cross` 展开），最后
+`inequality4_aim_in_convex_fan` + `conditions_in_rcone_fan` 收尾。
+注意：HOL 原文结论里的 `w2` 是自由变量（Flyspeck 笔误）；
+`rwDartFan` 不依赖四元组第 4 分量（wedge 用 sigmaFan，
+见 `wDartFan` 定义），故按全称量化绑定为定理参数（HOL 侧
+MATCH 时自由变量即被实例化，语义一致）。
+
+候选已有引理：
+- `not_empty_rw_dart_fan`（Kepler/Text/TopologyFan.lean:4125）
+- `properties_fully_surrounded`（Kepler/Text/Planarity.lean:2370）
+- `properties_of_fully_surrounded1_fan`（Kepler/Text/PlanarityNotCut.lean:2330）
+- `sum4_azim_fan`（Kepler/Text/TopologyFan.lean:1105）
+- `azim_compl`（Kepler/Geom/AzimLemmas.lean:318，AZIM_COMPL）
+- `azim_eq_zero_iff` / `azim_eq_zero_iff_alt`（Kepler/Geom/AzimLemmas.lean:296/307，
+  AZIM_EQ_0_PI_EQ_COPLANAR 的替代）
+- `azim_eq_azim_iff`（Kepler/Geom/AzimLemmas.lean:193，AZIM_EQ_ALT）
+- `cross_dot_fully_surrounded_fan` / `_ge_fan`
+  （Kepler/Text/Planarity.lean:2860/2876）
+- `aff_gt_1_2`（Kepler/Text/Planarity.lean:165）
+- `notcoplanar_imp_notcollinear_fan`（Kepler/Text/PlanarityNotCut.lean:2298）
+- `inequality4_aim_in_convex_fan`（Kepler/Text/PlanarityNotCut.lean:2474）
+- `conditions_in_rcone_fan` / `aff_gt_imp_not_collinear`（本文件 batch 1） -/
+theorem exists_point_inside_domain_cone_fan {x v u w w2 : V3} {V : Set V3}
+    {E : Set (Set V3)} {s : ℝ}
+    (hfan : FAN x V E) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hsigma : sigmaFan x V E u w = v) (hs : 0 < s) (hsπ : s < Real.pi / 2)
+    (hfan80 : fan80 x V E)
+    (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard) :
+    ∃ y : V3, y ∈ rwDartFan x V E (x, u, w, w2) (Real.cos s) ∧
+      azim x v u y < azim x v u w := by
+  sorry
+
+/-- HOL planarity.hl:10329-10384 `cut_in_angle_fan`
+
+HOL 原文：
+```
+!x:real^3 v:real^3 u:real^3 w:real^3 y:real^3.
+ ~coplanar {x,v,u,w} /\ ~collinear {x,u,y}
+/\ &0< azim x u w v /\ azim x u w v< pi
+/\ azim x u w y< azim x u w v /\ &0< azim x u w y
+==> let a1=(v-x):real^3 in
+    let a2=w-x:real^3 in
+    let a3=(y-x):real^3 in
+    let a4=(u-x) :real^3 in
+        let va=a1 cross a2:real^3 in
+    let vb=a3 cross a4:real^3 in
+    let v3= (vb:real^3) cross (va:real^3)+(x:real^3)
+in v3 IN aff_gt {x} {v,w:real^3}
+```
+
+证明思路：`notcoplanar_imp_notcollinear_fan` 给 ¬Collinear3 x v w 等；
+`aff_gt_1_2` 展开目标，取系数 t1 = 1 - vb⬝a4 + vb⬝a1、
+t2 = vb⬝a4、t3 = -(vb⬝a1)（a1 = v-x、a2 = w-x、a3 = y-x、
+a4 = u-x、va = a1×a2、vb = a3×a4）。t3 > 0 由
+`cross_dot_fully_surrounded_fan`（h2/h1 先给 azim x u w y < π，
+`sum4_azim_fan` 转成 0 < azim x u y v < π）；向量恒等式经
+CROSS_LAGRANGE（Mathlib `cross_dot_cross`）展开验证。
+编码注记：HOL 的 let 绑定按定义内联为嵌套叉积表达式；
+仓库无公开 V3 级叉积，沿用 Pi 侧 `crossProduct` + `WithLp.toLp 2`
+习惯写法（同本文件 `condition_to_in_aff_gt_by_angle` 与
+`cross_dot_fully_surrounded_fan`）。
+
+候选已有引理：
+- `notcoplanar_imp_notcollinear_fan`（Kepler/Text/PlanarityNotCut.lean:2298）
+- `aff_gt_1_2`（Kepler/Text/Planarity.lean:165）
+- `cross_dot_fully_surrounded_fan`（Kepler/Text/Planarity.lean:2860）
+- `sum4_azim_fan`（Kepler/Text/TopologyFan.lean:1105）
+- Mathlib `cross_dot_cross`（Mathlib/LinearAlgebra/CrossProduct.lean:111，
+  CROSS_LAGRANGE）、`cross_cross_eq_smul_sub_smul'`（CROSS_TRIPLE 侧） -/
+theorem cut_in_angle_fan {x v u w y : V3}
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) (hnc : ¬ Collinear3 x u y)
+    (h0 : 0 < azim x u w v) (h1 : azim x u w v < Real.pi)
+    (h2 : azim x u w y < azim x u w v) (h3 : 0 < azim x u w y) :
+    ((WithLp.toLp 2 (crossProduct
+        (crossProduct ((y - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ))
+        (crossProduct ((v - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ))) : V3) + x) ∈
+      affGt {x} {v, w} := by
+  sorry
+
+/-- HOL planarity.hl:10385-10426 `aff_gt_1_2_scale_fan`
+
+HOL 原文：
+```
+!x:real^3 v:real^3 u:real^3 w:real^3 a:real.
+&0< a /\ a % (u-x)= w-x /\ ~collinear {x,w,v}
+==> aff_gt {x} {u,v} =aff_gt {x} {w,v}
+```
+
+证明思路：由 a • (u - x) = w - x 得 u - x = a⁻¹ • (w - x)。
+两侧各用 `aff_gt_1_2`（Disjoint 由 ¬Collinear3 x w v 导出，
+做法同本文件 `conditions_in_rcone_fan`；HOL 的 `th3` 未移植）
+展开为系数组合后双向映射系数：t1' = 1 - a*t2 - t3、
+t2' = a*t2、t3' = t3（反向用 a⁻¹），正性由 a > 0 与 a⁻¹ > 0
+（HOL COLLINEAR_SPECIAL_SCALE 对应 `collinear3_iff_smul` 型
+缩放论证）。HOL 的 GEOM_ORIGIN_TAC（平移原点）不必要：
+`aff_gt_1_2` 组合式已带 t1 系数。
+
+候选已有引理：
+- `aff_gt_1_2`（Kepler/Text/Planarity.lean:165）
+- `collinear3_iff_smul`（Kepler/Geom/Azim.lean:86，COLLINEAR_SPECIAL_SCALE 角色）
+- `conditions_in_rcone_fan`（本文件 batch 1，Disjoint 内联推导模板） -/
+theorem aff_gt_1_2_scale_fan {x v u w : V3} {a : ℝ}
+    (ha : 0 < a) (hscale : a • (u - x) = w - x)
+    (hnc : ¬ Collinear3 x w v) :
+    affGt {x} {u, v} = affGt {x} {w, v} := by
+  sorry
+
+/-- HOL planarity.hl:10427-10570 `exists_cut_rcone_fan_with_edge_run_fan`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) v:real^3 u:real^3 w:real^3 s:real.
+FAN(x,V,E)/\ {v,u} IN E /\ {u,w} IN E
+/\ sigma_fan x V E u w = v
+/\ &0<s /\ s<pi/ &2
+/\ fan80(x,V,E)
+/\ (!v. v IN V==>CARD (set_of_edge v V E) >1)
+==>
+(?t:real. &0< t /\ t< &1 /\
+~(rw_dart_fan x V E ((x:real^3),(u:real^3),(w:real^3),(sigma_fan x V E u w:real^3)) (cos(s)) INTER aff_gt {x} {v, (&1-t)%u+t%w}={}))
+```
+
+证明思路：与 `exists_point_inside_domain_cone_fan` 相同的 fan80 /
+fully-surrounded 前奏；`CARD = 1` 分支与 hcard u 矛盾。CARD > 1 时
+`inequality3_aim_in_convex_fan` 给弦内点方位角严格介于 0 与
+azim x u w v；`exists_point_inside_domain_cone_fan`（本批上文）给
+y ∈ rw_dart(cos s) 且 azim x v u y < azim x v u w。再以
+`cut_in_angle_fan`（实例 [x;w;v;u;y]，四元组换序 + let_CONV）得
+v3 ∈ aff_gt {x,w} {v,u}；`scale_in_edges_fan`（本文件 batch 1）
+给 a、t 使 a • (v3 - x) = (1-t) • u + t • w - x，EXISTS_TAC t；
+成员资格经 `aff_gt_1_2_scale_fan`（本批上文）、
+`continuous_coplanar_fan`、`notcoplanar_imp_notcollinear_fan`、
+`azim_compl` / `azim_eq_azim_iff`（AZIM_EQ_ALT）、
+`inequality4_aim_in_convex_fan`、`angle_is_smallpi_fan`（batch 1）
+与 `conditions_in_rcone_fan`（batch 1）合并（witness 为 y）。
+
+候选已有引理：
+- `exists_point_inside_domain_cone_fan` / `cut_in_angle_fan` /
+  `aff_gt_1_2_scale_fan`（本批上文）
+- `inequality3_aim_in_convex_fan`（Kepler/Text/Planarity.lean:2009）
+- `inequality4_aim_in_convex_fan`（Kepler/Text/PlanarityNotCut.lean:2474）
+- `scale_in_edges_fan` / `conditions_in_rcone_fan` /
+  `angle_is_smallpi_fan`（本文件 batch 1）
+- `continuous_coplanar_fan`（Kepler/Text/Planarity.lean:1142）
+- `notcoplanar_imp_notcollinear_fan`（Kepler/Text/PlanarityNotCut.lean:2298）
+- `azim_compl`（Kepler/Geom/AzimLemmas.lean:318）、
+  `azim_eq_azim_iff`（Kepler/Geom/AzimLemmas.lean:193） -/
+theorem exists_cut_rcone_fan_with_edge_run_fan {x v u w : V3} {V : Set V3}
+    {E : Set (Set V3)} {s : ℝ}
+    (hfan : FAN x V E) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hsigma : sigmaFan x V E u w = v) (hs : 0 < s) (hsπ : s < Real.pi / 2)
+    (hfan80 : fan80 x V E)
+    (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard) :
+    ∃ t : ℝ, 0 < t ∧ t < 1 ∧
+      (rwDartFan x V E (x, u, w, sigmaFan x V E u w) (Real.cos s) ∩
+        affGt {x} {v, (1 - t) • u + t • w}) ≠ ∅ := by
+  sorry
+
+/-- HOL planarity.hl:10571-10612 `aff_gt_in_rw_dart_fan`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) v:real^3 u:real^3 w:real^3 y:real^3 s:real.
+FAN(x,V,E)/\ {v,u} IN E /\ {u,w} IN E
+/\ sigma_fan x V E u w = v
+/\ &0<s /\ s<pi/ &2
+/\ y IN rw_dart_fan x V E ((x:real^3),(u:real^3),(w:real^3),(v:real^3)) (cos(s))
+/\ fan80(x,V,E)
+/\ (!v. v IN V==>CARD (set_of_edge v V E) >1)
+==> aff_gt {x} {u,y} SUBSET rw_dart_fan x V E ((x:real^3),(u:real^3),(w:real^3),(sigma_fan x V E u w:real^3)) (cos(s))
+```
+
+证明思路：`CARD = 1` 分支与 hcard u 矛盾。CARD > 1 时
+`rwDartFan` 展开为 `wedge x u w (sigmaFan …) ∩ rconeFan x u (cos s)`
+（wedge 用 sigmaFan 而非四元组第 4 分量）。取 x' ∈ aff_gt {x} {u,y}：
+`aff_gt_inter_aff_gt` 分解出 x' ∈ aff_gt {x,u} {y}；
+`aff_gt_imp_not_collinear`（batch 1）+ `azim_eq_azim_iff`（AZIM_EQ_ALT）
+把 wedge 界 `azim x u w y < azim x u w (sigmaFan …)` 转移到 x'；
+rcone 侧由 `conditions_in_rcone_fan`（batch 1，EXISTS_TAC y，
+锥轴为 u）转移到 x'。
+
+候选已有引理：
+- `aff_gt_inter_aff_gt`（Kepler/Text/Planarity.lean:4078）
+- `aff_gt_imp_not_collinear` / `conditions_in_rcone_fan`（本文件 batch 1）
+- `azim_eq_azim_iff`（Kepler/Geom/AzimLemmas.lean:193，AZIM_EQ_ALT）
+- `fan_not_collinear` / `edge_ne_of_fan`（Kepler/Text/Fan.lean:342/1038，
+  HOL remark1_fan 的互异性分量） -/
+theorem aff_gt_in_rw_dart_fan {x v u w y : V3} {V : Set V3} {E : Set (Set V3)}
+    {s : ℝ}
+    (hfan : FAN x V E) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hsigma : sigmaFan x V E u w = v) (hs : 0 < s) (hsπ : s < Real.pi / 2)
+    (hy : y ∈ rwDartFan x V E (x, u, w, v) (Real.cos s))
+    (hfan80 : fan80 x V E)
+    (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard) :
+    affGt {x} {u, y} ⊆ rwDartFan x V E (x, u, w, sigmaFan x V E u w)
+      (Real.cos s) := by
+  sorry
+
+/-- HOL planarity.hl:10613-10623 `in_aff_gt_1_2`
+
+HOL 原文：
+```
+!x:real^3 v:real^3 u:real^3 t:real.
+DISJOINT {x} {v,u} /\ &0< t /\ t< &1==>  (&1-t)% v+ t% u IN aff_gt {x} {v,u}
+```
+
+证明思路：`aff_gt_1_2` 展开后取系数 (0, 1-t, t)：三系数和为 1、
+1 - t > 0 与 t > 0 由 ht/ht1，向量恒等式 `module` 即得
+（HOL 用 VECTOR_ARITH）。
+
+候选已有引理：
+- `aff_gt_1_2`（Kepler/Text/Planarity.lean:165） -/
+theorem in_aff_gt_1_2 {x v u : V3} {t : ℝ}
+    (hdis : Disjoint ({x} : Set V3) {v, u}) (ht : 0 < t) (ht1 : t < 1) :
+    (1 - t) • v + t • u ∈ affGt {x} {v, u} := by
+  sorry
+
+/-- HOL planarity.hl:10624-10806 `exists_rw_dart_inter_aff_gt1_fan`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) v:real^3 u:real^3 w:real^3 s:real.
+FAN(x,V,E)/\ {v,u} IN E /\ {u,w} IN E
+/\ sigma_fan x V E u w = v
+/\ &0<s /\ s<pi/ &2
+/\ fan80(x,V,E)
+/\ (!v. v IN V==>CARD (set_of_edge v V E) >1)
+==>
+(?h:real. &0< h /\
+(!t:real. &0< t /\ t< h==>
+~(rw_dart_fan x V E ((x:real^3),(u:real^3),(w:real^3),(sigma_fan x V E u w:real^3)) (cos(s)) INTER aff_gt {x} {v, (&1-t)%u+t%w}={})
+))
+```
+
+证明思路：`CARD = 1` 分支与 hcard u 矛盾。CARD > 1 时
+`exists_cut_rcone_fan_with_edge_run_fan`（本批上文）给 t0 ∈ (0,1)
+使交集非空，取 h := t0。对每个 t' < t0 记 vt = (1-t')•u + t'•w：
+`in_aff_gt_1_2`（本批上文）+ `aff_gt_inter_aff_gt` +
+`continuous_coplanar_fan` 维持非退化；两次 `cut_in_angle_fan`
+（[x;v;u;vt;y] 给 v3 ∈ aff_gt {x} {v,vt} 侧、[x;y;v;u;vt] 经
+叉积反对称归一给 v3 ∈ aff_gt {x} {u,y} 侧），
+`aff_gt_in_rw_dart_fan`（本批上文）把 aff_gt {x} {u,y} 整体纳入
+rw_dart；楔形严格性经 `azim_eq_azim_iff`（AZIM_EQ_ALT）、
+`azim_compl`、`inequality4_aim_in_convex_fan`（比例 t⁻¹*t'）、
+`angle_is_smallpi_fan`（batch 1）与 `azim_eq_zero_iff` 合成。
+
+候选已有引理：
+- `exists_cut_rcone_fan_with_edge_run_fan` / `cut_in_angle_fan` /
+  `in_aff_gt_1_2` / `aff_gt_in_rw_dart_fan`（本批上文）
+- `aff_gt_inter_aff_gt`（Kepler/Text/Planarity.lean:4078）
+- `continuous_coplanar_fan`（Kepler/Text/Planarity.lean:1142）
+- `inequality4_aim_in_convex_fan`（Kepler/Text/PlanarityNotCut.lean:2474）
+- `angle_is_smallpi_fan`（本文件 batch 1）
+- `azim_eq_azim_iff`（Kepler/Geom/AzimLemmas.lean:193）、
+  `azim_compl`（Kepler/Geom/AzimLemmas.lean:318）、
+  `azim_eq_zero_iff`（Kepler/Geom/AzimLemmas.lean:296） -/
+theorem exists_rw_dart_inter_aff_gt1_fan {x v u w : V3} {V : Set V3}
+    {E : Set (Set V3)} {s : ℝ}
+    (hfan : FAN x V E) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
+    (hsigma : sigmaFan x V E u w = v) (hs : 0 < s) (hsπ : s < Real.pi / 2)
+    (hfan80 : fan80 x V E)
+    (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard) :
+    ∃ h : ℝ, 0 < h ∧
+      ∀ t : ℝ, 0 < t → t < h →
+        (rwDartFan x V E (x, u, w, sigmaFan x V E u w) (Real.cos s) ∩
+          affGt {x} {v, (1 - t) • u + t • w}) ≠ ∅ := by
+  sorry
+
 end Kepler.Text
