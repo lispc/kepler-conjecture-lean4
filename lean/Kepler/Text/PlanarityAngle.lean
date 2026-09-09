@@ -659,7 +659,11 @@ theorem angle_is_smallpi_fan {x v u w : V3} {V : Set V3} {E : Set (Set V3)}
     (hsigma : sigmaFan x V E u w = v) (hfan80 : fan80 x V E)
     (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard) :
     0 < azim x v u w ∧ azim x v u w < Real.pi := by
-  sorry
+  obtain ⟨hθ0, hθπ⟩ := hfan80 u w huw
+  rw [hsigma] at hθ0 hθπ
+  have hcop : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan hvu huw hθ0 hθπ
+  exact properties_of_fully_surrounded1_fan hcop hθ0 hθπ
 
 /-! ## rw_dart 与 aff_gt 相交（planarity.hl:9680-9980，最难一块） -/
 
