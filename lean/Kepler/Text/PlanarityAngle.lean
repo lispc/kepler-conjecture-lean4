@@ -16,10 +16,10 @@ angle/cone theorems
 - `aff_gt_imp_not_collinear` (10020)
 - `conditions_in_rcone_fan` (10051)
 
-SKELETON ONLY: every proof below is `sorry`; a worker pool fills them
-mechanically from the per-theorem HOL proof sketch in the docstring
-(the verbatim HOL statement is included so the worker never needs to
-open the .hl file). `lake env lean` green with all sorries.
+Porting method: skeleton (frozen statements + per-theorem HOL docstrings)
+designed by glm-5.3, proofs filled by the auto_loop/big-pickle harness,
+each commit gated on build+axioms+signature-freeze, batch-audited by the
+main agent. All 8 theorems fully proved, zero sorry.
 
 Encoding notes (gaps / closest existing encodings):
 - HOL `e1_fan`/`e2_fan`/`e3_fan` ↔ `e1Fan`/`e2Fan`/`e3Fan`
