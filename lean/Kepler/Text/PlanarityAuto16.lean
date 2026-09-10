@@ -247,7 +247,11 @@ theorem CARD_GT1_IMP_AZIM_FAN_EQ_AZIM
     (hy : y ∈ dartOfFan V E)
     (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard) :
     azimFan x V E y.1 y.2 = azim x y.1 y.2 (sigmaFan x V E y.1 y.2) := by
-  sorry
+  have he : {y.1, y.2} ∈ E := IN_D1_FAN_IMP_EDGE_FAN hfan hcard hy
+  have hyV : y.1 ∈ V := (FAN_in_setOfEdge x V E y.1 y.2 hfan he).1
+  have h : 1 < (setOfEdge y.1 V E).ncard := hcard y.1 hyV
+  unfold azimFan
+  rw [if_pos h]
 
 /-- HOL planarity.hl :15333-15369 `CARD_GT1_IMP_AZIM_FAN_EQ_DIHV`
 
