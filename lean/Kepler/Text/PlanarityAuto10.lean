@@ -276,6 +276,37 @@ theorem aff_gt_2_1r_rcross_dotl_4point (x y z v u : V3) :
   rw [hA3, smul_zero, add_zero, smul_eq_mul]
   exact mul_pos hc hpos
 
+private lemma crossProduct_add_left (p q r : Fin 3 → ℝ) :
+    crossProduct (p + q) r = crossProduct p r + crossProduct q r := by
+  rw [map_add, LinearMap.add_apply]
+
+private lemma crossProduct_smul_left (c : ℝ) (p r : Fin 3 → ℝ) :
+    crossProduct (c • p) r = c • crossProduct p r := by
+  rw [map_smul, LinearMap.smul_apply]
+
+private lemma cross_dot_combo3 (a b c : Fin 3 → ℝ) (s t : ℝ) :
+    crossProduct (s • a + t • b) c ⬝ᵥ a = t * (crossProduct b c ⬝ᵥ a) := by
+  simp only [crossProduct_add_left, crossProduct_smul_left, add_dotProduct,
+    smul_dotProduct]
+  have h : crossProduct a c ⬝ᵥ a = 0 := by
+    rw [dotProduct_comm, dot_self_cross]
+  rw [h, smul_zero, zero_add, smul_eq_mul]
+
+private lemma cross_dot_combo4 (a b c : Fin 3 → ℝ) (s t : ℝ) :
+    -(crossProduct (s • a + t • b) c ⬝ᵥ b) = s * (crossProduct b c ⬝ᵥ a) := by
+  simp only [crossProduct_add_left, crossProduct_smul_left, add_dotProduct,
+    smul_dotProduct]
+  have hb : crossProduct b c ⬝ᵥ b = 0 := by
+    rw [dotProduct_comm, dot_self_cross]
+  have hab : crossProduct a c ⬝ᵥ b = -(crossProduct b c ⬝ᵥ a) := by
+    rw [dotProduct_comm (crossProduct a c) b]
+    rw [triple_product_permutation]
+    rw [← cross_anticomm]
+    rw [dotProduct_neg]
+    rw [dotProduct_comm (crossProduct b c) a]
+  rw [hb, smul_zero, add_zero, hab, smul_eq_mul]
+  ring
+
 /-- HOL planarity.hl :12913-12946 `aff_gt_1_2_cross_dotr_4point`
 
 HOL 原文：
@@ -312,7 +343,45 @@ theorem aff_gt_1_2_cross_dotr_4point (x y z v u : V3) :
       ((a3 : V3) : Fin 3 → ℝ)) →
     (0 < -((crossProduct ((a1 : V3) : Fin 3 → ℝ) ((a2 : V3) : Fin 3 → ℝ)) ⬝ᵥ
       ((a4 : V3) : Fin 3 → ℝ))) := by
-  sorry
+  dsimp only
+  intro hnc hgt hpos
+  have hxv : x ≠ v := fun he =>
+    hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) he.symm)
+  have hxu : x ≠ u := fun he =>
+    hnc (collinear3_pair_left (v0 := x) (v1 := v) (x := u) he.symm)
+  have hdis : Disjoint ({x} : Set V3) ({v, u} : Set V3) := by
+    rw [Set.disjoint_singleton_left]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+    exact ⟨hxv, hxu⟩
+  rw [aff_gt_1_2 (x := x) (v := v) (w := u) hdis, Set.mem_setOf_eq] at hgt
+  obtain ⟨t1, t2, t3, ht2, ht3, hsum, hy_eq⟩ := hgt
+  have ht1 : t1 = 1 - t2 - t3 := by linarith
+  have ha1 : (y - x : V3) = t2 • (v - x) + t3 • (u - x) := by
+    rw [hy_eq, ht1]
+    module
+  have ha1' : ((y - x : V3) : Fin 3 → ℝ) =
+      t2 • ((v - x : V3) : Fin 3 → ℝ) + t3 • ((u - x : V3) : Fin 3 → ℝ) := by
+    rw [ha1]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul]
+  have hA : crossProduct ((y - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((v - x : V3) : Fin 3 → ℝ) =
+      t3 * (crossProduct ((u - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((v - x : V3) : Fin 3 → ℝ)) := by
+    rw [ha1']
+    exact cross_dot_combo3 _ _ _ t2 t3
+  have hB : -(crossProduct ((y - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((u - x : V3) : Fin 3 → ℝ)) =
+      t2 * (crossProduct ((u - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((v - x : V3) : Fin 3 → ℝ)) := by
+    rw [ha1']
+    exact cross_dot_combo4 _ _ _ t2 t3
+  have hc : 0 < crossProduct ((u - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((v - x : V3) : Fin 3 → ℝ) := by
+    have h' := hpos
+    rw [hA] at h'
+    exact pos_of_mul_pos_right h' ht3.le
+  rw [hB]
+  exact mul_pos ht2 hc
 
 /-- HOL planarity.hl :12952-12987 `aff_gt_1_2_cross_dotr_4point_neg`
 
