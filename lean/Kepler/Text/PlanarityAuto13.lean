@@ -584,6 +584,39 @@ HOL 原文：
 theorem POINT_IN_CLOSURE_AFF_GT_1_2 (x v u : V3)
     (hxv : x ≠ v) (hxu : x ≠ u) (hvu : v ≠ u) :
     v ∈ closure (affGt ({x} : Set V3) ({v, u} : Set V3)) := by
-  sorry
+  have hdis : Disjoint ({x} : Set V3) ({v, u} : Set V3) := by
+    rw [Set.disjoint_left]
+    intro a ha hb
+    rw [Set.mem_singleton_iff] at ha
+    subst ha
+    rw [Set.mem_insert_iff, Set.mem_singleton_iff] at hb
+    rcases hb with h | h
+    · exact hxv h
+    · exact hxu h
+  rw [Metric.mem_closure_iff]
+  intro ε hε
+  have huv_pos : 0 < ‖u - v‖ := norm_pos_iff.mpr (sub_ne_zero.mpr (Ne.symm hvu))
+  set t3 : ℝ := min (ε / (2 * ‖u - v‖)) (1 / 2) with ht3def
+  have ht3pos : 0 < t3 := by
+    rw [ht3def]
+    exact lt_min (div_pos hε (by linarith [huv_pos])) (by norm_num)
+  have ht3le : t3 ≤ ε / (2 * ‖u - v‖) := by
+    rw [ht3def]; exact min_le_left _ _
+  have ht3half : t3 ≤ 1 / 2 := by
+    rw [ht3def]; exact min_le_right _ _
+  have ht2pos : 0 < 1 - t3 := by linarith
+  refine ⟨(1 - t3) • v + t3 • u, ?_, ?_⟩
+  · rw [aff_gt_1_2 hdis, Set.mem_setOf_eq]
+    exact ⟨0, 1 - t3, t3, ht2pos, ht3pos, by ring, by simp⟩
+  · rw [dist_eq_norm]
+    have hsub : v - ((1 - t3) • v + t3 • u) = t3 • (v - u) := by module
+    rw [hsub, norm_smul, Real.norm_eq_abs, abs_of_pos ht3pos, norm_sub_rev]
+    have hle : t3 * ‖u - v‖ ≤ ε / 2 := by
+      calc t3 * ‖u - v‖ ≤ (ε / (2 * ‖u - v‖)) * ‖u - v‖ :=
+            mul_le_mul_of_nonneg_right ht3le (norm_nonneg _)
+        _ = ε / 2 := by
+              rw [div_mul_eq_mul_div]
+              field_simp [huv_pos.ne']
+    linarith [half_lt_self hε]
 
 end Kepler.Text
