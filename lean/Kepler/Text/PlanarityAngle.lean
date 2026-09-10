@@ -1194,6 +1194,36 @@ theorem conditions_in_rcone_fan {x v u w : V3} {s : ℝ}
 
 /-! ## 锥内取点与弦切割（planarity.hl:10096-10806，batch 2 skeleton） -/
 
+/-- 三点仿射包成员（Planarity 私有引理 `mem_affineSpan_triple_of_eq` 的复制）。 -/
+private theorem mem_affineSpan_triple_of_eq_pa {x p q y : V3} {c h : ℝ}
+    (hy : y = x + c • (q - x) + h • (p - x)) :
+    y ∈ (affineSpan ℝ ({x, p, q} : Set V3) : Set V3) := by
+  have hxS : x ∈ affineSpan ℝ ({x, p, q} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hpS : p ∈ affineSpan ℝ ({x, p, q} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hqS : q ∈ affineSpan ℝ ({x, p, q} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hd3 : c • (q - x) ∈ (affineSpan ℝ ({x, p, q} : Set V3)).direction :=
+    Submodule.smul_mem _ c (AffineSubspace.vsub_mem_direction hqS hxS)
+  have hd4 : h • (p - x) ∈ (affineSpan ℝ ({x, p, q} : Set V3)).direction :=
+    Submodule.smul_mem _ h (AffineSubspace.vsub_mem_direction hpS hxS)
+  have hd5 : c • (q - x) + h • (p - x) ∈ (affineSpan ℝ ({x, p, q} : Set V3)).direction :=
+    Submodule.add_mem _ hd3 hd4
+  have hval : y = h • (p - x) +ᵥ (c • (q - x) +ᵥ x) := by
+    rw [hy, vadd_eq_add, vadd_eq_add]
+    abel
+  rw [hval]
+  exact AffineSubspace.vadd_mem_of_mem_direction hd4
+    (AffineSubspace.vadd_mem_of_mem_direction hd3 hxS)
+
+/-- 混合积轮换（Planarity 私有引理 `cross_dot_cycle` 的复制）。 -/
+private theorem cross_dot_cycle_pa {X Y Z : Fin 3 → ℝ} :
+    crossProduct X Y ⬝ᵥ Z = crossProduct Y Z ⬝ᵥ X := by
+  rw [dotProduct_comm, triple_product_permutation, dotProduct_comm]
+
+/-- 叉积第二变元的标量分配（Planarity 私有引理的复制）。 -/
+private theorem crossProduct_smul_right_pa (c : ℝ) (p q : Fin 3 → ℝ) :
+    crossProduct p (c • q) = c • crossProduct p q :=
+  (crossProduct p).map_smul c q
+
 /-- HOL planarity.hl:10096-10328 `exists_point_inside_domain_cone_fan`
 
 HOL 原文：
@@ -1249,7 +1279,294 @@ theorem exists_point_inside_domain_cone_fan {x v u w w2 : V3} {V : Set V3}
     (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard) :
     ∃ y : V3, y ∈ rwDartFan x V E (x, u, w, w2) (Real.cos s) ∧
       azim x v u y < azim x v u w := by
-  sorry
+  -- 基本成员与 fan80 角度（HOL：fan80 + remark1_fan）
+  have huV : u ∈ V := (fan_mem_of_edge hfan huw).1
+  have hcardu : 1 < (setOfEdge u V E).ncard := hcard u huV
+  obtain ⟨hθ0, hθπ⟩ := hfan80 u w huw
+  rw [hsigma] at hθ0 hθπ
+  -- 非共面/非共线基本盘
+  have hcop : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan hvu huw hθ0 hθπ
+  obtain ⟨hncuw, hncvu, hncvw⟩ := notcoplanar_imp_notcollinear_fan hcop
+  have hncuv : ¬ Collinear3 x u v := fun hc => hncvu (collinear3_swap_anc hc)
+  have hux : u ≠ x := fun he => hncuw (collinear3_of_eq he)
+  -- 取 y ∈ rwDart（not_empty_rw_dart_fan；rwDartFan 不依赖四元组第 4 分量）
+  obtain ⟨y, hyr⟩ := not_empty_rw_dart_fan (v := u) (u := w) hfan huw hs hsπ
+  rw [hsigma] at hyr
+  have hyr2 : y ∈ rwDartFan x V E (x, u, w, w2) (Real.cos s) := by
+    have heq : rwDartFan x V E (x, u, w, w2) (Real.cos s)
+        = rwDartFan x V E (x, u, w, v) (Real.cos s) := by
+      simp only [rwDartFan, wDartFan]
+    rw [heq]
+    exact hyr
+  -- 拆分 rwDart：wedge + rcone
+  have hycone : y ∈ rconeFan x u (Real.cos s) := by
+    have h1 : y ∈ rwDartFan x V E (x, u, w, v) (Real.cos s) := hyr
+    rw [rwDartFan] at h1
+    exact h1.2
+  have hywedge : y ∈ wedge x u w v := by
+    have h1 : y ∈ rwDartFan x V E (x, u, w, v) (Real.cos s) := hyr
+    rw [rwDartFan] at h1
+    have h2 := h1.1
+    rw [wDartFan, if_pos hcardu, hsigma] at h2
+    exact h2
+  rw [wedge, Set.mem_setOf_eq] at hywedge
+  obtain ⟨hncuy, h0y, hyv⟩ := hywedge
+  -- 三点角加法（HOL sum4_azim_fan）→ azim x u y v ∈ (0, π)
+  have hsum : azim x u w v = azim x u w y + azim x u y v :=
+    sum4_azim_fan hux hncuw hncuy hncuv (le_of_lt hyv)
+  have h0yv : 0 < azim x u y v := by linarith
+  have hyvpi : azim x u y v < Real.pi := by linarith
+  -- 混合积正性（HOL cross_dot_fully_surrounded_fan[x;u;y;v] 侧）：
+  -- 0 < (u-x)×(y-x)⬝(v-x)
+  have hD1 : 0 < crossProduct ((u - x : V3) : Fin 3 → ℝ) ((y - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((v - x : V3) : Fin 3 → ℝ) :=
+    cross_dot_fully_surrounded_fan (v1 := u) (v := y) (u1 := v) hncuv hncuy h0yv hyvpi
+  -- ¬Collinear3 x v y：y = x 时 azim x u w y = 0 矛盾；y - x ∥ v - x 时混合积为 0 矛盾
+  have hncvy : ¬ Collinear3 x v y := by
+    intro hcol
+    rcases eq_or_ne y x with hyx | hyx
+    · exfalso
+      have h0 : azim x u w y = 0 := by
+        rw [hyx]
+        show (if Collinear3 x u w ∨ Collinear3 x u x then (0 : ℝ)
+            else Classical.epsilon _) = 0
+        rw [if_pos (Or.inr (collinear3_pair_left rfl))]
+      linarith
+    · exfalso
+      have hxv : x ≠ v := fun he => hncvu (by rw [he]; exact collinear3_of_eq rfl)
+      obtain ⟨μ, hμ⟩ := (collinear3_iff_smul (Ne.symm hxv)).mp hcol
+      have hcoe : ((y - x : V3) : Fin 3 → ℝ) = μ • ((v - x : V3) : Fin 3 → ℝ) := by
+        rw [← coe_smul_aux]
+        exact congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hμ
+      have hzero : crossProduct ((u - x : V3) : Fin 3 → ℝ) ((y - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+          ((v - x : V3) : Fin 3 → ℝ) = 0 := by
+        rw [hcoe, crossProduct_smul_right_pa, smul_dotProduct, smul_eq_mul,
+          dotProduct_comm (crossProduct ((u - x : V3) : Fin 3 → ℝ)
+            ((v - x : V3) : Fin 3 → ℝ)) ((v - x : V3) : Fin 3 → ℝ),
+          dot_cross_self, mul_zero]
+      linarith
+  -- 主分支：azim x v u y 与 π 的比较（HOL 分支 4 的矛盾，含 = π 情形）
+  rcases lt_or_ge (azim x v u y) Real.pi with hvyπ | hvypi
+  · -- azim x v u y < π
+    rcases (lt_or_ge (azim x v u y) (azim x v u w)).symm with hlewy | hlty
+    · -- 大支：azim x v u w ≤ azim x v u y，构造 v3 / v4（HOL 分支 5a）
+      -- 记号（HOL ABBREV）：a1 = v-x, a2 = y-x, a3 = u-x, a4 = w-x
+      obtain ⟨a1, ha1⟩ : ∃ f : Fin 3 → ℝ, f = ((v - x : V3) : Fin 3 → ℝ) := ⟨_, rfl⟩
+      obtain ⟨a2, ha2⟩ : ∃ f : Fin 3 → ℝ, f = ((y - x : V3) : Fin 3 → ℝ) := ⟨_, rfl⟩
+      obtain ⟨a3, ha3⟩ : ∃ f : Fin 3 → ℝ, f = ((u - x : V3) : Fin 3 → ℝ) := ⟨_, rfl⟩
+      obtain ⟨a4, ha4⟩ : ∃ f : Fin 3 → ℝ, f = ((w - x : V3) : Fin 3 → ℝ) := ⟨_, rfl⟩
+      -- 混合积正性（HOL cross_dot_fully_surrounded_fan[x;u;v;w] 侧）：
+      -- 0 < (u-x)×(w-x)⬝(v-x)
+      have hP1 : 0 < crossProduct ((u - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+          ((v - x : V3) : Fin 3 → ℝ) :=
+        cross_dot_fully_surrounded_fan (v1 := u) (v := w) (u1 := v) hncuv hncuw hθ0 hθπ
+      rw [← ha3, ← ha4, ← ha1] at hP1
+      rw [← ha3, ← ha2, ← ha1] at hD1
+      -- 系数正性（HOL 子目标 6/8 的 t3 / t3' > 0）
+      have ht3 : 0 < -(crossProduct a1 a4 ⬝ᵥ a3) := by
+        rw [cross_dot_cycle_pa, ← cross_anticomm, neg_dotProduct, neg_neg]
+        exact hP1
+      have ht3' : 0 < -(crossProduct a2 a3 ⬝ᵥ a1) := by
+        rw [← cross_anticomm, neg_dotProduct, neg_neg]
+        exact hD1
+      -- v3 := (a2×a3)×(a1×a4) + x（HOL ABBREV v3）
+      obtain ⟨v3, hv3⟩ : ∃ z : V3,
+          z = (WithLp.toLp 2 (crossProduct (crossProduct a2 a3)
+            (crossProduct a1 a4)) : V3) + x := ⟨_, rfl⟩
+      have hv3x : v3 - x = (WithLp.toLp 2 (crossProduct (crossProduct a2 a3)
+          (crossProduct a1 a4)) : V3) := by
+        rw [hv3]; module
+      -- CROSS_LAGRANGE 两种展开
+      have hE1 : v3 - x = (crossProduct a2 a3 ⬝ᵥ a4) • (v - x)
+          - (crossProduct a2 a3 ⬝ᵥ a1) • (w - x) := by
+        have hc := cross_cross_eq_smul_sub_smul' (crossProduct a2 a3) a1 a4
+        rw [dotProduct_comm a1 (crossProduct a2 a3)] at hc
+        rw [hv3x]
+        have hx1 : (v - x : V3) = (WithLp.toLp 2 a1 : V3) := by
+          rw [ha1]
+        have hx4 : (w - x : V3) = (WithLp.toLp 2 a4 : V3) := by
+          rw [ha4]
+        rw [hx1, hx4, ← WithLp.toLp_smul, ← WithLp.toLp_smul, ← WithLp.toLp_sub, hc]
+      have hE2 : v3 - x = (crossProduct a1 a4 ⬝ᵥ a2) • (u - x)
+          - (crossProduct a1 a4 ⬝ᵥ a3) • (y - x) := by
+        have hc2 := cross_cross_eq_smul_sub_smul' (crossProduct a1 a4) a2 a3
+        rw [dotProduct_comm a2 (crossProduct a1 a4)] at hc2
+        have hanti : crossProduct (crossProduct a2 a3) (crossProduct a1 a4)
+            = -crossProduct (crossProduct a1 a4) (crossProduct a2 a3) :=
+          (cross_anticomm (crossProduct a1 a4) (crossProduct a2 a3)).symm
+        rw [hv3x]
+        have hx3 : (u - x : V3) = (WithLp.toLp 2 a3 : V3) := by
+          rw [ha3]
+        have hxy : (y - x : V3) = (WithLp.toLp 2 a2 : V3) := by
+          rw [ha2]
+        rw [hx3, hxy, ← WithLp.toLp_smul, ← WithLp.toLp_smul, ← WithLp.toLp_sub,
+          hanti, hc2, neg_sub]
+      -- 非退化（th3 的角色）
+      have hxv : x ≠ v := fun he => hncvu (by rw [he]; exact collinear3_of_eq rfl)
+      have hwx : w ≠ x := fun he => hncvw (by rw [he]; exact collinear3_pair_left rfl)
+      have hwv : w ≠ v := fun he => hncvw (by rw [he]; exact collinear3_pair_right rfl)
+      have hyx : y ≠ x := fun he => hncuy (by rw [he]; exact collinear3_pair_left rfl)
+      have hyu : y ≠ u := fun he => hncuy (by rw [he]; exact collinear3_pair_right rfl)
+      have hxu : x ≠ u := fun he => hncuw (by rw [he]; exact collinear3_of_eq rfl)
+      -- aff_gt 成员（HOL AFF_GT_2_1 的射线刻画 affGt_pair_iff）
+      have hv3vw : v3 ∈ affGt {x, v} {w} :=
+        (affGt_pair_iff hxv hwx hwv).mpr ⟨-(crossProduct a2 a3 ⬝ᵥ a1), ht3',
+          crossProduct a2 a3 ⬝ᵥ a4, by rw [hE1]; module⟩
+      have hv3uy : v3 ∈ affGt {x, u} {y} :=
+        (affGt_pair_iff hxu hyx hyu).mpr ⟨-(crossProduct a1 a4 ⬝ᵥ a3), ht3,
+          crossProduct a1 a4 ⬝ᵥ a2, by rw [hE2]; module⟩
+      have hncv3 : ¬ Collinear3 x v v3 := aff_gt_imp_not_collinear hncvw hv3vw
+      have hncuv3 : ¬ Collinear3 x u v3 := aff_gt_imp_not_collinear hncuy hv3uy
+      -- 方位角传递（HOL AZIM_EQ_ALT 两次）
+      have hzvs : azim x v u v3 = azim x v u w :=
+        (azim_eq_azim_iff_alt hncvu hncv3 hncvw).mpr hv3vw
+      have hzu : azim x u v v3 = azim x u v y :=
+        (azim_eq_azim_iff_alt hncuv hncuv3 hncuy).mpr hv3uy
+      -- azim x u v3 v = azim x u y v ∈ (0, π)（HOL 子目标 10 的消除 + AZIM_COMPL 双侧）
+      have hv3vne : azim x u v3 v ≠ 0 := by
+        intro h0
+        have hc : azim x u v v3 = 0 := by
+          rw [azim_compl hncuv3 hncuv, if_pos h0]
+        have hcompl1 : azim x u v y = 2 * Real.pi - azim x u y v := by
+          rw [azim_compl hncuy hncuv, if_neg (ne_of_gt h0yv)]
+        rw [hzu, hcompl1] at hc
+        have h2pi := azim_lt_two_pi x u y v
+        linarith
+      have hkey : azim x u v3 v = azim x u y v := by
+        have hc : azim x u v v3 = 2 * Real.pi - azim x u v3 v := by
+          rw [azim_compl hncuv3 hncuv, if_neg hv3vne]
+        have hcompl1 : azim x u v y = 2 * Real.pi - azim x u y v := by
+          rw [azim_compl hncuy hncuv, if_neg (ne_of_gt h0yv)]
+        rw [hzu, hcompl1] at hc
+        have h2pi := azim_lt_two_pi x u y v
+        linarith
+      have hv3v0 : 0 < azim x u v3 v := by rw [hkey]; exact h0yv
+      have hv3vpi : azim x u v3 v < Real.pi := by rw [hkey]; exact hyvpi
+      -- w ∈ aff{x,v,v3}（由 t3' > 0 反解；HOL 子目标 9 的准备）
+      have hwspan : w ∈ (affineSpan ℝ ({x, v, v3} : Set V3) : Set V3) := by
+        have hCne : crossProduct a2 a3 ⬝ᵥ a1 ≠ 0 := by
+          intro h0
+          rw [h0] at ht3'
+          norm_num at ht3'
+        have hmul : (crossProduct a2 a3 ⬝ᵥ a1)⁻¹ * (crossProduct a2 a3 ⬝ᵥ a1) = 1 :=
+          inv_mul_cancel₀ hCne
+        have hstep : (crossProduct a2 a3 ⬝ᵥ a1)⁻¹ • (v3 - x)
+            = ((crossProduct a2 a3 ⬝ᵥ a1)⁻¹ * (crossProduct a2 a3 ⬝ᵥ a4)) • (v - x)
+              - (w - x) := by
+          rw [hE1, smul_sub, smul_smul, smul_smul, hmul, one_smul]
+        refine mem_affineSpan_triple_of_eq_pa (x := x) (p := v) (q := v3)
+          (c := -((crossProduct a2 a3 ⬝ᵥ a1)⁻¹))
+          (h := ((crossProduct a2 a3 ⬝ᵥ a1)⁻¹) * (crossProduct a2 a3 ⬝ᵥ a4)) ?_
+        rw [neg_smul, hstep, neg_sub]
+        module
+      -- ¬Coplanar {x,v,u,v3}（HOL 子目标 9）
+      have hcop3 : ¬ Coplanar ({x, v, u, v3} : Set V3) := by
+        intro hcpl
+        obtain ⟨p, q, r, hsub⟩ := hcpl
+        apply hcop
+        refine ⟨p, q, r, ?_⟩
+        have hxS : x ∈ (affineSpan ℝ ({p, q, r} : Set V3) : Set V3) := hsub (by simp)
+        have hvS : v ∈ (affineSpan ℝ ({p, q, r} : Set V3) : Set V3) := hsub (by simp)
+        have huS : u ∈ (affineSpan ℝ ({p, q, r} : Set V3) : Set V3) := hsub (by simp)
+        have hv3S : v3 ∈ (affineSpan ℝ ({p, q, r} : Set V3) : Set V3) := hsub (by simp)
+        have hle : affineSpan ℝ ({x, v, v3} : Set V3) ≤ affineSpan ℝ ({p, q, r} : Set V3) :=
+          affineSpan_le.mpr (by
+            intro z hz'
+            simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz'
+            rcases hz' with rfl | rfl | rfl
+            · exact hxS
+            · exact hvS
+            · exact hv3S)
+        have hwS : w ∈ (affineSpan ℝ ({p, q, r} : Set V3) : Set V3) := hle hwspan
+        intro z hz
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+        rcases hz with rfl | rfl | rfl | rfl
+        · exact hxS
+        · exact hvS
+        · exact huS
+        · exact hwS
+      -- azim x v w y ∈ [0, π] → va⬝a2 ≥ 0（HOL 末段 cross_dot_fully_surrounded_ge_fan）
+      have hsum2 : azim x v u y = azim x v u w + azim x v w y :=
+        sum4_azim_fan (Ne.symm hxv) hncvu hncvw hncvy hlewy
+      have hge2 : 0 ≤ crossProduct ((v - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+          ((y - x : V3) : Fin 3 → ℝ) := by
+        refine cross_dot_fully_surrounded_ge_fan (v1 := v) (v := w) (u1 := y) hncvy hncvw ?_ ?_
+        · exact azim_nonneg x v w y
+        · have h1 := azim_nonneg x v u w
+          have h2 : azim x v w y = azim x v u y - azim x v u w := by
+            rw [hsum2]; ring
+          rw [h2]
+          linarith
+      rw [← ha1, ← ha4, ← ha2] at hge2
+      -- v4 := ½•u + ½•v3（HOL ABBREV v4）
+      obtain ⟨v4, hv4⟩ : ∃ z : V3,
+          z = (1 - 1 / 2 : ℝ) • u + (1 / 2 : ℝ) • v3 := ⟨_, rfl⟩
+      have hv4x : v4 - x = (1 / 2 : ℝ) • (u - x) + (1 / 2 : ℝ) • (v3 - x) := by
+        rw [hv4]; module
+      -- v4 的两组 aff_gt 成员
+      have hv4uy : v4 ∈ affGt {x, u} {y} :=
+        (affGt_pair_iff hxu hyx hyu).mpr ⟨(1 / 2 : ℝ) * (-(crossProduct a1 a4 ⬝ᵥ a3)),
+          mul_pos (by norm_num) ht3,
+          (1 / 2 : ℝ) * (crossProduct a1 a4 ⬝ᵥ a2) + 1 / 2, by
+            rw [hv4x, hE2]
+            module⟩
+      have hv4uy' : v4 ∈ affGt {x} {u, y} := by
+        rw [aff_gt_1_2 (disjoint_singleton_of_not_collinear3_anc hncuy)]
+        refine ⟨(1 / 2 : ℝ) * (1 - (crossProduct a1 a4 ⬝ᵥ a2)
+            + (crossProduct a1 a4 ⬝ᵥ a3)),
+          (1 / 2 : ℝ) * (crossProduct a1 a4 ⬝ᵥ a2) + 1 / 2,
+          (1 / 2 : ℝ) * (-(crossProduct a1 a4 ⬝ᵥ a3)), ?_, ?_, ?_, ?_⟩
+        · linarith
+        · exact mul_pos (by norm_num) ht3
+        · ring
+        · have h1 : v4 - x = ((1 / 2 : ℝ) * (crossProduct a1 a4 ⬝ᵥ a2) + 1 / 2) • (u - x)
+              + ((1 / 2 : ℝ) * (-(crossProduct a1 a4 ⬝ᵥ a3))) • (y - x) := by
+            rw [hv4x, hE2]
+            module
+          rw [← sub_add_cancel v4 x, h1]
+          module
+      -- v4 ∈ rwDart：wedge + rcone
+      have hncv4 : ¬ Collinear3 x u v4 := aff_gt_imp_not_collinear hncuy hv4uy
+      have hzv4 : azim x u w v4 = azim x u w y :=
+        (azim_eq_azim_iff_alt hncuw hncv4 hncuy).mpr hv4uy
+      have hv4cone : v4 ∈ rconeFan x u (Real.cos s) :=
+        conditions_in_rcone_fan hncuy hv4uy' hs hsπ hycone
+      have hv4wedge : v4 ∈ wedge x u w v := by
+        rw [wedge, Set.mem_setOf_eq]
+        refine ⟨hncv4, ?_, ?_⟩
+        · rw [hzv4]; exact h0y
+        · rw [hzv4]; exact hyv
+      -- 弦角夹逼（HOL inequality4_aim_in_convex_fan）
+      obtain ⟨-, hv4b⟩ := inequality4_aim_in_convex_fan (v := v) (u := u) (w := v3)
+        (a := 1 / 2) hcop3 hv3v0 hv3vpi (by norm_num) (by norm_num)
+      rw [← hv4] at hv4b
+      exact ⟨v4, by
+        rw [rwDartFan, wDartFan, if_pos hcardu, hsigma]
+        exact ⟨hv4wedge, hv4cone⟩, by
+        rw [← hzvs]
+        exact hv4b⟩
+    · -- 小支：azim x v u y < azim x v u w，直接取 y
+      exact ⟨y, hyr2, hlty⟩
+  · -- Real.pi ≤ azim x v u y：矛盾（HOL 分支 4）
+    exfalso
+    have hne0 : azim x v u y ≠ 0 :=
+      ne_of_gt (lt_of_lt_of_le Real.pi_pos hvypi)
+    have hcompl : azim x v y u = 2 * Real.pi - azim x v u y := by
+      rw [azim_compl hncvu hncvy, if_neg hne0]
+    have hge1 : 0 ≤ azim x v y u := azim_nonneg x v y u
+    have hle1 : azim x v y u ≤ Real.pi := by
+      rw [hcompl]
+      linarith [azim_lt_two_pi x v u y]
+    have hge : 0 ≤ crossProduct ((v - x : V3) : Fin 3 → ℝ) ((y - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((u - x : V3) : Fin 3 → ℝ) :=
+      cross_dot_fully_surrounded_ge_fan (v1 := v) (v := y) (u1 := u) hncvu hncvy hge1 hle1
+    have hrel : crossProduct ((v - x : V3) : Fin 3 → ℝ) ((y - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((u - x : V3) : Fin 3 → ℝ)
+        = -(crossProduct ((u - x : V3) : Fin 3 → ℝ) ((y - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+          ((v - x : V3) : Fin 3 → ℝ)) := by
+      rw [cross_dot_cycle_pa, ← cross_anticomm, neg_dotProduct]
+    linarith
 
 /-- HOL planarity.hl:10329-10384 `cut_in_angle_fan`
 
@@ -1488,3 +1805,4 @@ theorem exists_rw_dart_inter_aff_gt1_fan {x v u w : V3} {V : Set V3}
   sorry
 
 end Kepler.Text
+
