@@ -239,7 +239,13 @@ theorem permutes_4points_collinear {E : Type*} [AddCommGroup E] [Module ℝ E]
     (hy : y ∈ affineSpan ℝ ({x, z} : Set E))
     (hnc : ¬ Collinear ℝ ({x, y, w} : Set E)) :
     ¬ Collinear ℝ ({x, z, w} : Set E) := by
-  sorry
+  intro hc
+  apply hnc
+  have hw : w ∈ affineSpan ℝ ({x, z} : Set E) :=
+    Collinear.mem_affineSpan_of_mem_of_ne hc (by simp) (by simp) (by simp) hxz
+  exact collinear_triple_of_mem_affineSpan_pair (k := ℝ)
+    (p₁ := x) (p₂ := y) (p₃ := w) (p₄ := x) (p₅ := z)
+    (left_mem_affineSpan_pair _ _ _) hy hw
 
 /-- HOL planarity.hl :12105-12116 `permutes_4points_collinear1`
 
