@@ -442,7 +442,8 @@ theorem equality_dart_leads_into {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet)
     (hy : y ∈ ds) (hy1 : y1 ∈ ds) :
     dartLeadsInto x V E y.1 y.2 = dartLeadsInto x V E y1.1 y1.2 := by
-  sorry
+  rcases exists_dartset_leads_into_fan hfan hcard hfan80 hds with ⟨s, hs⟩
+  rw [← hs y hy, ← hs y1 hy1]
 
 /-- HOL planarity.hl :11043-11057 `UNIQUE_DARTSET_LEADS_INTO1_FAN`
 
