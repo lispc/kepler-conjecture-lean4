@@ -1613,7 +1613,59 @@ theorem cut_in_angle_fan {x v u w y : V3}
         (crossProduct ((y - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ))
         (crossProduct ((v - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ))) : V3) + x) ∈
       affGt {x} {v, w} := by
-  sorry
+  -- 非退化基本盘（hcop ⇒ 三组三点不共线）
+  obtain ⟨hncuw, hncvu, hncvw⟩ := notcoplanar_imp_notcollinear_fan hcop
+  have hncuv : ¬ Collinear3 x u v := fun hc => hncvu (collinear3_swap_anc hc)
+  have hux : u ≠ x := fun he => hncuw (collinear3_of_eq (v := x) (w := u) (w1 := w) he)
+  -- 三点角加法（HOL sum4_azim_fan）→ azim x u y v ∈ (0, π)
+  have hsum : azim x u w v = azim x u w y + azim x u y v :=
+    sum4_azim_fan hux hncuw hnc hncuv (le_of_lt h2)
+  have h0yv : 0 < azim x u y v := by linarith
+  have hyvpi : azim x u y v < Real.pi := by linarith
+  have hwypi : azim x u w y < Real.pi := lt_trans h2 h1
+  -- 混合积正性（HOL cross_dot_fully_surrounded_fan 两调）
+  have hP1 : 0 < crossProduct ((u - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((y - x : V3) : Fin 3 → ℝ) :=
+    cross_dot_fully_surrounded_fan (v1 := u) (v := w) (u1 := y) hnc hncuw h3 hwypi
+  have hP2 : 0 < crossProduct ((u - x : V3) : Fin 3 → ℝ) ((y - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((v - x : V3) : Fin 3 → ℝ) :=
+    cross_dot_fully_surrounded_fan (v1 := u) (v := y) (u1 := v) hncuv hnc h0yv hyvpi
+  -- 记号（HOL ABBREV）：a1 = v-x, a2 = y-x, a3 = u-x, a4 = w-x
+  obtain ⟨a1, ha1⟩ : ∃ f : Fin 3 → ℝ, f = ((v - x : V3) : Fin 3 → ℝ) := ⟨_, rfl⟩
+  obtain ⟨a2, ha2⟩ : ∃ f : Fin 3 → ℝ, f = ((y - x : V3) : Fin 3 → ℝ) := ⟨_, rfl⟩
+  obtain ⟨a3, ha3⟩ : ∃ f : Fin 3 → ℝ, f = ((u - x : V3) : Fin 3 → ℝ) := ⟨_, rfl⟩
+  obtain ⟨a4, ha4⟩ : ∃ f : Fin 3 → ℝ, f = ((w - x : V3) : Fin 3 → ℝ) := ⟨_, rfl⟩
+  rw [← ha3, ← ha4, ← ha2] at hP1
+  rw [← ha3, ← ha2, ← ha1] at hP2
+  -- 系数正性：t2 = vb⬝a4 > 0, t3 = -(vb⬝a1) > 0
+  have ht2 : 0 < crossProduct a2 a3 ⬝ᵥ a4 := by
+    rw [cross_dot_cycle_pa]
+    exact hP1
+  have ht3 : 0 < -(crossProduct a2 a3 ⬝ᵥ a1) := by
+    rw [← neg_dotProduct, cross_anticomm]
+    exact hP2
+  -- CROSS_LAGRANGE（Mathlib `cross_cross_eq_smul_sub_smul'`）展开
+  have hE1 : (WithLp.toLp 2 (crossProduct (crossProduct a2 a3) (crossProduct a1 a4)) : V3)
+      = (crossProduct a2 a3 ⬝ᵥ a4) • (v - x)
+        - (crossProduct a2 a3 ⬝ᵥ a1) • (w - x) := by
+    have hc := cross_cross_eq_smul_sub_smul' (crossProduct a2 a3) a1 a4
+    rw [dotProduct_comm a1 (crossProduct a2 a3)] at hc
+    have hx1 : (v - x : V3) = (WithLp.toLp 2 a1 : V3) := by rw [ha1]
+    have hx4 : (w - x : V3) = (WithLp.toLp 2 a4 : V3) := by rw [ha4]
+    rw [hx1, hx4, ← WithLp.toLp_smul, ← WithLp.toLp_smul, ← WithLp.toLp_sub, hc]
+  -- aff_gt_1_2 展开 + 见证系数
+  rw [aff_gt_1_2 (disjoint_singleton_of_not_collinear3_anc hncvw)]
+  refine ⟨1 - (crossProduct a2 a3 ⬝ᵥ a4) + (crossProduct a2 a3 ⬝ᵥ a1),
+    (crossProduct a2 a3 ⬝ᵥ a4), -(crossProduct a2 a3 ⬝ᵥ a1), ht2, ht3, by ring, ?eq⟩
+  rw [← ha1, ← ha2, ← ha3, ← ha4]
+  calc
+    (WithLp.toLp 2 (crossProduct (crossProduct a2 a3) (crossProduct a1 a4)) : V3) + x
+        = x + (WithLp.toLp 2 (crossProduct (crossProduct a2 a3) (crossProduct a1 a4)) : V3) := by module
+    _ = x + ((crossProduct a2 a3 ⬝ᵥ a4) • (v - x)
+        - (crossProduct a2 a3 ⬝ᵥ a1) • (w - x)) := by rw [hE1]
+    _ = (1 - (crossProduct a2 a3 ⬝ᵥ a4) + (crossProduct a2 a3 ⬝ᵥ a1)) • x
+        + (crossProduct a2 a3 ⬝ᵥ a4) • v
+        + (-(crossProduct a2 a3 ⬝ᵥ a1)) • w := by module
 
 /-- HOL planarity.hl:10385-10426 `aff_gt_1_2_scale_fan`
 
