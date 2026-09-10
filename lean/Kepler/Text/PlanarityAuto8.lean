@@ -146,7 +146,23 @@ theorem aff_ge_1_1_subset_xfan (x : V3) (V : Set V3) (E : Set (Set V3)) (y : V3)
     (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard)
     (hy : y ∈ xfan x V E) (hxy : x ≠ y) :
     affGe {x} {y} ⊆ xfan x V E := by
-  sorry
+  intro z hz
+  obtain ⟨e, heE, hye⟩ := hy
+  obtain ⟨v, w, heq⟩ := expand_edge_graph_fan hfan heE
+  have hy' : y ∈ affGe {x} {v, w} := by simpa [heq] using hye
+  have hxe : x ∉ e := by
+    intro hx
+    exact hfan.2.2.2.1 (hfan.1 (Set.mem_sUnion.mpr ⟨e, heE, hx⟩))
+  have hxvw : x ∉ ({v, w} : Set V3) := by simpa [heq] using hxe
+  have hdis : Disjoint ({x} : Set V3) {v, w} := by
+    rw [Set.disjoint_left]
+    intro a ha hb
+    rw [Set.mem_singleton_iff] at ha
+    rw [ha] at hb
+    exact hxvw hb
+  refine ⟨e, heE, ?_⟩
+  rw [heq]
+  exact aff_ge_1_1_subset_aff_ge_fan (v1 := y) hdis hxy hy' hz
 
 /-! ## yfan 与 xfan 的点独立性（planarity.hl:12067-12093） -/
 
