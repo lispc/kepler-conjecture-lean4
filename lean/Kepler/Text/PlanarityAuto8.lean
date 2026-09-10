@@ -502,7 +502,9 @@ theorem v_subset_xfan (x : V3) (V : Set V3) (E : Set (Set V3))
     (hfan : FAN x V E)
     (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard) :
     V ⊆ xfan x V E := by
-  sorry
+  intro v hv
+  obtain ⟨w, hvw, -⟩ := exists_edge_fully_surround_fan (x := x) hfan hv hcard
+  exact ⟨{v, w}, hvw, (point_in_aff_ge (fan_not_collinear hfan hvw)).2.1⟩
 
 /-- HOL planarity.hl :12209-12217 `set_of_edge_subset_edges`
 
