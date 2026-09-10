@@ -343,7 +343,9 @@ theorem PROPERTIES_TRIANGLE_FAN_lemma2 {x v u w : V3} {V : Set V3}
     (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
     (hfan80 : fan80 x V E) :
     sigmaFan x V E w v = u := by
-  sorry
+  have h1 : sigmaFan x V E v u = w :=
+    PROPERTIES_TRIANGLE_FAN_lemma1 hfan hvu huw hwv hsigma hcard hfan80
+  exact PROPERTIES_TRIANGLE_FAN_lemma1 hfan hwv hvu huw h1 hcard hfan80
 
 /-- HOL planarity.hl :14713-14724 `PROPERTIES_TRIANGLE_FAN`
 
