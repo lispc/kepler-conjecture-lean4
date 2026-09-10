@@ -121,7 +121,13 @@ theorem add_edge_graph_fan {A : Type*} {V : Set A} {E : Set (Set A)} {v u : A}
     (E1 : Set (Set A)) (hv : v ∈ V) (hu : u ∈ V)
     (hE1 : E1 = E ∪ {{v, u}}) (hU : ⋃₀ E ⊆ V) :
     ⋃₀ E1 ⊆ V := by
-  sorry
+  intro x hx
+  rw [hE1, Set.sUnion_union, Set.sUnion_singleton] at hx
+  rcases hx with hx | hx
+  · exact hU hx
+  · rcases hx with rfl | rfl
+    · exact hv
+    · exact hu
 
 /-- HOL planarity.hl :11138-11149 `graph_add_edge_is_graph`
 
