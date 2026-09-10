@@ -85,7 +85,9 @@ HOL 原文：
 theorem coplanar_imp_continuous_collinear (x v u w : V3)
     (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) :
     ∀ t : ℝ, t ≠ 0 → ¬ Collinear3 x v ((1 - t) • u + t • w) := by
-  sorry
+  intro t ht
+  exact (notcoplanar_imp_notcollinear_fan
+    (continuous_coplanar_fan x v u w hcop t ht)).2.2
 
 /-- HOL planarity.hl :13645-13723 `aff_gt_1_3_eq_unions_aff_gt_1_2`
 
