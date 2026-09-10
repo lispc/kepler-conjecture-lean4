@@ -700,6 +700,62 @@ theorem dartset_leads_into_fan_radial {x : V3} {V : Set V3} {E : Set (Set V3)}
       ∀ u : V3, x + u ∈ dartsetLeadsIntoFan x V E ds ∩ Metric.ball x r →
         ∀ t : ℝ, 0 < t → t * ‖u‖ < r →
           x + t • u ∈ dartsetLeadsIntoFan x V E ds ∩ Metric.ball x r := by
-  sorry
+  obtain ⟨f1, f2, f3, hdsf, _hf12, _hf23, _hf31, he23, he31, he12, _hsig,
+    _hf3fst, _hf2fst, _hf1fst⟩ :=
+    CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN1 hfan hcard hds hds3
+  have himg : (fun y : V3 × V3 => y.1) '' ds = ({f1.1, f2.1, f3.1} : Set V3) := by
+    rw [hdsf]
+    ext z
+    simp
+    tauto
+  have hleads : dartsetLeadsIntoFan x V E ds =
+      affGt ({x} : Set V3) {f1.1, f2.1, f3.1} := by
+    rw [← KVQWYDL_lemma10 hfan hcard hfan80 hds hds3, himg]
+  obtain ⟨hsub, _hgraph, _hfan1, hfan2, _hfan6, _hfan7⟩ := hfan
+  have hxV : x ∉ V := hfan2
+  have hf1V : f1.1 ∈ V :=
+    hsub (Set.mem_sUnion.mpr ⟨{f1.1, f2.1}, he12, by simp⟩)
+  have hf2V : f2.1 ∈ V :=
+    hsub (Set.mem_sUnion.mpr ⟨{f1.1, f2.1}, he12, by simp⟩)
+  have hf3V : f3.1 ∈ V :=
+    hsub (Set.mem_sUnion.mpr ⟨{f3.1, f1.1}, he31, by simp⟩)
+  have hx1 : x ≠ f1.1 := fun h => hxV (by rw [h]; exact hf1V)
+  have hx2 : x ≠ f2.1 := fun h => hxV (by rw [h]; exact hf2V)
+  have hx3 : x ≠ f3.1 := fun h => hxV (by rw [h]; exact hf3V)
+  have hdis : Disjoint ({x} : Set V3) {f1.1, f2.1, f3.1} := by
+    rw [Set.disjoint_left]
+    intro a ha hb
+    rw [Set.mem_singleton_iff] at ha
+    rw [ha] at hb
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hb
+    rcases hb with h | h | h
+    · exact hx1 h
+    · exact hx2 h
+    · exact hx3 h
+  refine ⟨Set.inter_subset_right, ?_⟩
+  intro u hu t ht ht_norm
+  rw [Set.mem_inter_iff] at hu ⊢
+  obtain ⟨huT, _huB⟩ := hu
+  refine ⟨?_, ?_⟩
+  · rw [hleads] at huT ⊢
+    rw [AFF_GT_1_3 x f1.1 f2.1 f3.1 hdis] at huT
+    rw [Set.mem_setOf_eq] at huT
+    obtain ⟨t1, t2, t3, t4, ht2, ht3, ht4, hsum, hveq⟩ := huT
+    rw [AFF_GT_1_3 x f1.1 f2.1 f3.1 hdis]
+    rw [Set.mem_setOf_eq]
+    refine ⟨1 + t * t1 - t, t * t2, t * t3, t * t4,
+      mul_pos ht ht2, mul_pos ht ht3, mul_pos ht ht4, ?_, ?_⟩
+    · have hcoef : (1 + t * t1 - t) + t * t2 + t * t3 + t * t4 =
+          1 - t + t * (t1 + t2 + t3 + t4) := by ring
+      rw [hcoef, hsum]
+      ring
+    · rw [show u = (t1 • x + t2 • f1.1 + t3 • f2.1 + t4 • f3.1) - x by
+            rw [← hveq]; abel]
+      module
+  · rw [Metric.mem_ball]
+    rw [dist_eq_norm]
+    rw [show (x + t • u) - x = t • u by abel]
+    rw [norm_smul, Real.norm_eq_abs, abs_of_pos ht]
+    exact ht_norm
 
 end Kepler.Text
