@@ -551,7 +551,7 @@ theorem EQ_PAIR_IMP_EQ_4_FAN {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hy1 : y1 ∈ dartOfFan V E)
     (hp : (y.1, y.2) = (y1.1, y1.2)) :
     y = y1 := by
-  sorry
+  simpa using hp
 
 /-- HOL planarity.hl :15212-15242 `KVQWYDL_lemma30`
 
