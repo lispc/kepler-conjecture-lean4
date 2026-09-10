@@ -82,7 +82,9 @@ while true; do
     fi
     continue
   fi
-  if [ "$n" -ge 2 ]; then MODEL="zhipuai-coding-plan/glm-5.3"; else MODEL="opencode/big-pickle"; fi
+  # 2026-09-10 用户定：worker 全用 deepseek-v4-flash（更快更便宜，真产试车双杀）；
+  # 满血 glm-5.3 留作最后兜底
+  if [ "$n" -ge 2 ]; then MODEL="zhipuai-coding-plan/glm-5.3"; else MODEL="deepseek/deepseek-v4-flash"; fi
   gen_prompt "$THM" > "/tmp/auto_prompt_$THM.txt"
   log "DISPATCH $THM (attempt $((n+1)), model $MODEL)"
   timeout 5400 opencode run -m "$MODEL" "$(cat /tmp/auto_prompt_$THM.txt)" \
