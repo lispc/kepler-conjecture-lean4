@@ -375,6 +375,73 @@ theorem PROPERTIES_TRIANGLE_FAN {x v u w : V3} {V : Set V3}
   exact ⟨PROPERTIES_TRIANGLE_FAN_lemma1 hfan hvu huw hwv hsigma hcard hfan80,
     PROPERTIES_TRIANGLE_FAN_lemma2 hfan hvu huw hwv hsigma hcard hfan80⟩
 
+private theorem mem_affineSpan_sub_of_smul_eq_neg {x y a b : V3} {p q r : ℝ}
+    (hp : p ≠ 0) (h : p • (y - x) + q • (a - x) + r • (b - x) = 0) :
+    y ∈ affineSpan ℝ ({x, a, b} : Set V3) := by
+  have ha : a - x ∈ vectorSpan ℝ ({x, a, b} : Set V3) := by
+    simpa [vsub_eq_sub] using
+      vsub_mem_vectorSpan (k := ℝ) (p₁ := a) (p₂ := x) (by simp) (by simp)
+  have hb : b - x ∈ vectorSpan ℝ ({x, a, b} : Set V3) := by
+    simpa [vsub_eq_sub] using
+      vsub_mem_vectorSpan (k := ℝ) (p₁ := b) (p₂ := x) (by simp) (by simp)
+  have hqr : q • (a - x) + r • (b - x) ∈ vectorSpan ℝ ({x, a, b} : Set V3) :=
+    add_mem (Submodule.smul_mem _ q ha) (Submodule.smul_mem _ r hb)
+  have hpy : p • (y - x) = -(q • (a - x) + r • (b - x)) := by
+    have h' : p • (y - x) + (q • (a - x) + r • (b - x)) = 0 := by
+      rw [← h]; abel
+    exact eq_neg_of_add_eq_zero_left h'
+  have hpy_mem : p • (y - x) ∈ vectorSpan ℝ ({x, a, b} : Set V3) := by
+    rw [hpy]; exact neg_mem hqr
+  have hyx : y - x ∈ vectorSpan ℝ ({x, a, b} : Set V3) := by
+    have := Submodule.smul_mem _ p⁻¹ hpy_mem
+    rwa [smul_smul, inv_mul_cancel₀ hp, one_smul] at this
+  have hx : x ∈ affineSpan ℝ ({x, a, b} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hdir : y - x ∈ (affineSpan ℝ ({x, a, b} : Set V3)).direction := by
+    rwa [direction_affineSpan]
+  have hmem := (AffineSubspace.vadd_mem_iff_mem_direction
+    (s := affineSpan ℝ ({x, a, b} : Set V3)) (y - x) hx).mpr hdir
+  rwa [vadd_eq_add, sub_add_cancel] at hmem
+
+private theorem notcoplanar_smul_sub_eq_zero {x v u w : V3} {p q r : ℝ}
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3))
+    (h : p • (v - x) + q • (u - x) + r • (w - x) = 0) :
+    p = 0 ∧ q = 0 ∧ r = 0 := by
+  refine ⟨?_, ?_, ?_⟩
+  · by_contra hp
+    have hv : v ∈ affineSpan ℝ ({x, u, w} : Set V3) :=
+      mem_affineSpan_sub_of_smul_eq_neg (a := u) (b := w) hp h
+    exact hcop ⟨x, u, w, fun z hz => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl | rfl
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact hv
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact subset_affineSpan ℝ _ (by simp)⟩
+  · by_contra hq
+    have h' : q • (u - x) + p • (v - x) + r • (w - x) = 0 := by
+      rw [← h]; abel
+    have hu : u ∈ affineSpan ℝ ({x, v, w} : Set V3) :=
+      mem_affineSpan_sub_of_smul_eq_neg (a := v) (b := w) hq h'
+    exact hcop ⟨x, v, w, fun z hz => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl | rfl
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact hu
+      · exact subset_affineSpan ℝ _ (by simp)⟩
+  · by_contra hr
+    have h' : r • (w - x) + p • (v - x) + q • (u - x) = 0 := by
+      rw [← h]; abel
+    have hw : w ∈ affineSpan ℝ ({x, v, u} : Set V3) :=
+      mem_affineSpan_sub_of_smul_eq_neg (a := v) (b := u) hr h'
+    exact hcop ⟨x, v, u, fun z hz => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl | rfl
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact hw⟩
+
 /-! ## 3-1 与 2-2 仿射开单纯形的交（planarity.hl:14725-14774） -/
 
 /-- HOL planarity.hl :14725-14774 `inter_aff_gt_3_1_is_aff_gt_2_2`
@@ -402,7 +469,42 @@ theorem inter_aff_gt_3_1_is_aff_gt_2_2 (x v u w : V3)
     (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) :
     affGt ({x, v, u} : Set V3) {w} ∩ affGt ({x, u, w} : Set V3) {v} =
       affGt ({x, u} : Set V3) {v, w} := by
-  sorry
+  obtain ⟨hdis1, hdis2, -, -, hdis5, -, -, -⟩ :=
+    notcoplanar_disjoints x v u w hcop
+  ext y
+  constructor
+  · intro hy
+    simp only [Set.mem_inter_iff] at hy
+    obtain ⟨hy1, hy2⟩ := hy
+    rw [AFF_GT_3_1 x v u w hdis1, Set.mem_setOf_eq] at hy1
+    rw [AFF_GT_3_1 x u w v hdis2, Set.mem_setOf_eq] at hy2
+    rw [affGt2_2 hdis5, Set.mem_setOf_eq]
+    obtain ⟨a1, a2, a3, a4, ha4, hasum, hay⟩ := hy1
+    obtain ⟨b1, b2, b3, b4, hb4, hbsum, hby⟩ := hy2
+    have heq : (a2 - b4) • (v - x) + (a3 - b2) • (u - x) +
+        (a4 - b3) • (w - x) = 0 := by
+      have hEq : a1 • x + a2 • v + a3 • u + a4 • w =
+          b1 • x + b2 • u + b3 • w + b4 • v := by rw [← hay, hby]
+      have h1 : a1 = 1 - a2 - a3 - a4 := by linarith
+      have h2 : b1 = 1 - b2 - b3 - b4 := by linarith
+      have hdiff : (a2 - b4) • (v - x) + (a3 - b2) • (u - x) +
+          (a4 - b3) • (w - x) =
+          (a1 • x + a2 • v + a3 • u + a4 • w) -
+            (b1 • x + b2 • u + b3 • w + b4 • v) := by
+        rw [h1, h2]; module
+      rw [hdiff, hEq, sub_self]
+    obtain ⟨ha2b4, -, -⟩ := notcoplanar_smul_sub_eq_zero hcop heq
+    have ha2pos : 0 < a2 := by rw [sub_eq_zero.mp ha2b4]; exact hb4
+    exact ⟨a1, a3, a2, a4, ha2pos, ha4, by linarith, by rw [hay]; module⟩
+  · intro hy
+    rw [affGt2_2 hdis5, Set.mem_setOf_eq] at hy
+    obtain ⟨t1, t2, t3, t4, ht3, ht4, htsum, hty⟩ := hy
+    simp only [Set.mem_inter_iff]
+    refine ⟨?_, ?_⟩
+    · rw [AFF_GT_3_1 x v u w hdis1, Set.mem_setOf_eq]
+      exact ⟨t1, t3, t2, t4, ht4, by linarith, by rw [hty]; module⟩
+    · rw [AFF_GT_3_1 x u w v hdis2, Set.mem_setOf_eq]
+      exact ⟨t1, t2, t4, t3, ht3, by linarith, by rw [hty]; module⟩
 
 /-! ## 面上边与 dart_leads_into 的对应（planarity.hl:14775-14845） -/
 
