@@ -286,7 +286,21 @@ theorem notcoplanar_4point_aff_gt_3_1_not_empty (x v u w : V3)
     (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) :
     affGt ({x, v, u} : Set V3) {w} ∩ affGt ({x, u, w} : Set V3) {v} ∩
       affGt ({x, w, v} : Set V3) {u} ≠ ∅ := by
-  sorry
+  obtain ⟨hd1, hd2, hd3, -⟩ := notcoplanar_disjoints x v u w hcop
+  have h1 : (1 / 3 : ℝ) • v + (1 / 3 : ℝ) • u + (1 / 3 : ℝ) • w ∈
+      affGt ({x, v, u} : Set V3) {w} := by
+    rw [AFF_GT_3_1 x v u w hd1]
+    exact ⟨0, 1 / 3, 1 / 3, 1 / 3, by norm_num, by norm_num, by module⟩
+  have h2 : (1 / 3 : ℝ) • v + (1 / 3 : ℝ) • u + (1 / 3 : ℝ) • w ∈
+      affGt ({x, u, w} : Set V3) {v} := by
+    rw [AFF_GT_3_1 x u w v hd2]
+    exact ⟨0, 1 / 3, 1 / 3, 1 / 3, by norm_num, by norm_num, by module⟩
+  have h3 : (1 / 3 : ℝ) • v + (1 / 3 : ℝ) • u + (1 / 3 : ℝ) • w ∈
+      affGt ({x, w, v} : Set V3) {u} := by
+    rw [AFF_GT_3_1 x w v u hd3]
+    exact ⟨0, 1 / 3, 1 / 3, 1 / 3, by norm_num, by norm_num, by module⟩
+  rw [← Set.nonempty_iff_ne_empty]
+  exact ⟨_, ⟨⟨h1, h2⟩, h3⟩⟩
 
 /-- HOL planarity.hl :14350-14359 `notcoplanar_4point_aff_gt_1_3_not_empty`
 
