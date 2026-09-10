@@ -225,7 +225,17 @@ theorem condition_not_edge_fan {x : V3} {V : Set V3} {E : Set (Set V3)}
     (he1 : e1 ∈ E) (he2 : e2 = {v, u})
     (hsub : affGt {x} {v, u} ⊆ dartsetLeadsIntoFan x V E ds) :
     e1 ≠ e2 := by
-  sorry
+  intro heq
+  rw [he2] at heq
+  obtain ⟨y, hy⟩ := exists_in_aff_gt hnc
+  have hy' : y ∈ affGe {x} {v, u} := by
+    rw [aff_ge_eq_aff_gt_union_aff_ge hnc]
+    exact Set.mem_union_left _ (Set.mem_union_left _ hy)
+  have hyx : y ∈ xfan x V E := ⟨e1, he1, by rw [heq]; exact hy'⟩
+  have hysub := dartset_leads_into_subset_yfan hfan hcard hfan80 hds
+  have hyy : y ∈ yfan x V E := hysub (hsub hy)
+  rw [yfan, Set.mem_sdiff] at hyy
+  exact hyy.2 hyx
 
 /-- HOL planarity.hl :11211-11224 `properties_edges_eq_fan`
 
