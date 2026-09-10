@@ -272,7 +272,15 @@ theorem permutes_4points_collinear1 {E : Type*} [AddCommGroup E] [Module ℝ E]
     (hy : y ∈ affineSpan ℝ ({x, z} : Set E))
     (hnc : ¬ Collinear ℝ ({x, z, w} : Set E)) :
     ¬ Collinear ℝ ({x, y, w} : Set E) := by
-  sorry
+  intro hc
+  apply hnc
+  have hw : w ∈ affineSpan ℝ ({x, y} : Set E) :=
+    Collinear.mem_affineSpan_of_mem_of_ne hc (by simp) (by simp) (by simp) hxy
+  have hsub : affineSpan ℝ ({x, y} : Set E) ≤ affineSpan ℝ ({x, z} : Set E) :=
+    affineSpan_pair_le_of_right_mem hy
+  exact collinear_triple_of_mem_affineSpan_pair (k := ℝ)
+    (p₁ := x) (p₂ := z) (p₃ := w) (p₄ := x) (p₅ := z)
+    (left_mem_affineSpan_pair _ _ _) (right_mem_affineSpan_pair _ _ _) (hsub hw)
 
 /-! ## aff_gt 上的 azim 不变性与 aff_ge/aff_gt 边界（planarity.hl:12117-12154） -/
 
