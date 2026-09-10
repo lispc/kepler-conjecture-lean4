@@ -414,7 +414,24 @@ HOL 原文：
 theorem no_origin_aff_ge_is_aff_gt (x y z : V3) (hxy : x ≠ y) (hxz : x ≠ z)
     (hz : z ∈ affGe {x} {y}) :
     z ∈ affGt {x} {y} := by
-  sorry
+  obtain ⟨f, hfin, hsum, hge, hone⟩ := hz
+  have hsum' : z = f x • x + f y • y := by
+    rw [hsum, sum_insert_single_v (f := f) hfin hxy]
+  have hone' : f x + f y = 1 := by
+    rw [← sum_insert_single_s (f := f) hfin hxy]
+    exact hone
+  have hfy_ge : 0 ≤ f y := hge y (Set.mem_singleton y)
+  have hfy_ne : f y ≠ 0 := by
+    intro h0
+    apply hxz
+    have hfx : f x = 1 := by linarith
+    rw [hsum', h0, hfx]
+    simp
+  have hfy_pos : 0 < f y := lt_of_le_of_ne hfy_ge (Ne.symm hfy_ne)
+  exact ⟨f, hfin, hsum, fun w hw => by
+    rw [Set.mem_singleton_iff] at hw
+    subst hw
+    exact hfy_pos, hone⟩
 
 /-! ## 邻居集上 azim1 最小元的存在性（planarity.hl:12155-12194） -/
 
