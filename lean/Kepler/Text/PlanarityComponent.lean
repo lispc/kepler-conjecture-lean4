@@ -218,6 +218,36 @@ theorem connected_component_of_faces_fan {x v u w : V3} {V : Set V3}
   exact (unique_dart_leads_into hfan hvu U ⟨h, hh0, hspec⟩).trans
     (hUU'.trans (unique_dart_leads_into hfan huw U' ⟨h', hh'0, hspec'⟩).symm)
 
+/-- `connected_component_of_faces_fan` 的 `fFanPair` 步进版：同面上相邻
+dart `d`、`fFanPair d` 的 `dartLeadsInto` 相等。 -/
+private theorem dartLeadsInto_fFanPair {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
+    (hfan80 : fan80 x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    dartLeadsInto x V E (fFanPair x V E d).1 (fFanPair x V E d).2 =
+      dartLeadsInto x V E d.1 d.2 := by
+  rcases d with ⟨v, u⟩
+  have hvu : {v, u} ∈ E := hd
+  have hba : {u, v} ∈ E := by
+    rwa [Set.pair_comm]
+  have hσ1 : sigmaFan x V E u (inverse1SigmaFan x V E u v) = v :=
+    (INVERSE1_SIGMA_FAN hfan).2.1 v hba
+  have hσ : sigmaFan x V E u (inverseSigmaFan x V E u v) = v := by
+    rwa [inverse_sigma_fan_eq_inverse1 hfan hba] at hσ1
+  have huw : {u, inverseSigmaFan x V E u v} ∈ E := by
+    simpa [dart1OfFan, fFanPair] using (fFanPair_mem_dart1 hfan hd)
+  simpa [fFanPair] using
+    (connected_component_of_faces_fan hfan hvu huw hσ hcard hfan80).symm
+
+/-- `hypermapOfFan` 的 faceMap 在 dart1OfFan 上即 `fFanPair`。 -/
+private theorem hypermapOfFan_faceMap_eq (hfan : FAN x V E) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) :
+    (hypermapOfFan x V E hfan).faceMap d = fFanPair x V E d := by
+  unfold hypermapOfFan extendPerm
+  simp only [Equiv.ofBijective_apply]
+  unfold Kepler.Text.Fan.res
+  rw [if_pos (by
+    simpa [(finite_dart1_fan hfan).coe_toFinset] using hd)]
+
 /-- HOL planarity.hl :10927-10976 `exists_dartset_leads_into_fan`
 
 HOL 原文：
@@ -256,7 +286,50 @@ theorem exists_dartset_leads_into_fan {x : V3} {V : Set V3}
     (hfan80 : fan80 x V E)
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet) :
     ∃ s : Set V3, ∀ y ∈ ds, s = dartLeadsInto x V E y.1 y.2 := by
-  sorry
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  obtain ⟨d, hd, hds⟩ := Hypermap.face_representation H hds
+  have hdarts : (↑H.darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have hmem : ∀ p : V3 × V3, p ∈ H.darts → p ∈ dart1OfFan V E := by
+    intro p hp
+    change p ∈ (↑H.darts : Set (V3 × V3)) at hp
+    simpa [hdarts] using hp
+  have hfm : ∀ p : V3 × V3, p ∈ dart1OfFan V E →
+      H.faceMap p = fFanPair x V E p := by
+    intro p hp
+    change (hypermapOfFan x V E hfan).faceMap p = fFanPair x V E p
+    exact hypermapOfFan_faceMap_eq hfan hp
+  have hstep : ∀ p : V3 × V3, p ∈ dart1OfFan V E →
+      dartLeadsInto x V E (H.faceMap p).1 (H.faceMap p).2 =
+        dartLeadsInto x V E p.1 p.2 := by
+    intro p hp
+    rw [hfm p hp]
+    exact dartLeadsInto_fFanPair hfan hcard hfan80 hp
+  refine ⟨dartLeadsInto x V E d.1 d.2, ?_⟩
+  intro y hy
+  have hc : y ∈ H.face d := by
+    simpa [hds] using hy
+  rcases (by simpa [Hypermap.face, orbitMap] using hc :
+    ∃ n : ℕ, (H.faceMap ^ n) d = y) with ⟨n, hn⟩
+  have hmain : ∀ n : ℕ,
+      dartLeadsInto x V E ((H.faceMap ^ n) d).1 ((H.faceMap ^ n) d).2 =
+        dartLeadsInto x V E d.1 d.2 := by
+    intro n
+    induction n with
+    | zero => simp
+    | succ k ih =>
+        have hp : (H.faceMap ^ k) d ∈ H.darts := by
+          exact H.faceMap_permutes.pow_apply_mem k hd
+        have hp1 : (H.faceMap ^ k) d ∈ dart1OfFan V E := hmem _ hp
+        have hs : dartLeadsInto x V E (H.faceMap ((H.faceMap ^ k) d)).1
+            (H.faceMap ((H.faceMap ^ k) d)).2 =
+            dartLeadsInto x V E ((H.faceMap ^ k) d).1 ((H.faceMap ^ k) d).2 :=
+          hstep _ hp1
+        rw [pow_succ', Equiv.Perm.mul_apply, hs, ih]
+  have hkey := hmain n
+  rw [hn] at hkey
+  exact hkey.symm
 
 /-! ## dartset_leads_into_fan 的 ε-定义与其刻画（planarity.hl:10978-11106） -/
 
