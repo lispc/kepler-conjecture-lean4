@@ -418,7 +418,49 @@ theorem aff_gt_1_2_cross_dotr_4point_neg (x y z v u : V3) :
       ((a3 : V3) : Fin 3 → ℝ))) →
     (0 < (crossProduct ((a1 : V3) : Fin 3 → ℝ) ((a2 : V3) : Fin 3 → ℝ)) ⬝ᵥ
       ((a4 : V3) : Fin 3 → ℝ)) := by
-  sorry
+  dsimp only
+  intro hnc hgt hpos
+  have hxv : x ≠ v := fun he =>
+    hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) he.symm)
+  have hxu : x ≠ u := fun he =>
+    hnc (collinear3_pair_left (v0 := x) (v1 := v) (x := u) he.symm)
+  have hdis : Disjoint ({x} : Set V3) ({v, u} : Set V3) := by
+    rw [Set.disjoint_singleton_left]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+    exact ⟨hxv, hxu⟩
+  rw [aff_gt_1_2 (x := x) (v := v) (w := u) hdis, Set.mem_setOf_eq] at hgt
+  obtain ⟨t1, t2, t3, ht2, ht3, hsum, hy_eq⟩ := hgt
+  have ht1 : t1 = 1 - t2 - t3 := by linarith
+  have ha1 : (y - x : V3) = t2 • (v - x) + t3 • (u - x) := by
+    rw [hy_eq, ht1]
+    module
+  have ha1' : ((y - x : V3) : Fin 3 → ℝ) =
+      t2 • ((v - x : V3) : Fin 3 → ℝ) + t3 • ((u - x : V3) : Fin 3 → ℝ) := by
+    rw [ha1]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul]
+  have hA : crossProduct ((y - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((v - x : V3) : Fin 3 → ℝ) =
+      t3 * (crossProduct ((u - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((v - x : V3) : Fin 3 → ℝ)) := by
+    rw [ha1']
+    exact cross_dot_combo3 _ _ _ t2 t3
+  have hB : -(crossProduct ((y - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((u - x : V3) : Fin 3 → ℝ)) =
+      t2 * (crossProduct ((u - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((v - x : V3) : Fin 3 → ℝ)) := by
+    rw [ha1']
+    exact cross_dot_combo4 _ _ _ t2 t3
+  have hc : 0 < -(crossProduct ((u - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((v - x : V3) : Fin 3 → ℝ)) := by
+    have h' := hpos
+    rw [hA] at h'
+    rw [← mul_neg] at h'
+    exact pos_of_mul_pos_right h' ht3.le
+  have hneg : -(crossProduct ((y - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((u - x : V3) : Fin 3 → ℝ)) < 0 := by
+    rw [hB]
+    exact mul_neg_of_pos_of_neg ht2 (neg_pos.mp hc)
+  exact neg_lt_zero.mp hneg
 
 /-- HOL planarity.hl :12991-13022 `aff_gt_1_2_cross_dotr_4point_zero`
 
