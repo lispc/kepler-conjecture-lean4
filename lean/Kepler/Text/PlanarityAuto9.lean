@@ -115,6 +115,22 @@ theorem aff_ge_2_1_is_exists_point_inaff_ge_1_2 (x y z w : V3)
         field_simp
         module
 
+/-- `affGt s t ⊆ affGe s t`：严格正系数组合是非负组合。 -/
+private theorem affGt_subset_affGe_gen {s t : Set V3} : affGt s t ⊆ affGe s t := by
+  intro v hv
+  obtain ⟨f, hfin, hsum, hpos, hone⟩ := hv
+  exact ⟨f, hfin, hsum, fun w hw => (hpos w hw).le, hone⟩
+
+/-- `¬Collinear3 x v w` 蕴含 `{x}` 与 `{v,w}` 不交。 -/
+private theorem disjoint_of_not_collinear3' {x v w : V3} (hnc : ¬ Collinear3 x v w) :
+    Disjoint ({x} : Set V3) {v, w} := by
+  rw [Set.disjoint_singleton_left]
+  intro hmem
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+  rcases hmem with h | h
+  · exact hnc (collinear3_of_eq (v := x) (w := v) (w1 := w) h.symm)
+  · exact hnc (collinear3_pair_left (v0 := x) (v1 := v) (x := w) h.symm)
+
 /-! ## yfan 中点的 azim 不为零（planarity.hl:12261-12322） -/
 
 /-- HOL planarity.hl :12261-12322 `not_azim_points_in_yfan`
@@ -170,7 +186,55 @@ theorem not_azim_points_in_yfan (x : V3) (V : Set V3) (E : Set (Set V3))
     (hyxfan : y ∈ xfan x V E) (hyx : y ≠ x)
     (hconn : ∀ t : ℝ, 0 < t → t < 1 → (1 - t) • y + t • z ∈ yfan x V E) :
     ∀ w1 : V3, w1 ∈ setOfEdge u V E → azim x u z w1 ≠ 0 := by
-  sorry
+  intro w1 hw1
+  obtain ⟨huw1E, _hw1V⟩ := hw1
+  intro hazim
+  have hnc_xuw1 : ¬ Collinear3 x u w1 := fan_not_collinear hfan huw1E
+  have hxu : x ≠ u := fun h => hnc_xuw1 (collinear3_of_eq h.symm)
+  have hxw1 : x ≠ w1 := fun h => hnc_xuw1 (collinear3_pair_left h.symm)
+  have hnc_xyz : ¬ Collinear3 x y z :=
+    point_in_yfan_and_point_in_xfan_indepent_fan x V E U y z
+      hfan hcard hfan80 hU hz hyxfan hyx hconn
+  have hy_span : y ∈ affineSpan ℝ ({x, u} : Set V3) :=
+    aff_ge_1_1_subset_aff_fan y x u hxu hyge
+  have hnc_xyw1 : ¬ Collinear3 x y w1 :=
+    permutes_4points_collinear1 x y u w1 hyx.symm hxu hy_span hnc_xuw1
+  have hyw1 : y ≠ w1 :=
+    fun h => hnc_xyw1 (collinear3_pair_right (v0 := x) (v1 := y) (x := w1) h.symm)
+  have hyGt : y ∈ affGt {x} {u} :=
+    no_origin_aff_ge_is_aff_gt x u y hxu hyx.symm hyge
+  have hazim_xy : azim x y z w1 = 0 := by
+    rw [in_aff_gt_eq_azim x y u z w1 hxu hyGt]
+    exact hazim
+  have hz_gt : z ∈ affGt {x, y} {w1} :=
+    (azim_eq_zero_iff (v0 := x) (v1 := y) (w := z) (x := w1) hnc_xyz hnc_xyw1).mp hazim_xy
+  have hz_ge : z ∈ affGe {x, y} {w1} := affGt_subset_affGe_gen hz_gt
+  have h1 : Disjoint ({x} : Set V3) {y, w1} := disjoint_of_not_collinear3' hnc_xyw1
+  have h2 : Disjoint ({x, y} : Set V3) {w1} := by
+    rw [Set.disjoint_left]
+    intro a ha
+    rw [Set.mem_insert_iff, Set.mem_singleton_iff] at ha
+    rcases ha with rfl | rfl
+    · exact hxw1
+    · exact hyw1
+  obtain ⟨t, ht0, ht1, hmem⟩ :=
+    aff_ge_2_1_is_exists_point_inaff_ge_1_2 x y z w1 h1 h2 hz_ge
+  have hy_ge_uw1 : y ∈ affGe {x} {u, w1} := by
+    rw [aff_ge_eq_aff_gt_union_aff_ge hnc_xuw1]
+    exact Or.inl (Or.inr hyge)
+  have hdis_x_uw1 : Disjoint ({x} : Set V3) {u, w1} := by
+    rw [Set.disjoint_singleton_left]
+    intro hmem
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+    rcases hmem with h | h
+    · exact hxu h
+    · exact hxw1 h
+  have hsub : affGe {x} {y, w1} ⊆ affGe {x} {u, w1} :=
+    aff_ge1_subset_aff_ge (x := x) (v := u) (u := w1) (v1 := y)
+      hdis_x_uw1 hnc_xyw1 hy_ge_uw1
+  have hmem_uw1 : (1 - t) • y + t • z ∈ affGe {x} {u, w1} := hsub hmem
+  have hxfan_mem : (1 - t) • y + t • z ∈ xfan x V E := ⟨{u, w1}, huw1E, hmem_uw1⟩
+  exact (hconn t ht0 ht1).2 hxfan_mem
 
 /-! ## 引导进入有界 yfan 分量的边（planarity.hl:12323-12424） -/
 
