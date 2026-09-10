@@ -74,6 +74,43 @@ open scoped Topology
 
 /-! ## 3 元面集的基本基数性质（planarity.hl:14910-15162） -/
 
+/-- `f1_fan` 在真 dart 上没有 2-循环（HOL `properties_of_f1_fan` +
+`SIGMA_FAN` 的核心互异性步骤）：`fFanPair (fFanPair d) ≠ d`。
+
+证明：写 `d = (a,b)`，设 `c = inverseSigmaFan b a`。若
+`fFanPair (fFanPair d) = d`，则第一分量给 `c = a`，即
+`inverseSigmaFan b a = a`；由 `inverse_sigma_fan_comp` 得
+`extensionSigmaFan b a = a`，即 `sigmaFan b a = a`。另一方面 `a` 是 `b`
+的邻居，且由 `hcard` 知 `setOfEdge b ≠ {a}`，故 `SIGMA_FAN` 给出
+`sigmaFan b a ≠ a`，矛盾。 -/
+private theorem fFanPair_fFanPair_ne_of_surrounded {x : V3} {V : Set V3}
+    {E : Set (Set V3)}
+    (hfan : FAN x V E)
+    (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard)
+    {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    fFanPair x V E (fFanPair x V E d) ≠ d := by
+  obtain ⟨a, b⟩ := d
+  simp only [dart1OfFan, Set.mem_setOf_eq] at hd
+  intro heq
+  have hba : {b, a} ∈ E := by rwa [Set.pair_comm]
+  have ha_mem : a ∈ setOfEdge b V E :=
+    (properties_of_setOfEdge_fan x V E b a hfan).mp hba
+  have hc : inverseSigmaFan x V E b a = a := by
+    have h1 := congrArg Prod.fst heq
+    simpa only [fFanPair] using h1
+  have hbV : b ∈ V := hfan.1 (Set.mem_sUnion.mpr ⟨{a, b}, hd, by simp⟩)
+  have hne : setOfEdge b V E ≠ {a} := by
+    intro h
+    have h1 := hcard b hbV
+    rw [h] at h1
+    simp at h1
+  have hsa : sigmaFan x V E b a = a := by
+    have hcomp : extensionSigmaFan x V E b a = a := by
+      have h2 := congrFun (inverse_sigma_fan_comp hfan ha_mem).2 a
+      simpa [Function.comp, hc] using h2
+    rwa [extensionSigmaFan, if_neg (by simpa using ha_mem)] at hcomp
+  exact (SIGMA_FAN hne hfan ha_mem).2.1 hsa
+
 /-- HOL planarity.hl :14910-14985 `CARD_FACE_SET_GE_3_FULLY_SURROUNDED_FAN`
 
 HOL 原文：
@@ -105,7 +142,45 @@ theorem CARD_FACE_SET_GE_3_FULLY_SURROUNDED_FAN {x : V3} {V : Set V3}
     (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard)
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet) :
     3 ≤ ds.ncard := by
-  sorry
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  have hdf : dartOfFan V E = dart1OfFan V E :=
+    dartOfFan_eq_dart1_of_surrounded hfan hcard
+  have hfin : ds.Finite := FINITE_FACE_FAN hfan hds
+  obtain ⟨d, hdH, hface⟩ := Hypermap.face_representation H hds
+  have hdarts : (↑H.darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have hd_dart1 : d ∈ dart1OfFan V E := by
+    change d ∈ (↑H.darts : Set (V3 × V3)) at hdH
+    simpa [hdarts] using hdH
+  have hd_mem : d ∈ ds := by
+    rw [hface]
+    exact Hypermap.mem_face_self H d
+  let y : V3 × V3 := fFanPair x V E d
+  have hy_dart1 : y ∈ dart1OfFan V E := fFanPair_mem_dart1 hfan hd_dart1
+  have hy_mem : y ∈ ds :=
+    condition_f1_fan_in_face_set (y := y) (y1 := d) hfan rfl hds hdf hd_mem
+  let y1 : V3 × V3 := fFanPair x V E y
+  have hy1_mem : y1 ∈ ds :=
+    condition_f1_fan_in_face_set (y := y1) (y1 := y) hfan rfl hds hdf hy_mem
+  have hdy : d ≠ y := fun h => f_fan_no_fix hfan d hd_dart1 h.symm
+  have hyy1 : y ≠ y1 := fun h => f_fan_no_fix hfan y hy_dart1 h.symm
+  have hdy1 : d ≠ y1 := fun h =>
+    fFanPair_fFanPair_ne_of_surrounded hfan hcard hd_dart1 h.symm
+  have hsub : ({d, y, y1} : Set (V3 × V3)) ⊆ ds := by
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | rfl | rfl
+    · exact hd_mem
+    · exact hy_mem
+    · exact hy1_mem
+  have hcard3 : ({d, y, y1} : Set (V3 × V3)).ncard = 3 := by
+    rw [show ({d, y, y1} : Set (V3 × V3)) = insert d (insert y {y1}) by rfl,
+      Set.ncard_insert_of_notMem (by simp [hdy, hdy1]),
+      Set.ncard_insert_of_notMem (by simpa using hyy1)]
+    simp
+  have hle := Set.ncard_le_ncard hsub hfin
+  rwa [hcard3] at hle
 
 /-- HOL planarity.hl :14986-15063 `CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN`
 
