@@ -85,7 +85,7 @@ theorem zpoint_in_yfan (x : V3) (V : Set V3) (E : Set (Set V3))
     (hfan : FAN x V E) (hne : E ≠ ∅)
     (hU : U ∈ topologicalComponentYfan x V E) (hz : z ∈ U) :
     z ∈ yfan x V E := by
-  sorry
+  exact topological_component_subset_yfan hU hz
 
 /-! ## 线段上的凸组合（planarity.hl:11802-11819） -/
 
