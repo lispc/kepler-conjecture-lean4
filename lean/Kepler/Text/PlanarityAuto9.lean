@@ -287,7 +287,82 @@ theorem exists_edge_bounded_topological_component_yfan (x : V3) (V : Set V3)
     (hconn : ∀ t : ℝ, 0 < t → t < 1 → (1 - t) • y + t • z ∈ yfan x V E) :
     ∃ w : V3, {u, w} ∈ E ∧
       z ∈ wDartFan x V E (x, u, w, sigmaFan x V E u w) := by
-  sorry
+  have hE : E ≠ ∅ := nonsetedge_fully_surround_fan hcard hfan
+  have hz_yfan : z ∈ yfan x V E :=
+    zpoint_in_yfan x V E U z hfan hE hU hz
+  have hsetV : setOfEdge u V E ⊆ V := set_of_edge_subset_edges V E u
+  have hsetXfan : setOfEdge u V E ⊆ xfan x V E :=
+    hsetV.trans (v_subset_xfan x V E hfan hcard)
+  have hz_not_set : z ∉ setOfEdge u V E :=
+    fun hzmem => hz_yfan.2 (hsetXfan hzmem)
+  obtain ⟨w, hw_mem, hw_min⟩ :=
+    exists_edge_component_yfan x V E u z hfan hcard hu hz_not_set
+  refine ⟨w, hw_mem.1, ?_⟩
+  have hcard_u : 1 < (setOfEdge u V E).ncard := hcard u hu
+  have hnc_xyz : ¬ Collinear3 x y z :=
+    point_in_yfan_and_point_in_xfan_indepent_fan x V E U y z
+      hfan hcard hfan80 hU hz hyxfan hyx hconn
+  have hnc_xuw : ¬ Collinear3 x u w := fan_not_collinear hfan hw_mem.1
+  have hxu : x ≠ u := by
+    intro h
+    exact hnc_xuw (by rw [h]; exact collinear3_of_eq rfl)
+  have hy_span : y ∈ affineSpan ℝ ({x, u} : Set V3) :=
+    aff_ge_1_1_subset_aff_fan y x u hxu hyge
+  have hnc_xuz : ¬ Collinear3 x u z :=
+    permutes_4points_collinear x y u z (Ne.symm hyx) hxu hy_span hnc_xyz
+  have hne_azim_z_w : azim x u z w ≠ 0 :=
+    not_azim_points_in_yfan x V E U y z u
+      hfan hcard hfan80 hU hz hu hyge hyxfan hyx hconn w hw_mem
+  have hpos : 0 < azim x u w z := by
+    rcases lt_or_eq_of_le (azim_nonneg x u w z) with h | h
+    · exact h
+    · exfalso
+      exact hne_azim_z_w
+        (azim_compl_eq_zero (z := x) (w := u) (w1 := w) (w2 := z)
+          hnc_xuw hnc_xuz h.symm)
+  have hne_singleton : setOfEdge u V E ≠ {w} := by
+    intro h
+    have h1 : (setOfEdge u V E).ncard = 1 := by rw [h, Set.ncard_singleton]
+    omega
+  obtain ⟨hwσ_mem, hwσ_ne_w, hwσ_min⟩ :=
+    SIGMA_FAN hne_singleton hfan hw_mem
+  have hnc_xuwσ : ¬ Collinear3 x u (sigmaFan x V E u w) :=
+    fan_not_collinear hfan hwσ_mem.1
+  have hne_azim_z_σ : azim x u z (sigmaFan x V E u w) ≠ 0 :=
+    not_azim_points_in_yfan x V E U y z u
+      hfan hcard hfan80 hU hz hu hyge hyxfan hyx hconn
+      (sigmaFan x V E u w) hwσ_mem
+  have hle : azim x u z (sigmaFan x V E u w) ≤ azim x u z w := by
+    have h := hw_min (sigmaFan x V E u w) hwσ_mem
+    unfold azim1 at h
+    linarith
+  have hsum4 : azim x u z w
+      = azim x u z (sigmaFan x V E u w) + azim x u (sigmaFan x V E u w) w :=
+    sum4_azim_fan (Ne.symm hxu) hnc_xuz hnc_xuwσ hnc_xuw hle
+  have hpos_azim_z_σ : 0 < azim x u z (sigmaFan x V E u w) :=
+    lt_of_le_of_ne (azim_nonneg x u z (sigmaFan x V E u w))
+      (Ne.symm hne_azim_z_σ)
+  have hne_azim_σw : azim x u (sigmaFan x V E u w) w ≠ 0 := by
+    intro h0
+    exact hwσ_ne_w (unique_azim0_point_fan hfan hwσ_mem.1 hw_mem.1 h0)
+  have hlt : azim x u w z < azim x u w (sigmaFan x V E u w) := by
+    have hcompl_z : azim x u w z = 2 * Real.pi - azim x u z w := by
+      rw [azim_compl (z := x) (w := u) (w1 := z) (w2 := w)
+        hnc_xuz hnc_xuw, if_neg hne_azim_z_w]
+    have hcompl_σ : azim x u w (sigmaFan x V E u w)
+        = 2 * Real.pi - azim x u (sigmaFan x V E u w) w := by
+      rw [azim_compl (z := x) (w := u) (w1 := sigmaFan x V E u w) (w2 := w)
+        hnc_xuwσ hnc_xuw, if_neg hne_azim_σw]
+    have hlt_aux : azim x u (sigmaFan x V E u w) w < azim x u z w := by
+      linarith [hsum4, hpos_azim_z_σ]
+    rw [hcompl_z, hcompl_σ]
+    linarith
+  have hwdart : wDartFan x V E (x, u, w, sigmaFan x V E u w)
+      = wedge x u w (sigmaFan x V E u w) := by
+    unfold wDartFan
+    rw [if_pos hcard_u]
+  rw [hwdart]
+  exact ⟨hnc_xuz, hpos, hlt⟩
 
 /-! ## aff_gt 边锥含于 w_dart_fan（planarity.hl:12425-12463） -/
 
