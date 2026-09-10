@@ -154,6 +154,21 @@ FAN(x,V,E)
 - `exists_norm_eq_iInf_of_complete_convex`
   （Mathlib/Analysis/InnerProductSpace/Projection/Minimal.lean:34）
 - `xfan`（Kepler/Text/Fan.lean:154）、`yfan`（Kepler/Text/Fan.lean:158） -/
+private lemma dist_smul_segment_lt {y z : V3} {t : ℝ} (ht0 : 0 < t) (ht1 : t < 1)
+    (hyz : y ≠ z) :
+    dist z ((1 - t) • y + t • z) < dist z y := by
+  have h1t : 0 < 1 - t := sub_pos.mpr ht1
+  have h1t1 : 1 - t < 1 := by linarith
+  have hz_pos : 0 < dist z y := dist_pos.mpr (Ne.symm hyz)
+  have hsub : z - ((1 - t) • y + t • z) = (1 - t) • (z - y) := by module
+  calc
+    dist z ((1 - t) • y + t • z)
+        = ‖(1 - t) • (z - y)‖ := by rw [dist_eq_norm, hsub]
+      _ = (1 - t) * ‖z - y‖ := norm_smul_of_nonneg (le_of_lt h1t) _
+      _ = (1 - t) * dist z y := by rw [dist_eq_norm]
+      _ < 1 * dist z y := mul_lt_mul_of_pos_right h1t1 hz_pos
+      _ = dist z y := one_mul _
+
 theorem connect_insidepoint_to_bound_yfan (x : V3) (V : Set V3) (E : Set (Set V3))
     (U : Set V3) (z : V3)
     (hfan : FAN x V E)
@@ -162,7 +177,43 @@ theorem connect_insidepoint_to_bound_yfan (x : V3) (V : Set V3) (E : Set (Set V3
     (hU : U ∈ topologicalComponentYfan x V E) (hz : z ∈ U) :
     ∃ y : V3, y ≠ x ∧ y ∈ xfan x V E ∧
       ∀ t : ℝ, 0 < t → t < 1 → (1 - t) • y + t • z ∈ yfan x V E := by
-  sorry
+  have hne : E ≠ ∅ := nonsetedge_fully_surround_fan hcard hfan
+  have hxz : x ≠ z := point_in_yfan_not_x_fan x V E U z hfan hne hU hz
+  obtain ⟨v, hv_xfan, hx_not_conv⟩ :=
+    exists_point_notxin_convex_in_xfan x V E z hfan hxz hne
+  have hne_inter : (xfan x V E ∩ segment ℝ v z).Nonempty :=
+    Set.nonempty_iff_ne_empty.mpr
+      (notempty_xfan_inter_segment_fan x V E z v hfan hv_xfan)
+  have hcompact_seg : IsCompact (segment ℝ v z) := by
+    rw [← convexHull_pair v z]
+    exact (Set.toFinite ({v, z} : Set V3)).isCompact_convexHull ℝ
+  have hcompact : IsCompact (xfan x V E ∩ segment ℝ v z) :=
+    hcompact_seg.inter_left (xfan_closed_fan hfan)
+  obtain ⟨y, hy, hmin⟩ := hcompact.exists_isMinOn hne_inter
+    (continuous_const.dist continuous_id).continuousOn
+  have hy_xfan : y ∈ xfan x V E := hy.1
+  have hy_seg : y ∈ segment ℝ v z := hy.2
+  have hy_conv : y ∈ convexHull ℝ ({v, z} : Set V3) := by
+    rw [convexHull_pair]
+    exact hy_seg
+  have hyx : y ≠ x := by
+    intro h
+    exact hx_not_conv (h ▸ hy_conv)
+  have hz_yfan : z ∈ yfan x V E := topological_component_subset_yfan hU hz
+  have hyz : y ≠ z := by
+    intro h
+    exact hz_yfan.2 (h ▸ hy_xfan)
+  refine ⟨y, hyx, hy_xfan, ?_⟩
+  intro t ht0 ht1
+  by_contra hp_not
+  have hp_xfan : (1 - t) • y + t • z ∈ xfan x V E := by
+    by_contra hpx
+    exact hp_not (by simp [yfan, hpx])
+  have hp_seg : (1 - t) • y + t • z ∈ segment ℝ v z :=
+    segment_in_segment v z y hy_seg t ⟨le_of_lt ht0, le_of_lt ht1⟩
+  have hle : dist z y ≤ dist z ((1 - t) • y + t • z) :=
+    isMinOn_iff.mp hmin _ ⟨hp_xfan, hp_seg⟩
+  exact (not_lt_of_ge hle) (dist_smul_segment_lt ht0 ht1 hyz)
 
 /-! ## yfan 分量的连通性与刻画（planarity.hl:11882-11904） -/
 
