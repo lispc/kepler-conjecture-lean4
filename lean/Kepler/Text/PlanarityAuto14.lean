@@ -634,7 +634,40 @@ theorem KVQWYDL_lemma3 {x v u w u1 w1 : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan80 : fan80 x V E)
     (haff : affGt ({x} : Set V3) ({v, u, w} : Set V3) = dartLeadsInto x V E u1 w1) :
     (u1, w1) ∈ ({(v, u), (u, w), (w, v)} : Set (V3 × V3)) := by
-  sorry
+  have hu1mem : u1 ∈ ({v, u, w} : Set V3) :=
+    KVQWYDL_lemma2 hfan hvu huw hwv hu1w1 hsigma hcard hfan80 haff
+  have htri : sigmaFan x V E v u = w ∧ sigmaFan x V E w v = u :=
+    PROPERTIES_TRIANGLE_FAN hfan hvu huw hwv hsigma hcard hfan80
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hu1mem
+  rcases hu1mem with hu1v | hu1u | hu1w
+  · exact condition_edge_in_face_fan (x := x) (v := v) (u := u) (w := w)
+      (u1 := u1) (w1 := w1) hfan hvu huw hwv hu1w1 hsigma hcard hfan80 hu1v haff
+  · have haff' : affGt ({x} : Set V3) ({u, w, v} : Set V3)
+        = dartLeadsInto x V E u1 w1 := by
+      rw [show ({u, w, v} : Set V3) = ({v, u, w} : Set V3) by
+        ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+      exact haff
+    have h := condition_edge_in_face_fan (x := x) (v := u) (u := w) (w := v)
+      (u1 := u1) (w1 := w1) hfan huw hwv hvu hu1w1 htri.2 hcard hfan80 hu1u haff'
+    have hset : ({(u, w), (w, v), (v, u)} : Set (V3 × V3))
+        = ({(v, u), (u, w), (w, v)} : Set (V3 × V3)) := by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      constructor <;> intro hp <;> tauto
+    rw [hset] at h
+    exact h
+  · have haff' : affGt ({x} : Set V3) ({w, v, u} : Set V3)
+        = dartLeadsInto x V E u1 w1 := by
+      rw [show ({w, v, u} : Set V3) = ({v, u, w} : Set V3) by
+        ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+      exact haff
+    have h := condition_edge_in_face_fan (x := x) (v := w) (u := v) (w := u)
+      (u1 := u1) (w1 := w1) hfan hwv hvu huw hu1w1 htri.1 hcard hfan80 hu1w haff'
+    have hset : ({(w, v), (v, u), (u, w)} : Set (V3 × V3))
+        = ({(v, u), (u, w), (w, v)} : Set (V3 × V3)) := by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      constructor <;> intro hp <;> tauto
+    rw [hset] at h
+    exact h
 
 /-! ## 面的有限性与 f1 封闭性（planarity.hl:14872-14909） -/
 
