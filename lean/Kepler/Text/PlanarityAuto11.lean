@@ -182,7 +182,35 @@ theorem pos_in_aff_gt_2_1_fan (x v u : V3) (a : ℝ)
     (hdis : Disjoint ({x, v} : Set V3) {u})
     (ha0 : 0 < a) (ha1 : a < 1) :
     (1 - a) • v + a • u ∈ affGt ({x, v} : Set V3) {u} := by
-  sorry
+  have _ := ha1
+  have hxu : x ≠ u := by
+    intro he
+    exact (Set.disjoint_left.mp hdis)
+      (show x ∈ ({x, v} : Set V3) by simp)
+      (show x ∈ ({u} : Set V3) by simp [he])
+  have hvu : v ≠ u := by
+    intro he
+    exact (Set.disjoint_left.mp hdis)
+      (show v ∈ ({x, v} : Set V3) by simp)
+      (show v ∈ ({u} : Set V3) by simp [he])
+  rcases eq_or_ne x v with hxv | hxv
+  · rw [hxv]
+    rw [show ({v, v} : Set V3) = {v} by ext z; simp]
+    have hfin : ({v} ∪ {u} : Set V3).Finite :=
+      (Set.finite_singleton v).union (Set.finite_singleton u)
+    refine ⟨fun z => if z = u then a else 1 - a, hfin, ?_, ?_, ?_⟩
+    · rw [sum_insert_single_v hfin hvu]
+      rw [if_neg hvu, if_pos rfl]
+    · intro w hw
+      rw [Set.mem_singleton_iff] at hw
+      rw [hw]
+      simpa using ha0
+    · rw [sum_insert_single_s hfin hvu]
+      rw [if_neg hvu, if_pos rfl]
+      ring
+  · rw [affGt_pair_iff (v0 := x) (v1 := v) (x := u)
+      (y := (1 - a) • v + a • u) hxv (Ne.symm hxu) (Ne.symm hvu)]
+    exact ⟨a, ha0, 1 - a, by module⟩
 
 /-! ## 四点 aff_gt 交集条件（planarity.hl:13169-13292） -/
 
