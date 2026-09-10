@@ -44,10 +44,16 @@ import $MODULE
 EOF
 timeout 600 lake env lean "/tmp/AxCheck_$THM.lean" > /tmp/AxCheck_$THM.out 2>&1 \
   || fail "axioms check crashed, see /tmp/AxCheck_$THM.out"
-grep -q 'sorryAx' "/tmp/AxCheck_$THM.out" && fail "sorryAx in axioms"
-axline=$(grep -oE 'depends on axioms: \[.*\]' "/tmp/AxCheck_$THM.out" | head -1)
-[ -n "$axline" ] || fail "no axioms line in output"
-rest=$(echo "$axline" | sed 's/.*\[//; s/\]//; s/propext//g; s/Classical\.choice//g; s/Quot\.sound//g; s/[ ,]//g')
-[ -z "$rest" ] || fail "unexpected axioms: $axline"
+# NB: lean wraps long output across lines — flatten before matching
+flat=$(tr '\n' ' ' < "/tmp/AxCheck_$THM.out")
+echo "$flat" | grep -q 'sorryAx' && fail "sorryAx in axioms"
+if echo "$flat" | grep -q 'does not depend on any axioms'; then
+  axline="(none)"
+else
+  axline=$(echo "$flat" | grep -oE 'depends on axioms: \[.*\]' | head -1)
+  [ -n "$axline" ] || fail "no axioms line in output"
+  rest=$(echo "$axline" | sed 's/.*\[//; s/\]//; s/propext//g; s/Classical\.choice//g; s/Quot\.sound//g; s/[ ,]//g')
+  [ -z "$rest" ] || fail "unexpected axioms: $axline"
+fi
 
 echo "GATE-PASS $THM" | tee -a /tmp/auto_gate.log
