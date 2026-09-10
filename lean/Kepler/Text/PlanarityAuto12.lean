@@ -348,12 +348,141 @@ Kepler/Text/Planarity.lean:2900 的用法）与 `notcoplanar_imp_notcollinear_fa
 - `notcoplanar_disjoints`（Kepler/Text/PlanarityAuto11.lean:1259）
 - `notcoplanar_disjoint`（Kepler/Text/PlanarityAuto11.lean:1220）
 - `LinearIndependent`（Mathlib/LinearAlgebra/LinearIndependent/Basic.lean） -/
+private theorem mem_affineSpan_sub_of_smul_eq_neg {x y a b : V3} {p q r : ℝ}
+    (hp : p ≠ 0) (h : p • (y - x) + q • (a - x) + r • (b - x) = 0) :
+    y ∈ affineSpan ℝ ({x, a, b} : Set V3) := by
+  have ha : a - x ∈ vectorSpan ℝ ({x, a, b} : Set V3) := by
+    simpa [vsub_eq_sub] using
+      vsub_mem_vectorSpan (k := ℝ) (p₁ := a) (p₂ := x) (by simp) (by simp)
+  have hb : b - x ∈ vectorSpan ℝ ({x, a, b} : Set V3) := by
+    simpa [vsub_eq_sub] using
+      vsub_mem_vectorSpan (k := ℝ) (p₁ := b) (p₂ := x) (by simp) (by simp)
+  have hqr : q • (a - x) + r • (b - x) ∈ vectorSpan ℝ ({x, a, b} : Set V3) :=
+    add_mem (Submodule.smul_mem _ q ha) (Submodule.smul_mem _ r hb)
+  have hpy : p • (y - x) = -(q • (a - x) + r • (b - x)) := by
+    have h' : p • (y - x) + (q • (a - x) + r • (b - x)) = 0 := by
+      rw [← h]; abel
+    exact eq_neg_of_add_eq_zero_left h'
+  have hpy_mem : p • (y - x) ∈ vectorSpan ℝ ({x, a, b} : Set V3) := by
+    rw [hpy]; exact neg_mem hqr
+  have hyx : y - x ∈ vectorSpan ℝ ({x, a, b} : Set V3) := by
+    have := Submodule.smul_mem _ p⁻¹ hpy_mem
+    rwa [smul_smul, inv_mul_cancel₀ hp, one_smul] at this
+  have hx : x ∈ affineSpan ℝ ({x, a, b} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hdir : y - x ∈ (affineSpan ℝ ({x, a, b} : Set V3)).direction := by
+    rwa [direction_affineSpan]
+  have hmem := (AffineSubspace.vadd_mem_iff_mem_direction
+    (s := affineSpan ℝ ({x, a, b} : Set V3)) (y - x) hx).mpr hdir
+  rwa [vadd_eq_add, sub_add_cancel] at hmem
+
+private theorem notcoplanar_smul_sub_eq_zero {x v u w : V3} {p q r : ℝ}
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3))
+    (h : p • (v - x) + q • (u - x) + r • (w - x) = 0) :
+    p = 0 ∧ q = 0 ∧ r = 0 := by
+  refine ⟨?_, ?_, ?_⟩
+  · by_contra hp
+    have hv : v ∈ affineSpan ℝ ({x, u, w} : Set V3) :=
+      mem_affineSpan_sub_of_smul_eq_neg (a := u) (b := w) hp h
+    exact hcop ⟨x, u, w, fun z hz => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl | rfl
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact hv
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact subset_affineSpan ℝ _ (by simp)⟩
+  · by_contra hq
+    have h' : q • (u - x) + p • (v - x) + r • (w - x) = 0 := by
+      rw [← h]; abel
+    have hu : u ∈ affineSpan ℝ ({x, v, w} : Set V3) :=
+      mem_affineSpan_sub_of_smul_eq_neg (a := v) (b := w) hq h'
+    exact hcop ⟨x, v, w, fun z hz => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl | rfl
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact hu
+      · exact subset_affineSpan ℝ _ (by simp)⟩
+  · by_contra hr
+    have h' : r • (w - x) + p • (v - x) + q • (u - x) = 0 := by
+      rw [← h]; abel
+    have hw : w ∈ affineSpan ℝ ({x, v, u} : Set V3) :=
+      mem_affineSpan_sub_of_smul_eq_neg (a := v) (b := u) hr h'
+    exact hcop ⟨x, v, u, fun z hz => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl | rfl
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact hw⟩
+
 theorem inter_aff_gt_3_1_is_aff_gt_1_3 (x v u w : V3)
     (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) :
     affGt ({x, v, u} : Set V3) {w} ∩ affGt ({x, u, w} : Set V3) {v} ∩
       affGt ({x, w, v} : Set V3) {u} =
         affGt ({x} : Set V3) ({v, u, w} : Set V3) := by
-  sorry
+  obtain ⟨hdis1, hdis2, hdis3, hdis4, -, -, -, -⟩ :=
+    notcoplanar_disjoints x v u w hcop
+  ext y
+  constructor
+  · intro hy
+    simp only [Set.mem_inter_iff] at hy
+    obtain ⟨⟨hy1, hy2⟩, hy3⟩ := hy
+    rw [AFF_GT_3_1 x v u w hdis1, Set.mem_setOf_eq] at hy1
+    rw [AFF_GT_3_1 x u w v hdis2, Set.mem_setOf_eq] at hy2
+    rw [AFF_GT_3_1 x w v u hdis3, Set.mem_setOf_eq] at hy3
+    rw [AFF_GT_1_3 x v u w hdis4, Set.mem_setOf_eq]
+    obtain ⟨a1, a2, a3, a4, ha4, hasum, hay⟩ := hy1
+    obtain ⟨b1, b2, b3, b4, hb4, hbsum, hby⟩ := hy2
+    obtain ⟨c1, c2, c3, c4, hc4, hcsum, hcy⟩ := hy3
+    have heq1 : (a2 - b4) • (v - x) + (a3 - b2) • (u - x) +
+        (a4 - b3) • (w - x) = 0 := by
+      have hEq : a1 • x + a2 • v + a3 • u + a4 • w =
+          b1 • x + b2 • u + b3 • w + b4 • v := by rw [← hay, hby]
+      have h1 : a1 = 1 - a2 - a3 - a4 := by linarith
+      have h2 : b1 = 1 - b2 - b3 - b4 := by linarith
+      have hdiff : (a2 - b4) • (v - x) + (a3 - b2) • (u - x) +
+          (a4 - b3) • (w - x) =
+          (a1 • x + a2 • v + a3 • u + a4 • w) -
+            (b1 • x + b2 • u + b3 • w + b4 • v) := by
+        rw [h1, h2]; module
+      rw [hdiff, hEq, sub_self]
+    have heq2 : (b4 - c3) • (v - x) + (b2 - c4) • (u - x) +
+        (b3 - c2) • (w - x) = 0 := by
+      have hEq : b1 • x + b2 • u + b3 • w + b4 • v =
+          c1 • x + c2 • w + c3 • v + c4 • u := by rw [← hby, hcy]
+      have h1 : b1 = 1 - b2 - b3 - b4 := by linarith
+      have h2 : c1 = 1 - c2 - c3 - c4 := by linarith
+      have hdiff : (b4 - c3) • (v - x) + (b2 - c4) • (u - x) +
+          (b3 - c2) • (w - x) =
+          (b1 • x + b2 • u + b3 • w + b4 • v) -
+            (c1 • x + c2 • w + c3 • v + c4 • u) := by
+        rw [h1, h2]; module
+      rw [hdiff, hEq, sub_self]
+    obtain ⟨ha2b4, ha3b2, _ha4b3⟩ := notcoplanar_smul_sub_eq_zero hcop heq1
+    obtain ⟨_hb4c3, hb2c4, _hb3c2⟩ := notcoplanar_smul_sub_eq_zero hcop heq2
+    have ha2pos : 0 < a2 := by
+      have h : a2 = b4 := sub_eq_zero.mp ha2b4
+      rw [h]; exact hb4
+    have ha3pos : 0 < a3 := by
+      have h1 : a3 = b2 := sub_eq_zero.mp ha3b2
+      have h2 : b2 = c4 := sub_eq_zero.mp hb2c4
+      rw [h1, h2]; exact hc4
+    exact ⟨a1, a2, a3, a4, ha2pos, ha3pos, ha4, hasum, hay⟩
+  · intro hy
+    rw [AFF_GT_1_3 x v u w hdis4, Set.mem_setOf_eq] at hy
+    obtain ⟨t1, t2, t3, t4, ht2, ht3, ht4, htsum, hty⟩ := hy
+    simp only [Set.mem_inter_iff]
+    refine ⟨⟨?_, ?_⟩, ?_⟩
+    · rw [AFF_GT_3_1 x v u w hdis1, Set.mem_setOf_eq]
+      exact ⟨t1, t2, t3, t4, ht4, htsum, hty⟩
+    · rw [AFF_GT_3_1 x u w v hdis2, Set.mem_setOf_eq]
+      refine ⟨t1, t3, t4, t2, ht2, ?_, ?_⟩
+      · linarith
+      · rw [hty]; module
+    · rw [AFF_GT_3_1 x w v u hdis3, Set.mem_setOf_eq]
+      refine ⟨t1, t4, t2, t3, ht3, ?_, ?_⟩
+      · linarith
+      · rw [hty]; module
 
 /-! ## cross/dot 与 aff_gt 3-1 半空间（planarity.hl:13872-14074） -/
 
