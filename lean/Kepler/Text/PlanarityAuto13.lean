@@ -371,7 +371,35 @@ theorem KVQWYDL_lemma1 (x : V3) (V : Set V3) (E : Set (Set V3))
     (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
     (hfan80 : fan80 x V E) :
     affGt ({x} : Set V3) ({v, u, w} : Set V3) = dartLeadsInto x V E u w := by
-  sorry
+  apply Set.Subset.antisymm
+  · exact aff_gt_1_3_subset_dart_leads_into_fan x V E v u w hfan hvu huw hsigma
+      hcard hfan80
+  · intro z hz
+    by_contra hzgt
+    obtain ⟨hθ0, hθπ⟩ := hfan80 u w huw
+    rw [hsigma] at hθ0 hθπ
+    have hcop := properties_fully_surrounded hfan hvu huw hθ0 hθπ
+    have hne := notcoplanar_4point_aff_gt_1_3_not_empty x v u w hcop
+    obtain ⟨y, hy⟩ := Set.nonempty_iff_ne_empty.mpr hne
+    have hys : y ∈ dartLeadsInto x V E u w :=
+      aff_gt_1_3_subset_dart_leads_into_fan x V E v u w hfan hvu huw hsigma
+        hcard hfan80 hy
+    have hconn : IsPreconnected (dartLeadsInto x V E u w) :=
+      connected_dart_leads_into_fan hfan huw
+    obtain ⟨t, hts, htun⟩ :=
+      cut_aff_gt_1_3_connected x y z v u w (dartLeadsInto x V E u w)
+        hconn hcop hys hz hy hzgt
+    have hyfan : dartLeadsInto x V E u w ⊆ yfan x V E :=
+      topological_component_subset_yfan
+        (dart_leads_into_mem_topologicalComponentYfan hfan huw)
+    have htxfan : t ∈ xfan x V E := by
+      rcases htun with (h1 | h2) | h3
+      · exact AFF_GE_SUBSET_XFAN x V E v u hvu h1
+      · exact AFF_GE_SUBSET_XFAN x V E u w huw h2
+      · exact AFF_GE_SUBSET_XFAN x V E w v hwv h3
+    have hty : t ∈ yfan x V E := hyfan hts
+    rw [yfan, Set.mem_sdiff] at hty
+    exact hty.2 htxfan
 
 /-! ## yfan 分量内的点不等于顶点（planarity.hl:14401-14417） -/
 
