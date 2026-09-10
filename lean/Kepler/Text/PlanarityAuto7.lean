@@ -242,7 +242,7 @@ theorem in_topological_component_yfan_is_connected (x : V3) (V : Set V3)
     (E : Set (Set V3)) (U : Set V3)
     (hU : U ∈ topologicalComponentYfan x V E) :
     IsPreconnected U := by
-  sorry
+  exact isPreconnected_of_mem_topologicalComponentYfan hU
 
 /-- HOL planarity.hl :11891-11904 `expand_element_in_topological_component_yfan`
 
