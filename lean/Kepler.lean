@@ -30,6 +30,8 @@ import Kepler.Text.PlanarityNotCut
 import Kepler.Text.AffGtCut
 -- Phase 5: planarity.hl:9297 起 angle/rcone 段（自动化移植 harness：骨架定稿 + big-pickle 填空）
 import Kepler.Text.PlanarityAngle
+-- Phase 5: planarity.hl:10812 起 dartset/连通分量段（同 harness）
+import Kepler.Text.PlanarityComponent
 import Kepler.Text.VectorAngleLemmas
 -- Phase 4: 分支定界证书树（二分盒树 + covers/bb_sound，叶为内核 decide 的 checkPos）
 import Kepler.Interval.Cert

@@ -1,9 +1,10 @@
-# 项目总进度（Status）— 2026-09-09
+# 项目总进度（Status）— 2026-09-10
 
 > 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新（cron 自动 push）。
 > 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
-> 当前 main @ `ae6af2f`，`lake build Kepler` 全绿（9307 jobs），
+> 当前 main @ `33e951a`，`lake build Kepler` 全绿（9307 jobs），
 > 唯一 sorry 是 `Statement.lean:111` 的主定理占位（sanctioned，见 Phase 1）。
+> wip/auto-phase5 领先 main：批次 2（6/7 入库，1 枚 NEEDS-HUMAN 闭合后合并）+ 批次 3 骨架。
 
 图例：✅ 完成并验证 / 🟡 进行中 / ⬜ 未启动。完成度为行数或条目数口径的粗略估计。
 
@@ -60,13 +61,15 @@
 禁词扫描 / lake build 绿 / 公理白名单）→ 过闸自动 commit，3 次失败跳过、连续 3 跳闸熔断
 → **Kimi 主 agent 降为每日批次审计（陈述 vs HOL），审过才 ff-push 进 main**。
 升级链：big-pickle ×2 → glm-5.3 ×1 → NEEDS-HUMAN。模板：`docs/phase5-worker-template.md`。
+第三车道试车中：deepseek-v4-flash（付费 API，2026-09-10 升级版基准 97s 零干预过，
+比上一版快一倍；真产首单因依赖未闭合被闸正确拦下，证明本身质量合格）。
 
 | 模块（HOL 源文件） | 行数 | 状态 | 完成度 |
 |---|---|---|---|
 | hypermap/hypermap.hl | 13,575 | ✅ 全书收官 | 100% |
 | fan/fan.hl 系列（fan_defs/fan_misc/fan/CFYXFTY/hypermap_and_fan） | ~7,800 | ✅ 全书收官（hypermapOfFan 完整构造） | 100% |
 | fan/topology.hl | 4,718 | ✅ 全书收官（`36c37c6`，dart_leads_into 全套） | 100% |
-| fan/planarity.hl | 15,463 | 🟡 覆盖至 :9296（main @ `ae6af2f`，60%）；两个巨块（not_cut_inside_fan :3667-5182、AFF_GT_CUT_XFAN_IMP_EDGE_FAN :7788-8998）已全闭合并入；angle/rcone 段 8 定理骨架在 wip 由 harness 自动推进 | **60%** |
+| fan/planarity.hl | 15,463 | 🟡 main 覆盖至 :10095（`33e951a`，65.3%）：批次 1（angle 段 8 枚）全自动闭合入 main；wip 上批次 2（rcone 段 :10096-10806）6/7 入库、`exists_rw_dart_inter_aff_gt1_fan` NEEDS-HUMAN 在补，批次 3（dartset/连通分量段 :10812-11094，9 枚）骨架已备 | **65%** |
 | fan/Conforming.hl | 17,033 | ⬜ 未启动 | 0% |
 | fan/ 其余（polyhedron 等） | ~3,200 | ⬜ 未启动 | 0% |
 | packing/（Rogers/OXLZLEZ3/REUHADY…） | ~28,000 | ⬜ 未启动 | 0% |
