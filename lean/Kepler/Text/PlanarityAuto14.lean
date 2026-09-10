@@ -239,7 +239,30 @@ theorem condition_unique_by_dart_leads_into {x w u w1 : V3} {V : Set V3}
       wDartFan x V E (x, u, w, sigmaFan x V E u w))
     (heq : dartLeadsInto x V E u w = dartLeadsInto x V E u w1) :
     w = w1 := by
-  sorry
+  by_contra hne
+  obtain ⟨h, hh0, hspec⟩ := dartLeadsInto_spec (v := u) (u := w1) hfan huw1
+  set h1 : ℝ := min h (Real.pi / 2) / 2 with hh1def
+  have hminpos : 0 < min h (Real.pi / 2) := lt_min hh0 (by positivity)
+  have hh1_0 : 0 < h1 := by
+    rw [hh1def]; exact div_pos hminpos two_pos
+  have hh1_h : h1 < h := by
+    rw [hh1def]
+    exact lt_of_lt_of_le (half_lt_self hminpos) (min_le_left _ _)
+  have hh1_pi2 : h1 < Real.pi / 2 := by
+    rw [hh1def]
+    exact lt_of_lt_of_le (half_lt_self hminpos) (min_le_right _ _)
+  obtain ⟨y, hy⟩ :=
+    not_empty_rw_dart_fan (v := u) (u := w1) hfan huw1 hh1_0 hh1_pi2
+  obtain ⟨hsub', -⟩ := hspec h1 y hh1_0 hh1_h hy
+  have hyw1 : y ∈ wDartFan x V E (x, u, w1, sigmaFan x V E u w1) := hy.1
+  have hydl1 : y ∈ dartLeadsInto x V E u w1 := hsub' hy
+  have hydl : y ∈ dartLeadsInto x V E u w := heq.symm ▸ hydl1
+  have hyw : y ∈ wDartFan x V E (x, u, w, sigmaFan x V E u w) := hsub hydl
+  have hmem : y ∈ wDartFan x V E (x, u, w, sigmaFan x V E u w) ∩
+      wDartFan x V E (x, u, w1, sigmaFan x V E u w1) := ⟨hyw, hyw1⟩
+  have hempty := disjoint_fan2 (v := u) hfan huw huw1 hne
+  rw [hempty] at hmem
+  exact hmem
 
 /-! ## 三角形扇面的 σ 性质（planarity.hl:14669-14724） -/
 
