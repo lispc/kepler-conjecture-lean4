@@ -93,7 +93,69 @@ theorem aff_ge_1_3_eq_unions_aff_ge_1_2_and_aff_gt_1_3 (x v u w : V3)
         affGe ({x} : Set V3) ({u, w} : Set V3) ∪
         affGe ({x} : Set V3) ({w, v} : Set V3) ∪
         affGt ({x} : Set V3) ({v, u, w} : Set V3) := by
-  sorry
+  obtain ⟨hd1, hd2, hd3, hd4, hd5, hd6, hd7, hd8⟩ :=
+    notcoplanar_disjoints x v u w hcop
+  apply le_antisymm
+  · intro y hy
+    rw [AFF_GE_1_3 x v u w hd4] at hy
+    simp only [Set.mem_setOf_eq] at hy
+    obtain ⟨t1, t2, t3, t4, ht2, ht3, ht4, hsum, hy⟩ := hy
+    by_cases h2 : t2 = 0
+    · have hmem : y ∈ affGe ({x} : Set V3) ({u, w} : Set V3) := by
+        rw [aff_ge_1_2 (x := x) (v := u) (u := w) hd7]
+        exact ⟨t1, t3, t4, ht3, ht4, by linarith, by rw [hy, h2]; module⟩
+      simp only [Set.mem_union]
+      tauto
+    · by_cases h3 : t3 = 0
+      · have hmem : y ∈ affGe ({x} : Set V3) ({w, v} : Set V3) := by
+          rw [aff_ge_1_2 (x := x) (v := w) (u := v) hd8]
+          exact ⟨t1, t4, t2, ht4, ht2, by linarith, by rw [hy, h3]; module⟩
+        simp only [Set.mem_union]
+        tauto
+      · by_cases h4 : t4 = 0
+        · have hmem : y ∈ affGe ({x} : Set V3) ({v, u} : Set V3) := by
+            rw [aff_ge_1_2 (x := x) (v := v) (u := u) hd6]
+            exact ⟨t1, t2, t3, ht2, ht3, by linarith, by rw [hy, h4]; module⟩
+          simp only [Set.mem_union]
+          tauto
+        · have hmem : y ∈ affGt ({x} : Set V3) ({v, u, w} : Set V3) := by
+            rw [AFF_GT_1_3 x v u w hd4]
+            exact ⟨t1, t2, t3, t4, lt_of_le_of_ne ht2 (Ne.symm h2),
+              lt_of_le_of_ne ht3 (Ne.symm h3), lt_of_le_of_ne ht4 (Ne.symm h4),
+              hsum, hy⟩
+          simp only [Set.mem_union]
+          tauto
+  · apply Set.union_subset
+    · apply Set.union_subset
+      · apply Set.union_subset
+        · intro y hy
+          rw [aff_ge_1_2 (x := x) (v := v) (u := u) hd6] at hy
+          simp only [Set.mem_setOf_eq] at hy
+          obtain ⟨a1, a2, a3, ha2, ha3, hsum, hy⟩ := hy
+          rw [AFF_GE_1_3 x v u w hd4]
+          simp only [Set.mem_setOf_eq]
+          exact ⟨a1, a2, a3, 0, ha2, ha3, le_refl 0, by linarith, by rw [hy]; module⟩
+        · intro y hy
+          rw [aff_ge_1_2 (x := x) (v := u) (u := w) hd7] at hy
+          simp only [Set.mem_setOf_eq] at hy
+          obtain ⟨b1, b2, b3, hb2, hb3, hsum, hy⟩ := hy
+          rw [AFF_GE_1_3 x v u w hd4]
+          simp only [Set.mem_setOf_eq]
+          exact ⟨b1, 0, b2, b3, le_refl 0, hb2, hb3, by linarith, by rw [hy]; module⟩
+      · intro y hy
+        rw [aff_ge_1_2 (x := x) (v := w) (u := v) hd8] at hy
+        simp only [Set.mem_setOf_eq] at hy
+        obtain ⟨c1, c2, c3, hc2, hc3, hsum, hy⟩ := hy
+        rw [AFF_GE_1_3 x v u w hd4]
+        simp only [Set.mem_setOf_eq]
+        exact ⟨c1, c3, 0, c2, hc3, le_refl 0, hc2, by linarith, by rw [hy]; module⟩
+    · intro y hy
+      rw [AFF_GT_1_3 x v u w hd4] at hy
+      simp only [Set.mem_setOf_eq] at hy
+      obtain ⟨d1, d2, d3, d4, hd2, hd3, hd4', hsum, hy⟩ := hy
+      rw [AFF_GE_1_3 x v u w hd4]
+      simp only [Set.mem_setOf_eq]
+      exact ⟨d1, d2, d3, d4, le_of_lt hd2, le_of_lt hd3, le_of_lt hd4', hsum, hy⟩
 
 /-- HOL planarity.hl :14252-14297 `cut_aff_gt_1_3_connected`
 
