@@ -284,6 +284,52 @@ theorem permutes_4points_collinear1 {E : Type*} [AddCommGroup E] [Module ℝ E]
 
 /-! ## aff_gt 上的 azim 不变性与 aff_ge/aff_gt 边界（planarity.hl:12117-12154） -/
 
+/-- `affGt {x} {v}` 的射线提取：`y - x = t • (v - x)` 且 `t > 0`。 -/
+private theorem affGt_ray {x v y : V3} (hxv : x ≠ v) (hmem : y ∈ affGt {x} {v}) :
+    ∃ t : ℝ, 0 < t ∧ y - x = t • (v - x) := by
+  obtain ⟨f, hfin, hsum, hpos, hone⟩ := hmem
+  rw [sum_insert_single_s hfin hxv] at hone
+  rw [sum_insert_single_v hfin hxv] at hsum
+  refine ⟨f v, hpos v (Set.mem_singleton v), ?_⟩
+  have hfx : f x = 1 - f v := by linarith
+  rw [hsum, hfx]
+  module
+
+/-- 轴的正常数缩放下 `AzimSpec` 不变（HOL `AZIM_SPECIAL_SCALE` 的角色）。 -/
+private theorem azimSpec_axis_smul {v w u w1 w2 : V3} {θ c : ℝ}
+    (hc : 0 < c) (hu : u - v = c • (w - v))
+    (hspec : AzimSpec v w w1 w2 θ) :
+    AzimSpec v u w1 w2 θ := by
+  obtain ⟨hθ0, hθ1, h1, h2, hframes⟩ := hspec
+  refine ⟨hθ0, hθ1, h1 / c, h2 / c, ?_⟩
+  intro e1 e2 e3 he hax hu_ne
+  have hcne : c ≠ 0 := ne_of_gt hc
+  have hwv : w ≠ v := by
+    intro hwv
+    apply hu_ne
+    have hzero : u - v = 0 := by rw [hu, hwv, sub_self, smul_zero]
+    exact sub_eq_zero.mp hzero
+  have hwv_eq : (w - v : V3) = (c⁻¹ * dist u v) • e3 := by
+    have hthis : c • (w - v) = dist u v • e3 := by rw [← hu, hax]
+    calc (w - v : V3) = c⁻¹ • (c • (w - v)) := by
+          rw [smul_smul, inv_mul_cancel₀ hcne, one_smul]
+      _ = c⁻¹ • (dist u v • e3) := by rw [hthis]
+      _ = (c⁻¹ * dist u v) • e3 := by rw [smul_smul]
+  have hdist : dist w v = c⁻¹ * dist u v := by
+    rw [dist_eq_norm, hwv_eq, norm_smul, Real.norm_eq_abs,
+      abs_of_nonneg (mul_nonneg (inv_nonneg.mpr hc.le) dist_nonneg)]
+    have he3 : ‖e3‖ = 1 := by
+      have hsq : ‖e3‖ ^ 2 = 1 := by rw [norm_sq_eq_dot, he.2.2.1]
+      rcases sq_eq_one_iff.mp hsq with h | h
+      · exact h
+      · exfalso; linarith [norm_nonneg e3, h]
+    rw [he3, mul_one]
+  have hwv_hax : (w - v : V3) = dist w v • e3 := by rw [hwv_eq, hdist]
+  obtain ⟨ψ, r1, r2, hrep1, hrep2, hr1, hr2⟩ := hframes e1 e2 e3 he hwv_hax hwv
+  refine ⟨ψ, r1, r2, ?_, ?_, hr1, hr2⟩
+  · rw [hrep1, hu, smul_smul, div_mul_cancel₀ _ hcne]
+  · rw [hrep2, hu, smul_smul, div_mul_cancel₀ _ hcne]
+
 /-- HOL planarity.hl :12117-12129 `in_aff_gt_eq_azim`
 
 HOL 原文：
@@ -310,7 +356,39 @@ HOL 原文：
 theorem in_aff_gt_eq_azim (x y z w0 w1 : V3) (hxz : x ≠ z)
     (hy : y ∈ affGt {x} {z}) :
     azim x y w0 w1 = azim x z w0 w1 := by
-  sorry
+  obtain ⟨c, hc, hyz⟩ := affGt_ray hxz hy
+  have hyx : y ≠ x := by
+    intro hyx
+    have h0 : c • (z - x) = 0 := by rw [← hyz, hyx, sub_self]
+    have hzx : z - x = 0 := (smul_eq_zero.mp h0).resolve_left (ne_of_gt hc)
+    exact hxz (sub_eq_zero.mp hzx).symm
+  have hcoll : ∀ w : V3, Collinear3 x y w ↔ Collinear3 x z w := by
+    intro w
+    rw [collinear3_iff_smul hyx, collinear3_iff_smul hxz.symm]
+    constructor
+    · rintro ⟨t, ht⟩
+      refine ⟨t * c, ?_⟩
+      rw [ht, hyz, smul_smul]
+    · rintro ⟨t, ht⟩
+      refine ⟨t / c, ?_⟩
+      have hzx : z - x = (1 / c) • (y - x) := by
+        rw [hyz, smul_smul, div_mul_cancel₀ (1 : ℝ) (ne_of_gt hc), one_smul]
+      rw [ht, hzx, smul_smul]
+      congr 1
+      ring
+  by_cases hdeg : Collinear3 x z w0 ∨ Collinear3 x z w1
+  · have hdegy : Collinear3 x y w0 ∨ Collinear3 x y w1 :=
+      hdeg.imp (hcoll w0).mpr (hcoll w1).mpr
+    unfold azim
+    rw [if_pos hdegy, if_pos hdeg]
+  · have hndz : ¬ Collinear3 x z w0 ∧ ¬ Collinear3 x z w1 := not_or.mp hdeg
+    have hndy : ¬ Collinear3 x y w0 ∧ ¬ Collinear3 x y w1 :=
+      ⟨fun h => hndz.1 ((hcoll w0).mp h), fun h => hndz.2 ((hcoll w1).mp h)⟩
+    have hspecz : AzimSpec x z w0 w1 (azim x z w0 w1) := by
+      unfold azim
+      rw [if_neg hdeg]
+      exact Classical.epsilon_spec (azimSpec_exists hndz.1 hndz.2)
+    exact azim_eq_of_spec hndy.1 hndy.2 (azimSpec_axis_smul hc hyz hspecz)
 
 /-- HOL planarity.hl :12130-12154 `no_origin_aff_ge_is_aff_gt`
 
