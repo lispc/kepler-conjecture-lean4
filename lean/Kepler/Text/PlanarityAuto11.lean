@@ -812,6 +812,120 @@ theorem JUTSTKG (x : V3) (V : Set V3) (E : Set (Set V3)) (U : Set V3)
 
 /-! ## aff_gt/aff_ge 的三点组合刻画（planarity.hl:13573-13606） -/
 
+/-- `({x,v,u} ∪ {w}).toFinset` 就是去重后的四点 `Finset`。 -/
+private theorem toFinset_triple_union_single {x v u w : V3}
+    (h : ({x, v, u} ∪ {w} : Set V3).Finite) :
+    h.toFinset = ({x, v, u, w} : Finset V3) := by
+  apply Finset.ext
+  intro z
+  simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+    Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+  tauto
+
+/-- 指示函数标量和：`∑ z∈{x,v,u,w} (∑ᵢ tᵢ[z=pᵢ]) = t1+t2+t3+t4`。 -/
+private theorem finset_sum_indicators_s (t1 t2 t3 t4 : ℝ) (x v u w : V3) :
+    (∑ z ∈ ({x, v, u, w} : Finset V3),
+      ((if z = x then t1 else 0) + (if z = v then t2 else 0) +
+        (if z = u then t3 else 0) + (if z = w then t4 else 0)))
+      = t1 + t2 + t3 + t4 := by
+  rw [Finset.sum_add_distrib, Finset.sum_add_distrib, Finset.sum_add_distrib]
+  rw [Finset.sum_ite_eq', Finset.sum_ite_eq', Finset.sum_ite_eq', Finset.sum_ite_eq']
+  simp
+
+/-- 指示函数向量和：`∑ z∈{x,v,u,w} (∑ᵢ tᵢ[z=pᵢ]) • z = ∑ᵢ tᵢ • pᵢ`。 -/
+private theorem finset_sum_indicators_v (t1 t2 t3 t4 : ℝ) (x v u w : V3) :
+    (∑ z ∈ ({x, v, u, w} : Finset V3),
+      (((if z = x then t1 else 0) + (if z = v then t2 else 0) +
+        (if z = u then t3 else 0) + (if z = w then t4 else 0)) • z))
+      = t1 • x + t2 • v + t3 • u + t4 • w := by
+  have h : ∀ z : V3,
+      (((if z = x then t1 else 0) + (if z = v then t2 else 0) +
+        (if z = u then t3 else 0) + (if z = w then t4 else 0)) • z)
+      = ((if z = x then t1 • z else 0) + (if z = v then t2 • z else 0) +
+         (if z = u then t3 • z else 0) + (if z = w then t4 • z else 0)) := by
+    intro z
+    rw [add_smul, add_smul, add_smul]
+    by_cases hx : z = x <;> by_cases hv : z = v <;> by_cases hu : z = u <;>
+      by_cases hw : z = w <;> simp [hx, hv, hu, hw]
+  rw [Finset.sum_congr rfl (fun z _ => h z)]
+  rw [Finset.sum_add_distrib, Finset.sum_add_distrib, Finset.sum_add_distrib]
+  rw [Finset.sum_ite_eq', Finset.sum_ite_eq', Finset.sum_ite_eq', Finset.sum_ite_eq']
+  simp
+
+/-- 三点去重标量和：把重合点系数归并到首次出现处。 -/
+private theorem sum_triple_first_s (f : V3 → ℝ) (x v u : V3) :
+    (∑ z ∈ ({x, v, u} : Finset V3), f z)
+      = f x + (if v = x then 0 else f v)
+          + (if u = x then 0 else if u = v then 0 else f u) := by
+  by_cases hxv : v = x
+  · rw [hxv]
+    by_cases hux : u = x
+    · rw [hux]
+      simp
+    · rw [show ({x, x, u} : Finset V3) = ({x, u} : Finset V3) by
+          ext z; simp only [Finset.mem_insert, Finset.mem_singleton]; tauto]
+      rw [Finset.sum_insert (by rw [Finset.mem_singleton]; exact fun h => hux h.symm),
+        Finset.sum_singleton]
+      simp [hux]
+  · by_cases hxu : u = x
+    · rw [hxu]
+      rw [show ({x, v, x} : Finset V3) = ({x, v} : Finset V3) by
+          ext z; simp only [Finset.mem_insert, Finset.mem_singleton]; tauto]
+      rw [Finset.sum_insert (by rw [Finset.mem_singleton]; exact fun h => hxv h.symm),
+        Finset.sum_singleton]
+      simp [hxv]
+    · by_cases hvu : u = v
+      · rw [hvu]
+        rw [show ({x, v, v} : Finset V3) = ({x, v} : Finset V3) by
+            ext z; simp only [Finset.mem_insert, Finset.mem_singleton]; tauto]
+        rw [Finset.sum_insert (by rw [Finset.mem_singleton]; exact fun h => hxv h.symm),
+          Finset.sum_singleton]
+        simp [hxv]
+      · rw [Finset.sum_insert (by
+            rw [Finset.mem_insert, Finset.mem_singleton, not_or]
+            exact ⟨fun h => hxv h.symm, fun h => hxu h.symm⟩)]
+        rw [Finset.sum_insert (by rw [Finset.mem_singleton]; exact fun h => hvu h.symm),
+          Finset.sum_singleton]
+        simp only [if_neg hxv, if_neg hxu, if_neg hvu]
+        ring
+
+/-- 三点去重向量和：把重合点系数归并到首次出现处。 -/
+private theorem sum_triple_first_v (f : V3 → ℝ) (x v u : V3) :
+    (∑ z ∈ ({x, v, u} : Finset V3), f z • z)
+      = f x • x + (if v = x then 0 else f v) • v
+          + (if u = x then 0 else if u = v then 0 else f u) • u := by
+  by_cases hxv : v = x
+  · rw [hxv]
+    by_cases hux : u = x
+    · rw [hux]
+      simp
+    · rw [show ({x, x, u} : Finset V3) = ({x, u} : Finset V3) by
+          ext z; simp only [Finset.mem_insert, Finset.mem_singleton]; tauto]
+      rw [Finset.sum_insert (by rw [Finset.mem_singleton]; exact fun h => hux h.symm),
+        Finset.sum_singleton]
+      simp [hux]
+  · by_cases hxu : u = x
+    · rw [hxu]
+      rw [show ({x, v, x} : Finset V3) = ({x, v} : Finset V3) by
+          ext z; simp only [Finset.mem_insert, Finset.mem_singleton]; tauto]
+      rw [Finset.sum_insert (by rw [Finset.mem_singleton]; exact fun h => hxv h.symm),
+        Finset.sum_singleton]
+      simp [hxv]
+    · by_cases hvu : u = v
+      · rw [hvu]
+        rw [show ({x, v, v} : Finset V3) = ({x, v} : Finset V3) by
+            ext z; simp only [Finset.mem_insert, Finset.mem_singleton]; tauto]
+        rw [Finset.sum_insert (by rw [Finset.mem_singleton]; exact fun h => hxv h.symm),
+          Finset.sum_singleton]
+        simp [hxv]
+      · rw [Finset.sum_insert (by
+            rw [Finset.mem_insert, Finset.mem_singleton, not_or]
+            exact ⟨fun h => hxv h.symm, fun h => hxu h.symm⟩)]
+        rw [Finset.sum_insert (by rw [Finset.mem_singleton]; exact fun h => hvu h.symm),
+          Finset.sum_singleton]
+        simp only [if_neg hxv, if_neg hxu, if_neg hvu]
+        abel
+
 /-- HOL planarity.hl :13573-13584 `AFF_GT_3_1`
 
 HOL 原文：
@@ -845,7 +959,42 @@ theorem AFF_GT_3_1 (x v u w : V3)
     affGt ({x, v, u} : Set V3) {w} =
       {y | ∃ t1 t2 t3 t4 : ℝ, 0 < t4 ∧ t1 + t2 + t3 + t4 = 1 ∧
         y = t1 • x + t2 • v + t3 • u + t4 • w} := by
-  sorry
+  have hw_notin : w ∉ ({x, v, u} : Set V3) :=
+    (Set.disjoint_right.mp hdis) (Set.mem_singleton w)
+  have hwx : w ≠ x := fun h => hw_notin (by rw [h]; simp)
+  have hwv : w ≠ v := fun h => hw_notin (by rw [h]; simp)
+  have hwu : w ≠ u := fun h => hw_notin (by rw [h]; simp)
+  have hfin : ({x, v, u} ∪ {w} : Set V3).Finite :=
+    (((Set.finite_singleton u).insert v).insert x).union (Set.finite_singleton w)
+  have hTeq := toFinset_triple_union_single hfin
+  have hsplit : ({x, v, u, w} : Finset V3) = insert w ({x, v, u} : Finset V3) := by
+    ext z; simp only [Finset.mem_insert, Finset.mem_singleton]; tauto
+  have hwmem : w ∉ ({x, v, u} : Finset V3) := by
+    rw [Finset.mem_insert, Finset.mem_insert, Finset.mem_singleton, not_or, not_or]
+    exact ⟨hwx, hwv, hwu⟩
+  ext y
+  simp only [affGt, Set.mem_setOf_eq, Affsign]
+  constructor
+  · rintro ⟨f, hfin', hsum, hpos, hone⟩
+    have hT' := toFinset_triple_union_single hfin'
+    rw [hT', hsplit] at hsum hone
+    rw [Finset.sum_insert hwmem] at hsum hone
+    rw [sum_triple_first_v] at hsum
+    rw [sum_triple_first_s] at hone
+    refine ⟨f x, (if v = x then 0 else f v),
+      (if u = x then 0 else if u = v then 0 else f u), f w,
+      hpos w (Set.mem_singleton w), ?_, ?_⟩
+    · linarith
+    · rw [hsum]; abel
+  · rintro ⟨t1, t2, t3, t4, ht4, hsum, hy⟩
+    refine ⟨fun z => (if z = x then t1 else 0) + (if z = v then t2 else 0) +
+      (if z = u then t3 else 0) + (if z = w then t4 else 0), hfin, ?_, ?_, ?_⟩
+    · rw [hTeq, finset_sum_indicators_v]; exact hy
+    · intro z hz
+      rw [Set.mem_singleton_iff] at hz
+      rw [hz]
+      simpa [hwx, hwv, hwu] using ht4
+    · rw [hTeq, finset_sum_indicators_s]; exact hsum
 
 /-- HOL planarity.hl :13585-13594 `AFF_GT_1_3`
 
