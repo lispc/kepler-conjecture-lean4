@@ -389,6 +389,8 @@ theorem point_in_yfan_not_x_fan (x : V3) (V : Set V3) (E : Set (Set V3))
     (hfan : FAN x V E) (hne : E ≠ ∅)
     (hU : U ∈ topologicalComponentYfan x V E) (hz : z ∈ U) :
     x ≠ z := by
-  sorry
+  have hz_yfan : z ∈ yfan x V E := topological_component_subset_yfan hU hz
+  intro hxz
+  exact hz_yfan.2 (hxz ▸ x_in_xfan hfan hne)
 
 end Kepler.Text
