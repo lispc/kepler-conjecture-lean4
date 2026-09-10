@@ -149,7 +149,8 @@ theorem dartset_leads_into_fan_eventually_radial_norm
         ∀ u : V3, x + u ∈ dartsetLeadsIntoFan x V E ds ∩ Metric.ball x r →
           ∀ t : ℝ, 0 < t → t * ‖u‖ < r →
             x + t • u ∈ dartsetLeadsIntoFan x V E ds ∩ Metric.ball x r := by
-  sorry
+  exact ⟨1, by norm_num,
+    dartset_leads_into_fan_radial hfan hcard hfan80 hds hds3 (by norm_num)⟩
 
 /-- HOL planarity.hl :15301-15317 `measurable_dartset_leads_into3_fan`
 
