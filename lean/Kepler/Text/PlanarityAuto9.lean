@@ -926,6 +926,14 @@ theorem exists_dart_leads_into_edge_eq_topological_component_fan
 
 /-! ## 情形 2：aff_gt 上点的 azim 不为零（planarity.hl:12759-12818） -/
 
+/-- 三点共线在交换第二、三点下不变（`{x,v,u} = {x,u,v}`）。 -/
+private theorem collinear3_swap_auto9 {x v u : V3} (h : Collinear3 x v u) :
+    Collinear3 x u v := by
+  unfold Collinear3 at h ⊢
+  rw [show ({x, u, v} : Set V3) = {x, v, u} by
+    ext a; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  exact h
+
 /-- HOL planarity.hl :12759-12818 `not_azim_points1_in_yfan`
 
 HOL 原文：
@@ -977,6 +985,46 @@ theorem not_azim_points1_in_yfan (x : V3) (V : Set V3) (E : Set (Set V3))
     (hyxfan : y ∈ xfan x V E) (hyx : y ≠ x)
     (hconn : ∀ t : ℝ, 0 < t → t < 1 → (1 - t) • y + t • z ∈ yfan x V E) :
     azim x y z w ≠ 0 := by
-  sorry
+  intro hazim
+  have hnc_xyz : ¬ Collinear3 x y z :=
+    point_in_yfan_and_point_in_xfan_indepent_fan x V E U y z
+      hfan hcard hfan80 hU hz hyxfan hyx hconn
+  have hnc_xuw : ¬ Collinear3 x u w := fan_not_collinear hfan huw
+  have hnc_xwu : ¬ Collinear3 x w u := fun h => hnc_xuw (collinear3_swap_auto9 h)
+  have hy_wu : y ∈ affGt {x} {w, u} := by
+    simpa only [show ({w, u} : Set V3) = {u, w} by
+      ext a; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] using hy
+  have hnc_xyw : ¬ Collinear3 x y w :=
+    properties_of_collinear4_points_fan hnc_xwu hy_wu
+  have hxu : x ≠ u := fun h => hnc_xuw (collinear3_of_eq h.symm)
+  have hxw : x ≠ w := fun h => hnc_xuw (collinear3_pair_left h.symm)
+  have hyw : y ≠ w := fun h => hnc_xyw (collinear3_pair_right h.symm)
+  have hz_gt : z ∈ affGt {x, y} {w} :=
+    (azim_eq_zero_iff (v0 := x) (v1 := y) (w := z) (x := w) hnc_xyz hnc_xyw).mp hazim
+  have hz_ge : z ∈ affGe {x, y} {w} := affGt_subset_affGe_gen hz_gt
+  have h1 : Disjoint ({x} : Set V3) {y, w} := disjoint_of_not_collinear3' hnc_xyw
+  have h2 : Disjoint ({x, y} : Set V3) {w} := by
+    rw [Set.disjoint_left]
+    intro a ha
+    rw [Set.mem_insert_iff, Set.mem_singleton_iff] at ha
+    rcases ha with rfl | rfl
+    · exact hxw
+    · exact hyw
+  obtain ⟨t, ht0, ht1, hmem⟩ :=
+    aff_ge_2_1_is_exists_point_inaff_ge_1_2 x y z w h1 h2 hz_ge
+  have hy_ge_uw : y ∈ affGe {x} {u, w} := affGt_subset_affGe_gen hy
+  have hdis_x_uw : Disjoint ({x} : Set V3) {u, w} := by
+    rw [Set.disjoint_singleton_left]
+    intro hmem'
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem'
+    rcases hmem' with h | h
+    · exact hxu h
+    · exact hxw h
+  have hsub : affGe {x} {y, w} ⊆ affGe {x} {u, w} :=
+    aff_ge1_subset_aff_ge (x := x) (v := u) (u := w) (v1 := y)
+      hdis_x_uw hnc_xyw hy_ge_uw
+  have hmem_uw : (1 - t) • y + t • z ∈ affGe {x} {u, w} := hsub hmem
+  have hxfan_mem : (1 - t) • y + t • z ∈ xfan x V E := ⟨{u, w}, huw, hmem_uw⟩
+  exact (hconn t ht0 ht1).2 hxfan_mem
 
 end Kepler.Text
