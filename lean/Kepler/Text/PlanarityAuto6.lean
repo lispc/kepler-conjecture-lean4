@@ -147,7 +147,8 @@ theorem sym_line01_fan {E : Type*} [AddCommGroup E] [Module ℝ E] (x y z : E)
     (hx : x ∈ affineSpan ℝ ({y, z} : Set E))
     (hdis : Disjoint ({y} : Set E) {x, z}) :
     affineSpan ℝ ({y, x} : Set E) ≤ affineSpan ℝ ({y, z} : Set E) := by
-  sorry
+  have := hdis
+  exact affineSpan_pair_le_of_right_mem (k := ℝ) hx
 
 /-- HOL planarity.hl :11655-11677 `sym_line02_fan`
 
