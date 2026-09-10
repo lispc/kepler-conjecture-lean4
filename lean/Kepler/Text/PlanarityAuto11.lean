@@ -96,7 +96,66 @@ theorem point_in_aff_gt_2_1_change_point_in_aff_gt_1_2 (x v u y : V3)
     (hnc : ¬ Collinear3 x v u)
     (hy : y ∈ affGt ({x} : Set V3) {v, u}) :
     u ∈ affGt ({x, v} : Set V3) {y} := by
-  sorry
+  have hxv : x ≠ v := fun he =>
+    hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) he.symm)
+  have hxu : x ≠ u := fun he =>
+    hnc (collinear3_pair_left (v0 := x) (v1 := v) (x := u) he.symm)
+  have hdis : Disjoint ({x} : Set V3) {v, u} := by
+    rw [Set.disjoint_left]
+    intro a ha
+    rw [Set.mem_singleton_iff] at ha
+    subst ha
+    simp [hxv, hxu]
+  rw [aff_gt_1_2 hdis] at hy
+  simp only [Set.mem_setOf_eq] at hy
+  obtain ⟨t1, t2, t3, ht2, ht3, hsum, hyeq⟩ := hy
+  have ht3ne : t3 ≠ 0 := ne_of_gt ht3
+  have ht1 : t1 = 1 - t2 - t3 := by linarith
+  have hyx : y - x = t2 • (v - x) + t3 • (u - x) := by
+    rw [hyeq, ht1]
+    module
+  have hyxne : y ≠ x := by
+    intro heq
+    have hlin : t2 • (v - x) + t3 • (u - x) = 0 := by
+      rw [← hyx, heq, sub_self]
+    have hkey : t3 • (u - x) = -(t2 • (v - x)) := by
+      rw [eq_neg_iff_add_eq_zero, add_comm]
+      exact hlin
+    have hu_eq : u - x = (-(t2 / t3)) • (v - x) := by
+      calc u - x = t3⁻¹ • (t3 • (u - x)) := (inv_smul_smul₀ ht3ne _).symm
+        _ = t3⁻¹ • (-(t2 • (v - x))) := by rw [hkey]
+        _ = (-(t2 / t3)) • (v - x) := by module
+    exact hnc ((collinear3_iff_smul (w := v) (v := x) (w1 := u)
+      (Ne.symm hxv)).mpr ⟨_, hu_eq⟩)
+  have hyvne : y ≠ v := by
+    intro heq
+    have hthis : v - x = t2 • (v - x) + t3 • (u - x) := by rw [← hyx, heq]
+    have hrel : (1 - t2) • (v - x) = t3 • (u - x) := by
+      have h2 : (v - x) - t2 • (v - x) = t3 • (u - x) := by
+        nth_rewrite 1 [hthis]
+        abel
+      rw [show (1 - t2) • (v - x) = (v - x) - t2 • (v - x) by module]
+      exact h2
+    have h1mt2 : 1 - t2 ≠ 0 := by
+      intro h0
+      have hz : t3 • (u - x) = 0 := by rw [← hrel, h0, zero_smul]
+      have hux0 : u - x = 0 := by
+        rw [← inv_smul_smul₀ ht3ne (u - x), hz, smul_zero]
+      exact hxu (sub_eq_zero.mp hux0).symm
+    have hu_eq : u - x = ((1 - t2) / t3) • (v - x) := by
+      calc u - x = t3⁻¹ • (t3 • (u - x)) := (inv_smul_smul₀ ht3ne _).symm
+        _ = t3⁻¹ • ((1 - t2) • (v - x)) := by rw [hrel]
+        _ = ((1 - t2) / t3) • (v - x) := by module
+    exact hnc ((collinear3_iff_smul (w := v) (v := x) (w1 := u)
+      (Ne.symm hxv)).mpr ⟨_, hu_eq⟩)
+  refine (affGt_pair_iff (v0 := x) (v1 := v) (x := y) (y := u)
+    hxv hyxne hyvne).mpr ?_
+  refine ⟨t3⁻¹, inv_pos.mpr ht3, -(t2 / t3), ?_⟩
+  have hkey : t3 • (u - x) = (y - x) - t2 • (v - x) := by
+    rw [hyx]; abel
+  calc u - x = t3⁻¹ • (t3 • (u - x)) := (inv_smul_smul₀ ht3ne _).symm
+    _ = t3⁻¹ • ((y - x) - t2 • (v - x)) := by rw [hkey]
+    _ = t3⁻¹ • (y - x) + (-(t2 / t3)) • (v - x) := by module
 
 /-- HOL planarity.hl :13150-13168 `pos_in_aff_gt_2_1_fan`
 
