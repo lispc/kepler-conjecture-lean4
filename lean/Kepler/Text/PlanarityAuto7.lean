@@ -273,7 +273,8 @@ theorem expand_element_in_topological_component_yfan (x : V3) (V : Set V3)
     (hfan : FAN x V E)
     (hU : U ∈ topologicalComponentYfan x V E) (hz : z ∈ U) :
     U = connectedComponentIn (yfan x V E) z := by
-  sorry
+  rcases hU with ⟨b, _hb, rfl⟩
+  exact connectedComponentIn_eq hz
 
 /-! ## aff_gt 上的凸组合与 yfan 分离（planarity.hl:11905-11968） -/
 
