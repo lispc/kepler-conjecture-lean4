@@ -256,7 +256,19 @@ FINITE e /\ ~(e={v,u}) /\ ~(v=u)  /\ CARD e=2  ==>  ~(v IN e)\/ ~(u IN e)
 theorem properties_edges_eq_fan {A : Type*} {e : Set A} {v u : A}
     (hfin : e.Finite) (hne : e ≠ {v, u}) (hvu : v ≠ u) (hcard : e.ncard = 2) :
     v ∉ e ∨ u ∉ e := by
-  sorry
+  by_contra h
+  push Not at h
+  obtain ⟨hve, hue⟩ := h
+  have hsub : ({v, u} : Set A) ⊆ e := by
+    intro x hx
+    rw [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl
+    · exact hve
+    · exact hue
+  have hpair : ({v, u} : Set A).ncard = 2 := Set.ncard_pair hvu
+  have heq : ({v, u} : Set A) = e :=
+    Set.eq_of_subset_of_ncard_le hsub (by rw [hcard, hpair]) hfin
+  exact hne heq.symm
 
 /-- HOL planarity.hl :11226-11293 `condition_not_intersection_fan`
 
