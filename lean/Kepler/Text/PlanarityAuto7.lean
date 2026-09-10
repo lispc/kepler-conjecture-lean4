@@ -387,7 +387,10 @@ HOL 即 `EXISTS_TAC` 后 `REAL_ARITH_TAC`。
 theorem exists_in_aff_gt_disjoint (x v u : V3)
     (hdis : Disjoint ({x} : Set V3) {v, u}) :
     ∃ y : V3, y ∈ affGt {x} {v, u} := by
-  sorry
+  refine ⟨(1 / 2 : ℝ) • v + (1 / 2 : ℝ) • u, ?_⟩
+  rw [aff_gt_1_2 hdis]
+  refine ⟨0, 1 / 2, 1 / 2, by norm_num, by norm_num, by norm_num, ?_⟩
+  module
 
 /-- HOL planarity.hl :11969-12005 `aff_gt_subset_component_y_fan`
 
