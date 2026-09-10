@@ -215,6 +215,22 @@ theorem aff_gt_1_3_subset_yfan (x : V3) (V : Set V3) (E : Set (Set V3))
   rw [hdisj] at hmem
   exact hmem
 
+/-- `Disjoint {x} {v,u,w}` 时 `affGt {x} {v,u,w}` 凸（HOL `CONVEX_AFF_GT` 的
+3-1 情形；经 `AFF_GT_1_3` 的系数展开直接验证）。 -/
+private theorem convex_affGt_triple {x v u w : V3}
+    (hdis : Disjoint ({x} : Set V3) ({v, u, w} : Set V3)) :
+    Convex ℝ (affGt ({x} : Set V3) ({v, u, w} : Set V3)) := by
+  rw [AFF_GT_1_3 x v u w hdis, convex_iff_forall_pos]
+  intro p hp q hq a b ha hb hab
+  obtain ⟨t1, t2, t3, t4, ht2, ht3, ht4, hsum, rfl⟩ := hp
+  obtain ⟨s1, s2, s3, s4, hs2, hs3, hs4, hssum, rfl⟩ := hq
+  refine ⟨a * t1 + b * s1, a * t2 + b * s2, a * t3 + b * s3, a * t4 + b * s4,
+    add_pos (mul_pos ha ht2) (mul_pos hb hs2),
+    add_pos (mul_pos ha ht3) (mul_pos hb hs3),
+    add_pos (mul_pos ha ht4) (mul_pos hb hs4), ?_, ?_⟩
+  · nlinarith [hsum, hssum, hab]
+  · module
+
 /-- HOL planarity.hl :13744-13805 `aff_gt_1_3_subset_dart_leads_into_fan`
 
 HOL 原文：
@@ -257,7 +273,51 @@ theorem aff_gt_1_3_subset_dart_leads_into_fan (x : V3) (V : Set V3) (E : Set (Se
     (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
     (hfan80 : fan80 x V E) :
     affGt ({x} : Set V3) ({v, u, w} : Set V3) ⊆ dartLeadsInto x V E u w := by
-  sorry
+  obtain ⟨hθ0, hθπ⟩ := hfan80 u w huw
+  rw [hsigma] at hθ0 hθπ
+  have hcop := properties_fully_surrounded hfan hvu huw hθ0 hθπ
+  have hdis : Disjoint ({x} : Set V3) ({v, u, w} : Set V3) :=
+    (notcoplanar_disjoints x v u w hcop).2.2.2.1
+  obtain ⟨h, hh0, hspec⟩ := dartLeadsInto_spec hfan huw
+  set h1 : ℝ := min h (Real.pi / 2) / 2 with hh1def
+  have hmin0 : 0 < min h (Real.pi / 2) := lt_min hh0 (by positivity)
+  have hh10 : 0 < h1 := by rw [hh1def]; exact div_pos hmin0 two_pos
+  have hh1lt : h1 < h := by
+    rw [hh1def]
+    exact lt_of_lt_of_le (half_lt_self hmin0) (min_le_left _ _)
+  have hh1pi : h1 < Real.pi / 2 := by
+    rw [hh1def]
+    exact lt_of_lt_of_le (half_lt_self hmin0) (min_le_right _ _)
+  obtain ⟨h'', hh''0, hne⟩ :=
+    exists_rw_dart_inter_aff_gt1_fan (s := h1) hfan hvu huw hsigma hh10 hh1pi
+      hfan80 hcard
+  set a1 : ℝ := min h'' 1 / 2 with ha1def
+  have hmin1 : 0 < min h'' 1 := lt_min hh''0 one_pos
+  have ha10 : 0 < a1 := by rw [ha1def]; exact div_pos hmin1 two_pos
+  have ha1h'' : a1 < h'' := by
+    rw [ha1def]
+    exact lt_of_lt_of_le (half_lt_self hmin1) (min_le_left _ _)
+  have ha11 : a1 < 1 := by
+    rw [ha1def]
+    exact lt_of_lt_of_le (half_lt_self hmin1) (min_le_right _ _)
+  obtain ⟨y', hy'⟩ := Set.nonempty_iff_ne_empty.mpr (hne a1 ha10 ha1h'')
+  obtain ⟨hy'D, hy'aff⟩ := hy'
+  have hy'dl : y' ∈ dartLeadsInto x V E u w :=
+    (hspec h1 y' hh10 hh1lt hy'D).1 hy'D
+  have hy'affGt : y' ∈ affGt ({x} : Set V3) ({v, u, w} : Set V3) := by
+    rw [aff_gt_1_3_eq_unions_aff_gt_1_2 x v u w hcop]
+    exact Set.mem_sUnion.mpr ⟨_, ⟨a1, ha10, ha11, rfl⟩, hy'aff⟩
+  have hU : dartLeadsInto x V E u w ∈ topologicalComponentYfan x V E :=
+    dart_leads_into_mem_topologicalComponentYfan (v := u) (u := w) hfan huw
+  have heq' : dartLeadsInto x V E u w = connectedComponentIn (yfan x V E) y' :=
+    expand_element_in_topological_component_yfan x V E (dartLeadsInto x V E u w) y'
+      hfan hU hy'dl
+  have hsubyfan : affGt ({x} : Set V3) ({v, u, w} : Set V3) ⊆ yfan x V E :=
+    aff_gt_1_3_subset_yfan x V E v u w hfan hvu huw hsigma hcard hfan80
+  have hpre : IsPreconnected (affGt ({x} : Set V3) ({v, u, w} : Set V3)) :=
+    (convex_affGt_triple hdis).isPreconnected
+  rw [heq']
+  exact hpre.subset_connectedComponentIn hy'affGt hsubyfan
 
 /-! ## 三个 aff_gt 3-1 半空间的交（planarity.hl:13806-13871） -/
 
