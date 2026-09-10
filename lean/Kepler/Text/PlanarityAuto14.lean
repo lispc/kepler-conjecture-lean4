@@ -729,6 +729,15 @@ HOL 用未移植的 `hypermap_of_fan_rep`/`into_domain_power_efn_fan` 构造幂�
 - `fFanPair`（Kepler/Text/Fan.lean:118）
 - `hypermapOfFan_faceMap_eq`（Kepler/Text/PlanarityComponent.lean:242，`private`，需公开或重导）
 - 缺口：`hypermap_of_fan_rep`（fan.hl:2780）、`into_domain_power_efn_fan`（fan.hl:2694）未移植 -/
+private theorem hypermapOfFan_faceMap_eq_auto14 (hfan : FAN x V E) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) :
+    (hypermapOfFan x V E hfan).faceMap d = fFanPair x V E d := by
+  unfold hypermapOfFan extendPerm
+  simp only [Equiv.ofBijective_apply]
+  unfold Kepler.Text.Fan.res
+  rw [if_pos (by
+    simpa [(finite_dart1_fan hfan).coe_toFinset] using hd)]
+
 theorem condition_f1_fan_in_face_set {x : V3} {V : Set V3} {E : Set (Set V3)}
     {y y1 : V3 × V3} {ds : Set (V3 × V3)}
     (hfan : FAN x V E)
@@ -737,6 +746,24 @@ theorem condition_f1_fan_in_face_set {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hdf : dartOfFan V E = dart1OfFan V E)
     (hy1 : y1 ∈ ds) :
     y ∈ ds := by
-  sorry
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  obtain ⟨d, hd, hface⟩ := Hypermap.face_representation H hds
+  have hdarts : (↑H.darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have hy1face : y1 ∈ H.face d := by simpa [hface] using hy1
+  have hy1mem : y1 ∈ H.darts := H.face_subset_darts hd hy1face
+  have hy1d : y1 ∈ dart1OfFan V E := by
+    change y1 ∈ (↑H.darts : Set (V3 × V3)) at hy1mem
+    simpa [hdarts] using hy1mem
+  have hfm : H.faceMap y1 = fFanPair x V E y1 := by
+    change (hypermapOfFan x V E hfan).faceMap y1 = fFanPair x V E y1
+    exact hypermapOfFan_faceMap_eq_auto14 hfan hy1d
+  have hyface : H.faceMap y1 ∈ H.face d := by
+    rcases (by simpa [Hypermap.face, orbitMap] using hy1face :
+      ∃ n : ℕ, (H.faceMap ^ n) d = y1) with ⟨n, hn⟩
+    exact ⟨n + 1, by rw [pow_succ', Equiv.Perm.mul_apply, hn]⟩
+  rw [hface, hy, ← hfm]
+  exact hyface
 
 end Kepler.Text
