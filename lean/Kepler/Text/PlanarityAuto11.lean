@@ -682,7 +682,133 @@ theorem JUTSTKG (x : V3) (V : Set V3) (E : Set (Set V3)) (U : Set V3)
     (hfan80 : fan80 x V E)
     (hU : U ∈ topologicalComponentYfan x V E) :
     ∃ v u : V3, {v, u} ∈ E ∧ dartLeadsInto x V E v u = U := by
-  sorry
+  obtain ⟨z, hz⟩ := exists_point_in_component_yfan hU
+  obtain ⟨y, hyx, hy_xfan_mem, hconn⟩ :=
+    connect_insidepoint_to_bound_yfan x V E U z hfan hcard hfan80 hU hz
+  have hy_xfan : y ∈ xfan x V E := hy_xfan_mem
+  rw [xfan, Set.mem_setOf_eq] at hy_xfan_mem
+  obtain ⟨e, he, hye⟩ := hy_xfan_mem
+  obtain ⟨v, w, rfl⟩ := expand_edge_graph_fan hfan he
+  have hnc_vw : ¬ Collinear3 x v w := fan_not_collinear hfan he
+  have hmem := fan_mem_of_edge hfan he
+  have hvV : v ∈ V := hmem.1
+  have hwV : w ∈ V := hmem.2
+  have hpair : ({w, v} : Set V3) = {v, w} := by
+    ext a; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  have he_wv : {w, v} ∈ E := by rwa [hpair]
+  rw [aff_ge_eq_aff_gt_union_aff_ge hnc_vw] at hye
+  rcases hye with (hygt | hyv) | hyw
+  · have hygt_wv : y ∈ affGt ({x} : Set V3) {w, v} := by rwa [hpair]
+    rcases lt_trichotomy ((crossProduct ((v - x : V3) : Fin 3 → ℝ)
+        ((y - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((z - x : V3) : Fin 3 → ℝ)) 0
+      with hneg | hzero | hpos
+    · have hneg_yzv : 0 < -((crossProduct ((y - x : V3) : Fin 3 → ℝ)
+          ((z - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ)) := by
+        have hcyc : (crossProduct ((y - x : V3) : Fin 3 → ℝ)
+            ((z - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ) =
+            (crossProduct ((v - x : V3) : Fin 3 → ℝ)
+              ((y - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((z - x : V3) : Fin 3 → ℝ) := by
+          rw [cross_dot_cyclic, cross_dot_cyclic]
+        rw [hcyc]
+        linarith
+      have hyzw : 0 < (crossProduct ((y - x : V3) : Fin 3 → ℝ)
+          ((z - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((w - x : V3) : Fin 3 → ℝ) :=
+        aff_gt_1_2_cross_dotr_4point_neg x y z v w hnc_vw hygt hneg_yzv
+      have hpos_wyz : 0 < (crossProduct ((w - x : V3) : Fin 3 → ℝ)
+          ((y - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((z - x : V3) : Fin 3 → ℝ) := by
+        calc 0 < (crossProduct ((y - x : V3) : Fin 3 → ℝ)
+              ((z - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((w - x : V3) : Fin 3 → ℝ) := hyzw
+          _ = (crossProduct ((z - x : V3) : Fin 3 → ℝ)
+                ((w - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ) :=
+              cross_dot_cyclic
+          _ = (crossProduct ((w - x : V3) : Fin 3 → ℝ)
+                ((y - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((z - x : V3) : Fin 3 → ℝ) :=
+              cross_dot_cyclic
+      have hinv := INVERSE1_SIGMA_FAN (x := x) (V := V) (E := E) (v := v) hfan
+      obtain ⟨hinv_edge, hinv_sigma, -⟩ := hinv
+      have hedge : {v, inverse1SigmaFan x V E v w} ∈ E := hinv_edge w he
+      have hsig : sigmaFan x V E v (inverse1SigmaFan x V E v w) = w :=
+        hinv_sigma w he
+      have hdart :=
+        exists_dart_leads_into_edge_eq_topological1_component_fan x V E U y z w v
+          (inverse1SigmaFan x V E v w) hfan hcard hfan80 hU hz he_wv hedge hsig
+          hygt_wv hy_xfan hyx hconn hpos_wyz
+      exact ⟨w, v, he_wv, hdart⟩
+    · exfalso
+      have hzero_yzv : (crossProduct ((y - x : V3) : Fin 3 → ℝ)
+          ((z - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ) = 0 := by
+        rw [cross_dot_cyclic, cross_dot_cyclic]
+        exact hzero
+      have hzero_yzw : (crossProduct ((y - x : V3) : Fin 3 → ℝ)
+          ((z - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((w - x : V3) : Fin 3 → ℝ) = 0 :=
+        aff_gt_1_2_cross_dotr_4point_zero x y z v w hnc_vw hygt hzero_yzv
+      have hazimw : azim x y z w ≠ 0 :=
+        not_azim_points1_in_yfan x V E U y z v w hfan hcard hfan80 hU hz
+          he hygt hy_xfan hyx hconn
+      have hazimv : azim x y z v ≠ 0 :=
+        not_azim_points1_in_yfan x V E U y z w v hfan hcard hfan80 hU hz
+          he_wv hygt_wv hy_xfan hyx hconn
+      have hnc_xyz : ¬ Collinear3 x y z :=
+        point_in_yfan_and_point_in_xfan_indepent_fan x V E U y z
+          hfan hcard hfan80 hU hz hy_xfan hyx hconn
+      have hnc_xyv : ¬ Collinear3 x y v :=
+        properties_of_collinear4_points_fan (x := x) (v := v) (u := w) (v1 := y)
+          hnc_vw hygt
+      have hnc_xyw : ¬ Collinear3 x y w :=
+        properties_of_collinear4_points_fan (x := x) (v := w) (u := v) (v1 := y)
+          (fun h => hnc_vw (collinear3_swap_auto11 h)) hygt_wv
+      have hazimv_pos : 0 < azim x y z v :=
+        lt_of_le_of_ne (azim_nonneg x y z v) (Ne.symm hazimv)
+      rcases lt_or_ge (azim x y z v) Real.pi with hlt_pi | hge_pi
+      · have hcontr : 0 < (crossProduct ((y - x : V3) : Fin 3 → ℝ)
+            ((z - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ) :=
+          cross_dot_fully_surrounded_fan (x := x) (v1 := y) (u1 := v) (v := z)
+            hnc_xyv hnc_xyz hazimv_pos hlt_pi
+        rw [hzero_yzv] at hcontr
+        exact (lt_irrefl (0 : ℝ)) hcontr
+      · have hdis_x_wv : Disjoint ({x} : Set V3) {w, v} := by
+          rw [Set.disjoint_singleton_left]
+          intro hmem'
+          rcases Set.mem_insert_iff.mp hmem' with h | h
+          · exact hnc_vw (collinear3_swap_auto11
+              (collinear3_of_eq (v := x) (w := w) (w1 := v) h.symm))
+          · exact hnc_vw (collinear3_of_eq (v := x) (w := v) (w1 := w) h.symm)
+        have hazim_pi : azim x y w v = Real.pi :=
+          aff_gt2_subset_aff_ge (x := x) (v := w) (u := v) (v1 := y)
+            hdis_x_wv hnc_xyv hnc_xyw hygt_wv
+        have hle : azim x y w v ≤ azim x y z v := by rw [hazim_pi]; exact hge_pi
+        have hsum : azim x y z v = azim x y z w + azim x y w v :=
+          sum5_azim_fan (x := x) (v := y) (u := z) (w1 := w) (w2 := v)
+            hyx hnc_xyz hnc_xyw hnc_xyv hle
+        have hazimw_pos : 0 < azim x y z w :=
+          lt_of_le_of_ne (azim_nonneg x y z w) (Ne.symm hazimw)
+        have hazimw_lt_pi : azim x y z w < Real.pi := by
+          have h2pi : azim x y z v < 2 * Real.pi := azim_lt_two_pi x y z v
+          linarith
+        have hcontr : 0 < (crossProduct ((y - x : V3) : Fin 3 → ℝ)
+            ((z - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((w - x : V3) : Fin 3 → ℝ) :=
+          cross_dot_fully_surrounded_fan (x := x) (v1 := y) (u1 := w) (v := z)
+            hnc_xyw hnc_xyz hazimw_pos hazimw_lt_pi
+        rw [hzero_yzw] at hcontr
+        exact (lt_irrefl (0 : ℝ)) hcontr
+    · have hinv := INVERSE1_SIGMA_FAN (x := x) (V := V) (E := E) (v := w) hfan
+      obtain ⟨hinv_edge, hinv_sigma, -⟩ := hinv
+      have hedge : {w, inverse1SigmaFan x V E w v} ∈ E := hinv_edge v he_wv
+      have hsig : sigmaFan x V E w (inverse1SigmaFan x V E w v) = v :=
+        hinv_sigma v he_wv
+      have hdart :=
+        exists_dart_leads_into_edge_eq_topological1_component_fan x V E U y z v w
+          (inverse1SigmaFan x V E w v) hfan hcard hfan80 hU hz he hedge hsig
+          hygt hy_xfan hyx hconn hpos
+      exact ⟨v, w, he, hdart⟩
+  · obtain ⟨w', hw'E, hdart⟩ :=
+      exists_dart_leads_into_edge_eq_topological_component_fan x V E U y z v
+        hfan hcard hfan80 hU hz hvV hyv hy_xfan hyx hconn
+    exact ⟨v, w', hw'E, hdart⟩
+  · obtain ⟨w', hw'E, hdart⟩ :=
+      exists_dart_leads_into_edge_eq_topological_component_fan x V E U y z w
+        hfan hcard hfan80 hU hz hwV hyw hy_xfan hyx hconn
+    exact ⟨w, w', hw'E, hdart⟩
 
 /-! ## aff_gt/aff_ge 的三点组合刻画（planarity.hl:13573-13606） -/
 
