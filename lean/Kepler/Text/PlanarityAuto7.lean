@@ -360,7 +360,13 @@ theorem segment_subset_yfan (x : V3) (V : Set V3) (E : Set (Set V3))
     (hz : z ∈ yfan x V E) (hw : w ∈ affGt {x} {y, z})
     (hconn : ∀ t : ℝ, 0 < t → t < 1 → (1 - t) • y + t • z ∈ yfan x V E) :
     segment ℝ w z ⊆ yfan x V E := by
-  sorry
+  rw [segment_eq_image]
+  rintro p ⟨t, ht, rfl⟩
+  rcases lt_or_eq_of_le ht.2 with htlt | hteq
+  · exact point_in_aff_gt_in_yfan x V E y z _ hfan hdis
+      (segmentsubset_aff_gt x y z w hdis hw t ⟨ht.1, htlt⟩) hconn
+  · subst hteq
+    simpa using hz
 
 /-- HOL planarity.hl :11956-11968 `exists_in_aff_gt_disjoint`
 
