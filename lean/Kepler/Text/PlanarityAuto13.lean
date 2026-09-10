@@ -463,7 +463,11 @@ x IN aff_ge {x} {v}
 theorem point_in_aff_ge_1_1 (x v : V3) (hxv : x ≠ v) :
     x ∈ affGe ({x} : Set V3) ({v} : Set V3) ∧
       v ∈ affGe ({x} : Set V3) ({v} : Set V3) := by
-  sorry
+  constructor
+  · rw [mem_affGe_singleton hxv]
+    exact ⟨1, 0, le_refl 0, by norm_num, by module⟩
+  · rw [mem_affGe_singleton hxv]
+    exact ⟨0, 1, by norm_num, by norm_num, by module⟩
 
 /-! ## aff_ge {x}{v,u} 中的顶点必为端点（planarity.hl:14441-14472） -/
 
