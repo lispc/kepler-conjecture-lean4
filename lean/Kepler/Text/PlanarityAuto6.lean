@@ -118,7 +118,10 @@ theorem sym_line_fan {E : Type*} [AddCommGroup E] [Module ℝ E] (x y z : E)
     (hx : x ∈ affineSpan ℝ ({y, z} : Set E))
     (hdis : Disjoint ({x} : Set E) {y, z}) :
     affineSpan ℝ ({x, z} : Set E) = affineSpan ℝ ({x, y} : Set E) := by
-  sorry
+  apply le_antisymm
+  · exact sym_line0_fan x y z hx hdis
+  · exact sym_line0_fan x z y (by simpa [Set.pair_comm] using hx)
+      (by simpa [Set.pair_comm] using hdis)
 
 /-- HOL planarity.hl :11643-11654 `sym_line01_fan`
 
