@@ -695,7 +695,9 @@ theorem FINITE_FACE_FAN {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E)
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet) :
     ds.Finite := by
-  sorry
+  simp only [Hypermap.faceSet, setOfOrbits] at hds
+  obtain ⟨d, _, rfl⟩ := hds
+  exact Hypermap.face_finite (hypermapOfFan x V E hfan) d
 
 /-- HOL planarity.hl :14883-14909 `condition_f1_fan_in_face_set`
 
