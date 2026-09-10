@@ -556,7 +556,25 @@ Mathlib 缺口：无同形引理；最接近的是
 - `mul_lt_of_lt_div`（Mathlib/Algebra/Order/Field/Basic.lean） -/
 theorem exists_esilon_real (a b : ℝ) (ha : 0 < a) :
     ∃ t : ℝ, 0 < t ∧ t < 1 ∧ ∀ h : ℝ, 0 < h → h < t → 0 < a - h * b := by
-  sorry
+  rcases le_or_gt b 0 with hb | hb
+  · refine ⟨1 / 2, by norm_num, by norm_num, ?_⟩
+    intro h hh _
+    have hb' : h * b ≤ 0 := mul_nonpos_of_nonneg_of_nonpos (le_of_lt hh) hb
+    linarith
+  · have hbpos : 0 < b := hb
+    have hab : 0 < a / b := div_pos ha hbpos
+    refine ⟨min (a / b) 1 / 2, ?_, ?_, ?_⟩
+    · have hmin : 0 < min (a / b) 1 := lt_min hab (by norm_num)
+      linarith
+    · have hle : min (a / b) 1 ≤ 1 := min_le_right _ _
+      linarith
+    · intro h hh ht
+      have hlt : h < a / b := by
+        have hmin : min (a / b) 1 ≤ a / b := min_le_left _ _
+        have : min (a / b) 1 / 2 < a / b := by nlinarith
+        linarith
+      have : h * b < a := (lt_div_iff₀ hbpos).mp hlt
+      linarith
 
 /-! ## cross/dot 符号的 epsilon 不变性（planarity.hl:13059-13120） -/
 
