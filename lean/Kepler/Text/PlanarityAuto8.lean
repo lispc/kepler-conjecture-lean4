@@ -525,6 +525,7 @@ HOL 名称虽为 `..._subset_edges`，但结论实为 `⊆ V`，按 HOL 原样�
 - `setOfEdge`（Kepler/Text/Fan.lean:62） -/
 theorem set_of_edge_subset_edges (V : Set V3) (E : Set (Set V3)) (v : V3) :
     setOfEdge v V E ⊆ V := by
-  sorry
+  intro w hw
+  exact hw.2
 
 end Kepler.Text
