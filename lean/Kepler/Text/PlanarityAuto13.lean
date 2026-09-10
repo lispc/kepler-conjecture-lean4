@@ -323,7 +323,9 @@ HOL 原文：
 theorem notcoplanar_4point_aff_gt_1_3_not_empty (x v u w : V3)
     (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) :
     affGt ({x} : Set V3) ({v, u, w} : Set V3) ≠ ∅ := by
-  sorry
+  have h := inter_aff_gt_3_1_is_aff_gt_1_3 x v u w hcop
+  rw [← h]
+  exact notcoplanar_4point_aff_gt_3_1_not_empty x v u w hcop
 
 /-! ## dart_leads_into 与 aff_gt 的相等（planarity.hl:14360-14400） -/
 
