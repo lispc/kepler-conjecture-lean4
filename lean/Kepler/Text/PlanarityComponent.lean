@@ -74,6 +74,31 @@ open scoped Topology
 
 /-! ## 面上 dart_leads_into 的一致性（planarity.hl:10812-10976） -/
 
+/-- 不共线 ⇒ `x` 不属于 `{v,w}`（`Disjoint {x} {v,w}`）。 -/
+private theorem disjoint_of_not_collinear3_component {x v w : V3}
+    (hnc : ¬ Collinear3 x v w) :
+    Disjoint ({x} : Set V3) {v, w} := by
+  rw [Set.disjoint_iff_inter_eq_empty, Set.singleton_inter_eq_empty]
+  intro hmem
+  rcases Set.mem_insert_iff.mp hmem with he | he
+  · exact hnc (by rw [he]; exact collinear3_of_eq rfl)
+  · exact hnc (by rw [Set.mem_singleton_iff.mp he]; exact collinear3_pair_left rfl)
+
+/-- 三点不共线时 `affGt {x} {v,w}` 是凸集（HOL `CONVEX_AFF_GT`）：由
+`aff_gt_1_2` 写成开三角形的显式组合，凸组合的系数仍严格正。 -/
+private theorem convex_affGt_single_pair {x v w : V3} (hnc : ¬ Collinear3 x v w) :
+    Convex ℝ (affGt {x} {v, w}) := by
+  rw [aff_gt_1_2 (disjoint_of_not_collinear3_component hnc), convex_iff_forall_pos]
+  intro y hy z hz a b ha hb hab
+  obtain ⟨t1, t2, t3, ht2, ht3, hsum, hyeq⟩ := hy
+  obtain ⟨s1, s2, s3, hs2, hs3, hssum, hzeq⟩ := hz
+  refine ⟨a * t1 + b * s1, a * t2 + b * s2, a * t3 + b * s3,
+    add_pos (mul_pos ha ht2) (mul_pos hb hs2),
+    add_pos (mul_pos ha ht3) (mul_pos hb hs3), ?_, ?_⟩
+  · nlinarith [hsum, hssum, hab]
+  · rw [hyeq, hzeq]
+    module
+
 /-- HOL planarity.hl :10812-10913 `connected_component_of_faces_fan`
 
 HOL 原文：
@@ -105,6 +130,7 @@ dart_leads_into x V E v u = dart_leads_into x V E u w
 - `exists_rw_dart_inter_aff_gt1_fan`（Kepler/Text/PlanarityAngle.lean:2173）
 - `fan_run_in_small_is_subset_yfan`（Kepler/Text/Planarity.lean:2588）
 - `connectedComponentIn_mono`（Mathlib/Topology/Connected/Basic.lean:635） -/
+
 theorem connected_component_of_faces_fan {x v u w : V3} {V : Set V3}
     {E : Set (Set V3)}
     (hfan : FAN x V E) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
@@ -112,7 +138,85 @@ theorem connected_component_of_faces_fan {x v u w : V3} {V : Set V3}
     (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
     (hfan80 : fan80 x V E) :
     dartLeadsInto x V E v u = dartLeadsInto x V E u w := by
-  sorry
+  obtain ⟨U, h, hh0, hspec⟩ := exists_leads_into_fan hfan hvu
+  obtain ⟨U', h', hh'0, hspec'⟩ := exists_leads_into_fan hfan huw
+  obtain ⟨hθ0, hθπ⟩ := hfan80 u w huw
+  rw [hsigma] at hθ0 hθπ
+  -- 公共小角度 s0：同时小于两侧阈值与 π/2
+  set s0 : ℝ := min (min h h') (Real.pi / 2) / 2 with hs0def
+  have hXpos : 0 < min (min h h') (Real.pi / 2) :=
+    lt_min (lt_min hh0 hh'0) (by positivity)
+  have hs0pos : 0 < s0 := by rw [hs0def]; exact div_pos hXpos two_pos
+  have hs0lt_h : s0 < h := by
+    rw [hs0def]
+    exact lt_of_lt_of_le (half_lt_self hXpos)
+      (le_trans (min_le_left _ _) (min_le_left _ _))
+  have hs0lt_h' : s0 < h' := by
+    rw [hs0def]
+    exact lt_of_lt_of_le (half_lt_self hXpos)
+      (le_trans (min_le_left _ _) (min_le_right _ _))
+  have hs0lt_pi2 : s0 < Real.pi / 2 := by
+    rw [hs0def]
+    exact lt_of_lt_of_le (half_lt_self hXpos) (min_le_right _ _)
+  -- 两侧弦带阈值与 yfan 阈值
+  obtain ⟨H1, hH10, hH1⟩ :=
+    exists_rw_dart_inter_aff_gt1_fan hfan hvu huw hsigma hs0pos hs0lt_pi2 hfan80 hcard
+  obtain ⟨H2, hH20, hH2⟩ :=
+    exists_rw_dart_inter_aff_gt_fan hfan hvu huw hsigma hfan80 hcard
+  obtain ⟨H3, hH30, hH3le1, hH3⟩ :=
+    fan_run_in_small_is_subset_yfan hfan hvu huw hθ0 hθπ hsigma
+  -- 公共弦参数 h1：同时小于三个阈值
+  set h1 : ℝ := min (min H1 H2) H3 / 2 with hh1def
+  have hYpos : 0 < min (min H1 H2) H3 :=
+    lt_min (lt_min hH10 hH20) hH30
+  have hh1pos : 0 < h1 := by rw [hh1def]; exact div_pos hYpos two_pos
+  have hh1lt_H1 : h1 < H1 := by
+    rw [hh1def]
+    exact lt_of_lt_of_le (half_lt_self hYpos)
+      (le_trans (min_le_left _ _) (min_le_left _ _))
+  have hh1lt_H2 : h1 < H2 := by
+    rw [hh1def]
+    exact lt_of_lt_of_le (half_lt_self hYpos)
+      (le_trans (min_le_left _ _) (min_le_right _ _))
+  have hh1lt_H3 : h1 < H3 := by
+    rw [hh1def]
+    exact lt_of_lt_of_le (half_lt_self hYpos) (min_le_right _ _)
+  have hh1lt_one : h1 < 1 := lt_of_lt_of_le hh1lt_H3 hH3le1
+  -- 公共凸区域 A = aff_gt {x} {v, (1-h1)u + h1 w}
+  set A : Set V3 := affGt {x} {v, (1 - h1) • u + h1 • w} with hA
+  have hncA : ¬ Collinear3 x v ((1 - h1) • u + h1 • w) :=
+    not_collinear_is_properties_fully_surrounded hfan hvu huw hθ0 hθπ h1 hh1pos hh1lt_one
+  have hconvA : Convex ℝ A := by
+    rw [hA]
+    exact convex_affGt_single_pair hncA
+  have hpreA : IsPreconnected A := hconvA.isPreconnected
+  -- 两侧各取 A 内的交点
+  have hne_y : (rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos s0) ∩ A) ≠ ∅ := by
+    rw [hA]
+    exact hH2 h1 hh1pos hh1lt_H2 s0 hs0pos hs0lt_pi2
+  obtain ⟨y, hy⟩ := Set.nonempty_iff_ne_empty.mpr hne_y
+  have hyrw : y ∈ rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos s0) := hy.1
+  have hyA : y ∈ A := hy.2
+  have hne_y' : (rwDartFan x V E (x, u, w, sigmaFan x V E u w) (Real.cos s0) ∩ A) ≠ ∅ := by
+    rw [hA]
+    exact hH1 h1 hh1pos hh1lt_H1
+  obtain ⟨y', hy'⟩ := Set.nonempty_iff_ne_empty.mpr hne_y'
+  have hy'rw : y' ∈ rwDartFan x V E (x, u, w, sigmaFan x V E u w) (Real.cos s0) := hy'.1
+  have hy'A : y' ∈ A := hy'.2
+  have hAyfan : A ⊆ yfan x V E := by
+    rw [hA]
+    exact hH3 h1 hh1pos hh1lt_H3
+  -- A 预连通且含于 yfan ⇒ y 与 y' 落在 yfan 的同一连通分量
+  have hy'comp : y' ∈ connectedComponentIn (yfan x V E) y :=
+    (hpreA.subset_connectedComponentIn hyA hAyfan) hy'A
+  have hcomp : connectedComponentIn (yfan x V E) y =
+      connectedComponentIn (yfan x V E) y' :=
+    connectedComponentIn_eq hy'comp
+  obtain ⟨-, hUy⟩ := hspec s0 y hs0pos hs0lt_h hyrw
+  obtain ⟨-, hU'y'⟩ := hspec' s0 y' hs0pos hs0lt_h' hy'rw
+  have hUU' : U = U' := by rw [← hUy, hcomp, hU'y']
+  exact (unique_dart_leads_into hfan hvu U ⟨h, hh0, hspec⟩).trans
+    (hUU'.trans (unique_dart_leads_into hfan huw U' ⟨h', hh'0, hspec'⟩).symm)
 
 /-- HOL planarity.hl :10927-10976 `exists_dartset_leads_into_fan`
 
