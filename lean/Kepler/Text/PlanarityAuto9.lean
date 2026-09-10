@@ -94,7 +94,26 @@ theorem aff_ge_2_1_is_exists_point_inaff_ge_1_2 (x y z w : V3)
     (h2 : Disjoint ({x, y} : Set V3) {w})
     (hz : z ∈ affGe {x, y} {w}) :
     ∃ t : ℝ, 0 < t ∧ t < 1 ∧ (1 - t) • y + t • z ∈ affGe {x} {y, w} := by
-  sorry
+  have hxy : x ≠ y := Set.disjoint_iff_forall_ne.mp h1 rfl (Or.inl rfl)
+  have hyw : y ≠ w := Set.disjoint_iff_forall_ne.mp h2 (Or.inr rfl) rfl
+  obtain ⟨t1, t2, t3, ht3, hsum, hz'⟩ := (mem_affGe_pair h2 hxy).mp hz
+  by_cases ht2 : 0 ≤ t2
+  · refine ⟨1 / 2, by norm_num, by norm_num, ?_⟩
+    rw [mem_affGe_singleton_pair h1 hyw]
+    refine ⟨t1 / 2, 1 / 2 + t2 / 2, t3 / 2, by linarith, by linarith, by linarith, ?_⟩
+    rw [hz']
+    module
+  · simp only [not_le] at ht2
+    have hpos : 0 < 1 - t2 := by linarith
+    refine ⟨1 / (1 - t2), by positivity, ?_, ?_⟩
+    · rw [div_lt_one hpos]; linarith
+    · rw [mem_affGe_singleton_pair h1 hyw]
+      refine ⟨t1 / (1 - t2), 0, t3 / (1 - t2), by norm_num, by positivity, ?_, ?_⟩
+      · have hsum' : t1 + t3 = 1 - t2 := by linarith
+        rw [add_zero, ← add_div, hsum', div_self (ne_of_gt hpos)]
+      · rw [hz']
+        field_simp
+        module
 
 /-! ## yfan 中点的 azim 不为零（planarity.hl:12261-12322） -/
 
