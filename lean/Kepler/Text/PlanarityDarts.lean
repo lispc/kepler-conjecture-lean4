@@ -656,6 +656,44 @@ theorem DWWUTKW {x : V3} {V : Set V3} {E E1 : Set (Set V3)}
     (hsub : affGt {x} {v, u} ⊆ dartsetLeadsIntoFan x V E ds)
     (hE1 : E1 = E ∪ {{v, u}}) :
     FAN x V E1 := by
-  sorry
+  have hvu : v ≠ u := fun h =>
+    hnc (by rw [h]; exact collinear3_pair_right (v0 := x) (v1 := u) rfl)
+  refine ⟨?_, ?_, hfan.2.2.1, hfan.2.2.2.1, ?_, ?_⟩
+  · exact add_edge_graph_fan E1 hv hu hE1 hfan.1
+  · exact graph_add_edge_is_graph hE1 hvu hfan.2.1
+  · intro e he
+    rw [hE1] at he
+    exact add_edge_into_collinear_fan hnc hfan.2.2.2.2.1 e he
+  · intro e1 he1 e2 he2
+    have classify : ∀ e : Set V3,
+        e ∈ E1 ∪ {s | ∃ w ∈ V, s = {w}} →
+        e ∈ E ∨ e = {v, u} ∨ (∃ w ∈ V, e = {w}) := by
+      intro e he
+      rw [hE1] at he
+      simp only [Set.mem_union, Set.mem_singleton_iff, Set.mem_setOf_eq] at he
+      rcases he with (he | he) | he
+      · exact Or.inl he
+      · exact Or.inr (Or.inl he)
+      · exact Or.inr (Or.inr he)
+    have hfan7_old := hfan.2.2.2.2.2
+    rcases classify e1 he1 with he1E | he1vu | ⟨w1, hw1, he1w1⟩
+    · rcases classify e2 he2 with he2E | he2vu | he2P
+      · exact hfan7_old e1 (Or.inl he1E) e2 (Or.inl he2E)
+      · rw [he2vu]
+        exact condition_not_intersection_fan hfan hv hu hnc hcard hfan80 hds hsub he1E rfl
+      · exact hfan7_old e1 (Or.inl he1E) e2 (Or.inr he2P)
+    · rcases classify e2 he2 with he2E | he2vu | ⟨w2, hw2, he2w2⟩
+      · rw [Set.inter_comm (affGe {x} e1) (affGe {x} e2), Set.inter_comm e1 e2]
+        exact condition_not_intersection_fan hfan hv hu hnc hcard hfan80 hds hsub he2E he1vu
+      · rw [he1vu, he2vu, Set.inter_self, Set.inter_self]
+      · rw [he1vu, he2w2]
+        exact condition_not_intersection_point_fan hfan hv hu hnc hcard hfan80 hds hsub hw2 rfl
+    · rcases classify e2 he2 with he2E | he2vu | he2P
+      · exact hfan7_old e1 (Or.inr ⟨w1, hw1, he1w1⟩) e2 (Or.inl he2E)
+      · rw [he1w1, he2vu,
+          Set.inter_comm (affGe {x} {w1}) (affGe {x} {v, u}),
+          Set.inter_comm ({w1} : Set V3) ({v, u} : Set V3)]
+        exact condition_not_intersection_point_fan hfan hv hu hnc hcard hfan80 hds hsub hw1 rfl
+      · exact hfan7_old e1 (Or.inr ⟨w1, hw1, he1w1⟩) e2 (Or.inr he2P)
 
 end Kepler.Text
