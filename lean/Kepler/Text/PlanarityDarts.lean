@@ -488,6 +488,23 @@ theorem exists_edge_fully_surround_fan {x w : V3} {V : Set V3} {E : Set (Set V3)
   obtain ⟨v, hv⟩ := (Set.ncard_pos hfin).mp hpos
   exact ⟨v, hv.1, hv.2⟩
 
+/-- 当 `S,T ⊆ {w}` 且 `x ∉ S,T` 时，`S,T` 各为 `∅` 或 `{w}`，故两处
+`affGe` 的并集可合并为 `affGe {x} (S ∪ T)`（退化项 `affGe {x} ∅` 含于
+另一项）。 -/
+private theorem affGe_union_of_subset_singleton {x w : V3} {S T : Set V3}
+    (hS : S ⊆ ({w} : Set V3)) (hT : T ⊆ ({w} : Set V3))
+    (hxS : x ∉ S) (hxT : x ∉ T)
+    (hfinS : ({x} ∪ S : Set V3).Finite) (hfinT : ({x} ∪ T : Set V3).Finite) :
+    affGe {x} S ∪ affGe {x} T = affGe {x} (S ∪ T) := by
+  rcases Set.subset_singleton_iff_eq.mp hS with hS0 | hSw
+  · rw [hS0, Set.empty_union]
+    exact Set.union_eq_right.mpr (affGe_mono_right' (Set.empty_subset T) hfinT hxT)
+  · subst hSw
+    rcases Set.subset_singleton_iff_eq.mp hT with hT0 | hTw
+    · rw [hT0, Set.union_empty]
+      exact Set.union_eq_left.mpr (affGe_mono_right' (Set.empty_subset _) hfinS hxS)
+    · rw [hTw, Set.union_self, Set.union_self]
+
 /-- HOL planarity.hl :11310-11375 `condition_not_intersection_point_fan`
 
 HOL 原文：
@@ -524,7 +541,78 @@ theorem condition_not_intersection_point_fan {x : V3} {V : Set V3} {E : Set (Set
     (hsub : affGt {x} {v, u} ⊆ dartsetLeadsIntoFan x V E ds)
     (hw : w ∈ V) (he1 : e1 = {v, u}) :
     affGe {x} e1 ∩ affGe {x} {w} = affGe {x} (e1 ∩ {w}) := by
-  sorry
+  subst he1
+  have hVfin : V.Finite := hfan.2.2.1.1
+  have hxV : x ∉ V := hfan.2.2.2.1
+  have hvu : v ≠ u := fun h =>
+    hnc (by rw [h]; exact collinear3_pair_right (v0 := x) (v1 := u) rfl)
+  have h77 := aff_ge_eq_aff_gt_union_aff_ge (x := x) (v := v) (w := u) hnc
+  have hyfan := dartset_leads_into_subset_yfan hfan hcard hfan80 hds
+  have hgt_yfan : affGt {x} {v, u} ⊆ yfan x V E :=
+    fun y hy => hyfan (hsub hy)
+  have hgt_xfan : affGt {x} {v, u} ∩ xfan x V E = ∅ := by
+    rw [Set.eq_empty_iff_forall_notMem]
+    intro y hy
+    obtain ⟨hygt, hyx⟩ := hy
+    have hyy := hgt_yfan hygt
+    rw [yfan, Set.mem_sdiff] at hyy
+    exact hyy.2 hyx
+  obtain ⟨v', hvv', hv'⟩ := exists_edge_fully_surround_fan hfan hw hcard
+  have hw_xfan : affGe {x} {w} ⊆ xfan x V E := by
+    have hpairfin : ({w, v'} : Set V3).Finite :=
+      hVfin.subset (by
+        intro z hz
+        rw [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+        rcases hz with rfl | rfl
+        · exact hw
+        · exact hv')
+    have hfin : ({x} ∪ {w, v'} : Set V3).Finite :=
+      (Set.finite_singleton x).union hpairfin
+    have hxpair : x ∉ ({w, v'} : Set V3) := by
+      intro hx
+      rw [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+      rcases hx with h | h
+      · exact hxV (by rw [h]; exact hw)
+      · exact hxV (by rw [h]; exact hv')
+    have hsub' : ({w} : Set V3) ⊆ {w, v'} := by
+      intro z hz
+      rw [Set.mem_singleton_iff] at hz
+      rw [Set.mem_insert_iff]
+      exact Or.inl hz
+    intro y hy
+    exact ⟨{w, v'}, hvv', affGe_mono_right' hsub' hfin hxpair hy⟩
+  have hA_disj : affGt {x} {v, u} ∩ affGe {x} {w} = ∅ := by
+    rw [Set.eq_empty_iff_forall_notMem]
+    intro y hy
+    obtain ⟨hyA, hyW⟩ := hy
+    have hmem : y ∈ affGt {x} {v, u} ∩ xfan x V E := ⟨hyA, hw_xfan hyW⟩
+    rw [hgt_xfan] at hmem
+    exact hmem
+  have hfan7 := hfan.2.2.2.2.2
+  have h7wv : affGe {x} {w} ∩ affGe {x} {v} = affGe {x} ({w} ∩ {v} : Set V3) :=
+    hfan7 {w} (Or.inr ⟨w, hw, rfl⟩) {v} (Or.inr ⟨v, hv, rfl⟩)
+  have h7wu : affGe {x} {w} ∩ affGe {x} {u} = affGe {x} ({w} ∩ {u} : Set V3) :=
+    hfan7 {w} (Or.inr ⟨w, hw, rfl⟩) {u} (Or.inr ⟨u, hu, rfl⟩)
+  have hdist : ((affGt {x} {v, u} ∪ affGe {x} {v}) ∪ affGe {x} {u}) ∩
+        affGe {x} {w}
+      = affGe {x} ({w} ∩ {v} : Set V3) ∪ affGe {x} ({w} ∩ {u} : Set V3) := by
+    rw [Set.union_inter_distrib_right, Set.union_inter_distrib_right, hA_disj,
+      Set.empty_union]
+    rw [Set.inter_comm (affGe {x} {v}) (affGe {x} {w}), h7wv,
+      Set.inter_comm (affGe {x} {u}) (affGe {x} {w}), h7wu]
+  rw [h77, hdist]
+  have hST : ({w} ∩ {v} : Set V3) ∪ ({w} ∩ {u} : Set V3) = ({v, u} ∩ {w} : Set V3) := by
+    rw [← Set.inter_union_distrib_left, Set.singleton_union, Set.inter_comm]
+  rw [← hST]
+  have hxw : x ∉ ({w} : Set V3) := by
+    rw [Set.mem_singleton_iff]
+    intro h
+    exact hxV (by rw [h]; exact hw)
+  exact affGe_union_of_subset_singleton (Set.inter_subset_left) (Set.inter_subset_left)
+    (fun hz => hxw (Set.inter_subset_left hz))
+    (fun hz => hxw (Set.inter_subset_left hz))
+    ((Set.finite_singleton x).union ((Set.finite_singleton w).subset Set.inter_subset_left))
+    ((Set.finite_singleton x).union ((Set.finite_singleton w).subset Set.inter_subset_left))
 
 /-! ## DWWUTKW：加边保持 FAN（planarity.hl:11377-11438） -/
 
