@@ -469,7 +469,14 @@ theorem exists_edge_component_yfan (x : V3) (V : Set V3) (E : Set (Set V3))
     ∃ w : V3, w ∈ setOfEdge v V E ∧
       ∀ w1 : V3, w1 ∈ setOfEdge v V E →
         azim1 x v y w ≤ azim1 x v y w1 := by
-  sorry
+  have hVfin : V.Finite := hfan.2.2.1.1
+  have hfin : (setOfEdge v V E).Finite := remark_finite_fan1 v V E hVfin
+  have hne : (setOfEdge v V E).Nonempty := by
+    obtain ⟨w, hw⟩ := exists_edge_fully_surround_fan (x := x) (w := v) hfan hv hcard
+    exact ⟨w, hw⟩
+  obtain ⟨w, hw, hmin⟩ :=
+    Set.exists_min_image (setOfEdge v V E) (fun w => azim1 x v y w) hfin hne
+  exact ⟨w, hw, fun w1 hw1 => hmin w1 hw1⟩
 
 /-! ## 顶点集含于 xfan 与邻居集含于顶点集（planarity.hl:12195-12217） -/
 
