@@ -175,7 +175,19 @@ theorem sym_line02_fan {E : Type*} [AddCommGroup E] [Module ℝ E] (x y z : E)
     (hx : x ∈ affineSpan ℝ ({y, z} : Set E))
     (hdis : Disjoint ({y} : Set E) {x, z}) :
     affineSpan ℝ ({y, z} : Set E) ≤ affineSpan ℝ ({y, x} : Set E) := by
-  sorry
+  have hy_notin : y ∉ ({x, z} : Set E) := Set.disjoint_singleton_left.mp hdis
+  have hxy : x ≠ y := by
+    intro h
+    exact hy_notin (by simp [h])
+  have hz : z ∈ affineSpan ℝ ({x, y} : Set E) := sym_line1_fan x y z hx hxy
+  rw [AffineSubspace.affineSpan_pair_comm (k := ℝ) (p₁ := x) (p₂ := y)] at hz
+  apply affineSpan_le.mpr
+  intro w hw
+  rcases Set.mem_insert_iff.mp hw with hwy | hwz
+  · rw [hwy]
+    exact POINT_IN_LINE y x
+  · rw [Set.mem_singleton_iff.mp hwz]
+    exact hz
 
 /-- HOL planarity.hl :11678-11687 `sym_line_fan1`
 
