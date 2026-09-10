@@ -201,7 +201,15 @@ theorem point_in_yfan_and_point_in_xfan_indepent_fan (x : V3) (V : Set V3)
     (hy : y ∈ xfan x V E) (hyx : y ≠ x)
     (hconn : ∀ t : ℝ, 0 < t → t < 1 → (1 - t) • y + t • z ∈ yfan x V E) :
     ¬ Collinear3 x y z := by
-  sorry
+  have hxy : x ≠ y := hyx.symm
+  intro hcol
+  have hz_aff : z ∈ affineSpan ℝ ({x, y} : Set V3) :=
+    (collinear3_iff_mem_affineSpan hxy).mp hcol
+  obtain ⟨t, ht0, ht1, htmem⟩ := place_there_point_line_fan x y z hxy hz_aff
+  have hsub := aff_ge_1_1_subset_xfan x V E y hfan hcard hy hxy
+  have hxfan : (1 - t) • y + t • z ∈ xfan x V E := hsub htmem
+  have hyfan : (1 - t) • y + t • z ∈ yfan x V E := hconn t ht0 ht1
+  exact hyfan.2 hxfan
 
 /-! ## 四点共线置换（planarity.hl:12094-12116） -/
 
