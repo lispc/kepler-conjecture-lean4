@@ -39,6 +39,7 @@ import Kepler.Text.PlanarityConnect
 import Kepler.Text.PlanarityAuto6
 import Kepler.Text.PlanarityAuto7
 import Kepler.Text.PlanarityAuto8
+import Kepler.Text.PlanarityAuto9
 import Kepler.Text.VectorAngleLemmas
 -- Phase 4: 分支定界证书树（二分盒树 + covers/bb_sound，叶为内核 decide 的 checkPos）
 import Kepler.Interval.Cert
