@@ -2,9 +2,9 @@
 
 > 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新（cron 自动 push）。
 > 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
-> 当前 main @ `33e951a`，`lake build Kepler` 全绿（9307 jobs），
+> 当前 main @ `efd8124`，`lake build Kepler` 全绿（9310 jobs），
 > 唯一 sorry 是 `Statement.lean:111` 的主定理占位（sanctioned，见 Phase 1）。
-> wip/auto-phase5 领先 main：批次 2（6/7 入库，1 枚 NEEDS-HUMAN 闭合后合并）+ 批次 3 骨架。
+> Phase 5 已进入 auto_pipeline 无人值守模式（deepseek 全权，Kimi 每 4h 抽查汇报）。
 
 图例：✅ 完成并验证 / 🟡 进行中 / ⬜ 未启动。完成度为行数或条目数口径的粗略估计。
 
@@ -55,21 +55,19 @@
 
 ## Phase 5 — 文字证明移植 🟡（全项目最大头，已全自动化）
 
-**生产模式（2026-09-09 起）**：自动化移植 harness（`lean/scripts/auto_loop.sh` + `auto_gate.sh`，分支 `wip/auto-phase5`）：
-满血 glm-5.3 批量设计骨架（**陈述定稿冻结**，docstring 嵌 HOL 原文+证法+候选引理）
-→ big-pickle（opencode 免费）逐定理填空 → 机械闸五道（单文件 diff / 签名冻结 /
-禁词扫描 / lake build 绿 / 公理白名单）→ 过闸自动 commit，3 次失败跳过、连续 3 跳闸熔断
-→ **Kimi 主 agent 降为每日批次审计（陈述 vs HOL），审过才 ff-push 进 main**。
-升级链：big-pickle ×2 → glm-5.3 ×1 → NEEDS-HUMAN。模板：`docs/phase5-worker-template.md`。
-第三车道试车中：deepseek-v4-flash（付费 API，2026-09-10 升级版基准 97s 零干预过，
-比上一版快一倍；真产首单因依赖未闭合被闸正确拦下，证明本身质量合格）。
+**生产模式（2026-09-10 v2）**：`lean/scripts/auto_pipeline.sh` 全自动批次流水线——
+deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 → 机械闸五道 →
+批次审计 → 自动 ff-push main。满血 glm-5.3 留作 NEEDS-HUMAN 前最后兜底；
+**Kimi 降为每 4h 汇报 + STATUS.md + 陈述保真抽查 + 处理熔断**。
+模板：`docs/phase5-worker-template.md`。
+实测吞吐：批次 4（10 枚）21 分钟、批次 5（10 枚）15 分钟，全 deepseek 一次过。
 
 | 模块（HOL 源文件） | 行数 | 状态 | 完成度 |
 |---|---|---|---|
 | hypermap/hypermap.hl | 13,575 | ✅ 全书收官 | 100% |
 | fan/fan.hl 系列（fan_defs/fan_misc/fan/CFYXFTY/hypermap_and_fan） | ~7,800 | ✅ 全书收官（hypermapOfFan 完整构造） | 100% |
 | fan/topology.hl | 4,718 | ✅ 全书收官（`36c37c6`，dart_leads_into 全套） | 100% |
-| fan/planarity.hl | 15,463 | 🟡 main 覆盖至 :10095（`33e951a`，65.3%）：批次 1（angle 段 8 枚）全自动闭合入 main；wip 上批次 2（rcone 段 :10096-10806）6/7 入库、`exists_rw_dart_inter_aff_gt1_fan` NEEDS-HUMAN 在补，批次 3（dartset/连通分量段 :10812-11094，9 枚）骨架已备 | **65%** |
+| fan/planarity.hl | 15,463 | 🟡 main 覆盖至 :11610（`efd8124`，**75.1%**）：批次 1-5（angle/rcone/dartset/加边/连通边界段，44 枚定理）全自动闭合入 main；批次 6 起由 auto_pipeline 无人值守推进 | **75%** |
 | fan/Conforming.hl | 17,033 | ⬜ 未启动 | 0% |
 | fan/ 其余（polyhedron 等） | ~3,200 | ⬜ 未启动 | 0% |
 | packing/（Rogers/OXLZLEZ3/REUHADY…） | ~28,000 | ⬜ 未启动 | 0% |
@@ -101,8 +99,8 @@
 ## 整体估计
 
 - **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 0%（G4 待开工）。
-- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + planarity 60% ≈ 36k 行 HOL 源；待移植 ≈ 84k 行。按行数口径 **~30%**。自动化 harness 已自证可行（首批 8 定理中 4 枚已无人干预过闸入库 wip）。
-- **全项目粗略完成度：~54%**。
+- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + planarity 75% ≈ 38k 行 HOL 源；待移植 ≈ 82k 行。按行数口径 **~32%**。auto_pipeline 无人值守批次推进中。
+- **全项目粗略完成度：~55%**。
 
 ## 验证纪律
 
