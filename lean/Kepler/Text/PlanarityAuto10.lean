@@ -614,7 +614,27 @@ theorem invariant_cross_dotr_esilon_3piont (x y z v u : V3) :
       ∀ h : ℝ, 0 < h → h < t →
         0 < (crossProduct ((a1 : V3) : Fin 3 → ℝ) ((a2 : V3) : Fin 3 → ℝ)) ⬝ᵥ
           ((((1 - h) • v + h • u - x : V3)) : Fin 3 → ℝ) := by
-  sorry
+  dsimp only
+  intro hpos
+  set c : Fin 3 → ℝ :=
+    crossProduct ((y - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ) with hc
+  set A : ℝ := c ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ) with hA
+  set B : ℝ := c ⬝ᵥ ((u - x : V3) : Fin 3 → ℝ) with hB
+  obtain ⟨t, ht0, ht1, ht⟩ := exists_esilon_real A (A - B) hpos
+  refine ⟨t, ht0, ht1, ?_⟩
+  intro h hh0 hht
+  have hval : c ⬝ᵥ ((((1 - h) • v + h • u - x : V3)) : Fin 3 → ℝ) = A - h * (A - B) := by
+    have hdecomp : ((1 - h) • v + h • u - x : V3) = (1 - h) • (v - x) + h • (u - x) := by
+      module
+    have hcast : ((((1 - h) • v + h • u - x : V3)) : Fin 3 → ℝ) =
+        (1 - h) • ((v - x : V3) : Fin 3 → ℝ) + h • ((u - x : V3) : Fin 3 → ℝ) := by
+      rw [hdecomp]
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul]
+    rw [hcast, dotProduct_add, dotProduct_smul, dotProduct_smul, smul_eq_mul, smul_eq_mul,
+      hA, hB]
+    ring
+  rw [hval]
+  exact ht h hh0 hht
 
 /-- HOL planarity.hl :13081-13098 `invariant_rcross_dot_esilon_3piont`
 
