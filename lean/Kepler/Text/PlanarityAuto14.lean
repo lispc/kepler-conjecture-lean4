@@ -112,6 +112,10 @@ FAN(x,V,E)/\ {v,u} IN E /\ {u,w} IN E /\ {w,v} IN E /\ {u1,w1} IN E
 - `v_subset_xfan`（Kepler/Text/PlanarityAuto8.lean:501）
 - `POINT_IN_AFF_GE_IMP_IN_EDGE`（Kepler/Text/PlanarityAuto13.lean:529）
 - `edge_ne_of_fan`（Kepler/Text/Fan.lean:1039，HOL `remark1_fan` 的互异部分） -/
+private theorem affGt_subset_affGe_auto14 {s t : Set V3} : affGt s t ⊆ affGe s t := by
+  rintro y ⟨f, hfin, hsum, hpos, hone⟩
+  exact ⟨f, hfin, hsum, fun w hw => le_of_lt (hpos w hw), hone⟩
+
 theorem KVQWYDL_lemma2 {x v u w u1 w1 : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E) (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E)
     (hwv : {w, v} ∈ E) (hu1w1 : {u1, w1} ∈ E)
@@ -120,7 +124,87 @@ theorem KVQWYDL_lemma2 {x v u w u1 w1 : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan80 : fan80 x V E)
     (haff : affGt ({x} : Set V3) ({v, u, w} : Set V3) = dartLeadsInto x V E u1 w1) :
     u1 ∈ ({v, u, w} : Set V3) := by
-  sorry
+  obtain ⟨hθ0, hθπ⟩ := hfan80 u w huw
+  rw [hsigma] at hθ0 hθπ
+  have hcop : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan hvu huw hθ0 hθπ
+  obtain ⟨h, hh0, hspec⟩ := dartLeadsInto_spec hfan hu1w1
+  set h1 : ℝ := min h (Real.pi / 2) / 2 with hh1def
+  have hminpos : 0 < min h (Real.pi / 2) := lt_min hh0 (by positivity)
+  have hh1_0 : 0 < h1 := by
+    rw [hh1def]; exact div_pos hminpos two_pos
+  have hh1_h : h1 < h := by
+    rw [hh1def]
+    exact lt_of_lt_of_le (half_lt_self hminpos) (min_le_left _ _)
+  have hh1_pi2 : h1 < Real.pi / 2 := by
+    rw [hh1def]
+    exact lt_of_lt_of_le (half_lt_self hminpos) (min_le_right _ _)
+  obtain ⟨y, hy⟩ := not_empty_rw_dart_fan hfan hu1w1 hh1_0 hh1_pi2
+  obtain ⟨hsub, -⟩ := hspec h1 y hh1_0 hh1_h hy
+  have hu1V : u1 ∈ V := (fan_mem_of_edge hfan hu1w1).1
+  have hxu1 : x ≠ u1 := by
+    intro hx
+    exact hfan.2.2.2.1 (by rw [hx]; exact hu1V)
+  have hσmem : sigmaFan x V E u1 w1 ∈ setOfEdge u1 V E :=
+    sigma_fan_in_setOfEdge hfan
+      ((properties_of_setOfEdge_fan x V E u1 w1 hfan).mp hu1w1)
+  have hvu' : ({sigmaFan x V E u1 w1, u1} : Set V3) ∈ E := by
+    have h :=
+      (properties_of_setOfEdge_fan x V E u1 (sigmaFan x V E u1 w1) hfan).mpr hσmem
+    rw [Set.pair_comm] at h
+    exact h
+  have hgt_sub : affGt ({x} : Set V3) ({u1, y} : Set V3) ⊆
+      rwDartFan x V E (x, u1, w1, sigmaFan x V E u1 w1) (Real.cos h1) :=
+    aff_gt_in_rw_dart_fan (v := sigmaFan x V E u1 w1) (u := u1) (w := w1)
+      (y := y) (s := h1) hfan hvu' hu1w1 rfl hh1_0 hh1_pi2 hy hfan80 hcard
+  have hgt_sub' : affGt ({x} : Set V3) ({u1, y} : Set V3) ⊆
+      affGt ({x} : Set V3) ({v, u, w} : Set V3) :=
+    hgt_sub.trans (hsub.trans (le_of_eq haff.symm))
+  have hne : E ≠ ∅ := nonsetedge_fully_surround_fan hcard hfan
+  have hU : dartLeadsInto x V E u1 w1 ∈ topologicalComponentYfan x V E :=
+    dart_leads_into_mem_topologicalComponentYfan hfan hu1w1
+  have hydl : y ∈ dartLeadsInto x V E u1 w1 := hsub hy
+  have hxy : x ≠ y :=
+    point_in_yfan_not_x_fan x V E (dartLeadsInto x V E u1 w1) y hfan hne hU hydl
+  have hu1y : u1 ≠ y :=
+    point_in_yfan_is_not_inv_fan x V E (dartLeadsInto x V E u1 w1) y u1 hfan hcard
+      hU hydl hu1V
+  have hu1clos : u1 ∈ closure (affGt ({x} : Set V3) ({u1, y} : Set V3)) :=
+    POINT_IN_CLOSURE_AFF_GT_1_2 x u1 y hxu1 hxy hu1y
+  have hclosed : IsClosed (affGe ({x} : Set V3) ({v, u, w} : Set V3)) := by
+    have hcompl : IsOpen (affGe ({x} : Set V3) ({v, u, w} : Set V3))ᶜ := by
+      simpa [Set.sdiff_eq, Set.univ_inter] using OPEN_DIFF_AFF_GE x v u w
+    exact isOpen_compl_iff.mp hcompl
+  have hcl : closure (affGt ({x} : Set V3) ({u1, y} : Set V3)) ⊆
+      affGe ({x} : Set V3) ({v, u, w} : Set V3) := by
+    calc closure (affGt ({x} : Set V3) ({u1, y} : Set V3))
+        ⊆ closure (affGe ({x} : Set V3) ({v, u, w} : Set V3)) :=
+          closure_mono (hgt_sub'.trans affGt_subset_affGe_auto14)
+      _ = affGe ({x} : Set V3) ({v, u, w} : Set V3) := hclosed.closure_eq
+  have hu1ge : u1 ∈ affGe ({x} : Set V3) ({v, u, w} : Set V3) := hcl hu1clos
+  have hgt_yfan : affGt ({x} : Set V3) ({v, u, w} : Set V3) ⊆ yfan x V E := by
+    rw [haff]
+    exact topological_component_subset_yfan
+      (dart_leads_into_mem_topologicalComponentYfan hfan hu1w1)
+  have hu1xfan : u1 ∈ xfan x V E := v_subset_xfan x V E hfan hcard hu1V
+  have hu1notgt : u1 ∉ affGt ({x} : Set V3) ({v, u, w} : Set V3) := by
+    intro hgt
+    have hyf : u1 ∈ yfan x V E := hgt_yfan hgt
+    rw [yfan, Set.mem_sdiff] at hyf
+    exact hyf.2 hu1xfan
+  have hdecomp := aff_ge_1_3_eq_unions_aff_ge_1_2_and_aff_gt_1_3 x v u w hcop
+  rw [hdecomp] at hu1ge
+  rcases (by simpa only [Set.mem_union] using hu1ge) with ((h1' | h2') | h3') | h4'
+  · have hm := POINT_IN_AFF_GE_IMP_IN_EDGE x V E v u u1 hfan hvu hu1V hxu1 h1'
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm ⊢
+    tauto
+  · have hm := POINT_IN_AFF_GE_IMP_IN_EDGE x V E u w u1 hfan huw hu1V hxu1 h2'
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm ⊢
+    tauto
+  · have hm := POINT_IN_AFF_GE_IMP_IN_EDGE x V E w v u1 hfan hwv hu1V hxu1 h3'
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hm ⊢
+    tauto
+  · exact absurd h4' hu1notgt
 
 /-- HOL planarity.hl :14624-14668 `condition_unique_by_dart_leads_into`
 
