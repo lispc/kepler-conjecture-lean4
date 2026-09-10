@@ -68,6 +68,27 @@ open scoped Topology
 
 /-! ## 四点 cross/dot 符号（planarity.hl:12819-13023） -/
 
+/-- 向量三重积恒等式（`cross_cross_eq_smul_sub_smul'` 的 `toLp` 提升）：
+`(a ⨯ b) ⨯ (c ⨯ d) = ((a ⨯ b)·d)•c + (-((a ⨯ b)·c))•d`。 -/
+private theorem cross_cross_toLp (a b c d : V3) :
+    WithLp.toLp 2 (crossProduct (crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ))
+                                 (crossProduct (c : Fin 3 → ℝ) (d : Fin 3 → ℝ)))
+      = ((crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (d : Fin 3 → ℝ)) • c +
+        (-((crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (c : Fin 3 → ℝ))) • d := by
+  have hPi :
+      crossProduct (crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ))
+          (crossProduct (c : Fin 3 → ℝ) (d : Fin 3 → ℝ))
+        = ((crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (d : Fin 3 → ℝ)) •
+            (c : Fin 3 → ℝ) +
+          (-((crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)) ⬝ᵥ (c : Fin 3 → ℝ))) •
+            (d : Fin 3 → ℝ) := by
+    rw [cross_cross_eq_smul_sub_smul']
+    rw [dotProduct_comm (c : Fin 3 → ℝ)
+      (crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ))]
+    rw [sub_eq_add_neg, ← neg_smul]
+  rw [hPi]
+  simp only [WithLp.toLp_add, WithLp.toLp_smul, WithLp.toLp_ofLp]
+
 /-- HOL planarity.hl :12819-12851 `condition_cross_dot_4point`
 
 HOL 原文：
@@ -111,7 +132,22 @@ theorem condition_cross_dot_4point (x y z v u : V3) :
     (0 < va ⬝ᵥ ((a4 : V3) : Fin 3 → ℝ)) →
     (0 < -(va ⬝ᵥ ((a3 : V3) : Fin 3 → ℝ))) →
     v3 ∈ affGt ({x} : Set V3) ({v, u} : Set V3) := by
-  sorry
+  dsimp only
+  intro hnc hpos4 hpos3
+  have hxv : x ≠ v := fun he =>
+    hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) he.symm)
+  have hxu : x ≠ u := fun he =>
+    hnc (collinear3_pair_left (v0 := x) (v1 := v) (x := u) he.symm)
+  have hvu : v ≠ u := fun he =>
+    hnc (collinear3_pair_right (v0 := x) (v1 := v) (x := u) he.symm)
+  refine Affsign.of_triple (sgn := fun r => 0 < r)
+    ((crossProduct ((y - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ)) ⬝ᵥ
+      ((u - x : V3) : Fin 3 → ℝ))
+    (-((crossProduct ((y - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ)) ⬝ᵥ
+      ((v - x : V3) : Fin 3 → ℝ)))
+    hpos4 hpos3 ?_ hxv hxu hvu
+  rw [cross_cross_toLp]
+  module
 
 /-- HOL planarity.hl :12857-12879 `aff_gt_2_1_cross_dotl_4point`
 
