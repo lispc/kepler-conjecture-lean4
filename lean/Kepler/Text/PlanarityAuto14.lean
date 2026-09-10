@@ -372,7 +372,8 @@ theorem PROPERTIES_TRIANGLE_FAN {x v u w : V3} {V : Set V3}
     (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
     (hfan80 : fan80 x V E) :
     sigmaFan x V E v u = w ∧ sigmaFan x V E w v = u := by
-  sorry
+  exact ⟨PROPERTIES_TRIANGLE_FAN_lemma1 hfan hvu huw hwv hsigma hcard hfan80,
+    PROPERTIES_TRIANGLE_FAN_lemma2 hfan hvu huw hwv hsigma hcard hfan80⟩
 
 /-! ## 3-1 与 2-2 仿射开单纯形的交（planarity.hl:14725-14774） -/
 
