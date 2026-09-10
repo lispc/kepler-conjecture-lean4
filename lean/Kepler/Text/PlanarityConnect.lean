@@ -99,7 +99,12 @@ HOL 原文：
 theorem nonsetedge_fully_surround_fan {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard) (hfan : FAN x V E) :
     E ≠ ∅ := by
-  sorry
+  intro hE
+  have hVne : V ≠ ∅ := hfan.2.2.1.2
+  obtain ⟨w, hw⟩ := Set.nonempty_iff_ne_empty.mpr hVne
+  obtain ⟨v, hvE, _⟩ := exists_edge_fully_surround_fan hfan hw hcard
+  rw [hE] at hvE
+  exact hvE
 
 /-- HOL planarity.hl :11469-11488 `x_in_xfan`
 
