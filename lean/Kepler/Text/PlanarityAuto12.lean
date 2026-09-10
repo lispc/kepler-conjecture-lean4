@@ -119,7 +119,54 @@ theorem aff_gt_1_3_eq_unions_aff_gt_1_2 (x v u w : V3)
     affGt ({x} : Set V3) ({v, u, w} : Set V3) =
       ⋃₀ {s : Set V3 | ∃ a : ℝ, 0 < a ∧ a < 1 ∧
         s = affGt ({x} : Set V3) ({v, (1 - a) • u + a • w} : Set V3)} := by
-  sorry
+  have hdis : Disjoint ({x} : Set V3) ({v, u, w} : Set V3) :=
+    (notcoplanar_disjoints x v u w hcop).2.2.2.1
+  ext y
+  rw [AFF_GT_1_3 x v u w hdis]
+  constructor
+  · rintro ⟨t1, t2, t3, t4, ht2, ht3, ht4, hsum, hy⟩
+    set a : ℝ := t4 / (t3 + t4) with ha_def
+    have hden : t3 + t4 ≠ 0 := by positivity
+    have ha0 : 0 < a := by rw [ha_def]; positivity
+    have ha1 : a < 1 := by
+      rw [ha_def, div_lt_one (by linarith : (0 : ℝ) < t3 + t4)]
+      linarith
+    have hnc := coplanar_imp_continuous_collinear x v u w hcop a (ne_of_gt ha0)
+    have hdis2 : Disjoint ({x} : Set V3)
+        ({v, (1 - a) • u + a • w} : Set V3) := by
+      rw [Set.disjoint_singleton_left]
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+      constructor
+      · intro hxv
+        exact hnc (by rw [hxv]; exact collinear3_of_eq rfl)
+      · intro hxz
+        exact hnc (by rw [← hxz]; exact collinear3_pair_left rfl)
+    have hcoef1 : (t3 + t4) * (1 - a) = t3 := by
+      rw [ha_def]; field_simp [hden]; ring
+    have hcoef2 : (t3 + t4) * a = t4 := by
+      rw [ha_def]; field_simp [hden]
+    refine Set.mem_sUnion.mpr ⟨affGt ({x} : Set V3)
+      ({v, (1 - a) • u + a • w} : Set V3), ⟨a, ha0, ha1, rfl⟩, ?_⟩
+    rw [aff_gt_1_2 hdis2]
+    refine ⟨t1, t2, t3 + t4, ht2, by linarith, by linarith, ?_⟩
+    rw [hy, smul_add, smul_smul, smul_smul, hcoef1, hcoef2]; abel
+  · rintro ⟨s, ⟨a, ha0, ha1, rfl⟩, hy⟩
+    have hnc := coplanar_imp_continuous_collinear x v u w hcop a (ne_of_gt ha0)
+    have hdis2 : Disjoint ({x} : Set V3)
+        ({v, (1 - a) • u + a • w} : Set V3) := by
+      rw [Set.disjoint_singleton_left]
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+      constructor
+      · intro hxv
+        exact hnc (by rw [hxv]; exact collinear3_of_eq rfl)
+      · intro hxz
+        exact hnc (by rw [← hxz]; exact collinear3_pair_left rfl)
+    rw [aff_gt_1_2 hdis2] at hy
+    obtain ⟨t1, t2, t3, ht2, ht3, hsum, hy⟩ := hy
+    refine ⟨t1, t2, t3 * (1 - a), t3 * a, ht2, mul_pos ht3 (by linarith),
+      mul_pos ht3 ha0, ?_, ?_⟩
+    · ring_nf; linarith [hsum]
+    · rw [hy, smul_add, smul_smul, smul_smul]; abel
 
 /-! ## aff_gt 含于 yfan / dart_leads_into（planarity.hl:13724-13805） -/
 
