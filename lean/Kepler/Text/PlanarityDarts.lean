@@ -1,0 +1,381 @@
+/-
+Port of the HOL Light Flyspeck planarity theory (Fan chapter), slice 18h.
+
+Source: `reference/flyspeck/text_formalization/fan/planarity.hl`
+(Flyspeck book formalization, Hoang Le Truong, 2010; persistent copy
+`/home/scroll/hol-light-ref/`).
+
+Coverage (slice 18h of block 18, planarity.hl:11111-11438): the
+edge-insertion / fan-preservation layer
+- `RWXUYZZ` (11111)
+- `add_edge_graph_fan` (11124)
+- `graph_add_edge_is_graph` (11138)
+- `add_edge_into_collinear_fan` (11151)
+- `condition_not_edge_fan` (11168)
+- `properties_edges_eq_fan` (11211)
+- `condition_not_intersection_fan` (11226)
+- `exists_edge_fully_surround_fan` (11295)
+- `condition_not_intersection_point_fan` (11310)
+- `DWWUTKW` (11377)
+
+Porting method: skeleton (frozen statements + per-theorem HOL docstrings)
+designed by glm-5.3, proofs filled by the auto_loop/big-pickle harness.
+
+Encoding notes (gaps / closest existing encodings):
+- `hypermap1_of_fanx (x,V,E)` is NOT ported; as in
+  Kepler/Text/PlanarityComponent.lean, the face-set hypothesis
+  `ds IN face_set(hypermap1_of_fanx (x,V,E))` is encoded as
+  `ds ∈ (hypermapOfFan x V E hfan).faceSet` with `ds : Set (V3 × V3)`
+  (pair darts) and `pr2 y`/`pr3 y` as `y.1`/`y.2`.
+- HOL `UNIONS E` ↔ `⋃₀ E`; `E UNION {{v,u}}` ↔ `E ∪ {{v, u}}`.
+- HOL `graph E` ↔ `Graph E` (Kepler/Text/Fan.lean:37). HOL's `graph` is
+  polymorphic in `A`; the repo `Graph` is `V3`-specific, so
+  `graph_add_edge_is_graph` is stated for `V3` (fidelity gap noted).
+- HOL `CARD e = 2` ↔ `e.ncard = 2` (repo convention, cf.
+  Kepler/Text/PlanarityComponent.lean:49).
+- HOL `collinear ({x} UNION e)` ↔ `Collinear ℝ (insert x e)` (the form
+  used by `fan6`, Kepler/Text/Fan.lean:46).
+- HOL `~collinear {x,v,u}` ↔ `¬ Collinear3 x v u`
+  (Kepler/Geom/Azim.lean:43).
+- HOL `aff_gt`/`aff_ge` ↔ `affGt`/`affGe` (Kepler/Geom/Aff.lean:39/42).
+- HOL `dartset_leads_into_fan` ↔ `dartsetLeadsIntoFan`
+  (Kepler/Text/PlanarityComponent.lean:348).
+- HOL `dart_leads_into` ↔ `dartLeadsInto`
+  (Kepler/Text/TopologyFan.lean:4179).
+- `RWXUYZZ` (11111) is exactly the conjunction of the already-ported
+  `exists_dartset_leads_into_fan` (PlanarityComponent.lean:283) and
+  `dartset_leads_into_is_topological_component_yfan`
+  (PlanarityComponent.lean:535); kept as a separate statement for HOL
+  name fidelity.
+-/
+
+import Kepler.Text.PlanarityComponent
+
+set_option maxHeartbeats 5000000
+
+namespace Kepler.Text
+
+open Kepler.Geom
+open Kepler.Text.Fan
+open Complex
+open Filter
+open Classical
+open scoped Topology
+
+/-! ## RWXUYZZ（planarity.hl:11111-11122） -/
+
+/-- HOL planarity.hl :11111-11122 `RWXUYZZ`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) ds:real^3#real^3#real^3#real^3->bool.
+FAN(x,V,E)
+/\ (!v. v IN V==>CARD (set_of_edge v V E) >1)
+/\ fan80(x,V,E)
+/\ ds IN face_set(hypermap1_of_fanx (x,V,E))
+==>
+(?s:real^3->bool. !y. y IN ds==> s= dart_leads_into x V E (pr2 y) (pr3 y))
+/\ dartset_leads_into_fan x V E ds IN topological_component_yfan (x,V,E)
+```
+
+证明思路：两个合取项分别是本仓库已移植的
+`exists_dartset_leads_into_fan`（给出 ∃s）与
+`dartset_leads_into_is_topological_component_yfan`（给出分量归属），
+直接 `⟨..., ...⟩` 组装即可。HOL 证明即
+`MESON_TAC[dartset_leads_into_is_topological_component_yfan;
+exists_dartset_leads_into_fan]`。
+
+候选已有引理：
+- `exists_dartset_leads_into_fan`
+  （Kepler/Text/PlanarityComponent.lean:283）
+- `dartset_leads_into_is_topological_component_yfan`
+  （Kepler/Text/PlanarityComponent.lean:535） -/
+theorem RWXUYZZ {x : V3} {V : Set V3} {E : Set (Set V3)} {ds : Set (V3 × V3)}
+    (hfan : FAN x V E) (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
+    (hfan80 : fan80 x V E)
+    (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet) :
+    (∃ s : Set V3, ∀ y ∈ ds, s = dartLeadsInto x V E y.1 y.2) ∧
+      dartsetLeadsIntoFan x V E ds ∈ topologicalComponentYfan x V E := by
+  sorry
+
+/-! ## 加边保持图/扇性质（planarity.hl:11124-11224） -/
+
+/-- HOL planarity.hl :11124-11136 `add_edge_graph_fan`
+
+HOL 原文：
+```
+!(V:A->bool) (E:(A->bool)->bool) v:A u:A.
+ v IN V /\ u IN V /\ E1=E UNION {{v,u}} /\ UNIONS E SUBSET V==> UNIONS E1 SUBSET V
+```
+
+证明思路：`E1 = E ∪ {{v,u}}` 代入，`⋃₀ (E ∪ {{v,u}}) = ⋃₀ E ∪ {v,u}`
+（`Set.sUnion_union` + `Set.sUnion_pair`/`Set.sUnion_singleton`），
+再由 `v ∈ V`、`u ∈ V`、`⋃₀ E ⊆ V` 逐点证。
+
+候选已有引理：
+- `Set.sUnion_union`（Mathlib/Data/Set/Lattice.lean:897）
+- `Set.sUnion_pair`（Mathlib/Data/Set/Lattice.lean:925）
+- `Set.sUnion_singleton`（Mathlib/Data/Set/Lattice.lean:853） -/
+theorem add_edge_graph_fan {A : Type*} {V : Set A} {E : Set (Set A)} {v u : A}
+    (E1 : Set (Set A)) (hv : v ∈ V) (hu : u ∈ V)
+    (hE1 : E1 = E ∪ {{v, u}}) (hU : ⋃₀ E ⊆ V) :
+    ⋃₀ E1 ⊆ V := by
+  sorry
+
+/-- HOL planarity.hl :11138-11149 `graph_add_edge_is_graph`
+
+HOL 原文：
+```
+!E1 (E:(A->bool)->bool) v:A u:A.
+ E1=E UNION {{v,u}} /\ ~(v=u) /\ graph E==> graph E1
+```
+
+证明思路：对 `E1` 的每条边分类：旧边由 `Graph E` 给出；
+新边 `{v,u}` 由 `v ≠ u` 及 `CARD_2_FAN`/`Set.ncard_pair` 给出两点基数。
+
+编码差距：HOL 的 `graph` 对任意类型 `A` 多态，本仓库 `Graph`
+（Kepler/Text/Fan.lean:37）仅定义在 `V3` 上，故此处理论上应为 `V3` 版本。
+
+候选已有引理：
+- `Graph`（Kepler/Text/Fan.lean:37）
+- `GRAPH`（Kepler/Text/Planarity.lean:4965）
+- `CARD_2_FAN`（Kepler/Text/Planarity.lean:4975）
+- `Set.ncard_pair`（Mathlib/Data/Set/Card.lean:746） -/
+theorem graph_add_edge_is_graph {E E1 : Set (Set V3)} {v u : V3}
+    (hE1 : E1 = E ∪ {{v, u}}) (hvu : v ≠ u) (hgraph : Graph E) :
+    Graph E1 := by
+  sorry
+
+/-- HOL planarity.hl :11151-11166 `add_edge_into_collinear_fan`
+
+HOL 原文：
+```
+!x:real^3 (E:(real^3->bool)->bool) v:real^3 u:real^3.
+~collinear {x,v,u} /\
+(!e. e IN E ==> ~collinear ({x} UNION e))
+==>
+(!e. e IN E UNION {{v, u}} ==> ~collinear ({x} UNION e))
+```
+
+证明思路：对 `e ∈ E ∪ {{v,u}}` 分类：`e ∈ E` 用第二假设；
+`e = {v,u}` 时 `insert x e = {x,v,u}`，用 `~collinear {x,v,u}`。
+（HOL 用 `SET_RULE {X} UNION {A,B}={X,A,B}`。）
+
+候选已有引理：
+- `fan6`（Kepler/Text/Fan.lean:46，`¬ Collinear ℝ (insert x e)` 形式）
+- `Collinear3`（Kepler/Geom/Azim.lean:43） -/
+theorem add_edge_into_collinear_fan {x v u : V3} {E : Set (Set V3)}
+    (hnc : ¬ Collinear3 x v u)
+    (hE : ∀ e ∈ E, ¬ Collinear ℝ (insert x e)) :
+    ∀ e ∈ E ∪ {{v, u}}, ¬ Collinear ℝ (insert x e) := by
+  sorry
+
+/-! ## 条件：新边不与 face dartset 相交（planarity.hl:11168-11293） -/
+
+/-- HOL planarity.hl :11168-11209 `condition_not_edge_fan`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) v:real^3 u:real^3 ds.
+FAN(x,V,E) /\ v IN V /\ u IN V /\ ~collinear {x,v,u}
+/\ (!v. v IN V==>CARD (set_of_edge v V E) >1)
+/\ fan80(x,V,E)
+/\ ds IN face_set(hypermap1_of_fanx (x,V,E))
+/\ e1 IN E /\ e2 = {v, u}
+/\ aff_gt {x} {v,u} SUBSET dartset_leads_into_fan x V E ds
+==> ~(e1=e2)
+```
+
+证明思路：反设 `e1 = e2 = {v,u}`。由
+`aff_ge_eq_aff_gt_union_aff_ge` 得 `aff_ge {x} {v,u}` 包含
+`aff_gt {x} {v,u}`；`dartset_leads_into_subset_yfan` 把 dartset 放入
+`yfan`，故 `aff_gt {x} {v,u} ∩ xfan = ∅`。但 `e1 ∈ E` 给出
+`aff_ge {x} e1 ⊆ xfan`，而 `exists_in_aff_gt` 提供
+`aff_gt {x} {v,u}` 的非空点，矛盾。
+
+候选已有引理：
+- `aff_ge_eq_aff_gt_union_aff_ge`（Kepler/Text/Planarity.lean:4419）
+- `dartset_leads_into_subset_yfan`
+  （Kepler/Text/PlanarityComponent.lean:583）
+- `exists_in_aff_gt`（Kepler/Text/PlanarityNotCut.lean:1847）
+- `xfan`（Kepler/Text/Fan.lean:154）、`yfan`（Kepler/Text/Fan.lean:158） -/
+theorem condition_not_edge_fan {x : V3} {V : Set V3} {E : Set (Set V3)}
+    {v u : V3} {ds : Set (V3 × V3)} {e1 e2 : Set V3}
+    (hfan : FAN x V E) (hv : v ∈ V) (hu : u ∈ V) (hnc : ¬ Collinear3 x v u)
+    (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
+    (hfan80 : fan80 x V E)
+    (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet)
+    (he1 : e1 ∈ E) (he2 : e2 = {v, u})
+    (hsub : affGt {x} {v, u} ⊆ dartsetLeadsIntoFan x V E ds) :
+    e1 ≠ e2 := by
+  sorry
+
+/-- HOL planarity.hl :11211-11224 `properties_edges_eq_fan`
+
+HOL 原文：
+```
+!e:A-> bool v:A u:A.
+FINITE e /\ ~(e={v,u}) /\ ~(v=u)  /\ CARD e=2  ==>  ~(v IN e)\/ ~(u IN e)
+```
+
+证明思路：反设 `v ∈ e ∧ u ∈ e`，则 `{v,u} ⊆ e`；由 `v ≠ u` 得
+`CARD {v,u} = 2`，与 `CARD e = 2` 及 `e` 有限合起来用
+`Set.eq_of_subset_of_ncard_le` 得 `e = {v,u}`，与 `~(e={v,u})` 矛盾。
+
+候选已有引理：
+- `Set.ncard_pair`（Mathlib/Data/Set/Card.lean:746）
+- `Set.eq_of_subset_of_ncard_le`（Mathlib/Data/Set/Card.lean:862）
+- `CARD_2_FAN`（Kepler/Text/Planarity.lean:4975） -/
+theorem properties_edges_eq_fan {A : Type*} {e : Set A} {v u : A}
+    (hfin : e.Finite) (hne : e ≠ {v, u}) (hvu : v ≠ u) (hcard : e.ncard = 2) :
+    v ∉ e ∨ u ∉ e := by
+  sorry
+
+/-- HOL planarity.hl :11226-11293 `condition_not_intersection_fan`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) v:real^3 u:real^3 ds e1:real^3->bool e2:real^3->bool.
+FAN(x,V,E) /\ v IN V /\ u IN V /\ ~collinear {x,v,u}
+/\ (!v. v IN V==>CARD (set_of_edge v V E) >1)
+/\ fan80(x,V,E)
+/\ ds IN face_set(hypermap1_of_fanx (x,V,E))
+/\ aff_gt {x} {v,u} SUBSET dartset_leads_into_fan x V E ds
+/\ e1 IN E /\ e2 = {v, u}
+==>aff_ge {x} e1 INTER aff_ge {x} e2 = aff_ge {x} (e1 INTER e2)
+```
+
+证明思路：HOL 路线：`aff_ge_eq_aff_gt_union_aff_ge` 展开
+`aff_ge {x} {v,u}`；`dartset_leads_into_subset_yfan` 得
+`aff_gt {x} {v,u} ∩ xfan = ∅`；又 `aff_ge {x} e1 ⊆ xfan`
+（`e1 ∈ E`）。于是 `aff_ge {x} e1` 与 `aff_ge {x} {v,u}` 的交只能落在
+`aff_ge {x} {v} ∪ aff_ge {x} {u}` 上；再由 `properties_edges_eq_fan`
+与 `fan7` 的分配律，将交化为 `aff_ge {x} (e1 ∩ e2)`。
+
+候选已有引理：
+- `fan7`（Kepler/Text/Fan.lean:51，HOL `fan7` 分配律）
+- `condition_not_edge_fan`（本文件上文）
+- `properties_edges_eq_fan`（本文件上文）
+- `aff_ge_eq_aff_gt_union_aff_ge`（Kepler/Text/Planarity.lean:4419）
+- `dartset_leads_into_subset_yfan`
+  （Kepler/Text/PlanarityComponent.lean:583） -/
+theorem condition_not_intersection_fan {x : V3} {V : Set V3} {E : Set (Set V3)}
+    {v u : V3} {ds : Set (V3 × V3)} {e1 e2 : Set V3}
+    (hfan : FAN x V E) (hv : v ∈ V) (hu : u ∈ V) (hnc : ¬ Collinear3 x v u)
+    (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
+    (hfan80 : fan80 x V E)
+    (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet)
+    (hsub : affGt {x} {v, u} ⊆ dartsetLeadsIntoFan x V E ds)
+    (he1 : e1 ∈ E) (he2 : e2 = {v, u}) :
+    affGe {x} e1 ∩ affGe {x} e2 = affGe {x} (e1 ∩ e2) := by
+  sorry
+
+/-! ## 完全环绕边与点相交（planarity.hl:11295-11375） -/
+
+/-- HOL planarity.hl :11295-11308 `exists_edge_fully_surround_fan`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) w:real^3.
+FAN(x,V,E) /\ w IN V
+/\ (!v. v IN V==>CARD (set_of_edge v V E) >1)
+==> ?v. {w,v} IN E /\ v IN V
+```
+
+证明思路：由 `w ∈ V` 得 `CARD (set_of_edge w V E) > 1 > 0`，
+故 `setOfEdge w V E ≠ ∅`；取 `v ∈ setOfEdge w V E`，
+按 `setOfEdge` 定义即 `{w,v} ∈ E` 且 `v ∈ V`。
+
+候选已有引理：
+- `setOfEdge`（Kepler/Text/Fan.lean:62）
+- `Set.ncard_pos`（Mathlib/Data/Set/Card.lean:679）
+- `Set.nonempty_iff_ne_empty`（Mathlib/Data/Set/Basic.lean:434） -/
+theorem exists_edge_fully_surround_fan {x w : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hw : w ∈ V)
+    (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard) :
+    ∃ v : V3, {w, v} ∈ E ∧ v ∈ V := by
+  sorry
+
+/-- HOL planarity.hl :11310-11375 `condition_not_intersection_point_fan`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) v:real^3 u:real^3 ds:real^3#real^3#real^3#real^3->bool e1:real^3->bool w:real^3.
+FAN(x,V,E) /\ v IN V /\ u IN V /\ ~collinear {x,v,u}
+/\ (!v. v IN V==>CARD (set_of_edge v V E) >1)
+/\ fan80(x,V,E)
+/\ ds IN face_set(hypermap1_of_fanx (x,V,E))
+/\ aff_gt {x} {v,u} SUBSET dartset_leads_into_fan x V E ds
+/\ w IN V /\ e1 = {v, u}
+==>aff_ge {x} e1 INTER aff_ge {x} {w} = aff_ge {x} (e1 INTER {w})
+```
+
+证明思路：与 `condition_not_intersection_fan` 同型，但把 `e2` 换成
+顶点单点集 `{w}`。`aff_ge {x} {w} ⊆ xfan` 由
+`exists_edge_fully_surround_fan` 取环绕边 `{w,v'}` 并展开
+`aff_ge_eq_aff_gt_union_aff_ge` 得到；其余用 `fan7` 与
+`aff_gt {x} {v,u} ∩ xfan = ∅` 收尾。
+
+候选已有引理：
+- `exists_edge_fully_surround_fan`（本文件上文）
+- `fan7`（Kepler/Text/Fan.lean:51）
+- `aff_ge_eq_aff_gt_union_aff_ge`（Kepler/Text/Planarity.lean:4419）
+- `edge_ne_of_fan`（Kepler/Text/Fan.lean:1039，HOL `remark1_fan` 互异分量）
+- `dartset_leads_into_subset_yfan`
+  （Kepler/Text/PlanarityComponent.lean:583） -/
+theorem condition_not_intersection_point_fan {x : V3} {V : Set V3} {E : Set (Set V3)}
+    {v u w : V3} {ds : Set (V3 × V3)} {e1 : Set V3}
+    (hfan : FAN x V E) (hv : v ∈ V) (hu : u ∈ V) (hnc : ¬ Collinear3 x v u)
+    (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
+    (hfan80 : fan80 x V E)
+    (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet)
+    (hsub : affGt {x} {v, u} ⊆ dartsetLeadsIntoFan x V E ds)
+    (hw : w ∈ V) (he1 : e1 = {v, u}) :
+    affGe {x} e1 ∩ affGe {x} {w} = affGe {x} (e1 ∩ {w}) := by
+  sorry
+
+/-! ## DWWUTKW：加边保持 FAN（planarity.hl:11377-11438） -/
+
+/-- HOL planarity.hl :11377-11438 `DWWUTKW`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) v:real^3 u:real^3 ds.
+FAN(x,V,E) /\ v IN V /\ u IN V /\ ~collinear {x,v,u}
+/\ (!v. v IN V==>CARD (set_of_edge v V E) >1)
+/\ fan80(x,V,E)
+/\ ds IN face_set(hypermap1_of_fanx (x,V,E))
+/\ aff_gt {x} {v,u} SUBSET dartset_leads_into_fan x V E ds
+/\ E1=E UNION {{v,u}}
+==> FAN (x,V,E1)
+```
+
+证明思路：展开 `FAN` 为 `(⋃₀ E1 ⊆ V) ∧ Graph E1 ∧ fan1 ∧ fan2 ∧
+fan6 ∧ fan7`。
+- `⋃₀ E1 ⊆ V`：`add_edge_graph_fan`；
+- `Graph E1`：`graph_add_edge_is_graph`（`v ≠ u` 由 `th3` 的非共线推出）；
+- `fan6`：`add_edge_into_collinear_fan`；
+- `fan7`：对新增边分类，用 `condition_not_intersection_fan` 与
+  `condition_not_intersection_point_fan` 处理含 `{v,u}` 的相交；
+- `fan1`/`fan2` 与 `E` 的情形一致（加边不改 `V`、不改原点）。
+
+候选已有引理：
+- `FAN`（Kepler/Text/Fan.lean:56）
+- `add_edge_graph_fan`（本文件上文）
+- `graph_add_edge_is_graph`（本文件上文）
+- `add_edge_into_collinear_fan`（本文件上文）
+- `condition_not_intersection_fan`（本文件上文）
+- `condition_not_intersection_point_fan`（本文件上文）
+- `fan7`（Kepler/Text/Fan.lean:51） -/
+theorem DWWUTKW {x : V3} {V : Set V3} {E E1 : Set (Set V3)}
+    {v u : V3} {ds : Set (V3 × V3)}
+    (hfan : FAN x V E) (hv : v ∈ V) (hu : u ∈ V) (hnc : ¬ Collinear3 x v u)
+    (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
+    (hfan80 : fan80 x V E)
+    (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet)
+    (hsub : affGt {x} {v, u} ⊆ dartsetLeadsIntoFan x V E ds)
+    (hE1 : E1 = E ∪ {{v, u}}) :
+    FAN x V E1 := by
+  sorry
+
+end Kepler.Text
