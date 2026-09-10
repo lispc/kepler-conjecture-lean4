@@ -270,6 +270,56 @@ theorem properties_edges_eq_fan {A : Type*} {e : Set A} {v u : A}
     Set.eq_of_subset_of_ncard_le hsub (by rw [hcard, hpair]) hfin
   exact hne heq.symm
 
+/-- `affGe {x} S ⊆ affGe {x} T`（`S ⊆ T`，`{x} ∪ T` 有限，`x ∉ T`）。
+移植自 `Kepler/Text/Planarity.lean` 的私有 `affGe_mono_right`。 -/
+private theorem affGe_mono_right' {x : V3} {S T : Set V3} (hST : S ⊆ T)
+    (hfin : ({x} ∪ T : Set V3).Finite) (hxT : x ∉ T) :
+    affGe {x} S ⊆ affGe {x} T := by
+  intro y hy
+  simp only [affGe, Set.mem_setOf_eq, Affsign] at hy ⊢
+  obtain ⟨f, hS, hyv, hpos, hsum⟩ := hy
+  have hsub : ({x} ∪ S : Set V3) ⊆ {x} ∪ T := by
+    intro z hz
+    simp only [Set.mem_union] at hz ⊢
+    rcases hz with h | h
+    · exact Or.inl h
+    · exact Or.inr (hST h)
+  have hsubfin : hS.toFinset ⊆ hfin.toFinset := by
+    intro z hz
+    simp only [Set.Finite.mem_toFinset] at hz ⊢
+    exact hsub hz
+  have hgv0 : ∀ z ∈ hfin.toFinset, z ∉ hS.toFinset →
+      (if z ∈ ({x} ∪ S : Set V3) then f z else 0) = 0 := by
+    intro z hz hzs
+    exact if_neg (fun hcon => hzs (by
+      simp only [Set.Finite.mem_toFinset]
+      exact hcon))
+  have hgvv : ∀ z ∈ hfin.toFinset, z ∉ hS.toFinset →
+      (if z ∈ ({x} ∪ S : Set V3) then f z else 0) • z = 0 := by
+    intro z hz hzs
+    rw [hgv0 z hz hzs, zero_smul]
+  refine ⟨fun z => if z ∈ ({x} ∪ S : Set V3) then f z else 0, hfin, ?_, ?_, ?_⟩
+  · show y = ∑ z ∈ hfin.toFinset, (if z ∈ ({x} ∪ S : Set V3) then f z else 0) • z
+    rw [hyv, ← Finset.sum_subset hsubfin hgvv]
+    exact Finset.sum_congr rfl
+      (fun z hz => by
+        simp only [Set.Finite.mem_toFinset] at hz
+        rw [if_pos hz])
+  · intro z hzT
+    show 0 ≤ (if z ∈ ({x} ∪ S : Set V3) then f z else 0)
+    by_cases hzS : z ∈ ({x} ∪ S : Set V3)
+    · rw [if_pos hzS]
+      simp only [Set.mem_union] at hzS
+      rcases hzS with h | h
+      · exact (hxT ((Set.mem_singleton_iff.mp h) ▸ hzT)).elim
+      · exact hpos z h
+    · rw [if_neg hzS]
+  · show ∑ z ∈ hfin.toFinset, (if z ∈ ({x} ∪ S : Set V3) then f z else 0) = 1
+    rw [← hsum, ← Finset.sum_subset hsubfin hgv0]
+    exact Finset.sum_congr rfl (fun z hz => by
+      simp only [Set.Finite.mem_toFinset] at hz
+      rw [if_pos hz])
+
 /-- HOL planarity.hl :11226-11293 `condition_not_intersection_fan`
 
 HOL 原文：
@@ -307,7 +357,105 @@ theorem condition_not_intersection_fan {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hsub : affGt {x} {v, u} ⊆ dartsetLeadsIntoFan x V E ds)
     (he1 : e1 ∈ E) (he2 : e2 = {v, u}) :
     affGe {x} e1 ∩ affGe {x} e2 = affGe {x} (e1 ∩ e2) := by
-  sorry
+  subst he2
+  have hgraph : Graph E := hfan.2.1
+  obtain ⟨hfin1, hcard_fin⟩ := hgraph e1 he1
+  have hcard1 : e1.ncard = 2 := by
+    rw [Set.ncard_eq_toFinset_card e1 hfin1]
+    exact hcard_fin
+  have hvu : v ≠ u := fun h =>
+    hnc (by rw [h]; exact collinear3_pair_right (v0 := x) (v1 := u) rfl)
+  have hxv : x ≠ v := fun h =>
+    hnc (by rw [h]; exact collinear3_of_eq rfl)
+  have hxu : x ≠ u := fun h =>
+    hnc (by rw [h]; exact collinear3_pair_left rfl)
+  have hne : e1 ≠ ({v, u} : Set V3) :=
+    condition_not_edge_fan hfan hv hu hnc hcard hfan80 hds he1 rfl hsub
+  have hprop := properties_edges_eq_fan hfin1 hne hvu hcard1
+  have h77 := aff_ge_eq_aff_gt_union_aff_ge (x := x) (v := v) (w := u) hnc
+  have hyfan := dartset_leads_into_subset_yfan hfan hcard hfan80 hds
+  have hgt_yfan : affGt {x} {v, u} ⊆ yfan x V E :=
+    fun y hy => hyfan (hsub hy)
+  have hgt_xfan : affGt {x} {v, u} ∩ xfan x V E = ∅ := by
+    rw [Set.eq_empty_iff_forall_notMem]
+    intro y hy
+    obtain ⟨hygt, hyx⟩ := hy
+    have hyy := hgt_yfan hygt
+    rw [yfan, Set.mem_sdiff] at hyy
+    exact hyy.2 hyx
+  have he1_xfan : affGe {x} e1 ⊆ xfan x V E := fun y hy => ⟨e1, he1, hy⟩
+  have hgt_e1_disj : affGe {x} e1 ∩ affGt {x} {v, u} = ∅ := by
+    rw [Set.eq_empty_iff_forall_notMem]
+    intro y hy
+    obtain ⟨hyA, hyG⟩ := hy
+    have hmem : y ∈ affGt {x} {v, u} ∩ xfan x V E := ⟨hyG, he1_xfan hyA⟩
+    rw [hgt_xfan] at hmem
+    exact hmem
+  have hfan7 := hfan.2.2.2.2.2
+  have h7v : affGe {x} e1 ∩ affGe {x} {v} = affGe {x} (e1 ∩ {v}) :=
+    hfan7 e1 (Or.inl he1) ({v} : Set V3) (Or.inr ⟨v, hv, rfl⟩)
+  have h7u : affGe {x} e1 ∩ affGe {x} {u} = affGe {x} (e1 ∩ {u}) :=
+    hfan7 e1 (Or.inl he1) ({u} : Set V3) (Or.inr ⟨u, hu, rfl⟩)
+  have hfin_u : ({x} ∪ (e1 ∩ ({u} : Set V3)) : Set V3).Finite :=
+    (Set.finite_singleton x).union (hfin1.subset Set.inter_subset_left)
+  have hfin_v : ({x} ∪ (e1 ∩ ({v} : Set V3)) : Set V3).Finite :=
+    (Set.finite_singleton x).union (hfin1.subset Set.inter_subset_left)
+  have hx_u : x ∉ e1 ∩ ({u} : Set V3) := by
+    intro hx
+    obtain ⟨_, hx2⟩ := (Set.mem_inter_iff x _ _).mp hx
+    exact hxu (Set.mem_singleton_iff.mp hx2)
+  have hx_v : x ∉ e1 ∩ ({v} : Set V3) := by
+    intro hx
+    obtain ⟨_, hx2⟩ := (Set.mem_inter_iff x _ _).mp hx
+    exact hxv (Set.mem_singleton_iff.mp hx2)
+  rw [h77]
+  have hdist : affGe {x} e1 ∩
+        (affGt {x} {v, u} ∪ affGe {x} {v} ∪ affGe {x} {u})
+      = affGe {x} (e1 ∩ {v}) ∪ affGe {x} (e1 ∩ {u}) := by
+    rw [Set.inter_union_distrib_left, Set.inter_union_distrib_left,
+      hgt_e1_disj, h7v, h7u]
+    simp
+  rw [hdist]
+  rcases hprop with hvnot | hunot
+  · have hveq : e1 ∩ ({v} : Set V3) = ∅ := by
+      rw [Set.eq_empty_iff_forall_notMem]
+      intro z hz
+      obtain ⟨hz1, hz2⟩ := (Set.mem_inter_iff z _ _).mp hz
+      exact hvnot (Set.mem_singleton_iff.mp hz2 ▸ hz1)
+    have hveq2 : e1 ∩ ({v, u} : Set V3) = e1 ∩ ({u} : Set V3) := by
+      ext z
+      constructor
+      · intro hz
+        obtain ⟨hz1, hz2⟩ := (Set.mem_inter_iff z _ _).mp hz
+        rcases Set.mem_insert_iff.mp hz2 with h | h
+        · exact absurd (h ▸ hz1) hvnot
+        · exact (Set.mem_inter_iff z _ _).mpr ⟨hz1, h⟩
+      · intro hz
+        obtain ⟨hz1, hz2⟩ := (Set.mem_inter_iff z _ _).mp hz
+        exact (Set.mem_inter_iff z _ _).mpr ⟨hz1, Set.mem_insert_of_mem v hz2⟩
+    rw [hveq, hveq2]
+    exact Set.union_eq_right.mpr
+      (affGe_mono_right' (Set.empty_subset _) hfin_u hx_u)
+  · have hueq : e1 ∩ ({u} : Set V3) = ∅ := by
+      rw [Set.eq_empty_iff_forall_notMem]
+      intro z hz
+      obtain ⟨hz1, hz2⟩ := (Set.mem_inter_iff z _ _).mp hz
+      exact hunot (Set.mem_singleton_iff.mp hz2 ▸ hz1)
+    have hueq2 : e1 ∩ ({v, u} : Set V3) = e1 ∩ ({v} : Set V3) := by
+      ext z
+      constructor
+      · intro hz
+        obtain ⟨hz1, hz2⟩ := (Set.mem_inter_iff z _ _).mp hz
+        rcases Set.mem_insert_iff.mp hz2 with h | h
+        · exact (Set.mem_inter_iff z _ _).mpr ⟨hz1, Set.mem_singleton_iff.mpr h⟩
+        · exact absurd (h ▸ hz1) hunot
+      · intro hz
+        obtain ⟨hz1, hz2⟩ := (Set.mem_inter_iff z _ _).mp hz
+        exact (Set.mem_inter_iff z _ _).mpr
+          ⟨hz1, Set.mem_insert_iff.mpr (Or.inl (Set.mem_singleton_iff.mp hz2))⟩
+    rw [hueq, hueq2]
+    exact Set.union_eq_left.mpr
+      (affGe_mono_right' (Set.empty_subset _) hfin_v hx_v)
 
 /-! ## 完全环绕边与点相交（planarity.hl:11295-11375） -/
 
