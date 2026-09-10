@@ -213,7 +213,46 @@ theorem CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN {x : V3} {V : Set V3}
     (hds3 : ds.ncard = 3) :
     ∃ f1 f2 f3 : V3 × V3, ds = {f1, f2, f3} ∧
       f2 = fFanPair x V E f1 ∧ f3 = fFanPair x V E f2 := by
-  sorry
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  have hdf : dartOfFan V E = dart1OfFan V E :=
+    dartOfFan_eq_dart1_of_surrounded hfan hcard
+  have hfin : ds.Finite := FINITE_FACE_FAN hfan hds
+  obtain ⟨d, hdH, hface⟩ := Hypermap.face_representation H hds
+  have hdarts : (↑H.darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have hd_dart1 : d ∈ dart1OfFan V E := by
+    change d ∈ (↑H.darts : Set (V3 × V3)) at hdH
+    simpa [hdarts] using hdH
+  have hd_mem : d ∈ ds := by
+    rw [hface]
+    exact Hypermap.mem_face_self H d
+  let y : V3 × V3 := fFanPair x V E d
+  have hy_dart1 : y ∈ dart1OfFan V E := fFanPair_mem_dart1 hfan hd_dart1
+  have hy_mem : y ∈ ds :=
+    condition_f1_fan_in_face_set (y := y) (y1 := d) hfan rfl hds hdf hd_mem
+  let y1 : V3 × V3 := fFanPair x V E y
+  have hy1_mem : y1 ∈ ds :=
+    condition_f1_fan_in_face_set (y := y1) (y1 := y) hfan rfl hds hdf hy_mem
+  have hdy : d ≠ y := fun h => f_fan_no_fix hfan d hd_dart1 h.symm
+  have hyy1 : y ≠ y1 := fun h => f_fan_no_fix hfan y hy_dart1 h.symm
+  have hdy1 : d ≠ y1 := fun h =>
+    fFanPair_fFanPair_ne_of_surrounded hfan hcard hd_dart1 h.symm
+  have hsub : ({d, y, y1} : Set (V3 × V3)) ⊆ ds := by
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | rfl | rfl
+    · exact hd_mem
+    · exact hy_mem
+    · exact hy1_mem
+  have hcard3 : ({d, y, y1} : Set (V3 × V3)).ncard = 3 := by
+    rw [show ({d, y, y1} : Set (V3 × V3)) = insert d (insert y {y1}) by rfl,
+      Set.ncard_insert_of_notMem (by simp [hdy, hdy1]),
+      Set.ncard_insert_of_notMem (by simpa using hyy1)]
+    simp
+  have hseteq : ({d, y, y1} : Set (V3 × V3)) = ds :=
+    Set.eq_of_subset_of_ncard_le hsub (by rw [hcard3, hds3]) hfin
+  exact ⟨d, y, y1, hseteq.symm, rfl, rfl⟩
 
 /-- HOL planarity.hl :15064-15113 `lemma_CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN`
 
