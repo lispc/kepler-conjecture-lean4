@@ -714,7 +714,24 @@ theorem exists_edge_rw_dart_fan_inter_aff_gt_not_empty_fan (x : V3) (V : Set V3)
       ∀ h : ℝ, 0 < h → h ≤ Real.pi →
         rwDartFan x V E (x, u, w, sigmaFan x V E u w) (Real.cos h) ∩
           affGt {x} {u, z} ≠ ∅ := by
-  sorry
+  obtain ⟨w, huw, hz_wdart⟩ :=
+    exists_edge_bounded_topological_component_yfan x V E U y z u
+      hfan hcard hfan80 hU hz hu hyge hyxfan hyx hconn
+  refine ⟨w, huw, ?_⟩
+  have hnc_xyz : ¬ Collinear3 x y z :=
+    point_in_yfan_and_point_in_xfan_indepent_fan x V E U y z
+      hfan hcard hfan80 hU hz hyxfan hyx hconn
+  have hnc_xuw : ¬ Collinear3 x u w := fan_not_collinear hfan huw
+  have hxu : x ≠ u := by
+    intro h
+    exact hnc_xuw (by rw [h]; exact collinear3_of_eq rfl)
+  have hy_span : y ∈ affineSpan ℝ ({x, u} : Set V3) :=
+    aff_ge_1_1_subset_aff_fan y x u hxu hyge
+  have hnc_xuz : ¬ Collinear3 x u z :=
+    permutes_4points_collinear x y u z (Ne.symm hyx) hxu hy_span hnc_xyz
+  intro h hh0 hhpi
+  exact condition_rw_dart_fan_inter_aff_gt_is_not_empty x V E u w z h
+    hfan hcard hfan80 hnc_xuz huw hz_wdart hh0 hhpi
 
 /-! ## 存在边使 rw_dart_fan 与分量交非空（planarity.hl:12630-12694） -/
 
