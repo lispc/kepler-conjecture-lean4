@@ -1693,7 +1693,57 @@ theorem aff_gt_1_2_scale_fan {x v u w : V3} {a : ℝ}
     (ha : 0 < a) (hscale : a • (u - x) = w - x)
     (hnc : ¬ Collinear3 x w v) :
     affGt {x} {u, v} = affGt {x} {w, v} := by
-  sorry
+  have ha0 : a ≠ 0 := ne_of_gt ha
+  have hinv : u - x = a⁻¹ • (w - x) := by
+    have h1 : a⁻¹ • (a • (u - x)) = a⁻¹ • (w - x) := by rw [hscale]
+    rw [smul_smul, inv_mul_cancel₀ ha0, one_smul] at h1
+    exact h1
+  have hxv : x ≠ v := by
+    intro he
+    apply hnc
+    rw [he]
+    exact collinear3_pair_left rfl
+  have hxw : x ≠ w := by
+    intro he
+    apply hnc
+    rw [he]
+    exact collinear3_of_eq rfl
+  have hxu : x ≠ u := by
+    intro he
+    have hw : w = x := by
+      have := hscale
+      simp only [he.symm, sub_self, smul_zero] at this
+      exact sub_eq_zero.mp this.symm
+    exact hxw hw.symm
+  have hdis_uv : Disjoint ({x} : Set V3) {u, v} := by
+    rw [Set.disjoint_singleton_left]
+    intro hmem
+    rcases Set.mem_insert_iff.mp hmem with he | he
+    · subst he
+      exact hxu rfl
+    · subst he
+      exact hxv rfl
+  have hdis_wv : Disjoint ({x} : Set V3) {w, v} :=
+    disjoint_singleton_of_not_collinear3_anc hnc
+  rw [aff_gt_1_2 hdis_uv, aff_gt_1_2 hdis_wv]
+  ext y; constructor
+  · rintro ⟨t1, t2, t3, ht2, ht3, htsum, rfl⟩
+    refine ⟨t1 + t2 - a⁻¹ * t2, a⁻¹ * t2, t3,
+      mul_pos (inv_pos.mpr ha) ht2, ht3, by linarith, ?_⟩
+    have hu : u = x + a⁻¹ • (w - x) := by
+      calc u = (u - x) + x := by module
+        _ = a⁻¹ • (w - x) + x := by rw [hinv]
+        _ = x + a⁻¹ • (w - x) := by module
+    rw [hu]; module
+  · rintro ⟨t1, t2, t3, ht2, ht3, htsum, h⟩
+    refine ⟨t1 + t2 - a * t2, a * t2, t3,
+      mul_pos ha ht2, ht3, by linarith, ?_⟩
+    rw [h]
+    have hw : w = x + a • (u - x) := by
+      calc w = (w - x) + x := by module
+        _ = a • (u - x) + x := by rw [hscale]
+        _ = x + a • (u - x) := by module
+    rw [hw]; module
 
 /-- HOL planarity.hl:10427-10570 `exists_cut_rcone_fan_with_edge_run_fan`
 
