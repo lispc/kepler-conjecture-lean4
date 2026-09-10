@@ -423,6 +423,81 @@ theorem aff_gt_in_w_dart_fan (x : V3) (V : Set V3) (E : Set (Set V3))
 
 /-! ## rcone 与 aff_gt 的非空交（planarity.hl:12464-12573） -/
 
+/-- 叉积为零推出共线（`collinear3_of_cross_eq_zero` 的本地副本）。 -/
+private theorem collinear3_of_cross_eq_zero_a9 {x v u : V3}
+    (h : crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ) = 0) :
+    Collinear3 x v u := by
+  by_cases hvx : v = x
+  · rw [hvx]
+    exact collinear3_of_eq rfl
+  · have hp : ((v - x : V3) : Fin 3 → ℝ) ≠ 0 := by
+      intro h0
+      apply hvx
+      exact sub_eq_zero.mp ((WithLp.ofLp_eq_zero 2).mp h0)
+    have h0 : crossProduct ((v - x : V3) : Fin 3 → ℝ)
+        (crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ)) = 0 := by
+      rw [h]
+      exact map_zero _
+    have h1 := cross_cross_eq_smul_sub_smul' ((v - x : V3) : Fin 3 → ℝ)
+      ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ)
+    rw [h0] at h1
+    have h2 : (((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((u - x : V3) : Fin 3 → ℝ)) •
+        ((v - x : V3) : Fin 3 → ℝ) =
+        (((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ)) •
+          ((u - x : V3) : Fin 3 → ℝ) :=
+      sub_eq_zero.mp h1.symm
+    have hpp : ((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ) ≠ 0 := by
+      intro h1'
+      apply hp
+      funext i
+      have h3 := (Finset.sum_eq_zero_iff_of_nonneg
+        (fun j _ => mul_self_nonneg (((v - x : V3) : Fin 3 → ℝ) j))).mp h1'
+      exact mul_self_eq_zero.mp (h3 i (Finset.mem_univ i))
+    have hqe : ((u - x : V3) : Fin 3 → ℝ)
+        = ((((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((u - x : V3) : Fin 3 → ℝ)) /
+          (((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ))) •
+          ((v - x : V3) : Fin 3 → ℝ) := by
+      calc ((u - x : V3) : Fin 3 → ℝ)
+          = (((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ))⁻¹ •
+              ((((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ)) •
+                ((u - x : V3) : Fin 3 → ℝ)) := by
+            rw [smul_smul, inv_mul_cancel₀ hpp, one_smul]
+        _ = (((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ))⁻¹ •
+              ((((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((u - x : V3) : Fin 3 → ℝ)) •
+                ((v - x : V3) : Fin 3 → ℝ)) := by rw [h2]
+        _ = ((((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((u - x : V3) : Fin 3 → ℝ)) /
+              (((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ))) •
+              ((v - x : V3) : Fin 3 → ℝ) := by
+            rw [smul_smul, div_eq_inv_mul, mul_comm]
+    obtain ⟨c, hcdef⟩ : ∃ c : ℝ,
+        c = (((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((u - x : V3) : Fin 3 → ℝ)) /
+          (((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ)) := ⟨_, rfl⟩
+    have hqec : ((u - x : V3) : Fin 3 → ℝ) = c • ((v - x : V3) : Fin 3 → ℝ) := by
+      rw [hcdef]
+      exact hqe
+    have hqV : (u - x : V3) = c • (v - x : V3) := by
+      have hc := congrArg (WithLp.toLp 2) hqec
+      rwa [WithLp.toLp_ofLp, WithLp.toLp_smul, WithLp.toLp_ofLp] at hc
+    rw [collinear3_iff_mem_affineSpan (Ne.symm hvx), affine_hull_2_fan]
+    refine ⟨1 - c, c, by ring, ?_⟩
+    calc u = (u - x) + x := by module
+      _ = c • (v - x) + x := by rw [hqV]
+      _ = (1 - c) • x + c • v := by module
+
+/-- 非共线 ⇒ 叉积范数为正（`cross_pos_of_not_collinear3_anc` 的本地副本）。 -/
+private theorem cross_pos_of_not_collinear3_a9 {x v u : V3}
+    (hnc : ¬ Collinear3 x v u) :
+    0 < ‖(WithLp.toLp 2 (crossProduct ((v - x : V3) : Fin 3 → ℝ)
+      ((u - x : V3) : Fin 3 → ℝ)) : V3)‖ := by
+  have hzne : (WithLp.toLp 2 (crossProduct ((v - x : V3) : Fin 3 → ℝ)
+      ((u - x : V3) : Fin 3 → ℝ)) : V3) ≠ 0 := by
+    intro h0
+    apply hnc
+    have hcoe := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) h0
+    simp only [WithLp.ofLp_zero] at hcoe
+    exact collinear3_of_cross_eq_zero_a9 hcoe
+  exact norm_pos_iff.mpr hzne
+
 /-- HOL planarity.hl :12464-12573 `not_empty_rcone_fan_inter_aff_gt`
 
 HOL 原文：
@@ -458,7 +533,95 @@ theorem not_empty_rcone_fan_inter_aff_gt (x v u : V3) (h : ℝ)
     (hnc : ¬ Collinear3 x v u)
     (hh0 : 0 < h) (hhpi : h ≤ Real.pi) :
     rconeFan x v (Real.cos h) ∩ affGt {x} {v, u} ≠ ∅ := by
-  sorry
+  have hvx : v ≠ x := fun he => hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) he)
+  have hnv : ‖v - x‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hvx)
+  have hnvpos : 0 < ‖v - x‖ := lt_of_le_of_ne (norm_nonneg _) fun h => hnv h.symm
+  have haxf : (v - x : V3) = ‖v - x‖ • e3Fan x v u := by
+    rw [e3Fan, smul_smul, mul_inv_cancel₀ hnv, one_smul]
+  have he1s : e1Fan x v u ⬝ᵥ e1Fan x v u = 1 := e1Fan_dot_self hnc
+  have he3s : e3Fan x v u ⬝ᵥ e3Fan x v u = 1 := e3Fan_dot_self hvx u
+  have he1d3 : e1Fan x v u ⬝ᵥ e3Fan x v u = 0 := e1Fan_dot_e3 hnc
+  have he1vx : inner ℝ (e1Fan x v u) (v - x) = 0 := by
+    conv_lhs => rw [haxf]
+    rw [real_inner_smul_right, inner_eq_dot, he1d3, mul_zero]
+  have he3vx : inner ℝ (e3Fan x v u) (v - x) = ‖v - x‖ := by
+    conv_lhs => rw [haxf]
+    rw [real_inner_smul_right, inner_eq_dot, he3s, mul_one]
+  -- 通用 rcone 成员：标架点 `sin s1 • e1 + cos s1 • e3 + x`（`s1 < π/2`）
+  have hrcone : ∀ s1 : ℝ, 0 < s1 → s1 < h → s1 < Real.pi / 2 →
+      Real.sin s1 • e1Fan x v u + Real.cos s1 • e3Fan x v u + x ∈
+        rconeFan x v (Real.cos h) := by
+    intro s1 hs1pos hs1h hs1pi
+    have hsin : 0 < Real.sin s1 :=
+      Real.sin_pos_of_pos_of_lt_pi hs1pos (by linarith [hs1pi, Real.pi_pos])
+    have hcos1 : 0 < Real.cos s1 :=
+      Real.cos_pos_of_mem_Ioo ⟨by linarith [Real.pi_pos], hs1pi⟩
+    have hcoslt : Real.cos h < Real.cos s1 :=
+      Real.cos_lt_cos_of_nonneg_of_le_pi (le_of_lt hs1pos) hhpi hs1h
+    set w : V3 := Real.sin s1 • e1Fan x v u + Real.cos s1 • e3Fan x v u + x with hwdef
+    have hwxs : w - x = Real.sin s1 • e1Fan x v u + Real.cos s1 • e3Fan x v u := by
+      rw [hwdef]; module
+    have he1n : ‖e1Fan x v u‖ = 1 := by
+      have h : ‖e1Fan x v u‖ ^ 2 = 1 := by
+        rw [norm_sq_eq_dot]; exact he1s
+      nlinarith [h, norm_nonneg (e1Fan x v u), sq_nonneg (‖e1Fan x v u‖ - 1)]
+    have he3n : ‖e3Fan x v u‖ = 1 := by
+      have h : ‖e3Fan x v u‖ ^ 2 = 1 := by
+        rw [norm_sq_eq_dot]; exact he3s
+      nlinarith [h, norm_nonneg (e3Fan x v u), sq_nonneg (‖e3Fan x v u‖ - 1)]
+    have hnw : ‖w - x‖ = 1 := by
+      have h2 : ‖w - x‖ ^ 2 = 1 := by
+        conv_lhs => rw [hwxs, norm_add_sq_real, norm_smul, norm_smul,
+          Real.norm_eq_abs, Real.norm_eq_abs, abs_of_pos hsin, abs_of_pos hcos1,
+          he1n, he3n, real_inner_smul_left, real_inner_smul_right, inner_eq_dot,
+          he1d3]
+        have hsc := Real.sin_sq_add_cos_sq s1
+        rw [sq, sq] at hsc
+        linarith
+      nlinarith [h2, norm_nonneg (w - x), sq_nonneg (‖w - x‖ - 1)]
+    have hdot : (w - x) ⬝ᵥ (v - x) = Real.cos s1 * ‖v - x‖ := by
+      rw [← inner_eq_dot, hwxs, inner_add_left, real_inner_smul_left,
+        real_inner_smul_left]
+      change Real.sin s1 * inner ℝ (e1Fan x v u) (v - x) +
+        Real.cos s1 * inner ℝ (e3Fan x v u) (v - x) = Real.cos s1 * ‖v - x‖
+      rw [he1vx, he3vx]
+      ring
+    show (w - x) ⬝ᵥ (v - x) > dist w x * dist v x * Real.cos h
+    rw [hdot, dist_eq_norm, dist_eq_norm, hnw, one_mul]
+    have hstep : (Real.cos s1 - Real.cos h) * ‖v - x‖ > 0 :=
+      mul_pos (sub_pos.mpr hcoslt) hnvpos
+    have hstep2 : Real.cos s1 * ‖v - x‖ - ‖v - x‖ * Real.cos h
+        = (Real.cos s1 - Real.cos h) * ‖v - x‖ := by ring
+    linarith
+  rcases lt_or_ge 0 ((v - x) ⬝ᵥ (u - x)) with hd | hle
+  · -- 正支：s1 = min h (atn (|cross|/dot)) / 2
+    set A : ℝ := Real.arctan (‖(WithLp.toLp 2 (crossProduct ((v - x : V3) : Fin 3 → ℝ)
+        ((u - x : V3) : Fin 3 → ℝ)) : V3)‖ * ((v - x) ⬝ᵥ (u - x))⁻¹) with hAdef
+    have hApos : 0 < A := by
+      rw [hAdef]
+      exact Real.arctan_pos.mpr (mul_pos (cross_pos_of_not_collinear3_a9 hnc) (inv_pos.mpr hd))
+    have hApi : A < Real.pi / 2 := by
+      rw [hAdef]; exact (Real.arctan_mem_Ioo _).2
+    have hs1pos : 0 < min h A / 2 := div_pos (lt_min hh0 hApos) two_pos
+    have hs1h : min h A / 2 < h := by linarith [min_le_left h A, hh0]
+    have hs1pi : min h A / 2 < Real.pi / 2 := by linarith [min_le_right h A, hApi]
+    have hs1A : min h A / 2 < Real.arctan (‖(WithLp.toLp 2 (crossProduct
+        ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ)) : V3)‖ *
+        ((v - x) ⬝ᵥ (u - x))⁻¹) := by
+      rw [← hAdef]; linarith [min_le_right h A, hApos]
+    exact Set.Nonempty.ne_empty
+      ⟨_, hrcone _ hs1pos hs1h hs1pi,
+        condition_to_in_aff_gt_by_angle hnc hd hs1pos hs1A⟩
+  · -- 非正支：s1 = min h (π/2) / 2
+    have hs1pos : 0 < min h (Real.pi / 2) / 2 :=
+      div_pos (lt_min hh0 (by linarith [Real.pi_pos])) two_pos
+    have hs1h : min h (Real.pi / 2) / 2 < h := by
+      linarith [min_le_left h (Real.pi / 2), hh0]
+    have hs1pi : min h (Real.pi / 2) / 2 < Real.pi / 2 := by
+      linarith [min_le_right h (Real.pi / 2), Real.pi_pos]
+    exact Set.Nonempty.ne_empty
+      ⟨_, hrcone _ hs1pos hs1h hs1pi,
+        condition1_to_in_aff_gt_by_angle hnc hs1pos hs1pi hle⟩
 
 /-! ## rw_dart_fan 与 aff_gt 的非空交（planarity.hl:12574-12598） -/
 
