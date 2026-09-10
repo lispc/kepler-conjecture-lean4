@@ -431,7 +431,12 @@ theorem point_in_yfan_is_not_inv_fan (x : V3) (V : Set V3) (E : Set (Set V3))
     (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard)
     (hU : U ∈ topologicalComponentYfan x V E) (hz : z ∈ U) (hu : u ∈ V) :
     u ≠ z := by
-  sorry
+  have hne : E ≠ ∅ := nonsetedge_fully_surround_fan hcard hfan
+  have hzY : z ∈ yfan x V E := zpoint_in_yfan x V E U z hfan hne hU hz
+  have huX : u ∈ xfan x V E := v_subset_xfan x V E hfan hcard hu
+  intro huz
+  rw [yfan, Set.mem_sdiff] at hzY
+  exact hzY.2 (huz ▸ huX)
 
 /-! ## 端点落在 aff_ge 1-1 中（planarity.hl:14418-14440） -/
 
