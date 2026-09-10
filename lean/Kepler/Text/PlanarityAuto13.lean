@@ -471,6 +471,30 @@ theorem point_in_aff_ge_1_1 (x v : V3) (hxv : x ≠ v) :
 
 /-! ## aff_ge {x}{v,u} 中的顶点必为端点（planarity.hl:14441-14472） -/
 
+/-- `affGe {x} ∅ = {x}`（AFF_GE_EQ_AFFINE_HULL/AFFINE_HULL_1 的现场替代：
+`{x} ∪ ∅` 的求和塌缩到单点，故 `f x = 1` 且 `y = x`）。 -/
+private theorem affGe_empty_auto13 (x : V3) : affGe {x} (∅ : Set V3) = {x} := by
+  ext y
+  simp only [affGe, Set.mem_setOf_eq, Affsign, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨f, hfin, hsum, -, hone⟩
+    have hTeq : hfin.toFinset = ({x} : Finset V3) := by
+      ext z
+      simp
+    rw [hTeq, Finset.sum_singleton] at hsum hone
+    rw [hsum, hone, one_smul]
+  · intro heq
+    rw [heq]
+    have hfin : ({x} ∪ (∅ : Set V3)).Finite :=
+      (Set.finite_singleton x).union Set.finite_empty
+    have hTeq : hfin.toFinset = ({x} : Finset V3) := by
+      ext z
+      simp
+    refine ⟨fun _ => 1, hfin, ?_, ?_, ?_⟩
+    · rw [hTeq]; simp
+    · intro z hz; simp at hz
+    · rw [hTeq]; simp
+
 /-- HOL planarity.hl :14441-14472 `POINT_IN_AFF_GE_IMP_IN_EDGE`
 
 HOL 原文：
@@ -507,7 +531,28 @@ theorem POINT_IN_AFF_GE_IMP_IN_EDGE (x : V3) (V : Set V3) (E : Set (Set V3))
     (hxu1 : x ≠ u1)
     (hu1 : u1 ∈ affGe ({x} : Set V3) ({v, u} : Set V3)) :
     u1 ∈ ({v, u} : Set V3) := by
-  sorry
+  rcases hfan with ⟨-, -, -, -, -, hfan7⟩
+  have h7 := hfan7 ({u1} : Set V3) (Or.inr ⟨u1, hu1V, rfl⟩)
+    ({v, u} : Set V3) (Or.inl hvu)
+  have hpt : u1 ∈ affGe ({x} : Set V3) ({u1} : Set V3) :=
+    (point_in_aff_ge_1_1 x u1 hxu1).2
+  have hmem : u1 ∈ affGe ({x} : Set V3) (({u1} : Set V3) ∩ ({v, u} : Set V3)) := by
+    rw [← h7]
+    exact ⟨hpt, hu1⟩
+  by_cases hcase : u1 ∈ ({v, u} : Set V3)
+  · exact hcase
+  · exfalso
+    have hdisj : Disjoint ({u1} : Set V3) ({v, u} : Set V3) := by
+      rw [Set.disjoint_left]
+      intro a ha hb
+      rw [Set.mem_singleton_iff] at ha
+      rw [ha] at hb
+      exact hcase hb
+    have hinter : ({u1} : Set V3) ∩ ({v, u} : Set V3) = ∅ :=
+      Set.disjoint_iff_inter_eq_empty.mp hdisj
+    rw [hinter, affGe_empty_auto13] at hmem
+    rw [Set.mem_singleton_iff] at hmem
+    exact hxu1 hmem.symm
 
 /-! ## aff_gt 1-2 的端点落在闭包中（planarity.hl:14473-14504） -/
 
