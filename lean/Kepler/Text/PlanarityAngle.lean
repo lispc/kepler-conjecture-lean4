@@ -2126,7 +2126,10 @@ DISJOINT {x} {v,u} /\ &0< t /\ t< &1==>  (&1-t)% v+ t% u IN aff_gt {x} {v,u}
 theorem in_aff_gt_1_2 {x v u : V3} {t : ℝ}
     (hdis : Disjoint ({x} : Set V3) {v, u}) (ht : 0 < t) (ht1 : t < 1) :
     (1 - t) • v + t • u ∈ affGt {x} {v, u} := by
-  sorry
+  rw [aff_gt_1_2 hdis]
+  refine ⟨0, 1 - t, t, ?_, ht, by ring, ?_⟩
+  · linarith
+  · module
 
 /-- HOL planarity.hl:10624-10806 `exists_rw_dart_inter_aff_gt1_fan`
 
