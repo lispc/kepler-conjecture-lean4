@@ -158,7 +158,17 @@ FAN(x,V,E)
 theorem xfan_closed_fan {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E) :
     IsClosed (xfan x V E) := by
-  sorry
+  have hfin : E.Finite := setEdgesFiniteFan hfan
+  have hEq : xfan x V E = ⋃ e ∈ E, affGe {x} e := by
+    ext v
+    simp only [xfan, Set.mem_setOf_eq, Set.mem_iUnion, exists_prop]
+  rw [hEq]
+  exact hfin.isClosed_biUnion (fun e he => by
+    obtain ⟨v, w, rfl⟩ := expand_edge_graph_fan hfan he
+    have hnc : ¬ Collinear3 x v w := by
+      intro h
+      exact hfan.2.2.2.2.1 {v, w} he h
+    exact closed_aff_ge_1_2 hnc)
 
 /-- HOL planarity.hl :11506-11520 `topological_component_subset_yfan`
 
