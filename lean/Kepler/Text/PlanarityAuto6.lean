@@ -239,7 +239,10 @@ HOL 原文：
 theorem aff_ge_1_1_subset_aff_fan (x y z : V3) (hyz : y ≠ z)
     (hx : x ∈ affGe {y} {z}) :
     x ∈ affineSpan ℝ ({y, z} : Set V3) := by
-  sorry
+  obtain ⟨t, ht⟩ := affGe_ray hyz hx
+  refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨t, ?_⟩
+  rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add]
+  exact (sub_eq_iff_eq_add.mp ht).symm
 
 /-! ## xfan 中避开给定凸包的点（planarity.hl:11700-11746） -/
 
