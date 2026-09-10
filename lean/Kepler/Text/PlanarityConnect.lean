@@ -277,7 +277,14 @@ theorem aff_gt_connect_bound_subset_yfan {x y z : V3} {V : Set V3} {E : Set (Set
     (hfan : FAN x V E) (hdis : Disjoint ({x} : Set V3) {y, z})
     (hconn : ∀ t : ℝ, 0 < t → t < 1 → (1 - t) • y + t • z ∈ yfan x V E) :
     affGt {x} {y, z} ⊆ yfan x V E := by
-  sorry
+  intro w hw
+  rw [yfan, Set.mem_sdiff]
+  refine ⟨Set.mem_univ _, ?_⟩
+  rintro ⟨e, he, hwe⟩
+  obtain ⟨v, u, rfl⟩ := expand_edge_graph_fan hfan he
+  have hempty := aff_gt_connect_bound_not_inter_edges_fan hfan he hdis hconn
+  rw [Set.eq_empty_iff_forall_notMem] at hempty
+  exact hempty w ⟨hw, hwe⟩
 
 /-! ## real^N 仿射包的基本事实（planarity.hl:11569-11609） -/
 
