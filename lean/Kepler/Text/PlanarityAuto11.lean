@@ -1266,6 +1266,11 @@ theorem notcoplanar_disjoints (x v u w : V3)
     Disjoint ({x} : Set V3) {v, u} ∧
     Disjoint ({x} : Set V3) {u, w} ∧
     Disjoint ({x} : Set V3) {w, v} := by
-  sorry
+  obtain ⟨hxv, hxu, hxw, hvu, hvw, huw⟩ := notcoplanar_disjoint x v u w hcop
+  have hvu' : u ≠ v := fun h => hvu h.symm
+  have hvw' : w ≠ v := fun h => hvw h.symm
+  have huw' : w ≠ u := fun h => huw h.symm
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;>
+    simp [Set.disjoint_left, hxv, hxu, hxw, hvu, hvu', hvw, hvw', huw, huw']
 
 end Kepler.Text
