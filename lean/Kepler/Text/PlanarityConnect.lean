@@ -218,13 +218,40 @@ aff_gt {x} {y,z} INTER aff_ge {x} {v,u}={}
 - `in_aff_gt_1_2`（Kepler/Text/PlanarityAngle.lean:2126）
 - `xfan`（Kepler/Text/Fan.lean:154）、`yfan`（Kepler/Text/Fan.lean:158）
 - `edge_ne_of_fan`（Kepler/Text/Fan.lean:1039） -/
+private theorem disjoint_singleton_pair_of_fan {x v u : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hvu : {v, u} ∈ E) :
+    Disjoint ({x} : Set V3) {v, u} := by
+  have hnc : ¬ Collinear3 x v u := by
+    intro h
+    exact hfan.2.2.2.2.1 {v, u} hvu (by simpa [Collinear3] using h)
+  rw [Set.disjoint_iff_inter_eq_empty, Set.singleton_inter_eq_empty]
+  intro hmem
+  rcases Set.mem_insert_iff.mp hmem with he | he
+  · exact hnc (by rw [he]; exact collinear3_of_eq rfl)
+  · exact hnc (by rw [Set.mem_singleton_iff.mp he]; exact collinear3_pair_left rfl)
+
 theorem aff_gt_connect_bound_not_inter_edges_fan {x v u y z : V3}
     {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E) (hvu : {v, u} ∈ E)
     (hdis : Disjoint ({x} : Set V3) {y, z})
     (hconn : ∀ t : ℝ, 0 < t → t < 1 → (1 - t) • y + t • z ∈ yfan x V E) :
     affGt {x} {y, z} ∩ affGe {x} {v, u} = ∅ := by
-  sorry
+  rw [Set.eq_empty_iff_forall_notMem]
+  intro w hw
+  rw [Set.mem_inter_iff] at hw
+  obtain ⟨hw_gt, hw_ge⟩ := hw
+  obtain ⟨a, t, ha0, ht0, ht1, haeq⟩ := scale_in_edges_fan hdis hw_gt
+  have hdis_vu : Disjoint ({x} : Set V3) {v, u} :=
+    disjoint_singleton_pair_of_fan hfan hvu
+  have hscaled : a • (w - x) + x ∈ affGe {x} {v, u} :=
+    scale_aff_ge_fan hdis_vu w a hw_ge (le_of_lt ha0)
+  have hpt : (1 - t) • y + t • z ∈ affGe {x} {v, u} := by
+    rw [haeq] at hscaled
+    simpa using hscaled
+  have hxfan : (1 - t) • y + t • z ∈ xfan x V E := ⟨{v, u}, hvu, hpt⟩
+  have hyfan := hconn t ht0 ht1
+  rw [yfan, Set.mem_sdiff] at hyfan
+  exact hyfan.2 hxfan
 
 /-- HOL planarity.hl :11552-11568 `aff_gt_connect_bound_subset_yfan`
 
