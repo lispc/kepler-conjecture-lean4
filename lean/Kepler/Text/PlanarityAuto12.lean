@@ -618,6 +618,77 @@ theorem coplanar_cross_dot (x v u v1 : V3)
       (c1 := g 1) (c2 := g 0) hi ?_
     linear_combination (norm := module) hg
 
+/-- 叉积平面分解的辅助恒等式（无假设版本）：对 `n = a ⨯ b`，
+`(n·n) • z = ((a·z)(b·b) - (b·z)(a·b)) • a +
+            ((b·z)(a·a) - (a·z)(a·b)) • b + (n·z) • n`。 -/
+private lemma crossProduct_plane_decomp_aux (a b z : Fin 3 → ℝ) :
+    (crossProduct a b ⬝ᵥ crossProduct a b) • z =
+      ((a ⬝ᵥ z) * (b ⬝ᵥ b) - (b ⬝ᵥ z) * (a ⬝ᵥ b)) • a +
+      ((b ⬝ᵥ z) * (a ⬝ᵥ a) - (a ⬝ᵥ z) * (a ⬝ᵥ b)) • b +
+      ((crossProduct a b) ⬝ᵥ z) • crossProduct a b := by
+  have h1 : crossProduct (crossProduct (crossProduct a b) z) (crossProduct a b) =
+      (crossProduct a b ⬝ᵥ crossProduct a b) • z -
+        (z ⬝ᵥ crossProduct a b) • crossProduct a b :=
+    cross_cross_eq_smul_sub_smul (crossProduct a b) z (crossProduct a b)
+  have h2 : crossProduct (crossProduct a b) z =
+      (a ⬝ᵥ z) • b - (b ⬝ᵥ z) • a :=
+    cross_cross_eq_smul_sub_smul a b z
+  have hb : crossProduct b (crossProduct a b) =
+      (b ⬝ᵥ b) • a - (a ⬝ᵥ b) • b :=
+    cross_cross_eq_smul_sub_smul' b a b
+  have ha : crossProduct a (crossProduct a b) =
+      (a ⬝ᵥ b) • a - (a ⬝ᵥ a) • b :=
+    cross_cross_eq_smul_sub_smul' a a b
+  have h1' : crossProduct (crossProduct (crossProduct a b) z) (crossProduct a b) =
+      ((a ⬝ᵥ z) * (b ⬝ᵥ b) - (b ⬝ᵥ z) * (a ⬝ᵥ b)) • a +
+      ((b ⬝ᵥ z) * (a ⬝ᵥ a) - (a ⬝ᵥ z) * (a ⬝ᵥ b)) • b := by
+    rw [h2, map_sub, map_smul, map_smul, LinearMap.sub_apply, LinearMap.smul_apply,
+      LinearMap.smul_apply, hb, ha]
+    module
+  calc (crossProduct a b ⬝ᵥ crossProduct a b) • z =
+        crossProduct (crossProduct (crossProduct a b) z) (crossProduct a b) +
+          (z ⬝ᵥ crossProduct a b) • crossProduct a b := by
+        rw [h1]; abel
+    _ = ((a ⬝ᵥ z) * (b ⬝ᵥ b) - (b ⬝ᵥ z) * (a ⬝ᵥ b)) • a +
+          ((b ⬝ᵥ z) * (a ⬝ᵥ a) - (a ⬝ᵥ z) * (a ⬝ᵥ b)) • b +
+          (z ⬝ᵥ crossProduct a b) • crossProduct a b := by rw [h1']
+    _ = ((a ⬝ᵥ z) * (b ⬝ᵥ b) - (b ⬝ᵥ z) * (a ⬝ᵥ b)) • a +
+          ((b ⬝ᵥ z) * (a ⬝ᵥ a) - (a ⬝ᵥ z) * (a ⬝ᵥ b)) • b +
+          ((crossProduct a b) ⬝ᵥ z) • crossProduct a b := by
+        rw [dotProduct_comm z (crossProduct a b)]
+
+/-- 平面分解：`n = a ⨯ b ≠ 0` 且 `n·z = 0` 时，
+`z = ((n·n)⁻¹ * ((a·z)(b·b) - (b·z)(a·b))) • a +
+     ((n·n)⁻¹ * ((b·z)(a·a) - (a·z)(a·b))) • b`。 -/
+private lemma crossProduct_plane_decomp {a b z : Fin 3 → ℝ}
+    (hn : crossProduct a b ≠ 0) (hz : (crossProduct a b) ⬝ᵥ z = 0) :
+    z = (((crossProduct a b ⬝ᵥ crossProduct a b)⁻¹) *
+          ((a ⬝ᵥ z) * (b ⬝ᵥ b) - (b ⬝ᵥ z) * (a ⬝ᵥ b))) • a +
+        (((crossProduct a b ⬝ᵥ crossProduct a b)⁻¹) *
+          ((b ⬝ᵥ z) * (a ⬝ᵥ a) - (a ⬝ᵥ z) * (a ⬝ᵥ b))) • b := by
+  have hnn : crossProduct a b ⬝ᵥ crossProduct a b ≠ 0 := by
+    intro h0
+    apply hn
+    funext i
+    have hsum : ∑ j, (crossProduct a b) j * (crossProduct a b) j = 0 := by
+      simpa only [dotProduct] using h0
+    have h3 := (Finset.sum_eq_zero_iff_of_nonneg
+      (fun j _ => mul_self_nonneg ((crossProduct a b) j))).mp hsum
+    exact mul_self_eq_zero.mp (h3 i (Finset.mem_univ i))
+  have hmain := crossProduct_plane_decomp_aux a b z
+  rw [hz, zero_smul, add_zero] at hmain
+  calc z = (crossProduct a b ⬝ᵥ crossProduct a b)⁻¹ •
+        ((crossProduct a b ⬝ᵥ crossProduct a b) • z) :=
+        (inv_smul_smul₀ hnn z).symm
+    _ = (crossProduct a b ⬝ᵥ crossProduct a b)⁻¹ •
+        (((a ⬝ᵥ z) * (b ⬝ᵥ b) - (b ⬝ᵥ z) * (a ⬝ᵥ b)) • a +
+         ((b ⬝ᵥ z) * (a ⬝ᵥ a) - (a ⬝ᵥ z) * (a ⬝ᵥ b)) • b) := by rw [hmain]
+    _ = (((crossProduct a b ⬝ᵥ crossProduct a b)⁻¹) *
+          ((a ⬝ᵥ z) * (b ⬝ᵥ b) - (b ⬝ᵥ z) * (a ⬝ᵥ b))) • a +
+        (((crossProduct a b ⬝ᵥ crossProduct a b)⁻¹) *
+          ((b ⬝ᵥ z) * (a ⬝ᵥ a) - (a ⬝ᵥ z) * (a ⬝ᵥ b))) • b := by
+        rw [smul_add, smul_smul, smul_smul]
+
 /-- HOL planarity.hl :13897-14074 `aff_gt_3_1_rep_cross_dot`
 
 HOL 原文：
@@ -656,7 +727,72 @@ theorem aff_gt_3_1_rep_cross_dot (x v u w : V3)
     affGt ({x, v, u} : Set V3) {w} =
       {y : V3 | 0 < crossProduct ((v - x : V3) : Fin 3 → ℝ)
           ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)} := by
-  sorry
+  obtain ⟨hdis, -, -, -, -, -, -, -⟩ := notcoplanar_disjoints x v u w hcop
+  rw [AFF_GT_3_1 x v u w hdis]
+  ext y
+  simp only [Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨t1, t2, t3, t4, ht4, hsum, hy⟩
+    have hz : (y - x : V3) = t2 • (v - x) + t3 • (u - x) + t4 • (w - x) := by
+      have ht1 : t1 = 1 - t2 - t3 - t4 := by linarith
+      rw [hy, ht1]
+      module
+    have hz' : ((y - x : V3) : Fin 3 → ℝ) =
+        t2 • ((v - x : V3) : Fin 3 → ℝ) + t3 • ((u - x : V3) : Fin 3 → ℝ) +
+          t4 • ((w - x : V3) : Fin 3 → ℝ) := by
+      have h := congrArg (fun p : V3 => (p : Fin 3 → ℝ)) hz
+      simpa only [WithLp.ofLp_add, WithLp.ofLp_smul] using h
+    rw [hz']
+    have ha : crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((v - x : V3) : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm]; exact dot_self_cross _ _
+    have hb : crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((u - x : V3) : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm]; exact dot_cross_self _ _
+    simp only [dotProduct_add, dotProduct_smul, smul_eq_mul, ha, hb, mul_zero,
+      zero_add, add_zero]
+    exact mul_pos ht4 hpos
+  · intro hy
+    let a : Fin 3 → ℝ := ((v - x : V3) : Fin 3 → ℝ)
+    let b : Fin 3 → ℝ := ((u - x : V3) : Fin 3 → ℝ)
+    let c : Fin 3 → ℝ := ((w - x : V3) : Fin 3 → ℝ)
+    let z : Fin 3 → ℝ := ((y - x : V3) : Fin 3 → ℝ)
+    let n : Fin 3 → ℝ := crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ)
+    have hd : 0 < n ⬝ᵥ c := by dsimp only [n, a, b, c]; exact hpos
+    have hnz : 0 < n ⬝ᵥ z := by dsimp only [n, a, b, z]; exact hy
+    have hn : n ≠ 0 := by
+      intro h0
+      rw [h0, zero_dotProduct] at hd
+      exact lt_irrefl 0 hd
+    let t4 : ℝ := (n ⬝ᵥ z) / (n ⬝ᵥ c)
+    have ht4 : 0 < t4 := by dsimp only [t4]; exact div_pos hnz hd
+    let z' : Fin 3 → ℝ := z - t4 • c
+    have hz' : n ⬝ᵥ z' = 0 := by
+      dsimp only [z', t4]
+      rw [dotProduct_sub, dotProduct_smul, smul_eq_mul]
+      field_simp [hd.ne']
+      ring
+    have hn_ab : crossProduct a b ≠ 0 := by
+      dsimp only [a, b]
+      dsimp only [n] at hn
+      exact hn
+    have hz'_ab : crossProduct a b ⬝ᵥ z' = 0 := by
+      dsimp only [a, b]
+      dsimp only [n] at hz'
+      exact hz'
+    have hdecomp := crossProduct_plane_decomp (a := a) (b := b) (z := z') hn_ab hz'_ab
+    obtain ⟨A, B, hAB⟩ : ∃ A B : ℝ, z' = A • a + B • b := ⟨_, _, hdecomp⟩
+    refine ⟨1 - A - B - t4, A, B, t4, ht4, by ring, ?_⟩
+    have hz_eq : z = A • a + B • b + t4 • c := by
+      rw [← hAB]
+      dsimp only [z']
+      abel
+    have hzV : (y - x : V3) = A • (v - x) + B • (u - x) + t4 • (w - x) := by
+      have h := congrArg (WithLp.toLp 2) hz_eq
+      simpa only [WithLp.toLp_add, WithLp.toLp_smul, WithLp.toLp_ofLp, a, b, c, z] using h
+    calc y = (y - x) + x := by abel
+      _ = (A • (v - x) + B • (u - x) + t4 • (w - x)) + x := by rw [hzV]
+      _ = (1 - A - B - t4) • x + A • v + B • u + t4 • w := by module
 
 /-! ## aff_gt 1-3 与 aff_ge 补集的开性（planarity.hl:14075-14124） -/
 
