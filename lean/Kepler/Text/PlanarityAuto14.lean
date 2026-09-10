@@ -297,7 +297,26 @@ theorem PROPERTIES_TRIANGLE_FAN_lemma1 {x v u w : V3} {V : Set V3}
     (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
     (hfan80 : fan80 x V E) :
     sigmaFan x V E v u = w := by
-  sorry
+  have huw_ne : u ≠ w := edge_ne_of_fan hfan huw
+  have hwv' : {v, w} ∈ E := by simpa [Set.pair_comm] using hwv
+  have hw_mem : w ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v w hfan).mp hwv'
+  have hu_mem : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  have hne : setOfEdge v V E ≠ {u} := by
+    intro h
+    have hw : w ∈ ({u} : Set V3) := h ▸ hw_mem
+    exact huw_ne (Set.mem_singleton_iff.mp hw).symm
+  have hσ := SIGMA_FAN hne hfan hu_mem
+  have hσmin : azim x v u (sigmaFan x V E v u) ≤ azim x v u w :=
+    hσ.2.2 w hw_mem (fun h => huw_ne h.symm)
+  have hsmall : azim x v u w ≤ azim x v u (sigmaFan x V E v u) :=
+    angle_is_small_fan hfan hvu huw hsigma hfan80 hcard
+  have heq : azim x v u (sigmaFan x V E v u) = azim x v u w :=
+    le_antisymm hσmin hsmall
+  have hvσ : {v, sigmaFan x V E v u} ∈ E :=
+    (properties_of_setOfEdge_fan x V E v (sigmaFan x V E v u) hfan).mpr hσ.1
+  exact unique_azim_point_fan hfan hvu hvσ hwv' heq
 
 /-- HOL planarity.hl :14702-14712 `PROPERTIES_TRIANGLE_FAN_lemma2`
 
