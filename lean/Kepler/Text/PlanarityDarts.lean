@@ -96,7 +96,8 @@ theorem RWXUYZZ {x : V3} {V : Set V3} {E : Set (Set V3)} {ds : Set (V3 × V3)}
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet) :
     (∃ s : Set V3, ∀ y ∈ ds, s = dartLeadsInto x V E y.1 y.2) ∧
       dartsetLeadsIntoFan x V E ds ∈ topologicalComponentYfan x V E := by
-  sorry
+  exact ⟨exists_dartset_leads_into_fan hfan hcard hfan80 hds,
+    dartset_leads_into_is_topological_component_yfan hfan hcard hfan80 hds⟩
 
 /-! ## 加边保持图/扇性质（planarity.hl:11124-11224） -/
 
