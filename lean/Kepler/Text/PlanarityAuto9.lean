@@ -658,7 +658,13 @@ theorem condition_rw_dart_fan_inter_aff_gt_is_not_empty (x : V3) (V : Set V3)
     (hh0 : 0 < h) (hhpi : h ≤ Real.pi) :
     rwDartFan x V E (x, v, u, sigmaFan x V E v u) (Real.cos h) ∩
       affGt {x} {v, z} ≠ ∅ := by
-  sorry
+  have hsub : affGt {x} {v, z} ⊆ wDartFan x V E (x, v, u, sigmaFan x V E v u) :=
+    aff_gt_in_w_dart_fan x V E v u z hfan hvu hz hfan80 hcard
+  obtain ⟨p, hp⟩ := Set.nonempty_iff_ne_empty.mpr
+    (not_empty_rcone_fan_inter_aff_gt x v z h hnc hh0 hhpi)
+  exact Set.Nonempty.ne_empty ⟨p, by
+    rw [rwDartFan]
+    exact ⟨⟨hsub hp.2, hp.1⟩, hp.2⟩⟩
 
 /-! ## 存在边使 rw_dart_fan 与 aff_gt 交非空（planarity.hl:12599-12629） -/
 
