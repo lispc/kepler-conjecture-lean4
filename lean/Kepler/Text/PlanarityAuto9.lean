@@ -402,7 +402,24 @@ theorem aff_gt_in_w_dart_fan (x : V3) (V : Set V3) (E : Set (Set V3))
     (hfan80 : fan80 x V E)
     (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard) :
     affGt {x} {u, y} ⊆ wDartFan x V E (x, u, w, sigmaFan x V E u w) := by
-  sorry
+  have huV : u ∈ V := (fan_mem_of_edge hfan huw).1
+  have hcardu : 1 < (setOfEdge u V E).ncard := hcard u huV
+  have hwd : wDartFan x V E (x, u, w, sigmaFan x V E u w)
+      = wedge x u w (sigmaFan x V E u w) := by
+    unfold wDartFan
+    rw [if_pos hcardu]
+  rw [hwd] at hy
+  rw [hwd]
+  obtain ⟨hnc_uy, h0y, hy_lt⟩ := hy
+  have hnc_uw : ¬ Collinear3 x u w := fan_not_collinear hfan huw
+  intro z hz
+  have hsplit : z ∈ affGt {x, u} {y} ∩ affGt {x, y} {u} := by
+    rw [← aff_gt_inter_aff_gt hnc_uy]
+    exact hz
+  have hncz : ¬ Collinear3 x u z := aff_gt_imp_not_collinear hnc_uy hsplit.1
+  have heq : azim x u w z = azim x u w y :=
+    (azim_eq_azim_iff_alt hnc_uw hncz hnc_uy).mpr hsplit.1
+  exact ⟨hncz, by rw [heq]; exact h0y, by rw [heq]; exact hy_lt⟩
 
 /-! ## rcone 与 aff_gt 的非空交（planarity.hl:12464-12573） -/
 
