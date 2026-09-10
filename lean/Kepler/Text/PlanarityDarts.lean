@@ -181,7 +181,11 @@ theorem add_edge_into_collinear_fan {x v u : V3} {E : Set (Set V3)}
     (hnc : ¬ Collinear3 x v u)
     (hE : ∀ e ∈ E, ¬ Collinear ℝ (insert x e)) :
     ∀ e ∈ E ∪ {{v, u}}, ¬ Collinear ℝ (insert x e) := by
-  sorry
+  intro e he
+  rw [Set.mem_union, Set.mem_singleton_iff] at he
+  rcases he with he | rfl
+  · exact hE e he
+  · simpa [Collinear3] using hnc
 
 /-! ## 条件：新边不与 face dartset 相交（planarity.hl:11168-11293） -/
 
