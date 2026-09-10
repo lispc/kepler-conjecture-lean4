@@ -355,7 +355,9 @@ FAN(x,V,E) ==> closed(xfan(x,V,E) INTER segment[v,z])
 theorem xfan_inter_segment_closed_fan (x : V3) (V : Set V3) (E : Set (Set V3))
     (z : V3) (v : V3) (hfan : FAN x V E) :
     IsClosed (xfan x V E ∩ segment ℝ v z) := by
-  sorry
+  refine (xfan_closed_fan hfan).inter ?_
+  rw [← convexHull_pair v z]
+  exact (Set.toFinite ({v, z} : Set V3)).isClosed_convexHull ℝ
 
 /-! ## yfan 分量不包含中心（planarity.hl:11770-11786） -/
 
