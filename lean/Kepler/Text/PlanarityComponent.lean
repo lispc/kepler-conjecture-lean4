@@ -586,6 +586,10 @@ theorem dartset_leads_into_subset_yfan {x : V3} {V : Set V3}
     (hfan80 : fan80 x V E)
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet) :
     dartsetLeadsIntoFan x V E ds ⊆ yfan x V E := by
-  sorry
+  have hmem := dartset_leads_into_is_topological_component_yfan hfan hcard hfan80 hds
+  rw [topologicalComponentYfan, Set.mem_setOf_eq] at hmem
+  obtain ⟨b, _hb, heq⟩ := hmem
+  rw [← heq]
+  exact connectedComponentIn_subset (yfan x V E) b
 
 end Kepler.Text
