@@ -189,7 +189,8 @@ U IN topological_component_yfan (x,V,E)
 theorem topological_component_subset_yfan {x : V3} {V : Set V3} {E : Set (Set V3)}
     {U : Set V3} (hU : U ∈ topologicalComponentYfan x V E) :
     U ⊆ yfan x V E := by
-  sorry
+  rcases hU with ⟨b, _hb, rfl⟩
+  exact connectedComponentIn_subset _ _
 
 /-! ## 弦与边的 aff_gt 分离（planarity.hl:11521-11568） -/
 
