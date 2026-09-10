@@ -290,7 +290,52 @@ theorem lemma_CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN {x : V3} {V : Set V3}
     (hf12 : fFanPair x V E f1 = f2) (hf23 : fFanPair x V E f2 = f3)
     (hdsf : ds = {f1, f2, f3}) :
     f1 = fFanPair x V E f3 := by
-  sorry
+  have hdf : dartOfFan V E = dart1OfFan V E :=
+    dartOfFan_eq_dart1_of_surrounded hfan hcard
+  have hf1_ds : f1 ∈ ds := by rw [hdsf]; simp
+  have hf3_ds : f3 ∈ ds := by rw [hdsf]; simp
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  have hdarts : (↑H.darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  obtain ⟨d, hdH, hface⟩ := Hypermap.face_representation H hds
+  have mem_dart1 : ∀ y ∈ ds, y ∈ dart1OfFan V E := by
+    intro y hy
+    have hyface : y ∈ H.face d := by simpa [hface] using hy
+    have hymem : y ∈ H.darts := H.face_subset_darts hdH hyface
+    change y ∈ (↑H.darts : Set (V3 × V3)) at hymem
+    simpa [hdarts] using hymem
+  have hf1d : f1 ∈ dart1OfFan V E := mem_dart1 f1 hf1_ds
+  have hf3d : f3 ∈ dart1OfFan V E := mem_dart1 f3 hf3_ds
+  have hf13 : f1 ≠ f3 := by
+    intro h
+    have hsub : ({f1, f2, f3} : Set (V3 × V3)) ⊆ {f1, f2} := by
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+      rcases hz with rfl | rfl | rfl
+      · exact Or.inl rfl
+      · exact Or.inr rfl
+      · exact Or.inl h.symm
+    have hle : ({f1, f2, f3} : Set (V3 × V3)).ncard ≤
+        ({f1, f2} : Set (V3 × V3)).ncard :=
+      Set.ncard_le_ncard hsub (Set.toFinite _)
+    have h2 : ({f1, f2} : Set (V3 × V3)).ncard ≤ 2 := by
+      by_cases h12 : f1 = f2
+      · rw [h12]; simp
+      · simp [Set.ncard_pair h12]
+    have h3 : ({f1, f2, f3} : Set (V3 × V3)).ncard = 3 := by rw [← hdsf, hds3]
+    omega
+  have hg3_ds : fFanPair x V E f3 ∈ ds :=
+    condition_f1_fan_in_face_set (y := fFanPair x V E f3) (y1 := f3) hfan rfl hds hdf hf3_ds
+  rw [hdsf] at hg3_ds
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hg3_ds
+  rcases hg3_ds with h | h | h
+  · exact h.symm
+  · exfalso
+    have heq : fFanPair x V E f3 = fFanPair x V E f1 := by rw [h, hf12]
+    exact hf13 (mono_fFanPair hfan hf3d hf1d heq).symm
+  · exfalso
+    exact f_fan_no_fix hfan f3 hf3d h
 
 /-- HOL planarity.hl :15114-15162 `CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN1`
 
