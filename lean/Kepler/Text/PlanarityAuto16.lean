@@ -190,7 +190,24 @@ theorem measurable_dartset_leads_into3_fan
     (hds3 : ds.ncard = 3)
     (he : 0 < e) :
     MeasurableSet (dartsetLeadsIntoFan x V E ds ∩ Metric.ball x e) := by
-  sorry
+  rw [← KVQWYDL_lemma10 hfan hcard hfan80 hds hds3]
+  have hmeas : MeasurableSet
+      (affGt ({x} : Set V3) ((fun y : V3 × V3 => y.1) '' ds)) := by
+    obtain ⟨f1, f2, f3, hdsf, _hf12, _hf23, _hf31, he23, he31, he12, hsig,
+      _hf3fst, _hf2fst, _hf1fst⟩ :=
+      CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN1 hfan hcard hds hds3
+    have himg : (fun y : V3 × V3 => y.1) '' ds = ({f1.1, f2.1, f3.1} : Set V3) := by
+      rw [hdsf]
+      ext z
+      simp
+      tauto
+    obtain ⟨hθ0, hθπ⟩ := hfan80 f2.1 f3.1 he23
+    rw [hsig] at hθ0 hθπ
+    have hcop : ¬ Coplanar ({x, f1.1, f2.1, f3.1} : Set V3) :=
+      properties_fully_surrounded hfan he12 he23 hθ0 hθπ
+    rw [himg]
+    exact (OPEN_AFF_GT_1_3 x f1.1 f2.1 f3.1 hcop).measurableSet
+  exact hmeas.inter Metric.isOpen_ball.measurableSet
 
 /-- HOL planarity.hl :15318-15332 `CARD_GT1_IMP_AZIM_FAN_EQ_AZIM`
 
