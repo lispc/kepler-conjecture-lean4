@@ -114,7 +114,9 @@ Mathlib 无与 HOL 同名/同形的整句引理，故保留（最接近者为 `c
 theorem segment_in_segment {E : Type*} [AddCommGroup E] [Module ℝ E]
     (x y z : E) (hz : z ∈ segment ℝ x y) :
     ∀ t : ℝ, 0 ≤ t ∧ t ≤ 1 → (1 - t) • z + t • y ∈ segment ℝ x y := by
-  sorry
+  intro t ht
+  exact convex_iff_add_mem.mp (convex_segment x y) hz (right_mem_segment ℝ x y)
+    (sub_nonneg.mpr ht.2) ht.1 (by ring)
 
 /-! ## 内点与 xfan 边界点的连线（planarity.hl:11820-11881） -/
 
