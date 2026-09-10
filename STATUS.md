@@ -2,7 +2,7 @@
 
 > 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新（cron 自动 push）。
 > 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
-> 当前 main @ `efd8124`，`lake build Kepler` 全绿（9310 jobs），
+> 当前 main @ `74bd5b4`，`lake build Kepler` 全绿，
 > 唯一 sorry 是 `Statement.lean:111` 的主定理占位（sanctioned，见 Phase 1）。
 > Phase 5 已进入 auto_pipeline 无人值守模式（deepseek 全权，Kimi 每 4h 抽查汇报）。
 
@@ -67,7 +67,7 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 | hypermap/hypermap.hl | 13,575 | ✅ 全书收官 | 100% |
 | fan/fan.hl 系列（fan_defs/fan_misc/fan/CFYXFTY/hypermap_and_fan） | ~7,800 | ✅ 全书收官（hypermapOfFan 完整构造） | 100% |
 | fan/topology.hl | 4,718 | ✅ 全书收官（`36c37c6`，dart_leads_into 全套） | 100% |
-| fan/planarity.hl | 15,463 | 🟡 main 覆盖至 :11610（`efd8124`，**75.1%**）：批次 1-5（angle/rcone/dartset/加边/连通边界段，44 枚定理）全自动闭合入 main；批次 6 起由 auto_pipeline 无人值守推进 | **75%** |
+| fan/planarity.hl | 15,463 | 🟡 main 覆盖至 :12218（**79.0%**）：批次 1-8 共 ~74 枚定理全自动闭合入 main；批次 9 在跑 | **79%** |
 | fan/Conforming.hl | 17,033 | ⬜ 未启动 | 0% |
 | fan/ 其余（polyhedron 等） | ~3,200 | ⬜ 未启动 | 0% |
 | packing/（Rogers/OXLZLEZ3/REUHADY…） | ~28,000 | ⬜ 未启动 | 0% |
