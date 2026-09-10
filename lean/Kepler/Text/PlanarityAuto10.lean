@@ -241,7 +241,40 @@ theorem aff_gt_2_1r_rcross_dotl_4point (x y z v u : V3) :
       ((a3 : V3) : Fin 3 → ℝ)) →
     (0 < (crossProduct ((a4 : V3) : Fin 3 → ℝ) ((a2 : V3) : Fin 3 → ℝ)) ⬝ᵥ
       ((a3 : V3) : Fin 3 → ℝ)) := by
-  sorry
+  dsimp only
+  intro hnc hgt hpos
+  have hxv : x ≠ v := fun he =>
+    hnc (collinear3_of_eq (v := x) (w := v) (w1 := y) he.symm)
+  have hyx : y ≠ x := fun he =>
+    hnc (collinear3_pair_left (v0 := x) (v1 := v) (x := y) he)
+  have hyv : y ≠ v := fun he =>
+    hnc (collinear3_pair_right (v0 := x) (v1 := v) (x := y) he)
+  obtain ⟨c, hc, h, hu⟩ :=
+    (affGt_pair_iff (v0 := x) (v1 := v) (x := y) (y := u) hxv hyx hyv).mp hgt
+  have cr_add_l : ∀ p q s : Fin 3 → ℝ,
+      crossProduct (p + q) s = crossProduct p s + crossProduct q s := by
+    intro p q s
+    funext i
+    fin_cases i <;>
+      simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+        Matrix.tail_cons, Matrix.head_cons, Pi.add_apply]
+  have cr_smul_l : ∀ (c : ℝ) (p s : Fin 3 → ℝ),
+      crossProduct (c • p) s = c • crossProduct p s := by
+    intro c p s
+    funext i
+    fin_cases i <;>
+      simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
+        Matrix.tail_cons, Matrix.head_cons, Pi.smul_apply]
+  rw [hu]
+  simp only [WithLp.ofLp_add, WithLp.ofLp_smul]
+  rw [cr_add_l, cr_smul_l, cr_smul_l]
+  rw [add_dotProduct, smul_dotProduct, smul_dotProduct]
+  have hA3 : crossProduct ((v - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((v - x : V3) : Fin 3 → ℝ) = 0 := by
+    rw [dotProduct_comm]
+    exact dot_self_cross _ _
+  rw [hA3, smul_zero, add_zero, smul_eq_mul]
+  exact mul_pos hc hpos
 
 /-- HOL planarity.hl :12913-12946 `aff_gt_1_2_cross_dotr_4point`
 
