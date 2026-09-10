@@ -301,7 +301,12 @@ DISJOINT {x} {y,z}/\ w IN aff_gt {x} {y,z}
 theorem segmentsubset_aff_gt (x y z w : V3)
     (hdis : Disjoint ({x} : Set V3) {y, z}) (hw : w ∈ affGt {x} {y, z}) :
     ∀ t : ℝ, 0 ≤ t ∧ t < 1 → (1 - t) • w + t • z ∈ affGt {x} {y, z} := by
-  sorry
+  intro t ht
+  rw [aff_gt_1_2 hdis] at hw ⊢
+  obtain ⟨t1, t2, t3, ht2, ht3, hsum, rfl⟩ := hw
+  refine ⟨(1 - t) * t1, (1 - t) * t2, (1 - t) * t3 + t,
+    by nlinarith, by nlinarith, by nlinarith, ?_⟩
+  module
 
 /-- HOL planarity.hl :11927-11937 `point_in_aff_gt_in_yfan`
 
