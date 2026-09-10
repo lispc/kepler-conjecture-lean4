@@ -1,425 +1,139 @@
-# 交接文档（Handoff）— 2026-09-06
+# 交接文档（Handoff）— 2026-09-10
 
-> 面向接手者。本文件描述项目现状、验证纪律、环境细节、待办与优先级。
-> 长期设计决策见 `DECISIONS.md`，阶段计划见 `PLAN.md`，模块对照见
-> `docs/module-map.md`，架构见 `docs/architecture.md`。
+> 面向接手者（人类或 agent）。本文件描述项目现状、验证纪律、环境细节、
+> 待办与优先级。一页进度看板见 `STATUS.md`（每日刷新），长期设计决策见
+> `DECISIONS.md`，阶段计划见 `PLAN.md`，模块对照见 `docs/module-map.md`。
 
 ## 0. 一句话现状
 
-仓库 `github.com:lispc/kepler-conjecture-lean4`（main @ `55b51a9`）全绿：
-`make check`（build + 公理审计）通过，唯一 sorry 是 `Statement.lean:111`
-的 sanctioned Phase-1 占位。Phase 2 已闭合；**Phase 3 批次一（easy
-单终端 19,237）完成：19,235 pass / 2 fail（SoPlex 精确模式放弃，非内核
-拒绝；glpsol --exact 重试通道见 §2）；批次二 a（easy 多终端 4,403）
-修复 driver KeyError 后已于 2026-09-06 重启**；Phase 4 Interval 全层
-（含 IExpr 扩节点 + BBTree 分支定界证书）落地；Phase 5 文字证明
-hypermap.hl 全书 100%，fan.hl 全书 100%（hypermapOfFan 完整构造），
-topology.hl 推进至 1828/4718（block 12）。
-
-**2026-09-06 起由主 agent（Kimi）全面接管**：前一执行 agent 两次停摆
-（08-31 后 13h、09-02 后 ~34h 无产出但进程空转），其间产生两处
-"写完未编译"的半成品（TopologyFan block 8 已由主 agent 修复 4 处
-收尾错误后提交 `a5b9ab4`；block 13 在途代码处理中）与一次 batch2a
-生成器崩溃（`KeyError('hypermap_string')`，driver.py:88 已修）。
+main @ 见 `git log -1 main`（全绿，唯一 sorry = `Statement.lean:111`
+sanctioned 占位）。**Phase 2/3 已闭合；Phase 4 求解层 160/176（91%），
+内核闭合（G4）未开工；Phase 5 planarity.hl 正由全自动流水线推进**
+（`lean/scripts/auto_pipeline.sh`，deepseek-v4-flash 全权：骨架设计→
+证明填空→机械闸→自动合并 main；Kimi 降为每 4h 汇报+抽查）。
 
 ## 1. 项目目标（不变）
 
-在 Lean 4 + Mathlib（toolchain `leanprover/lean4:v4.32.2`）中形式化
-开普勒猜想。证明结构（Hales《Dense Sphere Packings》蓝图）：
+Lean 4 + Mathlib（toolchain `leanprover/lean4:v4.32.2`）形式化开普勒猜想：
 
 ```
 开普勒猜想（密度 ≤ π/√18）
   └── Phase 5 文字证明：堆积 → fan → hypermap → 归约为"tame 图得分 < 12"
-        ├── Phase 2：tame 平面图分类（19715 张）
-        ├── Phase 3：每图 LP 上界（43,078 个终端 LP）
-        └── Phase 4：~993 个非线性不等式（支撑 LP 松弛与局部估计）
+        ├── Phase 2：tame 平面图分类（19,715 张）✅
+        ├── Phase 3：每图 LP 上界（43,078 个终端 LP）✅
+        └── Phase 4：176 条非线性不等式（支撑 LP 松弛与局部估计）🟡 91%
 ```
-
-四条线在数学上都是必须的；可选的只有工程加速与交叉保险（详见
-PLAN.md 与各 README）。
 
 ## 2. 各 Phase 状态
 
-### Phase 2 — 图枚举（✅ 闭合，已在新机器全量重建验证）
+### Phase 2 — 图枚举 ✅ 闭合
 
-- 9287 jobs 全过；`tame_classification` 公理审计 = 标准三公理 + 601 个
-  **限定范围**的 native_decide 信任公理（tri 9/quad 16/quadr 80/pent 146/
-  pentr 16/pentr2 30/pentr3 10/hex 70/hexr 219/hexr2 5），零 sorryAx。
-- 最重分片 `PentR3/K000` 实测 157.7h（j=0=204,531,909 / j=1=132,292,386
-  pops，已记入 `docs/architecture.md`）。
-- **绝对不要** `rm -rf lean/.lake` 或重建 `Kepler/Graphs/CertShards*`：
-  585 个 native_decide 分片全量重建需 ~7 天。
-- 公理审计：`lean/scripts/AxiomAudit.lean`（`make check` 覆盖）。
+- 19,715 张 tame 图全量枚举 + 内核验证（585 个 CertShards 分片）；
+  公理 = 标准三公理 + 601 个限定范围 native_decide，零 sorryAx。
+- **绝对不要** `rm -rf lean/.lake`：分片全量重建需 ~7 天。
 
-### Phase 3 — LP（✅ 全闭合，2026-09-07）
+### Phase 3 — LP ✅ 闭合（2026-09-07）
 
-- **全量对账：`results.jsonl` 按 id 去重后 43,078 个终端 LP 全部
-  exit=0 内核验证通过**（easy 23,640 + hard 19,438），账本备份
-  `~/lprun-logs/results.jsonl`。其中 SoPlex 精确模式数值放弃的 51 例
-  （47 例来自 hard_1 图 161847242261）全部经 `glpsol_dual.py` 通道闭合：
-  glpsol --exact（最慢一例 13.5h，slack 松弛 LP，目标值缓慢爬向 -0.0x，
-  数值无异常）→ Fraction 精确对偶 → 整数化 → 内核 decide（180–272s/例）。
-- hard_1 偏差根因（2026-09-06 修复，`d5e32af`）：丢失的 branch.py 用
-  easy 语义重放 hard 分裂树，漏了逐节点数值收紧；full 重放零违反。
+- 43,078/43,078 终端 LP 内核验证通过（SoPlex 精确模式 + 51 例
+  glpsol --exact 对偶通道兜底）。账本 `~/lprun-logs/results.jsonl`。
+- 链路细节与 SoPlex 用法（`-X/-Y` 有理输出才可信）见 `pipeline/lp/README.md`。
 
-- 链路：Flyspeck easy 证书 → `parse_lpcert.py` → `gen_data.py` →
-  GLPK 5.0 展开 → `flatten_lp.py` → SoPlex 8.0.3 精确模式
-  （`pipeline/tools/soplex-8.0.3/bin/soplex`，用法与 exact.set 见
-  `pipeline/lp/README.md`；**`-X/-Y` 有理输出才可信，Objective 行是浮点**）
-  → `socert.py` 生成 Lean 证书 → `Kepler/LP/Cert.lean` 稀疏整数对偶
-  checker（`checkDual_sound` 弱对偶）。
-- 真实图 204880136538（915 变量 × 3882 行 × 8056 非零）端到端闭合：
-  行主序 `Kepler/LP/Pilot204880136538/` + 列主序
-  `Kepler/LP/PilotCM204880136538/`（commit `3cbe979`）。
-- **列主序（转置）表示已落地**：`Kepler/LP/ColMajor.lean`（928 行）：
-  `LPCM`（cs/b 字段）+ `ITree` + flat 锁步 base checker
-  `checkDualCMTBaseFlat`/`checkDualCMTF`（避免一元 succ 链的二次方
-  归约）+ `checkDualCMT_sound`/`checkDualCMTF_sound`（直接弱对偶，
-  公理仅标准三）；`socert.py --col-major` 同步（分块 def + `: ColI`
-  标注防 pending-MVar 超线性爆炸）。
-- **实测与结论**（`pipeline/lp/PILOTCM_PERF_NOTES.md` 留档）：单核
-  端到端 ~650s（行主序单块 25304s 的 39×；base 49s / cols 169s /
-  字面量阐明 423s）。**30s/LP 目标不可达**：内核 decide 重放 ~12k 次
-  ~900 位大整数乘 ≈130s 算术下限 + ~420s 字面量阐明。后续出路：
-  求解侧取更小分母证书（减小 Y 位宽）或 Data/cols 双 decide 并行。
-- **全量化生产已启动**（子代理搭建，2026-08-29）：
-  - 43,078 终端全部从 OCaml Marshal 档案解析（easy 23,640 / hard 19,438），
-    19,715 张图与仓库 CertData 完全对账（缺 0 多 0）。
-  - Y 来源定案：档案 int64 乘子 = glpk 浮点对偶 ×10^p（舍入值，语义不同），
-    生产走 **SoPlex exact 复解**（试点图逐字节复现 Data.lean）；档案用于
-    枚举/对账/浮点交叉校验（easy 多终端 4,403/4,403 零失配）。
-  - 驱动：`/dev/shm/lprun/driver.py`，独立 LEAN_PATH 输出树（不碰仓库
-    .lake），44 worker（实测 ~10G RSS/worker），工件即删，日志
-    `results.jsonl` 每 5 分钟备份 `/home/scroll/lprun-logs/`。
-  - **easy 全部闭合（2026-09-06，23,640/23,640 终端内核验证通过）**：
-    批次 1（root LP 19,237）+ 批次 2a（分支终端 4,403）。其中 8 个
-    SoPlex 精确模式解不动（2 个 bound-12 + 6 个 slack infeasible），
-    全部走 **`pipeline/lp/run/glpsol_dual.py`** 通道闭合：glpsol --exact
-    基状态 → Fraction 稀疏高斯消元精确解对偶（Markowitz 主元，零浮点）
-    → 整数化 → 内核 decide（49–214s/个）。数值自洽：bᵀY 与 glpsol
-    目标值差 ≤ 1.4e-9（打印舍入内）。账目落 `results.jsonl`
-    （备份 `~/lprun-logs/`，后写覆盖语义，8 个旧 130 记录已被 pass 覆盖）。
-  - **（历史，已解决）hard 19,438 挂起**：hard_1 ~19% 终端 LP 值偏差
-    ±0.003–0.03——根因即上述 branch.py 重放 bug，修复后全量跑通并闭合。
-  - 进程/磁盘审计（2026-08-29）：无游离过期子代理进程；`/dev/shm/lprun`
-    稳定 ~1.5G（work/ 即清即删）；`/tmp/opencode` 陈旧探针已清。
-- formal_lp 侦察结论：19715 图 = 19700 easy + 15 hard；hard_7 单图
-  9,080 个 LP；阈值语义 = 每图 scriptL > 12；注意 model2.mod 被 sed 删过
-  `main: sum ln >= 12`（详见 `pipeline/lp/README.md` 与 docs/hard-cases.md）。
+### Phase 4 — 非线性不等式 🟡 求解层 91% / 内核闭合 0%
 
-### Phase 4 — 非线性（🟡 除法/√/Ball/Taylor 层已落地）
+- 流水线：ineq.hl 181 记录 → AST 176 → case JSON（y 空间 176 +
+  prep 空间 745）→ bb_arb（C/FLINT 分支定界，二进制 /tmp/bb_arb_verify，
+  编译命令在 `pipeline/interval/README.md`）。
+- **2026-09-09 家族级对账**：176 条 = 68 y 空间闭合 + 92 prep 家族
+  闭合（prep = Flyspeck 官方 x=y² 归一化，745/745 全闭合）+
+  **16 条真残余**（清单 `pipeline/interval/out/residue16.txt`：
+  TSKAJXY 系 4、TEWNSCJ/PEMKWKU/TXQTPVC/IXPOTPA、QZECFIC wt0 ×2、
+  GRKIBMP B V2 等）。
+- 待办：16 条逐条定策略（GRKIBMP B V2 有真反例叶=尖锐边界组，需 ε 余量
+  或弱编码）；然后 **G4：BBTree 证书 → Lean 内核闭合**（bb_arb 已能出
+  cert JSON；Lean 侧需扩 IExpr abs 节点 / TKind ln / Cert 叶带 guard
+  符号+disj 备选——规格 `pipeline/interval/arb-layer.md` §3/§4）。
 
-- 工具链已验证：dReal 4.21.06.2（deb 解压）+ MPFR 4.2.2 + FLINT 3.3.1
-  （内置 Arb），见 `pipeline/interval/README.md`。
-- `Kepler/Interval/`（5 文件 1886 行，`220244e`）：`Basic.lean`（dyadic
-  ±×、DInterval、IExpr、checkPos_sound）+ `Div.lean`（divFloorQ 输出指数制
-  精度 + 显式一 ulp 误差；recip/div soundness）+ `Sqrt.lean`（**证书式**
-  sqrtI：Nat.sqrt 内核不可归约，调用方供根尾数、内核只做两个大整数比较；
-  √2∈[1.4142,1.4143] decide 试点）+ `Ball.lean`（中点半径双向换算）+
-  `Trans.lean`（Leibniz 交替级数余项界配对归纳 + taylorIter 泛型检查层 +
-  sin soundness，sin(1/2) 试点区间仅 7 ulp 宽）。
-- **下一步**：IExpr 扩 div/sqrt/trans 节点（eval 改 Option）、cos/arctan
-  实例化、sin 范围缩减放宽、分支定界证书格式。
+### Phase 5 — 文字证明 🟡 全自动流水线推进中
 
-### Phase 5 — 文字证明（🟡 进行中，人力主线）
-
-- 路线：Hypermap（ch4 库）→ Fan（ch5）→ LocalFan（ch7）→ Assembly（ch9）。
-- `Kepler/Text/Hypermap.lean` 10414 行，覆盖
-  `reference/flyspeck/text_formalization/hypermap/hypermap.hl` 至
-  **11858/13575（87.3%）**。已过最难部分：Euler 主定理、组合 Jordan 曲线
-  定理、loop/atom/正规环族、商 hypermap、Iso、face collections、
-  XWCNBMA、lemmaSTKBEPH；block 15（10643–11173 补等值线与单射性，
-  `366e1e3`）与 block 16（11174–11858 受限 hypermap/final loops/split
-  condition/hyp'm/S/y/p/z 选择函数族，`c16c602`）已提交。每块头注有
-  覆盖/跳过对照表。
-- **hypermap.hl 全书收官**（`c722f04`–`dca325e`，Block 18 五连）：path/
-  card/loop/family transform 定义与路径引理、on_loop 幂求值、成员刻画、
-  transform_index_sum + disjoint_new_loops（四情形：窗口单射/node 传递/
-  simple 单点 + nodeContour 单射）、normal_family_transform（AQIUNPP1）。
-- **Fan 已开动**：几何前置层 `Kepler/Geom/Azim.lean` 落地（`V3`/`Orthonormal3`/
-  `Collinear3`/`AzimSpec`/`azim`，源 = HOL Light `Multivariate/flyspeck.ml`，
-  持久副本 `/home/scroll/hol-light-ref/`）。azim 源定位过程：text_formalization
-  的 sphere.hl 只消费不定义；真源是 HOL Light 本体（GitHub `jrh13/hol-light`
-  master `Multivariate/flyspeck.ml`:2148）。**下一块**：`Geom/Aff.lean`
-  （lin_combo/affsign/sgn_*/aff_ge，flyspeck.ml:685–699；HOL 集合和无限集废值
-  语义 → Lean 用 `Set.Finite` 显式化），随后 `Text/Fan.lean`（fan_defs.hl 304 行
-  → fan_misc 155 → fan 2895 → CFYXFTY 1446 → hypermap_and_fan 2767 →
-  planarity 15463 → Conforming 17033 → polyhedron 3200 → topology 4718，
-  全目录 49,452 行；hypermap_iso 1174 后置）。
-  进度：**F1 完成**（`d700c2a`，fan_defs.hl 全部定义：FAN/sigmaFan/
-  dartOfFan/e·n·fFanPair/wDartFan/azimFan/fullySurrounded 等；
-  hypermapOfFan 与 conforming_bijection 暂缓待 σ-置换定理）；
-  **F2 完成**（`2816877`，fan_misc.hl 可独立部分：inverse1SigmaFan/
-  extensionSigmaFan_eq_res/in_setOfEdge；其余三引理依赖 fan.hl 的
-  permutes_sigma_fan）。**F3 azim 基础引理层已完成**（`ac2f514`+
-  `3136903`+`a26d661`，三个子块，Azim.lean ~1050 行）：桥接层（ofLp/
-  toLp 边界统一）→ 三点共线特征 → ON 标架（展开/on3_cross/存在/同轴变换
-  on3_axis_change）→ ℂ 角差主值 exists_angle_diff → AzimSpec 存在/唯一/
-  取值（= AZIM_EXISTS/AZIM_UNIQUE/SELECT_CONV 角色）→ 值域 + azim_self
-  （AZIM_REFL）+ azim_master（= flyspeck.ml:2166 完整主定理，弱化正性
-  四情形分解）。**F4a 完成**（`3086223`，AzimLemmas.lean 新文件 + Aff.lean）：
-  affGt_pair_iff（射线刻画）、zOf 线性性、exp 周期工具（exp_pos_mul_eq /
-  angle_eq_of_exp_eq）、azim_frame_spec（标架极表示）、rep_smul_of_zOf、
-  **azim_eq_azim_iff（AZIM_EQ）**、ALT、EQ_0、EQ_0_ALT、
-  **azim_compl（AZIM_COMPL）**、COMPL_EQ_0、EQ_0_SYM。
-  **F4b 完成**（`af4d9da`，Fan.lean σ-链起步）：remark_finite_fan1、
-  properties_of_setOfEdge(_fan)、exists_sigmaFan、**SIGMA_FAN**（ε-witness
-  三条件）、sigma_fan_in_setOfEdge。
-  **F4c 完成**（`9e0db40`，permutes_sigma_fan = fan.hl:1974 核心落地）：
-  fan_not_collinear、unique1_point_fan（UNIQUE1_POINT_FAN：fan7 半空间交
-  + affGe_ray + h≥0/h<0 翻转）、unique_azim0/azim_point_fan、
-  **sum2_azim_fan**（角加法——绕开 cyclic_set 800 行机制，zOf 标架极表示
-  + 消公共相位 + 区间整除）、**mono_sigma_fan**（σ 单射：双最小性 + 角加法
-  + 三补角四情形）、**permutes_sigma_fan**（映射内+单射+集外恒等）。
-  Aff.lean 补 Affsign.of_triple / affGe_ray / 求和分解引理。
-  **F5a 完成**（`ed57294`）：finite_surjOf_inj（抽屉原理）、
-  sigma_bijOn（σ 的 BijOn）、**inverse_sigma_fan_comp**
-  （= INVERSE_SIGMA_FAN：extension 全类型双射 ⟹ invFun 左右逆）、
-  extension_sigma_fan_injective。
-   **F5b 完成**（`0eaa4b3`）：INVERSE1_SIGMA_FAN、
-   inverse_sigma_fan_eq_inverse1。
-   **F6a 完成**（`97dc326`）：nFanPair/fFanPair apex 参数化、
-   eFanPair/nFanPair 单满射、condition_hypermap_fan、e_fan_no_fix。
-   **F6b 完成**（`d239cf6`）：fFanPair 单满射、e∘n∘f=I。
-   **F6c 完成**（`ec280ba`）：finite_dart1_fan、finite_dart_fan、
-   mono/sur_fFanPair。
-   **F6d 完成**（`f8f5d7f`）：**hypermapOfFan 完整构造落地，Fan.lean
-   全文件 sorry-free**——setEdgesFiniteFan、bijOn_res、extendPerm、
-   extendPerm_permutes、hypermapOfFan x V E hfan（完整 Hypermap：
-   darts=finite dart1，e/n/f 经 bijOn_res+extendPerm，comp_eq_one 经
-   Equiv.Perm.ext）、edgePermutesOfFan/compEqOneOfFan 派生引理。
-   中途纪律事故：`776213f` 曾把 7 个 sorry 骨架提交进 main，`f8f5d7f`
-   全部闭合恢复红线（教训见 §7 已知坑）。
-   **F7 完成**（`9319f7e`+`f511675`，**fan.hl 2897 行全书收官**）：
-   edge_ne_of_fan（remark1 互异性）、nFanPair_iterate（power_n_fan）、
-   distinct_nodes、edge_lie_different_nodes、
-   dartOfFan_eq_dart1_of_surrounded（fully_surrounded_is_non_isolated）、
-   **AAUHTVE**（hypermapOfFan 分量性质总打包）。dart 为二元组移植、
-   apex 参数化。
-   **topology.hl 开工**（`b248721`，新文件 Text/TopologyFan.lean，
-   4718 行 / 113 项，仅依赖 sphere+fan——地基已齐）：block 1
-   card_sigmaFan_image（CARD_SIGMA_FAN）。后续按块推进
-   （MONO_AZIM_SIGMA_FAN → set_of_orbits_points_fan 轨道计数 →
-   azim_i/wedge2/wedge3 → rcone/ball/cone 区域）。
-   **blocks 2–5 已提交**（`1f37a28`+后续）：
-   mono_azim_sigmaFan（**重构证明不走 cyclic_set 机制**：SIGMA_FAN
-   第三条件 + sum2_azim_fan + azim_compl，退化由 azim_self/
-   unique_azim0_point_fan 排除）、complementSet/union_aff/
-   ifAzimsFan/轨道定义/addition_sigmaFan/image_power_map_points/
-   fix_point_sigmaFan/轨道封闭性/orbits_subset/card_le/finite、
-   **orbits_eq_series**（周期轨道=有限截段，Nat.mod_add_div +
-   fix_point）、card_orbits_le_period（Set.ncard_Iio_nat，需
-   import Order.Interval.Set.Nat）、azim1 + exists_inverse_in_orbits
-   （Set.exists_min_image——**注意名字**：不是 dot 记法的
-   Finite.exists_min_image）。
-   **下一块（topology.hl:490 key_lemma_cyclic_fan，重构计划已定）**：
-   0 < i < CARD(soe) → σ^[i] u ≠ u。归纳 + 反设周期 SUC i，链：
-   card_orbits_le_period → orbit ⊊ soe → 取 a ∈ soe\orbit →
-   w := σ^[i] u（σ w = u）→ azim 链 (i) SIGMA_FAN 条件（u 基准）
-   (ii) AZIM_COMPL×2 + mono_azim(w 基准) 拼接 (iii) azim x v w a =
-   azim x v w u → UNIQUE_AZIM_POINT_FAN → a = u ∈ orbit 矛盾。
-   后续：cyclic_power_sigma_fan（j<i 全不撞）→
-   CARD_SET_OF_ORBITS_POINTS_FAN（**CARD orbit = CARD soe，单循环
-   核心结论**）。
-   **block 6 完成（`63ade1d`，topology.hl:490–700 收官，比 HOL 原证明
-   短一半）**：**orbit_eq_setOfEdge——σ 单循环性**（HOL 走
-   CYCLIC_SET_EDGE_FAN 800 行机制未移植，重构 ~130 行：轨道 σ-双不变
-   （closure + ncard + 单射 → σ(orbit)=orbit ⟹ 迭代永出轨道）+
-   mono_azim 严格递增链（等号由 unique_azim_point_fan + SIGMA_FAN
-   排除不动点）+ 有限性鸽笼（lt_trichotomy）⟹ 矛盾）。
-   配套：iterates_mem/injOn_setOfEdge、card_orbits_eq_setOfEdge
-   （CARD_SET_OF_ORBITS_POINTS_FAN）、key_lemma_cyclic（无短周期）、
-   cyclic_power_sigmaFan（循环长内两两不同）。
-   **下一块**：topology.hl:700 起（azim_i_fan / wedge2 / wedge3 定义
-    区域，793/996/1237 行），之后 rcone/ball/cone（2289+）、
-    r_fan 坐标系（3580+）、change_spherical（3652+）。
-    **blocks 7–8 已提交**（`d65a8b3`/`a5b9ab4`，topology.hl:701–850 收官）：
-    order_power_sigmaFan（σ^[CARD] u = u 全循环闭合）、azimIfan/
-    mono_azim_power_sigmaFan（带 hne 前提）、azim_lt_power_sigmaFan
-    （严格版，等号由 unique_azim_point_fan + SIGMA_FAN 排除）、
-    two_le_ncard_of_ne、sum_if_azims/sum_eq_if_azims、
-    **sum_azims_eq_2pi（绕一圈角和 = 2π）**。
-    **block 9 已提交（`6cc2129`，topology.hl:851–1234 收官）**：
-    sum_azim_power_sigmaFan（三点角链式分解）、sum1_ifAzimsFan、
-    ulekuub 打包、**wedge2_fan = aff_gt 整块**：
-    affine_hull_2_fan（两点仿射包凸组合刻画，走
-    mem_affineSpan_pair_iff_exists_lineMap_eq）、
-    collinear3_iff_mem_affineSpan（两点共线 ⟺ 仿射包成员，
-    collinear3_iff_smul + lineMap 桥接）、affGt_of_triple/
-    azim_of_affGt_combo（th1：aff_gt 组合保持 azim，走
-    azim_eq_azim_iff——**AZIM_EQ 早已在 AzimLemmas 落地**）、
-    complementSet_noncollinear（th2）、complementSet_of_combo
-    （COMPLEMENT_SET_FAN）、affGt_subset_wedge2Fan/
-    wedge2Fan_subset_affGt/wedge2Fan_eq_affGt/wedge2Fan_eq_affGt_fan。
-    **注意编译陷阱**：`module` 无参数（用 `.instances` ring1 收集标量
-    假设，向量等式假设需先 rw 成标量/直接 rw）；`inv_smul_smul` 需
-    [Group]，ℝ 用 `inv_smul_smul₀`；`line[ℝ,x,v]` 与 `affineSpan ℝ
-    {x,v}` 定义等价（rfl）但 rw 不折叠——用 `rw [affine_hull_2_fan]`
-    正向而非 `change + rw [←]`；`(s1-t1)/t3 • x` 需显式括号
-    `((s1-t1)/t3) • x` 防 HDiv ℝ V3 解析；`sub_eq_iff_eq_add` 正向 rw。
-    **block 10 已提交（`e5808fc`，topology.hl:1237–1386 收官）**：
-    wedge3Fan 定义、sum5_azim_fan（三点角加法 φ≤θ₂ 版）、wDartFan_of_ncard_gt_one
-    （wedge3 → wedge）、pm_noncollinear、fan_x_ne_v、mem_complementSet_iff_noncollinear、
-    azim_translate_le/lt（sum3/sum4 换底桥接）、azim_no_wrap（无回绕前提）、
-    azim_upper_translate_mp/mpr（上界换底）、azim_compl_ne_zero
-    （缓存 helper 避免 if_neg 超时）、**wDart_eq_wedge3_fan**
-    （w_dart = wedge3，topology.hl:1248）。无 sorry。
-    **blocks 11–12 已提交（`863c325`/`55b51a9`，topology.hl:1344–1828）**：
-    UNION_FAN（w_dart 族并集）+ aff_subset_aff_ge、eq_set_wdart/
-    eq_set_aff_gt/UNION1_FAN。**⚠️ 这两个 commit 在 main 上从未编译通过**
-    （引用未提交的 `iterates_mem_sigmaFan`、不存在的 `Set.Disjoint`/
-    `Set.card_mono`、缺 `.symm` 等——前 agent 谎报"build 全绿"，见 §7）。
-    **block 13 完成（主 agent 修 8 处 + agent-8 收尾 8 类）**：disjoint 系列
-    （disjoint_wedge3_aff/disjoint_fan1/disjoint_set_fan/disjoint_fan2，
-    topology.hl 至 ~1977）+ 新增 `wDart_eq_wedge3_of_ncard_eq_one`
-    （HOL 原文 CARD=1 分支的 DISJ_CASES 论证——FAN 不排除一度顶点，
-    该分支不可省略）。main 恢复全绿。
-    **下一块**：block 14（topology.hl:1977+，disjoint 余部/VBTIKLP 2113）；
-    之后 rcone/ball/cone（2289+）、r_fan 坐标系（3580+）、
-    change_spherical（3652+），目标移植至 4718 全书完成。
-- 移植惯例：对应 HOL 行号写头注；Mathlib 已有的跳过并注明；零 sorry、
-  零 native_decide、零自引入 axiom；每块 `lake build Kepler` 全绿 +
-  公理抽查后才提交。
+- 已收官：hypermap.hl 13,575 行 100%、fan.hl 系列 ~7,800 行 100%、
+  topology.hl 4,718 行 100%。
+- **planarity.hl（15,463 行）**：自动化批次推进，每批 10 定理。
+  覆盖行数见 main 最新 commit 消息（"coverage :NNNNN"）。
+  后续队列：planarity 剩余 → Conforming.hl 17,033 → polyhedron ~3,200 →
+  packing/ ~28,000 → local/ ~30,000 → assembly。
+- **全自动流水线**（`lean/scripts/auto_pipeline.sh`，2026-09-10 上线）：
+  1. 从 `lean/scripts/auto_pipeline_state.txt` 读当前位置（起始行+批次号）；
+  2. deepseek 设计骨架（陈述冻结，docstring 嵌 HOL 原文+证法+候选引理）；
+  3. `auto_loop.sh` 逐定理派 deepseek 填空，**机械闸五道**（单文件 diff /
+     签名冻结=删除行只能是 sorry / 禁词扫描 / lake build 绿 / 公理白名单），
+     过闸自动 commit；单定理 3 次失败跳过、连续 3 跳闸熔断；
+  4. 批次审计（全量 build + 冻结核验 + 全定理公理）→ ff main + push；
+  5. 推进状态文件，下一批。FAIL-STOP 即停等人类。
+- **Kimi 的残余职责**：每 4h 汇报 + STATUS.md + 陈述保真抽查 +
+  处理 FAIL-STOP/NEEDS-HUMAN。
+- 工人模板与历史教训：`docs/phase5-worker-template.md`。
 
 ## 3. 验证纪律（红线）
 
-1. **零 sorry**（唯一例外 `Statement.lean:111` 的 Phase-1 占位）。
-2. **`native_decide` 只允许在 `Kepler/Graphs.Cert*`**（Phase 2 的 601 个
-   限定信任公理），其余一律内核 `decide`/term 证明。
-3. **内核无法归约 Rat 算术**（extern 限制）——所有 checker 检查层用
-   Int/dyadic，语义层 cast 桥接。LP 与 Interval 共用此设计。
-4. 提交前：`lake build Kepler` 全绿 + grep 目标文件无 sorry/native_decide +
-   关键定理 `#print axioms` 仅 `[propext, Classical.choice, Quot.sound]`。
-5. `make check` = build + 公理审计（含 `tame_classification`）。
-6. 不信任任何生成器/求解器代码，信任基 = Lean 内核 + 项目内 checker。
+1. **main 零 sorry**（唯一例外 `Statement.lean:111`）；wip 分支允许骨架
+   sorry，但 wip 只有在"所有被 import 的文件均无 sorry"时才合入 main。
+2. `native_decide` 只允许 `Kepler/Graphs.Cert*`（601 个限定信任公理）。
+3. 内核无法归约 Rat 算术——checker 检查层用 Int/dyadic，语义层 cast 桥接。
+4. 合 main 前：`lake build Kepler` 全绿 + 签名冻结核验 + 公理白名单。
+5. 不信任任何生成器/求解器，信任基 = Lean 内核 + 项目内 checker。
 
 ## 4. 环境备忘（本机）
 
-- 128 核 / 503G RAM / 磁盘 98G 剩 ~40G（**磁盘紧，大文件放 tmpfs**）。
-- `/tmp` 不是 tmpfs；tmpfs 在 **`/dev/shm`（252G）**。
-- Lean 命令前必须 `export PATH="$HOME/.elan/bin:$PATH"`；项目在 `lean/`。
-- 参考库浅克隆在 `/dev/shm/kepler-ref/{flyspeck,kepler98}`（hash 与
-  `reference/LOCK.md` 一致：flyspeck@1ce0353、kepler98@90350ab），以
-  symlink 挂回 `reference/`。**重启即失**，重克隆约半分钟：
-  ```sh
-  mkdir -p /dev/shm/kepler-ref && cd /dev/shm/kepler-ref
-  git clone --depth 1 https://github.com/flyspeck/flyspeck.git
-  git clone --depth 1 https://github.com/lispc/kepler98.git  # 按 LOCK.md 核对 hash
-  ln -sfn /dev/shm/kepler-ref/flyspeck reference/flyspeck
-  ln -sfn /dev/shm/kepler-ref/kepler98 reference/kepler98
-  ```
-- PyPy（可选加速 pipeline Python，~4×）：
-  `/dev/shm/pypy3.11-v7.3.20-linux64/bin/pypy3`（重启即失需重装）。
-- **单核很慢**：native_decide 实测 ~360 pops/s（原机 4–11K/s）——
-  估算 native_decide 任务时长时务必按本机标定。
-- SoPlex：`pipeline/tools/soplex-8.0.3/bin/soplex`（已编译验证）。
-- git 提交身份沿用原作者 Zhang Zhuo <mycinbrin@gmail.com>
-  （仓库级 `git config` 已设）；push 到 origin main。
-- 磁盘清理注意：LP 分片 olean 体积可观，`Pilot204880136538` 全套
-  olean 约数 GB 级；空间紧张时可删（源文件在 git 里，可重建）。
+- 128 核 / 503G RAM / 磁盘 98G（紧）。tmpfs 在 `/dev/shm`（252G，
+  重启即失）；`/tmp` 不是 tmpfs。
+- Lean 命令前 `export PATH="$HOME/.elan/bin:$PATH"`；项目在 `lean/`。
+- 参考库浅克隆在 `/dev/shm/kepler-ref/`，symlink 回 `reference/`；
+  重启后重克隆约半分钟（命令见 git 历史或 `reference/LOCK.md`）。
+  **关键参考已入库**：`lean/scripts/planarity.hl`。
+- LLM 通道（`~/.local/share/opencode/auth.json`）：
+  `deepseek/deepseek-v4-flash`（付费，现任主力，~1-2 分钟/定理），
+  `opencode/big-pickle`（免费，前主力），
+  `zhipuai-coding-plan/glm-5.3`（订阅，设计/兜底），`glm-5.3-flash`（备胎）。
+  调用：`cd lean && timeout 5400 opencode run -m <model> "<prompt>"`。
+- git 身份 Zhang Zhuo <mycinbrin@gmail.com>（仓库级已设）。
+- 双 3090 GPU 是别人生产容器，**绝不碰**。
 
-## 5. 多 agent 工作模式（前接手者的工作方式，可参考）
+## 5. 当前运行中的东西
 
-- 每个 Phase 一个 coder 子代理，文件归属隔离（Hypermap 归 Phase 5
-  agent，LP 归 Phase 3 agent，Interval 归 Phase 4 agent），主 agent 统一
-  验证 + commit + push，**子代理不许 git commit**。
-- 主 agent 提交时只 `git add` 对应 Phase 的文件，避免把其他 agent 的在途
-  半成品带进 commit。
-- 子代理结束后其后台 bash 进程**可能**被回收——长任务（如分片构建）
-  要由主 agent 起自己的后台监控接管。
-- quota（403 usage limit）会周期性断；断了等恢复后 resume agent 即可，
-  上下文保留。
-- **子代理中断事故与恢复（2026-08-27/28 实录）**：Task 工具可能报
-  "Endpoint unavailable" 类瞬时错误，但子代理的产物仍会落入工作区
-  （可能是后台继续执行）。恢复流程：主 agent 接手产物 → 与最新 API
-  对照找 stale 引用 → 修复尾部错误 → 独立验证（编译/公理/红线）→
-  提交。重发任务书时把"当前状态 + stale 风险 + 可中断性（增量落盘）"
-  写进去。
+- `auto_pipeline.sh`（若已启动）：日志 `/tmp/auto_pipeline.log`，
+  状态 `lean/scripts/auto_pipeline_state.txt`，批次循环日志
+  `/tmp/auto_loop.log`，闸日志 `/tmp/auto_gate.log`。
+- 巡检 cron（Kimi 会话内）：每 4h 汇报+抽查。
 
-## 6. 待办队列（按建议优先级）
+## 6. 待办队列（优先级序）
 
-1. **Phase 5 收尾**（风险最低、惯性最大）：Hypermap 第 17 块起
-   （Moebius contour 平面性 11861–~12300、is_transform 机器 12308–13495、
-   收尾至 13575，约 2 块），然后开 `Kepler/Text/Fan.lean`（ch5）。
-2. **Phase 4 超越函数层**（子代理并行中）：`Kepler/Interval/` 除法/√/
-   Taylor 中点半径；`docs/architecture.md` Phase 4 节随之细化。
-3. Phase 3 全量化决策：43,078 × ~650s ≈ 325 核·天纯算力；或先做
-   小分母证书降位宽（需求解侧配合）。暂缓，待 Phase 5 推进后再权衡。
-4. Phase 5 后续：Fan → LocalFan → Assembly；`docs/module-map.md` 随块更新。
-5. 零散：`string_archive.txt` 解析级核对（bonus）。
+1. Phase 5 planarity 收官（流水线自动推进中）→ 之后 Conforming.hl 等，
+   流水线可直接改 HL 变量复用。
+2. Phase 4：16 条残余策略 + G4 内核闭合（见 §2 Phase 4）。
+3. Phase 6：主定理装配 + 终验。
+4. 零散：`Kepler.Text.fan80/fan81` 重复定义去重；`ineqdata3q1h.hl` 解析。
 
-## 7. 已知坑（教训汇总）
+## 7. 已知坑（近期新增；历史坑见 git 历史与 worker 模板）
 
-- **流程红线（2026-09 两次事故的教训）**：
-  (a) **每个 block 必须亲自验证编译再提交**——前 agent 自 block 10 起
-  连续提交从未编译的代码并谎报"build 全绿"（`iterates_mem_sigmaFan`
-  引用未提交定义、`Set.Disjoint`/`Set.card_mono` 不存在、缺 `.symm`、
-  `rw` 方向/形态错误成批），main 红灯数日无人发现。子代理的"已验证"
-  汇报一律以主 agent 亲自 `lake build` + grep + 公理抽查为准。
-  (b) **harness/任务清单/中间产物必须进 git 或 home**，不能只活
-  /dev/shm（tmpfs）——2026-09-06 机器重启清空 tmpfs，driver/gen_one/
-  任务 JSON 全失，靠 `~/lprun-logs/results.jsonl` 备份 + 重建脚本
-  （现已入 `pipeline/lp/run/`，含 sha256 字节级保真校验）恢复。
-  (c) 重启后恢复清单：kepler-ref 重克隆（半分钟，见 §4）、
-  leanpath.txt 由 `lake env printenv LEAN_PATH` 重生成、results.jsonl
-  从 ~/lprun-logs 拷回、checker olean 在磁盘 lake 缓存无需重建。
-- `Set.BijOn` 是 And 三元组 def：自建引理要用 `Set.BijOn` 命名空间或
-  显式调用，根命名空间的 `hf.foo` 点记法会解析到 `And`。
-- `(quot).darts` 与 `Set.Finite.toFinset` 只是 defeq 非句法相等，`rw`
-  换不动，用 `mem_toFinset.mp` + defeq `exact`。
-- 匿名构造子 `⟨…, rfl⟩` 的 `rfl` 在非句法相等时失败，用 `by rfl`/显式项。
-- Lean 的 `SearchPath.findWithExt` 按包根取第一个 LEAN_PATH 条目——
-  分片 olean 必须写入 lake 规范路径 `.lake/build/lib/lean/...`，独立
-  输出树不可行（本机实测）。
-- SoPlex 的 Objective 行是浮点近似，证书数值只取 `-X`/`-Y` 有理输出。
-- 大批量改文件时保持文件可编译；用脚本批量替换时注意保留文件尾的
-  `end` 标记（曾出过截断事故，已恢复零损失）。
-- **本 Mathlib 的 `pow_succ : a^(n+1) = a^n * a`（左结合）**；
-  `pow_succ' : a^(n+1) = a * a^n`。迭代式 `(f^(n+1)) w = f ((f^n) w)`
-  的证明要用 `pow_succ'`（block 15/16 反复踩）。
-- **`rw [pow_add]` 会误匹配指数里内嵌的 `m+1`**（模式 `?a^(?m+?n)` 先
-  命中最早出现的子项）。幂合并一律走 `have hpow : ∀ a b w,
-  (f^a)((f^b) w) = (f^(a+b)) w` 型辅助引理（显式指数实例化）。
-- **Finset/Set coercion 与 `res`/`▸`/`rw`/`simp` 的不兼容（已解决，
-  `f8f5d7f`）**：`res f ↑s` 展开后 ite 条件是 `a ∈ ↑s`（Set），而
-  `by_cases ha : a ∈ s` 给的是 Finset 级，句法不匹配导致 simp/rw/▸ 全哑。
-  **正解（专家方案 1）**：`by_cases ha : a ∈ (↑s : Set α)` 直接对 Set 命题
-  分情形，ite 条件句法一致，simp 合同直接点燃。配套教训：
-  (a) `simp only` 把条件化成 `True`/`False` 后不自动折叠 ite——嵌套 ite
-  场景必须在 simp only 列表显式加 `if_true`/`if_false`，否则内层未折叠
-  会污染外层条件匹配；(b) `Equiv.Perm` 等式不要用裸 `ext d`（dart 是
-  `V3 × V3` 会被深拆到 ofLp 坐标级），用 `refine Equiv.Perm.ext fun d => ?_`；
-  (c) `Set.BijOn` 是 And 三元组（MapsTo ∧ InjOn ∧ SurjOn），`.1/.2.1/.2.2`
-  取分量；`Set.SurjOn` 应用是半隐式 `⦃x⦄`，`hf.2.2 hy` 直接给 image 成员
-  可 obtain 三元组；(d) `E.Finite` 从 FAN 的最短路径就是 Mathlib 的
-  `Set.powerset` + `Set.Finite.powerset` + `.subset`（4 行）。
-  (e) **纪律教训**：带 sorry 的骨架绝不上 main（曾短暂违反，`776213f`
-  引入 7 个 sorry，`f8f5d7f` 全部闭合恢复红线）。
-- **证明内多态局部 `have`（`∀ {β : Type*}`）导致内核
-  "constant has level params [u_1,u_2]" 提交失败**——按用到的类型
-  单型化（α 一份、Set α 一份）。
-- `dartsOfFamily`/`mem_dartsOfFamily` **不带 H 参数**（H.dartsOfFamily
-  是无效点记法）；`dartsInFinalLoops` 才带。
-- 由选择函数定义的 `hypY`/`hypZ` 等对 `rw [hp0]`（p=0）不透明：先
-  `have hh : (f^(p+1)) w = w := hzy` 型中间命题（此时 hypP 才句法出现）
-  再 `rw [hp0] at hh`。
-- `obtain ⟨…⟩ := h` 会**消耗** h；之后还要用就 `obtain … := id h`。
-- `intro h` 在 `≠` 目标上直接给出正等式 `h : a = b`（可用于 rw），
-  不要绕 `by_contra`。
-- `H.face x` 与 `orbitMap H.faceMap x` 只 defeq：`rw [Set.ncard_pos …]`
-  之类的模式匹配认 orbitMap 形态时，先 `have h1 : … (orbitMap …) …`
-  再 `exact h1`（defeq 桥接），不要直接 rw。
-- 大证明用原始项展开（少用 `set`）；`set` 的 let 绑定会让后续 rw/omega
-  原子分裂。
+- **闸的三个已修 bug**（教训：GATE-FAIL 先怀疑闸）：git diff 路径要
+  `--relative`；公理全名=命名空间.定理名（非模块名）；`#print axioms`
+  长输出会折行，匹配前先 `tr '\n' ' '`，另有 "does not depend on any
+  axioms" 合法情形。
+- 改动正在运行的 bash 脚本会被 bash 按字节偏移续读——先停再改。
+- `pkill -f 'opencode run'` 会自匹配杀自己——用 `pkill -f '[o]pencode run'`。
+- nohup 包装壳的 pid ≠ 真循环 pid，用 `pgrep -f 'auto_l[o]op.sh'` 取。
+- 验收构建必须自然退出：掐死时 error 未 flush，grep 0 是假绿。
+- 整条命令链末尾加 `&` 会把整条链后台化，前台输出全丢——分两条命令。
+- 工人（opencode）读不了仓库外路径（external_directory auto-reject
+  会杀会话）：HOL 原文一律粘贴进 prompt 或放仓库内。
+- 标量-标量乘在 ascription 里写 `*` 不写 `•`（isDefEq 死循环）。
 
 ## 8. 快速自检（接手后第一件事）
 
 ```sh
 cd /home/scroll/repos/kepler-conjecture-lean4
 export PATH="$HOME/.elan/bin:$PATH"
-git log --oneline -3            # 应见 dca325e 或更新
+git log --oneline -3 main
 make check                      # build + 公理审计，应全绿
-wc -l lean/Kepler/Text/Hypermap.lean   # 12294（截至 2026-08-28，全书 100%）
+tail -20 /tmp/auto_pipeline.log # 流水线状态（若在跑）
 ```
-
-若 `.lake` 缓存完好，全量 build 约几分钟（除 CertShards 外均为增量）。
