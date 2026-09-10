@@ -255,7 +255,8 @@ aff_ge {x} {u,w} SUBSET xfan(x:real^3,V:real^3->bool,E)
 theorem AFF_GE_SUBSET_XFAN (x : V3) (V : Set V3) (E : Set (Set V3)) (u w : V3)
     (huw : {u, w} ∈ E) :
     affGe ({x} : Set V3) ({u, w} : Set V3) ⊆ xfan x V E := by
-  sorry
+  intro y hy
+  exact ⟨{u, w}, huw, hy⟩
 
 /-! ## 不共面四点与 aff_gt 的非空性（planarity.hl:14309-14359） -/
 
