@@ -361,6 +361,6 @@ HOL 原文：
 - `mem_affineSpan`（Mathlib，`affineSpan` 的成员刻画） -/
 theorem POINT_IN_LINE1 {E : Type*} [AddCommGroup E] [Module ℝ E] (x y : E) :
     y ∈ affineSpan ℝ ({x, y} : Set E) := by
-  sorry
+  exact right_mem_affineSpan_pair (k := ℝ) x y
 
 end Kepler.Text
