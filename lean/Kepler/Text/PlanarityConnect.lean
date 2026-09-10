@@ -76,7 +76,8 @@ U IN topological_component_yfan (x,V,E)
 theorem exists_point_in_component_yfan {x : V3} {V : Set V3} {E : Set (Set V3)}
     {U : Set V3} (hU : U ∈ topologicalComponentYfan x V E) :
     ∃ z : V3, z ∈ U := by
-  sorry
+  rcases hU with ⟨b, hb, rfl⟩
+  exact connectedComponentIn_nonempty_iff.mpr hb
 
 /-- HOL planarity.hl :11455-11468 `nonsetedge_fully_surround_fan`
 
