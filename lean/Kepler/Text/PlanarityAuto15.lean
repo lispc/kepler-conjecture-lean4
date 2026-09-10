@@ -654,7 +654,8 @@ theorem KVQWYDL {x : V3} {V : Set V3} {E : Set (Set V3)} {ds : Set (V3 × V3)}
         dartsetLeadsIntoFan x V E ds ∧
       ∀ y : V3 × V3, y ∈ dartOfFan V E →
         dartsetLeadsIntoFan x V E ds = dartLeadsInto x V E y.1 y.2 → y ∈ ds := by
-  sorry
+  exact ⟨KVQWYDL_lemma10 hfan hcard hfan80 hds hds3,
+    KVQWYDL_lemma30 hfan hcard hfan80 hds hds3⟩
 
 /-! ## 3 元面引导集的径向性（planarity.hl:15260-15279） -/
 
