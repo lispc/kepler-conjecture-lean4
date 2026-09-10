@@ -36,6 +36,7 @@ import Kepler.Text.PlanarityComponent
 import Kepler.Text.PlanarityDarts
 -- Phase 5: planarity.hl:11439 起 yfan 连通/边界段（harness 批次 5）
 import Kepler.Text.PlanarityConnect
+import Kepler.Text.PlanarityAuto6
 import Kepler.Text.VectorAngleLemmas
 -- Phase 4: 分支定界证书树（二分盒树 + covers/bb_sound，叶为内核 decide 的 checkPos）
 import Kepler.Interval.Cert
