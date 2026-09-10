@@ -128,7 +128,12 @@ FAN(x,V,E) /\ ~(E={})
 theorem x_in_xfan {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E) (hne : E ≠ ∅) :
     x ∈ xfan x V E := by
-  sorry
+  obtain ⟨e, he⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  obtain ⟨v, w, rfl⟩ := expand_edge_graph_fan hfan he
+  have hnc : ¬ Collinear3 x v w := by
+    intro h
+    exact hfan.2.2.2.2.1 {v, w} he h
+  exact ⟨{v, w}, he, (point_in_aff_ge hnc).1⟩
 
 /-- HOL planarity.hl :11489-11505 `xfan_closed_fan`
 
