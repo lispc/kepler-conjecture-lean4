@@ -1139,7 +1139,56 @@ theorem AFF_GE_1_3 (x v u w : V3)
       {y | ∃ t1 t2 t3 t4 : ℝ, 0 ≤ t2 ∧ 0 ≤ t3 ∧ 0 ≤ t4 ∧
         t1 + t2 + t3 + t4 = 1 ∧
         y = t1 • x + t2 • v + t3 • u + t4 • w} := by
-  sorry
+  have hdis' := Set.disjoint_left.mp hdis
+  have hxv : x ≠ v := by
+    intro he; exact hdis' (Set.mem_singleton x) (by rw [he]; simp)
+  have hxu : x ≠ u := by
+    intro he; exact hdis' (Set.mem_singleton x) (by rw [he]; simp)
+  have hxw : x ≠ w := by
+    intro he; exact hdis' (Set.mem_singleton x) (by rw [he]; simp)
+  ext y
+  simp only [affGe, Set.mem_setOf_eq, Affsign]
+  constructor
+  · rintro ⟨f, hfin', hsum, hpos, hone⟩
+    have hfv : 0 ≤ f v := hpos v (by simp)
+    have hfu : 0 ≤ f u := hpos u (by simp)
+    have hfw : 0 ≤ f w := hpos w (by simp)
+    have hT' := toFinset_single_union_triple hfin'
+    rw [hT'] at hsum hone
+    rw [Finset.sum_insert (by
+      rw [Finset.mem_insert, Finset.mem_insert, Finset.mem_singleton, not_or, not_or]
+      exact ⟨hxv, hxu, hxw⟩)] at hsum hone
+    rw [sum_triple_first_v f v u w] at hsum
+    rw [sum_triple_first_s f v u w] at hone
+    refine ⟨f x, f v, (if u = v then 0 else f u),
+      (if w = v then 0 else if w = u then 0 else f w), ?_, ?_, ?_, ?_, ?_⟩
+    · exact hfv
+    · by_cases huv : u = v
+      · simp [huv]
+      · simp only [if_neg huv]; exact hfu
+    · by_cases hwv : w = v
+      · simp [hwv]
+      · by_cases hwu : w = u
+        · simp [hwu]
+        · simp only [if_neg hwv, if_neg hwu]; exact hfw
+    · linarith
+    · rw [hsum]; abel
+  · rintro ⟨t1, t2, t3, t4, ht2, ht3, ht4, hsum, hy⟩
+    have hfin : ({x} ∪ {v, u, w} : Set V3).Finite :=
+      (Set.finite_singleton x).union (((Set.finite_singleton w).insert u).insert v)
+    refine ⟨fun z => (if z = x then t1 else 0) + (if z = v then t2 else 0) +
+      (if z = u then t3 else 0) + (if z = w then t4 else 0), hfin, ?_, ?_, ?_⟩
+    · rw [toFinset_single_union_triple hfin, finset_sum_indicators_v]; exact hy
+    · intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl
+      · simp only [if_neg (Ne.symm hxv)]
+        split_ifs <;> linarith
+      · simp only [if_neg (Ne.symm hxu)]
+        split_ifs <;> linarith
+      · simp only [if_neg (Ne.symm hxw)]
+        split_ifs <;> linarith
+    · rw [toFinset_single_union_triple hfin, finset_sum_indicators_s]; exact hsum
 
 /-! ## 四点不共面的互异性与不交性（planarity.hl:13607-13631） -/
 
