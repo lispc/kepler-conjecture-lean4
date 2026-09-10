@@ -93,7 +93,29 @@ HOL 原文：
 theorem place_there_point_line_fan (x y z : V3) (hxy : x ≠ y)
     (hz : z ∈ affineSpan ℝ ({x, y} : Set V3)) :
     ∃ t : ℝ, 0 < t ∧ t < 1 ∧ (1 - t) • y + t • z ∈ affGe {x} {y} := by
-  sorry
+  obtain ⟨s, hs⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp hz
+  have hz' : z = (1 - s) • x + s • y := by
+    rw [← hs, AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add]
+    module
+  rcases lt_or_ge s 0 with hs0 | hs0
+  · refine ⟨1 / (1 - s), ?_, ?_, ?_⟩
+    · exact one_div_pos.mpr (by linarith)
+    · rw [div_lt_one (by linarith)]
+      linarith
+    · rw [mem_affGe_singleton hxy]
+      refine ⟨1, 0, le_refl 0, by ring, ?_⟩
+      rw [hz']
+      have hsne : (1 : ℝ) - s ≠ 0 := by linarith
+      rw [WithLp.ext_iff]
+      ext i
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, Pi.add_apply, Pi.smul_apply]
+      have h : (1 - s)⁻¹ * (1 - s) = 1 := inv_mul_cancel₀ hsne
+      linear_combination (x.ofLp i - y.ofLp i) * h
+  · refine ⟨1 / 2, by norm_num, by norm_num, ?_⟩
+    rw [mem_affGe_singleton hxy]
+    refine ⟨(1 - s) / 2, (1 + s) / 2, by linarith, by ring, ?_⟩
+    rw [hz']
+    module
 
 /-! ## aff_ge 边锥含于 xfan（planarity.hl:12039-12066） -/
 
