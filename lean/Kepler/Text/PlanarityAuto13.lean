@@ -157,6 +157,13 @@ theorem aff_ge_1_3_eq_unions_aff_ge_1_2_and_aff_gt_1_3 (x v u w : V3)
       simp only [Set.mem_setOf_eq]
       exact ⟨d1, d2, d3, d4, le_of_lt hd2, le_of_lt hd3, le_of_lt hd4', hsum, hy⟩
 
+/-- `affGt s t ⊆ affGe s t`：严格正系数组合是非负组合。 -/
+private theorem affGt_subset_affGe_cut {s t : Set V3} : affGt s t ⊆ affGe s t := by
+  intro z hz
+  simp only [affGt, affGe, Set.mem_setOf_eq, Affsign] at hz ⊢
+  obtain ⟨f, h, hv, ht, hsum⟩ := hz
+  exact ⟨f, h, hv, fun w hw => le_of_lt (ht w hw), hsum⟩
+
 /-- HOL planarity.hl :14252-14297 `cut_aff_gt_1_3_connected`
 
 HOL 原文：
@@ -193,7 +200,37 @@ theorem cut_aff_gt_1_3_connected (x y z v u w : V3) (s : Set V3)
       t ∈ affGe ({x} : Set V3) ({v, u} : Set V3) ∪
         affGe ({x} : Set V3) ({u, w} : Set V3) ∪
         affGe ({x} : Set V3) ({w, v} : Set V3) := by
-  sorry
+  by_contra h
+  push Not at h
+  have hAopen : IsOpen (affGt ({x} : Set V3) ({v, u, w} : Set V3)) :=
+    OPEN_AFF_GT_1_3 x v u w hcop
+  have hBopen : IsOpen ((Set.univ : Set V3) \
+      affGe ({x} : Set V3) ({v, u, w} : Set V3)) := OPEN_DIFF_AFF_GE x v u w
+  have hdisj : Disjoint (affGt ({x} : Set V3) ({v, u, w} : Set V3))
+      ((Set.univ : Set V3) \ affGe ({x} : Set V3) ({v, u, w} : Set V3)) := by
+    rw [Set.disjoint_left]
+    intro a haA haB
+    exact haB.2 (affGt_subset_affGe_cut haA)
+  have hsub : s ⊆ affGt ({x} : Set V3) ({v, u, w} : Set V3) ∪
+      ((Set.univ : Set V3) \ affGe ({x} : Set V3) ({v, u, w} : Set V3)) := by
+    intro a ha
+    by_cases haA : a ∈ affGt ({x} : Set V3) ({v, u, w} : Set V3)
+    · exact Or.inl haA
+    · refine Or.inr ⟨Set.mem_univ a, ?_⟩
+      intro haB
+      have hdecomp := aff_ge_1_3_eq_unions_aff_ge_1_2_and_aff_gt_1_3 x v u w hcop
+      have hmem : a ∈ affGe ({x} : Set V3) ({v, u} : Set V3) ∪
+          affGe ({x} : Set V3) ({u, w} : Set V3) ∪
+          affGe ({x} : Set V3) ({w, v} : Set V3) ∪
+          affGt ({x} : Set V3) ({v, u, w} : Set V3) := hdecomp ▸ haB
+      rcases (by simpa only [Set.mem_union] using hmem) with ((h1 | h2) | h3) | h4
+      · exact h a ha (Or.inl (Or.inl h1))
+      · exact h a ha (Or.inl (Or.inr h2))
+      · exact h a ha (Or.inr h3)
+      · exact haA h4
+  rcases hs.subset_or_subset hAopen hBopen hdisj hsub with hsu | hsv
+  · exact hzgt (hsu hz)
+  · exact (hsv hy).2 (affGt_subset_affGe_cut hygt)
 
 /-! ## 边锥含于 xfan（planarity.hl:14298-14308） -/
 
