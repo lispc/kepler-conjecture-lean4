@@ -84,7 +84,18 @@ theorem sym_line0_fan {E : Type*} [AddCommGroup E] [Module ℝ E] (x y z : E)
     (hx : x ∈ affineSpan ℝ ({y, z} : Set E))
     (hdis : Disjoint ({x} : Set E) {y, z}) :
     affineSpan ℝ ({x, z} : Set E) ≤ affineSpan ℝ ({x, y} : Set E) := by
-  sorry
+  have hxmem : x ∉ ({y, z} : Set E) := Set.disjoint_singleton_left.mp hdis
+  have hxy : x ≠ y := by
+    intro h
+    exact hxmem (by simp [h])
+  have hz : z ∈ affineSpan ℝ ({x, y} : Set E) := sym_line1_fan x y z hx hxy
+  apply affineSpan_le.mpr
+  intro w hw
+  rcases Set.mem_insert_iff.mp hw with hwx | hwz
+  · rw [hwx]
+    exact POINT_IN_LINE x y
+  · rw [Set.mem_singleton_iff.mp hwz]
+    exact hz
 
 /-- HOL planarity.hl :11631-11642 `sym_line_fan`
 
