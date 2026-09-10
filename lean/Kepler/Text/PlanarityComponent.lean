@@ -410,7 +410,11 @@ theorem UNIQUE_DARTSET_LEADS_INTO_FAN {x : V3} {V : Set V3}
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet)
     (hs : ∀ y ∈ ds, s = dartLeadsInto x V E y.1 y.2) :
     dartsetLeadsIntoFan x V E ds = s := by
-  sorry
+  obtain ⟨y, hy, hds_eq⟩ := Hypermap.face_representation (hypermapOfFan x V E hfan) hds
+  have hyds : y ∈ ds := by rw [hds_eq]; exact Hypermap.mem_face_self _ y
+  have h1 := DARTSET_LEADS_INTO_FAN hfan hcard hfan80 hds y hyds
+  have h2 := hs y hyds
+  rw [h2, h1]
 
 /-- HOL planarity.hl :11028-11041 `equality_dart_leads_into`
 
