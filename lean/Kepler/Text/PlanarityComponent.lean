@@ -378,7 +378,8 @@ theorem DARTSET_LEADS_INTO_FAN {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan80 : fan80 x V E)
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet) :
     ∀ y ∈ ds, dartsetLeadsIntoFan x V E ds = dartLeadsInto x V E y.1 y.2 := by
-  sorry
+  have h := exists_dartset_leads_into_fan hfan hcard hfan80 hds
+  simpa [dartsetLeadsIntoFan] using (Classical.epsilon_spec h)
 
 /-- HOL planarity.hl :11006-11026 `UNIQUE_DARTSET_LEADS_INTO_FAN`
 
