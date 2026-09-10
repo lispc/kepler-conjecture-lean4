@@ -392,6 +392,21 @@ theorem exists_in_aff_gt_disjoint (x v u : V3)
   refine ⟨0, 1 / 2, 1 / 2, by norm_num, by norm_num, by norm_num, ?_⟩
   module
 
+/-- `Disjoint {x} {y,z}` 时 `affGt {x} {y,z}` 凸（HOL `CONVEX_AFF_GT`，
+仓库 `convex_affGt_single_pair` 为 `private`，此处经 `aff_gt_1_2` 重证）。 -/
+private theorem convex_affGt_of_disjoint {x y z : V3}
+    (hdis : Disjoint ({x} : Set V3) {y, z}) :
+    Convex ℝ (affGt {x} {y, z}) := by
+  rw [aff_gt_1_2 hdis, convex_iff_forall_pos]
+  intro p hp q hq a b ha hb hab
+  obtain ⟨t1, t2, t3, ht2, ht3, hsum, rfl⟩ := hp
+  obtain ⟨s1, s2, s3, hs2, hs3, hssum, rfl⟩ := hq
+  refine ⟨a * t1 + b * s1, a * t2 + b * s2, a * t3 + b * s3,
+    add_pos (mul_pos ha ht2) (mul_pos hb hs2),
+    add_pos (mul_pos ha ht3) (mul_pos hb hs3), ?_, ?_⟩
+  · nlinarith [hsum, hssum, hab]
+  · module
+
 /-- HOL planarity.hl :11969-12005 `aff_gt_subset_component_y_fan`
 
 HOL 原文：
@@ -445,6 +460,23 @@ theorem aff_gt_subset_component_y_fan (x : V3) (V : Set V3) (E : Set (Set V3))
     (hdis : Disjoint ({x} : Set V3) {y, z})
     (hconn : ∀ t : ℝ, 0 < t → t < 1 → (1 - t) • y + t • z ∈ yfan x V E) :
     affGt {x} {y, z} ⊆ U := by
-  sorry
+  rw [expand_element_in_topological_component_yfan x V E U z hfan hU hz]
+  intro p hp
+  obtain ⟨w, hw⟩ := exists_in_aff_gt_disjoint x y z hdis
+  have hyfan : affGt {x} {y, z} ⊆ yfan x V E :=
+    aff_gt_connect_bound_subset_yfan hfan hdis hconn
+  have hpre : IsPreconnected (affGt {x} {y, z}) :=
+    (convex_affGt_of_disjoint hdis).isPreconnected
+  have hsub : affGt {x} {y, z} ⊆ connectedComponentIn (yfan x V E) w :=
+    hpre.subset_connectedComponentIn hw hyfan
+  have hz_yfan : z ∈ yfan x V E := topological_component_subset_yfan hU hz
+  have hseg_sub : segment ℝ w z ⊆ yfan x V E :=
+    segment_subset_yfan x V E y z w hfan hdis hz_yfan hw hconn
+  have hseg_pre : IsPreconnected (segment ℝ w z) := (convex_segment w z).isPreconnected
+  have hz_cc : z ∈ connectedComponentIn (yfan x V E) w :=
+    hseg_pre.subset_connectedComponentIn (left_mem_segment ℝ w z) hseg_sub
+      (right_mem_segment ℝ w z)
+  rw [← connectedComponentIn_eq hz_cc]
+  exact hsub hp
 
 end Kepler.Text
