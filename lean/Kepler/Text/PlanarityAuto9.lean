@@ -784,7 +784,63 @@ theorem exists_edge_rw_dart_fan_inter_topological_component_not_empty_fan
     ∃ w : V3, {u, w} ∈ E ∧
       ∀ h : ℝ, 0 < h → h ≤ Real.pi →
         rwDartFan x V E (x, u, w, sigmaFan x V E u w) (Real.cos h) ∩ U ≠ ∅ := by
-  sorry
+  have hnc_xyz : ¬ Collinear3 x y z :=
+    point_in_yfan_and_point_in_xfan_indepent_fan x V E U y z
+      hfan hcard hfan80 hU hz hyxfan hyx hconn
+  have hxy : x ≠ y := hyx.symm
+  have hxz : x ≠ z := by
+    intro hxz_eq
+    apply hnc_xyz
+    change Collinear ℝ ({x, y, z} : Set V3)
+    have hset : ({x, y, z} : Set V3) = {x, z, y} := by
+      ext p
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset]
+    exact collinear3_of_eq (v := x) (w := z) (w1 := y) hxz_eq.symm
+  have hdis : Disjoint ({x} : Set V3) {y, z} := by
+    rw [Set.disjoint_singleton_left]
+    intro hmem
+    rcases Set.mem_insert_iff.mp hmem with h | h
+    · exact hxy h
+    · exact hxz h
+  have hsub_yz : affGt {x} {y, z} ⊆ U :=
+    aff_gt_subset_component_y_fan x V E U y z
+      hfan hcard hfan80 hU hz hdis hconn
+  have hxu : x ≠ u := by
+    intro h
+    exact hfan.2.2.2.1 (h.symm ▸ hu)
+  obtain ⟨t1, t2, ht2, hsum, hy_eq⟩ := (mem_affGe_singleton hxu).mp hyge
+  have ht2pos : 0 < t2 := by
+    rcases lt_or_eq_of_le ht2 with h | h
+    · exact h
+    · exfalso
+      apply hyx
+      have ht1 : t1 = 1 := by linarith
+      rw [hy_eq, ht1, h.symm]
+      module
+  have hscale : t2 • (u - x) = y - x := by
+    have ht1 : t1 = 1 - t2 := by linarith
+    rw [hy_eq, ht1]
+    module
+  have hscale_eq : affGt {x} {u, z} = affGt {x} {y, z} :=
+    aff_gt_1_2_scale_fan (x := x) (v := z) (u := u) (w := y)
+      ht2pos hscale hnc_xyz
+  have hsub_uz : affGt {x} {u, z} ⊆ U := by
+    rw [hscale_eq]
+    exact hsub_yz
+  obtain ⟨w, huw, hw⟩ :=
+    exists_edge_rw_dart_fan_inter_aff_gt_not_empty_fan x V E U y z u
+      hfan hcard hfan80 hU hz hu hyge hyxfan hyx hconn
+  refine ⟨w, huw, ?_⟩
+  intro h hh0 hhpi
+  have hinter : rwDartFan x V E (x, u, w, sigmaFan x V E u w) (Real.cos h) ∩
+      affGt {x} {u, z} ≠ ∅ := hw h hh0 hhpi
+  have hsub' : rwDartFan x V E (x, u, w, sigmaFan x V E u w) (Real.cos h) ∩
+      affGt {x} {u, z} ⊆
+      rwDartFan x V E (x, u, w, sigmaFan x V E u w) (Real.cos h) ∩ U :=
+    Set.inter_subset_inter_right _ hsub_uz
+  exact (Set.Nonempty.mono hsub' (Set.nonempty_iff_ne_empty.mpr hinter)).ne_empty
 
 /-! ## 存在边其 dart_leads_into 恰为该分量（planarity.hl:12695-12758） -/
 
