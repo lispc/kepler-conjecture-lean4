@@ -185,7 +185,25 @@ theorem aff_gt_2_1_cross_dotl_4point (x y z v u : V3) :
       ((a3 : V3) : Fin 3 → ℝ)) →
     (0 < (crossProduct ((a1 : V3) : Fin 3 → ℝ) ((a2 : V3) : Fin 3 → ℝ)) ⬝ᵥ
       ((a4 : V3) : Fin 3 → ℝ)) := by
-  sorry
+  dsimp only
+  intro hnc hgt hpos
+  have hxz : x ≠ z := fun he =>
+    hnc (collinear3_of_eq (v := x) (w := z) (w1 := v) he.symm)
+  have hvx : v ≠ x := fun he =>
+    hnc (collinear3_pair_left (v0 := x) (v1 := z) (x := v) he)
+  have hvz : v ≠ z := fun he =>
+    hnc (collinear3_pair_right (v0 := x) (v1 := z) (x := v) he)
+  obtain ⟨c, hc, h, hu⟩ :=
+    (affGt_pair_iff (v0 := x) (v1 := z) (x := v) (y := u) hxz hvx hvz).mp hgt
+  rw [hu]
+  simp only [WithLp.ofLp_add, WithLp.ofLp_smul]
+  rw [dotProduct_add, dotProduct_smul, dotProduct_smul]
+  have hA2 : crossProduct ((y - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((z - x : V3) : Fin 3 → ℝ) = 0 := by
+    rw [dotProduct_comm]
+    exact dot_cross_self _ _
+  rw [hA2, smul_zero, add_zero, smul_eq_mul]
+  exact mul_pos hc hpos
 
 /-- HOL planarity.hl :12885-12907 `aff_gt_2_1r_rcross_dotl_4point`
 
