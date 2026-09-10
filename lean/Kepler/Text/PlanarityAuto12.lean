@@ -486,6 +486,66 @@ theorem inter_aff_gt_3_1_is_aff_gt_1_3 (x v u w : V3)
 
 /-! ## cross/dot 与 aff_gt 3-1 半空间（planarity.hl:13872-14074） -/
 
+/-- 由线性关系 `c0•(p-x)+c1•(a-x)+c2•(b-x)=0`（`c0 ≠ 0`）推出
+`p ∈ affineSpan{x,a,b}`：解出 `p-x` 作为 `a-x,b-x` 的线性组合，再用
+`vadd_mem_affineSpan_of_mem_affineSpan_of_mem_vectorSpan`。 -/
+private lemma mem_affineSpan_of_smul_relation {x a b p : V3} {c0 c1 c2 : ℝ}
+    (hc0 : c0 ≠ 0)
+    (hrel : c0 • (p - x) + c1 • (a - x) + c2 • (b - x) = 0) :
+    p ∈ (affineSpan ℝ ({x, a, b} : Set V3) : Set V3) := by
+  have hp : p - x = (-(c1 * c0⁻¹)) • (a - x) + (-(c2 * c0⁻¹)) • (b - x) := by
+    have h1 : c0 • (p - x) = -(c1 • (a - x) + c2 • (b - x)) := by
+      linear_combination (norm := module) hrel
+    calc p - x = c0⁻¹ • (c0 • (p - x)) := (inv_smul_smul₀ hc0 _).symm
+      _ = c0⁻¹ • (-(c1 • (a - x) + c2 • (b - x))) := by rw [h1]
+      _ = (-(c1 * c0⁻¹)) • (a - x) + (-(c2 * c0⁻¹)) • (b - x) := by module
+  have ha : (a - x : V3) ∈ vectorSpan ℝ ({x, a, b} : Set V3) :=
+    vsub_mem_vectorSpan ℝ (by simp) (by simp)
+  have hb : (b - x : V3) ∈ vectorSpan ℝ ({x, a, b} : Set V3) :=
+    vsub_mem_vectorSpan ℝ (by simp) (by simp)
+  have hmem : (p - x : V3) ∈ vectorSpan ℝ ({x, a, b} : Set V3) := by
+    rw [hp]
+    exact Submodule.add_mem _ (Submodule.smul_mem _ _ ha) (Submodule.smul_mem _ _ hb)
+  have hx : x ∈ (affineSpan ℝ ({x, a, b} : Set V3) : Set V3) := mem_affineSpan ℝ (by simp)
+  have := vadd_mem_affineSpan_of_mem_affineSpan_of_mem_vectorSpan hx hmem
+  simpa using this
+
+private lemma coplanar_of_v1_mem (x v u v1 : V3)
+    (h : v1 ∈ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3)) :
+    Coplanar ({x, v, u, v1} : Set V3) := by
+  refine ⟨x, v, u, ?_⟩
+  intro p hp
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+  rcases hp with rfl | rfl | rfl | rfl
+  · exact mem_affineSpan ℝ (by simp)
+  · exact mem_affineSpan ℝ (by simp)
+  · exact mem_affineSpan ℝ (by simp)
+  · exact h
+
+private lemma coplanar_of_v_mem (x v u v1 : V3)
+    (h : v ∈ (affineSpan ℝ ({x, u, v1} : Set V3) : Set V3)) :
+    Coplanar ({x, v, u, v1} : Set V3) := by
+  refine ⟨x, u, v1, ?_⟩
+  intro p hp
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+  rcases hp with rfl | rfl | rfl | rfl
+  · exact mem_affineSpan ℝ (by simp)
+  · exact h
+  · exact mem_affineSpan ℝ (by simp)
+  · exact mem_affineSpan ℝ (by simp)
+
+private lemma coplanar_of_u_mem (x v u v1 : V3)
+    (h : u ∈ (affineSpan ℝ ({x, v, v1} : Set V3) : Set V3)) :
+    Coplanar ({x, v, u, v1} : Set V3) := by
+  refine ⟨x, v, v1, ?_⟩
+  intro p hp
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+  rcases hp with rfl | rfl | rfl | rfl
+  · exact mem_affineSpan ℝ (by simp)
+  · exact mem_affineSpan ℝ (by simp)
+  · exact h
+  · exact mem_affineSpan ℝ (by simp)
+
 /-- HOL planarity.hl :13872-13883 `coplanar_cross_dot`
 
 HOL 原文：
@@ -514,7 +574,49 @@ theorem coplanar_cross_dot (x v u v1 : V3)
     (hcop : ¬ Coplanar ({x, v, u, v1} : Set V3)) :
     crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ
         ((v1 - x : V3) : Fin 3 → ℝ) ≠ 0 := by
-  sorry
+  by_contra h
+  apply hcop
+  let vec : Fin 3 → V3 := ![v1 - x, v - x, u - x]
+  let f : V3 →ₗ[ℝ] (Fin 3 → ℝ) := (WithLp.linearEquiv 2 ℝ (Fin 3 → ℝ)).toLinearMap
+  let mat : Matrix (Fin 3) (Fin 3) ℝ := f ∘ vec
+  have hmat : mat = ![((v1 - x : V3) : Fin 3 → ℝ), ((v - x : V3) : Fin 3 → ℝ),
+      ((u - x : V3) : Fin 3 → ℝ)] := by
+    funext i
+    fin_cases i <;> rfl
+  have hdet : Matrix.det mat = 0 := by
+    have hh : crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((v1 - x : V3) : Fin 3 → ℝ) = 0 := h
+    rw [dotProduct_comm] at hh
+    rw [triple_product_eq_det ((v1 - x : V3) : Fin 3 → ℝ) ((v - x : V3) : Fin 3 → ℝ)
+      ((u - x : V3) : Fin 3 → ℝ)] at hh
+    rwa [hmat]
+  have hker : LinearMap.ker f = ⊥ := by
+    rw [LinearMap.ker_eq_bot]
+    exact (WithLp.linearEquiv 2 ℝ (Fin 3 → ℝ)).injective
+  have hnotli_mat : ¬ LinearIndependent ℝ mat := by
+    intro hli
+    have h1 : IsUnit mat := (Matrix.linearIndependent_rows_iff_isUnit (A := mat)).mp hli
+    have h2 : IsUnit (Matrix.det mat) := (Matrix.isUnit_iff_isUnit_det mat).mp h1
+    exact h2.ne_zero hdet
+  have hnotli_vec : ¬ LinearIndependent ℝ vec := by
+    rw [← LinearMap.linearIndependent_iff f hker]
+    exact hnotli_mat
+  rw [Fintype.not_linearIndependent_iff] at hnotli_vec
+  obtain ⟨g, hg, i, hi⟩ := hnotli_vec
+  rw [Fin.sum_univ_three] at hg
+  simp only [vec, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+    Matrix.cons_val_two, Matrix.tail_cons] at hg
+  fin_cases i
+  · refine coplanar_of_v1_mem x v u v1 ?_
+    exact mem_affineSpan_of_smul_relation (a := v) (b := u) (p := v1) hi hg
+  · refine coplanar_of_v_mem x v u v1 ?_
+    refine mem_affineSpan_of_smul_relation (a := u) (b := v1) (p := v) (c0 := g 1)
+      (c1 := g 2) (c2 := g 0) hi ?_
+    linear_combination (norm := module) hg
+  · refine coplanar_of_u_mem x v u v1 ?_
+    refine mem_affineSpan_of_smul_relation (a := v) (b := v1) (p := u) (c0 := g 2)
+      (c1 := g 1) (c2 := g 0) hi ?_
+    linear_combination (norm := module) hg
 
 /-- HOL planarity.hl :13897-14074 `aff_gt_3_1_rep_cross_dot`
 
