@@ -794,6 +794,60 @@ theorem aff_gt_3_1_rep_cross_dot (x v u w : V3)
       _ = (A • (v - x) + B • (u - x) + t4 • (w - x)) + x := by rw [hzV]
       _ = (1 - A - B - t4) • x + A • v + B • u + t4 • w := by module
 
+private theorem continuous_vsub_ofLp (x : V3) :
+    Continuous (fun y : V3 => ((y - x : V3) : Fin 3 → ℝ)) :=
+  (PiLp.continuous_ofLp (p := 2) (β := fun _ : Fin 3 => ℝ)).comp
+    (continuous_id.sub continuous_const)
+
+private theorem isOpen_dot_pos (x : V3) (n : Fin 3 → ℝ) :
+    IsOpen {y : V3 | 0 < n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)} := by
+  have hcont : Continuous (fun y : V3 => n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)) :=
+    continuous_const.dotProduct (continuous_vsub_ofLp x)
+  exact isOpen_lt (f := fun _ : V3 => (0 : ℝ))
+    (g := fun y : V3 => n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)) continuous_const hcont
+
+private theorem isOpen_dot_neg (x : V3) (n : Fin 3 → ℝ) :
+    IsOpen {y : V3 | n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ) < 0} := by
+  have hcont : Continuous (fun y : V3 => n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)) :=
+    continuous_const.dotProduct (continuous_vsub_ofLp x)
+  exact isOpen_lt (f := fun y : V3 => n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ))
+    (g := fun _ : V3 => (0 : ℝ)) hcont continuous_const
+
+private theorem isOpen_affGt_3_1 (x v u w : V3)
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) :
+    IsOpen (affGt ({x, v, u} : Set V3) {w}) := by
+  have hne := coplanar_cross_dot x v u w hcop
+  rcases lt_or_gt_of_ne hne with hneg | hpos
+  · have hcop' : ¬ Coplanar ({x, u, v, w} : Set V3) := by
+      have he : ({x, u, v, w} : Set V3) = {x, v, u, w} := by
+        ext z
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      rwa [he]
+    have hpos' : 0 < crossProduct ((u - x : V3) : Fin 3 → ℝ)
+        ((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((w - x : V3) : Fin 3 → ℝ) := by
+      rw [← cross_anticomm, neg_dotProduct]
+      linarith
+    have heq := aff_gt_3_1_rep_cross_dot x u v w hcop' hpos'
+    have hseteq : ({x, v, u} : Set V3) = {x, u, v} := by
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hseteq, heq]
+    have hset2 : {y : V3 | 0 < crossProduct ((u - x : V3) : Fin 3 → ℝ)
+        ((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)} =
+        {y : V3 | crossProduct ((v - x : V3) : Fin 3 → ℝ)
+          ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ) < 0} := by
+      ext y
+      simp only [Set.mem_setOf_eq]
+      rw [← cross_anticomm, neg_dotProduct]
+      constructor <;> intro h <;> linarith
+    rw [hset2]
+    exact isOpen_dot_neg x _
+  · have heq := aff_gt_3_1_rep_cross_dot x v u w hcop hpos
+    rw [heq]
+    exact isOpen_dot_pos x _
+
 /-! ## aff_gt 1-3 与 aff_ge 补集的开性（planarity.hl:14075-14124） -/
 
 /-- HOL planarity.hl :14075-14114 `OPEN_AFF_GT_1_3`
@@ -823,7 +877,21 @@ open (aff_gt {x} {v,u,w})
 theorem OPEN_AFF_GT_1_3 (x v u w : V3)
     (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) :
     IsOpen (affGt ({x} : Set V3) ({v, u, w} : Set V3)) := by
-  sorry
+  rw [← inter_aff_gt_3_1_is_aff_gt_1_3 x v u w hcop]
+  have h2 : ¬ Coplanar ({x, u, w, v} : Set V3) := by
+    have he : ({x, u, w, v} : Set V3) = {x, v, u, w} := by
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rwa [he]
+  have h3 : ¬ Coplanar ({x, w, v, u} : Set V3) := by
+    have he : ({x, w, v, u} : Set V3) = {x, v, u, w} := by
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rwa [he]
+  exact ((isOpen_affGt_3_1 x v u w hcop).inter
+    (isOpen_affGt_3_1 x u w v h2)).inter (isOpen_affGt_3_1 x w v u h3)
 
 /-- HOL planarity.hl :14115-14124 `OPEN_DIFF_AFF_GE`
 
