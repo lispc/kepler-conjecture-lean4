@@ -538,7 +538,24 @@ theorem dartset_leads_into_is_topological_component_yfan {x : V3}
     (hfan80 : fan80 x V E)
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet) :
     dartsetLeadsIntoFan x V E ds ∈ topologicalComponentYfan x V E := by
-  sorry
+  obtain ⟨y, hy, heq⟩ := exists_point_dart_leads_into_fan hfan hcard hfan80 hds
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  have hdarts : (↑H.darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have hy_darts : y ∈ H.darts := by
+    have hyU : y ∈ ⋃₀ H.faceSet := Set.mem_sUnion.mpr ⟨ds, hds, hy⟩
+    have hsu := sUnion_setOfOrbits H.faceMap_permutes
+    change y ∈ (↑H.darts : Set (V3 × V3))
+    rw [hsu]
+    simpa [Hypermap.faceSet] using hyU
+  have hy_dart1 : y ∈ dart1OfFan V E := by
+    have : y ∈ (↑H.darts : Set (V3 × V3)) := hy_darts
+    rwa [hdarts] at this
+  have hE : {y.1, y.2} ∈ E := by
+    simpa [dart1OfFan] using hy_dart1
+  rw [heq]
+  exact dart_leads_into_mem_topologicalComponentYfan (v := y.1) (u := y.2) hfan hE
 
 /-- HOL planarity.hl :11094-11106 `dartset_leads_into_subset_yfan`
 
