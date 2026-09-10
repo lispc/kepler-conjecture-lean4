@@ -201,7 +201,19 @@ theorem aff_gt_1_3_subset_yfan (x : V3) (V : Set V3) (E : Set (Set V3))
     (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
     (hfan80 : fan80 x V E) :
     affGt ({x} : Set V3) ({v, u, w} : Set V3) ⊆ yfan x V E := by
-  sorry
+  obtain ⟨hθ0, hθπ⟩ := hfan80 u w huw
+  rw [hsigma] at hθ0 hθπ
+  have hcop := properties_fully_surrounded hfan hvu huw hθ0 hθπ
+  intro y hy
+  rw [aff_gt_1_3_eq_unions_aff_gt_1_2 x v u w hcop] at hy
+  rw [Set.mem_sUnion] at hy
+  obtain ⟨s, ⟨a, ha0, ha1, rfl⟩, hys⟩ := hy
+  refine ⟨trivial, ?_⟩
+  intro hyx
+  have hdisj := not_cut_in_edges_fan hfan hvu huw hsigma ha0 ha1 hcard hfan80
+  have hmem : y ∈ affGt {x} {v, (1 - a) • u + a • w} ∩ xfan x V E := ⟨hys, hyx⟩
+  rw [hdisj] at hmem
+  exact hmem
 
 /-- HOL planarity.hl :13744-13805 `aff_gt_1_3_subset_dart_leads_into_fan`
 
