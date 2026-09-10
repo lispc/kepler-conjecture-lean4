@@ -214,6 +214,13 @@ theorem pos_in_aff_gt_2_1_fan (x v u : V3) (a : ℝ)
 
 /-! ## 四点 aff_gt 交集条件（planarity.hl:13169-13292） -/
 
+/-- 混合积轮换：`(a × b) · c = (b × c) · a`。 -/
+private theorem cross_dot_cyclic {a b c : Fin 3 → ℝ} :
+    (crossProduct a b) ⬝ᵥ c = (crossProduct b c) ⬝ᵥ a := by
+  calc (crossProduct a b) ⬝ᵥ c = c ⬝ᵥ crossProduct a b := dotProduct_comm _ _
+    _ = a ⬝ᵥ crossProduct b c := triple_product_permutation c a b
+    _ = (crossProduct b c) ⬝ᵥ a := dotProduct_comm _ _
+
 /-- HOL planarity.hl :13169-13292 `condition_4point_aff_gt_1_2inter_aff_gt_1_2`
 
 HOL 原文：
@@ -283,7 +290,122 @@ theorem condition_4point_aff_gt_1_2inter_aff_gt_1_2
       ∀ h : ℝ, 0 < h → h < t →
         affGt ({x} : Set V3) {y, z} ∩
           affGt ({x} : Set V3) {v, (1 - h) • u + h • w} ≠ ∅ := by
-  sorry
+  dsimp only
+  intro hnc_xvu hnc_xuw hnc_xyz ha0 ha1 hy hpos_vuw hnc_line hpos_vyz
+  have hpos_yzv : 0 < (crossProduct ((y - x : V3) : Fin 3 → ℝ)
+      ((z - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ) := by
+    rw [← cross_dot_cyclic]
+    exact hpos_vyz
+  have h1 := aff_gt_1_2_cross_dotr_4point x y z v u hnc_xvu hy hpos_yzv
+  have h1' : 0 < (crossProduct ((z - x : V3) : Fin 3 → ℝ)
+      ((y - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((u - x : V3) : Fin 3 → ℝ) := by
+    rw [← cross_anticomm, neg_dotProduct]
+    exact h1
+  obtain ⟨t, ht0, ht1, ht⟩ := invariant_cross_dotr_esilon_3piont x z y u w h1'
+  have hy_vu : u ∈ affGt ({x, v} : Set V3) ({y} : Set V3) :=
+    point_in_aff_gt_2_1_change_point_in_aff_gt_1_2 x v u y hnc_xvu hy
+  have hnc_xyv : ¬ Collinear3 x y v :=
+    properties_of_collinear4_points_fan (v1 := y) hnc_xvu hy
+  have hnc_xvy : ¬ Collinear3 x v y := by
+    intro h
+    apply hnc_xyv
+    change Collinear ℝ ({x, y, v} : Set V3)
+    rw [show ({x, y, v} : Set V3) = {x, v, y} by
+      ext s; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact h
+  have hy_vu' : y ∈ affGt ({x, v} : Set V3) ({u} : Set V3) := by
+    have h := aff_gt_inter_aff_gt (x := x) (v := v) (w := u) hnc_xvu
+    rw [h] at hy
+    exact hy.1
+  have hE := aff_gt_2_1r_rcross_dotl_4point x y z v u hnc_xvy hy_vu hpos_yzv
+  obtain ⟨t', ht'0, ht'1, ht'⟩ := invariant_rcross_dot_esilon_3piont x u z v w hE
+  have hxw : x ≠ w := fun he =>
+    hnc_xuw (collinear3_pair_left (v0 := x) (v1 := u) (x := w) he.symm)
+  have huw : u ≠ w := fun he =>
+    hnc_xuw (collinear3_pair_right (v0 := x) (v1 := u) (x := w) he.symm)
+  have hdis_xuw : Disjoint ({x, u} : Set V3) ({w} : Set V3) := by
+    rw [Set.disjoint_left]
+    intro s hs hsw
+    rw [Set.mem_insert_iff, Set.mem_singleton_iff] at hs
+    rw [Set.mem_singleton_iff] at hsw
+    rcases hs with rfl | rfl
+    · exact hxw hsw
+    · exact huw hsw
+  refine ⟨min (min t t') a, ?_, ?_, ?_⟩
+  · exact lt_min (lt_min ht0 ht'0) ha0
+  · exact lt_of_le_of_lt (le_trans (min_le_left _ _) (min_le_left _ _)) ht1
+  · intro h hh0 hhh
+    have hh_lt_a : h < a := lt_of_lt_of_le hhh (min_le_right _ _)
+    have hh_lt_t : h < t :=
+      lt_of_lt_of_le hhh (le_trans (min_le_left _ _) (min_le_left _ _))
+    have hh_lt_t' : h < t' :=
+      lt_of_lt_of_le hhh (le_trans (min_le_left _ _) (min_le_right _ _))
+    have hh_lt1 : h < 1 := lt_trans hh_lt_a ha1
+    set p : V3 := (1 - h) • u + h • w with hp
+    have hC : 0 < (crossProduct ((z - x : V3) : Fin 3 → ℝ)
+        ((y - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((p - x : V3) : Fin 3 → ℝ) :=
+      ht h hh0 hh_lt_t
+    have hA : 0 < (crossProduct ((p - x : V3) : Fin 3 → ℝ)
+        ((z - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ) :=
+      ht' h hh0 hh_lt_t'
+    have hA' : 0 < (crossProduct ((v - x : V3) : Fin 3 → ℝ)
+        ((p - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((z - x : V3) : Fin 3 → ℝ) := by
+      rw [cross_dot_cyclic]
+      exact hA
+    have hD : 0 < -((crossProduct ((z - x : V3) : Fin 3 → ℝ)
+        ((y - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ)) := by
+      rw [← cross_anticomm, neg_dotProduct, neg_neg]
+      exact hpos_yzv
+    have hp_mem : p ∈ affGt ({x, u} : Set V3) ({w} : Set V3) :=
+      pos_in_aff_gt_2_1_fan x u w h hdis_xuw hh0 hh_lt1
+    have hp_vuw : 0 < (crossProduct ((v - x : V3) : Fin 3 → ℝ)
+        ((u - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((p - x : V3) : Fin 3 → ℝ) :=
+      aff_gt_2_1_cross_dotl_4point x v u w p hnc_xuw hp_mem hpos_vuw
+    have hp_vuw' : 0 < (crossProduct ((u - x : V3) : Fin 3 → ℝ)
+        ((p - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ) := by
+      rw [← cross_dot_cyclic]
+      exact hp_vuw
+    have hB' : 0 < -((crossProduct ((v - x : V3) : Fin 3 → ℝ)
+        ((p - x : V3) : Fin 3 → ℝ)) ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)) := by
+      have hB := aff_gt_2_1r_rcross_dotl_4point x u p v y hnc_xvu hy_vu' hp_vuw'
+      rw [cross_dot_cyclic] at hB
+      rw [← cross_anticomm, neg_dotProduct] at hB
+      exact hB
+    have hmem1 : (WithLp.toLp 2 (crossProduct
+        (crossProduct ((v - x : V3) : Fin 3 → ℝ) ((p - x : V3) : Fin 3 → ℝ))
+        (crossProduct ((y - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ))) + x)
+        ∈ affGt ({x} : Set V3) ({y, z} : Set V3) :=
+      condition_cross_dot_4point x v p y z hnc_xyz hA' hB'
+    have hmem2 : (WithLp.toLp 2 (crossProduct
+        (crossProduct ((z - x : V3) : Fin 3 → ℝ) ((y - x : V3) : Fin 3 → ℝ))
+        (crossProduct ((v - x : V3) : Fin 3 → ℝ) ((p - x : V3) : Fin 3 → ℝ))) + x)
+        ∈ affGt ({x} : Set V3) ({v, p} : Set V3) :=
+      condition_cross_dot_4point x z y v p (hnc_line h hh0 hh_lt_a) hC hD
+    have hcross_eq : crossProduct
+        (crossProduct ((z - x : V3) : Fin 3 → ℝ) ((y - x : V3) : Fin 3 → ℝ))
+        (crossProduct ((v - x : V3) : Fin 3 → ℝ) ((p - x : V3) : Fin 3 → ℝ)) =
+        crossProduct
+        (crossProduct ((v - x : V3) : Fin 3 → ℝ) ((p - x : V3) : Fin 3 → ℝ))
+        (crossProduct ((y - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ)) := by
+      have hzy : crossProduct ((z - x : V3) : Fin 3 → ℝ) ((y - x : V3) : Fin 3 → ℝ) =
+          -crossProduct ((y - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ) :=
+        (cross_anticomm _ _).symm
+      rw [hzy, map_neg, LinearMap.neg_apply, cross_anticomm]
+    have hEq : (WithLp.toLp 2 (crossProduct
+        (crossProduct ((z - x : V3) : Fin 3 → ℝ) ((y - x : V3) : Fin 3 → ℝ))
+        (crossProduct ((v - x : V3) : Fin 3 → ℝ) ((p - x : V3) : Fin 3 → ℝ))) + x) =
+        (WithLp.toLp 2 (crossProduct
+        (crossProduct ((v - x : V3) : Fin 3 → ℝ) ((p - x : V3) : Fin 3 → ℝ))
+        (crossProduct ((y - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ))) + x) := by
+      rw [hcross_eq]
+    have hmem2' : (WithLp.toLp 2 (crossProduct
+        (crossProduct ((v - x : V3) : Fin 3 → ℝ) ((p - x : V3) : Fin 3 → ℝ))
+        (crossProduct ((y - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ))) + x)
+        ∈ affGt ({x} : Set V3) ({v, p} : Set V3) := by
+      rw [← hEq]
+      exact hmem2
+    rw [← Set.nonempty_iff_ne_empty]
+    exact ⟨_, hmem1, hmem2'⟩
 
 /-! ## dart_leads_into 恰为分量（planarity.hl:13293-13572） -/
 
