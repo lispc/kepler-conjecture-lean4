@@ -2075,7 +2075,39 @@ theorem aff_gt_in_rw_dart_fan {x v u w y : V3} {V : Set V3} {E : Set (Set V3)}
     (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard) :
     affGt {x} {u, y} ⊆ rwDartFan x V E (x, u, w, sigmaFan x V E u w)
       (Real.cos s) := by
-  sorry
+  have huV : u ∈ V := (fan_mem_of_edge hfan huw).1
+  have hcardu : 1 < (setOfEdge u V E).ncard := hcard u huV
+  have hncuw : ¬ Collinear3 x u w := fan_not_collinear hfan huw
+  have hywv : y ∈ wedge x u w v := by
+    have h1 : y ∈ rwDartFan x V E (x, u, w, v) (Real.cos s) := hy
+    rw [rwDartFan] at h1
+    have h2 := h1.1
+    rw [wDartFan, if_pos hcardu, hsigma] at h2
+    exact h2
+  have hycv : y ∈ rconeFan x u (Real.cos s) := by
+    rw [rwDartFan] at hy
+    exact hy.2
+  rw [wedge, Set.mem_setOf_eq] at hywv
+  obtain ⟨hnc_uy, h0y, hyv⟩ := hywv
+  rintro x' hx'
+  rw [rwDartFan, wDartFan, if_pos hcardu]
+  have hx'uy : x' ∈ affGt {x, u} {y} := by
+    have hsplit : x' ∈ affGt {x, u} {y} ∩ affGt {x, y} {u} := by
+      rw [← aff_gt_inter_aff_gt hnc_uy]
+      exact hx'
+    exact hsplit.1
+  have hnc_ux' : ¬ Collinear3 x u x' := aff_gt_imp_not_collinear hnc_uy hx'uy
+  have hz : azim x u w x' = azim x u w y :=
+    (azim_eq_azim_iff_alt (v0 := x) (v1 := u) (w := w) (x := x') (y := y)
+      hncuw hnc_ux' hnc_uy).mpr hx'uy
+  have hx'w : x' ∈ wedge x u w (sigmaFan x V E u w) := by
+    rw [wedge, Set.mem_setOf_eq]
+    refine ⟨hnc_ux', ?_, ?_⟩
+    · rw [hz]; exact h0y
+    · rw [hz, hsigma]; exact hyv
+  have hx'c : x' ∈ rconeFan x u (Real.cos s) :=
+    conditions_in_rcone_fan hnc_uy hx' hs hsπ hycv
+  exact ⟨hx'w, hx'c⟩
 
 /-- HOL planarity.hl:10613-10623 `in_aff_gt_1_2`
 
