@@ -481,7 +481,12 @@ theorem exists_edge_fully_surround_fan {x w : V3} {V : Set V3} {E : Set (Set V3)
     (hfan : FAN x V E) (hw : w ∈ V)
     (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard) :
     ∃ v : V3, {w, v} ∈ E ∧ v ∈ V := by
-  sorry
+  have hVfin : V.Finite := hfan.2.2.1.1
+  have hfin : (setOfEdge w V E).Finite := remark_finite_fan1 w V E hVfin
+  have hpos : 0 < (setOfEdge w V E).ncard :=
+    lt_trans Nat.zero_lt_one (hcard w hw)
+  obtain ⟨v, hv⟩ := (Set.ncard_pos hfin).mp hpos
+  exact ⟨v, hv.1, hv.2⟩
 
 /-- HOL planarity.hl :11310-11375 `condition_not_intersection_point_fan`
 
