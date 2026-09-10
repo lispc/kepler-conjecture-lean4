@@ -328,7 +328,7 @@ theorem notempty_xfan_inter_segment_fan (x : V3) (V : Set V3) (E : Set (Set V3))
     (z : V3) (v : V3)
     (hfan : FAN x V E) (hv : v ∈ xfan x V E) :
     xfan x V E ∩ segment ℝ v z ≠ ∅ := by
-  sorry
+  exact Set.nonempty_iff_ne_empty.mp ⟨v, hv, left_mem_segment ℝ v z⟩
 
 /-- HOL planarity.hl :11761-11769 `xfan_inter_segment_closed_fan`
 
