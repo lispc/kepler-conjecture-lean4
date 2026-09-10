@@ -516,7 +516,8 @@ theorem IN_D1_FAN_IMP_EDGE_FAN {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard)
     (hy : y ∈ dartOfFan V E) :
     {y.1, y.2} ∈ E := by
-  sorry
+  rw [dartOfFan_eq_dart1_of_surrounded hfan hcard] at hy
+  exact hy
 
 /-- HOL planarity.hl :15192-15211 `EQ_PAIR_IMP_EQ_4_FAN`
 
