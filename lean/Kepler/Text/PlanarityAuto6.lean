@@ -277,7 +277,31 @@ theorem exists_point_notxin_convex_in_xfan (x : V3) (V : Set V3)
     (E : Set (Set V3)) (z : V3)
     (hfan : FAN x V E) (hxz : x ≠ z) (hne : E ≠ ∅) :
     ∃ v : V3, v ∈ xfan x V E ∧ x ∉ convexHull ℝ ({v, z} : Set V3) := by
-  sorry
+  obtain ⟨e, he⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  obtain ⟨v, w, rfl⟩ := expand_edge_graph_fan hfan he
+  have hnc : ¬ Collinear3 x v w := fan_not_collinear hfan he
+  obtain ⟨-, hv_ge, hw_ge⟩ := point_in_aff_ge hnc
+  have hvx : v ∈ xfan x V E := ⟨{v, w}, he, hv_ge⟩
+  have hwx : w ∈ xfan x V E := ⟨{v, w}, he, hw_ge⟩
+  by_cases hxc : x ∈ convexHull ℝ ({v, z} : Set V3)
+  · refine ⟨w, hwx, ?_⟩
+    intro hxw
+    have hxv_aff : x ∈ affineSpan ℝ ({v, z} : Set V3) :=
+      convexHull_subset_affineSpan ({v, z} : Set V3) hxc
+    have hxw_aff : x ∈ affineSpan ℝ ({w, z} : Set V3) :=
+      convexHull_subset_affineSpan ({w, z} : Set V3) hxw
+    have hline1 : affineSpan ℝ ({v, z} : Set V3) = affineSpan ℝ ({x, z} : Set V3) :=
+      (affineSpan_pair_eq_of_left_mem_of_ne (k := ℝ) hxv_aff hxz).symm
+    have hline2 : affineSpan ℝ ({x, z} : Set V3) = affineSpan ℝ ({w, z} : Set V3) :=
+      affineSpan_pair_eq_of_left_mem_of_ne (k := ℝ) hxw_aff hxz
+    have hw_line : w ∈ affineSpan ℝ ({v, z} : Set V3) := by
+      rw [hline1, hline2]
+      exact left_mem_affineSpan_pair (k := ℝ) w z
+    have hcol : Collinear ℝ ({x, v, w} : Set V3) :=
+      collinear_triple_of_mem_affineSpan_pair (p₁ := x) (p₂ := v) (p₃ := w)
+        (p₄ := v) (p₅ := z) hxv_aff (left_mem_affineSpan_pair (k := ℝ) v z) hw_line
+    exact hnc hcol
+  · exact ⟨v, hvx, hxc⟩
 
 /-! ## xfan 与线段的交（planarity.hl:11747-11769） -/
 
