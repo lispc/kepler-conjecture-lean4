@@ -1220,7 +1220,19 @@ HOL 原文：
 theorem notcoplanar_disjoint (x v u w : V3)
     (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) :
     x ≠ v ∧ x ≠ u ∧ x ≠ w ∧ v ≠ u ∧ v ≠ w ∧ u ≠ w := by
-  sorry
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  · intro h
+    exact hcop ((coplanar_triple x u w).subset (by intro p hp; simp [h] at hp ⊢; tauto))
+  · intro h
+    exact hcop ((coplanar_triple x v w).subset (by intro p hp; simp [h] at hp ⊢; tauto))
+  · intro h
+    exact hcop ((coplanar_triple x v u).subset (by intro p hp; simp [h] at hp ⊢; tauto))
+  · intro h
+    exact hcop ((coplanar_triple x v w).subset (by intro p hp; simp [h] at hp ⊢; tauto))
+  · intro h
+    exact hcop ((coplanar_triple x v u).subset (by intro p hp; simp [h] at hp ⊢; tauto))
+  · intro h
+    exact hcop ((coplanar_triple x v u).subset (by intro p hp; simp [h] at hp ⊢; tauto))
 
 /-- HOL planarity.hl :13623-13631 `notcoplanar_disjoints`
 
