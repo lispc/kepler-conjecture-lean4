@@ -545,7 +545,64 @@ theorem condition_edge_in_face_fan {x v u w u1 w1 : V3} {V : Set V3}
     (hfan80 : fan80 x V E) (hu1 : u1 = v)
     (haff : affGt ({x} : Set V3) ({v, u, w} : Set V3) = dartLeadsInto x V E u1 w1) :
     (u1, w1) ∈ ({(v, u), (u, w), (w, v)} : Set (V3 × V3)) := by
-  sorry
+  have htri : sigmaFan x V E v u = w ∧ sigmaFan x V E w v = u :=
+    PROPERTIES_TRIANGLE_FAN hfan hvu huw hwv hsigma hcard hfan80
+  have hvV : v ∈ V := (fan_mem_of_edge hfan hvu).1
+  have hcardv : 1 < (setOfEdge v V E).ncard := hcard v hvV
+  have hwd : wDartFan x V E (x, v, u, sigmaFan x V E v u)
+      = wedge x v u (sigmaFan x V E v u) := by
+    unfold wDartFan
+    rw [if_pos hcardv]
+  obtain ⟨hθ0, hθπ⟩ := hfan80 u w huw
+  rw [hsigma] at hθ0 hθπ
+  have hcop : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan hvu huw hθ0 hθπ
+  have hkv : affGt ({x} : Set V3) ({w, v, u} : Set V3)
+      = dartLeadsInto x V E v u :=
+    KVQWYDL_lemma1 x V E w v u hfan hwv hvu huw htri.1 hcard hfan80
+  have hset : ({w, v, u} : Set V3) = ({v, u, w} : Set V3) := by
+    ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  have hsub' : affGt ({x} : Set V3) ({v, u, w} : Set V3) ⊆
+      wDartFan x V E (x, v, u, sigmaFan x V E v u) := by
+    intro z hz
+    rw [aff_gt_1_3_eq_unions_aff_gt_1_2 x v u w hcop] at hz
+    rcases Set.mem_sUnion.mp hz with ⟨s, hs, hz⟩
+    rw [Set.mem_setOf_eq] at hs
+    obtain ⟨a, ha0, ha1, hs⟩ := hs
+    rw [hs] at hz
+    have hyw : (1 - a) • u + a • w ∈ wedge x v u (sigmaFan x V E v u) := by
+      rw [wedge, Set.mem_setOf_eq]
+      refine ⟨?_, ?_, ?_⟩
+      · exact not_collinear_is_properties_fully_surrounded hfan hvu huw hθ0 hθπ
+          a ha0 ha1
+      · exact (inequality4_aim_in_convex_fan hcop hθ0 hθπ ha0 ha1).1
+      · rw [htri.1]
+        exact (inequality4_aim_in_convex_fan hcop hθ0 hθπ ha0 ha1).2
+    have hy : (1 - a) • u + a • w ∈
+        wDartFan x V E (x, v, u, sigmaFan x V E v u) := by
+      rw [hwd]; exact hyw
+    exact aff_gt_in_w_dart_fan x V E v u ((1 - a) • u + a • w)
+      hfan hvu hy hfan80 hcard hz
+  have hsub : dartLeadsInto x V E v u ⊆
+      wDartFan x V E (x, v, u, sigmaFan x V E v u) := by
+    rw [← hkv]
+    intro z hz
+    exact hsub' (by simpa only [hset] using hz)
+  have hvw1 : ({v, w1} : Set V3) ∈ E := by
+    rw [hu1] at hu1w1
+    exact hu1w1
+  have haff' : affGt ({x} : Set V3) ({v, u, w} : Set V3)
+      = dartLeadsInto x V E v w1 := by
+    rw [hu1] at haff
+    exact haff
+  have heq : dartLeadsInto x V E v u = dartLeadsInto x V E v w1 := by
+    rw [← hkv, hset]
+    exact haff'
+  have hw1 : u = w1 :=
+    condition_unique_by_dart_leads_into (x := x) (w := u) (u := v) (w1 := w1)
+      hfan hvu hvw1 hcard hfan80 hsub heq
+  rw [hu1, ← hw1]
+  simp
 
 /-- HOL planarity.hl :14846-14871 `KVQWYDL_lemma3`
 
