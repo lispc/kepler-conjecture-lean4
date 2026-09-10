@@ -503,7 +503,9 @@ theorem exists_point_dart_leads_into_fan {x : V3} {V : Set V3}
     (hfan80 : fan80 x V E)
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet) :
     ∃ y ∈ ds, dartsetLeadsIntoFan x V E ds = dartLeadsInto x V E y.1 y.2 := by
-  sorry
+  obtain ⟨d, _hd, hd_eq⟩ := Hypermap.face_representation (hypermapOfFan x V E hfan) hds
+  have hd_mem : d ∈ ds := by rw [hd_eq]; exact Hypermap.mem_face_self _ d
+  exact ⟨d, hd_mem, UNIQUE_DARTSET_LEADS_INTO1_FAN _ hfan hcard hfan80 hds hd_mem rfl⟩
 
 /-- HOL planarity.hl :11081-11092 `dartset_leads_into_is_topological_component_yfan`
 
