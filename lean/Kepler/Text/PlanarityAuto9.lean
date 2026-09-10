@@ -896,7 +896,33 @@ theorem exists_dart_leads_into_edge_eq_topological_component_fan
     (hyxfan : y ∈ xfan x V E) (hyx : y ≠ x)
     (hconn : ∀ t : ℝ, 0 < t → t < 1 → (1 - t) • y + t • z ∈ yfan x V E) :
     ∃ w : V3, {u, w} ∈ E ∧ dartLeadsInto x V E u w = U := by
-  sorry
+  obtain ⟨w, huw, hprev⟩ :=
+    exists_edge_rw_dart_fan_inter_topological_component_not_empty_fan x V E U y z u
+      hfan hcard hfan80 hU hz hu hyge hyxfan hyx hconn
+  obtain ⟨h0, hh0pos, hspec⟩ :=
+    dartLeadsInto_spec (x := x) (V := V) (E := E) (v := u) (u := w) hfan huw
+  set s : ℝ := min (h0 / 2) (Real.pi / 2) with hsdef
+  have hs0 : 0 < s := by
+    rw [hsdef]
+    exact lt_min (half_pos hh0pos) (by positivity)
+  have hslt_h0 : s < h0 := by
+    rw [hsdef]
+    exact lt_of_le_of_lt (min_le_left _ _) (half_lt_self hh0pos)
+  have hs_le_pi : s ≤ Real.pi := by
+    rw [hsdef]
+    exact le_trans (min_le_right _ _) (by linarith [Real.pi_pos])
+  have hne : rwDartFan x V E (x, u, w, sigmaFan x V E u w) (Real.cos s) ∩ U ≠ ∅ :=
+    hprev s hs0 hs_le_pi
+  obtain ⟨y, hy⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  have hyrw : y ∈ rwDartFan x V E (x, u, w, sigmaFan x V E u w) (Real.cos s) := hy.1
+  have hyU : y ∈ U := hy.2
+  obtain ⟨-, hcc⟩ := hspec s y hs0 hslt_h0 hyrw
+  have hUcc : U = connectedComponentIn (yfan x V E) z :=
+    expand_element_in_topological_component_yfan x V E U z hfan hU hz
+  have hy_z : y ∈ connectedComponentIn (yfan x V E) z := hUcc ▸ hyU
+  have hcczy : connectedComponentIn (yfan x V E) z = connectedComponentIn (yfan x V E) y :=
+    connectedComponentIn_eq hy_z
+  exact ⟨w, huw, by rw [hUcc, hcczy, hcc]⟩
 
 /-! ## 情形 2：aff_gt 上点的 azim 不为零（planarity.hl:12759-12818） -/
 
