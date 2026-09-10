@@ -593,7 +593,33 @@ theorem KVQWYDL_lemma30 {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hds3 : ds.ncard = 3) :
     ∀ y : V3 × V3, y ∈ dartOfFan V E →
       dartsetLeadsIntoFan x V E ds = dartLeadsInto x V E y.1 y.2 → y ∈ ds := by
-  sorry
+  intro y hy hleads
+  obtain ⟨a, b⟩ := y
+  obtain ⟨f1, f2, f3, hdsf, _hf12, _hf23, _hf31, he23, he31, he12, hsig,
+    hf3fst, hf2fst, hf1fst⟩ :=
+    CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN1 hfan hcard hds hds3
+  have himg : (fun z : V3 × V3 => z.1) '' ds = ({f1.1, f2.1, f3.1} : Set V3) := by
+    rw [hdsf]
+    ext z
+    simp
+    tauto
+  have haff_ds : affGt ({x} : Set V3) ({f1.1, f2.1, f3.1} : Set V3) =
+      dartsetLeadsIntoFan x V E ds := by
+    have h := KVQWYDL_lemma10 hfan hcard hfan80 hds hds3
+    rwa [himg] at h
+  have hyedge : {a, b} ∈ E := IN_D1_FAN_IMP_EDGE_FAN hfan hcard hy
+  have haff_y : affGt ({x} : Set V3) ({f1.1, f2.1, f3.1} : Set V3) =
+      dartLeadsInto x V E a b := haff_ds.trans hleads
+  have hmem := KVQWYDL_lemma3 hfan he12 he23 he31 hyedge hsig hcard hfan80 haff_y
+  have hp1 : (f1.1, f2.1) = f1 := by rw [hf2fst]
+  have hp2 : (f2.1, f3.1) = f2 := by rw [hf3fst]
+  have hp3 : (f3.1, f1.1) = f3 := by rw [hf1fst]
+  rw [hdsf]
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem ⊢
+  rcases hmem with h | h | h
+  · exact Or.inl (h.trans hp1)
+  · exact Or.inr (Or.inl (h.trans hp2))
+  · exact Or.inr (Or.inr (h.trans hp3))
 
 /-- HOL planarity.hl :15243-15259 `KVQWYDL`
 
