@@ -331,7 +331,7 @@ theorem point_in_aff_gt_in_yfan (x : V3) (V : Set V3) (E : Set (Set V3))
     (hw : w ∈ affGt {x} {y, z})
     (hconn : ∀ t : ℝ, 0 < t → t < 1 → (1 - t) • y + t • z ∈ yfan x V E) :
     w ∈ yfan x V E := by
-  sorry
+  exact aff_gt_connect_bound_subset_yfan hfan hdis hconn hw
 
 /-- HOL planarity.hl :11938-11955 `segment_subset_yfan`
 
