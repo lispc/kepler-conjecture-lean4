@@ -288,6 +288,175 @@ arcV 0 vap vbp`，其中 `arcV` 用已移植的 `arcVFan`
 - 缺口：`dihV`（sphere.hl:377）未移植（本陈述就地展开）；
   `AZIM_DIVH`（HOL 证明所用）未移植；`sigma_fan_in_set_of_edge`
   （HOL fan.hl）未以原名移植 -/
+private theorem smul_dot (t : ℝ) (a b : V3) : (t • a) ⬝ᵥ b = t * (a ⬝ᵥ b) :=
+  smul_dotProduct t (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+
+private theorem dot_smul (a : V3) (t : ℝ) (b : V3) : a ⬝ᵥ (t • b) = t * (a ⬝ᵥ b) :=
+  dotProduct_smul t (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+
+private theorem add_dot (a b c : V3) : (a + b) ⬝ᵥ c = a ⬝ᵥ c + b ⬝ᵥ c :=
+  add_dotProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)
+
+private theorem dot_add (a b c : V3) : a ⬝ᵥ (b + c) = a ⬝ᵥ b + a ⬝ᵥ c :=
+  dotProduct_add (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)
+
+private theorem dot_comm (a b : V3) : a ⬝ᵥ b = b ⬝ᵥ a :=
+  dotProduct_comm (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+
+private theorem coe_sub (a b : V3) :
+    ((a - b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) - (b : Fin 3 → ℝ) := rfl
+
+private theorem coe_add (a b : V3) :
+    ((a + b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) + (b : Fin 3 → ℝ) := rfl
+
+private theorem coe_smul (t : ℝ) (a : V3) :
+    ((t • a : V3) : Fin 3 → ℝ) = t • (a : Fin 3 → ℝ) := rfl
+
+private theorem coe_zero : ((0 : V3) : Fin 3 → ℝ) = 0 := rfl
+
+private theorem cexp_cos_re (r : ℝ) : (Complex.exp ((r : ℂ) * I)).re = Real.cos r := by
+  have h := congrArg Complex.re (Complex.exp_mul_I (r : ℂ))
+  simpa using h
+
+private theorem cexp_sin_im (r : ℝ) : (Complex.exp ((r : ℂ) * I)).im = Real.sin r := by
+  have h := congrArg Complex.im (Complex.exp_mul_I (r : ℂ))
+  simpa using h
+
+/-- `AZIM_DIVH`（sphere.hl）的轴向标架证明：`azim a b c d` 与把 `c-a`、`d-a`
+投影到轴 `b-a` 的正交补后所得向量的夹角（即 `dihV`）相等，前提是
+`azim a b c d ≤ π`。 -/
+private theorem azim_eq_arcVFan_proj {a b c d : V3}
+    (h1 : ¬ Collinear3 a b c) (h2 : ¬ Collinear3 a b d)
+    (hπ : azim a b c d ≤ Real.pi) :
+    azim a b c d =
+      let va := c - a
+      let vb := d - a
+      let vc := b - a
+      arcVFan 0 ((vc ⬝ᵥ vc) • va - (va ⬝ᵥ vc) • vc)
+                ((vc ⬝ᵥ vc) • vb - (vb ⬝ᵥ vc) • vc) := by
+  have hab : b ≠ a := fun he => h1 (collinear3_of_eq he)
+  obtain ⟨e1, e2, e3, hon, halign⟩ := exists_on3_eq_smul (b - a) (sub_ne_zero.mpr hab)
+  have hax : (b - a : V3) = dist b a • e3 := by
+    rw [dist_eq_norm]; exact halign
+  have hax' : (b : Fin 3 → ℝ) - (a : Fin 3 → ℝ) = dist b a • (e3 : Fin 3 → ℝ) := by
+    have h := congrArg (fun v : V3 => (v : Fin 3 → ℝ)) hax
+    simpa only [coe_sub, coe_smul] using h
+  obtain ⟨psi, r1, r2, hr1, hr2, hz1, hz2⟩ :=
+    azim_frame_spec (v := a) (w := b) (w1 := c) (w2 := d) h1 h2 hon hax hab
+  have hon0 := hon
+  obtain ⟨h11, h22, h33, h12, h13, h23, -⟩ := hon
+  have h21 : e2 ⬝ᵥ e1 = 0 := by rw [dot_comm, h12]
+  have hva1 : (c - a) ⬝ᵥ e1 = r1 * Real.cos psi := by
+    have h := congrArg Complex.re hz1
+    simp only [zOf, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
+      mul_one] at h
+    rw [cexp_cos_re] at h
+    exact h
+  have hva2 : (c - a) ⬝ᵥ e2 = r1 * Real.sin psi := by
+    have h := congrArg Complex.im hz1
+    simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
+      Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, add_zero,
+      zero_add, mul_one] at h
+    rw [cexp_sin_im] at h
+    exact h
+  have hvb1 : (d - a) ⬝ᵥ e1 = r2 * Real.cos (psi + azim a b c d) := by
+    have h := congrArg Complex.re hz2
+    simp only [zOf, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, sub_zero, add_zero,
+      mul_one] at h
+    rw [cexp_cos_re] at h
+    exact h
+  have hvb2 : (d - a) ⬝ᵥ e2 = r2 * Real.sin (psi + azim a b c d) := by
+    have h := congrArg Complex.im hz2
+    simp only [zOf, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re,
+      Complex.ofReal_im, Complex.ofReal_re, mul_zero, zero_mul, add_zero,
+      zero_add, mul_one] at h
+    rw [cexp_sin_im] at h
+    exact h
+  set s : ℝ := dist b a ^ 2 with hs
+  have hs_pos : 0 < s := by rw [hs]; exact pow_pos (dist_pos.mpr hab) 2
+  set u1 : V3 := ((c - a) ⬝ᵥ e1) • e1 + ((c - a) ⬝ᵥ e2) • e2 with hu1def
+  set u2 : V3 := ((d - a) ⬝ᵥ e1) • e1 + ((d - a) ⬝ᵥ e2) • e2 with hu2def
+  have hu1_exp : u1 = (r1 * Real.cos psi) • e1 + (r1 * Real.sin psi) • e2 := by
+    rw [hu1def, hva1, hva2]
+  have hu2_exp : u2 = (r2 * Real.cos (psi + azim a b c d)) • e1 +
+      (r2 * Real.sin (psi + azim a b c d)) • e2 := by
+    rw [hu2def, hvb1, hvb2]
+  have hvcvc : (b - a) ⬝ᵥ (b - a) = s := by
+    rw [coe_sub, hax', smul_dotProduct, dotProduct_smul, h33, smul_eq_mul, hs]
+    ring
+  have hva_vc : (c - a) ⬝ᵥ (b - a) = dist b a * ((c - a) ⬝ᵥ e3) := by
+    rw [coe_sub, hax', dotProduct_smul, smul_eq_mul]
+  have hvb_vc : (d - a) ⬝ᵥ (b - a) = dist b a * ((d - a) ⬝ᵥ e3) := by
+    rw [coe_sub, hax', dotProduct_smul, smul_eq_mul]
+  have hvap : ((b - a) ⬝ᵥ (b - a)) • (c - a) - ((c - a) ⬝ᵥ (b - a)) • (b - a)
+      = s • u1 := by
+    have hdot3 : ((((c - a) ⬝ᵥ e1) • e1 + ((c - a) ⬝ᵥ e2) • e2 +
+        ((c - a) ⬝ᵥ e3) • e3) ⬝ᵥ e3) = (c - a) ⬝ᵥ e3 := by
+      rw [coe_add, coe_add, coe_smul, coe_smul, coe_smul, add_dotProduct, add_dotProduct,
+        smul_dotProduct, smul_dotProduct, smul_dotProduct, h13, h23, h33]
+      ring
+    rw [hvcvc, hva_vc, hax, on3_expand hon0 (c - a), hdot3, hu1def, hs]
+    module
+  have hvbp : ((b - a) ⬝ᵥ (b - a)) • (d - a) - ((d - a) ⬝ᵥ (b - a)) • (b - a)
+      = s • u2 := by
+    have hdot3 : ((((d - a) ⬝ᵥ e1) • e1 + ((d - a) ⬝ᵥ e2) • e2 +
+        ((d - a) ⬝ᵥ e3) • e3) ⬝ᵥ e3) = (d - a) ⬝ᵥ e3 := by
+      rw [coe_add, coe_add, coe_smul, coe_smul, coe_smul, add_dotProduct, add_dotProduct,
+        smul_dotProduct, smul_dotProduct, smul_dotProduct, h13, h23, h33]
+      ring
+    rw [hvcvc, hvb_vc, hax, on3_expand hon0 (d - a), hdot3, hu2def, hs]
+    module
+  have hu1norm : ‖u1‖ = r1 := by
+    have hsq : ‖u1‖ ^ 2 = r1 ^ 2 := by
+      rw [norm_sq_eq_dot, hu1_exp]
+      simp only [coe_add, coe_smul, add_dotProduct, dotProduct_add, smul_dotProduct,
+        dotProduct_smul, h11, h22, h12, h21]
+      ring_nf
+      nlinarith [Real.sin_sq_add_cos_sq psi]
+    nlinarith [norm_nonneg u1, hr1.le]
+  have hu2norm : ‖u2‖ = r2 := by
+    have hsq : ‖u2‖ ^ 2 = r2 ^ 2 := by
+      rw [norm_sq_eq_dot, hu2_exp]
+      simp only [coe_add, coe_smul, add_dotProduct, dotProduct_add, smul_dotProduct,
+        dotProduct_smul, h11, h22, h12, h21]
+      ring_nf
+      nlinarith [Real.sin_sq_add_cos_sq (psi + azim a b c d)]
+    nlinarith [norm_nonneg u2, hr2.le]
+  have hu1u2 : u1 ⬝ᵥ u2 = r1 * r2 * Real.cos (azim a b c d) := by
+    rw [hu1_exp, hu2_exp]
+    simp only [coe_add, coe_smul, add_dotProduct, dotProduct_add, smul_dotProduct,
+      dotProduct_smul, h11, h22, h12, h21]
+    have htrig : Real.cos psi * Real.cos (psi + azim a b c d) +
+        Real.sin psi * Real.sin (psi + azim a b c d) = Real.cos (azim a b c d) := by
+      rw [← Real.cos_sub]
+      rw [show psi - (psi + azim a b c d) = -(azim a b c d) by ring, Real.cos_neg]
+    linear_combination (r1 * r2) * htrig
+  have hnum : WithLp.ofLp (s • u1) ⬝ᵥ WithLp.ofLp (s • u2) =
+      (s * r1) * (s * r2) * Real.cos (azim a b c d) := by
+    rw [coe_smul, coe_smul, smul_dotProduct, dotProduct_smul, hu1u2]
+    ring
+  have hden1 : dist (s • u1) 0 = s * r1 := by
+    rw [dist_eq_norm, sub_zero, norm_smul, Real.norm_eq_abs, abs_of_pos hs_pos, hu1norm]
+  have hden2 : dist (s • u2) 0 = s * r2 := by
+    rw [dist_eq_norm, sub_zero, norm_smul, Real.norm_eq_abs, abs_of_pos hs_pos, hu2norm]
+  have hden : dist (s • u1) 0 * dist (s • u2) 0 = (s * r1) * (s * r2) := by
+    rw [hden1, hden2]
+  have harg : (WithLp.ofLp (s • u1) ⬝ᵥ WithLp.ofLp (s • u2)) /
+      (dist (s • u1) 0 * dist (s • u2) 0) = Real.cos (azim a b c d) := by
+    rw [hnum, hden]
+    have hsne : s ≠ 0 := ne_of_gt hs_pos
+    have hr1ne : r1 ≠ 0 := ne_of_gt hr1
+    have hr2ne : r2 ≠ 0 := ne_of_gt hr2
+    field_simp
+  dsimp only
+  show azim a b c d = arcVFan 0
+    (((b - a) ⬝ᵥ (b - a)) • (c - a) - ((c - a) ⬝ᵥ (b - a)) • (b - a))
+    (((b - a) ⬝ᵥ (b - a)) • (d - a) - ((d - a) ⬝ᵥ (b - a)) • (b - a))
+  rw [hvap, hvbp, arcVFan, coe_zero, sub_zero, sub_zero, harg,
+    Real.arccos_cos (azim_nonneg a b c d) hπ]
+
 theorem CARD_GT1_IMP_AZIM_FAN_EQ_DIHV
     {x : V3} {V : Set V3} {E : Set (Set V3)} {y : V3 × V3}
     (hfan : FAN x V E)
@@ -300,7 +469,19 @@ theorem CARD_GT1_IMP_AZIM_FAN_EQ_DIHV
       let vc := y.1 - x
       arcVFan 0 ((vc ⬝ᵥ vc) • va - (va ⬝ᵥ vc) • vc)
                 ((vc ⬝ᵥ vc) • vb - (vb ⬝ᵥ vc) • vc) := by
-  sorry
+  have he : {y.1, y.2} ∈ E := IN_D1_FAN_IMP_EDGE_FAN hfan hcard hy
+  have hnc1 : ¬ Collinear3 x y.1 y.2 := fan_not_collinear hfan he
+  have hy2soe : y.2 ∈ setOfEdge y.1 V E :=
+    (properties_of_setOfEdge_fan x V E y.1 y.2 hfan).mp he
+  have hsigsoe : sigmaFan x V E y.1 y.2 ∈ setOfEdge y.1 V E :=
+    sigma_fan_in_setOfEdge hfan hy2soe
+  have hsigE : {y.1, sigmaFan x V E y.1 y.2} ∈ E :=
+    (properties_of_setOfEdge_fan x V E y.1 (sigmaFan x V E y.1 y.2) hfan).mpr hsigsoe
+  have hnc2 : ¬ Collinear3 x y.1 (sigmaFan x V E y.1 y.2) :=
+    fan_not_collinear hfan hsigE
+  have h80 := hfan80 y.1 y.2 he
+  rw [CARD_GT1_IMP_AZIM_FAN_EQ_AZIM hfan hy hcard]
+  exact azim_eq_arcVFan_proj hnc1 hnc2 h80.2.le
 
 /-! ## 立体角恒等式与 MOZNWEH（planarity.hl:15370-15463） -/
 
