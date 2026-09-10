@@ -472,7 +472,22 @@ theorem KVQWYDL_lemma10 {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hds3 : ds.ncard = 3) :
     affGt ({x} : Set V3) ((fun y : V3 × V3 => y.1) '' ds) =
       dartsetLeadsIntoFan x V E ds := by
-  sorry
+  obtain ⟨f1, f2, f3, hdsf, _hf12, _hf23, _hf31, he23, he31, he12, hsig,
+    hf3fst, _hf2fst, _hf1fst⟩ :=
+    CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN1 hfan hcard hds hds3
+  have hf2_ds : f2 ∈ ds := by rw [hdsf]; simp
+  have hf2snd : f2.2 = f3.1 := hf3fst.symm
+  have hleads : dartsetLeadsIntoFan x V E ds = dartLeadsInto x V E f2.1 f3.1 := by
+    refine UNIQUE_DARTSET_LEADS_INTO1_FAN (dartLeadsInto x V E f2.1 f3.1)
+      hfan hcard hfan80 hds hf2_ds ?_
+    rw [hf2snd]
+  have himg : (fun y : V3 × V3 => y.1) '' ds = ({f1.1, f2.1, f3.1} : Set V3) := by
+    rw [hdsf]
+    ext z
+    simp
+    tauto
+  rw [himg, hleads]
+  exact KVQWYDL_lemma1 x V E f1.1 f2.1 f3.1 hfan he12 he23 he31 hsig hcard hfan80
 
 /-- HOL planarity.hl :15179-15191 `IN_D1_FAN_IMP_EDGE_FAN`
 
