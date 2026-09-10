@@ -316,7 +316,10 @@ HOL 原文：
 theorem sym_line1_fan {E : Type*} [AddCommGroup E] [Module ℝ E] (x y z : E)
     (hx : x ∈ affineSpan ℝ ({y, z} : Set E)) (hne : x ≠ y) :
     z ∈ affineSpan ℝ ({x, y} : Set E) := by
-  sorry
+  have h := affineSpan_pair_eq_of_right_mem_of_ne (k := ℝ) hx hne
+  rw [← AffineSubspace.affineSpan_pair_comm (k := ℝ) (p₁ := x) (p₂ := y)] at h
+  rw [h]
+  exact right_mem_affineSpan_pair (k := ℝ) y z
 
 /-- HOL planarity.hl :11592-11599 `POINT_IN_LINE`
 
