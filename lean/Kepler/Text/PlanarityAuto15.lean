@@ -379,7 +379,63 @@ theorem CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN1 {x : V3} {V : Set V3}
       {f2.1, f3.1} ∈ E ∧ {f3.1, f1.1} ∈ E ∧ {f1.1, f2.1} ∈ E ∧
       sigmaFan x V E f2.1 f3.1 = f1.1 ∧
       f3.1 = f2.2 ∧ f2.1 = f1.2 ∧ f1.1 = f3.2 := by
-  sorry
+  obtain ⟨f1, f2, f3, hdsf, h2, h3⟩ :=
+    CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN hfan hcard hds hds3
+  have hf12 : fFanPair x V E f1 = f2 := h2.symm
+  have hf23 : fFanPair x V E f2 = f3 := h3.symm
+  have hf31 : fFanPair x V E f3 = f1 :=
+    (lemma_CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN hfan hcard hds hds3 hf12 hf23 hdsf).symm
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  have hdarts : (↑H.darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  obtain ⟨d, hdH, hface⟩ := Hypermap.face_representation H hds
+  have mem_dart1 : ∀ y ∈ ds, y ∈ dart1OfFan V E := by
+    intro y hy
+    have hyface : y ∈ H.face d := by simpa [hface] using hy
+    have hymem : y ∈ H.darts := H.face_subset_darts hdH hyface
+    change y ∈ (↑H.darts : Set (V3 × V3)) at hymem
+    simpa [hdarts] using hymem
+  have hf1d : f1 ∈ dart1OfFan V E := mem_dart1 f1 (by rw [hdsf]; simp)
+  have hf2_mem : f2 ∈ dart1OfFan V E := by
+    have h := fFanPair_mem_dart1 hfan hf1d
+    rwa [hf12] at h
+  have hf3_mem : f3 ∈ dart1OfFan V E := by
+    have h := fFanPair_mem_dart1 hfan hf2_mem
+    rwa [hf23] at h
+  have hf2eq : f2 = (f1.2, inverseSigmaFan x V E f1.2 f1.1) := by
+    rw [← hf12]; rfl
+  have hf3eq : f3 = (f2.2, inverseSigmaFan x V E f2.2 f2.1) := by
+    rw [← hf23]; rfl
+  have hf1eq : f1 = (f3.2, inverseSigmaFan x V E f3.2 f3.1) := by
+    rw [← hf31]; rfl
+  have hf2fst : f2.1 = f1.2 := by rw [hf2eq]
+  have hf3fst : f3.1 = f2.2 := by rw [hf3eq]
+  have hf1fst : f1.1 = f3.2 := by rw [hf1eq]
+  have hf2snd : f2.2 = inverseSigmaFan x V E f1.2 f1.1 := by rw [hf2eq]
+  have hf32 : f3.1 = inverseSigmaFan x V E f1.2 f1.1 := hf3fst.trans hf2snd
+  have he23 : {f2.1, f3.1} ∈ E := by
+    have h : {f2.1, f2.2} ∈ E := hf2_mem
+    rwa [← hf3fst] at h
+  have he31 : {f3.1, f1.1} ∈ E := by
+    have h : {f3.1, f3.2} ∈ E := hf3_mem
+    rwa [← hf1fst] at h
+  have he12 : {f1.1, f2.1} ∈ E := by
+    have h : {f1.1, f1.2} ∈ E := hf1d
+    rwa [← hf2fst] at h
+  have hsig : sigmaFan x V E f2.1 f3.1 = f1.1 := by
+    have hba : {f1.2, f1.1} ∈ E := by
+      have h : {f1.1, f1.2} ∈ E := hf1d
+      rwa [Set.pair_comm] at h
+    have hinv : inverseSigmaFan x V E f1.2 f1.1 =
+        inverse1SigmaFan x V E f1.2 f1.1 :=
+      (inverse_sigma_fan_eq_inverse1 hfan hba).symm
+    have hσinv : sigmaFan x V E f1.2 (inverse1SigmaFan x V E f1.2 f1.1) = f1.1 :=
+      (INVERSE1_SIGMA_FAN hfan).2.1 f1.1 hba
+    rw [hf2fst, hf32, hinv]
+    exact hσinv
+  exact ⟨f1, f2, f3, hdsf, hf12, hf23, hf31, he23, he31, he12, hsig,
+    hf3fst, hf2fst, hf1fst⟩
 
 /-! ## KVQWYDL 系列：3 元面的 aff_gt 与引导集（planarity.hl:15163-15259） -/
 
