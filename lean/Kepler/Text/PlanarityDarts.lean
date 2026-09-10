@@ -151,7 +151,13 @@ HOL 原文：
 theorem graph_add_edge_is_graph {E E1 : Set (Set V3)} {v u : V3}
     (hE1 : E1 = E ∪ {{v, u}}) (hvu : v ≠ u) (hgraph : Graph E) :
     Graph E1 := by
-  sorry
+  intro e he
+  rw [hE1, Set.mem_union, Set.mem_singleton_iff] at he
+  rcases he with he | rfl
+  · exact hgraph e he
+  · refine ⟨(Set.finite_singleton u).insert v, ?_⟩
+    rw [← Set.ncard_eq_toFinset_card ({v, u} : Set V3) ((Set.finite_singleton u).insert v),
+      CARD_2_FAN hvu]
 
 /-- HOL planarity.hl :11151-11166 `add_edge_into_collinear_fan`
 
