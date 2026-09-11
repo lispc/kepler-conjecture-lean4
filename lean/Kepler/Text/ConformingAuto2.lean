@@ -441,7 +441,7 @@ HOL `aff {x,v,u}` ↔ `affineSpan ℝ ({x,v,u} : Set V3)`；
 theorem NEGLIGIBLE_AFF_3_INTER_BALL (x v u : V3) (r : ℝ) :
     volume (((affineSpan ℝ ({x, v, u} : Set V3)) : Set V3) ∩
       Metric.ball x r) = 0 := by
-  sorry
+  exact measure_mono_null Set.inter_subset_left (NEGLIGIBLE_AFF_3 x v u)
 
 /-- HOL Conforming.hl :713-721 `NEGLIGIBLE_AFF_GT_1_2_INTER_BALL`
 
