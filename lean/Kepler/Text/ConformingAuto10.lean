@@ -92,7 +92,11 @@ HOL 原文：
 - `Set.mem_sUnion`、`Set.eq_empty_iff_forall_not_mem`、`Set.pair_comm`（Mathlib） -/
 theorem condition_set_of_edge_eq_empty (v : V3) (V : Set V3) (E2 : Set (Set V3)) :
     v ∉ ⋃₀ E2 → setOfEdge v V E2 = ∅ := by
-  sorry
+  intro h
+  rw [Set.eq_empty_iff_forall_notMem]
+  intro w hw
+  rw [setOfEdge] at hw
+  exact h (Set.mem_sUnion.mpr ⟨{v, w}, hw.1, by simp⟩)
 
 /-- HOL Conforming.hl :2374-2378 `SET_OF_EDGE_INVARIANT`
 
