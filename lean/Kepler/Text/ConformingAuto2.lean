@@ -288,6 +288,51 @@ theorem NEGLIGIBLE_AFF_3 (x v u : V3) :
   exact MeasureTheory.Measure.addHaar_affineSubspace volume _
     (affineSpan_three_ne_top_auto2 x v u)
 
+/-- 有限仿射组合落入仿射子空间：`∑ w∈s, f w • w`（权重和为 1，各点属于
+`affineSpan ℝ T`）仍属于 `affineSpan ℝ T`。取基点 `b`，把组合写成
+`b + ∑ w, f w • (w - b)`，后项落在方向子空间。 -/
+private theorem finset_sum_smul_mem_affineSpan_auto2 {T : Set V3} {s : Finset V3}
+    {f : V3 → ℝ}
+    (hS : ∀ w ∈ s, w ∈ (affineSpan ℝ T : Set V3))
+    (hsum : ∑ w ∈ s, f w = 1) :
+    ∑ w ∈ s, f w • w ∈ (affineSpan ℝ T : Set V3) := by
+  have hne : s.Nonempty :=
+    Finset.nonempty_of_sum_ne_zero (by rw [hsum]; exact one_ne_zero)
+  obtain ⟨b, hb⟩ := hne
+  have hbS : b ∈ (affineSpan ℝ T : Set V3) := hS b hb
+  have hdir : ∑ w ∈ s, f w • (w - b) ∈ (affineSpan ℝ T).direction := by
+    apply Submodule.sum_mem
+    intro w hw
+    exact Submodule.smul_mem _ (f w)
+      (AffineSubspace.vsub_mem_direction (hS w hw) hbS)
+  have hsub : ∑ w ∈ s, f w • (w - b) = (∑ w ∈ s, f w • w) - b := by
+    simp only [smul_sub]
+    rw [Finset.sum_sub_distrib, ← Finset.sum_smul, hsum, one_smul]
+  have hy : ∑ w ∈ s, f w • w = (∑ w ∈ s, f w • (w - b)) +ᵥ b := by
+    rw [vadd_eq_add, hsub]
+    abel
+  rw [hy]
+  exact AffineSubspace.vadd_mem_of_mem_direction hdir hbS
+
+/-- `affGe {x,v} {u} ⊆ aff {x,v,u}`：`Affsign` 的见证是 `{x,v,u}` 上权重和为 1
+的仿射组合，故落入其仿射张成。 -/
+private theorem affGe_pair_singleton_subset_affineSpan_auto2 (x v u : V3) :
+    affGe ({x, v} : Set V3) {u} ⊆ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) := by
+  intro y hy
+  simp only [affGe, Set.mem_setOf_eq, Affsign] at hy
+  obtain ⟨f, hfin, hcomb, _hpos, hone⟩ := hy
+  have hmem : ∀ w ∈ hfin.toFinset, w ∈ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) := by
+    intro w hw
+    have hw' : w ∈ ({x, v} ∪ {u} : Set V3) := by
+      rw [← hfin.coe_toFinset]
+      exact hw
+    have hw'' : w ∈ ({x, v, u} : Set V3) := by
+      simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff] at hw' ⊢
+      tauto
+    exact subset_affineSpan ℝ _ hw''
+  rw [hcomb]
+  exact finset_sum_smul_mem_affineSpan_auto2 hmem hone
+
 /-- HOL Conforming.hl :660-680 `NEGLIGIBLE_AFF_GE_2_1`
 
 HOL 原文：
@@ -314,7 +359,8 @@ HOL `aff_ge {x,v} {u}` ↔ `affGe ({x,v} : Set V3) {u}`
   `properties_coordinate`、`e1_fan`/`e2_fan` 未以该名移植 -/
 theorem NEGLIGIBLE_AFF_GE_2_1 (x v u : V3) (h : ¬ Collinear3 x v u) :
     volume (affGe ({x, v} : Set V3) {u}) = 0 := by
-  sorry
+  exact measure_mono_null (affGe_pair_singleton_subset_affineSpan_auto2 x v u)
+    (NEGLIGIBLE_AFF_3 x v u)
 
 /-- HOL Conforming.hl :681-690 `NEGLIGIBLE_AFF_GE_1_2`
 
