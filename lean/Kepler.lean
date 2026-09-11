@@ -57,9 +57,17 @@ import Kepler.Text.PlanarityAuto13
 import Kepler.Text.PlanarityAuto14
 import Kepler.Text.PlanarityAuto15
 import Kepler.Text.PlanarityAuto16
+-- Phase 5: Conforming.hl 顶层定义层（conforming_* / N_FAN / f1_fan）
+import Kepler.Text.ConformingDefs
+import Kepler.Text.ConformingAuto1
+import Kepler.Text.ConformingAuto2
+import Kepler.Text.ConformingAuto3
+import Kepler.Text.ConformingAuto4
 import Kepler.Text.VectorAngleLemmas
 -- Phase 4: 分支定界证书树（二分盒树 + covers/bb_sound，叶为内核 decide 的 checkPos）
 import Kepler.Interval.Cert
+-- Phase 4 G4: 析取目标证书（bb_sound_disj，覆盖 58 条 disj 案例）
+import Kepler.Interval.CertDisj
 import Kepler.Graphs.ListAux
 import Kepler.Graphs.Rotation
 import Kepler.Graphs.Graph
