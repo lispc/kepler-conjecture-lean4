@@ -247,9 +247,46 @@ Mathlib `affineSpan ℝ`。故结论为
 - `addHaar_affineSubspace`（Mathlib/MeasureTheory/Measure/Lebesgue/EqHaar.lean:199）
 - `finrank_affineSpan_le` / `AffineSubspace.finrank_lt`（Mathlib）
 - 缺口：HOL `NEGLIGIBLE_AFFINE_HULL_3`、`aff` 未以该名移植 -/
+private theorem finrank_span_pair_le_two_auto2 (a b : V3) :
+    Module.finrank ℝ (Submodule.span ℝ ({a, b} : Set V3)) ≤ 2 := by
+  have h := finrank_span_finset_le_card (R := ℝ) ({a, b} : Finset V3)
+  unfold Set.finrank at h
+  rw [show (({a, b} : Finset V3) : Set V3) = ({a, b} : Set V3) from by simp] at h
+  have h2 : ({a, b} : Finset V3).card ≤ 2 := by
+    calc ({a, b} : Finset V3).card ≤ ({b} : Finset V3).card + 1 := Finset.card_insert_le a {b}
+      _ = 2 := by simp
+  omega
+
+private theorem affineSpan_three_ne_top_auto2 (x v u : V3) :
+    (affineSpan ℝ ({x, v, u} : Set V3)) ≠ ⊤ := by
+  intro h
+  have hdir : (affineSpan ℝ ({x, v, u} : Set V3)).direction = ⊤ := by
+    rw [h]; exact AffineSubspace.direction_top ℝ V3 V3
+  have hvs : vectorSpan ℝ ({x, v, u} : Set V3)
+      = Submodule.span ℝ ({v - x, u - x} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_right ℝ (show x ∈ ({x, v, u} : Set V3) from by simp)]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro p ⟨q, hq, rfl⟩
+      rcases hq with rfl | rfl | rfl
+      · simp
+      · exact Submodule.subset_span (by left; rfl)
+      · exact Submodule.subset_span (by right; rfl)
+    · rw [Submodule.span_le]
+      rintro p (rfl | rfl)
+      · exact Submodule.subset_span ⟨v, by simp, rfl⟩
+      · exact Submodule.subset_span ⟨u, by simp, rfl⟩
+  have hle : Module.finrank ℝ (affineSpan ℝ ({x, v, u} : Set V3)).direction ≤ 2 := by
+    rw [direction_affineSpan, hvs]
+    exact finrank_span_pair_le_two_auto2 (v - x) (u - x)
+  rw [hdir, finrank_top] at hle
+  have h3 : Module.finrank ℝ V3 = 3 := by simp [V3]
+  omega
+
 theorem NEGLIGIBLE_AFF_3 (x v u : V3) :
     volume ((affineSpan ℝ ({x, v, u} : Set V3)) : Set V3) = 0 := by
-  sorry
+  exact MeasureTheory.Measure.addHaar_affineSubspace volume _
+    (affineSpan_three_ne_top_auto2 x v u)
 
 /-- HOL Conforming.hl :660-680 `NEGLIGIBLE_AFF_GE_2_1`
 
