@@ -316,7 +316,8 @@ theorem INJ_TRAN_D1_FAN (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     y ∈ dart1OfFan V E ∧ y1 ∈ dart1OfFan V E ∧
     y = y1 →
       y = y1 := by
-  sorry
+  rintro ⟨-, -, -, -, -, hy⟩
+  exact hy
 
 /-- HOL Conforming.hl :5009-5116 `INJ_TRANF_FACE_DELETE_DS`
 
