@@ -452,6 +452,82 @@ FAN(x,V,E)
 - `wDartFan`（Kepler/Text/Fan.lean:162）
 - 缺口：HOL `WEDGE_LUNE_GT`（fan.hl）、`inter_aff_gt_3_1_is_aff_gt_2_2`
   （fan.hl）、`properties_of_f1_fan`（fan.hl:2797）未以该名移植 -/
+
+/-
+`WEDGE_LUNE_GT` 的 2-2 方向（本文件私有）：四点不共面且
+`0 < azim x v w s < π` 时，`affGt {x,v} {w,s} ⊆ wedge x v w s`。
+
+证明：`affGt2_2` 给出 `p = t1•x + t2•v + t3•w + t4•s`（`t3,t4>0`）。
+令 `c = t3+t4`、`a = t4/c`、`q = (1-a)•w + a•s`，则 `p = t1•x + t2•v + c•q`
+且 `q` 是弦 `w→s` 的内点。先用 `properties_of_fully_surrounded1_fan`
+两次把方位角反射到 `azim x w s v ∈ (0,π)`，再以
+`inequality4_aim_in_convex_fan` 得 `0 < azim x v w q < azim x v w s`。
+最后 `azim_of_affGt_combo` 说明 `p` 与 `q` 同方位角，`p` 非共线由
+`aff_gt_imp_not_collinear`。 -/
+private theorem affGt_subset_wedge_ca1 {x v w s : V3}
+    (hcop : ¬ Coplanar ({x, v, w, s} : Set V3))
+    (hθ0 : 0 < azim x v w s) (hθπ : azim x v w s < Real.pi)
+    (hdis : Disjoint ({x, v} : Set V3) {w, s}) :
+    affGt ({x, v} : Set V3) {w, s} ⊆ wedge x v w s := by
+  intro p hp
+  rw [affGt2_2 hdis] at hp
+  obtain ⟨t1, t2, t3, t4, ht3, ht4, hsum, hp_eq⟩ := hp
+  set c : ℝ := t3 + t4 with hc
+  have hcpos : 0 < c := by rw [hc]; linarith
+  set a : ℝ := t4 / c with ha
+  have ha0 : 0 < a := by rw [ha]; exact div_pos ht4 hcpos
+  have ha1 : a < 1 := by
+    rw [ha, div_lt_one hcpos]
+    linarith [ht3]
+  set q : V3 := (1 - a) • w + a • s with hq
+  have hcq : c • q = t3 • w + t4 • s := by
+    rw [hq, ha, hc, smul_add, smul_smul, smul_smul]
+    have hcne : t3 + t4 ≠ 0 := ne_of_gt (by linarith)
+    rw [show (t3 + t4) * (1 - t4 / (t3 + t4)) = t3 by
+          field_simp [hcne] <;> ring,
+        show (t3 + t4) * (t4 / (t3 + t4)) = t4 by
+          field_simp [hcne] <;> ring]
+  have hp_q : p = t1 • x + t2 • v + c • q := by
+    rw [hp_eq, hcq]
+    module
+  -- 反射方位角
+  have hcop_sw : ¬ Coplanar ({x, s, v, w} : Set V3) := by
+    rwa [show ({x, s, v, w} : Set V3) = {x, v, w, s} from by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  have hsvw : 0 < azim x s v w ∧ azim x s v w < Real.pi :=
+    properties_of_fully_surrounded1_fan hcop_sw hθ0 hθπ
+  have hcop_ws : ¬ Coplanar ({x, w, s, v} : Set V3) := by
+    rwa [show ({x, w, s, v} : Set V3) = {x, v, w, s} from by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  have hwsv : 0 < azim x w s v ∧ azim x w s v < Real.pi :=
+    properties_of_fully_surrounded1_fan hcop_ws hsvw.1 hsvw.2
+  have hq_bounds : 0 < azim x v w q ∧ azim x v w q < azim x v w s := by
+    have h := inequality4_aim_in_convex_fan (x := x) (v := v) (u := w) (w := s)
+      (a := a) hcop hwsv.1 hwsv.2 ha0 ha1
+    rw [hq]
+    exact h
+  -- p 与 q 同方位角
+  obtain ⟨-, hnc_vw, -⟩ := notcoplanar_imp_notcollinear_fan hcop
+  have hnc_q : ¬ Collinear3 x v q := by
+    intro hc
+    have h0 : azim x v w q = 0 := by
+      unfold azim
+      rw [if_pos (Or.inr hc)]
+    linarith [hq_bounds.1, h0]
+  have hsum' : t1 + t2 + c = 1 := by rw [hc]; linarith
+  have haz : azim x v w p = azim x v w q :=
+    (azim_of_affGt_combo hnc_vw hnc_q t1 t2 c hcpos hsum' hp_q).symm
+  have hxv : x ≠ v := fun h => hnc_vw
+    (collinear3_of_eq (v := x) (w := v) (w1 := w) h.symm)
+  have hxq : x ≠ q := fun h => hnc_q
+    (collinear3_pair_left (v0 := x) (v1 := v) (x := q) h.symm)
+  have hvq : v ≠ q := fun h => hnc_q
+    (collinear3_pair_right (v0 := x) (v1 := v) (x := q) h.symm)
+  have hpq : p ∈ affGt ({x, v} : Set V3) {q} :=
+    affGt_of_triple t1 t2 c hcpos hsum' hp_q hxv hxq hvq
+  have hnc_p : ¬ Collinear3 x v p := aff_gt_imp_not_collinear hnc_q hpq
+  exact ⟨hnc_p, by rw [haz]; exact hq_bounds.1, by rw [haz]; exact hq_bounds.2⟩
+
 theorem DARTSET_LEADS_INTO_SUBSET_WDART_FAN {x : V3} {V : Set V3}
     {E : Set (Set V3)} {ds : Set (V3 × V3)} {y : V3 × V3}
     (hfan : FAN x V E)
@@ -460,7 +536,118 @@ theorem DARTSET_LEADS_INTO_SUBSET_WDART_FAN {x : V3} {V : Set V3}
     (hconf : conformingFan x V E hfan) :
     dartsetLeadsIntoFan x V E ds ⊆
       wDartFan x V E (x, y.1, y.2, sigmaFan x V E y.1 y.2) := by
-  sorry
+  obtain ⟨hcard, hfan80, -, hhalf, -, -⟩ := hconf
+  set sigma : V3 := sigmaFan x V E y.1 y.2 with hsigma
+  -- y ∈ d1_fan，从而 {y.1,y.2} ∈ E
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  have hdarts : (↑H.darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  obtain ⟨d, hdH, hface⟩ := Hypermap.face_representation H hds
+  have hy_dart1 : y ∈ dart1OfFan V E := by
+    have hyface : y ∈ H.face d := by simpa [hface] using hy
+    have hymem : y ∈ H.darts := H.face_subset_darts hdH hyface
+    change y ∈ (↑H.darts : Set (V3 × V3)) at hymem
+    simpa [hdarts] using hymem
+  have hvw : {y.1, y.2} ∈ E := hy_dart1
+  have hnc_vw : ¬ Collinear3 x y.1 y.2 := fan_not_collinear hfan hvw
+  have hy1V : y.1 ∈ V := (fan_mem_of_edge hfan hvw).1
+  have hcardv : 1 < (setOfEdge y.1 V E).ncard := hcard y.1 hy1V
+  obtain ⟨hθ0, hθπ⟩ := hfan80 y.1 y.2 hvw
+  have hσ_soe : sigma ∈ setOfEdge y.1 V E := by
+    rw [hsigma]
+    exact sigma_fan_in_setOfEdge hfan
+      ((properties_of_setOfEdge_fan x V E y.1 y.2 hfan).mp hvw)
+  have h_vσ : {y.1, sigma} ∈ E :=
+    (properties_of_setOfEdge_fan x V E y.1 sigma hfan).mpr hσ_soe
+  have h_σv : {sigma, y.1} ∈ E := by
+    rw [Set.pair_comm]; exact h_vσ
+  have hnc_vσ : ¬ Collinear3 x y.1 sigma := fan_not_collinear hfan h_vσ
+  -- (sigma, y.1) 也在 ds 中（f1Fan 的前像）
+  have hy1_dart : (sigma, y.1) ∈ dartOfFan V E := by
+    rw [dartOfFan_eq_dart1_of_surrounded hfan hcard]
+    change {(sigma, y.1).1, (sigma, y.1).2} ∈ E
+    simpa using h_σv
+  have hf1_y1 : f1Fan x V E (sigma, y.1) = y := by
+    have h2 : inverse1SigmaFan x V E y.1 sigma = y.2 := by
+      rw [hsigma]
+      exact (INVERSE1_SIGMA_FAN (v := y.1) hfan).2.2 y.2 hvw
+    simp only [f1Fan]
+    rw [h2]
+  have hy1_ds : (sigma, y.1) ∈ ds :=
+    IMAGE_F1_IN_FACE_IMP_IN_FACE hfan hcard hds hy hy1_dart hf1_y1
+  -- 用 conformingHalfSpaceFan 展开为半空间交
+  rw [hhalf ds hds]
+  intro p hp
+  have hp_y : p ∈ affGt ({x, y.1, y.2} : Set V3) {(f1Fan x V E y).2} :=
+    (Set.mem_iInter.mp (Set.mem_iInter.mp hp y)) hy
+  have hp_y1 : p ∈ affGt ({x, (sigma, y.1).1, (sigma, y.1).2} : Set V3)
+      {(f1Fan x V E (sigma, y.1)).2} :=
+    (Set.mem_iInter.mp (Set.mem_iInter.mp hp (sigma, y.1))) hy1_ds
+  -- 两个 3-1 半空间
+  have hp_y_inv : p ∈ affGt ({x, y.1, y.2} : Set V3)
+      {inverse1SigmaFan x V E y.2 y.1} := by
+    simpa only [f1Fan] using hp_y
+  have hp_y_σ : p ∈ affGt ({x, y.1, y.2} : Set V3) {sigma} := by
+    have h := fully_surrounded_imp_aff_gt_3_1_of_edge_eq_fan hfan hvw hcard hfan80
+    rw [← h] at hp_y_inv
+    rw [← hsigma] at hp_y_inv
+    exact hp_y_inv
+  have hp_y1_w : p ∈ affGt ({x, sigma, y.1} : Set V3) {y.2} := by
+    have h2 : (f1Fan x V E (sigma, y.1)).2 = y.2 := by
+      simp only [f1Fan, hsigma]
+      exact (INVERSE1_SIGMA_FAN (v := y.1) hfan).2.2 y.2 hvw
+    simpa only [h2] using hp_y1
+  -- 非共面性（四种点序）
+  have hcop_σvw : ¬ Coplanar ({x, sigma, y.1, y.2} : Set V3) :=
+    properties_fully_surrounded hfan h_σv hvw
+      (by rw [hsigma]; exact hθ0) (by rw [hsigma]; exact hθπ)
+  have hcop_wvσ : ¬ Coplanar ({x, y.2, y.1, sigma} : Set V3) := by
+    rwa [show ({x, y.2, y.1, sigma} : Set V3) = {x, sigma, y.1, y.2} from by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  have hcop_vwσ : ¬ Coplanar ({x, y.1, y.2, sigma} : Set V3) := by
+    rwa [show ({x, y.1, y.2, sigma} : Set V3) = {x, sigma, y.1, y.2} from by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  -- 交到 2-2
+  have hp2 : p ∈ affGt ({x, y.1} : Set V3) {y.2, sigma} := by
+    have hsetA : ({x, y.2, y.1} : Set V3) = {x, y.1, y.2} := by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    have hsetB : ({x, y.1, sigma} : Set V3) = {x, sigma, y.1} := by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    have hmem : p ∈ affGt ({x, y.2, y.1} : Set V3) {sigma} ∩
+        affGt ({x, y.1, sigma} : Set V3) {y.2} := by
+      refine ⟨?_, ?_⟩
+      · rwa [hsetA]
+      · rwa [hsetB]
+    have heq := inter_aff_gt_3_1_is_aff_gt_2_2 x y.2 y.1 sigma hcop_wvσ
+    rw [heq] at hmem
+    exact hmem
+  -- 互异性
+  have hxv : x ≠ y.1 := fun h => hnc_vw
+    (collinear3_of_eq (v := x) (w := y.1) (w1 := y.2) h.symm)
+  have hxw : x ≠ y.2 := fun h => hnc_vw
+    (collinear3_pair_left (v0 := x) (v1 := y.1) (x := y.2) h.symm)
+  have hxs : x ≠ sigma := fun h => hnc_vσ
+    (collinear3_pair_left (v0 := x) (v1 := y.1) (x := sigma) h.symm)
+  have hvw' : y.1 ≠ y.2 := edge_ne_of_fan hfan hvw
+  have hvs : y.1 ≠ sigma := fun h => hnc_vσ
+    (collinear3_pair_right (v0 := x) (v1 := y.1) (x := sigma) h.symm)
+  have hdis : Disjoint ({x, y.1} : Set V3) {y.2, sigma} := by
+    rw [Set.disjoint_left]
+    intro a ha hb
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ha hb
+    rcases ha with ha | ha
+    · rcases hb with hb | hb
+      · exact hxw (ha.symm.trans hb)
+      · exact hxs (ha.symm.trans hb)
+    · rcases hb with hb | hb
+      · exact hvw' (ha.symm.trans hb)
+      · exact hvs (ha.symm.trans hb)
+  have hpwedge : p ∈ wedge x y.1 y.2 sigma :=
+    affGt_subset_wedge_ca1 hcop_vwσ
+      (by rw [hsigma]; exact hθ0) (by rw [hsigma]; exact hθπ) hdis hp2
+  rw [wDartFan, if_pos hcardv]
+  exact hpwedge
 
 /-! ## 迭代点与简单超映射（Conforming.hl:354-457） -/
 
