@@ -130,6 +130,15 @@ EOF
   LAST_IMP=$(grep -n '^import Kepler.Text.Conforming' Kepler.lean | tail -1 | cut -d: -f1)
   [ -n "$LAST_IMP" ] || LAST_IMP=$(grep -n '^import Kepler.Text.PlanarityAuto16' Kepler.lean | tail -1 | cut -d: -f1)
   sed -i "${LAST_IMP}a import $MODULE" Kepler.lean
+  # Root-module build (now that Kepler.lean imports $MODULE): catches
+  # cross-module declaration collisions that the per-module `lake env lean
+  # $FILE` check cannot see. Example: Conforming.hl binds `add_edge_graph` at
+  # both :2304 and :2431; only Kepler.lean imports batch 9 and batch 10
+  # together. Build the root BEFORE committing so a collision is a clean stop.
+  if ! lake build Kepler > /tmp/auto_skel_conforming_root_build.log 2>&1; then
+    die "skeleton breaks root module Kepler.lean (cross-module name collision?), see /tmp/auto_skel_conforming_root_build.log"
+  fi
+  grep -qE '(^| )error:' /tmp/auto_skel_conforming_root_build.log && die "errors in root build after skeleton (batch $BATCH)"
   SKEL_MARK=$(git rev-parse --short HEAD)
   git add "$FILE" Kepler.lean
   git commit -q -m "wip: ConformingAuto$BATCH skeleton — $SKEL_SORRIES frozen statements (Conforming.hl:$FIRST-$END), deepseek-designed" || die "skeleton commit failed"

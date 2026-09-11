@@ -12,7 +12,7 @@ Coverage (batch 10, Conforming.hl:2357-2633):
 - `SET_OF_EDGE_INVARIANT` (2374)
 - `expand_unions` (2381)
 - `SIGMA_FAN_OF_FANADD1` (2394)
-- `add_edge_graph` (2431)
+- `add_edge_graph` (2431; Lean name `add_edge_graph_of_fanadd`)
 - `not_in_set_of_edge` (2443)
 - `set_of_only_edge` (2453)
 - `set_of_only_edge1` (2462)
@@ -43,11 +43,12 @@ Encoding notes (gaps / closest existing encodings):
   (ported in ConformingAuto9.lean:344), and the `SIGMA_FAN_OF_FANADD*`
   proofs use `add_edge_imp_card_set_edge_ge1_fan`
   (ConformingAuto9.lean:376) and `add_edge_graph` (ConformingAuto9.lean:471).
-  ConformingAuto9 is deliberately NOT imported here: HOL re-binds the name
-  `add_edge_graph` at Conforming.hl:2431 (a different statement from
-  ConformingAuto9's :2304), so importing both would duplicate the
-  declaration. Proofs needing the batch-9 lemmas must restate them locally
-  or use the Mathlib primitives directly.
+  HOL re-binds the name `add_edge_graph` at Conforming.hl:2431 (a different
+  statement from ConformingAuto9's :2304). Since the root module `Kepler.lean`
+  imports every Auto file, the batch-10 version here is renamed
+  `add_edge_graph_of_fanadd` to avoid the duplicate declaration. ConformingAuto9
+  is still NOT imported here; proofs needing the batch-9 lemmas must restate
+  them locally or use the Mathlib primitives directly.
 - HOL `remark1_fan` (fan.hl:423) and `UNIQUE_SIGMA_FAN` (fan.hl:2107) are
   not ported under those names; the `SIGMA_FAN_OF_FANADD*` proof sketches
   note the closest available substitutes.
@@ -217,7 +218,8 @@ E UNION {{v,w}}=E1
 编码说明：`E UNION {{v,w}}` ↔ `E ∪ {({v, w} : Set V3)}`；`E1` 为
 `Set (Set V3)`，故 `{w,v}`/`{v,w}` 是 `Set V3` 的元素。注意 HOL 在
 Conforming.hl:2304 与 :2431 两次以同名 `add_edge_graph` 绑定不同命题；
-本文件对应 :2431 版本，且不 import ConformingAuto9（避免声明重名）。
+本文件对应 :2431 版本。为避免与 `ConformingAuto9.lean:471` 的 :2304
+版本在根模块 `Kepler.lean` 中撞名，这里改名为 `add_edge_graph_of_fanadd`。
 
 证明思路：由 `h : E ∪ {{v,w}} = E1` 得 `{v,w} ∈ E1`
 （`Set.mem_union_right` + `Set.mem_singleton`）；又 `{w,v} = {v,w}`
@@ -225,7 +227,7 @@ Conforming.hl:2304 与 :2431 两次以同名 `add_edge_graph` 绑定不同命题
 
 候选已有引理：
 - `Set.mem_union_right`、`Set.mem_singleton_iff`、`Set.pair_comm`（Mathlib） -/
-theorem add_edge_graph (v w : V3) (E E1 : Set (Set V3)) :
+theorem add_edge_graph_of_fanadd (v w : V3) (E E1 : Set (Set V3)) :
     E ∪ {{v, w}} = E1 →
       ({w, v} : Set V3) ∈ E1 ∧ ({v, w} : Set V3) ∈ E1 := by
   intro h
@@ -376,7 +378,7 @@ FAN(x,V,E)/\ FAN(x,V,E1)
 证明思路：由 `sigma_fan x V E u w = v` 与 `SIGMA_FAN` 得
 `v ∈ setOfEdge u V E`；由 `add_edge_imp_card_set_edge_ge1_fan` 与
 `SET_OF_EDGE_INVARIANT` 在 `E1 = E ∪ {{v,w}}` 上比较
-`setOfEdge v V E` 与 `setOfEdge v V E1`（用 `add_edge_graph` 与
+`setOfEdge v V E` 与 `setOfEdge v V E1`（用 `add_edge_graph_of_fanadd` 与
 `not_in_set_of_edge` 排除 `w`，用 `set_of_only_edge` 定位唯一邻居），再对
 `E1` 用 `UNIQUE_SIGMA_FAN` 把结论化为 `sigmaFan x V E v u ∈
 setOfEdge v V E1`；角度比较用 `angle_is_small_fan`、`sum4_azim_fan`、
@@ -385,7 +387,7 @@ setOfEdge v V E1`；角度比较用 `angle_is_small_fan`、`sum4_azim_fan`、
 
 候选已有引理：
 - `SIGMA_FAN`（Kepler/Text/Fan.lean:317）、`fan80`（Kepler/Text/Fan.lean:227）
-- `add_edge_graph`、`not_in_set_of_edge`、`set_of_only_edge`、
+- `add_edge_graph_of_fanadd`、`not_in_set_of_edge`、`set_of_only_edge`、
   `SET_OF_EDGE_INVARIANT`（本文件上文）
 - `add_edge_imp_card_set_edge_ge1_fan`（Kepler/Text/ConformingAuto9.lean:376）
 - `angle_is_small_fan`（Kepler/Text/PlanarityAngle.lean:490）
@@ -488,7 +490,7 @@ FAN(x,V,E)/\ FAN(x,V,E1)
 `sigmaFan x V E1 v u = w`；HOL 内层 `!v` 与外层参数 `v` 同名（遮蔽），
 Lean 侧改名为 `v'`（alpha 等价）。
 
-证明思路：由 `add_edge_graph` 得 `{v,w} ∈ E1`；由 `add_edge_imp_card_set_edge_ge1_fan`
+证明思路：由 `add_edge_graph_of_fanadd` 得 `{v,w} ∈ E1`；由 `add_edge_imp_card_set_edge_ge1_fan`
 得 `1 < (setOfEdge v V E1).ncard`，故 `setOfEdge v V E1 ≠ {u}`；对 `E1`
 用 `UNIQUE_SIGMA_FAN` 把结论化为 `w ∈ setOfEdge v V E1`，由
 `SET_OF_EDGE_INVARIANT` 与 `{v,w} ∈ E1` 给出；若 `setOfEdge v V E = {u}`
@@ -497,7 +499,7 @@ Lean 侧改名为 `v'`（alpha 等价）。
 
 候选已有引理：
 - `SIGMA_FAN`（Kepler/Text/Fan.lean:317）、`fan80`（Kepler/Text/Fan.lean:227）
-- `add_edge_graph`、`SET_OF_EDGE_INVARIANT`（本文件上文）
+- `add_edge_graph_of_fanadd`、`SET_OF_EDGE_INVARIANT`（本文件上文）
 - `add_edge_imp_card_set_edge_ge1_fan`（Kepler/Text/ConformingAuto9.lean:376）
 - `angle_is_small_fan`（Kepler/Text/PlanarityAngle.lean:490）
 - `sum4_azim_fan`（Kepler/Text/TopologyFan.lean:1105）
