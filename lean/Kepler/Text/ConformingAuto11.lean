@@ -107,7 +107,13 @@ xfan(x,V,E) INTER s = UNIONS {y | ?e. e IN E /\ y = (aff_ge {x} e) INTER s}
 - `Set.mem_iUnion`、`Set.mem_iUnion₂`、`Set.mem_inter_iff`（Mathlib） -/
 theorem XFAN_INTER_SET (x : V3) (V : Set V3) (E : Set (Set V3)) (s : Set V3) :
     xfan x V E ∩ s = ⋃ e ∈ E, (affGe ({x} : Set V3) e ∩ s) := by
-  sorry
+  ext v
+  simp only [Set.mem_inter_iff, xfan, Set.mem_setOf_eq, Set.mem_iUnion, exists_prop]
+  constructor
+  · rintro ⟨⟨e, he, hv⟩, hs⟩
+    exact ⟨e, he, hv, hs⟩
+  · rintro ⟨e, he, hv, hs⟩
+    exact ⟨⟨e, he, hv⟩, hs⟩
 
 /-! ## 方位角条件对 σ 与边的影响（Conforming.hl:2668-2931） -/
 
