@@ -414,7 +414,9 @@ HOL `aff_gt {x} {v,u}` ↔ `affGt ({x} : Set V3) {v,u}`
   的单调性可从定义直接展开） -/
 theorem NEGLIGIBLE_AFF_GT_1_2 (x v u : V3) (h : ¬ Collinear3 x v u) :
     volume (affGt ({x} : Set V3) {v, u}) = 0 := by
-  sorry
+  apply measure_mono_null _ (NEGLIGIBLE_AFF_GE_1_2 x v u h)
+  rintro y ⟨f, hfin, hyeq, hpos, hone⟩
+  exact ⟨f, hfin, hyeq, fun w hw => le_of_lt (hpos w hw), hone⟩
 
 /-- HOL Conforming.hl :703-712 `NEGLIGIBLE_AFF_3_INTER_BALL`
 
