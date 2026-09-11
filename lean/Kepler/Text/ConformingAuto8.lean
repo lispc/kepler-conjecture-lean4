@@ -66,6 +66,7 @@ Encoding notes (gaps / closest existing encodings):
 
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
+import Kepler.Text.ConformingAuto2
 import Kepler.Text.ConformingAuto6
 import Kepler.Text.ConformingAuto7
 
@@ -268,7 +269,9 @@ theorem nonconformin_fan_imp_n_fan_ge0 {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan80 : fan80 x V E)
     (hnconf : ¬ conformingFan x V E hfan) :
     0 < nFan x V E hfan := by
-  sorry
+  by_contra h
+  have hn : nFan x V E hfan = 0 := Nat.eq_zero_of_not_pos h
+  exact hnconf (DWFBRQY x V E hfan hcard hfan80 hn)
 
 /-- HOL Conforming.hl :1819-1841 `nonconformin_fan_imp_exist_face_gt_3`
 
