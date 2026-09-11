@@ -770,6 +770,8 @@ theorem DART_EQ_UNIONS_FACE_SET_NODE_SET_EDGE_SET {α : Type*} [DecidableEq α]
     (↑H.darts : Set α) = ⋃₀ H.faceSet ∧
       (↑H.darts : Set α) = ⋃₀ H.nodeSet ∧
       (↑H.darts : Set α) = ⋃₀ H.edgeSet := by
-  sorry
+  exact ⟨sUnion_setOfOrbits H.faceMap_permutes,
+    sUnion_setOfOrbits H.nodeMap_permutes,
+    sUnion_setOfOrbits H.edgeMap_permutes⟩
 
 end Kepler.Text
