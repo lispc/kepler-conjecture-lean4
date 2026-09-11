@@ -217,7 +217,24 @@ theorem SOL_DISJOINT_UNION (x : V3) (s t : Set V3) (r : ℝ)
     (hrs : radialNorm r x (s ∩ Metric.ball x r))
     (hrt : radialNorm r x (t ∩ Metric.ball x r)) :
     sol x (s ∪ t) = sol x s + sol x t := by
-  sorry
+  have hunion : (s ∪ t) ∩ Metric.ball x r =
+      (s ∩ Metric.ball x r) ∪ (t ∩ Metric.ball x r) :=
+    Set.union_inter_distrib_right s t (Metric.ball x r)
+  have hmunion : MeasurableSet ((s ∪ t) ∩ Metric.ball x r) := by
+    rw [hunion]
+    exact hms.union hmt
+  have hrunion : radialNorm r x ((s ∪ t) ∩ Metric.ball x r) := by
+    rw [hunion]
+    refine ⟨Set.union_subset hrs.1 hrt.1, ?_⟩
+    intro u hu t' ht' htu
+    rcases hu with hu | hu
+    · exact Or.inl (hrs.2 u hu t' ht' htu)
+    · exact Or.inr (hrt.2 u hu t' ht' htu)
+  have hdisj_ball : Disjoint (s ∩ Metric.ball x r) (t ∩ Metric.ball x r) :=
+    hdisj.mono Set.inter_subset_left Set.inter_subset_left
+  rw [sol_spec hr hmunion hrunion, sol_spec hr hms hrs, sol_spec hr hmt hrt,
+    hunion, measureReal_union hdisj_ball hmt]
+  ring
 
 /-! ## 有限并上的 `sol`（Conforming.hl:1170-1226） -/
 
