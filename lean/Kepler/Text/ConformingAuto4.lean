@@ -334,11 +334,37 @@ HOL :875）。插入情形把 `(s ∩ ⋂₀ f) ∩ ball` 重排为
 - `Set.sInter_empty`、`Set.sInter_insert`（Mathlib/Data/Set/Basic.lean）
 - `Set.inter_assoc`、`Set.inter_comm`（Mathlib/Data/Set/Basic.lean）
 - 缺口：HOL `inter_radial`（Conforming.hl 上文）未移植；`real^N` 一般维度未覆盖 -/
+private theorem radialNorm_inter (r : ℝ) (v0 : V3) (P Q : Set V3)
+    (hP : radialNorm r v0 P) (hQ : radialNorm r v0 Q) :
+    radialNorm r v0 (P ∩ Q) := by
+  refine ⟨Set.inter_subset_left.trans hP.1, ?_⟩
+  intro u hu t ht htu
+  exact ⟨hP.2 u hu.1 t ht htu, hQ.2 u hu.2 t ht htu⟩
+
 theorem RADIAL_INTERS (r : ℝ) (v0 : V3) (f : Set (Set V3))
     (hfin : f.Finite) (h : ∀ s ∈ f, radialNorm r v0 (s ∩ Metric.ball v0 r))
     (hr : r > 0) :
     radialNorm r v0 (⋂₀ f ∩ Metric.ball v0 r) := by
-  sorry
+  refine Set.Finite.induction_on
+    (motive := fun s _ => (∀ t ∈ s, radialNorm r v0 (t ∩ Metric.ball v0 r)) →
+      radialNorm r v0 (⋂₀ s ∩ Metric.ball v0 r))
+    f hfin ?_ ?_ h
+  · intro _
+    rw [Set.sInter_empty]
+    exact RADIAL_UNIV r v0 hr
+  · intro a s _ _ ih hins
+    have ha : radialNorm r v0 (a ∩ Metric.ball v0 r) :=
+      hins a (Set.mem_insert a s)
+    have hsih : radialNorm r v0 (⋂₀ s ∩ Metric.ball v0 r) :=
+      ih fun t ht => hins t (Set.mem_insert_of_mem a ht)
+    have key : ⋂₀ (insert a s) ∩ Metric.ball v0 r
+        = (a ∩ Metric.ball v0 r) ∩ (⋂₀ s ∩ Metric.ball v0 r) := by
+      rw [Set.sInter_insert]
+      ext z
+      simp only [Set.mem_inter_iff]
+      tauto
+    rw [key]
+    exact radialNorm_inter r v0 _ _ ha hsih
 
 /-! ## `xfan` 的并集分解与径向性（Conforming.hl:958-1007） -/
 
