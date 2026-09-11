@@ -195,6 +195,67 @@ theorem aff_gt_3_1_INTER_aff_SUBSET_aff_gt_2_14 (a x y z : V3) :
   rw [affGt_pair_iff (v0 := a) (v1 := x) (x := z) (y := p) hax hza hzx]
   exact ⟨t4, ht4, c, by rw [hcp, ht4h, add_comm]⟩
 
+/-- `aff_gt_3_1_INTER_aff_SUBSET_aff_gt_2_1` 的叉积正定版本（不依赖 `azim`
+条件，只用 `0 < (x-a)⨯(y-a)·z` 与 `0 < (x-a)⨯(y-a)·w`）。 -/
+private theorem aff_gt_3_1_INTER_aff_SUBSET_aff_gt_2_1_hpos
+    (a x y z w : V3)
+    (hcop : ¬ Coplanar ({a, x, y, z} : Set V3))
+    (hax : a ≠ x) (hwa : w ≠ a) (hwx : w ≠ x)
+    (hpos_z : 0 < crossProduct ((x - a : V3) : Fin 3 → ℝ)
+        ((y - a : V3) : Fin 3 → ℝ) ⬝ᵥ ((z - a : V3) : Fin 3 → ℝ))
+    (hpos_w : 0 < crossProduct ((x - a : V3) : Fin 3 → ℝ)
+        ((y - a : V3) : Fin 3 → ℝ) ⬝ᵥ ((w - a : V3) : Fin 3 → ℝ)) :
+    affGt ({a, x, y} : Set V3) {z} ∩
+      (affineSpan ℝ ({a, x, w} : Set V3) : Set V3) ⊆
+        affGt ({a, x} : Set V3) {w} := by
+  intro p hp
+  obtain ⟨hp1, hp2⟩ := hp
+  rw [aff_gt_3_1_rep_cross_dot a x y z hcop hpos_z, Set.mem_setOf_eq] at hp1
+  have hcoord : ∃ c h : ℝ, p - a = c • (x - a) + h • (w - a) := by
+    have hpS : p ∈ spanPoints ℝ ({a, x, w} : Set V3) := hp2
+    have haS : a ∈ spanPoints ℝ ({a, x, w} : Set V3) :=
+      mem_spanPoints ℝ a ({a, x, w} : Set V3) (by simp)
+    have hv : p - a ∈ vectorSpan ℝ ({a, x, w} : Set V3) :=
+      vsub_mem_vectorSpan_of_mem_spanPoints_of_mem_spanPoints ℝ hpS haS
+    rw [vectorSpan_eq_span_vsub_set_right ℝ
+        (show a ∈ ({a, x, w} : Set V3) by simp)] at hv
+    have hle : Submodule.span ℝ ((fun q : V3 => q - a) '' ({a, x, w} : Set V3)) ≤
+        Submodule.span ℝ ({x - a, w - a} : Set V3) := by
+      rw [Submodule.span_le]
+      rintro v ⟨q, hq, rfl⟩
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+      rcases hq with rfl | rfl | rfl
+      · simp
+      · exact Submodule.subset_span (by simp)
+      · exact Submodule.subset_span (by simp)
+    have hv' : p - a ∈ Submodule.span ℝ ({x - a, w - a} : Set V3) := hle hv
+    rw [Submodule.mem_span_pair] at hv'
+    obtain ⟨c, h, hch⟩ := hv'
+    exact ⟨c, h, hch.symm⟩
+  obtain ⟨c, h, hcp⟩ := hcoord
+  have hcoe : ((p - a : V3) : Fin 3 → ℝ) =
+      c • ((x - a : V3) : Fin 3 → ℝ) + h • ((w - a : V3) : Fin 3 → ℝ) := by
+    have := congrArg (fun q : V3 => (q : Fin 3 → ℝ)) hcp
+    simpa only [WithLp.ofLp_add, WithLp.ofLp_smul] using this
+  have hdot : crossProduct ((x - a : V3) : Fin 3 → ℝ) ((y - a : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((p - a : V3) : Fin 3 → ℝ) =
+      h * (crossProduct ((x - a : V3) : Fin 3 → ℝ) ((y - a : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((w - a : V3) : Fin 3 → ℝ)) := by
+    rw [hcoe, dotProduct_add, dotProduct_smul, dotProduct_smul]
+    have hx0 : crossProduct ((x - a : V3) : Fin 3 → ℝ) ((y - a : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((x - a : V3) : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm]
+      exact dot_self_cross _ _
+    rw [hx0, smul_zero, zero_add, smul_eq_mul]
+  have hhpos : 0 < h := by
+    have hlt : 0 < h * (crossProduct ((x - a : V3) : Fin 3 → ℝ)
+        ((y - a : V3) : Fin 3 → ℝ) ⬝ᵥ ((w - a : V3) : Fin 3 → ℝ)) := by
+      rw [← hdot]
+      exact hp1
+    exact (mul_pos_iff_of_pos_right hpos_w).mp hlt
+  rw [affGt_pair_iff (v0 := a) (v1 := x) (x := w) (y := p) hax hwa hwx]
+  exact ⟨h, hhpos, c, by rw [hcp, add_comm]⟩
+
 /-- HOL Conforming.hl :8303-8400 `lemmaINTERS_HALF_SPACE_DS_FANADD3`
 
 HOL 原文：
@@ -273,7 +334,88 @@ theorem lemmaINTERS_HALF_SPACE_DS_FANADD3 (x : V3) (V : Set V3)
       affGt ({x, sigmaFan x V E v u, w} : Set V3) {v} →
       U1 ∩ (affineSpan ℝ ({x, v, w} : Set V3) : Set V3) ⊆
         affGt ({x} : Set V3) {v, w} := by
-  sorry
+  intro h
+  obtain ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hmin, hU1⟩ := h
+  have hθuw : 0 < azim x u w v ∧ azim x u w v < Real.pi := by
+    have := hfan80 u w huw
+    rwa [hsigma] at this
+  have hcop_xvuw : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan hvu huw hθuw.1 hθuw.2
+  have hnc_vw : ¬ Collinear3 x v w := (notcoplanar_imp_notcollinear_fan hcop_xvuw).2.2
+  have hnc_uv : ¬ Collinear3 x u v := by
+    have hcop' : ¬ Coplanar ({x, u, v, w} : Set V3) := by
+      rwa [show ({x, u, v, w} : Set V3) = ({x, v, u, w} : Set V3) by
+        ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact (notcoplanar_imp_notcollinear_fan hcop').2.1
+  obtain ⟨hxv, hxu, hxw, hvu_ne, hvw_ne, huw_ne⟩ :=
+    notcoplanar_disjoint x v u w hcop_xvuw
+  have hσ_soe : sigmaFan x V E v u ∈ setOfEdge v V E :=
+    sigma_fan_in_setOfEdge hfan
+      ((properties_of_setOfEdge_fan x V E v u hfan).mp hvu)
+  have hσvE : ({v, sigmaFan x V E v u} : Set V3) ∈ E :=
+    (properties_of_setOfEdge_fan x V E v (sigmaFan x V E v u) hfan).mpr hσ_soe
+  have hθs : 0 < azim x v u (sigmaFan x V E v u) ∧
+      azim x v u (sigmaFan x V E v u) < Real.pi := hfan80 v u hvu
+  have hcop_vus : ¬ Coplanar ({x, v, u, sigmaFan x V E v u} : Set V3) := by
+    have h := properties_fully_surrounded (x := x) (V := V) (E := E)
+      (v := sigmaFan x V E v u) (u := v) (w := u)
+      hfan (by rwa [Set.pair_comm]) hvu hθs.1 hθs.2
+    have hset : ({x, sigmaFan x V E v u, v, u} : Set V3) =
+        ({x, v, u, sigmaFan x V E v u} : Set V3) := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rwa [hset] at h
+  have hcop_xwuv : ¬ Coplanar ({x, w, u, v} : Set V3) := by
+    rwa [show ({x, w, u, v} : Set V3) = ({x, v, u, w} : Set V3) by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  have hpos_s : 0 < crossProduct ((v - x : V3) : Fin 3 → ℝ)
+      ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((sigmaFan x V E v u - x : V3) : Fin 3 → ℝ) :=
+    cross_dot_fully_surrounded_fan (x := x) (v1 := v) (v := u)
+      (u1 := sigmaFan x V E v u)
+      (fan_not_collinear hfan hσvE) (fan_not_collinear hfan hvu) hθs.1 hθs.2
+  have hpos_w : 0 < crossProduct ((v - x : V3) : Fin 3 → ℝ)
+      ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((w - x : V3) : Fin 3 → ℝ) := by
+    have h := cross_dot_fully_surrounded_fan (x := x) (v1 := u) (v := w) (u1 := v)
+      hnc_uv (notcoplanar_imp_notcollinear_fan hcop_xvuw).1 hθuw.1 hθuw.2
+    have heq : crossProduct ((v - x : V3) : Fin 3 → ℝ)
+        ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((w - x : V3) : Fin 3 → ℝ) =
+        crossProduct ((u - x : V3) : Fin 3 → ℝ)
+          ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ) := by
+      calc crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+            ((w - x : V3) : Fin 3 → ℝ)
+          = ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+              crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ) := by
+            rw [dotProduct_comm]
+        _ = ((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+              crossProduct ((u - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ) := by
+            rw [triple_product_permutation]
+        _ = crossProduct ((u - x : V3) : Fin 3 → ℝ) ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+              ((v - x : V3) : Fin 3 → ℝ) := by
+            rw [dotProduct_comm]
+    rwa [heq]
+  have hB := aff_gt_3_1_INTER_aff_SUBSET_aff_gt_2_1_hpos x v u
+      (sigmaFan x V E v u) w hcop_vus hxv hxw.symm hvw_ne.symm hpos_s hpos_w
+  have hA := aff_gt_3_1_INTER_aff_SUBSET_aff_gt_2_14 x w u v hcop_xwuv
+  have haff : affGt ({x} : Set V3) {v, w} =
+      affGt ({x, v} : Set V3) {w} ∩ affGt ({x, w} : Set V3) {v} :=
+    aff_gt_inter_aff_gt hnc_vw
+  intro z hz
+  obtain ⟨hzU, hzspan⟩ := hz
+  rw [hU1] at hzU
+  obtain ⟨⟨⟨hzA, hzB⟩, _⟩, _⟩ := hzU
+  have hBmem : z ∈ affGt ({x, v} : Set V3) {w} := hB ⟨hzB, hzspan⟩
+  have hzA' : z ∈ affGt ({x, w, u} : Set V3) {v} := by
+    rw [show ({x, w, u} : Set V3) = ({x, u, w} : Set V3) by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact hzA
+  have hzspan' : z ∈ (affineSpan ℝ ({x, w, v} : Set V3) : Set V3) := by
+    rw [show ({x, w, v} : Set V3) = ({x, v, w} : Set V3) by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact hzspan
+  have hAmem : z ∈ affGt ({x, w} : Set V3) {v} := hA ⟨hzA', hzspan'⟩
+  rw [haff]
+  exact ⟨hBmem, hAmem⟩
 
 /-- HOL Conforming.hl :8401-8521 `aff_3_rep_cross_dot`
 
