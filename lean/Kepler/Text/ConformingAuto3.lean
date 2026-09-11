@@ -455,7 +455,19 @@ theorem MEASURE_YFAN_INTER_BALL (x : V3) (V : Set V3) (E : Set (Set V3))
     (r : ℝ) (hfan : FAN x V E) (hr : 0 ≤ r) :
     volume.real (yfan x V E ∩ Metric.ball x r) =
       (4 / 3 : ℝ) * Real.pi * r ^ 3 := by
-  sorry
+  have hzero : volume (xfan x V E ∩ Metric.ball x r) = 0 :=
+    HAS_MEASURE_XFAN_INTER_BALL x V E r hfan
+  have hset : yfan x V E ∩ Metric.ball x r
+      = Metric.ball x r \ (xfan x V E ∩ Metric.ball x r) := by
+    ext y
+    simp only [yfan, Set.mem_inter_iff, Set.mem_sdiff, Set.mem_univ, true_and]
+    tauto
+  rw [hset]
+  simp only [Measure.real]
+  rw [measure_sdiff_null hzero, EuclideanSpace.volume_ball_fin_three]
+  rw [ENNReal.toReal_mul, ENNReal.toReal_pow, ENNReal.toReal_ofReal hr,
+      ENNReal.toReal_ofReal (by positivity)]
+  ring
 
 /-- HOL Conforming.hl :800-814 `MESURABLE_YFAN_INTER_BALL`（HOL 拼写）
 
