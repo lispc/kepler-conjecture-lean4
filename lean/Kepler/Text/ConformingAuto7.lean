@@ -104,7 +104,8 @@ theorem FINITE_NODE_FAN {x : V3} {V : Set V3} {E : Set (Set V3)}
     {ds : Set (V3 × V3)}
     (hfan : FAN x V E)
     (hds : ds ∈ (hypermapOfFan x V E hfan).nodeSet) : ds.Finite := by
-  sorry
+  obtain ⟨y, -, rfl⟩ := (hypermapOfFan x V E hfan).node_representation hds
+  exact (hypermapOfFan x V E hfan).node_finite y
 
 /-- HOL Conforming.hl :1487-1496 `lemma_node_identity_fan`
 
