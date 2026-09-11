@@ -93,6 +93,80 @@ open scoped BigOperators
 
 /-! ## 全包围 fan 的 `aff_gt` 与 dart（Conforming.hl:1267-1291） -/
 
+private theorem cross_dot_cyclic_conf_auto6 {a b c : Fin 3 → ℝ} :
+    (crossProduct a b) ⬝ᵥ c = (crossProduct b c) ⬝ᵥ a := by
+  calc (crossProduct a b) ⬝ᵥ c = c ⬝ᵥ crossProduct a b := dotProduct_comm _ _
+    _ = a ⬝ᵥ crossProduct b c := triple_product_permutation c a b
+    _ = (crossProduct b c) ⬝ᵥ a := dotProduct_comm _ _
+
+private theorem fully_surrounded_imp_aff_gt_3_1_of_edge_eq_fan_auto6 {x : V3}
+    {V : Set V3} {E : Set (Set V3)} {v w : V3}
+    (hfan : FAN x V E) (hvw : {v, w} ∈ E)
+    (_hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
+    (hfan80 : fan80 x V E) :
+    affGt ({x, v, w} : Set V3) {sigmaFan x V E v w} =
+      affGt ({x, v, w} : Set V3) {inverse1SigmaFan x V E w v} := by
+  have hwv : {w, v} ∈ E := by
+    rw [show ({w, v} : Set V3) = {v, w} from by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact hvw
+  have hwS : w ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v w hfan).mp hvw
+  have hsS : sigmaFan x V E v w ∈ setOfEdge v V E :=
+    sigma_fan_in_setOfEdge hfan hwS
+  have hvs : {v, sigmaFan x V E v w} ∈ E :=
+    (properties_of_setOfEdge_fan x V E v (sigmaFan x V E v w) hfan).mpr hsS
+  have hsv : {sigmaFan x V E v w, v} ∈ E := by
+    rw [show ({sigmaFan x V E v w, v} : Set V3) = {v, sigmaFan x V E v w} from by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact hvs
+  have hwt : {w, inverse1SigmaFan x V E w v} ∈ E :=
+    (INVERSE1_SIGMA_FAN (v := w) hfan).1 v hwv
+  have hsig_t : sigmaFan x V E w (inverse1SigmaFan x V E w v) = v :=
+    (INVERSE1_SIGMA_FAN (v := w) hfan).2.1 v hwv
+  have h80_vw := hfan80 v w hvw
+  have h80_wt := hfan80 w (inverse1SigmaFan x V E w v) hwt
+  rw [hsig_t] at h80_wt
+  have hcop_inv : ¬ Coplanar ({x, v, w, inverse1SigmaFan x V E w v} : Set V3) :=
+    properties_fully_surrounded hfan hvw hwt h80_wt.1 h80_wt.2
+  have hcop_sig' : ¬ Coplanar ({x, sigmaFan x V E v w, v, w} : Set V3) :=
+    properties_fully_surrounded (v := sigmaFan x V E v w) (u := v) (w := w)
+      hfan hsv hvw h80_vw.1 h80_vw.2
+  have hcop_sig : ¬ Coplanar ({x, v, w, sigmaFan x V E v w} : Set V3) := by
+    rw [show ({x, v, w, sigmaFan x V E v w} : Set V3) =
+        {x, sigmaFan x V E v w, v, w} from by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact hcop_sig'
+  have hncv_s : ¬ Collinear3 x v (sigmaFan x V E v w) := fan_not_collinear hfan hvs
+  have hncvw : ¬ Collinear3 x v w := fan_not_collinear hfan hvw
+  have hncwv : ¬ Collinear3 x w v := fan_not_collinear hfan hwv
+  have hncwt : ¬ Collinear3 x w (inverse1SigmaFan x V E w v) :=
+    fan_not_collinear hfan hwt
+  have hpos_sig : 0 < crossProduct ((v - x : V3) : Fin 3 → ℝ)
+      ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((sigmaFan x V E v w - x : V3) : Fin 3 → ℝ) :=
+    cross_dot_fully_surrounded_fan (x := x) (v1 := v) (v := w)
+      (u1 := sigmaFan x V E v w) hncv_s hncvw h80_vw.1 h80_vw.2
+  have hpos_inv_raw : 0 < crossProduct ((w - x : V3) : Fin 3 → ℝ)
+      ((inverse1SigmaFan x V E w v - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((v - x : V3) : Fin 3 → ℝ) :=
+    cross_dot_fully_surrounded_fan (x := x) (v1 := w)
+      (v := inverse1SigmaFan x V E w v) (u1 := v) hncwv hncwt h80_wt.1 h80_wt.2
+  have hpos_inv : 0 < crossProduct ((v - x : V3) : Fin 3 → ℝ)
+      ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((inverse1SigmaFan x V E w v - x : V3) : Fin 3 → ℝ) := by
+    rw [cross_dot_cyclic_conf_auto6 (a := ((v - x : V3) : Fin 3 → ℝ))
+      (b := ((w - x : V3) : Fin 3 → ℝ))
+      (c := ((inverse1SigmaFan x V E w v - x : V3) : Fin 3 → ℝ))]
+    exact hpos_inv_raw
+  calc affGt ({x, v, w} : Set V3) {sigmaFan x V E v w}
+      = {y : V3 | 0 < crossProduct ((v - x : V3) : Fin 3 → ℝ)
+          ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)} :=
+        aff_gt_3_1_rep_cross_dot x v w (sigmaFan x V E v w) hcop_sig hpos_sig
+    _ = affGt ({x, v, w} : Set V3) {inverse1SigmaFan x V E w v} :=
+        (aff_gt_3_1_rep_cross_dot x v w (inverse1SigmaFan x V E w v) hcop_inv
+          hpos_inv).symm
+
 /-- HOL Conforming.hl :1267-1291 `fully_surrounded_imp_aff_gt_3_1_of_dart_eq_fan`
 
 HOL 原文：
@@ -136,7 +210,21 @@ theorem fully_surrounded_imp_aff_gt_3_1_of_dart_eq_fan {x : V3} {V : Set V3}
     (hy : y ∈ ds) :
     affGt ({x, y.1, y.2} : Set V3) {(f1Fan x V E y).2} =
       affGt ({x, y.1, y.2} : Set V3) {sigmaFan x V E y.1 y.2} := by
-  sorry
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  have hdarts : (↑H.darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have hy_dart : y ∈ dart1OfFan V E := by
+    simp only [Hypermap.faceSet, setOfOrbits] at hds
+    obtain ⟨d, hd, rfl⟩ := hds
+    have hsub : orbitMap H.faceMap d ⊆ (↑H.darts : Set (V3 × V3)) :=
+      H.face_subset_darts hd
+    exact hdarts ▸ hsub hy
+  have hyE : {y.1, y.2} ∈ E := by
+    simpa [dart1OfFan] using hy_dart
+  have h := fully_surrounded_imp_aff_gt_3_1_of_edge_eq_fan_auto6
+    (x := x) (V := V) (E := E) (v := y.1) (w := y.2) hfan hyE hcard hfan80
+  simpa only [f1Fan] using h.symm
 
 /-! ## 拓扑分量的开性（Conforming.hl:1292-1351） -/
 
