@@ -354,7 +354,120 @@ theorem azim_trangle_le_azim_face_fan (x : V3) (V : Set V3) (E : Set (Set V3))
     fan80 x V E ∧
     (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) →
       azim x w v u < azim x w w1 u := by
-  sorry
+  rintro ⟨hfan, hvu, huw, hww1, hvw_not, hsigma1, hsigma2, h80, hcard⟩
+  by_contra hnot
+  have hle : azim x w w1 u ≤ azim x w v u := not_lt.mp hnot
+  -- fan80 给出的两组方位角界
+  have hθw1 : 0 < azim x w w1 u ∧ azim x w w1 u < Real.pi := by
+    have := h80 w w1 hww1
+    rwa [hsigma2] at this
+  have hθuw : 0 < azim x u w v ∧ azim x u w v < Real.pi := by
+    have := h80 u w huw
+    rwa [hsigma1] at this
+  -- 两组四点不共面
+  have hcop1 : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan hvu huw hθuw.1 hθuw.2
+  have hcop2 : ¬ Coplanar ({x, u, w, w1} : Set V3) :=
+    properties_fully_surrounded hfan huw hww1 hθw1.1 hθw1.2
+  -- 拆出不共线事实
+  obtain ⟨hnc_uw, hnc_vu, hnc_vw⟩ := notcoplanar_imp_notcollinear_fan hcop1
+  obtain ⟨hnc_ww1, -, -⟩ := notcoplanar_imp_notcollinear_fan hcop2
+  have hnc_wv : ¬ Collinear3 x w v := collinear3_swap_ca11 hnc_vw
+  have hnc_wu : ¬ Collinear3 x w u := collinear3_swap_ca11 hnc_uw
+  have hxw : x ≠ w := fun h =>
+    hnc_wv (collinear3_of_eq (v := x) (w := w) (w1 := v) h.symm)
+  have hxw1 : x ≠ w1 := fun h =>
+    hnc_ww1 (collinear3_pair_left (v0 := x) (v1 := w) (x := w1) h.symm)
+  have hww1ne : w ≠ w1 := fun h =>
+    hnc_ww1 (collinear3_pair_right (v0 := x) (v1 := w) (x := w1) h.symm)
+  -- `{v,w} ∉ E` 把方位角等式排除
+  have hne : azim x w v u ≠ azim x w w1 u := by
+    intro heq
+    exact hvw_not (condition_azim_imp_edge_fan x V E v u w w1
+      ⟨hfan, hvu, huw, hww1, hsigma1, hsigma2, h80, hcard, heq⟩)
+  -- 角分解
+  have hsum : azim x w v u = azim x w v w1 + azim x w w1 u :=
+    sum5_azim_fan (v := w) (u := v) (w1 := w1) (w2 := u)
+      hxw.symm hnc_wv hnc_ww1 hnc_wu hle
+  have hApos : 0 < azim x w v w1 := by
+    have hA0 : 0 ≤ azim x w v w1 := by linarith [hsum, hle]
+    have hAne : azim x w v w1 ≠ 0 := by
+      intro h0
+      exact hne (by rw [hsum, h0]; ring)
+    exact lt_of_le_of_ne hA0 (Ne.symm hAne)
+  have hAlt : azim x w v w1 < azim x w v u := by linarith [hsum, hθw1.1]
+  have hθvu : 0 < azim x w v u ∧ azim x w v u < Real.pi :=
+    condition_azim_le_pi x V E v u w ⟨hfan, hvu, huw, hsigma1, h80, hcard⟩
+  -- `w1` 落在楔形，进而落在 `affGt {x,w} {v,u}`
+  have hw1_wedge : w1 ∈ wedge x w v u := by
+    simp only [wedge, Set.mem_setOf_eq]
+    exact ⟨hnc_ww1, hApos, hAlt⟩
+  have hwedge_eq := wedge_eq_affGt (v0 := x) (v1 := w) (w1 := v) (w2 := u)
+    hnc_wv hnc_wu hθvu.1 hθvu.2
+  have hw1_affGt : w1 ∈ affGt ({x, w} : Set V3) {v, u} := by
+    rw [hwedge_eq] at hw1_wedge
+    exact hw1_wedge
+  -- 不交性，用于 `affGt2_2` 系数分解
+  obtain ⟨hxv, hxu, -, -, hvw, huw_ne⟩ := notcoplanar_disjoint x v u w hcop1
+  have hdis_xw_vu : Disjoint ({x, w} : Set V3) {v, u} := by
+    rw [Set.disjoint_left]
+    intro a ha ha'
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ha ha'
+    rcases ha with rfl | rfl
+    · rcases ha' with rfl | rfl
+      · exact hxv rfl
+      · exact hxu rfl
+    · rcases ha' with rfl | rfl
+      · exact hvw rfl
+      · exact huw_ne rfl
+  rw [affGt2_2 (x := x) (u := w) (v := v) (w := u) hdis_xw_vu,
+    Set.mem_setOf_eq] at hw1_affGt
+  obtain ⟨t1, t2, t3, t4, ht3, ht4, htsum, hw1eq⟩ := hw1_affGt
+  -- 选取小参数 `h`
+  set M : ℝ := |t2| + 1 with hM
+  have hMpos : 0 < M := by rw [hM]; positivity
+  set h : ℝ := min (1 / 2) (1 / (2 * M)) with hh
+  have hpos : 0 < h := by
+    rw [hh]
+    exact lt_min (by norm_num) (by positivity)
+  have hle_half : h ≤ 1 / 2 := by rw [hh]; exact min_le_left _ _
+  have hlt1 : h < 1 := lt_of_le_of_lt hle_half (by norm_num)
+  have hcoef : 0 < (1 - h) + h * t2 := by
+    have hleM : h * M ≤ 1 / 2 := by
+      have hle : h ≤ 1 / (2 * M) := by rw [hh]; exact min_le_right _ _
+      have hmul := mul_le_mul_of_nonneg_right hle (le_of_lt hMpos)
+      have heq : (1 / (2 * M)) * M = 1 / 2 := by
+        field_simp [hMpos.ne']
+      rw [heq] at hmul
+      exact hmul
+    have h1mt2 : 1 - t2 ≤ M := by
+      rw [hM]
+      linarith [neg_le_abs t2]
+    have hmul2 := mul_le_mul_of_nonneg_left h1mt2 (le_of_lt hpos)
+    have hle3 : h * (1 - t2) ≤ 1 / 2 := le_trans hmul2 hleM
+    have hrw : (1 - h) + h * t2 = 1 - h * (1 - t2) := by ring
+    rw [hrw]
+    linarith
+  -- 见证点
+  set y : V3 := (1 - h) • w + h • w1 with hydef
+  obtain ⟨-, -, -, hdis_x_vuw, -, -, -, -⟩ := notcoplanar_disjoints x v u w hcop1
+  have hy_affGt : y ∈ affGt ({x} : Set V3) ({v, u, w} : Set V3) := by
+    rw [AFF_GT_1_3 x v u w hdis_x_vuw, Set.mem_setOf_eq]
+    refine ⟨h * t1, h * t3, h * t4, (1 - h) + h * t2,
+      mul_pos hpos ht3, mul_pos hpos ht4, hcoef, ?_, ?_⟩
+    · nlinarith [htsum]
+    · rw [hydef, hw1eq]; module
+  have hy_yfan : y ∈ yfan x V E :=
+    aff_gt_1_3_subset_yfan x V E v u w hfan hvu huw hsigma1 hcard h80 hy_affGt
+  have hy_affGe : y ∈ affGe ({x} : Set V3) ({w, w1} : Set V3) := by
+    refine Affsign.of_triple (sgn := fun r => 0 ≤ r) (x := x) (v := w) (u := w1)
+      (y := y) (1 - h) h ?_ ?_ ?_ hxw hxw1 hww1ne
+    · linarith
+    · exact le_of_lt hpos
+    · rw [hydef]; module
+  have hy_xfan : y ∈ xfan x V E := AFF_GE_SUBSET_XFAN x V E w w1 hww1 hy_affGe
+  obtain ⟨-, hy_notxfan⟩ := hy_yfan
+  exact hy_notxfan hy_xfan
 
 /-! ## 加边后 σ 的取值（Conforming.hl:2932-3602） -/
 
