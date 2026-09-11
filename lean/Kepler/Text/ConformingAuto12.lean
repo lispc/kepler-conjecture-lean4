@@ -283,7 +283,18 @@ theorem pair_disjoint_f10_f20_f30 (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       ¬ (f10 = f20) ∧ ¬ (f20 = f30) ∧ ¬ (f30 = f10) := by
-  sorry
+  rintro ⟨hfan, -, -, -, -, -, -, -, -, -, -, -, hvu, huw, -, -, -, -,
+    hf10, hf20, hf30, -⟩
+  have hne_vu : v ≠ u := edge_ne_of_fan hfan hvu
+  have hne_uw : u ≠ w := edge_ne_of_fan hfan huw
+  rw [hf10, hf20, hf30]
+  refine ⟨?_, ?_, ?_⟩
+  · intro h
+    exact hne_vu (Prod.ext_iff.mp h).2
+  · intro h
+    exact hne_vu (Prod.ext_iff.mp h).1
+  · intro h
+    exact hne_uw (Prod.ext_iff.mp h).1
 
 /-! ## `f1_fan` 在 `d_fan` 上的置换性与 `ds2` 的三元表示
     （Conforming.hl:3800-3990） -/
