@@ -28,6 +28,8 @@ import Kepler.Geom.SectorArea
 import Kepler.Geom.WedgeVolume
 -- Phase 5 体积层：dihV + WEDGE_LUNE_GT + HAS_MEASURE_LUNE（flyspeck.ml:2995/3805/5529）
 import Kepler.Geom.LuneVolume
+-- Phase 5 体积层：HOL VOLUME_SOLID_TRIANGLE（球∩三棱锥 = (Σ dihV - π)r³/3，flyspeck.ml:5883）
+import Kepler.Geom.SolidAngle
 import Kepler.Text.Fan
 import Kepler.Text.TopologyFan
 -- Phase 5: 文字证明移植 —— planarity.hl（Fan 章的平面性部分）
