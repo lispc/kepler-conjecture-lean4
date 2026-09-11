@@ -76,6 +76,7 @@ import Kepler.Text.ConformingAuto14
 import Kepler.Text.ConformingAuto15
 import Kepler.Text.ConformingAuto16
 import Kepler.Text.ConformingAuto17
+import Kepler.Text.ConformingAuto18
 import Kepler.Text.VectorAngleLemmas
 -- Phase 4: 分支定界证书树（二分盒树 + covers/bb_sound，叶为内核 decide 的 checkPos）
 import Kepler.Interval.Cert
