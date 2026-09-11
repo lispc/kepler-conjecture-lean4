@@ -818,7 +818,9 @@ HOL 原文：
 theorem NSUM_EQ_0_IFF {α : Type*} {s : Set α} {f : α → ℕ}
     (hs : s.Finite) :
     (∑ᶠ x ∈ s, f x) = 0 ↔ ∀ x, x ∈ s → f x = 0 := by
-  sorry
+  rw [finsum_mem_eq_finite_toFinset_sum f hs, Finset.sum_eq_zero_iff]
+  exact ⟨fun h x hx => h x (hs.mem_toFinset.mpr hx),
+    fun h x hx => h x (hs.mem_toFinset.mp hx)⟩
 
 /-- HOL Conforming.hl :465-483 `N_FAN_EQ_0_IMP_CARD_FACE_EQ_3`
 
