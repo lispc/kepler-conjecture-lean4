@@ -417,6 +417,73 @@ theorem lemmaINTERS_HALF_SPACE_DS_FANADD3 (x : V3) (V : Set V3)
   rw [haff]
   exact ⟨hBmem, hAmem⟩
 
+/-- 叉积平面分解辅助恒等式（本地副本）。 -/
+private lemma crossProduct_plane_decomp_aux_17 (a b z : Fin 3 → ℝ) :
+    (crossProduct a b ⬝ᵥ crossProduct a b) • z =
+      ((a ⬝ᵥ z) * (b ⬝ᵥ b) - (b ⬝ᵥ z) * (a ⬝ᵥ b)) • a +
+      ((b ⬝ᵥ z) * (a ⬝ᵥ a) - (a ⬝ᵥ z) * (a ⬝ᵥ b)) • b +
+      ((crossProduct a b) ⬝ᵥ z) • crossProduct a b := by
+  have h1 : crossProduct (crossProduct (crossProduct a b) z) (crossProduct a b) =
+      (crossProduct a b ⬝ᵥ crossProduct a b) • z -
+        (z ⬝ᵥ crossProduct a b) • crossProduct a b :=
+    cross_cross_eq_smul_sub_smul (crossProduct a b) z (crossProduct a b)
+  have h2 : crossProduct (crossProduct a b) z =
+      (a ⬝ᵥ z) • b - (b ⬝ᵥ z) • a :=
+    cross_cross_eq_smul_sub_smul a b z
+  have hb : crossProduct b (crossProduct a b) =
+      (b ⬝ᵥ b) • a - (a ⬝ᵥ b) • b :=
+    cross_cross_eq_smul_sub_smul' b a b
+  have ha : crossProduct a (crossProduct a b) =
+      (a ⬝ᵥ b) • a - (a ⬝ᵥ a) • b :=
+    cross_cross_eq_smul_sub_smul' a a b
+  have h1' : crossProduct (crossProduct (crossProduct a b) z) (crossProduct a b) =
+      ((a ⬝ᵥ z) * (b ⬝ᵥ b) - (b ⬝ᵥ z) * (a ⬝ᵥ b)) • a +
+      ((b ⬝ᵥ z) * (a ⬝ᵥ a) - (a ⬝ᵥ z) * (a ⬝ᵥ b)) • b := by
+    rw [h2, map_sub, map_smul, map_smul, LinearMap.sub_apply, LinearMap.smul_apply,
+      LinearMap.smul_apply, hb, ha]
+    module
+  calc (crossProduct a b ⬝ᵥ crossProduct a b) • z =
+        crossProduct (crossProduct (crossProduct a b) z) (crossProduct a b) +
+          (z ⬝ᵥ crossProduct a b) • crossProduct a b := by
+        rw [h1]; abel
+    _ = ((a ⬝ᵥ z) * (b ⬝ᵥ b) - (b ⬝ᵥ z) * (a ⬝ᵥ b)) • a +
+          ((b ⬝ᵥ z) * (a ⬝ᵥ a) - (a ⬝ᵥ z) * (a ⬝ᵥ b)) • b +
+          (z ⬝ᵥ crossProduct a b) • crossProduct a b := by rw [h1']
+    _ = ((a ⬝ᵥ z) * (b ⬝ᵥ b) - (b ⬝ᵥ z) * (a ⬝ᵥ b)) • a +
+          ((b ⬝ᵥ z) * (a ⬝ᵥ a) - (a ⬝ᵥ z) * (a ⬝ᵥ b)) • b +
+          ((crossProduct a b) ⬝ᵥ z) • crossProduct a b := by
+        rw [dotProduct_comm z (crossProduct a b)]
+
+/-- 平面分解（本地副本）：`n = a ⨯ b ≠ 0` 且 `n·z = 0` 时 `z` 是 `a,b` 的线性组合。 -/
+private lemma crossProduct_plane_decomp_17 {a b z : Fin 3 → ℝ}
+    (hn : crossProduct a b ≠ 0) (hz : (crossProduct a b) ⬝ᵥ z = 0) :
+    z = (((crossProduct a b ⬝ᵥ crossProduct a b)⁻¹) *
+          ((a ⬝ᵥ z) * (b ⬝ᵥ b) - (b ⬝ᵥ z) * (a ⬝ᵥ b))) • a +
+        (((crossProduct a b ⬝ᵥ crossProduct a b)⁻¹) *
+          ((b ⬝ᵥ z) * (a ⬝ᵥ a) - (a ⬝ᵥ z) * (a ⬝ᵥ b))) • b := by
+  have hnn : crossProduct a b ⬝ᵥ crossProduct a b ≠ 0 := by
+    intro h0
+    apply hn
+    funext i
+    have hsum : ∑ j, (crossProduct a b) j * (crossProduct a b) j = 0 := by
+      simpa only [dotProduct] using h0
+    have h3 := (Finset.sum_eq_zero_iff_of_nonneg
+      (fun j _ => mul_self_nonneg ((crossProduct a b) j))).mp hsum
+    exact mul_self_eq_zero.mp (h3 i (Finset.mem_univ i))
+  have hmain := crossProduct_plane_decomp_aux_17 a b z
+  rw [hz, zero_smul, add_zero] at hmain
+  calc z = (crossProduct a b ⬝ᵥ crossProduct a b)⁻¹ •
+        ((crossProduct a b ⬝ᵥ crossProduct a b) • z) :=
+        (inv_smul_smul₀ hnn z).symm
+    _ = (crossProduct a b ⬝ᵥ crossProduct a b)⁻¹ •
+        (((a ⬝ᵥ z) * (b ⬝ᵥ b) - (b ⬝ᵥ z) * (a ⬝ᵥ b)) • a +
+         ((b ⬝ᵥ z) * (a ⬝ᵥ a) - (a ⬝ᵥ z) * (a ⬝ᵥ b)) • b) := by rw [hmain]
+    _ = (((crossProduct a b ⬝ᵥ crossProduct a b)⁻¹) *
+          ((a ⬝ᵥ z) * (b ⬝ᵥ b) - (b ⬝ᵥ z) * (a ⬝ᵥ b))) • a +
+        (((crossProduct a b ⬝ᵥ crossProduct a b)⁻¹) *
+          ((b ⬝ᵥ z) * (a ⬝ᵥ a) - (a ⬝ᵥ z) * (a ⬝ᵥ b))) • b := by
+        rw [smul_add, smul_smul, smul_smul]
+
 /-- HOL Conforming.hl :8401-8521 `aff_3_rep_cross_dot`
 
 HOL 原文：
@@ -453,7 +520,86 @@ theorem aff_3_rep_cross_dot (x v u : V3) :
       (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) =
         {y : V3 | crossProduct ((v - x : V3) : Fin 3 → ℝ)
             ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ) = 0} := by
-  sorry
+  intro hnc
+  have hvx : v ≠ x := by
+    intro h
+    exact hnc (collinear3_of_eq (v := x) (w := v) (w1 := u) h)
+  have ha0 : ((v - x : V3) : Fin 3 → ℝ) ≠ 0 := by
+    intro h
+    apply hvx
+    exact sub_eq_zero.mp ((WithLp.ofLp_eq_zero 2).mp h)
+  have hn : crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ) ≠ 0 := by
+    rw [crossProduct_ne_zero_iff_linearIndependent, LinearIndependent.pair_iff' ha0]
+    intro c hc
+    apply hnc
+    refine (collinear3_iff_smul hvx).mpr ⟨c, ?_⟩
+    have h := congrArg (WithLp.toLp 2) hc.symm
+    simpa only [WithLp.toLp_smul, WithLp.toLp_ofLp] using h
+  have himg : (fun q : V3 => q -ᵥ x) '' ({x, v, u} : Set V3) =
+      insert (0 : V3) ({v - x, u - x} : Set V3) := by
+    ext p
+    constructor
+    · rintro ⟨q, hq, rfl⟩
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+      rcases hq with rfl | rfl | rfl <;> simp [vsub_eq_sub]
+    · intro hp
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+      rcases hp with rfl | rfl | rfl
+      · exact ⟨x, by simp, by simp⟩
+      · exact ⟨v, by simp, by simp [vsub_eq_sub]⟩
+      · exact ⟨u, by simp, by simp [vsub_eq_sub]⟩
+  have hspan : vectorSpan ℝ ({x, v, u} : Set V3) =
+      Submodule.span ℝ ({v - x, u - x} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_right ℝ (by simp : x ∈ ({x, v, u} : Set V3)),
+      himg, Submodule.span_insert_zero]
+  have hxmem : x ∈ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) :=
+    mem_affineSpan ℝ (by simp)
+  ext y
+  constructor
+  · intro hy
+    simp only [Set.mem_setOf_eq]
+    have hmem : y - x ∈ Submodule.span ℝ ({v - x, u - x} : Set V3) := by
+      have h := (AffineSubspace.vsub_right_mem_direction_iff_mem hxmem y).mpr hy
+      rw [direction_affineSpan, hspan] at h
+      simpa [vsub_eq_sub] using h
+    obtain ⟨c1, c2, hc⟩ := Submodule.mem_span_pair.mp hmem
+    have hc' : ((y - x : V3) : Fin 3 → ℝ) =
+        c1 • ((v - x : V3) : Fin 3 → ℝ) + c2 • ((u - x : V3) : Fin 3 → ℝ) := by
+      have h := congrArg (fun p : V3 => (p : Fin 3 → ℝ)) hc
+      simpa only [WithLp.ofLp_add, WithLp.ofLp_smul] using h.symm
+    rw [hc']
+    have ha : crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((v - x : V3) : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm]; exact dot_self_cross _ _
+    have hb : crossProduct ((v - x : V3) : Fin 3 → ℝ) ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((u - x : V3) : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm]; exact dot_cross_self _ _
+    simp only [dotProduct_add, dotProduct_smul, smul_eq_mul, ha, hb, mul_zero, add_zero]
+  · intro hy
+    simp only [Set.mem_setOf_eq] at hy
+    let a : Fin 3 → ℝ := ((v - x : V3) : Fin 3 → ℝ)
+    let b : Fin 3 → ℝ := ((u - x : V3) : Fin 3 → ℝ)
+    let z : Fin 3 → ℝ := ((y - x : V3) : Fin 3 → ℝ)
+    let A : ℝ := ((crossProduct a b ⬝ᵥ crossProduct a b)⁻¹) *
+      ((a ⬝ᵥ z) * (b ⬝ᵥ b) - (b ⬝ᵥ z) * (a ⬝ᵥ b))
+    let B : ℝ := ((crossProduct a b ⬝ᵥ crossProduct a b)⁻¹) *
+      ((b ⬝ᵥ z) * (a ⬝ᵥ a) - (a ⬝ᵥ z) * (a ⬝ᵥ b))
+    have hn_ab : crossProduct a b ≠ 0 := by simpa only [a, b] using hn
+    have hz : crossProduct a b ⬝ᵥ z = 0 := by simpa only [a, b, z] using hy
+    have hdec := crossProduct_plane_decomp_17 (a := a) (b := b) (z := z) hn_ab hz
+    have hdecV : (y - x : V3) = A • (v - x) + B • (u - x) := by
+      have h := congrArg (WithLp.toLp 2) hdec
+      simpa only [WithLp.toLp_add, WithLp.toLp_smul, WithLp.toLp_ofLp, A, B, a, b, z] using h
+    have hmem : y - x ∈ Submodule.span ℝ ({v - x, u - x} : Set V3) := by
+      rw [hdecV]
+      exact Submodule.add_mem _
+        (Submodule.smul_mem _ _ (Submodule.subset_span (by simp)))
+        (Submodule.smul_mem _ _ (Submodule.subset_span (by simp)))
+    have hdir : y - x ∈ (affineSpan ℝ ({x, v, u} : Set V3)).direction := by
+      rw [direction_affineSpan, hspan]
+      exact hmem
+    exact (AffineSubspace.vsub_right_mem_direction_iff_mem hxmem y).mp (by
+      simpa [vsub_eq_sub] using hdir)
 
 /-! ## 空间分解与 U1/U 的包含关系（Conforming.hl:8522-9065） -/
 
