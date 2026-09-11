@@ -895,7 +895,28 @@ theorem TRAN_COMMUTATIVE_F1_FAN_POWER (x : V3) (V : Set V3) (E E1 : Set (Set V3)
     ¬ (y ∈ ds) ∧
     y ∈ dartOfFan V E →
       (f1Fan x V E)^[n] y = (f1Fan x V E1)^[n] y := by
-  sorry
+  rintro ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hynotds, hydart⟩
+  have hyd1 : y ∈ dart1OfFan V E := by
+    rw [← dartOfFan_eq_dart1_of_surrounded hfan hcard]
+    exact hydart
+  have hpow_not : ∀ m : ℕ, ¬ (f1Fan x V E)^[m] y ∈ ds :=
+    fun m => f1_fan_power_in_face x V E ds y m hfan
+      ⟨hfanC, hcard, hds, hyd1, hynotds⟩
+  have hpow_dart : ∀ m : ℕ, (f1Fan x V E)^[m] y ∈ dartOfFan V E :=
+    fun m => Or.inr (f1Fan_iterate_mem_dart1OfFan hfan hyd1 m)
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+      rw [Function.iterate_succ_apply']
+      rw [Function.iterate_succ_apply']
+      rw [← ih]
+      exact TRAN_COMMUTATIVE_F1_FAN x V E E1 ds f1 f2 f3 v u w ds1 ds2
+        f10 f20 f30 ((f1Fan x V E)^[n] y) hfan hfan1
+        ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+         hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+         hf10, hf20, hf30, hE1, hpow_not n, hpow_dart n⟩
 
 /-- HOL Conforming.hl :4769-4847 `TRAN_COMMUTATIVE_F1_FAN_POWER3`
 
