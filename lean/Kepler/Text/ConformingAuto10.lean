@@ -228,7 +228,12 @@ Conforming.hl:2304 与 :2431 两次以同名 `add_edge_graph` 绑定不同命题
 theorem add_edge_graph (v w : V3) (E E1 : Set (Set V3)) :
     E ∪ {{v, w}} = E1 →
       ({w, v} : Set V3) ∈ E1 ∧ ({v, w} : Set V3) ∈ E1 := by
-  sorry
+  intro h
+  constructor
+  · rw [← h]
+    exact Set.mem_union_right E (by simp [Set.pair_comm])
+  · rw [← h]
+    exact Set.mem_union_right E (by simp)
 
 /-- HOL Conforming.hl :2443-2449 `not_in_set_of_edge`
 
