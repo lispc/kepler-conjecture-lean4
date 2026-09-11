@@ -1572,6 +1572,17 @@ theorem tranf_eq_image_of_tran (x : V3) (V : Set V3)
     hy_eq.trans hds0_eq_face1.symm
   rw [htranf, Set.image_id']
 
+private lemma azimFan_eq_of_sigmaFan_eq {x : V3} {V : Set V3}
+    {E E1 : Set (Set V3)} {a b : V3}
+    (h1 : 1 < (setOfEdge a V E).ncard)
+    (h2 : 1 < (setOfEdge a V E1).ncard)
+    (hσ : sigmaFan x V E1 a b = sigmaFan x V E a b) :
+    azimFan x V E1 a b = azimFan x V E a b := by
+  unfold azimFan
+  rw [if_pos (show (setOfEdge a V E1).ncard > 1 from h2),
+    if_pos (show (setOfEdge a V E).ncard > 1 from h1),
+    hσ]
+
 /-- HOL Conforming.hl :10117-10303 `azim_fanadd_eq`
 
 HOL 原文：
@@ -1639,6 +1650,93 @@ theorem azim_fanadd_eq (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     ds0 ∈ (hypermapOfFan x V E hfan).faceSet \ {ds} ∧
     y ∈ ds0 →
       azimFan x V E1 y.1 y.2 = azimFan x V E y.1 y.2 := by
-  sorry
+  rintro ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hds0mem, hy_ds0⟩
+  obtain ⟨hds0_faceSet, hds0_ne⟩ := hds0mem
+  have hdarts_E : (↑(hypermapOfFan x V E hfanC).darts : Set (V3 × V3)) =
+      dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfanC).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfanC).coe_toFinset
+  obtain ⟨a, ha_darts, ha_face⟩ :=
+    (hypermapOfFan x V E hfanC).face_representation hds0_faceSet
+  have hds0_subset : ds0 ⊆ (↑(hypermapOfFan x V E hfanC).darts : Set (V3 × V3)) := by
+    rw [ha_face]
+    exact (hypermapOfFan x V E hfanC).face_subset_darts ha_darts
+  have hy_dart1_E : y ∈ dart1OfFan V E := by
+    rw [← hdarts_E]
+    exact hds0_subset hy_ds0
+  have hy_edge : ({y.1, y.2} : Set V3) ∈ E := hy_dart1_E
+  have hsubV : ⋃₀ E ⊆ V := hfanC.1
+  obtain ⟨hy1V, -, -, -⟩ := in_setOfEdge V E y.1 y.2 hsubV hy_dart1_E
+  have hcard1 : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E1).ncard :=
+    add_edge_imp_card_set_edge_ge1_fan hfanC hcard hE1.symm
+  have hvw_not : ({v, w} : Set V3) ∉ E := by
+    rw [Set.pair_comm v w]; exact hwv
+  have hface_of : ∀ {u : Set (V3 × V3)} {z : V3 × V3},
+      u ∈ (hypermapOfFan x V E hfanC).faceSet → z ∈ u →
+      u = (hypermapOfFan x V E hfanC).face z := by
+    intro u z hu hz
+    obtain ⟨a', ha', ha'_eq⟩ := (hypermapOfFan x V E hfanC).face_representation hu
+    have hz_a : z ∈ (hypermapOfFan x V E hfanC).face a' := by
+      rw [← ha'_eq]; exact hz
+    exact ha'_eq.trans ((hypermapOfFan x V E hfanC).face_eq_of_mem hz_a)
+  have hdisj : ∀ z : V3 × V3, z ∈ ds → z ∈ ds0 → False := by
+    intro z hz_ds hz_ds0
+    exact hds0_ne ((hface_of hds0_faceSet hz_ds0).trans (hface_of hds hz_ds).symm)
+  have hf1_ds : f1 ∈ ds := hsub (by simp)
+  have hf3_ds : f3 ∈ ds := hsub (by simp)
+  by_cases hyv : y.1 = v
+  · rw [hyv]
+    have hvV : v ∈ V := hyv ▸ hy1V
+    by_cases hyu : y.2 = u
+    · exfalso
+      apply hdisj f1 hf1_ds
+      have hf1y : f1 = y := Prod.ext (by simp [hf1v, hyv]) (by simp [hf1u, hyu])
+      exact hf1y.symm ▸ hy_ds0
+    · have hune : u ≠ y.2 := fun h => hyu h.symm
+      have hy_edge_v : ({v, y.2} : Set V3) ∈ E := by rw [← hyv]; exact hy_edge
+      have hsig : sigmaFan x V E1 v y.2 = sigmaFan x V E v y.2 :=
+        SIGMA_FAN_OF_FANADD_AT_POINT4 x V E E1 v u w y.2
+          ⟨hfanC, hfan1, hfan80, hvu, huw, hwv, hune, hy_edge_v, hsigma, hcard, hE1⟩
+      exact azimFan_eq_of_sigmaFan_eq (hcard v hvV) (hcard1 v hvV) hsig
+  · by_cases hyw : y.1 = w
+    · rw [hyw]
+      have hwV : w ∈ V := (fan_mem_of_edge hfanC huw).2
+      by_cases hyp : y.2 = inverse1SigmaFan x V E w u
+      · exfalso
+        apply hdisj f3 hf3_ds
+        have hf2_eq : f2 = (u, w) := Prod.ext hf2u hf2w
+        have hf3_val : f3 = (w, inverse1SigmaFan x V E w u) := by
+          have h := hf2f3
+          rw [hf2_eq] at h
+          simpa only [f1Fan] using h.symm
+        have hf3y : f3 = y :=
+          Prod.ext (by simp [hf3w, hyw]) (by simp [hf3_val, hyp])
+        exact hf3y.symm ▸ hy_ds0
+      · have hy_edge_w : ({w, y.2} : Set V3) ∈ E := by rw [← hyw]; exact hy_edge
+        have hsig : sigmaFan x V E1 w y.2 = sigmaFan x V E w y.2 :=
+          SIGMA_FAN_OF_FANADD_AT_POINT5 x V E E1 v u w y.2
+            ⟨hfanC, hfan1, hfan80, hvu, huw, hwv, hyp, hy_edge_w, hsigma, hcard, hE1⟩
+        exact azimFan_eq_of_sigmaFan_eq (hcard w hwV) (hcard1 w hwV) hsig
+    · have hy1_not : y.1 ∉ ({v, w} : Set V3) := by simp [hyv, hyw]
+      have hS : setOfEdge y.1 V E1 = setOfEdge y.1 V E := by
+        ext z
+        simp only [setOfEdge, Set.mem_setOf_eq]
+        constructor
+        · rintro ⟨he, hz⟩
+          rw [← hE1] at he
+          rcases he with he | he
+          · exact ⟨he, hz⟩
+          · simp only [Set.mem_singleton_iff] at he
+            exact absurd (by rw [← he]; simp : y.1 ∈ ({v, w} : Set V3)) hy1_not
+        · rintro ⟨he, hz⟩
+          exact ⟨by rw [← hE1]; exact Or.inl he, hz⟩
+      have hsig : sigmaFan x V E1 y.1 y.2 = sigmaFan x V E y.1 y.2 :=
+        SIGMA_FAN_OF_FANADD1 x V E E1 v w
+          ⟨hfanC, hfan1, hcard, hvw_not, hE1⟩ y.1 y.2
+          ⟨hy_edge, hy1_not⟩
+      have h2 : 1 < (setOfEdge y.1 V E1).ncard := by rw [hS]; exact hcard y.1 hy1V
+      exact azimFan_eq_of_sigmaFan_eq (hcard y.1 hy1V) h2 hsig
 
 end Kepler.Text
