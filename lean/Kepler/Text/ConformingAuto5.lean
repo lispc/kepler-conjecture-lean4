@@ -238,6 +238,29 @@ theorem SOL_DISJOINT_UNION (x : V3) (s t : Set V3) (r : ℝ)
 
 /-! ## 有限并上的 `sol`（Conforming.hl:1170-1226） -/
 
+/-- 有限族的径向性（HOL `RADIAL_UNIONS`，Conforming.hl:864-874）：
+若有限集 `s` 中每个集合都径向，则 `⋃₀ s` 径向。 -/
+private theorem radialNorm_sUnion (r : ℝ) (x : V3) (s : Set (Set V3))
+    (hs : s.Finite) (h : ∀ t ∈ s, radialNorm r x t) :
+    radialNorm r x (⋃₀ s) := by
+  refine Set.Finite.induction_on
+    (motive := fun s _ => (∀ t ∈ s, radialNorm r x t) → radialNorm r x (⋃₀ s))
+    s hs ?_ ?_ h
+  · intro _
+    rw [Set.sUnion_empty]
+    exact ⟨Set.empty_subset _, fun u hu =>
+      (Set.notMem_empty (x := x + u) hu).elim⟩
+  · intro a s _ _ ih hins
+    rw [Set.sUnion_insert]
+    have ha : radialNorm r x a := hins a (Set.mem_insert a s)
+    have hs' : radialNorm r x (⋃₀ s) :=
+      ih fun t ht => hins t (Set.mem_insert_of_mem a ht)
+    refine ⟨Set.union_subset ha.1 hs'.1, ?_⟩
+    intro u hu t ht htu
+    rcases hu with hu | hu
+    · exact Or.inl (ha.2 u hu t ht htu)
+    · exact Or.inr (hs'.2 u hu t ht htu)
+
 /-- HOL Conforming.hl :1170-1226 `SOL_UNIONS`
 
 HOL 原文：
@@ -279,7 +302,50 @@ theorem SOL_UNIONS (r : ℝ) (x : V3) (f : Set (Set V3))
       radialNorm r x (s ∩ Metric.ball x r))
     (hdisj : ∀ s ∈ f, ∀ t ∈ f, s ≠ t → Disjoint s t) :
     sol x (⋃₀ f) = ∑ᶠ s ∈ f, sol x s := by
-  sorry
+  refine Set.Finite.induction_on
+    (motive := fun s _ =>
+      (∀ t ∈ s, MeasurableSet (t ∩ Metric.ball x r) ∧
+        radialNorm r x (t ∩ Metric.ball x r)) →
+      (∀ t ∈ s, ∀ u ∈ s, t ≠ u → Disjoint t u) →
+      sol x (⋃₀ s) = ∑ᶠ t ∈ s, sol x t)
+    f hfin ?_ ?_ hmeas_rad hdisj
+  · intro _ _
+    rw [Set.sUnion_empty, SOL_EMPTY, finsum_mem_empty]
+  · intro a s has hs ih hmeas hdisj
+    have ha : MeasurableSet (a ∩ Metric.ball x r) ∧
+        radialNorm r x (a ∩ Metric.ball x r) :=
+      hmeas a (Set.mem_insert a s)
+    have hs_meas : ∀ t ∈ s, MeasurableSet (t ∩ Metric.ball x r) ∧
+        radialNorm r x (t ∩ Metric.ball x r) :=
+      fun t ht => hmeas t (Set.mem_insert_of_mem a ht)
+    have hs_disj : ∀ t ∈ s, ∀ u ∈ s, t ≠ u → Disjoint t u :=
+      fun t ht u hu htu =>
+        hdisj t (Set.mem_insert_of_mem a ht) u (Set.mem_insert_of_mem a hu) htu
+    have ihs : sol x (⋃₀ s) = ∑ᶠ t ∈ s, sol x t := ih hs_meas hs_disj
+    have hsUnion_eq : (⋃₀ s) ∩ Metric.ball x r =
+        ⋃₀ ((fun t => t ∩ Metric.ball x r) '' s) := by
+      rw [Set.sUnion_image, Set.sUnion_eq_biUnion, Set.iUnion₂_inter]
+    have hsUnion_meas : MeasurableSet ((⋃₀ s) ∩ Metric.ball x r) := by
+      rw [hsUnion_eq]
+      exact Set.Finite.measurableSet_sUnion (hs.image _) fun u hu => by
+        rcases hu with ⟨t, ht, rfl⟩
+        exact (hs_meas t ht).1
+    have hsUnion_rad : radialNorm r x ((⋃₀ s) ∩ Metric.ball x r) := by
+      rw [hsUnion_eq]
+      exact radialNorm_sUnion r x ((fun t => t ∩ Metric.ball x r) '' s)
+        (hs.image _) fun u hu => by
+          rcases hu with ⟨t, ht, rfl⟩
+          exact (hs_meas t ht).2
+    have hdisj_a : Disjoint a (⋃₀ s) := by
+      rw [Set.disjoint_sUnion_right]
+      intro t ht
+      refine hdisj a (Set.mem_insert a s) t (Set.mem_insert_of_mem a ht) ?_
+      rintro rfl
+      exact has ht
+    have hsol_union : sol x (a ∪ ⋃₀ s) = sol x a + sol x (⋃₀ s) :=
+      SOL_DISJOINT_UNION x a (⋃₀ s) r hr ha.1 hsUnion_meas hdisj_a ha.2 hsUnion_rad
+    rw [Set.sUnion_insert, hsol_union, ihs,
+      finsum_mem_insert (fun t => sol x t) has hs]
 
 /-! ## 有界性与 `aff_gt` 的开性（Conforming.hl:1227-1262） -/
 
