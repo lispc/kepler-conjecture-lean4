@@ -778,7 +778,23 @@ theorem CONDITION_DART_IN_NODE (x : V3) (V : Set V3) (E : Set (Set V3))
     y1 ∈ dart1OfFan V E ∧
     y1.1 = y.1 →
       y1 ∈ f := by
-  sorry
+  rintro ⟨_, hcard, hf, hy, hy1, hy1eq⟩
+  have hrep := rep_node_set_fan hfan hcard hf hy
+  rw [hrep]
+  have hyE : {y.1, y.2} ∈ E :=
+    properties_of_elements_in_node_fully_surroundedfan hfan hcard hf hy
+  have hy_soe : y.2 ∈ setOfEdge y.1 V E :=
+    (properties_of_setOfEdge_fan x V E y.1 y.2 hfan).mp hyE
+  have hy1E : {y1.1, y1.2} ∈ E := by
+    simpa only [dart1OfFan, Set.mem_setOf_eq] using hy1
+  rw [hy1eq] at hy1E
+  have hy1_soe : y1.2 ∈ setOfEdge y.1 V E :=
+    (properties_of_setOfEdge_fan x V E y.1 y1.2 hfan).mp hy1E
+  have horbit : y1.2 ∈ setOfOrbitsPointsFan x V E y.1 y.2 := by
+    rw [orbit_eq_setOfEdge hfan hyE]
+    exact hy1_soe
+  obtain ⟨i, hi⟩ := horbit
+  exact ⟨i, Nat.zero_le i, by rw [hi]; exact Prod.ext hy1eq rfl⟩
 
 /-! ## 半空间交与 `dartset_leads_into_fan`（Conforming.hl:7652-8002） -/
 
