@@ -205,10 +205,48 @@ HOL 原文：
 - `Metric.mem_ball`、`norm_smul`（Mathlib）
 - `Real.le_mul_of_one_le_left`、`mul_nonneg`（Mathlib，用于系数非负）
 - 缺口：HOL `aff_normball` 未移植；`real^B`（2 维）未覆盖 -/
+/- 若 `y ∈ aff_ge {x} {u,v}`，则从 `x` 出发沿 `y` 方向的射线（参数 `t ≥ 0`）
+仍在该半空间中：`(1-t)•x + t•y ∈ aff_ge {x} {u,v}`。退化情形 `u = v` 用
+`mem_affGe_singleton`，非退化情形用 `mem_affGe_singleton_pair`。 -/
+private theorem affGe_pair_star {x u v y : V3}
+    (hdisj : Disjoint ({x} : Set V3) {u, v})
+    (hy : y ∈ affGe ({x} : Set V3) {u, v}) (t : ℝ) (ht : 0 ≤ t) :
+    (1 - t) • x + t • y ∈ affGe ({x} : Set V3) {u, v} := by
+  have hxu : x ≠ u := Set.disjoint_iff_forall_ne.mp hdisj rfl (Or.inl rfl)
+  have hxv : x ≠ v := Set.disjoint_iff_forall_ne.mp hdisj rfl (Or.inr rfl)
+  by_cases huv : u = v
+  · rw [← huv] at hy ⊢
+    have hp : ({u, u} : Set V3) = {u} := by ext z; simp
+    rw [hp] at hy ⊢
+    obtain ⟨a, b, hb, hab, hyeq⟩ := (mem_affGe_singleton hxu).mp hy
+    refine (mem_affGe_singleton hxu).mpr
+      ⟨(1 - t) + t * a, t * b, mul_nonneg ht hb, ?_, ?_⟩
+    · nlinarith
+    · rw [hyeq]; module
+  · obtain ⟨t1, t2, t3, ht2, ht3, hsum, hyeq⟩ :=
+      (mem_affGe_singleton_pair hdisj huv).mp hy
+    refine (mem_affGe_singleton_pair hdisj huv).mpr
+      ⟨(1 - t) + t * t1, t * t2, t * t3, mul_nonneg ht ht2,
+        mul_nonneg ht ht3, ?_, ?_⟩
+    · nlinarith
+    · rw [hyeq]; module
+
 theorem RADIAL_AFF_GE_1_2 (x u v : V3) (r : ℝ)
     (hdisj : Disjoint ({x} : Set V3) {u, v}) (hr : r > 0) :
     radialNorm r x (affGe ({x} : Set V3) {u, v} ∩ Metric.ball x r) := by
-  sorry
+  refine ⟨Set.inter_subset_right, ?_⟩
+  intro u' hu' t ht htu'
+  rw [Set.mem_inter_iff] at hu'
+  obtain ⟨hge, _hball⟩ := hu'
+  refine ⟨?_, ?_⟩
+  · have hstar := affGe_pair_star hdisj hge t (le_of_lt ht)
+    have heq : (1 - t) • x + t • (x + u') = x + t • u' := by module
+    rw [← heq]
+    exact hstar
+  · rw [Metric.mem_ball, dist_eq_norm]
+    have hsub : (x + t • u') - x = t • u' := by abel
+    rw [hsub, norm_smul, Real.norm_eq_abs, abs_of_pos ht]
+    exact htu'
 
 /-- HOL Conforming.hl :914-943 `RADIAL_AFF_GT_3_1`
 
