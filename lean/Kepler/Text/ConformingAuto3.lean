@@ -499,7 +499,19 @@ FAN(x,V,E)/\ &0<= r
 theorem MESURABLE_YFAN_INTER_BALL (x : V3) (V : Set V3) (E : Set (Set V3))
     (r : ℝ) (hfan : FAN x V E) (hr : 0 ≤ r) :
     MeasurableSet (yfan x V E ∩ Metric.ball x r) := by
-  sorry
+  have hxfan : MeasurableSet (xfan x V E) := by
+    rw [XFAN_EQ_UNIONS_AFF_GE_1_2]
+    apply MeasurableSet.biUnion (setEdgesFiniteFan hfan).countable
+    intro e he
+    obtain ⟨v, w, rfl⟩ := expand_edge_graph_fan hfan he
+    exact (closed_aff_ge_1_2 (fan_not_collinear hfan he)).measurableSet
+  have hset : yfan x V E ∩ Metric.ball x r
+      = Metric.ball x r \ (xfan x V E ∩ Metric.ball x r) := by
+    ext y
+    simp only [yfan, Set.mem_inter_iff, Set.mem_sdiff, Set.mem_univ, true_and]
+    tauto
+  rw [hset]
+  exact measurableSet_ball.diff (hxfan.inter measurableSet_ball)
 
 /-! ## 径向集在差与并下的封闭性（Conforming.hl:815-858） -/
 
