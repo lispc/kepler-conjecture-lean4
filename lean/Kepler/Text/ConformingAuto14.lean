@@ -569,7 +569,21 @@ theorem ds1_in_face_set_fanadd (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       ds1 ∈ (hypermapOfFan x V E1 hfan1).faceSet := by
-  sorry
+  rintro ⟨_hfanC, _hcard, _hfan80, _hds, _hds3, _hsub, _hf1f2, _hf2f3, _hf3ne,
+    _hf1v, _hf2u, _hf3w, _hvu, _huw, _hwv, _hsigma, _hf1u, _hf2w, hds1, _hds2,
+    _hf10, _hf20, _hf30, hE1⟩
+  have hvwE1 : ({v, w} : Set V3) ∈ E1 := by
+    rw [← hE1]
+    exact Or.inr rfl
+  have hdart1 : (v, w) ∈ dart1OfFan V E1 := hvwE1
+  have hmem : (v, w) ∈ (hypermapOfFan x V E1 hfan1).darts := by
+    show (v, w) ∈ (finite_dart1_fan hfan1).toFinset
+    exact (finite_dart1_fan hfan1).mem_toFinset.mpr hdart1
+  have hface : (hypermapOfFan x V E1 hfan1).face (v, w) ∈
+      (hypermapOfFan x V E1 hfan1).faceSet :=
+    (Hypermap.mem_darts_iff_face_mem _ _).mp hmem
+  rw [hds1]
+  exact hface
 
 /-- HOL Conforming.hl :5155-5194 `ds2_in_face_set_fanadd`
 
