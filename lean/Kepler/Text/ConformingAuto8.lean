@@ -65,6 +65,7 @@ Encoding notes (gaps / closest existing encodings):
 -/
 
 import Kepler.Text.PlanarityAuto16
+import Kepler.Text.AffGtCut
 import Kepler.Text.ConformingDefs
 import Kepler.Text.ConformingAuto2
 import Kepler.Text.ConformingAuto6
@@ -632,7 +633,17 @@ theorem condition_aff_gt_subset_yfan {x v u w : V3} {V : Set V3}
     (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
     (hfan80 : fan80 x V E) (hwv : {w, v} ∉ E) :
     affGt ({x} : Set V3) {v, w} ⊆ yfan x V E := by
-  sorry
+  intro y hy
+  simp only [yfan, Set.mem_sdiff, Set.mem_univ, true_and]
+  intro hyx
+  have hNE : ¬(affGt {x} {v, w} ∩ xfan x V E = ∅) := by
+    intro h
+    have hy' : y ∈ affGt {x} {v, w} ∩ xfan x V E := ⟨hy, hyx⟩
+    rw [h] at hy'
+    exact hy'
+  have hE : {v, w} ∈ E :=
+    AFF_GT_CUT_XFAN_IMP_EDGE_FAN hfan hvu huw hsigma hcard hfan80 hNE
+  exact hwv (by rwa [Set.pair_comm] at hE)
 
 /-- HOL Conforming.hl :2031-2092 `segment_subset_aff_gt_union`
 
