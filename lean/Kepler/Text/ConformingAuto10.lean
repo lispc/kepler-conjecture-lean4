@@ -254,7 +254,9 @@ HOL 原文：
 - `Set.pair_comm`（Mathlib） -/
 theorem not_in_set_of_edge (v w : V3) (V : Set V3) (E : Set (Set V3)) :
     ({w, v} : Set V3) ∉ E → w ∉ setOfEdge v V E := by
-  sorry
+  intro h hw
+  rw [setOfEdge, Set.mem_setOf_eq] at hw
+  exact h ((Set.pair_comm v w) ▸ hw.1)
 
 /-- HOL Conforming.hl :2453-2459 `set_of_only_edge`
 
