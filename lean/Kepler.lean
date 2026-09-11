@@ -22,6 +22,10 @@ import Kepler.Geom.Aff
 import Kepler.Geom.AzimLemmas
 -- Phase 5: 体积层基础设施（radial_norm / sol / sol_spec，vol1.hl）
 import Kepler.Geom.Volume
+-- Phase 5 体积层：2D 扇形面积（polar coord）
+import Kepler.Geom.SectorArea
+-- Phase 5 体积层：HOL VOLUME_BALL_WEDGE（球∩楔形 = azim·2r³/3，flyspeck.ml:5452）
+import Kepler.Geom.WedgeVolume
 import Kepler.Text.Fan
 import Kepler.Text.TopologyFan
 -- Phase 5: 文字证明移植 —— planarity.hl（Fan 章的平面性部分）
