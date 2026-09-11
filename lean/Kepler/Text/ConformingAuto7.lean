@@ -133,7 +133,8 @@ theorem lemma_node_identity_fan {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E)
     (hf : f ∈ (hypermapOfFan x V E hfan).nodeSet) (hy : y ∈ f) :
     f = (hypermapOfFan x V E hfan).node y := by
-  sorry
+  obtain ⟨z, -, rfl⟩ := (hypermapOfFan x V E hfan).node_representation hf
+  exact (hypermapOfFan x V E hfan).node_eq_of_mem hy
 
 /-- HOL Conforming.hl :1497-1510 `node_subset_dart_fan`
 
