@@ -677,7 +677,41 @@ theorem segment_subset_aff_gt_union {x y z v u w : V3}
     (hz : z ∈ affGt ({x} : Set V3) {w, v}) :
     segment ℝ y z ⊆
       affGt ({x} : Set V3) {w, v} ∪ affGt ({x} : Set V3) {v, u, w} := by
-  sorry
+  intro p hp
+  have hdis13 : Disjoint ({x} : Set V3) ({v, u, w} : Set V3) :=
+    (notcoplanar_disjoints x v u w hcop).2.2.2.1
+  have hdiswv : Disjoint ({x} : Set V3) ({w, v} : Set V3) :=
+    (notcoplanar_disjoints x v u w hcop).2.2.2.2.2.2.2
+  rw [AFF_GT_1_3 x v u w hdis13] at hy
+  obtain ⟨t1, t2, t3, t4, ht2, ht3, ht4, hsumy, hy_eq⟩ := hy
+  have hz_exp := hz
+  rw [aff_gt_1_2 (x := x) (v := w) (w := v) hdiswv] at hz_exp
+  obtain ⟨s1, s2, s3, hs2, hs3, hsumz, hz_eq⟩ := hz_exp
+  rw [segment] at hp
+  obtain ⟨a, b, ha0, hb0, hab, hp_eq⟩ := hp
+  by_cases hb1 : b = 1
+  · left
+    have haz : a = 0 := by linarith
+    have hpz : p = z := by
+      rw [← hp_eq, haz, hb1, zero_smul, one_smul, zero_add]
+    rw [hpz]
+    exact hz
+  · right
+    have hb_le : b ≤ 1 := by linarith
+    have hb_lt : b < 1 := lt_of_le_of_ne hb_le hb1
+    have ha_pos : 0 < a := by linarith
+    rw [AFF_GT_1_3 x v u w hdis13]
+    refine ⟨a * t1 + b * s1, a * t2 + b * s3, a * t3, a * t4 + b * s2,
+      ?_, ?_, ?_, ?_, ?_⟩
+    · positivity
+    · positivity
+    · positivity
+    · have hfac : (a * t1 + b * s1) + (a * t2 + b * s3) + a * t3 +
+          (a * t4 + b * s2) = a * (t1 + t2 + t3 + t4) + b * (s1 + s2 + s3) := by
+        ring
+      rw [hfac, hsumy, hsumz, mul_one, mul_one, hab]
+    · rw [← hp_eq, hy_eq, hz_eq]
+      module
 
 /-- HOL Conforming.hl :2094-2099 `SEGMENT_CONNECTED`
 
