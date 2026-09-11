@@ -77,6 +77,26 @@ open scoped BigOperators
 
 /-! ## conforming fan 的凸性与半空间（Conforming.hl:64-153） -/
 
+/-- HOL `CONVEX_AFF_GT`：`affGt s t` 对任意 `s t` 都是凸集。
+`Affsign` 的系数在凸组合下保持 `t` 上的严格正性与系数和为 1。 -/
+private theorem convex_affGt (s t : Set V3) : Convex ℝ (affGt s t) := by
+  rw [convex_iff_forall_pos]
+  intro y hy z hz a b ha hb hab
+  obtain ⟨f, hfin, hyeq, hfpos, hfsum⟩ := hy
+  obtain ⟨g, hfin', hzeq, hgpos, hgsum⟩ := hz
+  have hfs : hfin'.toFinset = hfin.toFinset := by
+    rw [Subsingleton.elim hfin' hfin]
+  rw [hfs] at hzeq hgsum
+  refine ⟨fun w => a * f w + b * g w, hfin, ?_, ?_, ?_⟩
+  · rw [hyeq, hzeq, Finset.smul_sum, Finset.smul_sum, ← Finset.sum_add_distrib]
+    apply Finset.sum_congr rfl
+    intro w _
+    rw [smul_smul, smul_smul, ← add_smul]
+  · intro w hw
+    exact add_pos (mul_pos ha (hfpos w hw)) (mul_pos hb (hgpos w hw))
+  · rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum,
+      hfsum, hgsum, mul_one, mul_one, hab]
+
 /-- HOL Conforming.hl :64-87 `GINGUAP`
 
 HOL 原文：
@@ -107,7 +127,9 @@ theorem GINGUAP {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hconf : conformingFan x V E hfan)
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet) :
     Convex ℝ (dartsetLeadsIntoFan x V E ds) := by
-  sorry
+  obtain ⟨-, -, -, hhalf, -, -⟩ := hconf
+  rw [hhalf ds hds]
+  exact convex_iInter₂ fun y _ => convex_affGt _ _
 
 /-- HOL Conforming.hl :88-154 `fully_surrounded_imp_aff_gt_3_1_of_edge_eq_fan`
 
