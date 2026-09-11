@@ -385,7 +385,8 @@ HOL `~collinear {x,v,u}` ↔ `¬ Collinear3 x v u`。
 - 缺口：HOL `aff_ge_inter_aff_ge` 未以该名移植 -/
 theorem NEGLIGIBLE_AFF_GE_1_2 (x v u : V3) (h : ¬ Collinear3 x v u) :
     volume (affGe ({x} : Set V3) {v, u}) = 0 := by
-  sorry
+  rw [aff_ge_inter_aff_ge h]
+  exact measure_mono_null Set.inter_subset_left (NEGLIGIBLE_AFF_GE_2_1 x v u h)
 
 /-- HOL Conforming.hl :691-702 `NEGLIGIBLE_AFF_GT_1_2`
 
