@@ -620,7 +620,48 @@ theorem rep_dartset_leads_into_fan_ds (x : V3) (V : Set V3)
     dartsetLeadsIntoFan x V E1 ds1 ∪ dartsetLeadsIntoFan x V E1 ds2 ∪
       affGt ({x} : Set V3) {v, w} = U →
       dartsetLeadsIntoFan x V E ds = U := by
-  sorry
+  intro h
+  obtain ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hconf, hUeq⟩ := h
+  have hbase : FAN x V E ∧
+      (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
+      fan80 x V E ∧
+      ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard ∧
+      ({f1, f2, f3} : Set (V3 × V3)) ⊆ ds ∧
+      f1Fan x V E f1 = f2 ∧ f1Fan x V E f2 = f3 ∧ ¬ (f1Fan x V E f3 = f1) ∧
+      f1.1 = v ∧ f2.1 = u ∧ f3.1 = w ∧
+      ({v, u} : Set V3) ∈ E ∧ ({u, w} : Set V3) ∈ E ∧ ({w, v} : Set V3) ∉ E ∧
+      sigmaFan x V E u w = v ∧ f1.2 = u ∧ f2.2 = w ∧
+      (hypermapOfFan x V E1 hfan1).face (v, w) = ds1 ∧
+      (hypermapOfFan x V E1 hfan1).face (w, v) = ds2 ∧
+      f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
+      E ∪ {({v, w} : Set V3)} = E1 :=
+    ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne, hf1v, hf2u,
+      hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20, hf30, hE1⟩
+  have hsubU : dartsetLeadsIntoFan x V E ds ⊆ U :=
+    dartset_leads_into_fan_SUBSET_U x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 U
+      hfan hfan1
+      ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne, hf1v, hf2u,
+        hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20, hf30,
+        hE1, hconf, hUeq⟩
+  have hA : dartsetLeadsIntoFan x V E1 ds1 ⊆ dartsetLeadsIntoFan x V E ds :=
+    dartset_leads_into_fanadd1 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1 hbase
+  have hB : dartsetLeadsIntoFan x V E1 ds2 ⊆ dartsetLeadsIntoFan x V E ds :=
+    dartset_leads_into_fanadd2 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1 hbase
+  have hC : affGt ({x} : Set V3) {v, w} ⊆ dartsetLeadsIntoFan x V E ds :=
+    STEP2_REDUCE_FAN hfan hcard hfan80 hds hds3 hsub hf1f2 hf2f3 hf3ne
+      hf1v hf2u hf3w hvu huw hwv hsigma
+  have hUsub : U ⊆ dartsetLeadsIntoFan x V E ds := by
+    rw [← hUeq]
+    intro p hp
+    rcases hp with (hpA | hpB) | hpC
+    · exact hA hpA
+    · exact hB hpB
+    · exact hC hpC
+  exact Set.Subset.antisymm hsubU hUsub
 
 /-! ## `tranf` 保持 `dartset_leads_into_fan`（Conforming.hl:9401-9741） -/
 
