@@ -1190,6 +1190,51 @@ theorem eq_aff_gt_3_fanadd_edge (x : V3) (V : Set V3)
   have heqR := aff_gt_3_1_rep_cross_dot x v u w hcop hposR
   rw [heqL, heqR]
 
+/-- `affGt` 对左端（基）集合单调：`s ⊆ s'` 且 `s' ∪ t` 有限时
+`affGt s t ⊆ affGt s' t`。把 `s` 上的系数在 `s'` 外补 0 延拓。 -/
+private theorem affGt_mono_base {s s' t : Set V3} (hss : s ⊆ s')
+    (hs' : s'.Finite) (ht : t.Finite) : affGt s t ⊆ affGt s' t := by
+  intro y hy
+  have hfin : (s' ∪ t).Finite := hs'.union ht
+  simp only [affGt, Set.mem_setOf_eq, Affsign] at hy ⊢
+  obtain ⟨f, hS, hyv, hpos, hsum⟩ := hy
+  have hsub : (s ∪ t : Set V3) ⊆ s' ∪ t := by
+    intro z hz
+    simp only [Set.mem_union] at hz ⊢
+    rcases hz with h | h
+    · exact Or.inl (hss h)
+    · exact Or.inr h
+  have hsubfin : hS.toFinset ⊆ hfin.toFinset := by
+    intro z hz
+    simp only [Set.Finite.mem_toFinset] at hz ⊢
+    exact hsub hz
+  have hgv0 : ∀ z ∈ hfin.toFinset, z ∉ hS.toFinset →
+      (if z ∈ (s ∪ t : Set V3) then f z else 0) = 0 := by
+    intro z hz hzs
+    exact if_neg (fun hcon => hzs (by
+      simp only [Set.Finite.mem_toFinset]
+      exact hcon))
+  have hgvv : ∀ z ∈ hfin.toFinset, z ∉ hS.toFinset →
+      (if z ∈ (s ∪ t : Set V3) then f z else 0) • z = 0 := by
+    intro z hz hzs
+    rw [hgv0 z hz hzs, zero_smul]
+  refine ⟨fun z => if z ∈ (s ∪ t : Set V3) then f z else 0, hfin, ?_, ?_, ?_⟩
+  · show y = ∑ z ∈ hfin.toFinset, (if z ∈ (s ∪ t : Set V3) then f z else 0) • z
+    rw [hyv, ← Finset.sum_subset hsubfin hgvv]
+    exact Finset.sum_congr rfl (fun z hz => by
+      simp only [Set.Finite.mem_toFinset] at hz
+      rw [if_pos hz])
+  · intro z hzt
+    show 0 < (if z ∈ (s ∪ t : Set V3) then f z else 0)
+    have hzt' : z ∈ (s ∪ t : Set V3) := Or.inr hzt
+    rw [if_pos hzt']
+    exact hpos z hzt
+  · show ∑ z ∈ hfin.toFinset, (if z ∈ (s ∪ t : Set V3) then f z else 0) = 1
+    rw [← hsum, ← Finset.sum_subset hsubfin hgv0]
+    exact Finset.sum_congr rfl (fun z hz => by
+      simp only [Set.Finite.mem_toFinset] at hz
+      rw [if_pos hz])
+
 /-- HOL Conforming.hl :8902-8957 `aff_gt_add_subset_U1`
 
 HOL 原文：
@@ -1260,7 +1305,51 @@ theorem aff_gt_add_subset_U1 (x : V3) (V : Set V3)
       affGt ({x, v, sigmaFan x V E v u} : Set V3) {w} ∩
       affGt ({x, sigmaFan x V E v u, w} : Set V3) {v} →
       affGt ({x} : Set V3) {v, w} ⊆ U1 := by
-  sorry
+  intro h
+  obtain ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hconf, hU1⟩ := h
+  have hθuw : 0 < azim x u w v ∧ azim x u w v < Real.pi := by
+    have := hfan80 u w huw
+    rwa [hsigma] at this
+  have hcop_xvuw : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan hvu huw hθuw.1 hθuw.2
+  have hnc_vw : ¬ Collinear3 x v w := (notcoplanar_imp_notcollinear_fan hcop_xvuw).2.2
+  have heqB : affGt ({x, v, u} : Set V3) {sigmaFan x V E v u} =
+      affGt ({x, v, u} : Set V3) {w} :=
+    eq_aff_gt_3_fanadd_edge x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1
+      ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne,
+        hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+        hf10, hf20, hf30, hE1, hconf⟩
+  have hPB : affGt ({x, v} : Set V3) {w} ⊆ affGt ({x, v, u} : Set V3) {w} :=
+    affGt_mono_base
+      (by intro z hz; simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢; tauto)
+      (((Set.finite_singleton u).insert v).insert x) (Set.finite_singleton w)
+  have hPC : affGt ({x, v} : Set V3) {w} ⊆
+      affGt ({x, v, sigmaFan x V E v u} : Set V3) {w} :=
+    affGt_mono_base
+      (by intro z hz; simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢; tauto)
+      (((Set.finite_singleton (sigmaFan x V E v u)).insert v).insert x)
+      (Set.finite_singleton w)
+  have hQA : affGt ({x, w} : Set V3) {v} ⊆ affGt ({x, u, w} : Set V3) {v} :=
+    affGt_mono_base
+      (by intro z hz; simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢; tauto)
+      (((Set.finite_singleton w).insert u).insert x) (Set.finite_singleton v)
+  have hQD : affGt ({x, w} : Set V3) {v} ⊆
+      affGt ({x, sigmaFan x V E v u, w} : Set V3) {v} :=
+    affGt_mono_base
+      (by intro z hz; simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢; tauto)
+      (((Set.finite_singleton w).insert (sigmaFan x V E v u)).insert x)
+      (Set.finite_singleton v)
+  intro y hy
+  have hyPQ : y ∈ affGt ({x, v} : Set V3) {w} ∩ affGt ({x, w} : Set V3) {v} :=
+    (aff_gt_inter_aff_gt hnc_vw) ▸ hy
+  have hyP : y ∈ affGt ({x, v} : Set V3) {w} := hyPQ.1
+  have hyQ : y ∈ affGt ({x, w} : Set V3) {v} := hyPQ.2
+  rw [hU1]
+  simp only [Set.mem_inter_iff]
+  exact ⟨⟨⟨hQA hyQ, by rw [heqB]; exact hPB hyP⟩, hPC hyP⟩, hQD hyQ⟩
 
 /-- HOL Conforming.hl :8958-9007 `lemma_rep_U_fanadd`
 
