@@ -481,10 +481,44 @@ FAN(x,V,E) /\ r> &0
 - `yfan`（Kepler/Text/Fan.lean:158）
 - `Set.diff_inter`、`Set.inter_subset_right`、`Set.subset_univ`（Mathlib/Data/Set/Basic.lean）
 - 缺口：无 -/
+private theorem radialNorm_diff (r : ℝ) (v0 : V3) (A B : Set V3)
+    (hA : radialNorm r v0 A) (hB : radialNorm r v0 B) (_hsub : A ⊆ B) :
+    radialNorm r v0 (B \ A) := by
+  refine ⟨?_, ?_⟩
+  · intro y hy
+    exact hB.1 hy.1
+  · intro u hu t ht htu
+    have hBmem : v0 + t • u ∈ B := hB.2 u hu.1 t ht htu
+    have hu_norm : ‖u‖ < r := by
+      have h := hB.1 hu.1
+      rw [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left] at h
+      exact h
+    refine ⟨hBmem, ?_⟩
+    intro hAt
+    have htu' : t⁻¹ * ‖t • u‖ < r := by
+      rw [norm_smul, Real.norm_eq_abs, abs_of_pos ht, ← mul_assoc,
+        inv_mul_cancel₀ (ne_of_gt ht), one_mul]
+      exact hu_norm
+    have hAu : v0 + u ∈ A := by
+      have h := hA.2 (t • u) hAt t⁻¹ (inv_pos.mpr ht) htu'
+      simpa [smul_smul, inv_mul_cancel₀ (ne_of_gt ht)] using h
+    exact hu.2 hAu
+
 theorem RADIAL_NORM_YFAN_INTER_BALL (x : V3) (V : Set V3) (E : Set (Set V3)) (r : ℝ)
     (hfan : FAN x V E) (hr : r > 0) :
     radialNorm r x (yfan x V E ∩ Metric.ball x r) := by
-  sorry
+  have hset : yfan x V E ∩ Metric.ball x r =
+      (Set.univ ∩ Metric.ball x r) \ (xfan x V E ∩ Metric.ball x r) := by
+    ext v
+    simp only [yfan, Set.mem_inter_iff, Set.mem_sdiff, Set.mem_univ, true_and]
+    tauto
+  rw [hset]
+  refine radialNorm_diff r x (xfan x V E ∩ Metric.ball x r)
+    (Set.univ ∩ Metric.ball x r)
+    (RADIAL_XFAN_INTER_BALL x V E r hfan hr)
+    (RADIAL_UNIV r x hr) ?_
+  intro v hv
+  exact ⟨Set.mem_univ _, hv.2⟩
 
 /-- HOL Conforming.hl :1024-1036 `SOLID_ANGLE_YFAN`
 
