@@ -810,6 +810,26 @@ theorem lemma_yfanadd_aff_ge (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     · rw [Set.mem_singleton_iff] at heS
       rwa [heS] at hye
 
+/-- 若 `w ∈ V`，则过 `w` 的闭射线 `affGe {x} {w}` 含于 `xfan x V E`：
+由 `exists_edge_fully_surround_fan` 取环绕边 `{w,v'}`，`w` 是
+`affGe {x} {w,v'}` 的端点，再用 `aff_ge_1_1_subset_xfan`。 -/
+private theorem affGe_singleton_subset_xfan_ca15 {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
+    {w : V3} (hw : w ∈ V) :
+    affGe ({x} : Set V3) {w} ⊆ xfan x V E := by
+  obtain ⟨v', hwv', hv'⟩ := exists_edge_fully_surround_fan (x := x) hfan hw hcard
+  have hxV : x ∉ V := hfan.2.2.2.1
+  have hxw : x ≠ w := fun h => hxV (h ▸ hw)
+  have hxv' : x ≠ v' := fun h => hxV (h ▸ hv')
+  have hwv'_ne : w ≠ v' := edge_ne_of_fan hfan hwv'
+  have hwmem : w ∈ affGe ({x} : Set V3) ({w, v'} : Set V3) := by
+    refine Affsign.of_triple (sgn := fun r => 0 ≤ r) (x := x) (v := w) (u := v')
+      (1 : ℝ) (0 : ℝ) (by norm_num) (by norm_num) ?_ hxw hxv' hwv'_ne
+    module
+  have hwxfan : w ∈ xfan x V E :=
+    AFF_GE_SUBSET_XFAN x V E w v' hwv' hwmem
+  exact aff_ge_1_1_subset_xfan x V E w hfan hcard hwxfan hxw
+
 /-- HOL Conforming.hl :6743-6843 `lemma_yfanadd_aff_gt`
 
 HOL 原文：
@@ -866,7 +886,33 @@ theorem lemma_yfanadd_aff_gt (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       yfan x V E ⊆ yfan x V E1 ∪ affGt ({x} : Set V3) ({v, w} : Set V3) := by
-  sorry
+  intro h y hy
+  have hge := lemma_yfanadd_aff_ge x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+    hfan hfan1 h hy
+  rw [yfan, Set.mem_sdiff] at hy
+  rcases h with ⟨hfan, hcard, hfan80, hds, hds3, hsub, hf1, hf2, hf3,
+    hpr1, hpr2, hpr3, hvu, huw, hwv, hsigma, hf1pr3, hf2pr3,
+    hface1, hface2, hf10, hf20, hf30, hE⟩
+  rw [Set.mem_union] at hge
+  rcases hge with hge1 | hge2
+  · exact Or.inl hge1
+  · right
+    have hvwE1 : {v, w} ∈ E1 := by
+      rw [← hE]
+      simp
+    have hnc : ¬ Collinear3 x v w := fan_not_collinear hfan1 hvwE1
+    have hvV : v ∈ V := (fan_mem_of_edge hfan hvu).1
+    have hwV : w ∈ V := (fan_mem_of_edge hfan huw).2
+    have hvx : affGe ({x} : Set V3) {v} ⊆ xfan x V E :=
+      affGe_singleton_subset_xfan_ca15 hfan hcard hvV
+    have hwx : affGe ({x} : Set V3) {w} ⊆ xfan x V E :=
+      affGe_singleton_subset_xfan_ca15 hfan hcard hwV
+    rw [aff_ge_eq_aff_gt_union_aff_ge (x := x) (v := v) (w := w) hnc,
+      Set.mem_union, Set.mem_union] at hge2
+    rcases hge2 with (hgt | hv) | hw
+    · exact hgt
+    · exact absurd (hvx hv) hy.2
+    · exact absurd (hwx hw) hy.2
 
 /-- HOL Conforming.hl :6844-6868 `lemma_yfanadd_aff_gt1`
 
