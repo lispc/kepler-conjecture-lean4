@@ -84,6 +84,7 @@ inductive IExpr (n : ℕ) : Type where
   | const (d : Dyadic) : IExpr n
   | var (i : Fin n) : IExpr n
   | neg (e : IExpr n) : IExpr n
+  | abs (e : IExpr n) : IExpr n
   | add (e₁ e₂ : IExpr n) : IExpr n
   | sub (e₁ e₂ : IExpr n) : IExpr n
   | mul (e₁ e₂ : IExpr n) : IExpr n
@@ -101,6 +102,7 @@ def eval {n : ℕ} : IExpr n → (Fin n → DInterval) → Option DInterval
   | .const d, _ => some ⟨d, d⟩
   | .var i, box => some (box i)
   | .neg e, box => (e.eval box).map DInterval.neg
+  | .abs e, box => (e.eval box).map DInterval.abs
   | .add e₁ e₂, box =>
       match e₁.eval box, e₂.eval box with
       | some I, some J => some (I.add J)
@@ -134,6 +136,7 @@ noncomputable def evalReal {n : ℕ} : IExpr n → (Fin n → ℝ) → ℝ
   | .const d, _ => d.toReal
   | .var i, ρ => ρ i
   | .neg e, ρ => -e.evalReal ρ
+  | .abs e, ρ => |e.evalReal ρ|
   | .add e₁ e₂, ρ => e₁.evalReal ρ + e₂.evalReal ρ
   | .sub e₁ e₂, ρ => e₁.evalReal ρ - e₂.evalReal ρ
   | .mul e₁ e₂, ρ => e₁.evalReal ρ * e₂.evalReal ρ
@@ -178,6 +181,16 @@ theorem eval_mem {n : ℕ} (e : IExpr n) (box : Fin n → DInterval) (ρ : Fin n
       simp only [Option.map_some] at h
       obtain rfl : I = DInterval.neg J := (Option.some.inj h).symm
       exact DInterval.mem_neg (ih J he)
+  | abs e ih =>
+    intro I h
+    simp only [eval] at h
+    cases he : e.eval box with
+    | none => rw [he] at h; simp at h
+    | some J =>
+      rw [he] at h
+      simp only [Option.map_some] at h
+      obtain rfl : I = DInterval.abs J := (Option.some.inj h).symm
+      exact DInterval.mem_abs (ih J he)
   | add e₁ e₂ ih₁ ih₂ =>
     intro I h
     simp only [eval] at h
