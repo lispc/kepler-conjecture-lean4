@@ -640,6 +640,36 @@ theorem TRAN_COMMUTATIVE_F1_FAN (x : V3) (V : Set V3) (E E1 : Set (Set V3))
 
 /-! ## `f1_fan` 幂在面内的保持与反映（Conforming.hl:4606-4670） -/
 
+private theorem f1Fan_not_mem_face_of_mem_dartOfFan {x : V3} {V : Set V3}
+    {E : Set (Set V3)} {ds : Set (V3 × V3)} {z : V3 × V3}
+    (hfan : FAN x V E)
+    (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard)
+    (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet)
+    (hz : z ∈ dartOfFan V E)
+    (hzn : ¬ z ∈ ds) :
+    ¬ f1Fan x V E z ∈ ds := by
+  intro hmem
+  exact hzn (image_f1Fan_mem_face_imp_mem_face hfan hcard hds hmem hz rfl)
+
+private theorem f1Fan_iterate_mem_dart1OfFan {x : V3} {V : Set V3}
+    {E : Set (Set V3)} (hfan : FAN x V E) {z : V3 × V3}
+    (hz : z ∈ dart1OfFan V E) :
+    ∀ m : ℕ, (f1Fan x V E)^[m] z ∈ dart1OfFan V E := by
+  intro m
+  induction m with
+  | zero => simpa using hz
+  | succ m ih =>
+      rw [Function.iterate_succ_apply']
+      have hpair : f1Fan x V E ((f1Fan x V E)^[m] z) =
+          fFanPair x V E ((f1Fan x V E)^[m] z) := by
+        have hba : {((f1Fan x V E)^[m] z).2, ((f1Fan x V E)^[m] z).1} ∈ E := by
+          have h : {((f1Fan x V E)^[m] z).1, ((f1Fan x V E)^[m] z).2} ∈ E := ih
+          rwa [Set.pair_comm] at h
+        simp only [f1Fan, fFanPair]
+        rw [inverse_sigma_fan_eq_inverse1 hfan hba]
+      rw [hpair]
+      exact fFanPair_mem_dart1 hfan ih
+
 /-- HOL Conforming.hl :4606-4638 `f1_fan_power_in_face`
 
 HOL 原文：
@@ -675,7 +705,17 @@ theorem f1_fan_power_in_face (x : V3) (V : Set V3) (E : Set (Set V3))
     y ∈ dart1OfFan V E ∧
     ¬ (y ∈ ds) →
       ¬ ((f1Fan x V E)^[n] y ∈ ds) := by
-  sorry
+  rintro ⟨_, hcard, hds, hyd, hyn⟩
+  have hmem : ∀ m : ℕ, (f1Fan x V E)^[m] y ∈ dartOfFan V E :=
+    fun m => Or.inr (f1Fan_iterate_mem_dart1OfFan hfan hyd m)
+  have hnot : ∀ m : ℕ, ¬ (f1Fan x V E)^[m] y ∈ ds := by
+    intro m
+    induction m with
+    | zero => simpa using hyn
+    | succ m ih =>
+        rw [Function.iterate_succ_apply']
+        exact f1Fan_not_mem_face_of_mem_dartOfFan hfan hcard hds (hmem m) ih
+  exact hnot n
 
 /-- HOL Conforming.hl :4639-4670 `f1_fan_power_in_face_imp_in_face`
 
