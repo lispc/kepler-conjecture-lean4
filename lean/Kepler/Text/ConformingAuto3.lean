@@ -391,7 +391,7 @@ FAN (x,V,E) ==>  negligible (xfan (x,V,E) INTER normball x r)
 theorem NEGLIGIBLE_XFAN_INTER_BALL (x : V3) (V : Set V3) (E : Set (Set V3))
     (r : ℝ) (hfan : FAN x V E) :
     volume (xfan x V E ∩ Metric.ball x r) = 0 := by
-  sorry
+  exact measure_mono_null Set.inter_subset_left (NEGLIGIBLE_XFAN x V E hfan)
 
 /-- HOL Conforming.hl :779-785 `HAS_MEASURE_XFAN_INTER_BALL`
 
