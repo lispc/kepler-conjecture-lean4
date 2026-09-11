@@ -611,7 +611,84 @@ theorem reperentation_of_ds2 (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       ds2 = ({f10, f20, f30} : Set (V3 × V3)) := by
-  sorry
+  intro h
+  have h' := h
+  obtain ⟨hfan, hcard, hfan80, hds, hds3, hf123, hf12, hf23, hf31,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1, hds2,
+    hf10, hf20, hf30, hE1⟩ := h
+  have h10d1 : f10 ∈ dart1OfFan V E1 :=
+    f10_in_d1_fanadd x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1 h'
+  have hEsub : E ⊆ E1 := by
+    intro e he
+    rw [← hE1]
+    exact Set.mem_union_left _ he
+  have h20d1 : f20 ∈ dart1OfFan V E1 := by
+    rw [hf20]
+    exact hEsub hvu
+  have h30d1 : f30 ∈ dart1OfFan V E1 := by
+    rw [hf30]
+    exact hEsub huw
+  have h12 : f1Fan x V E1 f10 = f20 :=
+    (f1_fan_of_f10_eq_f20 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20
+      hfan hfan1
+      ⟨hfan, hcard, hfan80, hds, hds3, hf123, hf12, hf23, hf31,
+        hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1, hds2,
+        hf10, hf20, hE1⟩).symm
+  have h23 : f1Fan x V E1 f20 = f30 :=
+    (f1_fan_of_f20_eq_f30 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f20 f30
+      hfan hfan1
+      ⟨hfan, hcard, hfan80, hds, hds3, hf123, hf12, hf23, hf31,
+        hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1, hds2,
+        hf20, hf30, hE1⟩).symm
+  have h31 : f1Fan x V E1 f30 = f10 :=
+    (f1_fan_of_f30_eq_f10 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f30
+      hfan hfan1
+      ⟨hfan, hcard, hfan80, hds, hds3, hf123, hf12, hf23, hf31,
+        hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1, hds2,
+        hf10, hf30, hE1⟩).symm
+  have hfm10 : (hypermapOfFan x V E1 hfan1).faceMap f10 = f20 := by
+    rw [hypermapOfFan_faceMap_eq_f1Fan_ca12 hfan1 h10d1, h12]
+  have hfm20 : (hypermapOfFan x V E1 hfan1).faceMap f20 = f30 := by
+    rw [hypermapOfFan_faceMap_eq_f1Fan_ca12 hfan1 h20d1, h23]
+  have hfm30 : (hypermapOfFan x V E1 hfan1).faceMap f30 = f10 := by
+    rw [hypermapOfFan_faceMap_eq_f1Fan_ca12 hfan1 h30d1, h31]
+  have hfm_wv : (hypermapOfFan x V E1 hfan1).faceMap (w, v) = f20 := by
+    rw [← hf10]; exact hfm10
+  have hper : ((hypermapOfFan x V E1 hfan1).faceMap ^ 3) (w, v) = (w, v) := by
+    rw [Equiv.Perm.coe_pow]
+    rw [Function.iterate_succ_apply', Function.iterate_succ_apply',
+      Function.iterate_succ_apply', Function.iterate_zero_apply]
+    rw [hfm_wv, hfm20, hfm30, hf10]
+  have hdisj := pair_disjoint_f10_f20_f30 x V E E1 ds f1 f2 f3 v u w ds1 ds2
+    f10 f20 f30 hfan hfan1 h'
+  obtain ⟨hne12, hne23, hne31⟩ := hdisj
+  have hS3sub : ({f10, f20, f30} : Set (V3 × V3)) ⊆ ds2 := by
+    intro y hy
+    rw [Set.mem_insert_iff, Set.mem_insert_iff, Set.mem_singleton_iff] at hy
+    rw [hds2]
+    change y ∈ orbitMap (hypermapOfFan x V E1 hfan1).faceMap (w, v)
+    rcases hy with rfl | rfl | rfl
+    · rw [hf10]; exact mem_orbitMap_self _ _
+    · exact ⟨1, by rw [pow_one]; rw [← hf10]; exact hfm10⟩
+    · exact ⟨2, by
+        rw [Equiv.Perm.coe_pow]
+        rw [Function.iterate_succ_apply', Function.iterate_succ_apply',
+          Function.iterate_zero_apply]
+        rw [← hf10, hfm10, hfm20]⟩
+  have hS3ncard : ({f10, f20, f30} : Set (V3 × V3)).ncard = 3 := by
+    have h13 : f10 ≠ f30 := fun hh => hne31 hh.symm
+    rw [Set.ncard_insert_of_notMem (by simp [hne12, h13]),
+      Set.ncard_insert_of_notMem (by simp [hne23]), Set.ncard_singleton]
+  have hle : ds2.ncard ≤ ({f10, f20, f30} : Set (V3 × V3)).ncard := by
+    have hupper : ds2.ncard ≤ 3 := by
+      rw [hds2]
+      change (orbitMap (hypermapOfFan x V E1 hfan1).faceMap (w, v)).ncard ≤ 3
+      exact card_orbit_le (hypermapOfFan x V E1 hfan1).faceMap (by norm_num) hper
+    rw [hS3ncard]; exact hupper
+  exact (Set.eq_of_subset_of_ncard_le hS3sub hle (by
+    rw [hds2]
+    exact (hypermapOfFan x V E1 hfan1).face_finite (w, v))).symm
 
 /-! ## `ds1` 与 `ds2` 不相交、`pr23` 的基数与 `tran` 的存在性
     （Conforming.hl:3992-4155） -/
