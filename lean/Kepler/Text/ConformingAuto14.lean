@@ -1201,6 +1201,37 @@ theorem EQ_CARD_FACE_FAN_AND_FANADD (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     E ∪ {({v, w} : Set V3)} = E1 →
       (((hypermapOfFan x V E1 hfan1).faceSet \ {ds1}) \ {ds2}).ncard =
         ((hypermapOfFan x V E hfan).faceSet \ {ds}).ncard := by
-  sorry
+  intro ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1⟩
+  let tranf : Set (V3 × V3) → Set (V3 × V3) := fun s =>
+    if h : (∃ g : Set (V3 × V3), ∃ z : V3 × V3,
+        g = (hypermapOfFan x V E1 hfan1).face z ∧ z ∈ s)
+    then Classical.choose h else ∅
+  refine (Set.ncard_congr
+    (s := (hypermapOfFan x V E hfan).faceSet \ {ds})
+    (t := ((hypermapOfFan x V E1 hfan1).faceSet \ {ds1}) \ {ds2})
+    (fun a _ => tranf a) ?_ ?_ ?_).symm
+  · intro a ha
+    exact DOMAIN_TRANF_FACE_DELETE_DS x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 a
+      hfan hfan1
+      ⟨hfan, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+       hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+       hf10, hf20, hf30, hE1, ha⟩
+  · intro a b ha hb hab
+    exact INJ_TRANF_FACE_DELETE_DS x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 a b
+      hfan hfan1
+      ⟨hfan, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+       hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w,
+       hds1.symm, hds2.symm,
+       hf10, hf20, hf30, hE1, ha, hb, hab⟩
+  · intro b hb
+    obtain ⟨ds0, hds0mem, heq⟩ :=
+      SUR_TRANF_FACE_DELETE_DS x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 b
+        hfan hfan1
+        ⟨hfan, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+         hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+         hf10, hf20, hf30, hE1, hb⟩
+    exact ⟨ds0, hds0mem, by simpa only [tranf] using heq⟩
 
 end Kepler.Text
