@@ -414,7 +414,7 @@ FAN (x,V,E) ==>  (xfan (x,V,E) INTER normball x r)  has_measure  &0
 theorem HAS_MEASURE_XFAN_INTER_BALL (x : V3) (V : Set V3) (E : Set (Set V3))
     (r : ℝ) (hfan : FAN x V E) :
     volume (xfan x V E ∩ Metric.ball x r) = 0 := by
-  sorry
+  exact NEGLIGIBLE_XFAN_INTER_BALL x V E r hfan
 
 /-! ## `yfan` 与球的测度/可测性（Conforming.hl:786-814） -/
 
