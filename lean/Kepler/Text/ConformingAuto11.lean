@@ -71,6 +71,7 @@ Encoding notes (gaps / closest existing encodings):
 
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
+import Kepler.Text.AffGtCut
 
 set_option maxHeartbeats 5000000
 
@@ -116,6 +117,30 @@ theorem XFAN_INTER_SET (x : V3) (V : Set V3) (E : Set (Set V3)) (s : Set V3) :
     exact ⟨⟨e, he, hv⟩, hs⟩
 
 /-! ## 方位角条件对 σ 与边的影响（Conforming.hl:2668-2931） -/
+
+/-- 非共线给出 `Disjoint {x} {p,q}`（本文件私有副本）。 -/
+private theorem disjoint_singleton_of_nc_ca11 {x p q : V3}
+    (hnc : ¬ Collinear3 x p q) : Disjoint ({x} : Set V3) {p, q} := by
+  rw [Set.disjoint_iff_inter_eq_empty, Set.singleton_inter_eq_empty]
+  intro hmem
+  rcases Set.mem_insert_iff.mp hmem with he | he
+  · exact hnc (by rw [he]; exact collinear3_of_eq rfl)
+  · exact hnc (by rw [Set.mem_singleton_iff.mp he]; exact collinear3_pair_left rfl)
+
+/-- `Collinear3` 后两点交换（本文件私有副本）。 -/
+private theorem collinear3_swap_ca11 {a b c : V3} (h : ¬ Collinear3 a b c) :
+    ¬ Collinear3 a c b := by
+  intro hc
+  apply h
+  change Collinear ℝ ({a, b, c} : Set V3)
+  rw [show ({a, b, c} : Set V3) = {a, c, b} from by ext z; simp; tauto]
+  exact hc
+
+/-- `affGt ⊆ affGe`（同一组合，严格正系数放宽为非负）。 -/
+private theorem affGt_subset_affGe_ca11 (s t : Set V3) : affGt s t ⊆ affGe s t := by
+  intro y hy
+  obtain ⟨f, hfin, hsum, hpos, hone⟩ := hy
+  exact ⟨f, hfin, hsum, fun z hz => (hpos z hz).le, hone⟩
 
 /-- HOL Conforming.hl :2668-2757 `condition_azim_imp_edge_fan`
 
@@ -168,7 +193,64 @@ theorem condition_azim_imp_edge_fan (x : V3) (V : Set V3) (E : Set (Set V3))
     (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
     azim x w v u = azim x w w1 u →
       ({v, w} : Set V3) ∈ E := by
-  sorry
+  rintro ⟨hfan, hvu, huw, hww1, hsigma1, hsigma2, h80, hcard, hazim⟩
+  -- `fan80` 给出的两组方位角界
+  obtain ⟨h_uw0, h_uwpi⟩ := h80 u w huw
+  rw [hsigma1] at h_uw0 h_uwpi
+  obtain ⟨h_ww10, h_ww1pi⟩ := h80 w w1 hww1
+  rw [hsigma2] at h_ww10 h_ww1pi
+  -- 两组四点不共面
+  have hcop1 : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan hvu huw h_uw0 h_uwpi
+  have hcop2 : ¬ Coplanar ({x, u, w, w1} : Set V3) :=
+    properties_fully_surrounded hfan huw hww1 h_ww10 h_ww1pi
+  -- 拆出不共线事实
+  obtain ⟨hncuw, hncvu, hncvw⟩ := notcoplanar_imp_notcollinear_fan hcop1
+  obtain ⟨hncww1, -, hncuw1⟩ := notcoplanar_imp_notcollinear_fan hcop2
+  have hncuw' : ¬ Collinear3 x w u := collinear3_swap_ca11 hncuw
+  have hncwv' : ¬ Collinear3 x w v := collinear3_swap_ca11 hncvw
+  -- 由 `azim_compl` 把方位角等式翻转为 `azim x w u v = azim x w u w1`
+  have hazim' : azim x w u v = azim x w u w1 := by
+    by_cases h0 : azim x w u v = 0
+    · have hv0 : azim x w v u = 0 := azim_compl_eq_zero hncuw' hncwv' h0
+      have hw1u0 : azim x w w1 u = 0 := by rw [← hazim]; exact hv0
+      have huw10 : azim x w u w1 = 0 := (azim_eq_zero_symm hncuw' hncww1).mpr hw1u0
+      rw [h0, huw10]
+    · have hne2 : azim x w u w1 ≠ 0 := by
+        intro h
+        have hw1u0 : azim x w w1 u = 0 := (azim_eq_zero_symm hncuw' hncww1).mp h
+        have hvu0 : azim x w v u = 0 := by rw [hazim]; exact hw1u0
+        exact h0 ((azim_eq_zero_symm hncuw' hncwv').mpr hvu0)
+      have hc1 : azim x w v u = 2 * Real.pi - azim x w u v := by
+        rw [azim_compl hncuw' hncwv', if_neg h0]
+      have hc2 : azim x w w1 u = 2 * Real.pi - azim x w u w1 := by
+        rw [azim_compl hncuw' hncww1, if_neg hne2]
+      have h := hazim
+      rw [hc1, hc2] at h
+      linarith
+  -- `AZIM_EQ_ALT`：`v` 落在 `aff_gt {x,w} {w1}`
+  have hv : v ∈ affGt ({x, w} : Set V3) {w1} :=
+    (azim_eq_azim_iff_alt hncuw' hncwv' hncww1).mp hazim'
+  have hdisww1 : Disjoint ({x} : Set V3) {w, w1} :=
+    disjoint_singleton_of_nc_ca11 hncww1
+  have hv_ge : v ∈ affGe ({x, w} : Set V3) {w1} :=
+    affGt_subset_affGe_ca11 _ _ hv
+  -- 平面分解：要么 `w1 ∈ aff_gt {x}{v,w}`，要么 `v ∈ aff_ge {x}{w,w1}`
+  have hdecomp : w1 ∈ affGt ({x} : Set V3) {v, w} ∨
+      v ∈ affGe ({x} : Set V3) {w, w1} := by
+    have h := decomposition_planar_by_angle_fan (x := x) (v := w) (u := w1) (w := v)
+      hncww1 hncwv' hv_ge
+    rw [show ({w, v} : Set V3) = {v, w} from by ext z; simp; tauto] at h
+    exact h
+  -- 取出 `aff_gt {x}{v,w} ∩ xfan` 中的见证点
+  have hne : (affGt ({x} : Set V3) {v, w} ∩ xfan x V E).Nonempty := by
+    rcases hdecomp with hcase | hcase
+    · exact ⟨w1, hcase, ({w, w1} : Set V3), hww1, (point_in_aff_ge hncww1).2.2⟩
+    · obtain ⟨y, hy⟩ := exists_in_aff_gt (x := x) (v := v) (u := w) hncvw
+      have hsub : affGt ({x} : Set V3) {v, w} ⊆ affGe ({x} : Set V3) {w, w1} :=
+        aff_gt12_subset_aff_ge (x := x) (v := w) (u := w1) (v1 := v) hdisww1 hncvw hcase
+      exact ⟨y, hy, ({w, w1} : Set V3), hww1, hsub hy⟩
+  exact AFF_GT_CUT_XFAN_IMP_EDGE_FAN hfan hvu huw hsigma1 hcard h80 hne.ne_empty
 
 /-- HOL Conforming.hl :2758-2819 `condition_azim_le_pi`
 
