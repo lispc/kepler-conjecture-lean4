@@ -677,7 +677,8 @@ theorem power_map_points_edge_fan {x : V3} {V : Set V3} {E : Set (Set V3)}
     {v w : V3} (n : ℕ)
     (hfan : FAN x V E) (hvw : {v, w} ∈ E) :
     {v, (sigmaFan x V E v)^[n] w} ∈ E := by
-  sorry
+  exact (properties_of_setOfEdge_fan x V E v ((sigmaFan x V E v)^[n] w) hfan).mpr
+    (image_power_map_points hfan hvw n)
 
 /-- HOL Conforming.hl :371-457 `SRPRNPL`
 
