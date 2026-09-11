@@ -536,7 +536,21 @@ theorem inverse1_sigma_fan_FANADD (x : V3) (V : Set V3)
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       inverse1SigmaFan x V E1 w v = inverse1SigmaFan x V E w u := by
-  sorry
+  rintro ⟨-, hcard, hfan80, -, -, -, -, -, -, -, -, -, hvu, huw, hwv, hsigma,
+    -, -, -, -, -, -, -, hE1⟩
+  set p : V3 := inverse1SigmaFan x V E w u with hp
+  have hwu : ({w, u} : Set V3) ∈ E := by rw [Set.pair_comm]; exact huw
+  have hwp : ({w, p} : Set V3) ∈ E := by
+    rw [hp]
+    exact (INVERSE1_SIGMA_FAN (v := w) hfan).1 u hwu
+  have hσ : sigmaFan x V E1 w p = v :=
+    SIGMA_FAN_OF_FANADD_AT_POINT6 x V E E1 v u w p
+      ⟨hfan, hfan1, hfan80, hvu, huw, hwv, hp, hwp, hsigma, hcard, hE1⟩
+  have hp_E1 : ({w, p} : Set V3) ∈ E1 := by
+    rw [← hE1]; exact Set.mem_union_left _ hwp
+  have h := (INVERSE1_SIGMA_FAN (v := w) hfan1).2.2 p hp_E1
+  rw [hσ] at h
+  exact h
 
 /-! ## `aff_gt` 的相等（Conforming.hl:7464-7564） -/
 
