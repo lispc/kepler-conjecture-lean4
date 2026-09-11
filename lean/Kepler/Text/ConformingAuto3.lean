@@ -588,4 +588,9 @@ HOL 原文：
 theorem RADIAL_UNION (r : ℝ) (v0 : V3) (A B : Set V3)
     (hA : radialNorm r v0 A) (hB : radialNorm r v0 B) :
     radialNorm r v0 (A ∪ B) := by
-  sorry
+  refine ⟨?_, ?_⟩
+  · exact Set.union_subset hA.1 hB.1
+  · intro u hu t ht htu
+    rcases hu with hu | hu
+    · exact Or.inl (hA.2 u hu t ht htu)
+    · exact Or.inr (hB.2 u hu t ht htu)
