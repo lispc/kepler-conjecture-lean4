@@ -406,7 +406,22 @@ theorem REP_OF_INVERSE1_SIGMA_FAN {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet)
     (hy : y ∈ ds) :
     f1Fan x V E (sigmaFan x V E y.1 y.2, y.1) = y := by
-  sorry
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  have hdarts : (↑H.darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have hy_dart : y ∈ dart1OfFan V E := by
+    simp only [Hypermap.faceSet, setOfOrbits] at hds
+    obtain ⟨d, hd, rfl⟩ := hds
+    have hsub : orbitMap H.faceMap d ⊆ (↑H.darts : Set (V3 × V3)) :=
+      H.face_subset_darts hd
+    exact hdarts ▸ hsub hy
+  have hyE : {y.1, y.2} ∈ E := by
+    simpa [dart1OfFan] using hy_dart
+  have hinv : inverse1SigmaFan x V E y.1 (sigmaFan x V E y.1 y.2) = y.2 :=
+    (INVERSE1_SIGMA_FAN hfan).2.2 y.2 hyE
+  simp only [f1Fan]
+  rw [hinv]
 
 /-- HOL Conforming.hl :268-353 `DARTSET_LEADS_INTO_SUBSET_WDART_FAN`
 
