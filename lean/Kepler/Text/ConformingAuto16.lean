@@ -613,7 +613,70 @@ theorem aff_gt_eq_fanadd (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     E ∪ {({v, w} : Set V3)} = E1 →
       affGt ({x, w, inverse1SigmaFan x V E1 w v} : Set V3) {v} =
         affGt ({x, w, inverse1SigmaFan x V E w u} : Set V3) {u} := by
-  sorry
+  intro h
+  have hcopy := h
+  obtain ⟨-, hcard, hfan80, -, -, -, -, -, -, -, -, -, hvu, huw, hwv, hsigma,
+    -, -, -, -, -, -, -, hE1⟩ := hcopy
+  have hinv : inverse1SigmaFan x V E1 w v = inverse1SigmaFan x V E w u :=
+    inverse1_sigma_fan_FANADD x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1 h
+  let p : V3 := inverse1SigmaFan x V E w u
+  have hp : p = inverse1SigmaFan x V E w u := rfl
+  have hwu : ({w, u} : Set V3) ∈ E := by rw [Set.pair_comm]; exact huw
+  have hwp : ({w, p} : Set V3) ∈ E := by
+    rw [hp]
+    exact (INVERSE1_SIGMA_FAN (v := w) hfan).1 u hwu
+  have hp_sigma : sigmaFan x V E w p = u := by
+    rw [hp]
+    exact (INVERSE1_SIGMA_FAN (v := w) hfan).2.1 u hwu
+  have hfan80_1 : fan80 x V E1 :=
+    FAN80_FANADD x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 hfan hfan1 h
+  have hvw_E1 : ({v, w} : Set V3) ∈ E1 := by
+    rw [← hE1]
+    exact Set.mem_union_right E (by simp)
+  have hwp_E1 : ({w, p} : Set V3) ∈ E1 := by
+    rw [← hE1]
+    exact Set.mem_union_left _ hwp
+  have hσ : sigmaFan x V E1 w p = v :=
+    SIGMA_FAN_OF_FANADD_AT_POINT6 x V E E1 v u w p
+      ⟨hfan, hfan1, hfan80, hvu, huw, hwv, hp, hwp, hsigma, hcard, hE1⟩
+  have hθ1 : 0 < azim x w p v ∧ azim x w p v < Real.pi := by
+    have hh := hfan80_1 w p hwp_E1
+    rwa [hσ] at hh
+  have hcop1 : ¬ Coplanar ({x, v, w, p} : Set V3) :=
+    properties_fully_surrounded (v := v) (u := w) (w := p)
+      hfan1 hvw_E1 hwp_E1 hθ1.1 hθ1.2
+  have hcop1' : ¬ Coplanar ({x, w, p, v} : Set V3) := by
+    rwa [show ({x, w, p, v} : Set V3) = {x, v, w, p} from by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  obtain ⟨-, hnc_wp, hnc_wv⟩ := notcoplanar_imp_notcollinear_fan hcop1'
+  have hpos_v : 0 < crossProduct ((w - x : V3) : Fin 3 → ℝ)
+      ((p - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ) :=
+    cross_dot_fully_surrounded_fan (x := x) (v1 := w) (v := p) (u1 := v)
+      hnc_wv hnc_wp hθ1.1 hθ1.2
+  have heq_v := aff_gt_3_1_rep_cross_dot x w p v hcop1' hpos_v
+  have hθ2 : 0 < azim x w p u ∧ azim x w p u < Real.pi := by
+    have hh := hfan80 w p hwp
+    rwa [hp_sigma] at hh
+  have hcop2 : ¬ Coplanar ({x, u, w, p} : Set V3) :=
+    properties_fully_surrounded (v := u) (u := w) (w := p)
+      hfan huw hwp hθ2.1 hθ2.2
+  have hcop2' : ¬ Coplanar ({x, w, p, u} : Set V3) := by
+    rwa [show ({x, w, p, u} : Set V3) = {x, u, w, p} from by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  have hnc_wu : ¬ Collinear3 x w u := fan_not_collinear hfan hwu
+  have hpos_u : 0 < crossProduct ((w - x : V3) : Fin 3 → ℝ)
+      ((p - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((u - x : V3) : Fin 3 → ℝ) :=
+    cross_dot_fully_surrounded_fan (x := x) (v1 := w) (v := p) (u1 := u)
+      hnc_wu hnc_wp hθ2.1 hθ2.2
+  have heq_u := aff_gt_3_1_rep_cross_dot x w p u hcop2' hpos_u
+  calc
+    affGt ({x, w, inverse1SigmaFan x V E1 w v} : Set V3) {v}
+        = affGt ({x, w, p} : Set V3) {v} := by rw [hinv, ← hp]
+      _ = {y : V3 | 0 < crossProduct ((w - x : V3) : Fin 3 → ℝ)
+            ((p - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)} := heq_v
+      _ = affGt ({x, w, p} : Set V3) {u} := heq_u.symm
+      _ = affGt ({x, w, inverse1SigmaFan x V E w u} : Set V3) {u} := by rw [hp]
 
 /-! ## `f30 = f2`（Conforming.hl:7565-7605） -/
 
