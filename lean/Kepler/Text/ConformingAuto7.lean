@@ -335,7 +335,18 @@ theorem lemma_card_node_eq_set_of_orbits {x : V3} {V : Set V3} {E : Set (Set V3)
     ({z : V3 × V3 | ∃ i : ℕ, 0 ≤ i ∧
         z = (y.1, (sigmaFan x V E y.1)^[i] y.2)}).ncard =
       (setOfOrbitsPointsFan x V E y.1 y.2).ncard := by
-  sorry
+  have _ := hcard
+  have _ := hf
+  have _ := hy
+  apply Set.ncard_congr (fun z _ => z.2)
+  · rintro z ⟨i, -, rfl⟩
+    exact ⟨i, rfl⟩
+  · rintro z z' hz hz' h
+    obtain ⟨i, -, rfl⟩ := hz
+    obtain ⟨i', -, rfl⟩ := hz'
+    exact Prod.ext rfl h
+  · rintro w ⟨i, rfl⟩
+    exact ⟨(y.1, (sigmaFan x V E y.1)^[i] y.2), ⟨i, Nat.zero_le i, rfl⟩, rfl⟩
 
 /-! ## σ-迭代单循环性与节点上的角和（Conforming.hl:1597-1717） -/
 
