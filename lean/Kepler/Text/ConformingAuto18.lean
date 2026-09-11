@@ -110,6 +110,7 @@ Encoding notes (gaps / closest existing encodings):
 
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
+import Kepler.Text.ConformingAuto15
 
 set_option maxHeartbeats 5000000
 
@@ -125,6 +126,28 @@ open scoped Topology
 open scoped BigOperators
 
 /-! ## `U` 与补分量之并的交为空（Conforming.hl:9066-9350） -/
+
+/-- 同一 `topologicalComponentYfan` 中两个相交的连通分量相等。 -/
+private lemma tcy_eq_of_mem {x : V3} {V : Set V3} {E : Set (Set V3)}
+    {A C : Set V3} (hA : A ∈ topologicalComponentYfan x V E)
+    (hC : C ∈ topologicalComponentYfan x V E) {p : V3}
+    (hpA : p ∈ A) (hpC : p ∈ C) : A = C := by
+  rw [topologicalComponentYfan, Set.mem_setOf_eq] at hA hC
+  obtain ⟨a, _, hAeq⟩ := hA
+  obtain ⟨c, _, hCeq⟩ := hC
+  rw [← hAeq] at hpA
+  rw [← hCeq] at hpC
+  rw [← hAeq, ← hCeq]
+  exact (connectedComponentIn_eq hpA).trans (connectedComponentIn_eq hpC).symm
+
+/-- `topologicalComponentYfan` 的每个成员都是 `yfan` 的子集。 -/
+private lemma tcy_subset_yfan {x : V3} {V : Set V3} {E : Set (Set V3)}
+    {C : Set V3} (hC : C ∈ topologicalComponentYfan x V E) :
+    C ⊆ yfan x V E := by
+  rw [topologicalComponentYfan, Set.mem_setOf_eq] at hC
+  obtain ⟨b, _, hCeq⟩ := hC
+  rw [← hCeq]
+  exact connectedComponentIn_subset (yfan x V E) b
 
 /-- HOL Conforming.hl :9066-9165 `U_INTER_U2_FANADD`
 
@@ -210,7 +233,83 @@ theorem U_INTER_U2_FANADD (x : V3) (V : Set V3)
       U ∩ ⋃₀ ((topologicalComponentYfan x V E1 \
           {dartsetLeadsIntoFan x V E1 ds1}) \
           {dartsetLeadsIntoFan x V E1 ds2}) = ∅ := by
-  sorry
+  intro h
+  obtain ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w,
+    hds1, hds2, hf10, hf20, hf30, hE1, _hconf, hU⟩ := h
+  have hbig :
+      FAN x V E ∧
+      (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
+      fan80 x V E ∧
+      ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard ∧
+      ({f1, f2, f3} : Set (V3 × V3)) ⊆ ds ∧
+      f1Fan x V E f1 = f2 ∧ f1Fan x V E f2 = f3 ∧ ¬ (f1Fan x V E f3 = f1) ∧
+      f1.1 = v ∧ f2.1 = u ∧ f3.1 = w ∧
+      ({v, u} : Set V3) ∈ E ∧ ({u, w} : Set V3) ∈ E ∧ ({w, v} : Set V3) ∉ E ∧
+      sigmaFan x V E u w = v ∧ f1.2 = u ∧ f2.2 = w ∧
+      (hypermapOfFan x V E1 hfan1).face (v, w) = ds1 ∧
+      (hypermapOfFan x V E1 hfan1).face (w, v) = ds2 ∧
+      f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
+      E ∪ {({v, w} : Set V3)} = E1 :=
+    ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne, hf1v, hf2u,
+      hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20, hf30, hE1⟩
+  have hcard1 : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E1).ncard :=
+    add_edge_imp_card_set_edge_ge1_fan (x := x) (V := V) (E := E) (E1 := E1)
+      (v := v) (w := w) hfan hcard hE1.symm
+  have hfan801 : fan80 x V E1 :=
+    FAN80_FANADD x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 hfan hfan1 hbig
+  have hds1mem : ds1 ∈ (hypermapOfFan x V E1 hfan1).faceSet :=
+    ds1_in_face_set_fanadd x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1
+      ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne, hf1v, hf2u,
+        hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1.symm, hds2.symm,
+        hf10, hf20, hf30, hE1⟩
+  have hds2mem : ds2 ∈ (hypermapOfFan x V E1 hfan1).faceSet :=
+    ds2_in_face_set_fanadd x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1
+      ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne, hf1v, hf2u,
+        hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2.symm,
+        hf10, hf20, hf30, hE1⟩
+  have hvwE1 : ({v, w} : Set V3) ∈ E1 := by
+    rw [← hE1]; exact Or.inr rfl
+  have hvV : v ∈ V := hfan1.1 (Set.mem_sUnion.mpr ⟨{v, w}, hvwE1, by simp⟩)
+  have hwV : w ∈ V := hfan1.1 (Set.mem_sUnion.mpr ⟨{v, w}, hvwE1, by simp⟩)
+  have hxV : x ∉ V := hfan1.2.2.2.1
+  have hxv : x ≠ v := fun hh => hxV (hh ▸ hvV)
+  have hxw : x ≠ w := fun hh => hxV (hh ▸ hwV)
+  have hdis : Disjoint ({x} : Set V3) ({v, w} : Set V3) := by
+    rw [Set.disjoint_singleton_left]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+    exact ⟨hxv, hxw⟩
+  have haff : affGt ({x} : Set V3) ({v, w} : Set V3) ⊆ xfan x V E1 :=
+    (aff_gt_subset_aff_ge hdis).trans (AFF_GE_SUBSET_XFAN x V E1 v w hvwE1)
+  set A : Set V3 := dartsetLeadsIntoFan x V E1 ds1 with hAdef
+  set B : Set V3 := dartsetLeadsIntoFan x V E1 ds2 with hBdef
+  have hA : A ∈ topologicalComponentYfan x V E1 := by
+    rw [hAdef]
+    exact dartset_leads_into_is_topological_component_yfan hfan1 hcard1 hfan801 hds1mem
+  have hB : B ∈ topologicalComponentYfan x V E1 := by
+    rw [hBdef]
+    exact dartset_leads_into_is_topological_component_yfan hfan1 hcard1 hfan801 hds2mem
+  rw [hU]
+  rw [Set.eq_empty_iff_forall_notMem]
+  intro p hp
+  rw [Set.mem_inter_iff, Set.mem_union, Set.mem_union] at hp
+  obtain ⟨hpU, hpS⟩ := hp
+  rw [Set.mem_sUnion] at hpS
+  obtain ⟨C, hC, hpC⟩ := hpS
+  rw [Set.mem_sdiff, Set.mem_sdiff] at hC
+  obtain ⟨⟨hCmem, hCneA⟩, hCneB⟩ := hC
+  have hCneA' : C ≠ A := by simpa using hCneA
+  have hCneB' : C ≠ B := by simpa using hCneB
+  rcases hpU with (hpA | hpB) | hpaff
+  · exact hCneA' (tcy_eq_of_mem (A := A) (C := C) (p := p) hA hCmem hpA hpC).symm
+  · exact hCneB' (tcy_eq_of_mem (A := B) (C := C) (p := p) hB hCmem hpB hpC).symm
+  · have hCyfan : C ⊆ yfan x V E1 := tcy_subset_yfan hCmem
+    have hp_yfan : p ∈ yfan x V E1 := hCyfan hpC
+    have hp_xfan : p ∈ xfan x V E1 := haff hpaff
+    rw [yfan, Set.mem_sdiff] at hp_yfan
+    exact hp_yfan.2 hp_xfan
 
 /-- HOL Conforming.hl :9166-9349 `dartset_leads_into_fan_SUBSET_U`
 
