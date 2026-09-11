@@ -174,6 +174,38 @@ theorem node_subset_dart_fan {x : V3} {V : Set V3} {E : Set (Set V3)}
   rw [dartOfFan, Set.mem_union]
   exact Or.inr h1
 
+/-- `hypermapOfFan` 的 `nodeMap` 在 `dart1OfFan` 上就是 `nFanPair`
+（ConformingAuto1 中 private 引理的本文件副本）。 -/
+private theorem hypermapOfFan_nodeMap_eq_ca7 {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    (hypermapOfFan x V E hfan).nodeMap d = nFanPair x V E d := by
+  unfold hypermapOfFan extendPerm
+  simp only [Equiv.ofBijective_apply]
+  unfold Kepler.Text.Fan.res
+  rw [if_pos (by
+    simpa [(finite_dart1_fan hfan).coe_toFinset] using hd)]
+
+/-- `nodeMap` 的迭代在 `dart1OfFan` 上保持首分量并沿 `sigmaFan` 递推
+（ConformingAuto1 中 private 引理的本文件副本）。 -/
+private theorem hypermapOfFan_nodeMap_iterate_ca7 {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) (n : ℕ) :
+    ((hypermapOfFan x V E hfan).nodeMap^[n]) d =
+      (d.1, (sigmaFan x V E d.1)^[n] d.2) := by
+  have hmem_iter : ∀ k : ℕ, (nFanPair x V E)^[k] d ∈ dart1OfFan V E := by
+    intro k
+    induction k with
+    | zero => simpa using hd
+    | succ k ihk => rw [Function.iterate_succ_apply']; exact nFanPair_mem_dart1 hfan ihk
+  have hmain : ∀ k : ℕ,
+      ((hypermapOfFan x V E hfan).nodeMap^[k]) d = (nFanPair x V E)^[k] d := by
+    intro k
+    induction k with
+    | zero => simp
+    | succ k ih =>
+      rw [Function.iterate_succ_apply', ih, Function.iterate_succ_apply']
+      exact hypermapOfFan_nodeMap_eq_ca7 hfan (hmem_iter k)
+  rw [hmain n, nFanPair_iterate]
+
 /-- HOL Conforming.hl :1511-1550 `rep_node_set_fan`
 
 HOL 原文：
@@ -212,7 +244,28 @@ theorem rep_node_set_fan {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hf : f ∈ (hypermapOfFan x V E hfan).nodeSet) (hy : y ∈ f) :
     f = {z : V3 × V3 | ∃ i : ℕ, 0 ≤ i ∧
       z = (y.1, (sigmaFan x V E y.1)^[i] y.2)} := by
-  sorry
+  have _ := hcard
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  have hdarts : (↑H.darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have hy_dart1 : y ∈ dart1OfFan V E := by
+    have hy_darts : y ∈ H.darts := by
+      obtain ⟨z, hz, hzf⟩ := H.node_representation hf
+      rw [hzf] at hy
+      exact H.node_subset_darts hz hy
+    have : y ∈ (↑H.darts : Set (V3 × V3)) := hy_darts
+    rwa [hdarts] at this
+  rw [lemma_node_identity_fan hfan hf hy]
+  ext z
+  simp only [Hypermap.node, orbitMap, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨n, hn⟩
+    exact ⟨n, Nat.zero_le n, by
+      rw [← hn, Equiv.Perm.coe_pow, hypermapOfFan_nodeMap_iterate_ca7 hfan hy_dart1 n]⟩
+  · rintro ⟨i, -, rfl⟩
+    exact ⟨i, by
+      rw [Equiv.Perm.coe_pow, hypermapOfFan_nodeMap_iterate_ca7 hfan hy_dart1 i]⟩
 
 /-- HOL Conforming.hl :1551-1568 `properties_of_elements_in_node_fully_surroundedfan`
 
