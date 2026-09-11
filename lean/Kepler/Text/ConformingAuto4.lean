@@ -165,7 +165,13 @@ HOL 原文：
 - 缺口：HOL `aff_normball`（vol1.hl:569）未移植；`real^N` 一般维度未覆盖 -/
 theorem RADIAL_UNIV (r : ℝ) (x : V3) (hr : r > 0) :
     radialNorm r x (Set.univ ∩ Metric.ball x r) := by
-  sorry
+  refine ⟨Set.inter_subset_right, ?_⟩
+  intro u _ t ht htu
+  refine ⟨Set.mem_univ _, ?_⟩
+  have hsub : (x + t • u) - x = t • u := by abel
+  rw [Metric.mem_ball, dist_eq_norm, hsub, norm_smul, Real.norm_eq_abs,
+    abs_of_pos ht]
+  exact htu
 
 /-! ## 半空间与球的径向性（Conforming.hl:887-943） -/
 
