@@ -747,7 +747,37 @@ theorem edge_not_in_ds2 (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       (v, w) ∉ ds2 := by
-  sorry
+  intro h
+  have h' := h
+  obtain ⟨hfan, hcard, hfan80, hds, hds3, hf123, hf12, hf23, hf31,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1, hds2,
+    hf10, hf20, hf30, hE1⟩ := h
+  have hvu_ne : v ≠ u := edge_ne_of_fan hfan hvu
+  have huw_ne : u ≠ w := edge_ne_of_fan hfan huw
+  have hvw_ne : v ≠ w := by
+    intro hvw
+    have hw_mem : w ∈ setOfEdge u V E :=
+      (properties_of_setOfEdge_fan x V E u w hfan).mp huw
+    have hne : setOfEdge u V E ≠ {w} := by
+      intro hset
+      have huV : u ∈ V := (fan_mem_of_edge hfan huw).1
+      have hlt : 1 < (setOfEdge u V E).ncard := hcard u huV
+      rw [hset, Set.ncard_singleton] at hlt
+      exact Nat.lt_irrefl 1 hlt
+    exact (SIGMA_FAN hne hfan hw_mem).2.1 (hsigma.trans hvw)
+  have hds2_eq : ds2 = ({f10, f20, f30} : Set (V3 × V3)) :=
+    reperentation_of_ds2 x V E E1 ds f1 f2 f3 v u w ds1 ds2
+      f10 f20 f30 hfan hfan1 h'
+  intro hmem
+  rw [hds2_eq] at hmem
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+  rcases hmem with hmem | hmem | hmem
+  · rw [hf10] at hmem
+    exact hvw_ne (Prod.ext_iff.mp hmem).1
+  · rw [hf20] at hmem
+    exact huw_ne (Prod.ext_iff.mp hmem).2.symm
+  · rw [hf30] at hmem
+    exact hvu_ne (Prod.ext_iff.mp hmem).1
 
 /-- HOL Conforming.hl :4036-4063 `disjoint_ds1_and_ds2`
 
