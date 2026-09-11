@@ -1425,7 +1425,39 @@ theorem lemma_rep_U_fanadd (x : V3) (V : Set V3)
       affGt ({x, sigmaFan x V E v u, w} : Set V3) {v} →
       U = U1 ∪ dartsetLeadsIntoFan x V E1 ds1 ∪
         dartsetLeadsIntoFan x V E1 ds2 := by
-  sorry
+  intro h
+  obtain ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hU, hconf, hU1⟩ := h
+  have hsub1 : affGt ({x} : Set V3) {v, w} ⊆ U1 :=
+    aff_gt_add_subset_U1 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 U1
+      hfan hfan1
+      ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+        hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10,
+        hf20, hf30, hE1, hconf, hU1⟩
+  have hsub2 : U1 ⊆ U :=
+    lemmaU1_subset_U x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 U U1
+      hfan hfan1
+      ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+        hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10,
+        hf20, hf30, hE1, hconf, hU1, hU⟩
+  apply Set.Subset.antisymm
+  · intro z hz
+    rw [hU] at hz
+    simp only [Set.mem_union] at hz
+    simp only [Set.mem_union]
+    rcases hz with hz | hz
+    · rcases hz with hz | hz
+      · exact Or.inl (Or.inr hz)
+      · exact Or.inr hz
+    · exact Or.inl (Or.inl (hsub1 hz))
+  · intro z hz
+    simp only [Set.mem_union] at hz
+    rcases hz with hz | hz
+    · rcases hz with hz | hz
+      · exact hsub2 hz
+      · rw [hU]; exact Or.inl (Or.inl hz)
+    · rw [hU]; exact Or.inl (Or.inr hz)
 
 /-- HOL Conforming.hl :9008-9065 `dartset_leads_into_ds_open_fanadd`
 
