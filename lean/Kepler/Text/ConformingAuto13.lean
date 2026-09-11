@@ -752,7 +752,10 @@ theorem f1_fan_power_in_face_imp_in_face (x : V3) (V : Set V3) (E : Set (Set V3)
     y ∈ dart1OfFan V E ∧
     ((f1Fan x V E)^[n] y ∈ ds) →
       y ∈ ds := by
-  sorry
+  rintro ⟨_, hcard, hds, hyd, hpow⟩
+  by_contra hyn
+  exact (f1_fan_power_in_face x V E ds y n hfan
+    ⟨hfan, hcard, hds, hyd, hyn⟩) hpow
 
 /-! ## `TRAN_COMMUTATIVE_F1_FAN` 的合并形式与幂形式（Conforming.hl:4671-4847） -/
 
