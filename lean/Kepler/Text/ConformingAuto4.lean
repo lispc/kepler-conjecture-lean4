@@ -91,7 +91,9 @@ HOL 原文：
 - 缺口：HOL 的 `real^N` 一般维度未覆盖；`radial_norm` 仅 `V3` 版 -/
 theorem RADIAL_EMPTY (r : ℝ) (v0 : V3) :
     radialNorm r v0 (∅ : Set V3) := by
-  sorry
+  refine ⟨Set.empty_subset _, ?_⟩
+  intro u hu
+  exact (Set.notMem_empty (x := v0 + u) hu).elim
 
 /-- HOL Conforming.hl :864-874 `RADIAL_UNIONS`
 
