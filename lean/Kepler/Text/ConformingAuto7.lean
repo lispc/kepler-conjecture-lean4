@@ -512,7 +512,8 @@ theorem exists_point_in_node {x : V3} {V : Set V3} {E : Set (Set V3)}
     {f : Set (V3 × V3)}
     (hfan : FAN x V E)
     (hf : f ∈ (hypermapOfFan x V E hfan).nodeSet) : ∃ y, y ∈ f := by
-  sorry
+  obtain ⟨y, -, rfl⟩ := (hypermapOfFan x V E hfan).node_representation hf
+  exact ⟨y, (hypermapOfFan x V E hfan).mem_node_self y⟩
 
 /-- HOL Conforming.hl :1687-1717 `SUM_AZIM_FAN_OF_NODE_EQ_2PI_I_FAN`
 
