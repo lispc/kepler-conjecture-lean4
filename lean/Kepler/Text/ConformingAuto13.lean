@@ -817,7 +817,25 @@ theorem TRAN_COMMUTATIVE_F1_FAN0 (x : V3) (V : Set V3) (E E1 : Set (Set V3))
       ¬ (y.2 ∈ ({v, w} : Set V3))) ∧
     y ∈ dartOfFan V E →
       f1Fan x V E y = f1Fan x V E1 y := by
-  sorry
+  rintro ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hcases, hydart⟩
+  rcases hcases with ⟨hc1, hc2⟩ | ⟨hd1, hd2⟩ | he
+  · exact TRAN_COMMUTATIVE_F1_FAN3 x V E E1 ds f1 f2 f3 v u w ds1 ds2
+      f10 f20 f30 y hfan hfan1
+      ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+       hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1, hds2,
+       hf10, hf20, hf30, hE1, hc1, hc2, hydart⟩
+  · exact TRAN_COMMUTATIVE_F1_FAN2 x V E E1 ds f1 f2 f3 v u w ds1 ds2
+      f10 f20 f30 y hfan hfan1
+      ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+       hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1, hds2,
+       hf10, hf20, hf30, hE1, hd1, hd2, hydart⟩
+  · exact TRAN_COMMUTATIVE_F1_FAN1 x V E E1 ds f1 f2 f3 v u w ds1 ds2
+      f10 f20 f30 y hfan hfan1
+      ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+       hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1, hds2,
+       hf10, hf20, hf30, hE1, he, hydart⟩
 
 /-- HOL Conforming.hl :4718-4768 `TRAN_COMMUTATIVE_F1_FAN_POWER`
 
