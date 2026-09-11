@@ -319,6 +319,48 @@ theorem INJ_TRAN_D1_FAN (x : V3) (V : Set V3) (E E1 : Set (Set V3))
   rintro ⟨-, -, -, -, -, hy⟩
   exact hy
 
+/-- `f1Fan` 把 `dart1OfFan` 中的元素仍送到 `dart1OfFan`。 -/
+private theorem f1Fan_iterate_mem_dart1OfFan {x : V3} {V : Set V3}
+    {E : Set (Set V3)} (hfan : FAN x V E) {z : V3 × V3}
+    (hz : z ∈ dart1OfFan V E) :
+    ∀ m : ℕ, (f1Fan x V E)^[m] z ∈ dart1OfFan V E := by
+  intro m
+  induction m with
+  | zero => simpa using hz
+  | succ m ih =>
+      rw [Function.iterate_succ_apply']
+      have hpair : f1Fan x V E ((f1Fan x V E)^[m] z) =
+          fFanPair x V E ((f1Fan x V E)^[m] z) := by
+        have hba : {((f1Fan x V E)^[m] z).2, ((f1Fan x V E)^[m] z).1} ∈ E := by
+          have h : {((f1Fan x V E)^[m] z).1, ((f1Fan x V E)^[m] z).2} ∈ E := ih
+          rwa [Set.pair_comm] at h
+        simp only [f1Fan, fFanPair]
+        rw [inverse_sigma_fan_eq_inverse1 hfan hba]
+      rw [hpair]
+      exact fFanPair_mem_dart1 hfan ih
+
+/-- `hypermapOfFan` 的 `faceMap` 的幂在 `dart1OfFan` 上等于 `f1Fan` 的迭代。 -/
+private theorem hypermapOfFan_faceMap_pow_eq_iterate {x : V3} {V : Set V3}
+    {E : Set (Set V3)} (hfan : FAN x V E) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) (k : ℕ) :
+    ((hypermapOfFan x V E hfan).faceMap ^ k) d = (f1Fan x V E)^[k] d := by
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+      rw [pow_succ', Equiv.Perm.mul_apply, ih, Function.iterate_succ_apply']
+      exact hypermapOfFan_faceMap_eq_f1Fan hfan
+        (f1Fan_iterate_mem_dart1OfFan hfan hd k)
+
+/-- 若 `f1 ∈ ds` 且 `ds` 是 `faceSet` 中的面，则 `ds` 就是 `f1` 所在的面。 -/
+private theorem identity_face_in_face_set {x : V3} {V : Set V3} {E : Set (Set V3)}
+    {ds : Set (V3 × V3)} {f1 : V3 × V3}
+    (hfan : FAN x V E)
+    (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet)
+    (hf1 : f1 ∈ ds) :
+    ds = (hypermapOfFan x V E hfan).face f1 := by
+  obtain ⟨d, _hd, rfl⟩ := (hypermapOfFan x V E hfan).face_representation hds
+  exact (hypermapOfFan x V E hfan).face_eq_of_mem hf1
+
 /-- HOL Conforming.hl :5009-5116 `INJ_TRANF_FACE_DELETE_DS`
 
 HOL 原文：
@@ -387,7 +429,88 @@ theorem INJ_TRANF_FACE_DELETE_DS (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     ds0' ∈ (hypermapOfFan x V E hfan).faceSet \ {ds} ∧
     tranf ds0 = tranf ds0' →
       ds0 = ds0' := by
-  sorry
+  dsimp only
+  rintro ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hds0mem, hds0'mem, htranf⟩
+  obtain ⟨hds0_faceSet, hds0_ne⟩ := hds0mem
+  obtain ⟨hds0'_faceSet, hds0'_ne⟩ := hds0'mem
+  have hEsub : E ⊆ E1 := by rw [← hE1]; exact Set.subset_union_left
+  have hdarts_E : (↑(hypermapOfFan x V E hfanC).darts : Set (V3 × V3)) =
+      dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfanC).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfanC).coe_toFinset
+  -- `TRANF` 给出两个 E-面各自在 `face_{E1}` 下的像与代表元。
+  have hT0raw := TRANF x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 ds0
+    hfanC hfan1
+    ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+     hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1, hds2,
+     hf10, hf20, hf30, hE1, ⟨hds0_faceSet, hds0_ne⟩⟩
+  dsimp only at hT0raw
+  obtain ⟨y, hy_eq, hy_mem⟩ := hT0raw
+  have hT0'raw := TRANF x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 ds0'
+    hfanC hfan1
+    ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+     hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1, hds2,
+     hf10, hf20, hf30, hE1, ⟨hds0'_faceSet, hds0'_ne⟩⟩
+  dsimp only at hT0'raw
+  obtain ⟨y', hy'_eq, hy'_mem⟩ := hT0'raw
+  have hyface : (hypermapOfFan x V E1 hfan1).face y =
+      (hypermapOfFan x V E1 hfan1).face y' :=
+    hy_eq.symm.trans (htranf.trans hy'_eq)
+  have hds0_eq : ds0 = (hypermapOfFan x V E hfanC).face y :=
+    identity_face_in_face_set hfanC hds0_faceSet hy_mem
+  have hds0'_eq : ds0' = (hypermapOfFan x V E hfanC).face y' :=
+    identity_face_in_face_set hfanC hds0'_faceSet hy'_mem
+  -- `y`、`y'` 都不在特殊面 `ds` 中。
+  have hy_not_ds : y ∉ ds := by
+    intro hyds
+    have hds_eq : ds = (hypermapOfFan x V E hfanC).face y :=
+      identity_face_in_face_set hfanC hds hyds
+    exact hds0_ne (hds0_eq.trans hds_eq.symm)
+  have hy'_not_ds : y' ∉ ds := by
+    intro hy'ds
+    have hds_eq : ds = (hypermapOfFan x V E hfanC).face y' :=
+      identity_face_in_face_set hfanC hds hy'ds
+    exact hds0'_ne (hds0'_eq.trans hds_eq.symm)
+  -- 两个代表元都在 `dart1OfFan V E`（从而也在 `dartOfFan V E`）。
+  obtain ⟨a, ha_darts, ha_face⟩ :=
+    (hypermapOfFan x V E hfanC).face_representation hds0_faceSet
+  have hds0_subset : ds0 ⊆ (↑(hypermapOfFan x V E hfanC).darts : Set (V3 × V3)) := by
+    rw [ha_face]; exact (hypermapOfFan x V E hfanC).face_subset_darts ha_darts
+  have hy_dart1_E : y ∈ dart1OfFan V E := by
+    rw [← hdarts_E]; exact hds0_subset hy_mem
+  obtain ⟨a', ha'_darts, ha'_face⟩ :=
+    (hypermapOfFan x V E hfanC).face_representation hds0'_faceSet
+  have hds0'_subset : ds0' ⊆ (↑(hypermapOfFan x V E hfanC).darts : Set (V3 × V3)) := by
+    rw [ha'_face]; exact (hypermapOfFan x V E hfanC).face_subset_darts ha'_darts
+  have hy'_dart1_E : y' ∈ dart1OfFan V E := by
+    rw [← hdarts_E]; exact hds0'_subset hy'_mem
+  have hy'_dartOfFan : y' ∈ dartOfFan V E := Or.inr hy'_dart1_E
+  -- `y` 与 `y'` 在同一个 `face_{E1}` 轨道，取幂次 `n`。
+  have hy_in_H1face : y ∈ (hypermapOfFan x V E1 hfan1).face y' :=
+    hyface ▸ (hypermapOfFan x V E1 hfan1).mem_face_self y
+  simp only [Hypermap.face, orbitMap] at hy_in_H1face
+  obtain ⟨n, hn⟩ := hy_in_H1face
+  have hy'_dart1_E1 : y' ∈ dart1OfFan V E1 := hEsub hy'_dart1_E
+  have hn' : (f1Fan x V E1)^[n] y' = y :=
+    (hypermapOfFan_faceMap_pow_eq_iterate hfan1 hy'_dart1_E1 n).symm.trans hn
+  -- `TRAN_COMMUTATIVE_F1_FAN_POWER` 把 `f1Fan` 幂从 `E1` 换回 `E`。
+  have hT := TRAN_COMMUTATIVE_F1_FAN_POWER x V E E1 ds f1 f2 f3 v u w ds1 ds2
+    f10 f20 f30 y' n hfanC hfan1
+    ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+     hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+     hf10, hf20, hf30, hE1, hy'_not_ds, hy'_dartOfFan⟩
+  have hpow_eq : (f1Fan x V E)^[n] y' = y := hT.trans hn'
+  -- 于是 `y` 落在 `ds0'` 中；结合 `y ∈ ds0` 得两个面相等。
+  have hy_ds0' : y ∈ ds0' := by
+    rw [hds0'_eq]
+    have hmem : ((hypermapOfFan x V E hfanC).faceMap ^ n) y' ∈
+        (hypermapOfFan x V E hfanC).face y' :=
+      pow_apply_mem_orbitMap _ n y'
+    rw [hypermapOfFan_faceMap_pow_eq_iterate hfanC hy'_dart1_E n, hpow_eq] at hmem
+    exact hmem
+  exact hds0_eq.trans (identity_face_in_face_set hfanC hds0'_faceSet hy_ds0').symm
 
 /-! ## 新面集的成员性与 `f1_fan` 幂的不变性（Conforming.hl:5117-5219） -/
 
