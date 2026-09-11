@@ -6,11 +6,15 @@
 
 ## 0. 一句话现状
 
-main @ 见 `git log -1 main`（全绿，唯一 sorry = `Statement.lean:111`
-sanctioned 占位）。**Phase 2/3 已闭合；Phase 4 求解层 160/176（91%），
-内核闭合（G4）未开工；Phase 5 planarity.hl 正由全自动流水线推进**
-（`lean/scripts/auto_pipeline.sh`，deepseek-v4-flash 全权：骨架设计→
-证明填空→机械闸→自动合并 main；Kimi 降为每 4h 汇报+抽查）。
+main @ `48ff904`（`make check` 全绿，唯一 sorry = `Statement.lean`
+sanctioned 主定理占位）。**Phase 2/3 已闭合；Phase 4 求解层 160/176（91%），
+内核闭合（G4）未开工；Phase 5：hypermap/fan/topology/planarity 100% 进 main**
+——其中 planarity 收官所依赖的**体积/测度论层已从零建成**
+（`Kepler/Geom/{Volume,SectorArea,WedgeVolume,LuneVolume,SolidAngle}.lean`，
+含 HOL Light `VOLUME_BALL_WEDGE`/`HAS_MEASURE_LUNE`/`VOLUME_SOLID_TRIANGLE`，
+零 sorry）。下一步 Conforming.hl，流水线 `scripts/auto_pipeline_conforming.sh`
+已在 wip/auto-phase5 跑（commits to wip only；待 `DWFBRQY` 等依赖 solid_of 的
+定理补齐后可合 main）。
 
 ## 1. 项目目标（不变）
 
@@ -53,14 +57,25 @@ Lean 4 + Mathlib（toolchain `leanprover/lean4:v4.32.2`）形式化开普勒猜�
   cert JSON；Lean 侧需扩 IExpr abs 节点 / TKind ln / Cert 叶带 guard
   符号+disj 备选——规格 `pipeline/interval/arb-layer.md` §3/§4）。
 
-### Phase 5 — 文字证明 🟡 全自动流水线推进中
+### Phase 5 — 文字证明 🟡 planarity 99%，流水线已 FAIL-STOP（等压轴攻坚）
 
 - 已收官：hypermap.hl 13,575 行 100%、fan.hl 系列 ~7,800 行 100%、
   topology.hl 4,718 行 100%。
-- **planarity.hl（15,463 行）**：自动化批次推进，每批 10 定理。
-  覆盖行数见 main 最新 commit 消息（"coverage :NNNNN"）。
-  后续队列：planarity 剩余 → Conforming.hl 17,033 → polyhedron ~3,200 →
-  packing/ ~28,000 → local/ ~30,000 → assembly。
+- **planarity.hl（15,463 行）**：main 覆盖至 :15280（98.8%，批次 1-15 全部
+  自动闭合，~150 枚定理）。**批次 16（收官批）FAIL-STOP**：剩 2 枚在 wip
+  `PlanarityAuto16.lean` 带 sorry：
+  1. `solid_of_dartset_leads_into_fan_triangle_fan`（:15370）——卡在前置
+     `VOLUME_SOLID_TRIANGLE` 未移植。**它不在 planarity.hl，在 HOL Light 本体
+     `Multivariate/flyspeck.ml:5883`**（measure(ball∩aff_gt) = Girard 盈余·r³/3；
+     测度论证明链长）；`sol`/`dihV`/`AZIM_DIVH` 也未移植（骨架 docstring 内有
+     sol 的 Classical.epsilon 规格编码方案和所有已就绪引理的 file:line）。
+  2. `MOZNWEH`（:15443，全书主定理）——纯 MESON 组装，solid_of 闭合后秒过。
+  攻坚路线：专项移植 VOLUME_SOLID_TRIANGLE 链（独立文件，原文需从
+  flyspeck.ml 粘进 prompt——工人读不了仓库外路径）→ 补 solid_of → MOZNWEH →
+  批次 16 审计进 main。**流水线目前处于停止状态**，清堵后删除
+  `PlanarityAuto16.lean` 的 2 个 sorry 并 ff 合 main，整个 planarity.hl 即收官。
+- 后续队列：Conforming.hl 17,033 → polyhedron ~3,200 → packing/ ~28,000 →
+  local/ ~30,000 → assembly（auto_pipeline 改 HL 变量即可复用）。
 - **全自动流水线**（`lean/scripts/auto_pipeline.sh`，2026-09-10 上线）：
   1. 从 `lean/scripts/auto_pipeline_state.txt` 读当前位置（起始行+批次号）；
   2. deepseek 设计骨架（陈述冻结，docstring 嵌 HOL 原文+证法+候选引理）；
@@ -100,18 +115,53 @@ Lean 4 + Mathlib（toolchain `leanprover/lean4:v4.32.2`）形式化开普勒猜�
 
 ## 5. 当前运行中的东西
 
-- `auto_pipeline.sh`（若已启动）：日志 `/tmp/auto_pipeline.log`，
-  状态 `lean/scripts/auto_pipeline_state.txt`，批次循环日志
-  `/tmp/auto_loop.log`，闸日志 `/tmp/auto_gate.log`。
-- 巡检 cron（Kimi 会话内）：每 4h 汇报+抽查。
+- **auto_pipeline.sh 已 FAIL-STOP（2026-09-11，批次 16 剩 2 枚，见 §2 Phase 5）**。
+  清堵后重启：`cd lean && nohup bash scripts/auto_pipeline.sh >> /tmp/auto_pipeline_driver.log 2>&1 &`
+  （但需先把状态文件指到收官之后或手工收尾批次 16）。
+- 日志：`/tmp/auto_pipeline.log` / `/tmp/auto_loop.log` / `/tmp/auto_gate.log`；
+  状态 `lean/scripts/auto_pipeline_state.txt`。
+- Kimi 侧巡检 cron：每 4h 汇报+抽查（会话内，换会话即失效需重建）。
 
 ## 6. 待办队列（优先级序）
 
-1. Phase 5 planarity 收官（流水线自动推进中）→ 之后 Conforming.hl 等，
-   流水线可直接改 HL 变量复用。
-2. Phase 4：16 条残余策略 + G4 内核闭合（见 §2 Phase 4）。
-3. Phase 6：主定理装配 + 终验。
-4. 零散：`Kepler.Text.fan80/fan81` 重复定义去重；`ineqdata3q1h.hl` 解析。
+1. ~~**Phase 5 planarity 收官攻坚**~~ ✅ **已完成（2026-09-11，main `48ff904`）**：
+   体积层从零建成（`Volume/SectorArea/WedgeVolume/LuneVolume/SolidAngle`），
+   `solid_of`+`MOZNWEH` 已证，planarity.hl 100% 进 main。
+2. **Conforming.hl 移植（进行中，wip/auto-phase5）**：定义层
+   `Kepler/Text/ConformingDefs.lean` 已就位；流水线
+   `scripts/auto_pipeline_conforming.sh` 已跑批次 1-2。**关键更新**：原 blocked 的
+   `DWFBRQY`（Conforming.hl:550）依赖的 `solid_of` 现已可证——应把
+   `auto_pipeline_conforming.sh` 的 `BLOCKED` 清空（或从 wip 里已跳过的
+   `DWFBRQY`/`nonconformin_fan_imp_n_fan_ge0` 重新派工），跑通后即可把
+   Conforming 合 main。Conforming 228 定理中仅极少数依赖立体角公式，其余为
+   `sol` 代数/测度/径向（`sol_spec` 即可）。
+3. Phase 4：16 条残余策略 + G4 内核闭合（见 §2 Phase 4）。
+4. Phase 6：主定理装配 + 终验。
+5. 零散：`Kepler.Text.fan80/fan81` 重复定义去重；`ineqdata3q1h.hl` 解析。
+
+### 体积层文件（2026-09-11，全部零 sorry、仅标准三公理）
+
+`Kepler/Geom/` 下（均 import 进 `Kepler.lean`）：
+- `Volume.lean`：`radialNorm`、`EventuallyRadial`、`sol`、`sol_spec`、
+  `volume_real_add_left/right`、`volume_real_smul`、`radialNorm.volume_scaling`。
+- `SectorArea.lean`：`sector_area`（2D 扇形面积 = ρ²θ/2）。
+- `WedgeVolume.lean`：`volume_ball_wedge`（HOL `VOLUME_BALL_WEDGE`）。
+- `LuneVolume.lean`：`arcV`/`dihV`、`azim_dihv_same`、`wedge_eq_affGt`
+  （`WEDGE_LUNE_GT`）、`volume_ball_affGt(_simple)`（`HAS_MEASURE_LUNE(_SIMPLE)`）。
+- `SolidAngle.lean`：`volume_solid_triangle`（HOL `VOLUME_SOLID_TRIANGLE`）。
+HOL 源在仓库内：`lean/scripts/flyspeck_multivariate.ml`（供后续 Volume/Packing
+章节引用）。
+
+### 体积层新文件（2026-09-11）
+
+`Kepler/Geom/Volume.lean`（已 import 进 `Kepler.lean`，`lake build Kepler` 绿）：
+- `radialNorm r x C`（HOL `radial_norm`）
+- `EventuallyRadial x C`（HOL `eventually_radial`）
+- `sol x C`（HOL `sol`，`Classical.choose` 选择见证半径）
+- `volume_real_add_left/right`、`volume_real_smul`（实值体积的平移/标度）
+- `radialNorm.volume_scaling`（HOL `lemma_r_r'`）
+- `sol_radius_independent`、`sol_spec`（HOL `sol_spec`）
+公理审计：仅 `[propext, Classical.choice, Quot.sound]`，零 sorry。
 
 ## 7. 已知坑（近期新增；历史坑见 git 历史与 worker 模板）
 
