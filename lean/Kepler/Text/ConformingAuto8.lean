@@ -351,7 +351,8 @@ theorem exists_face_in_face_set {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E)
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet) :
     ∃ f1, f1 ∈ ds := by
-  sorry
+  obtain ⟨d, _hd, rfl⟩ := (hypermapOfFan x V E hfan).face_representation hds
+  exact ⟨d, mem_orbitMap_self _ d⟩
 
 /-- HOL Conforming.hl :1857-1866 `identity_face_in_face_set`
 
