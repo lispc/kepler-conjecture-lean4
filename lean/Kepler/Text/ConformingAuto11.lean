@@ -1242,6 +1242,35 @@ theorem f1_fan_of_f20_eq_f30 (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       f30 = f1Fan x V E1 f20 := by
-  sorry
+  rintro ⟨-, -, -, -, -, -, -, -, -, -, -, -, hvu, huw, -, hsigma,
+    -, -, hf20, hf30, hE1⟩
+  have huv_ne : u ≠ v := (edge_ne_of_fan hfan hvu).symm
+  have huw_ne : u ≠ w := edge_ne_of_fan hfan huw
+  have hsingle_u : setOfEdge u V ({{v, w}} : Set (Set V3)) = ∅ := by
+    ext y
+    simp only [setOfEdge, Set.mem_setOf_eq, Set.mem_singleton_iff,
+      Set.mem_empty_iff_false, iff_false]
+    rintro ⟨hy, -⟩
+    have hu : u ∈ ({v, w} : Set V3) := by
+      rw [← hy]
+      exact Set.mem_insert u {y}
+    rcases (Set.mem_insert_iff.mp hu) with h | h
+    · exact huv_ne h
+    · exact huw_ne h
+  have hsoe_u : setOfEdge u V E1 = setOfEdge u V E := by
+    rw [← hE1, setOfEdge_union_ca11, hsingle_u, Set.union_empty]
+  have hsig_u : sigmaFan x V E1 u w = sigmaFan x V E u w := by
+    unfold sigmaFan
+    rw [hsoe_u]
+  have hsig_v : sigmaFan x V E1 u w = v := hsig_u.trans hsigma
+  have huw_E1 : ({u, w} : Set V3) ∈ E1 := by
+    rw [← hE1]
+    exact Set.mem_union_left _ huw
+  have hinv : inverse1SigmaFan x V E1 u v = w := by
+    have h := (INVERSE1_SIGMA_FAN (v := u) hfan1).2.2 w huw_E1
+    rwa [hsig_v] at h
+  rw [hf20, hf30]
+  simp only [f1Fan]
+  rw [hinv]
 
 end Kepler.Text
