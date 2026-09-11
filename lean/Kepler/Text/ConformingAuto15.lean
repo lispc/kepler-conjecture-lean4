@@ -1029,7 +1029,18 @@ theorem YFANADD_AFF_GT (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       yfan x V E = yfan x V E1 ∪ affGt ({x} : Set V3) ({v, w} : Set V3) := by
-  sorry
+  intro h
+  apply Set.Subset.antisymm
+  · exact lemma_yfanadd_aff_gt x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1 h
+  · intro y hy
+    rw [Set.mem_union] at hy
+    rcases hy with hy1 | hy2
+    · exact lemma_yfanadd_aff_gt1 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+        hfan hfan1 h hy1
+    · rcases h with ⟨_, hcard, hfan80, _, _, _, _, _, _, _, _, _, hvu, huw,
+        hwv, hsigma, _, _, _, _, _, _, _, _⟩
+      exact condition_aff_gt_subset_yfan hfan hvu huw hsigma hcard hfan80 hwv hy2
 
 /-! ## `dartset_leads_into_fan` 的包含（Conforming.hl:6901-7118） -/
 
