@@ -990,6 +990,36 @@ theorem TRAN_COMMUTATIVE_F1_FAN_POWER3 (x : V3) (V : Set V3) (E E1 : Set (Set V3
         ((f1Fan x V E)^[m] y).2 = w) ∨
       ¬ (((f1Fan x V E)^[m] y).2 ∈ ({v, w} : Set V3))) →
       (f1Fan x V E)^[n] y = (f1Fan x V E1)^[n] y := by
-  sorry
+  rintro ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hydart, hpow⟩
+  have hyd1 : y ∈ dart1OfFan V E := by
+    rw [← dartOfFan_eq_dart1_of_surrounded hfan hcard]
+    exact hydart
+  suffices hmain : ∀ n : ℕ,
+      (∀ m : ℕ, m < n →
+        (¬ (((f1Fan x V E)^[m] y).1 = sigmaFan x V E v u) ∧
+          ((f1Fan x V E)^[m] y).2 = v) ∨
+        (¬ (((f1Fan x V E)^[m] y).1 = u) ∧
+          ((f1Fan x V E)^[m] y).2 = w) ∨
+        ¬ (((f1Fan x V E)^[m] y).2 ∈ ({v, w} : Set V3))) →
+      (f1Fan x V E)^[n] y = (f1Fan x V E1)^[n] y by
+    exact hmain n hpow
+  intro n
+  induction n with
+  | zero => intro _; rfl
+  | succ n ih =>
+      intro hpow
+      have ih' : (f1Fan x V E)^[n] y = (f1Fan x V E1)^[n] y :=
+        ih (fun m hm => hpow m (Nat.lt_trans hm (Nat.lt_succ_self n)))
+      rw [Function.iterate_succ_apply']
+      rw [Function.iterate_succ_apply']
+      rw [← ih']
+      exact TRAN_COMMUTATIVE_F1_FAN0 x V E E1 ds f1 f2 f3 v u w ds1 ds2
+        f10 f20 f30 ((f1Fan x V E)^[n] y) hfan hfan1
+        ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+         hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+         hf10, hf20, hf30, hE1, hpow n (Nat.lt_succ_self n),
+         Or.inr (f1Fan_iterate_mem_dart1OfFan hfan hyd1 n)⟩
 
 end Kepler.Text
