@@ -411,7 +411,56 @@ HOL 原文：
 - `aff_gt_3_1_rep_cross_dot`（Kepler/Text/PlanarityAuto12.lean:723）
 - `isOpen_lt`（Mathlib/Topology/Order/OrderClosed.lean:587）
 - 缺口：无 -/
+private theorem continuous_vsub_ofLp (x : V3) :
+    Continuous (fun y : V3 => ((y - x : V3) : Fin 3 → ℝ)) :=
+  (PiLp.continuous_ofLp (p := 2) (β := fun _ : Fin 3 => ℝ)).comp
+    (continuous_id.sub continuous_const)
+
+private theorem isOpen_dot_pos (x : V3) (n : Fin 3 → ℝ) :
+    IsOpen {y : V3 | 0 < n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)} := by
+  have hcont : Continuous (fun y : V3 => n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)) :=
+    continuous_const.dotProduct (continuous_vsub_ofLp x)
+  exact isOpen_lt (f := fun _ : V3 => (0 : ℝ))
+    (g := fun y : V3 => n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)) continuous_const hcont
+
+private theorem isOpen_dot_neg (x : V3) (n : Fin 3 → ℝ) :
+    IsOpen {y : V3 | n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ) < 0} := by
+  have hcont : Continuous (fun y : V3 => n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)) :=
+    continuous_const.dotProduct (continuous_vsub_ofLp x)
+  exact isOpen_lt (f := fun y : V3 => n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ))
+    (g := fun _ : V3 => (0 : ℝ)) hcont continuous_const
+
 theorem OPEN_AFF_GT_3_1 (x v u w : V3)
     (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) :
     IsOpen (affGt ({x, v, u} : Set V3) {w}) := by
-  sorry
+  have hne := coplanar_cross_dot x v u w hcop
+  rcases lt_or_gt_of_ne hne with hneg | hpos
+  · have hcop' : ¬ Coplanar ({x, u, v, w} : Set V3) := by
+      have he : ({x, u, v, w} : Set V3) = {x, v, u, w} := by
+        ext z
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      rwa [he]
+    have hpos' : 0 < crossProduct ((u - x : V3) : Fin 3 → ℝ)
+        ((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((w - x : V3) : Fin 3 → ℝ) := by
+      rw [← cross_anticomm, neg_dotProduct]
+      linarith
+    have heq := aff_gt_3_1_rep_cross_dot x u v w hcop' hpos'
+    have hseteq : ({x, v, u} : Set V3) = {x, u, v} := by
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hseteq, heq]
+    have hset2 : {y : V3 | 0 < crossProduct ((u - x : V3) : Fin 3 → ℝ)
+        ((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)} =
+        {y : V3 | crossProduct ((v - x : V3) : Fin 3 → ℝ)
+          ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ) < 0} := by
+      ext y
+      simp only [Set.mem_setOf_eq]
+      rw [← cross_anticomm, neg_dotProduct]
+      constructor <;> intro h <;> linarith
+    rw [hset2]
+    exact isOpen_dot_neg x _
+  · have heq := aff_gt_3_1_rep_cross_dot x v u w hcop hpos
+    rw [heq]
+    exact isOpen_dot_pos x _
