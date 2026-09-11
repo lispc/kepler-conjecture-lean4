@@ -952,6 +952,11 @@ theorem exists_tranf_fan (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     ds0 ∈ (hypermapOfFan x V E hfan).faceSet \ {ds} →
       ∃ f, ∃ y, f = (hypermapOfFan x V E1 hfan1).face
           (y.1, sigmaFan x V E1 y.1 y.2) ∧ y ∈ ds0 := by
-  sorry
+  rintro ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hds0⟩
+  rcases hds0 with ⟨hds0mem, _⟩
+  simp only [Hypermap.faceSet, setOfOrbits, Set.mem_setOf_eq] at hds0mem
+  obtain ⟨y, -, hyeq⟩ := hds0mem
+  exact ⟨(hypermapOfFan x V E1 hfan1).face (y.1, sigmaFan x V E1 y.1 y.2), y,
+    rfl, by rw [← hyeq]; exact mem_orbitMap_self _ _⟩
 
 end Kepler.Text
