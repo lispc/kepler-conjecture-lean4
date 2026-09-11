@@ -77,6 +77,7 @@ Encoding notes (gaps / closest existing encodings):
 
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
+import Kepler.Text.ConformingAuto5
 
 set_option maxHeartbeats 5000000
 
@@ -634,12 +635,31 @@ FAN(x,V,E) /\ conforming_fan (x,V,E)
 - `connectedComponentIn_eq`（Mathlib/Topology/Connected/Basic.lean:585）
 - 缺口：HOL `CONNECTED_COMPONENT_NONOVERLAP` 无逐字对应，需由
   `connectedComponentIn_eq` 导出 `Disjoint` -/
+private theorem disjoint_connectedComponentIn_auto6 {α : Type*} [TopologicalSpace α]
+    {F : Set α} {b c : α}
+    (h : connectedComponentIn F b ≠ connectedComponentIn F c) :
+    Disjoint (connectedComponentIn F b) (connectedComponentIn F c) := by
+  refine Set.disjoint_left.2 fun z hz1 hz2 => h ?_
+  rw [connectedComponentIn_eq hz1, connectedComponentIn_eq hz2]
+
 theorem SUM_SOL_TOPOLOGICAL_COMPONENT_YFAN_EQ_SOL_UNIONS {x : V3} {V : Set V3}
     {E : Set (Set V3)}
     (hfan : FAN x V E) (hconf : conformingFan x V E hfan) :
     sol x (⋃₀ topologicalComponentYfan x V E) =
       ∑ᶠ f ∈ topologicalComponentYfan x V E, sol x f := by
-  sorry
+  have hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard := hconf.1
+  have hfan80 : fan80 x V E := hconf.2.1
+  refine SOL_UNIONS 1 x (topologicalComponentYfan x V E)
+    (FINITE_TOPOLOGICAL_COMPONENT_YFAN hfan hcard hfan80)
+    one_pos ?_ ?_
+  · intro f hf
+    exact ⟨MEASURABLE_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL 1 hfan hconf hf,
+      RADIAL_TOPOLOGICAL_COMPONENT_YFAN 1 hfan one_pos hconf hf⟩
+  · intro s hs t ht hst
+    rw [topologicalComponentYfan] at hs ht
+    obtain ⟨b, _hb, rfl⟩ := hs
+    obtain ⟨c, _hc, rfl⟩ := ht
+    exact disjoint_connectedComponentIn_auto6 hst
 
 /-- HOL Conforming.hl :1435-1455 `UNIONS_TOPOLOGICAL_COMPONENT_EQ_YFAN`
 
