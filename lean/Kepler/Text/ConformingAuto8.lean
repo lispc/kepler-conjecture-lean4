@@ -738,6 +738,6 @@ HOL 原文：
 - 缺口：Mathlib 无与 HOL `SEGMENT_CONNECTED` 同名/同形的整句引理
   （本陈述为 Mathlib-general，但未预打包），故保留 -/
 theorem SEGMENT_CONNECTED (a b : V3) : IsConnected (segment ℝ a b) := by
-  sorry
+  exact (convex_segment a b).isConnected ⟨a, left_mem_segment ℝ a b⟩
 
 end Kepler.Text
