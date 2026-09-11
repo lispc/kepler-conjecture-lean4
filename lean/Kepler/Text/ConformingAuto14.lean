@@ -94,6 +94,7 @@ Encoding notes (gaps / closest existing encodings):
 
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
+import Kepler.Text.ConformingAuto13
 
 set_option maxHeartbeats 5000000
 
@@ -104,6 +105,24 @@ open Kepler.Text.Fan
 open Classical
 
 /-! ## `tranf` 的唯一性与 `tran` 的像/单射（Conforming.hl:4848-5116） -/
+
+/-- `hypermapOfFan` 的 `faceMap` 在 `dart1OfFan` 上等于 `f1Fan`。 -/
+private theorem hypermapOfFan_faceMap_eq_f1Fan {x : V3} {V : Set V3}
+    {E : Set (Set V3)} (hfan : FAN x V E) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) :
+    (hypermapOfFan x V E hfan).faceMap d = f1Fan x V E d := by
+  have hba : ({d.2, d.1} : Set V3) ∈ E := by
+    have h : ({d.1, d.2} : Set V3) ∈ E := hd
+    rwa [Set.pair_comm] at h
+  have hface : (hypermapOfFan x V E hfan).faceMap d = fFanPair x V E d := by
+    unfold hypermapOfFan extendPerm
+    simp only [Equiv.ofBijective_apply]
+    unfold Kepler.Text.Fan.res
+    rw [if_pos (by simpa [(finite_dart1_fan hfan).coe_toFinset] using hd)]
+  have hpair : fFanPair x V E d = f1Fan x V E d := by
+    simp only [fFanPair, f1Fan]
+    rw [inverse_sigma_fan_eq_inverse1 hfan hba]
+  rw [hface, hpair]
 
 /-- HOL Conforming.hl :4848-4967 `unique_tranf_fan`
 
@@ -173,7 +192,70 @@ theorem unique_tranf_fan (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f = (hypermapOfFan x V E1 hfan1).face y ∧ y ∈ ds0 ∧
     ds0 ∈ (hypermapOfFan x V E hfan).faceSet \ {ds} →
       tranf ds0 = f := by
-  sorry
+  dsimp only
+  rintro ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hfy, hyds0, hds0mem⟩
+  have hEsub : E ⊆ E1 := by rw [← hE1]; exact Set.subset_union_left
+  obtain ⟨hds0_faceSet, hds0_ne⟩ := hds0mem
+  have hP : ∃ g : Set (V3 × V3), ∃ z : V3 × V3,
+      g = (hypermapOfFan x V E1 hfan1).face z ∧ z ∈ ds0 :=
+    ⟨f, y, hfy, hyds0⟩
+  rw [dif_pos hP]
+  obtain ⟨z, hz, hzds0⟩ := Classical.choose_spec hP
+  rw [hz, hfy]
+  set HE : Hypermap (V3 × V3) := hypermapOfFan x V E hfanC with hHE
+  set H1 : Hypermap (V3 × V3) := hypermapOfFan x V E1 hfan1 with hH1
+  have hdarts_eq : (↑HE.darts : Set (V3 × V3)) = dart1OfFan V E := by
+    rw [hHE]
+    change (↑(finite_dart1_fan hfanC).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfanC).coe_toFinset
+  obtain ⟨a, ha_darts, ha_face⟩ := HE.face_representation hds0_faceSet
+  have hds0_subset : ds0 ⊆ (↑HE.darts : Set (V3 × V3)) := by
+    rw [ha_face]; exact HE.face_subset_darts ha_darts
+  have hy_face : y ∈ HE.face a := by rw [← ha_face]; exact hyds0
+  have hface_y : HE.face y = ds0 :=
+    (HE.face_eq_of_mem hy_face).symm.trans ha_face.symm
+  have hz_in_face_y : z ∈ HE.face y := by rw [hface_y]; exact hzds0
+  obtain ⟨n, hn⟩ := hz_in_face_y
+  have hpoint : ∀ p : V3 × V3, p ∈ ds0 → HE.faceMap p = H1.faceMap p := by
+    intro p hp
+    have hp_dart1_E : p ∈ dart1OfFan V E := by
+      rw [← hdarts_eq]; exact hds0_subset hp
+    have hp_dart1_E1 : p ∈ dart1OfFan V E1 := hEsub hp_dart1_E
+    have hp_not_ds : ¬ p ∈ ds := by
+      intro hpds
+      have h1 : HE.face p = ds0 := by
+        have hpfa : p ∈ HE.face a := by rw [← ha_face]; exact hp
+        exact (HE.face_eq_of_mem hpfa).symm.trans ha_face.symm
+      obtain ⟨b, _hb, hb_face⟩ := HE.face_representation hds
+      have hpfb : p ∈ HE.face b := by rw [← hb_face]; exact hpds
+      have h2 : HE.face p = ds := (HE.face_eq_of_mem hpfb).symm.trans hb_face.symm
+      exact hds0_ne (h1.symm.trans h2)
+    have hmapE : HE.faceMap p = f1Fan x V E p := by
+      rw [hHE]; exact hypermapOfFan_faceMap_eq_f1Fan hfanC hp_dart1_E
+    have hmapE1 : H1.faceMap p = f1Fan x V E1 p := by
+      rw [hH1]; exact hypermapOfFan_faceMap_eq_f1Fan hfan1 hp_dart1_E1
+    rw [hmapE, hmapE1]
+    exact TRAN_COMMUTATIVE_F1_FAN x V E E1 ds f1 f2 f3 v u w ds1 ds2
+      f10 f20 f30 p hfanC hfan1
+      ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+       hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+       hf10, hf20, hf30, hE1, hp_not_ds, Or.inr hp_dart1_E⟩
+  have hiter : ∀ k : ℕ, (HE.faceMap ^ k) y = (H1.faceMap ^ k) y := by
+    intro k
+    induction k with
+    | zero => rfl
+    | succ k ih =>
+        have hp_mem : (HE.faceMap ^ k) y ∈ ds0 := by
+          have hmem := pow_apply_mem_orbitMap HE.faceMap k y
+          rw [← hface_y]
+          exact hmem
+        rw [pow_succ', pow_succ', Equiv.Perm.mul_apply, Equiv.Perm.mul_apply]
+        rw [← ih]
+        exact hpoint ((HE.faceMap ^ k) y) hp_mem
+  have hz_in_H1 : z ∈ H1.face y := ⟨n, by rw [← hiter n]; exact hn⟩
+  exact (H1.face_eq_of_mem hz_in_H1).symm
 
 /-- HOL Conforming.hl :4969-4989 `tran_in_dart_newfan`
 
