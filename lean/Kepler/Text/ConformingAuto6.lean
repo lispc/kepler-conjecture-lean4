@@ -411,7 +411,7 @@ theorem MEASURABLE_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL {x : V3} {V : Set V3}
     (hfan : FAN x V E) (hconf : conformingFan x V E hfan)
     {f : Set V3} (hf : f ∈ topologicalComponentYfan x V E) :
     MeasurableSet (f ∩ Metric.ball x r) := by
-  sorry
+  exact (OPEN_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL r hfan hconf hf).measurableSet
 
 /-- HOL Conforming.hl :1352-1395 `RADIAL_TOPOLOGICAL_COMPONENT_YFAN`
 
