@@ -178,6 +178,21 @@ FAN(x,V,E)/\ FAN(x,V,E1)
 - `add_edge_imp_card_set_edge_ge1_fan`（Kepler/Text/ConformingAuto9.lean:376）
 - `SIGMA_FAN`（Kepler/Text/Fan.lean:317）
 - 缺口：`remark1_fan`（fan.hl:423）、`UNIQUE_SIGMA_FAN`（fan.hl:2107）未移植 -/
+private lemma setOfEdge_eq_of_add_edge (V : Set V3) (E E1 : Set (Set V3))
+    (v w v1 : V3) (hE1 : E ∪ {{v, w}} = E1) (hv1 : v1 ∉ ({v, w} : Set V3)) :
+    setOfEdge v1 V E1 = setOfEdge v1 V E := by
+  ext u
+  simp only [setOfEdge, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨he, hu⟩
+    rw [← hE1] at he
+    rcases he with he | he
+    · exact ⟨he, hu⟩
+    · simp only [Set.mem_singleton_iff] at he
+      exact absurd (he ▸ (by simp : v1 ∈ ({v1, u} : Set V3))) hv1
+  · rintro ⟨he, hu⟩
+    exact ⟨by rw [← hE1]; exact Or.inl he, hu⟩
+
 theorem SIGMA_FAN_OF_FANADD1 (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     (v w : V3) :
     FAN x V E ∧ FAN x V E1 ∧
@@ -186,7 +201,9 @@ theorem SIGMA_FAN_OF_FANADD1 (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     E ∪ {{v, w}} = E1 →
     ∀ v1 w1 : V3, ({v1, w1} : Set V3) ∈ E ∧ v1 ∉ ({v, w} : Set V3) →
       sigmaFan x V E1 v1 w1 = sigmaFan x V E v1 w1 := by
-  sorry
+  rintro ⟨-, -, -, -, hE1⟩ v1 w1 ⟨-, hv1⟩
+  have h := setOfEdge_eq_of_add_edge V E E1 v w v1 hE1 hv1
+  simp only [sigmaFan, h]
 
 /-- HOL Conforming.hl :2431-2441 `add_edge_graph`
 
