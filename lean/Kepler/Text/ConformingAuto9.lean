@@ -416,7 +416,9 @@ IMAGE pr23 (d1_fan(x,V,E))={ (v,w) | {v,w} IN E}
 theorem PR23_OF_D1_FAN (x : V3) (V : Set V3) (E : Set (Set V3)) :
     Set.image (fun p : V3 × V3 => (p.1, p.2)) (dart1OfFan V E) =
       {p : V3 × V3 | {p.1, p.2} ∈ E} := by
-  sorry
+  rw [show (fun p : V3 × V3 => (p.1, p.2)) = id from funext (fun _ => rfl)]
+  rw [Set.image_id]
+  rfl
 
 /-- HOL Conforming.hl :2279-2302 `PR23_OF_D20_FAN`
 
