@@ -1,10 +1,11 @@
-# 项目总进度（Status）— 2026-09-10
+# 项目总进度（Status）— 2026-09-11
 
 > 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新（cron 自动 push）。
 > 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
 > 当前 main @ `7395bc9`，`lake build Kepler` 全绿，
 > 唯一 sorry 是 `Statement.lean:111` 的主定理占位（sanctioned，见 Phase 1）。
-> Phase 5 已进入 auto_pipeline 无人值守模式（deepseek 全权，Kimi 每 4h 抽查汇报）。
+> Phase 5 auto_pipeline 已 FAIL-STOP：planarity 收官批剩最后 2 枚（压轴主定理），
+> 卡在测度论前置 VOLUME_SOLID_TRIANGLE 未移植（见 Phase 5 节与 HANDOFF）。
 
 图例：✅ 完成并验证 / 🟡 进行中 / ⬜ 未启动。完成度为行数或条目数口径的粗略估计。
 
@@ -67,7 +68,7 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 | hypermap/hypermap.hl | 13,575 | ✅ 全书收官 | 100% |
 | fan/fan.hl 系列（fan_defs/fan_misc/fan/CFYXFTY/hypermap_and_fan） | ~7,800 | ✅ 全书收官（hypermapOfFan 完整构造） | 100% |
 | fan/topology.hl | 4,718 | ✅ 全书收官（`36c37c6`，dart_leads_into 全套） | 100% |
-| fan/planarity.hl | 15,463 | 🟡 main 覆盖至 :15280（**98.8%**）：批次 1-15 全自动闭合入 main；批次 16（收官批，到文件尾 :15463）在跑 | **99%** |
+| fan/planarity.hl | 15,463 | 🟡 main 覆盖至 :15280（**98.8%**）：批次 1-15 全自动闭合入 main；批次 16（收官批）4/6 闭合在 wip，**剩 2 枚 NEEDS-HUMAN**（见下） | **99%** |
 | fan/Conforming.hl | 17,033 | ⬜ 未启动 | 0% |
 | fan/ 其余（polyhedron 等） | ~3,200 | ⬜ 未启动 | 0% |
 | packing/（Rogers/OXLZLEZ3/REUHADY…） | ~28,000 | ⬜ 未启动 | 0% |
@@ -87,6 +88,19 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 标量-标量乘在 ascription 里写 `*` 不写 `•`（isDefEq 死循环）；定理应用严格按签名
 参数个数；验收构建必须自然退出（掐死时 error 未 flush 是假绿）；闸误杀先修闸
 （`--relative` 路径事故，`1a32e53`）。
+
+**当前卡点（2026-09-11，planarity 收官批批次 16，FAIL-STOP）**：剩 2 枚耦合定理
+在 `Kepler/Text/PlanarityAuto16.lean`（wip 分支）：
+1. `solid_of_dartset_leads_into_fan_triangle_fan`（planarity.hl:15370）——三角面
+   dartset 的立体角公式。deepseek×2 + 满血 glm-5.3×1 均失败。根因：前置
+   `VOLUME_SOLID_TRIANGLE`（measure(ball∩aff_gt) = (Girard 盈余)·r³/3）**不在
+   planarity.hl，在 HOL Light 本体 `Multivariate/flyspeck.ml:5883`**（已抓到
+   /tmp/flyspeck_ml.txt；测度论证明链较长）。`sol`/`dihV`/`AZIM_DIVH` 也未移植
+   （骨架 docstring 里有 sol 的 ε 规格编码方案）。
+2. `MOZNWEH`（planarity.hl:15443，**全书主定理**）——纯 MESON 组装，
+   待 solid_of 闭合后秒过。
+路线：先派专项移植 VOLUME_SOLID_TRIANGLE 链（独立文件）→ 补 solid_of →
+MOZNWEH → 批次 16 审计 → 进 main。
 
 ## Phase 6 — 集成与交付 ⬜
 

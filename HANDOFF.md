@@ -53,14 +53,25 @@ Lean 4 + Mathlib（toolchain `leanprover/lean4:v4.32.2`）形式化开普勒猜�
   cert JSON；Lean 侧需扩 IExpr abs 节点 / TKind ln / Cert 叶带 guard
   符号+disj 备选——规格 `pipeline/interval/arb-layer.md` §3/§4）。
 
-### Phase 5 — 文字证明 🟡 全自动流水线推进中
+### Phase 5 — 文字证明 🟡 planarity 99%，流水线已 FAIL-STOP（等压轴攻坚）
 
 - 已收官：hypermap.hl 13,575 行 100%、fan.hl 系列 ~7,800 行 100%、
   topology.hl 4,718 行 100%。
-- **planarity.hl（15,463 行）**：自动化批次推进，每批 10 定理。
-  覆盖行数见 main 最新 commit 消息（"coverage :NNNNN"）。
-  后续队列：planarity 剩余 → Conforming.hl 17,033 → polyhedron ~3,200 →
-  packing/ ~28,000 → local/ ~30,000 → assembly。
+- **planarity.hl（15,463 行）**：main 覆盖至 :15280（98.8%，批次 1-15 全部
+  自动闭合，~150 枚定理）。**批次 16（收官批）FAIL-STOP**：剩 2 枚在 wip
+  `PlanarityAuto16.lean` 带 sorry：
+  1. `solid_of_dartset_leads_into_fan_triangle_fan`（:15370）——卡在前置
+     `VOLUME_SOLID_TRIANGLE` 未移植。**它不在 planarity.hl，在 HOL Light 本体
+     `Multivariate/flyspeck.ml:5883`**（measure(ball∩aff_gt) = Girard 盈余·r³/3；
+     测度论证明链长）；`sol`/`dihV`/`AZIM_DIVH` 也未移植（骨架 docstring 内有
+     sol 的 Classical.epsilon 规格编码方案和所有已就绪引理的 file:line）。
+  2. `MOZNWEH`（:15443，全书主定理）——纯 MESON 组装，solid_of 闭合后秒过。
+  攻坚路线：专项移植 VOLUME_SOLID_TRIANGLE 链（独立文件，原文需从
+  flyspeck.ml 粘进 prompt——工人读不了仓库外路径）→ 补 solid_of → MOZNWEH →
+  批次 16 审计进 main。**流水线目前处于停止状态**，清堵后删除
+  `PlanarityAuto16.lean` 的 2 个 sorry 并 ff 合 main，整个 planarity.hl 即收官。
+- 后续队列：Conforming.hl 17,033 → polyhedron ~3,200 → packing/ ~28,000 →
+  local/ ~30,000 → assembly（auto_pipeline 改 HL 变量即可复用）。
 - **全自动流水线**（`lean/scripts/auto_pipeline.sh`，2026-09-10 上线）：
   1. 从 `lean/scripts/auto_pipeline_state.txt` 读当前位置（起始行+批次号）；
   2. deepseek 设计骨架（陈述冻结，docstring 嵌 HOL 原文+证法+候选引理）；
@@ -100,14 +111,18 @@ Lean 4 + Mathlib（toolchain `leanprover/lean4:v4.32.2`）形式化开普勒猜�
 
 ## 5. 当前运行中的东西
 
-- `auto_pipeline.sh`（若已启动）：日志 `/tmp/auto_pipeline.log`，
-  状态 `lean/scripts/auto_pipeline_state.txt`，批次循环日志
-  `/tmp/auto_loop.log`，闸日志 `/tmp/auto_gate.log`。
-- 巡检 cron（Kimi 会话内）：每 4h 汇报+抽查。
+- **auto_pipeline.sh 已 FAIL-STOP（2026-09-11，批次 16 剩 2 枚，见 §2 Phase 5）**。
+  清堵后重启：`cd lean && nohup bash scripts/auto_pipeline.sh >> /tmp/auto_pipeline_driver.log 2>&1 &`
+  （但需先把状态文件指到收官之后或手工收尾批次 16）。
+- 日志：`/tmp/auto_pipeline.log` / `/tmp/auto_loop.log` / `/tmp/auto_gate.log`；
+  状态 `lean/scripts/auto_pipeline_state.txt`。
+- Kimi 侧巡检 cron：每 4h 汇报+抽查（会话内，换会话即失效需重建）。
 
 ## 6. 待办队列（优先级序）
 
-1. Phase 5 planarity 收官（流水线自动推进中）→ 之后 Conforming.hl 等，
+1. **Phase 5 planarity 收官攻坚**（唯一卡点，见 §2）：VOLUME_SOLID_TRIANGLE 链
+   → solid_of → MOZNWEH → 批次 16 审计 → 进 main。之后 Conforming.hl 等，
+   流水线可直接改 HL 变量复用。
    流水线可直接改 HL 变量复用。
 2. Phase 4：16 条残余策略 + G4 内核闭合（见 §2 Phase 4）。
 3. Phase 6：主定理装配 + 终验。
