@@ -1681,6 +1681,74 @@ theorem aff_gt_3_1_INTER_aff_SUBSET_aff_gt_2_1 (a x y z w : V3) :
       affGt ({a, x, y} : Set V3) {z} ∩
         (affineSpan ℝ ({a, x, w} : Set V3) : Set V3) ⊆
           affGt ({a, x} : Set V3) {w} := by
-  sorry
+  intro h
+  obtain ⟨hpiz, h0z, hpiw, h0w, hdis, hnc_axw, hcop⟩ := h
+  obtain ⟨-, hnc_axy, hnc_axz⟩ := notcoplanar_imp_notcollinear_fan hcop
+  have hpos_z : 0 < crossProduct ((x - a : V3) : Fin 3 → ℝ)
+      ((y - a : V3) : Fin 3 → ℝ) ⬝ᵥ ((z - a : V3) : Fin 3 → ℝ) :=
+    cross_dot_fully_surrounded_fan (x := a) (v1 := x) (v := y) (u1 := z)
+      hnc_axz hnc_axy h0z hpiz
+  have hpos_w : 0 < crossProduct ((x - a : V3) : Fin 3 → ℝ)
+      ((y - a : V3) : Fin 3 → ℝ) ⬝ᵥ ((w - a : V3) : Fin 3 → ℝ) :=
+    cross_dot_fully_surrounded_fan (x := a) (v1 := x) (v := y) (u1 := w)
+      hnc_axw hnc_axy h0w hpiw
+  have heq := aff_gt_3_1_rep_cross_dot a x y z hcop hpos_z
+  have hw_not : w ∉ ({a, x} : Set V3) :=
+    (Set.disjoint_right.mp hdis) (Set.mem_singleton w)
+  have hwa : w ≠ a := fun he => hw_not (by rw [he]; simp)
+  have hwx : w ≠ x := fun he => hw_not (by rw [he]; simp)
+  have hax : a ≠ x := by
+    intro he
+    apply hnc_axw
+    unfold Collinear3
+    rw [he, show ({x, x, w} : Set V3) = {x, w} from by ext q; simp]
+    exact collinear_pair ℝ x w
+  intro p hp
+  obtain ⟨hp1, hp2⟩ := hp
+  rw [heq, Set.mem_setOf_eq] at hp1
+  have hcoord : ∃ c h : ℝ, p - a = c • (x - a) + h • (w - a) := by
+    have hpS : p ∈ spanPoints ℝ ({a, x, w} : Set V3) := hp2
+    have haS : a ∈ spanPoints ℝ ({a, x, w} : Set V3) :=
+      mem_spanPoints ℝ a ({a, x, w} : Set V3) (by simp)
+    have hv : p - a ∈ vectorSpan ℝ ({a, x, w} : Set V3) :=
+      vsub_mem_vectorSpan_of_mem_spanPoints_of_mem_spanPoints ℝ hpS haS
+    rw [vectorSpan_eq_span_vsub_set_right ℝ
+        (show a ∈ ({a, x, w} : Set V3) by simp)] at hv
+    have hle : Submodule.span ℝ ((fun q : V3 => q - a) '' ({a, x, w} : Set V3)) ≤
+        Submodule.span ℝ ({x - a, w - a} : Set V3) := by
+      rw [Submodule.span_le]
+      rintro v ⟨q, hq, rfl⟩
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+      rcases hq with rfl | rfl | rfl
+      · simp
+      · exact Submodule.subset_span (by simp)
+      · exact Submodule.subset_span (by simp)
+    have hv' : p - a ∈ Submodule.span ℝ ({x - a, w - a} : Set V3) := hle hv
+    rw [Submodule.mem_span_pair] at hv'
+    obtain ⟨c, h, hch⟩ := hv'
+    exact ⟨c, h, hch.symm⟩
+  obtain ⟨c, h, hcp⟩ := hcoord
+  have hcoe : ((p - a : V3) : Fin 3 → ℝ) =
+      c • ((x - a : V3) : Fin 3 → ℝ) + h • ((w - a : V3) : Fin 3 → ℝ) := by
+    have := congrArg (fun q : V3 => (q : Fin 3 → ℝ)) hcp
+    simpa only [WithLp.ofLp_add, WithLp.ofLp_smul] using this
+  have hdot : crossProduct ((x - a : V3) : Fin 3 → ℝ) ((y - a : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((p - a : V3) : Fin 3 → ℝ) =
+      h * (crossProduct ((x - a : V3) : Fin 3 → ℝ) ((y - a : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((w - a : V3) : Fin 3 → ℝ)) := by
+    rw [hcoe, dotProduct_add, dotProduct_smul, dotProduct_smul]
+    have hx0 : crossProduct ((x - a : V3) : Fin 3 → ℝ) ((y - a : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((x - a : V3) : Fin 3 → ℝ) = 0 := by
+      rw [dotProduct_comm]
+      exact dot_self_cross _ _
+    rw [hx0, smul_zero, zero_add, smul_eq_mul]
+  have hhpos : 0 < h := by
+    have hlt : 0 < h * (crossProduct ((x - a : V3) : Fin 3 → ℝ)
+        ((y - a : V3) : Fin 3 → ℝ) ⬝ᵥ ((w - a : V3) : Fin 3 → ℝ)) := by
+      rw [← hdot]
+      exact hp1
+    exact (mul_pos_iff_of_pos_right hpos_w).mp hlt
+  rw [affGt_pair_iff (v0 := a) (v1 := x) (x := w) (y := p) hax hwa hwx]
+  exact ⟨h, hhpos, c, by rw [hcp, add_comm]⟩
 
 end Kepler.Text
