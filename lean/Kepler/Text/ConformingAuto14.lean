@@ -637,7 +637,23 @@ theorem ds2_in_face_set_fanadd (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       ds2 ∈ (hypermapOfFan x V E1 hfan1).faceSet := by
-  sorry
+  rintro ⟨_hfanC, _hcard, _hfan80, _hds, _hds3, _hsub, _hf1f2, _hf2f3, _hf3ne,
+    _hf1v, _hf2u, _hf3w, _hvu, _huw, _hwv, _hsigma, _hf1u, _hf2w, _hds1, hds2,
+    _hf10, _hf20, _hf30, hE1⟩
+  have hvwE1 : ({v, w} : Set V3) ∈ E1 := by
+    rw [← hE1]
+    exact Or.inr rfl
+  have hwvE1 : ({w, v} : Set V3) ∈ E1 := by
+    rwa [Set.pair_comm]
+  have hdart1 : (w, v) ∈ dart1OfFan V E1 := hwvE1
+  have hmem : (w, v) ∈ (hypermapOfFan x V E1 hfan1).darts := by
+    show (w, v) ∈ (finite_dart1_fan hfan1).toFinset
+    exact (finite_dart1_fan hfan1).mem_toFinset.mpr hdart1
+  have hface : (hypermapOfFan x V E1 hfan1).face (w, v) ∈
+      (hypermapOfFan x V E1 hfan1).faceSet :=
+    (Hypermap.mem_darts_iff_face_mem _ _).mp hmem
+  rw [hds2]
+  exact hface
 
 /-- HOL Conforming.hl :5195-5219 `condition_f1_fan_power_in_face_set`
 
