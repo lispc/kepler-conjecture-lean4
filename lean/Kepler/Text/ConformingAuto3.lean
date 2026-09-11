@@ -305,7 +305,8 @@ xfan(x,V,E) =UNIONS {y | ?e. e IN E /\ y = aff_ge {x} e}
 - 缺口：HOL `UNIONS`/`IN_ELIM_THM` 未以该名移植 -/
 theorem XFAN_EQ_UNIONS_AFF_GE_1_2 (x : V3) (V : Set V3) (E : Set (Set V3)) :
     xfan x V E = ⋃ e ∈ E, affGe ({x} : Set V3) e := by
-  sorry
+  ext v
+  simp only [xfan, Set.mem_setOf_eq, Set.mem_iUnion, exists_prop]
 
 /-- HOL Conforming.hl :754-771 `NEGLIGIBLE_XFAN`
 
