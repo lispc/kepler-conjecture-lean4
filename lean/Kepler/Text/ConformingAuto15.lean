@@ -75,6 +75,7 @@ Encoding notes (gaps / closest existing encodings):
 
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
+import Kepler.Text.ConformingAuto9
 
 set_option maxHeartbeats 5000000
 
@@ -123,6 +124,12 @@ CARD (dart (hypermap1_of_fanx (x,V,E1)))
 - `Finset.card_union_of_disjoint`/`Set.ncard_union`（Mathlib，HOL `CARD_UNION`）
 - 缺口：`card_eq_image_in_d_fan`、`DART_FANADD_EQ_DART_FAN_ADD_2DART`、
   `hypermap_of_fan_rep` 未移植 -/
+private theorem darts_card_hypermapOfFan_eq_ncard {x : V3} {V : Set V3}
+    {E : Set (Set V3)} (hfan : FAN x V E) :
+    (hypermapOfFan x V E hfan).darts.card = (dart1OfFan V E).ncard := by
+  rw [hypermapOfFan]
+  exact (Set.ncard_eq_toFinset_card (dart1OfFan V E) (finite_dart1_fan hfan)).symm
+
 theorem CARD_DART_FANADD (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     (ds : Set (V3 × V3)) (f1 f2 f3 : V3 × V3) (v u w : V3)
     (hfan : FAN x V E) (hfan1 : FAN x V E1) :
@@ -138,7 +145,38 @@ theorem CARD_DART_FANADD (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     E ∪ {({v, w} : Set V3)} = E1 →
       (hypermapOfFan x V E1 hfan1).darts.card =
         (hypermapOfFan x V E hfan).darts.card + 2 := by
-  sorry
+  intro h
+  rcases h with ⟨hfan, hcard, hfan80, hds, hds3, hfsub, hf1, hf2, hf3,
+    hv, hu, hw, hvu, huw, hwv, hsigma, hvw, hE1⟩
+  have hdarts : dartOfFan V E1 =
+      dartOfFan V E ∪ ({(v, w), (w, v)} : Set (V3 × V3)) := by
+    have h := DART_FANADD_EQ_DART_FAN_ADD_2DART hfan hcard hfan80 hds hds3 hfsub
+      hf1 hf2 hf3 hv hu hw hvu huw hwv hsigma hvw hE1
+    rw [show (fun p : V3 × V3 => (p.1, p.2)) = id from
+      funext (fun _ => rfl)] at h
+    simpa only [Set.image_id] using h
+  have hcardE1 : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E1).ncard :=
+    add_edge_imp_card_set_edge_ge1_fan hfan hcard hE1.symm
+  have hdE : dartOfFan V E = dart1OfFan V E :=
+    dartOfFan_eq_dart1_of_surrounded hfan hcard
+  have hdE1 : dartOfFan V E1 = dart1OfFan V E1 :=
+    dartOfFan_eq_dart1_of_surrounded hfan1 hcardE1
+  have hset : dart1OfFan V E1 =
+      dart1OfFan V E ∪ ({(v, w), (w, v)} : Set (V3 × V3)) := by
+    rw [← hdE1, hdarts, hdE]
+  have hdisj : Disjoint (dart1OfFan V E) ({(v, w), (w, v)} : Set (V3 × V3)) := by
+    rw [Set.disjoint_left]
+    intro d hd1 hd2
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hd2
+    rcases hd2 with h | h
+    · rw [h] at hd1
+      exact hwv (by simpa only [dart1OfFan, Set.mem_setOf_eq, Set.pair_comm] using hd1)
+    · rw [h] at hd1
+      exact hwv (by simpa only [dart1OfFan, Set.mem_setOf_eq] using hd1)
+  have hpair : (v, w) ≠ (w, v) := fun h => hvw (congrArg Prod.fst h)
+  rw [darts_card_hypermapOfFan_eq_ncard hfan1,
+    darts_card_hypermapOfFan_eq_ncard hfan, hset,
+    Set.ncard_union_eq hdisj (finite_dart1_fan hfan), Set.ncard_pair hpair]
 
 /-- HOL Conforming.hl :6237-6337 `ZSZIUQE_LEMMA`（任务中仅标 ":6237"）
 
