@@ -66,6 +66,8 @@ Encoding notes (gaps / closest existing encodings):
 
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
+import Kepler.Text.ConformingAuto6
+import Kepler.Text.ConformingAuto7
 
 set_option maxHeartbeats 5000000
 
@@ -121,12 +123,118 @@ HOL 原文：
   未单列移植，用 Mathlib `finsum_congr`/`finsum_add_distrib`/
   `finsum_sub_distrib`/`finsum_const` 与 `finsum_mem_eq_finite_toFinset_sum`
   （cf. Kepler/Text/ConformingAuto1.lean:818）替代 -/
+private theorem finsum_mem_const_real {α : Type*} {s : Set α} (hs : s.Finite) (c : ℝ) :
+    (∑ᶠ _ ∈ s, c) = c * (s.ncard : ℝ) := by
+  rw [finsum_mem_eq_finite_toFinset_sum (fun _ : α => c) hs, Finset.sum_const,
+    nsmul_eq_mul, ← Set.ncard_eq_toFinset_card s hs, mul_comm]
+
+private theorem hypermap_faceSet_pairwiseDisjoint {α : Type*} [DecidableEq α]
+    (H : Hypermap α) : H.faceSet.PairwiseDisjoint id := by
+  intro a ha b hb hne
+  simp only [Hypermap.faceSet, setOfOrbits, Set.mem_setOf_eq] at ha hb
+  obtain ⟨xa, -, rfl⟩ := ha
+  obtain ⟨xb, -, rfl⟩ := hb
+  rcases orbitMap_disjoint_or_eq H.faceMap_permutes xa xb with h | h
+  · exact Set.disjoint_iff_inter_eq_empty.mpr h
+  · exact absurd h hne
+
+private theorem hypermap_nodeSet_pairwiseDisjoint {α : Type*} [DecidableEq α]
+    (H : Hypermap α) : H.nodeSet.PairwiseDisjoint id := by
+  intro a ha b hb hne
+  simp only [Hypermap.nodeSet, setOfOrbits, Set.mem_setOf_eq] at ha hb
+  obtain ⟨xa, -, rfl⟩ := ha
+  obtain ⟨xb, -, rfl⟩ := hb
+  rcases orbitMap_disjoint_or_eq H.nodeMap_permutes xa xb with h | h
+  · exact Set.disjoint_iff_inter_eq_empty.mpr h
+  · exact absurd h hne
+
+private theorem hypermap_face_finite_of_mem {α : Type*} [DecidableEq α]
+    (H : Hypermap α) {a : Set α} (ha : a ∈ H.faceSet) : a.Finite := by
+  simp only [Hypermap.faceSet, setOfOrbits, Set.mem_setOf_eq] at ha
+  obtain ⟨x, -, rfl⟩ := ha
+  exact Hypermap.face_finite H x
+
+private theorem hypermap_node_finite_of_mem {α : Type*} [DecidableEq α]
+    (H : Hypermap α) {a : Set α} (ha : a ∈ H.nodeSet) : a.Finite := by
+  simp only [Hypermap.nodeSet, setOfOrbits, Set.mem_setOf_eq] at ha
+  obtain ⟨x, -, rfl⟩ := ha
+  exact Hypermap.node_finite H x
+
 theorem SUM_CARD_FACE_NODE_DART_FAN {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E) (hconf : conformingFan x V E hfan) :
     2 * ((hypermapOfFan x V E hfan).faceSet.ncard : ℝ) +
         2 * ((hypermapOfFan x V E hfan).nodeSet.ncard : ℝ) -
         ((hypermapOfFan x V E hfan).darts.card : ℝ) = 4 := by
-  sorry
+  classical
+  let H := hypermapOfFan x V E hfan
+  let g : V3 × V3 → ℝ := fun y => azimFan x V E y.1 y.2
+  have hcardV : ∀ v ∈ V, 1 < (setOfEdge v V E).ncard := hconf.1
+  have hsol : ∀ f ∈ H.faceSet,
+      sol x (dartsetLeadsIntoFan x V E f) =
+        2 * Real.pi + ∑ᶠ y ∈ f, (g y - Real.pi) := by
+    intro f hf
+    have h := hconf.2.2.2.2.1 f hf
+    simpa [g] using h.2.2
+  have hsum_sol : (∑ᶠ f ∈ H.faceSet,
+      sol x (dartsetLeadsIntoFan x V E f)) = 4 * Real.pi :=
+    SUM_SOL_IN_FACE_SET_EQ_4PI hfan hconf
+  have hsum4 : (∑ᶠ f ∈ H.faceSet,
+      (2 * Real.pi + ∑ᶠ y ∈ f, (g y - Real.pi))) = 4 * Real.pi := by
+    rw [← hsum_sol]
+    exact finsum_mem_congr rfl (fun f hf => (hsol f hf).symm)
+  have hsplit : (∑ᶠ f ∈ H.faceSet,
+        (2 * Real.pi + ∑ᶠ y ∈ f, (g y - Real.pi))) =
+      (∑ᶠ f ∈ H.faceSet, 2 * Real.pi) +
+        (∑ᶠ f ∈ H.faceSet, ∑ᶠ y ∈ f, (g y - Real.pi)) :=
+    finsum_mem_add_distrib H.faceSet_finite
+  have hconstF : (∑ᶠ _ ∈ H.faceSet, 2 * Real.pi) =
+      2 * Real.pi * (H.faceSet.ncard : ℝ) :=
+    finsum_mem_const_real H.faceSet_finite (2 * Real.pi)
+  have hface_part : (∑ᶠ f ∈ H.faceSet, ∑ᶠ y ∈ f, (g y - Real.pi)) =
+      ∑ᶠ y ∈ (↑H.darts : Set (V3 × V3)), (g y - Real.pi) := by
+    have hsu : (⋃₀ H.faceSet) = (↑H.darts : Set (V3 × V3)) := by
+      change (⋃₀ setOfOrbits H.darts H.faceMap) = ↑H.darts
+      exact (sUnion_setOfOrbits H.faceMap_permutes).symm
+    rw [← finsum_mem_sUnion (hypermap_faceSet_pairwiseDisjoint H) H.faceSet_finite
+      (fun a ha => hypermap_face_finite_of_mem H ha)]
+    rw [hsu]
+  have hdarts_sub : (∑ᶠ y ∈ (↑H.darts : Set (V3 × V3)), (g y - Real.pi)) =
+      (∑ᶠ y ∈ (↑H.darts : Set (V3 × V3)), g y) -
+        Real.pi * (H.darts.card : ℝ) := by
+    rw [finsum_mem_sub_distrib g (fun _ => Real.pi) H.darts.finite_toSet]
+    congr 1
+    rw [finsum_mem_const_real H.darts.finite_toSet Real.pi]
+    simp
+  have hnode_part : (∑ᶠ f ∈ H.nodeSet, ∑ᶠ y ∈ f, g y) =
+      ∑ᶠ y ∈ (↑H.darts : Set (V3 × V3)), g y := by
+    have hsu : (⋃₀ H.nodeSet) = (↑H.darts : Set (V3 × V3)) := by
+      change (⋃₀ setOfOrbits H.darts H.nodeMap) = ↑H.darts
+      exact (sUnion_setOfOrbits H.nodeMap_permutes).symm
+    rw [← finsum_mem_sUnion (hypermap_nodeSet_pairwiseDisjoint H) H.nodeSet_finite
+      (fun a ha => hypermap_node_finite_of_mem H ha)]
+    rw [hsu]
+  have hdarts_g : (∑ᶠ y ∈ (↑H.darts : Set (V3 × V3)), g y) =
+      2 * Real.pi * (H.nodeSet.ncard : ℝ) := by
+    rw [← hnode_part]
+    rw [finsum_mem_congr rfl
+      (fun f hf => SUM_AZIM_FAN_OF_NODE_EQ_2PI_I_FAN hfan hf hcardV)]
+    exact finsum_mem_const_real H.nodeSet_finite (2 * Real.pi)
+  have hmain : 4 * Real.pi = 2 * Real.pi * (H.faceSet.ncard : ℝ) +
+      (2 * Real.pi * (H.nodeSet.ncard : ℝ) -
+        Real.pi * (H.darts.card : ℝ)) := by
+    rw [← hsum4, hsplit, hconstF, hface_part, hdarts_sub, hdarts_g]
+  have hpi : Real.pi ≠ 0 := Real.pi_ne_zero
+  have h' : Real.pi * 4 = Real.pi *
+      (2 * (H.faceSet.ncard : ℝ) +
+        (2 * (H.nodeSet.ncard : ℝ) - (H.darts.card : ℝ))) := by
+    rw [mul_comm Real.pi 4, hmain]
+    ring
+  have h'' : (4 : ℝ) = 2 * (H.faceSet.ncard : ℝ) +
+      (2 * (H.nodeSet.ncard : ℝ) - (H.darts.card : ℝ)) :=
+    mul_left_cancel₀ hpi h'
+  show 2 * (H.faceSet.ncard : ℝ) + 2 * (H.nodeSet.ncard : ℝ) -
+      (H.darts.card : ℝ) = 4
+  linarith
 
 /-! ## 非 conforming 扇的存在性结果（Conforming.hl:1806-2007） -/
 
