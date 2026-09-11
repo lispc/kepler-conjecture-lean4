@@ -121,7 +121,79 @@ theorem aff_gt_3_1_INTER_aff_SUBSET_aff_gt_2_14 (a x y z : V3) :
       affGt ({a, x, y} : Set V3) {z} ∩
         (affineSpan ℝ ({a, x, z} : Set V3) : Set V3) ⊆
           affGt ({a, x} : Set V3) {z} := by
-  sorry
+  intro hcop p hp
+  obtain ⟨hp1, hp2⟩ := hp
+  obtain ⟨hax, -, haz, -, hxz, -⟩ := notcoplanar_disjoint a x y z hcop
+  have hza : z ≠ a := fun h => haz h.symm
+  have hzx : z ≠ x := fun h => hxz h.symm
+  have hdis : Disjoint ({a, x, y} : Set V3) {z} :=
+    (notcoplanar_disjoints a x y z hcop).1
+  rw [AFF_GT_3_1 a x y z hdis] at hp1
+  obtain ⟨t1, t2, t3, t4, ht4, hsum, hp_eq⟩ := hp1
+  have hp_sub : p - a = t2 • (x - a) + t3 • (y - a) + t4 • (z - a) := by
+    have ht1 : t1 = 1 - t2 - t3 - t4 := by linarith
+    rw [hp_eq, ht1]
+    module
+  have hcoord : ∃ c h : ℝ, p - a = c • (x - a) + h • (z - a) := by
+    have hpS : p ∈ spanPoints ℝ ({a, x, z} : Set V3) := hp2
+    have haS : a ∈ spanPoints ℝ ({a, x, z} : Set V3) :=
+      mem_spanPoints ℝ a ({a, x, z} : Set V3) (by simp)
+    have hv : p - a ∈ vectorSpan ℝ ({a, x, z} : Set V3) :=
+      vsub_mem_vectorSpan_of_mem_spanPoints_of_mem_spanPoints ℝ hpS haS
+    rw [vectorSpan_eq_span_vsub_set_right ℝ
+        (show a ∈ ({a, x, z} : Set V3) by simp)] at hv
+    have hle : Submodule.span ℝ ((fun q : V3 => q - a) '' ({a, x, z} : Set V3)) ≤
+        Submodule.span ℝ ({x - a, z - a} : Set V3) := by
+      rw [Submodule.span_le]
+      rintro v ⟨q, hq, rfl⟩
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+      rcases hq with rfl | rfl | rfl
+      · simp
+      · exact Submodule.subset_span (by simp)
+      · exact Submodule.subset_span (by simp)
+    have hv' : p - a ∈ Submodule.span ℝ ({x - a, z - a} : Set V3) := hle hv
+    rw [Submodule.mem_span_pair] at hv'
+    obtain ⟨c, h, hch⟩ := hv'
+    exact ⟨c, h, hch.symm⟩
+  obtain ⟨c, h, hcp⟩ := hcoord
+  have hcoe_sub : ((p - a : V3) : Fin 3 → ℝ) =
+      t2 • ((x - a : V3) : Fin 3 → ℝ) + t3 • ((y - a : V3) : Fin 3 → ℝ) +
+        t4 • ((z - a : V3) : Fin 3 → ℝ) := by
+    have := congrArg (fun q : V3 => (q : Fin 3 → ℝ)) hp_sub
+    simpa only [WithLp.ofLp_add, WithLp.ofLp_smul] using this
+  have hcoe_coord : ((p - a : V3) : Fin 3 → ℝ) =
+      c • ((x - a : V3) : Fin 3 → ℝ) + h • ((z - a : V3) : Fin 3 → ℝ) := by
+    have := congrArg (fun q : V3 => (q : Fin 3 → ℝ)) hcp
+    simpa only [WithLp.ofLp_add, WithLp.ofLp_smul] using this
+  let n : Fin 3 → ℝ :=
+    crossProduct ((x - a : V3) : Fin 3 → ℝ) ((y - a : V3) : Fin 3 → ℝ)
+  have hx0 : n ⬝ᵥ ((x - a : V3) : Fin 3 → ℝ) = 0 := by
+    dsimp only [n]
+    rw [dotProduct_comm]
+    exact dot_self_cross _ _
+  have hy0 : n ⬝ᵥ ((y - a : V3) : Fin 3 → ℝ) = 0 := by
+    dsimp only [n]
+    rw [dotProduct_comm]
+    exact dot_cross_self _ _
+  have hnz : n ⬝ᵥ ((z - a : V3) : Fin 3 → ℝ) ≠ 0 := by
+    dsimp only [n]
+    exact coplanar_cross_dot a x y z hcop
+  have hdot1 : n ⬝ᵥ ((p - a : V3) : Fin 3 → ℝ) =
+      t4 * (n ⬝ᵥ ((z - a : V3) : Fin 3 → ℝ)) := by
+    rw [hcoe_sub, dotProduct_add, dotProduct_add, dotProduct_smul, dotProduct_smul,
+      dotProduct_smul, hx0, hy0]
+    simp only [smul_eq_mul, mul_zero, add_zero, zero_add]
+  have hdot2 : n ⬝ᵥ ((p - a : V3) : Fin 3 → ℝ) =
+      h * (n ⬝ᵥ ((z - a : V3) : Fin 3 → ℝ)) := by
+    rw [hcoe_coord, dotProduct_add, dotProduct_smul, dotProduct_smul, hx0]
+    simp only [smul_eq_mul, mul_zero]
+    ring
+  have ht4h : t4 = h := by
+    have hz : (t4 - h) * (n ⬝ᵥ ((z - a : V3) : Fin 3 → ℝ)) = 0 := by
+      rw [sub_mul, ← hdot1, ← hdot2, sub_self]
+    exact sub_eq_zero.mp ((mul_eq_zero.mp hz).resolve_right hnz)
+  rw [affGt_pair_iff (v0 := a) (v1 := x) (x := z) (y := p) hax hza hzx]
+  exact ⟨t4, ht4, c, by rw [hcp, ht4h, add_comm]⟩
 
 /-- HOL Conforming.hl :8303-8400 `lemmaINTERS_HALF_SPACE_DS_FANADD3`
 
