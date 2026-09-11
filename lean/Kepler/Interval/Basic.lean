@@ -398,6 +398,49 @@ theorem mem_mul {I J : DInterval} {x y : ℝ} (hx : I.mem x) (hy : J.mem y) :
       Dyadic.toReal_mul, Dyadic.toReal_mul, Dyadic.toReal_mul, Dyadic.toReal_mul]
     exact hhi
 
+/-- Interval absolute value: lower bound `hi` if `hi ≤ 0`, else `lo` if
+`0 ≤ lo`, else `0`; upper bound `max |lo| |hi|`. -/
+def abs (I : DInterval) : DInterval where
+  lo := if Dyadic.ble I.hi ⟨0, 0⟩ then -I.hi
+        else if Dyadic.ble ⟨0, 0⟩ I.lo then I.lo else ⟨0, 0⟩
+  hi := Dyadic.dmax (Dyadic.dmax I.lo (-I.lo)) (Dyadic.dmax I.hi (-I.hi))
+
+theorem mem_abs {I : DInterval} {x : ℝ} (hx : I.mem x) : I.abs.mem |x| := by
+  obtain ⟨hx1, hx2⟩ := hx
+  have hzero : (⟨0, 0⟩ : Dyadic).toReal = 0 := by
+    rw [Dyadic.toReal_def]; norm_num
+  have hM : I.abs.hi.toReal =
+      max (max I.lo.toReal (-I.lo.toReal)) (max I.hi.toReal (-I.hi.toReal)) := by
+    unfold DInterval.abs
+    rw [Dyadic.toReal_dmax, Dyadic.toReal_dmax, Dyadic.toReal_dmax,
+      Dyadic.toReal_neg, Dyadic.toReal_neg]
+  constructor
+  · show I.abs.lo.toReal ≤ |x|
+    unfold DInterval.abs
+    split_ifs with h1 h2
+    · have h1' : I.hi.toReal ≤ 0 := by
+        have := Dyadic.ble_toReal h1; rwa [hzero] at this
+      rw [Dyadic.toReal_neg, abs_of_nonpos (le_trans hx2 h1')]
+      linarith
+    · have h2' : 0 ≤ I.lo.toReal := by
+        have := Dyadic.ble_toReal h2; rwa [hzero] at this
+      rw [abs_of_nonneg (le_trans h2' hx1)]
+      exact hx1
+    · rw [hzero]
+      exact abs_nonneg x
+  · show |x| ≤ I.abs.hi.toReal
+    rw [hM]
+    apply abs_le.mpr
+    constructor
+    · have hM1 : -I.lo.toReal ≤
+          max (max I.lo.toReal (-I.lo.toReal)) (max I.hi.toReal (-I.hi.toReal)) :=
+        le_trans (le_max_right _ _) (le_max_left _ _)
+      linarith
+    · have hM2 : I.hi.toReal ≤
+          max (max I.lo.toReal (-I.lo.toReal)) (max I.hi.toReal (-I.hi.toReal)) :=
+        le_trans (le_max_left _ _) (le_max_right _ _)
+      linarith
+
 end DInterval
 
 end Kepler.Interval
