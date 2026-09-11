@@ -525,6 +525,48 @@ tran x V E1 ((f1_fan x V E ) y)=(f1_fan x V E1 ) (tran x V E1 y)
 - `IMAGE_F1_IN_FACE_IMP_IN_FACE`（Kepler/Text/ConformingAuto1.lean:271）
 - `STEP3_REDUCE_FAN`（Kepler/Text/ConformingAuto9.lean:298）
 - 缺口：HOL `tran`、`hypermap_of_fan_rep` 未移植 -/
+private theorem hypermapOfFan_faceMap_eq_ca13 (hfan : FAN x V E) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) :
+    (hypermapOfFan x V E hfan).faceMap d = fFanPair x V E d := by
+  unfold hypermapOfFan extendPerm
+  simp only [Equiv.ofBijective_apply]
+  unfold Kepler.Text.Fan.res
+  rw [if_pos (by
+    simpa [(finite_dart1_fan hfan).coe_toFinset] using hd)]
+
+private lemma image_f1Fan_mem_face_imp_mem_face {x : V3} {V : Set V3}
+    {E : Set (Set V3)} {ds : Set (V3 × V3)} {y y1 : V3 × V3}
+    (hfan : FAN x V E)
+    (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard)
+    (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet)
+    (hy : y ∈ ds)
+    (hy1 : y1 ∈ dartOfFan V E)
+    (hf1 : f1Fan x V E y1 = y) :
+    y1 ∈ ds := by
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  have hdart : dartOfFan V E = dart1OfFan V E :=
+    dartOfFan_eq_dart1_of_surrounded hfan hcard
+  have hy1d : y1 ∈ dart1OfFan V E := by rw [← hdart]; exact hy1
+  have hf1pair : f1Fan x V E y1 = fFanPair x V E y1 := by
+    have hba : {y1.2, y1.1} ∈ E := by
+      have h : {y1.1, y1.2} ∈ E := hy1d
+      rwa [Set.pair_comm] at h
+    simp only [f1Fan, fFanPair]
+    rw [inverse_sigma_fan_eq_inverse1 hfan hba]
+  have hfm : H.faceMap y1 = y := by
+    change (hypermapOfFan x V E hfan).faceMap y1 = y
+    rw [hypermapOfFan_faceMap_eq_ca13 hfan hy1d, ← hf1pair]
+    exact hf1
+  obtain ⟨d, _hdH, hface⟩ := Hypermap.face_representation H hds
+  have hyface : y ∈ H.face d := by rw [← hface]; exact hy
+  have hsymm : H.faceMap.symm y = y1 := by
+    rw [← hfm, Equiv.symm_apply_apply]
+  have hy1face : y1 ∈ H.face d := by
+    have h := Hypermap.faceMap_symm_mem_face H hyface
+    rwa [hsymm] at h
+  rw [hface]
+  exact hy1face
+
 theorem TRAN_COMMUTATIVE_F1_FAN (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     (ds : Set (V3 × V3)) (f1 f2 f3 : V3 × V3) (v u w : V3)
     (ds1 ds2 : Set (V3 × V3)) (f10 f20 f30 : V3 × V3) (y : V3 × V3)
@@ -545,7 +587,56 @@ theorem TRAN_COMMUTATIVE_F1_FAN (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     ¬ (y ∈ ds) ∧
     y ∈ dartOfFan V E →
       f1Fan x V E y = f1Fan x V E1 y := by
-  sorry
+  rintro ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hynotds, hydart⟩
+  have hcases : (y.1 = sigmaFan x V E v u ∧ y.2 = v) ∨
+      (y.1 = u ∧ y.2 = w) ∨
+      (¬ (y.1 = sigmaFan x V E v u) ∧ y.2 = v) ∨
+      (¬ (y.1 = u) ∧ y.2 = w) ∨
+      ¬ (y.2 ∈ ({v, w} : Set V3)) := by
+    by_cases h2v : y.2 = v
+    · by_cases h1 : y.1 = sigmaFan x V E v u
+      · exact Or.inl ⟨h1, h2v⟩
+      · exact Or.inr (Or.inr (Or.inl ⟨h1, h2v⟩))
+    · by_cases h2w : y.2 = w
+      · by_cases h1 : y.1 = u
+        · exact Or.inr (Or.inl ⟨h1, h2w⟩)
+        · exact Or.inr (Or.inr (Or.inr (Or.inl ⟨h1, h2w⟩)))
+      · refine Or.inr (Or.inr (Or.inr (Or.inr ?_)))
+        intro hmem
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+        exact hmem.elim h2v h2w
+  rcases hcases with ⟨ha1, ha2⟩ | ⟨hb1, hb2⟩ | ⟨hc1, hc2⟩ |
+    ⟨hd1, hd2⟩ | he
+  · have hf1eq : f1Fan x V E y = f1 := by
+      simp only [f1Fan]
+      rw [ha2, ha1, (INVERSE1_SIGMA_FAN hfan).2.2 u hvu]
+      exact Prod.ext hf1v.symm hf1u.symm
+    have hf1ds : f1 ∈ ds := hsub (by simp)
+    exact absurd
+      (image_f1Fan_mem_face_imp_mem_face hfan hcard hds hf1ds hydart hf1eq) hynotds
+  · have hf2ds : f2 ∈ ds := hsub (by simp)
+    have hyf2 : y = f2 := by
+      have h1 : y.1 = f2.1 := by rw [hb1, hf2u]
+      have h2 : y.2 = f2.2 := by rw [hb2, hf2w]
+      exact Prod.ext h1 h2
+    exact absurd (by rw [hyf2]; exact hf2ds) hynotds
+  · exact TRAN_COMMUTATIVE_F1_FAN3 x V E E1 ds f1 f2 f3 v u w ds1 ds2
+      f10 f20 f30 y hfan hfan1
+      ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+       hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1, hds2,
+       hf10, hf20, hf30, hE1, hc1, hc2, hydart⟩
+  · exact TRAN_COMMUTATIVE_F1_FAN2 x V E E1 ds f1 f2 f3 v u w ds1 ds2
+      f10 f20 f30 y hfan hfan1
+      ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+       hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1, hds2,
+       hf10, hf20, hf30, hE1, hd1, hd2, hydart⟩
+  · exact TRAN_COMMUTATIVE_F1_FAN1 x V E E1 ds f1 f2 f3 v u w ds1 ds2
+      f10 f20 f30 y hfan hfan1
+      ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+       hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1, hds2,
+       hf10, hf20, hf30, hE1, he, hydart⟩
 
 /-! ## `f1_fan` 幂在面内的保持与反映（Conforming.hl:4606-4670） -/
 
