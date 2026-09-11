@@ -308,7 +308,20 @@ theorem nonconformin_fan_imp_exist_face_gt_3 {x : V3} {V : Set V3}
     (hnconf : ¬ conformingFan x V E hfan) :
     ∃ ds : Set (V3 × V3),
       ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard := by
-  sorry
+  have hpos : 0 < nFan x V E hfan :=
+    nonconformin_fan_imp_n_fan_ge0 hfan hcard hfan80 hnconf
+  by_contra h
+  push Not at h
+  have hzero : ∀ f, f ∈ (hypermapOfFan x V E hfan).faceSet → f.ncard - 3 = 0 := by
+    intro f hf
+    have hge : 3 ≤ f.ncard := CARD_FACE_SET_GE_3_FULLY_SURROUNDED_FAN hfan hcard hf
+    have hle : f.ncard ≤ 3 := h f hf
+    omega
+  have hn0 : nFan x V E hfan = 0 := by
+    simp only [nFan]
+    exact (NSUM_EQ_0_IFF
+      (Hypermap.faceSet_finite (hypermapOfFan x V E hfan))).mpr hzero
+  omega
 
 /-- HOL Conforming.hl :1843-1855 `exists_face_in_face_set`
 
