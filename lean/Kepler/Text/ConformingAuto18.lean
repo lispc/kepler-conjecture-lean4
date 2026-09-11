@@ -1435,7 +1435,18 @@ theorem RADIAL_NORM_CO (r r' : ℝ) (x : V3) (C : Set V3) :
     r' ≤ r ∧ 0 < r' →
       radialNorm r x (C ∩ Metric.ball x r) →
         radialNorm r' x (C ∩ Metric.ball x r') := by
-  sorry
+  rintro ⟨hr'le, _hr'pos⟩ ⟨_hsub, hclosed⟩
+  refine ⟨Set.inter_subset_right, ?_⟩
+  intro u hu t ht htn
+  rcases hu with ⟨huC, huB⟩
+  have huBr : x + u ∈ Metric.ball x r := Metric.ball_subset_ball hr'le huB
+  have hcu : x + t • u ∈ C :=
+    (hclosed u ⟨huC, huBr⟩ t ht (lt_of_lt_of_le htn hr'le)).1
+  refine ⟨hcu, ?_⟩
+  rw [Metric.mem_ball, dist_eq_norm]
+  calc ‖(x + t • u) - x‖ = ‖t • u‖ := by rw [add_sub_cancel_left]
+    _ = t * ‖u‖ := by rw [norm_smul, Real.norm_eq_abs, abs_of_pos ht]
+    _ < r' := htn
 
 /-! ## `tranf` 与 `tran` 的像及方位角不变性（Conforming.hl:9988-10303） -/
 
