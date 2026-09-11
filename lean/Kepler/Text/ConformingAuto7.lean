@@ -381,7 +381,16 @@ theorem mono_cyclic_power_sigma_fan {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hj : j ≤ (setOfEdge v V E).ncard - 1)
     (heq : (sigmaFan x V E v)^[i] u = (sigmaFan x V E v)^[j] u) :
     i = j := by
-  sorry
+  have hu_mem : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  have hpos : 0 < (setOfEdge v V E).ncard :=
+    (Set.ncard_pos (remark_finite_fan1 v V E hfan.2.2.1.1)).mpr ⟨u, hu_mem⟩
+  rcases lt_trichotomy i j with hij | heqij | hji
+  · exfalso
+    exact (cyclic_power_sigmaFan x V E hfan hvu j i (by omega) hij) heq.symm
+  · exact heqij
+  · exfalso
+    exact (cyclic_power_sigmaFan x V E hfan hvu i j (by omega) hji) heq
 
 /-- HOL Conforming.hl :1626-1678 `SUM_AZIM_FAN_OF_NODE_EQ_SUM_AZIM_I_FAN`
 
