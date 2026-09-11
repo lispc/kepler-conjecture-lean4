@@ -77,6 +77,7 @@ Encoding notes (gaps / closest existing encodings):
 
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
+import Kepler.Text.ConformingAuto4
 import Kepler.Text.ConformingAuto5
 
 set_option maxHeartbeats 5000000
@@ -735,7 +736,10 @@ theorem SUM_SOL_IN_FACE_SET_EQ_4PI {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E) (hconf : conformingFan x V E hfan) :
     (∑ᶠ f ∈ (hypermapOfFan x V E hfan).faceSet,
         sol x (dartsetLeadsIntoFan x V E f)) = 4 * Real.pi := by
-  sorry
+  rw [← SUM_SOL_IN_TOPOLOGICAL_COMPONENET_EQ_IN_FACE_SET hfan hconf,
+    ← SUM_SOL_TOPOLOGICAL_COMPONENT_YFAN_EQ_SOL_UNIONS hfan hconf,
+    UNIONS_TOPOLOGICAL_COMPONENT_EQ_YFAN]
+  exact SOLID_ANGLE_YFAN x V E hfan
 
 /-- HOL Conforming.hl :1470-1477 `DART_EQ_UNIONS_FACE_SET_NODE_SET_EDGE_SET`
 
