@@ -565,6 +565,20 @@ theorem DART_FANADD_EQ_DART_FAN_ADD_2DART {x : V3} {V : Set V3}
     Set.image (fun p : V3 × V3 => (p.1, p.2)) (dartOfFan V E1) =
       Set.image (fun p : V3 × V3 => (p.1, p.2)) (dartOfFan V E) ∪
         ({(v, w), (w, v)} : Set (V3 × V3)) := by
-  sorry
+  have hfanE1 : FAN x V E1 :=
+    STEP3_REDUCE_FAN hfan hcard hfan80 hds hds3 hfsub hf1 hf2 hf3 hv hu hw
+      hvu huw hwv hsigma hE1
+  have hcardE1 : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E1).ncard :=
+    add_edge_imp_card_set_edge_ge1_fan hfan hcard hE1.symm
+  have hdartE : dartOfFan V E = dart1OfFan V E :=
+    dartOfFan_eq_dart1_of_surrounded hfan hcard
+  have hdartE1 : dartOfFan V E1 = dart1OfFan V E1 :=
+    dartOfFan_eq_dart1_of_surrounded hfanE1 hcardE1
+  rw [show (fun p : V3 × V3 => (p.1, p.2)) = id from funext (fun _ => rfl)]
+  rw [Set.image_id, Set.image_id]
+  rw [hdartE1, hdartE]
+  simp only [dart1OfFan]
+  rw [← hE1]
+  rw [add_edge_graph, expand_set_edge_fan]
 
 end Kepler.Text
