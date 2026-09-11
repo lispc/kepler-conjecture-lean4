@@ -1383,7 +1383,31 @@ HOL 原文：
 theorem RADIAL_AFF_GT_1_2 (x u v : V3) (r : ℝ) :
     Disjoint ({x} : Set V3) {u, v} ∧ 0 < r →
       radialNorm r x (affGt ({x} : Set V3) {u, v} ∩ Metric.ball x r) := by
-  sorry
+  rintro ⟨hdis, _hr⟩
+  constructor
+  · intro z hz
+    exact hz.2
+  · intro z hz t ht htnorm
+    obtain ⟨hzgt, _hzball⟩ := hz
+    rw [aff_gt_1_2 hdis] at hzgt
+    simp only [Set.mem_setOf_eq] at hzgt
+    obtain ⟨a1, a2, a3, ha2, ha3, hsum, hzeq⟩ := hzgt
+    have hz_eq : z = (a1 • x + a2 • u + a3 • v) - x := by
+      rw [← hzeq]
+      abel
+    have hmemgt : x + t • z ∈ affGt ({x} : Set V3) {u, v} := by
+      rw [aff_gt_1_2 hdis, Set.mem_setOf_eq]
+      refine ⟨1 - t + t * a1, t * a2, t * a3, ?_, ?_, ?_, ?_⟩
+      · exact mul_pos ht ha2
+      · exact mul_pos ht ha3
+      · rw [show a1 = 1 - a2 - a3 by linarith]
+        ring
+      · rw [hz_eq]
+        module
+    refine ⟨hmemgt, ?_⟩
+    rw [Metric.mem_ball, dist_eq_norm, show x + t • z - x = t • z by abel,
+      norm_smul, Real.norm_eq_abs, abs_of_pos ht]
+    simpa using htnorm
 
 /-- HOL Conforming.hl :9950-9987 `RADIAL_NORM_CO`
 
