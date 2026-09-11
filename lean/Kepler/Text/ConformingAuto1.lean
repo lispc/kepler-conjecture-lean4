@@ -324,6 +324,41 @@ FAN(x,V,E)
 - `IMAGE_F1_IN_FACE_IMP_IN_FACE`（本文件上文，HOL :155）
 - `dartOfFan_eq_dart1_of_surrounded`（Kepler/Text/Fan.lean:1084）
 - `Function.iterate_succ_apply'`（Mathlib/Logic/Function/Iterate.lean） -/
+private theorem f1Fan_iterate_mem_face_aux {x : V3} {V : Set V3}
+    {E : Set (Set V3)} {ds : Set (V3 × V3)}
+    (hfan : FAN x V E)
+    (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard)
+    (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet) :
+    ∀ (m : ℕ) (y1 y : V3 × V3), y1 ∈ dartOfFan V E →
+      y ∈ ds → (f1Fan x V E)^[m] y1 = y → y1 ∈ ds := by
+  intro m
+  induction m with
+  | zero =>
+      intro y1 y hy1 hy hpow
+      simp only [Function.iterate_zero, id_eq] at hpow
+      rw [hpow]
+      exact hy
+  | succ m ih =>
+      intro y1 y hy1 hy hpow
+      rw [Function.iterate_succ_apply] at hpow
+      have hy1d : y1 ∈ dart1OfFan V E := by
+        rw [← dartOfFan_eq_dart1_of_surrounded hfan hcard]
+        exact hy1
+      have hf1pair : f1Fan x V E y1 = fFanPair x V E y1 := by
+        have hba : {y1.2, y1.1} ∈ E := by
+          have h : {y1.1, y1.2} ∈ E := hy1d
+          rwa [Set.pair_comm] at h
+        simp only [f1Fan, fFanPair]
+        rw [inverse_sigma_fan_eq_inverse1 hfan hba]
+      have hclos1 : f1Fan x V E y1 ∈ dart1OfFan V E := by
+        rw [hf1pair]
+        exact fFanPair_mem_dart1 hfan hy1d
+      have hclos : f1Fan x V E y1 ∈ dartOfFan V E := by
+        rw [dartOfFan_eq_dart1_of_surrounded hfan hcard]
+        exact hclos1
+      exact IMAGE_F1_IN_FACE_IMP_IN_FACE hfan hcard hds
+        (ih (f1Fan x V E y1) y hclos hy hpow) hy1 rfl
+
 theorem IMAGE_F1_POWER_IN_FACE_IMP_IN_FACE (m : ℕ) {x : V3} {V : Set V3}
     {E : Set (Set V3)} {ds : Set (V3 × V3)} {y y1 : V3 × V3}
     (hfan : FAN x V E)
@@ -333,7 +368,7 @@ theorem IMAGE_F1_POWER_IN_FACE_IMP_IN_FACE (m : ℕ) {x : V3} {V : Set V3}
     (hy1 : y1 ∈ dartOfFan V E)
     (hpow : (f1Fan x V E)^[m] y1 = y) :
     y1 ∈ ds := by
-  sorry
+  exact f1Fan_iterate_mem_face_aux hfan hcard hds m y1 y hy1 hy hpow
 
 /-! ## 面的 `f1_fan` 代表元（Conforming.hl:247-353） -/
 
