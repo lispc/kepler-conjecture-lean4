@@ -597,7 +597,13 @@ theorem FINITE_TOPOLOGICAL_COMPONENT_YFAN {x : V3} {V : Set V3} {E : Set (Set V3
     (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard)
     (hfan80 : fan80 x V E) :
     (topologicalComponentYfan x V E).Finite := by
-  sorry
+  have himg : ((fun d : V3 × V3 => dartLeadsInto x V E d.1 d.2) ''
+      dart1OfFan V E).Finite :=
+    (finite_dart1_fan hfan).image _
+  refine himg.subset ?_
+  intro U hU
+  obtain ⟨v, u, huv, hUeq⟩ := JUTSTKG x V E U hfan hcard hfan80 hU
+  exact ⟨(v, u), by simpa [dart1OfFan] using huv, hUeq⟩
 
 /-- HOL Conforming.hl :1419-1434 `SUM_SOL_TOPOLOGICAL_COMPONENT_YFAN_EQ_SOL_UNIONS`
 
