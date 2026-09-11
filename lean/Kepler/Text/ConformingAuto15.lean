@@ -76,6 +76,8 @@ Encoding notes (gaps / closest existing encodings):
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
 import Kepler.Text.ConformingAuto9
+import Kepler.Text.ConformingAuto12
+import Kepler.Text.ConformingAuto14
 
 set_option maxHeartbeats 5000000
 
@@ -178,6 +180,12 @@ theorem CARD_DART_FANADD (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     darts_card_hypermapOfFan_eq_ncard hfan, hset,
     Set.ncard_union_eq hdisj (finite_dart1_fan hfan), Set.ncard_pair hpair]
 
+private theorem finsum_mem_const_nat {α : Type*} {s : Set α} (hs : s.Finite) (c : ℕ) :
+    (∑ᶠ _ ∈ s, c) = c * s.ncard := by
+  rw [finsum_mem_eq_finite_toFinset_sum (fun _ : α => c) hs, Finset.sum_const,
+    nsmul_eq_mul, ← Set.ncard_eq_toFinset_card s hs]
+  simp [mul_comm]
+
 /-- HOL Conforming.hl :6237-6337 `ZSZIUQE_LEMMA`（任务中仅标 ":6237"）
 
 HOL 原文：
@@ -237,7 +245,110 @@ theorem ZSZIUQE_LEMMA (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       nFan x V E1 hfan1 < nFan x V E hfan := by
-  sorry
+  intro h
+  have hAll := h
+  obtain ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1⟩ := h
+  let H0 : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  let H1 : Hypermap (V3 × V3) := hypermapOfFan x V E1 hfan1
+  have hcardE1 : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E1).ncard :=
+    add_edge_imp_card_set_edge_ge1_fan hfan hcard hE1.symm
+  have hge0 : ∀ f ∈ H0.faceSet, 3 ≤ f.ncard := fun f hf =>
+    CARD_FACE_SET_GE_3_FULLY_SURROUNDED_FAN hfan hcard hf
+  have hge1 : ∀ f ∈ H1.faceSet, 3 ≤ f.ncard := fun f hf =>
+    CARD_FACE_SET_GE_3_FULLY_SURROUNDED_FAN hfan1 hcardE1 hf
+  have hpart0 : H0.darts.card = ∑ᶠ f ∈ H0.faceSet, f.ncard := by
+    change H0.darts.card = ∑ᶠ f ∈ setOfOrbits H0.darts H0.faceMap, f.ncard
+    rw [← ncard_eq_finsum_orbits H0.faceMap_permutes]
+    exact (Set.ncard_coe_finset H0.darts).symm
+  have hpart1 : H1.darts.card = ∑ᶠ f ∈ H1.faceSet, f.ncard := by
+    change H1.darts.card = ∑ᶠ f ∈ setOfOrbits H1.darts H1.faceMap, f.ncard
+    rw [← ncard_eq_finsum_orbits H1.faceMap_permutes]
+    exact (Set.ncard_coe_finset H1.darts).symm
+  have hnfan0 : nFan x V E hfan + 3 * H0.faceSet.ncard = H0.darts.card := by
+    rw [nFan, hpart0]
+    have h3 : (∑ᶠ f ∈ H0.faceSet, (f.ncard - 3)) +
+        (∑ᶠ f ∈ H0.faceSet, (3 : ℕ)) = ∑ᶠ f ∈ H0.faceSet, f.ncard := by
+      rw [← finsum_mem_add_distrib (Hypermap.faceSet_finite H0)]
+      apply finsum_mem_congr rfl
+      intro f hf
+      have := hge0 f hf
+      omega
+    rw [← h3, finsum_mem_const_nat (Hypermap.faceSet_finite H0) 3]
+  have hnfan1 : nFan x V E1 hfan1 + 3 * H1.faceSet.ncard = H1.darts.card := by
+    rw [nFan, hpart1]
+    have h3 : (∑ᶠ f ∈ H1.faceSet, (f.ncard - 3)) +
+        (∑ᶠ f ∈ H1.faceSet, (3 : ℕ)) = ∑ᶠ f ∈ H1.faceSet, f.ncard := by
+      rw [← finsum_mem_add_distrib (Hypermap.faceSet_finite H1)]
+      apply finsum_mem_congr rfl
+      intro f hf
+      have := hge1 f hf
+      omega
+    rw [← h3, finsum_mem_const_nat (Hypermap.faceSet_finite H1) 3]
+  have huV : u ∈ V := hfan.1 (Set.mem_sUnion.mpr ⟨{v, u}, hvu, by simp⟩)
+  have hwV : w ∈ V := hfan.1 (Set.mem_sUnion.mpr ⟨{u, w}, huw, by simp⟩)
+  have hne : setOfEdge u V E ≠ {w} := by
+    intro hsing
+    have h1 := hcard u huV
+    rw [hsing] at h1
+    simp at h1
+  have hvw : v ≠ w := by
+    have hne2 : sigmaFan x V E u w ≠ w :=
+      (SIGMA_FAN (v := u) (u := w) hne hfan ⟨huw, hwV⟩).2.1
+    rwa [hsigma] at hne2
+  have hN : H1.faceSet.ncard = H0.faceSet.ncard + 1 := by
+    have hds1mem : ds1 ∈ H1.faceSet :=
+      ds1_in_face_set_fanadd x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+        hfan hfan1
+        ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+         hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w,
+         hds1.symm, hds2.symm, hf10, hf20, hf30, hE1⟩
+    have hds2mem : ds2 ∈ H1.faceSet :=
+      ds2_in_face_set_fanadd x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+        hfan hfan1
+        ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+         hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w,
+         hds1, hds2.symm, hf10, hf20, hf30, hE1⟩
+    have hds12 : ds1 ≠ ds2 :=
+      disjoint_ds1_and_ds2 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+        hfan hfan1
+        ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+         hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma,
+         hds1.symm, hds2.symm, hf10, hf20, hf30, hE1⟩
+    have hEQ := EQ_CARD_FACE_FAN_AND_FANADD x V E E1 ds f1 f2 f3 v u w ds1 ds2
+      f10 f20 f30 hfan hfan1 hAll
+    have hfin0 : H0.faceSet.Finite := Hypermap.faceSet_finite H0
+    have hfin1 : H1.faceSet.Finite := Hypermap.faceSet_finite H1
+    have h0 : (H0.faceSet \ {ds}).ncard = H0.faceSet.ncard - 1 :=
+      ncard_diff_singleton_mem hds hfin0
+    have hds2mem' : ds2 ∈ H1.faceSet \ {ds1} :=
+      ⟨hds2mem, by simpa [Set.mem_singleton_iff] using hds12.symm⟩
+    have h1 : ((H1.faceSet \ {ds1}) \ {ds2}).ncard =
+        (H1.faceSet \ {ds1}).ncard - 1 :=
+      ncard_diff_singleton_mem hds2mem' hfin1.sdiff
+    have h1' : (H1.faceSet \ {ds1}).ncard = H1.faceSet.ncard - 1 :=
+      ncard_diff_singleton_mem hds1mem hfin1
+    rw [h1, h1', h0] at hEQ
+    have h2le : 2 ≤ H1.faceSet.ncard := by
+      have hsub12 : ({ds1, ds2} : Set (Set (V3 × V3))) ⊆ H1.faceSet := by
+        intro f hf
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hf
+        rcases hf with rfl | rfl
+        · exact hds1mem
+        · exact hds2mem
+      calc 2 = ({ds1, ds2} : Set (Set (V3 × V3))).ncard :=
+            (Set.ncard_pair hds12).symm
+        _ ≤ H1.faceSet.ncard := Set.ncard_le_ncard hsub12 hfin1
+    have h1le : 1 ≤ H0.faceSet.ncard := by
+      have hpos : 0 < H0.faceSet.ncard := (Set.ncard_pos hfin0).mpr ⟨ds, hds⟩
+      omega
+    omega
+  have hD : H1.darts.card = H0.darts.card + 2 :=
+    CARD_DART_FANADD x V E E1 ds f1 f2 f3 v u w hfan hfan1
+      ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+       hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hvw, hE1⟩
+  omega
 
 /-! ## `fan80` 在加边后保持（Conforming.hl:6338-6521） -/
 
