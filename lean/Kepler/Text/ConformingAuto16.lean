@@ -1541,7 +1541,92 @@ theorem lemmaINTERS_HALF_SPACE_DS_FANADD2 (x : V3) (V : Set V3)
       affGt ({x, sigmaFan x V E v u, w} : Set V3) {v} = U1 →
       U1 ∩ affGt ({x, v, w} : Set V3) {sigmaFan x V E v u} ⊆
         dartsetLeadsIntoFan x V E1 ds1 := by
-  sorry
+  intro h
+  obtain ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hmin, hU1⟩ := h
+  have hbase : FAN x V E ∧
+      (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
+      fan80 x V E ∧
+      ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard ∧
+      ({f1, f2, f3} : Set (V3 × V3)) ⊆ ds ∧
+      f1Fan x V E f1 = f2 ∧ f1Fan x V E f2 = f3 ∧ ¬ (f1Fan x V E f3 = f1) ∧
+      f1.1 = v ∧ f2.1 = u ∧ f3.1 = w ∧
+      ({v, u} : Set V3) ∈ E ∧ ({u, w} : Set V3) ∈ E ∧ ({w, v} : Set V3) ∉ E ∧
+      sigmaFan x V E u w = v ∧ f1.2 = u ∧ f2.2 = w ∧
+      (hypermapOfFan x V E1 hfan1).face (v, w) = ds1 ∧
+      (hypermapOfFan x V E1 hfan1).face (w, v) = ds2 ∧
+      f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
+      E ∪ {({v, w} : Set V3)} = E1 ∧
+      (∀ (E2 : Set (Set V3)) (hfan2 : FAN x V E2),
+        FAN x V E2 ∧
+        (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E2).ncard) ∧
+        fan80 x V E2 ∧
+        nFan x V E2 hfan2 < nFan x V E hfan →
+          conformingFan x V E2 hfan2) :=
+    ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+      hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20,
+      hf30, hE1, hmin⟩
+  have hconf : conformingFan x V E1 hfan1 :=
+    FANADD_CONFORMING x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1 hbase
+  obtain ⟨hcard1, hfan80_1, -, -, -, -⟩ := hconf
+  have hds1_face : ds1 ∈ (hypermapOfFan x V E1 hfan1).faceSet :=
+    ds1_in_face_set_fanadd x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1
+      ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+        hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1.symm, hds2.symm,
+        hf10, hf20, hf30, hE1⟩
+  have hEsub : E ⊆ E1 := by rw [← hE1]; exact Set.subset_union_left
+  have hσ1vw : sigmaFan x V E1 v w = sigmaFan x V E v u :=
+    SIGMA_FAN_OF_FANADD_AT_POINT1 x V E E1 v u w
+      ⟨hfanE, hfan1, hvu, huw, hwv, hsigma, hfan80, hcard, hE1⟩
+  have hσ_soe : sigmaFan x V E v u ∈ setOfEdge v V E :=
+    sigma_fan_in_setOfEdge hfan
+      ((properties_of_setOfEdge_fan x V E v u hfan).mp hvu)
+  have hσvE : ({v, sigmaFan x V E v u} : Set V3) ∈ E :=
+    (properties_of_setOfEdge_fan x V E v (sigmaFan x V E v u) hfan).mpr hσ_soe
+  have hσvE1 : ({sigmaFan x V E v u, v} : Set V3) ∈ E1 := by
+    rw [Set.pair_comm]
+    exact hEsub hσvE
+  have hvwE1 : ({v, w} : Set V3) ∈ E1 := by
+    rw [← hE1]
+    exact Set.mem_union_right E (by simp)
+  have hθ := hfan80_1 v w hvwE1
+  rw [hσ1vw] at hθ
+  have hcop : ¬ Coplanar ({x, sigmaFan x V E v u, v, w} : Set V3) :=
+    properties_fully_surrounded (x := x) (V := V) (E := E1)
+      (v := sigmaFan x V E v u) (u := v) (w := w)
+      hfan1 hσvE1 hvwE1 hθ.1 hθ.2
+  have hinter := inter_aff_gt_3_1_is_aff_gt_1_3 x (sigmaFan x V E v u) v w hcop
+  have hsub := aff_gt_1_3_subset_dart_leads_into_fan x V E1
+      (sigmaFan x V E v u) v w hfan1 hσvE1 hvwE1 hσ1vw hcard1 hfan80_1
+  have hvw_ds1 : (v, w) ∈ ds1 := by
+    rw [← hds1]
+    exact (hypermapOfFan x V E1 hfan1).mem_face_self (v, w)
+  have hD := DARTSET_LEADS_INTO_FAN (x := x) (V := V) (E := E1) (ds := ds1)
+      hfan1 hcard1 hfan80_1 hds1_face (v, w) hvw_ds1
+  rw [hD]
+  intro z hz
+  have hzI : z ∈ affGt ({x, u, w} : Set V3) {v} ∩
+      affGt ({x, v, u} : Set V3) {sigmaFan x V E v u} ∩
+      affGt ({x, v, sigmaFan x V E v u} : Set V3) {w} ∩
+      affGt ({x, sigmaFan x V E v u, w} : Set V3) {v} := by
+    rw [hU1]
+    exact hz.1
+  have hset1 : ({x, sigmaFan x V E v u, v} : Set V3) =
+      ({x, v, sigmaFan x V E v u} : Set V3) := by
+    ext a; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  have hset2 : ({x, w, sigmaFan x V E v u} : Set V3) =
+      ({x, sigmaFan x V E v u, w} : Set V3) := by
+    ext a; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  apply hsub
+  rw [← hinter]
+  refine ⟨⟨?_, hz.2⟩, ?_⟩
+  · rw [hset1]
+    exact hzI.1.2
+  · rw [hset2]
+    exact hzI.2
 
 /-! ## 几何半空间包含（Conforming.hl:8219-8258） -/
 
