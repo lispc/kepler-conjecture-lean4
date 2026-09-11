@@ -309,7 +309,17 @@ HOL 原文：
 - `Set.pair_eq_pair_iff`、`Set.mem_singleton_iff`、`Set.pair_comm`（Mathlib） -/
 theorem set_of_only_edge1 (v w : V3) (V : Set V3) :
     v ∈ V → setOfEdge w V ({{v, w}} : Set (Set V3)) = {v} := by
-  sorry
+  intro hv
+  ext u
+  simp only [setOfEdge, Set.mem_setOf_eq, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨he, -⟩
+    rcases (Set.pair_eq_pair_iff.mp he) with ⟨hwv, huw⟩ | ⟨-, huv⟩
+    · exact huw.trans hwv
+    · exact huv
+  · intro hu
+    rw [hu]
+    exact ⟨Set.pair_comm w v, hv⟩
 
 /-! ## 加边对 σ 映射的影响（Conforming.hl:2475-2633） -/
 
