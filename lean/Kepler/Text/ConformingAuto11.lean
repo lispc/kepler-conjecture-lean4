@@ -1100,6 +1100,56 @@ Lean 的 `hypermapOfFan` 需要见证，故增加显式参数 `(hfan1 : FAN x V 
 - `add_edge_imp_card_set_edge_ge1_fan`（Kepler/Text/ConformingAuto9.lean:376）
 - 缺口：HOL `hypermap_of_fan_rep`（fan.hl:2780）、
   `dartset_fully_surrounded_is_non_isolated_fan` 未以该名移植 -/
+private theorem sigma_fan_of_fanadd_at_point2_ca11 (x : V3) (V : Set V3)
+    (E E1 : Set (Set V3)) (v u w : V3)
+    (hfan : FAN x V E) (hfan1 : FAN x V E1)
+    (hvu : ({v, u} : Set V3) ∈ E) (huw : ({u, w} : Set V3) ∈ E)
+    (hwv : ({w, v} : Set V3) ∉ E) (hsigma : sigmaFan x V E u w = v)
+    (hfan80 : fan80 x V E)
+    (hcard : ∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard)
+    (hE1 : E ∪ {({v, w} : Set V3)} = E1) :
+    sigmaFan x V E1 v u = w := by
+  have hvV : v ∈ V := (fan_mem_of_edge hfan hvu).1
+  have hwV : w ∈ V := (fan_mem_of_edge hfan huw).2
+  have hwu : w ≠ u := by
+    intro h
+    apply hwv
+    have hpair : ({w, v} : Set V3) = ({v, u} : Set V3) := by
+      rw [h]
+      exact Set.pair_comm u v
+    rw [hpair]
+    exact hvu
+  have hsingle : setOfEdge v V ({({v, w} : Set V3)} : Set (Set V3)) = {w} := by
+    rw [show ({v, w} : Set V3) = {w, v} from Set.pair_comm v w]
+    exact set_of_only_edge1_ca11 w v V hwV
+  have hsoe1 : setOfEdge v V E1 = setOfEdge v V E ∪ {w} := by
+    rw [← hE1, setOfEdge_union_ca11, hsingle]
+  have hvu_E1 : ({v, u} : Set V3) ∈ E1 := by
+    rw [← hE1]
+    exact Set.mem_union_left _ hvu
+  have hw_mem_E1 : w ∈ setOfEdge v V E1 := by
+    rw [hsoe1]
+    exact Set.mem_union_right _ (Set.mem_singleton w)
+  have hne : setOfEdge v V E ≠ {u} := by
+    intro h
+    have := hcard v hvV
+    rw [h, Set.ncard_singleton] at this
+    norm_num at this
+  have hu_mem : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  obtain ⟨-, -, hσ_min⟩ := SIGMA_FAN hne hfan hu_mem
+  have hsmall : azim x v u w ≤ azim x v u (sigmaFan x V E v u) :=
+    angle_is_small_fan hfan hvu huw hsigma hfan80 hcard
+  have hmin : ∀ w2 : V3, w2 ∈ setOfEdge v V E1 → w2 ≠ u →
+      azim x v u w ≤ azim x v u w2 := by
+    intro w2 hw2 hw2u
+    rw [hsoe1] at hw2
+    rcases hw2 with hw2 | hw2
+    · exact hsmall.trans (hσ_min w2 hw2 hw2u)
+    · have hw2w : w2 = w := Set.mem_singleton_iff.mp hw2
+      simp [hw2w]
+  exact unique_sigma_fan_ca11 hfan1 hvu_E1 hw_mem_E1 hwu hmin
+
 theorem f1_fan_of_f10_eq_f20 (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     (ds : Set (V3 × V3)) (f1 f2 f3 : V3 × V3) (v u w : V3)
     (ds1 ds2 : Set (V3 × V3)) (f10 f20 : V3 × V3)
@@ -1118,7 +1168,19 @@ theorem f1_fan_of_f10_eq_f20 (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f10 = (w, v) ∧ f20 = (v, u) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       f20 = f1Fan x V E1 f10 := by
-  sorry
+  rintro ⟨-, hcard, hfan80, -, -, -, -, -, -, -, -, -, hvu, huw, hwv, hsigma,
+    -, -, hf10, hf20, hE1⟩
+  have hσ1 : sigmaFan x V E1 v u = w :=
+    sigma_fan_of_fanadd_at_point2_ca11 x V E E1 v u w hfan hfan1 hvu huw hwv
+      hsigma hfan80 hcard hE1
+  have hvu_E1 : ({v, u} : Set V3) ∈ E1 := by
+    rw [← hE1]
+    exact Set.mem_union_left _ hvu
+  have hinv : inverse1SigmaFan x V E1 v w = u := by
+    rw [← hσ1]
+    exact (INVERSE1_SIGMA_FAN (v := v) hfan1).2.2 u hvu_E1
+  rw [hf10, hf20]
+  simp only [f1Fan, hinv]
 
 /-- HOL Conforming.hl :3642-3689 `f1_fan_of_f20_eq_f30`
 
