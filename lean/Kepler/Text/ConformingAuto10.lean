@@ -121,7 +121,12 @@ HOL 原文：
 - `Set.union_empty`（Mathlib） -/
 theorem SET_OF_EDGE_INVARIANT (v : V3) (V : Set V3) (E1 E2 : Set (Set V3)) :
     v ∉ ⋃₀ E2 → setOfEdge v V (E1 ∪ E2) = setOfEdge v V E1 := by
-  sorry
+  intro h
+  have hunion : setOfEdge v V (E1 ∪ E2) =
+      setOfEdge v V E1 ∪ setOfEdge v V E2 := by
+    ext w
+    simp only [setOfEdge, Set.mem_setOf_eq, Set.mem_union, or_and_right]
+  rw [hunion, condition_set_of_edge_eq_empty v V E2 h, Set.union_empty]
 
 /-- HOL Conforming.hl :2381-2391 `expand_unions`
 
