@@ -248,6 +248,18 @@ theorem RADIAL_AFF_GE_1_2 (x u v : V3) (r : ℝ)
     rw [hsub, norm_smul, Real.norm_eq_abs, abs_of_pos ht]
     exact htu'
 
+/-- 若 `y ∈ aff_gt {x,u,v} {w}`，则从 `x` 出发沿 `y` 方向的射线（参数 `t > 0`）
+仍在该集合中：`(1-t)•x + t•y ∈ aff_gt {x,u,v} {w}`。`w` 侧系数 `t*t4`
+由 `y` 的系数继承（`t > 0`、`t4 > 0`），其余系数用 `AFF_GT_3_1` 重新打包。 -/
+private theorem affGt_triple_star {x u v w y : V3}
+    (hdisj : Disjoint ({x, u, v} : Set V3) {w})
+    (hy : y ∈ affGt ({x, u, v} : Set V3) {w}) (t : ℝ) (ht : 0 < t) :
+    (1 - t) • x + t • y ∈ affGt ({x, u, v} : Set V3) {w} := by
+  rw [AFF_GT_3_1 x u v w hdisj] at hy ⊢
+  obtain ⟨t1, t2, t3, t4, ht4, hsum, hyeq⟩ := hy
+  exact ⟨1 - t + t * t1, t * t2, t * t3, t * t4, mul_pos ht ht4,
+    by nlinarith, by rw [hyeq]; module⟩
+
 /-- HOL Conforming.hl :914-943 `RADIAL_AFF_GT_3_1`
 
 HOL 原文：
@@ -279,7 +291,19 @@ HOL 原文：
 theorem RADIAL_AFF_GT_3_1 (x u v w : V3) (r : ℝ)
     (hdisj : Disjoint ({x, u, v} : Set V3) {w}) (hr : r > 0) :
     radialNorm r x (affGt ({x, u, v} : Set V3) {w} ∩ Metric.ball x r) := by
-  sorry
+  refine ⟨Set.inter_subset_right, ?_⟩
+  intro u' hu' t ht htu'
+  rw [Set.mem_inter_iff] at hu'
+  obtain ⟨hgt, _hball⟩ := hu'
+  refine ⟨?_, ?_⟩
+  · have hstar := affGt_triple_star hdisj hgt t ht
+    have heq : (1 - t) • x + t • (x + u') = x + t • u' := by module
+    rw [← heq]
+    exact hstar
+  · rw [Metric.mem_ball, dist_eq_norm]
+    have hsub : (x + t • u') - x = t • u' := by abel
+    rw [hsub, norm_smul, Real.norm_eq_abs, abs_of_pos ht]
+    exact htu'
 
 /-! ## 交集与球（Conforming.hl:944-957） -/
 
