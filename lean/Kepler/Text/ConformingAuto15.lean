@@ -700,7 +700,45 @@ theorem INVARANT_SIGMA_FAN_ADD (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     E ∪ {({v, w} : Set V3)} = E1 ∧
     y ∉ ds ∧ y ∈ dartOfFan V E →
       sigmaFan x V E1 y.1 y.2 = sigmaFan x V E y.1 y.2 := by
-  sorry
+  rintro ⟨hfan, hcard, hfan80, hds, hds3, hfsub, hf1, hf2, hf3, hf1v, hf2u,
+    hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20, hf30,
+    hE1, hy_notds, hydart⟩
+  have hdart1 : y ∈ dart1OfFan V E := by
+    rw [← dartOfFan_eq_dart1_of_surrounded hfan hcard]
+    exact hydart
+  have hyedge : ({y.1, y.2} : Set V3) ∈ E := hdart1
+  by_cases hv' : y.1 ∈ ({v, w} : Set V3)
+  · simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hv'
+    rcases hv' with hv' | hw'
+    · by_cases hw'u : y.2 = u
+      · have hyf1 : y = f1 :=
+          Prod.ext (by rw [hv', hf1v]) (by rw [hw'u, hf1u])
+        exact absurd (hyf1.symm ▸ hfsub (by simp)) hy_notds
+      · have hvy2 : ({v, y.2} : Set V3) ∈ E := by
+          have h := hyedge
+          rwa [hv'] at h
+        have hres := SIGMA_FAN_OF_FANADD_AT_POINT4 x V E E1 v u w y.2
+          ⟨hfan, hfan1, hfan80, hvu, huw, hwv, (fun h => hw'u h.symm), hvy2,
+            hsigma, hcard, hE1⟩
+        simpa only [hv'] using hres
+    · by_cases hw'inv : y.2 = inverse1SigmaFan x V E w u
+      · have hf3val : f3 = (w, inverse1SigmaFan x V E w u) := by
+          rw [← hf2]
+          simp only [f1Fan, hf2w, hf2u]
+        have hyf3 : y = f3 := by
+          rw [hf3val]
+          exact Prod.ext hw' hw'inv
+        exact absurd (hyf3.symm ▸ hfsub (by simp)) hy_notds
+      · have hwy2 : ({w, y.2} : Set V3) ∈ E := by
+          have h := hyedge
+          rwa [hw'] at h
+        have hres := SIGMA_FAN_OF_FANADD_AT_POINT5 x V E E1 v u w y.2
+          ⟨hfan, hfan1, hfan80, hvu, huw, hwv, hw'inv, hwy2, hsigma, hcard, hE1⟩
+        simpa only [hw'] using hres
+  · have hvw_not : ({v, w} : Set V3) ∉ E := by
+      rwa [Set.pair_comm]
+    exact SIGMA_FAN_OF_FANADD1 x V E E1 v w
+      ⟨hfan, hfan1, hcard, hvw_not, hE1⟩ y.1 y.2 ⟨hyedge, hv'⟩
 
 /-! ## `yfan` 在加边下的包含/等式（Conforming.hl:6693-6900） -/
 
