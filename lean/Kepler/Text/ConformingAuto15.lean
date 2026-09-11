@@ -914,6 +914,16 @@ theorem lemma_yfanadd_aff_gt (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     · exact absurd (hvx hv) hy.2
     · exact absurd (hwx hw) hy.2
 
+/-- 加边单调性：`E ⊆ E1` 时 `yfan x V E1 ⊆ yfan x V E`（因 `xfan` 关于边集单调）。 -/
+private theorem yfan_anti_mono_ca15 (x : V3) (V : Set V3) {E E1 : Set (Set V3)}
+    (h : E ⊆ E1) : yfan x V E1 ⊆ yfan x V E := by
+  intro y hy
+  simp only [yfan, Set.mem_sdiff, Set.mem_univ, true_and] at hy ⊢
+  intro hx
+  rw [xfan, Set.mem_setOf_eq] at hx
+  rcases hx with ⟨e, he, hye⟩
+  exact hy ⟨e, h he, hye⟩
+
 /-- HOL Conforming.hl :6844-6868 `lemma_yfanadd_aff_gt1`
 
 HOL 原文：
@@ -963,7 +973,8 @@ theorem lemma_yfanadd_aff_gt1 (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       yfan x V E1 ⊆ yfan x V E := by
-  sorry
+  rintro ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hE⟩ y hy
+  exact yfan_anti_mono_ca15 x V (by rw [← hE]; exact Set.subset_union_left) hy
 
 /-- HOL Conforming.hl :6869-6900 `YFANADD_AFF_GT`
 
