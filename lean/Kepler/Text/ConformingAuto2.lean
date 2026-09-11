@@ -468,7 +468,7 @@ HOL `aff_gt {x} {v,u}` ↔ `affGt ({x} : Set V3) {v,u}`；
 theorem NEGLIGIBLE_AFF_GT_1_2_INTER_BALL (x v u : V3) (r : ℝ)
     (h : ¬ Collinear3 x v u) :
     volume (affGt ({x} : Set V3) {v, u} ∩ Metric.ball x r) = 0 := by
-  sorry
+  exact measure_mono_null Set.inter_subset_left (NEGLIGIBLE_AFF_GT_1_2 x v u h)
 
 /-- HOL Conforming.hl :722-730 `MEASURE_AFF_GT_2_1_INTER_BALL`
 
