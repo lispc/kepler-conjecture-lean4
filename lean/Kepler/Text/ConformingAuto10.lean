@@ -514,6 +514,42 @@ theorem SIGMA_FAN_OF_FANADD_AT_POINT2 (x : V3) (V : Set V3) (E E1 : Set (Set V3)
     (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
     E ∪ {{v, w}} = E1 →
       sigmaFan x V E1 v u = w := by
-  sorry
+  rintro ⟨hfan, hfanE1, hvu, huw, hwv, hsigma, hfan80, hcard, hE1⟩
+  have hvV : v ∈ V := (fan_mem_of_edge hfan hvu).1
+  have hwV : w ∈ V := (fan_mem_of_edge hfan huw).2
+  have hwu : w ≠ u := by
+    intro h
+    apply hwv
+    have hpair : ({w, v} : Set V3) = ({v, u} : Set V3) := by
+      rw [h]
+      exact Set.pair_comm u v
+    rw [hpair]
+    exact hvu
+  have hsoe1 : setOfEdge v V E1 = setOfEdge v V E ∪ {w} := by
+    rw [← hE1, setOfEdge_union, set_of_only_edge v w V hwV]
+  have hvu_E1 : ({v, u} : Set V3) ∈ E1 := by
+    rw [← hE1]
+    exact Set.mem_union_left _ hvu
+  have hw_mem_E1 : w ∈ setOfEdge v V E1 := by
+    rw [hsoe1]
+    exact Set.mem_union_right _ (Set.mem_singleton w)
+  have hne : setOfEdge v V E ≠ {u} := by
+    intro h
+    have := hcard v hvV
+    rw [h, Set.ncard_singleton] at this
+    norm_num at this
+  have hu_mem : u ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+  obtain ⟨-, -, hσ_min⟩ := SIGMA_FAN hne hfan hu_mem
+  have hsmall : azim x v u w ≤ azim x v u (sigmaFan x V E v u) :=
+    angle_is_small_fan hfan hvu huw hsigma hfan80 hcard
+  have hmin : ∀ w2 : V3, w2 ∈ setOfEdge v V E1 → w2 ≠ u →
+      azim x v u w ≤ azim x v u w2 := by
+    intro w2 hw2 hw2u
+    rw [hsoe1] at hw2
+    rcases hw2 with hw2 | hw2
+    · exact hsmall.trans (hσ_min w2 hw2 hw2u)
+    · rw [Set.mem_singleton_iff.mp hw2]
+  exact unique_sigma_fan hfanE1 hvu_E1 hw_mem_E1 hwu hmin
 
 end Kepler.Text
