@@ -472,7 +472,8 @@ theorem add_edge_graph (v w : V3) (E : Set (Set V3)) :
     {p : V3 × V3 | {p.1, p.2} ∈ E ∪ {({v, w} : Set V3)}} =
       {p : V3 × V3 | {p.1, p.2} ∈ E} ∪
         {p : V3 × V3 | ({p.1, p.2} : Set V3) = {v, w}} := by
-  sorry
+  ext p
+  simp only [Set.mem_setOf_eq, Set.mem_union, Set.mem_singleton_iff]
 
 /-- HOL Conforming.hl :2312-2316 `expand_set_edge_fan`
 
