@@ -245,7 +245,20 @@ theorem STEP2_REDUCE_FAN {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hvu : {v, u} ∈ E) (huw : {u, w} ∈ E) (hwv : {w, v} ∉ E)
     (hsigma : sigmaFan x V E u w = v) :
     affGt ({x} : Set V3) {v, w} ⊆ dartsetLeadsIntoFan x V E ds := by
-  sorry
+  have hf2_ds : f2 ∈ ds := hfsub (by simp)
+  have hf2snd : f2.2 = w := by
+    have h := congrArg Prod.fst hf2
+    simp only [f1Fan] at h
+    rw [h, hw]
+  have hleads : dartsetLeadsIntoFan x V E ds = dartLeadsInto x V E u w := by
+    have h := UNIQUE_DARTSET_LEADS_INTO1_FAN (dartLeadsInto x V E f2.1 f2.2)
+      hfan hcard hfan80 hds hf2_ds rfl
+    rw [hf2snd, hu] at h
+    exact h
+  have hsub := AFF_GT_SUBSET_DART_LEADS_INTO_FAN (x := x) (v := v) (u := u) (w := w)
+    hfan hvu huw hwv hsigma hcard hfan80
+  rw [Set.pair_comm v w, hleads]
+  exact hsub
 
 /-- HOL Conforming.hl :2180-2214 `STEP3_REDUCE_FAN`
 
