@@ -382,7 +382,8 @@ theorem identity_face_in_face_set {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet)
     (hf1 : f1 ∈ ds) :
     ds = (hypermapOfFan x V E hfan).face f1 := by
-  sorry
+  obtain ⟨d, _hd, rfl⟩ := (hypermapOfFan x V E hfan).face_representation hds
+  exact (hypermapOfFan x V E hfan).face_eq_of_mem hf1
 
 /-- HOL Conforming.hl :1868-1878 `condition_f1_eq_fan`
 
