@@ -428,7 +428,68 @@ theorem SUM_AZIM_FAN_OF_NODE_EQ_SUM_AZIM_I_FAN
     (∑ i ∈ Finset.range ((setOfEdge y.1 V E).ncard),
         azimIfan x V E y.1 y.2 i) =
       ∑ᶠ y1 ∈ f, azimFan x V E y1.1 y1.2 := by
-  sorry
+  set n := (setOfEdge y.1 V E).ncard with hn
+  have hvu : {y.1, y.2} ∈ E :=
+    properties_of_elements_in_node_fully_surroundedfan hfan hcard hf hy
+  have hy1V : y.1 ∈ V :=
+    hfan.1 (Set.mem_sUnion.mpr ⟨{y.1, y.2}, hvu, by simp⟩)
+  have hu_mem : y.2 ∈ setOfEdge y.1 V E :=
+    (properties_of_setOfEdge_fan x V E y.1 y.2 hfan).mp hvu
+  have hn_pos : 0 < n := by
+    rw [hn]
+    exact (Set.ncard_pos (remark_finite_fan1 y.1 V E hfan.2.2.1.1)).mpr ⟨y.2, hu_mem⟩
+  have hperiod : (sigmaFan x V E y.1)^[n] y.2 = y.2 := by
+    rw [hn]
+    exact order_power_sigmaFan x V E hfan hvu rfl
+  let g : ℕ → V3 × V3 := fun i => (y.1, (sigmaFan x V E y.1)^[i] y.2)
+  have hg_mod : ∀ i : ℕ, g i = g (i % n) := by
+    intro i
+    apply Prod.ext
+    · rfl
+    · show (sigmaFan x V E y.1)^[i] y.2 =
+        (sigmaFan x V E y.1)^[i % n] y.2
+      conv_lhs =>
+        rw [show i = i % n + n * (i / n) from (Nat.mod_add_div i n).symm]
+      rw [Function.iterate_add_apply, Nat.mul_comm n (i / n),
+        show (sigmaFan x V E y.1)^[i / n * n] y.2 = y.2 from
+          fix_point_sigmaFan x V E y.1 y.2 (i / n) n hperiod]
+  have hf_eq : f = g '' (Finset.range n : Set ℕ) := by
+    rw [rep_node_set_fan hfan hcard hf hy]
+    ext z
+    constructor
+    · rintro ⟨i, -, rfl⟩
+      exact ⟨i % n,
+        by simp only [Finset.mem_coe, Finset.mem_range]; exact Nat.mod_lt i hn_pos,
+        (hg_mod i).symm⟩
+    · rintro ⟨i, _, rfl⟩
+      exact ⟨i, Nat.zero_le i, rfl⟩
+  have hbij : Set.BijOn g (Finset.range n : Set ℕ) f := by
+    refine ⟨?_, ?_, ?_⟩
+    · intro i hi
+      rw [hf_eq]
+      exact ⟨i, hi, rfl⟩
+    · intro i hi j hj heq
+      have hi' : i < n := by simpa using hi
+      have hj' : j < n := by simpa using hj
+      have h2 : (sigmaFan x V E y.1)^[i] y.2 =
+          (sigmaFan x V E y.1)^[j] y.2 := by
+        have := congrArg Prod.snd heq
+        simpa [g] using this
+      exact mono_cyclic_power_sigma_fan hfan hvu i j
+        (by omega) (by omega) h2
+    · intro z hz
+      rw [hf_eq] at hz
+      obtain ⟨i, hi, rfl⟩ := hz
+      exact ⟨i, hi, rfl⟩
+  rw [← finsum_mem_finset_eq_sum (fun i => azimIfan x V E y.1 y.2 i)
+    (Finset.range n)]
+  refine finsum_mem_eq_of_bijOn g hbij ?_
+  intro i _
+  have hterm : azimIfan x V E y.1 y.2 i =
+      azimFan x V E y.1 ((sigmaFan x V E y.1)^[i] y.2) := by
+    unfold azimIfan azimFan
+    rw [if_pos (hcard y.1 hy1V), Function.iterate_succ_apply']
+  rw [hterm]
 
 /-- HOL Conforming.hl :1679-1686 `exists_point_in_node`
 
