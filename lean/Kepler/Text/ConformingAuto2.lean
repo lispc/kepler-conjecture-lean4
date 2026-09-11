@@ -117,7 +117,20 @@ theorem version_JUTSTKG (x : V3) (V : Set V3) (E : Set (Set V3)) (U : Set V3)
     (hU : U ∈ topologicalComponentYfan x V E) :
     ∃ f : Set (V3 × V3), f ∈ (hypermapOfFan x V E hfan).faceSet ∧
       dartsetLeadsIntoFan x V E f = U := by
-  sorry
+  obtain ⟨v, u, huv, hdart⟩ := JUTSTKG x V E U hfan hcard hfan80 hU
+  have hdart1 : (v, u) ∈ dart1OfFan V E := huv
+  have hmem : (v, u) ∈ (hypermapOfFan x V E hfan).darts := by
+    show (v, u) ∈ (finite_dart1_fan hfan).toFinset
+    exact (finite_dart1_fan hfan).mem_toFinset.mpr hdart1
+  refine ⟨(hypermapOfFan x V E hfan).face (v, u), ?_, ?_⟩
+  · exact (Hypermap.mem_darts_iff_face_mem _ _).mp hmem
+  · have hyf : (v, u) ∈ (hypermapOfFan x V E hfan).face (v, u) :=
+      Hypermap.mem_face_self _ _
+    have hleads := DARTSET_LEADS_INTO_FAN hfan hcard hfan80
+      (show (hypermapOfFan x V E hfan).face (v, u) ∈
+        (hypermapOfFan x V E hfan).faceSet from
+        (Hypermap.mem_darts_iff_face_mem _ _).mp hmem)
+    rw [hleads (v, u) hyf, hdart]
 
 /-- HOL Conforming.hl :531-549 `measurable_dartset_leads_into30_fan`
 
