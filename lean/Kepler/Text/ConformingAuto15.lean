@@ -392,6 +392,15 @@ FAN(x,V,E)
 - `properties_fully_surrounded`（Kepler/Text/Planarity.lean:2370）
 - 缺口：`azim_trangle_le_azim_face_fan`、`sum4_azim_fan`、`sum5_azim_fan`、
   `condition_azim_le_pi`、`inverse1_sigma_fan`（`inverse1SigmaFan`）相关引理 -/
+private theorem collinear3_swap_fanadd {x v u : V3} (h : ¬ Collinear3 x v u) :
+    ¬ Collinear3 x u v := by
+  intro hc
+  apply h
+  unfold Collinear3 at hc ⊢
+  have hs : ({x, v, u} : Set V3) = {x, u, v} := by
+    ext z; simp; tauto
+  rwa [hs]
+
 theorem FAN80_FANADD (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     (ds : Set (V3 × V3)) (f1 f2 f3 : V3 × V3) (v u w : V3)
     (ds1 ds2 : Set (V3 × V3)) (f10 f20 f30 : V3 × V3)
@@ -410,7 +419,126 @@ theorem FAN80_FANADD (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       fan80 x V E1 := by
-  sorry
+  intro h
+  obtain ⟨_, hcard, hfan80, _, _, _, _, _, _, _, _, _, hvu, huw, hwv,
+    hsigma, _, _, _, _, _, _, _, hE1⟩ := h
+  have hθuw : 0 < azim x u w v ∧ azim x u w v < Real.pi := by
+    have := hfan80 u w huw
+    rwa [hsigma] at this
+  have hcop : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan hvu huw hθuw.1 hθuw.2
+  have hnc_vw : ¬ Collinear3 x v w := (notcoplanar_imp_notcollinear_fan hcop).2.2
+  have hwv' : ({v, w} : Set V3) ∉ E := fun hh => hwv (Set.pair_comm v w ▸ hh)
+  intro v' u' hv'
+  rw [← hE1] at hv'
+  rcases hv' with hv'E | hv'eq
+  · by_cases hv'v : v' ∈ ({v, w} : Set V3)
+    · simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hv'v
+      rcases hv'v with hv'v | hv'v
+      · subst v'
+        by_cases hu'u : u' = u
+        · subst u'
+          have hσ2 : sigmaFan x V E1 v u = w :=
+            SIGMA_FAN_OF_FANADD_AT_POINT2 x V E E1 v u w
+              ⟨hfan, hfan1, hvu, huw, hwv, hsigma, hfan80, hcard, hE1⟩
+          rw [hσ2]
+          exact properties_of_fully_surrounded1_fan hcop hθuw.1 hθuw.2
+        · have hu'ne : u ≠ u' := fun hh => hu'u hh.symm
+          have hσ4 : sigmaFan x V E1 v u' = sigmaFan x V E v u' :=
+            SIGMA_FAN_OF_FANADD_AT_POINT4 x V E E1 v u w u'
+              ⟨hfan, hfan1, hfan80, hvu, huw, hwv, hu'ne, hv'E, hsigma, hcard, hE1⟩
+          rw [hσ4]
+          exact hfan80 v u' hv'E
+      · subst v'
+        by_cases hu'inv : u' = inverse1SigmaFan x V E w u
+        · have hσ6 : sigmaFan x V E1 w u' = v :=
+            SIGMA_FAN_OF_FANADD_AT_POINT6 x V E E1 v u w u'
+              ⟨hfan, hfan1, hfan80, hvu, huw, hwv, hu'inv, hv'E, hsigma, hcard, hE1⟩
+          rw [hσ6]
+          have hwu : ({w, u} : Set V3) ∈ E := by rw [Set.pair_comm]; exact huw
+          have hp_sigma : sigmaFan x V E w u' = u := by
+            rw [hu'inv]
+            exact (INVERSE1_SIGMA_FAN (v := w) hfan).2.1 u hwu
+          have hθp : 0 < azim x w u' u ∧ azim x w u' u < Real.pi := by
+            have := hfan80 w u' hv'E
+            rwa [hp_sigma] at this
+          have htri : azim x w v u < azim x w u' u :=
+            azim_trangle_le_azim_face_fan x V E v u w u'
+              ⟨hfan, hvu, huw, hv'E, hwv', hsigma, hp_sigma, hfan80, hcard⟩
+          have hposvu : 0 < azim x w v u :=
+            (condition_azim_le_pi x V E v u w
+              ⟨hfan, hvu, huw, hsigma, hfan80, hcard⟩).1
+          have hnc_wu : ¬ Collinear3 x w u := fan_not_collinear hfan hwu
+          have hxw : w ≠ x := fun hh =>
+            hnc_wu (collinear3_of_eq (v := x) (w := w) (w1 := u) hh)
+          have hnc_wv : ¬ Collinear3 x w v := collinear3_swap_fanadd hnc_vw
+          have hnc_wu' : ¬ Collinear3 x w u' := fan_not_collinear hfan hv'E
+          have hsum : azim x w u' u = azim x w u' v + azim x w v u :=
+            sum5_azim_fan (v := w) (u := u') (w1 := v) (w2 := u)
+              hxw hnc_wu' hnc_wv hnc_wu (le_of_lt htri)
+          constructor <;>
+            linarith [hsum, htri, hθp.1, hθp.2, hposvu, azim_nonneg x w v u]
+        · have hσ5 : sigmaFan x V E1 w u' = sigmaFan x V E w u' :=
+            SIGMA_FAN_OF_FANADD_AT_POINT5 x V E E1 v u w u'
+              ⟨hfan, hfan1, hfan80, hvu, huw, hwv, hu'inv, hv'E, hsigma, hcard, hE1⟩
+          rw [hσ5]
+          exact hfan80 w u' hv'E
+    · have hσ1 : sigmaFan x V E1 v' u' = sigmaFan x V E v' u' :=
+        SIGMA_FAN_OF_FANADD1 x V E E1 v w ⟨hfan, hfan1, hcard, hwv', hE1⟩
+          v' u' ⟨hv'E, hv'v⟩
+      rw [hσ1]
+      exact hfan80 v' u' hv'E
+  · have hcases : (v' = v ∧ u' = w) ∨ (v' = w ∧ u' = v) := by
+      rcases Set.pair_eq_pair_iff.mp hv'eq with ⟨h1, h2⟩ | ⟨h1, h2⟩
+      · exact Or.inl ⟨h1, h2⟩
+      · exact Or.inr ⟨h1, h2⟩
+    rcases hcases with ⟨hv'v, hu'w⟩ | ⟨hv'w, hu'v⟩
+    · subst v'; subst u'
+      have hσ1 : sigmaFan x V E1 v w = sigmaFan x V E v u :=
+        SIGMA_FAN_OF_FANADD_AT_POINT1 x V E E1 v u w
+          ⟨hfan, hfan1, hvu, huw, hwv, hsigma, hfan80, hcard, hE1⟩
+      rw [hσ1]
+      have hvu_mem : u ∈ setOfEdge v V E :=
+        (properties_of_setOfEdge_fan x V E v u hfan).mp hvu
+      have hσvu_mem : sigmaFan x V E v u ∈ setOfEdge v V E :=
+        sigma_fan_in_setOfEdge hfan hvu_mem
+      have hσvu_edge : ({v, sigmaFan x V E v u} : Set V3) ∈ E :=
+        (properties_of_setOfEdge_fan x V E v (sigmaFan x V E v u) hfan).mpr hσvu_mem
+      have hσvu_E1 : ({v, sigmaFan x V E v u} : Set V3) ∈ E1 := by
+        rw [← hE1]; exact Set.mem_union_left _ hσvu_edge
+      have hvwE1 : ({v, w} : Set V3) ∈ E1 := by
+        rw [← hE1]; exact Set.mem_union_right E (by simp)
+      have hnc_vu : ¬ Collinear3 x v u := fan_not_collinear hfan hvu
+      have hnc_vσ : ¬ Collinear3 x v (sigmaFan x V E v u) :=
+        fan_not_collinear hfan hσvu_edge
+      have hxv : v ≠ x := fun hh =>
+        hnc_vu (collinear3_of_eq (v := x) (w := v) (w1 := u) hh)
+      have hsmall : azim x v u w ≤ azim x v u (sigmaFan x V E v u) :=
+        angle_is_small_fan hfan hvu huw hsigma hfan80 hcard
+      have hA : azim x v u (sigmaFan x V E v u) =
+          azim x v u w + azim x v w (sigmaFan x V E v u) :=
+        sum4_azim_fan hxv hnc_vu hnc_vw hnc_vσ hsmall
+      have h80vu : 0 < azim x v u (sigmaFan x V E v u) ∧
+          azim x v u (sigmaFan x V E v u) < Real.pi := hfan80 v u hvu
+      have hlt : azim x v w (sigmaFan x V E v u) < Real.pi := by
+        linarith [hA, h80vu.2, azim_nonneg x v u w]
+      have hpos : 0 < azim x v w (sigmaFan x V E v u) := by
+        rcases lt_or_eq_of_le (azim_nonneg x v w (sigmaFan x V E v u)) with hh | hh
+        · exact hh
+        · exfalso
+          have hweq : w = sigmaFan x V E v u :=
+            unique_azim0_point_fan hfan1 hvwE1 hσvu_E1 hh.symm
+          have hvwE : ({v, w} : Set V3) ∈ E := by
+            rw [hweq]; exact hσvu_edge
+          exact hwv (Set.pair_comm v w ▸ hvwE)
+      exact ⟨hpos, hlt⟩
+    · subst v'; subst u'
+      have hσ3 : sigmaFan x V E1 w v = u :=
+        SIGMA_FAN_OF_FANADD_AT_POINT3 x V E E1 v u w
+          ⟨hfan, hfan1, hvu, huw, hwv, hsigma, hfan80, hcard, hE1⟩
+      rw [hσ3]
+      exact condition_azim_le_pi x V E v u w
+        ⟨hfan, hvu, huw, hsigma, hfan80, hcard⟩
 
 /-! ## 加边保持 conforming（Conforming.hl:6522-6566） -/
 
