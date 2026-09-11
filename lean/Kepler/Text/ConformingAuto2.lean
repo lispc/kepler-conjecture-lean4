@@ -169,7 +169,10 @@ theorem measurable_dartset_leads_into30_fan (x : V3) (V : Set V3)
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet)
     (hds3 : ds.ncard = 3) :
     MeasurableSet (dartsetLeadsIntoFan x V E ds ∩ Metric.ball x e) := by
-  sorry
+  by_cases he : 0 < e
+  · exact measurable_dartset_leads_into3_fan hfan hcard hfan80 hds hds3 he
+  · rw [Metric.ball_eq_empty.mpr (le_of_not_gt he)]
+    simp
 
 /-- HOL Conforming.hl :550-651 `DWFBRQY`（HOL 中 `let   DWFBRQY=prove(...)`，
 多空格使批次名提取为空）
