@@ -382,7 +382,8 @@ theorem BOUNDED_INTER_BALL (x : V3) (V : Set V3) (E : Set (Set V3)) (r : ℝ)
     (hconf : conformingFan x V E hfan) :
     ∀ f ∈ topologicalComponentYfan x V E,
       Bornology.IsBounded (f ∩ Metric.ball x r) := by
-  sorry
+  intro f _
+  exact (Metric.isBounded_ball (x := x) (r := r)).subset Set.inter_subset_right
 
 /-- HOL Conforming.hl :1238-1262 `OPEN_AFF_GT_3_1`
 
