@@ -85,6 +85,7 @@ inductive IExpr (n : ℕ) : Type where
   | var (i : Fin n) : IExpr n
   | neg (e : IExpr n) : IExpr n
   | abs (e : IExpr n) : IExpr n
+  | ite (c t e : IExpr n) : IExpr n
   | add (e₁ e₂ : IExpr n) : IExpr n
   | sub (e₁ e₂ : IExpr n) : IExpr n
   | mul (e₁ e₂ : IExpr n) : IExpr n
@@ -103,6 +104,13 @@ def eval {n : ℕ} : IExpr n → (Fin n → DInterval) → Option DInterval
   | .var i, box => some (box i)
   | .neg e, box => (e.eval box).map DInterval.neg
   | .abs e, box => (e.eval box).map DInterval.abs
+  | .ite c t e, box =>
+      match c.eval box with
+      | some C =>
+          if C.hi.isNeg then t.eval box
+          else if C.lo.isNN then e.eval box
+          else none
+      | none => none
   | .add e₁ e₂, box =>
       match e₁.eval box, e₂.eval box with
       | some I, some J => some (I.add J)
@@ -137,6 +145,7 @@ noncomputable def evalReal {n : ℕ} : IExpr n → (Fin n → ℝ) → ℝ
   | .var i, ρ => ρ i
   | .neg e, ρ => -e.evalReal ρ
   | .abs e, ρ => |e.evalReal ρ|
+  | .ite c t e, ρ => if c.evalReal ρ < 0 then t.evalReal ρ else e.evalReal ρ
   | .add e₁ e₂, ρ => e₁.evalReal ρ + e₂.evalReal ρ
   | .sub e₁ e₂, ρ => e₁.evalReal ρ - e₂.evalReal ρ
   | .mul e₁ e₂, ρ => e₁.evalReal ρ * e₂.evalReal ρ
@@ -191,6 +200,33 @@ theorem eval_mem {n : ℕ} (e : IExpr n) (box : Fin n → DInterval) (ρ : Fin n
       simp only [Option.map_some] at h
       obtain rfl : I = DInterval.abs J := (Option.some.inj h).symm
       exact DInterval.mem_abs (ih J he)
+  | ite c t e ihc iht ihe =>
+    intro I h
+    simp only [eval] at h
+    cases hc : c.eval box with
+    | none => rw [hc] at h; simp at h
+    | some C =>
+      rw [hc] at h
+      dsimp only at h
+      by_cases hneg : C.hi.isNeg = true
+      · rw [if_pos hneg] at h
+        have hC := ihc C hc
+        have hlt : c.evalReal ρ < 0 :=
+          lt_of_le_of_lt hC.2 ((Dyadic.isNeg_iff C.hi).mp hneg)
+        show I.mem (if c.evalReal ρ < 0 then t.evalReal ρ else e.evalReal ρ)
+        rw [if_pos hlt]
+        exact iht I h
+      · rw [if_neg hneg] at h
+        by_cases hnn : C.lo.isNN = true
+        · rw [if_pos hnn] at h
+          have hC := ihc C hc
+          have hge : 0 ≤ c.evalReal ρ :=
+            le_trans ((Dyadic.isNN_iff C.lo).mp hnn) hC.1
+          have hnot : ¬ c.evalReal ρ < 0 := not_lt.mpr hge
+          show I.mem (if c.evalReal ρ < 0 then t.evalReal ρ else e.evalReal ρ)
+          rw [if_neg hnot]
+          exact ihe I h
+        · rw [if_neg hnn] at h; simp at h
   | add e₁ e₂ ih₁ ih₂ =>
     intro I h
     simp only [eval] at h
@@ -470,5 +506,71 @@ theorem exSin_end_to_end (x : ℝ) (hx1 : 1 / 2 ≤ x) (hx2 : x ≤ 1) :
     norm_num
   rw [hsimp] at h
   linarith
+
+/-! ## `.abs` / `.ite` pilots -/
+
+/-- `|x| - 1/2` on `[-2,-1]`: `.abs` of `[-2,-1]` is `[1,2]`, minus `1/2` gives
+`[1/2, 3/2]`. -/
+def exExprAbs : IExpr 1 := .sub (.abs (.var 0)) (.const ⟨1, -1⟩)
+
+/-- Box `[-2,-1]`. -/
+def exBoxAbs : Fin 1 → DInterval := fun _ => ⟨⟨-2, 0⟩, ⟨-1, 0⟩⟩
+
+/-- Accept: `|x| - 1/2 > 0` on `[-2,-1]` (kernel `decide`). -/
+theorem exAbs_accept : checkPos exExprAbs exBoxAbs = true := by decide
+
+/-- End-to-end: `1/2 < |x|` for every real `x ∈ [-2,-1]` (exercises
+`DInterval.mem_abs`). -/
+theorem exAbs_end_to_end (x : ℝ) (hx1 : -2 ≤ x) (hx2 : x ≤ -1) :
+    1 / 2 < |x| := by
+  have hmem : ∀ i : Fin 1, (exBoxAbs i).mem ((fun _ => x) i) := by
+    intro i
+    fin_cases i
+    constructor
+    · show Dyadic.toReal ⟨-2, 0⟩ ≤ x
+      rw [Dyadic.toReal_int]
+      exact_mod_cast hx1
+    · show x ≤ Dyadic.toReal ⟨-1, 0⟩
+      rw [Dyadic.toReal_int]
+      exact_mod_cast hx2
+  have h := checkPos_sound exExprAbs exBoxAbs exAbs_accept (fun _ => x) hmem
+  have hsimp : exExprAbs.evalReal (fun _ => x) = |x| - 1 / 2 := by
+    simp only [exExprAbs, IExpr.evalReal, Dyadic.toReal_def]
+    norm_num
+  rw [hsimp] at h
+  linarith
+
+/-- `ite(x - 3, 2 - x, -1)` on `[0,1]`: the guard `x - 3` evaluates to
+`[-3,-2]` (strictly negative), so the `then` branch `2 - x` (evaluating to
+`[1,2]`) is taken. -/
+def exExprIte : IExpr 1 :=
+  .ite (.sub (.var 0) (.const ⟨3, 0⟩)) (.sub (.const ⟨2, 0⟩) (.var 0)) (.const ⟨-1, 0⟩)
+
+/-- Box `[0,1]`. -/
+def exBoxIte : Fin 1 → DInterval := fun _ => ⟨⟨0, 0⟩, ⟨1, 0⟩⟩
+
+/-- Accept: the guard is decided by interval evaluation and the `then` branch
+is positive (kernel `decide`). -/
+theorem exIte_accept : checkPos exExprIte exBoxIte = true := by decide
+
+/-- End-to-end: `0 < (if x - 3 < 0 then 2 - x else -1)` for `x ∈ [0,1]`. -/
+theorem exIte_end_to_end (x : ℝ) (hx1 : 0 ≤ x) (hx2 : x ≤ 1) :
+    0 < (if x - 3 < 0 then 2 - x else -1) := by
+  have hmem : ∀ i : Fin 1, (exBoxIte i).mem ((fun _ => x) i) := by
+    intro i
+    fin_cases i
+    constructor
+    · show Dyadic.toReal ⟨0, 0⟩ ≤ x
+      rw [Dyadic.toReal_int]
+      exact_mod_cast hx1
+    · show x ≤ Dyadic.toReal ⟨1, 0⟩
+      rw [Dyadic.toReal_int]
+      exact_mod_cast hx2
+  have h := checkPos_sound exExprIte exBoxIte exIte_accept (fun _ => x) hmem
+  have hsimp : exExprIte.evalReal (fun _ => x) =
+      (if x - 3 < 0 then 2 - x else -1) := by
+    simp only [exExprIte, IExpr.evalReal, Dyadic.toReal_def]
+    norm_num
+  rwa [hsimp] at h
 
 end Kepler.Interval
