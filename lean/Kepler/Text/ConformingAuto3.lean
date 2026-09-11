@@ -545,7 +545,25 @@ v0 + t • u ∈ C`。
 theorem RADIAL_DIFF (r : ℝ) (v0 : V3) (A B : Set V3)
     (hA : radialNorm r v0 A) (hB : radialNorm r v0 B) (hsub : A ⊆ B) :
     radialNorm r v0 (B \ A) := by
-  sorry
+  refine ⟨?_, ?_⟩
+  · intro y hy
+    exact hB.1 hy.1
+  · intro u hu t ht htu
+    have hBmem : v0 + t • u ∈ B := hB.2 u hu.1 t ht htu
+    have hu_norm : ‖u‖ < r := by
+      have h := hB.1 hu.1
+      rw [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left] at h
+      exact h
+    refine ⟨hBmem, ?_⟩
+    intro hAt
+    have htu' : t⁻¹ * ‖t • u‖ < r := by
+      rw [norm_smul, Real.norm_eq_abs, abs_of_pos ht, ← mul_assoc,
+        inv_mul_cancel₀ (ne_of_gt ht), one_mul]
+      exact hu_norm
+    have hAu : v0 + u ∈ A := by
+      have h := hA.2 (t • u) hAt t⁻¹ (inv_pos.mpr ht) htu'
+      simpa [smul_smul, inv_mul_cancel₀ (ne_of_gt ht)] using h
+    exact hu.2 hAu
 
 /-- HOL Conforming.hl :852-858 `RADIAL_UNION`
 
