@@ -1,0 +1,668 @@
+/-
+Port of the HOL Light Flyspeck `Conforming.hl` top-level theorems, batch 14
+(Conforming.hl:4848-6177).
+
+Source: `reference/flyspeck/text_formalization/fan/Conforming.hl`
+(Flyspeck book formalization, Hoang Le Truong, 2010); persistent copies
+`lean/scripts/conforming.hl` and
+`/dev/shm/kepler-ref/flyspeck/text_formalization/fan/Conforming.hl`.
+
+Coverage (batch 14, Conforming.hl:4848-6177):
+- `unique_tranf_fan` (4848)
+- `tran_in_dart_newfan` (4969)
+- `INJ_TRAN_D1_FAN` (4990)
+- `INJ_TRANF_FACE_DELETE_DS` (5009)
+- `ds1_in_face_set_fanadd` (5117)
+- `ds2_in_face_set_fanadd` (5155)
+- `condition_f1_fan_power_in_face_set` (5195)
+- `SUR_TRANF_FACE_DELETE_DS` (5220)
+- `DOMAIN_TRANF_FACE_DELETE_DS` (5773)  [listed only as ":5773" in the task]
+- `EQ_CARD_FACE_FAN_AND_FANADD` (6121)
+
+Porting method: skeleton (frozen statements + per-theorem HOL docstrings);
+proofs to be filled by the auto_loop/big-pickle harness. Every proof is a
+bare `sorry`.
+
+Encoding notes (gaps / closest existing encodings):
+- HOL `real^3` ↔ `V3 = EuclideanSpace ℝ (Fin 3)` (Kepler/Geom/Azim.lean:33).
+- HOL `FAN(x,V,E)` ↔ `FAN x V E` (Kepler/Text/Fan.lean:56); HOL
+  `set_of_edge v V E` ↔ `setOfEdge v V E` (Kepler/Text/Fan.lean:62); HOL
+  `sigma_fan` ↔ `sigmaFan` (Kepler/Text/Fan.lean:67); HOL `fan80` ↔
+  `fan80` (Kepler/Text/Fan.lean:227); HOL `CARD (set_of_edge v V E) > 1` ↔
+  `1 < (setOfEdge v V E).ncard`; HOL `CARD ds > 3` ↔ `3 < ds.ncard`; HOL
+  `CARD s` ↔ `s.ncard`.
+- HOL `hypermap1_of_fanx (x,V,E)` is NOT ported; as in
+  Kepler/Text/PlanarityComponent.lean:37-48 and the earlier conforming
+  batches, `face_set (hypermap1_of_fanx (x,V,E))` is encoded as
+  `(hypermapOfFan x V E hfan).faceSet`, `face (hypermap1_of_fanx (x,V,E)) f`
+  as `(hypermapOfFan x V E hfan).face f`, and `face_set (...) DELETE ds` as
+  `(hypermapOfFan x V E hfan).faceSet \ {ds}`. Since `hypermapOfFan`
+  (Kepler/Text/Fan.lean:1169) needs an explicit `hfan : FAN x V E`, every
+  theorem that mentions it carries an extra explicit `(hfan : FAN x V E)`
+  argument; theorems that also mention `face (hypermap1_of_fanx (x,V,E1))`
+  carry a second extra explicit argument `(hfan1 : FAN x V E1)`. These are
+  the only deviations from the HOL signatures (HOL's `hypermap_of_fan` is
+  total). Theorems `tran_in_dart_newfan`, `INJ_TRAN_D1_FAN` and
+  `condition_f1_fan_power_in_face_set` mention only `d1_fan`/`d_fan`, so they
+  need no `hypermapOfFan` witness; `condition_f1_fan_power_in_face_set` still
+  needs `hfan` for its `face_set` hypothesis.
+- HOL quadruple darts `real^3#real^3#real^3#real^3` are encoded as pair darts
+  `V3 × V3` (Kepler/Text/PlanarityComponent.lean:37-48); `pr2 y`/`pr3 y` ↦
+  `y.1`/`y.2`. Consequently the HOL quadruples `(x,w,v,u)`, `(x,v,u,w)`,
+  `(x,u,w,v)` contract to the pairs `(w,v)`, `(v,u)`, `(u,w)`, and
+  `(x,v,w,sigma_fan x V E1 v w)` / `(x,w,v,sigma_fan x V E1 w v)` to the
+  pairs `(v,w)` / `(w,v)`.
+- HOL `f1_fan x V E` ↔ `f1Fan x V E` (Kepler/Text/ConformingDefs.lean:87);
+  HOL `(f1_fan x V E POWER n) y` ↔ `(f1Fan x V E)^[n] y` (Function.iterate).
+- HOL `d1_fan (x,V,E)` ↔ `dart1OfFan V E` (Kepler/Text/Fan.lean:86); HOL
+  `d_fan (x,V,E)` ↔ `dartOfFan V E` (Kepler/Text/Fan.lean:90).
+- HOL `tran` (Conforming.hl:4097) is NOT ported. It is
+  `(\(x,y,z,w). (x,y,z,sigma_fan x V E1 y z))`: it only rewrites the 4th
+  component of a dart. Since the repo's pair-dart encoding keeps
+  `(pr2,pr3)` and drops the 4th component, `tran x V E1` is the IDENTITY on
+  pair darts (same convention as Kepler/Text/ConformingAuto13.lean:55-68).
+  Hence `tran x V E1 y` is inlined as `y`; the statements
+  `tran_in_dart_newfan` / `INJ_TRAN_D1_FAN` therefore read `y ∈ dart1OfFan
+  V E → y ∈ dart1OfFan V E1` and `y = y1 → y = y1`. This is the only
+  deviation in those two statements, and it is forced by the pair encoding
+  (the 4th component is a function of the other three on `d1_fan`). NOTE:
+  the already-ported `exists_tranf_fan` (Kepler/Text/ConformingAuto12.lean:935)
+  instead inlines `tran x V E1 y` as `(y.1, sigmaFan x V E1 y.1 y.2)`, i.e.
+  it uses the `n_fan` map; that encoding changes the `(pr2,pr3)` dart and is
+  NOT used here.
+- HOL `tranf x V E E1 ds = @f. ?y. f = face (hypermap1_of_fanx (x,V,E1))
+  (tran x V E1 y) /\ y IN ds` (Conforming.hl:4101) is NOT ported. Its
+  closest existing encoding is the Hilbert choice of the same existence
+  predicate (with `tran` read as the identity, i.e. `f = face y /\ y ∈ ds`);
+  since the existence is only available under the theorem's hypotheses,
+  `tranf` is inlined in each statement as the totalized function
+  `fun s => if h : (∃ f, ∃ y, f = face y ∧ y ∈ s) then Classical.choose h else ∅`
+  bound by a local `let` (the `else` branch is unreachable under the
+  hypotheses). No new definition is introduced.
+- HOL `trans` (4094) is not needed by any of the ten theorems.
+- HOL `CARD_IMAGE_INJ_EQ` (used by `EQ_CARD_FACE_FAN_AND_FANADD`) is NOT
+  ported; Mathlib's `Set.ncard_image_of_injOn` / `Set.ncard_congr` are the
+  closest analogues.
+- Proof dependencies living in earlier conforming batches are NOT imported
+  here (per the porting convention this batch imports only
+  `PlanarityAuto16` and `ConformingDefs`); the proof sketches name them as
+  candidates to be restated or imported by the worker pool.
+- None of the ten statements is Mathlib-general: every one mentions the
+  repo-specific `FAN`/`sigmaFan`/`f1Fan`/`dart1OfFan`/`hypermapOfFan`
+  vocabulary, so nothing is skipped.
+-/
+
+import Kepler.Text.PlanarityAuto16
+import Kepler.Text.ConformingDefs
+
+set_option maxHeartbeats 5000000
+
+namespace Kepler.Text
+
+open Kepler.Geom
+open Kepler.Text.Fan
+open Classical
+
+/-! ## `tranf` 的唯一性与 `tran` 的像/单射（Conforming.hl:4848-5116） -/
+
+/-- HOL Conforming.hl :4848-4967 `unique_tranf_fan`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 ds0 f y.
+FAN(x,V,E)
+ /\ (!v. v IN V==>CARD (set_of_edge v V E) > 1)
+/\ fan80(x,V,E)
+/\ ds IN face_set(hypermap1_of_fanx (x,V,E)) /\ CARD ds >3
+/\ {f1,f2,f3} SUBSET ds /\ f1_fan x V E f1=f2 /\ f1_fan x V E f2 =f3 /\ ~(f1_fan x V E f3 =f1)
+/\  pr2 f1 =v /\  pr2 f2 =u /\  pr2 f3=w
+/\ {v,u} IN E /\ {u,w} IN E /\ ~({w,v} IN E)
+/\ sigma_fan x V E u w = v /\ pr3 f1= u /\ pr3 f2= w
+/\ ds1 = face (hypermap1_of_fanx (x,V,E1)) (x,v,w,sigma_fan x V E1 v w)
+/\ ds2 = face (hypermap1_of_fanx (x,V,E1)) (x,w,v,sigma_fan x V E1 w v)
+/\ (x,w,v,u)=f10
+/\ (x,v,u,w)=f20
+/\ (x,u,w,v)=f30
+/\ E UNION {{v,w}}= E1
+/\ f= face (hypermap1_of_fanx (x,V,E1)) (tran x V E1 y)/\ y IN ds0
+/\ ds0 IN face_set (hypermap1_of_fanx (x,V,E)) DELETE ds
+==> tranf x V E E1 ds0 = f
+```
+
+编码说明：`pr2 f1 =v`/`pr2 f2 =u`/`pr2 f3=w` ↦ `f1.1 = v`/`f2.1 = u`/
+`f3.1 = w`；`pr3 f1= u`/`pr3 f2= w` ↦ `f1.2 = u`/`f2.2 = w`；`CARD ds >3`
+↦ `3 < ds.ncard`；`{f1,f2,f3} SUBSET ds` ↦ `({f1,f2,f3} : Set (V3×V3)) ⊆ ds`；
+`face_set (...) DELETE ds` ↦ `faceSet \ {ds}`；`tran` 在点对编码下为恒等，
+`face(...)(tran x V E1 y)` 编码为 `face y`；`tranf` 内联为局部 `let`
+（见文件头）。额外携带 `hfan`、`hfan1`。
+
+证明思路：由 `ds0 ∈ faceSet(E) \ {ds}` 及 `y ∈ ds0` 知 `ds0` 是 `E` 的一个
+面；对 `E1 = E ∪ {{v,w}}` 用 `STEP3_REDUCE_FAN`/`TRANF` 得 `ds0` 中任一元素
+在 `face_{E1}` 下的像与 `face_{E1} y = f` 相同（`unique`），从而
+`Classical.choose` 取到的面等于 `f`，`dif_pos`/`Classical.choose_spec` 收口。
+
+候选已有引理：
+- `TRANF`（Kepler/Text/ConformingAuto13.lean:145）
+- `STEP3_REDUCE_FAN`（Kepler/Text/ConformingAuto9.lean:298）
+- `identity_face_in_face_set`（Kepler/Text/ConformingAuto8.lean:380）
+- `Hypermap.face_representation`（Kepler/Text/Hypermap.lean:2794）
+- 缺口：HOL `tran`/`tranf`（Conforming.hl:4097-4101）、`hypermap_of_fan_rep`
+  （fan.hl:2780）、`dartset_fully_surrounded_is_non_isolated_fan` 未移植 -/
+theorem unique_tranf_fan (x : V3) (V : Set V3) (E E1 : Set (Set V3))
+    (ds : Set (V3 × V3)) (f1 f2 f3 : V3 × V3) (v u w : V3)
+    (ds1 ds2 : Set (V3 × V3)) (f10 f20 f30 : V3 × V3) (ds0 : Set (V3 × V3))
+    (f : Set (V3 × V3)) (y : V3 × V3)
+    (hfan : FAN x V E) (hfan1 : FAN x V E1) :
+    let tranf : Set (V3 × V3) → Set (V3 × V3) := fun s =>
+      if h : (∃ g : Set (V3 × V3), ∃ z : V3 × V3,
+          g = (hypermapOfFan x V E1 hfan1).face z ∧ z ∈ s)
+      then Classical.choose h else ∅;
+    FAN x V E ∧
+    (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
+    fan80 x V E ∧
+    ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard ∧
+    ({f1, f2, f3} : Set (V3 × V3)) ⊆ ds ∧
+    f1Fan x V E f1 = f2 ∧ f1Fan x V E f2 = f3 ∧ ¬ (f1Fan x V E f3 = f1) ∧
+    f1.1 = v ∧ f2.1 = u ∧ f3.1 = w ∧
+    ({v, u} : Set V3) ∈ E ∧ ({u, w} : Set V3) ∈ E ∧ ({w, v} : Set V3) ∉ E ∧
+    sigmaFan x V E u w = v ∧ f1.2 = u ∧ f2.2 = w ∧
+    ds1 = (hypermapOfFan x V E1 hfan1).face (v, w) ∧
+    ds2 = (hypermapOfFan x V E1 hfan1).face (w, v) ∧
+    f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
+    E ∪ {({v, w} : Set V3)} = E1 ∧
+    f = (hypermapOfFan x V E1 hfan1).face y ∧ y ∈ ds0 ∧
+    ds0 ∈ (hypermapOfFan x V E hfan).faceSet \ {ds} →
+      tranf ds0 = f := by
+  sorry
+
+/-- HOL Conforming.hl :4969-4989 `tran_in_dart_newfan`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) E1 y .
+FAN(x,V,E)/\ FAN(x,V,E1)
+/\ E SUBSET E1
+/\ y IN d1_fan(x,V,E)
+==> tran x V E1 y IN d1_fan(x,V,E1)
+```
+
+编码说明：`E SUBSET E1` ↦ `E ⊆ E1`；`d1_fan` ↦ `dart1OfFan`；`tran` 在点对
+编码下为恒等（见文件头），故 `tran x V E1 y` 内联为 `y`。本定理不涉及
+`hypermapOfFan`，故无需 `hfan` 见证。
+
+证明思路：由 `y ∈ dart1OfFan V E` 得 `{y.1, y.2} ∈ E`，配合 `E ⊆ E1` 得
+`{y.1, y.2} ∈ E1`，即 `y ∈ dart1OfFan V E1`（`dart1OfFan` 展开即得）。
+
+候选已有引理：
+- `dart1OfFan`（Kepler/Text/Fan.lean:86）
+- `Set.mem_of_subset_of_mem`（Mathlib）
+- 缺口：HOL `tran`（Conforming.hl:4097）未移植 -/
+theorem tran_in_dart_newfan (x : V3) (V : Set V3) (E E1 : Set (Set V3))
+    (y : V3 × V3) :
+    FAN x V E ∧ FAN x V E1 ∧ E ⊆ E1 ∧ y ∈ dart1OfFan V E →
+      y ∈ dart1OfFan V E1 := by
+  sorry
+
+/-- HOL Conforming.hl :4990-5008 `INJ_TRAN_D1_FAN`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) E1 y y1.
+FAN(x,V,E)/\ FAN(x,V,E1)
+/\ E SUBSET E1
+/\ y IN d1_fan(x,V,E)
+/\ y1 IN d1_fan(x,V,E)
+/\
+tran x V E1 y = tran x V E1 y1
+==> y =y1
+```
+
+编码说明：`d1_fan` ↦ `dart1OfFan`；`tran` 在点对编码下为恒等（见文件头），
+故假设 `tran x V E1 y = tran x V E1 y1` 内联为 `y = y1`。本定理不涉及
+`hypermapOfFan`，故无需 `hfan` 见证。
+
+证明思路：在点对编码下 `tran` 是恒等，结论与（内联后的）假设相同，直接
+`exact`/`assumption` 收口。
+
+候选已有引理：
+- `dart1OfFan`（Kepler/Text/Fan.lean:86）
+- 缺口：HOL `tran`（Conforming.hl:4097）未移植 -/
+theorem INJ_TRAN_D1_FAN (x : V3) (V : Set V3) (E E1 : Set (Set V3))
+    (y y1 : V3 × V3) :
+    FAN x V E ∧ FAN x V E1 ∧ E ⊆ E1 ∧
+    y ∈ dart1OfFan V E ∧ y1 ∈ dart1OfFan V E ∧
+    y = y1 →
+      y = y1 := by
+  sorry
+
+/-- HOL Conforming.hl :5009-5116 `INJ_TRANF_FACE_DELETE_DS`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 ds0 ds0'.
+FAN(x,V,E)
+ /\ (!v. v IN V==>CARD (set_of_edge v V E) > 1)
+/\ fan80(x,V,E)
+/\ ds IN face_set(hypermap1_of_fanx (x,V,E)) /\ CARD ds >3
+/\ {f1,f2,f3} SUBSET ds /\ f1_fan x V E f1=f2 /\ f1_fan x V E f2 =f3 /\ ~(f1_fan x V E f3 =f1)
+/\  pr2 f1 =v /\  pr2 f2 =u /\  pr2 f3=w
+/\ {v,u} IN E /\ {u,w} IN E /\ ~({w,v} IN E)
+/\ sigma_fan x V E u w = v /\ pr3 f1= u /\ pr3 f2= w
+/\ ds1 = face (hypermap1_of_fanx (x,V,E1)) (x,v,w,sigma_fan x V E1 v w)
+/\ ds2 = face (hypermap1_of_fanx (x,V,E1)) (x,w,v,sigma_fan x V E1 w v)
+/\ (x,w,v,u)=f10
+/\ (x,v,u,w)=f20
+/\ (x,u,w,v)=f30
+/\ E UNION {{v,w}}= E1
+/\ ds0 IN face_set (hypermap1_of_fanx (x,V,E)) DELETE ds
+/\ ds0' IN face_set (hypermap1_of_fanx (x,V,E)) DELETE ds
+/\ tranf x V E E1 ds0=tranf x V E E1 ds0'
+==>
+ ds0 = ds0'
+```
+
+编码说明：`pr3 f1= u`/`pr3 f2= w` ↦ `f1.2 = u`/`f2.2 = w`；`tranf` 内联为
+局部 `let`（见文件头）；`face_set (...) DELETE ds` ↦ `faceSet \ {ds}`。
+额外携带 `hfan`、`hfan1`。
+
+证明思路：`tranf` 取 `ds0`（分别为 `E` 的面）中元素在 `face_{E1}` 下的像；
+由 `TRANF` 及 `unique_tranf_fan` 可知 `tranf ds0 = face_{E1} y`（`y ∈ ds0`）
+且 `tranf ds0' = face_{E1} y'`（`y' ∈ ds0'`）；两者相等结合
+`INJ_TRAN_D1_FAN` 与 `identity_face_in_face_set` 得 `ds0 = ds0'`。
+
+候选已有引理：
+- `TRANF`（Kepler/Text/ConformingAuto13.lean:145）
+- `unique_tranf_fan`（本文件）
+- `INJ_TRAN_D1_FAN`（本文件）
+- `identity_face_in_face_set`（Kepler/Text/ConformingAuto8.lean:380）
+- 缺口：HOL `tran`/`tranf`（Conforming.hl:4097-4101）、`hypermap_of_fan_rep`
+  （fan.hl:2780）、`face_subset_dart_fan` 未移植 -/
+theorem INJ_TRANF_FACE_DELETE_DS (x : V3) (V : Set V3) (E E1 : Set (Set V3))
+    (ds : Set (V3 × V3)) (f1 f2 f3 : V3 × V3) (v u w : V3)
+    (ds1 ds2 : Set (V3 × V3)) (f10 f20 f30 : V3 × V3)
+    (ds0 ds0' : Set (V3 × V3))
+    (hfan : FAN x V E) (hfan1 : FAN x V E1) :
+    let tranf : Set (V3 × V3) → Set (V3 × V3) := fun s =>
+      if h : (∃ g : Set (V3 × V3), ∃ z : V3 × V3,
+          g = (hypermapOfFan x V E1 hfan1).face z ∧ z ∈ s)
+      then Classical.choose h else ∅;
+    FAN x V E ∧
+    (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
+    fan80 x V E ∧
+    ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard ∧
+    ({f1, f2, f3} : Set (V3 × V3)) ⊆ ds ∧
+    f1Fan x V E f1 = f2 ∧ f1Fan x V E f2 = f3 ∧ ¬ (f1Fan x V E f3 = f1) ∧
+    f1.1 = v ∧ f2.1 = u ∧ f3.1 = w ∧
+    ({v, u} : Set V3) ∈ E ∧ ({u, w} : Set V3) ∈ E ∧ ({w, v} : Set V3) ∉ E ∧
+    sigmaFan x V E u w = v ∧ f1.2 = u ∧ f2.2 = w ∧
+    ds1 = (hypermapOfFan x V E1 hfan1).face (v, w) ∧
+    ds2 = (hypermapOfFan x V E1 hfan1).face (w, v) ∧
+    f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
+    E ∪ {({v, w} : Set V3)} = E1 ∧
+    ds0 ∈ (hypermapOfFan x V E hfan).faceSet \ {ds} ∧
+    ds0' ∈ (hypermapOfFan x V E hfan).faceSet \ {ds} ∧
+    tranf ds0 = tranf ds0' →
+      ds0 = ds0' := by
+  sorry
+
+/-! ## 新面集的成员性与 `f1_fan` 幂的不变性（Conforming.hl:5117-5219） -/
+
+/-- HOL Conforming.hl :5117-5154 `ds1_in_face_set_fanadd`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30.
+FAN(x,V,E)
+ /\ (!v. v IN V==>CARD (set_of_edge v V E) > 1)
+/\ fan80(x,V,E)
+/\ ds IN face_set(hypermap1_of_fanx (x,V,E)) /\ CARD ds >3
+/\ {f1,f2,f3} SUBSET ds /\ f1_fan x V E f1=f2 /\ f1_fan x V E f2 =f3 /\ ~(f1_fan x V E f3 =f1)
+/\  pr2 f1 =v /\  pr2 f2 =u /\  pr2 f3=w
+/\ {v,u} IN E /\ {u,w} IN E /\ ~({w,v} IN E)
+/\ sigma_fan x V E u w = v /\ pr3 f1= u /\ pr3 f2= w
+/\ ds1=face (hypermap1_of_fanx (x,V,E1)) (x,v,w,sigma_fan x V E1 v w)
+/\ ds2=face (hypermap1_of_fanx (x,V,E1)) (x,w,v,sigma_fan x V E1 w v)
+/\ (x,w,v,u)=f10
+/\ (x,v,u,w)=f20
+/\ (x,u,w,v)=f30
+/\ E UNION {{v,w}}= E1
+==> ds1 IN face_set (hypermap1_of_fanx (x,V,E1))
+```
+
+编码说明：`pr3 f1= u`/`pr3 f2= w` ↦ `f1.2 = u`/`f2.2 = w`；
+`ds1=face ... (x,v,w,sigma_fan x V E1 v w)` ↦ `ds1 = face (v, w)`。
+额外携带 `hfan`、`hfan1`。
+
+证明思路：`faceSet = setOfOrbits darts faceMap`；取代表元 `(v,w) ∈
+dart1OfFan V E1`（由 `E ⊆ E1`），则 `face (v,w) ∈ faceSet`，再由假设
+`ds1 = face (v,w)` 得 `ds1 ∈ faceSet`。可用 `Hypermap.face_representation`
+的逆或直接 `⟨(v,w), _, rfl⟩` 构造。
+
+候选已有引理：
+- `STEP3_REDUCE_FAN`（Kepler/Text/ConformingAuto9.lean:298）
+- `add_edge_imp_card_set_edge_ge1_fan`（Kepler/Text/ConformingAuto9.lean:376）
+- `Hypermap.faceSet`（Kepler/Text/Hypermap.lean:1008）、
+  `Hypermap.face`（同:846）
+- 缺口：`hypermap_of_fan_rep`（fan.hl:2780）未移植 -/
+theorem ds1_in_face_set_fanadd (x : V3) (V : Set V3) (E E1 : Set (Set V3))
+    (ds : Set (V3 × V3)) (f1 f2 f3 : V3 × V3) (v u w : V3)
+    (ds1 ds2 : Set (V3 × V3)) (f10 f20 f30 : V3 × V3)
+    (hfan : FAN x V E) (hfan1 : FAN x V E1) :
+    FAN x V E ∧
+    (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
+    fan80 x V E ∧
+    ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard ∧
+    ({f1, f2, f3} : Set (V3 × V3)) ⊆ ds ∧
+    f1Fan x V E f1 = f2 ∧ f1Fan x V E f2 = f3 ∧ ¬ (f1Fan x V E f3 = f1) ∧
+    f1.1 = v ∧ f2.1 = u ∧ f3.1 = w ∧
+    ({v, u} : Set V3) ∈ E ∧ ({u, w} : Set V3) ∈ E ∧ ({w, v} : Set V3) ∉ E ∧
+    sigmaFan x V E u w = v ∧ f1.2 = u ∧ f2.2 = w ∧
+    ds1 = (hypermapOfFan x V E1 hfan1).face (v, w) ∧
+    ds2 = (hypermapOfFan x V E1 hfan1).face (w, v) ∧
+    f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
+    E ∪ {({v, w} : Set V3)} = E1 →
+      ds1 ∈ (hypermapOfFan x V E1 hfan1).faceSet := by
+  sorry
+
+/-- HOL Conforming.hl :5155-5194 `ds2_in_face_set_fanadd`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30.
+FAN(x,V,E)
+ /\ (!v. v IN V==>CARD (set_of_edge v V E) > 1)
+/\ fan80(x,V,E)
+/\ ds IN face_set(hypermap1_of_fanx (x,V,E)) /\ CARD ds >3
+/\ {f1,f2,f3} SUBSET ds /\ f1_fan x V E f1=f2 /\ f1_fan x V E f2 =f3 /\ ~(f1_fan x V E f3 =f1)
+/\  pr2 f1 =v /\  pr2 f2 =u /\  pr2 f3=w
+/\ {v,u} IN E /\ {u,w} IN E /\ ~({w,v} IN E)
+/\ sigma_fan x V E u w = v /\ pr3 f1= u /\ pr3 f2= w
+/\ face (hypermap1_of_fanx (x,V,E1)) (x,v,w,sigma_fan x V E1 v w)= ds1
+/\ ds2=face (hypermap1_of_fanx (x,V,E1)) (x,w,v,sigma_fan x V E1 w v)
+/\ (x,w,v,u)=f10
+/\ (x,v,u,w)=f20
+/\ (x,u,w,v)=f30
+/\ E UNION {{v,w}}= E1
+==> ds2 IN face_set (hypermap1_of_fanx (x,V,E1))
+```
+
+编码说明：与 `ds1_in_face_set_fanadd` 平行，但 `ds1` 的假设方向相反
+（`face (v,w) = ds1`），结论为 `ds2 = face (w,v)`。额外携带 `hfan`、
+`hfan1`。
+
+证明思路：取代表元 `(w,v) ∈ dart1OfFan V E1`，则 `face (w,v) ∈ faceSet`，
+再由 `ds2 = face (w,v)` 得 `ds2 ∈ faceSet`。
+
+候选已有引理：
+- `STEP3_REDUCE_FAN`（Kepler/Text/ConformingAuto9.lean:298）
+- `Hypermap.faceSet`（Kepler/Text/Hypermap.lean:1008）、
+  `Hypermap.face`（同:846）
+- 缺口：`hypermap_of_fan_rep`（fan.hl:2780）未移植 -/
+theorem ds2_in_face_set_fanadd (x : V3) (V : Set V3) (E E1 : Set (Set V3))
+    (ds : Set (V3 × V3)) (f1 f2 f3 : V3 × V3) (v u w : V3)
+    (ds1 ds2 : Set (V3 × V3)) (f10 f20 f30 : V3 × V3)
+    (hfan : FAN x V E) (hfan1 : FAN x V E1) :
+    FAN x V E ∧
+    (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
+    fan80 x V E ∧
+    ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard ∧
+    ({f1, f2, f3} : Set (V3 × V3)) ⊆ ds ∧
+    f1Fan x V E f1 = f2 ∧ f1Fan x V E f2 = f3 ∧ ¬ (f1Fan x V E f3 = f1) ∧
+    f1.1 = v ∧ f2.1 = u ∧ f3.1 = w ∧
+    ({v, u} : Set V3) ∈ E ∧ ({u, w} : Set V3) ∈ E ∧ ({w, v} : Set V3) ∉ E ∧
+    sigmaFan x V E u w = v ∧ f1.2 = u ∧ f2.2 = w ∧
+    (hypermapOfFan x V E1 hfan1).face (v, w) = ds1 ∧
+    ds2 = (hypermapOfFan x V E1 hfan1).face (w, v) ∧
+    f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
+    E ∪ {({v, w} : Set V3)} = E1 →
+      ds2 ∈ (hypermapOfFan x V E1 hfan1).faceSet := by
+  sorry
+
+/-- HOL Conforming.hl :5195-5219 `condition_f1_fan_power_in_face_set`
+
+HOL 原文：
+```
+!n:num x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) y y1 ds.
+FAN(x,V,E)
+/\ y = (f1_fan x V E POWER n) y1
+/\ ds IN face_set (hypermap1_of_fanx (x,V,E))
+/\ d_fan (x,V,E) =d1_fan (x,V,E)
+/\ y1 IN ds
+==> y IN ds
+```
+
+编码说明：`n:num` ↦ `n : ℕ`；`(f1_fan x V E POWER n) y1` ↦
+`(f1Fan x V E)^[n] y1`；`d_fan`/`d1_fan` ↦ `dartOfFan`/`dart1OfFan`；
+`face_set (...)` ↦ `(hypermapOfFan x V E hfan).faceSet`。仅需 `hfan`。
+
+证明思路：对 `n` 归纳。`n = 0` 时 `y = y1`，直接由 `y1 ∈ ds` 得。归纳步
+用 `condition_f1_fan_in_face_set`（`PlanarityAuto14.lean:741`）把
+`f1Fan x V E ((f1Fan x V E)^[n] y1) ∈ ds` 转成
+`(f1Fan x V E)^[n+1] y1 ∈ ds`，注意 `f1Fan` 是 `faceMap` 在 `dart1OfFan`
+上的限制（需 `d_fan = d1_fan` 把面内元素拉回 `dart1OfFan`）。
+
+候选已有引理：
+- `condition_f1_fan_in_face_set`（Kepler/Text/PlanarityAuto14.lean:741）
+- `f1_fan_power_in_face_imp_in_face`（Kepler/Text/ConformingAuto13.lean:746）
+- `IMAGE_F1_IN_FACE_IMP_IN_FACE`（Kepler/Text/ConformingAuto1.lean:271）
+- `Function.iterate_succ_apply'`（Mathlib）
+- 缺口：HOL `d_fan`/`d1_fan` 的等价（`dartset_fully_surrounded_is_non_isolated_fan`）
+  未移植 -/
+theorem condition_f1_fan_power_in_face_set (n : ℕ) (x : V3) (V : Set V3)
+    (E : Set (Set V3)) (y y1 : V3 × V3) (ds : Set (V3 × V3))
+    (hfan : FAN x V E) :
+    FAN x V E ∧
+    y = (f1Fan x V E)^[n] y1 ∧
+    ds ∈ (hypermapOfFan x V E hfan).faceSet ∧
+    dartOfFan V E = dart1OfFan V E ∧
+    y1 ∈ ds →
+      y ∈ ds := by
+  sorry
+
+/-! ## `tranf` 在删面集上的满射与像（Conforming.hl:5220-6120） -/
+
+/-- HOL Conforming.hl :5220-5772 `SUR_TRANF_FACE_DELETE_DS`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 f.
+FAN(x,V,E)
+ /\ (!v. v IN V==>CARD (set_of_edge v V E) > 1)
+/\ fan80(x,V,E)
+/\ ds IN face_set(hypermap1_of_fanx (x,V,E)) /\ CARD ds >3
+/\ {f1,f2,f3} SUBSET ds /\ f1_fan x V E f1=f2 /\ f1_fan x V E f2 =f3 /\ ~(f1_fan x V E f3 =f1)
+/\  pr2 f1 =v /\  pr2 f2 =u /\  pr2 f3=w
+/\ {v,u} IN E /\ {u,w} IN E /\ ~({w,v} IN E)
+/\ sigma_fan x V E u w = v /\ pr3 f1= u /\ pr3 f2= w
+/\ face (hypermap1_of_fanx (x,V,E1)) (x,v,w,sigma_fan x V E1 v w)= ds1
+/\ face (hypermap1_of_fanx (x,V,E1)) (x,w,v,sigma_fan x V E1 w v)=ds2
+/\ (x,w,v,u)=f10
+/\ (x,v,u,w)=f20
+/\ (x,u,w,v)=f30
+/\ E UNION {{v,w}}= E1
+/\  f IN (face_set (hypermap1_of_fanx (x,V,E1)) DELETE ds1 ) DELETE ds2
+==> ?ds0. ds0 IN face_set (hypermap1_of_fanx (x,V,E)) DELETE ds
+/\ tranf x V E E1 ds0=f
+```
+
+编码说明：`pr3 f1= u`/`pr3 f2= w` ↦ `f1.2 = u`/`f2.2 = w`；
+`(face_set (...) DELETE ds1) DELETE ds2` ↦
+`(faceSet \ {ds1}) \ {ds2}`；`tranf` 内联为局部 `let`（见文件头）。
+额外携带 `hfan`、`hfan1`。
+
+证明思路：`f` 是 `E1` 的面且 `f ≠ ds1, ds2`。取 `f` 的代表元
+`x' = (v',w') ∈ dart1OfFan V E1`。若 `{v',w'} ≠ {v,w}`，则
+`{v',w'} ∈ E`，故 `y = (x,v',w',sigma_fan x V E v' w') ∈ d1_fan(x,V,E)`
+且其所在 `E` 面 `ds0 = face_E y ∈ faceSet(E) \ {ds}` 满足
+`tranf ds0 = f`（由 `tran` 恒等、`face` 的循环性）。若 `{v',w'} = {v,w}`，
+则 `f ∈ {ds1, ds2}`，与假设矛盾。HOL 证明按 `f1_fan` 幂的循环分类处理
+（`k=0,1,≥2` 分支），对应 `ds1`/`ds2`/其余面的排除。
+
+候选已有引理：
+- `TRANF`（Kepler/Text/ConformingAuto13.lean:145）
+- `reperentation_of_ds2`（Kepler/Text/ConformingAuto12.lean:596）
+- `ds1_in_face_set_fanadd`、`ds2_in_face_set_fanadd`（本文件）
+- `SIGMA_FAN_OF_FANADD1`（Kepler/Text/ConformingAuto10.lean:197）
+- `SIGMA_FAN_OF_FANADD_AT_POINT1/2`（Kepler/Text/ConformingAuto10.lean:399/510）
+- `identity_face_in_face_set`（Kepler/Text/ConformingAuto8.lean:380）
+- 缺口：HOL `tran`/`tranf`（Conforming.hl:4097-4101）、`hypermap_of_fan_rep`
+  （fan.hl:2780）、`face_subset_dart_fan`、`into_domain_power_efn_fan`
+  （fan.hl:2694）、`lemma_face_cycle`/`orbit_cyclic` 未移植 -/
+theorem SUR_TRANF_FACE_DELETE_DS (x : V3) (V : Set V3) (E E1 : Set (Set V3))
+    (ds : Set (V3 × V3)) (f1 f2 f3 : V3 × V3) (v u w : V3)
+    (ds1 ds2 : Set (V3 × V3)) (f10 f20 f30 : V3 × V3) (f : Set (V3 × V3))
+    (hfan : FAN x V E) (hfan1 : FAN x V E1) :
+    let tranf : Set (V3 × V3) → Set (V3 × V3) := fun s =>
+      if h : (∃ g : Set (V3 × V3), ∃ z : V3 × V3,
+          g = (hypermapOfFan x V E1 hfan1).face z ∧ z ∈ s)
+      then Classical.choose h else ∅;
+    FAN x V E ∧
+    (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
+    fan80 x V E ∧
+    ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard ∧
+    ({f1, f2, f3} : Set (V3 × V3)) ⊆ ds ∧
+    f1Fan x V E f1 = f2 ∧ f1Fan x V E f2 = f3 ∧ ¬ (f1Fan x V E f3 = f1) ∧
+    f1.1 = v ∧ f2.1 = u ∧ f3.1 = w ∧
+    ({v, u} : Set V3) ∈ E ∧ ({u, w} : Set V3) ∈ E ∧ ({w, v} : Set V3) ∉ E ∧
+    sigmaFan x V E u w = v ∧ f1.2 = u ∧ f2.2 = w ∧
+    (hypermapOfFan x V E1 hfan1).face (v, w) = ds1 ∧
+    (hypermapOfFan x V E1 hfan1).face (w, v) = ds2 ∧
+    f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
+    E ∪ {({v, w} : Set V3)} = E1 ∧
+    f ∈ ((hypermapOfFan x V E1 hfan1).faceSet \ {ds1}) \ {ds2} →
+      ∃ ds0, ds0 ∈ (hypermapOfFan x V E hfan).faceSet \ {ds} ∧ tranf ds0 = f := by
+  sorry
+
+/-- HOL Conforming.hl :5773-6120 `DOMAIN_TRANF_FACE_DELETE_DS`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 ds0.
+FAN(x,V,E)
+ /\ (!v. v IN V==>CARD (set_of_edge v V E) > 1)
+/\ fan80(x,V,E)
+/\ ds IN face_set(hypermap1_of_fanx (x,V,E)) /\ CARD ds >3
+/\ {f1,f2,f3} SUBSET ds /\ f1_fan x V E f1=f2 /\ f1_fan x V E f2 =f3 /\ ~(f1_fan x V E f3 =f1)
+/\  pr2 f1 =v /\  pr2 f2 =u /\  pr2 f3=w
+/\ {v,u} IN E /\ {u,w} IN E /\ ~({w,v} IN E)
+/\ sigma_fan x V E u w = v /\ pr3 f1= u /\ pr3 f2= w
+/\ face (hypermap1_of_fanx (x,V,E1)) (x,v,w,sigma_fan x V E1 v w)= ds1
+/\ face (hypermap1_of_fanx (x,V,E1)) (x,w,v,sigma_fan x V E1 w v)=ds2
+/\ (x,w,v,u)=f10
+/\ (x,v,u,w)=f20
+/\ (x,u,w,v)=f30
+/\ E UNION {{v,w}}= E1
+/\ ds0 IN face_set (hypermap1_of_fanx (x,V,E)) DELETE ds
+      ==> tranf x V E E1 ds0 IN
+          face_set (hypermap1_of_fanx (x,V,E1)) DELETE ds1 DELETE ds2
+```
+
+编码说明：`pr3 f1= u`/`pr3 f2= w` ↦ `f1.2 = u`/`f2.2 = w`；
+`(face_set (...) DELETE ds1) DELETE ds2` ↦
+`(faceSet \ {ds1}) \ {ds2}`；`tranf` 内联为局部 `let`（见文件头）。
+额外携带 `hfan`、`hfan1`。
+
+证明思路：`ds0 ∈ faceSet(E) \ {ds}`，取代表元 `y ∈ ds0`。由 `TRANF`
+（或 `unique_tranf_fan`）`tranf ds0 = face_{E1} y`；再证该面不属于 `ds1`、
+`ds2`：若等于 `ds1`（对应 `f1_fan` 幂为 0 或 1 的分支）或 `ds2`
+（对应 `f1_fan` 幂 ≥2 的分支），用 `SIGMA_FAN_OF_FANADD_AT_POINT1/2`、
+`reperentation_of_ds2` 及 `{w,v} ∉ E` 导出矛盾。
+
+候选已有引理：
+- `TRANF`（Kepler/Text/ConformingAuto13.lean:145）
+- `reperentation_of_ds2`（Kepler/Text/ConformingAuto12.lean:596）
+- `SIGMA_FAN_OF_FANADD_AT_POINT1`（Kepler/Text/ConformingAuto10.lean:399）
+- `SIGMA_FAN_OF_FANADD_AT_POINT2`（Kepler/Text/ConformingAuto10.lean:510）
+- `INJ_TRAN_D1_FAN`（本文件）
+- `identity_face_in_face_set`（Kepler/Text/ConformingAuto8.lean:380）
+- 缺口：HOL `tran`/`tranf`（Conforming.hl:4097-4101）、`hypermap_of_fan_rep`
+  （fan.hl:2780）、`face_subset_dart_fan`、`into_domain_power_efn_fan`
+  （fan.hl:2694）未移植 -/
+theorem DOMAIN_TRANF_FACE_DELETE_DS (x : V3) (V : Set V3) (E E1 : Set (Set V3))
+    (ds : Set (V3 × V3)) (f1 f2 f3 : V3 × V3) (v u w : V3)
+    (ds1 ds2 : Set (V3 × V3)) (f10 f20 f30 : V3 × V3) (ds0 : Set (V3 × V3))
+    (hfan : FAN x V E) (hfan1 : FAN x V E1) :
+    let tranf : Set (V3 × V3) → Set (V3 × V3) := fun s =>
+      if h : (∃ g : Set (V3 × V3), ∃ z : V3 × V3,
+          g = (hypermapOfFan x V E1 hfan1).face z ∧ z ∈ s)
+      then Classical.choose h else ∅;
+    FAN x V E ∧
+    (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
+    fan80 x V E ∧
+    ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard ∧
+    ({f1, f2, f3} : Set (V3 × V3)) ⊆ ds ∧
+    f1Fan x V E f1 = f2 ∧ f1Fan x V E f2 = f3 ∧ ¬ (f1Fan x V E f3 = f1) ∧
+    f1.1 = v ∧ f2.1 = u ∧ f3.1 = w ∧
+    ({v, u} : Set V3) ∈ E ∧ ({u, w} : Set V3) ∈ E ∧ ({w, v} : Set V3) ∉ E ∧
+    sigmaFan x V E u w = v ∧ f1.2 = u ∧ f2.2 = w ∧
+    (hypermapOfFan x V E1 hfan1).face (v, w) = ds1 ∧
+    (hypermapOfFan x V E1 hfan1).face (w, v) = ds2 ∧
+    f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
+    E ∪ {({v, w} : Set V3)} = E1 ∧
+    ds0 ∈ (hypermapOfFan x V E hfan).faceSet \ {ds} →
+      tranf ds0 ∈ ((hypermapOfFan x V E1 hfan1).faceSet \ {ds1}) \ {ds2} := by
+  sorry
+
+/-- HOL Conforming.hl :6121-6177 `EQ_CARD_FACE_FAN_AND_FANADD`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30.
+FAN(x,V,E)
+ /\ (!v. v IN V==>CARD (set_of_edge v V E) > 1)
+/\ fan80(x,V,E)
+/\ ds IN face_set(hypermap1_of_fanx (x,V,E)) /\ CARD ds >3
+/\ {f1,f2,f3} SUBSET ds /\ f1_fan x V E f1=f2 /\ f1_fan x V E f2 =f3 /\ ~(f1_fan x V E f3 =f1)
+/\  pr2 f1 =v /\  pr2 f2 =u /\  pr2 f3=w
+/\ {v,u} IN E /\ {u,w} IN E /\ ~({w,v} IN E)
+/\ sigma_fan x V E u w = v /\ pr3 f1= u /\ pr3 f2= w
+/\ face (hypermap1_of_fanx (x,V,E1)) (x,v,w,sigma_fan x V E1 v w)= ds1
+/\ face (hypermap1_of_fanx (x,V,E1)) (x,w,v,sigma_fan x V E1 w v)=ds2
+/\ (x,w,v,u)=f10
+/\ (x,v,u,w)=f20
+/\ (x,u,w,v)=f30
+/\ E UNION {{v,w}}= E1
+==> CARD ((face_set (hypermap1_of_fanx (x,V,E1)) DELETE ds1 ) DELETE ds2 )= CARD (face_set (hypermap1_of_fanx (x,V,E)) DELETE ds)
+```
+
+编码说明：`CARD s` ↦ `s.ncard`；`(face_set (...) DELETE ds1) DELETE ds2` ↦
+`(faceSet \ {ds1}) \ {ds2}`；`face (v,w) = ds1`/`face (w,v) = ds2`。额外携带
+`hfan`、`hfan1`。本定理的结论不含 `tranf`，但 HOL 证明用 `tranf` 作为
+双射（`DOMAIN`/`SUR`/`INJ_TRANF_FACE_DELETE_DS`）。
+
+证明思路：用 `CARD_IMAGE_INJ_EQ`（HOL）即 Mathlib 的
+`Set.ncard_image_of_injOn`：以 `tranf` 为映射，
+`DOMAIN_TRANF_FACE_DELETE_DS` 给出像集包含于
+`(faceSet1 \ {ds1}) \ {ds2}`，`SUR_TRANF_FACE_DELETE_DS` 给出满射，
+`INJ_TRANF_FACE_DELETE_DS` 给出单射；两侧 `ncard` 相等。需
+`FINITE_HYPERMAP_ORBITS`（即 `Hypermap.faceSet_finite`）保证有限性。
+
+候选已有引理：
+- `DOMAIN_TRANF_FACE_DELETE_DS`、`SUR_TRANF_FACE_DELETE_DS`、
+  `INJ_TRANF_FACE_DELETE_DS`（本文件）
+- `Hypermap.faceSet_finite`（Kepler/Text/Hypermap.lean:1016）
+- `Set.ncard_image_of_injOn`、`Set.ncard_congr`（Mathlib）
+- 缺口：HOL `CARD_IMAGE_INJ_EQ`（Mathlib 有等价形式）、`tranf`
+  （Conforming.hl:4101）未移植 -/
+theorem EQ_CARD_FACE_FAN_AND_FANADD (x : V3) (V : Set V3) (E E1 : Set (Set V3))
+    (ds : Set (V3 × V3)) (f1 f2 f3 : V3 × V3) (v u w : V3)
+    (ds1 ds2 : Set (V3 × V3)) (f10 f20 f30 : V3 × V3)
+    (hfan : FAN x V E) (hfan1 : FAN x V E1) :
+    FAN x V E ∧
+    (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
+    fan80 x V E ∧
+    ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard ∧
+    ({f1, f2, f3} : Set (V3 × V3)) ⊆ ds ∧
+    f1Fan x V E f1 = f2 ∧ f1Fan x V E f2 = f3 ∧ ¬ (f1Fan x V E f3 = f1) ∧
+    f1.1 = v ∧ f2.1 = u ∧ f3.1 = w ∧
+    ({v, u} : Set V3) ∈ E ∧ ({u, w} : Set V3) ∈ E ∧ ({w, v} : Set V3) ∉ E ∧
+    sigmaFan x V E u w = v ∧ f1.2 = u ∧ f2.2 = w ∧
+    (hypermapOfFan x V E1 hfan1).face (v, w) = ds1 ∧
+    (hypermapOfFan x V E1 hfan1).face (w, v) = ds2 ∧
+    f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
+    E ∪ {({v, w} : Set V3)} = E1 →
+      (((hypermapOfFan x V E1 hfan1).faceSet \ {ds1}) \ {ds2}).ncard =
+        ((hypermapOfFan x V E hfan).faceSet \ {ds}).ncard := by
+  sorry
+
+end Kepler.Text
