@@ -278,7 +278,16 @@ HOL 原文：
 - `Set.pair_eq_pair_iff`、`Set.mem_singleton_iff`、`Set.ext`（Mathlib） -/
 theorem set_of_only_edge (v w : V3) (V : Set V3) :
     w ∈ V → setOfEdge v V ({{v, w}} : Set (Set V3)) = {w} := by
-  sorry
+  intro hw
+  ext u
+  simp only [setOfEdge, Set.mem_setOf_eq, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨he, -⟩
+    rcases (Set.pair_eq_pair_iff.mp he) with ⟨-, huw⟩ | ⟨hvw, huv⟩
+    · exact huw
+    · rw [huv, hvw]
+  · rintro rfl
+    exact ⟨by simp, hw⟩
 
 /-- HOL Conforming.hl :2462-2468 `set_of_only_edge1`
 
