@@ -794,7 +794,21 @@ theorem lemma_yfanadd_aff_ge (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       yfan x V E ⊆ yfan x V E1 ∪ affGe ({x} : Set V3) ({v, w} : Set V3) := by
-  sorry
+  rintro ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hE⟩ y hy
+  rw [yfan, Set.mem_sdiff] at hy
+  by_cases hy1 : y ∈ yfan x V E1
+  · exact Or.inl hy1
+  · right
+    have hx1 : y ∈ xfan x V E1 := by
+      by_contra hc
+      exact hy1 (by simp [yfan, hc])
+    rw [xfan, Set.mem_setOf_eq] at hx1
+    rcases hx1 with ⟨e, heE1, hye⟩
+    rw [← hE] at heE1
+    rcases heE1 with heE | heS
+    · exact absurd ⟨e, heE, hye⟩ hy.2
+    · rw [Set.mem_singleton_iff] at heS
+      rwa [heS] at hye
 
 /-- HOL Conforming.hl :6743-6843 `lemma_yfanadd_aff_gt`
 
