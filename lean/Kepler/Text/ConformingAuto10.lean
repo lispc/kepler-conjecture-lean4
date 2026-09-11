@@ -147,7 +147,7 @@ HOL 原文：
 - `Set.sUnion_pair`（Mathlib/Data/Set/Lattice.lean:925） -/
 theorem expand_unions (v w : V3) :
     ⋃₀ ({{v, w}} : Set (Set V3)) = {v, w} := by
-  sorry
+  exact Set.sUnion_singleton _
 
 /-- HOL Conforming.hl :2394-2423 `SIGMA_FAN_OF_FANADD1`
 
