@@ -885,7 +885,9 @@ theorem card_eq_image_in_d_fan (x : V3) (V : Set V3) (E : Set (Set V3))
     (∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard) ∧
     ds ⊆ dartOfFan V E →
       (Set.image (fun p : V3 × V3 => (p.1, p.2)) ds).ncard = ds.ncard := by
-  sorry
+  intro _
+  rw [show (fun p : V3 × V3 => (p.1, p.2)) = id from
+        funext fun p => Prod.ext rfl rfl, Set.image_id]
 
 /-- HOL Conforming.hl :4106-4155 `exists_tranf_fan`
 
