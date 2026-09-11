@@ -1000,7 +1000,72 @@ theorem open_subsetU (x : V3) (V : Set V3)
       affGt ({x, v, sigmaFan x V E v u} : Set V3) {w} ∩
       affGt ({x, sigmaFan x V E v u, w} : Set V3) {v} →
       IsOpen U := by
-  sorry
+  rintro ⟨hfanE, hcard, h80, hds, hds3, hfsub, hf12, hf23, hf31, hpr1, hpr2,
+    hpr3, hvu, huw, hwv, hsigma, hf1u, hf2w, hface1, hface2, hf10, hf20,
+    hf30, hE1, hconf, hU⟩
+  have h80E1 : fan80 x V E1 :=
+    FAN80_FANADD x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 hfan hfan1
+      ⟨hfanE, hcard, h80, hds, hds3, hfsub, hf12, hf23, hf31, hpr1, hpr2,
+       hpr3, hvu, huw, hwv, hsigma, hf1u, hf2w, hface1, hface2, hf10, hf20,
+       hf30, hE1⟩
+  have hθuw : 0 < azim x u w v ∧ azim x u w v < Real.pi := by
+    have := h80 u w huw
+    rwa [hsigma] at this
+  have hcop1 : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan hvu huw hθuw.1 hθuw.2
+  have hσ_soe : sigmaFan x V E v u ∈ setOfEdge v V E :=
+    sigma_fan_in_setOfEdge hfan
+      ((properties_of_setOfEdge_fan x V E v u hfan).mp hvu)
+  have hσvE : ({sigmaFan x V E v u, v} : Set V3) ∈ E := by
+    have h1 : ({v, sigmaFan x V E v u} : Set V3) ∈ E :=
+      (properties_of_setOfEdge_fan x V E v (sigmaFan x V E v u) hfan).mpr hσ_soe
+    rwa [Set.pair_comm] at h1
+  have hθs : 0 < azim x v u (sigmaFan x V E v u) ∧
+      azim x v u (sigmaFan x V E v u) < Real.pi := h80 v u hvu
+  have hcop2 : ¬ Coplanar ({x, sigmaFan x V E v u, v, u} : Set V3) :=
+    properties_fully_surrounded (v := sigmaFan x V E v u) (u := v) (w := u)
+      hfan hσvE hvu hθs.1 hθs.2
+  have hσeq : sigmaFan x V E1 v w = sigmaFan x V E v u :=
+    SIGMA_FAN_OF_FANADD_AT_POINT1 x V E E1 v u w
+      ⟨hfan, hfan1, hvu, huw, hwv, hsigma, h80, hcard, hE1⟩
+  have hvwE1 : ({v, w} : Set V3) ∈ E1 := by
+    rw [← hE1]
+    exact Or.inr (by simp)
+  have hσvE1 : ({sigmaFan x V E v u, v} : Set V3) ∈ E1 := by
+    rw [← hE1]
+    exact Or.inl hσvE
+  have hθvw : 0 < azim x v w (sigmaFan x V E v u) ∧
+      azim x v w (sigmaFan x V E v u) < Real.pi := by
+    have := h80E1 v w hvwE1
+    rwa [hσeq] at this
+  have hcop3 : ¬ Coplanar ({x, sigmaFan x V E v u, v, w} : Set V3) :=
+    properties_fully_surrounded (v := sigmaFan x V E v u) (u := v) (w := w)
+      hfan1 hσvE1 hvwE1 hθvw.1 hθvw.2
+  have hA1 : IsOpen (affGt ({x, u, w} : Set V3) {v}) := by
+    apply OPEN_AFF_GT_3_1
+    rw [show ({x, u, w, v} : Set V3) = {x, v, u, w} by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact hcop1
+  have hA2 : IsOpen (affGt ({x, v, u} : Set V3) {sigmaFan x V E v u}) := by
+    apply OPEN_AFF_GT_3_1
+    rw [show ({x, v, u, sigmaFan x V E v u} : Set V3) =
+        {x, sigmaFan x V E v u, v, u} by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact hcop2
+  have hA3 : IsOpen (affGt ({x, v, sigmaFan x V E v u} : Set V3) {w}) := by
+    apply OPEN_AFF_GT_3_1
+    rw [show ({x, v, sigmaFan x V E v u, w} : Set V3) =
+        {x, sigmaFan x V E v u, v, w} by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact hcop3
+  have hA4 : IsOpen (affGt ({x, sigmaFan x V E v u, w} : Set V3) {v}) := by
+    apply OPEN_AFF_GT_3_1
+    rw [show ({x, sigmaFan x V E v u, w, v} : Set V3) =
+        {x, sigmaFan x V E v u, v, w} by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact hcop3
+  rw [hU]
+  exact IsOpen.inter (IsOpen.inter (IsOpen.inter hA1 hA2) hA3) hA4
 
 /-- HOL Conforming.hl :8812-8901 `eq_aff_gt_3_fanadd_edge`
 
