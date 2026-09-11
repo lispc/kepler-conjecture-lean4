@@ -292,7 +292,20 @@ theorem condition_azim_le_pi (x : V3) (V : Set V3) (E : Set (Set V3))
     fan80 x V E ∧
     (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) →
       0 < azim x w v u ∧ azim x w v u < Real.pi := by
-  sorry
+  rintro ⟨hfan, hvu, huw, hsigma, h80, hcard⟩
+  have hθ : 0 < azim x u w v ∧ azim x u w v < Real.pi := by
+    have h := h80 u w huw
+    rw [hsigma] at h
+    exact h
+  have hcop : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan hvu huw hθ.1 hθ.2
+  have h1 : 0 < azim x v u w ∧ azim x v u w < Real.pi :=
+    properties_of_fully_surrounded1_fan (x := x) (v := v) (u := u) (w := w)
+      hcop hθ.1 hθ.2
+  have hset : ({x, w, v, u} : Set V3) = ({x, v, u, w} : Set V3) := by
+    ext z; simp; tauto
+  exact properties_of_fully_surrounded1_fan (x := x) (v := w) (u := v) (w := u)
+    (by rwa [hset]) h1.1 h1.2
 
 /-- HOL Conforming.hl :2820-2931 `azim_trangle_le_azim_face_fan`
 
