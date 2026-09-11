@@ -63,6 +63,7 @@ Encoding notes (gaps / closest existing encodings):
 -/
 
 import Kepler.Text.PlanarityAuto16
+import Kepler.Text.ConformingAuto1
 import Kepler.Text.ConformingDefs
 
 set_option maxHeartbeats 5000000
@@ -216,13 +217,173 @@ FAN(x,V,E)
 - `properties_fully_surrounded`（Kepler/Text/Planarity.lean:2370）
 - 缺口：`lemma_face_identity`（Kepler/Text/Hypermap.lean:2485 附近有实现，
   但 HOL `exists_point_dart_leads_into_fan` 的对应组合需现场拼装） -/
+private theorem faceSet_subset_dartOfFan_auto2 {x : V3} {V : Set V3}
+    {E : Set (Set V3)} (hfan : FAN x V E)
+    (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard)
+    {ds : Set (V3 × V3)} (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet) :
+    ds ⊆ dartOfFan V E := by
+  intro y hy
+  obtain ⟨d, hd, hds_eq⟩ :=
+    Hypermap.face_representation (hypermapOfFan x V E hfan) hds
+  have hyface : y ∈ (hypermapOfFan x V E hfan).face d := by rw [← hds_eq]; exact hy
+  have hydarts : y ∈ (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) :=
+    (hypermapOfFan x V E hfan).face_subset_darts hd hyface
+  have hdarts : (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) =
+      dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have hy1 : y ∈ dart1OfFan V E := by
+    have h : y ∈ (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) := hydarts
+    rwa [hdarts] at h
+  rwa [dartOfFan_eq_dart1_of_surrounded hfan hcard]
+
+private theorem f1Fan_eq_fFanPair_of_dart1_auto2 {x : V3} {V : Set V3}
+    {E : Set (Set V3)} (hfan : FAN x V E) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) :
+    f1Fan x V E d = fFanPair x V E d := by
+  have hba : {d.2, d.1} ∈ E := by
+    have h : {d.1, d.2} ∈ E := hd
+    rwa [Set.pair_comm] at h
+  simp only [f1Fan, fFanPair]
+  rw [inverse_sigma_fan_eq_inverse1 hfan hba]
+
+private theorem fan_not_collinear_swap_auto2 {x v u : V3} {V : Set V3}
+    {E : Set (Set V3)} (hfan : FAN x V E) (he : {v, u} ∈ E) :
+    ¬ Collinear3 x u v := by
+  have h : {u, v} ∈ E := by rwa [Set.pair_comm] at he
+  exact fan_not_collinear hfan h
+
 theorem DWFBRQY (x : V3) (V : Set V3) (E : Set (Set V3))
     (hfan : FAN x V E)
     (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard)
     (hfan80 : fan80 x V E)
     (hn : nFan x V E hfan = 0) :
     conformingFan x V E hfan := by
-  sorry
+  have h3 : ∀ f, f ∈ (hypermapOfFan x V E hfan).faceSet → f.ncard = 3 :=
+    fun f hf => N_FAN_EQ_0_IMP_CARD_FACE_EQ_3 hfan hcard hn hf
+  refine ⟨hcard, hfan80, ?_, ?_, ?_, ?_⟩
+  · -- conformingBijectionFan
+    intro s hs
+    obtain ⟨f, hfmem, hfeq⟩ := version_JUTSTKG x V E s hfan hcard hfan80 hs
+    refine ⟨f, ⟨hfmem, hfeq.symm⟩, ?_⟩
+    intro g hg
+    obtain ⟨hgmem, hgeq⟩ := hg
+    obtain ⟨y, hyg, hyeq⟩ :=
+      exists_point_dart_leads_into_fan hfan hcard hfan80 hgmem
+    have hy_dart : y ∈ dartOfFan V E :=
+      faceSet_subset_dartOfFan_auto2 hfan hcard hgmem hyg
+    have hleadsf : dartsetLeadsIntoFan x V E f = dartLeadsInto x V E y.1 y.2 :=
+      hfeq.trans (hgeq.trans hyeq)
+    have hyf : y ∈ f :=
+      KVQWYDL_lemma30 hfan hcard hfan80 hfmem (h3 f hfmem) y hy_dart hleadsf
+    obtain ⟨a, _ha, hfa⟩ :=
+      Hypermap.face_representation (hypermapOfFan x V E hfan) hfmem
+    obtain ⟨b, _hb, hgb⟩ :=
+      Hypermap.face_representation (hypermapOfFan x V E hfan) hgmem
+    have hyfa : y ∈ (hypermapOfFan x V E hfan).face a := by rw [← hfa]; exact hyf
+    have hygb : y ∈ (hypermapOfFan x V E hfan).face b := by rw [← hgb]; exact hyg
+    calc g = (hypermapOfFan x V E hfan).face b := hgb
+      _ = (hypermapOfFan x V E hfan).face y := Hypermap.face_eq_of_mem _ hygb
+      _ = (hypermapOfFan x V E hfan).face a :=
+          (Hypermap.face_eq_of_mem _ hyfa).symm
+      _ = f := hfa.symm
+  · -- conformingHalfSpaceFan
+    intro f hf
+    obtain ⟨f1, f2, f3, hdsf, hf12, hf23, hf31, he23, he31, he12, hsig,
+      hf3fst, hf2fst, hf1fst⟩ :=
+      CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN1 hfan hcard hf (h3 f hf)
+    have hf1d : f1 ∈ dart1OfFan V E := by
+      show {f1.1, f1.2} ∈ E
+      rw [← hf2fst]; exact he12
+    have hf2d : f2 ∈ dart1OfFan V E := by
+      show {f2.1, f2.2} ∈ E
+      rw [← hf3fst]; exact he23
+    have hf3d : f3 ∈ dart1OfFan V E := by
+      show {f3.1, f3.2} ∈ E
+      rw [← hf1fst]; exact he31
+    have hf1fan1 : f1Fan x V E f1 = f2 :=
+      (f1Fan_eq_fFanPair_of_dart1_auto2 hfan hf1d).trans hf12
+    have hf1fan2 : f1Fan x V E f2 = f3 :=
+      (f1Fan_eq_fFanPair_of_dart1_auto2 hfan hf2d).trans hf23
+    have hf1fan3 : f1Fan x V E f3 = f1 :=
+      (f1Fan_eq_fFanPair_of_dart1_auto2 hfan hf3d).trans hf31
+    have himg : (fun y : V3 × V3 => y.1) '' f = ({f1.1, f2.1, f3.1} : Set V3) := by
+      rw [hdsf]
+      ext z
+      simp only [Set.mem_image, Set.mem_insert_iff, Set.mem_singleton_iff]
+      constructor
+      · rintro ⟨w, (rfl | rfl | rfl), rfl⟩ <;> simp
+      · intro hz
+        rcases hz with rfl | rfl | rfl
+        · exact ⟨f1, by simp, rfl⟩
+        · exact ⟨f2, by simp, rfl⟩
+        · exact ⟨f3, by simp, rfl⟩
+    rw [← KVQWYDL_lemma10 hfan hcard hfan80 hf (h3 f hf), himg, hdsf]
+    rw [show ({f1, f2, f3} : Set (V3 × V3)) = insert f1 (insert f2 {f3}) from rfl,
+      Set.biInter_insert, Set.biInter_insert, Set.biInter_singleton]
+    rw [hf1fan1, hf1fan2, hf1fan3]
+    rw [← hf2fst, ← hf3fst, ← hf1fst]
+    have hcop : ¬ Coplanar ({x, f1.1, f2.1, f3.1} : Set V3) := by
+      obtain ⟨hθ0, hθπ⟩ := hfan80 f2.1 f3.1 he23
+      rw [hsig] at hθ0 hθπ
+      exact properties_fully_surrounded hfan he12 he23 hθ0 hθπ
+    have hinter := inter_aff_gt_3_1_is_aff_gt_1_3 x f1.1 f2.1 f3.1 hcop
+    simpa only [Set.inter_assoc] using hinter.symm
+  · -- conformingSolidAngleFan
+    intro f hf
+    have h3f : f.ncard = 3 := h3 f hf
+    dsimp only
+    refine ⟨?_, ?_, ?_⟩
+    · intro r
+      rw [Set.inter_comm]
+      exact measurable_dartset_leads_into30_fan x V E f r
+        hfan hcard hfan80 hf h3f
+    · obtain ⟨r, hr, hsub, hrad⟩ :=
+        dartset_leads_into_fan_eventually_radial_norm hfan hcard hfan80 hf h3f
+      exact ⟨r, hr, hsub, hrad⟩
+    · exact solid_of_dartset_leads_into_fan_triangle_fan hfan hcard hfan80 hf h3f
+  · -- conformingDiagonalFan
+    intro f hf y hy z hz hyz
+    obtain ⟨f1, f2, f3, hdsf, hf12, hf23, hf31, he23, he31, he12, _hsig,
+      hf3fst, hf2fst, hf1fst⟩ :=
+      CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN1 hfan hcard hf (h3 f hf)
+    have hf1d : f1 ∈ dart1OfFan V E := by
+      show {f1.1, f1.2} ∈ E
+      rw [← hf2fst]; exact he12
+    have hf2d : f2 ∈ dart1OfFan V E := by
+      show {f2.1, f2.2} ∈ E
+      rw [← hf3fst]; exact he23
+    have hf3d : f3 ∈ dart1OfFan V E := by
+      show {f3.1, f3.2} ∈ E
+      rw [← hf1fst]; exact he31
+    have hf1fan1 : f1Fan x V E f1 = f2 :=
+      (f1Fan_eq_fFanPair_of_dart1_auto2 hfan hf1d).trans hf12
+    have hf1fan2 : f1Fan x V E f2 = f3 :=
+      (f1Fan_eq_fFanPair_of_dart1_auto2 hfan hf2d).trans hf23
+    have hf1fan3 : f1Fan x V E f3 = f1 :=
+      (f1Fan_eq_fFanPair_of_dart1_auto2 hfan hf3d).trans hf31
+    have hnc12 : ¬ Collinear3 x f1.1 f2.1 := fan_not_collinear hfan he12
+    have hnc23 : ¬ Collinear3 x f2.1 f3.1 := fan_not_collinear hfan he23
+    have hnc31 : ¬ Collinear3 x f3.1 f1.1 := fan_not_collinear hfan he31
+    have hnc21 : ¬ Collinear3 x f2.1 f1.1 := fan_not_collinear_swap_auto2 hfan he12
+    have hnc32 : ¬ Collinear3 x f3.1 f2.1 := fan_not_collinear_swap_auto2 hfan he23
+    have hnc13 : ¬ Collinear3 x f1.1 f3.1 := fan_not_collinear_swap_auto2 hfan he31
+    have hy' : y = f1 ∨ y = f2 ∨ y = f3 := by
+      have h := hy; rw [hdsf] at h
+      simpa only [Set.mem_insert_iff, Set.mem_singleton_iff] using h
+    have hz' : z = f1 ∨ z = f2 ∨ z = f3 := by
+      have h := hz; rw [hdsf] at h
+      simpa only [Set.mem_insert_iff, Set.mem_singleton_iff] using h
+    rcases hy' with rfl | rfl | rfl <;> rcases hz' with rfl | rfl | rfl
+    · exact absurd rfl hyz
+    · exact ⟨hnc12, Or.inr (Or.inl hf1fan1.symm)⟩
+    · exact ⟨hnc13, Or.inl hf1fan3.symm⟩
+    · exact ⟨hnc21, Or.inl hf1fan1.symm⟩
+    · exact absurd rfl hyz
+    · exact ⟨hnc23, Or.inr (Or.inl hf1fan2.symm)⟩
+    · exact ⟨hnc31, Or.inr (Or.inl hf1fan3.symm)⟩
+    · exact ⟨hnc32, Or.inl hf1fan2.symm⟩
+    · exact absurd rfl hyz
 
 /-! ## 低维仿射集的零测性（Conforming.hl:652-730） -/
 
