@@ -66,6 +66,8 @@ import Kepler.Text.ConformingAuto4
 import Kepler.Text.VectorAngleLemmas
 -- Phase 4: 分支定界证书树（二分盒树 + covers/bb_sound，叶为内核 decide 的 checkPos）
 import Kepler.Interval.Cert
+-- Phase 4 G4: 析取目标证书（bb_sound_disj，覆盖 58 条 disj 案例）
+import Kepler.Interval.CertDisj
 import Kepler.Graphs.ListAux
 import Kepler.Graphs.Rotation
 import Kepler.Graphs.Graph
