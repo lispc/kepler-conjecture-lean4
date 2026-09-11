@@ -413,6 +413,83 @@ theorem MEASURABLE_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL {x : V3} {V : Set V3}
     MeasurableSet (f ∩ Metric.ball x r) := by
   exact (OPEN_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL r hfan hconf hf).measurableSet
 
+private theorem radialNorm_inter_auto6 (r : ℝ) (v0 : V3) (P Q : Set V3)
+    (hP : radialNorm r v0 P) (hQ : radialNorm r v0 Q) :
+    radialNorm r v0 (P ∩ Q) := by
+  refine ⟨Set.inter_subset_left.trans hP.1, ?_⟩
+  intro u hu t ht htu
+  exact ⟨hP.2 u hu.1 t ht htu, hQ.2 u hu.2 t ht htu⟩
+
+private theorem RADIAL_UNIV_auto6 (r : ℝ) (x : V3) (hr : r > 0) :
+    radialNorm r x (Set.univ ∩ Metric.ball x r) := by
+  refine ⟨Set.inter_subset_right, ?_⟩
+  intro u _ t ht htu
+  refine ⟨Set.mem_univ _, ?_⟩
+  have hsub : (x + t • u) - x = t • u := by abel
+  rw [Metric.mem_ball, dist_eq_norm, hsub, norm_smul, Real.norm_eq_abs,
+    abs_of_pos ht]
+  exact htu
+
+private theorem RADIAL_INTERS_auto6 (r : ℝ) (v0 : V3) (f : Set (Set V3))
+    (hfin : f.Finite) (h : ∀ s ∈ f, radialNorm r v0 (s ∩ Metric.ball v0 r))
+    (hr : r > 0) :
+    radialNorm r v0 (⋂₀ f ∩ Metric.ball v0 r) := by
+  refine Set.Finite.induction_on
+    (motive := fun s _ => (∀ t ∈ s, radialNorm r v0 (t ∩ Metric.ball v0 r)) →
+      radialNorm r v0 (⋂₀ s ∩ Metric.ball v0 r))
+    f hfin ?_ ?_ h
+  · intro _
+    rw [Set.sInter_empty]
+    exact RADIAL_UNIV_auto6 r v0 hr
+  · intro a s _ _ ih hins
+    have ha : radialNorm r v0 (a ∩ Metric.ball v0 r) :=
+      hins a (Set.mem_insert a s)
+    have hsih : radialNorm r v0 (⋂₀ s ∩ Metric.ball v0 r) :=
+      ih fun t ht => hins t (Set.mem_insert_of_mem a ht)
+    have key : ⋂₀ (insert a s) ∩ Metric.ball v0 r
+        = (a ∩ Metric.ball v0 r) ∩ (⋂₀ s ∩ Metric.ball v0 r) := by
+      rw [Set.sInter_insert]
+      ext z
+      simp only [Set.mem_inter_iff]
+      tauto
+    rw [key]
+    exact radialNorm_inter_auto6 r v0 _ _ ha hsih
+
+private theorem radialNorm_biInter_auto6 {α : Type*} (r : ℝ) (v0 : V3)
+    (s : Set α) (g : α → Set V3)
+    (hfin : s.Finite) (h : ∀ a ∈ s, radialNorm r v0 (g a ∩ Metric.ball v0 r))
+    (hr : r > 0) :
+    radialNorm r v0 ((⋂ a ∈ s, g a) ∩ Metric.ball v0 r) := by
+  rw [← Set.sInter_image g s]
+  exact RADIAL_INTERS_auto6 r v0 (g '' s) (hfin.image g)
+    (fun t ht => by rcases ht with ⟨a, ha, rfl⟩; exact h a ha) hr
+
+private theorem affGt_triple_star_auto6 {x u v w y : V3}
+    (hdisj : Disjoint ({x, u, v} : Set V3) {w})
+    (hy : y ∈ affGt ({x, u, v} : Set V3) {w}) (t : ℝ) (ht : 0 < t) :
+    (1 - t) • x + t • y ∈ affGt ({x, u, v} : Set V3) {w} := by
+  rw [AFF_GT_3_1 x u v w hdisj] at hy ⊢
+  obtain ⟨t1, t2, t3, t4, ht4, hsum, hyeq⟩ := hy
+  exact ⟨1 - t + t * t1, t * t2, t * t3, t * t4, mul_pos ht ht4,
+    by nlinarith, by rw [hyeq]; module⟩
+
+private theorem RADIAL_AFF_GT_3_1_auto6 (x u v w : V3) (r : ℝ)
+    (hdisj : Disjoint ({x, u, v} : Set V3) {w}) (hr : r > 0) :
+    radialNorm r x (affGt ({x, u, v} : Set V3) {w} ∩ Metric.ball x r) := by
+  refine ⟨Set.inter_subset_right, ?_⟩
+  intro u' hu' t ht htu'
+  rw [Set.mem_inter_iff] at hu'
+  obtain ⟨hgt, _hball⟩ := hu'
+  refine ⟨?_, ?_⟩
+  · have hstar := affGt_triple_star_auto6 hdisj hgt t ht
+    have heq : (1 - t) • x + t • (x + u') = x + t • u' := by module
+    rw [← heq]
+    exact hstar
+  · rw [Metric.mem_ball, dist_eq_norm]
+    have hsub : (x + t • u') - x = t • u' := by abel
+    rw [hsub, norm_smul, Real.norm_eq_abs, abs_of_pos ht]
+    exact htu'
+
 /-- HOL Conforming.hl :1352-1395 `RADIAL_TOPOLOGICAL_COMPONENT_YFAN`
 
 HOL 原文：
@@ -445,7 +522,46 @@ theorem RADIAL_TOPOLOGICAL_COMPONENT_YFAN {x : V3} {V : Set V3} {E : Set (Set V3
     (hconf : conformingFan x V E hfan)
     {f : Set V3} (hf : f ∈ topologicalComponentYfan x V E) :
     radialNorm r x (f ∩ Metric.ball x r) := by
-  sorry
+  obtain ⟨hcard, hfan80, hbij, hhalf, _hsolid, _hdiag⟩ := hconf
+  obtain ⟨f', ⟨hf'mem, hf'eq⟩, _⟩ := hbij f hf
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  obtain ⟨d, hd, hd_eq⟩ := H.face_representation hf'mem
+  have hfin : f'.Finite := by rw [hd_eq]; exact H.face_finite d
+  rw [hf'eq, hhalf f' hf'mem]
+  refine radialNorm_biInter_auto6 r x f'
+    (fun y : V3 × V3 => affGt ({x, y.1, y.2} : Set V3) {(f1Fan x V E y).2})
+    hfin ?_ hr
+  intro y hy
+  rw [fully_surrounded_imp_aff_gt_3_1_of_dart_eq_fan hfan hcard hfan80 hf'mem hy]
+  refine RADIAL_AFF_GT_3_1_auto6 x y.1 y.2 (sigmaFan x V E y.1 y.2) r ?_ hr
+  have hdarts : (↑H.darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have hyE : {y.1, y.2} ∈ E := by
+    have hsub : f' ⊆ (↑H.darts : Set (V3 × V3)) := by
+      rw [hd_eq]; exact H.face_subset_darts hd
+    have hy_dart : y ∈ dart1OfFan V E := by
+      have : y ∈ (↑H.darts : Set (V3 × V3)) := hsub hy
+      rwa [hdarts] at this
+    simpa [dart1OfFan] using hy_dart
+  have hy2S : y.2 ∈ setOfEdge y.1 V E :=
+    (properties_of_setOfEdge_fan x V E y.1 y.2 hfan).mp hyE
+  have hσS : sigmaFan x V E y.1 y.2 ∈ setOfEdge y.1 V E :=
+    sigma_fan_in_setOfEdge hfan hy2S
+  have hσy1 : {sigmaFan x V E y.1 y.2, y.1} ∈ E := by
+    have hy1σ : {y.1, sigmaFan x V E y.1 y.2} ∈ E :=
+      (properties_of_setOfEdge_fan x V E y.1 (sigmaFan x V E y.1 y.2) hfan).mpr hσS
+    rwa [show ({sigmaFan x V E y.1 y.2, y.1} : Set V3) =
+        ({y.1, sigmaFan x V E y.1 y.2} : Set V3) from by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  have h80 := hfan80 y.1 y.2 hyE
+  have hraw := properties_fully_surrounded (v := sigmaFan x V E y.1 y.2)
+    (u := y.1) (w := y.2) hfan hσy1 hyE h80.1 h80.2
+  have hset : ({x, sigmaFan x V E y.1 y.2, y.1, y.2} : Set V3) =
+      ({x, y.1, y.2, sigmaFan x V E y.1 y.2} : Set V3) := by
+    ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  rw [hset] at hraw
+  exact (notcoplanar_disjoints x y.1 y.2 (sigmaFan x V E y.1 y.2) hraw).1
 
 /-! ## 拓扑分量的有限性与 `sol` 可加性（Conforming.hl:1396-1455） -/
 
