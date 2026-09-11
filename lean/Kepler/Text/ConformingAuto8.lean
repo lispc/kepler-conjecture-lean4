@@ -413,7 +413,10 @@ theorem condition_f1_eq_fan {x v u w : V3} {V : Set V3} {E : Set (Set V3)}
     (huw : {u, w} ∈ E) (hvu : {v, u} ∈ E)
     (hsigma : sigmaFan x V E u w = v) :
     f1Fan x V E (v, u) = (u, w) := by
-  sorry
+  have hinv : inverse1SigmaFan x V E u (sigmaFan x V E u w) = w :=
+    (INVERSE1_SIGMA_FAN (v := u) hfan).2.2 w huw
+  unfold f1Fan
+  rw [← hsigma, hinv]
 
 /-- HOL Conforming.hl :1880-2007 `nonconformin_fan_imp_exist_3point_in_face`
 
