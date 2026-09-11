@@ -20,6 +20,8 @@ import Kepler.Interval.Expr
 import Kepler.Geom.Azim
 import Kepler.Geom.Aff
 import Kepler.Geom.AzimLemmas
+-- Phase 5: 体积层基础设施（radial_norm / sol / sol_spec，vol1.hl）
+import Kepler.Geom.Volume
 import Kepler.Text.Fan
 import Kepler.Text.TopologyFan
 -- Phase 5: 文字证明移植 —— planarity.hl（Fan 章的平面性部分）

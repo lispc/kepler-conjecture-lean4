@@ -121,12 +121,31 @@ Lean 4 + Mathlib（toolchain `leanprover/lean4:v4.32.2`）形式化开普勒猜�
 ## 6. 待办队列（优先级序）
 
 1. **Phase 5 planarity 收官攻坚**（唯一卡点，见 §2）：VOLUME_SOLID_TRIANGLE 链
-   → solid_of → MOZNWEH → 批次 16 审计 → 进 main。之后 Conforming.hl 等，
-   流水线可直接改 HL 变量复用。
-   流水线可直接改 HL 变量复用。
-2. Phase 4：16 条残余策略 + G4 内核闭合（见 §2 Phase 4）。
-3. Phase 6：主定理装配 + 终验。
-4. 零散：`Kepler.Text.fan80/fan81` 重复定义去重；`ineqdata3q1h.hl` 解析。
+   → solid_of → MOZNWEH → 批次 16 审计 → 进 main。
+   **2026-09-11 更新**：`sol` 基础设施已落地（`Kepler/Geom/Volume.lean`，无 sorry），
+   `solid_of` 现只差 `VOLUME_SOLID_TRIANGLE`（Girard 球面盈余）。这是研究级
+   体积/球面测度几何，Mathlib 无现成结果；**不要再盲派流水线工人**，需专项移植
+   （HOL 源 `flyspeck.ml:5452-5969`：VOLUME_BALL_WEDGE / HAS_MEASURE_LUNE /
+   MEASURE_BALL_AFF_GT_SHUFFLE / MEASURE_LUNE_DECOMPOSITION /
+   SOLID_TRIANGLE_CONGRUENT_NEG / VOLUME_SOLID_TRIANGLE）。
+2. **Conforming.hl 移植（可用新 `sol_spec` 重启流水线）**：228 定理中大多数是
+   `sol` 代数/测度/径向性质，只依赖 `sol_spec` 而不依赖立体角公式；仅
+   `version_JUTSTKG`（及少数 `conforming_*` 展开）需 `solid_of`。可先把不依赖的
+   批次推进（wip），待体积链补齐再合 main。
+3. Phase 4：16 条残余策略 + G4 内核闭合（见 §2 Phase 4）。
+4. Phase 6：主定理装配 + 终验。
+5. 零散：`Kepler.Text.fan80/fan81` 重复定义去重；`ineqdata3q1h.hl` 解析。
+
+### 体积层新文件（2026-09-11）
+
+`Kepler/Geom/Volume.lean`（已 import 进 `Kepler.lean`，`lake build Kepler` 绿）：
+- `radialNorm r x C`（HOL `radial_norm`）
+- `EventuallyRadial x C`（HOL `eventually_radial`）
+- `sol x C`（HOL `sol`，`Classical.choose` 选择见证半径）
+- `volume_real_add_left/right`、`volume_real_smul`（实值体积的平移/标度）
+- `radialNorm.volume_scaling`（HOL `lemma_r_r'`）
+- `sol_radius_independent`、`sol_spec`（HOL `sol_spec`）
+公理审计：仅 `[propext, Classical.choice, Quot.sound]`，零 sorry。
 
 ## 7. 已知坑（近期新增；历史坑见 git 历史与 worker 模板）
 

@@ -77,6 +77,12 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 
 已落地的公共地基（`Kepler/Geom/` + `Kepler/Text/`）：
 
+- [x] **体积层基础设施 `Kepler/Geom/Volume.lean`（2026-09-11 新增，已验证无 sorry、
+  公理仅标准三）**：`radialNorm`（vol1.hl:18）、`sol`（vol1.hl:651，用
+  `Classical.choose` 编码 HOL `new_specification`）、`sol_spec`（体积密度规格）、
+  `radialNorm.volume_scaling`（vol1.hl:458 `lemma_r_r'` 的标度不变性）、
+  `sol_radius_independent`，以及 `volume.real` 在平移/标度下的引理。这是
+  Conforming/packing/local 大量 `sol` 代数定理的前置；**不依赖** VOLUME_SOLID_TRIANGLE。
 - [x] Azim 方位角全层（Azim/AzimLemmas：ON 标架、角加法、AZIM_EQ/COMPL 等）
 - [x] Aff 仿射符号层（affGe/affGt/affLt/affsign）
 - [x] Coplanar 移植（`Kepler/Geom/Coplanar.lean`，`757a33d`）
@@ -99,8 +105,24 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
    （骨架 docstring 里有 sol 的 ε 规格编码方案）。
 2. `MOZNWEH`（planarity.hl:15443，**全书主定理**）——纯 MESON 组装，
    待 solid_of 闭合后秒过。
-路线：先派专项移植 VOLUME_SOLID_TRIANGLE 链（独立文件）→ 补 solid_of →
-MOZNWEH → 批次 16 审计 → 进 main。
+
+**2026-09-11 接手评估（新）**：已确认这是全项目第一个真正的**研究级数学墙**，
+不是流水线调度问题：
+- `sol` 基础设施已落地（见上 `Kepler/Geom/Volume.lean`），所以 `solid_of` 现在
+  只需「`sol_spec`（r=1）+ `VOLUME_SOLID_TRIANGLE`」，剩下的唯一硬骨头就是
+  **球面三角形体积（Girard 球面盈余 / lune 体积）**。该链依赖
+  `VOLUME_BALL_WEDGE`（球与楔形交的体积 = azim·2r³/3，HOL 用 Fubini + 2D 扇形
+  面积证）、`MEASURE_LUNE_DECOMPOSITION`、`AFF_GT_SHUFFLE`、`SOLID_TRIANGLE_CONGRUENT_NEG`。
+- Mathlib 现状：有 `volume_ball`、`toSphere`（球面测度）、`Complex.polarCoord`
+  变量替换、`addHaar_smul`（标度）、平移不变、Fubini；**没有**球面盈余 / lune /
+  扇形面积 / 半空间球体积。移植该链需要自建球面测度几何（估计 1–2k 行，且是
+  自动化工人最不擅长的分析/积分证明）。
+- 结论：**不要再用 deepseek/glm 盲派 `solid_of`**；应先把体积链作为专项
+  （独立文件 + 人工/强模型逐引理）攻克，或先绕开它推进不依赖立体角公式的部分。
+
+路线（修订）：① 用新 `sol_spec` 重启流水线移植 `Conforming.hl`（228 定理中仅
+`version_JUTSTKG` 等少数依赖 `solid_of`；其余为 `sol` 代数/测度/径向，可闭合）；
+② 并行专项移植 VOLUME_SOLID_TRIANGLE 链；③ 回补 solid_of → MOZNWEH → 批次 16 进 main。
 
 ## Phase 6 — 集成与交付 ⬜
 
