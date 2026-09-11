@@ -71,6 +71,7 @@ Encoding notes (gaps / closest existing encodings):
 -/
 
 import Kepler.Text.PlanarityAuto16
+import Kepler.Text.ConformingAuto8
 import Kepler.Text.ConformingDefs
 
 set_option maxHeartbeats 5000000
@@ -87,6 +88,20 @@ open scoped Topology
 open scoped BigOperators
 
 /-! ## aff_gt 包含于 dart_leads_into（Conforming.hl:2101-2214） -/
+
+/-- `aff_gt_1_2` 展开后 `affGt {x} {p,q}` 是凸集（`{x}` 与 `{p,q}` 不交）。 -/
+private theorem convex_affGt_pair_of_disjoint {x p q : V3}
+    (hdis : Disjoint ({x} : Set V3) {p, q}) :
+    Convex ℝ (affGt ({x} : Set V3) {p, q}) := by
+  rw [aff_gt_1_2 hdis, convex_iff_forall_pos]
+  intro y hy z hz a b ha hb hab
+  obtain ⟨t1, t2, t3, ht2, ht3, hsum, hyeq⟩ := hy
+  obtain ⟨s1, s2, s3, hs2, hs3, hssum, hzeq⟩ := hz
+  refine ⟨a * t1 + b * s1, a * t2 + b * s2, a * t3 + b * s3,
+    add_pos (mul_pos ha ht2) (mul_pos hb hs2),
+    add_pos (mul_pos ha ht3) (mul_pos hb hs3), ?_, ?_⟩
+  · nlinarith [hsum, hssum, hab]
+  · rw [hyeq, hzeq]; module
 
 /-- HOL Conforming.hl :2101-2152 `AFF_GT_SUBSET_DART_LEADS_INTO_FAN`
 
@@ -134,7 +149,52 @@ theorem AFF_GT_SUBSET_DART_LEADS_INTO_FAN {x v u w : V3} {V : Set V3}
     (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
     (hfan80 : fan80 x V E) :
     affGt ({x} : Set V3) {w, v} ⊆ dartLeadsInto x V E u w := by
-  sorry
+  obtain ⟨hθ0, hθπ⟩ := hfan80 u w huw
+  rw [hsigma] at hθ0 hθπ
+  have hcop : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan hvu huw hθ0 hθπ
+  have hdis_wv : Disjoint ({x} : Set V3) {w, v} :=
+    (notcoplanar_disjoints x v u w hcop).2.2.2.2.2.2.2
+  have hsub13 : affGt ({x} : Set V3) ({v, u, w} : Set V3) ⊆
+      dartLeadsInto x V E u w :=
+    aff_gt_1_3_subset_dart_leads_into_fan x V E v u w hfan hvu huw hsigma hcard hfan80
+  obtain ⟨y, hy⟩ := Set.nonempty_iff_ne_empty.mpr
+    (notcoplanar_4point_aff_gt_1_3_not_empty x v u w hcop)
+  have hy_dl : y ∈ dartLeadsInto x V E u w := hsub13 hy
+  have hU : dartLeadsInto x V E u w ∈ topologicalComponentYfan x V E :=
+    dart_leads_into_mem_topologicalComponentYfan (v := u) (u := w) hfan huw
+  have hsubyfan_dl : dartLeadsInto x V E u w ⊆ yfan x V E :=
+    topological_component_subset_yfan hU
+  have heq : dartLeadsInto x V E u w = connectedComponentIn (yfan x V E) y :=
+    expand_element_in_topological_component_yfan x V E (dartLeadsInto x V E u w) y
+      hfan hU hy_dl
+  obtain ⟨y', hy'⟩ := exists_in_aff_gt_disjoint x w v hdis_wv
+  have hsubwv_yfan : affGt ({x} : Set V3) {w, v} ⊆ yfan x V E := by
+    rw [Set.pair_comm w v]
+    exact condition_aff_gt_subset_yfan hfan hvu huw hsigma hcard hfan80 hwv
+  have hsub13_yfan : affGt ({x} : Set V3) ({v, u, w} : Set V3) ⊆ yfan x V E :=
+    fun z hz => hsubyfan_dl (hsub13 hz)
+  have hseg : segment ℝ y y' ⊆
+      affGt ({x} : Set V3) {w, v} ∪ affGt ({x} : Set V3) ({v, u, w} : Set V3) :=
+    segment_subset_aff_gt_union (x := x) (y := y) (z := y') (v := v) (u := u) (w := w)
+      hcop hy hy'
+  have hseg_yfan : segment ℝ y y' ⊆ yfan x V E := by
+    intro p hp
+    rcases (Set.mem_union p _ _).mp (hseg hp) with hpwv | hp13
+    · exact hsubwv_yfan hpwv
+    · exact hsub13_yfan hp13
+  have hy'_cc : y' ∈ connectedComponentIn (yfan x V E) y :=
+    ((convex_segment y y').isPreconnected.subset_connectedComponentIn
+      (left_mem_segment ℝ y y') hseg_yfan) (right_mem_segment ℝ y y')
+  have hcc_eq : connectedComponentIn (yfan x V E) y' =
+      connectedComponentIn (yfan x V E) y :=
+    (connectedComponentIn_eq hy'_cc).symm
+  have hsub_wv_cc : affGt ({x} : Set V3) {w, v} ⊆
+      connectedComponentIn (yfan x V E) y' :=
+    (convex_affGt_pair_of_disjoint hdis_wv).isPreconnected.subset_connectedComponentIn
+      hy' hsubwv_yfan
+  rw [heq, ← hcc_eq]
+  exact hsub_wv_cc
 
 /-- HOL Conforming.hl :2154-2178 `STEP2_REDUCE_FAN`
 
