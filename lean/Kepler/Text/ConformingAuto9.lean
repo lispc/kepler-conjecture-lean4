@@ -495,7 +495,16 @@ HOL 原文：
 theorem expand_set_edge_fan (v w : V3) :
     {p : V3 × V3 | ({p.1, p.2} : Set V3) = {v, w}} =
       ({(v, w), (w, v)} : Set (V3 × V3)) := by
-  sorry
+  ext p
+  rw [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff,
+    Set.pair_eq_pair_iff]
+  constructor
+  · rintro (⟨h1, h2⟩ | ⟨h1, h2⟩)
+    · exact Or.inl (Prod.ext h1 h2)
+    · exact Or.inr (Prod.ext h1 h2)
+  · rintro (h | h)
+    · exact Or.inl ⟨congrArg Prod.fst h, congrArg Prod.snd h⟩
+    · exact Or.inr ⟨congrArg Prod.fst h, congrArg Prod.snd h⟩
 
 /-- HOL Conforming.hl :2323-2356 `DART_FANADD_EQ_DART_FAN_ADD_2DART`
 
