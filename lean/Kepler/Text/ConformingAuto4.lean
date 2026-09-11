@@ -122,7 +122,22 @@ HOL 原文：
 theorem RADIAL_UNIONS (r : ℝ) (v0 : V3) (f : Set (Set V3))
     (hfin : f.Finite) (h : ∀ s ∈ f, radialNorm r v0 s) :
     radialNorm r v0 (⋃₀ f) := by
-  sorry
+  refine Set.Finite.induction_on
+    (motive := fun s _ => (∀ t ∈ s, radialNorm r v0 t) → radialNorm r v0 (⋃₀ s))
+    f hfin ?_ ?_ h
+  · intro _
+    rw [Set.sUnion_empty]
+    exact RADIAL_EMPTY r v0
+  · intro a s _ _ ih hins
+    rw [Set.sUnion_insert]
+    have ha : radialNorm r v0 a := hins a (Set.mem_insert a s)
+    have hs : radialNorm r v0 (⋃₀ s) :=
+      ih fun t ht => hins t (Set.mem_insert_of_mem a ht)
+    refine ⟨Set.union_subset ha.1 hs.1, ?_⟩
+    intro u hu t ht htu
+    rcases hu with hu | hu
+    · exact Or.inl (ha.2 u hu t ht htu)
+    · exact Or.inr (hs.2 u hu t ht htu)
 
 /-- HOL Conforming.hl :875-886 `RADIAL_UNIV`
 
