@@ -734,7 +734,8 @@ theorem f2_EQ_F30_FANADD (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       f30 = f2 := by
-  sorry
+  rintro ⟨_, _, _, _, _, _, _, _, _, _, hf21, _, _, _, _, _, _, hf22, _, _, _, _, hf30, _⟩
+  rw [hf30, ← hf21, ← hf22]
 
 /-! ## node 对 dart 的封闭性（Conforming.hl:7606-7651） -/
 
