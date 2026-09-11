@@ -431,7 +431,24 @@ FAN (x,V,E) /\ r> &0 ==>  radial_norm r x  (xfan (x,V,E) INTER normball x r)
 theorem RADIAL_XFAN_INTER_BALL (x : V3) (V : Set V3) (E : Set (Set V3)) (r : ℝ)
     (hfan : FAN x V E) (hr : r > 0) :
     radialNorm r x (xfan x V E ∩ Metric.ball x r) := by
-  sorry
+  rw [XFAN_INTER_BALL_UNIONS, ← Set.sUnion_image]
+  refine RADIAL_UNIONS r x _ ((setEdgesFiniteFan hfan).image _) ?_
+  intro s hs
+  rcases hs with ⟨e, he, rfl⟩
+  obtain ⟨v, w, rfl⟩ := expand_edge_graph_fan hfan he
+  refine RADIAL_AFF_GE_1_2 x v w r ?_ hr
+  have hsubV : ⋃₀ E ⊆ V := hfan.1
+  have hxV : x ∉ V := hfan.2.2.2.1
+  have hvV : v ∈ V := hsubV (Set.mem_sUnion.mpr ⟨{v, w}, he, by simp⟩)
+  have hwV : w ∈ V := hsubV (Set.mem_sUnion.mpr ⟨{v, w}, he, by simp⟩)
+  rw [Set.disjoint_iff_forall_ne]
+  intro a ha b hb
+  rw [Set.mem_singleton_iff] at ha
+  subst ha
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hb
+  rcases hb with rfl | rfl
+  · exact fun hxv => hxV (hxv.symm ▸ hvV)
+  · exact fun hxw => hxV (hxw.symm ▸ hwV)
 
 /-! ## `yfan` 的径向性与立体角（Conforming.hl:1008-1036） -/
 
