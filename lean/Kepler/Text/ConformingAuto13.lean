@@ -450,7 +450,41 @@ theorem TRAN_COMMUTATIVE_F1_FAN3 (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     y.2 = v ∧
     y ∈ dartOfFan V E →
       f1Fan x V E y = f1Fan x V E1 y := by
-  sorry
+  rintro ⟨hfan, hcard, hfan80, _, _, _, _, _, _, _, _, _,
+    hvu, huw, hwv, hsigma, _, _, _, _, _, hE1, hy1, hy2, hydart⟩
+  have hdart1 : y ∈ dart1OfFan V E := by
+    rw [← dartOfFan_eq_dart1_of_surrounded hfan hcard]
+    exact hydart
+  have hyedge : ({y.1, y.2} : Set V3) ∈ E := hdart1
+  have hv_y1 : ({v, y.1} : Set V3) ∈ E := by
+    rw [← hy2, Set.pair_comm]
+    exact hyedge
+  have hsigE := INVERSE1_SIGMA_FAN (x := x) (V := V) (E := E) (v := v) hfan
+  have hsigE1 := INVERSE1_SIGMA_FAN (x := x) (V := V) (E := E1) (v := v) hfan1
+  set p : V3 := inverse1SigmaFan x V E v y.1 with hp
+  have hp_sigma : sigmaFan x V E v p = y.1 := by
+    rw [hp]
+    exact hsigE.2.1 y.1 hv_y1
+  have hp_ne_u : p ≠ u := by
+    intro hpu
+    have : y.1 = sigmaFan x V E v u := by
+      rw [← hp_sigma, hpu]
+    exact hy1 this
+  have hp_edge : ({v, p} : Set V3) ∈ E := by
+    rw [hp]
+    exact hsigE.1 y.1 hv_y1
+  have hsigma4 : sigmaFan x V E1 v p = sigmaFan x V E v p :=
+    SIGMA_FAN_OF_FANADD_AT_POINT4 x V E E1 v u w p
+      ⟨hfan, hfan1, hfan80, hvu, huw, hwv, Ne.symm hp_ne_u, hp_edge, hsigma, hcard, hE1⟩
+  have hEsub : E ⊆ E1 := by rw [← hE1]; exact Set.subset_union_left
+  have hp_edge_E1 : ({v, p} : Set V3) ∈ E1 := hEsub hp_edge
+  have hp_sigma_E1 : sigmaFan x V E1 v p = y.1 := by
+    rw [hsigma4]; exact hp_sigma
+  have hfinal : inverse1SigmaFan x V E1 v y.1 = p := by
+    have h := hsigE1.2.2 p hp_edge_E1
+    rwa [hp_sigma_E1] at h
+  simp only [f1Fan]
+  rw [hy2, ← hp, hfinal]
 
 /-- HOL Conforming.hl :4427-4605 `TRAN_COMMUTATIVE_F1_FAN`
 
