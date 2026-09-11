@@ -219,6 +219,53 @@ tran x V E1 ((f1_fan x V E ) y)=(f1_fan x V E1 ) (tran x V E1 y)
 - `dartOfFan_eq_dart1_of_surrounded`（Kepler/Text/Fan.lean:1084）
 - 缺口：HOL `tran`/`tranf`、`hypermap_of_fan_rep`（fan.hl:2780）、
   `dartset_fully_surrounded_is_non_isolated_fan` 未移植 -/
+private lemma setOfEdge_eq_of_add_edge_not_mem (V : Set V3) (E E1 : Set (Set V3))
+    (v w a : V3) (hE1 : E ∪ {({v, w} : Set V3)} = E1)
+    (ha : a ∉ ({v, w} : Set V3)) :
+    setOfEdge a V E = setOfEdge a V E1 := by
+  ext u
+  simp only [setOfEdge, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨he, hu⟩
+    exact ⟨by rw [← hE1]; exact Or.inl he, hu⟩
+  · rintro ⟨he, hu⟩
+    rw [← hE1] at he
+    rcases he with he | he
+    · exact ⟨he, hu⟩
+    · simp only [Set.mem_singleton_iff] at he
+      exact absurd (he ▸ (by simp : a ∈ ({a, u} : Set V3))) ha
+
+private lemma sigmaFan_eq_of_add_edge_not_mem (x : V3) (V : Set V3)
+    (E E1 : Set (Set V3)) (v w a : V3)
+    (hE1 : E ∪ {({v, w} : Set V3)} = E1)
+    (ha : a ∉ ({v, w} : Set V3)) (u : V3) :
+    sigmaFan x V E a u = sigmaFan x V E1 a u := by
+  have hS := setOfEdge_eq_of_add_edge_not_mem V E E1 v w a hE1 ha
+  unfold sigmaFan
+  rw [hS]
+
+private lemma inverse1SigmaFan_eq_of_add_edge_not_mem (x : V3) (V : Set V3)
+    (E E1 : Set (Set V3)) (v w a : V3)
+    (hE1 : E ∪ {({v, w} : Set V3)} = E1)
+    (ha : a ∉ ({v, w} : Set V3)) :
+    inverse1SigmaFan x V E a = inverse1SigmaFan x V E1 a := by
+  have hmem : ∀ u : V3, ({a, u} : Set V3) ∈ E ↔ ({a, u} : Set V3) ∈ E1 := by
+    intro u
+    constructor
+    · intro he; rw [← hE1]; exact Or.inl he
+    · intro he
+      rw [← hE1] at he
+      rcases he with he | he
+      · exact he
+      · simp only [Set.mem_singleton_iff] at he
+        exact absurd (he ▸ (by simp : a ∈ ({a, u} : Set V3))) ha
+  have hsig : ∀ u : V3, sigmaFan x V E a u = sigmaFan x V E1 a u :=
+    fun u => sigmaFan_eq_of_add_edge_not_mem x V E E1 v w a hE1 ha u
+  unfold inverse1SigmaFan
+  apply congrArg
+  funext g
+  simp only [hmem, hsig]
+
 theorem TRAN_COMMUTATIVE_F1_FAN1 (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     (ds : Set (V3 × V3)) (f1 f2 f3 : V3 × V3) (v u w : V3)
     (ds1 ds2 : Set (V3 × V3)) (f10 f20 f30 : V3 × V3) (y : V3 × V3)
@@ -239,7 +286,9 @@ theorem TRAN_COMMUTATIVE_F1_FAN1 (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     ¬ (y.2 ∈ ({v, w} : Set V3)) ∧
     y ∈ dartOfFan V E →
       f1Fan x V E y = f1Fan x V E1 y := by
-  sorry
+  rintro ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hE1, hy2, _⟩
+  simp only [f1Fan]
+  rw [inverse1SigmaFan_eq_of_add_edge_not_mem x V E E1 v w y.2 hE1 hy2]
 
 /-- HOL Conforming.hl :4253-4339 `TRAN_COMMUTATIVE_F1_FAN2`
 
