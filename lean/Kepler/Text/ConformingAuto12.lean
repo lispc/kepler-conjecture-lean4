@@ -334,13 +334,66 @@ HOL `permutes` 未以该名移植，最接近的编码是集合层双射 `Set.Bi
   `permuters_of_enf_fan`（fan.hl:2174）、`subset_d_fan`、
   `PERMUTES_FINITE_SURJECTIVE` 未以该名移植；`permutes` 用 `Set.BijOn`
   代替 -/
+private theorem f1Fan_eq_fFanPair_of_dart1_auto12 {x : V3} {V : Set V3}
+    {E : Set (Set V3)} (hfan : FAN x V E) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) : f1Fan x V E d = fFanPair x V E d := by
+  obtain ⟨a, b⟩ := d
+  have hab : {a, b} ∈ E := by
+    simpa only [dart1OfFan, Set.mem_setOf_eq] using hd
+  have hba : {b, a} ∈ E := by rwa [Set.pair_comm]
+  simp only [f1Fan, fFanPair]
+  rw [inverse_sigma_fan_eq_inverse1 hfan hba]
+
 theorem f1_fan_permutes_prime (x : V3) (V : Set V3) (E : Set (Set V3))
     (p : (V3 → Set V3 → Set (Set V3) → V3 × V3 → V3 × V3) →
       (V3 × V3 → V3 × V3)) :
     FAN x V E ∧
       p = (fun t => Kepler.Text.Fan.res (t x V E) (dart1OfFan V E)) →
       Set.BijOn (p f1Fan) (dartOfFan V E) (dartOfFan V E) := by
-  sorry
+  rintro ⟨hfan, hp⟩
+  subst p
+  refine ⟨?_, ?_, ?_⟩
+  · intro d hd
+    by_cases h1 : d ∈ dart1OfFan V E
+    · simp only [Kepler.Text.Fan.res]
+      rw [if_pos h1, f1Fan_eq_fFanPair_of_dart1_auto12 hfan h1, dartOfFan]
+      exact Or.inr (fFanPair_mem_dart1 hfan h1)
+    · simp only [Kepler.Text.Fan.res]
+      rw [if_neg h1]
+      exact hd
+  · intro a ha b hb hab
+    by_cases ha1 : a ∈ dart1OfFan V E <;> by_cases hb1 : b ∈ dart1OfFan V E
+    · simp only [Kepler.Text.Fan.res] at hab
+      rw [if_pos ha1, if_pos hb1,
+        f1Fan_eq_fFanPair_of_dart1_auto12 hfan ha1,
+        f1Fan_eq_fFanPair_of_dart1_auto12 hfan hb1] at hab
+      exact mono_fFanPair hfan ha1 hb1 hab
+    · simp only [Kepler.Text.Fan.res] at hab
+      rw [if_pos ha1, if_neg hb1] at hab
+      have hmem : f1Fan x V E a ∈ dart1OfFan V E := by
+        rw [f1Fan_eq_fFanPair_of_dart1_auto12 hfan ha1]
+        exact fFanPair_mem_dart1 hfan ha1
+      rw [hab] at hmem
+      exact absurd hmem hb1
+    · simp only [Kepler.Text.Fan.res] at hab
+      rw [if_neg ha1, if_pos hb1] at hab
+      have hmem : f1Fan x V E b ∈ dart1OfFan V E := by
+        rw [f1Fan_eq_fFanPair_of_dart1_auto12 hfan hb1]
+        exact fFanPair_mem_dart1 hfan hb1
+      rw [← hab] at hmem
+      exact absurd hmem ha1
+    · simp only [Kepler.Text.Fan.res] at hab
+      rw [if_neg ha1, if_neg hb1] at hab
+      exact hab
+  · intro y hy
+    by_cases hy1 : y ∈ dart1OfFan V E
+    · obtain ⟨d', hd', hfp⟩ := sur_fFanPair hfan hy1
+      refine ⟨d', Or.inr hd', ?_⟩
+      simp only [Kepler.Text.Fan.res]
+      rw [if_pos hd', f1Fan_eq_fFanPair_of_dart1_auto12 hfan hd', hfp]
+    · refine ⟨y, hy, ?_⟩
+      simp only [Kepler.Text.Fan.res]
+      rw [if_neg hy1]
 
 /-- HOL Conforming.hl :3832-3912 `card_ds2_fanadd_eq3`
 
