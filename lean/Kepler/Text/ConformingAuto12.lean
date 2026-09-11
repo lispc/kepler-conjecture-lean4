@@ -80,6 +80,7 @@ Encoding notes (gaps / closest existing encodings):
 
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
+import Kepler.Text.ConformingAuto11
 
 set_option maxHeartbeats 5000000
 
@@ -150,7 +151,19 @@ theorem f1_fan_of_f30_eq_f10 (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f10 = (w, v) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       f10 = f1Fan x V E1 f30 := by
-  sorry
+  rintro ⟨-, hcard, hfan80, -, -, -, -, -, -, -, -, -, hvu, huw, hwv, hsigma,
+    -, -, hf10, hf30, hE1⟩
+  have hsig3 : sigmaFan x V E1 w v = u :=
+    SIGMA_FAN_OF_FANADD_AT_POINT3 x V E E1 v u w
+      ⟨hfan, hfan1, hvu, huw, hwv, hsigma, hfan80, hcard, hE1⟩
+  have hwv_E1 : ({w, v} : Set V3) ∈ E1 := by
+    rw [← hE1]
+    exact Set.mem_union_right E (by simp [Set.pair_comm])
+  have hinv : inverse1SigmaFan x V E1 w u = v := by
+    rw [← hsig3]
+    exact (INVERSE1_SIGMA_FAN (v := w) hfan1).2.2 v hwv_E1
+  rw [hf10, hf30]
+  simp only [f1Fan, hinv]
 
 /-- HOL Conforming.hl :3731-3775 `f10_in_d1_fanadd`
 
