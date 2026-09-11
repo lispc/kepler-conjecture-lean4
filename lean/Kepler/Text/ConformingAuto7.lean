@@ -297,7 +297,9 @@ theorem properties_of_elements_in_node_fully_surroundedfan
     (hcard : ∀ v ∈ V, 1 < (setOfEdge v V E).ncard)
     (hds : ds ∈ (hypermapOfFan x V E hfan).nodeSet) (hy : y ∈ ds) :
     {y.1, y.2} ∈ E := by
-  sorry
+  have hy_dart : y ∈ dartOfFan V E := node_subset_dart_fan hfan hds hy
+  rw [dartOfFan_eq_dart1_of_surrounded hfan hcard] at hy_dart
+  simpa only [dart1OfFan, Set.mem_setOf_eq] using hy_dart
 
 /-- HOL Conforming.hl :1569-1596 `lemma_card_node_eq_set_of_orbits`
 
