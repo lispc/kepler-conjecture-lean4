@@ -128,7 +128,28 @@ theorem SUM_SOL_IN_TOPOLOGICAL_COMPONENET_EQ_IN_FACE_SET {x : V3} {V : Set V3}
     (∑ᶠ f ∈ topologicalComponentYfan x V E, sol x f) =
       ∑ᶠ f ∈ (hypermapOfFan x V E hfan).faceSet,
         sol x (dartsetLeadsIntoFan x V E f) := by
-  sorry
+  obtain ⟨hcard, hfan80, hbij, -⟩ := hconf
+  have hmaps : Set.MapsTo (dartsetLeadsIntoFan x V E)
+      (hypermapOfFan x V E hfan).faceSet (topologicalComponentYfan x V E) :=
+    fun f hf => dartset_leads_into_is_topological_component_yfan hfan hcard hfan80 hf
+  have hsurj : Set.SurjOn (dartsetLeadsIntoFan x V E)
+      (hypermapOfFan x V E hfan).faceSet (topologicalComponentYfan x V E) := by
+    intro s hs
+    obtain ⟨f, hf, -⟩ := hbij s hs
+    exact ⟨f, hf.1, hf.2.symm⟩
+  have hinj : Set.InjOn (dartsetLeadsIntoFan x V E)
+      (hypermapOfFan x V E hfan).faceSet := by
+    intro f hf f' hf' heq
+    have hsf : dartsetLeadsIntoFan x V E f ∈ topologicalComponentYfan x V E := hmaps hf
+    obtain ⟨g, hg, huniq⟩ := hbij (dartsetLeadsIntoFan x V E f) hsf
+    have hfg : f = g := huniq f ⟨hf, rfl⟩
+    have hf'g : f' = g := huniq f' ⟨hf', heq⟩
+    rw [hfg, hf'g]
+  have hbijOn : Set.BijOn (dartsetLeadsIntoFan x V E)
+      (hypermapOfFan x V E hfan).faceSet (topologicalComponentYfan x V E) :=
+    ⟨hmaps, hinj, hsurj⟩
+  exact (finsum_mem_eq_of_bijOn (dartsetLeadsIntoFan x V E) hbijOn
+    (fun _ _ => rfl)).symm
 
 /-- HOL Conforming.hl :1085-1092 `SOL_EMPTY`
 
