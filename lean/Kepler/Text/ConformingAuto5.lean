@@ -172,7 +172,17 @@ HOL 原文：
 - `MeasurableSet.empty`、`measure_empty`（Mathlib）
 - `Set.inter_empty`/`Set.empty_inter`（Mathlib/Data/Set/Basic.lean） -/
 theorem SOL_EMPTY (x : V3) : sol x (∅ : Set V3) = 0 := by
-  sorry
+  have hr : (0 : ℝ) < 1 := by norm_num
+  have hm : MeasurableSet ((∅ : Set V3) ∩ Metric.ball x 1) := by
+    rw [Set.empty_inter]
+    exact MeasurableSet.empty
+  have hrad : radialNorm 1 x ((∅ : Set V3) ∩ Metric.ball x 1) := by
+    rw [Set.empty_inter]
+    refine ⟨Set.empty_subset _, ?_⟩
+    intro u hu
+    exact (Set.notMem_empty (x := x + u) hu).elim
+  rw [sol_spec hr hm hrad, Set.empty_inter, Measure.real_def, measure_empty]
+  norm_num
 
 /-- HOL Conforming.hl :1093-1108 `SOL_DISJOINT_UNION`
 
