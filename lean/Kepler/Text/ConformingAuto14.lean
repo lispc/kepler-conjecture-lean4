@@ -94,6 +94,7 @@ Encoding notes (gaps / closest existing encodings):
 
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
+import Kepler.Text.ConformingAuto10
 import Kepler.Text.ConformingAuto13
 
 set_option maxHeartbeats 5000000
@@ -788,7 +789,201 @@ theorem SUR_TRANF_FACE_DELETE_DS (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     E ∪ {({v, w} : Set V3)} = E1 ∧
     f ∈ ((hypermapOfFan x V E1 hfan1).faceSet \ {ds1}) \ {ds2} →
       ∃ ds0, ds0 ∈ (hypermapOfFan x V E hfan).faceSet \ {ds} ∧ tranf ds0 = f := by
-  sorry
+  dsimp only
+  rintro ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hfmem⟩
+  obtain ⟨hfmem', hf_ne_ds2⟩ := hfmem
+  obtain ⟨hf_faceSet1, hf_ne_ds1⟩ := hfmem'
+  have hf_ne_ds1' : f ≠ ds1 := by simpa using hf_ne_ds1
+  have hf_ne_ds2' : f ≠ ds2 := by simpa using hf_ne_ds2
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfanC
+  let H1 : Hypermap (V3 × V3) := hypermapOfFan x V E1 hfan1
+  have hdarts_E : (↑H.darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfanC).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfanC).coe_toFinset
+  have hdarts_E1 : (↑H1.darts : Set (V3 × V3)) = dart1OfFan V E1 := by
+    change (↑(finite_dart1_fan hfan1).toFinset : Set (V3 × V3)) = dart1OfFan V E1
+    exact (finite_dart1_fan hfan1).coe_toFinset
+  have hds_dart1 : ds ⊆ dart1OfFan V E := by
+    obtain ⟨a, ha_darts, ha_face⟩ := H.face_representation hds
+    intro y hy
+    rw [ha_face] at hy
+    rw [← hdarts_E]
+    exact H.face_subset_darts ha_darts hy
+  obtain ⟨p, hp_darts, hp_face⟩ := H1.face_representation hf_faceSet1
+  have hface_of_mem : ∀ y ∈ f, H1.face y = f := by
+    intro y hy
+    have hy' : y ∈ H1.face p := by rw [← hp_face]; exact hy
+    exact (H1.face_eq_of_mem hy').symm.trans hp_face.symm
+  have hf2_eq : f2 = (u, w) := Prod.ext hf2u hf2w
+  have hwv_E1 : ({w, v} : Set V3) ∈ E1 := by
+    rw [← hE1]; exact Set.mem_union_right E (by simp [Set.pair_comm])
+  have hsig3 : sigmaFan x V E1 w v = u :=
+    SIGMA_FAN_OF_FANADD_AT_POINT3 x V E E1 v u w
+      ⟨hfanC, hfan1, hvu, huw, hwv, hsigma, hfan80, hcard, hE1⟩
+  have hinv_wu : inverse1SigmaFan x V E1 w u = v := by
+    have h := (INVERSE1_SIGMA_FAN (x := x) (V := V) (E := E1) (v := w) hfan1).2.2 v hwv_E1
+    rw [hsig3] at h
+    exact h
+  have hfm_f2 : H1.faceMap f2 = (w, v) := by
+    have hd1 : f2 ∈ dart1OfFan V E1 := by
+      rw [hf2_eq]
+      change ({u, w} : Set V3) ∈ E1
+      rw [← hE1]
+      exact Set.mem_union_left _ huw
+    have h := hypermapOfFan_faceMap_eq_f1Fan hfan1 hd1
+    rw [h]
+    simp only [f1Fan, hf2_eq, hinv_wu]
+  have hface_f2_ds2 : H1.face f2 = ds2 := by
+    have hmem : (w, v) ∈ H1.face f2 := by
+      change (w, v) ∈ orbitMap H1.faceMap f2
+      exact ⟨1, by rw [pow_one]; exact hfm_f2⟩
+    exact (H1.face_eq_of_mem hmem).trans hds2
+  have hvw_E1 : ({v, w} : Set V3) ∈ E1 := by
+    rw [← hE1]; exact Set.mem_union_right E (by simp)
+  have hsig1 : sigmaFan x V E1 v w = sigmaFan x V E v u :=
+    SIGMA_FAN_OF_FANADD_AT_POINT1 x V E E1 v u w
+      ⟨hfanC, hfan1, hvu, huw, hwv, hsigma, hfan80, hcard, hE1⟩
+  have hinv_v : inverse1SigmaFan x V E1 v (sigmaFan x V E v u) = w := by
+    have h := (INVERSE1_SIGMA_FAN (x := x) (V := V) (E := E1) (v := v) hfan1).2.2 w hvw_E1
+    rw [hsig1] at h
+    exact h
+  have hfm_h : H1.faceMap (sigmaFan x V E v u, v) = (v, w) := by
+    have hd1 : (sigmaFan x V E v u, v) ∈ dart1OfFan V E1 := by
+      have hu_mem : u ∈ setOfEdge v V E :=
+        (properties_of_setOfEdge_fan x V E v u hfanC).mp hvu
+      have hσ_mem : sigmaFan x V E v u ∈ setOfEdge v V E :=
+        sigma_fan_in_setOfEdge hfanC hu_mem
+      have hedge : ({v, sigmaFan x V E v u} : Set V3) ∈ E :=
+        (properties_of_setOfEdge_fan x V E v (sigmaFan x V E v u) hfanC).mpr hσ_mem
+      have hedge' : ({sigmaFan x V E v u, v} : Set V3) ∈ E := by
+        rwa [Set.pair_comm] at hedge
+      change ({sigmaFan x V E v u, v} : Set V3) ∈ E1
+      rw [← hE1]
+      exact Set.mem_union_left _ hedge'
+    have h := hypermapOfFan_faceMap_eq_f1Fan hfan1 hd1
+    rw [h]
+    simp only [f1Fan, hinv_v]
+  have hface_h_ds1 : H1.face (sigmaFan x V E v u, v) = ds1 := by
+    have hmem : (v, w) ∈ H1.face (sigmaFan x V E v u, v) := by
+      change (v, w) ∈ orbitMap H1.faceMap (sigmaFan x V E v u, v)
+      exact ⟨1, by rw [pow_one]; exact hfm_h⟩
+    exact (H1.face_eq_of_mem hmem).trans hds1
+  have h_agree : ∀ y ∈ ds, y ≠ (u, w) → y ≠ (sigmaFan x V E v u, v) →
+      f1Fan x V E y = f1Fan x V E1 y := by
+    intro y hy_ds hy_f2 hy_h
+    have hy_dart1 : y ∈ dart1OfFan V E := hds_dart1 hy_ds
+    have hy_dart : y ∈ dartOfFan V E := Set.mem_union_right _ hy_dart1
+    by_cases hy2 : y.2 ∈ ({v, w} : Set V3)
+    · rw [Set.mem_insert_iff, Set.mem_singleton_iff] at hy2
+      rcases hy2 with hy2 | hy2
+      · by_cases hy1 : y.1 = sigmaFan x V E v u
+        · exact absurd (Prod.ext hy1 hy2) hy_h
+        · exact TRAN_COMMUTATIVE_F1_FAN3 x V E E1 ds f1 f2 f3 v u w ds1 ds2
+            f10 f20 f30 y hfanC hfan1
+            ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+             hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1.symm, hds2.symm,
+             hf10, hf20, hf30, hE1, hy1, hy2, hy_dart⟩
+      · by_cases hy1 : y.1 = u
+        · exact absurd (Prod.ext hy1 hy2) hy_f2
+        · exact TRAN_COMMUTATIVE_F1_FAN2 x V E E1 ds f1 f2 f3 v u w ds1 ds2
+            f10 f20 f30 y hfanC hfan1
+            ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+             hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1.symm, hds2.symm,
+             hf10, hf20, hf30, hE1, hy1, hy2, hy_dart⟩
+    · exact TRAN_COMMUTATIVE_F1_FAN1 x V E E1 ds f1 f2 f3 v u w ds1 ds2
+        f10 f20 f30 y hfanC hfan1
+        ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+         hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1.symm, hds2.symm,
+         hf10, hf20, hf30, hE1, hy2, hy_dart⟩
+  have hf2_ds : f2 ∈ ds := hsub (by simp)
+  have hnot_sub : ¬ f ⊆ ds := by
+    intro hfsub
+    have hf2_not : f2 ∉ f := by
+      intro hf2f
+      have hface_f2_eq : H1.face f2 = f := hface_of_mem f2 hf2f
+      exact hf_ne_ds2' (hface_f2_eq.symm.trans hface_f2_ds2)
+    have h_not : (sigmaFan x V E v u, v) ∉ f := by
+      intro hf_h
+      have hface_h_eq : H1.face (sigmaFan x V E v u, v) = f :=
+        hface_of_mem _ hf_h
+      exact hf_ne_ds1' (hface_h_eq.symm.trans hface_h_ds1)
+    have hH_inv : ∀ y ∈ f, H.faceMap y ∈ f := by
+      intro y hy
+      have hy_ds : y ∈ ds := hfsub hy
+      have hy_dart1 : y ∈ dart1OfFan V E := hds_dart1 hy_ds
+      have hy_dart1_E1 : y ∈ dart1OfFan V E1 := by
+        change ({y.1, y.2} : Set V3) ∈ E1
+        rw [← hE1]
+        exact Set.mem_union_left _ hy_dart1
+      have hmapE : H.faceMap y = f1Fan x V E y :=
+        hypermapOfFan_faceMap_eq_f1Fan hfanC hy_dart1
+      have hmapE1 : H1.faceMap y = f1Fan x V E1 y :=
+        hypermapOfFan_faceMap_eq_f1Fan hfan1 hy_dart1_E1
+      have hagree : f1Fan x V E y = f1Fan x V E1 y :=
+        h_agree y hy_ds (fun hh => hf2_not (by rw [hf2_eq]; exact hh ▸ hy))
+          (fun hh => h_not (hh ▸ hy))
+      rw [hmapE, hagree, ← hmapE1]
+      have : H1.faceMap y ∈ H1.face y := by
+        simpa [Hypermap.face, pow_one] using pow_apply_mem_orbitMap H1.faceMap 1 y
+      rw [← hface_of_mem y hy]
+      exact this
+    have hds_subset_f : ds ⊆ f := by
+      have hp_f : p ∈ f := by rw [hp_face]; exact H1.mem_face_self p
+      have hp_ds : p ∈ ds := hfsub hp_f
+      obtain ⟨q, _, hq_face⟩ := H.face_representation hds
+      have hp_in_Hq : p ∈ H.face q := by rw [← hq_face]; exact hp_ds
+      have hface_p_ds : H.face p = ds :=
+        (H.face_eq_of_mem hp_in_Hq).symm.trans hq_face.symm
+      intro y hy
+      have hy_orbit : y ∈ H.face p := by rw [hface_p_ds]; exact hy
+      rw [Hypermap.face] at hy_orbit
+      obtain ⟨n, hn⟩ := hy_orbit
+      rw [← hn]
+      clear hn hy
+      induction n with
+      | zero => simpa using hp_f
+      | succ k ih =>
+          rw [pow_succ', Equiv.Perm.mul_apply]
+          exact hH_inv _ ih
+    exact hf2_not (hds_subset_f hf2_ds)
+  obtain ⟨z, hz_f, hz_not_ds⟩ := Set.not_subset.mp hnot_sub
+  have hz_in_p : z ∈ H1.face p := by rw [← hp_face]; exact hz_f
+  have hz_darts1 : z ∈ H1.darts := H1.face_subset_darts hp_darts hz_in_p
+  have hz_dart1_E1 : z ∈ dart1OfFan V E1 := by
+    rw [← hdarts_E1]; exact hz_darts1
+  have hfz : f = H1.face z := hp_face.trans (H1.face_eq_of_mem hz_in_p)
+  have hz_dart1_E : z ∈ dart1OfFan V E := by
+    by_contra hz
+    have hpair_E1 : ({z.1, z.2} : Set V3) ∈ E1 := hz_dart1_E1
+    rw [← hE1] at hpair_E1
+    rcases hpair_E1 with hpair | hpair
+    · exact hz hpair
+    · rcases (Set.pair_eq_pair_iff.mp hpair) with ⟨hz1, hz2⟩ | ⟨hz1, hz2⟩
+      · have hz_eq : z = (v, w) := Prod.ext hz1 hz2
+        exact hf_ne_ds1' (by rw [hfz, hz_eq, hds1])
+      · have hz_eq : z = (w, v) := Prod.ext hz1 hz2
+        exact hf_ne_ds2' (by rw [hfz, hz_eq, hds2])
+  let ds0 : Set (V3 × V3) := (hypermapOfFan x V E hfanC).face z
+  have hz_darts_E : z ∈ H.darts := by
+    change z ∈ (↑H.darts : Set (V3 × V3))
+    rw [hdarts_E]
+    exact hz_dart1_E
+  have hds0_faceSet : ds0 ∈ (hypermapOfFan x V E hfanC).faceSet :=
+    (Hypermap.mem_darts_iff_face_mem _ z).mp hz_darts_E
+  have hz_ds0 : z ∈ ds0 := by
+    change z ∈ (hypermapOfFan x V E hfanC).face z
+    exact Hypermap.mem_face_self _ z
+  have hds0_ne : ds0 ≠ ds := by
+    intro h
+    exact hz_not_ds (by rw [← h]; exact hz_ds0)
+  refine ⟨ds0, ⟨hds0_faceSet, hds0_ne⟩, ?_⟩
+  exact unique_tranf_fan x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+    ds0 f z hfanC hfan1
+    ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+     hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1.symm, hds2.symm,
+     hf10, hf20, hf30, hE1, hfz, hz_ds0, hds0_faceSet, hds0_ne⟩
 
 /-- HOL Conforming.hl :5773-6120 `DOMAIN_TRANF_FACE_DELETE_DS`
 
