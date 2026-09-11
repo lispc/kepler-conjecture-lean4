@@ -394,7 +394,10 @@ xfan(x,V,E) INTER normball x r= UNIONS {y | ?e. e IN E /\ y = (aff_ge {x} e) INT
 theorem XFAN_INTER_BALL_UNIONS (x : V3) (V : Set V3) (E : Set (Set V3)) (r : ℝ) :
     xfan x V E ∩ Metric.ball x r =
       ⋃ e ∈ E, (affGe ({x} : Set V3) e ∩ Metric.ball x r) := by
-  sorry
+  ext v
+  simp only [xfan, Set.mem_inter_iff, Set.mem_iUnion,
+    Set.mem_setOf_eq, exists_prop]
+  tauto
 
 /-- HOL Conforming.hl :986-1007 `RADIAL_XFAN_INTER_BALL`
 
