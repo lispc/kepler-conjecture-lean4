@@ -873,7 +873,383 @@ theorem INTERS_HALF_SPACE_DS_FANADD2 (x : V3) (V : Set V3)
     (⋂ y ∈ ds, affGt ({x, y.1, y.2} : Set V3) {(f1Fan x V E y).2}) = U1 →
       U1 ∩ affGt ({x, v, w} : Set V3) {sigmaFan x V E v u} ⊆
         dartsetLeadsIntoFan x V E1 ds1 := by
-  sorry
+  intro h
+  obtain ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hmin, hInter⟩ := h
+  have hEsub : E ⊆ E1 := by rw [← hE1]; exact Set.subset_union_left
+  have hvwE1 : ({v, w} : Set V3) ∈ E1 := by
+    rw [← hE1]; exact Set.mem_union_right E (by simp)
+  have hvw_not : ({v, w} : Set V3) ∉ E := fun hh => hwv (Set.pair_comm v w ▸ hh)
+  have hvw_ne : v ≠ w := edge_ne_of_fan hfan1 hvwE1
+  have huv_ne : u ≠ v := Ne.symm (edge_ne_of_fan hfan hvu)
+  have huw_ne : u ≠ w := edge_ne_of_fan hfan huw
+  have hbase : FAN x V E ∧
+      (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
+      fan80 x V E ∧
+      ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard ∧
+      ({f1, f2, f3} : Set (V3 × V3)) ⊆ ds ∧
+      f1Fan x V E f1 = f2 ∧ f1Fan x V E f2 = f3 ∧ ¬ (f1Fan x V E f3 = f1) ∧
+      f1.1 = v ∧ f2.1 = u ∧ f3.1 = w ∧
+      ({v, u} : Set V3) ∈ E ∧ ({u, w} : Set V3) ∈ E ∧ ({w, v} : Set V3) ∉ E ∧
+      sigmaFan x V E u w = v ∧ f1.2 = u ∧ f2.2 = w ∧
+      (hypermapOfFan x V E1 hfan1).face (v, w) = ds1 ∧
+      (hypermapOfFan x V E1 hfan1).face (w, v) = ds2 ∧
+      f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
+      E ∪ {({v, w} : Set V3)} = E1 ∧
+      (∀ (E2 : Set (Set V3)) (hfan2 : FAN x V E2),
+        FAN x V E2 ∧
+        (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E2).ncard) ∧
+        fan80 x V E2 ∧
+        nFan x V E2 hfan2 < nFan x V E hfan →
+          conformingFan x V E2 hfan2) :=
+    ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+      hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20,
+      hf30, hE1, hmin⟩
+  have hconf : conformingFan x V E1 hfan1 :=
+    FANADD_CONFORMING x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1 hbase
+  have hsimple : (hypermapOfFan x V E1 hfan1).Simple := SRPRNPL hfan1 hconf
+  obtain ⟨hcard1, hfan80_1, -, hhalf, -, -⟩ := hconf
+  have hds1_face : ds1 ∈ (hypermapOfFan x V E1 hfan1).faceSet :=
+    ds1_in_face_set_fanadd x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1
+      ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+        hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1.symm, hds2.symm,
+        hf10, hf20, hf30, hE1⟩
+  have hσ1vw : sigmaFan x V E1 v w = sigmaFan x V E v u :=
+    SIGMA_FAN_OF_FANADD_AT_POINT1 x V E E1 v u w
+      ⟨hfanE, hfan1, hvu, huw, hwv, hsigma, hfan80, hcard, hE1⟩
+  have hpack : FAN x V E ∧
+      (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
+      fan80 x V E ∧
+      ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard ∧
+      ({f1, f2, f3} : Set (V3 × V3)) ⊆ ds ∧
+      f1Fan x V E f1 = f2 ∧ f1Fan x V E f2 = f3 ∧ ¬ (f1Fan x V E f3 = f1) ∧
+      f1.1 = v ∧ f2.1 = u ∧ f3.1 = w ∧
+      ({v, u} : Set V3) ∈ E ∧ ({u, w} : Set V3) ∈ E ∧ ({w, v} : Set V3) ∉ E ∧
+      sigmaFan x V E u w = v ∧ f1.2 = u ∧ f2.2 = w ∧
+      (hypermapOfFan x V E1 hfan1).face (v, w) = ds1 ∧
+      (hypermapOfFan x V E1 hfan1).face (w, v) = ds2 ∧
+      f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
+      E ∪ {({v, w} : Set V3)} = E1 :=
+    ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+      hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20,
+      hf30, hE1⟩
+  have hinv : inverse1SigmaFan x V E1 w v = inverse1SigmaFan x V E w u :=
+    inverse1_sigma_fan_FANADD x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1 hpack
+  have hf2pair : f2 = (u, w) := Prod.ext hf2u hf2w
+  have hf3eq : f1Fan x V E1 (v, w) = f3 := by
+    have h2 : f1Fan x V E f2 = f3 := hf2f3
+    rw [hf2pair] at h2
+    simp only [f1Fan] at h2 ⊢
+    rw [hinv]
+    exact h2
+  have hdfE : dartOfFan V E = dart1OfFan V E :=
+    dartOfFan_eq_dart1_of_surrounded hfan hcard
+  have hdfE1 : dartOfFan V E1 = dart1OfFan V E1 :=
+    dartOfFan_eq_dart1_of_surrounded hfan1 hcard1
+  have hvw_dart1 : (v, w) ∈ dart1OfFan V E1 := hvwE1
+  have hdartsE1 : ((hypermapOfFan x V E1 hfan1).darts : Set (V3 × V3)) =
+      dart1OfFan V E1 := by
+    change ((finite_dart1_fan hfan1).toFinset : Set (V3 × V3)) = dart1OfFan V E1
+    exact (finite_dart1_fan hfan1).coe_toFinset
+  have hdartsE : ((hypermapOfFan x V E hfan).darts : Set (V3 × V3)) =
+      dart1OfFan V E := by
+    change ((finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have hds1_sub : ds1 ⊆ dart1OfFan V E1 := by
+    intro g hg
+    obtain ⟨d, hd, hface⟩ := (hypermapOfFan x V E1 hfan1).face_representation hds1_face
+    have hg' : g ∈ (hypermapOfFan x V E1 hfan1).face d := by
+      rw [← hface]; exact hg
+    have hgd : g ∈ (↑(hypermapOfFan x V E1 hfan1).darts : Set (V3 × V3)) :=
+      (hypermapOfFan x V E1 hfan1).face_subset_darts hd hg'
+    rwa [hdartsE1] at hgd
+  have hds_sub : ds ⊆ dart1OfFan V E := by
+    intro g hg
+    obtain ⟨d, hd, hface⟩ := (hypermapOfFan x V E hfan).face_representation hds
+    have hg' : g ∈ (hypermapOfFan x V E hfan).face d := by
+      rw [← hface]; exact hg
+    have hgd : g ∈ (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) :=
+      (hypermapOfFan x V E hfan).face_subset_darts hd hg'
+    rwa [hdartsE] at hgd
+  have hf1fwd : ∀ g ∈ ds, f1Fan x V E g ∈ ds := by
+    intro g hg
+    have hg1 : g ∈ dart1OfFan V E := hds_sub hg
+    have hba : ({g.2, g.1} : Set V3) ∈ E := by rw [Set.pair_comm]; exact hg1
+    exact condition_f1_fan_in_face_set hfan
+      (by simp only [f1Fan, fFanPair]; rw [inverse_sigma_fan_eq_inverse1 hfan hba])
+      hds hdfE hg
+  have htransb : FAN x V E ∧
+      (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
+      fan80 x V E ∧
+      ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard ∧
+      ({f1, f2, f3} : Set (V3 × V3)) ⊆ ds ∧
+      f1Fan x V E f1 = f2 ∧ f1Fan x V E f2 = f3 ∧ ¬ (f1Fan x V E f3 = f1) ∧
+      f1.1 = v ∧ f2.1 = u ∧ f3.1 = w ∧
+      ({v, u} : Set V3) ∈ E ∧ ({u, w} : Set V3) ∈ E ∧ ({w, v} : Set V3) ∉ E ∧
+      sigmaFan x V E u w = v ∧
+      ds1 = (hypermapOfFan x V E1 hfan1).face (v, w) ∧
+      ds2 = (hypermapOfFan x V E1 hfan1).face (w, v) ∧
+      f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
+      E ∪ {({v, w} : Set V3)} = E1 :=
+    ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+      hf2u, hf3w, hvu, huw, hwv, hsigma, hds1.symm, hds2.symm, hf10, hf20,
+      hf30, hE1⟩
+  have htran1 : ∀ g : V3 × V3, g ∈ ds → ¬ (g.2 ∈ ({v, w} : Set V3)) →
+      f1Fan x V E g = f1Fan x V E1 g := by
+    intro g hg hgn
+    exact TRAN_COMMUTATIVE_F1_FAN1 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20
+      f30 g hfan hfan1 ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3,
+        hf3ne, hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1.symm, hds2.symm,
+        hf10, hf20, hf30, hE1, hgn, by
+        simp only [dartOfFan, Set.mem_setOf_eq, Set.mem_union]
+        exact Or.inr (hds_sub hg)⟩
+  have htran2 : ∀ g : V3 × V3, g ∈ ds → ¬ (g.1 = u) → g.2 = w →
+      f1Fan x V E g = f1Fan x V E1 g := by
+    intro g hg hgnu hg2
+    exact TRAN_COMMUTATIVE_F1_FAN2 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20
+      f30 g hfan hfan1 ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3,
+        hf3ne, hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1.symm, hds2.symm,
+        hf10, hf20, hf30, hE1, hgnu, hg2, by
+        simp only [dartOfFan, Set.mem_setOf_eq, Set.mem_union]
+        exact Or.inr (hds_sub hg)⟩
+  have htran3 : ∀ g : V3 × V3, g ∈ ds → ¬ (g.1 = sigmaFan x V E v u) → g.2 = v →
+      f1Fan x V E g = f1Fan x V E1 g := by
+    intro g hg hgn hg2
+    exact TRAN_COMMUTATIVE_F1_FAN3 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20
+      f30 g hfan hfan1 ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3,
+        hf3ne, hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1.symm, hds2.symm,
+        hf10, hf20, hf30, hE1, hgn, hg2, by
+        simp only [dartOfFan, Set.mem_setOf_eq, Set.mem_union]
+        exact Or.inr (hds_sub hg)⟩
+  have hstepv : ∀ g : V3 × V3, g.2 = v → g.1 = sigmaFan x V E v u →
+      f1Fan x V E1 g = (v, w) := by
+    intro g hg2 hg1
+    simp only [f1Fan, hg2]
+    have hcl : inverse1SigmaFan x V E1 v (sigmaFan x V E1 v w) = w :=
+      (INVERSE1_SIGMA_FAN (v := v) hfan1).2.2 w hvwE1
+    rw [hg1, ← hσ1vw, hcl]
+  have hiter : ∀ n : ℕ, (f1Fan x V E1)^[n] (v, w) = (v, w) ∨
+      ((f1Fan x V E1)^[n] (v, w) ∈ ds ∧ (f1Fan x V E1)^[n] (v, w) ≠ f1 ∧
+        (f1Fan x V E1)^[n] (v, w) ≠ f2) := by
+    intro n
+    induction n with
+    | zero => exact Or.inl rfl
+    | succ k ih =>
+        rw [Function.iterate_succ_apply']
+        set g : V3 × V3 := (f1Fan x V E1)^[k] (v, w) with hgdef
+        rcases ih with hcyc | ⟨hgds, hgne1, hgne2⟩
+        · rw [hcyc, hf3eq]
+          refine Or.inr ⟨hfsub (by simp), ?_, ?_⟩
+          · exact fun heq => hvw_ne (by
+              rw [← hf1v, ← hf3w]; exact (congrArg Prod.fst heq).symm)
+          · exact fun heq => huw_ne (by
+              rw [← hf2u, ← hf3w]; exact (congrArg Prod.fst heq).symm)
+        · by_cases hg2v : g.2 = v
+          · by_cases hg1 : g.1 = sigmaFan x V E v u
+            · rw [hstepv g hg2v hg1]
+              exact Or.inl rfl
+            · rw [← htran3 g hgds hg1 hg2v]
+              refine Or.inr ⟨hf1fwd g hgds, ?_, ?_⟩
+              · intro heq
+                have hc1 : g.2 = f1.1 := by
+                  simpa only [f1Fan] using congrArg Prod.fst heq
+                rw [hf1v] at hc1
+                have hc2 : inverse1SigmaFan x V E g.2 g.1 = f1.2 := by
+                  simpa only [f1Fan] using congrArg Prod.snd heq
+                rw [hf1u, hc1] at hc2
+                have hedge : ({g.1, g.2} : Set V3) ∈ E := hds_sub hgds
+                rw [hc1, Set.pair_comm] at hedge
+                have hcl := (INVERSE1_SIGMA_FAN (v := v) hfan).2.1 g.1 hedge
+                rw [hc2] at hcl
+                exact hg1 hcl.symm
+              · intro heq
+                have hc1 : g.2 = f2.1 := by
+                  simpa only [f1Fan] using congrArg Prod.fst heq
+                rw [hf2u] at hc1
+                exact huv_ne (hc1.symm.trans hg2v)
+          · by_cases hg2w : g.2 = w
+            · have hgnu : ¬ (g.1 = u) := by
+                intro hgu
+                exact hgne2 ((Prod.ext hgu hg2w).trans hf2pair.symm)
+              rw [← htran2 g hgds hgnu hg2w]
+              refine Or.inr ⟨hf1fwd g hgds, ?_, ?_⟩
+              · intro heq
+                have hc1 : g.2 = f1.1 := by
+                  simpa only [f1Fan] using congrArg Prod.fst heq
+                rw [hf1v] at hc1
+                exact hvw_ne (hc1.symm.trans hg2w)
+              · intro heq
+                have hc1 : g.2 = f2.1 := by
+                  simpa only [f1Fan] using congrArg Prod.fst heq
+                rw [hf2u] at hc1
+                exact huw_ne (hc1.symm.trans hg2w)
+            · have hgn : ¬ (g.2 ∈ ({v, w} : Set V3)) := by
+                intro hmem
+                simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+                rcases hmem with hh | hh
+                · exact hg2v hh
+                · exact hg2w hh
+              rw [← htran1 g hgds hgn]
+              refine Or.inr ⟨hf1fwd g hgds, ?_, ?_⟩
+              · intro heq
+                have hc1 : g.2 = f1.1 := by
+                  simpa only [f1Fan] using congrArg Prod.fst heq
+                rw [hf1v] at hc1
+                exact hgn (by simp [hc1])
+              · intro heq
+                have hc1 : g.2 = f2.1 := by
+                  simpa only [f1Fan] using congrArg Prod.fst heq
+                rw [hf2u] at hc1
+                have hc2 : inverse1SigmaFan x V E g.2 g.1 = f2.2 := by
+                  simpa only [f1Fan] using congrArg Prod.snd heq
+                rw [hf2w, hc1] at hc2
+                have hedge : ({g.1, g.2} : Set V3) ∈ E := hds_sub hgds
+                rw [hc1, Set.pair_comm] at hedge
+                have hcl := (INVERSE1_SIGMA_FAN (v := u) hfan).2.1 g.1 hedge
+                rw [hc2, hsigma] at hcl
+                exact hgne1 (Prod.ext (hcl.symm.trans hf1v.symm) (hc1.trans hf1u.symm))
+  have hbridge : ∀ p ∈ dart1OfFan V E1, f1Fan x V E1 p = fFanPair x V E1 p := by
+    intro p hp
+    have hba : ({p.2, p.1} : Set V3) ∈ E1 := by rw [Set.pair_comm]; exact hp
+    simp only [f1Fan, fFanPair]
+    rw [inverse_sigma_fan_eq_inverse1 hfan1 hba]
+  have hfm1 : ∀ p ∈ dart1OfFan V E1,
+      (hypermapOfFan x V E1 hfan1).faceMap p = f1Fan x V E1 p := by
+    intro p hp
+    unfold hypermapOfFan extendPerm
+    simp only [Equiv.ofBijective_apply]
+    unfold Kepler.Text.Fan.res
+    rw [if_pos (by simpa [(finite_dart1_fan hfan1).coe_toFinset] using hp)]
+    exact (hbridge p hp).symm
+  have hf1mem1 : ∀ (k : ℕ) (p : V3 × V3), p ∈ dart1OfFan V E1 →
+      (f1Fan x V E1)^[k] p ∈ dart1OfFan V E1 := by
+    intro k
+    induction k with
+    | zero => intro p hp; exact hp
+    | succ k ih =>
+        intro p hp
+        rw [Function.iterate_succ_apply']
+        have hmem := ih p hp
+        rw [hbridge _ hmem]
+        exact fFanPair_mem_dart1 hfan1 hmem
+  have hpow : ∀ (k : ℕ) (p : V3 × V3), p ∈ dart1OfFan V E1 →
+      ((hypermapOfFan x V E1 hfan1).faceMap ^ k) p = (f1Fan x V E1)^[k] p := by
+    intro k
+    induction k with
+    | zero => intro p hp; rfl
+    | succ k ih =>
+        intro p hp
+        rw [pow_succ', Equiv.Perm.mul_apply, Function.iterate_succ_apply',
+          ih p hp]
+        exact hfm1 _ (hf1mem1 k p hp)
+  have hclass : ∀ y ∈ ds1, y = (v, w) ∨ (y ∈ ds ∧ y ≠ f1 ∧ y ≠ f2) := by
+    intro y hy
+    have hyface : y ∈ (hypermapOfFan x V E1 hfan1).face (v, w) := by
+      rwa [hds1]
+    obtain ⟨n, hn⟩ : ∃ n : ℕ,
+        ((hypermapOfFan x V E1 hfan1).faceMap ^ n) (v, w) = y := by
+      simpa [Hypermap.face, orbitMap] using hyface
+    rw [hpow n (v, w) hvw_dart1] at hn
+    rw [← hn]
+    exact hiter n
+  have hvwmem : (v, w) ∈ (hypermapOfFan x V E1 hfan1).darts := by
+    show (v, w) ∈ (finite_dart1_fan hfan1).toFinset
+    exact (finite_dart1_fan hfan1).mem_toFinset.mpr hvw_dart1
+  rw [hhalf ds1 hds1_face]
+  intro z hz
+  have hzU1 : z ∈ ⋂ y ∈ ds,
+      affGt ({x, y.1, y.2} : Set V3) {(f1Fan x V E y).2} := by
+    rw [hInter]
+    exact hz.1
+  simp only [Set.mem_iInter] at hzU1
+  simp only [Set.mem_iInter]
+  intro y hy
+  by_cases hyv : y.1 = v
+  · have hydart1 : y ∈ dart1OfFan V E1 := hds1_sub hy
+    have hvwnode : (hypermapOfFan x V E1 hfan1).node (v, w) ∈
+        (hypermapOfFan x V E1 hfan1).nodeSet :=
+      (Hypermap.mem_darts_iff_node_mem _ (v, w)).mp hvwmem
+    have hynode : y ∈ (hypermapOfFan x V E1 hfan1).node (v, w) :=
+      CONDITION_DART_IN_NODE x V E1 ((hypermapOfFan x V E1 hfan1).node (v, w))
+        (v, w) y hfan1
+        ⟨hfan1, hcard1, hvwnode, (hypermapOfFan x V E1 hfan1).mem_node_self (v, w),
+          hydart1, hyv⟩
+    have hyin : y ∈ (hypermapOfFan x V E1 hfan1).node (v, w) ∩
+        (hypermapOfFan x V E1 hfan1).face (v, w) :=
+      ⟨hynode, by rwa [hds1]⟩
+    rw [hsimple (v, w) hvwmem] at hyin
+    simp only [Set.mem_singleton_iff] at hyin
+    rw [hyin]
+    simp only [f1Fan]
+    rw [← fully_surrounded_imp_aff_gt_3_1_of_edge_eq_fan (x := x) (V := V)
+      (E := E1) (v := v) (w := w) hfan1 hvwE1 hcard1 hfan80_1, hσ1vw]
+    exact hz.2
+  · by_cases hyw : y.1 = w
+    · have hydart1 : y ∈ dart1OfFan V E1 := hds1_sub hy
+      have hf3face : f3 ∈ (hypermapOfFan x V E1 hfan1).face (v, w) := by
+        have hf3ds1 : f3 ∈ ds1 :=
+          condition_f1_fan_in_face_set hfan1
+            (by rw [← hf3eq]; exact hbridge (v, w) hvw_dart1) hds1_face hdfE1
+            (by rw [← hds1]; exact (hypermapOfFan x V E1 hfan1).mem_face_self (v, w))
+        rwa [hds1]
+      have hf3darts : f3 ∈ (hypermapOfFan x V E1 hfan1).darts :=
+        (hypermapOfFan x V E1 hfan1).face_subset_darts hvwmem hf3face
+      have hf3node : (hypermapOfFan x V E1 hfan1).node f3 ∈
+          (hypermapOfFan x V E1 hfan1).nodeSet :=
+        (Hypermap.mem_darts_iff_node_mem _ f3).mp hf3darts
+      have hfaceeq : (hypermapOfFan x V E1 hfan1).face f3 =
+          (hypermapOfFan x V E1 hfan1).face (v, w) :=
+        orbitMap_eq_of_mem (hypermapOfFan x V E1 hfan1).faceMap_permutes hf3face
+      have hyf3face : y ∈ (hypermapOfFan x V E1 hfan1).face f3 := by
+        rw [hfaceeq]; rwa [hds1]
+      have hyf3node : y ∈ (hypermapOfFan x V E1 hfan1).node f3 :=
+        CONDITION_DART_IN_NODE x V E1 ((hypermapOfFan x V E1 hfan1).node f3) f3 y
+          hfan1
+          ⟨hfan1, hcard1, hf3node, (hypermapOfFan x V E1 hfan1).mem_node_self f3,
+            hydart1, hyw.trans hf3w.symm⟩
+      have hyin : y ∈ (hypermapOfFan x V E1 hfan1).node f3 ∩
+          (hypermapOfFan x V E1 hfan1).face f3 := ⟨hyf3node, hyf3face⟩
+      rw [hsimple f3 hf3darts] at hyin
+      simp only [Set.mem_singleton_iff] at hyin
+      rw [hyin]
+      have hf3snd : f3.2 = inverse1SigmaFan x V E w u := by
+        rw [← hf2f3, hf2pair]
+        rfl
+      have hwu : ({w, u} : Set V3) ∈ E := by rw [Set.pair_comm]; exact huw
+      have h1 : ({w, inverse1SigmaFan x V E w u} : Set V3) ∈ E :=
+        (INVERSE1_SIGMA_FAN (v := w) hfan).1 u hwu
+      rw [← hf3snd] at h1
+      have hf3ne2 : ¬ (f3.2 ∈ ({v, w} : Set V3)) := by
+        intro hmem
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+        rcases hmem with hh | hh
+        · exact hwv (by rw [← hh]; exact h1)
+        · exact edge_ne_of_fan hfan h1 hh.symm
+      rw [← htran1 f3 (hfsub (by simp)) hf3ne2]
+      exact hzU1 f3 (hfsub (by simp))
+    · rcases hclass y hy with hcyc | ⟨hyds, -, -⟩
+      · rw [hcyc] at hyv
+        exact absurd rfl hyv
+      · have hyedge : ({y.1, y.2} : Set V3) ∈ E := hds_sub hyds
+        have hyedge1 : ({y.1, y.2} : Set V3) ∈ E1 := hEsub hyedge
+        have hσy : sigmaFan x V E1 y.1 y.2 = sigmaFan x V E y.1 y.2 :=
+          SIGMA_FAN_OF_FANADD1 x V E E1 v w
+            ⟨hfan, hfan1, hcard, hvw_not, hE1⟩ y.1 y.2 ⟨hyedge, by
+              intro hmem
+              simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+              rcases hmem with hh | hh
+              · exact hyv hh
+              · exact hyw hh⟩
+        simp only [f1Fan]
+        rw [← fully_surrounded_imp_aff_gt_3_1_of_edge_eq_fan (x := x) (V := V)
+          (E := E1) (v := y.1) (w := y.2) hfan1 hyedge1 hcard1 hfan80_1, hσy,
+          fully_surrounded_imp_aff_gt_3_1_of_edge_eq_fan (x := x) (V := V)
+          (E := E) (v := y.1) (w := y.2) hfan hyedge hcard hfan80]
+        exact hzU1 y hyds
 
 /-! ## 四个半空间交与 `dartset_leads_into_fan`（Conforming.hl:8003-8117） -/
 
