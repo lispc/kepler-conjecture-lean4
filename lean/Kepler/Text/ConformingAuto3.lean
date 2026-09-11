@@ -98,10 +98,94 @@ HOL 原文：
 - `NEGLIGIBLE_AFF_GT_1_2_INTER_BALL`（Kepler/Text/ConformingAuto2.lean:468）
 - `NEGLIGIBLE_AFF_GT_1_2`（Kepler/Text/ConformingAuto2.lean:415）
 - 缺口：HOL `HAS_MEASURE_0` 未移植 -/
+private theorem finrank_span_pair_le_two_auto3 (a b : V3) :
+    Module.finrank ℝ (Submodule.span ℝ ({a, b} : Set V3)) ≤ 2 := by
+  have h := finrank_span_finset_le_card (R := ℝ) ({a, b} : Finset V3)
+  unfold Set.finrank at h
+  rw [show (({a, b} : Finset V3) : Set V3) = ({a, b} : Set V3) from by simp] at h
+  have h2 : ({a, b} : Finset V3).card ≤ 2 := by
+    calc ({a, b} : Finset V3).card ≤ ({b} : Finset V3).card + 1 := Finset.card_insert_le a {b}
+      _ = 2 := by simp
+  omega
+
+private theorem affineSpan_three_ne_top_auto3 (x v u : V3) :
+    (affineSpan ℝ ({x, v, u} : Set V3)) ≠ ⊤ := by
+  intro h
+  have hdir : (affineSpan ℝ ({x, v, u} : Set V3)).direction = ⊤ := by
+    rw [h]; exact AffineSubspace.direction_top ℝ V3 V3
+  have hvs : vectorSpan ℝ ({x, v, u} : Set V3)
+      = Submodule.span ℝ ({v - x, u - x} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_right ℝ (show x ∈ ({x, v, u} : Set V3) from by simp)]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro p ⟨q, hq, rfl⟩
+      rcases hq with rfl | rfl | rfl
+      · simp
+      · exact Submodule.subset_span (by left; rfl)
+      · exact Submodule.subset_span (by right; rfl)
+    · rw [Submodule.span_le]
+      rintro p (rfl | rfl)
+      · exact Submodule.subset_span ⟨v, by simp, rfl⟩
+      · exact Submodule.subset_span ⟨u, by simp, rfl⟩
+  have hle : Module.finrank ℝ (affineSpan ℝ ({x, v, u} : Set V3)).direction ≤ 2 := by
+    rw [direction_affineSpan, hvs]
+    exact finrank_span_pair_le_two_auto3 (v - x) (u - x)
+  rw [hdir, finrank_top] at hle
+  have h3 : Module.finrank ℝ V3 = 3 := by simp [V3]
+  omega
+
+private theorem NEGLIGIBLE_AFF_3_auto3 (x v u : V3) :
+    volume ((affineSpan ℝ ({x, v, u} : Set V3)) : Set V3) = 0 := by
+  exact MeasureTheory.Measure.addHaar_affineSubspace volume _
+    (affineSpan_three_ne_top_auto3 x v u)
+
+private theorem finset_sum_smul_mem_affineSpan_auto3 {T : Set V3} {s : Finset V3}
+    {f : V3 → ℝ}
+    (hS : ∀ w ∈ s, w ∈ (affineSpan ℝ T : Set V3))
+    (hsum : ∑ w ∈ s, f w = 1) :
+    ∑ w ∈ s, f w • w ∈ (affineSpan ℝ T : Set V3) := by
+  have hne : s.Nonempty :=
+    Finset.nonempty_of_sum_ne_zero (by rw [hsum]; exact one_ne_zero)
+  obtain ⟨b, hb⟩ := hne
+  have hbS : b ∈ (affineSpan ℝ T : Set V3) := hS b hb
+  have hdir : ∑ w ∈ s, f w • (w - b) ∈ (affineSpan ℝ T).direction := by
+    apply Submodule.sum_mem
+    intro w hw
+    exact Submodule.smul_mem _ (f w)
+      (AffineSubspace.vsub_mem_direction (hS w hw) hbS)
+  have hsub : ∑ w ∈ s, f w • (w - b) = (∑ w ∈ s, f w • w) - b := by
+    simp only [smul_sub]
+    rw [Finset.sum_sub_distrib, ← Finset.sum_smul, hsum, one_smul]
+  have hy : ∑ w ∈ s, f w • w = (∑ w ∈ s, f w • (w - b)) +ᵥ b := by
+    rw [vadd_eq_add, hsub]
+    abel
+  rw [hy]
+  exact AffineSubspace.vadd_mem_of_mem_direction hdir hbS
+
+private theorem affGt_singleton_pair_subset_affineSpan_auto3 (x v u : V3) :
+    affGt ({x} : Set V3) {v, u} ⊆ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) := by
+  intro y hy
+  simp only [affGt, Set.mem_setOf_eq, Affsign] at hy
+  obtain ⟨f, hfin, hcomb, _hpos, hone⟩ := hy
+  have hmem : ∀ w ∈ hfin.toFinset, w ∈ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) := by
+    intro w hw
+    have hw' : w ∈ ({x} ∪ {v, u} : Set V3) := by
+      rw [← hfin.coe_toFinset]
+      exact hw
+    have hw'' : w ∈ ({x, v, u} : Set V3) := by
+      simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff] at hw' ⊢
+      tauto
+    exact subset_affineSpan ℝ _ hw''
+  rw [hcomb]
+  exact finset_sum_smul_mem_affineSpan_auto3 hmem hone
+
 theorem HAS_MEASURE_AFF_GT_1_2_INTER_BALL (x v u : V3) (r : ℝ)
     (h : ¬ Collinear3 x v u) :
     volume (affGt ({x} : Set V3) {v, u} ∩ Metric.ball x r) = 0 := by
-  sorry
+  have _ : ¬ Collinear3 x v u := h
+  exact measure_mono_null
+    (Set.inter_subset_left.trans (affGt_singleton_pair_subset_affineSpan_auto3 x v u))
+    (NEGLIGIBLE_AFF_3_auto3 x v u)
 
 /-- HOL Conforming.hl :738-745 `MEASURABLE_AFF_GT_2_1_INTER_BALL`
 
