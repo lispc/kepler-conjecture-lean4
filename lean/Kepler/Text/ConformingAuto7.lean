@@ -164,7 +164,15 @@ theorem node_subset_dart_fan {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E)
     (hds : ds ∈ (hypermapOfFan x V E hfan).nodeSet) :
     ds ⊆ dartOfFan V E := by
-  sorry
+  obtain ⟨y, hy, rfl⟩ := (hypermapOfFan x V E hfan).node_representation hds
+  intro d hd
+  have h1 : d ∈ (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) :=
+    (hypermapOfFan x V E hfan).node_subset_darts hy hd
+  have h2 : (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) = dart1OfFan V E :=
+    (finite_dart1_fan hfan).coe_toFinset
+  rw [h2] at h1
+  rw [dartOfFan, Set.mem_union]
+  exact Or.inr h1
 
 /-- HOL Conforming.hl :1511-1550 `rep_node_set_fan`
 
