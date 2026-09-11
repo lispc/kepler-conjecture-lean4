@@ -165,7 +165,18 @@ theorem TRANF (x : V3) (V : Set V3) (E E1 : Set (Set V3))
          then Classical.choose h else ∅;
        ∃ y : V3 × V3,
          tranf = (hypermapOfFan x V E1 hfan1).face y ∧ y ∈ ds0) := by
-  sorry
+  rintro ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hds0⟩
+  have hface : ds0 ∈ (hypermapOfFan x V E hfan).faceSet := hds0.1
+  obtain ⟨y0, _, hy0⟩ := (hypermapOfFan x V E hfan).face_representation hface
+  have hy0mem : y0 ∈ ds0 := by
+    rw [hy0]
+    exact (hypermapOfFan x V E hfan).mem_face_self y0
+  have hP : ∃ f : Set (V3 × V3), ∃ y : V3 × V3,
+      f = (hypermapOfFan x V E1 hfan1).face y ∧ y ∈ ds0 :=
+    ⟨(hypermapOfFan x V E1 hfan1).face y0, y0, rfl, hy0mem⟩
+  dsimp only
+  rw [dif_pos hP]
+  exact Classical.choose_spec hP
 
 /-- HOL Conforming.hl :4185-4252 `TRAN_COMMUTATIVE_F1_FAN1`
 
