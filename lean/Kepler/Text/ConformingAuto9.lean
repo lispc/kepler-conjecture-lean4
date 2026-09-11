@@ -379,7 +379,16 @@ theorem add_edge_imp_card_set_edge_ge1_fan {x : V3} {V : Set V3}
     (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
     (hE1 : E1 = E ∪ {({v, w} : Set V3)}) :
     ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E1).ncard := by
-  sorry
+  intro z hz
+  have hVfin : V.Finite := hfan.2.2.1.1
+  rw [hE1, SET_OF_EDGE_UNION_GRAPH]
+  have hfin1 : (setOfEdge z V E).Finite := remark_finite_fan1 z V E hVfin
+  have hfin2 : (setOfEdge z V {({v, w} : Set V3)}).Finite :=
+    hVfin.subset (fun a ha => ha.2)
+  have hle : (setOfEdge z V E).ncard ≤
+      (setOfEdge z V E ∪ setOfEdge z V {({v, w} : Set V3)}).ncard :=
+    Set.ncard_le_ncard Set.subset_union_left (hfin1.union hfin2)
+  exact lt_of_lt_of_le (hcard z hz) hle
 
 /-- HOL Conforming.hl :2253-2274 `PR23_OF_D1_FAN`
 
