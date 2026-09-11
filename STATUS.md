@@ -2,10 +2,13 @@
 
 > 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新（cron 自动 push）。
 > 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
-> 当前 main @ `7395bc9`，`lake build Kepler` 全绿，
-> 唯一 sorry 是 `Statement.lean:111` 的主定理占位（sanctioned，见 Phase 1）。
-> Phase 5 auto_pipeline 已 FAIL-STOP：planarity 收官批剩最后 2 枚（压轴主定理），
-> 卡在测度论前置 VOLUME_SOLID_TRIANGLE 未移植（见 Phase 5 节与 HANDOFF）。
+> 当前 main @ `48ff904`（2026-09-11），`make check` 全绿，
+> 唯一 sorry 是 `Statement.lean` 的主定理占位（sanctioned，见 Phase 1）。
+> **重大进展**：体积/测度论层已从零建成（`Kepler/Geom/{Volume,SectorArea,
+> WedgeVolume,LuneVolume,SolidAngle}.lean`，含 HOL `VOLUME_BALL_WEDGE` /
+> `HAS_MEASURE_LUNE` / `VOLUME_SOLID_TRIANGLE`），据此**planarity.hl 全部
+> 15,463 行已收官并进 main**（`solid_of` + `MOZNWEH` 已证）。
+> 下一目标：Conforming.hl（流水线已在 wip/auto-phase5 跑，见 Phase 5）。
 
 图例：✅ 完成并验证 / 🟡 进行中 / ⬜ 未启动。完成度为行数或条目数口径的粗略估计。
 
@@ -68,7 +71,7 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 | hypermap/hypermap.hl | 13,575 | ✅ 全书收官 | 100% |
 | fan/fan.hl 系列（fan_defs/fan_misc/fan/CFYXFTY/hypermap_and_fan） | ~7,800 | ✅ 全书收官（hypermapOfFan 完整构造） | 100% |
 | fan/topology.hl | 4,718 | ✅ 全书收官（`36c37c6`，dart_leads_into 全套） | 100% |
-| fan/planarity.hl | 15,463 | 🟡 main 覆盖至 :15280（**98.8%**）：批次 1-15 全自动闭合入 main；批次 16（收官批）4/6 闭合在 wip，**剩 2 枚 NEEDS-HUMAN**（见下） | **99%** |
+| fan/planarity.hl | 15,463 | ✅ **全书收官（2026-09-11，`48ff904`）**：批次 1-15 自动闭合 + 批次 16 的 `solid_of`/`MOZNWEH` 经体积层人工攻坚闭合，全部进 main | **100%** |
 | fan/Conforming.hl | 17,033 | ⬜ 未启动 | 0% |
 | fan/ 其余（polyhedron 等） | ~3,200 | ⬜ 未启动 | 0% |
 | packing/（Rogers/OXLZLEZ3/REUHADY…） | ~28,000 | ⬜ 未启动 | 0% |
@@ -95,34 +98,24 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 参数个数；验收构建必须自然退出（掐死时 error 未 flush 是假绿）；闸误杀先修闸
 （`--relative` 路径事故，`1a32e53`）。
 
-**当前卡点（2026-09-11，planarity 收官批批次 16，FAIL-STOP）**：剩 2 枚耦合定理
-在 `Kepler/Text/PlanarityAuto16.lean`（wip 分支）：
-1. `solid_of_dartset_leads_into_fan_triangle_fan`（planarity.hl:15370）——三角面
-   dartset 的立体角公式。deepseek×2 + 满血 glm-5.3×1 均失败。根因：前置
-   `VOLUME_SOLID_TRIANGLE`（measure(ball∩aff_gt) = (Girard 盈余)·r³/3）**不在
-   planarity.hl，在 HOL Light 本体 `Multivariate/flyspeck.ml:5883`**（已抓到
-   /tmp/flyspeck_ml.txt；测度论证明链较长）。`sol`/`dihV`/`AZIM_DIVH` 也未移植
-   （骨架 docstring 里有 sol 的 ε 规格编码方案）。
-2. `MOZNWEH`（planarity.hl:15443，**全书主定理**）——纯 MESON 组装，
-   待 solid_of 闭合后秒过。
+**planarity 收官（2026-09-11，已解决，`48ff904`）**：原先卡住的 2 枚
+（`solid_of_dartset_leads_into_fan_triangle_fan` + `MOZNWEH`）已通过自建体积层闭合。
+关键技术路线（可复用于后续 Volume/Packing/Local 章节）：
+- `Kepler/Geom/Volume.lean`：`sol` / `sol_spec`（vol1.hl，`Classical.choose` 编码）。
+- `Kepler/Geom/SectorArea.lean`：2D 扇形面积 = ρ²θ/2（`Complex.polarCoord` 变量替换）。
+- `Kepler/Geom/WedgeVolume.lean`：HOL `VOLUME_BALL_WEDGE`（球∩楔形 = azim·2r³/3）——
+  含平移/旋转归约、ON 标架等距、`azim↔arg` 桥、Fubini + 扇形积分。
+- `Kepler/Geom/LuneVolume.lean`：`dihV`、`azim_dihv_same`、`WEDGE_LUNE_GT`、
+  `HAS_MEASURE_LUNE(_SIMPLE)`。
+- `Kepler/Geom/SolidAngle.lean`：HOL `VOLUME_SOLID_TRIANGLE`（= (Σ dihV − π)r³/3）。
+全部零 sorry、公理仅标准三。`solid_of`/`MOZNWEH` 改用 `sol` 陈述后由上述引理组装。
+**经验**：这类研究级引理用「专项子 agent（同一主模型）+ 迭代编译 + 允许诚实部分完成」
+可以攻下（本会话 4 个子 agent 分别拿下扇形、楔形、lune、solid triangle）。
 
-**2026-09-11 接手评估（新）**：已确认这是全项目第一个真正的**研究级数学墙**，
-不是流水线调度问题：
-- `sol` 基础设施已落地（见上 `Kepler/Geom/Volume.lean`），所以 `solid_of` 现在
-  只需「`sol_spec`（r=1）+ `VOLUME_SOLID_TRIANGLE`」，剩下的唯一硬骨头就是
-  **球面三角形体积（Girard 球面盈余 / lune 体积）**。该链依赖
-  `VOLUME_BALL_WEDGE`（球与楔形交的体积 = azim·2r³/3，HOL 用 Fubini + 2D 扇形
-  面积证）、`MEASURE_LUNE_DECOMPOSITION`、`AFF_GT_SHUFFLE`、`SOLID_TRIANGLE_CONGRUENT_NEG`。
-- Mathlib 现状：有 `volume_ball`、`toSphere`（球面测度）、`Complex.polarCoord`
-  变量替换、`addHaar_smul`（标度）、平移不变、Fubini；**没有**球面盈余 / lune /
-  扇形面积 / 半空间球体积。移植该链需要自建球面测度几何（估计 1–2k 行，且是
-  自动化工人最不擅长的分析/积分证明）。
-- 结论：**不要再用 deepseek/glm 盲派 `solid_of`**；应先把体积链作为专项
-  （独立文件 + 人工/强模型逐引理）攻克，或先绕开它推进不依赖立体角公式的部分。
-
-路线（修订）：① 用新 `sol_spec` 重启流水线移植 `Conforming.hl`（228 定理中仅
-`version_JUTSTKG` 等少数依赖 `solid_of`；其余为 `sol` 代数/测度/径向，可闭合）；
-② 并行专项移植 VOLUME_SOLID_TRIANGLE 链；③ 回补 solid_of → MOZNWEH → 批次 16 进 main。
+**下一步（Conforming.hl）**：流水线 `scripts/auto_pipeline_conforming.sh` 已启动并
+跑完批次 1-2（wip/auto-phase5）；`ConformingDefs.lean` 定义层已就位。已知
+`DWFBRQY`（Conforming.hl:550）依赖 `solid_of`——**现已可证**，应尽快解除该 blocked
+标记并让流水线继续。
 
 ## Phase 6 — 集成与交付 ⬜
 
@@ -135,8 +128,9 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 ## 整体估计
 
 - **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 0%（G4 待开工）。
-- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + planarity 75% ≈ 38k 行 HOL 源；待移植 ≈ 82k 行。按行数口径 **~32%**。auto_pipeline 无人值守批次推进中。
-- **全项目粗略完成度：~55%**。
+- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** ≈ 42k 行 HOL 源；待移植 ≈ 78k 行（Conforming 17k / packing 28k / local 30k / assembly 等）。按行数口径 **~35%**。
+  另：**体积/测度论层已从零建成**（`Kepler/Geom/*.lean`，~3.4k 行，含 HOL Light 多元库的球面立体角链），这是原计划里没算到的关键前置，现已就位，后续 Packing/Local 可复用。
+- **全项目粗略完成度：~57%**。
 
 ## 验证纪律
 

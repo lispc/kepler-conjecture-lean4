@@ -6,11 +6,15 @@
 
 ## 0. 一句话现状
 
-main @ 见 `git log -1 main`（全绿，唯一 sorry = `Statement.lean:111`
-sanctioned 占位）。**Phase 2/3 已闭合；Phase 4 求解层 160/176（91%），
-内核闭合（G4）未开工；Phase 5 planarity.hl 正由全自动流水线推进**
-（`lean/scripts/auto_pipeline.sh`，deepseek-v4-flash 全权：骨架设计→
-证明填空→机械闸→自动合并 main；Kimi 降为每 4h 汇报+抽查）。
+main @ `48ff904`（`make check` 全绿，唯一 sorry = `Statement.lean`
+sanctioned 主定理占位）。**Phase 2/3 已闭合；Phase 4 求解层 160/176（91%），
+内核闭合（G4）未开工；Phase 5：hypermap/fan/topology/planarity 100% 进 main**
+——其中 planarity 收官所依赖的**体积/测度论层已从零建成**
+（`Kepler/Geom/{Volume,SectorArea,WedgeVolume,LuneVolume,SolidAngle}.lean`，
+含 HOL Light `VOLUME_BALL_WEDGE`/`HAS_MEASURE_LUNE`/`VOLUME_SOLID_TRIANGLE`，
+零 sorry）。下一步 Conforming.hl，流水线 `scripts/auto_pipeline_conforming.sh`
+已在 wip/auto-phase5 跑（commits to wip only；待 `DWFBRQY` 等依赖 solid_of 的
+定理补齐后可合 main）。
 
 ## 1. 项目目标（不变）
 
@@ -120,21 +124,33 @@ Lean 4 + Mathlib（toolchain `leanprover/lean4:v4.32.2`）形式化开普勒猜�
 
 ## 6. 待办队列（优先级序）
 
-1. **Phase 5 planarity 收官攻坚**（唯一卡点，见 §2）：VOLUME_SOLID_TRIANGLE 链
-   → solid_of → MOZNWEH → 批次 16 审计 → 进 main。
-   **2026-09-11 更新**：`sol` 基础设施已落地（`Kepler/Geom/Volume.lean`，无 sorry），
-   `solid_of` 现只差 `VOLUME_SOLID_TRIANGLE`（Girard 球面盈余）。这是研究级
-   体积/球面测度几何，Mathlib 无现成结果；**不要再盲派流水线工人**，需专项移植
-   （HOL 源 `flyspeck.ml:5452-5969`：VOLUME_BALL_WEDGE / HAS_MEASURE_LUNE /
-   MEASURE_BALL_AFF_GT_SHUFFLE / MEASURE_LUNE_DECOMPOSITION /
-   SOLID_TRIANGLE_CONGRUENT_NEG / VOLUME_SOLID_TRIANGLE）。
-2. **Conforming.hl 移植（可用新 `sol_spec` 重启流水线）**：228 定理中大多数是
-   `sol` 代数/测度/径向性质，只依赖 `sol_spec` 而不依赖立体角公式；仅
-   `version_JUTSTKG`（及少数 `conforming_*` 展开）需 `solid_of`。可先把不依赖的
-   批次推进（wip），待体积链补齐再合 main。
+1. ~~**Phase 5 planarity 收官攻坚**~~ ✅ **已完成（2026-09-11，main `48ff904`）**：
+   体积层从零建成（`Volume/SectorArea/WedgeVolume/LuneVolume/SolidAngle`），
+   `solid_of`+`MOZNWEH` 已证，planarity.hl 100% 进 main。
+2. **Conforming.hl 移植（进行中，wip/auto-phase5）**：定义层
+   `Kepler/Text/ConformingDefs.lean` 已就位；流水线
+   `scripts/auto_pipeline_conforming.sh` 已跑批次 1-2。**关键更新**：原 blocked 的
+   `DWFBRQY`（Conforming.hl:550）依赖的 `solid_of` 现已可证——应把
+   `auto_pipeline_conforming.sh` 的 `BLOCKED` 清空（或从 wip 里已跳过的
+   `DWFBRQY`/`nonconformin_fan_imp_n_fan_ge0` 重新派工），跑通后即可把
+   Conforming 合 main。Conforming 228 定理中仅极少数依赖立体角公式，其余为
+   `sol` 代数/测度/径向（`sol_spec` 即可）。
 3. Phase 4：16 条残余策略 + G4 内核闭合（见 §2 Phase 4）。
 4. Phase 6：主定理装配 + 终验。
 5. 零散：`Kepler.Text.fan80/fan81` 重复定义去重；`ineqdata3q1h.hl` 解析。
+
+### 体积层文件（2026-09-11，全部零 sorry、仅标准三公理）
+
+`Kepler/Geom/` 下（均 import 进 `Kepler.lean`）：
+- `Volume.lean`：`radialNorm`、`EventuallyRadial`、`sol`、`sol_spec`、
+  `volume_real_add_left/right`、`volume_real_smul`、`radialNorm.volume_scaling`。
+- `SectorArea.lean`：`sector_area`（2D 扇形面积 = ρ²θ/2）。
+- `WedgeVolume.lean`：`volume_ball_wedge`（HOL `VOLUME_BALL_WEDGE`）。
+- `LuneVolume.lean`：`arcV`/`dihV`、`azim_dihv_same`、`wedge_eq_affGt`
+  （`WEDGE_LUNE_GT`）、`volume_ball_affGt(_simple)`（`HAS_MEASURE_LUNE(_SIMPLE)`）。
+- `SolidAngle.lean`：`volume_solid_triangle`（HOL `VOLUME_SOLID_TRIANGLE`）。
+HOL 源在仓库内：`lean/scripts/flyspeck_multivariate.ml`（供后续 Volume/Packing
+章节引用）。
 
 ### 体积层新文件（2026-09-11）
 
