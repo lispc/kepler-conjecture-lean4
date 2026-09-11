@@ -343,7 +343,8 @@ HOL 原文：
 - `Set.mem_union`、`Set.ext`（Mathlib） -/
 theorem SET_OF_EDGE_UNION_GRAPH (v : V3) (V : Set V3) (E1 E2 : Set (Set V3)) :
     setOfEdge v V (E1 ∪ E2) = setOfEdge v V E1 ∪ setOfEdge v V E2 := by
-  sorry
+  ext w
+  simp only [setOfEdge, Set.mem_setOf_eq, Set.mem_union, or_and_right]
 
 /-- HOL Conforming.hl :2227-2247 `add_edge_imp_card_set_edge_ge1_fan`
 
