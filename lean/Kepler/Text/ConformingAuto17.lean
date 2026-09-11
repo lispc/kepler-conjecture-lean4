@@ -76,6 +76,7 @@ Encoding notes (gaps / closest existing encodings):
 
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
+import Kepler.Text.ConformingAuto16
 
 set_option maxHeartbeats 5000000
 
@@ -880,7 +881,54 @@ theorem lemmaU1_subset_U (x : V3) (V : Set V3)
     U = dartsetLeadsIntoFan x V E1 ds1 ∪ dartsetLeadsIntoFan x V E1 ds2 ∪
       affGt ({x} : Set V3) {v, w} →
       U1 ⊆ U := by
-  sorry
+  intro h
+  obtain ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hmin, hU1, hU⟩ := h
+  have hbase : FAN x V E ∧
+      (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
+      fan80 x V E ∧
+      ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard ∧
+      ({f1, f2, f3} : Set (V3 × V3)) ⊆ ds ∧
+      f1Fan x V E f1 = f2 ∧ f1Fan x V E f2 = f3 ∧ ¬ (f1Fan x V E f3 = f1) ∧
+      f1.1 = v ∧ f2.1 = u ∧ f3.1 = w ∧
+      ({v, u} : Set V3) ∈ E ∧ ({u, w} : Set V3) ∈ E ∧ ({w, v} : Set V3) ∉ E ∧
+      sigmaFan x V E u w = v ∧ f1.2 = u ∧ f2.2 = w ∧
+      (hypermapOfFan x V E1 hfan1).face (v, w) = ds1 ∧
+      (hypermapOfFan x V E1 hfan1).face (w, v) = ds2 ∧
+      f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
+      E ∪ {({v, w} : Set V3)} = E1 :=
+    ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+      hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20,
+      hf30, hE1⟩
+  have hds1sub := lemmaINTERS_HALF_SPACE_DS_FANADD2 x V E E1 ds f1 f2 f3 v u w
+    ds1 ds2 f10 f20 f30 U1 hfan hfan1
+    ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+      hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20,
+      hf30, hE1, hmin, hU1.symm⟩
+  have hds2sub := lemmaINTERS_HALF_SPACE_DS_FANADD1 x V E E1 ds f1 f2 f3 v u w
+    ds1 ds2 f10 f20 f30 U1 hfan hfan1
+    ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+      hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20,
+      hf30, hE1, hmin, hU1.symm⟩
+  have hhalf := lemmaINTERS_HALF_SPACE_DS_FANADD3 x V E E1 ds f1 f2 f3 v u w
+    ds1 ds2 f10 f20 f30 U1 hfan hfan1
+    ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+      hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20,
+      hf30, hE1, hmin, hU1⟩
+  have hcover := SPACE3_EQ_UNION_3SET x V E E1 ds f1 f2 f3 v u w
+    ds1 ds2 f10 f20 f30 hfan hfan1 hbase
+  intro z hz
+  rw [hU]
+  have hzcov : z ∈ (affineSpan ℝ ({x, v, w} : Set V3) : Set V3) ∪
+      affGt ({x, v, w} : Set V3) {sigmaFan x V E v u} ∪
+      affGt ({x, v, w} : Set V3) {u} := by
+    rw [hcover]; exact Set.mem_univ z
+  rw [Set.mem_union, Set.mem_union] at hzcov
+  rcases hzcov with (hzaff | hzσ) | hzu
+  · exact Or.inr (hhalf ⟨hz, hzaff⟩)
+  · exact Or.inl (Or.inl (hds1sub ⟨hz, hzσ⟩))
+  · exact Or.inl (Or.inr (hds2sub ⟨hz, hzu⟩))
 
 /-- HOL Conforming.hl :8684-8811 `open_subsetU`
 
