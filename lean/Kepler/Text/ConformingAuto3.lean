@@ -308,6 +308,28 @@ theorem XFAN_EQ_UNIONS_AFF_GE_1_2 (x : V3) (V : Set V3) (E : Set (Set V3)) :
   ext v
   simp only [xfan, Set.mem_setOf_eq, Set.mem_iUnion, exists_prop]
 
+private theorem affGe_singleton_pair_subset_affineSpan_auto3 (x v u : V3) :
+    affGe ({x} : Set V3) {v, u} ⊆ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) := by
+  intro y hy
+  simp only [affGe, Set.mem_setOf_eq, Affsign] at hy
+  obtain ⟨f, hfin, hcomb, _hnonneg, hone⟩ := hy
+  have hmem : ∀ w ∈ hfin.toFinset, w ∈ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) := by
+    intro w hw
+    have hw' : w ∈ ({x} ∪ {v, u} : Set V3) := by
+      rw [← hfin.coe_toFinset]
+      exact hw
+    have hw'' : w ∈ ({x, v, u} : Set V3) := by
+      simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff] at hw' ⊢
+      tauto
+    exact subset_affineSpan ℝ _ hw''
+  rw [hcomb]
+  exact finset_sum_smul_mem_affineSpan_auto3 hmem hone
+
+private theorem negligible_affGe_pair_auto3 (x v u : V3) :
+    volume (affGe ({x} : Set V3) {v, u}) = 0 :=
+  measure_mono_null (affGe_singleton_pair_subset_affineSpan_auto3 x v u)
+    (NEGLIGIBLE_AFF_3_auto3 x v u)
+
 /-- HOL Conforming.hl :754-771 `NEGLIGIBLE_XFAN`
 
 HOL 原文：
@@ -340,7 +362,11 @@ FAN (x,V,E) ==>  negligible (xfan (x,V,E))
 theorem NEGLIGIBLE_XFAN (x : V3) (V : Set V3) (E : Set (Set V3))
     (hfan : FAN x V E) :
     volume (xfan x V E) = 0 := by
-  sorry
+  rw [XFAN_EQ_UNIONS_AFF_GE_1_2]
+  rw [measure_biUnion_null_iff (setEdgesFiniteFan hfan).countable]
+  intro e he
+  obtain ⟨v, w, rfl⟩ := expand_edge_graph_fan hfan he
+  exact negligible_affGe_pair_auto3 x v w
 
 /-- HOL Conforming.hl :772-778 `NEGLIGIBLE_XFAN_INTER_BALL`
 
