@@ -187,6 +187,71 @@ theorem HAS_MEASURE_AFF_GT_1_2_INTER_BALL (x v u : V3) (r : ℝ)
     (Set.inter_subset_left.trans (affGt_singleton_pair_subset_affineSpan_auto3 x v u))
     (NEGLIGIBLE_AFF_3_auto3 x v u)
 
+private theorem measurableSet_affGt_pair_auto3 (x v u : V3) (h : ¬ Collinear3 x v u) :
+    MeasurableSet (affGt ({x} : Set V3) {v, u}) := by
+  have hxv : x ≠ v := fun he => h (collinear3_of_eq he.symm)
+  have hxu : x ≠ u := fun he =>
+    h (collinear3_pair_left (v0 := x) (v1 := v) (x := u) he.symm)
+  have hdis : Disjoint ({x} : Set V3) {v, u} := by
+    rw [Set.disjoint_singleton_left]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+    exact ⟨hxv, hxu⟩
+  have hset : affGt ({x} : Set V3) {v, u} =
+      ⋃ m : ℕ, ⋃ n : ℕ,
+        (fun p : ℝ × ℝ => (1 - p.1 - p.2) • x + p.1 • v + p.2 • u) ''
+          (Set.Icc (1 / ((m : ℝ) + 1)) ((m : ℝ) + 1) ×ˢ
+            Set.Icc (1 / ((n : ℝ) + 1)) ((n : ℝ) + 1)) := by
+    ext y
+    constructor
+    · intro hy
+      rw [aff_gt_1_2 (x := x) (v := v) (w := u) hdis, Set.mem_setOf_eq] at hy
+      obtain ⟨t1, t2, t3, ht2, ht3, hsum, hy_eq⟩ := hy
+      have ht1 : t1 = 1 - t2 - t3 := by linarith
+      obtain ⟨m, hm⟩ := exists_nat_gt (max t2 (1 / t2))
+      obtain ⟨n, hn⟩ := exists_nat_gt (max t3 (1 / t3))
+      refine Set.mem_iUnion.mpr ⟨m, Set.mem_iUnion.mpr ⟨n, ?_⟩⟩
+      rw [Set.mem_image]
+      refine ⟨(t2, t3), ?_, ?_⟩
+      · refine Set.mem_prod.mpr ⟨?_, ?_⟩
+        · rw [Set.mem_Icc]
+          refine ⟨?_, ?_⟩
+          · have h1t : 1 / t2 < (m : ℝ) := lt_of_le_of_lt (le_max_right _ _) hm
+            have hlt : (1 : ℝ) < (m : ℝ) * t2 := by
+              rw [div_lt_iff₀ ht2] at h1t
+              exact h1t
+            rw [div_le_iff₀ (by positivity : (0 : ℝ) < (m : ℝ) + 1)]
+            nlinarith [hlt, ht2.le]
+          · have : t2 < (m : ℝ) := lt_of_le_of_lt (le_max_left _ _) hm
+            linarith
+        · rw [Set.mem_Icc]
+          refine ⟨?_, ?_⟩
+          · have h1t : 1 / t3 < (n : ℝ) := lt_of_le_of_lt (le_max_right _ _) hn
+            have hlt : (1 : ℝ) < (n : ℝ) * t3 := by
+              rw [div_lt_iff₀ ht3] at h1t
+              exact h1t
+            rw [div_le_iff₀ (by positivity : (0 : ℝ) < (n : ℝ) + 1)]
+            nlinarith [hlt, ht3.le]
+          · have : t3 < (n : ℝ) := lt_of_le_of_lt (le_max_left _ _) hn
+            linarith
+      · show (1 - t2 - t3) • x + t2 • v + t3 • u = y
+        rw [hy_eq, ht1]
+    · intro hy
+      rcases Set.mem_iUnion.mp hy with ⟨m, hy⟩
+      rcases Set.mem_iUnion.mp hy with ⟨n, hy⟩
+      rcases hy with ⟨p, hp, rfl⟩
+      rw [aff_gt_1_2 (x := x) (v := v) (w := u) hdis, Set.mem_setOf_eq]
+      obtain ⟨hp1, hp2⟩ := Set.mem_prod.mp hp
+      rw [Set.mem_Icc] at hp1 hp2
+      obtain ⟨hp1a, -⟩ := hp1
+      obtain ⟨hp2a, -⟩ := hp2
+      exact ⟨1 - p.1 - p.2, p.1, p.2,
+        lt_of_lt_of_le (by positivity) hp1a,
+        lt_of_lt_of_le (by positivity) hp2a,
+        by ring, rfl⟩
+  rw [hset]
+  refine MeasurableSet.iUnion (fun m => MeasurableSet.iUnion (fun n => ?_))
+  exact ((isCompact_Icc.prod isCompact_Icc).image (by fun_prop)).isClosed.measurableSet
+
 /-- HOL Conforming.hl :738-745 `MEASURABLE_AFF_GT_2_1_INTER_BALL`
 
 HOL 原文：
@@ -214,7 +279,7 @@ Mathlib 中由 `MEASURE_AFF_GT_2_1_INTER_BALL` 给出的零测性，
 theorem MEASURABLE_AFF_GT_2_1_INTER_BALL (x v u : V3) (r : ℝ)
     (h : ¬ Collinear3 x v u) :
     MeasurableSet (affGt ({x} : Set V3) {v, u} ∩ Metric.ball x r) := by
-  sorry
+  exact (measurableSet_affGt_pair_auto3 x v u h).inter measurableSet_ball
 
 /-! ## `xfan` 的并表示与零测性（Conforming.hl:746-785） -/
 
