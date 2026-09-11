@@ -680,6 +680,32 @@ theorem power_map_points_edge_fan {x : V3} {V : Set V3} {E : Set (Set V3)}
   exact (properties_of_setOfEdge_fan x V E v ((sigmaFan x V E v)^[n] w) hfan).mpr
     (image_power_map_points hfan hvw n)
 
+/-- `hypermapOfFan` 的 `nodeMap` 在 `dart1OfFan` 上就是 `nFanPair`。 -/
+private theorem hypermapOfFan_nodeMap_eq_ca1 (hfan : FAN x V E) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) :
+    (hypermapOfFan x V E hfan).nodeMap d = nFanPair x V E d := by
+  unfold hypermapOfFan extendPerm
+  simp only [Equiv.ofBijective_apply]
+  unfold Kepler.Text.Fan.res
+  rw [if_pos (by
+    simpa [(finite_dart1_fan hfan).coe_toFinset] using hd)]
+
+/-- `nodeMap` 的迭代在 `dart1OfFan` 上保持首分量并沿 `sigmaFan` 递推。 -/
+private theorem hypermapOfFan_nodeMap_iterate_ca1 (hfan : FAN x V E) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) (n : ℕ) :
+    ((hypermapOfFan x V E hfan).nodeMap^[n]) d =
+      (d.1, (sigmaFan x V E d.1)^[n] d.2) := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    rw [Function.iterate_succ_apply', ih]
+    have hdE : {d.1, d.2} ∈ E := hd
+    have hmem : (d.1, (sigmaFan x V E d.1)^[n] d.2) ∈ dart1OfFan V E := by
+      simp only [dart1OfFan, Set.mem_setOf_eq]
+      exact power_map_points_edge_fan n hfan hdE
+    rw [hypermapOfFan_nodeMap_eq_ca1 hfan hmem]
+    simp only [nFanPair, Function.iterate_succ_apply']
+
 /-- HOL Conforming.hl :371-457 `SRPRNPL`
 
 HOL 原文（HOL 中 `let     SRPRNPL=prove(...)`，多空格使批次名提取为空）：
@@ -712,7 +738,56 @@ theorem SRPRNPL {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E)
     (hconf : conformingFan x V E hfan) :
     (hypermapOfFan x V E hfan).Simple := by
-  sorry
+  have hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard := hconf.1
+  have hfan80 : fan80 x V E := hconf.2.1
+  intro x' hx'darts
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  have hdarts : (↑H.darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have hx'dart1 : x' ∈ dart1OfFan V E := by
+    have : x' ∈ (↑H.darts : Set (V3 × V3)) := hx'darts
+    rwa [hdarts] at this
+  have hx'E : {x'.1, x'.2} ∈ E := hx'dart1
+  apply Set.Subset.antisymm
+  · intro z hz
+    rw [Set.mem_singleton_iff]
+    obtain ⟨hz_node, hz_face⟩ := hz
+    have hz_darts : z ∈ H.darts := H.node_subset_darts hx'darts hz_node
+    have hz_dart1 : z ∈ dart1OfFan V E := by
+      have : z ∈ (↑H.darts : Set (V3 × V3)) := hz_darts
+      rwa [hdarts] at this
+    have hz_E : {z.1, z.2} ∈ E := hz_dart1
+    have hz_fst : z.1 = x'.1 := by
+      obtain ⟨n, hn⟩ := hz_node
+      rw [← hn]
+      rw [Equiv.Perm.coe_pow, hypermapOfFan_nodeMap_iterate_ca1 hfan hx'dart1 n]
+    have hds_mem : H.face x' ∈ H.faceSet := ⟨x', hx'darts, rfl⟩
+    have hx'_ds : x' ∈ H.face x' := H.mem_face_self x'
+    have hcomp :=
+      dartset_leads_into_is_topological_component_yfan hfan hcard hfan80 hds_mem
+    obtain ⟨p, hp⟩ := exists_point_in_component_yfan hcomp
+    have hp_z : p ∈ wDartFan x V E (x, z.1, z.2, sigmaFan x V E z.1 z.2) :=
+      DARTSET_LEADS_INTO_SUBSET_WDART_FAN hfan hds_mem hz_face hconf hp
+    have hp_x' : p ∈ wDartFan x V E (x, x'.1, x'.2, sigmaFan x V E x'.1 x'.2) :=
+      DARTSET_LEADS_INTO_SUBSET_WDART_FAN hfan hds_mem hx'_ds hconf hp
+    by_contra hne
+    have hz2ne : x'.2 ≠ z.2 := fun h => hne (Prod.ext hz_fst h.symm)
+    have hzE' : {x'.1, z.2} ∈ E := by
+      rw [← hz_fst]
+      exact hz_E
+    have hdisj :=
+      disjoint_fan2 (v := x'.1) (w := x'.2) (w1 := z.2) hfan hx'E hzE' hz2ne
+    have hmem : p ∈ wDartFan x V E (x, x'.1, x'.2, sigmaFan x V E x'.1 x'.2) ∩
+        wDartFan x V E (x, x'.1, z.2, sigmaFan x V E x'.1 z.2) := by
+      refine ⟨hp_x', ?_⟩
+      rwa [hz_fst] at hp_z
+    rw [hdisj] at hmem
+    exact hmem
+  · intro z hz
+    rw [Set.mem_singleton_iff] at hz
+    rw [hz]
+    exact ⟨H.mem_node_self x', H.mem_face_self x'⟩
 
 /-! ## `nsum` 与 `N_FAN` 的计数引理（Conforming.hl:458-483） -/
 
