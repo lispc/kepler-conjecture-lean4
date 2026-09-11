@@ -70,6 +70,8 @@ Encoding notes (gaps / closest existing encodings):
 -/
 
 import Kepler.Text.PlanarityAuto15
+import Kepler.Geom.Volume
+import Kepler.Geom.SolidAngle
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -483,6 +485,47 @@ theorem CARD_GT1_IMP_AZIM_FAN_EQ_DIHV
   rw [CARD_GT1_IMP_AZIM_FAN_EQ_AZIM hfan hy hcard]
   exact azim_eq_arcVFan_proj hnc1 hnc2 h80.2.le
 
+/-- `affGt {x} {v1,v2,v3}`（`¬ Coplanar {x,v1,v2,v3}`）与单位球的交非空。
+用于从 `VOLUME_SOLID_TRIANGLE` 的 `ENNReal.ofReal` 值提取立体角的非负性：
+交为开集且非空，故体积为正，从而 `ofReal` 的自变量为正。 -/
+private theorem solid_triangle_inter_ball_nonempty {x v1 v2 v3 : V3}
+    (hcop : ¬ Coplanar ({x, v1, v2, v3} : Set V3)) :
+    (Metric.ball x 1 ∩ affGt ({x} : Set V3) {v1, v2, v3}).Nonempty := by
+  have hx1 : x ≠ v1 := by
+    intro h; apply hcop
+    have he : ({x, v1, v2, v3} : Set V3) = {v1, v2, v3} := by
+      rw [h]; ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [he]; exact coplanar_triple v1 v2 v3
+  have hx2 : x ≠ v2 := by
+    intro h; apply hcop
+    have he : ({x, v1, v2, v3} : Set V3) = {v1, v2, v3} := by
+      rw [h]; ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [he]; exact coplanar_triple v1 v2 v3
+  have hx3 : x ≠ v3 := by
+    intro h; apply hcop
+    have he : ({x, v1, v2, v3} : Set V3) = {v1, v2, v3} := by
+      rw [h]; ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [he]; exact coplanar_triple v1 v2 v3
+  have hdis : Disjoint ({x} : Set V3) {v1, v2, v3} := by
+    rw [Set.disjoint_singleton_left]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+    exact ⟨hx1, hx2, hx3⟩
+  set c : ℝ := 1 / (4 + ‖v1 + v2 + v3 - 3 • x‖) with hcdef
+  have hcpos : 0 < c := by rw [hcdef]; positivity
+  have hcn : c * (4 + ‖v1 + v2 + v3 - 3 • x‖) = 1 := by
+    rw [hcdef]; field_simp
+  have hn0 : 0 ≤ ‖v1 + v2 + v3 - 3 • x‖ := norm_nonneg _
+  have hc3 : 3 * c < 1 := by nlinarith [hcn, hcpos, hn0]
+  have hcw : c * ‖v1 + v2 + v3 - 3 • x‖ < 1 := by nlinarith [hcn, hcpos]
+  refine ⟨(1 - 3 * c) • x + c • v1 + c • v2 + c • v3, ?_, ?_⟩
+  · rw [Metric.mem_ball, dist_eq_norm]
+    have hsub : (1 - 3 * c) • x + c • v1 + c • v2 + c • v3 - x =
+        c • (v1 + v2 + v3 - 3 • x) := by module
+    rw [hsub, norm_smul, Real.norm_eq_abs, abs_of_pos hcpos]
+    exact hcw
+  · rw [AFF_GT_1_3 x v1 v2 v3 hdis]
+    exact ⟨1 - 3 * c, c, c, c, hcpos, hcpos, hcpos, by ring, rfl⟩
+
 /-! ## 立体角恒等式与 MOZNWEH（planarity.hl:15370-15463） -/
 
 /-- HOL planarity.hl :15370-15442 `solid_of_dartset_leads_into_fan_triangle_fan`
@@ -537,16 +580,95 @@ theorem solid_of_dartset_leads_into_fan_triangle_fan
     (hfan80 : fan80 x V E)
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet)
     (hds3 : ds.ncard = 3) :
-    Classical.epsilon (fun s : ℝ =>
-      ∀ r : ℝ, 0 < r →
-        MeasurableSet (dartsetLeadsIntoFan x V E ds ∩ Metric.ball x r) →
-        (dartsetLeadsIntoFan x V E ds ∩ Metric.ball x r) ⊆ Metric.ball x r ∧
-          (∀ u : V3, x + u ∈ dartsetLeadsIntoFan x V E ds ∩ Metric.ball x r →
-            ∀ t : ℝ, 0 < t → t * ‖u‖ < r →
-              x + t • u ∈ dartsetLeadsIntoFan x V E ds ∩ Metric.ball x r) →
-        s = 3 * volume.real (dartsetLeadsIntoFan x V E ds ∩ Metric.ball x r) / r ^ 3)
+    sol x (dartsetLeadsIntoFan x V E ds)
       = 2 * Real.pi + ∑ᶠ y ∈ ds, (azimFan x V E y.1 y.2 - Real.pi) := by
-  sorry
+  obtain ⟨f1, f2, f3, hdsf, hf12, hf23, hf31, he23, he31, he12, hsig,
+    hf3fst, hf2fst, hf1fst⟩ :=
+    CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN1 hfan hcard hds hds3
+  have hf1d1 : f1 ∈ dart1OfFan V E := by
+    show {f1.1, f1.2} ∈ E
+    rw [← hf2fst]; exact he12
+  have hf2d1 : f2 ∈ dart1OfFan V E := by
+    show {f2.1, f2.2} ∈ E
+    rw [← hf3fst]; exact he23
+  have hf3d1 : f3 ∈ dart1OfFan V E := by
+    show {f3.1, f3.2} ∈ E
+    rw [← hf1fst]; exact he31
+  have hf1dart : f1 ∈ dartOfFan V E := by
+    rw [dartOfFan_eq_dart1_of_surrounded hfan hcard]; exact hf1d1
+  have hf2dart : f2 ∈ dartOfFan V E := by
+    rw [dartOfFan_eq_dart1_of_surrounded hfan hcard]; exact hf2d1
+  have hf3dart : f3 ∈ dartOfFan V E := by
+    rw [dartOfFan_eq_dart1_of_surrounded hfan hcard]; exact hf3d1
+  have hf12ne : f1 ≠ f2 := by
+    intro h; exact f_fan_no_fix hfan f1 hf1d1 (hf12.trans h.symm)
+  have hf23ne : f2 ≠ f3 := by
+    intro h; exact f_fan_no_fix hfan f2 hf2d1 (hf23.trans h.symm)
+  have hf31ne : f3 ≠ f1 := by
+    intro h; exact f_fan_no_fix hfan f3 hf3d1 (hf31.trans h.symm)
+  have hf13ne : f1 ≠ f3 := hf31ne.symm
+  have himg : (fun y : V3 × V3 => y.1) '' ds = ({f1.1, f2.1, f3.1} : Set V3) := by
+    rw [hdsf]; ext z; simp; tauto
+  have hleads : dartsetLeadsIntoFan x V E ds =
+      affGt ({x} : Set V3) {f1.1, f2.1, f3.1} := by
+    rw [← KVQWYDL_lemma10 hfan hcard hfan80 hds hds3, himg]
+  have hmeas : MeasurableSet (dartsetLeadsIntoFan x V E ds ∩ Metric.ball x 1) :=
+    measurable_dartset_leads_into3_fan hfan hcard hfan80 hds hds3 (by norm_num)
+  have hrad : radialNorm 1 x (dartsetLeadsIntoFan x V E ds ∩ Metric.ball x 1) :=
+    dartset_leads_into_fan_radial hfan hcard hfan80 hds hds3 (by norm_num)
+  have hsol := sol_spec (x := x) (C := dartsetLeadsIntoFan x V E ds) (r := 1)
+    (by norm_num) hmeas hrad
+  obtain ⟨hθ0, hθπ⟩ := hfan80 f2.1 f3.1 he23
+  rw [hsig] at hθ0 hθπ
+  have hcop : ¬ Coplanar ({x, f1.1, f2.1, f3.1} : Set V3) :=
+    properties_fully_surrounded hfan he12 he23 hθ0 hθπ
+  have hne : (Metric.ball x 1 ∩ affGt ({x} : Set V3) {f1.1, f2.1, f3.1}).Nonempty :=
+    solid_triangle_inter_ball_nonempty hcop
+  have hvolpos : 0 < volume (Metric.ball x 1 ∩
+      affGt ({x} : Set V3) {f1.1, f2.1, f3.1}) :=
+    (Metric.isOpen_ball.inter (OPEN_AFF_GT_1_3 x f1.1 f2.1 f3.1 hcop)).measure_pos
+      volume hne
+  have hvol := volume_solid_triangle (v0 := x) (v1 := f1.1) (v2 := f2.1) (v3 := f3.1)
+    (r := 1) (by norm_num) hcop
+  rw [hvol] at hvolpos
+  rw [ENNReal.ofReal_pos] at hvolpos
+  have hTpos : 0 < (dihV x f1.1 f2.1 f3.1 + dihV x f2.1 f3.1 f1.1 +
+      dihV x f3.1 f1.1 f2.1 - Real.pi) := by nlinarith [hvolpos]
+  have hvolreal : volume.real (Metric.ball x 1 ∩
+      affGt ({x} : Set V3) {f1.1, f2.1, f3.1}) =
+      (dihV x f1.1 f2.1 f3.1 + dihV x f2.1 f3.1 f1.1 +
+        dihV x f3.1 f1.1 f2.1 - Real.pi) * 1 ^ 3 / 3 := by
+    rw [Measure.real_def, hvol, ENNReal.toReal_ofReal (by nlinarith [hTpos])]
+  have hPTF := PROPERTIES_TRIANGLE_FAN hfan he12 he23 he31 hsig hcard hfan80
+  have hf1azim : azimFan x V E f1.1 f1.2 =
+      dihV x f1.1 f1.2 (sigmaFan x V E f1.1 f1.2) :=
+    CARD_GT1_IMP_AZIM_FAN_EQ_DIHV hfan hcard hfan80 hf1dart
+  have hf2azim : azimFan x V E f2.1 f2.2 =
+      dihV x f2.1 f2.2 (sigmaFan x V E f2.1 f2.2) :=
+    CARD_GT1_IMP_AZIM_FAN_EQ_DIHV hfan hcard hfan80 hf2dart
+  have hf3azim : azimFan x V E f3.1 f3.2 =
+      dihV x f3.1 f3.2 (sigmaFan x V E f3.1 f3.2) :=
+    CARD_GT1_IMP_AZIM_FAN_EQ_DIHV hfan hcard hfan80 hf3dart
+  have hsum : (∑ᶠ y ∈ ds, (azimFan x V E y.1 y.2 - Real.pi)) =
+      (azimFan x V E f1.1 f1.2 - Real.pi) + (azimFan x V E f2.1 f2.2 - Real.pi) +
+        (azimFan x V E f3.1 f3.2 - Real.pi) := by
+    rw [hdsf]
+    rw [finsum_mem_insert (fun y : V3 × V3 => azimFan x V E y.1 y.2 - Real.pi)
+      (by simp [hf12ne, hf13ne]) ((Set.finite_singleton f3).insert f2)]
+    rw [finsum_mem_pair hf23ne]
+    ring
+  have hLHS : sol x (dartsetLeadsIntoFan x V E ds) =
+      (dihV x f1.1 f2.1 f3.1 + dihV x f2.1 f3.1 f1.1 +
+        dihV x f3.1 f1.1 f2.1) - Real.pi := by
+    rw [hsol, hleads, Set.inter_comm, hvolreal]
+    ring
+  have hRHS : 2 * Real.pi + (∑ᶠ y ∈ ds, (azimFan x V E y.1 y.2 - Real.pi)) =
+      (dihV x f1.1 f2.1 f3.1 + dihV x f2.1 f3.1 f1.1 +
+        dihV x f3.1 f1.1 f2.1) - Real.pi := by
+    rw [hsum, hf1azim, hf2azim, hf3azim]
+    rw [← hf2fst, ← hf3fst, ← hf1fst, hPTF.1, hsig, hPTF.2]
+    ring
+  rw [hLHS, hRHS]
 
 /-- HOL planarity.hl :15443-15463 `MOZNWEH`
 
@@ -596,15 +718,10 @@ theorem MOZNWEH
           ∀ u : V3, x + u ∈ dartsetLeadsIntoFan x V E ds ∩ Metric.ball x r →
             ∀ t : ℝ, 0 < t → t * ‖u‖ < r →
               x + t • u ∈ dartsetLeadsIntoFan x V E ds ∩ Metric.ball x r) ∧
-      Classical.epsilon (fun s : ℝ =>
-        ∀ r : ℝ, 0 < r →
-          MeasurableSet (dartsetLeadsIntoFan x V E ds ∩ Metric.ball x r) →
-          (dartsetLeadsIntoFan x V E ds ∩ Metric.ball x r) ⊆ Metric.ball x r ∧
-            (∀ u : V3, x + u ∈ dartsetLeadsIntoFan x V E ds ∩ Metric.ball x r →
-              ∀ t : ℝ, 0 < t → t * ‖u‖ < r →
-                x + t • u ∈ dartsetLeadsIntoFan x V E ds ∩ Metric.ball x r) →
-          s = 3 * volume.real (dartsetLeadsIntoFan x V E ds ∩ Metric.ball x r) / r ^ 3)
-        = 2 * Real.pi + ∑ᶠ y ∈ ds, (azimFan x V E y.1 y.2 - Real.pi) := by
-  sorry
+      sol x (dartsetLeadsIntoFan x V E ds)
+        = 2 * Real.pi + ∑ᶠ y ∈ ds, (azimFan x V E y.1 y.2 - Real.pi) :=
+  ⟨measurable_dartset_leads_into3_fan hfan hcard hfan80 hds hds3 he,
+    dartset_leads_into_fan_eventually_radial_norm hfan hcard hfan80 hds hds3,
+    solid_of_dartset_leads_into_fan_triangle_fan hfan hcard hfan80 hds hds3⟩
 
 end Kepler.Text
