@@ -222,7 +222,13 @@ theorem f10_in_d1_fanadd (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       f10 ∈ dart1OfFan V E1 := by
-  sorry
+  intro h
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
+    hf10, _, _, hE1⟩ := h
+  rw [hf10]
+  change ({w, v} : Set V3) ∈ E1
+  rw [← hE1]
+  exact Set.mem_union_right E (by simp [Set.pair_comm])
 
 /-- HOL Conforming.hl :3777-3798 `pair_disjoint_f10_f20_f30`
 
