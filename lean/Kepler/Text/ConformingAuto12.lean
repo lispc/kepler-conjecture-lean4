@@ -834,7 +834,19 @@ theorem disjoint_ds1_and_ds2 (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       ds1 ≠ ds2 := by
-  sorry
+  intro h
+  have h' := h
+  obtain ⟨hfan, hcard, hfan80, hds, hds3, hf123, hf12, hf23, hf31,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hds1, hds2,
+    hf10, hf20, hf30, hE1⟩ := h
+  have hnot : (v, w) ∉ ds2 :=
+    edge_not_in_ds2 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1 h'
+  have hmem : (v, w) ∈ ds1 := by
+    rw [hds1]
+    exact (hypermapOfFan x V E1 hfan1).mem_face_self (v, w)
+  intro heq
+  exact hnot (heq ▸ hmem)
 
 /-- HOL Conforming.hl :4065-4092 `card_eq_image_in_d_fan`
 
