@@ -601,6 +601,59 @@ theorem aff_3_rep_cross_dot (x v u : V3) :
     exact (AffineSubspace.vsub_right_mem_direction_iff_mem hxmem y).mp (by
       simpa [vsub_eq_sub] using hdir)
 
+/-- 混合积轮换：`(a × b) · c = (b × c) · a`。 -/
+private theorem cross_dot_cyclic17 {a b c : Fin 3 → ℝ} :
+    crossProduct a b ⬝ᵥ c = crossProduct b c ⬝ᵥ a := by
+  calc crossProduct a b ⬝ᵥ c = c ⬝ᵥ crossProduct a b := dotProduct_comm _ _
+    _ = a ⬝ᵥ crossProduct b c := triple_product_permutation c a b
+    _ = crossProduct b c ⬝ᵥ a := dotProduct_comm _ _
+
+/-- 空间分解的纯几何核：平面 `{x,v,w}` 与分别由 `s`、`u` 定向的两个开半空间
+之并覆盖全空间（`s` 与 `u` 位于平面两侧时）。 -/
+private theorem space3_eq_union_3set_geom (x v w u s : V3)
+    (hcop_u : ¬ Coplanar ({x, w, v, u} : Set V3))
+    (hcop_s : ¬ Coplanar ({x, v, w, s} : Set V3))
+    (hposB : 0 < crossProduct ((w - x : V3) : Fin 3 → ℝ)
+        ((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((u - x : V3) : Fin 3 → ℝ))
+    (hposA : 0 < crossProduct ((v - x : V3) : Fin 3 → ℝ)
+        ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((s - x : V3) : Fin 3 → ℝ)) :
+    (affineSpan ℝ ({x, v, w} : Set V3) : Set V3) ∪
+      affGt ({x, v, w} : Set V3) {s} ∪
+      affGt ({x, v, w} : Set V3) {u} = Set.univ := by
+  have hnc_vw : ¬ Collinear3 x v w :=
+    (notcoplanar_imp_notcollinear_fan hcop_s).2.1
+  have hP := aff_3_rep_cross_dot x v w hnc_vw
+  have hA := aff_gt_3_1_rep_cross_dot x v w s hcop_s hposA
+  have hB0 := aff_gt_3_1_rep_cross_dot x w v u hcop_u hposB
+  have hB1 : affGt ({x, v, w} : Set V3) {u} =
+      {y : V3 | 0 < crossProduct ((w - x : V3) : Fin 3 → ℝ)
+          ((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)} := by
+    rw [show ({x, v, w} : Set V3) = ({x, w, v} : Set V3) by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact hB0
+  ext y
+  constructor
+  · intro _; exact Set.mem_univ y
+  · intro _
+    rcases lt_trichotomy (crossProduct ((v - x : V3) : Fin 3 → ℝ)
+        ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)) 0 with
+      hneg | hzero | hpos
+    · right
+      rw [hB1]
+      simp only [Set.mem_setOf_eq]
+      have hcross : crossProduct ((w - x : V3) : Fin 3 → ℝ)
+          ((v - x : V3) : Fin 3 → ℝ) =
+          - crossProduct ((v - x : V3) : Fin 3 → ℝ)
+            ((w - x : V3) : Fin 3 → ℝ) := (cross_anticomm _ _).symm
+      rw [hcross, neg_dotProduct]
+      linarith
+    · left; left
+      rw [hP]
+      simpa only [Set.mem_setOf_eq] using hzero
+    · left; right
+      rw [hA]
+      simpa only [Set.mem_setOf_eq] using hpos
+
 /-! ## 空间分解与 U1/U 的包含关系（Conforming.hl:8522-9065） -/
 
 /-- HOL Conforming.hl :8522-8621 `SPACE3_EQ_UNION_3SET`
@@ -669,7 +722,88 @@ theorem SPACE3_EQ_UNION_3SET (x : V3) (V : Set V3)
       (affineSpan ℝ ({x, v, w} : Set V3) : Set V3) ∪
         affGt ({x, v, w} : Set V3) {sigmaFan x V E v u} ∪
         affGt ({x, v, w} : Set V3) {u} = Set.univ := by
-  sorry
+  intro h
+  obtain ⟨_hfanE, hcard, hfan80, _hds, _hds3, _hfsub, _hf1f2, _hf2f3, _hf3ne,
+    _hf1v, _hf2u, _hf3w, hvu, huw, hwv, hsigma, _hf1u, _hf2w, _hds1, _hds2,
+    _hf10, _hf20, _hf30, hE1⟩ := h
+  have hθuw : 0 < azim x u w v ∧ azim x u w v < Real.pi := by
+    have := hfan80 u w huw
+    rwa [hsigma] at this
+  have hcop_xvuw : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan hvu huw hθuw.1 hθuw.2
+  have hnc_vw : ¬ Collinear3 x v w :=
+    (notcoplanar_imp_notcollinear_fan hcop_xvuw).2.2
+  have hnc_vu : ¬ Collinear3 x v u :=
+    (notcoplanar_imp_notcollinear_fan hcop_xvuw).2.1
+  have hnc_uw : ¬ Collinear3 x u w :=
+    (notcoplanar_imp_notcollinear_fan hcop_xvuw).1
+  have hnc_uv : ¬ Collinear3 x u v := by
+    have hcop' : ¬ Coplanar ({x, u, v, w} : Set V3) := by
+      rwa [show ({x, u, v, w} : Set V3) = ({x, v, u, w} : Set V3) by
+        ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact (notcoplanar_imp_notcollinear_fan hcop').2.1
+  have hcop_u : ¬ Coplanar ({x, w, v, u} : Set V3) := by
+    rwa [show ({x, w, v, u} : Set V3) = ({x, v, u, w} : Set V3) by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  have hpos_w0 : 0 < crossProduct ((u - x : V3) : Fin 3 → ℝ)
+      ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((v - x : V3) : Fin 3 → ℝ) :=
+    cross_dot_fully_surrounded_fan (x := x) (v1 := u) (v := w) (u1 := v)
+      hnc_uv hnc_uw hθuw.1 hθuw.2
+  have hposB : 0 < crossProduct ((w - x : V3) : Fin 3 → ℝ)
+      ((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((u - x : V3) : Fin 3 → ℝ) := by
+    rw [← cross_dot_cyclic17 (a := ((u - x : V3) : Fin 3 → ℝ))
+      (b := ((w - x : V3) : Fin 3 → ℝ)) (c := ((v - x : V3) : Fin 3 → ℝ))]
+    exact hpos_w0
+  have hσ_edge : ({v, sigmaFan x V E v u} : Set V3) ∈ E :=
+    (properties_of_setOfEdge_fan x V E v (sigmaFan x V E v u) hfan).mpr
+      (sigma_fan_in_setOfEdge hfan
+        ((properties_of_setOfEdge_fan x V E v u hfan).mp hvu))
+  have hnc_vσ : ¬ Collinear3 x v (sigmaFan x V E v u) :=
+    fan_not_collinear hfan hσ_edge
+  have hxv : v ≠ x := fun hh =>
+    hnc_vu (collinear3_of_eq (v := x) (w := v) (w1 := u) hh)
+  have hsmall : azim x v u w ≤ azim x v u (sigmaFan x V E v u) :=
+    angle_is_small_fan hfan hvu huw hsigma hfan80 hcard
+  have hsum : azim x v u (sigmaFan x V E v u) =
+      azim x v u w + azim x v w (sigmaFan x V E v u) :=
+    sum4_azim_fan hxv hnc_vu hnc_vw hnc_vσ hsmall
+  have h80vu : 0 < azim x v u (sigmaFan x V E v u) ∧
+      azim x v u (sigmaFan x V E v u) < Real.pi := hfan80 v u hvu
+  have hlt : azim x v w (sigmaFan x V E v u) < Real.pi := by
+    linarith [hsum, h80vu.2, azim_nonneg x v u w]
+  have hpos_azim : 0 < azim x v w (sigmaFan x V E v u) := by
+    rcases lt_or_eq_of_le (azim_nonneg x v w (sigmaFan x V E v u)) with hh | hh
+    · exact hh
+    · exfalso
+      have hvwE1 : ({v, w} : Set V3) ∈ E1 := by
+        rw [← hE1]; exact Set.mem_union_right E (by simp)
+      have hσvE1 : ({v, sigmaFan x V E v u} : Set V3) ∈ E1 := by
+        rw [← hE1]; exact Set.mem_union_left _ hσ_edge
+      have hweq : w = sigmaFan x V E v u :=
+        unique_azim0_point_fan hfan1 hvwE1 hσvE1 hh.symm
+      have hvwE : ({v, w} : Set V3) ∈ E := by
+        rw [hweq]; exact hσ_edge
+      exact hwv (Set.pair_comm v w ▸ hvwE)
+  have hθs : 0 < azim x v w (sigmaFan x V E v u) ∧
+      azim x v w (sigmaFan x V E v u) < Real.pi := ⟨hpos_azim, hlt⟩
+  have hposA : 0 < crossProduct ((v - x : V3) : Fin 3 → ℝ)
+      ((w - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((sigmaFan x V E v u - x : V3) : Fin 3 → ℝ) :=
+    cross_dot_fully_surrounded_fan (x := x) (v1 := v) (v := w)
+      (u1 := sigmaFan x V E v u) hnc_vσ hnc_vw hθs.1 hθs.2
+  have hcop_s : ¬ Coplanar ({x, v, w, sigmaFan x V E v u} : Set V3) := by
+    have hvwE1 : ({v, w} : Set V3) ∈ E1 := by
+      rw [← hE1]; exact Set.mem_union_right E (by simp)
+    have hσvE1 : ({v, sigmaFan x V E v u} : Set V3) ∈ E1 := by
+      rw [← hE1]; exact Set.mem_union_left _ hσ_edge
+    have h := properties_fully_surrounded (x := x) (V := V) (E := E1)
+      (v := sigmaFan x V E v u) (u := v) (w := w)
+      hfan1 (Set.pair_comm v (sigmaFan x V E v u) ▸ hσvE1) hvwE1 hθs.1 hθs.2
+    rwa [show ({x, sigmaFan x V E v u, v, w} : Set V3) =
+        ({x, v, w, sigmaFan x V E v u} : Set V3) by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at h
+  exact space3_eq_union_3set_geom x v w u (sigmaFan x V E v u)
+    hcop_u hcop_s hposB hposA
 
 /-- HOL Conforming.hl :8622-8683 `lemmaU1_subset_U`
 
