@@ -995,7 +995,57 @@ theorem SIGMA_FAN_OF_FANADD_AT_POINT6 (x : V3) (V : Set V3) (E E1 : Set (Set V3)
     (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       sigmaFan x V E1 w w1 = v := by
-  sorry
+  rintro ⟨hfan, hfanE1, hfan80, hvu, huw, hwv, hw1_eq, hww1, hsigma, hcard, hE1⟩
+  have hvV : v ∈ V := (fan_mem_of_edge hfan hvu).1
+  have hwV : w ∈ V := (fan_mem_of_edge hfan huw).2
+  have huw_wu : ({w, u} : Set V3) ∈ E := by rw [Set.pair_comm]; exact huw
+  have hwv_vw : ({v, w} : Set V3) ∉ E := by rw [Set.pair_comm]; exact hwv
+  have hp_sigma : sigmaFan x V E w w1 = u := by
+    rw [hw1_eq]
+    exact (INVERSE1_SIGMA_FAN (v := w) hfan).2.1 u huw_wu
+  have hw1_mem : w1 ∈ setOfEdge w V E :=
+    (properties_of_setOfEdge_fan x V E w w1 hfan).mp hww1
+  have hsoe1 : setOfEdge w V E1 = setOfEdge w V E ∪ {v} := by
+    rw [← hE1, setOfEdge_union_ca11, set_of_only_edge1_ca11 v w V hvV]
+  have hww1_E1 : ({w, w1} : Set V3) ∈ E1 := by
+    rw [← hE1]; exact Set.mem_union_left _ hww1
+  have hv_mem_E1 : v ∈ setOfEdge w V E1 := by
+    rw [hsoe1]; exact Or.inr (Set.mem_singleton v)
+  have hv_ne_w1 : v ≠ w1 := fun h => hwv (by rw [h]; exact hww1)
+  have hne_w1 : setOfEdge w V E ≠ {w1} := by
+    intro h
+    have := hcard w hwV
+    rw [h, Set.ncard_singleton] at this
+    norm_num at this
+  obtain ⟨-, -, hσ_min⟩ := SIGMA_FAN hne_w1 hfan hw1_mem
+  rw [hp_sigma] at hσ_min
+  have hθ := hfan80 u w huw
+  rw [hsigma] at hθ
+  have hcop : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan hvu huw hθ.1 hθ.2
+  have hnc_vw : ¬ Collinear3 x v w := (notcoplanar_imp_notcollinear_fan hcop).2.2
+  have hnc_wv : ¬ Collinear3 x w v := collinear3_swap_ca11 hnc_vw
+  have hnc_wu : ¬ Collinear3 x w u := fan_not_collinear hfan huw_wu
+  have hnc_ww1 : ¬ Collinear3 x w w1 := fan_not_collinear hfan hww1
+  have hxw : x ≠ w := fun h =>
+    hnc_wu (collinear3_of_eq (v := x) (w := w) (w1 := u) h.symm)
+  have htri : azim x w v u < azim x w w1 u :=
+    azim_trangle_le_azim_face_fan x V E v u w w1
+      ⟨hfan, hvu, huw, hww1, hwv_vw, hsigma, hp_sigma, hfan80, hcard⟩
+  have hB : azim x w w1 u = azim x w w1 v + azim x w v u :=
+    sum5_azim_fan (v := w) (u := w1) (w1 := v) (w2 := u)
+      hxw.symm hnc_ww1 hnc_wv hnc_wu (le_of_lt htri)
+  have hpv_le_pu : azim x w w1 v ≤ azim x w w1 u := by
+    rw [hB]; linarith [azim_nonneg x w v u]
+  have hmin : ∀ w2 : V3, w2 ∈ setOfEdge w V E1 → w2 ≠ w1 →
+      azim x w w1 v ≤ azim x w w1 w2 := by
+    intro w2 hw2 hw2w1
+    rw [hsoe1] at hw2
+    rcases hw2 with hw2E | hw2sing
+    · exact le_trans hpv_le_pu (hσ_min w2 hw2E hw2w1)
+    · rw [Set.mem_singleton_iff.mp hw2sing]
+  exact unique_sigma_fan_ca11 (x := x) (v := w) (w := w1) (w1 := v)
+    hfanE1 hww1_E1 hv_mem_E1 hv_ne_w1 hmin
 
 /-! ## 加边后 f1_fan 的作用（Conforming.hl:3603-3689） -/
 
