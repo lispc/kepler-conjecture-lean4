@@ -855,4 +855,9 @@ theorem N_FAN_EQ_0_IMP_CARD_FACE_EQ_3 {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hn : nFan x V E hfan = 0)
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet) :
     ds.ncard = 3 := by
-  sorry
+  have hzero : ∀ f, f ∈ (hypermapOfFan x V E hfan).faceSet → f.ncard - 3 = 0 := by
+    refine (NSUM_EQ_0_IFF (Hypermap.faceSet_finite (hypermapOfFan x V E hfan))).mp ?_
+    simpa [nFan] using hn
+  have hds0 : ds.ncard - 3 = 0 := hzero ds hds
+  have hge : 3 ≤ ds.ncard := CARD_FACE_SET_GE_3_FULLY_SURROUNDED_FAN hfan hcard hds
+  omega
