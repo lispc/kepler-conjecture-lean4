@@ -609,7 +609,32 @@ theorem FANADD_CONFORMING (x : V3) (V : Set V3) (E E1 : Set (Set V3))
       nFan x V E2 hfan2 < nFan x V E hfan →
         conformingFan x V E2 hfan2) →
       conformingFan x V E1 hfan1 := by
-  sorry
+  intro h
+  obtain ⟨hfanE, hcard, hfan80E, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hmin⟩ := h
+  have hbase : FAN x V E ∧
+      (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
+      fan80 x V E ∧
+      ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard ∧
+      ({f1, f2, f3} : Set (V3 × V3)) ⊆ ds ∧
+      f1Fan x V E f1 = f2 ∧ f1Fan x V E f2 = f3 ∧ ¬ (f1Fan x V E f3 = f1) ∧
+      f1.1 = v ∧ f2.1 = u ∧ f3.1 = w ∧
+      ({v, u} : Set V3) ∈ E ∧ ({u, w} : Set V3) ∈ E ∧ ({w, v} : Set V3) ∉ E ∧
+      sigmaFan x V E u w = v ∧ f1.2 = u ∧ f2.2 = w ∧
+      (hypermapOfFan x V E1 hfan1).face (v, w) = ds1 ∧
+      (hypermapOfFan x V E1 hfan1).face (w, v) = ds2 ∧
+      f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
+      E ∪ {({v, w} : Set V3)} = E1 :=
+    ⟨hfanE, hcard, hfan80E, hds, hds3, hsub, hf1f2, hf2f3, hf3ne, hf1v, hf2u,
+      hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20, hf30,
+      hE1⟩
+  refine hmin E1 hfan1 ⟨hfan1, ?_, ?_, ?_⟩
+  · exact add_edge_imp_card_set_edge_ge1_fan hfan hcard hE1.symm
+  · exact FAN80_FANADD x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1 hbase
+  · exact ZSZIUQE_LEMMA x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1 hbase
 
 /-! ## σ 在面外 dart 上的不变性（Conforming.hl:6567-6692） -/
 
