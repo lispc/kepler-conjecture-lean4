@@ -1532,6 +1532,60 @@ theorem dartset_leads_into_ds_open_fanadd (x : V3) (V : Set V3)
     dartsetLeadsIntoFan x V E1 ds1 ∪ dartsetLeadsIntoFan x V E1 ds2 ∪
       affGt ({x} : Set V3) {v, w} = U →
       IsOpen U := by
-  sorry
+  rintro ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hconf, hU⟩
+  let U1 : Set V3 :=
+    affGt ({x, u, w} : Set V3) {v} ∩
+    affGt ({x, v, u} : Set V3) {sigmaFan x V E v u} ∩
+    affGt ({x, v, sigmaFan x V E v u} : Set V3) {w} ∩
+    affGt ({x, sigmaFan x V E v u, w} : Set V3) {v}
+  have hconf1 : conformingFan x V E1 hfan1 :=
+    FANADD_CONFORMING x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1
+      ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+        hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10,
+        hf20, hf30, hE1, hconf⟩
+  have hfan80E1 : fan80 x V E1 :=
+    FAN80_FANADD x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 hfan hfan1
+      ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+        hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10,
+        hf20, hf30, hE1⟩
+  have hcard1 : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E1).ncard :=
+    add_edge_imp_card_set_edge_ge1_fan hfan hcard hE1.symm
+  have hds1mem : ds1 ∈ (hypermapOfFan x V E1 hfan1).faceSet :=
+    ds1_in_face_set_fanadd x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1
+      ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+        hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1.symm, hds2.symm,
+        hf10, hf20, hf30, hE1⟩
+  have hds2mem : ds2 ∈ (hypermapOfFan x V E1 hfan1).faceSet :=
+    ds2_in_face_set_fanadd x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1
+      ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+        hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2.symm,
+        hf10, hf20, hf30, hE1⟩
+  have hopen1 : IsOpen (dartsetLeadsIntoFan x V E1 ds1) :=
+    OPEN_TOPOLOGICAL_COMPONENT_YFAN hfan1 hconf1
+      (dartset_leads_into_is_topological_component_yfan hfan1 hcard1 hfan80E1
+        hds1mem)
+  have hopen2 : IsOpen (dartsetLeadsIntoFan x V E1 ds2) :=
+    OPEN_TOPOLOGICAL_COMPONENT_YFAN hfan1 hconf1
+      (dartset_leads_into_is_topological_component_yfan hfan1 hcard1 hfan80E1
+        hds2mem)
+  have hU1open : IsOpen U1 :=
+    open_subsetU x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 U1 hfan hfan1
+      ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+        hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10,
+        hf20, hf30, hE1, hconf, rfl⟩
+  have hUeq : U = U1 ∪ dartsetLeadsIntoFan x V E1 ds1 ∪
+      dartsetLeadsIntoFan x V E1 ds2 :=
+    lemma_rep_U_fanadd x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 U U1
+      hfan hfan1
+      ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+        hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10,
+        hf20, hf30, hE1, hU.symm, hconf, rfl⟩
+  rw [hUeq]
+  exact (hU1open.union hopen1).union hopen2
 
 end Kepler.Text
