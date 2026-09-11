@@ -283,7 +283,8 @@ theorem tran_in_dart_newfan (x : V3) (V : Set V3) (E E1 : Set (Set V3))
     (y : V3 × V3) :
     FAN x V E ∧ FAN x V E1 ∧ E ⊆ E1 ∧ y ∈ dart1OfFan V E →
       y ∈ dart1OfFan V E1 := by
-  sorry
+  rintro ⟨_, _, hsub, hy⟩
+  exact hsub hy
 
 /-- HOL Conforming.hl :4990-5008 `INJ_TRAN_D1_FAN`
 
