@@ -694,7 +694,27 @@ theorem condition_f1_fan_power_in_face_set (n : ℕ) (x : V3) (V : Set V3)
     dartOfFan V E = dart1OfFan V E ∧
     y1 ∈ ds →
       y ∈ ds := by
-  sorry
+  rintro ⟨_, hy, hds, _hdf, hy1⟩
+  obtain ⟨d, hd, hface⟩ := Hypermap.face_representation (hypermapOfFan x V E hfan) hds
+  have hy1face : y1 ∈ (hypermapOfFan x V E hfan).face d := by simpa [hface] using hy1
+  have hy1mem : y1 ∈ (hypermapOfFan x V E hfan).darts :=
+    (hypermapOfFan x V E hfan).face_subset_darts hd hy1face
+  have hdarts : (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) =
+      dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have hy1d : y1 ∈ dart1OfFan V E := by
+    change y1 ∈ (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) at hy1mem
+    simpa [hdarts] using hy1mem
+  have hface_eq : (hypermapOfFan x V E hfan).face y1 = ds :=
+    ((hypermapOfFan x V E hfan).face_eq_of_mem hy1face).symm.trans hface.symm
+  have hpow : ((hypermapOfFan x V E hfan).faceMap ^ n) y1 = (f1Fan x V E)^[n] y1 :=
+    hypermapOfFan_faceMap_pow_eq_iterate hfan hy1d n
+  have hmem : ((hypermapOfFan x V E hfan).faceMap ^ n) y1 ∈
+      (hypermapOfFan x V E hfan).face y1 :=
+    pow_apply_mem_orbitMap _ n y1
+  rw [hy, ← hpow, ← hface_eq]
+  exact hmem
 
 /-! ## `tranf` 在删面集上的满射与像（Conforming.hl:5220-6120） -/
 
