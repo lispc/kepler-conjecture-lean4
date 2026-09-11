@@ -10,8 +10,8 @@ set -u
 cd "$(dirname "$0")/.."
 export PATH="$HOME/.elan/bin:$PATH"
 FILE="$1"
-STATE=/tmp/auto_loop.log
-SKIPS=/tmp/auto_loop_skips.txt
+STATE=${LOOPLOG:-/tmp/auto_loop.log}
+SKIPS=${LOOPSKIPS:-/tmp/auto_loop_skips.txt}
 declare -A FAILS
 touch "$SKIPS"
 consec_skip=0
