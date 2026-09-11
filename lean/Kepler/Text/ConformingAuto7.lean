@@ -546,4 +546,16 @@ theorem SUM_AZIM_FAN_OF_NODE_EQ_2PI_I_FAN
     (hf : f ∈ (hypermapOfFan x V E hfan).nodeSet)
     (hcard : ∀ v ∈ V, 1 < (setOfEdge v V E).ncard) :
     (∑ᶠ y ∈ f, azimFan x V E y.1 y.2) = 2 * Real.pi := by
-  sorry
+  obtain ⟨y, hy⟩ := exists_point_in_node hfan hf
+  have hvu : {y.1, y.2} ∈ E :=
+    properties_of_elements_in_node_fully_surroundedfan hfan hcard hf hy
+  have hy1V : y.1 ∈ V :=
+    hfan.1 (Set.mem_sUnion.mpr ⟨{y.1, y.2}, hvu, by simp⟩)
+  have hne : setOfEdge y.1 V E ≠ {y.2} := by
+    intro h
+    have hcard1 : (setOfEdge y.1 V E).ncard = 1 := by
+      rw [h, Set.ncard_singleton]
+    have := hcard y.1 hy1V
+    omega
+  rw [← SUM_AZIM_FAN_OF_NODE_EQ_SUM_AZIM_I_FAN hfan hf hy hcard]
+  exact sum_azims_eq_2pi hfan hvu hne
