@@ -309,7 +309,19 @@ theorem STEP3_REDUCE_FAN {x : V3} {V : Set V3} {E E1 : Set (Set V3)}
     (hsigma : sigmaFan x V E u w = v)
     (hE1 : E ∪ {({v, w} : Set V3)} = E1) :
     FAN x V E1 := by
-  sorry
+  have hvV : v ∈ V := hfan.1 (Set.mem_sUnion.mpr ⟨{v, u}, hvu, by simp⟩)
+  have hwV : w ∈ V := hfan.1 (Set.mem_sUnion.mpr ⟨{u, w}, huw, by simp⟩)
+  obtain ⟨hθ0, hθπ⟩ := hfan80 u w huw
+  rw [hsigma] at hθ0 hθπ
+  have hnc : ¬ Collinear3 x v w := by
+    have h := not_collinear_is_properties_fully_surrounded1 hfan hvu huw hθ0 hθπ 1
+      (by norm_num) (le_refl 1)
+    simpa using h
+  have hsub : affGt ({x} : Set V3) {v, w} ⊆ dartsetLeadsIntoFan x V E ds :=
+    STEP2_REDUCE_FAN hfan hcard hfan80 hds hds3 hfsub hf1 hf2 hf3 hv hu hw
+      hvu huw hwv hsigma
+  exact DWWUTKW (x := x) (V := V) (E := E) (E1 := E1) (v := v) (u := w) (ds := ds)
+    hfan hvV hwV hnc hcard hfan80 hds hsub hE1.symm
 
 /-! ## 加边的集合论引理（Conforming.hl:2216-2316） -/
 
