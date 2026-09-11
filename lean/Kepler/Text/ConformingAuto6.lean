@@ -1,0 +1,445 @@
+/-
+Port of the HOL Light Flyspeck `Conforming.hl` top-level theorems, batch 6
+(Conforming.hl:1267-1477).
+
+Source: `reference/flyspeck/text_formalization/fan/Conforming.hl`
+(Flyspeck book formalization, Hoang Le Truong, 2010); persistent copies
+`lean/scripts/conforming.hl` and
+`/dev/shm/kepler-ref/flyspeck/text_formalization/fan/Conforming.hl`.
+
+Coverage (batch 6, Conforming.hl:1267-1477):
+- `fully_surrounded_imp_aff_gt_3_1_of_dart_eq_fan` (1267)
+- `OPEN_TOPOLOGICAL_COMPONENT_YFAN` (1292)
+- `OPEN_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL` (1333)
+- `MEASURABLE_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL` (1342)
+- `RADIAL_TOPOLOGICAL_COMPONENT_YFAN` (1352)
+- `FINITE_TOPOLOGICAL_COMPONENT_YFAN` (1396)
+- `SUM_SOL_TOPOLOGICAL_COMPONENT_YFAN_EQ_SOL_UNIONS` (1419)
+- `UNIONS_TOPOLOGICAL_COMPONENT_EQ_YFAN` (1435)
+- `SUM_SOL_IN_FACE_SET_EQ_4PI` (1456)
+- `DART_EQ_UNIONS_FACE_SET_NODE_SET_EDGE_SET` (1470)
+
+Porting method: skeleton (frozen statements + per-theorem HOL docstrings);
+proofs to be filled by the auto_loop/big-pickle harness. Every proof is a
+bare `sorry`.
+
+Encoding notes (gaps / closest existing encodings):
+- HOL `real^3` ↔ `V3 = EuclideanSpace ℝ (Fin 3)` (Kepler/Geom/Azim.lean:33).
+- HOL `FAN(x,V,E)` ↔ `FAN x V E` (Kepler/Text/Fan.lean:56); HOL
+  `CARD (set_of_edge v V E) > 1` ↔ `1 < (setOfEdge v V E).ncard`
+  (repo convention, cf. Kepler/Text/PlanarityDarts.lean:94); HOL
+  `fan80` ↔ `fan80` (Kepler/Text/Fan.lean:227); HOL `sigma_fan` ↔
+  `sigmaFan` (Kepler/Text/Fan.lean:67); HOL `f1_fan` ↔ `f1Fan`
+  (Kepler/Text/ConformingDefs.lean:87).
+- HOL `conforming_fan (x,V,E)` ↔ `conformingFan x V E hfan`
+  (Kepler/Text/ConformingDefs.lean:184); the explicit `hfan : FAN x V E`
+  witness is carried through because `hypermapOfFan` needs it (HOL's
+  `hypermap_of_fan` is total).
+- HOL `hypermap1_of_fanx (x,V,E)` is NOT ported; as in
+  Kepler/Text/PlanarityComponent.lean:37-48, `face_set
+  (hypermap1_of_fanx (x,V,E))` is encoded as
+  `(hypermapOfFan x V E hfan).faceSet` with pair darts `V3 × V3`.
+- HOL quadruple darts `real^3#real^3#real^3#real^3` are encoded as pair
+  darts `V3 × V3` (Kepler/Text/PlanarityComponent.lean:37-48);
+  `pr2 y`/`pr3 y` ↦ `y.1`/`y.2`; `pr3 (f1_fan x V E y)` ↦
+  `(f1Fan x V E y).2`.
+- HOL `topological_component_yfan` ↔ `topologicalComponentYfan`
+  (Kepler/Text/Fan.lean:199); HOL `yfan` ↔ `yfan` (Kepler/Text/Fan.lean:158);
+  HOL `dartset_leads_into_fan` ↔ `dartsetLeadsIntoFan`
+  (Kepler/Text/PlanarityComponent.lean:348).
+- HOL `open` ↔ `IsOpen`; HOL `measurable` ↔ `MeasurableSet`; HOL
+  `normball x r` ↔ Mathlib `Metric.ball x r` (both are
+  `{y | dist y x < r}`; cf. `NORMBALL_BALL`, sphere.hl); HOL
+  `bounded` ↔ `Bornology.IsBounded` (repo convention, cf.
+  Kepler/Text/TopologyFan.lean:2764).
+- HOL `radial_norm r x C` ↔ `radialNorm r x C`
+  (Kepler/Geom/Volume.lean:27); HOL `sol x C` ↔ `Kepler.Geom.sol x C`
+  (Kepler/Geom/Volume.lean:36).
+- HOL `UNIONS f` ↔ `⋃₀ f` (`Set.sUnion`); HOL `INTERS f` ↔ `⋂₀ f`
+  (`Set.sInter`); HOL `INTER` ↔ `∩`; HOL `sum S g` (set sum) ↔ finsum
+  `∑ᶠ y ∈ S, g y` (`open scoped BigOperators`); HOL `&4 * pi` ↔
+  `4 * Real.pi`.
+- HOL `(A)hypermap` ↔ `Hypermap α` (Kepler/Text/Hypermap.lean:765); HOL
+  `dart H` (the dart *set*) ↔ `(↑H.darts : Set α)` (Kepler/Text/Hypermap.lean:767);
+  HOL `face_set`/`node_set`/`edge_set` ↔ `H.faceSet`/`H.nodeSet`/`H.edgeSet`
+  (Kepler/Text/Hypermap.lean:1002-1008).
+- `OPEN_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL` has `r` free in HOL
+  (implicitly universally quantified); as in `BOUNDED_INTER_BALL`
+  (ConformingAuto5.lean:380), `r` is an explicit parameter here.
+- None of the ten statements is Mathlib-general: every one mentions the
+  repo-specific `FAN`/`conformingFan`/`topologicalComponentYfan`/`affGt`/
+  `radialNorm`/`sol`/`Hypermap` vocabulary, so nothing is skipped.
+  `DART_EQ_UNIONS_FACE_SET_NODE_SET_EDGE_SET` is repo-specific to the
+  `Hypermap` structure, but its content is the three specializations of
+  the already-ported `sUnion_setOfOrbits` (Hypermap.lean:1562); it is kept
+  (public, HOL name) as required by the batch.
+-/
+
+import Kepler.Text.PlanarityAuto16
+import Kepler.Text.ConformingDefs
+
+set_option maxHeartbeats 5000000
+
+namespace Kepler.Text
+
+open Kepler.Geom
+open Kepler.Text.Fan
+open Complex
+open Filter
+open Classical
+open MeasureTheory
+open scoped Topology
+open scoped BigOperators
+
+/-! ## 全包围 fan 的 `aff_gt` 与 dart（Conforming.hl:1267-1291） -/
+
+/-- HOL Conforming.hl :1267-1291 `fully_surrounded_imp_aff_gt_3_1_of_dart_eq_fan`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool) ds  y.
+FAN(x,V,E)
+/\ (!v. v IN V==>CARD (set_of_edge v V E) >1)
+/\ fan80(x,V,E)
+/\ ds IN face_set (hypermap1_of_fanx (x,V,E))
+/\ y IN ds
+==>  aff_gt {x, pr2 y, pr3 y} {pr3 (f1_fan x V E y)} =
+ aff_gt {x, pr2 y, pr3 y} {sigma_fan x V E  (pr2 y) (pr3 y)}
+```
+
+编码说明：dart 用二元组编码，`pr2 y`/`pr3 y` ↦ `y.1`/`y.2`；
+`f1_fan x V E y` ↦ `f1Fan x V E y`，故 `pr3 (f1_fan x V E y)` ↦
+`(f1Fan x V E y).2`；`ds`/`y` 为二元组。`face_set (hypermap1_of_fanx …)` ↦
+`(hypermapOfFan x V E hfan).faceSet`。
+
+证明思路：由 `hds` 与 `hy` 得 `y ∈ (hypermapOfFan …).darts = dart1OfFan`
+（用 `dartOfFan_eq_dart1_of_surrounded` 消去孤立点），从而 `{y.1, y.2} ∈ E`；
+把 `f1Fan x V E y` 展开为 `(y.2, inverse1SigmaFan x V E y.2 y.1)`，再用
+`fully_surrounded_imp_aff_gt_3_1_of_edge_eq_fan`（取 `v = y.2`、`w = y.1`）
+把 `pr3 (f1Fan …) = inverse1SigmaFan x V E y.2 y.1` 一侧换成
+`sigmaFan x V E y.1 y.2`，并用 `SET_RULE` 重排 `{x, pr2, pr3}` 的次序。
+
+候选已有引理：
+- `fully_surrounded_imp_aff_gt_3_1_of_edge_eq_fan`
+  （Kepler/Text/ConformingAuto1.lean:166）
+- `dartOfFan_eq_dart1_of_surrounded`（Kepler/Text/Fan.lean:1084）
+- `faceSet_subset_dartOfFan_auto2`（private，Kepler/Text/ConformingAuto2.lean:220）
+- `properties_of_setOfEdge_fan`（Kepler/Text/Fan.lean:334）
+- 缺口：HOL `dartset_fully_surrounded_is_non_isolated_fan` 对应
+  `dartOfFan_eq_dart1_of_surrounded`；HOL `hypermap_of_fan_rep` 未移植 -/
+theorem fully_surrounded_imp_aff_gt_3_1_of_dart_eq_fan {x : V3} {V : Set V3}
+    {E : Set (Set V3)} {ds : Set (V3 × V3)} {y : V3 × V3}
+    (hfan : FAN x V E)
+    (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard)
+    (hfan80 : fan80 x V E)
+    (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet)
+    (hy : y ∈ ds) :
+    affGt ({x, y.1, y.2} : Set V3) {(f1Fan x V E y).2} =
+      affGt ({x, y.1, y.2} : Set V3) {sigmaFan x V E y.1 y.2} := by
+  sorry
+
+/-! ## 拓扑分量的开性（Conforming.hl:1292-1351） -/
+
+/-- HOL Conforming.hl :1292-1332 `OPEN_TOPOLOGICAL_COMPONENT_YFAN`
+
+HOL 原文：
+```
+!x:real^3 V E f.
+FAN(x,V,E) /\ conforming_fan (x,V,E)/\ f IN topological_component_yfan (x,V,E)
+          ==> open f
+```
+
+编码说明：`FAN(x,V,E)` ↔ `FAN x V E`；`conforming_fan (x,V,E)` ↔
+`conformingFan x V E hfan`（需显式 `hfan`）；`open` ↔ `IsOpen`；
+`topological_component_yfan` ↔ `topologicalComponentYfan`。
+
+证明思路：由 `conformingFan` 取出 `conformingHalfSpaceFan` 与
+`conformingBijectionFan`：对 `f ∈ topologicalComponentYfan` 取唯一面
+`f'` 使 `f = dartsetLeadsIntoFan x V E f'`；再用
+`conformingHalfSpaceFan` 把 `f` 写成有限族
+`{affGt {x, y.1, y.2} {(f1Fan …).2} | y ∈ f'}` 的交
+（`OPEN_INTERS`，Mathlib `Set.Finite.isOpen_sInter`）。每个成员由
+`fully_surrounded_imp_aff_gt_3_1_of_dart_eq_fan` 换成
+`affGt {x, y.1, y.2} {sigmaFan …}`，再用 `OPEN_AFF_GT_3_1` 及
+`properties_fully_surrounded` 得开。
+
+候选已有引理：
+- `conformingHalfSpaceFan`（Kepler/Text/ConformingDefs.lean:121）
+- `conformingBijectionFan`（Kepler/Text/ConformingDefs.lean:104）
+- `fully_surrounded_imp_aff_gt_3_1_of_dart_eq_fan`（本文件上文，HOL :1267）
+- `OPEN_AFF_GT_3_1`（Kepler/Text/ConformingAuto5.lean:433）
+- `properties_fully_surrounded`（Kepler/Text/Planarity.lean:2370）
+- `fan_not_collinear`（Kepler/Text/Fan.lean:342）
+- `Set.Finite.isOpen_sInter`（Mathlib/Topology/Basic.lean:92）
+- 缺口：HOL `FINITE_FACE_FAN`/`properties_of_elements_in_face_fully_surroundedfan`
+  （fan.hl:2857）未移植，需用 `Hypermap.faceSet_finite` +
+  `dartOfFan_eq_dart1_of_surrounded` 现场拼装 -/
+theorem OPEN_TOPOLOGICAL_COMPONENT_YFAN {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hconf : conformingFan x V E hfan)
+    {f : Set V3} (hf : f ∈ topologicalComponentYfan x V E) :
+    IsOpen f := by
+  sorry
+
+/-- HOL Conforming.hl :1333-1341 `OPEN_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL`
+
+HOL 原文：
+```
+!x:real^3 V E f.
+FAN(x,V,E) /\ conforming_fan (x,V,E)/\ f IN topological_component_yfan (x,V,E)
+          ==> open (f INTER normball x r)
+```
+
+编码说明（缺口）：HOL 原文中 `r` 为自由变量（隐式全称量化），Lean 侧
+显式写作参数 `(r : ℝ)`（同 `BOUNDED_INTER_BALL`，ConformingAuto5.lean:380）。
+`open` ↔ `IsOpen`；`INTER` ↔ `∩`；`normball x r` ↔ `Metric.ball x r`。
+
+证明思路：`f ∩ ball x r` 是两个开集之交：由
+`OPEN_TOPOLOGICAL_COMPONENT_YFAN`（本文件上文）得 `f` 开，由
+`isOpen_ball` 得球开，再用 `IsOpen.inter` 收口。
+
+候选已有引理：
+- `OPEN_TOPOLOGICAL_COMPONENT_YFAN`（本文件上文，HOL :1292）
+- `isOpen_ball`（Mathlib/Topology/MetricSpace/Pseudo/Metric.lean）
+- `IsOpen.inter`（Mathlib/Topology/Defs/Basic.lean）
+- 缺口：HOL `GSYM ball_eq_normball`/`OPEN_BALL` 由 Mathlib
+  `isOpen_ball` 覆盖；`r` 的隐式量化在 Lean 侧显式化 -/
+theorem OPEN_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL {x : V3} {V : Set V3}
+    {E : Set (Set V3)} (r : ℝ)
+    (hfan : FAN x V E) (hconf : conformingFan x V E hfan)
+    {f : Set V3} (hf : f ∈ topologicalComponentYfan x V E) :
+    IsOpen (f ∩ Metric.ball x r) := by
+  sorry
+
+/-- HOL Conforming.hl :1342-1351 `MEASURABLE_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL`
+
+HOL 原文：
+```
+!x:real^3 V E r f.
+FAN(x,V,E) /\ conforming_fan (x,V,E) /\ f IN topological_component_yfan (x,V,E)
+          ==> measurable (f INTER normball x r)
+```
+
+编码说明：`measurable` ↔ `MeasurableSet`；`INTER` ↔ `∩`；`normball` ↔
+`Metric.ball`；`FAN`/`conforming_fan`/`topological_component_yfan` 同前。
+
+证明思路：由 `OPEN_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL`（本文件上文）
+得 `f ∩ ball x r` 开，再用 `IsOpen.measurableSet` 得可测。（HOL 用
+`MEASURABLE_OPEN`；`BOUNDED_INTER_BALL` 在该 HOL 版本中作为
+`MEASURABLE_OPEN` 的前件之一。）
+
+候选已有引理：
+- `OPEN_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL`（本文件上文，HOL :1333）
+- `BOUNDED_INTER_BALL`（Kepler/Text/ConformingAuto5.lean:380）
+- `IsOpen.measurableSet`
+  （Mathlib/MeasureTheory/Constructions/BorelSpace/Basic.lean:222）
+- 缺口：无 -/
+theorem MEASURABLE_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL {x : V3} {V : Set V3}
+    {E : Set (Set V3)} (r : ℝ)
+    (hfan : FAN x V E) (hconf : conformingFan x V E hfan)
+    {f : Set V3} (hf : f ∈ topologicalComponentYfan x V E) :
+    MeasurableSet (f ∩ Metric.ball x r) := by
+  sorry
+
+/-- HOL Conforming.hl :1352-1395 `RADIAL_TOPOLOGICAL_COMPONENT_YFAN`
+
+HOL 原文：
+```
+!x:real^3 V E r f.
+FAN(x,V,E) /\ r> &0 /\ conforming_fan (x,V,E) /\ f IN topological_component_yfan (x,V,E)
+          ==> radial_norm r x (f INTER normball x r)
+```
+
+编码说明：`radial_norm` ↔ `radialNorm`；`INTER` ↔ `∩`；`normball` ↔
+`Metric.ball`；`FAN`/`conforming_fan`/`topological_component_yfan` 同前。
+
+证明思路：与 `OPEN_TOPOLOGICAL_COMPONENT_YFAN` 同构：由
+`conformingHalfSpaceFan` 把 `f` 写成有限族
+`{affGt {x, y.1, y.2} {(f1Fan …).2} | y ∈ f'}` 的交，用
+`fully_surrounded_imp_aff_gt_3_1_of_dart_eq_fan` 换成
+`{sigmaFan …}` 形式，对每个成员用 `RADIAL_AFF_GT_3_1`
+（前件 `notcoplanar_disjoints` + `properties_fully_surrounded`），
+再用 `RADIAL_INTERS` 对有限交封闭。
+
+候选已有引理：
+- `RADIAL_INTERS`（Kepler/Text/ConformingAuto4.lean:345）
+- `RADIAL_AFF_GT_3_1`（Kepler/Text/ConformingAuto4.lean:292）
+- `fully_surrounded_imp_aff_gt_3_1_of_dart_eq_fan`（本文件上文，HOL :1267）
+- `notcoplanar_disjoints`（Kepler/Text/PlanarityAuto11.lean:1259）
+- `properties_fully_surrounded`（Kepler/Text/Planarity.lean:2370）
+- 缺口：HOL `FINITE_FACE_FAN` 未移植；`real^N` 一般维度未覆盖 -/
+theorem RADIAL_TOPOLOGICAL_COMPONENT_YFAN {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (r : ℝ) (hfan : FAN x V E) (hr : r > 0)
+    (hconf : conformingFan x V E hfan)
+    {f : Set V3} (hf : f ∈ topologicalComponentYfan x V E) :
+    radialNorm r x (f ∩ Metric.ball x r) := by
+  sorry
+
+/-! ## 拓扑分量的有限性与 `sol` 可加性（Conforming.hl:1396-1455） -/
+
+/-- HOL Conforming.hl :1396-1418 `FINITE_TOPOLOGICAL_COMPONENT_YFAN`
+
+HOL 原文：
+```
+!x:real^3 (V:real^3->bool) (E:(real^3->bool)->bool).
+FAN(x,V,E)
+/\ (!v. v IN V==>CARD (set_of_edge v V E) >1)
+/\ fan80(x,V,E)
+==> FINITE (topological_component_yfan (x,V,E))
+```
+
+编码说明：`FINITE` ↔ `Set.Finite`（`.Finite`）；`topological_component_yfan`
+↔ `topologicalComponentYfan`；`FAN`/`fan80` 同前。
+
+证明思路：由 `Hypermap.faceSet_finite` 得 `faceSet` 有限，用
+`Set.Finite.image` 沿 `f ↦ dartsetLeadsIntoFan x V E f` 得
+`{dartsetLeadsIntoFan x V E f | f ∈ faceSet}` 有限；再由
+`dartset_leads_into_is_topological_component_yfan` 与 `version_JUTSTKG`
+证明该像恰为 `topologicalComponentYfan x V E`。
+
+候选已有引理：
+- `Hypermap.faceSet_finite`（Kepler/Text/Hypermap.lean:1016）
+- `dartset_leads_into_is_topological_component_yfan`
+  （Kepler/Text/PlanarityComponent.lean:535）
+- `version_JUTSTKG`（Kepler/Text/ConformingAuto2.lean:114）
+- `Set.Finite.image`（Mathlib/Data/Set/Finite/Basic.lean:566）
+- 缺口：HOL `FINITE_HYPERMAP_ORBITS` 由 `faceSet_finite` 覆盖 -/
+theorem FINITE_TOPOLOGICAL_COMPONENT_YFAN {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E)
+    (hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard)
+    (hfan80 : fan80 x V E) :
+    (topologicalComponentYfan x V E).Finite := by
+  sorry
+
+/-- HOL Conforming.hl :1419-1434 `SUM_SOL_TOPOLOGICAL_COMPONENT_YFAN_EQ_SOL_UNIONS`
+
+HOL 原文：
+```
+!x:real^3 V E.
+FAN(x,V,E) /\ conforming_fan (x,V,E)
+==>  sol x (UNIONS (topological_component_yfan (x,V,E)))=sum (topological_component_yfan (x,V,E)) (\f. sol x f)
+```
+
+编码说明：`sol` ↔ `Kepler.Geom.sol`；`UNIONS` ↔ `⋃₀`；HOL 集合和
+`sum S g` ↔ finsum `∑ᶠ f ∈ S, g f`；`conforming_fan` ↔
+`conformingFan x V E hfan`。
+
+证明思路：对有限族 `topologicalComponentYfan x V E` 用 `SOL_UNIONS`：
+由 `FINITE_TOPOLOGICAL_COMPONENT_YFAN` 得有限；取 `r = 1 > 0`，
+由 `RADIAL_TOPOLOGICAL_COMPONENT_YFAN` 与
+`MEASURABLE_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL` 得每个成员的
+径向性与可测性；成员互不相交由连通分量非重叠
+（HOL `CONNECTED_COMPONENT_NONOVERLAP`，Mathlib
+`connectedComponentIn_eq`/`Disjoint`）得到。
+
+候选已有引理：
+- `SOL_UNIONS`（Kepler/Text/ConformingAuto5.lean:298）
+- `FINITE_TOPOLOGICAL_COMPONENT_YFAN`（本文件上文，HOL :1396）
+- `RADIAL_TOPOLOGICAL_COMPONENT_YFAN`（本文件上文，HOL :1352）
+- `MEASURABLE_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL`（本文件上文，HOL :1342）
+- `connectedComponentIn_eq`（Mathlib/Topology/Connected/Basic.lean:585）
+- 缺口：HOL `CONNECTED_COMPONENT_NONOVERLAP` 无逐字对应，需由
+  `connectedComponentIn_eq` 导出 `Disjoint` -/
+theorem SUM_SOL_TOPOLOGICAL_COMPONENT_YFAN_EQ_SOL_UNIONS {x : V3} {V : Set V3}
+    {E : Set (Set V3)}
+    (hfan : FAN x V E) (hconf : conformingFan x V E hfan) :
+    sol x (⋃₀ topologicalComponentYfan x V E) =
+      ∑ᶠ f ∈ topologicalComponentYfan x V E, sol x f := by
+  sorry
+
+/-- HOL Conforming.hl :1435-1455 `UNIONS_TOPOLOGICAL_COMPONENT_EQ_YFAN`
+
+HOL 原文：
+```
+!x:real^3 V E.
+  UNIONS (topological_component_yfan (x,V,E))= yfan(x,V,E)
+```
+
+编码说明：`UNIONS` ↔ `⋃₀`；`topological_component_yfan` ↔
+`topologicalComponentYfan`；`yfan` ↔ `yfan`。无额外假设（HOL 亦无）。
+
+证明思路：双向包含。⊆：任取 `y ∈ ⋃₀ topologicalComponentYfan`，
+则 `y` 属于某连通分量 `connectedComponentIn (yfan x V E) b`，由
+`connectedComponentIn_subset` 得 `y ∈ yfan`。⊇：对 `y ∈ yfan`，
+取分量 `connectedComponentIn (yfan x V E) y`，由
+`connectedComponentIn_eq`（或 `connectedComponentIn_self`/自反性）得
+`y` 属于该分量，故属于并。
+
+候选已有引理：
+- `topologicalComponentYfan`（Kepler/Text/Fan.lean:199）
+- `connectedComponentIn_subset`（Mathlib/Topology/Connected/Basic.lean:529）
+- `connectedComponentIn_eq`（Mathlib/Topology/Connected/Basic.lean:585）
+- `Set.mem_sUnion`（Mathlib/Data/Set/Lattice.lean）
+- 缺口：无 -/
+theorem UNIONS_TOPOLOGICAL_COMPONENT_EQ_YFAN (x : V3) (V : Set V3)
+    (E : Set (Set V3)) :
+    ⋃₀ topologicalComponentYfan x V E = yfan x V E := by
+  sorry
+
+/-! ## 面集上的 `sol` 和与 dart 分解（Conforming.hl:1456-1477） -/
+
+/-- HOL Conforming.hl :1456-1469 `SUM_SOL_IN_FACE_SET_EQ_4PI`
+
+HOL 原文：
+```
+!x:real^3 V E.
+FAN(x,V,E) /\ conforming_fan (x,V,E)
+==>  sum (face_set (hypermap1_of_fanx (x,V,E))) (\f. sol x (dartset_leads_into_fan x V E f))= &4 * pi
+```
+
+编码说明：HOL 集合和 `sum S g` ↔ finsum `∑ᶠ f ∈ S, g f`；
+`face_set (hypermap1_of_fanx …)` ↔ `(hypermapOfFan x V E hfan).faceSet`；
+`dartset_leads_into_fan` ↔ `dartsetLeadsIntoFan`；`sol` ↔
+`Kepler.Geom.sol`；`&4 * pi` ↔ `4 * Real.pi`。
+
+证明思路：由 `SUM_SOL_IN_TOPOLOGICAL_COMPONENET_EQ_IN_FACE_SET` 把
+面集和化为拓扑分量上的和，由
+`SUM_SOL_TOPOLOGICAL_COMPONENT_YFAN_EQ_SOL_UNIONS` 化为
+`sol x (⋃₀ topologicalComponentYfan x V E)`，再由
+`UNIONS_TOPOLOGICAL_COMPONENT_EQ_YFAN` 化为 `sol x (yfan x V E)`，
+最后用 `SOLID_ANGLE_YFAN` 得 `4 * π`。
+
+候选已有引理：
+- `SUM_SOL_IN_TOPOLOGICAL_COMPONENET_EQ_IN_FACE_SET`
+  （Kepler/Text/ConformingAuto5.lean:124）
+- `SUM_SOL_TOPOLOGICAL_COMPONENT_YFAN_EQ_SOL_UNIONS`（本文件上文，HOL :1419）
+- `UNIONS_TOPOLOGICAL_COMPONENT_EQ_YFAN`（本文件上文，HOL :1435）
+- `SOLID_ANGLE_YFAN`（Kepler/Text/ConformingAuto4.lean:551）
+- 缺口：无 -/
+theorem SUM_SOL_IN_FACE_SET_EQ_4PI {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (hconf : conformingFan x V E hfan) :
+    (∑ᶠ f ∈ (hypermapOfFan x V E hfan).faceSet,
+        sol x (dartsetLeadsIntoFan x V E f)) = 4 * Real.pi := by
+  sorry
+
+/-- HOL Conforming.hl :1470-1477 `DART_EQ_UNIONS_FACE_SET_NODE_SET_EDGE_SET`
+
+HOL 原文：
+```
+!(H:(A)hypermap). dart H = UNIONS (face_set H)/\ dart H = UNIONS (node_set H)/\ dart H = UNIONS (edge_set H)
+```
+
+编码说明：HOL `(A)hypermap` ↔ `Hypermap α`（Kepler/Text/Hypermap.lean:765）；
+HOL `dart H`（dart *集合*）↔ `(↑H.darts : Set α)`（`H.darts : Finset α`）；
+`face_set`/`node_set`/`edge_set` ↔ `H.faceSet`/`H.nodeSet`/`H.edgeSet`；
+`UNIONS` ↔ `⋃₀`。
+
+证明思路：三条等式分别是 `sUnion_setOfOrbits`（Hypermap.lean:1562）
+在 `H.faceMap`、`H.nodeMap`、`H.edgeMap` 上的实例化，配合
+`H.faceMap_permutes`/`H.nodeMap_permutes`/`H.edgeMap_permutes`
+（即 HOL `lemma_partition` + `hypermap_lemma`）。
+
+候选已有引理：
+- `sUnion_setOfOrbits`（Kepler/Text/Hypermap.lean:1562）
+- `Hypermap.faceMap_permutes`、`Hypermap.nodeMap_permutes`、
+  `Hypermap.edgeMap_permutes`（Kepler/Text/Hypermap.lean:774-780）
+- `Hypermap.faceSet`/`nodeSet`/`edgeSet`（Kepler/Text/Hypermap.lean:1002-1008）
+- 缺口：无（该结果在本仓库已由 `sUnion_setOfOrbits` 覆盖，但按批次
+  要求保留 HOL 名与公开陈述） -/
+theorem DART_EQ_UNIONS_FACE_SET_NODE_SET_EDGE_SET {α : Type*} [DecidableEq α]
+    (H : Hypermap α) :
+    (↑H.darts : Set α) = ⋃₀ H.faceSet ∧
+      (↑H.darts : Set α) = ⋃₀ H.nodeSet ∧
+      (↑H.darts : Set α) = ⋃₀ H.edgeSet := by
+  sorry
+
+end Kepler.Text
