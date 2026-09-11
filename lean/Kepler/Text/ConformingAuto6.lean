@@ -228,6 +228,56 @@ theorem fully_surrounded_imp_aff_gt_3_1_of_dart_eq_fan {x : V3} {V : Set V3}
 
 /-! ## 拓扑分量的开性（Conforming.hl:1292-1351） -/
 
+private theorem continuous_vsub_ofLp_auto6 (x : V3) :
+    Continuous (fun y : V3 => ((y - x : V3) : Fin 3 → ℝ)) :=
+  (PiLp.continuous_ofLp (p := 2) (β := fun _ : Fin 3 => ℝ)).comp
+    (continuous_id.sub continuous_const)
+
+private theorem isOpen_dot_pos_auto6 (x : V3) (n : Fin 3 → ℝ) :
+    IsOpen {y : V3 | 0 < n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)} := by
+  have hcont : Continuous (fun y : V3 => n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)) :=
+    continuous_const.dotProduct (continuous_vsub_ofLp_auto6 x)
+  exact isOpen_lt (f := fun _ : V3 => (0 : ℝ))
+    (g := fun y : V3 => n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)) continuous_const hcont
+
+private theorem isOpen_dot_neg_auto6 (x : V3) (n : Fin 3 → ℝ) :
+    IsOpen {y : V3 | n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ) < 0} := by
+  have hcont : Continuous (fun y : V3 => n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)) :=
+    continuous_const.dotProduct (continuous_vsub_ofLp_auto6 x)
+  exact isOpen_lt (f := fun y : V3 => n ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ))
+    (g := fun _ : V3 => (0 : ℝ)) hcont continuous_const
+
+private theorem isOpen_affGt_3_1_auto6 (x v u w : V3)
+    (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) :
+    IsOpen (affGt ({x, v, u} : Set V3) {w}) := by
+  have hne := coplanar_cross_dot x v u w hcop
+  rcases lt_or_gt_of_ne hne with hneg | hpos
+  · have hcop' : ¬ Coplanar ({x, u, v, w} : Set V3) := by
+      have he : ({x, u, v, w} : Set V3) = {x, v, u, w} := by
+        ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rwa [he]
+    have hpos' : 0 < crossProduct ((u - x : V3) : Fin 3 → ℝ)
+        ((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((w - x : V3) : Fin 3 → ℝ) := by
+      rw [← cross_anticomm, neg_dotProduct]
+      linarith
+    have heq := aff_gt_3_1_rep_cross_dot x u v w hcop' hpos'
+    have hseteq : ({x, v, u} : Set V3) = {x, u, v} := by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hseteq, heq]
+    have hset2 : {y : V3 | 0 < crossProduct ((u - x : V3) : Fin 3 → ℝ)
+        ((v - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ)} =
+        {y : V3 | crossProduct ((v - x : V3) : Fin 3 → ℝ)
+          ((u - x : V3) : Fin 3 → ℝ) ⬝ᵥ ((y - x : V3) : Fin 3 → ℝ) < 0} := by
+      ext y
+      simp only [Set.mem_setOf_eq]
+      rw [← cross_anticomm, neg_dotProduct]
+      constructor <;> intro h <;> linarith
+    rw [hset2]
+    exact isOpen_dot_neg_auto6 x _
+  · have heq := aff_gt_3_1_rep_cross_dot x v u w hcop hpos
+    rw [heq]
+    exact isOpen_dot_pos_auto6 x _
+
 /-- HOL Conforming.hl :1292-1332 `OPEN_TOPOLOGICAL_COMPONENT_YFAN`
 
 HOL 原文：
@@ -266,7 +316,42 @@ theorem OPEN_TOPOLOGICAL_COMPONENT_YFAN {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E) (hconf : conformingFan x V E hfan)
     {f : Set V3} (hf : f ∈ topologicalComponentYfan x V E) :
     IsOpen f := by
-  sorry
+  obtain ⟨hcard, hfan80, hbij, hhalf, _hsolid, _hdiag⟩ := hconf
+  obtain ⟨f', ⟨hf'mem, hf'eq⟩, _⟩ := hbij f hf
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  obtain ⟨d, hd, hd_eq⟩ := H.face_representation hf'mem
+  have hfin : f'.Finite := by rw [hd_eq]; exact H.face_finite d
+  rw [hf'eq, hhalf f' hf'mem]
+  refine hfin.isOpen_biInter (fun y hy => ?_)
+  rw [fully_surrounded_imp_aff_gt_3_1_of_dart_eq_fan hfan hcard hfan80 hf'mem hy]
+  refine isOpen_affGt_3_1_auto6 x y.1 y.2 (sigmaFan x V E y.1 y.2) ?_
+  have hdarts : (↑H.darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have hyE : {y.1, y.2} ∈ E := by
+    have hsub : f' ⊆ (↑H.darts : Set (V3 × V3)) := by
+      rw [hd_eq]; exact H.face_subset_darts hd
+    have hy_dart : y ∈ dart1OfFan V E := by
+      have : y ∈ (↑H.darts : Set (V3 × V3)) := hsub hy
+      rwa [hdarts] at this
+    simpa [dart1OfFan] using hy_dart
+  have hy2S : y.2 ∈ setOfEdge y.1 V E :=
+    (properties_of_setOfEdge_fan x V E y.1 y.2 hfan).mp hyE
+  have hσS : sigmaFan x V E y.1 y.2 ∈ setOfEdge y.1 V E :=
+    sigma_fan_in_setOfEdge hfan hy2S
+  have hσy1 : {sigmaFan x V E y.1 y.2, y.1} ∈ E := by
+    have hy1σ : {y.1, sigmaFan x V E y.1 y.2} ∈ E :=
+      (properties_of_setOfEdge_fan x V E y.1 (sigmaFan x V E y.1 y.2) hfan).mpr hσS
+    rwa [show ({sigmaFan x V E y.1 y.2, y.1} : Set V3) =
+        ({y.1, sigmaFan x V E y.1 y.2} : Set V3) from by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  have h80 := hfan80 y.1 y.2 hyE
+  have hraw := properties_fully_surrounded (v := sigmaFan x V E y.1 y.2)
+    (u := y.1) (w := y.2) hfan hσy1 hyE h80.1 h80.2
+  have hset : ({x, sigmaFan x V E y.1 y.2, y.1, y.2} : Set V3) =
+      ({x, y.1, y.2, sigmaFan x V E y.1 y.2} : Set V3) := by
+    ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  rwa [hset] at hraw
 
 /-- HOL Conforming.hl :1333-1341 `OPEN_TOPOLOGICAL_COMPONENT_YFAN_INTER_BALL`
 
