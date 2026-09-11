@@ -688,7 +688,18 @@ HOL 原文：
 theorem UNIONS_TOPOLOGICAL_COMPONENT_EQ_YFAN (x : V3) (V : Set V3)
     (E : Set (Set V3)) :
     ⋃₀ topologicalComponentYfan x V E = yfan x V E := by
-  sorry
+  ext y
+  constructor
+  · intro hy
+    rw [Set.mem_sUnion] at hy
+    obtain ⟨s, hs, hys⟩ := hy
+    rw [topologicalComponentYfan] at hs
+    obtain ⟨b, _hb, rfl⟩ := hs
+    exact connectedComponentIn_subset _ _ hys
+  · intro hy
+    rw [Set.mem_sUnion]
+    exact ⟨connectedComponentIn (yfan x V E) y, ⟨y, hy, rfl⟩,
+      mem_connectedComponentIn hy⟩
 
 /-! ## 面集上的 `sol` 和与 dart 分解（Conforming.hl:1456-1477） -/
 
