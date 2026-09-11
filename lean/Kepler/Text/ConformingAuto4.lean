@@ -55,6 +55,7 @@ Encoding notes (gaps / closest existing encodings):
 
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
+import Kepler.Text.ConformingAuto3
 
 set_option maxHeartbeats 5000000
 
@@ -550,4 +551,10 @@ FAN (x,V,E) ==>  sol x (yfan (x,V,E))= &4 * pi
 theorem SOLID_ANGLE_YFAN (x : V3) (V : Set V3) (E : Set (Set V3))
     (hfan : FAN x V E) :
     sol x (yfan x V E) = 4 * Real.pi := by
-  sorry
+  have hrad : radialNorm 1 x (yfan x V E ∩ Metric.ball x 1) :=
+    RADIAL_NORM_YFAN_INTER_BALL x V E 1 hfan (by norm_num)
+  have hmeas : MeasurableSet (yfan x V E ∩ Metric.ball x 1) :=
+    MESURABLE_YFAN_INTER_BALL x V E 1 hfan (by norm_num)
+  rw [sol_spec (by norm_num : (0 : ℝ) < 1) hmeas hrad,
+      MEASURE_YFAN_INTER_BALL x V E 1 hfan (by norm_num : (0 : ℝ) ≤ 1)]
+  ring
