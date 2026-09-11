@@ -259,6 +259,15 @@ FAN(x,V,E)
 - `FINITE_FACE_FAN`（Kepler/Text/PlanarityAuto14.lean:693）
 - 缺口：HOL `hypermap_of_fan_rep`（fan.hl:2780）、
   `into_domain_power_efn_fan`（fan.hl:2694）未以该名移植 -/
+private theorem hypermapOfFan_faceMap_eq_ca1 (hfan : FAN x V E) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) :
+    (hypermapOfFan x V E hfan).faceMap d = fFanPair x V E d := by
+  unfold hypermapOfFan extendPerm
+  simp only [Equiv.ofBijective_apply]
+  unfold Kepler.Text.Fan.res
+  rw [if_pos (by
+    simpa [(finite_dart1_fan hfan).coe_toFinset] using hd)]
+
 theorem IMAGE_F1_IN_FACE_IMP_IN_FACE {x : V3} {V : Set V3} {E : Set (Set V3)}
     {ds : Set (V3 × V3)} {y y1 : V3 × V3}
     (hfan : FAN x V E)
@@ -268,7 +277,29 @@ theorem IMAGE_F1_IN_FACE_IMP_IN_FACE {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hy1 : y1 ∈ dartOfFan V E)
     (hf1 : f1Fan x V E y1 = y) :
     y1 ∈ ds := by
-  sorry
+  let H : Hypermap (V3 × V3) := hypermapOfFan x V E hfan
+  have hdart : dartOfFan V E = dart1OfFan V E :=
+    dartOfFan_eq_dart1_of_surrounded hfan hcard
+  have hy1d : y1 ∈ dart1OfFan V E := by rw [← hdart]; exact hy1
+  have hf1pair : f1Fan x V E y1 = fFanPair x V E y1 := by
+    have hba : {y1.2, y1.1} ∈ E := by
+      have h : {y1.1, y1.2} ∈ E := hy1d
+      rwa [Set.pair_comm] at h
+    simp only [f1Fan, fFanPair]
+    rw [inverse_sigma_fan_eq_inverse1 hfan hba]
+  have hfm : H.faceMap y1 = y := by
+    change (hypermapOfFan x V E hfan).faceMap y1 = y
+    rw [hypermapOfFan_faceMap_eq_ca1 hfan hy1d, ← hf1pair]
+    exact hf1
+  obtain ⟨d, _hdH, hface⟩ := Hypermap.face_representation H hds
+  have hyface : y ∈ H.face d := by rw [← hface]; exact hy
+  have hsymm : H.faceMap.symm y = y1 := by
+    rw [← hfm, Equiv.symm_apply_apply]
+  have hy1face : y1 ∈ H.face d := by
+    have h := Hypermap.faceMap_symm_mem_face H hyface
+    rwa [hsymm] at h
+  rw [hface]
+  exact hy1face
 
 /-- HOL Conforming.hl :211-246 `IMAGE_F1_POWER_IN_FACE_IMP_IN_FACE`
 
