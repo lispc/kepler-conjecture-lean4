@@ -445,7 +445,8 @@ theorem PR23_OF_D20_FAN (x : V3) (V : Set V3) (E : Set (Set V3)) :
     Set.image (fun p : V3 × V3 => (p.1, p.2))
         {p : V3 × V3 | p.1 = p.2 ∧ p.1 ∈ V ∧ setOfEdge p.1 V E = ∅} =
       {p : V3 × V3 | p.1 = p.2 ∧ p.1 ∈ V ∧ setOfEdge p.1 V E = ∅} := by
-  sorry
+  rw [show (fun p : V3 × V3 => (p.1, p.2)) = id from funext (fun _ => rfl)]
+  rw [Set.image_id]
 
 /-- HOL Conforming.hl :2304-2310 `add_edge_graph`
 
