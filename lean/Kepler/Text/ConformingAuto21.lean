@@ -684,6 +684,32 @@ theorem yfan_union_aff_gt_fan (x : V3) (V : Set V3) (E : Set (Set V3)) :
     fan80 x V E →
       yfan x V E ∪ (⋃ e ∈ E, affGt ({x} : Set V3) e) =
         (Set.univ : Set V3) \ ⋃ v ∈ V, affGe ({x} : Set V3) {v} := by
-  sorry
+  rintro ⟨hfan, hcard, h80⟩
+  have hxp := expand_xfan_eq_aff_gt_aff_ge x V E ⟨hfan, hcard, h80⟩
+  have hdis := properties12_fan7 x V E ⟨hfan, hcard, h80⟩
+  have hBC : ∀ y : V3, y ∈ (⋃ e ∈ E, affGt ({x} : Set V3) e) →
+      y ∉ ⋃ v ∈ V, affGe ({x} : Set V3) {v} := by
+    intro y hy hc
+    have hmem : y ∈ (⋃ e ∈ E, affGt ({x} : Set V3) e) ∩
+        (⋃ v ∈ V, affGe ({x} : Set V3) {v}) := Set.mem_inter hy hc
+    rw [hdis] at hmem
+    exact hmem
+  unfold yfan
+  rw [XFAN_EQ_UNIONS_AFF_GE_1_2, hxp]
+  ext y
+  constructor
+  · intro hy
+    rcases (Set.mem_union y _ _).1 hy with hy | hy
+    · rcases (Set.mem_sdiff y).1 hy with ⟨_, hne⟩
+      exact Set.mem_sdiff_of_mem (Set.mem_univ y) (fun hc => hne (Or.inr hc))
+    · exact Set.mem_sdiff_of_mem (Set.mem_univ y) (hBC y hy)
+  · intro hy
+    by_cases hB : y ∈ (⋃ e ∈ E, affGt ({x} : Set V3) e)
+    · exact Or.inr hB
+    · refine Or.inl ?_
+      refine Set.mem_sdiff_of_mem (Set.mem_univ y) (fun hc => ?_)
+      rcases (Set.mem_union y _ _).1 hc with hc | hc
+      · exact hB hc
+      · exact ((Set.mem_sdiff y).1 hy).2 hc
 
 end Kepler.Text
