@@ -263,7 +263,9 @@ theorem MEASURABLE_AFF_3_UNION_INTER_BALL (x : V3) (V : Set V3)
     (E : Set (Set V3)) (z y : V3) (r : ℝ) (hfan : FAN x V E) :
     MeasurableSet ((⋃ v ∈ V, (affineSpan ℝ ({x, z, v} : Set V3) : Set V3)) ∩
       Metric.ball y r) := by
-  sorry
+  refine MeasurableSet.inter ?_ Metric.isOpen_ball.measurableSet
+  exact hfan.2.2.1.1.measurableSet_biUnion fun v _ =>
+    IsClosed.measurableSet (AffineSubspace.closed_of_finiteDimensional _)
 
 /-! ## 球去掉零测集后的体积与非空性（Conforming.hl:14587-14623） -/
 
