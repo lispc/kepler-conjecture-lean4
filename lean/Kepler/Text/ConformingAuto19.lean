@@ -1208,7 +1208,12 @@ theorem DS1_DS2_EQ_DS_FANADD (x : V3) (V : Set V3)
     E ∪ {({v, w} : Set V3)} = E1 ∧
     ed1 = (v, w) ∧ ed2 = (w, v) →
       (fun y : V3 × V3 => y) '' ds = ((ds1 ∪ ds2) \ {ed1}) \ {ed2} := by
-  sorry
+  intro h
+  exact Set.Subset.antisymm
+    (DS1_DS2_EQ_DS_FANADD2 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 ed1
+      ed2 hfan hfan1 h)
+    (DS1_DS2_EQ_DS_FANADD1 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 ed1
+      ed2 hfan hfan1 h)
 
 /-! ## 方位角不变性与实心角 conforming（Conforming.hl:11909-12507） -/
 
