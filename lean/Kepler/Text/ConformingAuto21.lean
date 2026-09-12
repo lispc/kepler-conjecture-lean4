@@ -1022,6 +1022,35 @@ theorem expand_xfan_eq_aff_gt_aff_ge (x : V3) (V : Set V3) (E : Set (Set V3)) :
         exact Or.inl (Or.inr hy)
       exact Set.mem_iUnion₂.mpr ⟨{v, u}, huE, hy'⟩
 
+/-! ### properties12_fan7 辅助引理（HOL 尾段系数展开的封装） -/
+
+/-- `Collinear3` 后两点的换序（三点字面集的交换）。 -/
+private theorem collinear3_swap_c21 {p q r : V3} (h : Collinear3 p q r) :
+    Collinear3 p r q := by
+  have hset : ({p, q, r} : Set V3) = ({p, r, q} : Set V3) := by
+    ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  show Collinear ℝ ({p, r, q} : Set V3)
+  rw [← hset]
+  exact h
+
+/-- 两点组合表示推出共线：`c • y = a • p + b • q`（`a + b = c`，`c ≠ 0`，
+`p ≠ q`）给出 `Collinear3 p q y`。 -/
+private theorem collinear3_of_two_repr {p q y : V3} {a b c : ℝ} (hc : c ≠ 0)
+    (hsum : a + b = c) (hpq : p ≠ q) (heq : c • y = a • p + b • q) :
+    Collinear3 p q y := by
+  have hdiv : y = (c⁻¹ * a) • p + (c⁻¹ * b) • q := by
+    have h6 := congrArg (fun z => c⁻¹ • z) heq
+    rw [inv_smul_smul₀ hc, smul_add, smul_smul, smul_smul] at h6
+    exact h6
+  have hcol : y ∈ (affineSpan ℝ ({p, q} : Set V3) : Set V3) := by
+    refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨c⁻¹ * b, ?_⟩
+    have hr : c⁻¹ * a + c⁻¹ * b = 1 := by
+      rw [← mul_add, hsum, inv_mul_cancel₀ hc]
+    have h1mr : 1 - c⁻¹ * b = c⁻¹ * a := by linarith
+    rw [hdiv, AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add, ← h1mr]
+    module
+  exact (collinear3_iff_mem_affineSpan hpq).mpr hcol
+
 /-- HOL Conforming.hl :14355-14505 `properties12_fan7`
 
 HOL 原文：
@@ -1059,7 +1088,87 @@ theorem properties12_fan7 (x : V3) (V : Set V3) (E : Set (Set V3)) :
     fan80 x V E →
       (⋃ e ∈ E, affGt ({x} : Set V3) e) ∩
           ⋃ v ∈ V, affGe ({x} : Set V3) {v} = ∅ := by
-  sorry
+  rintro ⟨hfan, hcard, h80⟩
+  have hxV : x ∉ V := hfan.2.2.2.1
+  refine Set.eq_empty_iff_forall_notMem.mpr ?_
+  intro y hy
+  obtain ⟨hy1, hy2⟩ := (Set.mem_inter_iff _ _ _).mp hy
+  obtain ⟨e, heE, hye⟩ := Set.mem_iUnion₂.mp hy1
+  obtain ⟨v', w, hevw⟩ := expand_edge_graph_fan hfan heE
+  have hvwE : ({v', w} : Set V3) ∈ E := by rw [← hevw]; exact heE
+  obtain ⟨hv'V, hwV⟩ := fan_mem_of_edge hfan hvwE
+  have hxv' : x ≠ v' := fun hh => hxV (by rw [hh]; exact hv'V)
+  have hxw : x ≠ w := fun hh => hxV (by rw [hh]; exact hwV)
+  have hnc : ¬ Collinear3 x v' w := fan_not_collinear hfan hvwE
+  rw [hevw] at hye
+  have hdis : Disjoint ({x} : Set V3) {v', w} :=
+    Set.disjoint_singleton_left.mpr (by simp [hxv', hxw])
+  rw [aff_gt_1_2 hdis, Set.mem_setOf_eq] at hye
+  obtain ⟨s1, s2, s3, hs2, hs3, hsum2, hyeq2⟩ := hye
+  obtain ⟨v, hvV, hyv⟩ := Set.mem_iUnion₂.mp hy2
+  have hvx : x ≠ v := fun hh => hxV (by rw [hh]; exact hvV)
+  obtain ⟨t1, t2, ht2, hsum, hyeq⟩ := (mem_affGe_singleton hvx).mp hyv
+  have hz0 : t1 • x + t2 • v = s1 • x + s2 • v' + s3 • w := by
+    rw [← hyeq, ← hyeq2]
+  rcases lt_or_eq_of_le ht2 with ht2pos | ht2z
+  · -- t2 > 0：解出 v ∈ aff_ge {x} {v',w}，fan7 给 v = v' ∨ v = w，均与 hnc 矛盾
+    have htv : t2 • v = (s1 - t1) • x + s2 • v' + s3 • w := by
+      refine sub_eq_zero.mp ?_
+      have e1 : t2 • v - ((s1 - t1) • x + s2 • v' + s3 • w)
+          = t1 • x + t2 • v - (s1 • x + s2 • v' + s3 • w) := by module
+      rw [e1, sub_eq_zero]
+      exact hz0
+    have hv'w : v ∈ affGe ({x} : Set V3) {v', w} := by
+      rw [aff_ge_1_2 hdis, Set.mem_setOf_eq]
+      refine ⟨t2⁻¹ * (s1 - t1), t2⁻¹ * s2, t2⁻¹ * s3,
+        mul_nonneg (inv_nonneg.mpr ht2pos.le) hs2.le,
+        mul_nonneg (inv_nonneg.mpr ht2pos.le) hs3.le, ?_, ?_⟩
+      · rw [← mul_add, ← mul_add, show (s1 - t1) + s2 + s3 = t2 from by linarith,
+          inv_mul_cancel₀ ht2pos.ne']
+      · have h6 := congrArg (fun z => t2⁻¹ • z) htv
+        rw [inv_smul_smul₀ ht2pos.ne', smul_add, smul_add, smul_smul, smul_smul,
+          smul_smul] at h6
+        exact h6
+    have hcardv : 1 < (setOfEdge v V E).ncard := hcard v hvV
+    have hne : (setOfEdge v V E).Nonempty := by
+      by_contra h0
+      rw [Set.not_nonempty_iff_eq_empty.mp h0, Set.ncard_empty] at hcardv
+      linarith
+    obtain ⟨u, hu⟩ := hne
+    have huE : ({v, u} : Set V3) ∈ E :=
+      (properties_of_setOfEdge_fan x V E v u hfan).mpr hu
+    rcases properties_of_fan7 hfan huE hvwE hv'w with hrv | hrw
+    · -- v = v'：两组表示相减解出 w ∈ aff {x,v'}，与 hnc 矛盾
+      rw [hrv] at hz0
+      have hw1 : s3 • w = (t1 - s1) • x + (t2 - s2) • v' := by
+        refine sub_eq_zero.mp ?_
+        have e2 : s3 • w - ((t1 - s1) • x + (t2 - s2) • v')
+            = s1 • x + s2 • v' + s3 • w - (t1 • x + t2 • v') := by module
+        rw [e2, sub_eq_zero]
+        exact hz0.symm
+      exact hnc (collinear3_of_two_repr hs3.ne' (by linarith) hxv' hw1)
+    · -- v = w：解出 v' ∈ aff {x,w}，与 hnc 矛盾
+      rw [hrw] at hz0
+      have hw2 : s2 • v' = (t1 - s1) • x + (t2 - s3) • w := by
+        refine sub_eq_zero.mp ?_
+        have e3 : s2 • v' - ((t1 - s1) • x + (t2 - s3) • w)
+            = s1 • x + s2 • v' + s3 • w - (t1 • x + t2 • w) := by module
+        rw [e3, sub_eq_zero]
+        exact hz0.symm
+      exact hnc (collinear3_swap_c21
+        (collinear3_of_two_repr hs2.ne' (by linarith) hxw hw2))
+  · -- t2 = 0：y = x 落入开锥 aff_gt {x} {v',w}，同样给出共线，矛盾
+    have ht1 : t1 = 1 := by linarith
+    have hyx : y = x := by rw [hyeq, ← ht2z, ht1]; simp
+    rw [hyx] at hyeq2
+    rw [show s1 = 1 - s2 - s3 from by linarith] at hyeq2
+    have hw0 : s3 • w = (s2 + s3) • x + (-s2) • v' := by
+      refine sub_eq_zero.mp ?_
+      have e0 : s3 • w - ((s2 + s3) • x + (-s2) • v')
+          = (1 - s2 - s3) • x + s2 • v' + s3 • w - x := by module
+      rw [e0, sub_eq_zero]
+      exact hyeq2.symm
+    exact hnc (collinear3_of_two_repr hs3.ne' (by ring) hxv' hw0)
 
 /-- HOL Conforming.hl :14506-14522 `yfan_union_aff_gt_fan`
 
