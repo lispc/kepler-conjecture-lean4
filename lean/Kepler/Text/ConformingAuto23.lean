@@ -499,6 +499,52 @@ theorem WGVWSKE (x : V3) (V : Set V3) (E : Set (Set V3)) (hfan : FAN x V E)
     (hypermapOfFan x V E hfan).Connected := by
   sorry
 
+/-- `hypermapOfFan` 的 dart 集合即 `dart1OfFan`（二元组 dart 集）。 -/
+private theorem hypermapOfFan_coe_darts_ca (x : V3) (V : Set V3) (E : Set (Set V3))
+    (hfan : FAN x V E) :
+    (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) = dart1OfFan V E :=
+  (finite_dart1_fan hfan).coe_toFinset
+
+/-- `hypermapOfFan` 的 `edgeMap` 在 dart 上就是 `eFanPair`
+（对应 HOL `hypermap_of_fan_rep` 的 e-分量）。 -/
+private theorem hypermapOfFan_edgeMap_eq_ca (x : V3) (V : Set V3) (E : Set (Set V3))
+    (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    (hypermapOfFan x V E hfan).edgeMap d = eFanPair V E d := by
+  unfold hypermapOfFan extendPerm
+  simp only [Equiv.ofBijective_apply]
+  unfold Kepler.Text.Fan.res
+  rw [if_pos (by simpa [(finite_dart1_fan hfan).coe_toFinset] using hd)]
+
+/-- dart 集外 `edgeMap` 恒等。 -/
+private theorem hypermapOfFan_edgeMap_fix_out_ca (x : V3) (V : Set V3) (E : Set (Set V3))
+    (hfan : FAN x V E) {d : V3 × V3} (hd : d ∉ dart1OfFan V E) :
+    (hypermapOfFan x V E hfan).edgeMap d = d := by
+  unfold hypermapOfFan extendPerm
+  simp only [Equiv.ofBijective_apply]
+  unfold Kepler.Text.Fan.res
+  rw [if_neg (by simpa [(finite_dart1_fan hfan).coe_toFinset] using hd)]
+
+/-- HOL `plain_hypermap_fan`：`hypermapOfFan` 的 `edgeMap` 是对合。 -/
+private theorem plainEdgeMap_fan_ca (x : V3) (V : Set V3) (E : Set (Set V3)) (hfan : FAN x V E) :
+    (hypermapOfFan x V E hfan).edgeMap * (hypermapOfFan x V E hfan).edgeMap = 1 := by
+  refine Equiv.Perm.ext fun d => ?_
+  by_cases hd : d ∈ dart1OfFan V E
+  · have h1 := hypermapOfFan_edgeMap_eq_ca x V E hfan hd
+    have h2 := hypermapOfFan_edgeMap_eq_ca x V E hfan (eFanPair_mem_dart1 hd)
+    simp only [Equiv.Perm.mul_apply, h1, h2, eFanPair_sq d hd, Equiv.Perm.one_apply]
+  · simp only [Equiv.Perm.mul_apply, hypermapOfFan_edgeMap_fix_out_ca x V E hfan hd,
+      Equiv.Perm.one_apply]
+
+/-- HOL `e_fan_no_fix_point`（hypermapOfFan 打包形态）。 -/
+private theorem edgeNoFix_fan_ca (x : V3) (V : Set V3) (E : Set (Set V3)) (hfan : FAN x V E) :
+    ∀ d ∈ (hypermapOfFan x V E hfan).darts, (hypermapOfFan x V E hfan).edgeMap d ≠ d := by
+  intro d hd
+  have hd1 : d ∈ dart1OfFan V E := by
+    rw [← hypermapOfFan_coe_darts_ca x V E hfan]
+    exact hd
+  rw [hypermapOfFan_edgeMap_eq_ca x V E hfan hd1]
+  exact e_fan_no_fix hfan d hd1
+
 /-- HOL Conforming.hl :16921-16958 `CARD_EDGE_SET_FAN`
 
 HOL 原文：
@@ -526,12 +572,20 @@ HOL 原文：
 - `Hypermap.edgeSet`/`Plain`（Kepler/Text/Hypermap.lean:1002,1039）
 - 缺口：HOL `into_domain_power_efn_fan`、`plain_hypermap_fan`、
   `e_fan_no_fix_point`、`hypermap_of_fan_rep` 未以该名移植 -/
+
 theorem CARD_EDGE_SET_FAN (x : V3) (V : Set V3) (E : Set (Set V3))
     (e : Set (V3 × V3)) (hfan : FAN x V E)
     (he : e ∈ (hypermapOfFan x V E hfan).edgeSet)
     (hconf : conformingFan x V E hfan) :
     e.ncard = 2 := by
-  sorry
+  have hmem : e ∈ setOfOrbits (hypermapOfFan x V E hfan).darts
+      (hypermapOfFan x V E hfan).edgeMap := he
+  simp only [setOfOrbits] at hmem
+  obtain ⟨d, hd, rfl⟩ := hmem
+  exact (orbitMap_finite_ncard_two
+    (hypermapOfFan x V E hfan).edgeMap_permutes
+    (plainEdgeMap_fan_ca x V E hfan)
+    (edgeNoFix_fan_ca x V E hfan) hd).2
 
 /-- HOL Conforming.hl :16959-17006 `REP_CARD_EDGE_SET_FAN`
 
