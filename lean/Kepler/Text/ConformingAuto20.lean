@@ -415,6 +415,23 @@ FAN(x,V,E)
 - 缺口：`into_domain_power_efn_fan`/`into_domain1_power_efn_fan`、
   `properties_of_f1_fan`、`f_fan_no_fix_point`、`lemma_face_identity`/
   `lemma_face_cycle`、`MONO_SIGMA_FAN` 未移植（见文件头） -/
+/- `faceMap` 与 `f1Fan` 在真 dart 上一致（`hypermapOfFan_faceMap_eq_ca1`
+（Kepler/Text/ConformingAuto1.lean）与 `inverse_sigma_fan_eq_inverse1` 的合并）。 -/
+private theorem hypermapOfFan_faceMap_eq_f1Fan20 {x : V3} {V : Set V3}
+    {E : Set (Set V3)} (hfan : FAN x V E) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) :
+    (hypermapOfFan x V E hfan).faceMap d = f1Fan x V E d := by
+  unfold hypermapOfFan extendPerm
+  simp only [Equiv.ofBijective_apply]
+  unfold Kepler.Text.Fan.res
+  rw [if_pos (by
+    simpa [(finite_dart1_fan hfan).coe_toFinset] using hd)]
+  have hba : {d.2, d.1} ∈ E := by
+    have h : {d.1, d.2} ∈ E := hd
+    rwa [Set.pair_comm] at h
+  simp only [f1Fan, fFanPair]
+  rw [inverse_sigma_fan_eq_inverse1 hfan hba]
+
 theorem INDUCTION_FANADD (x : V3) (V : Set V3)
     (E E1 : Set (Set V3)) (ds : Set (V3 × V3)) (f1 f2 f3 : V3 × V3)
     (v u w : V3) (ds1 ds2 : Set (V3 × V3)) (f10 f20 f30 : V3 × V3)
@@ -450,7 +467,109 @@ theorem INDUCTION_FANADD (x : V3) (V : Set V3)
         f3'.1 = f2'.2 ∧
         f2'.1 = f1'.2 ∧
         y = f3' := by
-  sorry
+  intro h
+  obtain ⟨a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16,
+      a17, a18, a19, a20, a21, a22, a23, a24, a25, hy⟩ := h
+  -- dart 集、置换、以及 y ∈ ds 的 dart 属性
+  have hdartscoe : ((hypermapOfFan x V E hfan).darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change ((finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  obtain ⟨d0, hd0, hd0f⟩ := (hypermapOfFan x V E hfan).face_representation a4
+  have hyface0 : y ∈ (hypermapOfFan x V E hfan).face d0 := by rw [← hd0f]; exact hy
+  have hydart1 : y ∈ dart1OfFan V E := by
+    have hysub := (hypermapOfFan x V E hfan).face_subset_darts hd0 hyface0
+    rwa [hdartscoe] at hysub
+  have hdsy : ds = (hypermapOfFan x V E hfan).face y := identity_face_in_face_set hfan a4 hy
+  have hfinMem : ∀ d : V3 × V3, d ∈ dart1OfFan V E →
+      d ∈ (hypermapOfFan x V E hfan).darts := by
+    intro d hd
+    rw [← hdartscoe] at hd
+    exact Finset.mem_coe.mp hd
+  have hfinMem' : ∀ d : V3 × V3, d ∈ (hypermapOfFan x V E hfan).darts →
+      d ∈ dart1OfFan V E := by
+    intro d hd
+    have h2 : d ∈ ((hypermapOfFan x V E hfan).darts : Set (V3 × V3)) :=
+      Finset.mem_coe.mpr hd
+    rwa [hdartscoe] at h2
+  -- 轨道回退的显式见证：f3' = y，f2' = σ_{y.1}(y.2) 方向的前一 dart，
+  -- f1' = σ_{f2'.1}(y.1) 方向的再前一 dart
+  set u' : V3 := sigmaFan x V E y.1 y.2 with hu'def
+  set w' : V3 := sigmaFan x V E u' y.1 with hw'def
+  have hyE : {y.1, y.2} ∈ E := hydart1
+  have hy1V : y.1 ∈ V := a1.1 (Set.mem_sUnion.mpr ⟨{y.1, y.2}, hyE, by simp⟩)
+  have hy2V : y.2 ∈ V := a1.1 (Set.mem_sUnion.mpr ⟨{y.1, y.2}, hyE, by simp⟩)
+  have hy1s : y.2 ∈ setOfEdge y.1 V E := ⟨hyE, hy2V⟩
+  have hsu' : u' ∈ setOfEdge y.1 V E := sigma_fan_in_setOfEdge hfan hy1s
+  have hG5 : {u', y.1} ∈ E := by
+    have hw : {y.1, u'} ∈ E := (properties_of_setOfEdge_fan x V E y.1 u' hfan).mpr hsu'
+    rwa [Set.pair_comm] at hw
+  have hu'V : u' ∈ V := a1.1 (Set.mem_sUnion.mpr ⟨{u', y.1}, hG5, by simp⟩)
+  have hu1s : y.1 ∈ setOfEdge u' V E := ⟨hG5, hy1V⟩
+  have hsw' : w' ∈ setOfEdge u' V E := sigma_fan_in_setOfEdge hfan hu1s
+  have hG7 : {w', u'} ∈ E := by
+    have hw : {u', w'} ∈ E := (properties_of_setOfEdge_fan x V E u' w' hfan).mpr hsw'
+    rwa [Set.pair_comm] at hw
+  have hG7u : {u', w'} ∈ E := by
+    have hw := hG7
+    rwa [Set.pair_comm w' u'] at hw
+  have hw'V : w' ∈ V := a1.1 (Set.mem_sUnion.mpr ⟨{u', w'}, hG7u, by simp⟩)
+  -- f1Fan 沿轨道回退两步
+  have hF23 : f1Fan x V E (u', y.1) = y := by
+    show (y.1, inverse1SigmaFan x V E y.1 u') = y
+    rw [hu'def, (INVERSE1_SIGMA_FAN hfan).2.2 y.2 hyE]
+  have hF12 : f1Fan x V E (w', u') = (u', y.1) := by
+    show (u', inverse1SigmaFan x V E u' w') = (u', y.1)
+    rw [hw'def, (INVERSE1_SIGMA_FAN hfan).2.2 y.1 hG5]
+  -- 排除不动点情形：f1Fan y ≠ f1'，否则 ds 是长度 ≤ 3 的轨道
+  have hne : f1Fan x V E y ≠ (w', u') := by
+    intro h4
+    have h3 : (f1Fan x V E)^[3] y = y := by
+      show (f1Fan x V E) ((f1Fan x V E) ((f1Fan x V E) y)) = y
+      rw [h4, hF12, hF23]
+    have hlink : ∀ (n : ℕ) (d : V3 × V3), d ∈ dart1OfFan V E →
+        ((hypermapOfFan x V E hfan).faceMap ^ n) d = (f1Fan x V E)^[n] d := by
+      intro n
+      induction n with
+      | zero => intro d _; simp
+      | succ k ih =>
+        intro d hd
+        have hd' : (hypermapOfFan x V E hfan).faceMap d ∈ dart1OfFan V E :=
+          hfinMem' _ ((hypermapOfFan x V E hfan).faceMap_permutes.apply_mem (hfinMem d hd))
+        rw [pow_succ, Equiv.Perm.mul_apply,
+          ih ((hypermapOfFan x V E hfan).faceMap d) hd',
+          hypermapOfFan_faceMap_eq_f1Fan20 hfan hd,
+          Function.iterate_succ_apply]
+    have hy3 : ((hypermapOfFan x V E hfan).faceMap ^ 3) y = y := by
+      rw [hlink 3 y hydart1]; exact h3
+    have hcard := card_orbit_le (hypermapOfFan x V E hfan).faceMap
+      (by norm_num : (3:ℕ) ≠ 0) hy3
+    rw [hdsy] at a5
+    simp only [Hypermap.face] at a5
+    omega
+  -- f2'、f1' 都是 dart
+  have hdof : dartOfFan V E = dart1OfFan V E := dartOfFan_eq_dart1_of_surrounded hfan a2
+  have hf2dart : (u', y.1) ∈ dartOfFan V E := by rw [hdof]; exact hG5
+  have hf1dart : (w', u') ∈ dartOfFan V E := by rw [hdof]; exact hG7
+  refine ⟨(w', u'), (u', y.1), y, ?_, hF12, hF23, hne, hG5, ?_, hG7, hw'def.symm,
+    rfl, rfl, rfl⟩
+  · intro z hz
+    have hm1 : (u', y.1) ∈ ds := IMAGE_F1_IN_FACE_IMP_IN_FACE hfan a2 a4 hy hf2dart hF23
+    have hm2 : (w', u') ∈ ds := IMAGE_F1_IN_FACE_IMP_IN_FACE hfan a2 a4 hm1 hf1dart hF12
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl
+    · exact hm2
+    · exact hm1
+    · exact hy
+  · intro hcontra
+    obtain ⟨hσ1, hσ2⟩ := PROPERTIES_TRIANGLE_FAN (v := w') (u := u') (w := y.1)
+      hfan hG7 hG5 hcontra hw'def.symm a2 a3
+    have hw's : w' ∈ setOfEdge y.1 V E := ⟨hcontra, hw'V⟩
+    have hσeq : sigmaFan x V E y.1 y.2 = sigmaFan x V E y.1 w' := by
+      rw [← hu'def, hσ2]
+    have h22 : y.2 = w' := mono_sigma_fan hfan hy1s hw's hσeq
+    have hfeq : y = (y.1, w') := Prod.ext rfl h22
+    rw [hfeq] at hne
+    exact hne (condition_f1_eq_fan (v := y.1) (u := w') (w := u') hfan hG7 hcontra hσ1)
 
 /-- HOL Conforming.hl :13204-13252 `conforming_diagonal_fan_ds_fanadd`
 
