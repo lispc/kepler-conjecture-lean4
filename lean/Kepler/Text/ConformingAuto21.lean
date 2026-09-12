@@ -567,7 +567,37 @@ theorem PIIJBJK (x : V3) (V : Set V3) (E : Set (Set V3)) (hfan : FAN x V E) :
     (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
     fan80 x V E →
       conformingFan x V E hfan := by
-  sorry
+  rintro ⟨_, hcard, h80⟩
+  by_cases hconf : conformingFan x V E hfan
+  · exact hconf
+  set S : Set ℕ := {n | ∃ (E1 : Set (Set V3)) (h1 : FAN x V E1),
+      FAN x V E1 ∧ (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E1).ncard) ∧
+        fan80 x V E1 ∧ ¬ conformingFan x V E1 h1 ∧ nFan x V E1 h1 = n} with hSdef
+  have hne : S.Nonempty := ⟨nFan x V E hfan, E, hfan, hfan, hcard, h80, hconf, rfl⟩
+  obtain ⟨n, hnS, hnmin⟩ :
+      ∃ n, n ∈ S ∧ ∀ m ∈ S, n ≤ m :=
+    ⟨sInf S, Nat.sInf_mem hne, fun m hm => Nat.sInf_le hm⟩
+  rw [hSdef, Set.mem_setOf_eq] at hnS
+  obtain ⟨E1, h1, h1E, h1card, h180, h1conf, hn1⟩ := hnS
+  have IH : ∀ (E2 : Set (Set V3)) (h2 : FAN x V E2),
+      FAN x V E2 ∧ (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E2).ncard) ∧
+        fan80 x V E2 ∧ nFan x V E2 h2 < nFan x V E1 h1 →
+        conformingFan x V E2 h2 := by
+    intro E2 h2 ⟨h2E, h2card, h280, hlt⟩
+    by_contra h2conf
+    have hle : n ≤ nFan x V E2 h2 :=
+      hnmin _ ⟨E2, h2, h2E, h2card, h280, h2conf, rfl⟩
+    rw [← hn1] at hle
+    omega
+  have hbij : conformingBijectionFan x V E1 h1 :=
+    conforming_bijection_fanadd_verrion x V E1 h1 ⟨h1E, h1card, h180, h1conf, IH⟩
+  have hhalf : conformingHalfSpaceFan x V E1 h1 :=
+    HYUAZSE x V E1 h1 ⟨h1E, h1card, h180, IH⟩
+  have hsol : conformingSolidAngleFan x V E1 h1 :=
+    TXFBALB_VERSION x V E1 h1 ⟨h1E, h1card, h180, h1conf, IH⟩
+  have hdiag : conformingDiagonalFan x V E1 h1 :=
+    GGZWYRM x V E1 h1 ⟨h1E, h1card, h180, IH⟩
+  exact absurd ⟨h1card, h180, hbij, hhalf, hsol, hdiag⟩ h1conf
 
 /-! ## 边锥的展开与两并集不交（Conforming.hl:14258-14522） -/
 
