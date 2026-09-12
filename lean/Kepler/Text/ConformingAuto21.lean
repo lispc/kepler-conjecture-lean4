@@ -518,7 +518,25 @@ theorem DART_FANADD_EQ_HALFSPACE (x : V3) (V : Set V3)
         conformingFan x V E2 hfan2) →
       dartsetLeadsIntoFan x V E ds =
         ⋂ y ∈ ds, affGt ({x, y.1, y.2} : Set V3) {(f1Fan x V E y).2} := by
-  sorry
+  intro h
+  obtain ⟨hfan0, hcard, h80, hds, h3lt, hsub, hf12, hf23, hf31, hv, hu, hw, hvu, huw,
+    hwv, hsig, hpu, hpw, hface1, hface2, hf10, hf20, hf30, hE1, IH⟩ := h
+  have hrep := rep_dartset_leads_into_fan_ds x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20
+    f30 (dartsetLeadsIntoFan x V E1 ds1 ∪ dartsetLeadsIntoFan x V E1 ds2 ∪
+      affGt ({x} : Set V3) {v, w}) hfan hfan1
+    ⟨hfan, hcard, h80, hds, h3lt, hsub, hf12, hf23, hf31, hv, hu, hw, hvu, huw, hwv,
+      hsig, hpu, hpw, hface1, hface2, hf10, hf20, hf30, hE1, IH, rfl⟩
+  have hsub4 := DART_FANADD_SUBSET_HALFSPACE4 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20
+    f30 hfan hfan1 ⟨hfan, hcard, h80, hds, h3lt, hsub, hf12, hf23, hf31, hv, hu, hw,
+      hvu, huw, hwv, hsig, hpu, hpw, hface1, hface2, hf10, hf20, hf30, hE1, IH⟩
+  have hyz := lemma_HYUAZSE x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+    (dartsetLeadsIntoFan x V E1 ds1 ∪ dartsetLeadsIntoFan x V E1 ds2 ∪
+      affGt ({x} : Set V3) {v, w})
+    (⋂ y ∈ ds, affGt ({x, y.1, y.2} : Set V3) {(f1Fan x V E y).2}) hfan hfan1
+    ⟨hfan, hcard, h80, hds, h3lt, hsub, hf12, hf23, hf31, hv, hu, hw, hvu, huw, hwv,
+      hsig, hpu, hpw, hface1, hface2, hf10, hf20, hf30, hE1, IH, rfl, rfl⟩
+  rw [hrep] at hsub4 ⊢
+  exact Set.Subset.antisymm hsub4 hyz
 
 /-! ## conforming_half_space_fan 与 conforming_fan 的归纳证明（Conforming.hl:14143-14257） -/
 
