@@ -962,6 +962,19 @@ theorem conforming_diagonal_fan_ds_fanadd (x : V3) (V : Set V3)
 
 /-! ## GGZWYRM 与半空间交的三个引理（Conforming.hl:13253-13673） -/
 
+/-- 真 dart 处 `f1Fan` 与 `fFanPair` 一致（同
+`f1Fan_eq_fFanPair_of_dart1_auto2`，Kepler/Text/ConformingAuto2.lean:326；
+该引理为 private，故此处复制）。 -/
+private theorem f1Fan_eq_fFanPair_of_dart1_20 {x : V3} {V : Set V3}
+    {E : Set (Set V3)} (hfan : FAN x V E) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) :
+    f1Fan x V E d = fFanPair x V E d := by
+  have hba : {d.2, d.1} ∈ E := by
+    have h : {d.1, d.2} ∈ E := hd
+    rwa [Set.pair_comm] at h
+  simp only [f1Fan, fFanPair]
+  rw [inverse_sigma_fan_eq_inverse1 hfan hba]
+
 /-- HOL Conforming.hl :13253-13308 `GGZWYRM`
 
 HOL 原文：
@@ -1008,7 +1021,68 @@ theorem GGZWYRM (x : V3) (V : Set V3) (E : Set (Set V3))
       nFan x V E1 hfan1 < nFan x V E hfan →
         conformingFan x V E1 hfan1) →
       conformingDiagonalFan x V E hfan := by
-  sorry
+  rintro ⟨-, hcard, hfan80, hmin⟩ f hf y hy z hz hyz
+  have h3 : 3 ≤ f.ncard := CARD_FACE_SET_GE_3_FULLY_SURROUNDED_FAN hfan hcard hf
+  rcases lt_or_eq_of_le h3 with h3lt | h3eq
+  · -- `CARD f > 3`：取三点组并加边 `{{pr2 f1, pr2 f3}}`，用
+    -- `conforming_diagonal_fan_ds_fanadd` 收口。
+    obtain ⟨p1, p2, p3, hsub, k1, k2, k3, k4, k5, k6, k7, k8, k9⟩ :=
+      nonconformin_fan_imp_exist_3point_in_face hfan hcard hfan80 hf h3lt
+    have hfan1 : FAN x V (E ∪ {({p1.1, p3.1} : Set V3)}) :=
+      STEP3_REDUCE_FAN hfan hcard hfan80 hf h3lt hsub k1 k2 k3 rfl rfl rfl k6 k4 k5
+        k7 rfl
+    exact conforming_diagonal_fan_ds_fanadd x V E (E ∪ {({p1.1, p3.1} : Set V3)}) f
+      p1 p2 p3 p1.1 p2.1 p3.1
+      ((hypermapOfFan x V (E ∪ {({p1.1, p3.1} : Set V3)}) hfan1).face (p1.1, p3.1))
+      ((hypermapOfFan x V (E ∪ {({p1.1, p3.1} : Set V3)}) hfan1).face (p3.1, p1.1))
+      (p3.1, p1.1) (p1.1, p2.1) (p2.1, p3.1) y z hfan hfan1
+      ⟨hfan, hcard, hfan80, hf, h3lt, hsub, k1, k2, k3, rfl, rfl, rfl, k6, k4, k5, k7,
+        k9.symm, k8.symm, rfl, rfl, rfl, rfl, rfl, rfl, hmin, hy, hz, hyz⟩
+  · -- `CARD f = 3`：`CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN1` 给三点枚举，
+    -- 逐对验证（不共线性由 fan6 边引理给出，折返关系由 `f1Fan` 轮换给出）。
+    obtain ⟨f1, f2, f3, hdsf, hf12, hf23, hf31, he23, he31, he12, _hsig,
+      hf3fst, hf2fst, hf1fst⟩ :=
+      CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN1 hfan hcard hf h3eq.symm
+    have hf1d : f1 ∈ dart1OfFan V E := by
+      show ({f1.1, f1.2} : Set V3) ∈ E
+      rw [← hf2fst]; exact he12
+    have hf2d : f2 ∈ dart1OfFan V E := by
+      show ({f2.1, f2.2} : Set V3) ∈ E
+      rw [← hf3fst]; exact he23
+    have hf3d : f3 ∈ dart1OfFan V E := by
+      show ({f3.1, f3.2} : Set V3) ∈ E
+      rw [← hf1fst]; exact he31
+    have hf1fan1 : f1Fan x V E f1 = f2 :=
+      (f1Fan_eq_fFanPair_of_dart1_20 hfan hf1d).trans hf12
+    have hf1fan2 : f1Fan x V E f2 = f3 :=
+      (f1Fan_eq_fFanPair_of_dart1_20 hfan hf2d).trans hf23
+    have hf1fan3 : f1Fan x V E f3 = f1 :=
+      (f1Fan_eq_fFanPair_of_dart1_20 hfan hf3d).trans hf31
+    have hnc12 : ¬ Collinear3 x f1.1 f2.1 := fan_not_collinear hfan he12
+    have hnc23 : ¬ Collinear3 x f2.1 f3.1 := fan_not_collinear hfan he23
+    have hnc31 : ¬ Collinear3 x f3.1 f1.1 := fan_not_collinear hfan he31
+    have hnc21 : ¬ Collinear3 x f2.1 f1.1 :=
+      collinear3_swap20 (fan_not_collinear hfan he12)
+    have hnc32 : ¬ Collinear3 x f3.1 f2.1 :=
+      collinear3_swap20 (fan_not_collinear hfan he23)
+    have hnc13 : ¬ Collinear3 x f1.1 f3.1 :=
+      collinear3_swap20 (fan_not_collinear hfan he31)
+    have hy' : y = f1 ∨ y = f2 ∨ y = f3 := by
+      have h := hy; rw [hdsf] at h
+      simpa only [Set.mem_insert_iff, Set.mem_singleton_iff] using h
+    have hz' : z = f1 ∨ z = f2 ∨ z = f3 := by
+      have h := hz; rw [hdsf] at h
+      simpa only [Set.mem_insert_iff, Set.mem_singleton_iff] using h
+    rcases hy' with rfl | rfl | rfl <;> rcases hz' with rfl | rfl | rfl
+    · exact absurd rfl hyz
+    · exact ⟨hnc12, Or.inr (Or.inl hf1fan1.symm)⟩
+    · exact ⟨hnc13, Or.inl hf1fan3.symm⟩
+    · exact ⟨hnc21, Or.inl hf1fan1.symm⟩
+    · exact absurd rfl hyz
+    · exact ⟨hnc23, Or.inr (Or.inl hf1fan2.symm)⟩
+    · exact ⟨hnc31, Or.inr (Or.inl hf1fan3.symm)⟩
+    · exact ⟨hnc32, Or.inl hf1fan2.symm⟩
+    · exact absurd rfl hyz
 
 /-- HOL Conforming.hl :13309-13459 `INTERS_HALF_SPACE_DS_FANADD3`
 （HOL 源行为 "let  INTERS_..." 双空格；名字无前导空格）
