@@ -1342,6 +1342,35 @@ theorem lemma_HYUAZSE (x : V3) (V : Set V3)
     | inr h2 => exact Or.inl (Or.inl (k2 ⟨hq, h2⟩))
   | inr h3 => exact Or.inl (Or.inr (k1 ⟨hq, h3⟩))
 
+/-- 加边 `E1 = E ∪ {{v,w}}` 后，对不在 `{v,w}` 上的点 `a`，
+`inverse1SigmaFan` 保持不变：`setOfEdge a V E1 = setOfEdge a V E` 使
+`sigmaFan x V E1 a = sigmaFan x V E a`（`SIGMA_FAN_OF_FANADD1`），再用
+`INVERSE1_SIGMA_FAN` 的 ε-逆唯一性（第 2.2 分量）收口。 -/
+private theorem inverse1SigmaFan_add_edge_invariant {x : V3} {V : Set V3}
+    {E E1 : Set (Set V3)} {v w : V3}
+    (hfan : FAN x V E) (hfan1 : FAN x V E1)
+    (hcard : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E).ncard)
+    (hvw_not : ({v, w} : Set V3) ∉ E)
+    (hE1 : E ∪ {({v, w} : Set V3)} = E1)
+    {a b : V3} (hzw : ({a, b} : Set V3) ∈ E)
+    (ha_not : a ∉ ({v, w} : Set V3)) :
+    inverse1SigmaFan x V E1 a b = inverse1SigmaFan x V E a b := by
+  have hza : ({a, inverse1SigmaFan x V E a b} : Set V3) ∈ E :=
+    (INVERSE1_SIGMA_FAN (v := a) hfan).1 b hzw
+  have hσa : sigmaFan x V E a (inverse1SigmaFan x V E a b) = b :=
+    (INVERSE1_SIGMA_FAN (v := a) hfan).2.1 b hzw
+  have hσE1 : sigmaFan x V E1 a (inverse1SigmaFan x V E a b) = b := by
+    rw [SIGMA_FAN_OF_FANADD1 x V E E1 v w ⟨hfan, hfan1, hcard, hvw_not, hE1⟩
+      a (inverse1SigmaFan x V E a b) ⟨hza, ha_not⟩]
+    exact hσa
+  have hzaE1 : ({a, inverse1SigmaFan x V E a b} : Set V3) ∈ E1 := by
+    rw [← hE1]
+    exact Or.inl hza
+  have h3 := (INVERSE1_SIGMA_FAN (v := a) hfan1).2.2
+    (inverse1SigmaFan x V E a b) hzaE1
+  rw [hσE1] at h3
+  exact h3
+
 /-- HOL Conforming.hl :13518-13673 `DART_FANADD_SUBSET_HALFSPACE`
 
 HOL 原文：
@@ -1423,6 +1452,100 @@ theorem DART_FANADD_SUBSET_HALFSPACE (x : V3) (V : Set V3)
         conformingFan x V E2 hfan2) →
       dartsetLeadsIntoFan x V E1 ds1 ⊆
         affGt ({x, f3.1, f3.2} : Set V3) {(f1Fan x V E f3).2} := by
-  sorry
+  intro h
+  obtain ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hmin⟩ := h
+  have pc : ∀ (a b : V3), ({a, b} : Set V3) = ({b, a} : Set V3) := by
+    intro a b
+    ext p
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  have hwu : ({w, u} : Set V3) ∈ E := by rw [pc w u]; exact huw
+  have hvw_not : ({v, w} : Set V3) ∉ E := by
+    intro hh
+    exact hwv (by rw [pc w v]; exact hh)
+  -- `f3 = (w, inverse1SigmaFan x V E w u)`（第二个分量由 `f1_fan f2 = f3` 读出）
+  have hf3s : f3.2 = inverse1SigmaFan x V E w u := by
+    have h6 : (f1Fan x V E f2).2 = f3.2 := congrArg Prod.snd hf2f3
+    rw [← h6]
+    simp only [f1Fan]
+    rw [hf2w, hf2u]
+  have hwz : ({w, inverse1SigmaFan x V E w u} : Set V3) ∈ E :=
+    (INVERSE1_SIGMA_FAN (v := w) hfan).1 u hwu
+  have hzw : ({inverse1SigmaFan x V E w u, w} : Set V3) ∈ E := by
+    rw [pc (inverse1SigmaFan x V E w u) w]; exact hwz
+  have hz_not : inverse1SigmaFan x V E w u ∉ ({v, w} : Set V3) := by
+    intro hcon
+    have h1 : inverse1SigmaFan x V E w u = v ∨
+        inverse1SigmaFan x V E w u = w := by
+      simpa only [Set.mem_insert_iff, Set.mem_singleton_iff] using hcon
+    rcases h1 with h1 | h1
+    · exact hwv (by rw [pc w v]; rw [← h1]; exact hzw)
+    · exact (edge_ne_of_fan hfan hwz) h1.symm
+  -- `conformingFan x V E1`：取出半空间分解
+  have hconf : conformingFan x V E1 hfan1 :=
+    FANADD_CONFORMING x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 hfan hfan1
+      ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v,
+        hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20,
+        hf30, hE1, hmin⟩
+  have hHS := hconf.2.2.2.1
+  have hE1' : FAN x V E ∧
+      (∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard) ∧
+      fan80 x V E ∧
+      ds ∈ (hypermapOfFan x V E hfan).faceSet ∧ 3 < ds.ncard ∧
+      ({f1, f2, f3} : Set (V3 × V3)) ⊆ ds ∧
+      f1Fan x V E f1 = f2 ∧ f1Fan x V E f2 = f3 ∧ ¬ (f1Fan x V E f3 = f1) ∧
+      f1.1 = v ∧ f2.1 = u ∧ f3.1 = w ∧
+      ({v, u} : Set V3) ∈ E ∧ ({u, w} : Set V3) ∈ E ∧
+      ({w, v} : Set V3) ∉ E ∧ sigmaFan x V E u w = v ∧ f1.2 = u ∧ f2.2 = w ∧
+      ds1 = (hypermapOfFan x V E1 hfan1).face (v, w) ∧
+      ds2 = (hypermapOfFan x V E1 hfan1).face (w, v) ∧
+      f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
+      E ∪ {({v, w} : Set V3)} = E1 :=
+    ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne, hf1v, hf2u,
+      hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1.symm, hds2.symm, hf10,
+      hf20, hf30, hE1⟩
+  have hcard1 : ∀ z : V3, z ∈ V → 1 < (setOfEdge z V E1).ncard :=
+    add_edge_imp_card_set_edge_ge1_fan hfan hcard hE1.symm
+  have hds1fs : ds1 ∈ (hypermapOfFan x V E1 hfan1).faceSet :=
+    ds1_in_face_set_fanadd x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+      hfan hfan1 hE1'
+  have hEq : dartsetLeadsIntoFan x V E1 ds1 =
+      ⋂ y ∈ ds1, affGt ({x, y.1, y.2} : Set V3) {(f1Fan x V E1 y).2} :=
+    hHS ds1 hds1fs
+  -- 见证 dart `(w, inverse1SigmaFan x V E w u)` 落在 `ds1` 中
+  have hvwE1 : ({v, w} : Set V3) ∈ E1 := by
+    rw [← hE1]; exact Set.mem_union_right E (by simp)
+  have hzsig : inverse1SigmaFan x V E w u = inverseSigmaFan x V E1 w v := by
+    rw [← inverse_sigma_fan_eq_inverse1 (v := w) (w := v) hfan1
+      (by rw [pc w v]; exact hvwE1)]
+    exact (inverse1_sigma_fan_FANADD x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10
+      f20 f30 hfan hfan1 ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2,
+        hf2f3, hf3ne, hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w,
+        hds1, hds2, hf10, hf20, hf30, hE1⟩).symm
+  have hmem0 : (v, w) ∈ ds1 := by
+    rw [← hds1]
+    exact (hypermapOfFan x V E1 hfan1).mem_face_self (v, w)
+  have hmem : (w, inverse1SigmaFan x V E w u) ∈ ds1 :=
+    condition_f1_fan_in_face_set hfan1 (by simp only [fFanPair, hzsig]) hds1fs
+      (dartOfFan_eq_dart1_of_surrounded hfan1 hcard1) hmem0
+  -- ε-逆在加边下不变：半空间点位与 `E`-扇中一致
+  have hinv : inverse1SigmaFan x V E1 (inverse1SigmaFan x V E w u) w =
+      inverse1SigmaFan x V E (inverse1SigmaFan x V E w u) w :=
+    inverse1SigmaFan_add_edge_invariant hfan hfan1 hcard hvw_not hE1 hzw hz_not
+  rw [hEq]
+  intro q hq
+  simp only [Set.mem_iInter] at hq
+  have hqz : q ∈ affGt ({x, w, inverse1SigmaFan x V E w u} : Set V3)
+      {inverse1SigmaFan x V E1 (inverse1SigmaFan x V E w u) w} := by
+    have h6 := hq (w, inverse1SigmaFan x V E w u) hmem
+    simpa only [f1Fan] using h6
+  have htgt : (f1Fan x V E f3).2 =
+      inverse1SigmaFan x V E (inverse1SigmaFan x V E w u) w := by
+    simp only [f1Fan, hf3s, hf3w]
+  rw [hf3w, hf3s, htgt]
+  rw [hinv] at hqz
+  exact hqz
 
 end Kepler.Text
