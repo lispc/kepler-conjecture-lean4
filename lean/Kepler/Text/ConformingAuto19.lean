@@ -437,7 +437,29 @@ theorem inverse1_sigma_fan_FANADD3 (x : V3) (V : Set V3)
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       inverse1SigmaFan x V E1 u v = w := by
-  sorry
+  intro h
+  obtain ⟨-, hcard, h80, -, -, -, -, -, -, -, -, -, hvu, huw, hwv, hsigma,
+    -, -, -, -, -, -, -, hE1⟩ := h
+  have hnotvw : ({v, w} : Set V3) ∉ E := fun hh => hwv (by
+    rw [Set.pair_comm] at hh; exact hh)
+  have huv' : u ≠ v := by
+    intro hne
+    rw [hne] at huw
+    exact hnotvw huw
+  have huw' : u ≠ w := by
+    intro hne
+    rw [hne] at hvu
+    exact hnotvw hvu
+  have hnot : u ∉ ({v, w} : Set V3) := by
+    simp [huv', huw']
+  have hs : sigmaFan x V E1 u w = v :=
+    (SIGMA_FAN_OF_FANADD1 x V E E1 v w ⟨hfan, hfan1, hcard, hnotvw, hE1⟩ u w
+      ⟨huw, hnot⟩).trans hsigma
+  have huw1 : ({u, w} : Set V3) ∈ E1 := by
+    rw [← hE1]
+    exact Set.mem_union_left _ huw
+  have h3 := (INVERSE1_SIGMA_FAN (v := u) hfan1).2.2 w huw1
+  rwa [hs] at h3
 
 /-! ## 加边面的 darts 交换（Conforming.hl:10663-11907） -/
 
