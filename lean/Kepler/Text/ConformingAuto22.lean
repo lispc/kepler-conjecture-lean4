@@ -418,6 +418,57 @@ theorem connected_in_dartset_leads_into_fan_union_aff_gt (x : V3) (V : Set V3)
       (segment ℝ y z : Set V3) ⊆ Z := by
   sorry
 
+/-- 系数移植：`y ∈ affGt s t` 时，沿基点 `x0 ∈ s` 的凸组合
+`z = τ • y + (1 - τ) • x0`（`0 < τ`，且 `x0 ∉ t` 保证 t-系数严格正）
+仍落在 `affGt s t` 中（`AFF_GT_1_1` 型展开的核心步骤）。 -/
+private theorem affGt_transplant (s t : Set V3) (x0 y z : V3) (τ : ℝ)
+    (hx0 : x0 ∈ s) (hxt : x0 ∉ t) (hy : y ∈ affGt s t) (hτ : 0 < τ)
+    (hz : z = τ • y + (1 - τ) • x0) :
+    z ∈ affGt s t := by
+  have hy' : Affsign (fun r : ℝ => 0 < r) s t y := hy
+  obtain ⟨f, hfin, hsum, hpos, hone⟩ := hy'
+  have hmemS : x0 ∈ hfin.toFinset :=
+    (hfin.mem_toFinset).2 (Set.mem_union_left t hx0)
+  have hvec : z = ∑ w ∈ hfin.toFinset,
+      (fun w => τ * f w + if w = x0 then 1 - τ else 0) w • w := by
+    have hA : ∑ w ∈ hfin.toFinset,
+        (fun w => τ * f w + if w = x0 then 1 - τ else 0) w • w
+        = ∑ w ∈ hfin.toFinset,
+          ((τ * f w) • w + (if w = x0 then 1 - τ else 0) • w) :=
+      Finset.sum_congr rfl fun w _ => add_smul _ _ _
+    have hB : ∑ w ∈ hfin.toFinset, (τ * f w) • w
+        = τ • ∑ w ∈ hfin.toFinset, f w • w := by
+      have hB1 : ∀ w ∈ hfin.toFinset, (τ * f w) • w = τ • (f w • w) :=
+        fun w _ => mul_smul τ (f w) w
+      rw [Finset.sum_congr rfl hB1, ← Finset.smul_sum]
+    have hC : ∑ w ∈ hfin.toFinset, (if w = x0 then 1 - τ else 0) • w
+        = (1 - τ) • x0 := by
+      rw [Finset.sum_eq_single x0]
+      · simp
+      · intro w _ hw
+        simp [hw]
+      · intro h
+        exact absurd hmemS h
+    rw [hA, Finset.sum_add_distrib, hB, hC, ← hsum]
+    exact hz
+  have hpos' : ∀ w ∈ t, 0 < (fun w => τ * f w + if w = x0 then 1 - τ else 0) w := by
+    intro w hw
+    have hwne : w ≠ x0 := fun h => hxt (h ▸ hw)
+    simp only [if_neg hwne, add_zero]
+    exact mul_pos hτ (hpos w hw)
+  have hsc : ∑ w ∈ hfin.toFinset,
+      (fun w => τ * f w + if w = x0 then 1 - τ else 0) w = 1 := by
+    have hD : ∑ w ∈ hfin.toFinset, (if w = x0 then 1 - τ else 0) = 1 - τ := by
+      rw [Finset.sum_eq_single x0]
+      · simp
+      · intro w _ hw
+        simp [hw]
+      · intro h
+        exact absurd hmemS h
+    rw [Finset.sum_add_distrib, ← Finset.mul_sum, hD, hone]
+    ring
+  exact ⟨fun w => τ * f w + if w = x0 then 1 - τ else 0, hfin, hvec, hpos', hsc⟩
+
 /-- HOL Conforming.hl :14722-14792 `AFF_GT_1_1_SUBSET_DARTSET_LEADS_INTO_FAN`
 
 HOL 原文：
@@ -476,6 +527,62 @@ theorem AFF_GT_1_1_SUBSET_DARTSET_LEADS_INTO_FAN (x : V3) (V : Set V3)
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet)
     (hy : y ∈ dartsetLeadsIntoFan x V E ds) :
     affGt ({x} : Set V3) {y} ⊆ dartsetLeadsIntoFan x V E ds := by
-  sorry
+  -- `x ≠ y`：dartsetLeadsIntoFan 是 yfan 的拓扑分量，而 x ∈ xfan = yfanᶜ
+  have htop : dartsetLeadsIntoFan x V E ds ∈ topologicalComponentYfan x V E :=
+    dartset_leads_into_is_topological_component_yfan hfan hcard hfan80 hds
+  have hxy : x ≠ y :=
+    point_in_yfan_not_x_fan x V E (dartsetLeadsIntoFan x V E ds) y hfan hE htop hy
+  -- conforming 半空间分解
+  have hHS : dartsetLeadsIntoFan x V E ds =
+      ⋂ d ∈ ds, affGt ({x, d.1, d.2} : Set V3) {(f1Fan x V E d).2} :=
+    hconf.2.2.2.1 ds hds
+  rw [hHS]
+  -- ds 中的 dart 都是带边 dart
+  have hdartscoe : ((hypermapOfFan x V E hfan).darts : Set (V3 × V3)) =
+      dart1OfFan V E := by
+    change ((finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have hxV : x ∉ V := hfan.2.2.2.1
+  intro z hz
+  simp only [Set.mem_iInter]
+  intro d hd
+  -- 半空间目标点换名
+  show z ∈ affGt ({x, d.1, d.2} : Set V3) {inverse1SigmaFan x V E d.2 d.1}
+  -- y 本身在每个半空间中
+  have hyd : y ∈ affGt ({x, d.1, d.2} : Set V3)
+      {inverse1SigmaFan x V E d.2 d.1} := by
+    have hy' := hy
+    rw [hHS] at hy'
+    simp only [Set.mem_iInter] at hy'
+    exact hy' d hd
+  -- d 是带边 dart：{d.1, d.2} ∈ E
+  have hde : ({d.1, d.2} : Set V3) ∈ E := by
+    obtain ⟨d0, hd0, hd0f⟩ := (hypermapOfFan x V E hfan).face_representation hds
+    have hmd : d ∈ (hypermapOfFan x V E hfan).face d0 := by
+      rw [← hd0f]; exact hd
+    have hsub := (hypermapOfFan x V E hfan).face_subset_darts hd0 hmd
+    rw [hdartscoe] at hsub
+    simpa [dart1OfFan] using hsub
+  -- f1Fan 的第二分量是 E-邻居顶点，故 ≠ x（fan2: x ∉ V）
+  have hpe : ({d.2, inverse1SigmaFan x V E d.2 d.1} : Set V3) ∈ E :=
+    (INVERSE1_SIGMA_FAN (v := d.2) hfan).1 d.1 (by rw [Set.pair_comm]; exact hde)
+  have hpV : inverse1SigmaFan x V E d.2 d.1 ∈ V :=
+    hfan.1 (Set.mem_sUnion.mpr ⟨{d.2, inverse1SigmaFan x V E d.2 d.1}, hpe, by simp⟩)
+  have hxp : x ≠ inverse1SigmaFan x V E d.2 d.1 := fun h => hxV (h ▸ hpV)
+  -- z ∈ affGt {x} {y} 的坐标展开（AFF_GT_1_1 成员形式）
+  have hz' : Affsign (fun r : ℝ => 0 < r) ({x} : Set V3) {y} z := hz
+  obtain ⟨f, hfin, hsum, hpos, hone⟩ := hz'
+  rw [sum_insert_single_s hfin hxy] at hone
+  rw [sum_insert_single_v hfin hxy] at hsum
+  have hfy : 0 < f y := hpos y (Set.mem_singleton y)
+  have hfx : f x = 1 - f y := by linarith
+  -- 沿基点 x 把射线移植进半空间锥
+  refine affGt_transplant ({x, d.1, d.2} : Set V3)
+      {inverse1SigmaFan x V E d.2 d.1} x y z (f y) ?_ ?_ hyd hfy ?_
+  · simp
+  · simp only [Set.mem_singleton_iff]
+    exact hxp
+  · rw [hsum, hfx]
+    module
 
 end Kepler.Text
