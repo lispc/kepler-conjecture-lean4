@@ -403,7 +403,28 @@ theorem DART_FANADD_SUBSET_HALFSPACE4 (x : V3) (V : Set V3)
         conformingFan x V E2 hfan2) →
       dartsetLeadsIntoFan x V E ds ⊆
         ⋂ y ∈ ds, affGt ({x, y.1, y.2} : Set V3) {(f1Fan x V E y).2} := by
-  sorry
+  intro h
+  obtain ⟨hfan0, hcard, h80, hds, h3lt, hsub, hf12, hf23, hf31, hv, hu, hw, hvu, huw,
+    hwv, hsig, hpu, hpw, hface1, hface2, hf10, hf20, hf30, hE1, IH⟩ := h
+  intro z hz
+  simp only [Set.mem_iInter]
+  intro y hy
+  obtain ⟨f1', f2', f3', hsub', h12', h23', h31', he23', he31', he12', hsig', hc23',
+    hc12', hy3⟩ :=
+    INDUCTION_FANADD x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 y hfan hfan1
+      ⟨hfan0, hcard, h80, hds, h3lt, hsub, hf12, hf23, hf31, hv, hu, hw, hvu, huw, hwv,
+        hsig, hpu, hpw, hface1, hface2, hf10, hf20, hf30, hE1, IH, hy⟩
+  have hfanE1' : FAN x V (E ∪ {({f1'.1, f3'.1} : Set V3)}) :=
+    STEP3_REDUCE_FAN hfan hcard h80 hds h3lt hsub' h12' h23' h31' rfl rfl rfl he12'
+      he23' he31' hsig' rfl
+  rw [hy3]
+  exact DART_FANADD_SUBSET_HALFSPACE3 x V E (E ∪ {({f1'.1, f3'.1} : Set V3)}) ds f1' f2'
+    f3' f1'.1 f2'.1 f3'.1
+    ((hypermapOfFan x V (E ∪ {({f1'.1, f3'.1} : Set V3)}) hfanE1').face (f1'.1, f3'.1))
+    ((hypermapOfFan x V (E ∪ {({f1'.1, f3'.1} : Set V3)}) hfanE1').face (f3'.1, f1'.1))
+    (f3'.1, f1'.1) (f1'.1, f2'.1) (f2'.1, f3'.1) hfan hfanE1'
+    ⟨hfan0, hcard, h80, hds, h3lt, hsub', h12', h23', h31', rfl, rfl, rfl, he12', he23',
+      he31', hsig', hc12'.symm, hc23'.symm, rfl, rfl, rfl, rfl, rfl, rfl, IH⟩ hz
 
 /-- HOL Conforming.hl :14093-14142 `DART_FANADD_EQ_HALFSPACE`
 
