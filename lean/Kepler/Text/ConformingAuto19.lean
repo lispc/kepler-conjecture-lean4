@@ -195,7 +195,101 @@ theorem eventally_measurable_fanadd (x : V3) (V : Set V3)
       let U := dartsetLeadsIntoFan x V E f
       (∀ r : ℝ, MeasurableSet (Metric.ball x r ∩ U)) ∧
         EventuallyRadial x U := by
-  sorry
+  rintro ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hmin, hf⟩
+  show (∀ r : ℝ, MeasurableSet (Metric.ball x r ∩ dartsetLeadsIntoFan x V E f)) ∧
+      EventuallyRadial x (dartsetLeadsIntoFan x V E f)
+  have collinear3_end_ca19 : ∀ a b : V3, Collinear3 a b a := fun a b => by
+    have hset : ({a, b, a} : Set V3) = {a, b} := by
+      ext z
+      simp
+      tauto
+    show Collinear ℝ ({a, b, a} : Set V3)
+    rw [hset]
+    exact collinear_pair ℝ a b
+  have hvwE1 : ({v, w} : Set V3) ∈ E1 := by
+    rw [← hE1]
+    exact Or.inr rfl
+  have hnc_vw : ¬ Collinear3 x v w := fan_not_collinear hfan1 hvwE1
+  have hdis : Disjoint ({x} : Set V3) {v, w} := by
+    rw [Set.disjoint_singleton_left]
+    intro hmem
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+    rcases hmem with he | he
+    · exact hnc_vw (collinear3_of_eq he.symm)
+    · exact hnc_vw (by rw [he]; exact collinear3_end_ca19 w v)
+  have hconf1 : conformingFan x V E1 hfan1 :=
+    FANADD_CONFORMING x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 hfanC hfan1
+      ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne, hf1v, hf2u,
+        hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20, hf30,
+        hE1, hmin⟩
+  have hsol1 : conformingSolidAngleFan x V E1 hfan1 := hconf1.2.2.2.2.1
+  have key2 : ∀ g : Set (V3 × V3), g ∈ (hypermapOfFan x V E1 hfan1).faceSet →
+      (∀ r : ℝ, MeasurableSet (Metric.ball x r ∩ dartsetLeadsIntoFan x V E1 g)) ∧
+        (∃ r : ℝ, 0 < r ∧ radialNorm r x
+          (dartsetLeadsIntoFan x V E1 g ∩ Metric.ball x r)) := fun g hg =>
+    ⟨(hsol1 g hg).1, (hsol1 g hg).2.1⟩
+  by_cases hfds : f = ds
+  · rw [hfds]
+    have hU := rep_dartset_leads_into_fan_ds x V E E1 ds f1 f2 f3 v u w ds1 ds2
+      f10 f20 f30
+      (dartsetLeadsIntoFan x V E1 ds1 ∪ dartsetLeadsIntoFan x V E1 ds2 ∪
+        affGt ({x} : Set V3) {v, w}) hfanC hfan1
+      ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne, hf1v, hf2u,
+        hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20, hf30,
+        hE1, hmin, rfl⟩
+    have hds1mem : ds1 ∈ (hypermapOfFan x V E1 hfan1).faceSet :=
+      ds1_in_face_set_fanadd x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+        hfanC hfan1
+        ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne, hf1v, hf2u,
+          hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1.symm, hds2.symm,
+          hf10, hf20, hf30, hE1⟩
+    have hds2mem : ds2 ∈ (hypermapOfFan x V E1 hfan1).faceSet :=
+      ds2_in_face_set_fanadd x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+        hfanC hfan1
+        ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne, hf1v, hf2u,
+          hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2.symm,
+          hf10, hf20, hf30, hE1⟩
+    obtain ⟨mA1, mE1⟩ := key2 ds1 hds1mem
+    obtain ⟨mB1, mE2⟩ := key2 ds2 hds2mem
+    rw [hU]
+    refine ⟨fun r => ?_, ?_⟩
+    · rw [Set.inter_union_distrib_left, Set.inter_union_distrib_left]
+      refine MeasurableSet.union (MeasurableSet.union (mA1 r) (mB1 r)) ?_
+      rw [Set.inter_comm]
+      exact MEASURABLE_AFF_GT_2_1_INTER_BALL x v w r hnc_vw
+    · obtain ⟨ra, hra0, hra⟩ := mE1
+      obtain ⟨rb, hrb0, hrb⟩ := mE2
+      have hA' := RADIAL_NORM_CO ra (min ra rb) x
+        (dartsetLeadsIntoFan x V E1 ds1) ⟨min_le_left ra rb, lt_min hra0 hrb0⟩ hra
+      have hB' := RADIAL_NORM_CO rb (min ra rb) x
+        (dartsetLeadsIntoFan x V E1 ds2) ⟨min_le_right ra rb, lt_min hra0 hrb0⟩ hrb
+      have hC' := RADIAL_AFF_GT_1_2 x v w (min ra rb) ⟨hdis, lt_min hra0 hrb0⟩
+      refine ⟨min ra rb, lt_min hra0 hrb0, fun z hz => hz.2, ?_⟩
+      intro u hu t ht htn
+      rcases hu.1 with (huA | huB) | huC
+      · obtain ⟨h1, h2⟩ := hA'.2 u ⟨huA, hu.2⟩ t ht htn
+        exact ⟨Or.inl (Or.inl h1), h2⟩
+      · obtain ⟨h1, h2⟩ := hB'.2 u ⟨huB, hu.2⟩ t ht htn
+        exact ⟨Or.inl (Or.inr h1), h2⟩
+      · obtain ⟨h1, h2⟩ := hC'.2 u ⟨huC, hu.2⟩ t ht htn
+        exact ⟨Or.inr h1, h2⟩
+  · have hdom := DOMAIN_TRANF_FACE_DELETE_DS x V E E1 ds f1 f2 f3 v u w ds1 ds2
+      f10 f20 f30 f hfanC hfan1
+      ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne, hf1v, hf2u,
+        hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20, hf30,
+        hE1, ⟨hf, hfds⟩⟩
+    have hfeq := dartset_leads_into_fan_eq_fanadd x V E E1 ds f1 f2 f3 v u w
+      ds1 ds2 f10 f20 f30 f hfanC hfan1
+      ⟨hfanC, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne, hf1v, hf2u,
+        hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2, hf10, hf20, hf30,
+        hE1, ⟨hf, hfds⟩, hmin⟩
+    dsimp only at hdom hfeq
+    obtain ⟨hg1, -⟩ := (Set.mem_sdiff _).mp ((Set.mem_sdiff _).mp hdom).1
+    obtain ⟨mA1, mE1⟩ := key2 _ hg1
+    rw [← hfeq]
+    exact ⟨mA1, mE1⟩
 
 /-- HOL Conforming.hl :10455-10463 `SOL_AFF_GT_2_1`
 
