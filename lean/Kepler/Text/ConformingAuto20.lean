@@ -207,7 +207,24 @@ theorem conforming_bijection_fanadd_verrion (x : V3) (V : Set V3)
         ∃! f : Set (V3 × V3),
           f ∈ (hypermapOfFan x V E hfan).faceSet ∧
             s = dartsetLeadsIntoFan x V E f := by
-  sorry
+  intro h
+  obtain ⟨hfanE, hcard, hfan80, hnconf, hmin⟩ := h
+  obtain ⟨ds, hds, hds3⟩ :=
+    nonconformin_fan_imp_exist_face_gt_3 hfan hcard hfan80 hnconf
+  obtain ⟨f1, f2, f3, hsub, hf1f2, hf2f3, hf3ne, huw, hwvne, hvu, hsigma, hf3u,
+    hf2v⟩ :=
+    nonconformin_fan_imp_exist_3point_in_face hfan hcard hfan80 hds hds3
+  -- E1 := E ∪ {{v,w}}（v = f1.1, u = f2.1, w = f3.1）是 fan（FANADD 步骤）
+  have hfan1 : FAN x V (E ∪ {({f1.1, f3.1} : Set V3)}) :=
+    STEP3_REDUCE_FAN hfan hcard hfan80 hds hds3 hsub hf1f2 hf2f3 hf3ne rfl rfl rfl
+      hvu huw hwvne hsigma rfl
+  exact conforming_bijection_fanadd x V E (E ∪ {({f1.1, f3.1} : Set V3)}) ds f1 f2 f3
+    f1.1 f2.1 f3.1
+    ((hypermapOfFan x V (E ∪ {({f1.1, f3.1} : Set V3)}) hfan1).face (f1.1, f3.1))
+    ((hypermapOfFan x V (E ∪ {({f1.1, f3.1} : Set V3)}) hfan1).face (f3.1, f1.1))
+    (f3.1, f1.1) (f1.1, f2.1) (f2.1, f3.1) hfan hfan1
+    ⟨hfan, hcard, hfan80, hmin, hds, hds3, hsub, hf1f2, hf2f3, hf3ne, rfl, rfl, rfl,
+      hvu, huw, hwvne, hsigma, hf2v.symm, hf3u.symm, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 /-! ## fanadd 结构下的逆 σ 恒等式（Conforming.hl:12569-12681） -/
 
