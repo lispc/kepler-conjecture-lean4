@@ -142,7 +142,55 @@ theorem aff_gt_subset_dartset_leads_into_fan_union_aff_gt (x : V3) (V : Set V3)
     (hxy : x ≠ y) (hxz : x ≠ z)
     (hseg : segment ℝ y z ⊆ Z) :
     affGt ({x} : Set V3) {y, z} ⊆ Z := by
-  sorry
+  have hxV : x ∉ V := hfan.2.2.2.1
+  have hdis : Disjoint ({x} : Set V3) {y, z} := by simp [hxy, hxz]
+  intro p hp
+  rw [aff_gt_1_2 hdis] at hp
+  simp only [Set.mem_setOf_eq] at hp
+  obtain ⟨t1, t2, t3, ht2, ht3, hsum, hpdef⟩ := hp
+  rw [hZ]
+  simp only [Set.mem_sdiff, Set.mem_univ, true_and]
+  intro hu
+  rcases Set.mem_iUnion₂.mp hu with ⟨v, hv, hpv⟩
+  have hxv : x ≠ v := by
+    intro he
+    apply hxV
+    rw [he]
+    exact hv
+  rw [mem_affGe_singleton hxv] at hpv
+  obtain ⟨s1, s2, hs2, hssum, hpvdef⟩ := hpv
+  have key : t1 • x + t2 • y + t3 • z = s1 • x + s2 • v := hpdef.symm.trans hpvdef
+  have hs0 : t2 + t3 ≠ 0 := by linarith
+  set u : ℝ := (t2 + t3)⁻¹ with hudef
+  have hu0 : 0 < u := by rw [hudef]; exact inv_pos.mpr (by linarith)
+  have huinv : u * (t2 + t3) = 1 := by rw [hudef]; exact inv_mul_cancel₀ hs0
+  have hsc : s1 - t1 + s2 = t2 + t3 := by linarith
+  have heq : t2 • y + t3 • z = (s1 - t1) • x + s2 • v := by
+    calc t2 • y + t3 • z
+        = (t1 • x + t2 • y + t3 • z) - t1 • x := by module
+      _ = (s1 • x + s2 • v) - t1 • x := by rw [key]
+      _ = (s1 - t1) • x + s2 • v := by rw [sub_smul]; module
+  have h31 : u * t3 ≤ 1 := by
+    have h : u * t3 ≤ u * (t2 + t3) :=
+      mul_le_mul_of_nonneg_left (by linarith) (le_of_lt hu0)
+    rwa [huinv] at h
+  have hqseg : u • (t2 • y + t3 • z) ∈ segment ℝ y z := by
+    rw [segment_eq_image]
+    refine ⟨u * t3, ⟨mul_nonneg (le_of_lt hu0) (le_of_lt ht3), h31⟩, ?_⟩
+    show (1 - u * t3) • y + (u * t3) • z = u • (t2 • y + t3 • z)
+    rw [show (1 : ℝ) - u * t3 = u * t2 from by rw [← huinv]; ring]
+    module
+  have hqge : u • (t2 • y + t3 • z) ∈ affGe ({x} : Set V3) {v} := by
+    rw [mem_affGe_singleton hxv]
+    refine ⟨u * (s1 - t1), u * s2, mul_nonneg (le_of_lt hu0) hs2, ?_, ?_⟩
+    · rw [← mul_add, hsc, huinv]
+    · show u • (t2 • y + t3 • z) = (u * (s1 - t1)) • x + (u * s2) • v
+      rw [heq]
+      module
+  have hZq : u • (t2 • y + t3 • z) ∈ Z := hseg hqseg
+  rw [hZ] at hZq
+  simp only [Set.mem_sdiff, Set.mem_univ, true_and] at hZq
+  exact hZq (Set.mem_iUnion₂.mpr ⟨v, hv, hqge⟩)
 
 /-! ### 辅助引理：affGt 成员点与 x 相异（由非共面性） -/
 
