@@ -271,7 +271,140 @@ theorem inverse1_sigma_fan_FANADD4 (x : V3) (V : Set V3)
     E ∪ {({v, w} : Set V3)} = E1 →
       inverse1SigmaFan x V E1 (inverse1SigmaFan x V E w u) w =
         inverse1SigmaFan x V E (inverse1SigmaFan x V E w u) w := by
-  sorry
+  rintro ⟨-, hcard, hfan80, -, -, -, -, -, -, -, -, -, hvu, huw, hwv, hsigma,
+    -, -, -, -, -, -, -, hE1⟩
+  have hwu : ({w, u} : Set V3) ∈ E := by rw [Set.pair_comm]; exact huw
+  set p : V3 := inverse1SigmaFan x V E w u with hp
+  have hpE : ({w, p} : Set V3) ∈ E := (INVERSE1_SIGMA_FAN (v := w) hfan).1 u hwu
+  have hpw : ({p, w} : Set V3) ∈ E := by rw [Set.pair_comm]; exact hpE
+  have htE : ({p, inverse1SigmaFan x V E p w} : Set V3) ∈ E :=
+    (INVERSE1_SIGMA_FAN (v := p) hfan).1 w hpw
+  have htσ : sigmaFan x V E p (inverse1SigmaFan x V E p w) = w :=
+    (INVERSE1_SIGMA_FAN (v := p) hfan).2.1 w hpw
+  have hnotvw : ({v, w} : Set V3) ∉ E := fun hh => hwv (by rw [Set.pair_comm]; exact hh)
+  have hp_ne_mem : p ∉ ({v, w} : Set V3) := by
+    intro hmem
+    rcases Set.mem_insert_iff.mp hmem with h | h
+    · exact hwv (h ▸ hpE)
+    · exact edge_ne_of_fan hfan hpw h
+  have hEsub : E ⊆ E1 := fun e he => by rw [← hE1]; exact Set.mem_union_left _ he
+  have hσd : sigmaFan x V E1 p (inverse1SigmaFan x V E p w) = w := by
+    rw [SIGMA_FAN_OF_FANADD1 x V E E1 v w ⟨hfan, hfan1, hcard, hnotvw, hE1⟩ p
+      (inverse1SigmaFan x V E p w) ⟨htE, hp_ne_mem⟩, htσ]
+  have hin := (INVERSE1_SIGMA_FAN (v := p) hfan1).2.2 _ (hEsub htE)
+  rw [hσd] at hin
+  exact hin
+
+/-- `Collinear3` 后两点交换（ConformingAuto11.lean:131 的私有副本）。 -/
+private theorem collinear3_swap20 {a b c : V3} (h : ¬ Collinear3 a b c) :
+    ¬ Collinear3 a c b := by
+  intro hc
+  apply h
+  change Collinear ℝ ({a, b, c} : Set V3)
+  rw [show ({a, b, c} : Set V3) = {a, c, b} from by ext z; simp; tauto]
+  exact hc
+
+/-- 加边 `{v,w}` 处 `f1Fan` 的相容性（ConformingAuto19.lean:688-733、793-877
+的 σ-稳定性技术打包）：真 dart `c`（`c ≠ (u,w)`）处 `f1Fan x V E1 c` 要么与
+`f1Fan x V E c` 一致，要么落到新 dart `(v,w)`。 -/
+private theorem f1Fan_E1_eq_of_edge {x : V3} {V : Set V3} {E E1 : Set (Set V3)}
+    {v u w : V3} (hfan : FAN x V E) (hfan1 : FAN x V E1)
+    (hfan80 : fan80 x V E)
+    (hcard : ∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E).ncard)
+    (hvu : ({v, u} : Set V3) ∈ E) (huw : ({u, w} : Set V3) ∈ E)
+    (hwv : ({w, v} : Set V3) ∉ E) (hsigma : sigmaFan x V E u w = v)
+    (hE1 : E ∪ {({v, w} : Set V3)} = E1)
+    (c : V3 × V3) (hcE : ({c.1, c.2} : Set V3) ∈ E) (hc : c ≠ (u, w)) :
+    f1Fan x V E1 c = f1Fan x V E c ∨ f1Fan x V E1 c = (v, w) := by
+  have hEsub : E ⊆ E1 := fun e he => by rw [← hE1]; exact Set.mem_union_left _ he
+  have hvwE1 : ({v, w} : Set V3) ∈ E1 := by rw [← hE1]; exact Or.inr rfl
+  have hθ := hfan80 v u hvu
+  have hsnu : sigmaFan x V E v u ≠ u := by
+    intro hsu
+    rw [hsu, azim_self] at hθ
+    norm_num at hθ
+  have hwuE : ({w, u} : Set V3) ∈ E := by rw [Set.pair_comm]; exact huw
+  have hσ1 : sigmaFan x V E1 v w = sigmaFan x V E v u :=
+    SIGMA_FAN_OF_FANADD_AT_POINT1 x V E E1 v u w
+      ⟨hfan, hfan1, hvu, huw, hwv, hsigma, hfan80, hcard, hE1⟩
+  have hescinv : inverse1SigmaFan x V E1 v (sigmaFan x V E v u) = w := by
+    have hin := (INVERSE1_SIGMA_FAN (v := v) hfan1).2.2 w hvwE1
+    rwa [hσ1] at hin
+  have hnotvw : ({v, w} : Set V3) ∉ E := fun hh => hwv (by rw [Set.pair_comm]; exact hh)
+  -- 新边之外 inverse1SigmaFan 的不变性
+  have hinv_off : ∀ b a : V3, b ∉ ({v, w} : Set V3) → ({b, a} : Set V3) ∈ E →
+      inverse1SigmaFan x V E1 b a = inverse1SigmaFan x V E b a := by
+    intro b a hb hba
+    have htE : ({b, inverse1SigmaFan x V E b a} : Set V3) ∈ E :=
+      (INVERSE1_SIGMA_FAN (v := b) hfan).1 a hba
+    have htσ : sigmaFan x V E b (inverse1SigmaFan x V E b a) = a :=
+      (INVERSE1_SIGMA_FAN (v := b) hfan).2.1 a hba
+    have hσd : sigmaFan x V E1 b (inverse1SigmaFan x V E b a) = a := by
+      rw [SIGMA_FAN_OF_FANADD1 x V E E1 v w ⟨hfan, hfan1, hcard, hnotvw, hE1⟩ b
+        (inverse1SigmaFan x V E b a) ⟨htE, hb⟩, htσ]
+    have hin := (INVERSE1_SIGMA_FAN (v := b) hfan1).2.2 _ (hEsub htE)
+    rwa [hσd] at hin
+  have hinv_v : ∀ a : V3, a ≠ sigmaFan x V E v u → ({v, a} : Set V3) ∈ E →
+      inverse1SigmaFan x V E1 v a = inverse1SigmaFan x V E v a := by
+    intro a ha hva
+    have htE : ({v, inverse1SigmaFan x V E v a} : Set V3) ∈ E :=
+      (INVERSE1_SIGMA_FAN (v := v) hfan).1 a hva
+    have htσ : sigmaFan x V E v (inverse1SigmaFan x V E v a) = a :=
+      (INVERSE1_SIGMA_FAN (v := v) hfan).2.1 a hva
+    have htne : u ≠ inverse1SigmaFan x V E v a := by
+      intro hte
+      apply ha
+      rw [← htσ, hte]
+    have hσd : sigmaFan x V E1 v (inverse1SigmaFan x V E v a) = a := by
+      rw [SIGMA_FAN_OF_FANADD_AT_POINT4 x V E E1 v u w (inverse1SigmaFan x V E v a)
+        ⟨hfan, hfan1, hfan80, hvu, huw, hwv, htne, htE, hsigma, hcard, hE1⟩, htσ]
+    have hin := (INVERSE1_SIGMA_FAN (v := v) hfan1).2.2 _ (hEsub htE)
+    rwa [hσd] at hin
+  have hinv_w : ∀ a : V3, a ≠ u → ({w, a} : Set V3) ∈ E →
+      inverse1SigmaFan x V E1 w a = inverse1SigmaFan x V E w a := by
+    intro a ha hwa
+    have htE : ({w, inverse1SigmaFan x V E w a} : Set V3) ∈ E :=
+      (INVERSE1_SIGMA_FAN (v := w) hfan).1 a hwa
+    have htσ : sigmaFan x V E w (inverse1SigmaFan x V E w a) = a :=
+      (INVERSE1_SIGMA_FAN (v := w) hfan).2.1 a hwa
+    have htne : inverse1SigmaFan x V E w a ≠ inverse1SigmaFan x V E w u := by
+      intro hte
+      apply ha
+      rw [← htσ, hte]
+      exact (INVERSE1_SIGMA_FAN (v := w) hfan).2.1 u hwuE
+    have hσd : sigmaFan x V E1 w (inverse1SigmaFan x V E w a) = a := by
+      rw [SIGMA_FAN_OF_FANADD_AT_POINT5 x V E E1 v u w (inverse1SigmaFan x V E w a)
+        ⟨hfan, hfan1, hfan80, hvu, huw, hwv, htne, htE, hsigma, hcard, hE1⟩, htσ]
+    have hin := (INVERSE1_SIGMA_FAN (v := w) hfan1).2.2 _ (hEsub htE)
+    rwa [hσd] at hin
+  by_cases hc2v : c.2 = v
+  · by_cases hc1s : c.1 = sigmaFan x V E v u
+    · -- 逃逸回新 dart (v, w)
+      right
+      simp only [f1Fan, hc2v, hc1s]
+      rw [hescinv]
+    · left
+      have hve : ({v, c.1} : Set V3) ∈ E := by
+        rw [Set.pair_comm, ← hc2v]; exact hcE
+      simp only [f1Fan, hc2v]
+      rw [hinv_v c.1 hc1s hve]
+  · by_cases hc2w : c.2 = w
+    · by_cases hc1u : c.1 = u
+      · exact absurd (Prod.ext_iff.mpr ⟨hc1u, hc2w⟩) hc
+      · left
+        have hwa : ({w, c.1} : Set V3) ∈ E := by
+          rw [Set.pair_comm, ← hc2w]; exact hcE
+        simp only [f1Fan, hc2w]
+        rw [hinv_w c.1 hc1u hwa]
+    · left
+      have hnv : c.2 ∉ ({v, w} : Set V3) := by
+        intro hmem
+        rcases Set.mem_insert_iff.mp hmem with h | h
+        · exact hc2v h
+        · exact hc2w (Set.mem_singleton_iff.mp h)
+      have hba : ({c.2, c.1} : Set V3) ∈ E := by rw [Set.pair_comm]; exact hcE
+      simp only [f1Fan]
+      rw [hinv_off c.2 c.1 hnv hba]
 
 /-! ## 面内对角线的分类（Conforming.hl:12682-13252） -/
 
@@ -357,7 +490,153 @@ theorem conforming_diagonal_fanadd1 (x : V3) (V : Set V3)
       ¬ Collinear3 x f3.1 z.1 ∧
         (f3 = f1Fan x V E z ∨ z = f1Fan x V E f3 ∨
           affGt ({x} : Set V3) {f3.1, z.1} ⊆ dartsetLeadsIntoFan x V E ds) := by
-  sorry
+  intro h
+  obtain ⟨a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16,
+    a17, a18, a19, a20, a21, a22, a23, a24, a25, hz, hf3z⟩ := h
+  -- E ⊆ E1 与三支 dart 的形状
+  have hEsub : E ⊆ E1 := fun e he => by rw [← a24]; exact Set.mem_union_left _ he
+  have hvwE1 : ({v, w} : Set V3) ∈ E1 := by rw [← a24]; exact Or.inr rfl
+  have hf1val : f1 = (v, u) := Prod.ext_iff.mpr ⟨a10, a17⟩
+  have hf2val : f2 = (u, w) := Prod.ext_iff.mpr ⟨a11, a18⟩
+  have hwuE : ({w, u} : Set V3) ∈ E := by rw [Set.pair_comm]; exact a14
+  have hpE : ({w, inverse1SigmaFan x V E w u} : Set V3) ∈ E :=
+    (INVERSE1_SIGMA_FAN (v := w) hfan).1 u hwuE
+  have hf3val : f3 = (w, inverse1SigmaFan x V E w u) := by
+    rw [← a8, hf2val]
+    simp [f1Fan]
+  have hunw : u ≠ w := edge_ne_of_fan hfan a14
+  have hθ := a3 u w a14
+  rw [a16] at hθ
+  have hcop : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan a13 a14 hθ.1 hθ.2
+  have hvnw : v ≠ w := by
+    intro hveq
+    rw [hveq, azim_self] at hθ
+    norm_num at hθ
+  -- z 是 E-dart
+  have hdartscoe : ((hypermapOfFan x V E hfan).darts : Set (V3 × V3)) = dart1OfFan V E := by
+    change ((finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+    exact (finite_dart1_fan hfan).coe_toFinset
+  have hzE : ({z.1, z.2} : Set V3) ∈ E := by
+    obtain ⟨d0, hd0, hd0f⟩ := (hypermapOfFan x V E hfan).face_representation a4
+    have hzface : z ∈ (hypermapOfFan x V E hfan).face d0 := by rw [← hd0f]; exact hz
+    have hzdart := (hypermapOfFan x V E hfan).face_subset_darts hd0 hzface
+    rw [hdartscoe] at hzdart
+    exact hzdart
+  -- E1 中加边处的 σ 值与 f3 = f1Fan x V E1 (v,w) ∈ ds1
+  have hσ6 : sigmaFan x V E1 w (inverse1SigmaFan x V E w u) = v :=
+    SIGMA_FAN_OF_FANADD_AT_POINT6 x V E E1 v u w (inverse1SigmaFan x V E w u)
+      ⟨hfan, hfan1, a3, a13, a14, a15, rfl, hpE, a16, a2, a24⟩
+  have hinvF1 : inverse1SigmaFan x V E1 w v = inverse1SigmaFan x V E w u := by
+    have hin := (INVERSE1_SIGMA_FAN (v := w) hfan1).2.2 _ (hEsub hpE)
+    rwa [hσ6] at hin
+  have hvwD1 : (v, w) ∈ dart1OfFan V E1 := hvwE1
+  have hfm : (hypermapOfFan x V E1 hfan1).faceMap (v, w) = f1Fan x V E1 (v, w) := by
+    have hba : ({w, v} : Set V3) ∈ E1 := by rw [Set.pair_comm]; exact hvwE1
+    unfold hypermapOfFan extendPerm
+    simp only [Equiv.ofBijective_apply]
+    unfold Kepler.Text.Fan.res
+    rw [if_pos (by
+      simpa [(finite_dart1_fan hfan1).coe_toFinset] using hvwD1)]
+    simp only [f1Fan, fFanPair]
+    rw [inverse_sigma_fan_eq_inverse1 hfan1 hba]
+  have hf3f : f3 = f1Fan x V E1 (v, w) := by
+    show f3 = (w, inverse1SigmaFan x V E1 w v)
+    rw [hinvF1]
+    exact hf3val
+  have hf3d1 : f3 ∈ ds1 := by
+    have h0 := pow_apply_mem_orbitMap (hypermapOfFan x V E1 hfan1).faceMap 1 (v, w)
+    rw [Equiv.Perm.coe_pow, Function.iterate_one, hfm] at h0
+    rw [← a19, hf3f]
+    exact h0
+  -- FANADD_CONFORMING（用到归纳假设 a25）给出 E1 上的 conforming_diagonal_fan
+  have hconf1 := FANADD_CONFORMING x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+    hfan hfan1 ⟨a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15,
+      a16, a17, a18, a19, a20, a21, a22, a23, a24, a25⟩
+  -- ds2 的三元表示、ds 的差集表示、leads-into 的并集表示
+  have hds2rep : ds2 = ({f10, f20, f30} : Set (V3 × V3)) :=
+    reperentation_of_ds2 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 hfan hfan1
+      ⟨a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16,
+        a19.symm, a20.symm, a21, a22, a23, a24⟩
+  have hdsrep : (fun y : V3 × V3 => y) '' ds =
+      ((ds1 ∪ ds2) \ {(v, w)}) \ {(w, v)} :=
+    DS1_DS2_EQ_DS_FANADD x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 (v, w) (w, v)
+      hfan hfan1
+      ⟨a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16,
+        a17, a18, a19.symm, a20.symm, a21, a22, a23, a24, rfl, rfl⟩
+  have hU := rep_dartset_leads_into_fan_ds x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+    (dartsetLeadsIntoFan x V E1 ds1 ∪ dartsetLeadsIntoFan x V E1 ds2 ∪
+      affGt ({x} : Set V3) {v, w}) hfan hfan1
+    ⟨a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16,
+      a17, a18, a19, a20, a21, a22, a23, a24, a25, rfl⟩
+  have hds1fs : ds1 ∈ (hypermapOfFan x V E1 hfan1).faceSet :=
+    ds1_in_face_set_fanadd x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 hfan hfan1
+      ⟨a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16,
+        a17, a18, a19.symm, a20.symm, a21, a22, a23, a24⟩
+  -- 情形一：z = f1
+  by_cases hz1 : z = f1
+  · rw [hz1]
+    refine ⟨?_, Or.inr (Or.inr ?_)⟩
+    · rw [a12, a10]
+      exact collinear3_swap20 (notcoplanar_imp_notcollinear_fan hcop).2.2
+    · rw [a12, a10, Set.pair_comm]
+      exact STEP2_REDUCE_FAN hfan a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16
+  -- 情形二：z = f2
+  by_cases hz2 : z = f2
+  · rw [hz2]
+    refine ⟨?_, Or.inl ?_⟩
+    · rw [a12, a11]
+      exact fan_not_collinear hfan hwuE
+    · rw [a8]
+  -- 情形三：z ≠ f1 且 z ≠ f2，则 z ∈ ds1，套用 E1 上的 conforming_diagonal_fan
+  · have hzimg : z ∈ (fun y : V3 × V3 => y) '' ds := ⟨z, hz, rfl⟩
+    rw [hdsrep] at hzimg
+    simp only [Set.mem_sdiff, Set.mem_singleton_iff] at hzimg
+    obtain ⟨⟨hzunion, hznvw⟩, hznwv⟩ := hzimg
+    have hz1m : z ∈ ds1 := by
+      rcases hzunion with hmem | hmem
+      · exact hmem
+      · rw [hds2rep] at hmem
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+        rcases hmem with hm | hm | hm
+        · rw [a21] at hm
+          exact absurd hm hznwv
+        · rw [a22] at hm
+          rw [← hf1val] at hm
+          exact absurd hm hz1
+        · rw [a23] at hm
+          rw [← hf2val] at hm
+          exact absurd hm hz2
+    obtain ⟨hcol, dor⟩ :=
+      hconf1.2.2.2.2.2 ds1 hds1fs f3 hf3d1 z hz1m hf3z
+    refine ⟨hcol, ?_⟩
+    rcases dor with d1 | d2 | d3
+    · -- f3 = f1Fan x V E1 z
+      rcases f1Fan_E1_eq_of_edge hfan hfan1 a3 a2 a13 a14 a15 a16 a24 z hzE
+        (fun hc => hz2 (by rw [hf2val]; exact hc)) with heq | hesc
+      · exact Or.inl (d1.trans heq)
+      · have hf3vw : f3 = (v, w) := d1.trans hesc
+        have hcf : f3.1 = v := by rw [hf3vw]
+        exact absurd (hcf.symm.trans a12) hvnw
+    · -- z = f1Fan x V E1 f3
+      have hf3ne : f3 ≠ (u, w) := by
+        intro hcon
+        rw [hf3val] at hcon
+        exact hunw (congrArg Prod.fst hcon).symm
+      rcases f1Fan_E1_eq_of_edge hfan hfan1 a3 a2 a13 a14 a15 a16 a24 f3
+        (by rw [hf3val]; exact hpE) hf3ne with heq | hesc
+      · exact Or.inr (Or.inl (d2.trans heq))
+      · rw [hf3val] at hesc
+        have h5 : f1Fan x V E1 (w, inverse1SigmaFan x V E w u) =
+            (inverse1SigmaFan x V E w u,
+              inverse1SigmaFan x V E1 (inverse1SigmaFan x V E w u) w) := rfl
+        rw [h5] at hesc
+        have hpv : inverse1SigmaFan x V E w u ≠ v := fun h6 => a15 (h6 ▸ hpE)
+        exact absurd (congrArg Prod.fst hesc).symm hpv.symm
+    · -- affGt {x} {f3.1, z.1} ⊆ dartsetLeadsIntoFan x V E1 ds1
+      refine Or.inr (Or.inr ?_)
+      rw [hU]
+      exact Set.Subset.trans d3 (Set.subset_union_left.trans Set.subset_union_left)
 
 /-- HOL Conforming.hl :13011-13203 `INDUCTION_FANADD`
 
