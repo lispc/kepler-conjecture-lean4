@@ -622,7 +622,17 @@ theorem REP_CARD_EDGE_SET_FAN (x : V3) (V : Set V3) (E : Set (Set V3))
     (hfan : FAN x V E) (hconf : conformingFan x V E hfan) :
     ((hypermapOfFan x V E hfan).edgeSet.ncard : ℝ) * (2 : ℝ) =
       ((hypermapOfFan x V E hfan).darts.card : ℝ) := by
-  sorry
+  set H := hypermapOfFan x V E hfan
+  have hedge : ∀ d ∈ H.darts, (orbitMap H.edgeMap d).ncard = 2 := fun d hd =>
+    (orbitMap_finite_ncard_two H.edgeMap_permutes
+      (plainEdgeMap_fan_ca x V E hfan) (edgeNoFix_fan_ca x V E hfan) hd).2
+  have h := ncard_eq_mul_numberOfOrbits H.edgeMap_permutes hedge
+  rw [Set.ncard_coe_finset] at h
+  rw [h]
+  have hE : numberOfOrbits H.darts H.edgeMap = H.edgeSet.ncard := rfl
+  rw [hE]
+  push_cast
+  ring
 
 /-- HOL Conforming.hl :17007-17029 `GGRLKHP`
 
