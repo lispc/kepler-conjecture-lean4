@@ -338,7 +338,31 @@ theorem DART_FANADD_SUBSET_HALFSPACE3 (x : V3) (V : Set V3)
         conformingFan x V E2 hfan2) →
       dartsetLeadsIntoFan x V E ds ⊆
         affGt ({x, f3.1, f3.2} : Set V3) {(f1Fan x V E f3).2} := by
-  sorry
+  intro h
+  obtain ⟨hfan0, hcard, h80, hds, h3lt, hsub, hf12, hf23, hf31, hv, hu, hw, hvu, huw,
+    hwv, hsig, hpu, hpw, hface1, hface2, hf10, hf20, hf30, hE1, IH⟩ := h
+  have hrep := rep_dartset_leads_into_fan_ds x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+    (dartsetLeadsIntoFan x V E1 ds1 ∪ dartsetLeadsIntoFan x V E1 ds2 ∪
+      affGt ({x} : Set V3) {v, w}) hfan hfan1
+    ⟨hfan, hcard, h80, hds, h3lt, hsub, hf12, hf23, hf31, hv, hu, hw, hvu, huw, hwv,
+      hsig, hpu, hpw, hface1, hface2, hf10, hf20, hf30, hE1, IH, rfl⟩
+  have h1 := DART_FANADD_SUBSET_HALFSPACE x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+    hfan hfan1 ⟨hfan, hcard, h80, hds, h3lt, hsub, hf12, hf23, hf31, hv, hu, hw, hvu,
+      huw, hwv, hsig, hpu, hpw, hface1, hface2, hf10, hf20, hf30, hE1, IH⟩
+  have h2 := DART_FANADD_SUBSET_HALFSPACE1 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+    hfan hfan1 ⟨hfan, hcard, h80, hds, h3lt, hsub, hf12, hf23, hf31, hv, hu, hw, hvu,
+      huw, hwv, hsig, hpu, hpw, hface1, hface2, hf10, hf20, hf30, hE1, IH⟩
+  have h3 := DART_FANADD_SUBSET_HALFSPACE2 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30
+    hfan hfan1 ⟨hfan, hcard, h80, hds, h3lt, hsub, hf12, hf23, hf31, hv, hu, hw, hvu,
+      huw, hwv, hsig, hpu, hpw, hface1, hface2, hf10, hf20, hf30, hE1, IH⟩
+  rw [hrep]
+  intro z hz
+  simp only [Set.mem_union] at hz
+  rcases hz with hz | hz
+  · rcases hz with hz | hz
+    · exact h1 hz
+    · exact h2 hz
+  · exact h3 hz
 
 /-- HOL Conforming.hl :14053-14092 `DART_FANADD_SUBSET_HALFSPACE4`
 
