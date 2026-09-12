@@ -176,7 +176,7 @@ theorem NEGLIGIBLE_AFF_3_UNION_INTER_BALL (x : V3) (V : Set V3)
     (E : Set (Set V3)) (z y : V3) (r : ℝ) (hfan : FAN x V E) :
     volume ((⋃ v ∈ V, (affineSpan ℝ ({x, z, v} : Set V3) : Set V3)) ∩
       Metric.ball y r) = 0 := by
-  sorry
+  exact measure_mono_null Set.inter_subset_left (NEGLIGIBLE_AFF_3_FAN x V E z hfan)
 
 /-! ## 同一集合的 measure / has_measure / measurable 三连
 （Conforming.hl:14564-14586） -/
@@ -205,7 +205,7 @@ theorem MEASURE_AFF_3_UNION_FAN (x : V3) (V : Set V3) (E : Set (Set V3))
     (z y : V3) (r : ℝ) (hfan : FAN x V E) :
     volume ((⋃ v ∈ V, (affineSpan ℝ ({x, z, v} : Set V3) : Set V3)) ∩
       Metric.ball y r) = 0 := by
-  sorry
+  exact NEGLIGIBLE_AFF_3_UNION_INTER_BALL x V E z y r hfan
 
 /-- HOL Conforming.hl :14571-14577 `HAS_MEASURE_AFF_3_UNION_INTER_BALL`
 
@@ -229,7 +229,7 @@ theorem HAS_MEASURE_AFF_3_UNION_INTER_BALL (x : V3) (V : Set V3)
     (E : Set (Set V3)) (z y : V3) (r : ℝ) (hfan : FAN x V E) :
     volume ((⋃ v ∈ V, (affineSpan ℝ ({x, z, v} : Set V3) : Set V3)) ∩
       Metric.ball y r) = 0 := by
-  sorry
+  exact NEGLIGIBLE_AFF_3_UNION_INTER_BALL x V E z y r hfan
 
 /-- HOL Conforming.hl :14578-14586 `MEASURABLE_AFF_3_UNION_INTER_BALL`
 
