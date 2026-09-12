@@ -1,8 +1,8 @@
-# 项目总进度（Status）— 2026-09-11
+# 项目总进度（Status）— 2026-09-12
 
 > 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新（cron 自动 push）。
 > 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
-> 当前 main @ `48ff904`（2026-09-11），`make check` 全绿，
+> 当前 main @ `cbe95e9`（2026-09-12），`make check` 全绿，
 > 唯一 sorry 是 `Statement.lean` 的主定理占位（sanctioned，见 Phase 1）。
 > **重大进展**：体积/测度论层已从零建成（`Kepler/Geom/{Volume,SectorArea,
 > WedgeVolume,LuneVolume,SolidAngle}.lean`，含 HOL `VOLUME_BALL_WEDGE` /
@@ -78,7 +78,7 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 | fan/fan.hl 系列（fan_defs/fan_misc/fan/CFYXFTY/hypermap_and_fan） | ~7,800 | ✅ 全书收官（hypermapOfFan 完整构造） | 100% |
 | fan/topology.hl | 4,718 | ✅ 全书收官（`36c37c6`，dart_leads_into 全套） | 100% |
 | fan/planarity.hl | 15,463 | ✅ **全书收官（2026-09-11，`48ff904`）**：批次 1-15 自动闭合 + 批次 16 的 `solid_of`/`MOZNWEH` 经体积层人工攻坚闭合，全部进 main | **100%** |
-| fan/Conforming.hl | 17,033 | ⬜ 未启动 | 0% |
+| fan/Conforming.hl | 17,033 | 🟡 批次流水线高歌猛进（wip/auto-phase5）：批次 1-18 闭合，批次 19 进行中，覆盖至 :10304；曾撞跨模块同名冲突（`add_edge_graph`，:2304 vs :2431）已改名修复并重启 | **~60%** |
 | fan/ 其余（polyhedron 等） | ~3,200 | ⬜ 未启动 | 0% |
 | packing/（Rogers/OXLZLEZ3/REUHADY…） | ~28,000 | ⬜ 未启动 | 0% |
 | local/（IMJXPHR/QKNVMLB/XWITCCN…） | ~30,000 | ⬜ 未启动 | 0% |
@@ -118,10 +118,11 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 **经验**：这类研究级引理用「专项子 agent（同一主模型）+ 迭代编译 + 允许诚实部分完成」
 可以攻下（本会话 4 个子 agent 分别拿下扇形、楔形、lune、solid triangle）。
 
-**下一步（Conforming.hl）**：流水线 `scripts/auto_pipeline_conforming.sh` 已启动并
-跑完批次 1-2（wip/auto-phase5）；`ConformingDefs.lean` 定义层已就位。已知
-`DWFBRQY`（Conforming.hl:550）依赖 `solid_of`——**现已可证**，应尽快解除该 blocked
-标记并让流水线继续。
+**Conforming.hl 进展（2026-09-12）**：流水线 `scripts/auto_pipeline_conforming.sh`
+批次 1-18 全部闭合（~180 枚定理，99% deepseek 一次过，仅 1 枚满血 glm 兜底），
+批次 19（:10304-12511）进行中；`ConformingDefs.lean` 定义层已就位，
+`DWFBRQY`（依赖 `solid_of`）已证。已知坑：HOL 原文存在同名不同义的重复绑定
+（如 `add_edge_graph` :2304/:2431），跨模块同环境会撞名——骨架设计阶段必须查重。
 
 ## Phase 6 — 集成与交付 ⬜
 
@@ -133,10 +134,10 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 
 ## 整体估计
 
-- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 0%（G4 待开工）。
-- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** ≈ 42k 行 HOL 源；待移植 ≈ 78k 行（Conforming 17k / packing 28k / local 30k / assembly 等）。按行数口径 **~35%**。
+- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 **G4 已开工**（`IExpr.abs`/`ite`、析取证书 `bb_sound_disj` 已进 main，剩 `TKind.ln` + `emit_lean.py` 粘合），尚无案例端到端进内核。
+- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** + Conforming ~10.3k 行 ≈ **52k 行 HOL 源**；待移植 ≈ 68k 行（Conforming 余 6.7k / packing 28k / local 30k / assembly 等）。按行数口径 **~43%**。
   另：**体积/测度论层已从零建成**（`Kepler/Geom/*.lean`，~3.4k 行，含 HOL Light 多元库的球面立体角链），这是原计划里没算到的关键前置，现已就位，后续 Packing/Local 可复用。
-- **全项目粗略完成度：~57%**。
+- **全项目粗略完成度：~60%**。
 
 ## 验证纪律
 
