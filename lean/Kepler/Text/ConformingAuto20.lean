@@ -1180,7 +1180,59 @@ theorem INTERS_HALF_SPACE_DS_FANADD3 (x : V3) (V : Set V3)
     U1 = ⋂ y ∈ ds, affGt ({x, y.1, y.2} : Set V3) {(f1Fan x V E y).2} →
       U1 ∩ (affineSpan ℝ ({x, v, w} : Set V3) : Set V3) ⊆
         affGt ({x} : Set V3) {v, w} := by
-  sorry
+  intro h
+  obtain ⟨hfanE, hcard, hfan80, hds, hds3, hfsub, hf1f2, hf2f3, hf3ne,
+    hf1v, hf2u, hf3w, hvu, huw, hwv, hsigma, hf1u, hf2w, hds1, hds2,
+    hf10, hf20, hf30, hE1, hmin, hInter⟩ := h
+  have hθ := hfan80 u w huw
+  rw [hsigma] at hθ
+  have hcop : ¬ Coplanar ({x, v, u, w} : Set V3) :=
+    properties_fully_surrounded hfan hvu huw hθ.1 hθ.2
+  have hncvw : ¬ Collinear3 x v w :=
+    (notcoplanar_imp_notcollinear_fan hcop).2.2
+  have hzmem : ∀ y ∈ ds, ∀ q ∈ U1,
+      q ∈ affGt ({x, y.1, y.2} : Set V3) {(f1Fan x V E y).2} := by
+    intro y hy q hq
+    rw [hInter] at hq
+    simp only [Set.mem_iInter] at hq
+    exact hq y hy
+  have m1 : ∀ q ∈ U1, q ∈ affGt ({x, v, u} : Set V3) {w} := by
+    intro q hq
+    have mq := hzmem f1 (hfsub (by simp)) q hq
+    rwa [hf1v, hf1u, hf1f2, hf2w] at mq
+  have hfs_uw_E : affGt ({x, u, w} : Set V3) {sigmaFan x V E u w} =
+      affGt ({x, u, w} : Set V3) {inverse1SigmaFan x V E w u} :=
+    fully_surrounded_imp_aff_gt_3_1_of_edge_eq_fan (x := x) (V := V) (E := E)
+      (v := u) (w := w) hfan huw hcard hfan80
+  have m2 : ∀ q ∈ U1, q ∈ affGt ({x, u, w} : Set V3) {v} := by
+    intro q hq
+    have mq := hzmem f2 (hfsub (by simp)) q hq
+    have hf3s : f3.2 = inverse1SigmaFan x V E w u := by
+      have h6 : (f1Fan x V E f2).2 = f3.2 := congrArg Prod.snd hf2f3
+      rw [← h6]; simp only [f1Fan]; rw [hf2w, hf2u]
+    rw [hf2u, hf2w, hf2f3, hf3s, ← hfs_uw_E, hsigma] at mq
+    exact mq
+  have s1 : ({x, w, u} : Set V3) = ({x, u, w} : Set V3) := by
+    ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  have s2 : ({x, w, v} : Set V3) = ({x, v, w} : Set V3) := by
+    ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  have hcop2 : ¬ Coplanar ({x, w, u, v} : Set V3) := by
+    have hset : ({x, v, u, w} : Set V3) = ({x, w, u, v} : Set V3) := by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rwa [hset] at hcop
+  have hA : U1 ∩ (affineSpan ℝ ({x, v, w} : Set V3) : Set V3) ⊆
+      affGt ({x, v} : Set V3) {w} := by
+    intro q hq
+    exact aff_gt_3_1_INTER_aff_SUBSET_aff_gt_2_14 x v u w hcop ⟨m1 q hq.1, hq.2⟩
+  have hB : U1 ∩ (affineSpan ℝ ({x, v, w} : Set V3) : Set V3) ⊆
+      affGt ({x, w} : Set V3) {v} := by
+    intro q hq
+    refine aff_gt_3_1_INTER_aff_SUBSET_aff_gt_2_14 x w u v hcop2 ⟨?_, ?_⟩
+    · rw [s1]; exact m2 q hq.1
+    · rw [s2]; exact hq.2
+  intro q hq
+  rw [aff_gt_inter_aff_gt hncvw]
+  exact ⟨hA ⟨hq.1, hq.2⟩, hB ⟨hq.1, hq.2⟩⟩
 
 /-- HOL Conforming.hl :13460-13517 `lemma_HYUAZSE`
 
