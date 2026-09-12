@@ -94,6 +94,9 @@ import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
 import Kepler.Text.ConformingAuto10
 import Kepler.Text.ConformingAuto12
+import Kepler.Text.ConformingAuto2
+import Kepler.Text.ConformingAuto3
+import Kepler.Text.ConformingAuto18
 
 set_option maxHeartbeats 5000000
 
@@ -221,7 +224,24 @@ HOL 原文：
 - `sol_spec`（Kepler/Geom/Volume.lean:171） -/
 theorem SOL_AFF_GT_2_1 (x v u : V3) (h : ¬ Collinear3 x v u) :
     sol x (affGt ({x} : Set V3) {v, u}) = 0 := by
-  sorry
+  have hxv : x ≠ v := fun he =>
+    h (collinear3_of_eq (v := x) (w := v) (w1 := u) he.symm)
+  have hxu : x ≠ u := fun he =>
+    h (collinear3_pair_left (v0 := x) (v1 := v) (x := u) he.symm)
+  have hdis : Disjoint ({x} : Set V3) {v, u} := by
+    rw [Set.disjoint_left]
+    intro a ha
+    rw [Set.mem_singleton_iff] at ha
+    subst ha
+    simp [hxv, hxu]
+  have hr : (0 : ℝ) < 1 := by norm_num
+  have hm := MEASURABLE_AFF_GT_2_1_INTER_BALL x v u 1 h
+  have hrad := RADIAL_AFF_GT_1_2 x v u 1 ⟨hdis, hr⟩
+  have hvol : volume.real (affGt ({x} : Set V3) {v, u} ∩ Metric.ball x 1) = 0 := by
+    rw [Measure.real_def, MEASURE_AFF_GT_2_1_INTER_BALL x v u 1 h]
+    simp
+  rw [sol_spec hr hm hrad, hvol]
+  norm_num
 
 /-! ## 加边后 `inverse1_sigma_fan` 的三个转移式（Conforming.hl:10467-10657） -/
 
