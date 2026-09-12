@@ -121,7 +121,10 @@ theorem exists_point_in_dartset_leads_into_fan (x : V3) (V : Set V3)
     (hfan80 : fan80 x V E)
     (hds : ds ∈ (hypermapOfFan x V E hfan).faceSet) :
     ∃ y : V3, y ∈ dartsetLeadsIntoFan x V E ds := by
-  sorry
+  have hmem := dartset_leads_into_is_topological_component_yfan hfan hcard hfan80 hds
+  rw [topologicalComponentYfan, Set.mem_setOf_eq] at hmem
+  obtain ⟨b, hb, heq⟩ := hmem
+  exact ⟨b, heq ▸ mem_connectedComponentIn hb⟩
 
 /-- HOL Conforming.hl :14538-14553 `NEGLIGIBLE_AFF_3_FAN`
 
