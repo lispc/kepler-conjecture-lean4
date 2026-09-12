@@ -150,7 +150,9 @@ Lean 侧照常为具名参数。
 theorem NEGLIGIBLE_AFF_3_FAN (x : V3) (V : Set V3) (E : Set (Set V3)) (z : V3)
     (hfan : FAN x V E) :
     volume (⋃ v ∈ V, (affineSpan ℝ ({x, z, v} : Set V3) : Set V3)) = 0 := by
-  sorry
+  rw [measure_biUnion_null_iff (hfan.2.2.1.1).countable]
+  intro v hv
+  exact NEGLIGIBLE_AFF_3 x z v
 
 /-- HOL Conforming.hl :14554-14563 `NEGLIGIBLE_AFF_3_UNION_INTER_BALL`
 
