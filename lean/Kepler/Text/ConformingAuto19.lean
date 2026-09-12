@@ -299,7 +299,18 @@ theorem inverse1_sigma_fan_FANADD1 (x : V3) (V : Set V3)
     f10 = (w, v) ∧ f20 = (v, u) ∧ f30 = (u, w) ∧
     E ∪ {({v, w} : Set V3)} = E1 →
       inverse1SigmaFan x V E1 v (sigmaFan x V E v u) = w := by
-  sorry
+  intro h
+  obtain ⟨-, hcard, h80, -, -, -, -, -, -, -, -, -, hvu, huw, hwv, hsigma,
+    -, -, -, -, -, -, -, hE1⟩ := h
+  have hs : sigmaFan x V E1 v w = sigmaFan x V E v u :=
+    SIGMA_FAN_OF_FANADD_AT_POINT1 x V E E1 v u w
+      ⟨hfan, hfan1, hvu, huw, hwv, hsigma, h80, hcard, hE1⟩
+  have hvw1 : ({v, w} : Set V3) ∈ E1 := by
+    rw [← hE1]
+    exact Set.mem_union_right _ rfl
+  have h3 := (INVERSE1_SIGMA_FAN (v := v) hfan1).2.2 w hvw1
+  rw [hs] at h3
+  exact h3
 
 /-- HOL Conforming.hl :10530-10583 `inverse1_sigma_fan_FANADD2`
 
