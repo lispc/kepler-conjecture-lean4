@@ -304,7 +304,22 @@ theorem measure_ball_diff_set_negligible (x : V3) (V : Set V3)
     volume.real ((Metric.ball y r \
       (⋃ v ∈ V, (affineSpan ℝ ({x, z, v} : Set V3) : Set V3))) : Set V3) =
       (4 / 3 : ℝ) * Real.pi * r ^ 3 := by
-  sorry
+  have hzero : volume ((⋃ v ∈ V, (affineSpan ℝ ({x, z, v} : Set V3) : Set V3)) ∩
+      Metric.ball y r) = 0 :=
+    NEGLIGIBLE_AFF_3_UNION_INTER_BALL x V E z y r hfan
+  have hset : (Metric.ball y r \
+      (⋃ v ∈ V, (affineSpan ℝ ({x, z, v} : Set V3) : Set V3)) : Set V3) =
+      Metric.ball y r \ ((⋃ v ∈ V, (affineSpan ℝ ({x, z, v} : Set V3) : Set V3)) ∩
+        Metric.ball y r) := by
+    ext a
+    simp only [Set.mem_sdiff, Set.mem_inter_iff]
+    tauto
+  rw [hset]
+  simp only [Measure.real]
+  rw [measure_sdiff_null hzero, EuclideanSpace.volume_ball_fin_three]
+  rw [ENNReal.toReal_mul, ENNReal.toReal_pow, ENNReal.toReal_ofReal hr,
+      ENNReal.toReal_ofReal (by positivity)]
+  ring
 
 /-- HOL Conforming.hl :14601-14623 `exists_measure_ball_diff_set_negligible`
 
