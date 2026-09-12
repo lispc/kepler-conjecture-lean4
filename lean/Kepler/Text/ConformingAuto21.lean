@@ -610,7 +610,49 @@ theorem expand_xfan_eq_aff_gt_aff_ge (x : V3) (V : Set V3) (E : Set (Set V3)) :
       (⋃ e ∈ E, affGe ({x} : Set V3) e) =
         (⋃ e ∈ E, affGt ({x} : Set V3) e) ∪
           ⋃ v ∈ V, affGe ({x} : Set V3) {v} := by
-  sorry
+  rintro ⟨hfan, hcard, h80⟩
+  have hxV : x ∉ V := hfan.2.2.2.1
+  ext y
+  constructor
+  · intro hy
+    obtain ⟨e, he, hy⟩ := Set.mem_iUnion₂.mp hy
+    obtain ⟨v, w, hevw⟩ := expand_edge_graph_fan hfan he
+    have hvwE : ({v, w} : Set V3) ∈ E := by rw [← hevw]; exact he
+    obtain ⟨hv, hw⟩ := fan_mem_of_edge hfan hvwE
+    have hnc : ¬ Collinear3 x v w := fan_not_collinear hfan hvwE
+    rw [hevw, aff_ge_eq_aff_gt_union_aff_ge hnc] at hy
+    simp only [Set.mem_union] at hy
+    rcases hy with (hy | hy) | hy
+    · exact Or.inl (Set.mem_iUnion₂.mpr ⟨{v, w}, hvwE, hy⟩)
+    · exact Or.inr (Set.mem_iUnion₂.mpr ⟨v, hv, hy⟩)
+    · exact Or.inr (Set.mem_iUnion₂.mpr ⟨w, hw, hy⟩)
+  · intro hy
+    rcases (Set.mem_union y _ _).1 hy with hy | hy
+    · obtain ⟨e, he, hy⟩ := Set.mem_iUnion₂.mp hy
+      obtain ⟨v, w, hevw⟩ := expand_edge_graph_fan hfan he
+      have hvwE : ({v, w} : Set V3) ∈ E := by rw [← hevw]; exact he
+      obtain ⟨hv, hw⟩ := fan_mem_of_edge hfan hvwE
+      have hxv : x ≠ v := fun hh => hxV (by rw [hh]; exact hv)
+      have hxw : x ≠ w := fun hh => hxV (by rw [hh]; exact hw)
+      have hdis : Disjoint ({x} : Set V3) {v, w} :=
+        Set.disjoint_singleton_left.mpr (by simp [hxv, hxw])
+      rw [hevw] at hy
+      have hy' : y ∈ affGe ({x} : Set V3) {v, w} := aff_gt_subset_aff_ge hdis hy
+      exact Set.mem_iUnion₂.mpr ⟨{v, w}, hvwE, hy'⟩
+    · obtain ⟨v, hv, hy⟩ := Set.mem_iUnion₂.mp hy
+      have hcardv : 1 < (setOfEdge v V E).ncard := hcard v hv
+      have hne : (setOfEdge v V E).Nonempty := by
+        by_contra h0
+        rw [Set.not_nonempty_iff_eq_empty.mp h0, Set.ncard_empty] at hcardv
+        linarith
+      obtain ⟨u, hu⟩ := hne
+      have huE : ({v, u} : Set V3) ∈ E :=
+        (properties_of_setOfEdge_fan x V E v u hfan).mpr hu
+      have hnc : ¬ Collinear3 x v u := fan_not_collinear hfan huE
+      have hy' : y ∈ affGe ({x} : Set V3) {v, u} := by
+        rw [aff_ge_eq_aff_gt_union_aff_ge hnc]
+        exact Or.inl (Or.inr hy)
+      exact Set.mem_iUnion₂.mpr ⟨{v, u}, huE, hy'⟩
 
 /-- HOL Conforming.hl :14355-14505 `properties12_fan7`
 
