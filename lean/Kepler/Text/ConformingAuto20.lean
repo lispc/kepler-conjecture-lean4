@@ -527,7 +527,23 @@ theorem conforming_diagonal_fan_ds_fanadd (x : V3) (V : Set V3)
       ¬ Collinear3 x y.1 z.1 ∧
         (y = f1Fan x V E z ∨ z = f1Fan x V E y ∨
           affGt ({x} : Set V3) {y.1, z.1} ⊆ dartsetLeadsIntoFan x V E ds) := by
-  sorry
+  intro h
+  obtain ⟨a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16,
+      a17, a18, a19, a20, a21, a22, a23, a24, a25, hy, hz, hyz⟩ := h
+  obtain ⟨g1, g2, g3, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, hyg3⟩ :=
+    INDUCTION_FANADD x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 y hfan hfan1
+      ⟨a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17,
+        a18, a19, a20, a21, a22, a23, a24, a25, hy⟩
+  have hfan1' : FAN x V (E ∪ {({g1.1, g3.1} : Set V3)}) :=
+    STEP3_REDUCE_FAN hfan a2 a3 a4 a5 k1 k2 k3 k4 rfl rfl rfl k7 k5 k6 k8 rfl
+  rw [hyg3]
+  exact conforming_diagonal_fanadd1 x V E (E ∪ {({g1.1, g3.1} : Set V3)}) ds g1 g2 g3
+    g1.1 g2.1 g3.1
+    ((hypermapOfFan x V (E ∪ {({g1.1, g3.1} : Set V3)}) hfan1').face (g1.1, g3.1))
+    ((hypermapOfFan x V (E ∪ {({g1.1, g3.1} : Set V3)}) hfan1').face (g3.1, g1.1))
+    (g3.1, g1.1) (g1.1, g2.1) (g2.1, g3.1) z hfan hfan1'
+    ⟨a1, a2, a3, a4, a5, k1, k2, k3, k4, rfl, rfl, rfl, k7, k5, k6, k8, k10.symm,
+      k9.symm, rfl, rfl, rfl, rfl, rfl, rfl, a25, hz, fun hc => hyz (hyg3.trans hc)⟩
 
 /-! ## GGZWYRM 与半空间交的三个引理（Conforming.hl:13253-13673） -/
 
