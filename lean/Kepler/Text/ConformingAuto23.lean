@@ -144,6 +144,75 @@ theorem aff_gt_subset_dartset_leads_into_fan_union_aff_gt (x : V3) (V : Set V3)
     affGt ({x} : Set V3) {y, z} ⊆ Z := by
   sorry
 
+/-! ### 辅助引理：affGt 成员点与 x 相异（由非共面性） -/
+
+private theorem affineSpanSet_mem {s : Set V3} {p : V3} (hp : p ∈ s) :
+    p ∈ (affineSpan ℝ s : Set V3) :=
+  SetLike.mem_coe.mpr (mem_affineSpan ℝ hp)
+
+private theorem affineSpanSet_mono {s t : Set V3} (hst : s ⊆ t) {p : V3}
+    (hp : p ∈ (affineSpan ℝ s : Set V3)) : p ∈ (affineSpan ℝ t : Set V3) :=
+  SetLike.mem_coe.mpr (affineSpan_mono ℝ hst (SetLike.mem_coe.mp hp))
+
+/-- 四点 `{x,a,b,c}` 不共面时，`x` 不落在 `{a,b,c}` 中任意两点
+`v,u` 所在的直线上（否则四点共面）。 -/
+private theorem not_mem_line_of_notCoplanar {x v u a b c : V3}
+    (hcop : ¬ Coplanar ({x, a, b, c} : Set V3))
+    (hv : v ∈ ({a, b, c} : Set V3)) (hu : u ∈ ({a, b, c} : Set V3)) :
+    x ∉ (affineSpan ℝ ({v, u} : Set V3) : Set V3) := by
+  have hsub : ({v, u} : Set V3) ⊆ ({a, b, c} : Set V3) := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl
+    · exact hv
+    · exact hu
+  intro hmem
+  refine hcop ⟨a, b, c, ?_⟩
+  intro q hq
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+  rcases hq with rfl | rfl | rfl | rfl
+  · exact affineSpanSet_mono hsub hmem
+  · exact affineSpanSet_mem (by simp)
+  · exact affineSpanSet_mem (by simp)
+  · exact affineSpanSet_mem (by simp)
+
+/-- 若 `p ∈ aff_gt {x} {v,u}`（即 `x ≠ v`、`x ≠ u`）且 `x` 不落在
+过 `v,u` 的直线上，则 `x ≠ p`：否则 `x = p` 落在该直线上。
+（HOL `th3`（fan.hl:388）+ `properties_of_collinear4_points_fan` 的
+成员形式替代。） -/
+private theorem ne_of_mem_affGt_of_not_on_line {x v u p : V3}
+    (hxv : x ≠ v) (hxu : x ≠ u)
+    (hp : p ∈ affGt ({x} : Set V3) ({v, u} : Set V3))
+    (hnc : x ∉ (affineSpan ℝ ({v, u} : Set V3) : Set V3)) : x ≠ p := by
+  rw [aff_gt_1_2 (x := x) (v := v) (w := u)
+    (by simp [hxv, hxu])] at hp
+  simp only [Set.mem_setOf_eq] at hp
+  obtain ⟨a1, a2, a3, ha2, ha3, ha1sum, hpdef⟩ := hp
+  intro he
+  rw [← he] at hpdef
+  have hab : a2 + a3 ≠ 0 := by linarith
+  have h0' : x - a1 • x = a2 • v + a3 • u := by
+    have key := congrArg (fun q => q - a1 • x) hpdef
+    rw [key]
+    module
+  have h0 : (1 - a1) • x = a2 • v + a3 • u := by
+    rw [← h0']
+    module
+  have h1 : (a2 + a3) • (x - v) = a3 • (u - v) := by
+    have e : (1 : ℝ) - a1 = a2 + a3 := by linarith
+    rw [← e, smul_sub, h0, e, add_smul, smul_sub]
+    module
+  have hxa : x - v = (a3 / (a2 + a3)) • (u - v) := by
+    have h2 := congrArg (fun c => (a2 + a3)⁻¹ • c) h1
+    rw [inv_smul_smul₀ hab, smul_smul] at h2
+    rw [div_eq_inv_mul]
+    exact h2
+  have hxmem : x ∈ (affineSpan ℝ ({v, u} : Set V3) : Set V3) := by
+    refine SetLike.mem_coe.mpr
+      (mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨a3 / (a2 + a3), ?_⟩)
+    rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add, ← hxa, sub_add_cancel]
+  exact hnc hxmem
+
 /-- HOL Conforming.hl :14865-14914 `aff_gt_1_2_subset_aff_1_3111`
 
 （名字中的 `1111` 是 HOL 自己的后缀，照抄。）
@@ -164,18 +233,59 @@ HOL 原文：
 `t2''*(t1'%x+t2'%v+t3'%u)+t3''*(…)` 重新配系数
 （`x`,`v`,`u`,`w` 系数分别取四组乘积和），正性由
 `REAL_LT_MUL`/正数相加收口。
+本证明：以成员形式引理 `aff_gt_1_2`、
+`AFF_GT_1_3` 直接展开三组坐标参数，配系数后正性收口；互异性
+（`x ≠ y`、`x ≠ z`）由辅助引理 `ne_of_mem_affGt_of_not_on_line`
+与 `not_mem_line_of_notCoplanar` 给出。
 
 候选已有引理：
 - `notcoplanar_imp_notcollinear_fan`（Kepler/Text/PlanarityNotCut.lean:2298）
 - `properties_of_collinear4_points_fan`（Kepler/Text/Planarity.lean:3087）
 - `affGt`（Kepler/Geom/Aff.lean:39）
+- `aff_gt_1_2`（Kepler/Text/Planarity.lean:165）、`AFF_GT_1_3`
+  （Kepler/Text/PlanarityAuto11.lean:1029）
+- `ne_of_mem_affGt_of_not_on_line`、`not_mem_line_of_notCoplanar`
+  （本文件上文）
 - 缺口：HOL `th3`（fan.hl:388）、`AFF_GT_1_2`/`AFF_GT_1_3` 未以该名移植 -/
 theorem aff_gt_1_2_subset_aff_1_3111 (x y z v u w : V3)
     (hcop : ¬ Coplanar ({x, v, u, w} : Set V3))
     (hy : y ∈ affGt ({x} : Set V3) {v, u})
     (hz : z ∈ affGt ({x} : Set V3) {v, w}) :
     affGt ({x} : Set V3) {y, z} ⊆ affGt ({x} : Set V3) {v, u, w} := by
-  sorry
+  obtain ⟨hxv, hxu, hxw, -, -, -⟩ := notcoplanar_disjoint x v u w hcop
+  have hxline1 : x ∉ (affineSpan ℝ ({v, u} : Set V3) : Set V3) :=
+    not_mem_line_of_notCoplanar hcop (by simp) (by simp)
+  have hxline2 : x ∉ (affineSpan ℝ ({v, w} : Set V3) : Set V3) :=
+    not_mem_line_of_notCoplanar hcop (by simp) (by simp)
+  have hxy : x ≠ y := ne_of_mem_affGt_of_not_on_line hxv hxu hy hxline1
+  have hxz : x ≠ z := ne_of_mem_affGt_of_not_on_line hxv hxw hz hxline2
+  have hdis6 : Disjoint ({x} : Set V3) {v, u} := by simp [hxv, hxu]
+  have hdisvw : Disjoint ({x} : Set V3) {v, w} := by simp [hxv, hxw]
+  have hdisyz : Disjoint ({x} : Set V3) {y, z} := by simp [hxy, hxz]
+  have hdis4 : Disjoint ({x} : Set V3) {v, u, w} := by simp [hxv, hxu, hxw]
+  rw [aff_gt_1_2 hdis6] at hy
+  rw [aff_gt_1_2 hdisvw] at hz
+  simp only [Set.mem_setOf_eq] at hy hz
+  obtain ⟨a1, a2, a3, ha2, ha3, ha1sum, hydef⟩ := hy
+  obtain ⟨b1, b2, b3, hb2, hb3, hb1sum, hzdef⟩ := hz
+  intro p hp
+  rw [aff_gt_1_2 hdisyz] at hp
+  simp only [Set.mem_setOf_eq] at hp
+  obtain ⟨c1, c2, c3, hc2, hc3, hc1sum, hpdef⟩ := hp
+  rw [AFF_GT_1_3 x v u w hdis4]
+  simp only [Set.mem_setOf_eq]
+  refine ⟨c1 + c2 * a1 + c3 * b1, c2 * a2 + c3 * b2, c2 * a3, c3 * b3, ?_, ?_, ?_, ?_, ?_⟩
+  · have g1 : 0 < c2 * a2 := mul_pos hc2 ha2
+    have g2 : 0 < c3 * b2 := mul_pos hc3 hb2
+    linarith
+  · exact mul_pos hc2 ha3
+  · exact mul_pos hc3 hb3
+  · have key : c2 * (a1 + a2 + a3) + c3 * (b1 + b2 + b3) =
+        c2 * a1 + c3 * b1 + (c2 * a2 + c3 * b2) + (c2 * a3 + c3 * b3) := by ring
+    rw [ha1sum, hb1sum] at key
+    linarith
+  · rw [hpdef, hydef, hzdef]
+    module
 
 /-- HOL Conforming.hl :14917-14947 `AFF_GT_1_3_SUBSET_AFF_GT_1_3`
 
@@ -192,17 +302,49 @@ HOL 原文：
 `AFF_GT_1_3` 后按 `t3 + t4*(1-t)`、`t4*t` 重新配 `u`、`w` 的系数
 （`x`,`v` 系数不变），和式恰好 `t1+t2+t3+t4`；正性由
 `REAL_LT_MUL`（`0 < 1-t` 由 `t < 1`）收口。
+本证明：点
+`(1-t)%u+t%w` 属于 `aff_gt {x} {u,w}`（`Affsign.of_triple`），从而
+`x ≠ (1-t)%u+t%w`（`ne_of_mem_affGt_of_not_on_line`）；内外两个
+`AFF_GT_1_3` 成员形式展开后按 `t3 + t4*(1-t)`、`t4*t` 配系数收口。
 
 候选已有引理：
 - `continuous_coplanar_fan`（Kepler/Text/Planarity.lean:1142）
 - `notcoplanar_imp_notcollinear_fan`（Kepler/Text/PlanarityNotCut.lean:2298）
 - `affGt`（Kepler/Geom/Aff.lean:39）
+- `AFF_GT_1_3`（Kepler/Text/PlanarityAuto11.lean:1029）、
+  `Affsign.of_triple`（Kepler/Geom/Aff.lean:168）
+- `ne_of_mem_affGt_of_not_on_line`、`not_mem_line_of_notCoplanar`
+  （本文件上文）
 - 缺口：HOL `th3`、`AFF_GT_1_3` 未以该名移植 -/
 theorem AFF_GT_1_3_SUBSET_AFF_GT_1_3 (x v u w : V3) (t : ℝ)
     (hcop : ¬ Coplanar ({x, v, u, w} : Set V3)) (ht0 : 0 < t) (ht1 : t < 1) :
     affGt ({x} : Set V3) {v, u, (1 - t) • u + t • w} ⊆
       affGt ({x} : Set V3) {v, u, w} := by
-  sorry
+  obtain ⟨hxv, hxu, hxw, -, -, huw⟩ := notcoplanar_disjoint x v u w hcop
+  have hdis4 : Disjoint ({x} : Set V3) {v, u, w} := by simp [hxv, hxu, hxw]
+  have hmem : (1 - t) • u + t • w ∈ affGt ({x} : Set V3) ({u, w} : Set V3) :=
+    Affsign.of_triple (sgn := fun r => (0 : ℝ) < r) (1 - t) t
+      (by linarith) ht0 (by module) hxu hxw huw
+  have hxline : x ∉ (affineSpan ℝ ({u, w} : Set V3) : Set V3) :=
+    not_mem_line_of_notCoplanar hcop (by simp) (by simp)
+  have hxu' : x ≠ (1 - t) • u + t • w :=
+    ne_of_mem_affGt_of_not_on_line hxu hxw hmem hxline
+  have hdis' : Disjoint ({x} : Set V3) {v, u, (1 - t) • u + t • w} := by
+    simp [hxv, hxu, hxu']
+  intro p hp
+  rw [AFF_GT_1_3 x v u ((1 - t) • u + t • w) hdis'] at hp
+  simp only [Set.mem_setOf_eq] at hp
+  obtain ⟨c1, c2, c3, c4, hc2, hc3, hc4, hc1sum, hpdef⟩ := hp
+  rw [AFF_GT_1_3 x v u w hdis4]
+  simp only [Set.mem_setOf_eq]
+  refine ⟨c1, c2, c3 + c4 * (1 - t), c4 * t, hc2, ?_, ?_, ?_, ?_⟩
+  · have g1 : 0 < c4 * (1 - t) := mul_pos hc4 (by linarith)
+    linarith
+  · exact mul_pos hc4 ht0
+  · have e : c4 * (1 - t) + c4 * t = c4 := by ring
+    linarith
+  · rw [hpdef]
+    module
 
 /-! ## 超图连通性（Conforming.hl:14956-17029） -/
 
