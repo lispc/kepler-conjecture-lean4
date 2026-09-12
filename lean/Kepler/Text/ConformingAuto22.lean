@@ -348,7 +348,14 @@ theorem exists_measure_ball_diff_set_negligible (x : V3) (V : Set V3)
     (E : Set (Set V3)) (y z : V3) (r : ℝ) (hfan : FAN x V E) (hr : 0 < r) :
     ∃ a : V3, a ∈ Metric.ball y r \
       (⋃ v ∈ V, (affineSpan ℝ ({x, z, v} : Set V3) : Set V3)) := by
-  sorry
+  by_contra h
+  have hsdiff : (Metric.ball y r \
+      (⋃ v ∈ V, (affineSpan ℝ ({x, z, v} : Set V3) : Set V3)) : Set V3) = ∅ :=
+    Set.eq_empty_iff_forall_notMem.mpr fun a ha => h ⟨a, ha.1, ha.2⟩
+  have hvol := measure_ball_diff_set_negligible x V E z y r hfan hr.le
+  rw [hsdiff, Measure.real_def, measure_empty] at hvol
+  simp at hvol
+  linarith
 
 /-! ## 沿 dart 集引出的点的连通性与 `aff_gt {x} {y}` 包含
 （Conforming.hl:14624-14792） -/
