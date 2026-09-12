@@ -357,6 +357,29 @@ theorem exists_measure_ball_diff_set_negligible (x : V3) (V : Set V3)
   simp at hvol
   linarith
 
+/-- 系数和为 1 的有限加权和落入 `affineSpan`（复制
+Kepler/Text/ConformingAuto3.lean 的私有引理
+`finset_sum_smul_mem_affineSpan_auto3`）。 -/
+private theorem sumSmulMemAffineSpan22 {T : Set V3} {s : Finset V3} {f : V3 → ℝ}
+    (hS : ∀ w ∈ s, w ∈ (affineSpan ℝ T : Set V3)) (hsum : ∑ w ∈ s, f w = 1) :
+    ∑ w ∈ s, f w • w ∈ (affineSpan ℝ T : Set V3) := by
+  have hne : s.Nonempty := Finset.nonempty_of_sum_ne_zero (by rw [hsum]; exact one_ne_zero)
+  obtain ⟨b, hb⟩ := hne
+  have hbS : b ∈ (affineSpan ℝ T : Set V3) := hS b hb
+  have hdir : ∑ w ∈ s, f w • (w - b) ∈ (affineSpan ℝ T).direction := by
+    apply Submodule.sum_mem
+    intro w hw
+    exact Submodule.smul_mem _ (f w)
+      (AffineSubspace.vsub_mem_direction (hS w hw) hbS)
+  have hsub : ∑ w ∈ s, f w • (w - b) = (∑ w ∈ s, f w • w) - b := by
+    simp only [smul_sub]
+    rw [Finset.sum_sub_distrib, ← Finset.sum_smul, hsum, one_smul]
+  have hy : ∑ w ∈ s, f w • w = (∑ w ∈ s, f w • (w - b)) +ᵥ b := by
+    rw [vadd_eq_add, hsub]
+    abel
+  rw [hy]
+  exact AffineSubspace.vadd_mem_of_mem_direction hdir hbS
+
 /-! ## 沿 dart 集引出的点的连通性与 `aff_gt {x} {y}` 包含
 （Conforming.hl:14624-14792） -/
 
@@ -416,7 +439,131 @@ theorem connected_in_dartset_leads_into_fan_union_aff_gt (x : V3) (V : Set V3)
     ∃ y z : V3, y ∈ dartsetLeadsIntoFan x V E ds ∧
       z ∈ dartsetLeadsIntoFan x V E ds1 ∧
       (segment ℝ y z : Set V3) ⊆ Z := by
-  sorry
+  -- 两个面上的代表点（HOL 的两次 `exists_point_in_dartset_leads_into_fan`）
+  obtain ⟨p0, hp0⟩ := exists_point_in_dartset_leads_into_fan x V E ds hfan hcard hfan80 hds
+  obtain ⟨y1, hy1⟩ := exists_point_in_dartset_leads_into_fan x V E ds1 hfan hcard hfan80 hds1
+  -- ds-分量是 yfan 的拓扑分量，故在 p0 处开
+  have htop : dartsetLeadsIntoFan x V E ds ∈ topologicalComponentYfan x V E :=
+    dartset_leads_into_is_topological_component_yfan hfan hcard hfan80 hds
+  obtain ⟨e, he, hball⟩ := Metric.isOpen_iff.mp
+    (OPEN_TOPOLOGICAL_COMPONENT_YFAN hfan hconf htop) p0 hp0
+  -- 在球心 p0、半径 e 的球内取 a ∉ ⋃ v ∈ V, affineSpan ℝ {x, y1, v}
+  obtain ⟨a, haball, haU⟩ := exists_measure_ball_diff_set_negligible x V E p0 y1 e hfan he
+  have hxV : x ∉ V := hfan.2.2.2.1
+  have hsub1 : dartsetLeadsIntoFan x V E ds1 ⊆ yfan x V E :=
+    dartset_leads_into_subset_yfan hfan hcard hfan80 hds1
+  refine ⟨a, y1, hball haball, hy1, ?_⟩
+  rw [hZ]
+  intro p hp
+  simp only [Set.mem_sdiff, Set.mem_univ, true_and]
+  rw [Set.mem_iUnion₂]
+  intro hcon
+  obtain ⟨v, hv, hpv⟩ := hcon
+  rw [segment] at hp
+  obtain ⟨α, β, hα0, -, hab, hpe⟩ := hp
+  have hxv : x ≠ v := fun h => hxV (h ▸ hv)
+  rcases hα0.eq_or_lt with hα | hα
+  · -- 端点 p = y1：y1 ∈ affGe {x} {v} 推出 y1 ∈ xfan，与 ds1-分量 ⊆ yfan 矛盾
+    have hβ1 : β = 1 := by rw [← hab, ← hα]; norm_num
+    rw [← hα, zero_smul, hβ1, one_smul, zero_add] at hpe
+    rw [← hpe] at hpv
+    have hfinv : (setOfEdge v V E).Finite := remark_finite_fan1 v V E hfan.2.2.1.1
+    have hvne : (setOfEdge v V E).Nonempty :=
+      (Set.ncard_pos hfinv).mp (by have := hcard v hv; linarith)
+    obtain ⟨u2, hu2⟩ := hvne
+    have hEu : {v, u2} ∈ E := (properties_of_setOfEdge_fan x V E v u2 hfan).2 hu2
+    have hu2V : u2 ∈ V :=
+      hfan.1 (Set.mem_sUnion_of_mem (by simp : u2 ∈ ({v, u2} : Set V3)) hEu)
+    have hxu2 : x ≠ u2 := fun h => hxV (h ▸ hu2V)
+    have hymem2 : y1 ∈ affGe ({x} : Set V3) {v, u2} := by
+      rcases eq_or_ne v u2 with rfl | hvu2
+      · rw [Set.pair_eq_singleton]; exact hpv
+      · rw [mem_affGe_singleton_pair (Set.disjoint_singleton_left.mpr (by simp [hxv, hxu2]))
+          hvu2]
+        obtain ⟨t1, t2, ht2, hsum', hy'⟩ := (mem_affGe_singleton hxv).mp hpv
+        exact ⟨t1, t2, 0, ht2, le_refl 0, by linarith, by rw [hy']; module⟩
+    have hymemXfan : y1 ∈ xfan x V E := by
+      simp only [xfan, Set.mem_setOf_eq]
+      exact ⟨{v, u2}, hEu, hymem2⟩
+    have hy1fan : y1 ∈ yfan x V E := hsub1 hy1
+    simp only [yfan, Set.mem_sdiff, Set.mem_univ, true_and] at hy1fan
+    exact hy1fan hymemXfan
+  · -- α > 0：由 p = α•a + β•y1 与 p ∈ affGe {x} {v} 解出 a ∈ affineSpan ℝ {x, y1, v}
+    have hαne : α ≠ 0 := ne_of_gt hα
+    have hpv' : Affsign (fun r : ℝ => 0 ≤ r) ({x} : Set V3) {v} p := hpv
+    obtain ⟨f, hfin, hcomb, _hpos, hone⟩ := hpv'
+    set S0 := hfin.toFinset with hS0
+    set S1 := insert y1 S0 with hS1
+    have hA : ∑ w ∈ S1, (if w = y1 then -β/α else 0) • w = (-β/α) • y1 := by
+      rw [Finset.sum_eq_single y1]
+      · simp
+      · intro w _ hw; simp [hw]
+      · intro h; exact absurd (Finset.mem_insert_self y1 S0) h
+    have hB : ∑ w ∈ S1, ((1/α) * (if w ∈ S0 then f w else 0)) • w = (1/α) • p := by
+      have hsplit : ∀ w ∈ S1, ((1/α) * (if w ∈ S0 then f w else 0)) • w
+          = (1/α) • ((if w ∈ S0 then f w else 0) • w) := fun w _ => (smul_smul _ _ _).symm
+      have hif : ∑ w ∈ S1, (if w ∈ S0 then f w else 0) • w = ∑ w ∈ S0, f w • w := by
+        by_cases hy1S : y1 ∈ S0
+        · have hsub : ∑ w ∈ S0, (if w ∈ S0 then f w else 0) • w
+              = ∑ w ∈ S0, f w • w :=
+            Finset.sum_congr rfl fun w hw => congrArg (fun z => z • w) (if_pos hw)
+          rw [hS1, Finset.insert_eq_of_mem hy1S, hsub]
+        · have hsub : ∑ w ∈ S0, (if w ∈ S0 then f w else 0) • w
+              = ∑ w ∈ S0, f w • w :=
+            Finset.sum_congr rfl fun w hw => congrArg (fun z => z • w) (if_pos hw)
+          rw [hS1, Finset.sum_insert hy1S, if_neg hy1S, zero_smul, zero_add, hsub]
+      rw [Finset.sum_congr rfl hsplit, ← Finset.smul_sum, hif, ← hcomb]
+    have hconv : (1/α) • p + (-β/α) • y1 = a := by
+      rw [← hpe, smul_add, smul_smul, one_div_mul_cancel hαne, one_smul, smul_smul,
+        add_assoc]
+      have hz2 : ((1/α) * β) • y1 + (-β/α) • y1 = 0 := by
+        rw [← add_smul]
+        have hz : (1/α) * β + -β/α = 0 := by ring
+        rw [hz, zero_smul]
+      rw [hz2, add_zero]
+    have hcoef : ∑ w ∈ S1, ((if w = y1 then -β/α else 0)
+        + (1/α) * (if w ∈ S0 then f w else 0)) = 1 := by
+      have hB0 : ∑ w ∈ S1, (if w ∈ S0 then f w else 0) = ∑ w ∈ S0, f w := by
+        by_cases hy1S : y1 ∈ S0
+        · have hsub : ∑ w ∈ S0, (if w ∈ S0 then f w else 0)
+              = ∑ w ∈ S0, f w := Finset.sum_congr rfl fun w hw => if_pos hw
+          rw [hS1, Finset.insert_eq_of_mem hy1S, hsub]
+        · have hsub : ∑ w ∈ S0, (if w ∈ S0 then f w else 0)
+              = ∑ w ∈ S0, f w := Finset.sum_congr rfl fun w hw => if_pos hw
+          rw [hS1, Finset.sum_insert hy1S, if_neg hy1S, zero_add, hsub]
+      rw [Finset.sum_add_distrib, ← Finset.mul_sum, hB0, hone,
+        Finset.sum_eq_single y1]
+      · simp
+        field_simp
+        linarith
+      · intro w _ hw; simp [hw]
+      · intro h; exact absurd (Finset.mem_insert_self y1 S0) h
+    have hmem : ∀ w ∈ S1, w ∈ (affineSpan ℝ ({x, y1, v} : Set V3) : Set V3) := by
+      intro w hw
+      rw [hS1] at hw
+      rcases Finset.mem_insert.mp hw with rfl | hw'
+      · exact subset_affineSpan ℝ _ (by simp)
+      · have hw2 : w ∈ ({x} ∪ {v} : Set V3) := by rw [← hfin.coe_toFinset]; exact hw'
+        have hw3 : w ∈ ({x, y1, v} : Set V3) := by
+          simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff] at hw2 ⊢
+          tauto
+        exact subset_affineSpan ℝ _ hw3
+    have hvec : ∑ w ∈ S1, ((if w = y1 then -β/α else 0)
+        + (1/α) * (if w ∈ S0 then f w else 0)) • w = a := by
+      have h1 : ∀ w ∈ S1, ((if w = y1 then -β/α else 0)
+          + (1/α) * (if w ∈ S0 then f w else 0)) • w
+          = (if w = y1 then -β/α else 0) • w
+            + ((1/α) * (if w ∈ S0 then f w else 0)) • w := fun w _ => add_smul _ _ _
+      have h2 : ∑ w ∈ S1, ((if w = y1 then -β/α else 0)
+          + (1/α) * (if w ∈ S0 then f w else 0)) • w
+          = ∑ w ∈ S1, (if w = y1 then -β/α else 0) • w
+            + ∑ w ∈ S1, ((1/α) * (if w ∈ S0 then f w else 0)) • w := by
+        rw [Finset.sum_congr rfl h1, Finset.sum_add_distrib]
+      rw [h2, hA, hB, ← hconv]
+      abel
+    have hspan := sumSmulMemAffineSpan22 hmem hcoef
+    rw [hvec] at hspan
+    exact haU (Set.mem_iUnion₂.mpr ⟨v, hv, hspan⟩)
 
 /-- 系数移植：`y ∈ affGt s t` 时，沿基点 `x0 ∈ s` 的凸组合
 `z = τ • y + (1 - τ) • x0`（`0 < τ`，且 `x0 ∉ t` 保证 t-系数严格正）
