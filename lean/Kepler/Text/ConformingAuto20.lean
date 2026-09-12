@@ -153,7 +153,22 @@ theorem TXFBALB_VERSION (x : V3) (V : Set V3) (E : Set (Set V3))
       nFan x V E1 hfan1 < nFan x V E hfan →
         conformingFan x V E1 hfan1) →
       conformingSolidAngleFan x V E hfan := by
-  sorry
+  intro hH
+  obtain ⟨_, hcard, hfan80, hnconf, hmin⟩ := hH
+  obtain ⟨ds, hds, hds3⟩ :=
+    nonconformin_fan_imp_exist_face_gt_3 hfan hcard hfan80 hnconf
+  obtain ⟨f1, f2, f3, hsub, hf1f2, hf2f3, hf3ne, huw, hwv, hvu, hsigma, hf3eq,
+    hf2eq⟩ := nonconformin_fan_imp_exist_3point_in_face hfan hcard hfan80 hds hds3
+  have hfan1 : FAN x V (E ∪ {({f1.1, f3.1} : Set V3)}) :=
+    STEP3_REDUCE_FAN hfan hcard hfan80 hds hds3 hsub hf1f2 hf2f3 hf3ne rfl rfl rfl
+      hvu huw hwv hsigma rfl
+  exact TXFBALB x V E (E ∪ {({f1.1, f3.1} : Set V3)}) ds f1 f2 f3 f1.1 f2.1 f3.1
+    ((hypermapOfFan x V (E ∪ {({f1.1, f3.1} : Set V3)}) hfan1).face (f1.1, f3.1))
+    ((hypermapOfFan x V (E ∪ {({f1.1, f3.1} : Set V3)}) hfan1).face (f3.1, f1.1))
+    (f3.1, f1.1) (f1.1, f2.1) (f2.1, f3.1) hfan hfan1
+    ⟨hfan, hcard, hfan80, hds, hds3, hsub, hf1f2, hf2f3, hf3ne, rfl, rfl, rfl,
+      hvu, huw, hwv, hsigma, hf2eq.symm, hf3eq.symm, rfl, rfl, rfl, rfl, rfl,
+      rfl, hmin⟩
 
 /-- HOL Conforming.hl :12539-12568 `conforming_bijection_fanadd_verrion`
 （HOL 自身拼写 "verrion"，名字照抄）
