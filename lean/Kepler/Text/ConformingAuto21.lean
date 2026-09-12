@@ -93,6 +93,52 @@ open MeasureTheory
 
 /-! ## fanadd 增边后 ds2 / 三 partition 块落入开半空间（Conforming.hl:13674-14092） -/
 
+/-- 三角锥 `affGt {x} {w,v,u}` 落入半空间 `affGt {x,w,z} {u}`（`z` 满足
+`azim x w v u < azim x w z u < π`，即 `u` 在 `w` 处介于 `v` 与 `z` 之间）。
+
+证明思路：`sum5_azim_fan` 由角序得 `azim x w z v ∈ (0,π)`；两次
+`cross_dot_fully_surrounded_fan` 给 `crossProduct (w-x) (z-x)` 与 `v-x`、
+`u-x` 的混合积均为正；`coplanar_cross_dot` 的逆否给四点不共面，从而
+`aff_gt_3_1_rep_cross_dot` 把目标半空间写成混合积符号条件；对
+`AFF_GT_1_3` 展开的锥系数 `t2,t3,t4 > 0` 直接计算混合积为正。 -/
+private theorem cone_subset_halfspace_aux (x w z v u : V3)
+    (hxw : x ≠ w) (hxu : x ≠ u) (hxv : x ≠ v)
+    (hncwz : ¬ Collinear3 x w z) (hncwu : ¬ Collinear3 x w u)
+    (hncwv : ¬ Collinear3 x w v)
+    (hθ0 : 0 < azim x w z u) (hθπ : azim x w z u < Real.pi)
+    (hlt : azim x w v u < azim x w z u)
+    (hncop : ¬ Coplanar ({x, w, z, u} : Set V3)) :
+    affGt ({x} : Set V3) ({w, v, u} : Set V3) ⊆
+      affGt ({x, w, z} : Set V3) {u} := by
+  have hsum := sum5_azim_fan (Ne.symm hxw) hncwz hncwv hncwu hlt.le
+  have hnv : 0 ≤ azim x w v u := azim_nonneg x w v u
+  have hθv0 : 0 < azim x w z v := by linarith
+  have hθvπ : azim x w z v < Real.pi := by linarith
+  have hposV := cross_dot_fully_surrounded_fan (v1 := w) (v := z) (u1 := v)
+    hncwv hncwz hθv0 hθvπ
+  have hposU := cross_dot_fully_surrounded_fan (v1 := w) (v := z) (u1 := u)
+    hncwu hncwz hθ0 hθπ
+  rw [aff_gt_3_1_rep_cross_dot x w z u hncop hposU]
+  rw [AFF_GT_1_3 x w v u (Set.disjoint_singleton_left.mpr (by simp [hxw, hxu, hxv]))]
+  intro y hy
+  simp only [Set.mem_setOf_eq] at hy ⊢
+  obtain ⟨t1, t2, t3, t4, ht2, ht3, ht4, hsum1, hyeq⟩ := hy
+  have ht1 : t1 = 1 - t2 - t3 - t4 := by linarith
+  have hzV : (y - x : V3) = t2 • (w - x) + t3 • (v - x) + t4 • (u - x) := by
+    rw [hyeq, ht1]; module
+  have hzV' : ((y - x : V3) : Fin 3 → ℝ) =
+      t2 • ((w - x : V3) : Fin 3 → ℝ) + t3 • ((v - x : V3) : Fin 3 → ℝ) +
+        t4 • ((u - x : V3) : Fin 3 → ℝ) := by
+    have h := congrArg (fun p : V3 => (p : Fin 3 → ℝ)) hzV
+    simpa only [WithLp.ofLp_add, WithLp.ofLp_smul] using h
+  rw [hzV']
+  simp only [dotProduct_add, dotProduct_smul, smul_eq_mul]
+  have hz0 : crossProduct ((w - x : V3) : Fin 3 → ℝ) ((z - x : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((w - x : V3) : Fin 3 → ℝ) = 0 := by
+    rw [dotProduct_comm]; exact dot_self_cross _ _
+  rw [hz0, mul_zero, zero_add]
+  exact add_pos (mul_pos ht3 hposV) (mul_pos ht4 hposU)
+
 /-- HOL Conforming.hl :13674-13869 `DART_FANADD_SUBSET_HALFSPACE1`
 
 HOL 原文：
@@ -181,7 +227,93 @@ theorem DART_FANADD_SUBSET_HALFSPACE1 (x : V3) (V : Set V3)
         conformingFan x V E2 hfan2) →
       dartsetLeadsIntoFan x V E1 ds2 ⊆
         affGt ({x, f3.1, f3.2} : Set V3) {(f1Fan x V E f3).2} := by
-  sorry
+  intro h
+  obtain ⟨-, hcard, h80, hds, h3lt, hsub, hf12, hf23, hf31, hv, hu, hw, hvu, huw,
+    hwv, hsig, hpu, hpw, hface1, hface2, hf10, hf20, hf30, hE1, -⟩ := h
+  have pc : ∀ (a b : V3), ({a, b} : Set V3) = ({b, a} : Set V3) := by
+    intro a b
+    ext p
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  -- `f3` 的第二分量：由 `f1_fan f2 = f3` 读出 `f3 = (w, inverse1SigmaFan x V E w u)`
+  have hf3s : f3.2 = inverse1SigmaFan x V E w u := by
+    have h6 : (f1Fan x V E f2).2 = f3.2 := congrArg Prod.snd hf23
+    rw [← h6]
+    simp only [f1Fan]
+    rw [hpw, hu]
+  -- E 侧：`{w, z} ∈ E` 与 `sigmaFan x V E w z = u`（`z = inverse1SigmaFan x V E w u`）
+  have hwuE : ({w, u} : Set V3) ∈ E := by rw [pc]; exact huw
+  have hwz : ({w, inverse1SigmaFan x V E w u} : Set V3) ∈ E :=
+    (INVERSE1_SIGMA_FAN (v := w) hfan).1 u hwuE
+  have hsigwz : sigmaFan x V E w (inverse1SigmaFan x V E w u) = u :=
+    (INVERSE1_SIGMA_FAN (v := w) hfan).2.1 u hwuE
+  -- E1 侧前置：基数条件、fan80、`ds2` 是 3 元面且 `ds2 = {f10, f20, f30}`
+  have hcard1 : ∀ v' : V3, v' ∈ V → 1 < (setOfEdge v' V E1).ncard :=
+    add_edge_imp_card_set_edge_ge1_fan hfan hcard hE1.symm
+  have h801 : fan80 x V E1 :=
+    FAN80_FANADD x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 hfan hfan1
+      ⟨hfan, hcard, h80, hds, h3lt, hsub, hf12, hf23, hf31, hv, hu, hw, hvu, huw, hwv,
+        hsig, hpu, hpw, hface1, hface2, hf10, hf20, hf30, hE1⟩
+  have hds2fs : ds2 ∈ (hypermapOfFan x V E1 hfan1).faceSet :=
+    ds2_in_face_set_fanadd x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 hfan hfan1
+      ⟨hfan, hcard, h80, hds, h3lt, hsub, hf12, hf23, hf31, hv, hu, hw, hvu, huw, hwv,
+        hsig, hpu, hpw, hface1, hface2.symm, hf10, hf20, hf30, hE1⟩
+  have hds2card : ds2.ncard = 3 :=
+    card_ds2_fanadd_eq3 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 hfan hfan1
+      ⟨hfan, hcard, h80, hds, h3lt, hsub, hf12, hf23, hf31, hv, hu, hw, hvu, huw, hwv,
+        hsig, hface1.symm, hface2.symm, hf10, hf20, hf30, hE1⟩
+  have hds2rep : ds2 = ({f10, f20, f30} : Set (V3 × V3)) :=
+    reperentation_of_ds2 x V E E1 ds f1 f2 f3 v u w ds1 ds2 f10 f20 f30 hfan hfan1
+      ⟨hfan, hcard, h80, hds, h3lt, hsub, hf12, hf23, hf31, hv, hu, hw, hvu, huw, hwv,
+        hsig, hface1.symm, hface2.symm, hf10, hf20, hf30, hE1⟩
+  -- 半空间侧角序：`azim x w z u ∈ (0,π)`（fan80）与 `azim x w v u < azim x w z u`
+  have hθz : 0 < azim x w (inverse1SigmaFan x V E w u) u ∧
+      azim x w (inverse1SigmaFan x V E w u) u < Real.pi := by
+    have hh := h80 w (inverse1SigmaFan x V E w u) hwz
+    rwa [hsigwz] at hh
+  have hlt : azim x w v u < azim x w (inverse1SigmaFan x V E w u) u :=
+    azim_trangle_le_azim_face_fan x V E v u w (inverse1SigmaFan x V E w u)
+      ⟨hfan, hvu, huw, hwz, by rw [pc]; exact hwv, hsig, hsigwz, h80, hcard⟩
+  -- 不共面：`properties_fully_surrounded` 于公共顶点 `w`、夹角 `azim x w z u`
+  have hncop : ¬ Coplanar ({x, w, inverse1SigmaFan x V E w u, u} : Set V3) := by
+    have hh : ¬ Coplanar ({x, u, w, inverse1SigmaFan x V E w u} : Set V3) :=
+      properties_fully_surrounded (v := u) (u := w) (w := inverse1SigmaFan x V E w u)
+        hfan huw hwz hθz.1 hθz.2
+    have he : ({x, u, w, inverse1SigmaFan x V E w u} : Set V3) =
+        ({x, w, inverse1SigmaFan x V E w u, u} : Set V3) := by
+      ext p; simp; tauto
+    rwa [he] at hh
+  -- 互异性与不共线性
+  obtain ⟨hvV, huV⟩ := fan_mem_of_edge hfan hvu
+  obtain ⟨_, hwV⟩ := fan_mem_of_edge hfan huw
+  have hxV : x ∉ V := hfan.2.2.2.1
+  have hxw : x ≠ w := fun he => hxV (by rw [he]; exact hwV)
+  have hxu : x ≠ u := fun he => hxV (by rw [he]; exact huV)
+  have hxv : x ≠ v := fun he => hxV (by rw [he]; exact hvV)
+  have hncwz : ¬ Collinear3 x w (inverse1SigmaFan x V E w u) :=
+    fan_not_collinear hfan hwz
+  have hncwu : ¬ Collinear3 x w u := fan_not_collinear hfan hwuE
+  have hncop1 : ¬ Coplanar ({x, v, u, w} : Set V3) := by
+    have hh := h80 u w huw
+    rw [hsig] at hh
+    exact properties_fully_surrounded hfan hvu huw hh.1 hh.2
+  have hncvw : ¬ Collinear3 x v w := (notcoplanar_imp_notcollinear_fan hncop1).2.2
+  have hncwv : ¬ Collinear3 x w v := by
+    intro hc
+    apply hncvw
+    have h2 : Collinear ℝ ({x, w, v} : Set V3) := hc
+    rw [show ({x, w, v} : Set V3) = ({x, v, w} : Set V3) from by ext p; simp; tauto] at h2
+    exact h2
+  -- 目标改写：半空间点第三坐标换成 `u`，锥写成 `affGt {x} {w, v, u}`
+  have htk : (f1Fan x V E f3).2 = inverse1SigmaFan x V E f3.2 f3.1 := rfl
+  have htfan := fully_surrounded_imp_aff_gt_3_1_of_edge_eq_fan (v := w)
+    (w := inverse1SigmaFan x V E w u) hfan hwz hcard h80
+  rw [hsigwz] at htfan
+  rw [htk, hw, hf3s, ← htfan, ← KVQWYDL_lemma10 hfan1 hcard1 h801 hds2fs hds2card,
+    hds2rep, hf10, hf20, hf30]
+  simp only [Set.image_insert_eq, Set.image_singleton]
+  exact cone_subset_halfspace_aux x w (inverse1SigmaFan x V E w u) v u hxw hxu hxv
+    hncwz hncwu hncwv hθz.1 hθz.2 hlt hncop
 
 /-- HOL Conforming.hl :13870-13996 `DART_FANADD_SUBSET_HALFSPACE2`
 
