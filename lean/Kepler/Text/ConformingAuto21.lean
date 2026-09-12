@@ -528,7 +528,60 @@ theorem HYUAZSE (x : V3) (V : Set V3) (E : Set (Set V3)) (hfan : FAN x V E) :
       nFan x V E1 hfan1 < nFan x V E hfan →
         conformingFan x V E1 hfan1) →
       conformingHalfSpaceFan x V E hfan := by
-  sorry
+  intro h
+  obtain ⟨-, hcard, h80, IH⟩ := h
+  show ∀ ds ∈ (hypermapOfFan x V E hfan).faceSet,
+    dartsetLeadsIntoFan x V E ds =
+      ⋂ y ∈ ds, affGt ({x, y.1, y.2} : Set V3) {(f1Fan x V E y).2}
+  intro ds hds
+  have hge := CARD_FACE_SET_GE_3_FULLY_SURROUNDED_FAN hfan hcard hds
+  rcases Nat.lt_or_ge ds.ncard 3 with h3 | h3
+  · exact absurd h3 (Nat.not_lt.mpr hge)
+  rcases Nat.eq_or_lt_of_le h3 with h3eq | h3lt
+  · -- CARD ds = 3
+    obtain ⟨g1, g2, g3, hset, hk12, hk23, hk31, he23, he31, he12, hsig, hc31, hc12,
+      hc23⟩ := CARD_FACE_SET_EQ_3_FULLY_SURROUNDED_FAN1 hfan hcard hds h3eq.symm
+    have hσinv : ∀ {a b : V3}, {a, b} ∈ E →
+        inverse1SigmaFan x V E a b = inverseSigmaFan x V E a b :=
+      fun hb => inverse_sigma_fan_eq_inverse1 hfan hb
+    have ht22 : g2.2 = inverseSigmaFan x V E g1.2 g1.1 := by rw [← hk12]; rfl
+    have ht32 : g3.2 = inverseSigmaFan x V E g2.2 g2.1 := by rw [← hk23]; rfl
+    have ht12 : g1.2 = inverseSigmaFan x V E g3.2 g3.1 := by rw [← hk31]; rfl
+    have hapk1 : (f1Fan x V E g1).2 = g3.1 := by
+      show inverse1SigmaFan x V E g1.2 g1.1 = g3.1
+      rw [hσinv (show ({g1.2, g1.1} : Set V3) ∈ E by rw [← hc12, Set.pair_comm]; exact he12),
+        ← ht22, hc31]
+    have hapk2 : (f1Fan x V E g2).2 = g1.1 := by
+      show inverse1SigmaFan x V E g2.2 g2.1 = g1.1
+      rw [hσinv (show ({g2.2, g2.1} : Set V3) ∈ E by rw [← hc31, Set.pair_comm]; exact he23),
+        ← ht32, hc23]
+    have hapk3 : (f1Fan x V E g3).2 = g2.1 := by
+      show inverse1SigmaFan x V E g3.2 g3.1 = g2.1
+      rw [hσinv (show ({g3.2, g3.1} : Set V3) ∈ E by rw [← hc23, Set.pair_comm]; exact he31),
+        ← ht12, hc12]
+    have hcop : ¬ Coplanar ({x, g1.1, g2.1, g3.1} : Set V3) := by
+      have h80bc := h80 g2.1 g3.1 he23
+      rw [hsig] at h80bc
+      exact properties_fully_surrounded hfan he12 he23 h80bc.1 h80bc.2
+    rw [← KVQWYDL_lemma10 hfan hcard h80 hds h3eq.symm, hset]
+    simp only [Set.image_insert_eq, Set.image_singleton, Set.biInter_insert,
+      Set.biInter_singleton]
+    rw [hapk1, hapk2, hapk3, ← hc12, ← hc31, ← hc23,
+      ← inter_aff_gt_3_1_is_aff_gt_1_3 x g1.1 g2.1 g3.1 hcop, Set.inter_assoc]
+  · -- 3 < CARD ds
+    obtain ⟨k1, k2, k3, hksub, hk12, hk23, hk3ne, he23, he31ne, he12, hsig, hc31,
+      hc12⟩ := nonconformin_fan_imp_exist_3point_in_face hfan hcard h80 hds h3lt
+    have hfanE1 : FAN x V (E ∪ {({k1.1, k3.1} : Set V3)}) :=
+      STEP3_REDUCE_FAN hfan hcard h80 hds h3lt hksub hk12 hk23 hk3ne rfl rfl rfl
+        he12 he23 he31ne hsig rfl
+    exact DART_FANADD_EQ_HALFSPACE x V E (E ∪ {({k1.1, k3.1} : Set V3)}) ds k1 k2 k3
+      k1.1 k2.1 k3.1
+      ((hypermapOfFan x V (E ∪ {({k1.1, k3.1} : Set V3)}) hfanE1).face (k1.1, k3.1))
+      ((hypermapOfFan x V (E ∪ {({k1.1, k3.1} : Set V3)}) hfanE1).face (k3.1, k1.1))
+      (k3.1, k1.1) (k1.1, k2.1) (k2.1, k3.1) hfan hfanE1
+      ⟨hfan, hcard, h80, hds, h3lt, hksub, hk12, hk23, hk3ne, rfl, rfl, rfl,
+        he12, he23, he31ne, hsig, hc12.symm, hc31.symm, rfl, rfl, rfl, rfl, rfl, rfl,
+        IH⟩
 
 /-- HOL Conforming.hl :14195-14257 `PIIJBJK`
 
