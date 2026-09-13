@@ -1046,4 +1046,789 @@ theorem FACE_OF_POLYHEDRON_SLICE {s : Set V3} {F : Set (Set V3)}
       fun k hk => ⟨a k, b k, (hFprop k hk).1, (hFprop k hk).2⟩⟩))
     (a h) (b h) hsup
 
+/-! ## #12 FACE_OF_AFF_DIM_LT (HOL polytope.ml:393) -/
+
+private theorem affDim_ge_neg1 (s : Set V3) : -1 ≤ affDim s := by
+  by_cases hs : s = ∅
+  · rw [hs, affDim_empty]
+  · simp only [affDim, if_neg hs]
+    have h : (0 : ℤ) ≤ (Module.finrank ℝ (vectorSpan ℝ s) : ℤ) := by
+      exact_mod_cast Nat.zero_le _
+    linarith
+
+/-- HOL `FACE_OF_AFF_DIM_LT` (polytope.ml:393): a proper face of a convex
+set has strictly smaller affine dimension. -/
+theorem FACE_OF_AFF_DIM_LT {f s : Set V3} (hsc : Convex ℝ s) (hface : FaceOf f s)
+    (hne : f ≠ s) : affDim f < affDim s := by
+  by_cases hf : f = ∅
+  · have hsne : s ≠ ∅ := by
+      intro h
+      exact hne (h ▸ hf)
+    have h1 : (0 : ℤ) ≤ affDim s := by
+      simp only [affDim, if_neg hsne]
+      have this : (0 : ℤ) ≤ (Module.finrank ℝ (vectorSpan ℝ s) : ℤ) := by
+        exact_mod_cast Nat.zero_le _
+      exact this
+    rw [hf, affDim_empty]
+    linarith
+  · have hfne : f.Nonempty := nonempty_iff_ne_empty.2 hf
+    have hsne : s.Nonempty := hfne.mono hface.1
+    obtain ⟨x, hx⟩ := Set.Nonempty.intrinsicInterior hsc hsne
+    have hxf : x ∉ f := fun hmem =>
+      (Set.disjoint_left.1 (faceOf_disjoint_rinterior hface hne)) hmem hx
+    by_contra hcon
+    push_neg at hcon
+    have hmono := affDim_mono hface.1 hfne
+    have hfeq : affDim f = affDim s := le_antisymm hmono hcon
+    have hfe : f ≠ ∅ := hf
+    have hfs : s ≠ ∅ := nonempty_iff_ne_empty.1 hsne
+    simp only [affDim, if_neg hfe, if_neg hfs] at hfeq
+    have hvle : vectorSpan ℝ f ≤ vectorSpan ℝ s := vectorSpan_mono ℝ hface.1
+    have hnat : Module.finrank ℝ (vectorSpan ℝ s) ≤ Module.finrank ℝ (vectorSpan ℝ f) :=
+      le_of_eq (by exact_mod_cast hfeq.symm)
+    have hveq : vectorSpan ℝ f = vectorSpan ℝ s :=
+      Submodule.eq_of_le_of_finrank_le hvle hnat
+    obtain ⟨p, hp⟩ := hfne
+    have heq : (affineSpan ℝ f : AffineSubspace ℝ V3) = affineSpan ℝ s := by
+      refine AffineSubspace.eq_of_direction_eq_of_nonempty_of_le ?_
+        ⟨p, subset_affineSpan ℝ _ hp⟩ (affineSpan_mono ℝ hface.1)
+      rw [direction_affineSpan, direction_affineSpan, hveq]
+    have hspan : (affineSpan ℝ f : Set V3) = (affineSpan ℝ s : Set V3) := by rw [heq]
+    obtain ⟨hxmem, ε, hε, hball⟩ := mem_rint_iff.1 hx
+    have hxaff : x ∈ (affineSpan ℝ f : Set V3) := by
+      rw [hspan]; exact subset_affineSpan ℝ s hxmem
+    have hxs : x ∈ s := hball ⟨Metric.mem_ball_self hε, by rw [← hspan]; exact hxaff⟩
+    exact hxf (faceOf_eq_affineInter hsc hface ⟨hxaff, hxs⟩)
+
+/-! ## #12a Slice kit for the minimal halfspace representation -/
+
+private theorem convex_of_minrep {s : Set V3} {F : Set (Set V3)}
+    (a : Set V3 → V3) (b : Set V3 → ℝ) (hF : F.Finite)
+    (hs : s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : V3 | a h ⬝ᵥ x ≤ b h}) :
+    Convex ℝ s :=
+  POLYHEDRON_IMP_CONVEX (POLYHEDRON_INTER_AFFINE.2 ⟨F, hF, hs,
+    fun k hk => ⟨a k, b k, (hFprop k hk).1, (hFprop k hk).2⟩⟩)
+
+/-- For each constraint `h` of an irredundant representation there are points
+of `s` strictly on both sides of the hyperplane `{a h ⬝ᵥ x = b h}`. -/
+private theorem slice_sides {s : Set V3} {F : Set (Set V3)}
+    (a : Set V3 → V3) (b : Set V3 → ℝ) (hF : F.Finite)
+    (hs : s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : V3 | a h ⬝ᵥ x ≤ b h})
+    (hmin : ∀ F', F' ⊂ F → s ⊂ (affineSpan ℝ s : Set V3) ∩ ⋂₀ F')
+    (hsne : s ≠ ∅) (h : Set V3) (hh : h ∈ F) :
+    ∃ x z : V3, x ∈ s ∧ (∀ i ∈ F, a i ⬝ᵥ x < b i) ∧
+      z ∈ (affineSpan ℝ s : Set V3) ∩ ⋂₀ (F \ {h}) ∧
+      a h ⬝ᵥ x < b h ∧ b h < a h ⬝ᵥ z := by
+  have hconv := convex_of_minrep a b hF hs hFprop
+  have hrie : intrinsicInterior ℝ s = {x : V3 | x ∈ s ∧ ∀ i ∈ F, a i ⬝ᵥ x < b i} :=
+    RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT a b hF hs hFprop hmin
+  obtain ⟨x, hx⟩ := Set.Nonempty.intrinsicInterior hconv (nonempty_iff_ne_empty.2 hsne)
+  have hx' : x ∈ s ∧ ∀ i ∈ F, a i ⬝ᵥ x < b i := by rw [hrie] at hx; exact hx
+  have hsdiff : F \ {h} ⊂ F := by
+    refine Set.ssubset_iff_subset_ne.2 ⟨Set.sdiff_subset, fun hEq => ?_⟩
+    have hmem' : h ∈ F \ {h} := by rw [hEq]; exact hh
+    exact absurd hmem'.2 (by simp)
+  obtain ⟨-, z, hzT, hzs⟩ := Set.ssubset_iff_exists.1 (hmin _ hsdiff)
+  have hzaff : z ∈ (affineSpan ℝ s : Set V3) := hzT.1
+  have hzF : z ∉ ⋂₀ F := by
+    rw [hs] at hzs
+    exact fun hz' => hzs ⟨hzaff, hz'⟩
+  obtain ⟨i, hiF, hzi⟩ : ∃ i ∈ F, z ∉ i := by
+    by_contra hcon'
+    push_neg at hcon'
+    exact hzF (Set.mem_sInter.2 hcon')
+  have hih : i = h := by
+    by_contra hne
+    exact hzi (Set.mem_sInter.1 hzT.2 i ⟨hiF, by simp [hne]⟩)
+  have hzA : b h < a h ⬝ᵥ z := by
+    have hkz : z ∉ h := by rw [← hih]; exact hzi
+    rw [(hFprop h hh).2] at hkz
+    simpa only [Set.mem_setOf_eq, not_le] using hkz
+  exact ⟨x, z, hx'.1, hx'.2, ⟨hzaff, hzT.2⟩, hx'.2 h hh, hzA⟩
+
+/-- The crossing point: `h` is tight and all other constraints are strict. -/
+private theorem slice_cross {s : Set V3} {F : Set (Set V3)}
+    (a : Set V3 → V3) (b : Set V3 → ℝ) (hF : F.Finite)
+    (hs : s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : V3 | a h ⬝ᵥ x ≤ b h})
+    (hmin : ∀ F', F' ⊂ F → s ⊂ (affineSpan ℝ s : Set V3) ∩ ⋂₀ F')
+    (hsne : s ≠ ∅) (h : Set V3) (hh : h ∈ F) :
+    ∃ x : V3, x ∈ s ∧ a h ⬝ᵥ x = b h ∧
+      (∀ i ∈ F, i ≠ h → a i ⬝ᵥ x < b i) ∧ x ∈ (affineSpan ℝ s : Set V3) := by
+  obtain ⟨p, z, hps, hpstrict, hzs, hpl, hzg⟩ :=
+    slice_sides a b hF hs hFprop hmin hsne h hh
+  have hpaff : p ∈ (affineSpan ℝ s : Set V3) := subset_affineSpan ℝ s hps
+  have hzaff : z ∈ (affineSpan ℝ s : Set V3) := hzs.1
+  obtain ⟨t, htp, ht1, htden⟩ : ∃ t : ℝ, 0 < t ∧ t < 1 ∧
+      t * (a h ⬝ᵥ z - a h ⬝ᵥ p) = b h - a h ⬝ᵥ p :=
+    ⟨(b h - a h ⬝ᵥ p) / (a h ⬝ᵥ z - a h ⬝ᵥ p), div_pos (by linarith) (by linarith),
+      (div_lt_one (by linarith)).2 (by linarith), div_mul_cancel₀ _ (by linarith)⟩
+  have hqdot : ∀ w : V3, w ⬝ᵥ (p + t • (z - p)) = w ⬝ᵥ p + t * (w ⬝ᵥ z - w ⬝ᵥ p) := by
+    intro w
+    have e1 : w ⬝ᵥ (p + t • (z - p)) = w ⬝ᵥ p + w ⬝ᵥ (t • (z - p)) := dot_add _ _ _
+    have e2 : w ⬝ᵥ (t • (z - p)) = t * (w ⬝ᵥ (z - p)) := dot_smul _ _ _
+    have e3 : w ⬝ᵥ (z - p) = w ⬝ᵥ z - w ⬝ᵥ p := dot_sub _ _ _
+    rw [e1, e2, e3]
+  refine ⟨p + t • (z - p), ?_, ?_, ?_, ?_⟩
+  · rw [hs]
+    refine ⟨affineSpan_lineq hpaff hpaff hzaff t, fun i hi => ?_⟩
+    rw [(hFprop i hi).2, Set.mem_setOf_eq, WithLp.ofLp_add,
+      WithLp.ofLp_smul, WithLp.ofLp_sub, hqdot (a i)]
+    by_cases hih : i = h
+    · rw [← hih] at htden
+      linarith
+    · have hiz : a i ⬝ᵥ z ≤ b i := by
+        have hzi : z ∈ i := Set.mem_sInter.1 hzs.2 i ((Set.mem_diff i).2 ⟨hi, hih⟩)
+        rw [(hFprop i hi).2] at hzi
+        exact hzi
+      have hstep : t * (a i ⬝ᵥ z - a i ⬝ᵥ p) ≤ t * (b i - a i ⬝ᵥ p) :=
+        mul_le_mul_of_nonneg_left (by linarith) htp.le
+      have hkey : t * (b i - a i ⬝ᵥ p) < b i - a i ⬝ᵥ p := by
+        refine lt_of_lt_of_le
+          (mul_lt_mul_of_pos_right ht1 (by linarith [hpstrict i hi])) ?_
+        rw [one_mul]
+      linarith
+  · rw [WithLp.ofLp_add, WithLp.ofLp_smul, WithLp.ofLp_sub, hqdot (a h)]
+    linarith
+  · intro i hi hih
+    rw [WithLp.ofLp_add, WithLp.ofLp_smul, WithLp.ofLp_sub, hqdot (a i)]
+    have hiz : a i ⬝ᵥ z ≤ b i := by
+      have hzi : z ∈ i := Set.mem_sInter.1 hzs.2 i ((Set.mem_diff i).2 ⟨hi, hih⟩)
+      rw [(hFprop i hi).2] at hzi
+      exact hzi
+    have hstep : t * (a i ⬝ᵥ z - a i ⬝ᵥ p) ≤ t * (b i - a i ⬝ᵥ p) :=
+      mul_le_mul_of_nonneg_left (by linarith) htp.le
+    have hkey : t * (b i - a i ⬝ᵥ p) < b i - a i ⬝ᵥ p := by
+      refine lt_of_lt_of_le
+        (mul_lt_mul_of_pos_right ht1 (by linarith [hpstrict i hi])) ?_
+      rw [one_mul]
+    linarith
+  · exact affineSpan_lineq hpaff hpaff hzaff t
+
+/-- The span of a nonempty hyperplane slice of `s` is the direction of `s`
+killed by the slice's normal vector. -/
+private theorem vectorSpan_slice {s : Set V3} {F : Set (Set V3)}
+    (a : Set V3 → V3) (b : Set V3 → ℝ) (hF : F.Finite)
+    (hs : s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : V3 | a h ⬝ᵥ x ≤ b h})
+    (hmin : ∀ F', F' ⊂ F → s ⊂ (affineSpan ℝ s : Set V3) ∩ ⋂₀ F')
+    (hsne : s ≠ ∅) (h : Set V3) (hh : h ∈ F) :
+    vectorSpan ℝ (s ∩ {x : V3 | a h ⬝ᵥ x = b h})
+      = vectorSpan ℝ s ⊓ LinearMap.ker (dotRight (a h)) := by
+  classical
+  obtain ⟨x0, hx0s, hx0eq, hx0st, hx0aff⟩ := slice_cross a b hF hs hFprop hmin hsne h hh
+  haveI : Finite F := hF
+  have hlin : ∀ u x y : V3, ∀ r : ℝ,
+      u.ofLp ⬝ᵥ (x + r • y).ofLp = u.ofLp ⬝ᵥ x.ofLp + r * (u.ofLp ⬝ᵥ y.ofLp) := by
+    intro u x y r
+    rw [WithLp.ofLp_add, WithLp.ofLp_smul, dotProduct_add, dotProduct_smul, smul_eq_mul]
+  refine le_antisymm (le_inf (vectorSpan_mono ℝ Set.inter_subset_left) ?_) ?_
+  · rw [vectorSpan_def, Submodule.span_le]
+    rintro w ⟨p, hp, q, hq, rfl⟩
+    simp only [Set.mem_inter_iff, Set.mem_setOf_eq] at hp hq
+    change (p -ᵥ q) ∈ ((LinearMap.ker (dotRight (a h)) : Submodule ℝ V3) : Set V3)
+    rw [vsub_eq_sub, SetLike.mem_coe, LinearMap.mem_ker, LinearMap.map_sub]
+    have hp' : dotRight (a h) p = b h := hp.2
+    have hq' : dotRight (a h) q = b h := hq.2
+    rw [hp', hq', sub_self]
+  · intro w hw
+    obtain ⟨hwW, hwK⟩ := Submodule.mem_inf.1 hw
+    have hwK' : dotRight (a h) w = 0 := LinearMap.mem_ker.1 hwK
+    have hwK'' : a h ⬝ᵥ w = 0 := hwK'
+    have hwdir : w ∈ (affineSpan ℝ s).direction := by
+      rw [direction_affineSpan]
+      exact hwW
+    set O : Set V3 := ⋂ i : {y // y ∈ F}, {y : V3 | a i.1 ⬝ᵥ y < b i.1 ∨ i.1 = h} with hO
+    have hOopen : IsOpen O := by
+      rw [hO]
+      refine isOpen_iInter_of_finite fun i => ?_
+      by_cases hih : i.1 = h
+      · have hset : {y : V3 | a i.1 ⬝ᵥ y < b i.1 ∨ i.1 = h} = (univ : Set V3) := by
+          ext y
+          simp [hih]
+        rw [hset]
+        exact isOpen_univ
+      · have hset : {y : V3 | a i.1 ⬝ᵥ y < b i.1 ∨ i.1 = h}
+            = {y : V3 | a i.1 ⬝ᵥ y < b i.1} := by
+          ext y
+          simp [hih]
+        rw [hset]
+        exact isOpen_lt (continuous_const.dotProduct (PiLp.continuous_ofLp 2 _))
+          continuous_const
+    have hx0O : x0 ∈ O := by
+      rw [hO, Set.mem_iInter]
+      intro i
+      by_cases hih : i.1 = h
+      · right
+        exact hih
+      · left
+        exact hx0st i.1 i.2 hih
+    obtain ⟨ε, hε0, hballO⟩ := Metric.isOpen_iff.1 hOopen x0 hx0O
+    have htex : ∃ t : ℝ, 0 < t ∧ ‖x0 + t • w - x0‖ < ε := by
+      refine ⟨ε / (2 * (‖w‖ + 1)), div_pos hε0 (by positivity), ?_⟩
+      have hstep : x0 + (ε / (2 * (‖w‖ + 1))) • w - x0
+          = (ε / (2 * (‖w‖ + 1))) • w := by rw [add_sub_cancel_left]
+      rw [hstep, norm_smul, Real.norm_eq_abs, abs_of_pos (div_pos hε0 (by positivity))]
+      calc (ε / (2 * (‖w‖ + 1))) * ‖w‖
+          ≤ (ε / (2 * (‖w‖ + 1))) * (‖w‖ + 1) :=
+            mul_le_mul_of_nonneg_left (by linarith [norm_nonneg w])
+              (div_nonneg hε0.le (by positivity))
+        _ = ε / 2 := by field_simp
+      linarith
+    obtain ⟨t, ht0, htball⟩ := htex
+    have hqA : x0 + t • w ∈ (affineSpan ℝ s : Set V3) := by
+      have hv : (t • w) +ᵥ x0 = x0 + t • w := by rw [vadd_eq_add]; module
+      rw [← hv]
+      exact AffineSubspace.vadd_mem_of_mem_direction (Submodule.smul_mem _ t hwdir) hx0aff
+    have hqH : (a h).ofLp ⬝ᵥ (x0 + t • w).ofLp = b h := by
+      rw [hlin, hx0eq, hwK'', mul_zero, add_zero]
+    have h1 : x0 + t • w ∈ ⋂₀ F := by
+      refine Set.mem_sInter.2 fun i hi => ?_
+      rw [(hFprop i hi).2, Set.mem_setOf_eq]
+      by_cases hih : i = h
+      · have hie : (a i).ofLp ⬝ᵥ (x0 + t • w).ofLp = b i := by rw [hih]; exact hqH
+        rw [hie]
+      · have hqO : x0 + t • w ∈ O := hballO (Metric.mem_ball.2 htball)
+        rw [hO] at hqO
+        rcases Set.mem_iInter.1 hqO ⟨i, hi⟩ with h1' | h2
+        · exact le_of_lt h1'
+        · exact absurd h2 hih
+    have hqs : x0 + t • w ∈ s := by
+      rw [hs]
+      exact ⟨hqA, h1⟩
+    have hmemH : x0 + t • w ∈ {y : V3 | a h ⬝ᵥ y = b h} := by
+      rw [Set.mem_setOf_eq]
+      exact hqH
+    have hmemH0 : x0 ∈ {y : V3 | a h ⬝ᵥ y = b h} := by
+      rw [Set.mem_setOf_eq]
+      exact hx0eq
+    have hgen : (x0 + t • w - x0 : V3) ∈ vectorSpan ℝ (s ∩ {y : V3 | a h ⬝ᵥ y = b h}) :=
+      Submodule.subset_span (Set.mem_vsub.2 ⟨x0 + t • w, ⟨hqs, hmemH⟩,
+        x0, ⟨hx0s, hmemH0⟩, by rw [vsub_eq_sub]⟩)
+    have hscale : w = (1 / t) • (x0 + t • w - x0) := by
+      have hstep : x0 + t • w - x0 = t • w := by rw [add_sub_cancel_left]
+      rw [hstep, smul_smul, one_div, inv_mul_cancel₀ ht0.ne', one_smul]
+    rw [hscale]
+    exact Submodule.smul_mem _ _ hgen
+
+/-- Codimension-one property: the hyperplane slice has affine dimension
+`affDim s - 1`. -/
+private theorem affDim_slice {s : Set V3} {F : Set (Set V3)}
+    (a : Set V3 → V3) (b : Set V3 → ℝ) (hF : F.Finite)
+    (hs : s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : V3 | a h ⬝ᵥ x ≤ b h})
+    (hmin : ∀ F', F' ⊂ F → s ⊂ (affineSpan ℝ s : Set V3) ∩ ⋂₀ F')
+    (hsne : s ≠ ∅) (h : Set V3) (hh : h ∈ F) :
+    affDim (s ∩ {x : V3 | a h ⬝ᵥ x = b h}) = affDim s - 1 := by
+  classical
+  obtain ⟨x0, hx0s, hx0eq, -, -⟩ := slice_cross a b hF hs hFprop hmin hsne h hh
+  have hune : (s ∩ {x : V3 | a h ⬝ᵥ x = b h}).Nonempty :=
+    ⟨x0, ⟨hx0s, by rw [Set.mem_setOf_eq]; exact hx0eq⟩⟩
+  obtain ⟨p, z, hps, -, hzs, hpl, hzg⟩ := slice_sides a b hF hs hFprop hmin hsne h hh
+  have hpaff : p ∈ (affineSpan ℝ s : Set V3) := subset_affineSpan ℝ s hps
+  have hzaff : z ∈ (affineSpan ℝ s : Set V3) := hzs.1
+  have hwW : z - p ∈ vectorSpan ℝ s := by
+    rw [← direction_affineSpan]
+    exact AffineSubspace.vsub_mem_direction hzaff hpaff
+  have hwne : dotRight (a h) (z - p) ≠ 0 := by
+    show a h ⬝ᵥ (z - p) ≠ 0
+    rw [dot_sub]
+    linarith
+  have hzp : (z - p : V3) ≠ 0 := fun hc => hwne (by rw [hc]; simp)
+  have hveq : vectorSpan ℝ (s ∩ {x : V3 | a h ⬝ᵥ x = b h})
+      = vectorSpan ℝ s ⊓ LinearMap.ker (dotRight (a h)) :=
+    vectorSpan_slice a b hF hs hFprop hmin hsne h hh
+  -- codimension one of the kernel inside the direction
+  have hsup : ((vectorSpan ℝ s ⊓ LinearMap.ker (dotRight (a h))) ⊔
+      (ℝ ∙ (z - p) : Submodule ℝ V3)) = vectorSpan ℝ s := by
+    refine le_antisymm (sup_le inf_le_left ?_) ?_
+    · exact Submodule.span_le.2 (Set.singleton_subset_iff.2 hwW)
+    · intro v hv
+      have hd0 : dotRight (a h) (z - p) ≠ 0 := hwne
+      refine Submodule.mem_sup.2 ⟨v - (dotRight (a h) v / dotRight (a h) (z - p)) • (z - p),
+        ?_, (dotRight (a h) v / dotRight (a h) (z - p)) • (z - p), ?_, ?_⟩
+      · refine ⟨Submodule.sub_mem (p := vectorSpan ℝ s) hv
+            (Submodule.smul_mem _ _ hwW), ?_⟩
+        rw [SetLike.mem_coe, LinearMap.mem_ker, LinearMap.map_sub, LinearMap.map_smul,
+          smul_eq_mul]
+        field_simp
+        ring
+      · exact Submodule.mem_span_singleton.2 ⟨_, rfl⟩
+      · rw [sub_add_cancel]
+  have hinf : ((vectorSpan ℝ s ⊓ LinearMap.ker (dotRight (a h))) ⊓
+      (ℝ ∙ (z - p) : Submodule ℝ V3)) = ⊥ := by
+    rw [Submodule.eq_bot_iff]
+    intro v hv
+    obtain ⟨hvW, hvS⟩ := Submodule.mem_inf.1 hv
+    obtain ⟨-, hvK⟩ := Submodule.mem_inf.1 hvW
+    obtain ⟨c, hc⟩ := Submodule.mem_span_singleton.1 hvS
+    have hker : dotRight (a h) v = 0 := hvK
+    rw [← hc, LinearMap.map_smul, smul_eq_mul] at hker
+    have hcv : c = 0 := by
+      rcases mul_eq_zero.1 hker with h0 | h0
+      · exact h0
+      · exact absurd h0 hwne
+    rw [← hc, hcv, zero_smul]
+  have h1 := Submodule.finrank_sup_add_finrank_inf_eq
+    (vectorSpan ℝ s ⊓ LinearMap.ker (dotRight (a h))) (ℝ ∙ (z - p))
+  rw [hsup, hinf, finrank_bot, finrank_span_singleton hzp] at h1
+  simp only [affDim, if_neg (nonempty_iff_ne_empty.1 hune), if_neg hsne]
+  rw [hveq]
+  have e1 : (↑(Module.finrank ℝ (vectorSpan ℝ s)) : ℤ)
+      = ↑(Module.finrank ℝ
+          (vectorSpan ℝ s ⊓ LinearMap.ker (dotRight (a h)) : Submodule ℝ V3)) + 1 := by
+    omega
+  omega
+
+/-! ## #13 FACET_OF_POLYHEDRON_EXPLICIT (HOL polytope.ml:4718) -/
+
+/-- HOL `FACET_OF_POLYHEDRON_EXPLICIT`: for a polyhedron given by an
+irredundant halfspace representation, the facets are exactly the hyperplane
+slices cut out by single constraints of the representation. -/
+theorem FACET_OF_POLYHEDRON_EXPLICIT {s : Set V3} {F : Set (Set V3)}
+    (a : Set V3 → V3) (b : Set V3 → ℝ) (hF : F.Finite)
+    (hs : s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : V3 | a h ⬝ᵥ x ≤ b h})
+    (hmin : ∀ F', F' ⊂ F → s ⊂ (affineSpan ℝ s : Set V3) ∩ ⋂₀ F')
+    (c : Set V3) :
+    FacetOf c s ↔ ∃ h, h ∈ F ∧ c = s ∩ {x : V3 | a h ⬝ᵥ x = b h} := by
+  classical
+  have hrie : intrinsicInterior ℝ s = {y : V3 | y ∈ s ∧ ∀ i ∈ F, a i ⬝ᵥ y < b i} :=
+    RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT a b hF hs hFprop hmin
+  constructor
+  · rintro ⟨hface, hcne, hcdim⟩
+    by_cases hse : s = ∅
+    · rw [hse] at hface
+      exact absurd (faceOf_empty.1 hface) hcne
+    · have hconv : Convex ℝ s := convex_of_minrep a b hF hs hFprop
+      have hcs : c ≠ s := by
+        intro heq
+        rw [heq] at hcdim
+        have hpos : (0 : ℤ) ≤ affDim s := by
+          simp only [affDim, if_neg hse]
+          have hh : (0 : ℤ) ≤ (Module.finrank ℝ (vectorSpan ℝ s) : ℤ) := by
+            exact_mod_cast Nat.zero_le _
+          exact hh
+        linarith
+      -- a point of the relative interior of the facet
+      obtain ⟨x, hx⟩ := Set.Nonempty.intrinsicInterior hface.2.1
+        (nonempty_iff_ne_empty.2 hcne)
+      have hxc : x ∈ c := (mem_rint_iff.1 hx).1
+      have hxinS : x ∈ s := hface.1 hxc
+      have hxnot : x ∉ intrinsicInterior ℝ s :=
+        Set.disjoint_left.1 (faceOf_disjoint_rinterior hface hcs) hxc
+      -- the constraint `j` of the minimal representation that is tight at `x`
+      obtain ⟨j, hjF, hj⟩ : ∃ i ∈ F, ¬(a i ⬝ᵥ x < b i) := by
+        by_contra hcon
+        push_neg at hcon
+        exact hxnot (by rw [hrie]; exact ⟨hxinS, hcon⟩)
+      have hxmem2 : x ∈ ⋂₀ F := by
+        rw [hs] at hxinS
+        exact hxinS.2
+      have hxj : a j ⬝ᵥ x ≤ b j := by
+        have h0 : x ∈ j := Set.mem_sInter.1 hxmem2 j hjF
+        rw [(hFprop j hjF).2] at h0
+        exact h0
+      have hjeq : a j ⬝ᵥ x = b j := le_antisymm hxj (not_lt.1 hj)
+      have hxu : x ∈ s ∩ {y : V3 | a j ⬝ᵥ y = b j} :=
+        ⟨hxinS, by rw [Set.mem_setOf_eq]; exact hjeq⟩
+      -- the facet is contained in the slice (both faces, rint's meet at x)
+      have hcu : c ⊆ s ∩ {y : V3 | a j ⬝ᵥ y = b j} :=
+        subset_of_faceOf (FACE_OF_POLYHEDRON_SLICE a b hF hs hFprop hmin j hjF)
+          hface.1 (Set.not_disjoint_iff.2 ⟨x, hxu, hx⟩)
+      -- dimension descent
+      have hun : (s ∩ {y : V3 | a j ⬝ᵥ y = b j}).Nonempty := ⟨x, hxu⟩
+      have hc' : c.Nonempty := nonempty_iff_ne_empty.2 hcne
+      have hcdim' := affDim_slice a b hF hs hFprop hmin hse j hjF
+      have hfeq2 : Module.finrank ℝ (vectorSpan ℝ c)
+          = Module.finrank ℝ (vectorSpan ℝ (s ∩ {y : V3 | a j ⬝ᵥ y = b j})) := by
+        have h1 : affDim c = affDim (s ∩ {y : V3 | a j ⬝ᵥ y = b j}) := by
+          rw [hcdim, hcdim']
+        simp only [affDim, if_neg (nonempty_iff_ne_empty.1 hc'),
+          if_neg (nonempty_iff_ne_empty.1 hun)] at h1
+        exact_mod_cast h1
+      have hveq : vectorSpan ℝ c = vectorSpan ℝ (s ∩ {y : V3 | a j ⬝ᵥ y = b j}) :=
+        Submodule.eq_of_le_of_finrank_le (vectorSpan_mono ℝ hcu)
+          (le_of_eq hfeq2.symm)
+      have heq2 : (affineSpan ℝ c : AffineSubspace ℝ V3)
+          = affineSpan ℝ (s ∩ {y : V3 | a j ⬝ᵥ y = b j}) := by
+        refine AffineSubspace.eq_of_direction_eq_of_nonempty_of_le ?_
+          ⟨x, subset_affineSpan ℝ _ hxc⟩ (affineSpan_mono ℝ hcu)
+        rw [direction_affineSpan, direction_affineSpan, hveq]
+      -- the slice is contained in the facet, since their spans agree
+      refine ⟨j, hjF, subset_antisymm hcu ?_⟩
+      intro y hy
+      refine faceOf_eq_affineInter hconv hface ⟨?_, hy.1⟩
+      rw [heq2]
+      exact subset_affineSpan ℝ _ hy
+  · rintro ⟨j, hjF, rfl⟩
+    by_cases hse : s = ∅
+    · -- a nonempty `s = ∅` representation is irredundant only when `F = ∅`
+      have hFe : F = ∅ := by
+        by_contra hFne
+        have hne0 : (∅ : Set (Set V3)) ⊂ F :=
+          Set.ssubset_iff_subset_ne.2 ⟨Set.empty_subset _, Ne.symm hFne⟩
+        obtain ⟨-, w, hwT, -⟩ := Set.ssubset_iff_exists.1 (hmin _ hne0)
+        rw [hse, AffineSubspace.span_empty, AffineSubspace.bot_coe] at hwT
+        exact absurd hwT.1 (by simp)
+      exact absurd hjF (by rw [hFe]; simp)
+    · obtain ⟨x0, hx0s, hx0eq, -, -⟩ := slice_cross a b hF hs hFprop hmin hse j hjF
+      refine ⟨FACE_OF_POLYHEDRON_SLICE a b hF hs hFprop hmin j hjF, ?_, ?_⟩
+      · exact nonempty_iff_ne_empty.1
+          ⟨x0, ⟨hx0s, by rw [Set.mem_setOf_eq]; exact hx0eq⟩⟩
+      · exact affDim_slice a b hF hs hFprop hmin hse j hjF
+
+/-! ## #14 FACE_OF_POLYHEDRON_SUBSET_EXPLICIT kit -/
+
+/-- The intrinsic interior of a nonempty affine set is the set itself. -/
+private theorem rint_affine {s : Set V3} (hne : s.Nonempty)
+    (haff : (affineSpan ℝ s : Set V3) = s) : intrinsicInterior ℝ s = s := by
+  refine Set.ext fun x => ?_
+  constructor
+  · intro hmem
+    exact (mem_rint_iff.1 hmem).1
+  · intro hx
+    exact mem_rint_iff.2 ⟨hx, 1, by norm_num, by rw [haff]; exact Set.inter_subset_right⟩
+
+/-- The affine span of a set inside a hyperplane stays inside the hyperplane. -/
+private theorem affineSpan_subset_hyperplane {t : Set V3} {a : V3} {b : ℝ}
+    (hsub : t ⊆ {x : V3 | a ⬝ᵥ x = b}) (p : V3) (hp : a ⬝ᵥ p = b) :
+    (affineSpan ℝ t : Set V3) ⊆ {x : V3 | a ⬝ᵥ x = b} := by
+  have hT : affineSpan ℝ t ≤ AffineSubspace.mk' p (LinearMap.ker (dotRight a)) := by
+    refine affineSpan_le.2 ?_
+    intro q hq
+    have hq' : a ⬝ᵥ q = b := hsub hq
+    refine (AffineSubspace.mem_mk').2 ?_
+    rw [vsub_eq_sub, LinearMap.mem_ker, LinearMap.map_sub]
+    have hq2 : dotRight a q = b := hq'
+    have hp2 : dotRight a p = b := hp
+    rw [hq2, hp2, sub_self]
+  intro q hq
+  have h1 : q -ᵥ p ∈ LinearMap.ker (dotRight a) := (AffineSubspace.mem_mk').1 (hT hq)
+  have h2 : a ⬝ᵥ q - a ⬝ᵥ p = 0 := by
+    rw [← dot_sub]
+    exact h1
+  rw [Set.mem_setOf_eq]
+  linarith
+
+/-- The intersection of a finite nonempty family of faces of `s` is a face. -/
+private theorem faceOf_sInter {s : Set V3} (hsc : Convex ℝ s) :
+    ∀ G : Set (Set V3), G.Finite → (∀ u ∈ G, FaceOf u s) → G.Nonempty →
+      FaceOf (⋂₀ G) s := by
+  intro G hG
+  refine Set.Finite.induction_on
+    (motive := fun G _ => (∀ u ∈ G, FaceOf u s) → G.Nonempty →
+      FaceOf (⋂₀ G) s) G hG ?_ ?_
+  · intro _ hne
+    exact absurd hne (by simp)
+  · intro u G' huG' hFin ih hmem hne
+    rw [Set.sInter_insert]
+    by_cases hG'e : G' = ∅
+    · subst hG'e
+      rw [Set.sInter_empty, Set.inter_univ]
+      exact hmem u (Set.mem_insert u ∅)
+    · refine faceOf_inter (hmem u (Set.mem_insert u G'))
+        (ih (fun v hv => hmem v (Set.mem_insert_of_mem _ hv)) ?_)
+      exact Set.nonempty_iff_ne_empty.2 hG'e
+
+/-- HOL `FACE_OF_POLYHEDRON_SUBSET_EXPLICIT` (polytope.ml:4986): every
+nonempty proper face of `s` is contained in a hyperplane slice determined by
+a single constraint of the irredundant representation. -/
+theorem FACE_OF_POLYHEDRON_SUBSET_EXPLICIT {s : Set V3} {F : Set (Set V3)}
+    (a : Set V3 → V3) (b : Set V3 → ℝ) (hF : F.Finite)
+    (hs : s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : V3 | a h ⬝ᵥ x ≤ b h})
+    (hmin : ∀ F', F' ⊂ F → s ⊂ (affineSpan ℝ s : Set V3) ∩ ⋂₀ F')
+    {c : Set V3} (hcf : FaceOf c s) (hcne : c ≠ ∅) (hcs : c ≠ s) :
+    ∃ h, h ∈ F ∧ c ⊆ s ∩ {x : V3 | a h ⬝ᵥ x = b h} := by
+  classical
+  haveI : Finite F := hF
+  have hrie : intrinsicInterior ℝ s = {y : V3 | y ∈ s ∧ ∀ i ∈ F, a i ⬝ᵥ y < b i} :=
+    RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT a b hF hs hFprop hmin
+  by_cases hFe : F = ∅
+  · -- an affine set has no nonempty proper faces
+    exfalso
+    obtain ⟨y, hy⟩ := nonempty_iff_ne_empty.2 hcne
+    have hs' : s = (affineSpan ℝ s : Set V3) := by
+      refine eq_of_subset_of_subset (subset_affineSpan ℝ s) ?_
+      intro x hx
+      rw [hs, hFe, Set.sInter_empty, Set.inter_univ]
+      exact hx
+    have hrint : intrinsicInterior ℝ s = s := rint_affine ⟨y, hcf.1 hy⟩ hs'.symm
+    have hdisj := faceOf_disjoint_rinterior hcf hcs
+    rw [hrint] at hdisj
+    exact Set.disjoint_left.1 hdisj hy (hcf.1 hy)
+  · obtain ⟨x, hx⟩ := Set.Nonempty.intrinsicInterior hcf.2.1
+      (nonempty_iff_ne_empty.2 hcne)
+    have hxc : x ∈ c := (mem_rint_iff.1 hx).1
+    have hxinS : x ∈ s := hcf.1 hxc
+    have hxnot : x ∉ intrinsicInterior ℝ s :=
+      Set.disjoint_left.1 (faceOf_disjoint_rinterior hcf hcs) hxc
+    obtain ⟨j, hjF, hj⟩ : ∃ i ∈ F, ¬(a i ⬝ᵥ x < b i) := by
+      by_contra hcon
+      push_neg at hcon
+      exact hxnot (by rw [hrie]; exact ⟨hxinS, hcon⟩)
+    have hxmem2 : x ∈ ⋂₀ F := by
+      rw [hs] at hxinS
+      exact hxinS.2
+    have hxj : a j ⬝ᵥ x ≤ b j := by
+      have h0 : x ∈ j := Set.mem_sInter.1 hxmem2 j hjF
+      rw [(hFprop j hjF).2] at h0
+      exact h0
+    have hjeq : a j ⬝ᵥ x = b j := le_antisymm hxj (not_lt.1 hj)
+    have hxu : x ∈ s ∩ {y : V3 | a j ⬝ᵥ y = b j} :=
+      ⟨hxinS, by rw [Set.mem_setOf_eq]; exact hjeq⟩
+    exact ⟨j, hjF, subset_of_faceOf (FACE_OF_POLYHEDRON_SLICE a b hF hs hFprop hmin j hjF)
+      hcf.1 (Set.not_disjoint_iff.2 ⟨x, hxu, hx⟩)⟩
+
+/-- HOL `FACE_OF_POLYHEDRON_EXPLICIT` (polytope.ml:5065): every nonempty
+proper face of `s` is the intersection of the hyperplane slices (from the
+irredundant representation) that contain it. -/
+theorem FACE_OF_POLYHEDRON_EXPLICIT {s : Set V3} {F : Set (Set V3)}
+    (a : Set V3 → V3) (b : Set V3 → ℝ) (hF : F.Finite)
+    (hs : s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : V3 | a h ⬝ᵥ x ≤ b h})
+    (hmin : ∀ F', F' ⊂ F → s ⊂ (affineSpan ℝ s : Set V3) ∩ ⋂₀ F')
+    {c : Set V3} (hcf : FaceOf c s) (hcne : c ≠ ∅) (hcs : c ≠ s) :
+    c = ⋂₀ {u | ∃ h ∈ F, u = s ∩ {y : V3 | a h ⬝ᵥ y = b h} ∧
+      c ⊆ s ∩ {y : V3 | a h ⬝ᵥ y = b h}} := by
+  classical
+  haveI : Finite F := hF
+  have hconv : Convex ℝ s := convex_of_minrep a b hF hs hFprop
+  have hrie : intrinsicInterior ℝ s = {y : V3 | y ∈ s ∧ ∀ i ∈ F, a i ⬝ᵥ y < b i} :=
+    RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT a b hF hs hFprop hmin
+  -- a point of the relative interior of the face and a tight constraint at it
+  obtain ⟨x, hx⟩ := Set.Nonempty.intrinsicInterior hcf.2.1
+    (nonempty_iff_ne_empty.2 hcne)
+  have hxc : x ∈ c := (mem_rint_iff.1 hx).1
+  have hxinS : x ∈ s := hcf.1 hxc
+  have hxnot : x ∉ intrinsicInterior ℝ s :=
+    Set.disjoint_left.1 (faceOf_disjoint_rinterior hcf hcs) hxc
+  have hxmem2 : x ∈ ⋂₀ F := by
+    rw [hs] at hxinS
+    exact hxinS.2
+  obtain ⟨j, hjF, hj⟩ : ∃ i ∈ F, ¬(a i ⬝ᵥ x < b i) := by
+    by_contra hcon
+    push_neg at hcon
+    exact hxnot (by rw [hrie]; exact ⟨hxinS, hcon⟩)
+  have hxj : a j ⬝ᵥ x ≤ b j := by
+    have h0 : x ∈ j := Set.mem_sInter.1 hxmem2 j hjF
+    rw [(hFprop j hjF).2] at h0
+    exact h0
+  have hjeq : a j ⬝ᵥ x = b j := le_antisymm hxj (not_lt.1 hj)
+  -- the family of slices containing `c`, resp. containing the rint point `x`
+  set I : Set (Set V3) := {u | ∃ h ∈ F, u = s ∩ {y : V3 | a h ⬝ᵥ y = b h} ∧
+    c ⊆ s ∩ {y : V3 | a h ⬝ᵥ y = b h}} with hI
+  set I' : Set (Set V3) := {u | ∃ h ∈ F, u = s ∩ {y : V3 | a h ⬝ᵥ y = b h} ∧
+    x ∈ s ∩ {y : V3 | a h ⬝ᵥ y = b h}} with hI'
+  have hxslice : x ∈ s ∩ {y : V3 | a j ⬝ᵥ y = b j} :=
+    ⟨hxinS, hjeq⟩
+  have hIne : I'.Nonempty :=
+    ⟨s ∩ {y : V3 | a j ⬝ᵥ y = b j}, j, hjF, rfl, hxslice⟩
+  -- the two index sets define the same family of slices
+  have hII' : I = I' := by
+    refine Set.ext fun u => ?_
+    constructor
+    · intro hu
+      rw [hI] at hu
+      obtain ⟨h, hHF, rfl, hcsub⟩ := hu
+      rw [hI']
+      exact ⟨h, hHF, rfl, hcsub hxc⟩
+    · intro hu
+      rw [hI'] at hu
+      obtain ⟨h, hHF, rfl, hxT⟩ := hu
+      rw [hI]
+      refine ⟨h, hHF, rfl, subset_of_faceOf
+        (FACE_OF_POLYHEDRON_SLICE a b hF hs hFprop hmin h hHF) hcf.1 ?_⟩
+      exact Set.not_disjoint_iff.2 ⟨x, hxT, hx⟩
+  -- `⋂₀ I'` is a face of `s` whose relative interior meets the one of `c`
+  have hIfin : I'.Finite :=
+    (Set.Finite.image (fun h => s ∩ {y : V3 | a h ⬝ᵥ y = b h}) hF).subset fun u hu => by
+      rw [hI'] at hu
+      obtain ⟨h, hHF, rfl, -⟩ := hu
+      exact ⟨h, hHF, rfl⟩
+  have hfaceI : FaceOf (⋂₀ I') s :=
+    faceOf_sInter hconv I' hIfin (fun u hu => by
+      rw [hI'] at hu
+      obtain ⟨h, hHF, rfl, -⟩ := hu
+      exact FACE_OF_POLYHEDRON_SLICE a b hF hs hFprop hmin h hHF) hIne
+  have hxmI' : x ∈ ⋂₀ I' := by
+    refine Set.mem_sInter.2 fun u hu => ?_
+    rw [hI'] at hu
+    obtain ⟨h, hHF, rfl, hxT⟩ := hu
+    exact hxT
+  set O : Set V3 := ⋂ i : {y // y ∈ F},
+    {p : V3 | a i.1 ⬝ᵥ p < b i.1 ∨ a i.1 ⬝ᵥ x = b i.1} with hO
+  have hOopen : IsOpen O := by
+    rw [hO]
+    refine isOpen_iInter_of_finite fun i => ?_
+    by_cases hih : a i.1 ⬝ᵥ x = b i.1
+    · have hset : {p : V3 | a i.1 ⬝ᵥ p < b i.1 ∨ a i.1 ⬝ᵥ x = b i.1}
+          = (univ : Set V3) := by
+        ext p
+        simp [hih]
+      rw [hset]
+      exact isOpen_univ
+    · have hset : {p : V3 | a i.1 ⬝ᵥ p < b i.1 ∨ a i.1 ⬝ᵥ x = b i.1}
+          = {p : V3 | a i.1 ⬝ᵥ p < b i.1} := by
+        ext p
+        simp [hih]
+      rw [hset]
+      exact isOpen_lt (continuous_const.dotProduct (PiLp.continuous_ofLp 2 _))
+        continuous_const
+  have hxO : x ∈ O := by
+    rw [hO, Set.mem_iInter]
+    intro i
+    by_cases hih : a i.1 ⬝ᵥ x = b i.1
+    · right
+      exact hih
+    · left
+      have h0 : x ∈ i.1 := Set.mem_sInter.1 hxmem2 i.1 i.2
+      rw [(hFprop i.1 i.2).2] at h0
+      exact lt_of_le_of_ne h0 hih
+  obtain ⟨ε', hε0', hballO⟩ := Metric.isOpen_iff.1 hOopen x hxO
+  have hxmI'rint : x ∈ intrinsicInterior ℝ (⋂₀ I') := by
+    refine mem_rint_iff.2 ⟨hxmI', ε', hε0', ?_⟩
+    intro y hy
+    have hyaff : y ∈ (affineSpan ℝ (⋂₀ I') : Set V3) := hy.2
+    have hyH : ∀ i ∈ F, a i ⬝ᵥ x = b i → a i ⬝ᵥ y = b i := by
+      intro i hiF hiEq
+      have hmem : s ∩ {y : V3 | a i ⬝ᵥ y = b i} ∈ I' :=
+        ⟨i, hiF, rfl, ⟨hxinS, hiEq⟩⟩
+      have h1 : y ∈ (affineSpan ℝ (s ∩ {y : V3 | a i ⬝ᵥ y = b i}) : Set V3) :=
+        (affineSpan_mono ℝ (Set.sInter_subset_of_mem hmem)) hyaff
+      exact affineSpan_subset_hyperplane Set.inter_subset_right x hiEq h1
+    obtain ⟨v, hvI'⟩ := hIne
+    have hvs : v ⊆ s := by
+      have hv := hvI'
+      rw [hI'] at hv
+      obtain ⟨h, hHF, rfl, -⟩ := hv
+      exact Set.inter_subset_left
+    have hyA : y ∈ (affineSpan ℝ s : Set V3) :=
+      (affineSpan_mono ℝ (Set.Subset.trans (Set.sInter_subset_of_mem hvI') hvs)) hyaff
+    have hyF : y ∈ ⋂₀ F := by
+      refine Set.mem_sInter.2 fun i hiF => ?_
+      rcases Set.mem_iInter.1 (hballO hy.1) ⟨i, hiF⟩ with h1 | h2
+      · rw [(hFprop i hiF).2, Set.mem_setOf_eq]
+        exact le_of_lt h1
+      · rw [(hFprop i hiF).2, Set.mem_setOf_eq]
+        exact (hyH i hiF h2).le
+    intro u hu
+    rw [hI'] at hu
+    obtain ⟨h, hHF, rfl, hxT⟩ := hu
+    refine ⟨?_, hyH h hHF hxT.2⟩
+    rw [hs]
+    exact ⟨hyA, hyF⟩
+  -- conclusion: the two faces agree
+  refine subset_antisymm ?_ ?_
+  · intro y hy
+    intro u hu
+    rw [hI] at hu
+    obtain ⟨h, hHF, rfl, hcsub⟩ := hu
+    exact hcsub hy
+  · rw [hII']
+    exact (faceOf_eq hcf hfaceI
+      (Set.not_disjoint_iff.2 ⟨x, hx, hxmI'rint⟩)).symm.subset
+
+/-- Skolemized minimal halfspace representation of a polyhedron. -/
+private theorem minrep_skolem {s : Set V3} (hsp : polyhedron s) :
+    ∃ F : Set (Set V3), F.Finite ∧ s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ F ∧
+      ∃ a : Set V3 → V3, ∃ b : Set V3 → ℝ,
+        (∀ h ∈ F, a h ≠ 0 ∧ h = {x : V3 | a h ⬝ᵥ x ≤ b h}) ∧
+        ∀ F', F' ⊂ F → s ⊂ (affineSpan ℝ s : Set V3) ∩ ⋂₀ F' := by
+  classical
+  obtain ⟨F, hF, hs, hFprop, hmin⟩ := POLYHEDRON_INTER_AFFINE_MINIMAL.1 hsp
+  have hFprop' : ∀ h : Set V3, ∃ a : V3, ∃ b : ℝ, h ∈ F →
+      a ≠ 0 ∧ h = {x : V3 | a ⬝ᵥ x ≤ b} := by
+    intro h
+    by_cases hh : h ∈ F
+    · obtain ⟨a, b, ha, hb⟩ := hFprop h hh
+      exact ⟨a, b, fun _ => ⟨ha, hb⟩⟩
+    · refine ⟨0, 0, fun hF0 => absurd hF0 hh⟩
+  choose a b ha hb using hFprop'
+  exact ⟨F, hF, hs, a, b, fun h hh => ⟨ha h hh, hb h hh⟩, hmin⟩
+
+/-- HOL `FACET_OF_POLYHEDRON` (polytope.ml:5190): every facet of a polyhedron
+is cut out by a single supporting halfspace. -/
+theorem FACET_OF_POLYHEDRON {s : Set V3} (hsp : polyhedron s) {c : Set V3}
+    (hcf : FacetOf c s) :
+    ∃ a : V3, ∃ b : ℝ, a ≠ 0 ∧ s ⊆ {x : V3 | a ⬝ᵥ x ≤ b} ∧
+      c = s ∩ {x : V3 | a ⬝ᵥ x = b} := by
+  obtain ⟨F, hF, hs, a, b, hFprop, hmin⟩ := minrep_skolem hsp
+  obtain ⟨j, hjF, rfl⟩ := (FACET_OF_POLYHEDRON_EXPLICIT a b hF hs hFprop hmin c).1 hcf
+  refine ⟨a j, b j, (hFprop j hjF).1, ?_, rfl⟩
+  intro x hx
+  rw [hs] at hx
+  have h0 : x ∈ j := Set.mem_sInter.1 hx.2 j hjF
+  rw [(hFprop j hjF).2] at h0
+  exact h0
+
+/-- HOL `FACE_OF_POLYHEDRON` (polytope.ml:5217): every nonempty proper face of
+a polyhedron is the intersection of the facets containing it. -/
+theorem FACE_OF_POLYHEDRON {s : Set V3} (hsp : polyhedron s) {c : Set V3}
+    (hcf : FaceOf c s) (hcne : c ≠ ∅) (hcs : c ≠ s) :
+    c = ⋂₀ {f : Set V3 | FacetOf f s ∧ c ⊆ f} := by
+  obtain ⟨F, hF, hs, a, b, hFprop, hmin⟩ := minrep_skolem hsp
+  have hIeq : {f : Set V3 | FacetOf f s ∧ c ⊆ f}
+      = {u | ∃ h ∈ F, u = s ∩ {y : V3 | a h ⬝ᵥ y = b h} ∧
+          c ⊆ s ∩ {y : V3 | a h ⬝ᵥ y = b h}} := by
+    refine Set.ext fun f => ?_
+    constructor
+    · rintro ⟨hfac, hcsub⟩
+      obtain ⟨h, hHF, hfeq⟩ :=
+        (FACET_OF_POLYHEDRON_EXPLICIT a b hF hs hFprop hmin f).1 hfac
+      refine ⟨h, hHF, hfeq, ?_⟩
+      rw [hfeq] at hcsub
+      exact hcsub
+    · rintro ⟨h, hHF, rfl, hcsub⟩
+      exact ⟨(FACET_OF_POLYHEDRON_EXPLICIT a b hF hs hFprop hmin
+        (s ∩ {y : V3 | a h ⬝ᵥ y = b h})).2 ⟨h, hHF, rfl⟩, hcsub⟩
+  rw [hIeq]
+  exact FACE_OF_POLYHEDRON_EXPLICIT a b hF hs hFprop hmin hcf hcne hcs
+
+/-- HOL `RELATIVE_INTERIOR_OF_POLYHEDRON` (polytope.ml:5359): the relative
+interior of a polyhedron is the polyhedron minus its facets. -/
+theorem RELATIVE_INTERIOR_OF_POLYHEDRON {s : Set V3} (hsp : polyhedron s) :
+    intrinsicInterior ℝ s = s \ ⋃₀ {f : Set V3 | FacetOf f s} := by
+  classical
+  obtain ⟨F, hF, hs, a, b, hFprop, hmin⟩ := minrep_skolem hsp
+  have hrie : intrinsicInterior ℝ s = {y : V3 | y ∈ s ∧ ∀ i ∈ F, a i ⬝ᵥ y < b i} :=
+    RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT a b hF hs hFprop hmin
+  refine Set.ext fun x => ?_
+  constructor
+  · intro hxmem
+    rw [hrie] at hxmem
+    obtain ⟨hxS', hxstrict⟩ := hxmem
+    refine ⟨hxS', ?_⟩
+    intro hcon
+    rw [Set.mem_sUnion] at hcon
+    obtain ⟨f, hf, hxf⟩ := hcon
+    obtain ⟨j, hjF, rfl⟩ := (FACET_OF_POLYHEDRON_EXPLICIT a b hF hs hFprop hmin f).1 hf
+    have hjeq : a j ⬝ᵥ x = b j := hxf.2
+    exact absurd (hxstrict j hjF) (not_lt.2 hjeq.symm.le)
+  · intro hxmem
+    obtain ⟨hxS, hxnof⟩ := (Set.mem_sdiff x).1 hxmem
+    have hxnof' : ∀ f ∈ {f : Set V3 | FacetOf f s}, x ∉ f := by
+      intro f hf hxf
+      exact hxnof (Set.mem_sUnion.2 ⟨f, hf, hxf⟩)
+    rw [hrie]
+    refine ⟨hxS, fun i hiF => ?_⟩
+    by_contra hcon
+    have hxle : a i ⬝ᵥ x ≤ b i := by
+      have h0 : x ∈ ⋂₀ F := by
+        rw [hs] at hxS
+        exact hxS.2
+      have h1 : x ∈ i := Set.mem_sInter.1 h0 i hiF
+      rw [(hFprop i hiF).2] at h1
+      exact h1
+    have hieq : a i ⬝ᵥ x = b i := le_antisymm hxle (not_lt.1 hcon)
+    have hsne : s ≠ ∅ := nonempty_iff_ne_empty.1 ⟨x, hxS⟩
+    obtain ⟨x0, hx0s, hx0eq, -, -⟩ := slice_cross a b hF hs hFprop hmin hsne i hiF
+    have hfacet : FacetOf (s ∩ {y : V3 | a i ⬝ᵥ y = b i}) s :=
+      (FACET_OF_POLYHEDRON_EXPLICIT a b hF hs hFprop hmin
+        (s ∩ {y : V3 | a i ⬝ᵥ y = b i})).2 ⟨i, hiF, rfl⟩
+    exact hxnof' _ hfacet ⟨hxS, hieq⟩
+
 end Kepler.Text
