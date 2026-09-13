@@ -2109,6 +2109,22 @@ HOL 原文：
 theorem GGRLKHP (x : V3) (V : Set V3) (E : Set (Set V3)) (hfan : FAN x V E)
     (hconf : conformingFan x V E hfan) :
     (hypermapOfFan x V E hfan).Planar := by
-  sorry
+  have hc : (hypermapOfFan x V E hfan).numberOfComponents = 1 := WGVWSKE x V E hfan hconf
+  have h1 := SUM_CARD_FACE_NODE_DART_FAN hfan hconf
+  have h2 := REP_CARD_EDGE_SET_FAN x V E hfan hconf
+  have key : (((hypermapOfFan x V E hfan).nodeSet.ncard +
+      (hypermapOfFan x V E hfan).edgeSet.ncard +
+      (hypermapOfFan x V E hfan).faceSet.ncard : ℕ) : ℝ) =
+      ((hypermapOfFan x V E hfan).darts.card + 2 : ℕ) := by
+    push_cast
+    rw [← h2]
+    linarith
+  have hnat : (hypermapOfFan x V E hfan).nodeSet.ncard +
+      (hypermapOfFan x V E hfan).edgeSet.ncard +
+      (hypermapOfFan x V E hfan).faceSet.ncard =
+      (hypermapOfFan x V E hfan).darts.card + 2 := Nat.cast_inj.mp key
+  unfold Hypermap.Planar
+  rw [hc]
+  exact hnat
 
 end Kepler.Text
