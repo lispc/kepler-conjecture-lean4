@@ -135,7 +135,7 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 ## 整体估计
 
 - **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 **G4 已开工**（`IExpr.abs`/`ite`、析取证书 `bb_sound_disj` 已进 main，剩 `TKind.ln` + `emit_lean.py` 粘合），尚无案例端到端进内核。
-- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** + Conforming ~10.3k 行 ≈ **52k 行 HOL 源**；待移植 ≈ 68k 行（Conforming 余 6.7k / packing 28k / local 30k / assembly 等）。按行数口径 **~43%**。
+- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** + **Conforming 100%（17k 行，23 批 ~230 枚，零 sorry）** ≈ **59k 行 HOL 源**；待移植 ≈ 61k 行（packing 28k / local 30k / assembly 等）。按行数口径 **~49%**。
   另：**体积/测度论层已从零建成**（`Kepler/Geom/*.lean`，~3.4k 行，含 HOL Light 多元库的球面立体角链），这是原计划里没算到的关键前置，现已就位，后续 Packing/Local 可复用。
 - **全项目粗略完成度：~60%**。
 
@@ -144,3 +144,5 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 1. main 分支：`lake build Kepler` 全绿 + `grep sorry/admit/native_decide` 零命中（Statement.lean:111 与 Graphs.Cert* 例外）+ 新定理 `#print axioms` 仅 `[propext, Classical.choice, Quot.sound]`；
 2. wip 分支：允许 sorry（骨架占位），进 main 前由主 agent 批次审计陈述保真；
 3. 自动化 harness 的提交由机械闸背书 + 主 agent 审计兜底；人工派工的提交由主 agent 逐块验收。
+
+- **全项目粗略完成度：~59%**。

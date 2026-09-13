@@ -187,3 +187,10 @@ git log --oneline -3 main
 make check                      # build + 公理审计，应全绿
 tail -20 /tmp/auto_pipeline.log # 流水线状态（若在跑）
 ```
+
+## 2026-09-12 里程碑：Conforming.hl 全书收官（main @ d77c13f）
+- **fan/Conforming.hl（17,033 行）23 批 ~230 枚定理全部闭合，零 sorry、标准公理，已合入 main**（`make check` 绿）。批次 1-18 由 opencode-CLI 流水线完成；批次 19-23（含巨证 `lemma_connect_hypermap`，HOL 证明 ~1900 行）由主 agent 直接以 Task sub-agent 完成——CLI 派发方式已废弃（ARG_MAX 128KiB 上限 + 无必要）。
+- **新架构**：主 agent 编排（派 worker / 跑 `auto_gate.sh` 验收 / git / state），sub-agent 干活；多批次用 `git worktree` 分道（lane-bNN 分支 + `cp -al` 硬链接 `.lake`）并行，完成后 merge 回 wip 再合 main。
+- **两阶段攻坚法**（难定理标配）：先派"规划者"出可执行证明计划（目标分解+have 链+辅助引理清单+读取预算），再派"执行者"照计划落地——TXFBALB、`conforming_diagonal_fanadd1`、`lemma_connect_hypermap` 均如此拿下。
+- **教训**：W2 曾冻结出假辅助命题（单面 vs 相邻双面，正四面体反例），被 W3 用反例挡下，W4 重述为交叉式（下侧∈face(w,v)、上侧∈face(v,w)，由 azim 符号决定）后闭合。假命题审查是流程的一部分。
+- **state**：`scripts/auto_pipeline_conforming_state.txt = DONE 23`。下一目标：`polyhedron.hl`（~3.2k 行，依赖 Conforming 已就绪）→ packing → local → assembly。
