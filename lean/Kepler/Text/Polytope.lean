@@ -522,4 +522,528 @@ theorem faceOf_eq_affineInter {t s : Set V3} (_hs : Convex ℝ s) (hface : FaceO
       exact (hface.2.2 _ _ _ hx0's hys hdmid hdmidseg).2
 
 
+/-! ## #5 polyhedron basics (HOL polytope1.ml `polyhedron`, short item set) -/
+
+/-- Dot product additivity in the second argument (V3 bridge, via `dotRight`). -/
+private theorem dot_add (a x y : V3) : a ⬝ᵥ (x + y) = a ⬝ᵥ x + a ⬝ᵥ y :=
+  LinearMap.map_add (dotRight a) x y
+
+/-- Dot product difference in the second argument (V3 bridge, via `dotRight`). -/
+private theorem dot_sub (a x y : V3) : a ⬝ᵥ (x - y) = a ⬝ᵥ x - a ⬝ᵥ y :=
+  LinearMap.map_sub (dotRight a) x y
+
+/-- Dot product homogeneity in the second argument (V3 bridge, via `dotRight`). -/
+private theorem dot_smul (a : V3) (r : ℝ) (x : V3) : a ⬝ᵥ (r • x) = r * (a ⬝ᵥ x) := by
+  rw [show a ⬝ᵥ (r • x) = (RingHom.id ℝ) r • (a ⬝ᵥ x) from
+    LinearMap.map_smul (dotRight a) r x, RingHom.id_apply, smul_eq_mul]
+
+/-- Negation of the left argument (V3 bridge). -/
+private theorem dot_neg_left (a x : V3) : (-a) ⬝ᵥ x = -(a ⬝ᵥ x) := by
+  show (-a).ofLp ⬝ᵥ x.ofLp = -(a.ofLp ⬝ᵥ x.ofLp)
+  rw [WithLp.ofLp_neg, neg_dotProduct]
+
+/-- The halfspace `{x : V3 | a ⬝ᵥ x ≤ b}` is convex. -/
+private theorem convex_halfspace_le (a : V3) (b : ℝ) : Convex ℝ {x : V3 | a ⬝ᵥ x ≤ b} := by
+  intro x hx y hy u v hu hv hab
+  simp only [Set.mem_setOf_eq] at hx hy ⊢
+  have h : a ⬝ᵥ (u • x + v • y) = u * (a ⬝ᵥ x) + v * (a ⬝ᵥ y) := by
+    rw [dot_add, dot_smul, dot_smul]
+  rw [WithLp.ofLp_add, WithLp.ofLp_smul, WithLp.ofLp_smul, h]
+  have hu1 : u + v = 1 := hab
+  have h3 : u * b + v * b = b := by
+    have h4 : (u + v) * b = b := by rw [hu1, one_mul]
+    rwa [add_mul] at h4
+  exact le_trans (add_le_add (mul_le_mul_of_nonneg_left hx hu)
+    (mul_le_mul_of_nonneg_left hy hv)) (by rw [h3])
+
+/-- The halfspace `{x : V3 | a ⬝ᵥ x ≤ b}` is closed. -/
+private theorem isClosed_halfspace_le (a : V3) (b : ℝ) : IsClosed {x : V3 | a ⬝ᵥ x ≤ b} := by
+  have hc : Continuous fun y : V3 => a ⬝ᵥ y :=
+    continuous_const.dotProduct (PiLp.continuous_ofLp 2 _)
+  exact isClosed_le hc continuous_const
+
+/-- HOL `POLYHEDRON_UNIV`. -/
+theorem POLYHEDRON_UNIV : polyhedron (univ : Set V3) := by
+  refine ⟨∅, Set.finite_empty, ?_, ?_⟩
+  · simp
+  · intro h hh
+    exact absurd hh (by simp)
+
+/-- HOL `POLYHEDRON_EMPTY`: `∅` is the intersection of two opposite halfspaces. -/
+theorem POLYHEDRON_EMPTY : polyhedron (∅ : Set V3) := by
+  obtain ⟨a, ha⟩ := exists_ne (0 : V3)
+  refine ⟨{{x : V3 | a ⬝ᵥ x ≤ 0}, {x : V3 | 1 ≤ a ⬝ᵥ x}}, by simp, ?_, ?_⟩
+  · rw [Set.sInter_insert, Set.sInter_singleton]
+    ext x
+    simp only [Set.mem_empty_iff_false, false_iff, Set.mem_inter_iff, not_and]
+    intro hx1 hx2
+    simp only [Set.mem_setOf_eq] at hx1 hx2
+    linarith
+  · intro k hk
+    rcases Set.mem_insert_iff.1 hk with rfl | hk
+    · exact ⟨a, 0, ha, rfl⟩
+    · rcases Set.mem_singleton_iff.1 hk with rfl
+      refine ⟨-a, -1, neg_ne_zero.2 ha, ?_⟩
+      ext x
+      simp only [Set.mem_setOf_eq]
+      constructor
+      · intro h
+        show (-a) ⬝ᵥ x ≤ -1
+        rw [dot_neg_left]
+        linarith
+      · intro h
+        show 1 ≤ a ⬝ᵥ x
+        rw [dot_neg_left] at h
+        linarith
+
+/-- HOL `POLYHEDRON_HALFSPACE_LE`. -/
+theorem POLYHEDRON_HALFSPACE_LE {a : V3} (ha : a ≠ 0) (b : ℝ) :
+    polyhedron {x : V3 | a ⬝ᵥ x ≤ b} := by
+  refine ⟨{{x : V3 | a ⬝ᵥ x ≤ b}}, Set.finite_singleton _, ?_, ?_⟩
+  · simp
+  · intro k hk
+    rcases Set.mem_singleton_iff.1 hk with rfl
+    exact ⟨a, b, ha, rfl⟩
+
+/-- HOL `POLYHEDRON_INTER`. -/
+theorem POLYHEDRON_INTER {s t : Set V3} (hs : polyhedron s) (ht : polyhedron t) :
+    polyhedron (s ∩ t) := by
+  obtain ⟨F, hF, rfl, hFprop⟩ := hs
+  obtain ⟨G, hG, rfl, hGprop⟩ := ht
+  refine ⟨F ∪ G, hF.union hG, ?_, ?_⟩
+  · rw [Set.sInter_union]
+  · intro k hk
+    rcases Set.mem_union _ _ _ |>.1 hk with hk | hk
+    · exact hFprop _ hk
+    · exact hGprop _ hk
+
+/-- HOL `POLYHEDRON_HYPERPLANE`. -/
+theorem POLYHEDRON_HYPERPLANE {a : V3} (ha : a ≠ 0) (b : ℝ) :
+    polyhedron {x : V3 | a ⬝ᵥ x = b} := by
+  have hset : {x : V3 | a ⬝ᵥ x = b} =
+      {x : V3 | a ⬝ᵥ x ≤ b} ∩ {x : V3 | b ≤ a ⬝ᵥ x} := by
+    ext x
+    simp only [Set.mem_inter_iff, Set.mem_setOf_eq, le_antisymm_iff]
+  rw [hset]
+  have hge : polyhedron {x : V3 | b ≤ a ⬝ᵥ x} := by
+    have : {x : V3 | b ≤ a ⬝ᵥ x} = {x : V3 | (-a) ⬝ᵥ x ≤ -b} := by
+      ext x
+      simp only [Set.mem_setOf_eq]
+      constructor
+      · intro h
+        show (-a) ⬝ᵥ x ≤ -b
+        rw [dot_neg_left]
+        linarith
+      · intro h
+        show b ≤ a ⬝ᵥ x
+        rw [dot_neg_left] at h
+        linarith
+    rw [this]
+    exact POLYHEDRON_HALFSPACE_LE (neg_ne_zero.2 ha) (-b)
+  exact POLYHEDRON_INTER (POLYHEDRON_HALFSPACE_LE ha b) hge
+
+/-- HOL `POLYHEDRON_INTERS`: a finite intersection of polyhedra is a polyhedron. -/
+theorem POLYHEDRON_INTERS {F : Set (Set V3)} (hF : F.Finite)
+    (hFprop : ∀ k ∈ F, polyhedron k) : polyhedron (⋂₀ F) := by
+  classical
+  refine Set.Finite.induction_on
+    (motive := fun t _ => (∀ j ∈ t, polyhedron j) → polyhedron (⋂₀ t)) F hF ?_ ?_
+    hFprop
+  · intro _
+    simpa using POLYHEDRON_UNIV
+  · intro k s' hk _ ih hprop
+    rw [Set.sInter_insert]
+    exact POLYHEDRON_INTER (hprop k (Set.mem_insert k s'))
+      (ih fun j hj => hprop j (Set.mem_insert_of_mem k hj))
+
+/-- HOL `POLYHEDRON_IMP_CLOSED`. -/
+theorem POLYHEDRON_IMP_CLOSED {s : Set V3} (hs : polyhedron s) : IsClosed s := by
+  obtain ⟨F, hF, rfl, hFprop⟩ := hs
+  exact isClosed_sInter fun k hk => by
+    obtain ⟨a, b, -, rfl⟩ := hFprop k hk
+    exact isClosed_halfspace_le a b
+
+/-- HOL `POLYHEDRON_IMP_CONVEX`. -/
+theorem POLYHEDRON_IMP_CONVEX {s : Set V3} (hs : polyhedron s) : Convex ℝ s := by
+  obtain ⟨F, hF, rfl, hFprop⟩ := hs
+  exact convex_sInter fun k hk => by
+    obtain ⟨a, b, -, rfl⟩ := hFprop k hk
+    exact convex_halfspace_le a b
+
+/-! ## #6 affine sets are polyhedra (kernel of HOL `AFFINE_IMP_POLYHEDRON`) -/
+
+/-- For `V3` the real inner product agrees with the dot product. -/
+private theorem inner_eq_dot (v u : V3) : (inner ℝ v u) = v ⬝ᵥ u := by
+  rw [EuclideanSpace.inner_eq_star_dotProduct, dotProduct_comm]
+  simp
+
+/-- Every affine subspace of `V3` is a polyhedron: it is a finite intersection
+of halfspaces.  (HOL `AFFINE_IMP_POLYHEDRON`, polytope.ml:4462.) -/
+private theorem affineSubspace_polyhedron (A : AffineSubspace ℝ V3) :
+    polyhedron (A : Set V3) := by
+  classical
+  rcases eq_or_ne A ⊥ with hbot | hbot
+  · rw [hbot, AffineSubspace.bot_coe]
+    exact POLYHEDRON_EMPTY
+  · obtain ⟨c, hc⟩ := (AffineSubspace.nonempty_iff_ne_bot A).2 hbot
+    set K := A.direction with hK
+    have hmem : ∀ x : V3, x ∈ A ↔ x - c ∈ K := by
+      intro x
+      constructor
+      · intro hx
+        have h1 : (x -ᵥ c) ∈ K := AffineSubspace.vsub_mem_direction hx hc
+        rwa [vsub_eq_sub] at h1
+      · intro hxc
+        have h1 : ((x - c) +ᵥ c) ∈ A :=
+          AffineSubspace.vadd_mem_of_mem_direction hxc hc
+        rwa [vadd_eq_add, sub_add_cancel] at h1
+    -- a finite spanning family of `Kᗮ` without the zero vector
+    have hfd : (Submodule.orthogonal K).FG :=
+      (Submodule.fg_iff_finiteDimensional _).2 (by infer_instance)
+    obtain ⟨t0, ht0⟩ := hfd
+    set t : Finset V3 := t0.filter (fun v : V3 => v ≠ 0) with htdef
+    have hsub0 : (↑t : Set V3) ⊆ ↑t0 := by
+      intro v hv
+      obtain ⟨hv1, _⟩ := Finset.mem_filter.1 (Finset.mem_coe.1 hv)
+      exact Finset.mem_coe.2 hv1
+    have hspan : Submodule.span ℝ (↑t : Set V3) = Submodule.orthogonal K := by
+      rw [← ht0]
+      refine le_antisymm (Submodule.span_mono hsub0) ?_
+      rw [Submodule.span_le]
+      intro v hv
+      by_cases hv0 : v = 0
+      · subst hv0
+        exact Submodule.zero_mem _
+      · refine Submodule.subset_span ?_
+        exact Finset.mem_filter.2 ⟨Finset.mem_coe.2 hv, hv0⟩
+    have hK2 : Submodule.orthogonal (Submodule.orthogonal K) = K := by
+      rw [Submodule.orthogonal_orthogonal_eq_closure]
+      exact (Submodule.closed_of_finiteDimensional K).submodule_topologicalClosure_eq
+    have hbridge : ∀ x : V3, x - c ∈ K ↔ ∀ v ∈ (↑t : Set V3), (inner ℝ v (x - c)) = 0 := by
+      intro x
+      constructor
+      · intro hxm v hv
+        have hvK : v ∈ Submodule.orthogonal K := by
+          rw [← hspan]
+          exact Submodule.subset_span hv
+        rw [Submodule.mem_orthogonal'] at hvK
+        exact hvK (x - c) hxm
+      · intro h
+        have hsp : Submodule.span ℝ (↑t : Set V3) ≤ LinearMap.ker
+            ({ toFun := fun u : V3 => inner ℝ u (x - c),
+               map_add' := by intro p q; rw [inner_add_left],
+               map_smul' := by intro r p; simp [inner_smul_left] } :
+               V3 →ₗ[ℝ] ℝ) := by
+          rw [Submodule.span_le]
+          intro v hv
+          simp only [SetLike.mem_coe, LinearMap.mem_ker]
+          show (inner ℝ v (x - c) : ℝ) = 0
+          exact h v hv
+        have hmem2 : (x - c) ∈ Submodule.orthogonal (Submodule.orthogonal K) := by
+          rw [Submodule.mem_orthogonal]
+          intro u hu
+          exact hsp (by rw [hspan]; exact hu)
+        rw [hK2] at hmem2
+        exact hmem2
+    refine ⟨(fun v : V3 => {x : V3 | v ⬝ᵥ x ≤ v ⬝ᵥ c}) '' ↑t ∪
+      (fun v : V3 => {x : V3 | v ⬝ᵥ c ≤ v ⬝ᵥ x}) '' ↑t,
+      (t.finite_toSet.image _).union (t.finite_toSet.image _), ?_, ?_⟩
+    · ext x
+      constructor
+      · intro hx
+        have hxm : x - c ∈ K := (hmem x).1 hx
+        rw [Set.mem_sInter]
+        intro k hk
+        rcases Set.mem_union _ _ _ |>.1 hk with ⟨v, hv, rfl⟩ | ⟨v, hv, rfl⟩
+        · have h2 : v ⬝ᵥ (x - c) = 0 := by
+            rw [← inner_eq_dot]
+            exact (hbridge x).1 hxm v hv
+          have h3 := dot_sub v x c
+          rw [h2] at h3
+          simp only [Set.mem_setOf_eq]
+          linarith
+        · have h2 : v ⬝ᵥ (x - c) = 0 := by
+            rw [← inner_eq_dot]
+            exact (hbridge x).1 hxm v hv
+          have h3 := dot_sub v x c
+          rw [h2] at h3
+          simp only [Set.mem_setOf_eq]
+          linarith
+      · intro hx
+        rw [Set.mem_sInter] at hx
+        have hall : ∀ v ∈ (↑t : Set V3), v ⬝ᵥ x = v ⬝ᵥ c := by
+          intro v hv
+          have h1 := hx _ (Set.mem_union_left _ (Set.mem_image_of_mem _ hv))
+          have h2 := hx _ (Set.mem_union_right _ (Set.mem_image_of_mem _ hv))
+          simp only [Set.mem_setOf_eq] at h1 h2
+          linarith
+        refine (hmem x).2 ((hbridge x).2 fun v hv => ?_)
+        rw [inner_eq_dot]
+        have h3 := dot_sub v x c
+        rw [hall v hv, sub_self] at h3
+        exact h3
+    · intro k hk
+      rcases Set.mem_union _ _ _ |>.1 hk with ⟨v, hv, rfl⟩ | ⟨v, hv, rfl⟩
+      · exact ⟨v, v ⬝ᵥ c, (Finset.mem_filter.1 hv).2, rfl⟩
+      · refine ⟨-v, -(v ⬝ᵥ c), neg_ne_zero.2 (Finset.mem_filter.1 hv).2, ?_⟩
+        ext x
+        simp only [Set.mem_setOf_eq]
+        constructor
+        · intro h
+          show (-v) ⬝ᵥ x ≤ -(v ⬝ᵥ c)
+          rw [dot_neg_left]
+          linarith
+        · intro h
+          show v ⬝ᵥ c ≤ v ⬝ᵥ x
+          rw [dot_neg_left] at h
+          linarith
+
+/-- HOL `POLYHEDRON_AFFINE_HULL` (via `AFFINE_IMP_POLYHEDRON`). -/
+theorem POLYHEDRON_AFFINE_HULL (s : Set V3) : polyhedron (affineSpan ℝ s : Set V3) :=
+  affineSubspace_polyhedron _
+
+/-! ## #7 POLYHEDRON_INTER_AFFINE (HOL polytope.ml:4502) -/
+
+/-- HOL `POLYHEDRON_INTER_AFFINE`: canonical affine-hull + halfspace
+representation of a polyhedron. -/
+theorem POLYHEDRON_INTER_AFFINE {s : Set V3} :
+    polyhedron s ↔ ∃ F : Set (Set V3), F.Finite ∧
+      s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ F ∧
+      ∀ h ∈ F, ∃ a : V3, ∃ b : ℝ, a ≠ 0 ∧ h = {x : V3 | a ⬝ᵥ x ≤ b} := by
+  constructor
+  · rintro ⟨F, hF, rfl, hFprop⟩
+    refine ⟨F, hF, Set.eq_of_subset_of_subset (fun x hx => ?_) Set.inter_subset_right, hFprop⟩
+    exact ⟨subset_affineSpan ℝ _ hx, hx⟩
+  · rintro ⟨F, hF, hs, hFprop⟩
+    rw [hs]
+    exact POLYHEDRON_INTER (POLYHEDRON_AFFINE_HULL s) (POLYHEDRON_INTERS hF
+      (fun k hk => by
+        obtain ⟨a, b, ha, rfl⟩ := hFprop k hk
+        exact POLYHEDRON_HALFSPACE_LE ha b))
+
+/-! ## #8 POLYHEDRON_INTER_AFFINE_MINIMAL (HOL polytope.ml:4628,
+POLYHEDRON_INTER_AFFINE_PARALLEL_MINIMAL collapsed to a direct
+cardinality-minimal argument) -/
+
+/-- HOL `POLYHEDRON_INTER_AFFINE_MINIMAL`: a polyhedron admits a finite
+halfspace representation that is *irredundant*: every proper subfamily
+strictly enlarges the set. -/
+theorem POLYHEDRON_INTER_AFFINE_MINIMAL {s : Set V3} :
+    polyhedron s ↔ ∃ F : Set (Set V3), F.Finite ∧
+      s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ F ∧
+      (∀ h ∈ F, ∃ a : V3, ∃ b : ℝ, a ≠ 0 ∧ h = {x : V3 | a ⬝ᵥ x ≤ b}) ∧
+      ∀ F', F' ⊂ F → s ⊂ (affineSpan ℝ s : Set V3) ∩ ⋂₀ F' := by
+  classical
+  refine ⟨fun h => ?_, fun h => POLYHEDRON_INTER_AFFINE.2 (by
+    obtain ⟨F, hF, hs, hFprop, -⟩ := h
+    exact ⟨F, hF, hs, hFprop⟩)⟩
+  obtain ⟨F0, hF0, hs0, hF0prop⟩ := POLYHEDRON_INTER_AFFINE.1 h
+  set Swit : Set (Set (Set V3)) := {G : Set (Set V3) | G.Finite ∧
+    s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ G ∧
+    (∀ h ∈ G, ∃ a : V3, ∃ b : ℝ, a ≠ 0 ∧ h = {x : V3 | a ⬝ᵥ x ≤ b})} with hSwit
+  have hWne : Swit.Nonempty := ⟨F0, by
+    rw [hSwit, Set.mem_setOf_eq]
+    exact ⟨hF0, hs0, hF0prop⟩⟩
+  set F := Function.argminOn (f := Set.ncard) Swit hWne with hFdef
+  have hFmem : F ∈ Swit := Function.argminOn_mem (f := Set.ncard) Swit hWne
+  obtain ⟨hF, hs, hFprop⟩ : (F.Finite ∧ s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ F ∧
+      ∀ h ∈ F, ∃ a : V3, ∃ b : ℝ, a ≠ 0 ∧ h = {x : V3 | a ⬝ᵥ x ≤ b}) := hFmem
+  refine ⟨F, hF, hs, hFprop, ?_⟩
+  intro F' hsub
+  have hsubFF : F' ⊆ F := hsub.1
+  have hF'fin : F'.Finite := hF.subset hsubFF
+  have hF'prop : ∀ h ∈ F', ∃ a : V3, ∃ b : ℝ, a ≠ 0 ∧ h = {x : V3 | a ⬝ᵥ x ≤ b} :=
+    fun h hk => hFprop h (hsubFF hk)
+  have hssub : s ⊆ (affineSpan ℝ s : Set V3) ∩ ⋂₀ F' := by
+    refine Set.subset_inter (subset_affineSpan ℝ s) ?_
+    calc s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ F := hs
+      _ ⊆ ⋂₀ F := Set.inter_subset_right
+      _ ⊆ ⋂₀ F' := Set.sInter_subset_sInter hsubFF
+  refine Set.ssubset_iff_subset_ne.2 ⟨hssub, fun heq => ?_⟩
+  have hF'mem : F' ∈ Swit := by
+    rw [hSwit, Set.mem_setOf_eq]
+    exact ⟨hF'fin, heq, hF'prop⟩
+  have hlt : F'.ncard < F.ncard := Set.ncard_lt_ncard hsub hF
+  exact Function.not_lt_argminOn (f := Set.ncard) Swit hF'mem hlt
+
+/-! ## #9 RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT (HOL polytope.ml:4640) -/
+
+/-- HOL `RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT`: for an irredundant
+halfspace representation `s = affine hull s ∩ ⋂₀ F`, the intrinsic interior
+is cut out by the *strict* inequalities. -/
+theorem RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT {s : Set V3} {F : Set (Set V3)}
+    (a : Set V3 → V3) (b : Set V3 → ℝ)
+    (hF : F.Finite)
+    (hs : s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : V3 | a h ⬝ᵥ x ≤ b h})
+    (hmin : ∀ F', F' ⊂ F → s ⊂ (affineSpan ℝ s : Set V3) ∩ ⋂₀ F') :
+    intrinsicInterior ℝ s = {x : V3 | x ∈ s ∧ ∀ h ∈ F, a h ⬝ᵥ x < b h} := by
+  classical
+  haveI : Finite F := hF
+  ext x
+  constructor
+  · -- the intrinsic interior is inside every defining halfspace, strictly
+    intro hx
+    obtain ⟨hxmem, ε, hε0, hball⟩ := mem_rint_iff.1 hx
+    refine ⟨hxmem, fun h hk => ?_⟩
+    obtain ⟨ha, hh⟩ := hFprop h hk
+    have hxInter : x ∈ ⋂₀ F := by rw [hs] at hxmem; exact hxmem.2
+    have hxh : x ∈ h := Set.mem_sInter.1 hxInter h hk
+    rw [hh, Set.mem_setOf_eq] at hxh
+    have hxA : a h ⬝ᵥ x ≤ b h := hxh
+    by_contra hcon
+    push_neg at hcon
+    have heq : a h ⬝ᵥ x = b h := le_antisymm hxA hcon
+    -- remove the h-th halfspace: minimality produces z in the affine hull
+    -- violating h but satisfying all the others
+    have hsdiff : F \ {h} ⊂ F := by
+      refine Set.ssubset_iff_subset_ne.2 ⟨Set.sdiff_subset, fun hEq => ?_⟩
+      have hmem' : h ∈ F \ {h} := by rw [hEq]; exact hk
+      exact absurd hmem'.2 (by simp)
+    obtain ⟨-, z, hzT, hzs⟩ := Set.ssubset_iff_exists.1 (hmin _ hsdiff)
+    have hzaff : z ∈ (affineSpan ℝ s : Set V3) := hzT.1
+    have hall : ∀ i ∈ F \ {h}, z ∈ i := fun i hi =>
+      Set.mem_sInter.1 hzT.2 i hi
+    have hzF : z ∉ ⋂₀ F := by
+      rw [hs] at hzs
+      exact fun hz' => hzs ⟨hzaff, hz'⟩
+    obtain ⟨i, hiF, hzi⟩ : ∃ i ∈ F, z ∉ i := by
+      by_contra hcon'
+      push_neg at hcon'
+      exact hzF (Set.mem_sInter.2 hcon')
+    have hih : i = h := by
+      by_contra hne
+      exact hzi (hall i ⟨hiF, by simp [hne]⟩)
+    have hAz : b h < a h ⬝ᵥ z := by
+      have hkz : z ∉ h := by rw [← hih]; exact hzi
+      rw [hh] at hkz
+      simpa only [Set.mem_setOf_eq, not_le] using hkz
+    -- the point w := x + t • (z - x) lies in s but violates the h-th halfspace
+    set t : ℝ := min (1 / 2) (ε / (2 * (‖z - x‖ + 1))) with htdef
+    have ht0 : 0 < t := lt_min (by norm_num : (0:ℝ) < 1 / 2)
+      (div_pos hε0 (by positivity))
+    have ht1 : t < 1 := lt_of_le_of_lt (min_le_left _ _) (by norm_num : (1 / 2 : ℝ) < 1)
+    have hwball : ‖x + t • (z - x) - x‖ < ε := by
+      have hstep : x + t • (z - x) - x = t • (z - x) := by
+        rw [smul_sub]; module
+      rw [hstep, norm_smul, Real.norm_eq_abs, abs_of_pos ht0]
+      have h1 : t ≤ ε / (2 * (‖z - x‖ + 1)) := min_le_right _ _
+      have hK0 : 0 ≤ ε / (2 * (‖z - x‖ + 1)) := div_nonneg hε0.le (by positivity)
+      have h2 : ‖z - x‖ ≤ ‖z - x‖ + 1 := by linarith [norm_nonneg (z - x)]
+      calc t * ‖z - x‖ ≤ (ε / (2 * (‖z - x‖ + 1))) * ‖z - x‖ :=
+          mul_le_mul_of_nonneg_right h1 (norm_nonneg (z - x))
+        _ ≤ (ε / (2 * (‖z - x‖ + 1))) * (‖z - x‖ + 1) :=
+          mul_le_mul_of_nonneg_left h2 hK0
+        _ = ε / 2 := by field_simp
+      linarith
+    have hxaff : x ∈ (affineSpan ℝ s : Set V3) := subset_affineSpan ℝ s hxmem
+    have hw : x + t • (z - x) ∈ s :=
+      hball ⟨hwball, affineSpan_lineq hxaff hxaff hzaff t⟩
+    have hws : x + t • (z - x) ∈ ⋂₀ F := by rw [hs] at hw; exact hw.2
+    have hwh : x + t • (z - x) ∈ h := Set.mem_sInter.1 hws h hk
+    rw [hh, Set.mem_setOf_eq] at hwh
+    have hwA : a h ⬝ᵥ (x + t • (z - x)) ≤ b h := hwh
+    have hAw : a h ⬝ᵥ (x + t • (z - x))
+        = a h ⬝ᵥ x + t * (a h ⬝ᵥ z - a h ⬝ᵥ x) := by
+      have e1 : a h ⬝ᵥ (x + t • (z - x)) = a h ⬝ᵥ x + a h ⬝ᵥ (t • (z - x)) :=
+        dot_add _ _ _
+      have e2 : a h ⬝ᵥ (t • (z - x)) = t * (a h ⬝ᵥ (z - x)) := dot_smul _ _ _
+      have e3 : a h ⬝ᵥ (z - x) = a h ⬝ᵥ z - a h ⬝ᵥ x := dot_sub _ _ _
+      rw [e1, e2, e3]
+    rw [heq] at hAw
+    rw [hAw] at hwA
+    have hpos' : 0 < t * (a h ⬝ᵥ z - b h) := mul_pos ht0 (by linarith)
+    linarith
+  · -- all strict inequalities give a point of the intrinsic interior
+    rintro ⟨hxmem, hstrict⟩
+    set O : Set V3 := ⋂ h : {y // y ∈ F}, {y : V3 | a h ⬝ᵥ y < b h} with hO
+    have hOopen : IsOpen O := by
+      rw [hO]
+      exact isOpen_iInter_of_finite fun h => isOpen_lt
+        (continuous_const.dotProduct (PiLp.continuous_ofLp 2 _)) continuous_const
+    have hxO : x ∈ O := by
+      rw [hO, Set.mem_iInter]
+      exact fun h => hstrict h.1 h.2
+    obtain ⟨δ, hδ0, hballδ⟩ := Metric.isOpen_iff.1 hOopen x hxO
+    refine mem_rint_iff.2 ⟨hxmem, δ, hδ0, fun y hy => ?_⟩
+    rw [hs]
+    refine ⟨hy.2, fun i hi => ?_⟩
+    obtain ⟨-, hhi⟩ := hFprop i hi
+    have hyO : y ∈ O := hballδ (Metric.mem_ball.2 hy.1)
+    rw [hO] at hyO
+    have hyi : a i ⬝ᵥ y < b i := Set.mem_iInter.1 hyO ⟨i, hi⟩
+    rw [hhi]
+    exact Set.mem_setOf.2 (le_of_lt hyi)
+
+/-! ## #10 FACET_OF_POLYHEDRON_EXPLICIT — supporting-face half
+(HOL polytope.ml:4718, `FACE_OF_INTER_SUPPORTING_HYPERPLANE_LE` ingredient) -/
+
+/-- A supporting hyperplane cuts a face: for convex `s` with `a ⬝ᵥ x ≤ c` on
+`s`, the slice `s ∩ {a ⬝ᵥ x = c}` is a face of `s`. -/
+private theorem faceOf_supporting_eq {s : Set V3} (hs : Convex ℝ s) (a : V3) (c : ℝ)
+    (hsub : ∀ x ∈ s, a ⬝ᵥ x ≤ c) :
+    FaceOf (s ∩ {x : V3 | a ⬝ᵥ x = c}) s := by
+  refine ⟨Set.inter_subset_left, ?_, ?_⟩
+  · intro p hp q hq u v hu1 hv1 hab
+    simp only [Set.mem_inter_iff, Set.mem_setOf_eq] at hp hq ⊢
+    obtain ⟨hps, hpP⟩ := hp
+    obtain ⟨hqs, hqP⟩ := hq
+    refine ⟨hs hps hqs hu1 hv1 hab, ?_⟩
+    have e1 : a ⬝ᵥ (u • p + v • q) = u * (a ⬝ᵥ p) + v * (a ⬝ᵥ q) := by
+      rw [dot_add, dot_smul, dot_smul]
+    rw [WithLp.ofLp_add, WithLp.ofLp_smul, WithLp.ofLp_smul, e1, hpP, hqP]
+    have hcc : (u + v) * c = c := by rw [hab, one_mul]
+    linarith [mul_add u v c, mul_comm v c, hcc]
+  · rintro p q x hps hqs hx hseg
+    simp only [Set.mem_inter_iff, Set.mem_setOf_eq] at hx ⊢
+    obtain ⟨hxs, hxe⟩ := hx
+    obtain ⟨u, v, hu0, hv0, huv, hxuv⟩ := hseg
+    have e1 : a ⬝ᵥ (u • p + v • q) = u * (a ⬝ᵥ p) + v * (a ⬝ᵥ q) := by
+      rw [dot_add, dot_smul, dot_smul]
+    have hpx : a ⬝ᵥ x = u * (a ⬝ᵥ p) + v * (a ⬝ᵥ q) := by
+      rw [← hxuv, WithLp.ofLp_add, WithLp.ofLp_smul, WithLp.ofLp_smul, e1]
+    rw [hxe] at hpx
+    have key : u * (c - a ⬝ᵥ p) + v * (c - a ⬝ᵥ q) = 0 := by
+      have h2 : u * (c - a ⬝ᵥ p) + v * (c - a ⬝ᵥ q)
+          = (u + v) * c - (u * (a ⬝ᵥ p) + v * (a ⬝ᵥ q)) := by ring
+      rw [h2, huv, one_mul, ← hpx]
+      ring
+    have hpp : a ⬝ᵥ p = c := by
+      by_contra hne
+      have hgt : a ⬝ᵥ p < c := lt_of_le_of_ne (hsub p hps) hne
+      have hppos : 0 < u * (c - a ⬝ᵥ p) := mul_pos hu0 (sub_pos.2 hgt)
+      have hqpos : 0 ≤ v * (c - a ⬝ᵥ q) :=
+        mul_nonneg hv0.le (sub_nonneg.2 (hsub q hqs))
+      linarith
+    have hqq : a ⬝ᵥ q = c := by
+      by_contra hne
+      have hgt : a ⬝ᵥ q < c := lt_of_le_of_ne (hsub q hqs) hne
+      have hppos : 0 < v * (c - a ⬝ᵥ q) := mul_pos hv0 (sub_pos.2 hgt)
+      have hqpos : 0 ≤ u * (c - a ⬝ᵥ p) :=
+        mul_nonneg hu0.le (sub_nonneg.2 (hsub p hps))
+      linarith
+    exact ⟨⟨hps, hpp⟩, ⟨hqs, hqq⟩⟩
+
+/-- Slice-face half of HOL `FACET_OF_POLYHEDRON_EXPLICIT` (⇐ direction,
+facehood part): for each defining halfspace `h` of an irredundant
+representation, `s ∩ {a h ⬝ᵥ x = b h}` is a face of `s`. -/
+theorem FACE_OF_POLYHEDRON_SLICE {s : Set V3} {F : Set (Set V3)}
+    (a : Set V3 → V3) (b : Set V3 → ℝ) (hF : F.Finite)
+    (hs : s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : V3 | a h ⬝ᵥ x ≤ b h})
+    (hmin : ∀ F', F' ⊂ F → s ⊂ (affineSpan ℝ s : Set V3) ∩ ⋂₀ F')
+    (h : Set V3) (hk : h ∈ F) :
+    FaceOf (s ∩ {x : V3 | a h ⬝ᵥ x = b h}) s := by
+  obtain ⟨-, hh⟩ := hFprop h hk
+  have hsup : ∀ x ∈ s, a h ⬝ᵥ x ≤ b h := by
+    intro x hx
+    have hxInter : x ∈ ⋂₀ F := by rw [hs] at hx; exact hx.2
+    have hxh : x ∈ h := Set.mem_sInter.1 hxInter h hk
+    rw [hh, Set.mem_setOf_eq] at hxh
+    exact hxh
+  exact faceOf_supporting_eq
+    (POLYHEDRON_IMP_CONVEX (POLYHEDRON_INTER_AFFINE.2 ⟨F, hF, hs,
+      fun k hk => ⟨a k, b k, (hFprop k hk).1, (hFprop k hk).2⟩⟩))
+    (a h) (b h) hsup
+
 end Kepler.Text
