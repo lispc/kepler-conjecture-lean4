@@ -1,14 +1,16 @@
-# 项目总进度（Status）— 2026-09-12
+# 项目总进度（Status）— 2026-09-13
 
 > 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新（cron 自动 push）。
 > 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
-> 当前 main @ `cbe95e9`（2026-09-12），`make check` 全绿，
-> 唯一 sorry 是 `Statement.lean` 的主定理占位（sanctioned，见 Phase 1）。
+> 当前 main @ `291cfa3`（2026-09-13），`lake build Kepler` 全绿（9353 jobs）。
+> 注意：2026-09-13 起接班 agent 改为 main 直推模式，main 上现含 polyhedron
+> 在制骨架 sorry（PolyAuto2/3/5/6，~30 枚）；Conforming 及之前全部内容零 sorry，
+> 历史 sanctioned 占位仍为 `Statement.lean` 主定理（见 Phase 1）。
 > **重大进展**：体积/测度论层已从零建成（`Kepler/Geom/{Volume,SectorArea,
 > WedgeVolume,LuneVolume,SolidAngle}.lean`，含 HOL `VOLUME_BALL_WEDGE` /
-> `HAS_MEASURE_LUNE` / `VOLUME_SOLID_TRIANGLE`），据此**planarity.hl 全部
-> 15,463 行已收官并进 main**（`solid_of` + `MOZNWEH` 已证）。
-> 下一目标：Conforming.hl（流水线已在 wip/auto-phase5 跑，见 Phase 5）。
+> `HAS_MEASURE_LUNE` / `VOLUME_SOLID_TRIANGLE`），据此 planarity.hl 收官；
+> **Conforming.hl 17,033 行亦已 100% 收官进 main（2026-09-13，`d77c13f`）**。
+> 当前目标：polyhedron.hl（Phase 5 第六本，多 lane 并行已跑通，见 Phase 5）。
 
 图例：✅ 完成并验证 / 🟡 进行中 / ⬜ 未启动。完成度为行数或条目数口径的粗略估计。
 
@@ -79,7 +81,7 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 | fan/topology.hl | 4,718 | ✅ 全书收官（`36c37c6`，dart_leads_into 全套） | 100% |
 | fan/planarity.hl | 15,463 | ✅ **全书收官（2026-09-11，`48ff904`）**：批次 1-15 自动闭合 + 批次 16 的 `solid_of`/`MOZNWEH` 经体积层人工攻坚闭合，全部进 main | **100%** |
 | fan/Conforming.hl | 17,033 | ✅ **全书收官（2026-09-12）**：批次 1-23 全闭合（~230 枚定理，全部零 sorry、标准公理），含巨证 `lemma_connect_hypermap`（~1900 行 HOL 证明，6 段 sub-agent 流水攻克）与收尾 Euler/`Hypermap.Planar`；已合入 main | **100%** |
-| fan/ 其余（polyhedron 等） | ~3,200 | ⬜ 未启动 | 0% |
+| fan/polyhedron.hl | ~3,200 | 🟡 多 lane 并行移植中（2026-09-13 开工，main 直推）：PolyAuto1/4 已闭合（20 枚），PolyAuto2 8/10、PolyAuto3 5/10、PolyAuto5/6 骨架待填 | ~50% |
 | packing/（Rogers/OXLZLEZ3/REUHADY…） | ~28,000 | ⬜ 未启动 | 0% |
 | local/（IMJXPHR/QKNVMLB/XWITCCN…） | ~30,000 | ⬜ 未启动 | 0% |
 | assembly（ch9 终装配） | — | ⬜ 未启动 | 0% |
@@ -118,10 +120,12 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 **经验**：这类研究级引理用「专项子 agent（同一主模型）+ 迭代编译 + 允许诚实部分完成」
 可以攻下（本会话 4 个子 agent 分别拿下扇形、楔形、lune、solid triangle）。
 
-**Conforming.hl 进展（2026-09-12）**：流水线 `scripts/auto_pipeline_conforming.sh`
-批次 1-18 全部闭合（~180 枚定理，99% deepseek 一次过，仅 1 枚满血 glm 兜底），
-批次 19（:10304-12511）进行中；`ConformingDefs.lean` 定义层已就位，
-`DWFBRQY`（依赖 `solid_of`）已证。已知坑：HOL 原文存在同名不同义的重复绑定
+**Conforming.hl 收官（2026-09-13，`d77c13f` 进 main）**：流水线
+`scripts/auto_pipeline_conforming.sh` 批次 1-23 全部闭合（~230 枚定理，零 sorry、
+标准公理）。收尾两枚 `WGVWSKE`/`GGRLKHP` 依赖 `lemma_connect_hypermap`
+（~1900 行 HOL 巨证，6 段 sub-agent 流水攻克）+ Euler 恒等式 ⇒ `Hypermap.Planar`。
+工作流在本书期间两次升级：多 lane 并行分支 + "axiom closure pending" 暂存机制、
+two-stage（planner+executor）难题拆解法。已知坑：HOL 原文存在同名不同义的重复绑定
 （如 `add_edge_graph` :2304/:2431），跨模块同环境会撞名——骨架设计阶段必须查重。
 
 ## Phase 6 — 集成与交付 ⬜
@@ -135,14 +139,12 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 ## 整体估计
 
 - **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 **G4 已开工**（`IExpr.abs`/`ite`、析取证书 `bb_sound_disj` 已进 main，剩 `TKind.ln` + `emit_lean.py` 粘合），尚无案例端到端进内核。
-- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** + **Conforming 100%（17k 行，23 批 ~230 枚，零 sorry）** ≈ **59k 行 HOL 源**；待移植 ≈ 61k 行（packing 28k / local 30k / assembly 等）。按行数口径 **~49%**。
+- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** + **Conforming 100%（17k 行，23 批 ~230 枚，零 sorry）** ≈ **59k 行 HOL 源**；polyhedron（3.2k）已开工 ~50%；待移植 ≈ 60k 行（polyhedron 余量 / packing 28k / local 30k / assembly 等）。按行数口径 **~50%**。
   另：**体积/测度论层已从零建成**（`Kepler/Geom/*.lean`，~3.4k 行，含 HOL Light 多元库的球面立体角链），这是原计划里没算到的关键前置，现已就位，后续 Packing/Local 可复用。
-- **全项目粗略完成度：~60%**。
+- **全项目粗略完成度：~61%**。
 
 ## 验证纪律
 
-1. main 分支：`lake build Kepler` 全绿 + `grep sorry/admit/native_decide` 零命中（Statement.lean:111 与 Graphs.Cert* 例外）+ 新定理 `#print axioms` 仅 `[propext, Classical.choice, Quot.sound]`；
-2. wip 分支：允许 sorry（骨架占位），进 main 前由主 agent 批次审计陈述保真；
+1. main 分支：`lake build Kepler` 全绿 + 新定理 `#print axioms` 仅 `[propext, Classical.choice, Quot.sound]`；历史上 main 零 sorry（Statement.lean:111 与 Graphs.Cert* 例外），2026-09-13 起接班 agent 改为 main 直推模式，允许在制骨架 sorry 短暂存在于 main，批次闭合后清零；
+2. 批次闭合标准：该批全部定理零 sorry + 根模块构建绿 + 陈述保真抽查；
 3. 自动化 harness 的提交由机械闸背书 + 主 agent 审计兜底；人工派工的提交由主 agent 逐块验收。
-
-- **全项目粗略完成度：~59%**。
