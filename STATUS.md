@@ -58,7 +58,7 @@
   - [x] `IExpr.abs` + `DInterval.abs` + soundness（`Basic.lean`/`Expr.lean`）
   - [x] `IExpr.ite`：**区间决定 guard**（`C.hi<0`→then，`C.lo≥0`→else，跨 0→STRADDLE 返回 none），`eval_mem` 证分支一致——无需单独 guard 证书
   - [x] 析取证书 `Kepler/Interval/CertDisj.lean`：`DisjGoal = pos e | varLt i j`，`BBTreeD` + `bb_sound_disj`（覆盖 58 条 disj 案例）
-  - [ ] `TKind.ln` + `logI`（6 条 ln 记录；`log x = log2·k + log(x/2^k)`，`[1,2]` 上 artanh 级数，需 log2 dyadic 常数证书）
+  - [x] `TKind.lnK` + `logI` 全链（2026-09-13，`3aed260` 进 main）：`log2D` dyadic 常数证书、`lnI`/`logInterval` soundness（`[1,2]` artanh 级数）、试点 2/3 < log x on [2,4]，公理仅标准三
   - [ ] `emit_lean.py` 证书 JSON→Lean 分片 + G4 粘合（155 定义闭包的 Lean 定义，依赖 packing 章定义，**主体剩余**）
   - 规格：`pipeline/interval/arb-layer.md` §3/§4
 - [ ] GRKIBMP_B_V2 尖锐边界组单独处理（我们把 ≥ 加强成严格 > 导致等号边界不可闭，需 ε 余量或弱编码）
@@ -82,9 +82,17 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 | fan/planarity.hl | 15,463 | ✅ **全书收官（2026-09-11，`48ff904`）**：批次 1-15 自动闭合 + 批次 16 的 `solid_of`/`MOZNWEH` 经体积层人工攻坚闭合，全部进 main | **100%** |
 | fan/Conforming.hl | 17,033 | ✅ **全书收官（2026-09-12）**：批次 1-23 全闭合（~230 枚定理，全部零 sorry、标准公理），含巨证 `lemma_connect_hypermap`（~1900 行 HOL 证明，6 段 sub-agent 流水攻克）与收尾 Euler/`Hypermap.Planar`；已合入 main | **100%** |
 | fan/polyhedron.hl | ~3,200 | 🟡 多 lane 并行移植中（2026-09-13 开工，main 直推）：PolyAuto1/2/4/6 已闭合，PolyAuto3 剩 1、PolyAuto5 剩 3、PolyAuto7 剩 8——共 12 枚真实 sorry 全部依赖门控（见下方 blocker 台账） | ~70% |
-| packing/（Rogers/OXLZLEZ3/REUHADY…） | ~28,000 | ⬜ 未启动 | 0% |
-| local/（IMJXPHR/QKNVMLB/XWITCCN…） | ~30,000 | ⬜ 未启动 | 0% |
+| packing/（Rogers/OXLZLEZ3/REUHADY/counting_spheres/marchal…） | **99,350（43 文件，2026-09-13 实测）** | ⬜ 未启动 | 0% |
+| local/（IMJXPHR/QKNVMLB/XWITCCN/local_lemmas/terminal…） | **174,694（68 文件，2026-09-13 实测）** | ⬜ 未启动 | 0% |
+| trigonometry/（trig1/trig2/euler） | 10,511 | ⬜ 未启动（部分语义已被 azim 层覆盖，正式移植未做） | 0% |
+| volume/vol1.hl | 1,421 | 🟡 已用 :18/:458/:651 三段（`radialNorm`/`sol`），其余待移植 | ~25% |
+| fan/ 残余（hypermap_iso-compiled 1,174 + GMLWKPK 297） | 1,471 | ⬜ 未评估（可能为编译产物/可跳过） | — |
 | assembly（ch9 终装配） | — | ⬜ 未启动 | 0% |
+
+> 行数口径说明（2026-09-13 实测 `reference/flyspeck/text_formalization/`）：Phase 5 全书总量
+> ≈ **359k 行**（已完成 60.8k + 剩余 ~298.6k）。旧估计"packing 28k / local 30k"实测为
+> 99k / 175k，此前完成度高估约 3 倍，已据此下修。不计入：nonlinear/（93k，Phase 4 数据）、
+> tame/（98k，Phase 2 数据）、general/theorem_digest*（60k，自动生成索引）。
 
 已落地的公共地基（`Kepler/Geom/` + `Kepler/Text/`）：
 
@@ -164,10 +172,10 @@ polyhedron.hl 宣告 100% 的硬标准 = 5 个 PolyAuto 文件零 sorry + 根构
 
 ## 整体估计
 
-- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 **G4 已开工**（`IExpr.abs`/`ite`、析取证书 `bb_sound_disj` 已进 main，剩 `TKind.ln` + `emit_lean.py` 粘合），尚无案例端到端进内核。
-- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** + **Conforming 100%（17k 行，23 批 ~230 枚，零 sorry）** ≈ **59k 行 HOL 源**；polyhedron（3.2k）已开工 ~50%；待移植 ≈ 60k 行（polyhedron 余量 / packing 28k / local 30k / assembly 等）。按行数口径 **~50%**。
+- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 **G4 只差最后一环**（`abs`/`ite`/析取证书/`TKind.lnK`+`logI` 全链已进 main，仅剩 `emit_lean.py` 证书→Lean 粘合），尚无案例端到端进内核。
+- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** + **Conforming 100%** + polyhedron ~70% ≈ **60.8k 行 HOL 源**；2026-09-13 实测全书总量 ≈ **359k 行**（剩余：packing 99.4k / local 174.7k / trigonometry 10.5k / volume 1.1k / fan 残余等，~150 文件）。**按行数口径 ~17%**；考虑已完成部分含大量最难地基（hypermap 构造、体积测度层从零建），而 local/packing 多为模式重复引理工厂，**工作量口径估计 25-35%**。按 Conforming 吞吐（17k 行/2.5 天）线性外推，剩余 ~299k 行约需 40 天连轴（未计巨证）。
   另：**体积/测度论层已从零建成**（`Kepler/Geom/*.lean`，~3.4k 行，含 HOL Light 多元库的球面立体角链），这是原计划里没算到的关键前置，现已就位，后续 Packing/Local 可复用。
-- **全项目粗略完成度：~61%**。
+- **全项目粗略完成度：~47%（较昨日 ~61% 下修，原因是 Phase 5 剩余行数实测为旧估计的 5 倍）**。
 
 ## 验证纪律
 
