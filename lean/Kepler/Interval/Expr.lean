@@ -60,6 +60,7 @@ inductive TKind where
   | sinK : TKind
   | cosK : TKind
   | arctanK : TKind
+  | lnK : TKind
   deriving Repr, DecidableEq
 
 /-- The real function denoted by a `TKind`. -/
@@ -68,6 +69,7 @@ noncomputable def transReal (k : TKind) (x : ℝ) : ℝ :=
   | .sinK => Real.sin x
   | .cosK => Real.cos x
   | .arctanK => Real.arctan x
+  | .lnK => Real.log x
 
 /-- The interval-level enclosure denoted by a `TKind` (range checks are
 internal to the wrappers; failure gives `none`). -/
@@ -76,6 +78,7 @@ def transOn (k : TKind) (I : DInterval) (N : ℕ) (out : Int) : Option DInterval
   | .sinK => sinGen I N out
   | .cosK => cosI I N out
   | .arctanK => arctanI I N out
+  | .lnK => lnI I N out
 
 /-- Interval expression AST: constants, variables, `+ - × Neg`, division at
 granularity `out`, certificate-based square root (two root mantissas), and
@@ -157,10 +160,11 @@ noncomputable def evalReal {n : ℕ} : IExpr n → (Fin n → ℝ) → ℝ
 theorem transOn_sound (k : TKind) {I : DInterval} {N : ℕ} {out : Int}
     {K : DInterval} {y : ℝ} (hy : I.mem y) (h : transOn k I N out = some K) :
     K.mem (transReal k y) := by
-  rcases k with _ | _ | _
+  rcases k with _ | _ | _ | _
   · exact sinGen_sound hy h
   · exact cosI_sound hy h
   · exact arctanI_sound hy h
+  · exact lnI_sound hy h
 
 /-- **Soundness of interval evaluation**: every *successful* interval value
 contains the real value for every assignment pointwise inside the box. -/
@@ -572,5 +576,50 @@ theorem exIte_end_to_end (x : ℝ) (hx1 : 0 ≤ x) (hx2 : x ≤ 1) :
     simp only [exExprIte, IExpr.evalReal, Dyadic.toReal_def]
     norm_num
   rwa [hsimp] at h
+
+/-! ## `.ln` pilots -/
+
+/-- `log x - 5453/8192` on `[2, 4]`: the `.trans lnK` node (8 `artanh(1/3)`
+series terms at granularity `2⁻¹⁶`, `2^k`-reduction via `log2D`), minus the
+dyadic constant `5453/8192 ≈ 0.6654 < 2/3`. -/
+def exExprLn : IExpr 1 :=
+  .sub (.trans .lnK (.var 0) 8 (-16)) (.const ⟨5453, -13⟩)
+
+/-- Box `[2, 4]`. -/
+def exBoxLn : Fin 1 → DInterval := fun _ => ⟨⟨2, 0⟩, ⟨4, 0⟩⟩
+
+/-- Accept: `log x - 5453/8192 > 0` on `[2, 4]` (kernel `decide`). -/
+theorem exLn_accept : checkPos exExprLn exBoxLn = true := by decide
+
+/-- The evaluated enclosure:
+`[4855486394...·2⁻²⁴⁰, 2188007318...·2⁻²⁷⁴]` ≈ `[0.02748, 0.72083]`. -/
+theorem exLn_eval : exExprLn.eval exBoxLn
+    = some ⟨⟨48554863947538302270195294171722354843220497104995571038467602058838016, -240⟩,
+            ⟨21880073182283483966811360749173919189533804515262497370194283916508339591914192910, -274⟩⟩ := by
+  decide
+
+/-- End-to-end: `2/3 < log x` for every real `x ∈ [2, 4]`. -/
+theorem exLn_end_to_end (x : ℝ) (hx1 : (2:ℝ) ≤ x) (hx2 : x ≤ 4) :
+    2 / 3 < Real.log x := by
+  have hmem : ∀ i : Fin 1, (exBoxLn i).mem ((fun _ => x) i) := by
+    intro i
+    fin_cases i
+    show Dyadic.toReal ⟨2, 0⟩ ≤ x ∧ x ≤ Dyadic.toReal ⟨4, 0⟩
+    rw [Dyadic.toReal_int, Dyadic.toReal_int]
+    exact ⟨hx1, hx2⟩
+  have h := IExpr.eval_mem exExprLn exBoxLn (fun _ => x) hmem _ exLn_eval
+  obtain ⟨h1, _⟩ := h
+  have hsimp : exExprLn.evalReal (fun _ => x) = Real.log x - 5453 / 8192 := by
+    simp [exExprLn, IExpr.evalReal, transReal, Dyadic.toReal_def]
+    norm_num
+  rw [hsimp] at h1
+  rw [Dyadic.toReal_def] at h1
+  have hkey : (((48554863947538302270195294171722354843220497104995571038467602058838016 : ℤ) : ℝ)
+        * (2:ℝ)^(-240:ℤ)) + 5453 / 8192 > 2 / 3 := by
+    norm_num
+  linarith
+
+#print axioms exLn_accept
+#print axioms exLn_eval
 
 end Kepler.Interval

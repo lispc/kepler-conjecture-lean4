@@ -1183,5 +1183,754 @@ theorem sinRedPilot_real (x : ℝ) (hx1 : (7:ℝ)/2 ≤ x) (hx2 : x ≤ 4) :
     linarith
   exact lt_of_le_of_lt h2 hnum
 
-end Kepler.Interval
+/-! ## `log` via `artanh`: the semantic layer
 
+The engine identity is `log u = 2·artanh((u-1)/(u+1))` for `u > 0`: the
+Möbius substitution `y = (u-1)/(u+1)` maps `[1, 2]` to `[0, 1/3]`, where the
+`artanh` series `∑ y^{2j+1}/(2j+1)` converges geometrically (all terms
+*positive* — unlike the alternating `arctan` family, so the Leibniz bound
+does not apply; the tail is bounded geometrically instead).  The series
+identity is derived from Mathlib's complex log Taylor series
+(`Complex.hasSum_taylorSeries_log`/`_neg_log`), bridged to `ℝ` by
+`Complex.hasSum_re`, and reindexed over odd indices fiberwise. -/
+
+/-- **Engine identity**: `log u = 2·artanh((u-1)/(u+1))` for `u > 0`. -/
+theorem log_eq_two_mul_artanh {u : ℝ} (hu : 0 < u) :
+    Real.log u = 2 * Real.artanh ((u - 1) / (u + 1)) := by
+  have hu1 : (0:ℝ) < u + 1 := by linarith
+  have hu2 : u + 1 ≠ 0 := by linarith
+  have hy : ((u - 1) / (u + 1)) ∈ Set.Icc (-1) 1 := by
+    constructor
+    · rw [le_div_iff₀ hu1]; linarith
+    · rw [div_le_iff₀ hu1]; linarith
+  have h1 : 1 + (u - 1) / (u + 1) = 2 * u / (u + 1) := by
+    field_simp
+    linarith
+  have h2 : 1 - (u - 1) / (u + 1) = 2 / (u + 1) := by
+    field_simp
+    linarith
+  have hfrac : (2 * u / (u + 1)) / (2 / (u + 1)) = u := by
+    field_simp
+  rw [Real.artanh_eq_half_log hy, h1, h2, hfrac]
+  ring
+
+/-- The real Taylor series of `log(1-z)` (`Σ zⁿ/n = -log(1-z)`, `|z| < 1`),
+bridged from `Complex.hasSum_taylorSeries_neg_log`. -/
+theorem real_hasSum_neg_log {y : ℝ} (hy : |y| < 1) :
+    HasSum (fun n : ℕ ↦ y ^ n / (n : ℝ)) (-Real.log (1 - y)) := by
+  have hnorm : ‖(y : ℂ)‖ < 1 := by
+    rw [Complex.norm_real, Real.norm_eq_abs]; exact hy
+  have hc := Complex.hasSum_taylorSeries_neg_log hnorm
+  have hre := Complex.hasSum_re hc
+  have hz : ((1:ℂ) - (y:ℂ)) = (((1 - y : ℝ) : ℂ)) := by norm_cast
+  rw [hz] at hre
+  rw [Complex.neg_re, Complex.log_ofReal_re] at hre
+  have hcoef : (fun n : ℕ ↦ (((y : ℂ) ^ n / ((n : ℕ) : ℂ)) : ℂ).re)
+      = (fun n : ℕ ↦ y ^ n / (n : ℝ)) := by
+    funext n
+    rcases Nat.eq_zero_or_pos n with rfl | hn
+    · simp
+    · rw [← Complex.ofReal_pow]
+      have hn2 : ((n : ℕ) : ℂ) = ((n : ℝ) : ℂ) := by norm_cast
+      rw [hn2, ← Complex.ofReal_div, Complex.ofReal_re]
+  rwa [hcoef] at hre
+
+/-- The real Taylor series of `log(1+y)` (`Σ (-1)^{n+1} yⁿ/n = log(1+y)`,
+`|y| < 1`), bridged from `Complex.hasSum_taylorSeries_log`. -/
+theorem real_hasSum_log_one_add {y : ℝ} (hy : |y| < 1) :
+    HasSum (fun n : ℕ ↦ (-1 : ℝ) ^ (n + 1) * y ^ n / (n : ℝ)) (Real.log (1 + y)) := by
+  have hnorm : ‖(y : ℂ)‖ < 1 := by
+    rw [Complex.norm_real, Real.norm_eq_abs]; exact hy
+  have hc := Complex.hasSum_taylorSeries_log hnorm
+  have hre := Complex.hasSum_re hc
+  have hz : ((1:ℂ) + (y:ℂ)) = (((1 + y : ℝ) : ℂ)) := by norm_cast
+  rw [hz] at hre
+  rw [Complex.log_ofReal_re] at hre
+  have hcoef : (fun n : ℕ ↦ ((((-1 : ℂ) ^ (n + 1) * (y : ℂ) ^ n) / ((n : ℕ) : ℂ)) : ℂ).re)
+      = (fun n : ℕ ↦ (-1 : ℝ) ^ (n + 1) * y ^ n / (n : ℝ)) := by
+    funext n
+    rcases Nat.eq_zero_or_pos n with rfl | hn
+    · simp
+    · have hc : (((-1 : ℂ) ^ (n + 1) : ℂ)) = (((-1 : ℝ) ^ (n + 1) : ℝ) : ℂ) := by
+        norm_cast
+      rw [hc, ← Complex.ofReal_pow]
+      have hn2 : ((n : ℕ) : ℂ) = ((n : ℝ) : ℂ) := by norm_cast
+      rw [hn2, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.ofReal_re]
+  rwa [hcoef] at hre
+
+/-- **The `artanh` power series** `∑ y^{2n+1}/(2n+1) = artanh y` on `|y| < 1`:
+even terms cancel between the two log series; odd terms double. -/
+theorem real_hasSum_artanh {y : ℝ} (hy : |y| < 1) :
+    HasSum (fun n : ℕ ↦ y ^ (2 * n + 1) / ((2 * n + 1 : ℕ) : ℝ)) (Real.artanh y) := by
+  rw [abs_lt] at hy
+  have hnorm : |y| < 1 := abs_lt.mpr ⟨by linarith, by linarith⟩
+  have h1 := real_hasSum_log_one_add hnorm
+  have h2 := real_hasSum_neg_log hnorm
+  have hdiv : Real.log (1 + y) + -Real.log (1 - y)
+      = Real.log ((1 + y) / (1 - y)) := by
+    rw [Real.log_div (by linarith : (1:ℝ) + y ≠ 0) (by linarith : (1:ℝ) - y ≠ 0)]
+    ring
+  have hmem : y ∈ Set.Icc (-1 : ℝ) 1 := by
+    rw [Set.mem_Icc]
+    constructor <;> linarith
+  have hhalf := Real.artanh_eq_half_log hmem
+  -- combine the two coefficient families: even `n` cancel, odd `n` double
+  have hsum := h1.add h2
+  have hfe : (fun n : ℕ ↦ (-1 : ℝ) ^ (n + 1) * y ^ n / (n : ℝ) + y ^ n / (n : ℝ))
+      = (fun n : ℕ ↦ (((-1 : ℝ) ^ (n + 1) + 1) * y ^ n) / (n : ℝ)) := funext fun n => by
+    ring
+  rw [hfe] at hsum
+  rw [hdiv] at hsum
+  -- reindex over `n = k*2 + b`, `b ∈ Fin 2`
+  have hre : HasSum (fun p : ℕ × Fin 2 ↦
+        (((-1 : ℝ) ^ ((p.1 * 2 + (p.2 : ℕ)) + 1) + 1) * y ^ (p.1 * 2 + (p.2 : ℕ)))
+          / ((p.1 * 2 + (p.2 : ℕ) : ℕ) : ℝ))
+      (Real.log ((1 + y) / (1 - y))) :=
+    (Nat.divModEquiv 2).symm.hasSum_iff.mpr hsum
+  have hfib : ∀ k : ℕ,
+      HasSum (fun b : Fin 2 ↦ (((-1 : ℝ) ^ ((k * 2 + ↑b) + 1) + 1) * y ^ (k * 2 + ↑b))
+          / (↑(k * 2 + ↑b) : ℝ))
+        (2 * y ^ (2 * k + 1) / ((2 * k + 1 : ℕ) : ℝ)) := by
+    intro k
+    convert! hasSum_fintype (_ : Fin 2 → ℝ) using 1
+    rw [Fin.sum_univ_two, Fin.val_zero, Fin.val_one]
+    have hodd : (-1 : ℝ) ^ (k * 2 + 0 + 1) = -1 := by
+      rw [show k * 2 + 0 + 1 = 2 * k + 1 from by ring]
+      exact Odd.neg_one_pow ⟨k, by omega⟩
+    have hev : (-1 : ℝ) ^ (k * 2 + 1 + 1) = 1 := by
+      rw [show k * 2 + 1 + 1 = 2 * k + 2 from by ring]
+      exact Even.neg_one_pow ⟨k + 1, by omega⟩
+    simp only [hodd, hev]
+    simp only [Nat.mul_zero, zero_add, Nat.add_zero, mul_one, pow_zero,
+      Nat.mul_one, neg_one_mul, neg_add_cancel, zero_mul, zero_div,
+      add_zero, one_mul]
+    field_simp
+    ring
+  have hfib2 : HasSum (fun k : ℕ ↦ 2 * y ^ (2 * k + 1) / ((2 * k + 1 : ℕ) : ℝ))
+      (Real.log ((1 + y) / (1 - y))) := hre.prod_fiberwise hfib
+  have hhalf' : Real.artanh y = (2:ℝ)⁻¹ * Real.log ((1 + y) / (1 - y)) := by
+    rw [hhalf]; field_simp
+  have hfe2 : (fun k : ℕ ↦ (2:ℝ)⁻¹ * (2 * y ^ (2 * k + 1) / ((2 * k + 1 : ℕ) : ℝ)))
+      = fun k : ℕ ↦ y ^ (2 * k + 1) / ((2 * k + 1 : ℕ) : ℝ) := funext fun k => by field_simp
+  have hfin := hfib2.mul_left (2:ℝ)⁻¹
+  rw [hfe2] at hfin
+  rw [hhalf']
+  exact hfin
+
+/-- **Partial-sum bounds for `artanh`** (semantic layer): for `0 ≤ y < 1`
+the `N`-term partial sum of `∑ y^{2j+1}/(2j+1)` under-estimates `artanh y`,
+and the tail is bounded geometrically:
+`artanh y ≤ s_N + y^{2N+1}/(1-y²)`. -/
+theorem real_artanh_partial_bounds {y : ℝ} (hy0 : 0 ≤ y) (hy1 : y < 1) (N : ℕ) :
+    (∑ i ∈ Finset.range N, y ^ (2 * i + 1) / ((2 * i + 1 : ℕ) : ℝ)) ≤ Real.artanh y ∧
+    Real.artanh y ≤ (∑ i ∈ Finset.range N, y ^ (2 * i + 1) / ((2 * i + 1 : ℕ) : ℝ))
+      + y ^ (2 * N + 1) / ((1 : ℝ) - y ^ 2) := by
+  have hnorm : |y| < 1 := by rw [abs_lt]; constructor <;> linarith
+  have hy2 : (0:ℝ) ≤ y ^ 2 := by positivity
+  have hy2lt : y ^ 2 < 1 := by nlinarith
+  set S : ℕ → ℝ := fun i ↦ y ^ (2 * i + 1) / ((2 * i + 1 : ℕ) : ℝ) with hS
+  have hsum : HasSum S (Real.artanh y) := real_hasSum_artanh hnorm
+  have hf : Summable S := hsum.summable
+  -- the geometric majorant of the tail and its exact sum
+  set G : ℕ → ℝ := fun k ↦ y ^ (2 * N + 1) * (y ^ 2) ^ k with hG
+  have hGsum : HasSum G (y ^ (2 * N + 1) * (1 - y ^ 2)⁻¹) := by
+    rw [hG]
+    exact (hasSum_geometric_of_lt_one hy2 hy2lt).mul_left _
+  have hGsumm : Summable G := hGsum.summable
+  have hGval : ∑' k : ℕ, G k = y ^ (2 * N + 1) * (1 - y ^ 2)⁻¹ := hGsum.tsum_eq
+  have hterm : ∀ k : ℕ, S (k + N) ≤ G k := by
+    intro k
+    simp only [hS, hG]
+    have hexp : y ^ (2 * (k + N) + 1) = y ^ (2 * N + 1) * (y ^ 2) ^ k := by
+      rw [show 2 * (k + N) + 1 = (2 * N + 1) + 2 * k from by omega, pow_add, ← pow_mul]
+    calc y ^ (2 * (k + N) + 1) / ((2 * (k + N) + 1 : ℕ) : ℝ)
+        ≤ y ^ (2 * (k + N) + 1) := by
+          have h1le : (1:ℝ) ≤ ((2 * (k + N) + 1 : ℕ) : ℝ) := by
+            exact_mod_cast (by omega : (1:ℕ) ≤ 2 * (k + N) + 1)
+          have hpos : (0:ℝ) < ((2 * (k + N) + 1 : ℕ) : ℝ) := by positivity
+          rw [div_le_iff₀ hpos]
+          exact le_mul_of_one_le_right (pow_nonneg hy0 _) h1le
+      _ = y ^ (2 * N + 1) * (y ^ 2) ^ k := hexp
+  have htail : ∑' k : ℕ, S (k + N) ≤ y ^ (2 * N + 1) / ((1 : ℝ) - y ^ 2) := by
+    have hinj : Function.Injective (fun k : ℕ ↦ k + N) := fun a b h => by
+      simpa using h
+    have hSsumm : Summable (fun k : ℕ ↦ S (k + N)) := hf.comp_injective hinj
+    calc ∑' k : ℕ, S (k + N) ≤ ∑' k : ℕ, G k := hSsumm.tsum_le_tsum hterm hGsumm
+      _ = y ^ (2 * N + 1) * (1 - y ^ 2)⁻¹ := hGval
+      _ = y ^ (2 * N + 1) / ((1 : ℝ) - y ^ 2) := by rw [inv_eq_one_div]; ring
+  have hsplit := hf.sum_add_tsum_nat_add N
+  rw [hsum.tsum_eq] at hsplit
+  have htail0 : (0:ℝ) ≤ ∑' k : ℕ, S (k + N) := by
+    refine tsum_nonneg fun k => ?_
+    simp only [hS]
+    exact div_nonneg (pow_nonneg hy0 _) (Nat.cast_nonneg _)
+  constructor
+  · linarith
+  · linarith
+
+/-! ## `log` via `artanh`: the checked dyadic layer
+
+`logAcc` accumulates the *positive* series `∑ y^{2j+1}/(2j+1)` with
+outward per-term rounding — each term `d.npow (2j+1)` (exact dyadic power)
+is divided by the odd integer `2j+1` at the *per-term* granularity
+`(2j+1) * out` (so `divFloorQ`'s exponent precondition holds), the floor
+going to the lower sum and the one-ulp-up value to the upper sum; exact
+`Dyadic.add` keeps the sums exact.  `logInterval` evaluates `u ∈ [1, 2]`:
+`d = y_low ≤ (u-1)/(u+1) =: y_true ≤ y_high = d + one ulp`, the check
+`y_high ≤ 5/16` (in particular `< 1`, and `5/16 < 1/3` covers the whole
+window), the series at `y_low` gives the lower bracket (the tail is
+nonnegative) and the series at `y_high` plus the *exact* remainder bound
+`9/8 · y_high^{2N+1}` (valid since `1/(1-t²) ≤ 9/8` for `t ≤ 5/16`:
+`256/231 < 9/8`) gives the upper bracket. -/
+
+/-- Positive-term outward-rounded Taylor accumulator for
+`∑ d^{2i+1}/(2i+1)`. -/
+def logAcc (d : Dyadic) (out : Int) :
+    ℕ → ℕ → Dyadic → Dyadic → Option (Dyadic × Dyadic)
+  | 0, _, lw, hg => some (lw, hg)
+  | fuel + 1, i, lw, hg =>
+      match Dyadic.divFloorQ (d.npow (2 * i + 1)) ⟨((2 * i + 1 : ℕ) : ℤ), 0⟩
+          ((2 * i + 1) * out) with
+      | none => none
+      | some q =>
+          logAcc d out fuel (i + 1) (lw.add q) (hg.add ⟨q.m + 1, (2 * i + 1) * out⟩)
+
+/-- **Soundness of `logAcc`**: if every rounded term brackets its exact
+term, the final `(lw, hg)` brackets the partial sums of the exact series. -/
+theorem logAcc_spec (d : Dyadic) (out : Int) (A : ℕ → ℝ)
+    (hA : ∀ i (q : Dyadic),
+      Dyadic.divFloorQ (d.npow (2 * i + 1)) ⟨((2 * i + 1 : ℕ) : ℤ), 0⟩ ((2 * i + 1) * out)
+        = some q →
+        q.toReal ≤ A i ∧ A i ≤ Dyadic.toReal ⟨q.m + 1, (2 * i + 1) * out⟩) :
+    ∀ (fuel i : ℕ) (lw hg : Dyadic),
+      lw.toReal ≤ ∑ j ∈ Finset.range i, A j →
+      ∑ j ∈ Finset.range i, A j ≤ hg.toReal →
+      ∀ res, logAcc d out fuel i lw hg = some res →
+        ((res.1).toReal ≤ ∑ j ∈ Finset.range (i + fuel), A j ∧
+          ∑ j ∈ Finset.range (i + fuel), A j ≤ (res.2).toReal) := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro i lw hg hlo hhi res h
+    obtain rfl : res = (lw, hg) := (Option.some.inj (show some (lw, hg) = some res from h)).symm
+    rw [Nat.add_zero]
+    exact ⟨hlo, hhi⟩
+  | succ fuel ih =>
+    intro i lw hg hlo hhi res h
+    have hstep : (match Dyadic.divFloorQ (d.npow (2 * i + 1)) ⟨((2 * i + 1 : ℕ) : ℤ), 0⟩
+          ((2 * i + 1) * out) with
+        | none => none
+        | some q =>
+            logAcc d out fuel (i + 1) (lw.add q) (hg.add ⟨q.m + 1, (2 * i + 1) * out⟩))
+        = some res := h
+    cases hq : Dyadic.divFloorQ (d.npow (2 * i + 1)) ⟨((2 * i + 1 : ℕ) : ℤ), 0⟩
+        ((2 * i + 1) * out) with
+    | none => rw [hq] at hstep; simp at hstep
+    | some q =>
+      rw [hq] at hstep
+      obtain ⟨hq1, hq2⟩ := hA i q hq
+      have hU : Dyadic.toReal ⟨q.m + 1, (2 * i + 1) * out⟩
+          = q.toReal + (Dyadic.ulp ((2 * i + 1) * out)).toReal :=
+        toReal_succ_ulp (Dyadic.divFloorQ_e hq)
+      rw [show i + (fuel + 1) = (i + 1) + fuel from by omega]
+      have hsucc : ∑ j ∈ Finset.range (i + 1), A j
+          = (∑ j ∈ Finset.range i, A j) + A i := Finset.sum_range_succ A i
+      exact ih (i + 1) (lw.add q) (hg.add ⟨q.m + 1, (2 * i + 1) * out⟩)
+        (by rw [Dyadic.toReal_add, hsucc]; exact add_le_add hlo hq1)
+        (by rw [Dyadic.toReal_add, hsucc]; exact add_le_add hhi hq2)
+        res hstep
+
+private theorem mantissa_nonneg {a : Dyadic} (h : 0 ≤ a.toReal) : 0 ≤ a.m := by
+  by_contra hcon
+  rw [Dyadic.toReal_def] at h
+  push_neg at hcon
+  have hz : ((a.m : ℝ) * (2:ℝ) ^ a.e) < 0 :=
+    mul_neg_of_neg_of_pos (by exact_mod_cast hcon) (by positivity)
+  linarith
+
+private theorem mantissa_neg {a : Dyadic} (h : a.m < 0) : a.toReal < 0 := by
+  rw [Dyadic.toReal_def]
+  exact mul_neg_of_neg_of_pos (by exact_mod_cast h) (by positivity)
+
+/-- Interval enclosure of `log u.toReal` for `u.toReal ∈ [1, 2]`: `N`
+positive series terms of `2·artanh((u-1)/(u+1))` with outward per-term
+rounding at granularity `out`, plus the exact remainder bound
+`9/8 · y_high^{2N+1}` on the upper side. -/
+def logInterval (u : Dyadic) (N : ℕ) (out : Int) : Option DInterval :=
+  match Dyadic.divFloorQ (u.dsub ⟨1, 0⟩) (u.add ⟨1, 0⟩) out with
+  | none => none
+  | some d =>
+      if Dyadic.ble ⟨d.m + 1, out⟩ ⟨3, -3⟩ then
+        match logAcc d out N 0 ⟨0, 0⟩ ⟨0, 0⟩,
+            logAcc ⟨d.m + 1, out⟩ out N 0 ⟨0, 0⟩ ⟨0, 0⟩ with
+        | some (lw, _), some (_, hg) =>
+            some (DInterval.mk (lw.add lw)
+              (Dyadic.add (Dyadic.add hg
+                (Dyadic.mul (Dyadic.mul ⟨(7:ℤ), 0⟩ (Dyadic.npow ⟨d.m + 1, out⟩ (2 * N + 1))) ⟨1, -2⟩))
+                (Dyadic.add hg
+                  (Dyadic.mul (Dyadic.mul ⟨(7:ℤ), 0⟩ (Dyadic.npow ⟨d.m + 1, out⟩ (2 * N + 1))) ⟨1, -2⟩))))
+        | _, _ => none
+      else none
+
+set_option maxHeartbeats 10000000 in
+/-- **Soundness of `logInterval`** (over `ℝ`): on `1 ≤ u.toReal ≤ 2`, the
+returned interval contains `log` of the real semantics. -/
+theorem logInterval_sound {u : Dyadic} {N : ℕ} {out : Int} {I : DInterval}
+    (h : logInterval u N out = some I) (h1 : Dyadic.toReal ⟨1, 0⟩ ≤ u.toReal)
+    (h2 : u.toReal ≤ 2) :
+    I.mem (Real.log u.toReal) := by
+  rw [Dyadic.toReal_int] at h1
+  push_cast at h1
+  have hden : (0:ℝ) < (u.add ⟨1, 0⟩).toReal := by
+    rw [Dyadic.toReal_add, Dyadic.toReal_int]
+    push_cast
+    linarith
+  have hnum : (0:ℝ) ≤ (u.dsub ⟨1, 0⟩).toReal := by
+    rw [Dyadic.toReal_dsub, Dyadic.toReal_int]
+    push_cast
+    linarith
+  have hy : (u.dsub ⟨1, 0⟩).toReal / (u.add ⟨1, 0⟩).toReal
+      = (u.toReal - 1) / (u.toReal + 1) := by
+    rw [Dyadic.toReal_dsub, Dyadic.toReal_add, Dyadic.toReal_int]; ring
+  simp only [logInterval] at h
+  cases hd : Dyadic.divFloorQ (u.dsub ⟨1, 0⟩) (u.add ⟨1, 0⟩) out with
+  | none => rw [hd] at h; dsimp only at h; simp at h
+  | some d =>
+    obtain ⟨hlow, hhigh⟩ := Dyadic.divFloorQ_spec hd
+    rw [hy] at hlow hhigh
+    obtain ⟨hbpos, _, hdq⟩ | ⟨hbneg, _, hdq⟩ := Dyadic.divFloorQ_cases hd
+    · have hdm : (0:ℤ) ≤ d.m := by
+        rw [hdq]
+        exact Int.ediv_nonneg (mul_nonneg (mantissa_nonneg hnum)
+          (by exact_mod_cast Nat.zero_le ((2:ℕ) ^ _))) (by omega)
+      rw [hd] at h
+      dsimp only at h
+      by_cases hchk : Dyadic.ble ⟨d.m + 1, out⟩ ⟨3, -3⟩
+      · have h38 : Dyadic.toReal ⟨d.m + 1, out⟩ ≤ (3:ℝ) / 8 := by
+          have hb := Dyadic.ble_toReal hchk
+          have hb38 : Dyadic.toReal ⟨3, -3⟩ = (3:ℝ) / 8 := by
+            rw [Dyadic.toReal_def]; norm_num
+          rw [hb38] at hb
+          exact hb
+        rw [if_pos hchk] at h
+        cases hloop1 : logAcc d out N 0 ⟨0, 0⟩ ⟨0, 0⟩ with
+        | none => simp only [hloop1] at h; simp at h
+        | some lr1 =>
+          obtain ⟨lw, _⟩ := lr1
+          simp only [hloop1] at h
+          cases hloop2 : logAcc ⟨d.m + 1, out⟩ out N 0 ⟨0, 0⟩ ⟨0, 0⟩ with
+          | none => simp only [hloop2] at h; simp at h
+          | some lr2 =>
+            obtain ⟨_, hg⟩ := lr2
+            simp only [hloop2, Option.some.injEq] at h
+            obtain rfl := h.symm
+            set Ad : ℕ → ℝ := fun i ↦ d.toReal ^ (2 * i + 1) / ((2 * i + 1 : ℕ) : ℝ) with hAd
+            set Ah : ℕ → ℝ := fun i ↦ Dyadic.toReal ⟨d.m + 1, out⟩ ^ (2 * i + 1)
+                / ((2 * i + 1 : ℕ) : ℝ) with hAh
+            have hAd' : ∀ i (q : Dyadic),
+                Dyadic.divFloorQ (d.npow (2 * i + 1)) ⟨((2 * i + 1 : ℕ) : ℤ), 0⟩
+                    ((2 * i + 1) * out) = some q →
+                q.toReal ≤ Ad i ∧ Ad i ≤ Dyadic.toReal ⟨q.m + 1, (2 * i + 1) * out⟩ := by
+              intro i q hq
+              obtain ⟨hs1, hs2⟩ := Dyadic.divFloorQ_spec hq
+              rw [Dyadic.toReal_npow, Dyadic.toReal_int] at hs1 hs2
+              exact ⟨hs1, hs2⟩
+            have hAh' : ∀ i (q : Dyadic),
+                Dyadic.divFloorQ ((⟨d.m + 1, out⟩ : Dyadic).npow (2 * i + 1))
+                    ⟨((2 * i + 1 : ℕ) : ℤ), 0⟩
+                    ((2 * i + 1) * out) = some q →
+                q.toReal ≤ Ah i ∧ Ah i ≤ Dyadic.toReal ⟨q.m + 1, (2 * i + 1) * out⟩ := by
+              intro i q hq
+              obtain ⟨hs1, hs2⟩ := Dyadic.divFloorQ_spec hq
+              rw [Dyadic.toReal_npow, Dyadic.toReal_int] at hs1 hs2
+              exact ⟨hs1, hs2⟩
+            obtain ⟨h1a, h1b⟩ := logAcc_spec d out Ad hAd' N 0 ⟨0, 0⟩ ⟨0, 0⟩
+              (by rw [Dyadic.toReal_def]; simp) (by rw [Dyadic.toReal_def]; simp) _ hloop1
+            obtain ⟨h2a, h2b⟩ := logAcc_spec ⟨d.m + 1, out⟩ out Ah hAh' N 0 ⟨0, 0⟩ ⟨0, 0⟩
+              (by rw [Dyadic.toReal_def]; simp) (by rw [Dyadic.toReal_def]; simp) _ hloop2
+            rw [Nat.zero_add] at h1a h1b h2a h2b
+            dsimp only at h1a h2b
+            have hupos : (0:ℝ) < u.toReal := by linarith
+            have hlog := log_eq_two_mul_artanh hupos
+            have hy0 : (0:ℝ) ≤ (u.toReal - 1) / (u.toReal + 1) := by
+              apply div_nonneg <;> linarith
+            have hy3 : (u.toReal - 1) / (u.toReal + 1) ≤ 1 / 3 := by
+              rw [div_le_iff₀ (by linarith : (0:ℝ) < u.toReal + 1)]
+              nlinarith
+            have hyd : d.toReal ≤ (u.toReal - 1) / (u.toReal + 1) := hlow
+            have hyh : (u.toReal - 1) / (u.toReal + 1) ≤ Dyadic.toReal ⟨d.m + 1, out⟩ := hhigh
+            have hlt1 : Dyadic.toReal ⟨d.m + 1, out⟩ < 1 := by linarith
+            have hb0 : (0:ℝ) ≤ d.toReal := by
+              rw [Dyadic.toReal_def]
+              exact mul_nonneg (by exact_mod_cast hdm) (by positivity)
+            have hb1 : (0:ℝ) ≤ Dyadic.toReal ⟨d.m + 1, out⟩ := by
+              rw [Dyadic.toReal_def]
+              exact mul_nonneg (by exact_mod_cast (by omega : (0:ℤ) ≤ d.m + 1)) (by positivity)
+            have hpartd := real_artanh_partial_bounds (hy0 := hb0) (hy1 := by linarith) N
+            have hparth := real_artanh_partial_bounds (hy0 := hb1) (hy1 := hlt1) N
+            have hmono1 : Real.artanh d.toReal
+                ≤ Real.artanh ((u.toReal - 1) / (u.toReal + 1)) :=
+              Real.artanh_le_artanh (by linarith) (by linarith) hyd
+            have hmono2 : Real.artanh ((u.toReal - 1) / (u.toReal + 1))
+                ≤ Real.artanh (Dyadic.toReal ⟨d.m + 1, out⟩) :=
+              Real.artanh_le_artanh (by linarith) hlt1 hyh
+            have ht2 : (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2 ≤ (9:ℝ) / 64 := by
+              have hq1 : (0:ℝ) ≤ (3:ℝ)/8 - Dyadic.toReal ⟨d.m + 1, out⟩ := by linarith
+              have hq2 : (0:ℝ) ≤ (3:ℝ)/8 + Dyadic.toReal ⟨d.m + 1, out⟩ := by linarith
+              have hq3 : (0:ℝ) ≤ ((3:ℝ)/8 - Dyadic.toReal ⟨d.m + 1, out⟩)
+                    * ((3:ℝ)/8 + Dyadic.toReal ⟨d.m + 1, out⟩) := mul_nonneg hq1 hq2
+              have hq4 : ((3:ℝ)/8 - Dyadic.toReal ⟨d.m + 1, out⟩)
+                    * ((3:ℝ)/8 + Dyadic.toReal ⟨d.m + 1, out⟩)
+                  = (9:ℝ)/64 - (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2 := by ring
+              linarith [hq3, hq4]
+            have hR : Dyadic.toReal
+                (Dyadic.mul (Dyadic.mul ⟨(7:ℤ), 0⟩
+                  (Dyadic.npow (⟨d.m + 1, out⟩ : Dyadic) (2 * N + 1))) ⟨1, -2⟩)
+                = (7:ℝ) / 4 * (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1) := by
+              have h14 : Dyadic.toReal ⟨1, -2⟩ = (1:ℝ) / 4 := by
+                rw [Dyadic.toReal_def]; norm_num
+              rw [Dyadic.toReal_mul, Dyadic.toReal_mul, Dyadic.toReal_int, Dyadic.toReal_npow,
+                h14]
+              ring
+            constructor
+            · show Dyadic.toReal (lw.add lw) ≤ Real.log u.toReal
+              rw [Dyadic.toReal_add, hlog]
+              calc (lw.toReal + lw.toReal)
+                  ≤ 2 * (∑ i ∈ Finset.range N, Ad i) := by linarith
+                _ ≤ 2 * Real.artanh d.toReal :=
+                      mul_le_mul_of_nonneg_left hpartd.1 (by norm_num)
+                _ ≤ 2 * Real.artanh ((u.toReal - 1) / (u.toReal + 1)) :=
+                      mul_le_mul_of_nonneg_left hmono1 (by norm_num)
+            · have hhi : Dyadic.toReal
+                  ((hg.add
+                      (Dyadic.mul (Dyadic.mul ⟨(7:ℤ), 0⟩
+                        (Dyadic.npow (⟨d.m + 1, out⟩ : Dyadic) (2 * N + 1))) ⟨1, -2⟩)).add
+                    (hg.add
+                      (Dyadic.mul (Dyadic.mul ⟨(7:ℤ), 0⟩
+                        (Dyadic.npow (⟨d.m + 1, out⟩ : Dyadic) (2 * N + 1))) ⟨1, -2⟩)))
+                  = 2 * (hg.toReal
+                      + (7:ℝ) / 4 * (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1)) := by
+                rw [Dyadic.toReal_add, Dyadic.toReal_add, hR]
+                ring
+              have hUB : Real.artanh ((u.toReal - 1) / (u.toReal + 1))
+                  ≤ hg.toReal
+                    + (7:ℝ) / 4 * (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1) := by
+                have h2 := hparth.2
+                have h64 : ((9:ℝ)/64 : ℝ) < 1 := by norm_num
+                have hpos : (0:ℝ) < (1:ℝ) - (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2 := by
+                  linarith
+                have htnonneg : (0:ℝ) ≤ (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1) :=
+                  pow_nonneg hb1 _
+                have hlin : (1:ℝ) ≤ (7:ℝ) / 4
+                    * ((1:ℝ) - (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2) := by
+                  have h55 : ((55:ℝ)/64 : ℝ) ≤ 1 - (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2 := by
+                    linarith
+                  have hmul := mul_le_mul_of_nonneg_left h55
+                    (by norm_num : (0:ℝ) ≤ (7:ℝ) / 4)
+                  have hnum : (1:ℝ) ≤ (7:ℝ) / 4 * ((55:ℝ) / 64) := by norm_num
+                  linarith
+                have hrem' : (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1)
+                      / ((1:ℝ) - (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2)
+                    ≤ (7:ℝ) / 4 * (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1) := by
+                  rw [div_le_iff₀ hpos]
+                  nlinarith [hlin, htnonneg]
+                linarith
+              have h1'' : (2:ℝ) * Real.artanh ((u.toReal - 1) / (u.toReal + 1))
+                    ≤ 2 * (hg.toReal + (7:ℝ) / 4
+                        * (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1)) :=
+                mul_le_mul_of_nonneg_left hUB (by norm_num)
+              rw [hlog]
+              dsimp only
+              linarith [h1'', hhi]
+      · rw [if_neg hchk] at h; simp at h
+    · exact absurd (mantissa_neg hbneg) (by linarith)
+
+/-! ## Dyadic enclosure of `log 2` and integer scaling -/
+
+/-- Dyadic enclosure of `log 2`: `[45425·2⁻¹⁶, 45430·2⁻¹⁶]`, obtained from
+`logInterval ⟨2, 0⟩ 8 (-16)` (`2·artanh(1/3)` with 8 series terms at
+granularity `2⁻¹⁶` plus the exact `7/4` remainder bound) rounded outward to
+granularity `2⁻¹⁶`. -/
+def log2D : DInterval := ⟨⟨45425, -16⟩, ⟨45430, -16⟩⟩
+
+set_option exponentiation.threshold 2048 in
+set_option maxHeartbeats 1000000 in
+set_option maxRecDepth 8000 in
+theorem log2D_mem : log2D.mem (Real.log 2) := by
+  have hcert : logInterval ⟨2, 0⟩ 8 (-16)
+      = some ⟨⟨1224664839723253066757532368272827966897654092888104932391667849000070544, -240⟩,
+              ⟨21041551031267394410589974817095804438051737544098602624748996252542645910946185216, -274⟩⟩ := by
+    decide
+  have h1 : Dyadic.toReal ⟨1, 0⟩ ≤ Dyadic.toReal ⟨2, 0⟩ := by
+    rw [Dyadic.toReal_int, Dyadic.toReal_int]; norm_num
+  have h2 : Dyadic.toReal ⟨2, 0⟩ ≤ 2 := by rw [Dyadic.toReal_int]; norm_num
+  obtain ⟨hlo, hhi⟩ := logInterval_sound hcert h1 h2
+  have htwo : Dyadic.toReal ⟨2, 0⟩ = 2 := by rw [Dyadic.toReal_int]; norm_num
+  have hlo' : Dyadic.toReal
+      ⟨1224664839723253066757532368272827966897654092888104932391667849000070544, -240⟩
+      ≤ Real.log (Dyadic.toReal ⟨2, 0⟩) := hlo
+  have hhi' : Real.log (Dyadic.toReal ⟨2, 0⟩) ≤ Dyadic.toReal
+      ⟨21041551031267394410589974817095804438051737544098602624748996252542645910946185216, -274⟩ := hhi
+  rw [htwo, Dyadic.toReal_def] at hlo' hhi'
+  constructor
+  · rw [Dyadic.toReal_def]
+    show ((45425:ℤ):ℝ) * (2:ℝ)^(-16:ℤ) ≤ Real.log 2
+    have hk : ((45425:ℤ) * (2:ℤ)^224 : ℤ)
+        ≤ 1224664839723253066757532368272827966897654092888104932391667849000070544 := by
+      decide
+    have hz : ((2:ℝ)^(-16:ℤ):ℝ) = (2:ℝ)^224 * (2:ℝ)^(-240:ℤ) := by
+      have he : ((2:ℝ)^(-16:ℤ):ℝ) = (2:ℝ)^((-240:ℤ)+224) := by norm_num
+      have hbz := zpow_add₀ (show (2:ℝ) ≠ 0 by norm_num) (-240 : ℤ) 224
+      rw [he, hbz]
+      ring
+    have hk0 : (((45425 * 2^224 : ℤ):ℝ)) ≤ (((1224664839723253066757532368272827966897654092888104932391667849000070544 : ℤ):ℝ)) := by
+      exact_mod_cast hk
+    have hmul : ((45425:ℤ):ℝ) * ((2:ℝ)^224 * (2:ℝ)^(-240:ℤ))
+        = (((45425 * 2^224 : ℤ):ℝ)) * (2:ℝ)^(-240:ℤ) := by
+      push_cast; ring
+    rw [hz, hmul]
+    exact le_trans (mul_le_mul_of_nonneg_right hk0
+      (by norm_num : (0:ℝ) ≤ (2:ℝ)^(-240:ℤ))) hlo'
+  · rw [Dyadic.toReal_def]
+    show Real.log 2 ≤ ((45430:ℤ):ℝ) * (2:ℝ)^(-16:ℤ)
+    have hk : 21041551031267394410589974817095804438051737544098602624748996252542645910946185216
+        ≤ (45430:ℤ) * (2:ℤ)^258 := by
+      decide
+    have hz : ((2:ℝ)^(-16:ℤ):ℝ) = (2:ℝ)^258 * (2:ℝ)^(-274:ℤ) := by
+      have he : ((2:ℝ)^(-16:ℤ):ℝ) = (2:ℝ)^((-274:ℤ)+258) := by norm_num
+      have hbz := zpow_add₀ (show (2:ℝ) ≠ 0 by norm_num) (-274 : ℤ) 258
+      rw [he, hbz]
+      ring
+    have hk0 : (((21041551031267394410589974817095804438051737544098602624748996252542645910946185216 : ℤ):ℝ)) ≤ (((45430 * 2^258 : ℤ):ℝ)) := by
+      exact_mod_cast hk
+    have hmul : ((45430:ℤ):ℝ) * ((2:ℝ)^258 * (2:ℝ)^(-274:ℤ))
+        = (((45430 * 2^258 : ℤ):ℝ)) * (2:ℝ)^(-274:ℤ) := by
+      push_cast; ring
+    rw [hz, hmul]
+    exact le_trans hhi' (mul_le_mul_of_nonneg_right hk0 (by norm_num : (0:ℝ) ≤ (2:ℝ)^(-274:ℤ)))
+
+/-- Scaling of an interval by an integer (reversing the endpoints for
+negative `k`): `iscale I k` contains `k * x` whenever `I` contains `x`. -/
+def iscale (I : DInterval) (k : Int) : DInterval :=
+  if 0 ≤ k then ⟨⟨k * I.lo.m, I.lo.e⟩, ⟨k * I.hi.m, I.hi.e⟩⟩
+  else ⟨⟨k * I.hi.m, I.hi.e⟩, ⟨k * I.lo.m, I.lo.e⟩⟩
+
+theorem iscale_mem {I : DInterval} {x : ℝ} (hx : I.mem x) (k : Int) :
+    (iscale I k).mem (k * x) := by
+  obtain ⟨h1, h2⟩ := hx
+  rw [Dyadic.toReal_def] at h1 h2
+  unfold iscale DInterval.mem
+  split
+  · next hk =>
+    refine ⟨?_, ?_⟩
+    · simp only [Dyadic.toReal_def]
+      rw [show (((k:ℤ) * I.lo.m : ℤ):ℝ) * (2:ℝ)^I.lo.e
+            = (k:ℝ) * (((I.lo.m : ℤ):ℝ) * (2:ℝ)^I.lo.e) from by push_cast; ring]
+      exact mul_le_mul_of_nonneg_left h1 (by exact_mod_cast hk)
+    · simp only [Dyadic.toReal_def]
+      rw [show (((k:ℤ) * I.hi.m : ℤ):ℝ) * (2:ℝ)^I.hi.e
+            = (k:ℝ) * (((I.hi.m : ℤ):ℝ) * (2:ℝ)^I.hi.e) from by push_cast; ring]
+      exact mul_le_mul_of_nonneg_left h2 (by exact_mod_cast hk)
+  · next hk =>
+    refine ⟨?_, ?_⟩
+    · simp only [Dyadic.toReal_def]
+      rw [show (((k:ℤ) * I.hi.m : ℤ):ℝ) * (2:ℝ)^I.hi.e
+            = (k:ℝ) * (((I.hi.m : ℤ):ℝ) * (2:ℝ)^I.hi.e) from by push_cast; ring]
+      have hk' : (k:ℝ) ≤ 0 := by
+        have hk'' : (k:ℤ) ≤ 0 := by omega
+        exact_mod_cast hk''
+      exact mul_le_mul_of_nonpos_left h2 hk'
+    · simp only [Dyadic.toReal_def]
+      rw [show (((k:ℤ) * I.lo.m : ℤ):ℝ) * (2:ℝ)^I.lo.e
+            = (k:ℝ) * (((I.lo.m : ℤ):ℝ) * (2:ℝ)^I.lo.e) from by push_cast; ring]
+      have hk' : (k:ℝ) ≤ 0 := by
+        have hk'' : (k:ℤ) ≤ 0 := by omega
+        exact_mod_cast hk''
+      exact mul_le_mul_of_nonpos_left h1 hk'
+
+/-! ## `2^k` range reduction and the interval-level `ln` wrapper -/
+
+/-- Point enclosure of `log z.toReal` for `z.toReal > 0`: write
+`z.toReal = u·2^k` with `u.toReal ∈ [1, 2)` (`k = ⌊log₂ z.toReal⌋` via
+`Nat.log2` of the mantissa), enclose `log u` by `logInterval`, and add the
+`k·log 2` contribution via `log2D.iscale k`. -/
+def logPoint (z : Dyadic) (N : ℕ) (out : Int) : Option DInterval :=
+  if z.isPos then
+    match logInterval ⟨z.m, -(Nat.log2 z.m.toNat : ℤ)⟩ N out with
+    | some J => some (J.add (iscale log2D ((Nat.log2 z.m.toNat : ℤ) + z.e)))
+    | none => none
+  else none
+
+set_option maxRecDepth 4000 in
+theorem logPoint_sound {z : Dyadic} {N : ℕ} {out : Int} {K : DInterval}
+    (h : logPoint z N out = some K) (hz : 0 < z.toReal) : K.mem (Real.log z.toReal) := by
+  unfold logPoint at h
+  split at h
+  · next hpos =>
+    have hzm : (0:ℤ) < z.m := by
+      by_contra hcon
+      push_neg at hcon
+      have hle : Dyadic.toReal z ≤ 0 := by
+        rw [Dyadic.toReal_def]
+        exact mul_nonpos_of_nonpos_of_nonneg (by exact_mod_cast hcon) (by positivity)
+      linarith
+    have hmpos : (0:ℕ) < z.m.toNat := by
+      have := Int.toNat_of_nonneg (le_of_lt hzm)
+      omega
+    set n : ℕ := Nat.log2 z.m.toNat with hn_def
+    have h2n : (2:ℕ)^n ≤ z.m.toNat := by
+      rw [hn_def, Nat.log2_eq_log_two]
+      exact Nat.pow_log_le_self 2 (by omega)
+    have hlt2n : z.m.toNat < (2:ℕ)^(n + 1) := by
+      rw [hn_def, Nat.log2_eq_log_two, Nat.pow_succ]
+      exact Nat.lt_pow_succ_log_self (b := 2) (by norm_num) z.m.toNat
+    have hzmeq : ((z.m.toNat : ℕ) : ℝ) = (z.m : ℝ) :=
+      by exact_mod_cast (Int.toNat_of_nonneg (le_of_lt hzm))
+    have h2n_dup : (2:ℕ)^Nat.log2 z.m.toNat ≤ z.m.toNat := by
+      rw [Nat.log2_eq_log_two]
+      exact Nat.pow_log_le_self 2 (by omega)
+    have hlt2n : z.m.toNat < (2:ℕ)^(Nat.log2 z.m.toNat + 1) := by
+      rw [Nat.log2_eq_log_two, Nat.pow_succ]
+      exact Nat.lt_pow_succ_log_self (b := 2) (by norm_num) z.m.toNat
+    have hzmeq : ((z.m.toNat : ℕ) : ℝ) = (z.m : ℝ) :=
+      by exact_mod_cast (Int.toNat_of_nonneg (le_of_lt hzm))
+    cases hl : logInterval ⟨z.m, -((Nat.log2 z.m.toNat : ℤ))⟩ N out with
+    | none => rw [hl] at h; simp at h
+    | some J =>
+      rw [hl] at h
+      obtain rfl : K = J.add (iscale log2D ((Nat.log2 z.m.toNat : ℤ) + z.e)) :=
+        (Option.some.inj h).symm
+      have hutwo : Dyadic.toReal ⟨z.m, -((Nat.log2 z.m.toNat : ℤ))⟩
+          = ((z.m : ℤ):ℝ) * (2:ℝ)^(-(Nat.log2 z.m.toNat : ℤ)) := by
+        rw [Dyadic.toReal_def]
+      have hge : ((2:ℝ)^((↑(Nat.log2 z.m.toNat) : ℤ)):ℝ) ≤ ((z.m:ℤ):ℝ) := by
+        rw [show ((2:ℝ)^((↑(Nat.log2 z.m.toNat) : ℤ)):ℝ)
+              = (((2:ℕ)^(Nat.log2 z.m.toNat) : ℕ) : ℝ) from by rw [zpow_natCast]; norm_cast,
+          ← hzmeq]
+        exact_mod_cast h2n
+      have hXpos : (0:ℝ) < (2:ℝ)^((↑(Nat.log2 z.m.toNat) : ℤ)) := by positivity
+      have hutwo' : Dyadic.toReal ⟨z.m, -(↑(Nat.log2 z.m.toNat) : ℤ)⟩
+          = ((z.m:ℤ):ℝ) / (2:ℝ)^((↑(Nat.log2 z.m.toNat) : ℤ)) := by
+        rw [Dyadic.toReal_def, div_eq_mul_inv, zpow_neg]
+      have hu1 : (1:ℝ) ≤ Dyadic.toReal ⟨z.m, -(↑(Nat.log2 z.m.toNat) : ℤ)⟩ := by
+        rw [hutwo', le_div_iff₀ hXpos, one_mul]
+        exact hge
+      have hu2 : Dyadic.toReal ⟨z.m, -(↑(Nat.log2 z.m.toNat) : ℤ)⟩ < 2 := by
+        have hz2 : ((2:ℝ)^((↑(Nat.log2 z.m.toNat) + 1 : ℤ)):ℝ)
+            = ((2:ℝ)^((↑(Nat.log2 z.m.toNat) : ℤ)):ℝ) * 2 := by
+          rw [zpow_add₀ (show (2:ℝ) ≠ 0 by norm_num)
+            ((↑(Nat.log2 z.m.toNat) : ℤ)) (1:ℤ), zpow_one]
+        have hlt2 : ((z.m:ℤ):ℝ) < ((2:ℝ)^((↑(Nat.log2 z.m.toNat) + 1 : ℤ)):ℝ) := by
+          have he : (((Nat.log2 z.m.toNat : ℤ)) + 1)
+              = ((Nat.log2 z.m.toNat + 1 : ℕ) : ℤ) := by
+            push_cast; omega
+          rw [show ((2:ℝ)^((↑(Nat.log2 z.m.toNat) + 1 : ℤ)):ℝ)
+                = (((2:ℕ)^(Nat.log2 z.m.toNat + 1) : ℕ) : ℝ) from by
+                rw [he, zpow_natCast, Nat.cast_pow, Nat.cast_ofNat], ← hzmeq]
+          exact_mod_cast hlt2n
+        rw [hutwo', div_lt_iff₀ hXpos, mul_comm]
+        exact hlt2
+      have hJ : J.mem (Real.log (Dyadic.toReal ⟨z.m, -((Nat.log2 z.m.toNat : ℤ))⟩)) :=
+        logInterval_sound hl
+          (show Dyadic.toReal ⟨1, 0⟩ ≤ Dyadic.toReal ⟨z.m, -((Nat.log2 z.m.toNat : ℤ))⟩ from by
+            rw [Dyadic.toReal_int]
+            exact_mod_cast hu1) (le_of_lt hu2)
+      have hS := iscale_mem (I := log2D) (k := (Nat.log2 z.m.toNat : ℤ) + z.e)
+        log2D_mem
+      have hu_eq : Dyadic.toReal ⟨z.m, -((Nat.log2 z.m.toNat : ℤ))⟩
+            * (2:ℝ)^((Nat.log2 z.m.toNat : ℤ) + z.e) = z.toReal := by
+        rw [hutwo, mul_assoc]
+        have hzpow : (2:ℝ)^(-(Nat.log2 z.m.toNat : ℤ))
+              * (2:ℝ)^((Nat.log2 z.m.toNat : ℤ) + z.e) = (2:ℝ)^(z.e) := by
+          have hzz2 := zpow_add₀ (show (2:ℝ) ≠ 0 by norm_num)
+            (-(Nat.log2 z.m.toNat : ℤ)) ((Nat.log2 z.m.toNat : ℤ) + z.e)
+          rw [show (-(Nat.log2 z.m.toNat : ℤ))
+                  + ((Nat.log2 z.m.toNat : ℤ) + z.e) = z.e from by omega] at hzz2
+          exact hzz2.symm
+        rw [hzpow]
+        show ((z.m : ℤ):ℝ) * (2:ℝ)^(z.e) = _
+        rw [Dyadic.toReal_def]
+      have hadd := DInterval.mem_add hJ hS
+      have hpos2 : (0:ℝ) < (2:ℝ)^((Nat.log2 z.m.toNat : ℤ) + z.e) := by positivity
+      have hupos : (0:ℝ) < Dyadic.toReal ⟨z.m, -((Nat.log2 z.m.toNat : ℤ))⟩ :=
+        lt_of_lt_of_le one_pos hu1
+      have hsum : Real.log (Dyadic.toReal ⟨z.m, -((Nat.log2 z.m.toNat : ℤ))⟩)
+            + (((Nat.log2 z.m.toNat : ℤ) + z.e : ℤ) : ℝ) * Real.log 2
+          = Real.log z.toReal := by
+        rw [← Real.log_zpow (x := (2:ℝ)) (n := ((Nat.log2 z.m.toNat : ℤ) + z.e : ℤ)),
+          ← Real.log_mul (ne_of_gt hupos) (by positivity), ← hu_eq]
+      rwa [hsum] at hadd
+  · next hn =>
+    rw [Dyadic.isPos_iff] at hn
+    exact absurd hz hn
+
+set_option exponentiation.threshold 2048 in
+example : logInterval ⟨2, 0⟩ 8 (-16)
+    = some ⟨⟨1224664839723253066757532368272827966897654092888104932391667849000070544, -240⟩,
+            ⟨21041551031267394410589974817095804438051737544098602624748996252542645910946185216, -274⟩⟩ := by
+  decide
+
+set_option exponentiation.threshold 2048 in
+set_option maxHeartbeats 1000000 in
+set_option maxRecDepth 8000 in
+example : logInterval ⟨2, 0⟩ 8 (-16)
+    = some ⟨⟨1224664839723253066757532368272827966897654092888104932391667849000070544, -240⟩,
+            ⟨21041551031267394410589974817095804438051737544098602624748996252542645910946185216, -274⟩⟩ := by
+  decide
+
+/-- Interval-level `log` on `J` with `J.lo.toReal > 0`: `log` is monotone,
+so the endpoints' point enclosures bracket all of `{log y : y ∈ J}`. -/
+def lnI (J : DInterval) (N : ℕ) (out : Int) : Option DInterval :=
+  if J.lo.isPos then
+    match logPoint J.lo N out, logPoint J.hi N out with
+    | some L, some H => some ⟨L.lo, H.hi⟩
+    | _, _ => none
+  else none
+
+/-- **Soundness of `lnI`**: if the range check succeeds, the result contains
+`log y` for every real `y ∈ J`. -/
+theorem lnI_sound {J : DInterval} {N : ℕ} {out : Int} {K : DInterval} {y : ℝ}
+    (hy : J.mem y) (h : lnI J N out = some K) : K.mem (Real.log y) := by
+  obtain ⟨h1, h2⟩ := hy
+  unfold lnI at h
+  by_cases hchk : J.lo.isPos
+  · rw [if_pos hchk] at h
+    have hy0 : (0:ℝ) < y := by
+      rw [Dyadic.isPos_iff] at hchk
+      exact lt_of_lt_of_le hchk h1
+    cases hl : logPoint J.lo N out with
+    | none => rw [hl] at h; simp at h
+    | some L =>
+      rw [hl] at h
+      cases hh : logPoint J.hi N out with
+      | none => rw [hh] at h; simp at h
+      | some H =>
+        rw [hh] at h
+        obtain rfl : K = ⟨L.lo, H.hi⟩ := (Option.some.inj h).symm
+        have hlo0 : (0:ℝ) < Dyadic.toReal J.lo := by
+          rw [Dyadic.isPos_iff] at hchk
+          exact hchk
+        have hhi0 : (0:ℝ) < Dyadic.toReal J.hi :=
+          lt_of_lt_of_le hy0 h2
+        obtain ⟨hl1, _⟩ := logPoint_sound hl hlo0
+        obtain ⟨_, hh2⟩ := logPoint_sound hh hhi0
+        exact ⟨le_trans hl1 (Real.log_le_log hlo0 h1),
+          le_trans (Real.log_le_log hy0 h2) hh2⟩
+  · rw [if_neg hchk] at h; simp at h
+
+#eval match lnI ⟨⟨2, 0⟩, ⟨4, 0⟩⟩ 8 (-16) with
+  | some I => s!"LO {I.lo.m} {I.lo.e} HI {I.hi.m} {I.hi.e}"
+  | none => "none"
+
+#print axioms logInterval_sound
+#print axioms log2D_mem
+#print axioms iscale_mem
+#print axioms logPoint_sound
+#print axioms lnI_sound
+
+#print axioms logInterval_sound
+#print axioms log2D_mem
+#print axioms logPoint_sound
+#print axioms lnI_sound
+
+end Kepler.Interval
