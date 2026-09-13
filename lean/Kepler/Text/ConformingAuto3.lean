@@ -1,0 +1,596 @@
+/-
+Port of the HOL Light Flyspeck `Conforming.hl` top-level theorems, batch 3
+(Conforming.hl:731-858).
+
+Source: `reference/flyspeck/text_formalization/fan/Conforming.hl`
+(Flyspeck book formalization, Hoang Le Truong, 2010); persistent copies
+`lean/scripts/conforming.hl` and
+`/dev/shm/kepler-ref/flyspeck/text_formalization/fan/Conforming.hl`.
+
+Coverage (batch 3, Conforming.hl:731-858):
+- `HAS_MEASURE_AFF_GT_1_2_INTER_BALL` (731)
+- `MEASURABLE_AFF_GT_2_1_INTER_BALL` (738; HOL name says 2-1 but the
+  statement is about the 1-2 set `aff_gt {x} {v,u}`; the name is kept
+  verbatim)
+- `XFAN_EQ_UNIONS_AFF_GE_1_2` (746)
+- `NEGLIGIBLE_XFAN` (754)
+- `NEGLIGIBLE_XFAN_INTER_BALL` (772)
+- `HAS_MEASURE_XFAN_INTER_BALL` (779)
+- `MEASURE_YFAN_INTER_BALL` (786)
+- `MESURABLE_YFAN_INTER_BALL` (800; HOL misspelling kept verbatim)
+- `RADIAL_DIFF` (815)
+- `RADIAL_UNION` (852)
+
+Porting method: skeleton (frozen statements + per-theorem HOL docstrings);
+proofs to be filled by the auto_loop/big-pickle harness. Every proof is a
+bare `sorry`.
+
+Encoding notes (gaps / closest existing encodings):
+- HOL `real^3` ↔ `V3 = EuclideanSpace ℝ (Fin 3)` (Kepler/Geom/Azim.lean:33).
+- HOL `FAN(x,V,E)` ↔ `FAN x V E` (Kepler/Text/Fan.lean:56).
+- HOL `xfan (x,V,E)` ↔ `xfan x V E` (Kepler/Text/Fan.lean:154);
+  HOL `yfan (x,V,E)` = `UNIV DIFF xfan` ↔ `yfan x V E`
+  (Kepler/Text/Fan.lean:158).
+- HOL `normball x r` ↔ Mathlib `Metric.ball x r` (both are
+  `{y | dist y x < r}`; cf. `NORMBALL_BALL`, sphere.hl).
+- HOL `aff_ge`/`aff_gt` ↔ `affGe`/`affGt` (Kepler/Geom/Aff.lean:39/42);
+  HOL `collinear {x,v,u}` ↔ `Collinear3 x v u` (Kepler/Geom/Azim.lean:43).
+- HOL `UNIONS {y | ?e. e IN E /\ y = f e}` ↔ `⋃ e ∈ E, f e`
+  (`Set.iUnion`); HOL `INTER` ↔ `∩`, `DIFF` ↔ `\`, `SUBSET` ↔ `⊆`,
+  `UNION` ↔ `∪`.
+- HOL `measurable` ↔ `MeasurableSet`; HOL `negligible s`,
+  `measure s = &0` and `s has_measure &0` are all encoded as the Mathlib
+  Lebesgue measure-zero predicate `volume s = 0` (cf.
+  Kepler/Text/ConformingAuto2.lean:55-59). For the non-zero value in
+  `MEASURE_YFAN_INTER_BALL`, HOL `measure s` (a real) is encoded as
+  `volume.real s` (`Measure.real`, the real-valued part of `volume`),
+  matching `Kepler.Geom.Volume`'s use of `volume.real`
+  (Kepler/Geom/Volume.lean:40).
+- HOL `radial_norm r v0 C` ↔ `radialNorm r v0 C`
+  (Kepler/Geom/Volume.lean:27). HOL's statement is for a general
+  `real^N`; the repo only defines `radialNorm` for `V3`, so `RADIAL_DIFF`
+  and `RADIAL_UNION` are stated for `V3` (noted per-theorem).
+- None of the ten statements is Mathlib-general: every one mentions the
+  repo-specific `FAN`/`xfan`/`yfan`/`affGt`/`affGe`/`radialNorm`
+  vocabulary (or is the exact `affGt`-ball statement already ported in
+  ConformingAuto2), so nothing is skipped.
+-/
+
+import Kepler.Text.PlanarityAuto16
+import Kepler.Text.ConformingDefs
+
+set_option maxHeartbeats 5000000
+
+namespace Kepler.Text
+
+open Kepler.Geom
+open Kepler.Text.Fan
+open Complex
+open Filter
+open Classical
+open MeasureTheory
+open scoped Topology
+open scoped BigOperators
+
+/-! ## `aff_gt` 与球的测度/可测性（Conforming.hl:731-745） -/
+
+/-- HOL Conforming.hl :731-737 `HAS_MEASURE_AFF_GT_1_2_INTER_BALL`
+
+HOL 原文：
+```
+!x:real^3 v:real^3 u:real^3 r:real.
+~collinear {x,v,u}==>  (aff_gt {x} {v,u} INTER normball x r)  has_measure  &0
+```
+
+编码说明（缺口）：HOL `has_measure &0`（= `measure s = &0`）未移植，
+与 `negligible` 定义等价，统一编码为 `volume s = 0`（见文件头）；
+`aff_gt {x} {v,u}` ↔ `affGt ({x} : Set V3) {v,u}`；
+`normball x r` ↔ `Metric.ball x r`；HOL `~collinear {x,v,u}` ↔
+`¬ Collinear3 x v u`。
+
+证明思路：HOL 由 `NEGLIGIBLE_AFF_GT_1_2_INTER_BALL` 与
+`HAS_MEASURE_0` 收口。在 `volume = 0` 编码下结论与
+`MEASURE_AFF_GT_2_1_INTER_BALL` 类型完全相同，直接引用即可。
+
+候选已有引理：
+- `MEASURE_AFF_GT_2_1_INTER_BALL`（Kepler/Text/ConformingAuto2.lean:495，
+  类型完全相同）
+- `NEGLIGIBLE_AFF_GT_1_2_INTER_BALL`（Kepler/Text/ConformingAuto2.lean:468）
+- `NEGLIGIBLE_AFF_GT_1_2`（Kepler/Text/ConformingAuto2.lean:415）
+- 缺口：HOL `HAS_MEASURE_0` 未移植 -/
+private theorem finrank_span_pair_le_two_auto3 (a b : V3) :
+    Module.finrank ℝ (Submodule.span ℝ ({a, b} : Set V3)) ≤ 2 := by
+  have h := finrank_span_finset_le_card (R := ℝ) ({a, b} : Finset V3)
+  unfold Set.finrank at h
+  rw [show (({a, b} : Finset V3) : Set V3) = ({a, b} : Set V3) from by simp] at h
+  have h2 : ({a, b} : Finset V3).card ≤ 2 := by
+    calc ({a, b} : Finset V3).card ≤ ({b} : Finset V3).card + 1 := Finset.card_insert_le a {b}
+      _ = 2 := by simp
+  omega
+
+private theorem affineSpan_three_ne_top_auto3 (x v u : V3) :
+    (affineSpan ℝ ({x, v, u} : Set V3)) ≠ ⊤ := by
+  intro h
+  have hdir : (affineSpan ℝ ({x, v, u} : Set V3)).direction = ⊤ := by
+    rw [h]; exact AffineSubspace.direction_top ℝ V3 V3
+  have hvs : vectorSpan ℝ ({x, v, u} : Set V3)
+      = Submodule.span ℝ ({v - x, u - x} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_right ℝ (show x ∈ ({x, v, u} : Set V3) from by simp)]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro p ⟨q, hq, rfl⟩
+      rcases hq with rfl | rfl | rfl
+      · simp
+      · exact Submodule.subset_span (by left; rfl)
+      · exact Submodule.subset_span (by right; rfl)
+    · rw [Submodule.span_le]
+      rintro p (rfl | rfl)
+      · exact Submodule.subset_span ⟨v, by simp, rfl⟩
+      · exact Submodule.subset_span ⟨u, by simp, rfl⟩
+  have hle : Module.finrank ℝ (affineSpan ℝ ({x, v, u} : Set V3)).direction ≤ 2 := by
+    rw [direction_affineSpan, hvs]
+    exact finrank_span_pair_le_two_auto3 (v - x) (u - x)
+  rw [hdir, finrank_top] at hle
+  have h3 : Module.finrank ℝ V3 = 3 := by simp [V3]
+  omega
+
+private theorem NEGLIGIBLE_AFF_3_auto3 (x v u : V3) :
+    volume ((affineSpan ℝ ({x, v, u} : Set V3)) : Set V3) = 0 := by
+  exact MeasureTheory.Measure.addHaar_affineSubspace volume _
+    (affineSpan_three_ne_top_auto3 x v u)
+
+private theorem finset_sum_smul_mem_affineSpan_auto3 {T : Set V3} {s : Finset V3}
+    {f : V3 → ℝ}
+    (hS : ∀ w ∈ s, w ∈ (affineSpan ℝ T : Set V3))
+    (hsum : ∑ w ∈ s, f w = 1) :
+    ∑ w ∈ s, f w • w ∈ (affineSpan ℝ T : Set V3) := by
+  have hne : s.Nonempty :=
+    Finset.nonempty_of_sum_ne_zero (by rw [hsum]; exact one_ne_zero)
+  obtain ⟨b, hb⟩ := hne
+  have hbS : b ∈ (affineSpan ℝ T : Set V3) := hS b hb
+  have hdir : ∑ w ∈ s, f w • (w - b) ∈ (affineSpan ℝ T).direction := by
+    apply Submodule.sum_mem
+    intro w hw
+    exact Submodule.smul_mem _ (f w)
+      (AffineSubspace.vsub_mem_direction (hS w hw) hbS)
+  have hsub : ∑ w ∈ s, f w • (w - b) = (∑ w ∈ s, f w • w) - b := by
+    simp only [smul_sub]
+    rw [Finset.sum_sub_distrib, ← Finset.sum_smul, hsum, one_smul]
+  have hy : ∑ w ∈ s, f w • w = (∑ w ∈ s, f w • (w - b)) +ᵥ b := by
+    rw [vadd_eq_add, hsub]
+    abel
+  rw [hy]
+  exact AffineSubspace.vadd_mem_of_mem_direction hdir hbS
+
+private theorem affGt_singleton_pair_subset_affineSpan_auto3 (x v u : V3) :
+    affGt ({x} : Set V3) {v, u} ⊆ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) := by
+  intro y hy
+  simp only [affGt, Set.mem_setOf_eq, Affsign] at hy
+  obtain ⟨f, hfin, hcomb, _hpos, hone⟩ := hy
+  have hmem : ∀ w ∈ hfin.toFinset, w ∈ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) := by
+    intro w hw
+    have hw' : w ∈ ({x} ∪ {v, u} : Set V3) := by
+      rw [← hfin.coe_toFinset]
+      exact hw
+    have hw'' : w ∈ ({x, v, u} : Set V3) := by
+      simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff] at hw' ⊢
+      tauto
+    exact subset_affineSpan ℝ _ hw''
+  rw [hcomb]
+  exact finset_sum_smul_mem_affineSpan_auto3 hmem hone
+
+theorem HAS_MEASURE_AFF_GT_1_2_INTER_BALL (x v u : V3) (r : ℝ)
+    (h : ¬ Collinear3 x v u) :
+    volume (affGt ({x} : Set V3) {v, u} ∩ Metric.ball x r) = 0 := by
+  have _ : ¬ Collinear3 x v u := h
+  exact measure_mono_null
+    (Set.inter_subset_left.trans (affGt_singleton_pair_subset_affineSpan_auto3 x v u))
+    (NEGLIGIBLE_AFF_3_auto3 x v u)
+
+private theorem measurableSet_affGt_pair_auto3 (x v u : V3) (h : ¬ Collinear3 x v u) :
+    MeasurableSet (affGt ({x} : Set V3) {v, u}) := by
+  have hxv : x ≠ v := fun he => h (collinear3_of_eq he.symm)
+  have hxu : x ≠ u := fun he =>
+    h (collinear3_pair_left (v0 := x) (v1 := v) (x := u) he.symm)
+  have hdis : Disjoint ({x} : Set V3) {v, u} := by
+    rw [Set.disjoint_singleton_left]
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+    exact ⟨hxv, hxu⟩
+  have hset : affGt ({x} : Set V3) {v, u} =
+      ⋃ m : ℕ, ⋃ n : ℕ,
+        (fun p : ℝ × ℝ => (1 - p.1 - p.2) • x + p.1 • v + p.2 • u) ''
+          (Set.Icc (1 / ((m : ℝ) + 1)) ((m : ℝ) + 1) ×ˢ
+            Set.Icc (1 / ((n : ℝ) + 1)) ((n : ℝ) + 1)) := by
+    ext y
+    constructor
+    · intro hy
+      rw [aff_gt_1_2 (x := x) (v := v) (w := u) hdis, Set.mem_setOf_eq] at hy
+      obtain ⟨t1, t2, t3, ht2, ht3, hsum, hy_eq⟩ := hy
+      have ht1 : t1 = 1 - t2 - t3 := by linarith
+      obtain ⟨m, hm⟩ := exists_nat_gt (max t2 (1 / t2))
+      obtain ⟨n, hn⟩ := exists_nat_gt (max t3 (1 / t3))
+      refine Set.mem_iUnion.mpr ⟨m, Set.mem_iUnion.mpr ⟨n, ?_⟩⟩
+      rw [Set.mem_image]
+      refine ⟨(t2, t3), ?_, ?_⟩
+      · refine Set.mem_prod.mpr ⟨?_, ?_⟩
+        · rw [Set.mem_Icc]
+          refine ⟨?_, ?_⟩
+          · have h1t : 1 / t2 < (m : ℝ) := lt_of_le_of_lt (le_max_right _ _) hm
+            have hlt : (1 : ℝ) < (m : ℝ) * t2 := by
+              rw [div_lt_iff₀ ht2] at h1t
+              exact h1t
+            rw [div_le_iff₀ (by positivity : (0 : ℝ) < (m : ℝ) + 1)]
+            nlinarith [hlt, ht2.le]
+          · have : t2 < (m : ℝ) := lt_of_le_of_lt (le_max_left _ _) hm
+            linarith
+        · rw [Set.mem_Icc]
+          refine ⟨?_, ?_⟩
+          · have h1t : 1 / t3 < (n : ℝ) := lt_of_le_of_lt (le_max_right _ _) hn
+            have hlt : (1 : ℝ) < (n : ℝ) * t3 := by
+              rw [div_lt_iff₀ ht3] at h1t
+              exact h1t
+            rw [div_le_iff₀ (by positivity : (0 : ℝ) < (n : ℝ) + 1)]
+            nlinarith [hlt, ht3.le]
+          · have : t3 < (n : ℝ) := lt_of_le_of_lt (le_max_left _ _) hn
+            linarith
+      · show (1 - t2 - t3) • x + t2 • v + t3 • u = y
+        rw [hy_eq, ht1]
+    · intro hy
+      rcases Set.mem_iUnion.mp hy with ⟨m, hy⟩
+      rcases Set.mem_iUnion.mp hy with ⟨n, hy⟩
+      rcases hy with ⟨p, hp, rfl⟩
+      rw [aff_gt_1_2 (x := x) (v := v) (w := u) hdis, Set.mem_setOf_eq]
+      obtain ⟨hp1, hp2⟩ := Set.mem_prod.mp hp
+      rw [Set.mem_Icc] at hp1 hp2
+      obtain ⟨hp1a, -⟩ := hp1
+      obtain ⟨hp2a, -⟩ := hp2
+      exact ⟨1 - p.1 - p.2, p.1, p.2,
+        lt_of_lt_of_le (by positivity) hp1a,
+        lt_of_lt_of_le (by positivity) hp2a,
+        by ring, rfl⟩
+  rw [hset]
+  refine MeasurableSet.iUnion (fun m => MeasurableSet.iUnion (fun n => ?_))
+  exact ((isCompact_Icc.prod isCompact_Icc).image (by fun_prop)).isClosed.measurableSet
+
+/-- HOL Conforming.hl :738-745 `MEASURABLE_AFF_GT_2_1_INTER_BALL`
+
+HOL 原文：
+```
+!x:real^3 v:real^3 u:real^3 r:real.
+~collinear {x,v,u}==>   measurable (aff_gt {x} {v,u} INTER normball x r)
+```
+
+编码说明（缺口）：HOL 名虽为 `2_1`，陈述中的集合是 1-2 型
+`aff_gt {x} {v,u}`（名称原样保留）。HOL `measurable` ↔ `MeasurableSet`；
+`aff_gt {x} {v,u}` ↔ `affGt ({x} : Set V3) {v,u}`；
+`normball x r` ↔ `Metric.ball x r`；HOL `~collinear {x,v,u}` ↔
+`¬ Collinear3 x v u`。
+
+证明思路：HOL 由 `HAS_MEASURE_AFF_GT_1_2_INTER_BALL` 得
+`measure = 0`，再由 `HAS_MEASURE_MEASURABLE_MEASURE` 得可测。在
+Mathlib 中由 `MEASURE_AFF_GT_2_1_INTER_BALL` 给出的零测性，
+用 `measurableSet_of_null`（Lebesgue 测度完备）得 `MeasurableSet`。
+
+候选已有引理：
+- `MEASURE_AFF_GT_2_1_INTER_BALL`（Kepler/Text/ConformingAuto2.lean:495）
+- `measurableSet_of_null`（Mathlib/MeasureTheory/Measure/NullMeasurable.lean:434，
+  需 `volume.IsComplete` 实例）
+- 缺口：HOL `measurable` 定义与 `HAS_MEASURE_MEASURABLE_MEASURE` 未移植 -/
+theorem MEASURABLE_AFF_GT_2_1_INTER_BALL (x v u : V3) (r : ℝ)
+    (h : ¬ Collinear3 x v u) :
+    MeasurableSet (affGt ({x} : Set V3) {v, u} ∩ Metric.ball x r) := by
+  exact (measurableSet_affGt_pair_auto3 x v u h).inter measurableSet_ball
+
+/-! ## `xfan` 的并表示与零测性（Conforming.hl:746-785） -/
+
+/-- HOL Conforming.hl :746-753 `XFAN_EQ_UNIONS_AFF_GE_1_2`
+
+HOL 原文：
+```
+!x V E.
+xfan(x,V,E) =UNIONS {y | ?e. e IN E /\ y = aff_ge {x} e}
+```
+
+编码说明：HOL `UNIONS {y | ?e. e IN E /\ y = aff_ge {x} e}` 是像集
+`{aff_ge {x} e | e ∈ E}` 的并，编码为 `⋃ e ∈ E, affGe ({x} : Set V3) e`
+（`Set.iUnion` 的 `∈` 绑定）；`xfan` ↔ `xfan`（Kepler/Text/Fan.lean:154，
+定义即 `{v | ∃ e ∈ E, v ∈ affGe {x} e}`）。
+
+证明思路：展开 `xfan` 与 `⋃ e ∈ E, ·` 的成员关系
+（`Set.mem_iUnion` / `Set.mem_iUnion₂`）后外延即得，`V` 不参与。
+
+候选已有引理：
+- `xfan`（Kepler/Text/Fan.lean:154）
+- `Set.mem_iUnion`、`Set.mem_iUnion₂`（Mathlib/Data/Set/Lattice.lean）
+- 缺口：HOL `UNIONS`/`IN_ELIM_THM` 未以该名移植 -/
+theorem XFAN_EQ_UNIONS_AFF_GE_1_2 (x : V3) (V : Set V3) (E : Set (Set V3)) :
+    xfan x V E = ⋃ e ∈ E, affGe ({x} : Set V3) e := by
+  ext v
+  simp only [xfan, Set.mem_setOf_eq, Set.mem_iUnion, exists_prop]
+
+private theorem affGe_singleton_pair_subset_affineSpan_auto3 (x v u : V3) :
+    affGe ({x} : Set V3) {v, u} ⊆ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) := by
+  intro y hy
+  simp only [affGe, Set.mem_setOf_eq, Affsign] at hy
+  obtain ⟨f, hfin, hcomb, _hnonneg, hone⟩ := hy
+  have hmem : ∀ w ∈ hfin.toFinset, w ∈ (affineSpan ℝ ({x, v, u} : Set V3) : Set V3) := by
+    intro w hw
+    have hw' : w ∈ ({x} ∪ {v, u} : Set V3) := by
+      rw [← hfin.coe_toFinset]
+      exact hw
+    have hw'' : w ∈ ({x, v, u} : Set V3) := by
+      simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff] at hw' ⊢
+      tauto
+    exact subset_affineSpan ℝ _ hw''
+  rw [hcomb]
+  exact finset_sum_smul_mem_affineSpan_auto3 hmem hone
+
+private theorem negligible_affGe_pair_auto3 (x v u : V3) :
+    volume (affGe ({x} : Set V3) {v, u}) = 0 :=
+  measure_mono_null (affGe_singleton_pair_subset_affineSpan_auto3 x v u)
+    (NEGLIGIBLE_AFF_3_auto3 x v u)
+
+/-- HOL Conforming.hl :754-771 `NEGLIGIBLE_XFAN`
+
+HOL 原文：
+```
+!(x:real^3) (V:real^3->bool) (E:(real^3->bool)->bool).
+FAN (x,V,E) ==>  negligible (xfan (x,V,E))
+```
+
+编码说明（缺口）：`negligible` 用 `volume = 0`（见文件头）；
+`xfan` ↔ `xfan`（Kepler/Text/Fan.lean:154）。
+
+证明思路：先用 `XFAN_EQ_UNIONS_AFF_GE_1_2` 把 `xfan` 写成
+`⋃ e ∈ E, affGe {x} e`；由 `setEdgesFiniteFan` 得 `E` 有限，故只需
+有限个零测集的并仍零测（`measure_iUnion_null` /
+`measure_biUnion_null_iff`）；每条边由 `expand_edge_graph_fan` 写成
+`{v,w}`，再用 `NEGLIGIBLE_AFF_GE_1_2`（三点不共线由 `FAN` 的
+`remark1_fan` 分量给出）。
+
+候选已有引理：
+- `XFAN_EQ_UNIONS_AFF_GE_1_2`（本文件上文，HOL :746）
+- `NEGLIGIBLE_AFF_GE_1_2`（Kepler/Text/ConformingAuto2.lean:386）
+- `setEdgesFiniteFan`（Kepler/Text/Fan.lean:851，HOL
+  `set_edges_is_finite_fan`）
+- `expand_edge_graph_fan`（Kepler/Text/TopologyFan.lean:3212）
+- `measure_iUnion_null_iff`（Mathlib/MeasureTheory/OuterMeasure/Basic.lean:118）、
+  `measure_iUnion_null`（同文件:122）、
+  `measure_biUnion_null_iff`（同文件:107）
+- `edge_ne_of_fan`（Kepler/Text/Fan.lean:1039，HOL `remark1_fan` 互异分量）
+- 缺口：HOL `NEGLIGIBLE_UNIONS`、`remark1_fan`、`FINITE_IMAGE` 未以该名移植 -/
+theorem NEGLIGIBLE_XFAN (x : V3) (V : Set V3) (E : Set (Set V3))
+    (hfan : FAN x V E) :
+    volume (xfan x V E) = 0 := by
+  rw [XFAN_EQ_UNIONS_AFF_GE_1_2]
+  rw [measure_biUnion_null_iff (setEdgesFiniteFan hfan).countable]
+  intro e he
+  obtain ⟨v, w, rfl⟩ := expand_edge_graph_fan hfan he
+  exact negligible_affGe_pair_auto3 x v w
+
+/-- HOL Conforming.hl :772-778 `NEGLIGIBLE_XFAN_INTER_BALL`
+
+HOL 原文：
+```
+!x:real^3 V:real^3->bool (E:(real^3->bool)->bool) r:real.
+FAN (x,V,E) ==>  negligible (xfan (x,V,E) INTER normball x r)
+```
+
+编码说明（缺口）：`negligible` 用 `volume = 0`（见文件头）；
+`xfan` ↔ `xfan`；`normball x r` ↔ `Metric.ball x r`。
+
+证明思路：由 `Set.inter_subset_left` 得
+`xfan x V E ∩ Metric.ball x r ⊆ xfan x V E`，再用
+`measure_mono_null` 与 `NEGLIGIBLE_XFAN`（HOL 用 `NEGLIGIBLE_SUBSET`）。
+
+候选已有引理：
+- `NEGLIGIBLE_XFAN`（本文件上文，HOL :754）
+- `measure_mono_null`（Mathlib/MeasureTheory/OuterMeasure/Basic.lean:54）
+- `Set.inter_subset_left`（Mathlib/Data/Set/Basic.lean）
+- 缺口：HOL `NEGLIGIBLE_SUBSET` 未以该名移植 -/
+theorem NEGLIGIBLE_XFAN_INTER_BALL (x : V3) (V : Set V3) (E : Set (Set V3))
+    (r : ℝ) (hfan : FAN x V E) :
+    volume (xfan x V E ∩ Metric.ball x r) = 0 := by
+  exact measure_mono_null Set.inter_subset_left (NEGLIGIBLE_XFAN x V E hfan)
+
+/-- HOL Conforming.hl :779-785 `HAS_MEASURE_XFAN_INTER_BALL`
+
+HOL 原文：
+```
+!x:real^3 V E r.
+FAN (x,V,E) ==>  (xfan (x,V,E) INTER normball x r)  has_measure  &0
+```
+
+编码说明（缺口）：HOL `has_measure &0`（= `measure s = &0`）未移植，
+与 `negligible` 定义等价，统一编码为 `volume s = 0`（见文件头）；
+`xfan` ↔ `xfan`；`normball x r` ↔ `Metric.ball x r`。
+
+证明思路：HOL 由 `NEGLIGIBLE_XFAN_INTER_BALL` 与 `HAS_MEASURE_0`
+收口；在 `volume = 0` 编码下两者类型相同，直接引用。
+
+候选已有引理：
+- `NEGLIGIBLE_XFAN_INTER_BALL`（本文件上文，HOL :772）
+- 缺口：HOL `HAS_MEASURE_0` 未移植 -/
+theorem HAS_MEASURE_XFAN_INTER_BALL (x : V3) (V : Set V3) (E : Set (Set V3))
+    (r : ℝ) (hfan : FAN x V E) :
+    volume (xfan x V E ∩ Metric.ball x r) = 0 := by
+  exact NEGLIGIBLE_XFAN_INTER_BALL x V E r hfan
+
+/-! ## `yfan` 与球的测度/可测性（Conforming.hl:786-814） -/
+
+/-- HOL Conforming.hl :786-799 `MEASURE_YFAN_INTER_BALL`
+
+HOL 原文：
+```
+!x:real^3 V E r.
+FAN(x,V,E)/\ &0<= r
+==> measure ( (yfan (x,V,E)) INTER normball x r)= &4/ &3 *pi *r pow 3
+```
+
+编码说明：HOL `measure s`（实值）↔ `volume.real s`
+（`Measure.real`，见文件头与 Kepler/Geom/Volume.lean:40）；
+`yfan` ↔ `yfan`（Kepler/Text/Fan.lean:158）；`normball x r` ↔
+`Metric.ball x r`；`&4/ &3 *pi *r pow 3` ↔
+`(4 / 3 : ℝ) * Real.pi * r ^ 3`。HOL 的 `&0<= r` ↔ `0 ≤ r`。
+
+证明思路：把 `yfan = UNIV \ xfan` 代入并把球与差的交写成
+`Metric.ball x r \ (xfan x V E ∩ Metric.ball x r)`
+（HOL `SET_RULE` 步骤）；由 `HAS_MEASURE_XFAN_INTER_BALL` 得内层
+零测且可测，`Metric.ball x r` 可测，用 `measure_sdiff`
+（HOL `MEASURE_DIFF_SUBSET`）得实值测度等于球的实值测度；
+最后 `EuclideanSpace.volume_ball_fin_three`（HOL `VOLUME_BALL`）给出
+`r^3 * (π * 4 / 3)`，`ring` 收口。
+
+候选已有引理：
+- `HAS_MEASURE_XFAN_INTER_BALL`（本文件上文，HOL :779）
+- `EuclideanSpace.volume_ball_fin_three`
+  （Mathlib/MeasureTheory/Measure/Lebesgue/VolumeOfBalls.lean:408）
+- `MeasureTheory.measure_sdiff`
+  （Mathlib/MeasureTheory/Measure/MeasureSpace.lean:250）
+- `yfan`（Kepler/Text/Fan.lean:158）
+- `measurableSet_ball`（Mathlib，球可测）
+- 缺口：HOL `MEASURE_DIFF_SUBSET`、`VOLUME_BALL`、`GSYM ball_eq_normball`、
+  `SET_RULE` 未以该名移植 -/
+theorem MEASURE_YFAN_INTER_BALL (x : V3) (V : Set V3) (E : Set (Set V3))
+    (r : ℝ) (hfan : FAN x V E) (hr : 0 ≤ r) :
+    volume.real (yfan x V E ∩ Metric.ball x r) =
+      (4 / 3 : ℝ) * Real.pi * r ^ 3 := by
+  have hzero : volume (xfan x V E ∩ Metric.ball x r) = 0 :=
+    HAS_MEASURE_XFAN_INTER_BALL x V E r hfan
+  have hset : yfan x V E ∩ Metric.ball x r
+      = Metric.ball x r \ (xfan x V E ∩ Metric.ball x r) := by
+    ext y
+    simp only [yfan, Set.mem_inter_iff, Set.mem_sdiff, Set.mem_univ, true_and]
+    tauto
+  rw [hset]
+  simp only [Measure.real]
+  rw [measure_sdiff_null hzero, EuclideanSpace.volume_ball_fin_three]
+  rw [ENNReal.toReal_mul, ENNReal.toReal_pow, ENNReal.toReal_ofReal hr,
+      ENNReal.toReal_ofReal (by positivity)]
+  ring
+
+/-- HOL Conforming.hl :800-814 `MESURABLE_YFAN_INTER_BALL`（HOL 拼写）
+
+HOL 原文：
+```
+!x:real^3 V E r.
+FAN(x,V,E)/\ &0<= r
+==> measurable ( (yfan (x,V,E)) INTER normball x r)
+```
+
+编码说明：HOL `measurable` ↔ `MeasurableSet`；`yfan` ↔ `yfan`；
+`normball x r` ↔ `Metric.ball x r`；HOL `&0<= r` ↔ `0 ≤ r`。
+名称 `MESURABLE_...` 按 HOL 原样保留（非 `MEASURABLE_`）。
+
+证明思路：把 `yfan = UNIV \ xfan` 代入并把球与差的交写成
+`Metric.ball x r \ (xfan x V E ∩ Metric.ball x r)`；由
+`HAS_MEASURE_XFAN_INTER_BALL` 得内层零测故可测
+（`measurableSet_of_null`），`Metric.ball x r` 可测，用
+`MeasurableSet.diff`（HOL `MEASURABLE_DIFF`）收口。
+
+候选已有引理：
+- `HAS_MEASURE_XFAN_INTER_BALL`（本文件上文，HOL :779）
+- `MeasurableSet.diff`
+  （Mathlib/MeasureTheory/MeasurableSpace/Defs.lean:175）
+- `measurableSet_of_null`
+  （Mathlib/MeasureTheory/Measure/NullMeasurable.lean:434）
+- `measurableSet_ball`（Mathlib）
+- 缺口：HOL `MEASURABLE_DIFF`、`GSYM ball_eq_normball` 未以该名移植 -/
+theorem MESURABLE_YFAN_INTER_BALL (x : V3) (V : Set V3) (E : Set (Set V3))
+    (r : ℝ) (hfan : FAN x V E) (hr : 0 ≤ r) :
+    MeasurableSet (yfan x V E ∩ Metric.ball x r) := by
+  have hxfan : MeasurableSet (xfan x V E) := by
+    rw [XFAN_EQ_UNIONS_AFF_GE_1_2]
+    apply MeasurableSet.biUnion (setEdgesFiniteFan hfan).countable
+    intro e he
+    obtain ⟨v, w, rfl⟩ := expand_edge_graph_fan hfan he
+    exact (closed_aff_ge_1_2 (fan_not_collinear hfan he)).measurableSet
+  have hset : yfan x V E ∩ Metric.ball x r
+      = Metric.ball x r \ (xfan x V E ∩ Metric.ball x r) := by
+    ext y
+    simp only [yfan, Set.mem_inter_iff, Set.mem_sdiff, Set.mem_univ, true_and]
+    tauto
+  rw [hset]
+  exact measurableSet_ball.diff (hxfan.inter measurableSet_ball)
+
+/-! ## 径向集在差与并下的封闭性（Conforming.hl:815-858） -/
+
+/-- HOL Conforming.hl :815-851 `RADIAL_DIFF`
+
+HOL 原文：
+```
+!r v0 A B:real^N->bool. radial_norm r v0 A /\ radial_norm r v0 B /\ A SUBSET B ==> radial_norm r v0 (B DIFF A)
+```
+
+编码说明（缺口）：HOL 陈述对一般 `real^N`，而仓库
+`radialNorm`（Kepler/Geom/Volume.lean:27）只对 `V3` 定义，故此处
+限定 `V3`（不引入新定义）。`radial_norm` ↔ `radialNorm`；
+`B DIFF A` ↔ `B \ A`；`A SUBSET B` ↔ `A ⊆ B`。
+`radialNorm r v0 C` 展开为
+`C ⊆ Metric.ball v0 r ∧ ∀ u, v0 + u ∈ C → ∀ t, 0 < t → t * ‖u‖ < r →
+v0 + t • u ∈ C`。
+
+证明思路：两条 `radialNorm` 合取。第一支 `B \ A ⊆ ball v0 r` 由
+`B ⊆ ball` 与差集子集传递。第二支取 `v0 + u ∈ B \ A`，先用 `B` 的
+径向性得 `v0 + t•u ∈ B`，再用反证：若 `v0 + t•u ∈ A`，对 `A` 用
+径向性于方向 `t•u` 与参数 `inv t`（`t > 0`，`t * ‖t•u‖ < r`）反推
+`v0 + u ∈ A`，与 `v0 + u ∉ A` 矛盾；故 `v0 + t•u ∈ B \ A`。
+
+候选已有引理：
+- `radialNorm`（Kepler/Geom/Volume.lean:27）
+- `Set.diff_subset`、`Set.diff_subset_iff`（Mathlib/Data/Set/Basic.lean）
+- `norm_smul`、`Real.norm_eq_abs`（Mathlib，用于 `t * ‖t•u‖` 计算）
+- `inv_mul_cancel₀` / `mul_inv_cancel₀`（Mathlib/Algebra/GroupPower/...）
+- 缺口：HOL 的 `real^N` 一般维度未覆盖；`radial_norm` 仅 `V3` 版 -/
+theorem RADIAL_DIFF (r : ℝ) (v0 : V3) (A B : Set V3)
+    (hA : radialNorm r v0 A) (hB : radialNorm r v0 B) (hsub : A ⊆ B) :
+    radialNorm r v0 (B \ A) := by
+  refine ⟨?_, ?_⟩
+  · intro y hy
+    exact hB.1 hy.1
+  · intro u hu t ht htu
+    have hBmem : v0 + t • u ∈ B := hB.2 u hu.1 t ht htu
+    have hu_norm : ‖u‖ < r := by
+      have h := hB.1 hu.1
+      rw [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left] at h
+      exact h
+    refine ⟨hBmem, ?_⟩
+    intro hAt
+    have htu' : t⁻¹ * ‖t • u‖ < r := by
+      rw [norm_smul, Real.norm_eq_abs, abs_of_pos ht, ← mul_assoc,
+        inv_mul_cancel₀ (ne_of_gt ht), one_mul]
+      exact hu_norm
+    have hAu : v0 + u ∈ A := by
+      have h := hA.2 (t • u) hAt t⁻¹ (inv_pos.mpr ht) htu'
+      simpa [smul_smul, inv_mul_cancel₀ (ne_of_gt ht)] using h
+    exact hu.2 hAu
+
+/-- HOL Conforming.hl :852-858 `RADIAL_UNION`
+
+HOL 原文：
+```
+!r v0 A B:real^N->bool. radial_norm r v0 A /\ radial_norm r v0 B ==> radial_norm r v0 (A UNION B)
+```
+
+编码说明（缺口）：HOL 陈述对一般 `real^N`，而仓库
+`radialNorm`（Kepler/Geom/Volume.lean:27）只对 `V3` 定义，故此处
+限定 `V3`（不引入新定义）。`radial_norm` ↔ `radialNorm`；
+`A UNION B` ↔ `A ∪ B`。
+
+证明思路：两条 `radialNorm` 合取。第一支 `A ∪ B ⊆ ball v0 r` 由两条
+`⊆ ball` 取并。第二支对 `v0 + u ∈ A ∪ B` 分情形，分别用 `A` 或 `B`
+的径向性得到 `v0 + t • u` 落入同一侧，从而落入并。
+
+候选已有引理：
+- `radialNorm`（Kepler/Geom/Volume.lean:27）
+- `Set.union_subset_iff`、`Set.mem_union`（Mathlib/Data/Set/Basic.lean）
+- 缺口：HOL 的 `real^N` 一般维度未覆盖；`radial_norm` 仅 `V3` 版 -/
+theorem RADIAL_UNION (r : ℝ) (v0 : V3) (A B : Set V3)
+    (hA : radialNorm r v0 A) (hB : radialNorm r v0 B) :
+    radialNorm r v0 (A ∪ B) := by
+  refine ⟨?_, ?_⟩
+  · exact Set.union_subset hA.1 hB.1
+  · intro u hu t ht htu
+    rcases hu with hu | hu
+    · exact Or.inl (hA.2 u hu t ht htu)
+    · exact Or.inr (hB.2 u hu t ht htu)

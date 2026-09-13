@@ -34,6 +34,14 @@ if ! timeout 3600 lake build "$MODULE" > /tmp/auto_gate_build.log 2>&1; then
 fi
 grep -qE '(^| )error:' /tmp/auto_gate_build.log && fail "errors in build log"
 
+# 4b. root-module build: catches cross-module declaration collisions that the
+#     per-module build above cannot see (e.g. two Auto files binding the same
+#     name; only the root Kepler.lean imports both). Incremental, so cheap.
+if ! timeout 3600 lake build Kepler > /tmp/auto_gate_root_build.log 2>&1; then
+  fail "lake build Kepler (root) failed, see /tmp/auto_gate_root_build.log"
+fi
+grep -qE '(^| )error:' /tmp/auto_gate_root_build.log && fail "errors in root build log"
+
 # 5. axioms whitelist on the target theorem (olean now exists)
 #    NB: full name = <file's namespace>.<THM>, NOT <module>.<THM>
 NS=$(grep -m1 -oE '^namespace [A-Za-z0-9_.]+' "$FILE" | awk '{print $2}')

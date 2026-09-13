@@ -63,6 +63,25 @@ import Kepler.Text.ConformingAuto1
 import Kepler.Text.ConformingAuto2
 import Kepler.Text.ConformingAuto3
 import Kepler.Text.ConformingAuto4
+import Kepler.Text.ConformingAuto5
+import Kepler.Text.ConformingAuto6
+import Kepler.Text.ConformingAuto7
+import Kepler.Text.ConformingAuto8
+import Kepler.Text.ConformingAuto9
+import Kepler.Text.ConformingAuto10
+import Kepler.Text.ConformingAuto11
+import Kepler.Text.ConformingAuto12
+import Kepler.Text.ConformingAuto13
+import Kepler.Text.ConformingAuto14
+import Kepler.Text.ConformingAuto15
+import Kepler.Text.ConformingAuto16
+import Kepler.Text.ConformingAuto17
+import Kepler.Text.ConformingAuto18
+import Kepler.Text.ConformingAuto19
+import Kepler.Text.ConformingAuto20
+import Kepler.Text.ConformingAuto21
+import Kepler.Text.ConformingAuto22
+import Kepler.Text.ConformingAuto23
 import Kepler.Text.VectorAngleLemmas
 -- Phase 4: 分支定界证书树（二分盒树 + covers/bb_sound，叶为内核 decide 的 checkPos）
 import Kepler.Interval.Cert
