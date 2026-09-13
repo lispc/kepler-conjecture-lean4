@@ -74,6 +74,7 @@ geometric content.
 
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
+import Kepler.Text.Polytope
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -83,52 +84,6 @@ namespace Kepler.Text
 open Kepler.Geom
 open Classical
 
-/-! ## 批 4 需要的上游定义（HOL 原文逐字移植；见文件头「合并去重」说明） -/
-
-/-- HOL `aff_dim`（HOL Light Multivariate，`polytope1.ml` 使用；
-∅ ↦ -1，否则仿射包方向的维数）。`WithBot`/`ℤ` 语义按 HOL 取 `ℤ`。 -/
-noncomputable def affDim (s : Set V3) : ℤ :=
-  if s = ∅ then -1 else (Module.finrank ℝ (vectorSpan ℝ s) : ℤ)
-
-/-- HOL `t face_of s`（polytope1.ml:22，flyspeck Definition 4.7 QLITJET）：
-```
-t SUBSET s /\ convex t /\
-!a b x. a IN s /\ b IN s /\ x IN t /\ x IN segment(a,b) ==> a IN t /\ b IN t
-```
--/
-def FaceOf (t s : Set V3) : Prop :=
-  t ⊆ s ∧ Convex ℝ t ∧
-    ∀ a b x : V3, a ∈ s → b ∈ s → x ∈ t → x ∈ segment ℝ a b → a ∈ t ∧ b ∈ t
-
-/-- HOL `f facet_of s`（polytope1.ml:1506）：
-```
-f facet_of s <=> f face_of s /\ ~(f = {}) /\ aff_dim f = aff_dim s - &1
-```
--/
-def FacetOf (f s : Set V3) : Prop :=
-  FaceOf f s ∧ f ≠ ∅ ∧ affDim f = affDim s - 1
-
-/-- HOL `polyhedron s`（polytope1.ml:2546，flyspeck Definition 4.8 QSRHLXB）：
-```
-polyhedron s <=> ?f. FINITE f /\ s = INTERS f /\
-  (!h. h IN f ==> ?a b. ~(a = vec 0) /\ h = {x | a dot x <= b})
-```
--/
-def polyhedron (s : Set V3) : Prop :=
-  ∃ F : Set (Set V3), F.Finite ∧ s = ⋂₀ F ∧
-    ∀ h ∈ F, ∃ a : V3, ∃ b : ℝ, a ≠ 0 ∧ h = {x : V3 | a ⬝ᵥ x ≤ b}
-
-/-- HOL `fchanged`（polyhedron.hl:512，`new_definition`，逐字移植）：
-```
-fchanged f={v| ?v1 t. v=t% v1 /\ v1 IN (relative_interior f)/\ t> &0}
-```
-即 `f` 相对内部各点出发的正射线之并。 -/
-def fchanged (f : Set V3) : Set V3 :=
-  {v : V3 | ∃ v1 : V3, ∃ t : ℝ, v = t • v1 ∧ v1 ∈ intrinsicInterior ℝ f ∧ 0 < t}
-
-/-! ## 批 4 私有辅助引理 -/
-
-/-- HOL `AFF_GT_1_1`：双单点 `affGt {x} {v}` 是过 `x` 过 `v` 的开射线。 -/
 private theorem affGt_halfLine {x v u : V3} :
     u ∈ affGt {x} {v} ↔ ∃ t : ℝ, 0 < t ∧ u = x + t • (v - x) := by
   by_cases hxv : x = v
@@ -187,52 +142,6 @@ private theorem affGt_halfLine {x v u : V3} :
         rw [if_neg hxv, if_pos (rfl : v = v)]
         ring
 
-/-- 凸集的相对内部仍是凸（HOL `CONVEX_RELATIVE_INTERIOR` :514；Mathlib 缺口，就地证）。 -/
-private theorem convex_intrinsicInterior {s : Set V3} (hs : Convex ℝ s) :
-    Convex ℝ (intrinsicInterior ℝ s) := by
-  rcases Set.eq_empty_or_nonempty s with h0 | hsne
-  · rw [h0, intrinsicInterior_empty]
-    exact convex_empty
-  · obtain ⟨p0, hp0⟩ := hsne
-    set p' : affineSpan ℝ s := ⟨p0, subset_affineSpan ℝ s hp0⟩ with _hp'def
-    haveI : Nonempty (affineSpan ℝ s) := ⟨p'⟩
-    set e := AffineIsometryEquiv.constVSub ℝ p' with _hedef
-    obtain ⟨g, hgdef⟩ : ∃ g : (affineSpan ℝ s).direction →ᵃ[ℝ] V3,
-        g = (affineSpan ℝ s).subtype.comp e.symm.toAffineEquiv.toAffineMap := ⟨_, rfl⟩
-    have hgcoe : ∀ w : (affineSpan ℝ s).direction, g w = ((e.symm w : affineSpan ℝ s) : V3) := by
-      intro w
-      rw [hgdef]
-      rfl
-    have hAE : e.toHomeomorph '' ((↑) ⁻¹' s : Set (affineSpan ℝ s)) = g ⁻¹' s := by
-      ext w
-      simp only [Set.mem_image, Set.mem_preimage, AffineIsometryEquiv.coe_toHomeomorph]
-      constructor
-      · rintro ⟨y, hy, rfl⟩
-        rw [hgcoe, e.symm_apply_apply]
-        exact hy
-      · intro hgw
-        rw [hgcoe] at hgw
-        refine ⟨e.symm w, hgw, ?_⟩
-        simp
-    have hII : intrinsicInterior ℝ s = g '' interior (g ⁻¹' s) := by
-      ext z
-      rw [mem_intrinsicInterior, Set.mem_image]
-      constructor
-      · rintro ⟨y, hy, rfl⟩
-        refine ⟨e y, ?_, ?_⟩
-        · rw [← hAE,
-            ← Homeomorph.image_interior e.toHomeomorph ((↑) ⁻¹' s : Set (affineSpan ℝ s))]
-          exact ⟨y, hy, rfl⟩
-        · rw [hgcoe, e.symm_apply_apply]
-      · rintro ⟨w, hw, rfl⟩
-        rw [← hAE,
-          ← Homeomorph.image_interior e.toHomeomorph ((↑) ⁻¹' s : Set (affineSpan ℝ s))] at hw
-        obtain ⟨u, hu, rfl⟩ := hw
-        exact ⟨u, hu, by rw [hgcoe, AffineIsometryEquiv.coe_toHomeomorph, e.symm_apply_apply]⟩
-    rw [hII]
-    exact ((hs.affine_preimage g).interior).affine_image g
-
-/-- 连通分量的对称性。 -/
 private theorem ccIn_symm {F : Set V3} {a b : V3}
     (h : a ∈ connectedComponentIn F b) : b ∈ connectedComponentIn F a := by
   have hF : b ∈ F := connectedComponentIn_nonempty_iff.mp ⟨a, h⟩

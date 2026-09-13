@@ -73,6 +73,7 @@ Encoding notes (gaps / closest existing encodings):
 -/
 
 import Kepler.Text.PlanarityAuto16
+import Kepler.Text.Polytope
 import Kepler.Text.ConformingDefs
 import Mathlib
 
@@ -1129,77 +1130,6 @@ private theorem convex_halfspace_dot (a : V3) (b : ℝ) : Convex ℝ {y : V3 | a
   rw [key] at h3
   exact h3
 
-/-- 凸集的相对内部（内蕴内部）是凸的。 -/
-private theorem convex_intrinsicInterior {s : Set V3} (hs : Convex ℝ s) :
-    Convex ℝ (intrinsicInterior ℝ s) := by
-  rcases s.eq_empty_or_nonempty with h | h
-  · subst h
-    simp only [intrinsicInterior_empty]
-    exact convex_empty
-  · obtain ⟨p0, hp0⟩ := h
-    set p' : affineSpan ℝ s := ⟨p0, subset_affineSpan ℝ s hp0⟩ with _hp'def
-    haveI : Nonempty (affineSpan ℝ s) := ⟨p'⟩
-    set e := AffineIsometryEquiv.constVSub ℝ p' with _hedef
-    obtain ⟨g, hgdef⟩ : ∃ g : (affineSpan ℝ s).direction →ᵃ[ℝ] V3,
-        g = (affineSpan ℝ s).subtype.comp e.symm.toAffineEquiv.toAffineMap := ⟨_, rfl⟩
-    have hgcoe : ∀ w : (affineSpan ℝ s).direction, g w = ((e.symm w : affineSpan ℝ s) : V3) := by
-      intro w
-      rw [hgdef]
-      rfl
-    have hAE : e.toHomeomorph '' ((↑) ⁻¹' s : Set (affineSpan ℝ s)) = g ⁻¹' s := by
-      ext w
-      simp only [Set.mem_image, Set.mem_preimage, AffineIsometryEquiv.coe_toHomeomorph]
-      constructor
-      · rintro ⟨y, hy, rfl⟩
-        rw [hgcoe, e.symm_apply_apply]
-        exact hy
-      · intro hgw
-        rw [hgcoe] at hgw
-        refine ⟨e.symm w, hgw, ?_⟩
-        simp
-    have hII : intrinsicInterior ℝ s = g '' interior (g ⁻¹' s) := by
-      ext z
-      rw [mem_intrinsicInterior, Set.mem_image]
-      constructor
-      · rintro ⟨y, hy, rfl⟩
-        refine ⟨e y, ?_, ?_⟩
-        · rw [← hAE,
-            ← Homeomorph.image_interior e.toHomeomorph ((↑) ⁻¹' s : Set (affineSpan ℝ s))]
-          exact ⟨y, hy, rfl⟩
-        · rw [hgcoe, e.symm_apply_apply]
-      · rintro ⟨w, hw, rfl⟩
-        rw [← hAE,
-          ← Homeomorph.image_interior e.toHomeomorph ((↑) ⁻¹' s : Set (affineSpan ℝ s))] at hw
-        obtain ⟨u, hu, rfl⟩ := hw
-        exact ⟨u, hu, by rw [hgcoe, AffineIsometryEquiv.coe_toHomeomorph, e.symm_apply_apply]⟩
-    rw [hII]
-    exact ((hs.affine_preimage g).interior).affine_image g
-
-
-/-- HOL polyhedron.hl :514-516 `CONVEX_RELATIVE_INTERIOR`
-
-HOL 原文：
-```
-!p:real^3->bool. polyhedron p ==> convex (relative_interior p)
-```
-
-编码说明（缺口）：HOL `polyhedron p` 就地展开（见批头）；HOL
-`relative_interior p` ↔ `intrinsicInterior ℝ p`
-（Mathlib Analysis/Convex/Intrinsic.lean:61）。
-
-证明思路（HOL）：由 `POLYHEDRON_INTER_AFFINE_MINIMAL` 取 `p =
-affine hull p ∩ ⋂ f`，用 `RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT` 得
-`relative_interior p = p ∩ {x | ∀ h ∈ f, a h ⬝ x < b h}`，再
-`CONVEX_INTER`（`p` 凸：`POLYHEDRON_EQ_FINITE_FACES`）+ `CONVEX_INTERS`
-+ `LEMMA`（本文件）+ `CONVEX_HALFSPACE_LT`。
-
-候选已有引理：
-- `intrinsicInterior ℝ`（Mathlib Analysis/Convex/Intrinsic.lean:61）
-- `Convex.inter`、`convex_iInter`-型、`Convex.halfspace_lt`（Mathlib：
-  `convex_halfspace_lt`）
-- `LEMMA`（本文件 PolyAuto3.lean）
-- 缺口：`RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT`、
-  `POLYHEDRON_INTER_AFFINE_MINIMAL` 未移植 -/
 theorem CONVEX_RELATIVE_INTERIOR {p : Set V3}
     (hp : ∃ f : Set (Set V3), f.Finite ∧ p = ⋂₀ f ∧
       ∀ h ∈ f, ∃ a : V3, ∃ b : ℝ, a ≠ 0 ∧ h = {y : V3 | a ⬝ᵥ y ≤ b}) :
