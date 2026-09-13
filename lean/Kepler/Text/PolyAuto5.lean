@@ -47,14 +47,14 @@ Encoding notes (gaps / closest existing encodings):
   `FacetOf`, `affDim`). Since PolyAuto4 must NOT be imported here
   (concurrent lane; batch plan forbids PolyAuto imports), the statements
   below reference faithful `private` copies suffixed `_p5`
-  (`fchanged_p5`, `polyhedron_p5`, `faceOf_p5`, `facetOf_p5`, `affDim_p5`,
-  `edgeOf_p5`, `edges_p5`), byte-for-byte the PolyAuto4 bodies
-  (`edgeOf_p5`/`edges_p5` are new ports, quoted verbatim from
+  (`fchanged`, `polyhedron`, `FaceOf`, `FacetOf`, `affDim`,
+  `edgeOf`, `edges`), byte-for-byte the PolyAuto4 bodies
+  (`edgeOf`/`edges` are new ports, quoted verbatim from
   polytope.ml:2847 / flyspeck_multivariate.ml:6887; `edges` uses the CLOSED
   segment `segment[v,w]`, unlike the open-segment `face_of` quantifier).
   MERGE PLAN: at assembly, delete the `_p5` copies and re-point every
   occurrence to PolyAuto4's `fchanged`/`polyhedron`/`FaceOf`/`FacetOf`/
-  `affDim` (identical bodies); `edgeOf_p5`/`edges_p5` should move next to
+  `affDim` (identical bodies); `edgeOf`/`edges` should move next to
   them (or be inlined at call sites) — propose `edgeOf`/`edges` defs in the
   PolyAuto4 lane.
 - Imports: `PlanarityAuto16` + `ConformingDefs` per batch plan (the cited
@@ -68,6 +68,7 @@ ported lemmas; liangou = coefficient/rewriting bookkeeping; fenxi =
 geometric content.
 -/
 
+import Kepler.Text.Polytope
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
 import Mathlib
@@ -78,65 +79,6 @@ namespace Kepler.Text
 
 open Kepler.Geom
 open Classical
-
-/-! ## 批 5 需要的上游定义（PolyAuto4 同体私有副本；见文件头「合并去重」说明） -/
-
-/-- PolyAuto4.lean `affDim` 的私有副本（HOL `aff_dim`，polytope.ml；
-∅ ↦ -1，否则仿射包方向 `vectorSpan` 的维数）。 -/
-private noncomputable def affDim_p5 (s : Set V3) : ℤ :=
-  if s = ∅ then -1 else (Module.finrank ℝ (vectorSpan ℝ s) : ℤ)
-
-/-- PolyAuto4.lean `FaceOf` 的私有副本（HOL `t face_of s`，polytope.ml，
-flyspeck Definition 4.7 QLITJET）：
-```
-t SUBSET s /\ convex t /\
-!a b x. a IN s /\ b IN s /\ x IN t /\ x IN segment(a,b) ==> a IN t /\ b IN t
-```
--/
-private def faceOf_p5 (t s : Set V3) : Prop :=
-  t ⊆ s ∧ Convex ℝ t ∧
-    ∀ a b x : V3, a ∈ s → b ∈ s → x ∈ t → x ∈ segment ℝ a b → a ∈ t ∧ b ∈ t
-
-/-- PolyAuto4.lean `FacetOf` 的私有副本（HOL `f facet_of s`，polytope.ml:2620）：
-```
-f facet_of s <=> f face_of s /\ ~(f = {}) /\ aff_dim f = aff_dim s - &1
-```
--/
-private def facetOf_p5 (f s : Set V3) : Prop :=
-  faceOf_p5 f s ∧ f ≠ ∅ ∧ affDim_p5 f = affDim_p5 s - 1
-
-/-- PolyAuto4.lean `polyhedron` 的私有副本（HOL `polyhedron s`，flyspeck
-Definition 4.8 QSRHLXB，polytope.ml:4385）：
-```
-polyhedron s <=> ?f. FINITE f /\ s = INTERS f /\
-  (!h. h IN f ==> ?a b. ~(a = vec 0) /\ h = {x | a dot x <= b})
-```
--/
-private def polyhedron_p5 (s : Set V3) : Prop :=
-  ∃ F : Set (Set V3), F.Finite ∧ s = ⋂₀ F ∧
-    ∀ h ∈ F, ∃ a : V3, ∃ b : ℝ, a ≠ 0 ∧ h = {x : V3 | a ⬝ᵥ x ≤ b}
-
-/-- PolyAuto4.lean `fchanged` 的私有副本（HOL `fchanged`，polyhedron.hl:512
-`new_definition`，逐字移植）：
-```
-fchanged f={v| ?v1 t. v=t% v1 /\ v1 IN (relative_interior f)/\ t> &0}
-```
-即 `f` 相对内部各点出发的正射线之并。 -/
-private def fchanged_p5 (f : Set V3) : Set V3 :=
-  {v : V3 | ∃ v1 : V3, ∃ t : ℝ, v = t • v1 ∧ v1 ∈ intrinsicInterior ℝ f ∧ 0 < t}
-
-/-- HOL `e edge_of s`（polytope.ml:2847，逐字移植；批 5 新增）：
-```
-e edge_of s <=> e face_of s /\ aff_dim e = &1
-```
--/
-private def edgeOf_p5 (e s : Set V3) : Prop :=
-  faceOf_p5 e s ∧ affDim_p5 e = 1
-
-/-- HOL `edges s = {{v,w} | segment[v,w] edge_of s}`（flyspeck_multivariate.ml:6887，
-逐字移植；注意此处是**闭**段 `segment[v,w]`） -/
-private def edges_p5 (s : Set V3) : Set (Set V3) :=
-  {e : Set V3 | ∃ v w : V3, e = {v, w} ∧ edgeOf_p5 (segment ℝ v w) s}
 
 /-! ## polyhedron.hl :745-:890（连续性、仿射包与内部） -/
 
@@ -231,7 +173,7 @@ HOL 原文：
 !x p:(real^3->bool). x IN interior p ==> aff_dim p= &3
 ```
 
-编码说明：HOL `aff_dim` ↦ 本批私有 `affDim_p5`（= PolyAuto4 的 `affDim`；
+编码说明：HOL `aff_dim` ↦ 本批私有 `affDim`（= PolyAuto4 的 `affDim`；
 ∅ ↦ -1，否则 `Module.finrank ℝ (vectorSpan ℝ s)`）。
 
 证明思路：`INTERIOR_AFFINIE_HUL_EQ_UNIV` 得 `affineSpan p = univ`；
@@ -243,7 +185,7 @@ HOL 原文：
 - `vectorSpan_univ`（Mathlib LinearAlgebra/AffineSpace）、`Module.finrank_top`
 - `SetLike`/`Submodule.finrank` 维数 API -/
 theorem AFF_DIM_INTERIOR_EQ_3 (x : V3) (p : Set V3) (hx : x ∈ interior p) :
-    affDim_p5 p = 3 := by
+    affDim p = 3 := by
   have hne : p ≠ ∅ := by
     rintro rfl
     simp at hx
@@ -253,7 +195,7 @@ theorem AFF_DIM_INTERIOR_EQ_3 (x : V3) (p : Set V3) (hx : x ∈ interior p) :
     rw [AffineSubspace.top_coe, hspan]
   have hv : vectorSpan ℝ p = ⊤ :=
     AffineSubspace.vectorSpan_eq_top_of_affineSpan_eq_top ℝ V3 V3 htop
-  have h3 : affDim_p5 p = ((Module.finrank ℝ (vectorSpan ℝ p) : ℕ) : ℤ) := if_neg hne
+  have h3 : affDim p = ((Module.finrank ℝ (vectorSpan ℝ p) : ℕ) : ℤ) := if_neg hne
   rw [h3, hv, finrank_top, finrank_euclideanSpace_fin]
   norm_num
 
@@ -314,6 +256,237 @@ theorem IN_RELATIVE_INTERIOR1 (x : V3) (s : Set V3) (hx : x ∈ intrinsicInterio
 
 /-! ## polyhedron.hl :891-:1180（fchanged 区域的开性与单射性） -/
 
+/-! ### 批 5 内联辅助引理（Polytope.lean 尚无对应公开版本；内联实现） -/
+
+/-- 点积的 ℝ-线性性（`dotRight` 的内联副本，供超平面方向计算使用）。 -/
+private def dotLin5 (a : V3) : V3 →ₗ[ℝ] ℝ where
+  toFun x := a ⬝ᵥ x
+  map_add' x y := by
+    show a.ofLp ⬝ᵥ (x.ofLp + y.ofLp) = a.ofLp ⬝ᵥ x.ofLp + a.ofLp ⬝ᵥ y.ofLp
+    rw [dotProduct_add]
+  map_smul' r x := by
+    show a.ofLp ⬝ᵥ (r • x.ofLp) = (RingHom.id ℝ) r • (a.ofLp ⬝ᵥ x.ofLp)
+    rw [dotProduct_smul]
+    simp
+
+/-- 点积加法（Polytope.lean 私有 `dot_add` 的内联副本）。 -/
+private theorem dot_add5 (a x y : V3) : a ⬝ᵥ (x + y) = a ⬝ᵥ x + a ⬝ᵥ y := by
+  show a.ofLp ⬝ᵥ (x.ofLp + y.ofLp) = a.ofLp ⬝ᵥ x.ofLp + a.ofLp ⬝ᵥ y.ofLp
+  rw [dotProduct_add]
+
+/-- 点积数乘（Polytope.lean 私有 `dot_smul` 的内联副本）。 -/
+private theorem dot_smul5 (a x : V3) (r : ℝ) : a ⬝ᵥ (r • x) = r * (a ⬝ᵥ x) := by
+  show a.ofLp ⬝ᵥ (r • x.ofLp) = r * (a.ofLp ⬝ᵥ x.ofLp)
+  rw [dotProduct_smul]
+  simp
+
+/-- 点积左数乘。 -/
+private theorem dot_smul_left5 (a b : V3) (r : ℝ) : (r • a) ⬝ᵥ b = r * (a ⬝ᵥ b) := by
+  show (r • a).ofLp ⬝ᵥ b.ofLp = r * (a.ofLp ⬝ᵥ b.ofLp)
+  rw [WithLp.ofLp_smul, dotProduct_comm, dotProduct_smul, dotProduct_comm, smul_eq_mul]
+
+/-- 点积左减法。 -/
+private theorem dot_sub_left5 (a b c : V3) : (a - b) ⬝ᵥ c = a ⬝ᵥ c - b ⬝ᵥ c := by
+  show (a - b).ofLp ⬝ᵥ c.ofLp = a.ofLp ⬝ᵥ c.ofLp - b.ofLp ⬝ᵥ c.ofLp
+  rw [WithLp.ofLp_sub, dotProduct_comm, dotProduct_sub, dotProduct_comm, dotProduct_comm,
+    dotProduct_comm c.ofLp a.ofLp, dotProduct_comm c.ofLp b.ofLp]
+
+/-- Skolem 化的最小半空间表示（= Polytope.lean 私有 `minrep_skolem` 的公开
+重述；`minrep_skolem` 为 private，无法跨文件使用）。 -/
+private theorem exists_minrep {s : Set V3} (hsp : polyhedron s) :
+    ∃ (F : Set (Set V3)) (a : Set V3 → V3) (b : Set V3 → ℝ), F.Finite ∧
+      s = (affineSpan ℝ s : Set V3) ∩ ⋂₀ F ∧
+      (∀ h ∈ F, a h ≠ 0 ∧ h = {x : V3 | a h ⬝ᵥ x ≤ b h}) ∧
+      ∀ F' : Set (Set V3), F' ⊂ F → s ⊂ (affineSpan ℝ s : Set V3) ∩ ⋂₀ F' := by
+  obtain ⟨F, hF, hs, hFprop, hmin⟩ := POLYHEDRON_INTER_AFFINE_MINIMAL.1 hsp
+  have hex : ∀ h : Set V3, ∃ c : V3 × ℝ, h ∈ F → c.1 ≠ 0 ∧ h = {x : V3 | c.1 ⬝ᵥ x ≤ c.2} := by
+    intro h
+    by_cases hh : h ∈ F
+    · obtain ⟨u, r, hu, hr⟩ := hFprop h hh
+      exact ⟨(u, r), fun _ => ⟨hu, hr⟩⟩
+    · exact ⟨(0, 0), fun hf => absurd hf hh⟩
+  choose c hc using hex
+  exact ⟨F, fun h => (c h).1, fun h => (c h).2, hF, hs, fun h hh => hc h hh, hmin⟩
+
+/-- 有界非空、维数 ≥ 1 的多面体有真面（facet 存在性，= HOL
+`POLYTOPE_FACET_EXISTS` 的多面体版本）：取最小表示的任一约束切一刀。 -/
+private theorem exists_facet {s : Set V3} (hsp : polyhedron s) (hb : Bornology.IsBounded s)
+    (hne : s.Nonempty) (hdim : 1 ≤ affDim s) :
+    ∃ g : Set V3, FacetOf g s := by
+  obtain ⟨F, a, b, hF, hs, hFprop, hmin⟩ := exists_minrep hsp
+  have hFne : F.Nonempty := by
+    by_contra hcon
+    push_neg at hcon
+    have hsaff : s = (affineSpan ℝ s : Set V3) := by
+      rw [hcon, Set.sInter_empty, Set.inter_univ] at hs
+      exact hs
+    have hdir0 : (affineSpan ℝ s).direction = ⊥ := by
+      rw [direction_affineSpan]
+      refine Submodule.eq_bot_iff _ |>.2 fun u hu => ?_
+      by_contra hune
+      obtain ⟨x, hx⟩ := hne
+      have hum : u ∈ (affineSpan ℝ s).direction := by
+        rw [direction_affineSpan]; exact hu
+      have hstep : ∀ n : ℕ, x + (n : ℝ) • u ∈ s := by
+        intro n
+        have hmem : ((n : ℝ) • u) ∈ (affineSpan ℝ s).direction :=
+          Submodule.smul_mem _ (n : ℝ) hum
+        have hvadd : ((n : ℝ) • u) +ᵥ x = x + (n : ℝ) • u := by
+          rw [vadd_eq_add]; module
+        rw [← hvadd, hsaff]
+        exact AffineSubspace.vadd_mem_of_mem_direction hmem (subset_affineSpan ℝ s hx)
+      obtain ⟨C, hC⟩ := Metric.isBounded_iff.1 hb
+      have hkey : ∀ n : ℕ, (n : ℝ) * ‖u‖ ≤ C := by
+        intro n
+        have h1 := hC hx (hstep n)
+        rw [dist_eq_norm] at h1
+        have h2 : x - (x + (n : ℝ) • u) = -((n : ℝ) • u) := by module
+        rw [h2, norm_neg, norm_smul, Real.norm_eq_abs, abs_of_nonneg (by positivity)] at h1
+        exact h1
+      have hpos : 0 < ‖u‖ := norm_pos_iff.2 hune
+      obtain ⟨n, hn⟩ := exists_nat_gt (C / ‖u‖ + 1)
+      have h1 := mul_lt_mul_of_pos_right hn hpos
+      have h2 : (C / ‖u‖ + 1) * ‖u‖ = C + ‖u‖ := by field_simp
+      have h3 := hkey n
+      linarith
+    have h0 : affDim s = 0 := by
+      rw [affDim, if_neg (Set.nonempty_iff_ne_empty.1 hne), ← direction_affineSpan, hdir0,
+        finrank_bot]
+      norm_num
+    linarith [hdim, h0]
+  obtain ⟨h0, h0mem⟩ := hFne
+  exact ⟨s ∩ {x : V3 | a h0 ⬝ᵥ x = b h0},
+    (FACET_OF_POLYHEDRON_EXPLICIT a b hF hs hFprop hmin _).2 ⟨h0, h0mem, rfl⟩⟩
+
+/-- 点积加法备用与超平面仿射包（HOL `AFF_DIM_HYPERPLANE` 用法的内联版本）：
+非空、二维且含于超平面 `{a ⬝ᵥ x = b}` 的集合的仿射包等于该超平面。 -/
+private theorem affineSpan_eq_hyperplane {f : Set V3} {a : V3} {b : ℝ} (ha : a ≠ 0)
+    (hne : f.Nonempty) (hsub : f ⊆ {x : V3 | a ⬝ᵥ x = b}) (hdim : affDim f = 2) :
+    (affineSpan ℝ f : Set V3) = {x : V3 | a ⬝ᵥ x = b} := by
+  obtain ⟨p0, hp0f⟩ := hne
+  have hp0 : a ⬝ᵥ p0 = b := hsub hp0f
+  have hmap : ∀ w : V3, dotLin5 a w = a ⬝ᵥ w := fun _ => rfl
+  have hneH : ({x : V3 | a ⬝ᵥ x = b} : Set V3) ≠ ∅ :=
+    Set.nonempty_iff_ne_empty.1 ⟨p0, hp0⟩
+  have hvK : vectorSpan ℝ ({x : V3 | a ⬝ᵥ x = b} : Set V3)
+      = LinearMap.ker (dotLin5 a) := by
+    refine le_antisymm ?_ ?_
+    · rw [vectorSpan_def, Submodule.span_le]
+      intro z hz
+      obtain ⟨x, hx, y, hy, hz'⟩ := Set.mem_vsub.1 hz
+      have hx1 : a ⬝ᵥ x = b := hx
+      have hy1 : a ⬝ᵥ y = b := hy
+      rw [← hz', SetLike.mem_coe, LinearMap.mem_ker]
+      show dotLin5 a (x - y) = 0
+      rw [LinearMap.map_sub, hmap, hmap, hx1, hy1, sub_self]
+    · intro z hz
+      rw [vectorSpan_def]
+      have hz0 : a ⬝ᵥ z = 0 := by
+        have h0' := LinearMap.mem_ker.1 hz
+        rw [hmap] at h0'
+        exact h0'
+      refine Submodule.subset_span ?_
+      refine Set.mem_vsub.2
+        ⟨p0 + z, ?_, p0, (show p0 ∈ ({x : V3 | a ⬝ᵥ x = b} : Set V3) from hp0), ?_⟩
+      · show a ⬝ᵥ (p0 + z) = b
+        rw [dot_add5, hp0, hz0, add_zero]
+      · show (p0 + z) -ᵥ p0 = z
+        rw [vsub_eq_sub, add_sub_cancel_left]
+  have hK2 : Module.finrank ℝ (LinearMap.ker (dotLin5 a)) = 2 := by
+    have h1 := affDim_hyperplane ha b
+    simp only [affDim, if_neg hneH] at h1
+    rw [hvK] at h1
+    exact_mod_cast h1
+  have hSle : affineSpan ℝ f ≤ AffineSubspace.mk' p0 (LinearMap.ker (dotLin5 a)) := by
+    refine affineSpan_le.2 fun z hz => ?_
+    refine (AffineSubspace.mem_mk').2 ?_
+    show dotLin5 a (z -ᵥ p0) = 0
+    rw [vsub_eq_sub, LinearMap.map_sub, hmap, hmap, hsub hz, hp0, sub_self]
+  have hdirEq : (affineSpan ℝ f).direction
+      = (AffineSubspace.mk' p0 (LinearMap.ker (dotLin5 a))).direction := by
+    refine Submodule.eq_of_le_of_finrank_le (AffineSubspace.direction_le hSle) ?_
+    rw [AffineSubspace.direction_mk', direction_affineSpan]
+    have hdim' : (Module.finrank ℝ (vectorSpan ℝ f) : ℤ) = 2 := by
+      have h2' := hdim
+      simp only [affDim, if_neg (Set.nonempty_iff_ne_empty.1 ⟨p0, hp0f⟩)] at h2'
+      exact h2'
+    rw [hK2]
+    exact_mod_cast hdim'.symm.le
+  have heq : affineSpan ℝ f = AffineSubspace.mk' p0 (LinearMap.ker (dotLin5 a)) :=
+    AffineSubspace.eq_of_direction_eq_of_nonempty_of_le hdirEq
+      ⟨p0, subset_affineSpan ℝ f hp0f⟩ hSle
+  rw [heq]
+  ext z
+  constructor
+  · intro hz
+    have hz' : z -ᵥ p0 ∈ LinearMap.ker (dotLin5 a) := (AffineSubspace.mem_mk').1 hz
+    show a ⬝ᵥ z = b
+    have e1 : a ⬝ᵥ z = a ⬝ᵥ p0 := by
+      have h2' : dotLin5 a (z -ᵥ p0) = 0 := hz'
+      rw [vsub_eq_sub, LinearMap.map_sub, hmap, hmap, sub_eq_zero] at h2'
+      exact h2'
+    rw [e1, hp0]
+  · intro hz
+    have hz' : a ⬝ᵥ z = b := hz
+    refine (AffineSubspace.mem_mk').2 ?_
+    show dotLin5 a (z -ᵥ p0) = 0
+    rw [vsub_eq_sub, LinearMap.map_sub, hmap, hmap, hz', hp0, sub_self]
+
+/-- 直线上的坐标：`{v, w}` 仿射包中的点形如 `v + μ • (w - v)`。 -/
+private theorem line_coord {v w y : V3} (hy : y ∈ (affineSpan ℝ {v, w} : Set V3)) :
+    ∃ μ : ℝ, y - v = μ • (w - v) := by
+  have hle : affineSpan ℝ {v, w} ≤ AffineSubspace.mk' v (ℝ ∙ (w - v)) := by
+    refine affineSpan_le.2 fun p hp => ?_
+    obtain hp' : p = v ∨ p = w := by
+      rcases Set.mem_insert_iff.1 hp with h | h
+      · exact Or.inl h
+      · rw [Set.mem_singleton_iff] at h
+        exact Or.inr h
+    rcases hp' with hpe | hpe
+    · rw [hpe]
+      exact (AffineSubspace.mem_mk').2 (by
+        simp only [vsub_eq_sub, sub_self]; exact Submodule.zero_mem _)
+    · rw [hpe]
+      exact (AffineSubspace.mem_mk').2
+        (Submodule.mem_span_singleton.2 ⟨1, one_smul ℝ (w - v)⟩)
+  obtain ⟨r, hr⟩ := Submodule.mem_span_singleton.1 (AffineSubspace.mem_mk'.1 (hle hy))
+  exact ⟨r, hr.symm⟩
+
+/-- 两点集的方向：`vectorSpan {v, w} = ℝ ∙ (w - v)`。 -/
+private theorem vectorSpan_pair5 (v w : V3) : vectorSpan ℝ {v, w} = ℝ ∙ (w - v) := by
+  rw [vectorSpan_def]
+  refine le_antisymm (Submodule.span_le.2 ?_) ?_
+  · intro z hz
+    obtain ⟨p, hp, q, hq, hz⟩ := Set.mem_vsub.1 hz
+    have hp' : p = v ∨ p = w := by
+      rcases Set.mem_insert_iff.1 hp with h | h
+      · exact Or.inl h
+      · rw [Set.mem_singleton_iff] at h
+        exact Or.inr h
+    have hq' : q = v ∨ q = w := by
+      rcases Set.mem_insert_iff.1 hq with h | h
+      · exact Or.inl h
+      · rw [Set.mem_singleton_iff] at h
+        exact Or.inr h
+    rcases hp' with hpe | hpe <;> rcases hq' with hqe | hqe
+    · rw [← hz, hpe, hqe, vsub_eq_sub, sub_self]; exact Submodule.zero_mem _
+    · rw [← hz, hpe, hqe, vsub_eq_sub]
+      rw [(neg_sub w v).symm]
+      exact Submodule.neg_mem _ (Submodule.mem_span_singleton.2 ⟨1, one_smul ℝ (w - v)⟩)
+    · rw [← hz, hpe, hqe, vsub_eq_sub]
+      exact Submodule.mem_span_singleton.2 ⟨1, one_smul ℝ (w - v)⟩
+    · rw [← hz, hpe, hqe, vsub_eq_sub, sub_self]; exact Submodule.zero_mem _
+  · have hmem : (w - v : V3) ∈ ({v, w} : Set V3) -ᵥ ({v, w} : Set V3) :=
+      Set.mem_vsub.2 ⟨w, Set.mem_insert_of_mem v (by simp), v,
+        Set.mem_insert v {w}, rfl⟩
+    refine Submodule.span_le.2 ?_
+    intro x hx
+    rw [Set.mem_singleton_iff] at hx
+    subst hx
+    exact Submodule.subset_span hmem
+
+/-! ## polyhedron.hl :891-:1180（fchanged 区域的开性与单射性） -/
+
 /-- HOL polyhedron.hl :891-:1127 `FCHANGED_OPEN`（批 5 主打，HOL 证明约 240 行）
 
 HOL 原文：
@@ -324,7 +497,7 @@ HOL 原文：
 ==> open (fchanged f)
 ```
 
-编码说明：`fchanged`、`facet_of` 经私有副本 `fchanged_p5`、`facetOf_p5`
+编码说明：`fchanged`、`facet_of` 经私有副本 `fchanged`、`FacetOf`
 引用（= PolyAuto4 的 `fchanged`/`FacetOf`，见文件头合并计划）；
 `open` ↦ `IsOpen`；`bounded` ↦ `Bornology.IsBounded`。
 
@@ -332,12 +505,12 @@ HOL 原文：
 polyhedron 写成有限交 `p = affine hull p ∩ ⋂ h {x | a h dot x = b h}`；(2)
 `FACET_OF_POLYHEDRON_EXPLICIT`：`f = p ∩ {x | a h dot x = b h}` 且
 `affine hull f = {x | a h dot x = b h}`（由 `AFF_DIM_HYPERPLANE` + 维数比较
-`affDim f = affDim p - 1 = 2`）；(3) 任取 `v = t • v1 ∈ fchanged_p5 f`
+`affDim f = affDim p - 1 = 2`）；(3) 任取 `v = t • v1 ∈ fchanged f`
 （`v1 ∈ relative interior f`），用 `CONTINUOUS_ON_LIFT_DOT` 与
 `IN_RELATIVE_INTERIOR1` 取半径，令 `r1 = min (‖v1‖⁻¹ e /6) 1 /2`、
 `r2 = |b h| r1 /2`、`r3 = min (e/12) (d/2)`，证明 `v1` 的 `r3`-球内点的
 正射线可调参 `t1` 仍打在超平面 `{a h dot x = b h}` 上且停在
-`ball (v1, e)` 内；(4) 由 `t > 0` 缩放回 `v`，得 `fchanged_p5 f` 含
+`ball (v1, e)` 内；(4) 由 `t > 0` 缩放回 `v`，得 `fchanged f` 含
 `v` 的开球，`open_def` 收尾。关键不等式大量使用 `REAL_ABS_BETWEEN`、
 `REAL_LT_MUL2`、三角不等式（`NORM_TRIANGLE`）。
 
@@ -350,16 +523,88 @@ polyhedron 写成有限交 `p = affine hull p ∩ ⋂ h {x | a h dot x = b h}`�
 - `IsOpen`、`Metric.isOpen_iff`、`mem_intrinsicInterior`（Mathlib）
 - 缺口：`POLYHEDRON_COLLINEAR_FACES` 等上游引理未移植 -/
 theorem FCHANGED_OPEN (p f : Set V3) (hb : Bornology.IsBounded p)
-    (hp : polyhedron_p5 p) (hz : (0 : V3) ∈ interior p) (hf : facetOf_p5 f p) :
-    IsOpen (fchanged_p5 f) := by
-  -- BLOCKER (batch-known-hard, 240-line HOL analytic proof): needs the unported
-  -- upstream polyhedron.hl:745- lemmas POLYHEDRON_INTER_AFFINE_MINIMAL and
-  -- FACET_OF_POLYHEDRON_EXPLICIT (write f = p ∩ {x | a ⬝ᵥ x = b} with
-  -- affineSpan f = that hyperplane, via AFF_DIM_HYPERPLANE and affDim_p5 f = 2)
-  -- plus RELATIVE_INTERIOR_OF_POLYHEDRON; none ported (not in Mathlib
-  -- v4.32.2, not in PolyAuto1-4). Batch-local prerequisites that ARE ready:
-  -- CONTINUOUS_ON_LIFT_DOT, IN_RELATIVE_INTERIOR1, INTERIOR_IMP_RELATIVE_INTERIOR.
-  sorry
+    (hp : polyhedron p) (hz : (0 : V3) ∈ interior p) (hf : FacetOf f p) :
+    IsOpen (fchanged f) := by
+  -- supporting-hyperplane data for the facet f
+  obtain ⟨a, b, ha0, hpsub, hfeq⟩ := FACET_OF_POLYHEDRON hp hf
+  have h0p : (0 : V3) ∈ intrinsicInterior ℝ p := interior_subset_intrinsicInterior hz
+  have hfne : f ≠ ∅ := hf.2.1
+  have h0f : (0 : V3) ∉ f := by
+    intro h0
+    have hfp : p ⊆ f := subset_of_faceOf hf.1 (Set.Subset.refl p)
+      (Set.not_disjoint_iff.2 ⟨(0 : V3), h0, h0p⟩)
+    have hfpeq : f = p := Set.Subset.antisymm hf.1.1 hfp
+    rw [hfpeq] at hf
+    have h2 := hf.2.2
+    linarith
+  have h0in : (0 : V3) ∈ p := interior_subset hz
+  have hdot0 : a ⬝ᵥ (0 : V3) = 0 := (dotLin5 a).map_zero
+
+  have hb_ge : 0 ≤ b := by
+    have h1 : (0 : V3) ∈ {x : V3 | a ⬝ᵥ x ≤ b} := hpsub h0in
+    rw [Set.mem_setOf_eq, hdot0] at h1
+    linarith
+  have hbpos : 0 < b := by
+    rcases lt_or_eq_of_le hb_ge with h | h
+    · exact h
+    · exfalso
+      apply h0f
+      rw [hfeq]
+      refine ⟨h0in, ?_⟩
+      rw [Set.mem_setOf_eq, hdot0, h]
+  have hdim3 : affDim p = 3 := AFF_DIM_INTERIOR_EQ_3 0 p hz
+  have hdimf : affDim f = 2 := by rw [hf.2.2, hdim3]; norm_num
+  have hsf : f ⊆ {x : V3 | a ⬝ᵥ x = b} := by rw [hfeq]; exact Set.inter_subset_right
+  have hspanfeq : (affineSpan ℝ f : Set V3) = {x : V3 | a ⬝ᵥ x = b} :=
+    affineSpan_eq_hyperplane ha0 (Set.nonempty_iff_ne_empty.2 hfne) hsf hdimf
+  have hdot : Continuous fun y : V3 => a ⬝ᵥ y :=
+    continuous_const.dotProduct (PiLp.continuous_ofLp 2 _)
+  -- pointwise: every v ∈ fchanged f has the open neighbourhood
+  -- {y | a ⬝ᵥ y > 0} ∩ ψ ⁻¹' (ball v1 e) inside fchanged f, where ψ y = (b/(a⬝ᵥy)) • y
+  refine Metric.isOpen_iff.2 fun v hv => ?_
+  obtain ⟨v1, t, rfl, hv1, ht⟩ := hv
+  have hv1f : v1 ∈ f := (mem_rint_iff.1 hv1).1
+  have hv1b : a ⬝ᵥ v1 = b := hsf hv1f
+  have hav : a ⬝ᵥ (t • v1) = t * b := by rw [dot_smul5, hv1b]
+  have hav0 : 0 < a ⬝ᵥ (t • v1) := by rw [hav]; exact mul_pos ht hbpos
+  obtain ⟨e, he0, hball⟩ := IN_RELATIVE_INTERIOR1 v1 f hv1
+  have hPopen : IsOpen {y : V3 | a ⬝ᵥ y > 0} := isOpen_lt continuous_const hdot
+  have hψcont : ContinuousOn (fun y : V3 => (b / (a ⬝ᵥ y)) • y) {y : V3 | a ⬝ᵥ y > 0} := by
+    have hc : ContinuousOn (fun y : V3 => b / (a ⬝ᵥ y)) {y : V3 | a ⬝ᵥ y > 0} :=
+      ContinuousOn.div continuousOn_const hdot.continuousOn fun y hy => ne_of_gt hy
+    exact ContinuousOn.smul (f := fun y : V3 => b / (a ⬝ᵥ y)) (g := id) hc continuousOn_id
+  -- the open neighbourhood U of v inside fchanged f
+  have hUopen : IsOpen ({y : V3 | a ⬝ᵥ y > 0} ∩
+      (fun y : V3 => (b / (a ⬝ᵥ y)) • y) ⁻¹' Metric.ball v1 e) :=
+    ContinuousOn.isOpen_inter_preimage hψcont hPopen Metric.isOpen_ball
+  have hψvmem : (b / (a ⬝ᵥ (t • v1))) • (t • v1) ∈ Metric.ball v1 e := by
+    have hψv : (b / (a ⬝ᵥ (t • v1))) • (t • v1) = v1 := by
+      rw [hav]
+      rw [show (b / (t * b)) • (t • v1) = ((b / (t * b)) * t) • v1 from
+        by rw [smul_smul]]
+      rw [show (b / (t * b)) * t = 1 from by field_simp, one_smul]
+    rw [hψv]
+    exact Metric.mem_ball_self he0
+  have hvmem : t • v1 ∈ ({y : V3 | a ⬝ᵥ y > 0} ∩
+      (fun y : V3 => (b / (a ⬝ᵥ y)) • y) ⁻¹' Metric.ball v1 e) := ⟨hav0, hψvmem⟩
+  have hUsub : ({y : V3 | a ⬝ᵥ y > 0} ∩
+      (fun y : V3 => (b / (a ⬝ᵥ y)) • y) ⁻¹' Metric.ball v1 e) ⊆ fchanged f := by
+    rintro y ⟨hyP, hyball⟩
+    have hay0 : 0 < a ⬝ᵥ y := hyP
+    have hx0 : a ⬝ᵥ y ≠ 0 := ne_of_gt hay0
+    have hb0 : b ≠ 0 := ne_of_gt hbpos
+    have hEq : y = (a ⬝ᵥ y / b) • ((b / (a ⬝ᵥ y)) • y) := by
+      rw [smul_smul]
+      have hprodc : (a ⬝ᵥ y / b) * (b / (a ⬝ᵥ y)) = 1 := by field_simp
+      rw [hprodc, one_smul]
+    refine ⟨(b / (a ⬝ᵥ y)) • y, a ⬝ᵥ y / b, hEq, ?_, div_pos hay0 hbpos⟩
+    · have hψyH : (b / (a ⬝ᵥ y)) • y ∈ {x : V3 | a ⬝ᵥ x = b} := by
+        show a ⬝ᵥ ((b / (a ⬝ᵥ y)) • y) = b
+        rw [dot_smul5, div_mul_cancel₀ b hx0]
+      rw [hspanfeq] at hball
+      exact hball ⟨hyball, hψyH⟩
+  obtain ⟨ε, hε0, hballε⟩ := Metric.isOpen_iff.1 hUopen (t • v1) hvmem
+  exact ⟨ε, hε0, fun z hz => hUsub (hballε hz)⟩
 
 /-- HOL polyhedron.hl :1132-:1179 `FCHANGED_ONE_TO_ONE`
 
@@ -372,7 +617,7 @@ HOL 原文：
 ```
 
 编码说明：同上，`fchanged`/`facet_of` 经私有副本引用；
-`~(A INTER B = {})` ↦ `fchanged_p5 f1 ∩ fchanged_p5 f2 ≠ ∅`。
+`~(A INTER B = {})` ↦ `fchanged f1 ∩ fchanged f2 ≠ ∅`。
 
 证明思路（HOL 结构）：取公共点 `v = t•v1 = t'•v1'`（`v1, v1'` 分别在
 `f1, f2` 的相对内部）；`facet_of` 展开排除 `f1 = p` / `f2 = p`（与
@@ -386,15 +631,70 @@ HOL 原文：
   （flyspeck_multivariate.ml:6881，repo 未移植）
 - `Set.extremePoints`、`mem_intrinsicInterior`（Mathlib） -/
 theorem FCHANGED_ONE_TO_ONE (p f1 f2 : Set V3) (hb : Bornology.IsBounded p)
-    (hp : polyhedron_p5 p) (hz : (0 : V3) ∈ interior p)
-    (hf1 : facetOf_p5 f1 p) (hf2 : facetOf_p5 f2 p)
-    (hinter : fchanged_p5 f1 ∩ fchanged_p5 f2 ≠ ∅) : f1 = f2 := by
-  -- BLOCKER: the geometric core is POLYHEDRON_COLLINEAR_FACES
-  -- (flyspeck_multivariate.ml:6881, unported: positive ray from common point
-  -- forces t' = t, v1 = v1') plus FACE_OF_EQ (two faces of p whose relative
-  -- interiors meet are equal, polytope.ml, unported). Elementary part only:
-  -- facetOf_p5 f = p is excluded by affDim_p5 p = affDim_p5 p - 1.
-  sorry
+    (hp : polyhedron p) (hz : (0 : V3) ∈ interior p)
+    (hf1 : FacetOf f1 p) (hf2 : FacetOf f2 p)
+    (hinter : fchanged f1 ∩ fchanged f2 ≠ ∅) : f1 = f2 := by
+  obtain ⟨v, hv⟩ := Set.nonempty_iff_ne_empty.2 hinter
+  obtain ⟨hvm1, hvm2⟩ := hv
+  obtain ⟨v1, t, hveq1, hv1, ht⟩ := hvm1
+  obtain ⟨v1', t', hveq2, hv1', ht'⟩ := hvm2
+  have hray : t • v1 = t' • v1' := hveq1.symm.trans hveq2
+  have h0p : (0 : V3) ∈ intrinsicInterior ℝ p := interior_subset_intrinsicInterior hz
+  -- properness: fᵢ ≠ p, whence 0 ∉ fᵢ (0 ∈ relative interior of p)
+  have hf1ne : f1 ≠ p := by
+    intro hcon
+    rw [hcon] at hf1
+    have h2 := hf1.2.2
+    linarith
+  have hf2ne : f2 ≠ p := by
+    intro hcon
+    rw [hcon] at hf2
+    have h2 := hf2.2.2
+    linarith
+  have h0f1 : (0 : V3) ∉ f1 := fun h0 => hf1ne
+    (Set.Subset.antisymm hf1.1.1 (subset_of_faceOf hf1.1 (Set.Subset.refl p)
+      (Set.not_disjoint_iff.2 ⟨(0 : V3), h0, h0p⟩)))
+  have h0f2 : (0 : V3) ∉ f2 := fun h0 => hf2ne
+    (Set.Subset.antisymm hf2.1.1 (subset_of_faceOf hf2.1 (Set.Subset.refl p)
+      (Set.not_disjoint_iff.2 ⟨(0 : V3), h0, h0p⟩)))
+  have hv1f1 : v1 ∈ p := hf1.1.1 (mem_rint_iff.1 hv1).1
+  have hv1'f2 : v1' ∈ p := hf2.1.1 (mem_rint_iff.1 hv1').1
+  rcases lt_trichotomy t t' with hlt | heq | hgt
+  · -- t < t': the ray from 0 through v1' enters f2 via v1' ∈ openSegment 0 v1
+    exfalso
+    have hcoef : v1' = (t / t') • v1 := by
+      have h1 : (1 / t') • (t • v1) = (1 / t') • (t' • v1') := by rw [hray]
+      rw [smul_smul, smul_smul, one_div, inv_mul_cancel₀ ht'.ne', one_smul,
+        ← div_eq_inv_mul] at h1
+      exact h1.symm
+    refine h0f2 ((hf2.1.2.2 (0 : V3) v1 v1' (interior_subset hz) hv1f1
+      (mem_rint_iff.1 hv1').1 ?_).1)
+    have hlt1 : t / t' < 1 := (div_lt_one ht').2 hlt
+    refine ⟨1 - t / t', t / t', by linarith, div_pos ht ht', by ring, ?_⟩
+    rw [smul_zero, zero_add, hcoef]
+  · -- t = t': v1 = v1' lies in both relative interiors
+    have h1 : t • v1 = t • v1' := by
+      rw [← heq] at hray
+      exact hray
+    have hvv : v1 = v1' := by
+      have h2 := congrArg (fun x => (1 / t) • x) h1
+      rw [smul_smul, smul_smul, one_div, inv_mul_cancel₀ ht.ne', one_smul] at h2
+      rw [one_smul] at h2
+      exact h2
+    exact faceOf_eq hf1.1 hf2.1 (Set.not_disjoint_iff.2 ⟨v1, hv1, hvv ▸ hv1'⟩)
+  · -- t' < t: symmetric, using the face f1
+    exfalso
+    have hcoef : v1 = (t' / t) • v1' := by
+      have h1 : (1 / t) • (t' • v1') = (1 / t) • (t • v1) := by rw [← hray]
+      rw [smul_smul, smul_smul, one_div, inv_mul_cancel₀ ht.ne', one_smul,
+        ← div_eq_inv_mul] at h1
+      exact h1.symm
+    refine h0f1 ((hf1.1.2.2 (0 : V3) v1' v1 (interior_subset hz) hv1'f2
+      (mem_rint_iff.1 hv1).1 ?_).1)
+    have hlt1 : t' / t < 1 := (div_lt_one ht).2 hgt
+    refine ⟨1 - t' / t, t' / t, by linarith, div_pos ht' ht, by ring, ?_⟩
+    rw [smul_zero, zero_add, hcoef]
+
 
 /-! ## polyhedron.hl :1184-:1311（基数与边的存在性） -/
 
@@ -429,16 +729,16 @@ HOL 原文：
 ```
 
 编码说明：`edges p = {{v,w} | segment[v,w] edge_of p}`（flyspeck_multivariate.ml:6887）
-经私有 `edges_p5` 引用，`edge_of`（polytope.ml:2847：`e face_of s ∧
-aff_dim e = &1`）经私有 `edgeOf_p5` 引用；成员关系 `e ∈ edges_p5 p` 已按
-集合论展开为 `∃ v w, e = {v,w} ∧ edgeOf_p5 (segment ℝ v w) p` 语义。
+经私有 `edges` 引用，`edge_of`（polytope.ml:2847：`e face_of s ∧
+aff_dim e = &1`）经私有 `edgeOf` 引用；成员关系 `e ∈ edges p` 已按
+集合论展开为 `∃ v w, e = {v,w} ∧ edgeOf (segment ℝ v w) p` 语义。
 
 证明思路（HOL 结构）：(1) `POLYTOPE_EQ_BOUNDED_POLYHEDRON`：p 是多胞形；
 (2) `AFF_DIM_INTERIOR_EQ_3` 得满维；(3) `POLYTOPE_FACET_EXISTS` 两连击：
 p 有余维 1 面 `f`（`affDim f = 2`），f 又有余维 1 面 `f'`（`affDim f' = 1`），
 且 `f'` 非空；(4) `affDim f' = 1` ⇒ 仿射无关基 `b` 满足 `CARD b = 2`，经
 `CARD_EXISTS_2` 写成 `{v, w}`；(5) `FACE_OF_TRANS` 得 `f' face_of p`，故
-`e = {v,w}` 见证 `edges_p5 p`。
+`e = {v,w}` 见证 `edges p`。
 
 候选已有引理：
 - 本批 `AFF_DIM_INTERIOR_EQ_3`、`CARD_EXISTS_2`
@@ -447,14 +747,167 @@ p 有余维 1 面 `f`（`affDim f = 2`），f 又有余维 1 面 `f'`（`affDim 
   flyspeck 库引理，repo 均未移植 → 需补批（fenxi）
 - `segment`、`affineSpan`、`Set.ncard`（Mathlib） -/
 theorem EXISTS_EDGE_POLYTOPE (p : Set V3) (hb : Bornology.IsBounded p)
-    (hp : polyhedron_p5 p) (hz : (0 : V3) ∈ interior p) :
-    ∃ e : Set V3, e ∈ edges_p5 p := by
-  -- BLOCKER: needs POLYTOPE_FACET_EXISTS twice (bounded full-dim polyhedron
-  -- has a facet, and a facet has a facet) + FACE_OF_TRANS + the affDim = 1 →
-  -- two-point basis reduction via CARD_EXISTS_2. None of the polytope-face
-  -- lemmas are ported; Mathlib has no polytope face/facet theory (only
-  -- exposed faces in Analysis/Convex/Exposed.lean; a 1-dim face needs a
-  -- generic-position supporting-hyperplane argument).
-  sorry
-
-end Kepler.Text
+    (hp : polyhedron p) (hz : (0 : V3) ∈ interior p) :
+    ∃ e : Set V3, e ∈ edges p := by
+  have hdim3 : affDim p = 3 := AFF_DIM_INTERIOR_EQ_3 0 p hz
+  have hpne : p.Nonempty := ⟨0, interior_subset hz⟩
+  -- facet g1 of p, made explicit and polyhedral
+  obtain ⟨g1, hg1f⟩ := exists_facet hp hb hpne (by rw [hdim3]; norm_num)
+  obtain ⟨a₁, b₁, ha₁, -, hg1eq⟩ := FACET_OF_POLYHEDRON hp hg1f
+  have hg1ne : g1.Nonempty := Set.nonempty_iff_ne_empty.2 hg1f.2.1
+  have hg1b : Bornology.IsBounded g1 := Bornology.IsBounded.subset hb hg1f.1.1
+  have hg1p : polyhedron g1 := by
+    rw [hg1eq]
+    exact POLYHEDRON_INTER hp (POLYHEDRON_HYPERPLANE ha₁ b₁)
+  have hdim2 : affDim g1 = 2 := by rw [hg1f.2.2, hdim3]; norm_num
+  -- facet g2 of g1
+  obtain ⟨g2, hg2f⟩ := exists_facet hg1p hg1b hg1ne (by rw [hdim2]; norm_num)
+  have hg2b : Bornology.IsBounded g2 :=
+    Bornology.IsBounded.subset hb (Set.Subset.trans hg2f.1.1 hg1f.1.1)
+  have hg2ne : g2.Nonempty := Set.nonempty_iff_ne_empty.2 hg2f.2.1
+  have hdim1 : affDim g2 = 1 := by rw [hg2f.2.2, hdim2]; norm_num
+  -- two distinct points of g2
+  obtain ⟨v, w, hvw, hv, hw⟩ : ∃ v w : V3, v ≠ w ∧ v ∈ g2 ∧ w ∈ g2 := by
+    by_contra hcon
+    push_neg at hcon
+    obtain ⟨v0, hv0⟩ := hg2ne
+    have hsingle : g2 = {v0} :=
+      Set.eq_singleton_iff_unique_mem.2 ⟨hv0, fun y hy => by
+        by_contra hne
+        exact hcon v0 y (fun h => hne h.symm) hv0 hy⟩
+    rw [hsingle, affDim_singleton] at hdim1
+    norm_num at hdim1
+  -- g2 lies on the line through v, w
+  have hmem : ∀ z ∈ ({v, w} : Set V3), z ∈ g2 := by
+    intro z hz
+    rcases Set.mem_insert_iff.1 hz with rfl | hz
+    · exact hv
+    · rw [Set.mem_singleton_iff] at hz
+      exact hz ▸ hw
+  have hvspan : vectorSpan ℝ {v, w} = vectorSpan ℝ g2 := by
+    refine Submodule.eq_of_le_of_finrank_le (vectorSpan_mono ℝ hmem) ?_
+    have h1 : vectorSpan ℝ {v, w} = ℝ ∙ (w - v) := vectorSpan_pair5 v w
+    have h2 : Module.finrank ℝ (ℝ ∙ (w - v)) = 1 :=
+      finrank_span_singleton (sub_ne_zero.2 (Ne.symm hvw))
+    have h3 : (Module.finrank ℝ (vectorSpan ℝ g2) : ℤ) = 1 := by
+      have h3' : affDim g2 = (Module.finrank ℝ (vectorSpan ℝ g2) : ℤ) := by
+        simp only [affDim, if_neg (Set.nonempty_iff_ne_empty.1 hg2ne)]
+      rw [h3'] at hdim1
+      exact hdim1
+    rw [h1, h2]
+    exact_mod_cast h3.le
+  have hspang : (affineSpan ℝ {v, w} : Set V3) = (affineSpan ℝ g2 : Set V3) := by
+    have hsp' : affineSpan ℝ {v, w} = affineSpan ℝ g2 :=
+      AffineSubspace.eq_of_direction_eq_of_nonempty_of_le
+        (by rw [direction_affineSpan, direction_affineSpan, hvspan])
+        ⟨v, subset_affineSpan ℝ {v, w} (Set.mem_insert v {w})⟩ (affineSpan_mono ℝ hmem)
+    rw [hsp']
+  have hg2sub : g2 ⊆ (affineSpan ℝ {v, w} : Set V3) := by
+    rw [hspang]
+    exact subset_affineSpan ℝ g2
+  -- closedness of g1, g2 and compactness of g2
+  have hcont : ∀ a : V3, Continuous fun y : V3 => a ⬝ᵥ y := fun a =>
+    continuous_const.dotProduct (PiLp.continuous_ofLp 2 _)
+  have hg1c : IsClosed g1 := by
+    rw [hg1eq]
+    exact (POLYHEDRON_IMP_CLOSED hp).inter (isClosed_eq (hcont a₁) continuous_const)
+  have hg2c : IsClosed g2 := by
+    obtain ⟨a₂, b₂, -, -, hg2eq⟩ := FACET_OF_POLYHEDRON hg1p hg2f
+    rw [hg2eq]
+    exact hg1c.inter (isClosed_eq (hcont a₂) continuous_const)
+  have hgcpt : IsCompact g2 := Metric.isCompact_of_isClosed_isBounded hg2c hg2b
+  -- coordinate on the line, endpoints of g2 as min/max of the coordinate
+  set d : V3 := w - v with hd
+  have hd0 : d ≠ 0 := sub_ne_zero.2 (Ne.symm hvw)
+  have hdd : d ⬝ᵥ d ≠ 0 := fun h => hd0 (by simpa using dotProduct_self_eq_zero.1 h)
+  have hddpos : 0 < d ⬝ᵥ d := by
+    have hnn : 0 ≤ d.ofLp ⬝ᵥ d.ofLp := by
+      rw [dotProduct]
+      exact Finset.sum_nonneg fun i _ => mul_self_nonneg _
+    exact lt_of_le_of_ne hnn (Ne.symm hdd)
+  have hcoord : ∀ y ∈ g2, ∃ μ : ℝ, y - v = μ • d ∧ (y - v) ⬝ᵥ d = μ * (d ⬝ᵥ d) := by
+    intro y hy
+    obtain ⟨μ, hμ⟩ := line_coord (hg2sub hy)
+    exact ⟨μ, hμ, by rw [hμ, dot_smul_left5]⟩
+  have hcc : Continuous fun y : V3 => (y - v) ⬝ᵥ d / (d ⬝ᵥ d) := by
+    refine Continuous.div ?_ continuous_const fun _ => hdd
+    have hA : Continuous fun y : V3 => y ⬝ᵥ d :=
+      Continuous.dotProduct (PiLp.continuous_ofLp 2 _) continuous_const
+    have hB : Continuous fun y : V3 => v ⬝ᵥ d := continuous_const
+    refine Continuous.congr (hA.sub hB) fun y => (dot_sub_left5 y v d).symm
+  obtain ⟨ymin, hymin, hmin⟩ := hgcpt.exists_isMinOn hg2ne hcc.continuousOn
+  obtain ⟨ymax, hymax, hmax⟩ := hgcpt.exists_isMaxOn hg2ne hcc.continuousOn
+  obtain ⟨α, hα, hcα⟩ := hcoord ymin hymin
+  obtain ⟨β, hβ, hcβ⟩ := hcoord ymax hymax
+  have hmin' : ∀ y ∈ g2, α * (d ⬝ᵥ d) ≤ (y - v) ⬝ᵥ d := fun y hy => by
+    have h0 : ((ymin - v) ⬝ᵥ d) / (d ⬝ᵥ d) ≤ ((y - v) ⬝ᵥ d) / (d ⬝ᵥ d) := hmin hy
+    rw [hcα] at h0
+    rw [le_div_iff₀ hddpos, div_mul_cancel₀ _ (ne_of_gt hddpos)] at h0
+    exact h0
+  have hmax' : ∀ y ∈ g2, (y - v) ⬝ᵥ d ≤ β * (d ⬝ᵥ d) := fun y hy => by
+    have h0 : ((ymin - v) ⬝ᵥ d) / (d ⬝ᵥ d) ≤ ((y - v) ⬝ᵥ d) / (d ⬝ᵥ d) := hmin hy
+    have h1 : ((y - v) ⬝ᵥ d) / (d ⬝ᵥ d) ≤ ((ymax - v) ⬝ᵥ d) / (d ⬝ᵥ d) := hmax hy
+    rw [hcβ, div_le_iff₀ hddpos, div_mul_cancel₀ _ (ne_of_gt hddpos)] at h1
+    exact h1
+  have hαβ : α < β := by
+    by_contra hcon
+    push_neg at hcon
+    have hall : ∀ y ∈ g2, y = ymin := by
+      intro y hy
+      obtain ⟨μ, hμ, hcμ⟩ := hcoord y hy
+      have h1 : α * (d ⬝ᵥ d) ≤ μ * (d ⬝ᵥ d) := (hmin' y hy).trans hcμ.le
+      have h2 : μ * (d ⬝ᵥ d) ≤ β * (d ⬝ᵥ d) := by rw [← hcμ]; exact hmax' y hy
+      have hαle : α ≤ μ := le_of_mul_le_mul_right h1 hddpos
+      have hμle : μ ≤ β := le_of_mul_le_mul_right h2 hddpos
+      have hcyeq : μ = α := le_antisymm (le_trans hμle hcon) hαle
+      have hμeq : y - v = α • d := by rw [← hcyeq]; exact hμ
+      have heq2 : ymin - v = y - v := by rw [hα, ← hμeq]
+      calc y = v + (y - v) := by module
+        _ = v + (ymin - v) := by rw [← heq2]
+        _ = ymin := by module
+    rw [Set.eq_singleton_iff_unique_mem.2 ⟨hymin, hall⟩, affDim_singleton] at hdim1
+    norm_num at hdim1
+  have hminmax : ymin ≠ ymax := by
+    intro hcon
+    have h1 : α = β := by
+      rw [hcon] at hα
+      have h2' : (α • d) ⬝ᵥ d = (β • d) ⬝ᵥ d := by rw [hα.symm, hβ]
+      rw [dot_smul_left5, dot_smul_left5] at h2'
+      exact mul_left_injective₀ (ne_of_gt hddpos) h2'
+    linarith [hαβ]
+  -- g2 = segment ℝ ymin ymax
+  have hseg : g2 = segment ℝ ymin ymax := by
+    refine Set.ext fun y => ?_
+    constructor
+    · intro hy
+      obtain ⟨μ, hμ, hcμ⟩ := hcoord y hy
+      have h1 : α ≤ μ := le_of_mul_le_mul_right ((hmin' y hy).trans hcμ.le) hddpos
+      have h2 : μ ≤ β := le_of_mul_le_mul_right
+        (by rw [← hcμ]; exact hmax' y hy) hddpos
+      have hβ0 : β - α ≠ 0 := ne_of_gt (sub_pos.2 hαβ)
+      have hβpos : 0 < β - α := sub_pos.2 hαβ
+      set t : ℝ := (β - μ) / (β - α) with htdef
+      obtain ⟨ht01a, ht01b⟩ : t ∈ Set.Icc (0 : ℝ) 1 :=
+        ⟨div_nonneg (by linarith) hβpos.le, (div_le_one hβpos).2 (by linarith)⟩
+      have htmul : t * α + (1 - t) * β = μ := by
+        rw [htdef]
+        field_simp
+        linarith
+      have hy' : y = v + μ • d := by rw [← hμ]; module
+      have hy1 : ymin = v + α • d := by rw [← hα]; module
+      have hy2 : ymax = v + β • d := by rw [← hβ]; module
+      have hkey : t • ymin + (1 - t) • ymax = v + μ • d := by
+        rw [hy1, hy2]
+        have e1 : t • (v + α • d) + (1 - t) • (v + β • d)
+            = (t + (1 - t)) • v + (t * α + (1 - t) * β) • d := by
+          rw [smul_add, smul_add, smul_smul, smul_smul]
+          module
+        rw [e1, show t + (1 - t) = 1 from by ring, one_smul, htmul]
+      rw [hy']
+      exact ⟨t, 1 - t, ht01a, by linarith, by ring, hkey⟩
+    · intro hy
+      exact Convex.segment_subset hg2f.1.2.1 hymin hymax hy
+  refine ⟨{ymin, ymax}, Set.mem_setOf.2 ⟨ymin, ymax, rfl, ?_, ?_⟩⟩
+  · rw [← hseg]
+    exact FaceOf.trans hg2f.1 hg1f.1
+  · exact (affDim_segment ymin ymax).2 hminmax

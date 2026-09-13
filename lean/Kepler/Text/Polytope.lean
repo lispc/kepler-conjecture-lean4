@@ -1831,4 +1831,673 @@ theorem RELATIVE_INTERIOR_OF_POLYHEDRON {s : Set V3} (hsp : polyhedron s) :
         (s ∩ {y : V3 | a i ⬝ᵥ y = b i})).2 ⟨i, hiF, rfl⟩
     exact hxnof' _ hfacet ⟨hxS, hieq⟩
 
+/-! ## #18 FACE_OF_POLYHEDRON_SUBSET_FACET (S3) -/
+
+/-- HOL `FACE_OF_POLYHEDRON_SUBSET_FACET` (polytope.ml:70): every nonempty
+proper face of a polyhedron is contained in a facet. -/
+theorem FACE_OF_POLYHEDRON_SUBSET_FACET {s : Set V3} (hsp : polyhedron s) {c : Set V3}
+    (hcf : FaceOf c s) (hcne : c ≠ ∅) (hcs : c ≠ s) :
+    ∃ f : Set V3, FacetOf f s ∧ c ⊆ f := by
+  by_contra hcon
+  push_neg at hcon
+  have hF : {f : Set V3 | FacetOf f s ∧ c ⊆ f} = ∅ :=
+    Set.ext fun f => ⟨fun h => hcon f h.1 h.2, by simp⟩
+  have hce : c = (univ : Set V3) := by
+    rw [FACE_OF_POLYHEDRON hsp hcf hcne hcs, hF, Set.sInter_empty]
+  have hsU : (univ : Set V3) ⊆ s := by rw [← hce]; exact hcf.1
+  exact hcs (hce.trans (subset_antisymm (subset_univ s) hsU).symm)
+
+/-! ## #19 Finiteness of faces, facets and extreme points (S3) -/
+
+/-- HOL `FINITE_POLYHEDRON_FACETS` (polytope.ml:157): a polyhedron has
+finitely many facets — every facet is a hyperplane slice of the irredundant
+representation. -/
+theorem FINITE_POLYHEDRON_FACETS {s : Set V3} (hsp : polyhedron s) :
+    {f : Set V3 | FacetOf f s}.Finite := by
+  obtain ⟨F, hF, hs, a, b, hFprop, hmin⟩ := minrep_skolem hsp
+  refine Set.Finite.subset (hF.image fun h => s ∩ {y : V3 | a h ⬝ᵥ y = b h}) ?_
+  intro f hf
+  obtain ⟨j, hjF, rfl⟩ := (FACET_OF_POLYHEDRON_EXPLICIT a b hF hs hFprop hmin f).1 hf
+  exact Set.mem_image_of_mem _ hjF
+
+/-- HOL `FINITE_POLYHEDRON_FACES` (polytope.ml:121): a polyhedron has finitely
+many faces — every nonempty proper face is an intersection of hyperplane
+slices indexed by a subset of the constraint set. -/
+theorem FINITE_POLYHEDRON_FACES {s : Set V3} (hsp : polyhedron s) :
+    {f : Set V3 | FaceOf f s}.Finite := by
+  classical
+  obtain ⟨F, hF, hs, a, b, hFprop, hmin⟩ := minrep_skolem hsp
+  have hP : {T : Set (Set V3) | T ⊆ F}.Finite := Set.Finite.powerset hF
+  have hfin : ({⋂₀ {u : Set V3 | ∃ h ∈ T, u = s ∩ {y : V3 | a h ⬝ᵥ y = b h}} |
+      T ∈ {T : Set (Set V3) | T ⊆ F}}).Finite :=
+    hP.image fun T => ⋂₀ {u : Set V3 | ∃ h ∈ T, u = s ∩ {y : V3 | a h ⬝ᵥ y = b h}}
+  refine (hfin.insert (∅ : Set V3)).insert s |>.subset ?_
+  intro c hc
+  by_cases hc0 : c = ∅
+  · exact Or.inr (Set.mem_insert_iff.2 (Or.inl hc0))
+  by_cases hcs : c = s
+  · exact Set.mem_insert_iff.2 (Or.inl hcs)
+  refine Or.inr (Or.inr ⟨{h : Set V3 | h ∈ F ∧ c ⊆ s ∩ {y : V3 | a h ⬝ᵥ y = b h}},
+    fun h hh => hh.1, ?_⟩)
+  have hface := FACE_OF_POLYHEDRON_EXPLICIT a b hF hs hFprop hmin hc hc0 hcs
+  have hTeq : c = ⋂₀ {u : Set V3 | ∃ h ∈ {h : Set V3 | h ∈ F ∧
+        c ⊆ s ∩ {y : V3 | a h ⬝ᵥ y = b h}},
+        u = s ∩ {y : V3 | a h ⬝ᵥ y = b h}} :=
+    hface.trans (congrArg Set.sInter (Set.ext fun u => by
+      constructor
+      · rintro ⟨h, hFh, rfl, hcsub⟩
+        exact ⟨h, ⟨hFh, hcsub⟩, rfl⟩
+      · rintro ⟨h, ⟨hFh, hcsub⟩, rfl⟩
+        exact ⟨h, hFh, rfl, hcsub⟩))
+  exact hTeq.symm
+
+/-- HOL `FINITE_POLYHEDRON_EXTREME_POINTS` (polytope.ml:170): a polyhedron has
+finitely many extreme points — they are the singleton faces. -/
+theorem FINITE_POLYHEDRON_EXTREME_POINTS {s : Set V3} (hsp : polyhedron s) :
+    {v : V3 | v ∈ Set.extremePoints ℝ s}.Finite := by
+  have h1 : ∀ v : V3, v ∈ Set.extremePoints ℝ s ↔ FaceOf ({v} : Set V3) s :=
+    fun v => faceOf_sing.symm
+  have h2 : {v : V3 | v ∈ Set.extremePoints ℝ s}
+      = (fun v : V3 => ({v} : Set V3)) ⁻¹' {f : Set V3 | FaceOf f s} := by
+    ext v
+    simpa only [Set.mem_setOf_eq, Set.mem_preimage] using h1 v
+  rw [h2]
+  refine Set.Finite.preimage (fun x _ y _ h => by simpa using h)
+    (FINITE_POLYHEDRON_FACES hsp)
+
+/-! ## #20 Exposed faces (S3) -/
+
+/-- HOL `exposed_face_of` (polytope1.ml:980). Mathlib's `IsExposed` has a
+different shape (dual-pairing functional, empty set not exposed), so the HOL
+halfspace formulation is kept verbatim. -/
+def exposedFaceOf (t s : Set V3) : Prop :=
+  FaceOf t s ∧ ∃ a : V3, ∃ b : ℝ, s ⊆ {x : V3 | a ⬝ᵥ x ≤ b} ∧
+    t = s ∩ {x : V3 | a ⬝ᵥ x = b}
+
+private theorem dot_lzero (x : V3) : (0 : V3) ⬝ᵥ x = 0 := by
+  show (0 : Fin 3 → ℝ) ⬝ᵥ x.ofLp = 0
+  exact zero_dotProduct _
+
+private theorem dot_smul_left (r : ℝ) (a x : V3) : (r • a) ⬝ᵥ x = r * (a ⬝ᵥ x) := by
+  show (r • a.ofLp) ⬝ᵥ x.ofLp = r * (a.ofLp ⬝ᵥ x.ofLp)
+  exact smul_dotProduct r _ _
+
+private theorem dot_sum_left (K : Finset (Set V3)) (g : Set V3 → V3) (x : V3) :
+    WithLp.ofLp (∑ u ∈ K, g u) ⬝ᵥ x.ofLp = ∑ u ∈ K, g u ⬝ᵥ x := by
+  rw [dotProduct_comm, WithLp.ofLp_sum, dotProduct_sum]
+  exact Finset.sum_congr rfl fun u _ => dotProduct_comm _ _
+
+/-- HOL `EMPTY_EXPOSED_FACE_OF` (polytope1.ml:982). -/
+theorem EMPTY_EXPOSED_FACE_OF (s : Set V3) : exposedFaceOf ∅ s := by
+  refine ⟨empty_faceOf s, 0, 1, fun x _ => ?_, ?_⟩
+  · have h0 : (0 : V3) ⬝ᵥ x = 0 := dot_lzero x
+    show (0 : V3) ⬝ᵥ x ≤ 1
+    rw [h0]
+    norm_num
+  · refine Set.ext fun x => ?_
+    have h0 : (0 : V3) ⬝ᵥ x = 0 := dot_lzero x
+    show False ↔ x ∈ s ∩ {y : V3 | (0 : V3) ⬝ᵥ y = 1}
+    simp
+
+/-- HOL `EXPOSED_FACE_OF_REFL` (polytope1.ml:994). -/
+theorem EXPOSED_FACE_OF_REFL {s : Set V3} (hs : Convex ℝ s) : exposedFaceOf s s := by
+  refine ⟨FaceOf.refl hs, 0, 0, fun x _ => ?_, ?_⟩
+  · have h0 : (0 : V3) ⬝ᵥ x = 0 := dot_lzero x
+    show (0 : V3) ⬝ᵥ x ≤ 0
+    rw [h0]
+  · refine Set.ext fun x => ?_
+    have h0 : (0 : V3) ⬝ᵥ x = 0 := dot_lzero x
+    show x ∈ s ↔ x ∈ s ∩ {y : V3 | (0 : V3) ⬝ᵥ y = 0}
+    simp [h0]
+
+/-- The supporting-hyperplane slice of a convex set is a face. -/
+private theorem faceOf_hyperplane_slice {s : Set V3} (hs : Convex ℝ s) {a : V3} {b : ℝ}
+    (hsub : s ⊆ {x : V3 | a ⬝ᵥ x ≤ b}) : FaceOf (s ∩ {x : V3 | a ⬝ᵥ x = b}) s := by
+  have hcvxH : Convex ℝ {x : V3 | a ⬝ᵥ x = b} := by
+    intro x hx y hy u v hu hv hab
+    simp only [Set.mem_setOf_eq] at hx hy ⊢
+    have h : a ⬝ᵥ (u • x + v • y) = u * (a ⬝ᵥ x) + v * (a ⬝ᵥ y) := by
+      rw [dot_add, dot_smul, dot_smul]
+    rw [WithLp.ofLp_add, WithLp.ofLp_smul, WithLp.ofLp_smul, h, hx, hy]
+    have h3 : u * b + v * b = b := by
+      have h4 : (u + v) * b = b := by rw [hab, one_mul]
+      rwa [add_mul] at h4
+    exact h3
+  refine ⟨Set.inter_subset_left, hs.inter hcvxH, ?_⟩
+  intro u v x hu hv hx hseg
+  obtain ⟨l, m, hl, hm, hlm, hxe⟩ := hseg
+  have hxe' : l • u.ofLp + m • v.ofLp = x.ofLp :=
+    congrArg (fun z : V3 => z.ofLp) hxe
+  have hu0 : a ⬝ᵥ u ≤ b := hsub hu
+  have hv0 : a ⬝ᵥ v ≤ b := hsub hv
+  have hkey : a ⬝ᵥ (l • u + m • v) = l * (a ⬝ᵥ u) + m * (a ⬝ᵥ v) := by
+    rw [dot_add, dot_smul, dot_smul]
+  have hx0 : a.ofLp ⬝ᵥ (l • u.ofLp + m • v.ofLp) = b := by
+    rw [hxe']
+    exact hx.2
+  rw [hkey] at hx0
+  have hab : l * (a ⬝ᵥ u) + m * (a ⬝ᵥ v) = l * b + m * b := by
+    rw [hx0, ← add_mul, hlm, one_mul]
+  have h1 : l * (a ⬝ᵥ u) ≤ l * b := mul_le_mul_of_nonneg_left hu0 hl.le
+  have h2 : m * (a ⬝ᵥ v) ≤ m * b := mul_le_mul_of_nonneg_left hv0 hm.le
+  have hu' : a ⬝ᵥ u = b := mul_left_cancel₀ hl.ne' (by linarith)
+  have hv' : a ⬝ᵥ v = b := mul_left_cancel₀ hm.ne' (by linarith)
+  exact ⟨⟨hu, hu'⟩, ⟨hv, hv'⟩⟩
+
+/-- HOL `EXPOSED_FACE_OF` (polytope1.ml:998). -/
+theorem EXPOSED_FACE_OF {s t : Set V3} :
+    exposedFaceOf t s ↔ FaceOf t s ∧ (t = ∅ ∨ t = s ∨
+      ∃ a : V3, ∃ b : ℝ, a ≠ 0 ∧ s ⊆ {x : V3 | a ⬝ᵥ x ≤ b} ∧
+        t = s ∩ {x : V3 | a ⬝ᵥ x = b}) := by
+  constructor
+  · rintro ⟨hface, a, b, hsub, hte⟩
+    refine ⟨hface, ?_⟩
+    by_cases ha : a = 0
+    · rw [ha] at hte
+      rcases eq_or_ne b 0 with hb | hb
+      · right
+        left
+        rw [hte, hb]
+        refine Set.ext fun x => ?_
+        have h0 : (0 : V3) ⬝ᵥ x = 0 := dot_lzero x
+        show x ∈ s ∩ {y : V3 | (0 : V3) ⬝ᵥ y = 0} ↔ x ∈ s
+        simp [h0]
+      · left
+        rw [hte]
+        refine Set.ext fun x => ?_
+        have h0 : (0 : V3) ⬝ᵥ x = 0 := dot_lzero x
+        show x ∈ s ∩ {y : V3 | (0 : V3) ⬝ᵥ y = b} ↔ False
+        refine iff_of_false ?_ fun hc => hc
+        rintro ⟨-, hc⟩
+        have h1 : (0 : V3) ⬝ᵥ x = b := hc
+        exact hb (h1.symm.trans h0)
+    · exact Or.inr (Or.inr ⟨a, b, ha, hsub, hte⟩)
+  · rintro ⟨hface, hdisj⟩
+    rcases hdisj with rfl | rfl | ⟨a, b, ha, hsub, hte⟩
+    · exact EMPTY_EXPOSED_FACE_OF s
+    · exact EXPOSED_FACE_OF_REFL hface.2.1
+    · exact And.intro hface ⟨a, b, hsub, hte⟩
+
+/-- HOL `EXPOSED_FACE_OF_POLYHEDRON` (polytope.ml:95): in a polyhedron every
+face is exposed. -/
+theorem EXPOSED_FACE_OF_POLYHEDRON {s : Set V3} (hsp : polyhedron s) {t : Set V3} :
+    exposedFaceOf t s ↔ FaceOf t s := by
+  refine ⟨fun h => h.1, fun hface => ?_⟩
+  by_cases ht0 : t = ∅
+  · rw [ht0]
+    exact EMPTY_EXPOSED_FACE_OF s
+  by_cases hts : t = s
+  · subst hts
+    exact EXPOSED_FACE_OF_REFL hface.2.1
+  classical
+  obtain ⟨f₀, hf₀, hf₀t⟩ := FACE_OF_POLYHEDRON_SUBSET_FACET hsp hface ht0 hts
+  have hFfin : {f : Set V3 | FacetOf f s ∧ t ⊆ f}.Finite :=
+    Set.Finite.subset (FINITE_POLYHEDRON_FACETS hsp) fun f hf => hf.1
+  have hFI : t = ⋂₀ {f : Set V3 | FacetOf f s ∧ t ⊆ f} := FACE_OF_POLYHEDRON hsp hface ht0 hts
+  have hFBtot : ∀ f : Set V3, ∃ a : V3, ∃ c : ℝ, FacetOf f s →
+      (∀ x ∈ s, a ⬝ᵥ x ≤ c) ∧ f = s ∩ {x : V3 | a ⬝ᵥ x = c} := by
+    intro f
+    by_cases hf : FacetOf f s
+    · obtain ⟨a, c, -, h1, h2⟩ := FACET_OF_POLYHEDRON hsp hf
+      exact ⟨a, c, fun _ => ⟨h1, h2⟩⟩
+    · exact ⟨0, 0, fun hf' => absurd hf' hf⟩
+  choose af cf haf using hFBtot
+  set K := hFfin.toFinset with hKdef
+  have hKne : K.Nonempty := ⟨f₀, hFfin.mem_toFinset.2 ⟨hf₀, hf₀t⟩⟩
+  have hnpos : (0:ℝ) < (K.card : ℝ) :=
+    Nat.cast_pos.2 (Finset.card_pos.2 hKne)
+  set w : ℝ := (K.card : ℝ)⁻¹ with hwdef
+  have hwn : 0 < w := inv_pos.2 hnpos
+  have hcard : ∑ u ∈ K, w = 1 := by
+    rw [hwdef, Finset.sum_const, nsmul_eq_mul, mul_inv_cancel₀ hnpos.ne']
+  set g : V3 := ∑ u ∈ K, w • af u with hgdef
+  set d : ℝ := ∑ u ∈ K, w * cf u with hddef
+  have hmem : ∀ u ∈ K, FacetOf u s ∧ t ⊆ u := fun u hu => hFfin.mem_toFinset.1 hu
+  have hclaim1 : ∀ x ∈ s, g ⬝ᵥ x ≤ d := by
+    intro x hx
+    rw [hgdef, hddef, dot_sum_left]
+    refine Finset.sum_le_sum fun u hu => ?_
+    rw [dot_smul_left]
+    exact mul_le_mul_of_nonneg_left ((haf u (hmem u hu).1).1 x hx) hwn.le
+  have hclaim2 : ∀ x ∈ t, g ⬝ᵥ x = d := by
+    intro x hx
+    rw [hgdef, hddef, dot_sum_left]
+    refine Finset.sum_congr rfl fun u hu => ?_
+    rw [dot_smul_left]
+    have hxu : x ∈ s ∩ {y : V3 | af u ⬝ᵥ y = cf u} := by
+      have h1 : x ∈ u := (hmem u hu).2 hx
+      rwa [(haf u (hmem u hu).1).2] at h1
+    have hxeq : af u ⬝ᵥ x = cf u := hxu.2
+    rw [hxeq]
+  have hclaim3 : ∀ x ∈ s, g ⬝ᵥ x = d → x ∈ ⋂₀ {f : Set V3 | FacetOf f s ∧ t ⊆ f} := by
+    intro x hx hgx
+    refine Set.mem_sInter.2 fun u hu => ?_
+    have hgsum : g ⬝ᵥ x = ∑ v ∈ K, w * (af v ⬝ᵥ x) := by
+      rw [hgdef, dot_sum_left]
+      exact Finset.sum_congr rfl fun v _ => dot_smul_left w (af v) x
+    have hnonneg : ∀ v ∈ K, 0 ≤ w * (cf v - af v ⬝ᵥ x) := fun v hv =>
+      mul_nonneg hwn.le (sub_nonneg.2 ((haf v (hmem v hv).1).1 x hx))
+    have hsum0 : ∑ v ∈ K, (w * (cf v - af v ⬝ᵥ x)) = 0 := by
+      have h1 : ∑ v ∈ K, (w * (cf v - af v ⬝ᵥ x))
+          = ∑ v ∈ K, (w * cf v) - ∑ v ∈ K, (w * (af v ⬝ᵥ x)) := by
+        rw [← Finset.sum_sub_distrib (f := fun v => w * cf v)
+          (g := fun v => w * (af v ⬝ᵥ x))]
+        exact Finset.sum_congr rfl fun v _ => by ring
+      rw [h1, ← hgsum, hgx, hddef]
+      ring
+    have hcfv : af u ⬝ᵥ x = cf u := by
+      have huK : u ∈ K := hFfin.mem_toFinset.2 hu
+      have h0 := Finset.sum_eq_zero_iff_of_nonneg hnonneg |>.1 hsum0 u huK
+      exact sub_eq_zero.mp ((mul_eq_zero.1 h0).resolve_left hwn.ne') |>.symm
+    have hu' := hmem u (hFfin.mem_toFinset.2 hu)
+    rw [(haf u hu'.1).2]
+    exact ⟨hx, hcfv⟩
+  refine ⟨hface, g, d, hclaim1, ?_⟩
+  rw [hFI]
+  refine Set.ext fun x => ?_
+  constructor
+  · intro hx
+    have hxs : x ∈ s := by
+      have h1 := Set.mem_sInter.1 hx f₀ ⟨hf₀, hf₀t⟩
+      rw [(haf f₀ hf₀).2] at h1
+      exact h1.1
+    exact ⟨hxs, hclaim2 x (by rw [hFI]; exact hx)⟩
+  · rintro ⟨hxs, hgx⟩
+    exact hclaim3 x hxs hgx
+
+/-- HOL `FACE_OF_POLYHEDRON_POLYHEDRON` (polytope.ml:103): a face of a
+polyhedron is a polyhedron. -/
+theorem FACE_OF_POLYHEDRON_POLYHEDRON {s : Set V3} (hsp : polyhedron s) {c : Set V3}
+    (hcf : FaceOf c s) : polyhedron c := by
+  by_cases hc0 : c = ∅
+  · rw [hc0]
+    exact POLYHEDRON_EMPTY
+  by_cases hcs : c = s
+  · rw [hcs]
+    exact hsp
+  obtain ⟨F, hF, hs, a, b, hFprop, hmin⟩ := minrep_skolem hsp
+  rw [FACE_OF_POLYHEDRON_EXPLICIT a b hF hs hFprop hmin hcf hc0 hcs]
+  refine POLYHEDRON_INTERS (Set.Finite.subset (hF.image fun h =>
+    s ∩ {y : V3 | a h ⬝ᵥ y = b h}) ?_) ?_
+  · rintro u ⟨h, hFh, rfl, -⟩
+    exact Set.mem_image_of_mem _ hFh
+  · rintro u ⟨h, hFh, rfl, -⟩
+    exact POLYHEDRON_INTER hsp (POLYHEDRON_HYPERPLANE (hFprop h hFh).1 (b h))
+
+/-! ## #21 Existence of extreme points (S3) -/
+
+/-- HOL `EXTREME_POINT_EXISTS_CONVEX` (polytope1.ml:1636): a nonempty compact
+set has an extreme point (Krein–Milman, Mathlib `IsCompact.extremePoints_nonempty`;
+convexity is not needed for existence). -/
+theorem EXTREME_POINT_EXISTS_CONVEX {s : Set V3} (hcomp : IsCompact s)
+    (_hcvx : Convex ℝ s) (hne : s.Nonempty) :
+    ∃ x : V3, x ∈ Set.extremePoints ℝ s :=
+  hcomp.extremePoints_nonempty hne
+
+/-! ## #22 Segment family (S3) -/
+
+private theorem leftEndpoint_extreme (a b : V3) :
+    a ∈ Set.extremePoints ℝ (segment ℝ a b) := by
+  rw [mem_extremePoints_iff_forall_segment]
+  refine ⟨left_mem_segment ℝ a b, fun y hy z hz hseg => ?_⟩
+  obtain ⟨l₁, m₁, hl₁, hm₁, hlm₁, hye⟩ := hy
+  obtain ⟨l₂, m₂, hl₂, hm₂, hlm₂, hze⟩ := hz
+  obtain ⟨l, m, hl, hm, hlm, hxe⟩ := hseg
+  by_cases hab : a = b
+  · left
+    rw [hab] at hye ⊢
+    rw [← add_smul, hlm₁, one_smul] at hye
+    exact hye.symm
+  · have hxeq : (l * l₁ + m * l₂) • a + (l * m₁ + m * m₂) • b = a := by
+      linear_combination (norm := module) hxe + l • hye + m • hze
+    have hAB : l * l₁ + m * l₂ + (l * m₁ + m * m₂) = 1 := by
+      have e1 : l * l₁ + m * l₂ + (l * m₁ + m * m₂)
+          = l * (l₁ + m₁) + m * (l₂ + m₂) := by ring
+      rw [e1, hlm₁, hlm₂, mul_one, mul_one]
+      exact hlm
+    have hB : (l * m₁ + m * m₂) • (b - a) = 0 := by
+      have hA' : l * l₁ + m * l₂ = 1 - (l * m₁ + m * m₂) := by linarith
+      rw [hA'] at hxeq
+      linear_combination (norm := module) hxeq
+    rcases hl.eq_or_lt with h0l | hl0
+    · -- l = 0: m = 1, so a = z
+      subst h0l
+      rw [zero_smul, zero_add] at hxe
+      rw [zero_add] at hlm
+      rw [hlm, one_smul] at hxe
+      right
+      exact hxe
+    · -- 0 < l: m₁ = 0 and y = a
+      have hB0 : l * m₁ + m * m₂ = 0 := by
+        rcases smul_eq_zero.1 hB with h | h
+        · exact h
+        · exact absurd (sub_eq_zero.mp h).symm hab
+      have hP1 : l * m₁ = 0 := by
+        have hnn1 : 0 ≤ l * m₁ := mul_nonneg hl0.le hm₁
+        have hnn2 : 0 ≤ m * m₂ := mul_nonneg hm hm₂
+        linarith [hB0, hnn1, hnn2]
+      have hm₁0 : m₁ = 0 := (mul_eq_zero.1 hP1).resolve_left hl0.ne'
+      left
+      rw [← hye, hm₁0, zero_smul, add_zero, show l₁ = 1 from by linarith, one_smul]
+
+private theorem leftEndpoint_extreme' (a b : V3) :
+    a ∈ segment ℝ a b ∧ ∀ y ∈ segment ℝ a b, ∀ z ∈ segment ℝ a b,
+      a ∈ segment ℝ y z → y = a ∨ z = a :=
+  mem_extremePoints_iff_forall_segment.1 (leftEndpoint_extreme a b)
+
+/-- HOL `EXTREME_POINT_OF_SEGMENT` (polytope1.ml:1865): the extreme points of
+the closed segment `[a, b]` are its endpoints. -/
+theorem EXTREME_POINT_OF_SEGMENT (a b x : V3) :
+    x ∈ Set.extremePoints ℝ (segment ℝ a b) ↔ x = a ∨ x = b := by
+  rw [mem_extremePoints_iff_forall_segment]
+  constructor
+  · rintro ⟨hmem, hcond⟩
+    obtain ⟨l, m, hl, hm, hlm, hxe⟩ := hmem
+    rcases eq_or_lt_of_le hl with rfl | hl0
+    · right
+      rw [← hxe, zero_smul, zero_add, show m = 1 from by linarith, one_smul]
+    · rcases eq_or_lt_of_le hm with rfl | hm0
+      · left
+        rw [← hxe, zero_smul, add_zero, show l = 1 from by linarith, one_smul]
+      · rcases hcond a (left_mem_segment ℝ a b) b (right_mem_segment ℝ a b)
+          ⟨l, m, le_of_lt hl0, le_of_lt hm0, hlm, hxe⟩ with hx | hx
+        · exact Or.inl hx.symm
+        · exact Or.inr hx.symm
+  · rintro (h | h)
+    · rw [h]
+      exact leftEndpoint_extreme' a b
+    · rw [h, segment_symm]
+      exact leftEndpoint_extreme' b a
+
+/-- HOL `SEGMENT_FACE_OF` (polytope1.ml:1966): if the closed segment `[a, b]`
+is a face then `a` and `b` are extreme points. -/
+theorem SEGMENT_FACE_OF {s : Set V3} {a b : V3} (h : FaceOf (segment ℝ a b) s) :
+    a ∈ Set.extremePoints ℝ s ∧ b ∈ Set.extremePoints ℝ s := by
+  have h1 : FaceOf {a} (segment ℝ a b) :=
+    faceOf_sing.2 ((EXTREME_POINT_OF_SEGMENT a b a).2 (Or.inl rfl))
+  have h2 : FaceOf {b} (segment ℝ a b) :=
+    faceOf_sing.2 ((EXTREME_POINT_OF_SEGMENT a b b).2 (Or.inr rfl))
+  exact ⟨faceOf_sing.1 (FaceOf.trans h1 h), faceOf_sing.1 (FaceOf.trans h2 h)⟩
+
+/-- HOL `SEGMENT_EDGE_OF` (polytope1.ml:1973). -/
+theorem SEGMENT_EDGE_OF {s : Set V3} {a b : V3} (h : edgeOf (segment ℝ a b) s) :
+    a ≠ b ∧ a ∈ Set.extremePoints ℝ s ∧ b ∈ Set.extremePoints ℝ s := by
+  refine ⟨?_, (SEGMENT_FACE_OF h.1).1, (SEGMENT_FACE_OF h.1).2⟩
+  rintro rfl
+  rw [segment_same] at h
+  exact absurd h.2 (by rw [affDim_singleton]; norm_num)
+
+/-- Bridge: the closed segment `[a, b]` carries an edge exactly when `a ≠ b`
+and it is a face (HOL `edge_of` + `AFF_DIM_SEGMENT`). -/
+theorem edgeOf_segment_iff {s : Set V3} {a b : V3} :
+    edgeOf (segment ℝ a b) s ↔ a ≠ b ∧ FaceOf (segment ℝ a b) s := by
+  rw [edgeOf]
+  constructor
+  · rintro ⟨hf, hdim⟩
+    refine ⟨?_, hf⟩
+    rintro rfl
+    rw [segment_same, affDim_singleton] at hdim
+    norm_num at hdim
+  · rintro ⟨hne, hf⟩
+    exact ⟨hf, (affDim_segment a b).2 hne⟩
+
+/-! ## #23 Polytope basics (S3) -/
+
+/-- HOL `polytope` (polytope1.ml): a polytope is the convex hull of a finite
+set. -/
+def polytope (s : Set V3) : Prop :=
+  ∃ F : Set V3, F.Finite ∧ convexHull ℝ F = s
+
+/-- HOL `POLYTOPE_IMP_CONVEX`. -/
+theorem POLYTOPE_IMP_CONVEX {s : Set V3} (h : polytope s) : Convex ℝ s := by
+  obtain ⟨F, -, rfl⟩ := h
+  exact convex_convexHull ℝ F
+
+/-- HOL `POLYTOPE_IMP_BOUNDED`. -/
+theorem POLYTOPE_IMP_BOUNDED {s : Set V3} (h : polytope s) : Bornology.IsBounded s := by
+  obtain ⟨F, hF, rfl⟩ := h
+  exact isBounded_convexHull.2 hF.isBounded
+
+/-- HOL `POLYTOPE_IMP_CLOSED`. -/
+theorem POLYTOPE_IMP_CLOSED {s : Set V3} (h : polytope s) : IsClosed s := by
+  obtain ⟨F, hF, rfl⟩ := h
+  exact hF.isClosed_convexHull ℝ
+
+/-- HOL `POLYTOPE_IMP_COMPACT` (the compactness half of `POLYTOPE_IMP_COMPACT`
+in polytope1.ml, from closed + bounded in finite dimension). -/
+theorem POLYTOPE_IMP_COMPACT {s : Set V3} (h : polytope s) : IsCompact s := by
+  obtain ⟨F, hF, rfl⟩ := h
+  exact hF.isCompact_convexHull ℝ
+
+/-! ## #24 Collinear faces of a polyhedron (S3) -/
+
+/-- Scaling step for HOL `POLYHEDRON_COLLINEAR_FACES_STRONG`
+(flyspeck_multivariate.ml:6820): the case `s ≤ t`. -/
+private theorem collinear_faces_aux {P f f' : Set V3} (hsp : polyhedron P)
+    (h0 : (0:V3) ∈ intrinsicInterior ℝ P) (hf : FaceOf f P) (hfn : f ≠ P)
+    (hf' : FaceOf f' P) (hfn' : f' ≠ P) {p q : V3} (hpf : p ∈ f) (hqf : q ∈ f')
+    {s t : ℝ} (hs : 0 < s) (ht : 0 < t) (hle : s ≤ t) (hst : s • p = t • q) :
+    s = t := by
+  by_contra hne
+  push_neg at hne
+  have hlt : s < t := lt_of_le_of_ne hle hne
+  have hf'ne : f' ≠ ∅ := nonempty_iff_ne_empty.1 ⟨q, hqf⟩
+  obtain ⟨g, hgf, hsub⟩ := FACE_OF_POLYHEDRON_SUBSET_FACET hsp hf' hf'ne hfn'
+  obtain ⟨hface, -, hdim⟩ := hgf
+  have h0g : (0:V3) ∉ g := by
+    intro h0g
+    have hPg : P ⊆ g := by
+      refine subset_of_faceOf hface (subset_refl P) ?_
+      exact Set.not_disjoint_iff.2 ⟨0, h0g, h0⟩
+    have hge : g = P := subset_antisymm hface.1 hPg
+    rw [hge] at hdim
+    linarith
+  have hqg : q ∈ g := hsub hqf
+  have hpP : p ∈ P := hf.1 hpf
+  have hzp : (0:V3) ∈ P := intrinsicInterior_subset h0
+  have hqseg : q ∈ openSegment ℝ 0 p := by
+    have htp : t ≠ 0 := ne_of_gt ht
+    have hqeq : (s / t) • p = q := by
+      rw [div_eq_inv_mul, ← smul_smul, ← hst.symm, inv_smul_smul₀ htp]
+    exact ⟨1 - s / t, s / t, (by linarith [(div_lt_one ht).2 hlt]), by positivity, by ring, by
+      rw [smul_zero, zero_add, hqeq]⟩
+  exact h0g (hface.2.2 0 p q hzp hpP hqg hqseg).1
+
+/-- HOL `POLYHEDRON_COLLINEAR_FACES_STRONG` (flyspeck_multivariate.ml:6820):
+two proper faces of a polyhedron whose relative interior contains the origin
+meet the rays from the origin in the same radial parameter. -/
+theorem POLYHEDRON_COLLINEAR_FACES_STRONG {P f f' : Set V3} (hsp : polyhedron P)
+    (h0 : (0:V3) ∈ intrinsicInterior ℝ P) (hf : FaceOf f P) (hfn : f ≠ P)
+    (hf' : FaceOf f' P) (hfn' : f' ≠ P) {p q : V3} (hpf : p ∈ f) (hqf : q ∈ f')
+    {s t : ℝ} (hs : 0 < s) (ht : 0 < t) (hst : s • p = t • q) : s = t := by
+  rcases le_total s t with hle | hle
+  · exact collinear_faces_aux hsp h0 hf hfn hf' hfn' hpf hqf hs ht hle hst
+  · exact (collinear_faces_aux hsp h0 hf' hfn' hf hfn hqf hpf ht hs hle
+      hst.symm).symm
+
+/-- HOL `POLYHEDRON_COLLINEAR_FACES` (flyspeck_multivariate.ml:6875), with
+the HOL-verbatim topological interior premise. -/
+theorem POLYHEDRON_COLLINEAR_FACES {P f f' : Set V3} (hsp : polyhedron P)
+    (h0 : (0:V3) ∈ interior P) (hf : FaceOf f P) (hfn : f ≠ P)
+    (hf' : FaceOf f' P) (hfn' : f' ≠ P) {p q : V3} (hpf : p ∈ f) (hqf : q ∈ f')
+    {s t : ℝ} (hs : 0 < s) (ht : 0 < t) (hst : s • p = t • q) : s = t :=
+  POLYHEDRON_COLLINEAR_FACES_STRONG hsp (interior_subset_intrinsicInterior h0)
+    hf hfn hf' hfn' hpf hqf hs ht hst
+
+/-! ## #25 Cones `aff_ge {z} s` over a convex hull (S3) -/
+
+private theorem affGe_convex {z : V3} {s : Set V3} (hs : s.Finite) :
+    Convex ℝ (affGe {z} s) := by
+  classical
+  rintro u hu v hv c d hc hd hcd
+  obtain ⟨f, hK, hfsum, hfsign, hone⟩ := hu
+  obtain ⟨g, hK', hgsum, hgsign, hone'⟩ := hv
+  have hKK : hK.toFinset = hK'.toFinset := by rw [proof_irrel hK hK']
+  refine ⟨fun w => c * f w + d * g w, hK, ?_, ?_, ?_⟩
+  · rw [hfsum, hgsum, ← hKK]
+    simp only [Finset.smul_sum, smul_smul, Finset.sum_add_distrib]
+    exact Finset.sum_add_distrib.symm.trans
+      (Finset.sum_congr rfl fun x _ => (add_smul (c * f x) (d * g x) x).symm)
+  · intro w hw
+    exact add_nonneg (mul_nonneg hc (hfsign w hw)) (mul_nonneg hd (hgsign w hw))
+  · simp only [Finset.sum_add_distrib, ← Finset.mul_sum, hone, hone', mul_one]
+    exact hcd
+
+private theorem mem_affGe_base {z : V3} {s : Set V3} (hs : s.Finite) :
+    z ∈ affGe {z} s := by
+  have hK : ({z} ∪ s).Finite := (Set.finite_singleton z).union hs
+  have hzK : z ∈ hK.toFinset := by simpa using Set.mem_union_left _ (Set.mem_singleton z)
+  refine ⟨fun w => if w = z then 1 else 0, hK, ?_, ?_, ?_⟩
+  · rw [Finset.sum_eq_single_of_mem z hzK (fun b hb hne => by
+      have hbm := (Set.Finite.mem_toFinset hK).1 hb
+      rcases (Set.mem_union b {z} s).1 hbm with h | h
+      · exact absurd h hne
+      · simp [hne])]
+    simp
+  · intro w hw
+    by_cases h : w = z <;> simp [h]
+  · rw [Finset.sum_eq_single_of_mem z hzK (fun b hb hne => by
+      have hbm := (Set.Finite.mem_toFinset hK).1 hb
+      rcases (Set.mem_union b {z} s).1 hbm with h | h
+      · exact absurd h hne
+      · simp [hne])]
+    simp
+
+private theorem mem_affGe_of_mem {z : V3} {s : Set V3} {y : V3} (hs : s.Finite)
+    (hzs : z ∉ s) (hy : y ∈ s) : y ∈ affGe {z} s := by
+  have hzy : z ≠ y := fun hc => hzs (hc ▸ hy)
+  have hK : ({z} ∪ s).Finite := (Set.finite_singleton z).union hs
+  have hyK : y ∈ hK.toFinset := by simpa using Set.mem_union_right ({z} : Set V3) hy
+  refine ⟨fun w => if w = y then 1 else 0, hK, ?_, ?_, ?_⟩
+  · rw [Finset.sum_eq_single_of_mem y hyK (fun b hb hne => by
+      have hbm := (Set.Finite.mem_toFinset hK).1 hb
+      rcases (Set.mem_union b {z} s).1 hbm with h | h
+      · show (if b = y then (1:ℝ) else 0) • b = 0
+        rw [if_neg (fun hc => by rw [h] at hc; exact hzy hc), zero_smul]
+      · show (if b = y then (1:ℝ) else 0) • b = 0
+        rw [if_neg hne, zero_smul])]
+    simp
+  · intro w hw
+    by_cases h : w = y <;> simp [h]
+  · rw [Finset.sum_eq_single_of_mem y hyK (fun b hb hne => by
+      have hbm := (Set.Finite.mem_toFinset hK).1 hb
+      rcases (Set.mem_union b {z} s).1 hbm with h | h
+      · show (if b = y then (1:ℝ) else 0) = 0
+        rw [if_neg (fun hc => by rw [h] at hc; exact hzy hc)]
+      · show (if b = y then (1:ℝ) else 0) = 0
+        rw [if_neg hne])]
+    simp
+
+/-- The cone over a convex hull from an exterior apex `z` (z-translate variant
+of HOL `AFF_GE_0_CONVEX_HULL_ALT`, flyspeck_multivariate.ml:1531, needed by
+the fan-7 consumers with a non-0 base). -/
+theorem AFF_GE_SING_CONVEX_HULL_ALT {z : V3} {s : Set V3} (hfin : s.Finite)
+    (hzs : z ∉ s) :
+    affGe {z} s =
+      insert z {v : V3 | ∃ t : ℝ, 0 < t ∧ ∃ y, y ∈ convexHull ℝ s ∧
+        v = z + t • (y - z)} := by
+  classical
+  refine Set.ext fun v => ?_
+  rw [Set.mem_insert_iff, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨f, hK, hvsum, hsign, hone⟩
+    have hzK : z ∈ hK.toFinset :=
+      hK.mem_toFinset.2 (Set.mem_union_left _ (Set.mem_singleton z))
+    have hKe : ∀ w ∈ hK.toFinset.erase z, w ∈ s := by
+      intro w hw
+      have hbm : w ∈ ({z} ∪ s : Set V3) :=
+        hK.mem_toFinset.1 (Finset.mem_erase.1 hw).2
+      rcases (Set.mem_union w {z} s).1 hbm with h | h
+      · exact absurd h (Finset.mem_erase.1 hw).1
+      · exact h
+    have hsumE : f z + ∑ w ∈ hK.toFinset.erase z, f w = 1 := by
+      rw [← hone, Finset.add_sum_erase _ _ hzK]
+    set S : ℝ := ∑ w ∈ hK.toFinset.erase z, f w with hSdef
+    have hSn : 0 ≤ S := Finset.sum_nonneg fun w hw => hsign w (hKe w hw)
+    by_cases hS0 : S = 0
+    · -- S = 0: all s-coefficients vanish, v = z
+      left
+      have hfv : f z = 1 := by linarith [hsumE, hS0]
+      have hnn : ∀ w ∈ hK.toFinset.erase z, 0 ≤ f w := fun w hw => hsign w (hKe w hw)
+      have hzero : ∑ w ∈ hK.toFinset.erase z, f w • w = 0 := by
+        have hsum0 : ∑ w ∈ hK.toFinset.erase z, f w = 0 := hSdef.symm.trans hS0
+        have hfw : ∀ w ∈ hK.toFinset.erase z, f w = 0 :=
+          (Finset.sum_eq_zero_iff_of_nonneg hnn).1 hsum0
+        exact Finset.sum_eq_zero fun w hw => by rw [hfw w hw, zero_smul]
+      rw [hvsum, ← Finset.add_sum_erase hK.toFinset (fun w => f w • w) hzK,
+        hzero, add_zero, hfv, one_smul]
+    · -- S > 0: v = z + S • (y - z) with y ∈ convex hull s
+      right
+      have hSpos : 0 < S := lt_of_le_of_ne hSn (Ne.symm hS0)
+      refine ⟨S, hSpos, ∑ w ∈ hK.toFinset.erase z, (f w / S) • w, ?_, ?_⟩
+      · rw [convexHull_eq]
+        refine ⟨V3, hK.toFinset.erase z, fun i => f i / S, id, ?_, ?_, ?_, ?_⟩
+        · exact fun i hi => div_nonneg (hsign i (hKe i hi)) (le_of_lt hSpos)
+        · rw [← Finset.sum_div, hSdef, div_self hS0]
+        · exact fun i hi => hKe i hi
+        · have hsum1 : ∑ i ∈ hK.toFinset.erase z, f i / S = 1 := by
+            rw [← Finset.sum_div, hSdef, div_self hS0]
+          rw [Finset.centerMass, hsum1, inv_one, one_smul]
+          exact Finset.sum_congr rfl fun i _ => by rw [id_eq]
+      · rw [hvsum, ← Finset.add_sum_erase hK.toFinset (fun w => f w • w) hzK]
+        have hfv : f z = 1 - S := by linarith [hsumE]
+        rw [hfv]
+        have hyexp : S • ∑ w ∈ hK.toFinset.erase z, (f w / S) • w
+            = ∑ w ∈ hK.toFinset.erase z, f w • w := by
+          rw [Finset.smul_sum]
+          refine Finset.sum_congr rfl fun w hw => ?_
+          have h1 : S * (f w / S) = f w := by field_simp
+          rw [smul_smul, h1]
+        linear_combination (norm := module) -hyexp
+  · rintro (h | ⟨t, ht, y, hym, rfl⟩)
+    · rw [h]
+      exact mem_affGe_base hfin
+    · have hsub : convexHull ℝ s ⊆ affGe {z} s :=
+        convexHull_min (fun w hw => mem_affGe_of_mem hfin hzs hw)
+          (affGe_convex hfin)
+      obtain ⟨f, hK, hfsum, hsign, hone⟩ := hsub hym
+      have hzK : z ∈ hK.toFinset :=
+        hK.mem_toFinset.2 (Set.mem_union_left _ (Set.mem_singleton z))
+      have hvec : z + t • (y - z) = ∑ u ∈ hK.toFinset,
+          ((if u = z then (1:ℝ) - t else 0) • u + t • (f u • u)) := by
+        have hterm : ∑ x ∈ hK.toFinset, ((if x = z then (1:ℝ) - t else 0) • x
+            + t • (f x • x))
+            = ∑ x ∈ hK.toFinset, (if x = z then (1:ℝ) - t else 0) • x
+                + ∑ x ∈ hK.toFinset, t • (f x • x) := Finset.sum_add_distrib
+        have hif : ∑ x ∈ hK.toFinset, (if x = z then (1:ℝ) - t else 0) • x
+            = (1 - t) • z := by
+          rw [Finset.sum_eq_single_of_mem z hzK (fun b hb hne => by
+            rw [if_neg hne]; exact zero_smul ℝ b), if_pos rfl]
+        have h2t : ∑ x ∈ hK.toFinset, t • (f x • x)
+            = t • ∑ x ∈ hK.toFinset, f x • x := Finset.smul_sum.symm
+        rw [hfsum, hterm, hif, h2t]
+        module
+      rw [hvec]
+      refine ⟨fun u => (if u = z then (1:ℝ) - t else 0) + t * f u, hK, ?_, ?_, ?_⟩
+      · exact Finset.sum_congr rfl fun w _ => by
+          beta_reduce
+          rw [add_smul, ← mul_smul]
+      · intro w hw
+        beta_reduce
+        show (if w = z then (1:ℝ) - t else 0) + t * f w ≥ 0
+        by_cases huz : w = z
+        · rw [huz] at hw
+          exact absurd hw hzs
+        · rw [if_neg huz]
+          exact add_nonneg (by norm_num) (mul_nonneg (le_of_lt ht) (hsign w hw))
+      · beta_reduce
+        rw [Finset.sum_add_distrib, Finset.sum_ite_eq_of_mem' hK.toFinset z
+          (fun x => (1:ℝ) - t) hzK, ← Finset.mul_sum, hone]
+        ring
+
+/-- HOL `AFF_GE_0_CONVEX_HULL_ALT` (flyspeck_multivariate.ml:1531). -/
+theorem AFF_GE_0_CONVEX_HULL_ALT {s : Set V3} (hfin : s.Finite)
+    (h0s : (0:V3) ∉ s) :
+    affGe {(0:V3)} s =
+      insert (0:V3) {v : V3 | ∃ t : ℝ, 0 < t ∧ ∃ y, y ∈ convexHull ℝ s ∧
+        v = t • y} := by
+  rw [AFF_GE_SING_CONVEX_HULL_ALT hfin h0s]
+  refine congrArg (insert (0:V3)) (Set.ext fun v => ?_)
+  simp only [Set.mem_setOf_eq, zero_add, sub_zero]
+
 end Kepler.Text
