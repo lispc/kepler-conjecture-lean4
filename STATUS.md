@@ -81,7 +81,7 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 | fan/topology.hl | 4,718 | ✅ 全书收官（`36c37c6`，dart_leads_into 全套） | 100% |
 | fan/planarity.hl | 15,463 | ✅ **全书收官（2026-09-11，`48ff904`）**：批次 1-15 自动闭合 + 批次 16 的 `solid_of`/`MOZNWEH` 经体积层人工攻坚闭合，全部进 main | **100%** |
 | fan/Conforming.hl | 17,033 | ✅ **全书收官（2026-09-12）**：批次 1-23 全闭合（~230 枚定理，全部零 sorry、标准公理），含巨证 `lemma_connect_hypermap`（~1900 行 HOL 证明，6 段 sub-agent 流水攻克）与收尾 Euler/`Hypermap.Planar`；已合入 main | **100%** |
-| fan/polyhedron.hl | ~3,200 | 🟡 多 lane 并行移植中（2026-09-13 开工，main 直推）：PolyAuto1/4 已闭合（20 枚），PolyAuto2 8/10、PolyAuto3 5/10、PolyAuto5/6 骨架待填 | ~50% |
+| fan/polyhedron.hl | ~3,200 | 🟡 多 lane 并行移植中（2026-09-13 开工，main 直推）：PolyAuto1/2/4/6 已闭合，PolyAuto3 剩 1、PolyAuto5 剩 3、PolyAuto7 剩 8——共 12 枚真实 sorry 全部依赖门控（见下方 blocker 台账） | ~70% |
 | packing/（Rogers/OXLZLEZ3/REUHADY…） | ~28,000 | ⬜ 未启动 | 0% |
 | local/（IMJXPHR/QKNVMLB/XWITCCN…） | ~30,000 | ⬜ 未启动 | 0% |
 | assembly（ch9 终装配） | — | ⬜ 未启动 | 0% |
@@ -127,6 +127,32 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 工作流在本书期间两次升级：多 lane 并行分支 + "axiom closure pending" 暂存机制、
 two-stage（planner+executor）难题拆解法。已知坑：HOL 原文存在同名不同义的重复绑定
 （如 `add_edge_graph` :2304/:2431），跨模块同环境会撞名——骨架设计阶段必须查重。
+
+**polyhedron blocker 台账（2026-09-13 建，用户批准）**：12 枚真实 sorry，
+全部为依赖门控（非证不动），每枚在文件内有 `BLOCKER`/`缺口` docstring。
+polyhedron.hl 宣告 100% 的硬标准 = 5 个 PolyAuto 文件零 sorry + 根构建绿。
+
+| 定理（Lean） | 位置 | HOL 源 | 缺什么 |
+|---|---|---|---|
+| `POLYHEDRON_FAN`（仅 extremePoints 有限性合取项） | PolyAuto3:1102 | polyhedron.hl:342-513 | `FINITE_POLYHEDRON_EXTREME_POINTS`（polytope.ml） |
+| `FCHANGED_OPEN` | PolyAuto5:362 | polyhedron.hl:891-1127（240 行证明） | `POLYHEDRON_INTER_AFFINE_MINIMAL`（polyhedron.hl:745+）+ `POLYHEDRON_COLLINEAR_FACES` |
+| `FCHANGED_ONE_TO_ONE` | PolyAuto5:397 | 同上区域 | `POLYHEDRON_COLLINEAR_FACES` |
+| `EXISTS_EDGE_POLYTOPE` | PolyAuto5:458 | — | `POLYTOPE_FACET_EXISTS`（有界全维 ⇒ facet 存在，用两次） |
+| `AMHFNXP_BIJ` | PolyAuto7:316 | — | 双射构造，依赖面结构层 |
+| `EXPAND_EDGE_POLYTOPE` | PolyAuto7:353 | polyhedron.hl:1893-1930 | `AFF_DIM` 展开、`COMPACT_CONVEX_COLLINEAR_SEGMENT` |
+| `EXISTS_EDGE_AT_VERTICES` | PolyAuto7:390 | polyhedron.hl:1932-2003 | `AFF_DIM_INTERIOR_EQ_3`、`FACE_OF_POLYHEDRON_SUBSET_FACET` |
+| `FLVNSME` | PolyAuto7:486 | polyhedron.hl:2005-2995（**~990 行，全书最大证明块**） | `AFF_DIM_INTERIOR_EQ_3` 等面/维数层 |
+| `CARD_SET_OF_EDGE_INEQ_1_POLYHEDRON` | PolyAuto7:527 | polyhedron.hl:2996-3026 | `remark1_fan`、`properties_coordinate`（fan.hl，本仓库欠账） |
+| `BSXAQBQ` | PolyAuto7:566 | polyhedron.hl:3028-3088 | `remark1_fan` |
+| `POLYTOPE_FAN80` | PolyAuto7:599 | polyhedron.hl:3090-3156 | `remark1_fan` |
+| `WBLARHH` | PolyAuto7:644 | polyhedron.hl:3158-3187 | 链内二级：等 `POLYHEDRON_FAN` + `CARD_SET_OF_EDGE_INEQ_1_POLYHEDRON` |
+
+补链优先级建议：① `remark1_fan`（fan.hl 欠账，一枚解三枚，且 Conforming 收官时已
+第二次挡路）；② polytope.ml 面/维数层（`AFF_DIM_INTERIOR_EQ_3`、`FACE_OF_*`、
+`POLYHEDRON_COLLINEAR_FACES`、`FINITE_POLYHEDRON_EXTREME_POINTS`、`POLYTOPE_FACET_EXISTS`，
+原文已入库 `lean/scripts/polytope.ml`）；③ `POLYHEDRON_INTER_AFFINE_MINIMAL`（240 行，
+专项攻坚）；④ `FLVNSME`（~990 行巨证，参照 `lemma_connect_hypermap` 的 6 段式打法，
+留到最后链路齐全时）。
 
 ## Phase 6 — 集成与交付 ⬜
 
