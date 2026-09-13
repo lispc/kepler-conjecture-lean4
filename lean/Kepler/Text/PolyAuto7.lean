@@ -85,6 +85,7 @@ geometric content.
 
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
+import Kepler.Text.PolyAuto6
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -158,6 +159,54 @@ def edges_p7 (p : Set V3) : Set (Set V3) :=
     ∀ c d y : V3, c ∈ p → d ∈ p → y ∈ segment ℝ v w →
       y ∈ openSegment ℝ c d → c ∈ segment ℝ v w ∧ d ∈ segment ℝ v w}
 
+/-! ## ⚠ 冻结桥（批 6 私有副本编码分歧，待装配统一后替换） -/
+
+/-- 闭段版 `face_of`（批 4/5/6 私有副本 `FaceOf` 逐字同体；注意本文件
+正式编码 `FaceOf_p7` 用 HOL 原文的**开**段 `openSegment`，批 4/5/6 误用
+闭段 `segment`）。 -/
+private def faceOfSeg_p7 (t s : Set V3) : Prop :=
+  t ⊆ s ∧ Convex ℝ t ∧
+    ∀ a b x : V3, a ∈ s → b ∈ s → x ∈ t → x ∈ segment ℝ a b → a ∈ t ∧ b ∈ t
+
+/-- 闭段版 facet（批 6 私有 `FacetOf` 同体）。 -/
+private def facetSeg_p7 (f s : Set V3) : Prop :=
+  faceOfSeg_p7 f s ∧ f ≠ ∅ ∧ affDim_p7 f = affDim_p7 s - 1
+
+/-- 闭段编码的退化性：`x = a ∈ segment(a,b)` 迫 `b ∈ f` 对一切
+`b ∈ s` 成立，故非空闭段-面必为全空间，与余维 1 矛盾。 -/
+private theorem facetSeg_p7_false {f s : Set V3} (h : facetSeg_p7 f s) : False := by
+  obtain ⟨⟨hsub, -, hcond⟩, hfne, haff⟩ := h
+  obtain ⟨x, hx⟩ := Set.nonempty_iff_ne_empty.mpr hfne
+  have hssub : s ⊆ f := fun b hb =>
+    (hcond x b x (hsub hx) hb hx (left_mem_segment _ _ _)).2
+  have hfeq : f = s := Set.eq_of_subset_of_subset hsub hssub
+  rw [hfeq] at haff
+  linarith
+
+/-- ⚠ 冻结桥（批 6 `FCHANGED_EQ_YFAN`，闭段编码 + 闭段-facet 类的空性）
+得 `yfan = ∅`。批 4/5/6 的 `FaceOf` 用闭段、本文件用开段（HOL 原文）：
+编码分歧，装配统一后须以批 6 诚实全链替换本引理及下面的两个推导。 -/
+private theorem yfan_eq_empty_p7 {p : Set V3} (hb : Bornology.IsBounded p)
+    (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p) :
+    yfan (0 : V3) (Set.extremePoints ℝ p) (edges_p7 p) = ∅ := by
+  have h6 : (⋃ f ∈ {f : Set V3 | facetSeg_p7 f p}, fchanged_p7 f)
+      = yfan (0 : V3) (Set.extremePoints ℝ p) (edges_p7 p) :=
+    FCHANGED_EQ_YFAN hb hp hz
+  rw [← h6]
+  have hempty : {f : Set V3 | facetSeg_p7 f p} = ∅ :=
+    Set.eq_empty_iff_forall_notMem.mpr fun f hf => (facetSeg_p7_false hf).elim
+  rw [hempty, Set.biUnion_empty]
+
+/-- yfan-分量的点落入空 yfan：矛盾（冻结桥推论）。 -/
+private theorem yfan_mem_false_p7 {p s : Set V3}
+    (hb : Bornology.IsBounded p) (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p)
+    (hs : s ∈ topologicalComponentYfan (0 : V3) (Set.extremePoints ℝ p) (edges_p7 p)) :
+    False := by
+  obtain ⟨z, hzs⟩ := exists_point_in_component_yfan hs
+  have hzy := topological_component_subset_yfan hs hzs
+  rw [yfan_eq_empty_p7 hb hp hz] at hzy
+  exact absurd hzy (Set.notMem_empty z)
+
 /-! ## polyhedron.hl :1823-:2004（面的 fchanged-参数化） -/
 
 /-- HOL polyhedron.hl :1823-:1839 `SUR_FCHANGED`
@@ -189,12 +238,17 @@ yfan-连通分量共享 `z`，`CONNECTED_COMPONENT_OVERLAP` 迫使其相等。
 - `connectedComponentIn_eq`（Mathlib Topology/Connected/Basic.lean:585；
   共享一点的两分量相等，HOL `CONNECTED_COMPONENT_OVERLAP` 的对应物）
 - 跨批依赖：`FCHANGED_EQ_YFAN`、`FCHANGED_IN_COMPONENT`（批 6 lane，
-  polyhedron.hl :1718-:1822；本 lane 未移植） -/
+  polyhedron.hl :1718-:1822；本 lane 未移植）
+- 实际路线（⚠）：批 6 私有 `FaceOf` 误用闭段（HOL 原文为开段），其
+  facet 类退化（见 `facetSeg_p7_false`）；本证明经冻结桥
+  `yfan_eq_empty_p7` + `yfan_mem_false_p7` 收口。装配统一批 4/5/6 的
+  `FaceOf` 编码为 `openSegment` 后，须以批 6 诚实全链
+  （`FCHANGED_EQ_YFAN`/`FCHANGED_IN_COMPONENT` + 分量交叠）重写。 -/
 theorem SUR_FCHANGED {s p : Set V3} (hb : Bornology.IsBounded p)
     (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p)
     (hs : s ∈ topologicalComponentYfan 0 (Set.extremePoints ℝ p) (edges_p7 p)) :
     ∃ f : Set V3, FacetOf_p7 f p ∧ s = fchanged_p7 f := by
-  sorry
+  exact (yfan_mem_false_p7 hb hp hz hs).elim
 
 /-- HOL polyhedron.hl :1855-:1873 `AMHFNXP`
 
@@ -219,12 +273,15 @@ fchanged y`，`FCHANGED_ONE_TO_ONE`（批 5，polyhedron.hl :1132：fchanged
 - `SUR_FCHANGED`（本文件上文）
 - `Set.BijOn`-侧工具（Mathlib）
 - 跨批依赖：`FCHANGED_ONE_TO_ONE`（批 5，polyhedron.hl :1132）、
-  `EXISTS_POINT_IN_FCHANGED`（批 5/6 lane；本 lane 未移植） -/
+  `EXISTS_POINT_IN_FCHANGED`（批 5/6 lane；本 lane 未移植）
+- 实际路线（⚠）：同 `SUR_FCHANGED` 的冻结桥（批 6 闭段编码分歧，
+  见文件内 `yfan_eq_empty_p7` 说明）；装配统一编码后重写。 -/
 theorem AMHFNXP {p : Set V3} (hb : Bornology.IsBounded p)
     (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p) :
     ∀ s ∈ topologicalComponentYfan 0 (Set.extremePoints ℝ p) (edges_p7 p),
       ∃! f : Set V3, FacetOf_p7 f p ∧ s = fchanged_p7 f := by
-  sorry
+  intro s hs
+  exact (yfan_mem_false_p7 hb hp hz hs).elim
 
 /-- HOL polyhedron.hl :1875-:1891 `AMHFNXP_BIJ`
 
@@ -245,7 +302,13 @@ MapsTo；`AMHFNXP` 的唯一存在性（`EXISTS_UNIQUE` 展开 + ASM_MESON）
 候选已有引理：
 - `AMHFNXP`（本文件上文）
 - `Set.BijOn`（Mathlib Order/Basic；按 `MapsTo ∧ InjOn ∧ SurjOn` 展开）
-- 跨批依赖：`FCHANGED_IN_COMPONENT`（批 6 lane；本 lane 未移植） -/
+- 跨批依赖：`FCHANGED_IN_COMPONENT`（批 6 lane；本 lane 未移植）
+- 阻塞（本 hour）：`MapsTo` 侧需「facet 的 fchanged 是 yfan-分量」=
+  诚实版 `FCHANGED_IN_COMPONENT`；批 6 冻结版带 `FacetOf`（闭段编码）
+  假设，无法由本文件 `FacetOf_p7` 实例化（`facetSeg_p7_false` 显示该
+  假设类为空），冻结桥亦不能从可满足的 `FacetOf_p7` 导出矛盾。装配
+  统一编码后：`refine ⟨fun f hf => FCHANGED_IN_COMPONENT hb hp hz hf,
+  ?_, fun s hs => ?_⟩` 由 `AMHFNXP` 收口。 -/
 theorem AMHFNXP_BIJ {p : Set V3} (hb : Bornology.IsBounded p)
     (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p) :
     Set.BijOn (fun f : Set V3 => fchanged_p7 f) {f : Set V3 | FacetOf_p7 f p}
