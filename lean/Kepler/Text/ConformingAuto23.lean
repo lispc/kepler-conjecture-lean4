@@ -1840,6 +1840,33 @@ theorem lemma_connect_hypermap (x : V3) (V : Set V3) (E : Set (Set V3))
                   have hprod : 0 < (1 - t1) * t''' := mul_pos (by linarith) ht0
                   linarith)
 
+/-- `setOfComponents` 成员形式的逆（HOL `lemma_component_identity` 的来源之一）：
+分量集中的分量都是某 dart 的 `combComponent`。 -/
+private theorem hypermapOfFan_setOfComponents_inv_ca23 (H : Hypermap (V3 × V3))
+    {S : Set (V3 × V3)} (hS : S ∈ H.setOfComponents) :
+    ∃ z ∈ H.darts, H.combComponent z = S := by
+  have h : H.setOfComponents =
+      (fun y : V3 × V3 => H.combComponent y) '' (↑H.darts : Set (V3 × V3)) := by
+    ext t
+    simp [Hypermap.setOfComponents, Hypermap.setPartComponents]
+  rw [h] at hS
+  simp only [Set.mem_image] at hS
+  obtain ⟨z, hz, hzS⟩ := hS
+  exact ⟨z, Finset.mem_coe.mp hz, hzS⟩
+
+/-- HOL `lemma_component_identity`：`setOfComponents` 中两个含公共 dart 的分量相等
+（`partition_components` 的二分 + 非空交排除）。 -/
+private theorem hypermapOfFan_component_identity_ca23 (H : Hypermap (V3 × V3))
+    {D₁ D₂ : Set (V3 × V3)} (h₁ : D₁ ∈ H.setOfComponents) (h₂ : D₂ ∈ H.setOfComponents)
+    {w : V3 × V3} (hw₁ : w ∈ D₁) (hw₂ : w ∈ D₂) : D₁ = D₂ := by
+  obtain ⟨z₁, -, rfl⟩ := hypermapOfFan_setOfComponents_inv_ca23 H h₁
+  obtain ⟨z₂, -, rfl⟩ := hypermapOfFan_setOfComponents_inv_ca23 H h₂
+  rcases H.partition_components z₁ z₂ with heq | hdis
+  · exact heq
+  · have hcap : (H.combComponent z₁ ∩ H.combComponent z₂).Nonempty := ⟨w, hw₁, hw₂⟩
+    rw [hdis] at hcap
+    exact absurd hcap Set.not_nonempty_empty
+
 /-- HOL Conforming.hl :16858-16918 `WGVWSKE`
 
 HOL 原文：
@@ -1872,7 +1899,53 @@ HOL 原文：
 theorem WGVWSKE (x : V3) (V : Set V3) (E : Set (Set V3)) (hfan : FAN x V E)
     (hconf : conformingFan x V E hfan) :
     (hypermapOfFan x V E hfan).Connected := by
-  sorry
+  -- P1：取 dart `f1 = (v,u)`（`fan1` 给 `V` 非空，边度 `> 1` 给邻居 `u`）
+  have hcard : ∀ v : V3, v ∈ V → 1 < (setOfEdge v V E).ncard := hconf.1
+  have hdart_eq : dartOfFan V E = dart1OfFan V E :=
+    dartOfFan_eq_dart1_of_surrounded hfan hcard
+  obtain ⟨v, hvV⟩ := Set.nonempty_iff_ne_empty.mpr hfan.2.2.1.2
+  obtain ⟨u, huE, -⟩ := exists_inf_element_fix_fan x v v V E hfan hvV (hcard v hvV)
+  have hf1 : (v, u) ∈ dart1OfFan V E := by
+    simp only [dart1OfFan, Set.mem_setOf_eq]
+    exact huE.1
+  have hf1H : (v, u) ∈ (hypermapOfFan x V E hfan).darts := by
+    show (v, u) ∈ (finite_dart1_fan hfan).toFinset
+    exact (finite_dart1_fan hfan).mem_toFinset.mpr hf1
+  set H := hypermapOfFan x V E hfan with hHdef
+  have hDmem : H.combComponent (v, u) ∈ H.setOfComponents :=
+    hypermapOfFan_mem_setOfComponents H hf1H
+  -- P2：任何 dart `y` 与 `f1` 同分量（`lemma_connect_hypermap` + 组件恒等）
+  have hconn : ∀ y ∈ H.darts, y ∈ H.combComponent (v, u) := by
+    intro y hyH
+    have hy1 : y ∈ dart1OfFan V E := by
+      rw [← hypermapOfFan_darts_coe x V E hfan]
+      exact hyH
+    obtain ⟨D₀, hD₀mem, hf1D₀, hyD₀⟩ :=
+      lemma_connect_hypermap x V E (v, u) y hfan hconf hcard hconf.2.1
+        (hdart_eq ▸ hf1) (hdart_eq ▸ hy1)
+    have hD₀eq : D₀ = H.combComponent (v, u) :=
+      hypermapOfFan_component_identity_ca23 H hD₀mem hDmem hf1D₀
+        (H.mem_combComponent_self (v, u))
+    rw [hD₀eq] at hyD₀
+    exact hyD₀
+  -- P3：分量集为单点集 `{combComponent (v,u)}`
+  have hset : H.setOfComponents = {H.combComponent (v, u)} := by
+    ext S
+    constructor
+    · intro hS
+      obtain ⟨z, hzH, hzS⟩ := hypermapOfFan_setOfComponents_inv_ca23 H hS
+      rw [← hzS, Set.mem_singleton_iff]
+      exact hypermapOfFan_component_identity_ca23 H
+        (hypermapOfFan_mem_setOfComponents H hzH) hDmem
+        (H.mem_combComponent_self z) (hconn z hzH)
+    · intro hS
+      rw [Set.mem_singleton_iff] at hS
+      rw [hS]
+      exact hDmem
+  -- P4：连通 = 分量数为 1
+  show H.numberOfComponents = 1
+  show H.setOfComponents.ncard = 1
+  rw [hset, Set.ncard_singleton]
 
 /-- `hypermapOfFan` 的 dart 集合即 `dart1OfFan`（二元组 dart 集）。 -/
 private theorem hypermapOfFan_coe_darts_ca (x : V3) (V : Set V3) (E : Set (Set V3))
