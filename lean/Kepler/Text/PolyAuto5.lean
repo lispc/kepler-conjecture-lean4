@@ -157,7 +157,7 @@ HOL 原文：
 - `Matrix.dotProduct` 连续性 / `(innerSL ℝ a).continuous`（EuclideanSpace 内积） -/
 theorem CONTINUOUS_ON_LIFT_DOT (s : Set V3) (a : V3) :
     ContinuousOn (fun y : V3 => a ⬝ᵥ y) s := by
-  sorry
+  exact (continuous_const.dotProduct (PiLp.continuous_ofLp 2 _)).continuousOn
 
 /-- HOL polyhedron.hl :752-:812 `AFFINITE_HULL_BALL_EQ_UNIV`
 
@@ -178,8 +178,27 @@ affineSpan (ball x e)`，再由 `x'` 任意得 `= univ`。
 - `Submodule.eq_top_of_finrank_eq` / `eq_top_iff`（经 `finrank` 判满）
 - 缺口：Mathlib 似无 `affineSpan_ball_eq_univ` 一等引理 -/
 theorem AFFINITE_HULL_BALL_EQ_UNIV (x : V3) (e : ℝ) (he : 0 < e) :
-    (affineSpan ℝ (Metric.ball x e) : Set V3) = univ := by
-  sorry
+    (affineSpan ℝ (Metric.ball x e) : Set V3) = Set.univ := by
+  apply Set.eq_univ_of_forall
+  intro y
+  by_cases hy : y = x
+  · subst hy
+    exact subset_affineSpan ℝ _ (Metric.mem_ball_self he)
+  · have hyn : 0 < ‖(y - x : V3)‖ := norm_pos_iff.2 (sub_ne_zero.2 hy)
+    set c := e / 2 / ‖y - x‖ with hc
+    have hc0 : 0 < c := by rw [hc]; exact div_pos (div_pos he zero_lt_two) hyn
+    have hz : x + c • (y - x) ∈ Metric.ball x e := by
+      rw [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left, norm_smul, Real.norm_eq_abs,
+        abs_of_pos hc0, hc]
+      field_simp
+      linarith
+    have hcne : c ≠ 0 := ne_of_gt hc0
+    have key : AffineMap.lineMap x (x + c • (y - x)) c⁻¹ = y := by
+      simp only [AffineMap.lineMap_apply_module', add_sub_cancel_left, smul_smul,
+        inv_mul_cancel₀ hcne, one_smul, sub_add_cancel]
+    rw [← key]
+    exact AffineMap.lineMap_mem _ (subset_affineSpan ℝ _ (Metric.mem_ball_self he))
+      (subset_affineSpan ℝ _ hz)
 
 /-- HOL polyhedron.hl :815-:824 `INTERIOR_AFFINIE_HUL_EQ_UNIV`
 
@@ -197,8 +216,13 @@ HOL 原文：
 - `Metric.isOpen_iff`、`interior` 的开球刻画
 - 本批 `AFFINITE_HULL_BALL_EQ_UNIV`、`affineSpan_mono` -/
 theorem INTERIOR_AFFINIE_HUL_EQ_UNIV (x : V3) (p : Set V3) (hx : x ∈ interior p) :
-    (affineSpan ℝ p : Set V3) = univ := by
-  sorry
+    (affineSpan ℝ p : Set V3) = Set.univ := by
+  obtain ⟨e, he, hsub⟩ := Metric.isOpen_iff.mp isOpen_interior x hx
+  have h1 := AFFINITE_HULL_BALL_EQ_UNIV x e he
+  have h2 : (affineSpan ℝ (Metric.ball x e) : Set V3) ⊆ (affineSpan ℝ p : Set V3) :=
+    affineSpan_mono ℝ (hsub.trans interior_subset)
+  rw [h1] at h2
+  exact Set.eq_univ_of_univ_subset h2
 
 /-- HOL polyhedron.hl :828-:836 `AFF_DIM_INTERIOR_EQ_3`
 
@@ -220,7 +244,18 @@ HOL 原文：
 - `SetLike`/`Submodule.finrank` 维数 API -/
 theorem AFF_DIM_INTERIOR_EQ_3 (x : V3) (p : Set V3) (hx : x ∈ interior p) :
     affDim_p5 p = 3 := by
-  sorry
+  have hne : p ≠ ∅ := by
+    rintro rfl
+    simp at hx
+  have hspan := INTERIOR_AFFINIE_HUL_EQ_UNIV x p hx
+  have htop : affineSpan ℝ p = ⊤ := by
+    refine SetLike.coe_injective ?_
+    rw [AffineSubspace.top_coe, hspan]
+  have hv : vectorSpan ℝ p = ⊤ :=
+    AffineSubspace.vectorSpan_eq_top_of_affineSpan_eq_top ℝ V3 V3 htop
+  have h3 : affDim_p5 p = ((Module.finrank ℝ (vectorSpan ℝ p) : ℕ) : ℤ) := if_neg hne
+  rw [h3, hv, finrank_top, finrank_euclideanSpace_fin]
+  norm_num
 
 /-- HOL polyhedron.hl :840-:853 `INTERIOR_IMP_RELATIVE_INTERIOR`
 
@@ -241,7 +276,7 @@ HOL 原文：
 - 本批 `INTERIOR_AFFINIE_HUL_EQ_UNIV`、`interior_subset` -/
 theorem INTERIOR_IMP_RELATIVE_INTERIOR (x : V3) (p : Set V3) (hx : x ∈ interior p) :
     x ∈ intrinsicInterior ℝ p := by
-  sorry
+  exact interior_subset_intrinsicInterior hx
 
 /-- HOL polyhedron.hl :858-:886 `IN_RELATIVE_INTERIOR1`
 
@@ -264,7 +299,18 @@ HOL 原文：
 theorem IN_RELATIVE_INTERIOR1 (x : V3) (s : Set V3) (hx : x ∈ intrinsicInterior ℝ s) :
     ∃ e : ℝ, 0 < e ∧ (Metric.ball x e ∩ (affineSpan ℝ s : Set V3)) ⊆
       intrinsicInterior ℝ s := by
-  sorry
+  obtain ⟨y, hy, rfl⟩ := mem_intrinsicInterior.mp hx
+  have hopen : IsOpen (interior ((↑) ⁻¹' s : Set (affineSpan ℝ s))) := isOpen_interior
+  obtain ⟨t, ht, hteq⟩ := isOpen_induced_iff.mp hopen
+  have hxy : y ∈ Subtype.val ⁻¹' t := by rw [hteq]; exact hy
+  obtain ⟨e, he, hball⟩ := Metric.isOpen_iff.mp ht (y : V3) hxy
+  refine ⟨e, he, ?_⟩
+  rintro z ⟨hzb, hzs⟩
+  have hex : ∃ w : (affineSpan ℝ s), (w : V3) = z := ⟨⟨z, hzs⟩, rfl⟩
+  obtain ⟨w, rfl⟩ := hex
+  refine mem_intrinsicInterior.mpr ⟨w, ?_, rfl⟩
+  rw [← hteq]
+  exact hball hzb
 
 /-! ## polyhedron.hl :891-:1180（fchanged 区域的开性与单射性） -/
 
@@ -306,6 +352,13 @@ polyhedron 写成有限交 `p = affine hull p ∩ ⋂ h {x | a h dot x = b h}`�
 theorem FCHANGED_OPEN (p f : Set V3) (hb : Bornology.IsBounded p)
     (hp : polyhedron_p5 p) (hz : (0 : V3) ∈ interior p) (hf : facetOf_p5 f p) :
     IsOpen (fchanged_p5 f) := by
+  -- BLOCKER (batch-known-hard, 240-line HOL analytic proof): needs the unported
+  -- upstream polyhedron.hl:745- lemmas POLYHEDRON_INTER_AFFINE_MINIMAL and
+  -- FACET_OF_POLYHEDRON_EXPLICIT (write f = p ∩ {x | a ⬝ᵥ x = b} with
+  -- affineSpan f = that hyperplane, via AFF_DIM_HYPERPLANE and affDim_p5 f = 2)
+  -- plus RELATIVE_INTERIOR_OF_POLYHEDRON; none ported (not in Mathlib
+  -- v4.32.2, not in PolyAuto1-4). Batch-local prerequisites that ARE ready:
+  -- CONTINUOUS_ON_LIFT_DOT, IN_RELATIVE_INTERIOR1, INTERIOR_IMP_RELATIVE_INTERIOR.
   sorry
 
 /-- HOL polyhedron.hl :1132-:1179 `FCHANGED_ONE_TO_ONE`
@@ -336,6 +389,11 @@ theorem FCHANGED_ONE_TO_ONE (p f1 f2 : Set V3) (hb : Bornology.IsBounded p)
     (hp : polyhedron_p5 p) (hz : (0 : V3) ∈ interior p)
     (hf1 : facetOf_p5 f1 p) (hf2 : facetOf_p5 f2 p)
     (hinter : fchanged_p5 f1 ∩ fchanged_p5 f2 ≠ ∅) : f1 = f2 := by
+  -- BLOCKER: the geometric core is POLYHEDRON_COLLINEAR_FACES
+  -- (flyspeck_multivariate.ml:6881, unported: positive ray from common point
+  -- forces t' = t, v1 = v1') plus FACE_OF_EQ (two faces of p whose relative
+  -- interiors meet are equal, polytope.ml, unported). Elementary part only:
+  -- facetOf_p5 f = p is excluded by affDim_p5 p = affDim_p5 p - 1.
   sorry
 
 /-! ## polyhedron.hl :1184-:1311（基数与边的存在性） -/
@@ -358,7 +416,8 @@ a ≠ b ∧ s = {a, b}`，一步完成（zuzhuang）。
 - `Set.Finite`、`Set.ncard` -/
 theorem CARD_EXISTS_2 {α : Type*} (e : Set α) (he : e.Finite) (hc : e.ncard = 2) :
     ∃ v w : α, e = {v, w} := by
-  sorry
+  obtain ⟨v, w, -, rfl⟩ := Set.ncard_eq_two.mp hc
+  exact ⟨v, w, rfl⟩
 
 /-- HOL polyhedron.hl :1278-:1311 `EXISTS_EDGE_POLYTOPE`
 
@@ -390,6 +449,12 @@ p 有余维 1 面 `f`（`affDim f = 2`），f 又有余维 1 面 `f'`（`affDim 
 theorem EXISTS_EDGE_POLYTOPE (p : Set V3) (hb : Bornology.IsBounded p)
     (hp : polyhedron_p5 p) (hz : (0 : V3) ∈ interior p) :
     ∃ e : Set V3, e ∈ edges_p5 p := by
+  -- BLOCKER: needs POLYTOPE_FACET_EXISTS twice (bounded full-dim polyhedron
+  -- has a facet, and a facet has a facet) + FACE_OF_TRANS + the affDim = 1 →
+  -- two-point basis reduction via CARD_EXISTS_2. None of the polytope-face
+  -- lemmas are ported; Mathlib has no polytope face/facet theory (only
+  -- exposed faces in Analysis/Convex/Exposed.lean; a 1-dim face needs a
+  -- generic-position supporting-hyperplane argument).
   sorry
 
 end Kepler.Text

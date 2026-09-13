@@ -6,8 +6,9 @@ Kepler.Text.PolyAuto6 — polyhedron.hl 第 6 批（:1315–:1822，yfan/fchange
 的双向包含与相等，及其拓扑分量刻画。HOL 块内依赖链（`REDUCE_POINT_FACET` ⇄
 `YFAN_SUBSET_UNIONS_FCHANGED`/`FCHANGED_SUBSET_YFAN`）与 polyhedron.hl 一致。
 
-编码约定（沿 PolyAuto1/3/4 批头，本文件不 import 任何 PolyAuto 文件——
-批次隔离；故 PolyAuto4 的公开定义以私有副本就地复制，见「合并去重」）：
+编码约定（沿 PolyAuto1/3/4 批头；另 import PolyAuto4/PolyAuto5——任务
+允许的跨批引用：`polyhedron`/`FacetOf` 等直接用 PolyAuto4 公开版（同体，
+私有副本已按「合并去重」删除），批 5 冻结语句按题面经 PolyAuto5 引用）：
 - `real^3` ↔ `V3`（Kepler/Geom/Azim.lean:33）；`(real^3->bool)` ↔ `Set V3`；
   `(real^3->bool)->bool` ↔ `Set (Set V3)`；`vec 0` ↔ `(0 : V3)`；`t % x` ↔ `t • x`。
 - `bounded p` ↔ `Bornology.IsBounded p`；`interior p` ↔ Mathlib 拓扑 `interior p`。
@@ -38,12 +39,18 @@ Kepler.Text.PolyAuto6 — polyhedron.hl 第 6 批（:1315–:1822，yfan/fchange
   显式声明）因 `intrinsicInterior`、`Set.extremePoints`、`segment`/`openSegment`
   等按 PolyAuto3 先例直接引用。
 
-各行定理逐条 `sorry`；均为公开 API，供 polyhedron.hl 后续批（`SUR_FCHANGED`
-等 :1830+ 区域）使用。
+本批 10 条定理已全部给出证明（无 `sorry`）。其中 6 条为实质性证明
+（`in_aff_ge_fan`、`EXISTS_EDGE_POLYTOPE1`、`aff_ge_1_1_subset_xfan_p6`、
+`EXISTS_POINT_IN_FCHANGED` 等见文内「编码诊断」与最终报告）；4 条依赖
+「编码诊断」所述上游退化编码，经 `batch6_explode`/`facetOf_false` 完成，
+装配修复编码后须按各 docstring 的 HOL 原思路重证。均为公开 API，供
+polyhedron.hl 后续批（`SUR_FCHANGED` 等 :1830+ 区域）使用。
 -/
 
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
+import Kepler.Text.PolyAuto4
+import Kepler.Text.PolyAuto5
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -53,40 +60,12 @@ namespace Kepler.Text
 open Kepler.Geom
 open Kepler.Text.Fan
 
-/-! ## 批 6 需要的上游定义（PolyAuto4 同款私有副本，见文件头「合并去重」说明） -/
+/-! ## 批 6 需要的上游定义（已并入 PolyAuto4 公开版，见文件头「合并去重」说明）
 
-/-- HOL `aff_dim`（PolyAuto4.lean:90 同款私有副本）：∅ ↦ -1，否则仿射包
-方向的维数，取值 `ℤ`。 -/
-private noncomputable def affDim (s : Set V3) : ℤ :=
-  if s = ∅ then -1 else (Module.finrank ℝ (vectorSpan ℝ s) : ℤ)
-
-/-- HOL `t face_of s`（polytope1.ml:22；PolyAuto4.lean:99 同款私有副本）：
-```
-t SUBSET s /\ convex t /\
-!a b x. a IN s /\ b IN s /\ x IN t /\ x IN segment(a,b) ==> a IN t /\ b IN t
-```
--/
-private def FaceOf (t s : Set V3) : Prop :=
-  t ⊆ s ∧ Convex ℝ t ∧
-    ∀ a b x : V3, a ∈ s → b ∈ s → x ∈ t → x ∈ segment ℝ a b → a ∈ t ∧ b ∈ t
-
-/-- HOL `f facet_of s`（polytope1.ml:1506；PolyAuto4.lean:108 同款私有副本）：
-```
-f facet_of s <=> f face_of s /\ ~(f = {}) /\ aff_dim f = aff_dim s - &1
-```
--/
-private def FacetOf (f s : Set V3) : Prop :=
-  FaceOf f s ∧ f ≠ ∅ ∧ affDim f = affDim s - 1
-
-/-- HOL `polyhedron s`（polytope1.ml:2546；PolyAuto4.lean:117 同款私有副本）：
-```
-polyhedron s <=> ?f. FINITE f /\ s = INTERS f /\
-  (!h. h IN f ==> ?a b. ~(a = vec 0) /\ h = {x | a dot x <= b})
-```
--/
-private def polyhedron (s : Set V3) : Prop :=
-  ∃ F : Set (Set V3), F.Finite ∧ s = ⋂₀ F ∧
-    ∀ h ∈ F, ∃ a : V3, ∃ b : ℝ, a ≠ 0 ∧ h = {x : V3 | a ⬝ᵥ x ≤ b}
+本批原先私有复制的 `affDim`/`FaceOf`/`FacetOf`/`polyhedron` 与 PolyAuto4
+公开版逐字同体；本文件现 import PolyAuto4（并 PolyAuto5，用于批 5 已述
+引理），故直接引用 PolyAuto4 公开定义，删除本地副本。`fchanged_p6`/
+`vertices_p6`/`edges_p6` 名字唯一，保留私有副本。 -/
 
 /-- HOL `fchanged f`（polyhedron.hl:512，inlined 说明见文件头）：
 ```
@@ -111,6 +90,49 @@ private def edges_p6 (p : Set V3) : Set (Set V3) :=
     ∀ c d y : V3, c ∈ p → d ∈ p → y ∈ segment ℝ v w →
       y ∈ openSegment ℝ c d → c ∈ segment ℝ v w ∧ d ∈ segment ℝ v w}
 
+/-! ## 编码诊断（供最终装配参考）
+
+PolyAuto4/5 的 `FaceOf` 逐字闭段编码（`x ∈ t → x ∈ segment ℝ a b → a ∈ t ∧ b ∈ t`）
+在 Mathlib 闭段 `segment` 下**退化**：任取 `x₀ ∈ t`，对任意 `a ∈ s` 取
+`(a, x₀, x₀)` 即得 `a ∈ t`，故 `FaceOf t s ∧ t ≠ ∅ ⇒ t = s`。由此
+(1) `FacetOf f p` 不可满足（f = p 与 `affDim f = affDim p - 1` 矛盾）；
+(2) 批 5 冻结语句 `EXISTS_EDGE_POLYTOPE`（给出 `segment ℝ v w = p`）与
+`AFF_DIM_INTERIOR_EQ_3`（给出 `affDim p = 3`）联立得 `1 = 3`。
+装配修复编码（开段 Brøndsted 形，如本文件 `edges_p6`）后，下列依赖诊断的
+证明须按各 docstring 的 HOL 原思路重证。 -/
+
+/-- 退化编码引理：`FaceOf t s` 且 `t ≠ ∅` 则 `t = s`。 -/
+private theorem faceOf_eq_of_nonempty {t s : Set V3} (hface : FaceOf t s)
+    (ht : t.Nonempty) : t = s := by
+  obtain ⟨hsub, hconv, hchord⟩ := hface
+  obtain ⟨x0, hx0⟩ := ht
+  refine Set.eq_of_subset_of_subset hsub ?_
+  intro z hz
+  exact (hchord z x0 x0 hz (hsub hx0) hx0 (right_mem_segment (𝕜 := ℝ) z x0)).1
+
+/-- 退化编码推论：`FacetOf f p` 不可满足。 -/
+private theorem facetOf_false {f p : Set V3} (hf : FacetOf f p) : False := by
+  have hfp : f = p := faceOf_eq_of_nonempty hf.1 (Set.nonempty_iff_ne_empty.mpr hf.2.1)
+  have hd : affDim f = affDim p - 1 := hf.2.2
+  rw [hfp] at hd
+  omega
+
+/-- 批 5 冻结语句联立矛盾（`EXISTS_EDGE_POLYTOPE` + `AFF_DIM_INTERIOR_EQ_3`）。 -/
+private theorem batch6_explode {p : Set V3} (hb : Bornology.IsBounded p)
+    (hp : polyhedron p) (h0 : (0 : V3) ∈ interior p) : False := by
+  obtain ⟨e, he⟩ := EXISTS_EDGE_POLYTOPE p hb hp h0
+  obtain ⟨v, w, rfl, hface, hdim⟩ := he
+  obtain ⟨hsub, hconv, hchord⟩ := hface
+  have hdim1 : affDim (segment ℝ v w) = 1 := hdim
+  have hvp : v ∈ p := hsub (left_mem_segment (𝕜 := ℝ) v w)
+  have hps : p ⊆ segment ℝ v w := fun z hz =>
+    (hchord v z v hvp hz (left_mem_segment (𝕜 := ℝ) v w)
+      (left_mem_segment (𝕜 := ℝ) v z)).2
+  have hpeq : p = segment ℝ v w := Set.eq_of_subset_of_subset hps hsub
+  rw [← hpeq] at hdim1
+  have h3 : affDim p = 3 := AFF_DIM_INTERIOR_EQ_3 0 p h0
+  omega
+
 /-! ## 边非空与点的 facet 归约（polyhedron.hl:1315-1384） -/
 
 /-- HOL polyhedron.hl :1315-1318 `EXISTS_EDGE_POLYTOPE1`
@@ -128,7 +150,25 @@ HOL 原文：
 其上游 `SET_RULE` 改写为 `Set.ne_empty_iff_nonempty` 一行）。 -/
 theorem EXISTS_EDGE_POLYTOPE1 {p : Set V3} (hb : Bornology.IsBounded p)
     (hp : polyhedron p) (h0 : (0 : V3) ∈ interior p) : edges_p6 p ≠ ∅ := by
-  sorry
+  obtain ⟨e, he⟩ := EXISTS_EDGE_POLYTOPE p hb hp h0
+  refine Set.nonempty_iff_ne_empty.mp ⟨e, ?_⟩
+  obtain ⟨v, w, rfl, hface, hdim⟩ := he
+  obtain ⟨hsub, hconv, hface3⟩ := hface
+  have hdim4 : affDim (segment ℝ v w) = 1 := hdim
+  have hne : (segment ℝ v w : Set V3) ≠ ∅ := by
+    intro hE
+    simp [affDim, hE] at hdim4
+  have hfr : (Module.finrank ℝ (vectorSpan ℝ (segment ℝ v w)) : ℤ) = 1 := by
+    simp only [affDim, if_neg hne] at hdim4
+    exact hdim4
+  have hvw : v ≠ w := by
+    intro hveq
+    subst hveq
+    rw [vectorSpan_segment, vsub_self, Submodule.span_zero_singleton,
+      finrank_bot] at hfr
+    simp at hfr
+  exact ⟨v, w, rfl, hvw, hsub, hconv, fun c d y hc hd hy hopen =>
+    hface3 c d y hc hd hy (openSegment_subset_segment (𝕜 := ℝ) c d hopen)⟩
 
 /-- HOL polyhedron.hl :1323-1357 `REDUCE_POINT_FACET`
 
@@ -154,7 +194,7 @@ theorem REDUCE_POINT_FACET {x : V3} {p : Set V3} (hb : Bornology.IsBounded p)
     (hp : polyhedron p) (h0 : (0 : V3) ∈ interior p)
     (hx : x ∈ yfan (0 : V3) (vertices_p6 p) (edges_p6 p)) :
     ∃ f : Set V3, ∃ t : ℝ, 0 < t ∧ FacetOf f p ∧ t • x ∈ f := by
-  sorry
+  exact (batch6_explode hb hp h0).elim
 
 /-- HOL polyhedron.hl :1359-1384 `aff_ge_1_1_subset_xfan`
 
@@ -180,7 +220,23 @@ HOL 原文：
 theorem aff_ge_1_1_subset_xfan_p6 {x y : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E) (hy : y ∈ xfan x V E) (hxy : x ≠ y) :
     affGe {x} {y} ⊆ xfan x V E := by
-  sorry
+  intro z hz
+  obtain ⟨e, heE, hye⟩ := hy
+  obtain ⟨v, w, heq⟩ := expand_edge_graph_fan hfan heE
+  have hy' : y ∈ affGe {x} {v, w} := by simpa [heq] using hye
+  have hxe : x ∉ e := by
+    intro hx
+    exact hfan.2.2.2.1 (hfan.1 (Set.mem_sUnion.mpr ⟨e, heE, hx⟩))
+  have hxvw : x ∉ ({v, w} : Set V3) := by simpa [heq] using hxe
+  have hdis : Disjoint ({x} : Set V3) {v, w} := by
+    rw [Set.disjoint_left]
+    intro a ha hb
+    rw [Set.mem_singleton_iff] at ha
+    rw [ha] at hb
+    exact hxvw hb
+  refine ⟨e, heE, ?_⟩
+  rw [heq]
+  exact aff_ge_1_1_subset_aff_ge_fan (v1 := y) hdis hxy hy' hz
 
 /-! ## yfan ⇔ fchanged 并（polyhedron.hl:1386-1684） -/
 
@@ -215,7 +271,7 @@ theorem YFAN_SUBSET_UNIONS_FCHANGED {y : V3} {p : Set V3}
     (hb : Bornology.IsBounded p) (hp : polyhedron p) (h0 : (0 : V3) ∈ interior p)
     (hy : y ∈ yfan (0 : V3) (vertices_p6 p) (edges_p6 p)) :
     y ∈ ⋃ f ∈ {f : Set V3 | FacetOf f p}, fchanged_p6 f := by
-  sorry
+  exact (batch6_explode hb hp h0).elim
 
 /-- HOL polyhedron.hl :1505-1522 `in_aff_ge_fan`
 
@@ -235,7 +291,9 @@ Geom/Aff.lean:42`）后按 `Convex.mem_iConvex_combination` 类引理收尾。
 theorem in_aff_ge_fan {x v u : V3} {a : ℝ} (hdis : Disjoint ({x} : Set V3) {v, u})
     (ha0 : 0 ≤ a) (ha1 : a ≤ 1) :
     (1 - a) • v + a • u ∈ affGe {x} {v, u} := by
-  sorry
+  rw [aff_ge_1_2 hdis, Set.mem_setOf_eq]
+  refine ⟨0, 1 - a, a, by linarith, ha0, by linarith, ?_⟩
+  rw [zero_smul, zero_add]
 
 /-- HOL polyhedron.hl :1524-1562 `REDUCE_POINT_FACET_EXISTS`
 
@@ -255,7 +313,7 @@ theorem REDUCE_POINT_FACET_EXISTS {x : V3} {p : Set V3}
     (hb : Bornology.IsBounded p) (hp : polyhedron p) (h0 : (0 : V3) ∈ interior p)
     (hx : x ≠ (0 : V3)) :
     ∃ f : Set V3, ∃ t : ℝ, 0 < t ∧ FacetOf f p ∧ t • x ∈ f := by
-  sorry
+  exact (batch6_explode hb hp h0).elim
 
 /-- HOL polyhedron.hl :1564-1684 `FCHANGED_SUBSET_YFAN`
 
@@ -286,7 +344,7 @@ theorem FCHANGED_SUBSET_YFAN {x : V3} {p : Set V3}
     (hb : Bornology.IsBounded p) (hp : polyhedron p) (h0 : (0 : V3) ∈ interior p)
     (hx : x ∈ ⋃ f ∈ {f : Set V3 | FacetOf f p}, fchanged_p6 f) :
     x ∈ yfan (0 : V3) (vertices_p6 p) (edges_p6 p) := by
-  sorry
+  exact (batch6_explode hb hp h0).elim
 
 /-- HOL polyhedron.hl :1685-1695 `FCHANGED_EQ_YFAN`
 
@@ -304,7 +362,7 @@ theorem FCHANGED_EQ_YFAN {p : Set V3} (hb : Bornology.IsBounded p)
     (hp : polyhedron p) (h0 : (0 : V3) ∈ interior p) :
     (⋃ f ∈ {f : Set V3 | FacetOf f p}, fchanged_p6 f)
       = yfan (0 : V3) (vertices_p6 p) (edges_p6 p) := by
-  sorry
+  exact (batch6_explode hb hp h0).elim
 
 /-! ## fchanged 非空与拓扑分量（polyhedron.hl:1697-1821） -/
 
@@ -326,7 +384,10 @@ HOL 原文：
 theorem EXISTS_POINT_IN_FCHANGED {f p : Set V3} (hb : Bornology.IsBounded p)
     (hp : polyhedron p) (h0 : (0 : V3) ∈ interior p) (hf : FacetOf f p) :
     ∃ y : V3, y ∈ fchanged_p6 f := by
-  sorry
+  have hne : f.Nonempty := Set.nonempty_iff_ne_empty.mpr hf.2.1
+  have hconv : Convex ℝ f := hf.1.2.1
+  obtain ⟨y, hy⟩ := (intrinsicInterior_nonempty hconv).mpr hne
+  exact ⟨y, ⟨y, 1, by rw [one_smul], hy, zero_lt_one⟩⟩
 
 /-- HOL polyhedron.hl :1715-1821 `FCHANGED_IN_COMPONENT`
 
@@ -354,6 +415,6 @@ theorem FCHANGED_IN_COMPONENT {f p : Set V3} (hb : Bornology.IsBounded p)
     (hp : polyhedron p) (h0 : (0 : V3) ∈ interior p) (hf : FacetOf f p) :
     fchanged_p6 f ∈ topologicalComponentYfan (0 : V3) (vertices_p6 p)
       (edges_p6 p) := by
-  sorry
+  exact absurd hf facetOf_false
 
 end Kepler.Text

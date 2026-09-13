@@ -855,6 +855,172 @@ theorem SET_OF_EDGE_LINEAR_IMAGE_EQ (f : V3 →ₗ[ℝ] V3) (x : V3) (V : Set V3
 
 /-! ## 多面体导出扇（polyhedron.hl:342-513） -/
 
+/-! ### POLYHEDRON_FAN 组件（本批就地证明的辅助引理） -/
+
+/-- `dotProduct` 关于第二个变量的连续性。 -/
+private theorem continuous_dot_right (a : V3) : Continuous (fun y : V3 => a ⬝ᵥ y) := by
+  fun_prop
+
+/-- 闭半空间（点积形式）。 -/
+private theorem isClosed_halfspace_dot (a : V3) (b : ℝ) : IsClosed {y : V3 | a ⬝ᵥ y ≤ b} :=
+  isClosed_le (continuous_dot_right a) continuous_const
+
+/-- 有界多面体（有限个闭半空间之交）有极值点（HOL `EXTREME_POINT_EXISTS_CONVEX`
+的替代路线：闭 + 有界 ⇒ 紧 + Mathlib Krein–Milman
+`IsCompact.extremePoints_nonempty`）。 -/
+private theorem extremePoints_nonempty_of_polyhedron {p : Set V3}
+    (hp : ∃ f : Set (Set V3), f.Finite ∧ p = ⋂₀ f ∧
+      ∀ h ∈ f, ∃ a : V3, ∃ b : ℝ, a ≠ 0 ∧ h = {y : V3 | a ⬝ᵥ y ≤ b})
+    (hbd : Bornology.IsBounded p) {z : V3} (hzp : z ∈ p) :
+    (Set.extremePoints ℝ p).Nonempty := by
+  obtain ⟨f, -, hp0, hdesc⟩ := hp
+  have hclosed : IsClosed p := by
+    rw [hp0]
+    refine isClosed_sInter fun h hh => ?_
+    obtain ⟨a, b, -, rfl⟩ := hdesc h hh
+    exact isClosed_halfspace_dot a b
+  exact (Metric.isCompact_of_isClosed_isBounded hclosed hbd).extremePoints_nonempty ⟨z, hzp⟩
+
+/-- 两点集的 Graph 计数（`{v,w}` 有限且基数 2，`v ≠ w`）。 -/
+private theorem finite_pair_card_two {v w : V3} (hvw : v ≠ w) :
+    ∃ h : ({v, w} : Set V3).Finite, h.toFinset.card = 2 := by
+  have hfin : ({v, w} : Set V3).Finite := (Set.finite_singleton w).insert v
+  refine ⟨hfin, ?_⟩
+  rw [← Set.ncard_eq_toFinset_card ({v, w} : Set V3) hfin]
+  exact Set.ncard_pair hvw
+
+/-- 边 `[v,w]`（内联 face_of 条件）的第一端点 `v` 是 `p` 的极值点
+（HOL `EXTREME_POINT_OF_SEGMENT`+`FACE_OF_TRANS` 的内联一步）。 -/
+private theorem edgeFirstEndpoint_extreme {p : Set V3} {v w : V3} (hvw : v ≠ w)
+    (hsub : segment ℝ v w ⊆ p)
+    (hface : ∀ c d y : V3, c ∈ p → d ∈ p → y ∈ segment ℝ v w →
+      y ∈ openSegment ℝ c d → c ∈ segment ℝ v w ∧ d ∈ segment ℝ v w) :
+    v ∈ Set.extremePoints ℝ p := by
+  have hvp : v ∈ p := hsub (left_mem_segment ℝ v w)
+  rw [mem_extremePoints]
+  refine ⟨hvp, ?_⟩
+  intro c hc d hd hxy
+  obtain ⟨hcf, hdf⟩ := hface c d v hc hd (left_mem_segment ℝ v w) hxy
+  obtain ⟨α, β, hα, hβ, hαβ, hvdef⟩ := hxy
+  obtain ⟨t', s', ht', hs', ht's', hcdef⟩ := hcf
+  obtain ⟨t'', s'', ht'', hs'', ht''s'', hddef⟩ := hdf
+  have hα1 : α = 1 - β := by linarith
+  have ht'1 : t' = 1 - s' := by linarith
+  have ht''1 : t'' = 1 - s'' := by linarith
+  have hcv : c = v + s' • (w - v) := by rw [← hcdef, ht'1]; module
+  have hdd : d = v + s'' • (w - v) := by rw [← hddef, ht''1]; module
+  rw [hcv, hdd, hα1] at hvdef
+  -- hvdef : (1 - β) • (v + s' • (w - v)) + β • (v + s'' • (w - v)) = v
+  have hβpos : (0:ℝ) < 1 - β := by rw [← hα1]; exact hα
+  have hvf : (s' + β * (s'' - s')) • (w - v) = 0 := by
+    linear_combination (norm := module) hvdef
+  have hβ0 : s' + β * (s'' - s') = 0 := by
+    rcases smul_eq_zero.mp hvf with h | h
+    · exact h
+    · exact absurd (sub_eq_zero.mp h).symm hvw
+  have hβform : s' + β * (s'' - s') = (1 - β) * s' + β * s'' := by ring
+  rw [hβform] at hβ0
+  have hterm1 : (0:ℝ) ≤ (1 - β) * s' := mul_nonneg hβpos.le hs'
+  have hterm2 : (0:ℝ) ≤ β * s'' := mul_nonneg hβ.le hs''
+  have h1t : (1 - β) * s' = 0 := by
+    have hsplit : (1 - β) * s' = -(β * s'') := by linarith
+    linarith
+  have hs'0 : s' = 0 := by
+    rcases mul_eq_zero.mp h1t with h | h
+    · exact absurd h (ne_of_gt hβpos)
+    · exact h
+  have hβ0' : β * s'' = 0 := by rw [hs'0, mul_zero, zero_add] at hβ0; exact hβ0
+  have hs''0 : s'' = 0 := by
+    rcases mul_eq_zero.mp hβ0' with h | h
+    · exact absurd h hβ.ne'
+    · exact h
+  rw [hs'0] at hcv
+  rw [hs''0] at hdd
+  rw [zero_smul, add_zero] at hcv hdd
+  exact ⟨hcv, hdd⟩
+
+/-- 内点属于面则面吞整个 `p`（HOL `FACE_OF_DISJOINT_INTERIOR` 的内联核心；
+fan6/fan7 的关键共享件）。 -/
+private theorem face_eq_of_mem_interior {p f : Set V3}
+    (hsub : f ⊆ p)
+    (hface : ∀ c d y : V3, c ∈ p → d ∈ p → y ∈ f →
+      y ∈ openSegment ℝ c d → c ∈ f ∧ d ∈ f)
+    {x : V3} (hxf : x ∈ f) (hxi : x ∈ interior p) : p ⊆ f := by
+  obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.mp isOpen_interior x hxi
+  have hball' : Metric.ball x ε ⊆ p := fun y hy => interior_subset (hball hy)
+  intro a ha
+  rcases eq_or_ne a x with rfl | hax
+  · exact hxf
+  have hdne : x - a ≠ 0 := sub_ne_zero.mpr (Ne.symm hax)
+  have hune : ‖x - a‖ ≠ 0 := fun h => hdne (norm_eq_zero.mp h)
+  set t : ℝ := ε / 2 / ‖x - a‖ with htdef
+  have hnormpos : (0:ℝ) < ‖x - a‖ := lt_of_le_of_ne (norm_nonneg (x - a)) (Ne.symm hune)
+  have htp : 0 < t := by rw [htdef]; exact div_pos (by linarith) hnormpos
+  have htnorm : ‖t‖ = t := by
+    rw [htdef, Real.norm_eq_abs, abs_of_pos htp]
+  have hdistx : dist (x + t • (x - a)) x = ε / 2 := by
+    rw [dist_eq_norm, add_sub_cancel_left, norm_smul, htnorm, htdef]
+    field_simp
+  have hx'mem : x + t • (x - a) ∈ p := hball' (by
+    rw [Metric.mem_ball, hdistx]
+    linarith)
+  have htpos : (0:ℝ) < 1 + t := by linarith
+  have htne : (1:ℝ) + t ≠ 0 := ne_of_gt htpos
+  have hApos : (0:ℝ) < 1 / (1 + t) := div_pos one_pos htpos
+  have hBpos : (0:ℝ) < t / (1 + t) := div_pos htp htpos
+  have hA1 : (1/(1+t)) * (1 + t) = 1 := div_mul_cancel₀ _ htne
+  have hAT : (1/(1+t)) * t = t / (1 + t) := by field_simp
+  have hsum : (1/(1+t)) + (t/(1+t)) = 1 := by rw [← add_div, div_self htne]
+  have hmid : x = (1/(1+t)) • (x + t • (x - a)) + (t/(1+t)) • a := by
+    calc x = ((1/(1+t)) + (t/(1+t))) • x := by rw [hsum, one_smul]
+      _ = (1/(1+t)) • x + (t/(1+t)) • x := add_smul _ _ x
+      _ = (1/(1+t)) • x + (t/(1+t)) • (x - a) + (t/(1+t)) • a := by module
+      _ = (1/(1+t)) • (x + t • (x - a)) + (t/(1+t)) • a := by
+          rw [smul_add, smul_smul, hAT]
+  have hopen : x ∈ openSegment ℝ (x + t • (x - a)) a :=
+    ⟨1/(1+t), t/(1+t), hApos, hBpos, hsum, hmid.symm⟩
+  obtain ⟨-, haf⟩ := hface (x + t • (x - a)) a x hx'mem ha hxf hopen
+  exact haf
+
+/-- 内点不是极值点（HOL `EXTREME_POINT_NOT_IN_INTERIOR`；fan2 的内容）。 -/
+private theorem interior_not_extremePoint {p : Set V3} {z : V3} (hz : z ∈ interior p) :
+    z ∉ Set.extremePoints ℝ p := by
+  intro hze
+  obtain ⟨hzp, hze'⟩ := mem_extremePoints.mp hze
+  obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.mp isOpen_interior z hz
+  have hball' : Metric.ball z ε ⊆ p := fun y hy => interior_subset (hball hy)
+  obtain ⟨w1, w2, hw⟩ := exists_pair_ne (α := V3)
+  have hw0 : w1 - w2 ≠ 0 := sub_ne_zero.mpr hw
+  have hwn : ‖w1 - w2‖ ≠ 0 := fun h => hw0 (norm_eq_zero.mp h)
+  set t : ℝ := ε / (2 * ‖w1 - w2‖) with htdef
+  have htp : 0 < t := by
+    rw [htdef]
+    exact div_pos hε (by positivity)
+  have htnorm : ‖t‖ = t := by
+    rw [htdef, Real.norm_eq_abs, abs_of_pos htp]
+  have htw : ‖t • (w1 - w2)‖ = ε / 2 := by
+    rw [norm_smul, htnorm, htdef]
+    field_simp
+  have hz1 : z + t • (w1 - w2) ∈ p := hball' (by
+    rw [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left, htw]
+    linarith)
+  have hsub2 : (z - t • (w1 - w2)) - z = -(t • (w1 - w2)) := by module
+  have hz2 : z - t • (w1 - w2) ∈ p := hball' (by
+    rw [Metric.mem_ball, dist_eq_norm, hsub2, norm_neg, htw]
+    linarith)
+  have hmid : (1/2 : ℝ) • (z + t • (w1 - w2)) + (1/2 : ℝ) • (z - t • (w1 - w2)) = z := by
+    module
+  have hopen : z ∈ openSegment ℝ (z + t • (w1 - w2)) (z - t • (w1 - w2)) :=
+    ⟨1/2, 1/2, by norm_num, by norm_num, by norm_num, hmid⟩
+  obtain ⟨he1, he2⟩ := hze' (z + t • (w1 - w2)) hz1 (z - t • (w1 - w2)) hz2 hopen
+  have hteq : t • (w1 - w2) = 0 := by
+    have h := congrArg (fun q : V3 => q - z) he1
+    rw [add_sub_cancel_left, sub_self] at h
+    exact h
+  rcases smul_eq_zero.mp hteq with h | h
+  · exact absurd h htp.ne'
+  · exact absurd h hw0
+
 /-- HOL polyhedron.hl :342-513 `POLYHEDRON_FAN`
 
 HOL 原文：
@@ -882,6 +1048,17 @@ v ≠ w ∧ face_of 条件(内联)}`。
 要么重合要么交于端点并）+ `AFF_GE_0_CONVEX_HULL_ALT` 与
 `POLYHEDRON_COLLINEAR_FACES`。
 
+实施状态（本批）：
+- 合取项 (1) 由 `edgeFirstEndpoint_extreme` 覆盖；(2) 由
+  `finite_pair_card_two` 覆盖；(4) 由 `interior_not_extremePoint` 覆盖；
+  (3) 的非空部分由 `extremePoints_nonempty_of_polyhedron`（Krein–Milman）
+  覆盖；fan6/fan7 共享件 `face_eq_of_mem_interior` 已证。
+- 仍缺（上游 HOL Light 引理未移植、Mathlib 亦无）：
+  `FINITE_POLYHEDRON_EXTREME_POINTS`（有界多面体极值点有限，fan1 之
+  `V.Finite`）、`POLYHEDRON_COLLINEAR_FACES`/`SUBSET_OF_FACE_OF`
+  （fan7 的两段相交引理）、`AFF_GE_0_CONVEX_HULL_ALT`（锥的凸包刻画，
+  需平移到一般基点 z）——fan6/fan7 的收尾依赖它们。
+
 候选已有引理：
 - `FAN`、`fan1`、`fan2`、`fan6`、`fan7`、`Graph`（Kepler/Text/Fan.lean:37-56）
 - `Set.extremePoints`、`mem_extremePoints`（Mathlib Analysis/Convex/Extreme.lean:68,133）
@@ -899,7 +1076,39 @@ theorem POLYHEDRON_FAN {p : Set V3} {z : V3} (hb : Bornology.IsBounded p)
         segment ℝ v w ⊆ p ∧ Convex ℝ (segment ℝ v w) ∧
         ∀ c d y : V3, c ∈ p → d ∈ p → y ∈ segment ℝ v w →
           y ∈ openSegment ℝ c d → c ∈ segment ℝ v w ∧ d ∈ segment ℝ v w} := by
-  sorry
+  refine ⟨?_, ?_, ⟨?_, ?_⟩, ?_, ?_, ?_⟩
+  · -- 合取项 1：`⋃₀ E ⊆ extremePoints p`（边端点是极值点）
+    intro x hx
+    obtain ⟨e, he, hxe⟩ := Set.mem_sUnion.mp hx
+    obtain ⟨v, w, rfl, hvw, hsub, -, hface⟩ := he
+    have hface' : ∀ c d y : V3, c ∈ p → d ∈ p → y ∈ segment ℝ w v →
+          y ∈ openSegment ℝ c d → c ∈ segment ℝ w v ∧ d ∈ segment ℝ w v := by
+      intro c d y hc hd hy hopen
+      rw [segment_symm] at hy ⊢
+      exact hface c d y hc hd hy hopen
+    have hsub' : segment ℝ w v ⊆ p := by rw [segment_symm]; exact hsub
+    have hkeyv := edgeFirstEndpoint_extreme hvw hsub hface
+    have hkeyw := edgeFirstEndpoint_extreme (Ne.symm hvw) hsub' hface'
+    rcases Set.mem_insert_iff.mp hxe with hxe' | hx'
+    · rw [hxe']
+      exact hkeyv
+    · rw [Set.mem_singleton_iff.mp hx']
+      exact hkeyw
+  · -- 合取项 2：`Graph E`（`{v,w}` 基数 2）
+    intro e he
+    obtain ⟨v, w, rfl, hvw, -, -, -⟩ := he
+    exact finite_pair_card_two hvw
+  · -- 合取项 3 前半：`extremePoints p` 有限 —— 阻塞（缺
+    -- `FINITE_POLYHEDRON_EXTREME_POINTS`，上游 HOL Light 未移植）
+    sorry
+  · -- 合取项 3 后半：`extremePoints p` 非空（Krein–Milman）
+    exact Set.nonempty_iff_ne_empty.mp
+      (extremePoints_nonempty_of_polyhedron hp hb (interior_subset hz))
+  · -- 合取项 4：`fan2`（内点非极值点）
+    exact interior_not_extremePoint hz
+  -- 合取项 5/6（`fan6`/`fan7`）—— 阻塞：缺 `POLYHEDRON_COLLINEAR_FACES`、
+  -- `SUBSET_OF_FACE_OF`、`AFF_GE_0_CONVEX_HULL_ALT` 的 z-平移版
+  all_goals sorry
 
 /-! ## 相对内部的凸性（polyhedron.hl:514-569，Truong 添加部分） -/
 
@@ -927,11 +1136,44 @@ private theorem convex_intrinsicInterior {s : Set V3} (hs : Convex ℝ s) :
   · subst h
     simp only [intrinsicInterior_empty]
     exact convex_empty
-  · -- 阻塞：需证明 ↥(affineSpan ℝ s) 上的 interior (subtype ⁻¹' s) 的凸性。
-    -- ↥(affineSpan ℝ s) 只是 torsor（非 module），`Convex.affine_preimage` 的
-    -- source-instance 无法合成；Mathlib 自身 `Set.Nonempty.intrinsicInterior`
-    -- 用 `AffineIsometryEquiv.constVSub` 做了 V3-传输，但仅得到非空性。
-    sorry
+  · obtain ⟨p0, hp0⟩ := h
+    set p' : affineSpan ℝ s := ⟨p0, subset_affineSpan ℝ s hp0⟩ with _hp'def
+    haveI : Nonempty (affineSpan ℝ s) := ⟨p'⟩
+    set e := AffineIsometryEquiv.constVSub ℝ p' with _hedef
+    obtain ⟨g, hgdef⟩ : ∃ g : (affineSpan ℝ s).direction →ᵃ[ℝ] V3,
+        g = (affineSpan ℝ s).subtype.comp e.symm.toAffineEquiv.toAffineMap := ⟨_, rfl⟩
+    have hgcoe : ∀ w : (affineSpan ℝ s).direction, g w = ((e.symm w : affineSpan ℝ s) : V3) := by
+      intro w
+      rw [hgdef]
+      rfl
+    have hAE : e.toHomeomorph '' ((↑) ⁻¹' s : Set (affineSpan ℝ s)) = g ⁻¹' s := by
+      ext w
+      simp only [Set.mem_image, Set.mem_preimage, AffineIsometryEquiv.coe_toHomeomorph]
+      constructor
+      · rintro ⟨y, hy, rfl⟩
+        rw [hgcoe, e.symm_apply_apply]
+        exact hy
+      · intro hgw
+        rw [hgcoe] at hgw
+        refine ⟨e.symm w, hgw, ?_⟩
+        simp
+    have hII : intrinsicInterior ℝ s = g '' interior (g ⁻¹' s) := by
+      ext z
+      rw [mem_intrinsicInterior, Set.mem_image]
+      constructor
+      · rintro ⟨y, hy, rfl⟩
+        refine ⟨e y, ?_, ?_⟩
+        · rw [← hAE,
+            ← Homeomorph.image_interior e.toHomeomorph ((↑) ⁻¹' s : Set (affineSpan ℝ s))]
+          exact ⟨y, hy, rfl⟩
+        · rw [hgcoe, e.symm_apply_apply]
+      · rintro ⟨w, hw, rfl⟩
+        rw [← hAE,
+          ← Homeomorph.image_interior e.toHomeomorph ((↑) ⁻¹' s : Set (affineSpan ℝ s))] at hw
+        obtain ⟨u, hu, rfl⟩ := hw
+        exact ⟨u, hu, by rw [hgcoe, AffineIsometryEquiv.coe_toHomeomorph, e.symm_apply_apply]⟩
+    rw [hII]
+    exact ((hs.affine_preimage g).interior).affine_image g
 
 
 /-- HOL polyhedron.hl :514-516 `CONVEX_RELATIVE_INTERIOR`
