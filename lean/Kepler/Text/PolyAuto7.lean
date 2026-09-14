@@ -166,6 +166,186 @@ def edges_p7 (p : Set V3) : Set (Set V3) :=
     ∀ c d y : V3, c ∈ p → d ∈ p → y ∈ segment ℝ v w →
       y ∈ openSegment ℝ c d → c ∈ segment ℝ v w ∧ d ∈ segment ℝ v w}
 
+/-! ## 填充辅助（session 1）：紧凸共线集为段（HOL COMPACT_CONVEX_COLLINEAR_SEGMENT
+的 Mathlib 重建；供 EXPAND_EDGE_POLYTOPE 与 FLVNSME 阶段 6 共用） -/
+
+/-- `vectorSpan ℝ {a, b} = ℝ ∙ (b - a)`（Mathlib 无现成对偶引理）。 -/
+private theorem vectorSpan_pair_p7 (a b : V3) :
+    vectorSpan ℝ {a, b} = ℝ ∙ (b - a) := by
+  apply le_antisymm
+  · rw [vectorSpan_def, Submodule.span_le]
+    intro z hz
+    rw [Set.mem_vsub] at hz
+    obtain ⟨x, hx, y, hy, rfl⟩ := hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx hy
+    rcases hx with rfl | rfl <;> rcases hy with rfl | rfl
+    · rw [vsub_self]
+      exact Submodule.zero_mem _
+    · refine Submodule.mem_span_singleton.2 ⟨-1, ?_⟩
+      rw [neg_one_smul, vsub_eq_sub]
+      module
+    · refine Submodule.mem_span_singleton.2 ⟨1, ?_⟩
+      rw [one_smul, vsub_eq_sub]
+    · rw [vsub_self]
+      exact Submodule.zero_mem _
+  · rw [Submodule.span_le]
+    intro z hz
+    simp only [Set.mem_singleton_iff] at hz
+    subst hz
+    have h := vsub_rev_mem_vectorSpan_pair ℝ a b
+    rw [vsub_eq_sub] at h
+    exact SetLike.mem_coe.2 h
+
+/-- 直线 `affineSpan ℝ {a, b}` 的显式参数化。 -/
+private theorem mem_affineSpan_pair_p7 {a b x : V3} :
+    x ∈ (affineSpan ℝ {a, b} : Set V3) ↔ ∃ t : ℝ, x = a + t • (b - a) := by
+  constructor
+  · intro hx
+    have ha : a ∈ (affineSpan ℝ {a, b} : Set V3) :=
+      subset_affineSpan ℝ {a, b} (Set.mem_insert a {b})
+    have hxa : (x - a) + a ∈ (affineSpan ℝ {a, b} : Set V3) := by
+      rw [show (x - a) + a = x from by abel]
+      exact hx
+    have hx2 : x - a ∈ (affineSpan ℝ {a, b}).direction :=
+      (AffineSubspace.vadd_mem_iff_mem_direction (v := x - a) (p := a) ha).1 hxa
+    rw [direction_affineSpan, vectorSpan_pair_p7] at hx2
+    obtain ⟨t, ht⟩ := Submodule.mem_span_singleton.1 hx2
+    refine ⟨t, ?_⟩
+    rw [show x = (x - a) + a from by abel, ht]
+    abel
+  · rintro ⟨t, rfl⟩
+    have ha : a ∈ (affineSpan ℝ {a, b} : Set V3) :=
+      subset_affineSpan ℝ {a, b} (Set.mem_insert a {b})
+    have h2 : t • (b - a) ∈ (affineSpan ℝ {a, b}).direction := by
+      rw [direction_affineSpan, vectorSpan_pair_p7]
+      exact Submodule.mem_span_singleton.2 ⟨t, rfl⟩
+    have hmem : t • (b - a) + a ∈ (affineSpan ℝ {a, b} : Set V3) :=
+      (AffineSubspace.vadd_mem_iff_mem_direction
+        (v := t • (b - a)) (p := a) ha).2 h2
+    rw [add_comm] at hmem
+    exact hmem
+
+/-- 仿射参数化直线的区间像是段（仿射重参数化；t1 = t2 退化情形单独处理）。 -/
+private theorem image_Icc_eq_segment_p7 (a e : V3) {t1 t2 : ℝ} (hle : t1 ≤ t2) :
+    (fun t : ℝ => a + t • e) '' Set.Icc t1 t2 =
+      segment ℝ (a + t1 • e) (a + t2 • e) := by
+  rw [segment_eq_image_lineMap]
+  refine Set.ext fun x => ?_
+  by_cases h12 : t1 = t2
+  · subst h12
+    rw [Set.Icc_self, Set.image_singleton]
+    constructor
+    · intro hx
+      refine ⟨0, Set.mem_Icc.mpr ⟨by norm_num, by norm_num⟩, ?_⟩
+      rw [AffineMap.lineMap_same_apply]
+      exact hx.symm
+    · intro hx
+      obtain ⟨lam, -, hlx⟩ := hx
+      rw [AffineMap.lineMap_same_apply] at hlx
+      rw [Set.mem_singleton_iff.2 hlx.symm]
+      exact Set.mem_singleton _
+  · have hpos : 0 < t2 - t1 := sub_pos.mpr (lt_of_le_of_ne hle h12)
+    have hlamIcc : ∀ t ∈ Set.Icc t1 t2, (t - t1) / (t2 - t1) ∈ Set.Icc (0:ℝ) 1 := by
+      intro t ht
+      obtain ⟨ht1, ht2⟩ := ht
+      exact ⟨div_nonneg (by linarith) hpos.le, (div_le_one hpos).2 (by linarith)⟩
+    have hlammul : ∀ t : ℝ, (t - t1) / (t2 - t1) * (t2 - t1) = t - t1 :=
+      fun t => by field_simp
+    have hsub2 : a + t2 • e - (a + t1 • e) = (t2 - t1) • e := by
+      module
+    constructor
+    · rintro ⟨t, ht, rfl⟩
+      refine ⟨(t - t1) / (t2 - t1), hlamIcc t ht, ?_⟩
+      rw [AffineMap.lineMap_apply, vadd_eq_add, vsub_eq_sub, hsub2, smul_smul,
+        hlammul t]
+      module
+    · rintro ⟨lam, hlamI, rfl⟩
+      refine ⟨t1 + lam * (t2 - t1), ?_, ?_⟩
+      · constructor
+        · nlinarith [(Set.mem_Icc.mp hlamI).1, hle]
+        · nlinarith [(Set.mem_Icc.mp hlamI).2, hle]
+      · rw [AffineMap.lineMap_apply, vadd_eq_add, vsub_eq_sub, hsub2, smul_smul]
+        module
+
+/-- 紧凸共线集是（可退化）段（HOL `COMPACT_CONVEX_COLLINEAR_SEGMENT`，
+polytope.ml）。非空性必须显式（空集无端点）。 -/
+private theorem compact_convex_subset_line {s : Set V3} (hcomp : IsCompact s)
+    (hconv : Convex ℝ s) (hne : s.Nonempty) {a b : V3} (hab : a ≠ b)
+    (hsub : s ⊆ affineSpan ℝ {a, b}) : ∃ c d, s = segment ℝ c d := by
+  classical
+  set e : V3 := b - a with he
+  set F : ℝ → V3 := fun t => a + t • e with hFdef
+  have he0 : e ≠ 0 := sub_ne_zero.mpr (Ne.symm hab)
+  have hFcont : Continuous F := by fun_prop
+  set T : Set ℝ := F ⁻¹' s with hTdef
+  have hmemT : ∀ t : ℝ, F t ∈ s ↔ t ∈ T := fun _ => Iff.rfl
+  have hpre : ∀ x ∈ s, ∃ t : ℝ, F t = x ∧ t ∈ T := by
+    intro x hx
+    obtain ⟨t, ht⟩ := mem_affineSpan_pair_p7.1 (hsub hx)
+    refine ⟨t, ht.symm, ?_⟩
+    have hx2 : F t ∈ s := by
+      rw [show F t = x from ht.symm]
+      exact hx
+    exact (hmemT t).mpr hx2
+  have hsFT : s = F '' T := by
+    refine Set.ext fun x => ?_
+    constructor
+    · intro hx
+      obtain ⟨t, ht1, ht2⟩ := hpre x hx
+      exact ⟨t, ht2, ht1⟩
+    · rintro ⟨t, ht, rfl⟩
+      exact (hmemT t).mp ht
+  have hTne : T.Nonempty := by
+    obtain ⟨x, hx⟩ := hne
+    obtain ⟨t, -, ht2⟩ := hpre x hx
+    exact ⟨t, ht2⟩
+  have hTconv : Convex ℝ T := by
+    intro u hu v hv α β hα hβ hab
+    refine (hmemT _).mpr ?_
+    have key : α • F u + β • F v = F (α * u + β * v) := by
+      have e1 : α • a + β • a = a := by rw [← add_smul, hab, one_smul]
+      have e2 : (α * u) • e + (β * v) • e = (α * u + β * v) • e := by
+        rw [← add_smul]
+      simp only [hFdef, smul_add, smul_smul, add_assoc, add_left_comm,
+        ← add_smul, hab, one_smul]
+      rw [← add_assoc, ← add_smul, hab, one_smul]
+    have hmem' : α • F u + β • F v ∈ s :=
+      hconv ((hmemT u).mp hu) ((hmemT v).mp hv) hα hβ hab
+    rwa [key] at hmem'
+  have hTclosed : IsClosed T := (hcomp.isClosed).preimage hFcont
+  have hTbd : Bornology.IsBounded T := by
+    obtain ⟨R, hR⟩ := (Metric.isBounded_iff_subset_ball (0 : V3)).mp hcomp.isBounded
+    rw [Metric.isBounded_iff_subset_ball (0 : ℝ)]
+    refine ⟨(R + ‖a‖) / ‖e‖ + 1, fun t ht => ?_⟩
+    have hFts : F t ∈ s := (hmemT t).mp ht
+    have h1 : ‖F t‖ < R := by
+      have h1' := Metric.mem_ball.1 (hR hFts)
+      rwa [dist_zero_right] at h1'
+    have hpos' : 0 < ‖e‖ := norm_pos_iff.mpr he0
+    have h2 : ‖F t - a‖ ≤ ‖F t‖ + ‖a‖ := norm_sub_le _ _
+    have h3 : ‖F t - a‖ = |t| * ‖e‖ := by
+      simp only [hFdef, add_sub_cancel_left, norm_smul, Real.norm_eq_abs]
+    have h5 : |t| * ‖e‖ < R + ‖a‖ := by rw [h3.symm]; linarith
+    rw [Metric.mem_ball, dist_zero_right, Real.norm_eq_abs]
+    have h6 : |t| ≤ (R + ‖a‖) / ‖e‖ := by
+      rw [le_div_iff₀ hpos']
+      linarith
+    linarith
+  have hTcomp : IsCompact T := Metric.isCompact_of_isClosed_isBounded hTclosed hTbd
+  obtain ⟨t1, h1T, h1min⟩ := hTcomp.exists_isMinOn hTne continuousOn_id
+  obtain ⟨t2, h2T, h2max⟩ := hTcomp.exists_isMaxOn hTne continuousOn_id
+  have hle : t1 ≤ t2 := h1min h2T
+  have hTIcc : ∀ t ∈ T, t ∈ Set.Icc t1 t2 := fun t ht => ⟨h1min ht, h2max ht⟩
+  have hIccT : ∀ t ∈ Set.Icc t1 t2, t ∈ T := by
+    intro t ht
+    rw [← segment_eq_Icc hle, segment_eq_image_lineMap] at ht
+    obtain ⟨lam, hlamI, rfl⟩ := ht
+    exact hTconv.lineMap_mem h1T h2T hlamI
+  have hTeq : T = Set.Icc t1 t2 :=
+    Set.ext fun t => ⟨fun ht => hTIcc t ht, fun ht => hIccT t ht⟩
+  refine ⟨F t1, F t2, ?_⟩
+  rw [hsFT, hTeq, image_Icc_eq_segment_p7 a e hle]
+
 /-- HOL polyhedron.hl :1893-:1930 `EXPAND_EDGE_POLYTOPE`
 
 HOL 原文（对 `real^N` 一般陈述；本 lane 按仓库惯例特化到 `V3`）：
@@ -202,7 +382,99 @@ theorem EXPAND_EDGE_POLYTOPE {f p : Set V3}
     (hp : ∃ t : Set V3, t.Finite ∧ p = convexHull ℝ t)
     (hf : FaceOf_p7 f p) (hdim : affDim_p7 f = 1) :
     ∃ a b : V3, f = segment ℝ a b := by
-  sorry
+  classical
+  obtain ⟨t, htfin, hpt⟩ := hp
+  have hfconv : Convex ℝ f := hf.2.1
+  -- p 凸、紧（多胞形）
+  have hpconv : Convex ℝ p := by rw [hpt]; exact convex_convexHull ℝ t
+  have hpcomp : IsCompact p := by rw [hpt]; exact htfin.isCompact_convexHull ℝ
+  -- f 非空（否则维数 -1）
+  have hfne : f ≠ ∅ := by
+    intro h
+    have h1 : affDim f = 1 := hdim
+    rw [h, affDim_empty] at h1
+    omega
+  -- 维数 1 → vectorSpan 一维
+  have hfvr : Module.finrank ℝ (vectorSpan ℝ f) = 1 := by
+    have h1 : affDim f = 1 := hdim
+    simp only [affDim, if_neg hfne] at h1
+    exact_mod_cast h1
+  have hnebot : vectorSpan ℝ f ≠ ⊥ := by
+    intro h
+    rw [h, finrank_bot] at hfvr
+    omega
+  -- 取方向向量 d ≠ 0
+  obtain ⟨d, hd, hd0⟩ : ∃ d : V3, d ∈ vectorSpan ℝ f ∧ d ≠ 0 := by
+    by_contra hcon
+    push_neg at hcon
+    exact hnebot ((Submodule.eq_bot_iff _).2 hcon)
+  have h1 : (ℝ ∙ d : Submodule ℝ V3) ≤ vectorSpan ℝ f :=
+    Submodule.span_le.mpr (Set.singleton_subset_iff.mpr hd)
+  have h2 : Module.finrank ℝ (ℝ ∙ d : Submodule ℝ V3) = 1 :=
+    finrank_span_singleton hd0
+  have hspan : (ℝ ∙ d : Submodule ℝ V3) = vectorSpan ℝ f :=
+    Submodule.eq_of_le_of_finrank_eq h1 (by rw [h2, hfvr])
+  -- f 闭（面 = affineSpan f ∩ p）→ 紧
+  have haffclosed : IsClosed (affineSpan ℝ f : Set V3) := by
+    obtain ⟨q, hq⟩ := Set.nonempty_iff_ne_empty.mpr hfne
+    have hqaff : q ∈ (affineSpan ℝ f : Set V3) := subset_affineSpan ℝ f hq
+    have hsetEq : (affineSpan ℝ f : Set V3) =
+        (fun w : V3 => w - q) ⁻¹' ((affineSpan ℝ f).direction : Set V3) := by
+      ext w
+      rw [Set.mem_preimage]
+      refine ⟨fun hw => ?_, fun hd' => ?_⟩
+      · refine (AffineSubspace.vadd_mem_iff_mem_direction (v := w - q) (p := q) hqaff).1 ?_
+        rw [vadd_eq_add, sub_add_cancel]
+        exact hw
+      · rw [SetLike.mem_coe] at hd'
+        rw [← AffineSubspace.vadd_mem_iff_mem_direction (v := w - q) (p := q) hqaff] at hd'
+        rw [vadd_eq_add, sub_add_cancel] at hd'
+        exact hd'
+    rw [hsetEq]
+    exact IsClosed.preimage (continuous_sub_right q)
+      (Submodule.closed_of_finiteDimensional _)
+  have hfclosed : IsClosed f := by
+    have hfeq : f = (affineSpan ℝ f : Set V3) ∩ p := by
+      refine Set.ext fun x => ?_
+      constructor
+      · intro hx
+        exact ⟨subset_affineSpan ℝ f hx, hf.1 hx⟩
+      · rintro ⟨hxaff, hxp⟩
+        exact faceOf_eq_affineInter hpconv hf ⟨hxaff, hxp⟩
+    rw [hfeq]
+    exact haffclosed.inter hpcomp.isClosed
+  have hfcomp : IsCompact f :=
+    Metric.isCompact_of_isClosed_isBounded hfclosed (hpcomp.isBounded.subset hf.1)
+  -- KM 链：extremePoints f ⊆ extremePoints p ⊆ t ⇒ 有限（与 EXISTS_EDGE_AT_VERTICES
+  -- 同构；末段用紧凸性直接下潜，此链作为 f 多胞形性的见证保留）
+  have hfext : (Set.extremePoints ℝ f).Finite := by
+    have h1 : Set.extremePoints ℝ f ⊆ Set.extremePoints ℝ p :=
+      fun x hx => faceOf_sing.1 (FaceOf.trans (faceOf_sing.2 hx) hf)
+    have h2 : Set.extremePoints ℝ p ⊆ t := by
+      intro y hy
+      rw [hpt] at hy
+      exact extremePoints_convexHull_subset hy
+    exact Set.Finite.subset htfin fun x hx => h2 (h1 hx)
+  -- 共线：vectorSpan 一维 ⇒ f ⊆ affineSpan {a, a + d}
+  obtain ⟨a, ha⟩ := Set.nonempty_iff_ne_empty.mpr hfne
+  have hab : a ≠ a + d := by
+    intro h
+    have h2 : d = 0 := by
+      have h3 := congrArg (fun z : V3 => z - a) h
+      rw [sub_self, add_sub_cancel_left] at h3
+      exact h3.symm
+    exact hd0 h2
+  have hsubline : f ⊆ affineSpan ℝ {a, a + d} := by
+    intro x hx
+    have hxv : x - a ∈ vectorSpan ℝ f := vsub_mem_vectorSpan ℝ hx ha
+    rw [← hspan] at hxv
+    obtain ⟨t, ht⟩ := Submodule.mem_span_singleton.1 hxv
+    rw [mem_affineSpan_pair_p7]
+    refine ⟨t, ?_⟩
+    rw [show (a + d) - a = d from by rw [add_sub_cancel_left], ht]
+    abel
+  exact compact_convex_subset_line hfcomp hfconv
+    (Set.nonempty_iff_ne_empty.mpr hfne) hab hsubline
 
 /-! ## 批 6 诚实核心（polyhedron.hl :1315-:1821，面向 `_p7` 编码就地重建）
 
@@ -1201,6 +1473,334 @@ theorem EXISTS_EDGE_AT_VERTICES {p : Set V3} (hb : Bornology.IsBounded p)
   · rw [heq]
     refine Set.nonempty_iff_ne_empty.mp ⟨a, ?_, haV⟩
     exact heE2
+
+/-! ## 填充辅助（session 1）：FLVNSME 阶段 0-3 的通用事实 -/
+
+/-- V3 点积第二变元的加法性（Polytope.lean 私有 `dot_add` 的就地重述）。 -/
+private theorem p7_dot_add (a x y : V3) : a ⬝ᵥ (x + y) = a ⬝ᵥ x + a ⬝ᵥ y := by
+  show a.ofLp ⬝ᵥ (x.ofLp + y.ofLp) = a.ofLp ⬝ᵥ x.ofLp + a.ofLp ⬝ᵥ y.ofLp
+  rw [dotProduct_add]
+
+/-- V3 点积第二变元的齐次性（Polytope.lean 私有 `dot_smul` 的就地重述）。 -/
+private theorem p7_dot_smul (a : V3) (r : ℝ) (x : V3) : a ⬝ᵥ (r • x) = r * (a ⬝ᵥ x) := by
+  show a.ofLp ⬝ᵥ (r • x.ofLp) = (RingHom.id ℝ) r • (a.ofLp ⬝ᵥ x.ofLp)
+  rw [dotProduct_smul, RingHom.id_apply, smul_eq_mul]
+
+/-- 支撑超平面切片是面（HOL `FACE_OF_INTER_SUPPORTING_HYPERPLANE`；Polytope.lean
+私有 `faceOf_hyperplane_slice` 的显式参数重述，供 P4-P6 下潜用）。 -/
+private theorem faceOf_hyperplane_slice {s : Set V3} (hconv : Convex ℝ s) (a : V3) (c : ℝ)
+    (hsub : s ⊆ {x : V3 | a ⬝ᵥ x ≤ c}) : FaceOf (s ∩ {x : V3 | a ⬝ᵥ x = c}) s := by
+  have hcvxH : Convex ℝ {x : V3 | a ⬝ᵥ x = c} := by
+    intro x hx y hy u v hu hv hab
+    simp only [Set.mem_setOf_eq] at hx hy ⊢
+    have h : a ⬝ᵥ (u • x + v • y) = u * (a ⬝ᵥ x) + v * (a ⬝ᵥ y) := by
+      rw [p7_dot_add, p7_dot_smul, p7_dot_smul]
+    rw [WithLp.ofLp_add, WithLp.ofLp_smul, WithLp.ofLp_smul, h, hx, hy]
+    have h3 : u * c + v * c = c := by
+      have h4 : (u + v) * c = c := by rw [hab, one_mul]
+      rwa [add_mul] at h4
+    exact h3
+  refine ⟨Set.inter_subset_left, hconv.inter hcvxH, ?_⟩
+  intro u v x hu hv hx hseg
+  obtain ⟨l, m, hl, hm, hlm, hxe⟩ := hseg
+  have hxe' : l • u.ofLp + m • v.ofLp = x.ofLp :=
+    congrArg (fun z : V3 => z.ofLp) hxe
+  have hu0 : a ⬝ᵥ u ≤ c := hsub hu
+  have hv0 : a ⬝ᵥ v ≤ c := hsub hv
+  have hkey : a ⬝ᵥ (l • u + m • v) = l * (a ⬝ᵥ u) + m * (a ⬝ᵥ v) := by
+    rw [p7_dot_add, p7_dot_smul, p7_dot_smul]
+  have hx0 : a.ofLp ⬝ᵥ (l • u.ofLp + m • v.ofLp) = c := by
+    rw [hxe']
+    exact hx.2
+  rw [hkey] at hx0
+  have hcom : l * (a ⬝ᵥ u) + m * (a ⬝ᵥ v) = l * c + m * c := by
+    rw [← add_mul, hlm, one_mul]
+    exact hx0
+  have h1 : l * (a ⬝ᵥ u) ≤ l * c := mul_le_mul_of_nonneg_left hu0 hl.le
+  have h2 : m * (a ⬝ᵥ v) ≤ m * c := mul_le_mul_of_nonneg_left hv0 hm.le
+  have hu' : a ⬝ᵥ u = c := mul_left_cancel₀ hl.ne' (by linarith)
+  have hv' : a ⬝ᵥ v = c := mul_left_cancel₀ hm.ne' (by linarith)
+  exact ⟨⟨hu, hu'⟩, ⟨hv, hv'⟩⟩
+
+/-- 极点不在拓扩内部（HOL `EXTREME_POINT_NOT_IN_INTERIOR`）。 -/
+private theorem extremePoint_not_mem_interior {s : Set V3} {x : V3}
+    (hx : x ∈ Set.extremePoints ℝ s) : x ∉ interior s := by
+  intro hint
+  obtain ⟨ε, hε0, hball⟩ := Metric.isOpen_iff.1 isOpen_interior x hint
+  set u : V3 := EuclideanSpace.single (0 : Fin 3) (1:ℝ) with hu
+  have hu1 : ‖u‖ = 1 := by
+    rw [hu]
+    simp [PiLp.norm_single]
+  have hu0 : u ≠ 0 := by
+    intro h
+    rw [h] at hu1
+    norm_num at hu1
+  set δ := ε / 2 with hδdef
+  have hδ0 : 0 < δ := by linarith
+  have hyb : x + δ • u ∈ Metric.ball x ε := by
+    rw [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left, norm_smul, Real.norm_eq_abs,
+      abs_of_pos hδ0, hδdef, hu1, mul_one]
+    linarith
+  have hy : x + δ • u ∈ s := interior_subset (hball hyb)
+  have hzb : x - δ • u ∈ Metric.ball x ε := by
+    rw [Metric.mem_ball, dist_eq_norm, show x - δ • u - x = -(δ • u) from by abel,
+      norm_neg, norm_smul, Real.norm_eq_abs, abs_of_pos hδ0, hδdef, hu1, mul_one]
+    linarith
+  have hz : x - δ • u ∈ s := interior_subset (hball hzb)
+  have hxm : x ∈ segment ℝ (x + δ • u) (x - δ • u) := by
+    apply openSegment_subset_segment
+    refine ⟨1 / 2, 1 / 2, ?_, ?_, ?_, ?_⟩
+    · norm_num
+    · norm_num
+    · norm_num
+    · rw [smul_add, smul_sub]
+      module
+  rcases (mem_extremePoints_iff_forall_segment.1 hx).2 (x + δ • u) hy
+    (x - δ • u) hz hxm with heq | heq
+  · have h1 : (x + δ • u) - x = 0 := by rw [heq, sub_self]
+    rw [add_sub_cancel_left] at h1
+    exact hu0 (smul_right_injective _ hδ0.ne' (h1.trans (smul_zero δ).symm))
+  · have h1 : (x - δ • u) - x = -( δ • u) := by abel
+    rw [heq, sub_self] at h1
+    exact hu0 (smul_right_injective _ hδ0.ne'
+      ((neg_eq_zero.mp h1.symm).trans (smul_zero δ).symm))
+
+/-- 紧凸凸集与 aff_ge 射线的交是自顶点出发的段（HOL
+`HALFLINE_INTER_COMPACT_SEGMENT` 的 V3 移植；供 FLVNSME 阶段 6 用）。 -/
+private theorem affGe_inter_compact_segment {s : Set V3} (hcomp : IsCompact s)
+    (hconv : Convex ℝ s) {v w : V3} (hv : v ∈ s) :
+    ∃ c, s ∩ affGe {v} {w} = segment ℝ v c := by
+  classical
+  by_cases hvw : v = w
+  · subst hvw
+    refine ⟨v, ?_⟩
+    have haff : (affGe {v} {v} : Set V3) = {v} := by
+      apply Set.ext fun y => ?_
+      constructor
+      · rintro ⟨f, hfin, hsum, -, hone⟩
+        have hsub : hfin.toFinset = {v} := by
+          rw [Finset.eq_singleton_iff_unique_mem]
+          refine ⟨by simp, fun z hz => ?_⟩
+          have h2 : z ∈ ({v} ∪ {v} : Set V3) := hfin.mem_toFinset.mp hz
+          simp at h2
+          exact h2
+        simp only [hsub, Finset.sum_singleton] at hsum hone
+        rw [hone, one_smul] at hsum
+        exact Set.mem_singleton_iff.2 hsum
+      · intro hy
+        rw [Set.mem_singleton_iff] at hy
+        rw [hy]
+        have hfin : ({v} ∪ {v} : Set V3).Finite :=
+          (Set.finite_singleton v).union (Set.finite_singleton v)
+        have hsub : hfin.toFinset = {v} := by
+          rw [Finset.eq_singleton_iff_unique_mem]
+          refine ⟨by simp, fun z hz => ?_⟩
+          have h2 : z ∈ ({v} ∪ {v} : Set V3) := hfin.mem_toFinset.mp hz
+          simp at h2
+          exact h2
+        refine ⟨fun _ => (1:ℝ), hfin, ?_, ?_, ?_⟩
+        · rw [hsub]; simp
+        · intro z _; norm_num
+        · rw [hsub]; simp
+    rw [haff]
+    have h2 : s ∩ {v} = {v} := by
+      ext y
+      simp only [Set.mem_inter_iff, Set.mem_singleton_iff]
+      exact ⟨fun h => h.2, fun h => ⟨h ▸ hv, h⟩⟩
+    rw [h2, segment_same]
+  · set e : V3 := w - v with he
+    set F : ℝ → V3 := fun t => v + t • e with hFdef
+    have he0 : e ≠ 0 := sub_ne_zero.mpr (fun h : w = v => hvw h.symm)
+    have hFcont : Continuous F := by fun_prop
+    set T : Set ℝ := F ⁻¹' s with hTdef
+    have hmemT : ∀ t : ℝ, F t ∈ s ↔ t ∈ T := fun _ => Iff.rfl
+    have h0T : 0 ∈ T := by
+      have hF0 : F 0 ∈ s := by
+        have : F 0 = v := by simp [hFdef]
+        rw [this]; exact hv
+      exact (hmemT 0).mpr hF0
+    have hTconv : Convex ℝ T := by
+      intro u1 hu1 u2 hu2 α β hα hβ hab
+      refine (hmemT _).mpr ?_
+      have key : α • F u1 + β • F u2 = F (α * u1 + β * u2) := by
+        simp only [hFdef, smul_add, smul_smul, add_assoc, add_left_comm,
+          ← add_smul, hab, one_smul]
+        rw [← add_assoc, ← add_smul, hab, one_smul]
+      have hmem' : α • F u1 + β • F u2 ∈ s :=
+        hconv ((hmemT u1).mp hu1) ((hmemT u2).mp hu2) hα hβ hab
+      rwa [key] at hmem'
+    have hTclosed : IsClosed T := (hcomp.isClosed).preimage hFcont
+    have hTbd : Bornology.IsBounded T := by
+      obtain ⟨R, hR⟩ := (Metric.isBounded_iff_subset_ball (0 : V3)).mp hcomp.isBounded
+      rw [Metric.isBounded_iff_subset_ball (0 : ℝ)]
+      refine ⟨(R + ‖v‖) / ‖e‖ + 1, fun t ht => ?_⟩
+      have hFts : F t ∈ s := (hmemT t).mp ht
+      have h1 : ‖F t‖ < R := by
+        have h1' := Metric.mem_ball.1 (hR hFts)
+        rwa [dist_zero_right] at h1'
+      have hpos' : 0 < ‖e‖ := norm_pos_iff.mpr he0
+      have h2 : ‖F t - v‖ ≤ ‖F t‖ + ‖v‖ := norm_sub_le _ _
+      have h3 : ‖F t - v‖ = |t| * ‖e‖ := by
+        simp only [hFdef, add_sub_cancel_left, norm_smul, Real.norm_eq_abs]
+      have h5 : |t| * ‖e‖ < R + ‖v‖ := by rw [h3.symm]; linarith
+      rw [Metric.mem_ball, dist_zero_right, Real.norm_eq_abs]
+      have h6 : |t| ≤ (R + ‖v‖) / ‖e‖ := by
+        rw [le_div_iff₀ hpos']
+        linarith
+      linarith
+    have hTcomp : IsCompact T := Metric.isCompact_of_isClosed_isBounded hTclosed hTbd
+    have hTne : T.Nonempty := ⟨0, h0T⟩
+    obtain ⟨t2, h2T, h2max⟩ := hTcomp.exists_isMaxOn hTne continuousOn_id
+    have ht20 : (0:ℝ) ≤ t2 := h2max h0T
+    have h0T' : 0 ∈ T := by
+      have hF0v : F 0 = v := by simp [hFdef]
+      have hv' : F 0 ∈ s := by rw [hF0v]; exact hv
+      exact (hmemT 0).mpr hv'
+    have hray : affGe {v} {w} = insert v {x : V3 | ∃ t : ℝ, 0 < t ∧ x = v + t • e} := by
+      rw [AFF_GE_SING_CONVEX_HULL_ALT (Set.finite_singleton w) (fun h => hvw h)]
+      congr 1
+      ext x
+      simp [convexHull_singleton, he]
+    have hIci : T ∩ Set.Ici 0 = Set.Icc 0 t2 := by
+      apply Set.ext fun t => ?_
+      constructor
+      · rintro ⟨ht, ht0⟩
+        exact ⟨ht0, h2max ht⟩
+      · intro ht
+        obtain ⟨ht0, ht2le⟩ := ht
+        by_cases ht20' : t2 = 0
+        · have ht0' : t = 0 := by linarith
+          rw [ht0']
+          exact ⟨h0T, by norm_num⟩
+        · have hpos2 : 0 < t2 := by
+            rcases eq_or_lt_of_le ht20 with h | h
+            · exact absurd h.symm ht20'
+            · exact h
+          have hlo : (0:ℝ) ≤ t / t2 := div_nonneg ht0 hpos2.le
+          have hhi : t / t2 ≤ 1 := (div_le_one hpos2).2 ht2le
+          have hlamt : (t / t2 : ℝ) * t2 = t := by field_simp
+          have hA1 : (0:ℝ) ≤ 1 - t / t2 := sub_nonneg.mpr hhi
+          have hA2 : 1 - t / t2 ≤ 1 := by
+            have : (0:ℝ) ≤ t / t2 := hlo
+            linarith
+          have hmemT2 : (1 - t / t2 : ℝ) • (0 : ℝ) + (t / t2 : ℝ) • t2 ∈ T :=
+            hTconv h0T h2T hA1 hlo (by ring)
+          rw [smul_zero, zero_add, smul_eq_mul, hlamt] at hmemT2
+          refine ⟨hmemT2, ?_⟩
+          exact ht0
+    refine ⟨v + t2 • e, ?_⟩
+    have hkey : s ∩ affGe {v} {w} = F '' (T ∩ Set.Ici 0) := by
+      rw [hray]
+      refine Set.ext fun x => ?_
+      constructor
+      · rintro ⟨hxs, hx | ⟨t, ht0, rfl⟩⟩
+        · refine ⟨0, ⟨h0T', by norm_num⟩, ?_⟩
+          rw [hx]
+          simp [hFdef]
+        · exact ⟨t, ⟨(hmemT t).mp hxs, le_of_lt ht0⟩, rfl⟩
+      · rintro ⟨t, ⟨ht, ht0⟩, rfl⟩
+        refine ⟨(hmemT t).mp ht, ?_⟩
+        rcases lt_or_eq_of_le (Set.mem_Ici.mp ht0) with hlt | hle0
+        · exact Or.inr ⟨t, hlt, rfl⟩
+        · left
+          rw [← hle0]
+          simp [hFdef]
+    rw [hkey, hIci, image_Icc_eq_segment_p7 v e ht20]
+    simp [hFdef]
+
+/-- FLVNSME 阶段 1（P1）：过顶点 `v` 取得暴露 facet 的显式超平面形式
+（HOL `EXPOSED_FACE_OF_POLYHEDRON` + `FACE_OF_POLYHEDRON_SUBSET_FACET` 链；
+内部含 P0：`{v}` face 与 `p ≠ {v}` 的排除）。 -/
+private theorem flvns_p1_exposed {v : V3} {p : Set V3}
+    (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p)
+    (hv : v ∈ Set.extremePoints ℝ p) :
+    ∃ f : Set V3, ∃ a' : V3, ∃ b' : ℝ,
+      FacetOf f p ∧ f ≠ p ∧ f = p ∩ {x : V3 | a' ⬝ᵥ x = b'} ∧
+      p ⊆ {x : V3 | a' ⬝ᵥ x ≤ b'} ∧ a' ≠ 0 ∧ 0 ≤ b' ∧ v ∈ f := by
+  classical
+  -- P0：{v} 是 p 的面，且 p ≠ {v}（否则与维数 3 矛盾）
+  have hvsing : FaceOf {v} p := faceOf_sing.2 hv
+  have h3p : affDim p = 3 := AFF_DIM_INTERIOR_EQ_3 0 p hz
+  have hpvne : p ≠ {v} := by
+    intro h
+    have hz2 : (0:V3) ∈ interior {v} := by rw [h] at hz; exact hz
+    have h3 := AFF_DIM_INTERIOR_EQ_3 0 {v} hz2
+    rw [affDim_singleton] at h3
+    omega
+  obtain ⟨f, hf, hvf⟩ := FACE_OF_POLYHEDRON_SUBSET_FACET (s := p) hp hvsing
+    (Set.singleton_ne_empty v) (Ne.symm hpvne)
+  obtain ⟨a', b', ha0, hsub, hfeq⟩ := FACET_OF_POLYHEDRON hp hf
+  refine ⟨f, a', b', hf, ?_, hfeq, hsub, ha0, ?_, hvf (Set.mem_singleton v)⟩
+  · intro h
+    rw [h] at hf
+    have h2 := hf.2.2
+    omega
+  · have h0p : (0:V3) ∈ p := interior_subset hz
+    have h01 : a' ⬝ᵥ (0:V3) ≤ b' := hsub h0p
+    have h02 : a' ⬝ᵥ (0:V3) = 0 := by
+      rw [← inner_eq_dot]
+      exact inner_zero_right _
+    rw [h02] at h01
+    exact h01
+
+/-- FLVNSME 阶段 2（P2）：原点在内部时，内部含深入开半空间
+`{x | a⋅x < 0}` 的点（显式见证 y = -t•a，HOL `OPEN_HALFSPACE_LT` +
+`IN_INTERIOR` 步骤的 V3 内联版）。 -/
+private theorem flvns_p2_yint {p : Set V3} {a : V3}
+    (hz : (0 : V3) ∈ interior p) (ha : a ≠ 0) :
+    ∃ y, y ∈ interior p ∧ a ⬝ᵥ y < 0 := by
+  obtain ⟨ε, hε0, hball⟩ := Metric.isOpen_iff.1 isOpen_interior (0 : V3) hz
+  have haapos : 0 < a ⬝ᵥ a := by
+    have h1 : 0 ≤ a ⬝ᵥ a := by
+      show 0 ≤ (a.ofLp : Fin 3 → ℝ) ⬝ᵥ a.ofLp
+      rw [dotProduct]
+      exact Finset.sum_nonneg fun i _ => mul_self_nonneg _
+    have h2 : a ⬝ᵥ a ≠ 0 := by
+      intro h
+      have h3 : (a.ofLp : Fin 3 → ℝ) ⬝ᵥ a.ofLp = 0 := h
+      exact ha ((WithLp.ofLp_eq_zero 2).mp (dotProduct_self_eq_zero.mp h3))
+    exact lt_of_le_of_ne h1 (Ne.symm h2)
+  have ha0 : ‖a‖ ≠ 0 := norm_ne_zero_iff.mpr ha
+  have hnp : (0:ℝ) < ‖a‖ := norm_pos_iff.mpr ha
+  set t : ℝ := ε / (2 * ‖a‖) with ht
+  have ht0 : 0 < t := by
+    refine div_pos hε0 ?_
+    linarith
+  refine ⟨-t • a, ?_, ?_⟩
+  · have hmem : -t • a ∈ Metric.ball (0 : V3) ε := by
+      rw [Metric.mem_ball, dist_zero_right, norm_smul, Real.norm_eq_abs,
+        abs_neg, abs_of_pos ht0, ht, div_mul_eq_mul_div]
+      have h2' : (0:ℝ) < 2 * ‖a‖ := by linarith [hnp]
+      rw [div_lt_iff₀ h2']
+      nlinarith [norm_pos_iff.mpr ha, hε0]
+    exact hball hmem
+  · have h4 : a ⬝ᵥ (-t • a) < 0 := by
+      rw [p7_dot_smul, neg_mul]
+      linarith [mul_pos ht0 haapos]
+    exact h4
+
+/-- FLVNSME 阶段 3（P3）：穿越点 z：给定 `a⋅y < 0 = a⋅v`，段 `[y,v]`
+中点处于 p 且深入开半空间且异于 v（显式见证 z = lineMap y v (1/2)）。 -/
+private theorem flvns_p3_cross {p : Set V3} (hconv : Convex ℝ p) {a y v : V3}
+    (hy : y ∈ p) (hv : v ∈ p) (hay : a ⬝ᵥ y < 0) (hav : a ⬝ᵥ v = 0) :
+    ∃ z, z ∈ segment ℝ y v ∧ z ∈ p ∧ a ⬝ᵥ z < 0 ∧ z ≠ v := by
+  have h12 : (1 / 2 : ℝ) ∈ Set.Icc (0 : ℝ) 1 := ⟨by norm_num, by norm_num⟩
+  have hay' : inner ℝ a y < 0 := by rw [inner_eq_dot]; exact hay
+  have hav' : inner ℝ a v = 0 := by rw [inner_eq_dot]; exact hav
+  refine ⟨AffineMap.lineMap y v (1 / 2 : ℝ), ?_, ?_, ?_⟩
+  · exact lineMap_mem_segment (a := y) (b := v) (ht := h12)
+  · exact hconv.lineMap_mem hy hv h12
+  · constructor
+    · rw [← inner_eq_dot, AffineMap.lineMap_apply, vadd_eq_add, vsub_eq_sub,
+        inner_add_right, inner_smul_right, inner_sub_right, hav']
+      linarith
+    · intro h
+      apply hay'.ne
+      have h3 : inner ℝ a (AffineMap.lineMap y v (1 / 2 : ℝ)) = inner ℝ a v :=
+        congrArg (fun z : V3 => inner ℝ a z) h
+      rw [AffineMap.lineMap_apply, vadd_eq_add, vsub_eq_sub, inner_add_right,
+        inner_smul_right, inner_sub_right, hav'] at h3
+      linarith
 
 /-! ## polyhedron.hl :2005-:2995（FLVNSME，本批主菜） -/
 
