@@ -4,13 +4,28 @@
 v1 scope (pilot): single-goal ("main") cases, ops
 {push_var, push_const, add, sub, mul, neg, abs, div, ite};
 dyadic consts inline, non-dyadic consts as exact `div` of int consts.
-sqrt / trans (atan/sin/cos/ln) / disj goals are rejected for now:
-- sqrt needs *per-leaf* mantissa certs (IExpr.sqrt bakes s₁ s₂ into the
-  expression, but the radicand interval varies per leaf) — cert-layer
-  extension pending;
-- trans works in principle (fixed N/out across leaves) but is untested.
+
+v2 (FillParams pipeline, `--fill`): ops sqrt/atan/sin/cos/ln accepted.
+- `sqrt` slots become *parameters*: Stage A (`--stage-a`) emits a Lean
+  driver whose `fillMkExpr N out` has dummy `(0, 0)` mantissas; running it
+  (`lake env lean --run`) recomputes the exact per-leaf mantissas with the
+  tracing evaluator of `Kepler.Interval.Tools.FillParams` and walks an
+  `(N, out)` rung ladder for the `trans` nodes.
+- Stage B (`--bbg --params FILE`) reads that output and emits `BBTreeG`
+  shards: `Base` carries `{mod}MkExpr (ms : Vector (Int × Int) k)` with the
+  sqrt slots fed from `ms` (RPN/post order), a dummy-parameter global
+  `{mod}Expr`, and a one-shot `rfl` lemma `{mod}_sem` closing every leaf's
+  `hsame`; leaves are `.leaf box ({mod}MkExpr #v[..]) ({mod}_sem _)
+  (by decide)`.
+- `--leaves N` samples: take the first N cert leaves, shrink the root box
+  to the smallest bisection-grid box containing them, then extend the
+  sample to ALL cert leaves inside that box (a complete partition, so tree
+  reconstruction still works); the target box of the emitted theorem is the
+  shrunk box.
 
 Usage: emit_lean.py <case.json> <cert.json> <out.lean> [--name NAME]
+       [--shard-leaves=N] [--leaves=N] [--fill] [--stage-a]
+       [--bbg --params=FILE]
 """
 import json
 import sys
@@ -174,11 +189,28 @@ def build_goals(case, rpn):
     return "[" + ", ".join(goals) + "]", goal_k
 
 
-class RPN:
-    """RPN prog -> IExpr text. Stack machine; each entry is a Lean term str."""
+TRANS_KIND = {"atan": "arctanK", "sin": "sinK", "cos": "cosK", "ln": "lnK"}
 
-    def __init__(self, div_out=-64):
+
+class RPN:
+    """RPN prog -> IExpr text. Stack machine; each entry is a Lean term str.
+
+    `sqrt_slot`: None rejects sqrt (v1 behavior); otherwise a callable
+    i -> (s1_text, s2_text) fed with the sqrt node's index in RPN/post
+    order (the same order FillParams.evalFill collects mantissas).
+    `trans`: None rejects trans ops; otherwise a callable
+    (op, closed) -> (N_text, out_text) supplying the certificate parameters.
+    `closed` marks var-free arguments (constant across leaves): callers
+    typically give them a fixed high N — the alternating arctan series
+    converges only like `1/(2N+1)` at boundary points such as `arctan 1`,
+    so a constant `atan(1)` node wants `N` in the hundreds while
+    var-containing nodes stay on the rung ladder."""
+
+    def __init__(self, div_out=-64, sqrt_slot=None, trans=None):
         self.div_out = div_out
+        self.sqrt_slot = sqrt_slot
+        self.trans = trans
+        self.sqrt_count = 0
 
     def const(self, c):
         num, den = c["num"], c["den"]
@@ -190,38 +222,71 @@ class RPN:
                 f"({self.div_out}))")
 
     def emit(self, prog):
+        """RPN prog -> IExpr term text."""
+        return self.emit_pair(prog)[0]
+
+    def emit_pair(self, prog):
+        """RPN prog -> (IExpr term text, closed): `closed` marks var-free
+        subterms (leaf-constant), used by the `trans` callback."""
+        # stack entries: (Lean term text, closed=var-free)
         st = []
         for ins in prog:
             if isinstance(ins, dict):
                 if "ite" not in ins:
                     die(f"unknown dict instr {list(ins)}")
-                c = self.emit(ins["ite"]["cond"])
-                t = self.emit(ins["ite"]["then"])
-                e = self.emit(ins["ite"]["else"])
-                st.append(f"(.ite {c} {t} {e})")
+                c = self.emit_pair(ins["ite"]["cond"])
+                t = self.emit_pair(ins["ite"]["then"])
+                e = self.emit_pair(ins["ite"]["else"])
+                st.append((f"(.ite {c[0]} {t[0]} {e[0]})",
+                           c[1] and t[1] and e[1]))
                 continue
             op = ins[0]
             if op == "push_var":
-                st.append(f"(.var {ins[1]})")
+                st.append((f"(.var {ins[1]})", False))
             elif op == "push_const":
-                st.append(self.const(ins[1]))
+                st.append((self.const(ins[1]), True))
             elif op in ("add", "sub", "mul"):
                 b, a = st.pop(), st.pop()
-                st.append(f"(.{op} {a} {b})")
+                st.append((f"(.{op} {a[0]} {b[0]})", a[1] and b[1]))
             elif op == "neg":
-                st.append(f"(.neg {st.pop()})")
+                a = st.pop()
+                st.append((f"(.neg {a[0]})", a[1]))
             elif op == "abs":
-                st.append(f"(.abs {st.pop()})")
+                a = st.pop()
+                st.append((f"(.abs {a[0]})", a[1]))
             elif op == "div":
                 b, a = st.pop(), st.pop()
-                st.append(f"(.div {a} {b} ({self.div_out}))")
-            elif op in ("sqrt", "atan", "sin", "cos", "ln"):
-                die(f"op {op}: not supported in v1 (see module docstring)")
+                st.append((f"(.div {a[0]} {b[0]} ({self.div_out}))", a[1] and b[1]))
+            elif op == "sqrt":
+                if self.sqrt_slot is None:
+                    die("op sqrt: not supported without --fill (see module docstring)")
+                a = st.pop()
+                s1, s2 = self.sqrt_slot(self.sqrt_count)
+                self.sqrt_count += 1
+                st.append((f"(.sqrt {a[0]} {s1} {s2})", a[1]))
+            elif op in TRANS_KIND:
+                if self.trans is None:
+                    die(f"op {op}: not supported without --fill (see module docstring)")
+                a = st.pop()
+                N, out = self.trans(op, a[1])
+                st.append((f"(.trans .{TRANS_KIND[op]} {a[0]} {N} {out})", a[1]))
             else:
                 die(f"unknown op {op}")
         if len(st) != 1:
             die(f"RPN stack imbalance: {len(st)}")
         return st[0]
+
+
+def count_op(prog, target):
+    """Count occurrences of op `target` in an RPN prog (ite subprogs included)."""
+    k = 0
+    for ins in prog:
+        if isinstance(ins, dict):
+            for key in ("cond", "then", "else"):
+                k += count_op(ins["ite"][key], target)
+        elif ins[0] == target:
+            k += 1
+    return k
 
 
 def box_lean(box):
@@ -299,37 +364,349 @@ def shard_file(mod, k, sub, n, mode):
             "end Kepler.Interval.Cases\n")
 
 
+# ---------------------------------------------------------------------------
+# FillParams pipeline (v2): streaming cert reader, leaf sampling, Stage A
+# (per-leaf sqrt parameter computation in Lean) and Stage B (BBTreeG shards).
+# ---------------------------------------------------------------------------
+
+import itertools
+import os
+
+
+def stream_cert(path):
+    """Stream a bb_arb cert JSON without materializing ~1GB of Python
+    objects.  Returns (root_box JSON, prec, leaf generator)."""
+    import re
+    text = open(path).read()
+    dec = json.JSONDecoder()
+    i = text.index('"root_box"')
+    i = text.index(":", i) + 1
+    while text[i] in " \t\r\n":
+        i += 1
+    root_box, _ = dec.raw_decode(text, i)
+    m = re.search(r'"prec"\s*:\s*(\d+)', text[:4096])
+    prec = int(m.group(1)) if m else None
+    p = text.index("[", text.index('"leaves"')) + 1
+
+    def gen():
+        nonlocal p
+        while True:
+            while text[p] in " \t\r\n,":
+                p += 1
+            if text[p] == "]":
+                return
+            leaf, p = dec.raw_decode(text, p)
+            yield leaf
+
+    return root_box, gen()
+
+
+def sample_leaves(leaf_iter, rootfrac, limit):
+    """Prefix sample: the first `limit` cert leaves, the root box shrunk to
+    the smallest bisection-grid box containing them, then the sample
+    extended to ALL cert leaves inside that grid box.  The contained leaves
+    of a grid box partition it completely (every actual leaf is a grid box,
+    hence either inside or interior-disjoint), so tree reconstruction still
+    succeeds.  Returns (grid box, leaves in cert order)."""
+    n = len(rootfrac)
+    sample = []
+    for leaf in leaf_iter:
+        sample.append(leaf)
+        if len(sample) >= limit:
+            break
+    if not sample:
+        die("sample: empty cert leaf stream")
+    boxes = [tuple(box_frac(iv) for iv in l["box"]) for l in sample]
+    bbox = tuple((min(b[d][0] for b in boxes), max(b[d][1] for b in boxes))
+                 for d in range(n))
+    cur = rootfrac
+    improved = True
+    while improved:
+        improved = False
+        for d in range(n):
+            lo, hi = cur[d]
+            mid = (lo + hi) / 2
+            if bbox[d][1] <= mid:
+                cur = cur[:d] + ((lo, mid),) + cur[d + 1:]
+                improved = True
+                break
+            if bbox[d][0] >= mid:
+                cur = cur[:d] + ((mid, hi),) + cur[d + 1:]
+                improved = True
+                break
+
+    def inside(l):
+        b = tuple(box_frac(iv) for iv in l["box"])
+        return all(b[d][0] >= cur[d][0] and b[d][1] <= cur[d][1] for d in range(n))
+
+    leaves = [l for l in itertools.chain(sample, leaf_iter) if inside(l)]
+    return cur, leaves
+
+
+def stage_a_file(mod, n, expr, boxes_lean, nleaves):
+    """Stage A driver: `fillMkExpr N out` (dummy sqrt slots, rung-parameter
+    trans nodes) + the sampled leaf boxes + a `runLadder` main."""
+    return (HDR + "import Kepler.Interval.Tools.FillParams\n\n"
+            "open Kepler.Interval Kepler.Interval.Tools\n\n"
+            "/-- The case expression with dummy sqrt slots `(0, 0)`; the `trans`\n"
+            "certificate parameters are the rung arguments `N out`. -/\n"
+            f"def fillMkExpr (N : ℕ) (out : Int) : IExpr {n} :=\n  {expr}\n\n"
+            f"/-- The {nleaves} sampled leaf boxes (cert order). -/\n"
+            f"def fillBoxes : Array (Fin {n} → DInterval) :=\n  #["
+            + ",\n    ".join(f"({b} : Fin {n} → DInterval)" for b in boxes_lean)
+            + "]\n\n"
+            "def main : IO UInt32 := runLadder fillMkExpr fillBoxes\n")
+
+
+def parse_params(path, nleaves, k):
+    """Parse FillParams output: `RUNG N out` header + `i PASS s1 t1 ...`
+    lines.  Returns ((N, out), {leaf index: [(s1, t1), ...]})."""
+    rung = None
+    params = {}
+    for ln in open(path):
+        parts = ln.split()
+        if not parts:
+            continue
+        if parts[0] == "RUNG":
+            rung = (int(parts[1]), int(parts[2]))
+        elif parts[0] == "BESTFAIL":
+            die(f"FillParams reported failures ({ln.strip()}) — refusing stage B")
+        elif parts[0].isdigit():
+            i = int(parts[0])
+            if parts[1] != "PASS":
+                die(f"leaf {i} not PASS: {ln.strip()}")
+            nums = [int(x) for x in parts[2:]]
+            if len(nums) != 2 * k:
+                die(f"leaf {i}: expected {2 * k} mantissas, got {len(nums)}")
+            params[i] = [(nums[j], nums[j + 1]) for j in range(0, len(nums), 2)]
+    if rung is None:
+        die("params file has no RUNG line")
+    if len(params) != nleaves:
+        die(f"params cover {len(params)} leaves, expected {nleaves}")
+    return rung, params
+
+
+def ms_vec(pairs):
+    return "#v[" + ", ".join(f"({s}, {t})" for s, t in pairs) + "]"
+
+
+def emit_tree_bbg(u, mod, params_by_box, depth=0):
+    """BBTreeG constructor text; leaves carry the per-leaf filled
+    `{mod}MkExpr` instance, the one-shot `{mod}_sem` semantics lemma and an
+    inline kernel `decide` cert."""
+    if isinstance(u, Leaf):
+        return (f"(.leaf {box_lit(u.box)} ({mod}MkExpr {ms_vec(params_by_box[u.box])}) "
+                f"({mod}_sem _) (by decide))")
+    pad = "  " * min(depth + 1, 20)
+    return (f"(.node {box_lit(u.box)} {u.d}\n{pad}{emit_tree_bbg(u.l, mod, params_by_box, depth + 1)}\n"
+            f"{pad}{emit_tree_bbg(u.r, mod, params_by_box, depth + 1)})")
+
+
+def base_file_bbg(mod, n, k, expr, box):
+    return (HDR + "import Kepler.Interval.CertG\n\n"
+            "namespace Kepler.Interval.Cases\n\n"
+            "/-- Expression factory: slot `i` of `ms` carries the per-leaf certificate\n"
+            "mantissas `(s₁, s₂)` of the `i`-th `.sqrt` node (RPN/post order — the\n"
+            "order `Kepler.Interval.Tools.FillParams.evalFill` collects them). -/\n"
+            f"def {mod}MkExpr (ms : Vector (Int × Int) {k}) : IExpr {n} :=\n  {expr}\n\n"
+            "/-- The global expression (dummy parameters; `evalReal` ignores them). -/\n"
+            f"def {mod}Expr : IExpr {n} := {mod}MkExpr (Vector.replicate {k} (0, 0))\n\n"
+            "/-- Every parameter instance coincides with the global expression over ℝ\n"
+            "(`IExpr.evalReal` discards the certificate slots definitionally). -/\n"
+            f"theorem {mod}_sem (ms : Vector (Int × Int) {k}) :\n"
+            f"    ({mod}MkExpr ms).evalReal = ({mod}Expr).evalReal := rfl\n\n"
+            "/-- The target box (tree root). -/\n"
+            f"def {mod}Box : Fin {n} → DInterval :=\n  {box}\n\n"
+            "end Kepler.Interval.Cases\n")
+
+
+def shard_file_bbg(mod, i, sub, n, params_by_box):
+    return (HDR + f"import Kepler.Interval.Cases.{mod}.Base\n\n"
+            "set_option maxHeartbeats 0\n"
+            "-- closed-arg atan nodes run N=1024 Taylor terms; the elaborator's\n"
+            "-- whnf recursion budget must cover the `taylorIter` fuel\n"
+            "set_option maxRecDepth 1000000\n\n"
+            "namespace Kepler.Interval.Cases\n\n"
+            f"/-- Shard {i} subtree (per-leaf filled expressions; certs are inline\n"
+            f"kernel `decide`s). -/\n"
+            f"def {mod}Shard{i}Tree : BBTreeG {n} {mod}Expr :=\n"
+            f"  {emit_tree_bbg(sub, mod, params_by_box)}\n\n"
+            f"/-- Covering of shard {i}: one kernel `decide` via `BBTreeG.coversB`. -/\n"
+            f"theorem {mod}Shard{i}Covers : {mod}Shard{i}Tree.covers :=\n"
+            f"  BBTreeG.coversB_sound _ (by decide)\n\n"
+            "end Kepler.Interval.Cases\n")
+
+
+def emit_sharded_bbg(t, mod, n, k, expr, box, hdr, outpath, shard_leaves, params_by_box):
+    """Stage B: Base (MkExpr/Expr/sem/Box) + BBTreeG shards + root, for the
+    per-leaf filled expressions."""
+    shards = cut_shards(t, shard_leaves)
+    shard_idx = {id(u): i + 1 for i, u in enumerate(shards)}
+    base = os.path.splitext(outpath)[0]
+    os.makedirs(base, exist_ok=True)
+
+    open(os.path.join(base, "Base.lean"), "w").write(
+        base_file_bbg(mod, n, k, expr, box).format(**hdr))
+
+    for i, u in enumerate(shards, 1):
+        open(os.path.join(base, f"Shard{i}.lean"), "w").write(
+            shard_file_bbg(mod, i, u, n, params_by_box).format(**hdr))
+
+    def skel_tree(u):
+        if id(u) in shard_idx:
+            return f"{mod}Shard{shard_idx[id(u)]}Tree"
+        if isinstance(u, Leaf):
+            return (f"(.leaf {box_lit(u.box)} ({mod}MkExpr {ms_vec(params_by_box[u.box])}) "
+                    f"({mod}_sem _) (by decide))")
+        return f"(.node {box_lit(u.box)} {u.d} {skel_tree(u.l)} {skel_tree(u.r)})"
+
+    def skel_proof(u):
+        if id(u) in shard_idx:
+            return f"{mod}Shard{shard_idx[id(u)]}Covers"
+        if isinstance(u, Leaf):
+            return "trivial"
+        return (f"⟨splitOKB_sound (by decide), {skel_proof(u.l)}, "
+                f"{skel_proof(u.r)}⟩")
+
+    imports = "\n".join(f"import Kepler.Interval.Cases.{mod}.Shard{i}"
+                        for i in range(1, len(shards) + 1))
+    root = (HDR + imports + "\n\nset_option maxHeartbeats 0\n\n"
+            "namespace Kepler.Interval.Cases\n\n"
+            f"/-- The certificate tree, assembled from {len(shards)} shard subtrees. -/\n"
+            f"def {mod}Tree : BBTreeG {n} {mod}Expr :=\n  {skel_tree(t)}\n\n"
+            f"/-- Covering: per-shard `coversB` certificates glued by `splitOKB`\n"
+            f"on the {len(shards)}-way skeleton. -/\n"
+            f"theorem {mod}_covers : {mod}Tree.covers :=\n  {skel_proof(t)}\n\n"
+            f"/-- Box containment is reflexive here (tree root = target box). -/\n"
+            f"theorem {mod}_sub : boxSub {mod}Box {mod}Tree.box := by\n"
+            "  intro i\n  fin_cases i <;> exact ⟨by decide, by decide⟩\n\n"
+            "/-- End-to-end: the case expression is strictly positive on the whole box. -/\n"
+            f"theorem {mod}_pos (ρ : Fin {n} → ℝ) (hρ : boxMem {mod}Box ρ) :\n"
+            f"    0 < ({mod}Expr).evalReal ρ :=\n"
+            f"  bb_soundG {mod}Tree {mod}Box {mod}_covers {mod}_sub ρ hρ\n\n"
+            f"#print axioms {mod}_pos\n\nend Kepler.Interval.Cases\n")
+    open(outpath, "w").write(root.format(**hdr))
+    print(f"emit_lean: wrote {outpath} + Base/Shard1..{len(shards)} "
+          f"({t.nleaves} leaves, {len(shards)} shards, BBTreeG)")
+
+
 def main():
     shard_leaves = 128
+    sample_n = None
+    fill = False
+    stage_a = False
+    bbg = False
+    params_file = None
     args = []
     for a in sys.argv[1:]:
         if a.startswith("--shard-leaves="):
             shard_leaves = int(a.split("=", 1)[1])
+        elif a.startswith("--leaves="):
+            sample_n = int(a.split("=", 1)[1])
+        elif a == "--fill":
+            fill = True
+        elif a == "--stage-a":
+            stage_a = True
+        elif a == "--bbg":
+            bbg = True
+        elif a.startswith("--params="):
+            params_file = a.split("=", 1)[1]
         elif not a.startswith("--"):
             args.append(a)
     if len(args) != 3:
-        die("usage: emit_lean.py <case.json> <cert.json> <out.lean> [--shard-leaves=N]")
+        die("usage: emit_lean.py <case.json> <cert.json> <out.lean> [--shard-leaves=N]\n"
+            "                [--leaves=N] [--fill] [--stage-a] [--bbg --params=FILE]")
+    fill = fill or stage_a or bbg
     case = json.load(open(args[0]))
-    cert = json.load(open(args[1]))
     cid = args[0].split("/")[-1].replace(".json", "")
-    mod = "C" + "".join(ch if ch.isalnum() else "x" for ch in cid)
-
-    if cert["root_box"] != case["box"]:
-        die("cert root_box != case box")
+    outbase = os.path.splitext(os.path.basename(args[2]))[0]
+    if outbase.startswith("C"):
+        mod = outbase
+    else:
+        mod = "C" + "".join(ch if ch.isalnum() else "x" for ch in cid)
     n = len(case["vars"])
+    extra = ""
 
+    if sample_n is None:
+        cert = json.load(open(args[1]))
+        if cert["root_box"] != case["box"]:
+            die("cert root_box != case box")
+        leaves = cert["leaves"]
+        rootfrac = tuple(box_frac(iv) for iv in cert["root_box"])
+        prec = cert.get("prec")
+    else:
+        root_box_json, leaf_iter = stream_cert(args[1])
+        if root_box_json != case["box"]:
+            die("cert root_box != case box")
+        rootfrac, leaves = sample_leaves(
+            leaf_iter, tuple(box_frac(iv) for iv in root_box_json), sample_n)
+        prec = None
+        extra = (f" — SAMPLE: smallest grid box over first {sample_n} cert leaves"
+                 f" ({len(leaves)} leaves inside)")
+
+    hdr = dict(caseid=case["id"], origop=case.get("orig_op"), vars=case["vars"],
+               nleaves=len(leaves), prec=prec, extra=extra)
+
+    leafmap = {}
+    for l in leaves:
+        b = tuple(box_frac(iv) for iv in l["box"])
+        if b in leafmap:
+            die(f"duplicate leaf box: {b}")
+        leafmap[b] = l["hit"]
+
+    if fill:
+        # ---- FillParams pipeline (stage A driver / stage B BBTreeG shards) ----
+        if case.get("disj"):
+            die("fill pipeline: disj cases unsupported (use the v1 path)")
+        hits = {l["hit"] for l in leaves}
+        if hits != {"main"}:
+            die(f"fill pipeline needs main-only hits, got {hits}")
+        t = reconstruct(rootfrac, leafmap)
+        box = box_lit(rootfrac)
+        k = count_op(case["prog"], "sqrt")
+        # var-free (leaf-constant) trans arguments get a fixed high Taylor
+        # order: the alternating arctan series at a boundary point (atan 1)
+        # converges only like 1/(2N+1), so the rung ladder's N (tuned for
+        # interior args, where big mantissas make high N expensive) can
+        # never reach the needed precision.
+        closed_params = ("1024", "(-64)")
+        if stage_a:
+            rpn = RPN(sqrt_slot=lambda i: ("0", "0"),
+                      trans=lambda op, closed: closed_params if closed else ("N", "out"))
+            expr = rpn.emit(case["prog"])
+            boxes_lean = [box_lit(tuple(box_frac(iv) for iv in l["box"])) for l in leaves]
+            out = stage_a_file(mod, n, expr, boxes_lean, len(leaves))
+            open(args[2], "w").write(out.format(**hdr))
+            print(f"emit_lean: wrote {args[2]} (stage A: {len(leaves)} leaves, "
+                  f"{k} sqrt slots)")
+            return
+        if params_file is None:
+            die("--bbg needs --params=FILE (FillParams stage-A output)")
+        (N, out_g), params = parse_params(params_file, len(leaves), k)
+        rpn = RPN(sqrt_slot=lambda i: (f"((ms[{i}]'(by decide)).1)",
+                                       f"((ms[{i}]'(by decide)).2)"),
+                  trans=lambda op, closed: closed_params if closed else (str(N), f"({out_g})"))
+        expr = rpn.emit(case["prog"])
+        if rpn.sqrt_count != k:
+            die(f"internal: sqrt count {rpn.sqrt_count} != prog count {k}")
+        params_by_box = {}
+        for i, l in enumerate(leaves):
+            params_by_box[tuple(box_frac(iv) for iv in l["box"])] = params[i]
+        emit_sharded_bbg(t, mod, n, k, expr, box, hdr, args[2], shard_leaves,
+                         params_by_box)
+        return
+
+    # ---- original v1 path (BBTree / BBTreeD) ----
     rpn = RPN()
     expr = rpn.emit(case["prog"])
     box = box_lean(case["box"])
-    hdr = dict(caseid=case["id"], origop=case.get("orig_op"), vars=case["vars"],
-               nleaves=len(cert["leaves"]), prec=cert.get("prec"), extra="")
 
     if case.get("disj"):
         goals_lean, goal_k = build_goals(case, rpn)
         mode = Mode(True, goals_lean, goal_k)
     else:
         mode = Mode(False)
-    hits = {l["hit"] for l in cert["leaves"]}
+    hits = {l["hit"] for l in leaves}
     if mode.disj:
         unknown = hits - set(mode.goal_k)
         if unknown:
@@ -337,14 +714,6 @@ def main():
     elif hits != {"main"}:
         die(f"cert hits {hits}: case is not disj but cert uses disjuncts")
 
-    leaves = cert["leaves"]
-    rootfrac = tuple(box_frac(iv) for iv in cert["root_box"])
-    leafmap = {}
-    for l in leaves:
-        b = tuple(box_frac(iv) for iv in l["box"])
-        if b in leafmap:
-            die(f"duplicate leaf box: {b}")
-        leafmap[b] = l["hit"]
     t = reconstruct(rootfrac, leafmap)
 
     if mode.disj:

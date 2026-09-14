@@ -22,8 +22,10 @@
   Instantiations (terms antitone on `[0, 1]`; `Mathlib.HasSum` sources):
   + `sin`: `Real.hasSum_sin` (valid for all `x`);
   + `cos`: `Real.hasSum_cos` (valid for all `x`);
-  + `arctan`: `Real.hasSum_arctan` (valid for `‖x‖ < 1` — hence the *strict*
-    range checks `blt` in `arctanI` below).
+  + `arctan`: `Real.hasSum_arctan` (valid for `‖x‖ < 1`; the endpoints
+    `x = ±1` are closed off separately by continuity —
+    `arctan_abs_sub_partial_le_one` — so the range checks in `arctanI` are
+    the *non-strict* `ble`).
 
   **Range reduction** (`sinRed`): `sin` is only Taylor-enclosed on `[0, 1]`;
   for arguments in a band around `±π` we shift by the dyadic π enclosure
@@ -303,6 +305,36 @@ theorem arctan_abs_sub_partial_le {x : ℝ} (hx0 : 0 ≤ x) (hx1 : x < 1) (n : �
   have h := abs_sub_partial_le (arctan_terms_antitone hx0 hx1')
     (fun i => div_nonneg (pow_nonneg hx0 _) (Nat.cast_nonneg _)) hsum n
   rwa [hsumEq] at h
+
+/-- **Boundary case `x = 1`** of the `arctan` remainder bound.  The series
+identity itself (`Real.hasSum_arctan`) is only stated for `|x| < 1`, but
+both sides of `arctan_abs_sub_partial_le` are continuous in `x` and the
+inequality holds on `[0, 1)`, so it survives at the endpoint `x = 1`
+(Abel-type passage to the limit; no new analysis is needed).  This is what
+allows the *closed* gate `J ⊆ [-1, 1]` in `arctanI` — needed e.g. for
+`arctan 1 = π/4` arguments (`2570626711`-style dihedral cases). -/
+theorem arctan_abs_sub_partial_le_one (n : ℕ) :
+    |Real.arctan 1 - ∑ i ∈ Finset.range n, ((-1:ℝ)^i * (1:ℝ)^(2*i+1))/((2*i+1 : ℕ):ℝ)|
+      ≤ (1:ℝ)^(2*n+1)/((2*n+1 : ℕ):ℝ) := by
+  have hS : Continuous (fun x : ℝ =>
+      ∑ i ∈ Finset.range n, ((-1:ℝ)^i * x^(2*i+1))/((2*i+1 : ℕ):ℝ)) :=
+    continuous_finsetSum _ fun i _ =>
+      (continuous_const.mul (continuous_pow (2*i+1))).div_const _
+  have hf : Continuous (fun x : ℝ =>
+      |Real.arctan x - ∑ i ∈ Finset.range n, ((-1:ℝ)^i * x^(2*i+1))/((2*i+1 : ℕ):ℝ)|) :=
+    (Real.continuous_arctan.sub hS).abs
+  have hg : Continuous (fun x : ℝ => x^(2*n+1)/((2*n+1 : ℕ):ℝ)) :=
+    (continuous_pow (2*n+1)).div_const _
+  have hsub : Set.Ico (0:ℝ) 1 ⊆ {x : ℝ |
+      |Real.arctan x - ∑ i ∈ Finset.range n, ((-1:ℝ)^i * x^(2*i+1))/((2*i+1 : ℕ):ℝ)|
+        ≤ x^(2*n+1)/((2*n+1 : ℕ):ℝ)} := by
+    intro x hx
+    simp only [Set.mem_setOf_eq]
+    exact arctan_abs_sub_partial_le hx.1 hx.2 n
+  have hmem := closure_minimal hsub (isClosed_le hf hg)
+    (by rw [closure_Ico (by norm_num : (0:ℝ) ≠ 1)]
+        exact ⟨zero_le_one, le_refl 1⟩)
+  exact hmem
 
 /-! ## `sin` on `[0, 1]`: alternating Taylor with explicit remainder -/
 
@@ -655,12 +687,17 @@ def arctanInterval (x : Dyadic) (N : ℕ) (out : Int) : Option DInterval :=
       | none => none
       | some u => some ⟨lw.dsub ⟨u.m + 1, out⟩, hg.add ⟨u.m + 1, out⟩⟩
 
-/-- **Soundness of `arctanInterval`** (over `ℝ`): on `0 ≤ x.toReal < 1`, the
-returned interval contains `arctan` of the real semantics. -/
-theorem arctanInterval_sound {x : Dyadic} {N : ℕ} {out : Int} {I : DInterval}
-    (h : arctanInterval x N out = some I) (hx0 : 0 ≤ x.toReal) (hx1 : x.toReal < 1) :
+/-- **Soundness of `arctanInterval`, core** (over `ℝ`): given the analytic
+alternating-series estimate at `x.toReal`, the returned interval contains
+`arctan` of the real semantics.  Factored out so both the strict (`x < 1`)
+and the boundary (`x = 1`, via `arctan_abs_sub_partial_le_one`) instances
+can reuse it. -/
+theorem arctanInterval_sound_core {x : Dyadic} {N : ℕ} {out : Int} {I : DInterval}
+    (h : arctanInterval x N out = some I)
+    (harc : |Real.arctan x.toReal
+        - ∑ i ∈ Finset.range N, ((-1:ℝ)^i * x.toReal^(2*i+1))/((2*i+1 : ℕ):ℝ)|
+        ≤ x.toReal^(2*N+1)/((2*N+1 : ℕ):ℝ)) :
     I.lo.toReal ≤ Real.arctan x.toReal ∧ Real.arctan x.toReal ≤ I.hi.toReal := by
-  have hx1' : x.toReal ≤ 1 := le_of_lt hx1
   simp only [arctanInterval] at h
   cases hloop : taylorIter (fun i => x.npow (2*i+1)) (fun i => ((2*i+1 : ℕ) : ℤ)) out N 0
       ⟨0, 0⟩ ⟨0, 0⟩ with
@@ -697,7 +734,6 @@ theorem arctanInterval_sound {x : Dyadic} {N : ℕ} {out : Int} {I : DInterval}
       push_cast at hu1 hu2
       have hU : Dyadic.toReal ⟨u.m + 1, out⟩ = u.toReal + (Dyadic.ulp out).toReal :=
         toReal_succ_ulp (Dyadic.divFloorQ_e hu)
-      have harc := arctan_abs_sub_partial_le hx0 hx1 N
       rw [abs_le] at harc
       have hcast : ((2*N+1 : ℕ):ℝ) = 2*((N:ℝ)) + 1 := by push_cast; ring
       rw [hcast] at harc
@@ -717,6 +753,25 @@ theorem arctanInterval_sound {x : Dyadic} {N : ℕ} {out : Int} {I : DInterval}
       · show Real.arctan x.toReal ≤ Dyadic.toReal (hg.add ⟨u.m + 1, out⟩)
         rw [Dyadic.toReal_add]
         linarith [hs2, harc.2, hu2]
+
+/-- **Soundness of `arctanInterval`** (over `ℝ`): on `0 ≤ x.toReal < 1`, the
+returned interval contains `arctan` of the real semantics. -/
+theorem arctanInterval_sound {x : Dyadic} {N : ℕ} {out : Int} {I : DInterval}
+    (h : arctanInterval x N out = some I) (hx0 : 0 ≤ x.toReal) (hx1 : x.toReal < 1) :
+    I.lo.toReal ≤ Real.arctan x.toReal ∧ Real.arctan x.toReal ≤ I.hi.toReal :=
+  arctanInterval_sound_core h (arctan_abs_sub_partial_le hx0 hx1 N)
+
+/-- **Soundness of `arctanInterval`, closed interval** (over `ℝ`): on
+`0 ≤ x.toReal ≤ 1` — the endpoint `x = 1` uses the boundary estimate
+`arctan_abs_sub_partial_le_one`. -/
+theorem arctanInterval_sound_closed {x : Dyadic} {N : ℕ} {out : Int} {I : DInterval}
+    (h : arctanInterval x N out = some I) (hx0 : 0 ≤ x.toReal) (hx1 : x.toReal ≤ 1) :
+    I.lo.toReal ≤ Real.arctan x.toReal ∧ Real.arctan x.toReal ≤ I.hi.toReal := by
+  rcases lt_or_eq_of_le hx1 with hlt | heq
+  · exact arctanInterval_sound h hx0 hlt
+  · apply arctanInterval_sound_core h
+    rw [heq]
+    exact arctan_abs_sub_partial_le_one N
 
 /-! ## Interval-level wrappers: endpoint monotonicity + sign handling -/
 
@@ -848,14 +903,14 @@ theorem cosI_sound {J : DInterval} {N : ℕ} {out : Int} {K : DInterval} {y : �
         exact ⟨le_trans hlh1 hmono2, le_trans hmono1 hhl2⟩
   · rw [if_neg hchk] at h; simp at h
 
-/-- Point-level `arctan` enclosure for `|z.toReal| < 1`: negative inputs
+/-- Point-level `arctan` enclosure for `|z.toReal| ≤ 1`: negative inputs
 reduce via `arctan (-u) = -arctan u` (odd). -/
 def arctanPoint (z : Dyadic) (N : ℕ) (out : Int) : Option DInterval :=
   if z.isNeg then (arctanInterval (-z) N out).map DInterval.neg
   else arctanInterval z N out
 
 theorem arctanPoint_sound {z : Dyadic} {N : ℕ} {out : Int} {K : DInterval}
-    (hz1 : -1 < z.toReal) (hz2 : z.toReal < 1)
+    (hz1 : -1 ≤ z.toReal) (hz2 : z.toReal ≤ 1)
     (h : arctanPoint z N out = some K) : K.mem (Real.arctan z.toReal) := by
   unfold arctanPoint at h
   by_cases hn : z.isNeg = true
@@ -864,7 +919,7 @@ theorem arctanPoint_sound {z : Dyadic} {N : ℕ} {out : Int} {K : DInterval}
     have hnz0 : (0:ℝ) ≤ Dyadic.toReal (-z) := by
       rw [Dyadic.toReal_neg]
       linarith
-    have hnz1 : Dyadic.toReal (-z) < 1 := by
+    have hnz1 : Dyadic.toReal (-z) ≤ 1 := by
       rw [Dyadic.toReal_neg]
       linarith
     cases hs : arctanInterval (-z) N out with
@@ -872,7 +927,7 @@ theorem arctanPoint_sound {z : Dyadic} {N : ℕ} {out : Int} {K : DInterval}
     | some L =>
       rw [hs] at h
       obtain rfl : K = DInterval.neg L := (Option.some.inj h).symm
-      obtain ⟨h1, h2⟩ := arctanInterval_sound hs hnz0 hnz1
+      obtain ⟨h1, h2⟩ := arctanInterval_sound_closed hs hnz0 hnz1
       have hid : Real.arctan z.toReal = -Real.arctan (Dyadic.toReal (-z)) := by
         rw [Dyadic.toReal_neg, Real.arctan_neg]
         ring
@@ -882,33 +937,35 @@ theorem arctanPoint_sound {z : Dyadic} {N : ℕ} {out : Int} {K : DInterval}
     have hz0 : 0 ≤ z.toReal := by
       by_contra hc
       exact hn ((Dyadic.isNeg_iff z).mpr (by linarith))
-    exact arctanInterval_sound h hz0 hz2
+    exact arctanInterval_sound_closed h hz0 hz2
 
-/-- Interval-level `arctan` on `J ⊆ (-1, 1)` (**strict**: the series identity
-needs `‖x‖ < 1`): `arctan` is monotone, so the endpoints' point enclosures
+/-- Interval-level `arctan` on the **closed** range `J ⊆ [-1, 1]` (the
+endpoints `±1` are covered by the boundary estimate
+`arctan_abs_sub_partial_le_one`; the alternating-series remainder is still
+valid there): `arctan` is monotone, so the endpoints' point enclosures
 bracket all of `{arctan y : y ∈ J}`. -/
 def arctanI (J : DInterval) (N : ℕ) (out : Int) : Option DInterval :=
-  if Dyadic.blt (⟨-1, 0⟩ : Dyadic) J.lo && Dyadic.blt J.hi ⟨1, 0⟩ then
+  if Dyadic.ble (⟨-1, 0⟩ : Dyadic) J.lo && Dyadic.ble J.hi ⟨1, 0⟩ then
     match arctanPoint J.lo N out, arctanPoint J.hi N out with
     | some L, some H => some ⟨L.lo, H.hi⟩
     | _, _ => none
   else none
 
-/-- **Soundness of `arctanI`**: if the (strict) range checks succeed, the
+/-- **Soundness of `arctanI`**: if the range checks succeed, the
 result contains `arctan y` for every real `y ∈ J`. -/
 theorem arctanI_sound {J : DInterval} {N : ℕ} {out : Int} {K : DInterval} {y : ℝ}
     (hy : J.mem y) (h : arctanI J N out = some K) : K.mem (Real.arctan y) := by
   obtain ⟨hy1, hy2⟩ := hy
   unfold arctanI at h
-  by_cases hchk : Dyadic.blt (⟨-1, 0⟩ : Dyadic) J.lo && Dyadic.blt J.hi ⟨1, 0⟩
+  by_cases hchk : Dyadic.ble (⟨-1, 0⟩ : Dyadic) J.lo && Dyadic.ble J.hi ⟨1, 0⟩
   · rw [if_pos hchk] at h
-    have hlo : (-1:ℝ) < J.lo.toReal := by
-      have h := Dyadic.blt_toReal (Bool.and_eq_true_iff.mp hchk).1
+    have hlo : (-1:ℝ) ≤ J.lo.toReal := by
+      have h := Dyadic.ble_toReal (Bool.and_eq_true_iff.mp hchk).1
       rw [Dyadic.toReal_int] at h
       push_cast at h
       exact h
-    have hhi : J.hi.toReal < 1 := by
-      have h := Dyadic.blt_toReal (Bool.and_eq_true_iff.mp hchk).2
+    have hhi : J.hi.toReal ≤ 1 := by
+      have h := Dyadic.ble_toReal (Bool.and_eq_true_iff.mp hchk).2
       rw [Dyadic.toReal_int] at h
       push_cast at h
       exact h
@@ -1498,152 +1555,157 @@ theorem logInterval_sound {u : Dyadic} {N : ℕ} {out : Int} {I : DInterval}
   | some d =>
     obtain ⟨hlow, hhigh⟩ := Dyadic.divFloorQ_spec hd
     rw [hy] at hlow hhigh
-    obtain ⟨hbpos, _, hdq⟩ | ⟨hbneg, _, hdq⟩ := Dyadic.divFloorQ_cases hd
-    · have hdm : (0:ℤ) ≤ d.m := by
-        rw [hdq]
+    have hdm : (0:ℤ) ≤ d.m := by
+      rcases Dyadic.divFloorQ_cases hd with
+        ⟨hbpos, _, hdq⟩ | ⟨hbneg, _, hdq⟩ | ⟨hbpos, _, hdq⟩ | ⟨hbneg, _, hdq⟩
+      · rw [hdq]
         exact Int.ediv_nonneg (mul_nonneg (mantissa_nonneg hnum)
           (by exact_mod_cast Nat.zero_le ((2:ℕ) ^ _))) (by omega)
-      rw [hd] at h
-      dsimp only at h
-      by_cases hchk : Dyadic.ble ⟨d.m + 1, out⟩ ⟨3, -3⟩
-      · have h38 : Dyadic.toReal ⟨d.m + 1, out⟩ ≤ (3:ℝ) / 8 := by
-          have hb := Dyadic.ble_toReal hchk
-          have hb38 : Dyadic.toReal ⟨3, -3⟩ = (3:ℝ) / 8 := by
-            rw [Dyadic.toReal_def]; norm_num
-          rw [hb38] at hb
-          exact hb
-        rw [if_pos hchk] at h
-        cases hloop1 : logAcc d out N 0 ⟨0, 0⟩ ⟨0, 0⟩ with
-        | none => simp only [hloop1] at h; simp at h
-        | some lr1 =>
-          obtain ⟨lw, _⟩ := lr1
-          simp only [hloop1] at h
-          cases hloop2 : logAcc ⟨d.m + 1, out⟩ out N 0 ⟨0, 0⟩ ⟨0, 0⟩ with
-          | none => simp only [hloop2] at h; simp at h
-          | some lr2 =>
-            obtain ⟨_, hg⟩ := lr2
-            simp only [hloop2, Option.some.injEq] at h
-            obtain rfl := h.symm
-            set Ad : ℕ → ℝ := fun i ↦ d.toReal ^ (2 * i + 1) / ((2 * i + 1 : ℕ) : ℝ) with hAd
-            set Ah : ℕ → ℝ := fun i ↦ Dyadic.toReal ⟨d.m + 1, out⟩ ^ (2 * i + 1)
-                / ((2 * i + 1 : ℕ) : ℝ) with hAh
-            have hAd' : ∀ i (q : Dyadic),
-                Dyadic.divFloorQ (d.npow (2 * i + 1)) ⟨((2 * i + 1 : ℕ) : ℤ), 0⟩
-                    ((2 * i + 1) * out) = some q →
-                q.toReal ≤ Ad i ∧ Ad i ≤ Dyadic.toReal ⟨q.m + 1, (2 * i + 1) * out⟩ := by
-              intro i q hq
-              obtain ⟨hs1, hs2⟩ := Dyadic.divFloorQ_spec hq
-              rw [Dyadic.toReal_npow, Dyadic.toReal_int] at hs1 hs2
-              exact ⟨hs1, hs2⟩
-            have hAh' : ∀ i (q : Dyadic),
-                Dyadic.divFloorQ ((⟨d.m + 1, out⟩ : Dyadic).npow (2 * i + 1))
-                    ⟨((2 * i + 1 : ℕ) : ℤ), 0⟩
-                    ((2 * i + 1) * out) = some q →
-                q.toReal ≤ Ah i ∧ Ah i ≤ Dyadic.toReal ⟨q.m + 1, (2 * i + 1) * out⟩ := by
-              intro i q hq
-              obtain ⟨hs1, hs2⟩ := Dyadic.divFloorQ_spec hq
-              rw [Dyadic.toReal_npow, Dyadic.toReal_int] at hs1 hs2
-              exact ⟨hs1, hs2⟩
-            obtain ⟨h1a, h1b⟩ := logAcc_spec d out Ad hAd' N 0 ⟨0, 0⟩ ⟨0, 0⟩
-              (by rw [Dyadic.toReal_def]; simp) (by rw [Dyadic.toReal_def]; simp) _ hloop1
-            obtain ⟨h2a, h2b⟩ := logAcc_spec ⟨d.m + 1, out⟩ out Ah hAh' N 0 ⟨0, 0⟩ ⟨0, 0⟩
-              (by rw [Dyadic.toReal_def]; simp) (by rw [Dyadic.toReal_def]; simp) _ hloop2
-            rw [Nat.zero_add] at h1a h1b h2a h2b
-            dsimp only at h1a h2b
-            have hupos : (0:ℝ) < u.toReal := by linarith
-            have hlog := log_eq_two_mul_artanh hupos
-            have hy0 : (0:ℝ) ≤ (u.toReal - 1) / (u.toReal + 1) := by
-              apply div_nonneg <;> linarith
-            have hy3 : (u.toReal - 1) / (u.toReal + 1) ≤ 1 / 3 := by
-              rw [div_le_iff₀ (by linarith : (0:ℝ) < u.toReal + 1)]
-              nlinarith
-            have hyd : d.toReal ≤ (u.toReal - 1) / (u.toReal + 1) := hlow
-            have hyh : (u.toReal - 1) / (u.toReal + 1) ≤ Dyadic.toReal ⟨d.m + 1, out⟩ := hhigh
-            have hlt1 : Dyadic.toReal ⟨d.m + 1, out⟩ < 1 := by linarith
-            have hb0 : (0:ℝ) ≤ d.toReal := by
-              rw [Dyadic.toReal_def]
-              exact mul_nonneg (by exact_mod_cast hdm) (by positivity)
-            have hb1 : (0:ℝ) ≤ Dyadic.toReal ⟨d.m + 1, out⟩ := by
-              rw [Dyadic.toReal_def]
-              exact mul_nonneg (by exact_mod_cast (by omega : (0:ℤ) ≤ d.m + 1)) (by positivity)
-            have hpartd := real_artanh_partial_bounds (hy0 := hb0) (hy1 := by linarith) N
-            have hparth := real_artanh_partial_bounds (hy0 := hb1) (hy1 := hlt1) N
-            have hmono1 : Real.artanh d.toReal
-                ≤ Real.artanh ((u.toReal - 1) / (u.toReal + 1)) :=
-              Real.artanh_le_artanh (by linarith) (by linarith) hyd
-            have hmono2 : Real.artanh ((u.toReal - 1) / (u.toReal + 1))
-                ≤ Real.artanh (Dyadic.toReal ⟨d.m + 1, out⟩) :=
-              Real.artanh_le_artanh (by linarith) hlt1 hyh
-            have ht2 : (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2 ≤ (9:ℝ) / 64 := by
-              have hq1 : (0:ℝ) ≤ (3:ℝ)/8 - Dyadic.toReal ⟨d.m + 1, out⟩ := by linarith
-              have hq2 : (0:ℝ) ≤ (3:ℝ)/8 + Dyadic.toReal ⟨d.m + 1, out⟩ := by linarith
-              have hq3 : (0:ℝ) ≤ ((3:ℝ)/8 - Dyadic.toReal ⟨d.m + 1, out⟩)
-                    * ((3:ℝ)/8 + Dyadic.toReal ⟨d.m + 1, out⟩) := mul_nonneg hq1 hq2
-              have hq4 : ((3:ℝ)/8 - Dyadic.toReal ⟨d.m + 1, out⟩)
-                    * ((3:ℝ)/8 + Dyadic.toReal ⟨d.m + 1, out⟩)
-                  = (9:ℝ)/64 - (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2 := by ring
-              linarith [hq3, hq4]
-            have hR : Dyadic.toReal
-                (Dyadic.mul (Dyadic.mul ⟨(7:ℤ), 0⟩
-                  (Dyadic.npow (⟨d.m + 1, out⟩ : Dyadic) (2 * N + 1))) ⟨1, -2⟩)
-                = (7:ℝ) / 4 * (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1) := by
-              have h14 : Dyadic.toReal ⟨1, -2⟩ = (1:ℝ) / 4 := by
-                rw [Dyadic.toReal_def]; norm_num
-              rw [Dyadic.toReal_mul, Dyadic.toReal_mul, Dyadic.toReal_int, Dyadic.toReal_npow,
-                h14]
+      · exact absurd (mantissa_neg hbneg) (by linarith)
+      · rw [hdq]
+        exact Int.ediv_nonneg (mantissa_nonneg hnum)
+          (le_of_lt (Int.mul_pos hbpos (pow_pos (by norm_num : (0:ℤ) < 2) _)))
+      · exact absurd (mantissa_neg hbneg) (by linarith)
+    rw [hd] at h
+    dsimp only at h
+    by_cases hchk : Dyadic.ble ⟨d.m + 1, out⟩ ⟨3, -3⟩
+    · have h38 : Dyadic.toReal ⟨d.m + 1, out⟩ ≤ (3:ℝ) / 8 := by
+        have hb := Dyadic.ble_toReal hchk
+        have hb38 : Dyadic.toReal ⟨3, -3⟩ = (3:ℝ) / 8 := by
+          rw [Dyadic.toReal_def]; norm_num
+        rw [hb38] at hb
+        exact hb
+      rw [if_pos hchk] at h
+      cases hloop1 : logAcc d out N 0 ⟨0, 0⟩ ⟨0, 0⟩ with
+      | none => simp only [hloop1] at h; simp at h
+      | some lr1 =>
+        obtain ⟨lw, _⟩ := lr1
+        simp only [hloop1] at h
+        cases hloop2 : logAcc ⟨d.m + 1, out⟩ out N 0 ⟨0, 0⟩ ⟨0, 0⟩ with
+        | none => simp only [hloop2] at h; simp at h
+        | some lr2 =>
+          obtain ⟨_, hg⟩ := lr2
+          simp only [hloop2, Option.some.injEq] at h
+          obtain rfl := h.symm
+          set Ad : ℕ → ℝ := fun i ↦ d.toReal ^ (2 * i + 1) / ((2 * i + 1 : ℕ) : ℝ) with hAd
+          set Ah : ℕ → ℝ := fun i ↦ Dyadic.toReal ⟨d.m + 1, out⟩ ^ (2 * i + 1)
+              / ((2 * i + 1 : ℕ) : ℝ) with hAh
+          have hAd' : ∀ i (q : Dyadic),
+              Dyadic.divFloorQ (d.npow (2 * i + 1)) ⟨((2 * i + 1 : ℕ) : ℤ), 0⟩
+                  ((2 * i + 1) * out) = some q →
+              q.toReal ≤ Ad i ∧ Ad i ≤ Dyadic.toReal ⟨q.m + 1, (2 * i + 1) * out⟩ := by
+            intro i q hq
+            obtain ⟨hs1, hs2⟩ := Dyadic.divFloorQ_spec hq
+            rw [Dyadic.toReal_npow, Dyadic.toReal_int] at hs1 hs2
+            exact ⟨hs1, hs2⟩
+          have hAh' : ∀ i (q : Dyadic),
+              Dyadic.divFloorQ ((⟨d.m + 1, out⟩ : Dyadic).npow (2 * i + 1))
+                  ⟨((2 * i + 1 : ℕ) : ℤ), 0⟩
+                  ((2 * i + 1) * out) = some q →
+              q.toReal ≤ Ah i ∧ Ah i ≤ Dyadic.toReal ⟨q.m + 1, (2 * i + 1) * out⟩ := by
+            intro i q hq
+            obtain ⟨hs1, hs2⟩ := Dyadic.divFloorQ_spec hq
+            rw [Dyadic.toReal_npow, Dyadic.toReal_int] at hs1 hs2
+            exact ⟨hs1, hs2⟩
+          obtain ⟨h1a, h1b⟩ := logAcc_spec d out Ad hAd' N 0 ⟨0, 0⟩ ⟨0, 0⟩
+            (by rw [Dyadic.toReal_def]; simp) (by rw [Dyadic.toReal_def]; simp) _ hloop1
+          obtain ⟨h2a, h2b⟩ := logAcc_spec ⟨d.m + 1, out⟩ out Ah hAh' N 0 ⟨0, 0⟩ ⟨0, 0⟩
+            (by rw [Dyadic.toReal_def]; simp) (by rw [Dyadic.toReal_def]; simp) _ hloop2
+          rw [Nat.zero_add] at h1a h1b h2a h2b
+          dsimp only at h1a h2b
+          have hupos : (0:ℝ) < u.toReal := by linarith
+          have hlog := log_eq_two_mul_artanh hupos
+          have hy0 : (0:ℝ) ≤ (u.toReal - 1) / (u.toReal + 1) := by
+            apply div_nonneg <;> linarith
+          have hy3 : (u.toReal - 1) / (u.toReal + 1) ≤ 1 / 3 := by
+            rw [div_le_iff₀ (by linarith : (0:ℝ) < u.toReal + 1)]
+            nlinarith
+          have hyd : d.toReal ≤ (u.toReal - 1) / (u.toReal + 1) := hlow
+          have hyh : (u.toReal - 1) / (u.toReal + 1) ≤ Dyadic.toReal ⟨d.m + 1, out⟩ := hhigh
+          have hlt1 : Dyadic.toReal ⟨d.m + 1, out⟩ < 1 := by linarith
+          have hb0 : (0:ℝ) ≤ d.toReal := by
+            rw [Dyadic.toReal_def]
+            exact mul_nonneg (by exact_mod_cast hdm) (by positivity)
+          have hb1 : (0:ℝ) ≤ Dyadic.toReal ⟨d.m + 1, out⟩ := by
+            rw [Dyadic.toReal_def]
+            exact mul_nonneg (by exact_mod_cast (by omega : (0:ℤ) ≤ d.m + 1)) (by positivity)
+          have hpartd := real_artanh_partial_bounds (hy0 := hb0) (hy1 := by linarith) N
+          have hparth := real_artanh_partial_bounds (hy0 := hb1) (hy1 := hlt1) N
+          have hmono1 : Real.artanh d.toReal
+              ≤ Real.artanh ((u.toReal - 1) / (u.toReal + 1)) :=
+            Real.artanh_le_artanh (by linarith) (by linarith) hyd
+          have hmono2 : Real.artanh ((u.toReal - 1) / (u.toReal + 1))
+              ≤ Real.artanh (Dyadic.toReal ⟨d.m + 1, out⟩) :=
+            Real.artanh_le_artanh (by linarith) hlt1 hyh
+          have ht2 : (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2 ≤ (9:ℝ) / 64 := by
+            have hq1 : (0:ℝ) ≤ (3:ℝ)/8 - Dyadic.toReal ⟨d.m + 1, out⟩ := by linarith
+            have hq2 : (0:ℝ) ≤ (3:ℝ)/8 + Dyadic.toReal ⟨d.m + 1, out⟩ := by linarith
+            have hq3 : (0:ℝ) ≤ ((3:ℝ)/8 - Dyadic.toReal ⟨d.m + 1, out⟩)
+                  * ((3:ℝ)/8 + Dyadic.toReal ⟨d.m + 1, out⟩) := mul_nonneg hq1 hq2
+            have hq4 : ((3:ℝ)/8 - Dyadic.toReal ⟨d.m + 1, out⟩)
+                  * ((3:ℝ)/8 + Dyadic.toReal ⟨d.m + 1, out⟩)
+                = (9:ℝ)/64 - (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2 := by ring
+            linarith [hq3, hq4]
+          have hR : Dyadic.toReal
+              (Dyadic.mul (Dyadic.mul ⟨(7:ℤ), 0⟩
+                (Dyadic.npow (⟨d.m + 1, out⟩ : Dyadic) (2 * N + 1))) ⟨1, -2⟩)
+              = (7:ℝ) / 4 * (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1) := by
+            have h14 : Dyadic.toReal ⟨1, -2⟩ = (1:ℝ) / 4 := by
+              rw [Dyadic.toReal_def]; norm_num
+            rw [Dyadic.toReal_mul, Dyadic.toReal_mul, Dyadic.toReal_int, Dyadic.toReal_npow,
+              h14]
+            ring
+          constructor
+          · show Dyadic.toReal (lw.add lw) ≤ Real.log u.toReal
+            rw [Dyadic.toReal_add, hlog]
+            calc (lw.toReal + lw.toReal)
+                ≤ 2 * (∑ i ∈ Finset.range N, Ad i) := by linarith
+              _ ≤ 2 * Real.artanh d.toReal :=
+                    mul_le_mul_of_nonneg_left hpartd.1 (by norm_num)
+              _ ≤ 2 * Real.artanh ((u.toReal - 1) / (u.toReal + 1)) :=
+                    mul_le_mul_of_nonneg_left hmono1 (by norm_num)
+          · have hhi : Dyadic.toReal
+                ((hg.add
+                    (Dyadic.mul (Dyadic.mul ⟨(7:ℤ), 0⟩
+                      (Dyadic.npow (⟨d.m + 1, out⟩ : Dyadic) (2 * N + 1))) ⟨1, -2⟩)).add
+                  (hg.add
+                    (Dyadic.mul (Dyadic.mul ⟨(7:ℤ), 0⟩
+                      (Dyadic.npow (⟨d.m + 1, out⟩ : Dyadic) (2 * N + 1))) ⟨1, -2⟩)))
+                = 2 * (hg.toReal
+                    + (7:ℝ) / 4 * (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1)) := by
+              rw [Dyadic.toReal_add, Dyadic.toReal_add, hR]
               ring
-            constructor
-            · show Dyadic.toReal (lw.add lw) ≤ Real.log u.toReal
-              rw [Dyadic.toReal_add, hlog]
-              calc (lw.toReal + lw.toReal)
-                  ≤ 2 * (∑ i ∈ Finset.range N, Ad i) := by linarith
-                _ ≤ 2 * Real.artanh d.toReal :=
-                      mul_le_mul_of_nonneg_left hpartd.1 (by norm_num)
-                _ ≤ 2 * Real.artanh ((u.toReal - 1) / (u.toReal + 1)) :=
-                      mul_le_mul_of_nonneg_left hmono1 (by norm_num)
-            · have hhi : Dyadic.toReal
-                  ((hg.add
-                      (Dyadic.mul (Dyadic.mul ⟨(7:ℤ), 0⟩
-                        (Dyadic.npow (⟨d.m + 1, out⟩ : Dyadic) (2 * N + 1))) ⟨1, -2⟩)).add
-                    (hg.add
-                      (Dyadic.mul (Dyadic.mul ⟨(7:ℤ), 0⟩
-                        (Dyadic.npow (⟨d.m + 1, out⟩ : Dyadic) (2 * N + 1))) ⟨1, -2⟩)))
-                  = 2 * (hg.toReal
-                      + (7:ℝ) / 4 * (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1)) := by
-                rw [Dyadic.toReal_add, Dyadic.toReal_add, hR]
-                ring
-              have hUB : Real.artanh ((u.toReal - 1) / (u.toReal + 1))
-                  ≤ hg.toReal
-                    + (7:ℝ) / 4 * (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1) := by
-                have h2 := hparth.2
-                have h64 : ((9:ℝ)/64 : ℝ) < 1 := by norm_num
-                have hpos : (0:ℝ) < (1:ℝ) - (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2 := by
-                  linarith
-                have htnonneg : (0:ℝ) ≤ (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1) :=
-                  pow_nonneg hb1 _
-                have hlin : (1:ℝ) ≤ (7:ℝ) / 4
-                    * ((1:ℝ) - (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2) := by
-                  have h55 : ((55:ℝ)/64 : ℝ) ≤ 1 - (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2 := by
-                    linarith
-                  have hmul := mul_le_mul_of_nonneg_left h55
-                    (by norm_num : (0:ℝ) ≤ (7:ℝ) / 4)
-                  have hnum : (1:ℝ) ≤ (7:ℝ) / 4 * ((55:ℝ) / 64) := by norm_num
-                  linarith
-                have hrem' : (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1)
-                      / ((1:ℝ) - (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2)
-                    ≤ (7:ℝ) / 4 * (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1) := by
-                  rw [div_le_iff₀ hpos]
-                  nlinarith [hlin, htnonneg]
+            have hUB : Real.artanh ((u.toReal - 1) / (u.toReal + 1))
+                ≤ hg.toReal
+                  + (7:ℝ) / 4 * (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1) := by
+              have h2 := hparth.2
+              have h64 : ((9:ℝ)/64 : ℝ) < 1 := by norm_num
+              have hpos : (0:ℝ) < (1:ℝ) - (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2 := by
                 linarith
-              have h1'' : (2:ℝ) * Real.artanh ((u.toReal - 1) / (u.toReal + 1))
-                    ≤ 2 * (hg.toReal + (7:ℝ) / 4
-                        * (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1)) :=
-                mul_le_mul_of_nonneg_left hUB (by norm_num)
-              rw [hlog]
-              dsimp only
-              linarith [h1'', hhi]
-      · rw [if_neg hchk] at h; simp at h
-    · exact absurd (mantissa_neg hbneg) (by linarith)
+              have htnonneg : (0:ℝ) ≤ (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1) :=
+                pow_nonneg hb1 _
+              have hlin : (1:ℝ) ≤ (7:ℝ) / 4
+                  * ((1:ℝ) - (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2) := by
+                have h55 : ((55:ℝ)/64 : ℝ) ≤ 1 - (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2 := by
+                  linarith
+                have hmul := mul_le_mul_of_nonneg_left h55
+                  (by norm_num : (0:ℝ) ≤ (7:ℝ) / 4)
+                have hnum : (1:ℝ) ≤ (7:ℝ) / 4 * ((55:ℝ) / 64) := by norm_num
+                linarith
+              have hrem' : (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1)
+                    / ((1:ℝ) - (Dyadic.toReal ⟨d.m + 1, out⟩) ^ 2)
+                  ≤ (7:ℝ) / 4 * (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1) := by
+                rw [div_le_iff₀ hpos]
+                nlinarith [hlin, htnonneg]
+              linarith
+            have h1'' : (2:ℝ) * Real.artanh ((u.toReal - 1) / (u.toReal + 1))
+                  ≤ 2 * (hg.toReal + (7:ℝ) / 4
+                      * (Dyadic.toReal ⟨d.m + 1, out⟩) ^ (2 * N + 1)) :=
+              mul_le_mul_of_nonneg_left hUB (by norm_num)
+            rw [hlog]
+            dsimp only
+            linarith [h1'', hhi]
+    · rw [if_neg hchk] at h; simp at h
 
 /-! ## Dyadic enclosure of `log 2` and integer scaling -/
 
