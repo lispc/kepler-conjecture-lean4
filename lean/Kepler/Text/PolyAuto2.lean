@@ -431,6 +431,377 @@ theorem FAN6_LINEAR_IMAGE_EQ (f : V3 →ₗ[ℝ] V3) (hf : Function.Injective f)
     obtain ⟨e₀, he₀, rfl⟩ := he
     exact fun hc => h e₀ he₀ ((hcol e₀).mp hc)
 
+/-- 单射函数像相等推出原像相等。 -/
+private theorem fan7_image_eq_of_image_eq {g : V3 → V3} (hg : Function.Injective g)
+    {A B : Set V3} (h : g '' A = g '' B) : A = B := by
+  ext z
+  constructor
+  · intro hz
+    obtain ⟨w, hw, hgw⟩ := h ▸ Set.mem_image_of_mem _ hz
+    rw [hg hgw] at hw
+    exact hw
+  · intro hz
+    obtain ⟨w, hw, hgw⟩ := h.symm ▸ Set.mem_image_of_mem _ hz
+    rw [hg hgw] at hw
+    exact hw
+
+/-- 平移像半空间中点的回拉：`v ∈ affGe {a+x} ((a+·) '' t)` 时 `v - a ∈ affGe {x} t`。 -/
+private theorem fan7_affGe_add_image_sub (a x : V3) {t : Set V3} {v : V3}
+    (hv : v ∈ affGe {a + x} ((fun y : V3 => a + y) '' t)) : v - a ∈ affGe {x} t := by
+  have hinj : Function.Injective (fun y : V3 => a + y) := fun u w h => add_left_cancel h
+  simp only [affGe, Set.mem_setOf_eq, Affsign] at hv ⊢
+  obtain ⟨c, h, hval, hsign, hsum⟩ := hv
+  have hFeq : ((h.toFinset : Set V3)) = {a + x} ∪ (fun y : V3 => a + y) '' t :=
+    h.coe_toFinset
+  have hInj : Set.InjOn (fun y : V3 => a + y)
+      ((fun y : V3 => a + y) ⁻¹' (h.toFinset : Set V3)) := fun u _ w _ huw =>
+    add_left_cancel huw
+  set F₀ : Finset V3 := h.toFinset.preimage (fun y : V3 => a + y) hInj with hF₀eq
+  have hmem₀ : ∀ w : V3, w ∈ F₀ ↔ a + w ∈ h.toFinset := by
+    intro w
+    rw [hF₀eq]
+    exact Finset.mem_preimage
+  have himg : F₀.image (fun y : V3 => a + y) = h.toFinset := by
+    apply Finset.ext
+    intro u
+    rw [Finset.mem_image]
+    constructor
+    · rintro ⟨w, hw, rfl⟩
+      exact (hmem₀ w).1 hw
+    · intro hu
+      refine ⟨u - a, (hmem₀ (u - a)).2 ?_, by simp⟩
+      have hau : (a + (u - a) : V3) = u := by simp
+      rw [hau]
+      exact hu
+  have hsub₀ : ∀ w : V3, w ∈ F₀ → w ∈ {x} ∪ t := by
+    intro w hw
+    have hw' : (a + w : V3) ∈ {a + x} ∪ (fun y : V3 => a + y) '' t := by
+      rw [← hFeq]
+      exact (hmem₀ w).1 hw
+    simp only [Set.mem_union, Set.mem_image, Set.mem_singleton_iff] at hw'
+    rcases hw' with hr | ⟨w', hw', hrw'⟩
+    · exact Or.inl (add_left_cancel hr)
+    · exact Or.inr (by rw [← hinj hrw']; exact hw')
+  have hfin : ({x} ∪ t : Set V3).Finite := by
+    have h1 : ((fun y : V3 => a + y) ⁻¹' ({a + x} ∪ (fun y : V3 => a + y) '' t)).Finite :=
+      Set.Finite.preimage (fun u _ w _ huw => add_left_cancel huw) h
+    have h2 : {x} ∪ t ⊆ (fun y : V3 => a + y) ⁻¹' ({a + x} ∪
+        (fun y : V3 => a + y) '' t) := by
+      intro w hw
+      simp only [Set.mem_preimage, Set.mem_union, Set.mem_singleton_iff, Set.mem_image] at hw
+      simp only [Set.mem_preimage, Set.mem_union, Set.mem_singleton_iff, Set.mem_image]
+      rcases hw with hr | hw'
+      · exact Or.inl (by rw [hr])
+      · exact Or.inr ⟨w, hw', rfl⟩
+    exact h1.subset h2
+  have hF₀sub : ∀ w ∈ F₀, w ∈ hfin.toFinset := by
+    intro w hw
+    exact (Set.Finite.mem_toFinset (hs := hfin)).2 (hsub₀ w hw)
+  have hsumimg : ∑ u ∈ F₀.image (fun y : V3 => a + y), c u = ∑ w ∈ F₀, c (a + w) :=
+    Finset.sum_image (fun u _ w _ huw => hinj huw)
+  have hsum₀ : ∑ w ∈ F₀, c (a + w) = 1 := by
+    rw [← hsumimg, himg]
+    simpa using hsum
+  have hvalimg : ∑ u ∈ F₀.image (fun y : V3 => a + y), c u • u =
+      ∑ w ∈ F₀, c (a + w) • (a + w) :=
+    Finset.sum_image (fun u _ w _ huw => hinj huw)
+  have hsplit : ∑ w ∈ F₀, c (a + w) • (a + w) =
+      (∑ w ∈ F₀, c (a + w)) • a + ∑ w ∈ F₀, c (a + w) • w := by
+    rw [Finset.sum_congr rfl (fun w _ => smul_add _ _ _), Finset.sum_add_distrib,
+      Finset.sum_smul]
+  set S : V3 := ∑ w ∈ F₀, c (a + w) • w with hSeq
+  have hval' : v = a + S := by
+    rw [hval, ← himg, hvalimg, hsplit, hsum₀, one_smul]
+  refine ⟨fun w => if w ∈ F₀ then c (a + w) else 0, hfin, ?_, ?_, ?_⟩
+  · -- 数值
+    have hzero : ∀ w ∈ F₀, (if w ∈ F₀ then c (a + w) else 0) • w = c (a + w) • w :=
+      fun w hw => by simp [hw]
+    rw [← Finset.sum_subset hF₀sub (fun w _ hw' => by simp [hw']),
+      Finset.sum_congr rfl hzero, ← hSeq]
+    refine sub_eq_of_eq_add ?_
+    exact hval'.trans (add_comm a S)
+  · -- 符号
+    intro w hw
+    have hw₀ : w ∈ F₀ := (hmem₀ w).2 (by
+      have hwu : (a + w : V3) ∈ {a + x} ∪ (fun y : V3 => a + y) '' t := by
+        simp only [Set.mem_union, Set.mem_singleton_iff, Set.mem_image]
+        exact Or.inr ⟨w, hw, rfl⟩
+      show (a + w : V3) ∈ (h.toFinset : Set V3)
+      rw [hFeq]
+      exact hwu)
+    show 0 ≤ (if w ∈ F₀ then c (a + w) else 0)
+    rw [if_pos hw₀]
+    exact hsign _ (Set.mem_image_of_mem _ hw)
+  · -- 和
+    have hzero2 : ∀ w ∈ F₀, (if w ∈ F₀ then c (a + w) else 0) = c (a + w) :=
+      fun w hw => by simp [hw]
+    rw [← Finset.sum_subset hF₀sub (fun w _ hw' => by simp [hw']),
+      Finset.sum_congr rfl hzero2]
+    exact hsum₀
+
+/-- 平移像半空间中点的直推：`u ∈ affGe {x} t` 时 `a + u ∈ affGe {a+x} ((a+·) '' t)`。 -/
+private theorem fan7_affGe_add_image_add (a x : V3) {t : Set V3} {u : V3}
+    (hu : u ∈ affGe {x} t) : a + u ∈ affGe {a + x} ((fun y : V3 => a + y) '' t) := by
+  have hinjOn : Set.InjOn (fun y : V3 => a + y) ({x} ∪ t) := fun p _ q _ hpq =>
+    add_left_cancel hpq
+  simp only [affGe, Set.mem_setOf_eq, Affsign] at hu ⊢
+  obtain ⟨c, h₀, hval, hsign, hsum⟩ := hu
+  have hset : ({a + x} ∪ ((fun y : V3 => a + y) '' t) : Set V3) =
+      (fun y : V3 => a + y) '' ({x} ∪ t) := by
+    rw [Set.image_union, Set.image_singleton]
+  have hfin2 : ({a + x} ∪ ((fun y : V3 => a + y) '' t) : Set V3).Finite := by
+    rw [hset]
+    exact Set.Finite.image (fun y : V3 => a + y) h₀
+  have hF2 : hfin2.toFinset = h₀.toFinset.image (fun y : V3 => a + y) := by
+    apply Finset.coe_injective
+    rw [Set.Finite.coe_toFinset, Finset.coe_image, Set.Finite.coe_toFinset h₀]
+    exact hset
+  have hinjF : Set.InjOn (fun y : V3 => a + y) (h₀.toFinset : Set V3) :=
+    hinjOn.mono (fun p hp => (Set.Finite.mem_toFinset (hs := h₀)).mp hp)
+  have hvalimg : ∑ z ∈ h₀.toFinset.image (fun y : V3 => a + y), c (z - a) • z =
+      ∑ w ∈ h₀.toFinset, c (a + w - a) • (a + w) :=
+    Finset.sum_image hinjF
+  have hsumsub : ∑ w ∈ h₀.toFinset, c (a + w - a) • (a + w) =
+      ∑ w ∈ h₀.toFinset, c w • (a + w) :=
+    Finset.sum_congr rfl (fun w _ => by simp)
+  have hsplit : ∑ w ∈ h₀.toFinset, c w • (a + w) =
+      (∑ w ∈ h₀.toFinset, c w) • a + ∑ w ∈ h₀.toFinset, c w • w := by
+    rw [Finset.sum_congr rfl (fun w _ => smul_add _ _ _), Finset.sum_add_distrib,
+      Finset.sum_smul]
+  refine ⟨fun z => c (z - a), hfin2, ?_, ?_, ?_⟩
+  · -- 数值
+    rw [hF2, hvalimg, hsumsub, hsplit, hsum, one_smul, ← hval]
+  · -- 符号
+    intro z hz
+    obtain ⟨w, hw, rfl⟩ := hz
+    show 0 ≤ c ((a + w) - a)
+    rw [show (a + w) - a = w from by simp]
+    exact hsign _ hw
+  · -- 和
+    rw [hF2]
+    have hsumimg : ∑ z ∈ h₀.toFinset.image (fun y : V3 => a + y), c (z - a) =
+        ∑ w ∈ h₀.toFinset, c (a + w - a) :=
+      Finset.sum_image hinjF
+    rw [hsumimg]
+    have hsum' : ∑ w ∈ h₀.toFinset, c (a + w - a) = ∑ w ∈ h₀.toFinset, c w :=
+      Finset.sum_congr rfl (fun w _ => by simp)
+    rw [hsum']
+    exact hsum
+
+/-- `affGe` 在平移下的等变：`affGe {a+x} ((a+·) '' t) = (a+·) '' affGe {x} t`。 -/
+private theorem fan7_affGe_add_image (a x : V3) (t : Set V3) :
+    affGe {a + x} ((fun y : V3 => a + y) '' t) =
+      (fun y : V3 => a + y) '' (affGe {x} t) := by
+  ext v
+  constructor
+  · intro hmem
+    exact ⟨v - a, fan7_affGe_add_image_sub a x hmem, by simp⟩
+  · rintro ⟨u, hu, rfl⟩
+    exact fan7_affGe_add_image_add a x hu
+
+/-- `affGe` 在单射线性像下的等变：`affGe {f x} (f '' t) = f '' (affGe {x} t)`。 -/
+private theorem fan7_affGe_lin_image {f : V3 →ₗ[ℝ] V3} (hf : Function.Injective f) (x : V3)
+    (t : Set V3) : affGe {f x} (f '' t) = f '' (affGe {x} t) := by
+  ext v
+  constructor
+  · -- 正向：回拉
+    have hinj : Function.Injective fun y : V3 => f y := hf
+    intro hv
+    simp only [affGe, Set.mem_setOf_eq, Affsign] at hv ⊢
+    obtain ⟨c, h, hval, hsign, hsum⟩ := hv
+    have hFeq : ((h.toFinset : Set V3)) = {f x} ∪ f '' t := h.coe_toFinset
+    have hInj : Set.InjOn (f) ((f ⁻¹' (h.toFinset : Set V3))) := fun u _ w _ huw => hf huw
+    set F₀ : Finset V3 := h.toFinset.preimage f hInj with hF₀eq
+    have hmem₀ : ∀ w : V3, w ∈ F₀ ↔ (f w : V3) ∈ (h.toFinset : Set V3) := by
+      intro w
+      rw [hF₀eq]
+      exact ⟨fun hw => Finset.mem_preimage.1 hw, fun hw => Finset.mem_preimage.2 hw⟩
+    have himg : F₀.image f = h.toFinset := by
+      apply Finset.ext
+      intro u
+      rw [Finset.mem_image]
+      constructor
+      · rintro ⟨w, hw, rfl⟩
+        exact (hmem₀ w).1 hw
+      · intro hu
+        have hu' : (u : V3) ∈ {f x} ∪ f '' t :=
+          (Set.Finite.mem_toFinset (hs := h)).mp hu
+        simp only [Set.mem_union, Set.mem_singleton_iff, Set.mem_image] at hu'
+        rcases hu' with hr | ⟨w, hw, hrw⟩
+        · refine ⟨x, (hmem₀ x).2 ?_, ?_⟩
+          · rw [hFeq]
+            simp only [Set.mem_union, Set.mem_singleton_iff]
+            exact Or.inl trivial
+          · rw [hr]
+        · refine ⟨w, (hmem₀ w).2 ?_, ?_⟩
+          · rw [hFeq]
+            simp only [Set.mem_union, Set.mem_image]
+            exact Or.inr ⟨w, hw, rfl⟩
+          · exact hrw
+    have hsub₀ : ∀ w : V3, w ∈ F₀ → w ∈ {x} ∪ t := by
+      intro w hw
+      have hw' : (f w : V3) ∈ {f x} ∪ f '' t := by
+        rw [← hFeq]
+        exact (hmem₀ w).1 hw
+      simp only [Set.mem_union, Set.mem_singleton_iff, Set.mem_image] at hw'
+      rcases hw' with hr | ⟨w', hw', hrw'⟩
+      · exact Or.inl (hf hr)
+      · exact Or.inr (by rw [← hinj hrw']; exact hw')
+    have hfin : ({x} ∪ t : Set V3).Finite := by
+      have h1 : (f ⁻¹' ({f x} ∪ f '' t)).Finite :=
+        Set.Finite.preimage (fun u _ w _ huw => hf huw) h
+      have h2 : {x} ∪ t ⊆ f ⁻¹' ({f x} ∪ f '' t) := by
+        intro w hw
+        rcases (Set.mem_union _ _ _).mp hw with rfl | hw
+        · simp
+        · exact Set.mem_preimage.2 (by
+            simp only [Set.mem_union, Set.mem_image, Set.mem_singleton_iff]
+            exact Or.inr ⟨w, hw, rfl⟩)
+      exact h1.subset h2
+    have hF₀sub : ∀ w ∈ F₀, w ∈ hfin.toFinset := fun w hw =>
+      (Set.Finite.mem_toFinset (hs := hfin)).2 (hsub₀ w hw)
+    have hsumimg : ∑ u ∈ F₀.image f, c u = ∑ w ∈ F₀, c (f w) :=
+      Finset.sum_image (fun u _ w _ huw => hinj huw)
+    have hsum₀ : ∑ w ∈ F₀, c (f w) = 1 := by
+      rw [← hsumimg, himg]
+      simpa using hsum
+    have hvalimg : ∑ u ∈ F₀.image f, c u • u = ∑ w ∈ F₀, c (f w) • (f w) :=
+      Finset.sum_image (fun u _ w _ huw => hinj huw)
+    have hsplit : ∑ w ∈ F₀, c (f w) • (f w) = f (∑ w ∈ F₀, c (f w) • w) := by
+      rw [map_sum]
+      exact Finset.sum_congr rfl (fun w _ => (map_smul f (c (f w)) w).symm)
+    set S : V3 := ∑ w ∈ F₀, c (f w) • w with hSeq
+    have hval' : v = f S := by
+      rw [hval, ← himg, hvalimg, hsplit]
+    refine ⟨S, ⟨fun w => if w ∈ F₀ then c (f w) else 0, hfin, ?_, ?_, ?_⟩, ?_⟩
+    · -- 数值
+      have hzero2 : ∀ w ∈ F₀, (if w ∈ F₀ then c (f w) else 0) • w = c (f w) • w :=
+        fun w hw => by simp [hw]
+      rw [← Finset.sum_subset hF₀sub (fun w _ hw' => by simp [hw']),
+        Finset.sum_congr rfl hzero2, ← hSeq]
+    · -- 符号
+      intro w hw
+      have hw₀ : w ∈ F₀ := (hmem₀ w).2 (by
+        rw [hFeq]
+        simp only [Set.mem_union, Set.mem_image, Set.mem_singleton_iff]
+        exact Or.inr ⟨w, hw, rfl⟩)
+      show 0 ≤ (if w ∈ F₀ then c (f w) else 0)
+      rw [if_pos hw₀]
+      exact hsign _ (Set.mem_image_of_mem _ hw)
+    · -- 和
+      have hzero3 : ∀ w ∈ F₀, (if w ∈ F₀ then c (f w) else 0) = c (f w) :=
+        fun w hw => by simp [hw]
+      rw [← Finset.sum_subset hF₀sub (fun w _ hw' => by simp [hw']),
+        Finset.sum_congr rfl hzero3]
+      exact hsum₀
+    · -- v = f S
+      exact hval'.symm
+  · -- 反向：直推
+    intro hu
+    obtain ⟨u, hu_mem, hu_val⟩ := hu
+    have hinjOn : Set.InjOn f ({x} ∪ t) := fun p _ q _ hpq => hf hpq
+    simp only [affGe, Set.mem_setOf_eq, Affsign] at hu_mem ⊢
+    obtain ⟨c, h₀, hval, hsign, hsum⟩ := hu_mem
+    have hinjF : Set.InjOn f (h₀.toFinset : Set V3) :=
+      hinjOn.mono (fun p hp => (Set.Finite.mem_toFinset (hs := h₀)).mp hp)
+    have heq : ({f x} ∪ (f '' t : Set V3)) = f '' ({x} ∪ t) := by
+      rw [Set.image_union, Set.image_singleton]
+    have hfin2 : ({f x} ∪ (f '' t : Set V3)).Finite := by
+      rw [heq]
+      exact Set.Finite.image f h₀
+    have hF' : hfin2.toFinset = h₀.toFinset.image f := by
+      apply Finset.coe_injective
+      rw [Set.Finite.coe_toFinset, Finset.coe_image, Set.Finite.coe_toFinset h₀, heq]
+    have hvalimg : ∑ z ∈ h₀.toFinset.image f, c (Function.invFun f z) • z =
+        ∑ w ∈ h₀.toFinset, c (Function.invFun f (f w)) • (f w) :=
+      Finset.sum_image hinjF
+    have hsumsub : ∑ w ∈ h₀.toFinset, c (Function.invFun f (f w)) • (f w) =
+        ∑ w ∈ h₀.toFinset, c w • (f w) :=
+      Finset.sum_congr rfl (fun w _ => by rw [Function.leftInverse_invFun hf])
+    have hsplit : ∑ w ∈ h₀.toFinset, c w • (f w) =
+        f (∑ w ∈ h₀.toFinset, c w • w) := by
+      rw [map_sum]
+      exact Finset.sum_congr rfl (fun w _ => (map_smul f (c w) w).symm)
+    refine ⟨fun z => c (Function.invFun f z), hfin2, ?_, ?_, ?_⟩
+    · -- 数值
+      rw [hF', hvalimg, hsumsub, hsplit, ← hval]
+      exact hu_val.symm
+    · -- 符号
+      intro z hz
+      obtain ⟨w, hw, hzw⟩ := hz
+      subst hzw
+      show 0 ≤ c (Function.invFun f (f w))
+      rw [Function.leftInverse_invFun hf]
+      exact hsign _ hw
+    · -- 和
+      rw [hF']
+      have hsumimg : ∑ z ∈ h₀.toFinset.image f, c (Function.invFun f z) =
+          ∑ w ∈ h₀.toFinset, c (Function.invFun f (f w)) :=
+        Finset.sum_image hinjF
+      rw [hsumimg]
+      have hsum' : ∑ w ∈ h₀.toFinset, c (Function.invFun f (f w)) =
+          ∑ w ∈ h₀.toFinset, c w :=
+        Finset.sum_congr rfl (fun w _ => congrArg c (Function.leftInverse_invFun hf w))
+      rw [hsum']
+      exact hsum
+
+/-- `fan7` 在单射函数逐点像下的不变性（`affGe` 传输由参数给出）。 -/
+private theorem fan7_image_iff {g : V3 → V3} (hg : Function.Injective g)
+    (haff : ∀ x : V3, ∀ t : Set V3, affGe {g x} (g '' t) = g '' (affGe {x} t))
+    (x : V3) (V : Set V3) (E : Set (Set V3)) :
+    fan7 (g x) (g '' V) ((fun e : Set V3 => g '' e) '' E) ↔ fan7 x V E := by
+  constructor
+  · intro h e1 he1 e2 he2
+    have hdom : ∀ e ∈ E ∪ {s | ∃ v ∈ V, s = {v}},
+        g '' e ∈ ((fun e : Set V3 => g '' e) '' E) ∪ {s | ∃ v ∈ g '' V, s = {v}} := by
+      intro e he
+      rcases (Set.mem_union _ _ _).mp he with he' | ⟨v, hv, rfl⟩
+      · exact (Set.mem_union _ _ _).mpr (Or.inl ⟨e, he', rfl⟩)
+      · rw [Set.image_singleton]
+        exact (Set.mem_union _ _ _).mpr (Or.inr ⟨g v, Set.mem_image_of_mem _ hv, rfl⟩)
+    have hin : (g '' e1) ∩ (g '' e2) = g '' (e1 ∩ e2) := (Set.image_inter hg).symm
+    have hkey := h (g '' e1) (hdom e1 he1) (g '' e2) (hdom e2 he2)
+    rw [haff x e1, haff x e2, ← Set.image_inter hg, hin, haff x (e1 ∩ e2)] at hkey
+    exact fan7_image_eq_of_image_eq hg hkey
+  · intro h e1' he1' e2' he2'
+    have hpre1 : ∃ e : Set V3, e ∈ E ∪ {s | ∃ v ∈ V, s = {v}} ∧ g '' e = e1' := by
+      rcases (Set.mem_union _ _ _).mp he1' with h | h
+      · obtain ⟨e, hE, rfl'⟩ := h
+        exact ⟨e, Set.mem_union_left _ hE, rfl'⟩
+      · obtain ⟨v, hv, rfl'⟩ := h
+        obtain ⟨v₀, hv₀, rfl''⟩ := hv
+        have hem : ({v₀} : Set V3) ∈ E ∪ {s | ∃ v ∈ V, s = {v}} :=
+          Set.mem_union_right _ ⟨v₀, hv₀, rfl⟩
+        have heq : g '' {v₀} = e1' := by
+          rw [Set.image_singleton, rfl'']
+          exact rfl'.symm
+        exact ⟨{v₀}, hem, heq⟩
+    obtain ⟨e1, he1, rfl⟩ := hpre1
+    have hpre2 : ∃ e : Set V3, e ∈ E ∪ {s | ∃ v ∈ V, s = {v}} ∧ g '' e = e2' := by
+      rcases (Set.mem_union _ _ _).mp he2' with h | h
+      · obtain ⟨e, hE, rfl'⟩ := h
+        exact ⟨e, Set.mem_union_left _ hE, rfl'⟩
+      · obtain ⟨v, hv, rfl'⟩ := h
+        obtain ⟨v₀, hv₀, rfl''⟩ := hv
+        have hem : ({v₀} : Set V3) ∈ E ∪ {s | ∃ v ∈ V, s = {v}} :=
+          Set.mem_union_right _ ⟨v₀, hv₀, rfl⟩
+        have heq : g '' {v₀} = e2' := by
+          rw [Set.image_singleton, rfl'']
+          exact rfl'.symm
+        exact ⟨{v₀}, hem, heq⟩
+    obtain ⟨e2, he2, rfl⟩ := hpre2
+    have hdom1 : e1 ∈ E ∪ {s | ∃ v ∈ V, s = {v}} := by
+      rcases (Set.mem_union _ _ _).mp he1 with h | ⟨v, hv, rfl⟩
+      · exact (Set.mem_union _ _ _).mpr (Or.inl h)
+      · exact (Set.mem_union _ _ _).mpr (Or.inr ⟨v, hv, rfl⟩)
+    have hdom2 : e2 ∈ E ∪ {s | ∃ v ∈ V, s = {v}} := by
+      rcases (Set.mem_union _ _ _).mp he2 with h | ⟨v, hv, rfl⟩
+      · exact (Set.mem_union _ _ _).mpr (Or.inl h)
+      · exact (Set.mem_union _ _ _).mpr (Or.inr ⟨v, hv, rfl⟩)
+    have hin : (g '' e1) ∩ (g '' e2) = g '' (e1 ∩ e2) := (Set.image_inter hg).symm
+    have hkey := h e1 hdom1 e2 hdom2
+    rw [haff x e1, haff x e2, hin, ← Set.image_inter hg, haff x (e1 ∩ e2), hkey]
+
 /-- HOL polyhedron.hl :242-:249 `FAN7_TRANSLATION_EQ`
 
 HOL 原文：
@@ -462,8 +833,9 @@ UNION 成员（SET_RULE :246-:248）再 GEOM_TRANSLATE_TAC。
 theorem FAN7_TRANSLATION_EQ (a x : V3) (V : Set V3) (E : Set (Set V3)) :
     fan7 (a + x) ((fun y : V3 => a + y) '' V)
         ((fun e : Set V3 => (fun y : V3 => a + y) '' e) '' E) ↔
-      fan7 x V E := by
-  sorry
+      fan7 x V E :=
+  fan7_image_iff (fun u v h => add_left_cancel h)
+    (fun x' t => fan7_affGe_add_image a x' t) x V E
 
 /-- HOL polyhedron.hl :251-:261 `FAN7_LINEAR_IMAGE_EQ`
 
@@ -493,7 +865,7 @@ LEFT_OR_DISTRIB/RIGHT_OR_DISTRIB + TAUR 拆分，Lean 侧 `Set.mem_union` +
 - `Function.Injective`（Mathlib/Logic/Function/Basic.lean） -/
 theorem FAN7_LINEAR_IMAGE_EQ (f : V3 →ₗ[ℝ] V3) (hf : Function.Injective f)
     (x : V3) (V : Set V3) (E : Set (Set V3)) :
-    fan7 (f x) (f '' V) ((fun e : Set V3 => f '' e) '' E) ↔ fan7 x V E := by
-  sorry
+    fan7 (f x) (f '' V) ((fun e : Set V3 => f '' e) '' E) ↔ fan7 x V E :=
+  fan7_image_iff hf (fun x' t => fan7_affGe_lin_image hf x' t) x V E
 
 end Kepler.Text
