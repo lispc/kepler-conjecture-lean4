@@ -1804,6 +1804,75 @@ private theorem flvns_p3_cross {p : Set V3} (hconv : Convex ℝ p) {a y v : V3}
 
 /-! ## polyhedron.hl :2005-:2995（FLVNSME，本批主菜） -/
 
+/-- P4：切片暴露面底 `w` 与支撑泛函 `a2/b2`（HOL polyhedron.hl :2330-:2560
+的核心代数）。在 `p` 内暴露顶点 `{w}` 得 `a'''/b''`（`p ⊆ {a'''·x ≤ b''}`、
+`{w} = p ∩ {a'''·x = b''}`），令 `a2 = ((v-w)·a')•a''' - ((v-w)·a''')•a'`、
+`b2 = a2·w`：由 `0 < (v-w)·a' = b'-b1` 乘开，`a2/b2` 在切片
+`{a'·x = b1}` 上支撑且于 `w` 处取等，且 `a2·(v-w) = 0`——沿 `v-w` 方向
+消失、在 `w` 处取等的支撑泛函（FLVNSME 阶段 6 收口用）。 -/
+private theorem flvns_p4_descent
+    {p : Set V3} (hpoly : polyhedron_p7 p)
+    {a' : V3} {b1 b' : ℝ} (hbb : b1 < b')
+    {v w : V3} (hw : w ∈ Set.extremePoints ℝ p)
+    (ha'w : a' ⬝ᵥ w = b1) (ha'v : a' ⬝ᵥ v = b') :
+    ∃ a2 : V3, ∃ b2 : ℝ,
+      (∀ x ∈ p, x ∈ {x : V3 | a' ⬝ᵥ x = b1} → a2 ⬝ᵥ x ≤ b2) ∧
+      a2 ⬝ᵥ w = b2 ∧ a2 ⬝ᵥ (v - w) = 0 ∧ a' ⬝ᵥ w = b1 := by
+  classical
+  -- V3 点积代数（Polytope.lean 私有 dot 引理的就地重述，inner 桥接）
+  have dot_comm : ∀ x y : V3, x ⬝ᵥ y = y ⬝ᵥ x := fun x y => by
+    rw [← inner_eq_dot, ← inner_eq_dot, real_inner_comm]
+  have dot_sub_left : ∀ x y z : V3, (x - y) ⬝ᵥ z = x ⬝ᵥ z - y ⬝ᵥ z := fun x y z => by
+    rw [← inner_eq_dot, ← inner_eq_dot, ← inner_eq_dot, inner_sub_left]
+  have dot_sub_right : ∀ x y z : V3, x ⬝ᵥ (y - z) = x ⬝ᵥ y - x ⬝ᵥ z := fun x y z => by
+    have hpi : ∀ (p : V3) (q r : Fin 3 → ℝ),
+        p.ofLp ⬝ᵥ (q - r) = p.ofLp ⬝ᵥ q - p.ofLp ⬝ᵥ r := by
+      intro p q r
+      rw [show q - r = q + (-1 : ℝ) • r from by rw [sub_eq_add_neg, neg_one_smul],
+        dotProduct_add, dotProduct_smul]
+      ring
+    exact hpi x y.ofLp z.ofLp
+  have dot_lin : ∀ (u1 u2 : V3) (c1 c2 : ℝ) (z : V3),
+      (c1 • u1 - c2 • u2) ⬝ᵥ z = c1 * (u1 ⬝ᵥ z) - c2 * (u2 ⬝ᵥ z) := by
+    intro u1 u2 c1 c2 z
+    rw [← inner_eq_dot, ← inner_eq_dot, ← inner_eq_dot,
+      inner_sub_left, real_inner_smul_left, real_inner_smul_left]
+  -- EXPOSED_FACE_OF_POLYHEDRON：在 `p` 内暴露顶点 `{w}`
+  have hpoly' : polyhedron p := hpoly
+  obtain ⟨-, a''', b'', hpsub, hweq⟩ :=
+    (EXPOSED_FACE_OF_POLYHEDRON (s := p) hpoly').2 (faceOf_sing.2 hw)
+  have ha3w : a''' ⬝ᵥ w = b'' := by
+    have h1 : w ∈ (p ∩ {x : V3 | a''' ⬝ᵥ x = b''} : Set V3) := by
+      rw [← hweq]; exact Set.mem_singleton w
+    simpa using h1.2
+  set c1 : ℝ := (v - w) ⬝ᵥ a' with hc1
+  set c2 : ℝ := (v - w) ⬝ᵥ a''' with hc2
+  set a2 : V3 := c1 • a''' - c2 • a' with ha2
+  -- 关键系数：`c1 = b' - b1 > 0`（0 < b' - b1 乘开用）
+  have hs : c1 = b' - b1 := by
+    rw [hc1, dot_sub_left, dot_comm v a', dot_comm w a', ha'v, ha'w]
+  have hsp : 0 < c1 := by rw [hs]; linarith
+  have hc2e : c2 = a''' ⬝ᵥ v - b'' := by
+    rw [hc2, dot_sub_left, dot_comm v a''', dot_comm w a''', ha3w]
+  have ha3vw : a''' ⬝ᵥ (v - w) = c2 := by rw [dot_sub_right, ha3w, ← hc2e]
+  have ha1vw : a' ⬝ᵥ (v - w) = b' - b1 := by rw [dot_sub_right, ha'v, ha'w]
+  refine ⟨a2, a2 ⬝ᵥ w, ?_, rfl, ?_, ha'w⟩
+  · -- 切片上支撑：a2·x = c1·(a'''·x) - c2·b1 ≤ c1·b'' - c2·b1 = b2
+    intro x hx hxs
+    simp only [Set.mem_setOf_eq] at hxs
+    have e1 : a2 ⬝ᵥ x = c1 * (a''' ⬝ᵥ x) - c2 * b1 := by
+      rw [ha2, dot_lin a''' a' c1 c2 x, hxs]
+    have e2 : a2 ⬝ᵥ w = c1 * b'' - c2 * b1 := by
+      rw [ha2, dot_lin a''' a' c1 c2 w, ha3w, ha'w]
+    have hmul : c1 * (a''' ⬝ᵥ x) ≤ c1 * b'' :=
+      mul_le_mul_of_nonneg_left (hpsub hx) hsp.le
+    rw [e1, e2]
+    linarith
+  -- 沿 v-w 方向消失：a2·(v-w) = c1·c2 - c2·(b'-b1) = 0
+  · show (c1 • a''' - c2 • a') ⬝ᵥ (v - w) = 0
+    rw [dot_lin, ha3vw, ha1vw, hs]
+    ring
+
 /-- HOL polyhedron.hl :2005-:2995 `FLVNSME`（HOL 文件最大证明块，约
 1000 行）
 
