@@ -54,12 +54,20 @@
 - [x] **prep（x=y² 归一化，Flyspeck 官方形式）路线大胜**：812 条 prep 记录全解析 → 745 案例生成（四脚本 CLI 化，`59d3a1b`）；pass1+pass2（900s/4M 节点）**745/745 全闭合（100%）**
 - [x] **家族级分析（2026-09-09）**：176 条不等式 = 68 y 空间闭合 + **92 条 prep 家族覆盖闭合（实质已解决）** + 16 条真残余（清单 `pipeline/interval/out/residue16.txt`：TSKAJXY 系 4 条、TEWNSCJ/PEMKWKU/TXQTPVC/IXPOTPA、QZECFIC wt0 ×2、GRKIBMP B V2 等）。**求解层合计 160/176（91%）**
 - [ ] 16 条真残余逐条定策略（GRKIBMP B V2 有真反例叶=尖锐边界组，需 ε 余量或弱编码；其余先试更大预算/域剖分）
-- [ ] **BBTree 证书 → Lean 内核闭合**（G4）：bb_arb 已能出 cert JSON；Lean 侧扩展进度（2026-09-11）：
+- [ ] **BBTree 证书 → Lean 内核闭合**（G4）：bb_arb 已能出 cert JSON；Lean 侧扩展进度：
   - [x] `IExpr.abs` + `DInterval.abs` + soundness（`Basic.lean`/`Expr.lean`）
   - [x] `IExpr.ite`：**区间决定 guard**（`C.hi<0`→then，`C.lo≥0`→else，跨 0→STRADDLE 返回 none），`eval_mem` 证分支一致——无需单独 guard 证书
   - [x] 析取证书 `Kepler/Interval/CertDisj.lean`：`DisjGoal = pos e | varLt i j`，`BBTreeD` + `bb_sound_disj`（覆盖 58 条 disj 案例）
   - [x] `TKind.lnK` + `logI` 全链（2026-09-13，`3aed260` 进 main）：`log2D` dyadic 常数证书、`lnI`/`logInterval` soundness（`[1,2]` artanh 级数）、试点 2/3 < log x on [2,4]，公理仅标准三
-  - [ ] `emit_lean.py` 证书 JSON→Lean 分片 + G4 粘合（155 定义闭包的 Lean 定义，依赖 packing 章定义，**主体剩余**）
+  - [x] **`emit_lean.py` 证书→Lean 分片生成器 + 端到端通路（2026-09-13/14，wip/g4-emit 分支，Kimi 负责）**：
+    - 树重建：扁平叶表 → 二分树（任意无横跨维满足 splitOK，优先最宽维）
+    - 分片三层结构 Base/ShardK/根（55k 叶案例 4m50s wall、553 shards；1504 叶 35.7s；公理标准三）：`C3397113841`、`C4717061266`、`C1965189142x34` 端到端内核验证
+    - `CertBool.lean`：`splitOKB`/`coversB`（BBTree + BBTreeD）——整树覆盖一次内核 `decide`
+    - `CertG.lean`/`BBTreeG`：**跨叶 sqrt/div/trans 参数机制**——`evalReal` 忽略证书参数，逐叶特化表达式 + `rfl` 语义桥（试点端到端绿）
+    - disj 发射（BBTreeD/var_lt 校验）已实现，待代数 disj 证书端到端
+  - [ ] sqrt 量产：Lean 编译态参数填充工具（`#eval`/`--run` 逐叶算 mantissa，零镜像风险）+ BBTreeG 分片发射——**设计已定，实现中**
+  - [ ] 证书量产：145 个已闭合案例需 bb_arb `--cert` 重跑出证书（机时 1-3 天）
+  - [ ] G4 粘合收尾：155 定义闭包的 Lean 定义 + 每案例 `evalReal e ρ = 展开式 ρ` 对应引理（依赖 packing 章定义，**主体剩余**）
   - 规格：`pipeline/interval/arb-layer.md` §3/§4
 - [ ] GRKIBMP_B_V2 尖锐边界组单独处理（我们把 ≥ 加强成严格 > 导致等号边界不可闭，需 ε 余量或弱编码）
 - [ ] `ineqdata3q1h.hl` 7 条 Mathematica record 单独解析
@@ -172,7 +180,7 @@ polyhedron.hl 宣告 100% 的硬标准 = 5 个 PolyAuto 文件零 sorry + 根构
 
 ## 整体估计
 
-- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 **G4 只差最后一环**（`abs`/`ite`/析取证书/`TKind.lnK`+`logI` 全链已进 main，仅剩 `emit_lean.py` 证书→Lean 粘合），尚无案例端到端进内核。
+- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 **G4 通路已验证**（2026-09-14：3 案例端到端进内核、55k 叶 4m50s、跨叶 sqrt 机制 BBTreeG 打通；剩 sqrt 量产工具 + 145 案例证书重跑 + 155 定义粘合）。
 - **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** + **Conforming 100%** + polyhedron ~70% ≈ **60.8k 行 HOL 源**；2026-09-13 实测全书总量 ≈ **359k 行**（剩余：packing 99.4k / local 174.7k / trigonometry 10.5k / volume 1.1k / fan 残余等，~150 文件）。**按行数口径 ~17%**；考虑已完成部分含大量最难地基（hypermap 构造、体积测度层从零建），而 local/packing 多为模式重复引理工厂，**工作量口径估计 25-35%**。按 Conforming 吞吐（17k 行/2.5 天）线性外推，剩余 ~299k 行约需 40 天连轴（未计巨证）。
   另：**体积/测度论层已从零建成**（`Kepler/Geom/*.lean`，~3.4k 行，含 HOL Light 多元库的球面立体角链），这是原计划里没算到的关键前置，现已就位，后续 Packing/Local 可复用。
 - **全项目粗略完成度：~47%（较昨日 ~61% 下修，原因是 Phase 5 剩余行数实测为旧估计的 5 倍）**。
