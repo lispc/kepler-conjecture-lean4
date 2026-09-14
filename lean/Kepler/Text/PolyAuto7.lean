@@ -72,11 +72,17 @@ Encoding notes (gaps / closest existing encodings):
   precedent; the only signature deviation from HOL, affecting WBLARHH).
 - HOL `BIJ f s t` (INJ + SURJ) ↔ `Set.BijOn f s t`.
 - HOL `?!x. P x` ↔ `∃! x, P x`.
-- Imports: `PlanarityAuto16` + `ConformingDefs` per batch plan (the cited
-  PlanarityComponent/PlanarityConnect/Fan/ConformingAuto chain rides in
-  transitively) plus `Mathlib` for `intrinsicInterior`, `Set.extremePoints`,
-  `segment`, `interior`. NO PolyAuto imports (batches 1-6 are concurrent
-  lanes; cross-batch dependencies are recorded per theorem below).
+- Imports: `PlanarityAuto16` + `ConformingDefs` per batch plan, plus
+  `PolyAuto5`（诚实 FCHANGED 三件套 `FCHANGED_OPEN`/`FCHANGED_ONE_TO_ONE`/
+  `EXISTS_EDGE_POLYTOPE` + `AFF_DIM_INTERIOR_EQ_3`；Polytope.lean 公开
+  面论基座随之引入，其公开 `FaceOf`/`FacetOf`/`affDim`/`fchanged` 与本
+  文件 `_p7` 私有副本逐字定义等价——`exact`/`apply` 按定义等价直接互
+  通）、`PolyAuto3`（`POLYHEDRON_FAN`，V/E 编码逐字一致、语句冻结可
+  用）与 `Mathlib` for `intrinsicInterior`, `Set.extremePoints`,
+  `segment`, `interior`。构建注意：lane 的 `.lake` 缺 Polytope/PolyAuto5/
+  PolyAuto3 新鲜 olean 时，以
+  `lake env lean -o <olean> Kepler/Text/<模块>.lean` 单模块补建（本
+  lane 已按此补建三枚；未动 `lake build`）。
 
 Difficulty scale (for the fill-in pass): zuzhuang = assembly of already
 ported lemmas; liangou = coefficient/rewriting bookkeeping; fenxi =
@@ -85,7 +91,8 @@ geometric content.
 
 import Kepler.Text.PlanarityAuto16
 import Kepler.Text.ConformingDefs
-import Kepler.Text.PolyAuto6
+import Kepler.Text.PolyAuto5
+import Kepler.Text.PolyAuto3
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -159,164 +166,6 @@ def edges_p7 (p : Set V3) : Set (Set V3) :=
     ∀ c d y : V3, c ∈ p → d ∈ p → y ∈ segment ℝ v w →
       y ∈ openSegment ℝ c d → c ∈ segment ℝ v w ∧ d ∈ segment ℝ v w}
 
-/-! ## ⚠ 冻结桥（批 6 私有副本编码分歧，待装配统一后替换） -/
-
-/-- 闭段版 `face_of`（批 4/5/6 私有副本 `FaceOf` 逐字同体；注意本文件
-正式编码 `FaceOf_p7` 用 HOL 原文的**开**段 `openSegment`，批 4/5/6 误用
-闭段 `segment`）。 -/
-private def faceOfSeg_p7 (t s : Set V3) : Prop :=
-  t ⊆ s ∧ Convex ℝ t ∧
-    ∀ a b x : V3, a ∈ s → b ∈ s → x ∈ t → x ∈ segment ℝ a b → a ∈ t ∧ b ∈ t
-
-/-- 闭段版 facet（批 6 私有 `FacetOf` 同体）。 -/
-private def facetSeg_p7 (f s : Set V3) : Prop :=
-  faceOfSeg_p7 f s ∧ f ≠ ∅ ∧ affDim_p7 f = affDim_p7 s - 1
-
-/-- 闭段编码的退化性：`x = a ∈ segment(a,b)` 迫 `b ∈ f` 对一切
-`b ∈ s` 成立，故非空闭段-面必为全空间，与余维 1 矛盾。 -/
-private theorem facetSeg_p7_false {f s : Set V3} (h : facetSeg_p7 f s) : False := by
-  obtain ⟨⟨hsub, -, hcond⟩, hfne, haff⟩ := h
-  obtain ⟨x, hx⟩ := Set.nonempty_iff_ne_empty.mpr hfne
-  have hssub : s ⊆ f := fun b hb =>
-    (hcond x b x (hsub hx) hb hx (left_mem_segment _ _ _)).2
-  have hfeq : f = s := Set.eq_of_subset_of_subset hsub hssub
-  rw [hfeq] at haff
-  linarith
-
-/-- ⚠ 冻结桥（批 6 `FCHANGED_EQ_YFAN`，闭段编码 + 闭段-facet 类的空性）
-得 `yfan = ∅`。批 4/5/6 的 `FaceOf` 用闭段、本文件用开段（HOL 原文）：
-编码分歧，装配统一后须以批 6 诚实全链替换本引理及下面的两个推导。 -/
-private theorem yfan_eq_empty_p7 {p : Set V3} (hb : Bornology.IsBounded p)
-    (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p) :
-    yfan (0 : V3) (Set.extremePoints ℝ p) (edges_p7 p) = ∅ := by
-  have h6 : (⋃ f ∈ {f : Set V3 | facetSeg_p7 f p}, fchanged_p7 f)
-      = yfan (0 : V3) (Set.extremePoints ℝ p) (edges_p7 p) :=
-    FCHANGED_EQ_YFAN hb hp hz
-  rw [← h6]
-  have hempty : {f : Set V3 | facetSeg_p7 f p} = ∅ :=
-    Set.eq_empty_iff_forall_notMem.mpr fun f hf => (facetSeg_p7_false hf).elim
-  rw [hempty, Set.biUnion_empty]
-
-/-- yfan-分量的点落入空 yfan：矛盾（冻结桥推论）。 -/
-private theorem yfan_mem_false_p7 {p s : Set V3}
-    (hb : Bornology.IsBounded p) (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p)
-    (hs : s ∈ topologicalComponentYfan (0 : V3) (Set.extremePoints ℝ p) (edges_p7 p)) :
-    False := by
-  obtain ⟨z, hzs⟩ := exists_point_in_component_yfan hs
-  have hzy := topological_component_subset_yfan hs hzs
-  rw [yfan_eq_empty_p7 hb hp hz] at hzy
-  exact absurd hzy (Set.notMem_empty z)
-
-/-! ## polyhedron.hl :1823-:2004（面的 fchanged-参数化） -/
-
-/-- HOL polyhedron.hl :1823-:1839 `SUR_FCHANGED`
-
-HOL 原文：
-```
-!s p:real^3->bool.
-         bounded p /\ polyhedron p /\ vec 0 IN interior p /\
- s IN topological_component_yfan(vec 0:real^3,vertices (p:real^3->bool),edges (p:real^3->bool))
-==> ?f. f facet_of p /\ s= fchanged f
-```
-
-编码说明：`topological_component_yfan` ↦ `topologicalComponentYfan`
-（Kepler/Text/Fan.lean:199）；`vertices`/`edges` 见 `edges_p7` 与批头
-（`Set.extremePoints ℝ p`）；`facet_of`/`fchanged` ↦ 本文件私有副本。
-
-证明思路（HOL）：`FCHANGED_EQ_YFAN`（批 6）把 `fchanged` 侧化入
-yfan-分量语言；`topological_component_subset_yfan`
-（Kepler/Text/PlanarityConnect.lean:189）与
-`exists_point_in_component_yfan`（PlanarityConnect.lean:76）取
-`z ∈ s ⊆ yfan`；`FCHANGED_IN_COMPONENT`（批 6：每个 facet 的 fchanged
-是含 yfan 点的 yfan-连通分量）取 facet `f` 与点 `z ∈ fchanged f`；两个
-yfan-连通分量共享 `z`，`CONNECTED_COMPONENT_OVERLAP` 迫使其相等。
-
-候选已有引理：
-- `topologicalComponentYfan`（Kepler/Text/Fan.lean:199）
-- `topological_component_subset_yfan`（Kepler/Text/PlanarityConnect.lean:189）
-- `exists_point_in_component_yfan`（Kepler/Text/PlanarityConnect.lean:76）
-- `connectedComponentIn_eq`（Mathlib Topology/Connected/Basic.lean:585；
-  共享一点的两分量相等，HOL `CONNECTED_COMPONENT_OVERLAP` 的对应物）
-- 跨批依赖：`FCHANGED_EQ_YFAN`、`FCHANGED_IN_COMPONENT`（批 6 lane，
-  polyhedron.hl :1718-:1822；本 lane 未移植）
-- 实际路线（⚠）：批 6 私有 `FaceOf` 误用闭段（HOL 原文为开段），其
-  facet 类退化（见 `facetSeg_p7_false`）；本证明经冻结桥
-  `yfan_eq_empty_p7` + `yfan_mem_false_p7` 收口。装配统一批 4/5/6 的
-  `FaceOf` 编码为 `openSegment` 后，须以批 6 诚实全链
-  （`FCHANGED_EQ_YFAN`/`FCHANGED_IN_COMPONENT` + 分量交叠）重写。 -/
-theorem SUR_FCHANGED {s p : Set V3} (hb : Bornology.IsBounded p)
-    (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p)
-    (hs : s ∈ topologicalComponentYfan 0 (Set.extremePoints ℝ p) (edges_p7 p)) :
-    ∃ f : Set V3, FacetOf_p7 f p ∧ s = fchanged_p7 f := by
-  exact (yfan_mem_false_p7 hb hp hz hs).elim
-
-/-- HOL polyhedron.hl :1855-:1873 `AMHFNXP`
-
-HOL 原文：
-```
-!p:real^3->bool.
-         bounded p /\ polyhedron p /\ vec 0 IN interior p
-==>
-(!s. s IN topological_component_yfan (vec 0,vertices (p:real^3->bool),edges (p:real^3->bool)) ==> (?!f. f facet_of p /\
-							 s = fchanged f))
-```
-
-编码说明：`?!f. P f` ↦ `∃! f, P f`（ConformingDefs.lean 先例）。
-
-证明思路（HOL）：存在性即 `SUR_FCHANGED`；唯一性：设 `s = fchanged f =
-fchanged y`，`FCHANGED_ONE_TO_ONE`（批 5，polyhedron.hl :1132：fchanged
-单射性）化归为 `fchanged f ∩ fchanged y ≠ ∅`，而
-`EXISTS_POINT_IN_FCHANGED`（批 5/6：非空 facet 的 fchanged 含 yfan 点）
-+ `SET_TAC` 给出交非空，故 `f = y`。
-
-候选已有引理：
-- `SUR_FCHANGED`（本文件上文）
-- `Set.BijOn`-侧工具（Mathlib）
-- 跨批依赖：`FCHANGED_ONE_TO_ONE`（批 5，polyhedron.hl :1132）、
-  `EXISTS_POINT_IN_FCHANGED`（批 5/6 lane；本 lane 未移植）
-- 实际路线（⚠）：同 `SUR_FCHANGED` 的冻结桥（批 6 闭段编码分歧，
-  见文件内 `yfan_eq_empty_p7` 说明）；装配统一编码后重写。 -/
-theorem AMHFNXP {p : Set V3} (hb : Bornology.IsBounded p)
-    (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p) :
-    ∀ s ∈ topologicalComponentYfan 0 (Set.extremePoints ℝ p) (edges_p7 p),
-      ∃! f : Set V3, FacetOf_p7 f p ∧ s = fchanged_p7 f := by
-  intro s hs
-  exact (yfan_mem_false_p7 hb hp hz hs).elim
-
-/-- HOL polyhedron.hl :1875-:1891 `AMHFNXP_BIJ`
-
-HOL 原文：
-```
-!p:real^3->bool. bounded p /\ polyhedron p /\ vec 0 IN interior p ==>
-  (BIJ fchanged (\f. f facet_of p) (topological_component_yfan (vec 0,vertices p,edges p)))
-```
-
-编码说明：HOL `BIJ f s t`（INJ + SURJ）↦ `Set.BijOn f s t`；像函数
-`\f. f facet_of p` 编码为集合 `{f : Set V3 | FacetOf_p7 f p}`。
-
-证明思路（HOL，prove_by_refinement 原文仅 7 步）：展开 `BIJ/INJ/SURJ`；
-`FCHANGED_IN_COMPONENT`（批 6，REWRITE_RULE[IN] 后 SIMP）给出
-MapsTo；`AMHFNXP` 的唯一存在性（`EXISTS_UNIQUE` 展开 + ASM_MESON）
-同时给出 InjOn 与 SurjOn。
-
-候选已有引理：
-- `AMHFNXP`（本文件上文）
-- `Set.BijOn`（Mathlib Order/Basic；按 `MapsTo ∧ InjOn ∧ SurjOn` 展开）
-- 跨批依赖：`FCHANGED_IN_COMPONENT`（批 6 lane；本 lane 未移植）
-- 阻塞（本 hour）：`MapsTo` 侧需「facet 的 fchanged 是 yfan-分量」=
-  诚实版 `FCHANGED_IN_COMPONENT`；批 6 冻结版带 `FacetOf`（闭段编码）
-  假设，无法由本文件 `FacetOf_p7` 实例化（`facetSeg_p7_false` 显示该
-  假设类为空），冻结桥亦不能从可满足的 `FacetOf_p7` 导出矛盾。装配
-  统一编码后：`refine ⟨fun f hf => FCHANGED_IN_COMPONENT hb hp hz hf,
-  ?_, fun s hs => ?_⟩` 由 `AMHFNXP` 收口。 -/
-theorem AMHFNXP_BIJ {p : Set V3} (hb : Bornology.IsBounded p)
-    (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p) :
-    Set.BijOn (fun f : Set V3 => fchanged_p7 f) {f : Set V3 | FacetOf_p7 f p}
-      (topologicalComponentYfan 0 (Set.extremePoints ℝ p) (edges_p7 p)) := by
-  sorry
-
-/-! ## polyhedron.hl :1893-:2004（边上的顶点） -/
-
 /-- HOL polyhedron.hl :1893-:1930 `EXPAND_EDGE_POLYTOPE`
 
 HOL 原文（对 `real^N` 一般陈述；本 lane 按仓库惯例特化到 `V3`）：
@@ -345,12 +194,889 @@ flyspeck_multivariate.ml:1579 `REWRITE_TAC[polytope]` 的用法）内联为
 - 缺口：`AFF_DIM`-类展开、`COMPACT_CONVEX_COLLINEAR_SEGMENT`
   （「紧凸共线集是（可退化）段」）repo/Mathlib 均无现成引理；
   Mathlib 侧可由 `vectorSpan` 维数分类 + `segment` 的凸包刻画
-  `convexHull_two` 重建 -/
+  `convexHull_two` 重建
+- 位置说明（本 hour）：原在 :1893 节；批 6 诚实核心的
+  `yfan_subset_unions_fchanged_p7` 需前向引用本引理，故整块（语句 +
+  docstring 原文）上移到核心节之前；`sorry` 保留（配额内 2 处之一）。 -/
 theorem EXPAND_EDGE_POLYTOPE {f p : Set V3}
     (hp : ∃ t : Set V3, t.Finite ∧ p = convexHull ℝ t)
     (hf : FaceOf_p7 f p) (hdim : affDim_p7 f = 1) :
     ∃ a b : V3, f = segment ℝ a b := by
   sorry
+
+/-! ## 批 6 诚实核心（polyhedron.hl :1315-:1821，面向 `_p7` 编码就地重建）
+
+原「冻结桥」依赖的批 6 私有副本编码已废弃：装配后 `Polytope.lean` 提供公开
+逐字定义（`FaceOf`/`FacetOf`/`affDim`/`fchanged`/`polyhedron`，与本文件
+`_p7` 副本 `exact` 按定义等价互通），PolyAuto5 提供诚实
+`FCHANGED_OPEN`/`FCHANGED_ONE_TO_ONE`/`EXISTS_EDGE_POLYTOPE`。批 6 模块
+（PolyAuto6.lean）因批 4 闭段 `FacetOf` 与 Polytope 公开定义重名冲突已
+不可导入，本节按各定理 docstring 的 HOL 原思路重建所需链条：
+`⋃fchanged ⊆ yfan`（POLYHEDRON_COLLINEAR_FACES 两分支）、
+`yfan ⊆ ⋃fchanged`（射线-前沿 = REDUCE_POINT_FACET_EXISTS 核心 + facet
+相对内部分二分 + 一维面经 EXPAND_EDGE_POLYTOPE 下潜成边——按
+EXISTS_EDGE_AT_VERTICES 既有先例作黑箱），拼装 `FCHANGED_EQ_YFAN`，
+再以连通性（批 4 CONNECTED_FCHANGED 移植）+ 开二分分解得
+`FCHANGED_IN_COMPONENT`。 -/
+
+/-- 连通分量的对称性（批 4 `ccIn_symm` 移植）。 -/
+private theorem ccIn_symm_p7 {F : Set V3} {a b : V3}
+    (h : a ∈ connectedComponentIn F b) : b ∈ connectedComponentIn F a := by
+  have hF : b ∈ F := connectedComponentIn_nonempty_iff.mp ⟨a, h⟩
+  rw [← connectedComponentIn_eq h]
+  exact mem_connectedComponentIn hF
+
+/-- 连通分量的传递性（批 4 `CONNECTED_COMPONENT_TRANS` 移植）。 -/
+private theorem ccIn_trans_p7 {F : Set V3} {a b c : V3}
+    (h1 : a ∈ connectedComponentIn F b) (h2 : b ∈ connectedComponentIn F c) :
+    a ∈ connectedComponentIn F c := by
+  rw [connectedComponentIn_eq h2]
+  exact h1
+
+/-- 正射线 `{t • y | t > 0}` 连通（批 4 `CONNECTED_HALF_LINE1` 移植；
+退化射线为单点，一般情形作 `Ioi 0` 在连续映射 `t ↦ t • y` 下的像）。 -/
+private theorem isConnected_ray_p7 (y : V3) :
+    IsConnected {v : V3 | ∃ t : ℝ, 0 < t ∧ v = t • y} := by
+  by_cases hy : y = 0
+  · subst hy
+    have h0 : {v : V3 | ∃ t : ℝ, 0 < t ∧ v = t • (0 : V3)} = {0} := by
+      ext v
+      simp only [Set.mem_setOf_eq, smul_zero]
+      constructor
+      · rintro ⟨t, -, rfl⟩
+        rfl
+      · rintro rfl
+        exact ⟨1, zero_lt_one, rfl⟩
+    rw [h0]
+    exact isConnected_singleton
+  · have hset : {v : V3 | ∃ t : ℝ, 0 < t ∧ v = t • y}
+        = (fun t : ℝ => t • y) '' Set.Ioi 0 := by
+      ext u
+      simp only [Set.mem_setOf_eq, Set.mem_image]
+      constructor
+      · rintro ⟨t, ht, rfl⟩
+        exact ⟨t, ht, rfl⟩
+      · rintro ⟨t, ht, rfl⟩
+        exact ⟨t, ht, rfl⟩
+    rw [hset]
+    exact ((convex_Ioi 0).isConnected ⟨1, zero_lt_one⟩).image _
+      ((continuous_id.smul continuous_const).continuousOn)
+
+/-- facet 的 `fchanged` 连通（批 4 `CONNECTED_FCHANGED` 移植；`FacetOf`
+只消耗凸性与非空性，对 face 编码的开/闭段分歧无差别）。 -/
+private theorem isConnected_fchanged_p7 {P f : Set V3} (hf : FacetOf_p7 f P) :
+    IsConnected (fchanged_p7 f) := by
+  have hfne : f.Nonempty := Set.nonempty_iff_ne_empty.mpr hf.2.1
+  have hiiConn : IsConnected (intrinsicInterior ℝ f) :=
+    (convex_intrinsicInterior hf.1.2.1).isConnected
+      (Set.Nonempty.intrinsicInterior hf.1.2.1 hfne)
+  have key : ∀ u ∈ fchanged_p7 f, ∀ w ∈ fchanged_p7 f,
+      u ∈ connectedComponentIn (fchanged_p7 f) w := by
+    intro u hu w hw
+    obtain ⟨v1, t, rfl, hv1, ht⟩ := hu
+    obtain ⟨v1', t', rfl, hv1', ht'⟩ := hw
+    -- 中段：v1 与 v1' 在 rint f 中同分量，搬进 fchanged f
+    have h1mid : v1' ∈ connectedComponentIn (intrinsicInterior (𝕜 := ℝ) f) v1 :=
+      hiiConn.2.subset_connectedComponentIn hv1 subset_rfl hv1'
+    have hsubRI : intrinsicInterior (𝕜 := ℝ) f ⊆ fchanged_p7 f := fun v hv =>
+      ⟨v, 1, by rw [one_smul], hv, zero_lt_one⟩
+    have cMid : v1' ∈ connectedComponentIn (fchanged_p7 f) v1 := by
+      refine connectedComponentIn_mono (x := v1) hsubRI ?_
+      exact h1mid
+    -- 左段：t • v1 与 v1 同分量（过 v1 的开射线连通）
+    have cLeft : (t : ℝ) • v1 ∈ connectedComponentIn (fchanged_p7 f) v1 := by
+      have hsub : {z : V3 | ∃ s : ℝ, 0 < s ∧ z = s • v1} ⊆ fchanged_p7 f := by
+        rintro z ⟨s, hs, rfl⟩
+        exact ⟨v1, s, rfl, hv1, hs⟩
+      have hRay : v1 ∈
+          connectedComponentIn {z : V3 | ∃ s : ℝ, 0 < s ∧ z = s • v1} (t • v1) :=
+        (isConnected_ray_p7 v1).2.subset_connectedComponentIn ⟨t, ht, rfl⟩ subset_rfl
+          ⟨1, zero_lt_one, by rw [one_smul]⟩
+      exact ccIn_symm_p7 (connectedComponentIn_mono (t • v1) hsub hRay)
+    -- 右段：t' • v1' 与 v1' 同分量
+    have cRight : v1' ∈ connectedComponentIn (fchanged_p7 f) (t' • v1') := by
+      have hsub : {z : V3 | ∃ s : ℝ, 0 < s ∧ z = s • v1'} ⊆ fchanged_p7 f := by
+        rintro z ⟨s, hs, rfl⟩
+        exact ⟨v1', s, rfl, hv1', hs⟩
+      have hRay : v1' ∈
+          connectedComponentIn {z : V3 | ∃ s : ℝ, 0 < s ∧ z = s • v1'} (t' • v1') :=
+        (isConnected_ray_p7 v1').2.subset_connectedComponentIn ⟨t', ht', rfl⟩ subset_rfl
+          ⟨1, zero_lt_one, by rw [one_smul]⟩
+      exact connectedComponentIn_mono (t' • v1') hsub hRay
+    exact ccIn_trans_p7 (ccIn_trans_p7 cLeft (ccIn_symm_p7 cMid)) cRight
+  -- 取定点收尾：某点分量等于全集合
+  obtain ⟨v0, hv0ii⟩ := Set.Nonempty.intrinsicInterior hf.1.2.1 hfne
+  have hv0 : v0 ∈ fchanged_p7 f := ⟨v0, 1, by rw [one_smul], hv0ii, zero_lt_one⟩
+  have hcc : connectedComponentIn (fchanged_p7 f) v0 = fchanged_p7 f :=
+    Set.eq_of_subset_of_subset (connectedComponentIn_subset _ _)
+      (fun z hz => key z hz v0 hv0)
+  rw [← hcc]
+  exact isConnected_connectedComponentIn_iff.mpr hv0
+
+/-- 内点存在 ⇒ 仿射包全空间时 `rint = interior`（`mem_rint_iff` +
+`INTERIOR_AFFINIE_HUL_EQ_UNIV`；HOL `RELATIVE_INTERIOR_INTERIOR` 的特例）。 -/
+private theorem mem_rint_iff_interior_p7 {p : Set V3} (h0 : (0 : V3) ∈ interior p)
+    {z : V3} : z ∈ intrinsicInterior ℝ p ↔ z ∈ interior p := by
+  have haff : (affineSpan ℝ p : Set V3) = Set.univ := INTERIOR_AFFINIE_HUL_EQ_UNIV 0 p h0
+  constructor
+  · intro hmem
+    obtain ⟨hzp, ε, hε, hball⟩ := mem_rint_iff.mp hmem
+    exact mem_interior.mpr ⟨Metric.ball z ε,
+      fun w hw => hball ⟨hw, by rw [haff]; trivial⟩, Metric.isOpen_ball,
+      Metric.mem_ball_self hε⟩
+  · intro hmem
+    obtain ⟨t, htsub, htopen, hzt⟩ := mem_interior.mp hmem
+    obtain ⟨ε, hε, hballt⟩ := Metric.isOpen_iff.mp htopen z hzt
+    refine mem_rint_iff.mpr ⟨htsub hzt, ε, hε, ?_⟩
+    intro w hw
+    rw [haff] at hw
+    exact htsub (hballt hw.1)
+
+/-- 极点不含于内点集合（`faceOf_sing` + `faceOf_disjoint_rinterior` +
+`AFF_DIM_INTERIOR_EQ_3`）。 -/
+private theorem extremePoint_ne_zero_of_interior {p : Set V3} {v : V3}
+    (hz : (0 : V3) ∈ interior p) (hv : v ∈ Set.extremePoints ℝ p) : v ≠ 0 := by
+  intro hcon
+  have h1 : FaceOf {v} p := faceOf_sing.mpr hv
+  have h2 : (0 : V3) ∈ intrinsicInterior ℝ p := interior_subset_intrinsicInterior hz
+  have h3 : ({v} : Set V3) ≠ p := by
+    intro hcon2
+    have h4 : affDim p = 3 := AFF_DIM_INTERIOR_EQ_3 0 p hz
+    rw [← hcon2, affDim_singleton] at h4
+    norm_num at h4
+  have h0v : (0 : V3) ∈ ({v} : Set V3) := by
+    rw [Set.mem_singleton_iff]
+    exact hcon.symm
+  exact Set.disjoint_left.mp (faceOf_disjoint_rinterior h1 h3) h0v h2
+
+/-- 开段点落在闭段相对内部（HOL `RELATIVE_INTERIOR_SEGMENT` 的成员形态）：
+`affineSpan (segment a b) = affineSpan {a,b}` 上的球论证。 -/
+private theorem openSegment_mem_rint_segment {a b z : V3} (hab : a ≠ b)
+    (hz : z ∈ openSegment ℝ a b) : z ∈ intrinsicInterior ℝ (segment ℝ a b) := by
+  obtain ⟨l, m, hl, hm, hlm, hze⟩ := hz
+  have hlm' : l = 1 - m := by linarith
+  have hsegsub : (segment ℝ a b : Set V3) ⊆ (affineSpan ℝ ({a, b} : Set V3) : Set V3) := by
+    intro w hw
+    obtain ⟨c, d, hc, hd, hcd, rfl⟩ := hw
+    rw [AffineSubspace.mem_coe, mem_affineSpan_pair_iff_exists_lineMap_eq]
+    refine ⟨d, ?_⟩
+    have hcd' : c = 1 - d := by linarith
+    rw [AffineMap.lineMap_apply, vadd_eq_add, vsub_eq_sub, smul_sub, hcd',
+      sub_smul, one_smul]
+    abel
+  have habsub : ({a, b} : Set V3) ⊆ (segment ℝ a b : Set V3) := by
+    intro w hw
+    rcases Set.mem_insert_iff.mp hw with rfl | hw
+    · exact left_mem_segment _ _ _
+    · rw [Set.mem_singleton_iff] at hw
+      subst hw
+      exact right_mem_segment _ _ _
+  have hsegaff : (affineSpan ℝ (segment ℝ a b) : Set V3)
+      = (affineSpan ℝ ({a, b} : Set V3) : Set V3) :=
+    le_antisymm (affineSpan_le.mpr hsegsub) (affineSpan_mono ℝ habsub)
+  have hmlt1 : m < 1 := by linarith
+  rw [mem_rint_iff]
+  refine ⟨⟨l, m, hl.le, hm.le, hlm, hze⟩, min m (1 - m) * ‖b - a‖,
+    mul_pos (lt_min hm (by linarith)) (norm_sub_pos_iff.mpr (Ne.symm hab)), ?_⟩
+  intro w hwb
+  obtain ⟨hwball, hwaff⟩ := hwb
+  rw [hsegaff, AffineSubspace.mem_coe,
+    mem_affineSpan_pair_iff_exists_lineMap_eq] at hwaff
+  obtain ⟨r, rfl⟩ := hwaff
+  have hzlm : z = AffineMap.lineMap a b m := by
+    have h1 : z = l • a + m • b := hze.symm
+    rw [hlm'] at h1
+    rw [h1, AffineMap.lineMap_apply, vadd_eq_add, vsub_eq_sub, sub_smul, one_smul,
+      smul_sub]
+    abel
+  have hbaneq : dist (AffineMap.lineMap a b r) z < min m (1 - m) * ‖b - a‖ := hwball
+  rw [hzlm, dist_eq_norm] at hbaneq
+  have hline : AffineMap.lineMap a b r - AffineMap.lineMap a b m
+      = (r - m) • (b - a) := by
+    rw [AffineMap.lineMap_apply, AffineMap.lineMap_apply, vadd_eq_add, vadd_eq_add,
+      vsub_eq_sub, add_sub_add_right_eq_sub, ← sub_smul]
+  rw [hline, norm_smul, Real.norm_eq_abs] at hbaneq
+  have hba0 : (0:ℝ) < ‖b - a‖ := norm_sub_pos_iff.mpr (Ne.symm hab)
+  have hrm : |r - m| < min m (1 - m) := by
+    rw [mul_comm |r - m| ‖b - a‖, mul_comm (min m (1 - m)) ‖b - a‖] at hbaneq
+    exact lt_of_mul_lt_mul_left hbaneq hba0.le
+  have hr1 : 0 < r := by
+    have h2 := (abs_lt.mp hrm).1
+    have h3 := min_le_left m (1 - m)
+    linarith
+  have hr2 : r < 1 := by
+    have h2 := (abs_lt.mp hrm).2
+    have h3 := min_le_right m (1 - m)
+    linarith
+  exact ⟨1 - r, r, by linarith, by linarith, by ring, by
+    rw [AffineMap.lineMap_apply, vadd_eq_add, vsub_eq_sub, sub_smul, one_smul,
+      smul_sub]
+    abel⟩
+
+/-- 极点不落在异于其单点的面的相对内部（HOL `EXTREME_POINT_NOT_IN_
+RELATIVE_INTERIOR` 的最小重建：沿仿射包对称逃逸）。 -/
+private theorem extreme_notMem_rint_p7 {p f : Set V3} {e : V3}
+    (he : e ∈ Set.extremePoints ℝ p) (hef : e ∈ intrinsicInterior ℝ f)
+    (hff : FaceOf f p) (hfne : f ≠ {e}) : False := by
+  have hef' : e ∈ f := (mem_rint_iff.mp hef).1
+  obtain ⟨u, huf, hue⟩ : ∃ u ∈ f, u ≠ e := by
+    by_contra hcon
+    push_neg at hcon
+    exact hfne (Set.eq_singleton_iff_unique_mem.mpr
+      ⟨hef', fun z hz => hcon z hz⟩)
+  obtain ⟨-, ε, hε, hball⟩ := mem_rint_iff.mp hef
+  have hηp : (0:ℝ) < ‖u - e‖ := norm_sub_pos_iff.mpr hue
+  set δ : ℝ := ε / (2 * ‖u - e‖) with hδ
+  have hδp : 0 < δ := div_pos hε (mul_pos two_pos hηp)
+  have hη0 : u - e ≠ 0 := sub_ne_zero.mpr hue
+  -- e ± δ•(u-e) ∈ affineSpan f 且在球内，故 ∈ f ⊆ p
+  have hsub2 : ({e, u} : Set V3) ⊆ f := by
+    intro z hz
+    rcases Set.mem_insert_iff.mp hz with rfl | hz
+    · exact hef'
+    · rw [Set.mem_singleton_iff] at hz
+      rw [hz]
+      exact huf
+  have hsub3 : ({e, u} : Set V3) ⊆ (affineSpan ℝ f : Set V3) := by
+    intro z hz
+    rcases Set.mem_insert_iff.mp hz with rfl | hz
+    · exact subset_affineSpan ℝ f hef'
+    · rw [Set.mem_singleton_iff] at hz
+      rw [hz]
+      exact subset_affineSpan ℝ f huf
+  have haff1 : e + δ • (u - e) ∈ (affineSpan ℝ f : Set V3) := by
+    have h1 : AffineMap.lineMap e u δ ∈ affineSpan ℝ ({e, u} : Set V3) :=
+      AffineMap.lineMap_mem_affineSpan_pair δ e u
+    have h2 : AffineMap.lineMap e u δ = e + δ • (u - e) := by
+      rw [AffineMap.lineMap_apply, vadd_eq_add, vsub_eq_sub]
+    rw [← h2]
+    exact affineSpan_le.mpr hsub3 h1
+  have haff2 : e - δ • (u - e) ∈ (affineSpan ℝ f : Set V3) := by
+    have h1 : AffineMap.lineMap e u (-δ) ∈ affineSpan ℝ ({e, u} : Set V3) :=
+      AffineMap.lineMap_mem_affineSpan_pair (-δ) e u
+    have h2 : AffineMap.lineMap e u (-δ) = e - δ • (u - e) := by
+      rw [AffineMap.lineMap_apply, vadd_eq_add, vsub_eq_sub, neg_smul,
+        sub_eq_add_neg]
+    rw [← h2]
+    exact affineSpan_le.mpr hsub3 h1
+  have hd1 : dist (e + δ • (u - e)) e = δ * ‖u - e‖ := by
+    rw [dist_eq_norm]
+    have hv : e + δ • (u - e) - e = δ • (u - e) := by rw [add_sub_cancel_left]
+    rw [hv, norm_smul, Real.norm_eq_abs, abs_of_pos hδp]
+  have hd2 : dist (e - δ • (u - e)) e = δ * ‖u - e‖ := by
+    rw [dist_eq_norm]
+    have hv : e - δ • (u - e) - e = -(δ • (u - e)) := by abel
+    rw [hv, norm_neg, norm_smul, Real.norm_eq_abs, abs_of_pos hδp]
+  have hηne : ‖u - e‖ ≠ 0 := ne_of_gt hηp
+  have hp1 : e + δ • (u - e) ∈ p := by
+    refine hff.1 (hball ⟨?_, haff1⟩)
+    rw [Metric.mem_ball, hd1, hδ]
+    field_simp
+    norm_num
+  have hp2 : e - δ • (u - e) ∈ p := by
+    refine hff.1 (hball ⟨?_, haff2⟩)
+    rw [Metric.mem_ball, hd2, hδ]
+    field_simp
+    norm_num
+  have hseg : e ∈ openSegment ℝ (e + δ • (u - e)) (e - δ • (u - e)) := by
+    refine ⟨1 / 2, 1 / 2, by norm_num, by norm_num, by norm_num, ?_⟩
+    rw [smul_add, smul_sub ((1:ℝ)/2) e (δ • (u - e)), smul_sub δ u e, add_assoc]
+    have hPQ : ((1:ℝ)/2) • (δ • u - δ • e)
+        + (((1:ℝ)/2) • e - ((1:ℝ)/2) • (δ • u - δ • e)) = ((1:ℝ)/2) • e := by abel
+    rw [hPQ, ← add_smul, add_halves, one_smul]
+  have hseg' : e ∈ segment ℝ (e + δ • (u - e)) (e - δ • (u - e)) := by
+    obtain ⟨a₁, a₂, h₁, h₂, h₃, h₄⟩ := hseg
+    exact ⟨a₁, a₂, h₁.le, h₂.le, h₃, h₄⟩
+  obtain ⟨mem, hcond⟩ := mem_extremePoints_iff_forall_segment.mp he
+  rcases hcond (e + δ • (u - e)) hp1 (e - δ • (u - e)) hp2 hseg' with hcon | hcon
+  · have hz0 : δ • (u - e) = δ • (0:V3) := by rw [add_eq_left.mp hcon, smul_zero]
+    exact hη0 (smul_right_injective V3 (ne_of_gt hδp) hz0)
+  · have h1 : e + δ • (u - e) = e := (sub_eq_iff_eq_add.mp hcon).symm
+    have hz0 : δ • (u - e) = δ • (0:V3) := by
+      have h2 : (e + δ • (u - e)) - e = (0:V3) := by rw [h1, sub_self]
+      rw [add_sub_cancel_left] at h2
+      rw [h2, smul_zero]
+    exact hη0 (smul_right_injective V3 (ne_of_gt hδp) hz0)
+
+
+/-- 射线-前沿引理（HOL `REDUCE_POINT_FACET_EXISTS` 的核心重建）：非零点的
+过原点射线离开紧多面体的最后一点必落在某 facet 上。参数集合为闭集，上确界
+可达；上确界点在 `p \ rint p` 中（全维数下 `rint = interior`），经
+`RELATIVE_INTERIOR_OF_POLYHEDRON` 落入某 facet。 -/
+private theorem exists_facet_ray_p7 {p : Set V3} (hb : Bornology.IsBounded p)
+    (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p) {y : V3} (hy : y ≠ 0) :
+    ∃ f : Set V3, ∃ t : ℝ, 0 < t ∧ FacetOf_p7 f p ∧ t • y ∈ f := by
+  classical
+  have hpc : IsClosed p := POLYHEDRON_IMP_CLOSED hp
+  have hyn : (0:ℝ) < ‖y‖ := norm_pos_iff.mpr hy
+  set S : Set ℝ := {t : ℝ | t • y ∈ p} with hS
+  have hmemS : ∀ t : ℝ, t ∈ S ↔ t • y ∈ p := fun _ => Iff.rfl
+  have h0S : (0 : ℝ) ∈ S := (hmemS 0).mpr (by simpa using interior_subset hz)
+  -- 上有界：`p ⊆ ball 0 R`
+  obtain ⟨R, hR⟩ := hb.subset_ball (0 : V3)
+  have hbdd : BddAbove S := by
+    refine ⟨R / ‖y‖, fun t ht => ?_⟩
+    have htn : ‖t • y‖ < R := by
+      have h1 : dist (t • y) (0 : V3) < R := hR ((hmemS t).mp ht)
+      rwa [dist_zero_right] at h1
+    have h2 : t * ‖y‖ ≤ R := by
+      rw [norm_smul, Real.norm_eq_abs] at htn
+      calc t * ‖y‖ ≤ |t| * ‖y‖ := mul_le_mul_of_nonneg_right (le_abs_self t) hyn.le
+        _ ≤ R := by linarith
+    exact (le_div_iff₀ hyn).mpr h2
+  -- 含正参数（0 的内点球）
+  obtain ⟨e, he, hsub⟩ := Metric.isOpen_iff.mp isOpen_interior 0 hz
+  have htpos : ∃ t ∈ S, 0 < t := by
+    refine ⟨e / 2 / ‖y‖, ?_, by positivity⟩
+    have hmem : (e / 2 / ‖y‖) • y ∈ Metric.ball (0 : V3) e := by
+      rw [Metric.mem_ball, dist_zero_right, norm_smul, Real.norm_eq_abs,
+        abs_of_pos (by positivity : (0:ℝ) < e / 2 / ‖y‖)]
+      field_simp
+      linarith
+    exact (hmemS _).mpr (interior_subset (hsub hmem))
+  have hne : S.Nonempty := ⟨0, h0S⟩
+  -- 上确界可达（S 闭：闭集在连续映射下的原像）
+  have hcS : IsClosed S := by
+    rw [hS]
+    exact hpc.preimage (continuous_id.smul continuous_const)
+  have hsup : sSup S ∈ S := by
+    have hinc : sSup S ∈ closure S := by
+      rw [Metric.mem_closure_iff]
+      intro ε hε
+      have hlt : sSup S - ε / 2 < sSup S := by linarith
+      obtain ⟨t, ht, hgt⟩ : ∃ t ∈ S, sSup S - ε / 2 < t := by
+        by_contra hcon
+        push_neg at hcon
+        exact absurd (csSup_le hne fun t ht => hcon t ht)
+          (by intro hcon'; linarith)
+      refine ⟨t, ht, ?_⟩
+      have htt : t ≤ sSup S := le_csSup hbdd ht
+      rw [Real.dist_eq, abs_of_nonneg (by linarith :
+        (0:ℝ) ≤ sSup S - t)]
+      linarith
+    rw [hcS.closure_eq] at hinc
+    exact hinc
+  have ht0pos : 0 < sSup S := by
+    obtain ⟨t, htS, ht0⟩ := htpos
+    exact ht0.trans_le (le_csSup hbdd htS)
+  have hw : sSup S • y ∈ p := (hmemS _).mp hsup
+  -- 上确界点不在 interior（否则可沿射线延拓）
+  have hwnint : sSup S • y ∉ interior p := by
+    intro hint
+    obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.mp isOpen_interior _ hint
+    have hδ : 0 < ε / (2 * ‖y‖) := div_pos hε (mul_pos two_pos hyn)
+    have hmem : sSup S • y + (ε / (2 * ‖y‖)) • y ∈ Metric.ball (sSup S • y) ε := by
+      rw [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left, norm_smul,
+        Real.norm_eq_abs, abs_of_pos hδ]
+      have hpos : (0:ℝ) < ‖y‖ := hyn
+      field_simp
+      linarith
+    have hS' : sSup S + ε / (2 * ‖y‖) ∈ S := by
+      refine (hmemS _).mpr ?_
+      have hv : (sSup S + ε / (2 * ‖y‖)) • y
+          = sSup S • y + (ε / (2 * ‖y‖)) • y := add_smul _ _ _
+      rw [hv]
+      exact interior_subset (hball hmem)
+    exact absurd (le_csSup hbdd hS') (by linarith)
+  -- 全维数下 rint = interior
+  have hwrint : sSup S • y ∉ intrinsicInterior ℝ p := fun h =>
+    hwnint ((mem_rint_iff_interior_p7 hz).1 h)
+  -- `RELATIVE_INTERIOR_OF_POLYHEDRON`：rint p = p \ ⋃₀ facets
+  rw [RELATIVE_INTERIOR_OF_POLYHEDRON hp] at hwrint
+  have hwu : sSup S • y ∈ ⋃₀ {f : Set V3 | FacetOf f p} := by
+    by_contra hcon
+    exact hwrint ((Set.mem_sdiff _).mpr ⟨hw, hcon⟩)
+  obtain ⟨f, hf, hwf⟩ := Set.mem_sUnion.mp hwu
+  exact ⟨f, sSup S, ht0pos, hf, hwf⟩
+
+/-- `⋃{fchanged f | f facet_of p} ⊆ yfan`（HOL `FCHANGED_SUBSET_YFAN`
+的诚实重建）：反设 `x = t•v1 ∈ affGe {0} {a,b}`（`{a,b}` 为边，即闭段
+`[a,b]` 是真面），则 `v1` 与 `w := (1/s)•v1 ∈ [a,b]` 是过原点正倍数点，
+`POLYHEDRON_COLLINEAR_FACES`（batch 4 语义，`f`、`[a,b]` 均真面）迫
+`s = 1`，即 `v1 ∈ [a,b]`；内点分支 `FACE_OF_EQ` 导出 `f = [a,b]` 与
+`affDim` 矛盾，端点分支与 `SEGMENT_FACE_OF` 的极点性 + 极点不在
+facet 相对内部矛盾。零分支由 `0 ∈ rint f ∩ rint p` 排除。 -/
+private theorem fchanged_subset_yfan_p7 {p : Set V3}
+    (hb : Bornology.IsBounded p) (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p) :
+    (⋃ f ∈ {f : Set V3 | FacetOf_p7 f p}, fchanged_p7 f) ⊆
+      yfan (0 : V3) (Set.extremePoints ℝ p) (edges_p7 p) := by
+  intro x hx
+  obtain ⟨f, hf, hxf⟩ := Set.mem_iUnion₂.mp hx
+  obtain ⟨v1, t, hvx, hv1, ht⟩ := hxf
+  have hfp : FacetOf f p := hf
+  have h3p : affDim p = 3 := AFF_DIM_INTERIOR_EQ_3 0 p hz
+  have h2f : affDim f = 2 := by rw [hfp.2.2, h3p]; norm_num
+  have hfpp : f ≠ p := by
+    intro h
+    rw [h] at h2f
+    omega
+  have hv1f : v1 ∈ f := intrinsicInterior_subset hv1
+  -- 反设 x ∈ xfan
+  show x ∈ Set.univ \ xfan (0:V3) (Set.extremePoints ℝ p) (edges_p7 p)
+  rw [Set.mem_sdiff]
+  refine ⟨Set.mem_univ _, fun hcon => ?_⟩
+  obtain ⟨e, heE, hex⟩ := hcon
+  obtain ⟨a, b, rfl, hab, hsub, hconv, hchord⟩ := heE
+  have hsegedge : edgeOf (segment ℝ a b) p :=
+    ⟨⟨hsub, hconv, hchord⟩, (affDim_segment a b).mpr hab⟩
+  obtain ⟨-, haext, hbext⟩ := SEGMENT_EDGE_OF hsegedge
+  have hsegface : FaceOf (segment ℝ a b) p := ⟨hsub, hconv, hchord⟩
+  have ha0 : a ≠ 0 := extremePoint_ne_zero_of_interior hz haext
+  have hb0 : b ≠ 0 := extremePoint_ne_zero_of_interior hz hbext
+  have hpp : polyhedron p := hp
+  have hdisj : Disjoint ({(0:V3)} : Set V3) {a, b} := by
+    rw [Set.disjoint_left]
+    intro z hz1 hz2
+    rw [Set.mem_singleton_iff] at hz1
+    rcases Set.mem_insert_iff.mp hz2 with h | h
+    · exact ha0 (h.symm.trans hz1)
+    · rw [Set.mem_singleton_iff] at h
+      exact hb0 (h.symm.trans hz1)
+  have hexp : x ∈ {y : V3 | ∃ t1 t2 t3 : ℝ, 0 ≤ t2 ∧ 0 ≤ t3 ∧ t1 + t2 + t3 = 1 ∧
+      y = t1 • (0:V3) + t2 • a + t3 • b} := by
+    rw [← aff_ge_1_2 hdisj]
+    exact hex
+  obtain ⟨t1, c1, c2, hc10, hc20, hsum1, hcxe⟩ := hexp
+  have hxeq : x = c1 • a + c2 • b := by rw [hcxe]; simp
+  by_cases hcc : c1 = 0 ∧ c2 = 0
+  · -- x = 0 ⟹ v1 = 0 ∈ rint f ∩ rint p ⟹ 与 Disjoint 矛盾
+    have hx0 : x = 0 := by simp [hxeq, hcc]
+    have hv10 : v1 = 0 := by
+      have hprod : t • v1 = 0 := by rw [← hx0, hvx]
+      exact (smul_eq_zero.mp hprod).resolve_left ht.ne'
+    have hv1f0 : (0:V3) ∈ f := by rw [← hv10]; exact hv1f
+    exact Set.disjoint_left.mp (faceOf_disjoint_rinterior hfp.1 hfpp) hv1f0
+      (interior_subset_intrinsicInterior hz)
+  · -- 主情形
+    have hcpos : 0 < c1 + c2 := by
+      by_contra hcon
+      push_neg at hcon
+      have h1 : c1 ≤ 0 := le_trans (le_add_of_nonneg_right hc20) hcon
+      have h2 : c2 ≤ 0 := le_trans (le_add_of_nonneg_left hc10) hcon
+      exact hcc ⟨le_antisymm h1 hc10, le_antisymm h2 hc20⟩
+    have hv1eq : v1 = (c1 / t) • a + (c2 / t) • b := by
+      apply smul_right_injective V3 ht.ne'
+      show t • v1 = t • ((c1 / t) • a + (c2 / t) • b)
+      have hsum : t • v1 = t • ((c1 / t) • a + (c2 / t) • b) := by
+        rw [smul_add, smul_smul, mul_div_cancel₀ _ ht.ne', smul_smul,
+          mul_div_cancel₀ _ ht.ne', hvx.symm.trans hxeq]
+      rw [hsum]
+    have h1' : 0 ≤ c1 / t := div_nonneg hc10 ht.le
+    have h2' : 0 ≤ c2 / t := div_nonneg hc20 ht.le
+    have hs' : 0 < c1 / t + c2 / t := by
+      by_contra hcon
+      push_neg at hcon
+      have hzz1 : c1 / t = 0 := by linarith
+      have hzz2 : c2 / t = 0 := by linarith
+      exact hcc ⟨(div_eq_zero_iff).mp hzz1 |>.resolve_right ht.ne',
+        (div_eq_zero_iff).mp hzz2 |>.resolve_right ht.ne'⟩
+    set s : ℝ := c1 / t + c2 / t with hsdef
+    have hceq : ∀ (q : ℝ) (z : V3), (1 / s) • (q • z) = (q / s) • z := by
+      intro q z
+      rw [smul_smul]
+      congr 1
+      field_simp
+    have hsmem : (1 / s) • v1 ∈ segment ℝ a b := by
+      rw [hv1eq, smul_add, hceq (c1 / t) a, hceq (c2 / t) b]
+      exact ⟨(c1 / t) / s, (c2 / t) / s,
+        div_nonneg h1' hs'.le, div_nonneg h2' hs'.le, by rw [← add_div, hsdef,
+        div_self hs'.ne'], rfl⟩
+    -- POLYHEDRON_COLLINEAR_FACES：1•v1 = s•((1/s)•v1) ⟹ 1 = s ⟹ v1 ∈ [a,b]
+    have hsgne : (segment ℝ a b : Set V3) ≠ p := by
+      intro h
+      have h3 : affDim (segment ℝ a b) = 1 := hsegedge.2
+      rw [h] at h3
+      omega
+    have hsEq : (1:ℝ) = s :=
+      POLYHEDRON_COLLINEAR_FACES hpp hz hfp.1 hfpp hsegface hsgne hv1f hsmem
+        one_pos hs' (by rw [one_smul, smul_smul, div_eq_mul_inv, one_mul,
+          mul_inv_cancel₀ hs'.ne', one_smul])
+    have hv1seg : v1 ∈ segment ℝ a b := by
+      rw [hsEq] at hsmem
+      rw [div_self hs'.ne', one_smul] at hsmem
+      exact hsmem
+    obtain ⟨l, m, hl, hm, hlm, hv1eq2⟩ := hv1seg
+    have hfne_sing : ∀ z : V3, f ≠ {z} := by
+      intro z h
+      rw [h, affDim_singleton] at h2f
+      norm_num at h2f
+    have hm1ub : m ≤ 1 := le_trans (le_add_of_nonneg_left hl) hlm.le
+    rcases eq_or_lt_of_le hm with hm0 | hm0
+    · have hv1a : v1 = a := by
+        have hl1 : l = 1 := by linarith
+        rw [hl1, one_smul, ← hm0, zero_smul, add_zero] at hv1eq2
+        exact hv1eq2.symm
+      have hv1a' : a ∈ intrinsicInterior ℝ f := by
+        rw [← hv1a]
+        exact hv1
+      exact extreme_notMem_rint_p7 haext hv1a' hfp.1 (hfne_sing a)
+    · rcases eq_or_lt_of_le hm1ub with hm1 | hm1lt
+      · have hv1b : v1 = b := by
+          have hl0 : l = 0 := by linarith
+          rw [hl0, zero_smul, hm1, one_smul, zero_add] at hv1eq2
+          exact hv1eq2.symm
+        have hv1b' : b ∈ intrinsicInterior ℝ f := by
+          rw [← hv1b]
+          exact hv1
+        exact extreme_notMem_rint_p7 hbext hv1b' hfp.1 (hfne_sing b)
+      · have hlm2 : l = 1 - m := by linarith
+        have hv1open : v1 ∈ openSegment ℝ a b := by
+          rw [hlm2] at hv1eq2
+          exact ⟨1 - m, m, by linarith, hm0, by linarith, hv1eq2⟩
+        have hv1rint : v1 ∈ intrinsicInterior ℝ (segment ℝ a b) :=
+          openSegment_mem_rint_segment hab hv1open
+        have hfeq : f = segment ℝ a b :=
+          faceOf_eq hfp.1 hsegface
+            (Set.not_disjoint_iff_nonempty_inter.mpr ⟨v1, hv1, hv1rint⟩)
+        rw [hfeq] at h2f
+        exact absurd h2f (by rw [hsegedge.2]; norm_num)
+
+/-- `yfan ⊆ ⋃{fchanged f | f facet_of p}`（HOL `YFAN_SUBSET_UNIONS_FCHANGED`
+的诚实重建）：`REDUCE_POINT_FACET` 路线——射线-前沿引理取 facet `f` 与
+`t•y ∈ f`；`t•y ∈ rint f` 时直接落入并集；否则 `t•y ∈ f \ rint f`，经
+`RELATIVE_INTERIOR_OF_POLYHEDRON` 下潜到 `f` 的 facet `g ∋ t•y`（维数
+1），按 `EXISTS_EDGE_AT_VERTICES` 的 Krein–Milman 先例 +
+`EXPAND_EDGE_POLYTOPE`（本文件冻结语句，作黑箱）写成 `segment[a,b]`，
+于是 `y ∈ affGe {0}{a,b} ⊆ xfan`，与 `y ∈ yfan` 矛盾。0 ∉ yfan 由
+`EXISTS_EDGE_POLYTOPE`（边存在 ⟹ 0 ∈ xfan）排除。 -/
+private theorem yfan_subset_unions_fchanged_p7 {p : Set V3}
+    (hb : Bornology.IsBounded p) (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p)
+    {y : V3} (hy : y ∈ yfan (0 : V3) (Set.extremePoints ℝ p) (edges_p7 p)) :
+    y ∈ ⋃ f ∈ {f : Set V3 | FacetOf_p7 f p}, fchanged_p7 f := by
+  have hpp : polyhedron p := hp
+  -- 0 ∉ yfan：边存在 ⟹ 0 ∈ xfan
+  have hy0 : y ≠ 0 := by
+    rintro rfl
+    obtain ⟨e0, he0⟩ := EXISTS_EDGE_POLYTOPE p hb hpp hz
+    obtain ⟨v, w, rfl, hedge⟩ := he0
+    obtain ⟨⟨hsub, hconv, hchord⟩, hdim⟩ := hedge
+    have hvw : v ≠ w := (affDim_segment v w).mp hdim
+    have hsegface : FaceOf (segment ℝ v w) p := ⟨hsub, hconv, hchord⟩
+    have hznot0 : ∀ z ∈ segment ℝ v w, z ≠ 0 := by
+      intro z hzm hz0
+      have h2 : (segment ℝ v w : Set V3) ≠ p := by
+        intro hcon
+        have h3 : affDim (segment ℝ v w) = 1 := (affDim_segment v w).mpr hvw
+        rw [hcon] at h3
+        have h4 : affDim p = 3 := AFF_DIM_INTERIOR_EQ_3 0 p hz
+        omega
+      have h0seg : (0:V3) ∈ segment ℝ v w := by
+        rw [← hz0]
+        exact hzm
+      exact Set.disjoint_left.mp (faceOf_disjoint_rinterior hsegface h2) h0seg
+        (interior_subset_intrinsicInterior hz)
+    have hdisj : Disjoint ({(0:V3)} : Set V3) {v, w} := by
+      rw [Set.disjoint_left]
+      intro z hz1 hz2
+      rw [Set.mem_singleton_iff] at hz1
+      rcases Set.mem_insert_iff.mp hz2 with h | h
+      · exact hznot0 v (left_mem_segment (𝕜 := ℝ) v w) (h.symm.trans hz1)
+      · rw [Set.mem_singleton_iff] at h
+        exact hznot0 w (right_mem_segment _ _ _) (h.symm.trans hz1)
+    have h0cone : (0:V3) ∈ affGe {(0:V3)} {v, w} := by
+      rw [aff_ge_1_2 hdisj]
+      exact ⟨1, 0, 0, le_refl 0, le_refl 0, by norm_num, by simp⟩
+    have hxfan : (0:V3) ∈ xfan (0:V3) (Set.extremePoints ℝ p) (edges_p7 p) :=
+      ⟨{v, w}, ⟨v, w, rfl, hvw, hsub, hconv, hchord⟩, h0cone⟩
+    obtain ⟨-, hnot⟩ := (Set.mem_sdiff _).mp hy
+    exact hnot hxfan
+  -- 主线：射线-前沿引理
+  obtain ⟨f, t0, ht00, hf, hwy⟩ := exists_facet_ray_p7 hb hp hz hy0
+  have hfp : FacetOf f p := hf
+  by_cases hwrint : t0 • y ∈ intrinsicInterior ℝ f
+  · exact Set.mem_iUnion₂.mpr ⟨f, hf, t0 • y, 1 / t0,
+      by rw [smul_smul, show (1:ℝ) / t0 * t0 = 1 by
+        field_simp, one_smul], hwrint,
+      div_pos zero_lt_one ht00⟩
+  · -- 下降分支：t0•y 落在 f 的某 facet g（维数 1）
+    have hwf : t0 • y ∈ f := hwy
+    have hfpoly : polyhedron f := by
+      obtain ⟨a₁, b₁, ha₁, -, hfeq⟩ := FACET_OF_POLYHEDRON hpp hfp
+      rw [hfeq]
+      exact POLYHEDRON_INTER hpp (POLYHEDRON_HYPERPLANE ha₁ b₁)
+    have hw' : t0 • y ∉ intrinsicInterior ℝ f := hwrint
+    rw [RELATIVE_INTERIOR_OF_POLYHEDRON hfpoly] at hw'
+    have hwu : t0 • y ∈ ⋃₀ {g : Set V3 | FacetOf g f} := by
+      by_contra hcon
+      exact hw' ((Set.mem_sdiff _).mpr ⟨hwf, hcon⟩)
+    obtain ⟨g, hg, hwg⟩ := Set.mem_sUnion.mp hwu
+    have h2f : affDim f = 2 := by rw [hfp.2.2, AFF_DIM_INTERIOR_EQ_3 0 p hz]; norm_num
+    have h1g : affDim g = 1 := by rw [hg.2.2, h2f]; norm_num
+    have hgp : FaceOf g p := FaceOf.trans hg.1 hfp.1
+    have hgne : g ≠ ∅ := hg.2.1
+    have hgne2 : g ≠ p := by
+      intro h
+      rw [h] at h1g
+      have h3 : affDim p = 3 := AFF_DIM_INTERIOR_EQ_3 0 p hz
+      omega
+    have hgpp : polyhedron g := by
+      rw [FACE_OF_POLYHEDRON hpp hgp hgne hgne2]
+      refine POLYHEDRON_INTERS ?_ ?_
+      · exact Set.Finite.subset (FINITE_POLYHEDRON_FACETS hpp) fun _ hx => hx.1
+      · intro h' hh'
+        obtain ⟨a', b', ha0', -, hhe⟩ := FACET_OF_POLYHEDRON hpp hh'.1
+        rw [hhe]
+        exact POLYHEDRON_INTER hpp (POLYHEDRON_HYPERPLANE ha0' b')
+    have hgpconv : Convex ℝ g := hgp.2.1
+    have hgb : Bornology.IsBounded g := hb.subset hgp.1
+    have hgcl : IsClosed g := POLYHEDRON_IMP_CLOSED hgpp
+    have hgcomp : IsCompact g := Metric.isCompact_of_isClosed_isBounded hgcl hgb
+    have hext : (Set.extremePoints ℝ g).Finite := FINITE_POLYHEDRON_EXTREME_POINTS hgpp
+    have hcch : IsClosed (convexHull ℝ (Set.extremePoints ℝ g)) :=
+      (hext.isCompact_convexHull ℝ).isClosed
+    have hgkm : g = convexHull ℝ (Set.extremePoints ℝ g) := by
+      have h1 := closure_convexHull_extremePoints hgcomp hgpconv
+      rw [hcch.closure_eq] at h1
+      exact h1.symm
+    obtain ⟨a, b, hgseg⟩ :=
+      EXPAND_EDGE_POLYTOPE (f := g) (p := g) ⟨Set.extremePoints ℝ g, hext, hgkm⟩
+        (FaceOf.refl (s := g) hgpconv) h1g
+    have hab : a ≠ b := by
+      rintro rfl
+      rw [hgseg, segment_same, affDim_singleton] at h1g
+      norm_num at h1g
+    have heE : {a, b} ∈ edges_p7 p := by
+      refine ⟨a, b, rfl, hab, ?_, ?_, ?_⟩
+      · rw [← hgseg]; exact hgp.1
+      · rw [← hgseg]; exact hgp.2.1
+      · rw [← hgseg]; exact hgp.2.2
+    have hsf : FaceOf (segment ℝ a b) p := by rw [← hgseg]; exact hgp
+    obtain ⟨haext, hbext⟩ := SEGMENT_FACE_OF hsf
+    have ha0 : a ≠ 0 := extremePoint_ne_zero_of_interior hz haext
+    have hb0 : b ≠ 0 := extremePoint_ne_zero_of_interior hz hbext
+    have hdisj2 : Disjoint ({(0:V3)} : Set V3) {a, b} := by
+      rw [Set.disjoint_left]
+      intro z hz1 hz2
+      rw [Set.mem_singleton_iff] at hz1
+      rcases Set.mem_insert_iff.mp hz2 with h | h
+      · exact ha0 (h.symm.trans hz1)
+      · rw [Set.mem_singleton_iff] at h
+        exact hb0 (h.symm.trans hz1)
+    have hwseg : t0 • y ∈ segment ℝ a b := by rw [← hgseg]; exact hwg
+    obtain ⟨l, m, hl, hm, hlm, heq⟩ := hwseg
+    have ht00ne : t0 ≠ 0 := ht00.ne'
+    have hyc : y ∈ affGe {(0:V3)} {a, b} := by
+      rw [aff_ge_1_2 hdisj2]
+      refine ⟨1 - 1 / t0, l / t0, m / t0, div_nonneg hl ht00.le,
+        div_nonneg hm ht00.le, ?_, ?_⟩
+      · field_simp
+        linarith
+      · have hysc : y = (1 / t0) • (t0 • y) := by
+          rw [smul_smul, show (1:ℝ) / t0 * t0 = 1 from by field_simp, one_smul]
+        rw [hysc, ← heq, smul_add, smul_smul, smul_smul, smul_zero, zero_add]
+        congr 1
+        · field_simp
+        · field_simp
+    have hxfan : y ∈ xfan (0:V3) (Set.extremePoints ℝ p) (edges_p7 p) :=
+      ⟨{a, b}, heE, hyc⟩
+    exact absurd hxfan ((Set.mem_sdiff _).mp hy).2
+
+/-- `FCHANGED_EQ_YFAN` 的 `_p7` 诚实重建（两包含拼装；HOL
+polyhedron.hl :1685-:1695）。 -/
+private theorem fchanged_eq_yfan_p7 {p : Set V3}
+    (hb : Bornology.IsBounded p) (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p) :
+    (⋃ f ∈ {f : Set V3 | FacetOf_p7 f p}, fchanged_p7 f)
+      = yfan (0 : V3) (Set.extremePoints ℝ p) (edges_p7 p) := by
+  refine Set.eq_of_subset_of_subset (fchanged_subset_yfan_p7 hb hp hz) ?_
+  intro y hy
+  exact yfan_subset_unions_fchanged_p7 hb hp hz hy
+
+
+/-- `FCHANGED_IN_COMPONENT` 的 `_p7` 诚实重建（HOL polyhedron.hl
+:1715-:1821）：`fchanged f` 连通且含于 `yfan`，在 `yfan` 中开
+（`FCHANGED_OPEN`），其余 facet 的 `fchanged` 之并（`FCHANGED_EQ_YFAN`
+覆盖 yfan 的其余部分）亦开且与之不交（`FCHANGED_ONE_TO_ONE` 逆否），
+故 `fchanged f` 恰为含其任一点的 yfan-连通分量（开二分 + 连通性）。 -/
+private theorem fchanged_in_component_p7 {p : Set V3}
+    (hb : Bornology.IsBounded p) (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p)
+    {f : Set V3} (hf : FacetOf_p7 f p) :
+    fchanged_p7 f ∈ topologicalComponentYfan (0 : V3) (Set.extremePoints ℝ p)
+      (edges_p7 p) := by
+  have hfp : FacetOf f p := hf
+  have hpp : polyhedron p := hp
+  have hfne : f.Nonempty := Set.nonempty_iff_ne_empty.mpr hfp.2.1
+  obtain ⟨v0, hv0⟩ := Set.Nonempty.intrinsicInterior hfp.1.2.1 hfne
+  have hb0 : v0 ∈ fchanged_p7 f := ⟨v0, 1, by rw [one_smul], hv0, zero_lt_one⟩
+  have hfsub : fchanged_p7 f ⊆ yfan (0 : V3) (Set.extremePoints ℝ p) (edges_p7 p) :=
+    fun w hw => fchanged_subset_yfan_p7 hb hp hz
+      (Set.mem_iUnion₂.mpr ⟨f, hf, hw⟩)
+  have hyfan0 : v0 ∈ yfan (0 : V3) (Set.extremePoints ℝ p) (edges_p7 p) := hfsub hb0
+  have hconn : IsConnected (fchanged_p7 f) := isConnected_fchanged_p7 hf
+  have hbig : fchanged_p7 f ⊆
+      connectedComponentIn (yfan (0 : V3) (Set.extremePoints ℝ p) (edges_p7 p)) v0 :=
+    hconn.2.subset_connectedComponentIn hb0 hfsub
+  have hUopen : IsOpen (fchanged_p7 f) := FCHANGED_OPEN p f hb hpp hz hfp
+  have hVopen : IsOpen
+      (⋃₀ {T : Set V3 | ∃ g : Set V3, FacetOf_p7 g p ∧ g ≠ f ∧ T = fchanged_p7 g}) :=
+    by
+      refine isOpen_sUnion ?_
+      rintro T ⟨g, hg, hne2, rfl⟩
+      exact FCHANGED_OPEN p g hb hpp hz hg
+  have hsplit : ∀ z ∈ yfan (0 : V3) (Set.extremePoints ℝ p) (edges_p7 p),
+      z ∈ fchanged_p7 f ∪
+        ⋃₀ {T : Set V3 | ∃ g : Set V3, FacetOf_p7 g p ∧ g ≠ f ∧ T = fchanged_p7 g} := by
+    intro z hzy
+    have hzu : z ∈ ⋃ g ∈ {g : Set V3 | FacetOf_p7 g p}, fchanged_p7 g :=
+      (Eq.subset (fchanged_eq_yfan_p7 hb hp hz).symm) hzy
+    obtain ⟨g, hg, hzg⟩ := Set.mem_iUnion₂.mp hzu
+    rcases eq_or_ne g f with hgf | hne
+    · rw [hgf] at hzg
+      exact Or.inl hzg
+    · exact Or.inr (Set.mem_sUnion.mpr
+        ⟨fchanged_p7 g, ⟨g, hg, hne, rfl⟩, hzg⟩)
+  have hDU : Disjoint (fchanged_p7 f)
+      (⋃₀ {T : Set V3 | ∃ g : Set V3, FacetOf_p7 g p ∧ g ≠ f ∧ T = fchanged_p7 g}) := by
+    rw [Set.disjoint_left]
+    intro z hzU hzV
+    obtain ⟨T, ⟨g, hg, hne, rfl⟩, hzg⟩ := Set.mem_sUnion.mp hzV
+    refine absurd (FCHANGED_ONE_TO_ONE p f g hb hpp hz hfp hg ?_).symm hne
+    refine Set.nonempty_iff_ne_empty.mpr ⟨z, hzU, hzg⟩
+  have hcompU : connectedComponentIn
+      (yfan (0 : V3) (Set.extremePoints ℝ p) (edges_p7 p)) v0 ⊆ fchanged_p7 f := by
+    by_contra hcon
+    rw [Set.not_subset] at hcon
+    obtain ⟨z, hzc, hzU⟩ := hcon
+    have hzy : z ∈ yfan (0 : V3) (Set.extremePoints ℝ p) (edges_p7 p) :=
+      connectedComponentIn_subset _ _ hzc
+    have hzV : z ∈ ⋃₀ {T : Set V3 | ∃ g : Set V3, FacetOf_p7 g p ∧ g ≠ f ∧
+        T = fchanged_p7 g} := (hsplit z hzy).resolve_left hzU
+    have hpre : IsPreconnected (connectedComponentIn
+      (yfan (0 : V3) (Set.extremePoints ℝ p) (edges_p7 p)) v0) :=
+      (isConnected_connectedComponentIn_iff.mpr hyfan0).2
+    obtain ⟨w, hw1, hw2⟩ := hpre (fchanged_p7 f)
+      (⋃₀ {T : Set V3 | ∃ g : Set V3, FacetOf_p7 g p ∧ g ≠ f ∧
+        T = fchanged_p7 g}) hUopen hVopen
+      (fun x hx => hsplit x (connectedComponentIn_subset _ _ hx))
+      ⟨v0, mem_connectedComponentIn hyfan0, hb0⟩ ⟨z, hzc, hzV⟩
+    exact hDU ⟨w, hw1, hw2⟩
+  refine ⟨v0, hyfan0, ?_⟩
+  exact subset_antisymm hcompU hbig
+
+/-! ## polyhedron.hl :1823-:2004（面的 fchanged-参数化） -/
+
+/-- HOL polyhedron.hl :1823-:1839 `SUR_FCHANGED`
+
+HOL 原文：
+```
+!s p:real^3->bool.
+         bounded p /\ polyhedron p /\ vec 0 IN interior p /\
+ s IN topological_component_yfan(vec 0:real^3,vertices (p:real^3->bool),edges (p:real^3->bool))
+==> ?f. f facet_of p /\ s= fchanged f
+```
+
+编码说明：`topological_component_yfan` ↦ `topologicalComponentYfan`
+（Kepler/Text/Fan.lean:199）；`vertices`/`edges` 见 `edges_p7` 与批头
+（`Set.extremePoints ℝ p`）；`facet_of`/`fchanged` ↦ 本文件私有副本。
+
+证明思路（HOL，诚实执行）：`FCHANGED_EQ_YFAN`（上文 `fchanged_eq_yfan_p7`
+两包含）把 `fchanged` 侧化入 yfan-语言；`topological_component_subset_yfan`
+（PlanarityConnect.lean:189）与 `connectedComponentIn_nonempty_iff` 取
+`z ∈ s ⊆ yfan`；`yfan_subset_unions_fchanged_p7` 给 facet `f` 与
+`z ∈ fchanged f`；`fchanged_in_component_p7`（上文：facet 的 fchanged 是
+yfan-连通分量）与共享点 `z` 的分量唯一性
+（`connectedComponentIn_eq`，HOL `CONNECTED_COMPONENT_OVERLAP`）迫使
+`s = fchanged f`。原冻结桥（批 6 闭段编码爆炸）已随批 6 模块废弃，
+本证明为 PolyAuto6.lean 中心链的就地诚实重建（见批 6 诚实核心节头）。 -/
+theorem SUR_FCHANGED {s p : Set V3} (hb : Bornology.IsBounded p)
+    (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p)
+    (hs : s ∈ topologicalComponentYfan 0 (Set.extremePoints ℝ p) (edges_p7 p)) :
+    ∃ f : Set V3, FacetOf_p7 f p ∧ s = fchanged_p7 f := by
+  rcases hs with ⟨b, hby, rfl⟩
+  have hsub : connectedComponentIn (yfan 0 (Set.extremePoints ℝ p) (edges_p7 p)) b ⊆
+      yfan 0 (Set.extremePoints ℝ p) (edges_p7 p) :=
+    topological_component_subset_yfan ⟨b, hby, rfl⟩
+  obtain ⟨z, hzs⟩ := connectedComponentIn_nonempty_iff.mpr hby
+  obtain ⟨f, hf, hzfc⟩ :=
+    Set.mem_iUnion₂.mp (yfan_subset_unions_fchanged_p7 hb hp hz (hsub hzs))
+  obtain ⟨z', hz'y, hzeq⟩ := fchanged_in_component_p7 hb hp hz hf
+  have e1 : connectedComponentIn (yfan 0 (Set.extremePoints ℝ p) (edges_p7 p)) b
+      = connectedComponentIn (yfan 0 (Set.extremePoints ℝ p) (edges_p7 p)) z :=
+    connectedComponentIn_eq hzs
+  have hzz' : z ∈ connectedComponentIn (yfan 0 (Set.extremePoints ℝ p) (edges_p7 p)) z' := by
+    rw [hzeq]
+    exact hzfc
+  have e2 : connectedComponentIn (yfan 0 (Set.extremePoints ℝ p) (edges_p7 p)) z'
+      = connectedComponentIn (yfan 0 (Set.extremePoints ℝ p) (edges_p7 p)) z :=
+    connectedComponentIn_eq hzz'
+  exact ⟨f, hf, e1.trans (e2.symm.trans hzeq.symm)⟩
+
+/-- HOL polyhedron.hl :1855-:1873 `AMHFNXP`
+
+HOL 原文：
+```
+!p:real^3->bool.
+         bounded p /\ polyhedron p /\ vec 0 IN interior p
+==>
+(!s. s IN topological_component_yfan (vec 0,vertices (p:real^3->bool),edges (p:real^3->bool)) ==> (?!f. f facet_of p /\
+							 s = fchanged f))
+```
+
+编码说明：`?!f. P f` ↦ `∃! f, P f`（ConformingDefs.lean 先例）。
+
+证明思路（HOL，诚实执行）：存在性即 `SUR_FCHANGED`；唯一性：设
+`s = fchanged f = fchanged y`，`FCHANGED_ONE_TO_ONE`（PolyAuto5，诚实版）
+化归为 `fchanged f ∩ fchanged y ≠ ∅`；交点由 `f` 的非空凸性给相对内部
+非空（Mathlib `Set.Nonempty.intrinsicInterior`，即 HOL
+`EXISTS_POINT_IN_FCHANGED` 的就地重建，`t = 1` 见证）。 -/
+theorem AMHFNXP {p : Set V3} (hb : Bornology.IsBounded p)
+    (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p) :
+    ∀ s ∈ topologicalComponentYfan 0 (Set.extremePoints ℝ p) (edges_p7 p),
+      ∃! f : Set V3, FacetOf_p7 f p ∧ s = fchanged_p7 f := by
+  intro s hs
+  obtain ⟨f, hf, hseq⟩ := SUR_FCHANGED hb hp hz hs
+  refine ⟨f, ⟨hf, hseq⟩, ?_⟩
+  rintro y ⟨hfy, hseqy⟩
+  have hpp : polyhedron p := hp
+  have hfne : f.Nonempty := Set.nonempty_iff_ne_empty.mpr hf.2.1
+  obtain ⟨v0, hv0⟩ := Set.Nonempty.intrinsicInterior hf.1.2.1 hfne
+  have hv0f : v0 ∈ fchanged_p7 f := ⟨v0, 1, by rw [one_smul], hv0, zero_lt_one⟩
+  have hint : fchanged_p7 f ∩ fchanged_p7 y ≠ ∅ :=
+    Set.nonempty_iff_ne_empty.mpr ⟨v0, hv0f, hv0y⟩
+  have hv0y : v0 ∈ fchanged_p7 y := by
+    rw [← hseqy, hseq]
+    exact hv0f
+  exact FCHANGED_ONE_TO_ONE p f y hb hpp hz hf hfy hint
+
+/-- HOL polyhedron.hl :1875-:1891 `AMHFNXP_BIJ`
+
+HOL 原文：
+```
+!p:real^3->bool. bounded p /\ polyhedron p /\ vec 0 IN interior p ==>
+  (BIJ fchanged (\f. f facet_of p) (topological_component_yfan (vec 0,vertices p,edges p)))
+```
+
+编码说明：HOL `BIJ f s t`（INJ + SURJ）↦ `Set.BijOn f s t`；像函数
+`\f. f facet_of p` 编码为集合 `{f : Set V3 | FacetOf_p7 f p}`。
+
+证明思路（HOL，prove_by_refinement 原文仅 7 步；诚实执行）：三分量——
+MapsTo 即诚实版 `FCHANGED_IN_COMPONENT`（上文 `fchanged_in_component_p7`，
+PolyAuto6.lean 废弃后的就地重建）；InjOn 由 PolyAuto5 诚实版
+`FCHANGED_ONE_TO_ONE` + facet 非空凸性给 `fchanged` 非空
+（`t = 1` 见证）；SurjOn 即 `SUR_FCHANGED`。 -/
+theorem AMHFNXP_BIJ {p : Set V3} (hb : Bornology.IsBounded p)
+    (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p) :
+    Set.BijOn (fun f : Set V3 => fchanged_p7 f) {f : Set V3 | FacetOf_p7 f p}
+      (topologicalComponentYfan 0 (Set.extremePoints ℝ p) (edges_p7 p)) := by
+  have hpp : polyhedron p := hp
+  refine ⟨?_, ?_, ?_⟩
+  · intro f hf
+    exact fchanged_in_component_p7 hb hp hz hf
+  · intro f hf y hfy heq
+    have hfne : f.Nonempty := Set.nonempty_iff_ne_empty.mpr hf.2.1
+    obtain ⟨v0, hv0⟩ := Set.Nonempty.intrinsicInterior hf.1.2.1 hfne
+    have hv0f : v0 ∈ fchanged_p7 f := ⟨v0, 1, by rw [one_smul], hv0, zero_lt_one⟩
+    have hint : fchanged_p7 f ∩ fchanged_p7 y ≠ ∅ :=
+      Set.nonempty_iff_ne_empty.mpr ⟨v0, hv0f, hv0y⟩
+    have hv0y : v0 ∈ fchanged_p7 y := by
+      rw [show fchanged_p7 y = fchanged_p7 f from Eq.symm heq]
+      exact hv0f
+    exact FCHANGED_ONE_TO_ONE p f y hb hpp hz hf hfy hint
+  · intro s hs
+    obtain ⟨f, hf, hseq⟩ := SUR_FCHANGED hb hp hz hs
+    refine ⟨f, hf, ?_⟩
+    exact hseq.symm
+
+/-! ## polyhedron.hl :1893-:2004（边上的顶点） -/
 
 /-- HOL polyhedron.hl :1932-:2003 `EXISTS_EDGE_AT_VERTICES`
 
@@ -387,7 +1113,94 @@ theorem EXISTS_EDGE_AT_VERTICES {p : Set V3} (hb : Bornology.IsBounded p)
     (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p) :
     ∀ v ∈ Set.extremePoints ℝ p,
       setOfEdge v (Set.extremePoints ℝ p) (edges_p7 p) ≠ ∅ := by
-  sorry
+  intro v hv
+  -- `{v} face_of p`（`FACE_OF_SING` 展开，`faceOf_sing`）
+  have hvsing : FaceOf_p7 {v} p := (faceOf_sing (x := v) (s := p)).mpr hv
+  have h3p : affDim p = 3 := AFF_DIM_INTERIOR_EQ_3 0 p hz
+  -- 排除 `p = {v}`（否则维数 0 ≠ 3）
+  have hpvne : p ≠ {v} := by
+    intro h
+    have hz' : (0:V3) ∈ interior {v} := by rw [← h]; exact hz
+    have h3 := AFF_DIM_INTERIOR_EQ_3 0 {v} hz'
+    rw [affDim_singleton] at h3
+    omega
+  -- 顶点嵌入某个 facet `f`（维数 2），`f` 显式化为超平面切片故为多面体
+  obtain ⟨f, hf, hvf⟩ :=
+    FACE_OF_POLYHEDRON_SUBSET_FACET (s := p) hp hvsing (Set.singleton_ne_empty v) (Ne.symm hpvne)
+  obtain ⟨a1, b1, ha1, -, hfeq⟩ := FACET_OF_POLYHEDRON hp hf
+  have hfp : polyhedron f := by
+    rw [hfeq]
+    exact POLYHEDRON_INTER hp (POLYHEDRON_HYPERPLANE ha1 b1)
+  have hfvf : FaceOf_p7 {v} f := faceOf_subset hvsing hvf hf.1.1
+  have h2f : affDim f = 2 := by rw [hf.2.2, h3p]; norm_num
+  have hvne : {v} ≠ f := by
+    intro h
+    rw [← h, affDim_singleton] at h2f
+    omega
+  -- 降一维：过 `v` 的 facet `g`（维数 1），`g face_of p`
+  obtain ⟨g, hg, hvg⟩ := FACE_OF_POLYHEDRON_SUBSET_FACET hfp hfvf (Set.singleton_ne_empty v) hvne
+  have hgne : g ≠ ∅ := hg.2.1
+  have hgaff : affDim g = 1 := by rw [hg.2.2, h2f]; norm_num
+  have hgp : FaceOf_p7 g p := FaceOf.trans hg.1 hf.1
+  have hgne2 : g ≠ p := by
+    intro h
+    rw [h] at hgaff
+    omega
+  -- `g` 为多面体（面 = 含它的 facets 之交）
+  have hgpp : polyhedron g := by
+    rw [FACE_OF_POLYHEDRON hp hgp hgne hgne2]
+    refine POLYHEDRON_INTERS ?_ ?_
+    · exact Set.Finite.subset (FINITE_POLYHEDRON_FACETS hp) fun _ hx => hx.1
+    · intro h' hh'
+      obtain ⟨a', b', ha0', -, hhe⟩ := FACET_OF_POLYHEDRON hp hh'.1
+      rw [hhe]
+      exact POLYHEDRON_INTER hp (POLYHEDRON_HYPERPLANE ha0' b')
+  -- `g` 是多胞形（Krein–Milman + 极点有限）
+  have hgpconv : Convex ℝ g := hgp.2.1
+  have hgb : Bornology.IsBounded g := hb.subset hgp.1
+  have hgcl : IsClosed g := POLYHEDRON_IMP_CLOSED hgpp
+  have hgcomp : IsCompact g := Metric.isCompact_of_isClosed_isBounded hgcl hgb
+  have hext : (Set.extremePoints ℝ g).Finite := FINITE_POLYHEDRON_EXTREME_POINTS hgpp
+  have hcch : IsClosed (convexHull ℝ (Set.extremePoints ℝ g)) :=
+    (hext.isCompact_convexHull ℝ).isClosed
+  have hgkm : g = convexHull ℝ (Set.extremePoints ℝ g) := by
+    have h1 := closure_convexHull_extremePoints hgcomp hgpconv
+    rw [hcch.closure_eq] at h1
+    exact h1.symm
+  -- 退化边：`g = segment[a,b]`（EXPAND_EDGE_POLYTOPE，冻结语句）
+  obtain ⟨a, b, hgseg⟩ :=
+    EXPAND_EDGE_POLYTOPE (f := g) (p := g) ⟨Set.extremePoints ℝ g, hext, hgkm⟩
+      (FaceOf.refl (s := g) hgpconv) hgaff
+  have hsegedge : edgeOf (segment ℝ a b) p :=
+    ⟨by rw [← hgseg]; exact hgp, by rw [← hgseg]; exact hgaff⟩
+  obtain ⟨hab, haV, hbV⟩ := SEGMENT_EDGE_OF hsegedge
+  have hvseg : v ∈ Set.extremePoints ℝ (segment ℝ a b) := by
+    have hvsegr : v ∈ segment ℝ a b := by rw [← hgseg]; exact hvg (by simp)
+    have hsubp : segment ℝ a b ⊆ p := by rw [← hgseg]; exact hgp.1
+    refine mem_extremePoints.mpr ⟨hvsegr, ?_⟩
+    intro x₁ hx₁ x₂ hx₂ hx
+    have e1 := hv.2 (hsubp hx₁) (hsubp hx₂) hx
+    have e2 := hv.2 (hsubp hx₂) (hsubp hx₁) (by rw [openSegment_symm]; exact hx)
+    exact ⟨e1, e2⟩
+  have heE1 : {a, b} ∈ edges_p7 p :=
+    ⟨a, b, rfl, hab, hsegedge.1.1, hsegedge.1.2.1, hsegedge.1.2.2⟩
+  have heE2 : {b, a} ∈ edges_p7 p := by
+    refine ⟨b, a, rfl, hab.symm, ?_, ?_, ?_⟩
+    · intro z hz
+      rw [segment_symm] at hz
+      exact hsegedge.1.1 hz
+    · rw [segment_symm]
+      exact hsegedge.1.2.1
+    · intro c d y hc hd hy hopen
+      rw [segment_symm] at hy ⊢
+      exact hsegedge.1.2.2 c d y hc hd hy hopen
+  rcases (EXTREME_POINT_OF_SEGMENT a b v).mp hvseg with heq | heq
+  · rw [heq]
+    refine Set.nonempty_iff_ne_empty.mp ⟨b, ?_, hbV⟩
+    exact heE1
+  · rw [heq]
+    refine Set.nonempty_iff_ne_empty.mp ⟨a, ?_, haV⟩
+    exact heE2
 
 /-! ## polyhedron.hl :2005-:2995（FLVNSME，本批主菜） -/
 
@@ -524,7 +1337,164 @@ theorem CARD_SET_OF_EDGE_INEQ_1_POLYHEDRON {p : Set V3}
     (hz : (0 : V3) ∈ interior p) :
     ∀ v ∈ Set.extremePoints ℝ p,
       1 < (setOfEdge v (Set.extremePoints ℝ p) (edges_p7 p)).ncard := by
-  sorry
+  intro v hv
+  -- fan 结构（POLYHEDRON_FAN，PolyAuto3 冻结语句；编码逐字一致）
+  have hfan : FAN 0 (Set.extremePoints ℝ p) (edges_p7 p) :=
+    POLYHEDRON_FAN hb hp hz
+  have hvz : v ≠ 0 := fun he => hfan.2.2.2.1 (by rw [he] at hv; exact hv)
+  -- 一个邻居（EXISTS_EDGE_AT_VERTICES）
+  obtain ⟨w, hwE, hwV⟩ :=
+    Set.nonempty_iff_ne_empty.mpr (EXISTS_EDGE_AT_VERTICES hb hp hz v hv)
+  have hnc := fan_not_collinear hfan hwE
+  -- 法向 `n = v × w`（V3 侧）
+  set n : V3 := WithLp.toLp 2 (crossProduct (v : Fin 3 → ℝ) (w : Fin 3 → ℝ)) with hn
+  have hv0p : (v : Fin 3 → ℝ) ≠ 0 := by
+    intro he
+    refine hvz ?_
+    exact (WithLp.ofLp_eq_zero 2).mp he
+  have ha0 : n ≠ 0 := by
+    intro hne
+    apply hnc
+    have h2 : (n : Fin 3 → ℝ) = (0 : Fin 3 → ℝ) := by rw [hne, WithLp.ofLp_zero]
+    have hcp : (crossProduct (v : Fin 3 → ℝ) (w : Fin 3 → ℝ)) = (0 : Fin 3 → ℝ) := by
+      rw [hn] at h2
+      rwa [coe_toLp] at h2
+    have hli : ¬LinearIndependent ℝ ![(v : Fin 3 → ℝ), (w : Fin 3 → ℝ)] := fun hl =>
+      ((crossProduct_ne_zero_iff_linearIndependent (v := (v : Fin 3 → ℝ))
+        (w := (w : Fin 3 → ℝ))).mpr hl) hcp
+    rw [LinearIndependent.pair_iff' hv0p] at hli
+    push_neg at hli
+    obtain ⟨c, hc⟩ := hli
+    refine (collinear3_iff_smul hvz).mpr ⟨c, ?_⟩
+    apply WithLp.ofLp_injective
+    simp [hc]
+  have hnv : n ⬝ᵥ v = 0 := by
+    rw [hn, dot_toLp, dotProduct_comm, dot_self_cross]
+  have hnw : n ⬝ᵥ w = 0 := by
+    rw [hn, dot_toLp, dotProduct_comm, dot_cross_self]
+  have hn0 : n ⬝ᵥ (0 : V3) = 0 := by
+    rw [dot_toLp, WithLp.ofLp_zero, dotProduct_zero]
+  -- FLVNSME：从 `v` 深入开半空间 `{n·x < 0}` 的边到达 `w'`
+  obtain ⟨w', hw'V, hw'A, hw'E⟩ :=
+    FLVNSME (v := v) (a := n) (b := 0) hb hp hz rfl ha0
+      (by simpa using hnv) (by simpa using hn0) hv
+  simp only [Set.mem_setOf_eq] at hw'A
+  have hnnv : (n : Fin 3 → ℝ) ⬝ᵥ (v : Fin 3 → ℝ) = 0 := by
+    rw [← dot_toLp]; exact hnv
+  -- `w'` 是与 `w` 不同的邻居
+  have hww : w ≠ w' := by
+    intro he
+    rw [← he] at hw'A
+    linarith
+  have hcard : ({w, w'} : Set V3).ncard = 2 := CARD_2_FAN hww
+  have hsub : ({w, w'} : Set V3) ⊆
+      setOfEdge v (Set.extremePoints ℝ p) (edges_p7 p) := by
+    intro x hx
+    rcases Set.mem_insert_iff.mp hx with rfl | rfl
+    · exact ⟨hwE, hwV⟩
+    · exact ⟨hw'E, hw'V⟩
+  have hVfin : (Set.extremePoints ℝ p).Finite := FINITE_POLYHEDRON_EXTREME_POINTS hp
+  have hsefin : (setOfEdge v (Set.extremePoints ℝ p) (edges_p7 p)).Finite :=
+    Set.Finite.subset hVfin fun x hx => hx.2
+  have h2 : (2 : ℕ) ≤ (setOfEdge v (Set.extremePoints ℝ p) (edges_p7 p)).ncard := by
+    refine le_trans (le_of_eq hcard.symm) (Set.ncard_le_ncard hsub hsefin)
+  omega
+
+/-! ## 填充辅助：V3-叉积簿记（liangou） -/
+
+/-- V3 点积的 Pi-侧展开。 -/
+private theorem p7_dot_pi {n y : V3} :
+    n ⬝ᵥ y = (n : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ) := by
+  have h1 : n = WithLp.toLp 2 (n : Fin 3 → ℝ) := (WithLp.toLp_ofLp 2 n).symm
+  rw [h1, dot_toLp]
+
+/-- 任意 `n` 与原点的点积为零。 -/
+private theorem p7_dot_zero (n : V3) : n ⬝ᵥ (0 : V3) = 0 := by
+  rw [p7_dot_pi, WithLp.ofLp_zero, dotProduct_zero]
+
+/-- 负号的点积。 -/
+private theorem p7_neg_dot {n y : V3} : (-n) ⬝ᵥ y = -(n ⬝ᵥ y) := by
+  rw [p7_dot_pi, WithLp.ofLp_neg, neg_dotProduct, ← p7_dot_pi]
+
+/-- `v × w` 与 `v` 的点积为零（`DOT_SELF_CROSS`）。 -/
+private theorem p7_cross_dot_v (v w : V3) :
+    (WithLp.toLp 2 (crossProduct (v : Fin 3 → ℝ) (w : Fin 3 → ℝ)) : V3) ⬝ᵥ v = 0 := by
+  rw [dot_toLp, dotProduct_comm, dot_self_cross]
+
+/-- `v × w` 与 `w` 的点积为零（`DOT_CROSS_SELF`）。 -/
+private theorem p7_cross_dot_w (v w : V3) :
+    (WithLp.toLp 2 (crossProduct (v : Fin 3 → ℝ) (w : Fin 3 → ℝ)) : V3) ⬝ᵥ w = 0 := by
+  rw [dot_toLp, dotProduct_comm, dot_cross_self]
+
+/-- 非零性：`¬Collinear3 0 v w` 给 `v × w ≠ 0`。 -/
+private theorem p7_cross_ne {v w : V3} (hnc : ¬ Collinear3 0 v w) :
+    (WithLp.toLp 2 (crossProduct (v : Fin 3 → ℝ) (w : Fin 3 → ℝ)) : V3) ≠ 0 := by
+  intro hne
+  apply hnc
+  have hvz : v ≠ 0 := by
+    intro he
+    apply hnc
+    rw [he]
+    exact collinear3_of_eq rfl
+  have h2 : ((WithLp.toLp 2 (crossProduct (v : Fin 3 → ℝ) (w : Fin 3 → ℝ)) : V3) : Fin 3 → ℝ)
+      = ((0 : V3) : Fin 3 → ℝ) := by rw [hne]
+  have hcp : (crossProduct (v : Fin 3 → ℝ) (w : Fin 3 → ℝ)) = (0 : Fin 3 → ℝ) := by
+    rwa [coe_toLp, WithLp.ofLp_zero] at h2
+  have hv0p : (v : Fin 3 → ℝ) ≠ 0 := by
+    intro he
+    exact hvz ((WithLp.ofLp_eq_zero 2).mp he)
+  have hli : ¬LinearIndependent ℝ ![(v : Fin 3 → ℝ), (w : Fin 3 → ℝ)] := fun hl =>
+    ((crossProduct_ne_zero_iff_linearIndependent (v := (v : Fin 3 → ℝ))
+      (w := (w : Fin 3 → ℝ))).mpr hl) hcp
+  rw [LinearIndependent.pair_iff' hv0p] at hli
+  push_neg at hli
+  obtain ⟨c, hc⟩ := hli
+  refine (collinear3_iff_smul hvz).mpr ⟨c, ?_⟩
+  apply WithLp.ofLp_injective
+  simp [hc]
+
+/-- 共线性消灭点积：`0,v,w'` 共线且 `n ⊥ v` ⇒ `n ⬝ᵥ w' = 0`。 -/
+private theorem p7_collinear_dot {v w' n : V3} (hvz : v ≠ 0)
+    (hcol : Collinear3 0 v w') (hnv : n ⬝ᵥ v = 0) : n ⬝ᵥ w' = 0 := by
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul hvz).mp hcol
+  have hpi : (w' : Fin 3 → ℝ) = c • (v : Fin 3 → ℝ) := by
+    have h2 := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hc
+    simp at h2
+    exact h2
+  have h5 : n ⬝ᵥ w' = (n : Fin 3 → ℝ) ⬝ᵥ (w' : Fin 3 → ℝ) := p7_dot_pi
+  have h6 : (n : Fin 3 → ℝ) ⬝ᵥ (v : Fin 3 → ℝ) = 0 := by rw [← p7_dot_pi]; exact hnv
+  rw [h5, hpi, dotProduct_smul, h6]
+  simp
+
+/-- sin 为正 + azim 值域 ⇒ `azim 0 v u w < π`（JBDNJJB 的收口）。 -/
+private theorem p7_azim_lt_pi {v u w : V3} (h1 : ¬ Collinear3 0 v u)
+    (h2 : ¬ Collinear3 0 v w)
+    (hpos : 0 < (crossProduct (v : Fin 3 → ℝ) (u : Fin 3 → ℝ)) ⬝ᵥ (w : Fin 3 → ℝ)) :
+    azim 0 v u w < Real.pi := by
+  obtain ⟨t, ht, hs⟩ := JBDNJJB h1 h2
+  by_cases hle : azim 0 v u w < Real.pi
+  · exact hle
+  · exfalso
+    have hnn := azim_nonneg 0 v u w
+    have hπle : Real.pi ≤ azim 0 v u w := le_of_not_gt hle
+    have hlt2 : azim 0 v u w < 2 * Real.pi := azim_lt_two_pi 0 v u w
+    have hsn : 0 ≤ Real.sin (azim 0 v u w - Real.pi) :=
+      Real.sin_nonneg_of_nonneg_of_le_pi (by linarith) (by linarith)
+    have hsplit : Real.sin (azim 0 v u w)
+        = -Real.sin (azim 0 v u w - Real.pi) := by
+      have hadd := Real.sin_add (azim 0 v u w - Real.pi) Real.pi
+      rw [Real.sin_pi, Real.cos_pi] at hadd
+      have heq : (azim 0 v u w - Real.pi) + Real.pi = azim 0 v u w := by linarith
+      rw [heq] at hadd
+      linarith
+    have hK : t * ((crossProduct (v : Fin 3 → ℝ) (u : Fin 3 → ℝ)) ⬝ᵥ (w : Fin 3 → ℝ)) ≤ 0 := by
+      rw [← hs, hsplit]
+      linarith
+    have hKpos : 0 < t * ((crossProduct (v : Fin 3 → ℝ) (u : Fin 3 → ℝ)) ⬝ᵥ (w : Fin 3 → ℝ)) := by
+      nlinarith
+    exact absurd hKpos (by intro hh; linarith)
+
+/-! ## polyhedron.hl :3028-:3088 `BSXAQBQ` -/
 
 /-- HOL polyhedron.hl :3028-:3088 `BSXAQBQ`
 
@@ -563,7 +1533,54 @@ theorem BSXAQBQ {p : Set V3} (hb : Bornology.IsBounded p)
     (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p) {x : V3 × V3}
     (hx : x ∈ dartOfFan (Set.extremePoints ℝ p) (edges_p7 p)) :
     azimFan 0 (Set.extremePoints ℝ p) (edges_p7 p) x.1 x.2 < Real.pi := by
-  sorry
+  have hfan : FAN 0 (Set.extremePoints ℝ p) (edges_p7 p) :=
+    POLYHEDRON_FAN hb hp hz
+  have hcard := CARD_SET_OF_EDGE_INEQ_1_POLYHEDRON hb hp hz
+  rw [dartOfFan, Set.mem_union] at hx
+  rcases hx with ⟨h11, hx1V, hse⟩ | hx1
+  · refine absurd (hcard x.1 hx1V) ?_
+    intro hc
+    rw [hse, Set.ncard_empty] at hc
+    norm_num at hc
+  · simp only [dart1OfFan, Set.mem_setOf_eq] at hx1
+    have hx1V : x.1 ∈ Set.extremePoints ℝ p := (fan_mem_of_edge hfan hx1).1
+    rw [azimFan, if_pos (hcard x.1 hx1V)]
+    have hu : x.2 ∈ setOfEdge x.1 (Set.extremePoints ℝ p) (edges_p7 p) :=
+      (properties_of_setOfEdge_fan 0 (Set.extremePoints ℝ p) (edges_p7 p) x.1 x.2 hfan).mp hx1
+    have hne : setOfEdge x.1 (Set.extremePoints ℝ p) (edges_p7 p) ≠ {x.2} := by
+      intro he
+      have hc := hcard x.1 hx1V
+      rw [he, Set.ncard_singleton] at hc
+      omega
+    obtain ⟨hσ, hσu, hmin⟩ := SIGMA_FAN hne hfan hu
+    set n : V3 := WithLp.toLp 2 (crossProduct (x.1 : Fin 3 → ℝ) (x.2 : Fin 3 → ℝ)) with hndef
+    have hnc : ¬ Collinear3 0 x.1 x.2 := fan_not_collinear hfan hx1
+    have ha0 : (-n) ≠ 0 := neg_ne_zero.2 (p7_cross_ne hnc)
+    have hnv : n ⬝ᵥ x.1 = 0 := p7_cross_dot_v x.1 x.2
+    obtain ⟨w', hw'V, hw'A, hw'E⟩ :=
+      FLVNSME (v := x.1) (a := -n) (b := 0) hb hp hz rfl ha0
+        (by simp only [Set.mem_setOf_eq]; rw [p7_neg_dot, hnv]; simp)
+        (by simp only [Set.mem_setOf_eq]; rw [p7_neg_dot, p7_dot_zero]; simp) hx1V
+    simp only [Set.mem_setOf_eq] at hw'A
+    have hpos : 0 < n ⬝ᵥ w' := by
+      have h9 := p7_neg_dot (n := n) (y := w')
+      have h10 := hw'A
+      rw [h9] at h10
+      linarith
+    have hvz : x.1 ≠ 0 := fun he => hfan.2.2.2.1 (by rw [he] at hx1V; exact hx1V)
+    have hncw : ¬ Collinear3 0 x.1 w' := by
+      intro hcol
+      linarith [p7_collinear_dot hvz hcol hnv, hpos]
+    have hlt := p7_azim_lt_pi hnc hncw hpos
+    have hw'u : w' ≠ x.2 := by
+      intro he
+      have h2 := p7_cross_dot_w x.1 x.2
+      rw [he] at hpos
+      linarith
+    have := hmin w'
+      ((properties_of_setOfEdge_fan 0 (Set.extremePoints ℝ p) (edges_p7 p) x.1 w' hfan).mp hw'E)
+      hw'u
+    linarith
 
 /-- HOL polyhedron.hl :3090-:3156 `POLYTOPE_FAN80`
 
@@ -596,7 +1613,55 @@ Kepler/Text/Fan.lean:456）收口 `0 < azim 0 v u σ < π`。
 theorem POLYTOPE_FAN80 {p : Set V3} (hb : Bornology.IsBounded p)
     (hp : polyhedron_p7 p) (hz : (0 : V3) ∈ interior p) :
     fan80 0 (Set.extremePoints ℝ p) (edges_p7 p) := by
-  sorry
+  have hfan : FAN 0 (Set.extremePoints ℝ p) (edges_p7 p) :=
+    POLYHEDRON_FAN hb hp hz
+  have hcard := CARD_SET_OF_EDGE_INEQ_1_POLYHEDRON hb hp hz
+  intro v u hu
+  have hvV : v ∈ Set.extremePoints ℝ p := (fan_mem_of_edge hfan hu).1
+  have h1 := hcard v hvV
+  have hu' : u ∈ setOfEdge v (Set.extremePoints ℝ p) (edges_p7 p) :=
+    (properties_of_setOfEdge_fan 0 (Set.extremePoints ℝ p) (edges_p7 p) v u hfan).mp hu
+  have hne : setOfEdge v (Set.extremePoints ℝ p) (edges_p7 p) ≠ {u} := by
+    intro he
+    rw [he, Set.ncard_singleton] at h1
+    omega
+  obtain ⟨hσ, hσu, hmin⟩ := SIGMA_FAN hne hfan hu'
+  set n : V3 := WithLp.toLp 2 (crossProduct (v : Fin 3 → ℝ) (u : Fin 3 → ℝ)) with hndef
+  have hnc : ¬ Collinear3 0 v u := fan_not_collinear hfan hu
+  have ha0 : (-n) ≠ 0 := neg_ne_zero.2 (p7_cross_ne hnc)
+  have hnv : n ⬝ᵥ v = 0 := p7_cross_dot_v v u
+  obtain ⟨w', hw'V, hw'A, hw'E⟩ :=
+    FLVNSME (v := v) (a := -n) (b := 0) hb hp hz rfl ha0
+      (by simp only [Set.mem_setOf_eq]; rw [p7_neg_dot, hnv]; simp)
+      (by simp only [Set.mem_setOf_eq]; rw [p7_neg_dot, p7_dot_zero]; simp) hvV
+  simp only [Set.mem_setOf_eq] at hw'A
+  have hpos : 0 < n ⬝ᵥ w' := by
+    have h9 := p7_neg_dot (n := n) (y := w')
+    have h10 := hw'A
+    rw [h9] at h10
+    linarith
+  have hvz : v ≠ 0 := fun he => hfan.2.2.2.1 (by rw [he] at hvV; exact hvV)
+  have hncw : ¬ Collinear3 0 v w' := by
+    intro hcol
+    linarith [p7_collinear_dot hvz hcol hnv, hpos]
+  have hlt := p7_azim_lt_pi hnc hncw hpos
+  have hw'u : w' ≠ u := by
+    intro he
+    have h2 := p7_cross_dot_w v u
+    rw [he] at hpos
+    linarith
+  have hmin' := hmin w'
+    ((properties_of_setOfEdge_fan 0 (Set.extremePoints ℝ p) (edges_p7 p) v w' hfan).mp hw'E)
+    hw'u
+  refine ⟨?_, ?_⟩
+  · have hnn := azim_nonneg 0 v u (sigmaFan 0 (Set.extremePoints ℝ p) (edges_p7 p) v u)
+    rcases lt_or_eq_of_le hnn with h0 | h0
+    · exact h0
+    · have hσE : {v, sigmaFan 0 (Set.extremePoints ℝ p) (edges_p7 p) v u} ∈ edges_p7 p :=
+        (properties_of_setOfEdge_fan 0 (Set.extremePoints ℝ p) (edges_p7 p) v
+          (sigmaFan 0 (Set.extremePoints ℝ p) (edges_p7 p) v u) hfan).mpr hσ
+      exact absurd (unique_azim0_point_fan hfan hu hσE h0.symm).symm hσu
+  · linarith
 
 /-- HOL polyhedron.hl :3158-:3187 `WBLARHH`
 
@@ -641,6 +1706,13 @@ theorem WBLARHH {p : Set V3} (hb : Bornology.IsBounded p)
     (hf : f ∈ (hypermapOfFan 0 (Set.extremePoints ℝ p) (edges_p7 p) hfan).faceSet) :
     ∃! f1 : Set V3, FacetOf_p7 f1 p ∧
       dartsetLeadsIntoFan 0 (Set.extremePoints ℝ p) (edges_p7 p) f = fchanged_p7 f1 := by
-  sorry
+  have hcard := CARD_SET_OF_EDGE_INEQ_1_POLYHEDRON hb hp hz
+  have h80 := POLYTOPE_FAN80 hb hp hz
+  -- dartsetLeadsInto 像是 yfan-拓扑分量（conforming 三前提齐备）
+  have hcomp : dartsetLeadsIntoFan 0 (Set.extremePoints ℝ p) (edges_p7 p) f ∈
+      topologicalComponentYfan 0 (Set.extremePoints ℝ p) (edges_p7 p) :=
+    dartset_leads_into_is_topological_component_yfan hfan hcard h80 hf
+  -- AMHFNXP 给出唯一 facet
+  exact AMHFNXP hb hp hz _ hcomp
 
 end Kepler.Text
