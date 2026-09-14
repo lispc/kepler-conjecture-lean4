@@ -69,20 +69,30 @@ def run_round(mod, n, expr, items, round_no, chunk_size):
                            timeout=86400)
         lines = (p.stdout + p.stderr).splitlines()
         chunk_fails = 0
+        leaf_lines = 0
+        driver_errors = []
         for ln in lines:
             parts = ln.split()
-            if len(parts) >= 2 and parts[0].isdigit() and parts[1] == "FAIL":
-                failures.append(c0 + int(parts[0]))
-                chunk_fails += 1
+            if len(parts) >= 2 and parts[0].isdigit():
+                if parts[1] in ("PASS", "FAIL"):
+                    leaf_lines += 1
+                if parts[1] == "FAIL":
+                    failures.append(c0 + int(parts[0]))
+                    chunk_fails += 1
             if "error" in ln.lower() and "BESTFAIL" not in ln:
-                print(f"  driver stderr: {ln}", flush=True)
+                driver_errors.append(ln)
+        if driver_errors or leaf_lines != len(chunk):
+            die(f"driver chunk {c0 // chunk_size} broken: "
+                f"{len(driver_errors)} errors, {leaf_lines}/{len(chunk)} "
+                f"leaf lines — aborting (no silent clean)\n"
+                + "\n".join(driver_errors[:5]))
         print(f"[round {round_no}] chunk {c0 // chunk_size}: "
               f"{chunk_fails} FAIL / {len(chunk)}", flush=True)
     return failures
 
 
 def main():
-    max_depth, chunk_size = 3, 40000
+    max_depth, chunk_size = 3, 5000
     args = []
     for a in sys.argv[1:]:
         if a.startswith("--max-depth="):

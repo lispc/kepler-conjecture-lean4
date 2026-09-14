@@ -447,6 +447,7 @@ def stage_a_file(mod, n, expr, boxes_lean, nleaves):
     """Stage A driver: `fillMkExpr N out` (dummy sqrt slots, rung-parameter
     trans nodes) + the sampled leaf boxes + a `runLadder` main."""
     return (HDR + "import Kepler.Interval.Tools.FillParams\n\n"
+            "set_option maxHeartbeats 0\n\n"
             "open Kepler.Interval Kepler.Interval.Tools\n\n"
             "/-- The case expression with dummy sqrt slots `(0, 0)`; the `trans`\n"
             "certificate parameters are the rung arguments `N out`. -/\n"
