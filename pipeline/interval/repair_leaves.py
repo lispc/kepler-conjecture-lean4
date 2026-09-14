@@ -31,21 +31,21 @@ def die(msg):
 
 
 def split_box(box):
-    """Widest-dim exact midpoint split of a Fraction box tuple."""
-    widths = [(hi - lo, d) for d, (lo, hi) in enumerate(box)]
+    """Widest-dim exact midpoint split (dyadic pairs; mid in midRadius form)."""
+    widths = [(E.dval(hi) - E.dval(lo), d) for d, (lo, hi) in enumerate(box)]
     _, d = max(widths)
     lo, hi = box[d]
-    mid = (lo + hi) / 2
+    mid = E.dmid(lo, hi)
     return (box[:d] + ((lo, mid),) + box[d + 1:],
             box[:d] + ((mid, hi),) + box[d + 1:])
 
 
 def box_json(box):
-    def dy(fr):
-        m, e = E.frac_dyadic(fr)
-        den = 1 << (-e) if e < 0 else 1
-        num = m if e <= 0 else m * (1 << e)
-        return {"num": num, "den": den}
+    def dy(p):
+        m, e = p
+        if e < 0:
+            return {"num": m, "den": 1 << (-e)}
+        return {"num": m * (1 << e), "den": 1}
     return [[dy(lo), dy(hi)] for lo, hi in box]
 
 

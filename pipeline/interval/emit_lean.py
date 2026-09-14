@@ -48,10 +48,17 @@ def dyadic(num, den):
 
 
 class Leaf:
-    def __init__(self, box, hit="main"):
-        self.box = box  # tuple of (lo, hi) Fractions
+    def __init__(self, box, hit="main", cert_box=None):
+        self.box = box  # tuple of (lo, hi) dyadic (m, e) pairs (tree-construction form)
+        self.cert_box = cert_box if cert_box is not None else box  # cert-origin key
         self.hit = hit  # 'main' | 'disj:K' | 'var_lt:I,J'
         self.nleaves = 1
+
+
+def box_eq(a, b):
+    """Value equality of dyadic-pair boxes (forms may differ)."""
+    return all(dcmp(a[d][0], b[d][0]) == 0 and dcmp(a[d][1], b[d][1]) == 0
+               for d in range(len(a)))
 
 
 class Node:
@@ -91,39 +98,40 @@ def reconstruct(box, leaves):
     """
     if len(leaves) == 1:
         (only, hit), = leaves.items()
-        if only != box:
+        if not box_eq(only, box):
             die(f"reconstruct: singleton leaf != node box\n  leaf={only}\n  node={box}")
-        return Leaf(box, hit)
+        return Leaf(box, hit, cert_box=only)
     n = len(box)
     cands = []
     for d in range(n):
         lo, hi = box[d]
-        mid = (lo + hi) / 2
+        mid = dmid(lo, hi)
         left, right, straddle = {}, {}, False
         for leaf, hit in leaves.items():
             llo, lhi = leaf[d]
-            if lhi <= mid:
+            if dcmp(lhi, mid) <= 0:
                 left[leaf] = hit
-            elif llo >= mid:
+            elif dcmp(llo, mid) >= 0:
                 right[leaf] = hit
             else:
                 straddle = True
                 break
         if not straddle and left and right and len(left) + len(right) == len(leaves):
-            cands.append((hi - lo, d, left, right))
+            cands.append((dval(hi) - dval(lo), d, left, right, mid))
     if not cands:
         die(f"reconstruct: no clean split dim for box {box} with {len(leaves)} leaves")
     cands.sort(key=lambda c: -c[0])
-    _, d, left, right = cands[0]
+    _, d, left, right, mid = cands[0]
     lo, hi = box[d]
-    mid = (lo + hi) / 2
     lbox = box[:d] + ((lo, mid),) + box[d + 1:]
     rbox = box[:d] + ((mid, hi),) + box[d + 1:]
     return Node(box, d, reconstruct(lbox, left), reconstruct(rbox, right))
 
 
 def frac_dyadic(fr):
-    """Fraction -> (m, e) dyadic mantissa/exponent (denominator must be 2^k)."""
+    """Fraction -> (m, e) dyadic mantissa/exponent (denominator must be 2^k).
+    The Fraction is auto-reduced, so the result is the *normalised* form
+    (odd mantissa or zero) — matching `frac_dyadic` canonical endpoints."""
     den = fr.denominator
     if den & (den - 1):
         die(f"non-dyadic fraction {fr} in cert box")
@@ -134,18 +142,40 @@ def frac_dyadic(fr):
     return (fr.numerator, e)
 
 
+def dval(d):
+    """Dyadic (m, e) -> Fraction value."""
+    m, e = d
+    return Fraction(m * (1 << e), 1) if e >= 0 else Fraction(m, 1 << (-e))
+
+
+def dcmp(a, b):
+    """Compare dyadics a b: -1/0/1 (exact, exponent-aligned)."""
+    me = min(a[1], b[1])
+    x = (a[0] << (a[1] - me)) - (b[0] << (b[1] - me))
+    return (x > 0) - (x < 0)
+
+
+def dmid(lo, hi):
+    """Exact midpoint in `DInterval.midRadius.c` form: mantissa aligned to
+    `min e` and exponent decremented — **not** normalised.  Emitted child
+    endpoints MUST use this form, because the kernel compares them
+    structurally against `midRadius.c` of the (equally emitted) parent."""
+    me = min(lo[1], hi[1])
+    return (lo[0] * (1 << (lo[1] - me)) + hi[0] * (1 << (hi[1] - me)), me - 1)
+
+
 def box_frac(b):
-    """JSON box interval [{num,den},{num,den}] -> (Fraction, Fraction)."""
-    return (Fraction(b[0]["num"], b[0]["den"]), Fraction(b[1]["num"], b[1]["den"]))
+    """JSON box interval [{num,den},{num,den}] -> normalised dyadic pair
+    ((lm, le), (hm, he))."""
+    return (frac_dyadic(Fraction(b[0]["num"], b[0]["den"])),
+            frac_dyadic(Fraction(b[1]["num"], b[1]["den"])))
 
 
 def box_lit(box):
-    """Fraction box tuple -> Lean `(Fin n -> DInterval)` literal."""
+    """Dyadic-pair box tuple -> Lean `(Fin n -> DInterval)` literal."""
     ivs = []
     for lo, hi in box:
-        dm, de = frac_dyadic(lo)
-        em, ee = frac_dyadic(hi)
-        ivs.append(f"⟨⟨{dm}, {de}⟩, ⟨{em}, {ee}⟩⟩")
+        ivs.append(f"⟨⟨{lo[0]}, {lo[1]}⟩, ⟨{hi[0]}, {hi[1]}⟩⟩")
     return "![" + ", ".join(ivs) + "]"
 
 
@@ -417,7 +447,8 @@ def sample_leaves(leaf_iter, rootfrac, limit):
     if not sample:
         die("sample: empty cert leaf stream")
     boxes = [tuple(box_frac(iv) for iv in l["box"]) for l in sample]
-    bbox = tuple((min(b[d][0] for b in boxes), max(b[d][1] for b in boxes))
+    bbox = tuple((min((b[d][0] for b in boxes), key=lambda x: dval(x)),
+                  max((b[d][1] for b in boxes), key=lambda x: dval(x)))
                  for d in range(n))
     cur = rootfrac
     improved = True
@@ -425,19 +456,20 @@ def sample_leaves(leaf_iter, rootfrac, limit):
         improved = False
         for d in range(n):
             lo, hi = cur[d]
-            mid = (lo + hi) / 2
-            if bbox[d][1] <= mid:
+            mid = dmid(lo, hi)
+            if dcmp(bbox[d][1], mid) <= 0:
                 cur = cur[:d] + ((lo, mid),) + cur[d + 1:]
                 improved = True
                 break
-            if bbox[d][0] >= mid:
+            if dcmp(bbox[d][0], mid) >= 0:
                 cur = cur[:d] + ((mid, hi),) + cur[d + 1:]
                 improved = True
                 break
 
     def inside(l):
         b = tuple(box_frac(iv) for iv in l["box"])
-        return all(b[d][0] >= cur[d][0] and b[d][1] <= cur[d][1] for d in range(n))
+        return all(dcmp(b[d][0], cur[d][0]) >= 0 and dcmp(b[d][1], cur[d][1]) <= 0
+                   for d in range(n))
 
     leaves = [l for l in itertools.chain(sample, leaf_iter) if inside(l)]
     return cur, leaves
@@ -447,7 +479,7 @@ def stage_a_file(mod, n, expr, boxes_lean, nleaves):
     """Stage A driver: `fillMkExpr N out` (dummy sqrt slots, rung-parameter
     trans nodes) + the sampled leaf boxes + a `runLadder` main."""
     return (HDR + "import Kepler.Interval.Tools.FillParams\n\n"
-            "set_option maxHeartbeats 0\n\n"
+            "set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
             "open Kepler.Interval Kepler.Interval.Tools\n\n"
             "/-- The case expression with dummy sqrt slots `(0, 0)`; the `trans`\n"
             "certificate parameters are the rung arguments `N out`. -/\n"
@@ -496,7 +528,7 @@ def emit_tree_bbg(u, mod, params_by_box, depth=0):
     `{mod}MkExpr` instance, the one-shot `{mod}_sem` semantics lemma and an
     inline kernel `decide` cert."""
     if isinstance(u, Leaf):
-        return (f"(.leaf {box_lit(u.box)} ({mod}MkExpr {ms_vec(params_by_box[u.box])}) "
+        return (f"(.leaf {box_lit(u.box)} ({mod}MkExpr {ms_vec(params_by_box[u.cert_box])}) "
                 f"({mod}_sem _) (by decide))")
     pad = "  " * min(depth + 1, 20)
     return (f"(.node {box_lit(u.box)} {u.d}\n{pad}{emit_tree_bbg(u.l, mod, params_by_box, depth + 1)}\n"
@@ -557,7 +589,7 @@ def emit_sharded_bbg(t, mod, n, k, expr, box, hdr, outpath, shard_leaves, params
         if id(u) in shard_idx:
             return f"{mod}Shard{shard_idx[id(u)]}Tree"
         if isinstance(u, Leaf):
-            return (f"(.leaf {box_lit(u.box)} ({mod}MkExpr {ms_vec(params_by_box[u.box])}) "
+            return (f"(.leaf {box_lit(u.box)} ({mod}MkExpr {ms_vec(params_by_box[u.cert_box])}) "
                     f"({mod}_sem _) (by decide))")
         return f"(.node {box_lit(u.box)} {u.d} {skel_tree(u.l)} {skel_tree(u.r)})"
 
@@ -724,7 +756,7 @@ def main():
             if isinstance(u, Leaf):
                 if u.hit.startswith("var_lt:"):
                     i, j = (int(x) for x in u.hit[7:].split(","))
-                    if not (u.box[i][1] < u.box[j][0]):
+                    if not (dcmp(u.box[i][1], u.box[j][0]) < 0):
                         die(f"var_lt leaf fails box check: {u.hit} box={u.box}")
             else:
                 check_varlt(u.l)
