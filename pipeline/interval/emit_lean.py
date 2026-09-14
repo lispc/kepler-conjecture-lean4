@@ -603,7 +603,7 @@ def emit_sharded_bbg(t, mod, n, k, expr, box, hdr, outpath, shard_leaves, params
 
     imports = "\n".join(f"import Kepler.Interval.Cases.{mod}.Shard{i}"
                         for i in range(1, len(shards) + 1))
-    root = (HDR + imports + "\n\nset_option maxHeartbeats 0\n\n"
+    root = (HDR + imports + "\n\nset_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
             "namespace Kepler.Interval.Cases\n\n"
             f"/-- The certificate tree, assembled from {len(shards)} shard subtrees. -/\n"
             f"def {mod}Tree : BBTreeG {n} {mod}Expr :=\n  {skel_tree(t)}\n\n"
@@ -832,7 +832,7 @@ def emit_sharded(t, mod, n, expr, box, hdr, outpath, shard_leaves, mode):
 
     imports = "\n".join(f"import Kepler.Interval.Cases.{mod}.Shard{i}"
                         for i in range(1, len(shards) + 1))
-    root = (HDR + imports + "\n\nset_option maxHeartbeats 0\n\n"
+    root = (HDR + imports + "\n\nset_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
             "namespace Kepler.Interval.Cases\n\n"
             f"/-- The certificate tree, assembled from {len(shards)} shard subtrees. -/\n"
             f"def {mod}Tree : {mode.tree_type(mod, n)} :=\n  {skel_tree(t)}\n\n"
