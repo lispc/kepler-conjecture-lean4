@@ -16,6 +16,7 @@
   `native_decide`; the checking layer stays in `Int` comparisons.
 -/
 import Kepler.Interval.Cert
+import Kepler.Interval.CertDisj
 
 namespace Kepler.Interval
 
@@ -62,6 +63,28 @@ theorem coversB_sound {n : ℕ} {e : IExpr n} (t : BBTree n e)
     exact ⟨splitOKB_sound hs, ihl hl, ihr hr⟩
 
 end BBTree
+
+namespace BBTreeD
+
+/-- Bool-valued cover checker for disjunctive trees (mirrors `BBTreeD.covers`;
+same box-splitting layer as `BBTree.coversB`). -/
+def coversB {n : ℕ} {goals : List (DisjGoal n)} : BBTreeD n goals → Bool
+  | .leaf _ _ _ => true
+  | .node b d l r => Bool.and (splitOKB b d l.box r.box) (Bool.and l.coversB r.coversB)
+
+/-- **Soundness of `BBTreeD.coversB`**: a passing Bool check yields the
+`Prop` cover certificate. -/
+theorem coversB_sound {n : ℕ} {goals : List (DisjGoal n)} (t : BBTreeD n goals)
+    (h : t.coversB = true) : t.covers := by
+  induction t with
+  | leaf b k hcert => trivial
+  | node b d l r ihl ihr =>
+    have h' : Bool.and (splitOKB b d l.box r.box) (Bool.and l.coversB r.coversB) = true := h
+    simp only [Bool.and_eq_true] at h'
+    obtain ⟨hs, hl, hr⟩ := h'
+    exact ⟨splitOKB_sound hs, ihl hl, ihr hr⟩
+
+end BBTreeD
 
 /-! ## Pilot: the two-leaf bisection of `Cert.lean`, checked by one `decide` -/
 
