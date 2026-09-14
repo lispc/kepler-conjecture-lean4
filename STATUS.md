@@ -93,7 +93,7 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 | fan/topology.hl | 4,718 | ✅ 全书收官（`36c37c6`，dart_leads_into 全套） | 100% |
 | fan/planarity.hl | 15,463 | ✅ **全书收官（2026-09-11，`48ff904`）**：批次 1-15 自动闭合 + 批次 16 的 `solid_of`/`MOZNWEH` 经体积层人工攻坚闭合，全部进 main | **100%** |
 | fan/Conforming.hl | 17,033 | ✅ **全书收官（2026-09-12）**：批次 1-23 全闭合（~230 枚定理，全部零 sorry、标准公理），含巨证 `lemma_connect_hypermap`（~1900 行 HOL 证明，6 段 sub-agent 流水攻克）与收尾 Euler/`Hypermap.Planar`；已合入 main | **100%** |
-| fan/polyhedron.hl | ~3,200 | 🟡 冲刺收尾（2026-09-14）：Polytope S1-S3 链路建成（`FINITE_POLYHEDRON_EXTREME_POINTS`/`COLLINEAR_FACES`/`INTER_AFFINE_MINIMAL`/facet 层），PolyAuto1/2/4/5/6 闭合，**仅剩 3 枚 sorry**（`POLYHEDRON_FAN`、`FLVNSME` ~990 行巨证、`EXPAND_EDGE_POLYTOPE`，台账见下） | ~90% |
+| fan/polyhedron.hl | 3,200 | ✅ **全书收官（2026-09-14）**：71 条定理 + Polytope 面理论基层（`Kepler/Text/Polytope.lean` ~2.5k 行，0 sorry）全部闭合进 main；巨证 `FLVNSME`（~1000 行 HOL）经 6 段 sub-agent 流水 + 两阶段规划攻克；曾发现 FaceOf 闭/开线段编码 bug，已修正为 Brøndsted 开线段规范并诚实重做受污染证明 | **100%** |
 | packing/（Rogers/OXLZLEZ3/REUHADY/counting_spheres/marchal…） | **99,350（43 文件，2026-09-13 实测）** | ⬜ 未启动 | 0% |
 | local/（IMJXPHR/QKNVMLB/XWITCCN/local_lemmas/terminal…） | **174,694（68 文件，2026-09-13 实测）** | ⬜ 未启动 | 0% |
 | trigonometry/（trig1/trig2/euler） | 10,511 | ⬜ 未启动（部分语义已被 azim 层覆盖，正式移植未做） | 0% |

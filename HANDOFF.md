@@ -194,3 +194,9 @@ tail -20 /tmp/auto_pipeline.log # 流水线状态（若在跑）
 - **两阶段攻坚法**（难定理标配）：先派"规划者"出可执行证明计划（目标分解+have 链+辅助引理清单+读取预算），再派"执行者"照计划落地——TXFBALB、`conforming_diagonal_fanadd1`、`lemma_connect_hypermap` 均如此拿下。
 - **教训**：W2 曾冻结出假辅助命题（单面 vs 相邻双面，正四面体反例），被 W3 用反例挡下，W4 重述为交叉式（下侧∈face(w,v)、上侧∈face(v,w)，由 azim 符号决定）后闭合。假命题审查是流程的一部分。
 - **state**：`scripts/auto_pipeline_conforming_state.txt = DONE 23`。下一目标：`polyhedron.hl`（~3.2k 行，依赖 Conforming 已就绪）→ packing → local → assembly。
+
+## 2026-09-14 里程碑：polyhedron.hl 全书收官（main @ c425db2）
+- **fan/polyhedron.hl（3,200 行，71 条定理）全部闭合，零 sorry，已合 main**（`make check` 绿）。附带新基层 `Kepler/Text/Polytope.lean`（~2,500 行：Brøndsted 开线段 FaceOf/FacetOf/edgeOf/edges/polyhedron/polytope 定义 + FACE/FACET_OF_POLYHEDRON_EXPLICIT + RELATIVE_INTERIOR_OF_POLYHEDRON + FINITE_POLYHEDRON_EXTREME_POINTS + COLLINEAR_FACES + AFF_GE_SING_CONVEX_HULL_ALT + exposed/segment kit）。G4 轨道同期闭合 logI 全链（log2D/lnI_sound/TKind.lnK，已进 main）。
+- **多文件并行架构（成熟）**：7 条 `git worktree` lane（kepler-p1..p7，`.lake` 用 `cp -al` 硬链接共享）+ 主 agent 中央编排。教训三条：① lane 收割后**立即** `reset --hard` 同步，否则 lane 重置会抹掉未提交成果（PolyAuto2 FAN7 被抹 3 次）；② 硬链接 .lake 的 trace 会互相污染——「phantom error/幻影绿」都源于此，判定编译状态必须 `rm <module>.{olean,ilean,trace}` 后重来；③ 巨证拆解到「一个 worker 一个引理」粒度（flvns_p1..p5 + 组装）比整段交付成功率高得多。
+- **编码纪律**：FaceOf 必须 OPEN 线段（Brøndsted）；闭线段编码退化（非空⇒f=s）曾诱发 6 枚「爆炸式空洞证明」，已全部诚实重做。自动提交的 cron 刷新**不得**搬动 PolyAuto*/工作文件到 main（曾与 wip 合并产生 add/add 冲突）。
+- **下一目标**：`packing/`（~28k 行，Rogers/OXLZLEZ3/REUHADY…）→ `local/`（~30k 行）→ assembly。Polytope 基层与测度/体积层可直接复用。
