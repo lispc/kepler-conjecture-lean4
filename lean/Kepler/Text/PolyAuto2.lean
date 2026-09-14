@@ -431,36 +431,22 @@ theorem FAN6_LINEAR_IMAGE_EQ (f : V3 →ₗ[ℝ] V3) (hf : Function.Injective f)
     obtain ⟨e₀, he₀, rfl⟩ := he
     exact fun hc => h e₀ he₀ ((hcol e₀).mp hc)
 
-/-! ## FAN7 辅助引理（单射像下的 `affGe` 等变，同 PolyAuto3 的私有关键引理） -/
-
-/-- 单射函数像对交的分配。 -/
-private theorem image_inter_injective {g : V3 → V3} (hg : Function.Injective g)
-    (s t : Set V3) : g '' s ∩ g '' t = g '' (s ∩ t) := by
-  ext z
-  simp only [Set.mem_inter_iff, Set.mem_image]
-  constructor
-  · rintro ⟨⟨p, hp, rfl⟩, ⟨q, hq, hpq⟩⟩
-    rw [← hg hpq] at hp
-    exact ⟨q, ⟨hp, hq⟩, hpq⟩
-  · rintro ⟨w, ⟨h1, h2⟩, rfl⟩
-    exact ⟨⟨w, h1, rfl⟩, ⟨w, h2, rfl⟩⟩
-
 /-- 单射函数像相等推出原像相等。 -/
-private theorem image_eq_imp {g : V3 → V3} (hg : Function.Injective g) {s t : Set V3}
-    (h : g '' s = g '' t) : s = t := by
+private theorem fan7_image_eq_of_image_eq {g : V3 → V3} (hg : Function.Injective g)
+    {A B : Set V3} (h : g '' A = g '' B) : A = B := by
   ext z
   constructor
   · intro hz
-    obtain ⟨w, hw, hgw⟩ := h ▸ Set.mem_image_of_mem g hz
+    obtain ⟨w, hw, hgw⟩ := h ▸ Set.mem_image_of_mem _ hz
     rw [hg hgw] at hw
     exact hw
   · intro hz
-    obtain ⟨w, hw, hgw⟩ := h.symm ▸ Set.mem_image_of_mem g hz
+    obtain ⟨w, hw, hgw⟩ := h.symm ▸ Set.mem_image_of_mem _ hz
     rw [hg hgw] at hw
     exact hw
 
 /-- 平移像半空间中点的回拉：`v ∈ affGe {a+x} ((a+·) '' t)` 时 `v - a ∈ affGe {x} t`。 -/
-private theorem affGe_add_image_sub (a x : V3) {t : Set V3} {v : V3}
+private theorem fan7_affGe_add_image_sub (a x : V3) {t : Set V3} {v : V3}
     (hv : v ∈ affGe {a + x} ((fun y : V3 => a + y) '' t)) : v - a ∈ affGe {x} t := by
   have hinj : Function.Injective (fun y : V3 => a + y) := fun u w h => add_left_cancel h
   simp only [affGe, Set.mem_setOf_eq, Affsign] at hv ⊢
@@ -554,7 +540,7 @@ private theorem affGe_add_image_sub (a x : V3) {t : Set V3} {v : V3}
     exact hsum₀
 
 /-- 平移像半空间中点的直推：`u ∈ affGe {x} t` 时 `a + u ∈ affGe {a+x} ((a+·) '' t)`。 -/
-private theorem affGe_add_image_add (a x : V3) {t : Set V3} {u : V3}
+private theorem fan7_affGe_add_image_add (a x : V3) {t : Set V3} {u : V3}
     (hu : u ∈ affGe {x} t) : a + u ∈ affGe {a + x} ((fun y : V3 => a + y) '' t) := by
   have hinjOn : Set.InjOn (fun y : V3 => a + y) ({x} ∪ t) := fun p _ q _ hpq =>
     add_left_cancel hpq
@@ -603,18 +589,18 @@ private theorem affGe_add_image_add (a x : V3) {t : Set V3} {u : V3}
     exact hsum
 
 /-- `affGe` 在平移下的等变：`affGe {a+x} ((a+·) '' t) = (a+·) '' affGe {x} t`。 -/
-private theorem affGe_add_image (a x : V3) (t : Set V3) :
+private theorem fan7_affGe_add_image (a x : V3) (t : Set V3) :
     affGe {a + x} ((fun y : V3 => a + y) '' t) =
       (fun y : V3 => a + y) '' (affGe {x} t) := by
   ext v
   constructor
   · intro hmem
-    exact ⟨v - a, affGe_add_image_sub a x hmem, by simp⟩
+    exact ⟨v - a, fan7_affGe_add_image_sub a x hmem, by simp⟩
   · rintro ⟨u, hu, rfl⟩
-    exact affGe_add_image_add a x hu
+    exact fan7_affGe_add_image_add a x hu
 
-/-- `affGe` 在单射线性像下的等变：`affGe {f x} (f '' t) = f '' affGe {x} t`。 -/
-private theorem affGe_lin_image {f : V3 →ₗ[ℝ] V3} (hf : Function.Injective f) (x : V3)
+/-- `affGe` 在单射线性像下的等变：`affGe {f x} (f '' t) = f '' (affGe {x} t)`。 -/
+private theorem fan7_affGe_lin_image {f : V3 →ₗ[ℝ] V3} (hf : Function.Injective f) (x : V3)
     (t : Set V3) : affGe {f x} (f '' t) = f '' (affGe {x} t) := by
   ext v
   constructor
@@ -759,6 +745,63 @@ private theorem affGe_lin_image {f : V3 →ₗ[ℝ] V3} (hf : Function.Injective
       rw [hsum']
       exact hsum
 
+/-- `fan7` 在单射函数逐点像下的不变性（`affGe` 传输由参数给出）。 -/
+private theorem fan7_image_iff {g : V3 → V3} (hg : Function.Injective g)
+    (haff : ∀ x : V3, ∀ t : Set V3, affGe {g x} (g '' t) = g '' (affGe {x} t))
+    (x : V3) (V : Set V3) (E : Set (Set V3)) :
+    fan7 (g x) (g '' V) ((fun e : Set V3 => g '' e) '' E) ↔ fan7 x V E := by
+  constructor
+  · intro h e1 he1 e2 he2
+    have hdom : ∀ e ∈ E ∪ {s | ∃ v ∈ V, s = {v}},
+        g '' e ∈ ((fun e : Set V3 => g '' e) '' E) ∪ {s | ∃ v ∈ g '' V, s = {v}} := by
+      intro e he
+      rcases (Set.mem_union _ _ _).mp he with he' | ⟨v, hv, rfl⟩
+      · exact (Set.mem_union _ _ _).mpr (Or.inl ⟨e, he', rfl⟩)
+      · rw [Set.image_singleton]
+        exact (Set.mem_union _ _ _).mpr (Or.inr ⟨g v, Set.mem_image_of_mem _ hv, rfl⟩)
+    have hin : (g '' e1) ∩ (g '' e2) = g '' (e1 ∩ e2) := (Set.image_inter hg).symm
+    have hkey := h (g '' e1) (hdom e1 he1) (g '' e2) (hdom e2 he2)
+    rw [haff x e1, haff x e2, ← Set.image_inter hg, hin, haff x (e1 ∩ e2)] at hkey
+    exact fan7_image_eq_of_image_eq hg hkey
+  · intro h e1' he1' e2' he2'
+    have hpre1 : ∃ e : Set V3, e ∈ E ∪ {s | ∃ v ∈ V, s = {v}} ∧ g '' e = e1' := by
+      rcases (Set.mem_union _ _ _).mp he1' with h | h
+      · obtain ⟨e, hE, rfl'⟩ := h
+        exact ⟨e, Set.mem_union_left _ hE, rfl'⟩
+      · obtain ⟨v, hv, rfl'⟩ := h
+        obtain ⟨v₀, hv₀, rfl''⟩ := hv
+        have hem : ({v₀} : Set V3) ∈ E ∪ {s | ∃ v ∈ V, s = {v}} :=
+          Set.mem_union_right _ ⟨v₀, hv₀, rfl⟩
+        have heq : g '' {v₀} = e1' := by
+          rw [Set.image_singleton, rfl'']
+          exact rfl'.symm
+        exact ⟨{v₀}, hem, heq⟩
+    obtain ⟨e1, he1, rfl⟩ := hpre1
+    have hpre2 : ∃ e : Set V3, e ∈ E ∪ {s | ∃ v ∈ V, s = {v}} ∧ g '' e = e2' := by
+      rcases (Set.mem_union _ _ _).mp he2' with h | h
+      · obtain ⟨e, hE, rfl'⟩ := h
+        exact ⟨e, Set.mem_union_left _ hE, rfl'⟩
+      · obtain ⟨v, hv, rfl'⟩ := h
+        obtain ⟨v₀, hv₀, rfl''⟩ := hv
+        have hem : ({v₀} : Set V3) ∈ E ∪ {s | ∃ v ∈ V, s = {v}} :=
+          Set.mem_union_right _ ⟨v₀, hv₀, rfl⟩
+        have heq : g '' {v₀} = e2' := by
+          rw [Set.image_singleton, rfl'']
+          exact rfl'.symm
+        exact ⟨{v₀}, hem, heq⟩
+    obtain ⟨e2, he2, rfl⟩ := hpre2
+    have hdom1 : e1 ∈ E ∪ {s | ∃ v ∈ V, s = {v}} := by
+      rcases (Set.mem_union _ _ _).mp he1 with h | ⟨v, hv, rfl⟩
+      · exact (Set.mem_union _ _ _).mpr (Or.inl h)
+      · exact (Set.mem_union _ _ _).mpr (Or.inr ⟨v, hv, rfl⟩)
+    have hdom2 : e2 ∈ E ∪ {s | ∃ v ∈ V, s = {v}} := by
+      rcases (Set.mem_union _ _ _).mp he2 with h | ⟨v, hv, rfl⟩
+      · exact (Set.mem_union _ _ _).mpr (Or.inl h)
+      · exact (Set.mem_union _ _ _).mpr (Or.inr ⟨v, hv, rfl⟩)
+    have hin : (g '' e1) ∩ (g '' e2) = g '' (e1 ∩ e2) := (Set.image_inter hg).symm
+    have hkey := h e1 hdom1 e2 hdom2
+    rw [haff x e1, haff x e2, hin, ← Set.image_inter hg, haff x (e1 ∩ e2), hkey]
+
 /-- HOL polyhedron.hl :242-:249 `FAN7_TRANSLATION_EQ`
 
 HOL 原文：
@@ -790,44 +833,9 @@ UNION 成员（SET_RULE :246-:248）再 GEOM_TRANSLATE_TAC。
 theorem FAN7_TRANSLATION_EQ (a x : V3) (V : Set V3) (E : Set (Set V3)) :
     fan7 (a + x) ((fun y : V3 => a + y) '' V)
         ((fun e : Set V3 => (fun y : V3 => a + y) '' e) '' E) ↔
-      fan7 x V E := by
-  have hinj : Function.Injective (fun y : V3 => a + y) := fun _ _ h => add_left_cancel h
-  unfold fan7
-  have hpre : ∀ e : Set V3,
-      e ∈ ((fun e : Set V3 => (fun y : V3 => a + y) '' e) '' E) ∪
-        {s | ∃ v ∈ (fun y : V3 => a + y) '' V, s = {v}} →
-      ∃ e₀, e₀ ∈ E ∪ {s | ∃ v ∈ V, s = {v}} ∧
-        ((fun y : V3 => a + y) '' e₀) = e := by
-    intro e he
-    simp only [Set.mem_union, Set.mem_image, Set.mem_setOf_eq] at he
-    rcases he with ⟨e₁, he₁, rfl⟩ | ⟨v, hv, rfl⟩
-    · exact ⟨e₁, Or.inl he₁, rfl⟩
-    · obtain ⟨u, hu, rfl⟩ := hv
-      exact ⟨{u}, Or.inr ⟨u, hu, rfl⟩, Set.image_singleton⟩
-  have hfwd : ∀ e : Set V3, e ∈ E ∪ {s | ∃ v ∈ V, s = {v}} →
-      ((fun y : V3 => a + y) '' e) ∈
-        ((fun e : Set V3 => (fun y : V3 => a + y) '' e) '' E) ∪
-          {s | ∃ v ∈ (fun y : V3 => a + y) '' V, s = {v}} := by
-    intro e he
-    rcases he with he | ⟨v, hv, rfl⟩
-    · exact Or.inl ⟨e, he, rfl⟩
-    · rw [Set.image_singleton]
-      exact Or.inr ⟨a + v, ⟨v, hv, rfl⟩, rfl⟩
-  constructor
-  · intro h e1 he1 e2 he2
-    have h1 := h ((fun y : V3 => a + y) '' e1) (hfwd e1 he1)
-      ((fun y : V3 => a + y) '' e2) (hfwd e2 he2)
-    rw [affGe_add_image a x e1, affGe_add_image a x e2,
-      image_inter_injective hinj (affGe {x} e1) (affGe {x} e2),
-      image_inter_injective hinj e1 e2, affGe_add_image a x (e1 ∩ e2)] at h1
-    exact image_eq_imp hinj h1
-  · intro h e1 he1 e2 he2
-    obtain ⟨f1, hf1, rfl⟩ := hpre e1 he1
-    obtain ⟨f2, hf2, rfl⟩ := hpre e2 he2
-    rw [affGe_add_image a x f1, affGe_add_image a x f2,
-      image_inter_injective hinj (affGe {x} f1) (affGe {x} f2),
-      image_inter_injective hinj f1 f2, affGe_add_image a x (f1 ∩ f2),
-      h f1 hf1 f2 hf2]
+      fan7 x V E :=
+  fan7_image_iff (fun u v h => add_left_cancel h)
+    (fun x' t => fan7_affGe_add_image a x' t) x V E
 
 /-- HOL polyhedron.hl :251-:261 `FAN7_LINEAR_IMAGE_EQ`
 
@@ -857,37 +865,7 @@ LEFT_OR_DISTRIB/RIGHT_OR_DISTRIB + TAUR 拆分，Lean 侧 `Set.mem_union` +
 - `Function.Injective`（Mathlib/Logic/Function/Basic.lean） -/
 theorem FAN7_LINEAR_IMAGE_EQ (f : V3 →ₗ[ℝ] V3) (hf : Function.Injective f)
     (x : V3) (V : Set V3) (E : Set (Set V3)) :
-    fan7 (f x) (f '' V) ((fun e : Set V3 => f '' e) '' E) ↔ fan7 x V E := by
-  unfold fan7
-  have hpre : ∀ e : Set V3,
-      e ∈ ((fun e : Set V3 => f '' e) '' E) ∪ {s | ∃ v ∈ f '' V, s = {v}} →
-      ∃ e₀, e₀ ∈ E ∪ {s | ∃ v ∈ V, s = {v}} ∧ f '' e₀ = e := by
-    intro e he
-    simp only [Set.mem_union, Set.mem_image, Set.mem_setOf_eq] at he
-    rcases he with ⟨e₁, he₁, rfl⟩ | ⟨v, hv, rfl⟩
-    · exact ⟨e₁, Or.inl he₁, rfl⟩
-    · obtain ⟨u, hu, rfl⟩ := hv
-      exact ⟨{u}, Or.inr ⟨u, hu, rfl⟩, Set.image_singleton⟩
-  have hfwd : ∀ e : Set V3, e ∈ E ∪ {s | ∃ v ∈ V, s = {v}} →
-      f '' e ∈ ((fun e : Set V3 => f '' e) '' E) ∪ {s | ∃ v ∈ f '' V, s = {v}} := by
-    intro e he
-    rcases he with he | ⟨v, hv, rfl⟩
-    · exact Or.inl ⟨e, he, rfl⟩
-    · rw [Set.image_singleton]
-      exact Or.inr ⟨f v, ⟨v, hv, rfl⟩, rfl⟩
-  constructor
-  · intro h e1 he1 e2 he2
-    have h1 := h (f '' e1) (hfwd e1 he1) (f '' e2) (hfwd e2 he2)
-    rw [affGe_lin_image hf x e1, affGe_lin_image hf x e2,
-      image_inter_injective hf (affGe {x} e1) (affGe {x} e2),
-      image_inter_injective hf e1 e2, affGe_lin_image hf x (e1 ∩ e2)] at h1
-    exact image_eq_imp hf h1
-  · intro h e1 he1 e2 he2
-    obtain ⟨f1, hf1, rfl⟩ := hpre e1 he1
-    obtain ⟨f2, hf2, rfl⟩ := hpre e2 he2
-    rw [affGe_lin_image hf x f1, affGe_lin_image hf x f2,
-      image_inter_injective hf (affGe {x} f1) (affGe {x} f2),
-      image_inter_injective hf f1 f2, affGe_lin_image hf x (f1 ∩ f2),
-      h f1 hf1 f2 hf2]
+    fan7 (f x) (f '' V) ((fun e : Set V3 => f '' e) '' E) ↔ fan7 x V E :=
+  fan7_image_iff hf (fun x' t => fan7_affGe_lin_image hf x' t) x V E
 
 end Kepler.Text

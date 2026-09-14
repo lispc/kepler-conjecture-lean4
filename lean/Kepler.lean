@@ -82,6 +82,13 @@ import Kepler.Text.ConformingAuto20
 import Kepler.Text.ConformingAuto21
 import Kepler.Text.ConformingAuto22
 import Kepler.Text.ConformingAuto23
+import Kepler.Text.PolyAuto1
+import Kepler.Text.PolyAuto2
+import Kepler.Text.PolyAuto3
+import Kepler.Text.PolyAuto4
+import Kepler.Text.PolyAuto5
+import Kepler.Text.PolyAuto6
+import Kepler.Text.PolyAuto7
 import Kepler.Text.VectorAngleLemmas
 -- Phase 4: 分支定界证书树（二分盒树 + covers/bb_sound，叶为内核 decide 的 checkPos）
 import Kepler.Interval.Cert
