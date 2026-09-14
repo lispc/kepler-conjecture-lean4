@@ -1873,6 +1873,45 @@ private theorem flvns_p4_descent
     rw [dot_lin, ha3vw, ha1vw, hs]
     ring
 
+/-- P5：删 v 重整化的严格性矛盾（HOL polyhedron.hl :2560-:2790 重心迁移
+阶段的可复用内核）。若支撑超平面取等点 `a2⬝ᵥv = b2` 落在严格低于支撑界的
+`w`（`a2⬝ᵥw < b2`）与 `p` 内点 `v31` 的连线段上（`v = (1-t)•w + t•v31`，
+参数 `t ∈ (0,1)`：`t = 0` 与 `w ≠ v` 矛盾、`t = 1` 与 `v ≠ v31` 矛盾），
+则点积线性给出 `b2 = (1-t)a2⬝ᵥw + t·a2⬝ᵥv31 < (1-t)b2 + t·b2 = b2`——
+矛盾。（HOL 原证在 `w` 端严格、`v31` 端由 `p` 支撑，正是本引理两输入。） -/
+private theorem flvns_p5_renorm
+    {p : Set V3} {a2 : V3} {b2 : ℝ} (hsup : ∀ x ∈ p, a2 ⬝ᵥ x ≤ b2)
+    {v w v31 : V3} (hv : v ∈ p) (hw : w ∈ p) (hv31 : v31 ∈ p) (hwv : w ≠ v)
+    (hvv31 : v ≠ v31)
+    (hseg : v ∈ segment ℝ w v31)
+    (hval : a2 ⬝ᵥ v = b2) (hww : a2 ⬝ᵥ w < b2) :
+    False := by
+  clear hv hw
+  rw [segment_eq_image] at hseg
+  obtain ⟨t, htI, htv0⟩ := hseg
+  obtain ⟨ht0, ht1⟩ := Set.mem_Icc.mp htI
+  have htv : (1 - t) • w + t • v31 = v := htv0
+  -- t > 0：否则 v = w；t < 1：否则 v = v31
+  have htpos : 0 < t := lt_of_le_of_ne ht0 (Ne.symm fun h => by
+    rw [h, sub_zero, one_smul, zero_smul, add_zero] at htv; exact hwv htv)
+  have htlt : t < 1 := lt_of_le_of_ne ht1 fun h => by
+    rw [h, sub_self, zero_smul, one_smul, zero_add] at htv; exact hvv31 htv.symm
+  -- 点积线性：b2 = (1-t)·a2⬝ᵥw + t·a2⬝ᵥv31
+  have hkey : a2 ⬝ᵥ ((1 - t) • w + t • v31)
+      = (1 - t) * (a2 ⬝ᵥ w) + t * (a2 ⬝ᵥ v31) := by
+    rw [p7_dot_add, p7_dot_smul, p7_dot_smul]
+  have hdoteq : b2 = (1 - t) * (a2 ⬝ᵥ w) + t * (a2 ⬝ᵥ v31) := by
+    rw [← hval, ← htv, WithLp.ofLp_add, WithLp.ofLp_smul, WithLp.ofLp_smul, hkey]
+  have hsplit : (1 - t) * b2 + t * b2 = b2 := by ring
+  have hc1 : (0:ℝ) < 1 - t := by linarith
+  have h1 : (1 - t) * (a2 ⬝ᵥ w) < (1 - t) * b2 := by
+    rw [mul_comm (1 - t) (a2 ⬝ᵥ w), mul_comm (1 - t) b2]
+    exact mul_lt_mul_of_pos_right hww hc1
+  have h2 : t * (a2 ⬝ᵥ v31) ≤ t * b2 := by
+    rw [mul_comm t (a2 ⬝ᵥ v31), mul_comm t b2]
+    exact mul_le_mul_of_nonneg_right (hsup v31 hv31) htpos.le
+  linarith
+
 /-- HOL polyhedron.hl :2005-:2995 `FLVNSME`（HOL 文件最大证明块，约
 1000 行）
 
