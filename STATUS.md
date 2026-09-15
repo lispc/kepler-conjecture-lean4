@@ -1,17 +1,16 @@
-# 项目总进度（Status）— 2026-09-14
+# 项目总进度（Status）— 2026-09-15
 
 > 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新（cron 自动 push）。
 > 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
-> 当前 main @ 见本 commit（2026-09-14），全库构建 9926/9933 零 error 在收尾（图证书分片重跑中）。
-> 注意：2026-09-13 起接班 agent 改为 main 直推模式，main 上现含 polyhedron
-> 在制骨架 sorry（余 3 枚：POLYHEDRON_FAN、FLVNSME、EXPAND_EDGE_POLYTOPE）；
-> Conforming 及之前全部内容零 sorry，历史 sanctioned 占位仍为 `Statement.lean` 主定理（见 Phase 1）。
-> **重大进展**：体积/测度论层已从零建成（`Kepler/Geom/{Volume,SectorArea,
-> WedgeVolume,LuneVolume,SolidAngle}.lean`，含 HOL `VOLUME_BALL_WEDGE` /
-> `HAS_MEASURE_LUNE` / `VOLUME_SOLID_TRIANGLE`），据此 planarity.hl 收官；
-> **Conforming.hl 17,033 行亦已 100% 收官进 main（2026-09-13，`d77c13f`）**。
-> 当前目标：polyhedron.hl（Phase 5 第六本，blocker 台账基本核销，见 Phase 5）；
-> **Phase 4 G4 由 Kimi 并行推进（wip/g4-emit），通路已验证、205k 叶案例闭合（见 Phase 4）**。
+> 当前 main @ `9acd1839`（2026-09-14），`make check` 绿（HANDOFF 记录 `c425db2` 验收）。
+> 注意：2026-09-13 起接班 agent 改为 main 直推模式；polyhedron 在制骨架 sorry 已随
+> 2026-09-14 全书收官清零，历史 sanctioned 占位仍为 `Statement.lean` 主定理（见 Phase 1）。
+> **重大进展**：**polyhedron.hl 已 100% 收官进 main（2026-09-14，`c425db2`）**——
+> fan/ 部分（hypermap + fan + topology + planarity + Conforming + polyhedron）全部完成；
+> **packing 章已启动**：测绘完成（42 文件 ~119k 行 ~1114 定理，`docs/packing-manifest.md` 待提交），
+> PackingAuto1-5 骨架 ~5.6k 行 / 202 sorry 在制。
+> **Phase 4 G4 由 Kimi 并行推进（wip/g4-emit）：16 份现存证书已闭合 5 份，
+> 最大单案 1,670,962 叶；FillParams stage-a 分片并行化改造完成（见 Phase 4）**。
 
 图例：✅ 完成并验证 / 🟡 进行中 / ⬜ 未启动。完成度为行数或条目数口径的粗略估计。
 
@@ -62,14 +61,15 @@
   - [x] `TKind.lnK` + `logI` 全链（2026-09-13，`3aed260` 进 main）：`log2D` dyadic 常数证书、`lnI`/`logInterval` soundness（`[1,2]` artanh 级数）、试点 2/3 < log x on [2,4]，公理仅标准三
   - [x] **`emit_lean.py` 证书→Lean 分片生成器 + 端到端通路（2026-09-13/14，wip/g4-emit 分支，Kimi 负责）**：
     - 树重建：扁平叶表 → 二分树（任意无横跨维满足 splitOK，优先最宽维）
-    - 分片三层结构 Base/ShardK/根（公理标准三）：**4 案例端到端闭合**——`C1965189142x34`（1 叶）、`C3397113841`（1.5k 叶 35.7s）、`C4717061266`（55k 叶 4m50s）、`CFWGKMBZ`（**205k 叶 59m50s**，`642fa5c`）；`C6078657299`（694k 叶）构建中
+    - 分片三层结构 Base/ShardK/根（公理标准三）：**7 案例端到端闭合**——`C1965189142x34`（1 叶）、`C3397113841`（1.5k 叶 35.7s）、`C4717061266`（55k 叶 4m50s）、`CFWGKMBZ`（205k 叶 59m50s，`642fa5c`）、`C6078657299`（694k 叶，首个真实 disj 大案例，`625fd10`）、`C8425800388`（**1.35M 叶** 4h47m，`8b31098`）、`C3253650737`（**1.67M 叶** 5h19m，`a55b02d`）
     - `CertBool.lean`：`splitOKB`/`coversB`（BBTree + BBTreeD）——整树覆盖一次内核 `decide`
     - `CertG.lean`/`BBTreeG`：**跨叶 sqrt/div/trans 参数机制**——`evalReal` 忽略证书参数，逐叶特化表达式 + `rfl` 语义桥（试点端到端绿）
     - disj 发射（BBTreeD/var_lt 校验）已实现，合成 mixed-hits 案例端到端绿（假证书被内核正确拒收）
     - **4 个真缺陷治本**：`divFloorQ` 缩放空间缺陷（深负指数除法 none→双分支精确取整）；`atan(1)` 边界不可求值（Abel 式极限放宽为 ≤）；修复扫描假绿防护（驱动错误即中止）；**dyadic 规范化形态 vs 内核 midRadius 形态**（偶数 mantissa 中点结构不等——全管线改 (m,e) 表示 + midRadius 同款中点，`0aea134`）
   - [x] **FillParams 参数填充工具链（2026-09-14，`0588df2`）**：Lean 编译态逐叶算 sqrt mantissa（零镜像失真）+ (N,out) 阶梯 + 279 叶小样端到端绿；封闭 atan 参数 N=1024 trick
+  - [x] **FillParams stage-a 分片并行化（2026-09-15，wip/g4-emit）**：单体驱动（354MB/96万叶数组字面量）elaboration 不可扩展（11.5h 未果）→ 改造为 `--stage-a-shards=K` 连续切块小驱动 + `runMain` argv 派发（无参走阶梯 / `N out` 钉死单点）+ `stagea_merge.py`（全局 rung 裁定 + STALE 补算 + 全局索引合并）；256 chunk × 64 路并行
   - [x] **repair_leaves.py 叶修复回路（`85f5ae7`）**：编译态逐叶扫描 → 失败叶二分加深（splitOK 对任意细化保持）→ 修复证书
-  - [ ] 现存 16 证书收尾：代数类 8 份已闭合 4 + 3 排队；sqrt/atan 家族（2570626711 等 3 份）待 FillParams 全量；disj+sqrt 家族 6 份
+  - [ ] 现存 16 证书收尾：已闭合 5 份（另加早期 2 小案共 7 案例）；波1 sqrt4/atan7 三份（QITNPEA_3725403817 96万叶分片参数在算 / 5490182221 135万 / 2570626711 190万）；波2 disj+sqrt 家族 6 份（79~83 sqrt，FillParams 待扩 disj）；末位 2 份 3112-sqrt 怪物（需参数共享优化）
   - [ ] 证书量产：145 个已闭合案例需 bb_arb `--cert` 重跑出证书（机时 1-3 天；9893763499 案例 bb_arb 失控吐 117GB 日志已记录）
   - [ ] G4 粘合收尾：155 定义闭包的 Lean 定义 + 每案例 `evalReal e ρ = 展开式 ρ` 对应引理（依赖 packing 章定义，**主体剩余**）
   - 规格：`pipeline/interval/arb-layer.md` §3/§4
@@ -94,7 +94,7 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 | fan/planarity.hl | 15,463 | ✅ **全书收官（2026-09-11，`48ff904`）**：批次 1-15 自动闭合 + 批次 16 的 `solid_of`/`MOZNWEH` 经体积层人工攻坚闭合，全部进 main | **100%** |
 | fan/Conforming.hl | 17,033 | ✅ **全书收官（2026-09-12）**：批次 1-23 全闭合（~230 枚定理，全部零 sorry、标准公理），含巨证 `lemma_connect_hypermap`（~1900 行 HOL 证明，6 段 sub-agent 流水攻克）与收尾 Euler/`Hypermap.Planar`；已合入 main | **100%** |
 | fan/polyhedron.hl | 3,200 | ✅ **全书收官（2026-09-14）**：71 条定理 + Polytope 面理论基层（`Kepler/Text/Polytope.lean` ~2.5k 行，0 sorry）全部闭合进 main；巨证 `FLVNSME`（~1000 行 HOL）经 6 段 sub-agent 流水 + 两阶段规划攻克；曾发现 FaceOf 闭/开线段编码 bug，已修正为 Brøndsted 开线段规范并诚实重做受污染证明 | **100%** |
-| packing/（Rogers/OXLZLEZ3/REUHADY/counting_spheres/marchal…） | **99,350（43 文件，2026-09-13 实测）** | ⬜ 未启动 | 0% |
+| packing/（Rogers/OXLZLEZ3/REUHADY/counting_spheres/marchal…） | **99,350（43 文件，2026-09-13 实测）** | 🟡 已启动（2026-09-15）：测绘完成（42 文件 ~119k 行 ~1114 定理，manifest 在制）；PackingAuto1-5 骨架 ~5.6k 行 / 202 sorry 在填 | ~2% |
 | local/（IMJXPHR/QKNVMLB/XWITCCN/local_lemmas/terminal…） | **174,694（68 文件，2026-09-13 实测）** | ⬜ 未启动 | 0% |
 | trigonometry/（trig1/trig2/euler） | 10,511 | ⬜ 未启动（部分语义已被 azim 层覆盖，正式移植未做） | 0% |
 | volume/vol1.hl | 1,421 | 🟡 已用 :18/:458/:651 三段（`radialNorm`/`sol`），其余待移植 | ~25% |
@@ -148,20 +148,13 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 two-stage（planner+executor）难题拆解法。已知坑：HOL 原文存在同名不同义的重复绑定
 （如 `add_edge_graph` :2304/:2431），跨模块同环境会撞名——骨架设计阶段必须查重。
 
-**polyhedron blocker 台账（2026-09-13 建，用户批准；2026-09-14 核销更新）**：
-原 12 枚真实 sorry 全部依赖门控。**核销 9 枚**（driver 的 Polytope S1-S3 链路 +
-多 lane 工人）：`FCHANGED_OPEN`/`FCHANGED_ONE_TO_ONE`（`INTER_AFFINE_MINIMAL` +
-`COLLINEAR_FACES` 就位后闭合）、`EXISTS_EDGE_POLYTOPE`、`AMHFNXP_BIJ`、
-`EXISTS_EDGE_AT_VERTICES`、`CARD_SET_OF_EDGE_INEQ_1_POLYHEDRON`、`BSXAQBQ`、
-`POLYTOPE_FAN80`、`WBLARHH`。**剩 3 枚**：
-
-| 定理（Lean） | 位置 | HOL 源 | 缺什么 |
-|---|---|---|---|
-| `POLYHEDRON_FAN`（仅 extremePoints 有限性合取项） | PolyAuto3 | polyhedron.hl:342-513 | ~~`FINITE_POLYHEDRON_EXTREME_POINTS`~~（S3 已就位）——**已解锁，可直接填** |
-| `EXPAND_EDGE_POLYTOPE` | PolyAuto7 | polyhedron.hl:1893-1930 | `AFF_DIM` 展开、`COMPACT_CONVEX_COLLINEAR_SEGMENT` |
-| `FLVNSME` | PolyAuto7 | polyhedron.hl:2005-2995（**~990 行，全书最大证明块**） | `AFF_DIM_INTERIOR_EQ_3` 等面/维数层（S2/S2b 部分就位） |
-
-polyhedron.hl 宣告 100% 的硬标准 = 5 个 PolyAuto 文件零 sorry + 根构建绿。
+**polyhedron blocker 台账（2026-09-13 建，用户批准；2026-09-14 全部核销）**：
+原 12 枚真实 sorry 全部闭合——前 9 枚（`FCHANGED_OPEN`/`FCHANGED_ONE_TO_ONE`、
+`EXISTS_EDGE_POLYTOPE`、`AMHFNXP_BIJ`、`EXISTS_EDGE_AT_VERTICES`、
+`CARD_SET_OF_EDGE_INEQ_1_POLYHEDRON`、`BSXAQBQ`、`POLYTOPE_FAN80`、`WBLARHH`）+
+末 3 枚（`POLYHEDRON_FAN`、`EXPAND_EDGE_POLYTOPE`、`FLVNSME` ~990 行巨证经
+P1-P5 分段流水攻克）。**polyhedron.hl 100% 达成（71/71 定理零 sorry + 根构建绿，
+`c425db2` 进 main）**。
 
 ## Phase 6 — 集成与交付 ⬜
 
@@ -173,10 +166,10 @@ polyhedron.hl 宣告 100% 的硬标准 = 5 个 PolyAuto 文件零 sorry + 根构
 
 ## 整体估计
 
-- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 **G4 通路已验证并量产化**（2026-09-14：**4 案例端到端进内核，最大 205,418 叶 59m50s**；FillParams/repair 工具链就绪、4 个共享层真缺陷治本；剩 16 证书收尾 + 145 案例证书重跑 + 155 定义粘合）。
-- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** + **Conforming 100%** + polyhedron ~90% ≈ **61.4k 行 HOL 源**；2026-09-13 实测全书总量 ≈ **359k 行**（剩余：packing 99.4k / local 174.7k / trigonometry 10.5k / volume 1.1k / fan 残余等，~150 文件）。**按行数口径 ~17%**；考虑已完成部分含大量最难地基（hypermap 构造、体积测度层从零建），而 local/packing 多为模式重复引理工厂，**工作量口径估计 25-35%**。按 Conforming 吞吐（17k 行/2.5 天）线性外推，剩余 ~299k 行约需 40 天连轴（未计巨证）。
+- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 **G4 已百万叶级量产**（2026-09-15：**7 案例端到端进内核，最大 1,670,962 叶 5h19m**；FillParams stage-a 分片并行化落地、repair 工具链就绪、4 个共享层真缺陷治本；剩 11 证书收尾 + 145 案例证书重跑 + 155 定义粘合）。
+- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** + **Conforming 100%** + **polyhedron 100%（2026-09-14）** ≈ **61.8k 行 HOL 源**；2026-09-13 实测全书总量 ≈ **359k 行**（剩余：packing 99.4k【已启动，骨架在制】/ local 174.7k / trigonometry 10.5k / volume 1.1k / fan 残余等，~150 文件）。**按行数口径 ~17%**；考虑已完成部分含大量最难地基（hypermap 构造、体积测度层从零建），而 local/packing 多为模式重复引理工厂，**工作量口径估计 25-35%**。按 Conforming 吞吐（17k 行/2.5 天）线性外推，剩余 ~298k 行约需 40 天连轴（未计巨证）。
   另：**体积/测度论层已从零建成**（`Kepler/Geom/*.lean`，~3.4k 行，含 HOL Light 多元库的球面立体角链），这是原计划里没算到的关键前置，现已就位，后续 Packing/Local 可复用。
-- **全项目粗略完成度：~48%（Phase 5 剩余行数实测为旧估计 5 倍后下修；G4 通路验证回补）**。
+- **全项目粗略完成度：~50%（polyhedron 收官 + G4 百万叶级量产通路确立后小幅回补）**。
 
 ## 验证纪律
 
