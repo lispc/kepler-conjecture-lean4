@@ -1,0 +1,4522 @@
+(* ========================================================================== *)
+(* FLYSPECK - BOOK FORMALIZATION                                              *)
+(*                                                                            *)
+(* Chapter: Packing                                                           *)
+(* Lemma: OXLZLEZ                                                             *)
+(* Author: Nguyen Quang Truong                                                *)
+(* Date: 2012-12-21                                                           *)
+(* ========================================================================== *)
+
+
+
+module Oxl_2012 = struct
+
+
+open Oxl_def;;
+
+
+(* 
+
+needs "/home/user1/flyspeck/working/boot.hl";;
+
+
+
+===================== dont worry about this ================
+needs "/home/user1/flyspeck/working/update_database_310.ml";;
+needs "/home/user1/flyspeck/working/asm_search.ml";;
+needs "/home/user1/flyspeck/working/Oxl_deff.hl";;
+
+
+
+needs "/home/user1/flyspeck/working/OXLZLEZ2.hl";;
+
+
+
+*)
+
+
+
+
+
+let asms_search0 sths =
+  let rec immediatesublist l1 l2 =
+    match (l1,l2) with
+      [],_ -> true
+    | _,[] -> false
+    | (h1::t1,h2::t2) -> h1 = h2 && immediatesublist t1 t2 in
+  let rec sublist l1 l2 =
+    match (l1,l2) with
+      [],_ -> true
+    | _,[] -> false
+    | (h1::t1,h2::t2) -> immediatesublist l1 l2 || sublist l1 t2 in
+  let exists_subterm_satisfying p (n,th) = can (find_term p) (concl th)
+  and name_contains s (n,th) = sublist (explode s) (explode n) in
+  let rec filterpred tm =
+    match tm with
+      Comb(Var("<omit this pattern>",_),t) -> not o filterpred t
+    | Comb(Var("<match theorem name>",_),Var(pat,_)) -> name_contains pat
+    | Comb(Var("<match aconv>",_),pat) -> exists_subterm_satisfying (aconv pat)
+    | pat -> exists_subterm_satisfying (can (term_match [] pat)) in
+  fun pats ->
+    let triv,nontriv = partition is_var pats in
+    (if triv <> [] then
+      warn true
+         ("Ignoring plain variables in search: "^
+          end_itlist (fun s t -> s^", "^t) (map (fst o dest_var) triv))
+     else ());
+    (if nontriv = [] && triv <> [] then []
+     else itlist (filter o filterpred) pats sths);;
+
+let asms_search tms =
+  let gstk = !current_goalstack in
+  match gstk with
+    [] -> []
+  | (meta,gl::_,just)::_
+       -> let (sths,_) = gl in
+          map snd (asms_search0 sths tms)
+  | _  -> failwith "asm_searchs: Invalid goal state";;
+
+let ASMS_SEARCH_TCL (tms:(term)list) (thstac:(thm)list->tactic) : tactic =
+  fun (gl:goal) ->
+  let (sths,tm) = gl in
+  let ths1 = map snd (asms_search0 sths tms) in
+  thstac ths1 gl;;
+
+let ASM_SEARCH_TCL (tms:(term)list) (thstac:thm->tactic) : tactic =
+  let foo ths = match ths with
+                  [] -> failwith "ASM_SEARCH_TCL: No matching asms found"
+                | _  -> thstac (hd ths) in
+  ASMS_SEARCH_TCL tms foo;;
+
+
+
+
+let ATTACH thm = MATCH_MP (MESON[]` ! a b. ( a ==> b ) ==> ( a <=> a /\ b )`) thm;;
+
+let NHANH tm = ONCE_REWRITE_TAC[ ATTACH (SPEC_ALL ( tm ))];;
+
+let PHA = REWRITE_TAC[ MESON[] ` (a/\b)/\c <=> a/\ b /\ c `; MESON[]`
+a ==> b ==> c <=> a /\ b ==> c `];;
+
+let DOWN_TAC = REPEAT (FIRST_X_ASSUM MP_TAC) THEN REWRITE_TAC[IMP_IMP] THEN PHA;;
+
+
+let DOWN = FIRST_X_ASSUM MP_TAC;;
+
+let DOWNS n = REPLICATE_TAC n DOWN THEN PHA;;
+
+let REMOVE_TAC = FIRST_X_ASSUM MP_TAC THEN MATCH_MP_TAC (TAUT` a ==> b ==> a`);;
+
+
+let types_thm th = let cl = concl th in
+List.map dest_var (frees cl );;
+
+let seans_fn () =
+let (tms,tm) = top_goal () in
+let vss = map frees (tm::tms) in
+let vs = setify (flat vss) in
+map dest_var vs;;
+
+
+
+
+
+let PAT_REWRITE_TAC tm thms =
+(CONV_TAC (PAT_CONV tm (REWRITE_CONV thms )));;
+
+let FOR_ASM th =
+let th1 = REWRITE_RULE[MESON[]` a /\ b ==> c <=>
+a ==> b ==> c `] th in
+let th2 = SPEC_ALL th1 in UNDISCH_ALL th2;;
+
+(* change a th having form |- A ==> t to the form A |- t
+to get ready to some other commands
+
+
+|- A ==> t
+----------- FOR_ASM
+A |- t
+*)
+
+let ASSUME_TAC2 = ASSUME_TAC o FOR_ASM;;
+
+
+let PAT_ONCE_REWRITE_TAC tm thms =
+(CONV_TAC (PAT_CONV tm (ONCE_REWRITE_CONV thms )));;
+
+let ASM_PAT_RW_TAC tm thms = EVERY_ASSUM (fun th ->
+(CONV_TAC (PAT_CONV tm (ONCE_REWRITE_CONV
+( th ::[ thms ] )))));;
+
+let PAT_TH_TAC tm th =
+(CONV_TAC (PAT_CONV tm (REWRITE_CONV[th] )));;
+
+
+let IMP_TO_EQ_RULE th = MATCH_MP (TAUT` (a ==> b ) ==>
+( a <=> a /\ b )`) (SPEC_ALL th);;
+
+let NHANH_PAT tm th = PAT_ONCE_REWRITE_TAC tm
+[ IMP_TO_EQ_RULE th ];;
+
+
+let MAKE_FIRST_TAC tm = UNDISCH_TAC tm THEN DISCH_TAC;;
+
+
+(* ---------- BG TEST ------------- *)
+
+
+
+let rec els L = match L with
+[] -> p ()
+| (x::l) -> e x; els l;;
+
+let rec bls L = match L with
+[] -> p ()
+| (x::l) -> b (); bls l;;
+
+
+
+
+
+(* ------------- *)
+
+let QU_OR_QXY = prove (` ! i. cc_qu_v11 cc i \/ cc_qx_v11 cc i \/ cc_qy_v11 cc i `,
+REWRITE_TAC[cc_qu_v11; cc_qx_v11; cc_qy_v11] THEN MESON_TAC[]);;
+
+let QX_NN0 = REWRITE_RULE[REAL_ARITH` #0.0 = &0`] QX_NN;;
+let QY_NN0 = REWRITE_RULE[REAL_ARITH` #0.0 = &0`] QY_NN;;
+
+
+let MOD_REFL = REWRITE_RULE[MULT_CLAUSES] (SPECL [`m:num `;`1`] MOD_MULT);;
+
+
+let SUM_POS_LT_NUMSEG = prove_by_refinement (
+`!m n f. m <= n /\ (!p. m <= p /\ p <= n ==> &0 < f p) ==> &0 < sum (m..n) f`,
+[GEN_TAC;
+INDUCT_TAC;
+REWRITE_TAC[LE; SUM_CLAUSES_NUMSEG];
+SIMP_TAC[];
+GEN_TAC;
+STRIP_TAC;
+FIRST_X_ASSUM (MP_TAC o (SPEC` 0`));
+ASM_REWRITE_TAC[LE];
+
+
+GEN_TAC;
+ASM_CASES_TAC` m = SUC n `;
+ASM_REWRITE_TAC[SUM_SING_NUMSEG];
+STRIP_TAC;
+FIRST_X_ASSUM (MP_TAC o (SPEC` SUC n `));
+FIRST_X_ASSUM MP_TAC;
+CONV_TAC TAUT;
+
+STRIP_TAC;
+SUBGOAL_THEN`  &0 < sum (m..n) f ` MP_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+CONJ_TAC;
+DOWN_TAC;
+ARITH_TAC;
+FIRST_X_ASSUM MP_TAC;
+MESON_TAC[ARITH_RULE` a <= p ==> a <= SUC p `];
+REWRITE_TAC[SUM_CLAUSES_NUMSEG];
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+MATCH_MP_TAC REAL_LT_ADD;
+ASM_REWRITE_TAC[];
+FIRST_X_ASSUM MATCH_MP_TAC;
+ASM_REWRITE_TAC[LE_REFL]]);;
+
+(* =================================================== *)
+
+
+let glt = `cc_bool_model_v11 cc /\
+ cc_real_model_v11 cc /\
+ sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0 /\
+ indSet = 0..cc_card_v11 cc - 1
+ ==> (?i j k.
+          ~(i = j \/ j = k \/ k = i) /\
+          i IN indSet /\
+          j IN indSet /\
+          k IN indSet /\
+          cc_4cell_v11 cc i /\
+          cc_4cell_v11 cc j /\
+          cc_4cell_v11 cc k)`;;
+
+
+let e1 = (STRIP_TAC THEN ASSUME_TAC2 CC_CARD2 THEN 
+DOWN_TAC THEN NHANH periodic_fn THEN 
+ASM_CASES_TAC` ~ (?i. i IN indSet /\ cc_4cell_v11 cc i)` THENL [
+
+
+SUBGOAL_THEN` ! i. i IN indSet ==> cc_qy_v11 cc i ` MP_TAC THENL 
+[MP_TAC QU_OR_QXY THEN 
+REWRITE_TAC[cc_qu_v11; cc_qx_v11] THEN 
+FIRST_X_ASSUM MP_TAC THEN 
+MESON_TAC[];
+
+REWRITE_TAC[cc_real_model_v11; cc_bool_model_v11]] THEN 
+
+REPEAT STRIP_TAC THEN 
+SUBGOAL_THEN` ! i. i IN indSet ==> &0 < cc_gg_v11 cc i ` MP_TAC THENL [
+
+
+UNDISCH_TAC`!i. i IN indSet ==> cc_qy_v11 cc i` THEN
+DISCH_THEN NHANH THEN
+UNDISCH_TAC`!i. cc_qy_v11 cc i ==> #0.008 * cc_azim_v11 cc i <= cc_gg_v11 cc i` THEN
+STRIP_TAC THEN
+FIRST_ASSUM NHANH THEN
+GEN_TAC THEN
+
+UNDISCH_TAC` !i. #0.606 <= cc_azim_v11 cc i ` THEN
+DISCH_TAC THEN
+FIRST_ASSUM (MP_TAC o (SPEC` i: num `)) THEN
+REAL_ARITH_TAC;
+
+STRIP_TAC] THEN 
+SUBGOAL_THEN` &0 < sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) ` MP_TAC THENL
+
+
+[MATCH_MP_TAC SUM_POS_LT_NUMSEG THEN CONJ_TAC THENL 
+[UNDISCH_TAC` ~ (cc_card_v11 cc = 0) ` THEN 
+ARITH_TAC;
+
+REPEAT STRIP_TAC THEN 
+FIRST_X_ASSUM MATCH_MP_TAC THEN 
+ASM_REWRITE_TAC[IN_NUMSEG]];
+
+
+UNDISCH_TAC` sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0 ` THEN 
+REAL_ARITH_TAC];
+
+FIRST_X_ASSUM MP_TAC] THEN 
+REWRITE_TAC[] THEN STRIP_TAC THEN STRIP_TAC THEN 
+ASM_CASES_TAC` ~ ( ?j. j IN indSet /\ ~(j = i) /\ cc_4cell_v11 cc j)`);;
+
+
+
+let e2 = (FIRST_X_ASSUM MP_TAC THEN 
+REWRITE_TAC [
+MESON[]` ~(?j. j IN indSet /\ ~(j = i) /\ cc_4cell_v11 cc j) <=>
+!j. j IN indSet /\ ~(j = i)  ==> ~ cc_4cell_v11 cc j `] THEN 
+
+STRIP_TAC THEN 
+SUBGOAL_THEN`!j. j IN indSet /\ ~(j = i) ==> cc_qy_v11 cc j ` MP_TAC THENL [
+
+
+
+FIRST_ASSUM NHANH THEN 
+REPEAT STRIP_TAC THEN 
+MP_TAC (SPEC `j:num` QU_OR_QXY) THEN 
+FIRST_ASSUM MP_TAC THEN 
+SIMP_TAC[cc_qu_v11; cc_qx_v11];
+
+
+SUBGOAL_THEN` cc_qu_v11 cc i \/ cc_qx_v11 cc i ` MP_TAC] THENL [
+
+MP_TAC (SPEC_ALL QU_OR_QXY) THEN 
+MATCH_MP_TAC (TAUT` ~ c ==> a \/ b \/ c ==> a \/ b `) THEN
+ASM_REWRITE_TAC[cc_qy_v11];
+
+
+STRIP_TAC THEN 
+STRIP_TAC THEN 
+SUBGOAL_THEN` cc_qy_v11 cc (i + 1)` MP_TAC]);;
+
+
+
+
+let e3 = (ASM_CASES_TAC` i < cc_card_v11 cc - 1 ` THENL [
+FIRST_ASSUM (MP_TAC o SPEC` i + 1 `) THEN ANTS_TAC THENL [
+ASM_REWRITE_TAC[ARITH_RULE`~( i + 1 = i ) `; IN_NUMSEG] THEN 
+FIRST_ASSUM MP_TAC THEN 
+ARITH_TAC;
+
+REWRITE_TAC[]];
+
+
+
+UNDISCH_TAC` (i:num) IN indSet ` THEN 
+ASM_REWRITE_TAC[IN_NUMSEG] THEN 
+STRIP_TAC THEN 
+ASSUME_TAC2 (ARITH_RULE` ~(i < cc_card_v11 cc - 1) /\ i <= cc_card_v11 cc - 1 ==> cc_card_v11 cc - 1 = i `) THEN 
+UNDISCH_TAC` periodic (cc_qy_v11 cc) (cc_card_v11 cc) ` THEN 
+EXPAND_TAC "i" THEN 
+DOWN_TAC THEN 
+REWRITE_TAC[cc_bool_model_v11] THEN 
+NHANH (ARITH_RULE` ~( a = 0) ==> a - 1 + 1 = a `) THEN 
+SIMP_TAC[periodic] THEN 
+
+
+STRIP_TAC THEN 
+ONCE_REWRITE_TAC[ARITH_RULE` a = 0 + a `] THEN 
+ASM_REWRITE_TAC[] THEN 
+FIRST_X_ASSUM MATCH_MP_TAC THEN 
+ASM_REWRITE_TAC[IN_NUMSEG] THEN 
+
+EXPAND_TAC "i" THEN 
+REWRITE_TAC[LE] THEN 
+MATCH_MP_TAC (ARITH_RULE` 2 <= a ==> ~( 0 = a - 1) `) THEN 
+FIRST_ASSUM ACCEPT_TAC]);;
+
+
+let e4 = (
+
+
+(* ------------------------------------- *)
+DOWN_TAC THEN 
+REWRITE_TAC[cc_real_model_v11] THEN 
+STRIP_TAC THEN 
+UNDISCH_TAC` !i. cc_qu_v11 cc i /\ cc_qy_v11 cc (i + 1)
+          ==> cc_eps <= cc_gg_v11 cc i + cc_gg3a_v11 cc (i + 1) ` THEN 
+STRIP_TAC THEN 
+FIRST_ASSUM (MP_TAC o SPEC_ALL) THEN 
+ANTS_TAC THENL [ASM_REWRITE_TAC[];
+MAKE_FIRST_TAC` !i. cc_qy_v11 cc i
+          ==> cc_gg3a_v11 cc i + cc_gg3b_v11 cc i <= cc_gg_v11 cc i `] THEN 
+
+SUBGOAL_THEN` cc_gg3a_v11 cc ( i + 1) <= cc_gg_v11 cc ( i + 1) ` MP_TAC THENL [
+MATCH_MP_TAC REAL_LE_TRANS THEN 
+EXISTS_TAC` cc_gg3a_v11 cc (i + 1) + cc_gg3b_v11 cc (i + 1)` THEN 
+
+CONJ_TAC THENL [
+REWRITE_TAC[REAL_LE_ADDR] THEN 
+FIRST_X_ASSUM MATCH_MP_TAC THEN 
+ASM_REWRITE_TAC[];
+
+FIRST_X_ASSUM MATCH_MP_TAC THEN 
+ASM_REWRITE_TAC[]];
+
+
+PHA] THEN 
+NHANH (REAL_ARITH` a <= b /\ c <= d + a ==> c <= d + b `));;
+
+
+(* ================================================ *)
+
+(* let CHQSQEY = oxl6142;; *)
+
+let SUM_BETA = prove(` sum S (\x. f x) = sum S f `,
+MATCH_MP_TAC SUM_EQ THEN 
+REWRITE_TAC[BETA_THM]);;
+
+
+let LXDEYBO = prove_by_refinement (LXDEYBO_concl,
+[ GEN_TAC;
+REWRITE_TAC[cc_bool_model_v11; cc_real_model_v11; cc_size_v11];
+STRIP_TAC;
+ABBREV_TAC` cd = CARD {i | i IN 0..cc_card_v11 cc - 1 /\ cc_4cell_v11 cc i}`;
+ASM_CASES_TAC` 4 < cd `;
+ABBREV_TAC` ss = {i | i IN 0..cc_card_v11 cc - 1 /\ cc_4cell_v11 cc i}`;
+ABBREV_TAC` S = 0..cc_card_v11 cc - 1 `;
+SUBGOAL_THEN` sum ss (cc_gg_v11 cc) <= sum S (cc_gg_v11 cc) ` MP_TAC;
+MATCH_MP_TAC SUM_SUBSET_SIMPLE;
+CONJ_TAC;
+EXPAND_TAC "S";
+REWRITE_TAC[FINITE_NUMSEG];
+EXPAND_TAC "ss";
+CONJ_TAC;
+SET_TAC[];
+REWRITE_TAC[IN_DIFF; IN_ELIM_THM; DE_MORGAN_THM];
+REPEAT STRIP_TAC;
+FIRST_X_ASSUM MP_TAC;
+ASM_REWRITE_TAC[];
+MATCH_MP_TAC QY_NN0;
+ASM_REWRITE_TAC[cc_bool_model_v11; cc_real_model_v11; cc_qy_v11];
+
+STRIP_TAC;
+SUBGOAL_THEN` sum ss (\i. a_spine5 + b_spine5 * cc_azim_v11 cc i ) <= sum ss (cc_gg_v11 cc ) ` MP_TAC;
+MATCH_MP_TAC SUM_LE;
+CONJ_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC` S: num -> bool `;
+CONJ_TAC;
+EXPAND_TAC "S";
+REWRITE_TAC[FINITE_NUMSEG];
+EXPAND_TAC "ss";
+SET_TAC[];
+EXPAND_TAC "ss";
+REWRITE_TAC[IN_ELIM_THM];
+ASM_SEARCH_TCL [` cc_4cell_v11 cc i ==> a <= b `] NHANH;
+SIMP_TAC[];
+
+SUBGOAL_THEN` sum ss (cc_azim_v11 cc ) <= &2 * pi ` MP_TAC;
+ASM_SEARCH_TCL [`sum S (cc_azim_v11 cc) = &2 * pi `] (SUBST1_TAC o SYM);
+MATCH_MP_TAC SUM_SUBSET_SIMPLE;
+
+CONJ_TAC;
+EXPAND_TAC "S";
+REWRITE_TAC[FINITE_NUMSEG];
+CONJ_TAC;
+EXPAND_TAC "ss";
+SET_TAC[];
+
+REPEAT STRIP_TAC;
+ASM_SEARCH_TCL [` (!i. #0.606 <= cc_azim_v11 cc i) `] MP_TAC;
+DISCH_THEN (MP_TAC o (SPEC`x:num `));
+REAL_ARITH_TAC;
+
+
+ONCE_REWRITE_TAC[MESON[ABS_SIMP]` (\i. a + f i ) = (\i. (\j. a) i + f i)`];
+STRIP_TAC THEN STRIP_TAC;
+SUBGOAL_THEN` sum ss (\i. (\j. a_spine5) i + b_spine5 * cc_azim_v11 cc i) =
+sum ss (\j. a_spine5) + sum ss (\i. b_spine5 * cc_azim_v11 cc i)` MP_TAC;
+MATCH_MP_TAC SUM_ADD;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC` S:num -> bool`;
+EXPAND_TAC "S";
+REWRITE_TAC[FINITE_NUMSEG];
+ASM_REWRITE_TAC[];
+EXPAND_TAC "ss";
+SET_TAC[];
+
+REWRITE_TAC[SUM_LMUL];
+REWRITE_TAC[Sphere.b_spine5; Sphere.a_spine5];
+SUBGOAL_THEN` FINITE (S:num -> bool) ` MP_TAC;
+EXPAND_TAC "S";
+REWRITE_TAC[FINITE_NUMSEG];
+STRIP_TAC;
+SUBGOAL_THEN` ss SUBSET (S:num -> bool) ` ASSUME_TAC;
+EXPAND_TAC "ss";
+SET_TAC[];
+SUBGOAL_THEN` FINITE (ss:num -> bool) ` MP_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC`S: num -> bool `;
+ASM_REWRITE_TAC[FINITE_NUMSEG];
+STRIP_TAC;
+ASSUME_TAC2 (ISPECL [` #0.0560305 `;`ss:num -> bool`] SUM_CONST);
+ASM_REWRITE_TAC[];
+ASSUME_TAC2 (ARITH_RULE` 4 < cd ==> 5 <= cd `);
+FIRST_X_ASSUM MP_TAC;
+FIRST_X_ASSUM MP_TAC;
+ASM_REWRITE_TAC[GSYM REAL_OF_NUM_LE];
+REPEAT STRIP_TAC;
+
+SUBGOAL_THEN` &0 <= sum ss (cc_gg_v11 cc)` ASSUME_TAC;
+MATCH_MP_TAC REAL_LE_TRANS;
+EXISTS_TAC` sum ss (\i. (\j. a_spine5) i + b_spine5 * cc_azim_v11 cc i) `;
+ASM_REWRITE_TAC[];
+ASM_REWRITE_TAC[Sphere.a_spine5; Sphere.b_spine5];
+REWRITE_TAC[REAL_ARITH` &0 <= a + -- b * x <=> b * x <= a `];
+MATCH_MP_TAC REAL_LE_TRANS;
+EXISTS_TAC` #0.0445813 * ( &2 * pi) `;
+ASM_REWRITE_TAC[REAL_ARITH` #0.0445813 * a <= #0.0445813 * b <=> a <= b `];
+ASM_REWRITE_TAC[ISPECL [`ss:num -> bool `;` cc_azim_v11 cc `] (GEN_ALL SUM_BETA)];
+MATCH_MP_TAC REAL_LE_TRANS;
+EXISTS_TAC` &5 * #0.0560305`;
+ASM_REWRITE_TAC[REAL_ARITH` &5 * #0.0560305 <= &cd * #0.0560305 <=> &5 <= &cd`];
+MP_TAC (prove(` pi < #3.1416 `, REWRITE_TAC[ Flyspeck_constants.bounds]));
+REAL_ARITH_TAC;
+
+
+SUBGOAL_THEN` &0 <= sum S (cc_gg_v11 cc)` MP_TAC;
+UNDISCH_TAC` &0 <= sum ss (cc_gg_v11 cc) `;
+UNDISCH_TAC` sum ss (cc_gg_v11 cc) <= sum S (cc_gg_v11 cc) `;
+REAL_ARITH_TAC;
+UNDISCH_TAC` sum S (cc_gg_v11 cc) < &0 `;
+REAL_ARITH_TAC;
+
+FIRST_X_ASSUM MP_TAC;
+ARITH_TAC]);;
+
+
+(* ================================== *)
+
+let IMP_TAC = ONCE_REWRITE_TAC[TAUT` a /\ b ==> c <=> a ==> b ==> c `];;
+
+
+
+(* the concls *)
+
+let MTMLSRF_concl = 
+`!cc. cc_bool_model_v11 cc /\
+        cc_bool_prep_v11 cc /\
+        cc_real_model_v11 cc /\
+        sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0
+        ==> (?i. 0 < i /\
+                 cc_gg_v11 cc i < &0 /\
+                 cc_qu_v11 cc i /\
+                 cc_4cell_v11 cc (i + 1) /\
+                 cc_4cell_v11 cc (i - 1))`;;
+
+let UNPNFVW_concl = 
+`!cc. cc_bool_model_v11 cc /\
+        cc_bool_prep_v11 cc /\
+        cc_real_model_v11 cc /\
+        sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0
+        ==> cc_size_v11 cc (cc_qy_v11 cc) <= 1`;;
+
+let IPVICGW_concl = 
+ `!cc. cc_bool_model_v11 cc /\
+        cc_bool_prep_v11 cc /\
+        cc_real_model_v11 cc /\
+        sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0
+        ==> (!i. cc_small_v11 cc i)`;;
+let RSIWAMP_concl = `!cc. cc_bool_model_v11 cc /\ cc_bool_prep_v11 cc /\ cc_real_model_v11 cc /\ 
+   (sum (0..cc_card_v11 cc -1) (cc_gg_v11 cc) < &0) ==> (cc_card_v11 cc <= 4)`;;
+
+
+
+
+
+
+
+
+let MTMLSRF = prove_by_refinement (MTMLSRF_concl,
+[REWRITE_TAC[cc_bool_model_v11; cc_real_model_v11];
+REPEAT STRIP_TAC;
+ASM_CASES_TAC` ~(? i. 0 < i /\ cc_gg_v11 cc i < &0) `;
+FIRST_X_ASSUM MP_TAC;
+REWRITE_TAC[MESON[]` ~(?i. p i /\ q i) <=> ! i. p i ==> ~(q i )`];
+STRIP_TAC;
+SUBGOAL_THEN` &0 <= sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) ` MP_TAC;
+MATCH_MP_TAC SUM_POS_LE_NUMSEG;
+REPEAT STRIP_TAC;
+ASM_CASES_TAC` p = 0 `;
+ASM_SEARCH_TCL [` periodic `; `cc_gg_v11 `] MP_TAC;
+FIRST_X_ASSUM SUBST_ALL_TAC;
+REWRITE_TAC[periodic];
+DISCH_THEN (SUBST1_TAC o SYM o (SPEC` 0`));
+REWRITE_TAC[REAL_ARITH` &0 <= x <=> ~( x < &0) `];
+FIRST_X_ASSUM MATCH_MP_TAC;
+ASM_SEARCH_TCL [` ~( x = 0) `] MP_TAC;
+ARITH_TAC;
+REWRITE_TAC[REAL_ARITH` &0 <= x <=> ~( x < &0) `];
+FIRST_X_ASSUM MATCH_MP_TAC;
+FIRST_X_ASSUM MP_TAC;
+ARITH_TAC;
+ASM_REWRITE_TAC[REAL_ARITH` &0 <= x <=> ~( x < &0) `];
+FIRST_X_ASSUM MP_TAC;
+REWRITE_TAC[];
+STRIP_TAC;
+ASM_CASES_TAC` ~( ?i. 0 < i /\
+     cc_gg_v11 cc i < &0 /\
+     cc_qu_v11 cc i /\
+     cc_4cell_v11 cc (i + 1) /\
+     cc_4cell_v11 cc (i - 1) ) `;
+FIRST_X_ASSUM MP_TAC;
+REWRITE_TAC[MESON[]` ~(?i.  p1 i /\ p2 i /\ p3 i /\ p4 i) <=> (! i. p1 i /\ p2 i /\
+p3 i ==> ~( p4 i))`];
+STRIP_TAC;
+ABBREV_TAC` S = 1..cc_card_v11 cc `;
+ABBREV_TAC` cb i <=> cc_gg_v11 cc i < &0 /\ cc_qu_v11 cc i `;
+ABBREV_TAC` sa = { i | i IN S /\ cb i /\ cc_qy_v11 cc (i + 1) }`;
+ABBREV_TAC` sb = { i | i IN S /\ cb i /\ cc_qy_v11 cc ( i - 1)}`;
+ABBREV_TAC` ss = {i | (i:num) IN S /\ cb i} `;
+
+
+ABBREV_TAC` saa = { i + 1 | i + 1 IN S /\ cc_qy_v11 cc (i + 1) /\ cb i} `;
+ABBREV_TAC` sbb = { i | i IN S /\ cc_qy_v11 cc i /\ cb ( i + 1)}`;
+ABBREV_TAC` sab = { i | i IN S /\ cc_qy_v11 cc i /\ (cb (i + 1) \/ (cb ( i - 1)))} `;
+
+SUBGOAL_THEN` DISJOINT ss (sab: num -> bool) ` MP_TAC;
+EXPAND_TAC "sab";
+EXPAND_TAC "ss";
+ASM_SEARCH_TCL [` a /\ b <=> f i  `] ( fun x -> REWRITE_TAC[GSYM x]);
+REWRITE_TAC[cc_qu_v11; cc_qy_v11];
+SET_TAC[];
+SUBGOAL_THEN` FINITE (S:num -> bool) ` MP_TAC;
+EXPAND_TAC "S";
+REWRITE_TAC[FINITE_NUMSEG];
+STRIP_TAC;
+SUBGOAL_THEN` ss SUBSET (S:num -> bool) /\ sab SUBSET S ` ASSUME_TAC;
+EXPAND_TAC "ss";
+EXPAND_TAC "sab";
+SET_TAC[];
+SUBGOAL_THEN` FINITE (ss:num -> bool) ` MP_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC `S:num -> bool `;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+SUBGOAL_THEN` FINITE (sab:num -> bool) ` ASSUME_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC `S:num -> bool `;
+ASM_REWRITE_TAC[];
+
+STRIP_TAC;
+SUBGOAL_THEN` sum saa (cc_gg3a_v11 cc) + sum sbb (cc_gg3b_v11 cc) + sum ss (cc_gg_v11 cc) <= sum (ss UNION sab) (cc_gg_v11 cc)`  MP_TAC;
+ASM_SIMP_TAC[SUM_UNION];
+REWRITE_TAC[REAL_ARITH` a + b + c <= c + d <=> a + b <= d `];
+SUBGOAL_THEN` sbb SUBSET (sab:num -> bool) /\ saa SUBSET (sab:num -> bool) ` ASSUME_TAC;
+EXPAND_TAC "saa";
+EXPAND_TAC "sbb";
+EXPAND_TAC "sab";
+CONJ_TAC;
+REWRITE_TAC[SUBSET; IN_ELIM_THM];
+MESON_TAC[];
+REWRITE_TAC[SUBSET; IN_ELIM_THM];
+MESON_TAC[ARITH_RULE` (i + 1) - 1 = i `];
+SUBGOAL_THEN` !x. x IN saa ==> cc_qy_v11 cc x ` ASSUME_TAC;
+EXPAND_TAC "saa";
+SET_TAC[];
+SUBGOAL_THEN` !x. x IN sbb ==> cc_qy_v11 cc x ` ASSUME_TAC;
+EXPAND_TAC "sbb";
+SET_TAC[];
+SUBGOAL_THEN` !x. x IN sab ==> cc_qy_v11 cc x ` ASSUME_TAC;
+EXPAND_TAC "sab";
+SET_TAC[];
+SUBGOAL_THEN` sum saa (cc_gg3a_v11 cc) <= sum sab (cc_gg3a_v11 cc) ` MP_TAC;
+MATCH_MP_TAC SUM_SUBSET_SIMPLE;
+ASM_REWRITE_TAC[IN_DIFF];
+FIRST_ASSUM NHANH;
+ASM_SEARCH_TCL [` cc_qy_v11 cc i ==> c <= cc_gg3a_v11 cc i `] NHANH;
+SIMP_TAC[];
+
+SUBGOAL_THEN` sum sbb (cc_gg3b_v11 cc) <=
+     sum sab (cc_gg3b_v11 cc)` MP_TAC;
+MATCH_MP_TAC SUM_SUBSET_SIMPLE;
+ASM_REWRITE_TAC[];
+ASM_REWRITE_TAC[IN_DIFF];
+FIRST_ASSUM NHANH;
+ASM_SEARCH_TCL [` cc_qy_v11 cc i ==> c <= cc_gg3b_v11 cc i `] NHANH THEN
+SIMP_TAC[];
+SUBGOAL_THEN` sum sab (cc_gg3a_v11 cc) + sum sab (cc_gg3b_v11 cc) <= sum sab (cc_gg_v11 cc) ` MP_TAC;
+ASSUME_TAC2 (ISPECL [` cc_gg3a_v11 cc `;` cc_gg3b_v11 cc `;` sab:num -> bool `] SUM_ADD);
+FIRST_X_ASSUM (SUBST1_TAC o SYM);
+MATCH_MP_TAC SUM_LE;
+ASM_REWRITE_TAC[];
+FIRST_ASSUM NHANH;
+ASM_SEARCH_TCL [` cc_qy_v11 cc i ==> a + b <= c`] NHANH;
+SIMP_TAC[];
+REAL_ARITH_TAC;
+STRIP_TAC;
+
+SUBGOAL_THEN`&0 <= sum saa (cc_gg3a_v11 cc) +
+      sum sbb (cc_gg3b_v11 cc) +
+      sum ss (cc_gg_v11 cc) ` MP_TAC;
+SUBGOAL_THEN` sa SUBSET (ss:num -> bool) ` MP_TAC;
+EXPAND_TAC "sa";
+EXPAND_TAC "ss";
+SET_TAC[];
+NHANH (SET_RULE` s SUBSET S ==> DISJOINT s (S DIFF s) /\ s UNION ( S DIFF s) = S`);
+STRIP_TAC;
+FIRST_ASSUM (SUBST1_TAC o SYM);
+SUBGOAL_THEN` FINITE (sa:num -> bool) ` ASSUME_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC` ss: num -> bool `;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` FINITE (ss DIFF (sa:num -> bool)) ` ASSUME_TAC;
+MATCH_MP_TAC FINITE_DIFF;
+FIRST_X_ASSUM ACCEPT_TAC;
+ASM_SIMP_TAC[SUM_UNION];
+
+
+SUBGOAL_THEN` sum saa (cc_gg3a_v11 cc) = sum sa (\i. cc_gg3a_v11 cc (i + 1)) ` MP_TAC;
+MATCH_MP_TAC (GSYM SUM_EQ_GENERAL);
+ABBREV_TAC` nn = cc_card_v11 cc `;
+
+EXISTS_TAC`\i. if i = nn then 1 else i + 1 `;
+CONJ_TAC;
+GEN_TAC;
+EXPAND_TAC "sa";
+EXPAND_TAC "saa";
+REWRITE_TAC[IN_ELIM_THM; EXISTS_UNIQUE];
+STRIP_TAC;
+ASM_CASES_TAC` 0 < i' `;
+EXISTS_TAC` i':num `;
+ASM_REWRITE_TAC[];
+CONJ_TAC;
+CONJ_TAC;
+UNDISCH_TAC` i' + 1 IN S `;
+FIRST_X_ASSUM MP_TAC;
+EXPAND_TAC "S";
+REWRITE_TAC[IN_NUMSEG];
+ARITH_TAC;
+SUBGOAL_THEN` ~(i' = (nn:num)) ` MP_TAC;
+UNDISCH_TAC` i' + 1 IN S `;
+EXPAND_TAC "S";
+REWRITE_TAC[IN_NUMSEG];
+ARITH_TAC;
+SIMP_TAC[];
+GEN_TAC;
+
+EXPAND_TAC "S";
+REWRITE_TAC[IN_NUMSEG];
+ASM_CASES_TAC` y' = (nn:num) `;
+ASM_REWRITE_TAC[];
+FIRST_X_ASSUM SUBST_ALL_TAC;
+NHANH (ARITH_RULE` a + 1 = 1 ==> ~( 0 < a) `);
+ASM_REWRITE_TAC[];
+
+ASM_REWRITE_TAC[];
+ARITH_TAC;
+SUBST_ALL_TAC (ARITH_RULE` ~( 0 < i') <=> i' = 0 `);
+EXISTS_TAC `nn:num `;
+ASM_REWRITE_TAC[];
+CONJ_TAC;
+EXPAND_TAC "S";
+REWRITE_TAC[IN_NUMSEG; LE_REFL; ADD];
+MP_TAC (SPEC_ALL CC_CARD2);
+ANTS_TAC;
+ASM_REWRITE_TAC[cc_bool_model_v11; cc_real_model_v11];
+ASM_SIMP_TAC[ARITH_RULE` 2 <= nn ==> 1 <= nn `];
+STRIP_TAC;
+ASM_SEARCH_TCL [` periodic`; `cc_gg_v11 `] MP_TAC;
+ASM_SEARCH_TCL [` cc_bool_prep_v11 `] MP_TAC;
+REWRITE_TAC[cc_bool_prep_v11];
+MP_TAC (SPEC_ALL periodic_fn);
+ANTS_TAC;
+ASM_REWRITE_TAC[cc_bool_model_v11];
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+SIMP_TAC[Oxl_def.periodic];
+STRIP_TAC;
+UNDISCH_TAC`(cb: num -> bool) i'`;
+ASM_REWRITE_TAC[];
+ASM_SEARCH_TCL [` a /\ b <=> c `] (fun x -> REWRITE_TAC[GSYM x]);
+FIRST_X_ASSUM MP_TAC;
+UNDISCH_TAC` cc_qy_v11 cc (i' + 1) `;
+ASM_SEARCH_TCL [` periodic `;` cc_qu_v11`] MP_TAC;
+ASM_SEARCH_TCL [` periodic `;` cc_qy_v11`] MP_TAC;
+ASM_SEARCH_TCL [` periodic `;` cc_gg_v11`] MP_TAC;
+SIMP_TAC[Oxl_def.periodic];
+UNDISCH_TAC` i' = 0 `;
+SIMP_TAC[ADD;ADD_SYM];
+MESON_TAC[ADD; ADD_SYM];
+
+GEN_TAC;
+EXPAND_TAC "S";
+REWRITE_TAC[IN_NUMSEG];
+ASM_CASES_TAC` y' = (nn:num) `;
+ASM_REWRITE_TAC[];
+ASM_REWRITE_TAC[];
+ARITH_TAC;
+
+
+GEN_TAC;
+EXPAND_TAC "sa";
+EXPAND_TAC "saa";
+REWRITE_TAC[IN_ELIM_THM];
+STRIP_TAC;
+CONJ_TAC;
+ASM_CASES_TAC` x = (nn: num) `;
+EXISTS_TAC` 0`;
+ASM_REWRITE_TAC[ADD];
+EXPAND_TAC "S";
+REWRITE_TAC[IN_NUMSEG];
+CONJ_TAC;
+MP_TAC (SPEC_ALL CC_CARD2);
+ANTS_TAC;
+ASM_REWRITE_TAC[cc_bool_model_v11; cc_real_model_v11];
+ASM_REWRITE_TAC[];
+ARITH_TAC;
+
+
+FIRST_X_ASSUM SUBST_ALL_TAC;
+REPLICATE_TAC 2 (FIRST_X_ASSUM MP_TAC);
+ASM_SEARCH_TCL [` a /\ b <=> c `] (fun x -> REWRITE_TAC[GSYM x]);
+ASM_SEARCH_TCL [` periodic `;` cc_gg_v11 `] MP_TAC;
+MP_TAC (SPEC_ALL periodic_fn);
+ANTS_TAC;
+ASM_REWRITE_TAC[cc_bool_model_v11];
+STRIP_TAC;
+ASM_SEARCH_TCL [` periodic `;` cc_qy_v11 `] MP_TAC;
+ASM_SEARCH_TCL [` periodic `;` cc_qu_v11 `] MP_TAC;
+SIMP_TAC[Oxl_def.periodic];
+ASM_SEARCH_TCL [` cc_card_v11 cc = nn `] SUBST1_TAC;
+
+MESON_TAC[ADD; ADD_SYM];
+EXISTS_TAC `x:num `;
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` (x:num) IN S `;
+EXPAND_TAC "S";
+REWRITE_TAC[IN_NUMSEG];
+FIRST_X_ASSUM MP_TAC;
+ARITH_TAC;
+
+ASM_CASES_TAC` x = (nn:num) `;
+ASM_REWRITE_TAC[];
+ASM_SEARCH_TCL [` periodic (cc_gg3a_v11 cc) `] MP_TAC;
+REWRITE_TAC[Oxl_def.periodic];
+MESON_TAC[ADD_SYM];
+ASM_REWRITE_TAC[];
+
+MP_TAC (SPEC_ALL periodic_fn);
+ANTS_TAC;
+ASM_REWRITE_TAC[cc_bool_model_v11];
+ABBREV_TAC` nn = cc_card_v11 cc `;
+STRIP_TAC;
+SUBGOAL_THEN ` ss DIFF sa SUBSET (sb: num -> bool) ` MP_TAC;
+UNDISCH_TAC` {i | (i:num) IN S /\ cb i} = ss `;
+STRIP_TAC;
+EXPAND_TAC "ss";
+EXPAND_TAC "sa";
+EXPAND_TAC "sb";
+
+REWRITE_TAC[SUBSET; IN_DIFF; IN_ELIM_THM];
+SUBGOAL_THEN` !x. (x IN S /\ cb x) ==>  ~(cc_4cell_v11 cc (x + 1) /\ cc_4cell_v11 cc (x - 1))` MP_TAC;
+GEN_TAC THEN STRIP_TAC;
+FIRST_ASSUM MATCH_MP_TAC;
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` (x:num) IN S `;
+EXPAND_TAC "S";
+REWRITE_TAC[IN_NUMSEG];
+ARITH_TAC;
+REWRITE_TAC[cc_qy_v11];
+MESON_TAC[];
+
+
+SUBGOAL_THEN` sum sbb (cc_gg3b_v11 cc) = sum sb (\i. cc_gg3b_v11 cc ( i - 1))` MP_TAC;
+MATCH_MP_TAC SUM_EQ_GENERAL;
+EXISTS_TAC`\i. if i = nn then 1 else i + 1 `;
+CONJ_TAC;
+REWRITE_TAC[EXISTS_UNIQUE];
+GEN_TAC;
+EXPAND_TAC "sb";
+REWRITE_TAC[IN_ELIM_THM];
+EXPAND_TAC "sbb";
+EXPAND_TAC "S";
+REWRITE_TAC[IN_NUMSEG];
+STRIP_TAC;
+ASM_CASES_TAC` y = 1 `;
+EXISTS_TAC` nn:num`;
+REWRITE_TAC[IN_ELIM_THM];
+CONJ_TAC;
+ASM_REWRITE_TAC[];
+CONJ_TAC;
+STRIP_TAC;
+MP_TAC (SPEC_ALL CC_CARD2);
+ANTS_TAC;
+ASM_REWRITE_TAC[cc_bool_model_v11; cc_real_model_v11];
+ASM_REWRITE_TAC[];
+
+ARITH_TAC;
+REWRITE_TAC[LE_REFL];
+FIRST_X_ASSUM SUBST_ALL_TAC;
+FIRST_X_ASSUM MP_TAC;
+FIRST_X_ASSUM MP_TAC;
+ASM_SEARCH_TCL [` a /\ b <=> c `] MP_TAC;
+DISCH_THEN (fun x -> REWRITE_TAC[GSYM x]);
+ASM_SEARCH_TCL [` periodic (cc_gg_v11 cc) `] MP_TAC;
+ASM_SEARCH_TCL [` periodic (cc_qy_v11 cc) `] MP_TAC;
+ASM_SEARCH_TCL [` periodic (cc_qu_v11 cc) `] MP_TAC;
+REWRITE_TAC[Oxl_def.periodic; SUB_REFL];
+MESON_TAC[ADD; ADD_SYM];
+GEN_TAC;
+ASM_CASES_TAC` y' = (nn:num) `;
+ASM_REWRITE_TAC[];
+ASM_REWRITE_TAC[];
+ARITH_TAC;
+EXISTS_TAC` y - 1 `;
+CONJ_TAC;
+ASSUME_TAC2 (ARITH_RULE` 1 <= y /\ y <= nn ==> ~( y - 1 = nn) `);
+ASM_REWRITE_TAC[IN_ELIM_THM];
+ASSUME_TAC2 (ARITH_RULE` 1 <= y /\ y <= nn ==> y - 1 + 1 = y /\ y - 1 <= nn`);
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` 1 <= y `;
+UNDISCH_TAC` ~( y = 1) `;
+ARITH_TAC;
+GEN_TAC;
+
+ASM_CASES_TAC` y' = (nn:num) `;
+ASM_REWRITE_TAC[];
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+FIRST_X_ASSUM MP_TAC;
+UNDISCH_TAC` 1 <= y `;
+ARITH_TAC;
+GEN_TAC;
+EXPAND_TAC "sbb";
+EXPAND_TAC "sb";
+EXPAND_TAC "S";
+REWRITE_TAC[IN_ELIM_THM; IN_NUMSEG];
+STRIP_TAC;
+ASM_CASES_TAC` x = (nn: num) `;
+ASM_REWRITE_TAC[];
+FIRST_X_ASSUM SUBST_ALL_TAC;
+CONJ_TAC;
+CONJ_TAC;
+UNDISCH_TAC` 1 <= nn `;
+ARITH_TAC;
+
+UNDISCH_TAC` (cb:num -> bool) (nn + 1) `;
+UNDISCH_TAC` cc_qy_v11 cc nn `;
+ASM_SEARCH_TCL [` a /\ b <=> c `] (fun x -> REWRITE_TAC[GSYM x]);
+ASM_SEARCH_TCL [` periodic (cc_gg_v11 cc) `] MP_TAC;
+ASM_SEARCH_TCL [` periodic (cc_qu_v11 cc) `] MP_TAC;
+ASM_SEARCH_TCL [` periodic (cc_qy_v11 cc) `] MP_TAC;
+REWRITE_TAC[Oxl_def.periodic; SUB_REFL];
+MESON_TAC[ADD; ADD_SYM];
+
+REWRITE_TAC[SUB_REFL];
+ASM_SEARCH_TCL [` periodic (cc_gg3b_v11 cc) `] MP_TAC;
+REWRITE_TAC[Oxl_def.periodic];
+MESON_TAC[ADD; ADD_SYM];
+
+ASM_REWRITE_TAC[ARITH_RULE` (a + 1) - 1 = a /\ 1 <= a + 1`];
+UNDISCH_TAC` x <= (nn:num) `;
+FIRST_X_ASSUM MP_TAC;
+ARITH_TAC;
+
+
+SIMP_TAC[];
+
+REPEAT STRIP_TAC;
+SUBGOAL_THEN` sum (ss DIFF sa) (\i. cc_gg3b_v11 cc (i - 1)) <= sum sb (\i. cc_gg3b_v11 cc (i - 1))` MP_TAC;
+MATCH_MP_TAC SUM_SUBSET_SIMPLE;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` sb SUBSET (S:num -> bool) ` ASSUME_TAC;
+EXPAND_TAC "sb";
+SET_TAC[];
+CONJ_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC` S: num -> bool `;
+ASM_REWRITE_TAC[];
+
+EXPAND_TAC "sb";
+REWRITE_TAC[IN_DIFF; IN_ELIM_THM];
+ASM_SEARCH_TCL  [` cc_qy_v11 cc i ==> &0 <= cc_gg3b_v11 cc i `] NHANH;
+SIMP_TAC[];
+
+STRIP_TAC;
+SUBGOAL_THEN` &0 <= sum sa (\i. cc_gg3a_v11 cc (i + 1)) +
+         sum sa (cc_gg_v11 cc) ` ASSUME_TAC;
+ASM_SIMP_TAC[GSYM SUM_ADD];
+MATCH_MP_TAC SUM_POS_LE;
+ASM_REWRITE_TAC[];
+EXPAND_TAC "sa";
+REWRITE_TAC[IN_ELIM_THM];
+ASM_SEARCH_TCL [` a /\ b <=> c `] (fun x -> REWRITE_TAC[ GSYM x]);
+ASM_SEARCH_TCL [` x /\ cc_qy_v11 cc (i + 1) ==> a `] MP_TAC;
+REWRITE_TAC[cc_eps];
+MESON_TAC[REAL_ADD_SYM; REAL_ARITH` &0 <= #0.0057`; REAL_LE_TRANS];
+
+
+SUBGOAL_THEN` &0 <= sum (ss DIFF sa) (\i. cc_gg3b_v11 cc (i - 1)) + sum (ss DIFF sa) (cc_gg_v11 cc) ` ASSUME_TAC;
+SUBGOAL_THEN` FINITE (ss DIFF (sa:num -> bool)) ` MP_TAC;
+MATCH_MP_TAC FINITE_DIFF;
+FIRST_X_ASSUM ACCEPT_TAC;
+SIMP_TAC[GSYM SUM_ADD];
+STRIP_TAC;
+MATCH_MP_TAC SUM_POS_LE;
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` ss DIFF sa SUBSET (sb:num -> bool) `;
+REWRITE_TAC[SUBSET];
+DISCH_THEN NHANH;
+EXPAND_TAC "sb";
+EXPAND_TAC "S";
+REWRITE_TAC[IN_NUMSEG; IN_ELIM_THM];
+NHANH (ARITH_RULE` 1 <= x ==> x - 1 + 1 = x `);
+ASM_SEARCH_TCL [` a /\ b <=> v`] (fun x -> REWRITE_TAC[GSYM x]);
+ASM_SEARCH_TCL  [` cc_qu_v11 cc (i + 1) /\ cc_qy_v11 cc i ==> a `] MP_TAC;
+REWRITE_TAC[cc_eps];
+MESON_TAC[REAL_ADD_SYM; REAL_ARITH` &0 <= #0.0057`; REAL_LE_TRANS];
+REPLICATE_TAC 3 (FIRST_X_ASSUM MP_TAC);
+REAL_ARITH_TAC;
+
+SUBGOAL_THEN` ss UNION sab SUBSET (S:num -> bool) ` MP_TAC;
+EXPAND_TAC "ss";
+EXPAND_TAC "sab";
+SET_TAC[];
+NHANH (SET_RULE` s SUBSET S ==> (S DIFF s ) UNION s = S /\ DISJOINT (S DIFF s) s`);
+ABBREV_TAC` sg = ss UNION (sab:num -> bool) `;
+STRIP_TAC;
+SUBGOAL_THEN` FINITE (sg: num -> bool) ` ASSUME_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC` S:num -> bool `;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` FINITE (S DIFF (sg:num -> bool)) ` ASSUME_TAC;
+MATCH_MP_TAC FINITE_DIFF;
+FIRST_X_ASSUM ACCEPT_TAC;
+STRIP_TAC;
+SUBGOAL_THEN` &0 <= sum S (cc_gg_v11 cc) ` MP_TAC;
+ASM_SIMP_TAC[SUM_UNION];
+EXPAND_TAC "S";
+REPLICATE_TAC 4 (FIRST_X_ASSUM MP_TAC);
+ASM_SIMP_TAC[SUM_UNION];
+REPEAT STRIP_TAC;
+MATCH_MP_TAC REAL_LE_ADD;
+CONJ_TAC;
+MATCH_MP_TAC SUM_POS_LE;
+ASM_REWRITE_TAC[];
+
+GEN_TAC;
+EXPAND_TAC "sg";
+EXPAND_TAC "ss";
+REWRITE_TAC[IN_DIFF; IN_ELIM_THM; IN_UNION];
+ASM_SEARCH_TCL [` a /\ b <=> c `] (fun x -> REWRITE_TAC[GSYM x]);
+REWRITE_TAC[DE_MORGAN_THM];
+IMP_TAC;
+SIMP_TAC[];
+REPEAT STRIP_TAC;
+UNDISCH_TAC` ~( cc_gg_v11 cc x < &0 ) `;
+REAL_ARITH_TAC;
+SUBGOAL_THEN ` cc_bool_model_v11 cc ` MP_TAC;
+ASM_REWRITE_TAC[cc_bool_model_v11];
+NHANH (SPECL [`cc: cc_v11`;` x:num `] QY_QX_QU);
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` cc_real_model_v11 cc ` MP_TAC;
+ASM_REWRITE_TAC[cc_real_model_v11];
+MESON_TAC[QY_NN0; QX_NN0];
+MATCH_MP_TAC REAL_LE_TRANS;
+EXISTS_TAC` sum saa (cc_gg3a_v11 cc) +
+      sum sbb (cc_gg3b_v11 cc) +
+      sum ss (cc_gg_v11 cc) `;
+ASM_REWRITE_TAC[];
+ABBREV_TAC` nn = cc_card_v11 cc `;
+STRIP_TAC;
+UNDISCH_TAC` ~( nn = 0 ) `;
+ASM_SEARCH_TCL [` periodic (cc_gg_v11 cc) `] MP_TAC;
+PHA;
+NHANH periodic_sum;
+STRIP_TAC;
+FIRST_X_ASSUM (MP_TAC o (SPEC ` 1 `));
+ASSUME_TAC2 (ARITH_RULE` ~( nn = 0) ==> nn - 1 + 1 = nn `);
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+UNDISCH_TAC` &0 <= sum S (cc_gg_v11 cc) `;
+ASM_REWRITE_TAC[REAL_ARITH` &0 <= x <=> ~( x < &0)`];
+FIRST_X_ASSUM MP_TAC;
+SIMP_TAC[]]);;
+
+
+
+
+let MOD_INJ1 = prove_by_refinement
+(` ~( n = 0) /\ k < n /\ ~( k = 0) ==> (! x. ~( x MOD n = (x + k) MOD n)) `,
+[REPEAT STRIP_TAC;
+MP_TAC (SPECL [` n: num `;` x:num `;` x:num `;` x + k:num`] MOD_INJ);
+ANTS_TAC;
+ASM_REWRITE_TAC[IN_NUMSEG];
+DOWN_TAC;
+SIMP_TAC[LE_REFL; ARITH_RULE` ~( n = 0) ==> x <= n - 1 + x `; ARITH_RULE` a <= a + x:num `];
+STRIP_TAC;
+UNDISCH_TAC` k < (n:num) `;
+ARITH_TAC;
+UNDISCH_TAC` ~( k = 0) `;
+ARITH_TAC]);;
+
+
+
+
+(* TTTTTT *)
+
+
+
+(* ========================================== *)
+(* WKR_COMPTED *)
+
+
+
+let WKR_COMPTED = prove_by_refinement (`cc_bool_model_v11 cc /\
+cc_bool_prep_v11 cc /\
+ cc_real_model_v11 cc /\
+ sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0 /\
+ indSet = 0..cc_card_v11 cc - 1
+ ==> (?i j k.
+          ~(i = j \/ j = k \/ k = i) /\
+          i IN indSet /\
+          j IN indSet /\
+          k IN indSet /\
+          cc_4cell_v11 cc i /\
+          cc_4cell_v11 cc j /\
+          cc_4cell_v11 cc k)`, [STRIP_TAC;
+ASSUME_TAC2 (SPEC_ALL MTMLSRF);
+ASSUME_TAC2 Oxl_def.CC_CARD2;
+DOWN_TAC;
+REWRITE_TAC[cc_real_model_v11; cc_qu_v11; cc_bool_model_v11];
+STRIP_TAC;
+ASM_CASES_TAC` cc_card_v11 cc = 2 `;
+ASM_SEARCH_TCL [` x = &2 * pi `] MP_TAC;
+FIRST_ASSUM SUBST1_TAC;
+REWRITE_TAC[ARITH_RULE` 2 - 1 = 1 `];
+MP_TAC (ARITH_RULE` 0 < 1 /\ 0 <= 1 `);
+SIMP_TAC[SUM_CLAUSES_RIGHT; SUB_REFL; SUM_SING_NUMSEG];
+STRIP_TAC THEN STRIP_TAC;
+ABBREV_TAC` nn = cc_card_v11 cc `;
+SUBGOAL_THEN` {i MOD nn, (i + 1) MOD nn} SUBSET 0..nn - 1 ` MP_TAC;
+REWRITE_TAC[INSERT_SUBSET; EMPTY_SUBSET];
+
+UNDISCH_TAC` ~(nn = 0) `;
+MESON_TAC[Oxl_def.MOD_IN_NUMSEG];
+MP_TAC (SPECL [`1 `;` 2 `] (GEN_ALL MOD_INJ1));
+ANTS_TAC;
+ARITH_TAC;
+MP_TAC (SPECL [` 0`;` 2 - 1 `] CARD_NUMSEG);
+ASM_REWRITE_TAC[ARITH_RULE` (2 - 1 + 1) - 0 = 2 `];
+REPEAT STRIP_TAC;
+SUBGOAL_THEN` {i MOD 2, (i + 1) MOD 2} = 0..2 - 1` MP_TAC;
+MATCH_MP_TAC CARD_SUBSET_EQ;
+ASM_REWRITE_TAC[FINITE_NUMSEG; Geomdetail.CARD_SET2];
+
+
+DISCH_THEN (ASSUME_TAC o SYM);
+
+ASM_SEARCH_TCL [` sum s f = &2 * pi `] MP_TAC;
+UNDISCH_TAC` nn = 2 `;
+SIMP_TAC[];
+ASM_SIMP_TAC[];
+FIRST_X_ASSUM (MP_TAC o (SPEC` i: num `));
+SIMP_TAC[Geomdetail.SUM_DIS2];
+REPEAT STRIP_TAC;
+SUBGOAL_THEN` cc_4cell_v11 cc (i MOD 2) /\ cc_4cell_v11 cc ((i + 1) MOD 2) ` MP_TAC;
+UNDISCH_TAC ` ~( nn = 0 ) `;
+UNDISCH_TAC` periodic (cc_4cell_v11 cc) nn `;
+PHA;
+UNDISCH_TAC` cc_4cell_v11 cc (i) `;
+UNDISCH_TAC` cc_4cell_v11 cc (i + 1) `;
+ASM_REWRITE_TAC[];
+MESON_TAC[Oxl_def.periodic_mod];
+ASM_SEARCH_TCL [` cc_azim_v11 `;` #2.8`] (NHANH_PAT` \x. x ==> y `);
+
+DOWN;
+MP_TAC (prove(` #3.14159 < pi`, REWRITE_TAC[ Flyspeck_constants.bounds]));
+REAL_ARITH_TAC;
+
+
+ABBREV_TAC` nn = cc_card_v11 cc `;
+EXISTS_TAC` (i - 1) MOD nn`;
+EXISTS_TAC` (i) MOD nn`;
+EXISTS_TAC` (i + 1) MOD nn`;
+MP_TAC (ISPECL [` 1 `;`nn: num `] (GEN_ALL MOD_INJ1));
+MP_TAC (ISPECL [` 2 `;`nn: num `] (GEN_ALL MOD_INJ1));
+ANTS_TAC;
+ASM_REWRITE_TAC[ARITH_RULE` ~( 2 = 0) /\ (2 < nn <=> 2 <= nn /\ ~( nn = 2))`];
+STRIP_TAC;
+ANTS_TAC;
+ASM_SIMP_TAC[ARITH_RULE` ~( 1 = 0) /\ ( 2 <= x ==> 1 < x)`];
+STRIP_TAC;
+FIRST_ASSUM (MP_TAC o (SPEC` i: num `));
+FIRST_X_ASSUM (MP_TAC o (SPEC` i - 1 `));
+FIRST_ASSUM (MP_TAC o (SPEC` i - 1 `));
+UNDISCH_TAC` 0 < i `;
+SIMP_TAC[ARITH_RULE` 0 < i ==> i - 1 + 1 = i /\ i - 1 + 2 = i + 1 `];
+REPLICATE_TAC 4 STRIP_TAC;
+ASM_SIMP_TAC[MOD_IN_NUMSEG];
+ASM_SEARCH_TCL [` periodic `;` cc_4cell_v11 `] MP_TAC;
+UNDISCH_TAC` cc_4cell_v11 cc (i - 1) `;
+UNDISCH_TAC` cc_4cell_v11 cc (i) `;
+UNDISCH_TAC` cc_4cell_v11 cc (i + 1) `;
+UNDISCH_TAC` ~( nn = 0) `;
+MESON_TAC[Oxl_def.periodic_mod]]);;
+
+
+
+
+let oxl6142 = prove_by_refinement (CHQSQEY_concl,
+[GEN_TAC;
+ABBREV_TAC` indSet = 0..cc_card_v11 cc - 1 `;
+STRIP_TAC;
+MP_TAC WKR_COMPTED;
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+
+REWRITE_TAC[cc_size_v11];
+SUBGOAL_THEN` {i,j,k} SUBSET {i | i IN 0..cc_card_v11 cc - 1 /\ cc_4cell_v11 cc i}` MP_TAC;
+ASM_REWRITE_TAC[INSERT_SUBSET; EMPTY_SUBSET; IN_ELIM_THM];
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+SUBGOAL_THEN` FINITE {i | i IN indSet /\ cc_4cell_v11 cc i} ` MP_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC` indSet:num -> bool `;
+EXPAND_TAC "indSet";
+REWRITE_TAC[FINITE_NUMSEG];
+SET_TAC[];
+FIRST_X_ASSUM MP_TAC;
+PHA;
+NHANH CARD_SUBSET;
+STRIP_TAC;
+ASM_SEARCH_TCL [` a \/ b`] MP_TAC;
+REWRITE_TAC[GSYM Geomdetail.CARD3];
+DISCH_THEN SUBST_ALL_TAC;
+FIRST_X_ASSUM ACCEPT_TAC]);;
+
+
+let CHQSQEY = oxl6142;;
+
+
+let THREE_LE_CC_CARD = prove_by_refinement (` cc_bool_model_v11 cc /\
+          cc_bool_prep_v11 cc /\
+          cc_real_model_v11 cc /\
+          sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0
+          ==> 3 <= cc_card_v11 cc `,
+[NHANH CHQSQEY;
+REWRITE_TAC[cc_size_v11];
+ABBREV_TAC` sn = 0..cc_card_v11 cc - 1 `;
+STRIP_TAC;
+ASSUME_TAC (SET_RULE` {i | i IN sn /\ cc_4cell_v11 cc i} SUBSET sn`);
+SUBGOAL_THEN` FINITE (sn:num -> bool) ` MP_TAC;
+EXPAND_TAC "sn";
+REWRITE_TAC[FINITE_NUMSEG];
+FIRST_X_ASSUM MP_TAC;
+PHA;
+NHANH CARD_SUBSET;
+STRIP_TAC;
+ABBREV_TAC` c4 = CARD {i | i IN sn /\ cc_4cell_v11 cc i} `;
+ASSUME_TAC2 (ARITH_RULE` 3 <= c4 /\ c4 <= CARD (sn:num -> bool) ==> 3 <= CARD sn`);
+FIRST_X_ASSUM MP_TAC;
+EXPAND_TAC "sn";
+REWRITE_TAC[CARD_NUMSEG];
+ARITH_TAC]);;
+
+
+
+
+let THREE_MOD_CONSECUTIVES = prove_by_refinement (
+` 0 < i /\ 3 <= n ==> ~( (i - 1) MOD n = i MOD n \/ i MOD n = (i + 1) MOD n \/
+(i + 1) MOD n = (i - 1) MOD n )`,
+[NHANH (ARITH_RULE` 3 <= n ==> 2 < n /\ 1 < n /\ ~(n = 0)`);
+STRIP_TAC;
+MP_TAC (SPECL [` 2`;` n:num `] (GEN_ALL MOD_INJ1));
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+ARITH_TAC;
+MP_TAC (SPECL [` 1`;` n:num `] (GEN_ALL MOD_INJ1));
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+ARITH_TAC;
+STRIP_TAC;
+FIRST_ASSUM (ASSUME_TAC o (SPEC` i - 1 `));
+FIRST_X_ASSUM (ASSUME_TAC o (SPEC` i:num `));
+STRIP_TAC;
+FIRST_X_ASSUM (MP_TAC o (SPEC` i - 1 `));
+REPLICATE_TAC 2 (FIRST_X_ASSUM MP_TAC);
+PHA;
+ASSUME_TAC2 (ARITH_RULE` 0 < i ==> i - 1 + 1 = i /\ i - 1 + 2 = i + 1 `);
+ASM_REWRITE_TAC[];
+MESON_TAC[]]);;
+
+
+
+let MOD_PERIOD_BOUNDED = prove_by_refinement (
+` ~( n = 0) /\ ~( k = 0) ==> (! x. (x + k) MOD n = x MOD n ==> n <= k ) `,
+[REPEAT STRIP_TAC;
+ASM_CASES_TAC` n <= (k:num) `;
+ASM_REWRITE_TAC[];
+MP_TAC MOD_INJ1;
+ANTS_TAC;
+ASM_REWRITE_TAC[ARITH_RULE` a < (b:num) <=> ~(b <= a ) `];
+ASM_MESON_TAC[]]);;
+
+
+
+let MOD_PERIOD_BOUNDED2 = prove_by_refinement
+(` ~(nn = 0) /\ m <= k /\
+(i + k ) MOD nn IN { (i + x) MOD nn | x < m } ==> nn <= k `,
+[REWRITE_TAC[IN_ELIM_THM] ;
+STRIP_TAC ;
+MP_TAC (SPECL [` nn:num `;` k - (x:num) `] (GEN_ALL MOD_PERIOD_BOUNDED)) ;
+ANTS_TAC ;
+ASM_REWRITE_TAC[] ;
+ASM_ARITH_TAC ;
+DISCH_THEN (MP_TAC o (SPEC` i + (x:num) `)) ;
+ANTS_TAC ;
+ASSUME_TAC2 (ARITH_RULE` x < m /\ m <= (k:num) ==> (i + x) + k - x = i + k `) ;
+ASM_REWRITE_TAC[] ;
+ARITH_TAC]);;
+
+
+
+let CARD_EMPTY = el 0 (CONJUNCTS CARD_CLAUSES);;
+
+let CARD_INSERT = el 1 (CONJUNCTS CARD_CLAUSES);;
+let SWITCH_TAC tm = UNDISCH_TAC tm THEN DISCH_THEN (ASSUME_TAC o GSYM);;
+
+
+
+(* ===================================== *)
+
+
+
+
+let UNPNFVW = prove_by_refinement ( UNPNFVW_concl,
+
+[ NHANH THREE_LE_CC_CARD;
+NHANH MTMLSRF;
+NHANH CHQSQEY;
+REPEAT STRIP_TAC;
+ABBREV_TAC` indSet = 0..cc_card_v11 cc - 1 `;
+MP_TAC WKR_COMPTED;
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+ASSUME_TAC2 (SPEC_ALL LXDEYBO);
+ABBREV_TAC` sz = cc_size_v11 cc (cc_4cell_v11 cc) ` ;
+ASM_CASES_TAC` cc_size_v11 cc (cc_4cell_v11 cc) = 3 `;
+ABBREV_TAC` nn = cc_card_v11 cc `;
+UNDISCH_TAC` 3 <= nn `;
+UNDISCH_TAC` 0 < i `;
+PHA;
+NHANH THREE_MOD_CONSECUTIVES;
+REWRITE_TAC[GSYM Geomdetail.CARD3];
+ABBREV_TAC` ia = (i - 1) MOD nn `;
+ABBREV_TAC` ib = i MOD nn `;
+ABBREV_TAC ` ic = (i + 1) MOD nn `;
+SUBGOAL_THEN` cc_4cell_v11 cc ia /\ cc_4cell_v11 cc ib /\ cc_4cell_v11 cc ic ` MP_TAC;
+UNDISCH_TAC` cc_qu_v11 cc i `;
+REWRITE_TAC[cc_qu_v11];
+ASM_SEARCH_TCL [` cc_bool_model_v11 `] MP_TAC;
+REWRITE_TAC[cc_bool_model_v11];
+ASM_REWRITE_TAC[];
+ASM_MESON_TAC[periodic_mod];
+REPEAT STRIP_TAC;
+ASSUME_TAC2 (ARITH_RULE` 3 <= nn ==> ~( nn = 0) `);
+ASM_SEARCH_TCL [` cc_qu_v11 `] MP_TAC;
+REWRITE_TAC[cc_qu_v11] THEN STRIP_TAC;
+SUBGOAL_THEN`! i. cc_4cell_v11 cc (i MOD nn) = cc_4cell_v11 cc i ` MP_TAC;
+GEN_TAC;
+MATCH_MP_TAC (GSYM periodic_mod);
+ASM_REWRITE_TAC[];
+ASM_SEARCH_TCL [` cc_bool_model_v11 `] MP_TAC;
+SIMP_TAC[cc_bool_model_v11];
+ASM_REWRITE_TAC[];
+SIMP_TAC[];
+STRIP_TAC;
+
+SUBGOAL_THEN` {ia, ib, ic} SUBSET indSet:num -> bool ` MP_TAC;
+REWRITE_TAC[INSERT_SUBSET; EMPTY_SUBSET];
+EXPAND_TAC "indSet";
+EXPAND_TAC "ia";
+EXPAND_TAC "ib";
+EXPAND_TAC "ic";
+UNDISCH_TAC` ~(nn = 0) `;
+SIMP_TAC[MOD_IN_NUMSEG];
+STRIP_TAC;
+SUBGOAL_THEN` {ia, ib, ic} SUBSET {i | i IN 0..cc_card_v11 cc - 1 /\ cc_4cell_v11 cc i} ` MP_TAC;
+REWRITE_TAC[INSERT_SUBSET; EMPTY_SUBSET; IN_ELIM_THM];
+FIRST_X_ASSUM MP_TAC;
+ASM_SIMP_TAC[INSERT_SUBSET];
+STRIP_TAC;
+EXPAND_TAC "ia";
+EXPAND_TAC "ib";
+EXPAND_TAC "ic";
+ASMS_SEARCH_TCL [` X <=> cc_4cell_v11 cc i `] REWRITE_TAC;
+ASM_REWRITE_TAC[];
+FIRST_X_ASSUM MP_TAC;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+
+
+SUBGOAL_THEN` FINITE (indSet:num -> bool) ` ASSUME_TAC;
+EXPAND_TAC "indSet";
+REWRITE_TAC[FINITE_NUMSEG];
+SUBGOAL_THEN`{ia, ib, ic} = {i | i IN indSet /\ cc_4cell_v11 cc i} ` ASSUME_TAC;
+MATCH_MP_TAC CARD_SUBSET_EQ;
+ASM_REWRITE_TAC[];
+CONJ_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC` indSet:num -> bool `;
+ASM_REWRITE_TAC[];
+SET_TAC[];
+UNDISCH_TAC` cc_size_v11 cc (cc_4cell_v11 cc) = 3 `;
+REWRITE_TAC[cc_size_v11];
+EXPAND_TAC "indSet";
+EXPAND_TAC "nn";
+SIMP_TAC[];
+
+ASM_CASES_TAC` cc_4cell_v11 cc ( (i + 2) MOD nn) `;
+SUBGOAL_THEN` (i + 2) MOD nn IN {ia, ib, ic} ` MP_TAC;
+ASM_REWRITE_TAC[];
+REWRITE_TAC[IN_ELIM_THM];
+ASM_REWRITE_TAC[];
+EXPAND_TAC "indSet";
+MATCH_MP_TAC MOD_IN_NUMSEG;
+FIRST_X_ASSUM ACCEPT_TAC;
+STRIP_TAC;
+SUBGOAL_THEN` nn = 3 ` ASSUME_TAC;
+FIRST_X_ASSUM MP_TAC;
+REWRITE_TAC[IN_INSERT; NOT_IN_EMPTY];
+STRIP_TAC;
+FIRST_X_ASSUM MP_TAC;
+ASSUME_TAC2 (ARITH_RULE` 0 < i ==> i + 2 = (i - 1) + 3 `);
+ASM_REWRITE_TAC[];
+EXPAND_TAC "ia";
+STRIP_TAC;
+MP_TAC (ARITH_RULE` ~( 3 = 0) `);
+UNDISCH_TAC` ~( nn = 0) `;
+PHA;
+NHANH MOD_PERIOD_BOUNDED;
+STRIP_TAC;
+REWRITE_TAC[ARITH_RULE` a = 3 <=> a <= 3 /\ 3 <= a `];
+ASM_REWRITE_TAC[];
+FIRST_X_ASSUM MATCH_MP_TAC;
+EXISTS_TAC` i - 1 `;
+ASM_REWRITE_TAC[];
+
+DOWN;
+EXPAND_TAC "ib";
+ASSUME_TAC (ARITH_RULE` ~( 2 = 0) `);
+ASSUME_TAC2 (SPECL [` nn: num `;` 2 `] (GEN_ALL MOD_PERIOD_BOUNDED));
+FIRST_ASSUM NHANH;
+NHANH (ARITH_RULE` n <= 2 ==> ~( 3 <= n ) `);
+ASM_REWRITE_TAC[];
+DOWN;
+EXPAND_TAC "ic";
+ASSUME_TAC (ARITH_RULE` ~( 1 = 0) `);
+ASSUME_TAC2 (SPECL [` nn: num `;` 1 `] (GEN_ALL MOD_PERIOD_BOUNDED));
+REWRITE_TAC[ARITH_RULE` a + 2 = (a + 1) + 1 `];
+FIRST_ASSUM NHANH;
+NHANH (ARITH_RULE` n <= 1 ==> ~( 3 <= n ) `);
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` CARD (indSet:num -> bool) = nn ` MP_TAC;
+EXPAND_TAC "indSet";
+REWRITE_TAC[CARD_NUMSEG];
+UNDISCH_TAC` ~( nn = 0) `;
+ARITH_TAC;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+MP_TAC (ISPECL [` {ia, ib, ic:num} `;` indSet:num -> bool `] CARD_SUBSET_EQ);
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+
+ASM_REWRITE_TAC[cc_size_v11];
+EXPAND_TAC "indSet";
+UNDISCH_TAC` nn = 3 `;
+SIMP_TAC[cc_qy_v11];
+NHANH (SET_RULE` { i | i IN S /\ p i } = S ==> {i | i IN S /\ ~( p i)} = {} `);
+SIMP_TAC[CARD_CLAUSES];
+REPEAT STRIP_TAC;
+ARITH_TAC;
+ASM_SEARCH_TCL [` cc_bool_prep_v11 `] MP_TAC;
+REWRITE_TAC[cc_bool_prep_v11; cc_qy_v11];
+
+ASM_SEARCH_TCL [` p ( x MOD n) <=> p x `] (fun x -> ONCE_REWRITE_TAC[GSYM x]) ;
+DISCH_THEN (ASSUME_TAC2 o (SPEC` (i + 2)`)) ;
+SUBGOAL_THEN` { ((i - 1) + x) MOD nn | x < 3}  = {ia, ib, ic} ` MP_TAC ;
+REWRITE_TAC[EXTENSION; IN_ELIM_THM] ;
+GEN_TAC ;
+REWRITE_TAC[ARITH_RULE` x < 3 <=> x = 0 \/ x = 1 \/ x = 2 `; IN_ELIM_THM; NOT_IN_EMPTY; IN_INSERT] ;
+EXPAND_TAC "ia" ;
+EXPAND_TAC "ib" ;
+EXPAND_TAC "ic" ;
+UNDISCH_TAC` 0 < i ` ;
+NHANH (ARITH_RULE` 0 < i ==> (i - 1 ) + 0 = i - 1 /\ ( i - 1) + 1 = i /\ ( i - 1) + 2 = i + 1 `) ;
+
+
+MESON_TAC[];
+STRIP_TAC;
+SUBGOAL_THEN` (i + 3) MOD nn IN {(i - 1 + x) MOD nn | x < 3} ` MP_TAC;
+ASM_REWRITE_TAC[];
+ASM_REWRITE_TAC[IN_ELIM_THM];
+EXPAND_TAC "indSet";
+CONJ_TAC;
+MATCH_MP_TAC MOD_IN_NUMSEG;
+FIRST_X_ASSUM ACCEPT_TAC;
+DOWN THEN DOWN;
+ASM_REWRITE_TAC[ARITH_RULE` a + 3 = (a + 2 ) + 1 `];
+SIMP_TAC[];
+
+ASSUME_TAC2 (ARITH_RULE` 0 < i ==> i + 3 = (i -1) + 4 `);
+FIRST_ASSUM SUBST1_TAC;
+MP_TAC (ARITH_RULE` 3 <= 4 `);
+UNDISCH_TAC` ~( nn = 0) `;
+PHA;
+NHANH MOD_PERIOD_BOUNDED2;
+STRIP_TAC;
+
+
+ABBREV_TAC` id = ((i - 1) + 4) MOD nn `;
+SUBGOAL_THEN` (! x. x IN {ia, ib, ic} ==> cc_4cell_v11 cc x)` ASSUME_TAC;
+UNDISCH_TAC` cc_4cell_v11 cc ia `;
+UNDISCH_TAC` cc_4cell_v11 cc ib `;
+UNDISCH_TAC` cc_4cell_v11 cc ic `;
+SET_TAC[];
+
+SUBGOAL_THEN` ~( ((i + 2) MOD nn) IN {ia, ib, ic})` MP_TAC;
+UNDISCH_TAC` ~cc_4cell_v11 cc (((i + 2)) MOD nn) `;
+DOWN;
+MESON_TAC[];
+
+
+
+ABBREV_TAC` ie = (i + 2) MOD nn `;
+STRIP_TAC;
+MP_TAC (prove(` FINITE {ia, ib, ic:num}`, REWRITE_TAC[Geomdetail.FINITE6]));
+NHANH (ISPEC`ie: num ` CARD_INSERT);
+ABBREV_TAC` cells = {i | i IN indSet /\ cc_4cell_v11 cc i} `;
+ASM_REWRITE_TAC[ADD1];
+STRIP_TAC;
+SUBGOAL_THEN` CARD (indSet:num -> bool) = nn ` ASSUME_TAC;
+EXPAND_TAC "indSet";
+REWRITE_TAC[CARD_NUMSEG];
+MATCH_MP_TAC (ARITH_RULE` ~(nn = 0) ==> (nn - 1 + 1) - 0 = nn `);
+FIRST_X_ASSUM ACCEPT_TAC;
+SUBGOAL_THEN` {ie, ia, ib, ic:num } SUBSET indSet ` MP_TAC;
+ONCE_REWRITE_TAC[INSERT_SUBSET];
+ASM_REWRITE_TAC[];
+EXPAND_TAC "ie";
+EXPAND_TAC "indSet";
+MATCH_MP_TAC MOD_IN_NUMSEG;
+FIRST_ASSUM ACCEPT_TAC;
+STRIP_TAC;
+SUBGOAL_THEN` {ie, ia, ib, ic:num} = indSet` MP_TAC;
+MATCH_MP_TAC CARD_SUBSET_EQ;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` CARD ((ie:num) INSERT cells) <= CARD (indSet:num -> bool) ` MP_TAC;
+MATCH_MP_TAC CARD_SUBSET;
+DOWN;
+ASM_SIMP_TAC[];
+
+
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` nn <= 4 `;
+ARITH_TAC;
+
+ASM_REWRITE_TAC[cc_size_v11; cc_qy_v11];
+STRIP_TAC;
+ASSUME_TAC2 (
+SET_RULE` cc_4cell_v11 cc ia /\ cc_4cell_v11 cc ib /\ cc_4cell_v11 cc ic /\
+{ia, ib, ic} = cells /\ ~cc_4cell_v11 cc ie /\ ie INSERT cells = indSet
+==> {i | i IN indSet /\ ~cc_4cell_v11 cc i} = {ie} `);
+ASM_REWRITE_TAC[];
+REWRITE_TAC[LE_REFL; CARD_SING];
+ASM_CASES_TAC` cc_size_v11 cc (cc_qy_v11 cc) <= 1 `;
+FIRST_X_ASSUM ACCEPT_TAC;
+
+DOWN;
+REWRITE_TAC[ARITH_RULE` ~( x <= 1) <=> 2 <= x `; cc_size_v11];
+ASM_REWRITE_TAC[];
+ABBREV_TAC` qyset = {i | i IN indSet /\ cc_qy_v11 cc i} `;
+SUBGOAL_THEN` qyset SUBSET (indSet:num -> bool) ` MP_TAC;
+EXPAND_TAC "qyset";
+SET_TAC[];
+STRIP_TAC;
+SUBGOAL_THEN` FINITE (indSet:num -> bool) ` ASSUME_TAC;
+EXPAND_TAC "indSet";
+REWRITE_TAC[FINITE_NUMSEG];
+SUBGOAL_THEN` FINITE (qyset:num -> bool) ` ASSUME_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC` indSet:num -> bool `;
+ASM_REWRITE_TAC[];
+DOWN;
+NHANH CHOOSE_SUBSET;
+STRIP_TAC;
+FIRST_X_ASSUM NHANH;
+REWRITE_TAC[HAS_SIZE_2_EXISTS; 
+SET_RULE` (!z. z IN t <=> z = x \/ z = y) <=> {x,y} = t  `];
+STRIP_TAC;
+UNDISCH_TAC` ~(cc_size_v11 cc (cc_4cell_v11 cc) = 3) `;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+ASSUME_TAC2 (ARITH_RULE` 3 <= sz /\ ~( sz = 3) /\ sz <= 4 ==> sz = 4 `);
+DOWN;
+EXPAND_TAC "sz";
+REWRITE_TAC[cc_size_v11];
+ASM_REWRITE_TAC[];
+ABBREV_TAC` cells = {i | i IN indSet /\ cc_4cell_v11 cc i}`;
+STRIP_TAC;
+
+SUBGOAL_THEN` indSet = qyset UNION cells /\ DISJOINT qyset (cells: num -> bool)` MP_TAC;
+EXPAND_TAC "qyset";
+EXPAND_TAC "cells";
+REWRITE_TAC[cc_qy_v11];
+SET_TAC[];
+STRIP_TAC;
+MP_TAC (SET_RULE` {i | i IN indSet /\ cc_4cell_v11 cc i} SUBSET indSet`);
+SWITCH_TAC` indSet = qyset UNION (cells: num -> bool) `;
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` FINITE (indSet:num -> bool)`;
+PHA;
+NHANH (FINITE_SUBSET);
+STRIP_TAC;
+REPLICATE_TAC 27 DOWN;
+PHA;
+ASM_SEARCH_TCL [` cc_real_model_v11 `] MP_TAC;
+ASM_SEARCH_TCL [` cc_bool_model_v11 `] MP_TAC;
+REWRITE_TAC[cc_real_model_v11; cc_bool_model_v11];
+REPEAT STRIP_TAC;
+
+SUBGOAL_THEN` &0 <= sum indSet (cc_gg_v11 cc) ` MP_TAC;
+EXPAND_TAC "indSet";
+SUBGOAL_THEN` sum (qyset UNION cells) (cc_gg_v11 cc) = sum qyset (cc_gg_v11 cc) + sum cells (cc_gg_v11 cc) ` SUBST1_TAC;
+MATCH_MP_TAC SUM_UNION;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` ! j. cc_qy_v11 cc j ==> &0 <= cc_gg_v11 cc j ` ASSUME_TAC;
+REPEAT STRIP_TAC;
+MATCH_MP_TAC QY_NN0;
+ASM_REWRITE_TAC[];
+
+SUBGOAL_THEN` sum t (cc_gg_v11 cc) <= sum qyset (cc_gg_v11 cc)` ASSUME_TAC;
+MATCH_MP_TAC SUM_SUBSET_SIMPLE;
+ASM_REWRITE_TAC[];
+EXPAND_TAC "qyset";
+REWRITE_TAC[IN_DIFF; IN_ELIM_THM];
+FIRST_ASSUM NHANH;
+
+
+SIMP_TAC[];
+SUBGOAL_THEN` &2 * #0.606 * #0.008 <= sum qyset (cc_gg_v11 cc) ` ASSUME_TAC;
+MATCH_MP_TAC REAL_LE_TRANS;
+EXISTS_TAC` sum t (cc_gg_v11 cc) `;
+ASM_REWRITE_TAC[];
+EXPAND_TAC "t";
+SUBGOAL_THEN` sum {x, y} (cc_gg_v11 cc) = cc_gg_v11 cc x + cc_gg_v11 cc y ` SUBST1_TAC;
+MATCH_MP_TAC Geomdetail.SUM_DIS2;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` cc_qy_v11 cc x /\ cc_qy_v11 cc y ` MP_TAC;
+UNDISCH_TAC` t SUBSET (qyset: num -> bool) ` ;
+EXPAND_TAC "t";
+EXPAND_TAC "qyset";
+SET_TAC[];
+STRIP_TAC;
+ASM_SEARCH_TCL [`#0.008 `] (ASSUME_TAC2 o (SPEC` x:num `));
+DOWN;
+ASM_SEARCH_TCL [`#0.008 `] (ASSUME_TAC2 o (SPEC` y:num `));
+DOWN;
+ASM_SEARCH_TCL [`#0.606`] (MP_TAC o (SPEC` x:num `));
+ASM_SEARCH_TCL [`#0.606`] (MP_TAC o (SPEC` y:num `));
+REAL_ARITH_TAC;
+
+
+SUBGOAL_THEN` ! i. i IN cells ==> a_spine5 + b_spine5 * cc_azim_v11 cc i <= cc_gg_v11 cc i` ASSUME_TAC;
+EXPAND_TAC "cells";
+REWRITE_TAC[IN_ELIM_THM];
+ASM_SEARCH_TCL [` cc_4cell_v11 cc i ==> a_spine5 + b_spine5 * cc_azim_v11 cc i <= cc_gg_v11 cc i`] NHANH;
+SIMP_TAC[];
+SUBGOAL_THEN` sum cells (\i. (\j. a_spine5) i + b_spine5 * cc_azim_v11 cc i) <= sum cells (cc_gg_v11 cc)` MP_TAC;
+MATCH_MP_TAC SUM_LE;
+ASM_REWRITE_TAC[];
+
+ASM_SIMP_TAC[SUM_ADD; SUM_CONST; SUM_LMUL];
+REWRITE_TAC[ISPECL [` cells:num -> bool `; `cc_azim_v11 cc `] (GEN_ALL SUM_BETA)];
+STRIP_TAC;
+SUBGOAL_THEN` ! f. sum (indSet:num -> bool) f = sum cells f + sum qyset f ` ASSUME_TAC;
+GEN_TAC;
+EXPAND_TAC "indSet";
+ONCE_REWRITE_TAC[REAL_ADD_SYM];
+MATCH_MP_TAC SUM_UNION;
+ASM_REWRITE_TAC[];
+ASM_SEARCH_TCL [` x = &2 * pi`] MP_TAC;
+ASM_SEARCH_TCL [` 0..m = t `] MP_TAC;
+SIMP_TAC[];
+ASM_REWRITE_TAC[];
+
+STRIP_TAC;
+SUBGOAL_THEN` sum (qyset DIFF t) (cc_azim_v11 cc) = sum qyset (cc_azim_v11 cc) - sum t (cc_azim_v11 cc) ` ASSUME_TAC;
+MATCH_MP_TAC SUM_DIFF;
+ASM_REWRITE_TAC[];
+DOWN;
+EXPAND_TAC "t";
+UNDISCH_TAC` ~( x = (y:num)) `;
+SIMP_TAC[Geomdetail.SUM_DIS2];
+STRIP_TAC;
+SUBGOAL_THEN` !s. FINITE s ==> &0 <= sum s (cc_azim_v11 cc) ` ASSUME_TAC;
+GEN_TAC;
+STRIP_TAC;
+MATCH_MP_TAC SUM_POS_LE;
+ASM_REWRITE_TAC[];
+REPEAT STRIP_TAC;
+ASM_SEARCH_TCL [` #0.606 <= x `] (MP_TAC o (SPEC` x':num `));
+REAL_ARITH_TAC;
+FIRST_ASSUM (MP_TAC o (SPEC` qyset DIFF {x, y:num}`));
+ANTS_TAC;
+MATCH_MP_TAC FINITE_DIFF;
+ASM_REWRITE_TAC[];
+PHA;
+NHANH (REAL_ARITH` &0 <= x /\ x = y - z ==> z <= y `);
+STRIP_TAC;
+SUBGOAL_THEN` &2 * #0.606 <= sum qyset (cc_azim_v11 cc) ` MP_TAC;
+MATCH_MP_TAC REAL_LE_TRANS;
+EXISTS_TAC` cc_azim_v11 cc x + cc_azim_v11 cc y `;
+ASM_REWRITE_TAC[];
+ASM_SEARCH_TCL [` #0.606 <= x `] (MP_TAC o (SPEC` x:num `));
+ASM_SEARCH_TCL [` #0.606 <= x `] (MP_TAC o (SPEC` y:num `));
+REAL_ARITH_TAC;
+STRIP_TAC;
+MATCH_MP_TAC REAL_LE_TRANS;
+EXISTS_TAC` &2 * #0.606 * #0.008 + ( &4 * a_spine5 + b_spine5 * sum cells (cc_azim_v11 cc)) ` ;
+ONCE_REWRITE_TAC[TAUT` a /\ b <=> b /\ a `];
+CONJ_TAC;
+MATCH_MP_TAC REAL_LE_ADD2;
+ASM_REWRITE_TAC[];
+
+ASM_REWRITE_TAC[Sphere.a_spine5; Sphere.b_spine5];
+UNDISCH_TAC` sum cells (cc_azim_v11 cc) + sum qyset (cc_azim_v11 cc) = &2 * pi `;
+SIMP_TAC[REAL_ARITH` a + b = c <=> a = c - b `];
+STRIP_TAC;
+UNDISCH_TAC` &2 * #0.606 <= sum qyset (cc_azim_v11 cc) `;
+MP_TAC (prove(` pi < #3.1416 `, REWRITE_TAC[ Flyspeck_constants.bounds]));
+REAL_ARITH_TAC;
+UNDISCH_TAC` sum indSet (cc_gg_v11 cc) < &0 `;
+REAL_ARITH_TAC]);;
+
+
+
+let CC_4CELL_QUQX = prove(` cc_4cell_v11 cc i <=> cc_qu_v11 cc i \/ cc_qx_v11 cc i `,
+REWRITE_TAC[cc_qx_v11; cc_qu_v11] THEN CONV_TAC TAUT);;
+
+
+
+let QX_NN00 = prove(`  cc_bool_model_v11 cc /\ cc_real_model_v11 cc ==> (! i. cc_qx_v11 cc i
+           ==> &0 <= cc_gg_v11 cc i) `,
+REPEAT STRIP_TAC THEN ASM_SIMP_TAC[QX_NN0]);;
+
+
+let QY_NN00 = prove(`  cc_bool_model_v11 cc /\ cc_real_model_v11 cc ==> (! i. cc_qy_v11 cc i
+           ==> &0 <= cc_gg_v11 cc i) `,
+REPEAT STRIP_TAC THEN ASM_SIMP_TAC[QY_NN0]);;
+
+
+
+
+let NUMSEG_SET_VER = prove(` 0..m = { i | i <= m } `,
+REWRITE_TAC[numseg] THEN 
+MP_TAC (ARITH_RULE`! x. (0 <= x /\ x <= m  <=> x <= m)`) THEN 
+SET_TAC[]);;
+
+
+let FINITE_INITIAL_SEG = REWRITE_RULE[NUMSEG_SET_VER] (SPEC `0` FINITE_NUMSEG);;
+
+
+let FINITE_INITIAL_SEG2 = prove(` FINITE {i | i < (n:num)} `,
+MATCH_MP_TAC (ISPECL [` {i | i < n:num } `;` {i | i <= (n:num) }`] FINITE_SUBSET)
+THEN REWRITE_TAC[FINITE_INITIAL_SEG; SUBSET; IN_ELIM_THM; LT_IMP_LE]);;
+
+
+
+
+let CARD_MOD_NUMSEG = prove_by_refinement(
+` !m. m <= n ==> CARD {(i + k) MOD n | k | k < m} = m `,
+
+[INDUCT_TAC;
+STRIP_TAC;
+MP_TAC (ARITH_RULE`(!x. ~( x < 0))`);
+SIMP_TAC[SET_RULE` (!x. ~(x < 0)) ==> {(i + k) MOD n | k < 0} = {} `; CARD_EMPTY];
+NHANH (ARITH_RULE` SUC m <= n ==> m <= n `);
+FIRST_X_ASSUM NHANH;
+REWRITE_TAC[ARITH_RULE` k < SUC m <=> k < m \/ k = m `];
+REWRITE_TAC[SET_RULE` {(i + k) MOD n | k < m \/ k = m} = (i + m) MOD n INSERT {(i + k) MOD n | k < m }`];
+STRIP_TAC;
+SUBGOAL_THEN` ~( (i + m) MOD n IN {(i + k) MOD n | k < m})` ASSUME_TAC;
+
+REWRITE_TAC[IN_ELIM_THM];
+STRIP_TAC;
+MP_TAC (let tt = GEN_ALL MOD_INJ1 in
+SPECL [` m - (k: num) `;` n: num `] tt);
+ANTS_TAC; ASM_ARITH_TAC;
+DISCH_THEN (ASSUME_TAC o (SPEC` i + (k:num) `));
+DOWN;
+ASSUME_TAC2 (ARITH_RULE` k < (m:num) ==> (i + k) + m - k = i + m `);
+ASM_REWRITE_TAC[];
+MP_TAC (ISPECL [`\k. ( i + k) MOD n `; `{ k  | k < m:num} `] FINITE_IMAGE);
+ANTS_TAC;
+REWRITE_TAC[ FINITE_INITIAL_SEG2; IMAGE; IN_ELIM_THM];
+REWRITE_TAC[ IMAGE; IN_ELIM_THM];
+
+ASM_REWRITE_TAC[SET_RULE` {y | ?x. x < m /\ y = (i + x) MOD n} = {(i + k) MOD n | k < m} `];
+
+NHANH (ISPEC ` (i + m) MOD n ` CARD_INSERT);
+ASM_REWRITE_TAC[];
+SIMP_TAC[]]);;
+
+
+
+
+let MOD_NUMSEG = prove_by_refinement(` ~( n = 0 ) ==> (! i. 0..(n - 1) = {(i + k) MOD n | k | k < n })`,
+[STRIP_TAC;
+GEN_TAC;
+SUBGOAL_THEN` {(i + k) MOD n | k | k < n} SUBSET 0..(n - 1) ` ASSUME_TAC;
+REWRITE_TAC[SUBSET];
+GEN_TAC;
+REWRITE_TAC[IN_ELIM_THM];
+STRIP_TAC;
+ASM_REWRITE_TAC[];
+ASM_SIMP_TAC[MOD_IN_NUMSEG];
+MP_TAC (REWRITE_RULE[LE_REFL] (SPEC`n:num ` CARD_MOD_NUMSEG));
+STRIP_TAC;
+MATCH_MP_TAC (GSYM CARD_SUBSET_EQ);
+ASM_REWRITE_TAC[FINITE_NUMSEG; CARD_NUMSEG];
+UNDISCH_TAC` ~( n = 0) `;
+ARITH_TAC]);;
+
+
+
+
+
+(*  IPVICGW_concl;;  *)
+
+
+
+let IPVICGW_C33 = prove_by_refinement(`! cc. (cc_bool_model_v11 cc /\
+       cc_bool_prep_v11 cc /\
+       cc_real_model_v11 cc /\
+       sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0) /\
+      cc_card_v11 cc = 3 
+==> (!i. cc_small_v11 cc i) `,
+
+[NHANH LXDEYBO;
+NHANH CHQSQEY;
+REWRITE_TAC[cc_size_v11];
+GEN_TAC;
+STRIP_TAC THEN ASSUME_TAC2 QY_NN00 THEN ASSUME_TAC2 QX_NN00;
+DOWN_TAC;
+ABBREV_TAC` cells = {i | i IN 0..cc_card_v11 cc - 1 /\ cc_4cell_v11 cc i} `;
+ABBREV_TAC` nn = cc_card_v11 cc `;
+REWRITE_TAC[cc_bool_model_v11; cc_real_model_v11; cc_bool_prep_v11];
+STRIP_TAC;
+SUBGOAL_THEN` cells SUBSET 0..nn - 1 ` ASSUME_TAC;
+EXPAND_TAC "cells";
+SET_TAC[];
+ASSUME_TAC (SPECL [` 0`;` nn - 1 `] FINITE_NUMSEG);
+MP_TAC (SPECL [` 0`;` nn - 1 `] CARD_NUMSEG);
+ASM_SIMP_TAC[ARITH_RULE`(3 - 1 + 1) - 0 = 3 `];
+ASSUME_TAC2 (ISPECL [` cells:num -> bool `;` 0.. nn - 1 `] CARD_SUBSET);
+REPLICATE_TAC 3 DOWN THEN PHA;
+ASM_REWRITE_TAC[];
+ASM_SIMP_TAC[ARITH_RULE` 3 <= x ==> ( x <= y /\ y = 3 <=> x = 3 /\ y = 3) `];
+STRIP_TAC;
+SUBGOAL_THEN` 0..3 - 1 = cells ` MP_TAC;
+MATCH_MP_TAC (GSYM CARD_SUBSET_EQ);
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+GEN_TAC;
+ASM_CASES_TAC` ! i. i IN cells ==> cc_qy_v11 cc i `;
+SUBGOAL_THEN` ! i. i IN cells ==> &0 <= cc_gg_v11 cc i ` ASSUME_TAC;
+REPEAT STRIP_TAC;
+ASM_SEARCH_TCL [` !i. cc_qy_v11 cc i ==> &0 <= cc_gg_v11 cc i `] MATCH_MP_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+FIRST_ASSUM ACCEPT_TAC;
+SUBGOAL_THEN` &0 <= sum cells (cc_gg_v11 cc) ` ASSUME_TAC;
+MATCH_MP_TAC SUM_POS_LE;
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` sum (0..nn - 1) (cc_gg_v11 cc) < &0 `;
+DOWN;
+ASM_REWRITE_TAC[];
+REAL_ARITH_TAC;
+
+ASM_CASES_TAC` (!i. i IN cells ==> cc_qx_v11 cc i) `;
+SUBGOAL_THEN` (!i. i IN cells ==> &0 <= cc_gg_v11 cc i)` MP_TAC;
+GEN_TAC THEN STRIP_TAC;
+ASM_SEARCH_TCL [` (!i. cc_qx_v11 cc i ==> &0 <= cc_gg_v11 cc i) `] MATCH_MP_TAC;
+FIRST_ASSUM MATCH_MP_TAC;
+FIRST_X_ASSUM ACCEPT_TAC;
+UNDISCH_TAC` FINITE (0..3 - 1 ) `;
+PHA;
+ASM_REWRITE_TAC[];
+NHANH SUM_POS_LE;
+ASM_REWRITE_TAC[REAL_ARITH` &0 <= x <=> ~( x < &0) `];
+STRIP_TAC;
+UNDISCH_TAC` sum (0..nn - 1) (cc_gg_v11 cc) < &0 `;
+ASM_REWRITE_TAC[];
+DOWN;
+REWRITE_TAC[ISPECL [`cells: num -> bool `;` cc_gg_v11 cc `] (GEN_ALL SUM_BETA)];
+SIMP_TAC[];
+DOWN;
+REWRITE_TAC[MESON[]` ~(! x. P x ==> q x) <=> (? x. P x /\ ~( q x)) `];
+STRIP_TAC;
+SUBGOAL_THEN` cc_4cell_v11 cc i' ` MP_TAC;
+REPLICATE_TAC 2 DOWN THEN PHA;
+
+UNDISCH_TAC` {i | i IN 0..nn - 1 /\ cc_4cell_v11 cc i} = cells `;
+DISCH_THEN (SUBST1_TAC o GSYM);
+
+SIMP_TAC[IN_ELIM_THM];
+ASM_REWRITE_TAC[CC_4CELL_QUQX];
+ASM_SEARCH_TCL [` !i. cc_qu_v11 cc i ==> --cc_eps <= cc_gg_v11 cc i `] NHANH;
+REWRITE_TAC[cc_qu_v11; cc_hassmall_v11];
+STRIP_TAC;
+ASM_CASES_TAC` cc_small_v11 cc (i' + 2) `;
+UNDISCH_TAC` ~( cc_card_v11 cc = 0) `;
+ASM_REWRITE_TAC[];
+NHANH MOD_NUMSEG;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+FIRST_X_ASSUM (ASSUME_TAC o (SPEC` i': num `));
+SUBGOAL_THEN` ! j. j IN cells ==> cc_small_v11 cc j ` ASSUME_TAC;
+ASM_REWRITE_TAC[IN_ELIM_THM];
+REPEAT STRIP_TAC;
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` ~( 3 = 0) `;
+UNDISCH_TAC ` periodic (cc_small_v11 cc) (cc_card_v11 cc) `;
+ASM_REWRITE_TAC[];
+PHA;
+SIMP_TAC[GSYM Oxl_def.periodic_mod];
+REPLICATE_TAC 9 DOWN;
+REWRITE_TAC[ARITH_RULE` k < 3 <=> k = 0 \/ k = 1 \/ k = 2 `];
+MESON_TAC[ADD_0];
+
+UNDISCH_TAC` ~( 3 = 0) `;
+UNDISCH_TAC ` periodic (cc_small_v11 cc) (cc_card_v11 cc) `;
+ASM_REWRITE_TAC[];
+PHA;
+NHANH ( GEN_ALL (
+SPEC` i:num` (GEN`m:num ` (SPEC_ALL Oxl_def.periodic_mod))));
+SIMP_TAC[];
+STRIP_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+EXPAND_TAC "cells";
+MATCH_MP_TAC MOD_IN_NUMSEG;
+ASM_REWRITE_TAC[];
+
+
+SUBGOAL_THEN` ~(cc_qu_v11 cc (i' + 1)) /\ ~(cc_qu_v11 cc (i' + 2)) ` MP_TAC;
+ASM_REWRITE_TAC[cc_qu_v11; cc_hassmall_v11; ARITH_RULE` (x + 1) + 1 = x + 2 `];
+STRIP_TAC;
+SUBGOAL_THEN`! i. cc_4cell_v11 cc i ` ASSUME_TAC;
+GEN_TAC;
+UNDISCH_TAC` ~( cc_card_v11 cc = 0) `;
+UNDISCH_TAC ` periodic (cc_4cell_v11 cc) (cc_card_v11 cc) `;
+ASM_REWRITE_TAC[];
+PHA;
+NHANH ( GEN_ALL (
+SPEC` i:num` (GEN`m:num ` (SPEC_ALL Oxl_def.periodic_mod))));
+SIMP_TAC[];
+STRIP_TAC;
+SUBGOAL_THEN` i MOD 3 IN cells ` MP_TAC;
+EXPAND_TAC "cells";
+MATCH_MP_TAC MOD_IN_NUMSEG;
+ARITH_TAC;
+ASM_SEARCH_TCL [` {i | i IN 0..nn - 1 /\ cc_4cell_v11 cc i} = cells `] (SUBST1_TAC o SYM);
+SET_TAC[];
+FIRST_ASSUM (MP_TAC o (SPEC` i' + 1 `));
+FIRST_ASSUM (MP_TAC o (SPEC` i' + 2 `));
+DOWN;
+ASM_REWRITE_TAC[CC_4CELL_QUQX];
+
+REWRITE_TAC[GSYM CC_4CELL_QUQX];
+REPEAT STRIP_TAC;
+SUBGOAL_THEN` cc_eps <= cc_gg_v11 cc (i' + 1 ) ` ASSUME_TAC;
+ASM_SEARCH_TCL [` !i. cc_qx_v11 cc i /\ cc_small_v11 cc i /\ ~cc_small_v11 cc (i + 1)
+       ==> cc_eps <= cc_gg_v11 cc i`] MATCH_MP_TAC;
+ASM_REWRITE_TAC[ARITH_RULE` (i + 1) + 1 = i + 2 `];
+SUBGOAL_THEN` cc_qu_v11 cc i' ` MP_TAC;
+ASM_REWRITE_TAC[cc_qu_v11; cc_hassmall_v11];
+ASM_SEARCH_TCL [`!i. cc_qu_v11 cc i ==> --cc_eps <= cc_gg_v11 cc i`] NHANH;
+ASM_SEARCH_TCL [` cc_qx_v11 cc i ==> &0 <= r`] (ASSUME_TAC2 o (SPEC` i' + 2 `));
+STRIP_TAC;
+SUBGOAL_THEN` &0 <= sum (i'.. i' + 2) (cc_gg_v11 cc) ` ASSUME_TAC;
+MP_TAC (ARITH_RULE` i' <= i' + 2 `);
+SIMP_TAC[SUM_CLAUSES_LEFT];
+STRIP_TAC;
+MP_TAC (ARITH_RULE` i' + 1 <= i' + 2 `);
+SIMP_TAC[SUM_CLAUSES_LEFT; ARITH_RULE` (i + 1) + 1 = i + 2`; SUM_SING_NUMSEG];
+STRIP_TAC;
+
+UNDISCH_TAC` --cc_eps <= cc_gg_v11 cc i' `;
+UNDISCH_TAC` cc_eps <= cc_gg_v11 cc (i' + 1) `;
+UNDISCH_TAC` &0 <= cc_gg_v11 cc (i' + 2) `;
+PHA;
+REAL_ARITH_TAC;
+
+UNDISCH_TAC` ~( cc_card_v11 cc = 0) `;
+ASM_SEARCH_TCL [` periodic (cc_gg_v11 cc) `] MP_TAC;
+PHA;
+NHANH Oxl_def.periodic_sum;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+FIRST_X_ASSUM (MP_TAC o (SPEC` i':num `));
+REWRITE_TAC[ARITH_RULE` 3 - 1 + i = i + 2 `];
+DISCH_THEN (ASSUME_TAC o SYM);
+UNDISCH_TAC` sum (0.. nn - 1 ) (cc_gg_v11 cc) < &0 `;
+ASM_REWRITE_TAC[REAL_ARITH` a < &0 <=> ~( &0 <= a) `]]);;
+
+
+
+
+
+
+
+let UNIQUE_QY = prove_by_refinement
+(` !cc. cc_bool_model_v11 cc /\
+          cc_bool_prep_v11 cc /\
+          cc_real_model_v11 cc /\
+          sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0
+          ==> (! j. cc_qy_v11 cc j /\ j IN 0..cc_card_v11 cc - 1  ==> 
+          (! k. ~( k = j) /\ k IN 0..cc_card_v11 cc - 1 
+             ==> ~(cc_qy_v11 cc k))) `,
+[NHANH UNPNFVW;
+REWRITE_TAC[cc_size_v11];
+REPEAT STRIP_TAC;
+ABBREV_TAC ` qys = {i | i IN 0..cc_card_v11 cc - 1 /\ cc_qy_v11 cc i} `;
+SUBGOAL_THEN` {j,k} SUBSET (qys: num -> bool) ` ASSUME_TAC;
+EXPAND_TAC "qys";
+REWRITE_TAC[SUBSET; EMPTY_SUBSET; IN_ELIM_THM; IN_INSERT; NOT_IN_EMPTY];
+REPLICATE_TAC 6 DOWN THEN PHA;
+MESON_TAC[];
+ASSUME_TAC (SPECL [` 0`;` cc_card_v11 cc - 1 `] FINITE_NUMSEG);
+SUBGOAL_THEN` FINITE (qys: num -> bool) ` ASSUME_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC` 0..cc_card_v11 cc - 1 `;
+ASM_REWRITE_TAC[];
+EXPAND_TAC "qys";
+SET_TAC[];
+SUBGOAL_THEN` CARD {j:num, k} <= CARD (qys:num -> bool) ` MP_TAC;
+MATCH_MP_TAC CARD_SUBSET;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+UNDISCH_TAC` ~( k = (j:num)) `;
+REWRITE_TAC[];
+
+ASM_CASES_TAC` k = (j:num) `;
+FIRST_X_ASSUM ACCEPT_TAC;
+DOWN;
+REWRITE_TAC[GSYM Geomdetail.CARD2];
+DOWN;
+REWRITE_TAC[INSERT_COMM];
+PHA;
+NHANH (ARITH_RULE` a <= b /\ a = 2 ==> ~( b <= 1 )`);
+ASM_REWRITE_TAC[]]);;
+
+
+
+let UNIQUE_QY2 = prove(`!cc. cc_bool_model_v11 cc /\
+          cc_bool_prep_v11 cc /\
+          cc_real_model_v11 cc /\
+          sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0
+          ==> (! j. cc_qy_v11 cc j /\ j IN 0..cc_card_v11 cc - 1  ==> 
+          (! k. cc_qy_v11 cc k/\ k IN 0..cc_card_v11 cc - 1 
+             ==> k = j))  `,
+NHANH UNIQUE_QY THEN GEN_TAC THEN STRIP_TAC THEN 
+FIRST_X_ASSUM NHANH THEN MESON_TAC[]);;
+
+
+
+let ASM_SEARCH_TC = asms_search;;
+
+
+
+let IPVICGW_C43_C44 = prove_by_refinement
+(`!cc. (cc_bool_model_v11 cc /\
+           cc_bool_prep_v11 cc /\
+           cc_real_model_v11 cc /\
+           sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0) /\
+          cc_card_v11 cc = 4
+          ==> (!i. cc_small_v11 cc i) `,
+[
+NHANH CHQSQEY;
+NHANH LXDEYBO;
+GEN_TAC THEN STRIP_TAC;
+ASSUME_TAC2 QX_NN00;
+ASSUME_TAC2 QY_NN00;
+SUBGOAL_THEN` cc_bool_model_v11 cc /\
+ cc_bool_prep_v11 cc /\
+ cc_real_model_v11 cc /\
+ sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0 ` MP_TAC;
+ASM_REWRITE_TAC[];
+NHANH Oxl_def.periodic_fn;
+REWRITE_TAC[cc_bool_model_v11; cc_real_model_v11; cc_bool_prep_v11];
+STRIP_TAC;
+ABBREV_TAC` nn = cc_card_v11 cc `;
+ASM_CASES_TAC` ! i. cc_small_v11 cc i `;
+FIRST_X_ASSUM ACCEPT_TAC;
+FIRST_X_ASSUM MP_TAC;
+REWRITE_TAC[NOT_FORALL_THM];
+STRIP_TAC;
+SUBGOAL_THEN` ~ cc_qu_v11 cc i /\ ~ cc_qu_v11 cc ( i + 3) ` MP_TAC;
+ASM_REWRITE_TAC[cc_qu_v11; cc_hassmall_v11; DE_MORGAN_THM];
+DISJ1_TAC;
+DISJ2_TAC;
+
+ASM_SEARCH_TCL [` periodic (cc_small_v11 cc) `] MP_TAC;
+REWRITE_TAC[periodic];
+ASM_SIMP_TAC[ARITH_RULE` (i + 3) + 1 = i + 4 `];
+STRIP_TAC;
+MP_TAC (SPEC` i:num` QU_OR_QXY);
+MP_TAC (SPEC` i + 3` QU_OR_QXY);
+ASM_REWRITE_TAC[];
+ONCE_REWRITE_TAC[DISJ_SYM];
+STRIP_TAC;
+STRIP_TAC;
+DOWN THEN DOWN;
+
+ASM_SEARCH_TCL [` periodic (cc_qy_v11 cc) `] MP_TAC;
+ASSUME_TAC2 (ISPECL [` cc_qy_v11 cc `; `nn:num `;` i:num `] Oxl_def.periodic_mod);
+ASSUME_TAC2 (ISPECL [` cc_qy_v11 cc `; `nn:num `;` i + 3`] Oxl_def.periodic_mod);
+REPLICATE_TAC 2 (FIRST_X_ASSUM SUBST1_TAC);
+ASM_REWRITE_TAC[];
+STRIP_TAC THEN STRIP_TAC;
+MP_TAC (SPEC_ALL UNIQUE_QY2);
+ANTS_TAC;
+UNDISCH_TAC` sum (0..nn - 1) (cc_gg_v11 cc) < &0 `;
+ASM_REWRITE_TAC[];
+
+DISCH_THEN (MP_TAC o (SPEC` i MOD 4 `));
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+MATCH_MP_TAC MOD_IN_NUMSEG;
+ARITH_TAC;
+DISCH_THEN (MP_TAC o (SPEC` (i + 3) MOD 4 `));
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+MATCH_MP_TAC MOD_IN_NUMSEG;
+ARITH_TAC;
+MP_TAC (let th = GEN_ALL MOD_INJ1 in
+SPECL [` 3 `;` 4 `] th);
+ANTS_TAC;
+ARITH_TAC;
+SIMP_TAC[];
+
+SUBGOAL_THEN` ~ cc_qy_v11 cc ((i + 1) MOD 4) /\ ~( cc_qy_v11 cc ((i + 2) MOD 4)) ` ASSUME_TAC;
+MP_TAC (SPEC_ALL UNIQUE_QY);
+ANTS_TAC;
+UNDISCH_TAC` sum (0..nn - 1) (cc_gg_v11 cc) < &0 `;
+ASM_REWRITE_TAC[];
+DISCH_THEN (MP_TAC o (SPEC`(i + 3) MOD 4 `));
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+SWITCH_TAC` nn = 4 `;
+ASM_SIMP_TAC[GSYM periodic_mod; MOD_IN_NUMSEG];
+STRIP_TAC;
+FIRST_ASSUM (MP_TAC o (SPEC` (i + 1) MOD 4 `));
+ANTS_TAC;
+SWITCH_TAC` nn = 4 `;
+ASM_SIMP_TAC[MOD_IN_NUMSEG];
+MP_TAC (let t = GEN_ALL MOD_INJ1 in SPECL [`2`; ` 4 `] t);
+ANTS_TAC;
+ARITH_TAC;
+DISCH_THEN (MP_TAC o (SPEC` i + 1 `));
+ASM_SIMP_TAC[ARITH_RULE` (i + 1) + 2 = i + 3 `];
+
+
+FIRST_X_ASSUM (MP_TAC o (SPEC` (i + 2) MOD 4 `));
+ANTS_TAC;
+SWITCH_TAC` nn = 4 `;
+MP_TAC (let t = GEN_ALL MOD_INJ1 in SPECL [` 1 `;` 4 `] t);
+ANTS_TAC;
+ARITH_TAC;
+ASM_SIMP_TAC[ARITH_RULE` i + 3 = (i + 2) + 1 `; MOD_IN_NUMSEG];
+SIMP_TAC[];
+MP_TAC (SPEC`(i + 1) MOD 4 ` QU_OR_QXY);
+MP_TAC (SPEC`(i + 2) MOD 4 ` QU_OR_QXY);
+ASM_SIMP_TAC[];
+ONCE_REWRITE_TAC[DISJ_SYM];
+STRIP_TAC THEN STRIP_TAC;
+REPLICATE_TAC 3 DOWN THEN PHA;
+SWITCH_TAC` nn = 4 `;
+ASM_REWRITE_TAC[];
+ASM_SIMP_TAC[GSYM periodic_mod];
+STRIP_TAC;
+ASSUME_TAC2 (ISPECL [` cc_gg_v11 cc `;` nn: num `] periodic_sum);
+SUBGOAL_THEN` &0 <= sum (i..nn - 1 + i) (cc_gg_v11 cc)` MP_TAC;
+MATCH_MP_TAC SUM_POS_LE;
+REWRITE_TAC[FINITE_NUMSEG];
+GEN_TAC;
+EXPAND_TAC "nn";
+REWRITE_TAC[IN_NUMSEG; ARITH_RULE` i <= x /\ x <= 4 - 1 + i <=> x = i \/ x = i + 1 \/ x = i + 2 \/ x = i + 3 `];
+REPLICATE_TAC 8 DOWN THEN PHA;
+ASM_SEARCH_TCL [` cc_qy_v11 cc i ==> &0 <= cc_gg_v11 cc i `] MP_TAC;
+ASM_SEARCH_TCL [` cc_qx_v11 cc i ==> &0 <= x `] MP_TAC;
+MESON_TAC[];
+ASM_REWRITE_TAC[REAL_ARITH` &0 <= a <=> ~( a < &0) `];
+SUBGOAL_THEN` cc_small_v11 cc (i + 1) /\ cc_small_v11 cc (i + 2) ` MP_TAC;
+DOWN;
+SWITCH_TAC` nn = 4 `;
+ASM_SIMP_TAC[GSYM periodic_mod];
+SIMP_TAC[ARITH_RULE` (i + 1) + 1 = i + 2 `; cc_qu_v11; cc_hassmall_v11];
+STRIP_TAC;
+
+(* =========== *)
+
+
+SUBGOAL_THEN` cc_eps <= cc_gg_v11 cc i ` MP_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` -- cc_eps <= cc_gg_v11 cc (i + 1) ` MP_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+UNDISCH_TAC` cc_qu_v11 cc ((i + 1) MOD 4 )`;
+SWITCH_TAC` nn = 4 `;
+ASM_SIMP_TAC[GSYM Oxl_def.periodic_mod];
+SUBGOAL_THEN` &0 <= cc_gg_v11 cc (i + 2)` MP_TAC;
+ASM_SEARCH_TCL [` cc_qx_v11 cc i ==> &0 <= x `] MATCH_MP_TAC;
+UNDISCH_TAC` cc_qx_v11 cc (( i + 2) MOD 4 ) `;
+SWITCH_TAC` nn = 4 `;
+ASM_SIMP_TAC[GSYM Oxl_def.periodic_mod];
+SUBGOAL_THEN` &0 <= cc_gg_v11 cc (i + 3) ` MP_TAC;
+ASM_SEARCH_TCL [` cc_qy_v11 cc i ==> &0 <= cc_gg_v11 cc i `] MATCH_MP_TAC;
+FIRST_X_ASSUM ACCEPT_TAC;
+REPEAT STRIP_TAC;
+SUBGOAL_THEN` &0 <= sum (0..nn - 1) (cc_gg_v11 cc) ` MP_TAC;
+ASM_REWRITE_TAC[];
+ASSUME_TAC2 (ISPECL [` cc_gg_v11 cc `;` nn:num `] Oxl_def.periodic_sum);
+FIRST_X_ASSUM (MP_TAC o SYM o (SPEC_ALL));
+ASM_SIMP_TAC[];
+STRIP_TAC;
+SIMP_TAC[ARITH_RULE` 4 - 1 + i = i + 3 `; SUM_CLAUSES_LEFT; ARITH_RULE` i <= i + 3 /\ i + 1 <= i + 3 /\ (i + 1) + 1 <= i + 3 /\ ((i +1) + 1) + 1 = i + 3 `];
+REWRITE_TAC[SUM_SING_NUMSEG; ARITH_RULE` (i + 1) + 1 = i + 2 `];
+UNDISCH_TAC` &0 <= cc_gg_v11 cc (i + 2) `;
+UNDISCH_TAC` &0 <= cc_gg_v11 cc (i + 3) `;
+UNDISCH_TAC` cc_eps <= cc_gg_v11 cc (i) `;
+UNDISCH_TAC` --cc_eps <= cc_gg_v11 cc (i + 1) `;
+PHA;
+REAL_ARITH_TAC;
+
+
+
+ASM_REWRITE_TAC[REAL_ARITH` &0 <= x <=> ~( x < &0) `];
+
+
+
+
+
+REPLICATE_TAC 3 DOWN THEN PHA;
+SWITCH_TAC` nn = 4 `;
+ASM_SIMP_TAC[GSYM Oxl_def.periodic_mod];
+STRIP_TAC;
+
+
+ASM_SEARCH_TCL [` !i. cc_qu_v11 cc i /\ cc_qy_v11 cc (i + 1)
+          ==> xac <= cc_gg_v11 cc i + cc_gg3a_v11 cc (i + 1) `] (MP_TAC o (SPEC` i + 2 `));
+ANTS_TAC;
+ASM_REWRITE_TAC[ARITH_RULE` (i + 2) + 1 = i + 3 `];
+ASM_REWRITE_TAC[ARITH_RULE` (i + 2) + 1 = i + 3 `];
+SUBGOAL_THEN` cc_gg3a_v11 cc (i + 3) + cc_gg3b_v11 cc (i + 3) <= cc_gg_v11 cc ( i + 3) ` MP_TAC;
+FIRST_ASSUM MATCH_MP_TAC;
+FIRST_ASSUM ACCEPT_TAC;
+STRIP_TAC;
+SUBGOAL_THEN` &0 <= cc_gg3b_v11 cc (i + 3) ` ASSUME_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+FIRST_X_ASSUM ACCEPT_TAC;
+STRIP_TAC;
+SUBGOAL_THEN` &0 <= cc_gg_v11 cc (i + 2) + cc_gg_v11 cc (i + 3)` MP_TAC;
+REPLICATE_TAC 3 DOWN THEN PHA;
+REAL_ARITH_TAC;
+
+
+
+ASM_SEARCH_TCL [` cc_qx_v11 cc (i) ==> &0 <= x `] (ASSUME_TAC2 o (SPEC` i + 1 `));
+ASM_SEARCH_TCL [` cc_qx_v11 cc (i) ==> &0 <= x `] (ASSUME_TAC2 o (SPEC` i + 1 `));
+ASM_SEARCH_TCL [` cc_qx_v11 cc (i) ==> &0 <= x `] (ASSUME_TAC2 o (SPEC` i:num `));
+STRIP_TAC;
+SUBGOAL_THEN` &0 <= sum (0..nn - 1 ) (cc_gg_v11 cc) ` MP_TAC;
+ASSUME_TAC2 (ISPECL [` cc_gg_v11 cc `; `nn:num `] Oxl_def.periodic_sum);
+FIRST_X_ASSUM (SUBST1_TAC o SYM o (SPEC` i:num `));
+EXPAND_TAC "nn";
+REWRITE_TAC[ARITH_RULE` 4 - 1 + i = i + 3 `];
+SIMP_TAC[ARITH_RULE` 4 - 1 + i = i + 3 `; SUM_CLAUSES_LEFT; ARITH_RULE` i <= i + 3 /\ i + 1 <= i + 3 /\ (i + 1) + 1 <= i + 3 /\ ((i +1) + 1) + 1 = i + 3 `];
+REWRITE_TAC[SUM_SING_NUMSEG; ARITH_RULE` (i + 1) + 1 = i + 2 `];
+DOWN THEN DOWN THEN DOWN THEN PHA;
+REAL_ARITH_TAC;
+ASM_REWRITE_TAC[REAL_ARITH` &0 <= x <=> ~( x < &0) `];
+REPLICATE_TAC 3 DOWN THEN PHA;
+SWITCH_TAC` nn = 4 `;
+ASM_SIMP_TAC[GSYM Oxl_def.periodic_mod];
+STRIP_TAC;
+
+(* =================== *)
+ASM_SEARCH_TCL [` !i. cc_qu_v11 cc i /\ cc_qy_v11 cc (i + 1)
+          ==> xax <= cc_gg_v11 cc i + cc_gg3a_v11 cc (i + 1) `] (MP_TAC o (SPEC` i + 2 `));
+ANTS_TAC;
+ASM_REWRITE_TAC[ARITH_RULE` (i + 2) + 1 = i + 3 `];
+ASM_REWRITE_TAC[ARITH_RULE` (i + 2) + 1 = i + 3 `];
+SUBGOAL_THEN` cc_gg3a_v11 cc (i + 3) + cc_gg3b_v11 cc (i + 3) <= cc_gg_v11 cc ( i + 3) ` MP_TAC;
+FIRST_ASSUM MATCH_MP_TAC;
+FIRST_ASSUM ACCEPT_TAC;
+STRIP_TAC;
+SUBGOAL_THEN` &0 <= cc_gg3b_v11 cc (i + 3) ` ASSUME_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+FIRST_X_ASSUM ACCEPT_TAC;
+STRIP_TAC;
+
+SUBGOAL_THEN` &0 <= cc_gg_v11 cc (i + 2) + cc_gg_v11 cc (i + 3)` MP_TAC;
+REPLICATE_TAC 3 DOWN THEN PHA;
+REAL_ARITH_TAC;
+STRIP_TAC;
+SUBGOAL_THEN` cc_small_v11 cc ( i + 1) ` MP_TAC;
+UNDISCH_TAC` cc_qu_v11 cc (i + 1) `;
+SIMP_TAC[cc_qu_v11; cc_hassmall_v11];
+STRIP_TAC;
+ASM_SEARCH_TCL [`!i. cc_qx_v11 cc i /\ cc_small_v11 cc (i + 1) /\ ~cc_small_v11 cc i
+       ==> cc_eps <= cc_gg_v11 cc i `] (ASSUME_TAC2 o SPEC_ALL);
+SUBGOAL_THEN` -- cc_eps <= cc_gg_v11 cc ( i + 1) ` MP_TAC;
+FIRST_ASSUM MATCH_MP_TAC;
+FIRST_X_ASSUM ACCEPT_TAC;
+
+REPEAT STRIP_TAC;
+SUBGOAL_THEN` &0 <= sum (0..nn - 1) (cc_gg_v11 cc) ` MP_TAC;
+ASM_REWRITE_TAC[];
+ASSUME_TAC2 (ISPECL [` cc_gg_v11 cc `;` nn:num `] Oxl_def.periodic_sum);
+FIRST_X_ASSUM (MP_TAC o SYM o (SPEC_ALL));
+
+
+ASM_SIMP_TAC[];
+STRIP_TAC;
+EXPAND_TAC "nn";
+REWRITE_TAC[ARITH_RULE` 4 - 1 + i = i + 3 `];
+SIMP_TAC[ARITH_RULE` 4 - 1 + i = i + 3 `; SUM_CLAUSES_LEFT; ARITH_RULE` i <= i + 3 /\ i + 1 <= i + 3 /\ (i + 1) + 1 <= i + 3 /\ ((i +1) + 1) + 1 = i + 3 `];
+REWRITE_TAC[SUM_SING_NUMSEG; ARITH_RULE` (i + 1) + 1 = i + 2 `];
+
+
+REPLICATE_TAC 4 DOWN THEN PHA;
+DOWN;
+REAL_ARITH_TAC;
+
+
+
+ASM_REWRITE_TAC[REAL_ARITH` &0 <= a <=> ~( a < &0) `];
+STRIP_TAC;
+SUBGOAL_THEN` &0 <= cc_gg_v11 cc i + cc_gg_v11 cc (i + 1) ` MP_TAC;
+ASM_CASES_TAC` cc_qy_v11 cc (i + 1) `;
+MATCH_MP_TAC REAL_LE_ADD;
+ASM_SIMP_TAC[];
+ASM_CASES_TAC` cc_qx_v11 cc (i + 1) `;
+MATCH_MP_TAC REAL_LE_ADD;
+ASM_SIMP_TAC[];
+MP_TAC (SPEC` i + 1 ` QU_OR_QXY);
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+ASM_SEARCH_TCL [` cc_qu_v11 cc ( i + 1) /\ cc_qy_v11 cc i `] (ASSUME_TAC2 o SPEC_ALL);
+ASM_SEARCH_TCL [` cc_gg3a_v11 cc i + x <= y `] (ASSUME_TAC2 o SPEC_ALL);
+ASM_SEARCH_TCL  [` x ==> &0 <= cc_gg3a_v11 cc i  `] (ASSUME_TAC2 o SPEC_ALL);
+DOWNS 3;
+REWRITE_TAC[];
+REAL_ARITH_TAC;
+
+
+STRIP_TAC;
+SUBGOAL_THEN` &0 <= cc_gg_v11 cc (i + 2) + cc_gg_v11 cc (i + 3) ` MP_TAC;
+ASM_CASES_TAC` cc_qy_v11 cc (i + 2) `;
+MATCH_MP_TAC REAL_LE_ADD;
+ASM_SIMP_TAC[];
+ASM_CASES_TAC` cc_qx_v11 cc (i + 2) `;
+MATCH_MP_TAC REAL_LE_ADD;
+ASM_SIMP_TAC[];
+
+MP_TAC (SPEC ` i + 2 ` QU_OR_QXY);
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN`~ cc_small_v11 cc (i + 4) ` MP_TAC;
+UNDISCH_TAC` periodic (cc_small_v11 cc) nn `;
+ASM_SIMP_TAC[Oxl_def.periodic];
+ASM_SEARCH_TCL [` cc_qu_v11 cc i ==> -- x <= y `] NHANH;
+STRIP_TAC;
+
+
+REWRITE_TAC[cc_qu_v11; cc_hassmall_v11; ARITH_RULE` (i + 2) + 1 = i + 3 `];
+STRIP_TAC;
+ASM_SEARCH_TCL [` !i. cc_qx_v11 cc i /\ cc_small_v11 cc (i) /\ ~cc_small_v11 cc (i + 1)
+       ==> cc_eps <= cc_gg_v11 cc i ` ] (MP_TAC o (SPEC` i + 3 `));
+ANTS_TAC;
+ASM_REWRITE_TAC[ARITH_RULE` (i + 3) + 1 = i + 4 `];
+DOWN;
+REAL_ARITH_TAC;
+STRIP_TAC;
+
+SUBGOAL_THEN` &0 <= sum (0..nn - 1) (cc_gg_v11 cc) ` MP_TAC;
+SWITCH_TAC ` nn = 4 `;
+ASM_REWRITE_TAC[];
+ASSUME_TAC2 (ISPECL [` cc_gg_v11 cc `; ` nn:num `] Oxl_def.periodic_sum);
+FIRST_X_ASSUM (SUBST1_TAC o SYM o SPEC_ALL);
+FIRST_X_ASSUM (SUBST1_TAC o SYM);
+SIMP_TAC[ARITH_RULE`4 - 1 + i = i + 3 `; SUM_CLAUSES_LEFT; ARITH_RULE` i <= i + (j:num) /\ i + 1 <= i + 3 /\ (i + 1) + 1 <= i + 3  `; LE_TRANS];
+REWRITE_TAC[ARITH_RULE` ((i + 1) + 1) + 1 = i + 3 `; SUM_SING_NUMSEG];
+
+DOWNS 2;
+REWRITE_TAC[ARITH_RULE` (i + 1) + 1 = i + 2 `];
+REAL_ARITH_TAC;
+ASM_REWRITE_TAC[REAL_ARITH` &0 <= x <=> ~( x < &0) `];
+
+
+(* pkpk *)
+
+SUBGOAL_THEN` &0 <= cc_gg_v11 cc i + cc_gg_v11 cc (i + 1) ` ASSUME_TAC;
+ASM_CASES_TAC` cc_qy_v11 cc (i + 1) ` ;
+SWITCH_TAC` nn = 4 `;
+MATCH_MP_TAC REAL_LE_ADD;
+ASM_SIMP_TAC[];
+ASM_CASES_TAC` cc_qx_v11 cc (i + 1) `;
+SWITCH_TAC` nn = 4 `;
+MATCH_MP_TAC REAL_LE_ADD;
+ASM_SIMP_TAC[];
+MP_TAC (SPEC` i + 1 ` QU_OR_QXY);
+ASM_REWRITE_TAC[];
+ASM_SEARCH_TCL [` cc_qu_v11 cc i ==> -- x <= y `] NHANH;
+STRIP_TAC;
+SUBGOAL_THEN` cc_eps <= cc_gg_v11 cc i ` MP_TAC;
+FIRST_ASSUM MATCH_MP_TAC;
+ASM_REWRITE_TAC[];
+DOWNS 2;
+SIMP_TAC[cc_qu_v11; cc_hassmall_v11];
+DOWN;
+REAL_ARITH_TAC;
+
+SUBGOAL_THEN` ~cc_small_v11 cc (i + 4) ` ASSUME_TAC;
+ASM_SEARCH_TCL [` periodic (cc_small_v11 cc) `] MP_TAC;
+SIMP_TAC[Oxl_def.periodic];
+SWITCH_TAC` nn = 4 `;
+ASM_SIMP_TAC[];
+SUBGOAL_THEN` &0 <= cc_gg_v11 cc (i + 2) + cc_gg_v11 cc (i + 3) ` MP_TAC;
+ASM_CASES_TAC` cc_qy_v11 cc ( i + 2) \/ cc_qx_v11 cc (i + 2)`;
+MATCH_MP_TAC REAL_LE_ADD;
+ASM_SIMP_TAC[];
+DOWN THEN STRIP_TAC;
+ASM_SIMP_TAC[];
+ASM_SIMP_TAC[];
+MP_TAC (SPEC` i + 2 ` QU_OR_QXY);
+DOWN;
+SIMP_TAC[DE_MORGAN_THM];
+ASM_SEARCH_TCL [` cc_qu_v11 cc i ==> -- x <= y `] NHANH;
+STRIP_TAC THEN STRIP_TAC;
+SUBGOAL_THEN` cc_eps <= cc_gg_v11 cc (i + 3) ` MP_TAC;
+ASM_SEARCH_TCL [` !i. cc_qx_v11 cc i /\ cc_small_v11 cc i /\ ~cc_small_v11 cc (i + 1)
+          ==> cc_eps <= cc_gg_v11 cc i `] MATCH_MP_TAC;
+UNDISCH_TAC` ~cc_small_v11 cc (i + 4) `;
+ASM_SIMP_TAC[ARITH_RULE` (i + 3) + 1 = i + 4 `];
+UNDISCH_TAC` cc_qu_v11 cc (i + 2) `;
+SIMP_TAC[cc_qu_v11; cc_hassmall_v11; ARITH_RULE` (i + 2) + 1 = i + 3 `];
+DOWN;
+REAL_ARITH_TAC;
+
+
+STRIP_TAC;
+SUBGOAL_THEN` &0 <= sum (0..nn - 1) (cc_gg_v11 cc) ` MP_TAC;
+ASSUME_TAC2 (ISPECL [` cc_gg_v11 cc `;` nn:num `] Oxl_def.periodic_sum);
+FIRST_X_ASSUM (SUBST1_TAC o SYM o SPEC_ALL);
+ASM_REWRITE_TAC[ARITH_RULE` 4 - 1 + i = i + 3 `];
+SIMP_TAC[SUM_CLAUSES_LEFT; ARITH_RULE` i <= i + 3 /\ i + 1 <= i + 3 /\ (i + 1) + 1 = i + 2 /\ i + 2 <= i + 3 /\ (i + 2 ) + 1 = i + 3 /\ (i + 1) + 2 = i + 3 `];
+REWRITE_TAC[SUM_SING_NUMSEG];
+DOWNS 3;
+REAL_ARITH_TAC;
+ASM_REWRITE_TAC[REAL_ARITH` &0 <= x <=> ~( x < &0) `]]);;
+
+
+
+
+
+let EXISTS_QY_CARD5 = prove_by_refinement
+(` (cc_bool_model_v11 cc /\
+           cc_bool_prep_v11 cc /\
+           cc_real_model_v11 cc /\
+           sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0) /\
+          cc_card_v11 cc = 5 
+==> (? i. i < 5 /\ cc_qy_v11 cc i)`,
+[NHANH UNPNFVW;
+NHANH LXDEYBO;
+REWRITE_TAC[cc_size_v11; cc_qy_v11];
+MP_TAC (SET_RULE` DISJOINT {i | i IN 0..cc_card_v11 cc - 1 /\ cc_4cell_v11 cc i} {i | i IN 0..cc_card_v11 cc - 1 /\ ~cc_4cell_v11 cc i}`);
+MP_TAC (SET_RULE` {i | i IN 0..cc_card_v11 cc - 1 /\ cc_4cell_v11 cc i} UNION {i | i IN 0..cc_card_v11 cc - 1 /\ ~cc_4cell_v11 cc i} = 0..cc_card_v11 cc - 1`);
+REPEAT STRIP_TAC;
+FIRST_X_ASSUM SUBST_ALL_TAC;
+ABBREV_TAC ` s1 = {i | i IN 0..5 - 1 /\ cc_4cell_v11 cc i}`;
+ABBREV_TAC ` s2 = {i | i IN 0..5 - 1 /\ ~cc_4cell_v11 cc i}`;
+SUBGOAL_THEN` CARD (s1 UNION (s2:num -> bool)) = CARD s1 + CARD s2 ` MP_TAC;
+MATCH_MP_TAC CARD_UNION;
+ASM_REWRITE_TAC[GSYM DISJOINT];
+ASM_REWRITE_TAC[GSYM FINITE_UNION; FINITE_NUMSEG];
+ASM_SIMP_TAC[CARD_NUMSEG; ARITH_RULE` (5 - 1 + 1) - 0 = 5 `];
+STRIP_TAC;
+ASSUME_TAC2 (ARITH_RULE` 5 = CARD (s1:num -> bool) + CARD (s2:num -> bool) /\ CARD s1 <= 4 /\ CARD s2 <= 1 
+==> CARD s2 = 1 `);
+DOWN;
+ASM_CASES_TAC` (s2:num -> bool) = {} `;
+ASM_REWRITE_TAC[CARD_EMPTY; ARITH_RULE` ~( 0 = 1) `];
+DOWN;
+REWRITE_TAC[GSYM MEMBER_NOT_EMPTY];
+FIRST_X_ASSUM (SUBST1_TAC o SYM);
+EXPAND_TAC "s2";
+SIMP_TAC[IN_ELIM_THM; IN_NUMSEG; ARITH_RULE`x <= 5 - 1 <=> x < 5 `; LE_0]]);;
+
+
+
+
+let NUMSEG_INTER_22 = prove_by_refinement(
+` ~(nn = 0) ==> ( (i <= x /\ x <= i + nn - 1) <=> (? k. k < nn /\ x = i + k )) `,
+[STRIP_TAC;
+EQ_TAC;
+STRIP_TAC;
+EXISTS_TAC` x - (i:num) `;
+DOWN_TAC;
+ARITH_TAC;
+STRIP_TAC;
+DOWN_TAC;
+ARITH_TAC]);;
+
+
+let PERIODIC_IMAGE_EQUAL = prove_by_refinement(
+` ~( nn = 0) /\ periodic (f:num -> A) nn ==> IMAGE f (0..nn - 1) = IMAGE f (i..i + nn - 1) `,
+[NHANH MOD_NUMSEG;
+STRIP_TAC;
+FIRST_X_ASSUM (MP_TAC o (SPEC` i:num `));
+SIMP_TAC[];
+ASSUME_TAC2 (
+REWRITE_RULE[RIGHT_FORALL_IMP_THM] (ISPECL [` f:num -> A `;` nn:num `] Oxl_def.periodic_mod));
+FIRST_X_ASSUM (ASSUME_TAC o GSYM);
+ASM_SIMP_TAC[IMAGE; IN_ELIM_THM; IN_NUMSEG];
+ASM_SIMP_TAC[NUMSEG_INTER_22];
+DOWN;
+SET_TAC[]]);;
+
+let CARD5_1074_LE_QYI = prove_by_refinement(` (cc_bool_model_v11 cc /\
+            cc_bool_prep_v11 cc /\
+            cc_real_model_v11 cc /\
+            sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0 ) /\
+(!i. cc_4cell_v11 cc i
+          ==> a_spine5 + b_spine5 * cc_azim_v11 cc i <= cc_gg_v11 cc i ) /\
+( !i. cc_qy_v11 cc i ==> #0.008 * cc_azim_v11 cc i <= cc_gg_v11 cc i ) /\
+cc_qy_v11 cc i /\ cc_card_v11 cc = 5 /\
+periodic (cc_gg_v11 cc) (cc_card_v11 cc ) /\
+(!i. #0.606 <= cc_azim_v11 cc i ) /\
+sum (0..cc_card_v11 cc - 1) (cc_azim_v11 cc) = &2 * pi /\
+ #1.074 <= cc_azim_v11 cc i 
+==> &0 <= sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) `,
+
+[NHANH UNPNFVW;
+
+REWRITE_TAC[TAUT` a /\ b /\ c <=> (a/\b) /\ c `];
+IMP_TAC;
+STRIP_TAC;
+DISCH_TAC;
+ABBREV_TAC` S = { i + k | k | k < 5 /\ cc_qy_v11 cc (i + k ) } ` ;
+SUBGOAL_THEN` i IN (S:num -> bool) ` ASSUME_TAC;
+EXPAND_TAC "S";
+REWRITE_TAC[IN_ELIM_THM];
+EXISTS_TAC` 0 `;
+ASM_REWRITE_TAC[ADD_CLAUSES];
+ARITH_TAC;
+SUBGOAL_THEN` S SUBSET { i + k | k | k < 5 } ` ASSUME_TAC;
+EXPAND_TAC "S";
+CONV_TAC SET_RULE;
+ASSUME_TAC (SPEC` 5 ` FINITE_NUMSEG_LT );
+SUBGOAL_THEN` IMAGE (\k. i + k ) { m | m < 5} = {i + k | k < 5 }` ASSUME_TAC;
+REWRITE_TAC[EXTENSION; IN_IMAGE; IN_ELIM_THM];
+GEN_TAC;
+MESON_TAC[];
+UNDISCH_TAC` FINITE {m | m < 5} `;
+NHANH (ISPEC `(\x. (i:num) + x ) ` FINITE_IMAGE);
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+SUBGOAL_THEN` sum {i:num} ( cc_azim_v11 cc ) <= sum S ( cc_azim_v11 cc ) ` ASSUME_TAC;
+MATCH_MP_TAC SUM_SUBSET_SIMPLE;
+CONJ_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC` {i + k | k < 5 } ` ;
+ASM_REWRITE_TAC[];
+ASM_REWRITE_TAC[INSERT_SUBSET; EMPTY_SUBSET];
+GEN_TAC THEN STRIP_TAC;
+MATCH_MP_TAC REAL_LE_TRANS;
+EXISTS_TAC` #0.606 `;
+ASM_REWRITE_TAC[];
+REAL_ARITH_TAC;
+
+MP_TAC (ISPECL [` cc_gg_v11 cc `;` 5 `] Oxl_def.periodic_sum);
+ANTS_TAC;
+UNDISCH_TAC` periodic (cc_gg_v11 cc) (cc_card_v11 cc) `;
+ASM_SIMP_TAC[];
+STRIP_TAC;
+ARITH_TAC;
+DISCH_THEN (ASSUME_TAC o SYM o SPEC_ALL);
+ABBREV_TAC` SS = {i + k | k | k < 5 /\ ~cc_qy_v11 cc (i + k)} `;
+SUBGOAL_THEN` S INTER (SS: num -> bool) = {} ` ASSUME_TAC;
+EXPAND_TAC "S";
+EXPAND_TAC "SS";
+CONV_TAC SET_RULE;
+SUBGOAL_THEN` { i + k | k | k < 5 } = S UNION (SS: num -> bool)` ASSUME_TAC;
+EXPAND_TAC "S";
+EXPAND_TAC "SS";
+CONV_TAC SET_RULE;
+ASM_REWRITE_TAC[numseg];
+SUBGOAL_THEN` {x | i <= x /\ x <= 5 - 1 + i} = {i + k | k < 5 } ` ASSUME_TAC;
+REWRITE_TAC[EXTENSION; IN_ELIM_THM];
+GEN_TAC;
+EQ_TAC;
+STRIP_TAC;
+EXISTS_TAC` x - (i:num) `;
+DOWN THEN DOWN;
+ARITH_TAC;
+STRIP_TAC;
+DOWNS 2;
+ARITH_TAC;
+ASM_REWRITE_TAC[];
+ASSUME_TAC2 UNIQUE_QY;
+DOWN THEN PHA;
+DISCH_THEN (MP_TAC o (SPEC` i MOD 5 ` ));
+ASM_REWRITE_TAC[];
+ANTS_TAC;
+MP_TAC (ARITH_RULE` ~( 5 = 0 ) `);
+SIMP_TAC[Oxl_def.MOD_IN_NUMSEG];
+ASSUME_TAC2 Oxl_def.periodic_fn;
+DOWN;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+DOWN THEN PHA;
+SIMP_TAC [ GSYM Oxl_def.periodic_mod];
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+SUBGOAL_THEN` cc_qy_v11 cc (i MOD 5 ) ` ASSUME_TAC;
+ASSUME_TAC2 Oxl_def.periodic_fn;
+DOWN;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+MP_TAC (ARITH_RULE` ~( 5 = 0 ) `);
+DOWN THEN PHA;
+SIMP_TAC [ GSYM Oxl_def.periodic_mod];
+ASM_REWRITE_TAC[];
+
+SUBGOAL_THEN` FINITE (S: num -> bool) ` MP_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC` {i + k | k < 5} `;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` FINITE (SS: num -> bool) ` MP_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC` {i + k | k < 5} `;
+ASM_REWRITE_TAC[];
+CONV_TAC SET_RULE;
+PHA THEN STRIP_TAC;
+SUBGOAL_THEN` DISJOINT S (SS: num -> bool) ` MP_TAC;
+ASM_REWRITE_TAC[DISJOINT];
+DOWN THEN DOWN THEN PHA;
+SIMP_TAC[SUM_UNION];
+STRIP_TAC;
+SUBGOAL_THEN`!i.  cc_qy_v11 cc (i MOD 5 ) = cc_qy_v11 cc i ` ASSUME_TAC;
+MATCH_MP_TAC (* Xwitccn. *) Oxl_def.PERIODIC_PROPERTY;
+ASSUME_TAC2 Oxl_def.periodic_fn;
+DOWN;
+ASM_SIMP_TAC[];
+STRIP_TAC;
+ARITH_TAC;
+ASSUME_TAC2 Oxl_def.periodic_fn;
+DOWN THEN ASM_REWRITE_TAC[] THEN STRIP_TAC;
+
+
+
+
+SUBGOAL_THEN` S = {i:num } ` ASSUME_TAC;
+REWRITE_TAC[EXTENSION; IN_INSERT; NOT_IN_EMPTY];
+EXPAND_TAC "S";
+REWRITE_TAC[IN_ELIM_THM];
+GEN_TAC;
+EQ_TAC;
+STRIP_TAC;
+ASM_CASES_TAC` k = 0 `;
+DOWN THEN DOWN THEN ARITH_TAC;
+
+UNDISCH_TAC` !k. ~(k = i MOD 5) /\ k IN 0..5 - 1 ==> ~cc_qy_v11 cc k `;
+DISCH_THEN (MP_TAC o (SPEC` ( i + k ) MOD 5 `));
+ANTS_TAC;
+CONJ_TAC;
+
+
+MP_TAC (SPECL [` k:num `;` 5 `] Oxl_def.MOD_INJ1_ALT);
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+ARITH_TAC;
+SIMP_TAC[];
+MATCH_MP_TAC Oxl_def.MOD_IN_NUMSEG;
+ARITH_TAC;
+ASM_REWRITE_TAC[];
+
+STRIP_TAC;
+EXISTS_TAC` 0 `;
+ASM_REWRITE_TAC[ADD_CLAUSES];
+ARITH_TAC;
+
+SUBGOAL_THEN` SS = { i + k | k < 5 } DIFF S ` ASSUME_TAC;
+ASM_REWRITE_TAC[];
+MATCH_MP_TAC (SET_RULE` SS INTER S = {} ==> SS = ( S UNION SS ) DIFF S  `);
+UNDISCH_TAC` (S:num -> bool) INTER SS = {} `;
+ASM_REWRITE_TAC[INTER_COMM];
+SUBGOAL_THEN` SS = { i + k | 0 < k /\ k < 5 } ` ASSUME_TAC;
+DOWN;
+FIRST_X_ASSUM SUBST1_TAC;
+SIMP_TAC[];
+DISCH_TAC;
+REWRITE_TAC[EXTENSION; IN_ELIM_THM; IN_DIFF; IN_INSERT; NOT_IN_EMPTY];
+GEN_TAC;
+MESON_TAC[ARITH_RULE` ~( 0 < k ) <=> x + k = x `];
+
+SUBGOAL_THEN` cc_bool_model_v11 cc /\ cc_real_model_v11 cc ` MP_TAC;
+ASM_REWRITE_TAC[];
+REWRITE_TAC[cc_bool_model_v11; cc_real_model_v11];
+STRIP_TAC;
+SUBGOAL_THEN` ! i. i IN SS ==> 
+       a_spine5 + b_spine5 * cc_azim_v11 cc i <= cc_gg_v11 cc i ` ASSUME_TAC;
+EXPAND_TAC "SS";
+REWRITE_TAC[IN_ELIM_THM];
+GEN_TAC THEN STRIP_TAC;
+ASM_SEARCH_TCL [` !i. cc_4cell_v11 cc i ==>
+       a_spine5 + b_spine5 * cc_azim_v11 cc i <= cc_gg_v11 cc i `] MATCH_MP_TAC;
+ASM_REWRITE_TAC[];
+DOWN THEN DOWN;
+SIMP_TAC[cc_qy_v11];
+
+DOWN;
+UNDISCH_TAC` FINITE (SS: num -> bool) `;
+PHA;
+NHANH SUM_LE;
+UNDISCH_TAC` {i + k | k < 5} = S UNION SS `;
+DISCH_THEN (ASSUME_TAC o SYM);
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` SS = {i + k | k < 5} DIFF S `;
+UNDISCH_TAC` SS = {i + k | 0 < k /\ k < 5} `;
+ASM_REWRITE_TAC[];
+DISCH_THEN (ASSUME_TAC o SYM);
+DISCH_THEN (ASSUME_TAC o SYM);
+ASM_REWRITE_TAC[SUM_SING; ETA_AX];
+SUBGOAL_THEN`! a f. (\(i:num). (a:real) + f i ) = (\i. (\i. a ) i + f i )` ASSUME_TAC; 
+REWRITE_TAC[BETA_THM];
+FIRST_X_ASSUM (fun x -> ONCE_REWRITE_TAC[x]);
+IMP_TAC;
+ASM_SIMP_TAC[SUM_ADD; Vol1.SUM_CONST2; SUM_LMUL];
+SUBGOAL_THEN` CARD {i + k | k < 5 } = 5 ` ASSUME_TAC;
+MATCH_MP_TAC Topology.CARD_FINITE_SERIES_EQ;
+GEN_TAC THEN GEN_TAC;
+ARITH_TAC;
+SUBGOAL_THEN` CARD ({i + k | k < 5} DIFF {i}) = CARD {i + k | k < 5} - CARD {i} ` ASSUME_TAC;
+MATCH_MP_TAC CARD_DIFF;
+ASM_REWRITE_TAC[INSERT_SUBSET];
+
+REWRITE_TAC[EMPTY_SUBSET; IN_ELIM_THM];
+EXISTS_TAC` 0 `;
+CONJ_TAC;
+ARITH_TAC;
+ARITH_TAC;
+DOWN;
+ASM_REWRITE_TAC[CARD_SING];
+STRIP_TAC THEN STRIP_TAC;
+MP_TAC (GSYM (SPECL [` cc_azim_v11 cc `;` 5`] Oxl_def.periodic_sum));
+ANTS_TAC;
+UNDISCH_TAC` periodic (cc_azim_v11 cc) (cc_card_v11 cc)`;
+ASM_REWRITE_TAC[];
+SIMP_TAC[];
+STRIP_TAC;
+ARITH_TAC;
+ASM_REWRITE_TAC[ARITH_RULE` 5 - 1 = 4 `];
+STRIP_TAC;
+STRIP_TAC;
+UNDISCH_TAC` sum (0..cc_card_v11 cc - 1) (cc_azim_v11 cc) = &2 * pi `;
+ASM_REWRITE_TAC[ARITH_RULE` 5 - 1 = 4 `];
+SUBGOAL_THEN` i.. 4 + i = S UNION SS ` ASSUME_TAC;
+ASM_REWRITE_TAC[];
+REWRITE_TAC[numseg; EXTENSION; IN_ELIM_THM];
+GEN_TAC;
+EQ_TAC;
+STRIP_TAC;
+EXISTS_TAC` x - (i:num) `;
+DOWN THEN DOWN;
+ARITH_TAC;
+STRIP_TAC;
+DOWN THEN DOWN;
+ARITH_TAC;
+
+
+FIRST_ASSUM SUBST1_TAC;
+ASSUME_TAC2 (ISPECL [` cc_azim_v11 cc `;` S: num -> bool `;` SS: num -> bool `] SUM_UNION);
+FIRST_ASSUM SUBST1_TAC;
+ASM_REWRITE_TAC[SUM_SING; REAL_ARITH` a + b = x <=> b = x - a` ];
+STRIP_TAC;
+UNDISCH_TAC` &4 * a_spine5 + b_spine5 * sum SS (\i. cc_azim_v11 cc i) <=
+      sum SS (cc_gg_v11 cc) `;
+ASM_REWRITE_TAC[ETA_AX];
+UNDISCH_TAC` #1.074 <= cc_azim_v11 cc i `;
+REWRITE_TAC[Sphere.a_spine5; Sphere.b_spine5];
+MP_TAC (
+REWRITE_RULE[] (
+REWRITE_CONV[Flyspeck_constants.bounds]` #3.14159 < pi /\ pi < #3.1416 `));
+STRIP_TAC THEN STRIP_TAC;
+MATCH_MP_TAC (REAL_ARITH` &0 <= x + b ==> b <= c ==> &0 <= x + c `);
+SUBGOAL_THEN` #0.008 * cc_azim_v11 cc i <= cc_gg_v11 cc i ` ASSUME_TAC;
+ASM_SIMP_TAC[];
+DOWNS 4;
+REAL_ARITH_TAC]);;
+
+
+
+
+let MOD_INJ11 = REWRITE_RULE[GSYM RIGHT_FORALL_IMP_THM] MOD_INJ1;;
+
+
+let PI_BOUNDS = REWRITE_RULE[] (REWRITE_CONV[Flyspeck_constants.bounds]` #3.14159 < pi /\ pi < #3.1416 `);;
+
+
+
+
+let CARD5_LT_1074_QYI = 
+prove_by_refinement (` (cc_bool_model_v11 cc /\
+            cc_bool_prep_v11 cc /\
+            cc_real_model_v11 cc /\
+            sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0 ) /\
+
+cc_qy_v11 cc i /\ cc_card_v11 cc = 5 /\
+ cc_azim_v11 cc i <  #1.074
+==> &0 <= sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) `,
+[REPEAT STRIP_TAC;
+ASSUME_TAC2 QY_NN00 THEN ASSUME_TAC2 QX_NN00;
+ASSUME_TAC2 EXISTS_QY_CARD5;
+DOWN_TAC;
+NHANH Oxl_def.periodic_fn;
+STRIP_TAC;
+SUBGOAL_THEN` cc_bool_model_v11 cc /\
+          cc_bool_prep_v11 cc /\
+          cc_real_model_v11 cc ` MP_TAC;
+ASM_REWRITE_TAC[];
+REWRITE_TAC[cc_bool_model_v11; cc_real_model_v11];
+STRIP_TAC THEN ASSUME_TAC2 UNIQUE_QY;
+
+
+
+
+
+
+
+ASM_CASES_TAC` cc_small_eta_v11 cc i \/ cc_small_eta_v11 cc ( i + 1) `;
+SUBGOAL_THEN` a_spine5 + b_spine5 * cc_azim_v11 cc i <= cc_gg_v11 cc i ` ASSUME_TAC;
+UNDISCH_TAC` !i. cc_qy_v11 cc i /\
+          cc_small_eta_v11 cc i /\
+          cc_small_eta_v11 cc (i + 1)
+          ==> a_spine5 + b_spine5 * cc_azim_v11 cc i <= cc_gg_v11 cc i `;
+UNDISCH_TAC` !i. cc_qy_v11 cc i /\
+          ~cc_small_eta_v11 cc i /\
+          cc_small_eta_v11 cc (i + 1) /\
+          cc_azim_v11 cc i < #1.074
+          ==> a_spine5 + b_spine5 * cc_azim_v11 cc i <= cc_gg_v11 cc i `;
+UNDISCH_TAC` !i. cc_qy_v11 cc i /\
+          cc_small_eta_v11 cc i /\
+          ~cc_small_eta_v11 cc (i + 1) /\
+          cc_azim_v11 cc i < #1.074
+          ==> a_spine5 + b_spine5 * cc_azim_v11 cc i <= cc_gg_v11 cc i `;
+UNDISCH_TAC` cc_azim_v11 cc i < #1.074 `;
+UNDISCH_TAC` cc_qy_v11 cc i `;
+DOWN;
+MESON_TAC[];
+
+
+MP_TAC (REWRITE_RULE[RIGHT_FORALL_IMP_THM ] (ISPECL [` cc_qy_v11 cc `;` 5 `] periodic_mod));
+ANTS_TAC;
+UNDISCH_TAC` periodic (cc_qy_v11 cc) (cc_card_v11 cc ) `;
+ASM_REWRITE_TAC[];
+SIMP_TAC[];
+STRIP_TAC;
+ARITH_TAC;
+DISCH_THEN (ASSUME_TAC o GSYM);
+UNDISCH_TAC` !j. cc_qy_v11 cc j
+          ==> j IN 0..cc_card_v11 cc - 1
+          ==> (!k. ~(k = j)
+                   ==> k IN 0..cc_card_v11 cc - 1
+                   ==> ~cc_qy_v11 cc k) `;
+PHA;
+STRIP_TAC;
+FIRST_ASSUM (MP_TAC o (SPEC` i MOD 5 ` ));
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+ASSUME_TAC (ARITH_RULE` ~( 5 = 0) `);
+ASM_SIMP_TAC[Oxl_def.MOD_IN_NUMSEG];
+STRIP_TAC;
+SUBGOAL_THEN` ! k. 0 < k /\ k < 5 ==> ~cc_qy_v11 cc ((i + k) MOD 5 ) ` ASSUME_TAC;
+GEN_TAC THEN STRIP_TAC;
+
+
+FIRST_X_ASSUM MATCH_MP_TAC;
+ASSUME_TAC (ARITH_RULE` ~( 5 = 0) `);
+ASM_SIMP_TAC[Oxl_def.MOD_IN_NUMSEG];
+MATCH_MP_TAC (GSYM MOD_INJ11);
+ASM_REWRITE_TAC[ARITH_RULE` ~( 0 = x) <=> 0 < x `];
+ARITH_TAC;
+
+SUBGOAL_THEN` !k. k < 5 ==> a_spine5 + b_spine5 * cc_azim_v11 cc (i + k ) <= cc_gg_v11 cc (i + k ) ` ASSUME_TAC;
+GEN_TAC;
+ASM_CASES_TAC` k = 0 `;
+ASM_REWRITE_TAC[ADD_CLAUSES];
+STRIP_TAC;
+UNDISCH_TAC` !i. cc_4cell_v11 cc i
+          ==> a_spine5 + b_spine5 * cc_azim_v11 cc i <= cc_gg_v11 cc i `;
+DISCH_THEN MATCH_MP_TAC;
+UNDISCH_TAC` !k. 0 < k /\ k < 5 ==> ~cc_qy_v11 cc ((i + k) MOD 5) `;
+ASM_REWRITE_TAC[];
+REWRITE_TAC[cc_qy_v11];
+DISCH_THEN MATCH_MP_TAC;
+DOWN THEN DOWN THEN SIMP_TAC[];
+ARITH_TAC;
+MP_TAC (ISPECL [` cc_gg_v11 cc `;` 5 `] Oxl_def.periodic_sum);
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+
+UNDISCH_TAC` periodic (cc_gg_v11 cc) (cc_card_v11 cc) `;
+ASM_SIMP_TAC[];
+ARITH_TAC;
+
+DISCH_THEN (ASSUME_TAC o GSYM);
+ASM_REWRITE_TAC[ARITH_RULE` 5 - 1 = 4 `];
+SUBGOAL_THEN` ! j. j IN (i..4 + i) ==>  a_spine5 + b_spine5 * cc_azim_v11 cc (j) <=
+              cc_gg_v11 cc (j) ` ASSUME_TAC;
+GEN_TAC;
+REWRITE_TAC[IN_NUMSEG];
+ABBREV_TAC` ij = j - (i:num) `;
+NHANH (ARITH_RULE` (i:num) <= j ==> j = i + ( j - i) ` );
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+UNDISCH_TAC` j = i + ij:num `;
+DISCH_THEN SUBST1_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+EXPAND_TAC "ij";
+UNDISCH_TAC` j <= 4 + i `;
+ARITH_TAC;
+UNDISCH_TAC` !j. j IN i..4 + i
+          ==> a_spine5 + b_spine5 * cc_azim_v11 cc j <= cc_gg_v11 cc j ` ;
+NHANH (REWRITE_RULE[GSYM IN_NUMSEG] SUM_LE_NUMSEG);
+
+
+REWRITE_TAC[SUM_ADD_NUMSEG; ETA_AX;SUM_CONST_NUMSEG; SUM_LMUL];
+REWRITE_TAC[ARITH_RULE` ((4 + i) + 1) - i = 5 `];
+IMP_TAC;
+STRIP_TAC;
+SUBST_ALL_TAC (ARITH_RULE` 5 - 1 = 4 `);
+ASM_REWRITE_TAC[];
+MATCH_MP_TAC (REAL_ARITH` c <= b ==> b <= a ==> c <= a `);
+UNDISCH_TAC` sum (0..cc_card_v11 cc - 1) (cc_azim_v11 cc) = &2 * pi `;
+MP_TAC (ISPECL [` cc_azim_v11 cc `;` 5 `] Oxl_def.periodic_sum);
+ANTS_TAC;
+UNDISCH_TAC` periodic (cc_azim_v11 cc) (cc_card_v11 cc) ` ;
+ASM_REWRITE_TAC[];
+SIMP_TAC[];
+ARITH_TAC;
+
+
+ASM_SIMP_TAC[ARITH_RULE` 5 - 1 + i = 4 + i `];
+STRIP_TAC THEN STRIP_TAC;
+REWRITE_TAC[Sphere.a_spine5; Sphere.b_spine5];
+MP_TAC PI_BOUNDS;
+REAL_ARITH_TAC;
+
+UNDISCH_TAC` ~(cc_small_eta_v11 cc i \/ cc_small_eta_v11 cc (i + 1)) `;
+REWRITE_TAC[DE_MORGAN_THM];
+STRIP_TAC;
+
+
+FIRST_ASSUM (MP_TAC o (SPEC` i MOD 5 `));
+PHA;
+MP_TAC (
+REWRITE_RULE[RIGHT_FORALL_IMP_THM ] (ISPECL [` cc_qy_v11 cc `;` 5 `] Oxl_def.periodic_mod));
+ANTS_TAC;
+ABBREV_TAC` nn = cc_card_v11 cc `;
+SUBST_ALL_TAC (MESON[]` nn = 5 <=> 5 = nn `);
+ASM_REWRITE_TAC[];
+DISCH_THEN (ASSUME_TAC o GSYM);
+
+
+ASM_REWRITE_TAC[];
+ANTS_TAC;
+ASSUME_TAC (ARITH_RULE` ~( 5 = 0) `);
+ASM_SIMP_TAC[MOD_IN_NUMSEG];
+STRIP_TAC;
+SUBGOAL_THEN` ! k. 0 < k /\ k < 5 ==> ~ cc_qy_v11 cc ( i + k ) ` ASSUME_TAC;
+GEN_TAC THEN STRIP_TAC;
+FIRST_X_ASSUM (MP_TAC o (SPEC` (i + k) MOD 5 `));
+ANTS_TAC;
+ASSUME_TAC (ARITH_RULE` ~( 5 = 0) `);
+ASM_SIMP_TAC[MOD_IN_NUMSEG];
+MATCH_MP_TAC (GSYM MOD_INJ11);
+ASM_REWRITE_TAC[ARITH_RULE` ~( 0 = k ) <=> 0 < k `];
+ASM_SIMP_TAC[];
+
+
+
+ARITH_TAC;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` ! i. -- cc_eps <= cc_gg_v11 cc i ` ASSUME_TAC;
+GEN_TAC;
+ASM_CASES_TAC` cc_qy_v11 cc i'' ` ;
+DOWN;
+ASM_SEARCH_TCL [` cc_qy_v11 cc i ==> &0 <= cc_gg_v11 cc i `] NHANH;
+REWRITE_TAC[Oxl_def.cc_eps];
+REAL_ARITH_TAC;
+ASM_CASES_TAC` cc_qx_v11 cc i'' ` ;
+DOWN;
+ASM_SEARCH_TCL [` cc_qx_v11 cc i ==> &0 <= cc_gg_v11 cc i `] NHANH;
+REWRITE_TAC[Oxl_def.cc_eps];
+REAL_ARITH_TAC;
+MP_TAC (SPEC` i'':num ` QU_OR_QXY);
+ASM_REWRITE_TAC[];
+
+
+
+
+
+
+
+
+
+
+
+
+SUBGOAL_THEN` &0 <= cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) + cc_gg_v11 cc (i + 2) ` ASSUME_TAC;
+ASM_CASES_TAC` cc_qu_v11 cc (i + 1 ) ` ;
+ASM_SEARCH_TCL [`cc_qu_v11 cc i /\ ~cc_small_eta_v11 cc i`;` cc_eps <= x`] (MP_TAC o (SPEC ` i + 1 `));
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+
+FIRST_X_ASSUM (MP_TAC o (SPEC ` i + 2 `));
+PHA;
+MATCH_MP_TAC (REAL_ARITH` &0 <= x ==> -- a <= z /\ a <= y ==> &0 <= x + y + z `);
+UNDISCH_TAC` cc_qy_v11 cc i `;
+ASM_REWRITE_TAC[];
+ASM_CASES_TAC` cc_qx_v11 cc (i + 1 ) `;
+
+
+
+ASM_CASES_TAC` ~ cc_small_v11 cc ( i + 2 ) ` ;
+SUBGOAL_THEN` ~ cc_qu_v11 cc ( i + 1) /\ ~ cc_qu_v11 cc ( i + 2) ` ASSUME_TAC;
+DOWN;
+SIMP_TAC[cc_qu_v11; cc_hassmall_v11; ARITH_RULE` (i + 1 ) + 1 = i + 2 `];
+MP_TAC (SPEC` i + 1 ` QU_OR_QXY);
+MP_TAC (SPEC` i + 2 ` QU_OR_QXY);
+ASM_REWRITE_TAC[];
+
+DISCH_TAC;
+SUBGOAL_THEN` &0 <= cc_gg_v11 cc (i + 2) ` ASSUME_TAC;
+UNDISCH_TAC` !i. cc_qx_v11 cc i ==> &0 <= cc_gg_v11 cc i `;
+UNDISCH_TAC` !i. cc_qy_v11 cc i ==> &0 <= cc_gg_v11 cc i `;
+DOWN;
+MESON_TAC[];
+SUBGOAL_THEN` &0 <= cc_gg_v11 cc ( i + 1) ` MP_TAC;
+UNDISCH_TAC` cc_qx_v11 cc (i + 1) `;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` &0 <= cc_gg3b_v11 cc i ` MP_TAC;
+UNDISCH_TAC` cc_qy_v11 cc i `;
+ASM_REWRITE_TAC[];
+DOWN;
+REAL_ARITH_TAC;
+
+ASM_CASES_TAC` ~ cc_small_v11 cc (i + 1) `;
+ASM_SEARCH_TCL [` cc_qx_v11 cc i /\ cc_small_v11 cc (i + 1) /\ ~cc_small_v11 cc i
+       ==> cc_eps <= cc_gg_v11 cc i`] (MP_TAC o (SPEC` i + 1 `));
+ANTS_TAC;
+ASM_REWRITE_TAC[ARITH_RULE` ( i + 1) + 1 = i + 2 `];
+UNDISCH_TAC` ~ ~cc_small_v11 cc (i + 2) `;
+SIMP_TAC[];
+
+
+FIRST_X_ASSUM (MP_TAC o (SPEC ` i + 2 `));
+SUBGOAL_THEN` &0 <= cc_gg3b_v11 cc i ` MP_TAC;
+ASM_SIMP_TAC[];
+REAL_ARITH_TAC;
+
+ASM_SEARCH_TCL [` !i. cc_qx_v11 cc (i + 1) /\ cc_hassmall_v11 cc (i + 1) /\ cc_qy_v11 cc i
+       ==> cc_eps <= cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) `] (MP_TAC o (SPEC ` i :num ` ));
+ANTS_TAC;
+DOWN THEN DOWN;
+ASM_SIMP_TAC[cc_hassmall_v11; ARITH_RULE` (i + 1) + 1 = i + 2 `];
+SUBGOAL_THEN` -- cc_eps <= cc_gg_v11 cc (i + 2) ` MP_TAC;
+ASM_REWRITE_TAC[];
+REAL_ARITH_TAC;
+
+
+MP_TAC (SPEC` i + 1 ` QU_OR_QXY);
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` ~ cc_qy_v11 cc (i + 1) ` MP_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+ARITH_TAC;
+SIMP_TAC[];
+
+SUBGOAL_THEN` &0 <= cc_gg3a_v11 cc i + cc_gg_v11 cc ( i + 3) + cc_gg_v11 cc ( i + 4 ) ` ASSUME_TAC;
+ASM_CASES_TAC` ~ cc_small_v11 cc ( i + 4 ) ` ;
+SUBGOAL_THEN` &0 <= cc_gg_v11 cc (i + 3) /\ &0 <= cc_gg_v11 cc (i + 4 ) ` ASSUME_TAC;
+SUBGOAL_THEN` ~cc_qu_v11 cc (i + 3) /\ ~cc_qu_v11 cc ( i + 4) ` MP_TAC;
+DOWN;
+SIMP_TAC[cc_qu_v11; cc_hassmall_v11; ARITH_RULE` (i + 3 ) + 1 = i + 4 `];
+STRIP_TAC;
+MP_TAC (SPEC` i + 3 ` QU_OR_QXY);
+MP_TAC (SPEC` i + 4 ` QU_OR_QXY);
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` !i. cc_qx_v11 cc i ==> &0 <= cc_gg_v11 cc i `;
+UNDISCH_TAC` !i. cc_qy_v11 cc i ==> &0 <= cc_gg_v11 cc i `;
+MESON_TAC[];
+SUBGOAL_THEN` &0 <= cc_gg3a_v11 cc i ` MP_TAC;
+ASM_SIMP_TAC[];
+DOWN;
+REAL_ARITH_TAC;
+DOWN;
+REWRITE_TAC[];
+SUBGOAL_THEN` ~cc_small_eta_v11 cc ((i + 5 ) MOD 5 ) ` ASSUME_TAC;
+MP_TAC (
+REWRITE_RULE[RIGHT_FORALL_IMP_THM] (
+ISPECL [` cc_small_eta_v11 cc `; ` 5 `] Oxl_def.periodic_mod));
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+ABBREV_TAC` nn = cc_card_v11 cc `;
+SUBST_ALL_TAC (MESON[]` nn = 5 <=> 5 = nn `);
+ASM_REWRITE_TAC[];
+
+DISCH_THEN (ASSUME_TAC o GSYM);
+ONCE_REWRITE_TAC[ARITH_RULE` i + 5 = 1 * 5 + i `];
+REWRITE_TAC[MOD_MULT_ADD];
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+MP_TAC (
+REWRITE_RULE[RIGHT_FORALL_IMP_THM] (
+ISPECL [` cc_small_eta_v11 cc `; ` 5 `] Oxl_def.periodic_mod));
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+ABBREV_TAC` nn = cc_card_v11 cc `;
+SUBST_ALL_TAC (MESON[]` nn = 5 <=> 5 = nn `);
+ASM_REWRITE_TAC[];
+DISCH_THEN (ASSUME_TAC o GSYM);
+
+UNDISCH_TAC` ~cc_small_eta_v11 cc ((i + 5) MOD 5) `;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+ASM_CASES_TAC` cc_qu_v11 cc (i + 4 ) ` ;
+UNDISCH_TAC` !i. cc_qu_v11 cc i /\ ~cc_small_eta_v11 cc (i + 1)
+       ==> cc_eps <= cc_gg_v11 cc i `;
+DISCH_THEN (MP_TAC o (SPEC` i + 4 `));
+ANTS_TAC;
+ASM_REWRITE_TAC[ARITH_RULE` (i + 4 ) + 1 = i + 5 `];
+SUBGOAL_THEN` --cc_eps <= cc_gg_v11 cc (i + 3) ` MP_TAC;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` &0 <= cc_gg3a_v11 cc i ` MP_TAC;
+ASM_SIMP_TAC[];
+REAL_ARITH_TAC;
+
+ASM_CASES_TAC` cc_qx_v11 cc ( i + 4) `;
+ASM_CASES_TAC`~ cc_small_v11 cc ( i + 5 ) `;
+UNDISCH_TAC` !i. cc_qx_v11 cc i /\ cc_small_v11 cc i /\ ~cc_small_v11 cc (i + 1)
+       ==> cc_eps <= cc_gg_v11 cc i `;
+DISCH_THEN (MP_TAC o (SPEC` i + 4 `));
+ANTS_TAC;
+ASM_REWRITE_TAC[ARITH_RULE` (i + 4 ) + 1 = i + 5 ` ];
+SUBGOAL_THEN` -- cc_eps <= cc_gg_v11 cc ( i + 3 ) ` MP_TAC;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` &0 <= cc_gg3a_v11 cc i ` MP_TAC;
+ASM_SIMP_TAC[];
+REAL_ARITH_TAC;
+
+UNDISCH_TAC` !i. cc_qx_v11 cc i /\ cc_hassmall_v11 cc i /\ cc_qy_v11 cc (i + 1)
+       ==> cc_eps <= cc_gg_v11 cc i + cc_gg3a_v11 cc (i + 1) `;
+DISCH_THEN (MP_TAC o (SPEC` i + 4 `));
+ANTS_TAC;
+DOWN;
+ASM_SIMP_TAC[cc_hassmall_v11; ARITH_RULE` (i + 4) + 1 = i + 5 `];
+STRIP_TAC;
+SUBGOAL_THEN` cc_qy_v11 cc ((i + 5) MOD 5 ) ` MP_TAC;
+ONCE_REWRITE_TAC[ARITH_RULE` i + 5 = 1 * 5 + i `];
+REWRITE_TAC[MOD_MULT_ADD];
+ASM_REWRITE_TAC[];
+ASM_REWRITE_TAC[];
+
+ASM_REWRITE_TAC[ARITH_RULE` (i + 4) + 1 = i + 5 `];
+UNDISCH_TAC` periodic (cc_gg3a_v11 cc) (cc_card_v11 cc) `;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+MP_TAC (let tt = REWRITE_RULE[RIGHT_FORALL_IMP_THM] Oxl_def.periodic_mod in
+ISPECL [` cc_gg3a_v11 cc `; ` 5 `] tt);
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+ARITH_TAC;
+DISCH_THEN (ASSUME_TAC o GSYM);
+
+SUBGOAL_THEN` cc_gg3a_v11 cc ((i + 5) MOD 5) = cc_gg3a_v11 cc (i) ` MP_TAC;
+ONCE_REWRITE_TAC[ARITH_RULE` i + 5 = 1 * 5 + i `];
+REWRITE_TAC[MOD_MULT_ADD];
+ASM_REWRITE_TAC[];
+ASM_SIMP_TAC[];
+
+STRIP_TAC;
+SUBGOAL_THEN` -- cc_eps <= cc_gg_v11 cc (i + 3 ) ` MP_TAC;
+ASM_REWRITE_TAC[];
+REAL_ARITH_TAC;
+SUBGOAL_THEN` ~ cc_qy_v11 cc (( i + 4 ) MOD 5) ` ASSUME_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+ASSUME_TAC (ARITH_RULE` ~( 5 = 0) `);
+ASM_SIMP_TAC[MOD_IN_NUMSEG];
+MATCH_MP_TAC (GSYM MOD_INJ11);
+ARITH_TAC;
+MP_TAC (SPEC` i + 4 ` QU_OR_QXY);
+DOWN;
+ASM_REWRITE_TAC[];
+SIMP_TAC[];
+ASM_SEARCH_TCL [` cc_gg3a_v11 cc i + x <= y`] (ASSUME_TAC2 o SPEC_ALL);
+MP_TAC (ARITH_RULE` ~( 5 = 0) `);
+UNDISCH_TAC` periodic (cc_gg_v11 cc ) (cc_card_v11 cc) `;
+ASM_REWRITE_TAC[];
+PHA;
+NHANH Oxl_def.periodic_sum;
+STRIP_TAC;
+FIRST_X_ASSUM (ASSUME_TAC o GSYM);
+ASM_SIMP_TAC[];
+ONCE_REWRITE_TAC[ADD_SYM];
+SIMP_TAC[SUM_CLAUSES_LEFT; ARITH_RULE` 5 - 1 = 4 /\ i <= i + 4 /\ i + 1 <= i + 4 /\
+i + 2 <= i + 4 /\ i + 3 <= i + 4 /\ i + 4 <= i + 4 /\ (i + 1 ) + 1 = i + 2 `];
+SIMP_TAC[SUM_CLAUSES_LEFT; ARITH_RULE` (i + 1) + 2 <= i + 4 /\ ((i + 1) + 2) + 1 = i + 4`];
+REWRITE_TAC[SUM_SING_NUMSEG; ARITH_RULE` (i + 1) + 2 = i + 3 `];
+UNDISCH_TAC` cc_gg3a_v11 cc i + cc_gg3b_v11 cc i <= cc_gg_v11 cc i `;
+UNDISCH_TAC` &0 <= cc_gg3a_v11 cc i + cc_gg_v11 cc (i + 3) + cc_gg_v11 cc (i + 4) `;
+UNDISCH_TAC` &0 <= cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) + cc_gg_v11 cc (i + 2) `;
+REAL_ARITH_TAC]);;
+
+
+
+
+
+
+
+let PRE_IPVICGW = prove_by_refinement (
+` (cc_bool_model_v11 cc /\
+      cc_bool_prep_v11 cc /\
+      cc_real_model_v11 cc /\
+      sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0) /\
+     cc_card_v11 cc = 5 
+==> &0 <= sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) `,
+[NHANH EXISTS_QY_CARD5;
+STRIP_TAC;
+ASM_CASES_TAC` cc_azim_v11 cc i < #1.074 `;
+ASSUME_TAC2 CARD5_LT_1074_QYI;
+ASM_REWRITE_TAC[];
+
+MATCH_MP_TAC CARD5_1074_LE_QYI;
+ASM_REWRITE_TAC[REAL_ARITH` x <= y <=> ~( y < x ) `];
+ASSUME_TAC2 QY_NN00 THEN ASSUME_TAC2 QX_NN00;
+ASSUME_TAC2 EXISTS_QY_CARD5;
+DOWN_TAC;
+NHANH Oxl_def.periodic_fn;
+REWRITE_TAC[cc_bool_model_v11; cc_real_model_v11];
+ONCE_REWRITE_TAC[TAUT` ~ a <=> a ==> F `];
+IMP_TAC;
+IMP_TAC;
+STRIP_TAC;
+STRIP_TAC;
+STRIP_TAC;
+
+ABBREV_TAC` nn = cc_card_v11 cc `;
+ASM_REWRITE_TAC[REAL_ARITH` ~( a < b) <=> b <= a `];
+DOWN;
+SUBST_ALL_TAC (MESON[]` nn = 5 <=> 5 = nn `);
+ASM_REWRITE_TAC[]]);;
+
+
+
+let CC_CARD_LESS_THAN_5 = prove_by_refinement(` cc_bool_model_v11 cc /\
+            cc_bool_prep_v11 cc /\
+            cc_real_model_v11 cc /\
+            sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0
+            ==> cc_card_v11 cc <= 5 `,
+
+
+[NHANH LXDEYBO;
+NHANH UNPNFVW;
+REWRITE_TAC[cc_size_v11; cc_qy_v11];
+MP_TAC (SET_RULE` DISJOINT {i | i IN 0..cc_card_v11 cc - 1 /\ ~cc_4cell_v11 cc i} {i | i IN 0..cc_card_v11 cc - 1 /\ cc_4cell_v11 cc i} `);
+MP_TAC (SET_RULE` {i | i IN 0..cc_card_v11 cc - 1 /\ ~cc_4cell_v11 cc i} UNION {i | i IN 0..cc_card_v11 cc - 1 /\ cc_4cell_v11 cc i} = 0..cc_card_v11 cc - 1 `);
+REPEAT STRIP_TAC;
+ABBREV_TAC` s1 = {i | i IN 0..cc_card_v11 cc - 1 /\ ~cc_4cell_v11 cc i} `;
+ABBREV_TAC` s2 = {i | i IN 0..cc_card_v11 cc - 1 /\ cc_4cell_v11 cc i}`;
+SUBGOAL_THEN` FINITE (s1:num -> bool) ` ASSUME_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC` 0.. cc_card_v11 cc - 1 `;
+REWRITE_TAC[FINITE_NUMSEG];
+EXPAND_TAC "s1";
+SET_TAC[];
+SUBGOAL_THEN` FINITE (s2:num -> bool) ` ASSUME_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC` 0.. cc_card_v11 cc - 1 `;
+REWRITE_TAC[FINITE_NUMSEG];
+EXPAND_TAC "s2";
+SET_TAC[];
+
+MP_TAC (ISPECL [` s1:num -> bool `; ` s2: num -> bool `] CARD_UNION);
+ANTS_TAC;
+ASM_REWRITE_TAC[GSYM DISJOINT];
+
+
+
+ASM_REWRITE_TAC[CARD_NUMSEG];
+ASSUME_TAC2 (prove(` cc_bool_model_v11 cc ==> ~( cc_card_v11 cc = 0) `, SIMP_TAC[cc_bool_model_v11]));
+ASM_SEARCH_TCL [` x <= 1 `] MP_TAC;
+ASM_SEARCH_TCL [` x <= 4 `] MP_TAC;
+ARITH_TAC]);;
+
+
+
+
+
+let IPVICGW = prove_by_refinement(`!cc. cc_bool_model_v11 cc /\
+        cc_bool_prep_v11 cc /\
+        cc_real_model_v11 cc /\
+        sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0
+        ==> (!i. cc_small_v11 cc i)`,
+[NHANH CC_CARD_LESS_THAN_5 ; NHANH THREE_LE_CC_CARD;
+PHA; REWRITE_TAC[ARITH_RULE` 3 <= x /\ x <= 5 <=> x = 3 \/ x = 4 \/ x = 5 `];
+MESON_TAC[IPVICGW_C43_C44; IPVICGW_C33; PRE_IPVICGW; REAL_ARITH` a < b ==> ~( b <= a )`]]);;
+
+
+
+
+let RSIWAMP = prove_by_refinement (
+`!cc. cc_bool_model_v11 cc /\ cc_bool_prep_v11 cc /\ cc_real_model_v11 cc /\ 
+   (sum (0..cc_card_v11 cc -1) (cc_gg_v11 cc) < &0) ==> (cc_card_v11 cc <= 4)`,
+[NHANH CC_CARD_LESS_THAN_5;
+REWRITE_TAC[ARITH_RULE` a <= 5 <=> a <= 4 \/ a = 5 `];
+GEN_TAC THEN STRIP_TAC;
+ASSUME_TAC2 PRE_IPVICGW;
+DOWN;
+ASM_REWRITE_TAC[REAL_ARITH` &0 <= x <=> ~( x < &0 ) `]]);;
+
+
+
+
+
+
+
+
+
+
+
+
+let LEAST_BOUND_CC_GG = prove(` (!i. cc_qu_v11 cc i ==> --cc_eps <= cc_gg_v11 cc i) /\
+  (!i. cc_qx_v11 cc i ==> &0 <= cc_gg_v11 cc i) /\
+ (!i. cc_qy_v11 cc i ==> &0 <= cc_gg_v11 cc i) 
+==> (! i. -- cc_eps <= cc_gg_v11 cc i) `,
+SUBGOAL_THEN` -- cc_eps <= &0 ` MP_TAC THENL [
+REWRITE_TAC[Oxl_def.cc_eps] THEN 
+REAL_ARITH_TAC; MESON_TAC[REAL_LE_TRANS; QU_OR_QXY]]);;
+
+
+
+
+
+
+let periodic_mod1 = 
+REWRITE_RULE[RIGHT_FORALL_IMP_THM] periodic_mod;;
+
+
+
+
+
+let LITTLE_CC_GG3BB = prove(`    (!i. cc_qy_v11 cc i ==> &0 <= cc_gg3b_v11 cc i) /\
+       (!i. cc_qu_v11 cc (i + 1) /\ cc_qy_v11 cc i
+            ==> &0 <= cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1)) /\
+(! i. cc_qy_v11 cc i ==> &0 <= cc_gg_v11 cc i ) /\
+(! i. cc_qx_v11 cc i ==> &0 <= cc_gg_v11 cc i ) /\
+       cc_qy_v11 cc i
+       ==> &0 <= cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) `,
+MP_TAC (SPEC` i + 1 ` QU_OR_QXY) THEN 
+MESON_TAC[REAL_ARITH` &0 <= a /\ &0 <= b ==> &0 <= a + b `]);;
+
+
+
+let MOD_ADD_CANCEL = 
+REWRITE_RULE[ARITH_RULE` 1 * n + p = p + n ` ] (
+SPEC` 1 ` (CONJUNCT1 MOD_MULT_ADD));;
+
+
+
+let LITTLE_CC_GG3AA = prove_by_refinement(
+`    (!i. cc_qy_v11 cc i ==> &0 <= cc_gg3a_v11 cc i) /\
+      (!i. cc_qu_v11 cc i /\ cc_qy_v11 cc (i + 1)
+                 ==> &0 <= cc_gg_v11 cc i + cc_gg3a_v11 cc (i + 1)) /\
+(! i. cc_qy_v11 cc i ==> &0 <= cc_gg_v11 cc i ) /\
+(! i. cc_qx_v11 cc i ==> &0 <= cc_gg_v11 cc i ) /\
+periodic (cc_qy_v11 cc ) nn /\
+periodic (cc_gg3a_v11 cc ) nn /\
+~( nn = 0)
+       /\ cc_qy_v11 cc i
+       ==> &0 <= cc_gg_v11 cc ( i + nn - 1 ) + cc_gg3a_v11 cc (i) `,
+[ASM_CASES_TAC` cc_qx_v11 cc (i + nn - 1) \/ cc_qy_v11 cc ( i + nn - 1 ) `;
+DOWN;
+MESON_TAC[REAL_ARITH` &0 <= a /\ &0 <= b ==> &0 <= a + b `];
+MP_TAC (SPEC` i + nn - 1 ` QU_OR_QXY);
+ASM_REWRITE_TAC[];
+ABBREV_TAC` nii = i + nn - 1 `;
+STRIP_TAC;
+STRIP_TAC;
+UNDISCH_TAC` !i. cc_qu_v11 cc i /\ cc_qy_v11 cc (i + 1)
+          ==> &0 <= cc_gg_v11 cc i + cc_gg3a_v11 cc (i + 1) `;
+DISCH_THEN (MP_TAC o (SPEC` nii: num `));
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+ASSUME_TAC2 (ARITH_RULE ` ~( nn = 0) ==> (i + nn - 1 ) + 1 = i + nn `);
+DOWN;
+ASM_REWRITE_TAC[];
+SIMP_TAC[];
+ASSUME_TAC2 (ISPECL [` cc_qy_v11 cc `;` nn:num `] periodic_mod1);
+FIRST_X_ASSUM (ASSUME_TAC o GSYM);
+SUBGOAL_THEN` cc_qy_v11 cc ((i + nn) MOD nn) ` ASSUME_TAC;
+REWRITE_TAC[MOD_ADD_CANCEL];
+ASM_REWRITE_TAC[];
+DOWN;
+ASM_SIMP_TAC[];
+
+SUBGOAL_THEN` nii + 1 = i + nn ` ASSUME_TAC;
+EXPAND_TAC "nii";
+UNDISCH_TAC` ~( nn = 0) `;
+ARITH_TAC;
+ASM_REWRITE_TAC[];
+
+ASSUME_TAC2 (ISPECL [` cc_gg3a_v11 cc `; `nn:num `] periodic_mod1);
+FIRST_X_ASSUM (ASSUME_TAC o GSYM);
+SUBGOAL_THEN` cc_gg3a_v11 cc ((i + nn) MOD nn) = cc_gg3a_v11 cc i ` MP_TAC;
+REWRITE_TAC[MOD_ADD_CANCEL];
+ASM_REWRITE_TAC[];
+
+ASM_SIMP_TAC[]]);;
+
+
+
+let SUM_NUMSEG2 = 
+SIMP_RULE[ARITH_RULE`m <= m + 1`; SUM_SING_NUMSEG] (SPEC` m + 1` (GEN` n:num ` (SPEC_ALL SUM_CLAUSES_LEFT)));;
+
+let SUM_NUMSEG33 = 
+SIMP_RULE[ARITH_RULE`m <= m + 2 /\ m + 2 = (m + 1 ) + 1`; SUM_NUMSEG2] (SPEC` m + 2` (GEN` n:num ` (SPEC_ALL SUM_CLAUSES_LEFT)));;
+
+
+let SUM_NUMSEG3 =
+REWRITE_RULE[ARITH_RULE` (a + 1) + 1 = a + 2 `]  SUM_NUMSEG33;;
+
+
+let SUM_NUMSEG44 = 
+SIMP_RULE[ARITH_RULE`m <= m + 3 /\ m + 3 = (m + 1 ) + 2 `; SUM_NUMSEG3] (SPEC` m + 3` (GEN` n:num ` (SPEC_ALL SUM_CLAUSES_LEFT)));;
+
+let SUM_NUMSEG4 = 
+REWRITE_RULE[ARITH_RULE` (m + 1) + 2 = m + 3 /\ (m + 1) + 1 = m + 2 `] SUM_NUMSEG44;;
+
+
+
+
+
+let UTEOITF_concl = `!cc. cc_bool_model_v11 cc /\ cc_bool_prep_v11 cc /\ cc_real_model_v11 cc /\ 
+   (sum (0..cc_card_v11 cc -1) (cc_gg_v11 cc) < &0) ==> (!i. cc_4cell_v11 cc i)`;;
+
+
+
+let UTEOITF = prove_by_refinement(UTEOITF_concl,
+[GEN_TAC;
+NHANH RSIWAMP;
+STRIP_TAC THEN ASSUME_TAC2 QY_NN00 THEN ASSUME_TAC2 QX_NN00;
+ASM_CASES_TAC` !i. cc_4cell_v11 cc i `;
+ASM_REWRITE_TAC[];
+DOWN;
+REWRITE_TAC[NOT_FORALL_THM; GSYM cc_qy_v11];
+STRIP_TAC;
+ASSUME_TAC2 RSIWAMP;
+ASSUME_TAC2 THREE_LE_CC_CARD;
+ASSUME_TAC2 IPVICGW;
+ASSUME_TAC2 UNIQUE_QY;
+DOWN_TAC;
+NHANH Oxl_def.periodic_fn;
+REWRITE_TAC[cc_bool_model_v11; cc_real_model_v11];
+ABBREV_TAC` nn = cc_card_v11 cc `;
+STRIP_TAC;
+
+
+
+ASM_CASES_TAC` nn = 3 `;
+SUBGOAL_THEN` &0 <= cc_gg3a_v11 cc i /\ &0 <= cc_gg3b_v11 cc i ` MP_TAC;
+ASM_SIMP_TAC[];
+STRIP_TAC;
+SUBGOAL_THEN` &0 <= cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) ` ASSUME_TAC;
+ASM_CASES_TAC` cc_qy_v11 cc (i + 1) `;
+SUBGOAL_THEN` &0 <= cc_gg_v11 cc ( i + 1) ` MP_TAC;
+ASM_SIMP_TAC[];
+UNDISCH_TAC` &0 <= cc_gg3b_v11 cc i `;
+REAL_ARITH_TAC;
+ASM_CASES_TAC` cc_qx_v11 cc (i + 1) `;
+SUBGOAL_THEN` &0 <= cc_gg_v11 cc ( i + 1) ` MP_TAC;
+ASM_SIMP_TAC[];
+UNDISCH_TAC` &0 <= cc_gg3b_v11 cc i `;
+REAL_ARITH_TAC;
+MP_TAC (SPEC` i + 1 ` QU_OR_QXY);
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+ASM_REWRITE_TAC[];
+MP_TAC (GSYM (
+ISPECL [` cc_qy_v11 cc `;` nn:num `] periodic_mod1));
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` nn = 3 `;
+DISCH_THEN (ASSUME_TAC o SYM);
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+SUBGOAL_THEN` cc_qy_v11 cc ((1 * 3 + i ) MOD 3) ` MP_TAC;
+REWRITE_TAC[MOD_MULT_ADD];
+ASM_REWRITE_TAC[];
+
+
+MP_TAC LITTLE_CC_GG3AA;
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` cc_gg3a_v11 cc i + cc_gg3b_v11 cc (i) <= cc_gg_v11 cc i ` ASSUME_TAC;
+ASM_SIMP_TAC[];
+STRIP_TAC THEN STRIP_TAC;
+SUBGOAL_THEN` &0 <= sum (0..nn - 1) (cc_gg_v11 cc) ` MP_TAC;
+ASSUME_TAC2 (
+ISPECL [` cc_gg_v11 cc `;` nn:num `] periodic_sum);
+FIRST_X_ASSUM (ASSUME_TAC o GSYM);
+
+ASM_REWRITE_TAC[];
+EXPAND_TAC "nn";
+REWRITE_TAC[ARITH_RULE` 3 - 1 = 2 /\ 2 + i = i + 2`; SUM_NUMSEG3];
+
+UNDISCH_TAC` &0 <= cc_gg_v11 cc (i + nn - 1) + cc_gg3a_v11 cc i `;
+UNDISCH_TAC` &0 <= cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) `;
+UNDISCH_TAC` cc_gg3a_v11 cc i + cc_gg3b_v11 cc i <= cc_gg_v11 cc i `;
+EXPAND_TAC "nn";
+REWRITE_TAC[ARITH_RULE` 3 - 1 = 2 `];
+PHA;
+REAL_ARITH_TAC;
+
+ASM_REWRITE_TAC[REAL_ARITH` &0 <= x <=> ~( x < &0 ) `];
+ASSUME_TAC2 (ISPECL [` cc_gg_v11 cc `;` nn:num `] periodic_sum);
+FIRST_X_ASSUM (ASSUME_TAC o GSYM);
+DOWN;
+FIRST_X_ASSUM (MP_TAC o (SPEC` i MOD nn`));
+ASSUME_TAC2 (ISPECL [` cc_qy_v11 cc `; `nn:num `] periodic_mod1);
+FIRST_X_ASSUM (ASSUME_TAC o GSYM);
+ANTS_TAC;
+ASM_SIMP_TAC[MOD_IN_NUMSEG];
+STRIP_TAC;
+FIRST_ASSUM (MP_TAC o (SPEC` (i + 1) MOD nn `));
+ANTS_TAC;
+ASM_SIMP_TAC[MOD_IN_NUMSEG];
+MATCH_MP_TAC (GSYM MOD_INJ11);
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` 3 <= nn `;
+ARITH_TAC;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+ASM_CASES_TAC` cc_qx_v11 cc (i + 1 ) `;
+ASM_SEARCH_TCL [` !i. cc_qx_v11 cc (i + 1) /\ cc_hassmall_v11 cc (i + 1) /\ cc_qy_v11 cc i
+       ==> cc_eps <= cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1)`] (MP_TAC o (SPEC` i:num `));
+ANTS_TAC;
+ASM_REWRITE_TAC[cc_hassmall_v11];
+STRIP_TAC;
+
+
+SUBGOAL_THEN` &0 <= cc_gg_v11 cc (i + 3 ) + cc_gg3a_v11 cc ((i + 3) + 1 ) ` ASSUME_TAC;
+ASM_CASES_TAC` cc_qu_v11 cc ( i + 3) `;
+FIRST_X_ASSUM MATCH_MP_TAC;
+ASM_REWRITE_TAC[];
+ASSUME_TAC2 (ARITH_RULE` ~( nn = 3) /\ 3 <= nn /\ nn <= 4 ==> 4 = nn`);
+SUBGOAL_THEN` cc_qy_v11 cc ((i + 4 ) MOD 4 ) ` MP_TAC;
+REWRITE_TAC[MOD_ADD_CANCEL];
+ASM_REWRITE_TAC[];
+
+ASM_REWRITE_TAC[];
+ASM_REWRITE_TAC[ARITH_RULE` (i + 3) + 1 = i + 4 `];
+
+REWRITE_TAC[ARITH_RULE` (i + 3) + 1 = i + 4 `];
+ASSUME_TAC2 (ARITH_RULE` ~( nn = 3) /\ 3 <= nn /\ nn <= 4 ==> 4 = nn`);
+SUBGOAL_THEN` cc_qy_v11 cc ((i + 4) MOD 4 ) ` ASSUME_TAC;
+REWRITE_TAC[MOD_ADD_CANCEL];
+ASM_REWRITE_TAC[];
+DOWN;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+SUBGOAL_THEN` &0 <= cc_gg3a_v11 cc (i + nn) ` MP_TAC;
+ASM_SIMP_TAC[];
+SUBGOAL_THEN` &0 <= cc_gg_v11 cc ( i + 3) ` MP_TAC;
+MP_TAC (SPEC` i + 3 ` QU_OR_QXY);
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+ASM_SIMP_TAC[];
+ASM_SIMP_TAC[];
+REAL_ARITH_TAC;
+
+ASSUME_TAC2 LEAST_BOUND_CC_GG;
+STRIP_TAC;
+SUBGOAL_THEN` &0 <= sum (0..nn - 1) (cc_gg_v11 cc) ` MP_TAC;
+ASM_REWRITE_TAC[];
+
+
+ASSUME_TAC2 (ARITH_RULE` ~( nn = 3) /\ 3 <= nn /\ nn <= 4 ==> 4 = nn`);
+EXPAND_TAC "nn";
+REWRITE_TAC[ARITH_RULE` 4 - 1 + i = i + 3 `; SUM_NUMSEG4];
+ASSUME_TAC2 (
+ISPECL [` cc_gg3a_v11 cc `;` nn:num `] periodic_mod1);
+FIRST_X_ASSUM (ASSUME_TAC o GSYM);
+SUBGOAL_THEN` cc_gg3a_v11 cc (((i + 3) + 1) MOD 4) = cc_gg3a_v11 cc i ` ASSUME_TAC;
+REWRITE_TAC[ARITH_RULE` (i + 3) + 1 = i + 4 `; MOD_ADD_CANCEL];
+ASM_REWRITE_TAC[];
+DOWN;
+ASM_REWRITE_TAC[];
+DISCH_THEN SUBST_ALL_TAC;
+UNDISCH_TAC` cc_eps <= cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) `;
+UNDISCH_TAC` &0 <= cc_gg_v11 cc (i + 3) + cc_gg3a_v11 cc i`;
+SUBGOAL_THEN` -- cc_eps <= cc_gg_v11 cc ( i + 2) ` MP_TAC;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` cc_gg3a_v11 cc i + cc_gg3b_v11 cc i <= cc_gg_v11 cc i ` ASSUME_TAC;
+ASM_SIMP_TAC[];
+DOWN;
+PHA;
+REAL_ARITH_TAC;
+ASM_REWRITE_TAC[REAL_ARITH` &0 <= x <=> ~( x < &0 ) `];
+MP_TAC (SPEC` i + 1 ` QU_OR_QXY);
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+
+
+
+
+(* ========================== *)
+ASSUME_TAC2 LEAST_BOUND_CC_GG;
+DOWN;
+
+FIRST_ASSUM (MP_TAC o (SPEC ` (i + 2) MOD nn `));
+ANTS_TAC;
+ASM_SIMP_TAC[MOD_IN_NUMSEG];
+MATCH_MP_TAC (GSYM MOD_INJ11);
+ASM_REWRITE_TAC[ARITH_RULE` ~( 0 = 2) `];
+UNDISCH_TAC` 3 <= nn `;
+ARITH_TAC;
+STRIP_TAC;
+FIRST_ASSUM (MP_TAC o (SPEC ` (i + 3) MOD nn `));
+ANTS_TAC;
+ASM_SIMP_TAC[MOD_IN_NUMSEG];
+MATCH_MP_TAC (GSYM MOD_INJ11);
+ASM_REWRITE_TAC[ARITH_RULE` ~( 0 = 3) `];
+UNDISCH_TAC` 3 <= nn `;
+UNDISCH_TAC` ~( nn = 3)`;
+ARITH_TAC;
+STRIP_TAC;
+DOWN THEN DOWN;
+ASM_REWRITE_TAC[];
+STRIP_TAC THEN STRIP_TAC;
+
+ASM_CASES_TAC` cc_qx_v11 cc ( i + 2 ) `;
+SUBGOAL_THEN` &0 <= cc_gg_v11 cc ( i + 2) ` ASSUME_TAC;
+ASM_SIMP_TAC[];
+MP_TAC LITTLE_CC_GG3BB;
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+MP_TAC LITTLE_CC_GG3AA;
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+ASSUME_TAC2 (ARITH_RULE` 3 <= nn /\ nn <= 4 /\ ~( nn = 3) ==> 4 = nn `);
+EXPAND_TAC "nn";
+REWRITE_TAC[ARITH_RULE` 4 - 1 = 3 `];
+SUBGOAL_THEN` cc_gg3a_v11 cc i + cc_gg3b_v11 cc i <= cc_gg_v11 cc i ` MP_TAC;
+ASM_SIMP_TAC[];
+REPEAT STRIP_TAC;
+SUBGOAL_THEN` &0 <= sum (0..nn - 1 ) (cc_gg_v11 cc) ` MP_TAC;
+EXPAND_TAC "nn";
+ASM_REWRITE_TAC[ARITH_RULE` 4 - 1 = 3 /\ 3 + i = i + 3`];
+REWRITE_TAC[SUM_NUMSEG4];
+UNDISCH_TAC` &0 <= cc_gg_v11 cc (i + 3) + cc_gg3a_v11 cc i `;
+UNDISCH_TAC` cc_gg3a_v11 cc i + cc_gg3b_v11 cc i <= cc_gg_v11 cc i `;
+UNDISCH_TAC` &0 <= cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) `;
+UNDISCH_TAC` &0 <= cc_gg_v11 cc (i + 2) `;
+PHA;
+REAL_ARITH_TAC;
+
+
+ASM_REWRITE_TAC[REAL_ARITH` &0 <= x <=> ~( x < &0 ) `];
+ASM_CASES_TAC` cc_qx_v11 cc ( i + 3) `;
+
+
+
+ASSUME_TAC2 (ARITH_RULE` 3 <= nn /\ nn <= 4 /\ ~( nn = 3) ==> 4 = nn `);
+SUBGOAL_THEN` cc_qy_v11 cc ((i + 4) MOD 4) ` ASSUME_TAC;
+REWRITE_TAC[MOD_ADD_CANCEL];
+ASM_REWRITE_TAC[];
+DOWN;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+ASM_SEARCH_TCL [` cc_eps <= x + cc_gg3a_v11 cc i `] (MP_TAC o (SPEC` i + 3 `));
+ANTS_TAC;
+ASM_REWRITE_TAC[ARITH_RULE` (i + 3) + 1 = i + 4 `; cc_hassmall_v11];
+STRIP_TAC;
+MP_TAC LITTLE_CC_GG3BB;
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+
+STRIP_TAC;
+SUBGOAL_THEN` -- cc_eps <= cc_gg_v11 cc (i + 2) ` MP_TAC;
+ASM_SIMP_TAC[];
+STRIP_TAC;
+
+SUBGOAL_THEN` cc_gg3a_v11 cc ((i + 4) MOD 4) = cc_gg3a_v11 cc i ` MP_TAC;
+REWRITE_TAC[MOD_ADD_CANCEL];
+ASM_REWRITE_TAC[];
+ASSUME_TAC2 (ISPECL [` cc_gg3a_v11 cc `;` nn:num `] periodic_mod1);
+FIRST_X_ASSUM (ASSUME_TAC o GSYM);
+ASM_REWRITE_TAC[];
+ASSUME_TAC2 (ISPECL [` cc_gg3a_v11 cc `;` nn:num `] periodic_mod1);
+FIRST_X_ASSUM (ASSUME_TAC o GSYM);
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+
+STRIP_TAC;
+SUBGOAL_THEN` &0 <= sum (0..nn - 1) (cc_gg_v11 cc ) ` MP_TAC;
+ASM_REWRITE_TAC[];
+EXPAND_TAC "nn";
+REWRITE_TAC[ARITH_RULE` 4 - 1 + i = i + 3 `; SUM_NUMSEG4];
+SUBGOAL_THEN` cc_gg3a_v11 cc i + cc_gg3b_v11 cc i <= cc_gg_v11 cc i ` MP_TAC;
+ASM_SIMP_TAC[];
+
+UNDISCH_TAC` &0 <= cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) `;
+UNDISCH_TAC` cc_eps <= cc_gg_v11 cc (i + 3) + cc_gg3a_v11 cc ((i + 3) + 1) `;
+PHA;
+ASM_REWRITE_TAC[ARITH_RULE` (i + 3) + 1 = i + 4 `];
+SUBGOAL_THEN` --cc_eps <= cc_gg_v11 cc (i + 2) ` MP_TAC;
+ASM_REWRITE_TAC[];
+REAL_ARITH_TAC;
+DOWN;
+ASM_REWRITE_TAC[ARITH_RULE` &0 <= x <=> ~( x < &0 ) `];
+
+
+
+
+
+
+
+
+
+MP_TAC (SPEC` i + 2 ` QU_OR_QXY);
+MP_TAC (SPEC` i + 3 ` QU_OR_QXY);
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+STRIP_TAC;
+SUBGOAL_THEN` #0.008 * cc_azim_v11 cc i <= cc_gg_v11 cc i ` ASSUME_TAC;
+ASM_SIMP_TAC[];
+ASSUME_TAC2 (ISPECL [` cc_azim_v11 cc `;` nn:num `] periodic_sum);
+ASM_SEARCH_TCL [` &2 * pi `] MP_TAC;
+FIRST_X_ASSUM (ASSUME_TAC o GSYM);
+DOWN;
+SIMP_TAC[];
+ASSUME_TAC2 (ARITH_RULE` 3 <= nn  /\ nn <= 4 /\ ~( nn = 3) ==> 4 = nn `);
+EXPAND_TAC "nn";
+REWRITE_TAC[ARITH_RULE` 4 - 1 + i = i + 3 /\ 4 - 1 = 3 `];
+REPEAT STRIP_TAC;
+UNDISCH_TAC` sum (i..i + 3) (cc_azim_v11 cc) = &2 * pi `;
+REWRITE_TAC[SUM_NUMSEG4];
+STRIP_TAC;
+
+ASM_CASES_TAC` #2.089 <= cc_azim_v11 cc i ` ;
+ASM_SEARCH_TCL [`#0.161517`] (ASSUME_TAC2 o (SPEC` i + 1 `));
+ASM_SEARCH_TCL [`!i. cc_qu_v11 cc i
+       ==> #0.161517 - #0.119482 * cc_azim_v11 cc i <= cc_gg_v11 cc i`] (ASSUME_TAC2 o (SPEC` i + 2 `));
+ASM_SEARCH_TCL [`!i. cc_qu_v11 cc i
+       ==> #0.161517 - #0.119482 * cc_azim_v11 cc i <= cc_gg_v11 cc i`] (ASSUME_TAC2 o (SPEC` i + 3 `));
+SUBGOAL_THEN` &0 <= sum (0..nn - 1) (cc_gg_v11 cc ) ` MP_TAC;
+EXPAND_TAC "nn";
+REWRITE_TAC[ARITH_RULE` 4 - 1 = 3 `];
+ASM_REWRITE_TAC[SUM_NUMSEG4];
+DOWNS 4;
+DOWN;
+UNDISCH_TAC` #0.008 * cc_azim_v11 cc i <= cc_gg_v11 cc i `;
+MP_TAC (PI_BOUNDS);
+REAL_ARITH_TAC;
+
+ASM_REWRITE_TAC[REAL_ARITH` &0 <= x <=> ~( x < &0) `];
+
+
+ASM_CASES_TAC` cc_azim_v11 cc i <= #1.946 `;
+UNDISCH_TAC` !i. cc_qu_v11 cc i
+       ==> -- #0.0659 + #0.042 * cc_azim_v11 cc i <= cc_gg_v11 cc i `;
+STRIP_TAC;
+FIRST_ASSUM (ASSUME_TAC2 o (SPEC` i + 1 `));
+FIRST_ASSUM (ASSUME_TAC2 o (SPEC` i + 2 `));
+FIRST_ASSUM (ASSUME_TAC2 o (SPEC` i + 3 `));
+SUBGOAL_THEN` &0 <= sum (0..nn - 1) (cc_gg_v11 cc) ` MP_TAC;
+EXPAND_TAC "nn";
+REWRITE_TAC[ARITH_RULE` 4 - 1 = 3 `];
+ASM_REWRITE_TAC[SUM_NUMSEG4];
+DOWNS 3;
+UNDISCH_TAC` cc_azim_v11 cc i <= #1.946 `;
+UNDISCH_TAC` cc_azim_v11 cc i +
+      cc_azim_v11 cc (i + 1) +
+      cc_azim_v11 cc (i + 2) +
+      cc_azim_v11 cc (i + 3) =
+      &2 * pi `;
+MP_TAC PI_BOUNDS;
+UNDISCH_TAC` #0.008 * cc_azim_v11 cc i <= cc_gg_v11 cc i `;
+REAL_ARITH_TAC;
+
+ASM_REWRITE_TAC[REAL_ARITH` &0 <= x <=> ~( x < &0) `];
+ASM_CASES_TAC` cc_small_eta_v11 cc i /\
+       cc_small_eta_v11 cc (i + 1) `;
+UNDISCH_TAC` !i. cc_qy_v11 cc i /\
+          cc_small_eta_v11 cc i /\
+          cc_small_eta_v11 cc (i + 1) /\
+          #1.946 <= cc_azim_v11 cc i /\
+          cc_azim_v11 cc i <= #2.089
+          ==> #3.0 * cc_eps <= cc_gg_v11 cc i `;
+DISCH_THEN (MP_TAC o (SPEC` i:num `));
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+DOWNS 3;
+REAL_ARITH_TAC;
+STRIP_TAC;
+SUBGOAL_THEN` -- cc_eps <= cc_gg_v11 cc (i + 1) /\ 
+-- cc_eps <= cc_gg_v11 cc (i + 2) /\ 
+-- cc_eps <= cc_gg_v11 cc (i + 3) ` MP_TAC;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+SUBGOAL_THEN` &0 <= sum (0..nn - 1) (cc_gg_v11 cc ) ` MP_TAC;
+EXPAND_TAC "nn";
+REWRITE_TAC[ARITH_RULE` 4 - 1 = 3 `];
+ASM_REWRITE_TAC[SUM_NUMSEG4];
+DOWNS 4;
+REAL_ARITH_TAC;
+ASM_REWRITE_TAC[REAL_ARITH` &0 <= x <=> ~( x < &0) `];
+
+
+UNDISCH_TAC` sum (0..nn - 1) (cc_gg_v11 cc) < &0 `;
+EXPAND_TAC "nn";
+REWRITE_TAC[ARITH_RULE` 4 - 1 = 3 `];
+ASM_REWRITE_TAC[];
+REWRITE_TAC[REAL_ARITH` a < &0 <=> ~( &0 <= a ) `; SUM_NUMSEG4];
+STRIP_TAC;
+
+
+
+UNDISCH_TAC`~(cc_small_eta_v11 cc i /\ cc_small_eta_v11 cc (i + 1)) `;
+REWRITE_TAC[DE_MORGAN_THM];
+STRIP_TAC;
+ASSUME_TAC2 (ISPECL [` cc_small_eta_v11 cc `; `nn:num `] periodic_mod1);
+FIRST_X_ASSUM (ASSUME_TAC o GSYM);
+SUBGOAL_THEN` ~cc_small_eta_v11 cc ((i + 4) MOD 4)` ASSUME_TAC;
+REWRITE_TAC[MOD_ADD_CANCEL];
+ASM_REWRITE_TAC[];
+DOWN;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+UNDISCH_TAC` !i. cc_qu_v11 cc i /\ ~cc_small_eta_v11 cc (i + 1)
+          ==> cc_eps <= cc_gg_v11 cc i `;
+DISCH_THEN (MP_TAC o (SPEC` i + 3 `));
+ANTS_TAC;
+ASM_REWRITE_TAC[ARITH_RULE` (i + 3) + 1 = i + 4 `];
+STRIP_TAC;
+SUBGOAL_THEN` -- cc_eps <= cc_gg_v11 cc (i + 2 ) ` ASSUME_TAC;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` &0 <= cc_gg3b_v11 cc i + cc_gg_v11 cc (i + 1) `ASSUME_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` &0 <= cc_gg3a_v11 cc i /\ cc_gg3a_v11 cc i + cc_gg3b_v11 cc i <= cc_gg_v11 cc i ` ASSUME_TAC;
+ASM_SIMP_TAC[];
+
+SUBGOAL_THEN` &0 <=
+        cc_gg_v11 cc i +
+        cc_gg_v11 cc (i + 1) +
+        cc_gg_v11 cc (i + 2) +
+        cc_gg_v11 cc (i + 3) ` MP_TAC;
+DOWNS 4;
+REAL_ARITH_TAC;
+ASM_REWRITE_TAC[];
+
+UNDISCH_TAC` !i. cc_qu_v11 cc i /\ ~cc_small_eta_v11 cc i ==> cc_eps <= cc_gg_v11 cc i `;
+DISCH_THEN (MP_TAC o (SPEC` i + 1 `));
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+
+SUBGOAL_THEN` -- cc_eps <= cc_gg_v11 cc (i + 2 ) ` ASSUME_TAC;
+
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` !i. cc_qu_v11 cc i /\ cc_qy_v11 cc (i + 1)
+       ==> &0 <= cc_gg_v11 cc i + cc_gg3a_v11 cc (i + 1) `;
+DISCH_THEN (MP_TAC o (SPEC` i + 3 `));
+ANTS_TAC;
+ASM_REWRITE_TAC[ARITH_RULE` (i + 3) + 1 = i + 4 `];
+SUBGOAL_THEN` cc_qy_v11 cc ((i + nn) MOD nn) ` MP_TAC;
+REWRITE_TAC[MOD_ADD_CANCEL];
+ASM_REWRITE_TAC[];
+ASM_REWRITE_TAC[];
+DOWN;
+SUBGOAL_THEN` &0 <= cc_gg3b_v11 cc i /\ cc_gg3a_v11 cc i + cc_gg3b_v11 cc i <= cc_gg_v11 cc i ` MP_TAC;
+ASM_SIMP_TAC[];
+
+SUBGOAL_THEN` cc_gg3a_v11 cc (((i + 3) + 1) MOD 4) = cc_gg3a_v11 cc i ` MP_TAC;
+REWRITE_TAC[ARITH_RULE` (i + 3) + 1 = i + 4 `; MOD_ADD_CANCEL];
+ASM_SIMP_TAC[];
+MATCH_MP_TAC (GSYM periodic_mod);
+ASM_REWRITE_TAC[];
+
+
+ASSUME_TAC2 (ISPECL [` cc_gg3a_v11 cc `;` nn:num `] periodic_mod1);
+FIRST_X_ASSUM (ASSUME_TAC o GSYM);
+ASM_REWRITE_TAC[];
+SIMP_TAC[];
+STRIP_TAC;
+UNDISCH_TAC` ~(&0 <=
+        cc_gg_v11 cc i +
+        cc_gg_v11 cc (i + 1) +
+        cc_gg_v11 cc (i + 2) +
+        cc_gg_v11 cc (i + 3)) `;
+SUBGOAL_THEN` -- cc_eps <= cc_gg_v11 cc (i + 2) ` MP_TAC;
+ASM_REWRITE_TAC[];
+REAL_ARITH_TAC]);;
+
+
+
+let GRHIDFA_ALT = prove_by_refinement(`!cc. cc_bool_model_v11 cc /\
+      cc_bool_prep_v11 cc /\
+      cc_real_model_v11 cc /\
+      sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0
+      ==> ~(cc_card_v11 cc = 4) `,
+[NHANH UTEOITF;
+NHANH IPVICGW;
+REPEAT STRIP_TAC;
+ASSUME_TAC2 QY_NN00 THEN ASSUME_TAC2 QX_NN00;
+DOWN_TAC;
+NHANH Oxl_def.periodic_fn;
+REWRITE_TAC[cc_bool_model_v11; cc_real_model_v11];
+ONCE_REWRITE_TAC[TAUT` ~ a <=> a ==> F `];
+ABBREV_TAC` nn = cc_card_v11 cc `;
+STRIP_TAC;
+ABBREV_TAC ` squ = { i | i <= 3 /\ cc_qu_v11 cc i } `;
+SWITCH_TAC` nn = 4 `;
+ASSUME_TAC (SPECL [` 0 `;` 3 `] FINITE_NUMSEG);
+SUBGOAL_THEN` squ SUBSET 0..3 ` ASSUME_TAC;
+EXPAND_TAC "squ";
+REWRITE_TAC[numseg; LE_0];
+CONV_TAC SET_RULE;
+SUBGOAL_THEN` FINITE (squ: num -> bool) ` ASSUME_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC` 0..3 `;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` ! i. cc_qu_v11 cc i \/ cc_qx_v11 cc i ` ASSUME_TAC;
+ASM_REWRITE_TAC[cc_qx_v11];
+MESON_TAC[];
+ABBREV_TAC` sqx = { i | i <= 3 /\ cc_qx_v11 cc i } ` ;
+SUBGOAL_THEN` sqx UNION squ = 0..3` ASSUME_TAC;
+EXPAND_TAC "squ";
+EXPAND_TAC "sqx";
+REWRITE_TAC[numseg; LE_0];
+UNDISCH_TAC` !i. cc_qu_v11 cc i \/ cc_qx_v11 cc i `;
+REWRITE_TAC[EXTENSION; IN_ELIM_THM; IN_UNION];
+MESON_TAC[];
+
+
+SUBGOAL_THEN` DISJOINT sqx (squ:num -> bool) ` ASSUME_TAC;
+EXPAND_TAC "squ" THEN EXPAND_TAC "sqx";
+REWRITE_TAC[cc_qx_v11];
+CONV_TAC SET_RULE;
+
+SUBGOAL_THEN` sqx SUBSET 0..3 ` ASSUME_TAC;
+EXPAND_TAC "sqx";
+REWRITE_TAC[numseg; LE_0];
+CONV_TAC SET_RULE;
+SUBGOAL_THEN` FINITE (sqx:num -> bool) ` ASSUME_TAC;
+MATCH_MP_TAC FINITE_SUBSET;
+EXISTS_TAC` 0..3 `;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` DISJOINT squ (sqx: num -> bool) ` ASSUME_TAC;
+ONCE_REWRITE_TAC[DISJOINT_SYM];
+ASM_REWRITE_TAC[];
+
+
+SUBGOAL_THEN`! f. sum (squ UNION sqx) f = sum squ f + sum (sqx:num -> bool) f ` ASSUME_TAC;
+GEN_TAC;
+MATCH_MP_TAC SUM_UNION;
+ASM_REWRITE_TAC[];
+
+MP_TAC (ISPECL [` squ: num -> bool `;` sqx: num -> bool `] CARD_UNION);
+ANTS_TAC;
+ASM_REWRITE_TAC[GSYM DISJOINT];
+UNDISCH_TAC` sqx UNION squ = 0..3 `;
+REWRITE_TAC[UNION_COMM];
+STRIP_TAC;
+ASM_REWRITE_TAC[CARD_NUMSEG; ARITH_RULE` (3 + 1) - 0 = 4 `];
+STRIP_TAC; SUBGOAL_THEN` !i. i IN squ
+       ==> #0.161517 - #0.119482 * cc_azim_v11 cc i <= cc_gg_v11 cc i ` ASSUME_TAC;
+EXPAND_TAC "squ";
+REWRITE_TAC[IN_ELIM_THM];
+GEN_TAC THEN STRIP_TAC;
+ASM_SIMP_TAC[];
+
+SUBGOAL_THEN` ! i. i IN sqx 
+==> #0.213849 - #0.119482 * cc_azim_v11 cc i <= cc_gg_v11 cc i ` ASSUME_TAC;
+EXPAND_TAC "sqx";
+REWRITE_TAC[IN_ELIM_THM];
+GEN_TAC THEN STRIP_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+ASM_REWRITE_TAC[cc_hassmall_v11];
+
+ASM_CASES_TAC` CARD (squ: num -> bool) <= 2 ` ;
+SWITCH_TAC` squ UNION sqx = 0..3 `;
+SUBGOAL_THEN` sum squ (\i. #0.161517 - #0.119482 * cc_azim_v11 cc i ) <=
+ sum squ (cc_gg_v11 cc) ` ASSUME_TAC;
+MATCH_MP_TAC SUM_LE;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` sum sqx (\i. #0.213849 - #0.119482 * cc_azim_v11 cc i ) <=
+ sum sqx (cc_gg_v11 cc) ` ASSUME_TAC;
+MATCH_MP_TAC SUM_LE;
+ASM_REWRITE_TAC[];
+
+UNDISCH_TAC` sum (0..nn - 1) (cc_gg_v11 cc) < &0 `;
+EXPAND_TAC "nn";
+REWRITE_TAC[ARITH_RULE` 4 - 1 = 3 `];
+ASM_REWRITE_TAC[ARITH_RULE` ~( x < &0 ) <=> &0 <= x `];
+MATCH_MP_TAC REAL_LE_TRANS;
+EXISTS_TAC` sum squ (\i. #0.161517 - #0.119482 * cc_azim_v11 cc i)  + 
+sum sqx (\i. #0.213849 - #0.119482 * cc_azim_v11 cc i ) `;
+CONJ_TAC;
+ASM_SIMP_TAC[SUM_SUB; SUM_LMUL; SUM_CONST];
+UNDISCH_TAC` sum (0..nn - 1) (cc_azim_v11 cc) = &2 * pi `;
+EXPAND_TAC "nn";
+REWRITE_TAC[ARITH_RULE` 4 - 1 = 3 `];
+ASM_REWRITE_TAC[ETA_AX];
+UNDISCH_TAC` nn = CARD (squ: num -> bool) + CARD (sqx: num -> bool) `;
+UNDISCH_TAC` CARD (squ: num -> bool) <= 2 `;
+REWRITE_TAC[GSYM REAL_OF_NUM_LE; GSYM REAL_OF_NUM_EQ; GSYM REAL_OF_NUM_ADD];
+EXPAND_TAC "nn";
+MP_TAC PI_BOUNDS;
+REAL_ARITH_TAC;
+
+DOWNS 2;
+REAL_ARITH_TAC;
+
+
+ASM_CASES_TAC` ! i. i < 4 ==> cc_qu_v11 cc i ` ;
+SUBGOAL_THEN` ! i. 0 <= i /\ i <= 3 ==> -- #0.0659 + #0.042 * cc_azim_v11 cc i <= cc_gg_v11 cc i ` ASSUME_TAC;
+REWRITE_TAC[ARITH_RULE` 0 <= x /\ x <= 3 <=> x < 4 `];
+FIRST_X_ASSUM NHANH;
+ASM_SIMP_TAC[];
+
+DOWN;
+PHA;
+NHANH SUM_LE_NUMSEG;
+REWRITE_TAC[SUM_ADD_NUMSEG; SUM_LMUL; ETA_AX; SUM_CONST_NUMSEG];
+REWRITE_TAC[ARITH_RULE` ( 3 + 1 ) - 0 = 4`];
+UNDISCH_TAC` sum (0..nn - 1) (cc_azim_v11 cc) = &2 * pi `;
+EXPAND_TAC "nn";
+REWRITE_TAC[ARITH_RULE` 4 - 1 = 3 `];
+SIMP_TAC[];
+REPEAT STRIP_TAC;
+SUBGOAL_THEN` &0 <= sum (0..3) (cc_gg_v11 cc) ` MP_TAC;
+MATCH_MP_TAC REAL_LE_TRANS;
+EXISTS_TAC` &4 * --  #0.0659 + #0.042 * &2 * pi `;
+DOWN THEN SIMP_TAC[];
+MP_TAC PI_BOUNDS;
+REAL_ARITH_TAC;
+ASM_REWRITE_TAC[REAL_ARITH` ~( &0 <= x ) <=> x < &0 `];
+UNDISCH_TAC` sum (0..nn - 1) (cc_gg_v11 cc) < &0 `;
+EXPAND_TAC "nn";
+SIMP_TAC[ARITH_RULE` 4 - 1 = 3 `];
+SUBGOAL_THEN` ? i. i < 4 /\ ~ cc_qu_v11 cc i ` ASSUME_TAC;
+DOWN;
+MESON_TAC[];
+DOWN THEN STRIP_TAC;
+SUBGOAL_THEN` cc_qx_v11 cc i ` ASSUME_TAC;
+ASM_REWRITE_TAC[cc_qx_v11];
+
+SUBGOAL_THEN` CARD (sqx:num -> bool) <= 1 ` ASSUME_TAC;
+UNDISCH_TAC` nn = CARD (squ:num -> bool) + CARD (sqx:num -> bool) `;
+UNDISCH_TAC` ~(CARD (squ:num -> bool) <= 2) `;
+EXPAND_TAC "nn";
+ARITH_TAC;
+SUBGOAL_THEN` ! j. j <= 3 /\ ~(j = i) ==> cc_qu_v11 cc j ` ASSUME_TAC;
+GEN_TAC THEN STRIP_TAC;
+ASM_CASES_TAC` cc_qx_v11 cc j `;
+SUBGOAL_THEN` {i, j:num} SUBSET sqx ` ASSUME_TAC;
+EXPAND_TAC "sqx";
+REWRITE_TAC[IN_ELIM_THM; INSERT_SUBSET; EMPTY_SUBSET];
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` i < 4 `;
+ARITH_TAC;
+
+UNDISCH_TAC` ~( j = (i:num)) ` ;
+REWRITE_TAC[GSYM Geomdetail.CARD2; INSERT_COMM];
+STRIP_TAC;
+SUBGOAL_THEN` CARD {i, j:num} <= CARD (sqx:num -> bool)` ASSUME_TAC;
+MATCH_MP_TAC CARD_SUBSET;
+ASM_REWRITE_TAC[];
+DOWN;
+ASM_REWRITE_TAC[];
+NHANH (ARITH_RULE` 2 <= a ==> ~( a <= 1 ) `);
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` !i. cc_qu_v11 cc i \/ cc_qx_v11 cc i `;
+DISCH_THEN (MP_TAC o (SPEC` j:num `));
+ASM_REWRITE_TAC[];
+ASSUME_TAC2 (ISPECL [` cc_qu_v11 cc `;` nn:num `] periodic_mod1);
+FIRST_X_ASSUM (ASSUME_TAC o GSYM);
+
+MP_TAC (ISPECL [` 3`] Hypermap.LE_MOD_SUC);
+REWRITE_TAC[ARITH_RULE` SUC 3 = 4 `];
+STRIP_TAC;
+
+SUBGOAL_THEN`  i MOD nn = i ` ASSUME_TAC;
+MATCH_MP_TAC MOD_LT;
+UNDISCH_TAC` i < 4 `;
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` !j. j <= 3 /\ ~(j = i) ==> cc_qu_v11 cc j `;
+EXPAND_TAC "i";
+STRIP_TAC;
+
+SUBGOAL_THEN` cc_qu_v11 cc (( i + 1) MOD 4 ) ` ASSUME_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+UNDISCH_TAC` nn = CARD (squ:num -> bool) + CARD (sqx: num -> bool) `;
+DISCH_THEN (ASSUME_TAC o SYM);
+CONJ_TAC;
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` 4 = nn `;
+SIMP_TAC[];
+STRIP_TAC;
+MATCH_MP_TAC (GSYM MOD_INJ11);
+EXPAND_TAC "nn";
+ARITH_TAC;
+
+SUBGOAL_THEN` cc_qu_v11 cc (( i + 2) MOD 4 ) ` ASSUME_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+UNDISCH_TAC` nn = CARD (squ:num -> bool) + CARD (sqx: num -> bool) `;
+DISCH_THEN (ASSUME_TAC o SYM);
+CONJ_TAC;
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` 4 = nn `;
+SIMP_TAC[];
+STRIP_TAC;
+MATCH_MP_TAC (GSYM MOD_INJ11);
+EXPAND_TAC "nn";
+ARITH_TAC;
+
+
+SUBGOAL_THEN` cc_qu_v11 cc (( i + 3) MOD 4 ) ` ASSUME_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+UNDISCH_TAC` nn = CARD (squ:num -> bool) + CARD (sqx: num -> bool) `;
+DISCH_THEN (ASSUME_TAC o SYM);
+CONJ_TAC;
+ASM_REWRITE_TAC[];
+UNDISCH_TAC` 4 = nn `;
+SIMP_TAC[];
+STRIP_TAC;
+MATCH_MP_TAC (GSYM MOD_INJ11);
+EXPAND_TAC "nn";
+ARITH_TAC;
+
+DOWNS 3;
+UNDISCH_TAC` nn = CARD (squ:num -> bool) + CARD (sqx: num -> bool) `;
+DISCH_THEN (ASSUME_TAC o SYM);
+ASM_REWRITE_TAC[];
+ASM_CASES_TAC` cc_crit_v11 cc i `;
+STRIP_TAC;
+UNDISCH_TAC` nn = 4 /\
+   (?i. cc_4cell_v11 cc i /\
+        cc_crit_v11 cc i /\
+        cc_qu_v11 cc (i + 1) /\
+        cc_qu_v11 cc (i + 2) /\
+        cc_qu_v11 cc (i + 3))
+   ==> &0 <= sum (0..nn - 1) (cc_gg_v11 cc) `;
+ANTS_TAC;
+ASM_REWRITE_TAC[];
+EXISTS_TAC` i:num `;
+ASM_REWRITE_TAC[];
+ASM_REWRITE_TAC[REAL_ARITH` ~( &0 <= x ) <=> x < &0 `];
+ASM_CASES_TAC` cc_subcrit_v11 cc i `;
+UNDISCH_TAC` cc_qx_v11 cc i `;
+REWRITE_TAC[cc_qx_v11; cc_qu_v11];
+ASM_REWRITE_TAC[cc_hassmall_v11];
+
+
+SUBGOAL_THEN` cc_crit_v11 cc i \/ cc_subcrit_v11 cc i \/ cc_supercrit_v11 cc i ` ASSUME_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+ASM_REWRITE_TAC[];
+
+DOWN;
+ASM_REWRITE_TAC[];
+
+STRIP_TAC;
+SUBGOAL_THEN` #0.00457511 + #0.00609451 * cc_azim_v11 cc i <= cc_gg_v11 cc i ` MP_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+ASM_REWRITE_TAC[cc_hassmall_v11];
+STRIP_TAC;
+
+SUBGOAL_THEN` ! i. cc_hassmall_v11 cc i ` ASSUME_TAC;
+ASM_REWRITE_TAC[cc_hassmall_v11];
+UNDISCH_TAC` !i. cc_qu_v11 cc i
+       ==> -- #0.0142852 + #0.00609451 * cc_azim_v11 cc i <= cc_gg_v11 cc i `;
+DISCH_THEN NHANH;
+STRIP_TAC;
+
+
+
+
+
+UNDISCH_TAC` sum (0..nn - 1) (cc_gg_v11 cc) < &0 `;
+UNDISCH_TAC` sum (0..nn - 1) (cc_azim_v11 cc) = &2 * pi `;
+ASSUME_TAC2 (ISPECL [` cc_gg_v11 cc `;`nn:num `] periodic_sum);
+FIRST_X_ASSUM (ASSUME_TAC o GSYM);
+ASSUME_TAC2 (ISPECL [` cc_azim_v11 cc `;`nn:num `] periodic_sum);
+FIRST_X_ASSUM (ASSUME_TAC o GSYM);
+ASM_REWRITE_TAC[];
+
+UNDISCH_TAC` 4 = nn `;
+STRIP_TAC;
+EXPAND_TAC "nn";
+REWRITE_TAC[ARITH_RULE` 4 - 1 + i = i + 3 `];
+REWRITE_TAC[SUM_NUMSEG4];
+
+UNDISCH_TAC ` -- #0.0142852 + #0.00609451 * cc_azim_v11 cc (i + 3) <=
+      cc_gg_v11 cc (i + 3) `;
+UNDISCH_TAC ` -- #0.0142852 + #0.00609451 * cc_azim_v11 cc (i + 2) <=
+      cc_gg_v11 cc (i + 2) `;
+UNDISCH_TAC ` -- #0.0142852 + #0.00609451 * cc_azim_v11 cc (i + 1) <=
+      cc_gg_v11 cc (i + 1) `;
+UNDISCH_TAC` #0.00457511 + #0.00609451 * cc_azim_v11 cc i <= cc_gg_v11 cc i `;
+PHA;
+MP_TAC PI_BOUNDS;
+REAL_ARITH_TAC]);;
+
+
+
+
+
+let LUIKGMH_concl = `!cc. cc_bool_model_v11 cc /\ cc_bool_prep_v11 cc /\ cc_real_model_v11 cc /\ 
+   (sum (0..cc_card_v11 cc -1) (cc_gg_v11 cc) < &0) ==> (4 <= cc_card_v11 cc)`;;
+
+
+
+let GRHIDFA_concl = `!cc. cc_bool_model_v11 cc /\ cc_bool_prep_v11 cc /\ cc_real_model_v11 cc /\ 
+   (sum (0..cc_card_v11 cc -1) (cc_gg_v11 cc) < &0) ==> (F)`;; 
+
+
+
+let NOT_QY_LEM = prove(` !cc. cc_bool_model_v11 cc /\
+          cc_bool_prep_v11 cc /\
+          cc_real_model_v11 cc /\
+          sum (0..cc_card_v11 cc - 1) (cc_gg_v11 cc) < &0
+          ==> (!i. ~ cc_qy_v11 cc i) `, NHANH UTEOITF THEN SIMP_TAC[cc_qy_v11]);;
+
+
+
+let LUIKGMH = prove_by_refinement(LUIKGMH_concl,
+[NHANH NOT_QY_LEM;
+REPEAT STRIP_TAC;
+ASSUME_TAC2 QY_NN00 THEN ASSUME_TAC2 QX_NN00;
+ASSUME_TAC2 THREE_LE_CC_CARD;
+DOWN_TAC;
+NHANH Oxl_def.periodic_fn;
+REWRITE_TAC[cc_bool_model_v11; cc_real_model_v11];
+STRIP_TAC;
+ABBREV_TAC` nn = cc_card_v11 cc `;
+ASM_CASES_TAC` nn = 3 `;
+SUBGOAL_THEN` ! i. cc_qu_v11 cc i /\ cc_gg_v11 cc i < &0 ==>  cc_azim_v11 cc i < #1.65 ` ASSUME_TAC;
+GEN_TAC THEN STRIP_TAC;
+SUBGOAL_THEN` -- #0.0659 + #0.042 * cc_azim_v11 cc i <= cc_gg_v11 cc i ` MP_TAC;
+ASM_SIMP_TAC[];
+DOWN THEN PHA;
+NHANH (REAL_ARITH` x < &0 /\ a <= x ==> a < &0 `);
+STRIP_TAC;
+DOWN;
+CONV_TAC REAL_FIELD;
+
+
+ABBREV_TAC` sxx = { i | i <= 2 /\ cc_qu_v11 cc i /\ cc_gg_v11 cc i < &0 }`;
+SUBGOAL_THEN` ! i. cc_qu_v11 cc i \/ cc_qx_v11 cc i ` ASSUME_TAC;
+GEN_TAC;
+MP_TAC (SPEC` i:num ` QU_OR_QXY);
+ASM_REWRITE_TAC[];
+ASM_CASES_TAC` (sxx:num -> bool) = {} `;
+SUBGOAL_THEN` ! i. i <= 2 ==> &0 <= cc_gg_v11 cc i ` ASSUME_TAC;
+GEN_TAC THEN STRIP_TAC;
+ASM_CASES_TAC` cc_qx_v11 cc i `;
+ASM_SIMP_TAC[];
+FIRST_X_ASSUM (MP_TAC o (SPEC`i:num `));
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+ASM_CASES_TAC` cc_gg_v11 cc i < &0 `;
+SUBGOAL_THEN` i IN (sxx:num -> bool) ` MP_TAC;
+EXPAND_TAC "sxx";
+REWRITE_TAC[IN_ELIM_THM];
+ASM_REWRITE_TAC[];
+ASM_REWRITE_TAC[NOT_IN_EMPTY];
+DOWN;
+REAL_ARITH_TAC;
+
+UNDISCH_TAC` sum (0..nn - 1) (cc_gg_v11 cc ) < &0 `;
+ASM_REWRITE_TAC[ARITH_RULE` 3 - 1 = 0 + 2 `; SUM_NUMSEG3; ADD];
+REWRITE_TAC[REAL_ARITH` x < &0 <=> ~( &0 <= x) `];
+DOWN;
+
+MESON_TAC[LE_0; SUM_POS_LE_NUMSEG];
+
+DOWN;
+REWRITE_TAC[Local_lemmas.EMPTY_NOT_EXISTS_IN];
+STRIP_TAC;
+ASM_CASES_TAC` ? y. y IN sxx /\ ~( y = x:num ) `;
+DOWN THEN STRIP_TAC;
+ASSUME_TAC (SET_RULE` DISJOINT {x,y:num} ( (0..2) DIFF {x,y}) `);
+ABBREV_TAC` sc = (0..2) DIFF {x,y} `;
+SUBGOAL_THEN` x <= 2 /\ y <= 2 /\ 0 <= x /\ 0 <= y` MP_TAC;
+UNDISCH_TAC` x IN (sxx: num -> bool) `;
+UNDISCH_TAC` y IN (sxx: num -> bool) `;
+EXPAND_TAC "sxx";
+SIMP_TAC[IN_ELIM_THM; LE_0];
+STRIP_TAC;
+SUBGOAL_THEN` 0..2 = {x,y} UNION sc ` ASSUME_TAC;
+EXPAND_TAC "sc";
+
+SUBGOAL_THEN` x IN 0..2 /\ y IN 0..2 ` MP_TAC;
+ASM_REWRITE_TAC[IN_NUMSEG];
+CONV_TAC SET_RULE;
+SUBGOAL_THEN` CARD {x,y:num} = 2 ` ASSUME_TAC;
+ASM_REWRITE_TAC[Geomdetail.CARD2];
+UNDISCH_TAC` sum (0..nn - 1) (cc_gg_v11 cc ) < &0 `;
+ASM_REWRITE_TAC[ARITH_RULE` 3 - 1 = 2 `];
+ASSUME_TAC (SPECL [` 0 `;` 2 `] FINITE_NUMSEG);
+ASSUME_TAC (ISPECL [` x:num `;` y:num `] Hypermap.FINITE_TWO_ELEMENTS);
+SUBGOAL_THEN` FINITE (sc:num -> bool) ` ASSUME_TAC;
+EXPAND_TAC "sc";
+MATCH_MP_TAC FINITE_DIFF;
+FIRST_ASSUM ACCEPT_TAC;
+
+
+STRIP_TAC;
+UNDISCH_TAC` sum (0..nn - 1) (cc_azim_v11 cc) = &2 * pi `;
+ASM_REWRITE_TAC[ARITH_RULE` 3 - 1 = 2 `];
+ASM_SIMP_TAC[SUM_UNION];
+ASSUME_TAC2 (
+ISPECL [` {x:num, y} `;` sc:num -> bool `] (
+REWRITE_RULE[GSYM DISJOINT] CARD_UNION));
+DOWN;
+ASM_REWRITE_TAC[];
+MP_TAC (SPECL [` 0 `;` 2 `] CARD_NUMSEG);
+ASM_SIMP_TAC[ARITH_RULE` ( 2 + 1) - 0 = 3 `];
+PHA THEN STRIP_TAC;
+SUBGOAL_THEN` sum {x,y} (cc_azim_v11 cc) <= &(CARD {x,y}) * ( #1.65) ` ASSUME_TAC;
+MATCH_MP_TAC SUM_BOUND;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` {x,y} SUBSET (sxx: num -> bool) ` MP_TAC;
+ASM_REWRITE_TAC[INSERT_SUBSET; EMPTY_SUBSET];
+
+REWRITE_TAC[SUBSET];
+DISCH_THEN NHANH;
+GEN_TAC THEN STRIP_TAC;
+MATCH_MP_TAC REAL_LT_IMP_LE;
+FIRST_X_ASSUM MATCH_MP_TAC;
+DOWN;
+EXPAND_TAC "sxx";
+REWRITE_TAC[IN_ELIM_THM];
+SIMP_TAC[];
+
+
+SUBGOAL_THEN` sum sc (cc_azim_v11 cc) < &(CARD sc) * ( #2.8) ` ASSUME_TAC;
+MATCH_MP_TAC SUM_BOUND_LT_ALL;
+ASM_REWRITE_TAC[];
+CONJ_TAC;
+STRIP_TAC;
+FIRST_X_ASSUM SUBST_ALL_TAC;
+UNDISCH_TAC` 3 = 2 + (CARD ({}:num -> bool))` ;
+REWRITE_TAC[CARD_EMPTY];
+ARITH_TAC;
+GEN_TAC THEN STRIP_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+FIRST_X_ASSUM (MP_TAC o (SPEC` x':num `));
+SIMP_TAC[cc_qu_v11; cc_qx_v11];
+MESON_TAC[];
+
+
+DOWNS 2;
+NHANH (REAL_ARITH` a <= aa /\ b < bb ==> a + b < aa + bb `);
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+UNDISCH_TAC` 3 = 2 + CARD (sc:num -> bool) `;
+REWRITE_TAC[ARITH_RULE` 3 = 2 + x <=> x = 1 `];
+DISCH_THEN (SUBST_ALL_TAC);
+DOWN;
+MP_TAC PI_BOUNDS;
+REAL_ARITH_TAC;
+
+SUBGOAL_THEN` ! i. #2.3 < cc_azim_v11 cc i ==> cc_eps <= cc_gg_v11 cc i ` ASSUME_TAC;
+GEN_TAC;
+FIRST_X_ASSUM (MP_TAC o (SPEC` i:num `));
+STRIP_TAC;
+STRIP_TAC;
+MATCH_MP_TAC REAL_LE_TRANS;
+EXISTS_TAC` -- #0.0659 + #0.042 * cc_azim_v11 cc i `;
+ASM_SIMP_TAC[];
+DOWN;
+REWRITE_TAC[cc_eps];
+REAL_ARITH_TAC;
+ASM_SIMP_TAC[];
+
+ASSUME_TAC2 (
+SET_RULE` x IN sxx /\ ~(?y. y IN sxx /\ ~(y = x)) ==> sxx = {x:num} `);
+ABBREV_TAC` sc = (0..2) DIFF sxx `;
+ASSUME_TAC (SPECL [` 0 `;` 2 `] FINITE_NUMSEG);
+SUBGOAL_THEN` FINITE ((0..2) DIFF sxx ) ` ASSUME_TAC;
+DOWN;
+REWRITE_TAC[FINITE_DIFF];
+DOWNS 3;
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+UNDISCH_TAC` x IN (sxx:num -> bool) `;
+EXPAND_TAC "sxx";
+REWRITE_TAC[IN_ELIM_THM];
+STRIP_TAC;
+SUBGOAL_THEN` x IN (0..2) ` ASSUME_TAC;
+ASM_REWRITE_TAC[IN_NUMSEG; LE_0];
+
+DOWN;
+NHANH (SET_RULE` x IN S ==> DISJOINT {x} (S DIFF {x}) `);
+ASM_REWRITE_TAC[];
+STRIP_TAC;
+ASSUME_TAC2 (SET_RULE` x IN (0..2) ==> {x} UNION ((0..2) DIFF {x}) = (0..2) `);
+MP_TAC (ISPECL [` {x:num } `;`sc: num -> bool `] CARD_UNION);
+ANTS_TAC;
+ASM_REWRITE_TAC[GSYM DISJOINT];
+UNDISCH_TAC` FINITE ((0..2) DIFF {x})`;
+ASM_REWRITE_TAC[FINITE_SING];
+DOWN;
+ASM_SIMP_TAC[CARD_SING; CARD_NUMSEG; ARITH_RULE` (2 + 1) - 0 = 3 `];
+REWRITE_TAC[ARITH_RULE` 3 = 1 + x <=> x = 2 `];
+PHA THEN STRIP_TAC;
+SUBGOAL_THEN` FINITE (sc:num -> bool) ` ASSUME_TAC;
+EXPAND_TAC "sc";
+FIRST_X_ASSUM ACCEPT_TAC;
+ASM_CASES_TAC` ! i. i IN sc ==> 
+cc_azim_v11 cc i <= #2.3 ` ;
+DOWNS 2;
+NHANH SUM_LE;
+REWRITE_TAC[ETA_AX];
+IMP_TAC;
+ASM_SIMP_TAC[SUM_CONST];
+PHA THEN STRIP_TAC;
+
+UNDISCH_TAC` sum (0..nn - 1) (cc_azim_v11 cc) = &2 * pi `;
+ASM_REWRITE_TAC[ARITH_RULE` 3 - 1 = 2 `];
+UNDISCH_TAC` {x} UNION sc = 0..2 `;
+DISCH_THEN (SUBST1_TAC o SYM);
+ASM_SIMP_TAC[SUM_UNION; FINITE_SING; SUM_SING];
+SUBGOAL_THEN` cc_azim_v11 cc x < #1.65 ` MP_TAC;
+FIRST_X_ASSUM MATCH_MP_TAC;
+ASM_REWRITE_TAC[];
+DOWN;
+MP_TAC PI_BOUNDS;
+REAL_ARITH_TAC;
+DOWN;
+REWRITE_TAC[MESON[]` (~(! i. p i ==> q i)) <=> (? i. p i /\ ~ q i ) `];
+REWRITE_TAC[REAL_ARITH` ~( x <= y ) <=> y < x `];
+STRIP_TAC;
+
+
+FIRST_ASSUM (ASSUME_TAC2 o (SPEC` i:num `));
+ASSUME_TAC2 (SET_RULE` (i:num) IN sc ==> sc = {i} UNION (sc DIFF {i})`);
+ABBREV_TAC` scc = sc DIFF {i:num} `;
+SUBGOAL_THEN` FINITE ( sc DIFF {i:num}) ` ASSUME_TAC;
+MATCH_MP_TAC FINITE_DIFF;
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` ! j. j IN sc ==> &0 <= cc_gg_v11 cc j ` ASSUME_TAC;
+EXPAND_TAC "sc";
+UNDISCH_TAC` sxx = {x:num} `;
+DISCH_THEN (SUBST1_TAC o SYM);
+EXPAND_TAC "sxx";
+REWRITE_TAC[IN_DIFF; IN_NUMSEG; IN_ELIM_THM; LE_0; DE_MORGAN_THM];
+GEN_TAC THEN IMP_TAC;
+SIMP_TAC[];
+PHA THEN STRIP_TAC;
+MP_TAC (SPEC` j:num` QU_OR_QXY);
+ASM_REWRITE_TAC[];
+DOWN;
+REAL_ARITH_TAC;
+
+UNDISCH_TAC` sum (0.. nn - 1) (cc_gg_v11 cc ) < &0 `;
+ASM_SIMP_TAC[ARITH_RULE` 3 - 1 = 2 `];
+UNDISCH_TAC` {x} UNION sc = 0..2 `;
+DISCH_THEN (SUBST1_TAC o SYM);
+UNDISCH_TAC ` sc = {i:num} UNION scc `;
+DISCH_THEN (ASSUME_TAC o SYM);
+ASM_SIMP_TAC[SUM_UNION; FINITE_SING; SUM_SING];
+FIRST_X_ASSUM (ASSUME_TAC o SYM);
+UNDISCH_TAC` FINITE (sc DIFF {i:num}) `;
+
+MP_TAC (SET_RULE` DISJOINT {i} (sc DIFF {i:num} ) `);
+ASM_SIMP_TAC[SUM_UNION; FINITE_SING; SUM_SING];
+PHA THEN STRIP_TAC;
+SUBGOAL_THEN` -- cc_eps <= cc_gg_v11 cc x ` ASSUME_TAC;
+ASSUME_TAC2 (LEAST_BOUND_CC_GG);
+ASM_REWRITE_TAC[];
+SUBGOAL_THEN` &0 <= sum scc (cc_gg_v11 cc) ` ASSUME_TAC;
+MATCH_MP_TAC SUM_POS_LE;
+ASM_REWRITE_TAC[];
+EXPAND_TAC "scc";
+REWRITE_TAC[IN_DIFF];
+FIRST_X_ASSUM NHANH;
+SIMP_TAC[];
+DOWNS 3;
+UNDISCH_TAC` cc_eps <= cc_gg_v11 cc i `;
+REAL_ARITH_TAC;
+DOWN;
+UNDISCH_TAC` 3 <= nn `;
+ARITH_TAC]);;
+
+
+
+let GRHIDFA = prove(GRHIDFA_concl, 
+PHA THEN NHANH LUIKGMH THEN NHANH GRHIDFA_ALT THEN NHANH RSIWAMP
+THEN GEN_TAC THEN STRIP_TAC THEN DOWNS 3 THEN ARITH_TAC);;
+
+
+
+(* =================================================== *)
+
+
+
+end;;
