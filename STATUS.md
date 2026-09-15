@@ -10,7 +10,7 @@
 > WedgeVolume,LuneVolume,SolidAngle}.lean`，含 HOL `VOLUME_BALL_WEDGE` /
 > `HAS_MEASURE_LUNE` / `VOLUME_SOLID_TRIANGLE`），据此 planarity.hl 收官；
 > **Conforming.hl 17,033 行亦已 100% 收官进 main（2026-09-13，`d77c13f`）**。
-> 当前目标：polyhedron.hl（Phase 5 第六本，blocker 台账基本核销，见 Phase 5）；
+> polyhedron.hl ✅ 已 100% 收官（71 定理 + Polytope 基层，零 sorry）。当前目标：**packing 章节（B1-B4 已落地 11 模块 8,521 行，`wip/auto-packing` @ 11 路零 error；骨架+部分诚实证明，~1114 定理已全部陈述）**；剩余 B5-B11：marchal2/3 链、TSKAJXY 链、counting_spheres、GRUTOTI∥REUHADY、OXLZLEZ3 终章。⚠️ 台账：`permutes` 编码保真度问题（Auto10：RVFXZBU/YNHYJIT 按现编码可能假，需侧条件或重编码）；`Marchal_cells_2_new.hl` 缺失（mcell_set 等辅助引理届时重建）；G4 由 Kimi 并行推进（wip/g4-emit）。
 > **Phase 4 G4 由 Kimi 并行推进（wip/g4-emit），通路已验证、205k 叶案例闭合（见 Phase 4）**。
 
 图例：✅ 完成并验证 / 🟡 进行中 / ⬜ 未启动。完成度为行数或条目数口径的粗略估计。
