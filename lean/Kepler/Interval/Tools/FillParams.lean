@@ -215,6 +215,31 @@ def runLadder {n : ℕ} (mkExpr : ℕ → Int → IExpr n)
   | none => IO.println "BESTFAIL no-rungs"
   return 1
 
+/-- Evaluate a single pinned rung; print the per-leaf lines and exit 0 when
+every leaf passes, else print a `BESTFAIL` header and exit 1.  Sharded
+stage-A phase 2 uses this to recompute params at the global rung. -/
+def runSingle {n : ℕ} (mkExpr : ℕ → Int → IExpr n)
+    (boxes : Array (Fin n → DInterval)) (N : ℕ) (out : Int) : IO UInt32 := do
+  let (fails, results) ← runRung mkExpr boxes N out
+  IO.eprintln s!"rung N={N} out={out}: {fails}/{boxes.size} failures"
+  if fails == 0 then
+    IO.println s!"RUNG {N} {out}"
+    printResults results
+    return 0
+  IO.println s!"BESTFAIL N={N} out={out} failures={fails}/{boxes.size}"
+  printResults results
+  return 1
+
+/-- Stage-A main with argv dispatch: no args walks the rung ladder;
+`N out` evaluates that pinned rung (sharded stage-A phase 2). -/
+def runMain {n : ℕ} (mkExpr : ℕ → Int → IExpr n)
+    (boxes : Array (Fin n → DInterval)) : List String → IO UInt32
+  | [ns, outs] =>
+    match ns.toNat?, outs.toInt? with
+    | some N, some out => runSingle mkExpr boxes N out
+    | _, _ => runLadder mkExpr boxes
+  | _ => runLadder mkExpr boxes
+
 end Tools
 
 end Kepler.Interval

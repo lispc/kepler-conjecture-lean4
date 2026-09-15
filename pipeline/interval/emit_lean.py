@@ -475,20 +475,22 @@ def sample_leaves(leaf_iter, rootfrac, limit):
     return cur, leaves
 
 
-def stage_a_file(mod, n, expr, boxes_lean, nleaves):
+def stage_a_file(mod, n, expr, boxes_lean, nleaves, leaf0=0):
     """Stage A driver: `fillMkExpr N out` (dummy sqrt slots, rung-parameter
-    trans nodes) + the sampled leaf boxes + a `runLadder` main."""
+    trans nodes) + the sampled leaf boxes + a `runMain` main (argv dispatch:
+    no args = ladder, `N out` = pinned rung).  `leaf0` is the global index
+    of the first box (sharded drivers report global leaf indices)."""
     return (HDR + "import Kepler.Interval.Tools.FillParams\n\n"
             "set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
             "open Kepler.Interval Kepler.Interval.Tools\n\n"
             "/-- The case expression with dummy sqrt slots `(0, 0)`; the `trans`\n"
             "certificate parameters are the rung arguments `N out`. -/\n"
             f"def fillMkExpr (N : ℕ) (out : Int) : IExpr {n} :=\n  {expr}\n\n"
-            f"/-- The {nleaves} sampled leaf boxes (cert order). -/\n"
+            f"/-- The {nleaves} sampled leaf boxes (cert order from {leaf0}). -/\n"
             f"def fillBoxes : Array (Fin {n} → DInterval) :=\n  #["
             + ",\n    ".join(f"({b} : Fin {n} → DInterval)" for b in boxes_lean)
             + "]\n\n"
-            "def main : IO UInt32 := runLadder fillMkExpr fillBoxes\n")
+            f"def main : List String → IO UInt32 := runMain fillMkExpr fillBoxes\n")
 
 
 def parse_params(path, nleaves, k):
@@ -628,12 +630,15 @@ def main():
     sample_n = None
     fill = False
     stage_a = False
+    stage_a_shards = 1
     bbg = False
     params_file = None
     args = []
     for a in sys.argv[1:]:
         if a.startswith("--shard-leaves="):
             shard_leaves = int(a.split("=", 1)[1])
+        elif a.startswith("--stage-a-shards="):
+            stage_a_shards = int(a.split("=", 1)[1])
         elif a.startswith("--leaves="):
             sample_n = int(a.split("=", 1)[1])
         elif a == "--fill":
@@ -708,6 +713,23 @@ def main():
                       trans=lambda op, closed: closed_params if closed else ("N", "out"))
             expr = rpn.emit(case["prog"])
             boxes_lean = [box_lit(tuple(box_frac(iv) for iv in l["box"])) for l in leaves]
+            if stage_a_shards > 1:
+                # Sharded stage A: contiguous chunks, driver i covers global
+                # leaf indices [i*sz, (i+1)*sz).  Each driver still reports
+                # LOCAL indices; the merge step remaps via this layout.
+                sz = (len(leaves) + stage_a_shards - 1) // stage_a_shards
+                d = os.path.splitext(args[2])[0] + ".d"
+                os.makedirs(d, exist_ok=True)
+                nw = 0
+                for i in range(0, len(leaves), sz):
+                    chunk = boxes_lean[i:i + sz]
+                    out = stage_a_file(mod, n, expr, chunk, len(chunk), leaf0=i)
+                    p = os.path.join(d, f"chunk{i // sz:05d}.lean")
+                    open(p, "w").write(out.format(**hdr))
+                    nw += 1
+                print(f"emit_lean: wrote {nw} stage-A shards to {d}/ "
+                      f"({len(leaves)} leaves, chunk size {sz}, {k} sqrt slots)")
+                return
             out = stage_a_file(mod, n, expr, boxes_lean, len(leaves))
             open(args[2], "w").write(out.format(**hdr))
             print(f"emit_lean: wrote {args[2]} (stage A: {len(leaves)} leaves, "

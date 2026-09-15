@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+"""Merge sharded stage-A params with repair-loop params into one FillParams
+params file covering a repaired certificate.
+
+Box-value keyed: stage B (emit_lean.py --bbg) looks params up by cert box,
+so the merge only needs to map every repaired-cert leaf box to its mantissa
+list.  Sources, in priority order:
+  1. <repair.params.json> — leaves that went through the repair loop
+     (descendants of failing leaves), each with its own rung;
+  2. <stagea_dir>/chunk*.out — pre-verified leaves from sharded stage A
+     (global index i*sz+local ↔ original cert leaf order).
+The global rung is the max (ladder order) over all contributing rungs;
+sqrt mantissas are rung-independent, so mixing sources is sound.
+
+usage: params_merge.py <orig_cert.json> <stagea_dir> <sz>
+                       <repaired_cert.json> <repair.params.json> <out.txt>
+"""
+import glob
+import json
+import os
+import re
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import emit_lean as E
+
+LADDER = [(12, -64), (16, -64), (20, -64), (24, -64), (32, -64), (48, -64),
+          (64, -64), (96, -64), (128, -64), (128, -80), (128, -100)]
+RANK = {r: i for i, r in enumerate(LADDER)}
+
+
+def die(msg):
+    sys.exit(f"params_merge: {msg}")
+
+
+def box_key(box_json):
+    return tuple(E.box_frac(iv) for iv in box_json)
+
+
+def main():
+    if len(sys.argv) != 7:
+        die(__doc__)
+    orig_cert = json.load(open(sys.argv[1]))
+    stagea_dir, sz = sys.argv[2], int(sys.argv[3])
+    repaired = json.load(open(sys.argv[4]))
+    rparams = json.load(open(sys.argv[5]))
+    outpath = sys.argv[6]
+
+    rungs = []
+    old = {}
+    orig_boxes = [box_key(l["box"]) for l in orig_cert["leaves"]]
+    for f in sorted(glob.glob(os.path.join(stagea_dir, "chunk*.out"))):
+        idx = int(re.search(r"chunk(\d+)", os.path.basename(f)).group(1))
+        for ln in open(f):
+            parts = ln.split()
+            if not parts:
+                continue
+            if parts[0] == "RUNG":
+                rungs.append((int(parts[1]), int(parts[2])))
+            elif parts[0] == "BESTFAIL":
+                # Failing leaves in this shard get no params here; they must
+                # be covered by the repair params (final lookup will verify).
+                print(f"params_merge: note BESTFAIL shard {f} ({ln.strip()})",
+                      file=sys.stderr)
+            elif parts[0].isdigit() and parts[1] == "PASS":
+                g = idx * sz + int(parts[0])
+                old[orig_boxes[g]] = parts[2:]
+
+    new = {}
+    for l in rparams["leaves"]:
+        rungs.append(tuple(l["rung"]))
+        new[box_key(l["box"])] = [str(x) for x in l["params"]]
+    if not rungs:
+        die("no rungs found in any source")
+    global_rung = max(rungs, key=lambda r: RANK[r])
+
+    missing = 0
+    with open(outpath, "w") as out:
+        out.write(f"RUNG {global_rung[0]} {global_rung[1]}\n")
+        for i, l in enumerate(repaired["leaves"]):
+            key = box_key(l["box"])
+            params = new.get(key) or old.get(key)
+            if params is None:
+                print(f"missing params for leaf {i}: {key}", file=sys.stderr)
+                missing += 1
+                continue
+            out.write(f"{i} PASS {' '.join(params)}\n")
+    if missing:
+        die(f"{missing} repaired-cert leaves have no params")
+    print(f"params_merge: wrote {outpath} — {len(repaired['leaves'])} leaves, "
+          f"global rung {global_rung} ({len(old)} stage-A + {len(new)} repair)")
+
+
+if __name__ == "__main__":
+    main()

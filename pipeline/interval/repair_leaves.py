@@ -16,13 +16,14 @@ Usage:
 """
 import json
 import os
+import re
 import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import emit_lean as E
 
-LEAN_DIR = "/dev/shm/kepler-g4e/lean"
+LEAN_DIR = os.environ.get("G4E_LEAN_DIR", "/home/scroll/repos/kepler-g4e/lean")
 REPAIR_DIR = os.path.join(LEAN_DIR, "Kepler/Interval/Cases/Repair")
 
 
@@ -49,8 +50,10 @@ def box_json(box):
     return [[dy(lo), dy(hi)] for lo, hi in box]
 
 
-def run_round(mod, n, expr, items, round_no, chunk_size):
-    """items: list of (box, hit, depth).  Returns list of failing indices."""
+def run_round(mod, n, expr, items, round_no, chunk_size, params_out=None):
+    """items: list of (box, hit, depth).  Returns list of failing indices.
+    When params_out is a dict, records {box: (mantissa ints, rung)} for every
+    PASS leaf (rung from the chunk's RUNG / BESTFAIL header)."""
     failures = []
     for c0 in range(0, len(items), chunk_size):
         chunk = items[c0:c0 + chunk_size]
@@ -71,11 +74,21 @@ def run_round(mod, n, expr, items, round_no, chunk_size):
         chunk_fails = 0
         leaf_lines = 0
         driver_errors = []
+        rung = None
         for ln in lines:
             parts = ln.split()
+            if parts[:1] == ["RUNG"]:
+                rung = [int(parts[1]), int(parts[2])]
+            elif parts[:1] == ["BESTFAIL"]:
+                m = re.search(r"N=(\d+) out=(-?\d+)", ln)
+                if m:
+                    rung = [int(m.group(1)), int(m.group(2))]
             if len(parts) >= 2 and parts[0].isdigit():
                 if parts[1] in ("PASS", "FAIL"):
                     leaf_lines += 1
+                if parts[1] == "PASS" and params_out is not None:
+                    params_out[chunk[int(parts[0])][0]] = (
+                        [int(x) for x in parts[2:]], rung)
                 if parts[1] == "FAIL":
                     failures.append(c0 + int(parts[0]))
                     chunk_fails += 1
@@ -93,12 +106,15 @@ def run_round(mod, n, expr, items, round_no, chunk_size):
 
 def main():
     max_depth, chunk_size = 3, 5000
+    fails_file = None
     args = []
     for a in sys.argv[1:]:
         if a.startswith("--max-depth="):
             max_depth = int(a.split("=", 1)[1])
         elif a.startswith("--chunk="):
             chunk_size = int(a.split("=", 1)[1])
+        elif a.startswith("--fails="):
+            fails_file = a.split("=", 1)[1]
         elif a == "--keep-going":
             pass
         elif not a.startswith("--"):
@@ -122,11 +138,24 @@ def main():
     # (box, hit, depth) triples; survivors = verified PASS (possibly split)
     items = [(tuple(E.box_frac(iv) for iv in l["box"]), l["hit"], 0)
              for l in cert["leaves"]]
-    print(f"repair: {len(items)} leaves, round 0 full scan", flush=True)
-    survivors = []
-    for round_no in range(max_depth + 1):
+    params_by_box = {}
+    if fails_file is not None:
+        # Seeded mode: a prior scan (e.g. sharded stage-A) already verified
+        # most leaves; only the seeded failures enter the split loop.
+        seed = {int(x) for x in open(fails_file) if x.strip()}
+        survivors = [it for i, it in enumerate(items) if i not in seed]
+        items = [it for i, it in enumerate(items) if i in seed]
+        print(f"repair: seeded {len(items)} failing leaves "
+              f"({len(survivors)} pre-verified survivors)", flush=True)
+        start_round = 1
+    else:
+        print(f"repair: {len(items)} leaves, round 0 full scan", flush=True)
+        survivors = []
+        start_round = 0
+    for round_no in range(start_round, max_depth + 1):
         fails = run_round(mod, n, expr, items, round_no,
-                          chunk_size if round_no == 0 else 100000)
+                          chunk_size if round_no == 0 else 100000,
+                          params_by_box)
         if not fails:
             survivors.extend(items)
             print(f"repair: round {round_no} clean — {len(survivors)} "
@@ -157,6 +186,15 @@ def main():
                       for b, hit, _ in survivors]}
     json.dump(out, open(args[2], "w"))
     print(f"repair: wrote {args[2]} ({len(survivors)} leaves)", flush=True)
+    # Params for every leaf that passed through a repair round (descendants
+    # of failing leaves); the pre-verified survivors keep their stage-A
+    # params — params_merge.py joins the two by box value.
+    pfile = args[2] + ".params.json"
+    pleaves = [{"box": box_json(b), "params": params_by_box[b][0],
+                "rung": params_by_box[b][1]}
+               for b, _, _ in survivors if b in params_by_box]
+    json.dump({"leaves": pleaves}, open(pfile, "w"))
+    print(f"repair: wrote {pfile} ({len(pleaves)} param leaves)", flush=True)
 
 
 if __name__ == "__main__":
