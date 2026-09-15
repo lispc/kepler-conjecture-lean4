@@ -240,6 +240,56 @@ def runMain {n : ℕ} (mkExpr : ℕ → Int → IExpr n)
     | _, _ => runLadder mkExpr boxes
   | _ => runLadder mkExpr boxes
 
+/-! ### Data-file drivers
+
+Boxes as runtime data instead of source literals: the elaboration of a
+million-leaf box array does not scale (the monolithic driver needed
+11.5h+), while parsing a text file at runtime is seconds.  One line per
+leaf, `lm le hm he` per dimension (emitted dyadic form, no normalization). -/
+
+/-- Parse one box line (`4*n` ints, single-space separated) into a
+`Fin n → DInterval`. -/
+def parseBoxLine (n : ℕ) (ln : String) : Option (Fin n → DInterval) :=
+  let ws := (ln.trim.splitOn " ").filter (!·.isEmpty)
+  if ws.length != 4 * n then none
+  else
+    let rec go : List String → Array DInterval → Option (Array DInterval)
+      | [], acc => some acc
+      | a :: b :: c :: d :: rest, acc =>
+        match a.toInt?, b.toInt?, c.toInt?, d.toInt? with
+        | some lm, some le, some hm, some he =>
+          go rest (acc.push ⟨⟨lm, le⟩, ⟨hm, he⟩⟩)
+        | _, _, _, _ => none
+      | _, _ => none
+    (go ws #[]).map fun arr (i : Fin n) => arr.getD i ⟨⟨0, 0⟩, ⟨0, 0⟩⟩
+
+/-- Stream a boxes data file into memory; dies on the first malformed line. -/
+def readBoxes (n : ℕ) (path : String) : IO (Array (Fin n → DInterval)) := do
+  let h ← IO.FS.Handle.mk path IO.FS.Mode.read
+  let mut out : Array (Fin n → DInterval) := #[]
+  repeat
+    let ln ← h.getLine
+    if ln.isEmpty then break
+    match parseBoxLine n ln with
+    | some b => out := out.push b
+    | none => throw (IO.userError s!"malformed box line: {ln.take 80}")
+  IO.eprintln s!"read {out.size} boxes from {path}"
+  return out
+
+/-- Data-file stage-A main: `boxes.txt` walks the ladder, `boxes.txt N out`
+evaluates the pinned rung. -/
+def runMainFile {n : ℕ} (mkExpr : ℕ → Int → IExpr n) : List String → IO UInt32
+  | [path] => do
+      let boxes ← readBoxes n path
+      runLadder mkExpr boxes
+  | [path, ns, outs] =>
+    match ns.toNat?, outs.toInt? with
+    | some N, some out => do
+        let boxes ← readBoxes n path
+        runSingle mkExpr boxes N out
+    | _, _ => throw (IO.userError "usage: driver <boxes.txt> [N out]")
+  | _ => throw (IO.userError "usage: driver <boxes.txt> [N out]")
+
 end Tools
 
 end Kepler.Interval

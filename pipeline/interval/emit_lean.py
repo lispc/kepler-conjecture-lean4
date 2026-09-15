@@ -631,6 +631,7 @@ def main():
     fill = False
     stage_a = False
     stage_a_shards = 1
+    stage_a_data = False
     bbg = False
     params_file = None
     args = []
@@ -645,6 +646,8 @@ def main():
             fill = True
         elif a == "--stage-a":
             stage_a = True
+        elif a == "--stage-a-data":
+            stage_a_data = True
         elif a == "--bbg":
             bbg = True
         elif a.startswith("--params="):
@@ -712,6 +715,36 @@ def main():
             rpn = RPN(sqrt_slot=lambda i: ("0", "0"),
                       trans=lambda op, closed: closed_params if closed else ("N", "out"))
             expr = rpn.emit(case["prog"])
+            if stage_a_data:
+                # Data-file mode: one tiny shared driver (compiles in
+                # seconds) + plain-text box chunks read at runtime —
+                # elaborating box literals is the scaling bottleneck.
+                # Chunk layout identical to the .lean shard mode.
+                sz = (len(leaves) + stage_a_shards - 1) // stage_a_shards
+                d = os.path.splitext(args[2])[0] + ".d"
+                os.makedirs(d, exist_ok=True)
+                drv = (HDR + "import Kepler.Interval.Tools.FillParams\n\n"
+                       "open Kepler.Interval Kepler.Interval.Tools\n\n"
+                       f"def fillMkExpr (N : ℕ) (out : Int) : IExpr {n} :=\n"
+                       f"  {expr}\n\n"
+                       "def main : List String → IO UInt32 :=\n"
+                       "  runMainFile fillMkExpr\n")
+                open(os.path.join(d, "driver.lean"), "w").write(
+                    drv.format(**hdr))
+                nw = 0
+                for i in range(0, len(leaves), sz):
+                    p = os.path.join(d, f"chunk{i // sz:05d}.txt")
+                    with open(p, "w") as f:
+                        for l in leaves[i:i + sz]:
+                            b = tuple(box_frac(iv) for iv in l["box"])
+                            f.write(" ".join(
+                                f"{lo[0]} {lo[1]} {hi[0]} {hi[1]}"
+                                for lo, hi in b) + "\n")
+                    nw += 1
+                print(f"emit_lean: wrote data-mode stage-A to {d}/ "
+                      f"(driver.lean + {nw} chunk txts, {len(leaves)} leaves, "
+                      f"chunk size {sz}, {k} sqrt slots)")
+                return
             boxes_lean = [box_lit(tuple(box_frac(iv) for iv in l["box"])) for l in leaves]
             if stage_a_shards > 1:
                 # Sharded stage A: contiguous chunks, driver i covers global
