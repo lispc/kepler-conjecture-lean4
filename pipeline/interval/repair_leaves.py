@@ -130,7 +130,7 @@ def main():
         die("disj repair not implemented (hit inheritance is goal-specific)")
 
     rpn = E.RPN(sqrt_slot=lambda i: ("0", "0"),
-                trans=lambda op, closed: ("1024", "(-64)") if closed else ("N", "out"))
+                trans=lambda op, closed: ("128", "(-64)") if closed else ("N", "out"))
     expr = rpn.emit(case["prog"])
     mod = "CRepair" + "".join(ch if ch.isalnum() else "x"
                               for ch in os.path.basename(args[1]).split(".")[0])

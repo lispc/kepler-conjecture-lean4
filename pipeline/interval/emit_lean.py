@@ -558,7 +558,7 @@ def base_file_bbg(mod, n, k, expr, box):
 def shard_file_bbg(mod, i, sub, n, params_by_box):
     return (HDR + f"import Kepler.Interval.Cases.{mod}.Base\n\n"
             "set_option maxHeartbeats 0\n"
-            "-- closed-arg atan nodes run N=1024 Taylor terms; the elaborator's\n"
+            "-- closed-arg atan nodes run N=128 Taylor terms; the elaborator's\n"
             "-- whnf recursion budget must cover the `taylorIter` fuel\n"
             "set_option maxRecDepth 1000000\n\n"
             "namespace Kepler.Interval.Cases\n\n"
@@ -705,12 +705,14 @@ def main():
         t = reconstruct(rootfrac, leafmap)
         box = box_lit(rootfrac)
         k = count_op(case["prog"], "sqrt")
-        # var-free (leaf-constant) trans arguments get a fixed high Taylor
-        # order: the alternating arctan series at a boundary point (atan 1)
+        # var-free (leaf-constant) trans arguments get a fixed Taylor order:
+        # the alternating arctan series at a boundary point (atan 1)
         # converges only like 1/(2N+1), so the rung ladder's N (tuned for
         # interior args, where big mantissas make high N expensive) can
-        # never reach the needed precision.
-        closed_params = ("1024", "(-64)")
+        # never reach the needed precision.  N=128 verified: all 3762 leaves
+        # of 5490182221 chunk00000 PASS at N=64/128/256/1024 with the same
+        # rung (12,-64); kernel cost scales ~linearly in N.
+        closed_params = ("128", "(-64)")
         if stage_a:
             rpn = RPN(sqrt_slot=lambda i: ("0", "0"),
                       trans=lambda op, closed: closed_params if closed else ("N", "out"))
