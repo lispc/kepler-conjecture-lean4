@@ -10,7 +10,7 @@
 > WedgeVolume,LuneVolume,SolidAngle}.lean`，含 HOL `VOLUME_BALL_WEDGE` /
 > `HAS_MEASURE_LUNE` / `VOLUME_SOLID_TRIANGLE`），据此 planarity.hl 收官；
 > **Conforming.hl 17,033 行亦已 100% 收官进 main（2026-09-13，`d77c13f`）**。
-> polyhedron.hl ✅ 已 100% 收官（71 定理 + Polytope 基层，零 sorry）。当前目标：**packing 章节（B1-B4 已落地 11 模块 8,521 行，`wip/auto-packing` @ 11 路零 error；骨架+部分诚实证明，~1114 定理已全部陈述）**；剩余 B5-B11：marchal2/3 链、TSKAJXY 链、counting_spheres、GRUTOTI∥REUHADY、OXLZLEZ3 终章。⚠️ 台账：`permutes` 编码保真度问题（Auto10：RVFXZBU/YNHYJIT 按现编码可能假，需侧条件或重编码）；`Marchal_cells_2_new.hl` 缺失（mcell_set 等辅助引理届时重建）；G4 由 Kimi 并行推进（wip/g4-emit）。
+> polyhedron.hl ✅ 已 100% 收官（71 定理 + Polytope 基层，零 sorry）。packing 章节 **B1-B11 全部落底（2026-09-14，`wip/auto-packing` @ `5b470efc`）：25 模块 20,546 行，25 路联合编译零 error**；全章 ~1,400+ 定理全部忠实陈述，诚实证明 ~400 枚；顶石多枚已闭合（EMNWUUS 2/2、UPFZBZM、URRPHBZ3、GRUTOTI、OXLZLEZ 经 GRHIDFA 路线）；剩余 = 证明完成波次（~800 sorry 集中在巨石内部引理）+ permutes 编码问题 + _pNN 副本合并清理。⚠️ 台账：`permutes` 编码保真度问题（Auto10：RVFXZBU/YNHYJIT 按现编码可能假，需侧条件或重编码）；`Marchal_cells_2_new.hl` 缺失（mcell_set 等辅助引理届时重建）；G4 由 Kimi 并行推进（wip/g4-emit）。
 > **Phase 4 G4 由 Kimi 并行推进（wip/g4-emit），通路已验证、205k 叶案例闭合（见 Phase 4）**。
 
 图例：✅ 完成并验证 / 🟡 进行中 / ⬜ 未启动。完成度为行数或条目数口径的粗略估计。
