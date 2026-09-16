@@ -1,16 +1,16 @@
-# 项目总进度（Status）— 2026-09-15
+# 项目总进度（Status）— 2026-09-16
 
 > 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新（cron 自动 push）。
 > 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
-> 当前 main @ `9acd1839`（2026-09-14），`make check` 绿（HANDOFF 记录 `c425db2` 验收）。
-> 注意：2026-09-13 起接班 agent 改为 main 直推模式；polyhedron 在制骨架 sorry 已随
-> 2026-09-14 全书收官清零，历史 sanctioned 占位仍为 `Statement.lean` 主定理（见 Phase 1）。
-> **重大进展**：**polyhedron.hl 已 100% 收官进 main（2026-09-14，`c425db2`）**——
-> fan/ 部分（hypermap + fan + topology + planarity + Conforming + polyhedron）全部完成；
-> **packing 章已启动**：测绘完成（42 文件 ~119k 行 ~1114 定理，`docs/packing-manifest.md` 待提交），
-> PackingAuto1-5 骨架 ~5.6k 行 / 202 sorry 在制。
-> **Phase 4 G4 由 Kimi 并行推进（wip/g4-emit）：16 份现存证书已闭合 5 份，
-> 最大单案 1,670,962 叶；FillParams stage-a 分片并行化改造完成（见 Phase 4）**。
+> 当前 main @ 见本 commit；最近验收：`make check` 绿（HANDOFF 记录 `c425db2`，2026-09-14）。
+> 注意：2026-09-13 起接班 agent 改为 main 直推模式，允许在制骨架 sorry 短暂存在；
+> 历史 sanctioned 占位仍为 `Statement.lean` 主定理（见 Phase 1）。
+> **重大进展**：**packing 章 25 模块骨架 100% 就位（2026-09-15，`5b470efc` 起）**——
+> ~1114 定理全部陈述（含各 capstone），20.5k 行 Lean / 920 sorry 进入纯填证期；
+> **local 章 69 个 HL 源（17.4 万行）已入库备货**（`03a13c79`）。
+> **Phase 4 G4 由 Kimi 并行推进（wip/g4-emit）：首个 sqrt/atan 全量案
+> QITNPEA_3725403817（964,984 叶，192 失败叶一轮修复）BBTreeG 内核构建中；
+> stage-a 数据模式（运行时读文本）落地，波1 后两案数据已备（见 Phase 4）**。
 
 图例：✅ 完成并验证 / 🟡 进行中 / ⬜ 未启动。完成度为行数或条目数口径的粗略估计。
 
@@ -69,7 +69,7 @@
   - [x] **FillParams 参数填充工具链（2026-09-14，`0588df2`）**：Lean 编译态逐叶算 sqrt mantissa（零镜像失真）+ (N,out) 阶梯 + 279 叶小样端到端绿；封闭 atan 参数 N=1024 trick
   - [x] **FillParams stage-a 分片并行化（2026-09-15，wip/g4-emit）**：单体驱动（354MB/96万叶数组字面量）elaboration 不可扩展（11.5h 未果）→ 改造为 `--stage-a-shards=K` 连续切块小驱动 + `runMain` argv 派发（无参走阶梯 / `N out` 钉死单点）+ `stagea_merge.py`（全局 rung 裁定 + STALE 补算 + 全局索引合并）；256 chunk × 64 路并行
   - [x] **repair_leaves.py 叶修复回路（`85f5ae7`）**：编译态逐叶扫描 → 失败叶二分加深（splitOK 对任意细化保持）→ 修复证书
-  - [ ] 现存 16 证书收尾：已闭合 5 份（另加早期 2 小案共 7 案例）；波1 sqrt4/atan7 三份（QITNPEA_3725403817 96万叶分片参数在算 / 5490182221 135万 / 2570626711 190万）；波2 disj+sqrt 家族 6 份（79~83 sqrt，FillParams 待扩 disj）；末位 2 份 3112-sqrt 怪物（需参数共享优化）
+  - [ ] 现存 16 证书收尾：已闭合 5 份（另加早期 2 小案共 7 案例）；波1 sqrt4/atan7 三份——**QITNPEA_3725403817（964,984 叶 = 964,792 + 192 修复衍生，2775 BBTreeG shards）内核构建中**（2026-09-16：940/2775 片已落，曾因故中断一次已断点续跑，日志零 error）、5490182221（135万叶）与 2570626711（190万叶）stage-a 数据模式已备货；波2 disj+sqrt 家族 6 份（79~83 sqrt，FillParams 待扩 disj）；末位 2 份 3112-sqrt 怪物（需参数共享优化）
   - [ ] 证书量产：145 个已闭合案例需 bb_arb `--cert` 重跑出证书（机时 1-3 天；9893763499 案例 bb_arb 失控吐 117GB 日志已记录）
   - [ ] G4 粘合收尾：155 定义闭包的 Lean 定义 + 每案例 `evalReal e ρ = 展开式 ρ` 对应引理（依赖 packing 章定义，**主体剩余**）
   - 规格：`pipeline/interval/arb-layer.md` §3/§4
@@ -94,8 +94,8 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 | fan/planarity.hl | 15,463 | ✅ **全书收官（2026-09-11，`48ff904`）**：批次 1-15 自动闭合 + 批次 16 的 `solid_of`/`MOZNWEH` 经体积层人工攻坚闭合，全部进 main | **100%** |
 | fan/Conforming.hl | 17,033 | ✅ **全书收官（2026-09-12）**：批次 1-23 全闭合（~230 枚定理，全部零 sorry、标准公理），含巨证 `lemma_connect_hypermap`（~1900 行 HOL 证明，6 段 sub-agent 流水攻克）与收尾 Euler/`Hypermap.Planar`；已合入 main | **100%** |
 | fan/polyhedron.hl | 3,200 | ✅ **全书收官（2026-09-14）**：71 条定理 + Polytope 面理论基层（`Kepler/Text/Polytope.lean` ~2.5k 行，0 sorry）全部闭合进 main；巨证 `FLVNSME`（~1000 行 HOL）经 6 段 sub-agent 流水 + 两阶段规划攻克；曾发现 FaceOf 闭/开线段编码 bug，已修正为 Brøndsted 开线段规范并诚实重做受污染证明 | **100%** |
-| packing/（Rogers/OXLZLEZ3/REUHADY/counting_spheres/marchal…） | **99,350（43 文件，2026-09-13 实测）** | 🟡 已启动（2026-09-15）：测绘完成（42 文件 ~119k 行 ~1114 定理，manifest 在制）；PackingAuto1-5 骨架 ~5.6k 行 / 202 sorry 在填 | ~2% |
-| local/（IMJXPHR/QKNVMLB/XWITCCN/local_lemmas/terminal…） | **174,694（68 文件，2026-09-13 实测）** | ⬜ 未启动 | 0% |
+| packing/（Rogers/OXLZLEZ3/REUHADY/counting_spheres/marchal…） | **99,350（43 文件，2026-09-13 实测）** | 🟡 **骨架 100% 就位（2026-09-15）**：25 模块 20.5k 行 Lean，~1114 定理全部陈述（GRUTOTI/OXLZLEZ/URRPHBZ3 等多个 capstone 已证），920 sorry 纯填证期 | 骨架100% / 证~25% |
+| local/（IMJXPHR/QKNVMLB/XWITCCN/local_lemmas/terminal…） | **174,694（68 文件，2026-09-13 实测）** | 🟡 备货中（69 个 HL 源已入库 `03a13c79`），未开工 | 0% |
 | trigonometry/（trig1/trig2/euler） | 10,511 | ⬜ 未启动（部分语义已被 azim 层覆盖，正式移植未做） | 0% |
 | volume/vol1.hl | 1,421 | 🟡 已用 :18/:458/:651 三段（`radialNorm`/`sol`），其余待移植 | ~25% |
 | fan/ 残余（hypermap_iso-compiled 1,174 + GMLWKPK 297） | 1,471 | ⬜ 未评估（可能为编译产物/可跳过） | — |
@@ -166,8 +166,8 @@ P1-P5 分段流水攻克）。**polyhedron.hl 100% 达成（71/71 定理零 sorr
 
 ## 整体估计
 
-- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 **G4 已百万叶级量产**（2026-09-15：**7 案例端到端进内核，最大 1,670,962 叶 5h19m**；FillParams stage-a 分片并行化落地、repair 工具链就绪、4 个共享层真缺陷治本；剩 11 证书收尾 + 145 案例证书重跑 + 155 定义粘合）。
-- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** + **Conforming 100%** + **polyhedron 100%（2026-09-14）** ≈ **61.8k 行 HOL 源**；2026-09-13 实测全书总量 ≈ **359k 行**（剩余：packing 99.4k【已启动，骨架在制】/ local 174.7k / trigonometry 10.5k / volume 1.1k / fan 残余等，~150 文件）。**按行数口径 ~17%**；考虑已完成部分含大量最难地基（hypermap 构造、体积测度层从零建），而 local/packing 多为模式重复引理工厂，**工作量口径估计 25-35%**。按 Conforming 吞吐（17k 行/2.5 天）线性外推，剩余 ~298k 行约需 40 天连轴（未计巨证）。
+- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 **G4 已百万叶级量产**（2026-09-15：**7 案例端到端进内核，最大 1,670,962 叶 5h19m**；stage-a 分片+数据模式、种子 repair、params 合并全链落地；首个 sqrt/atan 全量案 96.5 万叶构建中；剩 11 证书收尾 + 145 案例证书重跑 + 155 定义粘合）。
+- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** + **Conforming 100%** + **polyhedron 100%（2026-09-14）** ≈ **61.8k 行 HOL 源全证**；**packing 99.4k 骨架 100% 陈述（2026-09-15，25 模块 20.5k 行 Lean / 920 sorry 填证期）**；2026-09-13 实测全书总量 ≈ **359k 行**（剩余：local 174.7k【源已备货】/ trigonometry 10.5k / volume 1.1k / fan 残余等）。**按行数口径 ~17%+packing 骨架**；考虑已完成部分含大量最难地基（hypermap 构造、体积测度层从零建），而 local/packing 多为模式重复引理工厂，**工作量口径估计 30-40%**。按 packing 实测吞吐（99.4k 行骨架 2 天）线性外推，剩余填证 + local 约需 30-45 天连轴。
   另：**体积/测度论层已从零建成**（`Kepler/Geom/*.lean`，~3.4k 行，含 HOL Light 多元库的球面立体角链），这是原计划里没算到的关键前置，现已就位，后续 Packing/Local 可复用。
 - **全项目粗略完成度：~50%（polyhedron 收官 + G4 百万叶级量产通路确立后小幅回补）**。
 
