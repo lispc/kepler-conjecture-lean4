@@ -175,7 +175,7 @@ polyhedron.hl 宣告 100% 的硬标准 = 5 个 PolyAuto 文件零 sorry + 根构
 
 - **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 **G4 通路已验证并量产化**（2026-09-14：**4 案例端到端进内核，最大 205,418 叶 59m50s**；FillParams/repair 工具链就绪、4 个共享层真缺陷治本；剩 16 证书收尾 + 145 案例证书重跑 + 155 定义粘合）。
 - **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** + **Conforming 100%** + polyhedron 100% + **packing 骨架 100%** + **local 骨架 100%** ≈ **356k 行 HOL 源中的 ~335k 行骨架**；两大剩余章（packing 99.4k / local 174.7k）已于 2026-09-15/17 全数落为忠实 Lean 骨架（PackingAuto1-25 + LocalAuto1-38，64 模块 / ~47k 行 Lean，联合编译零 error），证明就位 ~1,600 枚、内部 sorry ~2,300 枚进入「证明完成波次」阶段。**骨架口径 ~93%**；证明完成 + trigonometry/volume 移植 + assembly 待做。剩余巨证集中在：packing 数值-解析巨石（PackingAuto18/22/25）、local 的 IMJXPHR/QKNVMLB/XWITCCN 内部、terminal→`local_annulus_inequality` 收口。
-- **全项目粗略完成度：~48%（Phase 5 剩余行数实测为旧估计 5 倍后下修；G4 通路验证回补）**。
+- **全项目粗略完成度：~75%（两大文字章节 packing/local 骨架全落底后上修；剩余 = ~2,300 内部 sorry 证明完成波次 + trigonometry/volume 小头 + G4 收尾 + assembly）**。
 
 ## 验证纪律
 
