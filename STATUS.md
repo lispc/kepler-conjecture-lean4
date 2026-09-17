@@ -10,7 +10,7 @@
 > WedgeVolume,LuneVolume,SolidAngle}.lean`，含 HOL `VOLUME_BALL_WEDGE` /
 > `HAS_MEASURE_LUNE` / `VOLUME_SOLID_TRIANGLE`），据此 planarity.hl 收官；
 > **Conforming.hl 17,033 行亦已 100% 收官进 main（2026-09-13，`d77c13f`）**。
-> polyhedron.hl ✅ 已 100% 收官（71 定理 + Polytope 基层，零 sorry）。packing 章节 **B1-B11 全部落底（2026-09-14，`wip/auto-packing` @ `5b470efc`）：25 模块 20,546 行，25 路联合编译零 error**；全章 ~1,400+ 定理全部忠实陈述，诚实证明 ~400 枚；顶石多枚已闭合（EMNWUUS 2/2、UPFZBZM、URRPHBZ3、GRUTOTI、OXLZLEZ 经 GRHIDFA 路线）；剩余 = 证明完成波次（~800 sorry 集中在巨石内部引理）+ permutes 编码问题 + _pNN 副本合并清理。⚠️ 台账：`permutes` 编码保真度问题（Auto10：RVFXZBU/YNHYJIT 按现编码可能假，需侧条件或重编码）；`Marchal_cells_2_new.hl` 缺失（mcell_set 等辅助引理届时重建）；G4 由 Kimi 并行推进（wip/g4-emit）。
+> polyhedron.hl ✅ 已 100% 收官（71 定理 + Polytope 基层，零 sorry）。packing 章节 **B1-B11 全部落底（2026-09-14，`wip/auto-packing` @ `5b470efc`）：25 模块 20,546 行，25 路联合编译零 error**；全章 ~1,400+ 定理全部忠实陈述，诚实证明 ~400 枚；顶石多枚已闭合（EMNWUUS 2/2、UPFZBZM、URRPHBZ3、GRUTOTI、OXLZLEZ 经 GRHIDFA 路线）；剩余 = 证明完成波次（~710 sorry 集中在巨石内部引理）+ permutes 编码问题 + _pNN 副本合并清理。**local 章节 W1-W7 全部落底（2026-09-17，`wip/auto-packing` @ `aa4baf6b`）：39 模块（LocalAnchors + LocalAuto1-38）覆盖全部 68 个 HOL 文件（174,694 行），38 路联合编译零 error**；~2,800 定理全部忠实陈述，诚实证明 ~1,180 枚；capstone：terminal.hl 主估值案例库（37/103）+ lunar_deform（19/48）；外部锚 `main_nonlinear_terminal_v11` 以 EXTERNAL-ANCHOR 形态接住。剩余 = 证明完成波次 + atn2 双侧编码合并（PackingAuto18/20 vs 21 分裂致 `_pNN` 副本）+ `local_annulus_inequality` 桥收口。⚠️ 台账：`permutes` 编码保真度问题（Auto10：RVFXZBU/YNHYJIT 按现编码可能假，需侧条件或重编码）；`Marchal_cells_2_new.hl` 缺失（mcell_set 等辅助引理届时重建）；G4 由 Kimi 并行推进（wip/g4-emit）。
 > **Phase 4 G4 由 Kimi 并行推进（wip/g4-emit），通路已验证、205k 叶案例闭合（见 Phase 4）**。
 
 图例：✅ 完成并验证 / 🟡 进行中 / ⬜ 未启动。完成度为行数或条目数口径的粗略估计。
@@ -94,8 +94,8 @@ deepseek-v4-flash 全权负责：骨架设计（陈述冻结）→ 工人填空 
 | fan/planarity.hl | 15,463 | ✅ **全书收官（2026-09-11，`48ff904`）**：批次 1-15 自动闭合 + 批次 16 的 `solid_of`/`MOZNWEH` 经体积层人工攻坚闭合，全部进 main | **100%** |
 | fan/Conforming.hl | 17,033 | ✅ **全书收官（2026-09-12）**：批次 1-23 全闭合（~230 枚定理，全部零 sorry、标准公理），含巨证 `lemma_connect_hypermap`（~1900 行 HOL 证明，6 段 sub-agent 流水攻克）与收尾 Euler/`Hypermap.Planar`；已合入 main | **100%** |
 | fan/polyhedron.hl | 3,200 | ✅ **全书收官（2026-09-14）**：71 条定理 + Polytope 面理论基层（`Kepler/Text/Polytope.lean` ~2.5k 行，0 sorry）全部闭合进 main；巨证 `FLVNSME`（~1000 行 HOL）经 6 段 sub-agent 流水 + 两阶段规划攻克；曾发现 FaceOf 闭/开线段编码 bug，已修正为 Brøndsted 开线段规范并诚实重做受污染证明 | **100%** |
-| packing/（Rogers/OXLZLEZ3/REUHADY/counting_spheres/marchal…） | **99,350（43 文件，2026-09-13 实测）** | ⬜ 未启动 | 0% |
-| local/（IMJXPHR/QKNVMLB/XWITCCN/local_lemmas/terminal…） | **174,694（68 文件，2026-09-13 实测）** | ⬜ 未启动 | 0% |
+| packing/（Rogers/OXLZLEZ3/REUHADY/counting_spheres/marchal…） | **99,350（43 文件，2026-09-13 实测）** | ✅ **骨架全书落底（2026-09-15，B1-B11）**：PackingAuto1-25，20,546 行，25 路零 error；~400 证明就位、~710 内部 sorry 待完成波次 | 骨架 100% / 证明 ~30% |
+| local/（IMJXPHR/QKNVMLB/XWITCCN/local_lemmas/terminal…） | **174,694（68 文件，2026-09-13 实测）** | ✅ **骨架全书落底（2026-09-17，W1-W7）**：LocalAnchors + LocalAuto1-38，39 模块，38 路零 error；~1,180 证明就位、~1,600 内部 sorry 待完成波次 | 骨架 100% / 证明 ~40% |
 | trigonometry/（trig1/trig2/euler） | 10,511 | ⬜ 未启动（部分语义已被 azim 层覆盖，正式移植未做） | 0% |
 | volume/vol1.hl | 1,421 | 🟡 已用 :18/:458/:651 三段（`radialNorm`/`sol`），其余待移植 | ~25% |
 | fan/ 残余（hypermap_iso-compiled 1,174 + GMLWKPK 297） | 1,471 | ⬜ 未评估（可能为编译产物/可跳过） | — |
@@ -174,8 +174,7 @@ polyhedron.hl 宣告 100% 的硬标准 = 5 个 PolyAuto 文件零 sorry + 根构
 ## 整体估计
 
 - **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 **G4 通路已验证并量产化**（2026-09-14：**4 案例端到端进内核，最大 205,418 叶 59m50s**；FillParams/repair 工具链就绪、4 个共享层真缺陷治本；剩 16 证书收尾 + 145 案例证书重跑 + 155 定义粘合）。
-- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** + **Conforming 100%** + polyhedron ~90% ≈ **61.4k 行 HOL 源**；2026-09-13 实测全书总量 ≈ **359k 行**（剩余：packing 99.4k / local 174.7k / trigonometry 10.5k / volume 1.1k / fan 残余等，~150 文件）。**按行数口径 ~17%**；考虑已完成部分含大量最难地基（hypermap 构造、体积测度层从零建），而 local/packing 多为模式重复引理工厂，**工作量口径估计 25-35%**。按 Conforming 吞吐（17k 行/2.5 天）线性外推，剩余 ~299k 行约需 40 天连轴（未计巨证）。
-  另：**体积/测度论层已从零建成**（`Kepler/Geom/*.lean`，~3.4k 行，含 HOL Light 多元库的球面立体角链），这是原计划里没算到的关键前置，现已就位，后续 Packing/Local 可复用。
+- **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** + **Conforming 100%** + polyhedron 100% + **packing 骨架 100%** + **local 骨架 100%** ≈ **356k 行 HOL 源中的 ~335k 行骨架**；两大剩余章（packing 99.4k / local 174.7k）已于 2026-09-15/17 全数落为忠实 Lean 骨架（PackingAuto1-25 + LocalAuto1-38，64 模块 / ~47k 行 Lean，联合编译零 error），证明就位 ~1,600 枚、内部 sorry ~2,300 枚进入「证明完成波次」阶段。**骨架口径 ~93%**；证明完成 + trigonometry/volume 移植 + assembly 待做。剩余巨证集中在：packing 数值-解析巨石（PackingAuto18/22/25）、local 的 IMJXPHR/QKNVMLB/XWITCCN 内部、terminal→`local_annulus_inequality` 收口。
 - **全项目粗略完成度：~48%（Phase 5 剩余行数实测为旧估计 5 倍后下修；G4 通路验证回补）**。
 
 ## 验证纪律
