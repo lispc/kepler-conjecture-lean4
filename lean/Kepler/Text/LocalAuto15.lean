@@ -51,12 +51,18 @@ ENCODING NOTES
   - Same-wave note: nothing here imports LocalAuto12-14/16-18 (owned by
     other lanes); every declaration carries the `_p15` suffix.
 
-DISCHARGES: `NORM_COS_ANGLE_LT_p15`, `MAX_COPLANAR_4POINT_p15`,
+FILL LEDGER (proof-fill worker, this wave): `NORM_COS_ANGLE_LT_p15`
+  was DISCHARGED (13 -> 12 sorries) by a self-contained law-of-cosines +
+  `Real.strictAntiOn_arccos` proof (no external blocker existed; the other
+  12 remain the chapter's contract registry — no proved blockers found in
+  LocalAuto1-38 / PackingAuto1-25 / Fan / Geom for them).
+
+DISCHARGES (remaining `sorry`): `MAX_COPLANAR_4POINT_p15`,
   `SUM_4ANGLE_4POINT_EQ_2PI_p15`, `EQ_DIAGONAL_MIN_p15`,
   `TWO_DIAGONAL_AT_MOST_p15`, `MAX_IF_COPLANAR_p15`,
   `MAX_IF_COPLANAR1_p15`, `TWO_DIAGONAL_AT_MOST1_p15`, `VPWSHTO1_p15`,
   `VPWSHTO200_p15`, `VPWSHTO2_p15`, `VPWSHTO_p15`,
-  `POINTS_IN_BALL_ANNULUS_NOT_COLLINEAR_p15` keep `sorry`.
+  `POINTS_IN_BALL_ANNULUS_NOT_COLLINEAR_p15`.
 -/
 
 import Kepler.Text.LocalAuto4
@@ -78,7 +84,133 @@ theorem NORM_COS_ANGLE_LT_p15 : ∀ v v1 u u1 w w1 : V3,
     norm (v - u) = norm (v1 - u1) →
     v ≠ u → v ≠ w → v1 ≠ w1 →
     (norm (u - w) < norm (u1 - w1) ↔ angle_p4 u v w < angle_p4 u1 v1 w1) := by
-  sorry
+  intro v v1 u u1 w w1 hw hvu hvne hvwne hv1w1
+  -- the two legs; equal-leg hypotheses and positivity
+  have hA : ‖v - u‖ = ‖v1 - u1‖ := hvu
+  have hB : ‖v - w‖ = ‖v1 - w1‖ := hw
+  have hApos : 0 < ‖v - u‖ := by
+    rw [← dist_eq_norm]
+    exact dist_pos.mpr hvne
+  have hBpos : 0 < ‖v - w‖ := by
+    rw [← dist_eq_norm]
+    exact dist_pos.mpr hvwne
+  have hABpos : 0 < ‖v - u‖ * ‖v - w‖ := mul_pos hApos hBpos
+  have hd0 : (‖v - u‖ * ‖v - w‖) ≠ 0 := ne_of_gt hABpos
+  have hden : ‖u - v‖ * ‖w - v‖ = ‖v - u‖ * ‖v - w‖ := by
+    rw [norm_sub_rev (a := u) (b := v), norm_sub_rev (a := w) (b := v)]
+  have hden1 : ‖u1 - v1‖ * ‖w1 - v1‖ = ‖v - u‖ * ‖v - w‖ := by
+    rw [hA, hB, norm_sub_rev (a := v1) (b := u1), norm_sub_rev (a := v1) (b := w1)]
+  have hpos : 0 < ‖u - v‖ * ‖w - v‖ := by rw [hden]; exact hABpos
+  have hpos1 : 0 < ‖u1 - v1‖ * ‖w1 - v1‖ := by rw [hden1]; exact hABpos
+  -- law of cosines for both bases
+  have e1 : ‖u - w‖ ^ 2
+      = ‖v - u‖ ^ 2 - 2 * inner ℝ (u - v) (w - v) + ‖v - w‖ ^ 2 := by
+    have h4 : (u - v) - (w - v) = u - w := by simp [sub_sub_sub_comm]
+    have h5 := real_inner_sub_sub_self (x := u - v) (y := w - v)
+    rw [h4] at h5
+    simp only [real_inner_self_eq_norm_sq] at h5
+    rw [norm_sub_rev (a := u) (b := v), norm_sub_rev (a := w) (b := v)] at h5
+    exact h5
+  have e2 : ‖u1 - w1‖ ^ 2
+      = ‖v - u‖ ^ 2 - 2 * inner ℝ (u1 - v1) (w1 - v1) + ‖v - w‖ ^ 2 := by
+    have h4 : (u1 - v1) - (w1 - v1) = u1 - w1 := by simp [sub_sub_sub_comm]
+    have h5 := real_inner_sub_sub_self (x := u1 - v1) (y := w1 - v1)
+    rw [h4] at h5
+    simp only [real_inner_self_eq_norm_sq] at h5
+    rw [norm_sub_rev (a := u1) (b := v1), norm_sub_rev (a := w1) (b := v1),
+      ← hA, ← hB] at h5
+    exact h5
+  -- division by the (common, positive) leg product is order-reflecting
+  have hdivlt : ∀ a b : ℝ,
+      a / (‖v - u‖ * ‖v - w‖) < b / (‖v - u‖ * ‖v - w‖) ↔ a < b := by
+    intro a b
+    constructor
+    · intro h
+      have h2 := (div_lt_iff₀ hABpos).mp h
+      rwa [div_mul_cancel₀ _ hd0] at h2
+    · intro h
+      rw [div_lt_iff₀ hABpos, div_mul_cancel₀ _ hd0]
+      exact h
+  have hdivle : ∀ a b : ℝ,
+      a / (‖v - u‖ * ‖v - w‖) ≤ b / (‖v - u‖ * ‖v - w‖) ↔ a ≤ b := by
+    intro a b
+    constructor
+    · intro h
+      have h2 := mul_le_mul_of_nonneg_right h (le_of_lt hABpos)
+      simpa only [div_mul_cancel₀ _ hd0] using h2
+    · intro h
+      rw [div_le_iff₀ hABpos, div_mul_cancel₀ _ hd0]
+      exact h
+  -- reduce the norm comparison to the inner-product (cosine) comparison
+  have hsqlt : ∀ a b : ℝ, 0 ≤ a → 0 ≤ b → (a < b ↔ a ^ 2 < b ^ 2) := by
+    intro a b ha hb
+    constructor
+    · intro h
+      have hbp : 0 < b - a := sub_pos.mpr h
+      have h1 : a ^ 2 ≤ a * b := by nlinarith [mul_nonneg ha (le_of_lt hbp)]
+      have h2 : a * b < b * b := by
+        have hb2 : 0 < b := lt_of_le_of_lt ha h
+        have h3 : 0 < b * (b - a) := mul_pos hb2 hbp
+        have h4 : b * b - a * b = b * (b - a) := by ring
+        linarith
+      linarith
+    · intro h
+      by_contra hge
+      push_neg at hge
+      have hbp : 0 ≤ a - b := by linarith
+      have h1 : b * b ≤ a * b := by nlinarith [mul_nonneg hb hbp]
+      have h2 : a * b ≤ a * a := by nlinarith [mul_nonneg ha hbp]
+      have h3 : b ^ 2 ≤ a ^ 2 := by nlinarith
+      linarith
+  have hsq : ‖u - w‖ < ‖u1 - w1‖ ↔
+      inner ℝ (u1 - v1) (w1 - v1) < inner ℝ (u - v) (w - v) := by
+    have hnn1 : 0 ≤ ‖u - w‖ := norm_nonneg _
+    have hnn2 : 0 ≤ ‖u1 - w1‖ := norm_nonneg _
+    constructor
+    · intro h
+      have h2 := (hsqlt _ _ hnn1 hnn2).mp h
+      rw [e1, e2] at h2
+      linarith
+    · intro h
+      have h2 : (‖v - u‖) ^ 2 - 2 * inner ℝ (u - v) (w - v) + (‖v - w‖) ^ 2
+          < (‖v - u‖) ^ 2 - 2 * inner ℝ (u1 - v1) (w1 - v1) + (‖v - w‖) ^ 2 := by
+        linarith
+      rw [← e1, ← e2] at h2
+      exact (hsqlt _ _ hnn1 hnn2).mpr h2
+  -- the two cosines lie in [-1, 1]
+  have hcub : -1 ≤ inner ℝ (u - v) (w - v) / (‖u - v‖ * ‖w - v‖)
+      ∧ inner ℝ (u - v) (w - v) / (‖u - v‖ * ‖w - v‖) ≤ 1 := by
+    have hb := abs_le.mp (abs_real_inner_le_norm (x := u - v) (y := w - v))
+    rw [hden] at hb
+    constructor
+    · rw [le_div_iff₀ hpos, neg_one_mul]; linarith
+    · rw [div_le_iff₀ hpos, one_mul]; linarith
+  have hdub : -1 ≤ inner ℝ (u1 - v1) (w1 - v1) / (‖u1 - v1‖ * ‖w1 - v1‖)
+      ∧ inner ℝ (u1 - v1) (w1 - v1) / (‖u1 - v1‖ * ‖w1 - v1‖) ≤ 1 := by
+    have hb := abs_le.mp (abs_real_inner_le_norm (x := u1 - v1) (y := w1 - v1))
+    rw [hden1] at hb
+    constructor
+    · rw [le_div_iff₀ hpos1, neg_one_mul]; linarith
+    · rw [div_le_iff₀ hpos1, one_mul]; linarith
+  constructor
+  · intro h
+    have hcos : inner ℝ (u1 - v1) (w1 - v1) < inner ℝ (u - v) (w - v) :=
+      hsq.mp h
+    have harg : inner ℝ (u1 - v1) (w1 - v1) / (‖u1 - v1‖ * ‖w1 - v1‖)
+        < inner ℝ (u - v) (w - v) / (‖u - v‖ * ‖w - v‖) := by
+      rw [hden1, hden]
+      exact (hdivlt _ _).mpr hcos
+    exact Real.strictAntiOn_arccos hdub hcub harg
+  · intro harc
+    have hcos : inner ℝ (u1 - v1) (w1 - v1) < inner ℝ (u - v) (w - v) := by
+      by_contra hge
+      push_neg at hge
+      have hdc : inner ℝ (u - v) (w - v) / (‖u - v‖ * ‖w - v‖)
+          ≤ inner ℝ (u1 - v1) (w1 - v1) / (‖u1 - v1‖ * ‖w1 - v1‖) := by
+        rw [hden1, hden]
+        exact (hdivle _ _).mpr hge
+      exact absurd harc (not_lt.mpr (Real.antitone_arccos hdc))
+    exact hsq.mpr hcos
 
 /-- HOL `MAX_COPLANAR_4POINT` (VPWSHTO.hl:47): reflected `w1` keeps the
 diagonal minimum. -/

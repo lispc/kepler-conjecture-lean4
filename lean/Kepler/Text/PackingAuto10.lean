@@ -29,13 +29,19 @@ Encoding notes.
 - HOL `proj_point` and `between` are absent from the port; private `_p10`
   copies are added here (HL: `proj_point v w = v % ((w dot v)/(v dot v))`,
   `between x (a,b) = dist(a,x) + dist(x,b) = dist(a,b)`).
-- Encoding caveat (weak `permutes`): `PackingAuto2.permutes` is the
-  pointwise-membership relation `∀ x, x ∈ s ↔ p x ∈ s`, whereas HL
-  `p permutes s` additionally fixes the complement of `s`. For
-  `RVFXZBU`/`YNHYJIT` the HL proofs use complement-fixing at indices
-  `≥ i-1` (via `LEFT_ACTION_LIST_PROPERTIES`), so the faithful statements
-  below carry that hypothesis strength gap; they are `sorry`ed here pending
-  an explicit complement-fixing side condition (see the docstrings).
+- Encoding caveat (weak `permutes`) — RULING 2026-09-18, verdict (b) TOO
+  STRONG: `PackingAuto2.permutes` is the pointwise-membership relation
+  `∀ x, x ∈ s ↔ p x ∈ s`, whereas HOL-Light `permutes` (`Library/perms.ml`)
+  is complement-fixing, `p permutes s := ∀ x, x ∉ s → p x = x`; for the
+  typed `Equiv.Perm ℕ` this means `p permutes 0..(i-1)` is *exactly*
+  `∀ j, i ≤ j → p j = j` (the earlier `≥ i-1` guess here was off by one:
+  the block `0..i-1` itself remains free to move). The first drafts of
+  `RVFXZBU`/`YNHYJIT` carried only the weak relation and were false as
+  encoded (e.g. `i = 2` with `p` the transposition of `2,3` weakly permutes
+  `Icc 0 1` but changes `hl ul`, hence `mcell4`, on `[u0;u1;u2;u3]`).
+  ENCODING-FIX: both statements now carry the explicit tail-fixedness
+  hypothesis `∀ j, i ≤ j → p j = j`, restoring faithfulness; see their
+  docstrings for proof status and the affected Auto2 interface.
 - DISCHARGES convention: theorems matching a `pack_concl` interface of
   PackingAuto2 are marked `DISCHARGES: PackingAuto2.<name>` in their
   docstrings (faithful statements here; the interfaces stay in Auto2).
@@ -64,24 +70,168 @@ namespace Kepler.Text
 
 open Kepler.Geom Set Classical
 
+/-! ### Tail-fixed permutation kit (added with the ENCODING-FIX) -/
+
+/-- Membership in a list via `getD` (used to see through `leftActionList`). -/
+private theorem mem_iff_getD_p10 {α : Type*} [Inhabited α] {ul : List α} {x : α} :
+    x ∈ ul ↔ ∃ k, k < ul.length ∧ ul.getD k default = x := by
+  induction ul with
+  | nil => simp
+  | cons a tl ih =>
+    constructor
+    · intro hmem
+      rcases List.mem_cons.1 hmem with hax | hm
+      · have h0 : (a :: tl).getD 0 default = a := rfl
+        exact ⟨0, by simp only [List.length_cons]; omega, h0.trans hax.symm⟩
+      · obtain ⟨k, hk, hx⟩ := ih.1 hm
+        refine ⟨k + 1, by simp only [List.length_cons]; omega, ?_⟩
+        simpa using hx
+    · rintro ⟨k, hk, hx⟩
+      cases k with
+      | zero =>
+        have hax : a = x := hx
+        subst hax
+        simp
+      | succ k =>
+        refine List.mem_cons_of_mem _ (ih.2 ⟨k, ?_, ?_⟩)
+        · simpa using hk
+        · simpa using hx
+
+/-- A permutation weakly permuting `Icc 0 (i-1)` and fixing every `j ≥ i`
+maps `m < i` into `[0, i)` and conversely (it bijects the initial block). -/
+private theorem p_lt_i_iff_p10 {p : Equiv.Perm ℕ} {i : ℕ}
+    (hperm : permutes p (Set.Icc 0 (i - 1))) (hfix : ∀ j, i ≤ j → p j = j)
+    (m : ℕ) : m < i ↔ p m < i := by
+  constructor
+  · intro hm
+    by_cases hge : i ≤ m
+    · rw [hfix m hge]; exact hm
+    · have hmem : m ∈ Set.Icc 0 (i - 1) := ⟨by omega, by omega⟩
+      have hp := (hperm m).mp hmem
+      simp only [Set.mem_Icc] at hp
+      omega
+  · intro hm
+    by_cases hge : i ≤ m
+    · rw [hfix m hge] at hm; omega
+    · omega
+
+/-- Same, for the inverse permutation. -/
+private theorem psymm_lt_i_p10 {p : Equiv.Perm ℕ} {i : ℕ}
+    (_hperm : permutes p (Set.Icc 0 (i - 1))) (hfix : ∀ j, i ≤ j → p j = j)
+    {m : ℕ} (hm : m < i) : p.symm m < i := by
+  by_contra hge
+  have h1 : p (p.symm m) = p.symm m := hfix _ (by omega)
+  rw [Equiv.apply_symm_apply] at h1
+  omega
+
+/-- Under the ENCODING-FIX hypotheses the left action only permutes the
+entries of a length-`i` list, so the point set is unchanged. -/
+private theorem setOfList_leftActionList_fix_p10 {p : Equiv.Perm ℕ} {ul : List V3}
+    {i : ℕ} (hlen : ul.length = i)
+    (hperm : permutes p (Set.Icc 0 (i - 1))) (hfix : ∀ j, i ≤ j → p j = j) :
+    setOfList (leftActionList p ul) = setOfList ul := by
+  have hpu : ∀ m, m < ul.length → p.symm m < ul.length := by
+    intro m hm
+    have h1 : m < i := by rw [← hlen]; exact hm
+    have h2 : p.symm m < i := psymm_lt_i_p10 hperm hfix h1
+    rw [← hlen] at h2
+    exact h2
+  have hpk : ∀ k, k < ul.length → p k < ul.length := by
+    intro k hk
+    have h1 : k < i := by rw [← hlen]; exact hk
+    have h2 : p k < i := (p_lt_i_iff_p10 hperm hfix k).1 h1
+    rw [← hlen] at h2
+    exact h2
+  ext x
+  have e : leftActionList p ul
+      = (List.range ul.length).map (fun j => ul.getD (p.symm j) default) := rfl
+  simp only [setOfList, e, List.mem_map, List.mem_range, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨j, hj, hx⟩
+    exact mem_iff_getD_p10.2 ⟨p.symm j, hpu j hj, hx⟩
+  · intro hmem
+    obtain ⟨k, hk, hx⟩ := mem_iff_getD_p10.1 hmem
+    refine ⟨p k, hpk k hk, ?_⟩
+    rw [Equiv.symm_apply_apply]
+    exact hx
+
+/-- The identity permutation acts trivially. -/
+private theorem leftActionList_refl_p10 {α : Type*} [Inhabited α] (ul : List α) :
+    leftActionList (Equiv.refl ℕ) ul = ul := by
+  apply List.ext_get
+  · simp [leftActionList]
+  · intro n _ h2
+    simp [leftActionList, Equiv.refl_symm, h2]
+
+/-- A typed permutation fixing `0` and every `j ≥ 1` is the identity. -/
+private theorem eq_refl_of_fix_p10 {p : Equiv.Perm ℕ}
+    (h0 : p 0 = 0) (hfix : ∀ j, 1 ≤ j → p j = j) : p = Equiv.refl ℕ :=
+  Equiv.ext fun j => by
+    rcases Nat.eq_zero_or_pos j with rfl | hj
+    · exact h0
+    · simpa using hfix j hj
+
 /-! ## RVFXZBU (RVFXZBU.hl:32-195): cell invariance under the left action -/
 
 /-- HOL `RVFXZBU_concl` (RVFXZBU.hl:32-36): permuting the first `i` points
 of a `barV V 3` list by `p` leaves the cell `mcell i` unchanged.
-DISCHARGES: PackingAuto2.RVFXZBU3_concl.
+DISCHARGES: PackingAuto2.RVFXZBU3_concl — but only modulo the tail-fixedness
+side condition added below: the Auto2 interface (weak `permutes`, no `hfix`)
+is false as stated and needs the same ENCODING-FIX (owned elsewhere).
 
-Encoding caveat: with the weak `PackingAuto2.permutes`, `p` need not fix
-indices `≥ i-1` (e.g. a transposition of `2,3` satisfies
-`permutes p (Set.Icc 0 1)` but moves `omegaListN V ul 2/3` on truncations
-of length 3), so the HL proof via `LEFT_ACTION_LIST_1_PROPERTIES`
-(complement-fixing) does not transfer; `sorry`ed pending an explicit
-side condition `∀ j ≥ i-1, p j = j`. -/
+-- ENCODING-FIX 2026-09-17: added tail-fixedness hypothesis per HOL source.
+HOL-Light `permutes` (`Library/perms.ml`) is complement-fixing
+(`p permutes s := ∀ x, x ∉ s → p x = x`), so `p permutes 0..(i-1)` for the
+typed `Equiv.Perm ℕ` is exactly `∀ j ≥ i, p j = j`; with only the weak
+pointwise `permutes` the statement is false (`p` a transposition of `2,3`
+weakly permutes `Icc 0 1` yet changes `hl ul`, hence `mcell4`, on
+`[u0;u1;u2;u3]`).
+
+Proof status: cases `i = 0, 1` (`p` forced to `Equiv.refl`) and `i = 4`
+(`mcell4` depends only on `setOfList`/`hl`) are proved via the tail-fixed
+kit above; cases `i = 2, 3` remain `sorry`: they need the ported
+`LEFT_ACTION_LIST_1_PROPERTIES`/`LEFT_ACTION_LIST_PROPERTIES`
+(marchal2.hl:5848/4460) — `mxi`/`omegaListN` invariance under the
+`{0,1}`-swap resp. the `S₃`-action, a genuine geometry bite. -/
 theorem RVFXZBU {V : Set V3} {ul : List V3} {i : ℕ} {p : Equiv.Perm ℕ}
     (hi : i ∈ ({0, 1, 2, 3, 4} : Set ℕ))
     (hsat : saturated V) (hpack : Packing V) (hbar : barV V 3 ul)
-    (hperm : permutes p (Set.Icc 0 (i - 1))) :
+    (hperm : permutes p (Set.Icc 0 (i - 1)))
+    (hfix : ∀ j, i ≤ j → p j = j) :
     mcell i V (leftActionList p ul) = mcell i V ul := by
-  sorry
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hi
+  rcases hi with rfl | rfl | rfl | rfl | rfl
+  · -- i = 0: hfix forces p = refl
+    have hp : p = Equiv.refl ℕ :=
+      eq_refl_of_fix_p10 (hfix 0 (Nat.zero_le 0))
+        (fun j hj => hfix j (by omega))
+    subst hp
+    rw [leftActionList_refl_p10]
+  · -- i = 1: hperm forces p 0 = 0, hfix the tail, so p = refl
+    have h0 : p 0 = 0 := by
+      have hin : (0:ℕ) ∈ Set.Icc 0 (1 - 1) := Set.mem_Icc.2 (by omega)
+      have hp0 := (hperm 0).mp hin
+      simp only [Set.mem_Icc] at hp0
+      omega
+    have hp : p = Equiv.refl ℕ := eq_refl_of_fix_p10 h0 hfix
+    subst hp
+    rw [leftActionList_refl_p10]
+  · -- i = 2: needs LEFT_ACTION_LIST_1_PROPERTIES (marchal2.hl:5848)
+    sorry
+  · -- i = 3: needs LEFT_ACTION_LIST_PROPERTIES (marchal2.hl:4460)
+    sorry
+  · -- i = 4: mcell4 depends only on setOfList and hl
+    have h4 : ul.length = 3 + 1 := hbar.1
+    have hlen : ul.length = 4 := by omega
+    have hset := setOfList_leftActionList_fix_p10 hlen hperm hfix
+    have hhl : hl (leftActionList p ul) = hl ul := by rw [hl, hl, hset]
+    have hL : mcell 4 V (leftActionList p ul) = mcell4 V (leftActionList p ul) := by
+      rw [mcell, if_neg (show (4:ℕ) ≠ 0 by omega), if_neg (by omega),
+        if_neg (by omega), if_neg (by omega)]
+    have hR : mcell 4 V ul = mcell4 V ul := by
+      rw [mcell, if_neg (show (4:ℕ) ≠ 0 by omega), if_neg (by omega),
+        if_neg (by omega), if_neg (by omega)]
+    rw [hL, hR, mcell4, mcell4, hhl, hset]
 
 /-! ## HDTFNFZ (HDTFNFZ.hl:32-111): vertices of a non-null cell -/
 
@@ -106,21 +256,45 @@ truncation is small and the whole simplex is large, the left action of a
 permutation of `0..i-1` preserves `barV` and the omega points at levels
 `i-1..3`.
 
-Encoding caveat: same weak-`permutes` gap as `RVFXZBU` — the HL proof
-applies `LEFT_ACTION_LIST_1_PROPERTIES`/`LEFT_ACTION_LIST_PROPERTIES`,
-which fix indices `≥ i-1`; with the pointwise-membership `permutes` the
-conclusion fails at `j = i-1` for permutations moving later indices.
-`sorry`ed pending the side condition `∀ j ≥ i-1, p j = j`. -/
+-- ENCODING-FIX 2026-09-17: added tail-fixedness hypothesis per HOL source.
+Same weak-`permutes` gap as `RVFXZBU`: the HL proof applies
+`LEFT_ACTION_LIST_1_PROPERTIES`/`LEFT_ACTION_LIST_PROPERTIES`, whose
+`p permutes 0..(i-1)` (complement-fixing `Library/perms.ml` semantics)
+fixes every index `≥ i`; with only the pointwise-membership `permutes`
+the conclusion fails, e.g. at `j = i-1` for permutations moving later
+in-range indices. The faithful side condition is `∀ j ≥ i, p j = j`
+(the earlier `≥ i-1` guess was off by one: the block `0..i-1` moves).
+
+Proof status: case `i = 4` is discharged by contradiction
+(`truncate_simplex 3 ul = ul` via `BARV_3_EXPLICIT` +
+`TRUNCATE_SIMPLEX_EXPLICIT_3`, so `h1` contradicts `h2`); cases
+`i = 2, 3` remain `sorry`: they need the ported
+`LEFT_ACTION_LIST_1_PROPERTIES`/`LEFT_ACTION_LIST_PROPERTIES`
+(marchal2.hl:5848/4460) — `barV` persistence of the swapped list and
+`omegaListN` invariance under the `{0,1}`-swap resp. the `S₃`-action. -/
 theorem YNHYJIT {V : Set V3} {ul vl : List V3} {i : ℕ} {p : Equiv.Perm ℕ}
     (hsat : saturated V) (hpack : Packing V) (hbar : barV V 3 ul)
     (hi : i ∈ ({2, 3, 4} : Set ℕ))
     (h1 : hl (truncateSimplex (i - 1) ul) < Real.sqrt 2)
     (h2 : Real.sqrt 2 ≤ hl ul)
     (hperm : permutes p (Set.Icc 0 (i - 1)))
+    (hfix : ∀ j, i ≤ j → p j = j)
     (hvl : vl = leftActionList p ul) :
     barV V 3 vl ∧
       ∀ j : ℕ, i - 1 ≤ j → j ≤ 3 → omegaListN V vl j = omegaListN V ul j := by
-  sorry
+  subst hvl
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hi
+  rcases hi with rfl | rfl | rfl
+  · -- i = 2: needs LEFT_ACTION_LIST_1_PROPERTIES (marchal2.hl:5848)
+    sorry
+  · -- i = 3: needs LEFT_ACTION_LIST_PROPERTIES (marchal2.hl:4460)
+    sorry
+  · -- i = 4: hypotheses are contradictory
+    exfalso
+    obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hbar
+    subst hul
+    rw [TRUNCATE_SIMPLEX_EXPLICIT_3] at h1
+    linarith
 
 /-! ## URRPHBZ1 (URRPHBZ1.hl): geometry kit and measurability of cells -/
 

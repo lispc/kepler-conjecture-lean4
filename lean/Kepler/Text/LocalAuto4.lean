@@ -27,10 +27,21 @@ Encoding (HOL → Lean):
   `wedgeInFanGe_p4`.
 - Section F (hypermap of the fan) statements are ported verbatim; their
   proofs are `sorry` (giants), except a few mechanical ones.
+- FILL LEDGER (proof-fill worker, this wave): the two sorried `_p4`
+  definitions were discharged (48 -> 46 sorries; the 46 remaining are the
+  5 ball-annulus geometry giants and the 41 Section-F SY hypermap giants,
+  none of which has a proved blocker in the current tree).
+  Filled: azimCycle_p4 (verbatim body copy of LocalAuto3.azimCycle_p3 —
+  needs `projection`, hence the new `import Kepler.Text.PackingAuto5`);
+  hyp_p4 (dite on `FAN x V E`: `hypermapOfFan` (Fan.lean) under the fan,
+  a junk empty-dart hypermap otherwise — every downstream Section-F
+  statement carries the FAN hypothesis and only constrains edge darts, on
+  which `hypermapOfFan`'s maps agree with the `_p4` of-hyp maps).
 -/
 
 import Kepler.Text.Polytope
 import Kepler.Text.PackingAuto2
+import Kepler.Text.PackingAuto5
 import Kepler.Text.Fan
 import Mathlib
 
@@ -730,8 +741,17 @@ at merge; sources WRGCVDR.hl:78-140, localization.hl:66-95) -/
 /-- NEEDS: flyspeck `EE` (WRGCVDR.hl:95) `EE v S = {w | {v,w} IN S}`. -/
 def EE_p4 (v : V3) (S : Set (Set V3)) : Set V3 := {w | {v, w} ∈ S}
 
-/-- NEEDS: flyspeck `azim_cycle` (fan library; the azimuthal successor). -/
-noncomputable def azimCycle_p4 (W : Set V3) (v0 u w : V3) : V3 := sorry
+/-- NEEDS: flyspeck `azim_cycle` (fan library; the azimuthal successor).
+DISCHARGED (was `sorry`): verbatim body copy of `Kepler.Text.azimCycle_p3`
+(LocalAuto3 = WRGCVDR.hl:78, identical modulo binder names); kept as a
+`_p4` copy per the lane convention. -/
+noncomputable def azimCycle_p4 (W : Set V3) (v0 u w : V3) : V3 :=
+  if W ⊆ {w} then w
+  else
+    Classical.epsilon fun z : V3 => z ≠ w ∧ z ∈ W ∧ ∀ q ∈ W, q ≠ w →
+      azim v0 u w z < azim v0 u w q ∨
+        azim v0 u w z = azim v0 u w q ∧
+          ‖projection (z - v0) (u - v0)‖ ≤ ‖projection (q - v0) (u - v0)‖
 
 /-- NEEDS: flyspeck `ivs_azim_cycle` (WRGCVDR.hl:126). -/
 noncomputable def ivsAzimCycle_p4 (W : Set V3) (v0 v w : V3) : V3 :=
@@ -765,10 +785,21 @@ def hasOrders_p4 {α : Type*} (f : α → α) (k : ℕ) : Prop :=
   (∀ i, 0 < i → i < k → f^[i] ≠ id) ∧ f^[k] = id
 
 /-- NEEDS: flyspeck `HYP`/`hypermap` (WRGCVDR.hl:140) packed into the Lean
-`Hypermap` structure; the proof fields are exactly the Section-F content. -/
+`Hypermap` structure; the proof fields are exactly the Section-F content.
+DISCHARGED (was `sorry`): under `FAN x V E` this is the importable
+`Kepler.Text.Fan.hypermapOfFan x V E` (its dart set is `dart1OfFan`, which
+is what the Section-F statements constrain — all their darts are edge
+darts, and `edgeMap/nodeMap/faceMap` agree with the `_p4` of-hyp maps on
+`dart1OfFan`); off the fan a junk hypermap is taken (no downstream
+statement constrains it). -/
 noncomputable def hyp_p4 (x : V3) (V : Set V3) (E : Set (Set V3)) :
     Hypermap (V3 × V3) := by
-  sorry
+  by_cases h : FAN x V E
+  · exact hypermapOfFan x V E h
+  · exact
+      { darts := ∅, edgeMap := 1, nodeMap := 1, faceMap := 1,
+        edgeMap_permutes := fun x _ => rfl, nodeMap_permutes := fun x _ => rfl,
+        faceMap_permutes := fun x _ => rfl, comp_eq_one := by simp }
 
 /-- NEEDS: flyspeck `face` (hypermap.hl) `= {y | y IN dart H ∧ ∃ n,
 ITER n (face_map H) x = y}`; reconcile with `Hypermap.faceSet`. -/

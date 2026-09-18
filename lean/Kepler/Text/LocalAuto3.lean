@@ -41,6 +41,27 @@ Encoding notes (per Kepler/Text/Polytope.lean conventions):
   conclusion coincides in shape with an appendix (LocalAuto1) result, no
   dependence is taken — consumers may discharge such goals by shape-matching
   either file.
+- FILL LEDGER (proof-fill worker, this wave): 12 of the 30 sorried
+  declarations were discharged; 18 giants remain (IDENTIFY_AZIM_CYCLE,
+  FIRST_AAUHTVE, HYP_LEMMA, ELMS_OF_HYPERMAP_HYP, CYCLIC_SET_IMP_STABLE_SET2,
+  FAN_IMP_BIJ_V_NODE_OF_HYP, LOCAL_FAN_IMP_BIJ_FF_NODES,
+  IN_NODE_IMP_FIRST_EQ, BIJ_BETWEEN_FF_AND_V, WRGCVDR,
+  IMP_FAN_V_PRIME_E_PRIME, DIH2K_IMP_PRE_SIMPLE_HYP,
+  DIH2K_IMP_SIMPLE_HYPERMAP, DIH_IMP_EVERY_NODE_INTER_FACE,
+  DIH2K_IMP_NODE_MAP_X_DIFF_X, AFF_GE_TO_AFF_GT2_GE1,
+  AFF_GE_INTER_AFF_LT_IMP_NOT_EQ_COL, CIZMRRH).
+  Filled: EXIS_SMALLEST_WITH_AZIM_ORD (lex-min port of the proved
+  LocalAuto7.AZIM_CYCLE_BASIC_PROPERTIES technique); AZIM_CYCLE_EQ_SIGMA_FAN,
+  IVS_AZIM_AS_SIGMA_FAN, IVS_AZIM_PROPERTIES, IVS_AZIM_EQ_INVERSE_SIGMA_FAN
+  (via the importable Fan.lean kit SIGMA_FAN/unique_azim_point_fan/
+  mono_sigma_fan/INVERSE1_SIGMA_FAN); IN_DARTS_IFF_NN_OF_HYP_TOO,
+  FAN_IMP_NN_OF_HYP_PERMUTES_DARTS, FAN_IMP_IN_DARTS_IFF_FF_TOO,
+  FAN_IMP_FACE_MAP_PERMUTES_DARTS, FAN_IMP_IN_SELF_PAIRS_IFF_FF_OF_HYP,
+  N_HYP_TO_AZIM_CYCLE_LEM, ITER_AZIM_CYCLE_EQ_ITER_SIGMA (via
+  nFanPair/fFanPair dart kit + private shim helpers FAN_darts_dichotomy,
+  nnOfHyp_isolated, ffOfHyp_isolated, nnOfHyp_eq_nFanPair,
+  ffOfHyp_eq_fFanPair, nnOfHyp_dart below); AZIM_CYCLE_PROPERTIES is now
+  unconditional (was proved modulo EXIS_SMALLEST_WITH_AZIM_ORD).
 - Anonymous HOL `prove(...)` blocks (e.g. WRGCVDR.hl:238) are kept as named
   helpers (`PAIRS_IN_UNIONS`); tactic-only `let`s (`SET_TAC`,
   `TR_SET_RULE`, `types_in_th`, `SMOOTH_GEN_ALL`, `AFF_SGN_TRULE`, …) have
@@ -676,7 +697,23 @@ theorem EXIS_SMALLEST_WITH_AZIM_ORD {W : Set V3} {v w p : V3}
     ∃ u : V3, u ≠ p ∧ u ∈ W ∧ ∀ q ∈ W, q ≠ p →
       azim v w p u < azim v w p q ∨
         azim v w p u = azim v w p q ∧
-          ‖projection (u - v) (w - v)‖ ≤ ‖projection (q - v) (w - v)‖ := sorry
+          ‖projection (u - v) (w - v)‖ ≤ ‖projection (q - v) (w - v)‖ := by
+  -- Proof adapted from the proved LocalAuto7.AZIM_CYCLE_BASIC_PROPERTIES:
+  -- lexicographic minimizer of (azim, ‖projection‖) on W \ {p}.
+  have hne : {u : V3 | u ∈ W ∧ u ≠ p}.Nonempty := by
+    by_contra hc
+    apply h1
+    intro x hx
+    by_contra hxp
+    exact hc ⟨x, hx, hxp⟩
+  have hf : {u : V3 | u ∈ W ∧ u ≠ p}.Finite := hfin.subset fun x hx => hx.1
+  obtain ⟨q, hqin, hqmin⟩ := Set.exists_min_image
+    {u : V3 | u ∈ W ∧ u ≠ p}
+    (fun x => toLex (azim v w p x, ‖projection (x - v) (w - v)‖)) hf hne
+  refine ⟨q, hqin.2, hqin.1, fun r hr hpr => ?_⟩
+  have h := hqmin r ⟨hr, hpr⟩
+  rw [Prod.Lex.toLex_le_toLex] at h
+  exact h
 
 /-- WRGCVDR.hl:1086 `AZIM_CYCLE_PROPERTIES`. -/
 theorem AZIM_CYCLE_PROPERTIES {W : Set V3} {p : V3} (hsub : ¬(W ⊆ {p})) (hfin : W.Finite)
@@ -725,24 +762,96 @@ theorem CYCLIC_SET_IMP_NOT_COLLINEAR {W : Set V3} {x y : V3} (h : cyclicSet_p3 W
 /-- WRGCVDR.hl:1111 `AZIM_CYCLE_EQ_SIGMA_FAN`. -/
 theorem AZIM_CYCLE_EQ_SIGMA_FAN {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E) {v u : V3} (hu : u ∈ setOfEdge v V E) :
-    azimCycle_p3 (EE_p3 v E) x v u = sigmaFan x V E v u := sorry
+    azimCycle_p3 (EE_p3 v E) x v u = sigmaFan x V E v u := by
+  -- Both are azimuth-minimal elements of setOfEdge v V E; uniqueness of the
+  -- minimizer is `unique_azim_point_fan` (Fan.hl:711, importable, proved).
+  -- (`FAN_IMP_EE_EQ_SET_OF_EDGE`/`FAN_IMP_FINITE_EE` are stated below in this
+  -- file, so their proofs are inlined here.)
+  have hEE : EE_p3 v E = setOfEdge v V E := UNI_E_IMP_EE_EQ_SET_OF_EDGE hfan.1 v
+  have hfinEE : (EE_p3 v E).Finite :=
+    hfan.2.2.1.1.subset (Set.Subset.trans (EE_SUBSET_UNIONS_E v E) hfan.1)
+  by_cases hne : setOfEdge v V E = {u}
+  · have hsub : EE_p3 v E ⊆ {u} := by rw [hEE]; exact hne.subset
+    rw [W_SUBSET_SINGLETON_IMP_IDE hsub x v, sigmaFan, if_pos hne]
+  · have hneE : ¬(EE_p3 v E ⊆ {u}) := by
+      intro hc
+      refine hne (Set.eq_singleton_iff_unique_mem.mpr ⟨hu, fun w hw => ?_⟩)
+      exact hc (by rw [← hEE] at hw; exact hw)
+    obtain ⟨hz1, hz2, hz3⟩ :=
+      AZIM_CYCLE_PROPERTIES (W := EE_p3 v E) (p := u) hneE hfinEE x v
+    obtain ⟨hs1, hs2, hs3⟩ := SIGMA_FAN hne hfan hu
+    have hEu : {v, u} ∈ E := (properties_of_setOfEdge_fan x V E v u hfan).mpr hu
+    have hEz : {v, azimCycle_p3 (EE_p3 v E) x v u} ∈ E :=
+      (properties_of_setOfEdge_fan x V E v _ hfan).mpr (by rw [← hEE]; exact hz2)
+    have hEs : {v, sigmaFan x V E v u} ∈ E :=
+      (properties_of_setOfEdge_fan x V E v _ hfan).mpr hs1
+    have hminz : azim x v u (azimCycle_p3 (EE_p3 v E) x v u)
+        ≤ azim x v u (sigmaFan x V E v u) := by
+      rcases hz3 (sigmaFan x V E v u) (by rw [hEE]; exact hs1) hs2 with h | h
+      · exact le_of_lt h
+      · exact le_of_eq h.1
+    have hmins : azim x v u (sigmaFan x V E v u)
+        ≤ azim x v u (azimCycle_p3 (EE_p3 v E) x v u) :=
+      hs3 _ (by rw [← hEE]; exact hz2) hz1
+    exact unique_azim_point_fan hfan hEu hEz hEs (le_antisymm hminz hmins)
 
 /-- WRGCVDR.hl:1151 `IVS_AZIM_AS_SIGMA_FAN`. -/
 theorem IVS_AZIM_AS_SIGMA_FAN {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E) {v u : V3} (hu : u ∈ setOfEdge v V E) :
     ivsAzimCycle_p3 (setOfEdge v V E) x v u =
-      Classical.epsilon (fun xx : V3 => xx ∈ setOfEdge v V E ∧ sigmaFan x V E v xx = u) := sorry
+      Classical.epsilon (fun xx : V3 => xx ∈ setOfEdge v V E ∧ sigmaFan x V E v xx = u) := by
+  -- The predicates agree pointwise: on `setOfEdge v V E` the proved
+  -- `AZIM_CYCLE_EQ_SIGMA_FAN` identifies `azimCycle_p3` with `sigmaFan`
+  -- (`UNI_E_IMP_EE_EQ_SET_OF_EDGE` is used since `FAN_IMP_EE_EQ_SET_OF_EDGE`
+  -- is only stated later in this file).
+  have hEE : EE_p3 v E = setOfEdge v V E := UNI_E_IMP_EE_EQ_SET_OF_EDGE hfan.1 v
+  have key : ∀ z : V3, z ∈ setOfEdge v V E →
+      azimCycle_p3 (setOfEdge v V E) x v z = sigmaFan x V E v z := by
+    intro z hz
+    rw [← hEE]
+    exact AZIM_CYCLE_EQ_SIGMA_FAN hfan hz
+  have hne : setOfEdge v V E ≠ ∅ := by
+    intro hc
+    rw [hc] at hu
+    exact absurd hu (by simp)
+  rw [ivsAzimCycle_p3, if_neg hne]
+  refine congrArg Classical.epsilon (funext fun z => propext ?_)
+  by_cases hz : z ∈ setOfEdge v V E
+  · rw [key z hz]
+  · simp only [hz, false_and]
 
 /-- WRGCVDR.hl:1177 `IVS_AZIM_PROPERTIES`. -/
 theorem IVS_AZIM_PROPERTIES {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E) {v u : V3} (hu : u ∈ setOfEdge v V E) :
     ivsAzimCycle_p3 (setOfEdge v V E) x v u ∈ setOfEdge v V E ∧
-      sigmaFan x V E v (ivsAzimCycle_p3 (setOfEdge v V E) x v u) = u := sorry
+      sigmaFan x V E v (ivsAzimCycle_p3 (setOfEdge v V E) x v u) = u := by
+  rw [IVS_AZIM_AS_SIGMA_FAN hfan hu]
+  have hEu : {v, u} ∈ E := (properties_of_setOfEdge_fan x V E v u hfan).mpr hu
+  have hgu : inverse1SigmaFan x V E v u ∈ setOfEdge v V E ∧
+      sigmaFan x V E v (inverse1SigmaFan x V E v u) = u :=
+    ⟨(properties_of_setOfEdge_fan x V E v _ hfan).mp ((INVERSE1_SIGMA_FAN hfan).1 u hEu),
+      (INVERSE1_SIGMA_FAN hfan).2.1 u hEu⟩
+  exact Classical.epsilon_spec
+    (p := fun z : V3 => z ∈ setOfEdge v V E ∧ sigmaFan x V E v z = u)
+    ⟨inverse1SigmaFan x V E v u, hgu⟩
 
 /-- WRGCVDR.hl:1208 `IVS_AZIM_EQ_INVERSE_SIGMA_FAN`. -/
 theorem IVS_AZIM_EQ_INVERSE_SIGMA_FAN {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E) {v u : V3} (hw : {v, u} ∈ E) :
-    ivsAzimCycle_p3 (EE_p3 v E) x v u = inverse1SigmaFan x V E v u := sorry
+    ivsAzimCycle_p3 (EE_p3 v E) x v u = inverse1SigmaFan x V E v u := by
+  have hu : u ∈ setOfEdge v V E := (properties_of_setOfEdge_fan x V E v u hfan).mp hw
+  rw [UNI_E_IMP_EE_EQ_SET_OF_EDGE hfan.1 v, IVS_AZIM_AS_SIGMA_FAN hfan hu]
+  have hgu : inverse1SigmaFan x V E v u ∈ setOfEdge v V E ∧
+      sigmaFan x V E v (inverse1SigmaFan x V E v u) = u :=
+    ⟨(properties_of_setOfEdge_fan x V E v _ hfan).mp ((INVERSE1_SIGMA_FAN hfan).1 u hw),
+      (INVERSE1_SIGMA_FAN hfan).2.1 u hw⟩
+  have huniq : ∀ z : V3, z ∈ setOfEdge v V E → sigmaFan x V E v z = u →
+      z = inverse1SigmaFan x V E v u := fun z hz hsig =>
+    mono_sigma_fan hfan hz hgu.1 (hsig.trans hgu.2.symm)
+  obtain ⟨heps1, heps2⟩ := Classical.epsilon_spec
+    (p := fun z : V3 => z ∈ setOfEdge v V E ∧ sigmaFan x V E v z = u)
+    ⟨inverse1SigmaFan x V E v u, hgu⟩
+  exact huniq _ heps1 heps2
 
 /-- WRGCVDR.hl:1236 `EE_OF_HYP_PERMUTES_DARTS`. -/
 theorem EE_OF_HYP_PERMUTES_DARTS (x : V3) (V : Set V3) (E : Set (Set V3)) :
@@ -819,14 +928,145 @@ theorem LINEAR_PROJECTION (t : ℝ) (x e : V3) :
   simp only [WithLp.ofLp_smul]
   rw [smul_dotProduct, smul_sub, smul_smul, smul_eq_mul, ← mul_div_assoc']
 
+
+/-! ## FAN darts machinery: nn/ff of hyp vs the fan pair maps (proved; the
+helpers transport between `dartsOfHyp_p3` (WRGCVDR encoding) and the
+`dart1OfFan`/`nFanPair`/`fFanPair` kit of Kepler.Text.Fan) -/
+
+private theorem FAN_darts_dichotomy {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (_hfan : FAN x V E) {y : V3 × V3} (hy : y ∈ dartsOfHyp_p3 E V) :
+    y ∈ dart1OfFan V E ∨ (y.1 = y.2 ∧ y.1 ∈ V ∧ EE_p3 y.1 E = ∅) := by
+  rcases (Set.mem_union _ _ _).mp hy with h | h
+  · exact Or.inl h
+  · exact Or.inr ⟨h.1, h.2.1, h.2.2⟩
+
+private theorem nnOfHyp_isolated {x : V3} {V : Set V3} {E : Set (Set V3)}
+    {y : V3 × V3} (hy : y.1 = y.2 ∧ y.1 ∈ V ∧ EE_p3 y.1 E = ∅) :
+    nnOfHyp_p3 x V E y = y := by
+  have hd : y ∈ dartsOfHyp_p3 E V := Or.inr (show y ∈ selfPairs_p3 E V from hy)
+  rw [show nnOfHyp_p3 x V E y =
+    if y ∈ dartsOfHyp_p3 E V then (y.1, azimCycle_p3 (EE_p3 y.1 E) x y.1 y.2) else y from rfl,
+    if_pos hd,
+    W_SUBSET_SINGLETON_IMP_IDE (W := EE_p3 y.1 E) (p := y.2) (v := x) (w := y.1)
+      (fun w hw => by rw [hy.2.2] at hw; exact absurd hw (by simp))]
+
+private theorem ffOfHyp_isolated {x : V3} {V : Set V3} {E : Set (Set V3)}
+    {y : V3 × V3} (hy : y.1 = y.2 ∧ y.1 ∈ V ∧ EE_p3 y.1 E = ∅) :
+    ffOfHyp_p3 x V E y = y := by
+  have hd : y ∈ dartsOfHyp_p3 E V := Or.inr (show y ∈ selfPairs_p3 E V from hy)
+  rw [show ffOfHyp_p3 x V E y =
+    if y ∈ dartsOfHyp_p3 E V then (y.2, ivsAzimCycle_p3 (EE_p3 y.2 E) x y.2 y.1) else y
+    from rfl,
+    if_pos hd,
+    show EE_p3 y.2 E = (∅ : Set V3) from by rw [← hy.1]; exact hy.2.2,
+    show ivsAzimCycle_p3 (∅ : Set V3) x y.2 y.1 = y.1 from by
+      rw [ivsAzimCycle_p3, if_pos (c := (∅ : Set V3) = ∅) rfl]]
+  exact Prod.ext hy.1.symm hy.1
+
+private theorem nnOfHyp_eq_nFanPair {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {y : V3 × V3} (hy : y ∈ dart1OfFan V E) :
+    nnOfHyp_p3 x V E y = nFanPair x V E y := by
+  have hy2 : y.2 ∈ setOfEdge y.1 V E :=
+    (properties_of_setOfEdge_fan x V E y.1 y.2 hfan).mp hy
+  have hd : y ∈ dartsOfHyp_p3 E V := Or.inl (show y ∈ ordPairs_p3 E from hy)
+  rw [show nnOfHyp_p3 x V E y =
+    if y ∈ dartsOfHyp_p3 E V then (y.1, azimCycle_p3 (EE_p3 y.1 E) x y.1 y.2) else y
+    from rfl,
+    if_pos hd, AZIM_CYCLE_EQ_SIGMA_FAN hfan hy2]
+  rfl
+
+private theorem ffOfHyp_eq_fFanPair {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {y : V3 × V3} (hy : y ∈ dart1OfFan V E) :
+    ffOfHyp_p3 x V E y = fFanPair x V E y := by
+  have hw : {y.2, y.1} ∈ E := Set.pair_comm _ _ ▸ hy
+  have hd : y ∈ dartsOfHyp_p3 E V := Or.inl (show y ∈ ordPairs_p3 E from hy)
+  rw [show ffOfHyp_p3 x V E y =
+    if y ∈ dartsOfHyp_p3 E V then (y.2, ivsAzimCycle_p3 (EE_p3 y.2 E) x y.2 y.1) else y
+    from rfl,
+    if_pos hd, IVS_AZIM_EQ_INVERSE_SIGMA_FAN hfan hw,
+    inverse_sigma_fan_eq_inverse1 hfan hw]
+  rfl
+
 /-- WRGCVDR.hl:1302 `IN_DARTS_IFF_NN_OF_HYP_TOO`. -/
+private theorem nnOfHyp_dart {x : V3} {V : Set V3} {E : Set (Set V3)} {u w : V3}
+    (hw : (u, w) ∈ dartsOfHyp_p3 E V) :
+    nnOfHyp_p3 x V E (u, w) = (u, azimCycle_p3 (EE_p3 u E) x u w) := by
+  have hd : (u, w) ∈ dartsOfHyp_p3 E V := hw
+  rw [show nnOfHyp_p3 x V E (u, w) =
+    if (u, w) ∈ dartsOfHyp_p3 E V
+    then ((u, w).1, azimCycle_p3 (EE_p3 (u, w).1 E) x (u, w).1 (u, w).2) else (u, w)
+    from rfl, if_pos hd]
+
 theorem IN_DARTS_IFF_NN_OF_HYP_TOO {x : V3} {V : Set V3} {E : Set (Set V3)}
     (_hfan : FAN x V E) (y : V3 × V3) :
-    y ∈ dartsOfHyp_p3 E V ↔ nnOfHyp_p3 x V E y ∈ dartsOfHyp_p3 E V := sorry
+    y ∈ dartsOfHyp_p3 E V ↔ nnOfHyp_p3 x V E y ∈ dartsOfHyp_p3 E V := by
+  constructor
+  · intro hy
+    rcases FAN_darts_dichotomy _hfan hy with h1 | h2
+    · rw [nnOfHyp_eq_nFanPair _hfan h1]
+      exact Set.mem_union_left (b := selfPairs_p3 E V)
+        (show (nFanPair x V E y) ∈ ordPairs_p3 E from nFanPair_mem_dart1 _hfan h1)
+    · rw [nnOfHyp_isolated h2]
+      exact hy
+  · intro hy
+    by_contra hnd
+    rw [show nnOfHyp_p3 x V E y =
+      if y ∈ dartsOfHyp_p3 E V then (y.1, azimCycle_p3 (EE_p3 y.1 E) x y.1 y.2) else y
+      from rfl, if_neg hnd] at hy
+    exact hnd hy
 
 /-- WRGCVDR.hl:1372 `FAN_IMP_NN_OF_HYP_PERMUTES_DARTS`. -/
 theorem FAN_IMP_NN_OF_HYP_PERMUTES_DARTS {x : V3} {V : Set V3} {E : Set (Set V3)}
-    (_hfan : FAN x V E) : permutesF_p3 (nnOfHyp_p3 x V E) (dartsOfHyp_p3 E V) := sorry
+    (_hfan : FAN x V E) : permutesF_p3 (nnOfHyp_p3 x V E) (dartsOfHyp_p3 E V) := by
+  refine ⟨fun d hd => (IN_DARTS_IFF_NN_OF_HYP_TOO _hfan d).mp hd, fun d hd => ?_, ?_⟩
+  · rw [show nnOfHyp_p3 x V E d =
+      if d ∈ dartsOfHyp_p3 E V then (d.1, azimCycle_p3 (EE_p3 d.1 E) x d.1 d.2) else d
+      from rfl, if_neg hd]
+  · intro a ha b hb hab
+    rcases FAN_darts_dichotomy _hfan ha with ha1 | ha2
+    · rw [nnOfHyp_eq_nFanPair _hfan ha1] at hab
+      rcases FAN_darts_dichotomy _hfan hb with hb1 | hb2
+      · rw [nnOfHyp_eq_nFanPair _hfan hb1] at hab
+        simp only [nFanPair] at hab
+        have hc := congrArg Prod.fst hab
+        have hc1 : a.1 = b.1 := hc
+        have hc2 : sigmaFan x V E a.1 a.2 = sigmaFan x V E b.1 b.2 :=
+          congrArg Prod.snd hab
+        have hmem1 : a.2 ∈ setOfEdge a.1 V E :=
+          (properties_of_setOfEdge_fan x V E a.1 a.2 _hfan).mp ha1
+        have hmem2 : b.2 ∈ setOfEdge b.1 V E :=
+          (properties_of_setOfEdge_fan x V E b.1 b.2 _hfan).mp hb1
+        rw [← hc1] at hmem2 hc2
+        exact Prod.ext hc1 (mono_sigma_fan _hfan hmem1 hmem2 hc2)
+      · rw [nnOfHyp_isolated hb2] at hab
+        simp only [nFanPair] at hab
+        have hc := congrArg Prod.fst hab
+        have hc1 : a.1 = b.1 := hc
+        have hc2 : sigmaFan x V E a.1 a.2 = b.2 := congrArg Prod.snd hab
+        have h12 : sigmaFan x V E a.1 a.2 = b.1 := hc2.trans hb2.1.symm
+        have hsig : sigmaFan x V E a.1 a.2 ∈ setOfEdge a.1 V E :=
+          sigma_fan_in_setOfEdge _hfan
+            ((properties_of_setOfEdge_fan x V E a.1 a.2 _hfan).mp ha1)
+        rw [h12, ← hc1] at hsig
+        exact absurd rfl
+          (edge_ne_of_fan _hfan
+            ((properties_of_setOfEdge_fan x V E a.1 a.1 _hfan).mpr hsig))
+    · rw [nnOfHyp_isolated ha2] at hab
+      rcases FAN_darts_dichotomy _hfan hb with hb1 | hb2
+      · rw [nnOfHyp_eq_nFanPair _hfan hb1] at hab
+        simp only [nFanPair] at hab
+        have hc := congrArg Prod.fst hab
+        have hc1 : a.1 = b.1 := hc
+        have hc2 : a.2 = sigmaFan x V E b.1 b.2 := congrArg Prod.snd hab
+        have hsig : sigmaFan x V E b.1 b.2 ∈ setOfEdge b.1 V E :=
+          sigma_fan_in_setOfEdge _hfan
+            ((properties_of_setOfEdge_fan x V E b.1 b.2 _hfan).mp hb1)
+        rw [← hc2, hc1.symm.trans ha2.1] at hsig
+        exact absurd rfl
+          (edge_ne_of_fan _hfan
+            ((properties_of_setOfEdge_fan x V E a.2 a.2 _hfan).mpr hsig))
+      · rw [nnOfHyp_isolated hb2] at hab
+        exact hab
 
 /-- WRGCVDR.hl:1521 `IVS_AZIM_EMPTY_IDE`. -/
 theorem IVS_AZIM_EMPTY_IDE (x y t : V3) : ivsAzimCycle_p3 ∅ x y t = t := by
@@ -835,7 +1075,21 @@ theorem IVS_AZIM_EMPTY_IDE (x y t : V3) : ivsAzimCycle_p3 ∅ x y t = t := by
 /-- WRGCVDR.hl:1529 `FAN_IMP_IN_DARTS_IFF_FF_TOO`. -/
 theorem FAN_IMP_IN_DARTS_IFF_FF_TOO {x : V3} {V : Set V3} {E : Set (Set V3)}
     (_hfan : FAN x V E) (y : V3 × V3) :
-    y ∈ dartsOfHyp_p3 E V ↔ ffOfHyp_p3 x V E y ∈ dartsOfHyp_p3 E V := sorry
+    y ∈ dartsOfHyp_p3 E V ↔ ffOfHyp_p3 x V E y ∈ dartsOfHyp_p3 E V := by
+  constructor
+  · intro hy
+    rcases FAN_darts_dichotomy _hfan hy with h1 | h2
+    · rw [ffOfHyp_eq_fFanPair _hfan h1]
+      exact Set.mem_union_left (b := selfPairs_p3 E V)
+        (show (fFanPair x V E y) ∈ ordPairs_p3 E from fFanPair_mem_dart1 _hfan h1)
+    · rw [ffOfHyp_isolated h2]
+      exact hy
+  · intro hy
+    by_contra hnd
+    rw [show ffOfHyp_p3 x V E y =
+      if y ∈ dartsOfHyp_p3 E V then (y.2, ivsAzimCycle_p3 (EE_p3 y.2 E) x y.2 y.1) else y
+      from rfl, if_neg hnd] at hy
+    exact hnd hy
 
 /-- WRGCVDR.hl:1748 `nn_of_hyp3_alt`. -/
 theorem nn_of_hyp3_alt (x : V3) (V : Set V3) (E : Set (Set V3)) (y : V3 × V3) :
@@ -891,7 +1145,85 @@ theorem ff_of_hyp3 (x : V3) (V : Set V3) (E : Set (Set V3)) (u : V3 × V3) :
 
 /-- WRGCVDR.hl:1610 `FAN_IMP_FACE_MAP_PERMUTES_DARTS`. -/
 theorem FAN_IMP_FACE_MAP_PERMUTES_DARTS {x : V3} {V : Set V3} {E : Set (Set V3)}
-    (_hfan : FAN x V E) : permutesF_p3 (ffOfHyp_p3 x V E) (dartsOfHyp_p3 E V) := sorry
+    (_hfan : FAN x V E) : permutesF_p3 (ffOfHyp_p3 x V E) (dartsOfHyp_p3 E V) := by
+  refine ⟨fun d hd => (FAN_IMP_IN_DARTS_IFF_FF_TOO _hfan d).mp hd, fun d hd => ?_, ?_⟩
+  · rw [show ffOfHyp_p3 x V E d =
+      if d ∈ dartsOfHyp_p3 E V then (d.2, ivsAzimCycle_p3 (EE_p3 d.2 E) x d.2 d.1) else d
+      from rfl, if_neg hd]
+  · intro a ha b hb hab
+    rcases FAN_darts_dichotomy _hfan ha with ha1 | ha2
+    · rw [ffOfHyp_eq_fFanPair _hfan ha1] at hab
+      rcases FAN_darts_dichotomy _hfan hb with hb1 | hb2
+      · rw [ffOfHyp_eq_fFanPair _hfan hb1] at hab
+        simp only [fFanPair] at hab
+        have hc := congrArg Prod.fst hab
+        have hc1 : a.2 = b.2 := hc
+        have hc2 : inverseSigmaFan x V E a.2 a.1 = inverseSigmaFan x V E b.2 b.1 :=
+          congrArg Prod.snd hab
+        have hmem : a.1 ∈ setOfEdge a.2 V E :=
+          (properties_of_setOfEdge_fan x V E a.2 a.1 _hfan).mp
+            (Set.pair_comm _ _ ▸ ha1)
+        have hcomp := (inverse_sigma_fan_comp _hfan (u := a.1) hmem).2
+        have h1 : extensionSigmaFan x V E a.2 (inverseSigmaFan x V E a.2 a.1) = a.1 :=
+          congrFun hcomp a.1
+        have h2 : extensionSigmaFan x V E a.2 (inverseSigmaFan x V E a.2 b.1) = b.1 :=
+          congrFun hcomp b.1
+        have hc2' : inverseSigmaFan x V E a.2 a.1 = inverseSigmaFan x V E a.2 b.1 := by
+          rw [← hc1] at hc2
+          exact hc2
+        rw [hc2'] at h1
+        rw [h1] at h2
+        exact Prod.ext h2 hc1
+      · rw [ffOfHyp_isolated hb2] at hab
+        simp only [fFanPair] at hab
+        have hc := congrArg Prod.fst hab
+        have hc1 : a.2 = b.1 := hc
+        have hc2 : inverseSigmaFan x V E a.2 a.1 = b.2 := congrArg Prod.snd hab
+        have h13 : inverseSigmaFan x V E a.2 a.1 = a.2 := by
+          rw [hc2, ← hb2.1, ← hc1]
+        have hmem : a.1 ∈ setOfEdge a.2 V E :=
+          (properties_of_setOfEdge_fan x V E a.2 a.1 _hfan).mp
+            (Set.pair_comm _ _ ▸ ha1)
+        have hcomp := (inverse_sigma_fan_comp _hfan (u := a.1) hmem).2
+        have h1 : extensionSigmaFan x V E a.2 (inverseSigmaFan x V E a.2 a.1) = a.1 :=
+          congrFun hcomp a.1
+        have hnotmem : ¬ (a.2 ∈ setOfEdge a.2 V E) := fun hm =>
+          absurd rfl (edge_ne_of_fan _hfan
+            ((properties_of_setOfEdge_fan x V E a.2 a.2 _hfan).mpr hm))
+        have h2 : extensionSigmaFan x V E a.2 a.2 = a.2 := by
+          simp [extensionSigmaFan, hnotmem]
+        rw [h13] at h1
+        have hal : a.1 = a.2 := h1.symm.trans h2
+        have hae : {a.2, a.1} ∈ E := Set.pair_comm _ _ ▸ ha1
+        rw [hal] at hae
+        exact absurd rfl (edge_ne_of_fan _hfan hae)
+    · rw [ffOfHyp_isolated ha2] at hab
+      rcases FAN_darts_dichotomy _hfan hb with hb1 | hb2
+      · rw [ffOfHyp_eq_fFanPair _hfan hb1] at hab
+        simp only [fFanPair] at hab
+        have hc := congrArg Prod.fst hab
+        have hc1 : a.1 = b.2 := hc
+        have hc2 : a.2 = inverseSigmaFan x V E b.2 b.1 := congrArg Prod.snd hab
+        have h13 : inverseSigmaFan x V E b.2 b.1 = b.2 := by
+          rw [← hc2, ← ha2.1, ← hc1]
+        have hmem : b.1 ∈ setOfEdge b.2 V E :=
+          (properties_of_setOfEdge_fan x V E b.2 b.1 _hfan).mp
+            (Set.pair_comm _ _ ▸ hb1)
+        have hcomp := (inverse_sigma_fan_comp _hfan (u := b.1) hmem).2
+        have h1 : extensionSigmaFan x V E b.2 (inverseSigmaFan x V E b.2 b.1) = b.1 :=
+          congrFun hcomp b.1
+        have hnotmem : ¬ (b.2 ∈ setOfEdge b.2 V E) := fun hm =>
+          absurd rfl (edge_ne_of_fan _hfan
+            ((properties_of_setOfEdge_fan x V E b.2 b.2 _hfan).mpr hm))
+        have h2 : extensionSigmaFan x V E b.2 b.2 = b.2 := by
+          simp [extensionSigmaFan, hnotmem]
+        rw [h13] at h1
+        have hal : b.1 = b.2 := h1.symm.trans h2
+        have hbe : {b.2, b.1} ∈ E := Set.pair_comm _ _ ▸ hb1
+        rw [hal] at hbe
+        exact absurd rfl (edge_ne_of_fan _hfan hbe)
+      · rw [ffOfHyp_isolated hb2] at hab
+        exact hab
 
 /-- WRGCVDR.hl:1779 `FAN_IMP_FIMITE_DARTS`. -/
 theorem FAN_IMP_FIMITE_DARTS {x : V3} {V : Set V3} {E : Set (Set V3)} (hfan : FAN x V E) :
@@ -910,7 +1242,37 @@ theorem FAN_IMP_EE_EQ_SET_OF_EDGE {x : V3} {V : Set V3} {E : Set (Set V3)}
 /-- WRGCVDR.hl:1809 `FAN_IMP_IN_SELF_PAIRS_IFF_FF_OF_HYP`. -/
 theorem FAN_IMP_IN_SELF_PAIRS_IFF_FF_OF_HYP {x : V3} {V : Set V3} {E : Set (Set V3)}
     (_hfan : FAN x V E) (y : V3 × V3) :
-    y ∈ selfPairs_p3 E V ↔ ffOfHyp_p3 x V E y ∈ selfPairs_p3 E V := sorry
+    y ∈ selfPairs_p3 E V ↔ ffOfHyp_p3 x V E y ∈ selfPairs_p3 E V := by
+  constructor
+  · intro hy
+    rw [ffOfHyp_isolated hy]
+    exact hy
+  · intro hy
+    by_cases hd : y ∈ dartsOfHyp_p3 E V
+    · rcases FAN_darts_dichotomy _hfan hd with h1 | h2
+      · rw [ffOfHyp_eq_fFanPair _hfan h1, fFanPair] at hy
+        -- hy : (y.2, σ⁻¹ y.2 y.1) ∈ selfPairs forces y.2 = σ⁻¹ y.2 y.1; applying
+        -- the extension σ (which fixes y.2 off its own neighbor set) gives y.2 = y.1
+        have hc : y.2 = inverseSigmaFan x V E y.2 y.1 := hy.1
+        have hmem : y.1 ∈ setOfEdge y.2 V E :=
+          (properties_of_setOfEdge_fan x V E y.2 y.1 _hfan).mp
+            (Set.pair_comm _ _ ▸ h1)
+        have hcomp := (inverse_sigma_fan_comp _hfan (u := y.1) hmem).2
+        have h2 : extensionSigmaFan x V E y.2 (inverseSigmaFan x V E y.2 y.1) = y.1 :=
+          congrFun hcomp y.1
+        have hnotmem : ¬ (y.2 ∈ setOfEdge y.2 V E) := fun hm =>
+          absurd rfl (edge_ne_of_fan _hfan
+            ((properties_of_setOfEdge_fan x V E y.2 y.2 _hfan).mpr hm))
+        have h3 : extensionSigmaFan x V E y.2 y.2 = y.2 := by
+          simp [extensionSigmaFan, hnotmem]
+        rw [← hc, h3] at h2
+        exact absurd h2.symm (edge_ne_of_fan _hfan h1)
+      · rw [ffOfHyp_isolated h2] at hy
+        exact hy
+    · rw [show ffOfHyp_p3 x V E y =
+        if y ∈ dartsOfHyp_p3 E V then (y.2, ivsAzimCycle_p3 (EE_p3 y.2 E) x y.2 y.1) else y
+        from rfl, if_neg hd] at hy
+      exact hy
 
 /-- WRGCVDR.hl:1846 `FIRST_AAUHTVE`: under `FAN`, the components of `HYP`
 carry a hypermap structure with `e² = I`. -/
@@ -953,13 +1315,76 @@ theorem iter_sigma_fan_in_set_of_edge {x : V3} {V : Set V3} {E : Set (Set V3)}
 /-- WRGCVDR.hl:1995 `N_HYP_TO_AZIM_CYCLE_LEM`. -/
 theorem N_HYP_TO_AZIM_CYCLE_LEM {x : V3} {V : Set V3} {E : Set (Set V3)}
     (_hfan : FAN x V E) {u v : V3} (_huv : (u, v) ∈ dartsOfHyp_p3 E V) (n : ℕ) :
-    (nnOfHyp_p3 x V E)^[n] (u, v) = (u, (azimCycle_p3 (EE_p3 u E) x u)^[n] v) := sorry
+    (nnOfHyp_p3 x V E)^[n] (u, v) = (u, (azimCycle_p3 (EE_p3 u E) x u)^[n] v) := by
+  induction n generalizing v with
+  | zero => rfl
+  | succ k ih =>
+    rw [Function.iterate_succ_apply', Function.iterate_succ_apply', ih _huv]
+    have hwD : (u, (azimCycle_p3 (EE_p3 u E) x u)^[k] v) ∈ dartsOfHyp_p3 E V := by
+      rcases FAN_darts_dichotomy _hfan _huv with h1 | h2
+      · have hEE : EE_p3 u E = setOfEdge u V E :=
+          UNI_E_IMP_EE_EQ_SET_OF_EDGE _hfan.1 u
+        have hvE : v ∈ EE_p3 u E := by
+          rw [hEE]
+          exact (properties_of_setOfEdge_fan x V E u v _hfan).mp h1
+        have hstep : ∀ m : ℕ, ∀ z : V3, z ∈ EE_p3 u E →
+            (azimCycle_p3 (EE_p3 u E) x u)^[m] z ∈ EE_p3 u E := by
+          intro m
+          induction m with
+          | zero => intro z hz; exact hz
+          | succ j jh =>
+            intro z hz
+            rw [Function.iterate_succ_apply']
+            have hq : (azimCycle_p3 (EE_p3 u E) x u)^[j] z ∈ EE_p3 u E := jh z hz
+            by_cases hsub : EE_p3 u E ⊆ {(azimCycle_p3 (EE_p3 u E) x u)^[j] z}
+            · rw [W_SUBSET_SINGLETON_IMP_IDE (W := EE_p3 u E)
+                (p := (azimCycle_p3 (EE_p3 u E) x u)^[j] z) (v := x) (w := u) hsub]
+              exact hq
+            · exact (AZIM_CYCLE_PROPERTIES (W := EE_p3 u E)
+                (p := (azimCycle_p3 (EE_p3 u E) x u)^[j] z) hsub
+                (FAN_IMP_FINITE_EE _hfan u) x u).2.1
+        have hwE : (azimCycle_p3 (EE_p3 u E) x u)^[k] v ∈ EE_p3 u E := hstep k v hvE
+        have hE2 : {u, (azimCycle_p3 (EE_p3 u E) x u)^[k] v} ∈ E :=
+          (properties_of_setOfEdge_fan x V E u _ _hfan).mpr
+            (by rw [hEE] at hwE ⊢; exact hwE)
+        exact Set.mem_union_left (b := selfPairs_p3 E V) hE2
+      · have hE : EE_p3 u E = ∅ := h2.2.2
+        have huv2 : u = v := h2.1
+        rw [← huv2, hE]
+        have hfix : ∀ m : ℕ, (azimCycle_p3 (∅ : Set V3) x u)^[m] u = u := by
+          intro m
+          induction m with
+          | zero => rfl
+          | succ j jh =>
+            rw [Function.iterate_succ_apply',
+              W_SUBSET_SINGLETON_IMP_IDE (W := (∅ : Set V3))
+                (p := (azimCycle_p3 (∅ : Set V3) x u)^[j] u) (v := x) (w := u)
+                (by simp), jh]
+        rw [hfix]
+        exact Set.mem_union_right (a := ordPairs_p3 E)
+          ⟨rfl, h2.2.1, h2.2.2⟩
+    rw [nnOfHyp_dart hwD]
 
 /-- WRGCVDR.hl:2044 `ITER_AZIM_CYCLE_EQ_ITER_SIGMA`. -/
 theorem ITER_AZIM_CYCLE_EQ_ITER_SIGMA {x : V3} {V : Set V3} {E : Set (Set V3)}
     (_hfan : FAN x V E) {v u : V3} (_hv : {v, u} ∈ E) (a : V3) (_ha : a ∈ EE_p3 v E)
     (n : ℕ) :
-    (azimCycle_p3 (EE_p3 v E) x v)^[n] a = (sigmaFan x V E v)^[n] a := sorry
+    (azimCycle_p3 (EE_p3 v E) x v)^[n] a = (sigmaFan x V E v)^[n] a := by
+  have haE : a ∈ setOfEdge v V E := by
+    rw [← UNI_E_IMP_EE_EQ_SET_OF_EDGE _hfan.1 v]
+    exact _ha
+  have hmem : ∀ m : ℕ, (sigmaFan x V E v)^[m] a ∈ setOfEdge v V E := by
+    intro m
+    induction m with
+    | zero => exact haE
+    | succ j jh =>
+      rw [Function.iterate_succ_apply']
+      exact sigma_fan_in_setOfEdge _hfan jh
+  induction n with
+  | zero => rfl
+  | succ k ih =>
+    rw [Function.iterate_succ_apply', Function.iterate_succ_apply', ih]
+    exact AZIM_CYCLE_EQ_SIGMA_FAN _hfan (hmem k)
 
 /-- WRGCVDR.hl:2070 `pmp_to_iter`. -/
 theorem pmp_to_iter (f : V3 → Set V3 → Set (Set V3) → V3 → V3 → V3) (x : V3) (V : Set V3)
