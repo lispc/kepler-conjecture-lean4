@@ -54,7 +54,9 @@ Encoding (house conventions, cf. LocalAuto24/33):
 -/
 
 import Kepler.Text.LocalAuto1
+import Kepler.Text.LocalAuto3
 import Kepler.Text.LocalAuto4
+import Kepler.Text.LocalAuto8
 import Kepler.Text.LocalAuto23
 import Mathlib
 
@@ -235,18 +237,146 @@ theorem fSy_eq_range_p36 {k : ℕ} (hk : 0 < k) {vv : ℕ → V3} (hper : Period
     exact ⟨i, Set.mem_univ i, by simp only; rw [hi1, hi2]⟩
 
 
+/-! ## Section 0.5: shared helpers (succ-torsor kit, table symm, concrete
+stable-system builders for the eight `s_init_list_v39` tables) -/
+
+theorem succ_mod_ne_p36 {k : ℕ} (hk : 1 < k) (n : ℕ) : n % k ≠ (n + 1) % k := by
+  have e1 : (n + 1) % k = (n % k + 1) % k := by simp [Nat.add_mod]
+  have h1 : n % k < k := Nat.mod_lt _ (by omega)
+  rcases Nat.lt_or_ge (n % k + 1) k with h | h
+  · rw [e1, Nat.mod_eq_of_lt (by omega : n % k + 1 < k)]
+    omega
+  · have hk1 : n % k + 1 = k := by omega
+    rw [e1, hk1, Nat.mod_self]
+    omega
+
+theorem succModIter_p36 (k : ℕ) (hk : 0 < k) {j : ℕ} (hj : j < k) (n : ℕ) :
+    (fun i => (1 + i) % k)^[n] j = (j + n) % k := by
+  induction n with
+  | zero =>
+      show j = j % k
+      exact (Nat.mod_eq_of_lt hj).symm
+  | succ m ih =>
+      rw [Function.iterate_succ_apply', ih, Nat.add_comm]
+      exact Nat.ModEq.add_right (c := 1) (Nat.mod_modEq (j + m) k)
+
+theorem succModIter_pos_p36 (k : ℕ) (hk : 0 < k) (j n : ℕ) (hn : 0 < n) :
+    (fun i => (1 + i) % k)^[n] j = (j + n) % k := by
+  induction n with
+  | zero => exact absurd hn (by omega)
+  | succ m ih =>
+      rcases Nat.eq_zero_or_pos m with hm | hm
+      · subst m
+        show (1 + j) % k = (j + 1) % k
+        rw [Nat.add_comm]
+      · rw [Function.iterate_succ_apply', ih hm, Nat.add_comm 1 ((j + m) % k)]
+        exact Nat.ModEq.add_right (c := 1) (Nat.mod_modEq (j + m) k)
+
+theorem torsor_succ_mod_p36 {k : ℕ} (hk : 0 < k) :
+    torsor_p23 (Set.Iic (k - 1)) k (fun i => (1 + i) % k) := by
+  have hxl : ∀ x ∈ Set.Iic (k - 1), x < k := fun x hx => by
+    rw [Set.mem_Iic] at hx
+    omega
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩
+  · intro x hx
+    have hxl : x < k := hxl x hx
+    show (1 + x) % k ≤ k - 1
+    rcases Nat.lt_or_ge (1 + x) k with h | h
+    · rw [Nat.mod_eq_of_lt h]; omega
+    · rw [Nat.mod_eq_sub_mod h, Nat.mod_eq_of_lt (by omega)]; omega
+  · intro x1 hx1 x2 hx2 heq
+    have h1 : x1 < k := hxl x1 hx1
+    have h2 : x2 < k := hxl x2 hx2
+    have hme : Nat.ModEq k (1 + x1) (1 + x2) := heq
+    have hme' : Nat.ModEq k (x1 + 1) (x2 + 1) := by
+      rw [Nat.add_comm x1 1, Nat.add_comm x2 1]; exact hme
+    have hc : x1 % k = x2 % k := Nat.ModEq.add_right_cancel' 1 hme'
+    rw [Nat.mod_eq_of_lt h1, Nat.mod_eq_of_lt h2] at hc
+    exact hc
+  · intro i x hi hik hxi
+    have hxl : x < k := hxl x hxi
+    rw [succModIter_p36 k hk hxl i]
+    intro heq
+    have h1 : (x + i) % k = x % k := by rw [heq, Nat.mod_eq_of_lt hxl]
+    have hdvd : k ∣ (x + i) - x := (Nat.modEq_iff_dvd' (by omega)).mp h1.symm
+    rw [Nat.add_sub_cancel_left] at hdvd
+    exact absurd (Nat.eq_zero_of_dvd_of_lt hdvd (by omega)) (by omega)
+  · intro x hx
+    have hxlt : x < k := hxl x hx
+    show (fun i => (1 + i) % k)^[k] x = x
+    rw [succModIter_p36 k hk hxlt k, Nat.add_mod_right, Nat.mod_eq_of_lt hxlt]
+  · rw [Nat.card_coe_set_eq, Set.ncard_Iic_nat]
+    omega
+
+theorem csAdj_symm_p36 {k : ℕ} {a1 a2 : ℝ} {i j : ℕ} :
+    csAdj k a1 a2 i j = csAdj k a1 a2 j i := by
+  simp only [csAdj]
+  by_cases h1 : i % k = j % k
+  · simp [h1]
+  · rw [if_neg h1, if_neg (Ne.symm h1)]
+    by_cases h2 : (j % k = (i + 1) % k ∨ (j + 1) % k = i % k)
+    · have h2' : (i % k = (j + 1) % k ∨ (i + 1) % k = j % k) := by
+        rcases h2 with h | h
+        · exact Or.inr h.symm
+        · exact Or.inl h.symm
+      rw [if_pos h2, if_pos h2']
+    · have h2' : ¬ (i % k = (j + 1) % k ∨ (i + 1) % k = j % k) := by
+        rintro (h | h)
+        · exact h2 (Or.inr h.symm)
+        · exact h2 (Or.inl h.symm)
+      rw [if_neg h2, if_neg h2']
+
+theorem aPro_symm_p36 {k : ℕ} {p a1 a2 : ℝ} {i j : ℕ} :
+    aPro k p a1 a2 i j = aPro k p a1 a2 j i := by
+  simp only [aPro]
+  by_cases h1 : i % k = j % k
+  · simp [h1]
+  · rw [if_neg h1, if_neg (Ne.symm h1)]
+    by_cases h2 : ({i % k, j % k} : Set ℕ) = {0, 1}
+    · have h2' : ({j % k, i % k} : Set ℕ) = {0, 1} := by
+        rw [← h2]
+        ext x
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        omega
+      rw [if_pos h2, if_pos h2']
+    · have h2' : ¬ ({j % k, i % k} : Set ℕ) = {0, 1} := by
+        intro he
+        rw [← he] at h2
+        exact h2 (by ext x; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; omega)
+      rw [if_neg h2, if_neg h2']
+      by_cases h3 : (j % k = (i + 1) % k ∨ (j + 1) % k = i % k)
+      · have h3' : (i % k = (j + 1) % k ∨ (i + 1) % k = j % k) := by
+          rcases h3 with h | h
+          · exact Or.inr h.symm
+          · exact Or.inl h.symm
+        rw [if_pos h3, if_pos h3']
+      · have h3' : ¬ (i % k = (j + 1) % k ∨ (i + 1) % k = j % k) := by
+          rintro (h | h)
+          · exact h3 (Or.inr h.symm)
+          · exact h3 (Or.inl h.symm)
+        rw [if_neg h3, if_neg h3']
+
+theorem change_type_v2_mkUnadorned_p36 {k : ℕ} (d : ℝ) (a b : ℕ → ℕ → ℝ) :
+    change_type_v2 (mkUnadornedV39 k d a b).J k = ∅ := by
+  show change_type_v2 (fun _ _ => False) k = ∅
+  ext e
+  simp [change_type_v2]
+
+
 /-! ## Section 1: the k = 3 system (XWITCCN.hl:63-2428) -/
 
 /-- HOL `wedge_in_fan_gt` (localization.hl:79) — statement-level twin.
 LocalAuto2 (`wedgeInFanGt_p2`) is NOT importable here (PackingAuto18/20
-`atn2` clash); NEEDS dedup at merge. -/
+`atn2` clash); body = the LocalAuto3 rendering `wedgeInFanGt_p3` (same
+shape, proved def); NEEDS dedup at merge. -/
 noncomputable def wedgeInFanGt_p36 (d : V3 × V3) (E : Set (Set V3)) : Set V3 :=
-  sorry
+  wedgeInFanGt_p3 d E
 
 /-- HOL `slicev` (localization.hl:149) — statement-level twin of
-LocalAuto2 `slicev_p2` (same import caveat). -/
+LocalAuto2 `slicev_p2` (same import caveat); body = the LocalAuto8
+rendering `slicev_p8` (same shape); NEEDS dedup at merge. -/
 def slicev_p36 (E : Set (Set V3)) (FF : Set (V3 × V3)) (v w : V3) : Set V3 :=
-  sorry
+  slicev_p8 E FF v w
 
 /-- HOL `CARD_SLICE_EQ` (XWITCCN.hl:63). -/
 theorem CARD_SLICE_EQ (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (v w : V3)

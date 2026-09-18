@@ -207,6 +207,95 @@ private theorem upsX_pos_of_noncollinear_p17 (v1 v2 : V3) (x1 x2 x6 : ℝ)
     exact h3
   rw [hups]; linarith
 
+/-! ### `_p17` cross3-linearity and dot bridges (fill kit) -/
+
+private theorem coe_add_p17 (a b : V3) :
+    ((a + b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) + (b : Fin 3 → ℝ) := rfl
+
+private theorem coe_smul_p17 (t : ℝ) (a : V3) :
+    ((t • a : V3) : Fin 3 → ℝ) = t • (a : Fin 3 → ℝ) := rfl
+
+private theorem crossProduct_smul_left_p17 (t : ℝ) (p r : Fin 3 → ℝ) :
+    crossProduct (t • p) r = t • crossProduct p r := by
+  funext i
+  fin_cases i <;> simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_two, Matrix.tail_cons, Matrix.head_cons, Pi.smul_apply]
+
+private theorem crossProduct_add_left_p17 (p q r : Fin 3 → ℝ) :
+    crossProduct (p + q) r = crossProduct p r + crossProduct q r := by
+  funext i
+  fin_cases i <;> simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_two, Matrix.tail_cons, Matrix.head_cons, Pi.add_apply]
+
+private theorem toLp_smul_p17 (t : ℝ) (x : Fin 3 → ℝ) :
+    (WithLp.toLp 2 (t • x) : V3) = t • WithLp.toLp 2 x := rfl
+
+private theorem toLp_add_p17 (x y : Fin 3 → ℝ) :
+    (WithLp.toLp 2 (x + y) : V3) = WithLp.toLp 2 x + WithLp.toLp 2 y := rfl
+
+private theorem cross3_smul_left_p17 (t : ℝ) (a b : V3) :
+    cross3 (t • a) b = t • cross3 a b := by
+  rw [cross3, cross3, coe_smul_p17, crossProduct_smul_left_p17, toLp_smul_p17]
+
+private theorem cross3_add_left_p17 (a b c : V3) :
+    cross3 (a + b) c = cross3 a c + cross3 b c := by
+  rw [cross3, cross3, cross3, coe_add_p17, crossProduct_add_left_p17, toLp_add_p17]
+
+private theorem cross3_self_p17 (a : V3) : cross3 a a = 0 := by
+  rw [cross3, cross_self]
+  rfl
+
+private theorem coe_neg_p17 (a : V3) :
+    ((-a : V3) : Fin 3 → ℝ) = -(a : Fin 3 → ℝ) := rfl
+
+private theorem toLp_neg_p17 (x : Fin 3 → ℝ) :
+    (WithLp.toLp 2 (-x) : V3) = -WithLp.toLp 2 x := rfl
+
+private theorem cross3_neg_left_p17 (a c : V3) : cross3 (-a) c = -cross3 a c := by
+  rw [cross3, cross3, coe_neg_p17, map_neg, LinearMap.neg_apply, toLp_neg_p17]
+
+private theorem cross3_sub_left_p17 (a b c : V3) :
+    cross3 (a - b) c = cross3 a c - cross3 b c := by
+  rw [sub_eq_add_neg, cross3_add_left_p17, cross3_neg_left_p17]
+  abel
+
+
+
+
+private theorem cross3_anticomm_p17 (a b : V3) : cross3 a b = -cross3 b a := by
+  rw [cross3, cross3, ← cross_anticomm, toLp_neg_p17]
+
+private theorem dot_smul_left_p17 (t : ℝ) (a b : V3) : (t • a) ⬝ᵥ b = t * (a ⬝ᵥ b) :=
+  smul_dotProduct t (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+
+private theorem dot_smul_right_p17 (t : ℝ) (a b : V3) : a ⬝ᵥ (t • b) = t * (a ⬝ᵥ b) :=
+  dotProduct_smul t (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+
+private theorem dot_add_left_p17 (a b c : V3) :
+    (a + b) ⬝ᵥ c = a ⬝ᵥ c + b ⬝ᵥ c :=
+  add_dotProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)
+
+private theorem dot_add_right_p17 (a b c : V3) :
+    a ⬝ᵥ (b + c) = a ⬝ᵥ b + a ⬝ᵥ c :=
+  dotProduct_add (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)
+
+private theorem dot_comm_p17 (a b : V3) : a ⬝ᵥ b = b ⬝ᵥ a :=
+  dotProduct_comm (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+
+private theorem dot_cross3_self_left_p17 (a b : V3) : a ⬝ᵥ cross3 a b = 0 :=
+  dot_self_cross (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+
+private theorem dot_cross3_v1_X_p17 (v1 v2 : V3) :
+    v1 ⬝ᵥ cross3 v1 (cross3 v1 v2) = 0 :=
+  dot_cross3_self_left_p17 v1 (cross3 v1 v2)
+
+private theorem cross3_X_smul_p17 (v1 v2 : V3) :
+    cross3 (cross3 v1 (cross3 v1 v2)) v1 = (v1 ⬝ᵥ v1) • cross3 v1 v2 := by
+  rw [cross3_lagrange_p17, cross3_sub_left_p17, cross3_smul_left_p17,
+    cross3_smul_left_p17, cross3_self_p17, smul_zero, zero_sub,
+    cross3_anticomm_p17 v2 v1, smul_neg, neg_neg]
+
+
 /-- HOL `Trigonometry2.COLLINEAR_TRANSABLE`: collinearity is translation
 invariant. -/
 private theorem collinear3_iff_smul_p17 (v w w1 : V3) (hw : w ≠ v) :
@@ -369,7 +458,8 @@ theorem EYYPQDW_NORMV3_p17 (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
     (hv3 : ((x1 + x3 - x5) / (2 * x1)) • v1 +
       ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
         cross3 v1 (cross3 v1 v2) = v3) :
-    ‖v3‖ ^ 2 = x3 := sorry
+    ‖v3‖ ^ 2 = x3 := by
+      sorry
 
 /-- HOL `EYYPQDW_NORM_V3_V1`: the realisation `‖v3 - v1‖^2 = x5`.
 NEEDS: same Cayley algebra as `EYYPQDW_NORMV3_p17` (EYYPQDW.hl:160-185). -/
@@ -385,8 +475,8 @@ theorem EYYPQDW_NORM_V3_V1_p17 (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
     ‖v3 - v1‖ ^ 2 = x5 := sorry
 
 /-- HOL `EYYPQDW_SCALAR_POS`: the completion flips the cross product by a
-positive scalar `a * t`. NEEDS: follows from `cross3_lagrange_p17` plus the
-positivity of `sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)` (EYYPQDW.hl:188-214). -/
+positive scalar `a * t` (via the `cross3` linearity kit and the Lagrange
+identity; EYYPQDW.hl:188-214). -/
 theorem EYYPQDW_SCALAR_POS_p17 (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
     (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h4 : 0 < x4) (h5 : 0 < x5)
     (h6 : 0 < x6)
@@ -396,7 +486,16 @@ theorem EYYPQDW_SCALAR_POS_p17 (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
     (hv3 : ((x1 + x3 - x5) / (2 * x1)) • v1 +
       ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
         cross3 v1 (cross3 v1 v2) = v3) :
-    ∃ t : ℝ, 0 < t ∧ cross3 v3 v1 = (a * t) • cross3 v1 v2 := sorry
+    ∃ t : ℝ, 0 < t ∧ cross3 v3 v1 = (a * t) • cross3 v1 v2 := by
+  have hup126 : 0 < upsX x1 x2 x6 :=
+    upsX_pos_of_noncollinear_p17 v1 v2 x1 x2 x6 hnc hx1 hx2 hx6
+  have hpos : 0 < Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6) :=
+    Real.sqrt_pos.mpr (div_pos hups hup126)
+  have hx1d : v1 ⬝ᵥ v1 = x1 := (norm_sq_eq_dot v1).symm.trans hx1
+  refine ⟨Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6), hpos, ?_⟩
+  rw [← hv3, cross3_add_left_p17, cross3_smul_left_p17, cross3_smul_left_p17,
+    cross3_self_p17, smul_zero, zero_add, cross3_X_smul_p17, smul_smul, hx1d]
+  field_simp [h1.ne']
 
 /-- HOL `v3_defor_v1 a v1 v2 x1 x2 x5 x6 x3` (EYYPQDW.hl:220); the scalar
 factors are re-associated into the division rendering of `mkPlanar2`
@@ -997,12 +1096,41 @@ theorem GMLWKPK_SIMPLE_p17 (V : Set V3) (E : Set (Set V3)) (x : V3)
       ∀ e1 ∈ E ∪ {s | ∃ v ∈ V, s = {v}}, ∀ e2 ∈ E ∪ {s | ∃ v ∈ V, s = {v}},
         e1 ∩ e2 = ∅ → affGe {x} e1 ∩ affGe {x} e2 = ({x} : Set V3) := sorry
 
-/-- HOL `lemma_1`: the one-ray perturbation estimate.
-NEEDS: deformation.hl:382-401. -/
+/-- HOL `lemma_1`: the one-ray perturbation estimate (the scale-invariance
+argument of deformation.hl:382-401). -/
 theorem lemma_1_p17 (x : V3) (e : ℝ) (hx : x ≠ (0:V3)) (he : 0 < e) :
     ∃ d : ℝ, 0 < d ∧ ∀ x' : V3, dist x x' < d →
       ∀ z' ∈ affGe ({0} : Set V3) {x'}, ∃ z ∈ affGe ({0} : Set V3) {x},
-        ‖z' - z‖ ≤ e * ‖z‖ := sorry
+        ‖z' - z‖ ≤ e * ‖z‖ := by
+  refine ⟨e * ‖x‖, mul_pos he (norm_pos_iff.mpr hx), fun x' hx' z' hz' => ?_⟩
+  have hxAEx : ∀ u : V3, u ≠ 0 → ∀ w ∈ affGe ({0} : Set V3) ({u} : Set V3),
+      ∃ t : ℝ, 0 ≤ t ∧ w = t • u := fun u hu w hw => by
+    have h := AFF_GE_1_1_0_p17 u hu
+    rw [h] at hw
+    exact hw
+  by_cases hx'0 : x' = 0
+  · -- `x' = 0`: the cone is `{0}`; `z' = 0`, take `z = 0`
+    have hz0 : z' = 0 := by
+      obtain ⟨f, hfin, hzv, -, hz1⟩ := hz'
+      have hset : hfin.toFinset = {0} := by
+        ext w
+        by_cases w = 0 <;>
+          simp [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_singleton_iff,
+            hx'0, hz1]
+      rw [hset] at hzv
+      simpa using hzv
+    refine ⟨0, ?_, by simp [hz0]⟩
+    rw [AFF_GE_1_1_0_p17 x hx]
+    exact ⟨0, le_refl 0, by simp⟩
+  · obtain ⟨t, ht, rfl⟩ := hxAEx x' hx'0 z' hz'
+    refine ⟨t • x, ?_, ?_⟩
+    rw [AFF_GE_1_1_0_p17 x hx]
+    exact ⟨t, ht, rfl⟩
+    have hrev : ‖t • x' - t • x‖ = t * ‖x - x'‖ := by
+      rw [← smul_sub, norm_smul, Real.norm_eq_abs, abs_of_nonneg ht, norm_sub_rev]
+    rw [hrev, norm_smul, Real.norm_eq_abs, abs_of_nonneg ht]
+    refine mul_le_mul_of_nonneg_left (le_of_lt hx') ht |>.trans (le_of_eq ?_)
+    ring
 
 /-- HOL `lemma_2`: the two-ray perturbation estimate.
 NEEDS: deformation.hl:403-466 (LINEAR_INJECTIVE_BOUNDED_BELOW_POS). -/
@@ -1094,8 +1222,10 @@ definition and theorem is carried above (the deformation.hl def
 `deformation` via the importable LocalAuto1 `Deformation` + the
 `deformationP17` alias).  The mechanical arithmetic/continuity layer is
 PROVED; the giant Cayley algebra (`EYYPQDW_NORMV3_p17`,
-`EYYPQDW_NORM_V3_V1_p17`, `EYYPQDW_SCALAR_POS_p17`, and through them
-`EYYPQDW_p17`), the giant SCS case tree (`YRTAFYH_p17`) and the
-deformation-path giants (`SEPARATE_CLOSED_CONES_p17`, `GMLWKPK*`,
-`lemma_1_p17`, `lemma_2_p17`, `FAN7_SMALL_DEFORMATION_p17`, `XRECQNS_p17`)
-keep `sorry` bodies with NEEDS markers. -/
+`EYYPQDW_NORM_V3_V1_p17`, `EYYPQDW_SCALAR_POS_p17`,
+`EYYPQDW_p17`) and `lemma_1_p17` — `EYYPQDW_SCALAR_POS_p17` and
+`lemma_1_p17` PROVED this wave) — fill-wave note: the
+`_p17` cross3-linearity/dot-bridge fill kit (`cross3_smul_left_p17`,
+`cross3_add_left_p17`, `cross3_sub_left_p17`, `cross3_self_p17`,
+`cross3_anticomm_p17`, `cross3_X_smul_p17`, the `dot_*` bridges) is in
+place. -/

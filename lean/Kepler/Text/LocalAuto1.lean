@@ -72,6 +72,7 @@ import Kepler.Geom.LuneVolume
 import Kepler.Text.Fan
 import Kepler.Text.PackingAuto2
 import Kepler.Text.PackingAuto18
+import Kepler.Text.SphereKit
 import Kepler.Statement
 import Mathlib
 
@@ -761,21 +762,10 @@ noncomputable def scsBasic4 (d a01 b01 a02 b02 a03 b03 a12 b12 a13 b13 a23 b23 :
       ((1, 3), b13), ((2, 3), b23)] 0 4
   mkUnadornedV39 4 d a b
 
-/-- HOL `delta_x4` (sphere.hl:110); local copy for import hygiene
-(`deltaX4f`, PackingAuto20). -/
-noncomputable def deltaX4 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  -x2 * x3 - x1 * x4 + x2 * x5 + x3 * x6 - x5 * x6 +
-    x1 * (-x1 + x2 + x3 - x4 + x5 + x6)
-
-/-- HOL `delta_x5` (sphere.hl; Nonlin_def.hl:435): partial derivative of
-`delta_x` at `x5`. BODY-FIX 2026-09-17: was a mis-port dropping the
-`- x1 * x3 + x1 * x4` summands; this is the corrected 6-term body, verbatim
-twin of LocalAuto11:165 `deltaX5f_p11` / LocalAuto21:113 `deltaX5_p21` /
-LocalAuto22:120 `deltaX5_p22` (checked as `∂deltaX/∂x5`), now canonical in
-`Kepler.Text.SphereKit`. -/
-noncomputable def deltaX5 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  -x1 * x3 + x1 * x4 - x2 * x5 + x3 * x6 - x4 * x6 +
-    x2 * (x1 - x2 + x3 + x4 - x5 + x6)
+/- `deltaX4`/`deltaX5` (HOL `delta_x4`/`delta_x5`, sphere.hl:110 / Nonlin_def.hl:435)
+are canonical in `Kepler.Text.SphereKit` (imported above; `deltaX5` there is the
+corrected 6-term body — DEDUP 2026-09-17, local copies removed to fix the
+co-import clash). `mkSimplex1` below resolves against the canonical defs. -/
 
 /-- HOL `mk_simplex1` (appendix.hl:862); `cross` <-> `cross3`
 (PackingAuto18:86), `%` <-> `•`. BODY-FIX 2026-09-17: the `d5` coefficient

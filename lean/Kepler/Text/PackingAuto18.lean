@@ -27,12 +27,18 @@ Encoding notes:
 - `cc_pe1`/`cc_pe2`/`cc_uh` are HOL `new_specification` (Skolem) constants;
   they are rendered by `Classical.choose` over the (sorry'd) existence
   theorems `cc_pe_exists` / `cc_uh_exists`, mirroring `SKOLEM_THM`.
-- `re_eqvl` (trig2.hl:4238), `conv0` (sphere.hl:294), `delta`
-  (collect_geom.hl:94), `delta_x` (sphere.hl:86), `ups_x` (sphere.hl:122),
-  `arclength` (sphere.hl:258) are ported here because the ported lemmas
-  quantify over them; `arclength` uses flyspeck `atn2(x, y) =
-  Real.atan2 y x` (the flyspeck branch structure coincides with Mathlib's
-  `Real.atan2` off the degenerate origin pair).
+- `re_eqvl` (trig2.hl:4238), `conv0` (sphere.hl:294) and `arclength`
+  (sphere.hl:258) are ported here because the ported lemmas quantify over
+  them; `arclength` uses flyspeck `atn2(x, y) = Real.atan2 y x` (the
+  flyspeck branch structure coincides with Mathlib's `Real.atan2` off the
+  degenerate origin pair).
+- atn2-merge (docs/atn2-merge-plan.md §5.1): the sphere.hl/collect_geom.hl
+  kit `delta_x`/`delta`/`ups_x`/`atn2` (and `chi_msb`) is single-sourced in
+  `Kepler.Text.SphereKit`, which declares it in this same `Kepler.Text`
+  namespace, so the plain names keep resolving for every downstream lemma
+  quantifying over them.
+  `arclength` has no canonical home yet (SphereKit wave 1 omitted it) and
+  stays defined here.
 - YSSKQOY's `dot`/`vector_angle` on `:complex` are the real^2 structures
   under the standard complex identification; `complexDot` is that dot
   product. `COS_ARG_VECTOR_ANGLE` is stated in the ℂ identification (the
@@ -56,6 +62,7 @@ the giant leaf-cell/sum-gamma chains carry `sorry`.
 -/
 
 import Kepler.Text.PackingAuto13
+import Kepler.Text.SphereKit
 import Kepler.Text.Polytope
 import Mathlib
 
@@ -64,6 +71,12 @@ set_option maxHeartbeats 5000000
 namespace Kepler.Text
 
 open Kepler.Geom Set Classical ComplexConjugate
+
+-- atn2-merge (docs/atn2-merge-plan.md §5.1): the kit bodies live in the
+-- canonical module Kepler.Text.SphereKit, which declares them in this same
+-- `Kepler.Text` namespace (`atn2`, `chiMsb`, `deltaP`, `deltaX`, `upsX`).
+-- With the local definitions deleted, every plain kit name keeps resolving
+-- for this lane and its importers exactly as when PA18 hosted them.
 
 noncomputable section
 
@@ -86,11 +99,8 @@ def conv0 (S : Set V3) : Set V3 := affGt ∅ S
 noncomputable def cross3 (a b : V3) : V3 :=
   WithLp.toLp 2 (crossProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ))
 
-/-- HOL `chi_msb` (leaf_cell.hl:781-782): the signed volume functional of the
-ordered triple `ul` at `p`. -/
-noncomputable def chiMsb (ul : List V3) (p : V3) : ℝ :=
-  (crossProduct ((ul[1]! - ul[0]! : V3) : Fin 3 → ℝ)
-      ((ul[2]! - ul[0]! : V3) : Fin 3 → ℝ)) ⬝ᵥ ((p - ul[0]! : V3) : Fin 3 → ℝ)
+-- atn2-merge: `chiMsb` (leaf_cell.hl:781-782, the `chi_msb` signed volume
+-- functional) moved verbatim to Kepler.Text.SphereKit (same namespace).
 
 /-- HOL `cc_pe_exists` (leaf_cell.hl:1052-1084), from `YBZFUPO`. -/
 theorem cc_pe_exists (V : Set V3) (ul : List V3) :
@@ -130,34 +140,16 @@ def ccA0 (ul : List V3) : Set V3 :=
 /-- HOL `cc_cell` (leaf_cell.hl:1142): the Marchal cell over `cc_uh`. -/
 def ccCell (V : Set V3) (ul : List V3) : Set V3 := mcell (ccKe V ul) V (ccUh V ul)
 
-/-- HOL `delta_x` (sphere.hl:86-90). -/
-def deltaX (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  x1 * x4 * (-x1 + x2 + x3 - x4 + x5 + x6) +
-    x2 * x5 * (x1 - x2 + x3 + x4 - x5 + x6) +
-    x3 * x6 * (x1 + x2 - x3 + x4 + x5 - x6) -
-    x2 * x3 * x4 - x1 * x3 * x5 - x1 * x2 * x6 - x4 * x5 * x6
+-- atn2-merge (plan §5.1): `deltaX` (sphere.hl `delta_x`), `deltaP`
+-- (collect_geom.hl `delta`), `upsX` (sphere.hl `ups_x`) and `atn2`
+-- (sphere.hl:48-52) moved verbatim to Kepler.Text.SphereKit, which
+-- declares them in this same `Kepler.Text` namespace.
 
-/-- HOL `delta` (collect_geom.hl:94-100): the Cayley–Menger style
-determinant on edge-squared entries. -/
-def deltaP (x12 x13 x14 x23 x24 x34 : ℝ) : ℝ :=
-  -(x12 * x13 * x23) - x12 * x14 * x24 - x13 * x14 * x34 - x23 * x24 * x34 +
-    x12 * x34 * (-x12 + x13 + x14 + x23 + x24 - x34) +
-    x13 * x24 * (x12 - x13 + x14 + x23 - x24 + x34) +
-    x14 * x23 * (x12 + x13 - x14 - x23 + x24 + x34)
-
-/-- HOL `ups_x` (sphere.hl:122-124). -/
-def upsX (x1 x2 x6 : ℝ) : ℝ :=
-  -(x1 * x1) - x2 * x2 - x6 * x6 + 2 * x1 * x6 + 2 * x1 * x2 + 2 * x2 * x6
-
-/-- Flyspeck `atn2` (sphere.hl:48-52); `atn2 x y = Real.atan2 y x` off the
-degenerate pair `(0, 0)`-with-`x ≤ 0` corner. -/
-noncomputable def atn2 (x y : ℝ) : ℝ :=
-  if |y| < x then Real.arctan (y / x)
-  else if 0 < y then Real.pi / 2 - Real.arctan (x / y)
-  else if y < 0 then -(Real.pi / 2) - Real.arctan (x / y)
-  else Real.pi
-
-/-- HOL `arclength` (sphere.hl:258-260). -/
+/-- HOL `arclength` (sphere.hl:258-260).  Stays in PackingAuto18 for now:
+SphereKit's wave-1 kit does not carry `arclength` (plan §3 said "move" but
+the move target does not exist yet), so deleting it would orphan the
+YSSKQOY monotonicity chain below and the LocalAuto lane's plain
+`arcLength` uses. -/
 noncomputable def arcLength (a b c : ℝ) : ℝ :=
   Real.pi / 2 +
     atn2 (Real.sqrt (upsX (a * a) (b * b) (c * c))) (c * c - a * a - b * b)

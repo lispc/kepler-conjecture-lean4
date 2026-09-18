@@ -75,6 +75,8 @@ Encoding:
 import Kepler.Text.Polytope
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto3
+import Kepler.Text.LocalAuto4
+import Kepler.Text.LocalAuto23
 import Kepler.Text.PackingAuto2
 import Mathlib
 
@@ -118,10 +120,18 @@ a diagonal leaves a k' = 3 half slice. -/
 theorem SCS_K_PRIME_CASE_4_p35 (s s' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
     (hs' : s' = scsHalfSliceV39 s p q d' mkj) (hscs : isScsV39 s)
     (hk : s.k = 4) (hdiag : scsDiag s.k p q) : s'.k = 3 := by
-  sorry
-  -- DISCHARGES: full unfold of `scsHalfSliceV39` + the mod-4 diagonal
-  -- calculus (`CASE_DIAGONAL_MOD` / `IMP_SUC_MOD_EQ` instantiations,
-  -- QKNVMLB.hl:102) — not yet ported as reusable Lean lemmas.
+  rw [hs']
+  simp only [scsHalfSliceV39]
+  rw [hk]
+  rw [hk] at hdiag
+  obtain ⟨h1, h2, h3⟩ := hdiag
+  have e1 : (p + 1) % 4 = (p % 4 + 1) % 4 := by simp [Nat.add_mod]
+  have e2 : (q + 1) % 4 = (q % 4 + 1) % 4 := by simp [Nat.add_mod]
+  rw [e1] at h2
+  rw [e2] at h3
+  have hb1 : p % 4 < 4 := Nat.mod_lt _ (by omega)
+  have hb2 : q % 4 < 4 := Nat.mod_lt _ (by omega)
+  interval_cases p % 4 <;> interval_cases q % 4 <;> omega
 
 /-- HOL `SCS_K_PRIME_CASE_5` (QKNVMLB.hl:138). -/
 theorem SCS_K_PRIME_CASE_5_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
@@ -129,8 +139,18 @@ theorem SCS_K_PRIME_CASE_5_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj :
     (hs'' : s'' = scsHalfSliceV39 s q p d' mkj) (hscs : isScsV39 s)
     (hk : s.k = 5) (hdiag : scsDiag s.k p q) :
     (s'.k = 3 ∧ s''.k = 4) ∨ (s'.k = 4 ∧ s''.k = 3) := by
-  sorry
-  -- DISCHARGES: mod-5 diagonal calculus (`CASE_DIAGONAL_MOD`, :145).
+  rw [hs', hs'']
+  simp only [scsHalfSliceV39]
+  rw [hk]
+  rw [hk] at hdiag
+  obtain ⟨h1, h2, h3⟩ := hdiag
+  have e1 : (p + 1) % 5 = (p % 5 + 1) % 5 := by simp [Nat.add_mod]
+  have e2 : (q + 1) % 5 = (q % 5 + 1) % 5 := by simp [Nat.add_mod]
+  rw [e1] at h2
+  rw [e2] at h3
+  have hb1 : p % 5 < 5 := Nat.mod_lt _ (by omega)
+  have hb2 : q % 5 < 5 := Nat.mod_lt _ (by omega)
+  interval_cases p % 5 <;> interval_cases q % 5 <;> omega
 
 /-- HOL `SCS_K_PRIME_CASE_6` (QKNVMLB.hl:189). -/
 theorem SCS_K_PRIME_CASE_6_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
@@ -138,8 +158,18 @@ theorem SCS_K_PRIME_CASE_6_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj :
     (hs'' : s'' = scsHalfSliceV39 s q p d' mkj) (hscs : isScsV39 s)
     (hk : s.k = 6) (hdiag : scsDiag s.k p q) :
     (s'.k = 3 ∧ s''.k = 5) ∨ (s'.k = 5 ∧ s''.k = 3) ∨ (s'.k = 4 ∧ s''.k = 4) := by
-  sorry
-  -- DISCHARGES: mod-6 diagonal calculus (`CASE_DIAGONAL_MOD`, :196).
+  rw [hs', hs'']
+  simp only [scsHalfSliceV39]
+  rw [hk]
+  rw [hk] at hdiag
+  obtain ⟨h1, h2, h3⟩ := hdiag
+  have e1 : (p + 1) % 6 = (p % 6 + 1) % 6 := by simp [Nat.add_mod]
+  have e2 : (q + 1) % 6 = (q % 6 + 1) % 6 := by simp [Nat.add_mod]
+  rw [e1] at h2
+  rw [e2] at h3
+  have hb1 : p % 6 < 6 := Nat.mod_lt _ (by omega)
+  have hb2 : q % 6 < 6 := Nat.mod_lt _ (by omega)
+  interval_cases p % 6 <;> interval_cases q % 6 <;> omega
 
 /-- HOL `SCS_K_PRIME_CASE_3` (QKNVMLB.hl:245): a diagonal of a conforming
 system forces `3 < k` (so `k = 3` systems have no diagonals). -/
@@ -163,10 +193,34 @@ theorem SCS_K_PRIME_LE_GE_p35 (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
     (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (s' : ScsV39)
     (hs' : s' = scsHalfSliceV39 s p q d' mkj) :
     3 ≤ s'.k ∧ s'.k ≤ 6 ∧ s'.k < s.k := by
-  sorry
-  -- DISCHARGES: composes SCS_K_PRIME_CASE_3/4/5/6_p35 with the `3 ≤ k'`
-  -- drop of the source's `LE_GE` strip (QKNVMLB.hl:272-305); needs the
-  -- CASE_4/5/6 mod calculi discharged first.
+  have hk3 := SCS_K_PRIME_CASE_3_p35 s p q hscs hdiag
+  have hk6 : s.k ≤ 6 := hscs.2.2.1
+  rw [hs']
+  simp only [scsHalfSliceV39]
+  have hbP : p % s.k < s.k := Nat.mod_lt _ (by have := hscs.2.1; omega)
+  have hbQ : q % s.k < s.k := Nat.mod_lt _ (by have := hscs.2.1; omega)
+  rcases (by have := hscs.2.1; have := hscs.2.2.1; omega : s.k = 4 ∨ s.k = 5 ∨ s.k = 6) with h | h | h
+  · rw [h] at hdiag hbP hbQ ⊢
+    obtain ⟨h1, h2, h3⟩ := hdiag
+    have e1 : (p + 1) % 4 = (p % 4 + 1) % 4 := by simp [Nat.add_mod]
+    have e2 : (q + 1) % 4 = (q % 4 + 1) % 4 := by simp [Nat.add_mod]
+    rw [e1] at h2
+    rw [e2] at h3
+    interval_cases p % 4 <;> interval_cases q % 4 <;> omega
+  · rw [h] at hdiag hbP hbQ ⊢
+    obtain ⟨h1, h2, h3⟩ := hdiag
+    have e1 : (p + 1) % 5 = (p % 5 + 1) % 5 := by simp [Nat.add_mod]
+    have e2 : (q + 1) % 5 = (q % 5 + 1) % 5 := by simp [Nat.add_mod]
+    rw [e1] at h2
+    rw [e2] at h3
+    interval_cases p % 5 <;> interval_cases q % 5 <;> omega
+  · rw [h] at hdiag hbP hbQ ⊢
+    obtain ⟨h1, h2, h3⟩ := hdiag
+    have e1 : (p + 1) % 6 = (p % 6 + 1) % 6 := by simp [Nat.add_mod]
+    have e2 : (q + 1) % 6 = (q % 6 + 1) % 6 := by simp [Nat.add_mod]
+    rw [e1] at h2
+    rw [e2] at h3
+    interval_cases p % 6 <;> interval_cases q % 6 <;> omega
 
 /-! ## Slice `is_scs` propagation (source order: 305-3398) -/
 
@@ -281,11 +335,31 @@ theorem SUC_MOD_NOT_EQ_p35 {k : ℕ} (hk : 1 < k) (i : ℕ) : i % k ≠ (i + 1) 
 /-- HOL `IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_PRIME_3` (QKNVMLB.hl:3447). -/
 theorem IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_PRIME_3_p35 (s : ScsV39) (vv : ℕ → V3)
     (i : ℕ) (hk : 3 < s.k) (hscs : isScsV39 s) (hBB : BBsV39 s vv) :
-    ¬ Collinear ℝ {(0 : V3), vv (i % s.k), vv ((i + 1) % s.k)} := by
-  sorry
-  -- DISCHARGES: source 3447-3610; needs the `ConvexLocalFan` branch of
-  -- BBs_v39 (k > 3) plus the genericity/non-collinearity of fan vertices
-  -- (localization `FAN` kit; cf. LocalAuto4/9 generic-layer).
+    ¬ Collinear ℝ {(0:V3), vv (i % s.k), vv ((i + 1) % s.k)} := by
+  have hk0 : 0 < s.k := by omega
+  have hP : i % s.k < s.k := Nat.mod_lt _ hk0
+  have hQ : (i + 1) % s.k < s.k := Nat.mod_lt _ hk0
+  have hne : i % s.k ≠ (i + 1) % s.k := SUC_MOD_NOT_EQ_p35 (by omega) i
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, hpb, -, -, -, -, hd2, -, hbc, -, -, -⟩ := hscs
+  have hp1 : Periodic (fun z => s.b (i % s.k) z) s.k := fun t => (hpb (i % s.k) t).2
+  have h2' : (i % s.k + 1) % s.k = (i + 1) % s.k := Nat.mod_add_mod i s.k 1
+  have hbb : s.b (i % s.k) ((i + 1) % s.k) ≤ cstab := by
+    have h1 := periodic_mod_eq_p23 hp1 (i % s.k + 1)
+    conv_lhs => rw [← h2']
+    rw [h1]
+    exact hbc (i % s.k) hk
+  have hv1 : vv (i % s.k) ∈ ballAnnulus := hBB.1 ⟨i % s.k, rfl⟩
+  have hv2 : vv ((i + 1) % s.k) ∈ ballAnnulus := hBB.1 ⟨(i + 1) % s.k, rfl⟩
+  have h2le : (2:ℝ) ≤ s.a (i % s.k) ((i + 1) % s.k) := hd2 _ _ ⟨hP, hQ, hne⟩
+  have hge2 : (2 : ℝ) ≤ ‖vv (i % s.k) - vv ((i + 1) % s.k)‖ := by
+    have h2 := (hBB.2.2.1 (i % s.k) ((i + 1) % s.k)).1
+    rw [dist_eq_norm] at h2
+    linarith
+  have hup : ‖vv (i % s.k) - vv ((i + 1) % s.k)‖ ≤ cstab := by
+    have h3 := (hBB.2.2.1 (i % s.k) ((i + 1) % s.k)).2
+    rw [dist_eq_norm] at h3
+    linarith
+  exact NONPARALLEL_BALL_ANNULUS hv1 hv2 hge2 hup
 
 /-- HOL `DIAG_NOT_IN_EDGES` (QKNVMLB.hl:3610). -/
 theorem DIAG_NOT_IN_EDGES_p35 (s : ScsV39) (p q : ℕ) (u w : V3) (E : Set (Set V3))
@@ -293,10 +367,77 @@ theorem DIAG_NOT_IN_EDGES_p35 (s : ScsV39) (p q : ℕ) (u w : V3) (E : Set (Set 
     (_hdist : dist u w ≤ cstab) (hp : vv (p % s.k) = u) (hq : vv (q % s.k) = w)
     (hE : E = Set.range fun i => {vv i, vv (i + 1)}) (hBB : BBsV39 s vv) :
     {u, w} ∉ E := by
-  sorry
-  -- DISCHARGES: source 3610-3724; needs
-  -- IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_PRIME_3_p35 (the diag edge would
-  -- force a collinear fan triple).
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hP : p % s.k < s.k := Nat.mod_lt _ hk0
+  have hQ : q % s.k < s.k := Nat.mod_lt _ hk0
+  have hper : Periodic vv s.k := hBB.2.1
+  have hscs0 := hscs
+  have hdiag0 := hdiag
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hd2, -, -, -, -, -⟩ := hscs
+  obtain ⟨h1, h2, h3⟩ := hdiag
+  have hvvinj : ∀ a b : ℕ, a < s.k → b < s.k → a ≠ b → vv a ≠ vv b := by
+    intro a b ha hb hab
+    have h2 := hd2 a b ⟨ha, hb, hab⟩
+    have h3 := (hBB.2.2.1 a b).1
+    intro he
+    rw [he, dist_self] at h3
+    linarith
+  have hpe : ∀ n : ℕ, vv (n % s.k) = vv n := periodic_mod_eq_p23 hper
+  intro hmem
+  rw [hE, Set.mem_range] at hmem
+  obtain ⟨x, hx⟩ := hmem
+  have hu : u = vv x ∨ u = vv (x + 1) := by
+    have h1' : (u:V3) ∈ ({u, w} : Set V3) := Set.mem_insert u _
+    have h2' : u ∈ ({vv x, vv (x + 1)} : Set V3) := hx ▸ h1'
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h2'
+    exact h2'
+  have hw : w = vv x ∨ w = vv (x + 1) := by
+    have h1' : (w:V3) ∈ ({u, w} : Set V3) := Set.mem_insert_of_mem u (Set.mem_singleton w)
+    have h2' : w ∈ ({vv x, vv (x + 1)} : Set V3) := hx ▸ h1'
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h2'
+    rcases h2' with h | h
+    · exact Or.inl h
+    · exact Or.inr h
+  have hres : ∀ n : ℕ, (n + 1) % s.k = (n % s.k + 1) % s.k := fun n =>
+    (Nat.mod_add_mod n s.k 1).symm
+  have huw : u ≠ w := NOT_EQ_DIAG_p35 s p q u w vv hscs0 hdiag0 _hdist hp hq hBB
+  rcases hu with hu | hu
+  · rcases hw with hw | hw
+    · -- u = vv x, w = vv x → u = w
+      exact huw (hu.trans hw.symm)
+    · -- u = vv x, w = vv (x + 1)
+      have hxP : vv (x % s.k) = u := by rw [hpe, hu]
+      have hxQ : vv ((x + 1) % s.k) = w := by rw [hpe, hw]
+      by_cases hxp : x % s.k = p % s.k
+      · have h1x : vv ((x + 1) % s.k) = vv (q % s.k) := hxQ.trans hq.symm
+        have h2x : (x + 1) % s.k = q % s.k := by
+          by_contra hne2
+          exact absurd h1x (hvvinj ((x + 1) % s.k) (q % s.k)
+            (Nat.mod_lt _ hk0) hQ hne2)
+        exact h2 (by rw [hres p, ← hxp, ← hres x, h2x])
+      · have hdx : vv (x % s.k) = u := by rw [hpe, hu]
+        have hAb := (hBB.2.2.1 (x % s.k) (p % s.k)).1
+        rw [hdx, hp, dist_self] at hAb
+        have h2le := hd2 (x % s.k) (p % s.k) ⟨Nat.mod_lt _ hk0, hP, hxp⟩
+        linarith
+  · rcases hw with hw | hw
+    · -- u = vv (x + 1), w = vv x
+      have hxP : vv ((x + 1) % s.k) = u := by rw [hpe, hu]
+      have hxQ : vv (x % s.k) = w := by rw [hpe, hw]
+      by_cases hxq : x % s.k = q % s.k
+      · have h1x : vv ((x + 1) % s.k) = vv (p % s.k) := hxP.trans hp.symm
+        have h2x : (x + 1) % s.k = p % s.k := by
+          by_contra hne2
+          exact absurd h1x (hvvinj ((x + 1) % s.k) (p % s.k)
+            (Nat.mod_lt _ hk0) hP hne2)
+        exact h3 (by rw [hres q, ← hxq, ← hres x, h2x])
+      · have hdx : vv (x % s.k) = w := by rw [hpe, hw]
+        have hAb := (hBB.2.2.1 (x % s.k) (q % s.k)).1
+        rw [hdx, hq, dist_self] at hAb
+        have h2le := hd2 (x % s.k) (q % s.k) ⟨Nat.mod_lt _ hk0, hQ, hxq⟩
+        linarith
+    · -- u = vv (x + 1), w = vv (x + 1) → u = w
+      exact huw (hu.trans hw.symm)
 
 /-- HOL `SCS_K_LE_6` (QKNVMLB.hl:3724). -/
 theorem SCS_K_LE_6_p35 (s : ScsV39) (h : isScsV39 s) : s.k ≤ 6 := h.2.2.1
@@ -338,9 +479,29 @@ theorem W_EW_K_SCS_ADD_P_p35 (s s' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
     (hp : vv (p % k) = u) (hq : vv (q % k) = w)
     (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv) :
     vv (k' - 1 + p % k) = w := by
-  sorry
-  -- DISCHARGES: source 4061-4144; needs the k' = q + 1 - (p mod k) shape
-  -- of scsHalfSliceV39 (mod-arithmetic path through CASE_4/5/6).
+  subst hk
+  have horig : s'.k = k' := hk'
+  rw [← hs'] at hk'
+  simp only [scsHalfSliceV39] at hk'
+  have hge := SCS_K_PRIME_LE_GE_p35 s p q d' mkj hscs hdiag s' hs'.symm
+  have hk'1 : 1 ≤ k' := by have := hge.1; omega
+  have hPk : p % s.k < s.k := Nat.mod_lt _ (by have := hscs.2.1; omega)
+  have hper : Periodic vv s.k := hBB.2.1
+  have hdm : (q + 1 + (s.k - p % s.k)) / s.k * s.k + k'
+      = q + 1 + (s.k - p % s.k) := by
+    have h := Nat.div_add_mod' (q + 1 + (s.k - p % s.k)) s.k
+    rw [hk'] at h
+    exact h
+  have hA : (k' - 1 + p % s.k) + (q + 1 + (s.k - p % s.k)) / s.k * s.k
+      = q + s.k := by omega
+  have hkey : (k' - 1 + p % s.k) % s.k = q % s.k := by
+    calc (k' - 1 + p % s.k) % s.k
+        = ((k' - 1 + p % s.k) + (q + 1 + (s.k - p % s.k)) / s.k * s.k) % s.k := by
+          rw [Nat.add_mul_mod_self_right]
+      _ = (q + s.k) % s.k := by rw [hA]
+      _ = q % s.k := Nat.add_mod_right _ _
+  rw [← periodic_mod_eq_p23 hper (k' - 1 + p % s.k), hkey]
+  exact hq
 
 /-- HOL `VV_INJ` (QKNVMLB.hl:4144): vv is injective on the index window. -/
 theorem VV_INJ_p35 (s : ScsV39) (k : ℕ) (vv : ℕ → V3) (hk : s.k = k)
@@ -359,9 +520,14 @@ theorem VV_INJ_p35 (s : ScsV39) (k : ℕ) (vv : ℕ → V3) (hk : s.k = k)
 theorem CARD_V_EQ_SCS_K_p35 (s : ScsV39) (k p q : ℕ) (V : Set V3) (vv : ℕ → V3)
     (hk : s.k = k) (hV : Set.range vv = V) (hscs : isScsV39 s)
     (hdiag : scsDiag s.k p q) (hBB : BBsV39 s vv) : Set.ncard V = k := by
-  sorry
-  -- DISCHARGES: source 4162-4290; image-of-numseg counting: Periodic vv k
-  -- collapses the range onto i < k, VV_INJ_p35 gives injectivity there.
+  subst hk
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hper : Periodic vv s.k := hBB.2.1
+  rw [← hV, range_periodic_image_p23 vv s.k hk0 hper, Set.InjOn.ncard_image]
+  · rw [Set.ncard_Iio_nat]
+  · intro i hi j hj hne
+    by_contra hne2
+    exact absurd hne (VV_INJ_p35 s s.k vv rfl hscs hBB i j ⟨hi, hj, hne2⟩)
 
 /-- HOL `V_PRIME_EQ_V_vv` (QKNVMLB.hl:4290, proof ~120 ln). -/
 theorem V_PRIME_EQ_V_vv_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
@@ -469,6 +635,35 @@ theorem DIAG_IS_NOT_EAR_p35 (s : ScsV39) (p q : ℕ) (hscs : isScsV39 s)
   have hk := he.2.2.1
   omega
 
+/-- Sandbox helper: the half slice has `k' ≥ 1` — `k' = 0` would force
+`(q + 1) % s.k = p % s.k`, excluded by the diagonal. -/
+private theorem halfSlice_k_pos_p35 (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
+    (hk0 : 0 < s.k) (h3 : ¬(p % s.k = (q + 1) % s.k)) :
+    0 < (scsHalfSliceV39 s p q d' mkj).k := by
+  have hPk : p % s.k < s.k := Nat.mod_lt _ hk0
+  by_contra h0
+  rw [Nat.not_lt] at h0
+  rw [Nat.le_zero] at h0
+  simp only [scsHalfSliceV39] at h0
+  have e1 : (q + 1 + (s.k - p % s.k) + p % s.k) % s.k = p % s.k := by
+    rw [Nat.add_mod, h0]
+    simp
+  have e2 : (q + 1 + (s.k - p % s.k) + p % s.k) = q + 1 + s.k := by omega
+  rw [e2, Nat.add_mod_right] at e1
+  exact h3 e1.symm
+
+/-- Sandbox helper: the half slice's `J`-flag sits at the override pair
+`(0, k' - 1)`. -/
+private theorem halfSlice_J_diag_p35 (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
+    (hk1 : 0 < (q + 1 + (s.k - p % s.k)) % s.k) :
+    (scsHalfSliceV39 s p q d' mkj).J 0 ((scsHalfSliceV39 s p q d' mkj).k - 1) = mkj := by
+  have hcond : ({(0:ℕ) % ((q + 1 + (s.k - p % s.k)) % s.k),
+      (((q + 1 + (s.k - p % s.k)) % s.k) - 1) % ((q + 1 + (s.k - p % s.k)) % s.k)} : Set ℕ)
+      = {0, ((q + 1 + (s.k - p % s.k)) % s.k) - 1} := by
+    rw [Nat.zero_mod, Nat.mod_eq_of_lt (by omega)]
+  simp only [scsHalfSliceV39]
+  exact if_pos hcond
+
 /-- HOL `SCS_J_DIAG_EQ` (QKNVMLB.hl:5278). -/
 theorem SCS_J_DIAG_EQ_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
     (hs' : s' = scsHalfSliceV39 s p q d' mkj)
@@ -476,9 +671,20 @@ theorem SCS_J_DIAG_EQ_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : 
     (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
     (hsl : isScsSliceV39 s s' s'' p q) :
     s'.J 0 (s'.k - 1) = s''.J 0 (s''.k - 1) := by
-  sorry
-  -- DISCHARGES: source 5278-5303; both mkj flags equal the J-flag of the
-  -- bm-diagonal override in scsHalfSliceV39 (PAIR_EQ on isScsSliceV39).
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  simp only [isScsSliceV39] at hsl
+  obtain ⟨hpair, -, -, -, -, -, -⟩ := hsl
+  simp only [scsSliceV39, Prod.mk.injEq] at hpair
+  obtain ⟨he1, he2⟩ := hpair
+  rw [he2]
+  simp only [scsHalfSliceV39]
+  have hk'' : 0 < (p + 1 + (s.k - q % s.k)) % s.k :=
+    halfSlice_k_pos_p35 s q p s''.d (s'.J 0 (s'.k - 1)) hk0 (fun e => hdiag.2.1 e.symm)
+  have hcond : ({(0:ℕ) % ((p + 1 + (s.k - q % s.k)) % s.k),
+      (((p + 1 + (s.k - q % s.k)) % s.k) - 1) % ((p + 1 + (s.k - q % s.k)) % s.k)} : Set ℕ)
+      = {0, ((p + 1 + (s.k - q % s.k)) % s.k) - 1} := by
+    rw [Nat.zero_mod, Nat.mod_eq_of_lt (by omega)]
+  rw [if_pos hcond]
 
 /-- HOL `DIAG_NOT_IN_SCS_J` (QKNVMLB.hl:5303). -/
 theorem DIAG_NOT_IN_SCS_J_p35 (s : ScsV39) (p q : ℕ) (hscs : isScsV39 s)
@@ -498,9 +704,72 @@ theorem SCS_J_PRIME_SUBSET_SCS_J_p35 (s s' : ScsV39) (p q : ℕ) (d' : ℝ)
     (hdiag : scsDiag s.k p q) (i : ℕ) (hi : i < s'.k - 1)
     (hJ : s'.J i (i + 1)) :
     s.J ((i + p % s.k) % s.k) (((i + p % s.k) % s.k) + 1) := by
-  sorry
-  -- DISCHARGES: source 5312-5371; the slice J-pairs push forward along the
-  -- p-shift (mod-2 table of scsHalfSliceV39).
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hge := SCS_K_PRIME_LE_GE_p35 s p q d' mkj hscs hdiag s' hs'.symm
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, hJper, -, -, -, -, -, -, -, -, -⟩ := hscs
+  rw [← hs'] at hJ hi
+  simp only [scsHalfSliceV39] at hJ hi
+  set K := (q + 1 + (s.k - p % s.k)) % s.k with hKdef
+  have hk'eq : K = s'.k := by
+    show (scsHalfSliceV39 s p q d' mkj).k = s'.k
+    rw [hs']
+  have hk'3 : 3 ≤ K := hk'eq ▸ hge.1
+  have hik : i % K = i := Nat.mod_eq_of_lt (by omega)
+  have hik1 : (i + 1) % K = i + 1 := Nat.mod_eq_of_lt (by omega)
+  rw [hik, hik1] at hJ
+  have hc : ¬(({i, i + 1} : Set ℕ) = {0, K - 1}) := by
+    intro e
+    by_cases h0 : i = 0
+    · subst h0
+      have h5 : (1:ℕ) ∈ ({0, K - 1} : Set ℕ) := by
+        have h51 : (1:ℕ) ∈ ({0, 1} : Set ℕ) := by simp
+        exact e ▸ h51
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h5
+      rcases h5 with h5 | h5
+      · exact absurd h5 (by norm_num)
+      · omega
+    · have h0n : (0:ℕ) ∉ ({i, i + 1} : Set ℕ) := by
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        omega
+      exact h0n (e ▸ (by simp : (0:ℕ) ∈ ({0, K - 1} : Set ℕ)))
+  rw [if_neg hc] at hJ
+  -- hJ : s.J (i + p % s.k) (i + 1 + p % s.k)
+  have hp1 : Periodic (fun z => s.J z (i + 1 + p % s.k)) s.k :=
+    fun t => (hJper t (i + 1 + p % s.k)).1
+  have hmod1 : s.J ((i + p % s.k) % s.k) (i + 1 + p % s.k)
+      = s.J (i + p % s.k) (i + 1 + p % s.k) := periodic_mod_eq_p23 hp1 (i + p % s.k)
+  have hp2 : Periodic (fun z => s.J ((i + p % s.k) % s.k) z) s.k :=
+    fun t => (hJper ((i + p % s.k) % s.k) t).2
+  have hWb : (i + p % s.k) % s.k < s.k := Nat.mod_lt _ hk0
+  have hW : (i + p % s.k) / s.k * s.k + (i + p % s.k) % s.k = i + p % s.k :=
+    Nat.div_add_mod' _ _
+  have hsum : i + 1 + p % s.k
+      = ((i + p % s.k) % s.k + 1) + (i + p % s.k) / s.k * s.k := by
+    have h1 : ((i + p % s.k) % s.k + 1) + (i + p % s.k) / s.k * s.k
+        = (i + p % s.k) / s.k * s.k + (i + p % s.k) % s.k + 1 := by ring
+    rw [h1, hW]
+    ring
+  rcases Nat.lt_or_ge ((i + p % s.k) % s.k + 1) s.k with hlt | hge2
+  · have hb := periodic_mod_eq_p23 hp2 (i + 1 + p % s.k)
+    have hmeq : (i + 1 + p % s.k) % s.k
+        = ((i + p % s.k) % s.k + 1) % s.k := by
+      rw [hsum, Nat.add_mul_mod_self_right]
+    rw [hmeq, Nat.mod_eq_of_lt hlt] at hb
+    rw [hb, hmod1]
+    exact hJ
+  · have hWk : (i + p % s.k) % s.k + 1 = s.k := by omega
+    have hb := periodic_mod_eq_p23 hp2 (i + 1 + p % s.k)
+    have hmeq : (i + 1 + p % s.k) % s.k
+        = ((i + p % s.k) % s.k + 1) % s.k := by
+      rw [hsum, Nat.add_mul_mod_self_right]
+    rw [hmeq, hWk, Nat.mod_self] at hb
+    have hthis : s.J ((i + p % s.k) % s.k) (((i + p % s.k) % s.k) + 1)
+        = s.J ((i + p % s.k) % s.k) 0 := by
+      rw [hWk]
+      have hJ2 := (hJper ((i + p % s.k) % s.k) 0).2
+      simpa using hJ2
+    rw [hthis, hb, hmod1]
+    exact hJ
 
 /-- HOL `INTER_SLICE_SCS_EMPTY1` (QKNVMLB.hl:5371). -/
 theorem INTER_SLICE_SCS_EMPTY1_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
@@ -510,9 +779,65 @@ theorem INTER_SLICE_SCS_EMPTY1_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ
     (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) (hpq : p % s.k < q % s.k) :
     {y | ∃ i < s'.k - 1, y = (i + p % s.k) % s.k} ∩
       {y | ∃ i < s''.k - 1, y = (i + q % s.k) % s.k} = ∅ := by
-  sorry
-  -- DISCHARGES: source 5371-5495; the two half-slice index windows are
-  -- disjoint when the diag is oriented p < q (mod calculus + SCS_K_PRIME).
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  have hP : p % s.k < s.k := Nat.mod_lt _ hk0
+  have hQ : q % s.k < s.k := Nat.mod_lt _ hk0
+  obtain ⟨hd1, hd2, hd3⟩ := hdiag
+  -- the two half-slice sizes (residue form, no wrap under P < Q and Q ≢ P - 1)
+  have hk' : s'.k = q % s.k + 1 - p % s.k := by
+    have hQ2 : q % s.k + 1 ≤ s.k := by omega
+    have m1 : (q % s.k + 1) % s.k = (q + 1) % s.k := Nat.mod_add_mod q s.k 1
+    have m2 : (q % s.k + 1 + (s.k - p % s.k)) % s.k
+        = (q + 1 + (s.k - p % s.k)) % s.k := by
+      calc (q % s.k + 1 + (s.k - p % s.k)) % s.k
+          = ((q % s.k + 1) % s.k + (s.k - p % s.k) % s.k) % s.k := Nat.add_mod _ _ _
+        _ = ((q + 1) % s.k + (s.k - p % s.k) % s.k) % s.k := by rw [m1]
+        _ = (q + 1 + (s.k - p % s.k)) % s.k := (Nat.add_mod _ _ _).symm
+    have h1 : q % s.k + 1 - p % s.k < s.k := by
+      by_contra hge
+      have hQ1 : q % s.k + 1 = s.k ∧ p % s.k = 0 := by omega
+      have hqe : (q + 1) % s.k = 0 := by
+        have hmeq : (q % s.k + 1) % s.k = (q + 1) % s.k := Nat.mod_add_mod q s.k 1
+        rw [← hmeq, hQ1.1, Nat.mod_self]
+      exact hd3 (by omega)
+    rw [← hs']; simp only [scsHalfSliceV39]
+    rw [← m2]
+    have h3 : q % s.k + 1 + (s.k - p % s.k) = s.k + (q % s.k + 1 - p % s.k) := by omega
+    rw [h3, Nat.add_mod_left, Nat.mod_eq_of_lt h1]
+  have hk'' : s''.k = s.k + p % s.k + 1 - q % s.k := by
+    have e2 : (p + 1) % s.k = (p % s.k + 1) % s.k := (Nat.mod_add_mod p s.k 1).symm
+    rw [e2] at hd2
+    have hPQ : p % s.k + 1 < q % s.k := by
+      by_contra hge
+      have hQb : p % s.k + 1 = q % s.k := by omega
+      have hP1 : p % s.k + 1 < s.k := by omega
+      exact hd2 (by rw [Nat.mod_eq_of_lt hP1]; exact hQb)
+    have h1 : (s.k + p % s.k + 1) - q % s.k < s.k := by omega
+    have m1 : (p % s.k + 1) % s.k = (p + 1) % s.k := Nat.mod_add_mod p s.k 1
+    have m2 : (p % s.k + 1 + (s.k - q % s.k)) % s.k
+        = (p + 1 + (s.k - q % s.k)) % s.k := by
+      calc (p % s.k + 1 + (s.k - q % s.k)) % s.k
+          = ((p % s.k + 1) % s.k + (s.k - q % s.k) % s.k) % s.k := Nat.add_mod _ _ _
+        _ = ((p + 1) % s.k + (s.k - q % s.k) % s.k) % s.k := by rw [m1]
+        _ = (p + 1 + (s.k - q % s.k)) % s.k := (Nat.add_mod _ _ _).symm
+    rw [← hs'']; simp only [scsHalfSliceV39]
+    rw [← m2]
+    have h3 : p % s.k + 1 + (s.k - q % s.k) = (s.k + p % s.k + 1) - q % s.k := by omega
+    rw [h3, Nat.mod_eq_of_lt h1]
+  rw [hk', hk'']
+  refine Set.eq_empty_iff_forall_notMem.mpr ?_
+  intro y hy
+  rw [Set.mem_inter_iff] at hy
+  obtain ⟨⟨i, hi, hyi⟩, ⟨j, hj, hyj⟩⟩ := hy
+  have hik : i + p % s.k < s.k := by omega
+  have hy1 : y = i + p % s.k := by rw [hyi, Nat.mod_eq_of_lt hik]
+  have hjk : j + q % s.k < s.k + s.k := by omega
+  by_cases hlt : j + q % s.k < s.k
+  · have hy2 : y = j + q % s.k := by rw [hyj, Nat.mod_eq_of_lt hlt]
+    omega
+  · have hy2 : y = j + q % s.k - s.k := by
+      rw [hyj, Nat.mod_eq_sub_mod (by omega), Nat.mod_eq_of_lt (by omega)]
+    omega
 
 /-- HOL `INTER_SLICE_SCS_EMPTY` (QKNVMLB.hl:5495). -/
 theorem INTER_SLICE_SCS_EMPTY_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
@@ -522,9 +847,12 @@ theorem INTER_SLICE_SCS_EMPTY_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
     (hscs : isScsV39 s) (hdiag : scsDiag s.k p q) :
     {y | ∃ i < s'.k - 1, y = (i + p % s.k) % s.k} ∩
       {y | ∃ i < s''.k - 1, y = (i + q % s.k) % s.k} = ∅ := by
-  sorry
-  -- DISCHARGES: source 5495-5522; drops the p < q orientation via
-  -- INTER_SLICE_SCS_EMPTY1_p35 + the symmetric instance.
+  rcases lt_trichotomy (p % s.k) (q % s.k) with h | h | h
+  · exact INTER_SLICE_SCS_EMPTY1_p35 s s' s'' p q d' d'' mkj hs' hs'' hscs hdiag h
+  · exact absurd h hdiag.1
+  · rw [Set.inter_comm]
+    exact INTER_SLICE_SCS_EMPTY1_p35 s s'' s' q p d'' d' mkj hs'' hs' hscs
+      ⟨fun e => hdiag.1 e.symm, fun e => hdiag.2.2 e.symm, fun e => hdiag.2.1 e.symm⟩ h
 
 /-- HOL `QKNVMLB2` (QKNVMLB.hl:5522, proof ~2215 ln — the giant). -/
 theorem QKNVMLB2_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
@@ -550,9 +878,123 @@ theorem DIST_DIAG_LE_CSTAB_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
     (hMM : vv ∈ MMsV39 s) (hscs : isScsV39 s) (hdiag : scsDiag s.k p q)
     (hsl : isScsSliceV39 s s' s'' p q) :
     norm (vv (p % s.k) - vv (q % s.k)) ≤ cstab := by
-  sorry
-  -- DISCHARGES: source 7736-8054; the diag edge length is bm-bounded
-  -- unless the k = 4 ear-flag case (is_scs_slice_v39 bm-components).
+  have hk0 : 0 < s.k := by have := hscs.2.1; omega
+  obtain ⟨-, -, -, -, -, -, -, -, -, hpbm, -, -, hsym, -, -, -, -, -, -, -, -⟩ := hscs
+  simp only [MMsV39, Set.mem_setOf_eq] at hMM
+  obtain ⟨-, -, -, -, -, hbmle⟩ := hMM
+  have hbmres : s.bm (p % s.k) (q % s.k) = s.bm p q := by
+    have hP : p % s.k < s.k := Nat.mod_lt _ hk0
+    have hQ : q % s.k < s.k := Nat.mod_lt _ hk0
+    have hper1 : Periodic (fun z => s.bm z (q % s.k)) s.k := fun t => (hpbm t (q % s.k)).1
+    have hper2 : Periodic (fun z => s.bm p z) s.k := fun t => (hpbm p t).2
+    calc s.bm (p % s.k) (q % s.k) = s.bm p (q % s.k) := periodic_mod_eq_p23 hper1 p
+      _ = s.bm p q := periodic_mod_eq_p23 hper2 q
+  rw [← dist_eq_norm]
+  have hsl0 := hsl
+  simp only [isScsSliceV39] at hsl
+  obtain ⟨-, -, -, -, -, hk4, -⟩ := hsl
+  rcases hk4 with hk4 | hbm
+  · simp only [isScsSliceV39] at hsl0
+    obtain ⟨hpair, -, -, -, -, -, hear'⟩ := hsl0
+    simp only [scsSliceV39, Prod.mk.injEq] at hpair
+    obtain ⟨he1, he2⟩ := hpair
+    have hJ' : s'.J 0 (s'.k - 1) := by
+      rcases Classical.em (s'.J 0 (s'.k - 1)) with h | h
+      · exact h
+      · exact absurd ⟨hk4, h⟩ hj
+    rcases hear' hJ' with he | he
+    · obtain ⟨-, -, hk3, -, -, hJset⟩ := he
+      obtain ⟨i, hseti, -, hbcst, -⟩ := hJset
+      have hk3c : (q + 1 + (s.k - p % s.k)) % s.k = 3 := by
+        have h3e : s'.k = (q + 1 + (s.k - p % s.k)) % s.k := by
+          rw [he1]; simp only [scsHalfSliceV39]
+        omega
+      have hJ2 : s'.J 2 3 := by
+        rw [he1]
+        simp only [scsHalfSliceV39]
+        have hcond : ({(2:ℕ) % ((q + 1 + (s.k - p % s.k)) % s.k),
+            (3 % ((q + 1 + (s.k - p % s.k)) % s.k))} : Set ℕ)
+            = {0, ((q + 1 + (s.k - p % s.k)) % s.k) - 1} := by
+          rw [hk3c]
+          simp only [Nat.reduceMod, Nat.reduceSub]
+          ext yy
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+          omega
+        rw [if_pos hcond]
+        exact hJ'
+      have hi2 : i = 2 := by
+        have hmem : (2:ℕ) ∈ ({i} : Set ℕ) := by rw [← hseti]; exact ⟨by omega, hJ2⟩
+        simp only [Set.mem_singleton_iff] at hmem
+        exact hmem.symm
+      have hbcstab : s'.b 2 3 = cstab := by
+        rw [hi2] at hbcst
+        exact hbcst
+      have hbov : s'.b 2 3 = s.bm p q := by
+        rw [he1]
+        simp only [scsHalfSliceV39]
+        have hcond : ({(2:ℕ) % ((q + 1 + (s.k - p % s.k)) % s.k),
+            (3 % ((q + 1 + (s.k - p % s.k)) % s.k))} : Set ℕ)
+            = {0, ((q + 1 + (s.k - p % s.k)) % s.k) - 1} := by
+          rw [hk3c]
+          simp only [Nat.reduceMod, Nat.reduceSub]
+          ext yy
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+          omega
+        rw [if_pos hcond]
+      have hbmfin : s.bm p q = cstab := hbov.symm.trans hbcstab
+      have hdle : dist (vv (p % s.k)) (vv (q % s.k)) ≤ s.bm (p % s.k) (q % s.k) :=
+        hbmle _ _
+      rw [hbmres, hbmfin] at hdle
+      exact hdle
+    · obtain ⟨-, -, hk3, -, -, hJset⟩ := he
+      obtain ⟨i, hseti, -, hbcst, -⟩ := hJset
+      have hk3c : (p + 1 + (s.k - q % s.k)) % s.k = 3 := by
+        have h3e : s''.k = (p + 1 + (s.k - q % s.k)) % s.k := by
+          rw [he2]; simp only [scsHalfSliceV39]
+        omega
+      have hJ2 : s''.J 2 3 := by
+        rw [he2]
+        simp only [scsHalfSliceV39]
+        have hcond : ({(2:ℕ) % ((p + 1 + (s.k - q % s.k)) % s.k),
+            (3 % ((p + 1 + (s.k - q % s.k)) % s.k))} : Set ℕ)
+            = {0, ((p + 1 + (s.k - q % s.k)) % s.k) - 1} := by
+          rw [hk3c]
+          simp only [Nat.reduceMod, Nat.reduceSub]
+          ext yy
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+          omega
+        rw [if_pos hcond]
+        exact hJ'
+      have hi2 : i = 2 := by
+        have hmem : (2:ℕ) ∈ ({i} : Set ℕ) := by rw [← hseti]; exact ⟨by omega, hJ2⟩
+        simp only [Set.mem_singleton_iff] at hmem
+        exact hmem.symm
+      have hbcstab : s''.b 2 3 = cstab := by
+        rw [hi2] at hbcst
+        exact hbcst
+      have hbov : s''.b 2 3 = s.bm q p := by
+        rw [he2]
+        simp only [scsHalfSliceV39]
+        have hcond : ({(2:ℕ) % ((p + 1 + (s.k - q % s.k)) % s.k),
+            (3 % ((p + 1 + (s.k - q % s.k)) % s.k))} : Set ℕ)
+            = {0, ((p + 1 + (s.k - q % s.k)) % s.k) - 1} := by
+          rw [hk3c]
+          simp only [Nat.reduceMod, Nat.reduceSub]
+          ext yy
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+          omega
+        rw [if_pos hcond]
+      have hsyml : s.bm q p = s.bm p q := (hsym q p).2.2.1
+      have hbmfin : s.bm p q = cstab :=
+        Eq.trans hsyml.symm (hbov.symm.trans hbcstab)
+      have hdle : dist (vv (p % s.k)) (vv (q % s.k)) ≤ s.bm (p % s.k) (q % s.k) :=
+        hbmle _ _
+      rw [hbmres, hbmfin] at hdle
+      exact hdle
+  · have hdle : dist (vv (p % s.k)) (vv (q % s.k)) ≤ s.bm (p % s.k) (q % s.k) :=
+      hbmle _ _
+    rw [hbmres] at hdle
+    exact hdle.trans hbm
 
 /-- HOL `VV_SUC_EQ_RHO_NODE_PRIME` (QKNVMLB.hl:8054). -/
 theorem VV_SUC_EQ_RHO_NODE_PRIME_p35 (s : ScsV39) (k p1 p q : ℕ) (u : V3)
@@ -596,13 +1038,37 @@ theorem V_SLICE_EQ_NUMSEG_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ)
   -- DISCHARGES: source 8202-8319; the slice's vertex orbit is exactly the
   -- k'-window (W_EW_K_SCS_ADD_P_p35 + injectivity).
 
+/-- Sandbox helper: the slice condition is swap-symmetric (the mkj flags
+agree by SCS_J_DIAG_EQ_p35, the numeric conjuncts reorder trivially). -/
+private theorem slice_sym_aux_p35 (s s' s'' : ScsV39) (p q : ℕ) (hscs : isScsV39 s)
+    (hdiag : scsDiag s.k p q) (hsl : isScsSliceV39 s s' s'' p q) :
+    isScsSliceV39 s s'' s' q p := by
+  have hscs0 := hscs
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, hsym, -, -, -, -, -, -, -, -⟩ := hscs
+  have hsyml : s.bm q p = s.bm p q := (hsym q p).2.2.1
+  have hsl0 := hsl
+  simp only [isScsSliceV39] at hsl ⊢
+  obtain ⟨hpair, hd1, hd2, hd3, hbm, hk4, hear⟩ := hsl
+  simp only [scsSliceV39, Prod.mk.injEq] at hpair
+  obtain ⟨he1, he2⟩ := hpair
+  have hj := SCS_J_DIAG_EQ_p35 s s' s'' p q s'.d s''.d (s'.J 0 (s'.k - 1)) he1 he2
+    hscs0 hdiag hsl0
+  rw [← hj]
+  refine ⟨?_, hd2, hd1, (by linarith : s.d ≤ s''.d + s'.d),
+    (by rw [hsyml]; exact hbm), (by rw [hsyml]; exact hk4),
+    fun hm => Or.symm (hear hm)⟩
+  rw [Prod.mk.injEq]
+  exact ⟨he2, he1⟩
+
 /-- HOL `SCS_SLICE_SYM` (QKNVMLB.hl:8319). -/
 theorem SCS_SLICE_SYM_p35 (s s' s'' : ScsV39) (p q : ℕ) (hscs : isScsV39 s)
     (hdiag : scsDiag s.k p q) :
     isScsSliceV39 s s' s'' p q ↔ isScsSliceV39 s s'' s' q p := by
-  sorry
-  -- DISCHARGES: source 8319-8422; symmetric re-pairing of the slice
-  -- (isScsSliceV39 unfolding + SCS_J_DIAG_EQ_p35 + mkj-flag swap).
+  constructor
+  · exact slice_sym_aux_p35 s s' s'' p q hscs hdiag
+  · intro hsl
+    exact slice_sym_aux_p35 s s'' s' q p hscs
+      ⟨fun e => hdiag.1 e.symm, fun e => hdiag.2.2 e.symm, fun e => hdiag.2.1 e.symm⟩ hsl
 
 /-! ## Small sum/numseg bank (source order: 8422-8445) -/
 

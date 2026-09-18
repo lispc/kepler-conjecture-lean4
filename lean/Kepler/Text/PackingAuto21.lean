@@ -19,21 +19,23 @@ FILE MAP (TSKAJXY3.hl: 1 def + 66 thms; HJKDESR1a_1cell dedup)
   reduction (MCELL2_VOL_SPLIT ... MCELL2_SOL), the analytic def
   `gamma2_x_div_azim_v2` and `GAMMAX_GAMMA2_X`, capstones `TSKAJXY_2`,
   `TSKAJXY`.  `HJKDESR1a_1cell` (TSKAJXY3.hl:766) is byte-identical to the
-  hub's copy (TSKAJXY1.hl:5652, PackingAuto20.lean:241); it IS declared
-  here (Auto20's olean is not importable in this checkout) and the two
-  copies must be deduped at merge time.
+  hub's copy (TSKAJXY1.hl:5652, PackingAuto20.lean:241); it was deduped at
+  the atn2-merge (plan §5.3): PA21 now imports PackingAuto20 and uses the
+  hub's declaration.  `MCELL2_SUBSET_AFF_GE` below is suffixed `_p21`
+  because PackingAuto18 hosts a same-named theorem with a DIFFERENT
+  statement (plan §6).
   `tsk_required_ineq` (TSKAJXY3.hl:2240) is a list of Merge_ineq string
   keys with no mathematical content; ported as a `List String` def.
-  - BUILD NOTE (PackingAuto19 `_p19`-copy convention): the oleans of
-    PackingAuto14-20 are NOT built in this checkout, so they cannot be
-    imported.  The pieces needed from the hub lane (the sphere.hl kit
-    `atn2`/`deltaXf`/`deltaX4f`/`dihXf`/`dihY`/`solY`/`volXf`/`volY`/
-    `vol3r`/`vol3f`/`gamma3f`, and the numeric seed `HJKDESR1a_1cell`)
-    are copied here VERBATIM from PackingAuto20.lean under their true
-    names; at merge time (Auto20 importable) delete this section and
-    dedupe `HJKDESR1a_1cell` (declared in the TSKAJXY3 block below, since
-    TSKAJXY1.hl:5652 and TSKAJXY3.hl:766 both carry it) against
-    PackingAuto20.lean:241.
+  - MERGE NOTE (atn2-merge, executed 2026-09: docs/atn2-merge-plan.md §5.3):
+    the verbatim hub-lane kit copy below (`atn2`/`deltaXf`/`deltaX4f`/
+    `dihXf`/`dihY`/`solY`/`volXf`/`volY`/`vol3r`/`vol3f`/`gamma3f` and the
+    numeric seed `HJKDESR1a_1cell`) is DELETED; the file imports
+    PackingAuto20     (the vol/gamma family + `HJKDESR1a_1cell` + the
+    `deltaXf`/`deltaX4f` compatibility aliases) and Kepler.Text.SphereKit
+    (the canonical `atn2`/`deltaX`/`deltaX4`/`dihXf`/`dihY`/`solY`,
+    declared in the shared `Kepler.Text` namespace).
+    `gamma2_x_div_azim_v2` stays: it is TSKAJXY3's own
+    single definition, not a PA20 twin.
 
 ENCODING NOTES
   - HOL `real^3` <-> `V3`; `dist(u,v)` <-> `dist u v`; `EL i ul` <->
@@ -57,7 +59,7 @@ ENCODING NOTES
     `pack_nonlinear_non_ox3q1h` are opaque (`sorry`-bodied constants) —
     they enter only sorried capstone statements/proofs.
   - `l ~/ y` in ATN2_Y_NEG etc. uses `Real.arctan`; `atn2` is
-    PackingAuto20.atn2 (verbatim sphere.hl:48).
+    Kepler.Text.SphereKit.atn2 (verbatim sphere.hl:48).
 
 DISCHARGES
   - NONE of the concl interfaces match verbatim: the capstone `TSKAJXY`
@@ -90,6 +92,8 @@ import Kepler.Text.PackingAuto10
 import Kepler.Text.PackingAuto11
 import Kepler.Text.PackingAuto12
 import Kepler.Text.PackingAuto13
+import Kepler.Text.PackingAuto20
+import Kepler.Text.SphereKit
 import Kepler.Text.Polytope
 import Mathlib
 
@@ -99,65 +103,14 @@ namespace Kepler.Text
 
 open Kepler.Geom Set Classical MeasureTheory
 
-/-! ## Verbatim hub-lane kit (copied from PackingAuto20.lean; delete at
-merge time when PackingAuto20's olean is buildable here) -/
+/-! ## Sphere.hl toolkit (atn2-merge, docs/atn2-merge-plan.md §5.3)
 
-/-- HOL `atn2` (sphere.hl:48); PackingAuto20.lean:66 verbatim. -/
-noncomputable def atn2 (x y : ℝ) : ℝ :=
-  if |y| < x then Real.arctan (y / x)
-  else if 0 < y then Real.pi / 2 - Real.arctan (x / y)
-  else if y < 0 then -(Real.pi / 2) - Real.arctan (x / y)
-  else Real.pi
-
-/-- HOL `delta_x` (sphere.hl:86); PackingAuto20.lean:73 verbatim. -/
-noncomputable def deltaXf (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  x1 * x4 * (-x1 + x2 + x3 - x4 + x5 + x6) +
-    x2 * x5 * (x1 - x2 + x3 + x4 - x5 + x6) +
-    x3 * x6 * (x1 + x2 - x3 + x4 + x5 - x6) -
-    x2 * x3 * x4 - x1 * x3 * x5 - x1 * x2 * x6 - x4 * x5 * x6
-
-/-- HOL `delta_x4` (sphere.hl:110); PackingAuto20.lean:80 verbatim. -/
-noncomputable def deltaX4f (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  -x2 * x3 - x1 * x4 + x2 * x5 + x3 * x6 - x5 * x6 +
-    x1 * (-x1 + x2 + x3 - x4 + x5 + x6)
-
-/-- HOL `dih_x` (sphere.hl:153); PackingAuto20.lean:85 verbatim. -/
-noncomputable def dihXf (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  Real.pi / 2 + atn2 (Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6))
-    (-(deltaX4f x1 x2 x3 x4 x5 x6))
-
-/-- HOL `dih_y` (sphere.hl:159); PackingAuto20.lean:90 verbatim. -/
-noncomputable def dihY (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  dihXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
-
-/-- HOL `sol_y` (sphere.hl:185); PackingAuto20.lean:94 verbatim. -/
-noncomputable def solY (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  dihY y1 y2 y3 y4 y5 y6 + dihY y2 y3 y1 y5 y6 y4 + dihY y3 y1 y2 y6 y4 y5 -
-    Real.pi
-
-/-- HOL `vol_x` (sphere.hl:251); PackingAuto20.lean:99 verbatim. -/
-noncomputable def volXf (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  Real.sqrt (deltaXf x1 x2 x3 x4 x5 x6) / 12
-
-/-- HOL `vol_y` (sphere.hl:547); PackingAuto20.lean:103 verbatim. -/
-noncomputable def volY (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  volXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
-
-/-- HOL `vol3r` (sphere.hl:578); PackingAuto20.lean:126 verbatim. -/
-noncomputable def vol3r (y1 y2 y3 r : ℝ) : ℝ := volY r r r y1 y2 y3
-
-/-- HOL `vol3f` (sphere.hl:580); PackingAuto20.lean:129 verbatim. -/
-noncomputable def vol3f (y1 y2 y3 r : ℝ) (f : ℝ → ℝ) : ℝ :=
-  (2 * mm1 / Real.pi) *
-    (solY y1 y2 r r r y3 + solY y2 y3 r r r y1 + solY y3 y1 r r r y2) -
-    (8 * mm2 / Real.pi) *
-    (f (y1 / 2) * dihY y1 y2 r r r y3 +
-      f (y2 / 2) * dihY y2 y3 r r r y1 +
-      f (y3 / 2) * dihY y3 y1 r r r y2)
-
-/-- HOL `gamma3f` (sphere.hl:582); PackingAuto20.lean:138 verbatim. -/
-noncomputable def gamma3f (y1 y2 y3 r : ℝ) (f : ℝ → ℝ) : ℝ :=
-  vol3r y1 y2 y3 r - vol3f y1 y2 y3 r f
+The verbatim hub-lane kit copy (`atn2`/`deltaXf`/`deltaX4f`/`dihXf`/`dihY`/
+`solY`/`volXf`/`volY`/`vol3r`/`vol3f`/`gamma3f` and the duplicate
+`HJKDESR1a_1cell`) is gone: the canonical numeric kit is
+`Kepler.Text.SphereKit` — which declares it in this same `Kepler.Text`
+namespace, so the plain names keep resolving — and the vol/gamma family plus
+`HJKDESR1a_1cell` come from the hub PackingAuto20, imported above. -/
 
 /-- HOL `gamma2_x_div_azim_v2` (TSKAJXY3.hl:2065-2068, the file's single
 `new_definition`; placed here because `GRKIBMP_concl` below mentions it). -/
@@ -621,12 +574,9 @@ theorem MCELL1_VOL (V X : Set V3) (ul : List V3) (hs : saturated V) (hp : Packin
     volume.real X = Real.sqrt 2 ^ 3 / 3 * sol (elV ul 0) X := by
   sorry
 
-/-- HOL `HJKDESR1a_1cell` (TSKAJXY3.hl:766; = TSKAJXY1.hl:5652, also
-ported as PackingAuto20.lean:241 -- dedupe at merge time).  Proof route:
-`3 * mm1 < 3 * 1.3 < pi * sqrt 2` via certified Flyspeck-constant bounds,
-not re-derivable without interval tactics. -/
-theorem HJKDESR1a_1cell : 0 < 8 * Real.pi * Real.sqrt 2 / 3 - 8 * mm1 := by
-  sorry
+-- atn2-merge: `HJKDESR1a_1cell` (TSKAJXY3.hl:766 = TSKAJXY1.hl:5652) is
+-- byte-identical to PackingAuto20.lean's declaration; with the hub now
+-- imported above, its copy serves both files (plan §5.3).
 
 /-- HOL `TSKAJXY_1` (TSKAJXY3.hl:780; giant: the 1-cell case of TSKAJXY). -/
 theorem TSKAJXY_1 (V : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V)
@@ -817,8 +767,11 @@ theorem FRUSTT_WEDGE_RCONE_GE (u v w1 w2 : V3) (h a : ℝ) (ha : 0 < a) (huv : u
         wedgeGe u v w1 w2)) := by
   sorry
 
-/-- HOL `MCELL2_SUBSET_AFF_GE` (TSKAJXY3.hl:1419). -/
-theorem MCELL2_SUBSET_AFF_GE (V : Set V3) (ul : List V3) (hp : Packing V)
+/-- HOL `MCELL2_SUBSET_AFF_GE` (TSKAJXY3.hl:1419).  Suffixed `_p21` at the
+atn2-merge: PackingAuto18.lean hosts a same-named `MCELL2_SUBSET_AFF_GE`
+with a DIFFERENT statement (hypothesis-free, `hdV`/`tail` form) — the two
+are NOT twins and must not be deduped (plan §6). -/
+theorem MCELL2_SUBSET_AFF_GE_p21 (V : Set V3) (ul : List V3) (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 ul) :
     mcell2 V ul ⊆
       affGe {elV ul 0, elV ul 1} ({mxi V ul, omegaListN V ul 3} : Set V3) := by

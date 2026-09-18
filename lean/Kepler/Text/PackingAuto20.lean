@@ -24,11 +24,13 @@ FILE MAP (TSKAJXY hub role)
   set-algebra core the giants rewrite through).
 
 ENCODING NOTES
-  - HOL `dih_y/sol_y/vol_y/gamma4fgcy/gamma3f` (sphere.hl:159-582) were
-    NOT ported anywhere in this checkout yet, so they are defined here
-    (this is the hub's definitional payload despite the .hl carrying no
-    defs -- upstream they live in `Sphere`).  HOL `atn2` (sphere.hl:48)
-    is ported verbatim as `atn2`; Mathlib has no `arctan2`.
+  - HOL `dih_y/sol_y/vol_y/gamma4fgcy/gamma3f` (sphere.hl:159-582): the
+    `delta_x4/dih_x/dih_y/sol_y` half of this payload now resolves to
+    Kepler.Text.SphereKit (atn2-merge, plan §5.2); the vol/gamma family (`vol_x/vol_y/vol4f/
+    gamma4fgcy/vol3r/vol3f/gamma3f`) stays here (its only duplicate was
+    PackingAuto21's verbatim copy, deleted in wave 2).  The hub's
+    `deltaXf`/`deltaX4f` names survive as compatibility aliases of
+    SphereKit `deltaX`/`deltaX4` until the wave-3 renames.
   - HOL `real^3` <-> `V3` (Kepler.Geom); `dist (u,v)` <-> `dist u v`;
     `NULLSET X` <-> `nullSet X` (`volume X = 0`); `vol X` (real volume)
     <-> `volume.real X`, matching the convention inside `gammaX`;
@@ -51,6 +53,7 @@ import Kepler.Text.PackingAuto10
 import Kepler.Text.PackingAuto11
 import Kepler.Text.PackingAuto12
 import Kepler.Text.PackingAuto13
+import Kepler.Text.SphereKit
 import Kepler.Text.Polytope
 import Mathlib
 
@@ -60,44 +63,37 @@ namespace Kepler.Text
 
 open Kepler.Geom Set Classical MeasureTheory
 
-/-! ## Definitional payload: the sphere.hl nonlinear toolkit -/
+/-! ## Definitional payload: the sphere.hl nonlinear toolkit
 
-/-- HOL `atn2` (sphere.hl:48), the quadrant-aware two-argument arctangent. -/
-noncomputable def atn2 (x y : ℝ) : ℝ :=
-  if |y| < x then Real.arctan (y / x)
-  else if 0 < y then Real.pi / 2 - Real.arctan (x / y)
-  else if y < 0 then -(Real.pi / 2) - Real.arctan (x / y)
-  else Real.pi
+Single-sourced in `Kepler.Text.SphereKit` (atn2-merge, docs/atn2-merge-plan.md
+§5.2); that module declares the kit in this same `Kepler.Text` namespace, so
+deleting the hub's local defs keeps every plain name resolving for the whole
+TSKAJXY chain (and the LocalAuto2 lane).  The hub's historical
+`deltaXf`/`deltaX4f` names survive as compatibility alias defs (bodies kept
+VERBATIM, definitionally equal to SphereKit `deltaX`/`deltaX4`: the
+LocalAuto2-lane proofs close goals by `simp only [deltaXf, …]` + `ring`,
+which needs the alias to unfold all the way to the arithmetic body).  Wave 3
+renames their users (plan §4) and removes them. -/
 
-/-- HOL `delta_x` (sphere.hl:86): the Cayley--Menger-style determinant. -/
-noncomputable def deltaXf (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+/-- Compatibility alias for the hub's historical `delta_x` name (verbatim
+body = SphereKit `deltaX` = the old PackingAuto20.lean:73 def); removed in
+wave 3 together with the `deltaXf → deltaX` user renames. -/
+def deltaXf (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
   x1 * x4 * (-x1 + x2 + x3 - x4 + x5 + x6) +
     x2 * x5 * (x1 - x2 + x3 + x4 - x5 + x6) +
     x3 * x6 * (x1 + x2 - x3 + x4 + x5 - x6) -
     x2 * x3 * x4 - x1 * x3 * x5 - x1 * x2 * x6 - x4 * x5 * x6
 
-/-- HOL `delta_x4` (sphere.hl:110): partial derivative of `delta_x` at `x4`. -/
+/-- Compatibility alias for the historical `delta_x4` name (verbatim body =
+SphereKit `deltaX4` = the old PackingAuto20.lean:80 def); removed in wave 3
+together with `deltaXf`. -/
 noncomputable def deltaX4f (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
   -x2 * x3 - x1 * x4 + x2 * x5 + x3 * x6 - x5 * x6 +
     x1 * (-x1 + x2 + x3 - x4 + x5 + x6)
 
-/-- HOL `dih_x` (sphere.hl:153): dihedral angle from squared lengths. -/
-noncomputable def dihXf (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  Real.pi / 2 + atn2 (Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6))
-    (-(deltaX4f x1 x2 x3 x4 x5 x6))
-
-/-- HOL `dih_y` (sphere.hl:159). -/
-noncomputable def dihY (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  dihXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
-
-/-- HOL `sol_y` (sphere.hl:185): spherical excess `alpha + beta + gamma - pi`. -/
-noncomputable def solY (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  dihY y1 y2 y3 y4 y5 y6 + dihY y2 y3 y1 y5 y6 y4 + dihY y3 y1 y2 y6 y4 y5 -
-    Real.pi
-
 /-- HOL `vol_x` (sphere.hl:251): simplex volume from squared lengths. -/
 noncomputable def volXf (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  Real.sqrt (deltaXf x1 x2 x3 x4 x5 x6) / 12
+  Real.sqrt (deltaX x1 x2 x3 x4 x5 x6) / 12
 
 /-- HOL `vol_y` (sphere.hl:547, `y_of_x vol_x`). -/
 noncomputable def volY (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
