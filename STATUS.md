@@ -1,4 +1,4 @@
-# 项目总进度（Status）— 2026-09-17
+# 项目总进度（Status）— 2026-09-18
 
 > 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新（cron 自动 push）。
 > 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
@@ -10,9 +10,11 @@
 > **local 章骨架 100% 就位（2026-09-16，`aa4baf6b`）：39 模块覆盖 174.7k 行 HOL 源，
 > 1793 sorry 进入纯填证期**——至此 Phase 5 全部主体章节（packing + local）骨架齐备。
 > **Phase 4 G4 由 Kimi 并行推进（wip/g4-emit）：首个 sqrt/atan 全量案
-> QITNPEA_3725403817（964,984 叶，2775 BBTreeG shards）内核构建中（~42%）；
+> QITNPEA_3725403817（964,984 叶，2775 BBTreeG shards）内核构建中（86%，2379/2775）；
 > 封闭 atan Taylor 阶 1024→128 固化（四档验证全过，`1db69bd8`，内核成本 ~8x↓）；
-> 5490182221 全量 stage-a（360 chunk 数据模式）运行中**。
+> 5490182221 全量 stage-a（360 chunk 数据模式）运行中（175/360）**。
+> 政策变更（2026-09-17 用户批准）：main 允许携带 sorry 债务，待 G4 两线收工后执行
+> 合并计划（债务账本工具 → 合 wip/auto-packing 进 main → 文档同步）。
 
 图例：✅ 完成并验证 / 🟡 进行中 / ⬜ 未启动。完成度为行数或条目数口径的粗略估计。
 
@@ -71,7 +73,7 @@
   - [x] **FillParams 参数填充工具链（2026-09-14，`0588df2`）**：Lean 编译态逐叶算 sqrt mantissa（零镜像失真）+ (N,out) 阶梯 + 279 叶小样端到端绿；封闭 atan 参数高 Taylor 阶 trick（阶数后经实测下调，见下）
   - [x] **FillParams stage-a 分片并行化（2026-09-15，wip/g4-emit）**：单体驱动（354MB/96万叶数组字面量）elaboration 不可扩展（11.5h 未果）→ 改造为 `--stage-a-shards=K` 连续切块小驱动 + `runMain` argv 派发（无参走阶梯 / `N out` 钉死单点）+ `stagea_merge.py`（全局 rung 裁定 + STALE 补算 + 全局索引合并）；256 chunk × 64 路并行
   - [x] **repair_leaves.py 叶修复回路（`85f5ae7`）**：编译态逐叶扫描 → 失败叶二分加深（splitOK 对任意细化保持）→ 修复证书
-  - [ ] 现存 16 证书收尾：已闭合 5 份（另加早期 2 小案共 7 案例）；波1 sqrt4/atan7 三份——**QITNPEA_3725403817（964,984 叶 = 964,792 + 192 修复衍生，2775 BBTreeG shards）内核构建中（2026-09-17：1154/2775 片 ~42%；期间遭 SIGKILL 两次均由 detached runner 自动续跑；09-16 晚曾发限流槽位死锁——mkdir 槽位被 SIGKILL 泄漏致全员空转 ~18h，已换 flock 方案根治并恢复）**；**封闭 atan Taylor 阶 1024→128 已固化（`1db69bd8`：5490182221 两个 chunk 在 N=64/128/256/1024 四档 3762 叶全过、rung 不变，内核 decide 成本 ~1/N，~8x 提速）**；5490182221（135万叶）全量 stage-a 运行中（360 chunk 数据模式 × 24 路，N=128，已完成 41/360，setsid runner 自动补缺）；2570626711（190万叶）stage-a 数据已备货；波2 disj+sqrt 家族 6 份（79~83 sqrt，FillParams 待扩 disj）；末位 2 份 3112-sqrt 怪物（需参数共享优化）
+  - [ ] 现存 16 证书收尾：已闭合 5 份（另加早期 2 小案共 7 案例）；波1 sqrt4/atan7 三份——**QITNPEA_3725403817（964,984 叶 = 964,792 + 192 修复衍生，2775 BBTreeG shards）内核构建中（2026-09-18：2379/2775 片 ~86%，稳定 ~48 片/小时无中断；期间遭 SIGKILL 两次均由 detached runner 自动续跑；09-16 晚曾发限流槽位死锁——mkdir 槽位被 SIGKILL 泄漏致全员空转 ~18h，已换 flock 方案根治并恢复）**；**封闭 atan Taylor 阶 1024→128 已固化（`1db69bd8`：5490182221 两个 chunk 在 N=64/128/256/1024 四档 3762 叶全过、rung 不变，内核 decide 成本 ~1/N，~8x 提速）**；5490182221（135万叶）全量 stage-a 运行中（360 chunk 数据模式 × 24 路，N=128，已完成 175/360，setsid runner 自动补缺）；2570626711（190万叶）stage-a 数据已备货；波2 disj+sqrt 家族 6 份（79~83 sqrt，FillParams 待扩 disj）；末位 2 份 3112-sqrt 怪物（需参数共享优化）
   - [ ] 证书量产：145 个已闭合案例需 bb_arb `--cert` 重跑出证书（机时 1-3 天；9893763499 案例 bb_arb 失控吐 117GB 日志已记录）
   - [ ] G4 粘合收尾：155 定义闭包的 Lean 定义 + 每案例 `evalReal e ρ = 展开式 ρ` 对应引理（依赖 packing 章定义，**主体剩余**）
   - 规格：`pipeline/interval/arb-layer.md` §3/§4
