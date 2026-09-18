@@ -28,11 +28,11 @@ Encoding:
   `minNum_mem_p30`/`minNum_le_p30`).
 - Same-wave workers own LocalAuto28/29/31-33; nothing is imported from
   them — every shared input is an in-file `_p30` copy.
-- No `native_decide`. The 40 proved items use mod/periodicity folding,
-  psort case analysis, order arithmetic and set-cardinality bookkeeping
-  (`Set.ncard_le_ncard`); the `c = am` edge-branch index-counting
-  cancellations and the master `UAGHHBM` fork analysis remain `sorry`
-  (each with a NEEDS marker).
+- No `native_decide`. The 46 proved items use mod/periodicity folding, psort case analysis, order arithmetic
+  and set-cardinality bookkeeping (`Set.ncard_le_ncard`); the `c = am`
+  edge-branch index-counting cancellations are discharged via
+  `psort_suc_edge_p30`/`psort_suc_ne_p30` (HOL `IMP_SUC_MOD_EQ` kit); the
+  master `UAGHHBM` fork analysis remains `sorry` (NEEDS marker).
 
 FILE MAP
   Section 0 (`_p30` substrate): `periodic_mod_p30`, `periodic2_mod_p30`,
@@ -44,9 +44,9 @@ FILE MAP
     `BBs_s_to_restrictionCs1_p30`, `BBs_restrictionCs1_to_s_p30`,
     `BBs_s_to_restrictionCs2_eq_p30`.
 
-  Status: 40 of the 47 HOL theorems are fully proved; the 6 `c = am`
-  edge-branch index-counting statements (Sections G tail) and the master
-  `UAGHHBM_p30` carry `sorry` with NEEDS markers.
+  Status: 46 of the 47 HOL theorems are fully proved; only the master
+  `UAGHHBM_p30` carries `sorry` with a NEEDS marker (the `is_scs_v39`
+  restriction-rewrite bash, HOL UAGHHBM.hl:2501-4095).
 
   Section A (UAGHHBM.hl:84-146): `PERIODIC_PSORT_p30` (proved),
     `CASE_PSORT_p30` (proved), `C_LE_2_IS_SCS_p30` (proved),
@@ -948,11 +948,96 @@ theorem BBINDEX_MIN_S_LE_SUBDIVISION2_C_EQ_AM_p30 (s : ScsV39) (i j : ℕ) (c : 
     IN_BBPRIME_SUBDIVISION_C_EQ_AM_p30 s i j c ww hs hk h1 h2 hbp hdc ham hedge
   exact MIN_NUM_SUBSET_p30 (a := BBindexV39 s ww) himg ⟨ww, hin, rfl⟩
 
-/-- HOL `BBINDEX_EQ_SUBDIVISION_C_EQ_AM` (UAGHHBM.hl:1820).
-NEEDS: the psort-matched-cell cancellation `IMP_SUC_MOD_EQ` counting kit
-(UAGHHBM.hl:1841-1926): the cells with `psort k (i,j) = psort k (x, x+1)`
-where `s.a x (x+1) ≠ c = s.am i j` drop out of both index sets, and
-`CARD_IMAGE_INJ_EQ` over the residue injection closes the equality. -/
+/-- `x % k ≠ (x + 1) % k` for `1 < k` (HOL `Qknvmlb.SUC_MOD_NOT_EQ`; the
+same one-line arithmetic as LocalAuto35 `SUC_MOD_NOT_EQ_p35`, re-derived
+here since LocalAuto30 imports no same-wave lane). -/
+theorem suc_mod_ne_p30 {k : ℕ} (hk : 1 < k) (x : ℕ) : x % k ≠ (x + 1) % k := by
+  intro hcon
+  have hy : x % k < k := Nat.mod_lt x (by omega)
+  rw [Nat.add_mod, show (1 : ℕ) % k = 1 from Nat.mod_eq_of_lt (by omega)] at hcon
+  rcases Nat.lt_or_ge (x % k + 1) k with hlt | hge
+  · rw [Nat.mod_eq_of_lt hlt] at hcon
+    omega
+  · have heqk : x % k + 1 = k := by omega
+    rw [heqk, Nat.mod_self] at hcon
+    omega
+
+/-- A `psort`-match of the cell `(i, j)` with a successor cell `(x, x + 1)`
+forces the cyclic-edge condition (the cell bookkeeping behind HOL
+`IMP_SUC_MOD_EQ`, UAGHHBM.hl:1841-1926). -/
+theorem psort_suc_edge_p30 {k i j x : ℕ} (hk : 3 < k) (hij : i % k ≠ j % k)
+    (hp : psort k (i, j) = psort k (x, x + 1)) :
+    j % k = (i + 1) % k ∨ (j + 1) % k = i % k := by
+  have h1m : (1 : ℕ) % k = 1 := Nat.mod_eq_of_lt (by omega)
+  have e1 : (x + 1) % k = (x % k + 1) % k := by rw [Nat.add_mod, h1m]
+  have e2 : (i + 1) % k = (i % k + 1) % k := by rw [Nat.add_mod, h1m]
+  have e3 : (j + 1) % k = (j % k + 1) % k := by rw [Nat.add_mod, h1m]
+  unfold psort at hp
+  simp only at hp
+  by_cases hab : i % k ≤ j % k
+  · by_cases hcd : x % k ≤ (x + 1) % k
+    · rw [if_pos hab, if_pos hcd] at hp
+      simp only [Prod.mk.injEq] at hp
+      obtain ⟨he1, he2⟩ := hp
+      refine Or.inl ?_
+      calc j % k = (x + 1) % k := he2
+        _ = (x % k + 1) % k := e1
+        _ = (i % k + 1) % k := by rw [he1]
+        _ = (i + 1) % k := e2.symm
+    · rw [if_pos hab, if_neg hcd] at hp
+      simp only [Prod.mk.injEq] at hp
+      obtain ⟨he1, he2⟩ := hp
+      refine Or.inr ?_
+      calc (j + 1) % k = (j % k + 1) % k := e3
+        _ = (x % k + 1) % k := by rw [he2]
+        _ = (x + 1) % k := e1.symm
+        _ = i % k := he1.symm
+  · by_cases hcd : x % k ≤ (x + 1) % k
+    · rw [if_neg hab, if_pos hcd] at hp
+      simp only [Prod.mk.injEq] at hp
+      obtain ⟨he1, he2⟩ := hp
+      refine Or.inr ?_
+      calc (j + 1) % k = (j % k + 1) % k := e3
+        _ = (x % k + 1) % k := by rw [he1]
+        _ = (x + 1) % k := e1.symm
+        _ = i % k := he2.symm
+    · rw [if_neg hab, if_neg hcd] at hp
+      simp only [Prod.mk.injEq] at hp
+      obtain ⟨he1, he2⟩ := hp
+      refine Or.inl ?_
+      calc j % k = (x + 1) % k := he1
+        _ = (x % k + 1) % k := e1
+        _ = (i % k + 1) % k := by rw [he2]
+        _ = (i + 1) % k := e2.symm
+
+/-- With equal residues `i % k = j % k` no successor cell is `psort`-matched
+by `(i, j)` (the matched pair would force `x % k = (x + 1) % k`, impossible
+for `3 < k`). -/
+theorem psort_suc_ne_p30 {k i j x : ℕ} (hk : 3 < k) (hij : i % k = j % k) :
+    psort k (i, j) ≠ psort k (x, x + 1) := by
+  intro hp
+  have hsuc := suc_mod_ne_p30 (k := k) (by omega) x
+  unfold psort at hp
+  simp only at hp
+  rw [hij, if_pos (le_refl (j % k))] at hp
+  by_cases hcd : x % k ≤ (x + 1) % k
+  · rw [if_pos hcd] at hp
+    simp only [Prod.mk.injEq] at hp
+    obtain ⟨he1, he2⟩ := hp
+    rw [← he1, he2] at hsuc
+    exact hsuc rfl
+  · rw [if_neg hcd] at hp
+    simp only [Prod.mk.injEq] at hp
+    obtain ⟨he1, he2⟩ := hp
+    rw [← he2, he1] at hsuc
+    exact hsuc rfl
+
+/-- HOL `BBINDEX_EQ_SUBDIVISION_C_EQ_AM` (UAGHHBM.hl:1820). The
+`c = am` branch: at the `override`-matched successor cells the edge
+hypothesis contradicts `ham`, and off the edge no cell is matched, so the
+two index sets agree pointwise (HOL's `IMP_SUC_MOD_EQ` cell-cancellation
+kit, UAGHHBM.hl:1841-1926, discharged by `psort_suc_edge_p30` /
+`psort_suc_ne_p30` above). -/
 theorem BBINDEX_EQ_SUBDIVISION_C_EQ_AM_p30 (s : ScsV39) (i j : ℕ) (c : ℝ)
     (ww : ℕ → V3) (hs : isScsV39 s) (hk : 3 < s.k) (h1 : s.a i j ≤ c)
     (h2 : c ≤ s.b i j)
@@ -960,11 +1045,25 @@ theorem BBINDEX_EQ_SUBDIVISION_C_EQ_AM_p30 (s : ScsV39) (i j : ℕ) (c : ℝ)
       c ≠ s.am i j) (hbb : BBsV39 s ww) (hdc : dist (ww i) (ww j) = c)
     (ham : s.am i j = c) :
     BBindexV39 s ww = BBindexV39 (restrictionCs2V39 s i j c) ww := by
-  sorry
+  by_cases hedg : j % s.k = (i + 1) % s.k ∨ (j + 1) % s.k = i % s.k
+  · exact absurd ham.symm (hedge hedg)
+  unfold BBindexV39
+  congr 1
+  ext x
+  have hkk : (restrictionCs2V39 s i j c).k = s.k := rfl
+  have hproj : (restrictionCs2V39 s i j c).a x (x + 1) =
+      override s.a s.k (i, j) c x (x + 1) := rfl
+  simp only [hkk, Set.mem_setOf_eq, hproj]
+  have hnom : psort s.k (i, j) ≠ psort s.k (x, x + 1) := by
+    by_cases hmod : i % s.k = j % s.k
+    · exact psort_suc_ne_p30 hk hmod
+    · exact fun hp => hedg (psort_suc_edge_p30 hk hmod hp)
+  unfold override
+  rw [if_neg hnom]
 
 /-- HOL `BBINDEX_BBPRIME_LE_SUBDIVISION2_C_EQ_AM` (UAGHHBM.hl:2120).
-NEEDS: same psort-matched-cell cancellation (`CARD_SUBSET` +
-`IMP_SUC_MOD_EQ`), UAGHHBM.hl:2144-2370. -/
+Same index-set inclusion as the cs2 twin (the matched cells equalise via
+`h1`/`hc`); the `hdc`/`ham`/`hedge` hypotheses are not needed here. -/
 theorem BBINDEX_BBPRIME_LE_SUBDIVISION2_C_EQ_AM_p30 (s : ScsV39) (i j : ℕ)
     (c : ℝ) (ww vv : ℕ → V3) (hs : isScsV39 s) (hk : 3 < s.k)
     (h1 : s.a i j ≤ c) (h2 : c ≤ s.b i j) (hbp : ww ∈ BBprimeV39 s)
@@ -973,10 +1072,37 @@ theorem BBINDEX_BBPRIME_LE_SUBDIVISION2_C_EQ_AM_p30 (s : ScsV39) (i j : ℕ)
       c ≠ s.am i j)
     (hbv : vv ∈ BBprimeV39 (restrictionCs2V39 s i j c)) :
     BBindexV39 s vv ≤ BBindexV39 (restrictionCs2V39 s i j c) vv := by
-  sorry
+  have hper : Periodic vv s.k :=
+    (BBs_restrictionCs2_to_s_p30 s i j c vv hs h1 hbv.1).2.1
+  have hc : c ≤ dist (vv i) (vv j) := by
+    have hab := hbv.1.2.2.1 i j |>.1
+    have proj : (restrictionCs2V39 s i j c).a i j = c := by
+      show override s.a s.k (i, j) c i j = c
+      unfold override
+      rw [if_pos rfl]
+    rw [proj] at hab
+    exact hab
+  have hkk : (restrictionCs2V39 s i j c).k = s.k := rfl
+  have hfin2 : {x | x < (restrictionCs2V39 s i j c).k ∧
+      (restrictionCs2V39 s i j c).a x (x + 1) = dist (vv x) (vv (x + 1))}.Finite :=
+    Set.Finite.subset (Set.finite_lt_nat s.k) (fun x hx => hkk ▸ hx.1)
+  unfold BBindexV39
+  refine Set.ncard_le_ncard (fun x hx => ⟨hx.1, ?_⟩) hfin2
+  show override s.a s.k (i, j) c x (x + 1) = dist (vv x) (vv (x + 1))
+  unfold override
+  by_cases hp : psort s.k (i, j) = psort s.k (x, x + 1)
+  · rw [if_pos hp]
+    have hdd : dist (vv i) (vv j) = dist (vv x) (vv (x + 1)) :=
+      dist_psort_p30 hper hp
+    have haxx : s.a x (x + 1) = s.a i j :=
+      (a_psort_p30 s hs hp).symm
+    rw [← hdd]
+    linarith [hx.2, haxx, h1, hc, hdd]
+  · rw [if_neg hp]
+    exact hx.2
 
 /-- HOL `CLAIM_BBINDEX_BBPRIME_LE_SUBDIVISION2_C_EQ_AM` (UAGHHBM.hl:2378).
-NEEDS: `BBINDEX_BBPRIME_LE_SUBDIVISION2_C_EQ_AM_p30`. -/
+Pointwise `MIN_NUM_LE_IMAGE` over the preceding inclusion. -/
 theorem CLAIM_BBINDEX_BBPRIME_LE_SUBDIVISION2_C_EQ_AM_p30 (s : ScsV39)
     (i j : ℕ) (c : ℝ) (ww : ℕ → V3) (hs : isScsV39 s) (hk : 3 < s.k)
     (h1 : s.a i j ≤ c) (h2 : c ≤ s.b i j) (hbp : ww ∈ BBprimeV39 s)
@@ -986,10 +1112,15 @@ theorem CLAIM_BBINDEX_BBPRIME_LE_SUBDIVISION2_C_EQ_AM_p30 (s : ScsV39)
     minNum (BBindexV39 s '' BBprimeV39 (restrictionCs2V39 s i j c)) ≤
       minNum (BBindexV39 (restrictionCs2V39 s i j c) ''
         BBprimeV39 (restrictionCs2V39 s i j c)) := by
-  sorry
+  have hin : ww ∈ BBprimeV39 (restrictionCs2V39 s i j c) :=
+    IN_BBPRIME_SUBDIVISION_C_EQ_AM_p30 s i j c ww hs hk h1 h2 hbp hdc ham hedge
+  exact MIN_NUM_LE_IMAGE_p30 hin fun x hx =>
+    BBINDEX_BBPRIME_LE_SUBDIVISION2_C_EQ_AM_p30 s i j c ww x hs hk h1 h2 hbp
+      hdc ham hedge hx
 
-/-- HOL `BBindex_min_LE_SUBDIVISION2_C_EQ_AM` (UAGHHBM.hl:2403).
-NEEDS: the two preceding C_EQ_AM min lemmas. -/
+/-- HOL `BBindex_min_LE_SUBDIVISION2_C_EQ_AM` (UAGHHBM.hl:2403). Chain of
+`BBINDEX_MIN_S_LE_SUBDIVISION2_C_EQ_AM` and the preceding claim, as in the
+cs2 twin. -/
 theorem BBindex_min_LE_SUBDIVISION2_C_EQ_AM_p30 (s : ScsV39) (i j : ℕ) (c : ℝ)
     (ww : ℕ → V3) (hs : isScsV39 s) (hk : 3 < s.k) (h1 : s.a i j ≤ c)
     (h2 : c ≤ s.b i j) (hbp : ww ∈ BBprimeV39 s)
@@ -997,11 +1128,19 @@ theorem BBindex_min_LE_SUBDIVISION2_C_EQ_AM_p30 (s : ScsV39) (i j : ℕ) (c : �
     (hedge : (j % s.k = (i + 1) % s.k ∨ (j + 1) % s.k = i % s.k) →
       c ≠ s.am i j) :
     BBindexMinV39 s ≤ BBindexMinV39 (restrictionCs2V39 s i j c) := by
-  sorry
+  have hclaim := CLAIM_BBINDEX_BBPRIME_LE_SUBDIVISION2_C_EQ_AM_p30 s i j c ww hs
+    hk h1 h2 hbp hdc ham hedge
+  have hmin := BBINDEX_MIN_S_LE_SUBDIVISION2_C_EQ_AM_p30 s i j c ww hs hk h1 h2
+    hbp hdc ham hedge
+  have hdef : BBindexMinV39 (restrictionCs2V39 s i j c) =
+      minNum (BBindexV39 (restrictionCs2V39 s i j c) ''
+        BBprimeV39 (restrictionCs2V39 s i j c)) := rfl
+  rw [hdef]
+  exact le_trans hmin hclaim
 
 /-- HOL `BBPRIME2_IS_NOT_2EMPTY_SUBDIVISION_C_EQ_AM` (UAGHHBM.hl:2422).
-NEEDS: `BBINDEX_EQ_SUBDIVISION_C_EQ_AM_p30` and
-`BBindex_min_LE_SUBDIVISION2_C_EQ_AM_p30`. -/
+Mirror of the cs2 twin, with `BBINDEX_EQ_SUBDIVISION_C_EQ_AM_p30` and
+`BBindex_min_LE_SUBDIVISION2_C_EQ_AM_p30` in place of the cs2 pair. -/
 theorem BBPRIME2_IS_NOT_2EMPTY_SUBDIVISION_C_EQ_AM_p30 (s : ScsV39) (i j : ℕ)
     (c : ℝ) (ww : ℕ → V3) (hs : isScsV39 s) (hk : 3 < s.k) (h1 : s.a i j ≤ c)
     (h2 : c ≤ s.b i j) (hmm : ww ∈ MMsV39 s)
@@ -1009,11 +1148,30 @@ theorem BBPRIME2_IS_NOT_2EMPTY_SUBDIVISION_C_EQ_AM_p30 (s : ScsV39) (i j : ℕ)
     (hedge : (j % s.k = (i + 1) % s.k ∨ (j + 1) % s.k = i % s.k) →
       c ≠ s.am i j) :
     ww ∈ BBprime2V39 (restrictionCs2V39 s i j c) := by
-  sorry
+  have hbp : ww ∈ BBprimeV39 s := hmm.1.1
+  have hin : ww ∈ BBprimeV39 (restrictionCs2V39 s i j c) :=
+    IN_BBPRIME_SUBDIVISION_C_EQ_AM_p30 s i j c ww hs hk h1 h2 hbp hdc ham hedge
+  have heq : BBindexV39 (restrictionCs2V39 s i j c) ww = BBindexV39 s ww :=
+    (BBINDEX_EQ_SUBDIVISION_C_EQ_AM_p30 s i j c ww hs hk h1 h2 hedge hmm.1.1.1
+      hdc ham).symm
+  have hmin2 : BBindexMinV39 s ≤ BBindexMinV39 (restrictionCs2V39 s i j c) :=
+    BBindex_min_LE_SUBDIVISION2_C_EQ_AM_p30 s i j c ww hs hk h1 h2 hbp hdc ham
+      hedge
+  have hge : BBindexMinV39 (restrictionCs2V39 s i j c) ≤
+      BBindexV39 (restrictionCs2V39 s i j c) ww := by
+    have hne : (BBindexV39 (restrictionCs2V39 s i j c) ''
+        BBprimeV39 (restrictionCs2V39 s i j c)).Nonempty :=
+      ⟨BBindexV39 (restrictionCs2V39 s i j c) ww, ⟨ww, hin, rfl⟩⟩
+    exact minNum_le_p30 hne ⟨ww, hin, rfl⟩
+  refine ⟨hin, ?_⟩
+  have hkey : BBindexMinV39 (restrictionCs2V39 s i j c) =
+      BBindexV39 (restrictionCs2V39 s i j c) ww :=
+    le_antisymm hge (by rw [heq, hmm.1.2]; exact hmin2)
+  rw [hkey]
 
-/-- HOL `MM_IS_NOT_2EMPTY_SUBDIVISION_C_EQ_AM` (UAGHHBM.hl:2476).
-NEEDS: `BBPRIME2_IS_NOT_2EMPTY_SUBDIVISION_C_EQ_AM_p30` (the am-side
-matches `ham` through `override` + `psort` case analysis). -/
+/-- HOL `MM_IS_NOT_2EMPTY_SUBDIVISION_C_EQ_AM` (UAGHHBM.hl:2476). As in the
+cs2 twin; the `am`-side matches `ham` through the definition of the cs2
+`am`-field: `s.am i j = c` makes the override branch dead. -/
 theorem MM_IS_NOT_2EMPTY_SUBDIVISION_C_EQ_AM_p30 (s : ScsV39) (i j : ℕ) (c : ℝ)
     (ww : ℕ → V3) (hs : isScsV39 s) (hk : 3 < s.k) (h1 : s.a i j ≤ c)
     (h2 : c ≤ s.b i j) (hmm : ww ∈ MMsV39 s)
@@ -1021,15 +1179,28 @@ theorem MM_IS_NOT_2EMPTY_SUBDIVISION_C_EQ_AM_p30 (s : ScsV39) (i j : ℕ) (c : �
     (hedge : (j % s.k = (i + 1) % s.k ∨ (j + 1) % s.k = i % s.k) →
       c ≠ s.am i j) :
     ww ∈ MMsV39 (restrictionCs2V39 s i j c) := by
-  sorry
+  refine ⟨BBPRIME2_IS_NOT_2EMPTY_SUBDIVISION_C_EQ_AM_p30 s i j c ww hs hk h1 h2
+    hmm hdc ham hedge, hmm.2.1, hmm.2.2.1, hmm.2.2.2.1, ?_, ?_⟩
+  · intro x y
+    show (if s.am i j < c then override s.am s.k (i, j) c else s.am) x y ≤
+      dist (ww x) (ww y)
+    rw [if_neg (by rw [ham]; exact lt_irrefl c)]
+    exact hmm.2.2.2.2.1 x y
+  · intro x y
+    exact hmm.2.2.2.2.2 x y
 
 /-! ## Section H: the master subdivision arrow (UAGHHBM.hl:2501-4095) -/
 
 /-- HOL `UAGHHBM` (UAGHHBM.hl:2501): the forking conclusion
 `scs_arrow_v39 {s} (set_of_list (subdiv_v39 s i j c))`.
 NEEDS: the full fork analysis over `subdivV39`'s four cases (HOL
-UAGHHBM.hl:2501-4095): `SCS_A_2`-style edge regime, the psort/override
-rewrites of `is_scs_v39` for each restriction, and Sections D-G. -/
+UAGHHBM.hl:2501-4095): `is_scs_v39` of the two restrictions (the
+`psort`/`override` rewrite of all 21 conjuncts — in HOL a single
+`RESA_TAC` bash of ~1600 lines) plus the edge-regime bookkeeping of
+Sections D-G (the Section G `c = am` chain is now discharged above; the
+remaining inputs are `isScsV39 (restrictionCs1V39 s i j c)` /
+`isScsV39 (restrictionCs2V39 s i j c)`, not present in any importable
+lane). -/
 theorem UAGHHBM_p30 (s : ScsV39) (i j : ℕ) (c : ℝ) (hs : isScsV39 s)
     (hij : i % s.k ≠ j % s.k) (hJ : ¬s.J i j) (h1 : s.a i j ≤ c)
     (h2 : c ≤ s.b i j)

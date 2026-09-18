@@ -767,13 +767,20 @@ noncomputable def deltaX4 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
   -x2 * x3 - x1 * x4 + x2 * x5 + x3 * x6 - x5 * x6 +
     x1 * (-x1 + x2 + x3 - x4 + x5 + x6)
 
-/-- HOL `delta_x5` (sphere.hl): partial derivative of `delta_x` at `x5`;
-not previously ported (verbatim from the sphere.hl determinant). -/
+/-- HOL `delta_x5` (sphere.hl; Nonlin_def.hl:435): partial derivative of
+`delta_x` at `x5`. BODY-FIX 2026-09-17: was a mis-port dropping the
+`- x1 * x3 + x1 * x4` summands; this is the corrected 6-term body, verbatim
+twin of LocalAuto11:165 `deltaX5f_p11` / LocalAuto21:113 `deltaX5_p21` /
+LocalAuto22:120 `deltaX5_p22` (checked as `∂deltaX/∂x5`), now canonical in
+`Kepler.Text.SphereKit`. -/
 noncomputable def deltaX5 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  x2 * (x1 - x2 + x3 + x4 - x5 + x6) - x2 * x5 + x3 * x6 - x4 * x6
+  -x1 * x3 + x1 * x4 - x2 * x5 + x3 * x6 - x4 * x6 +
+    x2 * (x1 - x2 + x3 + x4 - x5 + x6)
 
 /-- HOL `mk_simplex1` (appendix.hl:862); `cross` <-> `cross3`
-(PackingAuto18:86), `%` <-> `•`. -/
+(PackingAuto18:86), `%` <-> `•`. BODY-FIX 2026-09-17: the `d5` coefficient
+now picks up the corrected `deltaX5` (was the 4-term mis-port), so this
+def's value has changed; the body is unchanged. -/
 noncomputable def mkSimplex1 (v0 v1 v2 : V3) (x1 x2 x3 x4 x5 x6 : ℝ) : V3 :=
   let uinv := 1 / upsX x1 x2 x6
   let d := deltaX x1 x2 x3 x4 x5 x6

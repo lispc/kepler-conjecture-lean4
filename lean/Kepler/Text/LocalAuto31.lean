@@ -38,13 +38,18 @@ Encoding:
 - `IMAGE (\uv. f (FST uv) t, f (SND uv) t) FF` <-> `(fun uv => ...) '' FF`;
   `(@w. P w)` <-> `Classical.epsilon (fun w => P w)`.
 - `#1.26` <-> `h0` (PackingAuto2); `rho_fun` from LocalAuto1.
-- DISCHARGES: proved items are mechanical (norm/triangle epsilon arithmetic,
-  set/image bookkeeping, epsilon-congruence, periodicity folding, finite
-  minima over `Finset.range k`); the giants are `sorry` with NEEDS markers
-  naming the blocking kit (azim scale invariance, the local-fan distinctness
-  kit `LOCAL_FAN_IN_FF_DISTINCT`/`DETER_RHO_NODE`/`VV_INJ`/
-  `CLOSER_POINTS_LEMMA`, the stable-system case kit
-  `V_E_FF_IS_SCS_CASES_{4,5,6}`).
+   - DISCHARGES: proved items are mechanical (norm/triangle epsilon arithmetic,
+   set/image bookkeeping, epsilon-congruence, periodicity folding, finite
+   minima over `Finset.range k`). The 2026-09-18 pass filled the four
+   `DEFORMATION_DIST_LE_BLL_EDGE*` (via an in-file `CLOSER_POINTS_LEMMA`
+   shim), `CARD_V_EQ_SCS_K1` (via an in-file `VV_INJ_p31` shim — the twin
+   `VV_INJ_p35` is proved but LocalAuto35's transitive `Polytope` chain
+   would drag the `atn2` clash into this branch), and `DSV_WW_DEFOR_EQ`
+   (J-row emptyness + `VV_INJ_p31` + `setSum` congruence). Still `sorry`,
+   all blocked by the *same* root cause: `LocalFan V E FF` is the stub
+   `fun _ _ _ => True` (LocalAuto1.lean:138), so local-fan-conditioned
+   hypotheses carry no structure, and the azim scale invariance
+   `AZIM_SPECIAL_SCALE`/`AZIM_SCALE_ALL` is not ported (see NEEDS markers).
 -/
 
 import Kepler.Text.LocalAuto18
@@ -264,6 +269,78 @@ theorem ballAnnulus_norm_p31 {x : V3} (h : x ∈ ballAnnulus) :
   rw [Metric.mem_ball, dist_zero_right] at h2
   exact ⟨h1, le_of_not_gt h2⟩
 
+/-! ### Shims (proved siblings live in lanes LocalAuto31 must not import) -/
+
+/-- HOL `Qknvmlb.SUC_MOD_NOT_EQ` (shim: same arithmetic as
+LocalAuto35 `SUC_MOD_NOT_EQ_p35` / LocalAuto30 `suc_mod_ne_p30`; re-derived
+in-file since LocalAuto31 imports no same-wave lane and LocalAuto35's
+transitive `Polytope` chain would drag the `atn2` name clash along). -/
+theorem SUC_MOD_NOT_EQ_p31 {k : ℕ} (hk : 1 < k) (x : ℕ) :
+    x % k ≠ (x + 1) % k := by
+  intro hcon
+  have hy : x % k < k := Nat.mod_lt x (by omega)
+  rw [Nat.add_mod, show (1 : ℕ) % k = 1 from Nat.mod_eq_of_lt (by omega)] at hcon
+  rcases Nat.lt_or_ge (x % k + 1) k with hlt | hge
+  · rw [Nat.mod_eq_of_lt hlt] at hcon
+    omega
+  · have heqk : x % k + 1 = k := by omega
+    rw [heqk, Nat.mod_self] at hcon
+    omega
+
+/-- HOL `Qknvmlb.VV_INJ` (shim: same proof as LocalAuto35 `VV_INJ_p35` —
+the `2 ≤ scs_a` diagonal bound plus the `BBs` distance lower bound; see the
+`SUC_MOD_NOT_EQ_p31` note for why it is not imported). -/
+theorem VV_INJ_p31 (s : ScsV39) (k : ℕ) (vv : ℕ → V3) (hk : s.k = k)
+    (hscs : isScsV39 s) (hBB : BBsV39 s vv) :
+    ∀ i j, i < k ∧ j < k ∧ i ≠ j → vv i ≠ vv j := by
+  have hk3 : 0 < s.k := by have := hscs.2.1; omega
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hdiag2, -, -, -, -, -⟩ := hscs
+  intro i j ⟨hi, hj, hne⟩ he
+  rw [← hk] at hi hj
+  have h2 : (2 : ℝ) ≤ s.a i j := hdiag2 i j ⟨hi, hj, hne⟩
+  have h3 : s.a i j ≤ dist (vv i) (vv j) := (hBB.2.2.1 i j).1
+  rw [he, dist_self] at h3
+  linarith
+
+/-- HOL `CLOSER_POINTS_LEMMA` (shim: the Gallery closer-points statement,
+proved directly from the expansion of `‖x - t • y‖²`; used to pin the
+`b`-window at cyclic edges). -/
+theorem CLOSER_POINTS_LEMMA_p31 {x y : V3} (h : 0 < inner ℝ x y) :
+    ∃ u : ℝ, 0 < u ∧ ∀ t, 0 < t → t ≤ u → ‖x - t • y‖ < ‖x‖ := by
+  have hex : ∀ t : ℝ, ‖x - t • y‖ ^ 2
+      = ‖x‖ ^ 2 - 2 * t * inner ℝ x y + t * t * ‖y‖ ^ 2 := by
+    intro t
+    rw [← real_inner_self_eq_norm_sq, ← real_inner_self_eq_norm_sq,
+      ← real_inner_self_eq_norm_sq, inner_sub_left, inner_sub_right,
+      inner_sub_right, real_inner_smul_right, real_inner_smul_left,
+      real_inner_smul_left, real_inner_smul_right, real_inner_comm x y]
+    ring
+  have hpos : 0 < ‖y‖ ^ 2 + 1 := by positivity
+  refine ⟨inner ℝ x y / (‖y‖ ^ 2 + 1), div_pos h hpos, ?_⟩
+  intro t ht htu
+  have hI : 0 < inner ℝ x y := h
+  have hbound : t * ‖y‖ ^ 2 < inner ℝ x y := by
+    have h1 : t * ‖y‖ ^ 2 ≤ (inner ℝ x y / (‖y‖ ^ 2 + 1)) * ‖y‖ ^ 2 :=
+      mul_le_mul_of_nonneg_right htu (sq_nonneg _)
+    have h2 : (inner ℝ x y / (‖y‖ ^ 2 + 1)) * ‖y‖ ^ 2 < inner ℝ x y := by
+      rw [div_mul_eq_mul_div, div_lt_iff₀ hpos]
+      nlinarith [sq_nonneg ‖y‖]
+    linarith
+  have hkey : ‖x - t • y‖ ^ 2 < ‖x‖ ^ 2 := by
+    rw [hex t]
+    nlinarith
+  exact (abs_lt_of_sq_lt_sq' hkey (norm_nonneg _)).2
+
+/-- Congruence of `setSum` over a fixed set (PackingAuto2 `setSum` unfolds
+to a finite sum). -/
+theorem setSum_congr_p31 {S : Set ℕ} {f g : ℕ → ℝ} (h : ∀ i ∈ S, f i = g i) :
+    setSum S f = setSum S g := by
+  unfold setSum
+  by_cases hfin : S.Finite
+  · rw [dif_pos hfin, dif_pos hfin]
+    exact Finset.sum_congr rfl fun i hi => h i (hfin.mem_toFinset.mp hi)
+  · rw [dif_neg hfin, dif_neg hfin]
+
 /-! ## Section 2: the scs epsilon-distance kit (3 < k series) -/
 
 /-- HOL `DEFORMATION_DIST_LE_ALL` (ODXLSTC.hl:223). -/
@@ -407,26 +484,99 @@ theorem DEFORMATION_DIST_LE_BLL_LE3_p31 (s : ScsV39) (k l : ℕ) (w : ℕ → V3
 
 /-! ## Section 4: the edge cases and the combined b-window -/
 
+/-- Shared core of HOL `DEFORMATION_DIST_LE_BLL_EDGE{,2}` (ODXLSTC.hl:457,
+601): at a cyclic edge `l ≡ i ± 1` the vertex geometry (`2 ≤ scs_a`,
+annulus norms) forces a positive `(w l - w i) · w l`, and the closer-points
+shim turns it into a strict `b`-window along the shrink. -/
+private theorem distEdge_p31 (s : ScsV39) (k l i : ℕ) (w : ℕ → V3)
+    (hk1 : 1 < k) (hk : s.k = k) (his : isScsV39 s) (hmm : w ∈ MMsV39 s)
+    (hedge : l % k = (i + 1) % k ∨ i % k = (l + 1) % k) :
+    ∃ e : ℝ, 0 < e ∧ ∀ t, 0 < t → t < e →
+      dist ((1 - t) • w l) (w i) < s.b l i := by
+  have hkpos : 0 < k := by
+    have := his.2.1
+    rw [hk] at this
+    omega
+  obtain ⟨hann, hper, hdist, -⟩ := hmm.1.1.1
+  have hli : i % k ≠ l % k := by
+    rcases hedge with h | h
+    · intro hh
+      exact SUC_MOD_NOT_EQ_p31 (by omega) i (hh.trans h)
+    · intro hh
+      exact SUC_MOD_NOT_EQ_p31 (by omega) l (hh.symm.trans h)
+  have hik : i % k < s.k := by rw [hk]; exact Nat.mod_lt i (by omega)
+  have hlk : l % k < s.k := by rw [hk]; exact Nat.mod_lt l (by omega)
+  have hpa : Periodic2 s.a s.k := isScsV39_periodic2_a_p31 s his
+  obtain ⟨-, -, -, -, -, -, -, -, -, -, -, -, -, -, -, hdiag, -, -, -, -, -⟩ := his
+  have h2 : (2 : ℝ) ≤ s.a i l := by
+    have h0 := hdiag (i % k) (l % k) ⟨hik, hlk, hli⟩
+    have hmod := periodic2_mod_p18 hpa i l
+    rw [hk] at hmod
+    rwa [hmod] at h0
+  have hdli : (2 : ℝ) ≤ dist (w l) (w i) := by
+    have h1 := hdist i l |>.1
+    rw [dist_comm] at h1
+    linarith
+  have hnorm2 : (2 : ℝ) ≤ ‖w l - w i‖ := by rwa [← dist_eq_norm]
+  obtain ⟨hnl_hi, hnl_lo⟩ := ballAnnulus_norm_p31 (hann (Set.mem_range_self l))
+  obtain ⟨hni_hi, -⟩ := ballAnnulus_norm_p31 (hann (Set.mem_range_self i))
+  have hlt8 : ‖w i‖ ^ 2 < (8 : ℝ) := by
+    have hh : (h0 : ℝ) = 1.26 := rfl
+    have hsq : ‖w i‖ ^ 2 ≤ (2 * h0) ^ 2 := by
+      refine sq_le_sq' ?_ hni_hi
+      linarith [norm_nonneg (w i)]
+    calc ‖w i‖ ^ 2 ≤ (2 * h0) ^ 2 := hsq
+      _ < 8 := by rw [hh]; norm_num
+  have hex : ‖w l - w i‖ ^ 2
+      = ‖w l‖ ^ 2 - 2 * inner ℝ (w l) (w i) + ‖w i‖ ^ 2 := by
+    rw [← real_inner_self_eq_norm_sq, ← real_inner_self_eq_norm_sq,
+      ← real_inner_self_eq_norm_sq, inner_sub_left, inner_sub_right,
+      inner_sub_right, real_inner_comm (w l) (w i)]
+    ring
+  have hnl_sq : (4 : ℝ) ≤ ‖w l‖ ^ 2 := by
+    have h := sq_le_sq' (a := (2 : ℝ)) (b := ‖w l‖) (by linarith) hnl_lo
+    norm_num at h
+    exact h
+  have hn2_sq : (4 : ℝ) ≤ ‖w l - w i‖ ^ 2 := by
+    have h := sq_le_sq' (a := (2 : ℝ)) (b := ‖w l - w i‖)
+      (by linarith [norm_nonneg (w l), norm_nonneg (w i)]) hnorm2
+    norm_num at h
+    exact h
+  have hsign : 0 < inner ℝ (w l - w i) (w l) := by
+    rw [inner_sub_left, real_inner_self_eq_norm_sq,
+      real_inner_comm (w l) (w i)]
+    linarith [hex, hnl_sq, hn2_sq, hlt8]
+  obtain ⟨u, hu, huu⟩ := CLOSER_POINTS_LEMMA_p31 hsign
+  refine ⟨u, hu, ?_⟩
+  intro t ht hte
+  show dist ((1 - t) • w l) (w i) < s.b l i
+  have hvec : ((1 - t) • w l - w i) = (w l - w i) - t • w l := by
+    rw [sub_smul, one_smul]
+    abel
+  have h1 : dist ((1 - t) • w l) (w i) = ‖(w l - w i) - t • w l‖ := by
+    rw [dist_eq_norm, hvec]
+  rw [h1]
+  have h2' := huu t ht (le_of_lt hte)
+  have h3 : ‖w l - w i‖ = dist (w l) (w i) := (dist_eq_norm _ _).symm
+  have h4 : dist (w l) (w i) ≤ s.b l i := (hdist l i).2
+  rw [h3] at h2'
+  linarith
+
 /-- HOL `DEFORMATION_DIST_LE_BLL_EDGE` (ODXLSTC.hl:457): the successor-edge
 case `l MOD k = (i+1) MOD k`. -/
 theorem DEFORMATION_DIST_LE_BLL_EDGE_p31 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
-    (_his : isScsV39 s) (_hmm : w ∈ MMsV39 s) (_hk : s.k = k) (_hk3 : 3 < k) :
+    (his : isScsV39 s) (hmm : w ∈ MMsV39 s) (hk : s.k = k) (hk3 : 3 < k) :
     ∀ i, l % k = (i + 1) % k → ∃ e : ℝ, 0 < e ∧ ∀ t, 0 < t → t < e →
-      dist ((1 - t) • w l) (w i) < s.b l i := by
-  sorry
-  -- NEEDS: the a-edge pinning kit — `Qknvmlb.SUC_MOD_NOT_EQ`, `PERIODIC_PROPERTY`
-  -- folding, `REAL_LE_SQUARE_ABS` squaring of the `scs_a` 2-bound vs the
-  -- annulus norms, and `CLOSER_POINTS_LEMMA` (dot-product contraction on the
-  -- negative inner product `(w l - w i) · (- w l) < 0`).
+      dist ((1 - t) • w l) (w i) < s.b l i :=
+  fun i h => distEdge_p31 s k l i w (by omega) hk his hmm (Or.inl h)
 
 /-- HOL `DEFORMATION_DIST_LE_BLL_EDGE2` (ODXLSTC.hl:601): the predecessor-edge
-case `i MOD k = (l+1) MOD k`. -/
+case `i MOD k = (l+1) MOD k` (mirror of the successor case). -/
 theorem DEFORMATION_DIST_LE_BLL_EDGE2_p31 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
-    (_his : isScsV39 s) (_hmm : w ∈ MMsV39 s) (_hk : s.k = k) (_hk3 : 3 < k) :
+    (his : isScsV39 s) (hmm : w ∈ MMsV39 s) (hk : s.k = k) (hk3 : 3 < k) :
     ∀ i, i % k = (l + 1) % k → ∃ e : ℝ, 0 < e ∧ ∀ t, 0 < t → t < e →
-      dist ((1 - t) • w l) (w i) < s.b l i := by
-  sorry
-  -- NEEDS: same kit as DEFORMATION_DIST_LE_BLL_EDGE_p31 (mirror case).
+      dist ((1 - t) • w l) (w i) < s.b l i :=
+  fun i h => distEdge_p31 s k l i w (by omega) hk his hmm (Or.inr h)
 
 /-- HOL `DEFORMATION_DIST_LE_BLL_PRIME` (ODXLSTC.hl:742): every non-cyclic
 index gets a b-window, by trichotomy over the successor edges. -/
@@ -491,21 +641,21 @@ theorem DEFORMATION_DIST_LE_BLL_COM_p31 (s : ScsV39) (k l : ℕ) (w : ℕ → V3
 
 /-! ## Section 5: edge cases and the combined b-window (3 <= k series) -/
 
-/-- HOL `DEFORMATION_DIST_LE_BLL_EDGE_LE3` (ODXLSTC.hl:3267). -/
+/-- HOL `DEFORMATION_DIST_LE_BLL_EDGE_LE3` (ODXLSTC.hl:3267): the 3 <= k
+variant of the successor-edge case. -/
 theorem DEFORMATION_DIST_LE_BLL_EDGE_LE3_p31 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
-    (_his : isScsV39 s) (_hmm : w ∈ MMsV39 s) (_hk : s.k = k) (_hk3 : 3 ≤ k) :
+    (his : isScsV39 s) (hmm : w ∈ MMsV39 s) (hk : s.k = k) (hk3 : 3 ≤ k) :
     ∀ i, l % k = (i + 1) % k → ∃ e : ℝ, 0 < e ∧ ∀ t, 0 < t → t < e →
-      dist ((1 - t) • w l) (w i) < s.b l i := by
-  sorry
-  -- NEEDS: same kit as DEFORMATION_DIST_LE_BLL_EDGE_p31 (3 <= k variant).
+      dist ((1 - t) • w l) (w i) < s.b l i :=
+  fun i h => distEdge_p31 s k l i w (by have := hk3; omega) hk his hmm (Or.inl h)
 
-/-- HOL `DEFORMATION_DIST_LE_BLL_EDGE2_LE3` (ODXLSTC.hl:3408). -/
+/-- HOL `DEFORMATION_DIST_LE_BLL_EDGE2_LE3` (ODXLSTC.hl:3408): the 3 <= k
+variant of the predecessor-edge case. -/
 theorem DEFORMATION_DIST_LE_BLL_EDGE2_LE3_p31 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
-    (_his : isScsV39 s) (_hmm : w ∈ MMsV39 s) (_hk : s.k = k) (_hk3 : 3 ≤ k) :
+    (his : isScsV39 s) (hmm : w ∈ MMsV39 s) (hk : s.k = k) (hk3 : 3 ≤ k) :
     ∀ i, i % k = (l + 1) % k → ∃ e : ℝ, 0 < e ∧ ∀ t, 0 < t → t < e →
-      dist ((1 - t) • w l) (w i) < s.b l i := by
-  sorry
-  -- NEEDS: same kit as DEFORMATION_DIST_LE_BLL_EDGE_p31 (3 <= k variant).
+      dist ((1 - t) • w l) (w i) < s.b l i :=
+  fun i h => distEdge_p31 s k l i w (by have := hk3; omega) hk his hmm (Or.inr h)
 
 /-- HOL `DEFORMATION_DIST_LE_BLL_PRIME_LE3` (ODXLSTC.hl:3549). -/
 theorem DEFORMATION_DIST_LE_BLL_PRIME_LE3_p31 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
@@ -720,10 +870,12 @@ theorem WW_DEFOR_FF4_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
       ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF) ↔
       (w, v) ∈ FF := by
   sorry
-  -- NEEDS: local-fan distinctness kit — `LOCAL_FAN_IMP_IN_V2`,
+  -- NEEDS (still): the local-fan distinctness kit — `LOCAL_FAN_IMP_IN_V2`,
   -- `IVS_RHO_NODE1_DETE`, `DETER_RHO_NODE`, `LOFA_IMP_EE_TWO_ELMS_INS_ND`,
-  -- `LOFA_CARD_EE_V_2` (the `LocalFan` registry stub in LocalAuto1 blocks
-  -- the inference `w1 ∈ V` / genericity transfer).
+  -- `LOFA_CARD_EE_V_2`. Root blocker: `LocalFan V E FF` is the registry
+  -- stub `fun _ _ _ => True` (LocalAuto1.lean:138), so the hypotheses carry
+  -- no fan structure; the named HOL lemmas exist in this repo only against
+  -- the different predicate `localFan_p2` (LocalAuto5).
 
 /-- HOL `WW_DEFOR_RHO_NODE2` (ODXLSTC.hl:1306): the `ivs` choice transfers. -/
 theorem WW_DEFOR_RHO_NODE2_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
@@ -744,9 +896,10 @@ theorem WW_DEFOR_FF5_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
       ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF) ↔
       (v, w) ∈ FF := by
   sorry
-  -- NEEDS: `GENERIC_HYPOTHESIS_WW_DEFOR` kit + `PROPERTIES_GENERIC_LOCAL_FAN`
-  -- (genericity puts `v` off the `affGt {0} {w1}` line, excluding the
-  -- `(1 - t) % w1 = v` alignment; blocked by the `LocalFan` stub).
+  -- NEEDS (still): `GENERIC_HYPOTHESIS_WW_DEFOR` kit +
+  -- `PROPERTIES_GENERIC_LOCAL_FAN` (genericity puts `v` off the
+  -- `affGt {0} {w1}` line, excluding the `(1 - t) % w1 = v` alignment).
+  -- Root blocker: `LocalFan` stub (`True`, LocalAuto1.lean:138).
 
 /-- HOL `GENERIC_WW_DEFOR_RHO_NODE1_NOT_EDGE` (ODXLSTC.hl:1454). -/
 theorem GENERIC_WW_DEFOR_RHO_NODE1_NOT_EDGE_p31 {V : Set V3} {E : Set (Set V3)}
@@ -769,7 +922,8 @@ theorem WW_DEFOR_FF6_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
       ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF) ↔
       (w, v) ∈ FF := by
   sorry
-  -- NEEDS: same kit as WW_DEFOR_FF5_p31 (mirror case).
+  -- NEEDS (still): same kit as WW_DEFOR_FF5_p31 (mirror case) — root
+  -- blocker the `LocalFan` stub (`True`, LocalAuto1.lean:138).
 
 /-- HOL `GENERIC_WW_DEFOR_RHO_NODE1_NOT_EDGE2` (ODXLSTC.hl:1527). -/
 theorem GENERIC_WW_DEFOR_RHO_NODE1_NOT_EDGE2_p31 {V : Set V3} {E : Set (Set V3)}
@@ -792,10 +946,11 @@ theorem GENERIC_HYPOTHESIS_WW_DEFOR_p31 {V : Set V3} {E : Set (Set V3)}
     (_hlf : LocalFan V E FF) (_ht : t ≠ 0) (_hv : v ∈ V) (_hg : Generic V E) :
     ∀ x ∈ FF, x.1 ≠ x.2 ∧ (1 - t) • v ≠ x.1 ∧ (1 - t) • v ≠ x.2 := by
   sorry
-  -- NEEDS: `LOCAL_FAN_IN_FF_DISTINCT` (darts have distinct ends) and
+  -- NEEDS (still): `LOCAL_FAN_IN_FF_DISTINCT` (darts have distinct ends) and
   -- `LOFA_IMP_V_DIFF` + `PROPERTIES_GENERIC_LOCAL_FAN`/`AFF2` (genericity
-  -- puts `v` off `affGt {0} {x.1}` unless `t = 0`); blocked by the
-  -- `LocalFan` registry stub (LocalAuto1).
+  -- puts `v` off `affGt {0} {x.1}` unless `t = 0`). Root blocker: the
+  -- `LocalFan` registry stub is `True` (LocalAuto1.lean:138); the named HOL
+  -- lemmas exist here only against `localFan_p2` (LocalAuto5).
 
 /-- HOL `WW_DEFOR_AZIM` (ODXLSTC.hl:954): the interior azimuth at the
 deformed base point equals the original (azimuth scale invariance). -/
@@ -809,9 +964,11 @@ theorem WW_DEFOR_AZIM_p31 {FF : Set (V3 × V3)} {v : V3} {t : ℝ}
       = azim 0 v (rhoNode1 FF v)
         (Classical.epsilon fun a => (a, v) ∈ FF) := by
   sorry
-  -- NEEDS: `AZIM_SPECIAL_SCALE` (azimuth invariance under `(1 - t) % v`,
-  -- `0 < 1 - t`) applied to the transfers WW_DEFOR_rho_node1_p31 /
-  -- WW_DEFOR_APHA_p31; the Kepler.Geom azim kit has no scale lemma yet.
+  -- NEEDS (still): `AZIM_SPECIAL_SCALE` — azimuth invariance under
+  -- `(1 - t) % v`, `0 < 1 - t` — is NOT ported anywhere (PlanarityAuto8
+  -- documents the gap; Kepler.Geom.Azim/AzimLemmas have no scale lemma).
+  -- With it, the transfers WW_DEFOR_rho_node1_p31 / WW_DEFOR_APHA_p31
+  -- (both proved above) finish this.
 
 /-- HOL `GENEIRC_WW_DEFOR_AZIM` (ODXLSTC.hl:1039): the local-fan generic
 version of WW_DEFOR_AZIM (with the `t = 0` identity case). -/
@@ -826,8 +983,9 @@ theorem GENEIRC_WW_DEFOR_AZIM_p31 {V : Set V3} {E : Set (Set V3)}
       = azim 0 v (rhoNode1 FF v)
         (Classical.epsilon fun a => (a, v) ∈ FF) := by
   sorry
-  -- NEEDS: WW_DEFOR_AZIM_p31 via GENERIC_HYPOTHESIS_WW_DEFOR_p31 (both
-  -- blocked by the LocalFan stub); `t = 0` case is WW_DEFOR_0_ID + IMAGE_ID.
+  -- NEEDS (still): WW_DEFOR_AZIM_p31 via GENERIC_HYPOTHESIS_WW_DEFOR_p31
+  -- (both `sorry`: azim scale lemma unported + `LocalFan` stub `True`);
+  -- the `t = 0` case is WW_DEFOR_0_ID + IMAGE_ID.
 
 /-- HOL `AZIM_DEFOR_EDGE1` (ODXLSTC.hl:1189): azimuth transfer for the
 outgoing edge dart `(w1, v)`. -/
@@ -843,8 +1001,9 @@ theorem AZIM_DEFOR_EDGE1_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3
       = azim 0 v (rhoNode1 FF v)
         (Classical.epsilon fun a => (a, v) ∈ FF) := by
   sorry
-  -- NEEDS: WW_DEFOR_ALPHA3 (`CHOICE_LEMMA`) + GENERIC_WW_DEFOR_RHO_NODE1 +
-  -- `AZIM_SCALE_ALL` (local-fan kit; LocalFan stub).
+  -- NEEDS (still): WW_DEFOR_ALPHA3 (`CHOICE_LEMMA`) +
+  -- GENERIC_WW_DEFOR_RHO_NODE1 + `AZIM_SCALE_ALL` — root blocker the
+  -- `LocalFan` stub (`True`, LocalAuto1.lean:138); `AZIM_SCALE_ALL` unported.
 
 /-- HOL `AZIM_DEFOR_EDGE2` (ODXLSTC.hl:1365): azimuth transfer for the
 incoming edge dart `(v, w1)`. -/
@@ -860,8 +1019,9 @@ theorem AZIM_DEFOR_EDGE2_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3
       = azim 0 v (rhoNode1 FF v)
         (Classical.epsilon fun a => (a, v) ∈ FF) := by
   sorry
-  -- NEEDS: WW_DEFOR_RHO_NODE2 + GENERIC_WW_DEFOR_RHO_NODE2 + AZIM_SCALE_ALL
-  -- (local-fan kit; LocalFan stub).
+  -- NEEDS (still): WW_DEFOR_RHO_NODE2 + GENERIC_WW_DEFOR_RHO_NODE2 +
+  -- `AZIM_SCALE_ALL` — root blocker the `LocalFan` stub (`True`,
+  -- LocalAuto1.lean:138); `AZIM_SCALE_ALL` unported.
 
 /-- HOL `AZIM_DEFOR_EDGE3` (ODXLSTC.hl:1540): azimuth transfer when `(v, w1)`
 is not a dart of the fan in either order. -/
@@ -878,8 +1038,9 @@ theorem AZIM_DEFOR_EDGE3_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3
       = azim 0 v (rhoNode1 FF v)
         (Classical.epsilon fun a => (a, v) ∈ FF) := by
   sorry
-  -- NEEDS: GENERIC_WW_DEFOR_RHO_NODE1_NOT_EDGE{,2} (from WW_DEFOR_FF5/FF6)
-  -- + AZIM_SPECIAL_SCALE (local-fan kit; LocalFan stub).
+  -- NEEDS (still): GENERIC_WW_DEFOR_RHO_NODE1_NOT_EDGE{,2} (from
+  -- WW_DEFOR_FF5/FF6) + AZIM_SPECIAL_SCALE — root blocker the `LocalFan`
+  -- stub (`True`, LocalAuto1.lean:138); azim scale lemma unported.
 
 /-- HOL `AZIM_DEFORMATION_GENERIC` (ODXLSTC.hl:1566): azimuth transfer under
 `ww_defor w1` for arbitrary `v, w1 ∈ V` — trichotomy over the edge cases.
@@ -1083,21 +1244,51 @@ imply LEMMA1. -/
 theorem WW_DEFORMATION_CONVEX_LOCAL_FAN_p31 (hz : ZLZTHIC_concl_p31)
     (_hm : MHAEYJN_concl_p31) : LEMMA1_concl_p31 := by
   sorry
-  -- NEEDS: `JKQEWGV2` (MMs realisation is a convex local fan),
-  -- `Deformation.XRECQNS`, `Wrgcvdr_cizmrrh.CIZMRRH`, the interior-angle
-  -- transfer via AZIM_DEFORMATION_GENERIC_p31, `CARD_V_EQ_SCS_K1_p31`, and
-  -- the annulus pin DEFORMATION_IN_BALL_ANNULUS_p31; blocked by the
-  -- convex_local_fan registry kit.
+  -- NEEDS (still): `JKQEWGV2` (MMs realisation is a convex local fan) —
+  -- proved only as the `sorry` stubs `JKQEWGV2_concl` (LocalAuto1) /
+  -- `JKQEWGV2_p23` (LocalAuto23, itself needing the `sorry`
+  -- `JKQEWGV2_CASE_*_p23`), plus `Deformation.XRECQNS`,
+  -- `Wrgcvdr_cizmrrh.CIZMRRH`, the interior-angle transfer via
+  -- AZIM_DEFORMATION_GENERIC_p31, CARD_V_EQ_SCS_K1_p31 (now proved above)
+  -- and the annulus pin DEFORMATION_IN_BALL_ANNULUS_p31 (proved above).
 
 /-- HOL `CARD_V_EQ_SCS_K1` (ODXLSTC.hl:1961): a BBs realisation image has
-cardinality exactly `scs_k_v39 s`. -/
+cardinality exactly `scs_k_v39 s`. The HOL route (`IS_SCS_STABLE_SYSTEM` +
+`SCS_K_LE_6` + `V_E_FF_IS_SCS_CASES_{4,5,6}`, themselves `sorry`s in the
+importable lanes) is replaced by `VV_INJ_p31` + periodicity: the image of
+`{i | i < k}` under a periodic, mod-k-injective family has exactly `k`
+points. -/
 theorem CARD_V_EQ_SCS_K1_p31 (s : ScsV39) (k : ℕ) (vv : ℕ → V3) (V : Set V3)
-    (_hk : s.k = k) (_hV : Set.range vv = V) (_his : isScsV39 s) (_hk3 : 3 < k)
-    (_hbb : BBsV39 s vv) : V.ncard = k := by
-  sorry
-  -- NEEDS: `IS_SCS_STABLE_SYSTEM` + `Qknvmlb.SCS_K_LE_6` + the case bash
-  -- `V_E_FF_IS_SCS_CASES_{4,5,6}` with `VECTOR_3_{4,5,6}` and `VV_INJ`
-  -- (the dih2k stable-system matrix kit; not ported).
+    (hk : s.k = k) (hV : Set.range vv = V) (his : isScsV39 s) (_hk3 : 3 < k)
+    (hbb : BBsV39 s vv) : V.ncard = k := by
+  have hkpos : 0 < k := by
+    have := his.2.1
+    rw [hk] at this
+    omega
+  have hper : Periodic vv s.k := hbb.2.1
+  have pm : ∀ a, vv (a % k) = vv a := by
+    intro a
+    have hm := periodic_mod_p18 hper a
+    rwa [hk] at hm
+  have hinj : ∀ a b, a < k → b < k → a ≠ b → vv a ≠ vv b :=
+    fun a b ha hb hab => VV_INJ_p31 s k vv hk his hbb a b ⟨ha, hb, hab⟩
+  have hVe : V = (fun i => vv i) '' {i | i < k} := by
+    rw [← hV]
+    ext x
+    constructor
+    · rintro ⟨a, rfl⟩
+      exact ⟨a % k, Nat.mod_lt a (by omega), pm a⟩
+    · rintro ⟨a, _, rfl⟩
+      exact ⟨a, rfl⟩
+  rw [hVe]
+  have hco : {i | i < k} = ((Finset.range k : Finset ℕ) : Set ℕ) :=
+    (Finset.coe_range k).symm
+  rw [hco, ← Finset.coe_image, Set.ncard_coe_finset, Finset.card_image_of_injOn,
+    Finset.card_range]
+  intro a ha b hb heq
+  by_contra hne
+  rw [Finset.mem_coe, Finset.mem_range] at ha hb
+  exact hinj a b ha hb hne heq
 
 /-- HOL `CARD_FF_EQ_WW_DEFORMATION` (ODXLSTC.hl:2089). -/
 theorem CARD_FF_EQ_WW_DEFORMATION_p31 (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (e1 : ℝ)
@@ -1107,17 +1298,95 @@ theorem CARD_FF_EQ_WW_DEFORMATION_p31 (s : ScsV39) (k l : ℕ) (w : ℕ → V3) 
       (Set.range (fun i => (wwDefor_p31 (w l) (w i) t, wwDefor_p31 (w l) (w (i + 1)) t))).ncard
         = (Set.range (fun i => (w i, w (i + 1)))).ncard := by
   sorry
-  -- NEEDS: CARD_V_EQ_SCS_K1_p31 + `LOFA_IMP_CARD_FF_V_EQ` (local-fan kit).
+  -- NEEDS (still): CARD_V_EQ_SCS_K1_p31 (proved above) +
+  -- `LOFA_IMP_CARD_FF_V_EQ` (FF-cardinality from V-cardinality; local-fan
+  -- kit — root blocker the `LocalFan` stub `True`, LocalAuto1.lean:138).
 
 /-- HOL `DSV_WW_DEFOR_EQ` (ODXLSTC.hl:2126): dsv is invariant under the
-deformation when the l-row of J is empty. -/
+deformation when the l-row of J is empty. The J-darts avoid the vertex `l`
+cyclically (`_hJ` + J-symmetry + `Periodic2 s.J`), so `VV_INJ_p31` makes
+the deformation fix every J-dart pointwise and the summand functions agree
+on the J-set. -/
 theorem DSV_WW_DEFOR_EQ_p31 (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (t : ℝ)
-    (_hk : s.k = k) (_his : isScsV39 s) (_hbb : BBsV39 s w)
-    (_hJ : ∀ i, ¬ s.J l i) :
+    (hk : s.k = k) (his : isScsV39 s) (hbb : BBsV39 s w)
+    (hJ : ∀ i, ¬ s.J l i) :
     dsvV39 s (fun i => wwDefor_p31 (w l) (w i) t) = dsvV39 s w := by
-  sorry
-  -- NEEDS: `VV_INJ` (mod-k injectivity of the BBs realisation) + sum
-  -- congruence over the J-set (dsvV39 unfolds via `setSum`).
+  have hkpos : 0 < k := by
+    have := his.2.1
+    rw [hk] at this
+    omega
+  obtain ⟨-, hper, -, -⟩ := id hbb
+  have hpa : Periodic2 s.a s.k := isScsV39_periodic2_a_p31 s his
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, hJper, hJsym, _, _, _, _, _, _, _, _⟩ := id his
+  have hJs : ∀ i j, s.J i j = s.J j i := fun i j => (hJsym i j).2.2.2.2
+  have hjmod : ∀ i j, s.J (i % k) (j % k) = s.J i j := by
+    intro i j
+    have hm := periodic2_mod_p18 hJper i j
+    rwa [hk] at hm
+  have pm : ∀ a, w (a % k) = w a := by
+    intro a
+    have hm := periodic_mod_p18 hper a
+    rwa [hk] at hm
+  have hinj : ∀ a b, a < k → b < k → a ≠ b → w a ≠ w b :=
+    fun a b ha hb hab => VV_INJ_p31 s k w hk his hbb a b ⟨ha, hb, hab⟩
+  -- a J-dart never has `w m = w l` at its tail
+  have hne_l : ∀ m, s.J m (m + 1) → w m ≠ w l := by
+    intro m hmJ heq
+    by_cases hml : m % k = l % k
+    · have hmeq : (m + 1) % k = (l + 1) % k := Nat.ModEq.add_right 1 hml
+      have h1 : s.J (l % k) ((l + 1) % k) := by
+        rw [← hml, ← hmeq, hjmod m (m + 1)]
+        exact hmJ
+      have h2 : s.J l (l + 1) := by
+        rw [← hjmod l (l + 1)]
+        exact h1
+      exact hJ (l + 1) h2
+    · have h1 : w (m % k) ≠ w (l % k) := hinj _ _ (Nat.mod_lt m (by omega))
+        (Nat.mod_lt l (by omega)) hml
+      apply h1
+      rw [pm m, pm l]
+      exact heq
+  -- ... nor at its head
+  have hne_l1 : ∀ m, s.J m (m + 1) → w (m + 1) ≠ w l := by
+    intro m hmJ heq
+    by_cases hml : (m + 1) % k = l % k
+    · have h1m : (1 : ℕ) % k = 1 := Nat.mod_eq_of_lt (by omega)
+      have e1 : (m + 1) % k = (m % k + 1) % k := by rw [Nat.add_mod, h1m]
+      have hA : (m % k + 1) % k = l % k := by rw [← e1]; exact hml
+      have hkey : m % k = (l + k - 1) % k := by
+        have hB := Nat.ModEq.add_right (k - 1) hA
+        rw [show m % k + 1 + (k - 1) = m % k + k by omega] at hB
+        have hB' : (m % k + k) % k = (l + (k - 1)) % k := hB
+        rw [Nat.add_mod_right, Nat.mod_mod] at hB'
+        have heq1 : l + (k - 1) = l + k - 1 := by omega
+        rwa [heq1] at hB'
+      have hJ1 : s.J ((l + k - 1) % k) (l % k) := by
+        have hm := hjmod m (m + 1)
+        rw [hkey, hml] at hm
+        exact hm.symm ▸ hmJ
+      have hJ2 : s.J (l % k) ((l + k - 1) % k) := hJs _ _ ▸ hJ1
+      have hJ3 : s.J l ((l + k - 1) % k) := by
+        have hm := hjmod l ((l + k - 1) % k)
+        rw [Nat.mod_mod] at hm
+        rw [← hm]
+        exact hJ2
+      exact hJ ((l + k - 1) % k) hJ3
+    · have h1 : w ((m + 1) % k) ≠ w (l % k) := hinj _ _ (Nat.mod_lt _ (by omega))
+        (Nat.mod_lt l (by omega)) hml
+      apply h1
+      rw [pm (m + 1), pm l]
+      exact heq
+  have hcong : setSum {i | i < s.k ∧ s.J i (i + 1)}
+      (fun i => cstab - dist (wwDefor_p31 (w l) (w i) t)
+        (wwDefor_p31 (w l) (w (i + 1)) t))
+      = setSum {i | i < s.k ∧ s.J i (i + 1)}
+        (fun i => cstab - dist (w i) (w (i + 1))) := by
+    refine setSum_congr_p31 fun i hi => ?_
+    obtain ⟨-, hmJ⟩ := hi
+    rw [wwDefor_apply_p31, if_neg (hne_l i hmJ), wwDefor_apply_p31,
+      if_neg (hne_l1 i hmJ)]
+  unfold dsvV39
+  rw [hcong]
 
 /-- HOL `INTERIOR_ANGLE_SAME_WW_DEFOR0` (ODXLSTC.hl:2264). -/
 theorem INTERIOR_ANGLE_SAME_WW_DEFOR0_p31 (s : ScsV39) (k l : ℕ) (w : ℕ → V3)
@@ -1130,8 +1399,10 @@ theorem INTERIOR_ANGLE_SAME_WW_DEFOR0_p31 (s : ScsV39) (k l : ℕ) (w : ℕ → 
       (wwDefor_p31 (w l) (w (l % k)) t)
       = interiorAngle1 0 FF (w (l % k)) := by
   sorry
-  -- NEEDS: `CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS`, `ITER_CARD_MINUS1_EQ_IVS_RN1`,
-  -- `VV_SUC_EQ_RHO_NODE_PRIME`, `LOFA_IMP_DIS_ELMS23`, `AZIM_SCALE_ALL`.
+  -- NEEDS (still): `CONVEX_LOFA_IMP_INANGLE_EQ_AZIM_IVS`,
+  -- `ITER_CARD_MINUS1_EQ_IVS_RN1`, `VV_SUC_EQ_RHO_NODE_PRIME`,
+  -- `LOFA_IMP_DIS_ELMS23`, `AZIM_SCALE_ALL` — root blocker the `LocalFan`
+  -- stub (`True`, LocalAuto1.lean:138); azim scale lemma unported.
 
 /-- HOL `INTERIOR_ANGLE_SAME_WW_DEFOR1` (ODXLSTC.hl:2359): the iterated
 rho_node1 version. -/
@@ -1148,28 +1419,32 @@ theorem INTERIOR_ANGLE_SAME_WW_DEFOR1_p31 (s : ScsV39) (k l i : ℕ) (w : ℕ �
         (wwDefor_p31 (w l) (w (l % k)) t))
       = interiorAngle1 0 FF ((rhoNode1 FF)^[i] (w (l % k))) := by
   sorry
-  -- NEEDS: same kit as INTERIOR_ANGLE_SAME_WW_DEFOR0_p31 plus
+  -- NEEDS (still): same kit as INTERIOR_ANGLE_SAME_WW_DEFOR0_p31 plus
   -- `LOCAL_FAN_ITER_RHO_NODE_IN_V` and the `i = 1 / i = k-1 / interior`
-  -- trichotomy.
+  -- trichotomy (LocalFan stub `True`, LocalAuto1.lean:138).
 
 /-- HOL `TAUSTAR_WW_DEFOR` (ODXLSTC.hl:2557): ZLZTHIC + MHAEYJN imply the
 taustar decrease. -/
 theorem TAUSTAR_WW_DEFOR_p31 (hz : ZLZTHIC_concl_p31) (_hm : MHAEYJN_concl_p31) :
     TAUSTAR_WW_DEFOR_concl_p31 := by
   sorry
-  -- NEEDS: CARD_FF_EQ_WW_DEFORMATION_p31, DSV_WW_DEFOR_EQ_p31,
-  -- `SUM_AZIM_EQ_ANGLE_LE4`, INTERIOR_ANGLE_SAME_WW_DEFOR{0,1}_p31,
-  -- rho_fun_decreasing_p31, `INTERIOR_ANGLE1_POS`.
+  -- NEEDS (still): CARD_FF_EQ_WW_DEFORMATION_p31, DSV_WW_DEFOR_EQ_p31
+  -- (proved above), `SUM_AZIM_EQ_ANGLE_LE4` (unported; LocalAuto12/18
+  -- document the gap — only the `_FUN_p18` variant exists),
+  -- INTERIOR_ANGLE_SAME_WW_DEFOR{0,1}_p31 (still `sorry`), and
+  -- `INTERIOR_ANGLE1_POS` — chain-blocked by the `LocalFan` stub
+  -- (`True`, LocalAuto1.lean:138).
 
 /-- HOL `ODXLSTCv2` (ODXLSTC.hl:2692): ZLZTHIC + MHAEYJN imply the
 contradiction ODXLSTCv2_concl. -/
 theorem ODXLSTCv2_p31 (hz : ZLZTHIC_concl_p31) (_hm : MHAEYJN_concl_p31) :
     ODXLSTCv2_concl_p31 := by
   sorry
-  -- NEEDS: WW_DEFORMATION_CONVEX_LOCAL_FAN_p31 + TAUSTAR_WW_DEFOR_p31 +
-  -- DEFORMATION_DIST_LE_ALL_COM_p31 / DEFORMATION_DIST_LE_BLL_COM_p31 /
-  -- DEFORMATION_IN_BALL_ANNULUS_p31 (all present above) composed into the
-  -- BBs-viability contradiction.
+  -- NEEDS (still): WW_DEFORMATION_CONVEX_LOCAL_FAN_p31 + TAUSTAR_WW_DEFOR_p31
+  -- (both still `sorry` above); DEFORMATION_DIST_LE_ALL_COM_p31 /
+  -- DEFORMATION_DIST_LE_BLL_COM_p31 / DEFORMATION_IN_BALL_ANNULUS_p31 (all
+  -- proved above) are ready to be composed into the BBs-viability
+  -- contradiction once the two wrappers land.
 
 /-- HOL `GENERIC_WW_DEFOR_RHO_NODE1` (ODXLSTC.hl:1126): the `rho_node1`
 transfer for the outgoing edge dart under `local_fan`. -/
@@ -1180,9 +1455,10 @@ theorem GENERIC_WW_DEFOR_RHO_NODE1_p31 {V : Set V3} {E : Set (Set V3)}
     rhoNode1 ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
         (wwDefor_p31 w1 v t) = rhoNode1 FF v := by
   sorry
-  -- NEEDS: WW_DEFOR_RHO_NODE1_p31 via GENERIC_HYPOTHESIS_WW_DEFOR_p31 plus
-  -- `IVS_RHO_NODE1_DETE`, `DETER_RHO_NODE`, `LOFA_IMP_EE_TWO_ELMS_INS_ND`,
-  -- `LOFA_CARD_EE_V_2` (blocked by the LocalFan registry stub).
+  -- NEEDS (still): WW_DEFOR_RHO_NODE1_p31 via GENERIC_HYPOTHESIS_WW_DEFOR_p31
+  -- plus `IVS_RHO_NODE1_DETE`, `DETER_RHO_NODE`, `LOFA_IMP_EE_TWO_ELMS_INS_ND`,
+  -- `LOFA_CARD_EE_V_2` — root blocker the `LocalFan` stub (`True`,
+  -- LocalAuto1.lean:138).
 
 /-- HOL `WW_DEFOR_ALPHA3` (ODXLSTC.hl:1144): the `ivs` choice at the deformed
 point is `(1 - t) % w1` for the outgoing edge case. -/
@@ -1194,8 +1470,9 @@ theorem WW_DEFOR_ALPHA3_p31 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)
         (fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
       = (1 - t) • w1 := by
   sorry
-  -- NEEDS: `Hypermap_and_fan.CHOICE_LEMMA` + GENERIC_HYPOTHESIS kit +
-  -- `FST_EQ_IF_SAME_SND` (blocked by the LocalFan registry stub).
+  -- NEEDS (still): `Hypermap_and_fan.CHOICE_LEMMA` + GENERIC_HYPOTHESIS kit +
+  -- `FST_EQ_IF_SAME_SND` — root blocker the `LocalFan` stub (`True`,
+  -- LocalAuto1.lean:138).
 
 /-- HOL `GENERIC_WW_DEFOR_RHO_NODE2` (ODXLSTC.hl:1317): the `rho_node1` at
 the deformed point is `(1 - t) % w1` for the incoming edge case. -/
@@ -1206,5 +1483,6 @@ theorem GENERIC_WW_DEFOR_RHO_NODE2_p31 {V : Set V3} {E : Set (Set V3)}
     rhoNode1 ((fun uv => (wwDefor_p31 w1 uv.1 t, wwDefor_p31 w1 uv.2 t)) '' FF)
         (wwDefor_p31 w1 v t) = (1 - t) • w1 := by
   sorry
-  -- NEEDS: same kit as WW_DEFOR_ALPHA3_p31 (mirror case, `CHOICE_LEMMA` +
-  -- `DETER_RHO_NODE`); blocked by the LocalFan registry stub.
+  -- NEEDS (still): same kit as WW_DEFOR_ALPHA3_p31 (mirror case,
+  -- `CHOICE_LEMMA` + `DETER_RHO_NODE`) — root blocker the `LocalFan` stub
+  -- (`True`, LocalAuto1.lean:138).
