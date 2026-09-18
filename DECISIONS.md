@@ -3,6 +3,32 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-09-17 — main 分支允许携带 sorry 债务（原"main 零 sorry"纪律放宽）
+
+**变更**：原纪律"main 上除 `Statement.lean` sanctioned 占位外零 sorry"
+（2026-09-13 已放宽为"在制骨架 sorry 可短暂存在"）正式修订为——
+**main 允许携带 sorry 债务，债务以 `DEBT.md`（由 `lean/scripts/debt_ledger.py`
+生成）为唯一权威刻度**。wip/auto-packing（packing 25 模块 + local 39 模块，
+64 模块骨架）已合入 main（`aad4fb35`）。**已向人类汇报并获批准**
+（2026-09-17 会话，用户原话："我考虑去掉 main 不能有 sorry 这个限制"）。
+
+**理由**：
+
+- packing/local 骨架（64 模块、~3000 定理陈述）长期养在 wip 分支上，
+  合入代价随时间单调上升（跨模块撞名、接口漂移）；
+- 终验标准不变、只是推迟：主定理证明本体零 sorry 可达 + 公理仅标准三
+  （+ Phase 2 限定 native_decide）仍是项目终点验收条件；
+- Lean 编译器即判官：sorry 无法冒充证明，`#print axioms` 里的 `sorryAx`
+  永远可见；债务账本使"慢慢填"成为可度量的烧账过程而非口头承诺。
+
+**配套约束**：
+
+- 陈述保真审查成为唯一质量阀门：sorry 定理的**陈述**（尤其装配脊柱接口与
+  各章 capstone）必须过 `docs/statement-fidelity.md` 审查，不得随本政策放宽；
+- 每批次闭合后刷新 DEBT.md；新增未经授权的 sorry 会在 diff 中现形；
+- G4 生成的巨型案例证书文件（百万行级）暂缓合 main，按波次验收后分批合入。
+
+
 ## 2026-08-10 — 修订"禁用 native_decide"：枚举完备性计算改为限定范围 native_decide
 
 **变更**：PLAN.md §2 的"`native_decide` 禁用"修订为——**仅** tame 图枚举的

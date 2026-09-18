@@ -13,8 +13,8 @@
 > QITNPEA_3725403817（964,984 叶，2775 BBTreeG shards）内核构建中（86%，2379/2775）；
 > 封闭 atan Taylor 阶 1024→128 固化（四档验证全过，`1db69bd8`，内核成本 ~8x↓）；
 > 5490182221 全量 stage-a（360 chunk 数据模式）运行中（175/360）**。
-> 政策变更（2026-09-17 用户批准）：main 允许携带 sorry 债务，待 G4 两线收工后执行
-> 合并计划（债务账本工具 → 合 wip/auto-packing 进 main → 文档同步）。
+> 政策变更（2026-09-17 用户批准，已执行 2026-09-18）：main 允许携带 sorry 债务，
+> wip/auto-packing 已合入 main（`aad4fb35`），债务刻度 = `DEBT.md`（基线 2400）。
 
 图例：✅ 完成并验证 / 🟡 进行中 / ⬜ 未启动。完成度为行数或条目数口径的粗略估计。
 
@@ -73,7 +73,7 @@
   - [x] **FillParams 参数填充工具链（2026-09-14，`0588df2`）**：Lean 编译态逐叶算 sqrt mantissa（零镜像失真）+ (N,out) 阶梯 + 279 叶小样端到端绿；封闭 atan 参数高 Taylor 阶 trick（阶数后经实测下调，见下）
   - [x] **FillParams stage-a 分片并行化（2026-09-15，wip/g4-emit）**：单体驱动（354MB/96万叶数组字面量）elaboration 不可扩展（11.5h 未果）→ 改造为 `--stage-a-shards=K` 连续切块小驱动 + `runMain` argv 派发（无参走阶梯 / `N out` 钉死单点）+ `stagea_merge.py`（全局 rung 裁定 + STALE 补算 + 全局索引合并）；256 chunk × 64 路并行
   - [x] **repair_leaves.py 叶修复回路（`85f5ae7`）**：编译态逐叶扫描 → 失败叶二分加深（splitOK 对任意细化保持）→ 修复证书
-  - [ ] 现存 16 证书收尾：已闭合 5 份（另加早期 2 小案共 7 案例）；波1 sqrt4/atan7 三份——**QITNPEA_3725403817（964,984 叶 = 964,792 + 192 修复衍生，2775 BBTreeG shards）内核构建中（2026-09-18：2379/2775 片 ~86%，稳定 ~48 片/小时无中断；期间遭 SIGKILL 两次均由 detached runner 自动续跑；09-16 晚曾发限流槽位死锁——mkdir 槽位被 SIGKILL 泄漏致全员空转 ~18h，已换 flock 方案根治并恢复）**；**封闭 atan Taylor 阶 1024→128 已固化（`1db69bd8`：5490182221 两个 chunk 在 N=64/128/256/1024 四档 3762 叶全过、rung 不变，内核 decide 成本 ~1/N，~8x 提速）**；5490182221（135万叶）全量 stage-a 运行中（360 chunk 数据模式 × 24 路，N=128，已完成 175/360，setsid runner 自动补缺）；2570626711（190万叶）stage-a 数据已备货；波2 disj+sqrt 家族 6 份（79~83 sqrt，FillParams 待扩 disj）；末位 2 份 3112-sqrt 怪物（需参数共享优化）
+  - [ ] 现存 16 证书收尾：已闭合 6 份（另加早期 2 小案共 8 案例）；波1 sqrt4/atan7 三份——**QITNPEA_3725403817 已闭合（2026-09-18，`184d4a86`：964,984 叶 = 964,792 + 192 修复衍生，2775 BBTreeG shards，11,441 jobs，根 decide 180s，公理标准三）**；**封闭 atan Taylor 阶 1024→128 已固化（`1db69bd8`：四档 3762 叶全过、rung 不变，内核 decide 成本 ~1/N，~8x 提速）**；5490182221（135万叶）stage-a 356/360 完成（全局 rung (12,-64)），4 chunk 结构性失败叶（7491 个）repair 进行中，随后 params 合并 → --bbg → 构建；2570626711（190万叶）stage-a 数据已备货；波2 disj+sqrt 家族 6 份（79~83 sqrt，FillParams 待扩 disj）；末位 2 份 3112-sqrt 怪物（需参数共享优化）
   - [ ] 证书量产：145 个已闭合案例需 bb_arb `--cert` 重跑出证书（机时 1-3 天；9893763499 案例 bb_arb 失控吐 117GB 日志已记录）
   - [ ] G4 粘合收尾：155 定义闭包的 Lean 定义 + 每案例 `evalReal e ρ = 展开式 ρ` 对应引理（依赖 packing 章定义，**主体剩余**）
   - 规格：`pipeline/interval/arb-layer.md` §3/§4
@@ -170,13 +170,13 @@ P1-P5 分段流水攻克）。**polyhedron.hl 100% 达成（71/71 定理零 sorr
 
 ## 整体估计
 
-- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 **G4 已百万叶级量产**（2026-09-15：**7 案例端到端进内核，最大 1,670,962 叶 5h19m**；stage-a 分片+数据模式、种子 repair、params 合并全链落地；2026-09-17：首个 sqrt/atan 全量案 96.5 万叶构建至 42%，封闭 atan 阶 1024→128 固化 ~8x 提速，135万叶案 stage-a 全量运行中；剩 11 证书收尾 + 145 案例证书重跑 + 155 定义粘合）。
+- **计算三线**（Phase 2/3/4）：图枚举 ✅100%；LP ✅100%；非线性求解层 **160/176（91%）**（68 y + 92 prep），残余 16 条已列清单；内核闭合 **G4 已百万叶级量产**（**8 案例端到端进内核**：最大 1,670,962 叶 5h19m；2026-09-18 首个 sqrt/atan 全量案 QITNPEA_3725403817 闭合——96.5 万叶 2775 分片，公理标准三，`184d4a86`；封闭 atan 阶 1024→128 固化 ~8x 提速；5490182221 stage-a 356/360 完成、4 chunk 结构性失败叶修复中；剩 10 证书收尾 + 145 案例证书重跑 + 155 定义粘合）。
 - **文字证明**（Phase 5，占全项目工作量 60%+）：已完成 hypermap + fan + topology + **planarity 100%** + **Conforming 100%** + **polyhedron 100%（2026-09-14）** ≈ **61.8k 行 HOL 源全证**；**packing 99.4k 骨架 100% 陈述（2026-09-15，25 模块 20.5k 行 Lean / 920 sorry 填证期）**；**local 174.7k 骨架 100% 陈述（2026-09-16，39 模块 / 1793 sorry 填证期）**——至此全书主体三章陈述层齐备，剩余：填证 2713 sorry + trigonometry 10.5k / volume 1.1k / fan 残余。**按行数口径 ~17%+全部骨架**；考虑已完成部分含大量最难地基（hypermap 构造、体积测度层从零建），而 local/packing 多为模式重复引理工厂，**工作量口径估计 35-45%**（opencode 侧按骨架完成口径自估 ~75%，口径不同：其将骨架陈述计入完成度）。按 packing 实测吞吐（99.4k 行骨架 2 天）线性外推，剩余填证约需 30-45 天连轴。
   另：**体积/测度论层已从零建成**（`Kepler/Geom/*.lean`，~3.4k 行，含 HOL Light 多元库的球面立体角链），这是原计划里没算到的关键前置，现已就位，后续 Packing/Local 可复用。
 - **全项目粗略完成度：~55%（packing + local 骨架全部就位，填证期全面开启）**。
 
 ## 验证纪律
 
-1. main 分支：`lake build Kepler` 全绿 + 新定理 `#print axioms` 仅 `[propext, Classical.choice, Quot.sound]`；历史上 main 零 sorry（Statement.lean:111 与 Graphs.Cert* 例外），2026-09-13 起接班 agent 改为 main 直推模式，允许在制骨架 sorry 短暂存在于 main，批次闭合后清零；
+1. main 分支：`lake build Kepler` 全绿；**2026-09-17 政策变更（DECISIONS.md）：main 允许携带 sorry 债务，债务刻度 = `DEBT.md`（`lean/scripts/debt_ledger.py` 生成，基线 2400）**；终验标准不变只是推迟——项目终点要求主定理证明本体零 sorry 可达 + `#print axioms` 仅 `[propext, Classical.choice, Quot.sound]`（+ Phase 2 限定 native_decide）；陈述保真审查（`docs/statement-fidelity.md`）是唯一质量阀门，不随本政策放宽；
 2. 批次闭合标准：该批全部定理零 sorry + 根模块构建绿 + 陈述保真抽查；
 3. 自动化 harness 的提交由机械闸背书 + 主 agent 审计兜底；人工派工的提交由主 agent 逐块验收。
