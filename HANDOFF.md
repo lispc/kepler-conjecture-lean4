@@ -200,3 +200,17 @@ tail -20 /tmp/auto_pipeline.log # 流水线状态（若在跑）
 - **多文件并行架构（成熟）**：7 条 `git worktree` lane（kepler-p1..p7，`.lake` 用 `cp -al` 硬链接共享）+ 主 agent 中央编排。教训三条：① lane 收割后**立即** `reset --hard` 同步，否则 lane 重置会抹掉未提交成果（PolyAuto2 FAN7 被抹 3 次）；② 硬链接 .lake 的 trace 会互相污染——「phantom error/幻影绿」都源于此，判定编译状态必须 `rm <module>.{olean,ilean,trace}` 后重来；③ 巨证拆解到「一个 worker 一个引理」粒度（flvns_p1..p5 + 组装）比整段交付成功率高得多。
 - **编码纪律**：FaceOf 必须 OPEN 线段（Brøndsted）；闭线段编码退化（非空⇒f=s）曾诱发 6 枚「爆炸式空洞证明」，已全部诚实重做。自动提交的 cron 刷新**不得**搬动 PolyAuto*/工作文件到 main（曾与 wip 合并产生 add/add 冲突）。
 - **下一目标**：`packing/`（~28k 行，Rogers/OXLZLEZ3/REUHADY…）→ `local/`（~30k 行）→ assembly。Polytope 基层与测度/体积层可直接复用。
+
+## 2026-09-18 LocalAuto35/36 证明完成波次（单 lane 工人）
+
+- **LocalAuto35（QKNVMLB）**：36 → 22 sorry（+14 证明）。已闭合：SCS_K_PRIME_CASE_4/5/6（CASE_DIAGONAL_MOD 残差演算，interval_cases+omega）、SCS_K_PRIME_LE_GE、W_EW_K_SCS_ADD_P（k'≡q 残差链）、SCS_J_DIAG_EQ、SCS_J_PRIME_SUBSET_SCS_J、INTER_SLICE_SCS_EMPTY1/EMPTY、CARD_V_EQ_SCS_K（range_periodic_image_p23+VV_INJ）、DIST_DIAG_LE_CSTAB（ear-flag→bm-override=cstab）、SCS_SLICE_SYM、IS_SCS_NOT_COLLINEAR_BBs_CASE_LE_PRIME_3（LA4 NONPARALLEL_BALL_ANNULUS）、DIAG_NOT_IN_EDGES（hd2+injectivity，纯残差）。新增 import：LocalAuto4/23。
+- **LocalAuto36（XWITCCN）**：48 → 46（+2 定义-shim）：wedgeInFanGt_p36:=wedgeInFanGt_p3、slicev_p36:=slicev_p8（LA2 不可导入的替代渲染；merge 时去重）。另新增 import LocalAuto3/8。
+- **⚠️ 主树编译被跨 lane 重复名阻断**：SphereKit.lean（9-17 BODY-FIX）新增公开 `Kepler.Text.deltaX4/deltaX5`，与 LocalAuto1:766/776 的旧副本在 import-合并层冲突——任何同时 import Polytope 闭包（经 PlanarityAuto16→PA20→SphereKit）与 LA1 的文件都会触发 `environment already contains 'Kepler.Text.deltaX5'`。修复 = LocalAuto1 删除这两份旧副本（SphereKit 版为 canonical）。LA1 自身单独编译 0 error；沙盒（/tmp/opencode/sbox，LA1 副本已 private 化）内两文件 0 error。轮询脚本 /tmp/opencode/probe_status.log 持续监测。
+- **LA36 陈述层疑点（merge 前需裁定，未动陈述）**：① TAUSTAR_EQ_TAU_STAR_4/5/6/4_3/5_sqrt8/4_sqrt8/5_pro_cs 的 `hs1 : s1 = scsToStableSy_p23 s` 把记录 d 槽定为 0，而 HOL 源携带 `scs_d_v39 s`（dTame 4=0.206 等），与 dsv_v39=s.d 项相差 0.206——陈述疑假，需 s1.d:=s.d 或改写；② IN_NOT_EMPTY_CASE_3（k=3）误用含 CONDITION2 的 B_SY1_p4，HOL 的 k=3 body 无 CONDITION2（应采 LA24 的 CONDITION2-free body）。
+- 已填 16 枚全部沙盒 0-error 验证；剩余 sorry 的诚实 NEEDS 注记未动。
+
+- **LocalAuto12/14/17 填充波（本轮，沙盒 0-error 验证 /tmp/opencode/lakesnap）**：
+  - **LocalAuto12（YXIONXL）**：12 → 1 sorry（+11 证明）。全链 prop_equ 不变性闭合：PROP_EQU_IS_SCS/TRANS_BBINDEX_ID/PROP_EQU_IS_SCS-ncard（残差双射 y↦(y+k−i%k)%k + Set.InjOn.ncard_congr）、PRO_EQU_IS_EAR（3-cycle J-singleton + PRO_EQU_ID1 逆推；新增私件 PRO_EQU_IS_EAR_FWD/J_shift3/propEqu_comp_eq）、PRO_EQU_DSV_EQ（setSum 重索引 setSum_image_bij）、PRO_EQU_TAUSTAR_EQ（k≤3 tau3 循环对称；k>3 直接用 TRANS_V/E/FF range-等式改写——HOL 的 SUM_AZIM_EQ_ANGLE_LE4 绕路不必要）、TRANS_SCS_BBPRIME/PROP_EQU_EQ_BBPRIME/TRANS_IMAGE_BBINDEX_EQ/TRANS_BBINDEX_MIN_EQ/TRANS_BBPRIME2_SUBSET/TRANS_MMS_SUBSET/YXIONXL3。新增 kit：periodic2_shift_pair/dist_shift_pair/psi_key/mod_pair_roundtrip/mod_pair_cancel(')/setSum_image_bij。仅剩 sgtrnaf_p12 锚（ blockade：unadorned_MMs_p27/UXCKFPE2 仍 sorry，LA27 lane）。
+  - **LocalAuto17（EYYPQDW+YRTAFYH+deformation）**：13 → 11 sorry（+2：EYYPQDW_SCALAR_POS_p17（cross3 线性 kit+lagrange+field_simp）、lemma_1_p17（AFF_GE_1_1_0 + scale-invariance，含 x'=0 情形））。新增 `_p17` fill-kit：cross3_smul/add/sub/self/anticomm/X_smul、dot smul/add/comm 桥（后续 NORMV3/NORM_V3_V1/EYYPQDW_p17/lemma_2 的下一波基础）。
+  - **LocalAuto14（ZLZTHIC）**：39 → 39（未动；azim 连续性/cycle 序/deformation kit 的命名 blocker 均未落地，维持 NEEDS）。
+  - **⚠️ 主树仍被 deltaX4/deltaX5 双份阻断**（SphereKit-canonical vs LocalAuto1 旧副本；LA1.olean 17:17 仍未重建）——LA12/17 已在沙盒 0-error，主树修复（LA1 删两份旧副本）后即可合入。沙盒：/tmp/opencode/lakesnap。
