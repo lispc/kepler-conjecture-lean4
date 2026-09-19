@@ -37,15 +37,16 @@ FILE MAP
     `IMP_SUC_MOD_EQ1_p25`, `IMP_SUC_MOD_EQ_p25`, `CHOOSE_MOD_3_p25` (all
     proved), `SMALL_BALL_ANNULUS_6_p25` / `_sqrt8` / `_3` (proved),
     `CS_ADJ_p25` (proved, definitional), `ZITHLQN_CASE_3_p25` (proved; the
-    csAdj value-table exemplar for the other cases),
-    `ZITHLQN_CASE_4_p25`, `ZITHLQN_CASE_5_p25`, `ZITHLQN_CASE_6_p25`,
-    `ZITHLQN_CASE_5_pro_cs_p25`, `ZITHLQN_CASE_4_3_p25`,
-    `ZITHLQN_CASE_5_sqrt8_p25`, `ZITHLQN_CASE_4_pro_cs_p25` (sorry
-    giants), `exists_vv3_p25` (proved), `ZITHLQN_p25` (proved; re-export
-    of the LocalAuto1 registry arrow `ZITHLQN_concl`).
+    csAdj value-table exemplar), `ZITHLQN_CASE_4_p25`, `ZITHLQN_CASE_5_p25`,
+    `ZITHLQN_CASE_6_p25`, `ZITHLQN_CASE_4_3_p25`, `ZITHLQN_CASE_5_sqrt8_p25`
+    (all proved via the generic `bbsV39_csAdj_cycle_p25` value-table kit),
+    `ZITHLQN_CASE_5_pro_cs_p25`, `ZITHLQN_CASE_4_pro_cs_p25` (proved via the
+    `bbsV39_aPro_cycle_p25` kit), `exists_vv3_p25` (proved), `ZITHLQN_p25`
+    (proved; re-export of the LocalAuto1 registry arrow `ZITHLQN_concl`).
   Section B (VASYYAU): `WGDHPPI_p25` (re-export of LocalAuto1
     `WGDHPPI_concl`), `DIST_V_IN_BB_LE_C_p25` (proved),
-    `arclength_lt_1553_p25` (sorry), `YEBWJNG_p25` (re-export),
+    `arclength_lt_1553_p25` (proved: atn2 case splits + tan double-angle +
+    exact decimal norm_num), `YEBWJNG_p25` (re-export),
     `NOT_MOD_4_CASES_p25` / `_3` (proved), `SCS_STR_CASES_4_p25`
     (proved), the registry defs `NEHXMWH_concl_p25` / `NEHXMWH1_concl_p25`
     / `TUAPYYU_concl_p25` with `TUAPYYU1_p25`, `TUAPYYU_p25`,
@@ -492,9 +493,161 @@ theorem ZITHLQN_CASE_3_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
       simp only [mkUnadornedV39, csAdj, hi, hj, he]
       norm_num
 
-/-- HOL `ZITHLQN_CASE_4` (ZITHLQN.hl:1029). NEEDS: the csAdj value table
-on the 16 residue pairs (method of `ZITHLQN_CASE_3_p25`) plus the
-`ConvexLocalFan` transfer into the fourth `BBsV39` conjunct. -/
+/-! ### The csAdj cycle value-table kit -/
+
+/-- Two-element sets commute (used for the unordered cycle-edge pairs). -/
+theorem setPair_comm_p25 {α : Type u} (x y : α) : ({x, y} : Set α) = {y, x} := by
+  ext z
+  simp
+  tauto
+
+/-- Successor residues differ once `2 ≤ k`. -/
+theorem succ_mod_ne_p25 {k : ℕ} (hk : 2 ≤ k) (n : ℕ) : ¬(n % k = (n + 1) % k) := by
+  have hr : n % k < k := Nat.mod_lt n (by omega)
+  rcases Nat.lt_or_ge (n % k) (k - 1) with h | h
+  · have h2 : n % k + 1 < k := by omega
+    rw [← Nat.mod_add_mod n k 1, Nat.mod_eq_of_lt h2]
+    omega
+  · have h2 : n % k + 1 = k := by omega
+    rw [← Nat.mod_add_mod n k 1, h2, Nat.mod_self]
+    omega
+
+/-- An adjacent-residue pair of a periodic cycle is a cycle edge. -/
+theorem vvEdge_mem_p25 {k : ℕ} (hk : 0 < k) {vv : ℕ → V3} {E : Set (Set V3)}
+    (hper : ∀ i, vv (i % k) = vv i)
+    (hE : (Set.range fun i => {vv i, vv (i + 1)} : Set (Set V3)) = E)
+    {i j : ℕ} (h : j % k = (i + 1) % k ∨ (j + 1) % k = i % k) :
+    ({vv i, vv j} : Set V3) ∈ E := by
+  rcases h with h | h
+  · have h1 : (i % k + 1) % k = (i + 1) % k := Nat.mod_add_mod i k 1
+    have hvj : vv j = vv (i % k + 1) := by
+      rw [← hper j, h, ← h1, hper]
+    rw [← hper i, hvj, ← hE]
+    exact Set.mem_range.mpr ⟨i % k, rfl⟩
+  · have h1 : (j % k + 1) % k = (j + 1) % k := Nat.mod_add_mod j k 1
+    have hvi : vv i = vv (j % k + 1) := by
+      rw [← hper i, ← h, ← h1, hper]
+    rw [hvi, setPair_comm_p25, ← hper j, ← hE]
+    exact Set.mem_range.mpr ⟨j % k, rfl⟩
+
+/-- A non-adjacent, non-diagonal residue pair of a periodic cycle is not an
+edge. -/
+theorem vvEdge_notMem_p25 {k : ℕ} (hk : 2 ≤ k) {vv : ℕ → V3} {E : Set (Set V3)}
+    (hper : ∀ i, vv (i % k) = vv i)
+    (hinj : ∀ i j, vv i = vv j → i % k = j % k)
+    (hE : (Set.range fun i => {vv i, vv (i + 1)} : Set (Set V3)) = E)
+    {i j : ℕ} (hns : ¬(i % k = j % k))
+    (hna : ¬(j % k = (i + 1) % k ∨ (j + 1) % k = i % k)) :
+    ({vv i, vv j} : Set V3) ∉ E := by
+  intro hm
+  rw [← hE] at hm
+  obtain ⟨n, hn⟩ := Set.mem_range.mp hm
+  have hvne : vv i ≠ vv j := fun hcon => hns (hinj i j hcon)
+  have m1 : vv n ∈ ({vv i, vv j} : Set V3) := by
+    rw [← hn]; simp
+  have m2 : vv (n + 1) ∈ ({vv i, vv j} : Set V3) := by
+    rw [← hn]; simp
+  rcases Set.mem_insert_iff.mp m1 with e1 | e1 <;>
+    rcases Set.mem_insert_iff.mp m2 with e2 | e2
+  · exact succ_mod_ne_p25 hk n (hinj n (n + 1) (e1.trans e2.symm))
+  · exfalso
+    apply hna
+    have r1 : n % k = i % k := hinj n i e1
+    have r2 : (n + 1) % k = j % k := hinj (n + 1) j e2
+    have h1 : (n % k + 1) % k = (n + 1) % k := Nat.mod_add_mod n k 1
+    have h2 : (i % k + 1) % k = (i + 1) % k := Nat.mod_add_mod i k 1
+    rw [r1] at h1
+    omega
+  · exfalso
+    apply hna
+    refine Or.inr ?_
+    have r1 : n % k = j % k := hinj n j e1
+    have r2 : (n + 1) % k = i % k := hinj (n + 1) i e2
+    have h1 : (n % k + 1) % k = (n + 1) % k := Nat.mod_add_mod n k 1
+    have h2 : (j % k + 1) % k = (j + 1) % k := Nat.mod_add_mod j k 1
+    rw [r1] at h1
+    omega
+  · exact succ_mod_ne_p25 hk n (hinj (n + 1) n (e2.trans e1.symm)).symm
+
+/-- Any two points of a ball-annulus set are at distance at most `&6`
+(the `upperbd` triangle bound). -/
+theorem dist_le_6_of_ballAnnulus_p25 {V : Set V3} (hsub : V ⊆ ballAnnulus)
+    {v w : V3} (hv : v ∈ V) (hw : w ∈ V) : dist v w ≤ 6 := by
+  obtain ⟨_, d1⟩ := ballAnnulus_norm_bounds_p25 (hsub hv)
+  obtain ⟨_, d2⟩ := ballAnnulus_norm_bounds_p25 (hsub hw)
+  calc dist v w ≤ dist v 0 + dist 0 w := dist_triangle v 0 w
+    _ = dist v 0 + dist w 0 := by rw [dist_comm 0 w]
+    _ ≤ 2 * h0 + 2 * h0 := by linarith
+    _ ≤ 6 := by norm_num [h0]
+
+/-- The generic csAdj cycle value table over an unadorned system with
+`4 ≤ k ≤ 6`: same residues give `0/0`, adjacent residues are cycle edges
+realising the `(2, 2*h0)` band, and everything else is a non-edge realising
+the `(a2, b2)` band with `b2 = 6`. Method of `ZITHLQN_CASE_3_p25`. -/
+theorem bbsV39_csAdj_cycle_p25 (k : ℕ) (d a2 b2 : ℝ) (s : ScsV39) (vv : ℕ → V3)
+    (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (hs : s = mkUnadornedV39 k d (csAdj k 2 a2) (csAdj k (2 * h0) b2))
+    (hk4 : 4 ≤ k) (_hk6 : k ≤ 6)
+    (hper : ∀ i, vv (i % k) = vv i)
+    (hinj : ∀ i j, vv i = vv j → i % k = j % k)
+    (hV : (Set.range vv : Set V3) = V)
+    (hE : (Set.range fun i => {vv i, vv (i + 1)} : Set (Set V3)) = E)
+    (hFF : (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF)
+    (hlf : ConvexLocalFan V E FF)
+    (hsub : V ⊆ ballAnnulus)
+    (hd : ∀ v w : V3, ({v, w} : Set V3) ∈ E → 2 ≤ dist v w ∧ dist v w ≤ 2 * h0)
+    (hlow : ∀ v w : V3, v ≠ w → v ∈ V → w ∈ V → ({v, w} : Set V3) ∉ E → a2 ≤ dist v w)
+    (hb2 : b2 = 6) :
+    BBsV39 s vv := by
+  subst hs
+  simp only [BBsV39, mkUnadornedV39]
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [hV]; exact hsub
+  · intro i
+    have he : (i + k) % k = i % k := Nat.add_mod_right i k
+    rw [← hper (i + k), he, hper]
+  · intro i j
+    by_cases hsame : i % k = j % k
+    · have hvE : vv i = vv j := by rw [← hper i, ← hper j, hsame]
+      have av : csAdj k 2 a2 i j = 0 := by simp only [csAdj, hsame, ↓reduceIte]
+      have bv : csAdj k (2 * h0) b2 i j = 0 := by simp only [csAdj, hsame, ↓reduceIte]
+      rw [av, bv, hvE, dist_self]
+      exact ⟨le_refl _, le_refl _⟩
+    · by_cases hadj : (j % k = (i + 1) % k ∨ (j + 1) % k = i % k)
+      · have hemem : ({vv i, vv j} : Set V3) ∈ E :=
+          vvEdge_mem_p25 (by omega) hper hE hadj
+        have hdb := hd (vv i) (vv j) hemem
+        have av : csAdj k 2 a2 i j = 2 := by
+          simp only [csAdj, hsame, ↓reduceIte]
+          exact if_pos hadj
+        have bv : csAdj k (2 * h0) b2 i j = 2 * h0 := by
+          simp only [csAdj, hsame, ↓reduceIte]
+          exact if_pos hadj
+        rw [av, bv]; exact hdb
+      · have hne' : vv i ≠ vv j := fun hcon => hsame (hinj i j hcon)
+        have hmem : ({vv i, vv j} : Set V3) ∉ E :=
+          vvEdge_notMem_p25 (by omega) hper hinj hE hsame hadj
+        have hv : vv i ∈ V := by rw [← hV]; exact Set.mem_range.mpr ⟨i, rfl⟩
+        have hw : vv j ∈ V := by rw [← hV]; exact Set.mem_range.mpr ⟨j, rfl⟩
+        have hlo := hlow (vv i) (vv j) hne' hv hw hmem
+        have hhi : dist (vv i) (vv j) ≤ 6 := dist_le_6_of_ballAnnulus_p25 hsub hv hw
+        have av : csAdj k 2 a2 i j = a2 := by
+          simp only [csAdj, hsame, ↓reduceIte]
+          exact if_neg hadj
+        have bv : csAdj k (2 * h0) b2 i j = b2 := by
+          simp only [csAdj, hsame, ↓reduceIte]
+          exact if_neg hadj
+        rw [av, bv, hb2]
+        exact ⟨hlo, hhi⟩
+  · refine Or.inr ?_
+    rw [hV, hE, hFF]
+    exact hlf
+
+/-- HOL `ZITHLQN_CASE_4` (ZITHLQN.hl:1029): the csAdj value table on the 16
+residue pairs (method of `ZITHLQN_CASE_3_p25` via
+`bbsV39_csAdj_cycle_p25`), with the diagonal band `2*h0 ≤ dist ≤ &6` from
+`SMALL_BALL_ANNULUS_6_p25`'s triangle bound and the fan transfer into the
+fourth `BBsV39` conjunct. -/
 theorem ZITHLQN_CASE_4_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
     (vv : ℕ → V3) (s : ScsV39)
     (_hlf : ConvexLocalFan V E FF) (_hp : Kepler.Packing V) (_hb : V ⊆ ballAnnulus)
@@ -508,10 +661,19 @@ theorem ZITHLQN_CASE_4_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
     (_hE : (Set.range fun i => {vv i, vv (i + 1)} : Set (Set V3)) = E)
     (_hFF : (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF) :
     BBsV39 s vv := by
-  sorry
+  have hper : ∀ i, vv (i % 4) = vv i := by
+    intro i
+    have h := _hper i
+    rwa [_hc] at h
+  have hinj : ∀ i j, vv i = vv j → i % 4 = j % 4 := by
+    intro i j hij
+    have h := _hinj i j hij
+    rwa [_hc] at h
+  exact bbsV39_csAdj_cycle_p25 4 (dTame 4) (2 * h0) 6 s vv V E FF _hs (by omega) (by omega)
+    hper hinj _hV _hE _hFF _hlf _hb _hd _hne rfl
 
-/-- HOL `ZITHLQN_CASE_5` (ZITHLQN.hl:1180). NEEDS: as CASE_4, over 25
-residue pairs. -/
+/-- HOL `ZITHLQN_CASE_5` (ZITHLQN.hl:1180): as CASE_4, over the 25 residue
+pairs of the pentagon cycle. -/
 theorem ZITHLQN_CASE_5_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
     (vv : ℕ → V3) (s : ScsV39)
     (_hlf : ConvexLocalFan V E FF) (_hp : Kepler.Packing V) (_hb : V ⊆ ballAnnulus)
@@ -525,10 +687,19 @@ theorem ZITHLQN_CASE_5_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
     (_hE : (Set.range fun i => {vv i, vv (i + 1)} : Set (Set V3)) = E)
     (_hFF : (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF) :
     BBsV39 s vv := by
-  sorry
+  have hper : ∀ i, vv (i % 5) = vv i := by
+    intro i
+    have h := _hper i
+    rwa [_hc] at h
+  have hinj : ∀ i j, vv i = vv j → i % 5 = j % 5 := by
+    intro i j hij
+    have h := _hinj i j hij
+    rwa [_hc] at h
+  exact bbsV39_csAdj_cycle_p25 5 (dTame 5) (2 * h0) 6 s vv V E FF _hs (by omega) (by omega)
+    hper hinj _hV _hE _hFF _hlf _hb _hd _hne rfl
 
-/-- HOL `ZITHLQN_CASE_6` (ZITHLQN.hl:1329). NEEDS: as CASE_4, over 36
-residue pairs. -/
+/-- HOL `ZITHLQN_CASE_6` (ZITHLQN.hl:1329): as CASE_4, over the 36 residue
+pairs of the hexagon cycle. -/
 theorem ZITHLQN_CASE_6_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
     (vv : ℕ → V3) (s : ScsV39)
     (_hlf : ConvexLocalFan V E FF) (_hp : Kepler.Packing V) (_hb : V ⊆ ballAnnulus)
@@ -542,12 +713,149 @@ theorem ZITHLQN_CASE_6_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
     (_hE : (Set.range fun i => {vv i, vv (i + 1)} : Set (Set V3)) = E)
     (_hFF : (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF) :
     BBsV39 s vv := by
-  sorry
+  have hper : ∀ i, vv (i % 6) = vv i := by
+    intro i
+    have h := _hper i
+    rwa [_hc] at h
+  have hinj : ∀ i j, vv i = vv j → i % 6 = j % 6 := by
+    intro i j hij
+    have h := _hinj i j hij
+    rwa [_hc] at h
+  exact bbsV39_csAdj_cycle_p25 6 (dTame 6) (2 * h0) 6 s vv V E FF _hs (by omega) (by omega)
+    hper hinj _hV _hE _hFF _hlf _hb _hd _hne rfl
+
+/-- The generic `aPro` cycle value table (the `sInitListV39` entries 7-8
+displays): same residues give `0/0`; the `{0, 1}` residue pair is the
+exceptional `{vv 0, vv 1} = {v0, w0}` edge realising the
+`(2*h0, sqrt8)` band; other adjacent residues are cycle edges realising
+`(2, 2*h0)`; everything else is a non-edge realising `(a2, 6)`. -/
+theorem bbsV39_aPro_cycle_p25 (k : ℕ) (d a2 : ℝ) (s : ScsV39) (vv : ℕ → V3)
+    (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
+    (hs : s = mkUnadornedV39 k d (aPro_p25 k (2 * h0) 2 a2)
+      (aPro_p25 k (Real.sqrt 8) (2 * h0) 6))
+    (hk4 : 4 ≤ k)
+    (hper : ∀ i, vv (i % k) = vv i)
+    (hinj : ∀ i j, vv i = vv j → i % k = j % k)
+    (hV : (Set.range vv : Set V3) = V)
+    (hE : (Set.range fun i => {vv i, vv (i + 1)} : Set (Set V3)) = E)
+    (hFF : (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF)
+    (hlf : ConvexLocalFan V E FF)
+    (hsub : V ⊆ ballAnnulus)
+    (hd : ∀ v w : V3, ({v, w} : Set V3) ∈ E →
+      ({v, w} : Set V3) ≠ ({vv 0, vv 1} : Set V3) →
+      2 ≤ dist v w ∧ dist v w ≤ 2 * h0)
+    (hv0 : 2 * h0 ≤ dist (vv 0) (vv 1)) (hw0 : dist (vv 0) (vv 1) ≤ Real.sqrt 8)
+    (hlow : ∀ v w : V3, v ≠ w → v ∈ V → w ∈ V → ({v, w} : Set V3) ∉ E → a2 ≤ dist v w) :
+    BBsV39 s vv := by
+  subst hs
+  simp only [BBsV39, mkUnadornedV39]
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [hV]; exact hsub
+  · intro i
+    have he : (i + k) % k = i % k := Nat.add_mod_right i k
+    rw [← hper (i + k), he, hper]
+  · intro i j
+    by_cases hsame : i % k = j % k
+    · have hvE : vv i = vv j := by rw [← hper i, ← hper j, hsame]
+      have av : aPro_p25 k (2 * h0) 2 a2 i j = 0 := by
+        simp only [aPro_p25, hsame, ↓reduceIte]
+      have bv : aPro_p25 k (Real.sqrt 8) (2 * h0) 6 i j = 0 := by
+        simp only [aPro_p25, hsame, ↓reduceIte]
+      rw [av, bv, hvE, dist_self]
+      exact ⟨le_refl _, le_refl _⟩
+    · by_cases h01 : ({i % k, j % k} : Set ℕ) = {0, 1}
+      · have m1 : i % k = 0 ∨ i % k = 1 := by
+          have hm : i % k ∈ ({0, 1} : Set ℕ) := by rw [← h01]; simp
+          simp at hm
+          exact hm
+        have m2 : j % k = 0 ∨ j % k = 1 := by
+          have hm : j % k ∈ ({0, 1} : Set ℕ) := by rw [← h01]; simp
+          simp at hm
+          exact hm
+        have h0k : (0 : ℕ) % k = 0 := Nat.zero_mod k
+        have h1k : (1 : ℕ) % k = 1 := Nat.mod_eq_of_lt (by omega)
+        rcases m1 with hi0 | hi1
+        · rcases m2 with hj0 | hj1
+          · exact absurd (hi0.trans hj0.symm) hsame
+          · have hvi : vv i = vv 0 := by rw [← hper i, hi0]
+            have hvj : vv j = vv 1 := by rw [← hper j, hj1]
+            have av : aPro_p25 k (2 * h0) 2 a2 i j = 2 * h0 := by
+              simp only [aPro_p25, hsame, ↓reduceIte, h01, ↓reduceIte]
+            have bv : aPro_p25 k (Real.sqrt 8) (2 * h0) 6 i j = Real.sqrt 8 := by
+              simp only [aPro_p25, hsame, ↓reduceIte, h01, ↓reduceIte]
+            rw [av, bv, hvi, hvj]
+            exact ⟨hv0, hw0⟩
+        · rcases m2 with hj0 | hj1
+          · have hvi : vv i = vv 1 := by rw [← hper i, hi1]
+            have hvj : vv j = vv 0 := by rw [← hper j, hj0]
+            have av : aPro_p25 k (2 * h0) 2 a2 i j = 2 * h0 := by
+              simp only [aPro_p25, hsame, ↓reduceIte, h01, ↓reduceIte]
+            have bv : aPro_p25 k (Real.sqrt 8) (2 * h0) 6 i j = Real.sqrt 8 := by
+              simp only [aPro_p25, hsame, ↓reduceIte, h01, ↓reduceIte]
+            rw [av, bv, hvi, hvj, dist_comm]
+            exact ⟨hv0, hw0⟩
+          · exact absurd (hi1.trans hj1.symm) hsame
+      · by_cases hadj : (j % k = (i + 1) % k ∨ (j + 1) % k = i % k)
+        · have hemem : ({vv i, vv j} : Set V3) ∈ E :=
+            vvEdge_mem_p25 (by omega) hper hE hadj
+          have hne0 : ({vv i, vv j} : Set V3) ≠ ({vv 0, vv 1} : Set V3) := by
+            intro hc
+            apply h01
+            have q1 : vv i = vv 0 ∨ vv i = vv 1 := by
+              have hq : vv i ∈ ({vv 0, vv 1} : Set V3) := by rw [← hc]; simp
+              simp at hq
+              exact hq
+            have q2 : vv j = vv 0 ∨ vv j = vv 1 := by
+              have hq : vv j ∈ ({vv 0, vv 1} : Set V3) := by rw [← hc]; simp
+              simp at hq
+              exact hq
+            have h0k : (0 : ℕ) % k = 0 := Nat.zero_mod k
+            have h1k : (1 : ℕ) % k = 1 := Nat.mod_eq_of_lt (by omega)
+            rcases q1 with r1 | r1 <;> rcases q2 with r2 | r2
+            · exact absurd (hinj i j (r1.trans r2.symm)) hsame
+            · have i0 : i % k = 0 := by rw [hinj i 0 r1]; exact h0k
+              have j1 : j % k = 1 := by rw [hinj j 1 r2]; exact h1k
+              rw [i0, j1]
+            · have i1 : i % k = 1 := by rw [hinj i 1 r1]; exact h1k
+              have j0 : j % k = 0 := by rw [hinj j 0 r2]; exact h0k
+              rw [i1, j0, setPair_comm_p25]
+            · exact absurd (hinj i j (r1.trans r2.symm)) hsame
+          have hdb := hd (vv i) (vv j) hemem hne0
+          have av : aPro_p25 k (2 * h0) 2 a2 i j = 2 := by
+            simp only [aPro_p25, hsame, ↓reduceIte, h01, ↓reduceIte]
+            rcases hadj with h | h
+            · exact if_pos (Or.inl h)
+            · exact if_pos (Or.inr h)
+          have bv : aPro_p25 k (Real.sqrt 8) (2 * h0) 6 i j = 2 * h0 := by
+            simp only [aPro_p25, hsame, ↓reduceIte, h01, ↓reduceIte]
+            rcases hadj with h | h
+            · exact if_pos (Or.inl h)
+            · exact if_pos (Or.inr h)
+          rw [av, bv]; exact hdb
+        · have hne' : vv i ≠ vv j := fun hcon => hsame (hinj i j hcon)
+          have hmem : ({vv i, vv j} : Set V3) ∉ E :=
+            vvEdge_notMem_p25 (by omega) hper hinj hE hsame hadj
+          have hv : vv i ∈ V := by rw [← hV]; exact Set.mem_range.mpr ⟨i, rfl⟩
+          have hw : vv j ∈ V := by rw [← hV]; exact Set.mem_range.mpr ⟨j, rfl⟩
+          have hlo := hlow (vv i) (vv j) hne' hv hw hmem
+          have hhi : dist (vv i) (vv j) ≤ 6 := dist_le_6_of_ballAnnulus_p25 hsub hv hw
+          have av : aPro_p25 k (2 * h0) 2 a2 i j = a2 := by
+            simp only [aPro_p25, hsame, ↓reduceIte, h01, ↓reduceIte]
+            exact if_neg hadj
+          have bv : aPro_p25 k (Real.sqrt 8) (2 * h0) 6 i j = 6 := by
+            simp only [aPro_p25, hsame, ↓reduceIte, h01, ↓reduceIte]
+            exact if_neg hadj
+          rw [av, bv]
+          exact ⟨hlo, hhi⟩
+  · refine Or.inr ?_
+    rw [hV, hE, hFF]
+    exact hlf
 
 /-- HOL `ZITHLQN_CASE_5_pro_cs` (ZITHLQN.hl:1478): the `a_pro` pentagon
-(sInitListV39 entry 7). NEEDS: the aPro value table over 25 residue pairs
-(CASE_5 method), the `{v0, w0}` edge exception at `vv 0, vv 1`, and the
-fan transfer. -/
+(sInitListV39 entry 7). aPro value table over the 25 residue pairs via
+`bbsV39_aPro_cycle_p25`: the `{0, 1}` residue pair is the `{v0, w0}` edge
+(`2*h0 ≤ dist ≤ sqrt8`), other adjacent pairs are edges, distance-2 pairs
+are non-edges, plus the fan transfer. -/
 theorem ZITHLQN_CASE_5_pro_cs_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
     (vv : ℕ → V3) (s : ScsV39) (v0 w0 : V3)
     (_hlf : ConvexLocalFan V E FF) (_hp : Kepler.Packing V) (_hb : V ⊆ ballAnnulus)
@@ -566,10 +874,24 @@ theorem ZITHLQN_CASE_5_pro_cs_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 
     (_hFF : (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF)
     (_hvv0 : vv 0 = v0) (_hvv1 : vv 1 = w0) :
     BBsV39 s vv := by
-  sorry
+  have hper : ∀ i, vv (i % 5) = vv i := by
+    intro i
+    have h := _hper i
+    rwa [_hc] at h
+  have hinj : ∀ i j, vv i = vv j → i % 5 = j % 5 := by
+    intro i j hij
+    have h := _hinj i j hij
+    rwa [_hc] at h
+  exact bbsV39_aPro_cycle_p25 5 0.616 (2 * h0) s vv V E FF _hs (by omega)
+    hper hinj _hV _hE _hFF _hlf _hb
+    (fun v w hvw hne => _hd v w hvw (by rw [← _hvv0, ← _hvv1]; exact hne))
+    (by rw [_hvv0, _hvv1]; exact _hv0) (by rw [_hvv0, _hvv1]; exact _hw0)
+    _hne
 
 /-- HOL `ZITHLQN_CASE_4_3` (ZITHLQN.hl:1750): the `&3` diagonal quad
-(sInitListV39 entry 6). NEEDS: csAdj value table + fan transfer. -/
+(sInitListV39 entry 6). csAdj value table with diagonal band `&3 ≤ dist ≤
+&6` (lower bound from the `&3` non-edge hypothesis, upper bound from the
+annulus triangle bound). -/
 theorem ZITHLQN_CASE_4_3_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
     (vv : ℕ → V3) (s : ScsV39)
     (_hlf : ConvexLocalFan V E FF) (_hp : Kepler.Packing V) (_hb : V ⊆ ballAnnulus)
@@ -583,10 +905,20 @@ theorem ZITHLQN_CASE_4_3_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3
     (_hE : (Set.range fun i => {vv i, vv (i + 1)} : Set (Set V3)) = E)
     (_hFF : (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF) :
     BBsV39 s vv := by
-  sorry
+  have hper : ∀ i, vv (i % 4) = vv i := by
+    intro i
+    have h := _hper i
+    rwa [_hc] at h
+  have hinj : ∀ i j, vv i = vv j → i % 4 = j % 4 := by
+    intro i j hij
+    have h := _hinj i j hij
+    rwa [_hc] at h
+  exact bbsV39_csAdj_cycle_p25 4 0.467 3 6 s vv V E FF _hs (by omega) (by omega)
+    hper hinj _hV _hE _hFF _hlf _hb _hd _hne rfl
 
 /-- HOL `ZITHLQN_CASE_5_sqrt8` (ZITHLQN.hl:1901): the `sqrt8` diagonal
-pentagon (sInitListV39 entry 5). NEEDS: csAdj value table + fan transfer. -/
+pentagon (sInitListV39 entry 5). csAdj value table with diagonal band
+`sqrt8 ≤ dist ≤ &6`. -/
 theorem ZITHLQN_CASE_5_sqrt8_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
     (vv : ℕ → V3) (s : ScsV39)
     (_hlf : ConvexLocalFan V E FF) (_hp : Kepler.Packing V) (_hb : V ⊆ ballAnnulus)
@@ -600,11 +932,22 @@ theorem ZITHLQN_CASE_5_sqrt8_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 �
     (_hE : (Set.range fun i => {vv i, vv (i + 1)} : Set (Set V3)) = E)
     (_hFF : (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF) :
     BBsV39 s vv := by
-  sorry
+  have hper : ∀ i, vv (i % 5) = vv i := by
+    intro i
+    have h := _hper i
+    rwa [_hc] at h
+  have hinj : ∀ i j, vv i = vv j → i % 5 = j % 5 := by
+    intro i j hij
+    have h := _hinj i j hij
+    rwa [_hc] at h
+  exact bbsV39_csAdj_cycle_p25 5 0.616 (Real.sqrt 8) 6 s vv V E FF _hs (by omega) (by omega)
+    hper hinj _hV _hE _hFF _hlf _hb _hd _hne rfl
 
 /-- HOL `ZITHLQN_CASE_4_pro_cs` (ZITHLQN.hl:2057): the `a_pro` quad
-(sInitListV39 entry 8). NEEDS: aPro value table, the `{v0, w0}` exception,
-fan transfer. -/
+(sInitListV39 entry 8). aPro value table over the 16 residue pairs via
+`bbsV39_aPro_cycle_p25`: the `{0, 1}` residue pair is the `{v0, w0}` edge
+(`2*h0 ≤ dist ≤ sqrt8`), other adjacent pairs are edges, diagonals are
+non-edges (`sqrt8 ≤ dist ≤ &6`), plus the fan transfer. -/
 theorem ZITHLQN_CASE_4_pro_cs_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
     (vv : ℕ → V3) (s : ScsV39) (v0 w0 : V3)
     (_hlf : ConvexLocalFan V E FF) (_hp : Kepler.Packing V) (_hb : V ⊆ ballAnnulus)
@@ -623,7 +966,19 @@ theorem ZITHLQN_CASE_4_pro_cs_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 
     (_hFF : (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF)
     (_hvv0 : vv 0 = v0) (_hvv1 : vv 1 = w0) :
     BBsV39 s vv := by
-  sorry
+  have hper : ∀ i, vv (i % 4) = vv i := by
+    intro i
+    have h := _hper i
+    rwa [_hc] at h
+  have hinj : ∀ i j, vv i = vv j → i % 4 = j % 4 := by
+    intro i j hij
+    have h := _hinj i j hij
+    rwa [_hc] at h
+  exact bbsV39_aPro_cycle_p25 4 0.477 (Real.sqrt 8) s vv V E FF _hs (by omega)
+    hper hinj _hV _hE _hFF _hlf _hb
+    (fun v w hvw hne => _hd v w hvw (by rw [← _hvv0, ← _hvv1]; exact hne))
+    (by rw [_hvv0, _hvv1]; exact _hv0) (by rw [_hvv0, _hvv1]; exact _hw0)
+    _hne
 
 /-- HOL `ZITHLQN` (ZITHLQN.hl:2465): the final registry arrow; the
 LocalAuto1 twin `ZITHLQN_concl` has the identical statement. -/
@@ -643,12 +998,136 @@ theorem DIST_V_IN_BB_LE_C_p25 (s : ScsV39) (v : ℕ → V3) (i : ℕ) (c : ℝ)
     (hc : s.b i (i + 1) ≤ c) (hb : BBsV39 s v) : dist (v i) (v (i + 1)) ≤ c :=
   (hb.2.2.1 i (i + 1)).2.trans hc
 
-/-- HOL `arclength_lt_1553` (VASYYAU.hl:121). NEEDS: the
-`Trigonometry1.ATN_UPS_X_BREAKDOWN1` arctan-monotonicity kit (the arcLength
-`atn2` encoding is in PackingAuto18); numeric bounds on `upsX 4 4 c²`. -/
+/-- HOL `arclength_lt_1553` (VASYYAU.hl:121): both arcLength displays are
+unfolded to their `atn2` case splits; the comparison `arctan (n2/7.53) <
+2 * arctan (1.6496/n1)` reduces via `Real.arctan_tan` to the tangent
+double-angle identity `tan (2 arctan u) = 2u/(1-u²)`, with the final
+numeric band proved by exact decimal `norm_num` arithmetic on
+`(1.6496/√(6.3504·9.6496))` vs `√(15.53·0.47)/7.53`. -/
 theorem arclength_lt_1553_p25 :
     2 * arcLength 2 2 (2 * h0) < arcLength 2 2 (Real.sqrt 15.53) := by
-  sorry
+  have hh0 : h0 = 1.26 := rfl
+  simp only [arcLength]
+  obtain ⟨x, hxd⟩ : ∃ x : ℝ, x = (2 * h0) * (2 * h0) := ⟨_, rfl⟩
+  rw [← hxd]
+  obtain ⟨n1, hn1d⟩ : ∃ n1 : ℝ, n1 = Real.sqrt (upsX (2 * 2) (2 * 2) x) := ⟨_, rfl⟩
+  rw [← hn1d]
+  obtain ⟨y2, hy2d⟩ : ∃ y2 : ℝ, y2 = Real.sqrt 15.53 * Real.sqrt 15.53 := ⟨_, rfl⟩
+  rw [← hy2d]
+  obtain ⟨n2, hn2d⟩ : ∃ n2 : ℝ, n2 = Real.sqrt (upsX (2 * 2) (2 * 2) y2) := ⟨_, rfl⟩
+  rw [← hn2d]
+  have hx : x = 6.3504 := by rw [hxd, hh0]; norm_num
+  have hup1 : upsX (2 * 2) (2 * 2) x = 6.3504 * 9.6496 := by
+    rw [hx]; simp only [upsX]; norm_num
+  have hy1 : x - 2 * 2 - 2 * 2 = -(1.6496 : ℝ) := by rw [hx]; norm_num
+  have hnpos : 0 < n1 := by rw [hn1d, hup1]; exact Real.sqrt_pos.mpr (by norm_num)
+  have habs1 : |x - 2 * 2 - 2 * 2| < n1 := by
+    rw [hy1, abs_of_neg (by norm_num : (-(1.6496 : ℝ)) < 0), hn1d, hup1]
+    refine Real.lt_sqrt_of_sq_lt ?_
+    norm_num
+  have hneg1 : (-(1.6496 : ℝ)) / n1 = -((1.6496 : ℝ) / n1) := by ring
+  have hatn1 : atn2 n1 (x - 2 * 2 - 2 * 2) = -Real.arctan (1.6496 / n1) := by
+    rw [atn2, if_pos habs1, hy1, hneg1, Real.arctan_neg]
+  have hy2sq : y2 = 15.53 := by
+    rw [hy2d, Real.mul_self_sqrt (by norm_num : (0 : ℝ) ≤ 15.53)]
+  have hy2 : y2 - 2 * 2 - 2 * 2 = 7.53 := by rw [hy2sq]; norm_num
+  have hy2pos : 0 < y2 - 2 * 2 - 2 * 2 := by rw [hy2]; norm_num
+  have hup2 : upsX (2 * 2) (2 * 2) y2 = 15.53 * 0.47 := by
+    rw [hy2sq]; simp only [upsX]; norm_num
+  have hn2pos : 0 < n2 := by rw [hn2d, hup2]; exact Real.sqrt_pos.mpr (by norm_num)
+  have hn2lt : n2 < 7.53 := by
+    rw [hn2d, hup2]
+    calc (Real.sqrt (15.53 * 0.47) : ℝ) < Real.sqrt ((7.53 : ℝ) ^ 2) :=
+        Real.sqrt_lt_sqrt (by norm_num) (by norm_num)
+      _ = 7.53 := Real.sqrt_sq (by norm_num)
+  have hnotabs : ¬(|y2 - 2 * 2 - 2 * 2| < n2) := by
+    rw [hy2, abs_of_pos (by norm_num : (0 : ℝ) < 7.53)]
+    exact not_lt.mpr hn2lt.le
+  have hatn2 : atn2 n2 (y2 - 2 * 2 - 2 * 2) = Real.pi / 2 - Real.arctan (n2 / 7.53) := by
+    rw [atn2, if_neg hnotabs, if_pos hy2pos, hy2]
+  rw [hatn1, hatn2]
+  have hApos : 0 < Real.arctan (1.6496 / n1) :=
+    Real.arctan_pos.mpr (div_pos (by norm_num) hnpos)
+  have hu : (1.6496 : ℝ) / n1 < 1 := by
+    refine (div_lt_one hnpos).mpr ?_
+    rw [hn1d, hup1]
+    refine Real.lt_sqrt_of_sq_lt ?_
+    norm_num
+  have hAlt : Real.arctan (1.6496 / n1) < Real.pi / 4 := by
+    rw [← Real.arctan_one]
+    exact Real.arctan_lt_arctan_iff.mpr hu
+  have hA2 : 2 * Real.arctan (1.6496 / n1) < Real.pi / 2 := by linarith
+  have hπhalf : (0:ℝ) < Real.pi / 2 := div_pos Real.pi_pos (by norm_num)
+  have hπn : -(Real.pi) / 2 < 0 := by rw [neg_div]; linarith
+  have hAne : ∀ k : ℤ, Real.arctan (1.6496 / n1) ≠ (2 * k + 1) * Real.pi / 2 := by
+    intro k hc
+    by_cases h0 : k = 0
+    · simp [h0] at hc
+      linarith [hc, hAlt, hπhalf]
+    · rcases lt_or_ge (0 : ℤ) k with hk | hk
+      · have h1z : (1 : ℤ) ≤ 2 * k + 1 := by omega
+        have hc1 : (1 : ℝ) ≤ 2 * ↑k + 1 := by exact_mod_cast h1z
+        rw [hc] at hAlt
+        have hge : Real.pi / 2 ≤ (2 * ↑k + 1) * Real.pi / 2 := by
+          rw [div_le_div_iff₀ (by norm_num : (0:ℝ) < 2) (by norm_num : (0:ℝ) < 2)]
+          have hb : Real.pi ≤ (2 * ↑k + 1) * Real.pi := by
+            linarith [mul_le_mul_of_nonneg_right hc1 Real.pi_pos.le]
+          exact mul_le_mul_of_nonneg_right hb (by norm_num : (0:ℝ) ≤ 2)
+        linarith
+      · have h1z : (2 * k + 1 : ℤ) ≤ -1 := by omega
+        have hc1 : (2:ℝ) * ↑k + 1 ≤ -(1:ℝ) := by exact_mod_cast h1z
+        rw [hc] at hApos
+        have hle : (2 * ↑k + 1) * Real.pi / 2 ≤ -(Real.pi) / 2 := by
+          rw [div_le_div_iff₀ (by norm_num : (0:ℝ) < 2) (by norm_num : (0:ℝ) < 2)]
+          have hb : (2 * ↑k + 1) * Real.pi ≤ -Real.pi := by
+            linarith [mul_le_mul_of_nonneg_right hc1 Real.pi_pos.le, Real.pi_pos]
+          exact mul_le_mul_of_nonneg_right hb (by norm_num : (0:ℝ) ≤ 2)
+        have h7 : (2 * ↑k + 1) * Real.pi / 2 < -(Real.pi) / 2 := by linarith
+        exact absurd hApos (not_lt.mpr (le_trans (le_of_lt h7) (le_of_lt hπn)))
+  have htan : Real.tan (2 * Real.arctan (1.6496 / n1))
+      = 2 * (1.6496 / n1) / (1 - (1.6496 / n1) ^ 2) := by
+    rw [show 2 * Real.arctan (1.6496 / n1)
+          = Real.arctan (1.6496 / n1) + Real.arctan (1.6496 / n1) from by ring,
+      Real.tan_add (Or.inl ⟨hAne, hAne⟩), Real.tan_arctan]
+    ring
+  have hsqrtden : Real.sqrt (6.3504 * 9.6496) = n1 := by rw [hn1d, hup1]
+  have hsqrtB : Real.sqrt ((15.53 : ℝ) * 0.47) = n2 := by rw [hn2d, hup2]
+  have hD : (0 : ℝ) < 6.3504 * 9.6496 - 1.6496 ^ 2 := by norm_num
+  have h7 : (0 : ℝ) < 7.53 := by norm_num
+  have hrhs : (2 * (1.6496 / Real.sqrt (6.3504 * 9.6496)))
+        / (1 - (1.6496 / Real.sqrt (6.3504 * 9.6496)) ^ 2)
+      = 2 * 1.6496 * Real.sqrt (6.3504 * 9.6496)
+        / (6.3504 * 9.6496 - 1.6496 ^ 2) := by
+    have hAsq : (Real.sqrt (6.3504 * 9.6496)) ^ 2 = 6.3504 * 9.6496 :=
+      Real.sq_sqrt (by norm_num)
+    have hDne : ((6.3504 * 9.6496 - 1.6496 ^ 2 : ℝ)) ≠ 0 := by norm_num
+    field_simp [hAsq, hDne]
+    · rw [hAsq]; exact div_self hDne
+  have hmain : Real.sqrt ((15.53 : ℝ) * 0.47) * (6.3504 * 9.6496 - 1.6496 ^ 2)
+      < 2 * 1.6496 * Real.sqrt (6.3504 * 9.6496) * 7.53 := by
+    have e1 : (Real.sqrt ((15.53 : ℝ) * 0.47) * (6.3504 * 9.6496 - 1.6496 ^ 2)) ^ 2
+        < (2 * 1.6496 * Real.sqrt (6.3504 * 9.6496) * 7.53) ^ 2 := by
+      rw [mul_pow, mul_pow, mul_pow, Real.sq_sqrt (by norm_num : (0:ℝ) ≤ 15.53 * 0.47),
+        Real.sq_sqrt (by norm_num : (0:ℝ) ≤ 6.3504 * 9.6496)]
+      norm_num
+    have hpos1 : (0 : ℝ) ≤ Real.sqrt ((15.53 : ℝ) * 0.47)
+        * (6.3504 * 9.6496 - 1.6496 ^ 2) :=
+      mul_nonneg (Real.sqrt_nonneg _) (by norm_num)
+    have hpos2 : (0 : ℝ) ≤ 2 * 1.6496 * Real.sqrt (6.3504 * 9.6496) * 7.53 :=
+      mul_nonneg (by positivity) (by norm_num)
+    have e2 := Real.sqrt_lt_sqrt (sq_nonneg _) e1
+    rwa [Real.sqrt_sq hpos1, Real.sqrt_sq hpos2] at e2
+  have hcmp : n2 / 7.53 < Real.tan (2 * Real.arctan (1.6496 / n1)) := by
+    rw [htan, ← hsqrtden, ← hsqrtB, hrhs]
+    rw [div_lt_div_iff₀ h7 hD]
+    exact hmain
+  have hfinal : Real.arctan (n2 / 7.53) < 2 * Real.arctan (1.6496 / n1) := by
+    have hrefl : 2 * Real.arctan (1.6496 / n1)
+        = Real.arctan (Real.tan (2 * Real.arctan (1.6496 / n1))) :=
+      (Real.arctan_tan (by linarith) hA2).symm
+    rw [hrefl, Real.arctan_lt_arctan_iff]
+    exact hcmp
+  linarith
 
 /-- HOL `NOT_MOD_4_CASES` (VASYYAU.hl:386). -/
 theorem NOT_MOD_4_CASES_p25 (i p : ℕ) :

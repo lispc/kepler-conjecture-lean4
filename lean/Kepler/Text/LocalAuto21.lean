@@ -55,22 +55,22 @@ ENCODING NOTES
     importing them (LocalAuto9/LocalAuto11, hence `mkSimplex1_p11`,
     `taum_p11` and the PQCSXWG/`delta_x_sym` kit) must NOT be imported; the
     LocalAuto1-side twins `mkSimplex1`, `mkPlanar2`, `deltaX4`, `deltaX5`
-    (LocalAuto1) and `upsX`/`deltaX` (PackingAuto18) are used instead.
-    Same-wave lanes LocalAuto19/20/22-27 are NOT imported.
+    (LocalAuto1 — its `deltaX5` carries the corrected 6-term body since
+    DEDUP 2026-09-17) and `upsX`/`deltaX` (canonical, SphereKit) are used
+    instead.  Same-wave lanes LocalAuto19/20/22-27 are NOT imported.
   - HOL `real^3` ↔ `V3` (Kepler.Geom); `vec 0` ↔ `0`; `a cross b` ↔
     `cross3 a b` (PackingAuto18:86); `dot` ↔ `⬝ᵥ`; `%` ↔ `•`; `dist (a,b)`
     ↔ `dist a b`; `norm` ↔ `‖·‖`; `pow 2` ↔ `^ 2`; `collinear {a,b,c}` ↔
     `Collinear ℝ {a,b,c}`; `coplanar s` ↔ `Coplanar s` (Geom.Coplanar,
     "⊂ affineSpan of three points").
-  - `dih_x` ↔ `dihXf_p16`, `dih_y` ↔ `dihY_p16`, `taum` ↔ `taum_p16`
-    (LocalAuto16 `_p16` sphere-kit copies; LocalAuto16 imports LocalAuto1 so
-    it is on this side of the `atn2` split). `delta_x` ↔ `deltaX`
-    (PackingAuto18). `delta_x5`/`delta_x6` are carried as verbatim `_p21`
-    copies below: `deltaX5_p21` follows `Nonlin_def.delta_x5`
-    (nonlin_def.hl:435) which is the form `delta_x5_delta_x6` rewrites with;
-    NOTE the existing LocalAuto1 `deltaX5` drops the `- x1 * x3 + x1 * x4`
-    terms — NEEDS: reconcile at merge. `delta_x6` (sphere.hl:114) was not
-    ported before.
+  - DEDUP 2026-09-17: `dih_x` ↔ `dihXf`, `dih_y` ↔ `dihY`, `taum` ↔ `taum`
+    — the LocalAuto16 `_p16` sphere-kit copies are deleted; these names are
+    canonical `Kepler.Text.SphereKit` definitions now (the `taum` stub was
+    upgraded to the real body).  `delta_x` ↔ `deltaX` (canonical,
+    SphereKit).  `delta_x5` matched the canonical corrected `deltaX5`
+    verbatim and its `_p21` copy is deleted (DEDUP 2026-09-17);
+    `delta_x6` (sphere.hl:114) is NOT yet hosted by SphereKit, so the
+    `deltaX6_p21` copy stays until that wave.
   - `deformation f V (a,b)` ↔ `Deformation f V a b` (LocalAuto1:128);
     `real_continuous_on (real_interval (--e,e))` ↔ `ContinuousOn _ (Ioo (-e) e)`;
     `real_continuous atreal t` / `continuous atreal t` ↔ `ContinuousAt`.
@@ -97,6 +97,7 @@ ENCODING NOTES
 
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto16
+import Kepler.Text.SphereKit
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -105,17 +106,17 @@ namespace Kepler.Text
 
 open Kepler.Geom Set Classical
 
-/-! ## Section 0: `_p21` copies and anchors -/
+/-! ## Section 0: `_p21` copies and anchors
 
-/-- HOL `delta_x5` (nonlin_def.hl:435, `Nonlin_def.delta_x5`): partial
-derivative of `delta_x` at `x5`. Verbatim copy; NOTE LocalAuto1's `deltaX5`
-omits the `- x1 * x3 + x1 * x4` summands. NEEDS: merge/reconcile. -/
-noncomputable def deltaX5_p21 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  -x1 * x3 + x1 * x4 - x2 * x5 + x3 * x6 - x4 * x6 +
-    x2 * (x1 - x2 + x3 + x4 - x5 + x6)
+-- DEDUP 2026-09-17: the verbatim `delta_x5` copy that used to sit here
+-- (`deltaX5`, nonlin_def.hl:435) is deleted against the canonical
+-- corrected `Kepler.Text.SphereKit.deltaX5` — the bodies were identical
+-- (both carry the full 6-term formula; LocalAuto1's old mis-port was
+-- fixed 2026-09-17).  `deltaX6_p21` stays: SphereKit defers `delta_x6`. -/
 
 /-- HOL `delta_x6` (sphere.hl:114): partial derivative of `delta_x` at
-`x6`; not previously ported. NEEDS: merge. -/
+`x6`; not previously ported, and not yet hosted by `Kepler.Text.SphereKit`
+(deferred wave). KEEP: local copy. -/
 noncomputable def deltaX6_p21 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
   -x1 * x2 - x3 * x6 + x1 * x4 + x2 * x5 - x4 * x5 +
     x3 * (-x3 + x1 + x2 - x6 + x4 + x5)
@@ -1006,7 +1007,7 @@ theorem dih_x5_mono_p21 (x1 x2 x3 x4 x5 x6 : ℝ) (hx1 : 0 < x1)
     (hΔ : 0 < deltaX x1 x2 x3 x4 x5 x6) (hu1 : 0 < upsX x1 x2 x6)
     (hu2 : 0 < upsX x1 x3 x5) (hΔ6 : deltaX6_p21 x1 x2 x3 x4 x5 x6 < 0) :
     ∃ e, 0 < e ∧ ∀ t, |t| < e → t ≤ 0 →
-      dihXf_p16 x1 x2 x3 x4 (x5 + t) x6 ≤ dihXf_p16 x1 x2 x3 x4 x5 x6 := by
+      dihXf x1 x2 x3 x4 (x5 + t) x6 ≤ dihXf x1 x2 x3 x4 x5 x6 := by
   -- DISCHARGES: HOL Ocbicby.derived_form_dih_x_wrt_x5 (the ∂dih_x/∂x5
   -- derivative form `--sqrt x1 * delta_x6 / (ups_x x1 x3 * sqrt delta_x)`)
   -- + REAL_MVT_VERY_SIMPLE + epsilon_triple bookkeeping; the derivative
@@ -1016,18 +1017,18 @@ theorem dih_x5_mono_p21 (x1 x2 x3 x4 x5 x6 : ℝ) (hx1 : 0 < x1)
 /-- HOL `delta_x5_delta_x6` (CUXVZOZ.hl:3173): `delta_x6` is `delta_x5`
 under the `(x2,x3)`/`(x5,x6)` swap; a pure ring identity. -/
 theorem delta_x5_delta_x6_p21 (x1 x2 x3 x4 x5 x6 : ℝ) :
-    deltaX6_p21 x1 x3 x2 x4 x6 x5 = deltaX5_p21 x1 x2 x3 x4 x5 x6 := by
-  unfold deltaX6_p21 deltaX5_p21
+    deltaX6_p21 x1 x3 x2 x4 x6 x5 = deltaX5 x1 x2 x3 x4 x5 x6 := by
+  unfold deltaX6_p21 deltaX5
   ring
 
 /-- HOL `dih_obtuse_mono` (CUXVZOZ.hl:3182): under a negative `delta_x5`
 both `dih_x` at `x4+t` and at `x6+t` decrease. -/
 theorem dih_obtuse_mono_p21 (x1 x2 x3 x4 x5 x6 : ℝ) (hx1 : 0 < x1)
     (hΔ : 0 < deltaX x1 x2 x3 x4 x5 x6) (hu1 : 0 < upsX x1 x2 x6)
-    (hu2 : 0 < upsX x1 x3 x5) (hΔ5 : deltaX5_p21 x1 x2 x3 x4 x5 x6 < 0) :
+    (hu2 : 0 < upsX x1 x3 x5) (hΔ5 : deltaX5 x1 x2 x3 x4 x5 x6 < 0) :
     ∃ e, 0 < e ∧ ∀ t, |t| < e → t ≤ 0 →
-      dihXf_p16 x1 x2 x3 (x4 + t) x5 x6 ≤ dihXf_p16 x1 x2 x3 x4 x5 x6 ∧
-      dihXf_p16 x1 x2 x3 x4 x5 (x6 + t) ≤ dihXf_p16 x1 x2 x3 x4 x5 x6 := by
+      dihXf x1 x2 x3 (x4 + t) x5 x6 ≤ dihXf x1 x2 x3 x4 x5 x6 ∧
+      dihXf x1 x2 x3 x4 x5 (x6 + t) ≤ dihXf x1 x2 x3 x4 x5 x6 := by
   -- DISCHARGES: HOL uses dih_x5_mono (via delta_x5_delta_x6 and
   -- Merge_ineq.delta_x_sym), epsilon_pair bookkeeping and
   -- Tame_inequalities.DIH_X_MONO_LT_4; the delta_x-symmetry and tame
@@ -1040,7 +1041,7 @@ theorem dih_obtuse_mono_b_p21 (x1 x2 x3 x4 x5 x6 : ℝ) (hx1 : 0 < x1)
     (hΔ : 0 < deltaX x1 x2 x3 x4 x5 x6) (hu1 : 0 < upsX x1 x2 x6)
     (hu2 : 0 < upsX x1 x3 x5) :
     ∃ e, 0 < e ∧ ∀ t, |t| < e → t ≤ 0 →
-      dihXf_p16 x1 x2 x3 (x4 + t) x5 x6 ≤ dihXf_p16 x1 x2 x3 x4 x5 x6 := by
+      dihXf x1 x2 x3 (x4 + t) x5 x6 ≤ dihXf x1 x2 x3 x4 x5 x6 := by
   -- DISCHARGES: HOL Tame_inequalities.DIH_X_MONO_LT_4 + the delta_x
   -- continuity nbd bookkeeping. NEEDS: merge with the tame-inequalities
   -- lane.
@@ -1134,12 +1135,12 @@ theorem MMs_minimize_tau_fun_p21 (s : ScsV39) (k : ℕ) (v w : ℕ → V3)
 theorem tau3_taum_nonplanar_p21 (v0 v1 v2 : V3)
     (hnc : ¬ Coplanar ({0, v0, v1, v2} : Set V3)) :
     tau3 v0 v1 v2 =
-      taum_p16 ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1) := by
+      taum ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1) := by
   -- DISCHARGES: HOL Nonlinear_lemma.taum_123, Sphere.rhazim/rhazim2/rhazim3,
   -- node2_y/node3_y, sol0_const1 and Merge_ineq.DIHV_EQ_DIH_Y (dihV = dih_y
   -- off the coplanar locus); the dih_y bridge is not on this side.
-  -- NEEDS: the body of `taum` (Terminal lane; LocalAuto16's `taum_p16` is a
-  -- registry signature) plus the DIHV_EQ_DIH_Y bridge.
+  -- NEEDS: the DIHV_EQ_DIH_Y bridge (the `taum` body itself is the real
+  -- `Kepler.Text.SphereKit.taum` since DEDUP 2026-09-17).
   sorry
 
 /-- HOL `tau3_azim` (CUXVZOZ.hl:3629): the azimuth rendering of `tau3`. -/

@@ -23,14 +23,19 @@ Encoding (house conventions, cf. LocalAuto1/19/36):
   `scs3T2`; `IMAGE vv (:num)` ↔ `Set.range vv`; `periodic`/`periodic2` ↔
   `Periodic`/`Periodic2`; `psort`/`funlist_v39`/`funlistA_v39`/
   `ASSOCD_v39`/`cs_adj` ↔ LocalAuto1 twins; `sum` ↔ `setSum`.
-- y-space functionals: `delta_y`/`dih_y`/`taum`/`delta_x4` ↔ the `_p23`
-  twins (LocalAuto23; LocalAuto11's `_p11` lane clashes with LocalAuto1
-  via the PackingAuto18/20 `atn2` split, and LocalAuto1+LocalAnchors
-  clash via `scsBasicV39`, so both are excluded); `ups_x`/`delta_x`/
-  `delta`/`chi_msb` ↔ `upsX`/`deltaX`/`deltaP`/`chiMsb` (PackingAuto18,
-  transitive through LocalAuto1); `azim_cycle` ↔ `azimCycle_p18`;
-  `y_of_x`/`quadratic_root_plus`/`ineq` are ported verbatim as
-  `yOfXP38`/`quadraticRootPlusP38`/`ineqP38` (plain formulas);
+- y-space functionals: `delta_y`/`dih_y`/`taum`/`delta_x4` ↔ the canonical
+  `deltaY`/`dihY`/`taum`/`deltaX4` of `Kepler.Text.SphereKit` (DEDUP
+  2026-09-19: were the `_p23` twins of LocalAuto23, carried because
+  LocalAuto11's `_p11` lane clashed with LocalAuto1 via the
+  PackingAuto18/20 `atn2` split and LocalAuto1+LocalAnchors clashed via
+  `scsBasicV39`; the `taum` rename upgrades the opaque stub to the real
+  body — every consumer here is `sorry`, so no proof exploited opacity);
+  `ups_x`/`delta_x`/`delta`/`chi_msb` ↔ `upsX`/`deltaX`/`deltaP`/`chiMsb`
+  (SphereKit, transitive through LocalAuto1); `azim_cycle` ↔
+  `azimCycle_p18` (kept: the localization fan kit is not canonicalised
+  yet); `y_of_x`/`quadratic_root_plus` ↔ `yOfX`/`quadraticRootPlus`
+  (SphereKit, verbatim-equal bodies; DEDUP: were `yOfX`/
+  `quadraticRootPlus`); `ineq` stays local as `ineqP38`;
   `EE` ↔ `ee`; `ITER f j` ↔ `f^[j]`; `tau_fun`/`tau3`/`rho_fun`/
   `rho_node1`/`convex_local_fan`/`generic`/`rho` ↔ LocalAuto1.
 - The `_p19`/`_p14`/`_p13` lanes are NOT built in this checkout, so HOL
@@ -60,6 +65,7 @@ import Kepler.Text.PackingAuto2
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto18
 import Kepler.Text.LocalAuto23
+import Kepler.Text.SphereKit
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -114,26 +120,22 @@ noncomputable def cayleyRP38 (x12 x13 x14 x15 x23 x24 x25 x34 x35 : ℝ) :
 noncomputable def cayleytrP38 (x12 x13 x14 x15 x23 x24 x25 x34 x35 x : ℝ) :
     ℝ := sorry
 
-/-- NEEDS: sphere.hl `dih_x` (the `_p11` twin is not importable here, see
-header). -/
-noncomputable def dihXP38 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := sorry
+/- DEDUP (2026-09-19, atn2 merge plan §5.30): the `dih_x` stub `dihXP38`
+is deleted; its use site uses SphereKit's real-body `dihXf` instead (the
+only statement consumer, `DIH_X_NN`, is `sorry`, so nothing exploited the
+stub's opacity). -/
 
 /-- NEEDS: sphere.hl `tauq` (9-arg tau of a quad; the `_p11` twin is not
 importable here). -/
 noncomputable def tauqP38 (y1 y2 y3 y4 y5 y6 y7 y8 y9 : ℝ) : ℝ := sorry
 
-/-- NEEDS: sphere.hl `delta4_y` (the `_p11` twin is not importable here). -/
-noncomputable def delta4YP38 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ := sorry
-
-/-- HOL `y_of_x` (sphere.hl): a 6-variable x-space functional evaluated at
-the squared y's (verbatim formula). -/
-def yOfXP38 (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  f (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
-
-/-- HOL `quadratic_root_plus` (sphere.hl:67): the `+sqrt` root (verbatim
-formula). -/
-noncomputable def quadraticRootPlusP38 (a b c : ℝ) : ℝ :=
-  (-b + Real.sqrt (b ^ 2 - 4 * a * c)) / (2 * a)
+/- DEDUP (2026-09-19, atn2 merge plan §5.30): the stub `delta4YP38` and
+the verbatim-formula defs `yOfXP38`/`quadraticRootPlusP38` are deleted;
+their use sites use SphereKit's `delta4Y` (stub → real body; the only
+consumer, `quad_4680581274_y`, is `sorry`), `yOfX` and
+`quadraticRootPlus` (verbatim-equal bodies). `taumXP38` above STAYS: its
+canonical home `taumX` (`taum_x`) is not hosted by `Kepler.Text.SphereKit`
+yet (EXTERNAL-ANCHOR, plan §1.2). -/
 
 /-- HOL `ineq` (Sphere.ineq; verbatim renderer). -/
 def ineqP38 : List (ℝ × ℝ × ℝ) → Prop → Prop
@@ -159,7 +161,7 @@ noncomputable def quadCrossDiag2XP38 (x1 x2 x3 x4 x5 x6 x7 x8 x9 : ℝ) : ℝ :=
   let a := (abcOfQuadraticP38 (cayleyRP38 x3 x2 x1 x7 x4 x5 x8 x6 x9)).1
   let b := (abcOfQuadraticP38 (cayleyRP38 x3 x2 x1 x7 x4 x5 x8 x6 x9)).2.1
   let c := (abcOfQuadraticP38 (cayleyRP38 x3 x2 x1 x7 x4 x5 x8 x6 x9)).2.2
-  Real.sqrt (quadraticRootPlusP38 a b c)
+  Real.sqrt (quadraticRootPlus a b c)
 
 /-- HOL `scs_terminal_v116` (local-fan chapter lane): the terminal SCS case
 list consumed by `BBs_terminal`. -/
@@ -191,15 +193,15 @@ theorem sol_x_nn :
 theorem DIH_X_NN :
     ∀ x1 x2 x3 x4 x5 x6 : ℝ,
       0 < x1 → 0 ≤ deltaX x1 x2 x3 x4 x5 x6 →
-      0 ≤ dihXP38 x1 x2 x3 x4 x5 x6 := by
+      0 ≤ dihXf x1 x2 x3 x4 x5 x6 := by
   intro x1 x2 x3 x4 x5 x6 _ _
   sorry -- DISCHARGES: dih_x nonneg from the arccos form
 
 /-- HOL `DIH_Y_NN` (terminal.hl:114). -/
 theorem DIH_Y_NN :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ,
-      0 < y1 → 0 ≤ deltaY_p23 y1 y2 y3 y4 y5 y6 →
-      0 ≤ dihY_p23 y1 y2 y3 y4 y5 y6 := by
+      0 < y1 → 0 ≤ deltaY y1 y2 y3 y4 y5 y6 →
+      0 ≤ dihY y1 y2 y3 y4 y5 y6 := by
   intro y1 y2 y3 y4 y5 y6 _ _
   sorry -- DISCHARGES: dih_y nonneg from the arccos form
 
@@ -228,8 +230,8 @@ theorem RHO_LB (y : ℝ) (hy : (2 : ℝ) ≤ y) : 1 ≤ rho y := by
 /-- HOL `DIH_Y_LT_RHAZIM` (terminal.hl:149). -/
 theorem DIH_Y_LT_RHAZIM :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ,
-      2 ≤ y1 → 0 ≤ deltaY_p23 y1 y2 y3 y4 y5 y6 →
-      dihY_p23 y1 y2 y3 y4 y5 y6 ≤ rhazimP38 y1 y2 y3 y4 y5 y6 := by
+      2 ≤ y1 → 0 ≤ deltaY y1 y2 y3 y4 y5 y6 →
+      dihY y1 y2 y3 y4 y5 y6 ≤ rhazimP38 y1 y2 y3 y4 y5 y6 := by
   intro y1 y2 y3 y4 y5 y6 _ _
   sorry -- DISCHARGES: rhazimP38 body (external anchor)
 
@@ -237,7 +239,7 @@ theorem DIH_Y_LT_RHAZIM :
 theorem taum_taum_x :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ, 0 ≤ y1 → 0 ≤ y2 → 0 ≤ y3 → 0 ≤ y4 → 0 ≤ y5 →
       0 ≤ y6 →
-      taum_p23 y1 y2 y3 y4 y5 y6 = yOfXP38 taumXP38 y1 y2 y3 y4 y5 y6 := by
+      taum y1 y2 y3 y4 y5 y6 = yOfX taumXP38 y1 y2 y3 y4 y5 y6 := by
   intro y1 y2 y3 y4 y5 y6 _ _ _ _ _ _
   sorry -- DISCHARGES: taum_x body (external anchor taumXP38 = stub)
 
@@ -535,7 +537,7 @@ theorem tau3_taum (v0 v1 v2 : V3) :
     2 ≤ dist v0 v1 → 2 ≤ dist v0 v2 → 2 ≤ dist v1 v2 →
     dist v0 v1 ≤ 3.62 → dist v0 v2 ≤ 3.62 → dist v1 v2 ≤ 3.62 →
     tau3 v0 v1 v2 =
-      taum_p23 ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1) := by
+      taum ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1) := by
   intro _ _ _ _ _ _ _ _ _
   sorry -- DISCHARGES: tau3-to-taum formula transfer
 
@@ -545,13 +547,13 @@ theorem tau3_taum_40 (v0 v1 v2 : V3) :
     2 ≤ dist v0 v1 → 2 ≤ dist v0 v2 → 2 ≤ dist v1 v2 →
     dist v0 v1 < 4 → dist v0 v2 < 4 → dist v1 v2 < 4 →
     tau3 v0 v1 v2 =
-      taum_p23 ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1) := by
+      taum ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1) := by
   intro _ _ _ _ _ _ _ _ _
   sorry -- DISCHARGES: tau3-to-taum formula transfer
 
 /-- HOL `DELTA_Y_POS_4POINTS` (terminal.hl:537). -/
 theorem DELTA_Y_POS_4POINTS (v0 v1 v2 v3 : V3) :
-    0 ≤ deltaY_p23 (dist v0 v1) (dist v0 v2) (dist v0 v3) (dist v2 v3)
+    0 ≤ deltaY (dist v0 v1) (dist v0 v2) (dist v0 v3) (dist v2 v3)
       (dist v1 v3) (dist v1 v2) := by
   sorry -- DISCHARGES: Cayley-Menger positivity of a 4-point simplex
 
@@ -560,8 +562,8 @@ theorem tau3_taum_d (d a01 a12 a02 b01 b12 b02 : ℝ)
     (h : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
       2 ≤ y1 → y1 ≤ 2 * h0 → 2 ≤ y2 → y2 ≤ 2 * h0 → 2 ≤ y3 → y3 ≤ 2 * h0 →
       a01 ≤ y6 → y6 ≤ b01 → a12 ≤ y4 → y4 ≤ b12 → a02 ≤ y5 → y5 ≤ b02 →
-      0 ≤ deltaY_p23 y1 y2 y3 y4 y5 y6 →
-      d ≤ taum_p23 y1 y2 y3 y4 y5 y6)
+      0 ≤ deltaY y1 y2 y3 y4 y5 y6 →
+      d ≤ taum y1 y2 y3 y4 y5 y6)
     (v0 v1 v2 : V3) :
     2 ≤ ‖v0‖ → ‖v0‖ ≤ 2 * h0 → 2 ≤ ‖v1‖ → ‖v1‖ ≤ 2 * h0 → 2 ≤ ‖v2‖ →
     ‖v2‖ ≤ 2 * h0 → a01 ≤ dist v0 v1 → dist v0 v1 ≤ b01 →
@@ -576,8 +578,8 @@ theorem tau3_taum_dfun (d : ℝ) (a01 a12 a02 b01 b12 b02 : ℝ) (f : ℝ → �
     (h : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
       2 ≤ y1 → y1 ≤ 2 * h0 → 2 ≤ y2 → y2 ≤ 2 * h0 → 2 ≤ y3 → y3 ≤ 2 * h0 →
       a01 ≤ y6 → y6 ≤ b01 → a12 ≤ y4 → y4 ≤ b12 → a02 ≤ y5 → y5 ≤ b02 →
-      0 ≤ deltaY_p23 y1 y2 y3 y4 y5 y6 →
-      d + f y4 y5 y6 ≤ taum_p23 y1 y2 y3 y4 y5 y6)
+      0 ≤ deltaY y1 y2 y3 y4 y5 y6 →
+      d + f y4 y5 y6 ≤ taum y1 y2 y3 y4 y5 y6)
     (v0 v1 v2 : V3) :
     2 ≤ ‖v0‖ → ‖v0‖ ≤ 2 * h0 → 2 ≤ ‖v1‖ → ‖v1‖ ≤ 2 * h0 → 2 ≤ ‖v2‖ →
     ‖v2‖ ≤ 2 * h0 → a01 ≤ dist v0 v1 → dist v0 v1 ≤ b01 →
@@ -593,8 +595,8 @@ theorem taustar_taum (d : ℝ) (a b : ℕ → ℕ → ℝ) (h1 : 2 ≤ a 0 1) (h
       2 ≤ y1 → y1 ≤ 2 * h0 → 2 ≤ y2 → y2 ≤ 2 * h0 → 2 ≤ y3 → y3 ≤ 2 * h0 →
       a 0 1 ≤ y6 → y6 ≤ b 0 1 → a 1 2 ≤ y4 → y4 ≤ b 1 2 →
       a 0 2 ≤ y5 → y5 ≤ b 0 2 →
-      0 ≤ deltaY_p23 y1 y2 y3 y4 y5 y6 →
-      d ≤ taum_p23 y1 y2 y3 y4 y5 y6)
+      0 ≤ deltaY y1 y2 y3 y4 y5 y6 →
+      d ≤ taum y1 y2 y3 y4 y5 y6)
     (vv : ℕ → V3) (hbb : BBsV39 (mkUnadornedV39 3 d a b) vv) :
     0 ≤ taustarV39 (mkUnadornedV39 3 d a b) vv := by
   sorry -- DISCHARGES: tau3_taum (box-to-vector transfer)
@@ -607,11 +609,11 @@ theorem taustar_taum_dfun (d : ℝ) (a b : ℕ → ℕ → ℝ) (f : ℕ → ℕ
       2 ≤ y1 → y1 ≤ 2 * h0 → 2 ≤ y2 → y2 ≤ 2 * h0 → 2 ≤ y3 → y3 ≤ 2 * h0 →
       a 0 1 ≤ y6 → y6 ≤ b 0 1 → a 1 2 ≤ y4 → y4 ≤ b 1 2 →
       a 0 2 ≤ y5 → y5 ≤ b 0 2 →
-      0 ≤ deltaY_p23 y1 y2 y3 y4 y5 y6 →
+      0 ≤ deltaY y1 y2 y3 y4 y5 y6 →
       d + 0.1 * (if isEarV39 (ScsV39.mk 3 d a a b b f (fun _ => False)
           (fun _ => False) (fun _ => False)) then 1 else -1) *
         ((if f 0 1 then cstab - y6 else 0) + (if f 1 2 then cstab - y4 else 0) +
-        (if f 2 3 then cstab - y5 else 0) + 0) ≤ taum_p23 y1 y2 y3 y4 y5 y6)
+        (if f 2 3 then cstab - y5 else 0) + 0) ≤ taum y1 y2 y3 y4 y5 y6)
     (vv : ℕ → V3) (hbb : BBsV39 (ScsV39.mk 3 d a a b b f (fun _ => False)
       (fun _ => False) (fun _ => False)) vv) :
     0 ≤ taustarV39 (ScsV39.mk 3 d a a b b f (fun _ => False) (fun _ => False)
@@ -623,9 +625,10 @@ theorem taustar_taum_dfun (d : ℝ) (a b : ℕ → ℕ → ℝ) (f : ℕ → ℕ
 
 /-- HOL `taum_sym2` (terminal.hl:684). -/
 theorem taum_sym2 (y1 y2 y3 y4 y5 y6 : ℝ) :
-    taum_p23 y1 y2 y3 y4 y5 y6 = taum_p23 y2 y1 y3 y5 y4 y6 ∧
-    taum_p23 y1 y2 y3 y4 y5 y6 = taum_p23 y1 y3 y2 y4 y6 y5 := by
-  sorry -- DISCHARGES: taum_p23 body (stub twin)
+    taum y1 y2 y3 y4 y5 y6 = taum y2 y1 y3 y5 y4 y6 ∧
+    taum y1 y2 y3 y4 y5 y6 = taum y1 y3 y2 y4 y6 y5 := by
+  sorry -- DISCHARGES: taum symmetry (canonical SphereKit body, deduped
+  -- from the opaque `taum_p23` stub)
 
 /-- HOL `MOD_4_EXPLICIT` (terminal.hl:697). -/
 theorem MOD_4_EXPLICIT :
@@ -1031,7 +1034,7 @@ theorem cs_adj4_EXPLICIT (a b : ℝ) :
 
 /-- HOL `delta_4680581274` (terminal.hl:2179). -/
 theorem delta_4680581274 (y1 y4 : ℝ) (hy1 : cstab ≤ y1) (hy4 : 4 ≤ y4) :
-    deltaY_p23 y1 2 2 y4 2 cstab < 0 := by
+    deltaY y1 2 2 y4 2 cstab < 0 := by
   sorry -- DISCHARGES: the 4680581274 delta drop on the 2-2 spine
 
 /-- HOL `tau3_sym` (terminal.hl:2218). -/
@@ -1049,8 +1052,8 @@ theorem OWZLKVY0 (h : main_nonlinear_terminal_v11) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ,
       2 ≤ y1 ∧ y1 ≤ 2 * h0 ∧ 2 ≤ y1 ∧ y2 ≤ 2 * h0 ∧ 2 ≤ y2 ∧ y2 ≤ 2 * h0 ∧
       2 ≤ y3 ∧ y3 ≤ 2 * h0 ∧ cstab ≤ y4 ∧ y4 ≤ 3.915 ∧ y5 = 2 ∧ y6 = 2 ∧
-      200 ≤ deltaY_p23 y1 y2 y3 y4 y5 y6 →
-      0 ≤ taum_p23 y1 y2 y3 y4 y5 y6 := by
+      200 ≤ deltaY y1 y2 y3 y4 y5 y6 →
+      0 ≤ taum y1 y2 y3 y4 y5 y6 := by
   sorry -- DISCHARGES: main_nonlinear_terminal_v11 (external anchor) + LP
 
 /-- HOL `EAR_DELTA_X4` (terminal.hl:2264). -/
@@ -1058,10 +1061,10 @@ theorem EAR_DELTA_X4 (h : main_nonlinear_terminal_v11) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ,
       2 ≤ y1 ∧ y1 ≤ 2 * h0 ∧ 2 ≤ y2 ∧ y2 ≤ 2 * h0 ∧ 2 ≤ y3 ∧ y3 ≤ 2 * h0 ∧
       cstab ≤ y4 ∧ y4 ≤ 3.915 ∧ y5 = 2 ∧ y6 = 2 ∧
-      deltaY_p23 y1 y2 y3 y4 y5 y6 ≤ 200 →
-      deltaX4_p23 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) < 0 ∧
-      0 < deltaX4_p23 (y2 * y2) (y3 * y3) (y1 * y1) (y5 * y5) (y6 * y6) (y4 * y4) ∧
-      0 < deltaX4_p23 (y3 * y3) (y1 * y1) (y2 * y2) (y6 * y6) (y4 * y4) (y5 * y5) := by
+      deltaY y1 y2 y3 y4 y5 y6 ≤ 200 →
+      deltaX4 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) < 0 ∧
+      0 < deltaX4 (y2 * y2) (y3 * y3) (y1 * y1) (y5 * y5) (y6 * y6) (y4 * y4) ∧
+      0 < deltaX4 (y3 * y3) (y1 * y1) (y2 * y2) (y6 * y6) (y4 * y4) (y5 * y5) := by
   sorry -- DISCHARGES: main_nonlinear_terminal_v11 + LP
 
 /-- HOL `EAR_DIH1_DELTA_0` (terminal.hl:2306). -/
@@ -1069,8 +1072,8 @@ theorem EAR_DIH1_DELTA_0 (h : main_nonlinear_terminal_v11) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ,
       2 ≤ y1 ∧ y1 ≤ 2 * h0 ∧ 2 ≤ y2 ∧ y2 ≤ 2 * h0 ∧ 2 ≤ y3 ∧ y3 ≤ 2 * h0 ∧
       cstab ≤ y4 ∧ y4 ≤ 3.915 ∧ y5 = 2 ∧ y6 = 2 ∧
-      deltaY_p23 y1 y2 y3 y4 y5 y6 = 0 →
-      dihY_p23 y1 y2 y3 y4 y5 y6 = Real.pi := by
+      deltaY y1 y2 y3 y4 y5 y6 = 0 →
+      dihY y1 y2 y3 y4 y5 y6 = Real.pi := by
   sorry -- DISCHARGES: main_nonlinear_terminal_v11 + LP
 
 /-- HOL `OWZLKVY3` (terminal.hl:2333). -/
@@ -1078,9 +1081,9 @@ theorem OWZLKVY3 (h : main_nonlinear_terminal_v11) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ,
       2 ≤ y1 ∧ y1 ≤ 2 * h0 ∧ 2 ≤ y2 ∧ y2 ≤ 2 * h0 ∧ 2 ≤ y3 ∧ y3 ≤ 2 * h0 ∧
       cstab ≤ y4 ∧ y4 ≤ 3.915 ∧ y5 = 2 ∧ y6 = 2 ∧
-      0 ≤ deltaY_p23 y1 y2 y3 y4 y5 y6 ∧
-      dihY_p23 y1 y2 y3 y4 y5 y6 = Real.pi →
-      sol0 * (y1 - 2 * h0) / (2 * h0 - 2) ≤ taum_p23 y1 y2 y3 y4 y5 y6 := by
+      0 ≤ deltaY y1 y2 y3 y4 y5 y6 ∧
+      dihY y1 y2 y3 y4 y5 y6 = Real.pi →
+      sol0 * (y1 - 2 * h0) / (2 * h0 - 2) ≤ taum y1 y2 y3 y4 y5 y6 := by
   sorry -- DISCHARGES: main_nonlinear_terminal_v11 + LP
 
 /-- HOL `OWZLKVY1` (terminal.hl:2420). -/
@@ -1088,8 +1091,8 @@ theorem OWZLKVY1 (h : main_nonlinear_terminal_v11) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ,
       2 ≤ y1 ∧ y1 ≤ 2 * h0 ∧ 2 ≤ y2 ∧ y2 ≤ 2 * h0 ∧ 2 ≤ y3 ∧ y3 ≤ 2 * h0 ∧
       cstab ≤ y4 ∧ y4 ≤ 3.915 ∧ y5 = 2 ∧ y6 = 2 ∧
-      0 ≤ deltaY_p23 y1 y2 y3 y4 y5 y6 →
-      -sol0 ≤ taum_p23 y1 y2 y3 y4 y5 y6 := by
+      0 ≤ deltaY y1 y2 y3 y4 y5 y6 →
+      -sol0 ≤ taum y1 y2 y3 y4 y5 y6 := by
   sorry -- DISCHARGES: main_nonlinear_terminal_v11 + LP
 
 /-- HOL `OWZLKVY2` (terminal.hl:2496). -/
@@ -1097,8 +1100,8 @@ theorem OWZLKVY2 (h : main_nonlinear_terminal_v11) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ,
       y1 = 2 * h0 ∧ 2 ≤ y2 ∧ y2 ≤ 2 * h0 ∧ 2 ≤ y3 ∧ y3 ≤ 2 * h0 ∧
       cstab ≤ y4 ∧ y4 ≤ 3.915 ∧ y5 = 2 ∧ y6 = 2 ∧
-      0 ≤ deltaY_p23 y1 y2 y3 y4 y5 y6 →
-      0 ≤ taum_p23 y1 y2 y3 y4 y5 y6 := by
+      0 ≤ deltaY y1 y2 y3 y4 y5 y6 →
+      0 ≤ taum y1 y2 y3 y4 y5 y6 := by
   sorry -- DISCHARGES: main_nonlinear_terminal_v11 + LP
 
 /-- HOL `sqrt8_bounds` (terminal.hl:2549). -/
@@ -1121,7 +1124,7 @@ theorem ineq_5691615370_asym (h : main_nonlinear_terminal_v11) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ,
       ineqP38 [(3.0, y1, 3.0), (2, y2, 2.52), (2, y3, 2.52), (3.0, y4, 3.0),
         (2, y5, 2.52), (2, y6, 2.52)]
-        (deltaY_p23 y1 y2 y3 y4 y5 y6 < 0 ∨
+        (deltaY y1 y2 y3 y4 y5 y6 < 0 ∨
           y2 + y3 + y5 + y6 > 8.472) := by
   sorry -- DISCHARGES: LEMMA_5691615370 (LP asymmetric variant)
 
@@ -1149,9 +1152,9 @@ theorem terminal_quad_lemma (d : ℝ) (a b : ℕ → ℕ → ℝ)
 theorem tau_x_tau_residual_x_general (x1 x2 x3 x4 x5 x6 : ℝ)
     (h1 : 4 ≤ x1) (h2 : Real.sqrt x1 ≤ 2 * h0) (h3 : 0 < x1) (h4 : 0 < x2)
     (h5 : 0 < x3) (h6 : 0 < x4) (h7 : 0 < x5) (h8 : 0 < x6)
-    (h9 : deltaX4_p23 x1 x2 x3 x4 x5 x6 < 0)
-    (h10 : 0 < deltaX4_p23 x2 x3 x1 x5 x6 x4)
-    (h11 : 0 < deltaX4_p23 x3 x1 x2 x6 x4 x5)
+    (h9 : deltaX4 x1 x2 x3 x4 x5 x6 < 0)
+    (h10 : 0 < deltaX4 x2 x3 x1 x5 x6 x4)
+    (h11 : 0 < deltaX4 x3 x1 x2 x6 x4 x5)
     (h12 : 0 ≤ deltaX x1 x2 x3 x4 x5 x6) :
     taumXP38 x1 x2 x3 x4 x5 x6 =
       Real.sqrt (deltaX x1 x2 x3 x4 x5 x6) * tauResidualXP38 x1 x2 x3 x4 x5 x6 +
@@ -1163,8 +1166,8 @@ theorem OWZLKVY4 (h : main_nonlinear_terminal_v11) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ,
       2 ≤ y1 ∧ y1 ≤ 2 * h0 ∧ 2 ≤ y2 ∧ y2 ≤ 2 * h0 ∧ 2 ≤ y3 ∧ y3 ≤ 2 * h0 ∧
       cstab ≤ y4 ∧ y4 ≤ 3.915 ∧ y5 = 2 ∧ y6 = 2 ∧
-      0 ≤ deltaY_p23 y1 y2 y3 y4 y5 y6 →
-      taudP38 y1 y2 y3 y4 y5 y6 ≤ taum_p23 y1 y2 y3 y4 y5 y6 := by
+      0 ≤ deltaY y1 y2 y3 y4 y5 y6 →
+      taudP38 y1 y2 y3 y4 y5 y6 ≤ taum y1 y2 y3 y4 y5 y6 := by
   sorry -- DISCHARGES: main_nonlinear_terminal_v11 + LP
 
 /-- HOL `muR_alt` (terminal.hl:3436): `rfl` by the `muRP38` definition. -/
@@ -1180,7 +1183,7 @@ theorem quad_cross_diag2_x_cayleyR (x1 x2 x3 x4 x5 x6 x7 x8 x9 : ℝ)
     (_ : 0 ≤ x1) (_ : 0 ≤ x2) (_ : 0 ≤ x3) (_ : 0 ≤ x4) (_ : 0 ≤ x5) (_ : 0 ≤ x6)
     (_ : 0 ≤ x7) (_ : 0 ≤ x8) (_ : 0 ≤ x9) :
     quadCrossDiag2XP38 x1 x2 x3 x4 x5 x6 x7 x8 x9 =
-      Real.sqrt (quadraticRootPlusP38
+      Real.sqrt (quadraticRootPlus
         (abcOfQuadraticP38 (cayleyRP38 x3 x2 x1 x7 x4 x5 x8 x6 x9)).1
         (abcOfQuadraticP38 (cayleyRP38 x3 x2 x1 x7 x4 x5 x8 x6 x9)).2.1
         (abcOfQuadraticP38 (cayleyRP38 x3 x2 x1 x7 x4 x5 x8 x6 x9)).2.2) :=
@@ -1207,7 +1210,7 @@ theorem quadratic_root_upper_bound (a b c e x : ℝ) (ha : 0 < a)
 theorem quadratic_square_root_upper_bound (a b c e : ℝ) (ha : 0 < a)
     (hb : 0 < 2 * a * e + b) (hc : 0 < a * e ^ 2 + b * e + c)
     (hd : 0 ≤ b ^ 2 - 4 * a * c) (hbn : b ≤ 0) (he : 0 ≤ e) :
-    Real.sqrt (quadraticRootPlusP38 a b c) < Real.sqrt e := by
+    Real.sqrt (quadraticRootPlus a b c) < Real.sqrt e := by
   have hexp : (b + 2 * a * e) ^ 2 - (b ^ 2 - 4 * a * c) =
       4 * a * (a * e ^ 2 + b * e + c) := by ring
   have hm : (0 : ℝ) < a * (a * e ^ 2 + b * e + c) := by nlinarith [ha, hc]
@@ -1218,13 +1221,13 @@ theorem quadratic_square_root_upper_bound (a b c e : ℝ) (ha : 0 < a)
     have h2 : Real.sqrt (b ^ 2 - 4 * a * c) < Real.sqrt ((b + 2 * a * e) ^ 2) :=
       Real.sqrt_lt_sqrt hd hsq2
     rwa [hsq3] at h2
-  have hqrp : 0 ≤ quadraticRootPlusP38 a b c := by
-    rw [quadraticRootPlusP38]
+  have hqrp : 0 ≤ quadraticRootPlus a b c := by
+    rw [quadraticRootPlus]
     have hsq0 : 0 ≤ Real.sqrt (b ^ 2 - 4 * a * c) := Real.sqrt_nonneg _
     have h2a : (0 : ℝ) ≤ 2 * a := by linarith
     exact div_nonneg (by linarith [hbn, hsq0]) h2a
-  have hlt2 : quadraticRootPlusP38 a b c < e := by
-    rw [quadraticRootPlusP38]
+  have hlt2 : quadraticRootPlus a b c < e := by
+    rw [quadraticRootPlus]
     have h2a : (0 : ℝ) < 2 * a := by linarith
     have h3 : -b + Real.sqrt (b ^ 2 - 4 * a * c) < e * (2 * a) := by linarith
     exact (div_lt_iff₀ h2a).mpr h3
@@ -1271,7 +1274,7 @@ theorem LEMMA_4680581274_delta_issue_ups (x1 x2 x3 x4 x5 x6 : ℝ) :
       (4.0, x5, 4.0), (4.0, x6, 4.0)]
       (0 < upsX x2 x3 x4 ∨
         10 + deltaX x1 x2 x3 x4 x5 x6 * -1 < 0 ∨
-        deltaX4_p23 x1 x2 x3 x4 x5 x6 * -1 < 0) := by
+        deltaX4 x1 x2 x3 x4 x5 x6 * -1 < 0) := by
   sorry -- DISCHARGES: the 4680581274 ups escape (LP)
 
 /-- HOL `quad_4680581274_delta_issue` (terminal.hl:3639; the leading
@@ -1286,7 +1289,7 @@ theorem quad_4680581274_delta_issue (h : main_nonlinear_terminal_v11) :
         (4.0, x7, 2.0 * 1.26 * 2.0 * 1.26), (4.0, x8, 4.0),
         (3.01 * 3.01, x9, 3.01 * 3.01)]
         (unit6P38 x1 x2 x3 x4 x5 x6 * 10 + deltaX x1 x2 x3 x4 x5 x6 * -1 < 0 ∨
-          deltaX4_p23 x1 x2 x3 x4 x5 x6 * -1 < 0 ∨
+          deltaX4 x1 x2 x3 x4 x5 x6 * -1 < 0 ∨
           quadCrossDiag2XP38 x1 x2 x3 x4 x5 x6 x7 x8 x9 +
             unit6P38 x1 x2 x3 x4 x5 x6 * -3.01 < 0) := by
   sorry -- DISCHARGES: main_nonlinear_terminal_v11 + LP
@@ -1304,7 +1307,7 @@ theorem quad_4680581274_a (h : main_nonlinear_terminal_v11) :
             taumXP38 x1 x2 x3 x4 x5 x6 * -1 +
             taumXP38 x7 x2 x3 x4 x8 x9 * -1 < 0 ∨
           deltaX x1 x2 x3 x4 x5 x6 + unit6P38 x1 x2 x3 x4 x5 x6 * -10 < 0 ∨
-          deltaX4_p23 x1 x2 x3 x4 x5 x6 * -1 < 0 ∨
+          deltaX4 x1 x2 x3 x4 x5 x6 * -1 < 0 ∨
           quadCrossDiag2XP38 x1 x2 x3 x4 x5 x6 x7 x8 x9 +
             unit6P38 x1 x2 x3 x4 x5 x6 * -3.01 < 0) := by
   sorry -- DISCHARGES: main_nonlinear_terminal_v11 + LP
@@ -1317,8 +1320,8 @@ theorem quad_4680581274_y (h : main_nonlinear_terminal_v11) :
         (3.01, y4, 3.166), (2.0, y5, 2), (2.0, y6, 2), (2.0, y7, 2 * h0),
         (2.0, y8, 2), (3.01, y9, 3.01)]
         (tauqP38 y1 y2 y3 y4 y5 y6 y7 y8 y9 > 0.513 ∨
-          deltaY_p23 y1 y2 y3 y4 y5 y6 < 10 ∨
-          delta4YP38 y1 y2 y3 y4 y5 y6 > 0 ∨
+          deltaY y1 y2 y3 y4 y5 y6 < 10 ∨
+          delta4Y y1 y2 y3 y4 y5 y6 > 0 ∨
           enclosedP38 y1 y5 y6 y4 y2 y3 y7 y8 y9 < 3.01) := by
   sorry -- DISCHARGES: main_nonlinear_terminal_v11 + LP
 
@@ -1346,9 +1349,9 @@ theorem quad_4680581274_derived (h : main_nonlinear_terminal_v11) :
         (2.0, y7, 2 * h0), (2.0, y8, 2), (3.01, y9, 3.01)]
         (enclosedP38 y1 y5 y6 y4 y2 y3 y7 y8 y9 = y0 ∧
           y4 ≤ y0 ∧
-          0 ≤ deltaY_p23 y0 y9 y8 y4 y5 y6 ∧
-          0 ≤ deltaY_p23 y1 y2 y3 y4 y5 y6 ∧
-          0 ≤ deltaY_p23 y7 y2 y3 y4 y8 y9 →
+          0 ≤ deltaY y0 y9 y8 y4 y5 y6 ∧
+          0 ≤ deltaY y1 y2 y3 y4 y5 y6 ∧
+          0 ≤ deltaY y7 y2 y3 y4 y8 y9 →
           0.513 < tauqP38 y1 y2 y3 y4 y5 y6 y7 y8 y9) := by
   sorry -- DISCHARGES: main_nonlinear_terminal_v11 + LP
 

@@ -20,10 +20,13 @@ LocalAuto18 — Local Fan chapter, four-file bundle (skeleton-first pass):
     `scs_5M1`, the slice arrows `SCS_*_SLICE_*`, and `CNICGSF1..5`.
 
 FILE MAP
-  Section 0 (verbatim `_p18` copies; see ENCODING): `deltaX4_p18`,
-    `deltaY_p18`, `dihY_p18`, `EE_p18`, `azimCycle_p18`, `rhoNode1_p18`,
-    `azimInFan_p18`, `torsor_p18`, `constraintSystem_p18`,
-    `stableSystem_p18`, `rowV3_p18`, `CONDITION2_SY_p18`, `BSY1body_p18`.
+  Section 0 (verbatim `_p18` copies; see ENCODING): `EE_p18`,
+    `azimCycle_p18`, `rhoNode1_p18`, `azimInFan_p18`, `torsor_p18`,
+    `constraintSystem_p18`, `stableSystem_p18`, `rowV3_p18`,
+    `CONDITION2_SY_p18`, `BSY1body_p18`.  DEDUP 2026-09-17: the
+    sphere-kit copies `deltaX4`/`deltaY`/`dihY` were
+    deleted against `Kepler.Text.SphereKit` (bodies verified
+    identical; the inlined `dihY` twin included).
   Section A (WJSCPRO): `POWER_MOD_FUN_p18` (proved), the space
     `SYset_p18` (= `BSY1body_p18` ∩ `CONDITION2_SY_p18`), `CLOSED_SY_p18`
     (sorry; the HOL proof spans WJSCPRO.hl:63-3174), `BOUNDED_SY_p18`
@@ -51,10 +54,12 @@ ENCODING NOTES
   - Import discipline: this file sits on the LocalAuto1/`PackingAuto18`
     side of the fatal `atn2` duplication — LocalAuto2/`PackingAuto20`
     (also LocalAuto9/LocalAuto11, which import LocalAuto2) must NOT be
-    imported next to LocalAuto1. Everything needed from those lanes is
-    carried as a verbatim `_p18` copy with a NEEDS merge marker:
-    `deltaX4_p18`/`deltaY_p18`/`dihY_p18` (PackingAuto20:80-92,
-    LocalAuto11:129-151), `EE_p18`/`azimCycle_p18`/`rhoNode1_p18`/
+    imported next to LocalAuto1. DEDUP 2026-09-17: the sphere-kit trio
+    (the `deltaX4`/`deltaY`/`dihY` twins of PackingAuto20:80-92 /
+    LocalAuto11:129-151) is deleted against `Kepler.Text.SphereKit`;
+    everything else needed from the other lanes is still carried as a
+    verbatim `_p18` copy with a NEEDS merge marker:
+    `EE_p18`/`azimCycle_p18`/`rhoNode1_p18`/
     `azimInFan_p18` (LocalAuto2:82-203), `torsor_p18`/
     `constraintSystem_p18`/`stableSystem_p18`/`rowV3_p18`/
     `CONDITION2_SY_p18`/`BSY1body_p18` (LocalAuto9:145-160,396,1044-1058).
@@ -87,6 +92,7 @@ ENCODING NOTES
 -/
 
 import Kepler.Text.LocalAuto1
+import Kepler.Text.SphereKit
 import Kepler.Text.LocalAuto4
 import Mathlib
 
@@ -96,28 +102,15 @@ namespace Kepler.Text
 
 open Kepler.Geom Set Classical
 
-/-! ## Section 0: verbatim `_p18` copies (atn2 two-sides clash) -/
+/-! ## Section 0: verbatim `_p18` copies (atn2 two-sides clash)
 
-/-- HOL `delta_x4` (sphere.hl:110): partial derivative of `delta_x` at
-`x4`. Verbatim twin of PackingAuto20's `deltaX4f`. NEEDS: merge. -/
-noncomputable def deltaX4_p18 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  -x2 * x3 - x1 * x4 + x2 * x5 + x3 * x6 - x5 * x6 +
-    x1 * (-x1 + x2 + x3 - x4 + x5 + x6)
-
-/-- HOL `delta_y` (sphere.hl): `delta_x` at squared lengths; verbatim twin
-of LocalAuto11's `deltaY_p11` (body = `deltaX` of PackingAuto18). NEEDS:
-merge. -/
-noncomputable def deltaY_p18 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
-
-/-- HOL `dih_y` (sphere.hl:159). Verbatim twin of PackingAuto20's `dihY`
-(via `dihXf`). NEEDS: merge. -/
-noncomputable def dihY_p18 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  Real.pi / 2 + atn2
-    (Real.sqrt (4 * (y1 * y1) *
-      deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)))
-    (-(deltaX4_p18 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5)
-      (y6 * y6)))
+-- DEDUP 2026-09-17: the sphere-kit trio that used to open this section
+-- (`deltaX4`/`deltaY`/`dihY` `_p18` twins; `dihY` carried the inlined
+-- `dih_x`-at-squares formula) is deleted against the canonical
+-- `Kepler.Text.SphereKit` definitions — every body was verified
+-- identical.  Remaining uses resolve through the SphereKit import.
+-- The localization.hl / dih2k.hl `_p18` copies below stay until their
+-- rendering bridge lands (plan §6). -/
 
 /-- HOL `EE v E` (localization.hl:27): the `E`-neighbours of `v`. Verbatim
 twin of `EE_p2`. NEEDS: merge. -/
@@ -422,7 +415,7 @@ theorem ARCV_ADD_AFF_GE_p18 (u v w x : V3) (hv : v ≠ u) (hw : w ≠ u)
 /-- HOL `coplanar_delta_y_zero` (IUNBUIG.hl:144). -/
 theorem coplanar_delta_y_zero_p18 (u₀ u₁ u₂ u₃ : V3) :
     Coplanar ({u₀, u₁, u₂, u₃} : Set V3) ↔
-      deltaY_p18 (dist u₀ u₁) (dist u₀ u₂) (dist u₀ u₃) (dist u₂ u₃)
+      deltaY (dist u₀ u₁) (dist u₀ u₂) (dist u₀ u₃) (dist u₂ u₃)
         (dist u₁ u₃) (dist u₁ u₂) = 0 := by
   sorry
   -- DISCHARGES: HOL Terminal.DELTA_Y_POS_4POINTS (delta_y > 0 off
@@ -465,7 +458,7 @@ theorem planar_deform_dist_p18 (v₀ v₁ v₂ : V3) (f : V3 → ℝ → V3) (V 
     ∀ t, |t| < e' → dist (f v₁ t) (f v₂ t) = dist v₁ v₂ := by
   sorry
   -- DISCHARGES: quadratic_at_most_2_roots_p18 (proved above) + the
-  -- `delta_quadratic` identity (Nonlinear_lemma) on deltaY_p18 via
+  -- `delta_quadratic` identity (Nonlinear_lemma) on deltaY via
   -- coplanar_delta_y_zero_p18, plus the continuity clause of `Deformation`.
 
 /-- HOL `deform_pent_exists` (IUNBUIG.hl:269). Giant (needs
@@ -871,7 +864,7 @@ AZIM_DIHV_SAME_STRONG + DIHV_DIH_X + the `ups_x`-positivity kit). -/
 theorem azim_dih_y_p18 (v₀ v₁ v₂ v₃ : V3)
     (h₂ : ¬ Collinear3 v₀ v₁ v₂) (h₃ : ¬ Collinear3 v₀ v₁ v₃)
     (hpi : azim v₀ v₁ v₂ v₃ ≤ Real.pi) :
-    azim v₀ v₁ v₂ v₃ = dihY_p18 (dist v₀ v₁) (dist v₀ v₂) (dist v₀ v₃)
+    azim v₀ v₁ v₂ v₃ = dihY (dist v₀ v₁) (dist v₀ v₂) (dist v₀ v₃)
       (dist v₂ v₃) (dist v₁ v₃) (dist v₁ v₂) := by
   sorry
   -- DISCHARGES: HOL AZIM_DIHV_SAME_STRONG (LocalAuto2-side azimuth kit),

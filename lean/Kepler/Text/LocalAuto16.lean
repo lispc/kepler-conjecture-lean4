@@ -57,16 +57,12 @@ ENCODING NOTES
     `JEJTVGB_assume_v39`, `JEJTVGB_concl`,
     `main_nonlinear_terminal_v11`, and every quoted `*_concl` arrow)
     is the LocalAuto1 port and is imported, not copied.
-  - The sphere.hl kit has no importable port in this file's import
-    graph: PackingAuto18 (via LocalAuto1) and PackingAuto20 (via
-    LocalAuto2/11) define the SAME `Kepler.Text` names (`atn2`,
-    `dih_y`, ...) and Lean rejects importing both sides, while the
-    scs lane of this file mandates LocalAuto1.  So verbatim `_p16`
-    copies are included: `atn2_p16` / `deltaXf_p16` / `deltaX4f_p16`
-    / `dihXf_p16` / `dihY_p16` (= sphere.hl `dih_y` via
-    `y_of_x`), `deltaY_p16` (= sphere.hl `delta_y`), and the opaque
-    registry signature `taum_p16` (Terminal.hl's `taum`; no port in
-    the corpus).  All are merge candidates for the owning wave.
+  - DEDUP 2026-09-17: the sphere.hl kit is single-sourced in
+    `Kepler.Text.SphereKit`; the seven verbatim `_p16` copies that used to
+    sit here (the `atn2`/`deltaX`/`deltaX4`/`dihXf`/`dihY`/`deltaY` twins
+    and the opaque `taum` registry-signature stub) were deleted against it
+    after verifying every body identical (the `taum` stub was upgraded to
+    SphereKit's real `taum` body).  Uses resolve via the SphereKit import.
     `ups_x`/`arclength`/`TRI_UPS_X_STRICT_POS` come from PackingAuto18
     via LocalAuto1 (unambiguous on this side).
   - HOL `real^3` <-> `V3` (Kepler.Geom); `vec 0` <-> `0`;
@@ -99,6 +95,7 @@ this file.  All other items here discharge nothing yet.
 -/
 
 import Kepler.Text.LocalAuto1
+import Kepler.Text.SphereKit
 import Kepler.Geom.Aff
 import Kepler.Geom.Azim
 import Mathlib
@@ -257,50 +254,14 @@ theorem XIVPHKS_SHIFT_p16 (W : ℕ → Set V3) (a d : ℕ → ℕ → ℕ → �
     (∀ k j, 1 ≤ j → j + k ≤ r + 1 → w (j + k) ∈ W j) := by
   sorry
 
-/-! ## Section C: BKOSSGE.hl — sphere.hl kit (`_p16` copies)
+/-! ## Section C: BKOSSGE.hl -/
 
-PackingAuto18 (via LocalAuto1) and PackingAuto20 (via LocalAuto2/11)
-export identical `Kepler.Text.atn2`/`dihY`/... names and cannot be
-imported together; this file needs LocalAuto1's scs lane, so the kit is
-copied verbatim (merge note: delete against the owning wave). -/
-
-/-- HOL `atn2` (sphere.hl:48-52); verbatim twin of the PackingAuto18 /
-PackingAuto20 renderings. -/
-noncomputable def atn2_p16 (x y : ℝ) : ℝ :=
-  if |y| < x then Real.arctan (y / x)
-  else if 0 < y then Real.pi / 2 - Real.arctan (x / y)
-  else if y < 0 then -(Real.pi / 2) - Real.arctan (x / y)
-  else Real.pi
-
-/-- HOL `delta_x` (sphere.hl:86). -/
-noncomputable def deltaXf_p16 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  x1 * x4 * (-x1 + x2 + x3 - x4 + x5 + x6) +
-    x2 * x5 * (x1 - x2 + x3 + x4 - x5 + x6) +
-    x3 * x6 * (x1 + x2 - x3 + x4 + x5 - x6) -
-    x2 * x3 * x4 - x1 * x3 * x5 - x1 * x2 * x6 - x4 * x5 * x6
-
-/-- HOL `delta_x4` (sphere.hl:110). -/
-noncomputable def deltaX4f_p16 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  -x2 * x3 - x1 * x4 + x2 * x5 + x3 * x6 - x5 * x6 +
-    x1 * (-x1 + x2 + x3 - x4 + x5 + x6)
-
-/-- HOL `dih_x` (sphere.hl:153). -/
-noncomputable def dihXf_p16 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  Real.pi / 2 +
-    atn2_p16 (Real.sqrt (4 * x1 * deltaXf_p16 x1 x2 x3 x4 x5 x6))
-      (-(deltaX4f_p16 x1 x2 x3 x4 x5 x6))
-
-/-- HOL `dih_y` (sphere.hl:159). -/
-noncomputable def dihY_p16 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  dihXf_p16 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
-
-/-- HOL `delta_y` (sphere.hl): `y_of_x delta_x`. -/
-noncomputable def deltaY_p16 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  deltaXf_p16 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
-
-/-- NEEDS: HOL `taum` (Terminal.hl): the truncated tau of a quad (6
-y-slots); opaque registry signature (twin of LocalAuto11 `taum_p11`). -/
-noncomputable def taum_p16 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ := sorry
+-- DEDUP 2026-09-17: the seven verbatim sphere-kit `_p16` copies that used
+-- to sit here (the `atn2`/`deltaX`/`deltaX4`/`dihXf`/`dihY`/`deltaY` twins
+-- and the opaque `taum` registry-signature stub) are deleted against the
+-- canonical `Kepler.Text.SphereKit` definitions; every body was verified
+-- identical before deletion (the `taum` stub upgrades to SphereKit's real
+-- `taum` body).  Remaining uses resolve through the SphereKit import.
 
 /-! ## BKOSSGE.hl theorems -/
 
@@ -325,7 +286,7 @@ theorem ear_acute_p16 (h : main_nonlinear_terminal_v11) :
       2 ≤ y1 → y1 ≤ 2 * h0 → 2 ≤ y2 → y2 ≤ 2 * h0 → 2 ≤ y3 → y3 ≤ 2 * h0 →
       2 ≤ y4 → y4 ≤ 2 * h0 → 2 ≤ y6 → y6 ≤ 2 * h0 → 3 ≤ y5 →
       0 < upsX (y1 * y1) (y3 * y3) (y5 * y5) →
-      dihY_p16 y1 y2 y3 y4 y5 y6 < Real.pi / 2 := by
+      dihY y1 y2 y3 y4 y5 y6 < Real.pi / 2 := by
   sorry
 
 /-- HOL `quad_nonexist_849` (BKOSSGE.hl:69).
@@ -490,14 +451,14 @@ theorem INV_ARCLENGTH_p16 (y1 y3 z : ℝ) (hz1 : 0 < z) (hz2 : z < Real.pi)
     (fun _ _ => rfl) |>.symm
 
 /-- HOL `taum_dih_y` (BKOSSGE.hl:168).
-NEEDS: the real Terminal.hl `taum` definition (`taum_p16` is the opaque
-registry signature), Sphere.sol_y / lnazim / rho unfoldings and
-Nonlinear_lemma.sol0_const1. -/
+NEEDS: Sphere.sol_y / lnazim / rho unfoldings and
+Nonlinear_lemma.sol0_const1 (the canonical `taum` body is available via
+SphereKit since DEDUP 2026-09-17). -/
 theorem taum_dih_y_p16 (y1 y2 y3 y4 y5 y6 : ℝ) :
-    taum_p16 y1 y2 y3 y4 y5 y6 =
-      rho y1 * dihY_p16 y1 y2 y3 y4 y5 y6 +
-        rho y2 * dihY_p16 y2 y3 y1 y5 y6 y4 +
-        rho y3 * dihY_p16 y3 y1 y2 y6 y4 y5 - (Real.pi + sol0) := by
+    taum y1 y2 y3 y4 y5 y6 =
+      rho y1 * dihY y1 y2 y3 y4 y5 y6 +
+        rho y2 * dihY y2 y3 y1 y5 y6 y4 +
+        rho y3 * dihY y3 y1 y2 y6 y4 y5 - (Real.pi + sol0) := by
   sorry
 
 /-- HOL `real_continuous_dih_y_wrt4` (BKOSSGE.hl:181).
@@ -505,40 +466,40 @@ NEEDS: Ocbicby.derived_form_dih_x_wrt_x4 (the `dih_x` derivative in the
 `y4` slot, via Calc_derivative.derived_form) and the
 continuity-under-composition kit. -/
 theorem real_continuous_dih_y_wrt4_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
-    (hdy : 0 < deltaY_p16 y1 y2 y3 y4 y5 y6) (hy1 : 0 < y1)
+    (hdy : 0 < deltaY y1 y2 y3 y4 y5 y6) (hy1 : 0 < y1)
     (hu1 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6))
     (hu2 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5)) :
-    ContinuousAt (fun q => dihY_p16 y1 y2 y3 q y5 y6) y4 := by
+    ContinuousAt (fun q => dihY y1 y2 y3 q y5 y6) y4 := by
   sorry
 
 /-- HOL `real_continuous_dih_y_wrt5` (BKOSSGE.hl:211).
 NEEDS: Ocbicby.derived_form_dih_x_wrt_x5. -/
 theorem real_continuous_dih_y_wrt5_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
-    (hdy : 0 < deltaY_p16 y1 y2 y3 y4 y5 y6) (hy1 : 0 < y1)
+    (hdy : 0 < deltaY y1 y2 y3 y4 y5 y6) (hy1 : 0 < y1)
     (hu1 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6))
     (hu2 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5)) :
-    ContinuousAt (fun q => dihY_p16 y1 y2 y3 y4 q y6) y5 := by
+    ContinuousAt (fun q => dihY y1 y2 y3 y4 q y6) y5 := by
   sorry
 
 /-- HOL `real_continuous_dih_y_wrt6` (BKOSSGE.hl:241).
 NEEDS: Ocbicby.derived_form_dih_x_wrt_x6. -/
 theorem real_continuous_dih_y_wrt6_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
-    (hdy : 0 < deltaY_p16 y1 y2 y3 y4 y5 y6) (hy1 : 0 < y1)
+    (hdy : 0 < deltaY y1 y2 y3 y4 y5 y6) (hy1 : 0 < y1)
     (hu1 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6))
     (hu2 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5)) :
-    ContinuousAt (fun q => dihY_p16 y1 y2 y3 y4 y5 q) y6 := by
+    ContinuousAt (fun q => dihY y1 y2 y3 y4 y5 q) y6 := by
   sorry
 
 /-- HOL `real_continuous_taum` (BKOSSGE.hl:271).
 NEEDS: `taum_dih_y_p16` (the real `taum`), Merge_ineq.delta_y_sym /
 ups_x_sym and the `real_continuous_dih_y_wrt*_p16` suite. -/
 theorem real_continuous_taum_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
-    (hdy : 0 < deltaY_p16 y1 y2 y3 y4 y5 y6)
+    (hdy : 0 < deltaY y1 y2 y3 y4 y5 y6)
     (hy1 : 0 < y1) (hy2 : 0 < y2) (hy3 : 0 < y3)
     (hu1 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6))
     (hu2 : 0 < upsX (y2 * y2) (y3 * y3) (y4 * y4))
     (hu3 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5)) :
-    ContinuousAt (fun q => taum_p16 y1 y2 y3 q y5 y6) y4 := by
+    ContinuousAt (fun q => taum y1 y2 y3 q y5 y6) y4 := by
   sorry
 
 /-- HOL `UPS_X_STD_POS` (BKOSSGE.hl:291); via PackingAuto18's
@@ -725,5 +686,5 @@ UNADORNED_OPP, BASIC_OPP, DIAG_OPP (14).  Sorried (giants / registry):
 JEJTVGB_case_breakdown, JEJTVGB, FSQKWKK, XIVPHKS, XIVPHKS_SHIFT,
 ear_acute, quad_nonexist_849, quad_diag_362, taum_dih_y,
 real_continuous_dih_y_wrt4/5/6, real_continuous_taum, BKOSSGE,
-SCS_GENERIC_SYM_0, K_SUC_2_MOD_F_SUB_ID, CQAOQLR (16), plus the
-opaque `taum_p16` signature. -/
+SCS_GENERIC_SYM_0, K_SUC_2_MOD_F_SUB_ID, CQAOQLR (16).  The `_p16`
+sphere-kit copies were deduped into `Kepler.Text.SphereKit` 2026-09-17. -/

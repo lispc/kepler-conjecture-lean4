@@ -22,8 +22,11 @@ LocalAuto23 — Local Fan chapter appendix leftovers, two-file bundle
     plus the `IS_SCS_POINT_IN_BBS_IS_NOT_0*` / `IS_SCS_NOT_COLLINEAR_*` kit.
 
 FILE MAP
-  Section 0 (`_p23` substrate; see ENCODING): `deltaX4_p23`, `deltaY_p23`,
-    `dihY_p23`, `taum_p23` (registry signature), `torsor_p23`,
+  Section 0 (`_p23` substrate; see ENCODING): `torsor_p23`,
+    (DEDUP 2026-09-19: the former `deltaX4_p23`, `deltaY_p23`, `dihY_p23`,
+    `taum_p23` registry-twin block is deleted — verbatim-equal to the
+    canonical `deltaX4`/`deltaY`/`dihY`/`taum` of
+    `Kepler.Text.SphereKit`, now imported; use sites renamed),
     `constraintSystem_p23`, `stableSystem_p23`, `StableSyP23`,
     `aEar0_p23`, `bEar0_p23`, `earSy_p23`, `rowSy_p23`, `J1_SY_p23`,
     `dFun_p23`, `tauStar_p23`, `cycRow_p23` (the HOL row vector
@@ -59,20 +62,25 @@ FILE MAP
   `check_completeness_claimA_concl` is commented out in the source.
 
 ENCODING NOTES
-  - Import discipline: this file sits entirely on the LocalAuto1 side of
-    the fatal `atn2` duplication (LocalAuto2/9/11 and PackingAuto20 are
-    NOT imported; LocalAuto19-27 same-wave lanes are NOT imported). The
-    scs record (`ScsV39`, `isScsV39`, `BBsV39`, `taustarV39`, `MMsV39`,
-    `scsArrowV39`, the `scs_*I*/T*/M*` registry, `scsStabDiagV39`) and
-    `main_nonlinear_terminal_v11` come from LocalAuto1; the dih2k matrix
-    substrate (`FinVec`, `vecmats_p4`, `vecmatsV3_p4`, `matvec_p4`,
-    `V_SY_p4`/`E_SY_p4`/`F_SY_p4`, `CONDITION*_SY_p4`) from LocalAuto4
-    (via its import). The LocalAuto8 stable-system kit (`torsor`,
-    `constraint_system`, `stable_system`, `stable_sy`, `a_ear0`, `b_ear0`,
-    `ear_sy`, `J1_SY`, `d_fun`, `tau_star`), the LocalAuto16 `taum`
-    registry signature and the LocalAuto18 `delta_y`/`dih_y` bodies are
-    NOT importable next to LocalAuto1 (no oleans / parallel lanes) and
-    are carried as verbatim `_p23` twins with NEEDS merge markers.
+   - Import discipline: this file sits entirely on the LocalAuto1 side of
+     the fatal `atn2` duplication (LocalAuto2/9/11 and PackingAuto20 are
+     NOT imported; LocalAuto19-27 same-wave lanes are NOT imported). The
+     sphere-kit half of the split is resolved by importing
+     `Kepler.Text.SphereKit` (DEDUP 2026-09-19: the `_p23`
+     `delta_x4`/`delta_y`/`dih_y`/`taum` twins below were verbatim-equal
+     to its canonical `deltaX4`/`deltaY`/`dihY`/`taum` and are deleted;
+     `taum` upgrades the opaque stub to the real body — every consumer
+     here is `sorry`, so no proof exploited the stub's opacity). The
+     scs record (`ScsV39`, `isScsV39`, `BBsV39`, `taustarV39`, `MMsV39`,
+     `scsArrowV39`, the `scs_*I*/T*/M*` registry, `scsStabDiagV39`) and
+     `main_nonlinear_terminal_v11` come from LocalAuto1; the dih2k matrix
+     substrate (`FinVec`, `vecmats_p4`, `vecmatsV3_p4`, `matvec_p4`,
+     `V_SY_p4`/`E_SY_p4`/`F_SY_p4`, `CONDITION*_SY_p4`) from LocalAuto4
+     (via its import). The LocalAuto8 stable-system kit (`torsor`,
+     `constraint_system`, `stable_system`, `stable_sy`, `a_ear0`, `b_ear0`,
+     `ear_sy`, `J1_SY`, `d_fun`, `tau_star`) is still carried as verbatim
+     `_p23` twins with NEEDS merge markers (the dih2k fan kit is shape-C,
+     not a verbatim twin of the canonical shape-A systems — deferred).
   - HOL `real^3^M` / `dimindex(:M)=k` / `vector[...]` bookkeeping is
     replaced by the 0-based row function `cycRow_p23 vv k = fun i =>
     vv ((i+1) % k)`; HOL `matvec v = a` hypotheses are absorbed (the
@@ -94,6 +102,7 @@ ENCODING NOTES
 
 import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto4
+import Kepler.Text.SphereKit
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -105,31 +114,12 @@ open Kepler.Geom Set Classical
 
 /-! ## Section 0: `_p23` substrate -/
 
-/-- HOL `delta_x4` (sphere.hl:110): partial derivative of `delta_x` at
-`x4`. Verbatim twin of PackingAuto20 `deltaX4f` / LocalAuto18
-`deltaX4_p18` / LocalAuto16 `deltaX4f_p16`. NEEDS: merge. -/
-noncomputable def deltaX4_p23 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  -x2 * x3 - x1 * x4 + x2 * x5 + x3 * x6 - x5 * x6 +
-    x1 * (-x1 + x2 + x3 - x4 + x5 + x6)
-
-/-- HOL `delta_y` (sphere.hl): `delta_x` at squared lengths. Verbatim twin
-of LocalAuto11 `deltaY_p11` / LocalAuto18 `deltaY_p18`. NEEDS: merge. -/
-noncomputable def deltaY_p23 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
-
-/-- HOL `dih_y` (sphere.hl:159). Verbatim twin of LocalAuto11
-`dihY_p11` / LocalAuto18 `dihY_p18`. NEEDS: merge. -/
-noncomputable def dihY_p23 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  Real.pi / 2 + atn2
-    (Real.sqrt (4 * (y1 * y1) *
-      deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)))
-    (-(deltaX4_p23 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5)
-      (y6 * y6)))
-
-/-- NEEDS: HOL `taum` (Terminal.hl); opaque registry signature (twin of
-LocalAuto11 `taum_p11` / LocalAuto16 `taum_p23`, which are on lanes not
-importable next to LocalAuto1). -/
-noncomputable def taum_p23 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ := sorry
+/- DEDUP (2026-09-19, atn2 merge plan §5.27): the former registry-twin
+block `deltaX4_p23`, `deltaY_p23`, `dihY_p23` and the opaque `taum_p23`
+stub is deleted — verbatim-equal to `Kepler.Text.SphereKit`'s `deltaX4`,
+`deltaY`, `dihY` and `taum` (use sites renamed; `taum` upgrades the stub
+to the real body, and every consumer in this file is `sorry`, so no proof
+leaned on the stub's opacity). -/
 
 /-- HOL `torsor` (dih2k.hl). Verbatim twin of LocalAuto8 `torsor_p8` /
 LocalAuto18 `torsor_p18`. NEEDS: merge. -/
@@ -288,7 +278,7 @@ Mathlib `IsCompact.exists_isMinOn`. -/
 theorem taum_attains_inf_p23 (h : main_nonlinear_terminal_v11)
     (y1 y2 y3 y5 y6 : ℝ) :
     ∃ y4' : ℝ, 2 ≤ y4' ∧ y4' ≤ 2 * h0 ∧ ∀ y4 : ℝ, 2 ≤ y4 → y4 ≤ 2 * h0 →
-      taum_p23 y1 y2 y3 y4' y5 y6 ≤ taum_p23 y1 y2 y3 y4 y5 y6 := by
+      taum y1 y2 y3 y4' y5 y6 ≤ taum y1 y2 y3 y4 y5 y6 := by
   sorry
 
 /-- HOL `TAUM_EXTREMAL` (JOTSWIX.hl:48): the attained minimiser is at an
@@ -300,7 +290,7 @@ theorem TAUM_EXTREMAL_p23 (h : main_nonlinear_terminal_v11)
     (hy4 : 2 ≤ y4) (hy4' : y4 ≤ 2 * h0) (hy5 : 2 ≤ y5) (hy5' : y5 ≤ 2 * h0)
     (hy6 : 2 ≤ y6) (hy6' : y6 ≤ 2 * h0) :
     ∃ y4' : ℝ, (y4' = 2 * h0 ∨ y4' = 2) ∧
-      taum_p23 y1 y2 y3 y4' y5 y6 ≤ taum_p23 y1 y2 y3 y4 y5 y6 := by
+      taum y1 y2 y3 y4' y5 y6 ≤ taum y1 y2 y3 y4 y5 y6 := by
   sorry
 
 /-- HOL `TAUM_STD_POS` (JOTSWIX.hl:108): `taum ≥ 0` on the box. NEEDS:
@@ -311,7 +301,7 @@ theorem TAUM_STD_POS_p23 (h : main_nonlinear_terminal_v11)
     (hy2 : 2 ≤ y2) (hy2' : y2 ≤ 2 * h0) (hy3 : 2 ≤ y3) (hy3' : y3 ≤ 2 * h0)
     (hy4 : 2 ≤ y4) (hy4' : y4 ≤ 2 * h0) (hy5 : 2 ≤ y5) (hy5' : y5 ≤ 2 * h0)
     (hy6 : 2 ≤ y6) (hy6' : y6 ≤ 2 * h0) :
-    0 ≤ taum_p23 y1 y2 y3 y4 y5 y6 := by
+    0 ≤ taum y1 y2 y3 y4 y5 y6 := by
   sorry
 
 /-- HOL `LFLACKU` (JOTSWIX.hl:191): `scs_arrow_v39 {scs_3I1} {}`. NEEDS:
@@ -549,7 +539,7 @@ theorem LINDIH_11_p23 (h : main_nonlinear_terminal_v11) (y1 y2 y3 y4 y5 y6 : ℝ
     (hy1 : y1 = 2) (hy2 : 2 ≤ y2 ∧ y2 ≤ 2.52) (hy3 : 2 ≤ y3 ∧ y3 ≤ 2.52)
     (hy4 : y4 = 2) (hy5 : 3.01 ≤ y5 ∧ y5 ≤ 3.55)
     (hy6 : 2 * h0 ≤ y6 ∧ y6 ≤ 3.01) :
-    dihY_p23 y1 y2 y3 y4 y5 y6 < 1.1 ∨ deltaY_p23 y1 y2 y3 y4 y5 y6 < 0 := by
+    dihY y1 y2 y3 y4 y5 y6 < 1.1 ∨ deltaY y1 y2 y3 y4 y5 y6 < 0 := by
   sorry
 
 /-- HOL `LEMMA_PWE3` (JOTSWIX.hl:3370). NEEDS: same kit as
