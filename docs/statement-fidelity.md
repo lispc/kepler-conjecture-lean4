@@ -58,3 +58,26 @@ Flyspeck 最终审计（`general/audit_formal_proof.hl:49`）以计数形态
 除 `real^3` ↔ `EuclideanSpace ℝ (Fin 3)` 这一标准表示差异外，
 陈述逐项对应；无常数篡改（`π`、`√18`、指数 3、2、阈值 `1 ≤ r` 均一致）。
 已知偏差：无。
+
+---
+
+## 附录：Phase 6 装配脊柱的折算点（2026-09-19，P6-B 复审登记）
+
+`Kepler/Assembly.lean`（设计 `docs/phase6-spine.md`）的接口陈述经 P6-B 逐条
+对照 HOL 原文复审通过。以下折算点已知晓并记录，消除接口 sorry 时必须随附补证：
+
+1. **`the_nonlinear_inequalities` 量化折算**（用户批准 2026-09-19）：HOL 的 993 条
+   字面合取 → Lean 的"ID 清单（数据）+ `AllCertified` 量化命题"。**当前六个 ID 清单
+   为空、`CertifiedIneqHolds := True` 占位**——脊柱冻结的是形状；填实由 G4 负责，
+   届时每条 ID 到字面不等式的映射表本身也是保真对象，须逐条抽查。
+2. **`FAN 0 V (ESTD V)` 显式前提**：HOL `hypermap_of_fan` 为全函数，Lean
+   `hypermapOfFan` proof-parameterized；消 LP 接口 sorry 时需补
+   `Contravening V → FAN 0 V (ESTD V)`（surrounded_node 合取项给出）。
+3. **dart 编码差**：Lean 用 `dart1OfFan`（不含孤立 dart），HOL 用 `dart_of_fan`；
+   Contravening 语境下无孤立点，两编码一致，消 sorry 时补证。
+4. **`IsHypermapOfList` 规格级镜像**：`hypermap_of_list` 的构造属 P6-C；
+   落地后须证 `IsHypermapOfList L (hypermapOfList L)` 并展开回 HOL 原句。
+5. **镜像语义**：`iso_fgraph`（允许镜像，improper）与 HOL 一致；hypermap 层
+   `Iso` 保定向——两层之间必须是 ELLLNYZ 形析取桥（镜像分支走镜像 fan 绕行：
+   `hypermap_of_fan_neg` + `contravening_negative`），属 Phase 5 capstone 内部债务。
+6. **`CARD`/`sum` 的无限集约定**：均取 0，与 HOL 垃圾值约定一致。
