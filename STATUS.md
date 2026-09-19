@@ -1,18 +1,21 @@
-# 项目总进度（Status）— 2026-09-18
+# 项目总进度（Status）— 2026-09-19
 
 > 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新（cron 自动 push）。
 > 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
 > 当前 main @ 见本 commit；最近验收：各批次根构建绿（wip/auto-packing 批次提交信息 "38-way root clean"，`aa4baf6b`；HANDOFF 记录 `make check` 绿 `c425db2`，2026-09-14）。
 > 注意：2026-09-13 起接班 agent 改为 main 直推模式，允许在制骨架 sorry 短暂存在；
 > 历史 sanctioned 占位仍为 `Statement.lean` 主定理（见 Phase 1）。
-> **重大进展**：**packing 章 25 模块骨架 100% 就位（2026-09-15，`5b470efc` 起）**——
-> ~1114 定理全部陈述（含各 capstone），20.5k 行 Lean / 920 sorry 进入纯填证期；
-> **local 章骨架 100% 就位（2026-09-16，`aa4baf6b`）：39 模块覆盖 174.7k 行 HOL 源，
-> 1793 sorry 进入纯填证期**——至此 Phase 5 全部主体章节（packing + local）骨架齐备。
-> **Phase 4 G4 由 Kimi 并行推进（wip/g4-emit）：首个 sqrt/atan 全量案
-> QITNPEA_3725403817（964,984 叶，2775 BBTreeG shards）内核构建中（86%，2379/2775）；
-> 封闭 atan Taylor 阶 1024→128 固化（四档验证全过，`1db69bd8`，内核成本 ~8x↓）；
-> 5490182221 全量 stage-a（360 chunk 数据模式）运行中（175/360）**。
+> **重大进展（2026-09-19）**：**Phase 6 装配脊柱已立（`0742680a`）**——
+> `Kepler/Assembly.lean` 冻结四接口 sorry + 真证明装配定理（Phase 2 tame_classification
+> 已接线），`the_kepler_conjecture_from_interfaces` 的 `#print axioms` = 全项目债务图入口；
+> **接口之一 `goodListArchive` 已闭合（P6-C，`05b9653d`）：19,715 图 good_list 全库
+> 23 分片 native_decide + 内核组合器，零 sorryAx**；DEBT.md 新增"主定理可达债务"
+> 脊柱探针节（`spine_axioms.py`，P6-F `1618f6a4`/`0b9ac85a`）。
+> **Phase 4 G4（Kimi，wip/g4-emit）：Q 案 QITNPEA_3725403817 已内核闭合（2026-09-18，
+> `184d4a86`，96.5 万叶 2775 分片，公理标准三）**；5490182221（135 万叶）stage-a
+> 356/360 早过（全局 rung (12,-64)），chunk85-88 因 arctanI 域缺口 + N=128 余量不足
+> 结构性失败，两者已修（arctanI 扩展 + 封闭 atan Taylor 阶固化 **N=2048**），
+> 4 chunk 重跑中（85 已过，86-88 运行中），全过后 merge→--bbg→内核构建。
 > 政策变更（2026-09-17 用户批准，已执行 2026-09-18）：main 允许携带 sorry 债务，
 > wip/auto-packing 已合入 main（`aad4fb35`），债务刻度 = `DEBT.md`（基线 2400）。
 
@@ -73,7 +76,7 @@
   - [x] **FillParams 参数填充工具链（2026-09-14，`0588df2`）**：Lean 编译态逐叶算 sqrt mantissa（零镜像失真）+ (N,out) 阶梯 + 279 叶小样端到端绿；封闭 atan 参数高 Taylor 阶 trick（阶数后经实测下调，见下）
   - [x] **FillParams stage-a 分片并行化（2026-09-15，wip/g4-emit）**：单体驱动（354MB/96万叶数组字面量）elaboration 不可扩展（11.5h 未果）→ 改造为 `--stage-a-shards=K` 连续切块小驱动 + `runMain` argv 派发（无参走阶梯 / `N out` 钉死单点）+ `stagea_merge.py`（全局 rung 裁定 + STALE 补算 + 全局索引合并）；256 chunk × 64 路并行
   - [x] **repair_leaves.py 叶修复回路（`85f5ae7`）**：编译态逐叶扫描 → 失败叶二分加深（splitOK 对任意细化保持）→ 修复证书
-  - [ ] 现存 16 证书收尾：已闭合 6 份（另加早期 2 小案共 8 案例）；波1 sqrt4/atan7 三份——**QITNPEA_3725403817 已闭合（2026-09-18，`184d4a86`：964,984 叶 = 964,792 + 192 修复衍生，2775 BBTreeG shards，11,441 jobs，根 decide 180s，公理标准三）**；**封闭 atan Taylor 阶 1024→128 已固化（`1db69bd8`：四档 3762 叶全过、rung 不变，内核 decide 成本 ~1/N，~8x 提速）**；5490182221（135万叶）stage-a 356/360 完成（全局 rung (12,-64)），4 chunk 结构性失败叶（7491 个）repair 进行中，随后 params 合并 → --bbg → 构建；2570626711（190万叶）stage-a 数据已备货；波2 disj+sqrt 家族 6 份（79~83 sqrt，FillParams 待扩 disj）；末位 2 份 3112-sqrt 怪物（需参数共享优化）
+  - [ ] 现存 16 证书收尾：已闭合 6 份（另加早期 2 小案共 8 案例）；波1 sqrt4/atan7 三份——**QITNPEA_3725403817 已闭合（2026-09-18，`184d4a86`：964,984 叶 = 964,792 + 192 修复衍生，2775 BBTreeG shards，11,441 jobs，根 decide 180s，公理标准三）**；封闭 atan Taylor 阶先固化 128（`1db69bd8`，~8x 提速），后为 549 修复升至 **N=2048**（chunk85-88 结构性失败根因 = arctanI 域缺口 [-1,1] vs 实际需求 [3,9] + N=128 余量不足，两者已治本）；5490182221（135万叶）stage-a 356/360 完成（全局 rung (12,-64)），4 chunk 重跑中（85 已过零 FAIL），全过后 params 合并 → --bbg → 构建；2570626711（190万叶）stage-a 数据已备货；波2 disj+sqrt 家族 6 份（79~83 sqrt，FillParams 待扩 disj）；末位 2 份 3112-sqrt 怪物（需参数共享优化）
   - [ ] 证书量产：145 个已闭合案例需 bb_arb `--cert` 重跑出证书（机时 1-3 天；9893763499 案例 bb_arb 失控吐 117GB 日志已记录）
   - [ ] G4 粘合收尾：155 定义闭包的 Lean 定义 + 每案例 `evalReal e ρ = 展开式 ρ` 对应引理（依赖 packing 章定义，**主体剩余**）
   - 规格：`pipeline/interval/arb-layer.md` §3/§4
@@ -160,10 +163,16 @@ two-stage（planner+executor）难题拆解法。已知坑：HOL 原文存在同
 P1-P5 分段流水攻克）。**polyhedron.hl 100% 达成（71/71 定理零 sorry + 根构建绿，
 `c425db2` 进 main）**。
 
-## Phase 6 — 集成与交付 ⬜
+## Phase 6 — 集成与交付 🟡（装配脊柱已立，接口 1/4 闭合）
 
-- [ ] Phase 2–5 闭合后装配主定理证明（替换 Statement.lean:111 的 sorry）
-- [ ] 全量公理审计终验（目标：仅 propext / Classical.choice / Quot.sound + Phase 2 限定 native_decide）
+- [x] **装配脊柱 `Kepler/Assembly.lean`（2026-09-19，`0742680a`）**：HOL `kepler_conjecture_with_assumptions_and_archive` 逐行镜像；四接口 sorry 冻结（`nonlinearInequalities`/`linearProgrammingResults`/`textCapstone`/`goodListArchive`）+ 真证明 `assembly`（tame_classification 分量由 Phase 2 已证定理直接接线）；设计文档 `docs/phase6-spine.md`，折算点登记 `docs/statement-fidelity.md` 附录；脊柱故意不被根模块 import（终装配时接线）
+- [x] **接口 4 `goodListArchive` 闭合（P6-C，2026-09-19，`05b9653d`）**：19,715 图（Tri 9 / Quad 1253 / Pent 16080 / Hex 2373）good_list 三合取项全库 native_decide，23 分片 + 内核组合器（take/drop 链，覆盖完备性由类型检查保证），`#print axioms` 零 sorryAx
+- [x] **可达债务探针（P6-F，`1618f6a4`/`0b9ac85a`）**：DEBT.md 新增"主定理可达债务"节——`the_kepler_conjecture_from_interfaces` 的 `#print axioms` = sorryAx（剩余 3 接口）+ 624 特许 shard 公理 + 标准三，异常项无
+- [ ] 接口 1 `nonlinearInequalities`：待 Phase 4 G4 内核证书 + 155 定义闭包粘合（P6-E）
+- [ ] 接口 2 `linearProgrammingResults`：桥模式已验证（P6-D 原型）；**欠账：43,078 生产 LP 定理验完即删未持久化，终交付前需持久化重跑 ~324 核时**
+- [ ] 接口 3 `textCapstone`：待 Phase 5 填证收官 + 镜像语义差绕行（ELLLNYZ 析取形，P6-C 原型已探明）
+- [ ] 终装配：脊柱接入根模块 + 替换 Statement.lean:111 的 sorry
+- [ ] 全量公理审计终验（目标：仅 propext / Classical.choice / Quot.sound + 限定 native_decide）
 - [ ] 最终文档与复现脚本
 
 ---
@@ -177,6 +186,6 @@ P1-P5 分段流水攻克）。**polyhedron.hl 100% 达成（71/71 定理零 sorr
 
 ## 验证纪律
 
-1. main 分支：`lake build Kepler` 全绿；**2026-09-17 政策变更（DECISIONS.md）：main 允许携带 sorry 债务，债务刻度 = `DEBT.md`（`lean/scripts/debt_ledger.py` 生成，基线 2400）**；终验标准不变只是推迟——项目终点要求主定理证明本体零 sorry 可达 + `#print axioms` 仅 `[propext, Classical.choice, Quot.sound]`（+ Phase 2 限定 native_decide）；陈述保真审查（`docs/statement-fidelity.md`）是唯一质量阀门，不随本政策放宽；
+1. main 分支：`lake build Kepler` 全绿；**2026-09-17 政策变更（DECISIONS.md）：main 允许携带 sorry 债务，债务刻度 = `DEBT.md`（`lean/scripts/debt_ledger.py --with-spine` 生成，基线 2400，2026-09-19 现值 2403，含主定理可达债务探针节）**；终验标准不变只是推迟——项目终点要求主定理证明本体零 sorry 可达 + `#print axioms` 仅 `[propext, Classical.choice, Quot.sound]`（+ Phase 2 限定 native_decide）；陈述保真审查（`docs/statement-fidelity.md`）是唯一质量阀门，不随本政策放宽；
 2. 批次闭合标准：该批全部定理零 sorry + 根模块构建绿 + 陈述保真抽查；
 3. 自动化 harness 的提交由机械闸背书 + 主 agent 审计兜底；人工派工的提交由主 agent 逐块验收。
