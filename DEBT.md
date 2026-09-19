@@ -83,9 +83,15 @@
 
 ## 主定理可达债务（脊柱公理探针）
 
-> 探针于 2026-09-19 09:06 +0000 运行失败，本节无数据。输出尾部：
+> `Kepler.Assembly.the_kepler_conjecture_from_interfaces` 的 `#print axioms`，探针运行时间 2026-09-19 09:12 +0000。
+> 与上面的 token 计数不同：这里只统计**装配后主定理实际依赖**的公理。
 
-```
-/tmp/kc-main/lean/Kepler/Assembly.lean:19:0: error: object file '/tmp/kc-main/lean/oleans/Kepler/Assembly/GoodListDefs.olean' of module Kepler.Assembly.GoodListDefs does not exist
-```
+| 类别 | 公理 |
+|---|---|
+| sorry 占位（接口债务） | sorryAx |
+| 特许 native_decide（DECISIONS.md 2026-08-10 scoped exception） | 624 个 shard 公理 / ofReduceBool 族 |
+| 标准三公理 | Classical.choice, Quot.sound, propext |
+| 其它（**异常，需排查**） | 无 |
+
+`sorryAx` 当前来源 = Assembly.lean 的冻结接口占位（剩余 `nonlinearInequalities` / `linearProgrammingResults` / `textCapstone` 三个；`goodListArchive` 已于 2026-09-19 由 P6-C 闭合，见 docs/phase6-spine.md §1）；每闭合一个接口，此处可达债务随之消减。
 
