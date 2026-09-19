@@ -1,12 +1,12 @@
 # DEBT.md — sorry 债务账本
 
-> 由 `lean/scripts/debt_ledger.py` 生成；勿手改。总计 **2400** 个 sorry。
+> 由 `lean/scripts/debt_ledger.py` 生成；勿手改。总计 **2404** 个 sorry。
 
 | 区域 | sorry 数 | 涉及文件数 |
 |---|---|---|
 | Text | 2399 | 64 |
-| (root) | 1 | 1 |
-| **合计** | **2400** | **65** |
+| (root) | 5 | 2 |
+| **合计** | **2404** | **66** |
 
 <details><summary>逐文件明细</summary>
 
@@ -70,6 +70,7 @@
 | Text/PackingAuto20.lean | 6 |
 | Text/PackingAuto11.lean | 5 |
 | Text/PackingAuto13.lean | 5 |
+| Assembly.lean | 4 |
 | Text/PackingAuto14.lean | 4 |
 | Text/PackingAuto9.lean | 4 |
 | Text/LocalAnchors.lean | 3 |
@@ -79,3 +80,18 @@
 | Text/LocalBridge.lean | 1 |
 
 </details>
+
+## 主定理可达债务（脊柱公理探针）
+
+> `Kepler.Assembly.the_kepler_conjecture_from_interfaces` 的 `#print axioms`，探针运行时间 2026-09-19 08:43 +0000。
+> 与上面的 token 计数不同：这里只统计**装配后主定理实际依赖**的公理。
+
+| 类别 | 公理 |
+|---|---|
+| sorry 占位（接口债务） | sorryAx |
+| 特许 native_decide（DECISIONS.md 2026-08-10 scoped exception） | 601 个 shard 公理 / ofReduceBool 族 |
+| 标准三公理 | Classical.choice, Quot.sound, propext |
+| 其它（**异常，需排查**） | 无 |
+
+`sorryAx` 当前来源 = Assembly.lean 的冻结接口占位（`nonlinearInequalities` / `linearProgrammingResults` / `textCapstone` / `goodListArchive`，docs/phase6-spine.md §1）；每闭合一个接口，此处可达债务随之消减。
+

@@ -7,14 +7,20 @@ occurrences of the term `sorry` (word-boundary, line comments and the
 sanctioned `Statement.lean` main-theorem placeholder included and flagged),
 which matches how the batch pipelines report their remaining work.
 
-Usage:  python3 lean/scripts/debt_ledger.py [repo_root] > DEBT.md
+Usage:  python3 lean/scripts/debt_ledger.py [repo_root] [--with-spine] > DEBT.md
+
+--with-spine additionally runs lean/scripts/spine_axioms.py and appends the
+"reachable debt of the assembled main theorem" section (requires a working
+Lean toolchain; on probe failure the section reports the failure inline).
 """
 import os
 import re
+import subprocess
 import sys
 from collections import defaultdict
 
-ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(
+_args = [a for a in sys.argv[1:] if not a.startswith("--")]
+ROOT = _args[0] if _args else os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 LEAN = os.path.join(ROOT, "lean", "Kepler")
 WORD = re.compile(r"\bsorry\b")
@@ -85,6 +91,14 @@ def main():
     for rel, n in sorted(rows, key=lambda r: -r[1]):
         print(f"| {rel} | {n} |")
     print("\n</details>")
+    if "--with-spine" in sys.argv[1:]:
+        spine = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "spine_axioms.py")
+        proc = subprocess.run([sys.executable, spine, ROOT],
+                              capture_output=True, text=True)
+        print(proc.stdout)
+        if proc.stderr:
+            print(proc.stderr, file=sys.stderr)
 
 
 if __name__ == "__main__":
