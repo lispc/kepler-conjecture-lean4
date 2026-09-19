@@ -6,6 +6,7 @@ import Kepler.Text.PackingAuto10
 import Kepler.Text.PackingAuto11
 import Kepler.Text.PackingAuto12
 import Kepler.Text.PackingAuto13
+import Kepler.Text.PackingAuto14
 import Kepler.Text.Polytope
 import Mathlib
 /-!
@@ -60,9 +61,10 @@ Assembly status.
   (`FINITE_SET_LIST_LEMMA`) are proved; the capstone `AJRIPQN` is stated
   faithfully and `sorry`ed (DISCHARGES: none — it has no `pack_concl`
   interface); see its docstring for the precise missing pieces.
-- `qzksykg1_p17`/`qzksykg2_p17` are `_p17` copies of the parallel-owned
-  PackingAuto14 capstones (QZKSYKG lane, NOT importable), `sorry`ed with
-  NEEDS markers.
+- `qzksykg1_p17`/`qzksykg2_p17`: SHIMMED (2026-09-19) to the
+  parallel-owned `PackingAuto14.QZKSYKG1`/`QZKSYKG2` via the new import
+  (those remain `sorry`ed upstream in Auto14); delete the `_p17` copies at
+  merge into Auto14's results.
 - Imports: `Kepler.Text.PackingAuto2` (defs + pack_concl interfaces),
   `Kepler.Text.PackingAuto5` (KIUMVTC/TIWWFYQ/DRUQUFE/VORONOI_BALL2/
   BARV_SUBSET), `Kepler.Text.PackingAuto7` (Rogers kit),
@@ -224,33 +226,34 @@ private theorem finiteSetListLemma_p17 {s : Set V3} (hs : s.Finite) :
 /-- HOL `QZKSYKG1` (QZKSYKG.hl:244-253): a left action of a permutation of
 `0..k-1` on a `barV V 3` list keeps it `barV`, provided `mcell k V ul ≠ ∅`.
 
-NEEDS: PackingAuto14.QZKSYKG1 — the QZKSYKG lane (parallel-owned Auto14) is
-NOT importable here; verbatim `_p17` copy of its statement. The HL proof
-goes through `PERMUTES_TRIVIAL`/`LEFT_ACTION_LIST_I` (`k = 0,1`),
-`YIFVQDV_1` (`k = 4`) and `YNHYJIT` (`k = 2,3`, itself carrying the weak-
-`permutes` encoding caveat of Auto10). -/
+SHIM (2026-09-19): the parallel-owned PackingAuto14 olean HAS landed in this
+checkout, so the verbatim `_p17` copy discharges to
+`Kepler.Text.PackingAuto14.QZKSYKG1` (still `sorry`ed upstream there — a
+documented transitive shim, deleting the statement duplication; delete the
+copy at merge when Auto14's giants land). -/
 private theorem qzksykg1_p17 {V : Set V3} {ul vl : List V3} {k : ℕ} {p : Equiv.Perm ℕ}
     (hsat : saturated V) (hpack : Packing V) (hbar : barV V 3 ul)
     (hk : k ∈ ({0, 1, 2, 3, 4} : Set ℕ)) (hne : mcell k V ul ≠ ∅)
     (hperm : permutes p (Set.Icc 0 (k - 1))) (hvl : vl = leftActionList p ul) :
-    barV V 3 vl := by
-  sorry
+    barV V 3 vl :=
+  QZKSYKG1 hsat hpack hbar hk hne hperm hvl
 
 /-- HOL `QZKSYKG2` (QZKSYKG.hl:255-262): `mcell k V ul` is covered by the
 union of the Rogers simplices of all left-action permutations of `ul` over
 `0..k-1` (giant, ~1900 HL lines).
 
-NEEDS: PackingAuto14.QZKSYKG2 — parallel-owned Auto14, NOT importable;
-verbatim `_p17` copy of its statement. The `k = 2, 3` cases additionally
-consume `MXI_EXPLICIT`/`OMEGA_LIST_1_EXPLICIT_NEW` (marchal2 material) and
-`YNHYJIT` (Auto10 caveat); `k = 4` consumes `WQPRRDY`. -/
+SHIM (2026-09-19): the parallel-owned PackingAuto14 olean HAS landed in this
+checkout, so the verbatim `_p17` copy discharges to
+`Kepler.Text.PackingAuto14.QZKSYKG2` (still `sorry`ed upstream there — a
+documented transitive shim, deleting the statement duplication; delete the
+copy at merge when Auto14's giants land). -/
 private theorem qzksykg2_p17 {V : Set V3} {ul : List V3} {k : ℕ}
     (hsat : saturated V) (hpack : Packing V) (hbar : barV V 3 ul)
     (hk : k ∈ ({0, 1, 2, 3, 4} : Set ℕ)) :
     mcell k V ul ⊆
       ⋃₀ ((fun p => rogers V (leftActionList p ul)) ''
-        {p : Equiv.Perm ℕ | permutes p (Set.Icc 0 (k - 1))}) := by
-  sorry
+        {p : Equiv.Perm ℕ | permutes p (Set.Icc 0 (k - 1))}) :=
+  QZKSYKG2 hsat hpack hbar hk
 
 /-! ## AJRIPQN.hl: main theorem -/
 

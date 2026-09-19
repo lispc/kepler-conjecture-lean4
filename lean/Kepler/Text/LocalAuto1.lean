@@ -10,8 +10,8 @@ FILE MAP
   (a) Local-fan-side primitives quoted by the conclusions but owned by the
       chapter proper (WRGCVDR/localization lanes): `azim_in_fan`,
       `interior_angle1`, `sol_local`, `circular`, `generic`, `lunar`,
-      `deformation`, `convex_local_fan` (ported here; the hypermap content of
-      `local_fan` is deferred with `hypermapOfFan`, see Fan.lean head note).
+      `deformation`, `convex_local_fan` (ported here; `local_fan` carries
+      its full FAN / hypermap-face / `dih2k` content over `hypermapOfFan`).
   (b) Shared constants/kit feeding the tau inequalities: `cstab`, `rho_fun`,
       `rho_rho_fun` (rho_fun = Sphere.rho), `tau_fun`, `tau3`, `d_tame`,
       `tgt`, `arc1553_v39`, the torsor kit.
@@ -83,8 +83,8 @@ namespace Kepler.Text
 open Kepler.Geom Kepler.Text.Fan Set Classical
 
 /-! ## Local-fan primitives quoted by the appendix conclusions
-(localization.hl:66-131; `local_fan`'s hypermap kit deferred with
-`hypermapOfFan`, Fan.lean head note) -/
+(localization.hl:66-131; `local_fan`'s FAN/face/`dih2k` content over
+`hypermapOfFan`, with `has_orders`/`dih2k` ported below) -/
 
 /-- HOL `EE` (localization.hl:38): the neighbours of `v` along `S`. -/
 def ee (v : V3) (S : Set (Set V3)) : Set V3 := {w | {v, w} ∈ S}
@@ -130,13 +130,35 @@ def Deformation (f : V3 → ℝ → V3) (V : Set V3) (a b : ℝ) : Prop :=
   (0 : ℝ) ∈ Icc a b ∧ (∀ v ∈ V, ∀ r ∈ Icc a b, ContinuousAt (f v) r) ∧
     ∀ v ∈ V, f v 0 = v
 
+/-- HOL `has_orders f k` (localization.hl:20): the iterates below `k` are
+nontrivial and the `k`-th is the identity.  `ITER i f = I` on functions ↦
+`(f ^ i : Equiv.Perm α) = 1` (Hypermap.lean encoding note). -/
+def HasOrders {α : Type*} (f : Equiv.Perm α) (k : ℕ) : Prop :=
+  (∀ i, 0 < i → i < k → f ^ i ≠ 1) ∧ f ^ k = 1
+
+/-- HOL `dih2k H k` (localization.hl:30): `CARD (dart H) = 2*k`, every dart's
+face `S = face H x` satisfies `dart H = S UNION IMAGE (node_map H) S`, and
+face/edge/node maps have orders `k`/`2`/`2`.  `face H x = orbit_map
+(face_map H) x` ↦ `orbitMap H.faceMap x`; `dart H` ↦ `H.darts`. -/
+def Dih2k {α : Type*} [DecidableEq α] (H : Hypermap α) (k : ℕ) : Prop :=
+  H.darts.card = 2 * k ∧
+    (∀ d ∈ H.darts, orbitMap H.faceMap d ∪ H.nodeMap '' orbitMap H.faceMap d =
+      (H.darts : Set α)) ∧
+    HasOrders H.faceMap k ∧ HasOrders H.edgeMap 2 ∧ HasOrders H.nodeMap 2
+
 /-- HOL `local_fan (V,E,FF)` (WRGCVDR.hl:144 = localization.hl:66): `FAN
-(vec 0,V,E)` at the hypermap `hypermap (HYP (vec 0,V,E))` with `FF` a
-hypermap face and `dih2k H (CARD FF)`.  Skeleton: the `HYP`-hypermap kit
-(`darts_of_hyp`/`ee_of_hyp`/`nn_of_hyp`/`ff_of_hyp` over `azim_cycle`) is the
-Local-Fan chapter foundation and is deferred together with `hypermapOfFan`
-(Fan.lean head note); the registry statements only need the signature. -/
-def LocalFan (_V : Set V3) (_E : Set (Set V3)) (_FF : Set (V3 × V3)) : Prop := True
+(vec 0,V,E)`, `FF` a hypermap face (`?x. x IN dart H /\ FF = face H x`) and
+`dih2k H (CARD FF)` at `H = hypermap (HYP (vec 0,V,E))`.  Ported over the
+fan chapter's dart-layer hypermap `hypermapOfFan 0 V E` (Fan.lean), whose
+darts are `dart1OfFan V E`: on a fan the `HYP` kit's isolated-vertex
+`self_pairs` are absent and its `azim_cycle` maps coincide with the
+`sigmaFan` maps, so the face/`dih2k` content lands verbatim; the residual
+`HYP`-layer bookkeeping is tracked by downstream obligations. -/
+def LocalFan (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) : Prop :=
+  ∃ hfan : FAN 0 V E,
+    ∃ x ∈ (hypermapOfFan 0 V E hfan).darts,
+      FF = orbitMap (hypermapOfFan 0 V E hfan).faceMap x ∧
+        Dih2k (hypermapOfFan 0 V E hfan) FF.ncard
 
 /-- HOL `wedge_in_fan_ge (v,w) E` (localization.hl:88). -/
 noncomputable def wedgeInFanGe (e : V3 × V3) (E : Set (Set V3)) : Set V3 :=

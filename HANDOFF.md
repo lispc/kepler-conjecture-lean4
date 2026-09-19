@@ -246,3 +246,22 @@ tail -20 /tmp/auto_pipeline.log # 流水线状态（若在跑）
   VPWSHTO1/200/2、VPWSHTO、POINTS_IN_BALL_ANNULUS 在全树均无已证孪生/阻塞
   （「contract registry」结论维持）；纯代数项已在上波闭合。0 error。
 - 三文件联合编译 0 error（rm trace 后重验 LA4→LA15/LA36 依赖链）。
+
+## PackingAuto21 填充波（2026-09-19）
+
+- **PackingAuto21（TSKAJXY2/3）**：43 → 37 sorry（+6 闭合）。本轮闭合：
+  `BIS_HYPERPLANE`（内积代数：PA5 `bis_mem_eq` 的超平面形；新私件 `p21_sq_eq`）、
+  `RCONE_GT_SCALE`（顶点射线正齐次性）、`RCONE_GE_COS`（顶点 + `cos arcV` 区域；
+  新私件 `p21_cos_arcV`：`abs_real_inner_le_norm`+`inner_eq_dot` 的 Cauchy–Schwarz 桥，
+  分母退化由 `0/0=0`+dot-消失吸收）、`DIST_LAW_OF_COS_ALT`（`norm_sub_sq_real`+私件
+  `p21_cos_arcV_mul`/`p21_cos_arcV_inner`，退化 junk 情形同样成立）、
+  `MCELL2_INTER_BIS_LE_MEASURABLE`（`MEASURABLE_MCELL` + `bis_le` 闭半空间 Borel）、
+  `RCONE_PAIR`（无坐标二次代数：bisector 半 `2A≤‖v-u‖²`、cone 半 `A≥t‖v-u‖‖x-u‖`、
+  `t≤1` 平方比较闭环；新私件 `p21_smul_dotP`/`p21_sum_smul_dotP`）。0 error。
+- **NEEDS 注记（未闭合，已写入文件内 NEEDS 块）**：`MCELL2_SPLIT`/`MCELL2_VOL_SPLIT`
+  的真正阻塞 = 从 `¬nullSet (mcell2 V ul)` 导出 `elV ul 0 ≠ elV ul 1`（u=v ⇒ 细胞 ⊆
+  `u + span{mxi-u, omega-u}` 平移真子空间 ⇒ 零测——草稿已试，`Finset.sum`-membership
+  在 `ofLp`-coercion 下的 conv/rw 组合过于脆弱，本轮放弃）；`MCELL2_VOL_SPLIT` 另需
+  ENNReal-级并-交可加性（`measure_union_add_inter`）+ 零测双 bisector 交
+  （`BIS_HYPERPLANE` + 仿射超平面零测）。`MCELL2_SPLIT` 的 `RCONE_PAIR`-半已就绪，
+  剩 affGe-半即闭合。0 error，37 sorry。

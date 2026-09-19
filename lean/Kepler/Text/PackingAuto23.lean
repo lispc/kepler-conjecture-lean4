@@ -37,11 +37,19 @@ privately here;
 HOL set `sum` ↔ `setSum` (Auto2; index finiteness folded into
 grutoti_sum_volD); `mcell_set V X` ↔ `X ∈ mcellSet V`. Sorried giants carry
 NEEDS-precision notes; mechanical steps are proved.
+
+2026-09-19 pass: `grutoti_hl_barV` SHIMMED to
+`PackingAuto15.HL_LE_SQRT2_IMP_BARV_1` (olean landed; still `sorry`ed
+upstream); `grutoti_vor_cover` FILLED (assembled from `grutoti_3mem` +
+Auto12's `VORONOI_LIST_3_SINGLETON_EXPLICIT` shim + `CLOSEST_POINT_SING`);
+`grutoti_volD_pos` re-documented (frozen statement is FALSE for the
+degenerate `u1 = u0` — the empty conic cap; caller `GRUTOTI` has `hne`).
 -/
 
 import Kepler.Text.PackingAuto2
 import Kepler.Text.PackingAuto6
 import Kepler.Text.PackingAuto12
+import Kepler.Text.PackingAuto15
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -64,12 +72,15 @@ private theorem grutoti_rconeGt_subset (u0 u1 : V3) (a b : ℝ) (h : a ≤ b) :
   simp only [rconeGt, Set.mem_setOf_eq] at hx ⊢
   exact lt_of_le_of_lt (mul_le_mul_of_nonneg_left h (by positivity)) hx
 
-/-- marchal3.hl:1054 `HL_LE_SQRT2_IMP_BARV_1` (Auto15:282, sorried there;
-giant: needs the saturated-packing barV criterion). -/
+/-- marchal3.hl:1054 `HL_LE_SQRT2_IMP_BARV_1` (Auto15:282). SHIM
+(2026-09-19): the PackingAuto15 olean HAS landed in this checkout, so the
+private copy discharges to `Kepler.Text.PackingAuto15.HL_LE_SQRT2_IMP_BARV_1`
+(statement-identical; still `sorry`ed upstream in Auto15 — a documented
+transitive shim; delete the copy at merge into Auto15's results). -/
 private theorem grutoti_hl_barV (V : Set V3) (u0 u1 : V3) (hs : saturated V)
     (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
-    (hhl : hl [u0, u1] < Real.sqrt 2) : barV V 1 [u0, u1] := by
-  sorry
+    (hhl : hl [u0, u1] < Real.sqrt 2) : barV V 1 [u0, u1] :=
+  HL_LE_SQRT2_IMP_BARV_1 V u0 u1 hs hp hu0 hu1 hne hhl
 
 /-- HL GRUTOTI.hl:7227: `s = {X | mcell_set V X /\ edgeX V X e}` — the index
 set of the final sums (identical to the GRUTOTI1_concl set by definition). -/
@@ -163,16 +174,73 @@ private theorem grutoti_concl_arith (w S volD : ℝ) (hvol : 0 < volD)
 /-- HL GRUTOTI.hl:86-160: the `k = 3` specialization of grutoti_3mem — the
 Voronoi cell of the edge is the union of the Rogers hulls
 `convex hull {ω₁, ω₂, ω₃}` over `barV V 3` lists truncating to `[u0, u1]`.
-NEEDS-precision: `omegaListN V vl 3 = circumcenter (setOfList vl)` via
-`VORONOI_LIST_3_SINGLETON_EXPLICIT` (Auto12:1087) + `OMEGA_LIST`/
-`OMEGA_LIST_IN_VORONOI_LIST`/`BARV_IMP_LENGTH_EQ_CARD`; the ⊇ direction
-(hull ⊆ voronoiList V [u0,u1]) needs voronoi monotonicity under truncation. -/
+FILLED (2026-09-19) from grutoti_3mem plus
+`PackingAuto12.VORONOI_LIST_3_SINGLETON_EXPLICIT` (SHIM: still `sorry`ed
+upstream in Auto12): on each truncation list the Voronoi cell is the
+singleton `{a}`, `a = circumcenter (setOfList vl)`, and `omega_list_n V vl 3`
+— being `closest_point` on that singleton (with
+`truncate_simplex 3 vl = vl` and `CLOSEST_POINT_SING`) — equals `a`, so the
+3mem family `{hull ({ωᵢ | i ∈ Icc 1 2} ∪ voronoiList V vl)}` coincides with
+the hull-of-triple family. -/
 private theorem grutoti_vor_cover (V : Set V3) (u0 u1 : V3) (hp : Packing V)
     (hs : saturated V) (hbar : barV V 1 [u0, u1]) :
     voronoiList V [u0, u1] =
       ⋃₀ {convexHull ℝ {omegaListN V vl 1, omegaListN V vl 2, omegaListN V vl 3} |
           vl ∈ {vl : List V3 | barV V 3 vl ∧ truncateSimplex 1 vl = [u0, u1]}} := by
-  sorry
+  have key : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      convexHull ℝ ({omegaListN V vl i | i ∈ Finset.Icc 1 (3 - 1)} ∪ voronoiList V vl) =
+        convexHull ℝ {omegaListN V vl 1, omegaListN V vl 2, omegaListN V vl 3} := by
+    intro vl hb _htr
+    obtain ⟨a, hsingle, hcc, -⟩ := VORONOI_LIST_3_SINGLETON_EXPLICIT V vl hp hs hb
+    have hlen : vl.length = 4 := hb.1
+    have homeg : omegaListN V vl 3 = a := by
+      have h3 : omegaListN V vl 3
+          = closestPoint (voronoiList V (truncateSimplex 3 vl)) (omegaListN V vl 2) := rfl
+      rw [h3, TRUNCATE_SIMPLEX_REFL 3 vl hlen, hsingle]
+      exact CLOSEST_POINT_SING a (omegaListN V vl 2)
+    have hIcc : {omegaListN V vl i | i ∈ Finset.Icc 1 (3 - 1)}
+        = {omegaListN V vl 1, omegaListN V vl 2} := by
+      ext y
+      simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff,
+        Finset.mem_coe, Finset.mem_Icc]
+      constructor
+      · rintro ⟨i, hi1, hi2, rfl⟩
+        rcases Nat.eq_zero_or_pos (i - 1) with h0 | _h0
+        · exact Or.inl (by rw [show i = 1 by omega])
+        · exact Or.inr (by rw [show i = 2 by omega])
+      · rintro (rfl | rfl)
+        · exact ⟨1, by norm_num, rfl⟩
+        · exact ⟨2, by norm_num, rfl⟩
+    congr 1
+    rw [hIcc, hsingle, homeg]
+    ext z
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, Set.mem_union]
+    tauto
+  rw [grutoti_3mem V u0 u1 hp hs hbar]
+  refine Set.ext fun X => ?_
+  constructor
+  · intro hX
+    rw [Set.mem_sUnion] at hX
+    obtain ⟨t, ht, hX⟩ := hX
+    rw [Set.mem_setOf_eq] at ht
+    obtain ⟨vl, hmem, rfl⟩ := ht
+    rw [Set.mem_setOf_eq] at hmem
+    obtain ⟨hb, htr⟩ := hmem
+    rw [key vl hb htr] at hX
+    refine Set.mem_sUnion.mpr ⟨convexHull ℝ {omegaListN V vl 1, omegaListN V vl 2,
+      omegaListN V vl 3}, ?_, hX⟩
+    exact ⟨vl, Set.mem_setOf.mpr ⟨hb, htr⟩, rfl⟩
+  · intro hX
+    rw [Set.mem_sUnion] at hX
+    obtain ⟨t, ht, hX⟩ := hX
+    rw [Set.mem_setOf_eq] at ht
+    obtain ⟨vl, hmem, rfl⟩ := ht
+    rw [Set.mem_setOf_eq] at hmem
+    obtain ⟨hb, htr⟩ := hmem
+    rw [(key vl hb htr).symm] at hX
+    refine Set.mem_sUnion.mpr ⟨convexHull ℝ ({omegaListN V vl i |
+      i ∈ Finset.Icc 1 (3 - 1)} ∪ voronoiList V vl), ?_, hX⟩
+    exact ⟨vl, Set.mem_setOf.mpr ⟨hb, htr⟩, rfl⟩
 
 /-- HL GRUTOTI.hl:161-2636: the volumetric core. Produces cone/annulus
 parameters `c r d` (`c = max b (hl/√2)`, `r = min 1 (min r1 r2)`,
@@ -236,9 +304,14 @@ private theorem grutoti_pivot (V : Set V3) (u0 u1 : V3) (e : Set V3) (r d : ℝ)
 
 /-- HL GRUTOTI.hl:7983-8000: `0 < vol D` from `VOLUME_CONIC_CAP`
 (marchal3; `vol (conic_cap u0 u1 r d) = 2/3 · π · r³ · (1-d)² …`-type formula,
-positive for `0 < d < 1`, `0 < r`). NEEDS-precision: the volume formula is
-not yet ported; alternative route via `CONIC_CAP_INTER_CONVEX_HULL_4_GT_0`
-(Auto15:538) with a non-coplanar quadruple in the cone. -/
+positive for `0 < d < 1`, `0 < r`). STILL `sorry`, with an honest note
+(2026-09-19): the statement as frozen is FALSE for the degenerate `u1 = u0`
+(then `rconeGt u0 u0 d = ∅`, so `vol D = 0`); the caller `GRUTOTI` supplies
+`hne : u0 ≠ u1` but the frozen private signature omits it. The fill route
+under `u0 ≠ u1` is elementary — `D` contains the open ball
+`ball (u0 + (r/2)·(u1-u0)/‖u1-u0‖, r·(1-d)/(4·(1+d)))` (cone/ball arithmetic
++ `volume` positivity of open balls) — port it together with the missing
+hypothesis at merge. -/
 private theorem grutoti_volD_pos (u0 u1 : V3) (r d : ℝ) (hr : 0 < r) (hd : 0 < d)
     (hd1 : d < 1) : 0 < volume.real (grutotiConicCap u0 u1 r d) := by
   sorry

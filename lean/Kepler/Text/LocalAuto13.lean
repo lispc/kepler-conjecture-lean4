@@ -53,10 +53,11 @@ FILL ROUND (2026-09-19): 47 -> 43 sorries.  Proved `EE_SYM_0_p13` and
 `SUM_PAIR_SYM_0_p13` (negation transports two-point sets / the neg-pair
 involution reindexes `setSum`), `COLLINEAR_SYM_0_p13` +
 `COLLINEAR_POINT_SYM_0_p13` (`collinear_iff_of_mem` with negated anchors).
-NOTE: `POINT_IN_AFF_LT_SYM_0_p13` is unprovable as stated (counterexample
-`w2 = 0`, `v1 ≠ 0`: the weight conditions force `f w2 < 0` with `w2` in the
-base set, making `∑ f = 1` and vector `0` incompatible); the HOL source
-presumably assumes `w2 ≠ 0` — left `sorry` with this note.
+FIDELITY-FIX 2026-09-17: `POINT_IN_AFF_LT_SYM_0_p13` hypothesis restored to
+the HOL `DISJOINT {vec 0,v1} {w2}` (YXIONXL2.hl:1324; the earlier port's
+`Disjoint {v1} {w2}` admitted the `w2 = 0` counterexample) — statement
+fixed, then PROVED with the HOL witnesses `&2, &0, --&1` (src:1330-1332);
+ledger 43 -> 40 tactic-sorries.
 -/
 
 import Kepler.Text.Fan
@@ -1415,10 +1416,64 @@ theorem AFF_LT_VEC0_SYM_0_p13 (e : Set V3) :
       = Set.image (fun x : V3 => -x) (affLt ({0} : Set V3) e) := by
   sorry
 
-/-- HOL `POINT_IN_AFF_LT_SYM_0` (src:1324). Proof pending. -/
-theorem POINT_IN_AFF_LT_SYM_0_p13 {v1 w2 : V3} (hd : Disjoint ({v1} : Set V3) {w2}) :
+/-- HOL `POINT_IN_AFF_LT_SYM_0` (src:1324).
+FIDELITY-FIX 2026-09-17: the HOL hypothesis is `DISJOINT {vec 0,v1} {w2}`
+(YXIONXL2.hl:1324-1325), i.e. `w2 ≠ 0 ∧ w2 ≠ v1`; the earlier port carried
+only `Disjoint {v1} {w2}`, which admits the counterexample `w2 = 0` (then
+`-w2 = 0`, and the weight conditions force `f w2 < 0` while `w2` lies in
+the base set, so `∑ f = 1` and vector `0` are incompatible).  Hypothesis
+restored verbatim and PROVED with the HOL witnesses `&2, &0, --&1`
+(YXIONXL2.hl:1330-1332). -/
+theorem POINT_IN_AFF_LT_SYM_0_p13 {v1 w2 : V3}
+    (hd : Disjoint ({0, v1} : Set V3) {w2}) :
     -w2 ∈ affLt ({0, v1} : Set V3) {w2} := by
-  sorry
+  have hd1 := Set.disjoint_left.mp hd
+  have h0w : (0 : V3) ≠ w2 := fun h => hd1 (Set.mem_insert 0 {v1}) (by simp [h])
+  have h1w : v1 ≠ w2 := fun h => hd1 (Set.mem_insert_of_mem 0 (Set.mem_singleton v1))
+    (by simp [h])
+  by_cases hv10 : v1 = 0
+  · subst hv10
+    have hfin : (({0, 0} ∪ {w2} : Set V3)).Finite := Set.toFinite _
+    have h3 : hfin.toFinset = ({0, w2} : Finset V3) := by
+      ext z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+        Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+      tauto
+    refine ⟨fun z => if z = w2 then (-1 : ℝ) else 2, hfin, ?_, ?_, ?_⟩
+    · rw [h3, Finset.sum_insert (by simp [h0w] : (0 : V3) ∉ ({w2} : Finset V3)),
+        Finset.sum_singleton]
+      simp [h0w]
+    · intro w hw
+      simp only [Set.mem_singleton_iff] at hw
+      subst hw
+      simp
+    · rw [h3, Finset.sum_insert (by simp [h0w] : (0 : V3) ∉ ({w2} : Finset V3)),
+        Finset.sum_singleton]
+      norm_num [h0w]
+  · have hfin : (({0, v1} ∪ {w2} : Set V3)).Finite := Set.toFinite _
+    have h3 : hfin.toFinset = ({0, v1, w2} : Finset V3) := by
+      ext z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+        Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+      tauto
+    refine ⟨fun z => if z = w2 then (-1 : ℝ) else if z = v1 then 0 else 2, hfin,
+      ?_, ?_, ?_⟩
+    · rw [h3,
+        Finset.sum_insert
+          (by simp [Ne.symm hv10, h0w] : (0 : V3) ∉ ({v1, w2} : Finset V3)),
+        Finset.sum_insert (by simp [h1w] : v1 ∉ ({w2} : Finset V3)),
+        Finset.sum_singleton]
+      simp [h0w, Ne.symm hv10, h1w]
+    · intro w hw
+      simp only [Set.mem_singleton_iff] at hw
+      subst hw
+      simp
+    · rw [h3,
+        Finset.sum_insert
+          (by simp [Ne.symm hv10, h0w] : (0 : V3) ∉ ({v1, w2} : Finset V3)),
+        Finset.sum_insert (by simp [h1w] : v1 ∉ ({w2} : Finset V3)),
+        Finset.sum_singleton]
+      norm_num [h0w, Ne.symm hv10, h1w]
 
 /-- HOL `COLLINEAR_POINT_SYM_0` (src:1336).
 DISCHARGED: `collinear_iff_of_mem` at `0` — if `v1` and `-w1` are both

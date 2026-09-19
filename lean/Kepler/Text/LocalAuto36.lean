@@ -56,13 +56,23 @@ Encoding (house conventions, cf. LocalAuto24/33):
   `torsor_succ_mod_p36`; cstab = 3.01 makes every bound numeric),
   `IN_NOT_EMPTY_B1_SY_3`, `NOT_COLLINEAR_BBs_CASE_3`,
   `IN_B_SY1_COLLINEAR_CASE_3`, `TAUSTAR_EQ_TAU_STAR_3` (dTame 3 = 0 +
-  `tau3_cycle_p36`). Remaining 34: `CARD_SLICE_EQ`, `HDPLYGY_CASE_3`,
-  `XWITCCN_CASE_*` (8, blocked by TAUSTAR_* + the B_SY1-minimiser),
-  `TAUSTAR_EQ_TAU_STAR_*` k >= 4 (7, statement doubt ①: s1.d := 0 vs
-  taustarV39's dTame k), the k >= 4 `IN_NOT_EMPTY_CASE/B1_SY` twins (14,
-  blocked by the registry-ConvexLocalFan vs `convexLocalFan_p4` def-bridge
-  — azimCycle_p4 vs sigmaFan; see NEEDS notes), `IN_NOT_EMPTY_CASE_3`
-  (statement doubt ②), `XWITCCN_TYPE`/`XWITCCN`.
+  `tau3_cycle_p36`).
+- FIDELITY-FIX 2026-09-17 (HANDOFF doubts ① + ②, ruled against
+  XWITCCN.hl): ① the k >= 4 `TAUSTAR_EQ_TAU_STAR_*` record hypothesis is
+  now `s1 = scsToStableSyD_p36 s` — the HOL record carries `scs_d_v39 s`
+  (XWITCCN.hl:2772 et seq.), NOT `0`; all 7 fixed and PROVED via
+  `taustar_eq_tauStar_gen_p36` (J = ∅ kills `dFun`, `dsv_J_empty` +
+  `vecmatsV3_flattenRow_p36` identify the tau_fun arguments).  ② the k = 3
+  body set is the CONDITION2-free `B_SY1_nc2_p36` (XWITCCN.hl:1344-1346
+  has no `CONDITION2_SY v`); `IN_NOT_EMPTY_CASE_3`, `NOT_EMPTY_CASE_3`,
+  `IN_B_SY1_COLLINEAR_CASE_3`, `HDPLYGY_CASE_3` restated accordingly, the
+  first three PROVED. Sorries: 34 -> 26 theorems (+1 placeholder inside
+  `scsToStableSyD_p36`, mirroring `scsToStableSy_p23`): `CARD_SLICE_EQ`,
+  `HDPLYGY_CASE_3`,
+  `XWITCCN_CASE_*` (8, blocked by the k >= 4 IN_NOT_EMPTY_CASE/B1_SY
+  twins), the k >= 4 `IN_NOT_EMPTY_CASE/B1_SY` twins (14, blocked by the
+  registry-ConvexLocalFan vs `convexLocalFan_p4` def-bridge — azimCycle_p4
+  vs sigmaFan; see NEEDS notes), `XWITCCN_TYPE`/`XWITCCN`.
 -/
 
 import Kepler.Text.LocalAuto1
@@ -373,6 +383,120 @@ theorem change_type_v2_mkUnadorned_p36 {k : ℕ} (d : ℝ) (a b : ℕ → ℕ �
   show change_type_v2 (fun _ _ => False) k = ∅
   ext e
   simp [change_type_v2]
+
+/-- `scsJSet_p23` of an unadorned system is empty (`mk_unadorned_v39` has
+`J = fun _ _ => False`). -/
+theorem scsJSet_mkUnadorned_p36 {k : ℕ} (d : ℝ) (a b : ℕ → ℕ → ℝ) :
+    scsJSet_p23 (mkUnadornedV39 k d a b) = ∅ := by
+  ext e
+  simp only [scsJSet_p23, Set.mem_setOf_eq, Set.mem_empty_iff_false]
+  constructor
+  · rintro ⟨i, j, -, -, hJ, -⟩
+    exact hJ
+  · intro h
+    exact absurd h (by simp)
+
+/-- HOL `stable_sy ((scs_k_v39 s),(scs_d_v39 s),(0..scs_k_v39 s - 1),
+(change_type_v3 (scs_a_v39 s)),(change_type_v3 (scs_b_v39 s)),
+(change_type_v2 (scs_J_v39 s) (scs_k_v39 s)),(\i. (1 + i) MOD scs_k_v39 s))`
+— the record carried by the `TAUSTAR_EQ_TAU_STAR_*` hypotheses
+(XWITCCN.hl:2771-2774 et seq.).
+
+FIDELITY-FIX 2026-09-17: the HOL record's `d` slot is `scs_d_v39 s`
+(XWITCCN.hl:2772), NOT `0`.  The earlier rendering via `scsToStableSy_p23`
+(which fixes `d := 0`) made every `k ≥ 4` `TAUSTAR_EQ_TAU_STAR_*` false,
+since `taustar_v39` subtracts `dsv_v39 = scs_d_v39 s` while
+`tau_star s1` subtracted `0 ≠ d_tame k`.  The `stable` field keeps the
+LocalAuto23 `IS_SCS_STABLE_SYSTEM_p23` placeholder, as in
+`scsToStableSy_p23`. -/
+noncomputable def scsToStableSyD_p36 (s : ScsV39) : StableSyP23 where
+  k := s.k
+  d := s.d
+  I := Set.Iic (s.k - 1)
+  a := s.a
+  b := s.b
+  J := scsJSet_p23 s
+  f := fun i => (1 + i) % s.k
+  stable := sorry
+
+/-- `setSum` over the empty set is `0`. -/
+private theorem setSum_empty_p36 {α : Type*} (f : α → ℝ) : setSum (∅ : Set α) f = 0 := by
+  classical
+  rw [setSum, dif_pos (Set.finite_empty : Set.Finite (∅ : Set α))]
+  simp
+
+/-- `MATVEC_VECMATS_ID` for `real^3` rows: the `flattenRow_p23` flattening
+decodes back to the cyclic row vector. -/
+theorem vecmatsV3_flattenRow_p36 {k : ℕ} (vv : ℕ → V3) :
+    vecmatsV3_p4 (flattenRow_p23 vv k) = cycRow_p23 vv k := by
+  funext j
+  have h1 : flattenRow_p23 vv k
+      = matvec_p4 (fun j : Fin k => (cycRow_p23 vv k j : Fin 3 → ℝ)) := by
+    funext i
+    simp only [flattenRow_p23, matvec_p4]
+  have h2 : vecmats_p4 (flattenRow_p23 vv k) j = (cycRow_p23 vv k j : Fin 3 → ℝ) := by
+    rw [h1, VECMATS_MATVEC_ID]
+  show (WithLp.toLp 2 (vecmats_p4 (flattenRow_p23 vv k) j) : V3) = cycRow_p23 vv k j
+  rw [h2, WithLp.toLp_ofLp]
+
+/-- The `CONDITION2`-free k = 3 body set of the HOL case machine: HOL
+`{matvec v | (!i. 1<=i /\ i <= dimindex(:M) ==> row i v IN ball_annulus) /\
+CONDITION1_SY (change_type_v3 (scs_a_v39 s)) (change_type_v3 (scs_b_v39 s))
+v}` — verbatim in `IN_NOT_EMPTY_CASE_3` (XWITCCN.hl:1344-1346),
+`NOT_EMPTY_CASE_3` (:1383-1384), `IN_B_SY1_COLLINEAR_CASE_3` (:2033-2035)
+and `HDPLYGY_CASE_3` (:2101-2116).  Unlike the `k ≥ 4` bodies (rendered by
+`B_SY1_p4`), the k = 3 statements carry NO `CONDITION2_SY v` conjunct.
+
+FIDELITY-FIX 2026-09-17: the earlier port stated the k = 3 case machine
+over `B_SY1_p4`, injecting a spurious `CONDITION2_SY_p4` conjunct that
+`BBsV39` cannot supply at `k = 3` (only the vacuous `s.k ≤ 3` disjunct). -/
+def B_SY1_nc2_p36 {m : ℕ} (a b : Fin m → Fin m → ℝ) : Set (FinVec m 3) :=
+  (fun v : Fin m → V3 =>
+      fun i : Fin (m * 3) =>
+        (v ⟨(i : ℕ) / 3, (Nat.div_lt_iff_lt_mul (k := 3) (by norm_num)).mpr i.isLt⟩ :
+              Fin 3 → ℝ) ⟨(i : ℕ) % 3, Nat.mod_lt (i : ℕ) (by norm_num : 0 < 3)⟩)
+    '' {v | (∀ i : Fin m, v i ∈ ballAnnulus) ∧ CONDITION1_SY_p4 a b v}
+
+/-- Core of the `k ≥ 4` `TAUSTAR_EQ_TAU_STAR_*` family (XWITCCN.hl:2763 et
+seq.): with `J = ∅`, `taustar_v39 = tau_fun(...) - scs_d_v39 s` and
+`tau_star s1 = tau_fun(...) - d_fun s1` where `d_fun s1 = s1.d` because
+`J1_SY s1 = ∅`. -/
+private theorem taustar_eq_tauStar_gen_p36 {k : ℕ} (hk3 : ¬(k ≤ 3)) (s : ScsV39)
+    (s1 : StableSyP23) (vv : ℕ → V3) (l : FinVec k 3)
+    (hJ : s.J = fun _ _ => False) (hk : s.k = k)
+    (hVEF : V_SY_p4 (cycRow_p23 vv k) = Set.range vv ∧
+      E_SY_p4 (cycRow_p23 vv k) = Set.range (fun i : ℕ => {vv i, vv (i + 1)}) ∧
+      F_SY_p4 (cycRow_p23 vv k) = Set.range (fun i : ℕ => (vv i, vv (i + 1))))
+    (hs1 : s1 = scsToStableSyD_p36 s) (hl : flattenRow_p23 vv k = l) :
+    taustarV39 s vv = tauStar_p23 s1 l := by
+  subst hs1
+  subst hl
+  obtain ⟨hV, hE, hF⟩ := hVEF
+  have hn3 : ¬(s.k ≤ 3) := by omega
+  have hvb : vecmatsV3_p4 (flattenRow_p23 vv k) = cycRow_p23 vv k :=
+    vecmatsV3_flattenRow_p36 vv
+  have hJs : (scsToStableSyD_p36 s).J = (∅ : Set (Set ℕ)) := by
+    show scsJSet_p23 s = ∅
+    ext e
+    simp only [scsJSet_p23, Set.mem_setOf_eq, Set.mem_empty_iff_false]
+    constructor
+    · rintro ⟨i, j, -, -, hJm, -⟩
+      rw [hJ] at hJm
+      exact hJm
+    · intro h
+      exact absurd h (by simp)
+  have hJ1 : J1_SY_p23 (scsToStableSyD_p36 s) = ∅ := by
+    rw [Set.eq_empty_iff_forall_notMem]
+    intro x hx
+    simp only [J1_SY_p23, Set.mem_setOf_eq] at hx
+    obtain ⟨i, hm, -, -⟩ := hx
+    rw [hJs] at hm
+    exact absurd hm (by simp)
+  unfold taustarV39
+  rw [if_neg hn3, dsv_J_empty s vv hJ]
+  unfold tauStar_p23 dFun_p23
+  rw [hvb, hV, hE, hF, hJ1, setSum_empty_p36, mul_zero, add_zero]
+  rfl
 
 
 /-! ## Section 1: the k = 3 system (XWITCCN.hl:63-2428) -/
@@ -687,32 +811,47 @@ theorem INEQUALITY_A_B_SCS_TAC_3 (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s 
       dist (vv i) (vv j) ≤ change_type_v3 s.b (i, j) :=
   INEQUALITY_A_B_SCS_TAC_30 s vv hBB i j
 
-/-- HOL `IN_NOT_EMPTY_CASE_3` (XWITCCN.hl:1335). -/
+/-- HOL `IN_NOT_EMPTY_CASE_3` (XWITCCN.hl:1335).
+FIDELITY-FIX 2026-09-17: restated over the CONDITION2-free `B_SY1_nc2_p36`
+(HOL body XWITCCN.hl:1344-1346 has no `CONDITION2_SY v`); now PROVED. -/
 theorem IN_NOT_EMPTY_CASE_3 (s : ScsV39) (vv : ℕ → V3)
     (hs : s = mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hk : s.k = 3) :
-    flattenRow_p23 vv 3 ∈ B_SY1_p4
+    flattenRow_p23 vv 3 ∈ B_SY1_nc2_p36
       (fun (i j : Fin 3) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
       (fun (i j : Fin 3) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) := by
-  sorry
-  -- DISCHARGES: BBsV39 unpack (annulus rows via ROW_IN_BALL_ANNULUS_3 /
-  -- VECTOR_3_3, CONDITION1 via the cs_adj ladder, fan conjunct vacuous at
-  -- k = 3) with witness `flattenRow_p23 vv 3`.
-  -- NEEDS (statement doubt, cf. HANDOFF ②): the B_SY1_p4 body requires
-  -- CONDITION2_SY_p4 (a convex local fan), but BBsV39 at k = 3 gives only the
-  -- vacuous left fan disjunct (s.k ≤ 3); the HOL k = 3 body has no CONDITION2.
-  -- Should be re-stated against a CONDITION2-free body (LA24 rendering).
+  have hper : Periodic vv 3 := by rw [← hk]; exact hBB.2.1
+  have hsa : s.a = csAdj 3 2 (2 * h0) := by rw [hs]; rfl
+  have hsb : s.b = csAdj 3 (2 * h0) 6 := by rw [hs]; rfl
+  refine ⟨cycRow_p23 vv 3, ⟨?_, ?_⟩, rfl⟩
+  · intro i
+    show vv (((i : ℕ) + 1) % 3) ∈ ballAnnulus
+    rw [periodic_mod_eq_p23 hper ((i : ℕ) + 1)]
+    exact hBB.1 (Set.mem_range_self ((i : ℕ) + 1))
+  · intro i j
+    obtain ⟨hc1, hc2⟩ := hBB.2.2.1 ((i : ℕ) + 1) ((j : ℕ) + 1)
+    rw [hsa, csAdj_mod_p36 3 2 (2 * h0) ((i : ℕ) + 1) ((j : ℕ) + 1)] at hc1
+    rw [hsb, csAdj_mod_p36 3 (2 * h0) 6 ((i : ℕ) + 1) ((j : ℕ) + 1)] at hc2
+    rw [dist_eq_norm] at hc1 hc2
+    simp only [change_type_v3]
+    rw [hsa, csAdj_mod_p36 3 2 (2 * h0) ((i : ℕ) + 1) ((j : ℕ) + 1), hsb,
+      csAdj_mod_p36 3 (2 * h0) 6 ((i : ℕ) + 1) ((j : ℕ) + 1)]
+    simp only [cycRow_p23]
+    rw [periodic_mod_eq_p23 hper ((i : ℕ) + 1), periodic_mod_eq_p23 hper ((j : ℕ) + 1)]
+    exact ⟨hc1, hc2⟩
 
-/-- HOL `NOT_EMPTY_CASE_3` (XWITCCN.hl:1383). -/
+/-- HOL `NOT_EMPTY_CASE_3` (XWITCCN.hl:1383).
+FIDELITY-FIX 2026-09-17: restated over the CONDITION2-free `B_SY1_nc2_p36`
+(HOL body XWITCCN.hl:1383-1384). -/
 theorem NOT_EMPTY_CASE_3 (s : ScsV39) (vv : ℕ → V3)
     (hs : s = mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hk : s.k = 3) :
-    B_SY1_p4
+    B_SY1_nc2_p36
       (fun (i j : Fin 3) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
       (fun (i j : Fin 3) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) ≠ ∅ :=
   Set.nonempty_iff_ne_empty.mp
     (⟨flattenRow_p23 vv 3, IN_NOT_EMPTY_CASE_3 s vv hs hBB hk⟩ :
-      (B_SY1_p4
+      (B_SY1_nc2_p36
         (fun (i j : Fin 3) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
         (fun (i j : Fin 3) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))).Nonempty)
 
@@ -933,11 +1072,14 @@ theorem NOT_COLLINEAR_BBs_CASE_3 (s : ScsV39) (vv : ℕ → V3)
     notCollinear_annulus_pair_p36 (hBB.1 (Set.mem_range_self 2))
       (hBB.1 (Set.mem_range_self 0)) (hb 2 0).1 (hb 2 0).2⟩
 
-/-- HOL `IN_B_SY1_COLLINEAR_CASE_3` (XWITCCN.hl:2027). -/
+/-- HOL `IN_B_SY1_COLLINEAR_CASE_3` (XWITCCN.hl:2027).
+FIDELITY-FIX 2026-09-17: restated over the CONDITION2-free `B_SY1_nc2_p36`
+(HOL body XWITCCN.hl:2033-2035); the proof is unchanged (it reads only the
+ball-annulus and CONDITION1 conjuncts). -/
 theorem IN_B_SY1_COLLINEAR_CASE_3 (s : ScsV39)
     (hs : s = mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6))
     (hk : s.k = 3) :
-    ∀ l ∈ B_SY1_p4
+    ∀ l ∈ B_SY1_nc2_p36
       (fun (i j : Fin 3) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
       (fun (i j : Fin 3) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)),
       ¬Collinear ℝ {0, rowSy_p23 l 0, rowSy_p23 l 1} ∧
@@ -945,8 +1087,8 @@ theorem IN_B_SY1_COLLINEAR_CASE_3 (s : ScsV39)
       ¬Collinear ℝ {0, rowSy_p23 l 1, rowSy_p23 l 2} := by
   subst hs
   intro l hl
-  simp only [B_SY1_p4, Set.mem_image, Set.mem_setOf_eq] at hl
-  obtain ⟨v, ⟨hvball, hvC1, -⟩, hvfl⟩ := hl
+  simp only [B_SY1_nc2_p36, Set.mem_image, Set.mem_setOf_eq] at hl
+  obtain ⟨v, ⟨hvball, hvC1⟩, hvfl⟩ := hl
   subst hvfl
   have b0 := hvball ⟨0, by norm_num⟩
   have b1 := hvball ⟨1, by norm_num⟩
@@ -978,20 +1120,22 @@ theorem IN_B_SY1_COLLINEAR_CASE_3 (s : ScsV39)
     rw [rowSy_bFlat3_p36 v ⟨1, by norm_num⟩, rowSy_bFlat3_p36 v ⟨2, by norm_num⟩]
     exact notCollinear_annulus_pair_p36 b1 b2 d12.1 d12.2
 
-/-- HOL `HDPLYGY_CASE_3` (XWITCCN.hl:2098): the `B_SY1` minimiser. -/
+/-- HOL `HDPLYGY_CASE_3` (XWITCCN.hl:2098): the `B_SY1` minimiser.
+FIDELITY-FIX 2026-09-17: restated over the CONDITION2-free `B_SY1_nc2_p36`
+(HOL body XWITCCN.hl:2101-2116). -/
 theorem HDPLYGY_CASE_3 (k : ℕ) (a b : ℕ → ℕ → ℝ) (J : Set (Set ℕ))
     (ht : triStable_p23 k 0 (Set.Iic (k - 1)) a b J (fun i => (1 + i) % k))
     (hk : k = 3) (h2k : 2 < k)
-    (hne : B_SY1_p4 (fun (i j : Fin k) => a ((i : ℕ) + 1) ((j : ℕ) + 1))
+    (hne : B_SY1_nc2_p36 (fun (i j : Fin k) => a ((i : ℕ) + 1) ((j : ℕ) + 1))
       (fun (i j : Fin k) => b ((i : ℕ) + 1) ((j : ℕ) + 1)) ≠ ∅)
-    (hcol : ∀ l ∈ B_SY1_p4 (fun (i j : Fin k) => a ((i : ℕ) + 1) ((j : ℕ) + 1))
+    (hcol : ∀ l ∈ B_SY1_nc2_p36 (fun (i j : Fin k) => a ((i : ℕ) + 1) ((j : ℕ) + 1))
       (fun (i j : Fin k) => b ((i : ℕ) + 1) ((j : ℕ) + 1)),
       ¬Collinear ℝ {0, rowSy_p23 l 0, rowSy_p23 l 1} ∧
       ¬Collinear ℝ {0, rowSy_p23 l 0, rowSy_p23 l 2} ∧
       ¬Collinear ℝ {0, rowSy_p23 l 1, rowSy_p23 l 2}) :
-    ∃ x ∈ B_SY1_p4 (fun (i j : Fin k) => a ((i : ℕ) + 1) ((j : ℕ) + 1))
+    ∃ x ∈ B_SY1_nc2_p36 (fun (i j : Fin k) => a ((i : ℕ) + 1) ((j : ℕ) + 1))
       (fun (i j : Fin k) => b ((i : ℕ) + 1) ((j : ℕ) + 1)),
-      ∀ y ∈ B_SY1_p4 (fun (i j : Fin k) => a ((i : ℕ) + 1) ((j : ℕ) + 1))
+      ∀ y ∈ B_SY1_nc2_p36 (fun (i j : Fin k) => a ((i : ℕ) + 1) ((j : ℕ) + 1))
         (fun (i j : Fin k) => b ((i : ℕ) + 1) ((j : ℕ) + 1)),
         tau3 (rowSy_p23 x 0) (rowSy_p23 x 1) (rowSy_p23 x 2) ≤
           tau3 (rowSy_p23 y 0) (rowSy_p23 y 1) (rowSy_p23 y 2) := by
@@ -1122,23 +1266,26 @@ theorem NOT_EMPTY_CASE_4 (s : ScsV39) (vv : ℕ → V3)
         (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))).Nonempty)
 
 /-- HOL `TAUSTAR_EQ_TAU_STAR_4` (XWITCCN.hl:2763). The HOL record equation
-`stable_sy (k,d,0..k-1, change_type_v3 (scs_a_v39 s), ..., (\i. (1+i) MOD k)) = s1`
-is carried as `s1 = scsToStableSy_p23 s` (the change_type bookkeeping
-collapses to the kit fields, cf. `change_type_v2_eq`). -/
+`stable_sy ((scs_k_v39 s),(scs_d_v39 s),(0..scs_k_v39 s - 1), change_type_v3
+(scs_a_v39 s), ..., (\i. (1+i) MOD k)) = s1` is carried as
+`s1 = scsToStableSyD_p36 s` (the change_type bookkeeping collapses to the
+kit fields, cf. `change_type_v2_eq`).
+
+FIDELITY-FIX 2026-09-17: the HOL record's `d` slot is `scs_d_v39 s`
+(XWITCCN.hl:2772); the earlier rendering `s1 = scsToStableSy_p23 s` fixed
+`d := 0`, contradicting `taustar_v39`'s `dsv_v39` subtraction of
+`d_tame 4 = 0.206`.  Statement corrected (not weakened: `taustar_v39` and
+`tau_star` now subtract the same quantity, as in HOL) and PROVED. -/
 theorem TAUSTAR_EQ_TAU_STAR_4 (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
     (l : FinVec 4 3)
     (hs : s = mkUnadornedV39 4 (dTame 4) (csAdj 4 2 (2 * h0)) (csAdj 4 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hk : s.k = 4)
-    (hs1 : s1 = scsToStableSy_p23 s) (hl : flattenRow_p23 vv 4 = l) :
+    (hs1 : s1 = scsToStableSyD_p36 s) (hl : flattenRow_p23 vv 4 = l) :
     taustarV39 s vv = tauStar_p23 s1 l := by
-  sorry
-  -- DISCHARGES: taustarV39 `k > 3` branch (tauFun over V/E/F from
-  -- V_E_FF_CASE_4) + dFun J-empty (mkUnadornedV39) + stable_sy_explicit.
-  -- NEEDS (statement doubt, cf. HANDOFF ①): as ported, s1 = scsToStableSy_p23 s
-  -- carries d = 0, so tauStar_p23 s1 l = tauFun(...) - 0, while taustarV39 s vv
-  -- = tauFun(...) - dTame k (≠ 0 for k ≥ 4). The HOL source fixes
-  -- s1.d := scs_d_v39 s; the Lean statement needs s1.d := dTame k before it is
-  -- provable. Statement left untouched here; same for all k ≥ 4 TAUSTAR twins.
+  refine taustar_eq_tauStar_gen_p36 (by omega) s s1 vv l ?_ hk
+    (V_E_FF_CASE_4 s vv hs hBB hk) hs1 hl
+  rw [hs]
+  rfl
 
 /-- HOL `VV_IN_BALL_ANNULUS_TAC_4` (XWITCCN.hl:2836) as a lemma. -/
 theorem VV_IN_BALL_ANNULUS_TAC_4 (vv : ℕ → V3) (hsub : Set.range vv ⊆ ballAnnulus)
@@ -1294,15 +1441,19 @@ theorem NOT_EMPTY_CASE_5 (s : ScsV39) (vv : ℕ → V3)
         (fun (i j : Fin 5) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
         (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))).Nonempty)
 
-/-- HOL `TAUSTAR_EQ_TAU_STAR_5` (XWITCCN.hl:3577). -/
+/-- HOL `TAUSTAR_EQ_TAU_STAR_5` (XWITCCN.hl:3577).
+FIDELITY-FIX 2026-09-17: `s1 = scsToStableSyD_p36 s` (HOL record
+`d`-slot `scs_d_v39 s`, XWITCCN.hl:3586); proved. -/
 theorem TAUSTAR_EQ_TAU_STAR_5 (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
     (l : FinVec 5 3)
     (hs : s = mkUnadornedV39 5 (dTame 5) (csAdj 5 2 (2 * h0)) (csAdj 5 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hk : s.k = 5)
-    (hs1 : s1 = scsToStableSy_p23 s) (hl : flattenRow_p23 vv 5 = l) :
+    (hs1 : s1 = scsToStableSyD_p36 s) (hl : flattenRow_p23 vv 5 = l) :
     taustarV39 s vv = tauStar_p23 s1 l := by
-  sorry
-  -- DISCHARGES: as TAUSTAR_EQ_TAU_STAR_4 at k = 5.
+  refine taustar_eq_tauStar_gen_p36 (by omega) s s1 vv l ?_ hk
+    (V_E_FF_CASE_5 s vv hs hBB hk) hs1 hl
+  rw [hs]
+  rfl
 
 /-- HOL `VV_IN_BALL_ANNULUS_TAC_5` (XWITCCN.hl:3654) as a lemma. -/
 theorem VV_IN_BALL_ANNULUS_TAC_5 (vv : ℕ → V3) (hsub : Set.range vv ⊆ ballAnnulus)
@@ -1622,15 +1773,19 @@ theorem NOT_EMPTY_CASE_6 (s : ScsV39) (vv : ℕ → V3)
         (fun (i j : Fin 6) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
         (fun (i j : Fin 6) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))).Nonempty)
 
-/-- HOL `TAUSTAR_EQ_TAU_STAR_6` (XWITCCN.hl:4402). -/
+/-- HOL `TAUSTAR_EQ_TAU_STAR_6` (XWITCCN.hl:4402).
+FIDELITY-FIX 2026-09-17: `s1 = scsToStableSyD_p36 s` (HOL record
+`d`-slot `scs_d_v39 s`, XWITCCN.hl:4410); proved. -/
 theorem TAUSTAR_EQ_TAU_STAR_6 (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
     (l : FinVec 6 3)
     (hs : s = mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) (csAdj 6 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hk : s.k = 6)
-    (hs1 : s1 = scsToStableSy_p23 s) (hl : flattenRow_p23 vv 6 = l) :
+    (hs1 : s1 = scsToStableSyD_p36 s) (hl : flattenRow_p23 vv 6 = l) :
     taustarV39 s vv = tauStar_p23 s1 l := by
-  sorry
-  -- DISCHARGES: as TAUSTAR_EQ_TAU_STAR_4 at k = 6.
+  refine taustar_eq_tauStar_gen_p36 (by omega) s s1 vv l ?_ hk
+    (V_E_FF_CASE_6 s vv hs hBB hk) hs1 hl
+  rw [hs]
+  rfl
 
 /-- HOL `VV_IN_BALL_ANNULUS_TAC_6` (XWITCCN.hl:4495) as a lemma. -/
 theorem VV_IN_BALL_ANNULUS_TAC_6 (vv : ℕ → V3) (hsub : Set.range vv ⊆ ballAnnulus)
@@ -1738,15 +1893,19 @@ theorem NOT_EMPTY_CASE_5_sqrt8 (s : ScsV39) (vv : ℕ → V3)
         (fun (i j : Fin 5) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
         (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))).Nonempty)
 
-/-- HOL `TAUSTAR_EQ_TAU_STAR_5_sqrt8` (XWITCCN.hl:5205). -/
+/-- HOL `TAUSTAR_EQ_TAU_STAR_5_sqrt8` (XWITCCN.hl:5205).
+FIDELITY-FIX 2026-09-17: `s1 = scsToStableSyD_p36 s` (HOL record
+`d`-slot `scs_d_v39 s`, XWITCCN.hl:5214); proved. -/
 theorem TAUSTAR_EQ_TAU_STAR_5_sqrt8 (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
     (l : FinVec 5 3)
     (hs : s = mkUnadornedV39 5 0.616 (csAdj 5 2 (Real.sqrt 8)) (csAdj 5 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hk : s.k = 5)
-    (hs1 : s1 = scsToStableSy_p23 s) (hl : flattenRow_p23 vv 5 = l) :
+    (hs1 : s1 = scsToStableSyD_p36 s) (hl : flattenRow_p23 vv 5 = l) :
     taustarV39 s vv = tauStar_p23 s1 l := by
-  sorry
-  -- DISCHARGES: as TAUSTAR_EQ_TAU_STAR_5 over the `5_sqrt8` system.
+  refine taustar_eq_tauStar_gen_p36 (by omega) s s1 vv l ?_ hk
+    (V_E_FF_CASE_5_sqrt8 s vv hs hBB hk) hs1 hl
+  rw [hs]
+  rfl
 
 /-- HOL `SCS_A_B__EQ_MOD_5_sqrt8` (XWITCCN.hl:5267). -/
 theorem SCS_A_B__EQ_MOD_5_sqrt8 (s : ScsV39)
@@ -1818,16 +1977,20 @@ theorem NOT_EMPTY_CASE_5_pro_cs (s : ScsV39) (vv : ℕ → V3)
         (fun (i j : Fin 5) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
         (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))).Nonempty)
 
-/-- HOL `TAUSTAR_EQ_TAU_STAR_5_pro_cs` (XWITCCN.hl:5992). -/
+/-- HOL `TAUSTAR_EQ_TAU_STAR_5_pro_cs` (XWITCCN.hl:5992).
+FIDELITY-FIX 2026-09-17: `s1 = scsToStableSyD_p36 s` (HOL record
+`d`-slot `scs_d_v39 s`, XWITCCN.hl:6001); proved. -/
 theorem TAUSTAR_EQ_TAU_STAR_5_pro_cs (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
     (l : FinVec 5 3)
     (hs : s = mkUnadornedV39 5 0.616 (aPro 5 (2 * h0) 2 (2 * h0))
       (aPro 5 (Real.sqrt 8) (2 * h0) 6))
     (hBB : BBsV39 s vv) (hk : s.k = 5)
-    (hs1 : s1 = scsToStableSy_p23 s) (hl : flattenRow_p23 vv 5 = l) :
+    (hs1 : s1 = scsToStableSyD_p36 s) (hl : flattenRow_p23 vv 5 = l) :
     taustarV39 s vv = tauStar_p23 s1 l := by
-  sorry
-  -- DISCHARGES: as TAUSTAR_EQ_TAU_STAR_5 over the `5_pro_cs` system.
+  refine taustar_eq_tauStar_gen_p36 (by omega) s s1 vv l ?_ hk
+    (V_E_FF_CASE_5_pro_cs s vv hs hBB hk) hs1 hl
+  rw [hs]
+  rfl
 
 /-- HOL `SCS_A_B__EQ_MOD_5_pro_cs` (XWITCCN.hl:6053). -/
 theorem SCS_A_B__EQ_MOD_5_pro_cs (s : ScsV39)
@@ -1900,15 +2063,19 @@ theorem NOT_EMPTY_CASE_4_3 (s : ScsV39) (vv : ℕ → V3)
         (fun (i j : Fin 4) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
         (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))).Nonempty)
 
-/-- HOL `TAUSTAR_EQ_TAU_STAR_4_3` (XWITCCN.hl:6688). -/
+/-- HOL `TAUSTAR_EQ_TAU_STAR_4_3` (XWITCCN.hl:6688).
+FIDELITY-FIX 2026-09-17: `s1 = scsToStableSyD_p36 s` (HOL record
+`d`-slot `scs_d_v39 s`, XWITCCN.hl:6697); proved. -/
 theorem TAUSTAR_EQ_TAU_STAR_4_3 (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
     (l : FinVec 4 3)
     (hs : s = mkUnadornedV39 4 0.467 (csAdj 4 2 3) (csAdj 4 (2 * h0) 6))
     (hBB : BBsV39 s vv) (hk : s.k = 4)
-    (hs1 : s1 = scsToStableSy_p23 s) (hl : flattenRow_p23 vv 4 = l) :
+    (hs1 : s1 = scsToStableSyD_p36 s) (hl : flattenRow_p23 vv 4 = l) :
     taustarV39 s vv = tauStar_p23 s1 l := by
-  sorry
-  -- DISCHARGES: as TAUSTAR_EQ_TAU_STAR_4 over the `4_3` system.
+  refine taustar_eq_tauStar_gen_p36 (by omega) s s1 vv l ?_ hk
+    (V_E_FF_CASE_4_3 s vv hs hBB hk) hs1 hl
+  rw [hs]
+  rfl
 
 /-- HOL `SCS_A_B__EQ_MOD_4_3` (XWITCCN.hl:6773). -/
 theorem SCS_A_B__EQ_MOD_4_3 (s : ScsV39)
@@ -1979,16 +2146,20 @@ theorem NOT_EMPTY_CASE_4_sqrt8 (s : ScsV39) (vv : ℕ → V3)
         (fun (i j : Fin 4) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
         (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))).Nonempty)
 
-/-- HOL `TAUSTAR_EQ_TAU_STAR_4_sqrt8` (XWITCCN.hl:7485). -/
+/-- HOL `TAUSTAR_EQ_TAU_STAR_4_sqrt8` (XWITCCN.hl:7485).
+FIDELITY-FIX 2026-09-17: `s1 = scsToStableSyD_p36 s` (HOL record
+`d`-slot `scs_d_v39 s`, XWITCCN.hl:7494); proved. -/
 theorem TAUSTAR_EQ_TAU_STAR_4_sqrt8 (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
     (l : FinVec 4 3)
     (hs : s = mkUnadornedV39 4 0.477 (aPro 4 (2 * h0) 2 (Real.sqrt 8))
       (aPro 4 (Real.sqrt 8) (2 * h0) 6))
     (hBB : BBsV39 s vv) (hk : s.k = 4)
-    (hs1 : s1 = scsToStableSy_p23 s) (hl : flattenRow_p23 vv 4 = l) :
+    (hs1 : s1 = scsToStableSyD_p36 s) (hl : flattenRow_p23 vv 4 = l) :
     taustarV39 s vv = tauStar_p23 s1 l := by
-  sorry
-  -- DISCHARGES: as TAUSTAR_EQ_TAU_STAR_4 over the `4_sqrt8` system.
+  refine taustar_eq_tauStar_gen_p36 (by omega) s s1 vv l ?_ hk
+    (V_E_FF_CASE_4_sqrt8 s vv hs hBB hk) hs1 hl
+  rw [hs]
+  rfl
 
 /-- HOL `SCS_A_B__EQ_MOD_4_sqrt8` (XWITCCN.hl:7557). -/
 theorem SCS_A_B__EQ_MOD_4_sqrt8 (s : ScsV39)

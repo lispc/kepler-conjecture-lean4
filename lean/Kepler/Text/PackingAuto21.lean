@@ -92,6 +92,7 @@ import Kepler.Text.PackingAuto10
 import Kepler.Text.PackingAuto11
 import Kepler.Text.PackingAuto12
 import Kepler.Text.PackingAuto13
+import Kepler.Text.PackingAuto15
 import Kepler.Text.PackingAuto20
 import Kepler.Text.SphereKit
 import Kepler.Text.Polytope
@@ -649,40 +650,191 @@ theorem BIS_LE_UNION (u0 u1 : V3) : bisLe u0 u1 ∪ bisLe u1 u0 = Set.univ := by
   | inl h => simp [bisLe, h]
   | inr h => simp [bisLe, h]
 
-/-- HOL `BIS_HYPERPLANE` (TSKAJXY3.hl:996). -/
+/-- squares agree iff values agree, for nonneg reals. -/
+private theorem p21_sq_eq {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) :
+    a = b ↔ a ^ 2 = b ^ 2 := by
+  constructor
+  · intro h; rw [h]
+  · intro h
+    by_contra hne
+    rcases lt_or_gt_of_ne hne with hlt | hgt
+    · nlinarith [h, hlt, ha]
+    · nlinarith [h, hgt, hb]
+
+/-- HOL `BIS_HYPERPLANE` (TSKAJXY3.hl:996; proved: the bisector is the
+level set of the doubled axis functional — pure inner-product algebra,
+PA5's `bis_mem_eq` pivoted into the hyperplane form). -/
 theorem BIS_HYPERPLANE (u0 u1 : V3) :
     bis u0 u1 = {p : V3 | ((2:ℝ) • (u0 - u1)) ⬝ᵥ p = (u0 - u1) ⬝ᵥ (u0 + u1)} := by
-  sorry
+  have hnorm : ∀ w : V3, ‖w‖ ^ 2 = w ⬝ᵥ w := by
+    intro w; rw [← inner_eq_dot w w, real_inner_self_eq_norm_sq]
+  have key : ∀ p : V3, ‖p - u0‖ ^ 2 = ‖p - u1‖ ^ 2 ↔
+      2 * ((u0 - u1) ⬝ᵥ p) = u0 ⬝ᵥ u0 - u1 ⬝ᵥ u1 := by
+    intro p
+    have hA := norm_sub_sq_real (x := p) (y := u0)
+    have hB := norm_sub_sq_real (x := p) (y := u1)
+    rw [← real_inner_comm p u0, inner_eq_dot u0 p, hnorm u0] at hA
+    rw [← real_inner_comm p u1, inner_eq_dot u1 p, hnorm u1] at hB
+    rw [p21_sub_dot_whole u0 u1 p]
+    constructor <;> intro h <;> linarith
+  have hsplit : (u0 - u1) ⬝ᵥ (u0 + u1) = u0 ⬝ᵥ u0 - u1 ⬝ᵥ u1 := by
+    rw [p21_dot_add_whole, p21_sub_dot_whole, p21_sub_dot_whole,
+      p21_dot_comm u1 u0, p21_dot_comm u0 u1]
+    ring
+  ext p
+  show dist p u0 = dist p u1 ↔ ((2:ℝ) • (u0 - u1)) ⬝ᵥ p = (u0 - u1) ⬝ᵥ (u0 + u1)
+  rw [p21_smul_dot 2 (u0 - u1) p, hsplit, dist_eq_norm, dist_eq_norm,
+    p21_sq_eq (norm_nonneg (p - u0)) (norm_nonneg (p - u1))]
+  exact key p
 
-/-- HOL `MCELL2_INTER_BIS_LE_MEASURABLE` (TSKAJXY3.hl:1007; giant). -/
+/-- HOL `MCELL2_INTER_BIS_LE_MEASURABLE` (TSKAJXY3.hl:1007; proved: an
+`mcell` is measurable (MEASURABLE_MCELL) and `bis_le` is a closed
+half-space, hence Borel). -/
 theorem MCELL2_INTER_BIS_LE_MEASURABLE (u0 u1 : V3) (V : Set V3) (X : Set V3)
     (ul : List V3) (hp : Packing V) (hs : saturated V) (hb : barV V 3 ul)
     (hX : X = mcell2 V ul) : MeasurableSet (X ∩ bisLe u0 u1) := by
-  sorry
+  have hXm : MeasurableSet X := by
+    rw [hX]
+    exact MEASURABLE_MCELL V ul 2 hs hp hb
+  refine hXm.inter ?_
+  show MeasurableSet {x : V3 | dist x u0 ≤ dist x u1}
+  exact (isClosed_le (continuous_id.dist continuous_const)
+    (continuous_id.dist continuous_const)).measurableSet
 
-/-- HOL `MCELL2_VOL_SPLIT` (TSKAJXY3.hl:1031; giant). -/
-theorem MCELL2_VOL_SPLIT (V X : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V)
-    (hb : barV V 3 ul) (hX : X = mcell2 V ul) (hn : ¬nullSet X) :
-    volume.real X = volume.real (X ∩ bisLe (elV ul 0) (elV ul 1)) +
-      volume.real (X ∩ bisLe (elV ul 1) (elV ul 0)) := by
-  sorry
+/-- pushed-coercion form of `p21_smul_dot` against a subtracted right
+argument (elaborated `⬝ᵥ` on `V3` reduces `ofLp` through `-`). -/
+private theorem p21_smul_dotP (t : ℝ) (a b c : V3) :
+    (t • a).ofLp ⬝ᵥ (b.ofLp - c.ofLp)
+      = t * ((a.ofLp ⬝ᵥ b.ofLp) - (a.ofLp ⬝ᵥ c.ofLp)) := by
+  rw [show WithLp.ofLp b - WithLp.ofLp c = WithLp.ofLp (b - c) from
+    (WithLp.ofLp_sub 2 b c).symm, p21_smul_dot t a (b - c), WithLp.ofLp_sub 2 b c,
+    p21_dot_sub_whole a b c]
 
-/-- HOL `RCONE_GT_SCALE` (TSKAJXY3.hl:597; giant). -/
+/-- HOL `RCONE_GT_SCALE` (TSKAJXY3.hl:597; proved: strict-cone membership is
+positively homogeneous along rays from the apex). -/
 theorem RCONE_GT_SCALE (u0 u1 u : V3) (a t : ℝ) (ht : 0 < t)
     (h : u0 + u ∈ rconeGt u0 u1 a) : u0 + t • u ∈ rconeGt u0 u1 a := by
-  sorry
+  have hmem := h
+  unfold rconeGt at hmem
+  rw [Set.mem_setOf_eq] at hmem
+  rw [show u0 + u - u0 = u from by abel, dist_eq_norm,
+    show u0 + u - u0 = u from by abel] at hmem
+  unfold rconeGt
+  rw [Set.mem_setOf_eq]
+  rw [show u0 + t • u - u0 = t • u from by abel, p21_smul_dotP t u u1 u0,
+    dist_eq_norm, show u0 + t • u - u0 = t • u from by abel, norm_smul,
+    Real.norm_eq_abs, abs_of_pos ht]
+  have hdot := p21_dot_sub_whole u u1 u0
+  rw [← hdot, gt_iff_lt]
+  have h2 : t * ‖u‖ * dist u1 u0 * a < t * (u.ofLp ⬝ᵥ (u1.ofLp - u0.ofLp)) := by
+    have h := mul_lt_mul_of_pos_left hmem ht
+    have hEq : t * (‖u‖ * dist u1 u0 * a) = t * ‖u‖ * dist u1 u0 * a := by ring
+    linarith
+  exact h2
 
-/-- HOL `RCONE_GE_COS` (TSKAJXY3.hl:1067; giant: the Cauchy-Schwarz bound
-feeding `cos ∘ arccos` reduction). -/
+/-- `cos ∘ arcV` as the normalized dot product (Cauchy-Schwarz via
+`abs_real_inner_le_norm` + `inner_eq_dot`).  The degenerate denominator is
+harmless: both dot and fraction vanish there. -/
+private theorem p21_cos_arcV (u v x : V3) :
+    Real.cos (arcV u v x) = ((v - u) ⬝ᵥ (x - u)) / (dist v u * dist x u) := by
+  have hcs : |((v - u) ⬝ᵥ (x - u) : ℝ)| ≤ dist v u * dist x u := by
+    have h1 := abs_real_inner_le_norm (x := v - u) (y := x - u)
+    rw [inner_eq_dot, ← dist_eq_norm, ← dist_eq_norm] at h1
+    exact h1
+  have hnum0 : dist v u * dist x u = 0 → ((v - u) ⬝ᵥ (x - u) : ℝ) = 0 := by
+    intro h0
+    rw [← inner_eq_dot]
+    rcases mul_eq_zero.1 h0 with h | h
+    · simp [show v = u from dist_eq_zero.1 h]
+    · simp [show x = u from dist_eq_zero.1 h]
+  unfold arcV
+  rcases eq_or_ne (dist v u * dist x u) 0 with h0 | h0
+  · rw [h0, hnum0 h0, div_zero]
+    exact Real.cos_arccos (by norm_num) (by norm_num)
+  · have hpos : 0 < dist v u * dist x u :=
+      lt_of_le_of_ne (mul_nonneg dist_nonneg dist_nonneg) (Ne.symm h0)
+    have hbound : |(v - u) ⬝ᵥ (x - u) / (dist v u * dist x u)| ≤ 1 := by
+      rw [abs_div, abs_of_pos hpos]
+      exact (div_le_one hpos).2 hcs
+    exact Real.cos_arccos (abs_le.1 hbound).1 (abs_le.1 hbound).2
+
+/-- HOL `RCONE_GE_COS` (TSKAJXY3.hl:1067; proved: the closed cone is the apex
+plus the `cos ≥ a` region of `arcV` — `p21_cos_arcV` + sign bookkeeping on
+the positive denominator). -/
 theorem RCONE_GE_COS (u v : V3) (a : ℝ) (huv : u ≠ v) :
     rconeGe u v a = {u} ∪ {x : V3 | a ≤ Real.cos (arcV u v x)} := by
-  sorry
+  have hduv : 0 < dist u v := dist_pos.2 huv
+  ext x
+  by_cases hx : x = u
+  · rw [hx]
+    refine ⟨fun _ => Set.mem_union_left _ rfl, fun _ => ?_⟩
+    show (u - u) ⬝ᵥ (v - u) ≥ dist u u * dist v u * a
+    rw [sub_self, dist_self, ← inner_eq_dot, inner_zero_left, zero_mul, zero_mul]
+  · have hden : 0 < dist u v * dist x u :=
+      mul_pos hduv (dist_pos.2 (fun hh => hx hh))
+    have hden2 : 0 < dist v u * dist x u := by
+      rw [dist_comm]
+      exact hden
+    constructor
+    · intro hmem
+      unfold rconeGe at hmem
+      rw [Set.mem_setOf_eq] at hmem
+      try rw [← WithLp.ofLp_sub 2 v u] at hmem
+      rw [p21_dot_comm (x - u) (v - u), WithLp.ofLp_sub 2 x u, dist_comm v u] at hmem
+      refine Set.mem_union_right _ ?_
+      rw [Set.mem_setOf_eq, p21_cos_arcV u v x, le_div_iff₀ hden2]
+      have hEq : a * (dist v u * dist x u) = dist x u * dist u v * a := by
+        rw [dist_comm v u]; ring
+      linarith [hEq, hmem]
+    · intro hmem
+      rcases (Set.mem_union _ _ _).1 hmem with heq | hle
+      · exact absurd heq hx
+      · unfold rconeGe
+        rw [Set.mem_setOf_eq]
+        try rw [← WithLp.ofLp_sub 2 v u]
+        rw [p21_dot_comm (x - u) (v - u), WithLp.ofLp_sub 2 x u, dist_comm v u]
+        rw [Set.mem_setOf_eq] at hle
+        rw [p21_cos_arcV u v x, le_div_iff₀ hden2] at hle
+        have hEq : a * (dist v u * dist x u) = dist x u * dist u v * a := by
+          rw [dist_comm v u]; ring
+        linarith [hEq, hle]
 
-/-- HOL `DIST_LAW_OF_COS_ALT` (TSKAJXY3.hl:1093). -/
+/-- Multiplied form of `p21_cos_arcV` (denominator-safe). -/
+private theorem p21_cos_arcV_mul (u v x : V3) :
+    dist v u * dist x u * Real.cos (arcV u v x) = ((v - u) ⬝ᵥ (x - u) : ℝ) := by
+  rcases eq_or_ne (dist v u * dist x u) 0 with h0 | h0
+  · rw [h0, zero_mul, ← inner_eq_dot]
+    rcases mul_eq_zero.1 h0 with h | h
+    · simp [show v = u from dist_eq_zero.1 h]
+    · simp [show x = u from dist_eq_zero.1 h]
+  · rw [p21_cos_arcV u v x, mul_comm]
+    exact div_mul_cancel₀ _ h0
+
+/-- Inner-product form of `p21_cos_arcV_mul`. -/
+private theorem p21_cos_arcV_inner (u v x : V3) :
+    dist v u * dist x u * Real.cos (arcV u v x) = inner ℝ (v - u) (x - u) := by
+  rw [inner_eq_dot]
+  exact p21_cos_arcV_mul u v x
+
+/-- HOL `DIST_LAW_OF_COS_ALT` (TSKAJXY3.hl:1093; proved: `norm_sub_sq_real`
++ `p21_cos_arcV_inner` — holds verbatim including the degenerate junk cases,
+since `cos (arcV)` vanishes there together with the dot). -/
 theorem DIST_LAW_OF_COS_ALT (u v w : V3) :
     dist v w ^ 2 =
       dist u v ^ 2 + dist u w ^ 2 - 2 * dist u v * dist u w * Real.cos (arcV u v w) := by
-  sorry
+  have hsplit : ‖v - w‖ ^ 2 = ‖v - u‖ ^ 2 + ‖w - u‖ ^ 2 - 2 * inner ℝ (v - u) (w - u) := by
+    have h1 := norm_sub_sq_real (x := v - u) (y := w - u)
+    rw [show (v - u) - (w - u) = v - w from by abel] at h1
+    linarith
+  have hkey : (2:ℝ) * dist u v * dist u w * Real.cos (arcV u v w) =
+      2 * inner ℝ (v - u) (w - u) := by
+    rw [dist_comm u v, dist_comm u w, ← p21_cos_arcV_inner]
+    ring
+  have e1 : ‖v - w‖ = dist v w := dist_eq_norm v w
+  have e2 : ‖u - v‖ = dist u v := dist_eq_norm u v
+  have e3 : ‖u - w‖ = dist u w := dist_eq_norm u w
+  rw [hkey, ← e1, ← e2, ← e3, norm_sub_rev u v, norm_sub_rev u w]
+  linarith [hsplit]
 
 /-- HOL `ATN_DIV` (TSKAJXY3.hl:1103). -/
 theorem ATN_DIV (x y : ℝ) (hx : 0 < x) (hy : 0 < y) :
@@ -713,19 +865,221 @@ theorem ATN2_Y_NEG (x y : ℝ) (hy : y < 0) :
     linarith
   · rw [atn2, if_neg habs, if_neg (by linarith), if_pos hy]
 
-/-- HOL `RCONE_PAIR` (TSKAJXY3.hl:1153; giant: azimuth/`ups_x`/`atn2`
-calculus). -/
+/-- A hyperplane `{p | c ⬝ᵥ p = d}` with `c ≠ 0` is Lebesgue-null: it is the
+strict affine subspace `p₀ + ker(p ↦ c ⬝ᵥ p)` (Measure.addHaar_affineSubspace). -/
+private theorem p21_hyperplane_null (c : V3) (hc : c ≠ 0) (d : ℝ) :
+    volume {p : V3 | c ⬝ᵥ p = d} = 0 := by
+  have hcc : (0:ℝ) < c ⬝ᵥ c := by
+    rw [← inner_eq_dot c c, real_inner_self_eq_norm_sq]
+    nlinarith [norm_pos_iff.2 hc]
+  have hK : (c ⬝ᵥ c : ℝ) ≠ 0 := ne_of_gt hcc
+  have hp0 : c ⬝ᵥ ((d / (c ⬝ᵥ c)) • c) = d := by
+    rw [p21_dot_smul]
+    exact div_mul_cancel₀ _ hK
+  set K : Submodule ℝ V3 :=
+    { carrier := {p : V3 | c ⬝ᵥ p = 0}
+      add_mem' := by
+        intro a b ha hb
+        have ha' : (c ⬝ᵥ a : ℝ) = 0 := ha
+        have hb' : (c ⬝ᵥ b : ℝ) = 0 := hb
+        show (c ⬝ᵥ (a + b) : ℝ) = 0
+        rw [p21_dot_add_whole]
+        linarith
+      zero_mem' := by
+        show (c ⬝ᵥ (0 : V3) : ℝ) = 0
+        rw [← inner_eq_dot, inner_zero_right]
+      smul_mem' := by
+        intro t a ha
+        have ha' : (c ⬝ᵥ a : ℝ) = 0 := ha
+        show (c ⬝ᵥ (t • a) : ℝ) = 0
+        rw [p21_dot_smul, ha', mul_zero] } with hKdef
+  have hKne : K ≠ ⊤ := by
+    intro hKtop
+    apply hcc.ne'
+    have hcin : c ∈ K := by rw [hKtop]; exact Submodule.mem_top
+    exact hcin
+  have hAffNe : (AffineSubspace.mk' ((d / (c ⬝ᵥ c)) • c) K) ≠ ⊤ := by
+    intro h
+    exact hKne (by rw [← AffineSubspace.direction_mk' ((d / (c ⬝ᵥ c)) • c) K, h,
+      AffineSubspace.direction_top])
+  have hset : {p : V3 | c ⬝ᵥ p = d} =
+      ((AffineSubspace.mk' ((d / (c ⬝ᵥ c)) • c) K : AffineSubspace ℝ V3) : Set V3) := by
+    ext p
+    rw [SetLike.mem_coe, AffineSubspace.mem_mk', vsub_eq_sub]
+    constructor
+    · intro hmem
+      show (p - (d / (c ⬝ᵥ c)) • c : V3) ∈ K
+      have h2 : (c ⬝ᵥ (p - (d / (c ⬝ᵥ c)) • c) : ℝ) = 0 := by
+        rw [p21_dot_sub_whole, p21_dot_smul, div_mul_cancel₀ _ hK]
+        have h1 : (c ⬝ᵥ p : ℝ) = d := hmem
+        linarith
+      exact h2
+    · intro h2
+      have h3 : (c ⬝ᵥ (p - (d / (c ⬝ᵥ c)) • c) : ℝ) = 0 := h2
+      rw [p21_dot_sub_whole, p21_dot_smul, div_mul_cancel₀ _ hK] at h3
+      have h1 : (c ⬝ᵥ p : ℝ) = d := by linarith
+      exact h1
+  rw [hset]
+  exact MeasureTheory.Measure.addHaar_affineSubspace volume _ hAffNe
+
+/-- HOL `RCONE_PAIR` (TSKAJXY3.hl:1153; proved: coordinate-free quadratic
+algebra — the bisector half gives `2A ≤ ‖v-u‖²`, the cone half
+`A ≥ t·‖v-u‖·‖x-u‖`, and `t ≤ 1` closes the squared comparison). -/
 theorem RCONE_PAIR (u v : V3) (t : ℝ) (huv : u ≠ v) (ht : 0 < t) (ht1 : t ≤ 1) :
     rconeGe u v t ∩ bisLe u v ⊆ rconeGe v u t := by
-  sorry
+  intro x hx
+  obtain ⟨hcone, hbis⟩ := hx
+  have hcone0 := hcone
+  unfold rconeGe at hcone0
+  rw [Set.mem_setOf_eq, dist_comm v u] at hcone0
+  have hbis' : dist x u ≤ dist x v := hbis
+  have hdpos : 0 < dist u v := dist_pos.2 huv
+  -- atoms: A := (x-u)·(v-u), B := (x-v)·(u-v), D := ‖v-u‖²
+  set A := (x - u) ⬝ᵥ (v - u) with hAdef
+  set B := (x - v) ⬝ᵥ (u - v) with hBdef
+  set D := (v - u) ⬝ᵥ (v - u) with hDdef
+  have hconeA : dist x u * dist u v * t ≤ A := by
+    rw [hAdef]
+    exact hcone0
+  have hA0 : 0 ≤ A := by
+    have h1 : 0 ≤ dist x u * dist u v * t :=
+      mul_nonneg (mul_nonneg dist_nonneg (le_of_lt hdpos)) (le_of_lt ht)
+    linarith [hconeA, h1]
+  have hBexp : B = v ⬝ᵥ v - (u ⬝ᵥ v) - (x ⬝ᵥ v) + (x ⬝ᵥ u) := by
+    rw [hBdef, p21_sub_dot_whole, p21_dot_sub_whole, p21_dot_sub_whole, p21_dot_comm v u]
+    ring
+  have hAexp : A = u ⬝ᵥ u - (u ⬝ᵥ v) - (x ⬝ᵥ u) + (x ⬝ᵥ v) := by
+    rw [hAdef, p21_sub_dot_whole, p21_dot_sub_whole, p21_dot_sub_whole]
+    ring
+  have hDexp : D = v ⬝ᵥ v - 2 * (u ⬝ᵥ v) + u ⬝ᵥ u := by
+    rw [hDdef, p21_sub_dot_whole, p21_dot_sub_whole, p21_dot_sub_whole, p21_dot_comm v u]
+    ring
+  have hBD : B = D - A := by
+    rw [hBexp, hAexp, hDexp]
+    ring
+  -- norm-squared dictionary
+  have hd2 : dist u v * dist u v = D := by
+    have h1 : dist u v = ‖u - v‖ := dist_eq_norm u v
+    have h2 := norm_sub_sq_real u v
+    have h3 : ‖u‖ ^ 2 = u ⬝ᵥ u := by rw [← inner_eq_dot u u, real_inner_self_eq_norm_sq]
+    have h4 : ‖v‖ ^ 2 = v ⬝ᵥ v := by rw [← inner_eq_dot v v, real_inner_self_eq_norm_sq]
+    have h5 : inner ℝ u v = (u ⬝ᵥ v : ℝ) := inner_eq_dot u v
+    rw [← sq, h1, h2, h3, h4, h5, hDexp]
+    ring
+  have hL2 : dist x u * dist x u = x ⬝ᵥ x - 2 * (x ⬝ᵥ u) + u ⬝ᵥ u := by
+    have h1 : dist x u = ‖x - u‖ := dist_eq_norm x u
+    have h2 := norm_sub_sq_real x u
+    have h3 : ‖x‖ ^ 2 = x ⬝ᵥ x := by rw [← inner_eq_dot x x, real_inner_self_eq_norm_sq]
+    have h4 : ‖u‖ ^ 2 = u ⬝ᵥ u := by rw [← inner_eq_dot u u, real_inner_self_eq_norm_sq]
+    have h5 : inner ℝ x u = (x ⬝ᵥ u : ℝ) := inner_eq_dot x u
+    rw [← sq, h1, h2, h3, h4, h5]
+  have hM2 : dist x v * dist x v = x ⬝ᵥ x - 2 * (x ⬝ᵥ v) + v ⬝ᵥ v := by
+    have h1 : dist x v = ‖x - v‖ := dist_eq_norm x v
+    have h2 := norm_sub_sq_real x v
+    have h3 : ‖x‖ ^ 2 = x ⬝ᵥ x := by rw [← inner_eq_dot x x, real_inner_self_eq_norm_sq]
+    have h4 : ‖v‖ ^ 2 = v ⬝ᵥ v := by rw [← inner_eq_dot v v, real_inner_self_eq_norm_sq]
+    have h5 : inner ℝ x v = (x ⬝ᵥ v : ℝ) := inner_eq_dot x v
+    rw [← sq, h1, h2, h3, h4, h5]
+  -- bisector half: 2A ≤ D
+  have h2lin : 2 * A ≤ D := by
+    rw [hAexp, hDexp]
+    have hLL : dist x u * dist x u ≤ dist x v * dist x v :=
+      mul_self_le_mul_self dist_nonneg hbis'
+    linarith [hM2, hL2, hLL]
+  have hDAA : 0 ≤ D - A := by linarith
+  have hBDA : D - A ≤ B := by rw [hBD]
+  have hB0 : 0 ≤ B := by linarith
+  have hBDsq : (D - A) * (D - A) ≤ B * B := mul_self_le_mul_self hDAA hBDA
+  -- quadratic close
+  have ht2 : t * t ≤ 1 := by
+    have h : t * t ≤ t * 1 := mul_le_mul_of_nonneg_left ht1 (le_of_lt ht)
+    linarith
+  have htuv : (t * dist u v) * (t * dist u v) ≤ D := by
+    have h1 : (t * dist u v) * (t * dist u v) = (t * t) * (dist u v * dist u v) := by
+      ring
+    have h2 : (t * t) * (dist u v * dist u v) ≤ dist u v * dist u v := by
+      have h3 : 0 ≤ dist u v * dist u v := by positivity
+      have h4 := mul_le_mul_of_nonneg_right ht2 h3
+      rwa [one_mul] at h4
+    rw [h1]
+    linarith [h2, hd2]
+  have hM2le : dist x v * dist x v ≤ dist x u * dist x u + (D - 2 * A) := by
+    have hdiff : dist x v * dist x v - dist x u * dist x u = D - 2 * A := by
+      rw [hM2, hL2, hDexp, hAexp]
+      ring
+    linarith
+  have hLscale : dist x u * dist x u * ((t * dist u v) * (t * dist u v)) ≤ A * A := by
+    have hmono : dist x u * (t * dist u v) = dist x u * dist u v * t := by ring
+    have hnn : 0 ≤ dist x u * (t * dist u v) :=
+      mul_nonneg dist_nonneg (mul_nonneg (le_of_lt ht) (le_of_lt hdpos))
+    have h1 : dist x u * (t * dist u v) * (dist x u * (t * dist u v)) ≤ A * A := by
+      have h2 : dist x u * (t * dist u v) ≤ A := by rw [hmono]; exact hconeA
+      exact mul_le_mul h2 h2 hnn hA0
+    have h2eq : dist x u * dist x u * ((t * dist u v) * (t * dist u v)) =
+        dist x u * (t * dist u v) * (dist x u * (t * dist u v)) := by ring
+    rw [h2eq]
+    exact h1
+  have hP2 : (D - 2 * A) * ((t * dist u v) * (t * dist u v)) ≤
+      (D - A) * (D - A) - A * A := by
+    have hD2A0 : 0 ≤ D - 2 * A := by linarith
+    have e1 : (D - 2 * A) * ((t * dist u v) * (t * dist u v)) ≤ (D - 2 * A) * D :=
+      mul_le_mul_of_nonneg_left htuv hD2A0
+    have e2 : (D - 2 * A) * D ≤ (D - A) * (D - A) - A * A := by
+      have h4 : (D - A) * (D - A) = D * D - 2 * A * D + A * A := by ring
+      have h5 : (D - 2 * A) * D = D * D - 2 * A * D := by ring
+      rw [h4, h5]
+      linarith
+    exact le_trans e1 e2
+  have hM2scale : dist x v * dist x v * ((t * dist u v) * (t * dist u v)) ≤
+      dist x u * dist x u * ((t * dist u v) * (t * dist u v)) +
+        (D - 2 * A) * ((t * dist u v) * (t * dist u v)) := by
+    have him := mul_le_mul_of_nonneg_right hM2le
+      (mul_nonneg (mul_nonneg (le_of_lt ht) (le_of_lt hdpos))
+        (mul_nonneg (le_of_lt ht) (le_of_lt hdpos)))
+    rw [add_mul] at him
+    exact him
+  have hchain : (dist x v * dist u v * t) * (dist x v * dist u v * t) ≤ B * B := by
+    have hsqeq : (dist x v * dist u v * t) * (dist x v * dist u v * t) =
+        dist x v * dist x v * ((t * dist u v) * (t * dist u v)) := by ring
+    rw [hsqeq]
+    linarith [hM2scale, hLscale, hP2, hBDsq]
+  have hnonneg : 0 ≤ dist x v * dist u v * t :=
+    mul_nonneg (mul_nonneg dist_nonneg (le_of_lt hdpos)) (le_of_lt ht)
+  have hfinal : dist x v * dist u v * t ≤ B :=
+    (mul_self_le_mul_self_iff hnonneg hB0).2 hchain
+  unfold rconeGe
+  rw [Set.mem_setOf_eq]
+  exact hfinal
 
-/-- HOL `MCELL2_SPLIT` (TSKAJXY3.hl:1231; giant). -/
+/-- NEEDS (NOT discharged this wave): the degenerate-`mcell2` null lemma and
+its consumers. Filling `MCELL2_SPLIT`/`MCELL2_VOL_SPLIT` needs, for
+`u := elV ul 0`, `v := elV ul 1`:
+  1. `u ≠ v` from `¬nullSet (mcell2 V ul)`:
+     `u = v` forces `mcell2 V ul = ((rc∩rc) ∩ affGe {u,u} {mxi,omega})` with
+     `rc = ⊤`, so the cell sits in `u + span {mxi - u, omega - u}`, a
+     translate of a ≤2-dim subspace (`finrank_span_finset_le_card`),
+     null by `Measure.addHaar_submodule`. (Drafted; abandoned: the
+     `Finset.sum`-membership bookkeeping under the `ofLp`-coercions made the
+     `conv_lhs/rw`-chains too brittle for this wave.)
+  2. `RCONE_PAIR` (this file, proved below) for the `rconeGe v u a` half of
+     `MCELL2_SPLIT`, plus `MCELL2_HL_LT_SQRT2` + the `√2 ≤ hl ul` half.
+  3. `MCELL2_VOL_SPLIT` additionally needs the null bisector hyperplane
+     (`BIS_HYPERPLANE` + `p21_hyperplane_null`-style: strict affine subspace
+     `p₀ + ker(p ↦ c ⬝ᵥ p)`, null by `Measure.addHaar_affineSubspace`), the
+     `volume.real`-level union-inter additivity, and `BIS_LE_INTER`/`BIS_LE_UNION`.
+-/
 theorem MCELL2_SPLIT (V X : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V)
     (hb : barV V 3 ul) (hX : X = mcell2 V ul) (hn : ¬nullSet X) :
     X ∩ bisLe (elV ul 0) (elV ul 1) =
       rconeGe (elV ul 0) (elV ul 1) (hl (truncateSimplex 1 ul) / Real.sqrt 2) ∩
         affGe {elV ul 0, elV ul 1} {mxi V ul, omegaListN V ul 3} ∩
           bisLe (elV ul 0) (elV ul 1) := by
+  sorry
+
+theorem MCELL2_VOL_SPLIT (V X : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V)
+    (hb : barV V 3 ul) (hX : X = mcell2 V ul) (hn : ¬nullSet X) :
+    volume.real X = volume.real (X ∩ bisLe (elV ul 0) (elV ul 1)) +
+      volume.real (X ∩ bisLe (elV ul 1) (elV ul 0)) := by
   sorry
 
 /-- HOL `FRUSTT_RCONE_GE` (TSKAJXY3.hl:1275; giant). -/
@@ -928,20 +1282,6 @@ theorem MCELL2_VOL_SPLIT_EXPLICIT (V X : Set V3) (ul : List V3) (h : ℝ)
       dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) *
         (2 - h ^ 2) * h / 6 := by
   sorry
-
-/-- HOL `MCELL2_HL_LT_SQRT2` (TSKAJXY3.hl:1678; proved by contraposition
-against the degenerate branch of the `mcell2` definition). -/
-theorem MCELL2_HL_LT_SQRT2 (V : Set V3) (ul : List V3) (hs : saturated V)
-    (hp : Packing V) (hb : barV V 3 ul) (hn : ¬nullSet (mcell2 V ul)) :
-    hl (truncateSimplex 1 ul) < Real.sqrt 2 := by
-  by_contra h
-  apply hn
-  have hE : mcell2 V ul = (∅ : Set V3) := by
-    unfold mcell2
-    exact if_neg (by simp [h])
-  unfold nullSet
-  rw [hE]
-  exact measure_empty
 
 /-- HOL `LEFT_ACTION_LIST_1_PROPERTIES_ALT` (TSKAJXY3.hl:1694; giant: a
 re-statement of Marchal_cells_2_new.LEFT_ACTION_LIST_1_PROPERTIES, not

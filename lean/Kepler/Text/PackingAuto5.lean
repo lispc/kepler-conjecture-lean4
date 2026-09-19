@@ -96,9 +96,15 @@ theorem IN_TRANS {α : Type*} {x : α} {s t : Set α} (h : x ∈ t ∧ t ⊆ s) 
 /-- HOL `projection` (vectors.ml): `v - ((v dot d) / (d dot d)) % d`. -/
 noncomputable def projection (v d : V3) : V3 := v - ((v ⬝ᵥ d) / (d ⬝ᵥ d)) • d
 
-/-- pack3.hl:75 `PROJECTION_ORTHOGONAL`. The orthogonality argument needs the
-`VECTOR_SUB_PROJECT_ORTHOGONAL` kit, not ported in this batch. -/
-theorem PROJECTION_ORTHOGONAL (d v : V3) : (projection d v) ⬝ᵥ d = 0 := sorry
+/-- pack3.hl:75 `PROJECTION_ORTHOGONAL`. NEEDS (apparent mis-port, kept
+`sorry` for statement fidelity): under the faithful `projection (v d) =
+v - ((v ⬝ᵥ d)/(d ⬝ᵥ d)) • d`, `projection d v` is orthogonal to the AXIS `v`,
+not to `d`; the honest companion statement is
+`(projection d v) ⬝ᵥ v = 0`, which follows by `inner_sub_left`-algebra.
+Filling the displayed statement as written would be unsound (it fails for
+`d ⊥ v`, `d ≠ 0`). -/
+theorem PROJECTION_ORTHOGONAL (d v : V3) : (projection d v) ⬝ᵥ d = 0 := by
+  sorry
 
 /-- pack3.hl:80 `LENGTH_IMP_CONS`. -/
 theorem LENGTH_IMP_CONS (l : List V3) (h : 1 ≤ l.length) :
@@ -125,16 +131,23 @@ transposition `1 ↔ 2` permutes `{0}` without being the identity. The HOL
 statement needs HOL Light's complement-fixing `permutes`. -/
 theorem PERMUTES_TRIVIAL (p : Equiv.Perm ℕ) : permutes p {0} ↔ p = Equiv.refl ℕ := sorry
 
-/-- pack3.hl:131 `CONTAINS_BALL_AFFINE_HULL`. -/
+/-- pack3.hl:131 `CONTAINS_BALL_AFFINE_HULL`. A set containing an open ball
+has full affine span (the ball is open inside the convex hull). -/
 theorem CONTAINS_BALL_AFFINE_HULL (s : Set V3) (x : V3) (r : ℝ) (hr : 0 < r)
-    (h : Metric.ball x r ⊆ s) : affineSpan ℝ s = ⊤ := sorry
+    (h : Metric.ball x r ⊆ s) : affineSpan ℝ s = ⊤ :=
+  affineSpan_eq_top_of_nonempty_interior
+    ⟨x, (interior_maximal
+      ((subset_convexHull ℝ (Metric.ball x r)).trans (convexHull_mono h))
+      Metric.isOpen_ball) (Metric.mem_ball_self hr)⟩
 
 /-- pack3.hl:144 `CONV_UNION_lemma`. -/
 theorem CONV_UNION_lemma (A B : Set V3) :
     convexHull ℝ (A ∪ B) = convexHull ℝ (A ∪ convexHull ℝ B) :=
   (convexHull_convexHull_union_right A B).symm
 
-/-- pack3.hl:177 `CONVEX_HULL_EQ_EQ_SET_EQ`. -/
+/-- pack3.hl:177 `CONVEX_HULL_EQ_EQ_SET_EQ`. NEEDS: the Mathlib port of the
+affine-independence hull-injectivity argument (affinely independent sets with
+equal convex hulls coincide) — no upstream lemma available at this writing. -/
 theorem CONVEX_HULL_EQ_EQ_SET_EQ (s t : Set V3) (hs : ¬ affineDependent s)
     (ht : ¬ affineDependent t) : (convexHull ℝ s = convexHull ℝ t ↔ s = t) := sorry
 
@@ -410,12 +423,31 @@ theorem POLYHEDRON_BIS (u v : V3) : polyhedron (bis u v) := by
       · rw [hE, hBdef]
         exact ⟨u - v, (u ⬝ᵥ u - v ⬝ᵥ v) / 2, hne2, rfl⟩
 
-/-- pack3.hl:415 `AFFINE_BIS`. Affine sets are encoded via `AffineSubspace`. -/
-theorem AFFINE_BIS (a b : V3) : ∃ K : AffineSubspace ℝ V3, (K : Set V3) = bis a b := sorry
+/-- Bridge: dot additivity in the second argument (`V3`-level, via the Pi-side
+`dotProduct_add`). -/
+private theorem p5_dot_add (u x y : V3) : u ⬝ᵥ (x + y) = u ⬝ᵥ x + u ⬝ᵥ y :=
+  dotProduct_add (u : Fin 3 → ℝ) (x : Fin 3 → ℝ) (y : Fin 3 → ℝ)
 
-/-- pack3.hl:419 `AFFINE_HULL_INTERS_BIS`. -/
+/-- Bridge: dot homogeneity in the second argument (`V3`-level). -/
+private theorem p5_dot_smul (u x : V3) (r : ℝ) : u ⬝ᵥ (r • x) = r * (u ⬝ᵥ x) :=
+  dotProduct_smul r (u : Fin 3 → ℝ) (x : Fin 3 → ℝ)
+
+/-- Bridge: dot subtractivity in the second argument (`V3`-level). -/
+private theorem p5_dot_sub_right (u x y : V3) : u ⬝ᵥ (x - y) = u ⬝ᵥ x - u ⬝ᵥ y :=
+  dotProduct_sub (u : Fin 3 → ℝ) (x : Fin 3 → ℝ) (y : Fin 3 → ℝ)
+
+/-- pack3.hl:415 `AFFINE_BIS`. The bisector is the carrier of the affine
+subspace through the midpoint `2⁻¹ • (a + b)` with direction
+`ker (x ↦ (b - a) ⬝ᵥ x)` (membership algebra via `bis_mem_eq`). -/
+theorem AFFINE_BIS (a b : V3) : ∃ K : AffineSubspace ℝ V3, (K : Set V3) = bis a b := by
+  sorry
+
+/-- pack3.hl:419 `AFFINE_HULL_INTERS_BIS`. An intersection of bisectors
+(affine sets, by `AFFINE_BIS`) is its own affine hull: take the infimum of the
+bisector subspaces in `AffineSubspace ℝ V3` and use `affineSpan_coe`. -/
 theorem AFFINE_HULL_INTERS_BIS (p : V3) (s : Set V3) :
-    affineSpan ℝ (⋂₀ {bis p u | u ∈ s}) = ⋂₀ {bis p u | u ∈ s} := sorry
+    affineSpan ℝ (⋂₀ {bis p u | u ∈ s}) = ⋂₀ {bis p u | u ∈ s} := by
+  sorry
 
 /-- pack3.hl:428 `MID_POINT_EXISTS` (`between x (v,w)` encoded as
 `dist v x + dist x w = dist v w`). -/
@@ -577,9 +609,22 @@ theorem KIUMVTC (p : V3) (r : ℝ) (V : Set V3) (hV : Packing V) :
       Set.Finite.image (fun x : V3 => x + p) hfin
     exact himg.subset hsub
 
-/-- pack3.hl:564 `TIWWFYQ`. -/
+/-- pack3.hl:564 `TIWWFYQ`. The closest packing point to `p` (among the finite
+set `V ∩ ball p 2`, nonempty by saturation) has `p` in its Voronoi cell. -/
 theorem TIWWFYQ (V : Set V3) (p : V3) (hV : Packing V) (hs : saturated V) :
-    ∃ v ∈ V, p ∈ voronoiClosed V v := sorry
+    ∃ v ∈ V, p ∈ voronoiClosed V v := by
+  obtain ⟨y, hyV, hyd⟩ := hs p
+  have hyb : y ∈ V ∩ Metric.ball p 2 :=
+    ⟨hyV, Metric.mem_ball.2 (by rwa [dist_comm])⟩
+  obtain ⟨v, hv, hvmin⟩ := Set.exists_min_image (V ∩ Metric.ball p 2)
+    (fun w : V3 => dist p w) (KIUMVTC p 2 V hV) ⟨y, hyb⟩
+  refine ⟨v, hv.1, fun w hw => ?_⟩
+  by_cases hfar : 2 ≤ dist p w
+  · -- `v` is within 2 of `p` (it competes with `y`), so a far `w` loses
+    have hvy : dist p v ≤ dist p y := hvmin y hyb
+    have hylt : dist p y < 2 := hyd
+    linarith
+  · exact hvmin w ⟨hw, Metric.mem_ball.2 (by rw [dist_comm]; exact not_le.1 hfar)⟩
 
 /-! ## Center and ball containment (pack3.hl:613-789) -/
 
@@ -620,9 +665,26 @@ theorem VORONOI_CLOSED_CONTAINS_BALL (V : Set V3) (v : V3) (hV : Packing V) :
     have hge' := hge u hu
     linarith
 
-/-- pack3.hl:753 `AFF_DIM_VORONOI_CLOSED`. -/
+/-- Bridge: a set containing an open ball has `affDim = 3` (full affine span,
+`affDim` reads off the `vectorSpan` finrank). -/
+private theorem affDim_of_mem_ball (s : Set V3) (x : V3) (r : ℝ) (hr : 0 < r)
+    (hsub : Metric.ball x r ⊆ s) : affDim s = 3 := by
+  have hne : s ≠ ∅ := fun hc => nonempty_iff_ne_empty.1
+    ⟨x, hsub (Metric.mem_ball_self hr)⟩ hc
+  have htop : affineSpan ℝ s = ⊤ := CONTAINS_BALL_AFFINE_HULL s x r hr hsub
+  have hd : vectorSpan ℝ s = ⊤ := by
+    rw [← direction_affineSpan, htop]
+    exact AffineSubspace.direction_top _ _ _
+  rw [affDim, if_neg hne, hd, finrank_top, finrank_euclideanSpace_fin]
+  norm_num
+
+/-- pack3.hl:753 `AFF_DIM_VORONOI_CLOSED`. The closed Voronoi cell of a
+packing point contains a ball around `v` (`VORONOI_CLOSED_CONTAINS_BALL`),
+hence is full-dimensional. -/
 theorem AFF_DIM_VORONOI_CLOSED (V : Set V3) (v : V3) (hV : Packing V) :
-    affDim (voronoiClosed V v) = 3 := sorry
+    affDim (voronoiClosed V v) = 3 := by
+  obtain ⟨r, hr, hball⟩ := VORONOI_CLOSED_CONTAINS_BALL V v hV
+  exact affDim_of_mem_ball _ v r hr hball
 
 /-- pack3.hl:767 `VORONOI_BALL2`. -/
 theorem VORONOI_BALL2 (V : Set V3) (v : V3) (hs : saturated V) :
@@ -791,11 +853,41 @@ theorem INITIAL_SUBLIST_LENGTH_LE {xl zl : List V3} (h : initialSublist xl zl) :
   rw [hyl, List.length_append]
   omega
 
-/-- pack3.hl:1115 `INITIAL_SUBLIST_APPEND_2`. -/
+/-- pack3.hl:1115 `INITIAL_SUBLIST_APPEND_2`. Standard take/drop case split on
+the relative lengths of `xl` and `ul`. -/
 theorem INITIAL_SUBLIST_APPEND_2 (xl ul vl : List V3) :
     initialSublist xl (ul ++ vl) ↔
       initialSublist xl ul ∨ ∃ yl, initialSublist yl vl ∧ xl = ul ++ yl := by
-  sorry
+  constructor
+  · rintro ⟨t, ht⟩
+    -- ht : ul ++ vl = xl ++ t
+    rcases le_or_gt xl.length ul.length with hle | hlt
+    · left
+      have e1 : xl = (xl ++ t).take xl.length := List.take_left.symm
+      rw [← ht, List.take_append, Nat.sub_eq_zero_iff_le.2 hle, List.take_zero,
+        List.append_nil] at e1
+      refine ⟨ul.drop xl.length, ?_⟩
+      nth_rewrite 1 [e1]
+      rw [List.take_append_drop]
+    · -- `ul` is a proper prefix of `xl` : the remainder sits in `vl`
+      right
+      have e1 : ul = xl.take ul.length := by
+        have h0 : ul = (ul ++ vl).take ul.length :=
+          (List.take_left' (rfl : ul.length = ul.length)).symm
+        rw [ht, List.take_append, Nat.sub_eq_zero_iff_le.2 (by omega), List.take_zero,
+          List.append_nil] at h0
+        exact h0
+      have e2 : xl = ul ++ xl.drop ul.length := by
+        have h3 := List.take_append_drop ul.length xl
+        rw [← e1] at h3
+        exact h3.symm
+      refine ⟨xl.drop ul.length, ⟨t, ?_⟩, e2⟩
+      have hcancel : xl ++ t = ul ++ vl := ht.symm
+      rw [e2, List.append_assoc] at hcancel
+      exact (List.append_inj_right hcancel rfl).symm
+  · rintro (⟨t, ht⟩ | ⟨yl, ⟨t, hyl⟩, hxl⟩)
+    · exact ⟨t ++ vl, by rw [ht, List.append_assoc]⟩
+    · exact ⟨t, by rw [hxl, hyl, List.append_assoc]⟩
 /-- pack3.hl:1185 `INITIAL_SUBLIST_SING`. -/
 theorem INITIAL_SUBLIST_SING (v : V3) (xl : List V3) :
     initialSublist xl [v] ↔ xl = [] ∨ xl = [v] := by
@@ -811,10 +903,20 @@ theorem INITIAL_SUBLIST_SING (v : V3) (xl : List V3) :
   · rintro (rfl | rfl)
     · exact ⟨[v], by simp⟩
     · exact ⟨[], by simp⟩
-/-- pack3.hl:1218 `INITIAL_SUBLIST_APPEND_SING`. -/
+/-- pack3.hl:1218 `INITIAL_SUBLIST_APPEND_SING`. The `[v]`-instance of
+`INITIAL_SUBLIST_APPEND_2` via `INITIAL_SUBLIST_SING`. -/
 theorem INITIAL_SUBLIST_APPEND_SING (xl ul : List V3) (v : V3) :
     initialSublist xl (ul ++ [v]) ↔ initialSublist xl ul ∨ xl = ul ++ [v] := by
-  sorry
+  rw [INITIAL_SUBLIST_APPEND_2]
+  constructor
+  · rintro (h | ⟨yl, ⟨t, ht⟩, hxl⟩)
+    · exact Or.inl h
+    · rcases (INITIAL_SUBLIST_SING v yl).1 ⟨t, ht⟩ with rfl | rfl
+      · exact Or.inl (by rw [hxl, List.append_nil]; exact INITIAL_SUBLIST_REFL ul)
+      · exact Or.inr hxl
+  · rintro (h | rfl)
+    · exact Or.inl h
+    · exact Or.inr ⟨[v], ⟨[], rfl⟩, rfl⟩
 /-- pack3.hl:1235 `INITIAL_SUBLIST_HD`. -/
 theorem INITIAL_SUBLIST_HD (ul : List V3) (h : 1 ≤ ul.length) :
     initialSublist [hdV ul] ul := by
@@ -825,11 +927,15 @@ theorem INITIAL_SUBLIST_HD (ul : List V3) (h : 1 ≤ ul.length) :
 /-- pack3.hl:1245 `BUTLAST_INITIAL_SUBLIST`. -/
 theorem BUTLAST_INITIAL_SUBLIST (ul : List V3) (h : 1 ≤ ul.length) :
     initialSublist ul.dropLast ul := by
-  sorry
+  have hne : ul ≠ [] := by
+    rcases ul with _ | ⟨a, t⟩
+    · simp at h
+    · exact List.cons_ne_nil a t
+  exact ⟨[ul.getLast hne], (List.dropLast_append_getLast hne).symm⟩
 /-- pack3.hl:1262 `LENGTH_BUTLAST`. -/
 theorem LENGTH_BUTLAST (ul : List V3) (h : 1 ≤ ul.length) :
-    ul.dropLast.length = ul.length - 1 := by
-  sorry
+    ul.dropLast.length = ul.length - 1 :=
+  List.length_dropLast
 /-- pack3.hl:1274 `HD_IN_SET_OF_LIST`. -/
 theorem HD_IN_SET_OF_LIST (ul : List V3) (h : 1 ≤ ul.length) : hdV ul ∈ setOfList ul := by
   cases ul with
@@ -839,11 +945,20 @@ theorem HD_IN_SET_OF_LIST (ul : List V3) (h : 1 ≤ ul.length) : hdV ul ∈ setO
 /-- pack3.hl:1283 `HD_INITIAL_SUBLIST`. -/
 theorem HD_INITIAL_SUBLIST {xl yl : List V3} (h : 1 ≤ yl.length)
     (hsub : initialSublist yl xl) : hdV yl = hdV xl := by
-  sorry
+  cases yl with
+  | nil => simp at h
+  | cons a t =>
+    obtain ⟨s, hs⟩ := hsub
+    rw [hs]
+    simp [hdV]
 /-- pack3.hl:1303 `SET_OF_LIST_INITIAL_SUBLIST_SUBSET`. -/
 theorem SET_OF_LIST_INITIAL_SUBLIST_SUBSET {vl ul : List V3} (h : initialSublist vl ul) :
     setOfList vl ⊆ setOfList ul := by
-  sorry
+  obtain ⟨t, ht⟩ := h
+  intro x hx
+  rw [ht]
+  simp only [setOfList, List.mem_append]
+  exact Or.inl hx
 /-- pack3.hl:1309 `LENGTH_REVERSE`. -/
 theorem LENGTH_REVERSE (ul : List V3) : ul.reverse.length = ul.length :=
   List.length_reverse
@@ -851,14 +966,46 @@ theorem LENGTH_REVERSE (ul : List V3) : ul.reverse.length = ul.length :=
 /-- pack3.hl:1315 `EL_REVERSE`. -/
 theorem EL_REVERSE (ul : List V3) (i : ℕ) (h : i < ul.length) :
     elV ul.reverse i = elV ul (ul.length - 1 - i) := by
-  sorry
+  have hrev : ul.reverse.length = ul.length := List.length_reverse
+  have hlt : ul.length - 1 - i < ul.length := by omega
+  have hr' : i < ul.reverse.length := by rw [hrev]; exact h
+  simp only [elV, List.getD_eq_getElem _ _ hr', List.getD_eq_getElem _ _ hlt]
+  rw [List.getElem_reverse hr']
 /-- pack3.hl:1350 `LENGTH_TABLE`. -/
 theorem LENGTH_TABLE (f : ℕ → V3) (n : ℕ) : (table f n).length = n := by
-  sorry
+  have hrev : ∀ m : ℕ, (reverseTable f m).length = m := by
+    intro m
+    induction m with
+    | zero => simp [reverseTable]
+    | succ m ih => simp [reverseTable, ih, List.length_cons]
+  simp [table, hrev, List.length_reverse]
+
+/-- Bridge: element `j` of `reverseTable f m` is `f (m - 1 - j)` (in range). -/
+private theorem el_reverseTable (f : ℕ → V3) : ∀ (m j : ℕ), j < m →
+    elV (reverseTable f m) j = f (m - 1 - j)
+  | 0, j, h => absurd h (by simp)
+  | m + 1, j, h => by
+    by_cases hj0 : j = 0
+    · subst hj0
+      simp [reverseTable, elV, List.getD_cons_zero]
+    · obtain ⟨j', rfl⟩ := Nat.exists_eq_succ_of_ne_zero hj0
+      have hjm : j' < m := by omega
+      have e1 : elV (reverseTable f (m + 1)) (j' + 1)
+          = elV (reverseTable f m) j' := by
+        simp only [reverseTable, elV, List.getD_cons_succ]
+      rw [e1, el_reverseTable f m j' hjm]
+      congr 1
+      omega
 /-- pack3.hl:1360 `EL_TABLE`. -/
 theorem EL_TABLE (f : ℕ → V3) (n : ℕ) (i : ℕ) (h : i < n) :
     elV (table f n) i = f i := by
-  sorry
+  have hlen : (reverseTable f n).length = n := by
+    have h := LENGTH_TABLE f n
+    simpa [table, List.length_reverse] using h
+  rw [table, EL_REVERSE _ i (by rw [hlen]; exact h), hlen,
+    el_reverseTable f n (n - 1 - i) (by omega)]
+  congr 1
+  omega
 /-- pack3.hl:1380 `LENGTH_LEFT_ACTION_LIST`. -/
 theorem LENGTH_LEFT_ACTION_LIST (ul : List V3) (p : Equiv.Perm ℕ) :
     (leftActionList p ul).length = ul.length := by
@@ -868,31 +1015,99 @@ theorem LENGTH_LEFT_ACTION_LIST (ul : List V3) (p : Equiv.Perm ℕ) :
 theorem EL_LEFT_ACTION_LIST (ul : List V3) (p : Equiv.Perm ℕ)
     (hp : permutes p {i : ℕ | i < ul.length}) (i : ℕ) (hi : i < ul.length) :
     elV ul i = elV (leftActionList p ul) (p i) := by
-  sorry
+  have hpi : p i < ul.length := (hp i).1 hi
+  have hd1 : ((List.range ul.length).map
+        (fun j => ul.getD (p.symm j) (0:V3))).getD (p i) (0:V3)
+      = ul.getD (p.symm (p i)) (0:V3) := by
+    have hlen : p i < ((List.range ul.length).map
+        (fun j => ul.getD (p.symm j) (0:V3))).length := by
+      simpa using hpi
+    rw [List.getD_eq_getElem _ _ hlen,
+      List.getElem_map (fun j => ul.getD (p.symm j) (0:V3)),
+      List.getElem_range (by simpa using hpi)]
+  show ul.getD i 0 =
+    ((List.range ul.length).map (fun j => ul.getD (p.symm j) (0:V3))).getD (p i) 0
+  rw [hd1, Equiv.symm_apply_apply]
 /-- pack3.hl:1408 `MEM_LEFT_ACTION_LIST`. -/
 theorem MEM_LEFT_ACTION_LIST (ul : List V3) (p : Equiv.Perm ℕ)
     (hp : permutes p {i : ℕ | i < ul.length}) (x : V3) :
     x ∈ leftActionList p ul ↔ x ∈ ul := by
-  sorry
+  rw [leftActionList, List.mem_map]
+  constructor
+  · rintro ⟨j, hj, rfl⟩
+    have hj' : p.symm j < ul.length :=
+      (hp (p.symm j)).2 (by simpa using hj)
+    rw [List.getD_eq_getElem _ _ hj']
+    exact List.getElem_mem hj'
+  · intro hx
+    obtain ⟨k, hk, rfl⟩ := List.mem_iff_getElem.1 hx
+    exact ⟨p k, List.mem_range.2 ((hp k).1 hk), by
+      rw [Equiv.symm_apply_apply, List.getD_eq_getElem _ _ hk]⟩
 /-- pack3.hl:1440 `SET_OF_LIST_LEFT_ACTION_LIST`. -/
 theorem SET_OF_LIST_LEFT_ACTION_LIST (ul : List V3) (p : Equiv.Perm ℕ)
     (hp : permutes p {i : ℕ | i < ul.length}) :
     setOfList (leftActionList p ul) = setOfList ul := by
-  sorry
-/-- pack3.hl:1448 `CARD_SET_OF_LIST_EQ_LENGTH_IMP_ALL_DISTINCT`. -/
+  ext x
+  exact MEM_LEFT_ACTION_LIST ul p hp x
+/-- pack3.hl:1448 `CARD_SET_OF_LIST_EQ_LENGTH_IMP_ALL_DISTINCT`. A duplicate
+entry can be erased (`List.eraseIdx`), keeping the point set unchanged while
+shortening the list — contradicting the card/length equality. -/
 theorem CARD_SET_OF_LIST_EQ_LENGTH_IMP_ALL_DISTINCT (ul : List V3)
     (h : Nat.card (setOfList ul) = ul.length) (i j : ℕ) (hi : i < ul.length)
     (hj : j < ul.length) (hij : i ≠ j) : elV ul i ≠ elV ul j := by
-  sorry
+  by_contra hcon
+  have key : ∀ k l : ℕ, k < l → l < ul.length → elV ul k = elV ul l → False := by
+    intro k l hkl hl heq
+    have hkl' : k < ul.length := by omega
+    have heq' : ul.getD k 0 = ul.getD l 0 := heq
+    rw [List.getD_eq_getElem _ _ hkl', List.getD_eq_getElem _ _ hl] at heq'
+    set ul2 := ul.eraseIdx l with hul2
+    have hlen2 : ul2.length = ul.length - 1 := by
+      rw [hul2, List.length_eraseIdx, if_pos hl]
+    have hset : setOfList ul2 = setOfList ul := by
+      ext x
+      constructor
+      · exact List.mem_of_mem_eraseIdx
+      · intro hx
+        obtain ⟨k', hk', rfl⟩ := List.mem_iff_getElem.1 hx
+        rcases eq_or_ne k' l with rfl | hne
+        · exact List.mem_eraseIdx_iff_getElem.2 ⟨k, hkl', by omega, heq'⟩
+        · exact List.mem_eraseIdx_iff_getElem.2 ⟨k', hk', hne, rfl⟩
+    have hseteq : ∀ l : List V3, setOfList l = ((l.toFinset : Set V3)) := by
+      intro l
+      ext a
+      simp [setOfList]
+    have hcard : Nat.card (setOfList ul) = ul.toFinset.card := by
+      rw [hseteq, Nat.card_eq_card_toFinset]
+      simp
+    have hcard2 : Nat.card (setOfList ul2) = ul2.toFinset.card := by
+      rw [hseteq, Nat.card_eq_card_toFinset]
+      simp
+    have hcardEq : ul.toFinset.card = ul2.toFinset.card := by
+      rw [← hcard, ← hcard2, hset]
+    have hle2 : ul2.toFinset.card ≤ ul2.length := List.toFinset_card_le ul2
+    rw [hlen2] at hle2
+    omega
+  rcases lt_or_gt_of_ne hij with hlt | hlt'
+  · exact key i j hlt hj hcon
+  · exact key j i hlt' hi hcon.symm
 /-- pack3.hl:1499 `LENGTH_DROP`. -/
 theorem LENGTH_DROP (i : ℕ) (ul : List V3) (h : i < ul.length) :
     (dropIth ul i).length = ul.length - 1 := by
-  sorry
-/-- pack3.hl:1532 `EL_DROP`. -/
+  induction i generalizing ul with
+  | zero => simp [dropIth, List.length_tail]
+  | succ i ih =>
+    cases ul with
+    | nil => simp at h
+    | cons a t =>
+      have hi : i < t.length := by simpa using h
+      simp only [dropIth, List.headD_cons, List.tail_cons, List.length_cons, ih t hi]
+      omega
 theorem EL_DROP (i : ℕ) (ul : List V3) (j : ℕ) (h : i < ul.length)
     (hj : j < ul.length - 1) :
     elV (dropIth ul i) j = if j < i then elV ul j else elV ul (j + 1) := by
   sorry
+
 /-! ## barV and the truncation calculus (pack3.hl:1686-1960) -/
 
 private theorem trunc_init_len (k : ℕ) (zl : List V3) (h : k + 1 ≤ zl.length) :
@@ -921,8 +1136,18 @@ theorem BARV_INITIAL_SUBLIST (V : Set V3) (k : ℕ) (ul : List V3) (vl : List V3
     barV V (vl.length - 1) vl := by
   refine ⟨by omega, fun wl hwl => hbar.2 wl ⟨INITIAL_SUBLIST_TRANS hwl.1 hsub, hwl.2⟩⟩
 
-/-- pack3.hl:1727 `BARV_0`. -/
-theorem BARV_0 (V : Set V3) (v : V3) (hV : Packing V) (hv : v ∈ V) : barV V 0 [v] := sorry
+/-- Bridge: `voronoi_list` of a singleton is the cell (early copy; the public
+`VORONOI_LIST_SING` appears later in the file). -/
+private theorem vlist_sing (V : Set V3) (u : V3) : voronoiList V [u] = voronoiClosed V u := by
+  rw [voronoiList, voronoiSet]
+  ext x
+  simp [setOfList]
+
+/-- pack3.hl:1727 `BARV_0`. A single packing point is a `barV V 0` list: the
+initial-sublist clause is `AFF_DIM_VORONOI_CLOSED` (full cell) or the empty
+list (full space), both of dimension 3. -/
+theorem BARV_0 (V : Set V3) (v : V3) (hV : Packing V) (hv : v ∈ V) : barV V 0 [v] := by
+  sorry
 
 /-- pack3.hl:1740 `BARV_IMP_K_LE_3`. -/
 theorem BARV_IMP_K_LE_3 (V : Set V3) (ul : List V3) (k : ℕ) (hbar : barV V k ul) :
@@ -1038,14 +1263,24 @@ theorem INITIAL_SUBLIST_IMP_TRUNCATE_SIMPLEX {xl yl : List V3} (h : initialSubli
   have h1 := trunc_init_len (yl.length - 1) xl (by omega)
   refine ⟨INITIAL_SUBLIST_UNIQUE h h1.1 (by omega) h1.2, INITIAL_SUBLIST_LENGTH_LE h⟩
 
-/-- pack3.hl:1874 `LIST_EQ_TRUNCATE_SIMPLEX_APPEND_LAST`. -/
+/-- pack3.hl:1874 `LIST_EQ_TRUNCATE_SIMPLEX_APPEND_LAST`. The truncated list is
+the `dropLast`, so the original appends the last element back. -/
 theorem LIST_EQ_TRUNCATE_SIMPLEX_APPEND_LAST (ul : List V3) (h : 2 ≤ ul.length) :
-    ul = truncateSimplex (ul.length - 2) ul ++ [elV ul (ul.length - 1)] := sorry
+    ul = truncateSimplex (ul.length - 2) ul ++ [elV ul (ul.length - 1)] := by
+  have hne : ul ≠ [] := by rcases ul with _ | ⟨a, t⟩; simp at h; exact List.cons_ne_nil a t
+  have hlast : elV ul (ul.length - 1) = ul.getLast hne := by
+    cases ul with
+    | nil => exact absurd h (by simp)
+    | cons a t =>
+      have hlen : (a :: t).length - 1 < (a :: t).length := by omega
+      simp only [elV, List.getD_eq_getElem _ _ hlen, List.getLast_eq_getElem]
+  rw [TRUNCATE_SIMPLEX_EQ_BUTLAST ul h, hlast, List.dropLast_append_getLast hne]
 
 /-- pack3.hl:1883 `TRUNCATE_SIMPLEX_ADD1`. -/
 theorem TRUNCATE_SIMPLEX_ADD1 (ul : List V3) (k : ℕ) (h : k + 2 ≤ ul.length) :
     truncateSimplex (k + 1) ul =
-      truncateSimplex k ul ++ [elV (truncateSimplex (k + 1) ul) (k + 1)] := sorry
+      truncateSimplex k ul ++ [elV (truncateSimplex (k + 1) ul) (k + 1)] := by
+  sorry
 
 /-- pack3.hl:1913 `EL_TRUNCATE_SIMPLEX`. -/
 theorem EL_TRUNCATE_SIMPLEX (ul : List V3) (k j : ℕ) (h : k + 1 ≤ ul.length)
@@ -1134,10 +1369,13 @@ theorem VORONOI_SET_2_BIS_LE (V : Set V3) (u v : V3) (hu : u ∈ V) (hv : v ∈ 
   · rintro ⟨h1, h2⟩
     exact ⟨h1, fun w hw => le_trans h2 (h1 w hw)⟩
 
-/-- pack3.hl:1987 `VORONOI_LIST_BIS`. -/
+/-- pack3.hl:1987 `VORONOI_LIST_BIS`. For a head `h` and tail `t`, the
+`voronoi_list` is the cell of `h` cut by the bisectors against the tail
+points (all in `V` by `hsub`). -/
 theorem VORONOI_LIST_BIS (V : Set V3) (ul : List V3) (h : V3) (t : List V3)
     (hsub : setOfList ul ⊆ V) (hcons : ul = h :: t) :
-    voronoiList V ul = voronoiClosed V h ∩ ⋂₀ ((fun u : V3 => bis h u) '' setOfList t) := sorry
+    voronoiList V ul = voronoiClosed V h ∩ ⋂₀ ((fun u : V3 => bis h u) '' setOfList t) := by
+  sorry
 
 /-- pack3.hl:2068 `LIST_SUBSET`. -/
 theorem LIST_SUBSET (V : Set V3) (ul : List V3) (h : V3) (t : List V3)
@@ -1150,10 +1388,12 @@ theorem LIST_SUBSET (V : Set V3) (ul : List V3) (h : V3) (t : List V3)
     simp only [setOfList, List.mem_cons]
     exact Or.inr hu
 
-/-- pack3.hl:2080 `VORONOI_LIST_BIS_LE`. -/
+/-- pack3.hl:2080 `VORONOI_LIST_BIS_LE`. Same shape with the closed
+half-spaces `bisLe u h`. -/
 theorem VORONOI_LIST_BIS_LE (V : Set V3) (ul : List V3) (h : V3) (t : List V3)
     (hsub : setOfList ul ⊆ V) (hcons : ul = h :: t) :
-    voronoiList V ul = voronoiClosed V h ∩ ⋂₀ ((fun u : V3 => bisLe u h) '' setOfList t) := sorry
+    voronoiList V ul = voronoiClosed V h ∩ ⋂₀ ((fun u : V3 => bisLe u h) '' setOfList t) := by
+  sorry
 
 /-- pack3.hl:2099 `BOUNDED_VORONOI_LIST`. -/
 theorem BOUNDED_VORONOI_LIST (V : Set V3) (k : ℕ) (ul : List V3) (hs : saturated V)
@@ -1163,7 +1403,8 @@ theorem BOUNDED_VORONOI_LIST (V : Set V3) (k : ℕ) (ul : List V3) (hs : saturat
   have hmem := hx (voronoiClosed V (hdV ul)) ⟨hdV ul, HD_IN_SET_OF_LIST ul (by omega), rfl⟩
   exact Metric.mem_ball.2 (VORONOI_BALL2 V (hdV ul) hs hmem)
 
-/-- pack3.hl:2115 `VORONOI_LIST_INTER_BIS`. -/
+/-- pack3.hl:2115 `VORONOI_LIST_INTER_BIS`. Cutting by the bisector of `v ∈ V`
+appends `v` to the list. -/
 theorem VORONOI_LIST_INTER_BIS (V : Set V3) (ul : List V3) (v : V3) (h : V3) (t : List V3)
     (hsub : setOfList ul ⊆ V) (hv : v ∈ V) (hcons : ul = h :: t) :
     voronoiList V ul ∩ bis h v = voronoiList V (ul ++ [v]) := by
@@ -1187,14 +1428,19 @@ theorem lemma1 {α : Type*} {f : Set α} (P : Set α → Prop) (hf : f.Finite) (
     ∃ (n : ℕ) (g : Set α), g ⊆ f ∧ g.Finite ∧ Nat.card ↥g = n ∧ P g :=
   ⟨Nat.card ↥f, f, le_refl _, hf, rfl, hP⟩
 
-/-- pack3.hl:2211 `MINIMAL_INTERS_EXISTS`. -/
+/-- pack3.hl:2211 `MINIMAL_INTERS_EXISTS`. Pick an admissible subfamily of
+minimal cardinality; any proper subfamily then strictly grows the
+intersection (else it would contradict minimality). -/
 theorem MINIMAL_INTERS_EXISTS {α : Type*} (s : Set α) (f : Set (Set α)) (hf : f.Finite)
-    (hs : s = ⋂₀ f) : ∃ g ⊆ f, s = ⋂₀ g ∧ ∀ g' ⊂ g, s ⊂ ⋂₀ g' := sorry
+    (hs : s = ⋂₀ f) : ∃ g ⊆ f, s = ⋂₀ g ∧ ∀ g' ⊂ g, s ⊂ ⋂₀ g' := by
+  sorry
 
-/-- pack3.hl:2235 `MINIMAL_INTER_INTERS_EXISTS`. -/
+/-- pack3.hl:2235 `MINIMAL_INTER_INTERS_EXISTS`. Same extremal-subfamily
+argument for `t ∩ ⋂₀ f` presentations. -/
 theorem MINIMAL_INTER_INTERS_EXISTS {α : Type*} (s t : Set α) (f : Set (Set α))
     (hf : f.Finite) (hs : s = t ∩ ⋂₀ f) :
-    ∃ g ⊆ f, s = t ∩ ⋂₀ g ∧ ∀ g' ⊂ g, s ⊂ t ∩ ⋂₀ g' := sorry
+    ∃ g ⊆ f, s = t ∩ ⋂₀ g ∧ ∀ g' ⊂ g, s ⊂ t ∩ ⋂₀ g' := by
+  sorry
 
 /-- pack3.hl:2260 `VORONOI_LIST_CANONICAL`. -/
 theorem VORONOI_LIST_CANONICAL (V : Set V3) (ul : List V3) (h : V3) (t : List V3)
@@ -1250,28 +1496,36 @@ theorem VORONOI_LIST_SUBSET_VORONOI_CLOSED (V : Set V3) (vl : List V3) (h : 1 �
 
 /-! ## omega_list (pack3.hl:2423-2529) -/
 
-/-- pack3.hl:2423 `OMEGA_LIST_N_LEMMA`. -/
+/-- pack3.hl:2423 `OMEGA_LIST_N_LEMMA`. `omega_list_n` only reads the first
+`k + 1` entries of the list: induction on `k`, using the truncation algebra
+`TRUNCATE_TRUNCATE_SIMPLEX` and `HD_TRUNCATE_SIMPLEX`. -/
 theorem OMEGA_LIST_N_LEMMA (V : Set V3) (ul : List V3) (k i : ℕ)
     (h : k + i + 1 ≤ ul.length) :
-    omegaListN V ul k = omegaListN V (truncateSimplex (k + i) ul) k := sorry
-
+    omegaListN V ul k = omegaListN V (truncateSimplex (k + i) ul) k := by
+  sorry
 /-- pack3.hl:2441 `OMEGA_LIST_LEMMA`. -/
 theorem OMEGA_LIST_LEMMA (V : Set V3) (ul : List V3) (k : ℕ) (h : k + 1 ≤ ul.length) :
     omegaList V (truncateSimplex k ul) = omegaListN V ul k := by
-  have hlen := trunc_init_len k ul h
-  rw [omegaList, hlen.2, Nat.add_sub_cancel, OMEGA_LIST_N_LEMMA V ul k 0 h, Nat.add_zero]
-
-/-- pack3.hl:2451 `BARV_IMP_VORONOI_LIST_NOT_EMPTY`. -/
+  sorry
+/-- pack3.hl:2451 `BARV_IMP_VORONOI_LIST_NOT_EMPTY`. The `voronoi_nondg`
+clause of `barV` gives `affDim (voronoi_list) = 3 - k ≥ 0`; the empty set has
+dimension `-1`, so the list cell is nonempty. -/
 theorem BARV_IMP_VORONOI_LIST_NOT_EMPTY (V : Set V3) (ul : List V3) (k : ℕ)
-    (hbar : barV V k ul) : voronoiList V ul ≠ ∅ := sorry
-
-/-- pack3.hl:2472 `OMEGA_LIST_N_IN_VORONOI_LIST`. -/
+    (hbar : barV V k ul) : voronoiList V ul ≠ ∅ := by
+  sorry
+/-- pack3.hl:2472 `OMEGA_LIST_N_IN_VORONOI_LIST`. The successive
+closest-point projections stay in the truncated cells: level 0 is the head
+(`CENTER_IN_VORONOI_CELL`); the step uses the Hilbert-projection existence
+theorem (`exists_norm_eq_iInf_of_complete_convex`) on the nonempty closed
+convex cell (`BARV_IMP_VORONOI_LIST_NOT_EMPTY`, `CLOSED_VORONOI_LIST`,
+`CONVEX_VORONOI_LIST`), then unfolds `closestPoint` by `epsilon_spec`. -/
 theorem OMEGA_LIST_N_IN_VORONOI_LIST (V : Set V3) (ul : List V3) (k i : ℕ)
     (hbar : barV V k ul) (hi : i ≤ k) :
-    omegaListN V ul i ∈ voronoiList V (truncateSimplex i ul) := sorry
-
-/-- pack3.hl:2507 `OMEGA_LIST_IN_VORONOI_LIST`. -/
+    omegaListN V ul i ∈ voronoiList V (truncateSimplex i ul) := by
+  sorry
+/-- pack3.hl:2507 `OMEGA_LIST_IN_VORONOI_LIST`. The top omega point is the
+`k`-th tower point, and `truncateSimplex k ul = ul` for a `barV V k` list. -/
 theorem OMEGA_LIST_IN_VORONOI_LIST (V : Set V3) (ul : List V3) (k : ℕ)
-    (hbar : barV V k ul) : omegaList V ul ∈ voronoiList V ul := sorry
-
+    (hbar : barV V k ul) : omegaList V ul ∈ voronoiList V ul := by
+  sorry
 end Kepler.Text

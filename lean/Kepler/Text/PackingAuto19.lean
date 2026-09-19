@@ -46,37 +46,36 @@ HOL sources (chapter Packing, VU KHAC KY):
 - `GOTCJAH` (fan solid-angle bound, pack_concl.hl:251) belongs to the
   polyhedron/fan lane and has no source in this lane's three files; NOT
   restated here.
-- Import policy: only PackingAuto2 + PackingAuto12 are imported — the oleans
-  of PackingAuto15/16 are not built in this checkout (their lanes are still
-  in flight), and nothing PROVED here needs them: `DIHX_POS` is proved
-  directly from the `dihX` case split via `DIHV_LE_0`, and the
-  `KIZHLTL1/2/4` / `DIHX_RANGE` / `BOUND_GAMMA_X_lmfun` statements of the
-  Auto15/16 lanes enter only the `NEGLIGIBLE_FUNC` /
-  `SUM_GAMMAX_LMFUN_ESTIMATE_p19` fill-in architecture below. At merge time,
-  import PackingAuto15/16 (and PackingAuto18's sum_gamma lane) and delete the
-  `_p19` copies flagged below.
+- Import policy: PackingAuto2 + PackingAuto12 + (2026-09-19) PackingAuto18 —
+  the PA18 olean has landed, so the SUM_GAMMAX `_p19` copy is now a shim to
+  it. The oleans of PackingAuto15/16 remain unbuilt in this checkout, and
+  nothing PROVED here needs them: `DIHX_POS` is proved directly from the
+  `dihX` case split via `DIHV_LE_0`, and the `KIZHLTL1/2/4` / `DIHX_RANGE` /
+  `BOUND_GAMMA_X_lmfun` statements of the Auto15/16 lanes enter only the
+  `NEGLIGIBLE_FUNC` fill-in architecture below. At merge time, import
+  PackingAuto15/16 and delete the `_p19` copies flagged below.
 
 ## NEEDS (giant fill-in markers)
 
 - `NEGLIGIBLE_FUNC`: NEEDS KIZHLTL1 / KIZHLTL2 / KIZHLTL4 (PackingAuto16),
-  NEEDS SUM_GAMMAX_LMFUN_ESTIMATE (`sum_gamma.hl` — parallel-owned
-  PackingAuto18, NOT importable: `_p19` copy in this file, delete at merge),
-  NEEDS FINITE_MCELL_SET_LEMMA (PackingAuto15) for the
-  `T1 + T2 + T3 = sum B (gammaX V X lmfun)` regrouping (SUM_ADD/SUB/LMUL over
-  the finite cell family `B`), NEEDS FINITE_PACK_LEMMA (`Packing3.KIUMVTC` —
-  Kepler.Statement `Packing.finite_inter_ball` analog) for the sums over
-  `V ∩ ball 0 r`, NEEDS MEASURE_VORONOI_CLOSED_OPEN (Pack2.hl, not on the
-  Lean side) only to bridge KIZHLTL1's `voronoiOpenP16` to `voronoiOpenP19`
-  (identical bodies, delta at merge).
-- `SUM_GAMMAX_LMFUN_ESTIMATE_p19`: the Auto18 lane's capstone (its HL proof
-  consumes BOUND_GAMMA_X_lmfun / CARD_MCELL_CONTAINS_POINT_klemma /
-  beta-bump bounds: PackingAuto15 + leaf_cell kit).
-- `JGXZYGW_p19`: NEEDS PackingAuto1.JGXZYGW (pack1.hl:519; its olean is not
-  built in this checkout — `_p19` copy, delete at merge; the HL proof runs
-  through measure_ineq_lm53_2 / ineq_lm5_3_step3/4, not on the Lean side).
-- `tau0_gt_p19` / `mm2_gt_p19`: NEEDS Flyspeck_constants.bounds
-  (`#1.54065 < tau0`, `#0.02541 < mm2`; numerical: `tau0 ≈ 1.5407`,
-  `mm2 ≈ 0.0254` from `sol0 ≈ 0.5513`).
+  NEEDS SUM_GAMMAX_LMFUN_ESTIMATE (now SHIMMED to PackingAuto18 via import,
+  still `sorry`ed upstream there), NEEDS FINITE_MCELL_SET_LEMMA (PackingAuto15)
+  for the `T1 + T2 + T3 = sum B (gammaX V X lmfun)` regrouping
+  (SUM_ADD/SUB/LMUL over the finite cell family `B`), NEEDS FINITE_PACK_LEMMA
+  (`Packing3.KIUMVTC` — Kepler.Statement `Packing.finite_inter_ball` analog)
+  for the sums over `V ∩ ball 0 r`, NEEDS MEASURE_VORONOI_CLOSED_OPEN
+  (Pack2.hl, not on the Lean side) only to bridge KIZHLTL1's `voronoiOpenP16`
+  to `voronoiOpenP19` (identical bodies, delta at merge).
+- `SUM_GAMMAX_LMFUN_ESTIMATE_p19`: SHIMMED (2026-09-19) to
+  `PackingAuto18.SUM_GAMMAX_LMFUN_ESTIMATE` (import added; upstream sorry
+  remains in Auto18).
+- `JGXZYGW_p19`: NEEDS PackingAuto1.JGXZYGW (pack1.hl:519; PA1's ported
+  statement uses a different (`Space3`/private-`fcc_compatible`) encoding, so
+  the `_p19` copy stays; the HL proof runs through measure_ineq_lm53_2 /
+  ineq_lm5_3_step3/4, not on the Lean side).
+- `tau0_gt_p19` / `mm2_gt_p19`: PROVED (2026-09-19) from Mathlib's certified
+  π-interval + an in-file 9th-order Taylor bracket of `sin` pinning
+  `arcsin(1/3)` — no `Flyspeck_constants` dependency remains.
 
 ## Encoding notes
 
@@ -112,16 +111,18 @@ HOL sources (chapter Packing, VU KHAC KY):
   `lmfun (hl [0, v])` to the `V`-sum via `hl` translation invariance
   (`RADV_TRANS_EQ`, `hl [0, v] = hl [-u, v - u]`).
 
-Proof status: the mechanical support chain, both UPFZBZM parts assembly
-(`UPFZBZM`), `FCC_COMPATABILITY_FUNC`, `JGXZYGW_KY` and the four RDWKARC
-translation lemmas are proved here; `NEGLIGIBLE_FUNC`, `RDWKARC`,
-`SUM_GAMMAX_LMFUN_ESTIMATE_p19`, `JGXZYGW_p19` and the two numerical
-Flyspeck-constants bounds are stated faithfully and `sorry`ed (giants /
-parallel-owned sources).
+Proof status (2026-09-19): the mechanical support chain, both UPFZBZM parts
+assembly (`UPFZBZM`), `FCC_COMPATABILITY_FUNC`, `JGXZYGW_KY`, the four
+RDWKARC translation lemmas and the two numerical Flyspeck-constants bounds
+(`tau0_gt_p19`, `mm2_gt_p19`, proved from Mathlib π-bounds + a certified
+Taylor bracket of `sin`) are proved here; `NEGLIGIBLE_FUNC`, `RDWKARC` and
+`JGXZYGW_p19` remain sorried giants; `SUM_GAMMAX_LMFUN_ESTIMATE_p19` is a
+documented shim to PackingAuto18's (still-sorried-upstream) capstone.
 -/
 
 import Kepler.Text.PackingAuto2
 import Kepler.Text.PackingAuto12
+import Kepler.Text.PackingAuto18
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -134,14 +135,245 @@ open Kepler.Geom Set Classical MeasureTheory
 
 /-! ## Support kit (UPFZBZM_support_lemmas.hl) -/
 
-/-- Flyspeck_constants.bounds `#1.54065 < tau0` (UPFZBZM_support_lemmas.hl:93).
-NEEDS Flyspeck_constants.bounds (not on the Lean side; numerical:
-`tau0 = 4π - 20 * sol0 ≈ 1.5407`). -/
-private theorem tau0_gt_p19 : 1.54065 < tau0 := by sorry
+/-! ### Certified numerics for `tau0`/`mm2` (2026-09-19 fill)
 
-/-- Flyspeck_constants.bounds `#0.02541 < mm2` (UPFZBZM_support_lemmas.hl:101).
-NEEDS Flyspeck_constants.bounds (numerical: `mm2 ≈ 0.0254`). -/
-private theorem mm2_gt_p19 : 0.02541 < mm2 := by sorry
+`Flyspeck_constants.bounds` (`#1.54065 < tau0`, `#0.02541 < mm2`) is proved
+from first principles: Mathlib's rational π-interval
+(`pi_gt_d6`/`pi_lt_d6`, error `10⁻⁶`) plus an alternating-series Taylor
+bracket of `sin` derived to order 9 (each step by a derivative-sign
+monotonicity argument on `[0, ∞)`, bootstrapped from Mathlib's
+`Real.sin_ge_sub_cube`). The bracket pins `arcsin(1/3)` to
+`0.3398369 < arcsin(1/3) < 0.3398370` (error `10⁻⁷`), which determines
+`sol0 = π/2 − 3·arcsin(1/3)`, `tau0 = 60·arcsin(1/3) − 6π` and
+`mm2 = (6·sol0 − π)·√2/(6·tau0)` with ample slack for the two Flyspeck
+bounds. All final comparisons are exact rational `norm_num` checks. -/
+
+private theorem p19_mono {f : ℝ → ℝ}
+    (hC : Continuous f) (hD : Differentiable ℝ f)
+    (hd : ∀ x : ℝ, 0 ≤ x → 0 ≤ deriv f x) : MonotoneOn f (Set.Ici 0) :=
+  monotoneOn_of_deriv_nonneg (convex_Ici (0 : ℝ)) hC.continuousOn hD.differentiableOn
+    (fun x hx => hd x (by
+      have hlt : 0 < x := by simpa [interior_Ici, Set.mem_Ioi] using hx
+      exact hlt.le))
+
+private theorem p19_antitone {f : ℝ → ℝ}
+    (hC : Continuous f) (hD : Differentiable ℝ f)
+    (hd : ∀ x : ℝ, 0 ≤ x → deriv f x ≤ 0) : AntitoneOn f (Set.Ici 0) :=
+  antitoneOn_of_deriv_nonpos (convex_Ici (0 : ℝ)) hC.continuousOn hD.differentiableOn
+    (fun x hx => hd x (by
+      have hlt : 0 < x := by simpa [interior_Ici, Set.mem_Ioi] using hx
+      exact hlt.le))
+
+private theorem p19_cos_le_taylor4 {t : ℝ} (ht : 0 ≤ t) :
+    Real.cos t ≤ 1 - t ^ 2 / 2 + t ^ 4 / 24 := by
+  have hC : Continuous (fun s : ℝ => Real.cos s - (1 - s ^ 2 / 2 + s ^ 4 / 24)) := by fun_prop
+  have hD : Differentiable ℝ (fun s : ℝ => Real.cos s - (1 - s ^ 2 / 2 + s ^ 4 / 24)) := by
+    fun_prop
+  have step := p19_antitone (f := fun s : ℝ => Real.cos s - (1 - s ^ 2 / 2 + s ^ 4 / 24)) hC hD
+    (by intro x hx
+        have hderiv : deriv (fun s : ℝ => Real.cos s - (1 - s ^ 2 / 2 + s ^ 4 / 24)) x
+            = -Real.sin x + x - x ^ 3 / 6 := by
+          simp (disch := fun_prop); ring
+        rw [hderiv]
+        have := Real.sin_ge_sub_cube hx
+        linarith)
+  have step2 := step (Set.mem_Ici.mpr le_rfl) (Set.mem_Ici.mpr ht) ht
+  have hz : (fun s : ℝ => Real.cos s - (1 - s ^ 2 / 2 + s ^ 4 / 24)) 0 = 0 := by simp
+  rw [hz] at step2
+  linarith
+
+private theorem p19_sin_le_taylor5 {t : ℝ} (ht : 0 ≤ t) :
+    Real.sin t ≤ t - t ^ 3 / 6 + t ^ 5 / 120 := by
+  have hC : Continuous (fun s : ℝ => Real.sin s - (s - s ^ 3 / 6 + s ^ 5 / 120)) := by fun_prop
+  have hD : Differentiable ℝ (fun s : ℝ => Real.sin s - (s - s ^ 3 / 6 + s ^ 5 / 120)) := by
+    fun_prop
+  have step := p19_antitone (f := fun s : ℝ => Real.sin s - (s - s ^ 3 / 6 + s ^ 5 / 120)) hC hD
+    (by intro x hx
+        have hderiv : deriv (fun s : ℝ => Real.sin s - (s - s ^ 3 / 6 + s ^ 5 / 120)) x
+            = Real.cos x - (1 - x ^ 2 / 2 + x ^ 4 / 24) := by
+          simp (disch := fun_prop); ring
+        rw [hderiv]
+        have := p19_cos_le_taylor4 hx
+        linarith)
+  have step2 := step (Set.mem_Ici.mpr le_rfl) (Set.mem_Ici.mpr ht) ht
+  have hz : (fun s : ℝ => Real.sin s - (s - s ^ 3 / 6 + s ^ 5 / 120)) 0 = 0 := by simp
+  rw [hz] at step2
+  linarith
+
+private theorem p19_cos_ge_taylor6 {t : ℝ} (ht : 0 ≤ t) :
+    1 - t ^ 2 / 2 + t ^ 4 / 24 - t ^ 6 / 720 ≤ Real.cos t := by
+  have hC : Continuous (fun s : ℝ => Real.cos s -
+      (1 - s ^ 2 / 2 + s ^ 4 / 24 - s ^ 6 / 720)) := by fun_prop
+  have hD : Differentiable ℝ (fun s : ℝ => Real.cos s -
+      (1 - s ^ 2 / 2 + s ^ 4 / 24 - s ^ 6 / 720)) := by fun_prop
+  have step := p19_mono (f := fun s : ℝ => Real.cos s -
+      (1 - s ^ 2 / 2 + s ^ 4 / 24 - s ^ 6 / 720)) hC hD
+    (by intro x hx
+        have hderiv : deriv (fun s : ℝ => Real.cos s -
+            (1 - s ^ 2 / 2 + s ^ 4 / 24 - s ^ 6 / 720)) x
+            = -Real.sin x + x - x ^ 3 / 6 + x ^ 5 / 120 := by
+          simp (disch := fun_prop); ring
+        rw [hderiv]
+        have := p19_sin_le_taylor5 hx
+        linarith)
+  have step2 := step (Set.mem_Ici.mpr le_rfl) (Set.mem_Ici.mpr ht) ht
+  have hz : (fun s : ℝ => Real.cos s -
+      (1 - s ^ 2 / 2 + s ^ 4 / 24 - s ^ 6 / 720)) 0 = 0 := by simp
+  rw [hz] at step2
+  linarith
+
+private theorem p19_sin_ge_taylor7 {t : ℝ} (ht : 0 ≤ t) :
+    t - t ^ 3 / 6 + t ^ 5 / 120 - t ^ 7 / 5040 ≤ Real.sin t := by
+  have hC : Continuous (fun s : ℝ => Real.sin s -
+      (s - s ^ 3 / 6 + s ^ 5 / 120 - s ^ 7 / 5040)) := by fun_prop
+  have hD : Differentiable ℝ (fun s : ℝ => Real.sin s -
+      (s - s ^ 3 / 6 + s ^ 5 / 120 - s ^ 7 / 5040)) := by fun_prop
+  have step := p19_mono (f := fun s : ℝ => Real.sin s -
+      (s - s ^ 3 / 6 + s ^ 5 / 120 - s ^ 7 / 5040)) hC hD
+    (by intro x hx
+        have hderiv : deriv (fun s : ℝ => Real.sin s -
+            (s - s ^ 3 / 6 + s ^ 5 / 120 - s ^ 7 / 5040)) x
+            = Real.cos x - (1 - x ^ 2 / 2 + x ^ 4 / 24 - x ^ 6 / 720) := by
+          simp (disch := fun_prop); ring
+        rw [hderiv]
+        have := p19_cos_ge_taylor6 hx
+        linarith)
+  have step2 := step (Set.mem_Ici.mpr le_rfl) (Set.mem_Ici.mpr ht) ht
+  have hz : (fun s : ℝ => Real.sin s -
+      (s - s ^ 3 / 6 + s ^ 5 / 120 - s ^ 7 / 5040)) 0 = 0 := by simp
+  rw [hz] at step2
+  linarith
+
+private theorem p19_cos_le_taylor8 {t : ℝ} (ht : 0 ≤ t) :
+    Real.cos t ≤ 1 - t ^ 2 / 2 + t ^ 4 / 24 - t ^ 6 / 720 + t ^ 8 / 40320 := by
+  have hC : Continuous (fun s : ℝ => Real.cos s -
+      (1 - s ^ 2 / 2 + s ^ 4 / 24 - s ^ 6 / 720 + s ^ 8 / 40320)) := by fun_prop
+  have hD : Differentiable ℝ (fun s : ℝ => Real.cos s -
+      (1 - s ^ 2 / 2 + s ^ 4 / 24 - s ^ 6 / 720 + s ^ 8 / 40320)) := by fun_prop
+  have step := p19_antitone (f := fun s : ℝ => Real.cos s -
+      (1 - s ^ 2 / 2 + s ^ 4 / 24 - s ^ 6 / 720 + s ^ 8 / 40320)) hC hD
+    (by intro x hx
+        have hderiv : deriv (fun s : ℝ => Real.cos s -
+            (1 - s ^ 2 / 2 + s ^ 4 / 24 - s ^ 6 / 720 + s ^ 8 / 40320)) x
+            = -Real.sin x + x - x ^ 3 / 6 + x ^ 5 / 120 - x ^ 7 / 5040 := by
+          simp (disch := fun_prop); ring
+        rw [hderiv]
+        have := p19_sin_ge_taylor7 hx
+        linarith)
+  have step2 := step (Set.mem_Ici.mpr le_rfl) (Set.mem_Ici.mpr ht) ht
+  have hz : (fun s : ℝ => Real.cos s -
+      (1 - s ^ 2 / 2 + s ^ 4 / 24 - s ^ 6 / 720 + s ^ 8 / 40320)) 0 = 0 := by simp
+  rw [hz] at step2
+  linarith
+
+private theorem p19_sin_le_taylor9 {t : ℝ} (ht : 0 ≤ t) :
+    Real.sin t ≤ t - t ^ 3 / 6 + t ^ 5 / 120 - t ^ 7 / 5040 + t ^ 9 / 362880 := by
+  have hC : Continuous (fun s : ℝ => Real.sin s -
+      (s - s ^ 3 / 6 + s ^ 5 / 120 - s ^ 7 / 5040 + s ^ 9 / 362880)) := by fun_prop
+  have hD : Differentiable ℝ (fun s : ℝ => Real.sin s -
+      (s - s ^ 3 / 6 + s ^ 5 / 120 - s ^ 7 / 5040 + s ^ 9 / 362880)) := by
+    fun_prop
+  have step := p19_antitone (f := fun s : ℝ => Real.sin s -
+      (s - s ^ 3 / 6 + s ^ 5 / 120 - s ^ 7 / 5040 + s ^ 9 / 362880)) hC hD
+    (by intro x hx
+        have hderiv : deriv (fun s : ℝ => Real.sin s -
+            (s - s ^ 3 / 6 + s ^ 5 / 120 - s ^ 7 / 5040 + s ^ 9 / 362880)) x
+            = Real.cos x - (1 - x ^ 2 / 2 + x ^ 4 / 24 - x ^ 6 / 720 + x ^ 8 / 40320) := by
+          simp (disch := fun_prop); ring
+        rw [hderiv]
+        have := p19_cos_le_taylor8 hx
+        linarith)
+  have step2 := step (Set.mem_Ici.mpr le_rfl) (Set.mem_Ici.mpr ht) ht
+  have hz : (fun s : ℝ => Real.sin s -
+      (s - s ^ 3 / 6 + s ^ 5 / 120 - s ^ 7 / 5040 + s ^ 9 / 362880)) 0 = 0 := by simp
+  rw [hz] at step2
+  linarith
+
+private theorem p19_arcsin_bounds :
+    (0.3398369 : ℝ) < Real.arcsin (1 / 3) ∧ Real.arcsin (1 / 3) < 0.3398370 := by
+  have hpi : (3.141592 : ℝ) < Real.pi := Real.pi_gt_d6
+  set a := Real.arcsin (1 / 3) with hdef
+  have hamem : a ∈ Set.Icc (-(Real.pi / 2)) (Real.pi / 2) :=
+    ⟨Real.neg_pi_div_two_le_arcsin _, Real.arcsin_le_pi_div_two _⟩
+  have ht1mem : (0.3398369 : ℝ) ∈ Set.Icc (-(Real.pi / 2)) (Real.pi / 2) := by
+    constructor <;> linarith
+  have ht2mem : (0.3398370 : ℝ) ∈ Set.Icc (-(Real.pi / 2)) (Real.pi / 2) := by
+    constructor <;> linarith
+  have hsa : Real.sin a = 1 / 3 := Real.sin_arcsin (by norm_num) (by norm_num)
+  have h9 := p19_sin_le_taylor9 (t := 0.3398369) (by norm_num)
+  have hlt : Real.sin 0.3398369 < Real.sin a := by
+    rw [hsa]
+    have hr : 0.3398369 - 0.3398369 ^ 3 / 6 + 0.3398369 ^ 5 / 120
+        - 0.3398369 ^ 7 / 5040 + 0.3398369 ^ 9 / 362880 < (1 : ℝ) / 3 := by norm_num
+    linarith
+  have h7 := p19_sin_ge_taylor7 (t := 0.3398370) (by norm_num)
+  have hgt : Real.sin a < Real.sin 0.3398370 := by
+    rw [hsa]
+    have hr : (1 : ℝ) / 3 < 0.3398370 - 0.3398370 ^ 3 / 6 + 0.3398370 ^ 5 / 120
+        - 0.3398370 ^ 7 / 5040 := by norm_num
+    linarith
+  exact ⟨(Real.strictMonoOn_sin.lt_iff_lt ht1mem hamem).mp hlt,
+    (Real.strictMonoOn_sin.lt_iff_lt hamem ht2mem).mp hgt⟩
+
+/-- The regular-tetrahedron solid angle in `arcsin` form:
+`sol0 = π/2 − 3·arcsin(1/3)` (via `Real.arccos_eq_pi_div_two_sub_arcsin`). -/
+private theorem p19_sol0_eq : sol0 = Real.pi / 2 - 3 * Real.arcsin (1 / 3) := by
+  have h : Real.arccos (1 / 3) = Real.pi / 2 - Real.arcsin (1 / 3) :=
+    Real.arccos_eq_pi_div_two_sub_arcsin _
+  show 3 * Real.arccos (1 / 3) - Real.pi = _
+  rw [h]; ring
+
+/-- Flyspeck-constants bound `#1.54065 < tau0` (UPFZBZM_support_lemmas.hl:93),
+PROVED here (2026-09-19 pass): Mathlib's certified π-interval
+(`Real.pi_gt_d6`/`Real.pi_lt_d6`) + a rigorous 9th-order Taylor bracket of
+`sin` (private `p19_sin_le_taylor9`/`p19_sin_ge_taylor7` above) pin
+`arcsin(1/3)` between `0.3398369` and `0.3398370`; `tau0 = 60·arcsin(1/3) − 6π`
+(unfolded via `Real.arccos_eq_pi_div_two_sub_arcsin`) then gives the bound
+with slack `6·10⁻⁶`. No `Flyspeck_constants` dependency remains. -/
+private theorem tau0_gt_p19 : 1.54065 < tau0 := by
+  obtain ⟨hlow, _⟩ := p19_arcsin_bounds
+  have hpi : Real.pi < 3.141593 := Real.pi_lt_d6
+  have hsol := p19_sol0_eq
+  show (1.54065 : ℝ) < 4 * Real.pi - 20 * sol0
+  rw [hsol]
+  linarith
+
+/-- Flyspeck-constants bound `#0.02541 < mm2` (UPFZBZM_support_lemmas.hl:101),
+PROVED here (2026-09-19 pass) on the same `arcsin(1/3)` bracket
+(`p19_arcsin_bounds`): `6·sol0 − π = 2π − 18·arcsin(1/3) > 0.166118`,
+`tau0 ≤ 1.540668`, `√2 > 1.414213` (exact rational square check), and
+`0.02541 · 9.244008 < 0.166118 · 1.414213` (exact) chain to the bound
+with slack `3.5·10⁻⁶`. -/
+private theorem mm2_gt_p19 : 0.02541 < mm2 := by
+  obtain ⟨hlow, hupp⟩ := p19_arcsin_bounds
+  have hpi : (3.141592 : ℝ) < Real.pi := Real.pi_gt_d6
+  have hsol := p19_sol0_eq
+  have hN : (0.166118 : ℝ) < 6 * sol0 - Real.pi := by rw [hsol]; linarith
+  have htauub : tau0 ≤ 1.540668 := by
+    have h6 : tau0 = 60 * Real.arcsin (1 / 3) - 6 * Real.pi := by
+      show 4 * Real.pi - 20 * sol0 = _
+      rw [hsol]; ring
+    linarith
+  have hs2 : (1.414213 : ℝ) < Real.sqrt 2 := by
+    have hsq : (1.414213 : ℝ) ^ 2 < 2 := by norm_num
+    exact Real.lt_sqrt_of_sq_lt hsq
+  have h6t : (6 : ℝ) * tau0 ≤ 9.244008 := by linarith
+  have key : (0.02541 : ℝ) * (6 * tau0) < (6 * sol0 - Real.pi) * Real.sqrt 2 := by
+    have hle : (0.166118 : ℝ) ≤ 6 * sol0 - Real.pi := by linarith
+    have hprod : (0.166118 : ℝ) * 1.414213 < (6 * sol0 - Real.pi) * Real.sqrt 2 :=
+      mul_lt_mul_of_le_of_lt_of_pos_of_nonneg hle hs2 (by norm_num)
+        (Real.sqrt_nonneg 2)
+    have step1 : (0.02541 : ℝ) * (6 * tau0) ≤ 0.02541 * 9.244008 :=
+      mul_le_mul_of_nonneg_left h6t (by norm_num)
+    calc (0.02541 : ℝ) * (6 * tau0) ≤ 0.02541 * 9.244008 := step1
+      _ < 0.166118 * 1.414213 := by norm_num
+      _ < (6 * sol0 - Real.pi) * Real.sqrt 2 := hprod
+  have hmm : mm2 = (6 * sol0 - Real.pi) * Real.sqrt 2 / (6 * tau0) := rfl
+  rw [hmm, lt_div_iff₀ (c := 6 * tau0) (by
+    have htau0pos : (0 : ℝ) < tau0 :=
+      lt_of_le_of_lt (by norm_num : (0 : ℝ) ≤ 1.54065) tau0_gt_p19
+    linarith)]
+  exact key
 
 /-- HOL `tau0_not_zero` (UPFZBZM_support_lemmas.hl:91). -/
 theorem tau0_not_zero : tau0 ≠ 0 := by
@@ -308,16 +540,18 @@ total `gammaX` deficit of the Marchal cells inside `ball 0 r`. The HL proof
 cc1 (BOUND_GAMMA_X_lmfun), cc2 (CARD_MCELL_CONTAINS_POINT_klemma), cc3
 (beta-bump bound) and re-groups the cluster sums over the finite cell family.
 
-NEEDS: the leaf_cell / sum_gamma kit — parallel-owned PackingAuto18, NOT
-importable in this checkout (`_p19` copy; delete at merge); its proof
-consumes BOUND_GAMMA_X_lmfun and CARD_MCELL_CONTAINS_POINT_klemma
-(PackingAuto15). -/
+NEEDS: the leaf_cell / sum_gamma kit — SHIM (2026-09-19): the parallel
+PackingAuto18 olean HAS landed in this checkout, so the `_p19` copy now
+discharges to `Kepler.Text.PackingAuto18.SUM_GAMMAX_LMFUN_ESTIMATE`
+(statement-identical; that theorem is still `sorry`ed upstream in Auto18 —
+the giant leaf-cell/sum_gamma chains carry `sorry` there — so this is a
+documented transitive-shim fill, deleting the statement duplication). -/
 theorem SUM_GAMMAX_LMFUN_ESTIMATE_p19 (V : Set V3) :
     ∃ c : ℝ, ∀ r : ℝ, saturated V → Packing V → 1 ≤ r →
       cellClusterInequality V → TSKAJXY_statement →
       c * r ^ 2 ≤ setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X}
-        (fun X => gammaX V X lmfun) := by
-  sorry
+        (fun X => gammaX V X lmfun) :=
+  SUM_GAMMAX_LMFUN_ESTIMATE V
 
 /-! ## UPFZBZM.hl -/
 

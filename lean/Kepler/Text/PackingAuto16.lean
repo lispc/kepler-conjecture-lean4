@@ -82,14 +82,15 @@ HOL sources:
 - The `mcell` dispatch step of `mcell_set_2` (HL uses marchal2
   `MCELL_EXPLICIT`) is proved inline from the public PackingAuto2 `mcell`
   definition — no Auto12 dependency needed.
-- Proof status: the four mechanical private lemmas of QZYZMJC.hl are proved
-  here; `MCELL_SET_NOT_EMPTY` (HL:137-496), the private
-  `voronoiList3SingletonExplicit_p16` bridge, and all five capstones are
-  stated faithfully and `sorry`ed (giants; the HL proofs run 350-600 lines
-  of refinement script each).
+- Proof status (2026-09-19): `voronoiList3SingletonExplicit_p16` SHIMMED to
+  `PackingAuto12.VORONOI_LIST_3_SINGLETON_EXPLICIT` (olean landed; still
+  `sorry`ed upstream there — documented transitive shim). The four mechanical
+  private lemmas of QZYZMJC.hl are proved; `MCELL_SET_NOT_EMPTY` and the five
+  capstones remain `sorry`ed giants (HL proofs run 350-600 lines each).
 -/
 
 import Kepler.Text.PackingAuto2
+import Kepler.Text.PackingAuto12
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -118,16 +119,18 @@ private theorem mcellSet2 (V : Set V3) :
   · rintro ⟨i, ul, rfl, hb, _hi⟩
     exact ⟨i, ul, rfl, hb⟩
 
-/-- NEEDS: marchal2.hl:2231 `VORONOI_LIST_3_SINGLETON_EXPLICIT` — owned by
-the parallel lane PackingAuto12, whose olean is not built in this checkout
-(NOT importable here; Auto14 keeps the same kind of private copy). Private
-`_p16` copy of the statement, sorried: geometric giant on the Auto12 side.
-Delete this copy at merge when PackingAuto12 lands. -/
+/-- NEEDS: marchal2.hl:2231 `VORONOI_LIST_3_SINGLETON_EXPLICIT` — SHIM
+(2026-09-19): the parallel PackingAuto12 olean HAS landed in this checkout,
+so the private `_p16` copy discharges to
+`Kepler.Text.PackingAuto12.VORONOI_LIST_3_SINGLETON_EXPLICIT`
+(statement-identical; still `sorry`ed upstream in Auto12 — a documented
+transitive shim, deleting the statement duplication; delete the copy at
+merge when Auto12's giant lands). -/
 private theorem voronoiList3SingletonExplicit_p16 (V : Set V3) (ul : List V3)
     (_hp : Packing V) (_hs : saturated V) (_hb : barV V 3 ul) :
     ∃ a, voronoiList V ul = {a} ∧ a = circumcenter (setOfList ul) ∧
-      hl ul = dist (hdV ul) a := by
-  sorry
+      hl ul = dist (hdV ul) a :=
+  VORONOI_LIST_3_SINGLETON_EXPLICIT V ul _hp _hs _hb
 
 /-- HOL `BARV_3_IMP_FINITE_lemma1` (QZYZMJC.hl:62-100): two list points of a
 `barV V 3` simplex over a saturated packing are less than `4` apart (the

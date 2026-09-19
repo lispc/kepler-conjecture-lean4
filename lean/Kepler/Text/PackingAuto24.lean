@@ -60,9 +60,9 @@ SORRY INVENTORY (giants, with blockers)
     leaf-cell wedge-disjointness extraction (`WEDGE_GE_ALMOST_DISJOINT`
     / `FCHKUGT` / `EWYBJUA`, OXLZLEZ3.hl) and barV/pair half-length
     (`HL_2`) extraction to synthesize `REUHADY1`'s stronger hypotheses.
-  - `GRUTOTI1_concl_p24`: statement copy of the parallel-owned Auto23
-    chapter (GRUTOTI.hl:48-58; proof NOT importable — Auto23 lane).
-    NEEDS marker only; delete at merge into Auto23's results.
+  - `GRUTOTI1_concl_p24`: SHIMMED (2026-09-19) to the statement-identical
+    `PackingAuto2.GRUTOTI1_concl` interface (still `sorry`ed there; the
+    Auto23 lane owns the real proof). Delete the `_p24` copy at merge.
 -/
 
 import Kepler.Text.PackingAuto2
@@ -278,16 +278,126 @@ theorem collinear3_mem_affineSpan_pair {v0 v1 z : V3} (hne : v0 ≠ v1)
 
 /-! ## COPLANAR_AZIM_EQ and the measure theorems (giants for this lane) -/
 
-/-- HOL `COPLANAR_AZIM_EQ` (REUHADY.hl:121). GIANT — `sorry`.
-NEEDS: the witness-construction route — pick a frame via
-`exists_on3_eq_smul` + `azimSpec_exists` for `(w1,w1)`, build
-`f := v0 + r1*(cos(ψ+a)) • e1 + r1*(sin(ψ+a)) • e2 + h1 • (v1 - v0)`
-with `azim v0 v1 w1 f = a` (via `azim_eq_azim_iff`), then
-`{z | azim v0 v1 w1 z = a} ⊆ affineSpan ℝ {v0, v1, f}` (non-collinear
-`z` from `azim_eq_azim_iff` + `affGt ⊆ affineSpan`; collinear `z` from
-`collinear3_mem_affineSpan_pair` above) and finrank-vectorSpan ≤ 2
-coplanarity. HL instead reduces to `real^2` `Arg` halflines via
-pushin/dropout. -/
+/-! ### The azim witness/affine-span kit (2026-09-19 fill, proved) -/
+
+private theorem p24_exists_azim_point (v0 v1 w1 : V3) (a : ℝ)
+    (hv01 : v0 ≠ v1) (hcw : ¬ Collinear3 v0 v1 w1)
+    (ha0 : 0 < a) (ha2 : a < 2 * Real.pi) :
+    ∃ f : V3, ¬ Collinear3 v0 v1 f ∧ azim v0 v1 w1 f = a := by
+  have hwv : v1 ≠ v0 := Ne.symm hv01
+  obtain ⟨e1, e2, e3, hon, halign⟩ :=
+    exists_on3_eq_smul (v1 - v0) (sub_ne_zero.mpr hwv)
+  have hax : (v1 - v0 : V3) = dist v1 v0 • e3 := by rw [dist_eq_norm]; exact halign
+  obtain ⟨hp1, -⟩ := axis_perp hax hon
+  have hp1' : (e3 : V3) ⬝ᵥ e1 = 0 := by
+    rw [show ((e3 : V3)) ⬝ᵥ (e1 : V3) = (e1 : V3) ⬝ᵥ (e3 : V3) from dotProduct_comm _ _]
+    exact hon.2.2.2.2.1
+  have hw2nc : ¬ Collinear3 v0 v1 (v0 + e1) := by
+    intro hcol
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul hwv).mp hcol
+    have hsimp : ((v0 + e1 : V3) - v0) = e1 := by simp
+    rw [hsimp, hax, smul_smul] at hc
+    have hdot := congrArg (fun x : V3 => x ⬝ᵥ e1) hc
+    rw [show (((c * dist v1 v0 : ℝ)) • (e3 : V3)) ⬝ᵥ e1
+        = c * dist v1 v0 * ((e3 : V3) ⬝ᵥ e1) from by
+      rw [← inner_eq_dot, ← inner_eq_dot, real_inner_smul_left], hp1', mul_zero] at hdot
+    rw [hon.1] at hdot
+    exact absurd hdot (by norm_num)
+  obtain ⟨ψ, r1, r2, hr1, hr2, hzw1, -⟩ := azim_frame_spec hcw hw2nc hon hax hwv
+  set f : V3 := v0 + (r1 * Real.cos (ψ + a)) • e1 + (r1 * Real.sin (ψ + a)) • e2 with hf
+  have hsub : (f : V3) - v0
+      = (r1 * Real.cos (ψ + a)) • e1 + (r1 * Real.sin (ψ + a)) • e2 + (0:ℝ) • (v1 - v0) := by
+    rw [hf]; module
+  have hzF : zOf e1 e2 (f - v0) = (r1 : ℂ) * Complex.exp (((ψ + a : ℝ)) * Complex.I) :=
+    zOf_of_rep hon hax hsub
+  have hnz : zOf e1 e2 (f - v0) ≠ 0 := by
+    rw [hzF]
+    exact mul_ne_zero (by exact_mod_cast hr1.ne') (Complex.exp_ne_zero _)
+  have hfnc : ¬ Collinear3 v0 v1 f :=
+    (zOf_ne_zero_iff hon hax hwv f).mp hnz
+  refine ⟨f, hfnc, ?_⟩
+  have hspec : AzimSpec v0 v1 w1 f (azim v0 v1 w1 f) := by
+    unfold azim
+    rw [if_neg (by rintro (h | h); exacts [hcw h, hfnc h])]
+    exact Classical.epsilon_spec (azimSpec_exists hcw hfnc)
+  unfold AzimSpec at hspec
+  obtain ⟨-, -, h1', h2', hframes⟩ := hspec
+  obtain ⟨ψ', r1', r2', hrep1, hrep2, hr1', hr2'⟩ := hframes e1 e2 e3 hon hax hwv
+  have hz1 : zOf e1 e2 (w1 - v0) = (r1' : ℂ) * Complex.exp ((ψ' : ℝ) * Complex.I) :=
+    zOf_of_rep hon hax hrep1
+  have hz2 : zOf e1 e2 (f - v0) = (r2' : ℂ) * Complex.exp
+      (((ψ' + azim v0 v1 w1 f : ℝ)) * Complex.I) :=
+    zOf_of_rep hon hax hrep2
+  have hn1 : ‖zOf e1 e2 (w1 - v0)‖ = r1 := by
+    rw [hzw1, Complex.norm_mul, Complex.norm_real, Real.norm_eq_abs,
+      abs_of_pos hr1, exp_unit_norm, mul_one]
+  have hn1' : ‖zOf e1 e2 (w1 - v0)‖ = r1' := by
+    rw [hz1, Complex.norm_mul, Complex.norm_real, Real.norm_eq_abs,
+      abs_of_pos hr1', exp_unit_norm, mul_one]
+  have hn2 : ‖zOf e1 e2 (f - v0)‖ = r1 := by
+    rw [hzF, Complex.norm_mul, Complex.norm_real, Real.norm_eq_abs,
+      abs_of_pos hr1, exp_unit_norm, mul_one]
+  have hn2' : ‖zOf e1 e2 (f - v0)‖ = r2' := by
+    rw [hz2, Complex.norm_mul, Complex.norm_real, Real.norm_eq_abs,
+      abs_of_pos hr2', exp_unit_norm, mul_one]
+  have hr1eq : r1' = r1 := hn1'.symm.trans hn1
+  have hr2eq : r2' = r1 := hn2'.symm.trans hn2
+  rw [hr1eq] at hz1
+  rw [hr2eq] at hz2
+  have hu1 : Complex.exp ((ψ' : ℝ) * Complex.I) = Complex.exp ((ψ : ℝ) * Complex.I) := by
+    have hkey : (r1 : ℂ) * Complex.exp ((ψ' : ℝ) * Complex.I)
+        = (r1 : ℂ) * Complex.exp ((ψ : ℝ) * Complex.I) := hz1.symm.trans hzw1
+    exact mul_left_cancel₀ (by exact_mod_cast hr1.ne') hkey
+  have hunits : Complex.exp ((azim v0 v1 w1 f : ℝ) * Complex.I)
+      = Complex.exp ((a : ℝ) * Complex.I) := by
+    have hkey : (r1 : ℂ) * Complex.exp (((ψ' + azim v0 v1 w1 f : ℝ)) * Complex.I)
+        = (r1 : ℂ) * Complex.exp (((ψ + a : ℝ)) * Complex.I) := hz2.symm.trans hzF
+    rw [exp_add_I, exp_add_I, hu1] at hkey
+    have h1 := mul_left_cancel₀ (a := ((r1 : ℂ))) (by exact_mod_cast hr1.ne') hkey
+    exact mul_left_cancel₀ (a := Complex.exp ((ψ : ℝ) * Complex.I))
+      (Complex.exp_ne_zero _) h1
+  exact angle_eq_of_exp_eq (azim_nonneg v0 v1 w1 f) (azim_lt_two_pi v0 v1 w1 f)
+    ha0.le ha2 hunits
+
+
+private theorem p24_mem_affineSpan_triple (v0 v1 w z : V3) (c₂ c₃ : ℝ)
+    (hz : z = v0 + c₂ • (v1 - v0) + c₃ • (w - v0)) :
+    z ∈ (affineSpan ℝ ({v0, v1, w} : Set V3)) := by
+  have h0 : v0 ∈ (affineSpan ℝ ({v0, v1, w} : Set V3)) := mem_affineSpan (k := ℝ) (by simp)
+  have h1 : v1 ∈ (affineSpan ℝ ({v0, v1, w} : Set V3)) := mem_affineSpan (k := ℝ) (by simp)
+  have h2 : w ∈ (affineSpan ℝ ({v0, v1, w} : Set V3)) := mem_affineSpan (k := ℝ) (by simp)
+  have d1 : (v1 - v0 : V3) ∈ (affineSpan ℝ ({v0, v1, w} : Set V3)).direction :=
+    AffineSubspace.vsub_mem_direction h1 h0
+  have d2 : (w - v0 : V3) ∈ (affineSpan ℝ ({v0, v1, w} : Set V3)).direction :=
+    AffineSubspace.vsub_mem_direction h2 h0
+  have dsum : c₂ • (v1 - v0) + c₃ • (w - v0) ∈
+      (affineSpan ℝ ({v0, v1, w} : Set V3)).direction :=
+    Submodule.add_mem _ (Submodule.smul_mem _ _ d1) (Submodule.smul_mem _ _ d2)
+  have hv := AffineSubspace.vadd_mem_of_mem_direction dsum h0
+  rw [show ((c₂ • (v1 - v0) + c₃ • (w - v0)) +ᵥ v0)
+    = v0 + (c₂ • (v1 - v0) + c₃ • (w - v0))
+    from (vadd_eq_add _ _).trans (add_comm _ _)] at hv
+  rw [hz, add_assoc]
+  exact hv
+
+/-- HOL `COPLANAR_AZIM_EQ` (REUHADY.hl:121). STILL `sorry` (2026-09-19):
+the proof architecture is assembled and its two main ingredients are PROVED
+above — `p24_exists_azim_point` (the frame/polar witness `f` off the axis
+with `azim v0 v1 w1 f = a`, via `exists_on3_eq_smul` + `azim_frame_spec` +
+`AzimSpec`-at-frame + `angle_eq_of_exp_eq`) and
+`p24_mem_affineSpan_triple` (affineSpan-triple membership from an
+`affGt`-combination). REMAINING (bookkeeping only): (1) in the `a ≠ 0`,
+`0 < a < 2π` branch, `azim_eq_azim_iff hcw hfnc hznc`.mp
+(hfaz.trans hz.symm) puts every `z` with `azim = a` into
+`affGt {v0,v1} {f}`, and `affGt_pair_iff` + `p24_mem_affineSpan_triple`
+give `z ∈ affineSpan ℝ {v0,v1,f}`; (2) in the `a = 0` branch, collinear `z`
+via `collinear3_mem_affineSpan_pair` + `affineSpan_mono`, non-collinear `z`
+via `azim_eq_zero_iff_alt` + the same affGt bridge; (3) the empty cases
+(`a < 0`, `a ≥ 2π`, degenerate `v0 = v1`) via `azim_nonneg`/`azim_lt_two_pi`;
+(4) the final `Coplanar` bookkeeping (Geom-vs-root resolution +
+`vectorSpan`-rank ≤ 2 of `S ⊆ affineSpan {v0,v1,f}` via `Submodule.rank_mono`
++ `rank_span_finset_le` + card ≤ 2) — all steps individually verified in
+scratch; splice at the next pass. -/
 theorem coplanarAzimEq (v0 v1 w1 : V3) (a : ℝ)
     (h : Collinear3 v0 v1 w1 → ¬(a = 0)) :
     Coplanar ℝ {z | azim v0 v1 w1 z = a} := by
@@ -385,6 +495,7 @@ private theorem GRUTOTI1_concl_p24 : ∀ (V : Set V3) (u0 u1 : V3) (e : Set V3),
     hl [u0, u1] < Real.sqrt 2 → e = {u0, u1} →
     setSum {X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X}
         (fun t => dihX V t (u0, u1)) = 2 * Real.pi := by
-  sorry
+  intro V u0 u1 e hs hp hu0 hu1 hne hhl he
+  exact GRUTOTI1_concl V u0 u1 e hs hp hu0 hu1 hne hhl he
 
 end Kepler.Text
