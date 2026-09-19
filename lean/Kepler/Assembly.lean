@@ -12,7 +12,8 @@
     `kepler_conjecture_with_assumptions`（文字侧 capstone）。
 
   接口冻结 2026-09-19：`nonlinearInequalities` / `linearProgrammingResults` /
-  `textCapstone` / `goodListArchive` 四个 sorry 占位定理是本文件**唯一**允许的 sorry；
+  `textCapstone` 三个 sorry 占位定理是本文件**唯一**允许的 sorry
+  （第四占位 `goodListArchive` 已由 P6-C 闭合为真证明，2026-09-19）；
   `assembly` 本体是真证明（对照 HOL tactic 脚本逐行翻译）。
 -/
 import Kepler.Statement
@@ -21,6 +22,8 @@ import Kepler.Text.Fan
 import Kepler.Text.PackingAuto2
 import Kepler.Text.Hypermap
 import Kepler.Text.LocalAuto16
+import Kepler.Assembly.GoodListDefs
+import Kepler.Assembly.GoodListAll
 
 open Classical Metric Set
 open Kepler.Geom Kepler.Text Kepler.Text.Fan Kepler.Graphs
@@ -64,54 +67,13 @@ def Contravening (V : Set V3) : Prop :=
     (∀ v ∈ V, surroundedNode V (ESTD V) v) ∧
     (∀ v ∈ V, surroundedNode V (ECTC V) v ∨ ‖v‖ = 2)
 
-/-! ### 1a. list_hypermap 机器（`formal_lp/hypermap/ssreflect/list_hypermap-compiled.hl`） -/
+/-! ### 1a. list_hypermap 机器（`formal_lp/hypermap/ssreflect/list_hypermap-compiled.hl`）
 
-/-- HOL `list_pairs`（list_hypermap-compiled.hl:19）：`list_pairs list = zip list (rot 1 list)`，
-其中 ssreflect `rot n s = drop n s ++ take n s`（已内联 `n = 1`）。 -/
-def listPairs (l : List α) : List (α × α) := l.zip (l.drop 1 ++ l.take 1)
-
-/-- HOL `list_of_darts`（list_hypermap-compiled.hl:20-21）：
-`foldr (λlist a. (list_pairs list) ++ a) [] L`，即 `flatten (map list_pairs L)`。 -/
-def listOfDarts (L : fgraph ℕ) : List (ℕ × ℕ) := (L.map listPairs).flatten
-
-/-- HOL `next_el`（`tame/ssreflect/seq2-compiled.hl:24-25`）逐句镜像：
-`next_el s x = if (indexl x s = sizel s - 1) then (headl x s) else (nth x s (indexl x s + 1))`。
-折算：`indexl` ↦ `List.idxOf`（`x ∉ s` 时 `idxOf = length`，与 HOL `indexl` 约定一致）、
-`headl x s` ↦ `s.headD x`、`nth x s i` ↦ `s.getD i x`（默认元均为 `x`）。 -/
-def nextEl [BEq α] (s : List α) (x : α) : α :=
-  if s.idxOf x = s.length - 1 then s.headD x else s.getD (s.idxOf x + 1) x
-
-/-- HOL `prev_el`（seq2-compiled.hl:26-27）逐句镜像：
-`prev_el s x = if ~(MEM x s) then x
-  else if (indexl x s = 0) then (last x s) else (nth x s (indexl x s - 1))`。 -/
-def prevEl [DecidableEq α] (s : List α) (x : α) : α :=
-  if x ∉ s then x else if s.idxOf x = 0 then s.getLastD x else s.getD (s.idxOf x - 1) x
-
-/-- HOL `find_face`（list_hypermap-compiled.hl:47-48 经 `find_list`/`list_of_faces`）：
-`L` 中第一个以 `d` 为 dart 的面（`list_pairs l` 含 `d`）的 **dart 列表**；无则 `[]`。 -/
-def findFaceDarts (L : fgraph ℕ) (d : ℕ × ℕ) : List (ℕ × ℕ) :=
-  listPairs ((L.find? fun l => decide (d ∈ listPairs l)).getD [])
-
-/-- HOL `e_list`（list_hypermap-compiled.hl:54）：`e_list d = (SND d, FST d)`。 -/
-def eList (d : ℕ × ℕ) : ℕ × ℕ := (d.2, d.1)
-
-/-- HOL `f_list`（list_hypermap-compiled.hl:53）：`f_list L d = next_el (find_face L d) d`。 -/
-def fList (L : fgraph ℕ) (d : ℕ × ℕ) : ℕ × ℕ := nextEl (findFaceDarts L d) d
-
-/-- HOL `n_list`（list_hypermap-compiled.hl:55）：
-`n_list L d = e_list (prev_el (find_face L d) d)`。 -/
-def nList (L : fgraph ℕ) (d : ℕ × ℕ) : ℕ × ℕ := eList (prevEl (findFaceDarts L d) d)
-
-/-- HOL `good_list`（list_hypermap-compiled.hl:62-65）逐句镜像：
-`good_list L <=> uniq (list_of_darts L) /\ all (λl. ~(l = [])) L /\
-  (!d. MEM d (list_of_darts L) ==> MEM (SND d, FST d) (list_of_darts L))`。
-（`uniq` ↦ `List.Nodup`。） -/
-def GoodList (L : fgraph ℕ) : Prop :=
-  (listOfDarts L).Nodup ∧ (∀ l ∈ L, l ≠ []) ∧
-    ∀ d ∈ listOfDarts L, (d.2, d.1) ∈ listOfDarts L
-
-/-- HOL `ALL good_list a`（the_main_statement.hl:49 合取项，`Seq2.ALL_all` 展开）。 -/
-def AllGoodList (a : List (fgraph ℕ)) : Prop := ∀ L ∈ a, GoodList L
+`listPairs` / `listOfDarts` / `nextEl` / `prevEl` / `findFaceDarts` /
+`eList` / `fList` / `nList` / `GoodList` / `AllGoodList` 已下沉至
+`Kepler/Assembly/GoodListDefs.lean`（P6-C：使 archive 逐图 `native_decide`
+分片不必 import 本脊柱、公理审计不被接口 sorry 污染），经 import 可见，
+对外签名不变。 -/
 
 /-! ### 1b. hypermap 同构与 `hypermap_of_list` 的规格级镜像 -/
 
@@ -163,10 +125,10 @@ def FanHypermapIsoList (V : Set V3) (hfan : FAN 0 V (ESTD V)) (L : fgraph ℕ) :
 
 /-! ### 1c. archive 数据与 tame_classification 形态 -/
 
-/-- HOL `tame_archive_lists`（`archive = set_of_list tame_archive_lists`，
-the_kepler_conjecture.hl:40）的 Lean 侧数据形态：Phase 2 archive 的底层清单
-（`Archive` 的数据部分，RelativeCompleteness.lean:110）。 -/
-def tameArchiveLists : List (fgraph ℕ) := TriData ++ QuadData ++ PentData ++ HexData
+/- HOL `tame_archive_lists`（`archive = set_of_list tame_archive_lists`，
+the_kepler_conjecture.hl:40）的 Lean 侧数据形态 `tameArchiveLists`
+已随 §1a 下沉至 `Kepler/Assembly/GoodListDefs.lean`（Phase 2 archive 的底层
+清单，`Archive` 的数据部分，RelativeCompleteness.lean:110），经 import 可见。 -/
 
 /-- HOL `tame_classification`（the_main_statement.hl:61-64）逐句镜像：
 `!a. tame_classification a =
@@ -276,7 +238,7 @@ def TextCapstone : Prop :=
     TameClassification a ∧ GoodLinearProgrammingResults a ∧ TheNonlinearInequalities →
       TheKeplerConjecture
 
-/-! ## 3. 接口 sorry 占位（接口冻结 2026-09-19；本文件仅有的四个 sorry） -/
+/-! ## 3. 接口 sorry 占位（接口冻结 2026-09-19；本文件仅有的三个 sorry） -/
 
 /-- 接口占位（冻结 2026-09-19）。债务归属：Phase 4 / G4 粘合（P6-E）。
 消除顺序：先填六个 ID 清单与 `CertifiedIneqHolds` 语义，再逐条闭合证书。 -/
@@ -293,13 +255,12 @@ theorem linearProgrammingResults : LinearProgrammingResults := by
 theorem textCapstone : TextCapstone := by
   sorry
 
-/-- 接口占位（冻结 2026-09-19）。HOL `Good_list_archive.good_list_archive`
-（HOL 侧由计算求得 archive 每张图满足 `good_list`）。
-`GoodList` 的三个合取项在 archive 数据上均可判定，Lean 侧可以 `native_decide`
-（走 DECISIONS.md 2026-08-10 的 scoped exception）或 `decide` 闭合。
-债务归属：Phase 2 / P6-C。 -/
-theorem goodListArchive : AllGoodList tameArchiveLists := by
-  sorry
+/-- HOL `Good_list_archive.good_list_archive`（HOL 侧由计算求得 archive 每张图
+满足 `good_list`）。**已闭合（P6-C，2026-09-19）**：19715 张图（Tri 9 / Quad 1253 /
+Pent 16080 / Hex 2373）逐片 `native_decide`（`Kepler/Assembly/GoodListShard*.lean`，
+23 分片，DECISIONS.md 2026-08-10 scoped exception + 2026-09-19 P6-C 扩展），
+纯内核组合器 `Kepler/Assembly/GoodListAll.lean` 的 `goodListArchiveAll` 收拢。 -/
+theorem goodListArchive : AllGoodList tameArchiveLists := goodListArchiveAll
 
 /-! ## 4. 装配定理 -/
 
@@ -316,14 +277,14 @@ HOL tactic 脚本逐步对应：
   与 `{y | y ∈ tameArchiveLists}` 定义上相等；
 - `ASM_REWRITE_TAC[good_linear_programming_results; GSYM linear_programming_results]`
   ↦ 第二分量拆为 `⟨goodListArchive, hLP⟩`；
-- `MP_TAC Good_list_archive.good_list_archive` ↦ 引用接口占位 `goodListArchive`。 -/
+- `MP_TAC Good_list_archive.good_list_archive` ↦ 引用已闭合的 `goodListArchive`。 -/
 theorem assembly (hNL : TheNonlinearInequalities) (hLP : LinearProgrammingResults)
     (hTC : TextCapstone) : TheKeplerConjecture := by
   refine hTC tameArchiveLists ⟨?_, ⟨goodListArchive, hLP⟩, hNL⟩
   intro g hpg ht
   exact Kepler.Graphs.tame_classification hpg ht
 
-/-- 闭合形态：消费四个接口占位后的主定理。
+/-- 闭合形态：消费三个接口占位 + 已闭合的 `goodListArchive` 后的主定理。
 `#print axioms` 的 sorryAx 清单即全项目债务图（docs/phase6-spine.md §1）。 -/
 theorem the_kepler_conjecture_from_interfaces : TheKeplerConjecture :=
   assembly nonlinearInequalities linearProgrammingResults textCapstone
