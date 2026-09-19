@@ -43,7 +43,12 @@ Encoding:
   theorems `HXHYTIJ_concl`..`TFITSKC_concl`) are NOT used to discharge;
   the faithful local statements here are kept independent (`_p27`-suffixed).
 - No `native_decide`; the proved items are mechanical (mod/order arithmetic,
-  definitional folding of `scsHalfSliceV39`). The giants are `sorry`.
+  definitional folding of `scsHalfSliceV39`, choice/`min_num` arguments).
+  The giants are `sorry`.
+- Fill-wave 2026-09-19: `SCS_M_LE_1_p27` and `HXHYTIJ_p27` discharged
+  (10 sorries remain). Blocker re-scan: `LKGRQUI_concl`/`YXIONXL3_concl`/
+  `CUXVZOZ_concl` still `sorry` in LocalAuto1; `XWITCCN` still `sorry` in
+  LocalAuto36; `SCS_M_EQ_1` content still missing corpus-wide.
 
 FILE MAP
   Section 0 (`_p27` substrate; see ENCODING): `periodic_mod_p27`,
@@ -56,16 +61,27 @@ FILE MAP
     `TFITSKCv1_p27` (sorry), `TFITSKC_p27` (sorry).
   Section B (JCYFMRP): `J_EMPY_CASES_A_EQ_2_p27` (proved),
     `DIST_EDGE_LE_CSTAB_CASE_LE3_p27` (proved),
-    `J_EMPY_CASES_A_EQ_2_V1_p27` (proved), `SCS_M_LE_1_p27` (sorry),
-    `JCYFMRP_p27` (sorry).
+    `J_EMPY_CASES_A_EQ_2_V1_p27` (proved), `SCS_M_LE_1_p27` (proved
+    2026-09-19: direct residue pin off the card ≤ 1 split; needs no
+    SCS_M_EQ_1), `JCYFMRP_p27` (sorry; NEEDS `CUXVZOZ`, still `sorry` in
+    LocalAuto1:1616).
   Section C (JLXFDMJ): `SCS_M_EQ_0_p27` (proved), `FINITE_SCS_M_p27`
-    (proved), `SCS_M_EQ_1_p27` (sorry), `SCS_M_LE_K_p27` (proved),
-    `JLXFDMJ_p27` (sorry); `SCS_A_2_p27` lives in Section 0.
-  Section D (SGTRNAF): `UXCKFPE2_p27` (sorry), `SGTRNAF_p27` (sorry).
-  Section E (HXHYTIJ): `HXHYTIJ_p27` (sorry).
-  Section F (AYQJTMD): `XWITCCN2_p27` (sorry), `unadorned_MMs_p27`
-    (sorry), `S_INIT_IS_UNADORNED_p27` (sorry), `AYQJTMD_p27` (sorry),
-    `EAPGLE_p27` (sorry).
+    (proved), `SCS_M_EQ_1_p27` (sorry; NEEDS the `scs_M` boundary
+    structure — isScs's ncard budget only bounds `k ≥ 4` cases), 
+    `SCS_M_LE_K_p27` (proved), `JLXFDMJ_p27` (sorry; NEEDS
+    `SCS_M_EQ_1_p27`); `SCS_A_2_p27` lives in Section 0.
+  Section D (SGTRNAF): `UXCKFPE2_p27` (proved 2026-09-18 via
+    `UXCKFPE_p24`), `SGTRNAF_p27` (proved 2026-09-18).
+  Section E (HXHYTIJ): `HXHYTIJ_p27` (proved 2026-09-19: the
+    `min_num`/choice argument done directly over the `BBprime`/`BBindexMin`
+    definitions).
+  Section F (AYQJTMD): `XWITCCN2_p27` (sorry; NEEDS the `XEIJITAF`
+    s_init cases — `XWITCCN` still `sorry` in LocalAuto36:1511 and
+    LocalAuto1:671; no `s_init`-member `isScsV39` lemma exists yet),
+    `unadorned_MMs_p27` (proved 2026-09-18), `S_INIT_IS_UNADORNED_p27`
+    (proved 2026-09-18), `AYQJTMD_p27` (sorry; NEEDS `XWITCCN2_p27` —
+    its other two inputs are proved here), `EAPGLE_p27` (sorry; NEEDS
+    the JEJTVGB registry, LocalAuto1:541-547, `ZITHLQN_concl` pending).
   Section G (FEKTYIY): `FEKTYIY_p27` (sorry).
 
   Section H (LKGRQUI): `SLICE_IS_UNADORNED_p27` (proved),
@@ -395,14 +411,55 @@ theorem J_EMPY_CASES_A_EQ_2_V1_p27 (s : ScsV39) (i : ℕ) :
     exact sqrt8_ne_2_p27 heq
 
 /-- HOL `SCS_M_LE_1` (JCYFMRP.hl:162). Note the `p % k` on the RHS is the
-HOL form `p MOD scs_k_v39 s`. -/
+HOL form `p MOD scs_k_v39 s`.
+DISCHARGED: the `CARD ≤ 1`-branch of the `scs_M` residue extraction done
+directly (the source splits on `CARD (scs_M s) = 0` / = 1 and re-uses
+SCS_M_EQ_0 / SCS_M_EQ_1): the pinned residue `p` is read off the at-most-one
+card bound (`Set.ncard_eq_zero`/`Set.ncard_eq_one` via `FINITE_SCS_M_p27`),
+every non-pinned index leaves `scs_M s` by the residue pin, the `scs_M`
+negation gives `b ≤ 2*h0 ∧ a ≤ 2` at the folded residues
+(`periodic2_mod_p27`), and `SCS_A_2_p27` turns `a ≤ 2` into `a = 2`. -/
 theorem SCS_M_LE_1_p27 (s : ScsV39) :
     (scsM s).ncard ≤ 1 → isScsV39 s →
       ∃ p, ∀ i, ¬ (i % s.k = p % s.k) → s.b i (i + 1) ≤ 2 * h0 ∧ s.a i (i + 1) = 2 := by
-  sorry
-    -- DISCHARGES: NEEDS the `CARD ≤ 1`-branch of the `scs_M` residue
-    -- extraction (the source splits on `CARD (scs_M s) = 0` / = 1 and re-uses
-    -- SCS_M_EQ_0 / SCS_M_EQ_1), incl. the `CHANGE_B/A_SCS_MOD` folds.
+  intro hcard hs
+  have h2 : ∀ i, 2 ≤ s.a i (i + 1) := SCS_A_2_p27 s hs
+  obtain ⟨-, hk3, -, -, -, -, -, hpa, -, -, hpb, -, -, -, -, -, -, -, -, -⟩ := hs
+  -- `FINITE_SCS_M_p27` (Section C) is only defined below; inlined here.
+  have hfin : (scsM s).Finite :=
+    (Set.finite_lt_nat s.k).subset (fun i hi => by rw [scsM] at hi; exact hi.1)
+  obtain ⟨p0, hp0⟩ : ∃ p0 : ℕ, ∀ q ∈ scsM s, q % s.k = p0 % s.k := by
+    by_cases h0 : (scsM s).ncard = 0
+    · refine ⟨0, fun q hq => absurd hq ?_⟩
+      rw [(Set.ncard_eq_zero hfin).mp h0]
+      exact fun hc => hc
+    · have h1 : (scsM s).ncard = 1 := by omega
+      obtain ⟨q, hq⟩ := Set.ncard_eq_one.mp h1
+      refine ⟨q, fun r hr => ?_⟩
+      rw [hq, Set.mem_singleton_iff] at hr
+      exact congrArg (fun n => n % s.k) hr
+  refine ⟨p0, fun i hi => ?_⟩
+  have hrk : i % s.k < s.k := Nat.mod_lt i (by omega)
+  have hnotkey : i % s.k ∉ scsM s := by
+    intro hc
+    have hmod : (i % s.k) % s.k = i % s.k := Nat.mod_mod _ _
+    have hkey := hp0 (i % s.k) hc
+    rw [hmod] at hkey
+    exact hi hkey
+  simp only [scsM, Set.mem_setOf_eq] at hnotkey
+  have hnb : ¬(2 * h0 < s.b (i % s.k) (i % s.k + 1)) := fun hc =>
+    hnotkey ⟨hrk, Or.inl hc⟩
+  have hna : ¬(2 < s.a (i % s.k) (i % s.k + 1)) := fun hc =>
+    hnotkey ⟨hrk, Or.inr hc⟩
+  have hstep : (i + 1) % s.k = (i % s.k + 1) % s.k :=
+    (mod_add_c_p27 (i := i) (c := 1) (by omega)).symm
+  have hbr : s.b (i % s.k) ((i + 1) % s.k) = s.b (i % s.k) (i % s.k + 1) := by
+    rw [hstep, periodic2_mod_p27 hpb (i % s.k) (i % s.k + 1), Nat.mod_mod]
+  have har : s.a (i % s.k) ((i + 1) % s.k) = s.a (i % s.k) (i % s.k + 1) := by
+    rw [hstep, periodic2_mod_p27 hpa (i % s.k) (i % s.k + 1), Nat.mod_mod]
+  rw [periodic2_mod_p27 hpb i (i + 1), hbr]
+  rw [periodic2_mod_p27 hpa i (i + 1), har]
+  exact ⟨not_lt.mp hnb, le_antisymm (not_lt.mp hna) (h2 (i % s.k))⟩
 
 /-- HOL `JCYFMRP_concl` (JCYFMRP.hl:240). -/
 theorem JCYFMRP_p27 :
@@ -517,13 +574,33 @@ theorem SGTRNAF_p27 : ∀ (s : ScsV39) (vv : ℕ → V3), isScsV39 s →
 
 /-! ## Section E: HXHYTIJ -/
 
-/-- HOL `HXHYTIJ` (HXHYTIJ.hl:79). -/
+/-- HOL `HXHYTIJ` (HXHYTIJ.hl:79).
+DISCHARGED: the `min_num`/choice argument of the source, done directly: if
+`taustar vv ≥ taustar ww` then `ww` itself attains the `BBs`-minimum (the
+`BBprime` minimality of `vv` transfers through `taustar ww ≤ taustar vv`), so
+`BBindex ww` lies in the index image and the `BBindexMin` choice value
+(`minNum` = least element, attained as in `UXCKFPE2_p27`) bounds it, while
+`BBindex vv = BBindexMin` by `BBprime2` membership. The `isScsV39 s`
+hypothesis is carried but not needed for this reading. -/
 theorem HXHYTIJ_p27 : ∀ (s : ScsV39) (vv ww : ℕ → V3), isScsV39 s →
     vv ∈ BBprime2V39 s → BBsV39 s ww →
     taustarV39 s vv < taustarV39 s ww ∨ BBindexV39 s vv ≤ BBindexV39 s ww := by
-  sorry
-    -- DISCHARGES: NEEDS the `scs_basic`/`BB` index-minimality machinery
-    -- (`min_num`/`SELECT_UNIQUE` argument of the source).
+  intro s vv ww _hs hvv hww
+  by_cases hlt : taustarV39 s vv < taustarV39 s ww
+  · exact Or.inl hlt
+  · right
+    have hle : taustarV39 s ww ≤ taustarV39 s vv := not_lt.mp hlt
+    have hwp : ww ∈ (BBprimeV39 s : Set (ℕ → V3)) :=
+      ⟨hww, fun w' hw' => le_trans hle (hvv.1.2.1 w' hw'),
+        lt_of_le_of_lt hle hvv.1.2.2⟩
+    have himage : BBindexV39 s ww ∈ BBindexV39 s '' BBprimeV39 s :=
+      ⟨ww, hwp, rfl⟩
+    have himageN : (BBindexV39 s '' BBprimeV39 s).Nonempty := ⟨_, himage⟩
+    have hmin : ∀ m ∈ BBindexV39 s '' BBprimeV39 s, BBindexMinV39 s ≤ m :=
+      (Classical.epsilon_spec (p := fun n => n ∈ BBindexV39 s '' BBprimeV39 s ∧
+        ∀ m ∈ BBindexV39 s '' BBprimeV39 s, n ≤ m)
+        ⟨sInf _, Nat.sInf_mem himageN, fun m hm => Nat.sInf_le hm⟩).2
+    exact hvv.2.trans_le (hmin _ himage)
 
 /-! ## Section F: AYQJTMD -/
 

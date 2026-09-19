@@ -87,8 +87,9 @@ body is proved:
   - `EYYPQDW3_p17`  DISCHARGES: LocalAuto1.EYYPQDW3_concl (appendix.hl:1268)
   - `YRTAFYH_p17`   DISCHARGES: LocalAuto1.YRTAFYH_concl  (appendix.hl:1554)
 All four are stated faithfully here; `EYYPQDW2_p17`/`EYYPQDW3_p17` are
-PROVED, `EYYPQDW_p17`/`YRTAFYH_p17` remain sorry'd (giant algebra /
-giant case tree — see NEEDS markers at each).
+PROVED; `EYYPQDW_p17` PROVED (fill wave 2026-09-19, via the discharged
+`EYYPQDW_NORMV3_p17`/`EYYPQDW_NORM_V3_V1_p17` Cayley identities);
+`YRTAFYH_p17` remains sorry'd (giant case tree — see NEEDS marker).
 -/
 
 import Kepler.Text.LocalAuto1
@@ -446,9 +447,59 @@ theorem EYYPQDW_COPLANAR_p17 (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
   · exact mem_affineSpan ℝ (by simp)
   · simpa using hv3mem
 
+/-- The `‖t • v‖² = t²‖v‖²` bridge (the cross3 fill-kit's norm twin). -/
+private theorem normsq_smul_p17 (t : ℝ) (v : V3) : ‖t • v‖ ^ 2 = t ^ 2 * ‖v‖ ^ 2 := by
+  rw [norm_smul, Real.norm_eq_abs, mul_pow, sq_abs]
+
+/-- Orthogonal pieces split a squared norm (`norm_add_sq_real` + the
+`v1 ⬝ᵥ cross3 v1 (cross3 v1 v2) = 0` dot bridge). -/
+private theorem normsq_add_orth_p17 (t s : ℝ) (u w : V3) (hd : u ⬝ᵥ w = 0) :
+    ‖t • u + s • w‖ ^ 2 = t ^ 2 * ‖u‖ ^ 2 + s ^ 2 * ‖w‖ ^ 2 := by
+  rw [norm_add_sq_real, real_inner_smul_left, real_inner_smul_right, inner_eq_dot, hd,
+    normsq_smul_p17, normsq_smul_p17]
+  ring
+
+/-- The squared norm of the double cross term: the Cayley identity
+`‖cross3 v1 (cross3 v1 v2)‖² = x1 * upsX x1 x2 x6 / 4` (Lagrange /
+`cross_dot_cross` twice + the Gram expansion of `upsX`). -/
+private theorem normsq_double_cross_p17 (v1 v2 : V3) (x1 x2 x6 : ℝ)
+    (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6) :
+    ‖cross3 v1 (cross3 v1 v2)‖ ^ 2 = x1 * upsX x1 x2 x6 / 4 := by
+  have h11 : v1 ⬝ᵥ v1 = x1 := (norm_sq_eq_dot v1).symm.trans hx1
+  have h22 : v2 ⬝ᵥ v2 = x2 := (norm_sq_eq_dot v2).symm.trans hx2
+  have hups4 : upsX x1 x2 x6 = 4 * (x1 * x2 - (v1 ⬝ᵥ v2) ^ 2) := by
+    have hd6 : x6 = x1 + x2 - 2 * (v1 ⬝ᵥ v2) := by
+      have h6e : ‖v1 - v2‖ ^ 2 = ‖v1‖ ^ 2 - 2 * (v1 ⬝ᵥ v2) + ‖v2‖ ^ 2 := by
+        rw [norm_sub_sq_real, inner_eq_dot]
+      rw [← hx6, h6e, hx1, hx2]; ring
+    unfold upsX
+    rw [hd6]
+    ring
+  have hzero : ((v1 : V3) : Fin 3 → ℝ) ⬝ᵥ
+      (crossProduct ((v1 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)) = 0 :=
+    dot_self_cross _ _
+  have hw'raw : ((cross3 v1 v2 : V3) : Fin 3 → ℝ) ⬝ᵥ ((cross3 v1 v2 : V3) : Fin 3 → ℝ)
+      = (v1 ⬝ᵥ v1) * (v2 ⬝ᵥ v2) - (v1 ⬝ᵥ v2) * (v2 ⬝ᵥ v1) :=
+    cross_dot_cross ((v1 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)
+      ((v1 : V3) : Fin 3 → ℝ) ((v2 : V3) : Fin 3 → ℝ)
+  have hwnraw : ((cross3 v1 (cross3 v1 v2) : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((cross3 v1 (cross3 v1 v2) : V3) : Fin 3 → ℝ)
+      = (v1 ⬝ᵥ v1) * (((cross3 v1 v2 : V3) : Fin 3 → ℝ) ⬝ᵥ
+          ((cross3 v1 v2 : V3) : Fin 3 → ℝ)) := by
+    rw [coe_cross3_p17, coe_cross3_p17, cross_dot_cross, hzero, zero_mul, sub_zero]
+  rw [show ‖cross3 v1 (cross3 v1 v2)‖ ^ 2 = inner ℝ (cross3 v1 (cross3 v1 v2))
+      (cross3 v1 (cross3 v1 v2)) from (real_inner_self_eq_norm_sq _).symm,
+    inner_eq_dot, hwnraw, hw'raw,
+    dotProduct_comm ((v2 : V3) : Fin 3 → ℝ) ((v1 : V3) : Fin 3 → ℝ), h11, h22, hups4]
+  field_simp
+
 /-- HOL `EYYPQDW_NORMV3`: the realisation `‖v3‖^2 = x3`.
-NEEDS: the `nlinarith`-heavy Cayley algebra of the HOL proof
-(EYYPQDW.hl:85-157). -/
+DISCHARGED: the Cayley algebra of the HOL proof (EYYPQDW.hl:85-157) —
+the cross term `cross3 v1 (cross3 v1 v2)` is orthogonal to `v1`
+(`dot_cross3_v1_X_p17`), has norm² `x1 * upsX x1 x2 x6 / 4`
+(`normsq_double_cross_p17`), and the sign scalar squares to
+`upsX x1 x3 x5 / (upsX x1 x2 x6 * x1 ^ 2)`; the two pieces then telescope
+against `upsX x1 x3 x5 = 4 * x1 * x3 - (x1 + x3 - x5) ^ 2`. -/
 theorem EYYPQDW_NORMV3_p17 (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
     (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h4 : 0 < x4) (h5 : 0 < x5)
     (h6 : 0 < x6)
@@ -459,10 +510,31 @@ theorem EYYPQDW_NORMV3_p17 (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
       ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
         cross3 v1 (cross3 v1 v2) = v3) :
     ‖v3‖ ^ 2 = x3 := by
-      sorry
+  have hups126 : 0 < upsX x1 x2 x6 :=
+    upsX_pos_of_noncollinear_p17 v1 v2 x1 x2 x6 hnc hx1 hx2 hx6
+  have hwnorm := normsq_double_cross_p17 v1 v2 x1 x2 x6 hx1 hx2 hx6
+  have hbeta : ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) ^ 2
+      = upsX x1 x3 x5 / (upsX x1 x2 x6 * x1 ^ 2) := by
+    have hq : 0 ≤ upsX x1 x3 x5 / upsX x1 x2 x6 :=
+      div_nonneg hups.le hups126.le
+    rw [mul_pow, div_pow, SGIN_POW_EQ_p17 a ha, Real.sq_sqrt hq]
+    field_simp
+  have hnormv3 : ‖v3‖ ^ 2
+      = ((x1 + x3 - x5) / (2 * x1)) ^ 2 * ‖v1‖ ^ 2
+        + ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) ^ 2 *
+          ‖cross3 v1 (cross3 v1 v2)‖ ^ 2 := by
+    rw [← hv3]; exact normsq_add_orth_p17 _ _ _ _ (dot_cross3_v1_X_p17 v1 v2)
+  have hups135 : upsX x1 x3 x5 = 4 * x1 * x3 - (x1 + x3 - x5) ^ 2 := by
+    unfold upsX; ring
+  rw [hnormv3, hx1, hwnorm, hbeta, hups135]
+  field_simp [h1.ne']
+  ring
 
 /-- HOL `EYYPQDW_NORM_V3_V1`: the realisation `‖v3 - v1‖^2 = x5`.
-NEEDS: same Cayley algebra as `EYYPQDW_NORMV3_p17` (EYYPQDW.hl:160-185). -/
+DISCHARGED: the same Cayley algebra as `EYYPQDW_NORMV3_p17`, with the
+affine coefficient shifted by one (`(x1+x3-x5)/(2*x1) - 1`); the pieces
+telescope against `upsX x1 x3 x5 = 4 * x1 * x3 - (x1 + x3 - x5) ^ 2` to
+`x5`. -/
 theorem EYYPQDW_NORM_V3_V1_p17 (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
     (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h4 : 0 < x4) (h5 : 0 < x5)
     (h6 : 0 < x6)
@@ -472,7 +544,31 @@ theorem EYYPQDW_NORM_V3_V1_p17 (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
     (hv3 : ((x1 + x3 - x5) / (2 * x1)) • v1 +
       ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
         cross3 v1 (cross3 v1 v2) = v3) :
-    ‖v3 - v1‖ ^ 2 = x5 := sorry
+    ‖v3 - v1‖ ^ 2 = x5 := by
+  have hups126 : 0 < upsX x1 x2 x6 :=
+    upsX_pos_of_noncollinear_p17 v1 v2 x1 x2 x6 hnc hx1 hx2 hx6
+  have hwnorm := normsq_double_cross_p17 v1 v2 x1 x2 x6 hx1 hx2 hx6
+  have hbeta : ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) ^ 2
+      = upsX x1 x3 x5 / (upsX x1 x2 x6 * x1 ^ 2) := by
+    have hq : 0 ≤ upsX x1 x3 x5 / upsX x1 x2 x6 :=
+      div_nonneg hups.le hups126.le
+    rw [mul_pow, div_pow, SGIN_POW_EQ_p17 a ha, Real.sq_sqrt hq]
+    field_simp
+  have hshift : v3 - v1 = ((x1 + x3 - x5) / (2 * x1) - 1) • v1 +
+      ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
+        cross3 v1 (cross3 v1 v2) := by
+    rw [← hv3]
+    module
+  have hnormv5 : ‖v3 - v1‖ ^ 2
+      = ((x1 + x3 - x5) / (2 * x1) - 1) ^ 2 * ‖v1‖ ^ 2
+        + ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) ^ 2 *
+          ‖cross3 v1 (cross3 v1 v2)‖ ^ 2 := by
+    rw [hshift]; exact normsq_add_orth_p17 _ _ _ _ (dot_cross3_v1_X_p17 v1 v2)
+  have hups135 : upsX x1 x3 x5 = 4 * x1 * x3 - (x1 + x3 - x5) ^ 2 := by
+    unfold upsX; ring
+  rw [hnormv5, hx1, hwnorm, hbeta, hups135]
+  field_simp [h1.ne']
+  ring
 
 /-- HOL `EYYPQDW_SCALAR_POS`: the completion flips the cross product by a
 positive scalar `a * t` (via the `cross3` linearity kit and the Lagrange
@@ -600,8 +696,13 @@ theorem MK_PLANAR_REP_p17 (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 a : ℝ) :
 
 /-- HOL `EYYPQDW` — the master statement.
 DISCHARGES: LocalAuto1.EYYPQDW_concl (appendix.hl:1244).
-NEEDS: `EYYPQDW_NORMV3_p17` / `EYYPQDW_NORM_V3_V1_p17` /
-`EYYPQDW_SCALAR_POS_p17` (Cayley algebra), then mechanical. -/
+DISCHARGED: the two Cayley norms via `EYYPQDW_NORMV3_p17` /
+`EYYPQDW_NORM_V3_V1_p17` at the translated pair `(v1 - v0, v2 - v0)`;
+coplanarity because the Lagrange identity makes `cross3 u1 (cross3 u1 u2)`
+a `u1, u2`-combination (so `v3` lies in `affineSpan {v0, v1, v2}`); the
+`t > 0` witness is the inverse of the square root, the scalar of
+`cross3 (v3 - v0) (v1 - v0)` off `cross3 u1 u2` (`cross3_X_smul_p17`).
+NEEDS: nothing. -/
 theorem EYYPQDW_p17 (v0 v1 v2 v3 : V3) (x1 x2 x3 x5 x6 s : ℝ)
     (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h5 : 0 < x5) (h6 : 0 < x6)
     (hnc : ¬ Collinear ℝ ({v0, v1, v2} : Set V3))
@@ -612,7 +713,73 @@ theorem EYYPQDW_p17 (v0 v1 v2 v3 : V3) (x1 x2 x3 x5 x6 s : ℝ)
     Coplanar ({v0, v1, v2, v3} : Set V3) ∧
       x3 = dist v3 v0 ^ 2 ∧ x5 = dist v3 v1 ^ 2 ∧
       ∃ t : ℝ, 0 < t ∧
-        t • cross3 (v3 - v0) (v1 - v0) = s • cross3 (v1 - v0) (v2 - v0) := sorry
+        t • cross3 (v3 - v0) (v1 - v0) = s • cross3 (v1 - v0) (v2 - v0) := by
+  have hnc0 : ¬ Collinear ℝ ({0, v1 - v0, v2 - v0} : Set V3) := fun hc =>
+    hnc ((collinear_transable_p17 v0 v1 v2).mpr hc)
+  have hx1' : ‖v1 - v0‖ ^ 2 = x1 := by rw [hx1, dist_eq_norm]
+  have hx2' : ‖v2 - v0‖ ^ 2 = x2 := by rw [hx2, dist_eq_norm]
+  have hx6' : ‖v1 - v0 - (v2 - v0)‖ ^ 2 = x6 := by
+    have hsimp : (v1 - v0 : V3) - (v2 - v0) = v1 - v2 := by abel
+    rw [hsimp, ← dist_eq_norm]; exact hx6.symm
+  have hsM : s ∈ ({-1, 1} : Set ℝ) := by
+    rcases hs with rfl | rfl <;> simp
+  have hrep := MK_PLANAR_REP_p17 v0 v1 v2 x1 x2 x3 x5 x6 s
+  rw [← hv3] at hrep
+  have hn3 : ‖v3 - v0‖ ^ 2 = x3 :=
+    EYYPQDW_NORMV3_p17 (v1 - v0) (v2 - v0) (v3 - v0) x1 x2 x3 1 x5 x6 s
+      h1 h2 h3 one_pos h5 h6 hnc0 hx1' hx2' hx6' hsM hups hrep.symm
+  have hn5 : ‖v3 - v0 - (v1 - v0)‖ ^ 2 = x5 :=
+    EYYPQDW_NORM_V3_V1_p17 (v1 - v0) (v2 - v0) (v3 - v0) x1 x2 x3 1 x5 x6 s
+      h1 h2 h3 one_pos h5 h6 hnc0 hx1' hx2' hx6' hsM hups hrep.symm
+  have hden126 : 0 < upsX x1 x2 x6 :=
+    upsX_pos_of_noncollinear_p17 (v1 - v0) (v2 - v0) x1 x2 x6 hnc0 hx1' hx2' hx6'
+  have hK : 0 < Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6) :=
+    Real.sqrt_pos.mpr (div_pos hups hden126)
+  -- coplanarity: v3 lies in the plane of {v0, v1, v2}
+  have hcop : Coplanar ({v0, v1, v2, v3} : Set V3) := by
+    have h1m : (v1 : V3) ∈ ({v0, v1, v2} : Set V3) := by simp
+    have h0m : (v0 : V3) ∈ ({v0, v1, v2} : Set V3) := by simp
+    have h2m : (v2 : V3) ∈ ({v0, v1, v2} : Set V3) := by simp
+    have hu1 : ((v1 - v0 : V3)) ∈ vectorSpan ℝ ({v0, v1, v2} : Set V3) := by
+      have h := vsub_mem_vectorSpan (k := ℝ) (p₁ := (v1 : V3)) (p₂ := (v0 : V3)) h1m h0m
+      simpa using h
+    have hu2 : ((v2 - v0 : V3)) ∈ vectorSpan ℝ ({v0, v1, v2} : Set V3) := by
+      have h := vsub_mem_vectorSpan (k := ℝ) (p₁ := (v2 : V3)) (p₂ := (v0 : V3)) h2m h0m
+      simpa using h
+    have hw : (cross3 (v1 - v0) (cross3 (v1 - v0) (v2 - v0)) : V3)
+        ∈ vectorSpan ℝ ({v0, v1, v2} : Set V3) := by
+      rw [cross3_lagrange_p17]
+      exact Submodule.sub_mem _ (Submodule.smul_mem _ _ hu1) (Submodule.smul_mem _ _ hu2)
+    have hv3m : ((v3 - v0 : V3)) ∈ vectorSpan ℝ ({v0, v1, v2} : Set V3) := by
+      rw [hrep]
+      exact Submodule.add_mem _ (Submodule.smul_mem _ _ hu1) (Submodule.smul_mem _ _ hw)
+    have h0mem : (v0 : V3) ∈ (affineSpan ℝ ({v0, v1, v2} : Set V3) : Set V3) :=
+      mem_affineSpan ℝ (by simp)
+    have hv3mem := vadd_mem_affineSpan_of_mem_affineSpan_of_mem_vectorSpan h0mem hv3m
+    refine ⟨v0, v1, v2, fun p hp => ?_⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | rfl | rfl | rfl
+    · exact mem_affineSpan ℝ (by simp)
+    · exact mem_affineSpan ℝ (by simp)
+    · exact mem_affineSpan ℝ (by simp)
+    · simpa using hv3mem
+  refine ⟨hcop, ?_, ?_, ?_⟩
+  · rw [dist_eq_norm]; exact hn3.symm
+  · have hacom : (v3 - v0 : V3) - (v1 - v0) = v3 - v1 := by abel
+    have hsub : ‖v3 - v1‖ = ‖v3 - v0 - (v1 - v0)‖ := by rw [← hacom]
+    rw [dist_eq_norm, hsub]; exact hn5.symm
+  · -- the scalar off the cross product: t = (square root)⁻¹
+    have h11 : WithLp.ofLp (v1 - v0) ⬝ᵥ WithLp.ofLp (v1 - v0) = x1 := by
+      rw [← norm_sq_eq_dot (v1 - v0)]; exact hx1'
+    have hcross : cross3 (v3 - v0) (v1 - v0)
+        = (s * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
+          cross3 (v1 - v0) (v2 - v0) := by
+      rw [hrep, cross3_add_left_p17, cross3_smul_left_p17, cross3_smul_left_p17,
+        cross3_self_p17, smul_zero, zero_add, cross3_X_smul_p17, h11, smul_smul]
+      field_simp
+    refine ⟨(Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6))⁻¹, inv_pos.mpr hK, ?_⟩
+    rw [hcross, smul_smul]
+    field_simp
 
 /-- HOL `MK_PLANAR_V3_DEFOR_V1`. -/
 theorem MK_PLANAR_V3_DEFOR_V1_p17 (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 a : ℝ) :
@@ -1223,8 +1390,11 @@ definition and theorem is carried above (the deformation.hl def
 `deformationP17` alias).  The mechanical arithmetic/continuity layer is
 PROVED; the giant Cayley algebra (`EYYPQDW_NORMV3_p17`,
 `EYYPQDW_NORM_V3_V1_p17`, `EYYPQDW_SCALAR_POS_p17`,
-`EYYPQDW_p17`) and `lemma_1_p17` — `EYYPQDW_SCALAR_POS_p17` and
-`lemma_1_p17` PROVED this wave) — fill-wave note: the
+`EYYPQDW_p17`) and `lemma_1_p17` — `EYYPQDW_SCALAR_POS_p17`,
+`lemma_1_p17`, `EYYPQDW_NORMV3_p17`, `EYYPQDW_NORM_V3_V1_p17` and
+`EYYPQDW_p17` PROVED this wave; the NORM pair via the Lagrange /
+`cross_dot_cross` identity `normsq_double_cross_p17` + the orthogonal
+split `normsq_add_orth_p17`) — fill-wave note: the
 `_p17` cross3-linearity/dot-bridge fill kit (`cross3_smul_left_p17`,
 `cross3_add_left_p17`, `cross3_sub_left_p17`, `cross3_self_p17`,
 `cross3_anticomm_p17`, `cross3_X_smul_p17`, the `dot_*` bridges) is in

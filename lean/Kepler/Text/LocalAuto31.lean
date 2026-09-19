@@ -45,7 +45,12 @@ Encoding:
    shim), `CARD_V_EQ_SCS_K1` (via an in-file `VV_INJ_p31` shim — the twin
    `VV_INJ_p35` is proved but LocalAuto35's transitive `Polytope` chain
    would drag the `atn2` clash into this branch), and `DSV_WW_DEFOR_EQ`
-   (J-row emptyness + `VV_INJ_p31` + `setSum` congruence). Still `sorry`,
+   (J-row emptyness + `VV_INJ_p31` + `setSum` congruence). The
+   2026-09-19 pass filled `CARD_FF_EQ_WW_DEFORMATION` (shim: both dart
+   ranges counted to `k` by the in-file `dartRange_ncard_p31` core —
+   `VV_INJ_p31` injectivity for the original family, dart-by-dart
+   residue case analysis for the deformed one; the HOL route's
+   `LOFA_IMP_CARD_FF_V_EQ` local-fan kit is unavailable). Still `sorry`,
    all blocked by the *same* root cause: `LocalFan V E FF` is the stub
    `fun _ _ _ => True` (LocalAuto1.lean:138), so local-fan-conditioned
    hypotheses carry no structure, and the azim scale invariance
@@ -1290,17 +1295,193 @@ theorem CARD_V_EQ_SCS_K1_p31 (s : ScsV39) (k : ℕ) (vv : ℕ → V3) (V : Set V
   rw [Finset.mem_coe, Finset.mem_range] at ha hb
   exact hinj a b ha hb hne heq
 
-/-- HOL `CARD_FF_EQ_WW_DEFORMATION` (ODXLSTC.hl:2089). -/
+/-- Counting core: the dart range of a periodic, residue-injective family has
+exactly `k` points (the same counting method as `CARD_V_EQ_SCS_K1_p31`,
+applied to the dart map). -/
+private theorem dartRange_ncard_p31 {k : ℕ} (hk0 : 0 < k) (f : ℕ → V3)
+    (hper : ∀ a, f (a % k) = f a)
+    (hinj : ∀ a b, a < k → b < k → a ≠ b → (f a, f (a + 1)) ≠ (f b, f (b + 1))) :
+    (Set.range (fun i => (f i, f (i + 1)))).ncard = k := by
+  have hpm1 : ∀ n, f (n % k) = f n := hper
+  have hpm2 : ∀ n, f (n % k + 1) = f (n + 1) := by
+    intro n
+    have h1 : (n % k + 1) % k = (n + 1) % k := Nat.mod_add_mod n k 1
+    rw [← hper (n % k + 1), h1, hper (n + 1)]
+  have hV : Set.range (fun i => (f i, f (i + 1)))
+      = (fun i => (f i, f (i + 1))) '' {i | i < k} := by
+    ext x
+    constructor
+    · rintro ⟨a, rfl⟩
+      refine ⟨a % k, Nat.mod_lt a hk0, ?_⟩
+      dsimp only
+      rw [hpm1 a, hpm2 a]
+    · rintro ⟨a, _, rfl⟩
+      exact ⟨a, rfl⟩
+  have hco : {i | i < k} = ((Finset.range k : Finset ℕ) : Set ℕ) :=
+    (Finset.coe_range k).symm
+  rw [hV, hco, ← Finset.coe_image, Set.ncard_coe_finset, Finset.card_image_of_injOn,
+    Finset.card_range]
+  intro a ha b hb heq
+  by_contra hne
+  rw [Finset.mem_coe, Finset.mem_range] at ha hb
+  exact hinj a b ha hb hne heq
+
+/-- HOL `CARD_FF_EQ_WW_DEFORMATION` (ODXLSTC.hl:2089). DISCHARGED (shim): the
+HOL route (`LOFA_IMP_CARD_FF_V_EQ`, local-fan kit) is replaced by direct
+counting — both dart ranges have `ncard = k` by `dartRange_ncard_p31`. The
+original family is residue-injective by `VV_INJ_p31`; for the deformed family
+the shrink at `w l` is handled dart-by-dart: if a deformed head/tail lands on
+`(1 - t) % w l` its residue is `l % k`, and the two head/tail equations force
+`a = b` unless `k ∤ 2` is violated (excluded by `3 < k`). -/
 theorem CARD_FF_EQ_WW_DEFORMATION_p31 (s : ScsV39) (k l : ℕ) (w : ℕ → V3) (e1 : ℝ)
-    (_hk : s.k = k) (_his : isScsV39 s) (_hk3 : 3 < k) (_hbb : BBsV39 s w)
+    (hk : s.k = k) (his : isScsV39 s) (_hk3 : 3 < k) (hbb : BBsV39 s w)
     (_hbb' : ∀ t, 0 < t → t < e1 → BBsV39 s (fun i => wwDefor_p31 (w l) (w i) t)) :
     ∀ t, 0 < t → t < e1 →
       (Set.range (fun i => (wwDefor_p31 (w l) (w i) t, wwDefor_p31 (w l) (w (i + 1)) t))).ncard
         = (Set.range (fun i => (w i, w (i + 1)))).ncard := by
-  sorry
-  -- NEEDS (still): CARD_V_EQ_SCS_K1_p31 (proved above) +
-  -- `LOFA_IMP_CARD_FF_V_EQ` (FF-cardinality from V-cardinality; local-fan
-  -- kit — root blocker the `LocalFan` stub `True`, LocalAuto1.lean:138).
+  intro t _ht _hte
+  have hper : Periodic w s.k := hbb.2.1
+  have pm : ∀ a, w (a % k) = w a := by
+    intro a
+    have hm := periodic_mod_p18 hper a
+    rwa [hk] at hm
+  have hinj : ∀ a b, a < k → b < k → a ≠ b → w a ≠ w b :=
+    fun a b ha hb hab => VV_INJ_p31 s k w hk his hbb a b ⟨ha, hb, hab⟩
+  have horig := dartRange_ncard_p31 (by omega) (fun i => w i) pm
+    (fun a b ha hb hab heq => hinj a b ha hb hab (congrArg Prod.fst heq))
+  set me := l % k with hme
+  set c := (1 - t) • w l with hc
+  have hmeK : me < k := Nat.mod_lt l (by omega)
+  have hwme : w me = w l := by rw [hme, pm l]
+  have hwil : ∀ i, i < k → (w i = w l ↔ i = me) := by
+    intro i hi
+    constructor
+    · intro hh
+      by_contra hne
+      exact hinj i me hi hmeK hne (hh.trans hwme.symm)
+    · intro hh
+      rw [hh]
+      exact hwme
+  have hA : ∀ i, i < k → wwDefor_p31 (w l) (w i) t = if i = me then c else w i := by
+    intro i hi
+    rw [wwDefor_apply_p31]
+    by_cases h : w i = w l
+    · rw [if_pos h, if_pos ((hwil i hi).mp h)]
+    · rw [if_neg h, if_neg (fun hh => h ((hwil i hi).mpr hh))]
+  have hF2 : ∀ n, wwDefor_p31 (w l) (w (n % k)) t = wwDefor_p31 (w l) (w n) t :=
+    fun n => by rw [pm n]
+  have hsucc_eq : ∀ x y, x < k → y < k → (x + 1) % k = (y + 1) % k → x = y := by
+    intro x y hx hy heq
+    have hmod : x % k = y % k := Nat.ModEq.add_right_cancel' 1 heq
+    rw [Nat.mod_eq_of_lt hx, Nat.mod_eq_of_lt hy] at hmod
+    exact hmod
+  have hsucc_ne : ∀ m, m < k → (m + 1) % k ≠ m := by
+    intro m hm
+    rcases Nat.lt_or_ge (m + 1) k with h | h
+    · rw [Nat.mod_eq_of_lt h]; omega
+    · have h1 : m + 1 = k := by omega
+      rw [h1, Nat.mod_self]
+      omega
+  have htwo_ne : ∀ m, m < k → (m + 2) % k ≠ m := by
+    intro m hm
+    rcases Nat.lt_or_ge (m + 2) k with h | h
+    · rw [Nat.mod_eq_of_lt h]; omega
+    · have h3 : m + 2 - k < k := by omega
+      have he : m + 2 = m + 2 - k + k := by omega
+      rw [he, Nat.add_mod_right, Nat.mod_eq_of_lt h3]
+      omega
+  -- the deformed dart map is injective on the residues
+  have hfinj : ∀ a b, a < k → b < k → a ≠ b →
+      (wwDefor_p31 (w l) (w a) t, wwDefor_p31 (w l) (w (a + 1)) t) ≠
+        (wwDefor_p31 (w l) (w b) t, wwDefor_p31 (w l) (w (b + 1)) t) := by
+    intro a b ha hb hab hne
+    have heq : (wwDefor_p31 (w l) (w a) t, wwDefor_p31 (w l) (w (a + 1)) t)
+        = (wwDefor_p31 (w l) (w b) t, wwDefor_p31 (w l) (w (b + 1)) t) := hne
+    rw [Prod.mk.injEq] at heq
+    obtain ⟨he1, he2⟩ := heq
+    have ha' : (a + 1) % k < k := Nat.mod_lt _ (by omega)
+    have hb' : (b + 1) % k < k := Nat.mod_lt _ (by omega)
+    have hsa : wwDefor_p31 (w l) (w (a + 1)) t
+        = wwDefor_p31 (w l) (w ((a + 1) % k)) t := (hF2 (a + 1)).symm
+    have hsb : wwDefor_p31 (w l) (w (b + 1)) t
+        = wwDefor_p31 (w l) (w ((b + 1) % k)) t := (hF2 (b + 1)).symm
+    rw [hsa, hsb] at he2
+    by_cases haml : (a + 1) % k = me
+    · -- a's head is the moved point; b's head is not (else a = b)
+      have hbml : (b + 1) % k ≠ me := fun hh =>
+        hab (hsucc_eq a b ha hb (haml.trans hh.symm))
+      have hda' : wwDefor_p31 (w l) (w ((a + 1) % k)) t = c := by
+        rw [hA _ ha', if_pos haml]
+      have hdb' : wwDefor_p31 (w l) (w ((b + 1) % k)) t = w ((b + 1) % k) := by
+        rw [hA _ hb', if_neg hbml]
+      rw [hda', hdb'] at he2
+      by_cases ham : a = me
+      · have hbne : b ≠ me := fun hh => hab (hh ▸ ham)
+        have hda : wwDefor_p31 (w l) (w a) t = c := by
+          rw [hA a ha, if_pos ham]
+        have hdb : wwDefor_p31 (w l) (w b) t = w b := by
+          rw [hA b hb, if_neg hbne]
+        rw [hda, hdb] at he1
+        -- c = w b and c = w b' → w b = w b' → b = b' → contra hsucc_ne
+        have hwb : w b = w ((b + 1) % k) := by rw [← he1, ← he2]
+        have hbb2 : b = (b + 1) % k := by
+          by_contra hne
+          exact hinj b _ hb hb' hne hwb
+        exact hsucc_ne b hb hbb2.symm
+      · have hda : wwDefor_p31 (w l) (w a) t = w a := by
+          rw [hA a ha, if_neg ham]
+        by_cases hbm : b = me
+        · have hdb : wwDefor_p31 (w l) (w b) t = c := by
+            rw [hA b hb, if_pos hbm]
+          rw [hda, hdb] at he1
+          -- w a = c = w b' → if a = b' then (b+2)%k = me, contra htwo_ne
+          have hwa : w a = w ((b + 1) % k) := he1.trans he2
+          by_cases hab' : a = (b + 1) % k
+          · have hkey2 : me = (b + 2) % k := by
+              rw [← haml, hab', Nat.mod_add_mod (b + 1) k 1]
+            exact htwo_ne me hmeK (by rw [hbm] at hkey2; exact hkey2.symm)
+          · exact hinj a _ ha hb' hab' hwa
+        · have hdb : wwDefor_p31 (w l) (w b) t = w b := by
+            rw [hA b hb, if_neg hbm]
+          rw [hda, hdb] at he1
+          exact hinj a b ha hb hab he1
+    · by_cases hbml : (b + 1) % k = me
+      · -- b's head is the moved point; then b = me is impossible outright
+        have hbm0 : b ≠ me := by
+          intro hh
+          exact hsucc_ne b hb (hbml.trans hh.symm)
+        have hdb' : wwDefor_p31 (w l) (w ((b + 1) % k)) t = c := by
+          rw [hA _ hb', if_pos hbml]
+        have hda' : wwDefor_p31 (w l) (w ((a + 1) % k)) t = w ((a + 1) % k) := by
+          rw [hA _ ha', if_neg haml]
+        rw [hda', hdb'] at he2
+        have hdb : wwDefor_p31 (w l) (w b) t = w b := by
+          rw [hA b hb, if_neg hbm0]
+        rw [hdb] at he1
+        by_cases ham : a = me
+        · have hda : wwDefor_p31 (w l) (w a) t = c := by
+            rw [hA a ha, if_pos ham]
+          rw [hda] at he1
+          -- w b = c = w a' → b = a' → (b+1)%k = (me+2)%k ≠ me, contra
+          have hwb : w b = w ((a + 1) % k) := by rw [← he1, ← he2]
+          by_cases hba : b = (a + 1) % k
+          · have hkey : (b + 1) % k = (me + 2) % k := by
+              have h2 : (b + 1) % k = ((a + 1) % k + 1) % k := by rw [hba]
+              rw [h2, Nat.mod_add_mod (a + 1) k 1]
+              rw [show a + 1 + 1 = me + 2 from by rw [ham]]
+            exact htwo_ne me hmeK (hkey.symm.trans hbml)
+          · exact hinj b _ hb ha' hba hwb
+        · have hda : wwDefor_p31 (w l) (w a) t = w a := by
+            rw [hA a ha, if_neg ham]
+          rw [hda] at he1
+          exact hinj a b ha hb hab he1
+      · rw [hA _ ha', hA _ hb', if_neg haml, if_neg hbml] at he2
+        by_cases hab' : (a + 1) % k = (b + 1) % k
+        · exact hab (hsucc_eq a b ha hb hab')
+        · exact hinj _ _ ha' hb' hab' he2
+  have hdef := dartRange_ncard_p31 (by omega)
+    (fun i => wwDefor_p31 (w l) (w i) t) (fun a => by rw [pm a]) hfinj
+  rw [hdef, horig]
 
 /-- HOL `DSV_WW_DEFOR_EQ` (ODXLSTC.hl:2126): dsv is invariant under the
 deformation when the l-row of J is empty. The J-darts avoid the vertex `l`

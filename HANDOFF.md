@@ -214,3 +214,35 @@ tail -20 /tmp/auto_pipeline.log # 流水线状态（若在跑）
   - **LocalAuto17（EYYPQDW+YRTAFYH+deformation）**：13 → 11 sorry（+2：EYYPQDW_SCALAR_POS_p17（cross3 线性 kit+lagrange+field_simp）、lemma_1_p17（AFF_GE_1_1_0 + scale-invariance，含 x'=0 情形））。新增 `_p17` fill-kit：cross3_smul/add/sub/self/anticomm/X_smul、dot smul/add/comm 桥（后续 NORMV3/NORM_V3_V1/EYYPQDW_p17/lemma_2 的下一波基础）。
   - **LocalAuto14（ZLZTHIC）**：39 → 39（未动；azim 连续性/cycle 序/deformation kit 的命名 blocker 均未落地，维持 NEEDS）。
   - **⚠️ 主树仍被 deltaX4/deltaX5 双份阻断**（SphereKit-canonical vs LocalAuto1 旧副本；LA1.olean 17:17 仍未重建）——LA12/17 已在沙盒 0-error，主树修复（LA1 删两份旧副本）后即可合入。沙盒：/tmp/opencode/lakesnap。
+
+## 2026-09-19 LocalAuto4/15/36 填充波（单 lane 工人）
+
+- **LocalAuto36（XWITCCN）**：46 → 34 sorry（+12）。闭合：8× `SCS_*_IS_TRI_STABLE`
+  （新增私件：csAdj/aPro 值表三分支 disjunction、`constraintSystem_succ_empty_p36`
+  /`stableSystem_csAdj_succ_p36`/`triStable_csAdj_succ_p36`/`stableSystem_aPro_succ_p36`
+  通用构造器——复用文件内已证的 `torsor_succ_mod_p36`；h0=1.26/cstab=3.01 全部数值化）、
+  `IN_NOT_EMPTY_B1_SY_3`、`NOT_COLLINEAR_BBs_CASE_3` + `IN_B_SY1_COLLINEAR_CASE_3`
+  （新私件：annulus 点对 + 表距 2..2h0 ⇒ 与 0 不共线；`bFlat3_p36`/`rowSy_bFlat3_p36`
+  flatten↔行往返；`tau3_cycle_p36` shim，LA12 同名私件不可导入）、`TAUSTAR_EQ_TAU_STAR_3`
+  （dTame 3 = 0 + dsv J-empty）。**阻塞澄清（写入 NEEDS 注记）**：① k≥4 的
+  `TAUSTAR_EQ_TAU_STAR_*`（7）按现陈述不可证——`scsToStableSy_p23` 的 d 槽 =0 而
+  taustarV39 扣 dTame k≠0（HANDOFF ① 的具体化；修法 s1.d := dTame k，本轮未动陈述）；
+  ② k≥4 的 `IN_NOT_EMPTY_CASE/B1_SY`（14）需要**fan 定义桥**：registry `ConvexLocalFan`
+  （sigmaFan/ee/wedgeGe）↔ `convexLocalFan_p4`（azimCycle_p4/EE_p4/wedgeGe_p4）——
+  树内无此桥（Fan.lean 无 azimCycle）；③ `IN_NOT_EMPTY_CASE_3` 陈述疑假（HANDOFF ②，
+  k=3 的 B_SY1 体含 CONDITION2 但 BBsV39 的 fan 合取支在 k=3 取左空枝）；
+  ④ `XWITCCN_CASE_*` 仍压在 ①+HDPLYGY 极小元之下。0 error，34 sorry。
+- **LocalAuto4（dih2k）**：46 → 40 sorry（+6）。闭合 Section-F 机械层：
+  `DART_FAN_SY`/`DART_FAN_SY1`（hyp_p4 FAN 枝 = hypermapOfFan，darts coe =
+  dart1OfFan——沿用 ConformingAuto14 的 change/coe_toFinset 模式）、`EQ_EDGE_E_SY`/
+  `EQ_EDGE_E_SY1`（pair-set + finNext≠i）、`SET_OF_EDGE_CARD_EQ2`（setOfEdge
+  邻居二枝枚举，纯 E_SY 组合）、`F_SY_INTER_IMAGE_NN_EMPTY`（finNext² = i ⇒
+  m ∣ 2 矛盾；私件 `finNext_ne_self_p4`、`hyp_darts_eq_p4`、`mem_dart1_of_fan_p4`）。
+  剩 40：5 ball-annulus 仿射引理（AFF_GT_1_2 等显式形在 Planarity.lean——**未导入**
+  以免扩大 LA15/LA36 闭包；NEEDS 注记已写）+ 35 枚 azim-cycle/hypermap 巨证
+  （需 fan 级 azimCycle↔sigmaFan 桥，树内无）。0 error。
+- **LocalAuto15（VPWSHTO）**：12 → 12（未动）。逐项 grep 复核：MAX_COPLANAR_4POINT、
+  SUM_4ANGLE、EQ_DIAGONAL_MIN、TWO_DIAGONAL_AT_MOST(1)、MAX_IF_COPLANAR(1)、
+  VPWSHTO1/200/2、VPWSHTO、POINTS_IN_BALL_ANNULUS 在全树均无已证孪生/阻塞
+  （「contract registry」结论维持）；纯代数项已在上波闭合。0 error。
+- 三文件联合编译 0 error（rm trace 后重验 LA4→LA15/LA36 依赖链）。

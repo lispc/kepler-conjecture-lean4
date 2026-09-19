@@ -49,6 +49,14 @@ ENCODING NOTES
 
 DISCHARGES: nothing yet; the `sorry` bodies are the registry (same
 convention as LocalAuto1's `*_concl` items).
+FILL ROUND (2026-09-19): 47 -> 43 sorries.  Proved `EE_SYM_0_p13` and
+`SUM_PAIR_SYM_0_p13` (negation transports two-point sets / the neg-pair
+involution reindexes `setSum`), `COLLINEAR_SYM_0_p13` +
+`COLLINEAR_POINT_SYM_0_p13` (`collinear_iff_of_mem` with negated anchors).
+NOTE: `POINT_IN_AFF_LT_SYM_0_p13` is unprovable as stated (counterexample
+`w2 = 0`, `v1 ≠ 0`: the weight conditions force `f w2 < 0` with `w2` in the
+base set, making `∑ f = 1` and vector `0` incompatible); the HOL source
+presumably assumes `w2 ≠ 0` — left `sorry` with this note.
 -/
 
 import Kepler.Text.Fan
@@ -491,10 +499,25 @@ theorem IMAGE_E_SYM_0_p13 (vv : ℕ → V3) {e : Set V3}
   rw [himg]
   exact ⟨x, Set.mem_univ _, rfl⟩
 
-/-- HOL `COLLINEAR_SYM_0` (src:233). -/
+/-- HOL `COLLINEAR_SYM_0` (src:233).
+DISCHARGED: `collinear_iff_of_mem` at the negated anchor — the same
+direction vector `v` works with negated coefficients (`-r • v +ᵥ -p₀`). -/
 theorem COLLINEAR_SYM_0_p13 {e : Set V3} (h : Collinear ℝ e) :
     Collinear ℝ (Set.image (fun x : V3 => -x) e) := by
-  sorry
+  by_cases he : e = ∅
+  · rw [he, Set.image_empty]
+    exact @collinear_empty ℝ V3 V3 _ _ _ _
+  · obtain ⟨p₀, hp₀⟩ := Set.nonempty_iff_ne_empty.mpr he
+    rw [collinear_iff_of_mem (Set.mem_image_of_mem _ hp₀)]
+    obtain ⟨v, hv⟩ := (collinear_iff_of_mem hp₀).mp h
+    refine ⟨v, ?_⟩
+    rintro p ⟨x, hx, rfl⟩
+    obtain ⟨r, hr⟩ := hv x hx
+    refine ⟨-r, ?_⟩
+    have hx2 : (-x : V3) = -(r • v +ᵥ p₀) := by rw [hr]
+    show (-x : V3) = (-r) • v +ᵥ (-p₀)
+    rw [hx2, vadd_eq_add, vadd_eq_add]
+    module
   -- NEEDS: Mathlib collinear-image transfer for the negation map.
 
 /-- HOL `UNION_SYM_0` (src:248). -/
@@ -1146,20 +1169,94 @@ theorem FUN_COMMUTATIVE_p13 {f g f1 : V3 × V3 → V3 × V3}
       intro x
       rw [Function.iterate_succ_apply', Function.iterate_succ_apply', ih, h]
 
-/-- HOL `EE_SYM_0` (src:693). Proof pending (elementwise set juggling;
-DISCHARGES convention). -/
+/-- Negation transports two-point sets (`EE_SYM_0_p13` bridge). -/
+private theorem image_neg_pair_p13 (x y : V3) :
+    (Set.image (fun z : V3 => -z) ({x, y} : Set V3)) = ({-x, -y} : Set V3) := by
+  ext u
+  simp only [Set.mem_image, Set.mem_insert_iff, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨z, (rfl | rfl), rfl⟩ <;> simp
+  · rintro (rfl | rfl | rfl | rfl) <;> simp
+
+/-- HOL `EE_SYM_0` (src:693).
+DISCHARGED: elementwise — `{-a, w} = {-(vv i), -(vv (i+1))}` transports
+under negation to `{a, -w} = {vv i, vv (i+1)}` (`image_neg_pair_p13`), so
+`-w ∈ eeP13 a E` exactly when `w ∈ eeP13 (-a) E'`. -/
 theorem EE_SYM_0_p13 (vv : ℕ → V3) (a : V3) :
     eeP13 (-a) (Set.image (fun i : ℕ => ({-(vv i), -(vv (i + 1))} : Set V3)) Set.univ)
       = Set.image (fun x : V3 => -x)
           (eeP13 a (Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ)) := by
-  sorry
+  ext w
+  constructor
+  · intro hw
+    rw [eeP13, Set.mem_setOf_eq] at hw
+    obtain ⟨i, -, hS⟩ := (Set.mem_image _ _ _).mp hw
+    have hS' : ({-(vv i), -(vv (i + 1))} : Set V3) = {-a, w} := hS
+    refine ⟨-w, ?_, by simp⟩
+    show {a, -w} ∈ Set.image (fun i : ℕ => ({vv i, vv (i + 1)} : Set V3)) Set.univ
+    refine ⟨i, Set.mem_univ _, ?_⟩
+    have h1' : (Set.image (fun z : V3 => -z) ({-a, w} : Set V3))
+        = (Set.image (fun z : V3 => -z) ({-(vv i), -(vv (i + 1))} : Set V3)) := by
+      rw [hS']
+    show ({vv i, vv (i + 1)} : Set V3) = {a, -w}
+    calc ({vv i, vv (i + 1)} : Set V3)
+        = (fun z : V3 => -z) '' ({-(vv i), -(vv (i + 1))} : Set V3) := by
+          rw [image_neg_pair_p13 (-(vv i)) (-(vv (i + 1)))]
+          simp
+      _ = (fun z : V3 => -z) '' ({-a, w} : Set V3) := by rw [hS']
+      _ = {a, -w} := by
+          rw [image_neg_pair_p13 (-a) w]
+          simp
+  · intro hw
+    obtain ⟨w', hmem, hw'eq⟩ := (Set.mem_image _ _ _).mp hw
+    rw [eeP13, Set.mem_setOf_eq] at hmem
+    obtain ⟨i, -, hEq⟩ := (Set.mem_image _ _ _).mp hmem
+    have hEq' : ({a, w'} : Set V3) = ({vv i, vv (i + 1)} : Set V3) := hEq.symm
+    refine ⟨i, Set.mem_univ _, ?_⟩
+    rw [← hw'eq]
+    simp only
+    rw [← image_neg_pair_p13 a w', ← image_neg_pair_p13 (vv i) (vv (i + 1)), hEq']
 
-/-- HOL `SUM_PAIR_SYM_0` (src:2359). Proof pending (Finset.sum_image
-transport over the image-toFinset bridge; DISCHARGES convention). -/
+/-- HOL `SUM_PAIR_SYM_0` (src:2359).
+DISCHARGED: the neg-pair map is an involution, so finiteness transports and
+`Finset.sum_image` reindexes the finite branch; both branches give `0` in
+the infinite case. -/
 theorem SUM_PAIR_SYM_0_p13 {s : Set (V3 × V3)} (f : V3 × V3 → ℝ) :
     setSum (Set.image (fun p : V3 × V3 => (-p.1, -p.2)) s) f
       = setSum s (f ∘ (fun p : V3 × V3 => (-p.1, -p.2))) := by
-  sorry
+  set m : V3 × V3 → V3 × V3 := fun p => (-p.1, -p.2) with hm
+  have hms : ∀ x : V3 × V3, m (m x) = x := by
+    intro x
+    simp only [hm]
+    simp
+  have hinj : Function.Injective m := by
+    intro a b hab
+    have h1 : m (m a) = m (m b) := by rw [hab]
+    rwa [hms, hms] at h1
+  by_cases hs : s.Finite
+  · have hf : (Set.image m s).Finite := hs.image _
+    have himg := Set.Finite.toFinset_image m hs hf
+    unfold setSum
+    rw [dif_pos hf, dif_pos hs, himg, Finset.sum_image (g := m) (by
+      intro x _ y _ hxy
+      exact hinj hxy)]
+    rfl
+  · have hf : ¬ (Set.image m s).Finite := by
+      intro hfi
+      have hEq : Set.image m (Set.image m s) = s := by
+        ext x
+        simp only [Set.mem_image]
+        constructor
+        · rintro ⟨y, ⟨z, hz, rfl⟩, rfl⟩
+          rw [hms]
+          exact hz
+        · intro hx
+          exact (Set.mem_image _ _ _).mpr ⟨m x, (Set.mem_image _ _ _).mpr ⟨x, hx, rfl⟩, hms x⟩
+      have hfin2 : (Set.image m (Set.image m s)).Finite := hfi.image m
+      rw [hEq] at hfin2
+      exact hs hfin2
+    unfold setSum
+    rw [dif_neg hf, dif_neg hs]
 
 /-- HOL `DUAL_EXISTS_MOD0` (src:1453). -/
 theorem DUAL_EXISTS_MOD0_p13 {k b : ℕ} (hk : k ≠ 0) :
@@ -1323,10 +1420,29 @@ theorem POINT_IN_AFF_LT_SYM_0_p13 {v1 w2 : V3} (hd : Disjoint ({v1} : Set V3) {w
     -w2 ∈ affLt ({0, v1} : Set V3) {w2} := by
   sorry
 
-/-- HOL `COLLINEAR_POINT_SYM_0` (src:1336). Proof pending. -/
+/-- HOL `COLLINEAR_POINT_SYM_0` (src:1336).
+DISCHARGED: `collinear_iff_of_mem` at `0` — if `v1` and `-w1` are both
+`v`-multiples then so are `v1` and `w1` (`-w1 = r • v` gives
+`w1 = -r • v`). -/
 theorem COLLINEAR_POINT_SYM_0_p13 {v1 w1 : V3} (h : ¬Collinear ℝ ({0, v1, w1} : Set V3)) :
     ¬Collinear ℝ ({0, v1, -w1} : Set V3) := by
-  sorry
+  intro hc
+  have h0 : (0 : V3) ∈ ({0, v1, -w1} : Set V3) := by simp
+  obtain ⟨v, hv⟩ := (collinear_iff_of_mem h0).mp hc
+  have h0p : (0 : V3) ∈ ({0, v1, w1} : Set V3) := by simp
+  refine h ((collinear_iff_of_mem h0p).mpr ⟨v, ?_⟩)
+  intro p hp
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+  rcases hp with h0 | h1c | h2c
+  · rw [h0]; exact ⟨0, by simp⟩
+  · rw [h1c]; exact hv v1 (by simp)
+  · rw [h2c]
+    obtain ⟨r, hr⟩ := hv (-w1) (by simp)
+    exact ⟨-r, by
+      have h1 : -w1 = r • v := by rw [hr, vadd_eq_add]; simp
+      have h2 : w1 = -(-w1) := by rw [neg_neg]
+      rw [h2, h1, neg_smul, vadd_eq_add]
+      simp⟩
 
 /-- HOL `AZIM_EQ_PI_POINT_SYM_0` (src:1350). Proof pending. -/
 theorem AZIM_EQ_PI_POINT_SYM_0_p13 {v1 w1 : V3}

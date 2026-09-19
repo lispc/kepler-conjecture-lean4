@@ -25,9 +25,19 @@ Encoding:
   `OEHDBEN` are fully proved (5 `is_scs_adj` systems via `Kepler.Text.LocalAuto22`'s
   W5 kit, 5 funlist systems + `STAB_6I1_SCS` by direct residue case work here).
   Remaining `sorry`s (7): `AQICLXA_SLICE`/`FUNOUYH_SLICE` (NEED
-  `LocalAuto1.LKGRQUI_concl`), `AQICLXA`/`FZIOTEF` (NEED `YXIONXL3_concl` +
-  `PROP_EQU_IS_SCS`), and the three `main_nonlinear_terminal_v11` implications
-  (NEED the mnt11 lane: RRCWNSJ/JCYFMRP/JLXFDMJ/MXQTIED, all LocalAuto1).
+   `LocalAuto1.LKGRQUI_concl`), `AQICLXA`/`FZIOTEF` (NEED `YXIONXL3_concl` +
+   `PROP_EQU_IS_SCS`), and the three `main_nonlinear_terminal_v11` implications
+   (NEED the mnt11 lane: RRCWNSJ/JCYFMRP/JLXFDMJ/MXQTIED, all LocalAuto1).
+- Fill-wave 2026-09-19 re-scan: all 7 blockers still open. `LKGRQUI_concl`
+  (LocalAuto1:950), `YXIONXL3_concl` (LocalAuto1:945), `RRCWNSJ_concl`
+  (:1334), `JCYFMRP_concl` (:1342), `JLXFDMJ_concl` (:1371), `MXQTIED_concl`
+  (:1098), `PEDSLGV2_concl` (:1397) all still `sorry`; the proved
+  `LocalAuto12.YXIONXL3`/`PROP_EQU_IS_SCS` twins only help downstream of
+  `AQICLXA_SLICE`/`FUNOUYH_SLICE`; `main_nonlinear_terminal_v11` is an opaque
+  `def ... := sorry` (LocalAuto1:793), so the three mnt11 implications cannot
+  extract content from the hypothesis. `MMS_IMP_BBS_p28`/`CHANGE_W_IN_BBS_MOD_
+  IS_SCS_p28` (LocalAuto28, proved) are auxiliary only. No fills this round;
+  statements and NEEDS notes unchanged.
 - No `native_decide` anywhere; `sorry` bodies carry `-- NEEDS:` markers
   naming the missing HOL inputs (the big `SCS_TAC` rewrites).
 - Same-wave files LocalAuto19/21-27 are NOT imported; nothing from them is

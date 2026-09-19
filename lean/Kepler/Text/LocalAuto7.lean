@@ -46,13 +46,16 @@ ENCODING NOTES (polar fan ↔ local fan duality)
     LocalAuto2): `azim_cycle` ↦ `azimCycle_p7`, `ivs_azim_cycle` ↦
     `ivsAzimCycle_p7`, `nn_of_hyp`/`ff_of_hyp`/`ee_of_hyp` ↦
     `nnOfHyp_p7`/`ffOfHyp_p7`/`eeOfHyp_p7`, `darts_of_hyp` ↦
-    `dartsOfHyp_p7`, `EE` ↦ LocalAuto1's `ee`, `plane` ↦ `plane_p7`.
-    Rationale: LocalAuto2 is NOT importable next to LocalAuto1 (the
-    PackingAuto18/PackingAuto20 lanes both own `Kepler.Text.atn2`, so the
-    two import trees clash), and the unsuffixed names stay reserved for
-    the LocalAuto1/LocalAnchors lanes per their merge notes.  Merge note:
-    when the atn2 clash is resolved, these `_p7` copies and their `rfl`
-    lemmas should be re-pointed at the shared lane and deleted.
+    `dartsOfHyp_p7`,     `EE` ↦ LocalAuto1's `ee`, `plane` ↦ `plane_p7`.
+    DEDUP (atn2-merge pass): the old blocker ("LocalAuto2 is NOT importable
+    next to LocalAuto1 — both lanes own `Kepler.Text.atn2`") is RESOLVED:
+    `atn2` is single-sourced in `Kepler.Text.SphereKit` (imported via
+    LocalAuto1), and LocalAuto1/LocalAuto2 are co-importable.  However the
+    shared localization kit (`EE`/`azim_cycle`/`azim_in_fan`) is DEFERRED in
+    SphereKit (no rendering bridge yet), so the `_p7` copies — and the
+    `ee` references, which still resolve to LocalAuto1's `ee` — remain
+    until the fan-kit bridge lands (plan §6).  No hosted twin here; pass
+    is otherwise a no-op.
   - `local_fan`/`convex_local_fan` ↦ LocalAuto1's `LocalFan` /
     `ConvexLocalFan` (whose hypermap kit is still a registry stub), so
     every theorem whose HOL proof consumes local-fan content carries a

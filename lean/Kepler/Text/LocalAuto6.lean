@@ -25,8 +25,9 @@ Encoding (HOL → Lean):
   `face HS d` ↦ `HS.face d`; `ITER n (rho_node1 FF) v` ↦
   `(rhoNode1_p2 FF)^[n] v`; `CARD S` ↦ `S.ncard`; `sum S f` ↦ `setSum S f`
   (PackingAuto2); `graph E` ↦ `Kepler.Text.Fan.Graph`.
-- HOL `ups_x` ↦ copy `upsX_p6` (PackingAuto18/25 both define
-  `Kepler.Text.upsX`, so reuse would be ambiguous). NEEDS: dedup at merge.
+- HOL `ups_x` ↦ copy `upsX_p6`. DEDUP (atn2-merge pass): NOT a twin —
+  SphereKit's `upsX` is the sphere.hl Gram form; `upsX_p6` renders the
+  packing_defs `½(x1+x2+x6+√…)` function and STAYS here (plan §3).
 - The local-fan slicing chapter (FACE_MAP_*, HAFL_CIRCLE_*, DETERMINE_FV*,
   SUM_INTERIOR_AGL_LEMMA, THE_SLICING_INTO_2_LEMMA, EJRCFJD, ...) is
   stated verbatim with `sorry` (giants); the arcV / wedge / continuity /
@@ -654,8 +655,9 @@ theorem AFF_GE11_SUB_AFF2 (v0 v1 : V3) :
       have hsum' : f v0 = 1 - f v1 := by rw [← hsum]; ring
       rw [hsum']
       module
-    rw [affineSpan_affineSpan]
-    exact hz
+    -- DEDUP-note fix (atn2-merge pass): the draft tail `rw [affineSpan_affineSpan]`
+    -- referenced a nonexistent lemma; `hgoal` already has the goal's type.
+    exact hgoal
 
 /-- HOL `AZ_REFL11` (local_lemmas1.hl:2132): CONJUNCT1 of `AZIM_DEGENERATE`
 refl-dropped. -/

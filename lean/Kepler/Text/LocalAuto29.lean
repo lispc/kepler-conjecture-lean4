@@ -59,17 +59,24 @@ Encoding (inherits `Kepler.Text.Polytope` / `Kepler.Text.LocalAuto1`):
 - No `native_decide`. Proved items: the mechanical registries
   (BASIC/K/J definitional folding, the `scsDiag` numeral checks,
   the `PSORT_5_EXPLICIT` table, the `scs_3T1_prime` equation, and
-  `J_SCS_5M2_0`), plus 21 discharged sorries (see FILE MAP): the
+  `J_SCS_5M2_0`), plus 40 discharged sorries (see FILE MAP): the
   Section E `scs_5M2` table/`scs_M` registries, `ARC_222` (via
   PackingAuto18 `arclength2`), the Section A `BBs` edge/stab
   transfers (proved `STAB_BB`-pattern shim `stabBB_p29` + residue
   case work), the pure-table prime-to-plain `BBs` bridges, the
-  `stab`-record set identities, and the two `PROP_OPP_DIAG_5M3`
-  definitional twins. Remaining 47 sorries: no importable proved
-  blocker exists — the `IS_SCS` giants, the `MMs`-witness steps
-  (blocked by the still-`sorry` `XWNHLMD_MM` kit), the
-  arrow/slice compositions and the `main_nonlinear_terminal_v11`
-  consumers — each carries a NEEDS note naming its blocker.
+  `stab`-record set identities, the two `PROP_OPP_DIAG_5M3`
+  definitional twins, and — 2026-09-19 pass — all 16 `SCS_*_IS_SCS`
+  giants (LocalAuto22's proved `is_scs_adj_p22` csAdj machine plus a
+  factored funlist skeleton `isScs_mkFunlist_p29` with 9/16-cell
+  residue sweeps; the LA22 `is_scs_*_p22` twins of these are still
+  `sorry`) and the three `STAB_*_SCS` diag-stab verifications (the
+  proved LocalAuto20 `STAB_6I1_SCS` method at `k = 5`). Remaining 28
+  sorries: the `MMs`-witness steps (blocked by the still-`sorry`
+  `XWNHLMD_MM` kit — LocalAuto26:688), the arrow/slice compositions
+  (`LKGRQUI_concl`/`YXIONXL3_concl` still pending in LocalAuto1;
+  `FZIOTEF` still `sorry` in LocalAuto20), the `JCYFMRP`/`xrr` kit
+  and the `main_nonlinear_terminal_v11` consumers — each carries a
+  NEEDS note naming its blocker.
 
 FILE MAP
   Definitions (`scs5M3` reused from `Kepler.Text.LocalAuto20`):
@@ -87,15 +94,26 @@ FILE MAP
     `MM_5M2_IMP_MM_STAB_5I3_p29` (sorry; NEEDS `XWNHLMD_MM`),
     `SCS_5I1_STAB_DIAG_sqrt8_p29` (DISCHARGED).
   Section B: `PSORT_5_EXPLICIT_p29` (proved).
-  Section C: `SCS_*_IS_SCS_p29` x16 (sorry; NEEDS the 20-conjunct
-    funlist/csAdj table verifications — no proved instance of any
-    of the 16 targets exists in LocalAuto1-38/PackingAuto1-25),
+  Section C: `SCS_*_IS_SCS_p29` x16 (ALL DISCHARGED 2026-09-19:
+    `SCS_5T1` via LocalAuto22's proved `is_scs_adj_p22` csAdj machine
+    (its LA22 twin `is_scs_5T1_p22` left only the trivial `h5` side
+    condition open); the other 15 funlist-table systems via the
+    factored skeleton `isScs_mkFunlist_p29` + `funlist3/4_symm_p29`
+    + 9/16-cell residue sweeps — 5M3, 3T1, 3T4, 3T6', 3T1', 3T4',
+    4M3', 4M4', 4M5', 4M6', 4M7, 4M8 and the 4M6/4M7/4M8 primes; the
+    LA22 `is_scs_*_p22` twins of these are still `sorry` so nothing
+    was importable except the csAdj machine),
     `SCS_*_BASIC_p29` x13 (proved), `K_SCS_*_p29` x13 (proved),
     `J_SCS_*_p29` x12 (proved).
-  Section D: `STAB_5I1_SCS_p29` (sorry; NEEDS `isScsV39` of the
-    stabbed tables), `STAB_5I2_SCS_p29` (sorry; same),
-    `STAB_5M3_SCS_p29` (sorry; same), `STAB_5M3_SCS_v2_p29`
-    (derived from `STAB_5M3_SCS_p29`, hence still `sorry`; the
+  Section D: `STAB_5I1_SCS_p29` (DISCHARGED 2026-09-19: the proved
+    LocalAuto20 `STAB_6I1_SCS` 21-conjunct method at `k = 5` —
+    `diag_not_edge_psort_p20` keeps the override off the edge pairs,
+    `csAdj_adj_p22`/`periodic2_cs_adj_p22`/`csAdj_swap_p22` carry the
+    csAdj residue work), `STAB_5I2_SCS_p29` (DISCHARGED; same
+    method), `STAB_5M3_SCS_p29` (DISCHARGED; same method over the
+    funlist tables — override invisible on edges via
+    `stab5M3_edge_p29`, card set `{0}` as for `SCS_5M2_IS_SCS`),
+    `STAB_5M3_SCS_v2_p29` (derived from `STAB_5M3_SCS_p29`; the
     HOL duplicate binding),
     `SCS_5M3_STAB_DIAG_sqrt8_p29` (DISCHARGED),
     `SCS_DIAG_SCS_5M3_{02,03,24}_p29` (proved),
@@ -624,90 +642,860 @@ theorem SCS_5I1_STAB_DIAG_sqrt8_p29 : ∀ (v : ℕ → V3) (i j : ℕ),
 
 /-! ## Section C1: `is_scs_v39` verifications (HIJQAHA.hl:616-2067) -/
 
-/-- HOL `SCS_5T1_IS_SCS` (HIJQAHA.hl:616). -/
-theorem SCS_5T1_IS_SCS_p29 : isScsV39 scs5T1 := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC expansion of `scs_5T1` (`cs_adj` tables,
-  -- `d_tame 5`, MOD-periodicity case work).
+/-- Symmetry of the `funlist_v39` tables (`psort` is symmetric). -/
+private theorem funlist_symm_p29 (data : List ((ℕ × ℕ) × ℝ)) (d : ℝ) (k i j : ℕ) :
+    funlistV39 data d k i j = funlistV39 data d k j i := by
+  unfold funlistV39
+  rw [psort_swap_p20 k i j]
+  by_cases h : i % k = j % k
+  · rw [if_pos h, if_pos h.symm]
+  · rw [if_neg h, if_neg (Ne.symm h)]
 
-/-- HOL `SCS_5M3_IS_SCS` (HIJQAHA.hl:688). -/
+/-- Shared 21-conjunct skeleton for the funlist-table `is_scs_v39`
+registries: everything except the numeric residue sweeps is generic
+(the LocalAuto20 `SCS_5M2_IS_SCS` boilerplate, factored out). -/
+private theorem isScs_mkFunlist_p29 {k : ℕ} {d : ℝ} {a b : ℕ → ℕ → ℝ}
+    (hk3 : 3 ≤ k) (hk6 : k ≤ 6) (hd : d < 0.9)
+    (hpa : Periodic2 a k) (hpb : Periodic2 b k)
+    (hsymm : ∀ i j, a i j = a j i ∧ b i j = b j i)
+    (hdom : ∀ i j, a i j ≤ b i j)
+    (hdiag0 : ∀ i, a i i = 0)
+    (h2a : ∀ i j, i < k ∧ j < k ∧ i ≠ j → 2 ≤ a i j)
+    (hb3 : ∀ i, k = 3 → b i (i + 1) < 4)
+    (hble : ∀ i, 3 < k → b i (i + 1) ≤ cstab)
+    (hcard : {i | i < k ∧ (2 * h0 < b i (i + 1) ∨ 2 < a i (i + 1))}.ncard + k ≤ 6) :
+    isScsV39 (mkUnadornedV39 k d a b) := by
+  unfold isScsV39
+  simp only [mkUnadornedV39]
+  refine ⟨hd, hk3, hk6, periodic_empty k, periodic_empty k, periodic_empty k,
+    periodic_empty k, hpa, hpa, hpb, hpb, fun _ _ => ⟨rfl, rfl⟩, ?_, ?_, hdiag0,
+    h2a, hb3, hble, fun _ _ hj => False.elim hj, fun _ _ hj => False.elim hj, hcard⟩
+  · intro i j
+    obtain ⟨h1, h2⟩ := hsymm i j
+    exact ⟨h1, h1, h2, h2, trivial⟩
+  · intro i j
+    exact ⟨le_refl _, hdom i j, le_refl _⟩
+
+/-- Paired table symmetry for the two funlist tables of a 3-row registry. -/
+private theorem funlist3_symm_p29 (la lb : List ((ℕ × ℕ) × ℝ)) (da db : ℝ) :
+    ∀ i j, funlistV39 la da 3 i j = funlistV39 la da 3 j i ∧
+      funlistV39 lb db 3 i j = funlistV39 lb db 3 j i :=
+  fun i j => ⟨funlist_symm_p29 _ _ _ _ _, funlist_symm_p29 _ _ _ _ _⟩
+
+/-- Paired table symmetry for the two funlist tables of a 4-row registry. -/
+private theorem funlist4_symm_p29 (la lb : List ((ℕ × ℕ) × ℝ)) (da db : ℝ) :
+    ∀ i j, funlistV39 la da 4 i j = funlistV39 la da 4 j i ∧
+      funlistV39 lb db 4 i j = funlistV39 lb db 4 j i :=
+  fun i j => ⟨funlist_symm_p29 _ _ _ _ _, funlist_symm_p29 _ _ _ _ _⟩
+
+/-- HOL `SCS_5T1_IS_SCS` (HIJQAHA.hl:616). DISCHARGED: `scs_5T1` is the
+`cs_adj` system `mkUnadornedV39 5 0.616 (csAdj 5 2 cstab) (csAdj 5 2 6)`, so
+the proved LocalAuto22 registry machine `is_scs_adj_p22` (transitively
+visible via LocalAuto20) applies directly. The LocalAuto22 twin
+`is_scs_5T1_p22` is itself this invocation with only its last side condition
+`h5 : 3 < 5 → 2 ≤ 2*h0 ∧ 2 = 2` left open; it is closed here. -/
+theorem SCS_5T1_IS_SCS_p29 : isScsV39 scs5T1 :=
+  is_scs_adj_p22 5 0.616 2 cstab 2 6
+    (by norm_num) (by norm_num) (by norm_num)
+    (fun h => absurd h (by norm_num))
+    (fun _ => le_cstab_two_p20)
+    (by norm_num) le_cstab_two_p20 (by norm_num) (by norm_num [cstab])
+    (fun _ => ⟨by norm_num [h0], rfl⟩)
+
+/-- HOL `SCS_5M3_IS_SCS` (HIJQAHA.hl:688). DISCHARGED: direct 21-conjunct
+`is_scs_v39` verification of the funlist tables, cloning the proved
+LocalAuto20 `SCS_5M2_IS_SCS` method verbatim (identical b-table and `d`;
+the a-table differs only at the `(0,1)` slot, `2 → 2*h0`). -/
 theorem SCS_5M3_IS_SCS_p29 : isScsV39 scs5M3 := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC expansion of `scs_5M3` funlist tables
-  -- (`PSORT_5_EXPLICIT_p29`, `FUNLIST_EXPLICIT`).
+  unfold isScsV39 scs5M3 mkUnadornedV39
+  dsimp only
+  have pa : Periodic2 (funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((0, 3), cstab),
+        ((1, 3), cstab), ((1, 4), cstab), ((2, 4), cstab)] 2 5) 5 :=
+    periodic2_funlist_p20 _ _ _
+  have pb : Periodic2 (funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6),
+        ((1, 3), 6), ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5) 5 :=
+    periodic2_funlist_p20 _ _ _
+  refine ⟨by norm_num, by norm_num, by norm_num, periodic_empty 5, periodic_empty 5,
+    periodic_empty 5, periodic_empty 5, pa, pa, pb, pb,
+    fun _ _ => ⟨rfl, rfl⟩, ?_, ?_, ?_, ?_, ?_, ?_, fun _ _ hj => False.elim hj,
+    fun _ _ hj => False.elim hj, ?_⟩
+  · intro i j
+    simp only [funlistV39, psort]
+    have hz1 : i % 5 < 5 := Nat.mod_lt i (by omega)
+    have hz2 : j % 5 < 5 := Nat.mod_lt j (by omega)
+    interval_cases i % 5 <;> interval_cases j % 5 <;> simp [assocdV39]
+  · intro i j
+    simp only [funlistV39, psort]
+    refine ⟨le_refl _, ?_, le_refl _⟩
+    have hz1 : i % 5 < 5 := Nat.mod_lt i (by omega)
+    have hz2 : j % 5 < 5 := Nat.mod_lt j (by omega)
+    interval_cases i % 5 <;> interval_cases j % 5 <;> simp [assocdV39] <;>
+      norm_num [h0, cstab]
+  · intro i; simp [funlistV39]
+  · intro i j ⟨hik, hjk, hne⟩
+    interval_cases i <;> interval_cases j <;>
+      simp_all [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab]
+  · intro i hk3
+    omega
+  · intro i hk5
+    rw [← funlist_mod_p20 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+        ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 i (i + 1) (by omega),
+      ← Nat.mod_add_mod i 5 1]
+    have hz : i % 5 < 5 := Nat.mod_lt i (by omega)
+    interval_cases i % 5 <;> simp [funlistV39, psort, assocdV39] <;>
+      norm_num [h0, cstab]
+  · have key : ∀ r : ℕ, r < 5 →
+        ((2 * h0 < funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6),
+              ((1, 3), 6), ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 r ((r + 1) % 5) ∨
+            2 < funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((0, 3), cstab),
+              ((1, 3), cstab), ((1, 4), cstab), ((2, 4), cstab)] 2 5
+              r ((r + 1) % 5)) ↔ r = 0) := by
+      intro r hr
+      interval_cases r <;>
+        simp [funlistV39, psort, assocdV39, two_h0_lt_cstab_p20] <;>
+        norm_num [h0, cstab]
+    have hS : {i | i < 5 ∧ (2 * h0 < funlistV39 [((0, 1), cstab), ((0, 2), 6),
+              ((0, 3), 6), ((1, 3), 6), ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5
+              i (i + 1) ∨
+            2 < funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((0, 3), cstab),
+              ((1, 3), cstab), ((1, 4), cstab), ((2, 4), cstab)] 2 5
+              i (i + 1))} = {0} := by
+      ext i
+      simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+          ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 i (i + 1) (by omega),
+        ← funlist_mod_p20 [((0, 1), 2 * h0), ((0, 2), cstab), ((0, 3), cstab),
+          ((1, 3), cstab), ((1, 4), cstab), ((2, 4), cstab)] 2 5 i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 5 1]
+      rw [key (i % 5) (Nat.mod_lt i (by omega))]
+      omega
+    rw [hS]
+    simp
+    all_goals norm_num
 
-/-- HOL `SCS_3T4_IS_SCS` (HIJQAHA.hl:780). -/
+/-- HOL `SCS_3T4_IS_SCS` (HIJQAHA.hl:780). DISCHARGED: direct 21-conjunct
+verification via the `isScs_mkFunlist_p29` skeleton; the numeric residue
+sweeps are the 9-cell `k = 3` case work. -/
 theorem SCS_3T4_IS_SCS_p29 : isScsV39 scs3T4 := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC expansion of `scs_3T4`.
+  refine isScs_mkFunlist_p29 (k := 3) (d := 0.2759)
+    (a := funlistV39 [((0, 1), 2)] (2 * h0) 3)
+    (b := funlistV39 [((0, 1), 2 * h0)] cstab 3)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist3_symm_p29 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 3 < 3 := Nat.mod_lt i (by omega)
+      have h2 : j % 3 < 3 := Nat.mod_lt j (by omega)
+      interval_cases i % 3 <;> interval_cases j % 3 <;> simp [assocdV39] <;>
+        norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab])
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), 2 * h0)] cstab 3 i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 3 1]
+      have hz : i % 3 < 3 := Nat.mod_lt i (by omega)
+      interval_cases i % 3 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (fun i h => absurd h (by norm_num))
+    (by
+      have hS : {i | i < 3 ∧ (2 * h0 < funlistV39 [((0, 1), 2 * h0)] cstab 3 i (i + 1) ∨
+          2 < funlistV39 [((0, 1), 2)] (2 * h0) 3 i (i + 1))} = {1, 2} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+        rw [← funlist_mod_p20 [((0, 1), 2 * h0)] cstab 3 i (i + 1) (by omega),
+          ← funlist_mod_p20 [((0, 1), 2)] (2 * h0) 3 i (i + 1) (by omega),
+          ← Nat.mod_add_mod i 3 1]
+        have key : ∀ r : ℕ, r < 3 →
+            ((2 * h0 < funlistV39 [((0, 1), 2 * h0)] cstab 3 r ((r + 1) % 3) ∨
+              2 < funlistV39 [((0, 1), 2)] (2 * h0) 3 r ((r + 1) % 3)) ↔ r = 1 ∨ r = 2) := by
+          intro r hr
+          interval_cases r <;>
+            simp [funlistV39, psort, assocdV39, two_h0_lt_cstab_p20] <;>
+            norm_num [h0, cstab]
+        rw [key (i % 3) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      simp [Set.ncard_insert_of_notMem, Set.ncard_singleton] <;> omega)
 
-/-- HOL `SCS_3T6_IS_SCS` (HIJQAHA.hl:853). -/
+/-- HOL `SCS_3T6_IS_SCS` (HIJQAHA.hl:853). DISCHARGED: `isScs_mkFunlist_p29`
+skeleton + 9-cell residue sweeps. -/
 theorem SCS_3T6_IS_SCS_p29 : isScsV39 scs3T6' := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC expansion of `scs_3T6'`.
+  refine isScs_mkFunlist_p29 (k := 3) (d := 0.4348)
+    (a := funlistV39 [((0, 1), Real.sqrt 8), ((1, 2), Real.sqrt 8)] 2 3)
+    (b := funlistV39 [((0, 1), cstab), ((1, 2), cstab)] (2 * h0) 3)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist3_symm_p29 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 3 < 3 := Nat.mod_lt i (by omega)
+      have h2 : j % 3 < 3 := Nat.mod_lt j (by omega)
+      interval_cases i % 3 <;> interval_cases j % 3 <;> simp [assocdV39] <;>
+        first | exact sqrt8_LE_CSTAB | norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;>
+        first | exact LE_sqrt8_2 | norm_num [h0, cstab])
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((1, 2), cstab)] (2 * h0) 3 i (i + 1)
+        (by omega), ← Nat.mod_add_mod i 3 1]
+      have hz : i % 3 < 3 := Nat.mod_lt i (by omega)
+      interval_cases i % 3 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (fun i h => absurd h (by norm_num))
+    (by
+      have hS : {i | i < 3 ∧ (2 * h0 < funlistV39 [((0, 1), cstab), ((1, 2), cstab)]
+              (2 * h0) 3 i (i + 1) ∨
+            2 < funlistV39 [((0, 1), Real.sqrt 8), ((1, 2), Real.sqrt 8)] 2 3
+              i (i + 1))} = {0, 1} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+        rw [← funlist_mod_p20 [((0, 1), cstab), ((1, 2), cstab)] (2 * h0) 3 i (i + 1)
+          (by omega),
+          ← funlist_mod_p20 [((0, 1), Real.sqrt 8), ((1, 2), Real.sqrt 8)] 2 3 i (i + 1)
+          (by omega), ← Nat.mod_add_mod i 3 1]
+        have key : ∀ r : ℕ, r < 3 →
+            ((2 * h0 < funlistV39 [((0, 1), cstab), ((1, 2), cstab)] (2 * h0) 3
+                r ((r + 1) % 3) ∨
+              2 < funlistV39 [((0, 1), Real.sqrt 8), ((1, 2), Real.sqrt 8)] 2 3
+                r ((r + 1) % 3)) ↔ r = 0 ∨ r = 1) := by
+          intro r hr
+          interval_cases r <;>
+            simp [funlistV39, psort, assocdV39, two_h0_lt_cstab_p20] <;>
+            norm_num [h0, cstab]
+        rw [key (i % 3) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      simp [Set.ncard_insert_of_notMem, Set.ncard_singleton] <;> omega)
 
-/-- HOL `SCS_3T1_prime_IS_SCS` (HIJQAHA.hl:912). -/
+/-- HOL `SCS_3T1_prime_IS_SCS` (HIJQAHA.hl:912). DISCHARGED: via the
+`scs_3T1_prime` equation (`scs3T1Prime_eq_p29`, `rfl`) and the
+`isScs_mkFunlist_p29` skeleton + 9-cell residue sweeps. -/
 theorem SCS_3T1_prime_IS_SCS_p29 : isScsV39 scs3T1Prime_p29 := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC via `scs_3T1_prime` equation
-  -- (`scs3T1Prime_eq_p29`), then the 3-row case work.
+  rw [scs3T1Prime_eq_p29]
+  refine isScs_mkFunlist_p29 (k := 3) (d := 0.11)
+    (a := funlistV39 [((0, 1), cstab)] 2 3)
+    (b := funlistV39 [((0, 1), cstab)] (2 * h0) 3)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist3_symm_p29 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 3 < 3 := Nat.mod_lt i (by omega)
+      have h2 : j % 3 < 3 := Nat.mod_lt j (by omega)
+      interval_cases i % 3 <;> interval_cases j % 3 <;> simp [assocdV39] <;>
+        norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab])
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), cstab)] (2 * h0) 3 i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 3 1]
+      have hz : i % 3 < 3 := Nat.mod_lt i (by omega)
+      interval_cases i % 3 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (fun i h => absurd h (by norm_num))
+    (by
+      have hS : {i | i < 3 ∧ (2 * h0 < funlistV39 [((0, 1), cstab)] (2 * h0) 3 i (i + 1) ∨
+          2 < funlistV39 [((0, 1), cstab)] 2 3 i (i + 1))} = {0} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+        rw [← funlist_mod_p20 [((0, 1), cstab)] (2 * h0) 3 i (i + 1) (by omega),
+          ← funlist_mod_p20 [((0, 1), cstab)] 2 3 i (i + 1) (by omega),
+          ← Nat.mod_add_mod i 3 1]
+        have key : ∀ r : ℕ, r < 3 →
+            ((2 * h0 < funlistV39 [((0, 1), cstab)] (2 * h0) 3 r ((r + 1) % 3) ∨
+              2 < funlistV39 [((0, 1), cstab)] 2 3 r ((r + 1) % 3)) ↔ r = 0) := by
+          intro r hr
+          interval_cases r <;>
+            simp [funlistV39, psort, assocdV39, two_h0_lt_cstab_p20] <;>
+            norm_num [h0, cstab]
+        rw [key (i % 3) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      simp [Set.ncard_singleton])
 
-/-- HOL `SCS_3T1_IS_SCS` (HIJQAHA.hl:988). -/
+/-- HOL `SCS_3T1_IS_SCS` (HIJQAHA.hl:988). DISCHARGED: `isScs_mkFunlist_p29`
+skeleton + 9-cell residue sweeps (the LA22 twin `is_scs_3T1_p22` is still
+`sorry`; this is a direct verification, no import needed). -/
 theorem SCS_3T1_IS_SCS_p29 : isScsV39 scs3T1 := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC expansion of `scs_3T1`.
+  refine isScs_mkFunlist_p29 (k := 3) (d := 0.11)
+    (a := funlistV39 [((0, 1), Real.sqrt 8)] 2 3)
+    (b := funlistV39 [((0, 1), cstab)] (2 * h0) 3)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist3_symm_p29 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 3 < 3 := Nat.mod_lt i (by omega)
+      have h2 : j % 3 < 3 := Nat.mod_lt j (by omega)
+      interval_cases i % 3 <;> interval_cases j % 3 <;> simp [assocdV39] <;>
+        first | exact sqrt8_LE_CSTAB | norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;>
+        first | exact LE_sqrt8_2 | norm_num [h0, cstab])
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), cstab)] (2 * h0) 3 i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 3 1]
+      have hz : i % 3 < 3 := Nat.mod_lt i (by omega)
+      interval_cases i % 3 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (fun i h => absurd h (by norm_num))
+    (by
+      have hS : {i | i < 3 ∧ (2 * h0 < funlistV39 [((0, 1), cstab)] (2 * h0) 3 i (i + 1) ∨
+          2 < funlistV39 [((0, 1), Real.sqrt 8)] 2 3 i (i + 1))} = {0} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+        rw [← funlist_mod_p20 [((0, 1), cstab)] (2 * h0) 3 i (i + 1) (by omega),
+          ← funlist_mod_p20 [((0, 1), Real.sqrt 8)] 2 3 i (i + 1) (by omega),
+          ← Nat.mod_add_mod i 3 1]
+        have key : ∀ r : ℕ, r < 3 →
+            ((2 * h0 < funlistV39 [((0, 1), cstab)] (2 * h0) 3 r ((r + 1) % 3) ∨
+              2 < funlistV39 [((0, 1), Real.sqrt 8)] 2 3 r ((r + 1) % 3)) ↔ r = 0) := by
+          intro r hr
+          interval_cases r <;>
+            simp [funlistV39, psort, assocdV39, two_h0_lt_cstab_p20] <;>
+            norm_num [h0, cstab]
+        rw [key (i % 3) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      simp [Set.ncard_singleton])
 
-/-- HOL `SCS_3T4_prime_IS_SCS` (HIJQAHA.hl:1068). -/
+/-- HOL `SCS_3T4_prime_IS_SCS` (HIJQAHA.hl:1068). DISCHARGED:
+`isScs_mkFunlist_p29` skeleton + 9-cell residue sweeps. -/
 theorem SCS_3T4_prime_IS_SCS_p29 : isScsV39 scs3T4Prime_p29 := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC expansion of `scs_3T4_prime`.
+  refine isScs_mkFunlist_p29 (k := 3) (d := 0.2759)
+    (a := funlistV39 [((0, 1), 2), ((1, 2), cstab)] (2 * h0) 3)
+    (b := funlistV39 [((0, 1), 2 * h0)] cstab 3)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist3_symm_p29 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 3 < 3 := Nat.mod_lt i (by omega)
+      have h2 : j % 3 < 3 := Nat.mod_lt j (by omega)
+      interval_cases i % 3 <;> interval_cases j % 3 <;> simp [assocdV39] <;>
+        norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab])
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), 2 * h0)] cstab 3 i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 3 1]
+      have hz : i % 3 < 3 := Nat.mod_lt i (by omega)
+      interval_cases i % 3 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (fun i h => absurd h (by norm_num))
+    (by
+      have hS : {i | i < 3 ∧ (2 * h0 < funlistV39 [((0, 1), 2 * h0)] cstab 3 i (i + 1) ∨
+          2 < funlistV39 [((0, 1), 2), ((1, 2), cstab)] (2 * h0) 3 i (i + 1))} = {1, 2} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+        rw [← funlist_mod_p20 [((0, 1), 2 * h0)] cstab 3 i (i + 1) (by omega),
+          ← funlist_mod_p20 [((0, 1), 2), ((1, 2), cstab)] (2 * h0) 3 i (i + 1) (by omega),
+          ← Nat.mod_add_mod i 3 1]
+        have key : ∀ r : ℕ, r < 3 →
+            ((2 * h0 < funlistV39 [((0, 1), 2 * h0)] cstab 3 r ((r + 1) % 3) ∨
+              2 < funlistV39 [((0, 1), 2), ((1, 2), cstab)] (2 * h0) 3
+                r ((r + 1) % 3)) ↔ r = 1 ∨ r = 2) := by
+          intro r hr
+          interval_cases r <;>
+            simp [funlistV39, psort, assocdV39, two_h0_lt_cstab_p20] <;>
+            norm_num [h0, cstab]
+        rw [key (i % 3) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      simp [Set.ncard_insert_of_notMem, Set.ncard_singleton] <;> omega)
 
-/-- HOL `SCS_4M6_IS_SCS` (HIJQAHA.hl:1140). -/
+/-- HOL `SCS_4M6_IS_SCS` (HIJQAHA.hl:1140). DISCHARGED: direct 21-conjunct verification via the `isScs_mkFunlist_p29` skeleton + 16-cell residue sweeps. -/
 theorem SCS_4M6_IS_SCS_p29 : isScsV39 scs4M6' := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC expansion of `scs_4M6'`.
-
-/-- HOL `SCS_4M5_IS_SCS` (HIJQAHA.hl:1234). -/
+  refine isScs_mkFunlist_p29 (k := 4) (d := 0.513)
+    (a := funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4)
+    (b := funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist4_symm_p29 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39] <;>
+        norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (fun i h => absurd h (by omega))
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 4 1]
+      have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (by
+      have hS : {i | i < 4 ∧ (2 * h0 < funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i (i + 1) ∨
+          2 < funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4 i (i + 1))} = {0} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+        rw [← funlist_mod_p20 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+          ← funlist_mod_p20 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4 i (i + 1) (by omega),
+          ← Nat.mod_add_mod i 4 1]
+        have key : ∀ r : ℕ, r < 4 →
+            ((2 * h0 < funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 r ((r + 1) % 4) ∨
+              2 < funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4 r ((r + 1) % 4)) ↔ r = 0) := by
+          intro r hr
+          interval_cases r <;>
+            simp [funlistV39, psort, assocdV39, two_h0_lt_cstab_p20] <;>
+            norm_num [h0, cstab]
+        rw [key (i % 4) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      simp [Set.ncard_insert_of_notMem, Set.ncard_singleton] <;> omega)
+/-- HOL `SCS_4M5_IS_SCS` (HIJQAHA.hl:1234). DISCHARGED: direct 21-conjunct verification via the `isScs_mkFunlist_p29` skeleton + 16-cell residue sweeps. -/
 theorem SCS_4M5_IS_SCS_p29 : isScsV39 scs4M5' := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC expansion of `scs_4M5'`.
-
-/-- HOL `SCS_4M6_prime_IS_SCS` (HIJQAHA.hl:1355). -/
+  refine isScs_mkFunlist_p29 (k := 4) (d := 0.513)
+    (a := funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), 2 * h0),
+      ((1, 3), 2 * h0)] 2 4)
+    (b := funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist4_symm_p29 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39] <;>
+        norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (fun i h => absurd h (by omega))
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 4 1]
+      have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (by
+      have hS : {i | i < 4 ∧ (2 * h0 < funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i (i + 1) ∨
+          2 < funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), 2 * h0),
+      ((1, 3), 2 * h0)] 2 4 i (i + 1))} = {0, 2} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+        rw [← funlist_mod_p20 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+          ← funlist_mod_p20 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), 2 * h0),
+      ((1, 3), 2 * h0)] 2 4 i (i + 1) (by omega),
+          ← Nat.mod_add_mod i 4 1]
+        have key : ∀ r : ℕ, r < 4 →
+            ((2 * h0 < funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 r ((r + 1) % 4) ∨
+              2 < funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), 2 * h0),
+      ((1, 3), 2 * h0)] 2 4 r ((r + 1) % 4)) ↔ r = 0 ∨ r = 2) := by
+          intro r hr
+          interval_cases r <;>
+            simp [funlistV39, psort, assocdV39, two_h0_lt_cstab_p20] <;>
+            norm_num [h0, cstab]
+        rw [key (i % 4) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      simp [Set.ncard_insert_of_notMem, Set.ncard_singleton] <;> omega)
+/-- HOL `SCS_4M6_prime_IS_SCS` (HIJQAHA.hl:1355). DISCHARGED: direct 21-conjunct verification via the `isScs_mkFunlist_p29` skeleton + 16-cell residue sweeps. -/
 theorem SCS_4M6_prime_IS_SCS_p29 : isScsV39 scs4M6Prime_p29 := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC expansion of `scs_4M6_prime`.
-
-/-- HOL `SCS_4M4_IS_SCS` (HIJQAHA.hl:1447). -/
+  refine isScs_mkFunlist_p29 (k := 4) (d := 0.513)
+    (a := funlistV39 [((0, 1), cstab), ((0, 2), cstab), ((1, 3), cstab)] 2 4)
+    (b := funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist4_symm_p29 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39] <;>
+        norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (fun i h => absurd h (by omega))
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 4 1]
+      have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (by
+      have hS : {i | i < 4 ∧ (2 * h0 < funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i (i + 1) ∨
+          2 < funlistV39 [((0, 1), cstab), ((0, 2), cstab), ((1, 3), cstab)] 2 4 i (i + 1))} = {0} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+        rw [← funlist_mod_p20 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+          ← funlist_mod_p20 [((0, 1), cstab), ((0, 2), cstab), ((1, 3), cstab)] 2 4 i (i + 1) (by omega),
+          ← Nat.mod_add_mod i 4 1]
+        have key : ∀ r : ℕ, r < 4 →
+            ((2 * h0 < funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 r ((r + 1) % 4) ∨
+              2 < funlistV39 [((0, 1), cstab), ((0, 2), cstab), ((1, 3), cstab)] 2 4 r ((r + 1) % 4)) ↔ r = 0) := by
+          intro r hr
+          interval_cases r <;>
+            simp [funlistV39, psort, assocdV39, two_h0_lt_cstab_p20] <;>
+            norm_num [h0, cstab]
+        rw [key (i % 4) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      simp [Set.ncard_insert_of_notMem, Set.ncard_singleton] <;> omega)
+/-- HOL `SCS_4M4_IS_SCS` (HIJQAHA.hl:1447). DISCHARGED: direct 21-conjunct verification via the `isScs_mkFunlist_p29` skeleton + 16-cell residue sweeps. -/
 theorem SCS_4M4_IS_SCS_p29 : isScsV39 scs4M4' := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC expansion of `scs_4M4'`.
-
-/-- HOL `SCS_4M3_IS_SCS` (HIJQAHA.hl:1548). -/
+  refine isScs_mkFunlist_p29 (k := 4) (d := 0.513)
+    (a := funlistV39 [((0, 1), 2 * h0), ((1, 2), 2 * h0), ((0, 2), 2 * h0),
+      ((1, 3), 2 * h0)] 2 4)
+    (b := funlistV39 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist4_symm_p29 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39] <;>
+        norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (fun i h => absurd h (by omega))
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 4 1]
+      have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (by
+      have hS : {i | i < 4 ∧ (2 * h0 < funlistV39 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i (i + 1) ∨
+          2 < funlistV39 [((0, 1), 2 * h0), ((1, 2), 2 * h0), ((0, 2), 2 * h0),
+      ((1, 3), 2 * h0)] 2 4 i (i + 1))} = {0, 1} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+        rw [← funlist_mod_p20 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+          ← funlist_mod_p20 [((0, 1), 2 * h0), ((1, 2), 2 * h0), ((0, 2), 2 * h0),
+      ((1, 3), 2 * h0)] 2 4 i (i + 1) (by omega),
+          ← Nat.mod_add_mod i 4 1]
+        have key : ∀ r : ℕ, r < 4 →
+            ((2 * h0 < funlistV39 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 r ((r + 1) % 4) ∨
+              2 < funlistV39 [((0, 1), 2 * h0), ((1, 2), 2 * h0), ((0, 2), 2 * h0),
+      ((1, 3), 2 * h0)] 2 4 r ((r + 1) % 4)) ↔ r = 0 ∨ r = 1) := by
+          intro r hr
+          interval_cases r <;>
+            simp [funlistV39, psort, assocdV39, two_h0_lt_cstab_p20] <;>
+            norm_num [h0, cstab]
+        rw [key (i % 4) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      simp [Set.ncard_insert_of_notMem, Set.ncard_singleton] <;> omega)
+/-- HOL `SCS_4M3_IS_SCS` (HIJQAHA.hl:1548). DISCHARGED: direct 21-conjunct verification via the `isScs_mkFunlist_p29` skeleton + 16-cell residue sweeps. -/
 theorem SCS_4M3_IS_SCS_p29 : isScsV39 scs4M3' := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC expansion of `scs_4M3'`.
-
-/-- HOL `SCS_4M7_IS_SCS` (HIJQAHA.hl:1649). -/
+  refine isScs_mkFunlist_p29 (k := 4) (d := 0.513)
+    (a := funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), Real.sqrt 8),
+      ((1, 3), Real.sqrt 8)] 2 4)
+    (b := funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist4_symm_p29 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39] <;>
+        first | exact sqrt8_LE_CSTAB | exact sqrt8_LE_6 | norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;>
+        first | exact LE_sqrt8_2 | norm_num [h0, cstab])
+    (fun i h => absurd h (by omega))
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 4 1]
+      have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (by
+      have hS : {i | i < 4 ∧ (2 * h0 < funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i (i + 1) ∨
+          2 < funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), Real.sqrt 8),
+      ((1, 3), Real.sqrt 8)] 2 4 i (i + 1))} = {0} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+        rw [← funlist_mod_p20 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+          ← funlist_mod_p20 [((0, 1), Real.sqrt 8), ((0, 2), Real.sqrt 8),
+      ((1, 3), Real.sqrt 8)] 2 4 i (i + 1) (by omega),
+          ← Nat.mod_add_mod i 4 1]
+        have key : ∀ r : ℕ, r < 4 →
+            ((2 * h0 < funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 r ((r + 1) % 4) ∨
+              2 < funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), Real.sqrt 8),
+      ((1, 3), Real.sqrt 8)] 2 4 r ((r + 1) % 4)) ↔ r = 0) := by
+          intro r hr
+          interval_cases r <;>
+            simp [funlistV39, psort, assocdV39, two_h0_lt_cstab_p20] <;>
+            norm_num [h0, cstab]
+        rw [key (i % 4) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      simp [Set.ncard_insert_of_notMem, Set.ncard_singleton] <;> omega)
+/-- HOL `SCS_4M7_IS_SCS` (HIJQAHA.hl:1649). DISCHARGED: direct 21-conjunct verification via the `isScs_mkFunlist_p29` skeleton + 16-cell residue sweeps (note the doubled `(1,3)` b-row, verbatim from the source). -/
 theorem SCS_4M7_IS_SCS_p29 : isScsV39 scs4M7 := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC expansion of `scs_4M7` (note the doubled
-  -- `(1,3)` row in the b-table, verbatim from the source).
-
-/-- HOL `SCS_4M7_prime_IS_SCS` (HIJQAHA.hl:1753). -/
+  refine isScs_mkFunlist_p29 (k := 4) (d := 0.513)
+    (a := funlistV39 [((0, 1), 2 * h0), ((1, 2), 2 * h0), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4)
+    (b := funlistV39 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist4_symm_p29 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39] <;>
+        norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (fun i h => absurd h (by omega))
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 4 1]
+      have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (by
+      have hS : {i | i < 4 ∧ (2 * h0 < funlistV39 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4 i (i + 1) ∨
+          2 < funlistV39 [((0, 1), 2 * h0), ((1, 2), 2 * h0), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4 i (i + 1))} = {0, 1} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+        rw [← funlist_mod_p20 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+          ← funlist_mod_p20 [((0, 1), 2 * h0), ((1, 2), 2 * h0), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4 i (i + 1) (by omega),
+          ← Nat.mod_add_mod i 4 1]
+        have key : ∀ r : ℕ, r < 4 →
+            ((2 * h0 < funlistV39 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4 r ((r + 1) % 4) ∨
+              2 < funlistV39 [((0, 1), 2 * h0), ((1, 2), 2 * h0), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4 r ((r + 1) % 4)) ↔ r = 0 ∨ r = 1) := by
+          intro r hr
+          interval_cases r <;>
+            simp [funlistV39, psort, assocdV39, two_h0_lt_cstab_p20] <;>
+            norm_num [h0, cstab]
+        rw [key (i % 4) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      simp [Set.ncard_insert_of_notMem, Set.ncard_singleton] <;> omega)
+/-- HOL `SCS_4M7_prime_IS_SCS` (HIJQAHA.hl:1753). DISCHARGED: direct 21-conjunct verification via the `isScs_mkFunlist_p29` skeleton + 16-cell residue sweeps (doubled `(1,3)` b-row verbatim). -/
 theorem SCS_4M7_prime_IS_SCS_p29 : isScsV39 scs4M7Prime_p29 := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC expansion of `scs_4M7_prime`.
-
-/-- HOL `SCS_4M8_IS_SCS` (HIJQAHA.hl:1855). -/
+  refine isScs_mkFunlist_p29 (k := 4) (d := 0.513)
+    (a := funlistV39 [((0, 1), cstab), ((1, 2), 2 * h0), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4)
+    (b := funlistV39 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist4_symm_p29 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39] <;>
+        norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (fun i h => absurd h (by omega))
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 4 1]
+      have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (by
+      have hS : {i | i < 4 ∧ (2 * h0 < funlistV39 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4 i (i + 1) ∨
+          2 < funlistV39 [((0, 1), cstab), ((1, 2), 2 * h0), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4 i (i + 1))} = {0, 1} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+        rw [← funlist_mod_p20 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+          ← funlist_mod_p20 [((0, 1), cstab), ((1, 2), 2 * h0), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4 i (i + 1) (by omega),
+          ← Nat.mod_add_mod i 4 1]
+        have key : ∀ r : ℕ, r < 4 →
+            ((2 * h0 < funlistV39 [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4 r ((r + 1) % 4) ∨
+              2 < funlistV39 [((0, 1), cstab), ((1, 2), 2 * h0), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4 r ((r + 1) % 4)) ↔ r = 0 ∨ r = 1) := by
+          intro r hr
+          interval_cases r <;>
+            simp [funlistV39, psort, assocdV39, two_h0_lt_cstab_p20] <;>
+            norm_num [h0, cstab]
+        rw [key (i % 4) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      simp [Set.ncard_insert_of_notMem, Set.ncard_singleton] <;> omega)
+/-- HOL `SCS_4M8_IS_SCS` (HIJQAHA.hl:1855). DISCHARGED: direct 21-conjunct verification via the `isScs_mkFunlist_p29` skeleton + 16-cell residue sweeps (note the doubled `(1,3)` b-row, verbatim from the source). -/
 theorem SCS_4M8_IS_SCS_p29 : isScsV39 scs4M8 := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC expansion of `scs_4M8`.
-
-/-- HOL `SCS_4M8_prime_IS_SCS` (HIJQAHA.hl:1959). -/
+  refine isScs_mkFunlist_p29 (k := 4) (d := 0.513)
+    (a := funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4)
+    (b := funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist4_symm_p29 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39] <;>
+        norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (fun i h => absurd h (by omega))
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 4 1]
+      have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (by
+      have hS : {i | i < 4 ∧ (2 * h0 < funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4 i (i + 1) ∨
+          2 < funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4 i (i + 1))} = {0, 2} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+        rw [← funlist_mod_p20 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+          ← funlist_mod_p20 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4 i (i + 1) (by omega),
+          ← Nat.mod_add_mod i 4 1]
+        have key : ∀ r : ℕ, r < 4 →
+            ((2 * h0 < funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4 r ((r + 1) % 4) ∨
+              2 < funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4 r ((r + 1) % 4)) ↔ r = 0 ∨ r = 2) := by
+          intro r hr
+          interval_cases r <;>
+            simp [funlistV39, psort, assocdV39, two_h0_lt_cstab_p20] <;>
+            norm_num [h0, cstab]
+        rw [key (i % 4) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      simp [Set.ncard_insert_of_notMem, Set.ncard_singleton] <;> omega)
+/-- HOL `SCS_4M8_prime_IS_SCS` (HIJQAHA.hl:1959). DISCHARGED: direct 21-conjunct verification via the `isScs_mkFunlist_p29` skeleton + 16-cell residue sweeps (doubled `(1,3)` b-row verbatim). -/
 theorem SCS_4M8_prime_IS_SCS_p29 : isScsV39 scs4M8Prime_p29 := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC expansion of `scs_4M8_prime`.
-
+  refine isScs_mkFunlist_p29 (k := 4) (d := 0.513)
+    (a := funlistV39 [((0, 1), 2 * h0), ((2, 3), cstab), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4)
+    (b := funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist4_symm_p29 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39] <;>
+        norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      rintro i j ⟨hik, hjk, hne⟩
+      interval_cases i <;> interval_cases j <;>
+        simp_all [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (fun i h => absurd h (by omega))
+    (fun i _ => by
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+        ← Nat.mod_add_mod i 4 1]
+      have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (by
+      have hS : {i | i < 4 ∧ (2 * h0 < funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4 i (i + 1) ∨
+          2 < funlistV39 [((0, 1), 2 * h0), ((2, 3), cstab), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4 i (i + 1))} = {0, 2} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+        rw [← funlist_mod_p20 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4 i (i + 1) (by omega),
+          ← funlist_mod_p20 [((0, 1), 2 * h0), ((2, 3), cstab), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4 i (i + 1) (by omega),
+          ← Nat.mod_add_mod i 4 1]
+        have key : ∀ r : ℕ, r < 4 →
+            ((2 * h0 < funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6),
+      ((1, 3), 6)] (2 * h0) 4 r ((r + 1) % 4) ∨
+              2 < funlistV39 [((0, 1), 2 * h0), ((2, 3), cstab), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4 r ((r + 1) % 4)) ↔ r = 0 ∨ r = 2) := by
+          intro r hr
+          interval_cases r <;>
+            simp [funlistV39, psort, assocdV39, two_h0_lt_cstab_p20] <;>
+            norm_num [h0, cstab]
+        rw [key (i % 4) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      simp [Set.ncard_insert_of_notMem, Set.ncard_singleton] <;> omega)
 /-! ## Section C2: `scs_basic_v39` (HIJQAHA.hl:2068-2112) -/
 
 /-- HOL `SCS_5M3_BASIC` (HIJQAHA.hl:2068). -/
@@ -857,26 +1645,294 @@ theorem J_SCS_4M8_prime1_p29 (i1 j : ℕ) :
 /-! ## Section D1: diag-stab verifications and `scs_5M3` basics
 (HIJQAHA.hl:2196-2363) -/
 
-/-- HOL `STAB_5I1_SCS` (HIJQAHA.hl:2196). -/
+/-- HOL `STAB_5I1_SCS` (HIJQAHA.hl:2196). DISCHARGED: the LocalAuto20
+`STAB_6I1_SCS` 21-conjunct verification method at `k = 5`: the `csAdj`
+a-table is untouched and the b-table is overridden by `cstab` exactly on the
+`psort`-slot of the diagonal pair `(i, j)`, which no edge pair hits
+(`diag_not_edge_psort_p20`); the `csAdj 5 (2*h0) 6` edge value is `2*h0`
+(`csAdj_adj_p22`), so the edge/card conjuncts survive the override. -/
 theorem STAB_5I1_SCS_p29 (i j : ℕ) : scsDiag scs5I1.k i j →
     isScsV39 (scsStabDiagV39 scs5I1 i j) ∧ scsBasicV39 (scsStabDiagV39 scs5I1 i j) := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC on the `scs_stab_diag_v39` unfolding of
-  -- `scs_5I1` (`cs_adj`/`d_tame` periodicity case work).
+  intro hd
+  have hdd : scsDiag 5 i j := hd
+  have hk1 : (1 : ℕ) < 5 := by norm_num
+  have hE : ∀ p : ℕ, ¬(2 * h0 < (if psort 5 (i, j) = psort 5 (p, p + 1) then cstab
+        else csAdj 5 (2 * h0) 6 p (p + 1)) ∨ 2 < csAdj 5 2 (2 * h0) p (p + 1)) := by
+    intro p h
+    rcases h with hc | hc
+    · rw [csAdj_adj_p22 (by norm_num : (1:ℕ) < 5)] at hc
+      rw [if_neg (diag_not_edge_psort_p20 p hk1 hdd)] at hc
+      exact lt_irrefl (2 * h0) hc
+    · rw [csAdj_adj_p22 (by norm_num : (1:ℕ) < 5)] at hc
+      exact lt_irrefl 2 hc
+  constructor
+  · unfold isScsV39
+    simp only [scsStabDiagV39, mkUnadornedV39, scs5I1]
+    refine ⟨by norm_num [dTame], by norm_num, by norm_num, periodic_empty 5,
+      periodic_empty 5, periodic_empty 5, periodic_empty 5, periodic2_cs_adj_p22,
+      periodic2_cs_adj_p22, ?_, ?_, fun _ _ => ⟨rfl, rfl⟩, ?_, ?_, ?_, ?_, ?_, ?_,
+      fun _ _ hj => False.elim hj, fun _ _ hj => False.elim hj, ?_⟩
+    · intro p q
+      dsimp only
+      have h6 : Periodic2 (csAdj 5 (2 * h0) 6) 5 := periodic2_cs_adj_p22
+      rw [show psort 5 (p + 5, q) = psort 5 (p, q) by simp only [psort, Nat.add_mod_right],
+        h6 p q |>.1,
+        show psort 5 (p, q + 5) = psort 5 (p, q) by simp only [psort, Nat.add_mod_right],
+        h6 p q |>.2]
+      exact ⟨rfl, rfl⟩
+    · intro p q
+      dsimp only
+      have h6 : Periodic2 (csAdj 5 (2 * h0) 6) 5 := periodic2_cs_adj_p22
+      rw [show psort 5 (p + 5, q) = psort 5 (p, q) by simp only [psort, Nat.add_mod_right],
+        h6 p q |>.1,
+        show psort 5 (p, q + 5) = psort 5 (p, q) by simp only [psort, Nat.add_mod_right],
+        h6 p q |>.2]
+      exact ⟨rfl, rfl⟩
+    · intro p q
+      refine ⟨csAdj_swap_p22, csAdj_swap_p22, ?_, ?_⟩
+      · have hps : psort 5 (q, p) = psort 5 (p, q) := psort_swap_p20 5 q p
+        rw [hps, csAdj_swap_p22]
+      · have hps : psort 5 (q, p) = psort 5 (p, q) := psort_swap_p20 5 q p
+        rw [hps, csAdj_swap_p22]
+        exact ⟨rfl, trivial⟩
+    · intro p q
+      refine ⟨le_refl _, ?_, le_refl _⟩
+      show csAdj 5 2 (2 * h0) p q ≤ (if psort 5 (i, j) = psort 5 (p, q) then cstab
+        else csAdj 5 (2 * h0) 6 p q)
+      unfold csAdj
+      split_ifs <;> norm_num [h0, cstab]
+    · intro p
+      simp [csAdj]
+    · intro p q hpq
+      obtain ⟨hp, hq, hne⟩ := hpq
+      have e1 : p % 5 = p := Nat.mod_eq_of_lt hp
+      have e2 : q % 5 = q := Nat.mod_eq_of_lt hq
+      simp only [csAdj, e1, e2]
+      split_ifs with hc
+      · exact absurd (by rw [hc]) hne
+      · norm_num
+      · norm_num [h0]
+    · intro p h3
+      omega
+    · intro p _
+      show (if psort 5 (i, j) = psort 5 (p, p + 1) then cstab
+          else csAdj 5 (2 * h0) 6 p (p + 1)) ≤ cstab
+      rw [if_neg (diag_not_edge_psort_p20 p hk1 hdd)]
+      rw [csAdj_adj_p22 (by norm_num : (1:ℕ) < 5)]
+      exact two_h0_le_cstab_p20
+    · show {p | p < 5 ∧ (2 * h0 < (if psort 5 (i, j) = psort 5 (p, p + 1) then cstab
+            else csAdj 5 (2 * h0) 6 p (p + 1)) ∨
+          2 < csAdj 5 2 (2 * h0) p (p + 1))}.ncard + 5 ≤ 6
+      have hEmp : {p | p < 5 ∧ (2 * h0 < (if psort 5 (i, j) = psort 5 (p, p + 1) then
+            cstab else csAdj 5 (2 * h0) 6 p (p + 1)) ∨
+          2 < csAdj 5 2 (2 * h0) p (p + 1))} = ∅ :=
+        Set.eq_empty_iff_forall_notMem.2 (fun p hp => hE p hp.2)
+      rw [hEmp, Set.ncard_empty]
+      omega
+  · exact ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
 
-/-- HOL `STAB_5I2_SCS` (HIJQAHA.hl:2207). -/
+/-- HOL `STAB_5I2_SCS` (HIJQAHA.hl:2207). DISCHARGED: the `STAB_6I1_SCS`
+method at `k = 5` (see `STAB_5I1_SCS_p29`), with `d = 0.616` and the
+`csAdj 5 2 (Real.sqrt 8)` a-table. -/
 theorem STAB_5I2_SCS_p29 (i j : ℕ) : scsDiag scs5I2.k i j →
     isScsV39 (scsStabDiagV39 scs5I2 i j) ∧ scsBasicV39 (scsStabDiagV39 scs5I2 i j) := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC on the `scs_stab_diag_v39` unfolding of
-  -- `scs_5I2`.
+  intro hd
+  have hdd : scsDiag 5 i j := hd
+  have hk1 : (1 : ℕ) < 5 := by norm_num
+  have hE : ∀ p : ℕ, ¬(2 * h0 < (if psort 5 (i, j) = psort 5 (p, p + 1) then cstab
+        else csAdj 5 (2 * h0) 6 p (p + 1)) ∨ 2 < csAdj 5 2 (Real.sqrt 8) p (p + 1)) := by
+    intro p h
+    rcases h with hc | hc
+    · rw [csAdj_adj_p22 (by norm_num : (1:ℕ) < 5)] at hc
+      rw [if_neg (diag_not_edge_psort_p20 p hk1 hdd)] at hc
+      exact lt_irrefl (2 * h0) hc
+    · rw [csAdj_adj_p22 (by norm_num : (1:ℕ) < 5)] at hc
+      exact lt_irrefl 2 hc
+  constructor
+  · unfold isScsV39
+    simp only [scsStabDiagV39, mkUnadornedV39, scs5I2]
+    refine ⟨by norm_num, by norm_num, by norm_num, periodic_empty 5,
+      periodic_empty 5, periodic_empty 5, periodic_empty 5, periodic2_cs_adj_p22,
+      periodic2_cs_adj_p22, ?_, ?_, fun _ _ => ⟨rfl, rfl⟩, ?_, ?_, ?_, ?_, ?_, ?_,
+      fun _ _ hj => False.elim hj, fun _ _ hj => False.elim hj, ?_⟩
+    · intro p q
+      dsimp only
+      have h6 : Periodic2 (csAdj 5 (2 * h0) 6) 5 := periodic2_cs_adj_p22
+      rw [show psort 5 (p + 5, q) = psort 5 (p, q) by simp only [psort, Nat.add_mod_right],
+        h6 p q |>.1,
+        show psort 5 (p, q + 5) = psort 5 (p, q) by simp only [psort, Nat.add_mod_right],
+        h6 p q |>.2]
+      exact ⟨rfl, rfl⟩
+    · intro p q
+      dsimp only
+      have h6 : Periodic2 (csAdj 5 (2 * h0) 6) 5 := periodic2_cs_adj_p22
+      rw [show psort 5 (p + 5, q) = psort 5 (p, q) by simp only [psort, Nat.add_mod_right],
+        h6 p q |>.1,
+        show psort 5 (p, q + 5) = psort 5 (p, q) by simp only [psort, Nat.add_mod_right],
+        h6 p q |>.2]
+      exact ⟨rfl, rfl⟩
+    · intro p q
+      refine ⟨csAdj_swap_p22, csAdj_swap_p22, ?_, ?_⟩
+      · have hps : psort 5 (q, p) = psort 5 (p, q) := psort_swap_p20 5 q p
+        rw [hps, csAdj_swap_p22]
+      · have hps : psort 5 (q, p) = psort 5 (p, q) := psort_swap_p20 5 q p
+        rw [hps, csAdj_swap_p22]
+        exact ⟨rfl, trivial⟩
+    · intro p q
+      refine ⟨le_refl _, ?_, le_refl _⟩
+      show csAdj 5 2 (Real.sqrt 8) p q ≤ (if psort 5 (i, j) = psort 5 (p, q) then cstab
+        else csAdj 5 (2 * h0) 6 p q)
+      unfold csAdj
+      split_ifs <;>
+        first | exact sqrt8_LE_CSTAB | exact sqrt8_LE_6 | norm_num [h0, cstab]
+    · intro p
+      simp [csAdj]
+    · intro p q hpq
+      obtain ⟨hp, hq, hne⟩ := hpq
+      have e1 : p % 5 = p := Nat.mod_eq_of_lt hp
+      have e2 : q % 5 = q := Nat.mod_eq_of_lt hq
+      simp only [csAdj, e1, e2]
+      split_ifs with hc
+      · exact absurd (by rw [hc]) hne
+      · norm_num
+      · exact LE_sqrt8_2
+    · intro p h3
+      omega
+    · intro p _
+      show (if psort 5 (i, j) = psort 5 (p, p + 1) then cstab
+          else csAdj 5 (2 * h0) 6 p (p + 1)) ≤ cstab
+      rw [if_neg (diag_not_edge_psort_p20 p hk1 hdd)]
+      rw [csAdj_adj_p22 (by norm_num : (1:ℕ) < 5)]
+      exact two_h0_le_cstab_p20
+    · show {p | p < 5 ∧ (2 * h0 < (if psort 5 (i, j) = psort 5 (p, p + 1) then cstab
+            else csAdj 5 (2 * h0) 6 p (p + 1)) ∨
+          2 < csAdj 5 2 (Real.sqrt 8) p (p + 1))}.ncard + 5 ≤ 6
+      have hEmp : {p | p < 5 ∧ (2 * h0 < (if psort 5 (i, j) = psort 5 (p, p + 1) then
+            cstab else csAdj 5 (2 * h0) 6 p (p + 1)) ∨
+          2 < csAdj 5 2 (Real.sqrt 8) p (p + 1))} = ∅ :=
+        Set.eq_empty_iff_forall_notMem.2 (fun p hp => hE p hp.2)
+      rw [hEmp, Set.ncard_empty]
+      omega
+  · exact ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
 
-/-- HOL `STAB_5M3_SCS` (HIJQAHA.hl:2219). -/
+/-- The stabbed `scs_5M3` b-table at an edge pair: the diagonal `psort`-key
+never hits an edge key, so the override is invisible (`diag_not_edge_psort_p20`). -/
+private theorem stab5M3_edge_p29 (i j p : ℕ) (hdd : scsDiag 5 i j) :
+    (if psort 5 (i, j) = psort 5 (p, p + 1) then cstab
+      else funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+        ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 p (p + 1))
+      = funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+        ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 p (p + 1) :=
+  if_neg (diag_not_edge_psort_p20 p (by norm_num) hdd)
+
+/-- HOL `STAB_5M3_SCS` (HIJQAHA.hl:2219). DISCHARGED: direct 21-conjunct
+`is_scs_v39` verification of the stabbed funlist tables — the a-table is the
+`scs_5M3` a-table untouched, the b-table is overridden by `cstab` on the
+`psort`-slot of `(i, j)` only (invisible on edge pairs,
+`stab5M3_edge_p29`), so the residue sweeps are those of the proved
+LocalAuto20 `SCS_5M2_IS_SCS` (identical b-table; a-table `(0,1)` slot
+`2 → 2*h0`). -/
 theorem STAB_5M3_SCS_p29 (i j : ℕ) : scsDiag scs5M3.k i j →
     isScsV39 (scsStabDiagV39 scs5M3 i j) ∧ scsBasicV39 (scsStabDiagV39 scs5M3 i j) := by
-  sorry
-  -- DISCHARGES: HL H_SCS_TAC on the `scs_stab_diag_v39` unfolding of
-  -- `scs_5M3` funlist tables.
+  intro hd
+  have hdd : scsDiag 5 i j := hd
+  have hk1 : (1 : ℕ) < 5 := by norm_num
+  have pa : Periodic2 (funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((0, 3), cstab),
+        ((1, 3), cstab), ((1, 4), cstab), ((2, 4), cstab)] 2 5) 5 :=
+    periodic2_funlist_p20 _ _ _
+  have pb : Periodic2 (funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6),
+        ((1, 3), 6), ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5) 5 :=
+    periodic2_funlist_p20 _ _ _
+  constructor
+  · unfold isScsV39
+    simp only [scsStabDiagV39, mkUnadornedV39, scs5M3]
+    refine ⟨by norm_num, by norm_num, by norm_num, periodic_empty 5, periodic_empty 5,
+      periodic_empty 5, periodic_empty 5, pa, pa, ?_, ?_,
+      fun _ _ => ⟨rfl, rfl⟩, ?_, ?_, ?_, ?_, ?_, ?_,
+      fun _ _ hj => False.elim hj, fun _ _ hj => False.elim hj, ?_⟩
+    · intro p q
+      dsimp only
+      rw [show psort 5 (p + 5, q) = psort 5 (p, q) by simp only [psort, Nat.add_mod_right],
+        pb p q |>.1,
+        show psort 5 (p, q + 5) = psort 5 (p, q) by simp only [psort, Nat.add_mod_right],
+        pb p q |>.2]
+      exact ⟨rfl, rfl⟩
+    · intro p q
+      dsimp only
+      rw [show psort 5 (p + 5, q) = psort 5 (p, q) by simp only [psort, Nat.add_mod_right],
+        pb p q |>.1,
+        show psort 5 (p, q + 5) = psort 5 (p, q) by simp only [psort, Nat.add_mod_right],
+        pb p q |>.2]
+      exact ⟨rfl, rfl⟩
+    · intro p q
+      refine ⟨funlist_symm_p29 _ _ _ _ _, funlist_symm_p29 _ _ _ _ _, ?_, ?_, trivial⟩
+      · have hps : psort 5 (q, p) = psort 5 (p, q) := psort_swap_p20 5 q p
+        rw [hps, funlist_symm_p29]
+      · have hps : psort 5 (q, p) = psort 5 (p, q) := psort_swap_p20 5 q p
+        rw [hps, funlist_symm_p29]
+    · intro p q
+      refine ⟨le_refl _, ?_, le_refl _⟩
+      show funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((0, 3), cstab),
+        ((1, 3), cstab), ((1, 4), cstab), ((2, 4), cstab)] 2 5 p q ≤
+        (if psort 5 (i, j) = psort 5 (p, q) then cstab
+          else funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+            ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 p q)
+      split_ifs
+      all_goals
+        rw [funlist_mod5_p29 [((0, 1), 2 * h0), ((0, 2), cstab), ((0, 3), cstab),
+          ((1, 3), cstab), ((1, 4), cstab), ((2, 4), cstab)] 2 p q]
+        try rw [funlist_mod5_p29 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6),
+          ((1, 3), 6), ((1, 4), 6), ((2, 4), 6)] (2 * h0) p q]
+        rcases penta_p29 p with hp | hp | hp | hp | hp <;>
+        rcases penta_p29 q with hq | hq | hq | hq | hq <;>
+        simp only [hp, hq] <;>
+        simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab]
+    · intro p
+      simp [funlistV39]
+    · intro p q ⟨hp, hq, hne⟩
+      interval_cases p <;> interval_cases q <;>
+        simp_all [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab]
+    · intro p h3
+      omega
+    · intro p hk5
+      rw [stab5M3_edge_p29 i j p hdd,
+        funlist_mod5_p29 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+          ((1, 4), 6), ((2, 4), 6)] (2 * h0) p (p + 1),
+        ← Nat.mod_add_mod p 5 1]
+      have hz : p % 5 < 5 := Nat.mod_lt p (by omega)
+      interval_cases p % 5 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab]
+    · have key : ∀ r : ℕ, r < 5 →
+          ((2 * h0 < funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6),
+                ((1, 3), 6), ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 r ((r + 1) % 5) ∨
+              2 < funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((0, 3), cstab),
+                ((1, 3), cstab), ((1, 4), cstab), ((2, 4), cstab)] 2 5
+                r ((r + 1) % 5)) ↔ r = 0) := by
+        intro r hr
+        interval_cases r <;>
+          simp [funlistV39, psort, assocdV39, two_h0_lt_cstab_p20] <;>
+          norm_num [h0, cstab]
+      have hS : {p | p < 5 ∧ (2 * h0 < (if psort 5 (i, j) = psort 5 (p, p + 1) then
+              cstab else funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6),
+                ((1, 3), 6), ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 p (p + 1)) ∨
+            2 < funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((0, 3), cstab),
+              ((1, 3), cstab), ((1, 4), cstab), ((2, 4), cstab)] 2 5
+              p (p + 1))} = {0} := by
+        ext p
+        simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+        rw [stab5M3_edge_p29 i j p hdd,
+          ← funlist_mod_p20 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+            ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 p (p + 1) (by omega),
+          ← funlist_mod_p20 [((0, 1), 2 * h0), ((0, 2), cstab), ((0, 3), cstab),
+            ((1, 3), cstab), ((1, 4), cstab), ((2, 4), cstab)] 2 5 p (p + 1) (by omega),
+          ← Nat.mod_add_mod p 5 1]
+        rw [key (p % 5) (Nat.mod_lt p (by omega))]
+        omega
+      rw [hS]
+      simp
+      all_goals norm_num
+  · exact ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
 
 /-- HOL `STAB_5M3_SCS` — the SHADOWING DUPLICATE binding (HIJQAHA.hl:2354):
 identical statement re-proved in the source (the second `let` shadows the

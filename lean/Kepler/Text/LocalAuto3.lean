@@ -31,6 +31,11 @@ Encoding notes (per Kepler/Text/Polytope.lean conventions):
   minimal-azimuth choice with norm tiebreak, condition `W SUBSET {p}`);
   `azimCycle_p3` is a verbatim `_p3` copy — NEEDS: move to the fan_defs /
   sphere layer at merge and re-point.
+  DEDUP (atn2-merge pass): the merge landed `Kepler.Text.SphereKit` for the
+  numeric kit only; the localization/fan kit (`EE`, `azim_cycle`,
+  `azim_in_fan`, …) is DEFERRED there (no rendering bridge yet), so
+  `azimCycle_p3`/`EE_p3` stay as the `_p3` lane home and were NOT deleted
+  (no hosted twin in this file; otherwise a no-op pass).
 - Names suffixed `_p3` overlap the localization lane (LocalAuto2 worker owns
   `localization.hl`, whose definitions share these HOL names) or upstream
   files; they are deliberate local copies for independent compilation —

@@ -51,6 +51,18 @@ Encoding (house conventions, cf. LocalAuto24/33):
 - `sorry` bodies carry `-- DISCHARGES:` naming the missing HOL inputs.
   Same-wave files LocalAuto34/35 are NOT imported (any overlap is resolved
   at the merge by deleting twins).
+- FILL LEDGER (proof-fill wave 2): 48 -> 34 sorries. Filled: the 8
+  `SCS_*_IS_TRI_STABLE` (generic cs_adj/a_pro successor-table builders +
+  `torsor_succ_mod_p36`; cstab = 3.01 makes every bound numeric),
+  `IN_NOT_EMPTY_B1_SY_3`, `NOT_COLLINEAR_BBs_CASE_3`,
+  `IN_B_SY1_COLLINEAR_CASE_3`, `TAUSTAR_EQ_TAU_STAR_3` (dTame 3 = 0 +
+  `tau3_cycle_p36`). Remaining 34: `CARD_SLICE_EQ`, `HDPLYGY_CASE_3`,
+  `XWITCCN_CASE_*` (8, blocked by TAUSTAR_* + the B_SY1-minimiser),
+  `TAUSTAR_EQ_TAU_STAR_*` k >= 4 (7, statement doubt ①: s1.d := 0 vs
+  taustarV39's dTame k), the k >= 4 `IN_NOT_EMPTY_CASE/B1_SY` twins (14,
+  blocked by the registry-ConvexLocalFan vs `convexLocalFan_p4` def-bridge
+  — azimCycle_p4 vs sigmaFan; see NEEDS notes), `IN_NOT_EMPTY_CASE_3`
+  (statement doubt ②), `XWITCCN_TYPE`/`XWITCCN`.
 -/
 
 import Kepler.Text.LocalAuto1
@@ -388,16 +400,269 @@ theorem CARD_SLICE_EQ (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3)) (v w
   -- DISCHARGES: HOL Localization `CARD_SLICE_EQ` proof (rhoNode1 walk split
   -- at v, w); NEEDS the slicev card kit + `ConvexLocalFan` nondegeneracy.
 
-/-- HOL `SCS_3_IS_TRI_STABLE` (XWITCCN.hl:356): `3I1` is `tri_stable`. The
-unused HOL reals dummy `scs_d_v39 s` is the `0` of the LocalAuto23 kit. -/
+/-! ### Value-table/case disjunction for `cs_adj` and `a_pro` (def-order
+precedence: diagonal, then `{0,1}` pair, then cyclic adjacency, then far). -/
+
+private theorem csAdj_values_p36 {k : ℕ} {a1 a2 : ℝ} {i j : ℕ} :
+    (i % k = j % k ∧ csAdj k a1 a2 i j = 0) ∨
+      (i % k ≠ j % k ∧ (j % k = (i + 1) % k ∨ (j + 1) % k = i % k) ∧
+        csAdj k a1 a2 i j = a1) ∨
+      (i % k ≠ j % k ∧ ¬(j % k = (i + 1) % k ∨ (j + 1) % k = i % k) ∧
+        csAdj k a1 a2 i j = a2) := by
+  unfold csAdj
+  by_cases h1 : i % k = j % k
+  · exact Or.inl ⟨h1, if_pos h1⟩
+  · rw [if_neg h1]
+    by_cases h2 : j % k = (i + 1) % k ∨ (j + 1) % k = i % k
+    · exact Or.inr (Or.inl ⟨h1, h2, if_pos h2⟩)
+    · exact Or.inr (Or.inr ⟨h1, h2, if_neg h2⟩)
+
+private theorem aPro_values_p36 {k : ℕ} {p a1 a2 : ℝ} {i j : ℕ} :
+    (i % k = j % k ∧ aPro k p a1 a2 i j = 0) ∨
+      (i % k ≠ j % k ∧ ({i % k, j % k} : Set ℕ) = {0, 1} ∧ aPro k p a1 a2 i j = p) ∨
+      (i % k ≠ j % k ∧ ({i % k, j % k} : Set ℕ) ≠ {0, 1} ∧
+        (j % k = (i + 1) % k ∨ (j + 1) % k = i % k) ∧ aPro k p a1 a2 i j = a1) ∨
+      (i % k ≠ j % k ∧ ({i % k, j % k} : Set ℕ) ≠ {0, 1} ∧
+        ¬(j % k = (i + 1) % k ∨ (j + 1) % k = i % k) ∧ aPro k p a1 a2 i j = a2) := by
+  unfold aPro
+  by_cases h1 : i % k = j % k
+  · exact Or.inl ⟨h1, if_pos h1⟩
+  · rw [if_neg h1]
+    by_cases h2 : ({i % k, j % k} : Set ℕ) = {0, 1}
+    · exact Or.inr (Or.inl ⟨h1, h2, if_pos h2⟩)
+    · rw [if_neg h2]
+      by_cases h3 : j % k = (i + 1) % k ∨ (j + 1) % k = i % k
+      · exact Or.inr (Or.inr (Or.inl ⟨h1, h2, h3, if_pos h3⟩))
+      · exact Or.inr (Or.inr (Or.inr ⟨h1, h2, h3, if_neg h3⟩))
+
+private theorem csAdj_diag_p36 {k : ℕ} {a1 a2 : ℝ} (i : ℕ) :
+    csAdj k a1 a2 i i = 0 := by
+  unfold csAdj; exact if_pos rfl
+
+private theorem csAdj_shift_p36 {k : ℕ} {a1 a2 : ℝ} (i j : ℕ) :
+    csAdj k a1 a2 i j = csAdj k a1 a2 i (j % k) := by
+  rw [csAdj_mod_p36 k a1 a2 i j, csAdj_mod_p36 k a1 a2 i (j % k),
+    show (j % k) % k = j % k from Nat.mod_mod j k]
+
+private theorem aPro_diag_p36 {k : ℕ} {p a1 a2 : ℝ} (i : ℕ) :
+    aPro k p a1 a2 i i = 0 := by
+  unfold aPro; exact if_pos rfl
+
+private theorem aPro_shift_p36 {k : ℕ} {p a1 a2 : ℝ} (i j : ℕ) :
+    aPro k p a1 a2 i j = aPro k p a1 a2 i (j % k) := by
+  rw [aPro_mod_p36 k p a1 a2 i j, aPro_mod_p36 k p a1 a2 i (j % k),
+    show (j % k) % k = j % k from Nat.mod_mod j k]
+
+/-- `cs_adj k (2*h0) b2 i ((1+i)%k) = 2*h0`: the successor pair is never
+diagonal and always cyclically adjacent. -/
+private theorem csAdj_fi_p36 {k : ℕ} {b2 : ℝ} (hk : 1 < k) (i : ℕ) :
+    csAdj k (2 * h0) b2 i ((1 + i) % k) = 2 * h0 := by
+  have e1 : ((1 + i) % k) % k = (i + 1) % k := by
+    rw [Nat.mod_mod, Nat.add_comm 1 i]
+  have hne : i % k ≠ ((1 + i) % k) % k := fun he => succ_mod_ne_p36 hk i (he.trans e1)
+  rcases csAdj_values_p36 (k := k) (a1 := 2 * h0) (a2 := b2) (i := i)
+    (j := (1 + i) % k) with h | ⟨-, -, hv⟩ | ⟨-, hneg, -⟩
+  · exact absurd h.1 hne
+  · exact hv
+  · exact absurd (Or.inl e1) hneg
+
+/-- `a_pro k p' a1' a2' i ((1+i)%k)` is `p'` (the `{0,1}` band, only at
+`i % k = 0`) or `a1'` (cyclic adjacency). -/
+private theorem aPro_fi_p36 {k : ℕ} {p' a1' a2' : ℝ} (hk : 1 < k) (i : ℕ) :
+    aPro k p' a1' a2' i ((1 + i) % k) = p' ∨
+      aPro k p' a1' a2' i ((1 + i) % k) = a1' := by
+  have e1 : ((1 + i) % k) % k = (i + 1) % k := by
+    rw [Nat.mod_mod, Nat.add_comm 1 i]
+  have hne : i % k ≠ ((1 + i) % k) % k := fun he => succ_mod_ne_p36 hk i (he.trans e1)
+  rcases aPro_values_p36 (k := k) (p := p') (a1 := a1') (a2 := a2') (i := i)
+    (j := (1 + i) % k) with h | ⟨-, -, hv⟩ | ⟨-, -, -, hv⟩ | ⟨-, -, hneg, -⟩
+  · exact absurd h.1 hne
+  · exact Or.inl hv
+  · exact Or.inr hv
+  · exact absurd (Or.inl e1) hneg
+
+/-! ### Generic stable/tri-stable builders for the successor-cycling
+unadorned systems on `0..k-1` (torsor from `torsor_succ_mod_p36`, `J = ∅`;
+value tables are `cs_adj`/`a_pro` ladders). The `a ≤ b` conjunct is a same
+pair case walk: both tables read the same case, so only the four aligned
+cases occur and the others die on the case witnesses. -/
+
+private theorem constraintSystem_succ_empty_p36 {k : ℕ} (hk3 : 3 ≤ k) (hk6 : k ≤ 6)
+    (aT bT : ℕ → ℕ → ℝ)
+    (hsym : ∀ i j, aT i j = aT j i ∧ bT i j = bT j i ∧ aT i j ≤ bT i j)
+    (hshift : ∀ i j, aT i j = aT i (j % k) ∧ bT i j = bT i (j % k)) :
+    constraintSystem_p23 k 0 (Set.Iic (k - 1)) aT bT ∅ (fun i => (1 + i) % k) := by
+  refine ⟨hk3, hk6, torsor_succ_mod_p36 (k := k) (by omega), ?_, ?_, ?_, ?_⟩
+  · intro i j
+    exact ⟨(hsym i j).1, (hsym i j).2.1, (hsym i j).2.2⟩
+  · intro i j
+    have hfk : (fun i => (1 + i) % k)^[k] j = (j + k) % k :=
+      succModIter_pos_p36 k (by omega) j k (by omega)
+    rw [hfk, Nat.add_mod_right]
+    exact hshift i j
+  · intro e he
+    exact absurd he (by simp)
+  · simpa using hk6
+
+private theorem stableSystem_csAdj_succ_p36 {k : ℕ} (hk3 : 3 ≤ k) (hk6 : k ≤ 6)
+    (a2 b2 : ℝ) (ha2 : 2 ≤ a2) (ha2b2 : a2 ≤ b2) :
+    stableSystem_p23 k 0 (Set.Iic (k - 1)) (csAdj k 2 a2) (csAdj k (2 * h0) b2)
+      ∅ (fun i => (1 + i) % k) := by
+  have hk1 : (1 : ℕ) < k := by have := hk3; omega
+  have hnum : (2 : ℝ) ≤ 2 * h0 := by rw [h0]; norm_num
+  refine ⟨constraintSystem_succ_empty_p36 hk3 hk6 _ _ ?_ ?_, ?_, ?_, ?_⟩
+  · intro i j
+    refine ⟨csAdj_symm_p36, csAdj_symm_p36, ?_⟩
+    rcases csAdj_values_p36 (k := k) (a1 := 2) (a2 := a2) (i := i) (j := j) with
+      h | ⟨hne, hadj, hv⟩ | ⟨hne, hneg, hv⟩
+    · rcases csAdj_values_p36 (k := k) (a1 := 2 * h0) (a2 := b2) (i := i) (j := j) with
+        h' | ⟨hne', -, -⟩ | ⟨hne', -, -⟩
+      · rw [h.2, h'.2]
+      · exact absurd h.1 hne'
+      · exact absurd h.1 hne'
+    · rcases csAdj_values_p36 (k := k) (a1 := 2 * h0) (a2 := b2) (i := i) (j := j) with
+        h' | ⟨hne', hadj', hv'⟩ | ⟨hne', hneg', hv'⟩
+      · exact absurd h'.1 hne
+      · rw [hv, hv']; rw [h0]; norm_num
+      · exact absurd hadj hneg'
+    · rcases csAdj_values_p36 (k := k) (a1 := 2 * h0) (a2 := b2) (i := i) (j := j) with
+        h' | ⟨hne', hadj', hv'⟩ | ⟨hne', hneg', hv'⟩
+      · exact absurd h'.1 hne
+      · exact absurd hadj' hneg
+      · rw [hv, hv']; exact ha2b2
+  · intro i j
+    exact ⟨csAdj_shift_p36 i j, csAdj_shift_p36 i j⟩
+  · intro i hi j hj hne
+    have hik : i < k := by have := Set.mem_Iic.mp hi; omega
+    have hjk : j < k := by have := Set.mem_Iic.mp hj; omega
+    rcases csAdj_values_p36 (k := k) (a1 := 2) (a2 := a2) (i := i) (j := j) with
+      h | ⟨-, -, hv⟩ | ⟨-, -, hv⟩
+    · rw [Nat.mod_eq_of_lt hik, Nat.mod_eq_of_lt hjk] at h; exact absurd h.1 hne
+    · rw [hv]
+    · rw [hv]; exact ha2
+  · intro i _
+    refine ⟨csAdj_diag_p36 i, ?_⟩
+    rw [csAdj_fi_p36 (k := k) (b2 := b2) hk1 i, h0, cstab]
+    norm_num
+  · intro i j hj
+    exact absurd hj (by simp)
+
+private theorem triStable_csAdj_succ_p36 (a2 b2 : ℝ) (ha2 : 2 ≤ a2) (ha2b2 : a2 ≤ b2) :
+    triStable_p23 3 0 (Set.Iic (3 - 1)) (csAdj 3 2 a2) (csAdj 3 (2 * h0) b2)
+      ∅ (fun i => (1 + i) % 3) := by
+  have hk1 : (1 : ℕ) < 3 := by norm_num
+  have hnum : (2 : ℝ) ≤ 2 * h0 := by rw [h0]; norm_num
+  have hk36 : (3 : ℕ) ≤ 6 := by norm_num
+  refine ⟨constraintSystem_succ_empty_p36 (by norm_num : (3:ℕ) ≤ 3)
+    (by norm_num : (3:ℕ) ≤ 6) _ _ ?_ ?_, rfl, ?_, ?_, ?_⟩
+  · intro i j
+    refine ⟨csAdj_symm_p36, csAdj_symm_p36, ?_⟩
+    rcases csAdj_values_p36 (k := 3) (a1 := 2) (a2 := a2) (i := i) (j := j) with
+      h | ⟨hne, hadj, hv⟩ | ⟨hne, hneg, hv⟩
+    · rcases csAdj_values_p36 (k := 3) (a1 := 2 * h0) (a2 := b2) (i := i) (j := j) with
+        h' | ⟨hne', -, -⟩ | ⟨hne', -, -⟩
+      · rw [h.2, h'.2]
+      · exact absurd h.1 hne'
+      · exact absurd h.1 hne'
+    · rcases csAdj_values_p36 (k := 3) (a1 := 2 * h0) (a2 := b2) (i := i) (j := j) with
+        h' | ⟨hne', hadj', hv'⟩ | ⟨hne', hneg', hv'⟩
+      · exact absurd h'.1 hne
+      · rw [hv, hv']; rw [h0]; norm_num
+      · exact absurd hadj hneg'
+    · rcases csAdj_values_p36 (k := 3) (a1 := 2 * h0) (a2 := b2) (i := i) (j := j) with
+        h' | ⟨hne', hadj', hv'⟩ | ⟨hne', hneg', hv'⟩
+      · exact absurd h'.1 hne
+      · exact absurd hadj' hneg
+      · rw [hv, hv']; exact ha2b2
+  · intro i j
+    exact ⟨csAdj_shift_p36 i j, csAdj_shift_p36 i j⟩
+  · intro i hi j hj hne
+    have hik : i < 3 := by have := Set.mem_Iic.mp hi; omega
+    have hjk : j < 3 := by have := Set.mem_Iic.mp hj; omega
+    rcases csAdj_values_p36 (k := 3) (a1 := 2) (a2 := a2) (i := i) (j := j) with
+      h | ⟨-, -, hv⟩ | ⟨-, -, hv⟩
+    · rw [Nat.mod_eq_of_lt hik, Nat.mod_eq_of_lt hjk] at h; exact absurd h.1 hne
+    · rw [hv]
+    · rw [hv]; exact ha2
+  · intro i _
+    refine ⟨csAdj_diag_p36 i, ?_⟩
+    rw [csAdj_fi_p36 (k := 3) (b2 := b2) hk1 i, h0]
+    norm_num
+  · intro i j hj
+    exact absurd hj (by simp)
+
+private theorem stableSystem_aPro_succ_p36 {k : ℕ} (hk3 : 3 ≤ k) (hk6 : k ≤ 6)
+    (p a1 a2 p' a1' a2' : ℝ)
+    (hge_p : 2 ≤ p) (hle_p : p ≤ p') (hge_a1 : 2 ≤ a1) (hle_a1 : a1 ≤ a1')
+    (hle_a2 : a2 ≤ a2') (hbound : p' ≤ cstab ∧ a1' ≤ cstab) (hge_a2 : 2 ≤ a2) :
+    stableSystem_p23 k 0 (Set.Iic (k - 1)) (aPro k p a1 a2) (aPro k p' a1' a2')
+      ∅ (fun i => (1 + i) % k) := by
+  have hk1 : (1 : ℕ) < k := by have := hk3; omega
+  refine ⟨constraintSystem_succ_empty_p36 hk3 hk6 _ _ ?_ ?_, ?_, ?_, ?_⟩
+  · intro i j
+    refine ⟨aPro_symm_p36, aPro_symm_p36, ?_⟩
+    rcases aPro_values_p36 (k := k) (p := p) (a1 := a1) (a2 := a2) (i := i) (j := j) with
+      h | ⟨hne, h01, hv⟩ | ⟨hne, h01, hadj, hv⟩ | ⟨hne, h01, hneg, hv⟩
+    · rcases aPro_values_p36 (k := k) (p := p') (a1 := a1') (a2 := a2') (i := i)
+        (j := j) with h' | ⟨hne', -, -⟩ | ⟨hne', -, -⟩ | ⟨hne', -, -⟩
+      · rw [h.2, h'.2]
+      · exact absurd h.1 hne'
+      · exact absurd h.1 hne'
+      · exact absurd h.1 hne'
+    · rcases aPro_values_p36 (k := k) (p := p') (a1 := a1') (a2 := a2') (i := i)
+        (j := j) with h' | ⟨hne', h01', hv'⟩ | ⟨hne', h01', hadj', hv'⟩ |
+        ⟨hne', h01', hneg', hv'⟩
+      · exact absurd h'.1 hne
+      · rw [hv, hv']; exact hle_p
+      · exact absurd h01 h01'
+      · exact absurd h01 h01'
+    · rcases aPro_values_p36 (k := k) (p := p') (a1 := a1') (a2 := a2') (i := i)
+        (j := j) with h' | ⟨hne', h01', hv'⟩ | ⟨hne', h01', hadj', hv'⟩ |
+        ⟨hne', h01', hneg', hv'⟩
+      · exact absurd h'.1 hne
+      · exact absurd h01' h01
+      · rw [hv, hv']; exact hle_a1
+      · exact absurd hadj hneg'
+    · rcases aPro_values_p36 (k := k) (p := p') (a1 := a1') (a2 := a2') (i := i)
+        (j := j) with h' | ⟨hne', h01', hv'⟩ | ⟨hne', h01', hadj', hv'⟩ |
+        ⟨hne', h01', hneg', hv'⟩
+      · exact absurd h'.1 hne
+      · exact absurd h01' h01
+      · exact absurd hadj' hneg
+      · rw [hv, hv']; exact hle_a2
+  · intro i j
+    exact ⟨aPro_shift_p36 i j, aPro_shift_p36 i j⟩
+  · intro i hi j hj hne
+    have hik : i < k := by have := Set.mem_Iic.mp hi; omega
+    have hjk : j < k := by have := Set.mem_Iic.mp hj; omega
+    rcases aPro_values_p36 (k := k) (p := p) (a1 := a1) (a2 := a2) (i := i) (j := j) with
+      h | ⟨-, -, hv⟩ | ⟨-, -, -, hv⟩ | ⟨-, -, -, hv⟩
+    · rw [Nat.mod_eq_of_lt hik, Nat.mod_eq_of_lt hjk] at h; exact absurd h.1 hne
+    · rw [hv]; exact hge_p
+    · rw [hv]; exact hge_a1
+    · rw [hv]; exact hge_a2
+  · intro i _
+    refine ⟨aPro_diag_p36 i, ?_⟩
+    rcases aPro_fi_p36 (k := k) (p' := p') (a1' := a1') (a2' := a2') hk1 i with hv | hv
+    · rw [hv]; exact hbound.1
+    · rw [hv]; exact hbound.2
+  · intro i j hj
+    exact absurd hj (by simp)
+
 theorem SCS_3_IS_TRI_STABLE (s : ScsV39)
     (hs : s = mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6)) :
     triStable_p23 s.k 0 (Set.Iic (s.k - 1))
       (fun i j => change_type_v3 s.a (i, j)) (fun i j => change_type_v3 s.b (i, j))
       (change_type_v2 s.J s.k) (fun i => (1 + i) % s.k) := by
-  sorry
-  -- DISCHARGES: IS_SCS_TRI_STABLE_SYSTEM_p23 at `hs` + change_type_v2_eq +
-  -- the `cs_adj 3 2 (2*h0)` / `cs_adj 3 (2*h0) 6` bound ladder.
+  have hk : s.k = 3 := by rw [hs]; rfl
+  have ha : s.a = csAdj 3 2 (2 * h0) := by rw [hs]; rfl
+  have hb : s.b = csAdj 3 (2 * h0) 6 := by rw [hs]; rfl
+  have hJ : change_type_v2 s.J 3 = ∅ := by
+    rw [hs]; exact change_type_v2_mkUnadorned_p36 _ _ _
+  rw [hk, ha, hb, hJ]
+  simpa only [change_type_v3] using
+    triStable_csAdj_succ_p36 (a2 := 2 * h0) (b2 := 6)
+      (by rw [h0]; norm_num) (by rw [h0]; norm_num)
 
 /-- HOL `ROW_IN_BALL_ANNULUS_3` (XWITCCN.hl:1303) as a lemma: the
 `fun th -> ...` tactic proves `vv th IN ball_annulus` from `IMAGE vv (:num)
@@ -433,6 +698,10 @@ theorem IN_NOT_EMPTY_CASE_3 (s : ScsV39) (vv : ℕ → V3)
   -- DISCHARGES: BBsV39 unpack (annulus rows via ROW_IN_BALL_ANNULUS_3 /
   -- VECTOR_3_3, CONDITION1 via the cs_adj ladder, fan conjunct vacuous at
   -- k = 3) with witness `flattenRow_p23 vv 3`.
+  -- NEEDS (statement doubt, cf. HANDOFF ②): the B_SY1_p4 body requires
+  -- CONDITION2_SY_p4 (a convex local fan), but BBsV39 at k = 3 gives only the
+  -- vacuous left fan disjunct (s.k ≤ 3); the HOL k = 3 body has no CONDITION2.
+  -- Should be re-stated against a CONDITION2-free body (LA24 rendering).
 
 /-- HOL `NOT_EMPTY_CASE_3` (XWITCCN.hl:1383). -/
 theorem NOT_EMPTY_CASE_3 (s : ScsV39) (vv : ℕ → V3)
@@ -472,6 +741,111 @@ theorem PROVE_INEQUALITY_TAC_3 (s : ScsV39) (vv : ℕ → V3) (hBB : BBsV39 s vv
     (i j : ℕ) : s.a i j ≤ dist (vv i) (vv j) ∧ dist (vv i) (vv j) ≤ s.b i j :=
   PROVE_INEQUALITY_TAC_30 s vv hBB i j
 
+/-! ### Annulus-norm/collinearity kit for the k = 3 case machine (a pair of
+annulus points at table distance `2..2*h0` is never collinear with `0`). -/
+
+private theorem ballAnnulus_norm_p36 {x : V3} (hx : x ∈ ballAnnulus) :
+    (2 : ℝ) ≤ ‖x‖ ∧ ‖x‖ ≤ 2 * h0 := by
+  unfold ballAnnulus at hx
+  obtain ⟨hcb, hnb⟩ := hx
+  have h1 : dist x (0 : V3) ≤ 2 * h0 := hcb
+  have h2 : ¬ dist x (0 : V3) < 2 := fun hd => hnb (Metric.mem_ball.mpr hd)
+  rw [dist_zero_right] at h1 h2
+  exact ⟨le_of_not_gt h2, h1⟩
+
+private theorem notCollinear_annulus_pair_p36 {p q : V3} (hp : p ∈ ballAnnulus)
+    (hq : q ∈ ballAnnulus) (hlo : (2 : ℝ) ≤ dist p q) (hhi : dist p q ≤ 2 * h0) :
+    ¬ Collinear ℝ ({0, p, q} : Set V3) := by
+  intro hcol
+  obtain ⟨p0, w, hw⟩ := (collinear_iff_exists_forall_eq_smul_vadd _).mp hcol
+  obtain ⟨r0, hr0⟩ := hw 0 (by simp)
+  obtain ⟨r1, hr1⟩ := hw p (by simp)
+  obtain ⟨r2, hr2⟩ := hw q (by simp)
+  have hp0 : p ≠ 0 := fun he => ballAnnulus_ne_0_p23 _ hp he
+  simp only [vadd_eq_add] at hr0 hr1 hr2
+  have hp0neg : p0 = -(r0 • w) := by
+    have h := eq_neg_of_add_eq_zero_left hr0.symm
+    calc p0 = -(-p0) := (neg_neg p0).symm
+      _ = -(r0 • w) := by rw [h]
+  have hc1 : p = (r1 - r0) • w := by rw [hr1, hp0neg]; module
+  have hc2 : q = (r2 - r0) • w := by rw [hr2, hp0neg]; module
+  have hc10 : r1 - r0 ≠ 0 := by
+    intro he
+    rw [hc1, he, zero_smul] at hp0
+    exact hp0 rfl
+  have hvdef : w = (r1 - r0)⁻¹ • p := by
+    rw [hc1, inv_smul_smul₀ hc10]
+  have hqeq : q = ((r2 - r0) / (r1 - r0)) • p := by
+    rw [hc2, hvdef, smul_smul, div_eq_inv_mul, mul_comm]
+  obtain ⟨hplo, hphi⟩ := ballAnnulus_norm_p36 hp
+  obtain ⟨hqlo, hqhi⟩ := ballAnnulus_norm_p36 hq
+  simp only [h0] at hphi hqhi hhi
+  set t := (r2 - r0) / (r1 - r0) with ht
+  have hnormq : ‖q‖ = |t| * ‖p‖ := by
+    rw [hqeq, norm_smul, Real.norm_eq_abs]
+  have hsub : p - t • p = (1 - t) • p := by module
+  have hd : dist p q = |1 - t| * ‖p‖ := by
+    rw [dist_eq_norm, hqeq, hsub, norm_smul, Real.norm_eq_abs]
+  have habst : |t| = t ∨ |t| = -t := by
+    rcases le_or_gt 0 t with h | h
+    · exact Or.inl (abs_of_nonneg h)
+    · exact Or.inr (abs_of_neg h)
+  have habs1 : |1 - t| = 1 - t ∨ |1 - t| = t - 1 := by
+    rcases le_or_gt t 1 with h | h
+    · exact Or.inl (by rw [abs_of_nonneg (by linarith : (0 : ℝ) ≤ 1 - t)])
+    · exact Or.inr (by rw [abs_of_neg (by linarith : (1 : ℝ) - t < 0)]; ring)
+  rcases habst with h2 | h2
+  · rw [h2] at hnormq
+    rcases habs1 with h1 | h1
+    · rw [h1] at hd
+      have hsum : dist p q + ‖q‖ = ‖p‖ := by rw [hd, hnormq]; ring
+      linarith
+    · rw [h1] at hd
+      have hsum : dist p q + ‖p‖ = ‖q‖ := by rw [hd, hnormq]; ring
+      linarith
+  · rw [h2] at hnormq
+    rcases habs1 with h1 | h1
+    · rw [h1] at hd
+      have hsum : dist p q = ‖p‖ + ‖q‖ := by rw [hd, hnormq]; ring
+      linarith
+    · rw [h1] at hd
+      have hsum : dist p q + ‖p‖ + ‖q‖ = (0 : ℝ) := by rw [hd, hnormq]; ring
+      linarith
+
+/-- `tau3` is cyclically invariant (verbatim twin of LocalAuto12's private
+`tau3_cycle`, re-derived here because that lane keeps it `private`). -/
+private theorem tau3_cycle_p36 (a b c : V3) : tau3 a b c = tau3 b c a := by
+  unfold tau3
+  ring
+
+/-- The `B_SY1_p4` flattening map at `m = 3` (verbatim body copy of the
+anonymous lambda in `LocalAuto4.B_SY1_p4`'s image). -/
+private def bFlat3_p36 (v : Fin 3 → V3) : FinVec 3 3 :=
+  fun i : Fin (3 * 3) =>
+    (v ⟨(i : ℕ) / 3, (Nat.div_lt_iff_lt_mul (k := 3) (by norm_num)).mpr i.isLt⟩ :
+          Fin 3 → ℝ) ⟨(i : ℕ) % 3, Nat.mod_lt (i : ℕ) (by norm_num : 0 < 3)⟩
+
+private theorem rowSy_bFlat3_p36 (v : Fin 3 → V3) (i : Fin 3) :
+    rowSy_p23 (bFlat3_p36 v) i = v i := by
+  have hv : vecmats_p4 (bFlat3_p36 v) ⟨(i : ℕ), i.isLt⟩ = (v i : Fin 3 → ℝ) := by
+    funext k
+    simp only [vecmats_p4, bFlat3_p36]
+    have hX : (finProdEquiv 3 3 (⟨(i : ℕ), i.isLt⟩, k) : ℕ) = (i : ℕ) * 3 + (k : ℕ) :=
+      finProdEquiv_val _ _
+    have hlt : (finProdEquiv 3 3 (⟨(i : ℕ), i.isLt⟩, k) : ℕ) < 3 * 3 := by rw [hX]; omega
+    have hdiv : (finProdEquiv 3 3 (⟨(i : ℕ), i.isLt⟩, k) : ℕ) / 3 = (i : ℕ) := by
+      rw [hX]; omega
+    have hmod : (finProdEquiv 3 3 (⟨(i : ℕ), i.isLt⟩, k) : ℕ) % 3 = (k : ℕ) := by
+      rw [hX]; omega
+    have eA : (⟨(finProdEquiv 3 3 (⟨(i : ℕ), i.isLt⟩, k) : ℕ) / 3,
+        Nat.div_lt_iff_lt_mul (k := 3) (by norm_num) |>.mpr hlt⟩ : Fin 3) = i :=
+      Fin.ext hdiv
+    have eB : (⟨(finProdEquiv 3 3 (⟨(i : ℕ), i.isLt⟩, k) : ℕ) % 3,
+        Nat.mod_lt _ (by norm_num : (0 : ℕ) < 3)⟩ : Fin 3) = k :=
+      Fin.ext hmod
+    rw [eA, eB]
+  rw [rowSy_p23, dif_pos i.isLt, vecmatsV3_p4, hv, WithLp.toLp_ofLp]
+
 /-- HOL `IN_NOT_EMPTY_B1_SY_3` (XWITCCN.hl:1470): the row-decoding converse.
 The HOL hypothesis `!i. vv i = if i MOD k = 0 then row 3 v else if ...`
 is carried as `Periodic vv 3` plus the body conditions on `cycRow_p23 vv 3`
@@ -485,9 +859,49 @@ theorem IN_NOT_EMPTY_B1_SY_3 (s : ScsV39) (vv : ℕ → V3)
       (fun (i j : Fin 3) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
       (cycRow_p23 vv 3)) :
     BBsV39 s vv := by
-  sorry
-  -- DISCHARGES: BBsV39 conjunct walk — annulus range lifted by periodicity,
-  -- the cs_adj bound ladder, `s.k ≤ 3` fan-conjunct disjunct (left).
+  subst hs
+  have hdisj : (mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0))
+      (csAdj 3 (2 * h0) 6)).k ≤ 3 := by
+    simp only [mkUnadornedV39]; exact le_refl 3
+  refine ⟨?_, hper, ?_, Or.inl hdisj⟩
+  · rintro _ ⟨n, rfl⟩
+    rw [← periodic_mod_eq_p23 hper n]
+    have hrow : cycRow_p23 vv 3 ⟨(n % 3 + 2) % 3, by omega⟩ = vv (n % 3) := by
+      show vv ((((n % 3 + 2) % 3 + 1) % 3 : ℕ)) = vv (n % 3)
+      rw [show (((n % 3 + 2) % 3 + 1) % 3 : ℕ) = n % 3 by omega]
+    rw [← hrow]
+    exact hball ⟨(n % 3 + 2) % 3, by omega⟩
+  · intro i j
+    have e1 : (((i % 3 + 2) % 3 + 1) % 3 : ℕ) = i % 3 := by omega
+    have e2 : (((j % 3 + 2) % 3 + 1) % 3 : ℕ) = j % 3 := by omega
+    have hi3 : (i % 3 + 2) % 3 < 3 := by omega
+    have hj3 : (j % 3 + 2) % 3 < 3 := by omega
+    obtain ⟨hc1, hc2⟩ := hC1 ⟨(i % 3 + 2) % 3, hi3⟩ ⟨(j % 3 + 2) % 3, hj3⟩
+    simp only [change_type_v3] at hc1 hc2
+    have hri : cycRow_p23 vv 3 ⟨(i % 3 + 2) % 3, hi3⟩ = vv (i % 3) := by
+      show vv ((((i % 3 + 2) % 3 + 1) % 3 : ℕ)) = vv (i % 3)
+      rw [e1]
+    have hqi : cycRow_p23 vv 3 ⟨(j % 3 + 2) % 3, hj3⟩ = vv (j % 3) := by
+      show vv ((((j % 3 + 2) % 3 + 1) % 3 : ℕ)) = vv (j % 3)
+      rw [e2]
+    rw [hri, hqi] at hc1 hc2
+    rw [← periodic_mod_eq_p23 hper i, ← periodic_mod_eq_p23 hper j, dist_eq_norm]
+    have hL : csAdj 3 2 (2 * h0) ((i % 3 + 2) % 3 + 1) ((j % 3 + 2) % 3 + 1)
+        = csAdj 3 2 (2 * h0) (i % 3) (j % 3) := by
+      rw [csAdj_mod_p36 3 2 (2 * h0), e1, e2]
+    have hR : csAdj 3 (2 * h0) 6 ((i % 3 + 2) % 3 + 1) ((j % 3 + 2) % 3 + 1)
+        = csAdj 3 (2 * h0) 6 (i % 3) (j % 3) := by
+      rw [csAdj_mod_p36 3 (2 * h0) 6, e1, e2]
+    simp only [mkUnadornedV39] at hc1 hc2
+    rw [hL] at hc1
+    rw [hR] at hc2
+    refine ⟨?_, ?_⟩
+    · simp only [mkUnadornedV39]
+      rw [csAdj_mod_p36 3 2 (2 * h0) i j]
+      exact hc1
+    · simp only [mkUnadornedV39]
+      rw [csAdj_mod_p36 3 (2 * h0) 6 i j]
+      exact hc2
 
 /-- HOL `TRI_STABLE_K_EQ_3` (XWITCCN.hl:1554). -/
 theorem TRI_STABLE_K_EQ_3 {k : ℕ} {a b : ℕ → ℕ → ℝ} {J : Set (Set ℕ)}
@@ -508,9 +922,16 @@ theorem NOT_COLLINEAR_BBs_CASE_3 (s : ScsV39) (vv : ℕ → V3)
     (hBB : BBsV39 s vv) :
     ¬Collinear ℝ {0, vv 1, vv 2} ∧ ¬Collinear ℝ {0, vv 1, vv 0} ∧
       ¬Collinear ℝ {0, vv 2, vv 0} := by
-  sorry
-  -- DISCHARGES: BBsV39 annulus bounds + the `dist ≥ 2` lower bound pair
-  -- check on {vv i, vv j} (HOL case machine, 400 ln).
+  subst hs
+  have hb := hBB.2.2.1
+  simp only [mkUnadornedV39, csAdj] at hb
+  exact ⟨
+    notCollinear_annulus_pair_p36 (hBB.1 (Set.mem_range_self 1))
+      (hBB.1 (Set.mem_range_self 2)) (hb 1 2).1 (hb 1 2).2,
+    notCollinear_annulus_pair_p36 (hBB.1 (Set.mem_range_self 1))
+      (hBB.1 (Set.mem_range_self 0)) (hb 1 0).1 (hb 1 0).2,
+    notCollinear_annulus_pair_p36 (hBB.1 (Set.mem_range_self 2))
+      (hBB.1 (Set.mem_range_self 0)) (hb 2 0).1 (hb 2 0).2⟩
 
 /-- HOL `IN_B_SY1_COLLINEAR_CASE_3` (XWITCCN.hl:2027). -/
 theorem IN_B_SY1_COLLINEAR_CASE_3 (s : ScsV39)
@@ -522,9 +943,40 @@ theorem IN_B_SY1_COLLINEAR_CASE_3 (s : ScsV39)
       ¬Collinear ℝ {0, rowSy_p23 l 0, rowSy_p23 l 1} ∧
       ¬Collinear ℝ {0, rowSy_p23 l 0, rowSy_p23 l 2} ∧
       ¬Collinear ℝ {0, rowSy_p23 l 1, rowSy_p23 l 2} := by
-  sorry
-  -- DISCHARGES: NOT_COLLINEAR_BBs_CASE_3 transported along the
-  -- cycRow/flattenRow correspondence (`vecmats` rows).
+  subst hs
+  intro l hl
+  simp only [B_SY1_p4, Set.mem_image, Set.mem_setOf_eq] at hl
+  obtain ⟨v, ⟨hvball, hvC1, -⟩, hvfl⟩ := hl
+  subst hvfl
+  have b0 := hvball ⟨0, by norm_num⟩
+  have b1 := hvball ⟨1, by norm_num⟩
+  have b2 := hvball ⟨2, by norm_num⟩
+  have h01 := hvC1 ⟨0, by norm_num⟩ ⟨1, by norm_num⟩
+  have h02 := hvC1 ⟨0, by norm_num⟩ ⟨2, by norm_num⟩
+  have h12 := hvC1 ⟨1, by norm_num⟩ ⟨2, by norm_num⟩
+  simp only [change_type_v3, mkUnadornedV39, csAdj] at h01 h02 h12
+  have d01 : (2 : ℝ) ≤ dist (v ⟨0, by norm_num⟩) (v ⟨1, by norm_num⟩) ∧
+      dist (v ⟨0, by norm_num⟩) (v ⟨1, by norm_num⟩) ≤ 2 * h0 :=
+    ⟨by rw [dist_eq_norm]; exact h01.1, by rw [dist_eq_norm]; exact h01.2⟩
+  have d02 : (2 : ℝ) ≤ dist (v ⟨0, by norm_num⟩) (v ⟨2, by norm_num⟩) ∧
+      dist (v ⟨0, by norm_num⟩) (v ⟨2, by norm_num⟩) ≤ 2 * h0 :=
+    ⟨by rw [dist_eq_norm]; exact h02.1, by rw [dist_eq_norm]; exact h02.2⟩
+  have d12 : (2 : ℝ) ≤ dist (v ⟨1, by norm_num⟩) (v ⟨2, by norm_num⟩) ∧
+      dist (v ⟨1, by norm_num⟩) (v ⟨2, by norm_num⟩) ≤ 2 * h0 :=
+    ⟨by rw [dist_eq_norm]; exact h12.1, by rw [dist_eq_norm]; exact h12.2⟩
+  refine ⟨?_, ?_, ?_⟩
+  · show ¬Collinear ℝ ({0, rowSy_p23 (bFlat3_p36 v) (0 : ℕ),
+      rowSy_p23 (bFlat3_p36 v) (1 : ℕ)} : Set V3)
+    rw [rowSy_bFlat3_p36 v ⟨0, by norm_num⟩, rowSy_bFlat3_p36 v ⟨1, by norm_num⟩]
+    exact notCollinear_annulus_pair_p36 b0 b1 d01.1 d01.2
+  · show ¬Collinear ℝ ({0, rowSy_p23 (bFlat3_p36 v) (0 : ℕ),
+      rowSy_p23 (bFlat3_p36 v) (2 : ℕ)} : Set V3)
+    rw [rowSy_bFlat3_p36 v ⟨0, by norm_num⟩, rowSy_bFlat3_p36 v ⟨2, by norm_num⟩]
+    exact notCollinear_annulus_pair_p36 b0 b2 d02.1 d02.2
+  · show ¬Collinear ℝ ({0, rowSy_p23 (bFlat3_p36 v) (1 : ℕ),
+      rowSy_p23 (bFlat3_p36 v) (2 : ℕ)} : Set V3)
+    rw [rowSy_bFlat3_p36 v ⟨1, by norm_num⟩, rowSy_bFlat3_p36 v ⟨2, by norm_num⟩]
+    exact notCollinear_annulus_pair_p36 b1 b2 d12.1 d12.2
 
 /-- HOL `HDPLYGY_CASE_3` (XWITCCN.hl:2098): the `B_SY1` minimiser. -/
 theorem HDPLYGY_CASE_3 (k : ℕ) (a b : ℕ → ℕ → ℝ) (J : Set (Set ℕ))
@@ -554,8 +1006,14 @@ theorem TAUSTAR_EQ_TAU_STAR_3 (s : ScsV39) (vv : ℕ → V3)
     (hs : s = mkUnadornedV39 3 (dTame 3) (csAdj 3 2 (2 * h0)) (csAdj 3 (2 * h0) 6))
     (hBB : BBsV39 s vv) :
     taustarV39 s vv = tau3 (vv 1) (vv 2) (vv 0) := by
-  sorry
-  -- DISCHARGES: taustarV39 `k ≤ 3` branch + dsvV39 J-empty (mkUnadornedV39).
+  have hk : s.k = 3 := by rw [hs]; rfl
+  have hd : s.d = dTame 3 := by rw [hs]; rfl
+  have hJ : s.J = fun _ _ => False := by rw [hs]; rfl
+  unfold taustarV39
+  rw [hk, if_pos (le_refl 3), dsv_J_empty s vv hJ, hd]
+  have hd3 : dTame 3 = 0 := by unfold dTame; rfl
+  rw [hd3, sub_zero]
+  exact tau3_cycle_p36 (vv 0) (vv 1) (vv 2)
 
 /-- HOL `XWITCCN_CASE_3` (XWITCCN.hl:2322). -/
 theorem XWITCCN_CASE_3 (s : ScsV39) (vv : ℕ → V3)
@@ -644,6 +1102,11 @@ theorem IN_NOT_EMPTY_CASE_4 (s : ScsV39) (vv : ℕ → V3)
   -- DISCHARGES: BBsV39 unpack — annulus rows via IN_BALL_ANNULUS_ROW_TAC_4 /
   -- VECTOR_3_4, CONDITION1 via the cs_adj ladder, CONDITION2 via
   -- V_E_FF_CASE_4 (fan conjunct of BBsV39).
+  -- NEEDS (family blocker for all k ≥ 4 IN_NOT_EMPTY_CASE/B1_SY twins): the
+  -- registry `ConvexLocalFan` (LA1: sigmaFan/ee/wedgeGe vocabulary) vs the
+  -- `_p4` `convexLocalFan_p4` (LA4: azimCycle_p4/EE_p4/wedgeGe_p4) def-bridge:
+  -- azimCycle_p4 (EE_p4 v E) 0 v u = sigmaFan 0 Set.univ E v u (fan-hypothetic),
+  -- wedgeGe_p4 = wedgeGe, EE_p4 = ee, plus localFan_p4 → LocalFan(=True).
 
 /-- HOL `NOT_EMPTY_CASE_4` (XWITCCN.hl:2737). -/
 theorem NOT_EMPTY_CASE_4 (s : ScsV39) (vv : ℕ → V3)
@@ -671,6 +1134,11 @@ theorem TAUSTAR_EQ_TAU_STAR_4 (s : ScsV39) (s1 : StableSyP23) (vv : ℕ → V3)
   sorry
   -- DISCHARGES: taustarV39 `k > 3` branch (tauFun over V/E/F from
   -- V_E_FF_CASE_4) + dFun J-empty (mkUnadornedV39) + stable_sy_explicit.
+  -- NEEDS (statement doubt, cf. HANDOFF ①): as ported, s1 = scsToStableSy_p23 s
+  -- carries d = 0, so tauStar_p23 s1 l = tauFun(...) - 0, while taustarV39 s vv
+  -- = tauFun(...) - dTame k (≠ 0 for k ≥ 4). The HOL source fixes
+  -- s1.d := scs_d_v39 s; the Lean statement needs s1.d := dTame k before it is
+  -- provable. Statement left untouched here; same for all k ≥ 4 TAUSTAR twins.
 
 /-- HOL `VV_IN_BALL_ANNULUS_TAC_4` (XWITCCN.hl:2836) as a lemma. -/
 theorem VV_IN_BALL_ANNULUS_TAC_4 (vv : ℕ → V3) (hsub : Set.range vv ⊆ ballAnnulus)
@@ -910,15 +1378,34 @@ theorem XWITCCN_CASE_5 (s : ScsV39) (vv : ℕ → V3)
 /-! ## Section 3.5: the remaining `IS_TRI_STABLE` statements (source lines
 471-1270, grouped; each is the k-wise twin of `SCS_3_IS_TRI_STABLE`) -/
 
+/- Numeric yardsticks of the eight concrete tables (h0 = 1.26, cstab = 3.01). -/
+private theorem two_le_2h0_p36 : (2 : ℝ) ≤ 2 * h0 := by rw [h0]; norm_num
+private theorem twoh0_le_cstab_p36 : 2 * h0 ≤ cstab := by rw [h0, cstab]; norm_num
+private theorem twoh0_le_six_p36 : 2 * h0 ≤ 6 := by rw [h0]; norm_num
+private theorem two_le_sqrt8_p36 : (2 : ℝ) ≤ Real.sqrt 8 :=
+  (Real.le_sqrt (by norm_num) (by norm_num)).mpr (by norm_num)
+private theorem sqrt8_le_six_p36 : Real.sqrt 8 ≤ 6 :=
+  (Real.sqrt_le_iff).mpr ⟨by norm_num, by norm_num⟩
+private theorem sqrt8_le_cstab_p36 : Real.sqrt 8 ≤ cstab := by
+  rw [cstab]; exact (Real.sqrt_le_iff).mpr ⟨by norm_num, by norm_num⟩
+private theorem twoh0_le_sqrt8_p36 : 2 * h0 ≤ Real.sqrt 8 := by
+  rw [h0]; exact (Real.le_sqrt (by norm_num) (by norm_num)).mpr (by norm_num)
+
 /-- HOL `SCS_4_IS_TRI_STABLE` (XWITCCN.hl:471): `4I1` is `stable_system`. -/
 theorem SCS_4_IS_TRI_STABLE (s : ScsV39)
     (hs : s = mkUnadornedV39 4 (dTame 4) (csAdj 4 2 (2 * h0)) (csAdj 4 (2 * h0) 6)) :
     stableSystem_p23 s.k 0 (Set.Iic (s.k - 1))
       (fun i j => change_type_v3 s.a (i, j)) (fun i j => change_type_v3 s.b (i, j))
       (change_type_v2 s.J s.k) (fun i => (1 + i) % s.k) := by
-  sorry
-  -- DISCHARGES: IS_SCS_STABLE_SYSTEM_p23 at `hs` + change_type_v2_eq +
-  -- the cs_adj bound ladder.
+  have hk : s.k = 4 := by rw [hs]; rfl
+  have ha : s.a = csAdj 4 2 (2 * h0) := by rw [hs]; rfl
+  have hb : s.b = csAdj 4 (2 * h0) 6 := by rw [hs]; rfl
+  have hJ : change_type_v2 s.J 4 = ∅ := by
+    rw [hs]; exact change_type_v2_mkUnadorned_p36 _ _ _
+  rw [hk, ha, hb, hJ]
+  simpa only [change_type_v3] using
+    stableSystem_csAdj_succ_p36 (k := 4) (by norm_num) (by norm_num) (2 * h0) 6
+      two_le_2h0_p36 (by rw [h0]; norm_num)
 
 /-- HOL `SCS_5_IS_TRI_STABLE` (XWITCCN.hl:577). -/
 theorem SCS_5_IS_TRI_STABLE (s : ScsV39)
@@ -926,8 +1413,15 @@ theorem SCS_5_IS_TRI_STABLE (s : ScsV39)
     stableSystem_p23 s.k 0 (Set.Iic (s.k - 1))
       (fun i j => change_type_v3 s.a (i, j)) (fun i j => change_type_v3 s.b (i, j))
       (change_type_v2 s.J s.k) (fun i => (1 + i) % s.k) := by
-  sorry
-  -- DISCHARGES: as SCS_4_IS_TRI_STABLE at k = 5.
+  have hk : s.k = 5 := by rw [hs]; rfl
+  have ha : s.a = csAdj 5 2 (2 * h0) := by rw [hs]; rfl
+  have hb : s.b = csAdj 5 (2 * h0) 6 := by rw [hs]; rfl
+  have hJ : change_type_v2 s.J 5 = ∅ := by
+    rw [hs]; exact change_type_v2_mkUnadorned_p36 _ _ _
+  rw [hk, ha, hb, hJ]
+  simpa only [change_type_v3] using
+    stableSystem_csAdj_succ_p36 (k := 5) (by norm_num) (by norm_num) (2 * h0) 6
+      two_le_2h0_p36 (by rw [h0]; norm_num)
 
 /-- HOL `SCS_6_IS_TRI_STABLE` (XWITCCN.hl:685). -/
 theorem SCS_6_IS_TRI_STABLE (s : ScsV39)
@@ -935,8 +1429,15 @@ theorem SCS_6_IS_TRI_STABLE (s : ScsV39)
     stableSystem_p23 s.k 0 (Set.Iic (s.k - 1))
       (fun i j => change_type_v3 s.a (i, j)) (fun i j => change_type_v3 s.b (i, j))
       (change_type_v2 s.J s.k) (fun i => (1 + i) % s.k) := by
-  sorry
-  -- DISCHARGES: as SCS_4_IS_TRI_STABLE at k = 6.
+  have hk : s.k = 6 := by rw [hs]; rfl
+  have ha : s.a = csAdj 6 2 (2 * h0) := by rw [hs]; rfl
+  have hb : s.b = csAdj 6 (2 * h0) 6 := by rw [hs]; rfl
+  have hJ : change_type_v2 s.J 6 = ∅ := by
+    rw [hs]; exact change_type_v2_mkUnadorned_p36 _ _ _
+  rw [hk, ha, hb, hJ]
+  simpa only [change_type_v3] using
+    stableSystem_csAdj_succ_p36 (k := 6) (by norm_num) (by norm_num) (2 * h0) 6
+      two_le_2h0_p36 (by rw [h0]; norm_num)
 
 /-- HOL `SCS_4_3_IS_TRI_STABLE` (XWITCCN.hl:797): the `4_3` system. -/
 theorem SCS_4_3_IS_TRI_STABLE (s : ScsV39)
@@ -944,9 +1445,15 @@ theorem SCS_4_3_IS_TRI_STABLE (s : ScsV39)
     stableSystem_p23 s.k 0 (Set.Iic (s.k - 1))
       (fun i j => change_type_v3 s.a (i, j)) (fun i j => change_type_v3 s.b (i, j))
       (change_type_v2 s.J s.k) (fun i => (1 + i) % s.k) := by
-  sorry
-  -- DISCHARGES: as SCS_4_IS_TRI_STABLE over the `4_3` bound ladder
-  -- (`cs_adj 4 2 3`).
+  have hk : s.k = 4 := by rw [hs]; rfl
+  have ha : s.a = csAdj 4 2 3 := by rw [hs]; rfl
+  have hb : s.b = csAdj 4 (2 * h0) 6 := by rw [hs]; rfl
+  have hJ : change_type_v2 s.J 4 = ∅ := by
+    rw [hs]; exact change_type_v2_mkUnadorned_p36 _ _ _
+  rw [hk, ha, hb, hJ]
+  simpa only [change_type_v3] using
+    stableSystem_csAdj_succ_p36 (k := 4) (by norm_num) (by norm_num) 3 6
+      (by norm_num) (by norm_num)
 
 /-- HOL `SCS_5_sqrt8_IS_TRI_STABLE` (XWITCCN.hl:905): the `5_sqrt8` system. -/
 theorem SCS_5_sqrt8_IS_TRI_STABLE (s : ScsV39)
@@ -954,8 +1461,15 @@ theorem SCS_5_sqrt8_IS_TRI_STABLE (s : ScsV39)
     stableSystem_p23 s.k 0 (Set.Iic (s.k - 1))
       (fun i j => change_type_v3 s.a (i, j)) (fun i j => change_type_v3 s.b (i, j))
       (change_type_v2 s.J s.k) (fun i => (1 + i) % s.k) := by
-  sorry
-  -- DISCHARGES: as SCS_4_IS_TRI_STABLE over the `5_sqrt8` bound ladder.
+  have hk : s.k = 5 := by rw [hs]; rfl
+  have ha : s.a = csAdj 5 2 (Real.sqrt 8) := by rw [hs]; rfl
+  have hb : s.b = csAdj 5 (2 * h0) 6 := by rw [hs]; rfl
+  have hJ : change_type_v2 s.J 5 = ∅ := by
+    rw [hs]; exact change_type_v2_mkUnadorned_p36 _ _ _
+  rw [hk, ha, hb, hJ]
+  simpa only [change_type_v3] using
+    stableSystem_csAdj_succ_p36 (k := 5) (by norm_num) (by norm_num) (Real.sqrt 8) 6
+      two_le_sqrt8_p36 sqrt8_le_six_p36
 
 /-- HOL `SCS_4_sqrt8_IS_TRI_STABLE` (XWITCCN.hl:1024): the `4_sqrt8` system
 (`a_pro` tables). -/
@@ -965,8 +1479,17 @@ theorem SCS_4_sqrt8_IS_TRI_STABLE (s : ScsV39)
     stableSystem_p23 s.k 0 (Set.Iic (s.k - 1))
       (fun i j => change_type_v3 s.a (i, j)) (fun i j => change_type_v3 s.b (i, j))
       (change_type_v2 s.J s.k) (fun i => (1 + i) % s.k) := by
-  sorry
-  -- DISCHARGES: as SCS_4_IS_TRI_STABLE over the `a_pro 4` bound ladder.
+  have hk : s.k = 4 := by rw [hs]; rfl
+  have ha : s.a = aPro 4 (2 * h0) 2 (Real.sqrt 8) := by rw [hs]; rfl
+  have hb : s.b = aPro 4 (Real.sqrt 8) (2 * h0) 6 := by rw [hs]; rfl
+  have hJ : change_type_v2 s.J 4 = ∅ := by
+    rw [hs]; exact change_type_v2_mkUnadorned_p36 _ _ _
+  rw [hk, ha, hb, hJ]
+  simpa only [change_type_v3] using
+    stableSystem_aPro_succ_p36 (k := 4) (by norm_num) (by norm_num) (2 * h0) 2
+      (Real.sqrt 8) (Real.sqrt 8) (2 * h0) 6
+      two_le_2h0_p36 twoh0_le_sqrt8_p36 le_rfl two_le_2h0_p36 sqrt8_le_six_p36
+      ⟨sqrt8_le_cstab_p36, twoh0_le_cstab_p36⟩ two_le_sqrt8_p36
 
 /-- HOL `SCS_5_pro_cs_IS_TRI_STABLE` (XWITCCN.hl:1147): the `5_pro_cs`
 system (`a_pro` tables). -/
@@ -976,8 +1499,17 @@ theorem SCS_5_pro_cs_IS_TRI_STABLE (s : ScsV39)
     stableSystem_p23 s.k 0 (Set.Iic (s.k - 1))
       (fun i j => change_type_v3 s.a (i, j)) (fun i j => change_type_v3 s.b (i, j))
       (change_type_v2 s.J s.k) (fun i => (1 + i) % s.k) := by
-  sorry
-  -- DISCHARGES: as SCS_4_IS_TRI_STABLE over the `a_pro 5` bound ladder.
+  have hk : s.k = 5 := by rw [hs]; rfl
+  have ha : s.a = aPro 5 (2 * h0) 2 (2 * h0) := by rw [hs]; rfl
+  have hb : s.b = aPro 5 (Real.sqrt 8) (2 * h0) 6 := by rw [hs]; rfl
+  have hJ : change_type_v2 s.J 5 = ∅ := by
+    rw [hs]; exact change_type_v2_mkUnadorned_p36 _ _ _
+  rw [hk, ha, hb, hJ]
+  simpa only [change_type_v3] using
+    stableSystem_aPro_succ_p36 (k := 5) (by norm_num) (by norm_num) (2 * h0) 2
+      (2 * h0) (Real.sqrt 8) (2 * h0) 6
+      two_le_2h0_p36 twoh0_le_sqrt8_p36 le_rfl two_le_2h0_p36 twoh0_le_six_p36
+      ⟨sqrt8_le_cstab_p36, twoh0_le_cstab_p36⟩ two_le_2h0_p36
 
 /-! ## Section 3.6: the `4_sqrt8`-tail tactic helpers (source lines
 7176-7261; new names only — the shadowed copies of `VV_IN_BALL_ANNULUS_TAC_4`,

@@ -184,11 +184,30 @@ def bSyRow_p26 (s : StableSyP23) : Fin s.k → Fin s.k → ℝ :=
 
 /-! ## Section A: RRCWNSJ -/
 
-/-- HOL `BB_VV_FUN_EQ` (RRCWNSJ.hl:92). Proof pending (needs
-`W_IN_BB_FUN_EQ` / `CHANGE_W_IN_BBS_MOD_IS_SCS`). -/
+/-- HOL `BB_VV_FUN_EQ` (RRCWNSJ.hl:92).
+DISCHARGED: forward = the `W_IN_BB_FUN_EQ` quasi-injectivity (mirrored from
+the LocalAuto28 fill: the 16th `isScsV39` conjunct `2 ≤ a i j` off the
+residue diagonal, with `BBsV39` bounds collapsing `dist = 0`); backward =
+mod-folding of the `Periodic vv s.k` realisation (`periodic_mod_eq_p23`). -/
 theorem BB_VV_FUN_EQ_p26 (s : ScsV39) (vv : ℕ → V3) (hs : isScsV39 s)
     (hv : BBsV39 s vv) : ∀ i j, vv i = vv j ↔ i % s.k = j % s.k := by
-  sorry
+  obtain ⟨-, h3k, -, -, -, -, -, -, -, -, -, -, -, -, -, hdiag, -, -, -, -, -⟩ := hs
+  have hk0 : 0 < s.k := by omega
+  intro i j
+  constructor
+  · intro heq
+    have hwx : vv (i % s.k) = vv i := periodic_mod_eq_p23 hv.2.1 i
+    have hwy : vv (j % s.k) = vv j := periodic_mod_eq_p23 hv.2.1 j
+    by_contra hne
+    have hdist : dist (vv (i % s.k)) (vv (j % s.k)) = 0 := by
+      rw [hwx, hwy, heq, dist_self]
+    have hle := (hv.2.2.1 (i % s.k) (j % s.k)).1
+    rw [hdist] at hle
+    exact absurd (hdiag (i % s.k) (j % s.k)
+      ⟨Nat.mod_lt _ hk0, Nat.mod_lt _ hk0, fun hc => hne (by rw [hc])⟩)
+      (by linarith)
+  · intro hmod
+    rw [← periodic_mod_eq_p23 hv.2.1 i, hmod, periodic_mod_eq_p23 hv.2.1 j]
 
 /-- HOL `WL_IN_E` (RRCWNSJ.hl:100). -/
 theorem WL_IN_E_p26 (w : ℕ → V3) (l : ℕ) :
@@ -368,16 +387,91 @@ theorem NORM_V_IN_BB_LE_CSTAB_p26 (s : ScsV39) (v : ℕ → V3)
   rw [← dist_eq_norm]
   exact le_trans hd (hb i)
 
-/-- HOL `arclength222h0` (AXJRPNC.hl:152). Proof pending (needs
-`ATN_UPS_X_BREAKDOWN1` / atn.inner normnum). -/
+/-- HOL `arclength222h0` (AXJRPNC.hl:152).
+DISCHARGED: numerically — `h0 = #1.26` makes `|c²-a²-b²| < sqrt (upsX 4 4
+4h0²)` (the `atn2` first branch, the `ATN_UPS_X_BREAKDOWN1` role) and
+`c²-a²-b² < 0`, so the arctangent is negative and `arclength < pi/2`. -/
 theorem arclength222h0_p26 : arcLength 2 2 (2 * h0) < Real.pi / 2 := by
-  sorry
+  have hh0 : h0 = 1.26 := rfl
+  have hy : ((2 * h0) * (2 * h0) - 2 * 2 - 2 * 2 : ℝ) = -1.6496 := by
+    rw [hh0]; norm_num
+  have hsqrt : Real.sqrt (upsX (2 * 2) (2 * 2) ((2 * h0) * (2 * h0)))
+      = Real.sqrt 61.27881984 := by
+    rw [hh0]; unfold upsX; norm_num
+  have hbranch : |((2 * h0) * (2 * h0) - 2 * 2 - 2 * 2 : ℝ)|
+      < Real.sqrt (upsX (2 * 2) (2 * 2) ((2 * h0) * (2 * h0))) := by
+    rw [hy, hsqrt, abs_of_neg (by norm_num : (-1.6496 : ℝ) < 0)]
+    exact Real.lt_sqrt_of_sq_lt (by norm_num)
+  unfold arcLength atn2
+  rw [if_pos hbranch, hy, hsqrt]
+  have hneg : Real.arctan ((-1.6496 : ℝ) / Real.sqrt 61.27881984) < 0 := by
+    rw [neg_div, Real.arctan_neg]
+    linarith [Real.arctan_pos.mpr (by norm_num :
+      (0 : ℝ) < 1.6496 / Real.sqrt 61.27881984)]
+  linarith
 
-/-- HOL `arclength_2h0_cstab` (AXJRPNC.hl:272). Proof pending (needs
-`ATN_UPS_X_BREAKDOWN1` / atn.inner normnum). -/
+/-- HOL `arclength_2h0_cstab` (AXJRPNC.hl:272).
+DISCHARGED: numerically — both `atn2`s hit the first branch (`h0 = #1.26`,
+`cstab = #3.01`); the sum is `pi + (negative arctangent) + (small positive
+arctangent)`, and `1.0601 / sqrt 143.8… < 1.6496 / sqrt 98.9…` (squared:
+`111.1 < 391.4`) folds the two arctangent terms negative via the strict
+monotonicity of `arctan` (the `ATN_UPS_X_BREAKDOWN1` role). -/
 theorem arclength_2h0_cstab_p26 :
     arcLength 2 2 (2 * h0) + arcLength 2 2 cstab < Real.pi := by
-  sorry
+  have hh0 : h0 = 1.26 := rfl
+  have hcst : cstab = 3.01 := by norm_num [cstab]
+  have hy1 : ((2 * h0) * (2 * h0) - 2 * 2 - 2 * 2 : ℝ) = -1.6496 := by
+    rw [hh0]; norm_num
+  have hy2 : (cstab * cstab - 2 * 2 - 2 * 2 : ℝ) = 1.0601 := by
+    rw [hcst]; norm_num
+  have hs1 : Real.sqrt (upsX (2 * 2) (2 * 2) ((2 * h0) * (2 * h0)))
+      = Real.sqrt 61.27881984 := by rw [hh0]; unfold upsX; norm_num
+  have hs2 : Real.sqrt (upsX (2 * 2) (2 * 2) (cstab * cstab))
+      = Real.sqrt 62.87618799 := by rw [hcst]; unfold upsX; norm_num
+  have hb1 : |((2 * h0) * (2 * h0) - 2 * 2 - 2 * 2 : ℝ)|
+      < Real.sqrt (upsX (2 * 2) (2 * 2) ((2 * h0) * (2 * h0))) := by
+    rw [hy1, hs1, abs_of_neg (by norm_num : (-1.6496 : ℝ) < 0), neg_neg]
+    exact Real.lt_sqrt_of_sq_lt (by norm_num)
+  have hb2 : |(cstab * cstab - 2 * 2 - 2 * 2 : ℝ)|
+      < Real.sqrt (upsX (2 * 2) (2 * 2) (cstab * cstab)) := by
+    rw [hy2, hs2, abs_of_pos (by norm_num : (0 : ℝ) < 1.0601)]
+    exact Real.lt_sqrt_of_sq_lt (by norm_num)
+  unfold arcLength atn2
+  rw [if_pos hb1, if_pos hb2, hy1, hy2, hs1, hs2]
+  have hneg : Real.arctan ((-1.6496 : ℝ) / Real.sqrt 61.27881984) < 0 := by
+    rw [neg_div, Real.arctan_neg]
+    linarith [Real.arctan_pos.mpr (by norm_num :
+      (0 : ℝ) < 1.6496 / Real.sqrt 61.27881984)]
+  have hmono : Real.arctan ((1.0601 : ℝ) / Real.sqrt 62.87618799)
+      < -Real.arctan ((-1.6496 : ℝ) / Real.sqrt 61.27881984) := by
+    rw [neg_div, Real.arctan_neg, neg_neg, Real.arctan_lt_arctan_iff]
+    refine lt_of_mul_lt_mul_left ?_
+      (mul_nonneg (Real.sqrt_nonneg 62.87618799) (Real.sqrt_nonneg 61.27881984))
+    have hkey : (Real.sqrt 62.87618799 * Real.sqrt 61.27881984)
+        * (1.0601 / Real.sqrt 62.87618799)
+        < (Real.sqrt 62.87618799 * Real.sqrt 61.27881984)
+          * (1.6496 / Real.sqrt 61.27881984) := by
+      have hc1 : (Real.sqrt 62.87618799 * Real.sqrt 61.27881984)
+          * (1.0601 / Real.sqrt 62.87618799)
+          = 1.0601 * Real.sqrt 61.27881984 := by field_simp
+      have hc2 : (Real.sqrt 62.87618799 * Real.sqrt 61.27881984)
+          * (1.6496 / Real.sqrt 61.27881984)
+          = 1.6496 * Real.sqrt 62.87618799 := by field_simp
+      rw [hc1, hc2]
+      have h1 : 0 ≤ (1.0601 : ℝ) * Real.sqrt 61.27881984 := by positivity
+      have h2 : 0 ≤ (1.6496 : ℝ) * Real.sqrt 62.87618799 := by positivity
+      rw [mul_self_lt_mul_self_iff h1 h2,
+        show (1.0601 : ℝ) * Real.sqrt 61.27881984 * (1.0601 * Real.sqrt 61.27881984)
+          = 1.0601 ^ 2 * 61.27881984 from by
+            rw [← pow_two, mul_pow,
+              Real.sq_sqrt (show (0 : ℝ) ≤ 61.27881984 by norm_num)],
+        show (1.6496 : ℝ) * Real.sqrt 62.87618799 * (1.6496 * Real.sqrt 62.87618799)
+          = 1.6496 ^ 2 * 62.87618799 from by
+            rw [← pow_two, mul_pow,
+              Real.sq_sqrt (show (0 : ℝ) ≤ 62.87618799 by norm_num)]]
+      norm_num
+    linarith [hkey]
+  linarith
 
 /-- HOL `DIST_LE2_BB_CASSE_4` (AXJRPNC.hl:180).
 DISCHARGED: the 21st `isScsV39` conjunct gives at most `6 - 4 = 2` bad

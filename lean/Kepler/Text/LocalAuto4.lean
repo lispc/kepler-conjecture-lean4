@@ -28,9 +28,15 @@ Encoding (HOL → Lean):
 - Section F (hypermap of the fan) statements are ported verbatim; their
   proofs are `sorry` (giants), except a few mechanical ones.
 - FILL LEDGER (proof-fill worker, this wave): the two sorried `_p4`
-  definitions were discharged (48 -> 46 sorries; the 46 remaining are the
-  5 ball-annulus geometry giants and the 41 Section-F SY hypermap giants,
-  none of which has a proved blocker in the current tree).
+  definitions were discharged (48 -> 46 sorries), then a second wave filled
+  the 6 mechanical Section-F SY lemmas (DART_FAN_SY, DART_FAN_SY1,
+  EQ_EDGE_E_SY, EQ_EDGE_E_SY1, SET_OF_EDGE_CARD_EQ2, F_SY_INTER_IMAGE_NN_EMPTY;
+  46 -> 40 sorries). Remaining 40 = the 5 ball-annulus geometry lemmas (3
+  affine-intersection lemmas need the AFF_GT_1_2/AFF_GE_1_1/AFF_GE_2_1
+  explicit forms from Planarity.lean — not imported here to keep the
+  LA15/LA36 downstream closure unchanged; see their NEEDS notes) + the 35
+  azim-cycle/hypermap Section-F giants (no proved blocker in the current
+  tree; they need a fan-level azimCycle/sigmaFan bridge).
   Filled: azimCycle_p4 (verbatim body copy of LocalAuto3.azimCycle_p3 —
   needs `projection`, hence the new `import Kepler.Text.PackingAuto5`);
   hyp_p4 (dite on `FAN x V E`: `hypermapOfFan` (Fan.lean) under the fan,
@@ -700,12 +706,19 @@ theorem BALL_ANNULUS_4PONITS_AFF_GT {v w z : V3}
 theorem AFF_INTER_AFF_GT_EQ_EMPTY {x y z : V3} (hnc : ¬ Collinear3 x y z) :
     ((affineSpan ℝ {x, y} : Set V3) ∩ affGt {x} {y, z}) = ∅ := by
   sorry
+  -- NEEDS: pure coefficient algebra (HOL proof dih2k.hl:1208 destructures
+  -- AFF_GT_1_2 and aff{x,y} memberships and solves for z in aff{x,y}). The
+  -- importable explicit form `aff_gt_1_2` lives in Planarity.lean (not
+  -- imported here to keep the LA15/LA36 downstream closure unchanged);
+  -- either import Planarity or port the 1-2 characterization privately.
 
 /-- HOL `AFF_GE_INTER_AFF_GT_EQ_EMPTY` (dih2k.hl:1244). -/
 theorem AFF_GE_INTER_AFF_GT_EQ_EMPTY {x y z u : V3} (hnc : ¬ Collinear3 x y z)
     (hxu : x ≠ u) (hu : u ∉ affGt {x} {y, z}) :
     (affGe {x} {u} ∩ affGt {x} {y, z}) = ∅ := by
   sorry
+  -- NEEDS: same AFF_GT_1_2 / AFF_GE_1_1 explicit-form shims as the lemma
+  -- above (HOL proof dih2k.hl:1244, pure coefficient algebra).
 
 /-- HOL `POINT_COM_AFF_GT_INTER` (dih2k.hl:1542). -/
 theorem POINT_COM_AFF_GT_INTER {y z z1 w : V3}
@@ -713,6 +726,9 @@ theorem POINT_COM_AFF_GT_INTER {y z z1 w : V3}
     (hw : w ∈ affGt {0} {y, z} ∩ affGt {0} {y, z1}) :
     z1 ∈ affGe {0, y} {z} := by
   sorry
+  -- NEEDS: AFF_GT_1_2 (twice) + AFF_GE_2_1 explicit forms (HOL proof
+  -- dih2k.hl:1542 is pure coefficient algebra; the collinearity hypotheses
+  -- are not even used).
 
 /-! ## finite_product cardinality (dih2k.hl:127-146) -/
 
@@ -1006,19 +1022,58 @@ theorem EXISTS_POINT_DART_OF_HYP {m : ℕ} (l : FinVec m 3) (hm : 2 < m) :
     Set.mem_union_left _ ?_⟩
   exact hed
 
+/-! ### Private kit for the Section-F fills (pairs, finNext, hyp darts) -/
+
+private theorem finNext_ne_self_p4 {m : ℕ} (hm : 1 < m) (i : Fin m) : finNext i ≠ i := by
+  intro he
+  have hval : ((i : ℕ) + 1) % m = (i : ℕ) := congrArg Fin.val he
+  rcases Nat.lt_or_ge ((i : ℕ) + 1) m with h | h
+  · rw [Nat.mod_eq_of_lt h] at hval
+    omega
+  · have hEq : (i : ℕ) + 1 = m := le_antisymm (by omega) h
+    rw [hEq, Nat.mod_self] at hval
+    omega
+
+private theorem hyp_darts_eq_p4 {V : Set V3} {E : Set (Set V3)} {x : V3}
+    (hfan : FAN x V E) :
+    (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) = dart1OfFan V E := by
+  change (↑(finite_dart1_fan hfan).toFinset : Set (V3 × V3)) = dart1OfFan V E
+  exact (finite_dart1_fan hfan).coe_toFinset
+
+private theorem mem_dart1_of_fan_p4 {V : Set V3} {E : Set (Set V3)} {p q : V3}
+    (h : {p, q} ∈ E) : (p, q) ∈ dart1OfFan V E := by
+  simp only [dart1OfFan, Set.mem_setOf_eq]
+  exact h
+
 /-- HOL `DART_FAN_SY` (dih2k.hl:1579). -/
 theorem DART_FAN_SY {m : ℕ} (l : FinVec m 3)
     (hfan : FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))) (i : Fin m)
     (x : V3 × V3) (hx : x = (vecmatsV3_p4 l i, vecmatsV3_p4 l (finNext i))) :
     x ∈ (hyp_p4 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))).darts := by
-  sorry
+  subst hx
+  show (vecmatsV3_p4 l i, vecmatsV3_p4 l (finNext i)) ∈
+    (hyp_p4 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))).darts
+  rw [hyp_p4, dif_pos hfan]
+  show _ ∈ (↑(hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).darts :
+    Set (V3 × V3))
+  rw [hyp_darts_eq_p4 hfan]
+  exact mem_dart1_of_fan_p4 (EDGE_IN_E_SY l i)
 
 /-- HOL `DART_FAN_SY1` (dih2k.hl:1594). -/
 theorem DART_FAN_SY1 {m : ℕ} (l : FinVec m 3)
     (hfan : FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))) (i : Fin m)
     (x : V3 × V3) (hx : x = (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)) :
     x ∈ (hyp_p4 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))).darts := by
-  sorry
+  subst hx
+  show (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i) ∈
+    (hyp_p4 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))).darts
+  rw [hyp_p4, dif_pos hfan]
+  show _ ∈ (↑(hypermapOfFan 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) hfan).darts :
+    Set (V3 × V3))
+  rw [hyp_darts_eq_p4 hfan]
+  have hed := EDGE_IN_E_SY l i
+  rw [Set.pair_comm] at hed
+  exact mem_dart1_of_fan_p4 hed
 
 /-- HOL `EQ_EDGE_E_SY` (dih2k.hl:1622). -/
 theorem EQ_EDGE_E_SY {m : ℕ} (l : FinVec m 3)
@@ -1028,7 +1083,17 @@ theorem EQ_EDGE_E_SY {m : ℕ} (l : FinVec m 3)
     (hx : vecmatsV3_p4 l (finNext i) = x)
     (hvw : ({v, x} : Set V3) = ({v, w} : Set V3)) :
     x = w := by
-  sorry
+  have hne : v ≠ x := by
+    intro hvx
+    have hin : vecmatsV3_p4 l i = vecmatsV3_p4 l (finNext i) := by
+      rw [hv, hx, hvx]
+    exact finNext_ne_self_p4 hm i (hinj i (finNext i) hin).symm
+  have h1 : x ∈ ({v, w} : Set V3) := by
+    have h2 : x ∈ ({v, x} : Set V3) := by simp
+    rwa [hvw] at h2
+  rcases Set.mem_insert_iff.mp h1 with h | h
+  · exact absurd h.symm hne
+  · exact h
 
 /-- HOL `EQ_EDGE_E_SY1` (dih2k.hl:1652). -/
 theorem EQ_EDGE_E_SY1 {m : ℕ} (l : FinVec m 3) (hm : 1 < m)
@@ -1037,7 +1102,17 @@ theorem EQ_EDGE_E_SY1 {m : ℕ} (l : FinVec m 3) (hm : 1 < m)
     (hx : vecmatsV3_p4 l (finNext i) = x)
     (hvw : ({v, x} : Set V3) = ({w, x} : Set V3)) :
     v = w := by
-  sorry
+  have hne : v ≠ x := by
+    intro hvx
+    have hin : vecmatsV3_p4 l i = vecmatsV3_p4 l (finNext i) := by
+      rw [hv, hx, hvx]
+    exact finNext_ne_self_p4 hm i (hinj i (finNext i) hin).symm
+  have h1 : v ∈ ({w, x} : Set V3) := by
+    have h2 : v ∈ ({v, x} : Set V3) := by simp
+    rwa [hvw] at h2
+  rcases Set.mem_insert_iff.mp h1 with h | h
+  · exact h
+  · exact absurd h hne
 
 /-- HOL `SET_OF_EDGE_CARD_EQ2` (dih2k.hl:1715). -/
 theorem SET_OF_EDGE_CARD_EQ2 {m : ℕ} (l : FinVec m 3) (hm : 1 < m)
@@ -1046,7 +1121,63 @@ theorem SET_OF_EDGE_CARD_EQ2 {m : ℕ} (l : FinVec m 3) (hm : 1 < m)
     (hv : vecmatsV3_p4 l (finNext i) = v)
     (hw : vecmatsV3_p4 l (finNext (finNext i)) = w) :
     setOfEdge v (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) = {u, w} := by
-  sorry
+  unfold setOfEdge
+  ext p
+  constructor
+  · rintro ⟨hE, -⟩
+    simp only [E_SY_p4, Set.mem_image] at hE
+    obtain ⟨j, -, hj⟩ := hE
+    have h1 : vecmatsV3_p4 l j ∈ ({v, p} : Set V3) := by
+      have h0 : vecmatsV3_p4 l j ∈
+          ({vecmatsV3_p4 l j, vecmatsV3_p4 l (finNext j)} : Set V3) := by simp
+      rw [hj] at h0
+      exact h0
+    have h2 : vecmatsV3_p4 l (finNext j) ∈ ({v, p} : Set V3) := by
+      have h0 : vecmatsV3_p4 l (finNext j) ∈
+          ({vecmatsV3_p4 l j, vecmatsV3_p4 l (finNext j)} : Set V3) := by simp
+      rw [hj] at h0
+      exact h0
+    rcases (Set.mem_insert_iff).mp h1 with hjv | hjp
+    · -- row j = v
+      have hrp : vecmatsV3_p4 l (finNext j) = p := by
+        rcases (Set.mem_insert_iff).mp h2 with he | he
+        · exact absurd (hinj j (finNext j) (by rw [hjv, he])).symm
+            (finNext_ne_self_p4 hm j)
+        · exact he
+      have hje : j = finNext i := hinj j (finNext i) (hjv ▸ hv).symm
+      right
+      rw [← hrp, hje, hw]
+      exact Set.mem_singleton w
+    · -- row j = p
+      rcases (Set.mem_insert_iff).mp h2 with hfv | hfp
+      · -- row (finNext j) = v
+        have hje : finNext j = finNext i :=
+          hinj (finNext j) (finNext i) (hfv ▸ hv).symm
+        have hjival : ((j : ℕ) + 1) % m = ((i : ℕ) + 1) % m := congrArg Fin.val hje
+        have e2 : Nat.ModEq m (j : ℕ) (i : ℕ) := Nat.ModEq.add_right_cancel' (c := 1) hjival
+        have hjieq : (j : ℕ) % m = (i : ℕ) % m := e2
+        rw [Nat.mod_eq_of_lt j.isLt, Nat.mod_eq_of_lt i.isLt] at hjieq
+        left
+        rw [← hjp, ← hu, Fin.ext hjieq]
+      · -- row (finNext j) = row j
+        have hje : j = finNext j := hinj j (finNext j) (by rw [hjp, hfp])
+        exact absurd hje.symm (finNext_ne_self_p4 hm j)
+  · intro hp
+    rcases (Set.mem_insert_iff).mp hp with hp1 | hp1
+    · rw [hp1]
+      have hed := EDGE_IN_E_SY l i
+      rw [Set.pair_comm, hv, hu] at hed
+      refine ⟨hed, ?_⟩
+      show u ∈ Set.range (vecmatsV3_p4 l)
+      rw [← hu]
+      exact Set.mem_range_self i
+    · rw [hp1]
+      have hed := EDGE_IN_E_SY l (finNext i)
+      rw [hv, hw] at hed
+      refine ⟨hed, ?_⟩
+      rw [← hw]
+      show vecmatsV3_p4 l (finNext (finNext i)) ∈ Set.range (vecmatsV3_p4 l)
+      exact Set.mem_range_self (f := vecmatsV3_p4 l) (finNext (finNext i))
 
 /-- HOL `INV_AZIM_CYCLE_EQ` (dih2k.hl:1789). -/
 theorem INV_AZIM_CYCLE_EQ {m : ℕ} (l : FinVec m 3)
@@ -1175,7 +1306,27 @@ theorem F_SY_INTER_IMAGE_NN_EMPTY {m : ℕ} (l : FinVec m 3) (hm : 2 < m)
     (hinj : ∀ i j : Fin m, vecmatsV3_p4 l i = vecmatsV3_p4 l j → i = j) :
     F_SY_p4 (vecmatsV3_p4 l) ∩
       ((fun i : Fin m => (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i)) '' Set.univ) = ∅ := by
-  sorry
+  ext d
+  constructor
+  · rintro ⟨⟨j, -, hjeq⟩, ⟨i, -, hieq⟩⟩
+    have hjeq' : (vecmatsV3_p4 l j, vecmatsV3_p4 l (finNext j)) = d := hjeq
+    have hieq' : (vecmatsV3_p4 l (finNext i), vecmatsV3_p4 l i) = d := hieq
+    rw [← hjeq', Prod.mk.injEq] at hieq
+    have hj : j = finNext i := (hinj (finNext i) j hieq.1).symm
+    have hi2 : finNext j = i := (hinj i (finNext j) hieq.2).symm
+    rw [hj] at hi2
+    have hne2 : finNext (finNext i) ≠ i := by
+      intro he
+      have hval : (((i : ℕ) + 1) % m + 1) % m = (i : ℕ) := congrArg Fin.val he
+      have h2mod : Nat.ModEq m (i : ℕ) ((i : ℕ) + 2) := by
+        calc i = (((i : ℕ) + 1) % m + 1) % m := hval.symm
+          _ ≡ ((i : ℕ) + 1) % m + 1 [MOD m] := Nat.mod_modEq _ m
+          _ ≡ (i : ℕ) + 2 [MOD m] :=
+              Nat.ModEq.add_right (c := 1) (Nat.mod_modEq ((i : ℕ) + 1) m)
+      exact absurd (Nat.le_of_dvd (by norm_num) ((Nat.modEq_iff_dvd' (by omega)).mp h2mod)) (by omega)
+    exact absurd hi2 hne2
+  · intro h
+    exact absurd h (by simp)
 
 /-- HOL `CARD_DART_OF_HYP` (dih2k.hl:2430). -/
 theorem CARD_DART_OF_HYP {m : ℕ} (l : FinVec m 3)

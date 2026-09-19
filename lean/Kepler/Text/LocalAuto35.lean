@@ -70,6 +70,16 @@ Encoding:
   inside a trailing `(* ... *)` comment in the source — skipped.
 - DISCHARGES convention: `sorry` bodies carry a `-- DISCHARGES:` marker
   naming the blocking item; mechanical proofs are discharged here.
+- Fill-wave 2026-09-19 re-scan (22 sorries, no fills): the external
+  blockers are still open — `XWNHLMD_MM_p26` still `sorry`
+  (LocalAuto26:688; twin `XWNHLMD_MM_p33` LocalAuto33:127 also `sorry`),
+  and no proved corpus twins exist for the giants (`SUM_AZIM_EQ_ANGLE_
+  LE4_FUN_p18` LocalAuto18:970 `sorry`; `TECOXBM` only as the
+  `Fin k`-matrix variant LocalAuto11:1105; `QKNVMLB1/2/3_concl` LocalAuto1:1664-1683
+  all `sorry`). The four `SCS_HALF_SLICE_IS_SCS*` field-by-field
+  verifications, the `V/E/F_PRIME` re-labelling trio, `TECOXBMv2_p35`,
+  the `VV_SUC` orbit pair, and the `QKNVMLB` taustar bank remain
+  self-contained giants for a dedicated wave.
 -/
 
 import Kepler.Text.Polytope
