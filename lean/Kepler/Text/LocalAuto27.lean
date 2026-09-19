@@ -76,6 +76,12 @@ FILE MAP
 -/
 
 import Kepler.Text.LocalAuto1
+-- Row/capstone import (2026-09-18 fill wave): LocalAuto24 carries the proved
+-- `UXCKFPE_p24` case assembly (`BBprimeV39 s ≠ ∅` from `BBs` + `taustar < 0`;
+-- its k = 3..6 case lemmas remain `sorry` in that lane). Importability
+-- verified empirically: LA24's chain (LA1/LA17/LA20/LA22/LA23) carries no
+-- `atn2` conflict with this file's substrate.
+import Kepler.Text.LocalAuto24
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -463,20 +469,51 @@ theorem JLXFDMJ_p27 :
 
 /-! ## Section D: SGTRNAF -/
 
-/-- HOL `UXCKFPE2` (SGTRNAF.hl:75). -/
+/-- HOL `UXCKFPE2` (SGTRNAF.hl:75).
+DISCHARGED: `UXCKFPE_p24` (LocalAuto24, the proved k = 3..6 case assembly;
+its case lemmas remain `sorry` in that lane) gives `BBprimeV39 s ≠ ∅`, so the
+index image `BBindexV39 s '' BBprimeV39 s` is a nonempty set of naturals;
+its least element `BBindexMinV39 s` (`minNum` = `Classical.epsilon`, least by
+`Nat.sInf`) is attained, and the attaining witness lands in `BBprime2V39 s`.
+RESIDUAL: the depth sits in LocalAuto24's `XWITCCN_CASE_*_IS_SCS_p24`. -/
 theorem UXCKFPE2_p27 : ∀ (s : ScsV39) (vv : ℕ → V3), isScsV39 s →
     BBsV39 s vv → taustarV39 s vv < 0 → BBprime2V39 s ≠ ∅ := by
-  sorry
-    -- DISCHARGES: NEEDS `UXCKFPE` (the k=4/5 BB-index minimization of the
-    -- `BBs` non-emptiness covered by `NOT_EMPTY_CASE_{4,5}_IS_SCS`).
+  intro s vv hs hBB hta
+  have hbp : (BBprimeV39 s : Set (ℕ → V3)) ≠ ∅ := UXCKFPE_p24 s vv hs hBB hta
+  have himage : (BBindexV39 s '' BBprimeV39 s).Nonempty := by
+    obtain ⟨w, hw⟩ := Set.nonempty_iff_ne_empty.mpr hbp
+    exact ⟨BBindexV39 s w, w, hw, rfl⟩
+  have hmin : BBindexMinV39 s ∈ BBindexV39 s '' BBprimeV39 s ∧
+      ∀ m ∈ BBindexV39 s '' BBprimeV39 s, BBindexMinV39 s ≤ m :=
+    Classical.epsilon_spec (p := fun n => n ∈ BBindexV39 s '' BBprimeV39 s ∧
+      ∀ m ∈ BBindexV39 s '' BBprimeV39 s, n ≤ m)
+      ⟨sInf _, Nat.sInf_mem himage, fun m hm => Nat.sInf_le hm⟩
+  obtain ⟨w, hwprime, hwidx⟩ := hmin.1
+  intro hcon
+  rw [Set.eq_empty_iff_forall_notMem] at hcon
+  exact hcon w ⟨hwprime, hwidx⟩
 
 /-- HOL `SGTRNAF` (SGTRNAF.hl:166). Consumed by the packing chapter through
-the regime-ANCHOR `sgtrnaf_p12` (LocalAuto12:272). -/
+the regime-ANCHOR `sgtrnaf_p12` (LocalAuto12:272).
+DISCHARGED: `UXCKFPE2_p27` gives `BBprime2V39 s ≠ ∅` and `unadorned_MMs_p27`
+rewrites `MMsV39 s` to it (the HOL proof is `MATCH_MP_TAC UXCKFPE2` after
+rewriting `MMs` via `unadorned_MMs`). -/
 theorem SGTRNAF_p27 : ∀ (s : ScsV39) (vv : ℕ → V3), isScsV39 s →
     unadornedV39 s → BBsV39 s vv → taustarV39 s vv < 0 → MMsV39 s ≠ ∅ := by
-  sorry
-    -- DISCHARGES: NEEDS `UXCKFPE2` + `unadorned_MMs` (the HOL proof is
-    -- `MATCH_MP_TAC UXCKFPE2` after rewriting `MMs` via `unadorned_MMs`).
+  intro s vv hs hu hBB hta
+  -- `unadorned_MMs_p27` (Section F) is declared below; the MMs membership is
+  -- inlined here (False-vacuous str/lo/hi guards, a/am and b/bm bounds).
+  have h2 : (BBprime2V39 s : Set (ℕ → V3)) ≠ ∅ := UXCKFPE2_p27 s vv hs hBB hta
+  obtain ⟨hlo, hhi, hstr, ham, hbm⟩ := hu
+  intro hcon
+  rw [Set.eq_empty_iff_forall_notMem] at hcon
+  obtain ⟨w, hwprime, hwidx⟩ := Set.nonempty_iff_ne_empty.mpr h2
+  exact hcon w ⟨⟨hwprime, hwidx⟩,
+    fun i hi => by rw [hstr] at hi; exact hi.elim,
+    fun i hi => by rw [hlo] at hi; exact hi.elim,
+    fun i hi => by rw [hhi] at hi; exact hi.elim,
+    fun i j => by rw [← ham]; exact (hwprime.1.2.2.1 i j).1,
+    fun i j => by rw [← hbm]; exact (hwprime.1.2.2.1 i j).2⟩
 
 /-! ## Section E: HXHYTIJ -/
 
@@ -497,17 +534,41 @@ theorem XWITCCN2_p27 : ∀ (s : ScsV39) (vv : ℕ → V3), s ∈ sInitListV39 �
     -- DISCHARGES: NEEDS the `XEIJITAF`/`UXCKFPE2` s_init cases of the
     -- `taustar < 0` non-emptiness for the s_init list.
 
-/-- HOL `unadorned_MMs` (AYQJTMD.hl:161). Also the engine of `SGTRNAF`. -/
+/-- HOL `unadorned_MMs` (AYQJTMD.hl:161). Also the engine of `SGTRNAF`.
+DISCHARGED: definitional — for an unadorned system the `str`/`lo`/`hi`
+guards are `False`-vacuous and `a = am`, `b = bm` turn the `MMs` tail bounds
+into the `BBs` bounds, so `MMsV39 s = BBprime2V39 s` outright. -/
 theorem unadorned_MMs_p27 : ∀ s : ScsV39, unadornedV39 s → MMsV39 s = BBprime2V39 s := by
-  sorry
-    -- DISCHARGES: NEEDS the `BBprim*/BB` equality at unadorned scs
-    -- (BBindex-min uniqueness, `BBprime2 = BBs de facto` via `unadorned`).
+  intro s hu
+  obtain ⟨hlo, hhi, hstr, ham, hbm⟩ := hu
+  ext vv
+  simp only [MMsV39, BBprime2V39, Set.mem_setOf_eq]
+  constructor
+  · exact fun h => h.1
+  · intro h
+    obtain ⟨hp, hidx⟩ := h
+    refine ⟨⟨hp, hidx⟩, ?_, ?_, ?_, ?_, ?_⟩
+    · exact fun i hi => by rw [hstr] at hi; exact hi.elim
+    · exact fun i hi => by rw [hlo] at hi; exact hi.elim
+    · exact fun i hi => by rw [hhi] at hi; exact hi.elim
+    · intro i j
+      rw [← ham]
+      exact (hp.1.2.2.1 i j).1
+    · intro i j
+      rw [← hbm]
+      exact (hp.1.2.2.1 i j).2
 
-/-- HOL `S_INIT_IS_UNADORNED` (AYQJTMD.hl:194). -/
+/-- HOL `S_INIT_IS_UNADORNED` (AYQJTMD.hl:194).
+DISCHARGED: all eight `sInitListV39` entries are `mkUnadornedV39` records,
+whose `lo`/`hi`/`str` fields are `False` and whose `a`/`b` equal their
+`am`/`bm` fields definitionally. -/
 theorem S_INIT_IS_UNADORNED_p27 : ∀ s, s ∈ sInitListV39 → unadornedV39 s := by
-  sorry
-    -- DISCHARGES: NEEDS the case-by-case `unadorned` check over the finite
-    -- `s_init_list` (each entry is built by `mk_unadorned`-style records).
+  intro s hs
+  simp only [sInitListV39, List.mem_cons, List.not_mem_nil] at hs
+  rcases hs with h | h | h | h | h | h | h | h | h
+  <;> first
+    | (rw [h]; exact ⟨rfl, rfl, rfl, rfl, rfl⟩)
+    | exact absurd h (by simp)
 
 /-- HOL `AYQJTMD` (AYQJTMD.hl:206). -/
 theorem AYQJTMD_p27 : ∀ (s : ScsV39) (vv : ℕ → V3), s ∈ sInitListV39 →

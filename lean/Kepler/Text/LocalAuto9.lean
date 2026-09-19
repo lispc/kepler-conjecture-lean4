@@ -88,6 +88,13 @@ LocalAuto4 (`FinVec`/`vecmatsV3_p4` precedent):
   `0.11`; `ball_annulus` ↔ `ballAnnulus`.
 - DISCHARGES convention: `sorry` bodies carry a `-- DISCHARGES:` marker with
   the blocking external item; mechanical proofs are discharged here.
+- DEDUP (atn2-merge wave 3): NO code change here. `SphereKit` (reached via
+  `LocalAuto2` → `PackingAuto20`) hosts only the sphere.hl numeric kit, so
+  `torsor_p9`/`constraintSystem_p9`/`stableSystem_p9` (dih2k kit, deferred)
+  and the `_p2` localization kit stay as-is (plan §3/§6); this file also
+  consumes no atn2-family names. With the hub `atn2` clash resolved,
+  `LocalAuto1` + `LocalAuto2` are co-importable again (dual-import probe
+  verified 2026-09-18).
 -/
 
 import Kepler.Text.Polytope

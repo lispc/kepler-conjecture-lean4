@@ -379,18 +379,85 @@ theorem arclength_2h0_cstab_p26 :
     arcLength 2 2 (2 * h0) + arcLength 2 2 cstab < Real.pi := by
   sorry
 
-/-- HOL `DIST_LE2_BB_CASSE_4` (AXJRPNC.hl:180). Proof pending (needs
-finitary cardinal arithmetic over bad index sets). -/
+/-- HOL `DIST_LE2_BB_CASSE_4` (AXJRPNC.hl:180).
+DISCHARGED: the 21st `isScsV39` conjunct gives at most `6 - 4 = 2` bad
+indices, so not all four residue edges can have `b > 2*h0`; an edge with
+`b ≤ 2*h0` bounds the corresponding `‖v i - v (i+1)‖` via `BBsV39`. -/
 theorem DIST_LE2_BB_CASSE_4_p26 (s : ScsV39) (v : ℕ → V3) (hk : s.k = 4)
     (hv : BBsV39 s v) (hs : isScsV39 s) : ∃ i, ‖v i - v (i + 1)‖ ≤ 2 * h0 := by
-  sorry
+  unfold isScsV39 at hs
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hcard⟩ := hs
+  rw [hk] at hcard
+  have hfin : ({i | i < 4 ∧ (2 * h0 < s.b i (i + 1) ∨ 2 < s.a i (i + 1))} : Set ℕ).Finite :=
+    Set.Finite.subset (Set.finite_Iio 4) fun x hx => hx.1
+  by_contra hcon
+  push_neg at hcon
+  have hsub : (Set.Iio 4 : Set ℕ) ⊆
+      {i | i < 4 ∧ (2 * h0 < s.b i (i + 1) ∨ 2 < s.a i (i + 1))} := by
+    intro r hr
+    refine ⟨hr, Or.inl ?_⟩
+    have hd : ‖v r - v (r + 1)‖ ≤ s.b r (r + 1) := by
+      rw [← dist_eq_norm]; exact (hv.2.2.1 r (r + 1)).2
+    exact lt_of_lt_of_le (hcon r) hd
+  have hle := Set.ncard_le_ncard hsub hfin
+  rw [Set.ncard_Iio_nat] at hle
+  omega
 
-/-- HOL `DIST_LE2_BB_CASSE_5` (AXJRPNC.hl:298). Proof pending (needs
-card-2 bad-index subset argument / `SUC_MOD_NOT_EQ`). -/
+/-- HOL `DIST_LE2_BB_CASSE_5` (AXJRPNC.hl:298).
+DISCHARGED: the bad-index set has at most one element (`ncard + 5 ≤ 6`); if
+both edges `i, i+1` had `> 2*h0` b-bounds, their two distinct residues would
+both be bad, by `periodic2_mod_eq_p26`/`periodic_mod_eq_p23` transfer. -/
 theorem DIST_LE2_BB_CASSE_5_p26 (s : ScsV39) (v : ℕ → V3) (hk : s.k = 5)
     (hv : BBsV39 s v) (hs : isScsV39 s) (i : ℕ) :
     ‖v i - v (i + 1)‖ ≤ 2 * h0 ∨ ‖v (i + 1) - v (i + 2)‖ ≤ 2 * h0 := by
-  sorry
+  unfold isScsV39 at hs
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, hpb, _, _, _, _, _, _, _, _, _, hcard⟩ := hs
+  rw [hk] at hpb hcard
+  have h5 : 0 < 5 := by norm_num
+  have hbmod : ∀ u : ℕ, s.b (u % 5) ((u % 5) + 1) = s.b u (u + 1) := by
+    intro u
+    have h1 := periodic2_mod_eq_p26 h5 hpb (u % 5) ((u % 5) + 1)
+    have h2 := periodic2_mod_eq_p26 h5 hpb u (u + 1)
+    rw [Nat.mod_mod, show ((u % 5) + 1) % 5 = (u + 1) % 5 from
+      Nat.ModEq.add_right 1 (Nat.mod_modEq u 5)] at h1
+    exact h1.trans h2.symm
+  have hp5 : Periodic v 5 := by
+    have := hv.2.1
+    rw [hk] at this
+    exact this
+  have hvmod : ∀ u : ℕ, dist (v (u % 5)) (v ((u % 5) + 1)) = dist (v u) (v (u + 1)) := by
+    intro u
+    have h1 : v (u % 5) = v u := periodic_mod_eq_p23 hp5 u
+    have h2 : v ((u % 5) + 1) = v (u + 1) := by
+      rw [← periodic_mod_eq_p23 hp5 (u + 1), ← Nat.ModEq.add_right 1 (Nat.mod_modEq u 5),
+        periodic_mod_eq_p23 hp5 (u % 5 + 1)]
+    rw [h1, h2]
+  by_contra hcon
+  push_neg at hcon
+  obtain ⟨c1, c2⟩ := hcon
+  have hbad : ∀ (u : ℕ), 2 * h0 < ‖v u - v (u + 1)‖ →
+      (u % 5 : ℕ) ∈ {i | i < 5 ∧ (2 * h0 < s.b i (i + 1) ∨ 2 < s.a i (i + 1))} := by
+    intro u hcu
+    refine ⟨Nat.mod_lt _ h5, Or.inl ?_⟩
+    have hd : dist (v (u % 5)) (v ((u % 5) + 1)) ≤ s.b (u % 5) ((u % 5) + 1) :=
+      (hv.2.2.1 (u % 5) ((u % 5) + 1)).2
+    have hgt : 2 * h0 < dist (v (u % 5)) (v ((u % 5) + 1)) := by
+      rw [hvmod u, dist_eq_norm]
+      exact hcu
+    exact lt_of_lt_of_le hgt hd
+  have hpair : ({(i % 5), ((i + 1) % 5)} : Set ℕ) ⊆
+      {i | i < 5 ∧ (2 * h0 < s.b i (i + 1) ∨ 2 < s.a i (i + 1))} := by
+    intro x hx
+    rw [Set.mem_insert_iff] at hx
+    rcases hx with hx | hx
+    · rw [hx]; exact hbad i c1
+    · rw [Set.mem_singleton_iff] at hx
+      rw [hx]; exact hbad (i + 1) c2
+  have hfin : ({i | i < 5 ∧ (2 * h0 < s.b i (i + 1) ∨ 2 < s.a i (i + 1))} : Set ℕ).Finite :=
+    Set.Finite.subset (Set.finite_Iio 5) fun x hx => hx.1
+  have hle := Set.ncard_le_ncard hpair hfin
+  rw [Set.ncard_pair (show (i % 5 : ℕ) ≠ (i + 1) % 5 from succ_mod_ne_p26 (by norm_num))] at hle
+  omega
 
 /-- HOL `AXJRPNC` (AXJRPNC.hl:380). Proof pending (needs
 `RRCWNSJ` / local fan machinery / lunar EDGE/IVS case elimination). -/
@@ -402,6 +469,82 @@ theorem AXJRPNC_p26 (s : ScsV39) (v : ℕ → V3) (i j : ℕ)
     s.k = 6 ∧ v j = v (i + 3) := by
   sorry
 /-! ## Section C: PPBTYDQ -/
+
+/-! ### `_p26` row/flatten helpers for the GBYCPXS fills (2026-09-18)
+
+The `B_SY1_p4` body set encodes a vertex family `v : Fin m → V3` by the
+`matvec` flattening `i ↦ v ⟨i/3⟩ ⟨i%3⟩`; `vecmatsV3_p4` inverts it.  These
+private lemmas give the 1-based-row ↔ 0-based-vertex bridge that plays the
+role of HOL `INJ_ROW_B_SY` (the LocalAuto9 twin lives on the other side of
+the `atn2` split and is not importable here). -/
+
+private theorem encApp_p26 {m : ℕ} (v : Fin m → V3) (r : Fin m) (k : Fin 3)
+    (x : ℕ) (hx : x = r * 3 + k) :
+    (v ⟨x / 3, ((Nat.div_lt_iff_lt_mul (k := 3) (by norm_num)).mpr
+        (by rw [hx]; exact INDEX_VECMAT r k))⟩ : Fin 3 → ℝ)
+      ⟨x % 3, Nat.mod_lt _ (by norm_num : (0:ℕ) < 3)⟩
+      = (v r).ofLp k := by
+  have hr : (⟨x / 3, ((Nat.div_lt_iff_lt_mul (k := 3) (by norm_num)).mpr
+      (by rw [hx]; exact INDEX_VECMAT r k))⟩ : Fin m) = r := by
+    refine Fin.ext ?_
+    show x / 3 = r.val
+    rw [hx]
+    exact (div_mod_row (m := m) (n := 3) (by norm_num) (r : ℕ) (k : ℕ) r.isLt k.isLt).1
+  have hk : (⟨x % 3, Nat.mod_lt _ (by norm_num : (0:ℕ) < 3)⟩ : Fin 3) = k := by
+    refine Fin.ext ?_
+    show x % 3 = k.val
+    rw [hx]
+    exact (div_mod_row (m := m) (n := 3) (by norm_num) (r : ℕ) (k : ℕ) r.isLt k.isLt).2
+  rw [hr, hk]
+
+private theorem rowId_p26 {m : ℕ} {v : Fin m → V3} {l : FinVec m 3}
+    (hvl : (fun w : Fin m → V3 => fun i : Fin (m * 3) =>
+        (v ⟨(i : ℕ) / 3, (Nat.div_lt_iff_lt_mul (k := 3) (by norm_num)).mpr i.isLt⟩ :
+          Fin 3 → ℝ) ⟨(i : ℕ) % 3, Nat.mod_lt (i : ℕ) (by norm_num : 0 < 3)⟩) v = l)
+    (r : Fin m) : vecmatsV3_p4 l r = v r := by
+  have h : (WithLp.ofLp (vecmatsV3_p4 l r) : Fin 3 → ℝ) = WithLp.ofLp (v r) := by
+    show vecmats_p4 l r = _
+    rw [← hvl]
+    funext k
+    exact encApp_p26 v r k (finProdEquiv m 3 (⟨r, k⟩)) (finProdEquiv_val r k)
+  exact (WithLp.equiv (2 : ENNReal) (Fin 3 → ℝ)).injective h
+
+private theorem fIterateSuccMod_p26 {k : ℕ} {f : ℕ → ℕ} (hf : ∀ j, f j = (j + 1) % k)
+    (hk0 : 0 < k) (j : ℕ) : f^[k] j = j % k := by
+  have key : ∀ n j : ℕ, 0 < n → f^[n] j = (j + n) % k := by
+    intro n
+    induction n with
+    | zero => intro j hn; exact absurd hn (Nat.not_lt_zero (0:ℕ))
+    | succ n ih =>
+        intro j hn
+        rcases Nat.eq_zero_or_pos n with h0 | hp
+        · rw [h0]
+          simp [hf]
+        · rw [Function.iterate_succ_apply, hf, ih ((j + 1) % k) hp, Nat.mod_add_mod]
+          congr 1
+          ring
+  rw [key k j hk0, Nat.add_mod_right]
+
+private theorem ballUb_p26 {x : V3} (hx : x ∈ ballAnnulus) : ‖x‖ ≤ 2 * h0 := by
+  have hd : dist x 0 ≤ 2 * h0 := Metric.mem_closedBall.mp hx.1
+  rwa [dist_zero_right] at hd
+
+private theorem setSum_le_of_le_p26 {α : Type*} {A : Set α} (hA : A.Finite) {f g : α → ℝ}
+    (h : ∀ x ∈ A, f x ≤ g x) : setSum A f ≤ setSum A g := by
+  simp only [setSum, dif_pos hA]
+  exact Finset.sum_le_sum (fun x hx => h x (hA.mem_toFinset.mp hx))
+
+private theorem setSum_nonneg_of_nonneg_p26 {α : Type*} {A : Set α} (hA : A.Finite)
+    {f : α → ℝ} (h : ∀ x ∈ A, 0 ≤ f x) : 0 ≤ setSum A f := by
+  simp only [setSum, dif_pos hA]
+  exact Finset.sum_nonneg (fun x hx => h x (hA.mem_toFinset.mp hx))
+
+private theorem setSum_empty_p26 {α : Type*} (f : α → ℝ) : setSum (∅ : Set α) f = 0 := by
+  simp [setSum]
+
+private theorem setSum_singleton_p26 {α : Type*} [DecidableEq α] {a : α} (f : α → ℝ) :
+    setSum ({a} : Set α) f = f a := by
+  simp [setSum]
 
 /-- HOL `BBPRIME_IMP_BB` (PPBTYDQ.hl:402). -/
 theorem BBPRIME_IMP_BB_p26 (s : ScsV39) (w : ℕ → V3) (h : w ∈ BBprimeV39 s) :
@@ -680,35 +823,256 @@ theorem SING_J1_SY_p26 (s : StableSyP23) (h : earSy_p23 s)
     · rw [Nat.mod_eq_of_lt hck]
       exact hJc
 
-/-- HOL `CARD_F_SY_IN_B_SY` (GBYCPXS.hl:43). Proof pending (needs the
-`INJ_ROW_B_SY` / `CARD_F_SY_EQ` row-injectivity kit over the 1-based
-`vecmats` rows). -/
+/-- HOL `CARD_F_SY_IN_B_SY` (GBYCPXS.hl:43).
+DISCHARGED: the 1-based-row / 0-based-vertex bridge (`rowId_p26`, the local
+stand-in for the `INJ_ROW_B_SY` kit) shows distinct rows; `CONDITION1_SY_p4`
+with the stable system's off-diagonal bound `2 ≤ a i j` (`s.stable.2.1`,
+indices shifted by one via `aSyRow_p26`) gives row injectivity, and the
+proved LocalAuto4 `CARD_F_SY_EQ` counts the `k` cyclic darts. -/
 theorem CARD_F_SY_IN_B_SY_p26 (s : StableSyP23) (l : FinVec s.k 3)
     (hI : s.I = {i | i < s.k}) (hf : ∀ i, s.f i = (i + 1) % s.k) (hk : 2 < s.k)
     (hl : l ∈ B_SY1_p4 (aSyRow_p26 s) (bSyRow_p26 s)) :
     (F_SY_p4 (vecmatsV3_p4 l)).ncard = s.k := by
-  sorry
+  obtain ⟨v, ⟨hball, hC1, -⟩, hvl⟩ := Iff.mp (Set.mem_image _ _ _) hl
+  have hrow : ∀ r : Fin s.k, vecmatsV3_p4 l r = v r := fun r => rowId_p26 hvl r
+  have hmemI : ∀ u : ℕ, u < s.k → u ∈ s.I := fun u hu => by
+    rw [hI]; exact hu
+  have hk0 : 0 < s.k := by omega
+  have h2off : ∀ x y : ℕ, x < s.k → y < s.k → x ≠ y → 2 ≤ s.a x y :=
+    fun x y hx hy hne => s.stable.2.1 x (hmemI x hx) y (hmemI y hy) hne
+  -- the wrap row `s.k` reduces to row `0` by symmetry + `f^[s.k]`-periodicity
+  have hwrap : ∀ x : ℕ, 1 ≤ x → x < s.k → 2 ≤ s.a x s.k := by
+    intro x hx1 hx
+    have hper : ∀ u w : ℕ, s.a u w = s.a u (s.f^[s.k] w) :=
+      fun u w => (s.stable.1.2.2.2.2.1 u w).1
+    have hsym : ∀ u w : ℕ, s.a u w = s.a w u := fun u w => (s.stable.1.2.2.2.1 u w).1
+    have hzero : s.f^[s.k] s.k = 0 := by
+      rw [fIterateSuccMod_p26 hf hk0 s.k]
+      simp
+    have h2x0 : 2 ≤ s.a x (s.f^[s.k] s.k) := by
+      rw [hzero]
+      exact h2off x 0 hx (by omega) (by omega)
+    rw [← hper x s.k] at h2x0
+    exact h2x0
+  have hinj : ∀ i j : Fin s.k, vecmatsV3_p4 l i = vecmatsV3_p4 l j → i = j := by
+    intro i j hij
+    by_contra hne
+    have hne2 : ((i : ℕ) + 1) ≠ ((j : ℕ) + 1) := fun he =>
+      hne (Fin.ext (Nat.succ_injective he))
+    have hvi : v i = v j := by rw [← hrow i, ← hrow j]; exact hij
+    have hz : ‖v i - v j‖ = 0 := by rw [hvi]; simp
+    have hC := (hC1 i j).1
+    simp only [aSyRow_p26] at hC
+    rw [hz] at hC
+    have hzero : s.f^[s.k] s.k = 0 := by
+      rw [fIterateSuccMod_p26 hf hk0 s.k]
+      simp
+    rcases Nat.lt_or_ge ((i : ℕ) + 1) s.k with hix | hix
+    · rcases Nat.lt_or_ge ((j : ℕ) + 1) s.k with hjy | hjy
+      · have ha2 := h2off ((i : ℕ) + 1) ((j : ℕ) + 1) hix hjy hne2
+        linarith
+      · have hjk : ((j : ℕ) + 1) = s.k := le_antisymm (by omega) hjy
+        have ha2 : 2 ≤ s.a ((i : ℕ) + 1) ((j : ℕ) + 1) := by
+          rw [hjk]
+          exact hwrap ((i : ℕ) + 1) (by omega) hix
+        linarith
+    · have hik2 : ((i : ℕ) + 1) = s.k := le_antisymm (by omega) hix
+      have hsym : ∀ u w : ℕ, s.a u w = s.a w u := fun u w => (s.stable.1.2.2.2.1 u w).1
+      have hper : ∀ u w : ℕ, s.a u w = s.a u (s.f^[s.k] w) :=
+        fun u w => (s.stable.1.2.2.2.2.1 u w).1
+      rcases Nat.lt_or_ge ((j : ℕ) + 1) s.k with hjy | hjy
+      · have h0I : (0 : ℕ) ∈ s.I := hmemI 0 (by omega)
+        have h2j0 := s.stable.2.1 ((j : ℕ) + 1) (hmemI _ hjy) 0 h0I (by omega)
+        have ha2' : 2 ≤ s.a ((i : ℕ) + 1) ((j : ℕ) + 1) := by
+          rw [hik2, hsym _ _, hper _ _, hzero]
+          exact h2j0
+        linarith
+      · have hik3 : (i : ℕ) = s.k - 1 := by omega
+        have hjk2 : (j : ℕ) = s.k - 1 := by omega
+        exact hne (Fin.ext (by rw [hik3, hjk2]))
+  exact CARD_F_SY_EQ l hinj
 
 /-- HOL `B_SY_LE_CSTAB` (GBYCPXS.hl:80): every cyclic adjacent row pair of
-`vecmats l` is at most `cstab` apart. Proof pending (needs the 1-based row /
-0-based vertex bridge used by `INJ_ROW_B_SY` to read `b_sy s i (f i) <= cstab`
-off `B_SY1`/`CONDITION1_SY`). -/
+`vecmats l` is at most `cstab` apart.
+DISCHARGED: the row bridge `rowId_p26` reads the statement off
+`CONDITION1_SY_p4` (`bSyRow_p26` shift), with the `b i (f i) ≤ cstab` stable
+bound transported by `fIterateSuccMod_p26` + symmetry; the two out-of-range
+cyclic indices (`i = s.k` resp. `i = s.k - 1`) fall back to the ball-annulus
+upper bound `‖v‖ ≤ 2*h0 < cstab`. -/
 theorem B_SY_LE_CSTAB_p26 (s : StableSyP23) (l : FinVec s.k 3)
     (hI : s.I = {i | i < s.k}) (hf : ∀ i, s.f i = (i + 1) % s.k) (hk : 2 < s.k)
     (hl : l ∈ B_SY1_p4 (aSyRow_p26 s) (bSyRow_p26 s)) :
     ∀ i, 1 ≤ i → i ≤ s.k →
       ‖rowSy_p23 l i - rowSy_p23 l (i % s.k + 1)‖ ≤ cstab := by
-  sorry
+  intro i hi1 hi2
+  obtain ⟨v, ⟨hball, hC1, -⟩, hvl⟩ := Iff.mp (Set.mem_image _ _ _) hl
+  have hrow : ∀ r : Fin s.k, vecmatsV3_p4 l r = v r := fun r => rowId_p26 hvl r
+  have hballle : ∀ r : Fin s.k, ‖v r‖ ≤ 2 * h0 := fun r => ballUb_p26 (hball r)
+  -- the stable-system bound `b j (f j) ≤ cstab` transported to `b u (u%k+1)`
+  have hbnd : ∀ u : ℕ, 1 ≤ u → u ≤ s.k → s.b u (u % s.k + 1) ≤ cstab := by
+    intro u hu1 hu2
+    have hk0 : 0 < s.k := by omega
+    have hmemI : ∀ w : ℕ, w < s.k → w ∈ s.I := fun w hw => by rw [hI]; exact hw
+    have hper : ∀ u w : ℕ, s.b u w = s.b u (s.f^[s.k] w) :=
+      fun u w => (s.stable.1.2.2.2.2.1 u w).2
+    have hsym : ∀ u w : ℕ, s.b u w = s.b w u :=
+      fun u w => (s.stable.1.2.2.2.1 u w).2.1
+    have hfit : (u % s.k) ∈ s.I := hmemI _ (Nat.mod_lt _ hk0)
+    have hle := (s.stable.2.2.1 (u % s.k) hfit).2
+    rw [hf] at hle
+    have hf1 : s.f^[s.k] u = u % s.k := fIterateSuccMod_p26 hf hk0 u
+    have hf2 : s.f^[s.k] (u % s.k + 1) = (u % s.k + 1) % s.k := fIterateSuccMod_p26 hf hk0 _
+    calc s.b u (u % s.k + 1)
+        _ = s.b (u % s.k + 1) u := hsym u _
+        _ = s.b (u % s.k + 1) (s.f^[s.k] u) := hper _ _
+        _ = s.b (u % s.k + 1) (u % s.k) := by rw [hf1]
+        _ = s.b (u % s.k) (u % s.k + 1) := hsym _ _
+        _ = s.b (u % s.k) (s.f^[s.k] (u % s.k + 1)) := hper _ _
+        _ = s.b (u % s.k) ((u % s.k + 1) % s.k) := by rw [hf2]
+        _ ≤ cstab := hle
+  by_cases hik : i = s.k
+  · -- rows `s.k` (junk `0`) and `1`: `‖0 - v 1‖ = ‖v 1‖ ≤ 2*h0 < cstab`
+    have h1lt : s.k % s.k + 1 < s.k := by rw [Nat.mod_self]; omega
+    have hr1 : rowSy_p23 l (s.k % s.k + 1) = v ⟨s.k % s.k + 1, h1lt⟩ := by
+      show (if h : s.k % s.k + 1 < s.k then vecmatsV3_p4 l ⟨s.k % s.k + 1, h⟩ else 0) = _
+      rw [dif_pos h1lt, hrow]
+    have hr0 : rowSy_p23 l s.k = 0 := by
+      show (if h : s.k < s.k then vecmatsV3_p4 l ⟨s.k, h⟩ else 0) = 0
+      rw [dif_neg (by omega)]
+    rw [hik, hr0, hr1]
+    calc ‖(0 : V3) - v ⟨s.k % s.k + 1, h1lt⟩‖
+        = ‖v ⟨s.k % s.k + 1, h1lt⟩‖ := by simp
+      _ ≤ 2 * h0 := hballle ⟨s.k % s.k + 1, h1lt⟩
+      _ ≤ cstab := by norm_num [h0, cstab]
+  · -- adjacent in-range rows: `CONDITION1_SY_p4` + the `b i (f i) ≤ cstab` bound
+    have hilt : i < s.k := by omega
+    have hr1 : rowSy_p23 l i = v ⟨i, hilt⟩ := by
+      show (if h : i < s.k then vecmatsV3_p4 l ⟨i, h⟩ else 0) = _
+      rw [dif_pos hilt, hrow]
+    by_cases hip1 : i + 1 = s.k
+    · have hr2 : rowSy_p23 l (i % s.k + 1) = 0 := by
+        show (if h : i % s.k + 1 < s.k then vecmatsV3_p4 l ⟨i % s.k + 1, h⟩ else 0) = 0
+        rw [dif_neg (show ¬(i % s.k + 1 < s.k) from by
+          have := Nat.mod_eq_of_lt hilt
+          have := hip1
+          omega)]
+      rw [hr1, hr2]
+      have hle := hballle ⟨i, hilt⟩
+      calc ‖v ⟨i, hilt⟩ - (0 : V3)‖ = ‖v ⟨i, hilt⟩‖ := by simp
+        _ ≤ 2 * h0 := hle
+        _ ≤ cstab := by norm_num [h0, cstab]
+    · have hip1lt : i % s.k + 1 < s.k := by
+        have h1 := Nat.mod_eq_of_lt hilt
+        have h2 := hip1
+        omega
+      have hr2 : rowSy_p23 l (i % s.k + 1) = v ⟨i % s.k + 1, hip1lt⟩ := by
+        show (if h : i % s.k + 1 < s.k then vecmatsV3_p4 l ⟨i % s.k + 1, h⟩ else 0) = _
+        rw [dif_pos hip1lt, hrow]
+      have hC := (hC1 ⟨i, hilt⟩ ⟨i % s.k + 1, hip1lt⟩).2
+      simp only [bSyRow_p26] at hC
+      rw [hr1, hr2]
+      have hmeq : (i % s.k + 1) % s.k = (i + 1) % s.k :=
+        Nat.ModEq.add_right 1 (Nat.mod_modEq i s.k)
+      have h5 := hbnd (i + 1) (by omega) (by omega)
+      have h5' : s.b (i + 1) ((i % s.k + 1) % s.k + 1) ≤ cstab := by rwa [← hmeq] at h5
+      have h5'' : s.b (i + 1) (i % s.k + 1 + 1) ≤ cstab := by
+        rwa [Nat.mod_eq_of_lt hip1lt] at h5'
+      calc ‖v ⟨i, hilt⟩ - v ⟨i % s.k + 1, hip1lt⟩‖
+          _ ≤ s.b ((⟨i, hilt⟩ : Fin s.k).val + 1)
+              ((⟨i % s.k + 1, hip1lt⟩ : Fin s.k).val + 1) := hC
+          _ ≤ cstab := h5''
 
-/-- HOL `D_FUN_LE` (GBYCPXS.hl:365). Proof pending (needs `B_SY_LE_CSTAB`
-plus the `SING_J1_SY` singleton sum reduction). -/
+set_option maxHeartbeats 20000000 in
+/-- HOL `D_FUN_LE` (GBYCPXS.hl:365).
+DISCHARGED: the summand `cstab - ‖row (x.1-1) - row (x.2-1)‖` is bounded by
+`CONDITION1_SY_p4` + `hbnd` (the `B_SY_LE_CSTAB` transport of the stable
+`b j (f j) ≤ cstab` bound).  Ear case: `SING_J1_SY_p26` collapses `J1_SY` to
+a singleton and `d = 0.11`, so `d_fun ≤ 0.11 + 0.1*cstab ≤ 0.92`; otherwise
+the `-1` coefficient makes `d_fun ≤ d ≤ 0.9`. -/
 theorem D_FUN_LE_p26 (s : StableSyP23) (l : FinVec s.k 3)
     (hI : s.I = {i | i < s.k}) (hf : ∀ i, s.f i = (i + 1) % s.k) (hk : 2 < s.k)
     (hd : s.d ≤ 0.9)
     (hsol : Real.pi ≤ solLocal (E_SY_p4 (vecmatsV3_p4 l)) (F_SY_p4 (vecmatsV3_p4 l)))
     (hl : l ∈ B_SY1_p4 (aSyRow_p26 s) (bSyRow_p26 s)) :
     dFun_p23 s l ≤ 0.92 := by
-  sorry
+  obtain ⟨v, ⟨hball, hC1, -⟩, hvl⟩ := Iff.mp (Set.mem_image _ _ _) hl
+  have hrow : ∀ r : Fin s.k, vecmatsV3_p4 l r = v r := fun r => rowId_p26 hvl r
+  have hbnd : ∀ u : ℕ, 1 ≤ u → u ≤ s.k → s.b u (u % s.k + 1) ≤ cstab := by
+    intro u hu1 hu2
+    have hk0 : 0 < s.k := by omega
+    have hmemI : ∀ w : ℕ, w < s.k → w ∈ s.I := fun w hw => by rw [hI]; exact hw
+    have hper : ∀ u w : ℕ, s.b u w = s.b u (s.f^[s.k] w) :=
+      fun u w => (s.stable.1.2.2.2.2.1 u w).2
+    have hsym : ∀ u w : ℕ, s.b u w = s.b w u :=
+      fun u w => (s.stable.1.2.2.2.1 u w).2.1
+    have hfit : (u % s.k) ∈ s.I := hmemI _ (Nat.mod_lt _ hk0)
+    have hle := (s.stable.2.2.1 (u % s.k) hfit).2
+    rw [hf] at hle
+    have hf1 : s.f^[s.k] u = u % s.k := fIterateSuccMod_p26 hf hk0 u
+    have hf2 : s.f^[s.k] (u % s.k + 1) = (u % s.k + 1) % s.k := fIterateSuccMod_p26 hf hk0 _
+    calc s.b u (u % s.k + 1)
+        _ = s.b (u % s.k + 1) u := hsym u _
+        _ = s.b (u % s.k + 1) (s.f^[s.k] u) := hper _ _
+        _ = s.b (u % s.k + 1) (u % s.k) := by rw [hf1]
+        _ = s.b (u % s.k) (u % s.k + 1) := hsym _ _
+        _ = s.b (u % s.k) (s.f^[s.k] (u % s.k + 1)) := hper _ _
+        _ = s.b (u % s.k) ((u % s.k + 1) % s.k) := by rw [hf2]
+        _ ≤ cstab := hle
+  -- every `J1_SY` element is a cyclic adjacent row pair bounded by `cstab`
+  have hJ1fin : (J1_SY_p23 s : Set (ℕ × ℕ)).Finite :=
+    Set.Finite.subset
+      (Set.Finite.image (fun i : ℕ => (i, i % s.k + 1)) (Set.finite_Icc 1 s.k))
+      (by
+        intro x hx
+        simp only [J1_SY_p23, Set.mem_setOf_eq] at hx
+        obtain ⟨w, -, hwI, rfl⟩ := hx
+        exact Set.mem_image_of_mem _ hwI)
+  have hterm : ∀ x ∈ J1_SY_p23 s,
+      0 ≤ cstab - ‖rowSy_p23 l (x.1 - 1) - rowSy_p23 l (x.2 - 1)‖ := by
+    intro x hx
+    simp only [J1_SY_p23, Set.mem_setOf_eq] at hx
+    obtain ⟨w, -, hwI, rfl⟩ := hx
+    obtain ⟨hw1, hw2⟩ := hwI
+    have hw : w ≤ s.k := hw2
+    have hwpos : 0 < s.k := by omega
+    have h1 : rowSy_p23 l (w - 1) = v ⟨w - 1, by omega⟩ := by
+      show (if h : w - 1 < s.k then vecmatsV3_p4 l ⟨w - 1, h⟩ else 0) = _
+      rw [dif_pos (by omega), hrow]
+    have h2 : rowSy_p23 l (w % s.k + 1 - 1) = v ⟨w % s.k, Nat.mod_lt _ hwpos⟩ := by
+      show (if h : w % s.k + 1 - 1 < s.k then vecmatsV3_p4 l ⟨w % s.k + 1 - 1, h⟩ else 0) = _
+      rw [Nat.succ_sub_one, dif_pos (Nat.mod_lt _ hwpos), hrow]
+    have hC := (hC1 ⟨w - 1, by omega⟩ ⟨w % s.k, Nat.mod_lt _ hwpos⟩).2
+    simp only [bSyRow_p26] at hC
+    have hw1 : (w - 1) + 1 = w := by omega
+    rw [hw1] at hC
+    rw [h1, h2]
+    exact sub_nonneg.mpr (le_trans hC (hbnd w (by omega) hw))
+  show s.d + (1 : ℝ) / 10 * (if earSy_p23 s then 1 else -1) *
+      setSum (J1_SY_p23 s)
+        (fun x => cstab - ‖rowSy_p23 l (x.1 - 1) - rowSy_p23 l (x.2 - 1)‖) ≤ 0.92
+  by_cases hear : earSy_p23 s
+  · -- ear: singleton sum, d = 0.11
+    have hsing := SING_J1_SY_p26 s hear hI hf hk
+    obtain ⟨-, hdd, -, -, -⟩ := id hear
+    obtain ⟨w, hJ1, -, -⟩ := hsing
+    have hcst : (cstab : ℝ) = 3.01 := by norm_num [cstab]
+    have hnorm : 0 ≤ ‖rowSy_p23 l ((w, w % s.k + 1).1 - 1)
+        - rowSy_p23 l ((w, w % s.k + 1).2 - 1)‖ := norm_nonneg _
+    have hseq : setSum (J1_SY_p23 s)
+        (fun x => cstab - ‖rowSy_p23 l (x.1 - 1) - rowSy_p23 l (x.2 - 1)‖)
+        = cstab - ‖rowSy_p23 l ((w, w % s.k + 1).1 - 1)
+            - rowSy_p23 l ((w, w % s.k + 1).2 - 1)‖ := by
+      rw [hJ1]
+      exact setSum_singleton_p26 (f := fun x => cstab - ‖rowSy_p23 l (x.1 - 1) -
+        rowSy_p23 l (x.2 - 1)‖) (a := (w, w % s.k + 1))
+    rw [if_pos hear, hseq]
+    linarith
+  · -- non-ear: the coefficient is -1 and the sum is nonnegative
+    rw [if_neg hear]
+    have hsum : 0 ≤ setSum (J1_SY_p23 s)
+        (fun x => cstab - ‖rowSy_p23 l (x.1 - 1) - rowSy_p23 l (x.2 - 1)‖) :=
+      setSum_nonneg_of_nonneg_p26 hJ1fin hterm
+    linarith
 
 /-- HOL `TAU_FUN_LE` (GBYCPXS.hl:467). Proof pending (needs
 `CARD_F_SY_IN_B_SY` / `LOFA_DETERMINE_AZIM_IN_FA` / the Flyspeck-constants

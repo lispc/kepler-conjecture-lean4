@@ -45,9 +45,18 @@ Encoding notes.
   Do NOT import the parallel lanes from here.
 - LDURDPN/LFJCIXP-specific vocabulary: `conv0` ↦ `conv0_p2` (affsign sgn_gt
   at the empty base), `plane` ↦ `plane_p2`, `P hull` ↦ `convexHull ℝ`,
-  `delta` (collect_geom) ↦ the importable `deltaXf` (same Cayley–Menger
-  determinant), `packing` ↦ `Kepler.Packing`, `ball_annulus` ↦
+  `delta` (collect_geom) ↦ the importable `deltaX` (same Cayley–Menger
+  determinant; the historic hub spelling `deltaXf` was renamed away in the
+  atn2-merge wave 3), `packing` ↦ `Kepler.Packing`, `ball_annulus` ↦
   `Kepler.Text.ballAnnulus`, `sol_y` ↦ `Kepler.Text.solY`.
+- DEDUP (atn2-merge wave 3): the sphere.hl numeric kit this file consumes
+  (`atn2`, `deltaX`, `dihXf`, `dihY`, `solY`, `const1`, …) is single-sourced
+  in `Kepler.Text.SphereKit` (reached transitively via `PackingAuto20`);
+  the hub's `atn2` clash is gone and `LocalAuto1` + `LocalAuto2` are
+  co-importable again (dual-import probe verified 2026-09-18). The
+  localization/dih2k kit (`azimCycle_p2`, `EE_p2`, `rhoNode1_p2`, …,
+  `dih2k_p2`) STAYS here: `SphereKit` defers it until a rendering bridge
+  exists (plan §6).
 -/
 
 import Kepler.Text.Polytope
@@ -328,12 +337,14 @@ noncomputable def interp_p2 (x1 y1 x2 y2 x : ℝ) : ℝ :=
 /-- HOL `ly` (sphere.hl:199). NEEDS: merge with the sphere layer's `ly`. -/
 noncomputable def ly_p2 (y : ℝ) : ℝ := interp_p2 2 1 2.52 0 y
 
-/-- HOL `const1` (sphere.hl:193): `sol_y 2 2 2 2 2 2 / pi`; `sol_y` ↦ the
-importable `Kepler.Text.solY`. NEEDS: merge with the sphere layer. -/
-noncomputable def const1_p2 : ℝ := solY 2 2 2 2 2 2 / Real.pi
+/- DEDUP (atn2-merge wave 3): the verbatim twin `const1_p2`
+(`solY 2 2 2 2 2 2 / pi`) is deleted; `rho_p2` consumes the canonical
+`Kepler.Text.const1` from `Kepler.Text.SphereKit` (via PackingAuto20),
+whose body is verbatim-identical. `ly_p2`/`interp_p2` stay: not
+syntactic twins of SphereKit `ly` (plan §6). -/
 
 /-- HOL `rho` (sphere.hl:201). NEEDS: merge with `LocalAnchors.rho`. -/
-noncomputable def rho_p2 (y : ℝ) : ℝ := 1 + const1_p2 - const1_p2 * ly_p2 y
+noncomputable def rho_p2 (y : ℝ) : ℝ := 1 + const1 - const1 * ly_p2 y
 
 /-- HOL `h_dart` (localization.hl:1557). -/
 noncomputable def hDart_p2 (x : V3 × V3) : ℝ := ‖x.1‖ / 2
@@ -840,12 +851,12 @@ theorem LDURDPN {u v w : V3} (huv : ¬ Collinear ℝ ({0, u, v} : Set V3))
         ¬((affineSpan ℝ ({0, u} : Set V3) ∩ conv0_p2 {v, w} : Set V3) = ∅)) := sorry
 
 /-- HOL `LFJCIXP` (LFJCIXP.hl:25): the delta bound and the resulting
-ball-annulus diameter bound; `delta` ↦ `deltaXf`, `packing` ↦ `Kepler.Packing`. -/
+ball-annulus diameter bound; `delta` ↦ `deltaX`, `packing` ↦ `Kepler.Packing`. -/
 theorem LFJCIXP :
     (∀ y1 y2 y3 y4 y5 y6 : ℝ,
         2 ≤ y1 ∧ y1 ≤ 2.52 ∧ 2 ≤ y2 ∧ y2 ≤ 2.52 ∧ 2 ≤ y3 ∧ y3 ≤ 2.52 ∧
             2 ≤ y4 ∧ y4 ≤ 4.52 ∧ y5 = 2 ∧ y6 = 2 →
-          y4 ≤ 3.915 ∨ deltaXf (y1 ^ 2) (y2 ^ 2) (y3 ^ 2) (y4 ^ 2) (y5 ^ 2) (y6 ^ 2) < 0) ∧
+          y4 ≤ 3.915 ∨ deltaX (y1 ^ 2) (y2 ^ 2) (y3 ^ 2) (y4 ^ 2) (y5 ^ 2) (y6 ^ 2) < 0) ∧
       ∀ {v u w : V3}, {v, u, w} ⊆ ballAnnulus → Packing ({v, u, w} : Set V3) →
         u ≠ w → ‖v - u‖ = 2 → ‖v - w‖ = 2 → ‖u - w‖ ≤ 4.52 → ‖u - w‖ ≤ 3.915 := sorry
 

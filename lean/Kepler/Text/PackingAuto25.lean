@@ -45,11 +45,12 @@ ENCODING NOTES
   - `pack_nonlinear_non_ox3q1h`, `tsk_hyp` <-> PackingAuto21 (opaque);
     `TSKAJXY` <-> PackingAuto21:1114; `RDWKARC_concl`/`OXLZLEZ_concl` <->>
     PackingAuto2 `*_concl` (sorried conclusions).
-  - real toolkit: `dih_x/dih_y/eta_y/gamma3f/delta_x/h0cut` <-> PackingAuto21
-    (`dihXf/dihY/eta_y/gamma3f/deltaXf/h0cut`).  `gamma4fgcy` lives only in
-    PackingAuto20, whose olean would make `dihY`/`gamma3f` ambiguous here
-    (both files re-declare the hub kit), so this file does NOT import 20 and
-    carries verbatim `_p25` copies of `vol4f`/`gamma4fgcy` (delete at merge).
+  - real toolkit: `dih_x/dih_y/eta_y/gamma3f/delta_x/h0cut` <-> SphereKit +
+    PackingAuto21 (`dihXf/dihY/eta_y/gamma3f/deltaX/h0cut`; the sphere.hl kit
+    is single-sourced in `Kepler.Text.SphereKit`, atn2-merge plan §5.4 —
+    the hub's duplicate defs are gone, and this file imports that module
+    explicitly).  `vol4f`/`gamma4fgcy` remain as local `_p25` copies here
+    (kept per plan §3; PA20's unsuffixed versions are not re-exported).
   - `_p25` opaque stand-ins (NEEDS upstream bodies):
     `ox3q1hP25` (Oxl_def.hl `ox3q1h`: the certified 4-cardinality gg-sum
       inequality of the cc_v11 real model — inside `cc_real_model_v11`'s
@@ -66,6 +67,7 @@ import Kepler.Text.Polytope
 import Kepler.Text.PackingAuto2
 import Kepler.Text.PackingAuto3
 import Kepler.Text.PackingAuto21
+import Kepler.Text.SphereKit
 import Kepler.Statement
 import Mathlib
 
@@ -93,11 +95,6 @@ NEEDS: sphere.hl body (only used through `radV {...}^2`, TSKAJXY2.hl:455). -/
 noncomputable def rad2YP25 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
   rad2XP25 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
 
-/-- HOL `delta_y` (sphere.hl): `y_of_x delta_x` = `deltaXf` at squared
-lengths (same `y_of_x` pattern as rad2_y, TSKAJXY2.hl:457). -/
-noncomputable def deltaYP25 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  deltaXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
-
 /-- HOL `beta_bumpA_y` (Merge_ineq.hl): the y-space bump correction of
 GG_MCELL_GENERAL.  NEEDS: exact Merge_ineq.hl body. -/
 noncomputable def beta_bumpA_yP25 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ := sorry
@@ -122,18 +119,14 @@ noncomputable def gamma4fgcyP25 (y1 y2 y3 y4 y5 y6 : ℝ) (f : ℝ → ℝ) : �
 /-- HOL `HAS_SIZE n` (used ~40 times below). -/
 def HasSizeP25 (s : Set V3) (n : ℕ) : Prop := s.Finite ∧ s.ncard = n
 
-/-! ## Leaf-cell kit (`_p25` copies from PackingAuto18.lean; the two lanes
-`PackingAuto18` and `PackingAuto21` both declare `MCELL2_SUBSET_AFF_GE` and
-`atn2`, so only one is importable here — we keep 21 for the certified
-nonlinear bank + real toolkit.  Delete this section at merge.) -/
+/-! ## Leaf-cell kit (`_p25` copies from PackingAuto18.lean; `chiMsb` and
+`upsX` used to be verbatim twins here too and were deleted at the atn2 merge
+(plan §5.4) — both now come from `Kepler.Text.SphereKit`.  The rest of the
+section is PA18-lane-duplicated but not SphereKit material; `MCELL2_SUBSET_AFF_GE`
+is *not* redeclared here (PA18's and PA21's statements differ, plan §6.1).) -/
 
 /-- HOL `leaf` (leaf_cell.hl:17); PackingAuto18.lean:73 verbatim. -/
 def leaf (V : Set V3) (ul : List V3) : Prop := barV V 2 ul ∧ hl ul < Real.sqrt 2
-
-/-- HOL `chi_msb` (leaf_cell.hl:781-782); PackingAuto18.lean:91 verbatim. -/
-noncomputable def chiMsb (ul : List V3) (p : V3) : ℝ :=
-  (crossProduct ((ul[1]! - ul[0]! : V3) : Fin 3 → ℝ)
-      ((ul[2]! - ul[0]! : V3) : Fin 3 → ℝ)) ⬝ᵥ ((p - ul[0]! : V3) : Fin 3 → ℝ)
 
 /-- HOL `cc_pe_exists` (leaf_cell.hl:1052-1084); PackingAuto18 verbatim. -/
 theorem cc_pe_exists (V : Set V3) (ul : List V3) :
@@ -166,10 +159,6 @@ noncomputable def ccKe (V : Set V3) (ul : List V3) : ℕ :=
 
 /-- HOL `cc_cell` (leaf_cell.hl:1142); PackingAuto18 verbatim. -/
 def ccCell (V : Set V3) (ul : List V3) : Set V3 := mcell (ccKe V ul) V (ccUh V ul)
-
-/-- HOL `ups_x` (sphere.hl:122-124); PackingAuto18.lean:149 verbatim. -/
-def upsX (x1 x2 x6 : ℝ) : ℝ :=
-  -(x1 * x1) - x2 * x2 - x6 * x6 + 2 * x1 * x6 + 2 * x1 * x2 + 2 * x2 * x6
 
 /-! ## DEFINITIONS -/
 
@@ -425,7 +414,7 @@ theorem NULLSET_AFF_2_1 (x y z : V3) : nullSet (affGe {x, y} {z}) := by
 /-- HOL `coplanar_delta_y` (renamed from coplanar_dih_y). -/
 theorem coplanar_delta_y (u0 u1 u2 u3 : V3) :
     ¬ Coplanar ({u0, u1, u2, u3} : Set V3) ↔
-      0 < deltaYP25 (dist u0 u1) (dist u0 u2) (dist u0 u3) (dist u2 u3)
+      0 < deltaY (dist u0 u1) (dist u0 u2) (dist u0 u3) (dist u2 u3)
         (dist u1 u3) (dist u1 u2) := by
   sorry
 
@@ -467,43 +456,43 @@ theorem DIST_IMP_UPS_X_POS (u0 u1 u2 : V3)
 /-- HOL `dih_x < pi`: the angle computed by `atn2` from a positive first
 argument stays below `pi/2` in every quadrant branch. -/
 theorem DIH_X_LT_PI {x1 x2 x3 x4 x5 x6 : ℝ} (h1 : 0 < x1)
-    (hd : 0 < deltaXf x1 x2 x3 x4 x5 x6) :
+    (hd : 0 < deltaX x1 x2 x3 x4 x5 x6) :
     dihXf x1 x2 x3 x4 x5 x6 < Real.pi := by
   unfold dihXf
-  have hx : 0 < Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6) :=
+  have hx : 0 < Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) :=
     Real.sqrt_pos.mpr (mul_pos (by linarith) hd)
-  have harg : atn2 (Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6))
-      (-(deltaX4f x1 x2 x3 x4 x5 x6)) < Real.pi / 2 := by
+  have harg : atn2 (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
+      (-(deltaX4 x1 x2 x3 x4 x5 x6)) < Real.pi / 2 := by
     unfold atn2
     split_ifs with hb hb2 hb3
-    · have hfrac : -(deltaX4f x1 x2 x3 x4 x5 x6) /
-          Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6) < 1 := by
+    · have hfrac : -(deltaX4 x1 x2 x3 x4 x5 x6) /
+          Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) < 1 := by
         rw [div_lt_one hx]
         have habs := abs_lt.mp hb
         linarith
       exact Real.arctan_lt_pi_div_two _
-    · have hpos : 0 < Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6) /
-            -(deltaX4f x1 x2 x3 x4 x5 x6) := div_pos hx hb2
+    · have hpos : 0 < Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) /
+            -(deltaX4 x1 x2 x3 x4 x5 x6) := div_pos hx hb2
       have hap := Real.arctan_pos.mpr hpos
       linarith
     · exact by
         have hge := Real.neg_pi_div_two_lt_arctan
-          (Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6) /
-            -(deltaX4f x1 x2 x3 x4 x5 x6))
+          (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) /
+            -(deltaX4 x1 x2 x3 x4 x5 x6))
         have hpi : 0 < Real.pi := Real.pi_pos
         linarith
     · exact absurd hx (by
-        have hy : -(deltaX4f x1 x2 x3 x4 x5 x6) = 0 := by linarith
+        have hy : -(deltaX4 x1 x2 x3 x4 x5 x6) = 0 := by linarith
         rw [hy] at hb
         simp at hb
-        have hle : Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6) = 0 :=
+        have hle : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) = 0 :=
           Real.sqrt_eq_zero_of_nonpos hb
         linarith)
   linarith
 
 /-- HOL `DIH_Y_LT_PI`. -/
 theorem DIH_Y_LT_PI {y1 y2 y3 y4 y5 y6 : ℝ} (h1 : 0 < y1)
-    (hd : 0 < deltaYP25 y1 y2 y3 y4 y5 y6) :
+    (hd : 0 < deltaY y1 y2 y3 y4 y5 y6) :
     dihY y1 y2 y3 y4 y5 y6 < Real.pi := by
   refine DIH_X_LT_PI (by positivity) hd
 
@@ -1156,7 +1145,7 @@ theorem WEDGE3_Y4 (V : Set V3) (f : ℕ → V3) (w0 : V3) (n : ℕ) (i : ℕ) (u
     (hy3 : y3 = dist u0 (f (i + 1))) (hy5 : y5 = dist u1 (f (i + 1)))
     (hy6 : y6 = dist u1 (f i)) :
     ∃ y4, 2 ≤ y4 ∧ y4 ≤ 2 * Real.sqrt 2 ∧
-      0 < deltaYP25 y1 y2 y3 y4 y5 y6 ∧
+      0 < deltaY y1 y2 y3 y4 y5 y6 ∧
       dihY y1 y2 y3 y4 y5 y6 ≤ azim u0 u1 (f i) (f (i + 1)) ∧
       2 ≤ rad2YP25 y1 y2 y3 y4 y5 y6 ∧
       (azim u0 u1 (f i) (f (i + 1)) < Real.pi →
@@ -1393,7 +1382,7 @@ theorem MCELL4_DOMAIN (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i
       2 ≤ dist u1 (f (i + 1)) ∧ dist u1 (f (i + 1)) < 2 * Real.sqrt 2 ∧
       rad2YP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
           (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) < 2 ∧
-      0 < deltaYP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+      0 < deltaY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
         (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) := by
   sorry
 
@@ -1570,7 +1559,7 @@ theorem CC_3_PROPS (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : 
       ¬ nullSet (ccCell V [u1, u0, f (i + 1)]) ∧
       azim_mcell V f u0 u1 i = azim u0 u1 (f i) (f (i + 1)) ∧
       (∃ y4, 2 ≤ y4 ∧ y4 ≤ 2 * Real.sqrt 2 ∧
-        0 < deltaYP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) y4
+        0 < deltaY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) y4
           (dist u1 (f (i + 1))) (dist u1 (f i)) ∧
         dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) y4
             (dist u1 (f (i + 1))) (dist u1 (f i)) ≤ azim u0 u1 (f i) (f (i + 1)) ∧
@@ -2198,7 +2187,7 @@ theorem IXPOTPA_MERGED (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1
     (hb3 : 2 ≤ y3) (hb3' : y3 ≤ 2 * hminus)
     (hb4 : Real.sqrt 8 ≤ y4) (hb4' : y4 ≤ y5 + y6)
     (hb5 : 2 ≤ y5) (hb5' : y5 ≤ 2 * hminus) (hb6 : 2 ≤ y6) (hb6' : y6 ≤ 2 * hminus)
-    (hd : 0 < deltaYP25 y1 y2 y3 y4 y5 y6)
+    (hd : 0 < deltaY y1 y2 y3 y4 y5 y6)
     (hdi1 : dihY y1 y2 y3 y4 y5 y6 ≤ 2.089)
     (hdi2 : 1.946 ≤ dihY y1 y2 y3 y4 y5 y6)
     (he1 : eta_y y1 y2 y6 ^ 2 ≤ 1.34 ^ 2) (he2 : eta_y y1 y3 y5 ^ 2 ≤ 1.34 ^ 2) :
@@ -2216,7 +2205,7 @@ theorem TXQTPVC_MERGED (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1
     (hb4 : 2 ≤ y4) (hb4' : y4 ≤ y5 + y6)
     (hrad : 2 ≤ rad2YP25 y1 y2 y3 y4 y5 y6)
     (hb5 : 2 ≤ y5) (hb5' : y5 ≤ 2 * hminus) (hb6 : 2 ≤ y6) (hb6' : y6 ≤ 2 * hminus)
-    (hd : 0 < deltaYP25 y1 y2 y3 y4 y5 y6)
+    (hd : 0 < deltaY y1 y2 y3 y4 y5 y6)
     (hdi1 : dihY y1 y2 y3 y4 y5 y6 ≤ 2.089)
     (hdi2 : 1.946 ≤ dihY y1 y2 y3 y4 y5 y6)
     (he1 : eta_y y1 y2 y6 ^ 2 ≤ 1.34 ^ 2) (he2 : eta_y y1 y3 y5 ^ 2 ≤ 1.34 ^ 2) :
@@ -2331,7 +2320,7 @@ theorem PACKING_CHAPTER_MAIN_CONCLUSION (hkc : ¬ keplerConjecture)
 order flattened; all giants) -/
 
 /-- HOL `EDGE_LE_2RAD`. -/
-theorem EDGE_LE_2RAD {x1 x2 x3 x4 x5 x6 : ℝ} (hd : 0 < deltaXf x1 x2 x3 x4 x5 x6)
+theorem EDGE_LE_2RAD {x1 x2 x3 x4 x5 x6 : ℝ} (hd : 0 < deltaX x1 x2 x3 x4 x5 x6)
     (h4 : 0 < x4) (h5 : 0 < x5) (h6 : 0 < x6) (hup : 0 < upsX x4 x5 x6) :
     x4 ≤ 4 * rad2XP25 x1 x2 x3 x4 x5 x6 := by
   sorry
@@ -2339,7 +2328,7 @@ theorem EDGE_LE_2RAD {x1 x2 x3 x4 x5 x6 : ℝ} (hd : 0 < deltaXf x1 x2 x3 x4 x5 
 /-- HOL `RAD2_Y_SQRT8`. -/
 theorem RAD2_Y_SQRT8 {y1 y2 y3 y5 y6 : ℝ} (h5 : 2 ≤ y5) (h6 : 2 ≤ y6)
     (h5' : y5 < 4) (h6' : y6 < 4)
-    (hd : 0 < deltaYP25 y1 y2 y3 (Real.sqrt 8) y5 y6) :
+    (hd : 0 < deltaY y1 y2 y3 (Real.sqrt 8) y5 y6) :
     2 ≤ rad2YP25 y1 y2 y3 (Real.sqrt 8) y5 y6 := by
   sorry
 
