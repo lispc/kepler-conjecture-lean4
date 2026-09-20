@@ -3,12 +3,15 @@ Kepler.Text.SphereKit — single home of the sphere.hl numeric kit, deduplicated
 from the PackingAuto18/20/21 hub split and the `_pNN` verbatim twins
 (docs/atn2-merge-plan.md, §1.2/§2).  Wave-1 subset: the numeric family only
 (`atn2`, the `delta_x` family, `dih_x`/`dih_y`/`sol_y`, `ups_x`, the
-Terminal.hl tau kit, `num1`/`dnum1`).  The localization.hl fan kit (`EE`,
-`azimCycle`, `azimInFan`, `rhoNode1`, …) and the dih2k.hl
-torsor/constraint/stable systems are DEFERRED until their rendering bridge
-exists (plan §6): their `_p2/_p3/_p4/_p18` copies are not yet syntactic
-twins.  Do NOT import PackingAuto18/20/21 here — that would re-create the
-fatal `atn2` clash this module exists to remove.
+Terminal.hl tau kit, `num1`/`dnum1`) plus the localization.hl syntactic-twin
+core (`EE`, `azimCycle` — verbatim over their `_p2/_p3/_p7/_p14/_p18`
+twins).  Still DEFERRED (plan §6): `azimInFan`/`rhoNode1`/`ivsRhoNode1`/
+`interiorAngle1` (their `_pNN` twins are not syntactic — `sigmaFan` vs
+`EE`+`azimCycle` renderings — and LocalAuto1 still owns the unsuffixed
+names) and the dih2k.hl torsor/constraint/stable systems.  Do NOT import
+PackingAuto18/20/21 here — that would re-create the fatal `atn2` clash this
+module exists to remove.  `PackingAuto5` is imported for `projection`
+(azimCycle's tiebreak); every current downstream module already imports it.
 
 Body provenance: every body is verbatim from the surveyed variant named in
 its docstring; the whole family was mechanically diffed for the plan
@@ -17,6 +20,7 @@ carries the CORRECTED 6-term body below (LocalAuto1.lean:772 was a mis-port).
 -/
 
 import Kepler.Geom.Azim
+import Kepler.Text.PackingAuto5
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -166,5 +170,41 @@ noncomputable def taum (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
   solY y1 y2 y3 y4 y5 y6 * (1 + const1) -
     const1 * (lnazim y1 y2 y3 y4 y5 y6 +
       lnazim y2 y3 y1 y5 y6 y4 + lnazim y3 y1 y2 y6 y4 y5)
+
+/-! ## localization.hl: `EE` and `azim_cycle` (syntactic-twin core)
+
+The two localization-kit names whose `_pNN` twins are byte-identical across
+lanes.  Still deferred here (plan §6): `azimInFan` (its `sigmaFan`-rendered
+LA1/LA13 body and the `EE`+`azimCycle`-rendered `azimInFan_p2/_p3/_p4/_p18`
+bodies are not syntactically equal — a `FAN`-conditional bridge lemma is
+needed first, and LocalAuto1 currently owns the unsuffixed name), and
+`rhoNode1`/`ivsRhoNode1`/`interiorAngle1` (unsuffixed names still owned by
+LocalAuto1; bodies are the trivial `Classical.epsilon` forms). -/
+
+open Classical
+
+/-- HOL `EE v S = {w | {v,w} ∈ S}` (localization.hl:38; also
+WRGCVDR.hl:95): the `S`-neighbours of `v`.  Verbatim = `EE_p2`
+(LocalAuto2.lean:126) = `EE_p3` (LocalAuto3.lean:132) = `EE_p18`
+(LocalAuto18.lean:117) — the α-generic majority.  V3-monomorphic same-body
+variants: `ee` (LA1:90), `EE_p4` (LA4:758), `eeP13` (LA13:96, separate
+lane). -/
+def EE {α : Type*} (v : α) (S : Set (Set α)) : Set α := {w | {v, w} ∈ S}
+
+/-- HOL `azim_cycle` (sphere.hl:414): the azimuthal successor of `p` around
+the axis `(v, w)` within `W` — least azimuth, `‖projection ‖`-distance
+tiebreak, `p` itself on the degenerate `W ⊆ {p}`.  Verbatim =
+`azimCycle_p2` (LA2:91) = `_p3` (LA3:104) = `_p7` (LA7:128) = `_p14`
+(LA14:234) = `_p18` (LA18:121); `azimCycle_p4` (LA4:764) is the same body
+modulo binder names.  NOT a twin: `azimCycleP13` (LA13:115 — different junk
+value, `≤`-tiebreak, argument order; plan §3 keeps it separate).  HOL
+`projection (w-v) (u-v)` ↔ repo `projection (u - v) (w - v)`. -/
+noncomputable def azimCycle (W : Set V3) (v w p : V3) : V3 :=
+  if W ⊆ {p} then p
+  else
+    Classical.epsilon fun u : V3 => u ≠ p ∧ u ∈ W ∧ ∀ q ∈ W, q ≠ p →
+      azim v w p u < azim v w p q ∨
+        azim v w p u = azim v w p q ∧
+          ‖projection (u - v) (w - v)‖ ≤ ‖projection (q - v) (w - v)‖
 
 end Kepler.Text

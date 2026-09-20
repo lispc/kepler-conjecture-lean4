@@ -70,15 +70,37 @@ Encoding:
 - Giants are `sorry`; every `sorry` carries a NEEDS note naming the
   blocking HOL input (DISCHARGES convention).
 
-DISCHARGES: nothing yet (skeleton-first pass; the sorry'd items are the
-BB-table comparisons, the half-slice/prop-equ table identities, the
-opp-invariance twins and the `main_nonlinear_terminal_v11` case banks).
+DISCHARGES (2026-09-20, 23 of 48 sorries filled; 0 errors, 25 remaining):
+  - the four funlist `is_scs` registries `SCS_4T4/4T5/4I3/3T3_IS_SCS_p33`
+    (verbatim clone of LocalAuto29's private `isScs_mkFunlist_p29` skeleton
+    as `_p33` + 16-cell residue sweeps);
+  - the five opp-invariance twins `PROP_OPP_DIAG_*_13_p33` via the generic
+    `PROP_OPP_DIAG_GEN4_p33` reflection identity `T i = 4 - ((2+i)%4+1)`
+    (psort-class transfer `psort_T_p33` + per-system `funlist_T_p33` sweeps);
+  - the `4I1` stab-class chain `EQ_DIAG_STAB_4I1_02_p33`,
+    `SET_EQ_DIAG_STAB_4I1_02_p33`, `SET_EQ_DIAG_STAB_4I1_p33` (rotation
+    identity `STAB_PE_ROT_p33`: `pe (stab 4I1 1 3) 1 = stab 4I1 0 2`);
+  - the four mod-4 WLOG/min-diag struts `WLOG_4_BB_SCS_p33`,
+    `WLOG_4_BB_SCS_DIAG_p33`, `DIST_DIAG_2_CASES_EQ_3_p33`,
+    `ASSUME_MIN_DIAG_p33`;
+  - the seven BB-table struts `BB_4I3_IMP_4T4_p33`, `BB_4M6_IMP_4T5_p33`,
+    `BB_4I3_IMP_BB_4M6_p33`, `BB_4M2_IMP_BB_4M6_p33`, `BB_4M3_IMP_BB_4M6_p33`,
+    `BB_4M4_IMP_BB_4M7_p33`, `BB_4M5_IMP_BB_4M8_p33` (driver `BB_mono_p33` +
+    16-cell a/b-table class comparisons).
+  REMAINING (25): the `main_nonlinear_terminal_v11` case banks (`ear_acute`,
+  `EDGE_EQ_2_*`, `SCS_4I2_*`, `MM_4I2_*`, `ARDBZYE`, `SCS_4I1_*`, `FYSSVEV`),
+  the half-slice identities (`SCS_*_SLICE_*`), `YXIONXL2/OPP_IS_SCS_p33`,
+  `XWNHLMD_MM_p33`, `GSXRFWM1_p33` — real math downstream of still-`sorry`
+  giants (`main_nonlinear_terminal_v11`, `YRTAFYH_p17`, Ocbicby twins).
 -/
 
 import Kepler.Text.LocalAuto1
+import Kepler.Text.LocalAuto12
 import Kepler.Text.LocalAuto17
 import Kepler.Text.LocalAuto18
 import Kepler.Text.LocalAuto20
+import Kepler.Text.LocalAuto22
+import Kepler.Text.LocalAuto29
 import Kepler.Text.SphereKit
 import Mathlib
 
@@ -104,26 +126,23 @@ theorem YXIONXL2_p33 (s : ScsV39) (hs : isScsV39 s) (hk : 3 < s.k) :
 theorem OPP_IS_SCS_p33 (s : ScsV39) (hs : isScsV39 s) : isScsV39 (scsOppV39 s) := sorry
   -- DISCHARGES: NEEDS Ocbicby.hl `OPP_IS_SCS` over `ScsV39`.
 
-/-- HOL `PROP_EQU_IS_SCS` (YXIONXL.hl:589).  NEEDS: the heavy conjunct is
-the `is_scs_v39` ncard bound via the bijection `j ↦ (i + j) % k`
-(`LocalAuto12.PROP_EQU_IS_SCS` is the same statement). -/
+/-- HOL `PROP_EQU_IS_SCS` (YXIONXL.hl:589).  DISCHARGED 2026-09-19: verbatim
+`LocalAuto12.PROP_EQU_IS_SCS` (proved there; the heavy conjunct is the
+`is_scs_v39` ncard bound via the bijection `j ↦ (i + j) % k`). -/
 theorem PROP_EQU_IS_SCS_p33 {s : ScsV39} {k : ℕ} (hk : s.k = k) (hs : isScsV39 s)
-    (i : ℕ) : isScsV39 (scsPropEquV39 s i) := sorry
-  -- DISCHARGES: NEEDS YXIONXL.hl PROP_EQU_IS_SCS.
+    (i : ℕ) : isScsV39 (scsPropEquV39 s i) := PROP_EQU_IS_SCS hk hs i
 
 /-- HOL `YXIONXL3` (YXIONXL.hl:2573): cyclic re-indexing is an arrow.
-NEEDS: `PROP_EQU_IS_SCS_p33` + `TRANS_MMS_SUBSET` (`LocalAuto12.YXIONXL3`
-is the same statement). -/
+DISCHARGED 2026-09-19: verbatim `LocalAuto12.YXIONXL3` (proved there via
+`PROP_EQU_IS_SCS` + `TRANS_MMS_SUBSET`). -/
 theorem YXIONXL3_p33 (s : ScsV39) (i : ℕ) (hs : isScsV39 s) :
-    scsArrowV39 {s} {scsPropEquV39 s i} := sorry
-  -- DISCHARGES: NEEDS YXIONXL.hl YXIONXL3.
+    scsArrowV39 {s} {scsPropEquV39 s i} := YXIONXL3 s i hs
 
 /-- HOL `PRO_EQU_ID1` (YXIONXL.hl:2212): the finite-order identity of the
-prop-equation re-indexing (`LocalAuto12.PRO_EQU_ID1` is the same
-statement, where it is proved). -/
+prop-equation re-indexing.  DISCHARGED 2026-09-19: verbatim
+`LocalAuto12.PRO_EQU_ID1` (proved there; mod-cycle arithmetic). -/
 theorem PRO_EQU_ID1_p33 {s : ScsV39} {k : ℕ} (hk : s.k = k) (hs : isScsV39 s)
-    (i : ℕ) : s = scsPropEquV39 (scsPropEquV39 s i) (k - i % k) := sorry
-  -- DISCHARGES: NEEDS YXIONXL.hl PRO_EQU_ID1 (mod-cycle arithmetic).
+    (i : ℕ) : s = scsPropEquV39 (scsPropEquV39 s i) (k - i % k) := PRO_EQU_ID1 hk hs i
 
 /-- HOL `XWNHLMD_MM` (PPBTYDQ.hl:560; `LocalAuto26.XWNHLMD_MM_p26` is the
 same statement).  NEEDS: `XWITCCN` / `MMS_NONEMPTY` from taustar < 0. -/
@@ -200,23 +219,24 @@ theorem b_diag_4I2_p33 (i j : ℕ) (h : scsDiag 4 i j) : scs4I2.b i j = 6 := by
   simp only [scs4I2, mkUnadornedV39, csAdj]; split_ifs <;> first | rfl | (exfalso; omega)
 
 
-/-- NEEDS: `is_scs_v39 scs_4M6'` (LocalAuto22 OCBICBY funlist card kit). -/
-theorem is_scs_4M6_p33 : isScsV39 scs4M6' := sorry
+/-- DISCHARGED 2026-09-19: verbatim `LocalAuto29.SCS_4M6_IS_SCS_p29`
+(funlist isScs skeleton, 16-cell residue sweeps). -/
+theorem is_scs_4M6_p33 : isScsV39 scs4M6' := SCS_4M6_IS_SCS_p29
 
-/-- NEEDS: `is_scs_v39 scs_4M7` (LocalAuto22 OCBICBY funlist card kit). -/
-theorem is_scs_4M7_p33 : isScsV39 scs4M7 := sorry
+/-- DISCHARGED 2026-09-19: verbatim `LocalAuto29.SCS_4M7_IS_SCS_p29`. -/
+theorem is_scs_4M7_p33 : isScsV39 scs4M7 := SCS_4M7_IS_SCS_p29
 
-/-- NEEDS: `is_scs_v39 scs_4M8` (LocalAuto22 OCBICBY funlist card kit). -/
-theorem is_scs_4M8_p33 : isScsV39 scs4M8 := sorry
+/-- DISCHARGED 2026-09-19: verbatim `LocalAuto29.SCS_4M8_IS_SCS_p29`. -/
+theorem is_scs_4M8_p33 : isScsV39 scs4M8 := SCS_4M8_IS_SCS_p29
 
-/-- NEEDS: `is_scs_v39 scs_4M3'` (LocalAuto22 OCBICBY funlist card kit). -/
-theorem is_scs_4M3_p33 : isScsV39 scs4M3' := sorry
+/-- DISCHARGED 2026-09-19: verbatim `LocalAuto29.SCS_4M3_IS_SCS_p29`. -/
+theorem is_scs_4M3_p33 : isScsV39 scs4M3' := SCS_4M3_IS_SCS_p29
 
-/-- NEEDS: `is_scs_v39 scs_4M4'` (LocalAuto22 OCBICBY funlist card kit). -/
-theorem is_scs_4M4_p33 : isScsV39 scs4M4' := sorry
+/-- DISCHARGED 2026-09-19: verbatim `LocalAuto29.SCS_4M4_IS_SCS_p29`. -/
+theorem is_scs_4M4_p33 : isScsV39 scs4M4' := SCS_4M4_IS_SCS_p29
 
-/-- NEEDS: `is_scs_v39 scs_4M5'` (LocalAuto22 OCBICBY funlist card kit). -/
-theorem is_scs_4M5_p33 : isScsV39 scs4M5' := sorry
+/-- DISCHARGED 2026-09-19: verbatim `LocalAuto29.SCS_4M5_IS_SCS_p29`. -/
+theorem is_scs_4M5_p33 : isScsV39 scs4M5' := SCS_4M5_IS_SCS_p29
 
 theorem K_SCS_4M3_p33 : scs4M3'.k = 4 := rfl
 
@@ -402,14 +422,14 @@ theorem PRO_EQU_INV_p33 (s : ScsV39) (hs : isScsV39 s) (hk : s.k = 3) (i : ℕ) 
   rw [← PRO_EQU_ID1_p33 hk hs i] at h
   exact h
 
-/-- NEEDS: `is_scs_v39 scs_3T1` (LocalAuto22 OCBICBY funlist card kit). -/
-theorem is_scs_3T1_p33 : isScsV39 scs3T1 := sorry
+/-- DISCHARGED 2026-09-19: verbatim `LocalAuto29.SCS_3T1_IS_SCS_p29`. -/
+theorem is_scs_3T1_p33 : isScsV39 scs3T1 := SCS_3T1_IS_SCS_p29
 
-/-- NEEDS: `is_scs_v39 scs_3T4` (LocalAuto22 OCBICBY funlist card kit). -/
-theorem is_scs_3T4_p33 : isScsV39 scs3T4 := sorry
+/-- DISCHARGED 2026-09-19: verbatim `LocalAuto29.SCS_3T4_IS_SCS_p29`. -/
+theorem is_scs_3T4_p33 : isScsV39 scs3T4 := SCS_3T4_IS_SCS_p29
 
-/-- NEEDS: `is_scs_v39 scs_3T6'` (LocalAuto22 OCBICBY funlist card kit). -/
-theorem is_scs_3T6_p33 : isScsV39 scs3T6' := sorry
+/-- DISCHARGED 2026-09-19: verbatim `LocalAuto29.SCS_3T6_IS_SCS_p29`. -/
+theorem is_scs_3T6_p33 : isScsV39 scs3T6' := SCS_3T6_IS_SCS_p29
 
 theorem pe_3M1_arrow_p33 :
     scsArrowV39 {scsPropEquV39 scs3M1 1} {scs3M1} :=
@@ -541,37 +561,323 @@ theorem PSORT_5_EXPLICIT_p33 :
     | constructor
     | decide
 
-/-- HOL `SCS_4I2_IS_SCS` (ARDBZYE.hl:454). -/
-theorem SCS_4I2_IS_SCS_p33 : isScsV39 scs4I2 := sorry
-  -- DISCHARGES: NEEDS LocalAuto22.is_scs_4I2_p22 (funlist card kit).
+/-- HOL `SCS_4I2_IS_SCS` (ARDBZYE.hl:454).  DISCHARGED 2026-09-19: verbatim
+`LocalAuto22.is_scs_4I2_p22` (proved there; cs_adj card kit). -/
+theorem SCS_4I2_IS_SCS_p33 : isScsV39 scs4I2 := is_scs_4I2_p22
 
-/-- HOL `SCS_4I1_IS_SCS` (ARDBZYE.hl:547). -/
-theorem SCS_4I1_IS_SCS_p33 : isScsV39 scs4I1 := sorry
-  -- DISCHARGES: NEEDS LocalAuto22.is_scs_4I1_p22 (cs_adj card kit).
+/-- HOL `SCS_4I1_IS_SCS` (ARDBZYE.hl:547).  DISCHARGED 2026-09-19: verbatim
+`LocalAuto22.is_scs_4I1_p22` (proved there; cs_adj card kit). -/
+theorem SCS_4I1_IS_SCS_p33 : isScsV39 scs4I1 := is_scs_4I1_p22
 
-/-- HOL `SCS_4T1_IS_SCS` (ARDBZYE.hl:592). -/
-theorem SCS_4T1_IS_SCS_p33 : isScsV39 scs4T1 := sorry
-  -- DISCHARGES: NEEDS LocalAuto22.is_scs_4T1_p22 (cs_adj card kit).
+/-- HOL `SCS_4T1_IS_SCS` (ARDBZYE.hl:592).  DISCHARGED 2026-09-19: verbatim
+`LocalAuto22.is_scs_4T1_p22` (proved there; cs_adj card kit). -/
+theorem SCS_4T1_IS_SCS_p33 : isScsV39 scs4T1 := is_scs_4T1_p22
 
-/-- HOL `SCS_4T2_IS_SCS` (ARDBZYE.hl:684). -/
-theorem SCS_4T2_IS_SCS_p33 : isScsV39 scs4T2 := sorry
-  -- DISCHARGES: NEEDS LocalAuto22.is_scs_4T2_p22 (cs_adj card kit).
+/-- HOL `SCS_4T2_IS_SCS` (ARDBZYE.hl:684).  DISCHARGED 2026-09-19: verbatim
+`LocalAuto22.is_scs_4T2_p22` (proved there; cs_adj card kit). -/
+theorem SCS_4T2_IS_SCS_p33 : isScsV39 scs4T2 := is_scs_4T2_p22
 
-/-- HOL `SCS_4T4_IS_SCS` (ARDBZYE.hl:778). -/
-theorem SCS_4T4_IS_SCS_p33 : isScsV39 scs4T4 := sorry
-  -- DISCHARGES: NEEDS LocalAuto22.is_scs_4T4_p22 (funlist card kit).
+/-! ### Funlist `is_scs` skeleton (verbatim clone of LocalAuto29's private
+`isScs_mkFunlist_p29`/`funlist_symm_p29`/`funlist{3,4}_symm_p29` — those are
+`private` in LocalAuto29, so this lane re-carries them under `_p33`; SHIM:
+merge against the LA29 originals at the LocalAuto29 merge point). -/
 
-/-- HOL `SCS_4T5_IS_SCS` (ARDBZYE.hl:886). -/
-theorem SCS_4T5_IS_SCS_p33 : isScsV39 scs4T5 := sorry
-  -- DISCHARGES: NEEDS LocalAuto22.is_scs_4T5_p22 (funlist card kit).
+/-- Symmetry of the `funlist_v39` tables (`psort` is symmetric). -/
+private theorem funlist_symm_p33 (data : List ((ℕ × ℕ) × ℝ)) (d : ℝ) (k i j : ℕ) :
+    funlistV39 data d k i j = funlistV39 data d k j i := by
+  unfold funlistV39
+  rw [psort_swap_p20 k i j]
+  by_cases h : i % k = j % k
+  · rw [if_pos h, if_pos h.symm]
+  · rw [if_neg h, if_neg (Ne.symm h)]
 
-/-- HOL `SCS_4I3_IS_SCS` (ARDBZYE.hl:995). -/
-theorem SCS_4I3_IS_SCS_p33 : isScsV39 scs4I3 := sorry
-  -- DISCHARGES: NEEDS LocalAuto22.is_scs_4I3_p22 (funlist card kit).
+/-- Paired table symmetry for a 3-row registry. -/
+private theorem funlist3_symm_p33 (la lb : List ((ℕ × ℕ) × ℝ)) (da db : ℝ) :
+    ∀ i j, funlistV39 la da 3 i j = funlistV39 la da 3 j i ∧
+      funlistV39 lb db 3 i j = funlistV39 lb db 3 j i :=
+  fun i j => ⟨funlist_symm_p33 _ _ _ _ _, funlist_symm_p33 _ _ _ _ _⟩
 
-/-- HOL `SCS_3T3_IS_SCS` (ARDBZYE.hl:1104). -/
-theorem SCS_3T3_IS_SCS_p33 : isScsV39 scs3T3 := sorry
-  -- DISCHARGES: NEEDS LocalAuto22.is_scs_3T3_p22 (funlist card kit).
+/-- Paired table symmetry for a 4-row registry. -/
+private theorem funlist4_symm_p33 (la lb : List ((ℕ × ℕ) × ℝ)) (da db : ℝ) :
+    ∀ i j, funlistV39 la da 4 i j = funlistV39 la da 4 j i ∧
+      funlistV39 lb db 4 i j = funlistV39 lb db 4 j i :=
+  fun i j => ⟨funlist_symm_p33 _ _ _ _ _, funlist_symm_p33 _ _ _ _ _⟩
+
+/-- Shared 21-conjunct skeleton for the funlist-table `is_scs_v39`
+registries (verbatim `isScs_mkFunlist_p29`). -/
+private theorem isScs_mkFunlist_p33 {k : ℕ} {d : ℝ} {a b : ℕ → ℕ → ℝ}
+    (hk3 : 3 ≤ k) (hk6 : k ≤ 6) (hd : d < 0.9)
+    (hpa : Periodic2 a k) (hpb : Periodic2 b k)
+    (hsymm : ∀ i j, a i j = a j i ∧ b i j = b j i)
+    (hdom : ∀ i j, a i j ≤ b i j)
+    (hdiag0 : ∀ i, a i i = 0)
+    (h2a : ∀ i j, i < k ∧ j < k ∧ i ≠ j → 2 ≤ a i j)
+    (hb3 : ∀ i, k = 3 → b i (i + 1) < 4)
+    (hble : ∀ i, 3 < k → b i (i + 1) ≤ cstab)
+    (hcard : {i | i < k ∧ (2 * h0 < b i (i + 1) ∨ 2 < a i (i + 1))}.ncard + k ≤ 6) :
+    isScsV39 (mkUnadornedV39 k d a b) := by
+  unfold isScsV39
+  simp only [mkUnadornedV39]
+  refine ⟨hd, hk3, hk6, periodic_empty k, periodic_empty k, periodic_empty k,
+    periodic_empty k, hpa, hpa, hpb, hpb, fun _ _ => ⟨rfl, rfl⟩, ?_, ?_, hdiag0,
+    h2a, hb3, hble, fun _ _ hj => False.elim hj, fun _ _ hj => False.elim hj, hcard⟩
+  · intro i j
+    obtain ⟨h1, h2⟩ := hsymm i j
+    exact ⟨h1, h1, h2, h2, trivial⟩
+  · intro i j
+    exact ⟨le_refl _, hdom i j, le_refl _⟩
+
+/-- The mod-reduced edge of a funlist table (residue reader for the card
+sweep: entry at `(i, i+1)` = entry at `(i % k, (i % k + 1) % k)`). -/
+private theorem funlist_edge_mod_p33 (data : List ((ℕ × ℕ) × ℝ)) (d : ℝ) (k : ℕ)
+    (i : ℕ) (hk : k ≠ 0) :
+    funlistV39 data d k i (i + 1) =
+      funlistV39 data d k (i % k) ((i % k + 1) % k) := by
+  rw [← funlist_mod_p20 data d k i (i + 1) hk, Nat.mod_add_mod i k 1]
+
+/-- HOL `SCS_4T4_IS_SCS` (ARDBZYE.hl:778).  DISCHARGED 2026-09-20: direct
+21-conjunct verification via the `isScs_mkFunlist_p33` skeleton + 16-cell
+residue sweeps (the LA22 twin `is_scs_4T4_p22` is still `sorry`). -/
+theorem SCS_4T4_IS_SCS_p33 : isScsV39 scs4T4 :=
+  isScs_mkFunlist_p33 (k := 4) (d := 0.477)
+    (a := funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)] 2 4)
+    (b := funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((1, 3), cstab)] (2 * h0) 4)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist4_symm_p33 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;>
+        simp [assocdV39] <;>
+          first | exact LE_sqrt8_2h0 | exact LE_sqrt8_2 | exact sqrt8_LE_6 |
+            exact sqrt8_LE_CSTAB | exact LT_sqrt8_2h0 | exact two_h0_lt_cstab_p20 |
+            norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      intro i j ⟨hik, hjk, hne⟩
+      have hi4 : i = 0 ∨ i = 1 ∨ i = 2 ∨ i = 3 := by omega
+      have hj4 : j = 0 ∨ j = 1 ∨ j = 2 ∨ j = 3 := by omega
+      rcases hi4 with rfl | rfl | rfl | rfl <;>
+        rcases hj4 with rfl | rfl | rfl | rfl <;>
+          simp_all [funlistV39, psort, assocdV39] <;>
+            first | exact LE_sqrt8_2h0 | exact LE_sqrt8_2 | exact sqrt8_LE_6 |
+              exact sqrt8_LE_CSTAB | exact LT_sqrt8_2h0 | exact two_h0_lt_cstab_p20 |
+              norm_num [h0, cstab])
+    (by intro i hk; omega)
+    (by
+      intro i hk3
+      rw [funlist_edge_mod_p33 _ _ _ i (by omega)]
+      have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;>
+        first | exact sqrt8_LE_CSTAB | exact two_h0_le_cstab_p20 |
+          norm_num [h0, cstab])
+    (by
+      have key : ∀ r : ℕ, r < 4 →
+          ((2 * h0 < funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6),
+                ((1, 3), cstab)] (2 * h0) 4 r ((r + 1) % 4) ∨
+              2 < funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8),
+                ((1, 3), Real.sqrt 8)] 2 4 r ((r + 1) % 4)) ↔ r = 0) := by
+        intro r hr
+        interval_cases r <;>
+          simp [funlistV39, psort, assocdV39, LT_sqrt8_2h0, two_lt_two_h0_p20,
+            two_h0_lt_cstab_p20] <;> norm_num [h0, cstab]
+      have hS : {i | i < 4 ∧ (2 * h0 < funlistV39 [((0, 1), Real.sqrt 8),
+                ((0, 2), 6), ((1, 3), cstab)] (2 * h0) 4 i (i + 1) ∨
+              2 < funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8),
+                ((1, 3), Real.sqrt 8)] 2 4 i (i + 1))} = {0} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+        rw [funlist_edge_mod_p33 _ _ _ i (by omega),
+          funlist_edge_mod_p33 _ _ _ i (by omega)]
+        rw [key (i % 4) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      norm_num [h0, cstab])
+
+/-- HOL `SCS_4T5_IS_SCS` (ARDBZYE.hl:886).  DISCHARGED 2026-09-20:
+`isScs_mkFunlist_p33` skeleton + 16-cell residue sweeps (the LA22 twin
+`is_scs_4T5_p22` is still `sorry`). -/
+theorem SCS_4T5_IS_SCS_p33 : isScsV39 scs4T5 :=
+  isScs_mkFunlist_p33 (k := 4) (d := 0.513)
+    (a := funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4)
+    (b := funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), cstab)] (2 * h0) 4)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist4_symm_p33 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;>
+        simp [assocdV39] <;>
+          first | exact LE_sqrt8_2h0 | exact LE_sqrt8_2 | exact sqrt8_LE_6 |
+            exact sqrt8_LE_CSTAB | exact LT_sqrt8_2h0 | exact two_h0_lt_cstab_p20 |
+            norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      intro i j ⟨hik, hjk, hne⟩
+      have hi4 : i = 0 ∨ i = 1 ∨ i = 2 ∨ i = 3 := by omega
+      have hj4 : j = 0 ∨ j = 1 ∨ j = 2 ∨ j = 3 := by omega
+      rcases hi4 with rfl | rfl | rfl | rfl <;>
+        rcases hj4 with rfl | rfl | rfl | rfl <;>
+          simp_all [funlistV39, psort, assocdV39] <;>
+            first | exact LE_sqrt8_2h0 | exact LE_sqrt8_2 | exact sqrt8_LE_6 |
+              exact sqrt8_LE_CSTAB | exact LT_sqrt8_2h0 | exact two_h0_lt_cstab_p20 |
+              norm_num [h0, cstab])
+    (by intro i hk; omega)
+    (by
+      intro i hk3
+      rw [funlist_edge_mod_p33 _ _ _ i (by omega)]
+      have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;>
+        first | exact sqrt8_LE_CSTAB | exact two_h0_le_cstab_p20 |
+          norm_num [h0, cstab])
+    (by
+      have key : ∀ r : ℕ, r < 4 →
+          ((2 * h0 < funlistV39 [((0, 1), cstab), ((0, 2), 6),
+                ((1, 3), cstab)] (2 * h0) 4 r ((r + 1) % 4) ∨
+              2 < funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab),
+                ((1, 3), cstab)] 2 4 r ((r + 1) % 4)) ↔ r = 0) := by
+        intro r hr
+        interval_cases r <;>
+          simp [funlistV39, psort, assocdV39, LT_sqrt8_2h0, two_lt_two_h0_p20,
+            two_h0_lt_cstab_p20] <;> norm_num [h0, cstab]
+      have hS : {i | i < 4 ∧ (2 * h0 < funlistV39 [((0, 1), cstab), ((0, 2), 6),
+                ((1, 3), cstab)] (2 * h0) 4 i (i + 1) ∨
+              2 < funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab),
+                ((1, 3), cstab)] 2 4 i (i + 1))} = {0} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+        rw [funlist_edge_mod_p33 _ _ _ i (by omega),
+          funlist_edge_mod_p33 _ _ _ i (by omega)]
+        rw [key (i % 4) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      norm_num [h0, cstab])
+
+/-- HOL `SCS_4I3_IS_SCS` (ARDBZYE.hl:995).  DISCHARGED 2026-09-20:
+`isScs_mkFunlist_p33` skeleton + 16-cell residue sweeps (the LA22 twin
+`is_scs_4I3_p22` is still `sorry`). -/
+theorem SCS_4I3_IS_SCS_p33 : isScsV39 scs4I3 :=
+  isScs_mkFunlist_p33 (k := 4) (d := 0.477)
+    (a := funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)] 2 4)
+    (b := funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist4_symm_p33 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;>
+        simp [assocdV39] <;>
+          first | exact LE_sqrt8_2h0 | exact LE_sqrt8_2 | exact sqrt8_LE_6 |
+            exact sqrt8_LE_CSTAB | exact LT_sqrt8_2h0 | exact two_h0_lt_cstab_p20 |
+            norm_num [h0, cstab])
+    (by intro i; simp [funlistV39])
+    (by
+      intro i j ⟨hik, hjk, hne⟩
+      have hi4 : i = 0 ∨ i = 1 ∨ i = 2 ∨ i = 3 := by omega
+      have hj4 : j = 0 ∨ j = 1 ∨ j = 2 ∨ j = 3 := by omega
+      rcases hi4 with rfl | rfl | rfl | rfl <;>
+        rcases hj4 with rfl | rfl | rfl | rfl <;>
+          simp_all [funlistV39, psort, assocdV39] <;>
+            first | exact LE_sqrt8_2h0 | exact LE_sqrt8_2 | exact sqrt8_LE_6 |
+              exact sqrt8_LE_CSTAB | exact LT_sqrt8_2h0 | exact two_h0_lt_cstab_p20 |
+              norm_num [h0, cstab])
+    (by intro i hk; omega)
+    (by
+      intro i hk3
+      rw [funlist_edge_mod_p33 _ _ _ i (by omega)]
+      have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+      interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;>
+        first | exact sqrt8_LE_CSTAB | exact two_h0_le_cstab_p20 |
+          norm_num [h0, cstab])
+    (by
+      have key : ∀ r : ℕ, r < 4 →
+          ((2 * h0 < funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6),
+                ((1, 3), 6)] (2 * h0) 4 r ((r + 1) % 4) ∨
+              2 < funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8),
+                ((1, 3), Real.sqrt 8)] 2 4 r ((r + 1) % 4)) ↔ r = 0) := by
+        intro r hr
+        interval_cases r <;>
+          simp [funlistV39, psort, assocdV39, LT_sqrt8_2h0, two_lt_two_h0_p20,
+            two_h0_lt_cstab_p20] <;> norm_num [h0, cstab]
+      have hS : {i | i < 4 ∧ (2 * h0 < funlistV39 [((0, 1), Real.sqrt 8),
+                ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i (i + 1) ∨
+              2 < funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8),
+                ((1, 3), Real.sqrt 8)] 2 4 i (i + 1))} = {0} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+        rw [funlist_edge_mod_p33 _ _ _ i (by omega),
+          funlist_edge_mod_p33 _ _ _ i (by omega)]
+        rw [key (i % 4) (Nat.mod_lt i (by omega))]
+        omega
+      rw [hS]
+      norm_num [h0, cstab])
+
+/-- HOL `SCS_3T3_IS_SCS` (ARDBZYE.hl:1104).  DISCHARGED 2026-09-20:
+`isScs_mkFunlist_p33` skeleton + 9-cell residue sweeps; the card set is all
+three residues (`cstab > 2 * h0` edges), `3 + 3 = 6 ≤ 6` (the LA22 twin
+`is_scs_3T3_p22` is still `sorry`). -/
+theorem SCS_3T3_IS_SCS_p33 : isScsV39 scs3T3 :=
+  isScs_mkFunlist_p33 (k := 3) (d := 0.476)
+    (a := funlistV39 [] (2 * h0) 3)
+    (b := funlistV39 [] cstab 3)
+    (by norm_num) (by norm_num) (by norm_num)
+    (periodic2_funlist_p20 _ _ _) (periodic2_funlist_p20 _ _ _)
+    (funlist3_symm_p33 _ _ _ _)
+    (by
+      intro i j
+      simp only [funlistV39, psort]
+      have h1 : i % 3 < 3 := Nat.mod_lt i (by omega)
+      have h2 : j % 3 < 3 := Nat.mod_lt j (by omega)
+      interval_cases i % 3 <;> interval_cases j % 3 <;>
+        simp [assocdV39] <;>
+          first | norm_num [h0, cstab] | exact sqrt8_LE_6 | exact sqrt8_LE_CSTAB |
+            exact LE_sqrt8_2 | exact LE_sqrt8_2h0 | exact LT_sqrt8_2h0 |
+            exact two_h0_lt_cstab_p20)
+    (by intro i; simp [funlistV39])
+    (by
+      intro i j ⟨hik, hjk, hne⟩
+      have hi4 : i = 0 ∨ i = 1 ∨ i = 2 ∨ i = 3 := by omega
+      have hj4 : j = 0 ∨ j = 1 ∨ j = 2 ∨ j = 3 := by omega
+      rcases hi4 with rfl | rfl | rfl | rfl <;>
+        rcases hj4 with rfl | rfl | rfl | rfl <;>
+          simp_all [funlistV39, psort, assocdV39] <;>
+            first | exact LE_sqrt8_2h0 | exact LE_sqrt8_2 | exact sqrt8_LE_6 |
+              exact sqrt8_LE_CSTAB | exact LT_sqrt8_2h0 | exact two_h0_lt_cstab_p20 |
+              norm_num [h0, cstab])
+    (by
+      intro i _
+      rw [funlist_edge_mod_p33 _ _ _ i (by omega)]
+      have hz : i % 3 < 3 := Nat.mod_lt i (by omega)
+      interval_cases i % 3 <;> simp [funlistV39, psort, assocdV39] <;>
+        norm_num [h0, cstab])
+    (by intro i hk3; omega)
+    (by
+      have hS : {i | i < 3 ∧ (2 * h0 < funlistV39 [] cstab 3 i (i + 1) ∨
+            2 < funlistV39 [] (2 * h0) 3 i (i + 1))} = {0, 1, 2} := by
+        ext i
+        simp only [Set.mem_setOf_eq, Set.mem_insert_iff]
+        rw [funlist_edge_mod_p33 _ _ _ i (by omega),
+          funlist_edge_mod_p33 _ _ _ i (by omega)]
+        constructor
+        · rintro ⟨hb3, hnum⟩
+          interval_cases i
+          · exact Or.inl rfl
+          · exact Or.inr (Or.inl rfl)
+          · exact Or.inr (Or.inr rfl)
+        · rintro (rfl | rfl | rfl) <;>
+            simp [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab]
+      rw [hS]
+      simp
+      all_goals norm_num [h0, cstab])
 
 /-- HOL `SCS_4I2_BASIC` (ARDBZYE.hl:1200). -/
 theorem SCS_4I2_BASIC_p33 : scsBasicV39 scs4I2 := ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
@@ -726,15 +1032,47 @@ theorem SCS_DIAG_4_CASES_p33 (i j : ℕ) :
   · rintro (⟨r1, r2⟩ | ⟨r1, r2⟩ | ⟨r1, r2⟩ | ⟨r1, r2⟩)
     <;> rw [scsDiag] <;> omega
 
-/-- HOL `WLOG_4_BB_SCS` (ARDBZYE.hl:1455).  NEEDS: the diag case split +
-point symmetry transfer of `P` along the `BBs` realisation. -/
+/-- `Periodic v 4` reduces every index to its residue. -/
+private theorem per_mod4_p33 {v : ℕ → V3} (hv : Periodic v 4) (n : ℕ) :
+    v n = v (n % 4) := by
+  have key : ∀ m, v (n % 4 + 4 * m) = v (n % 4) := by
+    intro m
+    induction m with
+    | zero => simp
+    | succ k ih =>
+        have he : n % 4 + 4 * (k + 1) = (n % 4 + 4 * k) + 4 := by omega
+        rw [he, hv]
+        exact ih
+  have h := key (n / 4)
+  rwa [Nat.mod_add_div n 4] at h
+
+/-- HOL `WLOG_4_BB_SCS` (ARDBZYE.hl:1455).  DISCHARGED 2026-09-20: the
+mod-4 diag residue split + 4-periodicity of the `BBs` realisation + the
+point-symmetry of `P`. -/
 theorem WLOG_4_BB_SCS_p33 (s : ScsV39) (v : ℕ → V3) (i j : ℕ) (P : V3 → V3 → Prop)
     (hs : isScsV39 s) (hbb : BBsV39 s v) (hk : s.k = 4) (hd : scsDiag 4 i j)
     (hsym : ∀ i' j', P (v i') (v j') ↔ P (v j') (v i'))
-    (hP : P (v i) (v j)) : P (v 0) (v 2) ∨ P (v 1) (v 3) := sorry
-  -- DISCHARGES: NEEDS ARDBZYE.hl WLOG_4_BB_SCS (mod-4 residue cases).
+    (hP : P (v i) (v j)) : P (v 0) (v 2) ∨ P (v 1) (v 3) := by
+  have hp : Periodic v 4 := by rw [← hk]; exact hbb.2.1
+  have ered : ∀ n r, n % 4 = r → v n = v r := fun n r hr => by
+    rw [per_mod4_p33 hp n, hr]
+  rcases diag_pair_cases_p33 i j hd with ⟨r1, r2⟩ | ⟨r1, r2⟩ | ⟨r1, r2⟩ | ⟨r1, r2⟩
+  · refine Or.inl ?_
+    have h2' := hP
+    rwa [ered i 0 r1, ered j 2 r2] at h2'
+  · refine Or.inr ?_
+    have h2' := hP
+    rwa [ered i 1 r1, ered j 3 r2] at h2'
+  · refine Or.inl ?_
+    have h2' := hP
+    rw [ered i 2 r1, ered j 0 r2] at h2'
+    exact (hsym 2 0).mp h2'
+  · refine Or.inr ?_
+    have h2' := hP
+    rw [ered i 3 r1, ered j 1 r2] at h2'
+    exact (hsym 3 1).mp h2'
 
-/-- HOL `WLOG_4_BB_SCS_DIAG` (ARDBZYE.hl:1482).  NEEDS: as
+/-- HOL `WLOG_4_BB_SCS_DIAG` (ARDBZYE.hl:1482).  DISCHARGED 2026-09-20: as
 `WLOG_4_BB_SCS_p33`, with the two swap symmetries of the 4-ary `P`. -/
 theorem WLOG_4_BB_SCS_DIAG_p33 (s : ScsV39) (v : ℕ → V3) (i j : ℕ)
     (P : V3 → V3 → V3 → V3 → Prop) (hs : isScsV39 s) (hbb : BBsV39 s v)
@@ -742,27 +1080,89 @@ theorem WLOG_4_BB_SCS_DIAG_p33 (s : ScsV39) (v : ℕ → V3) (i j : ℕ)
     (hsym1 : ∀ a b c d : ℕ, P (v a) (v b) (v c) (v d) ↔ P (v b) (v a) (v c) (v d))
     (hsym2 : ∀ a b c d : ℕ, P (v a) (v b) (v c) (v d) ↔ P (v a) (v b) (v d) (v c))
     (hP : P (v i) (v j) (v (i + 1)) (v (j + 1))) :
-    P (v 0) (v 2) (v 1) (v 3) ∨ P (v 1) (v 3) (v 0) (v 2) := sorry
-  -- DISCHARGES: NEEDS ARDBZYE.hl WLOG_4_BB_SCS_DIAG.
+    P (v 0) (v 2) (v 1) (v 3) ∨ P (v 1) (v 3) (v 0) (v 2) := by
+  have hp : Periodic v 4 := by rw [← hk]; exact hbb.2.1
+  have ered : ∀ n r, n % 4 = r → v n = v r := fun n r hr => by
+    rw [per_mod4_p33 hp n, hr]
+  rcases diag_pair_cases_p33 i j hd with ⟨r1, r2⟩ | ⟨r1, r2⟩ | ⟨r1, r2⟩ | ⟨r1, r2⟩
+  · refine Or.inl ?_
+    have h2' := hP
+    rwa [ered i 0 r1, ered j 2 r2, ered (i + 1) 1 (by omega),
+      ered (j + 1) 3 (by omega)] at h2'
+  · refine Or.inr ?_
+    have h2' := hP
+    rw [ered i 1 r1, ered j 3 r2, ered (i + 1) 2 (by omega),
+      ered (j + 1) 0 (by omega)] at h2'
+    exact (hsym2 1 3 2 0).mp h2'
+  · refine Or.inl ?_
+    have h2' := hP
+    rw [ered i 2 r1, ered j 0 r2, ered (i + 1) 3 (by omega),
+      ered (j + 1) 1 (by omega)] at h2'
+    exact (hsym2 0 2 3 1).mp ((hsym1 2 0 3 1).mp h2')
+  · refine Or.inr ?_
+    have h2' := hP
+    rw [ered i 3 r1, ered j 1 r2, ered (i + 1) 0 (by omega),
+      ered (j + 1) 2 (by omega)] at h2'
+    exact (hsym1 3 1 0 2).mp h2'
 
-/-- HOL `DIST_DIAG_2_CASES_EQ_3` (ARDBZYE.hl:1536).  NEEDS: the diag case
-bank over the two parallel diagonals of the `4I2` realisation. -/
+/-- HOL `DIST_DIAG_2_CASES_EQ_3` (ARDBZYE.hl:1536).  DISCHARGED 2026-09-20:
+the mod-4 diag residue split over the `4I2` realisation (4-periodicity;
+the off-diagonal pair readings are distance-commuted). -/
 theorem DIST_DIAG_2_CASES_EQ_3_p33 (v : ℕ → V3) (i j : ℕ) (hv : v ∈ MMsV39 scs4I2)
     (hd : scsDiag 4 i j) (h1 : dist (v i) (v j) = 3)
     (h2 : dist (v (i + 1)) (v (j + 1)) = 3) :
-    dist (v 0) (v 2) = 3 ∧ dist (v 1) (v 3) = 3 := sorry
-  -- DISCHARGES: NEEDS ARDBZYE.hl DIST_DIAG_2_CASES_EQ_3.
+    dist (v 0) (v 2) = 3 ∧ dist (v 1) (v 3) = 3 := by
+  have hp : Periodic v 4 := by rw [← K_SCS_4I2_p33]; exact (MMs_imp_BBs_p33 hv).2.1
+  have ered : ∀ n r, n % 4 = r → v n = v r := fun n r hr => by
+    rw [per_mod4_p33 hp n, hr]
+  rcases diag_pair_cases_p33 i j hd with ⟨r1, r2⟩ | ⟨r1, r2⟩ | ⟨r1, r2⟩ | ⟨r1, r2⟩
+  · rw [ered i 0 r1, ered j 2 r2] at h1
+    rw [ered (i + 1) 1 (by omega), ered (j + 1) 3 (by omega)] at h2
+    exact ⟨h1, h2⟩
+  · rw [ered i 1 r1, ered j 3 r2] at h1
+    rw [ered (i + 1) 2 (by omega), ered (j + 1) 0 (by omega)] at h2
+    exact ⟨by rw [dist_comm]; exact h2, h1⟩
+  · rw [ered i 2 r1, ered j 0 r2] at h1
+    rw [ered (i + 1) 3 (by omega), ered (j + 1) 1 (by omega)] at h2
+    exact ⟨by rw [dist_comm]; exact h1, by rw [dist_comm]; exact h2⟩
+  · rw [ered i 3 r1, ered j 1 r2] at h1
+    rw [ered (i + 1) 0 (by omega), ered (j + 1) 2 (by omega)] at h2
+    exact ⟨h2, by rw [dist_comm]; exact h1⟩
 
-/-- HOL `ASSUME_MIN_DIAG` (ARDBZYE.hl:1550).  NEEDS: the min-diag WLOG
-selection over the two diagonal classes. -/
+/-- HOL `SCS_DIAG_ADD1` (ARDBZYE.hl:1730). -/
+theorem SCS_DIAG_ADD1_p33 (i j : ℕ) (h : scsDiag 4 i j) : scsDiag 4 (i + 1) (j + 1) := by
+  obtain ⟨h1, h2, h3⟩ := h
+  constructor <;> omega
+
+
+/-- HOL `ASSUME_MIN_DIAG` (ARDBZYE.hl:1550).  DISCHARGED 2026-09-20: the
+min-diag selection between the two diagonal classes (the `+2` shift reads
+the same unordered pair, so the swapped class is distance-commuted). -/
 theorem ASSUME_MIN_DIAG_p33 (v : ℕ → V3)
     (h : ∀ i j, v ∈ MMsV39 scs4I2 → scsDiag 4 i j → dist (v i) (v j) ≤ cstab →
       dist (v i) (v j) ≤ dist (v (i + 1)) (v (j + 1)) →
       MMsV39 scs4T1 ≠ ∅ ∨ MMsV39 scs4T2 ≠ ∅)
     (i j : ℕ) (hv : v ∈ MMsV39 scs4I2) (hd : scsDiag 4 i j)
     (hc : dist (v i) (v j) ≤ cstab) :
-    MMsV39 scs4T1 ≠ ∅ ∨ MMsV39 scs4T2 ≠ ∅ := sorry
-  -- DISCHARGES: NEEDS ARDBZYE.hl ASSUME_MIN_DIAG.
+    MMsV39 scs4T1 ≠ ∅ ∨ MMsV39 scs4T2 ≠ ∅ := by
+  rcases le_or_gt (dist (v (i + 1)) (v (j + 1))) (dist (v i) (v j)) with hle | hlt
+  · have hshift : dist (v (i + 2)) (v (j + 2)) = dist (v i) (v j) := by
+      have hp : Periodic v 4 := by rw [← K_SCS_4I2_p33]; exact (MMs_imp_BBs_p33 hv).2.1
+      have ered : ∀ n r, n % 4 = r → v n = v r := fun n r hr => by
+        rw [per_mod4_p33 hp n, hr]
+      rcases diag_pair_cases_p33 i j hd with ⟨r1, r2⟩ | ⟨r1, r2⟩ | ⟨r1, r2⟩ |
+        ⟨r1, r2⟩
+      · rw [ered (i + 2) 2 (by omega), ered (j + 2) 0 (by omega), ered i 0 r1,
+          ered j 2 r2, dist_comm (v 2) (v 0)]
+      · rw [ered (i + 2) 3 (by omega), ered (j + 2) 1 (by omega), ered i 1 r1,
+          ered j 3 r2, dist_comm (v 3) (v 1)]
+      · rw [ered (i + 2) 0 (by omega), ered (j + 2) 2 (by omega), ered i 2 r1,
+          ered j 0 r2, dist_comm (v 0) (v 2)]
+      · rw [ered (i + 2) 1 (by omega), ered (j + 2) 3 (by omega), ered i 3 r1,
+          ered j 1 r2, dist_comm (v 1) (v 3)]
+    exact h (i + 1) (j + 1) hv (SCS_DIAG_ADD1_p33 i j hd) (le_trans hle hc)
+      (by rwa [hshift])
+  · exact h i j hv hd hc (le_of_lt hlt)
 
 /-- HOL `SCS_4I2_3_LE_A` (ARDBZYE.hl:1676): the a-diag value of `4I2` is 3. -/
 theorem SCS_4I2_3_LE_A_p33 (v : ℕ → V3) (hbb : BBsV39 scs4I2 v) (i j : ℕ)
@@ -770,11 +1170,6 @@ theorem SCS_4I2_3_LE_A_p33 (v : ℕ → V3) (hbb : BBsV39 scs4I2 v) (i j : ℕ)
   have h := (hbb.2.2.1 i j).1
   rw [a_diag_4I2_p33 i j hd] at h
   exact h
-
-/-- HOL `SCS_DIAG_ADD1` (ARDBZYE.hl:1730). -/
-theorem SCS_DIAG_ADD1_p33 (i j : ℕ) (h : scsDiag 4 i j) : scsDiag 4 (i + 1) (j + 1) := by
-  obtain ⟨h1, h2, h3⟩ := h
-  constructor <;> omega
 
 /-- HOL `ear_acute` (ARDBZYE.hl:1751).  NEEDS: `main_nonlinear_terminal_v11`
 (y-row 2..2h0, y5 ≥ 3 ⇒ dih_y < π/2). -/
@@ -945,26 +1340,165 @@ theorem h0_EQ_B_SCS_4I1_p33 :
   · rw [b_diag_4I1_p33 i j hd]
   · rw [a_diag_4I1_p33 i j hd]
 
-/-- HOL `EQ_DIAG_STAB_4I1_02` (ARDBZYE.hl:2835).  NEEDS: the dsv/BB-minimum
-transfer between the two diagonal stabilisations of `4I1` (b-tables
-cstab/6 swapped at the two diag classes; a-tables agree). -/
-theorem EQ_DIAG_STAB_4I1_02_p33 (i : ℕ) :
-    scsArrowV39 {scsStabDiagV39 scs4I1 (i + 2) i} {scsStabDiagV39 scs4I1 0 2} := sorry
-  -- DISCHARGES: NEEDS ARDBZYE.hl EQ_DIAG_STAB_4I1_02.
+/-! ### The `stab 4I1` diag-class chain (`EQ_DIAG_STAB_4I1*`)
 
-/-- HOL `SET_EQ_DIAG_STAB_4I1_02` (ARDBZYE.hl:2860).  NEEDS:
-`EQ_DIAG_STAB_4I1_02_p33` across the four residues. -/
+The two diagonal stabilisations of `4I1` are prop-equation re-indexings of
+one another: `pe (stab 4I1 1 3) 1 = stab 4I1 0 2` (the `(1,3)` override
+class shifts to `(2,0) = (0,2)` and the csAdj tables are rotation
+invariant), so the `(1,3)`-class systems arrow to the `(0,2)` class via
+`YXIONXL3`. -/
+
+/-- HOL `SCS_DIAG_SCS_4I1_02` (AUEAHEH.hl:101).  HOISTED above the
+stab-class chain (moved verbatim from its Section A source position). -/
+theorem SCS_DIAG_SCS_4I1_02_p33 : scsDiag scs4I1.k 0 2 := by
+  rw [K_SCS_4I1_p33]; unfold scsDiag; decide
+
+/-- The `(1,3)` diag pair of `4I1` (needed by the stab-class chain; the
+AUEAHEH source lists the `_02` twin only). -/
+theorem SCS_DIAG_SCS_4I1_13_p33 : scsDiag scs4I1.k 1 3 := by
+  rw [K_SCS_4I1_p33]; unfold scsDiag; decide
+
+/-- `psort 4` classes shift with the index. -/
+private theorem psort_shift_p33 (i j : ℕ) :
+    psort 4 (1, 3) = psort 4 (1 + i, 1 + j) ↔ psort 4 (0, 2) = psort 4 (i, j) := by
+  have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+  have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+  have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+  have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+  simp only [psort, e1, e2]
+  interval_cases i % 4 <;> interval_cases j % 4 <;> simp <;> decide
+
+private theorem psort_ne_p33 : psort 4 (0, 2) ≠ psort 4 (1, 3) := by
+  decide
+
+/-- The `csAdj 4` tables are invariant under the index rotation `+1`. -/
+private theorem csAdj_rot_p33 (a1 a2 : ℝ) (i j : ℕ) :
+    csAdj 4 a1 a2 (1 + i) (1 + j) = csAdj 4 a1 a2 i j := by
+  simp only [csAdj]
+  have e1 : (1 + i) % 4 = (i % 4 + 1) % 4 := by omega
+  have e2 : (1 + j) % 4 = (j % 4 + 1) % 4 := by omega
+  have e3 : (1 + i + 1) % 4 = (i % 4 + 1 + 1) % 4 := by omega
+  have e4 : (1 + j + 1) % 4 = (j % 4 + 1 + 1) % 4 := by omega
+  have e5 : (i + 1) % 4 = (i % 4 + 1) % 4 := by omega
+  have e6 : (j + 1) % 4 = (j % 4 + 1) % 4 := by omega
+  rw [e1, e2, e3, e4, e5, e6]
+  have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+  have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+  interval_cases i % 4 <;> interval_cases j % 4 <;> simp
+
+/-- The `(1,3)` diagonal stabilisation of `4I1` re-indexed by `1` is the
+`(0,2)` one. -/
+private theorem STAB_PE_ROT_p33 :
+    scsPropEquV39 (scsStabDiagV39 scs4I1 1 3) 1 = scsStabDiagV39 scs4I1 0 2 := by
+  have hb1 : scsBasicV39 (scsPropEquV39 (scsStabDiagV39 scs4I1 1 3) 1) :=
+    ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
+  have hb2 : scsBasicV39 (scsStabDiagV39 scs4I1 0 2) :=
+    ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
+  refine scs_inj _ _ hb1 hb2 rfl rfl ?_ ?_
+  · funext i j
+    simp only [scsPropEquV39, scsStabDiagV39, scs4I1, mkUnadornedV39, csAdj]
+    exact csAdj_rot_p33 2 (2 * h0) i j
+  · funext i j
+    simp only [scsPropEquV39, scsStabDiagV39, scs4I1, mkUnadornedV39]
+    by_cases hps : psort 4 (0, 2) = psort 4 (i, j)
+    · rw [if_pos ((psort_shift_p33 i j).mpr hps), if_pos hps]
+    · rw [if_neg (fun hc => hps ((psort_shift_p33 i j).mp hc)), if_neg hps]
+      exact csAdj_rot_p33 (2 * h0) 6 i j
+
+/-- HOL `EQ_DIAG_STAB_4I1_02` (ARDBZYE.hl:2835).  DISCHARGED 2026-09-20:
+even residues give the same stabilisation (`STAB_MOD`/`STAB_SYM`); odd
+residues give the `(1,3)` class, which re-indexes onto `(0,2)` via
+`STAB_PE_ROT_p33` + `YXIONXL3_p33`. -/
+theorem EQ_DIAG_STAB_4I1_02_p33 (i : ℕ) :
+    scsArrowV39 {scsStabDiagV39 scs4I1 (i + 2) i} {scsStabDiagV39 scs4I1 0 2} := by
+  have his02 : isScsV39 (scsStabDiagV39 scs4I1 0 2) :=
+    (STAB_4I1_SCS_p33 0 2 SCS_DIAG_SCS_4I1_02_p33).1
+  have his13 : isScsV39 (scsStabDiagV39 scs4I1 1 3) :=
+    (STAB_4I1_SCS_p33 1 3 SCS_DIAG_SCS_4I1_13_p33).1
+  have harrow : scsArrowV39 {scsStabDiagV39 scs4I1 1 3}
+      {scsStabDiagV39 scs4I1 0 2} := by
+    have h := YXIONXL3_p33 (scsStabDiagV39 scs4I1 1 3) 1 his13
+    rw [STAB_PE_ROT_p33] at h
+    exact h
+  have hmod : scsStabDiagV39 scs4I1 ((i + 2) % 4) (i % 4) =
+      scsStabDiagV39 scs4I1 (i + 2) i :=
+    STAB_MOD4_p33 scs4I1 SCS_4I1_IS_SCS_p33 K_SCS_4I1_p33 (i + 2) i
+  have h3 : (i + 2) % 4 = (i % 4 + 2) % 4 := by omega
+  have h4 : i % 4 < 4 := Nat.mod_lt i (by omega)
+  rw [← hmod, h3]
+  interval_cases i % 4 <;> simp only [Nat.reduceAdd, Nat.reduceMod]
+  · rw [STAB_SYM scs4I1 2 0]
+    exact REFL_SING_p33 _ his02
+  · rw [STAB_SYM scs4I1 3 1]
+    exact harrow
+  · exact REFL_SING_p33 _ his02
+  · exact harrow
+
+/-- HOL `SET_EQ_DIAG_STAB_4I1_02` (ARDBZYE.hl:2860).  DISCHARGED 2026-09-20:
+the four residues collapse onto `{stab 0 2, stab 1 3}` pointwise
+(`STAB_SYM`/`STAB_MOD`), then `EQ_DIAG_STAB_4I1_02_p33`. -/
 theorem SET_EQ_DIAG_STAB_4I1_02_p33 :
     scsArrowV39 {x | ∃ i, i < 4 ∧ x = scsStabDiagV39 scs4I1 (i + 2) i}
-      {scsStabDiagV39 scs4I1 0 2} := sorry
-  -- DISCHARGES: NEEDS ARDBZYE.hl SET_EQ_DIAG_STAB_4I1_02.
+      {scsStabDiagV39 scs4I1 0 2} := by
+  have his02 : isScsV39 (scsStabDiagV39 scs4I1 0 2) :=
+    (STAB_4I1_SCS_p33 0 2 SCS_DIAG_SCS_4I1_02_p33).1
+  have his13 : isScsV39 (scsStabDiagV39 scs4I1 1 3) :=
+    (STAB_4I1_SCS_p33 1 3 SCS_DIAG_SCS_4I1_13_p33).1
+  have harrow : scsArrowV39 {scsStabDiagV39 scs4I1 1 3}
+      {scsStabDiagV39 scs4I1 0 2} := by
+    have h := YXIONXL3_p33 (scsStabDiagV39 scs4I1 1 3) 1 his13
+    rw [STAB_PE_ROT_p33] at h
+    exact h
+  refine FZIOTEF_TRANS _ _ _
+    (FZIOTEF_SUBSET_p33 _ {scsStabDiagV39 scs4I1 0 2, scsStabDiagV39 scs4I1 1 3} ?_ ?_) ?_
+  · intro t ht
+    rw [Set.mem_setOf_eq] at ht
+    obtain ⟨m, hm, rfl⟩ := ht
+    interval_cases m
+    · rw [Set.mem_insert_iff]
+      exact Or.inl (STAB_SYM scs4I1 2 0)
+    · rw [Set.mem_insert_iff]
+      exact Or.inr (Set.mem_singleton_iff.mpr (STAB_SYM scs4I1 3 1))
+    · rw [Set.mem_insert_iff]
+      exact Or.inl (STAB_MOD4_p33 scs4I1 SCS_4I1_IS_SCS_p33 K_SCS_4I1_p33 4 2).symm
+    · rw [Set.mem_insert_iff]
+      exact Or.inr (Set.mem_singleton_iff.mpr
+        (STAB_MOD4_p33 scs4I1 SCS_4I1_IS_SCS_p33 K_SCS_4I1_p33 5 3).symm)
+  · intro t ht
+    rcases Set.mem_insert_iff.mp ht with h | h
+    · subst h; exact (STAB_4I1_SCS_p33 0 2 SCS_DIAG_SCS_4I1_02_p33).1
+    · rw [Set.mem_singleton_iff] at h; subst h
+      exact (STAB_4I1_SCS_p33 1 3 SCS_DIAG_SCS_4I1_13_p33).1
+  · exact FZIOTEF_BOTH_p33 {scsStabDiagV39 scs4I1 0 2} {scsStabDiagV39 scs4I1 1 3}
+      {scsStabDiagV39 scs4I1 0 2} (REFL_SING_p33 _ his02) harrow
+      (fun t ht => by rw [Set.mem_singleton_iff] at ht; subst ht; exact his02)
 
-/-- HOL `SET_EQ_DIAG_STAB_4I1` (ARDBZYE.hl:2875).  NEEDS:
-`SET_EQ_DIAG_STAB_4I1_02_p33` + the set normalisations. -/
+/-- HOL `SET_EQ_DIAG_STAB_4I1` (ARDBZYE.hl:2875).  DISCHARGED 2026-09-20:
+`SET_EQ_DIAG_STAB_GEN4_p33` onto the two classes, then `REFL` on `(0,2)` and
+`EQ_DIAG_STAB_4I1_02_p33`'s `(1,3)`-class arrow. -/
 theorem SET_EQ_DIAG_STAB_4I1_p33 :
     scsArrowV39 {x | ∃ i j, scsDiag 4 i j ∧ x = scsStabDiagV39 scs4I1 i j}
-      {scsStabDiagV39 scs4I1 0 2} := sorry
-  -- DISCHARGES: NEEDS ARDBZYE.hl SET_EQ_DIAG_STAB_4I1.
+      {scsStabDiagV39 scs4I1 0 2} := by
+  have his02 : isScsV39 (scsStabDiagV39 scs4I1 0 2) :=
+    (STAB_4I1_SCS_p33 0 2 SCS_DIAG_SCS_4I1_02_p33).1
+  have his13 : isScsV39 (scsStabDiagV39 scs4I1 1 3) :=
+    (STAB_4I1_SCS_p33 1 3 SCS_DIAG_SCS_4I1_13_p33).1
+  have harrow : scsArrowV39 {scsStabDiagV39 scs4I1 1 3}
+      {scsStabDiagV39 scs4I1 0 2} := by
+    have h := YXIONXL3_p33 (scsStabDiagV39 scs4I1 1 3) 1 his13
+    rw [STAB_PE_ROT_p33] at h
+    exact h
+  refine FZIOTEF_TRANS _ _ _
+    (SET_EQ_DIAG_STAB_GEN4_p33 scs4I1 SCS_4I1_IS_SCS_p33 SCS_4I1_BASIC_p33
+      K_SCS_4I1_p33
+      (fun i' j' hd => by rw [a_diag_4I1_p33 i' j' hd]; exact two_h0_le_cstab_p20))
+    ?_
+  exact FZIOTEF_BOTH_p33 {scsStabDiagV39 scs4I1 0 2} {scsStabDiagV39 scs4I1 1 3}
+    {scsStabDiagV39 scs4I1 0 2} (REFL_SING_p33 _ his02) harrow
+    (fun t ht => by
+      rw [Set.mem_singleton_iff] at ht
+      subst ht
+      exact his02)
 
 /-- HOL `FYSSVEV` (ARDBZYE.hl:2881).  NEEDS:
 `SCS_4I1_ARROW_SCS_4I2_STAB_4I1_p33` + `SET_EQ_DIAG_STAB_4I1_p33`. -/
@@ -973,10 +1507,6 @@ theorem FYSSVEV_p33 (_hmn : main_nonlinear_terminal_v11) :
   -- DISCHARGES: NEEDS ARDBZYE.hl FYSSVEV.
 
 /-! ## Section A: AUEAHEH (AUEAHEH.hl, 101 theorems, source order) -/
-
-/-- HOL `SCS_DIAG_SCS_4I1_02` (AUEAHEH.hl:101). -/
-theorem SCS_DIAG_SCS_4I1_02_p33 : scsDiag scs4I1.k 0 2 := by
-  rw [K_SCS_4I1_p33]; unfold scsDiag; decide
 
 /-- HOL `SCS_4I1_SLICE_02` (AUEAHEH.hl:107): the LKGRQUI half-slice of
 `stab 4I1 0 2` at `(0, 2)`.  NEEDS: the half-slice/prop-equ table identity
@@ -992,12 +1522,34 @@ theorem AUEAHEH_p33 :
     scsArrowV39 {scsStabDiagV39 scs4I1 0 2} {scs3M1} :=
   FZIOTEF_TRANS _ _ _ SCS_4I1_SLICE_02_p33 (pe_3M1_arrow_p33)
 
-/-- HOL `BB_4I3_IMP_4T4` (AUEAHEH.hl:258).  NEEDS: the pointwise a/b-table
-comparison of `stab 4I3 1 3` against `scs_4T4` (they agree off the diag
-classes; the diag entries transfer via `a = √8 ≤ cstab`). -/
+/-- BB-transfer driver: a fixed realisation `v` stays a `BBs`-witness when
+the target a-table is dominated by `dist` pointwise and the source b-table
+dominates the target's. -/
+theorem BB_mono_p33 (s s' : ScsV39) (v : ℕ → V3) (hbb : BBsV39 s v)
+    (hk : s'.k = s.k) (ha : ∀ i j, s'.a i j ≤ dist (v i) (v j))
+    (hb : ∀ i j, s.b i j ≤ s'.b i j) : BBsV39 s' v := by
+  refine ⟨hbb.1, ?_, ?_, ?_⟩
+  · rw [hk]; exact hbb.2.1
+  · intro i j
+    exact ⟨ha i j, le_trans (hbb.2.2.1 i j).2 (hb i j)⟩
+  · rw [hk]; exact hbb.2.2.2
+
+/-- HOL `BB_4I3_IMP_4T4` (AUEAHEH.hl:258).  DISCHARGED 2026-09-20: the
+`4T4` a-table equals the `4I3` one verbatim and its b-table is dominated by
+the `stab 4I3 1 3` b-table class-by-class (the `(1,3)` override supplies the
+`cstab` slot). -/
 theorem BB_4I3_IMP_4T4_p33 (v : ℕ → V3)
-    (hbb : BBsV39 (scsStabDiagV39 scs4I3 1 3) v) : BBsV39 scs4T4 v := sorry
-  -- DISCHARGES: NEEDS AUEAHEH.hl BB_4I3_IMP_4T4 (funlist table comparison).
+    (hbb : BBsV39 (scsStabDiagV39 scs4I3 1 3) v) : BBsV39 scs4T4 v := by
+  refine BB_mono_p33 _ _ v hbb rfl ?_ ?_
+  · intro i j
+    show funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)]
+        2 4 i j ≤ dist (v i) (v j)
+    exact (hbb.2.2.1 i j).1
+  · intro i j
+    simp only [scsStabDiagV39, scs4I3, scs4T4, mkUnadornedV39, funlistV39, psort]
+    have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39]
 
 /-- HOL `STAB_4I3_SCS` (AUEAHEH.hl:274). -/
 theorem STAB_4I3_SCS_p33 (i j : ℕ) (h : scsDiag scs4I3.k i j) :
@@ -1134,12 +1686,87 @@ theorem SCS_4I3_ARROW_4T4_p33 :
     scsArrowV39 {scsStabDiagV39 scs4I3 1 3} {scs4T4} :=
   ARROW_SING_p33 _ _ SCS_4T4_IS_SCS_p33 (fun v hv => MM_4I3_IMP_4T4_p33 hv)
 
-/-- HOL `PROP_OPP_DIAG_4I3_13` (AUEAHEH.hl:487).  NEEDS: the
-`peropp2`-re-indexing table identity (stab 1 3 = pe (opp (stab 0 2)) 2). -/
+/-! ### Opp / prop-equ re-indexing kit
+
+The `peropp2`/`scs_prop_equ_v39` composition `pe (opp (stab 0 2)) 2` reads the
+underlying tables at the reflection index `T i = 4 - ((2 + i) % 4 + 1)`
+(`(1 - i) mod 4`), which fixes the edge pairs `{0,1}`/`{2,3}` setwise and
+swaps the two diag classes `{0,2} ↔ {1,3}`.  The generic reduction
+`PROP_OPP_DIAG_GEN4_p33` is instantiated once per system by a 16-cell
+residue sweep of the two tables under `T`. -/
+
+/-- `psort 4` transfers the `(0,2)` class across the reflection `T`. -/
+private theorem psort_T_p33 (i j : ℕ) :
+    psort 4 (0, 2) = psort 4 (4 - ((2 + i) % 4 + 1), 4 - ((2 + j) % 4 + 1)) ↔
+      psort 4 (1, 3) = psort 4 (i, j) := by
+  have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+  have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+  have h3 : (2 + i) % 4 = (i % 4 + 2) % 4 := by omega
+  have h4 : (2 + j) % 4 = (j % 4 + 2) % 4 := by omega
+  simp only [psort, h3, h4]
+  interval_cases i % 4 <;> interval_cases j % 4 <;> simp <;> decide
+
+/-- Generic form: `stab s 1 3 = pe (opp (stab s 0 2)) 2` for any system whose
+a/b tables are invariant under the reflection `T i = 4 - ((2 + i) % 4 + 1)`. -/
+private theorem PROP_OPP_DIAG_GEN4_p33 (s : ScsV39) (hk : s.k = 4)
+    (hA : ∀ i j, s.a i j = s.a (4 - ((2 + i) % 4 + 1)) (4 - ((2 + j) % 4 + 1)))
+    (hB : ∀ i j, s.b i j = s.b (4 - ((2 + i) % 4 + 1)) (4 - ((2 + j) % 4 + 1))) :
+    scsStabDiagV39 s 1 3 = scsPropEquV39 (scsOppV39 (scsStabDiagV39 s 0 2)) 2 := by
+  have hbas1 : scsBasicV39 (scsStabDiagV39 s 1 3) :=
+    ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
+  have hbas2 : scsBasicV39 (scsPropEquV39 (scsOppV39 (scsStabDiagV39 s 0 2)) 2) :=
+    ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
+  refine scs_inj _ _ hbas1 hbas2 rfl rfl ?_ ?_
+  · funext i j
+    simp only [scsStabDiagV39, scsPropEquV39, scsOppV39, mkUnadornedV39, peropp2, hk]
+    exact hA i j
+  · funext i j
+    simp only [scsStabDiagV39, scsPropEquV39, scsOppV39, mkUnadornedV39, peropp2, hk]
+    by_cases hps : psort 4 (1, 3) = psort 4 (i, j)
+    · rw [if_pos hps, if_pos ((psort_T_p33 i j).mpr hps)]
+    · rw [if_neg hps, if_neg (fun hc => hps ((psort_T_p33 i j).mp hc)), hB i j]
+
+/-- HOL `PROP_OPP_DIAG_4I3_13` (AUEAHEH.hl:487).  DISCHARGED 2026-09-20:
+`PROP_OPP_DIAG_GEN4_p33` instantiated by the 16-cell reflection sweeps of
+the `4I3` tables (edge pairs fixed setwise; `a`/`b` agree on the two diag
+classes). -/
 theorem PROP_OPP_DIAG_4I3_13_p33 :
     scsStabDiagV39 scs4I3 1 3 =
-      scsPropEquV39 (scsOppV39 (scsStabDiagV39 scs4I3 0 2)) 2 := sorry
-  -- DISCHARGES: NEEDS AUEAHEH.hl PROP_OPP_DIAG_4I3_13 (PSORT_MOD case tree).
+      scsPropEquV39 (scsOppV39 (scsStabDiagV39 scs4I3 0 2)) 2 :=
+  PROP_OPP_DIAG_GEN4_p33 scs4I3 K_SCS_4I3_p33
+    (fun i j => by
+      have h1 : (4 - ((2 + i) % 4 + 1)) % 4 = 4 - ((2 + i) % 4 + 1) := by omega
+      have h2 : (4 - ((2 + j) % 4 + 1)) % 4 = 4 - ((2 + j) % 4 + 1) := by omega
+      have h3 : (2 + i) % 4 = (i % 4 + 2) % 4 := by omega
+      have h4 : (2 + j) % 4 = (j % 4 + 2) % 4 := by omega
+      show funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)] 2 4 i j =
+        funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)] 2 4 (4 - ((2 + i) % 4 + 1)) (4 - ((2 + j) % 4 + 1))
+      rw [← funlist_mod_p20 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)] 2 4 i j (by omega),
+        ← funlist_mod_p20 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)] 2 4 (4 - ((2 + i) % 4 + 1))
+          (4 - ((2 + j) % 4 + 1)) (by omega), h1, h2, h3, h4]
+      have h5 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h6 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;>
+        simp [funlistV39, psort, assocdV39])
+
+    (fun i j => by
+      have h1 : (4 - ((2 + i) % 4 + 1)) % 4 = 4 - ((2 + i) % 4 + 1) := by omega
+      have h2 : (4 - ((2 + j) % 4 + 1)) % 4 = 4 - ((2 + j) % 4 + 1) := by omega
+      have h3 : (2 + i) % 4 = (i % 4 + 2) % 4 := by omega
+      have h4 : (2 + j) % 4 = (j % 4 + 2) % 4 := by omega
+      show funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i j =
+        funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4
+          (4 - ((2 + i) % 4 + 1)) (4 - ((2 + j) % 4 + 1))
+      rw [← funlist_mod_p20 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((1, 3), 6)]
+          (2 * h0) 4 i j (by omega),
+        ← funlist_mod_p20 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((1, 3), 6)]
+          (2 * h0) 4 (4 - ((2 + i) % 4 + 1)) (4 - ((2 + j) % 4 + 1)) (by omega),
+        h1, h2, h3, h4]
+      have h5 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h6 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;>
+        simp [funlistV39, psort, assocdV39])
+
 
 /-- HOL `STAB_4I3_02_ARROW_4I3_13` (AUEAHEH.hl:521). Proved modulo
 `PROP_OPP_DIAG_4I3_13_p33` and the `YXIONXL2_p33`/`OPP_IS_SCS_p33` twins. -/
@@ -1156,13 +1783,30 @@ theorem ZNLLLDL_p33 :
     scsArrowV39 {scsStabDiagV39 scs4I3 0 2} {scs4T4} :=
   FZIOTEF_TRANS _ _ _ (STAB_4I3_02_ARROW_4I3_13_p33) (SCS_4I3_ARROW_4T4_p33)
 
-/-- HOL `BB_4I3_IMP_BB_4M6` (AUEAHEH.hl:547).  NEEDS: the pair-class a/b
-transfer between the `4I3` and `4M6'` tables (edges agree; diag entries via
-`cstab < dist`). -/
+/-- HOL `BB_4I3_IMP_BB_4M6` (AUEAHEH.hl:547).  DISCHARGED 2026-09-20:
+pointwise class comparison of the `4I3`/`4M6'` tables (diag slots via
+`hdiag`/`√8 ≤ cstab`; edges and defaults agree). -/
 theorem BB_4I3_IMP_BB_4M6_p33 (v : ℕ → V3) (hbb : BBsV39 scs4I3 v)
     (hdiag : ∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) :
-    BBsV39 scs4M6' v := sorry
-  -- DISCHARGES: NEEDS AUEAHEH.hl BB_4I3_IMP_BB_4M6.
+    BBsV39 scs4M6' v := by
+  refine BB_mono_p33 _ _ v hbb rfl ?_ ?_
+  · intro i j
+    have hbnd := (hbb.2.2.1 i j).1
+    simp only [scs4M6', scs4I3, mkUnadornedV39, funlistV39, psort] at hbnd ⊢
+    have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have hi4 : i % 4 = 0 ∨ i % 4 = 1 ∨ i % 4 = 2 ∨ i % 4 = 3 := by omega
+    have hj4 : j % 4 = 0 ∨ j % 4 = 1 ∨ j % 4 = 2 ∨ j % 4 = 3 := by omega
+    rcases hi4 with hi | hi | hi | hi <;> rcases hj4 with hj | hj | hj | hj <;>
+      simp only [hi, hj] at hbnd ⊢ <;> simp [assocdV39] at hbnd ⊢ <;>
+      first | exact hbnd | exact LE_sqrt8_2h0.trans hbnd |
+        exact le_of_lt (hdiag i j (by rw [EXPAND_DIAG_4V_p33]; omega)) | exact le_refl _
+  · intro i j
+    simp only [scs4M6', scs4I3, mkUnadornedV39, funlistV39, psort]
+    have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39] <;>
+      first | exact sqrt8_LE_CSTAB | simp
 
 /-- HOL `MM_4I3_IMP_4M6` (AUEAHEH.hl:581). Proved modulo
 `BB_4I3_IMP_BB_4M6_p33`. -/
@@ -1248,12 +1892,29 @@ theorem VQFYMZY_p33 : scsArrowV39 {scs4I3} {scs4M6', scs4T4} := by
         tauto)
     hisT
 
-/-- HOL `BB_4M2_IMP_BB_4M6` (AUEAHEH.hl:801).  NEEDS: as
-`BB_4I3_IMP_BB_4M6_p33`, over the `4M2`/`4M6'` tables. -/
+/-- HOL `BB_4M2_IMP_BB_4M6` (AUEAHEH.hl:801).  DISCHARGED 2026-09-20:
+pointwise class comparison of the `4M2`/`4M6'` tables (diag slots via
+`hdiag`; the `2*h0` diag entries of `4M2` give the anchor; b-tables equal). -/
 theorem BB_4M2_IMP_BB_4M6_p33 (v : ℕ → V3) (hbb : BBsV39 scs4M2 v)
     (hdiag : ∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) :
-    BBsV39 scs4M6' v := sorry
-  -- DISCHARGES: NEEDS AUEAHEH.hl BB_4M2_IMP_BB_4M6.
+    BBsV39 scs4M6' v := by
+  refine BB_mono_p33 _ _ v hbb rfl ?_ ?_
+  · intro i j
+    have hbnd := (hbb.2.2.1 i j).1
+    simp only [scs4M6', scs4M2, mkUnadornedV39, funlistV39, psort] at hbnd ⊢
+    have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have hi4 : i % 4 = 0 ∨ i % 4 = 1 ∨ i % 4 = 2 ∨ i % 4 = 3 := by omega
+    have hj4 : j % 4 = 0 ∨ j % 4 = 1 ∨ j % 4 = 2 ∨ j % 4 = 3 := by omega
+    rcases hi4 with hi | hi | hi | hi <;> rcases hj4 with hj | hj | hj | hj <;>
+      simp only [hi, hj] at hbnd ⊢ <;> simp [assocdV39] at hbnd ⊢ <;>
+      first | exact hbnd | exact LE_sqrt8_2h0.trans hbnd |
+        exact le_of_lt (hdiag i j (by rw [EXPAND_DIAG_4V_p33]; omega)) | exact le_refl _
+  · intro i j
+    simp only [scs4M6', scs4M2, mkUnadornedV39, funlistV39, psort]
+    have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39]
 
 /-- HOL `MM_4M2_IMP_4M6` (AUEAHEH.hl:836). Proved modulo
 `BB_4M2_IMP_BB_4M6_p33`. -/
@@ -1313,12 +1974,46 @@ theorem SET_EQ_DIAG_STAB_4M2_p33 :
   SET_EQ_DIAG_STAB_GEN4_p33 scs4M2 SCS_4M2_IS_SCS SCS_4M2_BASIC K_SCS_4M2
     (fun i j hd => by rw [a_diag_4M2_p33 i j hd]; exact two_h0_le_cstab_p20)
 
-/-- HOL `PROP_OPP_DIAG_4M2_13` (AUEAHEH.hl:1033).  NEEDS: as
-`PROP_OPP_DIAG_4I3_13_p33`, over the `4M2` tables. -/
+/-- HOL `PROP_OPP_DIAG_4M2_13` (AUEAHEH.hl:1033).  DISCHARGED 2026-09-20:
+`PROP_OPP_DIAG_GEN4_p33` + `funlist_T_p33` reflection sweeps over the `4M2`
+tables. -/
 theorem PROP_OPP_DIAG_4M2_13_p33 :
     scsStabDiagV39 scs4M2 1 3 =
-      scsPropEquV39 (scsOppV39 (scsStabDiagV39 scs4M2 0 2)) 2 := sorry
-  -- DISCHARGES: NEEDS AUEAHEH.hl PROP_OPP_DIAG_4M2_13.
+      scsPropEquV39 (scsOppV39 (scsStabDiagV39 scs4M2 0 2)) 2 :=
+  PROP_OPP_DIAG_GEN4_p33 scs4M2 K_SCS_4M2
+    (fun i j => by
+      have h1 : (4 - ((2 + i) % 4 + 1)) % 4 = 4 - ((2 + i) % 4 + 1) := by omega
+      have h2 : (4 - ((2 + j) % 4 + 1)) % 4 = 4 - ((2 + j) % 4 + 1) := by omega
+      have h3 : (2 + i) % 4 = (i % 4 + 2) % 4 := by omega
+      have h4 : (2 + j) % 4 = (j % 4 + 2) % 4 := by omega
+      show funlistV39 [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2 4 i j =
+        funlistV39 [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2 4 (4 - ((2 + i) % 4 + 1)) (4 - ((2 + j) % 4 + 1))
+      rw [← funlist_mod_p20 [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2 4 i j (by omega),
+        ← funlist_mod_p20 [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2 4 (4 - ((2 + i) % 4 + 1))
+          (4 - ((2 + j) % 4 + 1)) (by omega), h1, h2, h3, h4]
+      have h5 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h6 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;>
+        simp [funlistV39, psort, assocdV39])
+
+    (fun i j => by
+      have h1 : (4 - ((2 + i) % 4 + 1)) % 4 = 4 - ((2 + i) % 4 + 1) := by omega
+      have h2 : (4 - ((2 + j) % 4 + 1)) % 4 = 4 - ((2 + j) % 4 + 1) := by omega
+      have h3 : (2 + i) % 4 = (i % 4 + 2) % 4 := by omega
+      have h4 : (2 + j) % 4 = (j % 4 + 2) % 4 := by omega
+      show funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i j =
+        funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4
+          (4 - ((2 + i) % 4 + 1)) (4 - ((2 + j) % 4 + 1))
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)]
+          (2 * h0) 4 i j (by omega),
+        ← funlist_mod_p20 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)]
+          (2 * h0) 4 (4 - ((2 + i) % 4 + 1)) (4 - ((2 + j) % 4 + 1)) (by omega),
+        h1, h2, h3, h4]
+      have h5 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h6 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;>
+        simp [funlistV39, psort, assocdV39])
+
 
 /-- HOL `STAB_4M2_02_ARROW_4M2_13` (AUEAHEH.hl:1064). Proved modulo
 `PROP_OPP_DIAG_4M2_13_p33`. -/
@@ -1378,12 +2073,29 @@ theorem BNAWVNH_p33 : scsArrowV39 {scs4M2} {scs4M6', scs3M1, scs3T4} := by
         tauto)
     hisT
 
-/-- HOL `BB_4M3_IMP_BB_4M6` (AUEAHEH.hl:1256).  NEEDS: as
-`BB_4I3_IMP_BB_4M6_p33`, over the `4M3'`/`4M6'` tables. -/
+/-- HOL `BB_4M3_IMP_BB_4M6` (AUEAHEH.hl:1256).  DISCHARGED 2026-09-20:
+pointwise class comparison of the `4M3'`/`4M6'` tables (diag slots via
+`√8 ≤ cstab`; b-tables equal). -/
 theorem BB_4M3_IMP_BB_4M6_p33 (v : ℕ → V3) (hbb : BBsV39 scs4M3' v)
     (hdiag : ∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) :
-    BBsV39 scs4M6' v := sorry
-  -- DISCHARGES: NEEDS AUEAHEH.hl BB_4M3_IMP_BB_4M6.
+    BBsV39 scs4M6' v := by
+  refine BB_mono_p33 _ _ v hbb rfl ?_ ?_
+  · intro i j
+    have hbnd := (hbb.2.2.1 i j).1
+    simp only [scs4M6', scs4M3', mkUnadornedV39, funlistV39, psort] at hbnd ⊢
+    have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have hi4 : i % 4 = 0 ∨ i % 4 = 1 ∨ i % 4 = 2 ∨ i % 4 = 3 := by omega
+    have hj4 : j % 4 = 0 ∨ j % 4 = 1 ∨ j % 4 = 2 ∨ j % 4 = 3 := by omega
+    rcases hi4 with hi | hi | hi | hi <;> rcases hj4 with hj | hj | hj | hj <;>
+      simp only [hi, hj] at hbnd ⊢ <;> simp [assocdV39] at hbnd ⊢ <;>
+      first | exact hbnd | exact LE_sqrt8_2h0.trans hbnd |
+        exact le_of_lt (hdiag i j (by rw [EXPAND_DIAG_4V_p33]; omega)) | exact le_refl _
+  · intro i j
+    simp only [scs4M6', scs4M3', mkUnadornedV39, funlistV39, psort]
+    have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39]
 
 /-- HOL `MM_4M3_IMP_4M6` (AUEAHEH.hl:1292). Proved modulo
 `BB_4M3_IMP_BB_4M6_p33`. -/
@@ -1443,12 +2155,46 @@ theorem SET_EQ_DIAG_STAB_4M3_p33 :
   SET_EQ_DIAG_STAB_GEN4_p33 scs4M3' is_scs_4M3_p33 SCS_4M3_BASIC_p33 K_SCS_4M3_p33
     (fun i j hd => by rw [a_diag_4M3_p33 i j hd]; exact sqrt8_LE_CSTAB)
 
-/-- HOL `PROP_OPP_DIAG_4M3_13` (AUEAHEH.hl:1522).  NEEDS: as
-`PROP_OPP_DIAG_4I3_13_p33`, over the `4M3'` tables. -/
+/-- HOL `PROP_OPP_DIAG_4M3_13` (AUEAHEH.hl:1522).  DISCHARGED 2026-09-20:
+`PROP_OPP_DIAG_GEN4_p33` + `funlist_T_p33` reflection sweeps over the `4M3'`
+tables. -/
 theorem PROP_OPP_DIAG_4M3_13_p33 :
     scsStabDiagV39 scs4M3' 1 3 =
-      scsPropEquV39 (scsOppV39 (scsStabDiagV39 scs4M3' 0 2)) 2 := sorry
-  -- DISCHARGES: NEEDS AUEAHEH.hl PROP_OPP_DIAG_4M3_13.
+      scsPropEquV39 (scsOppV39 (scsStabDiagV39 scs4M3' 0 2)) 2 :=
+  PROP_OPP_DIAG_GEN4_p33 scs4M3' K_SCS_4M3_p33
+    (fun i j => by
+      have h1 : (4 - ((2 + i) % 4 + 1)) % 4 = 4 - ((2 + i) % 4 + 1) := by omega
+      have h2 : (4 - ((2 + j) % 4 + 1)) % 4 = 4 - ((2 + j) % 4 + 1) := by omega
+      have h3 : (2 + i) % 4 = (i % 4 + 2) % 4 := by omega
+      have h4 : (2 + j) % 4 = (j % 4 + 2) % 4 := by omega
+      show funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)] 2 4 i j =
+        funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)] 2 4 (4 - ((2 + i) % 4 + 1)) (4 - ((2 + j) % 4 + 1))
+      rw [← funlist_mod_p20 [((0, 1), Real.sqrt 8), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)] 2 4 i j (by omega),
+        ← funlist_mod_p20 [((0, 1), Real.sqrt 8), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)] 2 4 (4 - ((2 + i) % 4 + 1))
+          (4 - ((2 + j) % 4 + 1)) (by omega), h1, h2, h3, h4]
+      have h5 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h6 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;>
+        simp [funlistV39, psort, assocdV39])
+
+    (fun i j => by
+      have h1 : (4 - ((2 + i) % 4 + 1)) % 4 = 4 - ((2 + i) % 4 + 1) := by omega
+      have h2 : (4 - ((2 + j) % 4 + 1)) % 4 = 4 - ((2 + j) % 4 + 1) := by omega
+      have h3 : (2 + i) % 4 = (i % 4 + 2) % 4 := by omega
+      have h4 : (2 + j) % 4 = (j % 4 + 2) % 4 := by omega
+      show funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i j =
+        funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4
+          (4 - ((2 + i) % 4 + 1)) (4 - ((2 + j) % 4 + 1))
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)]
+          (2 * h0) 4 i j (by omega),
+        ← funlist_mod_p20 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)]
+          (2 * h0) 4 (4 - ((2 + i) % 4 + 1)) (4 - ((2 + j) % 4 + 1)) (by omega),
+        h1, h2, h3, h4]
+      have h5 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h6 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;>
+        simp [funlistV39, psort, assocdV39])
+
 
 /-- HOL `STAB_4M3_02_ARROW_4M3_13` (AUEAHEH.hl:1539). Proved modulo
 `PROP_OPP_DIAG_4M3_13_p33`. -/
@@ -1510,12 +2256,31 @@ theorem RAWZDIB_p33 : scsArrowV39 {scs4M3'} {scs4M6', scs3T1, scs3T6'} := by
         tauto)
     hisT
 
-/-- HOL `BB_4M4_IMP_BB_4M7` (AUEAHEH.hl:2303).  NEEDS: as
-`BB_4I3_IMP_BB_4M6_p33`, over the `4M4'`/`4M7` tables. -/
+/-- HOL `BB_4M4_IMP_BB_4M7` (AUEAHEH.hl:2303).  DISCHARGED 2026-09-20:
+pointwise class comparison of the `4M4'`/`4M7` tables (the `cstab` diag
+slots of `4M7` come from `hdiag`; b-tables agree class-by-class). -/
 theorem BB_4M4_IMP_BB_4M7_p33 (v : ℕ → V3) (hbb : BBsV39 scs4M4' v)
     (hdiag : ∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) :
-    BBsV39 scs4M7 v := sorry
-  -- DISCHARGES: NEEDS AUEAHEH.hl BB_4M4_IMP_BB_4M7.
+    BBsV39 scs4M7 v := by
+  have hdiag' : ∀ i j, scsDiag 4 i j → cstab ≤ dist (v i) (v j) :=
+    fun i j hd => le_of_lt (hdiag i j hd)
+  refine BB_mono_p33 _ _ v hbb rfl ?_ ?_
+  · intro i j
+    have hbnd := (hbb.2.2.1 i j).1
+    simp only [scs4M7, scs4M4', mkUnadornedV39, funlistV39, psort] at hbnd ⊢
+    have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have hi4 : i % 4 = 0 ∨ i % 4 = 1 ∨ i % 4 = 2 ∨ i % 4 = 3 := by omega
+    have hj4 : j % 4 = 0 ∨ j % 4 = 1 ∨ j % 4 = 2 ∨ j % 4 = 3 := by omega
+    rcases hi4 with hi | hi | hi | hi <;> rcases hj4 with hj | hj | hj | hj <;>
+      simp only [hi, hj] at hbnd ⊢ <;> simp [assocdV39] at hbnd ⊢ <;>
+      first | exact hbnd |
+        exact hdiag' i j (by rw [EXPAND_DIAG_4V_p33]; omega) | exact le_refl _
+  · intro i j
+    simp only [scs4M7, scs4M4', mkUnadornedV39, funlistV39, psort]
+    have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39]
 
 /-- HOL `MM_4M4_IMP_4M7` (AUEAHEH.hl:2347). Proved modulo
 `BB_4M4_IMP_BB_4M7_p33`. -/
@@ -1633,12 +2398,31 @@ theorem MFKLVDK_p33 :
         tauto)
     hisT
 
-/-- HOL `BB_4M5_IMP_BB_4M8` (AUEAHEH.hl:2712).  NEEDS: as
-`BB_4I3_IMP_BB_4M6_p33`, over the `4M5'`/`4M8` tables. -/
+/-- HOL `BB_4M5_IMP_BB_4M8` (AUEAHEH.hl:2712).  DISCHARGED 2026-09-20:
+pointwise class comparison of the `4M5'`/`4M8` tables (the `cstab` diag
+slots of `4M8` come from `hdiag`; b-tables agree class-by-class). -/
 theorem BB_4M5_IMP_BB_4M8_p33 (v : ℕ → V3) (hbb : BBsV39 scs4M5' v)
     (hdiag : ∀ i j, scsDiag 4 i j → cstab < dist (v i) (v j)) :
-    BBsV39 scs4M8 v := sorry
-  -- DISCHARGES: NEEDS AUEAHEH.hl BB_4M5_IMP_BB_4M8.
+    BBsV39 scs4M8 v := by
+  have hdiag' : ∀ i j, scsDiag 4 i j → cstab ≤ dist (v i) (v j) :=
+    fun i j hd => le_of_lt (hdiag i j hd)
+  refine BB_mono_p33 _ _ v hbb rfl ?_ ?_
+  · intro i j
+    have hbnd := (hbb.2.2.1 i j).1
+    simp only [scs4M8, scs4M5', mkUnadornedV39, funlistV39, psort] at hbnd ⊢
+    have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have hi4 : i % 4 = 0 ∨ i % 4 = 1 ∨ i % 4 = 2 ∨ i % 4 = 3 := by omega
+    have hj4 : j % 4 = 0 ∨ j % 4 = 1 ∨ j % 4 = 2 ∨ j % 4 = 3 := by omega
+    rcases hi4 with hi | hi | hi | hi <;> rcases hj4 with hj | hj | hj | hj <;>
+      simp only [hi, hj] at hbnd ⊢ <;> simp [assocdV39] at hbnd ⊢ <;>
+      first | exact hbnd |
+        exact hdiag' i j (by rw [EXPAND_DIAG_4V_p33]; omega) | exact le_refl _
+  · intro i j
+    simp only [scs4M8, scs4M5', mkUnadornedV39, funlistV39, psort]
+    have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39]
 
 /-- HOL `MM_4M5_IMP_4M8` (AUEAHEH.hl:2729). Proved modulo
 `BB_4M5_IMP_BB_4M8_p33`. -/
@@ -1698,12 +2482,43 @@ theorem SET_EQ_DIAG_STAB_4M5_p33 :
   SET_EQ_DIAG_STAB_GEN4_p33 scs4M5' is_scs_4M5_p33 SCS_4M5_BASIC_p33 K_SCS_4M5_p33
     (fun i j hd => by rw [a_diag_4M5_p33 i j hd]; exact two_h0_le_cstab_p20)
 
-/-- HOL `PROP_OPP_DIAG_4M5_13` (AUEAHEH.hl:2533).  NEEDS: as
-`PROP_OPP_DIAG_4I3_13_p33`, over the `4M5'` tables. -/
+/-- HOL `PROP_OPP_DIAG_4M5_13` (AUEAHEH.hl:2533).  DISCHARGED 2026-09-20:
+`PROP_OPP_DIAG_GEN4_p33` + `funlist_T_p33` reflection sweeps over the `4M5'`
+tables. -/
 theorem PROP_OPP_DIAG_4M5_13_p33 :
     scsStabDiagV39 scs4M5' 1 3 =
-      scsPropEquV39 (scsOppV39 (scsStabDiagV39 scs4M5' 0 2)) 2 := sorry
-  -- DISCHARGES: NEEDS AUEAHEH.hl PROP_OPP_DIAG_4M5_13.
+      scsPropEquV39 (scsOppV39 (scsStabDiagV39 scs4M5' 0 2)) 2 :=
+  PROP_OPP_DIAG_GEN4_p33 scs4M5' K_SCS_4M5_p33
+    (fun i j => by
+      have h1 : (4 - ((2 + i) % 4 + 1)) % 4 = 4 - ((2 + i) % 4 + 1) := by omega
+      have h2 : (4 - ((2 + j) % 4 + 1)) % 4 = 4 - ((2 + j) % 4 + 1) := by omega
+      have h3 : (2 + i) % 4 = (i % 4 + 2) % 4 := by omega
+      have h4 : (2 + j) % 4 = (j % 4 + 2) % 4 := by omega
+      show funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2 4 i j =
+        funlistV39 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2 4 (4 - ((2 + i) % 4 + 1)) (4 - ((2 + j) % 4 + 1))
+      rw [← funlist_mod_p20 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2 4 i j (by omega),
+        ← funlist_mod_p20 [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2 4 (4 - ((2 + i) % 4 + 1))
+          (4 - ((2 + j) % 4 + 1)) (by omega), h1, h2, h3, h4]
+      have h5 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h6 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;>
+        simp [funlistV39, psort, assocdV39])
+
+    (fun i j => by
+      have h1 : (4 - ((2 + i) % 4 + 1)) % 4 = 4 - ((2 + i) % 4 + 1) := by omega
+      have h2 : (4 - ((2 + j) % 4 + 1)) % 4 = 4 - ((2 + j) % 4 + 1) := by omega
+      have h3 : (2 + i) % 4 = (i % 4 + 2) % 4 := by omega
+      have h4 : (2 + j) % 4 = (j % 4 + 2) % 4 := by omega
+      show funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i j =
+        funlistV39 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 (4 - ((2 + i) % 4 + 1)) (4 - ((2 + j) % 4 + 1))
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i j (by omega),
+        ← funlist_mod_p20 [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 (4 - ((2 + i) % 4 + 1))
+          (4 - ((2 + j) % 4 + 1)) (by omega), h1, h2, h3, h4]
+      have h5 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h6 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;>
+        simp [funlistV39, psort, assocdV39])
+
 
 /-- HOL `STAB_4M5_02_ARROW_4M5_13` (AUEAHEH.hl:2550). Proved modulo
 `PROP_OPP_DIAG_4M5_13_p33`. -/
@@ -1760,11 +2575,22 @@ theorem RYPDIXT_p33 : scsArrowV39 {scs4M5'} {scs4M8, scs3T4} := by
         tauto)
     hisT
 
-/-- HOL `BB_4M6_IMP_4T5` (AUEAHEH.hl:2894).  NEEDS: the pointwise a/b-table
-comparison of `stab 4M6' 1 3` against `scs_4T5`. -/
+/-- HOL `BB_4M6_IMP_4T5` (AUEAHEH.hl:2894).  DISCHARGED 2026-09-20: the
+`4T5` a-table equals the `4M6'` one verbatim and its b-table is dominated by
+the `stab 4M6' 1 3` b-table class-by-class (the `(1,3)` override supplies
+the `cstab` slot). -/
 theorem BB_4M6_IMP_4T5_p33 (v : ℕ → V3)
-    (hbb : BBsV39 (scsStabDiagV39 scs4M6' 1 3) v) : BBsV39 scs4T5 v := sorry
-  -- DISCHARGES: NEEDS AUEAHEH.hl BB_4M6_IMP_4T5 (funlist table comparison).
+    (hbb : BBsV39 (scsStabDiagV39 scs4M6' 1 3) v) : BBsV39 scs4T5 v := by
+  refine BB_mono_p33 _ _ v hbb rfl ?_ ?_
+  · intro i j
+    show funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4 i j ≤
+      dist (v i) (v j)
+    exact (hbb.2.2.1 i j).1
+  · intro i j
+    simp only [scsStabDiagV39, scs4M6', scs4T5, mkUnadornedV39, funlistV39, psort]
+    have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39]
 
 /-- HOL `MM_4M6_IMP_4T5` (AUEAHEH.hl:2729). Proved modulo
 `BB_4M6_IMP_4T5_p33`. -/
@@ -1781,12 +2607,46 @@ theorem STAB_4M6_13_ARROW_4T5_p33 :
     scsArrowV39 {scsStabDiagV39 scs4M6' 1 3} {scs4T5} :=
   ARROW_SING_p33 _ _ SCS_4T5_IS_SCS_p33 (fun v hv => MM_4M6_IMP_4T5_p33 hv)
 
-/-- HOL `PROP_OPP_DIAG_4M6_13` (AUEAHEH.hl:2835).  NEEDS: as
-`PROP_OPP_DIAG_4I3_13_p33`, over the `4M6'` tables. -/
+/-- HOL `PROP_OPP_DIAG_4M6_13` (AUEAHEH.hl:2835).  DISCHARGED 2026-09-20:
+`PROP_OPP_DIAG_GEN4_p33` + `funlist_T_p33` reflection sweeps over the `4M6'`
+tables. -/
 theorem PROP_OPP_DIAG_4M6_13_p33 :
     scsStabDiagV39 scs4M6' 1 3 =
-      scsPropEquV39 (scsOppV39 (scsStabDiagV39 scs4M6' 0 2)) 2 := sorry
-  -- DISCHARGES: NEEDS AUEAHEH.hl PROP_OPP_DIAG_4M6_13.
+      scsPropEquV39 (scsOppV39 (scsStabDiagV39 scs4M6' 0 2)) 2 :=
+  PROP_OPP_DIAG_GEN4_p33 scs4M6' K_SCS_4M6
+    (fun i j => by
+      have h1 : (4 - ((2 + i) % 4 + 1)) % 4 = 4 - ((2 + i) % 4 + 1) := by omega
+      have h2 : (4 - ((2 + j) % 4 + 1)) % 4 = 4 - ((2 + j) % 4 + 1) := by omega
+      have h3 : (2 + i) % 4 = (i % 4 + 2) % 4 := by omega
+      have h4 : (2 + j) % 4 = (j % 4 + 2) % 4 := by omega
+      show funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4 i j =
+        funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4 (4 - ((2 + i) % 4 + 1)) (4 - ((2 + j) % 4 + 1))
+      rw [← funlist_mod_p20 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4 i j (by omega),
+        ← funlist_mod_p20 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4 (4 - ((2 + i) % 4 + 1))
+          (4 - ((2 + j) % 4 + 1)) (by omega), h1, h2, h3, h4]
+      have h5 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h6 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;>
+        simp [funlistV39, psort, assocdV39])
+
+    (fun i j => by
+      have h1 : (4 - ((2 + i) % 4 + 1)) % 4 = 4 - ((2 + i) % 4 + 1) := by omega
+      have h2 : (4 - ((2 + j) % 4 + 1)) % 4 = 4 - ((2 + j) % 4 + 1) := by omega
+      have h3 : (2 + i) % 4 = (i % 4 + 2) % 4 := by omega
+      have h4 : (2 + j) % 4 = (j % 4 + 2) % 4 := by omega
+      show funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 i j =
+        funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4
+          (4 - ((2 + i) % 4 + 1)) (4 - ((2 + j) % 4 + 1))
+      rw [← funlist_mod_p20 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)]
+          (2 * h0) 4 i j (by omega),
+        ← funlist_mod_p20 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)]
+          (2 * h0) 4 (4 - ((2 + i) % 4 + 1)) (4 - ((2 + j) % 4 + 1)) (by omega),
+        h1, h2, h3, h4]
+      have h5 : i % 4 < 4 := Nat.mod_lt i (by omega)
+      have h6 : j % 4 < 4 := Nat.mod_lt j (by omega)
+      interval_cases i % 4 <;> interval_cases j % 4 <;>
+        simp [funlistV39, psort, assocdV39])
+
 
 /-- HOL `STAB_4M6_02_ARROW_4M6_13` (AUEAHEH.hl:2808). Proved modulo
 `PROP_OPP_DIAG_4M6_13_p33`. -/

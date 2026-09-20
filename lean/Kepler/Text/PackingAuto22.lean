@@ -87,6 +87,7 @@ import Kepler.Text.PackingAuto10
 import Kepler.Text.PackingAuto11
 import Kepler.Text.PackingAuto12
 import Kepler.Text.PackingAuto13
+import Kepler.Text.PackingAuto15
 import Kepler.Text.Polytope
 import Mathlib
 
@@ -335,11 +336,25 @@ theorem facet_rep_props (P c : Set ℂ) (hP : polyhedronC P) (hc : facetOfC c P)
       c = P ∩ {x : ℂ | dot2 (facet_rep_a P c) x = facet_rep_b P c} :=
   (Classical.choose_spec (Classical.choose_spec facet_rep_spec)) P c hP hc
 
-/-- HOL `facet_rep_uniq_c` (counting_spheres.hl:200). GIANT. -/
+/-- HOL `facet_rep_uniq_c` (counting_spheres.hl:200). Filled from
+`facet_rep_uniq` applied at the common normal direction. -/
 theorem facet_rep_uniq_c (P c1 c2 : Set ℂ) (hP : polyhedronC P)
     (h1 : facetOfC c1 P) (h2 : facetOfC c2 P)
     (h : facet_rep_a P c1 = facet_rep_a P c2) : c1 = c2 := by
-  sorry
+  have s1 : P ⊆ {x : ℂ | dot2 (facet_rep_a P c1) x ≤ facet_rep_b P c1} :=
+    (facet_rep_props P c1 hP h1).2.2.1
+  have e1 : c1 = P ∩ {x : ℂ | dot2 (facet_rep_a P c1) x = facet_rep_b P c1} :=
+    (facet_rep_props P c1 hP h1).2.2.2
+  have s2 : P ⊆ {x : ℂ | dot2 (facet_rep_a P c1) x ≤ facet_rep_b P c2} := by
+    have hs := (facet_rep_props P c2 hP h2).2.2.1
+    rw [← h] at hs
+    exact hs
+  have e2 : c2 = P ∩ {x : ℂ | dot2 (facet_rep_a P c1) x = facet_rep_b P c2} := by
+    have he := (facet_rep_props P c2 hP h2).2.2.2
+    rw [← h] at he
+    exact he
+  exact (facet_rep_uniq P c1 c2 (facet_rep_a P c1) (facet_rep_b P c1)
+    (facet_rep_b P c2) hP h1 h2 s1 s2 e1 e2).2
 
 /-- Expansion of the planar dot product in coordinates. -/
 theorem dot2_expand (z w : ℂ) : dot2 z w = z.re * w.re + z.im * w.im := by
@@ -392,17 +407,116 @@ theorem facet_rep_refl (P c : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     dot2 (facet_rep_a P c) (r • facet_rep_a P c) ≤ facet_rep_b P c := by
   sorry
 
-/-- HOL `DOT_EQ_IMP_INEQ_LEMMA` (counting_spheres.hl:274). GIANT. -/
+/-- Additivity of `dot2` in the second argument. -/
+theorem dot2_add_right (a x y : ℂ) : dot2 a (x + y) = dot2 a x + dot2 a y := by
+  rw [dot2_expand, dot2_expand, dot2_expand]
+  simp [Complex.add_re, Complex.add_im]
+  ring
+
+/-- Homogeneity of `dot2` in the second argument. -/
+theorem dot2_smul_right (a x : ℂ) (c : ℝ) : dot2 a (c • x) = c * dot2 a x := by
+  rw [dot2_expand, dot2_expand]
+  have h1 : (c • x : ℂ).re = c * x.re := by simp
+  have h2 : (c • x : ℂ).im = c * x.im := by simp
+  rw [h1, h2]
+  ring
+
+/-- A nonzero complex vector has positive self inner product. -/
+theorem dot2_self_pos (a : ℂ) (ha : a ≠ 0) : 0 < dot2 a a := by
+  rw [dot2_expand]
+  have h1 : a.re ≠ 0 ∨ a.im ≠ 0 := by
+    by_contra hcon
+    push_neg at hcon
+    exact ha (Complex.ext hcon.1 hcon.2)
+  rcases h1 with h | h
+  · nlinarith [sq_pos_of_ne_zero h, sq_nonneg a.im]
+  · nlinarith [sq_pos_of_ne_zero h, sq_nonneg a.re]
+
+/-- HOL `DOT_EQ_IMP_INEQ_LEMMA` (counting_spheres.hl:274). Filled: the shared
+hyperplane hypothesis forces `dot2 a' x = (b'/b) * dot2 a x`, so half-space
+membership transfers. -/
 theorem DOT_EQ_IMP_INEQ_LEMMA (a a' : ℂ) (b b' : ℝ)
     (hiff : ∀ x : ℂ, dot2 a x = b ↔ dot2 a' x = b') (hb : 0 < b) (hb' : 0 < b') :
     ∀ x : ℂ, dot2 a x ≠ 0 → (dot2 a x ≤ b ↔ dot2 a' x ≤ b') := by
-  sorry
+  intro x hx
+  have key : dot2 a' x = b' * (dot2 a x) / b := by
+    have hy : dot2 a ((b / dot2 a x) • x) = b := by
+      rw [dot2_smul_right]
+      field_simp
+    have h2 := (hiff _).mp hy
+    rw [dot2_smul_right a' x (b / dot2 a x)] at h2
+    have h6 := congrArg (fun t => t * dot2 a x) h2
+    rw [mul_right_comm, div_mul_cancel₀ _ hx] at h6
+    rw [eq_div_iff (ne_of_gt hb), mul_comm]
+    exact h6
+  constructor
+  · intro hle
+    rw [key, div_le_iff₀ hb]
+    exact mul_le_mul_of_nonneg_left hle hb'.le
+  · intro hle
+    rw [key, div_le_iff₀ hb] at hle
+    exact le_of_mul_le_mul_left hle hb'
 
-/-- HOL `DOT_EQ_IMP_INEQ` (counting_spheres.hl:302). GIANT. -/
+/-- HOL `DOT_EQ_IMP_INEQ` (counting_spheres.hl:302). Filled via the transfer
+identity `dot2 a' x = (b'/b) * dot2 a x` (a hyperplane point exists once
+`a' ≠ 0`, which also forces `b > 0`; the `a' = 0` case collapses to `a = 0`). -/
 theorem DOT_EQ_IMP_INEQ (a a' : ℂ) (b b' : ℝ)
     (hiff : ∀ x : ℂ, dot2 a x = b ↔ dot2 a' x = b') (hb : 0 ≤ b) (hb' : 0 < b') :
     ∀ x : ℂ, dot2 a x ≤ b ↔ dot2 a' x ≤ b' := by
-  sorry
+  by_cases ha'0 : a' = 0
+  · subst ha'0
+    have ha0 : a = 0 := by
+      by_contra hne
+      have haa : 0 < dot2 a a := dot2_self_pos a hne
+      have haa0 : dot2 a a ≠ 0 := ne_of_gt haa
+      have hx0 : dot2 a ((b / dot2 a a) • a) = b := by
+        rw [dot2_smul_right]; field_simp
+      have h2 := (hiff _).mp hx0
+      rw [dot2_smul_right (0:ℂ) a (b / dot2 a a)] at h2
+      simp [dot2_expand] at h2
+      linarith
+    subst ha0
+    intro x
+    constructor <;> intro _ <;>
+      simp only [dot2_expand, Complex.zero_re, Complex.zero_im, zero_mul, add_zero] <;>
+      linarith
+  · have haa'0 : dot2 a' a' ≠ 0 := ne_of_gt (dot2_self_pos a' ha'0)
+    have hx₀a' : dot2 a' ((b' / dot2 a' a') • a') = b' := by
+      rw [dot2_smul_right]; field_simp
+    have hx₀a : dot2 a ((b' / dot2 a' a') • a') = b := (hiff _).mpr hx₀a'
+    have hbpos : 0 < b := by
+      rcases eq_or_lt_of_le hb with heq | hlt
+      · exfalso
+        have h1 : dot2 a 0 = 0 := by simp [dot2_expand]
+        rw [heq] at h1
+        have h2 := (hiff (0:ℂ)).mp h1
+        simp [dot2_expand] at h2
+        linarith
+      · exact hlt
+    have key : ∀ y : ℂ, dot2 a' y = (b' / b) * dot2 a y := by
+      intro y
+      have hLam : dot2 a (y + ((b - dot2 a y) / b) • ((b' / dot2 a' a') • a')) = b := by
+        rw [dot2_add_right, dot2_smul_right, hx₀a,
+          div_mul_cancel₀ (b - dot2 a y) (ne_of_gt hbpos)]
+        ring
+      have h2 := (hiff _).mp hLam
+      rw [dot2_add_right, dot2_smul_right, hx₀a'] at h2
+      field_simp at h2 ⊢
+      linear_combination h2
+    intro y
+    have hy' : dot2 a' y * b = b' * dot2 a y := by
+      rw [key y, mul_right_comm, div_mul_cancel₀ (b') (ne_of_gt hbpos)]
+    constructor
+    · intro h
+      rw [key y]
+      calc (b' / b) * dot2 a y ≤ (b' / b) * b :=
+            mul_le_mul_of_nonneg_left h (div_nonneg hb'.le hbpos.le)
+        _ = b' := div_mul_cancel₀ (b') (ne_of_gt hbpos)
+    · intro h
+      have h2 := mul_le_mul_of_nonneg_right h hbpos.le
+      rw [hy'] at h2
+      exact le_of_mul_le_mul_left h2 hb'
+
 
 /-- HOL `affine_facet_hyper` (counting_spheres.hl:320). GIANT. -/
 theorem affine_facet_hyper (P c : Set ℂ) (a : ℂ) (b : ℝ)
@@ -496,8 +610,7 @@ theorem poly_sort_antisym (P : Set ℂ) (u : ℂ) (c1 c2 : Set ℂ) (r : ℝ)
 theorem poly_sort_trans (P : Set ℂ) (u : ℂ) (c1 c2 c3 : Set ℂ) (r : ℝ)
     (hP : polyhedronC P) (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
     (hu : u ≠ 0) (h12 : poly_sort_fn P u c1 c2) (h23 : poly_sort_fn P u c2 c3) :
-    poly_sort_fn P u c1 c3 := by
-  sorry
+    poly_sort_fn P u c1 c3 := ⟨h12.1, h23.2.1, le_trans h12.2.2 h23.2.2⟩
 
 /-- HOL `POLY_SORT_LEMMA` (counting_spheres.hl:729). GIANT. -/
 theorem POLY_SORT_LEMMA (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u : ℂ)
@@ -673,10 +786,65 @@ theorem GOTCJAH_convex_sum (n : ℕ) (t : ℝ) (bet : ℕ → ℝ) (u : ℝ) (hn
       ∑ i ∈ Finset.range n, (bet i - asn (Real.sin (bet i) * t)) := by
   sorry
 
-/-- HOL `dih_dot` (counting_spheres.hl:1272). GIANT. -/
+/-- Linearity of `⬝ᵥ` in the left argument. -/
+theorem dotV_smul_left (t : ℝ) (a b : V3) : (t • a) ⬝ᵥ b = t * (a ⬝ᵥ b) := by
+  show ((t • a : V3).ofLp) ⬝ᵥ b.ofLp = t * (a.ofLp ⬝ᵥ b.ofLp)
+  rw [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul]
+
+/-- Linearity of `⬝ᵥ` in the right argument. -/
+theorem dotV_smul_right (a : V3) (t : ℝ) (b : V3) : a ⬝ᵥ (t • b) = t * (a ⬝ᵥ b) := by
+  show a.ofLp ⬝ᵥ ((t • b : V3).ofLp) = t * (a.ofLp ⬝ᵥ b.ofLp)
+  rw [WithLp.ofLp_smul, dotProduct_smul, smul_eq_mul]
+
+/-- Additivity of `⬝ᵥ` in the left argument. -/
+theorem dotV_add_left (a b c : V3) : (a + b) ⬝ᵥ c = a ⬝ᵥ c + b ⬝ᵥ c := by
+  show ((a + b : V3).ofLp) ⬝ᵥ c.ofLp = a.ofLp ⬝ᵥ c.ofLp + b.ofLp ⬝ᵥ c.ofLp
+  rw [WithLp.ofLp_add, add_dotProduct]
+
+/-- Additivity of `⬝ᵥ` in the right argument. -/
+theorem dotV_add_right (a b c : V3) : a ⬝ᵥ (b + c) = a ⬝ᵥ b + a ⬝ᵥ c := by
+  show a.ofLp ⬝ᵥ ((b + c : V3).ofLp) = a.ofLp ⬝ᵥ b.ofLp + a.ofLp ⬝ᵥ c.ofLp
+  rw [WithLp.ofLp_add, dotProduct_add]
+
+/-- Subtraction in the left argument of `⬝ᵥ`. -/
+theorem dotV_sub_left (a b c : V3) : (a - b) ⬝ᵥ c = a ⬝ᵥ c - b ⬝ᵥ c := by
+  show ((a - b : V3).ofLp) ⬝ᵥ c.ofLp = a.ofLp ⬝ᵥ c.ofLp - b.ofLp ⬝ᵥ c.ofLp
+  rw [WithLp.ofLp_sub, sub_dotProduct]
+
+/-- Subtraction in the right argument of `⬝ᵥ`. -/
+theorem dotV_sub_right (a b c : V3) : a ⬝ᵥ (b - c) = a ⬝ᵥ b - a ⬝ᵥ c := by
+  show a.ofLp ⬝ᵥ ((b - c : V3).ofLp) = a.ofLp ⬝ᵥ b.ofLp - a.ofLp ⬝ᵥ c.ofLp
+  rw [WithLp.ofLp_sub, dotProduct_sub]
+
+/-- Commutativity of `⬝ᵥ`. -/
+theorem dotV_comm (a b : V3) : a ⬝ᵥ b = b ⬝ᵥ a := by
+  show a.ofLp ⬝ᵥ b.ofLp = b.ofLp ⬝ᵥ a.ofLp
+  exact dotProduct_comm a.ofLp b.ofLp
+
+/-- The `V3`-to-`Fin 3 → ℝ` coercion of the zero vector is the zero function. -/
+theorem coeV_zero : ((0 : V3) : Fin 3 → ℝ) = 0 := rfl
+
+/-- HOL `dih_dot` (counting_spheres.hl:1272). Filled: the projected edge vectors
+are orthogonal, so the dihedral is `arccos 0 = π/2`. -/
 theorem dih_dot (u v w : V3) (hu : u ≠ 0) (h1 : (w - u) ⬝ᵥ v = 0)
     (h2 : (w - u) ⬝ᵥ u = 0) : dihV 0 u v w = Real.pi / 2 := by
-  sorry
+  have hwu : w ⬝ᵥ u = u ⬝ᵥ u := by
+    rw [dotV_sub_left] at h2
+    linarith
+  have hvw : v ⬝ᵥ w = v ⬝ᵥ u := by
+    have h3 : v ⬝ᵥ (w - u) = 0 := by rw [dotV_comm]; exact h1
+    rw [dotV_sub_right] at h3
+    linarith
+  have hnum : ((u.ofLp ⬝ᵥ u.ofLp) • v.ofLp - (v.ofLp ⬝ᵥ u.ofLp) • u.ofLp) ⬝ᵥ
+      ((u.ofLp ⬝ᵥ u.ofLp) • w.ofLp - (w.ofLp ⬝ᵥ u.ofLp) • u.ofLp) = 0 := by
+    rw [dotProduct_sub, sub_dotProduct, sub_dotProduct,
+      smul_dotProduct, smul_dotProduct, smul_dotProduct, smul_dotProduct,
+      dotProduct_smul, dotProduct_smul, dotProduct_smul, dotProduct_smul,
+      hwu, hvw, dotProduct_comm u.ofLp w.ofLp, hwu]
+    ring
+  simp only [dihV, arcV, WithLp.ofLp_sub, WithLp.ofLp_smul, sub_zero,
+    WithLp.ofLp_zero, hnum, zero_div]
+  exact Real.arccos_zero
 
 /-- HOL `abs_1_prod` (counting_spheres.hl:1295). -/
 theorem abs_1_prod (x y : ℝ) (hx : |x| ≤ 1) (hy : |y| ≤ 1) : |x * y| ≤ 1 := by
@@ -970,10 +1138,21 @@ theorem ORDER_AZIM_SUM2Pi (x y z : V3) (n : ℕ) (g : ℕ → V3)
     ∑ i ∈ Finset.Icc 1 n, azim x y (g i) (g (i + 1)) = 2 * Real.pi := by
   sorry
 
-/-- HOL `AFFINE_VEC0` (counting_spheres.hl:2680). GIANT. -/
+/-- HOL `AFFINE_VEC0` (counting_spheres.hl:2680). Filled: `0` is the affine
+combination `u + (1/(1-t)) • (t•u - u)`. -/
 theorem AFFINE_VEC0 (u : V3) (t : ℝ) (ht : t ≠ 1) :
     (0 : V3) ∈ affineSpan ℝ ({u, t • u} : Set V3) := by
-  sorry
+  rw [mem_affineSpan_pair_iff_exists_lineMap_eq]
+  refine ⟨1 / (1 - t), ?_⟩
+  have h1 : t • u -ᵥ u = (t - 1) • u := by
+    show t • u - u = (t - 1) • u
+    rw [sub_smul, one_smul]
+  have h2 : 1 / (1 - t) * (t - 1) = -1 := by
+    field_simp
+    ring
+  rw [AffineMap.lineMap_apply, h1, smul_smul, h2]
+  show (-1 : ℝ) • u + u = 0
+  simp
 
 /-- HOL `RELATIVE_INTERIOR_AFFINE_FACE` (counting_spheres.hl:2702). GIANT. -/
 theorem RELATIVE_INTERIOR_AFFINE_FACE (C : Set V3) (p : V3) (f : Set V3)
@@ -992,7 +1171,9 @@ theorem FCHANGED_AFFINE (p f : Set V3) (hp : polyhedron p) (hb : Bornology.IsBou
     fchanged f ∩ (affineSpan ℝ f : Set V3) = intrinsicInterior ℝ f := by
   sorry
 
-/-- HOL `RCONE_PREP` (counting_spheres.hl:2765). -/
+/-- HOL `RCONE_PREP` (counting_spheres.hl:2765). GIANT (inner-product
+expansion at the foot; the ofLp-coe elaboration drift defeated the algebra
+chain this round — RCONE_DISK/RDISK_R consume it as an axiom). -/
 theorem RCONE_PREP (p v u0 : V3) (b t : ℝ) (hb : 0 < b) (hv : v ≠ 0)
     (hvv : 0 < v ⬝ᵥ v) (hu0 : u0 = (b / (v ⬝ᵥ v)) • v) (ht1 : 0 < t) (ht2 : t < 1)
     (hpv : p ⬝ᵥ v = b) :
@@ -1001,22 +1182,127 @@ theorem RCONE_PREP (p v u0 : V3) (b t : ℝ) (hb : 0 < b) (hv : v ≠ 0)
       dist p u0 ^ 2 = p ⬝ᵥ p - b * b / (v ⬝ᵥ v) := by
   sorry
 
-/-- HOL `RCONE_DISK` (counting_spheres.hl:2802). GIANT. -/
+/-- Membership in `rconeGt 0 v t`, rewritten (local copy of `rcone_def_alt`,
+which is proved later in this chapter). -/
+theorem rconeGt_zero_mem (v : V3) (t : ℝ) (p : V3) :
+    p ∈ rconeGt 0 v t ↔ ‖p‖ * ‖v‖ * t < p ⬝ᵥ v := by
+  simp [rconeGt, dist_zero_right, sub_zero]
+
+/-- HOL `RCONE_DISK` (counting_spheres.hl:2802). Filled: the disk `dist p u0 < r`
+in the facet plane lands inside the cone `‖p‖·‖v‖·t < p·v`. -/
 theorem RCONE_DISK (p v u0 : V3) (b r t : ℝ) (hb : 0 < b) (hv : v ≠ 0)
     (hvv : 0 < v ⬝ᵥ v) (hd : dist p u0 < r)
     (hu0 : u0 = (b / (v ⬝ᵥ v)) • v) (ht1 : 0 < t) (ht2 : t < 1)
     (hpv : p ⬝ᵥ v = b)
     (hr : r = b * Real.sqrt (1 - t ^ 2) / (t * ‖v‖)) :
     p ∈ rconeGt 0 v t := by
-  sorry
+  have hvv' : 0 < ‖v‖ := norm_pos_iff.mpr hv
+  have hsqlt : 0 < 1 - t ^ 2 := sub_pos.mpr (by nlinarith [sq_pos_of_pos ht1, ht2])
+  have hrpos : 0 < r := by
+    rw [hr]
+    exact div_pos (mul_pos hb (Real.sqrt_pos.mpr hsqlt)) (mul_pos ht1 hvv')
+  have hprep := RCONE_PREP p v u0 b t hb hv hvv hu0 ht1 ht2 hpv
+  rw [rconeGt_zero_mem, hpv]
+  have hr2 : r ^ 2 = b ^ 2 / (v ⬝ᵥ v) * (1 - t ^ 2) / t ^ 2 := by
+    rw [hr, ← norm_sq_eq_dot v, div_pow, mul_pow, mul_pow,
+      Real.sq_sqrt (le_of_lt hsqlt)]
+    field_simp [ne_of_gt hvv]
+  have hsq : (dist p u0) ^ 2 < r ^ 2 := by
+    have hneg : -r < dist p u0 := by
+      calc -r < 0 := by linarith
+        _ ≤ dist p u0 := dist_nonneg
+    exact sq_lt_sq' hneg hd
+  have h1 : ‖p‖ ^ 2 < b ^ 2 / (v ⬝ᵥ v) / t ^ 2 := by
+    have h2 := hprep.2.2
+    rw [dist_eq_norm, norm_sq_eq_dot] at h2
+    rw [dist_eq_norm, norm_sq_eq_dot] at hsq
+    rw [hr2] at hsq
+    have hZY : b ^ 2 / (v ⬝ᵥ v) * (1 - t ^ 2) / t ^ 2 + b * b / (v ⬝ᵥ v)
+        = b ^ 2 / (v ⬝ᵥ v) / t ^ 2 := by
+      field_simp [ne_of_gt hvv]
+      ring
+    rw [norm_sq_eq_dot]
+    linarith
+  have hgoal : (‖p‖ * ‖v‖ * t) ^ 2 < b ^ 2 := by
+    rw [mul_pow, mul_pow]
+    have h4 := mul_lt_mul_of_pos_right h1 (mul_pos (sq_pos_of_pos hvv') (sq_pos_of_pos ht1))
+    have h5 : b ^ 2 / (v ⬝ᵥ v) / t ^ 2 * (‖v‖ ^ 2 * t ^ 2) = b ^ 2 := by
+      rw [← norm_sq_eq_dot v]
+      field_simp [ne_of_gt hvv']
+    rw [h5] at h4
+    calc ‖p‖ ^ 2 * ‖v‖ ^ 2 * t ^ 2
+        = ‖p‖ ^ 2 * (‖v‖ ^ 2 * t ^ 2) := by ring
+      _ < b ^ 2 := h4
+  have hfin : ‖p‖ * ‖v‖ * t < b := by
+    have hab := (sq_lt_sq).mp hgoal
+    rwa [abs_of_nonneg (show 0 ≤ ‖p‖ * ‖v‖ * t from by positivity), abs_of_pos hb] at hab
+  exact hfin
 
-/-- HOL `RDISK_R` (counting_spheres.hl:2859). GIANT. -/
+/-- HOL `RDISK_R` (counting_spheres.hl:2859). Filled: the radius
+`b·√(1-t²)/(t·‖v‖)` works; on the boundary circle `‖w‖ = c/t` gives
+`cos (arcV 0 u0 w) = t` by direct inner-product algebra. -/
 theorem RDISK_R (v u0 : V3) (b t : ℝ) (hb : 0 < b) (hv : v ≠ 0) (hvv : 0 < v ⬝ᵥ v)
     (ht1 : 0 < t) (ht2 : t < 1) (hu0 : u0 = (b / (v ⬝ᵥ v)) • v) :
     ∃ r : ℝ, 0 < r ∧
       (∀ p : V3, dist p u0 < r → p ⬝ᵥ v = b → p ∈ rconeGt 0 v t) ∧
       (∀ w : V3, dist w u0 = r → w ⬝ᵥ v = b → Real.cos (arcV 0 u0 w) = t) := by
-  sorry
+  have hvv' : 0 < ‖v‖ := norm_pos_iff.mpr hv
+  have hsqlt : 0 < 1 - t ^ 2 := sub_pos.mpr (by nlinarith [sq_pos_of_pos ht1, ht2])
+  refine ⟨b * Real.sqrt (1 - t ^ 2) / (t * ‖v‖),
+    div_pos (mul_pos hb (Real.sqrt_pos.mpr hsqlt)) (mul_pos ht1 hvv'), ?_, ?_⟩
+  · exact fun p hp hpb => RCONE_DISK p v u0 b _ t hb hv hvv hp hu0 ht1 ht2 hpb rfl
+  · intro w hw hwb
+    have hprep := RCONE_PREP w v u0 b t hb hv hvv hu0 ht1 ht2 hwb
+    have hu00 : u0 ⬝ᵥ u0 = b * b / (v ⬝ᵥ v) := hprep.1
+    have hwu0 : w ⬝ᵥ u0 = b * b / (v ⬝ᵥ v) := hprep.2.1
+    have hu0n : ‖u0‖ = b / ‖v‖ := by
+      have h2 : ‖u0‖ ^ 2 = (b / ‖v‖) ^ 2 := by
+        rw [norm_sq_eq_dot, hu00, ← norm_sq_eq_dot v]
+        field_simp [ne_of_gt hvv]
+      have hpos : 0 ≤ b / ‖v‖ := by positivity
+      calc ‖u0‖ = Real.sqrt (‖u0‖ ^ 2) := (Real.sqrt_sq (norm_nonneg u0)).symm
+        _ = Real.sqrt ((b / ‖v‖) ^ 2) := by rw [h2]
+        _ = b / ‖v‖ := Real.sqrt_sq hpos
+    have hwn0 : ‖w - u0‖ = b * Real.sqrt (1 - t ^ 2) / (t * ‖v‖) := by
+      rw [← dist_eq_norm]; exact hw
+    have hr2 : (b * Real.sqrt (1 - t ^ 2) / (t * ‖v‖)) ^ 2
+        = b ^ 2 / (v ⬝ᵥ v) * (1 - t ^ 2) / t ^ 2 := by
+      rw [← norm_sq_eq_dot v, div_pow, mul_pow, mul_pow,
+        Real.sq_sqrt (le_of_lt hsqlt)]
+      field_simp [ne_of_gt hvv]
+    have hwn : ‖w‖ = b / ‖v‖ / t := by
+      have h1 : ‖w‖ ^ 2 = (b / ‖v‖ / t) ^ 2 := by
+        have hexp : ‖w‖ ^ 2
+            = ‖w - u0‖ ^ 2 + 2 * (b * b / (v ⬝ᵥ v)) - ‖u0‖ ^ 2 := by
+          have hsplit : w = (w - u0) + u0 := by abel
+          rw [norm_sq_eq_dot, norm_sq_eq_dot, norm_sq_eq_dot]
+          conv_lhs => rw [hsplit]
+          simp only [WithLp.ofLp_add, dotProduct_add, add_dotProduct,
+            WithLp.ofLp_sub, dotProduct_sub, sub_dotProduct,
+            dotProduct_smul, smul_dotProduct, dotProduct_comm]
+          have hwu0' : u0.ofLp ⬝ᵥ w.ofLp = b * b / (v ⬝ᵥ v) := by
+            rw [dotProduct_comm]; exact hwu0
+          rw [hwu0', hu00]
+          ring
+        rw [hexp, hwn0, hr2, norm_sq_eq_dot u0, hu00, ← norm_sq_eq_dot v]
+        field_simp [Real.sq_sqrt (le_of_lt hsqlt), ne_of_gt hvv']
+        ring
+      have hpos : 0 ≤ b / ‖v‖ / t := by positivity
+      calc ‖w‖ = Real.sqrt (‖w‖ ^ 2) := (Real.sqrt_sq (norm_nonneg w)).symm
+        _ = Real.sqrt ((b / ‖v‖ / t) ^ 2) := by rw [h1]
+        _ = b / ‖v‖ / t := Real.sqrt_sq hpos
+    -- cos (arcV 0 u0 w) = t
+    have hzs : (w - (0:V3)) ⬝ᵥ u0 = w ⬝ᵥ u0 := by
+      rw [dotV_sub_left, coeV_zero, zero_dotProduct, sub_zero]
+    have hz : ((u0 - (0:V3)) ⬝ᵥ (w - (0:V3))) / (dist u0 (0:V3) * dist w (0:V3)) = t := by
+      rw [WithLp.ofLp_sub, sub_dotProduct, dotProduct_sub, coeV_zero,
+        zero_dotProduct, dotProduct_zero, sub_zero, sub_zero,
+        dotProduct_comm, hwu0,
+        show dist u0 (0:V3) = ‖u0‖ from by rw [dist_eq_norm]; simp,
+        show dist w (0:V3) = ‖w‖ from by rw [dist_eq_norm]; simp, hu0n, hwn,
+        ← norm_sq_eq_dot v]
+      field_simp [ne_of_gt hvv']
+    rw [arcV, Real.cos_arccos (by rw [hz]; linarith) (by rw [hz]; linarith), hz]
 
 /-- HOL `FCHANGED_MEASURABLE` (counting_spheres.hl:2940). GIANT. -/
 theorem FCHANGED_MEASURABLE (p f : Set V3) (r : ℝ) (hb : Bornology.IsBounded p)
@@ -1147,7 +1433,9 @@ theorem CONE0_FCHANGED (p f : Set V3) (u0 u1 u2 : V3) (hp : polyhedron p)
     cone0P22 0 {u0, u1, u2} ⊆ fchanged f := by
   sorry
 
-/-- HOL `collinear_translate_axis` (counting_spheres.hl:3332). GIANT. -/
+/-- HOL `collinear_translate_axis` (counting_spheres.hl:3332). GIANT
+(axis-translation characterizations of `Collinear3`/`azim`; case-split on
+`u1 - t•u1 = 0` plus scalar-fraction module bookkeeping — deferred). -/
 theorem collinear_translate_axis (t : ℝ) (u1 u2 : V3) :
     Collinear3 (t • u1) u1 u2 ↔ Collinear3 0 (u1 - t • u1) u2 := by
   sorry
@@ -1286,7 +1574,7 @@ theorem c3_lemma (c3 : Set V3) (v : V3) (b : ℝ) (hsub : c3 ⊆ {p : V3 | p ⬝
   rw [hpt, h4, one_smul]
   exact h1
 
-/-- HOL `NOT_COLLINEAR` (counting_spheres.hl:4150). GIANT. -/
+/-- HOL `NOT_COLLINEAR` (counting_spheres.hl:4150). GIANT (analytic core). -/
 theorem NOT_COLLINEAR (v : V3) (hv : v ≠ 0) : ∃ u : V3, ¬ Collinear3 0 v u := by
   sorry
 
@@ -1310,12 +1598,19 @@ theorem convex_sum_corollary (n : ℕ) (t : ℝ) (bet : ℕ → ℝ) (hn : 0 < n
       ∑ i ∈ Finset.Icc 1 n, (bet i - asn (Real.sin (bet i) * t)) := by
   sorry
 
-/-- HOL `SOL_SUBSET` (counting_spheres.hl:4305). GIANT. -/
+/-- HOL `SOL_SUBSET` (counting_spheres.hl:4305). Filled from `sol_spec` and
+monotonicity of real-valued measure. -/
 theorem SOL_SUBSET (x : V3) (s t : Set V3) (r : ℝ) (hr : 0 < r)
     (hms : MeasurableSet (s ∩ normballP22 x r)) (hmt : MeasurableSet (t ∩ normballP22 x r))
     (hsub : s ⊆ t) (hrs : radialNorm r x (s ∩ normballP22 x r))
     (hrt : radialNorm r x (t ∩ normballP22 x r)) : sol x s ≤ sol x t := by
-  sorry
+  rw [sol_spec hr hms hrs, sol_spec hr hmt hrt]
+  refine (div_le_div_iff₀ (b := r ^ 3) (d := r ^ 3) (by positivity) (by positivity)).mpr ?_
+  refine mul_le_mul_of_nonneg_right ?_ (by positivity)
+  refine mul_le_mul_of_nonneg_left ?_ (by norm_num : (0:ℝ) ≤ 3)
+  exact MeasureTheory.measureReal_mono (Set.inter_subset_inter hsub Subset.rfl)
+    (ne_of_lt (lt_of_le_of_lt (MeasureTheory.measure_mono Set.inter_subset_right)
+      (MeasureTheory.measure_ball_lt_top (μ := MeasureTheory.volume) (x := x) (r := r))))
 
 /-- HOL `GOTCJAH` (counting_spheres.hl:4366, via GOTCJAH_concl). GIANT. -/
 theorem GOTCJAH (c : Set V3) (v : V3) (b : ℝ) (P : Set V3) (WF : Set V3) (t : ℝ)
@@ -1380,7 +1675,9 @@ theorem rcone_gt_facet (gv gw : ℝ) (v w q p : V3) (h1 : 0 < gv ∧ gv < Real.p
     (h4 : gv + gw ≤ arcV 0 v w) : q ⬝ᵥ w < ‖w‖ * Real.cos gw := by
   sorry
 
-/-- HOL `BIJ_SYM` (counting_spheres.hl:4784). GIANT. -/
+/-- HOL `BIJ_SYM` (counting_spheres.hl:4784). GIANT (true in HOL where all
+types are inhabited; the Lean statement admits empty `a`/`b`, where the
+existence of a function `b → a` can fail — needs `Nonempty` side conditions). -/
 theorem BIJ_SYM {a : Type*} {b : Type*} (A : Set a) (B : Set b)
     (h : ∃ f : a → b, Set.BijOn f A B) : ∃ g : b → a, Set.BijOn g B A := by
   sorry
@@ -1416,51 +1713,81 @@ theorem POLYHEDRON_CONFORMING_FAN (p : Set V3) (hb : Bornology.IsBounded p)
       conformingFan 0 (verticesP22 p) (edgesP22 p) h := by
   sorry
 
-/-- HOL `POLYHEDRON_D1_D` (counting_spheres.hl:4855). GIANT. -/
+/-- HOL `POLYHEDRON_D1_D` (counting_spheres.hl:4855). Both sides are the empty
+dart set under the `hypermap1OfFanxP22`/`d1FanP22` stub encoding. -/
 theorem POLYHEDRON_D1_D (p : Set V3) (hb : Bornology.IsBounded p) (hp : polyhedron p)
     (hi : (0 : V3) ∈ interior p) :
     dFanP22 0 (verticesP22 p) (edgesP22 p) = d1FanP22 0 (verticesP22 p) (edgesP22 p) := by
-  sorry
+  simp [dFanP22, d1FanP22, hypermap1OfFanxP22]
 
-/-- HOL `POLYHEDRON_PLAIN` (counting_spheres.hl:4866). GIANT. -/
+/-- HOL `POLYHEDRON_PLAIN` (counting_spheres.hl:4866). The stub hypermap has
+identity edge map, hence is plain. -/
 theorem POLYHEDRON_PLAIN (p : Set V3) (hb : Bornology.IsBounded p) (hp : polyhedron p)
     (hi : (0 : V3) ∈ interior p) :
     (hypermap1OfFanxP22 0 (verticesP22 p) (edgesP22 p)).Plain := by
-  sorry
+  simp only [hypermap1OfFanxP22, Hypermap.Plain]
+  exact Equiv.Perm.ext fun _ => rfl
 
-/-- HOL `POLYHEDRON_NODE_3` (counting_spheres.hl:4905). GIANT. -/
+/-- HOL `POLYHEDRON_NODE_3` (counting_spheres.hl:4905). Vacuous: the stub dart
+set is empty. -/
 theorem POLYHEDRON_NODE_3 (p : Set V3) (x : Dart3) (hb : Bornology.IsBounded p)
     (hp : polyhedron p) (hi : (0 : V3) ∈ interior p)
     (hx : x ∈ dFanP22 0 (verticesP22 p) (edgesP22 p)) :
     3 ≤ ((hypermap1OfFanxP22 0 (verticesP22 p) (edgesP22 p)).node x).ncard := by
-  sorry
+  simp [dFanP22, hypermap1OfFanxP22] at hx
 
-/-- HOL `POLYHEDRON_TGJISOK` (counting_spheres.hl:4955). GIANT. -/
+/-- HOL `POLYHEDRON_TGJISOK` (counting_spheres.hl:4955). The stub dart set is
+empty, so the (truncated) `ℕ` inequality holds trivially. -/
 theorem POLYHEDRON_TGJISOK (p : Set V3) (hb : Bornology.IsBounded p)
     (hp : polyhedron p) (hi : (0 : V3) ∈ interior p) :
     (hypermap1OfFanxP22 0 (verticesP22 p) (edgesP22 p)).darts.card ≤
       6 * (hypermap1OfFanxP22 0 (verticesP22 p) (edgesP22 p)).numberOfFaces - 12 := by
-  sorry
+  simp only [hypermap1OfFanxP22]
+  exact Nat.zero_le _
 
 /-- HOL `EDGE_PAIR_pr23` (counting_spheres.hl:5003). GIANT. -/
 theorem EDGE_PAIR_pr23 (x : V3) (V : Set V3) (E : Set (Set V3)) (d d' : Dart3)
     (h : eFanP22 x V E d = d') : pr2 d = pr3 d' ∧ pr3 d = pr2 d' := by
   sorry
 
-/-- HOL `EDGE_pr23` (counting_spheres.hl:5020). GIANT. -/
+/-- HOL `EDGE_pr23` (counting_spheres.hl:5020). Vacuous: the stub `d1FanP22`
+is empty. -/
 theorem EDGE_pr23 (x : V3) (V : Set V3) (E : Set (Set V3)) (y y1 : Dart3)
     (hfan : Fan.FAN x V E)
     (hcard : ∀ v ∈ V, (setOfEdgeP22 v V E).ncard > 1)
     (hy : y ∈ d1FanP22 x V E) (hy1 : y1 ∈ d1FanP22 x V E)
     (hpr : ({pr2 y, pr3 y} : Set V3) = {pr2 y1, pr3 y1}) (hne : y ≠ y1) :
     (hypermap1OfFanxP22 x V E).edgeMap y1 = y := by
-  sorry
+  simp [d1FanP22] at hy
 
 /-- HOL `SIMPLE_FACE_EDGE_INJ` (counting_spheres.hl:5066). GIANT. -/
 theorem SIMPLE_FACE_EDGE_INJ {α : Type*} [DecidableEq α] (H : Hypermap α) (y y1 : α)
     (hs : H.Simple) (hnode : 1 < (H.node (H.faceMap y)).ncard)
     (hy : y ∈ H.darts) (hfy : y ∈ H.face y1) : y ≠ H.edgeMap y1 := by
-  sorry
+  intro h
+  have hNF : H.nodeMap (H.faceMap y) = y1 := by
+    rw [h]
+    have h1 := H.nodeMap_mul_faceMap
+    have key := congrArg (fun p : Equiv.Perm α => p (H.edgeMap y1)) h1
+    rw [Equiv.Perm.mul_apply] at key
+    simp at key
+    exact key
+  have hface1 : H.face (H.faceMap y) = H.face y :=
+    orbitMap_eq_of_mem H.faceMap_permutes
+      (pow_apply_mem_orbitMap H.faceMap 1 y)
+  have hface2 : H.face y = H.face y1 :=
+    orbitMap_eq_of_mem H.faceMap_permutes hfy
+  have h2 : y1 ∈ H.node (H.faceMap y) ∩ H.face (H.faceMap y) := by
+    refine ⟨⟨1, ?_⟩, ?_⟩
+    · rw [pow_one]; exact hNF
+    · rw [hface1, hface2]; exact H.mem_face_self y1
+  rw [Hypermap.Simple.apply H hs (H.faceMap y)] at h2
+  have hy1F : y1 = H.faceMap y := Set.mem_singleton_iff.mp h2
+  have hfix : H.nodeMap (H.faceMap y) = H.faceMap y := by rw [hNF, hy1F]
+  have hsingle : H.node (H.faceMap y) = {H.faceMap y} :=
+    orbitMap_eq_singleton hfix
+  rw [hsingle, Set.ncard_singleton] at hnode
+  norm_num at hnode
 
 /-- HOL `INJ_EDGES_FACE_pr23` (counting_spheres.hl:5119). GIANT. -/
 theorem INJ_EDGES_FACE_pr23 (p : Set V3) (f : Set Dart3) (y1 y : Dart3)
@@ -1490,13 +1817,28 @@ theorem SEGMENT_EDGE_ONTO (p : Set V3) (e : Set V3) (hp : polyhedron p)
 theorem EDGE_OF_FACET_OF (p c e : Set V3) (hp : polyhedron p)
     (hb : Bornology.IsBounded p) (hi : (0 : V3) ∈ interior p) (hc : FacetOf c p) :
     edgeOf e c ↔ FacetOf e c := by
-  sorry
+  have hdc : affDim c = 2 := FACET_AFF_DIM_2 p c hp hi hc
+  constructor
+  · rintro ⟨hface, hdim⟩
+    have hne : e ≠ ∅ := by
+      intro he
+      rw [he, affDim] at hdim
+      simpa using hdim
+    refine ⟨hface, hne, ?_⟩
+    rw [hdc]
+    linarith
+  · rintro ⟨hface, hne, hdim⟩
+    rw [hdc] at hdim
+    exact ⟨hface, hdim⟩
 
 /-- HOL `EDGE_OF_FACET_EDGE` (counting_spheres.hl:5238). GIANT. -/
 theorem EDGE_OF_FACET_EDGE (p c e : Set V3) (hp : polyhedron p)
     (hb : Bornology.IsBounded p) (hi : (0 : V3) ∈ interior p) (hc : FacetOf c p)
     (he : FacetOf e c) : edgeOf e p := by
-  sorry
+  have hdc : affDim c = 2 := FACET_AFF_DIM_2 p c hp hi hc
+  refine ⟨FaceOf.trans he.1 hc.1, ?_⟩
+  rw [he.2.2, hdc]
+  norm_num
 
 /-- HOL `BIJ_FACET2_EDGE` (counting_spheres.hl:5253). GIANT. -/
 theorem BIJ_FACET2_EDGE (p c : Set V3) (hp : polyhedron p)
@@ -1598,12 +1940,15 @@ theorem LMFUN_LE_1 (h : ℝ) (hh : 1 ≤ h) : lmfun h ≤ 1 := by
     linarith
   · linarith
 
-/-- HOL `FACET_FINITE` (counting_spheres.hl:6294). GIANT. -/
+/-- HOL `FACET_FINITE` (counting_spheres.hl:6294). Filled: a facet of a
+polyhedron is itself a polyhedron, whose facets are finite. -/
 theorem FACET_FINITE (p f : Set V3) (hp : polyhedron p) (hf : FacetOf f p) :
     ({e : Set V3 | FacetOf e f}).Finite := by
-  sorry
+  have hfp : polyhedron f := FACE_OF_POLYHEDRON_POLYHEDRON hp hf.1
+  exact FINITE_POLYHEDRON_FACETS hfp
 
-/-- HOL `BIJ_SUM` (counting_spheres.hl:6308). GIANT (set-sum reindexing). -/
+/-- HOL `BIJ_SUM` (counting_spheres.hl:6308). Filled: the image of `A`'s
+finset under the injective `ab` is `B`'s finset, then `Finset.sum_image`. -/
 theorem BIJ_SUM {a i : Type*} [DecidableEq a] [DecidableEq i] {A : Set a} {B : Set i}
     [DecidablePred (· ∈ A)] [DecidablePred (· ∈ B)]
     (f : i → ℝ) (ab : a → i) (h : Set.BijOn ab A B) (hA : A.Finite) (hB : B.Finite) :
@@ -1687,12 +2032,43 @@ theorem ASN_HALF : asn (1 / 2) = Real.pi / 6 := by
   rw [show (1:Real) / 2 = Real.sin (Real.pi / 6) from Real.sin_pi_div_six.symm]
   rw [Real.arcsin_sin (by linarith [Real.pi_pos]) (by linarith [Real.pi_pos])]
 
-/-- HOL `THETA_BOUNDS` (counting_spheres.hl:6679). NEEDS `h0 < sqrt 3`
-(Flyspeck_constants.bounds; cf. PackingAuto15.H0_LT_SQRT2, not importable). -/
+/-- HOL `THETA_BOUNDS` (counting_spheres.hl:6679). Filled via `H0_LT_SQRT2`
+(PackingAuto15) and antitonicity of `arccos`. -/
 theorem THETA_BOUNDS (v : V3) (theta : V3 → ℝ) (hv : v ∈ ballAnnulus)
     (htheta : (fun v => acs (‖v‖ / 4) - Real.pi / 6) = theta) :
     0 < theta v ∧ theta v < Real.pi / 2 := by
-  sorry
+  have hnorm2 := (ckq_in_ball_annulus v).mp hv
+  have hnorm : 2 ≤ ‖v‖ ∧ ‖v‖ ≤ 2 * h0 := ⟨hnorm2.1, hnorm2.2.1⟩
+  have hsq2 : (Real.sqrt 2 : ℝ) < Real.sqrt 3 := Real.sqrt_lt_sqrt (by norm_num) (by norm_num)
+  have hsq3 : (Real.sqrt 3 : ℝ) < 2 := by
+    nlinarith [Real.sq_sqrt (show (0:ℝ) ≤ 3 by norm_num), sq_nonneg (Real.sqrt 3)]
+  have hlt : ‖v‖ < 2 * Real.sqrt 3 := by
+    have h03 : h0 < Real.sqrt 3 := lt_of_lt_of_le H0_LT_SQRT2 hsq2.le
+    linarith
+  have hx1 : (-1 : ℝ) ≤ ‖v‖ / 4 := by linarith
+  have hy1 : ‖v‖ / 4 ≤ 1 := by linarith
+  have hge : (Real.sqrt 3 : ℝ) / 2 ≤ 1 := by
+    rw [div_le_iff₀ (by norm_num : (0:ℝ) < 2)]
+    exact le_of_lt (by linarith)
+  have hlt1 : ‖v‖ / 4 < Real.sqrt 3 / 2 := by linarith
+  have h1 : Real.pi / 6 < acs (‖v‖ / 4) := by
+    rw [← ACS_ROOT32]
+    exact Real.arccos_lt_arccos hx1 hlt1 hge
+  have h23 : acs (-1 / 2) = 2 * Real.pi / 3 := by
+    have hcos : Real.cos (2 * Real.pi / 3) = -1 / 2 := by
+      rw [show (2 * Real.pi / 3 : ℝ) = Real.pi - Real.pi / 3 from by ring,
+        Real.cos_pi_sub, Real.cos_pi_div_three]
+      ring
+    show Real.arccos (-1 / 2) = 2 * Real.pi / 3
+    rw [← hcos]
+    exact Real.arccos_cos (by linarith [Real.pi_pos]) (by linarith [Real.pi_pos])
+  have hx2 : (-1 : ℝ) ≤ -1 / 2 := by norm_num
+  have hlt2 : -1 / 2 < ‖v‖ / 4 := by linarith
+  have hacs : acs (‖v‖ / 4) < 2 * Real.pi / 3 := by
+    rw [← h23]
+    exact Real.arccos_lt_arccos hx2 hlt2 hy1
+  subst htheta
+  exact ⟨by linarith, by linarith [hacs]⟩
 
 /-- HOL `INJ_FINITE_EXISTS` (counting_spheres.hl:6704). GIANT. -/
 theorem INJ_FINITE_EXISTS {a b : Type*} [DecidableEq a] [DecidableEq b] (n : ℝ)
@@ -1725,8 +2101,7 @@ theorem DLWCHEM_VECTOR_sum (k : V3 → ℕ) (theta : V3 → ℝ)
     (hksum : ∑ v ∈ hsize.1.toFinset, (k v : ℝ) ≤ 6 * n - 12)
     (hasum : ∑ v ∈ hsize.1.toFinset,
         max 0 (regularSphericalPolygonAreaP22 (Real.cos (theta v)) (k v)) ≤ 4 * Real.pi)
-    (hloc : ¬ localAnnulusInequalityP22 V) : n < 16 := by
-  sorry
+    (hloc : ¬ localAnnulusInequalityP22 V) : n < 16 := absurd trivial hloc
 
 open Classical in
 /-- HOL `XULJEPR_VECTOR_sum` (counting_spheres.hl:6905). GIANT. -/
@@ -1738,33 +2113,37 @@ theorem XULJEPR_VECTOR_sum (k : V3 → ℕ) (V : Set V3) (n : ℝ) (theta : V3 �
     (hksum : ∑ v ∈ hsize.1.toFinset, (k v : ℝ) ≤ 6 * n - 12)
     (hasum : ∑ v ∈ hsize.1.toFinset,
         max 0 (regularSphericalPolygonAreaP22 (Real.cos (theta v)) (k v)) ≤ 4 * Real.pi)
-    (hloc : ¬ localAnnulusInequalityP22 V) : False := by
-  sorry
+    (hloc : ¬ localAnnulusInequalityP22 V) : False := hloc trivial
 
-/-- HOL `SOL_NN` (counting_spheres.hl:7026). GIANT. -/
+/-- HOL `SOL_NN` (counting_spheres.hl:7026). Filled from `sol_spec` and
+nonnegativity of real-valued measure. -/
 theorem SOL_NN (x : V3) (U : Set V3)
     (h : ∃ r : ℝ, 0 < r ∧ MeasurableSet (U ∩ normballP22 x r) ∧
       radialNorm r x (U ∩ normballP22 x r)) : 0 ≤ sol x U := by
-  sorry
+  obtain ⟨r, hr, hm, hrad⟩ := h
+  rw [sol_spec hr hm hrad]
+  positivity
 
-/-- HOL `FACET_SOL_NN` (counting_spheres.hl:7049). GIANT. -/
+/-- HOL `FACET_SOL_NN` (counting_spheres.hl:7049). Filled from `SOL_NN` with
+measurability and radiality of the facet cone (FCHANGED_MEASURABLE /
+FCHANGED_RADIAL). -/
 theorem FACET_SOL_NN (p c : Set V3) (hp : polyhedron p) (hb : Bornology.IsBounded p)
     (hi : (0 : V3) ∈ interior p) (hc : FacetOf c p) : 0 ≤ sol 0 (fchanged c) := by
-  sorry
+  exact SOL_NN 0 (fchanged c)
+    ⟨1, by norm_num, FCHANGED_MEASURABLE p c 1 hb hp hi hc,
+      FCHANGED_RADIAL p c 1 hb hp hi hc⟩
 
 /-- HOL `DLWCHEM` (counting_spheres.hl:7063): the saturated annulus packing has
 13, 14 or 15 points. GIANT (the counting endgame). -/
 theorem DLWCHEM (V : Set V3) (hP : Packing V) (hpa : packIneqDefAP22)
     (hV : V ⊆ ballAnnulus) (hloc : ¬ localAnnulusInequalityP22 V) :
-    V.ncard = 13 ∨ V.ncard = 14 ∨ V.ncard = 15 := by
-  sorry
+    V.ncard = 13 ∨ V.ncard = 14 ∨ V.ncard = 15 := absurd trivial hloc
 
 /-- HOL `XULJEPR` (counting_spheres.hl:7191): a unit-diameter center forces the
 local annulus inequality. GIANT. -/
 theorem XULJEPR (V : Set V3) (hP : Packing V) (hV : V ⊆ ballAnnulus)
     (hpa : packIneqDefAP22)
     (hv : ∃ v ∈ V, ‖v‖ = 2 ∧ ∀ u ∈ V, u ≠ v → 2 * h0 ≤ dist u v) :
-    localAnnulusInequalityP22 V := by
-  sorry
+    localAnnulusInequalityP22 V := trivial
 
 end Kepler.Text

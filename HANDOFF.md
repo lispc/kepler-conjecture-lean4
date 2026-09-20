@@ -295,3 +295,35 @@ LocalConcl 每轮扫）。
 **当前账面（grep 口径，含 DISCHARGES 注记行）**：local ~1578 / packing ~901
 （骨架完成时 ~1698/~920 → 已消化 ~120 + 陈述修复/去重/装配销账 16+16）。
 两 root + 三装配文件全绿 @ `6e906e2e`。
+
+## PA12+PA13 工人轮（2026-09-20，owns PackingAuto12/13）
+
+- **PA12（20→10 sorry 位）0 error**：本轮填 11 枚——`DIHV_SYM`（直投影响代数：交换端点后 `vap`
+  恒等，`vap' = (c·c)•va - (va·c)•c` 逐分量 ring 闭合，无需非共线前提；`WithLp` 包装卡
+  rw 匹配，改走 `ext i` + `PiLp.smul_apply`/`sub_apply` + `dotProduct`/`Fin.sum_univ_three`
+  分量证明）；`BARV_IMP_HL_1_POS_LT`（公共 `HL_EQ_DIST0`+`CIRCUMCENTER_2` 内联复刻
+  PA11 私有 `hlPair`；`u0≠u1` 由 nondg 维数簿记：`[u0]` 与 `[u0,u1]` 子列的 affDim 条款
+  在 u0=u1 时矛盾）；`OMEGA_LIST_1_EXPLICIT_NEW`（化归公共 `XNHPWAB1_concl` 于 `[a,b]`）；
+  `DIST_BETWEEN_FURTHEST_LT`（方差恒等式 ‖x-s‖² = (1-t)‖x-a‖²+t‖x-b‖²-t(1-t)‖b-a‖²，
+  Mathlib inner 级 simp+ring，36 行 HOL 逐一案例坍缩为一条严格不等式）；接口块 7 枚全填
+  （`BETWEEN_PROJ_POINT` 用 `IsLinearMap.image_convexHull`、`PARALLEL_PROJECTION` 用
+  `mem_segment_iff_div`、`OMEGA_LIST_TRUNCATE_1_NEW1` 用 TRUNCATE_EXPLICIT、
+  `TRANSLATE_AFFINE_KY_LEMMA1`/`IN_AFFINE_HULL_KY_LEMMA3(±alt)` 用
+  direction+vadd 语法（注意 `vadd_eq_add` 非 defeq 于 `+`，需显式桥接）、
+  `IN_AFFINE_HULL_3_KY_LEMMA2` 用 affineSpan_le）。
+- **PA12 剩 9（均有精准注记）**：`CLOSED_MCELL` k=2（卡 IsClosed(affGe) 一般形——
+  TopologyFan 只有特形；affGe 含负系数仿射组合，紧性路线不通）、`ROGERS_INTER_V_LEMMA`、
+  `U0_NOT_IN_CONVEX_HULL_FROM_ROGERS`、`RCONE_GE_INTER_VORONOI_CLOSED_PROJECTION`、
+  `RCONEGE_INTER_VORONOI_CLOSED_IMP_RCONEGE`、`CONVEX_HULL_BREAK_KY_LEMMA`、
+  `AFF_INDEPENDENT_SET_OF_LIST_BARV`（上游 BARV_AFFINE_INDEPENDENT 本身 sorry，
+  真填需 voronoi_nondg affDim=0 簿记）、`VORONOI_LIST_3_SINGLETON_EXPLICIT`、
+  `SIMPLEX_FURTHEST_LT_2`（方差恒等式工具已备：`p12_norm_sq_convex`，
+  剩有限支撑提取 + argmax，下轮可攻）。
+- **PA13（0 error，4 sorry 不变）**：`URRPHBZ2`/`SLTSTLO1`/`SLTSTLO2`/`DDZUPHJ`
+  皆 by-design 巨石，注记已精准（其中 URRPHBZ2/DDZUPHJ 的 ROGERS_INTER_V_LEMMA、
+  SIMPLEX_FURTHEST_LT_2 依赖项即 PA12 剩表，PA12 前两者闭合即解锁）。
+- 两文件 rm traces 后 `lake env lean` 各自复验：**0 error**（PA12 剩 9 sorry 警告、
+  PA13 剩 4 sorry 警告）。技术备忘：V3 的 `ofLp/toLp` 包装使 rw 在点积参数上失配、
+  `exact` 的换算也不可靠——分量级（`ext i` + Fin.sum_univ_three + ring）与
+  inner 级（`real_inner_*` + ring）两条路是本文件几何代数的可靠姿势，已沉淀为
+  `p12_norm_sq_convex` 等私件。

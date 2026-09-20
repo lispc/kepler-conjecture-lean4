@@ -589,10 +589,23 @@ theorem FINITE_PERMUTE_4 :
 /-! ## marchal2.hl:194 DIHV_SYM -/
 
 /-- HOL `DIHV_SYM` (marchal2.hl:194): `dihV x y z t = dihV y x z t`.
-Sorried: the symmetry of `Kepler.Geom.dihV` under swapping the two edge
-endpoints is not exported by any upstream lane. -/
+Direct projection algebra (no collinearity hypotheses needed): with `c = y - x`,
+swapping the edge endpoints replaces `(va, vc) := (z - x, y - x)` by
+`(va - c, -c)`, and the `vap` vector is unchanged since
+`((-c)⬝ᵥ(-c)) • (va - c) - ((va - c)⬝ᵥ(-c)) • (-c) = (c⬝ᵥc) • va - (va⬝ᵥc) • c`;
+the same holds for `vbp`. Proved componentwise on `Fin 3` (the `WithLp`
+wrapper blocks direct rewrites on the dot-product arguments). -/
 theorem DIHV_SYM (x y z t : V3) : dihV x y z t = dihV y x z t := by
-  sorry
+  simp only [dihV]
+  congr 1
+  · ext i
+    simp only [PiLp.smul_apply, PiLp.sub_apply, smul_eq_mul, dotProduct,
+      Fin.sum_univ_three]
+    ring
+  · ext i
+    simp only [PiLp.smul_apply, PiLp.sub_apply, smul_eq_mul, dotProduct,
+      Fin.sum_univ_three]
+    ring
 
 /-! ## marchal2.hl:255 RCONE_GT_SUBSET_RCONE_GE -/
 
@@ -735,13 +748,44 @@ theorem SEGMENT_INTER_CBALL_LEMMA (x : V3) (r : ℝ) (a b : V3)
 /-! ## marchal2.hl:487 BARV_IMP_HL_1_POS_LT -/
 
 /-- HOL `BARV_IMP_HL_1_POS_LT` (marchal2.hl:487): `0 < hl (truncate 1 ul)`
-for a `barV V 3` list. Sorried: requires the `hl`-of-a-pair fact
-(`hl [u;v] = dist u v / 2`), proved only in PackingAuto11's PRIVATE `hlPair`;
-re-expose `hlPair` publicly and this discharges. -/
+for a `barV V 3` list. `truncate 1 ul = [u0; u1]` and
+`hl [u0; u1] = dist u0 u1 / 2` (re-derivation of PackingAuto11's PRIVATE
+`hlPair` from the public Rogers `HL_EQ_DIST0` + `CIRCUMCENTER_2`);
+`u0 ≠ u1` because the nondg conditions force `affDim (voronoiList V [u0])`
+to equal both `3` (from the singleton sublist) and `2` (from the pair
+sublist) if `u0 = u1`. -/
 theorem BARV_IMP_HL_1_POS_LT (V : Set V3) (ul : List V3)
-    (_hs : saturated V) (_hp : Packing V) (_hb : barV V 3 ul) :
+    (_hs : saturated V) (_hp : Packing V) (hb : barV V 3 ul) :
     0 < hl (truncateSimplex 1 ul) := by
-  sorry
+  obtain ⟨u0, u1, u2, u3, hul⟩ : ∃ a b c d : V3, ul = [a, b, c, d] :=
+    BARV_3_EXPLICIT V ul hb
+  subst hul
+  have hv1 : voronoiNondg V [u0, u1] := hb.2 [u0, u1] ⟨⟨[u2, u3], rfl⟩, by simp⟩
+  have hv0 : voronoiNondg V [u0] := hb.2 [u0] ⟨⟨[u1, u2, u3], rfl⟩, by simp⟩
+  have hne : u0 ≠ u1 := by
+    intro he
+    subst he
+    have hset : setOfList [u0, u0] = setOfList [u0] := by simp [setOfList]
+    have h1 : affDim (voronoiSet V (setOfList [u0, u0])) + 2 = 4 := hv1.2.2
+    have h0 : affDim (voronoiSet V (setOfList [u0])) + 1 = 4 := hv0.2.2
+    rw [hset] at h1
+    omega
+  have hb1 : barV V 1 [u0, u1] := by
+    refine ⟨rfl, fun vl hv => hb.2 vl ⟨?_, hv.2⟩⟩
+    obtain ⟨yl, hy⟩ := hv.1
+    refine ⟨yl ++ [u2, u3], ?_⟩
+    show [u0, u1] ++ [u2, u3] = vl ++ (yl ++ [u2, u3])
+    rw [hy, List.append_assoc]
+  have hhl : hl [u0, u1] = dist u0 u1 / 2 := by
+    have hhd : hdV [u0, u1] = u0 := rfl
+    have hc : setOfList [u0, u1] = {u0, u1} := by
+      ext x
+      simp [setOfList]
+    rw [HL_EQ_DIST0 V 1 [u0, u1] _hp hb1, hc, CIRCUMCENTER_2, hhd, dist_midpoint_left,
+      Real.norm_eq_abs, abs_of_pos (show (0:ℝ) < 2 by norm_num)]
+    ring
+  rw [(TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2, hhl]
+  exact div_pos (dist_pos.mpr hne) (by norm_num)
 
 /-! ## marchal2.hl:541 CLOSED_MCELL -/
 
@@ -1117,12 +1161,26 @@ theorem RCONEGE_INTER_VORONOI_CLOSED_IMP_RCONEGE (V : Set V3) (a b : V3) (r : �
 /-- HOL `OMEGA_LIST_1_EXPLICIT_NEW` (marchal2.hl:1693): the `hl [a;b] < √2`
 variant of the omega-explicit lemma (differs from PackingAuto8's
 `OMEGA_LIST_1_EXPLICIT`, whose hypothesis bounds `hl ul` of the full list).
-Sorried: needs the voronoi-list-of-a-pair singleton characterization. -/
+Both reduce to the shared Rogers interface `XNHPWAB1_concl` (PackingAuto2)
+applied to the pair `[a, b]`. -/
 theorem OMEGA_LIST_1_EXPLICIT_NEW (a b c d : V3) (V : Set V3) (ul : List V3)
-    (_hs : saturated V) (_hp : Packing V) (_hbar : barV V 3 ul)
+    (_hs : saturated V) (_hp : Packing V) (hb : barV V 3 ul)
     (hul : ul = [a, b, c, d]) (hh : hl [a, b] < Real.sqrt 2) :
     omegaListN V ul 1 = circumcenter {a, b} := by
-  sorry
+  rw [hul] at hb ⊢
+  have hb1 : barV V 1 [a, b] := by
+    simpa using BARV_INITIAL_SUBLIST V 3 [a, b, c, d] [a, b] hb
+      (INITIAL_SUBLIST_APPEND [a, b] [c, d]) (by simp)
+  have h1 : omegaListN V [a, b, c, d] 1 = omegaList V [a, b] := by
+    show closestPoint (voronoiList V (truncateSimplex 1 [a, b, c, d])) (hdV [a, b, c, d])
+        = closestPoint (voronoiList V (truncateSimplex 1 [a, b])) (hdV [a, b])
+    rw [(TRUNCATE_SIMPLEX_EXPLICIT_1 a b c d).2.2,
+      (TRUNCATE_SIMPLEX_EXPLICIT_1 a b c d).1]
+    rfl
+  have hcen : omegaList V [a, b] = circumcenter (setOfList [a, b]) :=
+    XNHPWAB1_concl V [a, b] 1 _hs _hp (by omega) hb1 hh
+  rw [h1, hcen]
+  exact congrArg circumcenter (by ext x; simp [setOfList])
 
 /-! ## marchal2.hl:1724 IN_SET_IMP_IN_CONVEX_HULL_SET -/
 
@@ -1190,12 +1248,67 @@ theorem SIMPLEX_FURTHEST_LT_2 (a : V3) (s : Set V3) (hs : s.Finite)
 
 /-! ## marchal2.hl:2424 DIST_BETWEEN_FURTHEST_LT -/
 
-/-- HOL `DIST_BETWEEN_FURTHEST_LT` (marchal2.hl:2424). Sorried: metric
-case-analysis along the segment (36-line HOL proof). -/
+/-- Squared distance to a segment point (variance identity). -/
+private theorem p12_norm_sq_convex (u v : V3) (t : ℝ) :
+    ‖((1 - t) • u + t • v : V3)‖ ^ 2
+      = (1 - t) * ‖u‖ ^ 2 + t * ‖v‖ ^ 2 - t * (1 - t) * ‖u - v‖ ^ 2 := by
+  have hnorm : ∀ w : V3, ‖w‖ ^ 2 = @inner ℝ _ _ w w :=
+    fun w => (real_inner_self_eq_norm_sq w).symm
+  simp only [hnorm, inner_sub_right, inner_sub_left, inner_add_left, inner_add_right,
+    real_inner_smul_right, real_inner_comm]
+  ring
+
+/-- HOL `DIST_BETWEEN_FURTHEST_LT` (marchal2.hl:2424): an interior point `s`
+of the segment `[a, b]` is strictly closer to `x` than `a` whenever `b` is.
+Squared-distance variance identity along the segment
+(36-line HOL case analysis collapses to one strict inequality). -/
 theorem DIST_BETWEEN_FURTHEST_LT (x a b s : V3) (hs : s ∈ segment ℝ a b)
     (hsa : s ≠ a) (hsb : s ≠ b) (hab : a ≠ b)
     (hd : dist x b ≤ dist x a) : dist x s < dist x a := by
-  sorry
+  rw [mem_segment_iff_div] at hs
+  obtain ⟨α, β, hα, hβ, hsum, hse⟩ := hs
+  have h1 : α / (α + β) + β / (α + β) = 1 := by
+    rw [← add_div, div_self hsum.ne']
+  set t := β / (α + β) with htdef
+  have htge : 0 ≤ t := div_nonneg hβ (le_of_lt hsum)
+  have ht1 : t ≤ 1 := by
+    have hα0 : 0 ≤ α / (α + β) := div_nonneg hα hsum.le
+    linarith
+  have ht0 : 0 < t := by
+    rcases eq_or_lt_of_le htge with h | h
+    · rw [← h] at h1
+      simp at h1
+      rw [← hse, ← h, h1] at hsa
+      simp at hsa
+    · exact h
+  have htl1 : t < 1 := by
+    rcases eq_or_lt_of_le ht1 with h | h
+    · rw [← h] at h1
+      have h1' : α / (α + β) = 0 := by linarith
+      rw [← hse, h, h1'] at hsb
+      simp at hsb
+    · exact h
+  have hbA : ((x - a : V3) - (x - b)) = (b - a : V3) := by abel
+  have hids : (x : V3) - s = (1 - t) • (x - a) + t • (x - b) := by
+    rw [← hse, show (α / (α + β) : ℝ) = 1 - t from by linarith]
+    module
+  have hsq : ‖x - s‖ ^ 2
+      = (1 - t) * ‖x - a‖ ^ 2 + t * ‖x - b‖ ^ 2 - t * (1 - t) * ‖b - a‖ ^ 2 := by
+    rw [hids]
+    have h2 := p12_norm_sq_convex (x - a) (x - b) t
+    rw [hbA] at h2
+    exact h2
+  have hdb : ‖x - b‖ ^ 2 ≤ ‖x - a‖ ^ 2 := pow_le_pow_left₀ (norm_nonneg _) hd 2
+  have hlt2 : ‖x - s‖ ^ 2 < ‖x - a‖ ^ 2 := by
+    have hmul : t * ‖x - b‖ ^ 2 ≤ t * ‖x - a‖ ^ 2 :=
+      mul_le_mul_of_nonneg_left hdb htge
+    have hpos : 0 < t * (1 - t) * ‖b - a‖ ^ 2 :=
+      mul_pos (mul_pos ht0 (by linarith))
+        (pow_pos (norm_pos_iff.mpr (fun e => hab (sub_eq_zero.mp e).symm)) 2)
+    rw [hsq]
+    linarith
+  have hlt : ‖x - s‖ < ‖x - a‖ := (abs_lt_of_sq_lt_sq' hlt2 (norm_nonneg _)).2
+  rwa [dist_eq_norm, dist_eq_norm]
 
 /-! ## marchal2.hl:2445 ROGERS_EXPLICIT -/
 
@@ -1334,29 +1447,133 @@ theorem PRO_EXP (e x : V3) : proj_point e x = ((x ⬝ᵥ e) / (e ⬝ᵥ e)) • 
 theorem projection_proj_point (e x : V3) : projHL e x = x - proj_point e x := by
   rw [proj_point, sub_sub_cancel]
 
+/-- Linearity of `proj_point e ·` in the additive argument. -/
+private theorem p12_proj_point_add (e u v : V3) :
+    proj_point e (u + v) = proj_point e u + proj_point e v := by
+  have hd : ((u + v) ⬝ᵥ e) = (u ⬝ᵥ e) + (v ⬝ᵥ e) :=
+    add_dotProduct (u : Fin 3 → ℝ) (v : Fin 3 → ℝ) (e : Fin 3 → ℝ)
+  rw [PRO_EXP, PRO_EXP, PRO_EXP, hd, add_div, add_smul]
+
+/-- Linearity of `proj_point e ·` in the scalar argument. -/
+private theorem p12_proj_point_smul (e : V3) (c : ℝ) (v : V3) :
+    proj_point e (c • v) = c • proj_point e v := by
+  have hd : ((c • v) ⬝ᵥ e) = c * (v ⬝ᵥ e) :=
+    smul_dotProduct c (v : Fin 3 → ℝ) (e : Fin 3 → ℝ)
+  rw [PRO_EXP, PRO_EXP, hd, smul_smul, mul_div_assoc']
+
+/-- Linearity of `projHL e ·` in the scalar argument. -/
+private theorem p12_projHL_smul (e : V3) (c : ℝ) (v : V3) :
+    projHL e (c • v) = c • projHL e v := by
+  rw [projection_proj_point, projection_proj_point, p12_proj_point_smul e,
+    smul_sub]
+
 /-- HOL `BETWEEN_PROJ_POINT` (marchal2.hl:2955): `proj_point e ·` is linear,
 hence maps segments to segments. -/
 theorem BETWEEN_PROJ_POINT (a b x e : V3) (hx : x ∈ segment ℝ a b) :
-    proj_point e x ∈ segment ℝ (proj_point e a) (proj_point e b) := sorry
+    proj_point e x ∈ segment ℝ (proj_point e a) (proj_point e b) := by
+  rw [← p12_hull_pair] at hx
+  have h2 : proj_point e x ∈ convexHull ℝ
+      ((fun w : V3 => proj_point e w) '' ({a, b} : Set V3)) := by
+    rw [← IsLinearMap.image_convexHull ⟨p12_proj_point_add e, p12_proj_point_smul e⟩]
+    exact Set.mem_image_of_mem _ hx
+  have himg : ((fun w : V3 => proj_point e w) '' ({a, b} : Set V3))
+      = {proj_point e a, proj_point e b} := by
+    ext y
+    constructor
+    · rintro ⟨w, hwmem, hwe⟩
+      rw [← hwe]
+      rcases hwmem with rfl | rfl
+      · simp
+      · simp
+    · rintro (rfl | rfl)
+      · exact ⟨a, by simp⟩
+      · exact ⟨b, by simp⟩
+  rw [himg, p12_hull_pair] at h2
+  exact h2
 theorem PARALLEL_PROJECTION (x y a b : V3) (hx : x ∈ segment ℝ a y) (hab : a ≠ b) :
     ∃ k : ℝ, k ≤ 1 ∧ 0 ≤ k ∧
-      projHL (b - a) (x - a) = k • projHL (b - a) (y - a) := sorry
+      projHL (b - a) (x - a) = k • projHL (b - a) (y - a) := by
+  rw [mem_segment_iff_div] at hx
+  obtain ⟨α, β, hα, hβ, hsum, hxe⟩ := hx
+  refine ⟨β / (α + β), (div_le_one hsum).2 (by linarith),
+    div_nonneg hβ (le_of_lt hsum), ?_⟩
+  have h1 : α / (α + β) + β / (α + β) = 1 := by
+    rw [← add_div, div_self hsum.ne']
+  have h1' : α / (α + β) = 1 - β / (α + β) := by linarith
+  have hsub : x - a = (β / (α + β)) • (y - a) := by
+    rw [← hxe, h1', sub_smul, one_smul, smul_sub]
+    abel
+  rw [hsub, p12_projHL_smul]
 theorem OMEGA_LIST_TRUNCATE_1_NEW1 (V : Set V3) (u0 u1 u2 : V3) :
-    omegaListN V [u0, u1, u2] 1 = omegaList V [u0, u1] := sorry
+    omegaListN V [u0, u1, u2] 1 = omegaList V [u0, u1] := by
+  have htr : truncateSimplex 1 [u0, u1, u2] = [u0, u1] :=
+    (TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u2).2.1
+  show closestPoint (voronoiList V (truncateSimplex 1 [u0, u1, u2]))
+      (omegaListN V [u0, u1, u2] 0)
+    = closestPoint (voronoiList V (truncateSimplex 1 [u0, u1])) (omegaListN V [u0, u1] 0)
+  rw [htr, (TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u0).1]
+  rfl
 theorem TRANSLATE_AFFINE_KY_LEMMA1 (a b c x y z : V3) (k : ℝ)
     (ha : a ∈ affineSpan ℝ ({x, y, z} : Set V3))
     (hb : b ∈ affineSpan ℝ ({x, y, z} : Set V3))
     (hc : c ∈ affineSpan ℝ ({x, y, z} : Set V3)) :
-    a + k • (b - c) ∈ affineSpan ℝ ({x, y, z} : Set V3) := sorry
+    a + k • (b - c) ∈ affineSpan ℝ ({x, y, z} : Set V3) := by
+  have hdir : (k : ℝ) • ((b : V3) - c) ∈ (affineSpan ℝ ({x, y, z} : Set V3)).direction := by
+    refine Submodule.smul_mem _ k ?_
+    have hv : (b : V3) -ᵥ c ∈ (affineSpan ℝ ({x, y, z} : Set V3)).direction :=
+      AffineSubspace.vsub_mem_direction hb hc
+    rwa [vsub_eq_sub] at hv
+  have h := AffineSubspace.vadd_mem_of_mem_direction hdir ha
+  rwa [vadd_eq_add, add_comm] at h
 theorem IN_AFFINE_HULL_KY_LEMMA3 (x y z p a : V3) (r : ℝ)
     (h1 : p + a ∈ affineSpan ℝ ({x, y, z} : Set V3))
     (h2 : p + r • a ∈ affineSpan ℝ ({x, y, z} : Set V3))
-    (hr : r ≠ 1) : p ∈ affineSpan ℝ ({x, y, z} : Set V3) := sorry
+    (hr : r ≠ 1) : p ∈ affineSpan ℝ ({x, y, z} : Set V3) := by
+  have hv : (p : V3) + r • a -ᵥ (p + a) ∈
+      (affineSpan ℝ ({x, y, z} : Set V3)).direction :=
+    AffineSubspace.vsub_mem_direction h2 h1
+  have hv' : (r - 1) • a ∈ (affineSpan ℝ ({x, y, z} : Set V3)).direction := by
+    rw [sub_smul, one_smul]
+    rwa [vsub_eq_sub, add_sub_add_left_eq_sub] at hv
+  have hneg : (-a : V3) ∈ (affineSpan ℝ ({x, y, z} : Set V3)).direction := by
+    have h := Submodule.smul_mem (affineSpan ℝ ({x, y, z} : Set V3)).direction
+      (r - 1)⁻¹ hv'
+    rw [smul_smul, inv_mul_cancel₀ (sub_ne_zero_of_ne hr), one_smul] at h
+    exact Submodule.neg_mem _ h
+  have hmem := (AffineSubspace.vadd_mem_iff_mem_direction (-a) h1).2 hneg
+  have hp : (-a : V3) +ᵥ (p + a) = p := by rw [vadd_eq_add]; abel
+  rwa [hp] at hmem
 theorem IN_AFFINE_HULL_KY_LEMMA3_alt (x y z p a : V3) (r : ℝ)
     (h1 : p - a ∈ affineSpan ℝ ({x, y, z} : Set V3))
     (h2 : p - r • a ∈ affineSpan ℝ ({x, y, z} : Set V3))
-    (hr : r ≠ 1) : p ∈ affineSpan ℝ ({x, y, z} : Set V3) := sorry
+    (hr : r ≠ 1) : p ∈ affineSpan ℝ ({x, y, z} : Set V3) := by
+  have hv : (p : V3) - r • a -ᵥ (p - a) ∈
+      (affineSpan ℝ ({x, y, z} : Set V3)).direction :=
+    AffineSubspace.vsub_mem_direction h2 h1
+  have hv' : (1 - r) • a ∈ (affineSpan ℝ ({x, y, z} : Set V3)).direction := by
+    rw [sub_smul, one_smul]
+    rwa [vsub_eq_sub, sub_sub_sub_cancel_left] at hv
+  have hmem : (a : V3) ∈ (affineSpan ℝ ({x, y, z} : Set V3)).direction := by
+    have h := Submodule.smul_mem (affineSpan ℝ ({x, y, z} : Set V3)).direction
+      (1 - r)⁻¹ hv'
+    rw [smul_smul,
+      inv_mul_cancel₀ (fun e => hr (sub_eq_zero.mp e).symm), one_smul] at h
+    exact h
+  have hfin := (AffineSubspace.vadd_mem_iff_mem_direction a h1).2 hmem
+  have hp : (a : V3) +ᵥ (p - a) = p := by rw [vadd_eq_add]; abel
+  rwa [hp] at hfin
 theorem IN_AFFINE_HULL_3_KY_LEMMA2 (X Y Z a b c : V3)
     (hX : X ∈ affineSpan ℝ ({a, b, c} : Set V3))
     (hY : Y ∈ affineSpan ℝ ({a, b, c} : Set V3))
-    (hZ : Z ∈ segment ℝ X Y) : Z ∈ affineSpan ℝ ({a, b, c} : Set V3) := sorry
+    (hZ : Z ∈ segment ℝ X Y) : Z ∈ affineSpan ℝ ({a, b, c} : Set V3) := by
+  have hsub : ({X, Y} : Set V3) ⊆ (affineSpan ℝ ({a, b, c} : Set V3)) := by
+    intro w hw
+    rcases hw with rfl | rfl
+    · exact hX
+    · exact hY
+  have h1 : Z ∈ affineSpan ℝ ({X, Y} : Set V3) := by
+    rw [← p12_hull_pair] at hZ
+    exact convexHull_subset_affineSpan ({X, Y} : Set V3) hZ
+  have hle : affineSpan ℝ ({X, Y} : Set V3) ≤ affineSpan ℝ ({a, b, c} : Set V3) :=
+    affineSpan_le.2 hsub
+  exact hle h1

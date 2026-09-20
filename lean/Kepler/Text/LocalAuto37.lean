@@ -75,9 +75,14 @@ Encoding (house conventions, cf. LocalAuto31/34):
   folded into the direct proofs below.  The mid-file `let tt = GEN_ALL …`
   bindings are HOL proof-script scoping (ISPECL instantiations inside
   tactic blocks), likewise folded.
-- DISCHARGES: proved items are mechanical (real-arithmetic trivia, set/image
-  bookkeeping, iterate commutation by induction, epsilon packing under a
-  finite set, stub-reducing `LocalFan` conclusions).  The giants
+- DISCHARGES (2026-09-20, +3 sorries filled, 1 error fixed; 0 errors,
+  27 remaining): `HAS_THE_SAME_ORD_LEM_p37` (iterate conjugation + minimality
+  transfer via the dart `BijOn`), `HYP_ISO_DIH2K_PRESERVED_p37` (card via
+  `BijOn`/`ncard`, face-union via `IMAGE_FACE_F_p37` + node-map commutation,
+  orders via `HAS_THE_SAME_ORD_LEM_p37`), `AFF_LT_SUBSET_AFF11_p37`
+  (Affsign coefficient sum = lineMap parametrisation).  `XRECQNS_UPDATE_p37`
+  reverted to an honest `sorry` (the registry `LocalFan` upgrade made its old
+  `trivial` proof invalid; blocked on `Deformation.XRECQNS`).  The giants
   (`SUB_LUNAR_DEFORM_LEMMA`, `MHAEYJN_CONVEX_LOCAL_FAN`, `MHAEYJN`, the
   lunar characterisation chain and the `rho_node1` plane/cross kit) are
   `sorry` with NEEDS markers naming the blocking kit (the
@@ -317,12 +322,43 @@ theorem IN_CONV0_IMP_AFF_EQ1_p37 {x y a : V3} (ha : a ∈ openSegment ℝ x y) :
     affineSpan_pair_le_of_mem_of_mem (mem_affineSpan (k := ℝ) (Set.mem_insert _ _)) hymem
   exact le_antisymm hsp hsp'
 
-/-- HOL `AFF_LT_SUBSET_AFF11` (lunar_deform.hl:444).  NEEDS: the
-`AFF_LT_1_1` + `Collect_geom.AFF_2POINTS_INTERPRET` affine-coordinate
-twins. -/
+/-- HOL `AFF_LT_SUBSET_AFF11` (lunar_deform.hl:444).  DISCHARGED 2026-09-20:
+the `Affsign` coefficient sum (total 1 over the `{a, b}` support) is exactly
+an affine line parametrisation, so the point lands in `affineSpan {a, b}`;
+the sign bookkeeping is irrelevant for the hull inclusion. -/
 theorem AFF_LT_SUBSET_AFF11_p37 {a b : V3} (_h : Disjoint ({a} : Set V3) ({b} : Set V3)) :
     affLt {a} {b} ⊆ (affineSpan ℝ ({a, b} : Set V3) : Set V3) := by
-  sorry
+  intro x hx
+  obtain ⟨f, hfin, hx, -, hsum⟩ := hx
+  have h2f : hfin.toFinset = ({a, b} : Finset V3) := by
+    ext u
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+  rw [h2f] at hx hsum
+  by_cases hab : a = b
+  · rw [hab] at hx hsum
+    have h1 : f b = 1 := by simpa using hsum
+    have hxe : x = f b • b := by simpa using hx
+    rw [h1] at hxe
+    have hxb : x = b := by simpa using hxe
+    rw [hxb]
+    exact mem_affineSpan (k := ℝ) (Set.mem_insert_of_mem _ rfl)
+  · have hpa : ∑ w ∈ ({a, b} : Finset V3), f w • w = f a • a + f b • b := by
+      rw [Finset.sum_insert (by simp [hab]), Finset.sum_singleton]
+    have hpb : ∑ w ∈ ({a, b} : Finset V3), f w = f a + f b := by
+      rw [Finset.sum_insert (by simp [hab]), Finset.sum_singleton]
+    rw [hpa] at hx
+    rw [hpb] at hsum
+    have h1 : f a = 1 - f b := by linarith
+    have h2 : AffineMap.lineMap a b (f b) = f b • (b -ᵥ a) +ᵥ a :=
+      AffineMap.lineMap_apply a b (f b)
+    have e1 : ∀ z w : V3, z -ᵥ w = z - w := fun _ _ => rfl
+    have e2 : ∀ p v : V3, p +ᵥ v = p + v := fun _ _ => rfl
+    have hline : x = AffineMap.lineMap a b (f b) := by
+      rw [h2, hx, h1, e1, e2, sub_smul, one_smul, smul_sub]
+      abel
+    rw [hline]
+    exact AffineMap.lineMap_mem_affineSpan_pair (f b) a b
 
 /-- HOL `AZIM_PI_LEMMA` (lunar_deform.hl:459).  NEEDS:
 `Local_lemmas.COLL_IN_AFF_GT_AFF_GT_EQ`/`COLL_IN_AFF_GT_TOO` +
@@ -572,9 +608,10 @@ theorem ITER_COMM_RESTRICTED_p37 {α β : Type*} {V : Set α} {V' : Set β}
       rw [Function.iterate_succ_apply', Function.iterate_succ_apply',
         hcomm (h^[m] x) (hinv m), ih]
 
-/-- HOL `HAS_THE_SAME_ORD_LEM` (lunar_deform.hl:2871): the order of a
-map is preserved under conjugation by a bijection.  NEEDS: iterate
-conjugation + minimality transfer. -/
+/-- HOL `HAS_THE_SAME_ORD_LEM` (lunar_deform.hl:2871).  DISCHARGED 2026-09-20:
+iterate conjugation on `V` (with the `h`-invariance of `V` and the
+`g`-invariance of `V'`), minimality transfer via the `BijOn` injection, and
+identity-off-`V`/`V'` for the fixed points. -/
 theorem HAS_THE_SAME_ORD_LEM_p37 {α β : Type*} {V : Set α} {V' : Set β}
     {h : α → α} {g : β → β} {f : α → β} {k : ℕ}
     (_h1 : ∀ x ∉ V, h x = x) (_h2 : ∀ y ∉ V', g y = y)
@@ -582,7 +619,55 @@ theorem HAS_THE_SAME_ORD_LEM_p37 {α β : Type*} {V : Set α} {V' : Set β}
     (_h4 : ∀ y, g y ∈ V' ↔ y ∈ V')
     (_h5 : ∀ x ∈ V, f (h x) = g (f x)) (_h6 : hasOrders_p37 h k) :
     hasOrders_p37 g k := by
-  sorry
+  obtain ⟨hmin, htop⟩ := _h6
+  have hVin : ∀ (n : ℕ) (x : α), x ∈ V → h^[n] x ∈ V := by
+    intro n
+    induction n with
+    | zero => intro x hx; exact hx
+    | succ m ih =>
+        intro x hx
+        rw [Function.iterate_succ_apply']
+        exact (_h3 _).mpr (ih x hx)
+  have hconj : ∀ (n : ℕ) (x : α), x ∈ V → g^[n] (f x) = f (h^[n] x) := by
+    intro n
+    induction n with
+    | zero => intro x _; simp
+    | succ m ih =>
+        intro x hx
+        rw [Function.iterate_succ_apply', Function.iterate_succ_apply', ih x hx,
+          ← _h5 (h^[m] x) (hVin m x hx)]
+  have hfix : ∀ (m : ℕ) (x : α), x ∉ V → h^[m] x = x := by
+    intro m
+    induction m with
+    | zero => intro x _; simp
+    | succ n ih =>
+        intro x hx
+        rw [Function.iterate_succ_apply, _h1 x hx, ih x hx]
+  refine ⟨fun i hi1 hi2 heq => ?_, funext fun y => ?_⟩
+  · obtain ⟨x, hxne⟩ : ∃ x, h^[i] x ≠ x := by
+      by_contra hall
+      push_neg at hall
+      exact hmin i hi1 hi2 (funext hall)
+    have hxV : x ∈ V := by
+      by_contra hx
+      exact hxne (hfix i x hx)
+    have hne : g^[i] (f x) ≠ f x := by
+      intro hc
+      rw [hconj i x hxV] at hc
+      exact hxne (_hbij.injOn (hVin i x hxV) hxV hc)
+    exact hne (congrFun heq (f x))
+  · by_cases hy : y ∈ V'
+    · obtain ⟨x, hxV, hfx⟩ := _hbij.surjOn hy
+      rw [← hfx, hconj k x hxV, htop]
+      simp
+    · have gfix : ∀ (m : ℕ) (z : β), z ∉ V' → g^[m] z = z := by
+        intro m
+        induction m with
+        | zero => intro z _; simp
+        | succ n ih =>
+            intro z hz
+            rw [Function.iterate_succ_apply, _h2 z hz, ih z hz]
+      exact gfix k y hy
 
 /-- HOL `COMM_THEN_IMAGE_IMAGE_EQ` (lunar_deform.hl:2926). -/
 theorem COMM_THEN_IMAGE_IMAGE_EQ_p37 {S A : Set V3} {f g h : V3 → V3}
@@ -602,30 +687,160 @@ theorem IN_DART_PRESERVED_p37 {α : Type*} [DecidableEq α] (H : Hypermap α)
       (∀ x, (H.edgeMap : α → α) x ∈ (H.darts : Set α) ↔ x ∈ (H.darts : Set α)) :=
   ⟨h1, h2, h3⟩
 
-/-- HOL `HYP_ISO_DIH2K_PRESERVED` (lunar_deform.hl:2937): `dih2k` transfers
-along a hypermap isomorphism.  NEEDS: `iso_components` + card/face kit. -/
+/-- HOL `HYP_ISO_DIH2K_PRESERVED` (lunar_deform.hl:2937).  DISCHARGED
+2026-09-20: card transfer via the dart `BijOn` (`ncard` of the image),
+face-union transfer via `IMAGE_FACE_F_p37` + node-map commutation, and the
+three order transfers via `HAS_THE_SAME_ORD_LEM_p37` (the hypermap maps fix
+the co-darts pointwise and preserve dart membership by `permutes`). -/
 theorem HYP_ISO_DIH2K_PRESERVED_p37 {α β : Type*} [DecidableEq α] [DecidableEq β]
     {H : Hypermap α} {HH : Hypermap β} {f : α → β} {k : ℕ}
     (_hfin : (H.darts : Set α).Finite) (_hd : dih2k_p37 H k)
     (_hiso : hypIso_p37 f H HH) :
     dih2k_p37 HH k := by
-  sorry
+  obtain ⟨hcard, hface, hord, hordE, hordN⟩ := _hd
+  have himg : f '' (H.darts : Set α) = (HH.darts : Set β) := Set.BijOn.image_eq _hiso.1
+  have hmemF : ∀ x : α, (H.faceMap : α → α) x ∈ (H.darts : Set α) ↔
+      x ∈ (H.darts : Set α) := by
+    intro x
+    constructor
+    · intro hx
+      by_contra hnot
+      have h1 : (H.faceMap : α → α) x = x :=
+        H.faceMap_permutes x (fun hc => hnot (Finset.mem_coe.mp hc))
+      exact hnot (h1 ▸ hx)
+    · intro hx
+      by_contra hnot
+      have h1 : (H.faceMap : α → α) ((H.faceMap : α → α) x) =
+          (H.faceMap : α → α) x :=
+        H.faceMap_permutes ((H.faceMap : α → α) x)
+          (fun hc => hnot (Finset.mem_coe.mpr hc))
+      rw [← Equiv.injective H.faceMap h1] at hx
+      exact hnot hx
+  have hmemN : ∀ x : α, (H.nodeMap : α → α) x ∈ (H.darts : Set α) ↔
+      x ∈ (H.darts : Set α) := by
+    intro x
+    constructor
+    · intro hx
+      by_contra hnot
+      have h1 : (H.nodeMap : α → α) x = x :=
+        H.nodeMap_permutes x (fun hc => hnot (Finset.mem_coe.mp hc))
+      exact hnot (h1 ▸ hx)
+    · intro hx
+      by_contra hnot
+      have h1 : (H.nodeMap : α → α) ((H.nodeMap : α → α) x) =
+          (H.nodeMap : α → α) x :=
+        H.nodeMap_permutes ((H.nodeMap : α → α) x)
+          (fun hc => hnot (Finset.mem_coe.mpr hc))
+      rw [← Equiv.injective H.nodeMap h1] at hx
+      exact hnot hx
+  have hmemE : ∀ x : α, (H.edgeMap : α → α) x ∈ (H.darts : Set α) ↔
+      x ∈ (H.darts : Set α) := by
+    intro x
+    constructor
+    · intro hx
+      by_contra hnot
+      have h1 : (H.edgeMap : α → α) x = x :=
+        H.edgeMap_permutes x (fun hc => hnot (Finset.mem_coe.mp hc))
+      exact hnot (h1 ▸ hx)
+    · intro hx
+      by_contra hnot
+      have h1 : (H.edgeMap : α → α) ((H.edgeMap : α → α) x) =
+          (H.edgeMap : α → α) x :=
+        H.edgeMap_permutes ((H.edgeMap : α → α) x)
+          (fun hc => hnot (Finset.mem_coe.mpr hc))
+      rw [← Equiv.injective H.edgeMap h1] at hx
+      exact hnot hx
+  have hmemF' : ∀ y : β, (HH.faceMap : β → β) y ∈ (HH.darts : Set β) ↔
+      y ∈ (HH.darts : Set β) := by
+    intro y
+    constructor
+    · intro hx
+      by_contra hnot
+      have h1 : (HH.faceMap : β → β) y = y :=
+        HH.faceMap_permutes y (fun hc => hnot (Finset.mem_coe.mp hc))
+      exact hnot (h1 ▸ hx)
+    · intro hx
+      by_contra hnot
+      have h1 : (HH.faceMap : β → β) ((HH.faceMap : β → β) y) =
+          (HH.faceMap : β → β) y :=
+        HH.faceMap_permutes ((HH.faceMap : β → β) y)
+          (fun hc => hnot (Finset.mem_coe.mpr hc))
+      rw [← Equiv.injective HH.faceMap h1] at hx
+      exact hnot hx
+  have hmemN' : ∀ y : β, (HH.nodeMap : β → β) y ∈ (HH.darts : Set β) ↔
+      y ∈ (HH.darts : Set β) := by
+    intro y
+    constructor
+    · intro hx
+      by_contra hnot
+      have h1 : (HH.nodeMap : β → β) y = y :=
+        HH.nodeMap_permutes y (fun hc => hnot (Finset.mem_coe.mp hc))
+      exact hnot (h1 ▸ hx)
+    · intro hx
+      by_contra hnot
+      have h1 : (HH.nodeMap : β → β) ((HH.nodeMap : β → β) y) =
+          (HH.nodeMap : β → β) y :=
+        HH.nodeMap_permutes ((HH.nodeMap : β → β) y)
+          (fun hc => hnot (Finset.mem_coe.mpr hc))
+      rw [← Equiv.injective HH.nodeMap h1] at hx
+      exact hnot hx
+  have hmemE' : ∀ y : β, (HH.edgeMap : β → β) y ∈ (HH.darts : Set β) ↔
+      y ∈ (HH.darts : Set β) := by
+    intro y
+    constructor
+    · intro hx
+      by_contra hnot
+      have h1 : (HH.edgeMap : β → β) y = y :=
+        HH.edgeMap_permutes y (fun hc => hnot (Finset.mem_coe.mp hc))
+      exact hnot (h1 ▸ hx)
+    · intro hx
+      by_contra hnot
+      have h1 : (HH.edgeMap : β → β) ((HH.edgeMap : β → β) y) =
+          (HH.edgeMap : β → β) y :=
+        HH.edgeMap_permutes ((HH.edgeMap : β → β) y)
+          (fun hc => hnot (Finset.mem_coe.mpr hc))
+      rw [← Equiv.injective HH.edgeMap h1] at hx
+      exact hnot hx
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩
+  · rw [← Set.ncard_coe_finset, ← himg, Set.InjOn.ncard_image _hiso.1.injOn,
+      Set.ncard_coe_finset]
+    exact hcard
+  · intro x hx
+    obtain ⟨p, hp, hfx⟩ := _hiso.1.surjOn hx
+    rw [← hfx, ← IMAGE_FACE_F_p37 _hiso p hp, Set.image_image,
+      Set.image_congr fun y hy =>
+        _hiso.2.2.1 y (H.face_subset_darts (Finset.mem_coe.mpr hp) hy),
+      ← Set.BijOn.image_eq _hiso.1, hface p hp, Set.image_union, Set.image_image]
+  · exact HAS_THE_SAME_ORD_LEM_p37
+      (fun x hx => H.faceMap_permutes x (fun hc => hx (Finset.mem_coe.mpr hc)))
+      (fun y hy => HH.faceMap_permutes y (fun hc => hy (Finset.mem_coe.mpr hc)))
+      _hiso.1 hmemF hmemF' (fun x hx => (_hiso.2.1 x hx).symm) hord
+  · exact HAS_THE_SAME_ORD_LEM_p37
+      (fun x hx => H.edgeMap_permutes x (fun hc => hx (Finset.mem_coe.mpr hc)))
+      (fun y hy => HH.edgeMap_permutes y (fun hc => hy (Finset.mem_coe.mpr hc)))
+      _hiso.1 hmemE hmemE' (fun x hx => (_hiso.2.2.2 x hx).symm) hordE
+  · exact HAS_THE_SAME_ORD_LEM_p37
+      (fun x hx => H.nodeMap_permutes x (fun hc => hx (Finset.mem_coe.mpr hc)))
+      (fun y hy => HH.nodeMap_permutes y (fun hc => hy (Finset.mem_coe.mpr hc)))
+      _hiso.1 hmemN hmemN' (fun x hx => (_hiso.2.2.1 x hx).symm) hordN
 
 /-! ## Continuity preservation, the cross/plane kit, and MHAEYJN
 (source 3073-5039) -/
 
-/-- HOL `XRECQNS_UPDATE` (lunar_deform.hl:3073).  The `local_fan` conclusion
-reduces to the registry stub `LocalFan = True` (LocalAuto1), so the
-existence claim is witnessed by an arbitrary window; the substantive
-content (the `Deformation.XRECQNS` fan transfer) is deferred with the real
-fan kit. -/
+/-- HOL `XRECQNS_UPDATE` (lunar_deform.hl:3073).  GIANT (sorry): the source
+derives this from `Deformation.XRECQNS` (the fan-transfer theorem of
+deformation.hl) + `Wrgcvdr_cizmrrh.LOCAL_FAN_IMP_FAN`; the registry
+`LocalFan` is now the faithful conjunction (FAN witness + hypermap-face +
+dih2k), so the deformed-image fan obligations (FAN of `(f · t) '' V` via the
+continuity/injectivity window of `Deformation`, then the hypermap-face/dih2k
+transfer along the vertex map) are real and blocked on the XRECQNS kit. -/
 theorem XRECQNS_UPDATE_p37 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     {f : V3 → ℝ → V3} {a b : ℝ} (_hd : Deformation f V a b) (_hl : LocalFan V E FF) :
     ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, |t| < e →
       LocalFan ((fun v => f v t) '' V)
         ((fun s => (fun v => f v t) '' s) '' E)
-        ((fun p => (f p.1 t, f p.2 t)) '' FF) :=
-  ⟨1, by norm_num, fun _ _ => trivial⟩
+        ((fun p => (f p.1 t, f p.2 t)) '' FF) := sorry
+  -- DISCHARGES: NEEDS deformation.hl `Deformation.XRECQNS` (fan transfer).
 
 /-- HOL `NORM_CROSS_LE` (lunar_deform.hl:3200): `|u cross v| <= |u| |v|`
 (via Mathlib's sin-of-angle form of the cross-product norm). -/

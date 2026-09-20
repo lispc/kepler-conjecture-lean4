@@ -94,6 +94,7 @@ ENCODING NOTES
 -/
 
 import Kepler.Text.LocalAuto23
+import Kepler.Text.LocalAuto27
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -777,13 +778,18 @@ theorem PPBTYDQ_p26 (u v p : V3) (hu : ¬Collinear ℝ ({0, v, p} : Set V3))
     ¬(0 ∈ convexHull ℝ ({u, v} : Set V3)) := by
   sorry
 
-/-- HOL `XWNHLMD_MM` (PPBTYDQ.hl:560). Proof pending (needs
-`XWITCCN` / `MMS_NONEMPTY` from taustar<0). -/
+/-- HOL `XWNHLMD_MM` (PPBTYDQ.hl:560).
+DISCHARGED (2026-09-20): the HOL proof is `TAUSTAR_LE_0_XWNHLMD` +
+`SGTRNAF` (sgtrnaf.hl:166); `SGTRNAF_p27` (LocalAuto27, proved via
+`UXCKFPE2_p27` ← `UXCKFPE_p24`) is now importable and `scsBasicV39 s'`
+supplies its `unadornedV39 s'` side condition directly. -/
 theorem XWNHLMD_MM_p26 (s s' : ScsV39) (v : ℕ → V3)
     (hs : isScsV39 s) (hs' : isScsV39 s') (hb : scsBasicV39 s) (hb' : scsBasicV39 s')
     (hk : s.k = s'.k) (hv : v ∈ MMsV39 s) (hv' : BBsV39 s' v) (hds : s.d ≤ s'.d) :
     MMsV39 s' ≠ ∅ := by
-  sorry
+  have hta : taustarV39 s' v < 0 :=
+    TAUSTAR_LE_0_XWNHLMD_p26 s s' v hs hs' hb hb' hk hv hv' hds
+  exact SGTRNAF_p27 s' v hs' hb'.1 hv' hta
 
 /-- HOL `XWNHLMD` (PPBTYDQ.hl:574). -/
 theorem XWNHLMD_p26 (s s' : ScsV39) (v : ℕ → V3)

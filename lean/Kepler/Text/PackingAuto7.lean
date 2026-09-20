@@ -429,8 +429,8 @@ equidistant from all points of `S`, at distance `radV S`.
 NEEDS: PackingAuto6 (part A worker owns this proof). -/
 private theorem circumcenter_lemma_p7 (S : Set V3) (hne : S.Nonempty)
     (hind : ¬ affineDependent S) (w : V3) (hw : w ∈ S) :
-    dist (circumcenter S) w = radV S := by
-  sorry
+    dist (circumcenter S) w = radV S :=
+  (OAPVION2_concl S hind w hw).symm
 
 /-- HL `HL_PROPERTIES` (Rogers.hl:7046). -/
 theorem HL_PROPERTIES (V : Set V3) (ul : List V3) (k : ℕ) (hV : Packing V)
@@ -574,7 +574,33 @@ theorem SUBSPACES_INTER_BALL_EQ_IMP_EQ (s t : Set V3) (r : ℝ)
     (ht : ∃ K : Submodule ℝ V3, (K : Set V3) = t)
     (hr : 0 < r) (heq : s ∩ Metric.ball 0 r = t ∩ Metric.ball 0 r) :
     s = t := by
-  sorry
+  obtain ⟨Ks, rfl⟩ := hs
+  obtain ⟨Kt, rfl⟩ := ht
+  have key : ∀ K₁ K₂ : Submodule ℝ V3,
+      ((K₁ ∩ Metric.ball 0 r : Set V3) : Set V3) =
+        ((K₂ ∩ Metric.ball 0 r : Set V3) : Set V3) →
+      (K₁ : Set V3) ⊆ K₂ := by
+    intro K₁ K₂ h'
+    intro v hv
+    rcases eq_or_ne v 0 with h0 | h0
+    · exact h0.symm ▸ K₂.zero_mem
+    · have hvn : 0 < ‖v‖ := norm_pos_iff.mpr h0
+      have hcpos : 0 < r / (‖v‖ + 1) := div_pos hr (by positivity)
+      have hcne : r / (‖v‖ + 1) ≠ 0 := ne_of_gt hcpos
+      have hcball : ‖((r / (‖v‖ + 1)) • v : V3)‖ < r := by
+        rw [norm_smul, Real.norm_eq_abs, abs_of_pos hcpos, div_mul_eq_mul_div,
+          div_lt_iff₀ (by positivity : (0:ℝ) < ‖v‖ + 1)]
+        linarith
+      have hmem : ((r / (‖v‖ + 1)) • v : V3) ∈ (K₁ ∩ Metric.ball 0 r : Set V3) :=
+        ⟨K₁.smul_mem _ hv, Metric.mem_ball.2 (by rw [dist_zero_right]; exact hcball)⟩
+      have h3 : ((r / (‖v‖ + 1)) • v : V3) ∈ K₂ := by
+        have h2 : ((r / (‖v‖ + 1)) • v : V3) ∈ (K₂ ∩ Metric.ball 0 r : Set V3) := by
+          rw [← h']; exact hmem
+        exact h2.1
+      have h4 : ((r / (‖v‖ + 1))⁻¹ • ((r / (‖v‖ + 1)) • v) : V3) ∈ K₂ :=
+        K₂.smul_mem _ h3
+      rwa [inv_smul_smul₀ hcne] at h4
+  refine Set.ext fun v => ⟨fun hv => key Ks Kt heq hv, fun hv => key Kt Ks heq.symm hv⟩
 
 /-- HL `AFFINES_INTER_BALL_EQ_IMP_EQ` (Rogers.hl:8527). HL `affine s`
 (affine-set predicate) is rendered by the existential over

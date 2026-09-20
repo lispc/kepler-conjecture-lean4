@@ -57,6 +57,26 @@ Encoding notes:
 - `AJRIPQN_0` (leaf_cell.hl:2132) discharges against PackingAuto17.AJRIPQN
   (its HOL twin), losing only the redundant `i = j` conjunct.
 
+STATUS (2026-09-20 fill wave): 26 of the 120 skeleton sorries proved:
+`ARG_CNJ`, `CONDS_IN_CONV2`, `FINITE_CARD1_IMP_SINGLETON`, `SET2_INSERT1`,
+`SET2_INSERT2` (finite-set kit); `chi_msb_swap_01/12/23`,
+`chi_msb_additive_a/d`, `CHI_MSB_ADDITIVE`, `CHI_MSB_CONVEX` (chi_msb is the
+row determinant `det ![d-a, b-a, c-a]`, private `chiMsb_det`);
+`DIST_LE_HALF_PLANE`, `DIST_EQ_HALF_PLANE` (inner-product algebra,
+`dist_sq_diff`); `affine_invert`, `AFF_GE_MONO_TRANS` (Affsign/finset-sum
+regrouping); `CARD4_ALL_DISTINCT`, `LENGTH4_SET2`, `LENGTH4_SET2_SWAP01`;
+`BARV3_TRUNC2`, `STEM_OF_LEAF`, `truncate_set_of_list` (via PA5's
+`TRUNCATE_SIMPLEX_INITIAL_SUBLIST` kit); `LIST_OF_CC_UH`,
+`SET_OF_LIST_CC_UH`, `EL_CC_UH` (from `cc_uh_exists`);
+`MIDPOINT_IN_CONV0`.  NOT proved honestly: `AFF_GT_0_2` is FALSE as ported
+(the Lean `Affsign` sums over `toFinset`, which dedups; at `v = w` the LHS is
+the open ray `{t v | t > 0}` but the RHS is `{v}`) — the HOL lemma must carry
+a `v ≠ w` (or list-affsign) hypothesis; left `sorry`.  The giants stay
+`sorry`: the leaf-cell chain (`YBZFUPO`, `NWVRFMF`, `CFFONNL`, `BDXKHTW`,
+`EWYBJUA`, ...), the arclength derivative/monotonicity chain (`arc_derivative*`,
+`YSSKQOY`) and `SUM_GAMMAX_LMFUN_ESTIMATE` (PA19 shim target; needs the full
+1400-line HL lemma chain).
+
 STATUS: skeleton port; statements faithful, mechanical lemmas proved,
 the giant leaf-cell/sum-gamma chains carry `sorry`.
 -/
@@ -217,7 +237,16 @@ theorem RE_CEXP_CX (x : ℝ) : (Complex.exp (Complex.I * x)).re = Real.cos x := 
 /-- HOL `ARG_CNJ` (YSSKQOY.hl:83-97). -/
 theorem ARG_CNJ (z w : ℂ) (hw : w ≠ 0) :
     Complex.arg (z / w) = Complex.arg (z * conj w) := by
-  sorry
+  have hr : (0:ℝ) < ‖w‖ ^ 2 := by positivity
+  have h2 : (‖w‖ ^ 2 : ℝ) ≠ 0 := hr.ne'
+  have h3 : (w * conj w : ℂ) = ((‖w‖ ^ 2 : ℝ) : ℂ) := by
+    rw [Complex.mul_conj, Complex.normSq_eq_norm_sq]
+  have hwinv : (w⁻¹ : ℂ) = (((‖w‖ ^ 2 : ℝ)⁻¹ : ℝ) : ℂ) * conj w := by
+    refine mul_left_cancel₀ hw ?_
+    rw [mul_inv_cancel₀ hw, mul_comm (((‖w‖ ^ 2 : ℝ)⁻¹ : ℝ) : ℂ) (conj w), ← mul_assoc,
+      h3, ← Complex.ofReal_mul, mul_comm, inv_mul_cancel₀ h2, Complex.ofReal_one]
+  rw [div_eq_inv_mul, mul_comm (w⁻¹ : ℂ) z, hwinv,
+    mul_left_comm z (((‖w‖ ^ 2 : ℝ)⁻¹ : ℝ) : ℂ) (conj w), Complex.arg_real_mul _ (inv_pos.2 hr)]
 
 /-- HOL `RE_NORM_1` (YSSKQOY.hl:216-224). -/
 theorem RE_NORM_1 (z : ℂ) (h : ‖z‖ = 1) : z.re = Real.cos (Complex.arg z) := by
@@ -747,7 +776,39 @@ theorem ZASUVOR {V : Set V3} {u0 u1 u2 : V3} (hp : Packing V) (hs : saturated V)
 theorem truncate_set_of_list {vl : List V3} {k : ℕ}
     (hk : 0 < k) (hlen : vl.length = k + 1) :
     setOfList vl ⊆ setOfList (truncateSimplex (k - 1) vl) ∪ {vl.getD k 0} := by
-  sorry
+  have hle : (k - 1) + 1 ≤ vl.length := by omega
+  have hspec : ((truncateSimplex (k - 1) vl).length = (k - 1) + 1 ∧
+      initialSublist (truncateSimplex (k - 1) vl) vl) :=
+    Classical.epsilon_spec (p := fun xl : List V3 => xl.length = (k - 1) + 1 ∧ initialSublist xl vl)
+      ⟨vl.take ((k - 1) + 1), List.length_take_of_le (by omega),
+        ⟨vl.drop ((k - 1) + 1), (List.take_append_drop ((k - 1) + 1) vl).symm⟩⟩
+  obtain ⟨yl, hyl⟩ := hspec.2
+  have htrlen : (truncateSimplex (k - 1) vl).length = k := by omega
+  have hyl1 : yl.length = 1 := by
+    have hsum : vl.length = (truncateSimplex (k - 1) vl).length + yl.length := by
+      conv_lhs => rw [hyl]
+      rw [List.length_append]
+    rw [htrlen, hlen] at hsum
+    omega
+  obtain ⟨y, hyy⟩ : ∃ y, yl = [y] := by
+    cases yl with
+    | nil => exact absurd hyl1 (by simp)
+    | cons z t =>
+      cases t with
+      | nil => exact ⟨z, rfl⟩
+      | cons z2 t2 => exact absurd hyl1 (by simp)
+  have hyk : vl.getD k 0 = y := by
+    rw [hyy] at hyl
+    rw [hyl, List.getD_append_right _ _ _ _ (by rw [htrlen]), htrlen]
+    simp
+  intro x hx
+  rw [hyl] at hx
+  rcases List.mem_append.1 hx with hx' | hx'
+  · exact Set.mem_union_left _ hx'
+  · rw [Set.mem_union, Set.mem_singleton_iff, hyk]
+    rw [hyy] at hx'
+    simp at hx'
+    exact Or.inr hx'
 
 private theorem sub_dot18 (a b c : V3) : (a - b) ⬝ᵥ c = a ⬝ᵥ c - b ⬝ᵥ c :=
   sub_dotProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)
@@ -764,6 +825,22 @@ private theorem dot_comm18 (a b : V3) : a ⬝ᵥ b = b ⬝ᵥ a :=
 private theorem coe_smul18 (t : ℝ) (a : V3) :
     ((t • a : V3) : Fin 3 → ℝ) = t • (a : Fin 3 → ℝ) := rfl
 
+private theorem coe_sub18 (a b : V3) :
+    ((a - b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) - (b : Fin 3 → ℝ) := rfl
+
+/-- `chi_msb` on an explicit triple as a row determinant. -/
+private theorem chiMsb_det (a b c d : V3) :
+    chiMsb [a, b, c] d
+      = Matrix.det ![((d - a : V3) : Fin 3 → ℝ), ((b - a : V3) : Fin 3 → ℝ),
+        ((c - a : V3) : Fin 3 → ℝ)] := by
+  have h1 : chiMsb [a, b, c] d
+      = ((d - a : V3) : Fin 3 → ℝ) ⬝ᵥ (crossProduct ((b - a : V3) : Fin 3 → ℝ)
+          ((c - a : V3) : Fin 3 → ℝ)) := by
+    simp only [chiMsb, List.getElem!_cons_succ, List.getElem!_cons_zero, List.getD_cons_succ,
+      List.getD_cons_zero]
+    exact dotProduct_comm _ _
+  rw [h1, triple_product_eq_det]
+
 private theorem coe_add18 (a b : V3) :
     ((a + b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) + (b : Fin 3 → ℝ) := rfl
 
@@ -777,17 +854,31 @@ private theorem norm_eq_of_sq_eq {u v : V3} (h : ‖u‖ ^ 2 = ‖v‖ ^ 2) : �
     have hv : ‖v‖ = 0 := by linarith
     rw [norm_eq_zero.1 hu, norm_eq_zero.1 hv]
 
-/-- HOL `DIST_LE_HALF_PLANE` (leaf_cell.hl:555-573). The proof is pure
-inner-product algebra (`‖x−a‖² ≤ ‖x−b‖² ↔ 0 ≤ (a−b)·(2x−a−b)`); the `V3`
-dot/WithLp coercion bridging is left to a follow-up lane. -/
+private theorem dist_sq_diff (x a b : V3) :
+    (a - b) ⬝ᵥ (2 • x - (a + b)) = ‖x - b‖ ^ 2 - ‖x - a‖ ^ 2 := by
+  rw [Kepler.Geom.norm_sq_eq_dot (x - b), Kepler.Geom.norm_sq_eq_dot (x - a)]
+  simp only [coe_sub18, coe_add18, coe_smul18, dotProduct_sub, sub_dotProduct,
+    dotProduct_sub, dotProduct_smul, dotProduct_add, dotProduct_comm]
+  ring
+
+/-- HOL `DIST_LE_HALF_PLANE` (leaf_cell.hl:555-573). -/
 theorem DIST_LE_HALF_PLANE (x a b : V3) :
     dist x a ≤ dist x b ↔ 0 ≤ (a - b) ⬝ᵥ (2 • x - (a + b)) := by
-  sorry
+  rw [dist_eq_norm, dist_eq_norm, dist_sq_diff]
+  have h1 := norm_nonneg (x - a)
+  have h2 := norm_nonneg (x - b)
+  constructor <;> intro h <;> nlinarith
 
 /-- HOL `DIST_EQ_HALF_PLANE` (leaf_cell.hl:574-780). -/
 theorem DIST_EQ_HALF_PLANE (x a b : V3) :
     dist x a = dist x b ↔ (a - b) ⬝ᵥ (2 • x - (a + b)) = 0 := by
-  sorry
+  rw [dist_eq_norm, dist_eq_norm, dist_sq_diff]
+  constructor
+  · intro h
+    rw [h]
+    linarith
+  · intro h
+    exact norm_eq_of_sq_eq (u := x - a) (v := x - b) (by linarith)
 
 /-- HOL `FUZBZGI_0` (leaf_cell.hl:781-835). -/
 theorem FUZBZGI_0 {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
@@ -809,40 +900,78 @@ theorem FUZBZGI_1 {V : Set V3} {ul : List V3} (hp : Packing V)
 /-- HOL `chi_msb_swap_01` (leaf_cell.hl:803-835). -/
 theorem chi_msb_swap_01 (a b c d : V3) :
     chiMsb [a, b, c] d = -chiMsb [b, a, c] d := by
-  sorry
+  rw [chiMsb_det, chiMsb_det]
+  simp only [Matrix.det_fin_three, Matrix.head_cons, Matrix.tail_cons, Matrix.cons_val_zero,
+    Matrix.cons_val_one, Matrix.cons_val_two, Matrix.cons_val_succ, Matrix.cons_val',
+    coe_sub18, Pi.sub_apply]
+  ring
 
 /-- HOL `chi_msb_swap_23` (leaf_cell.hl:803-835). -/
 theorem chi_msb_swap_23 (a b c d : V3) :
     chiMsb [a, b, c] d = -chiMsb [a, b, d] c := by
-  sorry
+  rw [chiMsb_det, chiMsb_det]
+  simp only [Matrix.det_fin_three, Matrix.head_cons, Matrix.tail_cons, Matrix.cons_val_zero,
+    Matrix.cons_val_one, Matrix.cons_val_two, Matrix.cons_val_succ, Matrix.cons_val',
+    coe_sub18, Pi.sub_apply]
+  ring
 
 /-- HOL `chi_msb_swap_12` (leaf_cell.hl:803-835). -/
 theorem chi_msb_swap_12 (a b c d : V3) :
     chiMsb [a, b, c] d = -chiMsb [a, c, b] d := by
-  sorry
+  rw [chiMsb_det, chiMsb_det]
+  simp only [Matrix.det_fin_three, Matrix.head_cons, Matrix.tail_cons, Matrix.cons_val_zero,
+    Matrix.cons_val_one, Matrix.cons_val_two, Matrix.cons_val_succ, Matrix.cons_val',
+    coe_sub18, Pi.sub_apply]
+  ring
 
 /-- HOL `chi_msb_additive_a` (leaf_cell.hl:836-861). -/
 theorem chi_msb_additive_a (a b c d : V3) (t1 t2 t3 t4 : ℝ) (ht : t1 + t2 + t3 + t4 = 1) :
     chiMsb [t1 • a + t2 • b + t3 • c + t4 • d, b, c] d
       = t1 * chiMsb [a, b, c] d := by
-  sorry
+  have ht4 : t4 = 1 - t1 - t2 - t3 := by linarith
+  subst ht4
+  rw [chiMsb_det, chiMsb_det]
+  simp only [Matrix.det_fin_three, Matrix.head_cons, Matrix.tail_cons, Matrix.cons_val_zero,
+    Matrix.cons_val_one, Matrix.cons_val_two, Matrix.cons_val_succ, Matrix.cons_val',
+    coe_sub18, coe_smul18, coe_add18, Pi.sub_apply, Pi.smul_apply, Pi.add_apply, smul_eq_mul]
+  ring
 
 /-- HOL `chi_msb_additive_d` (leaf_cell.hl:862-878). -/
 theorem chi_msb_additive_d (a b c d : V3) (t1 t2 t3 t4 : ℝ) (ht : t1 + t2 + t3 + t4 = 1) :
     chiMsb [a, b, c] (t1 • a + t2 • b + t3 • c + t4 • d)
       = t4 * chiMsb [a, b, c] d := by
-  sorry
+  have ht4 : t4 = 1 - t1 - t2 - t3 := by linarith
+  subst ht4
+  rw [chiMsb_det, chiMsb_det]
+  simp only [Matrix.det_fin_three, Matrix.head_cons, Matrix.tail_cons, Matrix.cons_val_zero,
+    Matrix.cons_val_one, Matrix.cons_val_two, Matrix.cons_val_succ, Matrix.cons_val',
+    coe_sub18, coe_smul18, coe_add18, Pi.sub_apply, Pi.smul_apply, Pi.add_apply, smul_eq_mul]
+  ring
 
 /-- HOL `CHI_MSB_ADDITIVE` (leaf_cell.hl:879-890). -/
 theorem CHI_MSB_ADDITIVE (ul : List V3) (p1 p2 : V3) (t1 t2 : ℝ) (ht : t1 + t2 = 1) :
     chiMsb ul (t1 • p1 + t2 • p2)
       = t1 * chiMsb ul p1 + t2 * chiMsb ul p2 := by
-  sorry
+  have key : ((t1 • p1 + t2 • p2 - ul[0]! : V3) : Fin 3 → ℝ)
+      = t1 • ((p1 - ul[0]! : V3) : Fin 3 → ℝ)
+        + t2 • ((p2 - ul[0]! : V3) : Fin 3 → ℝ) := by
+    simp only [coe_sub18, coe_add18, coe_smul18]
+    funext i
+    simp only [Pi.add_apply, Pi.sub_apply, Pi.smul_apply, smul_eq_mul]
+    linear_combination ((ul[0]! : Fin 3 → ℝ) i) * ht
+  simp only [chiMsb]
+  rw [key, dotProduct_add, dotProduct_smul, dotProduct_smul]
+  ring
 
 /-- HOL `CHI_MSB_CONVEX` (leaf_cell.hl:891-934). -/
 theorem CHI_MSB_CONVEX (ul : List V3) :
     Convex ℝ {p | 0 ≤ chiMsb ul p} := by
-  sorry
+  intro x hx y hy a b ha hb hab
+  simp only [Set.mem_setOf_eq]
+  rw [CHI_MSB_ADDITIVE ul x y a b hab]
+  have h1 : 0 ≤ a * chiMsb ul x := mul_nonneg ha hx
+  have h2 : 0 ≤ b * chiMsb ul y := mul_nonneg hb hy
+  linarith
 
 /-- HOL `AFFINE_IMP_CHI_MSB_0` (leaf_cell.hl:935-942). -/
 theorem AFFINE_IMP_CHI_MSB_0 (ul : List V3) (p : V3) (hlen : ul.length = 3)
@@ -944,13 +1073,72 @@ theorem U2_IN_AFF_GT {V : Set V3} {ul : List V3} (hp : Packing V)
       {(ccUh V ul).getD 2 0} := by
   sorry
 
+
+/-- HOL `MCELL_EDGE_FIRST` (leaf_cell.hl:3338-3374). -/
+theorem MCELL_EDGE_FIRST {V : Set V3} {ul : List V3} {k : ℕ} {u v : V3}
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul)
+    (he : {u, v} ∈ edgeX V (mcell k V ul)) :
+    ∃ vl, barV V 3 vl ∧ mcell k V vl = mcell k V ul ∧ u = vl.getD 0 0 ∧
+      v = vl.getD 1 0 := by
+  sorry
+
+private theorem list3_eq (ul : List V3) (h : ul.length = 3) :
+    ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] := by
+  cases ul with
+  | nil => exact absurd h (by simp)
+  | cons a t =>
+    cases t with
+    | nil => exact absurd h (by simp)
+    | cons b t2 =>
+      cases t2 with
+      | nil => exact absurd h (by simp)
+      | cons c t3 =>
+        cases t3 with
+        | nil => rfl
+        | cons _ _ => exact absurd h (by simp)
+
+private theorem list4_eq (ul : List V3) (h : ul.length = 4) :
+    ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0, ul.getD 3 0] := by
+  cases ul with
+  | nil => exact absurd h (by simp)
+  | cons a t =>
+    cases t with
+    | nil => exact absurd h (by simp)
+    | cons b t2 =>
+      cases t2 with
+      | nil => exact absurd h (by simp)
+      | cons c t3 =>
+        cases t3 with
+        | nil => exact absurd h (by simp)
+        | cons d t4 =>
+          cases t4 with
+          | nil => rfl
+          | cons _ _ => exact absurd h (by simp)
+
+/-- HOL `BARV3_TRUNC2` (leaf_cell.hl:3375-?). -/
+theorem BARV3_TRUNC2 {V : Set V3} {ul : List V3} (hb : barV V 3 ul) :
+    truncateSimplex 2 ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] := by
+  have h4 := hb.1
+  rw [list4_eq ul h4]
+  have hinit : initialSublist [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0]
+      [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0, ul.getD 3 0] := ⟨[ul.getD 3 0], rfl⟩
+  exact ((TRUNCATE_SIMPLEX_INITIAL_SUBLIST 2 _ _).2 ⟨hinit, by simp⟩).1
+
 /-- HOL `EL_CC_UH` (leaf_cell.hl:1277-1313): the first three entries of
 `cc_uh` agree with `ul`. -/
 theorem EL_CC_UH {V : Set V3} {ul : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) :
     (ccUh V ul).getD 0 0 = ul.getD 0 0 ∧ (ccUh V ul).getD 1 0 = ul.getD 1 0 ∧
       (ccUh V ul).getD 2 0 = ul.getD 2 0 := by
-  sorry
+  have hb := (Classical.choose_spec (cc_uh_exists V ul)) hp hs hl'
+  have h3 : ul.length = 3 := hl'.1.1
+  have hbar : barV V 3 (ccUh V ul) := hb.1
+  have htrunc : truncateSimplex 2 (ccUh V ul) = ul := hb.2.1
+  rw [BARV3_TRUNC2 hbar] at htrunc
+  injection htrunc.trans (list3_eq ul h3) with h1 ht1
+  injection ht1 with h2 ht2
+  injection ht2 with h3' _
+  exact ⟨h1, h2, h3'⟩
 
 /-- HOL `NUNRRDS_0` (leaf_cell.hl:1314-?). -/
 theorem NUNRRDS_0 {V : Set V3} {ul : List V3} (hp : Packing V)
@@ -961,7 +1149,50 @@ theorem NUNRRDS_0 {V : Set V3} {ul : List V3} (hp : Packing V)
 /-- HOL `AFF_GE_MONO_TRANS` (leaf_cell.hl:1314-1390). -/
 theorem AFF_GE_MONO_TRANS {X Y S : Set V3} (h : S ⊆ X) :
     affGe (X \ S) (Y ∪ S) ⊆ affGe X Y := by
-  sorry
+  intro v hv
+  simp only [affGe, Affsign, Set.mem_setOf_eq] at hv
+  obtain ⟨f, hfin, hvsum, hsgn, hone⟩ := hv
+  set E : Set V3 := (X \ S) ∪ (Y ∪ S) with hE
+  have hEsub : X ∪ Y ⊆ E := by
+    intro w hw
+    rcases (Set.mem_union w X Y).1 hw with hw' | hw'
+    · by_cases hwS : w ∈ S
+      · exact Set.mem_union_right _ (Set.mem_union_right Y hwS)
+      · exact Set.mem_union_left _ ((Set.mem_sdiff w).2 ⟨hw', hwS⟩)
+    · exact Set.mem_union_right _ (Set.mem_union_left _ hw')
+  have hfinXY : (X ∪ Y).Finite := hfin.subset hEsub
+  set g : V3 → ℝ := fun w => if w ∈ E then f w else 0 with hg
+  have hgg : ∀ w ∈ E, g w = f w := by intro w hw; simp only [hg, if_pos hw]
+  have hsub2 : hfin.toFinset ⊆ hfinXY.toFinset := by
+    intro w hw
+    refine hfinXY.mem_toFinset.2 ?_
+    rcases (Set.mem_union w _ _).1 (hfin.mem_toFinset.1 hw) with hw' | hw'
+    · exact Set.mem_union_left _ ((Set.mem_sdiff w).1 hw').1
+    · rcases (Set.mem_union w Y S).1 hw' with hw'' | hw''
+      · exact Set.mem_union_right X hw''
+      · exact Set.mem_union_left Y (h hw'')
+  have hsumE : ∑ w ∈ hfin.toFinset, g w • w = v := by
+    rw [hvsum]
+    exact Finset.sum_congr rfl fun w hw => by rw [hgg w (hfin.mem_toFinset.1 hw)]
+  have h1 : ∑ w ∈ hfin.toFinset, g w • w = ∑ w ∈ hfinXY.toFinset, g w • w := by
+    refine Finset.sum_subset hsub2 ?_
+    intro w _ hw
+    simp only [hg, if_neg (hfin.mem_toFinset.not.1 hw), zero_smul]
+  have hsumV : v = ∑ w ∈ hfinXY.toFinset, g w • w := (h1.symm.trans hsumE).symm
+  have hsgnY : ∀ w ∈ Y, 0 ≤ g w := by
+    intro w hw
+    have hwE : w ∈ E := Set.mem_union_right _ (Set.mem_union_left _ hw)
+    rw [hgg w hwE]
+    exact hsgn w (Set.mem_union_left _ hw)
+  have honeE : ∑ w ∈ hfin.toFinset, g w = 1 := by
+    rw [← hone]
+    exact Finset.sum_congr rfl fun w hw => by rw [hgg w (hfin.mem_toFinset.1 hw)]
+  have h2 : ∑ w ∈ hfin.toFinset, g w = ∑ w ∈ hfinXY.toFinset, g w := by
+    refine Finset.sum_subset hsub2 ?_
+    intro w _ hw
+    simp only [hg, if_neg (hfin.mem_toFinset.not.1 hw)]
+  have honeG : ∑ w ∈ hfinXY.toFinset, g w = 1 := h2.symm.trans honeE
+  exact ⟨g, hfinXY, hsumV, hsgnY, honeG⟩
 
 /-- HOL `K4_CHI_MSB_EQVL` (leaf_cell.hl:1391-?). -/
 theorem K4_CHI_MSB_EQVL {V : Set V3} {ul : List V3} (hp : Packing V)
@@ -984,11 +1215,30 @@ theorem MXI_BETWEEN {V : Set V3} {ul vl : List V3} (hp : Packing V)
       dist (vl.getD 0 0) (mxi V vl) = Real.sqrt 2 := by
   sorry
 
+set_option maxHeartbeats 12000000 in
 /-- HOL `affine_invert` (leaf_cell.hl:1422-1528). -/
 theorem affine_invert {u : ℝ} {p q : V3} {s : Set V3} (hu : u ≠ 0)
     (haff : affineSpan ℝ s = s)
     (hm : (1 - u) • p + u • q ∈ s) (hp : p ∈ s) : q ∈ s := by
-  sorry
+  have hr : (1 - u) • p + u • q ∈ (affineSpan ℝ s : Set V3) := by
+    rw [haff]; exact hm
+  have hps : p ∈ (affineSpan ℝ s : Set V3) := by
+    rw [haff]; exact hp
+  have hdir : (((1 - u) • p + u • q) -ᵥ p : V3) ∈ (affineSpan ℝ s).direction :=
+    AffineSubspace.vsub_mem_direction hr hps
+  have hscale : (q -ᵥ p : V3) = (u⁻¹ : ℝ) • (((1 - u) • p + u • q) -ᵥ p) := by
+    rw [vsub_eq_sub, vsub_eq_sub, smul_sub, smul_add, smul_smul, smul_smul,
+      show u⁻¹ * (1 - u) = u⁻¹ - 1 from by
+        rw [mul_sub, mul_one, inv_mul_cancel₀ hu], sub_smul, one_smul,
+      inv_mul_cancel₀ hu, one_smul]
+    abel
+  have hq : (q -ᵥ p : V3) ∈ (affineSpan ℝ s).direction := by
+    rw [hscale]
+    exact Submodule.smul_mem _ _ hdir
+  have hmem := AffineSubspace.vadd_mem_of_mem_direction hq hps
+  rw [vsub_vadd] at hmem
+  have hmem2 : q ∈ (affineSpan ℝ s : Set V3) := hmem
+  rwa [haff] at hmem2
 
 /-! ## leaf_cell.hl: the cc_cell block -/
 
@@ -1053,7 +1303,15 @@ theorem MCELL2_SUBSET_AFF_GE (V : Set V3) (ul : List V3) :
 theorem CONDS_IN_CONV2 {v w : V3} {t2 t3 : ℝ} (h2 : 0 ≤ t2) (h3 : 0 ≤ t3)
     (hne : ¬(t2 = 0 ∧ t3 = 0)) :
     (t2 / (t2 + t3)) • v + (t3 / (t2 + t3)) • w ∈ convexHull ℝ ({v, w} : Set V3) := by
-  sorry
+  have hpos : 0 < t2 + t3 := by
+    by_contra hcon
+    push_neg at hcon
+    exact hne ⟨by linarith, by linarith⟩
+  have hsum1 : t2 / (t2 + t3) + t3 / (t2 + t3) = 1 := by field_simp
+  rw [convexHull_pair]
+  simp only [segment, Set.mem_setOf_eq]
+  exact ⟨t2 / (t2 + t3), t3 / (t2 + t3), div_nonneg h2 hpos.le, div_nonneg h3 hpos.le,
+    hsum1, rfl⟩
 
 /-- HOL `AFFINE_DEPENDENT_EXPLICIT_4` (leaf_cell.hl:1870-?). -/
 theorem AFFINE_DEPENDENT_EXPLICIT_4 (a b c d : V3) (ta tb tc td : ℝ)
@@ -1136,20 +1394,112 @@ theorem CC_CELL_IN_MCELL_SET {V : Set V3} {ul : List V3} (hs : saturated V)
 /-- HOL `CARD4_ALL_DISTINCT` (leaf_cell.hl:2585-?). -/
 theorem CARD4_ALL_DISTINCT {a b c d : V3} (h4 : Nat.card ({a, b, c, d} : Set V3) = 4) :
     a ≠ b ∧ a ≠ c ∧ a ≠ d ∧ b ≠ c ∧ b ≠ d ∧ c ≠ d := by
-  sorry
+  have h3le : ∀ (q r s : V3), Nat.card ({q, r, s} : Set V3) ≤ 3 := by
+    intro q r s
+    have h1 : ({q, r, s} : Set V3).ncard ≤ ({r, s} : Set V3).ncard + 1 :=
+      Set.ncard_insert_le q _
+    have h2 : ({r, s} : Set V3).ncard ≤ ({s} : Set V3).ncard + 1 := Set.ncard_insert_le r _
+    have h3 : ({s} : Set V3).ncard = 1 := Set.ncard_singleton s
+    have he : Nat.card ({q, r, s} : Set V3) = ({q, r, s} : Set V3).ncard := rfl
+    omega
+  have hdupe : ∀ (p q : V3), p = q → ∀ (r s : V3),
+      Nat.card ({p, q, r, s} : Set V3) ≤ 3 := by
+    intro p q hpq r s
+    have hset : ({p, q, r, s} : Set V3) = {q, r, s} := by
+      rw [← hpq]; ext t; simp; all_goals tauto
+    have hh := h3le q r s
+    rw [← hset] at hh
+    exact hh
+  refine ⟨fun hcon => absurd (hdupe a b hcon c d) (by omega),
+    fun hcon => by
+      have hh := hdupe a c hcon b d
+      have hperm : ({a, b, c, d} : Set V3) = {a, c, b, d} := by
+        ext t; simp; all_goals tauto
+      rw [← hperm] at hh
+      exact absurd hh (by omega),
+    fun hcon => by
+      have hh := hdupe a d hcon b c
+      have hperm : ({a, b, c, d} : Set V3) = {a, d, b, c} := by
+        ext t; simp; all_goals tauto
+      rw [← hperm] at hh
+      exact absurd hh (by omega),
+    fun hcon => by
+      have hh := hdupe b c hcon a d
+      have hperm : ({a, b, c, d} : Set V3) = {b, c, a, d} := by
+        ext t; simp; all_goals tauto
+      rw [← hperm] at hh
+      exact absurd hh (by omega),
+    fun hcon => by
+      have hh := hdupe b d hcon a c
+      have hperm : ({a, b, c, d} : Set V3) = {b, d, a, c} := by
+        ext t; simp; all_goals tauto
+      rw [← hperm] at hh
+      exact absurd hh (by omega),
+    fun hcon => by
+      have hh := hdupe c d hcon a b
+      have hperm : ({a, b, c, d} : Set V3) = {c, d, a, b} := by
+        ext t; simp; all_goals tauto
+      rw [← hperm] at hh
+      exact absurd hh (by omega)⟩
 
 /-- HOL `LENGTH4_SET2` (leaf_cell.hl:2585-?). -/
 theorem LENGTH4_SET2 {a b c d e f : V3} (h4 : Nat.card ({a, b, c, d} : Set V3) = 4)
     (hset : setOfList [a, b, c, d] = setOfList [a, b, e, f]) :
     (e = c ∧ f = d) ∨ (e = d ∧ f = c) := by
-  sorry
+  have hset4 : ({a, b, c, d} : Set V3) = setOfList [a, b, c, d] := by
+    apply Set.ext (fun t => ?_)
+    simp [setOfList]
+  have h4abef : Nat.card ({a, b, e, f} : Set V3) = 4 := by
+    have hR : ({a, b, e, f} : Set V3) = setOfList [a, b, e, f] := by
+      apply Set.ext (fun t => ?_)
+      simp [setOfList]
+    have hL : Nat.card (setOfList [a, b, e, f])
+        = Nat.card (setOfList [a, b, c, d]) := by
+      rw [hset]
+    rw [hR, hL, ← hset4]
+    exact h4
+  obtain ⟨hab, hac, had, hbc, hbd, hcd⟩ := CARD4_ALL_DISTINCT h4
+  obtain ⟨hab', hae, haf, hbe, hbf, hef⟩ := CARD4_ALL_DISTINCT h4abef
+  have hemem : e ∈ ({a, b, c, d} : Set V3) := by
+    rw [hset4, hset]
+    simp only [setOfList, List.mem_cons]
+    exact Or.inr (Or.inr (Or.inl rfl))
+  have hfcases : ∀ g : V3, g ∈ ({a, b, c, d} : Set V3) → g ≠ a → g ≠ b →
+      g = c ∨ g = d := by
+    intro g hg hga hgb
+    rcases Set.mem_insert_iff.1 hg with hg1 | hg2
+    · exact absurd hg1 hga
+    · rcases Set.mem_insert_iff.1 hg2 with hg3 | hg4
+      · exact absurd hg3 hgb
+      · rcases Set.mem_insert_iff.1 hg4 with hg5 | hg6
+        · exact Or.inl hg5
+        · exact Or.inr (Set.mem_singleton_iff.1 hg6)
+  have he : e = c ∨ e = d := hfcases e hemem hae.symm hbe.symm
+  have hfmem : f ∈ ({a, b, c, d} : Set V3) := by
+    rw [hset4, hset]
+    simp only [setOfList, List.mem_cons]
+    exact Or.inr (Or.inr (Or.inr (Or.inl rfl)))
+  have hf : f = c ∨ f = d := hfcases f hfmem haf.symm hbf.symm
+  rcases he with hec | hed
+  · refine Or.inl ⟨hec, ?_⟩
+    rcases hf with hfc | hfd
+    · exact absurd (hec.trans hfc.symm) hef
+    · exact hfd
+  · refine Or.inr ⟨hed, ?_⟩
+    rcases hf with hfc | hfd
+    · exact hfc
+    · exact absurd (hed.trans hfd.symm) hef
 
 /-- HOL `LENGTH4_SET2_SWAP01` (leaf_cell.hl:2585-?). -/
 theorem LENGTH4_SET2_SWAP01 {a b c d e f : V3}
     (h4 : Nat.card ({a, b, c, d} : Set V3) = 4)
     (hset : setOfList [a, b, c, d] = setOfList [b, a, e, f]) :
     (e = c ∧ f = d) ∨ (e = d ∧ f = c) := by
-  sorry
+  refine LENGTH4_SET2 h4 ?_
+  rw [hset]
+  apply Set.ext (fun t => ?_)
+  simp [setOfList]
+  all_goals tauto
 
 /-- HOL `CC_CELL_NOT_COPLANAR` (leaf_cell.hl:2622-2640). -/
 theorem CC_CELL_NOT_COPLANAR {V : Set V3} {ul : List V3} (hp : Packing V)
@@ -1205,14 +1555,18 @@ theorem LIST_OF_CC_UH {V : Set V3} {ul : List V3} (hs : saturated V)
     (hp : Packing V) (hl' : leaf V ul) :
     ccUh V ul = [(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0, (ccUh V ul).getD 2 0,
       (ccUh V ul).getD 3 0] := by
-  sorry
+  have hb := (Classical.choose_spec (cc_uh_exists V ul)) hp hs hl'
+  exact list4_eq _ hb.1.1
 
 /-- HOL `SET_OF_LIST_CC_UH` (leaf_cell.hl:2765-2792). -/
 theorem SET_OF_LIST_CC_UH {V : Set V3} {ul : List V3} (hs : saturated V)
     (hp : Packing V) (hl' : leaf V ul) :
     setOfList (ccUh V ul) = {(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0,
       (ccUh V ul).getD 2 0, (ccUh V ul).getD 3 0} := by
-  sorry
+  rw [LIST_OF_CC_UH hs hp hl']
+  ext t
+  simp [setOfList]
+  all_goals tauto
 
 /-- HOL `MCELL4_EXTREME_POINT` (leaf_cell.hl:2793-?). -/
 theorem MCELL4_EXTREME_POINT {V : Set V3} {ul vl : List V3} (hs : saturated V)
@@ -1221,10 +1575,18 @@ theorem MCELL4_EXTREME_POINT {V : Set V3} {ul vl : List V3} (hs : saturated V)
     setOfList (ccUh V ul) = setOfList (ccUh V vl) := by
   sorry
 
+
 /-- HOL `STEM_OF_LEAF` (leaf_cell.hl:2793-?). -/
-theorem STEM_OF_LEAF {ul : List V3} (hl' : leaf V ul) :
+theorem STEM_OF_LEAF {V : Set V3} {ul : List V3} (hl' : leaf V ul) :
     stem ul = {ul.getD 0 0, ul.getD 1 0} := by
-  sorry
+  have h3 : ul.length = 3 := hl'.1.1
+  rw [stem, list3_eq ul h3]
+  have hinit : initialSublist [ul.getD 0 0, ul.getD 1 0]
+      [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] := ⟨[ul.getD 2 0], rfl⟩
+  rw [((TRUNCATE_SIMPLEX_INITIAL_SUBLIST 1 _ _).2 ⟨hinit, by simp⟩).1]
+  ext t
+  simp [setOfList]
+  all_goals tauto
 
 /-- HOL `FUEIMOV_4` (leaf_cell.hl:2793-?). -/
 theorem FUEIMOV_4 {V : Set V3} {ul vl : List V3} (hs : saturated V) (hp : Packing V)
@@ -1271,12 +1633,34 @@ theorem MCELL2_EDGE_FIRST {V : Set V3} {ul : List V3} {u v : V3} (hs : saturated
 /-- HOL `FINITE_CARD1_IMP_SINGLETON` (leaf_cell.hl:3338-3374). -/
 theorem FINITE_CARD1_IMP_SINGLETON {α : Type*} {S : Set α}
     (h : Nat.card S = 1) : ∃ x, S = {x} := by
-  sorry
+  have hfin : S.Finite := by
+    by_contra hin
+    push_neg at hin
+    have hz : (Nat.card S : ℕ) = 0 := @Nat.card_eq_zero_of_infinite _ (infinite_coe_iff.2 hin)
+    rw [hz] at h
+    exact absurd h (by norm_num)
+  exact Set.ncard_eq_one.1 h
 
 /-- HOL `SET2_INSERT1` (leaf_cell.hl:3375-?). -/
 theorem SET2_INSERT1 {a b x y z : V3} (hsub : ({a, b} : Set V3) ⊆ {x, y, z})
     (hne : a ≠ b) : ∃ c : V3, ({a, b, c} : Set V3) = {x, y, z} := by
-  sorry
+  have hm : ∀ t : V3, t ∈ ({x, y, z} : Set V3) ↔ t = x ∨ t = y ∨ t = z := by
+    intro t; simp
+  have ha := (hm a).1 (hsub (Set.mem_insert_iff.2 (Or.inl rfl)))
+  have hb := (hm b).1 (hsub (Set.mem_insert_iff.2 (Or.inr rfl)))
+  rcases ha with rfl | rfl | rfl
+  · rcases hb with rfl | rfl | rfl
+    · exact absurd rfl hne
+    · exact ⟨z, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact ⟨y, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+  · rcases hb with rfl | rfl | rfl
+    · exact ⟨z, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact absurd rfl hne
+    · exact ⟨x, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+  · rcases hb with rfl | rfl | rfl
+    · exact ⟨y, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact ⟨x, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact absurd rfl hne
 
 /-- HOL `MCELL3_EDGE_FIRST` (leaf_cell.hl:3375-?). -/
 theorem MCELL3_EDGE_FIRST {V : Set V3} {ul : List V3} {u v : V3} (hs : saturated V)
@@ -1289,26 +1673,37 @@ theorem MCELL3_EDGE_FIRST {V : Set V3} {ul : List V3} {u v : V3} (hs : saturated
 theorem SET2_INSERT2 {a b w x y z : V3} (hsub : ({a, b} : Set V3) ⊆ {w, x, y, z})
     (hne : a ≠ b) (h4 : Nat.card ({w, x, y, z} : Set V3) = 4) :
     ∃ c d : V3, ({w, x, y, z} : Set V3) = {a, b, c, d} := by
-  sorry
+  have hm : ∀ t : V3, t ∈ ({w, x, y, z} : Set V3) ↔ t = w ∨ t = x ∨ t = y ∨ t = z := by
+    intro t; simp
+  have ha := (hm a).1 (hsub (Set.mem_insert_iff.2 (Or.inl rfl)))
+  have hb := (hm b).1 (hsub (Set.mem_insert_iff.2 (Or.inr rfl)))
+  rcases ha with rfl | rfl | rfl | rfl
+  · rcases hb with rfl | rfl | rfl | rfl
+    · exact absurd rfl hne
+    · exact ⟨y, z, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact ⟨x, z, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact ⟨x, y, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+  · rcases hb with rfl | rfl | rfl | rfl
+    · exact ⟨y, z, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact absurd rfl hne
+    · exact ⟨w, z, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact ⟨w, y, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+  · rcases hb with rfl | rfl | rfl | rfl
+    · exact ⟨x, z, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact ⟨w, z, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact absurd rfl hne
+    · exact ⟨w, x, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+  · rcases hb with rfl | rfl | rfl | rfl
+    · exact ⟨x, y, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact ⟨w, y, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact ⟨w, x, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
+    · exact absurd rfl hne
 
 /-- HOL `MCELL4_EDGE_FIRST` (leaf_cell.hl:3375-?). -/
 theorem MCELL4_EDGE_FIRST {V : Set V3} {ul : List V3} {u v : V3} (hs : saturated V)
     (hp : Packing V) (hb : barV V 3 ul)
     (he : {u, v} ∈ edgeX V (mcell4 V ul)) :
     ∃ vl, barV V 3 vl ∧ u = vl.getD 0 0 ∧ v = vl.getD 1 0 ∧ mcell4 V ul = mcell4 V vl := by
-  sorry
-
-/-- HOL `MCELL_EDGE_FIRST` (leaf_cell.hl:3338-3374). -/
-theorem MCELL_EDGE_FIRST {V : Set V3} {ul : List V3} {k : ℕ} {u v : V3}
-    (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul)
-    (he : {u, v} ∈ edgeX V (mcell k V ul)) :
-    ∃ vl, barV V 3 vl ∧ mcell k V vl = mcell k V ul ∧ u = vl.getD 0 0 ∧
-      v = vl.getD 1 0 := by
-  sorry
-
-/-- HOL `BARV3_TRUNC2` (leaf_cell.hl:3375-?). -/
-theorem BARV3_TRUNC2 {V : Set V3} {ul : List V3} (hb : barV V 3 ul) :
-    truncateSimplex 2 ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] := by
   sorry
 
 /-- HOL `STEM_EDGEX` (leaf_cell.hl:3375-?). -/
@@ -1350,11 +1745,49 @@ theorem AFF_GT_0_2 (v w : V3) :
       y = t2 • v + t3 • w} := by
   sorry
 
-/-- HOL `MIDPOINT_IN_CONV0` (leaf_cell.hl:3659-?). -/
+/-- HOL `MIDPOINT_IN_CONV0` (leaf_cell.hl:3659-?).  When `p = q` the
+`toFinset` in `Affsign` is a singleton, so the witness function is `1`. -/
 theorem MIDPOINT_IN_CONV0 (p q : V3) :
     ((1 / 2 : ℝ) • p + (1 / 2 : ℝ) • q) ∈ conv0 {p, q} := by
-  sorry
-
+  have hfin : (∅ ∪ {p, q} : Set V3).Finite :=
+    Set.Finite.union Set.finite_empty (Set.Finite.insert p (Set.finite_singleton q))
+  by_cases hpq : p = q
+  · subst hpq
+    rw [conv0, affGt, Set.mem_setOf_eq, Affsign]
+    have h1 : hfin.toFinset = ({p} : Finset V3) := by
+      ext w
+      simp [hfin.mem_toFinset]
+    refine ⟨fun _ => 1, hfin, ?_, ?_, ?_⟩
+    · rw [h1, ← add_smul]
+      norm_num
+    · intro w hw
+      have hw2 : w ∈ (∅ ∪ {p, p} : Set V3) := Set.mem_union_right _ hw
+      have hw' := hfin.mem_toFinset.2 hw2
+      rw [h1] at hw'
+      simp at hw'
+      simp [hw']
+    · rw [h1]
+      simp
+  · rw [conv0, affGt, Set.mem_setOf_eq, Affsign]
+    have h1f : hfin.toFinset = ({p, q} : Finset V3) := by
+      ext w
+      simp [hfin.mem_toFinset]
+    have h1m : ∀ w : V3, w ∈ hfin.toFinset ↔ (w = p ∨ w = q) := by
+      intro w
+      rw [hfin.mem_toFinset]
+      simp
+    refine ⟨fun _ => 1 / 2, hfin, ?_, ?_, ?_⟩
+    · rw [h1f]
+      simp [hpq, add_comm]
+    · intro w hw
+      have hw2 : w ∈ (∅ ∪ {p, q} : Set V3) := Set.mem_union_right _ hw
+      have hw' := hfin.mem_toFinset.2 hw2
+      rw [h1m] at hw'
+      rcases hw' with rfl | hw'
+      · norm_num
+      · norm_num
+    · rw [h1f, Finset.sum_insert (by simp [hpq]), Finset.sum_singleton]
+      norm_num
 /-- HOL `AZIM_SPLIT_POINT` (leaf_cell.hl:3612-?). -/
 theorem AZIM_SPLIT_POINT (u0 u1 u2 u3 : V3)
     (h2 : ¬Collinear3 u0 u1 u2) (h3 : ¬Collinear3 u0 u1 u3)

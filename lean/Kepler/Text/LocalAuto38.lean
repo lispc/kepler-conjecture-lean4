@@ -59,6 +59,29 @@ Encoding (house conventions, cf. LocalAuto1/19/36):
   merge note); the visible box shape of the anchor
   (`MainNonlinearTerminalV11`, LocalAnchors:49) is: `2 ≤ y1..y3 ≤ 2*h0`,
   `cstab ≤ y4 ≤ 3.915`, `y5 = y6 = 2`.
+- LEDGER (proof-fill pass 2026-09-20): 13 of the sorried theorems
+  DISCHARGED (statements untouched, proofs added in place, private
+  `*_p38` helpers prefixed): `DIH_X_NN`, `DIH_Y_NN` (atn2 lower-bound
+  helper `half_pi_add_atn2_nn_p38`), `tau3_sym` (dihV 2↔3 symmetry via
+  `dihV_swap23_p38`), `taum_sym2` (dihY 2↔3 swap via `deltaX_swap23_p38`/
+  `deltaX4_swap23_p38`/`dihY_swap23_p38`), `NONPARALLEL_BALL_ANNULUS40`,
+  `_ALT`, `40_ALT` (local `< 4` aux `nonparallel_annulus4_p38` mirroring
+  LocalAuto4's technique; `Collinear3` is definitional to the `Collinear`
+  form), `is_ear_scs3` (def unfolding), `is_scs_funlist`,
+  `is_scs_scs3`, `is_scs_ear_3603097872` (21-conjunct isScsV39 unfolding
+  over the funlist kit: mod-reduction + `periodic2_mod_sym_reduce`),
+  `REAL_WLOG_SQUARE_LEMMA`, `REAL_WLOG_SQUARE2_LEMMA` (rotation/
+  reflection case bash). Remaining 52 theorem sorries are
+  stub/certificate-bound: external anchors (`sol_x`, `rhazim`,
+  `enclosed`, `cayleyR`, `taum_x`/`tau_residual_x`/`flat_term_x`,
+  `scs_terminal_v116`), the dihV↔dih_y bridge (`DIHV_EQ_DIH_Y`; blocks
+  `tau3_taum`, `tau3_taum_d/_dfun`, `taustar_taum*`), Cayley–Menger
+  positivity (`DELTA_Y_POS_4POINTS`), the tau_fun fan characterization
+  (blocks `tau_fun_azim`, `terminal_quad_lemma`, the `vv_*` fan bank),
+  `SUM_INTER`'s junk hole, and the `main_nonlinear_terminal_v11` + LP
+  registry bank (`OWZLKVY*`, `EAR_*`, `quad_4680581274_*`, `empty_3T2`,
+  `delta_4680581274`, `ineq_5691615370_asym`, ...). Compile state:
+  0 errors.
 -/
 
 import Kepler.Text.PackingAuto2
@@ -169,6 +192,58 @@ noncomputable def scsTerminalV116_p38 : List ScsV39 := sorry
 
 /-! ## Section A: numerics and x-space basics (terminal.hl:51-183) -/
 
+/-- Helper (proved here 2026-09-20): on the nonnegative first-argument
+half-plane `atn2` is bounded below by `-π/2` (the `|y| < x` arctan branch,
+the `0 < y` branch, the `y < 0` branch with `x / y ≤ 0`, and the `π` junk
+branch). -/
+private theorem half_pi_add_atn2_nn_p38 {x y : ℝ} (hx : 0 ≤ x) :
+    (0 : ℝ) ≤ Real.pi / 2 + atn2 x y := by
+  rw [atn2]
+  split
+  · have h := Real.neg_pi_div_two_lt_arctan (y / x)
+    linarith
+  split
+  · have h := Real.arctan_lt_pi_div_two (x / y)
+    linarith [Real.pi_pos, h]
+  split
+  · have hxy : x / y ≤ 0 := by
+      refine div_nonpos_of_nonneg_of_nonpos hx ?_
+      linarith
+    have h1 : Real.arctan (x / y) ≤ 0 := Real.arctan_le_zero.mpr hxy
+    linarith
+  · have h := Real.pi_pos
+    linarith
+
+/-- Helper (proved here 2026-09-20): the 2↔3 slot swap of `delta_x`
+(= LocalAuto19 `deltaX_swap_p19`, which is not on this import lane). -/
+private theorem deltaX_swap23_p38 (a b c d e f : ℝ) :
+    deltaX a b c d e f = deltaX a c b d f e := by
+  simp only [deltaX]; ring
+
+/-- Helper (proved here 2026-09-20): the 2↔3 slot swap of `delta_x4`. -/
+private theorem deltaX4_swap23_p38 (a b c d e f : ℝ) :
+    deltaX4 a b c d e f = deltaX4 a c b d f e := by
+  simp only [deltaX4]; ring
+
+/-- Helper (proved here 2026-09-20): `dih_y` is invariant under swapping the
+2nd/3rd (and correspondingly 5th/6th) slots — the same dihedral edge, other
+two vertices exchanged. -/
+private theorem dihY_swap23_p38 (a b c d e f : ℝ) :
+    dihY a b c d e f = dihY a c b d f e := by
+  show Real.pi / 2 + atn2 _ _ = Real.pi / 2 + atn2 _ _
+  rw [deltaX_swap23_p38, deltaX4_swap23_p38]
+
+/-- Helper (proved here 2026-09-20): `dihV` is invariant under swapping the
+two face vertices (the projected wedge angle is symmetric). -/
+private theorem dihV_swap23_p38 (w0 w1 w2 w3 : V3) :
+    dihV w0 w1 w2 w3 = dihV w0 w1 w3 w2 := by
+  have hflip : ∀ u w : V3, arcV 0 u w = arcV 0 w u := by
+    intro u w
+    simp only [arcV, dist_zero_right]
+    congr 1
+    simp [dotProduct_comm, mul_comm]
+  simp only [dihV, hflip]
+
 /-- HOL `sqrt8_flyspeck` (terminal.hl:51). -/
 theorem sqrt8_flyspeck :
     (2.828427 : ℝ) < Real.sqrt 8 ∧ Real.sqrt 8 < 2.828428 := by
@@ -195,7 +270,10 @@ theorem DIH_X_NN :
       0 < x1 → 0 ≤ deltaX x1 x2 x3 x4 x5 x6 →
       0 ≤ dihXf x1 x2 x3 x4 x5 x6 := by
   intro x1 x2 x3 x4 x5 x6 _ _
-  sorry -- DISCHARGES: dih_x nonneg from the arccos form
+  show 0 ≤ Real.pi / 2 + atn2
+      (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
+      (-(deltaX4 x1 x2 x3 x4 x5 x6))
+  exact half_pi_add_atn2_nn_p38 (Real.sqrt_nonneg _)
 
 /-- HOL `DIH_Y_NN` (terminal.hl:114). -/
 theorem DIH_Y_NN :
@@ -203,7 +281,11 @@ theorem DIH_Y_NN :
       0 < y1 → 0 ≤ deltaY y1 y2 y3 y4 y5 y6 →
       0 ≤ dihY y1 y2 y3 y4 y5 y6 := by
   intro y1 y2 y3 y4 y5 y6 _ _
-  sorry -- DISCHARGES: dih_y nonneg from the arccos form
+  show 0 ≤ Real.pi / 2 + atn2
+      (Real.sqrt (4 * (y1 * y1) * deltaX (y1 * y1) (y2 * y2) (y3 * y3)
+        (y4 * y4) (y5 * y5) (y6 * y6)))
+      (-(deltaX4 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)))
+  exact half_pi_add_atn2_nn_p38 (Real.sqrt_nonneg _)
 
 /-- HOL `RHO_LB` (terminal.hl:130). -/
 theorem RHO_LB (y : ℝ) (hy : (2 : ℝ) ≤ y) : 1 ≤ rho y := by
@@ -509,27 +591,71 @@ theorem taustar3_fun (d : ℝ) (a b : ℕ → ℕ → ℝ) (f : ℕ → ℕ → 
 /-! ## Section C: annulus non-collinearity and the tau3 transfer bank
 (terminal.hl:383-683) -/
 
-/-- HOL `NONPARALLEL_BALL_ANNULUS40` (terminal.hl:383). -/
+/-- Helper (proved here 2026-09-20, mirroring LocalAuto4's private
+`nonparallel_ball_annulus_aux` with the `< 4` upper bound the terminal bank
+needs): two annulus points at vector distance `< 4` cannot be collinear with
+the origin — same direction collapses `‖v - w‖` to `≤ 2 * h0 - 2 < 2`,
+opposite direction blows it up to `≥ 4`. -/
+private theorem nonparallel_annulus4_p38 {v w : V3} (hv : v ∈ ballAnnulus)
+    (hw : w ∈ ballAnnulus) (h2 : 2 ≤ ‖v - w‖) (h4 : ‖v - w‖ < 4) :
+    ¬ Collinear ℝ ({0, v, w} : Set V3) := by
+  obtain ⟨hv2, hvu⟩ := ballAnnulus_norm_bounds hv
+  obtain ⟨hw2, hwu⟩ := ballAnnulus_norm_bounds hw
+  have hvne : v ≠ 0 := by
+    intro hh; rw [hh] at hv2; norm_num at hv2
+  intro hcol
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := (0 : V3)) (w := v) (w1 := w) hvne).mp hcol
+  have hwv : w = c • v := by simpa using hc
+  have e2 : ‖w‖ = |c| * ‖v‖ := by rw [hwv, norm_smul, Real.norm_eq_abs]
+  by_cases hc0 : 0 ≤ c
+  · have e3 : ‖w‖ = c * ‖v‖ := by rw [e2, abs_of_nonneg hc0]
+    have e1 : ‖v - w‖ = |(1 - c) * ‖v‖| := by
+      rw [hwv]
+      have hs : v - c • v = (1 - c) • v := by module
+      rw [hs, norm_smul, Real.norm_eq_abs, abs_mul,
+        abs_of_nonneg (by linarith : (0 : ℝ) ≤ ‖v‖)]
+    have habs : (1 - c) * ‖v‖ = ‖v‖ - c * ‖v‖ := by ring
+    have e4 : ‖v - w‖ = |‖v‖ - ‖w‖| := by rw [e1, habs, e3]
+    have hb : |‖v‖ - ‖w‖| ≤ 2 * h0 - 2 := abs_le.mpr ⟨by linarith, by linarith⟩
+    rw [e4] at h2
+    have h0v : h0 = 1.26 := rfl
+    linarith
+  · have e1 : ‖v - w‖ = ‖v‖ + ‖w‖ := by
+      rw [hwv]
+      have hs : v - c • v = (1 - c) • v := by module
+      rw [hs, norm_smul, Real.norm_eq_abs, norm_smul, Real.norm_eq_abs,
+        abs_of_pos (by linarith : (0 : ℝ) < 1 - c),
+        abs_of_neg (by linarith : c < 0)]
+      ring
+    rw [e1] at h4
+    have h0v : h0 = 1.26 := rfl
+    linarith
+
+/-- HOL `NONPARALLEL_BALL_ANNULUS40` (terminal.hl:383). DISCHARGED
+2026-09-20 via `nonparallel_annulus4_p38`. -/
 theorem NONPARALLEL_BALL_ANNULUS40 (v w : V3) :
     2 ≤ ‖v - w‖ → ‖v - w‖ < 4 → v ∈ ballAnnulus → w ∈ ballAnnulus →
-    ¬ Collinear ℝ ({0, v, w} : Set V3) := by
-  intro _ _ _ _ h
-  sorry -- DISCHARGES: Cauchy-Schwarz equality route (NORM_CAUCHY_SCHWARZ_EQUAL)
+    ¬ Collinear ℝ ({0, v, w} : Set V3) := fun h2 h4 hv hw =>
+  nonparallel_annulus4_p38 hv hw h2 h4
 
 /-- HOL `NONPARALLEL_BALL_ANNULUS_ALT` (terminal.hl:451; the `// was cstab`
-comment is verbatim source). -/
+comment is verbatim source). DISCHARGED 2026-09-20 via
+`nonparallel_annulus4_p38` (3.62 < 4). -/
 theorem NONPARALLEL_BALL_ANNULUS_ALT (v w : V3) :
     2 ≤ dist v w → dist v w ≤ 3.62 → v ∈ ballAnnulus → w ∈ ballAnnulus →
     ¬ Collinear ℝ ({0, v, w} : Set V3) := by
-  intro _ _ _ _ h
-  sorry -- DISCHARGES: as NONPARALLEL_BALL_ANNULUS40
+  intro h2 hup hv hw
+  rw [dist_eq_norm] at h2 hup
+  exact nonparallel_annulus4_p38 hv hw h2 (by linarith)
 
-/-- HOL `NONPARALLEL_BALL_ANNULUS40_ALT` (terminal.hl:470). -/
+/-- HOL `NONPARALLEL_BALL_ANNULUS40_ALT` (terminal.hl:470). DISCHARGED
+2026-09-20 via `nonparallel_annulus4_p38`. -/
 theorem NONPARALLEL_BALL_ANNULUS40_ALT (v w : V3) :
     2 ≤ dist v w → dist v w < 4 → v ∈ ballAnnulus → w ∈ ballAnnulus →
     ¬ Collinear ℝ ({0, v, w} : Set V3) := by
-  intro _ _ _ _ h
-  sorry -- DISCHARGES: as NONPARALLEL_BALL_ANNULUS40
+  intro h2 h4 hv hw
+  rw [dist_eq_norm] at h2 h4
+  exact nonparallel_annulus4_p38 hv hw h2 h4
 
 /-- HOL `tau3_taum` (terminal.hl:489). -/
 theorem tau3_taum (v0 v1 v2 : V3) :
@@ -623,12 +749,24 @@ theorem taustar_taum_dfun (d : ℝ) (a b : ℕ → ℕ → ℝ) (f : ℕ → ℕ
 /-! ## Section D: taum symmetry and the funlist/periodicity kit
 (terminal.hl:684-1211) -/
 
-/-- HOL `taum_sym2` (terminal.hl:684). -/
+/-- HOL `taum_sym2` (terminal.hl:684). DISCHARGED 2026-09-20: `taum` sums
+`ly`-weighted `dihY` terms over the three edges from the origin; the vertex
+transpositions permute those three terms, and each permuted `dihY` is related
+to the original by `dihY_swap23_p38`. -/
 theorem taum_sym2 (y1 y2 y3 y4 y5 y6 : ℝ) :
     taum y1 y2 y3 y4 y5 y6 = taum y2 y1 y3 y5 y4 y6 ∧
     taum y1 y2 y3 y4 y5 y6 = taum y1 y3 y2 y4 y6 y5 := by
-  sorry -- DISCHARGES: taum symmetry (canonical SphereKit body, deduped
-  -- from the opaque `taum_p23` stub)
+  have e1 : dihY y2 y1 y3 y5 y4 y6 = dihY y2 y3 y1 y5 y6 y4 :=
+    dihY_swap23_p38 _ _ _ _ _ _
+  have e2 : dihY y1 y3 y2 y4 y6 y5 = dihY y1 y2 y3 y4 y5 y6 :=
+    dihY_swap23_p38 _ _ _ _ _ _
+  have e3 : dihY y3 y2 y1 y6 y5 y4 = dihY y3 y1 y2 y6 y4 y5 :=
+    dihY_swap23_p38 _ _ _ _ _ _
+  constructor
+  · simp only [taum, solY, lnazim, e1, e2, e3]
+    ring
+  · simp only [taum, solY, lnazim, e1, e2, e3]
+    ring
 
 /-- HOL `MOD_4_EXPLICIT` (terminal.hl:697). -/
 theorem MOD_4_EXPLICIT :
@@ -727,9 +865,120 @@ theorem is_scs_funlist (k : ℕ) (d a0 b0 : ℝ) (j0 : Prop)
     isScsV39 (ScsV39.mk k d (funlistV39 a a0 k) (funlistV39 a a0 k)
       (funlistV39 b b0 k) (funlistV39 b b0 k) (funlistAV39 j1 False j0 k)
       u u' u'') := by
-  sorry -- DISCHARGES: mechanical unfolding of isScsV39 over the funlist kit
+  have hk0 : k ≠ 0 := fun hc => by rw [hc] at h2; norm_num at h2
+  have hFred : ∀ i j : ℕ, funlistV39 a a0 k i j =
+      funlistV39 a a0 k (i % k) (j % k) :=
+    fun i j => by simp only [funlistV39, psort, Nat.mod_mod]
+  have hGred : ∀ i j : ℕ, funlistV39 b b0 k i j =
+      funlistV39 b b0 k (i % k) (j % k) :=
+    fun i j => by simp only [funlistV39, psort, Nat.mod_mod]
+  have hJred : ∀ i j : ℕ, funlistAV39 j1 False j0 k i j ↔
+      funlistAV39 j1 False j0 k (i % k) (j % k) :=
+    fun i j => by simp only [funlistAV39, psort, Nat.mod_mod]
+  refine ⟨h1, h2, h3, h4, h5, h6, h6, periodic2_funlist a a0 k,
+    periodic2_funlist a a0 k, periodic2_funlist b b0 k,
+    periodic2_funlist b b0 k, periodic2_funlistA j1 False j0 k,
+    ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  all_goals simp only [ScsV39.mk]
+  · intro i j
+    exact ⟨funlist_sym k a a0 i j, funlist_sym k a a0 i j,
+      funlist_sym k b b0 i j, funlist_sym k b b0 i j,
+      funlistA_sym k j1 False j0 i j⟩
+  · intro i j
+    rw [hFred i j, hGred i j]
+    rcases Nat.lt_trichotomy (i % k) (j % k) with hlt | heq | hgt
+    · exact ⟨le_refl _, h7 _ _ ⟨hlt, Nat.mod_lt _ (Nat.pos_of_ne_zero hk0)⟩,
+        le_refl _⟩
+    · rw [heq, funlist_diag, funlist_diag]
+      exact ⟨le_refl _, le_refl _, le_refl _⟩
+    · rw [funlist_sym k a a0, funlist_sym k b b0]
+      exact ⟨le_refl _, h7 _ _ ⟨hgt, Nat.mod_lt _ (Nat.pos_of_ne_zero hk0)⟩,
+        le_refl _⟩
+  · intro i
+    exact funlist_diag a a0 k i
+  · intro i j hijk
+    obtain ⟨hik, hjk, hne⟩ := hijk
+    rw [hFred i j, Nat.mod_eq_of_lt hik, Nat.mod_eq_of_lt hjk]
+    rcases Nat.lt_trichotomy i j with hlt | heq | hgt
+    · exact h8 i j ⟨hlt, hjk⟩
+    · exact absurd heq hne
+    · rw [funlist_sym k a a0]
+      exact h8 j i ⟨hgt, hik⟩
+  · intro i hk3
+    subst hk3
+    have hb : i % 3 = 0 ∨ i % 3 = 1 ∨ i % 3 = 2 := by omega
+    rw [hGred i (i + 1)]
+    rcases hb with h0 | h1 | h2'
+    · rw [h0, show (i + 1) % 3 = 1 by omega]
+      exact h9 0 ⟨by norm_num, rfl⟩
+    · rw [h1, show (i + 1) % 3 = 2 by omega]
+      exact h9 1 ⟨by norm_num, rfl⟩
+    · rw [h2', show (i + 1) % 3 = 0 by omega]
+      have hx : funlistV39 b b0 3 2 0 = funlistV39 b b0 3 2 (2 + 1) := by
+        simp [funlistV39, psort]
+      rw [hx]
+      exact h9 2 ⟨by norm_num, rfl⟩
+  · intro i hik
+    have hred : funlistV39 b b0 k i (i + 1) =
+        funlistV39 b b0 k (i % k) (i % k + 1) := by
+      simp only [funlistV39, psort, Nat.add_mod, Nat.mod_mod]
+    rw [hred]
+    exact h10 _ ⟨Nat.mod_lt i (Nat.pos_of_ne_zero hk0), hik⟩
+  · intro i j hjJ
+    rw [hJred i j] at hjJ
+    have key : ∀ p q : ℕ, p < k → q < k →
+        funlistAV39 j1 False j0 k p q →
+        q % k = (p + 1) % k ∨ p % k = (q + 1) % k := by
+      intro p q hpk hqk hJ
+      rw [Nat.mod_eq_of_lt hpk, Nat.mod_eq_of_lt hqk]
+      simp only [funlistAV39, Nat.mod_mod] at hJ
+      by_cases he : p = q
+      · subst he
+        simp at hJ
+      · rcases Nat.lt_trichotomy p q with hlt | heq | hgt
+        · rcases h12 p q ⟨hlt, hqk, hJ⟩ with heq' | hwrap
+          · left
+            rw [heq', Nat.mod_eq_of_lt (by omega : p + 1 < k)]
+          · obtain ⟨hp0, hq1⟩ := hwrap
+            subst hp0
+            subst hq1
+            right
+            simp
+        · exact absurd heq he
+        · have hJqp : funlistAV39 j1 False j0 k q p := by
+            rw [funlistA_sym k j1 False j0]
+            exact hJ
+          rcases h12 q p ⟨hgt, hpk, hJqp⟩ with heq'' | hwrap
+          · right
+            rw [heq'', Nat.mod_eq_of_lt (by omega : q + 1 < k)]
+          · obtain ⟨hq0, hp1⟩ := hwrap
+            subst hq0
+            subst hp1
+            left
+            simp
+    have hred := key (i % k) (j % k) (Nat.mod_lt i (Nat.pos_of_ne_zero hk0))
+      (Nat.mod_lt j (Nat.pos_of_ne_zero hk0)) hjJ
+    rwa [Nat.mod_mod, Nat.mod_mod, Nat.mod_add_mod, Nat.mod_add_mod] at hred
+  · intro i j hjJ
+    rw [hJred i j] at hjJ
+    rw [hFred i j, hGred i j]
+    have hik := Nat.mod_lt i (Nat.pos_of_ne_zero hk0)
+    have hjk := Nat.mod_lt j (Nat.pos_of_ne_zero hk0)
+    rcases Nat.lt_trichotomy (i % k) (j % k) with hlt | heq | hgt
+    · exact h11 _ _ ⟨hlt, hjk, hjJ⟩
+    · rw [heq] at hjJ
+      simp only [funlistAV39, Nat.mod_mod, reduceIte] at hjJ
+    · have hJqp : funlistAV39 j1 False j0 k (j % k) (i % k) := by
+        rw [funlistA_sym k j1 False j0]
+        exact hjJ
+      obtain ⟨e1, e2⟩ := h11 (j % k) (i % k) ⟨hgt, hik, hJqp⟩
+      rw [funlist_sym k a a0, funlist_sym k b b0]
+      exact ⟨e1, e2⟩
+  · exact h13
 
-/-- HOL `is_ear_scs3` (terminal.hl:1103). -/
+/-- HOL `is_ear_scs3` (terminal.hl:1103). DISCHARGED 2026-09-20: the
+`is_ear_v39` unfolding — `unadorned_v39`/`k = 3`/`d = 0.11` are `rfl` for the
+`scs_v39 (3, #0.11, a, a, b, b, jf, {}, {}, {})` record. -/
 theorem is_ear_scs3 (a b : ℕ → ℕ → ℝ) (jf : ℕ → ℕ → Prop) :
     isEarV39 (ScsV39.mk 3 0.11 a a b b jf (fun _ => False) (fun _ => False)
       (fun _ => False)) ↔
@@ -738,7 +987,15 @@ theorem is_ear_scs3 (a b : ℕ → ℕ → ℝ) (jf : ℕ → ℕ → Prop) :
     (∃ i, {j | j < 3 ∧ jf j (j + 1)} = {i} ∧ a i (i + 1) = Real.sqrt 8 ∧
       b i (i + 1) = cstab ∧
       (∀ j, j < 3 ∧ j ≠ i → a j (j + 1) = 2 ∧ b j (j + 1) = 2 * h0)) := by
-  sorry -- DISCHARGES: isEarV39 unfolding
+  constructor
+  · intro h
+    unfold isEarV39 at h
+    obtain ⟨hscs, -, -, -, hdiag, hex⟩ := h
+    exact ⟨hscs, hdiag, hex⟩
+  · rintro ⟨hscs, hdiag, hex⟩
+    refine ⟨hscs, ?_, rfl, rfl, hdiag, hex⟩
+    unfold unadornedV39
+    exact ⟨rfl, rfl, rfl, rfl, rfl⟩
 
 /-- HOL `is_scs_scs3` (terminal.hl:1126). -/
 theorem is_scs_scs3 (d : ℝ) (a : List ((ℕ × ℕ) × ℝ)) (a0 : ℝ)
@@ -756,9 +1013,60 @@ theorem is_scs_scs3 (d : ℝ) (a : List ((ℕ × ℕ) × ℝ)) (a0 : ℝ)
     (h11 : ∀ i j : ℕ, i < j ∧ j < 3 ∧ funlistAV39 jf False j0 3 i j →
       funlistV39 a a0 3 i j = Real.sqrt 8 ∧ funlistV39 b b0 3 i j = cstab) :
     isScsV39 (ScsV39.mk 3 d (funlistV39 a a0 3) (funlistV39 a a0 3)
-      (funlistV39 b b0 3) (funlistV39 b b0 3) (funlistAV39 jf False j0 3)
+      (funlistV39 b b0 3) (funlistV39 b b0 3)       (funlistAV39 jf False j0 3)
       (fun _ => False) (fun _ => False) (fun _ => False)) := by
-  sorry -- DISCHARGES: mechanical unfolding of isScsV39 at k = 3
+  refine is_scs_funlist 3 d a0 b0 j0 a b jf (fun _ => False) (fun _ => False)
+    (fun _ => False) h1 (by norm_num) (by norm_num)
+    (periodic_empty _) (periodic_empty _) (periodic_empty _) ?_ ?_ ?_ ?_ h11 ?_ ?_
+  · rintro i j ⟨hij, hj3⟩
+    rcases (by omega : (i = 0 ∧ j = 1) ∨ (i = 0 ∧ j = 2) ∨ (i = 1 ∧ j = 2)) with
+      h01 | h02 | h12'
+    · obtain ⟨rfl, rfl⟩ := h01
+      exact h2
+    · obtain ⟨rfl, rfl⟩ := h02
+      exact h3
+    · obtain ⟨rfl, rfl⟩ := h12'
+      exact h4
+  · rintro i j ⟨hij, hj3⟩
+    rcases (by omega : (i = 0 ∧ j = 1) ∨ (i = 0 ∧ j = 2) ∨ (i = 1 ∧ j = 2)) with
+      h01 | h02 | h12'
+    · obtain ⟨rfl, rfl⟩ := h01
+      exact h5
+    · obtain ⟨rfl, rfl⟩ := h02
+      exact h7
+    · obtain ⟨rfl, rfl⟩ := h12'
+      exact h6
+  · rintro i ⟨hi, -⟩
+    have hb : i = 0 ∨ i = 1 ∨ i = 2 := by omega
+    rcases hb with h0 | h1' | h2'
+    · subst h0; exact h8
+    · subst h1'; exact h10
+    · subst h2'
+      have hx : funlistV39 b b0 3 2 (2 + 1) = funlistV39 b b0 3 0 2 := by
+        simp [funlistV39, psort]
+      rw [hx]
+      exact h9
+  · rintro i ⟨-, h3lt⟩
+    exact absurd h3lt (by norm_num)
+  · rintro i j ⟨hij, hj3⟩
+    rcases (by omega : (i = 0 ∧ j = 1) ∨ (i = 0 ∧ j = 2) ∨ (i = 1 ∧ j = 2)) with
+      h01 | h02 | h12'
+    · obtain ⟨rfl, rfl⟩ := h01
+      exact Or.inl rfl
+    · obtain ⟨rfl, rfl⟩ := h02
+      exact Or.inr ⟨rfl, rfl⟩
+    · obtain ⟨rfl, rfl⟩ := h12'
+      exact Or.inl rfl
+  · have hnc : {i | i < 3 ∧ (2 * h0 < funlistV39 b b0 3 i (i + 1) ∨
+        2 < funlistV39 a a0 3 i (i + 1))}.ncard ≤ ({0, 1, 2} : Set ℕ).ncard := by
+      refine Set.ncard_le_ncard ?_ ?_
+      · intro x hx
+        simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff] at hx ⊢
+        obtain ⟨hx1, -⟩ := hx
+        omega
+      · exact Set.toFinite _
+    have h3 : ({0, 1, 2} : Set ℕ).ncard = 3 := by simp
+    omega
 
 /-- HOL `is_scs_ear_3603097872` (terminal.hl:1186). -/
 theorem is_scs_ear_3603097872 :
@@ -767,7 +1075,46 @@ theorem is_scs_ear_3603097872 :
       (funlistV39 [((0, 1), cstab)] (2 * h0) 3) (funlistV39 [((0, 1), cstab)] (2 * h0) 3)
       (funlistAV39 [((0, 1), True)] False False 3)
       (fun _ => False) (fun _ => False) (fun _ => False)) := by
-  sorry -- DISCHARGES: the concrete 3-ear system's scs certificate
+  have hF01 : funlistV39 [((0, 1), Real.sqrt 8)] 2 3 0 1 = Real.sqrt 8 := by
+    simp [funlistV39, psort, assocdV39]
+  have hG01 : funlistV39 [((0, 1), cstab)] (2 * h0) 3 0 1 = cstab := by
+    simp [funlistV39, psort, assocdV39]
+  have hF12 : funlistV39 [((0, 1), Real.sqrt 8)] 2 3 1 2 = 2 := by
+    simp [funlistV39, psort, assocdV39]
+  have hG12 : funlistV39 [((0, 1), cstab)] (2 * h0) 3 1 2 = 2 * h0 := by
+    simp [funlistV39, psort, assocdV39]
+  refine is_scs_scs3 0.11 [((0, 1), Real.sqrt 8)] 2 [((0, 1), cstab)] (2 * h0)
+    [((0, 1), True)] False (by norm_num) ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
+  · rw [hF01, hG01]
+    exact (Real.sqrt_le_left (by norm_num [cstab])).mpr
+      (by norm_num : (8:ℝ) ≤ (3.01:ℝ) ^ 2)
+  · show (2:ℝ) ≤ 2 * h0
+    norm_num [h0]
+  · show (2:ℝ) ≤ 2 * h0
+    norm_num [h0]
+  · rw [hF01]
+    have h8sq : (2.828427:ℝ) ^ 2 < 8 := by norm_num
+    exact le_trans (by norm_num : (2:ℝ) ≤ 2.828427)
+      (le_of_lt ((Real.lt_sqrt (by norm_num)).mpr h8sq))
+  · show (2:ℝ) ≤ 2
+    norm_num
+  · show (2:ℝ) ≤ 2
+    norm_num
+  · show (cstab:ℝ) < 4
+    norm_num [cstab]
+  · show (2 * h0:ℝ) < 4
+    norm_num [h0]
+  · show (2 * h0:ℝ) < 4
+    norm_num [h0]
+  · rintro i j ⟨hij, hJ⟩
+    rcases (by omega : (i = 0 ∧ j = 1) ∨ (i = 0 ∧ j = 2) ∨ (i = 1 ∧ j = 2)) with
+      h01 | h02 | h12'
+    · obtain ⟨rfl, rfl⟩ := h01
+      exact ⟨hF01, hG01⟩
+    · obtain ⟨rfl, rfl⟩ := h02
+      simp [funlistAV39, psort, assocdV39] at hJ
+    · obtain ⟨rfl, rfl⟩ := h12'
+      simp [funlistAV39, psort, assocdV39] at hJ
 
 /-- HOL `REAL_FINITE_MIN_EXISTS` (terminal.hl:1213); the name is taken by an
 imported twin, so the `_p38` suffix is used. -/
@@ -783,7 +1130,35 @@ theorem REAL_WLOG_SQUARE_LEMMA (P : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ 
     (hmax : ∀ y1 y2 y3 y4 y5 y6 : ℝ, y2 ≤ y1 → y3 ≤ y1 → y4 ≤ y1 →
       P y1 y2 y3 y4 y5 y6) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ, P y1 y2 y3 y4 y5 y6 := by
-  sorry -- DISCHARGES: real wlog over the cyclic rotation of (y1, y2, y3, y4)
+  intro y1 y2 y3 y4 y5 y6
+  have r1 : P y1 y2 y3 y4 y5 y6 = P y2 y3 y4 y1 y6 y5 := hrot _ _ _ _ _ _
+  have r2 : P y2 y3 y4 y1 y6 y5 = P y3 y4 y1 y2 y5 y6 := hrot _ _ _ _ _ _
+  have r3 : P y3 y4 y1 y2 y5 y6 = P y4 y1 y2 y3 y6 y5 := hrot _ _ _ _ _ _
+  rcases le_total y2 y1 with h21 | h12
+  · rcases le_total y3 y1 with h31 | h13
+    · rcases le_total y4 y1 with h41 | h14
+      · exact hmax _ _ _ _ _ _ h21 h31 h41
+      · rw [r1, r2, r3]
+        exact hmax _ _ _ _ _ _ h14 (le_trans h21 h14)
+          (le_trans h31 h14)
+    · rcases le_total y4 y3 with h43 | h34
+      · rw [r1, r2]
+        exact hmax _ _ _ _ _ _ h43 h13 (le_trans h21 h13)
+      · rw [r1, r2, r3]
+        exact hmax _ _ _ _ _ _ (h13.trans h34)
+          (h21.trans (h13.trans h34)) h34
+  · rcases le_total y3 y2 with h32 | h23
+    · rcases le_total y4 y2 with h42 | h24
+      · rw [r1]
+        exact hmax _ _ _ _ _ _ h32 h42 h12
+      · rw [r1, r2, r3]
+        exact hmax _ _ _ _ _ _ (h12.trans h24) h24 (h32.trans h24)
+    · rcases le_total y4 y3 with h43 | h34
+      · rw [r1, r2]
+        exact hmax _ _ _ _ _ _ h43 (h12.trans h23) h23
+      · rw [r1, r2, r3]
+        exact hmax _ _ _ _ _ _ (h12.trans (h23.trans h34))
+          (h23.trans h34) h34
 
 /-- HOL `REAL_WLOG_SQUARE2_LEMMA` (terminal.hl:1237). -/
 theorem REAL_WLOG_SQUARE2_LEMMA (P : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → Prop)
@@ -793,7 +1168,82 @@ theorem REAL_WLOG_SQUARE2_LEMMA (P : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ
     (hmax : ∀ y1 y2 y3 y4 y5 y6 : ℝ, y2 ≤ y1 → y3 ≤ y1 → y4 ≤ y1 → y4 ≤ y2 →
       P y1 y2 y3 y4 y5 y6) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ, P y1 y2 y3 y4 y5 y6 := by
-  sorry -- DISCHARGES: real wlog over the two square symmetries
+  intro y1 y2 y3 y4 y5 y6
+  have rot1 : P y1 y2 y3 y4 y5 y6 = P y2 y3 y4 y1 y6 y5 := hrot _ _ _ _ _ _ |>.1
+  have rot2 : P y2 y3 y4 y1 y6 y5 = P y3 y4 y1 y2 y5 y6 := hrot _ _ _ _ _ _ |>.1
+  have rot3 : P y3 y4 y1 y2 y5 y6 = P y4 y1 y2 y3 y6 y5 := hrot _ _ _ _ _ _ |>.1
+  have ref1 : P y1 y2 y3 y4 y5 y6 = P y1 y4 y3 y2 y6 y5 := hrot _ _ _ _ _ _ |>.2
+  have ref2 : P y2 y3 y4 y1 y6 y5 = P y2 y1 y4 y3 y5 y6 := hrot _ _ _ _ _ _ |>.2
+  have ref3 : P y3 y4 y1 y2 y5 y6 = P y3 y2 y1 y4 y6 y5 := hrot _ _ _ _ _ _ |>.2
+  have ref4 : P y4 y1 y2 y3 y6 y5 = P y4 y3 y2 y1 y5 y6 := hrot _ _ _ _ _ _ |>.2
+  rcases le_total y2 y1 with h21 | h12
+  · rcases le_total y3 y1 with h31 | h13
+    · rcases le_total y4 y1 with h41 | h14
+      · rcases le_total y4 y2 with h42 | h24
+        · -- head y1, direct
+          exact hmax _ _ _ _ _ _ h21 h31 h41 h42
+        · -- head y1, reflected (2nd = y4, 4th = y2)
+          rw [ref1]
+          exact hmax _ _ _ _ _ _ h41 h31 h21 h24
+      · -- y1 ≤ y4: head y4 (three rotations); middle pair (y1, y3)
+        rcases le_total y3 y1 with h31' | h13'
+        · rw [rot1, rot2, rot3]
+          exact hmax _ _ _ _ _ _ h14 (h21.trans h14) (h31.trans h14) h31'
+        · rw [rot1, rot2, rot3, ref4]
+          exact hmax _ _ _ _ _ _ (h31.trans h14) (h21.trans h14) h14 h13'
+    · -- y1 ≤ y3
+      rcases le_total y4 y1 with h41 | h14
+      · -- head y3 (two rotations); middle pair (y4, y2)
+        rcases le_total y2 y4 with h42' | h24'
+        · rw [rot1, rot2]
+          exact hmax _ _ _ _ _ _ (h41.trans h13) h13 (h21.trans h13) h42'
+        · rw [rot1, rot2, ref3]
+          exact hmax _ _ _ _ _ _ (h21.trans h13) h13 (h41.trans h13) h24'
+      · -- y1 ≤ y4: compare y3, y4
+        rcases le_total y4 y3 with h43 | h34
+        · -- head y3; middle pair (y4, y2)
+          rcases le_total y2 y4 with h42' | h24'
+          · rw [rot1, rot2]
+            exact hmax _ _ _ _ _ _ h43 h13 (h21.trans h13) h42'
+          · rw [rot1, rot2, ref3]
+            exact hmax _ _ _ _ _ _ (h21.trans h13) h13 h43 h24'
+        · -- head y4; middle pair (y1, y3)
+          rcases le_total y3 y1 with h31' | h13'
+          · rw [rot1, rot2, rot3]
+            exact hmax _ _ _ _ _ _ h14 (h21.trans h14) h34 h31'
+          · rw [rot1, rot2, rot3, ref4]
+            exact hmax _ _ _ _ _ _ h34 (h21.trans h14) h14 h13'
+  · -- y2 ≤ y1
+    rcases le_total y3 y2 with h32 | h23
+    · rcases le_total y4 y2 with h42 | h24
+      · -- head y2 (one rotation); middle pair (y3, y1)
+        rcases le_total y1 y3 with h13' | h31'
+        · rw [rot1]
+          exact hmax _ _ _ _ _ _ h32 h42 h12 h13'
+        · rw [rot1, ref2]
+          exact hmax _ _ _ _ _ _ h12 h42 h32 h31'
+      · -- y2 ≤ y4: head y4; middle pair (y1, y3)
+        rcases le_total y3 y1 with h31' | h13'
+        · rw [rot1, rot2, rot3]
+          exact hmax _ _ _ _ _ _ (h12.trans h24) h24 (h32.trans h24) h31'
+        · rw [rot1, rot2, rot3, ref4]
+          exact hmax _ _ _ _ _ _ (h32.trans h24) h24 (h12.trans h24) h13'
+    · -- y2 ≤ y3
+      rcases le_total y4 y3 with h43 | h34
+      · -- head y3 (two rotations); middle pair (y4, y2)
+        rcases le_total y2 y4 with h42' | h24'
+        · rw [rot1, rot2]
+          exact hmax _ _ _ _ _ _ h43 (h12.trans h23) h23 h42'
+        · rw [rot1, rot2, ref3]
+          exact hmax _ _ _ _ _ _ h23 (h12.trans h23) h43 h24'
+      · -- y3 ≤ y4: head y4; middle pair (y1, y3)
+        rcases le_total y3 y1 with h31' | h13'
+        · rw [rot1, rot2, rot3]
+          exact hmax _ _ _ _ _ _ (h12.trans (h23.trans h34))
+            (h23.trans h34) h34 h31'
+        · rw [rot1, rot2, rot3, ref4]
+          exact hmax _ _ _ _ _ _ h34 (h23.trans h34)
+            (h12.trans (h23.trans h34)) h13'
 
 /-! ## Section E: the fan / azim bank (terminal.hl:1254-2230) -/
 
@@ -1037,10 +1487,21 @@ theorem delta_4680581274 (y1 y4 : ℝ) (hy1 : cstab ≤ y1) (hy4 : 4 ≤ y4) :
     deltaY y1 2 2 y4 2 cstab < 0 := by
   sorry -- DISCHARGES: the 4680581274 delta drop on the 2-2 spine
 
-/-- HOL `tau3_sym` (terminal.hl:2218). -/
+/-- HOL `tau3_sym` (terminal.hl:2218). DISCHARGED 2026-09-20: both
+symmetries follow from `dihV_swap23_p38` — each `dihV` term rewrites to the
+corresponding term of the permuted sum. -/
 theorem tau3_sym (v0 v1 v2 : V3) :
     tau3 v0 v1 v2 = tau3 v0 v2 v1 ∧ tau3 v0 v1 v2 = tau3 v1 v0 v2 := by
-  sorry -- DISCHARGES: tau3 symmetry (dih symmetry lemmas)
+  have h0 : ∀ a b c : V3, tau3 a b c = rho (norm a) * dihV 0 a b c +
+      rho (norm b) * dihV 0 b c a + rho (norm c) * dihV 0 c a b -
+      (Real.pi + sol0) := fun a b c => rfl
+  constructor
+  · rw [h0, h0, dihV_swap23_p38 0 v0 v1 v2, dihV_swap23_p38 0 v1 v2 v0,
+      dihV_swap23_p38 0 v2 v0 v1]
+    ring
+  · rw [h0, h0, dihV_swap23_p38 0 v0 v1 v2, dihV_swap23_p38 0 v1 v2 v0,
+      dihV_swap23_p38 0 v2 v0 v1]
+    ring
 
 /-- HOL `INSERT_SUBSET` (terminal.hl:2229). -/
 theorem INSERT_SUBSET {α : Type*} (a : α) (A S : Set α) :
