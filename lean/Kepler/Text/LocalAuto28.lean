@@ -19,7 +19,7 @@ Encoding:
   `dsv_v39` <-> `isScsV39`/`MMsV39`/`BBsV39`/`BBprimeV39`/`taustarV39`/`dsvV39`
   (LocalAuto1); `ball_annulus`/`h0` <-> `ballAnnulus`/`h0` (PackingAuto2).
 - `v3_defor_v1 a v1 v2 x1 x2 x5 x6 x3` <-> `v3DeforV1_p17` (LocalAuto17,
-  EYYPQDW lane; `ups_x` <-> `upsX`).  `rho_node1` <-> `rhoNode1`,
+  EYYPQDW lane; `ups_x` <-> `upsX` (SphereKit canonical)).  `rho_node1` <-> `rhoNode1`,
   `interior_angle1` <-> `interiorAngle1`, `deformation` <-> `Deformation`,
   `lunar` <-> `Lunar`, `generic` <-> `Generic`, `convex_local_fan` <->
   `ConvexLocalFan` (LocalAuto1).

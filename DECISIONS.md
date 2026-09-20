@@ -3,6 +3,57 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-09-19 — P6-C：native_decide scoped exception 扩展至 `Kepler.Assembly.GoodList*`
+
+**变更**：2026-08-10 条"native_decide 只允许出现在 `Kepler.Graphs.Cert*`"
+扩展为——另允许出现在 `Kepler.Assembly.GoodListShard*`（archive 逐图
+`good_list` 量产分片，23 片覆盖全部 19715 图：Tri 9 / Quad 1253 /
+Pent 16080 / Hex 2373）。用途：闭合装配脊柱第 4 个接口占位
+`Kepler.Assembly.goodListArchive : AllGoodList tameArchiveLists`
+（HOL `Good_list_archive.good_list_archive`）。
+
+**信任基影响**：与 2026-08-10 条完全相同——Lean 编译器+运行时进 TCB。
+本工具链（v4.32.2）`native_decide` 的公理足迹为每定理一条作用域公理
+`<thm>._native.native_decide.ax_1_1 : decide P = true`
+（`Lean.Meta.nativeEqTrue`，Lean.Meta/Native.lean:31-33），与既有
+`Kepler.Graphs.Cert*` 分片的足迹逐字一致；`#print axioms goodListArchive`
+= propext + Quot.sound + 23 条 native_decide 公理，无 sorryAx、无
+Classical.choice。组合器 `Kepler/Assembly/GoodListAll.lean` 为纯内核
+（`List.take_append_drop`/`List.all_append` 链），不做任何计算。
+
+**结构配套**：`GoodList`/`listOfDarts`/`tameArchiveLists` 等纯列表机器
+从 `Assembly.lean` §1a/§1c 下沉至 `Kepler/Assembly/GoodListDefs.lean`
+（本脊柱改为 import 之，对外签名不变），分片因而不必 import 装配脊柱，
+接口 sorry 不进入分片公理审计。生成器 `lean/scripts/gen_goodlist_shards.py`
+（slice=1000），runner `lean/scripts/run_goodlist_shards.sh`（幂等，
+状态文件 `p6c_goodlist.status`）。
+
+## 2026-09-17 — main 分支允许携带 sorry 债务（原"main 零 sorry"纪律放宽）
+
+**变更**：原纪律"main 上除 `Statement.lean` sanctioned 占位外零 sorry"
+（2026-09-13 已放宽为"在制骨架 sorry 可短暂存在"）正式修订为——
+**main 允许携带 sorry 债务，债务以 `DEBT.md`（由 `lean/scripts/debt_ledger.py`
+生成）为唯一权威刻度**。wip/auto-packing（packing 25 模块 + local 39 模块，
+64 模块骨架）已合入 main（`aad4fb35`）。**已向人类汇报并获批准**
+（2026-09-17 会话，用户原话："我考虑去掉 main 不能有 sorry 这个限制"）。
+
+**理由**：
+
+- packing/local 骨架（64 模块、~3000 定理陈述）长期养在 wip 分支上，
+  合入代价随时间单调上升（跨模块撞名、接口漂移）；
+- 终验标准不变、只是推迟：主定理证明本体零 sorry 可达 + 公理仅标准三
+  （+ Phase 2 限定 native_decide）仍是项目终点验收条件；
+- Lean 编译器即判官：sorry 无法冒充证明，`#print axioms` 里的 `sorryAx`
+  永远可见；债务账本使"慢慢填"成为可度量的烧账过程而非口头承诺。
+
+**配套约束**：
+
+- 陈述保真审查成为唯一质量阀门：sorry 定理的**陈述**（尤其装配脊柱接口与
+  各章 capstone）必须过 `docs/statement-fidelity.md` 审查，不得随本政策放宽；
+- 每批次闭合后刷新 DEBT.md；新增未经授权的 sorry 会在 diff 中现形；
+- G4 生成的巨型案例证书文件（百万行级）暂缓合 main，按波次验收后分批合入。
+
+
 ## 2026-08-10 — 修订"禁用 native_decide"：枚举完备性计算改为限定范围 native_decide
 
 **变更**：PLAN.md §2 的"`native_decide` 禁用"修订为——**仅** tame 图枚举的

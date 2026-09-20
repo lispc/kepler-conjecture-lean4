@@ -1,4 +1,4 @@
-# 交接文档（Handoff）— 2026-09-10
+# 交接文档（Handoff）— 2026-09-18
 
 > 面向接手者（人类或 agent）。本文件描述项目现状、验证纪律、环境细节、
 > 待办与优先级。一页进度看板见 `STATUS.md`（每日刷新），长期设计决策见
@@ -6,15 +6,31 @@
 
 ## 0. 一句话现状
 
-main @ `48ff904`（`make check` 全绿，唯一 sorry = `Statement.lean`
-sanctioned 主定理占位）。**Phase 2/3 已闭合；Phase 4 求解层 160/176（91%），
-内核闭合（G4）未开工；Phase 5：hypermap/fan/topology/planarity 100% 进 main**
-——其中 planarity 收官所依赖的**体积/测度论层已从零建成**
-（`Kepler/Geom/{Volume,SectorArea,WedgeVolume,LuneVolume,SolidAngle}.lean`，
-含 HOL Light `VOLUME_BALL_WEDGE`/`HAS_MEASURE_LUNE`/`VOLUME_SOLID_TRIANGLE`，
-零 sorry）。下一步 Conforming.hl，流水线 `scripts/auto_pipeline_conforming.sh`
-已在 wip/auto-phase5 跑（commits to wip only；待 `DWFBRQY` 等依赖 solid_of 的
-定理补齐后可合 main）。
+main @ 见 git（2026-09-18：`aad4fb35` 合入 wip/auto-packing + 债务账本
+commit）。**政策已变更（DECISIONS.md 2026-09-17）：main 允许携带 sorry
+债务，刻度 = `DEBT.md`（基线 2400 个，`lean/scripts/debt_ledger.py` 生成）。**
+Phase 2/3 已闭合；Phase 4 求解层 160/176（91%），内核闭合（G4，Kimi 负责，
+wip/g4-emit）已闭合 8 案例、最大 167 万叶，首个 sqrt/atan 全量案
+QITNPEA_3725403817（96.5 万叶，2775 分片）2026-09-18 闭合（`184d4a86`）；
+Phase 5：hypermap/fan/topology/planarity/Conforming/polyhedron 100%，
+packing（25 模块）+ local（39 模块）骨架 100% 进 main、纯填证期。
+**双 agent 架构**：opencode（--yolo 长驻，主仓库 wip/auto-packing）负责
+Phase 5 填证；Kimi 负责 Phase 4 G4（worktree
+`/home/scroll/repos/kepler-g4e`，分支 wip/g4-emit）+ 日报/账本/合并。
+
+### 近期基建教训（2026-09-16/17，重要）
+
+- **限流槽位死锁**：定制 toolchain `~/toolchains/g4cap`（bin/lean 是 wrapper，
+  限 64 并发槽，槽位目录 `/tmp/lean-cap-slots`）原用 mkdir/rmdir 抢槽，
+  被 SIGKILL 后槽位永久泄漏 → 全部 lean 编译空转死锁 ~18h。已改 **flock
+  方案**（内核随进程死亡自动放锁），根治。改并发数：sed
+  `~/toolchains/g4cap/bin/lean` 里的 `seq 1 64`。
+- **"神秘杀手"**：构建/stage-a 曾多次整组 SIGKILL（排除内核 OOM/cgroup/
+  systemd-oomd，未确诊）。对策标配：**setsid 脱离进程组 + detached
+  runner 自动重试 + 状态文件**（参考 `kepler-g4e/build_q_runner.sh`、
+  `lean/run_stagea_5490182221.sh`）。setsid 后零被杀记录。
+- **封闭 atan Taylor 阶 1024→128**（`1db69bd8`）：四档对照实验全过、rung
+  不变，内核 decide 成本 ~1/N，波1/波2 机时省 ~8x。
 
 ## 1. 项目目标（不变）
 
@@ -47,8 +63,9 @@ Lean 4 + Mathlib（toolchain `leanprover/lean4:v4.32.2`）形式化开普勒猜�
 - 流水线：ineq.hl 181 记录 → AST 176 → case JSON（y 空间 176 +
   prep 空间 745）→ bb_arb（C/FLINT 分支定界，二进制 /tmp/bb_arb_verify，
   编译命令在 `pipeline/interval/README.md`）。
-- **2026-09-09 家族级对账**：176 条 = 68 y 空间闭合 + 92 prep 家族
-  闭合（prep = Flyspeck 官方 x=y² 归一化，745/745 全闭合）+
+- **2026-09-09 家族级对账（2026-09-20 修订）**：176 条 = 68 y 空间闭合 + 92 prep 家族
+  ~~闭合~~（**证据链不可信已降级**：pass2 无 runner/日志/入仓产物，37 倍预算不可复现，
+  需重新求解）+
   **16 条真残余**（清单 `pipeline/interval/out/residue16.txt`：
   TSKAJXY 系 4、TEWNSCJ/PEMKWKU/TXQTPVC/IXPOTPA、QZECFIC wt0 ×2、
   GRKIBMP B V2 等）。

@@ -1,0 +1,1422 @@
+{
+ "meta": {
+  "roots": 87,
+  "closure": 155,
+  "resolved": 124,
+  "statement_variables": [
+   "x1",
+   "x2",
+   "x3",
+   "x4",
+   "x5",
+   "x6",
+   "y1",
+   "y2",
+   "y3",
+   "y4",
+   "y5",
+   "y6",
+   "y7",
+   "y8",
+   "y9"
+  ],
+  "drift": []
+ },
+ "rows": [
+  {
+   "symbol": "a_spine5",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "aSpine5 (lean/Kepler/Text/IneqClosureDefs.lean:598)",
+   "batch": "6",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:632"
+  },
+  {
+   "symbol": "abc_of_quadratic",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "abcOfQuadratic (lean/Kepler/Text/IneqClosureDefs.lean:847)",
+   "batch": "4(enabler)",
+   "note": "批 4 enabler：canonical abcOfQuadratic（LA19:160/LA38:147 孪生）",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:59"
+  },
+  {
+   "symbol": "abs",
+   "class": "primitive",
+   "tier": "A",
+   "lean": "Mathlib",
+   "batch": "",
+   "note": "",
+   "source": ""
+  },
+  {
+   "symbol": "acs",
+   "class": "primitive",
+   "tier": "A",
+   "lean": "Mathlib",
+   "batch": "",
+   "note": "",
+   "source": ""
+  },
+  {
+   "symbol": "acs_sqrt_x1_d4",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "acsSqrtX1D4 (lean/Kepler/Text/IneqClosureDefs.lean:704)",
+   "batch": "4",
+   "note": "批 4 已落地",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:792"
+  },
+  {
+   "symbol": "apex_A",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2985"
+  },
+  {
+   "symbol": "apex_flat",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2888"
+  },
+  {
+   "symbol": "apex_flat_h",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3711"
+  },
+  {
+   "symbol": "apex_flat_hll",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3236"
+  },
+  {
+   "symbol": "apex_flat_l",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3701"
+  },
+  {
+   "symbol": "apex_std3_hll",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3343"
+  },
+  {
+   "symbol": "apex_std3_lhh",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3903"
+  },
+  {
+   "symbol": "apex_std3_lll_wxx",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3764"
+  },
+  {
+   "symbol": "apex_std3_lll_xww",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3738"
+  },
+  {
+   "symbol": "apex_sup_flat",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3103"
+  },
+  {
+   "symbol": "arc_hhn",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "arcHhn (lean/Kepler/Text/IneqClosureDefs.lean:681)",
+   "batch": "4",
+   "note": "批 4 已落地；canonical arcLength 替 PA18:161 孪生（PA18 的 atn2 与 SphereKit FQN 冲突，不可 co-import）",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:780"
+  },
+  {
+   "symbol": "arclength",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "arcLength (lean/Kepler/Text/IneqClosureDefs.lean:656)",
+   "batch": "4(enabler)",
+   "note": "批 4 enabler：canonical arcLength（PA18:161 孪生不可 co-import）",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:258"
+  },
+  {
+   "symbol": "arclength_x_123",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "arclengthX123 (lean/Kepler/Text/IneqClosureDefs.lean:686)",
+   "batch": "4",
+   "note": "批 4 已落地，同 arcLength 注",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:798"
+  },
+  {
+   "symbol": "arclength_y1",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "arclengthY1 (lean/Kepler/Text/IneqClosureDefs.lean:697)",
+   "batch": "4",
+   "note": "批 4 已落地；注意 HOL 参数序 arclength y1 a b",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:762"
+  },
+  {
+   "symbol": "asn",
+   "class": "primitive",
+   "tier": "A",
+   "lean": "Mathlib",
+   "batch": "",
+   "note": "",
+   "source": ""
+  },
+  {
+   "symbol": "asn797k",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "asn797k (lean/Kepler/Text/IneqClosureDefs.lean:718)",
+   "batch": "4",
+   "note": "批 4 已落地；cos797 内联为 cos 0.797",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:783"
+  },
+  {
+   "symbol": "asnFnhk",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "asnFnhk (lean/Kepler/Text/IneqClosureDefs.lean:723)",
+   "batch": "4",
+   "note": "批 4 已落地；canonical asnFnhk 替 PA22:209-210 的 stub 0",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:786"
+  },
+  {
+   "symbol": "atn",
+   "class": "primitive",
+   "tier": "A",
+   "lean": "Mathlib",
+   "batch": "",
+   "note": "",
+   "source": ""
+  },
+  {
+   "symbol": "atn2",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "atn2_p16 (lean/Kepler/Text/LocalAuto16.lean:269)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:48"
+  },
+  {
+   "symbol": "b_spine5",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "bSpine5 (lean/Kepler/Text/IneqClosureDefs.lean:601)",
+   "batch": "6",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:634"
+  },
+  {
+   "symbol": "beta_bump_force_y",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "betaBumpForceY (lean/Kepler/Text/IneqClosureDefs.lean:485)",
+   "batch": "3",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:614"
+  },
+  {
+   "symbol": "beta_bump_lb",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "betaBumpLb (lean/Kepler/Text/IneqClosureDefs.lean:493)",
+   "batch": "3",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:636"
+  },
+  {
+   "symbol": "bump",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "bump (lean/Kepler/Text/PackingAuto2.lean:487)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:601"
+  },
+  {
+   "symbol": "cayleyR",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "cayleyR (lean/Kepler/Text/IneqClosureDefs.lean:772)",
+   "batch": "4",
+   "note": "批 4 已落地：150 项 Cayley–Menger 体由 defs.json AST 机械生成并数值互验；替 LA38 桩 cayleyRP38",
+   "source": "auto:reference/flyspeck/text_formalization/leg/cayleyR_def.hl:32"
+  },
+  {
+   "symbol": "compose6",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "compose6 (lean/Kepler/Text/IneqClosureDefs.lean:284)",
+   "batch": "2(enabler)",
+   "note": "defs.json body_ast 是截断的 parse 残片（{\"const\":\"f\"}），以 nonlin_def.hl:72-80 原文为准",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:72"
+  },
+  {
+   "symbol": "const1",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "const1P19 (lean/Kepler/Text/LocalAuto19.lean:128)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:197"
+  },
+  {
+   "symbol": "constant6",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "constant6 (lean/Kepler/Text/IneqClosureDefs.lean:274)",
+   "batch": "2(enabler)",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:249"
+  },
+  {
+   "symbol": "cos",
+   "class": "primitive",
+   "tier": "A",
+   "lean": "Mathlib",
+   "batch": "",
+   "note": "",
+   "source": ""
+  },
+  {
+   "symbol": "critical_edge_y",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "criticalEdgeY (lean/Kepler/Text/PackingAuto2.lean:491)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:603"
+  },
+  {
+   "symbol": "dart4_diag3",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2866"
+  },
+  {
+   "symbol": "dart4_diag3_b",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2591"
+  },
+  {
+   "symbol": "dartX",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2828"
+  },
+  {
+   "symbol": "dartY",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2847"
+  },
+  {
+   "symbol": "dart_mll_n",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3373"
+  },
+  {
+   "symbol": "dart_mll_w",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3363"
+  },
+  {
+   "symbol": "dart_std3",
+   "class": "unsupported",
+   "tier": "B",
+   "lean": "dartStd3 (lean/Kepler/Text/IneqClosureDefs.lean:561)",
+   "batch": "5(enabler)",
+   "note": "define_dart 列表域（parse_defs triage unsupported）；List (ℝ×ℝ×ℝ) 直接可移植，批 5 落地",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2697"
+  },
+  {
+   "symbol": "dart_std3_big",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "dartStd3Big (lean/Kepler/Text/IneqClosureDefs.lean:568)",
+   "batch": "5",
+   "note": "= dart_std3 verbatim（ineq.hl:3079，'same domain but extra disjunct'）",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3079"
+  },
+  {
+   "symbol": "dart_std3_big_200_218",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3256"
+  },
+  {
+   "symbol": "dart_std3_lw",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3552"
+  },
+  {
+   "symbol": "dart_std3_mini",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3191"
+  },
+  {
+   "symbol": "dart_std3_small",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3046"
+  },
+  {
+   "symbol": "dart_std4",
+   "class": "unsupported",
+   "tier": "D",
+   "lean": "-",
+   "batch": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
+   "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:1863"
+  },
+  {
+   "symbol": "delta4_squared_x",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "delta4SquaredX (lean/Kepler/Text/IneqClosureDefs.lean:209)",
+   "batch": "1",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:835"
+  },
+  {
+   "symbol": "delta4_squared_y",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "delta4SquaredY_p11 (lean/Kepler/Text/LocalAuto11.lean:198)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:838"
+  },
+  {
+   "symbol": "delta4_y",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "delta4Y_p11 (lean/Kepler/Text/LocalAuto11.lean:188)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:543"
+  },
+  {
+   "symbol": "delta_234_x",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "delta234X_p11 (lean/Kepler/Text/LocalAuto11.lean:184)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:848"
+  },
+  {
+   "symbol": "delta_x",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "deltaXf_p16 (lean/Kepler/Text/LocalAuto16.lean:276)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:86"
+  },
+  {
+   "symbol": "delta_x1",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "deltaX1f_p11 (lean/Kepler/Text/LocalAuto11.lean:159)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:418"
+  },
+  {
+   "symbol": "delta_x4",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "deltaX4 (lean/Kepler/Text/LocalAuto1.lean:766)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:110"
+  },
+  {
+   "symbol": "delta_y",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "deltaY_p11 (lean/Kepler/Text/LocalAuto11.lean:149)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:92"
+  },
+  {
+   "symbol": "dih2_y",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "dih2Y (lean/Kepler/Text/IneqClosureDefs.lean:522)",
+   "batch": "5",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:163"
+  },
+  {
+   "symbol": "dih3_y",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "dih3Y (lean/Kepler/Text/IneqClosureDefs.lean:526)",
+   "batch": "5",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:166"
+  },
+  {
+   "symbol": "dih4_x_div_sqrtdelta_posbranch",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "dih4XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:127)",
+   "batch": "1",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:163"
+  },
+  {
+   "symbol": "dih_x",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "dihXf_p16 (lean/Kepler/Text/LocalAuto16.lean:288)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:153"
+  },
+  {
+   "symbol": "dih_x_div_sqrtdelta_posbranch",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "dihXDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:95)",
+   "batch": "1",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:138"
+  },
+  {
+   "symbol": "dih_y",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "dihY_p16 (lean/Kepler/Text/LocalAuto16.lean:294)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:159"
+  },
+  {
+   "symbol": "dummy6",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "dummy6 (lean/Kepler/Text/IneqClosureDefs.lean:372)",
+   "batch": "3(enabler)",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:263"
+  },
+  {
+   "symbol": "enclosed",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "enclosed (lean/Kepler/Text/IneqClosureDefs.lean:857)",
+   "batch": "4",
+   "note": "批 4 已落地：sqrt(quadraticRootPlus (abcOfQuadratic (muR …))) 替 LA38 桩链（enclosedP38/muRP38/cayleyRP38 均 sorry）",
+   "source": "auto:reference/flyspeck/text_formalization/leg/enclosed_def.hl:22"
+  },
+  {
+   "symbol": "eta_x",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "etaX (lean/Kepler/Text/IneqClosureDefs.lean:606)",
+   "batch": "6",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:127"
+  },
+  {
+   "symbol": "eta_y",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "etaY (lean/Kepler/Text/IneqClosureDefs.lean:620)",
+   "batch": "6",
+   "note": "PA21:177 为 sorry opaque 桩（原 C 档）且 PA21 不可与 SphereKit co-import；批 6 在 IneqClosureDefs 立 canonical etaY",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:131"
+  },
+  {
+   "symbol": "eulerA_x",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "eulerAx_p19 (lean/Kepler/Text/LocalAuto19.lean:227)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:831"
+  },
+  {
+   "symbol": "gamma23_full8_x",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "gamma23Full8X (lean/Kepler/Text/IneqClosureDefs.lean:459)",
+   "batch": "3",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:383"
+  },
+  {
+   "symbol": "gamma23_keep135_x",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "gamma23Keep135X (lean/Kepler/Text/IneqClosureDefs.lean:465)",
+   "batch": "3",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:390"
+  },
+  {
+   "symbol": "gamma2_x1_div_a_v2",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "gamma2X1DivAV2 (lean/Kepler/Text/IneqClosureDefs.lean:413)",
+   "batch": "3",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:346"
+  },
+  {
+   "symbol": "gamma2_x_div_azim_v2",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "gamma2XDivAzimV2 (lean/Kepler/Text/IneqClosureDefs.lean:407)",
+   "batch": "3(enabler)",
+   "note": "PA21:164 已有同名 verbatim 体；同上 atn2 冲突不可复用，批 3 立 canonical gamma2XDivAzimV2",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:341"
+  },
+  {
+   "symbol": "gamma3_x",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "gamma3X (lean/Kepler/Text/IneqClosureDefs.lean:433)",
+   "batch": "3",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:380"
+  },
+  {
+   "symbol": "gamma3f",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "gamma3f (lean/Kepler/Text/PackingAuto20.lean:138)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:582"
+  },
+  {
+   "symbol": "gamma3f_x_div_sqrtdelta",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "gamma3fXDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:441)",
+   "batch": "3",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:349"
+  },
+  {
+   "symbol": "gamma4f",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "gamma4fgcy (lean/Kepler/Text/PackingAuto20.lean:122)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:563"
+  },
+  {
+   "symbol": "gamma4fgcy",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "gamma4fgcyP25 (lean/Kepler/Text/PackingAuto25.lean:119)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:566"
+  },
+  {
+   "symbol": "h0",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "h0 (lean/Kepler/Text/PackingAuto2.lean:458)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:203"
+  },
+  {
+   "symbol": "h0cut",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "h0cut (lean/Kepler/Text/PackingAuto21.lean:182)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:517"
+  },
+  {
+   "symbol": "hminus",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "hminus (lean/Kepler/Text/PackingAuto2.lean:468)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:529"
+  },
+  {
+   "symbol": "hplus",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "hplus (lean/Kepler/Text/PackingAuto2.lean:431)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:515"
+  },
+  {
+   "symbol": "interp",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "interp_p2 (lean/Kepler/Text/LocalAuto2.lean:325)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:195"
+  },
+  {
+   "symbol": "ldih2_x_div_sqrtdelta_posbranch",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "ldih2XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:150)",
+   "batch": "1",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:148"
+  },
+  {
+   "symbol": "ldih3_x_div_sqrtdelta_posbranch",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "ldih3XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:154)",
+   "batch": "1",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:151"
+  },
+  {
+   "symbol": "ldih5_x_div_sqrtdelta_posbranch",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "ldih5XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:158)",
+   "batch": "1",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:154"
+  },
+  {
+   "symbol": "ldih6_x_div_sqrtdelta_posbranch",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "ldih6XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:162)",
+   "batch": "1",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:157"
+  },
+  {
+   "symbol": "ldih_x_div_sqrtdelta_posbranch",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "ldihXDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:136)",
+   "batch": "1",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:144"
+  },
+  {
+   "symbol": "lfun",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "lfun (lean/Kepler/Text/PackingAuto2.lean:461)",
+   "batch": "1(enabler)",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:525"
+  },
+  {
+   "symbol": "lfun_y1",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "lfunY1 (lean/Kepler/Text/IneqClosureDefs.lean:536)",
+   "batch": "5",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:789"
+  },
+  {
+   "symbol": "lmfun",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "lmfun (lean/Kepler/Text/PackingAuto2.lean:464)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:523"
+  },
+  {
+   "symbol": "lnazim",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "lnazimP19 (lean/Kepler/Text/LocalAuto19.lean:131)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:213"
+  },
+  {
+   "symbol": "log",
+   "class": "primitive",
+   "tier": "A",
+   "lean": "Mathlib",
+   "batch": "",
+   "note": "",
+   "source": ""
+  },
+  {
+   "symbol": "ly",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "lyP19 (lean/Kepler/Text/LocalAuto19.lean:124)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:199"
+  },
+  {
+   "symbol": "marchal_quartic",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "marchalQuartic (lean/Kepler/Text/PackingAuto2.lean:435)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:519"
+  },
+  {
+   "symbol": "matan",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "matan (lean/Kepler/Text/IneqClosureDefs.lean:31)",
+   "batch": "1(enabler)",
+   "note": "批 5 名单，批 1 已作为 enabler 落地",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:728"
+  },
+  {
+   "symbol": "mk_126",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "mk126 (lean/Kepler/Text/IneqClosureDefs.lean:290)",
+   "batch": "2",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:267"
+  },
+  {
+   "symbol": "mk_135",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "mk135 (lean/Kepler/Text/IneqClosureDefs.lean:298)",
+   "batch": "2",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:273"
+  },
+  {
+   "symbol": "mk_456",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "mk456 (lean/Kepler/Text/IneqClosureDefs.lean:294)",
+   "batch": "2",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:270"
+  },
+  {
+   "symbol": "mm1",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "mm1 (lean/Kepler/Text/PackingAuto2.lean:425)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:511"
+  },
+  {
+   "symbol": "mm2",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "mm2 (lean/Kepler/Text/PackingAuto2.lean:428)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:513"
+  },
+  {
+   "symbol": "muR",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "muR (lean/Kepler/Text/IneqClosureDefs.lean:835)",
+   "batch": "4(enabler)",
+   "note": "批 4 已落地（enabler）：canonical muR，LA38 的 muRP38 依赖桩",
+   "source": "auto:reference/flyspeck/text_formalization/leg/muR_def.hl:40"
+  },
+  {
+   "symbol": "node2_y",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "node2Y (lean/Kepler/Text/IneqClosureDefs.lean:741)",
+   "batch": "4",
+   "note": "批 4 已落地（置换与 rotate2 同形，y 侧家族）",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:222"
+  },
+  {
+   "symbol": "norm2hh",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "norm2hh (lean/Kepler/Text/IneqClosureDefs.lean:335)",
+   "batch": "2",
+   "note": "复用 PackingAuto2 的 hminus（Classical.epsilon 版）/hplus",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:597"
+  },
+  {
+   "symbol": "pi",
+   "class": "primitive",
+   "tier": "A",
+   "lean": "Mathlib",
+   "batch": "",
+   "note": "",
+   "source": ""
+  },
+  {
+   "symbol": "proj_x1",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "projX1 (lean/Kepler/Text/IneqClosureDefs.lean:233)",
+   "batch": "2(enabler)",
+   "note": "HOL 多态；Lean 只移植闭包用到的 ℝ⁶→ℝ 实例",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:40"
+  },
+  {
+   "symbol": "proj_x2",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "projX2 (lean/Kepler/Text/IneqClosureDefs.lean:236)",
+   "batch": "2",
+   "note": "HOL 多态；同上",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:42"
+  },
+  {
+   "symbol": "proj_x3",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "projX3 (lean/Kepler/Text/IneqClosureDefs.lean:239)",
+   "batch": "2",
+   "note": "HOL 多态；同上",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:44"
+  },
+  {
+   "symbol": "proj_x4",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "projX4 (lean/Kepler/Text/IneqClosureDefs.lean:242)",
+   "batch": "2(enabler)",
+   "note": "HOL 多态；同上",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:46"
+  },
+  {
+   "symbol": "proj_x5",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "projX5 (lean/Kepler/Text/IneqClosureDefs.lean:245)",
+   "batch": "2",
+   "note": "HOL 多态；同上",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:48"
+  },
+  {
+   "symbol": "proj_x6",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "projX6 (lean/Kepler/Text/IneqClosureDefs.lean:248)",
+   "batch": "2",
+   "note": "HOL 多态；同上",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:50"
+  },
+  {
+   "symbol": "proj_y4",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "projY4 (lean/Kepler/Text/IneqClosureDefs.lean:256)",
+   "batch": "2",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:300"
+  },
+  {
+   "symbol": "proj_y5",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "projY5 (lean/Kepler/Text/IneqClosureDefs.lean:259)",
+   "batch": "2",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:303"
+  },
+  {
+   "symbol": "proj_y6",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "projY6 (lean/Kepler/Text/IneqClosureDefs.lean:262)",
+   "batch": "2",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:306"
+  },
+  {
+   "symbol": "promote1_to_6",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "promote1To6 (lean/Kepler/Text/IneqClosureDefs.lean:310)",
+   "batch": "2",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:254"
+  },
+  {
+   "symbol": "promote3_to_6",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "promote3To6 (lean/Kepler/Text/IneqClosureDefs.lean:313)",
+   "batch": "2",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:251"
+  },
+  {
+   "symbol": "quadratic_root_plus",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "quadraticRootPlus_p11 (lean/Kepler/Text/LocalAuto11.lean:154)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:67"
+  },
+  {
+   "symbol": "rad2_x",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "rad2X (lean/Kepler/Text/IneqClosureDefs.lean:628)",
+   "batch": "6",
+   "note": "PA25:89 rad2XP25 为 sorry 桩（原 C 档）；批 6 立 canonical rad2X（= rhoX/(deltaX*4)）",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:271"
+  },
+  {
+   "symbol": "rad2_y",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "rad2YP25 (lean/Kepler/Text/PackingAuto25.lean:93)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:541"
+  },
+  {
+   "symbol": "rhazim",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "rhazim (lean/Kepler/Text/IneqClosureDefs.lean:755)",
+   "batch": "4",
+   "note": "批 4 已落地；canonical rhazim 替 LA38 桩 rhazimP38",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:211"
+  },
+  {
+   "symbol": "rhazim2",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "rhazim2 (lean/Kepler/Text/IneqClosureDefs.lean:763)",
+   "batch": "4",
+   "note": "批 4：= node2_y rhazim；批 4 已落地（node2Y rhazim）",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:226"
+  },
+  {
+   "symbol": "rho",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "rho (lean/Kepler/Text/IneqClosureDefs.lean:748)",
+   "batch": "4(enabler)",
+   "note": "批 4 enabler：canonical rho（LA2:336 rho_p2 孪生）",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:201"
+  },
+  {
+   "symbol": "rho_x",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "rhoX (lean/Kepler/Text/IneqClosureDefs.lean:542)",
+   "batch": "5",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:137"
+  },
+  {
+   "symbol": "rotate2",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "rotate2 (lean/Kepler/Text/IneqClosureDefs.lean:62)",
+   "batch": "1(enabler)",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:654"
+  },
+  {
+   "symbol": "rotate3",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "rotate3 (lean/Kepler/Text/IneqClosureDefs.lean:66)",
+   "batch": "1(enabler)",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:657"
+  },
+  {
+   "symbol": "rotate4",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "rotate4 (lean/Kepler/Text/IneqClosureDefs.lean:70)",
+   "batch": "1(enabler)",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:660"
+  },
+  {
+   "symbol": "rotate5",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "rotate5 (lean/Kepler/Text/IneqClosureDefs.lean:74)",
+   "batch": "1(enabler)",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:663"
+  },
+  {
+   "symbol": "rotate6",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "rotate6 (lean/Kepler/Text/IneqClosureDefs.lean:78)",
+   "batch": "1(enabler)",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:666"
+  },
+  {
+   "symbol": "scalar6",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "scalar6 (lean/Kepler/Text/IneqClosureDefs.lean:326)",
+   "batch": "2",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:279"
+  },
+  {
+   "symbol": "sin",
+   "class": "primitive",
+   "tier": "A",
+   "lean": "Mathlib",
+   "batch": "",
+   "note": "",
+   "source": ""
+  },
+  {
+   "symbol": "sol0",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "sol0 (lean/Kepler/Text/PackingAuto2.lean:419)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:207"
+  },
+  {
+   "symbol": "sol_euler156_x_div_sqrtdelta",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "solEuler156XDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:201)",
+   "batch": "1",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:127"
+  },
+  {
+   "symbol": "sol_euler246_x_div_sqrtdelta",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "solEuler246XDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:191)",
+   "batch": "1",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:121"
+  },
+  {
+   "symbol": "sol_euler345_x_div_sqrtdelta",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "solEuler345XDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:196)",
+   "batch": "1",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:124"
+  },
+  {
+   "symbol": "sol_euler_x_div_sqrtdelta",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "solEulerXDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:173)",
+   "batch": "1",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:115"
+  },
+  {
+   "symbol": "sol_x",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "solX (lean/Kepler/Text/IneqClosureDefs.lean:379)",
+   "batch": "3(enabler)",
+   "note": "LocalAuto38:75 有 sorry 桩 solXP38（锚注释形式不同，扫描漏检）；批 3 在 IneqClosureDefs 立真体 solX",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:181"
+  },
+  {
+   "symbol": "sol_y",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "solY_p19 (lean/Kepler/Text/LocalAuto19.lean:119)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:185"
+  },
+  {
+   "symbol": "sqrt",
+   "class": "primitive",
+   "tier": "A",
+   "lean": "Mathlib",
+   "batch": "",
+   "note": "",
+   "source": ""
+  },
+  {
+   "symbol": "sqrt2",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "sqrt2 (lean/Kepler/Text/IneqClosureDefs.lean:588)",
+   "batch": "6",
+   "note": "PackingAuto2:91 内联为 Real.sqrt 2；批 6 为闭包粘合立名",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:76"
+  },
+  {
+   "symbol": "sqrt3",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "sqrt3 (lean/Kepler/Text/IneqClosureDefs.lean:715)",
+   "batch": "4(enabler)",
+   "note": "批 4 enabler：canonical sqrt3（PA22:112 孪生）",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:77"
+  },
+  {
+   "symbol": "sqrt8",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "sqrt8 (lean/Kepler/Text/IneqClosureDefs.lean:585)",
+   "batch": "6",
+   "note": "PackingAuto2:91 内联为 Real.sqrt 8；批 6 为闭包粘合立名",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:75"
+  },
+  {
+   "symbol": "tame_table_d",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "tameTableD (lean/Kepler/Text/IneqClosureDefs.lean:510)",
+   "batch": "5",
+   "note": "ℕ 参数表常数；分支内 &r/&s 为 ℕ→ℝ cast，guard 在 ℕ 层",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:803"
+  },
+  {
+   "symbol": "tau0",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "tau0 (lean/Kepler/Text/PackingAuto2.lean:422)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:509"
+  },
+  {
+   "symbol": "taum",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "taumP19 (lean/Kepler/Text/LocalAuto19.lean:135)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:215"
+  },
+  {
+   "symbol": "tauq",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "tauq (lean/Kepler/Text/IneqClosureDefs.lean:868)",
+   "batch": "4",
+   "note": "批 4 已落地；复用 SphereKit taum",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:244"
+  },
+  {
+   "symbol": "two6",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "two6 (lean/Kepler/Text/IneqClosureDefs.lean:277)",
+   "batch": "2",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:259"
+  },
+  {
+   "symbol": "uni",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "uni (lean/Kepler/Text/IneqClosureDefs.lean:365)",
+   "batch": "3(enabler)",
+   "note": "defs.json body_ast 截断（(f:A->B) 类型标注触发 parse bug）；HOL (f,x) 对在 Lean 解柯里化为 uni f x",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:246"
+  },
+  {
+   "symbol": "ups_126",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "ups126 (lean/Kepler/Text/IneqClosureDefs.lean:550)",
+   "batch": "5",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:446"
+  },
+  {
+   "symbol": "ups_x",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "upsX_p11 (lean/Kepler/Text/LocalAuto11.lean:144)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:122"
+  },
+  {
+   "symbol": "vol3f",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "vol3f (lean/Kepler/Text/PackingAuto20.lean:129)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:573"
+  },
+  {
+   "symbol": "vol3f_456",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "vol3f456 (lean/Kepler/Text/IneqClosureDefs.lean:423)",
+   "batch": "3(enabler)",
+   "note": "原批 5 名单，作为 gamma3_x 依赖随批 3 提前落地",
+   "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:365"
+  },
+  {
+   "symbol": "vol3r",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "vol3r (lean/Kepler/Text/PackingAuto20.lean:126)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:571"
+  },
+  {
+   "symbol": "vol4f",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "vol4f (lean/Kepler/Text/PackingAuto20.lean:107)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:549"
+  },
+  {
+   "symbol": "vol_x",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "volX (lean/Kepler/Text/IneqClosureDefs.lean:390)",
+   "batch": "3(enabler)",
+   "note": "PA20:99 volXf 为 verbatim 孪生，但 PA20 与 SphereKit 的 atn2 同名冲突使其不可跨 import 复用；批 3 立 canonical volX",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:251"
+  },
+  {
+   "symbol": "vol_y",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "volY (lean/Kepler/Text/PackingAuto20.lean:103)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:547"
+  },
+  {
+   "symbol": "x1_delta_x",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "x1DeltaX (lean/Kepler/Text/IneqClosureDefs.lean:636)",
+   "batch": "6",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:840"
+  },
+  {
+   "symbol": "x1_delta_y",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "x1DeltaY_p11 (lean/Kepler/Text/LocalAuto11.lean:193)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:842"
+  },
+  {
+   "symbol": "y_of_x",
+   "class": "resolved",
+   "tier": "B",
+   "lean": "yOfX_p11 (lean/Kepler/Text/LocalAuto11.lean:177)",
+   "batch": "",
+   "note": "",
+   "source": "reference/flyspeck/text_formalization/general/sphere.hl:538"
+  }
+ ]
+}
