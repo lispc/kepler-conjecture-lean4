@@ -216,7 +216,102 @@ NEEDS: port of the Mathlib affine-exchange argument
 theorem FUN_AFFINE_KLEMMA (a b c d : V3) (h1 : affDim {a, b, c} = 2)
     (h2 : d ∉ (affineSpan ℝ {a, b, c} : Set V3)) :
     a ∉ convexHull ℝ {b, c, d} := by
-  sorry
+  intro ha
+  have hac : a ∈ (affineSpan ℝ {b, c, d} : Set V3) :=
+    convexHull_subset_affineSpan ({b, c, d} : Set V3) ha
+  have hbc : (b : V3) ∈ (affineSpan ℝ {b, c, d} : Set V3) :=
+    subset_affineSpan ℝ _ (Set.mem_insert b {c, d})
+  have hcc : (c : V3) ∈ (affineSpan ℝ {b, c, d} : Set V3) :=
+    subset_affineSpan ℝ _
+      (Set.mem_insert_of_mem b (Set.mem_insert c {d}))
+  have hsub : ({a, b, c} : Set V3) ⊆ (affineSpan ℝ {b, c, d} : Set V3) := by
+    intros x hx
+    rcases hx with rfl | rfl | rfl
+    · exact hac
+    · exact hbc
+    · exact hcc
+  have hle : affineSpan ℝ {a, b, c} ≤ affineSpan ℝ {b, c, d} :=
+    affineSpan_le.2 hsub
+  have hdirle : (affineSpan ℝ {a, b, c}).direction ≤
+      (affineSpan ℝ {b, c, d}).direction := AffineSubspace.direction_le hle
+  rw [direction_affineSpan, direction_affineSpan] at hdirle
+  have hvs : vectorSpan ℝ {a, b, c} = vectorSpan ℝ {b, c, d} := by
+    refine Submodule.eq_of_le_of_finrank_le hdirle ?_
+    have h2le : (Module.finrank ℝ (vectorSpan ℝ {b, c, d}) : ℤ) ≤ 2 := by
+      have hgen : vectorSpan ℝ {b, c, d} ≤
+          Submodule.span ℝ ({c - b, d - b} : Set V3) := by
+        rw [vectorSpan_def]
+        refine Submodule.span_le.2 ?_
+        intro z hz
+        obtain ⟨x, hx, y, hy, rfl⟩ := Set.mem_vsub.1 hz
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx hy
+        rcases hx with hxe | hxe | hxe <;> rcases hy with hye | hye | hye
+        · rw [hxe, hye]
+          exact Submodule.mem_span_pair.2 ⟨0, 0,
+            show (0:ℝ) • (c - b) + (0:ℝ) • (d - b) = (b - b : V3) by module⟩
+        · rw [hxe, hye]
+          exact Submodule.mem_span_pair.2 ⟨-1, 0,
+            show (-1:ℝ) • (c - b) + (0:ℝ) • (d - b) = (b - c : V3) by module⟩
+        · rw [hxe, hye]
+          exact Submodule.mem_span_pair.2 ⟨0, -1,
+            show (0:ℝ) • (c - b) + (-1:ℝ) • (d - b) = (b - d : V3) by module⟩
+        · rw [hxe, hye]
+          exact Submodule.mem_span_pair.2 ⟨1, 0,
+            show (1:ℝ) • (c - b) + (0:ℝ) • (d - b) = (c - b : V3) by module⟩
+        · rw [hxe, hye]
+          exact Submodule.mem_span_pair.2 ⟨0, 0,
+            show (0:ℝ) • (c - b) + (0:ℝ) • (d - b) = (c - c : V3) by module⟩
+        · rw [hxe, hye]
+          exact Submodule.mem_span_pair.2 ⟨1, -1,
+            show (1:ℝ) • (c - b) + (-1:ℝ) • (d - b) = (c - d : V3) by module⟩
+        · rw [hxe, hye]
+          exact Submodule.mem_span_pair.2 ⟨0, 1,
+            show (0:ℝ) • (c - b) + (1:ℝ) • (d - b) = (d - b : V3) by module⟩
+        · rw [hxe, hye]
+          exact Submodule.mem_span_pair.2 ⟨-1, 1,
+            show (-1:ℝ) • (c - b) + (1:ℝ) • (d - b) = (d - c : V3) by module⟩
+        · rw [hxe, hye]
+          exact Submodule.mem_span_pair.2 ⟨0, 0,
+            show (0:ℝ) • (c - b) + (0:ℝ) • (d - b) = (d - d : V3) by module⟩
+      have hf : ({c - b, d - b} : Set V3).Finite := by
+        refine Set.Finite.insert (c - b) ?_
+        exact Set.finite_singleton (d - b)
+      haveI := hf.to_subtype
+      haveI := Fintype.ofFinite (↥({c - b, d - b} : Set V3))
+      have hgenrk := Submodule.finrank_mono hgen
+      have hcard' : (Module.finrank ℝ (Submodule.span ℝ
+          ({c - b, d - b} : Set V3)) : ℤ) ≤ 2 := by
+        have hset : (({c - b, d - b} : Finset V3) : Set V3)
+            = ({c - b, d - b} : Set V3) := by
+          simp [Finset.coe_insert, Finset.coe_singleton]
+        have h1 : (Module.finrank ℝ (Submodule.span ℝ
+            (({c - b, d - b} : Finset V3) : Set V3)) : ℕ) ≤
+            ({c - b, d - b} : Finset V3).card :=
+          finrank_span_finset_le_card _
+        rw [hset] at h1
+        have h2 : ({c - b, d - b} : Finset V3).card ≤ 2 := by
+          have hI := Finset.card_insert_le (c - b) ({d - b} : Finset V3)
+          simp only [Finset.card_singleton] at hI
+          omega
+        omega
+      omega
+    rw [affDim, if_neg (Nonempty.ne_empty
+      (⟨a, Set.mem_insert a ({b, c} : Set V3)⟩ :
+        ({a, b, c} : Set V3).Nonempty))] at h1
+    omega
+  have hdir : (affineSpan ℝ {a, b, c}).direction =
+      (affineSpan ℝ {b, c, d}).direction := by
+    rw [direction_affineSpan, direction_affineSpan]
+    exact hvs
+  have hd : d ∈ (affineSpan ℝ {b, c, d} : Set V3) :=
+    subset_affineSpan ℝ _
+      (Set.mem_insert_of_mem b (Set.mem_insert_of_mem c (rfl : d ∈ ({d} : Set V3))))
+  have hb : b ∈ (affineSpan ℝ {a, b, c} : Set V3) :=
+    subset_affineSpan ℝ _
+      (Set.mem_insert_of_mem a (Set.mem_insert b {c}))
+  have heq : affineSpan ℝ {a, b, c} = affineSpan ℝ {b, c, d} :=
+    AffineSubspace.eq_of_direction_eq_of_nonempty_of_le hdir ⟨b, hb⟩ hle
+  exact h2 (heq ▸ hd)
 
 /-- GIANT — HOL `URRPHBZ2` (URRPHBZ2.hl:215-972; concl
 `pack_concl.hl:176-178`): Marchal cells are eventually radial at packing
