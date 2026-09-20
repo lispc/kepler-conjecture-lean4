@@ -196,3 +196,12 @@ ladder 单一事实源）；repair_leaves.py 删 hit 继承，子叶重算。549
    处方：stage-A 驱动对 **closed（var-free）子式做 chunk 级记忆化**（每 chunk 只算一次），
    或按 hit 分布裁剪主 prog（语义注意：hit 重算是权威判定，主 prog 理论上可能在个别叶
    成立，裁剪主 prog 会改变 hit 重算的语义完备性——优先记忆化，不裁剪）。
+
+## 8. W2.5 实施结论（2026-09-20，`1fa6f281`）
+
+记忆化落地：只缓存 closed-arg trans 节点（初版"全 closed 子式"因每叶 O(n²) 守卫作废）。
+BIXPCGW 每叶每档 257s → ~1s（≈250×）；生产 chunk 口径 ~268h → ~70min。
+正确性：pilot 20/20 逐字节一致 + 549 单目标回归逐字节一致。
+**口径修正**：BIXPCGW 主 prog 的 143 个"closed atan"实测 = 89 closed + 54 open；
+closed 部分结构去重后仅 5 个（buildCache 430s/进程 一次性）。
+坑：evalFillC/evalFill 是手抄镜像，改语义必须双侧同步（分叉会在 stage-B decide 暴露为阻塞）。
