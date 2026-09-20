@@ -1163,11 +1163,17 @@ int main(int argc, char **argv)
                         }
                         fmpz_clear(t1); fmpz_clear(t2);
                     } else {
+                        /* sp 复位：主 prog ite STRADDLE 早退留下 sp>0 时，
+                           disj 支结果会落在 stk[sp] 而判据读 stk[0]
+                           （栈污染伪影，2026-09-20 W6 诊断，最小反例 spbug2） */
+                        sp = 0;
                         evres dst = eval_prog(dis.v[k].p, (arb_srcptr)vars, stk,
                                               &sp, prec, 0, NULL);
-                        if (dst == EV_STRADDLE)   /* guard 跨 0 → 并集兜底 */
+                        if (dst == EV_STRADDLE) {  /* guard 跨 0 → 并集兜底 */
+                            sp = 0;
                             dst = eval_prog(dis.v[k].p, (arb_srcptr)vars, stk,
                                             &sp, prec, 1, NULL);
+                        }
                         if (dst == EV_OK && arb_is_positive(stk[0])) {
                             snprintf(hits, sizeof(hits), "disj:%lu", (unsigned long)k);
                             hit = 1;
