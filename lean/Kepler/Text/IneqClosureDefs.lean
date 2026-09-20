@@ -214,6 +214,136 @@ as a real square). -/
 example : delta4SquaredX 4 4 4 4 4 4 = 256 := by
   norm_num [delta4SquaredX, deltaX4]
 
+/-! ## Batch 2: the 6-ary operator calculus (nonlin_def.hl)
+
+LocalAuto19.lean:59-60 *collapses* this calculus (`uni`/`mul6`/`compose6`/
+`constant6`/`proj_*`/`dummy6`) into x-level statements; per the P6-E batch-2
+decision the operators are ported as real defs here instead, so the G4
+interval pipeline can glue on `rfl`-mirrors of these bodies.  The collapse is
+propositionally invisible at the x-level (e.g. `mk126 f x1 … x6 = f x1 x2 2 2
+2 x6` below holds by `rfl`), so no semantic divergence is introduced — the
+difference is only which side carries the composite structure.
+
+HOL `proj_xi` (nonlin_def.hl:40-50) are polymorphic (`(x1:A) (x2:B) …`);
+only the ℝ⁶ → ℝ instances used by the closure are ported.  HOL `norm2hh`
+reuses PackingAuto2's `hminus` (the `Classical.epsilon` rendering of the
+`@x.` choice, PackingAuto2.lean:468) and `hplus` (= 1.3254). -/
+
+/-- HOL `proj_x1` (nonlin_def.hl:40). -/
+def projX1 (x1 _x2 _x3 _x4 _x5 _x6 : ℝ) : ℝ := x1
+
+/-- HOL `proj_x2` (nonlin_def.hl:42). -/
+def projX2 (_x1 x2 _x3 _x4 _x5 _x6 : ℝ) : ℝ := x2
+
+/-- HOL `proj_x3` (nonlin_def.hl:44). -/
+def projX3 (_x1 _x2 x3 _x4 _x5 _x6 : ℝ) : ℝ := x3
+
+/-- HOL `proj_x4` (nonlin_def.hl:46). -/
+def projX4 (_x1 _x2 _x3 x4 _x5 _x6 : ℝ) : ℝ := x4
+
+/-- HOL `proj_x5` (nonlin_def.hl:48). -/
+def projX5 (_x1 _x2 _x3 _x4 x5 _x6 : ℝ) : ℝ := x5
+
+/-- HOL `proj_x6` (nonlin_def.hl:50). -/
+def projX6 (_x1 _x2 _x3 _x4 _x5 x6 : ℝ) : ℝ := x6
+
+example : projX2 1 2 3 4 5 6 = 2 := rfl
+
+example : projX6 1 2 3 4 5 6 = 6 := rfl
+
+/-- HOL `proj_y4` (nonlin_def.hl:300-301): the y-coordinate projection,
+`sqrt x4`. -/
+noncomputable def projY4 (_x1 _x2 _x3 x4 _x5 _x6 : ℝ) : ℝ := Real.sqrt x4
+
+/-- HOL `proj_y5` (nonlin_def.hl:303-304). -/
+noncomputable def projY5 (_x1 _x2 _x3 _x4 x5 _x6 : ℝ) : ℝ := Real.sqrt x5
+
+/-- HOL `proj_y6` (nonlin_def.hl:306-307). -/
+noncomputable def projY6 (_x1 _x2 _x3 _x4 _x5 x6 : ℝ) : ℝ := Real.sqrt x6
+
+/-- Numeric: `projY4` at squared inputs picks up the unsquared coordinate. -/
+example : projY4 1 4 9 16 25 36 = 4 := by
+  unfold projY4
+  rw [show (16 : ℝ) = 4 ^ 2 by norm_num, Real.sqrt_sq (by norm_num)]
+
+example : projY6 1 4 9 16 25 36 = 6 := by
+  unfold projY6
+  rw [show (36 : ℝ) = 6 ^ 2 by norm_num, Real.sqrt_sq (by norm_num)]
+
+/-- HOL `constant6` (nonlin_def.hl:249). -/
+def constant6 (c : ℝ) (_x1 _x2 _x3 _x4 _x5 _x6 : ℝ) : ℝ := c
+
+/-- HOL `two6` (nonlin_def.hl:259): `constant6 (&2)`. -/
+def two6 : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ := constant6 2
+
+example : two6 1 2 3 4 5 6 = 2 := rfl
+
+/-- HOL `compose6` (nonlin_def.hl:72-80). NB: defs.json's `body_ast` for this
+def is a truncated parse artifact (`{"const":"f"}`); the HOL source above is
+the authority and is what is ported here. -/
+def compose6 (f p1 p2 p3 p4 p5 p6 : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ)
+    (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  f (p1 x1 x2 x3 x4 x5 x6) (p2 x1 x2 x3 x4 x5 x6) (p3 x1 x2 x3 x4 x5 x6)
+    (p4 x1 x2 x3 x4 x5 x6) (p5 x1 x2 x3 x4 x5 x6) (p6 x1 x2 x3 x4 x5 x6)
+
+/-- HOL `mk_126` (nonlin_def.hl:267-268). -/
+def mk126 (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  compose6 f projX1 projX2 two6 two6 two6 projX6
+
+/-- HOL `mk_456` (nonlin_def.hl:270-271). -/
+def mk456 (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  compose6 f two6 two6 two6 projX4 projX5 projX6
+
+/-- HOL `mk_135` (nonlin_def.hl:273-274). -/
+def mk135 (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  compose6 f projX1 two6 projX3 two6 projX5 two6
+
+/-- Pins the whole `compose6`/`proj`/`two6` stack for `mk_126`:
+setting the 3/4/5 slots to the constant 2. -/
+example : mk126 f x1 x2 x3 x4 x5 x6 = f x1 x2 2 2 2 x6 := rfl
+
+example : mk135 f x1 x2 x3 x4 x5 x6 = f x1 2 x3 2 x5 2 := rfl
+
+example : mk456 f x1 x2 x3 x4 x5 x6 = f 2 2 2 x4 x5 x6 := rfl
+
+/-- HOL `promote1_to_6` (nonlin_def.hl:254-255). -/
+def promote1To6 (f : ℝ → ℝ) (x1 _x2 _x3 _x4 _x5 _x6 : ℝ) : ℝ := f x1
+
+/-- HOL `promote3_to_6` (nonlin_def.hl:251-252). -/
+def promote3To6 (f : ℝ → ℝ → ℝ → ℝ) (x1 x2 x3 _x4 _x5 _x6 : ℝ) : ℝ := f x1 x2 x3
+
+example : promote1To6 f x1 x2 x3 x4 x5 x6 = f x1 := rfl
+
+/-- Numeric: promotes a unary function onto the first slot. -/
+example : promote1To6 Real.sqrt 9 0 0 0 0 0 = 3 := by
+  unfold promote1To6
+  rw [show (9 : ℝ) = 3 ^ 2 by norm_num, Real.sqrt_sq (by norm_num)]
+
+example : promote3To6 (fun a b c => a + b + c) 1 2 3 4 5 6 = 6 := by
+  norm_num [promote3To6]
+
+/-- HOL `scalar6` (nonlin_def.hl:279-280). -/
+def scalar6 (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) (r : ℝ)
+    (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := f x1 x2 x3 x4 x5 x6 * r
+
+example : scalar6 f r x1 x2 x3 x4 x5 x6 = f x1 x2 x3 x4 x5 x6 * r := rfl
+
+/-- Numeric: `scalar6 two6 3` is the constant 6. -/
+example : scalar6 two6 3 1 1 1 1 1 1 = 6 := by norm_num [scalar6, two6, constant6]
+
+/-- HOL `norm2hh` (sphere.hl:597-599). -/
+noncomputable def norm2hh (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  (y1 - hminus - hplus) ^ 2 + (y2 - 2) ^ 2 + (y3 - 2) ^ 2 + (y4 - 2) ^ 2 +
+    (y5 - 2) ^ 2 + (y6 - 2) ^ 2
+
+/-- Numeric: vanishes at the center `(hminus + hplus, 2,…,2)` — pins the
+left-associated `y1 - hminus - hplus` grouping and the five `(yi - 2)²`. -/
+example : norm2hh (hminus + hplus) 2 2 2 2 2 = 0 := by unfold norm2hh; ring
+
+/-- Numeric: one unit off center in `y1` gives 1. -/
+example : norm2hh (hminus + hplus + 1) 2 2 2 2 2 = 1 := by
+  unfold norm2hh; ring
+
 /-! ## Axiom audit (standard three only: propext / Classical.choice /
 Quot.sound) -/
 
@@ -223,5 +353,8 @@ Quot.sound) -/
 #print axioms solEuler156XDivSqrtdelta
 #print axioms delta4SquaredX
 #print axioms matan
+#print axioms compose6
+#print axioms mk126
+#print axioms norm2hh
 
 end Kepler.Text
