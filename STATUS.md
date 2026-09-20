@@ -21,7 +21,7 @@
 > 工单 `docs/ineq-closure-155.md`）；波2 disj+sqrt 家族设计与 W0-W4 全部入库
 > （wip/g4-emit `0a96e135`/`5150b13a`：BBTreeGD 混合证书结构、逐支判定 hit 重算、
 > manifest 单一事实源、`--bbg --disj-gd` 发射端端到端绿）；**43,078 LP 定理持久化
-> 内核重跑已全量启动**（`/home/scroll/lprun-persist/`，~800/h ETA ~46h，0 失败，
+> 内核重跑已全量启动**（`/home/scroll/lprun-persist/`，7180/43078 ~906/h ETA ~40h，1 个已知类失败待 glpsol 兜底，
 > 上次"验完即删"欠账清偿中）；2570626711（190 万叶）stage-a N=2048 低速开跑；
 > **⚠️ 完整性修订（2026-09-20）：prep 空间 92 家族"745/745 闭合"记录经根因调查判定不可信**（pass2 无任何可审计执行痕迹且 37 倍预算不可复现），求解层口径从 91% 下修为 39%，92 家族需重新求解（策略未定）。145 案例 bb_arb 证书重跑已启动（y 侧已产 35 张）；单案例"证书→接口"粘合试点已端到端打通（C3397113841：粘合引理 1 行 simp 模板，量产每案例 ~30 行机械模板）。
 > 政策变更（2026-09-17 用户批准，已执行 2026-09-18）：main 允许携带 sorry 债务，
@@ -84,7 +84,7 @@
   - [x] **FillParams 参数填充工具链（2026-09-14，`0588df2`）**：Lean 编译态逐叶算 sqrt mantissa（零镜像失真）+ (N,out) 阶梯 + 279 叶小样端到端绿；封闭 atan 参数高 Taylor 阶 trick（阶数后经实测下调，见下）
   - [x] **FillParams stage-a 分片并行化（2026-09-15，wip/g4-emit）**：单体驱动（354MB/96万叶数组字面量）elaboration 不可扩展（11.5h 未果）→ 改造为 `--stage-a-shards=K` 连续切块小驱动 + `runMain` argv 派发（无参走阶梯 / `N out` 钉死单点）+ `stagea_merge.py`（全局 rung 裁定 + STALE 补算 + 全局索引合并）；256 chunk × 64 路并行
   - [x] **repair_leaves.py 叶修复回路（`85f5ae7`）**：编译态逐叶扫描 → 失败叶二分加深（splitOK 对任意细化保持）→ 修复证书
-  - [ ] 现存 16 证书收尾：已闭合 6 份（另加早期 2 小案共 8 案例）；波1 sqrt4/atan7 三份——**QITNPEA_3725403817 已闭合（2026-09-18，`184d4a86`：964,984 叶 = 964,792 + 192 修复衍生，2775 BBTreeG shards，11,441 jobs，根 decide 180s，公理标准三）**；封闭 atan Taylor 阶先固化 128（`1db69bd8`，~8x 提速），后为 549 修复升至 **N=2048**（chunk85-88 结构性失败根因 = arctanI 域缺口 [-1,1] vs 实际需求 [3,9] + N=128 余量不足，两者已治本）；5490182221（135万叶）stage-a 356/360 完成（全局 rung (12,-64)），4 chunk N=2048 重跑中（85 已过零 FAIL，86-88 为 atan 重区单 chunk ~14h+），全过后 params 合并 → --bbg → 构建；2570626711（190万叶）stage-a N=2048 低速运行中（12 并发）；**波2 disj+sqrt 家族 6 份 W0-W4 已入库（2026-09-20）**：设计 `pipeline/interval/wave2-disj-design.md`，BBTreeGD 结构 + 逐支 hit 重算 + disj-gd 发射端全通，剩 W2.5（closed 子式记忆化，否则 BIXPCGW 单机 200+ 天）与 W5/W6；末位 2 份 3112-sqrt 怪物（需参数共享优化）
+  - [ ] 现存 16 证书收尾：已闭合 6 份（另加早期 2 小案共 8 案例）；波1 sqrt4/atan7 三份——**QITNPEA_3725403817 已闭合（2026-09-18，`184d4a86`：964,984 叶 = 964,792 + 192 修复衍生，2775 BBTreeG shards，11,441 jobs，根 decide 180s，公理标准三）**；封闭 atan Taylor 阶先固化 128（`1db69bd8`，~8x 提速），后为 549 修复升至 **N=2048**（chunk85-88 结构性失败根因 = arctanI 域缺口 [-1,1] vs 实际需求 [3,9] + N=128 余量不足，两者已治本）；5490182221（135万叶）stage-a 356/360 完成（全局 rung (12,-64)），4 chunk N=2048 重跑中（85 已过零 FAIL，86-88 为 atan 重区单 chunk ~14h+），全过后 params 合并 → --bbg → 构建；2570626711（190万叶）stage-a N=2048 低速运行中（12 并发，36/512）；**波2 disj+sqrt 家族 6 份 W0-W4 已入库（2026-09-20）**：设计 `pipeline/interval/wave2-disj-design.md`，BBTreeGD 结构 + 逐支 hit 重算 + disj-gd 发射端全通，剩 W2.5（closed 子式记忆化，否则 BIXPCGW 单机 200+ 天）与 W5/W6；末位 2 份 3112-sqrt 怪物（需参数共享优化）
   - [ ] 证书量产：145 个已闭合案例需 bb_arb `--cert` 重跑出证书（机时 1-3 天；9893763499 案例 bb_arb 失控吐 117GB 日志已记录）
   - [ ] G4 粘合收尾：155 定义闭包的 Lean 定义 + 每案例 `evalReal e ρ = 展开式 ρ` 对应引理（依赖 packing 章定义，**主体剩余**）
   - 规格：`pipeline/interval/arb-layer.md` §3/§4
