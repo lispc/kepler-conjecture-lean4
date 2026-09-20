@@ -78,6 +78,24 @@ BATCH2 = {
 }
 BATCH2_ENABLERS = {"compose6", "constant6", "proj_x1", "proj_x4"}
 
+# P6-E batch 3 (gamma/beta family) + enablers.  vol3f_456 was nominally a
+# batch-5 member but is ported with batch 3 as a gamma3_x dependency.
+BATCH3 = {
+    "gamma2_x1_div_a_v2", "gamma3_x", "gamma3f_x_div_sqrtdelta",
+    "gamma23_full8_x", "gamma23_keep135_x",
+    "beta_bump_force_y", "beta_bump_lb",
+}
+BATCH3_ENABLERS = {
+    "uni", "dummy6", "sol_x", "vol_x", "gamma2_x_div_azim_v2", "vol3f_456",
+}
+
+# P6-E batch 5 (misc).  matan was already done as a batch-1 enabler.
+BATCH5 = {
+    "tame_table_d", "dih2_y", "dih3_y", "lfun_y1", "rho_x", "ups_126",
+    "dart_std3_big",
+}
+BATCH5_ENABLERS = {"dart_std3"}
+
 # Per-symbol remarks (rendered in the md 备注 column).
 NOTES = {
     "compose6": "defs.json body_ast 是截断的 parse 残片（{\"const\":\"f\"}），"
@@ -89,6 +107,21 @@ NOTES = {
     "proj_x5": "HOL 多态；同上",
     "proj_x6": "HOL 多态；同上",
     "norm2hh": "复用 PackingAuto2 的 hminus（Classical.epsilon 版）/hplus",
+    "uni": "defs.json body_ast 截断（(f:A->B) 类型标注触发 parse bug）；"
+           "HOL (f,x) 对在 Lean 解柯里化为 uni f x",
+    "sol_x": "LocalAuto38:75 有 sorry 桩 solXP38（锚注释形式不同，扫描漏检）；"
+             "批 3 在 IneqClosureDefs 立真体 solX",
+    "vol_x": "PA20:99 volXf 为 verbatim 孪生，但 PA20 与 SphereKit 的 atn2 "
+             "同名冲突使其不可跨 import 复用；批 3 立 canonical volX",
+    "gamma2_x_div_azim_v2": "PA21:164 已有同名 verbatim 体；同上 atn2 冲突不"
+             "可复用，批 3 立 canonical gamma2XDivAzimV2",
+    "vol3f_456": "原批 5 名单，作为 gamma3_x 依赖随批 3 提前落地",
+    "dart_std3": "define_dart 列表域（parse_defs triage unsupported）；"
+                 "List (ℝ×ℝ×ℝ) 直接可移植，批 5 落地",
+    "dart_std3_big": "= dart_std3 verbatim（ineq.hl:3079，'same domain but "
+                     "extra disjunct'）",
+    "tame_table_d": "ℕ 参数表常数；分支内 &r/&s 为 ℕ→ℝ cast，guard 在 ℕ 层",
+    "matan": "批 5 名单，批 1 已作为 enabler 落地",
 }
 
 ANCHOR_RE = re.compile(r"/--\s*HOL\s*`([A-Za-z0-9_']+)`")
@@ -223,8 +256,8 @@ def main():
     for sym in sorted(seen):
         if sym in pd.PRIMITIVES:
             cls, tier, lean = "primitive", "A", "Mathlib"
-        elif sym in defs:
-            cls = "resolved"
+        elif sym in defs or sym in unsupported:
+            cls = "resolved" if sym in defs else "unsupported"
             if sym in anchors:
                 name, rel, line, stub = anchors[sym]
                 tier = "C" if stub else "B"
@@ -242,7 +275,11 @@ def main():
         batch = ("1" if sym in BATCH1
                  else "1(enabler)" if sym in BATCH1_ENABLERS
                  else "2" if sym in BATCH2
-                 else "2(enabler)" if sym in BATCH2_ENABLERS else "")
+                 else "2(enabler)" if sym in BATCH2_ENABLERS
+                 else "3" if sym in BATCH3
+                 else "3(enabler)" if sym in BATCH3_ENABLERS
+                 else "5" if sym in BATCH5
+                 else "5(enabler)" if sym in BATCH5_ENABLERS else "")
         rows.append({"symbol": sym, "class": cls, "tier": tier,
                      "lean": lean, "batch": batch,
                      "note": NOTES.get(sym, ""),
