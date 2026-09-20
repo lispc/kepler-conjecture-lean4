@@ -9,17 +9,17 @@
   B = 已按 B 档移植（camelCase + HOL 锚注释）; C = 桩（sorry/axiom）;
   D = 缺席
 - batch: 批次号（1 = sqrtdelta 有理家族；2 = 6 元算子演算；3 = gamma/beta；
-  4 = 弧长/enclosed（未做，赖 LA38 lane，主 agent 决策）；5 = 杂项；
+  4 = 弧长/enclosed（已落地，绕开 LA38 桩 lane 直译 HOL 原文）；5 = 杂项；
   6 = 清尾；N(enabler) = 批 N 依赖件）。unsupported 的 define_dart 盒域
   谓词已实证豁免（备注列）：emit_rpn 展开成数值盒，不进 IExpr。
 
 | # | symbol | class | tier | Lean 侧 | batch | HOL source | 备注 |
 |---|--------|-------|------|---------|-------|------------|------|
 | 1 | `a_spine5` | resolved | B | aSpine5 (lean/Kepler/Text/IneqClosureDefs.lean:598) | 6 | reference/flyspeck/text_formalization/general/sphere.hl:632 |  |
-| 2 | `abc_of_quadratic` | resolved | B | abcOfQuadratic_p19 (lean/Kepler/Text/LocalAuto19.lean:160) |  | reference/flyspeck/text_formalization/general/sphere.hl:59 |  |
+| 2 | `abc_of_quadratic` | resolved | B | abcOfQuadratic (lean/Kepler/Text/IneqClosureDefs.lean:847) | 4(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:59 | 批 4 enabler：canonical abcOfQuadratic（LA19:160/LA38:147 孪生） |
 | 3 | `abs` | primitive | A | Mathlib |  |  |  |
 | 4 | `acs` | primitive | A | Mathlib |  |  |  |
-| 5 | `acs_sqrt_x1_d4` | resolved | D | - | 4 | reference/flyspeck/text_formalization/general/sphere.hl:792 | 批 4，同上 |
+| 5 | `acs_sqrt_x1_d4` | resolved | B | acsSqrtX1D4 (lean/Kepler/Text/IneqClosureDefs.lean:704) | 4 | reference/flyspeck/text_formalization/general/sphere.hl:792 | 批 4 已落地 |
 | 6 | `apex_A` | unsupported | D | - |  | auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2985 | define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植 |
 | 7 | `apex_flat` | unsupported | D | - |  | auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2888 | define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植 |
 | 8 | `apex_flat_h` | unsupported | D | - |  | auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3711 | define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植 |
@@ -30,20 +30,20 @@
 | 13 | `apex_std3_lll_wxx` | unsupported | D | - |  | auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3764 | define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植 |
 | 14 | `apex_std3_lll_xww` | unsupported | D | - |  | auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3738 | define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植 |
 | 15 | `apex_sup_flat` | unsupported | D | - |  | auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3103 | define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植 |
-| 16 | `arc_hhn` | resolved | D | - | 4 | reference/flyspeck/text_formalization/general/sphere.hl:780 | 批 4（弧长/enclosed 家族）：依赖 LA38 未移植 lane，主 agent 另行决策 |
-| 17 | `arclength` | resolved | B | arcLength (lean/Kepler/Text/PackingAuto18.lean:161) |  | reference/flyspeck/text_formalization/general/sphere.hl:258 |  |
-| 18 | `arclength_x_123` | resolved | D | - | 4 | reference/flyspeck/text_formalization/general/sphere.hl:798 | 批 4，同上 |
-| 19 | `arclength_y1` | resolved | D | - | 4 | reference/flyspeck/text_formalization/general/sphere.hl:762 | 批 4，同上 |
+| 16 | `arc_hhn` | resolved | B | arcHhn (lean/Kepler/Text/IneqClosureDefs.lean:681) | 4 | reference/flyspeck/text_formalization/general/sphere.hl:780 | 批 4 已落地；canonical arcLength 替 PA18:161 孪生（PA18 的 atn2 与 SphereKit FQN 冲突，不可 co-import） |
+| 17 | `arclength` | resolved | B | arcLength (lean/Kepler/Text/IneqClosureDefs.lean:656) | 4(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:258 | 批 4 enabler：canonical arcLength（PA18:161 孪生不可 co-import） |
+| 18 | `arclength_x_123` | resolved | B | arclengthX123 (lean/Kepler/Text/IneqClosureDefs.lean:686) | 4 | reference/flyspeck/text_formalization/general/sphere.hl:798 | 批 4 已落地，同 arcLength 注 |
+| 19 | `arclength_y1` | resolved | B | arclengthY1 (lean/Kepler/Text/IneqClosureDefs.lean:697) | 4 | reference/flyspeck/text_formalization/general/sphere.hl:762 | 批 4 已落地；注意 HOL 参数序 arclength y1 a b |
 | 20 | `asn` | primitive | A | Mathlib |  |  |  |
-| 21 | `asn797k` | resolved | D | - | 4 | reference/flyspeck/text_formalization/general/sphere.hl:783 | 批 4，同上 |
-| 22 | `asnFnhk` | resolved | D | - | 4 | reference/flyspeck/text_formalization/general/sphere.hl:786 | 批 4，同上 |
+| 21 | `asn797k` | resolved | B | asn797k (lean/Kepler/Text/IneqClosureDefs.lean:718) | 4 | reference/flyspeck/text_formalization/general/sphere.hl:783 | 批 4 已落地；cos797 内联为 cos 0.797 |
+| 22 | `asnFnhk` | resolved | B | asnFnhk (lean/Kepler/Text/IneqClosureDefs.lean:723) | 4 | reference/flyspeck/text_formalization/general/sphere.hl:786 | 批 4 已落地；canonical asnFnhk 替 PA22:209-210 的 stub 0 |
 | 23 | `atn` | primitive | A | Mathlib |  |  |  |
 | 24 | `atn2` | resolved | B | atn2_p16 (lean/Kepler/Text/LocalAuto16.lean:269) |  | reference/flyspeck/text_formalization/general/sphere.hl:48 |  |
 | 25 | `b_spine5` | resolved | B | bSpine5 (lean/Kepler/Text/IneqClosureDefs.lean:601) | 6 | reference/flyspeck/text_formalization/general/sphere.hl:634 |  |
 | 26 | `beta_bump_force_y` | resolved | B | betaBumpForceY (lean/Kepler/Text/IneqClosureDefs.lean:485) | 3 | reference/flyspeck/text_formalization/general/sphere.hl:614 |  |
 | 27 | `beta_bump_lb` | resolved | B | betaBumpLb (lean/Kepler/Text/IneqClosureDefs.lean:493) | 3 | reference/flyspeck/text_formalization/general/sphere.hl:636 |  |
 | 28 | `bump` | resolved | B | bump (lean/Kepler/Text/PackingAuto2.lean:487) |  | reference/flyspeck/text_formalization/general/sphere.hl:601 |  |
-| 29 | `cayleyR` | resolved | D | - | 4 | auto:reference/flyspeck/text_formalization/leg/cayleyR_def.hl:32 | 批 4，同上 |
+| 29 | `cayleyR` | resolved | B | cayleyR (lean/Kepler/Text/IneqClosureDefs.lean:772) | 4 | auto:reference/flyspeck/text_formalization/leg/cayleyR_def.hl:32 | 批 4 已落地：150 项 Cayley–Menger 体由 defs.json AST 机械生成并数值互验；替 LA38 桩 cayleyRP38 |
 | 30 | `compose6` | resolved | B | compose6 (lean/Kepler/Text/IneqClosureDefs.lean:284) | 2(enabler) | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:72 | defs.json body_ast 是截断的 parse 残片（{"const":"f"}），以 nonlin_def.hl:72-80 原文为准 |
 | 31 | `const1` | resolved | B | const1P19 (lean/Kepler/Text/LocalAuto19.lean:128) |  | reference/flyspeck/text_formalization/general/sphere.hl:197 |  |
 | 32 | `constant6` | resolved | B | constant6 (lean/Kepler/Text/IneqClosureDefs.lean:274) | 2(enabler) | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:249 |  |
@@ -77,7 +77,7 @@
 | 60 | `dih_x_div_sqrtdelta_posbranch` | resolved | B | dihXDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:95) | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:138 |  |
 | 61 | `dih_y` | resolved | B | dihY_p16 (lean/Kepler/Text/LocalAuto16.lean:294) |  | reference/flyspeck/text_formalization/general/sphere.hl:159 |  |
 | 62 | `dummy6` | resolved | B | dummy6 (lean/Kepler/Text/IneqClosureDefs.lean:372) | 3(enabler) | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:263 |  |
-| 63 | `enclosed` | resolved | D | - | 4 | auto:reference/flyspeck/text_formalization/leg/enclosed_def.hl:22 | 批 4，同上 |
+| 63 | `enclosed` | resolved | B | enclosed (lean/Kepler/Text/IneqClosureDefs.lean:857) | 4 | auto:reference/flyspeck/text_formalization/leg/enclosed_def.hl:22 | 批 4 已落地：sqrt(quadraticRootPlus (abcOfQuadratic (muR …))) 替 LA38 桩链（enclosedP38/muRP38/cayleyRP38 均 sorry） |
 | 64 | `eta_x` | resolved | B | etaX (lean/Kepler/Text/IneqClosureDefs.lean:606) | 6 | reference/flyspeck/text_formalization/general/sphere.hl:127 |  |
 | 65 | `eta_y` | resolved | B | etaY (lean/Kepler/Text/IneqClosureDefs.lean:620) | 6 | reference/flyspeck/text_formalization/general/sphere.hl:131 | PA21:177 为 sorry opaque 桩（原 C 档）且 PA21 不可与 SphereKit co-import；批 6 在 IneqClosureDefs 立 canonical etaY |
 | 66 | `eulerA_x` | resolved | B | eulerAx_p19 (lean/Kepler/Text/LocalAuto19.lean:227) |  | reference/flyspeck/text_formalization/general/sphere.hl:831 |  |
@@ -113,8 +113,8 @@
 | 96 | `mk_456` | resolved | B | mk456 (lean/Kepler/Text/IneqClosureDefs.lean:294) | 2 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:270 |  |
 | 97 | `mm1` | resolved | B | mm1 (lean/Kepler/Text/PackingAuto2.lean:425) |  | reference/flyspeck/text_formalization/general/sphere.hl:511 |  |
 | 98 | `mm2` | resolved | B | mm2 (lean/Kepler/Text/PackingAuto2.lean:428) |  | reference/flyspeck/text_formalization/general/sphere.hl:513 |  |
-| 99 | `muR` | resolved | B | muRP38 (lean/Kepler/Text/LocalAuto38.lean:151) |  | auto:reference/flyspeck/text_formalization/leg/muR_def.hl:40 |  |
-| 100 | `node2_y` | resolved | D | - | 4 | reference/flyspeck/text_formalization/general/sphere.hl:222 | 批 4，同上 |
+| 99 | `muR` | resolved | B | muR (lean/Kepler/Text/IneqClosureDefs.lean:835) | 4(enabler) | auto:reference/flyspeck/text_formalization/leg/muR_def.hl:40 | 批 4 已落地（enabler）：canonical muR，LA38 的 muRP38 依赖桩 |
+| 100 | `node2_y` | resolved | B | node2Y (lean/Kepler/Text/IneqClosureDefs.lean:741) | 4 | reference/flyspeck/text_formalization/general/sphere.hl:222 | 批 4 已落地（置换与 rotate2 同形，y 侧家族） |
 | 101 | `norm2hh` | resolved | B | norm2hh (lean/Kepler/Text/IneqClosureDefs.lean:335) | 2 | reference/flyspeck/text_formalization/general/sphere.hl:597 | 复用 PackingAuto2 的 hminus（Classical.epsilon 版）/hplus |
 | 102 | `pi` | primitive | A | Mathlib |  |  |  |
 | 103 | `proj_x1` | resolved | B | projX1 (lean/Kepler/Text/IneqClosureDefs.lean:233) | 2(enabler) | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:40 | HOL 多态；Lean 只移植闭包用到的 ℝ⁶→ℝ 实例 |
@@ -131,9 +131,9 @@
 | 114 | `quadratic_root_plus` | resolved | B | quadraticRootPlus_p11 (lean/Kepler/Text/LocalAuto11.lean:154) |  | reference/flyspeck/text_formalization/general/sphere.hl:67 |  |
 | 115 | `rad2_x` | resolved | B | rad2X (lean/Kepler/Text/IneqClosureDefs.lean:628) | 6 | reference/flyspeck/text_formalization/general/sphere.hl:271 | PA25:89 rad2XP25 为 sorry 桩（原 C 档）；批 6 立 canonical rad2X（= rhoX/(deltaX*4)） |
 | 116 | `rad2_y` | resolved | B | rad2YP25 (lean/Kepler/Text/PackingAuto25.lean:93) |  | reference/flyspeck/text_formalization/general/sphere.hl:541 |  |
-| 117 | `rhazim` | resolved | D | - | 4 | reference/flyspeck/text_formalization/general/sphere.hl:211 | 批 4，同上 |
-| 118 | `rhazim2` | resolved | D | - | 4 | reference/flyspeck/text_formalization/general/sphere.hl:226 | 批 4：= node2_y rhazim，两个依赖均属批 4 排除清单 |
-| 119 | `rho` | resolved | B | rho_p2 (lean/Kepler/Text/LocalAuto2.lean:336) |  | reference/flyspeck/text_formalization/general/sphere.hl:201 |  |
+| 117 | `rhazim` | resolved | B | rhazim (lean/Kepler/Text/IneqClosureDefs.lean:755) | 4 | reference/flyspeck/text_formalization/general/sphere.hl:211 | 批 4 已落地；canonical rhazim 替 LA38 桩 rhazimP38 |
+| 118 | `rhazim2` | resolved | B | rhazim2 (lean/Kepler/Text/IneqClosureDefs.lean:763) | 4 | reference/flyspeck/text_formalization/general/sphere.hl:226 | 批 4：= node2_y rhazim；批 4 已落地（node2Y rhazim） |
+| 119 | `rho` | resolved | B | rho (lean/Kepler/Text/IneqClosureDefs.lean:748) | 4(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:201 | 批 4 enabler：canonical rho（LA2:336 rho_p2 孪生） |
 | 120 | `rho_x` | resolved | B | rhoX (lean/Kepler/Text/IneqClosureDefs.lean:542) | 5 | reference/flyspeck/text_formalization/general/sphere.hl:137 |  |
 | 121 | `rotate2` | resolved | B | rotate2 (lean/Kepler/Text/IneqClosureDefs.lean:62) | 1(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:654 |  |
 | 122 | `rotate3` | resolved | B | rotate3 (lean/Kepler/Text/IneqClosureDefs.lean:66) | 1(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:657 |  |
@@ -151,12 +151,12 @@
 | 134 | `sol_y` | resolved | B | solY_p19 (lean/Kepler/Text/LocalAuto19.lean:119) |  | reference/flyspeck/text_formalization/general/sphere.hl:185 |  |
 | 135 | `sqrt` | primitive | A | Mathlib |  |  |  |
 | 136 | `sqrt2` | resolved | B | sqrt2 (lean/Kepler/Text/IneqClosureDefs.lean:588) | 6 | reference/flyspeck/text_formalization/general/sphere.hl:76 | PackingAuto2:91 内联为 Real.sqrt 2；批 6 为闭包粘合立名 |
-| 137 | `sqrt3` | resolved | B | sqrt3 (lean/Kepler/Text/PackingAuto22.lean:112) |  | reference/flyspeck/text_formalization/general/sphere.hl:77 |  |
+| 137 | `sqrt3` | resolved | B | sqrt3 (lean/Kepler/Text/IneqClosureDefs.lean:715) | 4(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:77 | 批 4 enabler：canonical sqrt3（PA22:112 孪生） |
 | 138 | `sqrt8` | resolved | B | sqrt8 (lean/Kepler/Text/IneqClosureDefs.lean:585) | 6 | reference/flyspeck/text_formalization/general/sphere.hl:75 | PackingAuto2:91 内联为 Real.sqrt 8；批 6 为闭包粘合立名 |
 | 139 | `tame_table_d` | resolved | B | tameTableD (lean/Kepler/Text/IneqClosureDefs.lean:510) | 5 | reference/flyspeck/text_formalization/general/sphere.hl:803 | ℕ 参数表常数；分支内 &r/&s 为 ℕ→ℝ cast，guard 在 ℕ 层 |
 | 140 | `tau0` | resolved | B | tau0 (lean/Kepler/Text/PackingAuto2.lean:422) |  | reference/flyspeck/text_formalization/general/sphere.hl:509 |  |
 | 141 | `taum` | resolved | B | taumP19 (lean/Kepler/Text/LocalAuto19.lean:135) |  | reference/flyspeck/text_formalization/general/sphere.hl:215 |  |
-| 142 | `tauq` | resolved | D | - | 4 | reference/flyspeck/text_formalization/general/sphere.hl:244 | 批 4，同上 |
+| 142 | `tauq` | resolved | B | tauq (lean/Kepler/Text/IneqClosureDefs.lean:868) | 4 | reference/flyspeck/text_formalization/general/sphere.hl:244 | 批 4 已落地；复用 SphereKit taum |
 | 143 | `two6` | resolved | B | two6 (lean/Kepler/Text/IneqClosureDefs.lean:277) | 2 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:259 |  |
 | 144 | `uni` | resolved | B | uni (lean/Kepler/Text/IneqClosureDefs.lean:365) | 3(enabler) | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:246 | defs.json body_ast 截断（(f:A->B) 类型标注触发 parse bug）；HOL (f,x) 对在 Lean 解柯里化为 uni f x |
 | 145 | `ups_126` | resolved | B | ups126 (lean/Kepler/Text/IneqClosureDefs.lean:550) | 5 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:446 |  |
@@ -172,4 +172,4 @@
 | 155 | `y_of_x` | resolved | B | yOfX_p11 (lean/Kepler/Text/LocalAuto11.lean:177) |  | reference/flyspeck/text_formalization/general/sphere.hl:538 |  |
 
 closure stats: roots=87 size=155 resolved=124 primitives=9 unsupported=22 missing=0; statement variables excluded: x1, x2, x3, x4, x5, x6, y1, y2, y3, y4, y5, y6, y7, y8, y9
-resolved-by-tier: B=112, D=12
+resolved-by-tier: B=124

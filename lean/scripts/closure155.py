@@ -96,13 +96,15 @@ BATCH5 = {
 }
 BATCH5_ENABLERS = {"dart_std3"}
 
-# P6-E batch 4 (arc-length / enclosed family) — NOT ported: depends on the
-# unported LA38 lane; pending main-agent decision.  Listed so the work order
-# shows the residual scope explicitly.  (sol_x was in this family's orbit but
-# landed with batch 3.)
+# P6-E batch 4 (arc-length / enclosed family) — DONE 2026-09-20: real bodies
+# ported straight from HOL sources into IneqClosureDefs.lean, bypassing the
+# LA38 stub lane (definitions only; LA38's theorem proofs untouched).
 BATCH4 = {
     "arc_hhn", "arclength_x_123", "arclength_y1", "acs_sqrt_x1_d4", "asn797k",
     "node2_y", "enclosed", "rhazim", "rhazim2", "cayleyR", "tauq", "asnFnhk",
+}
+BATCH4_ENABLERS = {
+    "arclength", "abc_of_quadratic", "rho", "sqrt3", "muR",
 }
 
 # P6-E batch 6 (tail sweep): the remaining non-batch-4 resolved D rows, plus
@@ -151,19 +153,28 @@ NOTES = {
               "rad2X（= rhoX/(deltaX*4)）",
     "sqrt2": "PackingAuto2:91 内联为 Real.sqrt 2；批 6 为闭包粘合立名",
     "sqrt8": "PackingAuto2:91 内联为 Real.sqrt 8；批 6 为闭包粘合立名",
-    "rhazim2": "批 4：= node2_y rhazim，两个依赖均属批 4 排除清单",
-    "arc_hhn": "批 4（弧长/enclosed 家族）：依赖 LA38 未移植 lane，"
-               "主 agent 另行决策",
-    "arclength_x_123": "批 4，同上",
-    "arclength_y1": "批 4，同上",
-    "acs_sqrt_x1_d4": "批 4，同上",
-    "asn797k": "批 4，同上",
-    "node2_y": "批 4，同上",
-    "enclosed": "批 4，同上",
-    "rhazim": "批 4，同上",
-    "cayleyR": "批 4，同上",
-    "tauq": "批 4，同上",
-    "asnFnhk": "批 4，同上",
+    "rhazim2": "批 4：= node2_y rhazim；批 4 已落地（node2Y rhazim）",
+    "arc_hhn": "批 4 已落地；canonical arcLength 替 PA18:161 孪生"
+               "（PA18 的 atn2 与 SphereKit FQN 冲突，不可 co-import）",
+    "arclength_x_123": "批 4 已落地，同 arcLength 注",
+    "arclength_y1": "批 4 已落地；注意 HOL 参数序 arclength y1 a b",
+    "acs_sqrt_x1_d4": "批 4 已落地",
+    "asn797k": "批 4 已落地；cos797 内联为 cos 0.797",
+    "node2_y": "批 4 已落地（置换与 rotate2 同形，y 侧家族）",
+    "enclosed": "批 4 已落地：sqrt(quadraticRootPlus (abcOfQuadratic (muR …)))"
+                " 替 LA38 桩链（enclosedP38/muRP38/cayleyRP38 均 sorry）",
+    "rhazim": "批 4 已落地；canonical rhazim 替 LA38 桩 rhazimP38",
+    "cayleyR": "批 4 已落地：150 项 Cayley–Menger 体由 defs.json AST 机械"
+               "生成并数值互验；替 LA38 桩 cayleyRP38",
+    "muR": "批 4 已落地（enabler）：canonical muR，LA38 的 muRP38 依赖桩",
+    "arclength": "批 4 enabler：canonical arcLength（PA18:161 孪生不可 "
+                 "co-import）",
+    "abc_of_quadratic": "批 4 enabler：canonical abcOfQuadratic（LA19:160/"
+                        "LA38:147 孪生）",
+    "rho": "批 4 enabler：canonical rho（LA2:336 rho_p2 孪生）",
+    "sqrt3": "批 4 enabler：canonical sqrt3（PA22:112 孪生）",
+    "tauq": "批 4 已落地；复用 SphereKit taum",
+    "asnFnhk": "批 4 已落地；canonical asnFnhk 替 PA22:209-210 的 stub 0",
 }
 
 # define_dart 域谓词（unsupported 豁免实证，emit_rpn 盒展开口径）
@@ -331,6 +342,7 @@ def main():
                  else "3" if sym in BATCH3
                  else "3(enabler)" if sym in BATCH3_ENABLERS
                  else "4" if sym in BATCH4
+                 else "4(enabler)" if sym in BATCH4_ENABLERS
                  else "5" if sym in BATCH5
                  else "5(enabler)" if sym in BATCH5_ENABLERS
                  else "6" if sym in BATCH6 else "")
@@ -366,7 +378,7 @@ def main():
   B = 已按 B 档移植（camelCase + HOL 锚注释）; C = 桩（sorry/axiom）;
   D = 缺席
 - batch: 批次号（1 = sqrtdelta 有理家族；2 = 6 元算子演算；3 = gamma/beta；
-  4 = 弧长/enclosed（未做，赖 LA38 lane，主 agent 决策）；5 = 杂项；
+  4 = 弧长/enclosed（已落地，绕开 LA38 桩 lane 直译 HOL 原文）；5 = 杂项；
   6 = 清尾；N(enabler) = 批 N 依赖件）。unsupported 的 define_dart 盒域
   谓词已实证豁免（备注列）：emit_rpn 展开成数值盒，不进 IExpr。
 
