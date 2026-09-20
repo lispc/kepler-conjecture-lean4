@@ -23,7 +23,7 @@
 > manifest 单一事实源、`--bbg --disj-gd` 发射端端到端绿）；**43,078 LP 定理持久化
 > 内核重跑已全量启动**（`/home/scroll/lprun-persist/`，~800/h ETA ~46h，0 失败，
 > 上次"验完即删"欠账清偿中）；2570626711（190 万叶）stage-a N=2048 低速开跑；
-> 145 案例 bb_arb 证书重跑与单案例"证书→接口"粘合试点已启动。
+> 145 案例 bb_arb 证书重跑已启动；单案例"证书→接口"粘合试点已端到端打通（C3397113841：粘合引理 1 行 simp 模板，量产每案例 ~30 行机械模板）。
 > 政策变更（2026-09-17 用户批准，已执行 2026-09-18）：main 允许携带 sorry 债务，
 > wip/auto-packing 已合入 main（`aad4fb35`），债务刻度 = `DEBT.md`（基线 2400）。
 
@@ -176,7 +176,7 @@ P1-P5 分段流水攻克）。**polyhedron.hl 100% 达成（71/71 定理零 sorr
 - [x] **装配脊柱 `Kepler/Assembly.lean`（2026-09-19，`0742680a`）**：HOL `kepler_conjecture_with_assumptions_and_archive` 逐行镜像；四接口 sorry 冻结（`nonlinearInequalities`/`linearProgrammingResults`/`textCapstone`/`goodListArchive`）+ 真证明 `assembly`（tame_classification 分量由 Phase 2 已证定理直接接线）；设计文档 `docs/phase6-spine.md`，折算点登记 `docs/statement-fidelity.md` 附录；脊柱故意不被根模块 import（终装配时接线）
 - [x] **接口 4 `goodListArchive` 闭合（P6-C，2026-09-19，`05b9653d`）**：19,715 图（Tri 9 / Quad 1253 / Pent 16080 / Hex 2373）good_list 三合取项全库 native_decide，23 分片 + 内核组合器（take/drop 链，覆盖完备性由类型检查保证），`#print axioms` 零 sorryAx
 - [x] **可达债务探针（P6-F，`1618f6a4`/`0b9ac85a`）**：DEBT.md 新增"主定理可达债务"节——`the_kepler_conjecture_from_interfaces` 的 `#print axioms` = sorryAx（剩余 3 接口）+ 624 特许 shard 公理 + 标准三，异常项无
-- [ ] 接口 1 `nonlinearInequalities`：**155 定义闭包已 B=112/124 就位**（2026-09-20，批 1/2/3/5/尾批，`42bcf24a`；余批 4×12 赖 LA38 未移植 lane）；单案例粘合试点（C3397113841）进行中；待 G4 内核证书接入 + 六 ID 清单填实
+- [ ] 接口 1 `nonlinearInequalities`：**155 定义闭包已 B=112/124 就位**（2026-09-20，批 1/2/3/5/尾批，`42bcf24a`；余批 4×12 赖 LA38 未移植 lane）；单案例粘合试点已打通（C3397113841，IneqPilot 入 main）；待 G4 内核证书接入 + 六 ID 清单填实
 - [ ] 接口 2 `linearProgrammingResults`：桥模式已验证（P6-D 原型）；**持久化重跑进行中（2026-09-20 启动，`/home/scroll/lprun-persist/`，~800/h，ETA ~46h，0 失败；产物含 sha256 + 账本交叉校验 + 公理足迹）**
 - [ ] 接口 3 `textCapstone`：待 Phase 5 填证收官 + 镜像语义差绕行（ELLLNYZ 析取形，P6-C 原型已探明）
 - [ ] 终装配：脊柱接入根模块 + 替换 Statement.lean:111 的 sorry
