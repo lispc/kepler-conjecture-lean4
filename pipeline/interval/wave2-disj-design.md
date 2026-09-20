@@ -179,3 +179,20 @@ RUNG <N> <out>            # 全局 rung 不变
   7 atan 中 4 个 closed → 固定 (2048,-64)，**3 个 open → 全局 rung 阶梯**。
   阶梯顶 (128,-100) 是否够由 stage-A 实测裁定（BESTFAIL 即扩档，只改 FillParams.lean
   一处 + manifest 同步）。
+
+## 7. W2+W4 实施结论（2026-09-20，`bb87a1e0`）
+
+落地：FillParams.lean `runMainDisj`/`runMainFileDisj`（逐支判定：varLt 盒判定优先，pos 支按序，
+first-hit-wins）；emit_lean.py `fill_goals`/`stage_a_driver_disj` + manifest.json（schema v2，
+ladder 单一事实源）；repair_leaves.py 删 hit 继承，子叶重算。549 全量重发射与在跑目录逐字节
+一致（不回归已实证）。BIXPCGW pilot 20 叶：16 叶 PASS 1（hit 与原证一致，参数长度 ✓）。
+
+**两个 W5 前置风险（实测坐实）**：
+1. **深叶 BESTFAIL 与 N 无关**：4 个最深叶全档位 FAIL 且 best 停首档——瓶颈不是 open-atan
+   阶梯，疑似 div/atan 的 out=-64 粒度在巨 mantissa 深盒的绝对误差。对策 = seeded repair
+   二分（子叶更浅更松），W5 第一轮先验证可解性；不可解再诊断 evalFill 的 FAIL 区间来源。
+2. **性能炸弹（W2.5 必修）**：每叶每档 ≈250s——主 prog（83 sqrt + 143 closed atan @N=2048）
+   恒失败但 evalFill 全量求值，closed 子式叶间不变。70,870 叶 ≈ 单机 200+ 天，不可行。
+   处方：stage-A 驱动对 **closed（var-free）子式做 chunk 级记忆化**（每 chunk 只算一次），
+   或按 hit 分布裁剪主 prog（语义注意：hit 重算是权威判定，主 prog 理论上可能在个别叶
+   成立，裁剪主 prog 会改变 hit 重算的语义完备性——优先记忆化，不裁剪）。
