@@ -96,6 +96,29 @@ BATCH5 = {
 }
 BATCH5_ENABLERS = {"dart_std3"}
 
+# P6-E batch 4 (arc-length / enclosed family) — NOT ported: depends on the
+# unported LA38 lane; pending main-agent decision.  Listed so the work order
+# shows the residual scope explicitly.  (sol_x was in this family's orbit but
+# landed with batch 3.)
+BATCH4 = {
+    "arc_hhn", "arclength_x_123", "arclength_y1", "acs_sqrt_x1_d4", "asn797k",
+    "node2_y", "enclosed", "rhazim", "rhazim2", "cayleyR", "tauq", "asnFnhk",
+}
+
+# P6-E batch 6 (tail sweep): the remaining non-batch-4 resolved D rows, plus
+# canonical re-ports of the two sorry-stub C rows (eta_y / rad2_x).
+BATCH6 = {
+    "a_spine5", "b_spine5", "eta_x", "eta_y", "rad2_x", "sqrt2", "sqrt8",
+    "x1_delta_x",
+}
+
+# Evidence note shared by the define_dart domain predicates (exempt from
+# porting; see docs/ineq-closure-155.md 备注 column).
+_DART_NOTE = ("define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它"
+              "展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），"
+              "domain_raw 只进盒约束不进 prog（translate_record:947），"
+              "==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植")
+
 # Per-symbol remarks (rendered in the md 备注 column).
 NOTES = {
     "compose6": "defs.json body_ast 是截断的 parse 残片（{\"const\":\"f\"}），"
@@ -122,7 +145,36 @@ NOTES = {
                      "extra disjunct'）",
     "tame_table_d": "ℕ 参数表常数；分支内 &r/&s 为 ℕ→ℝ cast，guard 在 ℕ 层",
     "matan": "批 5 名单，批 1 已作为 enabler 落地",
+    "eta_y": "PA21:177 为 sorry opaque 桩（原 C 档）且 PA21 不可与 SphereKit "
+             "co-import；批 6 在 IneqClosureDefs 立 canonical etaY",
+    "rad2_x": "PA25:89 rad2XP25 为 sorry 桩（原 C 档）；批 6 立 canonical "
+              "rad2X（= rhoX/(deltaX*4)）",
+    "sqrt2": "PackingAuto2:91 内联为 Real.sqrt 2；批 6 为闭包粘合立名",
+    "sqrt8": "PackingAuto2:91 内联为 Real.sqrt 8；批 6 为闭包粘合立名",
+    "rhazim2": "批 4：= node2_y rhazim，两个依赖均属批 4 排除清单",
+    "arc_hhn": "批 4（弧长/enclosed 家族）：依赖 LA38 未移植 lane，"
+               "主 agent 另行决策",
+    "arclength_x_123": "批 4，同上",
+    "arclength_y1": "批 4，同上",
+    "acs_sqrt_x1_d4": "批 4，同上",
+    "asn797k": "批 4，同上",
+    "node2_y": "批 4，同上",
+    "enclosed": "批 4，同上",
+    "rhazim": "批 4，同上",
+    "cayleyR": "批 4，同上",
+    "tauq": "批 4，同上",
+    "asnFnhk": "批 4，同上",
 }
+
+# define_dart 域谓词（unsupported 豁免实证，emit_rpn 盒展开口径）
+for _d in ("apex_A", "apex_flat", "apex_flat_h", "apex_flat_hll",
+           "apex_flat_l", "apex_std3_hll", "apex_std3_lhh",
+           "apex_std3_lll_wxx", "apex_std3_lll_xww", "apex_sup_flat",
+           "dart4_diag3", "dart4_diag3_b", "dartX", "dartY", "dart_mll_n",
+           "dart_mll_w", "dart_std3_big_200_218", "dart_std3_lw",
+           "dart_std3_mini", "dart_std3_small", "dart_std4"):
+    NOTES[_d] = _DART_NOTE
+del _d
 
 ANCHOR_RE = re.compile(r"/--\s*HOL\s*`([A-Za-z0-9_']+)`")
 DEF_RE = re.compile(
@@ -278,8 +330,10 @@ def main():
                  else "2(enabler)" if sym in BATCH2_ENABLERS
                  else "3" if sym in BATCH3
                  else "3(enabler)" if sym in BATCH3_ENABLERS
+                 else "4" if sym in BATCH4
                  else "5" if sym in BATCH5
-                 else "5(enabler)" if sym in BATCH5_ENABLERS else "")
+                 else "5(enabler)" if sym in BATCH5_ENABLERS
+                 else "6" if sym in BATCH6 else "")
         rows.append({"symbol": sym, "class": cls, "tier": tier,
                      "lean": lean, "batch": batch,
                      "note": NOTES.get(sym, ""),
@@ -311,8 +365,10 @@ def main():
 - tier（Lean 侧现状）: A = 已有真体（项目原生/Mathlib）;
   B = 已按 B 档移植（camelCase + HOL 锚注释）; C = 桩（sorry/axiom）;
   D = 缺席
-- batch: 批次号（1 = sqrtdelta 有理家族；2 = 6 元算子演算；
-  N(enabler) = 批 N 依赖件）
+- batch: 批次号（1 = sqrtdelta 有理家族；2 = 6 元算子演算；3 = gamma/beta；
+  4 = 弧长/enclosed（未做，赖 LA38 lane，主 agent 决策）；5 = 杂项；
+  6 = 清尾；N(enabler) = 批 N 依赖件）。unsupported 的 define_dart 盒域
+  谓词已实证豁免（备注列）：emit_rpn 展开成数值盒，不进 IExpr。
 
 | # | symbol | class | tier | Lean 侧 | batch | HOL source | 备注 |
 |---|--------|-------|------|---------|-------|------------|------|

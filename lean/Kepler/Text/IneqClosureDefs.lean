@@ -573,6 +573,70 @@ example : dartStd3Big = dartStd3 := rfl
 example : dartStd3 2.2 2.2 2.2 2.2 2.2 2.2 = List.replicate 6 (2.0, 2.2, 2.52) :=
   rfl
 
+/-! ## Batch 6: tail sweep (sphere.hl constants and small combos)
+
+The two former C-tier rows are re-ported under canonical names: `eta_y`
+(PackingAuto21.lean:177) and `rad2_x` (`rad2XP25`, PackingAuto25.lean:89) are
+`sorry` stubs there, and PackingAuto21/25 cannot be co-imported with SphereKit
+anyway (the `atn2` clash, SphereKit.lean:10-11). -/
+
+/-- HOL `sqrt8` (sphere.hl:75). PackingAuto2 inlines this constant as
+`Real.sqrt 8` (PackingAuto2.lean:91); named here for closure gluing. -/
+noncomputable def sqrt8 : ℝ := Real.sqrt 8
+
+/-- HOL `sqrt2` (sphere.hl:76). Same inlining note as `sqrt8`. -/
+noncomputable def sqrt2 : ℝ := Real.sqrt 2
+
+/-- Cross-def: `sqrt8 = 2 * sqrt2`. -/
+example : sqrt8 = 2 * sqrt2 := by
+  rw [sqrt8, sqrt2, show (8 : ℝ) = 2 ^ 2 * 2 by norm_num,
+    Real.sqrt_mul (by norm_num), Real.sqrt_sq (by norm_num)]
+
+example : sqrt2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)
+
+/-- HOL `a_spine5` (sphere.hl:632). -/
+def aSpine5 : ℝ := 0.0560305
+
+/-- HOL `b_spine5` (sphere.hl:634). -/
+def bSpine5 : ℝ := -0.0445813
+
+example : (aSpine5, bSpine5) = (0.0560305, -0.0445813) := rfl
+
+/-- HOL `eta_x` (sphere.hl:127-129). -/
+noncomputable def etaX (x1 x2 x3 : ℝ) : ℝ :=
+  Real.sqrt (x1 * x2 * x3 / upsX x1 x2 x3)
+
+/-- Numeric: edge-2 regular simplex, `etaX 4 4 4 = √(64/48) = 2/√3`. -/
+example : etaX 4 4 4 = 2 / Real.sqrt 3 := by
+  have hups : upsX 4 4 4 = 48 := by norm_num [upsX]
+  unfold etaX
+  rw [hups, show (4 : ℝ) * 4 * 4 / 48 = (2 / Real.sqrt 3) ^ 2 by
+    rw [div_pow, Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 3)]; norm_num,
+    Real.sqrt_sq (by positivity)]
+
+/-- HOL `eta_y` (sphere.hl:131-135): `eta_x` at squared lengths (the HOL
+let-chain). Canonical name for the `sorry` opaque `eta_y`
+(PackingAuto21.lean:177). -/
+noncomputable def etaY (y1 y2 y3 : ℝ) : ℝ :=
+  etaX (y1 * y1) (y2 * y2) (y3 * y3)
+
+example : etaY 2 2 2 = etaX 4 4 4 := by norm_num [etaY]
+
+/-- HOL `rad2_x` (sphere.hl:271-273): squared circumradius from squared edge
+lengths. Canonical name for the `sorry` stub `rad2XP25`
+(PackingAuto25.lean:89). -/
+noncomputable def rad2X (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  rhoX x1 x2 x3 x4 x5 x6 / (deltaX x1 x2 x3 x4 x5 x6 * 4)
+
+/-- Numeric: regular tetrahedron with edge 2 has circumradius `√6/2`, so
+`rad2X (4,…,4) = 3/2`. -/
+example : rad2X 4 4 4 4 4 4 = 1.5 := by norm_num [rad2X, rhoX, deltaX]
+
+/-- HOL `x1_delta_x` (sphere.hl:840). -/
+def x1DeltaX (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := x1 * deltaX x1 x2 x3 x4 x5 x6
+
+example : x1DeltaX 4 4 4 4 4 4 = 512 := by norm_num [x1DeltaX, deltaX]
+
 /-! ## Axiom audit (standard three only: propext / Classical.choice /
 Quot.sound) -/
 
@@ -592,5 +656,8 @@ Quot.sound) -/
 #print axioms tameTableD
 #print axioms ups126
 #print axioms dartStd3Big
+#print axioms etaY
+#print axioms rad2X
+#print axioms x1DeltaX
 
 end Kepler.Text

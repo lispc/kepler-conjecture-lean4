@@ -26,9 +26,9 @@
   {
    "symbol": "a_spine5",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "aSpine5 (lean/Kepler/Text/IneqClosureDefs.lean:598)",
+   "batch": "6",
    "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:632"
   },
@@ -64,8 +64,8 @@
    "class": "resolved",
    "tier": "D",
    "lean": "-",
-   "batch": "",
-   "note": "",
+   "batch": "4",
+   "note": "批 4，同上",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:792"
   },
   {
@@ -74,7 +74,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2985"
   },
   {
@@ -83,7 +83,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2888"
   },
   {
@@ -92,7 +92,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3711"
   },
   {
@@ -101,7 +101,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3236"
   },
   {
@@ -110,7 +110,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3701"
   },
   {
@@ -119,7 +119,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3343"
   },
   {
@@ -128,7 +128,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3903"
   },
   {
@@ -137,7 +137,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3764"
   },
   {
@@ -146,7 +146,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3738"
   },
   {
@@ -155,7 +155,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3103"
   },
   {
@@ -163,8 +163,8 @@
    "class": "resolved",
    "tier": "D",
    "lean": "-",
-   "batch": "",
-   "note": "",
+   "batch": "4",
+   "note": "批 4（弧长/enclosed 家族）：依赖 LA38 未移植 lane，主 agent 另行决策",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:780"
   },
   {
@@ -181,8 +181,8 @@
    "class": "resolved",
    "tier": "D",
    "lean": "-",
-   "batch": "",
-   "note": "",
+   "batch": "4",
+   "note": "批 4，同上",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:798"
   },
   {
@@ -190,8 +190,8 @@
    "class": "resolved",
    "tier": "D",
    "lean": "-",
-   "batch": "",
-   "note": "",
+   "batch": "4",
+   "note": "批 4，同上",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:762"
   },
   {
@@ -208,8 +208,8 @@
    "class": "resolved",
    "tier": "D",
    "lean": "-",
-   "batch": "",
-   "note": "",
+   "batch": "4",
+   "note": "批 4，同上",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:783"
   },
   {
@@ -217,8 +217,8 @@
    "class": "resolved",
    "tier": "D",
    "lean": "-",
-   "batch": "",
-   "note": "",
+   "batch": "4",
+   "note": "批 4，同上",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:786"
   },
   {
@@ -242,9 +242,9 @@
   {
    "symbol": "b_spine5",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "bSpine5 (lean/Kepler/Text/IneqClosureDefs.lean:601)",
+   "batch": "6",
    "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:634"
   },
@@ -280,8 +280,8 @@
    "class": "resolved",
    "tier": "D",
    "lean": "-",
-   "batch": "",
-   "note": "",
+   "batch": "4",
+   "note": "批 4，同上",
    "source": "auto:reference/flyspeck/text_formalization/leg/cayleyR_def.hl:32"
   },
   {
@@ -335,7 +335,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2866"
   },
   {
@@ -344,7 +344,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2591"
   },
   {
@@ -353,7 +353,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2828"
   },
   {
@@ -362,7 +362,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2847"
   },
   {
@@ -371,7 +371,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3373"
   },
   {
@@ -380,7 +380,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3363"
   },
   {
@@ -407,7 +407,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3256"
   },
   {
@@ -416,7 +416,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3552"
   },
   {
@@ -425,7 +425,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3191"
   },
   {
@@ -434,7 +434,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3046"
   },
   {
@@ -443,7 +443,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
-   "note": "",
+   "note": "define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），domain_raw 只进盒约束不进 prog（translate_record:947），==> 前件由 strip_spine:899 剥离丢弃——不进 IExpr，豁免移植",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:1863"
   },
   {
@@ -586,26 +586,26 @@
    "class": "resolved",
    "tier": "D",
    "lean": "-",
-   "batch": "",
-   "note": "",
+   "batch": "4",
+   "note": "批 4，同上",
    "source": "auto:reference/flyspeck/text_formalization/leg/enclosed_def.hl:22"
   },
   {
    "symbol": "eta_x",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "etaX (lean/Kepler/Text/IneqClosureDefs.lean:606)",
+   "batch": "6",
    "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:127"
   },
   {
    "symbol": "eta_y",
    "class": "resolved",
-   "tier": "C",
-   "lean": "eta_y (lean/Kepler/Text/PackingAuto21.lean:177)",
-   "batch": "",
-   "note": "",
+   "tier": "B",
+   "lean": "etaY (lean/Kepler/Text/IneqClosureDefs.lean:620)",
+   "batch": "6",
+   "note": "PA21:177 为 sorry opaque 桩（原 C 档）且 PA21 不可与 SphereKit co-import；批 6 在 IneqClosureDefs 立 canonical etaY",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:131"
   },
   {
@@ -919,8 +919,8 @@
    "class": "resolved",
    "tier": "D",
    "lean": "-",
-   "batch": "",
-   "note": "",
+   "batch": "4",
+   "note": "批 4，同上",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:222"
   },
   {
@@ -1052,10 +1052,10 @@
   {
    "symbol": "rad2_x",
    "class": "resolved",
-   "tier": "C",
-   "lean": "rad2XP25 (lean/Kepler/Text/PackingAuto25.lean:89)",
-   "batch": "",
-   "note": "",
+   "tier": "B",
+   "lean": "rad2X (lean/Kepler/Text/IneqClosureDefs.lean:628)",
+   "batch": "6",
+   "note": "PA25:89 rad2XP25 为 sorry 桩（原 C 档）；批 6 立 canonical rad2X（= rhoX/(deltaX*4)）",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:271"
   },
   {
@@ -1072,8 +1072,8 @@
    "class": "resolved",
    "tier": "D",
    "lean": "-",
-   "batch": "",
-   "note": "",
+   "batch": "4",
+   "note": "批 4，同上",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:211"
   },
   {
@@ -1081,8 +1081,8 @@
    "class": "resolved",
    "tier": "D",
    "lean": "-",
-   "batch": "",
-   "note": "",
+   "batch": "4",
+   "note": "批 4：= node2_y rhazim，两个依赖均属批 4 排除清单",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:226"
   },
   {
@@ -1241,10 +1241,10 @@
   {
    "symbol": "sqrt2",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
-   "note": "",
+   "tier": "B",
+   "lean": "sqrt2 (lean/Kepler/Text/IneqClosureDefs.lean:588)",
+   "batch": "6",
+   "note": "PackingAuto2:91 内联为 Real.sqrt 2；批 6 为闭包粘合立名",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:76"
   },
   {
@@ -1259,10 +1259,10 @@
   {
    "symbol": "sqrt8",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
-   "note": "",
+   "tier": "B",
+   "lean": "sqrt8 (lean/Kepler/Text/IneqClosureDefs.lean:585)",
+   "batch": "6",
+   "note": "PackingAuto2:91 内联为 Real.sqrt 8；批 6 为闭包粘合立名",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:75"
   },
   {
@@ -1297,8 +1297,8 @@
    "class": "resolved",
    "tier": "D",
    "lean": "-",
-   "batch": "",
-   "note": "",
+   "batch": "4",
+   "note": "批 4，同上",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:244"
   },
   {
@@ -1394,9 +1394,9 @@
   {
    "symbol": "x1_delta_x",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "x1DeltaX (lean/Kepler/Text/IneqClosureDefs.lean:636)",
+   "batch": "6",
    "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:840"
   },
