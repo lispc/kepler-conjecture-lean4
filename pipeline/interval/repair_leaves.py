@@ -162,8 +162,21 @@ def main():
     mod = "CRepair" + "".join(ch if ch.isalnum() else "x"
                               for ch in os.path.basename(args[1]).split(".")[0])
 
-    # (box, hit, depth) triples; survivors = verified PASS (possibly split)
-    items = [(tuple(E.box_frac(iv) for iv in l["box"]), l["hit"], 0)
+    # (box, hit, depth) triples; survivors = verified PASS (possibly split).
+    # Boxes are fed to the driver in *tree node* form (the form the kernel
+    # checks — W3's `tree_box_map` fix, synced here): the `.sqrt` mantissa
+    # certificate is form-sensitive (`Dyadic.sqrtI` aligns the mantissa to
+    # `e % 2`).  split_box children are node-form by construction (dmid
+    # midpoints), so only the round-0/seeded leaves need the map.
+    leafmap = {}
+    for l in cert["leaves"]:
+        b = tuple(E.box_frac(iv) for iv in l["box"])
+        if b in leafmap:
+            die(f"duplicate leaf box: {b}")
+        leafmap[b] = l["hit"]
+    rootfrac = tuple(E.box_frac(iv) for iv in cert["root_box"])
+    tbm = E.tree_box_map(E.reconstruct(rootfrac, leafmap))
+    items = [(tbm[tuple(E.box_frac(iv) for iv in l["box"])], l["hit"], 0)
              for l in cert["leaves"]]
     params_by_box = {}
     if fails_file is not None:

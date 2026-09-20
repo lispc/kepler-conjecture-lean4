@@ -33,20 +33,20 @@ def die(msg):
     sys.exit(f"params_merge: {msg}")
 
 
-def load_ladder(d):
-    """Ladder single source of truth (wave-2 design D3): `<dir>/manifest.json`
-    (schema v2) when present; otherwise the hardcoded copy, with a
-    deprecation warning."""
+def load_manifest(d):
+    """Manifest single source of truth (wave-2 design D3):
+    `<dir>/manifest.json` (schema v2) when present; otherwise None and the
+    hardcoded ladder, with a deprecation warning."""
     p = os.path.join(d, "manifest.json")
     if os.path.exists(p):
         m = json.load(open(p))
         if m.get("schema") != 2 or not m.get("ladder"):
             die(f"{p}: not a schema-v2 manifest with a ladder")
-        return [tuple(r) for r in m["ladder"]]
+        return m
     print(f"params_merge: warning: no {p} — falling back to the hardcoded "
           "ladder (deprecated; re-emit stage A with schema v2)",
           file=sys.stderr)
-    return LADDER
+    return None
 
 
 def box_key(box_json):
@@ -61,8 +61,13 @@ def main():
     repaired = json.load(open(sys.argv[4]))
     rparams = json.load(open(sys.argv[5]))
     outpath = sys.argv[6]
-    ladder = load_ladder(stagea_dir)
+    manifest = load_manifest(stagea_dir)
+    ladder = [tuple(r) for r in manifest["ladder"]] if manifest else LADDER
     rank = {r: i for i, r in enumerate(ladder)}
+    # schema v2: goal label -> descriptor (repair params carry recomputed
+    # hit labels; the merged file needs the goal index k).
+    goal_of_label = ({g["label"]: g for g in manifest.get("goals", [])}
+                     if manifest else None)
 
     rungs = []
     old = {}
@@ -90,8 +95,23 @@ def main():
     new = {}
     for l in rparams["leaves"]:
         rungs.append(tuple(l["rung"]))
-        # repair params are v1-shaped (main-goal pos fills)
-        new[box_key(l["box"])] = ("PASS", [str(x) for x in l["params"]])
+        hit = l.get("hit")
+        if goal_of_label is not None and hit is not None:
+            # schema v2 (wave-2 W4): repair recomputed the hit; map the goal
+            # label back to its index and keep the PASS/PASSV shape.
+            g = goal_of_label.get(hit)
+            if g is None:
+                die(f"repair hit label {hit!r} not in manifest goals")
+            if g["kind"] == "varLt":
+                if l["params"]:
+                    die(f"varLt repair leaf with params: {hit}")
+                new[box_key(l["box"])] = ("PASSV", [str(g["index"])])
+            else:
+                new[box_key(l["box"])] = ("PASS", [str(g["index"])]
+                                          + [str(x) for x in l["params"]])
+        else:
+            # v1-shaped (main-goal pos fills, single-goal pipeline)
+            new[box_key(l["box"])] = ("PASS", [str(x) for x in l["params"]])
     if not rungs:
         die("no rungs found in any source")
     for r in rungs:
@@ -114,6 +134,20 @@ def main():
             out.write(f"{i} {status}{tail}\n")
     if missing:
         die(f"{missing} repaired-cert leaves have no params")
+    if manifest is not None:
+        # Repaired-certificate manifest for stage B (`--manifest`): goals and
+        # ladder unchanged (the real invariants), nleaves tracks the repaired
+        # cert (bisection may have added leaves).  The stage-A manifest in
+        # <stagea_dir> stays untouched.
+        rm = dict(manifest)
+        rm["nleaves"] = len(repaired["leaves"])
+        rm["repaired_from"] = manifest.get("nleaves")
+        mp = outpath + ".manifest.json"
+        with open(mp, "w") as f:
+            json.dump(rm, f, indent=1)
+            f.write("\n")
+        print(f"params_merge: wrote {mp} (repaired manifest, "
+              f"nleaves {manifest.get('nleaves')} -> {len(repaired['leaves'])})")
     print(f"params_merge: wrote {outpath} — {len(repaired['leaves'])} leaves, "
           f"global rung {global_rung} ({len(old)} stage-A + {len(new)} repair)")
 
