@@ -24,8 +24,8 @@
   + `cos`: `Real.hasSum_cos` (valid for all `x`);
   + `arctan`: `Real.hasSum_arctan` (valid for `‖x‖ < 1`; the endpoints
     `x = ±1` are closed off separately by continuity —
-    `arctan_abs_sub_partial_le_one` — so the range checks in `arctanI` are
-    the *non-strict* `ble`).
+    `arctan_abs_sub_partial_le_one` — so the range checks in `arctanIBase`
+    are the *non-strict* `ble`).
 
   **Range reduction** (`sinRed`): `sin` is only Taylor-enclosed on `[0, 1]`;
   for arguments in a band around `±π` we shift by the dyadic π enclosure
@@ -45,11 +45,16 @@
   `1/(2N+1)!` (for `x ≤ 1`); `cosInterval`/`arctanInterval` reuse the same
   loop with even powers (`x^(2i)/(2i)!`) resp. odd powers over odd integers
   (`x^(2i+1)/(2i+1)`), each with its term-shaped remainder.  The
-  **interval-level wrappers** `sinI`/`cosI`/`arctanI` enclose
+  **interval-level wrappers** `sinI`/`cosI` enclose
   `{f y : y ∈ J}` on `J ⊆ [-1,1]` (resp. `[0,1]` for `cos`) via endpoint
   monotonicity (`Real.sin_le_sin_of_le_of_le_pi_div_two`,
   `Real.cos_le_cos_of_nonneg_of_le_pi`, `arctan_mono`) applied to the point
-  enclosures, with odd/even sign handling.
+  enclosures, with odd/even sign handling.  `arctanI` is total on `ℝ`: the
+  base branch covers `J ⊆ [-1, 1]` (`arctanIBase`), `1 ≤ J.lo` reduces via
+  `arctan x = π/2 − arctan x⁻¹` (`arctanIPos`, with the `π/2` envelope
+  `halfPiI = 2·arctan 1` at Taylor order `max N 512`), `J.hi ≤ −1` by odd
+  symmetry (`arctanINeg`), and intervals crossing `±1` are split at the
+  crossing points and joined by hulls (`arctanHull`).
 
   Checking layer: `Int` only. No `sorry`, no `native_decide`, no new axioms.
 -/
@@ -943,20 +948,22 @@ theorem arctanPoint_sound {z : Dyadic} {N : ℕ} {out : Int} {K : DInterval}
 endpoints `±1` are covered by the boundary estimate
 `arctan_abs_sub_partial_le_one`; the alternating-series remainder is still
 valid there): `arctan` is monotone, so the endpoints' point enclosures
-bracket all of `{arctan y : y ∈ J}`. -/
-def arctanI (J : DInterval) (N : ℕ) (out : Int) : Option DInterval :=
+bracket all of `{arctan y : y ∈ J}`.  This is the base branch of `arctanI`;
+large arguments are handled by range reduction (`arctanIPos`/`arctanINeg`)
+and crossing intervals by hulls (`arctanHull`). -/
+def arctanIBase (J : DInterval) (N : ℕ) (out : Int) : Option DInterval :=
   if Dyadic.ble (⟨-1, 0⟩ : Dyadic) J.lo && Dyadic.ble J.hi ⟨1, 0⟩ then
     match arctanPoint J.lo N out, arctanPoint J.hi N out with
     | some L, some H => some ⟨L.lo, H.hi⟩
     | _, _ => none
   else none
 
-/-- **Soundness of `arctanI`**: if the range checks succeed, the
+/-- **Soundness of `arctanIBase`**: if the range checks succeed, the
 result contains `arctan y` for every real `y ∈ J`. -/
-theorem arctanI_sound {J : DInterval} {N : ℕ} {out : Int} {K : DInterval} {y : ℝ}
-    (hy : J.mem y) (h : arctanI J N out = some K) : K.mem (Real.arctan y) := by
+theorem arctanIBase_sound {J : DInterval} {N : ℕ} {out : Int} {K : DInterval} {y : ℝ}
+    (hy : J.mem y) (h : arctanIBase J N out = some K) : K.mem (Real.arctan y) := by
   obtain ⟨hy1, hy2⟩ := hy
-  unfold arctanI at h
+  unfold arctanIBase at h
   by_cases hchk : Dyadic.ble (⟨-1, 0⟩ : Dyadic) J.lo && Dyadic.ble J.hi ⟨1, 0⟩
   · rw [if_pos hchk] at h
     have hlo : (-1:ℝ) ≤ J.lo.toReal := by
@@ -984,6 +991,323 @@ theorem arctanI_sound {J : DInterval} {N : ℕ} {out : Int} {K : DInterval} {y :
         have hmono2 : Real.arctan y ≤ Real.arctan J.hi.toReal := Real.arctan_mono hy2
         exact ⟨le_trans hl1 hmono1, le_trans hmono2 hh2⟩
   · rw [if_neg hchk] at h; simp at h
+
+/-- Enclosure of `π / 2`: twice the point enclosure of `arctan 1 = π / 4`
+(`Real.arctan_one`).  The caller picks the Taylor order `Nπ` — the
+alternating-series remainder at `x = 1` is `~1 / (2·Nπ+1)`, far coarser than
+the output granularity. -/
+def halfPiI (Nπ : ℕ) (out : Int) : Option DInterval :=
+  (arctanPoint ⟨1, 0⟩ Nπ out).map fun A =>
+    ⟨(⟨2, 0⟩ : Dyadic).mul A.lo, (⟨2, 0⟩ : Dyadic).mul A.hi⟩
+
+/-- **Soundness of `halfPiI`**: the result contains `π / 2`. -/
+theorem halfPiI_sound {Nπ : ℕ} {out : Int} {K : DInterval}
+    (h : halfPiI Nπ out = some K) : K.mem (Real.pi / 2) := by
+  unfold halfPiI at h
+  cases hp : arctanPoint ⟨1, 0⟩ Nπ out with
+  | none => rw [hp] at h; simp at h
+  | some A =>
+    rw [hp] at h
+    obtain rfl : K = ⟨(⟨2, 0⟩ : Dyadic).mul A.lo, (⟨2, 0⟩ : Dyadic).mul A.hi⟩ :=
+      (Option.some.inj h).symm
+    have hz1 : (-1:ℝ) ≤ Dyadic.toReal ⟨1, 0⟩ := by
+      rw [Dyadic.toReal_int]
+      norm_num
+    have hz2 : Dyadic.toReal ⟨1, 0⟩ ≤ 1 := by
+      rw [Dyadic.toReal_int]
+      norm_num
+    obtain ⟨hA1, hA2⟩ := arctanPoint_sound hz1 hz2 hp
+    have hz1v : Dyadic.toReal ⟨1, 0⟩ = 1 := by
+      rw [Dyadic.toReal_int]
+      norm_num
+    rw [hz1v, Real.arctan_one] at hA1 hA2
+    have h2 : Dyadic.toReal (⟨2, 0⟩ : Dyadic) = 2 := by
+      rw [Dyadic.toReal_int]
+      norm_num
+    constructor
+    · show Dyadic.toReal ((⟨2, 0⟩ : Dyadic).mul A.lo) ≤ Real.pi / 2
+      rw [Dyadic.toReal_mul, h2]
+      linarith
+    · show Real.pi / 2 ≤ Dyadic.toReal ((⟨2, 0⟩ : Dyadic).mul A.hi)
+      rw [Dyadic.toReal_mul, h2]
+      linarith
+
+/-- The inner combination of `arctanIPos`, given the reciprocal interval
+`R ⊇ {1/y : y ∈ J}`: point enclosures of `arctan` at the endpoints of `R`
+(clamped to `[0, 1]` — harmless, since `1/y ∈ (0, 1]` already, so the clamp
+only tightens), then `π/2 − ·` via `DInterval.sub` (note the endpoint
+crossing: `π/2 − arctan(1/y)` is antitone in the enclosed value).  The `π/2`
+envelope uses Taylor order `max N 512`: the alternating-series remainder at
+`x = 1` is `~1/(2Nπ+1)`, and the node's own `N` can be as low as the rung
+minimum. -/
+def arctanIPosAux (R : DInterval) (N : ℕ) (out : Int) : Option DInterval :=
+  match arctanPoint (Dyadic.dmax R.lo ⟨0, 0⟩) N out,
+      arctanPoint (Dyadic.dmin R.hi ⟨1, 0⟩) N out, halfPiI (max N 512) out with
+  | some L, some H, some P => some (P.sub ⟨L.lo, H.hi⟩)
+  | _, _, _ => none
+
+/-- **Soundness of `arctanIPosAux`**: for `z ∈ R ∩ [0, 1]`, the result
+contains `π / 2 - arctan z`. -/
+theorem arctanIPosAux_sound {R : DInterval} {N : ℕ} {out : Int} {K : DInterval} {z : ℝ}
+    (hmem : R.mem z) (hz0 : (0:ℝ) ≤ z) (hz1 : z ≤ 1)
+    (h : arctanIPosAux R N out = some K) : K.mem (Real.pi / 2 - Real.arctan z) := by
+  obtain ⟨hR1, hR2⟩ := hmem
+  unfold arctanIPosAux at h
+  cases hL : arctanPoint (Dyadic.dmax R.lo ⟨0, 0⟩) N out with
+  | none => rw [hL] at h; simp at h
+  | some L =>
+    rw [hL] at h
+    cases hH : arctanPoint (Dyadic.dmin R.hi ⟨1, 0⟩) N out with
+    | none => rw [hH] at h; simp at h
+    | some H =>
+      rw [hH] at h
+      cases hP : halfPiI (max N 512) out with
+      | none => rw [hP] at h; simp at h
+      | some P =>
+        rw [hP] at h
+        obtain rfl : K = P.sub ⟨L.lo, H.hi⟩ := (Option.some.inj h).symm
+        have h0 : Dyadic.toReal (⟨0, 0⟩ : Dyadic) = 0 := by
+          rw [Dyadic.toReal_int]
+          norm_num
+        have h1d : Dyadic.toReal (⟨1, 0⟩ : Dyadic) = 1 := by
+          rw [Dyadic.toReal_int]
+          norm_num
+        have hlo0 : (-1:ℝ) ≤ Dyadic.toReal (Dyadic.dmax R.lo ⟨0, 0⟩) := by
+          rw [Dyadic.toReal_dmax, h0]
+          exact le_trans (by norm_num) (le_max_right _ _)
+        have hlo1 : Dyadic.toReal (Dyadic.dmax R.lo ⟨0, 0⟩) ≤ 1 := by
+          rw [Dyadic.toReal_dmax, h0]
+          exact max_le (le_trans hR1 hz1) (by norm_num)
+        have hhi0 : (-1:ℝ) ≤ Dyadic.toReal (Dyadic.dmin R.hi ⟨1, 0⟩) := by
+          rw [Dyadic.toReal_dmin, h1d]
+          exact le_trans (by norm_num) (le_trans hz0 (le_min hR2 hz1))
+        have hhi1 : Dyadic.toReal (Dyadic.dmin R.hi ⟨1, 0⟩) ≤ 1 := by
+          rw [Dyadic.toReal_dmin, h1d]
+          exact min_le_right _ _
+        obtain ⟨hL1, _⟩ := arctanPoint_sound hlo0 hlo1 hL
+        obtain ⟨_, hH2⟩ := arctanPoint_sound hhi0 hhi1 hH
+        obtain ⟨hP1, hP2⟩ := halfPiI_sound hP
+        have hm1 : Real.arctan (Dyadic.toReal (Dyadic.dmax R.lo ⟨0, 0⟩))
+            ≤ Real.arctan z := by
+          apply Real.arctan_mono
+          rw [Dyadic.toReal_dmax, h0]
+          exact max_le hR1 hz0
+        have hm2 : Real.arctan z
+            ≤ Real.arctan (Dyadic.toReal (Dyadic.dmin R.hi ⟨1, 0⟩)) := by
+          apply Real.arctan_mono
+          rw [Dyadic.toReal_dmin, h1d]
+          exact le_min hR2 hz1
+        exact DInterval.mem_sub ⟨hP1, hP2⟩ ⟨le_trans hL1 hm1, le_trans hm2 hH2⟩
+
+/-- **Positive large-argument branch** (`1 ≤ J.lo`): the identity
+`arctan x = π / 2 - arctan x⁻¹` (`Real.arctan_inv_of_pos`).  The reciprocal
+interval `R = J.recip out ⊇ {1/y : y ∈ J}` lies in `(0, 1]`, so
+`arctanIPosAux` applies. -/
+def arctanIPos (J : DInterval) (N : ℕ) (out : Int) : Option DInterval :=
+  if Dyadic.ble (⟨1, 0⟩ : Dyadic) J.lo then
+    match J.recip out with
+    | none => none
+    | some R => arctanIPosAux R N out
+  else none
+
+/-- **Soundness of `arctanIPos`**: if the checks succeed, the result
+contains `arctan y` for every real `y ∈ J`. -/
+theorem arctanIPos_sound {J : DInterval} {N : ℕ} {out : Int} {K : DInterval} {y : ℝ}
+    (hy : J.mem y) (h : arctanIPos J N out = some K) : K.mem (Real.arctan y) := by
+  have ⟨hy1, hy2⟩ := hy
+  unfold arctanIPos at h
+  by_cases hchk : Dyadic.ble (⟨1, 0⟩ : Dyadic) J.lo
+  · rw [if_pos hchk] at h
+    have hJlo : (1:ℝ) ≤ J.lo.toReal := by
+      have h := Dyadic.ble_toReal hchk
+      rw [Dyadic.toReal_int] at h
+      push_cast at h
+      exact h
+    have hy0 : (0:ℝ) < y := by linarith
+    have hy1' : (1:ℝ) ≤ y := le_trans hJlo hy1
+    cases hR : J.recip out with
+    | none => rw [hR] at h; simp at h
+    | some R =>
+      rw [hR] at h
+      have haux : arctanIPosAux R N out = some K := h
+      have hmem : R.mem ((1:ℝ) / y) := J.recip_sound hy hR
+      have hsub := arctanIPosAux_sound hmem (one_div_nonneg.mpr (le_of_lt hy0))
+        ((div_le_one hy0).mpr hy1') haux
+      have hid : Real.arctan y = Real.pi / 2 - Real.arctan (1 / y) := by
+        have h := Real.arctan_inv_of_pos hy0
+        rw [inv_eq_one_div] at h
+        linarith
+      rw [hid]
+      exact hsub
+  · rw [if_neg hchk] at h; simp at h
+
+/-- **Negative large-argument branch** (`J.hi ≤ −1`): odd symmetry
+`arctan y = −arctan(−y)` with `−y ∈ J.neg ⊆ [1, ∞)`. -/
+def arctanINeg (J : DInterval) (N : ℕ) (out : Int) : Option DInterval :=
+  if Dyadic.ble J.hi ⟨-1, 0⟩ then
+    (arctanIPos J.neg N out).map DInterval.neg
+  else none
+
+/-- **Soundness of `arctanINeg`**: if the checks succeed, the result
+contains `arctan y` for every real `y ∈ J`. -/
+theorem arctanINeg_sound {J : DInterval} {N : ℕ} {out : Int} {K : DInterval} {y : ℝ}
+    (hy : J.mem y) (h : arctanINeg J N out = some K) : K.mem (Real.arctan y) := by
+  unfold arctanINeg at h
+  by_cases hchk : Dyadic.ble J.hi ⟨-1, 0⟩
+  · rw [if_pos hchk] at h
+    cases hs : arctanIPos J.neg N out with
+    | none => rw [hs] at h; simp at h
+    | some L =>
+      rw [hs] at h
+      obtain rfl : K = DInterval.neg L := (Option.some.inj h).symm
+      have hL := arctanIPos_sound (DInterval.mem_neg hy) hs
+      have hid : Real.arctan y = -Real.arctan (-y) := by
+        rw [Real.arctan_neg]
+        ring
+      rw [hid]
+      exact DInterval.mem_neg hL
+  · rw [if_neg hchk] at h; simp at h
+
+/-- Union hull of two interval results (`none` if either fails — the
+enclosure is only sound when *both* branches were computable). -/
+def arctanHull (a b : Option DInterval) : Option DInterval :=
+  match a, b with
+  | some A, some B => some ⟨Dyadic.dmin A.lo B.lo, Dyadic.dmax A.hi B.hi⟩
+  | _, _ => none
+
+/-- **Soundness of `arctanHull`**: if either component contains `z`, the
+hull contains `z`. -/
+theorem arctanHull_sound {a b : Option DInterval} {K : DInterval} {z : ℝ}
+    (h : arctanHull a b = some K)
+    (hz : (∀ A, a = some A → A.mem z) ∨ (∀ B, b = some B → B.mem z)) :
+    K.mem z := by
+  unfold arctanHull at h
+  cases ha : a with
+  | none => rw [ha] at h; simp at h
+  | some A =>
+    rw [ha] at h
+    cases hb : b with
+    | none => rw [hb] at h; simp at h
+    | some B =>
+      rw [hb] at h
+      obtain rfl : K = ⟨Dyadic.dmin A.lo B.lo, Dyadic.dmax A.hi B.hi⟩ :=
+        (Option.some.inj h).symm
+      rcases hz with hz | hz
+      · obtain ⟨h1, h2⟩ := hz A ha
+        constructor
+        · show Dyadic.toReal (Dyadic.dmin A.lo B.lo) ≤ z
+          rw [Dyadic.toReal_dmin]
+          exact le_trans (min_le_left _ _) h1
+        · show z ≤ Dyadic.toReal (Dyadic.dmax A.hi B.hi)
+          rw [Dyadic.toReal_dmax]
+          exact le_trans h2 (le_max_left _ _)
+      · obtain ⟨h1, h2⟩ := hz B hb
+        constructor
+        · show Dyadic.toReal (Dyadic.dmin A.lo B.lo) ≤ z
+          rw [Dyadic.toReal_dmin]
+          exact le_trans (min_le_right _ _) h1
+        · show z ≤ Dyadic.toReal (Dyadic.dmax A.hi B.hi)
+          rw [Dyadic.toReal_dmax]
+          exact le_trans h2 (le_max_right _ _)
+
+/-- Interval-level `arctan`, total on all of `ℝ`: the base branch covers
+`J ⊆ [-1, 1]`; `1 ≤ J.lo` reduces via `arctan x = π/2 − arctan x⁻¹`
+(`arctanIPos`); `J.hi ≤ −1` by odd symmetry (`arctanINeg`); intervals
+crossing `±1` are split at the crossing points and the pieces are joined by
+hulls (`arctanHull`).  Each piece's own range check makes every branch
+independently sound. -/
+def arctanI (J : DInterval) (N : ℕ) (out : Int) : Option DInterval :=
+  if Dyadic.ble (⟨-1, 0⟩ : Dyadic) J.lo && Dyadic.ble J.hi ⟨1, 0⟩ then
+    arctanIBase J N out
+  else if Dyadic.ble (⟨1, 0⟩ : Dyadic) J.lo then
+    arctanIPos J N out
+  else if Dyadic.ble J.hi ⟨-1, 0⟩ then
+    arctanINeg J N out
+  else if Dyadic.ble (⟨-1, 0⟩ : Dyadic) J.lo then
+    -- `−1 ≤ J.lo < 1 < J.hi`: split at `1`
+    arctanHull (arctanIBase ⟨J.lo, ⟨1, 0⟩⟩ N out)
+      (arctanIPos ⟨⟨1, 0⟩, J.hi⟩ N out)
+  else if Dyadic.ble J.hi ⟨1, 0⟩ then
+    -- `J.lo < −1 < J.hi ≤ 1`: split at `−1`
+    arctanHull (arctanINeg ⟨J.lo, ⟨-1, 0⟩⟩ N out)
+      (arctanIBase ⟨⟨-1, 0⟩, J.hi⟩ N out)
+  else
+    -- `J.lo < −1` and `1 < J.hi`: split at both `−1` and `1`
+    arctanHull (arctanINeg ⟨J.lo, ⟨-1, 0⟩⟩ N out)
+      (arctanHull (arctanIBase ⟨⟨-1, 0⟩, ⟨1, 0⟩⟩ N out)
+        (arctanIPos ⟨⟨1, 0⟩, J.hi⟩ N out))
+
+/-- **Soundness of `arctanI`**: whenever evaluation succeeds, the result
+contains `arctan y` for every real `y ∈ J`. -/
+theorem arctanI_sound {J : DInterval} {N : ℕ} {out : Int} {K : DInterval} {y : ℝ}
+    (hy : J.mem y) (h : arctanI J N out = some K) : K.mem (Real.arctan y) := by
+  have ⟨hy1, hy2⟩ := hy
+  unfold arctanI at h
+  by_cases h1 : Dyadic.ble (⟨-1, 0⟩ : Dyadic) J.lo && Dyadic.ble J.hi ⟨1, 0⟩
+  · rw [if_pos h1] at h
+    exact arctanIBase_sound hy h
+  · rw [if_neg h1] at h
+    by_cases h2 : Dyadic.ble (⟨1, 0⟩ : Dyadic) J.lo
+    · rw [if_pos h2] at h
+      exact arctanIPos_sound hy h
+    · rw [if_neg h2] at h
+      by_cases h3 : Dyadic.ble J.hi ⟨-1, 0⟩
+      · rw [if_pos h3] at h
+        exact arctanINeg_sound hy h
+      · rw [if_neg h3] at h
+        by_cases h4 : Dyadic.ble (⟨-1, 0⟩ : Dyadic) J.lo
+        · rw [if_pos h4] at h
+          apply arctanHull_sound h
+          rcases le_total y 1 with hyL | hyR
+          · exact Or.inl fun A hA => arctanIBase_sound (J := ⟨J.lo, ⟨1, 0⟩⟩)
+              ⟨hy1, by
+                show y ≤ Dyadic.toReal (⟨1, 0⟩ : Dyadic)
+                rw [Dyadic.toReal_int]
+                exact_mod_cast hyL⟩ hA
+          · exact Or.inr fun B hB => arctanIPos_sound (J := ⟨⟨1, 0⟩, J.hi⟩)
+              ⟨by
+                show Dyadic.toReal (⟨1, 0⟩ : Dyadic) ≤ y
+                rw [Dyadic.toReal_int]
+                exact_mod_cast hyR, hy2⟩ hB
+        · rw [if_neg h4] at h
+          by_cases h5 : Dyadic.ble J.hi ⟨1, 0⟩
+          · rw [if_pos h5] at h
+            apply arctanHull_sound h
+            rcases le_total y (-1) with hyL | hyR
+            · exact Or.inl fun A hA => arctanINeg_sound (J := ⟨J.lo, ⟨-1, 0⟩⟩)
+                ⟨hy1, by
+                  show y ≤ Dyadic.toReal (⟨-1, 0⟩ : Dyadic)
+                  rw [Dyadic.toReal_int]
+                  exact_mod_cast hyL⟩ hA
+            · exact Or.inr fun B hB => arctanIBase_sound (J := ⟨⟨-1, 0⟩, J.hi⟩)
+                ⟨by
+                  show Dyadic.toReal (⟨-1, 0⟩ : Dyadic) ≤ y
+                  rw [Dyadic.toReal_int]
+                  exact_mod_cast hyR, hy2⟩ hB
+          · rw [if_neg h5] at h
+            apply arctanHull_sound h
+            rcases le_total y (-1) with hyL | hyR
+            · exact Or.inl fun A hA => arctanINeg_sound (J := ⟨J.lo, ⟨-1, 0⟩⟩)
+                ⟨hy1, by
+                  show y ≤ Dyadic.toReal (⟨-1, 0⟩ : Dyadic)
+                  rw [Dyadic.toReal_int]
+                  exact_mod_cast hyL⟩ hA
+            · exact Or.inr fun B hB => arctanHull_sound hB (by
+                rcases le_total y 1 with hyL1 | hyR1
+                · exact Or.inl fun A hA => arctanIBase_sound (J := ⟨⟨-1, 0⟩, ⟨1, 0⟩⟩)
+                    ⟨by
+                      show Dyadic.toReal (⟨-1, 0⟩ : Dyadic) ≤ y
+                      rw [Dyadic.toReal_int]
+                      exact_mod_cast hyR,
+                     by
+                      show y ≤ Dyadic.toReal (⟨1, 0⟩ : Dyadic)
+                      rw [Dyadic.toReal_int]
+                      exact_mod_cast hyL1⟩ hA
+                · exact Or.inr fun A hA => arctanIPos_sound (J := ⟨⟨1, 0⟩, J.hi⟩)
+                    ⟨by
+                      show Dyadic.toReal (⟨1, 0⟩ : Dyadic) ≤ y
+                      rw [Dyadic.toReal_int]
+                      exact_mod_cast hyR1, hy2⟩ hA)
 
 /-! ## Range reduction for `sin` by π-shifts -/
 

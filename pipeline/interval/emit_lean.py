@@ -709,10 +709,12 @@ def main():
         # the alternating arctan series at a boundary point (atan 1)
         # converges only like 1/(2N+1), so the rung ladder's N (tuned for
         # interior args, where big mantissas make high N expensive) can
-        # never reach the needed precision.  N=128 verified: all 3762 leaves
-        # of 5490182221 chunk00000 PASS at N=64/128/256/1024 with the same
-        # rung (12,-64); kernel cost scales ~linearly in N.
-        closed_params = ("128", "(-64)")
+        # never reach the needed precision.  N=2048: 5490182221's tight-margin
+        # region (chunks 85-88, leaf true margins down to ~3e-4) fails at
+        # N=128 (remainder ~1/257 ≈ 0.0039 eats the margin) and marginally
+        # at N=1024; N=2048 (remainder ~2.4e-4) passes all 3762 leaves of
+        # chunk00085.  Kernel cost scales ~linearly in N.
+        closed_params = ("2048", "(-64)")
         if stage_a:
             rpn = RPN(sqrt_slot=lambda i: ("0", "0"),
                       trans=lambda op, closed: closed_params if closed else ("N", "out"))
