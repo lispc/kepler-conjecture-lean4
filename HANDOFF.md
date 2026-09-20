@@ -63,8 +63,9 @@ Lean 4 + Mathlib（toolchain `leanprover/lean4:v4.32.2`）形式化开普勒猜�
 - 流水线：ineq.hl 181 记录 → AST 176 → case JSON（y 空间 176 +
   prep 空间 745）→ bb_arb（C/FLINT 分支定界，二进制 /tmp/bb_arb_verify，
   编译命令在 `pipeline/interval/README.md`）。
-- **2026-09-09 家族级对账**：176 条 = 68 y 空间闭合 + 92 prep 家族
-  闭合（prep = Flyspeck 官方 x=y² 归一化，745/745 全闭合）+
+- **2026-09-09 家族级对账（2026-09-20 修订）**：176 条 = 68 y 空间闭合 + 92 prep 家族
+  ~~闭合~~（**证据链不可信已降级**：pass2 无 runner/日志/入仓产物，37 倍预算不可复现，
+  需重新求解）+
   **16 条真残余**（清单 `pipeline/interval/out/residue16.txt`：
   TSKAJXY 系 4、TEWNSCJ/PEMKWKU/TXQTPVC/IXPOTPA、QZECFIC wt0 ×2、
   GRKIBMP B V2 等）。
