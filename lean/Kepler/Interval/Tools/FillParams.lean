@@ -52,6 +52,14 @@ import Kepler.Interval.Expr
 
 namespace Kepler.Interval
 
+instance : Hashable Dyadic := ⟨fun d => mixHash (Hashable.hash d.m) (Hashable.hash d.e)⟩
+
+/-- Tag for hashing `TKind`. -/
+def TKind.toTag : TKind → UInt64
+  | .sinK => 0 | .cosK => 1 | .arctanK => 2 | .lnK => 3
+
+instance : Hashable TKind := ⟨fun k => k.toTag⟩
+
 namespace IExpr
 
 /-- Number of `.sqrt` nodes (static count; fixes the parameter-list length
@@ -68,6 +76,60 @@ def countSqrt {n : ℕ} : IExpr n → ℕ
   | .div e₁ e₂ _ => e₁.countSqrt + e₂.countSqrt
   | .sqrt e _ _ => e.countSqrt + 1
   | .trans _ e _ _ => e.countSqrt
+
+/-- Variable-freedom (leaf-constant) predicate; mirrors the emitter's
+`closed` tracking.  A closed subterm evaluates to the same interval and the
+same sqrt-parameter list at every leaf and every rung — the memo table
+(`Tools.FillCache`) keys on this. -/
+def isClosed {n : ℕ} : IExpr n → Bool
+  | .const _ => true
+  | .var _ => false
+  | .neg e => e.isClosed
+  | .abs e => e.isClosed
+  | .ite c t e => c.isClosed && t.isClosed && e.isClosed
+  | .add e₁ e₂ => e₁.isClosed && e₂.isClosed
+  | .sub e₁ e₂ => e₁.isClosed && e₂.isClosed
+  | .mul e₁ e₂ => e₁.isClosed && e₂.isClosed
+  | .div e₁ e₂ _ => e₁.isClosed && e₂.isClosed
+  | .sqrt e _ _ => e.isClosed
+  | .trans _ e _ _ => e.isClosed
+
+/-- Structural equality (memo-table keys only; the kernel never sees this). -/
+protected def beq {n : ℕ} : IExpr n → IExpr n → Bool
+  | .const a, .const b => a == b
+  | .var i, .var j => i == j
+  | .neg a, .neg b => IExpr.beq a b
+  | .abs a, .abs b => IExpr.beq a b
+  | .ite c₁ t₁ e₁, .ite c₂ t₂ e₂ => IExpr.beq c₁ c₂ && IExpr.beq t₁ t₂ && IExpr.beq e₁ e₂
+  | .add a₁ b₁, .add a₂ b₂ => IExpr.beq a₁ a₂ && IExpr.beq b₁ b₂
+  | .sub a₁ b₁, .sub a₂ b₂ => IExpr.beq a₁ a₂ && IExpr.beq b₁ b₂
+  | .mul a₁ b₁, .mul a₂ b₂ => IExpr.beq a₁ a₂ && IExpr.beq b₁ b₂
+  | .div a₁ b₁ o₁, .div a₂ b₂ o₂ => o₁ == o₂ && IExpr.beq a₁ a₂ && IExpr.beq b₁ b₂
+  | .sqrt a₁ s₁ t₁, .sqrt a₂ s₂ t₂ => s₁ == s₂ && t₁ == t₂ && IExpr.beq a₁ a₂
+  | .trans k₁ a₁ N₁ o₁, .trans k₂ a₂ N₂ o₂ =>
+      k₁ == k₂ && N₁ == N₂ && o₁ == o₂ && IExpr.beq a₁ a₂
+  | _, _ => false
+  termination_by a b => sizeOf a + sizeOf b
+
+/-- Structural hash (memo-table keys only). -/
+protected def hash {n : ℕ} : IExpr n → UInt64
+  | .const d => mixHash 1 (Hashable.hash d)
+  | .var i => mixHash 2 (Hashable.hash i)
+  | .neg a => mixHash 3 (IExpr.hash a)
+  | .abs a => mixHash 4 (IExpr.hash a)
+  | .ite c t e => mixHash 5 (mixHash (IExpr.hash c) (mixHash (IExpr.hash t) (IExpr.hash e)))
+  | .add a b => mixHash 6 (mixHash (IExpr.hash a) (IExpr.hash b))
+  | .sub a b => mixHash 7 (mixHash (IExpr.hash a) (IExpr.hash b))
+  | .mul a b => mixHash 8 (mixHash (IExpr.hash a) (IExpr.hash b))
+  | .div a b o => mixHash 9 (mixHash (Hashable.hash o) (mixHash (IExpr.hash a) (IExpr.hash b)))
+  | .sqrt a s₁ s₂ =>
+      mixHash 10 (mixHash (Hashable.hash s₁) (mixHash (Hashable.hash s₂) (IExpr.hash a)))
+  | .trans k a N o =>
+      mixHash 11 (mixHash (Hashable.hash k) (mixHash (Hashable.hash N)
+        (mixHash (Hashable.hash o) (IExpr.hash a))))
+
+instance : BEq (IExpr n) := ⟨IExpr.beq⟩
+instance : Hashable (IExpr n) := ⟨IExpr.hash⟩
 
 end IExpr
 
@@ -164,6 +226,124 @@ def checkLeaf {n : ℕ} (e : IExpr n) (box : Fin n → DInterval) : LeafResult :
   | some I => ⟨I.lo.isPos, l⟩
   | none => ⟨false, l⟩
 
+/-! ### Closed-subterm memoization (W2.5)
+
+A *closed* (var-free, `IExpr.isClosed`) `.trans` node carries fixed
+certificate parameters (the emitter gives closed trans nodes the literal
+`(2048, -64)` regardless of the rung arguments), so its `evalFill` result —
+interval value AND sqrt-parameter list — is identical at every leaf and
+every rung.  Yet `evalFill` recomputed it per leaf: the BIXPCGW main prog
+carries 89 reachable closed `atan` nodes at N=2048 ≈ 220s of the ~255s
+per-leaf cost.  The runners below therefore build a memo table once per
+driver run (`buildCache`) and evaluate with `evalFillC`, which answers
+closed-argument `.trans` nodes from the table.
+
+Only `.trans` nodes are memoized: they are the expensive leaves of the
+interval semantics (Taylor sums), and restricting the per-leaf guard to
+trans nodes keeps the memo overhead negligible (a full `isClosed` check at
+*every* node costs O(|expr|²) per leaf and ate the entire speedup in the
+first W2.5 attempt).  The table maps the trans node to the full
+`(value, params)` pair of `evalFill`, so per-leaf output (including
+parameter lists) is bit-identical to the unmemoized run.  Cache misses fall
+back to plain `evalFill`, so correctness never depends on which subterms
+were pre-collected. -/
+
+/-- Memo table: closed-argument `.trans` node ↦ its `evalFill` result. -/
+abbrev FillCache (n : ℕ) := Std.HashMap (IExpr n) (Option DInterval × List (Int × Int))
+
+/-- Memoized tracing evaluator: identical to `evalFill`, except `.trans`
+nodes with closed (var-free) arguments are answered from `cache` (miss =
+plain `evalFill`, same value). -/
+def evalFillC {n : ℕ} (cache : FillCache n) :
+    IExpr n → (Fin n → DInterval) → Option DInterval × List (Int × Int)
+  | .const d, _ => (some ⟨d, d⟩, [])
+  | .var i, box => (some (box i), [])
+  | .neg e, box =>
+      let (o, l) := evalFillC cache e box
+      (o.map DInterval.neg, l)
+  | .abs e, box =>
+      let (o, l) := evalFillC cache e box
+      (o.map DInterval.abs, l)
+  | .ite c t e, box =>
+      let (oC, lc) := evalFillC cache c box
+      match oC with
+      | some C =>
+          if C.hi.isNeg then
+            let (oT, lt) := evalFillC cache t box
+            (oT, lc ++ lt ++ List.replicate (IExpr.countSqrt e) (0, 0))
+          else if C.lo.isNN then
+            let (oE, le) := evalFillC cache e box
+            (oE, lc ++ List.replicate (IExpr.countSqrt t) (0, 0) ++ le)
+          else
+            (none, lc ++ List.replicate (IExpr.countSqrt t + IExpr.countSqrt e) (0, 0))
+      | none => (none, lc ++ List.replicate (IExpr.countSqrt t + IExpr.countSqrt e) (0, 0))
+  | .add e₁ e₂, box =>
+      let (o₁, l₁) := evalFillC cache e₁ box
+      let (o₂, l₂) := evalFillC cache e₂ box
+      (match o₁, o₂ with
+       | some I, some J => some (I.add J)
+       | _, _ => none, l₁ ++ l₂)
+  | .sub e₁ e₂, box =>
+      let (o₁, l₁) := evalFillC cache e₁ box
+      let (o₂, l₂) := evalFillC cache e₂ box
+      (match o₁, o₂ with
+       | some I, some J => some (I.sub J)
+       | _, _ => none, l₁ ++ l₂)
+  | .mul e₁ e₂, box =>
+      let (o₁, l₁) := evalFillC cache e₁ box
+      let (o₂, l₂) := evalFillC cache e₂ box
+      (match o₁, o₂ with
+       | some I, some J => some (I.mul J)
+       | _, _ => none, l₁ ++ l₂)
+  | .div e₁ e₂ out, box =>
+      let (o₁, l₁) := evalFillC cache e₁ box
+      let (o₂, l₂) := evalFillC cache e₂ box
+      (match o₁, o₂ with
+       | some I, some J => DInterval.div I J out
+       | _, _ => none, l₁ ++ l₂)
+  | .sqrt e _ _, box =>
+      let (oJ, l) := evalFillC cache e box
+      match oJ with
+      | some J =>
+          let s₁ := J.lo.sqrtFloor
+          let s₂ := J.hi.sqrtFloor
+          (match Dyadic.sqrtI J.lo s₁, Dyadic.sqrtI J.hi s₂ with
+           | some Jl, some Jh => some ⟨Jl.lo, Jh.hi⟩
+           | _, _ => none, l ++ [(s₁, s₂)])
+      | none => (none, l ++ [(0, 0)])
+  | .trans k a N out, box =>
+      if a.isClosed then
+        match cache.get? (.trans k a N out) with
+        | some v => v
+        | none => evalFill (.trans k a N out) box
+      else
+        let (oJ, l) := evalFillC cache a box
+        (match oJ with
+         | some I => transOn k I N out
+         | none => none, l)
+
+/-- Collect every maximal closed-argument `.trans` node of `e` into the memo
+table, evaluating each once with plain `evalFill` against a dummy box
+(the node is var-free and never consults the box). -/
+def buildCache {n : ℕ} (cache : FillCache n) (e : IExpr n) : FillCache n :=
+  match e with
+  | .trans _ a _ _ =>
+      if a.isClosed then cache.insert e (evalFill e fun _ => ⟨⟨0, 0⟩, ⟨0, 0⟩⟩)
+      else buildCache cache a
+  | .const _ | .var _ => cache
+  | .neg a | .abs a | .sqrt a _ _ => buildCache cache a
+  | .ite c t a => buildCache (buildCache (buildCache cache c) t) a
+  | .add a b | .sub a b | .mul a b | .div a b _ => buildCache (buildCache cache a) b
+termination_by e
+
+/-- Memoized variant of `checkLeaf`. -/
+def checkLeafC {n : ℕ} (cache : FillCache n) (e : IExpr n)
+    (box : Fin n → DInterval) : LeafResult :=
+  let (o, l) := evalFillC cache e box
+  match o with
+  | some I => ⟨I.lo.isPos, l⟩
+  | none => ⟨false, l⟩
+
 /-- The `(N, out)` rung ladder for `.trans` nodes: raise the Taylor order
 first (the alternating-series remainder at boundary arguments like
 `arctan 1` is `1/(2N+1)`, so the ladder must reach far), then the output
@@ -173,14 +353,16 @@ def ladder : Array (ℕ × Int) :=
     (96, -64), (128, -64), (128, -80), (128, -100)]
 
 /-- Evaluate all leaves at one rung; returns the failure count and the
-per-leaf results. -/
-def runRung {n : ℕ} (mkExpr : ℕ → Int → IExpr n) (boxes : Array (Fin n → DInterval))
-    (N : ℕ) (out : Int) : IO (ℕ × Array LeafResult) := do
+per-leaf results.  Closed subterms are served from the chunk-level memo
+table `cache` (built once per driver run by `runLadder`/`runSingle`). -/
+def runRung {n : ℕ} (cache : FillCache n) (mkExpr : ℕ → Int → IExpr n)
+    (boxes : Array (Fin n → DInterval)) (N : ℕ) (out : Int)
+    : IO (ℕ × Array LeafResult) := do
   let e := mkExpr N out
   let mut results := #[]
   let mut fails := 0
   for box in boxes do
-    let r := checkLeaf e box
+    let r := checkLeafC cache e box
     if !r.pass then fails := fails + 1
     results := results.push r
   return (fails, results)
@@ -198,9 +380,11 @@ print `RUNG N out` plus the per-leaf mantissa lines and exit 0; otherwise
 print the best rung under a `BESTFAIL` header and exit 1. -/
 def runLadder {n : ℕ} (mkExpr : ℕ → Int → IExpr n)
     (boxes : Array (Fin n → DInterval)) : IO UInt32 := do
+  let cache := buildCache ∅ (mkExpr 0 0)
+  IO.eprintln s!"memoized {cache.size} closed subterms"
   let mut best : Option (ℕ × ℕ × Int × Array LeafResult) := none
   for (N, out) in ladder do
-    let (fails, results) ← runRung mkExpr boxes N out
+    let (fails, results) ← runRung cache mkExpr boxes N out
     IO.eprintln s!"rung N={N} out={out}: {fails}/{boxes.size} failures"
     if fails == 0 then
       IO.println s!"RUNG {N} {out}"
@@ -220,7 +404,9 @@ every leaf passes, else print a `BESTFAIL` header and exit 1.  Sharded
 stage-A phase 2 uses this to recompute params at the global rung. -/
 def runSingle {n : ℕ} (mkExpr : ℕ → Int → IExpr n)
     (boxes : Array (Fin n → DInterval)) (N : ℕ) (out : Int) : IO UInt32 := do
-  let (fails, results) ← runRung mkExpr boxes N out
+  let cache := buildCache ∅ (mkExpr N out)
+  IO.eprintln s!"memoized {cache.size} closed subterms"
+  let (fails, results) ← runRung cache mkExpr boxes N out
   IO.eprintln s!"rung N={N} out={out}: {fails}/{boxes.size} failures"
   if fails == 0 then
     IO.println s!"RUNG {N} {out}"
@@ -328,10 +514,11 @@ structure DisjLeafResult where
   params : List (Int × Int)
 
 /-- Per-leaf disjunctive judgement: all varLt goals (goal order) by exact box
-check, then all pos goals (goal order) by `checkLeaf` at rung `(N, out)`;
-first branch that holds wins. -/
-def checkLeafDisj {n : ℕ} (goals : List (FillGoal n)) (box : Fin n → DInterval)
-    (N : ℕ) (out : Int) : DisjLeafResult :=
+check, then all pos goals (goal order) by `checkLeafC` at rung `(N, out)`;
+first branch that holds wins.  `cache` is the union memo table over all pos
+goals' closed subterms (`goalsCache`). -/
+def checkLeafDisj {n : ℕ} (cache : FillCache n) (goals : List (FillGoal n))
+    (box : Fin n → DInterval) (N : ℕ) (out : Int) : DisjLeafResult :=
   match findVarLt goals 0 with
   | some k => ⟨some k, true, []⟩
   | none =>
@@ -347,9 +534,17 @@ where
   findPos : List (FillGoal n) → ℕ → Option (ℕ × List (Int × Int))
     | [], _ => none
     | .pos mk :: gs, k =>
-        let r := checkLeaf (mk N out) box
+        let r := checkLeafC cache (mk N out) box
         if r.pass then some (k, r.params) else findPos gs (k + 1)
     | .varLt _ _ :: gs, k => findPos gs (k + 1)
+
+/-- Union memo table over all pos goals (each built from `mk 0 0` — closed
+subterms are rung-independent, and a miss falls back to plain evaluation, so
+correctness never depends on the factory's rung arguments). -/
+def goalsCache {n : ℕ} (goals : List (FillGoal n)) : FillCache n :=
+  goals.foldl (fun c g => match g with
+    | .pos mk => buildCache c (mk 0 0)
+    | .varLt _ _ => c) ∅
 
 /-- Print one schema-v2 line per leaf: `i PASSV k` / `i PASS k s₁ t₁ …` /
 `i FAIL`. -/
@@ -368,13 +563,13 @@ def printResultsDisj (results : Array DisjLeafResult) : IO Unit := do
 
 /-- Evaluate all leaves at one rung against all goals; returns the failure
 count (leaves with no passing branch) and the per-leaf results. -/
-def runRungDisj {n : ℕ} (goals : List (FillGoal n))
+def runRungDisj {n : ℕ} (cache : FillCache n) (goals : List (FillGoal n))
     (boxes : Array (Fin n → DInterval)) (N : ℕ) (out : Int)
     : IO (ℕ × Array DisjLeafResult) := do
   let mut results := #[]
   let mut fails := 0
   for box in boxes do
-    let r := checkLeafDisj goals box N out
+    let r := checkLeafDisj cache goals box N out
     if r.hit.isNone then fails := fails + 1
     results := results.push r
   return (fails, results)
@@ -385,9 +580,11 @@ per-leaf lines and exit 0; otherwise print the best rung under a `BESTFAIL`
 header and exit 1. -/
 def runLadderDisj {n : ℕ} (goals : List (FillGoal n))
     (boxes : Array (Fin n → DInterval)) : IO UInt32 := do
+  let cache := goalsCache goals
+  IO.eprintln s!"memoized {cache.size} closed subterms"
   let mut best : Option (ℕ × ℕ × Int × Array DisjLeafResult) := none
   for (N, out) in ladder do
-    let (fails, results) ← runRungDisj goals boxes N out
+    let (fails, results) ← runRungDisj cache goals boxes N out
     IO.eprintln s!"rung N={N} out={out}: {fails}/{boxes.size} failures"
     if fails == 0 then
       IO.println s!"RUNG {N} {out}"
@@ -405,7 +602,9 @@ def runLadderDisj {n : ℕ} (goals : List (FillGoal n))
 /-- Pinned-rung disjunctive evaluation (sharded stage-A phase 2). -/
 def runSingleDisj {n : ℕ} (goals : List (FillGoal n))
     (boxes : Array (Fin n → DInterval)) (N : ℕ) (out : Int) : IO UInt32 := do
-  let (fails, results) ← runRungDisj goals boxes N out
+  let cache := goalsCache goals
+  IO.eprintln s!"memoized {cache.size} closed subterms"
+  let (fails, results) ← runRungDisj cache goals boxes N out
   IO.eprintln s!"rung N={N} out={out}: {fails}/{boxes.size} failures"
   if fails == 0 then
     IO.println s!"RUNG {N} {out}"
