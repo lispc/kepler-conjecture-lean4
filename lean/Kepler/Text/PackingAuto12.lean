@@ -486,19 +486,105 @@ theorem CONVEX_RCONE_GE (a : V3) (b : V3) (r : ℝ) (hr : 0 ≤ r) :
 /-! ## marchal2.hl:163 / :166 FINITE_PERMUTE_3 / FINITE_PERMUTE_4 -/
 
 /-- HOL `FINITE_PERMUTE_3` (marchal2.hl:163): finiteness of the symmetric
-group on `{0,1,2}`. ENCODING CAVEAT: under the pointwise
-`Kepler.Text.permutes` (`∀ x, x ∈ s ↔ p x ∈ s`), the set of `Equiv.Perm ℕ`
-acting membership-preserving on `{0,1,2}` is INFINITE (permutations may move
-the complement freely), so the faithful statement is false as encoded;
-sorried pending a complement-fixing `permutes` encoding. -/
-theorem FINITE_PERMUTE_3 : Set.Finite {p : Equiv.Perm ℕ | permutes p ({0, 1, 2} : Set ℕ)} :=
-  sorry
+group on `{0,1,2}`. FIDELITY-FIX 2026-09-19: HOL `permutes` (Library/perms.ml)
+is complement-fixing, so the faithful set-builder is the tail-fixed
+permutations `∀ j ≥ 3, p j = j` (the old pointwise-`permutes` set-builder
+was infinite, hence false as encoded). -/
+theorem FINITE_PERMUTE_3 :
+    Set.Finite {p : Equiv.Perm ℕ | ∀ j : ℕ, 3 ≤ j → p j = j} := by
+  classical
+  set S0 : Set ℕ := ({0, 1, 2} : Set ℕ) with hS0
+  have hin : ∀ p : Equiv.Perm ℕ, (∀ j : ℕ, 3 ≤ j → p j = j) →
+      ∀ i : ℕ, i ≤ 2 → p i ∈ S0 := by
+    intro p hp i hi
+    by_contra hcon
+    simp only [hS0, Set.mem_insert_iff, Set.mem_singleton_iff] at hcon
+    have h3 : 3 ≤ p i := by omega
+    have hfix : p i = p (p i) := (hp (p i) h3).symm
+    have hij : i = p i := Equiv.injective p hfix
+    omega
+  have hf2 : S0.Finite := by simp [hS0]
+  have hfp : ((S0 ×ˢ S0) ×ˢ S0).Finite := (hf2.prod hf2).prod hf2
+  haveI := hfp.to_subtype
+  have hmem : ∀ p : Equiv.Perm ℕ, (∀ j : ℕ, 3 ≤ j → p j = j) →
+      ((⟨⟨p 0, p 1⟩, p 2⟩ : (ℕ × ℕ) × ℕ) ∈ ((S0 ×ˢ S0) ×ˢ S0)) :=
+    fun p hp => Set.mem_prod.mpr (And.intro
+      (Set.mem_prod.mpr (And.intro (hin p hp 0 (by omega)) (hin p hp 1 (by omega))))
+      (hin p hp 2 (by omega)))
+  refine Finite.of_injective
+    (f := fun p : {p : Equiv.Perm ℕ | ∀ j : ℕ, 3 ≤ j → p j = j} =>
+      (⟨⟨⟨p.1 0, p.1 1⟩, p.1 2⟩, hmem p.1 p.2⟩ :
+        ↥((S0 ×ˢ S0) ×ˢ S0))) ?_
+  rintro ⟨p, hp⟩ ⟨q, hq⟩ heq
+  have hval : (⟨⟨p.1 0, p.1 1⟩, p.1 2⟩ : (ℕ × ℕ) × ℕ)
+      = (⟨⟨q.1 0, q.1 1⟩, q.1 2⟩ : (ℕ × ℕ) × ℕ) :=
+    congrArg Subtype.val heq
+  have h0 : p.1 0 = q.1 0 := congrArg (fun t : (ℕ × ℕ) × ℕ => t.1.1) hval
+  have h1e : p.1 1 = q.1 1 := congrArg (fun t : (ℕ × ℕ) × ℕ => t.1.2) hval
+  have h2e : p.1 2 = q.1 2 := congrArg (fun t : (ℕ × ℕ) × ℕ => t.2) hval
+  have hext : p = q := Equiv.ext (fun j => by
+    rcases Nat.lt_or_ge j 3 with hlt | hge
+    · interval_cases j
+      · exact h0
+      · exact h1e
+      · exact h2e
+    · exact (hp j hge).trans (hq j hge).symm)
+  exact Subtype.ext hext
 
 /-- HOL `FINITE_PERMUTE_4` (marchal2.hl:166): finiteness of the symmetric
-group on `{0,1,2,3}`. Same weak-`permutes` encoding caveat as
-`FINITE_PERMUTE_3`. -/
-theorem FINITE_PERMUTE_4 : Set.Finite {p : Equiv.Perm ℕ | permutes p ({0, 1, 2, 3} : Set ℕ)} :=
-  sorry
+group on `{0,1,2,3}`. Same FIDELITY-FIX as `FINITE_PERMUTE_3`. -/
+theorem FINITE_PERMUTE_4 :
+    Set.Finite {p : Equiv.Perm ℕ | ∀ j : ℕ, 4 ≤ j → p j = j} := by
+  classical
+  set S0 : Set ℕ := ({0, 1, 2, 3} : Set ℕ) with hS0
+  have hin : ∀ p : Equiv.Perm ℕ, (∀ j : ℕ, 4 ≤ j → p j = j) →
+      ∀ i : ℕ, i ≤ 3 → p i ∈ S0 := by
+    intro p hp i hi
+    by_contra hcon
+    simp only [hS0, Set.mem_insert_iff, Set.mem_singleton_iff] at hcon
+    have h4 : 4 ≤ p i := by omega
+    have hfix : p i = p (p i) := (hp (p i) h4).symm
+    have hij : i = p i := Equiv.injective p hfix
+    omega
+  have hf2 : S0.Finite := by simp [hS0]
+  have hfp : (((S0 ×ˢ S0) ×ˢ S0) ×ˢ S0).Finite :=
+    ((hf2.prod hf2).prod hf2).prod hf2
+  haveI := hfp.to_subtype
+  have hmem : ∀ p : Equiv.Perm ℕ, (∀ j : ℕ, 4 ≤ j → p j = j) →
+      ((⟨⟨⟨p 0, p 1⟩, p 2⟩, p 3⟩ : ((ℕ × ℕ) × ℕ) × ℕ) ∈
+        (((S0 ×ˢ S0) ×ˢ S0) ×ˢ S0)) :=
+    fun p hp => Set.mem_prod.mpr (And.intro
+      (Set.mem_prod.mpr (And.intro (Set.mem_prod.mpr
+        (And.intro (hin p hp 0 (by omega)) (hin p hp 1 (by omega))))
+        (hin p hp 2 (by omega))))
+      (hin p hp 3 (by omega)))
+  refine Finite.of_injective
+    (f := fun p : {p : Equiv.Perm ℕ | ∀ j : ℕ, 4 ≤ j → p j = j} =>
+      (⟨⟨⟨⟨p.1 0, p.1 1⟩, p.1 2⟩, p.1 3⟩, hmem p.1 p.2⟩ :
+        ↥(((S0 ×ˢ S0) ×ˢ S0) ×ˢ S0))) ?_
+  rintro ⟨p, hp⟩ ⟨q, hq⟩ heq
+  have hval : (⟨⟨⟨p.1 0, p.1 1⟩, p.1 2⟩, p.1 3⟩ :
+      ((ℕ × ℕ) × ℕ) × ℕ)
+      = (⟨⟨⟨q.1 0, q.1 1⟩, q.1 2⟩, q.1 3⟩ :
+      ((ℕ × ℕ) × ℕ) × ℕ) :=
+    congrArg Subtype.val heq
+  have h0 : p.1 0 = q.1 0 := congrArg
+    (fun t : ((ℕ × ℕ) × ℕ) × ℕ => t.1.1.1) hval
+  have h1e : p.1 1 = q.1 1 := congrArg
+    (fun t : ((ℕ × ℕ) × ℕ) × ℕ => t.1.1.2) hval
+  have h2e : p.1 2 = q.1 2 := congrArg
+    (fun t : ((ℕ × ℕ) × ℕ) × ℕ => t.1.2) hval
+  have h3e : p.1 3 = q.1 3 := congrArg
+    (fun t : ((ℕ × ℕ) × ℕ) × ℕ => t.2) hval
+  have hext : p = q := Equiv.ext (fun j => by
+    rcases Nat.lt_or_ge j 4 with hlt | hge
+    · interval_cases j
+      · exact h0
+      · exact h1e
+      · exact h2e
+      · exact h3e
+    · exact (hp j hge).trans (hq j hge).symm)
+  exact Subtype.ext hext
 
 /-! ## marchal2.hl:194 DIHV_SYM -/
 
