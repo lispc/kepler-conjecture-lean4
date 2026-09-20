@@ -14,7 +14,9 @@
   ## Semantics contract (what makes the output trustworthy)
 
   `evalFill` is a **tracing evaluator**: it mirrors `IExpr.eval` exactly —
-  same `DInterval` ops, same `ite` resolution by interval sign, node-supplied
+  same `DInterval` ops, same `ite` resolution by interval sign (with the
+  guard-straddle hull fallback: both branches then contribute REAL
+  mantissas), node-supplied
   `div`/`trans` parameters — except at `.sqrt` nodes, where it *computes*
   the exact floor mantissas `s = Nat.sqrt (d.m * 2^(d.e % 2))` from the
   radicand interval and then runs the same `Dyadic.sqrtI` check.  Hence
@@ -170,7 +172,14 @@ def evalFill {n : ℕ} : IExpr n → (Fin n → DInterval) → Option DInterval 
             let (oE, le) := evalFill e box
             (oE, lc ++ List.replicate (IExpr.countSqrt t) (0, 0) ++ le)
           else
-            (none, lc ++ List.replicate (IExpr.countSqrt t + IExpr.countSqrt e) (0, 0))
+            -- guard straddles 0: hull of both branches (bb_arb `ufall`
+            -- union fallback, mirrors `IExpr.eval`); BOTH branches are
+            -- genuinely evaluated, so both contribute real mantissas.
+            let (oT, lt) := evalFill t box
+            let (oE, le) := evalFill e box
+            (match oT, oE with
+             | some T, some E => some (DInterval.hull T E)
+             | _, _ => none, lc ++ lt ++ le)
       | none => (none, lc ++ List.replicate (IExpr.countSqrt t + IExpr.countSqrt e) (0, 0))
   | .add e₁ e₂, box =>
       let (o₁, l₁) := evalFill e₁ box
@@ -275,7 +284,12 @@ def evalFillC {n : ℕ} (cache : FillCache n) :
             let (oE, le) := evalFillC cache e box
             (oE, lc ++ List.replicate (IExpr.countSqrt t) (0, 0) ++ le)
           else
-            (none, lc ++ List.replicate (IExpr.countSqrt t + IExpr.countSqrt e) (0, 0))
+            -- guard straddle: hull of both branches (see `evalFill`)
+            let (oT, lt) := evalFillC cache t box
+            let (oE, le) := evalFillC cache e box
+            (match oT, oE with
+             | some T, some E => some (DInterval.hull T E)
+             | _, _ => none, lc ++ lt ++ le)
       | none => (none, lc ++ List.replicate (IExpr.countSqrt t + IExpr.countSqrt e) (0, 0))
   | .add e₁ e₂, box =>
       let (o₁, l₁) := evalFillC cache e₁ box
