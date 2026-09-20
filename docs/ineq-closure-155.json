@@ -251,18 +251,18 @@
   {
    "symbol": "beta_bump_force_y",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "betaBumpForceY (lean/Kepler/Text/IneqClosureDefs.lean:485)",
+   "batch": "3",
    "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:614"
   },
   {
    "symbol": "beta_bump_lb",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "betaBumpLb (lean/Kepler/Text/IneqClosureDefs.lean:493)",
+   "batch": "3",
    "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:636"
   },
@@ -386,19 +386,19 @@
   {
    "symbol": "dart_std3",
    "class": "unsupported",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
-   "note": "",
+   "tier": "B",
+   "lean": "dartStd3 (lean/Kepler/Text/IneqClosureDefs.lean:561)",
+   "batch": "5(enabler)",
+   "note": "define_dart 列表域（parse_defs triage unsupported）；List (ℝ×ℝ×ℝ) 直接可移植，批 5 落地",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2697"
   },
   {
    "symbol": "dart_std3_big",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
-   "note": "",
+   "tier": "B",
+   "lean": "dartStd3Big (lean/Kepler/Text/IneqClosureDefs.lean:568)",
+   "batch": "5",
+   "note": "= dart_std3 verbatim（ineq.hl:3079，'same domain but extra disjunct'）",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3079"
   },
   {
@@ -521,18 +521,18 @@
   {
    "symbol": "dih2_y",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "dih2Y (lean/Kepler/Text/IneqClosureDefs.lean:522)",
+   "batch": "5",
    "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:163"
   },
   {
    "symbol": "dih3_y",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "dih3Y (lean/Kepler/Text/IneqClosureDefs.lean:526)",
+   "batch": "5",
    "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:166"
   },
@@ -575,9 +575,9 @@
   {
    "symbol": "dummy6",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "dummy6 (lean/Kepler/Text/IneqClosureDefs.lean:372)",
+   "batch": "3(enabler)",
    "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:263"
   },
@@ -620,27 +620,27 @@
   {
    "symbol": "gamma23_full8_x",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "gamma23Full8X (lean/Kepler/Text/IneqClosureDefs.lean:459)",
+   "batch": "3",
    "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:383"
   },
   {
    "symbol": "gamma23_keep135_x",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "gamma23Keep135X (lean/Kepler/Text/IneqClosureDefs.lean:465)",
+   "batch": "3",
    "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:390"
   },
   {
    "symbol": "gamma2_x1_div_a_v2",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "gamma2X1DivAV2 (lean/Kepler/Text/IneqClosureDefs.lean:413)",
+   "batch": "3",
    "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:346"
   },
@@ -648,17 +648,17 @@
    "symbol": "gamma2_x_div_azim_v2",
    "class": "resolved",
    "tier": "B",
-   "lean": "gamma2_x_div_azim_v2 (lean/Kepler/Text/PackingAuto21.lean:164)",
-   "batch": "",
-   "note": "",
+   "lean": "gamma2XDivAzimV2 (lean/Kepler/Text/IneqClosureDefs.lean:407)",
+   "batch": "3(enabler)",
+   "note": "PA21:164 已有同名 verbatim 体；同上 atn2 冲突不可复用，批 3 立 canonical gamma2XDivAzimV2",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:341"
   },
   {
    "symbol": "gamma3_x",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "gamma3X (lean/Kepler/Text/IneqClosureDefs.lean:433)",
+   "batch": "3",
    "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:380"
   },
@@ -674,9 +674,9 @@
   {
    "symbol": "gamma3f_x_div_sqrtdelta",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "gamma3fXDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:441)",
+   "batch": "3",
    "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:349"
   },
@@ -800,9 +800,9 @@
   {
    "symbol": "lfun_y1",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "lfunY1 (lean/Kepler/Text/IneqClosureDefs.lean:536)",
+   "batch": "5",
    "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:789"
   },
@@ -857,7 +857,7 @@
    "tier": "B",
    "lean": "matan (lean/Kepler/Text/IneqClosureDefs.lean:31)",
    "batch": "1(enabler)",
-   "note": "",
+   "note": "批 5 名单，批 1 已作为 enabler 落地",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:728"
   },
   {
@@ -1097,9 +1097,9 @@
   {
    "symbol": "rho_x",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "rhoX (lean/Kepler/Text/IneqClosureDefs.lean:542)",
+   "batch": "5",
    "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:137"
   },
@@ -1214,10 +1214,10 @@
   {
    "symbol": "sol_x",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
-   "note": "",
+   "tier": "B",
+   "lean": "solX (lean/Kepler/Text/IneqClosureDefs.lean:379)",
+   "batch": "3(enabler)",
+   "note": "LocalAuto38:75 有 sorry 桩 solXP38（锚注释形式不同，扫描漏检）；批 3 在 IneqClosureDefs 立真体 solX",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:181"
   },
   {
@@ -1268,10 +1268,10 @@
   {
    "symbol": "tame_table_d",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
-   "note": "",
+   "tier": "B",
+   "lean": "tameTableD (lean/Kepler/Text/IneqClosureDefs.lean:510)",
+   "batch": "5",
+   "note": "ℕ 参数表常数；分支内 &r/&s 为 ℕ→ℝ cast，guard 在 ℕ 层",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:803"
   },
   {
@@ -1313,18 +1313,18 @@
   {
    "symbol": "uni",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
-   "note": "",
+   "tier": "B",
+   "lean": "uni (lean/Kepler/Text/IneqClosureDefs.lean:365)",
+   "batch": "3(enabler)",
+   "note": "defs.json body_ast 截断（(f:A->B) 类型标注触发 parse bug）；HOL (f,x) 对在 Lean 解柯里化为 uni f x",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:246"
   },
   {
    "symbol": "ups_126",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "ups126 (lean/Kepler/Text/IneqClosureDefs.lean:550)",
+   "batch": "5",
    "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:446"
   },
@@ -1349,10 +1349,10 @@
   {
    "symbol": "vol3f_456",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
-   "note": "",
+   "tier": "B",
+   "lean": "vol3f456 (lean/Kepler/Text/IneqClosureDefs.lean:423)",
+   "batch": "3(enabler)",
+   "note": "原批 5 名单，作为 gamma3_x 依赖随批 3 提前落地",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:365"
   },
   {
@@ -1377,9 +1377,9 @@
    "symbol": "vol_x",
    "class": "resolved",
    "tier": "B",
-   "lean": "volXf (lean/Kepler/Text/PackingAuto20.lean:99)",
-   "batch": "",
-   "note": "",
+   "lean": "volX (lean/Kepler/Text/IneqClosureDefs.lean:390)",
+   "batch": "3(enabler)",
+   "note": "PA20:99 volXf 为 verbatim 孪生，但 PA20 与 SphereKit 的 atn2 同名冲突使其不可跨 import 复用；批 3 立 canonical volX",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:251"
   },
   {

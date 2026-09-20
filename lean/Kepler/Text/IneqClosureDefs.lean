@@ -344,6 +344,235 @@ example : norm2hh (hminus + hplus) 2 2 2 2 2 = 0 := by unfold norm2hh; ring
 example : norm2hh (hminus + hplus + 1) 2 2 2 2 2 = 1 := by
   unfold norm2hh; ring
 
+/-! ## Batch 3: the gamma/beta family (nonlin_def.hl + sphere.hl)
+
+Reused, not re-ported: `dihXf`/`solY`/`upsX`/`deltaX` (SphereKit), `lfun`,
+`mm1`, `mm2`, `bump` (PackingAuto2).  PackingAuto20/21 already carry verbatim
+twins of `vol_x` (`volXf`) and `gamma2_x_div_azim_v2`, but those modules each
+declare their own unsuffixed `atn2`/`dihXf`/`dihY`/`solY` — the fatal clash
+SphereKit.lean:10-11 exists to remove — so they cannot be imported alongside
+SphereKit.  The canonical `volX`/`solX`/`gamma2XDivAzimV2` are therefore
+(re)stated here; `solX` also replaces the `sorry` stub `solXP38`
+(LocalAuto38.lean:75).
+
+Function arithmetic below is pointwise (`Pi` instances on ℝ⁶ → ℝ), matching
+HOL Light's overloaded `+`/`-`/`*` on 6-ary real functions. -/
+
+/-- HOL `uni` (nonlin_def.hl:246-247): `uni (f,x) x1..x6 = f (x x1..x6)`; the
+HOL pair argument is uncurried here. NB: defs.json's `body_ast` is a truncated
+parse artifact (`{"const":"f"}`, the `(f:A->B)` type cast trips parse_defs);
+the HOL source is the authority. -/
+def uni (f : ℝ → ℝ) (x : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ)
+    (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := f (x x1 x2 x3 x4 x5 x6)
+
+/-- Pins the uncurrying against the intended use `uni lfun g = lfun ∘ g`. -/
+example : uni lfun g x1 x2 x3 x4 x5 x6 = lfun (g x1 x2 x3 x4 x5 x6) := rfl
+
+/-- HOL `dummy6` (nonlin_def.hl:263): `constant6 (&0)`. -/
+def dummy6 : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ := constant6 0
+
+example : dummy6 1 2 3 4 5 6 = 0 := rfl
+
+/-- HOL `sol_x` (sphere.hl:181-184): solid angle from squared lengths.
+Verbatim body against SphereKit's `dihXf`; replaces the `sorry` stub
+`solXP38` (LocalAuto38.lean:75). -/
+noncomputable def solX (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  dihXf x1 x2 x3 x4 x5 x6 + dihXf x2 x3 x1 x5 x6 x4 +
+    dihXf x3 x1 x2 x6 x4 x5 - Real.pi
+
+/-- Consistency with the existing `solY` (SphereKit.lean:105):
+`sol_y y = sol_x` at squared lengths. -/
+example : solY y1 y2 y3 y4 y5 y6 =
+    solX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) := rfl
+
+/-- HOL `vol_x` (sphere.hl:251-252). Verbatim = `volXf`
+(PackingAuto20.lean:99). -/
+noncomputable def volX (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  Real.sqrt (deltaX x1 x2 x3 x4 x5 x6) / 12
+
+/-- Numeric: regular tetrahedron, `volX (4,…,4) = √128/12 = 2√2/3`. -/
+example : volX 4 4 4 4 4 4 = 2 * Real.sqrt 2 / 3 := by
+  have h128 : deltaX 4 4 4 4 4 4 = 128 := by norm_num [deltaX]
+  have hs : Real.sqrt (128 : ℝ) = 8 * Real.sqrt 2 := by
+    rw [show (128 : ℝ) = 8 ^ 2 * 2 by norm_num, Real.sqrt_mul (by norm_num),
+      Real.sqrt_sq (by norm_num)]
+  unfold volX
+  rw [h128, hs]
+  field_simp
+  ring
+
+/-- HOL `gamma2_x_div_azim_v2` (nonlin_def.hl:341-343). Verbatim =
+PackingAuto21.lean:164 (`gamma2_x_div_azim_v2`); re-stated under the canonical
+camelCase name because PackingAuto21 cannot be imported next to SphereKit. -/
+noncomputable def gamma2XDivAzimV2 (m x : ℝ) : ℝ :=
+  (8 - x) * Real.sqrt x / 24 -
+    (2 * (2 * mm1 / Real.pi) * (1 - Real.sqrt x / Real.sqrt 8) -
+      (8 * mm2 / Real.pi) * m * lfun (Real.sqrt x / 2))
+
+/-- HOL `gamma2_x1_div_a_v2` (nonlin_def.hl:346-347). -/
+noncomputable def gamma2X1DivAV2 (m : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  promote1To6 (gamma2XDivAzimV2 m)
+
+/-- Pins the `promote1_to_6` glue. -/
+example : gamma2X1DivAV2 m x1 x2 x3 x4 x5 x6 = gamma2XDivAzimV2 m x1 := rfl
+
+/-- HOL `vol3f_456` (nonlin_def.hl:365-378). Original batch-5 list member,
+ported with batch 3 as a `gamma3_x` dependency. NB: only the first `lfun`
+term carries the `scalar6 … m4` factor (HOL source asymmetry, verified
+against nonlin_def.hl:371-377). -/
+noncomputable def vol3f456 (m4 : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  scalar6 (mk456 (rotate5 solX) + mk456 (rotate6 solX) + mk456 (rotate4 solX))
+      (2 * mm1 / Real.pi) -
+    scalar6
+      ((scalar6 (uni lfun (scalar6 projY4 0.5)) m4) * mk456 (rotate4 dihXf) +
+        (uni lfun (scalar6 projY5 0.5)) * mk456 (rotate5 dihXf) +
+        (uni lfun (scalar6 projY6 0.5)) * mk456 (rotate6 dihXf))
+      (8 * mm2 / Real.pi)
+
+/-- HOL `gamma3_x` (nonlin_def.hl:380-381). -/
+noncomputable def gamma3X (m4 : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  mk456 volX - vol3f456 m4
+
+/-- Pins the `mk_456` face selection: slots 1-3 set to the constant 2. -/
+example : gamma3X m4 x1 x2 x3 x4 x5 x6 =
+    volX 2 2 2 x4 x5 x6 - vol3f456 m4 x1 x2 x3 x4 x5 x6 := rfl
+
+/-- HOL `gamma3f_x_div_sqrtdelta` (nonlin_def.hl:349-363). -/
+noncomputable def gamma3fXDivSqrtdelta (m4 m5 m6 : ℝ) :
+    ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  constant6 (1 / 12) -
+    (scalar6
+        (mk456 (rotate5 solEulerXDivSqrtdelta) +
+          mk456 (rotate6 solEulerXDivSqrtdelta) +
+          mk456 (rotate4 solEulerXDivSqrtdelta))
+        (2 * mm1 / Real.pi) -
+      scalar6
+        ((scalar6 (uni lfun (scalar6 projY4 0.5)) m4) *
+            mk456 (rotate4 dihXDivSqrtdeltaPosbranch) +
+          (scalar6 (uni lfun (scalar6 projY5 0.5)) m5) *
+            mk456 (rotate5 dihXDivSqrtdeltaPosbranch) +
+          (scalar6 (uni lfun (scalar6 projY6 0.5)) m6) *
+            mk456 (rotate6 dihXDivSqrtdeltaPosbranch))
+        (8 * mm2 / Real.pi))
+
+/-- HOL `gamma23_full8_x` (nonlin_def.hl:383-388). -/
+noncomputable def gamma23Full8X (m1 : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  compose6 (gamma3X m1) dummy6 dummy6 dummy6 projX1 projX2 projX6 +
+    compose6 (gamma3X m1) dummy6 dummy6 dummy6 projX1 projX3 projX5 +
+    scalar6 (dihXf - (mk126 dihXf + mk135 dihXf)) 0.008
+
+/-- HOL `gamma23_keep135_x` (nonlin_def.hl:390-393). -/
+noncomputable def gamma23Keep135X (m1 : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  compose6 (gamma3X m1) dummy6 dummy6 dummy6 projX1 projX3 projX5 +
+    scalar6 (dihXf - mk135 dihXf) 0.008
+
+/-- Pins the whole `compose6`/`dummy6`/`scalar6` glue for `gamma23_keep135_x`:
+the `gamma3_x` composite sees slots 1-3 zeroed, and the correction term is
+`0.008 * (dih_x - dih_x∘(x1,2,x3,2,x5,2))`. -/
+example : gamma23Keep135X m1 x1 x2 x3 x4 x5 x6 =
+    gamma3X m1 0 0 0 x1 x3 x5 +
+      (dihXf x1 x2 x3 x4 x5 x6 - dihXf x1 2 x3 2 x5 2) * 0.008 := rfl
+
+/-- Same pinning for `gamma23_full8_x`: two `gamma3_x` composites (keeping
+126 resp. 135) plus `0.008 * (dih_x - dih_x∘(x1,x2,2,2,2,x6) -
+dih_x∘(x1,2,x3,2,x5,2))`. -/
+example : gamma23Full8X m1 x1 x2 x3 x4 x5 x6 =
+    gamma3X m1 0 0 0 x1 x2 x6 + gamma3X m1 0 0 0 x1 x3 x5 +
+      (dihXf x1 x2 x3 x4 x5 x6 -
+        (dihXf x1 x2 2 2 2 x6 + dihXf x1 2 x3 2 x5 2)) * 0.008 := rfl
+
+/-- HOL `beta_bump_force_y` (sphere.hl:614-615). -/
+noncomputable def betaBumpForceY (y1 _y2 _y3 y4 _y5 _y6 : ℝ) : ℝ :=
+  bump (y1 / 2) - bump (y4 / 2)
+
+/-- Numeric: equal `y1 = y4` kills the force term. -/
+example (y : ℝ) : betaBumpForceY y 0 0 y 0 0 = 0 := by
+  unfold betaBumpForceY; ring
+
+/-- HOL `beta_bump_lb` (sphere.hl:636). -/
+def betaBumpLb : ℝ := -0.005
+
+/-- Numeric/cross-def: `bump h0 = 0.005 = -beta_bump_lb` (bump peak value;
+pins both the `bump` reuse and the sign of `betaBumpLb`). -/
+example : bump h0 = -betaBumpLb := by norm_num [bump, h0, betaBumpLb]
+
+/-! ## Batch 5: misc (sphere.hl / nonlin_def.hl / ineq.hl)
+
+`matan` was already ported in batch 1 and is skipped.  `dart_std3_big`
+(fallback-extracted at ineq.hl:3079) is verbatim `dart_std3`; `dart_std3`
+itself was triaged "unsupported: set/list notation" by parse_defs, but the
+`define_dart` list of (lo, value, hi) triples renders directly as a Lean
+`List (ℝ × ℝ × ℝ)`. -/
+
+/-- HOL `tame_table_d` (sphere.hl:803-805): the preferred term over
+`d2_tame`. ℕ-valued table indices; `&r`/`&s` in the branches are ℕ→ℝ casts
+(defs.json `num2r` nodes), the guard `r + 2*s > 3` is at ℕ level. -/
+def tameTableD (r s : ℕ) : ℝ :=
+  if r + 2 * s > 3 then
+    0.103 * (2 - (s : ℝ)) + 0.2759 * ((r : ℝ) + 2 * (s : ℝ) - 4)
+  else 0
+
+/-- Numeric: `r + 2s = 3` takes the zero branch. -/
+example : tameTableD 3 0 = 0 := by norm_num [tameTableD]
+
+/-- Numeric: `tameTableD 5 1 = 0.103 + 0.2759 * 3 = 0.9307`. -/
+example : tameTableD 5 1 = 0.9307 := by norm_num [tameTableD]
+
+/-- HOL `dih2_y` (sphere.hl:163-165). -/
+noncomputable def dih2Y (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  dihY y2 y1 y3 y5 y4 y6
+
+/-- HOL `dih3_y` (sphere.hl:166-168). -/
+noncomputable def dih3Y (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  dihY y3 y1 y2 y6 y4 y5
+
+/-- Pins the `dih2_y` argument swap. -/
+example : dih2Y y1 y2 y3 y4 y5 y6 = dihY y2 y1 y3 y5 y4 y6 := rfl
+
+/-- Pins the `dih3_y` argument rotation. -/
+example : dih3Y y1 y2 y3 y4 y5 y6 = dihY y3 y1 y2 y6 y4 y5 := rfl
+
+/-- HOL `lfun_y1` (sphere.hl:789-790): the 6-ary `lfun y1`. -/
+noncomputable def lfunY1 (y1 _y2 _y3 _y4 _y5 _y6 : ℝ) : ℝ := lfun y1
+
+/-- `lfun_y1` is exactly `promote1_to_6 lfun`. -/
+example : lfunY1 = promote1To6 lfun := rfl
+
+/-- HOL `rho_x` (sphere.hl:137-140). -/
+def rhoX (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  -x1 * x1 * x4 * x4 - x2 * x2 * x5 * x5 - x3 * x3 * x6 * x6 +
+    2 * x1 * x2 * x4 * x5 + 2 * x1 * x3 * x4 * x6 + 2 * x2 * x3 * x5 * x6
+
+/-- Numeric: `rhoX (1,…,1) = -3 + 6 = 3`. -/
+example : rhoX 1 1 1 1 1 1 = 3 := by norm_num [rhoX]
+
+/-- HOL `ups_126` (nonlin_def.hl:446-447). -/
+def ups126 : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  compose6 (promote3To6 upsX) projX1 projX2 projX6 dummy6 dummy6 dummy6
+
+/-- Pins the full stack: `ups_126` keeps slots 1,2,6 and zeroes 3,4,5
+(`dummy6`), i.e. it is `ups_x x1 x2 x6`. -/
+example : ups126 x1 x2 x3 x4 x5 x6 = upsX x1 x2 x6 := rfl
+
+/-- HOL `dart_std3` (ineq.hl:2697-2704, via `define_dart`): the standard dart
+domain box as a literal list of (lo, value, hi) triples — the shape consumed
+by HOL `ineq`. parse_defs triaged this "unsupported: set/list notation", but
+the list is directly portable; every entry pins `2.0 ≤ yi ≤ 2.52`. -/
+def dartStd3 (y1 y2 y3 y4 y5 y6 : ℝ) : List (ℝ × ℝ × ℝ) :=
+  [(2.0, y1, 2.52), (2.0, y2, 2.52), (2.0, y3, 2.52),
+    (2.0, y4, 2.52), (2.0, y5, 2.52), (2.0, y6, 2.52)]
+
+/-- HOL `dart_std3_big` (ineq.hl:3079, fallback extraction): `dart_std3_big =
+dart_std3` — "same domain but extra disjunct" (the extra disjunct lives on the
+inequality side, not in the domain). -/
+def dartStd3Big : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → List (ℝ × ℝ × ℝ) := dartStd3
+
+example : dartStd3Big = dartStd3 := rfl
+
+/-- Numeric/structural: six entries, all `[2.0, ·, 2.52]`. -/
+example : dartStd3 2.2 2.2 2.2 2.2 2.2 2.2 = List.replicate 6 (2.0, 2.2, 2.52) :=
+  rfl
+
 /-! ## Axiom audit (standard three only: propext / Classical.choice /
 Quot.sound) -/
 
@@ -356,5 +585,12 @@ Quot.sound) -/
 #print axioms compose6
 #print axioms mk126
 #print axioms norm2hh
+#print axioms gamma3fXDivSqrtdelta
+#print axioms gamma23Full8X
+#print axioms vol3f456
+#print axioms betaBumpForceY
+#print axioms tameTableD
+#print axioms ups126
+#print axioms dartStd3Big
 
 end Kepler.Text
