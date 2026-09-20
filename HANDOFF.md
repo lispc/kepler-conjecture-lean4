@@ -265,3 +265,33 @@ tail -20 /tmp/auto_pipeline.log # 流水线状态（若在跑）
   ENNReal-级并-交可加性（`measure_union_add_inter`）+ 零测双 bisector 交
   （`BIS_HYPERPLANE` + 仿射超平面零测）。`MCELL2_SPLIT` 的 `RCONE_PAIR`-半已就绪，
   剩 affGe-半即闭合。0 error，37 sorry。
+
+## 配额中断与续发清单（2026-09-19 记录，限额 2026-09-23 16:43 重置）
+
+Sub-agent 周/月配额耗尽，以下 6 份已拟好的工人任务书**未发出**，重置后按序重派
+（文件所有权互斥，可全并行；中央验证 = rm traces → 38 路 local root + 25 路
+packing root + PackingConcl/LocalConcl/LocalBridge 三文件，全零 error 后提交推送）：
+
+1. **P-4**（owns PA6+PA7）：Rogers A+B ~84 sorry；PA12 工人留话「hL-fix 经
+   公共 HL_EQ_DIST0+CIRCUMCENTER_2 可就绪（PA6/7）」——先查这两个是否已证可引。
+2. **P-5**（owns PA18）：~119 sorry；高杠杆 = SUM_GAMMAX 系（PA19 的
+   SUM_GAMMAX_LMFUN_ESTIMATE shim 指向此处，证毕即下游销账）；方法可仿 LA25/LA36
+   的 arclength atn2 案例剖分（arctan 单调 + 精确小数 norm_num）。
+3. **P-6**（owns PA22）：~120 sorry；23 个 funlist case-bank `is_scs_*` 用
+   LA29 `isScs_mkFunlist_p29` 骨架 + LA20 funlist kit 模板；taum/atn2 解析巨石留
+   sorry。本轮**不做**去重（deltaX5_p22 等冗余留待专门 dedup 趟）。
+4. **P-7**（owns PA25）：~170 sorry；组合/列表/集合机械题激进填（目标 ≥30）。
+5. **L-J**（owns LA33+LA37）：49+29 sorry；注意 LocalFan 已升级为忠实合取，
+   LA37 的 MHAEYJN_CONVEX_LOCAL_FAN 等 FAN 证人义务变真——可能解锁。
+6. **L-K**（owns LA38）：67 sorry；"+LP"/证书依赖的留 sorry，机械题激进填。
+
+**根阻塞台账（收敛中）**：① `main_nonlinear_terminal_v11`（LA1:793 opaque def
+:= sorry，外部锚，等 G4/非线性章）；② `XWNHLMD_MM`（LA26:688，卡 LA29/35 切片箭头
+链，其 JKQEWGV2 上游亦 sorry）；③ azimCycle↔sigmaFan 桥（fan 级，卡 ~35 个
+azim-循环巨石）；④ localization-kit EE/azimCycle/azimInFan 进 SphereKit（计划 §6
+deferred）；⑤ `LKGRQUI_concl`/`YXIONXL3_concl` 等 LA1 注册表项（部分已有证 twin，
+LocalConcl 每轮扫）。
+
+**当前账面（grep 口径，含 DISCHARGES 注记行）**：local ~1578 / packing ~901
+（骨架完成时 ~1698/~920 → 已消化 ~120 + 陈述修复/去重/装配销账 16+16）。
+两 root + 三装配文件全绿 @ `6e906e2e`。
