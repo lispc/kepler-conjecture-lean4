@@ -753,9 +753,14 @@ theorem RVFXZBU2_concl : ∀ (V : Set V3) (ul vl : List V3) (i : ℕ), saturated
     ∃ p : Equiv.Perm ℕ, permutes p (Set.Icc 0 (i - 1)) ∧ vl = leftActionList p ul := by
   sorry
 
-/-- HOL `RVFXZBU3_concl` (pack_concl.hl:149-150). -/
+/-- HOL `RVFXZBU3_concl` (pack_concl.hl:149-150). ENCODING-FIX 2026-09-19
+(mirror of the PackingAuto10 ruling): HOL `permutes` is complement-fixing,
+so the faithful Lean form carries the tail-fixedness side condition
+explicitly; the weak pointwise `permutes` hypothesis alone would make the
+statement false (transposition counterexample). -/
 theorem RVFXZBU3_concl : ∀ (V : Set V3) (ul : List V3) (i : ℕ) (p : Equiv.Perm ℕ),
     saturated V → Packing V → barV V 3 ul → permutes p (Set.Icc 0 (i - 1)) →
+    (∀ j : ℕ, i ≤ j → p j = j) →
     mcell i V (leftActionList p ul) = mcell i V ul := by
   sorry
 

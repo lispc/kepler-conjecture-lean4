@@ -24,14 +24,17 @@ Encoding notes.
   `PackingAuto2.permutes` (`∀ x, x ∈ s ↔ p x ∈ s`), not the
   complement-fixing HL relation. This matters for `QZKSYKG1`: the HL proof
   at `k = 2, 3` goes through `YNHYJIT`, whose HL proof uses
-  `LEFT_ACTION_LIST_PROPERTIES` (permutations fixing indices `≥ i-1`); with
-  only pointwise membership `YNHYJIT` may be false as pointwise-encoded
-  (same caveat as the PackingAuto10 copy, whose olean is not available in
-  this checkout — parallel lane). Hence a private `ynhyjit_p14` NEEDS copy
-  here, and `QZKSYKG1`/`QZKSYKG2` carry the same caveat.
-- NEEDS: `MXI_EXPLICIT` (marchal2.hl:2516) — marchal2 is parallel-owned
-  (PackingAuto12) and NOT importable; private `mxiExplicit_p14` copy,
-  delete at merge when Auto12 lands (Auto11 has a private copy too).
+  `LEFT_ACTION_LIST_PROPERTIES` (permutations fixing indices `≥ i-1`). The
+  pointwise-membership `permutes` encoding alone is too weak (PA10 ruling:
+  HL `permutes` is complement-fixing, so the faithful encoding carries the
+  tail-fixedness side condition `∀ j, i ≤ j → p j = j`).
+  ENCODING-FIX 2026-09-19: private `ynhyjit_p14` now carries `hfix`,
+  matching the PA10 fix; `QZKSYKG1`/`QZKSYKG2` keep the plain `permutes`
+  form (verbatim to HOL concl) — at discharge time their HL proofs must
+  supply the tail-fixedness from `LEFT_ACTION_LIST_PROPERTIES`.
+- `MXI_EXPLICIT` (marchal2.hl:2516): MERGED 2026-09-19 — PA12's proved
+  public `MXI_EXPLICIT` is importable; the unused private `mxiExplicit_p14`
+  copy was deleted (PA11 still holds its own private copy, out of scope).
 - Proof status: the five supporting lemmas are proved (mechanical);
   `QZKSYKG1`/`QZKSYKG2` are stated faithfully and `sorry`ed (giants; the HL
   proofs are ~1900 lines through `WQPRRDY`, `MXI_EXPLICIT`,
@@ -43,6 +46,7 @@ import Kepler.Text.PackingAuto5
 import Kepler.Text.PackingAuto6
 import Kepler.Text.PackingAuto7
 import Kepler.Text.PackingAuto8
+import Kepler.Text.PackingAuto12
 import Kepler.Text.Polytope
 import Mathlib
 
@@ -220,25 +224,17 @@ private theorem ynhyjit_p14 {V : Set V3} {ul vl : List V3} {i : ℕ} {p : Equiv.
     (h1 : hl (truncateSimplex (i - 1) ul) < Real.sqrt 2)
     (h2 : Real.sqrt 2 ≤ hl ul)
     (hperm : permutes p (Set.Icc 0 (i - 1)))
+    (hfix : ∀ j : ℕ, i ≤ j → p j = j)
     (hvl : vl = leftActionList p ul) :
     barV V 3 vl ∧
       ∀ j : ℕ, i - 1 ≤ j → j ≤ 3 → omegaListN V vl j = omegaListN V ul j := by
   sorry
 
-/-- NEEDS: `MXI_EXPLICIT` (marchal2.hl:2516) — marchal2 is parallel-owned
-(PackingAuto12) and NOT importable (private `mxiExplicit` copies also exist
-in PackingAuto11); delete this copy at merge when Auto12 lands. Under the
-`mcell3` regime the `mxi` point is realized on the segment from
-`omegaListN V ul 2` to `omegaListN V ul 3` at distance `sqrt 2` from `u0`
-(`SEGMENT_INTER_CBALL_LEMMA` + identification via the `@`-definition). -/
-private theorem mxiExplicit_p14 (V : Set V3) (u0 u1 u2 u3 : V3)
-    (hp : Packing V) (hs : saturated V) (hb : barV V 3 [u0, u1, u2, u3])
-    (hc1 : hl (truncateSimplex 2 [u0, u1, u2, u3]) < Real.sqrt 2)
-    (hc2 : Real.sqrt 2 ≤ hl [u0, u1, u2, u3]) :
-    ∃ s : V3, s ∈ segment ℝ (omegaListN V [u0, u1, u2, u3] 2)
-        (omegaListN V [u0, u1, u2, u3] 3) ∧
-      dist u0 s = Real.sqrt 2 ∧ mxi V [u0, u1, u2, u3] = s := by
-  sorry
+/- `MXI_EXPLICIT` (marchal2.hl:2516) is PA12's proved public theorem
+(imported below); the unused private `mxiExplicit_p14` copy was deleted
+DEDUP 2026-09-19. Under the `mcell3` regime the `mxi` point is realized on
+the segment from `omegaListN V ul 2` to `omegaListN V ul 3` at distance
+`sqrt 2` from `u0` (`SEGMENT_INTER_CBALL_LEMMA` + `@`-definition). -/
 
 /-! ## The two QZKSYKG capstones (QZKSYKG.hl:266-2251) -/
 
