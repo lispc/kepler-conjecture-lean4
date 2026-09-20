@@ -101,7 +101,11 @@ namespace IExpr
 
 /-- Interval evaluation over a box (`Option`-valued: `none` when a
 sub-check — divisor range, radicand sign, transcendental range, scaling
-room — fails; failure is always sound). -/
+room — fails; failure is always sound).  An `ite` whose guard interval
+straddles `0` evaluates BOTH branches and returns their hull (the bb_arb
+`ufall` union fallback: the true value lies in one of the two branches, so
+the hull is a sound superset); the hull is taken only when both branches
+evaluate successfully, matching bb_arb (a failing branch fails the node). -/
 def eval {n : ℕ} : IExpr n → (Fin n → DInterval) → Option DInterval
   | .const d, _ => some ⟨d, d⟩
   | .var i, box => some (box i)
@@ -112,7 +116,10 @@ def eval {n : ℕ} : IExpr n → (Fin n → DInterval) → Option DInterval
       | some C =>
           if C.hi.isNeg then t.eval box
           else if C.lo.isNN then e.eval box
-          else none
+          else
+            match t.eval box, e.eval box with
+            | some T, some E => some (DInterval.hull T E)
+            | _, _ => none
       | none => none
   | .add e₁ e₂, box =>
       match e₁.eval box, e₂.eval box with
@@ -230,7 +237,26 @@ theorem eval_mem {n : ℕ} (e : IExpr n) (box : Fin n → DInterval) (ρ : Fin n
           show I.mem (if c.evalReal ρ < 0 then t.evalReal ρ else e.evalReal ρ)
           rw [if_neg hnot]
           exact ihe I h
-        · rw [if_neg hnn] at h; simp at h
+        · rw [if_neg hnn] at h
+          -- guard straddles 0: the result is the hull of both branches, and
+          -- the true value is one of the two branch values.
+          cases ht : t.eval box with
+          | none => rw [ht] at h; simp at h
+          | some T =>
+            rw [ht] at h
+            cases he' : e.eval box with
+            | none => rw [he'] at h; simp at h
+            | some E =>
+              rw [he'] at h
+              dsimp only at h
+              obtain rfl : I = DInterval.hull T E := (Option.some.inj h).symm
+              show DInterval.mem (DInterval.hull T E)
+                (if c.evalReal ρ < 0 then t.evalReal ρ else e.evalReal ρ)
+              by_cases hlt : c.evalReal ρ < 0
+              · rw [if_pos hlt]
+                exact DInterval.mem_hull_left (iht T ht)
+              · rw [if_neg hlt]
+                exact DInterval.mem_hull_right (ihe E he')
   | add e₁ e₂ ih₁ ih₂ =>
     intro I h
     simp only [eval] at h

@@ -441,6 +441,31 @@ theorem mem_abs {I : DInterval} {x : ℝ} (hx : I.mem x) : I.abs.mem |x| := by
         le_trans (le_max_left _ _) (le_max_right _ _)
       linarith
 
+/-- Hull (interval union): the smallest interval containing both arguments.
+Used by the `ite` guard-straddle union fallback in `IExpr.eval` (the bb_arb
+`ufall` semantics): the true value lies in one of the two branches. -/
+def hull (I J : DInterval) : DInterval := ⟨Dyadic.dmin I.lo J.lo, Dyadic.dmax I.hi J.hi⟩
+
+theorem mem_hull_left {I J : DInterval} {x : ℝ} (hx : I.mem x) : (I.hull J).mem x := by
+  obtain ⟨h1, h2⟩ := hx
+  constructor
+  · show Dyadic.toReal (Dyadic.dmin I.lo J.lo) ≤ x
+    rw [Dyadic.toReal_dmin]
+    exact le_trans (min_le_left _ _) h1
+  · show x ≤ Dyadic.toReal (Dyadic.dmax I.hi J.hi)
+    rw [Dyadic.toReal_dmax]
+    exact le_trans h2 (le_max_left _ _)
+
+theorem mem_hull_right {I J : DInterval} {x : ℝ} (hx : J.mem x) : (I.hull J).mem x := by
+  obtain ⟨h1, h2⟩ := hx
+  constructor
+  · show Dyadic.toReal (Dyadic.dmin I.lo J.lo) ≤ x
+    rw [Dyadic.toReal_dmin]
+    exact le_trans (min_le_right _ _) h1
+  · show x ≤ Dyadic.toReal (Dyadic.dmax I.hi J.hi)
+    rw [Dyadic.toReal_dmax]
+    exact le_trans h2 (le_max_right _ _)
+
 end DInterval
 
 end Kepler.Interval

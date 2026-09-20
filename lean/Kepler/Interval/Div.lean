@@ -119,14 +119,21 @@ theorem isNeg_iff (d : Dyadic) : d.isNeg = true ↔ d.toReal < 0 := by
 
 /-- `divFloorQ a b out = some q` where `q` is the floor of `a / b` at output
 granularity `2^out` (see `divFloorQ_spec` for the two-sided error bound).
-Fails (`none`) if `b.m = 0` or `a.e - b.e - out < 0`. All arithmetic is in
-`Int` — kernel-checkable by `decide`. -/
+Fails (`none`) only if `b.m = 0`.  When `a.e - b.e - out ≥ 0` the numerator
+mantissa is shifted left as before; otherwise the *divisor* is shifted right
+by `2^(b.e + out - a.e)` and floored there (the exact big-integer mantissa
+keeps full precision — the result is still a one-ulp floor; this is what
+lets the Taylor layers absorb the very negative exponents that interval
+division produces).  All arithmetic is in `Int` — kernel-checkable by
+`decide`. -/
 def divFloorQ (a b : Dyadic) (out : Int) : Option Dyadic :=
-  if _hk : 0 ≤ a.e - b.e - out then
-    if _hb : b.m ≠ 0 then
+  if _hb : b.m ≠ 0 then
+    if _hk : 0 ≤ a.e - b.e - out then
       if 0 < b.m then some ⟨a.m * 2 ^ (a.e - b.e - out).toNat / b.m, out⟩
       else some ⟨a.m * 2 ^ (a.e - b.e - out).toNat / b.m - 1, out⟩
-    else none
+    else
+      if 0 < b.m then some ⟨a.m / (b.m * 2 ^ (b.e + out - a.e).toNat), out⟩
+      else some ⟨a.m / (b.m * 2 ^ (b.e + out - a.e).toNat) - 1, out⟩
   else none
 
 /-- Scaling identity: since `(kn : ℤ) = a.e - out`, the semantics factors as
@@ -144,28 +151,40 @@ theorem toReal_scale (a : Dyadic) (kn : ℕ) (out : Int) (hke : ((kn : Int)) = a
   ring
 
 /-- Case analysis on a successful `divFloorQ` (used by `divFloorQ_spec`):
-either `0 < b.m` and `q` is the plain Euclidean quotient, or `b.m < 0` and the
-mantissa is compensated by `- 1`. -/
+four cases — `0 < b.m` / `b.m < 0` (the mantissa compensated by `- 1`),
+each with either the left-shift (`a.e - b.e - out ≥ 0`) or the right-shifted
+divisor (`a.e - b.e - out < 0`). -/
 theorem divFloorQ_cases {a b : Dyadic} {out : Int} {q : Dyadic}
     (h : divFloorQ a b out = some q) :
     (0 < b.m ∧ 0 ≤ a.e - b.e - out ∧ q = ⟨a.m * 2 ^ (a.e - b.e - out).toNat / b.m, out⟩) ∨
     (b.m < 0 ∧ 0 ≤ a.e - b.e - out ∧
-      q = ⟨a.m * 2 ^ (a.e - b.e - out).toNat / b.m - 1, out⟩) := by
+      q = ⟨a.m * 2 ^ (a.e - b.e - out).toNat / b.m - 1, out⟩) ∨
+    (0 < b.m ∧ a.e - b.e - out < 0 ∧
+      q = ⟨a.m / (b.m * 2 ^ (b.e + out - a.e).toNat), out⟩) ∨
+    (b.m < 0 ∧ a.e - b.e - out < 0 ∧
+      q = ⟨a.m / (b.m * 2 ^ (b.e + out - a.e).toNat) - 1, out⟩) := by
   unfold divFloorQ at h
   split at h
-  · next hk =>
+  · next _hb =>
     split at h
-    · next _hb =>
+    · next hk =>
       split at h
       · next hpos => exact Or.inl ⟨hpos, hk, (Option.some.inj h).symm⟩
-      · next hneg => exact Or.inr ⟨by omega, hk, (Option.some.inj h).symm⟩
-    · exact absurd h (by simp)
+      · next hneg => exact Or.inr (Or.inl ⟨by omega, hk, (Option.some.inj h).symm⟩)
+    · next hk =>
+      split at h
+      · next hpos =>
+          exact Or.inr (Or.inr (Or.inl ⟨hpos, by omega, (Option.some.inj h).symm⟩))
+      · next hneg =>
+          exact Or.inr (Or.inr (Or.inr ⟨by omega, by omega, (Option.some.inj h).symm⟩))
   · exact absurd h (by simp)
 
 /-- Exponent bookkeeping: `divFloorQ` always returns exponent `out`. -/
 theorem divFloorQ_e {a b : Dyadic} {out : Int} {q : Dyadic}
     (h : divFloorQ a b out = some q) : q.e = out := by
-  rcases divFloorQ_cases h with ⟨_, _, hq⟩ | ⟨_, _, hq⟩
+  rcases divFloorQ_cases h with ⟨_, _, hq⟩ | ⟨_, _, hq⟩ | ⟨_, _, hq⟩ | ⟨_, _, hq⟩
+  · rw [hq]
+  · rw [hq]
   · rw [hq]
   · rw [hq]
 
@@ -177,17 +196,10 @@ theorem divFloorQ_spec {a b : Dyadic} {out : Int} {q : Dyadic}
       a.toReal / b.toReal ≤ Dyadic.toReal ⟨q.m + 1, out⟩ := by
   have hcases := divFloorQ_cases h
   have hb : b.m ≠ 0 := by
-    rcases hcases with ⟨h1, _, _⟩ | ⟨h1, _, _⟩ <;> omega
-  have hk : 0 ≤ a.e - b.e - out := by
-    rcases hcases with ⟨_, hk, _⟩ | ⟨_, hk, _⟩ <;> exact hk
-  have hkz : (((a.e - b.e - out).toNat : Int)) = a.e - b.e - out :=
-    Int.toNat_of_nonneg hk
+    rcases hcases with ⟨h1, _, _⟩ | ⟨h1, _, _⟩ | ⟨h1, _, _⟩ | ⟨h1, _, _⟩ <;> omega
   have hbne : b.toReal ≠ 0 := by
     rw [toReal_def]
     exact mul_ne_zero (by exact_mod_cast hb) (zpow_ne_zero b.e (by norm_num : (2:ℝ) ≠ 0))
-  have hAsc : a.toReal = ((a.m * 2 ^ (a.e - b.e - out).toNat : ℤ) : ℝ)
-      * (2 : ℝ) ^ (out + b.e) :=
-    toReal_scale a _ (out + b.e) (by omega)
   have hp2 : (0:ℝ) < (2:ℝ)^(out + b.e) := zpow_pos (by norm_num) _
   have hz : (2:ℝ)^out * (2:ℝ)^b.e = (2:ℝ)^(out + b.e) :=
     (zpow_add₀ (by norm_num : (2:ℝ) ≠ 0) out b.e).symm
@@ -197,9 +209,14 @@ theorem divFloorQ_spec {a b : Dyadic} {out : Int} {q : Dyadic}
     intro r
     simp only [toReal_def]
     linear_combination (r:ℝ) * (b.m:ℝ) * hz
-  rcases hcases with ⟨hpos, _, hq⟩ | ⟨hneg, _, hq⟩
-  · -- positive divisor: plain floor
+  rcases hcases with ⟨hpos, hk, hq⟩ | ⟨hneg, hk, hq⟩ | ⟨hpos, hk, hq⟩ | ⟨hneg, hk, hq⟩
+  · -- positive divisor, left shift: plain floor
     subst hq
+    have hkz : (((a.e - b.e - out).toNat : Int)) = a.e - b.e - out :=
+      Int.toNat_of_nonneg hk
+    have hAsc : a.toReal = ((a.m * 2 ^ (a.e - b.e - out).toNat : ℤ) : ℝ)
+        * (2 : ℝ) ^ (out + b.e) :=
+      toReal_scale a _ (out + b.e) (by omega)
     have hbpos : (0:ℝ) < b.toReal := by
       rw [toReal_def]
       exact mul_pos (by exact_mod_cast hpos) (zpow_pos (by norm_num) b.e)
@@ -210,8 +227,13 @@ theorem divFloorQ_spec {a b : Dyadic} {out : Int} {q : Dyadic}
     · rw [div_le_iff₀ hbpos, hAsc, hreg]
       exact mul_le_mul_of_nonneg_right
         (le_of_lt (Int_lt_succ_ediv_mul (a.m * 2 ^ (a.e - b.e - out).toNat) hpos)) (le_of_lt hp2)
-  · -- negative divisor: compensate the ceil rounding by `- 1`
+  · -- negative divisor, left shift: compensate the ceil rounding by `- 1`
     subst hq
+    have hkz : (((a.e - b.e - out).toNat : Int)) = a.e - b.e - out :=
+      Int.toNat_of_nonneg hk
+    have hAsc : a.toReal = ((a.m * 2 ^ (a.e - b.e - out).toNat : ℤ) : ℝ)
+        * (2 : ℝ) ^ (out + b.e) :=
+      toReal_scale a _ (out + b.e) (by omega)
     have hbneg : b.toReal < 0 := by
       rw [toReal_def]
       exact mul_neg_of_neg_of_pos (by exact_mod_cast hneg) (zpow_pos (by norm_num) b.e)
@@ -228,6 +250,97 @@ theorem divFloorQ_spec {a b : Dyadic} {out : Int} {q : Dyadic}
       rw [hn1]
       exact mul_le_mul_of_nonneg_right
         (Int_ediv_mul_le (a.m * 2 ^ (a.e - b.e - out).toNat) hb) (le_of_lt hp2)
+  · -- positive divisor, right-shifted divisor: floor of `a.m / (b.m · 2^j)`
+    subst hq
+    have hbpos : (0:ℝ) < b.toReal := by
+      rw [toReal_def]
+      exact mul_pos (by exact_mod_cast hpos) (zpow_pos (by norm_num) b.e)
+    have hDpos : 0 < b.m * 2 ^ (b.e + out - a.e).toNat :=
+      Int.mul_pos hpos (pow_pos (by norm_num : (0:ℤ) < 2) _)
+    have hDne : b.m * 2 ^ (b.e + out - a.e).toNat ≠ 0 := ne_of_gt hDpos
+    have hj : (((b.e + out - a.e).toNat : Int)) = b.e + out - a.e :=
+      Int.toNat_of_nonneg (by omega)
+    have hcastD : ((b.m * 2 ^ (b.e + out - a.e).toNat : ℤ) : ℝ)
+        = (b.m : ℝ) * (2:ℝ)^((b.e + out - a.e).toNat) := by
+      push_cast
+      ring
+    have hpow : (2:ℝ)^(out + b.e)
+        = (2:ℝ)^((b.e + out - a.e).toNat) * (2:ℝ)^a.e := by
+      rw [← zpow_natCast, hj, ← zpow_add₀ (by norm_num : (2:ℝ) ≠ 0)]
+      congr 1
+      omega
+    have hA : a.toReal = ((a.m : ℤ) : ℝ) * (2:ℝ)^a.e := toReal_def a
+    constructor
+    · rw [le_div_iff₀ hbpos, hreg, hpow, hA]
+      have h2 : ((a.m / (b.m * 2 ^ (b.e + out - a.e).toNat) : ℤ) : ℝ)
+          * ((b.m * 2 ^ (b.e + out - a.e).toNat : ℤ) : ℝ) ≤ ((a.m : ℤ) : ℝ) := by
+        exact_mod_cast Int_ediv_mul_le a.m hDne
+      rw [hcastD] at h2
+      calc ((a.m / (b.m * 2 ^ (b.e + out - a.e).toNat) : ℤ) : ℝ) * (b.m : ℝ)
+            * ((2:ℝ)^((b.e + out - a.e).toNat) * (2:ℝ)^a.e)
+          = (((a.m / (b.m * 2 ^ (b.e + out - a.e).toNat) : ℤ) : ℝ)
+              * ((b.m : ℝ) * (2:ℝ)^((b.e + out - a.e).toNat))) * (2:ℝ)^a.e := by ring
+        _ ≤ ((a.m : ℤ) : ℝ) * (2:ℝ)^a.e :=
+          mul_le_mul_of_nonneg_right h2 (zpow_nonneg (by norm_num) _)
+    · rw [div_le_iff₀ hbpos, hreg, hpow, hA]
+      have h2 : ((a.m : ℤ) : ℝ)
+          < (((a.m / (b.m * 2 ^ (b.e + out - a.e).toNat) + 1 : ℤ)) : ℝ)
+            * ((b.m * 2 ^ (b.e + out - a.e).toNat : ℤ) : ℝ) := by
+        exact_mod_cast Int_lt_succ_ediv_mul a.m hDpos
+      rw [hcastD] at h2
+      exact le_of_lt (calc ((a.m : ℤ) : ℝ) * (2:ℝ)^a.e
+          < ((((a.m / (b.m * 2 ^ (b.e + out - a.e).toNat) + 1 : ℤ)) : ℝ)
+              * ((b.m : ℝ) * (2:ℝ)^((b.e + out - a.e).toNat))) * (2:ℝ)^a.e :=
+          mul_lt_mul_of_pos_right h2 (zpow_pos (by norm_num) _)
+        _ = ((a.m / (b.m * 2 ^ (b.e + out - a.e).toNat) + 1 : ℤ) : ℝ) * (b.m : ℝ)
+            * ((2:ℝ)^((b.e + out - a.e).toNat) * (2:ℝ)^a.e) := by ring)
+  · -- negative divisor, right-shifted divisor: compensate by `- 1`
+    subst hq
+    have hbneg : b.toReal < 0 := by
+      rw [toReal_def]
+      exact mul_neg_of_neg_of_pos (by exact_mod_cast hneg) (zpow_pos (by norm_num) b.e)
+    have hDneg : b.m * 2 ^ (b.e + out - a.e).toNat < 0 :=
+      Int.mul_neg_of_neg_of_pos hneg (pow_pos (by norm_num : (0:ℤ) < 2) _)
+    have hDne : b.m * 2 ^ (b.e + out - a.e).toNat ≠ 0 := ne_of_lt hDneg
+    have hj : (((b.e + out - a.e).toNat : Int)) = b.e + out - a.e :=
+      Int.toNat_of_nonneg (by omega)
+    have hcastD : ((b.m * 2 ^ (b.e + out - a.e).toNat : ℤ) : ℝ)
+        = (b.m : ℝ) * (2:ℝ)^((b.e + out - a.e).toNat) := by
+      push_cast
+      ring
+    have hpow : (2:ℝ)^(out + b.e)
+        = (2:ℝ)^((b.e + out - a.e).toNat) * (2:ℝ)^a.e := by
+      rw [← zpow_natCast, hj, ← zpow_add₀ (by norm_num : (2:ℝ) ≠ 0)]
+      congr 1
+      omega
+    have hA : a.toReal = ((a.m : ℤ) : ℝ) * (2:ℝ)^a.e := toReal_def a
+    constructor
+    · rw [le_div_iff_of_neg hbneg, hreg, hpow, hA]
+      have h2 : ((a.m : ℤ) : ℝ)
+          ≤ ((a.m / (b.m * 2 ^ (b.e + out - a.e).toNat) - 1 : ℤ) : ℝ)
+            * ((b.m * 2 ^ (b.e + out - a.e).toNat : ℤ) : ℝ) := by
+        exact_mod_cast Int_le_subOne_ediv_mul a.m hDneg
+      rw [hcastD] at h2
+      calc ((a.m : ℤ) : ℝ) * (2:ℝ)^a.e
+          ≤ (((a.m / (b.m * 2 ^ (b.e + out - a.e).toNat) - 1 : ℤ) : ℝ)
+              * ((b.m : ℝ) * (2:ℝ)^((b.e + out - a.e).toNat))) * (2:ℝ)^a.e :=
+          mul_le_mul_of_nonneg_right h2 (zpow_nonneg (by norm_num) _)
+        _ = ((a.m / (b.m * 2 ^ (b.e + out - a.e).toNat) - 1 : ℤ) : ℝ) * (b.m : ℝ)
+            * ((2:ℝ)^((b.e + out - a.e).toNat) * (2:ℝ)^a.e) := by ring
+    · rw [div_le_iff_of_neg hbneg, hreg, hpow, hA]
+      have hn1 : a.m / (b.m * 2 ^ (b.e + out - a.e).toNat) - 1 + 1
+          = a.m / (b.m * 2 ^ (b.e + out - a.e).toNat) := by ring
+      rw [hn1]
+      have h2 : ((a.m / (b.m * 2 ^ (b.e + out - a.e).toNat) : ℤ) : ℝ)
+          * ((b.m * 2 ^ (b.e + out - a.e).toNat : ℤ) : ℝ) ≤ ((a.m : ℤ) : ℝ) := by
+        exact_mod_cast Int_ediv_mul_le a.m hDne
+      rw [hcastD] at h2
+      calc ((a.m / (b.m * 2 ^ (b.e + out - a.e).toNat) : ℤ) : ℝ) * (b.m : ℝ)
+            * ((2:ℝ)^((b.e + out - a.e).toNat) * (2:ℝ)^a.e)
+          = (((a.m / (b.m * 2 ^ (b.e + out - a.e).toNat) : ℤ) : ℝ)
+              * ((b.m : ℝ) * (2:ℝ)^((b.e + out - a.e).toNat))) * (2:ℝ)^a.e := by ring
+        _ ≤ ((a.m : ℤ) : ℝ) * (2:ℝ)^a.e :=
+          mul_le_mul_of_nonneg_right h2 (zpow_nonneg (by norm_num) _)
 
 /-- Explicit-error version of `divFloorQ_spec.2`: the truncation error is at
 most one ulp at the output granularity. -/
