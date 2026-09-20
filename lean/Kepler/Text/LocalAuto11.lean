@@ -41,7 +41,7 @@ ENCODING NOTES
     PackingAuto2/LocalAuto4 constants (1.26 / 3.01); NO
     `native_decide` anywhere.
   - Name plan: every declaration carries the `_p11` suffix.  The
-    sphere.hl kit `atn2`/`delta_x`/`delta_x4`/`dih_x`/`dih_y`/`sol_y`
+    sphere.hl kit `atn2PA20`/`delta_x`/`delta_x4`/`dih_x`/`dih_y`/`sol_y`
     exists TWICE in the corpus (`PackingAuto20` via LocalAuto2,
     `PackingAuto21` via PackingAuto25, verbatim-identical bodies);
     importing both is fatal (Lean rejects the duplicate module
@@ -120,11 +120,11 @@ open Kepler.Geom Set Classical
 
 /-! ## Section A: lp_details.hl — quadratic-root and delta_x kit -/
 
-/-- Ambiguity-resolution aliases: the sphere.hl `atn2`/`delta_x`/
+/-- Ambiguity-resolution aliases: the sphere.hl `atn2PA20`/`delta_x`/
 `delta_x4`/`dih_x`/`dih_y` kit is pinned to the PackingAuto20 copies
 (the verbatim-identical PackingAuto21 side lives behind the not-imported
 PackingAuto25). -/
-noncomputable def atn2_p11 (x y : ℝ) : ℝ := atn2 x y
+noncomputable def atn2_p11 (x y : ℝ) : ℝ := atn2PA20 x y
 
 noncomputable def deltaXf_p11 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
   deltaXf x1 x2 x3 x4 x5 x6
@@ -133,10 +133,10 @@ noncomputable def deltaX4f_p11 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
   deltaX4f x1 x2 x3 x4 x5 x6
 
 noncomputable def dihXf_p11 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  dihXf x1 x2 x3 x4 x5 x6
+  dihXfPA20 x1 x2 x3 x4 x5 x6
 
 noncomputable def dihY_p11 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  dihY y1 y2 y3 y4 y5 y6
+  dihYPA20 y1 y2 y3 y4 y5 y6
 
 /-- HOL `ups_x` (sphere.hl:122-124); verbatim copy of the
 PackingAuto18.lean:149 / PackingAuto25.lean:171 renderings (the other
@@ -706,7 +706,7 @@ theorem LEMMA_5691615370_p11 :
 
 /-! ### The `lindihpi` line and the numeric `atn (sqrt _)` bounds -/
 
-/-- lp_details.hl:1272 `lindihpi_lt_small` (quadrant analysis of `atn2`;
+/-- lp_details.hl:1272 `lindihpi_lt_small` (quadrant analysis of `atn2PA20`;
 DISCHARGES). -/
 theorem lindihpi_lt_small_p11 {u x1 x2 x3 x4 x5 x6 : ℝ}
     (habs : |u| < Real.pi / 2) (hx1 : 0 < x1)
@@ -733,17 +733,17 @@ theorem dih_y_imp_delta_y_nz_p11 {y1 y2 y3 y4 y5 y6 : ℝ} (hy1 : 0 < y1)
     deltaY_p11 y1 y2 y3 y4 y5 y6 ≠ 0 := by
   intro h0
   simp only [deltaY_p11, deltaXf_p11, delta4Y_p11, deltaX4f_p11] at h0 hd4
-  simp only [dihY_p11, dihY, dihXf] at hpi
+  simp only [dihY_p11, dihYPA20, dihXfPA20] at hpi
   have hsqrt : Real.sqrt
       ((4:ℝ) * (y1 * y1) * deltaXf (y1 * y1) (y2 * y2) (y3 * y3)
         (y4 * y4) (y5 * y5) (y6 * y6)) = 0 := by
     simp only [h0, mul_zero, Real.sqrt_zero]
-  have harg : atn2 (Real.sqrt
+  have harg : atn2PA20 (Real.sqrt
       ((4:ℝ) * (y1 * y1) * deltaXf (y1 * y1) (y2 * y2) (y3 * y3)
         (y4 * y4) (y5 * y5) (y6 * y6)))
       (-(deltaX4f (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5)
         (y6 * y6))) = Real.pi / 2 := by
-    simp only [atn2, hsqrt]
+    simp only [atn2PA20, hsqrt]
     simp [hd4]
   rw [harg] at hpi
   linarith

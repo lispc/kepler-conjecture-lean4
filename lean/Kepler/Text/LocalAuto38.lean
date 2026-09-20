@@ -25,9 +25,9 @@ Encoding (house conventions, cf. LocalAuto1/19/36):
   `ASSOCD_v39`/`cs_adj` ↔ LocalAuto1 twins; `sum` ↔ `setSum`.
 - y-space functionals: `delta_y`/`dih_y`/`taum`/`delta_x4` ↔ the `_p23`
   twins (LocalAuto23; LocalAuto11's `_p11` lane clashes with LocalAuto1
-  via the PackingAuto18/20 `atn2` split, and LocalAuto1+LocalAnchors
+  via the PackingAuto18/20 `atn2PA18` split, and LocalAuto1+LocalAnchors
   clash via `scsBasicV39`, so both are excluded); `ups_x`/`delta_x`/
-  `delta`/`chi_msb` ↔ `upsX`/`deltaX`/`deltaP`/`chiMsb` (PackingAuto18,
+  `delta`/`chi_msb` ↔ `upsXPA18`/`deltaXPA18`/`deltaPPA18`/`chiMsbPA18` (PackingAuto18,
   transitive through LocalAuto1); `azim_cycle` ↔ `azimCycle_p18`;
   `y_of_x`/`quadratic_root_plus`/`ineq` are ported verbatim as
   `yOfXP38`/`quadraticRootPlusP38`/`ineqP38` (plain formulas);
@@ -180,9 +180,9 @@ theorem sqrt8_flyspeck :
 theorem sol_x_nn :
     ∀ x1 x2 x3 x4 x5 x6 : ℝ,
       0 < x1 → 0 < x2 → 0 < x3 →
-      0 < upsX x1 x2 x6 → 0 < upsX x2 x3 x4 → 0 < upsX x1 x3 x5 →
+      0 < upsXPA18 x1 x2 x6 → 0 < upsXPA18 x2 x3 x4 → 0 < upsXPA18 x1 x3 x5 →
       0 < eulerAXP38 x1 x2 x3 x4 x5 x6 →
-      0 < deltaX x1 x2 x3 x4 x5 x6 →
+      0 < deltaXPA18 x1 x2 x3 x4 x5 x6 →
       0 < solXP38 x1 x2 x3 x4 x5 x6 := by
   intro x1 x2 x3 x4 x5 x6 _ _ _ _ _ _ _ _
   sorry -- DISCHARGES: sphere.hl sol_x positivity chain (deep analysis)
@@ -190,7 +190,7 @@ theorem sol_x_nn :
 /-- HOL `DIH_X_NN` (terminal.hl:85). -/
 theorem DIH_X_NN :
     ∀ x1 x2 x3 x4 x5 x6 : ℝ,
-      0 < x1 → 0 ≤ deltaX x1 x2 x3 x4 x5 x6 →
+      0 < x1 → 0 ≤ deltaXPA18 x1 x2 x3 x4 x5 x6 →
       0 ≤ dihXP38 x1 x2 x3 x4 x5 x6 := by
   intro x1 x2 x3 x4 x5 x6 _ _
   sorry -- DISCHARGES: dih_x nonneg from the arccos form
@@ -899,8 +899,8 @@ theorem muR_ALT (y1 y2 y3 y4 y5 y6 y7 y8 y9 : ℝ) :
 
 /-- HOL `enclosed4_lemma` (terminal.hl:1623). -/
 theorem enclosed4_lemma (v0 v1 v2 v3 : V3) :
-    0 < upsX (‖v0‖ * ‖v0‖) (‖v2‖ * ‖v2‖) (dist v0 v2 * dist v0 v2) →
-      chiMsb [0, v0, v2] v1 * chiMsb [0, v0, v2] v3 ≤ 0 →
+    0 < upsXPA18 (‖v0‖ * ‖v0‖) (‖v2‖ * ‖v2‖) (dist v0 v2 * dist v0 v2) →
+      chiMsbPA18 [0, v0, v2] v1 * chiMsbPA18 [0, v0, v2] v3 ≤ 0 →
       dist v1 v3 =
         enclosedP38 ‖v1‖ (dist v0 v1) (dist v1 v2) (dist v0 v2) ‖v2‖ ‖v0‖
           ‖v3‖ (dist v0 v3) (dist v2 v3) := by
@@ -1152,9 +1152,9 @@ theorem tau_x_tau_residual_x_general (x1 x2 x3 x4 x5 x6 : ℝ)
     (h9 : deltaX4_p23 x1 x2 x3 x4 x5 x6 < 0)
     (h10 : 0 < deltaX4_p23 x2 x3 x1 x5 x6 x4)
     (h11 : 0 < deltaX4_p23 x3 x1 x2 x6 x4 x5)
-    (h12 : 0 ≤ deltaX x1 x2 x3 x4 x5 x6) :
+    (h12 : 0 ≤ deltaXPA18 x1 x2 x3 x4 x5 x6) :
     taumXP38 x1 x2 x3 x4 x5 x6 =
-      Real.sqrt (deltaX x1 x2 x3 x4 x5 x6) * tauResidualXP38 x1 x2 x3 x4 x5 x6 +
+      Real.sqrt (deltaXPA18 x1 x2 x3 x4 x5 x6) * tauResidualXP38 x1 x2 x3 x4 x5 x6 +
         flatTermXP38 x1 := by
   sorry -- DISCHARGES: taum_x residual form (tau_x kit external anchor)
 
@@ -1233,7 +1233,7 @@ theorem quadratic_square_root_upper_bound (a b c e : ℝ) (ha : 0 < a)
 /-- HOL `abc_of_quadratic_cayleyR` (terminal.hl:3518). -/
 theorem abc_of_quadratic_cayleyR (x12 x13 x14 x15 x23 x24 x25 x34 x35 : ℝ) :
     abcOfQuadraticP38 (cayleyRP38 x12 x13 x14 x15 x23 x24 x25 x34 x35) =
-      (upsX x12 x13 x23,
+      (upsXPA18 x12 x13 x23,
         cayleytrP38 x12 x13 x14 x15 x23 x24 x25 x34 x35 0,
         cayleyRP38 x12 x13 x14 x15 x23 x24 x25 x34 x35 0) := by
   sorry -- DISCHARGES: cayleyR coefficients (the a-conic = ups_x identity)
@@ -1243,17 +1243,17 @@ theorem cayleyR_disc (x12 x13 x14 x15 x23 x24 x25 x34 x35 : ℝ) :
     (abcOfQuadraticP38 (cayleyRP38 x12 x13 x14 x15 x23 x24 x25 x34 x35)).2.1 ^ 2 -
       4 * (abcOfQuadraticP38 (cayleyRP38 x12 x13 x14 x15 x23 x24 x25 x34 x35)).1 *
         (abcOfQuadraticP38 (cayleyRP38 x12 x13 x14 x15 x23 x24 x25 x34 x35)).2.2 =
-      16 * deltaP x12 x13 x14 x23 x24 x34 * deltaP x12 x13 x15 x23 x25 x35 := by
+      16 * deltaPPA18 x12 x13 x14 x23 x24 x34 * deltaPPA18 x12 x13 x15 x23 x25 x35 := by
   sorry -- DISCHARGES: the cayleyR discriminant identity
 
 /-- HOL `quad_cross_diag2_x_bound` (terminal.hl:3551). -/
 theorem quad_cross_diag2_x_bound (x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 : ℝ)
     (_ : 0 ≤ x1) (_ : 0 ≤ x2) (_ : 0 ≤ x3) (_ : 0 ≤ x4) (_ : 0 ≤ x5) (_ : 0 ≤ x6)
     (_ : 0 ≤ x7) (_ : 0 ≤ x8) (_ : 0 ≤ x9) (_ : 0 ≤ x10)
-    (hups : 0 < upsX x2 x3 x4)
-    (hd1 : 0 ≤ deltaX x1 x2 x3 x4 x5 x6)
-    (hd2 : 0 ≤ deltaX x7 x2 x3 x4 x8 x9)
-    (hlin : 0 < 2 * upsX x2 x3 x4 * x10 +
+    (hups : 0 < upsXPA18 x2 x3 x4)
+    (hd1 : 0 ≤ deltaXPA18 x1 x2 x3 x4 x5 x6)
+    (hd2 : 0 ≤ deltaXPA18 x7 x2 x3 x4 x8 x9)
+    (hlin : 0 < 2 * upsXPA18 x2 x3 x4 * x10 +
       cayleytrP38 x3 x2 x1 x7 x4 x5 x8 x6 x9 0)
     (hcay : 0 < cayleyRP38 x3 x2 x1 x7 x4 x5 x8 x6 x9 x10)
     (htr : cayleytrP38 x3 x2 x1 x7 x4 x5 x8 x6 x9 0 ≤ 0) :
@@ -1269,8 +1269,8 @@ theorem LEMMA_4680581274_delta_issue_ups (x1 x2 x3 x4 x5 x6 : ℝ) :
     ineqP38 [(4.0, x1, 2.0 * 1.26 * 2.0 * 1.26), (4.0, x2, 2.0 * 1.26 * 2.0 * 1.26),
       (4.0, x3, 2.0 * 1.26 * 2.0 * 1.26), (3.01 * 3.01, x4, 3.166 * 3.166),
       (4.0, x5, 4.0), (4.0, x6, 4.0)]
-      (0 < upsX x2 x3 x4 ∨
-        10 + deltaX x1 x2 x3 x4 x5 x6 * -1 < 0 ∨
+      (0 < upsXPA18 x2 x3 x4 ∨
+        10 + deltaXPA18 x1 x2 x3 x4 x5 x6 * -1 < 0 ∨
         deltaX4_p23 x1 x2 x3 x4 x5 x6 * -1 < 0) := by
   sorry -- DISCHARGES: the 4680581274 ups escape (LP)
 
@@ -1278,14 +1278,14 @@ theorem LEMMA_4680581274_delta_issue_ups (x1 x2 x3 x4 x5 x6 : ℝ) :
 `// quad_nonlinear_v4 /` source-comment artifact is dropped, anchor kept). -/
 theorem quad_4680581274_delta_issue (h : main_nonlinear_terminal_v11) :
     ∀ x1 x2 x3 x4 x5 x6 x7 x8 x9 : ℝ,
-      0 ≤ deltaX x1 x2 x3 x4 x5 x6 →
-      0 ≤ deltaX x7 x2 x3 x4 x8 x9 →
+      0 ≤ deltaXPA18 x1 x2 x3 x4 x5 x6 →
+      0 ≤ deltaXPA18 x7 x2 x3 x4 x8 x9 →
       ineqP38 [(4.0, x1, 2.0 * 1.26 * 2.0 * 1.26),
         (4.0, x2, 2.0 * 1.26 * 2.0 * 1.26), (4.0, x3, 2.0 * 1.26 * 2.0 * 1.26),
         (3.01 * 3.01, x4, 3.166 * 3.166), (4.0, x5, 4.0), (4.0, x6, 4.0),
         (4.0, x7, 2.0 * 1.26 * 2.0 * 1.26), (4.0, x8, 4.0),
         (3.01 * 3.01, x9, 3.01 * 3.01)]
-        (unit6P38 x1 x2 x3 x4 x5 x6 * 10 + deltaX x1 x2 x3 x4 x5 x6 * -1 < 0 ∨
+        (unit6P38 x1 x2 x3 x4 x5 x6 * 10 + deltaXPA18 x1 x2 x3 x4 x5 x6 * -1 < 0 ∨
           deltaX4_p23 x1 x2 x3 x4 x5 x6 * -1 < 0 ∨
           quadCrossDiag2XP38 x1 x2 x3 x4 x5 x6 x7 x8 x9 +
             unit6P38 x1 x2 x3 x4 x5 x6 * -3.01 < 0) := by
@@ -1303,7 +1303,7 @@ theorem quad_4680581274_a (h : main_nonlinear_terminal_v11) :
         (unit6P38 x1 x2 x3 x4 x5 x6 * 0.513 +
             taumXP38 x1 x2 x3 x4 x5 x6 * -1 +
             taumXP38 x7 x2 x3 x4 x8 x9 * -1 < 0 ∨
-          deltaX x1 x2 x3 x4 x5 x6 + unit6P38 x1 x2 x3 x4 x5 x6 * -10 < 0 ∨
+          deltaXPA18 x1 x2 x3 x4 x5 x6 + unit6P38 x1 x2 x3 x4 x5 x6 * -10 < 0 ∨
           deltaX4_p23 x1 x2 x3 x4 x5 x6 * -1 < 0 ∨
           quadCrossDiag2XP38 x1 x2 x3 x4 x5 x6 x7 x8 x9 +
             unit6P38 x1 x2 x3 x4 x5 x6 * -3.01 < 0) := by
@@ -1333,7 +1333,7 @@ theorem taud_x_taum_x (h : main_nonlinear_terminal_v11) :
     ∀ x1 x2 x3 x4 x5 x6 : ℝ,
       4 ≤ x1 → x1 ≤ (2 * h0) ^ 2 → 4 ≤ x2 → x2 ≤ (2 * h0) ^ 2 →
       4 ≤ x3 → x3 ≤ (2 * h0) ^ 2 → cstab ^ 2 ≤ x4 → x4 ≤ 3.915 ^ 2 →
-      x5 = 4 → x6 = 4 → 0 ≤ deltaX x1 x2 x3 x4 x5 x6 →
+      x5 = 4 → x6 = 4 → 0 ≤ deltaXPA18 x1 x2 x3 x4 x5 x6 →
       taudXP38 x1 x2 x3 x4 x5 x6 ≤ taumXP38 x1 x2 x3 x4 x5 x6 := by
   sorry -- DISCHARGES: main_nonlinear_terminal_v11 + LP
 

@@ -49,7 +49,7 @@ ENCODING NOTES (deformation kit and friends)
     `native_decide` anywhere.
   - `inv(&2*x1)*(x1+x3-x5)` and `inv x1 * a * sqrt(inv u * v)` are rendered
     with the division form `(x1 + x3 - x5) / (2 * x1)` and
-    `(a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)` — the verbatim
+    `(a / x1) * Real.sqrt (upsXPA18 x1 x3 x5 / upsXPA18 x1 x2 x6)` — the verbatim
     renderings already used by `mkPlanar2` (LocalAuto1.lean:787); `inv` is
     total on both sides so this is a pure re-association (HOL `MK_PLANAR_REP`
     exists exactly to move between the two shapes).
@@ -73,7 +73,7 @@ ENCODING NOTES (deformation kit and friends)
   - Name plan: every NEW declaration carries the `_p17` suffix. Importable
     items are used unqualified from LocalAuto1 (`ScsV39`, `isScsV39`,
     `scsBasicV39`, `scsDiag`, `psort`, `scsStabDiagV39`, `cstab`, `Periodic`,
-    `Periodic2`, `mkPlanar2`, `Deformation`), PackingAuto18 (`upsX`,
+    `Periodic2`, `mkPlanar2`, `Deformation`), PackingAuto18 (`upsXPA18`,
     `cross3`) and Kepler.Text.Fan (`FAN`, `fan6`, `fan7`, `Graph`).
     Same-wave lanes own LocalAuto12-16/18 — nothing is imported from them;
     no `_p17` copies of their material are needed here.
@@ -182,7 +182,7 @@ with the given Cayley data. -/
 private theorem upsX_pos_of_noncollinear_p17 (v1 v2 : V3) (x1 x2 x6 : ℝ)
     (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
     (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6) :
-    0 < upsX x1 x2 x6 := by
+    0 < upsXPA18 x1 x2 x6 := by
   have hcross : cross3 v1 v2 ≠ 0 := cross3_ne_zero_p17 hnc
   have hsq : ‖cross3 v1 v2‖ ^ 2 =
       (v1 ⬝ᵥ v1) * (v2 ⬝ᵥ v2) - (v1 ⬝ᵥ v2) * (v2 ⬝ᵥ v1) := by
@@ -193,12 +193,12 @@ private theorem upsX_pos_of_noncollinear_p17 (v1 v2 : V3) (x1 x2 x6 : ℝ)
     rw [norm_sub_sq_real, inner_eq_dot]
   have hd6 : x6 = x1 + x2 - 2 * (v1 ⬝ᵥ v2) := by
     rw [← hx6, h6, hx1, hx2]; ring
-  have hups : upsX x1 x2 x6 =
+  have hups : upsXPA18 x1 x2 x6 =
       4 * ((v1 ⬝ᵥ v1) * (v2 ⬝ᵥ v2) - (v1 ⬝ᵥ v2) * (v2 ⬝ᵥ v1)) := by
     rw [hd6]
     have h11 : v1 ⬝ᵥ v1 = x1 := (norm_sq_eq_dot v1).symm.trans hx1
     have h22 : v2 ⬝ᵥ v2 = x2 := (norm_sq_eq_dot v2).symm.trans hx2
-    unfold upsX
+    unfold upsXPA18
     rw [h11, h22, dotProduct_comm (v2 : Fin 3 → ℝ) (v1 : Fin 3 → ℝ)]
     ring
   have hpos : 0 < (v1 ⬝ᵥ v1) * (v2 ⬝ᵥ v2) - (v1 ⬝ᵥ v2) * (v2 ⬝ᵥ v1) := by
@@ -325,14 +325,14 @@ theorem EYYPQDW_COPLANAR_p17 (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
     (h6 : 0 < x6)
     (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
     (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
-    (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsX x1 x3 x5)
+    (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsXPA18 x1 x3 x5)
     (hv3 : ((x1 + x3 - x5) / (2 * x1)) • v1 +
-      ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
+      ((a / x1) * Real.sqrt (upsXPA18 x1 x3 x5 / upsXPA18 x1 x2 x6)) •
         cross3 v1 (cross3 v1 v2) = v3) :
     Coplanar ({0, v1, v2, v3} : Set V3) := by
   have hlag := cross3_lagrange_p17 v1 v2
   set c1 := (x1 + x3 - x5) / (2 * x1) with hc1
-  set c2 := (a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6) with hc2
+  set c2 := (a / x1) * Real.sqrt (upsXPA18 x1 x3 x5 / upsXPA18 x1 x2 x6) with hc2
   have hv3' : v3 = (c1 + c2 * (v1 ⬝ᵥ v2)) • v1 - (c2 * (v1 ⬝ᵥ v1)) • v2 := by
     rw [← hv3, hlag]; module
   have hv1 : (v1 : V3) ∈ vectorSpan ℝ ({0, v1, v2} : Set V3) := by
@@ -365,9 +365,9 @@ theorem EYYPQDW_NORMV3_p17 (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
     (h6 : 0 < x6)
     (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
     (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
-    (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsX x1 x3 x5)
+    (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsXPA18 x1 x3 x5)
     (hv3 : ((x1 + x3 - x5) / (2 * x1)) • v1 +
-      ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
+      ((a / x1) * Real.sqrt (upsXPA18 x1 x3 x5 / upsXPA18 x1 x2 x6)) •
         cross3 v1 (cross3 v1 v2) = v3) :
     ‖v3‖ ^ 2 = x3 := sorry
 
@@ -378,23 +378,23 @@ theorem EYYPQDW_NORM_V3_V1_p17 (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
     (h6 : 0 < x6)
     (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
     (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
-    (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsX x1 x3 x5)
+    (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsXPA18 x1 x3 x5)
     (hv3 : ((x1 + x3 - x5) / (2 * x1)) • v1 +
-      ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
+      ((a / x1) * Real.sqrt (upsXPA18 x1 x3 x5 / upsXPA18 x1 x2 x6)) •
         cross3 v1 (cross3 v1 v2) = v3) :
     ‖v3 - v1‖ ^ 2 = x5 := sorry
 
 /-- HOL `EYYPQDW_SCALAR_POS`: the completion flips the cross product by a
 positive scalar `a * t`. NEEDS: follows from `cross3_lagrange_p17` plus the
-positivity of `sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)` (EYYPQDW.hl:188-214). -/
+positivity of `sqrt (upsXPA18 x1 x3 x5 / upsXPA18 x1 x2 x6)` (EYYPQDW.hl:188-214). -/
 theorem EYYPQDW_SCALAR_POS_p17 (v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 a : ℝ)
     (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h4 : 0 < x4) (h5 : 0 < x5)
     (h6 : 0 < x6)
     (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
     (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
-    (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsX x1 x3 x5)
+    (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsXPA18 x1 x3 x5)
     (hv3 : ((x1 + x3 - x5) / (2 * x1)) • v1 +
-      ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
+      ((a / x1) * Real.sqrt (upsXPA18 x1 x3 x5 / upsXPA18 x1 x2 x6)) •
         cross3 v1 (cross3 v1 v2) = v3) :
     ∃ t : ℝ, 0 < t ∧ cross3 v3 v1 = (a * t) • cross3 v1 v2 := sorry
 
@@ -403,13 +403,13 @@ factors are re-associated into the division rendering of `mkPlanar2`
 (LocalAuto1.lean:787), see the head note. -/
 noncomputable def v3DeforV1_p17 (a : ℝ) (v1 v2 : V3) (x1 x2 x5 x6 x3 : ℝ) : V3 :=
   ((x1 + x3 - x5) / (2 * x1)) • v1 +
-    ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
+    ((a / x1) * Real.sqrt (upsXPA18 x1 x3 x5 / upsXPA18 x1 x2 x6)) •
       cross3 v1 (cross3 v1 v2)
 
 /-- HOL `v3_defor_v2 a x1 x2 x3 x5 x6 v1 v2` (EYYPQDW.hl:222). -/
 noncomputable def v3DeforV2_p17 (a x1 x2 x3 x5 x6 : ℝ) (v1 v2 : V3) : V3 :=
   ((x1 + x3 - x5) / (2 * x1)) • v1 +
-    ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
+    ((a / x1) * Real.sqrt (upsXPA18 x1 x3 x5 / upsXPA18 x1 x2 x6)) •
       cross3 v1 (cross3 v1 v2)
 
 /-- HOL `LIFT_CONTINUOUS_ATREAL`; `lift` collapses to the identity
@@ -429,9 +429,9 @@ theorem EYYPQDW_CONTINUOUS_AT_X_p17 (a : ℝ) (v1 v2 : V3)
     (h6 : 0 < x6)
     (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
     (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
-    (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsX x1 x3 x5) :
+    (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsXPA18 x1 x3 x5) :
     ContinuousAt (fun x3 => v3DeforV1_p17 a v1 v2 x1 x2 x5 x6 x3) x3 := by
-  have hup126 : 0 < upsX x1 x2 x6 :=
+  have hup126 : 0 < upsXPA18 x1 x2 x6 :=
     upsX_pos_of_noncollinear_p17 v1 v2 x1 x2 x6 hnc hx1 hx2 hx6
   have hden : (2:ℝ) * x1 ≠ 0 := by linarith
   simp only [v3DeforV1_p17]
@@ -442,16 +442,16 @@ theorem EYYPQDW_CONTINUOUS_AT_X_p17 (a : ℝ) (v1 v2 : V3)
     exact (hnum.div hden' hden).smul continuousAt_const
   · have hvec : ContinuousAt (fun _ : ℝ => (cross3 v1 (cross3 v1 v2) : V3)) x3 :=
       continuousAt_const
-    have hf : ContinuousAt (fun q : ℝ => upsX x1 q x5 / upsX x1 x2 x6) x3 := by
-      have hnum2 : ContinuousAt (fun q : ℝ => upsX x1 q x5) x3 := by
-        refine Continuous.continuousAt ?_; unfold upsX; fun_prop
-      have hden2 : ContinuousAt (fun _ : ℝ => upsX x1 x2 x6) x3 := continuousAt_const
+    have hf : ContinuousAt (fun q : ℝ => upsXPA18 x1 q x5 / upsXPA18 x1 x2 x6) x3 := by
+      have hnum2 : ContinuousAt (fun q : ℝ => upsXPA18 x1 q x5) x3 := by
+        refine Continuous.continuousAt ?_; unfold upsXPA18; fun_prop
+      have hden2 : ContinuousAt (fun _ : ℝ => upsXPA18 x1 x2 x6) x3 := continuousAt_const
       exact hnum2.div hden2 (ne_of_gt hup126)
     have hsqrt : ContinuousAt
-        (fun q : ℝ => Real.sqrt (upsX x1 q x5 / upsX x1 x2 x6)) x3 :=
+        (fun q : ℝ => Real.sqrt (upsXPA18 x1 q x5 / upsXPA18 x1 x2 x6)) x3 :=
       (Real.continuous_sqrt.continuousAt).comp hf
     have hscal : ContinuousAt
-        (fun q : ℝ => (a / x1) * Real.sqrt (upsX x1 q x5 / upsX x1 x2 x6)) x3 :=
+        (fun q : ℝ => (a / x1) * Real.sqrt (upsXPA18 x1 q x5 / upsXPA18 x1 x2 x6)) x3 :=
       ContinuousAt.mul continuousAt_const hsqrt
     exact ContinuousAt.smul hscal hvec
 
@@ -461,7 +461,7 @@ theorem EYYPQDW_CONTINUOUS_AT_V_p17 (a : ℝ) (x1 x2 x3 x4 x5 x6 : ℝ) (v1 v2 :
     (h6 : 0 < x6)
     (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
     (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
-    (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsX x1 x3 x5) :
+    (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsXPA18 x1 x3 x5) :
     ContinuousAt (fun w => v3DeforV2_p17 a x1 x2 x3 x5 x6 v1 w) v2 := by
   simp only [v3DeforV2_p17]
   have hcross : ContinuousAt (fun w : V3 => cross3 v1 (cross3 v1 w)) v2 :=
@@ -471,7 +471,7 @@ theorem EYYPQDW_CONTINUOUS_AT_V_p17 (a : ℝ) (x1 x2 x3 x4 x5 x6 : ℝ) (v1 v2 :
     continuousAt_const
   exact ContinuousAt.add hc
     (ContinuousAt.smul
-      (f := fun _ : V3 => (a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6))
+      (f := fun _ : V3 => (a / x1) * Real.sqrt (upsXPA18 x1 x3 x5 / upsXPA18 x1 x2 x6))
       continuousAt_const hcross)
 
 /-- HOL `V3_DEFOR_V1_EQV3_DEFOR_V2`. -/
@@ -484,9 +484,9 @@ theorem V3_DEFOR_V1_EQV3_DEFOR_V2_p17 (a : ℝ) (v1 v2 : V3) (x1 x2 x5 x6 x3 : �
 theorem LIFT_UPS_CONTINUOUS_p17 (v1 v2 : V3) (x1 x2 x6 : ℝ)
     (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
     (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6) :
-    ContinuousAt (fun x2 => upsX x1 x2 x6) x2 := by
+    ContinuousAt (fun x2 => upsXPA18 x1 x2 x6) x2 := by
   refine Continuous.continuousAt ?_
-  unfold upsX
+  unfold upsXPA18
   fun_prop
 
 /-- HOL `MK_PLANAR_REP`: `mk_planar2 ... - v0` is exactly the shifted
@@ -494,7 +494,7 @@ theorem LIFT_UPS_CONTINUOUS_p17 (v1 v2 : V3) (x1 x2 x6 : ℝ)
 theorem MK_PLANAR_REP_p17 (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 a : ℝ) :
     mkPlanar2 v0 v1 v2 x1 x2 x3 x5 x6 a - v0 =
       ((x1 + x3 - x5) / (2 * x1)) • (v1 - v0) +
-        ((a / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) •
+        ((a / x1) * Real.sqrt (upsXPA18 x1 x3 x5 / upsXPA18 x1 x2 x6)) •
           cross3 (v1 - v0) (cross3 (v1 - v0) (v2 - v0)) := by
   simp only [mkPlanar2]
   abel
@@ -508,7 +508,7 @@ theorem EYYPQDW_p17 (v0 v1 v2 v3 : V3) (x1 x2 x3 x5 x6 s : ℝ)
     (hnc : ¬ Collinear ℝ ({v0, v1, v2} : Set V3))
     (hx1 : x1 = dist v1 v0 ^ 2) (hx2 : x2 = dist v2 v0 ^ 2)
     (hx6 : x6 = dist v1 v2 ^ 2)
-    (hups : 0 < upsX x1 x3 x5) (hs : s = 1 ∨ s = -1)
+    (hups : 0 < upsXPA18 x1 x3 x5) (hs : s = 1 ∨ s = -1)
     (hv3 : v3 = mkPlanar2 v0 v1 v2 x1 x2 x3 x5 x6 s) :
     Coplanar ({v0, v1, v2, v3} : Set V3) ∧
       x3 = dist v3 v0 ^ 2 ∧ x5 = dist v3 v1 ^ 2 ∧
@@ -535,7 +535,7 @@ theorem EYYPQDW2_p17 (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 s : ℝ)
     (hnc : ¬ Collinear ℝ ({v0, v1, v2} : Set V3))
     (hx1 : x1 = dist v1 v0 ^ 2) (hx2 : x2 = dist v2 v0 ^ 2)
     (hx6 : x6 = dist v1 v2 ^ 2)
-    (hups : 0 < upsX x1 x3 x5) (hs : s = 1 ∨ s = -1) :
+    (hups : 0 < upsXPA18 x1 x3 x5) (hs : s = 1 ∨ s = -1) :
     ContinuousAt (fun q => mkPlanar2 v0 v1 v2 x1 x2 q x5 x6 s) x3 := by
   have hfun := MK_PLANAR_V3_DEFOR_V1_FUN_p17 v0 v1 v2 x1 x2 x5 x6 s
   rw [hfun]
@@ -578,7 +578,7 @@ theorem EYYPQDW3_p17 (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 s : ℝ)
     (hnc : ¬ Collinear ℝ ({v0, v1, v2} : Set V3))
     (hx1 : x1 = dist v1 v0 ^ 2) (hx2 : x2 = dist v2 v0 ^ 2)
     (hx6 : x6 = dist v1 v2 ^ 2)
-    (hups : 0 < upsX x1 x3 x5) (hs : s = 1 ∨ s = -1) :
+    (hups : 0 < upsXPA18 x1 x3 x5) (hs : s = 1 ∨ s = -1) :
     ContinuousAt (fun q => mkPlanar2 v0 v1 q x1 x2 x3 x5 x6 s) v2 := by
   have hfun := MK_PLANAR_V3_DEFOR_V2_FUN_p17 v0 v1 x1 x2 x3 x5 x6 s
   rw [hfun]

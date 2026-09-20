@@ -11,7 +11,7 @@ FILE MAP (TSKAJXY2.hl: 1 def + 1 thm)
   (the hypothesis bundle `GRKIBMP_concl /\ cell3_from_ineq /\ tsk_hyp`),
   `TSKAJXY_statement_special_case` (`new_definition`), `TSKAJXY_034` (giant).
 
-FILE MAP (TSKAJXY3.hl: 1 def + 66 thms; HJKDESR1a_1cell dedup)
+FILE MAP (TSKAJXY3.hl: 1 def + 66 thms; HJKDESR1a_1cell_PA21 dedup)
   Measure/split kit for `mcell1` (GAMMAX_NULLSET ... TSKAJXY_1), the
   `cell_params_d` kit for `mcell2` (MCELL_CELL_PARAMETERS_D_EXIST ...),
   bisector algebra (BIS_*), symmetric-difference algebra (SDIFF_*),
@@ -29,9 +29,10 @@ FILE MAP (TSKAJXY3.hl: 1 def + 66 thms; HJKDESR1a_1cell dedup)
     imported.  The pieces needed from the hub lane (the sphere.hl kit
     `atn2`/`deltaXf`/`deltaX4f`/`dihXf`/`dihY`/`solY`/`volXf`/`volY`/
     `vol3r`/`vol3f`/`gamma3f`, and the numeric seed `HJKDESR1a_1cell`)
-    are copied here VERBATIM from PackingAuto20.lean under their true
-    names; at merge time (Auto20 importable) delete this section and
-    dedupe `HJKDESR1a_1cell` (declared in the TSKAJXY3 block below, since
+    are copied here VERBATIM from PackingAuto20.lean under `PA21`-suffixed
+    names (FQN conflict governance, docs/fqn-conflicts.md); at merge time
+    (Auto20 importable) delete this section and
+    dedupe `HJKDESR1a_1cell_PA21` (declared in the TSKAJXY3 block below, since
     TSKAJXY1.hl:5652 and TSKAJXY3.hl:766 both carry it) against
     PackingAuto20.lean:241.
 
@@ -56,8 +57,8 @@ ENCODING NOTES
     intersection with `rcone_gt u v a`); `eta_y`/`tsk_hyp`/
     `pack_nonlinear_non_ox3q1h` are opaque (`sorry`-bodied constants) —
     they enter only sorried capstone statements/proofs.
-  - `l ~/ y` in ATN2_Y_NEG etc. uses `Real.arctan`; `atn2` is
-    PackingAuto20.atn2 (verbatim sphere.hl:48).
+  - `l ~/ y` in ATN2_Y_NEG etc. uses `Real.arctan`; `atn2PA21` is
+    PackingAuto20.atn2PA21 (verbatim sphere.hl:48).
 
 DISCHARGES
   - NONE of the concl interfaces match verbatim: the capstone `TSKAJXY`
@@ -102,62 +103,63 @@ open Kepler.Geom Set Classical MeasureTheory
 /-! ## Verbatim hub-lane kit (copied from PackingAuto20.lean; delete at
 merge time when PackingAuto20's olean is buildable here) -/
 
-/-- HOL `atn2` (sphere.hl:48); PackingAuto20.lean:66 verbatim. -/
-noncomputable def atn2 (x y : ℝ) : ℝ :=
+/-- HOL `atn2` (sphere.hl:48); PackingAuto20.lean:66 verbatim. Renamed
+`atn2PA21` (docs/fqn-conflicts.md). -/
+noncomputable def atn2PA21 (x y : ℝ) : ℝ :=
   if |y| < x then Real.arctan (y / x)
   else if 0 < y then Real.pi / 2 - Real.arctan (x / y)
   else if y < 0 then -(Real.pi / 2) - Real.arctan (x / y)
   else Real.pi
 
 /-- HOL `delta_x` (sphere.hl:86); PackingAuto20.lean:73 verbatim. -/
-noncomputable def deltaXf (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+noncomputable def deltaXfPA21 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
   x1 * x4 * (-x1 + x2 + x3 - x4 + x5 + x6) +
     x2 * x5 * (x1 - x2 + x3 + x4 - x5 + x6) +
     x3 * x6 * (x1 + x2 - x3 + x4 + x5 - x6) -
     x2 * x3 * x4 - x1 * x3 * x5 - x1 * x2 * x6 - x4 * x5 * x6
 
 /-- HOL `delta_x4` (sphere.hl:110); PackingAuto20.lean:80 verbatim. -/
-noncomputable def deltaX4f (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+noncomputable def deltaX4fPA21 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
   -x2 * x3 - x1 * x4 + x2 * x5 + x3 * x6 - x5 * x6 +
     x1 * (-x1 + x2 + x3 - x4 + x5 + x6)
 
 /-- HOL `dih_x` (sphere.hl:153); PackingAuto20.lean:85 verbatim. -/
-noncomputable def dihXf (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  Real.pi / 2 + atn2 (Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6))
-    (-(deltaX4f x1 x2 x3 x4 x5 x6))
+noncomputable def dihXfPA21 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  Real.pi / 2 + atn2PA21 (Real.sqrt (4 * x1 * deltaXfPA21 x1 x2 x3 x4 x5 x6))
+    (-(deltaX4fPA21 x1 x2 x3 x4 x5 x6))
 
 /-- HOL `dih_y` (sphere.hl:159); PackingAuto20.lean:90 verbatim. -/
-noncomputable def dihY (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  dihXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+noncomputable def dihYPA21 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  dihXfPA21 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
 
 /-- HOL `sol_y` (sphere.hl:185); PackingAuto20.lean:94 verbatim. -/
-noncomputable def solY (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  dihY y1 y2 y3 y4 y5 y6 + dihY y2 y3 y1 y5 y6 y4 + dihY y3 y1 y2 y6 y4 y5 -
+noncomputable def solYPA21 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  dihYPA21 y1 y2 y3 y4 y5 y6 + dihYPA21 y2 y3 y1 y5 y6 y4 + dihYPA21 y3 y1 y2 y6 y4 y5 -
     Real.pi
 
 /-- HOL `vol_x` (sphere.hl:251); PackingAuto20.lean:99 verbatim. -/
-noncomputable def volXf (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  Real.sqrt (deltaXf x1 x2 x3 x4 x5 x6) / 12
+noncomputable def volXfPA21 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  Real.sqrt (deltaXfPA21 x1 x2 x3 x4 x5 x6) / 12
 
 /-- HOL `vol_y` (sphere.hl:547); PackingAuto20.lean:103 verbatim. -/
-noncomputable def volY (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  volXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+noncomputable def volYPA21 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  volXfPA21 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
 
-/-- HOL `vol3r` (sphere.hl:578); PackingAuto20.lean:126 verbatim. -/
-noncomputable def vol3r (y1 y2 y3 r : ℝ) : ℝ := volY r r r y1 y2 y3
+/-- HOL `vol3rPA21` (sphere.hl:578); PackingAuto20.lean:126 verbatim. -/
+noncomputable def vol3rPA21 (y1 y2 y3 r : ℝ) : ℝ := volYPA21 r r r y1 y2 y3
 
-/-- HOL `vol3f` (sphere.hl:580); PackingAuto20.lean:129 verbatim. -/
-noncomputable def vol3f (y1 y2 y3 r : ℝ) (f : ℝ → ℝ) : ℝ :=
+/-- HOL `vol3fPA21` (sphere.hl:580); PackingAuto20.lean:129 verbatim. -/
+noncomputable def vol3fPA21 (y1 y2 y3 r : ℝ) (f : ℝ → ℝ) : ℝ :=
   (2 * mm1 / Real.pi) *
-    (solY y1 y2 r r r y3 + solY y2 y3 r r r y1 + solY y3 y1 r r r y2) -
+    (solYPA21 y1 y2 r r r y3 + solYPA21 y2 y3 r r r y1 + solYPA21 y3 y1 r r r y2) -
     (8 * mm2 / Real.pi) *
-    (f (y1 / 2) * dihY y1 y2 r r r y3 +
-      f (y2 / 2) * dihY y2 y3 r r r y1 +
-      f (y3 / 2) * dihY y3 y1 r r r y2)
+    (f (y1 / 2) * dihYPA21 y1 y2 r r r y3 +
+      f (y2 / 2) * dihYPA21 y2 y3 r r r y1 +
+      f (y3 / 2) * dihYPA21 y3 y1 r r r y2)
 
-/-- HOL `gamma3f` (sphere.hl:582); PackingAuto20.lean:138 verbatim. -/
-noncomputable def gamma3f (y1 y2 y3 r : ℝ) (f : ℝ → ℝ) : ℝ :=
-  vol3r y1 y2 y3 r - vol3f y1 y2 y3 r f
+/-- HOL `gamma3fPA21` (sphere.hl:582); PackingAuto20.lean:138 verbatim. -/
+noncomputable def gamma3fPA21 (y1 y2 y3 r : ℝ) (f : ℝ → ℝ) : ℝ :=
+  vol3rPA21 y1 y2 y3 r - vol3fPA21 y1 y2 y3 r f
 
 /-- HOL `gamma2_x_div_azim_v2` (TSKAJXY3.hl:2065-2068, the file's single
 `new_definition`; placed here because `GRKIBMP_concl` below mentions it). -/
@@ -209,7 +211,7 @@ def frustt (u v : V3) (h a : ℝ) : Set V3 :=
 def cell3_from_ineq : Prop :=
   ∀ y4 y5 y6 : ℝ, 2 ≤ y4 → 2 ≤ y5 → 2 ≤ y6 →
     y4 ≤ 2 * Real.sqrt 2 → y5 ≤ 2 * Real.sqrt 2 → y6 ≤ 2 * Real.sqrt 2 →
-    eta_y y4 y5 y6 < Real.sqrt 2 → 0 ≤ gamma3f y4 y5 y6 (Real.sqrt 2) lmfun
+    eta_y y4 y5 y6 < Real.sqrt 2 → 0 ≤ gamma3fPA21 y4 y5 y6 (Real.sqrt 2) lmfun
 
 /-- HOL `GRKIBMP_concl` (TSKAJXY2.hl:73-75). -/
 def GRKIBMP_concl : Prop :=
@@ -622,10 +624,11 @@ theorem MCELL1_VOL (V X : Set V3) (ul : List V3) (hs : saturated V) (hp : Packin
   sorry
 
 /-- HOL `HJKDESR1a_1cell` (TSKAJXY3.hl:766; = TSKAJXY1.hl:5652, also
-ported as PackingAuto20.lean:241 -- dedupe at merge time).  Proof route:
+ported as PackingAuto20.lean:241 -- dedupe at merge time; renamed
+`HJKDESR1a_1cell_PA21`, docs/fqn-conflicts.md).  Proof route:
 `3 * mm1 < 3 * 1.3 < pi * sqrt 2` via certified Flyspeck-constant bounds,
 not re-derivable without interval tactics. -/
-theorem HJKDESR1a_1cell : 0 < 8 * Real.pi * Real.sqrt 2 / 3 - 8 * mm1 := by
+theorem HJKDESR1a_1cell_PA21 : 0 < 8 * Real.pi * Real.sqrt 2 / 3 - 8 * mm1 := by
   sorry
 
 /-- HOL `TSKAJXY_1` (TSKAJXY3.hl:780; giant: the 1-cell case of TSKAJXY). -/
@@ -747,13 +750,13 @@ theorem ATN_DIV (x y : ℝ) (hx : 0 < x) (hy : 0 < y) :
 theorem REAL_DIV_NEG (x y : ℝ) : x / -y = -(x / y) := by
   field_simp
 
-/-- HOL `ATN2_Y_NEG` (TSKAJXY3.hl:1128), for the `atn2` of
+/-- HOL `ATN2_Y_NEG` (TSKAJXY3.hl:1128), for the `atn2PA21` of
 PackingAuto20.lean:66. -/
 theorem ATN2_Y_NEG (x y : ℝ) (hy : y < 0) :
-    atn2 x y = -(Real.pi / 2) - Real.arctan (x / y) := by
+    atn2PA21 x y = -(Real.pi / 2) - Real.arctan (x / y) := by
   have hynonneg : 0 ≤ |y| := abs_nonneg y
   by_cases habs : |y| < x
-  · rw [atn2, if_pos habs]
+  · rw [atn2PA21, if_pos habs]
     have hx : 0 < x := by linarith
     have hyn : y / x < 0 := div_neg_of_neg_of_pos hy hx
     have hinv := Real.arctan_inv_of_neg hyn
@@ -761,9 +764,9 @@ theorem ATN2_Y_NEG (x y : ℝ) (hy : y < 0) :
       field_simp
     rw [hinv'] at hinv
     linarith
-  · rw [atn2, if_neg habs, if_neg (by linarith), if_pos hy]
+  · rw [atn2PA21, if_neg habs, if_neg (by linarith), if_pos hy]
 
-/-- HOL `RCONE_PAIR` (TSKAJXY3.hl:1153; giant: azimuth/`ups_x`/`atn2`
+/-- HOL `RCONE_PAIR` (TSKAJXY3.hl:1153; giant: azimuth/`ups_x`/`atn2PA21`
 calculus). -/
 theorem RCONE_PAIR (u v : V3) (t : ℝ) (huv : u ≠ v) (ht : 0 < t) (ht1 : t ≤ 1) :
     rconeGe u v t ∩ bisLe u v ⊆ rconeGe v u t := by
@@ -1079,9 +1082,9 @@ theorem GAMMAX_GAMMA2_X (V X : Set V3) (ul : List V3) (y1 y2 y3 y4 y5 y6 : ℝ)
     (hy4 : y4 = dist (mxi V ul) (omegaListN V ul 3))
     (hy5 : y5 = dist (elV ul 1) (omegaListN V ul 3))
     (hy6 : y6 = dist (elV ul 1) (mxi V ul)) :
-    0 ≤ dihY y1 y2 y3 y4 y5 y6 ∧
+    0 ≤ dihYPA21 y1 y2 y3 y4 y5 y6 ∧
       gammaX V X lmfun =
-        gamma2_x_div_azim_v2 (h0cut y1) (y1 * y1) * dihY y1 y2 y3 y4 y5 y6 := by
+        gamma2_x_div_azim_v2 (h0cut y1) (y1 * y1) * dihYPA21 y1 y2 y3 y4 y5 y6 := by
   sorry
 
 /-- HOL `TSKAJXY_2` (TSKAJXY3.hl:2181; giant: the 2-cell case, consuming

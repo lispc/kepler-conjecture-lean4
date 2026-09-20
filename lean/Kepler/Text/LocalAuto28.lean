@@ -19,7 +19,7 @@ Encoding:
   `dsv_v39` <-> `isScsV39`/`MMsV39`/`BBsV39`/`BBprimeV39`/`taustarV39`/`dsvV39`
   (LocalAuto1); `ball_annulus`/`h0` <-> `ballAnnulus`/`h0` (PackingAuto2).
 - `v3_defor_v1 a v1 v2 x1 x2 x5 x6 x3` <-> `v3DeforV1_p17` (LocalAuto17,
-  EYYPQDW lane; `ups_x` <-> `upsX`).  `rho_node1` <-> `rhoNode1`,
+  EYYPQDW lane; `ups_x` <-> `upsXPA18`).  `rho_node1` <-> `rhoNode1`,
   `interior_angle1` <-> `interiorAngle1`, `deformation` <-> `Deformation`,
   `lunar` <-> `Lunar`, `generic` <-> `Generic`, `convex_local_fan` <->
   `ConvexLocalFan` (LocalAuto1).
@@ -358,7 +358,7 @@ theorem EYYPQDW_CONTINUOUS_LIFT_DIST_ADD_p28 (v1 v2 w v : V3)
     (h6 : 0 < x6)
     (hnc : ¬ Collinear ℝ ({0, v1, v2} : Set V3))
     (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
-    (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsX x1 x3 x5) :
+    (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsXPA18 x1 x3 x5) :
     ContinuousAt (fun y => dist (v3DeforV1_p17 a v1 v2 x1 x2 x5 x6 y + w) v) x3 := by
   have hc := EYYPQDW_CONTINUOUS_AT_X_p17 a v1 v2 x1 x2 x3 x4 x5 x6 h1 h2 h3 h4 h5 h6
     hnc hx1 hx2 hx6 ha hups

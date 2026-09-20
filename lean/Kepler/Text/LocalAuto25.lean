@@ -645,7 +645,7 @@ theorem DIST_V_IN_BB_LE_C_p25 (s : ScsV39) (v : ℕ → V3) (i : ℕ) (c : ℝ)
 
 /-- HOL `arclength_lt_1553` (VASYYAU.hl:121). NEEDS: the
 `Trigonometry1.ATN_UPS_X_BREAKDOWN1` arctan-monotonicity kit (the arcLength
-`atn2` encoding is in PackingAuto18); numeric bounds on `upsX 4 4 c²`. -/
+`atn2PA18` encoding is in PackingAuto18); numeric bounds on `upsXPA18 4 4 c²`. -/
 theorem arclength_lt_1553_p25 :
     2 * arcLength 2 2 (2 * h0) < arcLength 2 2 (Real.sqrt 15.53) := by
   sorry

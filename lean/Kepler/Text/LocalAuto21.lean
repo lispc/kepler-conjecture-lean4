@@ -51,11 +51,11 @@ FILE MAP (all 62 HOL theorems, source order; `_p21` suffix throughout)
 
 ENCODING NOTES
   - Import discipline: this file sits on the LocalAuto1/`PackingAuto18` side
-    of the fatal `atn2` duplication. LocalAuto2/PackingAuto20 and everything
+    of the fatal `atn2PA18` duplication. LocalAuto2/PackingAuto20 and everything
     importing them (LocalAuto9/LocalAuto11, hence `mkSimplex1_p11`,
     `taum_p11` and the PQCSXWG/`delta_x_sym` kit) must NOT be imported; the
     LocalAuto1-side twins `mkSimplex1`, `mkPlanar2`, `deltaX4`, `deltaX5`
-    (LocalAuto1) and `upsX`/`deltaX` (PackingAuto18) are used instead.
+    (LocalAuto1) and `upsXPA18`/`deltaXPA18` (PackingAuto18) are used instead.
     Same-wave lanes LocalAuto19/20/22-27 are NOT imported.
   - HOL `real^3` ↔ `V3` (Kepler.Geom); `vec 0` ↔ `0`; `a cross b` ↔
     `cross3 a b` (PackingAuto18:86); `dot` ↔ `⬝ᵥ`; `%` ↔ `•`; `dist (a,b)`
@@ -64,7 +64,7 @@ ENCODING NOTES
     "⊂ affineSpan of three points").
   - `dih_x` ↔ `dihXf_p16`, `dih_y` ↔ `dihY_p16`, `taum` ↔ `taum_p16`
     (LocalAuto16 `_p16` sphere-kit copies; LocalAuto16 imports LocalAuto1 so
-    it is on this side of the `atn2` split). `delta_x` ↔ `deltaX`
+    it is on this side of the `atn2PA18` split). `delta_x` ↔ `deltaXPA18`
     (PackingAuto18). `delta_x5`/`delta_x6` are carried as verbatim `_p21`
     copies below: `deltaX5_p21` follows `Nonlin_def.delta_x5`
     (nonlin_def.hl:435) which is the form `delta_x5_delta_x6` rewrites with;
@@ -145,12 +145,12 @@ theorem PQCSXWG1_SYM_p21 (v0 v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 : ℝ)
     (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3) (h4 : 0 < x4) (h5 : 0 < x5)
     (h6 : 0 < x6) (hnc : ¬ Collinear ℝ ({v0, v1, v2} : Set V3))
     (hx1 : x1 = dist v1 v0 ^ 2) (hx2 : x2 = dist v2 v0 ^ 2)
-    (hx6 : x6 = dist v1 v2 ^ 2) (hΔ : 0 < deltaX x1 x2 x3 x4 x5 x6)
+    (hx6 : x6 = dist v1 v2 ^ 2) (hΔ : 0 < deltaXPA18 x1 x2 x3 x4 x5 x6)
     (hv3 : v3 = mkSimplex1 v0 v2 v1 x2 x1 x3 x5 x4 x6) :
     x3 = dist v3 v0 ^ 2 ∧ x5 = dist v3 v1 ^ 2 ∧ x4 = dist v3 v2 ^ 2 ∧
       (v2 - v0) ⬝ᵥ cross3 (v1 - v0) (v3 - v0) > 0 := by
   -- DISCHARGES: HOL Pqcsxwg.PQCSXWG1 and Merge_ineq.delta_x_sym — the
-  -- PQCSXWG lane lives on the LocalAuto11/LocalAuto2 side of the `atn2`
+  -- PQCSXWG lane lives on the LocalAuto11/LocalAuto2 side of the `atn2PA18`
   -- split and is not importable here. NEEDS: merge with that lane.
   sorry
 
@@ -197,7 +197,7 @@ theorem mk_simplex_uniq_p21 (v0 v1 v2 v3 : V3)
       (dist v2 v3 ^ 2) (dist v1 v3 ^ 2) (dist v1 v2 ^ 2) = v3 := by
   -- DISCHARGES: HOL Pqcsxwg.PQCSXWG1 + Oxlzlez.coplanar_delta_y
   -- (`delta_y > 0` off non-coplanarity) + `re_eqvl_pos_pos`; the coplanar
-  -- delta_y criterion is not on this side of the `atn2` split.
+  -- delta_y criterion is not on this side of the `atn2PA18` split.
   -- NEEDS: merge with the PQCSXWG/Oxlzlez lanes.
   sorry
 
@@ -361,8 +361,8 @@ theorem mk_planar_unique_p21 (v0 v1 v2 v3 v3' : V3)
 /-- HOL `mk_planar2_continuous` (CUXVZOZ.hl:974): `mk_planar2` is
 real-continuous in all parameters (s fixed). -/
 theorem mk_planar2_continuous_p21 (v0 v1 v2 : ℝ → V3) (x1 x2 x3 x5 x6 : ℝ → ℝ) (a s : ℝ)
-    (hx1 : 0 < x1 a) (hu1 : 0 < upsX (x1 a) (x2 a) (x6 a))
-    (hu2 : 0 < upsX (x1 a) (x3 a) (x5 a))
+    (hx1 : 0 < x1 a) (hu1 : 0 < upsXPA18 (x1 a) (x2 a) (x6 a))
+    (hu2 : 0 < upsXPA18 (x1 a) (x3 a) (x5 a))
     (hv0 : ContinuousAt v0 a) (hv1 : ContinuousAt v1 a) (hv2 : ContinuousAt v2 a)
     (hc1 : ContinuousAt x1 a) (hc2 : ContinuousAt x2 a) (hc3 : ContinuousAt x3 a)
     (hc5 : ContinuousAt x5 a) (hc6 : ContinuousAt x6 a) :
@@ -1003,8 +1003,8 @@ theorem WNWSHJT_ALT_p21 (w0 w1 w2 : V3) (f : V3 → ℝ → V3) (a b c : ℝ)
 /-- HOL `dih_x5_mono` (CUXVZOZ.hl:3116): `dih_x` decreases in `x5` while
 `delta_x6` is negative (MVT over the derived form). -/
 theorem dih_x5_mono_p21 (x1 x2 x3 x4 x5 x6 : ℝ) (hx1 : 0 < x1)
-    (hΔ : 0 < deltaX x1 x2 x3 x4 x5 x6) (hu1 : 0 < upsX x1 x2 x6)
-    (hu2 : 0 < upsX x1 x3 x5) (hΔ6 : deltaX6_p21 x1 x2 x3 x4 x5 x6 < 0) :
+    (hΔ : 0 < deltaXPA18 x1 x2 x3 x4 x5 x6) (hu1 : 0 < upsXPA18 x1 x2 x6)
+    (hu2 : 0 < upsXPA18 x1 x3 x5) (hΔ6 : deltaX6_p21 x1 x2 x3 x4 x5 x6 < 0) :
     ∃ e, 0 < e ∧ ∀ t, |t| < e → t ≤ 0 →
       dihXf_p16 x1 x2 x3 x4 (x5 + t) x6 ≤ dihXf_p16 x1 x2 x3 x4 x5 x6 := by
   -- DISCHARGES: HOL Ocbicby.derived_form_dih_x_wrt_x5 (the ∂dih_x/∂x5
@@ -1023,8 +1023,8 @@ theorem delta_x5_delta_x6_p21 (x1 x2 x3 x4 x5 x6 : ℝ) :
 /-- HOL `dih_obtuse_mono` (CUXVZOZ.hl:3182): under a negative `delta_x5`
 both `dih_x` at `x4+t` and at `x6+t` decrease. -/
 theorem dih_obtuse_mono_p21 (x1 x2 x3 x4 x5 x6 : ℝ) (hx1 : 0 < x1)
-    (hΔ : 0 < deltaX x1 x2 x3 x4 x5 x6) (hu1 : 0 < upsX x1 x2 x6)
-    (hu2 : 0 < upsX x1 x3 x5) (hΔ5 : deltaX5_p21 x1 x2 x3 x4 x5 x6 < 0) :
+    (hΔ : 0 < deltaXPA18 x1 x2 x3 x4 x5 x6) (hu1 : 0 < upsXPA18 x1 x2 x6)
+    (hu2 : 0 < upsXPA18 x1 x3 x5) (hΔ5 : deltaX5_p21 x1 x2 x3 x4 x5 x6 < 0) :
     ∃ e, 0 < e ∧ ∀ t, |t| < e → t ≤ 0 →
       dihXf_p16 x1 x2 x3 (x4 + t) x5 x6 ≤ dihXf_p16 x1 x2 x3 x4 x5 x6 ∧
       dihXf_p16 x1 x2 x3 x4 x5 (x6 + t) ≤ dihXf_p16 x1 x2 x3 x4 x5 x6 := by
@@ -1037,8 +1037,8 @@ theorem dih_obtuse_mono_p21 (x1 x2 x3 x4 x5 x6 : ℝ) (hx1 : 0 < x1)
 /-- HOL `dih_obtuse_mono_b` (CUXVZOZ.hl:3228): the unconditional half of
 `dih_obtuse_mono` (only the `x4+t` slot, no `delta_x5` hypothesis). -/
 theorem dih_obtuse_mono_b_p21 (x1 x2 x3 x4 x5 x6 : ℝ) (hx1 : 0 < x1)
-    (hΔ : 0 < deltaX x1 x2 x3 x4 x5 x6) (hu1 : 0 < upsX x1 x2 x6)
-    (hu2 : 0 < upsX x1 x3 x5) :
+    (hΔ : 0 < deltaXPA18 x1 x2 x3 x4 x5 x6) (hu1 : 0 < upsXPA18 x1 x2 x6)
+    (hu2 : 0 < upsXPA18 x1 x3 x5) :
     ∃ e, 0 < e ∧ ∀ t, |t| < e → t ≤ 0 →
       dihXf_p16 x1 x2 x3 (x4 + t) x5 x6 ≤ dihXf_p16 x1 x2 x3 x4 x5 x6 := by
   -- DISCHARGES: HOL Tame_inequalities.DIH_X_MONO_LT_4 + the delta_x

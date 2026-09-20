@@ -30,7 +30,7 @@ Encoding notes:
 - `re_eqvl` (trig2.hl:4238), `conv0` (sphere.hl:294), `delta`
   (collect_geom.hl:94), `delta_x` (sphere.hl:86), `ups_x` (sphere.hl:122),
   `arclength` (sphere.hl:258) are ported here because the ported lemmas
-  quantify over them; `arclength` uses flyspeck `atn2(x, y) =
+  quantify over them; `arclength` uses flyspeck `atn2PA18(x, y) =
   Real.atan2 y x` (the flyspeck branch structure coincides with Mathlib's
   `Real.atan2` off the degenerate origin pair).
 - YSSKQOY's `dot`/`vector_angle` on `:complex` are the real^2 structures
@@ -88,7 +88,7 @@ noncomputable def cross3 (a b : V3) : V3 :=
 
 /-- HOL `chi_msb` (leaf_cell.hl:781-782): the signed volume functional of the
 ordered triple `ul` at `p`. -/
-noncomputable def chiMsb (ul : List V3) (p : V3) : ℝ :=
+noncomputable def chiMsbPA18 (ul : List V3) (p : V3) : ℝ :=
   (crossProduct ((ul[1]! - ul[0]! : V3) : Fin 3 → ℝ)
       ((ul[2]! - ul[0]! : V3) : Fin 3 → ℝ)) ⬝ᵥ ((p - ul[0]! : V3) : Fin 3 → ℝ)
 
@@ -96,7 +96,7 @@ noncomputable def chiMsb (ul : List V3) (p : V3) : ℝ :=
 theorem cc_pe_exists (V : Set V3) (ul : List V3) :
     ∃ p1 p2 : V3, Packing V → saturated V → leaf V ul →
       voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3) ∧ p1 ≠ p2 ∧
-        0 < chiMsb ul p1 := by
+        0 < chiMsbPA18 ul p1 := by
   sorry
 
 /-- HOL `cc_pe1` (leaf_cell.hl:1082, `new_specification` via `SKOLEM_THM`). -/
@@ -131,7 +131,7 @@ def ccA0 (ul : List V3) : Set V3 :=
 def ccCell (V : Set V3) (ul : List V3) : Set V3 := mcell (ccKe V ul) V (ccUh V ul)
 
 /-- HOL `delta_x` (sphere.hl:86-90). -/
-def deltaX (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+def deltaXPA18 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
   x1 * x4 * (-x1 + x2 + x3 - x4 + x5 + x6) +
     x2 * x5 * (x1 - x2 + x3 + x4 - x5 + x6) +
     x3 * x6 * (x1 + x2 - x3 + x4 + x5 - x6) -
@@ -139,19 +139,20 @@ def deltaX (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
 
 /-- HOL `delta` (collect_geom.hl:94-100): the Cayley–Menger style
 determinant on edge-squared entries. -/
-def deltaP (x12 x13 x14 x23 x24 x34 : ℝ) : ℝ :=
+def deltaPPA18 (x12 x13 x14 x23 x24 x34 : ℝ) : ℝ :=
   -(x12 * x13 * x23) - x12 * x14 * x24 - x13 * x14 * x34 - x23 * x24 * x34 +
     x12 * x34 * (-x12 + x13 + x14 + x23 + x24 - x34) +
     x13 * x24 * (x12 - x13 + x14 + x23 - x24 + x34) +
     x14 * x23 * (x12 + x13 - x14 - x23 + x24 + x34)
 
 /-- HOL `ups_x` (sphere.hl:122-124). -/
-def upsX (x1 x2 x6 : ℝ) : ℝ :=
+def upsXPA18 (x1 x2 x6 : ℝ) : ℝ :=
   -(x1 * x1) - x2 * x2 - x6 * x6 + 2 * x1 * x6 + 2 * x1 * x2 + 2 * x2 * x6
 
-/-- Flyspeck `atn2` (sphere.hl:48-52); `atn2 x y = Real.atan2 y x` off the
+/-- Flyspeck `atn2` (sphere.hl:48-52), renamed `atn2PA18`
+(docs/fqn-conflicts.md); `atn2PA18 x y = Real.atan2 y x` off the
 degenerate pair `(0, 0)`-with-`x ≤ 0` corner. -/
-noncomputable def atn2 (x y : ℝ) : ℝ :=
+noncomputable def atn2PA18 (x y : ℝ) : ℝ :=
   if |y| < x then Real.arctan (y / x)
   else if 0 < y then Real.pi / 2 - Real.arctan (x / y)
   else if y < 0 then -(Real.pi / 2) - Real.arctan (x / y)
@@ -160,7 +161,7 @@ noncomputable def atn2 (x y : ℝ) : ℝ :=
 /-- HOL `arclength` (sphere.hl:258-260). -/
 noncomputable def arcLength (a b c : ℝ) : ℝ :=
   Real.pi / 2 +
-    atn2 (Real.sqrt (upsX (a * a) (b * b) (c * c))) (c * c - a * a - b * b)
+    atn2PA18 (Real.sqrt (upsXPA18 (a * a) (b * b) (c * c))) (c * c - a * a - b * b)
 
 /-- HOL `selectd` (YSSKQOY.hl:39-40): a default-carrying choice operator
 (the `Nonempty` constraint is a rendering artifact of `Classical.epsilon`,
@@ -350,22 +351,22 @@ theorem INJ_IFF_SURJ {α β : Type*} {a : Set α} {b : Set β} {f : α → β}
     exact Set.injOn_of_ncard_image_eq hcardimg ha
 
 private theorem upsX_sq_factor (a b c : ℝ) :
-    upsX (a * a) (b * b) (c * c)
+    upsXPA18 (a * a) (b * b) (c * c)
       = (a + b + c) * (-a + b + c) * (a - b + c) * (a + b - c) := by
-  simp only [upsX]
+  simp only [upsXPA18]
   ring
 
 /-- HOL `TRI_UPS_X_STRICT_POS` (YSSKQOY.hl:340-346). -/
 theorem TRI_UPS_X_STRICT_POS (a b c : ℝ) (ha : 0 < a) (hb : 0 < b) (hc : 0 ≤ c)
     (h1 : c < a + b) (h2 : a < b + c) (h3 : b < c + a) :
-    0 < upsX (a * a) (b * b) (c * c) := by
+    0 < upsXPA18 (a * a) (b * b) (c * c) := by
   rw [upsX_sq_factor]
   refine mul_pos (mul_pos (mul_pos (by linarith) (by linarith)) (by linarith))
     (by linarith)
 
 /-- HOL `ups_x_pos` (YSSKQOY.hl:348-357). -/
 theorem ups_x_pos (a b : ℝ) (h1 : 2 ≤ a) (h2 : a ≤ 2.52) (h3 : 2 ≤ b)
-    (h4 : b ≤ 2.52) : 0 < upsX (a ^ 2) (b ^ 2) 4 := by
+    (h4 : b ≤ 2.52) : 0 < upsXPA18 (a ^ 2) (b ^ 2) 4 := by
   have ha : 0 < a := by linarith
   have hb : 0 < b := by linarith
   rw [sq a, sq b, show (4:ℝ) = 2 * 2 from by norm_num]
@@ -429,8 +430,8 @@ theorem SEC_DOT (u v : V3) (r ψ : ℝ) (hr : 0 < r) (hψ1 : 0 ≤ ψ)
 /-- HOL `Arc_properties.arc_sym` (the `arclength` symmetry in its first two
 arguments; used by `yssk_reduction`). -/
 theorem arc_sym (a b c : ℝ) : arcLength a b c = arcLength b a c := by
-  have hu : upsX (a * a) (b * b) (c * c) = upsX (b * b) (a * a) (c * c) := by
-    simp only [upsX]; ring
+  have hu : upsXPA18 (a * a) (b * b) (c * c) = upsXPA18 (b * b) (a * a) (c * c) := by
+    simp only [upsXPA18]; ring
   have hy : c * c - a * a - b * b = c * c - b * b - a * a := by ring
   rw [arcLength, arcLength, hu, hy]
 
@@ -442,10 +443,10 @@ theorem arclength2 {h : ℝ} (h1 : 1 ≤ h) (h2 : h ≤ h0) :
   have hh : (0:ℝ) < h := by linarith
   have h126 : h ≤ 1.26 := by linarith
   have hp : (0:ℝ) < 4 - h * h := by nlinarith
-  have hx : Real.sqrt (upsX (2 * 2) ((2 * h) * (2 * h)) (2 * 2))
+  have hx : Real.sqrt (upsXPA18 (2 * 2) ((2 * h) * (2 * h)) (2 * 2))
       = 4 * h * Real.sqrt (4 - h * h) := by
-    have hup : upsX (2 * 2) ((2 * h) * (2 * h)) (2 * 2) = (4 * h) ^ 2 * (4 - h * h) := by
-      simp only [upsX]; ring
+    have hup : upsXPA18 (2 * 2) ((2 * h) * (2 * h)) (2 * 2) = (4 * h) ^ 2 * (4 - h * h) := by
+      simp only [upsXPA18]; ring
     have h4 : (0:ℝ) ≤ 4 * h := by nlinarith
     rw [hup, Real.sqrt_mul (sq_nonneg (4 * h)), Real.sqrt_sq h4]
   have hneg : (2 * 2 - 2 * 2 - (2 * h) * (2 * h) : ℝ) < 0 := by nlinarith
@@ -456,10 +457,10 @@ theorem arclength2 {h : ℝ} (h1 : 1 ≤ h) (h2 : h ≤ h0) :
     have hstep : h * h < h * Real.sqrt (4 - h * h) :=
       mul_lt_mul_of_pos_left hsqrt hh
     nlinarith
-  have hatn : atn2 (Real.sqrt (upsX (2 * 2) ((2 * h) * (2 * h)) (2 * 2)))
+  have hatn : atn2PA18 (Real.sqrt (upsXPA18 (2 * 2) ((2 * h) * (2 * h)) (2 * 2)))
       (2 * 2 - 2 * 2 - (2 * h) * (2 * h))
       = Real.arctan (-(h / Real.sqrt (4 - h * h))) := by
-    rw [atn2, hx, if_pos hyx, show (2 * 2 - 2 * 2 - (2 * h) * (2 * h) : ℝ) = -(4 * h * h) from
+    rw [atn2PA18, hx, if_pos hyx, show (2 * 2 - 2 * 2 - (2 * h) * (2 * h) : ℝ) = -(4 * h * h) from
       by ring]
     congr 1
     field_simp
@@ -472,7 +473,7 @@ theorem arclength2 {h : ℝ} (h1 : 1 ≤ h) (h2 : h ≤ h0) :
     rw [hten, Real.sqrt_div (by norm_num : (0:ℝ) ≤ 4)]
     norm_num
   calc arcLength 2 (2 * h) 2
-      = Real.pi / 2 + atn2 (Real.sqrt (upsX (2 * 2) ((2 * h) * (2 * h)) (2 * 2)))
+      = Real.pi / 2 + atn2PA18 (Real.sqrt (upsXPA18 (2 * 2) ((2 * h) * (2 * h)) (2 * 2)))
           (2 * 2 - 2 * 2 - (2 * h) * (2 * h)) := rfl
     _ = Real.pi / 2 + Real.arctan (-(h / Real.sqrt (4 - h * h))) := by rw [hatn]
     _ = Real.pi / 2 - Real.arcsin (h / 2) := by
@@ -517,7 +518,7 @@ theorem yssk_reduction
 derivative theory is out of scope here. -/
 theorem arc_derivative (a b : ℝ) (h : 2 ≤ a ∧ a ≤ 2.52 ∧ 2 ≤ b ∧ b ≤ 2.52) :
     HasDerivWithinAt (fun x => arcLength x b 2)
-      (-(4 + a ^ 2 - b ^ 2) / (a * Real.sqrt (upsX (a ^ 2) (b ^ 2) 4)))
+      (-(4 + a ^ 2 - b ^ 2) / (a * Real.sqrt (upsXPA18 (a ^ 2) (b ^ 2) 4)))
       (Icc 2 2.52) a := by
   sorry
 
@@ -525,15 +526,15 @@ theorem arc_derivative (a b : ℝ) (h : 2 ≤ a ∧ a ≤ 2.52 ∧ 2 ≤ b ∧ b
 `Calc_derivative` machinery (out of scope here). -/
 theorem arc_derivative2 (a b : ℝ) (h : 2 ≤ a ∧ a ≤ 2.52 ∧ 2 ≤ b ∧ b ≤ 2.52) :
     HasDerivWithinAt
-      (fun x => -(4 + a ^ 2 - x ^ 2) / (a * Real.sqrt (upsX (a ^ 2) (x ^ 2) 4)))
-      (32 * a * b / (Real.sqrt (upsX (a ^ 2) (b ^ 2) 4)) ^ 3) (Icc 2 2.52) b := by
+      (fun x => -(4 + a ^ 2 - x ^ 2) / (a * Real.sqrt (upsXPA18 (a ^ 2) (x ^ 2) 4)))
+      (32 * a * b / (Real.sqrt (upsXPA18 (a ^ 2) (b ^ 2) 4)) ^ 3) (Icc 2 2.52) b := by
   sorry
 
 /-- HOL `arc_length2_increasing` (YSSKQOY.hl:447-489). -/
 theorem arc_length2_increasing (a b1 b2 : ℝ)
     (h : 2 ≤ a ∧ a ≤ 2.52 ∧ 2 ≤ b1 ∧ b1 ≤ 2.52 ∧ 2 ≤ b2 ∧ b2 ≤ 2.52 ∧ b1 ≤ b2) :
-    (fun x => -(4 + a ^ 2 - x ^ 2) / (a * Real.sqrt (upsX (a ^ 2) (x ^ 2) 4))) b1 ≤
-      (fun x => -(4 + a ^ 2 - x ^ 2) / (a * Real.sqrt (upsX (a ^ 2) (x ^ 2) 4))) b2 := by
+    (fun x => -(4 + a ^ 2 - x ^ 2) / (a * Real.sqrt (upsXPA18 (a ^ 2) (x ^ 2) 4))) b1 ≤
+      (fun x => -(4 + a ^ 2 - x ^ 2) / (a * Real.sqrt (upsXPA18 (a ^ 2) (x ^ 2) 4))) b2 := by
   sorry
 
 /-- HOL `arc_length1_increasing` (YSSKQOY.hl:491-529). -/
@@ -816,55 +817,55 @@ theorem FUZBZGI_1 {V : Set V3} {ul : List V3} (hp : Packing V)
 
 /-- HOL `chi_msb_swap_01` (leaf_cell.hl:803-835). -/
 theorem chi_msb_swap_01 (a b c d : V3) :
-    chiMsb [a, b, c] d = -chiMsb [b, a, c] d := by
+    chiMsbPA18 [a, b, c] d = -chiMsbPA18 [b, a, c] d := by
   sorry
 
 /-- HOL `chi_msb_swap_23` (leaf_cell.hl:803-835). -/
 theorem chi_msb_swap_23 (a b c d : V3) :
-    chiMsb [a, b, c] d = -chiMsb [a, b, d] c := by
+    chiMsbPA18 [a, b, c] d = -chiMsbPA18 [a, b, d] c := by
   sorry
 
 /-- HOL `chi_msb_swap_12` (leaf_cell.hl:803-835). -/
 theorem chi_msb_swap_12 (a b c d : V3) :
-    chiMsb [a, b, c] d = -chiMsb [a, c, b] d := by
+    chiMsbPA18 [a, b, c] d = -chiMsbPA18 [a, c, b] d := by
   sorry
 
 /-- HOL `chi_msb_additive_a` (leaf_cell.hl:836-861). -/
 theorem chi_msb_additive_a (a b c d : V3) (t1 t2 t3 t4 : ℝ) (ht : t1 + t2 + t3 + t4 = 1) :
-    chiMsb [t1 • a + t2 • b + t3 • c + t4 • d, b, c] d
-      = t1 * chiMsb [a, b, c] d := by
+    chiMsbPA18 [t1 • a + t2 • b + t3 • c + t4 • d, b, c] d
+      = t1 * chiMsbPA18 [a, b, c] d := by
   sorry
 
 /-- HOL `chi_msb_additive_d` (leaf_cell.hl:862-878). -/
 theorem chi_msb_additive_d (a b c d : V3) (t1 t2 t3 t4 : ℝ) (ht : t1 + t2 + t3 + t4 = 1) :
-    chiMsb [a, b, c] (t1 • a + t2 • b + t3 • c + t4 • d)
-      = t4 * chiMsb [a, b, c] d := by
+    chiMsbPA18 [a, b, c] (t1 • a + t2 • b + t3 • c + t4 • d)
+      = t4 * chiMsbPA18 [a, b, c] d := by
   sorry
 
 /-- HOL `CHI_MSB_ADDITIVE` (leaf_cell.hl:879-890). -/
 theorem CHI_MSB_ADDITIVE (ul : List V3) (p1 p2 : V3) (t1 t2 : ℝ) (ht : t1 + t2 = 1) :
-    chiMsb ul (t1 • p1 + t2 • p2)
-      = t1 * chiMsb ul p1 + t2 * chiMsb ul p2 := by
+    chiMsbPA18 ul (t1 • p1 + t2 • p2)
+      = t1 * chiMsbPA18 ul p1 + t2 * chiMsbPA18 ul p2 := by
   sorry
 
 /-- HOL `CHI_MSB_CONVEX` (leaf_cell.hl:891-934). -/
 theorem CHI_MSB_CONVEX (ul : List V3) :
-    Convex ℝ {p | 0 ≤ chiMsb ul p} := by
+    Convex ℝ {p | 0 ≤ chiMsbPA18 ul p} := by
   sorry
 
 /-- HOL `AFFINE_IMP_CHI_MSB_0` (leaf_cell.hl:935-942). -/
 theorem AFFINE_IMP_CHI_MSB_0 (ul : List V3) (p : V3) (hlen : ul.length = 3)
-    (hp : p ∈ affineSpan ℝ (setOfList ul)) : chiMsb ul p = 0 := by
+    (hp : p ∈ affineSpan ℝ (setOfList ul)) : chiMsbPA18 ul p = 0 := by
   sorry
 
 /-- HOL `CHI_MSB_IMP_COPLANAR` (leaf_cell.hl:935-942). -/
-theorem CHI_MSB_IMP_COPLANAR (ul : List V3) (p : V3) (h : chiMsb ul p = 0) :
+theorem CHI_MSB_IMP_COPLANAR (ul : List V3) (p : V3) (h : chiMsbPA18 ul p = 0) :
     Coplanar ({ul.getD 0 0, ul.getD 1 0, ul.getD 2 0, p} : Set V3) := by
   sorry
 
 /-- HOL `CHI_MSB_COPLANAR` (leaf_cell.hl:943-1011). -/
 theorem CHI_MSB_COPLANAR (a b c d : V3) :
-    Coplanar ({a, b, c, d} : Set V3) ↔ chiMsb [a, b, c] d = 0 := by
+    Coplanar ({a, b, c, d} : Set V3) ↔ chiMsbPA18 [a, b, c] d = 0 := by
   sorry
 
 /-- HOL `JDHAWAY_0` (leaf_cell.hl:1012-1051). -/
@@ -872,13 +873,13 @@ theorem JDHAWAY_0 {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
     (hp : Packing V) (hs : saturated V) (hl' : leaf V ul)
     (hv : voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3)) (hne : p1 ≠ p2)
     (hc : circumcenter (setOfList ul) = t1 • p1 + t2 • p2) (hts : t1 + t2 = 1)
-    (hpos : 0 < t1 ∧ 0 < t2) : chiMsb ul p1 ≠ 0 := by
+    (hpos : 0 < t1 ∧ 0 < t2) : chiMsbPA18 ul p1 ≠ 0 := by
   sorry
 
 /-- HOL `JDHAWAY_1` (leaf_cell.hl:1012-1051). -/
 theorem JDHAWAY_1 {V : Set V3} {ul : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) :
-    chiMsb ul (circumcenter (setOfList ul)) = 0 := by
+    chiMsbPA18 ul (circumcenter (setOfList ul)) = 0 := by
   sorry
 
 /-- HOL `JDWAWAY` (leaf_cell.hl:1012-1051). -/
@@ -887,7 +888,7 @@ theorem JDWAWAY {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
     (hv : voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3)) (hne : p1 ≠ p2)
     (hc : circumcenter (setOfList ul) = t1 • p1 + t2 • p2) (hts : t1 + t2 = 1)
     (hpos : 0 < t1 ∧ 0 < t2) :
-    chiMsb ul p1 ≠ 0 ∧ chiMsb ul p2 ≠ 0 ∧ (chiMsb ul p1 < 0 ↔ 0 < chiMsb ul p2) := by
+    chiMsbPA18 ul p1 ≠ 0 ∧ chiMsbPA18 ul p2 ≠ 0 ∧ (chiMsbPA18 ul p1 < 0 ↔ 0 < chiMsbPA18 ul p2) := by
   sorry
 
 /-- HOL `FACET_OF_SEGMENT` (leaf_cell.hl:1085-1104): the endpoints are the
@@ -974,13 +975,13 @@ theorem AFF_GE_MONO_TRANS {X Y S : Set V3} (h : S ⊆ X) :
 /-- HOL `K4_CHI_MSB_EQVL` (leaf_cell.hl:1391-?). -/
 theorem K4_CHI_MSB_EQVL {V : Set V3} {ul : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) (h4 : ccKe V ul = 4) :
-    reEqvl (chiMsb ul ((ccUh V ul).getD 3 0)) (chiMsb ul (ccPe1 V ul)) := by
+    reEqvl (chiMsbPA18 ul ((ccUh V ul).getD 3 0)) (chiMsbPA18 ul (ccPe1 V ul)) := by
   sorry
 
 /-- HOL `K4_CHI_MSB_POS` (leaf_cell.hl:1391-?). -/
 theorem K4_CHI_MSB_POS {V : Set V3} {ul : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) (h4 : ccKe V ul = 4) :
-    0 < chiMsb ul ((ccUh V ul).getD 3 0) := by
+    0 < chiMsbPA18 ul ((ccUh V ul).getD 3 0) := by
   sorry
 
 /-- HOL `MXI_BETWEEN` (leaf_cell.hl:1391-1421). -/
@@ -1004,20 +1005,20 @@ theorem affine_invert {u : ℝ} {p q : V3} {s : Set V3} (hu : u ≠ 0)
 theorem CELL3_NONDEG {V : Set V3} {ul : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) (h3 : ccKe V ul = 3) :
     (mxi V (ccUh V ul)) ∉ affineSpan ℝ (setOfList ul) ∧
-      0 < chiMsb ul (mxi V (ccUh V ul)) := by
+      0 < chiMsbPA18 ul (mxi V (ccUh V ul)) := by
   sorry
 
 /-- HOL `CELL_NN` (leaf_cell.hl:1529-1575). -/
 theorem CELL_NN {V : Set V3} {ul : List V3} {p : V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) (hp' : p ∈ ccCell V ul) :
-    0 ≤ chiMsb ul p := by
+    0 ≤ chiMsbPA18 ul p := by
   sorry
 
 /-- HOL `delta_delta_x` (leaf_cell.hl:1576-1584): the two Cayley–Menger
 encodings agree. -/
 theorem delta_delta_x (x1 x2 x3 x4 x5 x6 : ℝ) :
-    deltaP x1 x2 x3 x6 x5 x4 = deltaX x1 x2 x3 x4 x5 x6 := by
-  simp only [deltaP, deltaX]
+    deltaPPA18 x1 x2 x3 x6 x5 x4 = deltaXPA18 x1 x2 x3 x4 x5 x6 := by
+  simp only [deltaPPA18, deltaXPA18]
   ring
 
 /-- HOL `ZWVCBMN` (leaf_cell.hl:1585-1629). -/
@@ -1052,8 +1053,10 @@ theorem MCELL3_NONPLANAR {V : Set V3} {vl : List V3} (hp : Packing V)
     ¬Coplanar (mcell3 V vl) := by
   sorry
 
-/-- HOL `MCELL2_SUBSET_AFF_GE` (leaf_cell.hl:1870-?). -/
-theorem MCELL2_SUBSET_AFF_GE (V : Set V3) (ul : List V3) :
+/-- HOL `MCELL2_SUBSET_AFF_GE` (leaf_cell.hl:1870-?). (Renamed
+`MCELL2_SUBSET_AFF_GE_PA18`: the canonical export is PackingAuto21's proved
+version; statements differ — see docs/fqn-conflicts.md §3.1.) -/
+theorem MCELL2_SUBSET_AFF_GE_PA18 (V : Set V3) (ul : List V3) :
     mcell2 V ul ⊆ affGe {hdV ul, hdV ul.tail} {mxi V ul, omegaListN V ul 3} := by
   sorry
 
@@ -1099,14 +1102,14 @@ theorem MCELL_CONVEX {V : Set V3} {vl : List V3} {k : ℕ} (hs : saturated V)
 /-- HOL `CHI_MSB_AFF_GT_0` (leaf_cell.hl:2132-2177). -/
 theorem CHI_MSB_AFF_GT_0 (a b c q q' : V3)
     (hnc : ¬Coplanar ({a, b, c, q} : Set V3))
-    (hq : 0 < chiMsb [a, b, c] q) (hq' : 0 < chiMsb [a, b, c] q') :
+    (hq : 0 < chiMsbPA18 [a, b, c] q) (hq' : 0 < chiMsbPA18 [a, b, c] q') :
     q' ∈ affGt {a, b, c} {q} := by
   sorry
 
 /-- HOL `CHI_MSB_POS2` (leaf_cell.hl:2132-2177). -/
 theorem CHI_MSB_POS2 (a b c d p : V3) (hd : a ≠ b ∧ b ≠ c)
     (hd' : d ∈ affGt {a, b} {c}) :
-    reEqvl (chiMsb [a, b, d] p) (chiMsb [a, b, c] p) := by
+    reEqvl (chiMsbPA18 [a, b, d] p) (chiMsbPA18 [a, b, c] p) := by
   sorry
 
 /-- HOL `MCELL_ARG_REDUCE` (leaf_cell.hl:2132-2177): every Marchal cell is

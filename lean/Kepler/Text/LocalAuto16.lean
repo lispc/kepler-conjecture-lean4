@@ -59,7 +59,7 @@ ENCODING NOTES
     is the LocalAuto1 port and is imported, not copied.
   - The sphere.hl kit has no importable port in this file's import
     graph: PackingAuto18 (via LocalAuto1) and PackingAuto20 (via
-    LocalAuto2/11) define the SAME `Kepler.Text` names (`atn2`,
+    LocalAuto2/11) define the SAME `Kepler.Text` names (`atn2PA18`,
     `dih_y`, ...) and Lean rejects importing both sides, while the
     scs lane of this file mandates LocalAuto1.  So verbatim `_p16`
     copies are included: `atn2_p16` / `deltaXf_p16` / `deltaX4f_p16`
@@ -260,11 +260,11 @@ theorem XIVPHKS_SHIFT_p16 (W : ℕ → Set V3) (a d : ℕ → ℕ → ℕ → �
 /-! ## Section C: BKOSSGE.hl — sphere.hl kit (`_p16` copies)
 
 PackingAuto18 (via LocalAuto1) and PackingAuto20 (via LocalAuto2/11)
-export identical `Kepler.Text.atn2`/`dihY`/... names and cannot be
+export identical `Kepler.Text.atn2PA18`/`dihY`/... names and cannot be
 imported together; this file needs LocalAuto1's scs lane, so the kit is
 copied verbatim (merge note: delete against the owning wave). -/
 
-/-- HOL `atn2` (sphere.hl:48-52); verbatim twin of the PackingAuto18 /
+/-- HOL `atn2PA18` (sphere.hl:48-52); verbatim twin of the PackingAuto18 /
 PackingAuto20 renderings. -/
 noncomputable def atn2_p16 (x y : ℝ) : ℝ :=
   if |y| < x then Real.arctan (y / x)
@@ -324,7 +324,7 @@ theorem ear_acute_p16 (h : main_nonlinear_terminal_v11) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ,
       2 ≤ y1 → y1 ≤ 2 * h0 → 2 ≤ y2 → y2 ≤ 2 * h0 → 2 ≤ y3 → y3 ≤ 2 * h0 →
       2 ≤ y4 → y4 ≤ 2 * h0 → 2 ≤ y6 → y6 ≤ 2 * h0 → 3 ≤ y5 →
-      0 < upsX (y1 * y1) (y3 * y3) (y5 * y5) →
+      0 < upsXPA18 (y1 * y1) (y3 * y3) (y5 * y5) →
       dihY_p16 y1 y2 y3 y4 y5 y6 < Real.pi / 2 := by
   sorry
 
@@ -347,9 +347,9 @@ theorem quad_diag_362_p16 (h : main_nonlinear_terminal_v11) :
   sorry
 
 /-- HOL `INV_ARCLENGTH` (BKOSSGE.hl:114): on `(0, π)` the `arclength`
-functional inverts the chord-length formula.  The `atn2` unfolding of
+functional inverts the chord-length formula.  The `atn2PA18` unfolding of
 `arcLength` is reached through the local `∀ g` statement (discharged by
-`rfl`), since the bare `atn2` name is ambiguous in this import graph. -/
+`rfl`), since the bare `atn2PA18` name is ambiguous in this import graph. -/
 theorem INV_ARCLENGTH_p16 (y1 y3 z : ℝ) (hz1 : 0 < z) (hz2 : z < Real.pi)
     (hy1 : 0 < y1) (hy3 : 0 < y3) :
     0 < y1 ^ 2 + y3 ^ 2 - 2 * y1 * y3 * Real.cos z ∧
@@ -370,8 +370,8 @@ theorem INV_ARCLENGTH_p16 (y1 y3 z : ℝ) (hz1 : 0 < z) (hz2 : z < Real.pi)
     rw [← pow_two, Real.sq_sqrt hDpos.le]
   have hpp : 0 < 2 * y1 * y3 := mul_pos (by linarith : (0:ℝ) < 2 * y1) hy3
   have hs : 0 < Real.sin z := Real.sin_pos_of_mem_Ioo ⟨hz1, hz2⟩
-  have hupsv : upsX (y1 * y1) (y3 * y3) D = (2 * y1 * y3 * Real.sin z) ^ 2 := by
-    simp only [upsX]
+  have hupsv : upsXPA18 (y1 * y1) (y3 * y3) D = (2 * y1 * y3 * Real.sin z) ^ 2 := by
+    simp only [upsXPA18]
     have htrig : Real.sin z ^ 2 + Real.cos z ^ 2 = 1 := Real.sin_sq_add_cos_sq z
     linear_combination
       (-(D - (y1 * y1 + y3 * y3) - 2 * y1 * y3 * Real.cos z)) * hD +
@@ -380,7 +380,7 @@ theorem INV_ARCLENGTH_p16 (y1 y3 z : ℝ) (hz1 : 0 < z) (hz2 : z < Real.pi)
     rw [hD]; ring
   simp only [arcLength]
   rw [hsq, hupsv, Real.sqrt_sq (by positivity), hY]
-  -- the `atn2` value: `π/2 + atn2 (2 y1 y3 sin z) (-(2 y1 y3 cos z)) = z`
+  -- the `atn2PA18` value: `π/2 + atn2PA18 (2 y1 y3 sin z) (-(2 y1 y3 cos z)) = z`
   have key : ∀ g : ℝ → ℝ → ℝ,
       (∀ x y : ℝ, g x y = if |y| < x then Real.arctan (y / x)
         else if 0 < y then Real.pi / 2 - Real.arctan (x / y)
@@ -506,8 +506,8 @@ NEEDS: Ocbicby.derived_form_dih_x_wrt_x4 (the `dih_x` derivative in the
 continuity-under-composition kit. -/
 theorem real_continuous_dih_y_wrt4_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
     (hdy : 0 < deltaY_p16 y1 y2 y3 y4 y5 y6) (hy1 : 0 < y1)
-    (hu1 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6))
-    (hu2 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5)) :
+    (hu1 : 0 < upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6))
+    (hu2 : 0 < upsXPA18 (y1 * y1) (y3 * y3) (y5 * y5)) :
     ContinuousAt (fun q => dihY_p16 y1 y2 y3 q y5 y6) y4 := by
   sorry
 
@@ -515,8 +515,8 @@ theorem real_continuous_dih_y_wrt4_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
 NEEDS: Ocbicby.derived_form_dih_x_wrt_x5. -/
 theorem real_continuous_dih_y_wrt5_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
     (hdy : 0 < deltaY_p16 y1 y2 y3 y4 y5 y6) (hy1 : 0 < y1)
-    (hu1 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6))
-    (hu2 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5)) :
+    (hu1 : 0 < upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6))
+    (hu2 : 0 < upsXPA18 (y1 * y1) (y3 * y3) (y5 * y5)) :
     ContinuousAt (fun q => dihY_p16 y1 y2 y3 y4 q y6) y5 := by
   sorry
 
@@ -524,8 +524,8 @@ theorem real_continuous_dih_y_wrt5_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
 NEEDS: Ocbicby.derived_form_dih_x_wrt_x6. -/
 theorem real_continuous_dih_y_wrt6_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
     (hdy : 0 < deltaY_p16 y1 y2 y3 y4 y5 y6) (hy1 : 0 < y1)
-    (hu1 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6))
-    (hu2 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5)) :
+    (hu1 : 0 < upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6))
+    (hu2 : 0 < upsXPA18 (y1 * y1) (y3 * y3) (y5 * y5)) :
     ContinuousAt (fun q => dihY_p16 y1 y2 y3 y4 y5 q) y6 := by
   sorry
 
@@ -535,9 +535,9 @@ ups_x_sym and the `real_continuous_dih_y_wrt*_p16` suite. -/
 theorem real_continuous_taum_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
     (hdy : 0 < deltaY_p16 y1 y2 y3 y4 y5 y6)
     (hy1 : 0 < y1) (hy2 : 0 < y2) (hy3 : 0 < y3)
-    (hu1 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6))
-    (hu2 : 0 < upsX (y2 * y2) (y3 * y3) (y4 * y4))
-    (hu3 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5)) :
+    (hu1 : 0 < upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6))
+    (hu2 : 0 < upsXPA18 (y2 * y2) (y3 * y3) (y4 * y4))
+    (hu3 : 0 < upsXPA18 (y1 * y1) (y3 * y3) (y5 * y5)) :
     ContinuousAt (fun q => taum_p16 y1 y2 y3 q y5 y6) y4 := by
   sorry
 
@@ -545,7 +545,7 @@ theorem real_continuous_taum_p16 (y1 y2 y3 y4 y5 y6 : ℝ)
 `TRI_UPS_X_STRICT_POS` with the `h0 = 1.26` box. -/
 theorem UPS_X_STD_POS_p16 (y1 y2 y3 : ℝ) (h1 : 2 ≤ y1) (h1' : y1 ≤ 2 * h0)
     (h2 : 2 ≤ y2) (h2' : y2 ≤ 2 * h0) (h3 : 2 ≤ y3) (h3' : y3 ≤ 2 * h0) :
-    0 < upsX (y1 * y1) (y2 * y2) (y3 * y3) := by
+    0 < upsXPA18 (y1 * y1) (y2 * y2) (y3 * y3) := by
   have h0v : h0 = 1.26 := rfl
   exact TRI_UPS_X_STRICT_POS y1 y2 y3 (by linarith) (by linarith) (by linarith)
     (by linarith) (by linarith) (by linarith)

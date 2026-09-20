@@ -108,7 +108,7 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
   here.  No owed discharge lives in them (the QKNVMLB trio's twins live in
   LocalAuto35 and are blocked under (c)/(d) regardless).
   (3) The corpus carries two mutually-exclusive kit branches: PackingAuto18
-  (`atn2`/`upsX`/`cross3`) vs PackingAuto20/21/25 (same names, re-rendered).
+  (`atn2PA18`/`upsXPA18`/`cross3`) vs PackingAuto20/21/25 (same names, re-rendered).
   LocalAuto1's tree loads the former; `Kepler.Text.LocalAuto2` imports
   `Kepler.Text.PackingAuto20`, so LocalAuto2 and its dependents LocalAuto9
   and LocalAuto11 cannot be co-imported with LocalAuto1.  Those three are
@@ -201,7 +201,7 @@ theorem EYYPQDW3_discharged :
       0 < x1 → 0 < x2 → 0 < x3 → 0 < x5 → 0 < x6 →
       ¬Collinear ℝ ({v0, v1, v2} : Set V3) →
       x1 = dist v1 v0 ^ 2 → x2 = dist v2 v0 ^ 2 → x6 = dist v1 v2 ^ 2 →
-      0 < upsX x1 x3 x5 →
+      0 < upsXPA18 x1 x3 x5 →
       ContinuousAt (fun q => mkPlanar2 v0 v1 q x1 x2 x3 x5 x6 s) v2 := by
   intro v0 v1 v2 x1 x2 x3 x5 x6 s _h1 _h2 _h3 _h5 _h6 _hnc _hx1 _hx2 _hx6 _hups
   rw [MK_PLANAR_V3_DEFOR_V2_FUN_p17 v0 v1 x1 x2 x3 x5 x6 s]
@@ -213,7 +213,7 @@ theorem EYYPQDW3_discharged :
         (continuousAt_id.sub continuousAt_const))
   refine ContinuousAt.add ?_ continuousAt_const
   refine ContinuousAt.add continuousAt_const ?_
-  exact hc.const_smul (s / x1 * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6))
+  exact hc.const_smul (s / x1 * Real.sqrt (upsXPA18 x1 x3 x5 / upsXPA18 x1 x2 x6))
 
 /-- `LocalAuto1.GSXRFWM_concl` discharged by the proved LocalAuto33 twin
 (verbatim twin; modulo the wave's own sorried `GSXRFWM1_p33` input). -/

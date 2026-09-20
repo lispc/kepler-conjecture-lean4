@@ -24,7 +24,7 @@ Encoding:
   `MMsV39`/`BBsV39`/`taustarV39`/`dsvV39` (LocalAuto1); `h0`/`ball_annulus` <->
   `h0`/`ballAnnulus` (PackingAuto2).
 - `v3_defor_v1 a v1 v2 x1 x2 x5 x6 x3` <-> `v3DeforV1_p17` (LocalAuto17);
-  `ups_x` <-> `upsX`, `x cross y` <-> `cross3` (PackingAuto18); `rho_node1` <->
+  `ups_x` <-> `upsXPA18`, `x cross y` <-> `cross3` (PackingAuto18); `rho_node1` <->
   `rhoNode1`, `interior_angle1` <-> `interiorAngle1`, `deformation` <->
   `Deformation`, `lunar` <-> `Lunar`, `generic` <-> `Generic`,
   `convex_local_fan` <-> `ConvexLocalFan`, `rho_fun` <-> `rhoFun`,
@@ -330,7 +330,7 @@ theorem UPS_X_POS_SEG_p34 (v1 v2 : V3) (x1 x2 x6 : ℝ)
     (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
     (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
     (h2 : 0 < x2) :
-    ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e → 0 < upsX x1 (x2 - t) x6 ∧ 0 < x2 - t := by
+    ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e → 0 < upsXPA18 x1 (x2 - t) x6 ∧ 0 < x2 - t := by
   sorry
 
 /-- HOL `UPS_X_POS_SEG_C` (IMJXPHR.hl:152). -/
@@ -338,7 +338,7 @@ theorem UPS_X_POS_SEG_C_p34 (v1 v2 : V3) (x1 x2 x6 c : ℝ)
     (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
     (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
     (h2 : 0 < x2) (hc : 0 < c) :
-    ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e → 0 < upsX x1 (x2 - t) x6 ∧ 0 < x2 - t ∧ t < c := by
+    ∃ e : ℝ, 0 < e ∧ ∀ t : ℝ, -e < t ∧ t < e → 0 < upsXPA18 x1 (x2 - t) x6 ∧ 0 < x2 - t ∧ t < c := by
   sorry
 
 /-- HOL `V3_DEFOR_V1_O_DEF` (IMJXPHR.hl:190). -/
@@ -439,7 +439,7 @@ theorem EYYPQDW_CONTINUOUS_LIFT_DIST_p34 (v1 v2 v : V3) (x1 x2 x3 x4 x5 x6 a : �
     (h6 : 0 < x6)
     (hnc : ¬Collinear ℝ ({0, v1, v2} : Set V3))
     (hx1 : ‖v1‖ ^ 2 = x1) (hx2 : ‖v2‖ ^ 2 = x2) (hx6 : ‖v1 - v2‖ ^ 2 = x6)
-    (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsX x1 x3 x5) :
+    (ha : a ∈ ({-1, 1} : Set ℝ)) (hups : 0 < upsXPA18 x1 x3 x5) :
     ContinuousAt (fun y => dist (v3DeforV1_p17 a v1 v2 x1 x2 x5 x6 y) v) x3 := by
   exact (EYYPQDW_CONTINUOUS_AT_X_p17 a v1 v2 x1 x2 x3 x4 x5 x6 h1 h2 h3 h4 h5 h6
     hnc hx1 hx2 hx6 ha hups).dist continuousAt_const

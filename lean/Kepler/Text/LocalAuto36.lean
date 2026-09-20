@@ -239,7 +239,7 @@ theorem fSy_eq_range_p36 {k : ℕ} (hk : 0 < k) {vv : ℕ → V3} (hper : Period
 
 /-- HOL `wedge_in_fan_gt` (localization.hl:79) — statement-level twin.
 LocalAuto2 (`wedgeInFanGt_p2`) is NOT importable here (PackingAuto18/20
-`atn2` clash); NEEDS dedup at merge. -/
+`atn2PA18` clash); NEEDS dedup at merge. -/
 noncomputable def wedgeInFanGt_p36 (d : V3 × V3) (E : Set (Set V3)) : Set V3 :=
   sorry
 
