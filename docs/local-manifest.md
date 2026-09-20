@@ -195,3 +195,47 @@ cross3/dot fill-kit + Mathlib `cross_dot_cross`/`dotProduct_sub`; LA26's
 and mirrors LA28's `W_IN_BB_FUN_EQ` proof in-file since LocalAuto28 has no
 olean on this branch). No statements changed; all three modules compile
 0 errors (`lake env lean`, traces removed first).
+
+## Fill ledger — 2026-09-20 proof-fill pass (worker: PackingAuto25)
+
+| module | sorry before | filled | sorry after | notes |
+|---|---|---|---|---|
+| PackingAuto25.lean (OXLZLEZ3 capstone) | 175 | 13 | 162 | Filled: `BARV3_SET_OF_LIST4` (length-4 case split, `elV`-getD simp), `RADV2` = PA15 `HL_2` (public, transitively imported via PA21) + `setOfList [u,v] = {u,v}`; `S_LEAF_SUBSET_PACKING` (`barV`→`voronoiNondg` prefix witness `⟨⟨[],rfl⟩,_⟩`); `UPS_X8_POS` (`upsX 8 a b = 64+16p+16q+2pq-p²-q²` at `a,b∈[4,16)`, `p²≤12p` envelopes); `DIST_IMP_COLLINEAR` (Azim `collinear3_iff_smul` + `|c|/|1-c|` ray trichotomy: collinear forces one distance = sum of the other two ≥ 4); `DIST_IMP_UPS_X_POS` (Gram identity `upsX ‖v1‖² ‖v2‖² ‖v1-v2‖² = 4(‖v1‖²‖v2‖² - ⟨v1,v2⟩²)` via `norm_sub_sq_real`/`norm_smul`/`mul_pow`/`sq_abs`, strict Cauchy–Schwarz from non-collinearity by the `⟨v1,v2⟩·v1 - ‖v1‖²·v2` norm-squaring argument, no Mathlib strict-CS twin exists); `CARD4_IN_PAIRS` (`Set.ncard_insert_le`/`ncard_pair` 3-element envelope + membership transfer); `COPLANAR_CONVEX_HULL_COPLANAR` (`subset_convexHull` + `convexHull_subset_affineSpan` + `affineSpan_le`); `critical_edgeX_critical_edge_y` (`pair_eq_pair_iff` split + `HL_2`); `NOT_COPLANAR_IMP_CARD4_ALT` (6 dedup cases ⇒ 3-point `Coplanar` witnesses, all-distinct via `Set.ncard_insert_of_notMem`); `cc_real_dat_def` (rfl of `cc_{4cell,small,subcrit}_v11` at `cc_data_v8` + `propext`-tautology on the qx/qu conjunct reassociation); `INITIAL_SUBLIST_TRUNCATE` (new `p25_take_append_cancel` induction; `truncateSimplex 2 ul` pinned by `epsilon_spec` at `ul.take 3`); `NULLSET_AFF_2_1` (4 private shims `p25_finrank_span_pair_le_two`/`p25_affineSpan_three_ne_top`/`p25_finset_sum_smul_mem_affineSpan`/`p25_affGe_subset_affineSpan` — the ConformingAuto3 `affGe ⊆ affineSpan` + `addHaar_affineSubspace` route, re-derived in-file since CA3 is not importable here). |
+
+Remaining 162 re-verified live and classified: (a) 3 `_p25` opaque
+constants/def stubs (`ox3q1hP25`, `rad2XP25`, `beta_bumpA_yP25`) — data
+placeholders, unprovable by design; (b) ~40 `real_model_*`/`*_MERGED`/
+`JSPEVYT`/`CIHTIUM`/`ztg4`/`gaz*`/`txq`/`tew`/`pema`/`pemb`/`008`/`3a/3b`/
+`gr`/`gamma*`-family entries consume the opaque certified banks
+`pack_nonlinear_non_ox3q1h`/`ox3q1hP25` (Merge_ineq.hl content not in any
+local source — information-theoretically blocked); (c) ~60 leaf/wedge/cc-cell
+geometry facts (`LEAF_RANKING_LEMMA`, `S_LEAF_SYM`, `LEAF_DOMAIN`,
+`MCELL{3,4}_*`, `cc_pe_exists`, `cc_uh_exists`, `REUHADY` = PA24 giant
+`sorry`, `LEAF_RANK_*`, `cc_4_*`, `CC_{2,3,4}_PROPS`, `EDGE_IMP_K23`,
+`critical_weight*`, `*_CRITICAL_WEIGHT`) — need the voronoi/`barV`-cell
+theory and the azim-torsor additivity kit, no proved twins upstream (PA18's
+leaf-cell lane sorries the same statements and is not importable; PA20's
+`gammaX_gamm4fgcy`/`gammaX_gamma3f` twins are themselves `sorry`);
+`RADV_ETAY` blocked by PA21's opaque `eta_y` stub; `STRICT_SORT_FINITE` is
+FALSE as stated (counterexample `α = Empty`, `n = 0`: no `ℕ → α` exists —
+statement needs `Nonempty α`, left `sorry` per statements-untouched);
+`beta_bumpA_y_sym23` unprovable (equality of an opaque stub at two argument
+tuples); `c2089`/`c1946` need the certified-Taylor-arctan route (margin
+~1e-4; `c1946` sketch documented in-file, `Real.pi_lt_d4` +
+`arctan_inv_of_pos` + `(1+t²)(1-t²+t⁴-t⁶+t⁸) = 1+t¹⁰` envelope suffice);
+`gamma4fgcy_sym26`/`AZIM_ZERO_SHIFT`/`ORDER_AZIM_SUM2Pi0`/
+`DIHV_EQ_0_PI_EQ_COPLANAR_ALT`/`radius_le_circumradius{,_all}`/
+`NOT_COPLANAR_AFF_3`/`AFF_DEP_COPLANAR`/`S_LEAF_FINITE` are provable but
+each ≈50–100 lines of relabeling/affine-dim/circumcenter work (no upstream
+twins; `radius_le_circumradius` also needs the epsilon-circumcenter ↔
+Mathlib circumcenter bridge).
+
+Shims added (documented in-file): private `p25_finrank_span_pair_le_two`,
+`p25_affineSpan_three_ne_top`, `p25_finset_sum_smul_mem_affineSpan`,
+`p25_affGe_subset_affineSpan`, `p25_take_append_cancel`. No new imports
+(PA15/PA6/PA20 reach this file transitively through PA21). No statements
+changed; module compiles 0 errors (`timeout 1800 lake env lean
+Kepler/Text/PackingAuto25.lean`, trace removed first; import oleans for
+PA12/PA21 had to be re-elaborated once — `lake build Kepler.Text.PackingAuto12
+Kepler.Text.PackingAuto21` — before the first pass because their .olean files
+were missing from the build tree while every other import was present).

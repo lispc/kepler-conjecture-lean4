@@ -272,7 +272,167 @@ the complementary pair. -/
 theorem CARD4_IN_PAIRS {α : Type*} (a b c d e f : α)
     (h4 : Nat.card ({a, b, c, d} : Set α) = 4) (heq : ({a, b, c, d} : Set α) = {a, b, e, f}) :
     ({c, d} : Set α) = {e, f} := by
-  sorry
+  have h4n : ({a, b, c, d} : Set α).ncard = 4 := h4
+  have h3 : ∀ (x y z : α), ({x, y, z} : Set α).ncard ≤ 3 := by
+    intro x y z
+    have hyz : ∀ (y z : α), ({y, z} : Set α).ncard ≤ 2 := by
+      intro y z
+      rcases eq_or_ne y z with hh | hh
+      · rw [show ({y, z} : Set α) = ({y} : Set α) from by simp [hh], Set.ncard_singleton]
+        omega
+      · rw [Set.ncard_pair hh]
+    calc ({x, y, z} : Set α).ncard = (insert x ({y, z} : Set α)).ncard := by simp
+      _ ≤ ({y, z} : Set α).ncard + 1 := Set.ncard_insert_le x _
+      _ ≤ 3 := by have h2 := hyz y z; omega
+  have hq4 : ∀ q : α, q ∈ ({a, b, c, d} : Set α) ↔ (q = a ∨ q = b ∨ q = c ∨ q = d) := by
+    intro q; simp
+  have hq3 : ∀ q : α, q ∈ ({a, b, e, f} : Set α) ↔ (q = a ∨ q = b ∨ q = e ∨ q = f) := by
+    intro q; simp
+  -- `c` and `d` are not in `{a, b}`
+  have hc : ¬ (c = a ∨ c = b) := by
+    intro hm
+    have hd2 : ({a, b, c, d} : Set α) = ({a, b, d} : Set α) := by
+      ext q
+      rw [hq4]
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      constructor
+      · intro hq
+        rcases hq with hq | hq | hq | hq
+        · exact Or.inl hq
+        · exact Or.inr (Or.inl hq)
+        · rcases hm with hm | hm
+          · exact Or.inl (hq.trans hm)
+          · exact Or.inr (Or.inl (hq.trans hm))
+        · exact Or.inr (Or.inr hq)
+      · intro hq
+        rcases hq with hq | hq | hq
+        · exact Or.inl hq
+        · exact Or.inr (Or.inl hq)
+        · exact Or.inr (Or.inr (Or.inr hq))
+    rw [hd2] at h4n
+    have := h3 a b d
+    omega
+  have hd : ¬ (d = a ∨ d = b) := by
+    intro hm
+    have hd2 : ({a, b, c, d} : Set α) = ({a, b, c} : Set α) := by
+      ext q
+      rw [hq4]
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      constructor
+      · intro hq
+        rcases hq with hq | hq | hq | hq
+        · exact Or.inl hq
+        · exact Or.inr (Or.inl hq)
+        · exact Or.inr (Or.inr hq)
+        · rcases hm with hm | hm
+          · exact Or.inl (hq.trans hm)
+          · exact Or.inr (Or.inl (hq.trans hm))
+      · intro hq
+        rcases hq with hq | hq | hq
+        · exact Or.inl hq
+        · exact Or.inr (Or.inl hq)
+        · exact Or.inr (Or.inr (Or.inl hq))
+    rw [hd2] at h4n
+    have := h3 a b c
+    omega
+  -- `e` and `f` are not in `{a, b}`
+  have he : ¬ (e = a ∨ e = b) := by
+    intro hm
+    have hd2 : ({a, b, e, f} : Set α) = ({a, b, f} : Set α) := by
+      ext q
+      rw [hq3]
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      constructor
+      · intro hq
+        rcases hq with hq | hq | hq | hq
+        · exact Or.inl hq
+        · exact Or.inr (Or.inl hq)
+        · rcases hm with hm | hm
+          · exact Or.inl (hq.trans hm)
+          · exact Or.inr (Or.inl (hq.trans hm))
+        · exact Or.inr (Or.inr hq)
+      · intro hq
+        rcases hq with hq | hq | hq
+        · exact Or.inl hq
+        · exact Or.inr (Or.inl hq)
+        · exact Or.inr (Or.inr (Or.inr hq))
+    rw [heq, hd2] at h4n
+    have := h3 a b f
+    omega
+  have hf : ¬ (f = a ∨ f = b) := by
+    intro hm
+    have hd2 : ({a, b, e, f} : Set α) = ({a, b, e} : Set α) := by
+      ext q
+      rw [hq3]
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      constructor
+      · intro hq
+        rcases hq with hq | hq | hq | hq
+        · exact Or.inl hq
+        · exact Or.inr (Or.inl hq)
+        · exact Or.inr (Or.inr hq)
+        · rcases hm with hm | hm
+          · exact Or.inl (hq.trans hm)
+          · exact Or.inr (Or.inl (hq.trans hm))
+      · intro hq
+        rcases hq with hq | hq | hq
+        · exact Or.inl hq
+        · exact Or.inr (Or.inl hq)
+        · exact Or.inr (Or.inr (Or.inl hq))
+    rw [heq, hd2] at h4n
+    have := h3 a b e
+    omega
+  have hce : c = e ∨ c = f := by
+    have hm : c ∈ ({a, b, e, f} : Set α) := by rw [← heq]; simp
+    rw [hq3] at hm
+    rcases hm with h | h | h | h
+    · exact absurd (Or.inl h) hc
+    · exact absurd (Or.inr h) hc
+    · exact Or.inl h
+    · exact Or.inr h
+  have hdf : d = e ∨ d = f := by
+    have hm : d ∈ ({a, b, e, f} : Set α) := by rw [← heq]; simp
+    rw [hq3] at hm
+    rcases hm with h | h | h | h
+    · exact absurd (Or.inl h) hd
+    · exact absurd (Or.inr h) hd
+    · exact Or.inl h
+    · exact Or.inr h
+  have hec : e = c ∨ e = d := by
+    have hm : e ∈ ({a, b, c, d} : Set α) := by rw [heq]; simp
+    rw [hq4] at hm
+    rcases hm with h | h | h | h
+    · exact absurd (Or.inl h) he
+    · exact absurd (Or.inr h) he
+    · exact Or.inl h
+    · exact Or.inr h
+  have hfd : f = c ∨ f = d := by
+    have hm : f ∈ ({a, b, c, d} : Set α) := by rw [heq]; simp
+    rw [hq4] at hm
+    rcases hm with h | h | h | h
+    · exact absurd (Or.inl h) hf
+    · exact absurd (Or.inr h) hf
+    · exact Or.inl h
+    · exact Or.inr h
+  ext q
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+  constructor
+  · intro hq
+    rcases hq with hq | hq
+    · rcases hce with hce | hce
+      · exact Or.inl (hq.trans hce)
+      · exact Or.inr (hq.trans hce)
+    · rcases hdf with hdf | hdf
+      · exact Or.inl (hq.trans hdf)
+      · exact Or.inr (hq.trans hdf)
+  · intro hq
+    rcases hq with hq | hq
+    · rcases hec with hec | hec
+      · exact Or.inl (hq.trans hec)
+      · exact Or.inr (hq.trans hec)
+    · rcases hfd with hfd | hfd
+      · exact Or.inl (hq.trans hfd)
+      · exact Or.inr (hq.trans hfd)
 
 /-- HOL `initial_sublist_cons` (generic in the source; instantiated at `V3`
 to reuse PackingAuto2's `initialSublist`). -/
@@ -285,17 +445,39 @@ theorem initial_sublist_cons (a b : V3) (x y : List V3) :
   · rintro ⟨hab, zl, hzl⟩
     subst hab
     exact ⟨zl, by rw [hzl]; simp [List.cons_append]⟩
-
 /-- HOL `COPLANAR_CONVEX_HULL_COPLANAR`. -/
 theorem COPLANAR_CONVEX_HULL_COPLANAR (s : Set V3) :
     Coplanar (convexHull ℝ s) ↔ Coplanar s := by
-  sorry
+  constructor
+  · rintro ⟨u, v, w, hsub⟩
+    exact ⟨u, v, w, Set.Subset.trans (subset_convexHull ℝ s) hsub⟩
+  · intro h
+    obtain ⟨u, v, w, hsub⟩ := h
+    refine ⟨u, v, w, ?_⟩
+    intro x hx
+    have h1' : x ∈ (affineSpan ℝ s : Set V3) := convexHull_subset_affineSpan (s := s) hx
+    have h2' : (affineSpan ℝ s : AffineSubspace ℝ V3) ≤
+        affineSpan ℝ ({u, v, w} : Set V3) := affineSpan_le.mpr hsub
+    exact SetLike.mem_coe.mpr (h2' h1')
 
 /-- HOL `BARV3_SET_OF_LIST4`. -/
 theorem BARV3_SET_OF_LIST4 (V : Set V3) (ul : List V3) (hp : Packing V)
     (hb : barV V 3 ul) :
     setOfList ul = {elV ul 0, elV ul 1, elV ul 2, elV ul 3} := by
-  sorry
+  rcases ul with _ | ⟨u0, t⟩
+  · exact absurd hb.1 (by simp)
+  rcases t with _ | ⟨u1, t⟩
+  · exact absurd hb.1 (by simp)
+  rcases t with _ | ⟨u2, t⟩
+  · exact absurd hb.1 (by simp)
+  rcases t with _ | ⟨u3, t⟩
+  · exact absurd hb.1 (by simp)
+  · have h4 : (u0 :: u1 :: u2 :: u3 :: t).length = 4 := hb.1
+    cases t with
+    | nil => ext x; simp [setOfList, elV]
+    | cons e t' =>
+      simp only [List.length_cons] at h4
+      omega
 
 /-- HOL `STRICT_SORT_FINITE`: a finite set with an asymmetric transitive
 `<<` can be enumerated by `1..n` in `<<`-increasing order. -/
@@ -407,9 +589,87 @@ theorem FM_DEMOD {α : Type*} {f : ℕ → α} {n : ℕ} (h : periodic f n) (hn 
   have e : i + n - 1 = i % n + n - 1 + n * (i / n) := by omega
   rw [e, p25_periodic_mul h]
 
+private theorem p25_finrank_span_pair_le_two (a b : V3) :
+    Module.finrank ℝ (Submodule.span ℝ ({a, b} : Set V3)) ≤ 2 := by
+  have h2 := finrank_span_finset_le_card (R := ℝ) ({a, b} : Finset V3)
+  unfold Set.finrank at h2
+  rw [show (({a, b} : Finset V3) : Set V3) = ({a, b} : Set V3) from by simp] at h2
+  refine h2.trans ?_
+  calc ({a, b} : Finset V3).card ≤ ({b} : Finset V3).card + 1 := Finset.card_insert_le a {b}
+    _ = 2 := by simp
+
+private theorem p25_affineSpan_three_ne_top (x v u : V3) :
+    (affineSpan ℝ ({x, v, u} : Set V3)) ≠ ⊤ := by
+  intro h
+  have hdir : (affineSpan ℝ ({x, v, u} : Set V3)).direction = ⊤ := by
+    rw [h]; exact AffineSubspace.direction_top ℝ V3 V3
+  have hvs : vectorSpan ℝ ({x, v, u} : Set V3)
+      = Submodule.span ℝ ({v - x, u - x} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_right ℝ (show x ∈ ({x, v, u} : Set V3) from by simp)]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro p ⟨q, hq, rfl⟩
+      rcases hq with rfl | rfl | rfl
+      · simp
+      · exact Submodule.subset_span (by left; rfl)
+      · exact Submodule.subset_span (by right; rfl)
+    · rw [Submodule.span_le]
+      rintro p (rfl | rfl)
+      · exact Submodule.subset_span ⟨v, by simp, rfl⟩
+      · exact Submodule.subset_span ⟨u, by simp, rfl⟩
+  have hle : Module.finrank ℝ (affineSpan ℝ ({x, v, u} : Set V3)).direction ≤ 2 := by
+    rw [direction_affineSpan, hvs]
+    exact p25_finrank_span_pair_le_two (v - x) (u - x)
+  rw [hdir, finrank_top] at hle
+  exact absurd hle (by norm_num)
+
+private theorem p25_finset_sum_smul_mem_affineSpan {T : Set V3} {s : Finset V3}
+    {f : V3 → ℝ}
+    (hS : ∀ w ∈ s, w ∈ (affineSpan ℝ T : Set V3))
+    (hsum : ∑ w ∈ s, f w = 1) :
+    ∑ w ∈ s, f w • w ∈ (affineSpan ℝ T : Set V3) := by
+  have hne : s.Nonempty :=
+    Finset.nonempty_of_sum_ne_zero (by rw [hsum]; exact one_ne_zero)
+  obtain ⟨b, hb⟩ := hne
+  have hbS : b ∈ (affineSpan ℝ T : Set V3) := hS b hb
+  have hdir : ∑ w ∈ s, f w • (w - b) ∈ (affineSpan ℝ T).direction := by
+    apply Submodule.sum_mem
+    intro w hw
+    exact Submodule.smul_mem _ (f w)
+      (AffineSubspace.vsub_mem_direction (hS w hw) hbS)
+  have hsub : ∑ w ∈ s, f w • (w - b) = (∑ w ∈ s, f w • w) - b := by
+    simp only [smul_sub]
+    rw [Finset.sum_sub_distrib, ← Finset.sum_smul, hsum, one_smul]
+  have hy : ∑ w ∈ s, f w • w = (∑ w ∈ s, f w • (w - b)) +ᵥ b := by
+    rw [vadd_eq_add, hsub]
+    abel
+  rw [hy]
+  exact AffineSubspace.vadd_mem_of_mem_direction hdir hbS
+
+private theorem p25_affGe_subset_affineSpan (s t : Set V3) :
+    affGe s t ⊆ (affineSpan ℝ (s ∪ t : Set V3) : Set V3) := by
+  intro v hv
+  simp only [affGe, Set.mem_setOf_eq, Affsign] at hv
+  obtain ⟨f, hfin, hcomb, _, hone⟩ := hv
+  have hmem : ∀ w ∈ hfin.toFinset, w ∈ (affineSpan ℝ (s ∪ t : Set V3) : Set V3) := by
+    intro w hw
+    have hw' : w ∈ s ∪ t := by
+      rw [← hfin.coe_toFinset]
+      exact hw
+    exact subset_affineSpan ℝ _ hw'
+  rw [hcomb]
+  exact p25_finset_sum_smul_mem_affineSpan hmem hone
+
 /-- HOL `NULLSET_AFF_2_1`. -/
 theorem NULLSET_AFF_2_1 (x y z : V3) : nullSet (affGe {x, y} {z}) := by
-  sorry
+  have hsub := p25_affGe_subset_affineSpan ({x, y} : Set V3) ({z} : Set V3)
+  have h3 : (affineSpan ℝ ({x, y} ∪ {z} : Set V3)) ≠ ⊤ := by
+    rw [show ({x, y} ∪ {z} : Set V3) = ({x, y, z} : Set V3) from by
+      ext q; simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+    exact p25_affineSpan_three_ne_top x y z
+  refine measure_mono_null hsub ?_
+  exact MeasureTheory.Measure.addHaar_affineSubspace volume
+    (affineSpan ℝ ({x, y} ∪ {z} : Set V3)) h3
 
 /-- HOL `coplanar_delta_y` (renamed from coplanar_dih_y). -/
 theorem coplanar_delta_y (u0 u1 u2 u3 : V3) :
@@ -425,7 +685,14 @@ theorem RADV_ETAY (u0 u1 u2 : V3) (hnc : ¬ Collinear3 u0 u1 u2) :
 
 /-- HOL `RADV2`. -/
 theorem RADV2 (u v : V3) : radV {u, v} = (1 / 2 : ℝ) * dist u v := by
-  sorry
+  have hset : setOfList [u, v] = ({u, v} : Set V3) := by
+    ext x
+    simp [setOfList]
+  have h := HL_2 u v
+  unfold hl at h
+  rw [hset] at h
+  rw [h]
+  ring
 
 /-- HOL `GDRQXLGv3`. -/
 theorem GDRQXLGv3 (v0 v1 v2 v3 : V3) (hnc : ¬ Coplanar ({v0, v1, v2, v3} : Set V3)) :
@@ -439,19 +706,161 @@ theorem DIST_IMP_COLLINEAR (u0 u1 u2 : V3)
     (h1 : 2 ≤ dist u0 u1) (h2 : 2 ≤ dist u0 u2) (h3 : 2 ≤ dist u1 u2)
     (h4 : dist u0 u1 < 4) (h5 : dist u0 u2 < 4) (h6 : dist u1 u2 < 4) :
     ¬ Collinear3 u0 u1 u2 := by
-  sorry
+  intro hcol
+  rcases eq_or_ne u1 u0 with heq | hne
+  · rw [heq, dist_self] at h1
+    linarith
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := u0) (w := u1) (w1 := u2) hne).mp hcol
+  have hω1 : dist u0 u1 = ‖u1 - u0‖ := by
+    rw [dist_eq_norm, norm_sub_rev]
+  have hω2 : dist u0 u2 = |c| * ‖u1 - u0‖ := by
+    rw [dist_eq_norm, norm_sub_rev, hc, norm_smul, Real.norm_eq_abs]
+  have hsub : (u1 - u2 : V3) = (1 - c) • (u1 - u0) := by
+    rw [sub_smul, one_smul, ← hc]
+    abel
+  have hω3 : dist u1 u2 = |1 - c| * ‖u1 - u0‖ := by
+    rw [dist_eq_norm, hsub, norm_smul, Real.norm_eq_abs]
+  rcases lt_or_ge c 1 with hc1 | hc1
+  · rcases lt_or_ge 0 c with hc0 | hc0
+    · have e : dist u0 u1 = dist u0 u2 + dist u1 u2 := by
+        rw [hω2, hω3, hω1, abs_of_nonneg (by linarith : (0 : ℝ) ≤ c),
+          abs_of_nonneg (by linarith : (0 : ℝ) ≤ 1 - c)]
+        ring
+      linarith
+    · have e : dist u1 u2 = dist u0 u1 + dist u0 u2 := by
+        rw [hω2, hω3, hω1, abs_of_nonpos (by linarith : (c : ℝ) ≤ 0),
+          abs_of_nonneg (by linarith : (0 : ℝ) ≤ 1 - c)]
+        ring
+      linarith
+  · have e : dist u0 u2 = dist u0 u1 + dist u1 u2 := by
+      rw [hω2, hω3, hω1, abs_of_nonneg (by linarith : (0 : ℝ) ≤ c),
+        abs_of_nonpos (by linarith : (1 - c : ℝ) ≤ 0)]
+      ring
+    linarith
 
 /-- HOL `UPS_X8_POS` (needs certified interval bounds). -/
 theorem UPS_X8_POS {y5 y6 : ℝ} (h5 : 2 ≤ y5) (h5' : y5 < 4) (h6 : 2 ≤ y6)
     (h6' : y6 < 4) : 0 < upsX 8 (y5 * y5) (y6 * y6) := by
-  sorry
+  have ha : 4 ≤ y5 * y5 := by nlinarith
+  have hb : y5 * y5 < 16 := by nlinarith
+  have hc : 4 ≤ y6 * y6 := by nlinarith
+  have hd : y6 * y6 < 16 := by nlinarith
+  have key : upsX 8 (y5 * y5) (y6 * y6) =
+      64 + 16 * (y5 * y5 - 4) + 16 * (y6 * y6 - 4) +
+        2 * (y5 * y5 - 4) * (y6 * y6 - 4) -
+        (y5 * y5 - 4) ^ 2 - (y6 * y6 - 4) ^ 2 := by
+    unfold upsX
+    ring
+  have p1 : 0 ≤ (y5 * y5 - 4) * (y6 * y6 - 4) :=
+    mul_nonneg (by linarith) (by linarith)
+  have p2 : (y5 * y5 - 4) ^ 2 ≤ 12 * (y5 * y5 - 4) :=
+    by have t2 : 0 ≤ (y5 * y5 - 4) * (12 - (y5 * y5 - 4)) :=
+         mul_nonneg (by linarith) (by linarith)
+       linarith
+  have p3 : (y6 * y6 - 4) ^ 2 ≤ 12 * (y6 * y6 - 4) :=
+    by have t2 : 0 ≤ (y6 * y6 - 4) * (12 - (y6 * y6 - 4)) :=
+         mul_nonneg (by linarith) (by linarith)
+       linarith
+  rw [key]
+  nlinarith
 
 /-- HOL `DIST_IMP_UPS_X_POS`. -/
 theorem DIST_IMP_UPS_X_POS (u0 u1 u2 : V3)
     (h1 : 2 ≤ dist u0 u1) (h2 : 2 ≤ dist u0 u2) (h3 : 2 ≤ dist u1 u2)
     (h4 : dist u0 u1 < 4) (h5 : dist u0 u2 < 4) (h6 : dist u1 u2 < 4) :
     0 < upsX (dist u0 u1 ^ 2) (dist u0 u2 ^ 2) (dist u1 u2 ^ 2) := by
-  sorry
+  have hnc := DIST_IMP_COLLINEAR u0 u1 u2 h1 h2 h3 h4 h5 h6
+  have hd01 : dist u0 u1 ≠ 0 := by
+    intro hzz
+    rw [hzz] at h1
+    linarith
+  have hd02 : dist u0 u2 ≠ 0 := by
+    intro hzz
+    rw [hzz] at h2
+    linarith
+  have hne : u1 ≠ u0 := by
+    intro hzz
+    exact hd01 (by rw [hzz]; simp)
+  have hne2 : u2 ≠ u0 := by
+    intro hzz
+    exact hd02 (by rw [hzz]; simp)
+  have hv1n : (u1 - u0 : V3) ≠ 0 := by
+    intro hzz
+    exact hne (sub_eq_zero.mp hzz)
+  have hv2n : (u2 - u0 : V3) ≠ 0 := by
+    intro hzz
+    exact hne2 (sub_eq_zero.mp hzz)
+  have hx1n : (‖u1 - u0‖ ^ 2 : ℝ) ≠ 0 :=
+    ne_of_gt (sq_pos_iff.mpr (norm_pos_iff.mpr hv1n).ne')
+  have hcol0 : ¬ Collinear3 (0 : V3) (u1 - u0) (u2 - u0) := by
+    intro h0
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := (0 : V3)) (w := u1 - u0)
+      (w1 := u2 - u0) hv1n).mp h0
+    exact hnc ((collinear3_iff_smul (v := u0) (w := u1) (w1 := u2) hne).mpr
+      ⟨c, by simpa using hc⟩)
+  -- the Gram identity for `ups_x`
+  have hup : upsX (‖u1 - u0‖ ^ 2) (‖u2 - u0‖ ^ 2)
+        (‖(u1 - u0) - (u2 - u0)‖ ^ 2) =
+      4 * (‖u1 - u0‖ ^ 2 * ‖u2 - u0‖ ^ 2 -
+        (inner ℝ (u1 - u0) (u2 - u0)) ^ 2) := by
+    have hdsq : ‖(u1 - u0) - (u2 - u0)‖ ^ 2
+        = ‖u1 - u0‖ ^ 2 + ‖u2 - u0‖ ^ 2 -
+          2 * inner ℝ (u1 - u0) (u2 - u0) := by
+      rw [norm_sub_sq_real]
+      ring
+    unfold upsX
+    rw [hdsq]
+    ring
+  have e1 : dist u0 u1 ^ 2 = ‖u1 - u0‖ ^ 2 := by rw [dist_eq_norm, norm_sub_rev]
+  have e2 : dist u0 u2 ^ 2 = ‖u2 - u0‖ ^ 2 := by rw [dist_eq_norm, norm_sub_rev]
+  have hsub : ((u1 - u0) - (u2 - u0) : V3) = u1 - u2 := by abel
+  have e3 : dist u1 u2 ^ 2 = ‖(u1 - u0) - (u2 - u0)‖ ^ 2 := by
+    rw [dist_eq_norm, ← hsub]
+  rw [e1, e2, e3, hup]
+  -- strict Cauchy–Schwarz from non-collinearity
+  have hcs : (inner ℝ (u1 - u0) (u2 - u0)) ^ 2 < ‖u1 - u0‖ ^ 2 * ‖u2 - u0‖ ^ 2 := by
+    by_contra hcon
+    push_neg at hcon
+    have hnorm0 : ‖(inner ℝ (u1 - u0) (u2 - u0)) • (u1 - u0) -
+        ‖u1 - u0‖ ^ 2 • (u2 - u0)‖ ^ 2 =
+        ‖u1 - u0‖ ^ 2 * (‖u1 - u0‖ ^ 2 * ‖u2 - u0‖ ^ 2 -
+          (inner ℝ (u1 - u0) (u2 - u0)) ^ 2) := by
+      rw [norm_sub_sq_real]
+      rw [norm_smul, norm_smul, Real.norm_eq_abs, Real.norm_eq_abs]
+      rw [mul_pow, mul_pow]
+      rw [sq_abs (a := inner ℝ (u1 - u0) (u2 - u0)),
+        sq_abs (a := (‖u1 - u0‖ ^ 2 : ℝ))]
+      rw [real_inner_smul_left, real_inner_smul_right]
+      ring
+    have hsq0 : ‖(inner ℝ (u1 - u0) (u2 - u0)) • (u1 - u0) -
+        ‖u1 - u0‖ ^ 2 • (u2 - u0)‖ ^ 2 = 0 := by
+      have hge : 0 ≤ ‖(inner ℝ (u1 - u0) (u2 - u0)) • (u1 - u0) -
+          ‖u1 - u0‖ ^ 2 • (u2 - u0)‖ ^ 2 := sq_nonneg _
+      rw [hnorm0]
+      have h1n : 0 ≤ ‖u1 - u0‖ ^ 2 := sq_nonneg _
+      have h2n : ‖u1 - u0‖ ^ 2 * ‖u2 - u0‖ ^ 2 -
+          (inner ℝ (u1 - u0) (u2 - u0)) ^ 2 ≤ 0 := by linarith
+      have h3 := mul_le_mul_of_nonneg_left h2n h1n
+      rw [mul_zero] at h3
+      exact le_antisymm h3 (by rw [← hnorm0]; exact hge)
+    have hwz : (inner ℝ (u1 - u0) (u2 - u0)) • (u1 - u0) -
+        ‖u1 - u0‖ ^ 2 • (u2 - u0) = 0 := by
+      rw [← norm_eq_zero]
+      exact sq_eq_zero_iff.mp hsq0
+    have hcancel : ‖u1 - u0‖ ^ 2 • (u2 - u0) =
+        ‖u1 - u0‖ ^ 2 •
+          ((inner ℝ (u1 - u0) (u2 - u0) / ‖u1 - u0‖ ^ 2) • (u1 - u0)) := by
+      rw [smul_smul]
+      have hscale : (‖u1 - u0‖ ^ 2 : ℝ) *
+          (inner ℝ (u1 - u0) (u2 - u0) / ‖u1 - u0‖ ^ 2)
+          = inner ℝ (u1 - u0) (u2 - u0) := by field_simp
+      rw [hscale, sub_eq_zero.mp hwz]
+    have hv2eq : (u2 - u0 : V3) =
+        (inner ℝ (u1 - u0) (u2 - u0) / ‖u1 - u0‖ ^ 2) • (u1 - u0) :=
+      smul_right_injective _ hx1n hcancel
+    exact hcol0 ((collinear3_iff_smul (v := (0 : V3)) (w := u1 - u0)
+      (w1 := u2 - u0) hv1n).mpr ⟨_, by simpa using hv2eq⟩)
+  linarith [hcs]
 
 /-- HOL `dih_x < pi`: the angle computed by `atn2` from a positive first
 argument stays below `pi/2` in every quadrant branch. -/
@@ -552,7 +961,11 @@ theorem LEAF_RANK_COLLINEAR (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f :
 /-- HOL `S_LEAF_SUBSET_PACKING`. -/
 theorem S_LEAF_SUBSET_PACKING (V : Set V3) (ul : List V3) (hp : Packing V)
     (hs : saturated V) : s_leaf V ul ⊆ V := by
-  sorry
+  intro x hx
+  have hleaf : barV V 2 [elV ul 0, elV ul 1, x] := hx.1.1
+  obtain ⟨-, hpre⟩ := hleaf
+  have hv := hpre [elV ul 0, elV ul 1, x] ⟨⟨[], rfl⟩, by simp⟩
+  exact hv.2.1 (by simp [setOfList])
 
 /-- HOL `S_LEAF_BOUNDED`. -/
 theorem S_LEAF_BOUNDED (V : Set V3) (ul : List V3) (hp : Packing V)
@@ -1215,7 +1628,24 @@ theorem cc_real_dat_def (V : Set V3) (f : ℕ → V3) (u0 u1 : V3) :
         (fun i => (dist u0 (f i) < 2 * hminus ∧ dist u1 (f i) < 2 * hminus) ∧
           dist u0 (f (i + 1)) < 2 * hminus ∧
           dist u1 (f (i + 1)) < 2 * hminus) := by
-  sorry
+  have h4 : cc_4cell_v11 (cc_data_v8 V f u0 u1) = fun i => cc_4 V u0 u1 f i := rfl
+  have hsm : cc_small_v11 (cc_data_v8 V f u0 u1) =
+      fun i => (dist u0 (f i) < 2 * hminus ∧ dist u1 (f i) < 2 * hminus) := rfl
+  have hsc : cc_subcrit_v11 (cc_data_v8 V f u0 u1) =
+      fun i => dist (f i) (f (i + 1)) < 2 * hminus := rfl
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · funext i
+    simp only [cc_qx_v11, cc_qu_v11, cc_hassmall_v11, h4, hsm, hsc]
+    apply propext
+    tauto
+  · funext i
+    simp only [cc_qy_v11, h4]
+  · funext i
+    simp only [cc_qu_v11, cc_hassmall_v11, h4, hsm, hsc]
+    apply propext
+    tauto
+  · funext i
+    simp only [cc_hassmall_v11, hsm]
 
 /-- HOL `real_periodic_data`: the wedge sums are `n`-periodic. -/
 theorem real_periodic_data (V : Set V3) (u0 u1 : V3) (f : ℕ → V3) (n : ℕ)
@@ -1319,7 +1749,21 @@ theorem CC_4_BETA_BUMP_0 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
 theorem critical_edgeX_critical_edge_y (V : Set V3) (X : Set V3) (u v : V3) :
     ({u, v} : Set V3) ∈ criticalEdgeX V X ↔
       ({u, v} : Set V3) ∈ edgeX V X ∧ criticalEdgeY (dist u v) := by
-  sorry
+  constructor
+  · rintro ⟨u', v', huv, hmem, h1, h2⟩
+    rw [pair_eq_pair_iff] at huv
+    rcases huv with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+    · refine ⟨hmem, ?_⟩
+      unfold criticalEdgeY
+      rw [HL_2] at h1 h2
+      exact ⟨by linarith, by linarith⟩
+    · refine ⟨hmem, ?_⟩
+      unfold criticalEdgeY
+      rw [HL_2, dist_comm] at h1 h2
+      exact ⟨by linarith, by linarith⟩
+  · rintro ⟨hmem, h1, h2⟩
+    have hhl := HL_2 u v
+    exact ⟨u, v, rfl, hmem, by linarith, by linarith⟩
 
 /-- HOL `critical_weight_wtcount6_y`. -/
 theorem critical_weight_wtcount6_y (V : Set V3) (u0 u1 w0 : V3) (n : ℕ)
@@ -1348,7 +1792,69 @@ theorem c_4_azim_mcell_dih_y (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ →
 theorem NOT_COPLANAR_IMP_CARD4_ALT (u0 u1 u2 u3 : V3)
     (hnc : ¬ Coplanar ({u0, u1, u2, u3} : Set V3)) :
     Set.ncard ({u0, u1, u2, u3} : Set V3) = 4 := by
-  sorry
+  by_contra hcon
+  push_neg at hcon
+  -- some pair must coincide; then the set lives in a plane
+  have hdup : u0 = u1 ∨ u0 = u2 ∨ u0 = u3 ∨ u1 = u2 ∨ u1 = u3 ∨ u2 = u3 := by
+    by_contra hall
+    push_neg at hall
+    apply hcon
+    rw [Set.ncard_insert_of_notMem (show u0 ∉ ({u1, u2, u3} : Set V3) from by simp [hall.1,
+      hall.2.1, hall.2.2.1]),
+      Set.ncard_insert_of_notMem (show u1 ∉ ({u2, u3} : Set V3) from by simp [hall.2.2.2.1,
+        hall.2.2.2.2.1]),
+      Set.ncard_insert_of_notMem (show u2 ∉ ({u3} : Set V3) from by simp [hall.2.2.2.2.2]),
+      Set.ncard_singleton]
+  have mem3 : ∀ (t1 t2 t3 a : V3), a = t1 ∨ a = t2 ∨ a = t3 →
+      a ∈ ({t1, t2, t3} : Set V3) := by
+    intro t1 t2 t3 a hh
+    rcases hh with hh | hh | hh
+    · simp [hh]
+    · simp [hh]
+    · simp [hh]
+  rcases hdup with h | h | h | h | h | h
+  · exact hnc ⟨u0, u2, u3, fun a ha => SetLike.mem_coe.mpr (mem_affineSpan ℝ (by
+      refine mem3 u0 u2 u3 a ?_
+      rcases ha with ha | ha | ha | ha
+      · exact Or.inl ha
+      · exact Or.inl (ha.trans h.symm)
+      · exact Or.inr (Or.inl ha)
+      · exact Or.inr (Or.inr ha)))⟩
+  · exact hnc ⟨u0, u1, u3, fun a ha => SetLike.mem_coe.mpr (mem_affineSpan ℝ (by
+      refine mem3 u0 u1 u3 a ?_
+      rcases ha with ha | ha | ha | ha
+      · exact Or.inl ha
+      · exact Or.inr (Or.inl ha)
+      · exact Or.inl (ha.trans h.symm)
+      · exact Or.inr (Or.inr ha)))⟩
+  · exact hnc ⟨u0, u1, u2, fun a ha => SetLike.mem_coe.mpr (mem_affineSpan ℝ (by
+      refine mem3 u0 u1 u2 a ?_
+      rcases ha with ha | ha | ha | ha
+      · exact Or.inl ha
+      · exact Or.inr (Or.inl ha)
+      · exact Or.inr (Or.inr ha)
+      · exact Or.inl (ha.trans h.symm)))⟩
+  · exact hnc ⟨u0, u2, u3, fun a ha => SetLike.mem_coe.mpr (mem_affineSpan ℝ (by
+      refine mem3 u0 u2 u3 a ?_
+      rcases ha with ha | ha | ha | ha
+      · exact Or.inl ha
+      · exact Or.inr (Or.inl (ha.trans h))
+      · exact Or.inr (Or.inl ha)
+      · exact Or.inr (Or.inr ha)))⟩
+  · exact hnc ⟨u0, u1, u2, fun a ha => SetLike.mem_coe.mpr (mem_affineSpan ℝ (by
+      refine mem3 u0 u1 u2 a ?_
+      rcases ha with ha | ha | ha | ha
+      · exact Or.inl ha
+      · exact Or.inr (Or.inl ha)
+      · exact Or.inr (Or.inr ha)
+      · exact Or.inr (Or.inl (ha.trans h.symm))))⟩
+  · exact hnc ⟨u0, u1, u2, fun a ha => SetLike.mem_coe.mpr (mem_affineSpan ℝ (by
+      refine mem3 u0 u1 u2 a ?_
+      rcases ha with ha | ha | ha | ha
+      · exact Or.inl ha
+      · exact Or.inr (Or.inl ha)
+      · exact Or.inr (Or.inr ha)
+      · exact Or.inr (Or.inr (ha.trans h.symm))))⟩
 
 /-- HOL `radius_le_circumradius`. -/
 theorem radius_le_circumradius (u0 u1 u2 u3 : V3)
@@ -2177,10 +2683,14 @@ arithmetic; Flyspeck uses `Flyspeck_constants.calc`). -/
 theorem c2089 : Real.arctan (Real.sqrt 3.07) < Real.pi - 2.089 := by
   sorry
 
-/-- HOL `c1946`: `pi - 1.946 < atn (sqrt 6.45)` (same). -/
+/-- HOL `c1946`: `pi - 1.946 < atn (sqrt 6.45)` (same).  Proof sketch
+(certified-interval, not yet formalized): `arctan √6.45 = π/2 - arctan z` with
+`z = (√6.45)⁻¹`, `z² = 20/129 ≤ (63/160)²`; the Taylor envelope
+`arctan z ≤ z·(1 - z²/3 + z⁴/5 - z⁶/7 + z⁸/9)` (pointwise
+`(1+t²)(1-t²+t⁴-t⁶+t⁸) = 1+t¹⁰`) evaluates to `0.3751097… < 1.946 - π/2 ≤
+1.946 - 3.1416/2 = 0.3752` (`Real.pi_lt_d4`). -/
 theorem c1946 : Real.pi - 1.946 < Real.arctan (Real.sqrt 6.45) := by
   sorry
-
 /-- HOL `IXPOTPA_MERGED`. -/
 theorem IXPOTPA_MERGED (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1h)
     (hcey : criticalEdgeY y1) (hb2 : 2 ≤ y2) (hb2' : y2 ≤ 2 * hminus)
@@ -2353,11 +2863,47 @@ theorem ORDER_AZIM_SUM2Pi0 (x y z : V3) (n : ℕ) (g : ℕ → V3)
     ∑ i ∈ Finset.Icc 0 (n - 1), azim x y (g i) (g (i + 1)) = 2 * Real.pi := by
   sorry
 
+private theorem p25_take_append_cancel {α : Type*} {l1 l2 : List α} (n : ℕ)
+    (h : n ≤ l1.length) : (l1 ++ l2).take n = l1.take n := by
+  induction l1 generalizing n with
+  | nil => simp at h; simp [h]
+  | cons a t ih =>
+    cases n with
+    | zero => simp
+    | succ n =>
+      have key : (t ++ l2).take n = t.take n := ih n (Nat.le_of_succ_le_succ h)
+      simp [key]
+
 /-- HOL `INITIAL_SUBLIST_TRUNCATE`. -/
 theorem INITIAL_SUBLIST_TRUNCATE (vl ul : List V3) (hl : ul.length = 4)
     (h1 : initialSublist vl ul)
     (h2 : ¬ initialSublist vl (truncateSimplex 2 ul)) : vl = ul := by
-  sorry
+  obtain ⟨htrlen, htrsub⟩ := Classical.epsilon_spec (p := fun t : List V3 =>
+      t.length = 3 ∧ initialSublist t ul)
+      ⟨ul.take 3, by simp [hl], ⟨ul.drop 3, (List.take_append_drop 3 ul).symm⟩⟩
+  obtain ⟨zl, hzl⟩ := htrsub
+  obtain ⟨yl, hyl⟩ := h1
+  have hlen : vl.length + yl.length = 4 := by rw [← hl, hyl, List.length_append]
+  by_cases hk : 4 ≤ vl.length
+  · have hy0 : yl.length = 0 := by omega
+    have hye : yl = [] := by
+      cases yl with
+      | nil => rfl
+      | cons a t => simp at hy0
+    rw [hye, List.append_nil] at hyl
+    exact hyl.symm
+  · exfalso
+    apply h2
+    have e1 : vl = ul.take vl.length := by
+      rw [hyl, p25_take_append_cancel vl.length (Nat.le_refl vl.length), List.take_length]
+    have e2 : ul.take vl.length = (truncateSimplex 2 ul).take vl.length := by
+      conv_lhs => rw [hzl]
+      exact p25_take_append_cancel vl.length (by rw [htrlen]; omega)
+    have e3 : initialSublist vl (truncateSimplex 2 ul) := by
+      rw [e1, e2]
+      exact ⟨(truncateSimplex 2 ul).drop vl.length,
+        (List.take_append_drop vl.length (truncateSimplex 2 ul)).symm⟩
+    exact absurd e3 h2
 
 /-- HOL `NOT_COPLANAR_AFF_3`. -/
 theorem NOT_COPLANAR_AFF_3 (s : Set V3) (hnc : ¬ Coplanar s) :
