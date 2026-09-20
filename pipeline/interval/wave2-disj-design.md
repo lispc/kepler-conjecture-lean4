@@ -205,3 +205,13 @@ BIXPCGW 每叶每档 257s → ~1s（≈250×）；生产 chunk 口径 ~268h → 
 **口径修正**：BIXPCGW 主 prog 的 143 个"closed atan"实测 = 89 closed + 54 open；
 closed 部分结构去重后仅 5 个（buildCache 430s/进程 一次性）。
 坑：evalFillC/evalFill 是手抄镜像，改语义必须双侧同步（分叉会在 stage-B decide 暴露为阻塞）。
+
+## 9. bb_arb 栈污染 bug 与 5 案重求解（2026-09-20，`960df850`）
+
+W6 发现：bb_arb disj 支命中判定读 `stk[0]`，但主 prog ite STRADDLE 早退留下 sp>0，
+disj 支结果落在 `stk[sp]`——**6 份证书的"全 disj:0" hit 全是栈污染伪影**
+（最小反例：disj 支 ≡ 常数 -3 也报命中）。内核拒收行为正确；已闭合案例（全 main-hit）
+与 W5 BBTreeGD 路径（hit 重算）均不受影响。
+修复 = disj eval 前 `sp = 0`（与主 prog 调用点一致）；修复后反例诚实闭合（hits={main}）。
+5 案用修复版重求解出诚实证书，然后统一走 BBTreeGD 路径（这些案例 main 支 79~83 sqrt
+会真命中，params schema v2 的 k=0 主支填参从此不再是理论路径）。
