@@ -50,16 +50,27 @@ def box_json(box):
     return [[dy(lo), dy(hi)] for lo, hi in box]
 
 
-def run_round(mod, n, expr, items, round_no, chunk_size, params_out=None):
-    """items: list of (box, hit, depth).  Returns list of failing indices.
-    When params_out is a dict, records {box: (mantissa ints, rung)} for every
-    PASS leaf (rung from the chunk's RUNG / BESTFAIL header)."""
+def run_round(mod, n, driver, items, round_no, chunk_size, params_out=None):
+    """items: list of (box, hit, depth).  Returns (failing indices, verdicts)
+    where verdicts maps item index -> recomputed hit string (disj drivers
+    only; None for single-goal drivers).
+    driver: ("single", expr) or ("disj", mkexprs, terms, hit_of_goal).
+    When params_out is a dict, records {box: (mantissa ints, rung, hit)} for
+    every PASS/PASSV leaf (rung from the chunk's RUNG / BESTFAIL header)."""
+    kind = driver[0]
+    hit_of_goal = driver[3] if kind == "disj" else None
     failures = []
+    verdicts = {}
     for c0 in range(0, len(items), chunk_size):
         chunk = items[c0:c0 + chunk_size]
         cname = f"Dr{round_no}C{c0 // chunk_size}"
         boxes_lean = [E.box_lit(b) for b, _, _ in chunk]
-        src = E.stage_a_file(mod + cname, n, expr, boxes_lean, len(chunk))
+        if kind == "disj":
+            src = E.stage_a_file_disj(mod + cname, n, driver[1], driver[2],
+                                      boxes_lean, len(chunk))
+        else:
+            src = E.stage_a_file(mod + cname, n, driver[1], boxes_lean,
+                                 len(chunk))
         src = src.format(caseid="repair", origop="", vars="", nleaves=len(chunk),
                          prec=None, extra="")
         os.makedirs(REPAIR_DIR, exist_ok=True)
@@ -84,14 +95,25 @@ def run_round(mod, n, expr, items, round_no, chunk_size, params_out=None):
                 if m:
                     rung = [int(m.group(1)), int(m.group(2))]
             if len(parts) >= 2 and parts[0].isdigit():
-                if parts[1] in ("PASS", "FAIL"):
+                idx = c0 + int(parts[0])
+                if parts[1] in ("PASS", "PASSV", "FAIL"):
                     leaf_lines += 1
-                if parts[1] == "PASS" and params_out is not None:
-                    params_out[chunk[int(parts[0])][0]] = (
-                        [int(x) for x in parts[2:]], rung)
                 if parts[1] == "FAIL":
-                    failures.append(c0 + int(parts[0]))
+                    failures.append(idx)
                     chunk_fails += 1
+                    continue
+                # PASS / PASSV: schema v1 (i PASS s1 t1 ...) or v2
+                # (i PASS k s1 t1 ... / i PASSV k); k re-computes the hit.
+                if kind == "disj":
+                    k = int(parts[2])
+                    hit = hit_of_goal[k]
+                    nums = [int(x) for x in parts[3:]]
+                else:
+                    hit = chunk[int(parts[0])][1]
+                    nums = [int(x) for x in parts[2:]]
+                verdicts[idx] = hit
+                if params_out is not None:
+                    params_out[chunk[int(parts[0])][0]] = (nums, rung, hit)
             if "error" in ln.lower() and "BESTFAIL" not in ln:
                 driver_errors.append(ln)
         if driver_errors or leaf_lines != len(chunk):
@@ -101,7 +123,7 @@ def run_round(mod, n, expr, items, round_no, chunk_size, params_out=None):
                 + "\n".join(driver_errors[:5]))
         print(f"[round {round_no}] chunk {c0 // chunk_size}: "
               f"{chunk_fails} FAIL / {len(chunk)}", flush=True)
-    return failures
+    return failures, verdicts
 
 
 def main():
@@ -127,11 +149,16 @@ def main():
         die("cert root_box != case box")
     n = len(case["vars"])
     if case.get("disj"):
-        die("disj repair not implemented (hit inheritance is goal-specific)")
-
-    rpn = E.RPN(sqrt_slot=lambda i: ("0", "0"),
-                trans=lambda op, closed: ("2048", "(-64)") if closed else ("N", "out"))
-    expr = rpn.emit(case["prog"])
+        # Disj repair (wave-2 D2): the driver carries ALL goals and
+        # recomputes the hit per (sub-)leaf — no hit inheritance; the cert
+        # hit is only a first-hit-wins hint at FLINT precision.
+        mkexprs, terms, goals_manifest = E.fill_goals(case)
+        hit_of_goal = {g["index"]: g["label"] for g in goals_manifest}
+        driver = ("disj", mkexprs, terms, hit_of_goal)
+    else:
+        rpn = E.RPN(sqrt_slot=lambda i: ("0", "0"),
+                    trans=lambda op, closed: ("2048", "(-64)") if closed else ("N", "out"))
+        driver = ("single", rpn.emit(case["prog"]))
     mod = "CRepair" + "".join(ch if ch.isalnum() else "x"
                               for ch in os.path.basename(args[1]).split(".")[0])
 
@@ -153,11 +180,14 @@ def main():
         survivors = []
         start_round = 0
     for round_no in range(start_round, max_depth + 1):
-        fails = run_round(mod, n, expr, items, round_no,
-                          chunk_size if round_no == 0 else 100000,
-                          params_by_box)
+        fails, verdicts = run_round(mod, n, driver, items, round_no,
+                                    chunk_size if round_no == 0 else 100000,
+                                    params_by_box)
         if not fails:
-            survivors.extend(items)
+            # hits recomputed by the driver this round (disj); cert hit kept
+            # only where there is no verdict (single-goal driver).
+            survivors.extend((b, verdicts.get(i, hit), d)
+                             for i, (b, hit, d) in enumerate(items))
             print(f"repair: round {round_no} clean — {len(survivors)} "
                   f"surviving leaves total", flush=True)
             break
@@ -168,10 +198,12 @@ def main():
                 if depth >= max_depth:
                     die(f"leaf still failing at depth {depth}: {b} hit={hit}")
                 l, r = split_box(b)
+                # child hits are NOT inherited — next round's driver
+                # recomputes them (the parent hit is kept for debug only)
                 nxt.append((l, hit, depth + 1))
                 nxt.append((r, hit, depth + 1))
             else:
-                survivors.append((b, hit, depth))
+                survivors.append((b, verdicts.get(i, hit), depth))
         print(f"repair: round {round_no}: {len(fails)} failing -> "
               f"{len(nxt)} children to re-check", flush=True)
         items = nxt
@@ -191,7 +223,7 @@ def main():
     # params — params_merge.py joins the two by box value.
     pfile = args[2] + ".params.json"
     pleaves = [{"box": box_json(b), "params": params_by_box[b][0],
-                "rung": params_by_box[b][1]}
+                "rung": params_by_box[b][1], "hit": params_by_box[b][2]}
                for b, _, _ in survivors if b in params_by_box]
     json.dump({"leaves": pleaves}, open(pfile, "w"))
     print(f"repair: wrote {pfile} ({len(pleaves)} param leaves)", flush=True)

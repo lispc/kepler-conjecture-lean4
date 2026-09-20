@@ -493,6 +493,98 @@ def stage_a_file(mod, n, expr, boxes_lean, nleaves, leaf0=0):
             f"def main : List String → IO UInt32 := runMain fillMkExpr fillBoxes\n")
 
 
+LADDER = [(12, -64), (16, -64), (20, -64), (24, -64), (32, -64), (48, -64),
+          (64, -64), (96, -64), (128, -64), (128, -80), (128, -100)]
+
+
+def fill_goals(case):
+    """Disjunctive stage-A goals (schema v2, wave-2 design D2/D3): the main
+    prog plus each `disj` entry, in goal order (goal 0 = main, disj entry j =
+    goal j+1).  Returns (mkexprs, terms, manifest):
+      mkexprs  — one `fillMkExpr<slot>` body per pos goal (dummy sqrt slots
+                 `(0, 0)`, closed trans fixed (2048,-64), open trans on the
+                 rung arguments `N out`);
+      terms    — per-goal `FillGoal` term text, in goal order;
+      manifest — per-goal JSON descriptors (kind/label/sqrt count or i,j).
+    """
+    rpn = RPN(sqrt_slot=lambda i: ("0", "0"),
+              trans=lambda op, closed: ("2048", "(-64)") if closed else ("N", "out"))
+    mkexprs, terms, manifest = [], [], []
+
+    def add_pos(prog, label):
+        terms.append(f".pos fillMkExpr{len(mkexprs)}")
+        mkexprs.append(rpn.emit(prog))
+        manifest.append({"index": len(manifest), "label": label, "kind": "pos",
+                         "sqrt": count_op(prog, "sqrt")})
+
+    add_pos(case["prog"], "main")
+    for idx, dj in enumerate(case["disj"]):
+        if "prog" in dj:
+            add_pos(dj["prog"], f"disj:{idx}")
+        elif "var_lt" in dj:
+            i, j = dj["var_lt"]
+            terms.append(f".varLt {i} {j}")
+            manifest.append({"index": len(manifest), "label": f"var_lt:{i},{j}",
+                             "kind": "varLt", "i": i, "j": j})
+        else:
+            die(f"disj entry without prog/var_lt: {list(dj)}")
+    return mkexprs, terms, manifest
+
+
+def stage_a_disj_prelude(n, mkexprs, terms):
+    """Shared disj driver prelude: fillMkExprK factories + fillGoals list."""
+    out = []
+    for i, e in enumerate(mkexprs):
+        out.append(f"/-- Pos-goal factory {i} (dummy sqrt slots `(0, 0)`; the\n"
+                   "`trans` certificate parameters are the rung arguments\n"
+                   "`N out`, closed trans nodes fixed at (2048, -64)). -/\n"
+                   f"def fillMkExpr{i} (N : ℕ) (out : Int) : IExpr {n} :=\n  {e}\n")
+    out.append("/-- The full goal list (main prog first, disj entries in case\n"
+               "order): pos factories plus exact-box varLt checks. -/\n"
+               f"def fillGoals : List (FillGoal {n}) :=\n  ["
+               + ", ".join(terms) + "]\n")
+    return "\n".join(out)
+
+
+def stage_a_file_disj(mod, n, mkexprs, terms, boxes_lean, nleaves, leaf0=0):
+    """Disjunctive stage-A driver with inline box literals: `runMainDisj`
+    walks the ladder and prints schema-v2 per-leaf lines (`i PASS k ...` /
+    `i PASSV k` / `i FAIL`).  `leaf0` is the global index of the first box
+    (sharded drivers report global leaf indices)."""
+    return (HDR + "import Kepler.Interval.Tools.FillParams\n\n"
+            "set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
+            "open Kepler.Interval Kepler.Interval.Tools\n\n"
+            + stage_a_disj_prelude(n, mkexprs, terms) + "\n"
+            f"/-- The {nleaves} sampled leaf boxes (cert order from {leaf0}). -/\n"
+            f"def fillBoxes : Array (Fin {n} → DInterval) :=\n  #["
+            + ",\n    ".join(f"({b} : Fin {n} → DInterval)" for b in boxes_lean)
+            + "]\n\n"
+            "def main : List String → IO UInt32 := runMainDisj fillGoals fillBoxes\n")
+
+
+def stage_a_driver_disj(n, mkexprs, terms):
+    """Data-file mode disj driver: one tiny source (compiles in seconds),
+    box chunks read at runtime by `runMainFileDisj`."""
+    return (HDR + "import Kepler.Interval.Tools.FillParams\n\n"
+            "open Kepler.Interval Kepler.Interval.Tools\n\n"
+            + stage_a_disj_prelude(n, mkexprs, terms) + "\n"
+            "def main : List String → IO UInt32 :=\n  runMainFileDisj fillGoals\n")
+
+
+def write_manifest(path, cid, n, goals, nleaves, mode, chunk_size=None):
+    """Stage-A manifest (schema v2, design D3): single source of truth for
+    the ladder and the per-goal sqrt slot counts; stagea_merge/params_merge
+    read it (W3) instead of replicating the ladder."""
+    m = {"schema": 2, "case": cid, "n": n,
+         "ladder": [list(r) for r in LADDER],
+         "goals": goals, "nleaves": nleaves, "mode": mode,
+         "chunk_size": chunk_size}
+    with open(path, "w") as f:
+        json.dump(m, f, indent=1)
+        f.write("\n")
+    print(f"emit_lean: wrote {path} (schema v2 manifest, {len(goals)} goals)")
+
+
 def parse_params(path, nleaves, k):
     """Parse FillParams output: `RUNG N out` header + `i PASS s1 t1 ...`
     lines.  Returns ((N, out), {leaf index: [(s1, t1), ...]})."""
@@ -697,10 +789,12 @@ def main():
 
     if fill:
         # ---- FillParams pipeline (stage A driver / stage B BBTreeG shards) ----
-        if case.get("disj"):
-            die("fill pipeline: disj cases unsupported (use the v1 path)")
+        disj = bool(case.get("disj"))
+        if disj and not stage_a:
+            die("fill pipeline: disj stage B (--bbg) unsupported (wave-2 W3); "
+                "--stage-a emits the schema-v2 disj driver")
         hits = {l["hit"] for l in leaves}
-        if hits != {"main"}:
+        if not disj and hits != {"main"}:
             die(f"fill pipeline needs main-only hits, got {hits}")
         t = reconstruct(rootfrac, leafmap)
         box = box_lit(rootfrac)
@@ -715,10 +809,69 @@ def main():
         # at N=1024; N=2048 (remainder ~2.4e-4) passes all 3762 leaves of
         # chunk00085.  Kernel cost scales ~linearly in N.
         closed_params = ("2048", "(-64)")
+        if stage_a and disj:
+            # Disjunctive stage A (schema v2): one fillMkExprK per pos goal,
+            # exact-box varLt goals; hit recomputed per leaf (design D2).
+            mkexprs, terms, goals_manifest = fill_goals(case)
+            nslots = sum(g["sqrt"] for g in goals_manifest if g["kind"] == "pos")
+            if stage_a_data:
+                # Data-file mode: tiny shared driver + plain-text box chunks.
+                sz = (len(leaves) + stage_a_shards - 1) // stage_a_shards
+                d = os.path.splitext(args[2])[0] + ".d"
+                os.makedirs(d, exist_ok=True)
+                open(os.path.join(d, "driver.lean"), "w").write(
+                    stage_a_driver_disj(n, mkexprs, terms).format(**hdr))
+                nw = 0
+                for i in range(0, len(leaves), sz):
+                    p = os.path.join(d, f"chunk{i // sz:05d}.txt")
+                    with open(p, "w") as f:
+                        for l in leaves[i:i + sz]:
+                            b = tuple(box_frac(iv) for iv in l["box"])
+                            f.write(" ".join(
+                                f"{lo[0]} {lo[1]} {hi[0]} {hi[1]}"
+                                for lo, hi in b) + "\n")
+                    nw += 1
+                write_manifest(os.path.join(d, "manifest.json"), cid, n,
+                               goals_manifest, len(leaves), "data", sz)
+                print(f"emit_lean: wrote data-mode disj stage-A to {d}/ "
+                      f"(driver.lean + {nw} chunk txts, {len(leaves)} leaves, "
+                      f"chunk size {sz}, {len(mkexprs)} pos goals, "
+                      f"{nslots} sqrt slots total)")
+                return
+            boxes_lean = [box_lit(tuple(box_frac(iv) for iv in l["box"]))
+                          for l in leaves]
+            if stage_a_shards > 1:
+                sz = (len(leaves) + stage_a_shards - 1) // stage_a_shards
+                d = os.path.splitext(args[2])[0] + ".d"
+                os.makedirs(d, exist_ok=True)
+                nw = 0
+                for i in range(0, len(leaves), sz):
+                    chunk = boxes_lean[i:i + sz]
+                    out = stage_a_file_disj(mod, n, mkexprs, terms, chunk,
+                                            len(chunk), leaf0=i)
+                    p = os.path.join(d, f"chunk{i // sz:05d}.lean")
+                    open(p, "w").write(out.format(**hdr))
+                    nw += 1
+                write_manifest(os.path.join(d, "manifest.json"), cid, n,
+                               goals_manifest, len(leaves), "lean-shards", sz)
+                print(f"emit_lean: wrote {nw} disj stage-A shards to {d}/ "
+                      f"({len(leaves)} leaves, chunk size {sz}, "
+                      f"{len(mkexprs)} pos goals, {nslots} sqrt slots total)")
+                return
+            out = stage_a_file_disj(mod, n, mkexprs, terms, boxes_lean,
+                                    len(leaves))
+            open(args[2], "w").write(out.format(**hdr))
+            write_manifest(os.path.splitext(args[2])[0] + ".manifest.json",
+                           cid, n, goals_manifest, len(leaves), "lean")
+            print(f"emit_lean: wrote {args[2]} (disj stage A: {len(leaves)} "
+                  f"leaves, {len(mkexprs)} pos goals, {nslots} sqrt slots total)")
+            return
         if stage_a:
             rpn = RPN(sqrt_slot=lambda i: ("0", "0"),
                       trans=lambda op, closed: closed_params if closed else ("N", "out"))
             expr = rpn.emit(case["prog"])
+            goals_manifest = [{"index": 0, "label": "main", "kind": "pos",
+                               "sqrt": k}]
             if stage_a_data:
                 # Data-file mode: one tiny shared driver (compiles in
                 # seconds) + plain-text box chunks read at runtime —
@@ -745,6 +898,8 @@ def main():
                                 f"{lo[0]} {lo[1]} {hi[0]} {hi[1]}"
                                 for lo, hi in b) + "\n")
                     nw += 1
+                write_manifest(os.path.join(d, "manifest.json"), cid, n,
+                               goals_manifest, len(leaves), "data", sz)
                 print(f"emit_lean: wrote data-mode stage-A to {d}/ "
                       f"(driver.lean + {nw} chunk txts, {len(leaves)} leaves, "
                       f"chunk size {sz}, {k} sqrt slots)")
@@ -764,11 +919,15 @@ def main():
                     p = os.path.join(d, f"chunk{i // sz:05d}.lean")
                     open(p, "w").write(out.format(**hdr))
                     nw += 1
+                write_manifest(os.path.join(d, "manifest.json"), cid, n,
+                               goals_manifest, len(leaves), "lean-shards", sz)
                 print(f"emit_lean: wrote {nw} stage-A shards to {d}/ "
                       f"({len(leaves)} leaves, chunk size {sz}, {k} sqrt slots)")
                 return
             out = stage_a_file(mod, n, expr, boxes_lean, len(leaves))
             open(args[2], "w").write(out.format(**hdr))
+            write_manifest(os.path.splitext(args[2])[0] + ".manifest.json",
+                           cid, n, goals_manifest, len(leaves), "lean")
             print(f"emit_lean: wrote {args[2]} (stage A: {len(leaves)} leaves, "
                   f"{k} sqrt slots)")
             return

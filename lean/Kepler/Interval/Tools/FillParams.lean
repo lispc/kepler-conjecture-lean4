@@ -290,6 +290,155 @@ def runMainFile {n : ℕ} (mkExpr : ℕ → Int → IExpr n) : List String → I
     | _, _ => throw (IO.userError "usage: driver <boxes.txt> [N out]")
   | _ => throw (IO.userError "usage: driver <boxes.txt> [N out]")
 
+/-! ### Disjunctive stage A (schema v2)
+
+Disjunctive goals (`emit_rpn.py` `disj` field): a leaf certificate only needs
+*some* disjunct to hold, so the stage-A driver carries **all** goal
+expressions (main prog first, then each disj entry in case order) and
+decides per leaf which branch holds, recomputing the bb_arb `hit` rather
+than trusting it (design D2: the cert hit is a first-hit-wins witness at
+FLINT precision, not a unique branch).
+
+Judgement order per leaf (cheap first): every `.varLt` goal by the exact box
+check `Dyadic.blt (box i).hi (box j).lo` (the same test as
+`DisjGoal.check`), then every `.pos` goal in goal order via `checkLeaf`;
+the first branch that holds wins.  Output per leaf (params schema v2):
+
+  `<i> PASSV <k>`         — varLt goal `k` hit, no parameters
+  `<i> PASS <k> s₁ t₁ …`  — pos goal `k` hit, `2·countSqrt (goals[k])` ints
+  `<i> FAIL`              — no branch holds at this rung
+
+The rung ladder is global and unchanged: the first rung at which every leaf
+has *some* passing branch wins (only pos branches consume the rung; varLt
+checks are rung-independent).  The goal index `k` refers to the full goals
+list (main = 0, disj entry `j` = `j+1`). -/
+
+/-- One goal of a disjunctive stage-A driver: a pos branch (expression
+factory over the rung arguments, dummy sqrt slots) or a varLt branch
+(exact box check, no parameters). -/
+inductive FillGoal (n : ℕ) : Type where
+  | pos (mk : ℕ → Int → IExpr n)
+  | varLt (i j : Fin n)
+
+/-- Per-leaf disjunctive result: the winning goal index (none = FAIL),
+whether it was a varLt goal (no params), and the sqrt mantissa list. -/
+structure DisjLeafResult where
+  hit : Option ℕ
+  hitVarLt : Bool
+  params : List (Int × Int)
+
+/-- Per-leaf disjunctive judgement: all varLt goals (goal order) by exact box
+check, then all pos goals (goal order) by `checkLeaf` at rung `(N, out)`;
+first branch that holds wins. -/
+def checkLeafDisj {n : ℕ} (goals : List (FillGoal n)) (box : Fin n → DInterval)
+    (N : ℕ) (out : Int) : DisjLeafResult :=
+  match findVarLt goals 0 with
+  | some k => ⟨some k, true, []⟩
+  | none =>
+    match findPos goals 0 with
+    | some (k, params) => ⟨some k, false, params⟩
+    | none => ⟨none, false, []⟩
+where
+  findVarLt : List (FillGoal n) → ℕ → Option ℕ
+    | [], _ => none
+    | .varLt i j :: gs, k =>
+        if Dyadic.blt (box i).hi (box j).lo then some k else findVarLt gs (k + 1)
+    | .pos _ :: gs, k => findVarLt gs (k + 1)
+  findPos : List (FillGoal n) → ℕ → Option (ℕ × List (Int × Int))
+    | [], _ => none
+    | .pos mk :: gs, k =>
+        let r := checkLeaf (mk N out) box
+        if r.pass then some (k, r.params) else findPos gs (k + 1)
+    | .varLt _ _ :: gs, k => findPos gs (k + 1)
+
+/-- Print one schema-v2 line per leaf: `i PASSV k` / `i PASS k s₁ t₁ …` /
+`i FAIL`. -/
+def printResultsDisj (results : Array DisjLeafResult) : IO Unit := do
+  let mut i := 0
+  for r in results do
+    match r.hit with
+    | some k =>
+      if r.hitVarLt then
+        IO.println s!"{i} PASSV {k}"
+      else
+        let params := " ".intercalate (r.params.map fun (s, t) => s!"{s} {t}")
+        IO.println s!"{i} PASS {k} {params}"
+    | none => IO.println s!"{i} FAIL"
+    i := i + 1
+
+/-- Evaluate all leaves at one rung against all goals; returns the failure
+count (leaves with no passing branch) and the per-leaf results. -/
+def runRungDisj {n : ℕ} (goals : List (FillGoal n))
+    (boxes : Array (Fin n → DInterval)) (N : ℕ) (out : Int)
+    : IO (ℕ × Array DisjLeafResult) := do
+  let mut results := #[]
+  let mut fails := 0
+  for box in boxes do
+    let r := checkLeafDisj goals box N out
+    if r.hit.isNone then fails := fails + 1
+    results := results.push r
+  return (fails, results)
+
+/-- Disjunctive stage-A entry point: walk the rung ladder; on the first rung
+where every leaf has a passing branch print `RUNG N out` plus the schema-v2
+per-leaf lines and exit 0; otherwise print the best rung under a `BESTFAIL`
+header and exit 1. -/
+def runLadderDisj {n : ℕ} (goals : List (FillGoal n))
+    (boxes : Array (Fin n → DInterval)) : IO UInt32 := do
+  let mut best : Option (ℕ × ℕ × Int × Array DisjLeafResult) := none
+  for (N, out) in ladder do
+    let (fails, results) ← runRungDisj goals boxes N out
+    IO.eprintln s!"rung N={N} out={out}: {fails}/{boxes.size} failures"
+    if fails == 0 then
+      IO.println s!"RUNG {N} {out}"
+      printResultsDisj results
+      return 0
+    if best.all (fun (b, _, _, _) => fails < b) then
+      best := some (fails, N, out, results)
+  match best with
+  | some (fails, N, out, results) =>
+      IO.println s!"BESTFAIL N={N} out={out} failures={fails}/{boxes.size}"
+      printResultsDisj results
+  | none => IO.println "BESTFAIL no-rungs"
+  return 1
+
+/-- Pinned-rung disjunctive evaluation (sharded stage-A phase 2). -/
+def runSingleDisj {n : ℕ} (goals : List (FillGoal n))
+    (boxes : Array (Fin n → DInterval)) (N : ℕ) (out : Int) : IO UInt32 := do
+  let (fails, results) ← runRungDisj goals boxes N out
+  IO.eprintln s!"rung N={N} out={out}: {fails}/{boxes.size} failures"
+  if fails == 0 then
+    IO.println s!"RUNG {N} {out}"
+    printResultsDisj results
+    return 0
+  IO.println s!"BESTFAIL N={N} out={out} failures={fails}/{boxes.size}"
+  printResultsDisj results
+  return 1
+
+/-- Disjunctive stage-A main with argv dispatch: no args walks the ladder,
+`N out` evaluates that pinned rung. -/
+def runMainDisj {n : ℕ} (goals : List (FillGoal n))
+    (boxes : Array (Fin n → DInterval)) : List String → IO UInt32
+  | [ns, outs] =>
+    match ns.toNat?, outs.toInt? with
+    | some N, some out => runSingleDisj goals boxes N out
+    | _, _ => runLadderDisj goals boxes
+  | _ => runLadderDisj goals boxes
+
+/-- Data-file disjunctive stage-A main: `boxes.txt` walks the ladder,
+`boxes.txt N out` evaluates the pinned rung. -/
+def runMainFileDisj {n : ℕ} (goals : List (FillGoal n)) : List String → IO UInt32
+  | [path] => do
+      let boxes ← readBoxes n path
+      runLadderDisj goals boxes
+  | [path, ns, outs] =>
+    match ns.toNat?, outs.toInt? with
+    | some N, some out => do
+        let boxes ← readBoxes n path
+        runSingleDisj goals boxes N out
+    | _, _ => throw (IO.userError "usage: driver <boxes.txt> [N out]")
+  | _ => throw (IO.userError "usage: driver <boxes.txt> [N out]")
+
 end Tools
 
 end Kepler.Interval
