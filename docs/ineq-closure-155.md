@@ -59,7 +59,7 @@
 | 45 | `dart_std3_mini` | unsupported | D | - |  | auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3191 |
 | 46 | `dart_std3_small` | unsupported | D | - |  | auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3046 |
 | 47 | `dart_std4` | unsupported | D | - |  | auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:1863 |
-| 48 | `delta4_squared_x` | resolved | D | - | 1 | reference/flyspeck/text_formalization/general/sphere.hl:835 |
+| 48 | `delta4_squared_x` | resolved | B | delta4SquaredX (lean/Kepler/Text/IneqClosureDefs.lean:209) | 1 | reference/flyspeck/text_formalization/general/sphere.hl:835 |
 | 49 | `delta4_squared_y` | resolved | B | delta4SquaredY_p11 (lean/Kepler/Text/LocalAuto11.lean:198) |  | reference/flyspeck/text_formalization/general/sphere.hl:838 |
 | 50 | `delta4_y` | resolved | B | delta4Y_p11 (lean/Kepler/Text/LocalAuto11.lean:188) |  | reference/flyspeck/text_formalization/general/sphere.hl:543 |
 | 51 | `delta_234_x` | resolved | B | delta234X_p11 (lean/Kepler/Text/LocalAuto11.lean:184) |  | reference/flyspeck/text_formalization/general/sphere.hl:848 |
@@ -69,9 +69,9 @@
 | 55 | `delta_y` | resolved | B | deltaY_p11 (lean/Kepler/Text/LocalAuto11.lean:149) |  | reference/flyspeck/text_formalization/general/sphere.hl:92 |
 | 56 | `dih2_y` | resolved | D | - |  | reference/flyspeck/text_formalization/general/sphere.hl:163 |
 | 57 | `dih3_y` | resolved | D | - |  | reference/flyspeck/text_formalization/general/sphere.hl:166 |
-| 58 | `dih4_x_div_sqrtdelta_posbranch` | resolved | D | - | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:163 |
+| 58 | `dih4_x_div_sqrtdelta_posbranch` | resolved | B | dih4XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:127) | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:163 |
 | 59 | `dih_x` | resolved | B | dihXf_p16 (lean/Kepler/Text/LocalAuto16.lean:288) |  | reference/flyspeck/text_formalization/general/sphere.hl:153 |
-| 60 | `dih_x_div_sqrtdelta_posbranch` | resolved | D | - | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:138 |
+| 60 | `dih_x_div_sqrtdelta_posbranch` | resolved | B | dihXDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:95) | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:138 |
 | 61 | `dih_y` | resolved | B | dihY_p16 (lean/Kepler/Text/LocalAuto16.lean:294) |  | reference/flyspeck/text_formalization/general/sphere.hl:159 |
 | 62 | `dummy6` | resolved | D | - |  | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:263 |
 | 63 | `enclosed` | resolved | D | - |  | auto:reference/flyspeck/text_formalization/leg/enclosed_def.hl:22 |
@@ -92,11 +92,11 @@
 | 78 | `hminus` | resolved | B | hminus (lean/Kepler/Text/PackingAuto2.lean:468) |  | reference/flyspeck/text_formalization/general/sphere.hl:529 |
 | 79 | `hplus` | resolved | B | hplus (lean/Kepler/Text/PackingAuto2.lean:431) |  | reference/flyspeck/text_formalization/general/sphere.hl:515 |
 | 80 | `interp` | resolved | B | interp_p2 (lean/Kepler/Text/LocalAuto2.lean:325) |  | reference/flyspeck/text_formalization/general/sphere.hl:195 |
-| 81 | `ldih2_x_div_sqrtdelta_posbranch` | resolved | D | - | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:148 |
-| 82 | `ldih3_x_div_sqrtdelta_posbranch` | resolved | D | - | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:151 |
-| 83 | `ldih5_x_div_sqrtdelta_posbranch` | resolved | D | - | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:154 |
-| 84 | `ldih6_x_div_sqrtdelta_posbranch` | resolved | D | - | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:157 |
-| 85 | `ldih_x_div_sqrtdelta_posbranch` | resolved | D | - | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:144 |
+| 81 | `ldih2_x_div_sqrtdelta_posbranch` | resolved | B | ldih2XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:150) | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:148 |
+| 82 | `ldih3_x_div_sqrtdelta_posbranch` | resolved | B | ldih3XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:154) | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:151 |
+| 83 | `ldih5_x_div_sqrtdelta_posbranch` | resolved | B | ldih5XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:158) | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:154 |
+| 84 | `ldih6_x_div_sqrtdelta_posbranch` | resolved | B | ldih6XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:162) | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:157 |
+| 85 | `ldih_x_div_sqrtdelta_posbranch` | resolved | B | ldihXDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:136) | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:144 |
 | 86 | `lfun` | resolved | B | lfun (lean/Kepler/Text/PackingAuto2.lean:461) | 1(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:525 |
 | 87 | `lfun_y1` | resolved | D | - |  | reference/flyspeck/text_formalization/general/sphere.hl:789 |
 | 88 | `lmfun` | resolved | B | lmfun (lean/Kepler/Text/PackingAuto2.lean:464) |  | reference/flyspeck/text_formalization/general/sphere.hl:523 |
@@ -104,7 +104,7 @@
 | 90 | `log` | primitive | A | Mathlib |  |  |
 | 91 | `ly` | resolved | B | lyP19 (lean/Kepler/Text/LocalAuto19.lean:124) |  | reference/flyspeck/text_formalization/general/sphere.hl:199 |
 | 92 | `marchal_quartic` | resolved | B | marchalQuartic (lean/Kepler/Text/PackingAuto2.lean:435) |  | reference/flyspeck/text_formalization/general/sphere.hl:519 |
-| 93 | `matan` | resolved | D | - | 1(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:728 |
+| 93 | `matan` | resolved | B | matan (lean/Kepler/Text/IneqClosureDefs.lean:31) | 1(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:728 |
 | 94 | `mk_126` | resolved | D | - |  | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:267 |
 | 95 | `mk_135` | resolved | D | - |  | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:273 |
 | 96 | `mk_456` | resolved | D | - |  | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:270 |
@@ -132,18 +132,18 @@
 | 118 | `rhazim2` | resolved | D | - |  | reference/flyspeck/text_formalization/general/sphere.hl:226 |
 | 119 | `rho` | resolved | B | rho_p2 (lean/Kepler/Text/LocalAuto2.lean:336) |  | reference/flyspeck/text_formalization/general/sphere.hl:201 |
 | 120 | `rho_x` | resolved | D | - |  | reference/flyspeck/text_formalization/general/sphere.hl:137 |
-| 121 | `rotate2` | resolved | D | - | 1(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:654 |
-| 122 | `rotate3` | resolved | D | - | 1(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:657 |
-| 123 | `rotate4` | resolved | D | - | 1(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:660 |
-| 124 | `rotate5` | resolved | D | - | 1(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:663 |
-| 125 | `rotate6` | resolved | D | - | 1(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:666 |
+| 121 | `rotate2` | resolved | B | rotate2 (lean/Kepler/Text/IneqClosureDefs.lean:62) | 1(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:654 |
+| 122 | `rotate3` | resolved | B | rotate3 (lean/Kepler/Text/IneqClosureDefs.lean:66) | 1(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:657 |
+| 123 | `rotate4` | resolved | B | rotate4 (lean/Kepler/Text/IneqClosureDefs.lean:70) | 1(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:660 |
+| 124 | `rotate5` | resolved | B | rotate5 (lean/Kepler/Text/IneqClosureDefs.lean:74) | 1(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:663 |
+| 125 | `rotate6` | resolved | B | rotate6 (lean/Kepler/Text/IneqClosureDefs.lean:78) | 1(enabler) | reference/flyspeck/text_formalization/general/sphere.hl:666 |
 | 126 | `scalar6` | resolved | D | - |  | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:279 |
 | 127 | `sin` | primitive | A | Mathlib |  |  |
 | 128 | `sol0` | resolved | B | sol0 (lean/Kepler/Text/PackingAuto2.lean:419) |  | reference/flyspeck/text_formalization/general/sphere.hl:207 |
-| 129 | `sol_euler156_x_div_sqrtdelta` | resolved | D | - | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:127 |
-| 130 | `sol_euler246_x_div_sqrtdelta` | resolved | D | - | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:121 |
-| 131 | `sol_euler345_x_div_sqrtdelta` | resolved | D | - | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:124 |
-| 132 | `sol_euler_x_div_sqrtdelta` | resolved | D | - | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:115 |
+| 129 | `sol_euler156_x_div_sqrtdelta` | resolved | B | solEuler156XDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:201) | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:127 |
+| 130 | `sol_euler246_x_div_sqrtdelta` | resolved | B | solEuler246XDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:191) | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:121 |
+| 131 | `sol_euler345_x_div_sqrtdelta` | resolved | B | solEuler345XDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:196) | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:124 |
+| 132 | `sol_euler_x_div_sqrtdelta` | resolved | B | solEulerXDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:173) | 1 | reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:115 |
 | 133 | `sol_x` | resolved | D | - |  | reference/flyspeck/text_formalization/general/sphere.hl:181 |
 | 134 | `sol_y` | resolved | B | solY_p19 (lean/Kepler/Text/LocalAuto19.lean:119) |  | reference/flyspeck/text_formalization/general/sphere.hl:185 |
 | 135 | `sqrt` | primitive | A | Mathlib |  |  |
@@ -169,4 +169,4 @@
 | 155 | `y_of_x` | resolved | B | yOfX_p11 (lean/Kepler/Text/LocalAuto11.lean:177) |  | reference/flyspeck/text_formalization/general/sphere.hl:538 |
 
 closure stats: roots=87 size=155 resolved=124 primitives=9 unsupported=22 missing=0; statement variables excluded: x1, x2, x3, x4, x5, x6, y1, y2, y3, y4, y5, y6, y7, y8, y9
-resolved-by-tier: B=49, C=2, D=73
+resolved-by-tier: B=67, C=2, D=55

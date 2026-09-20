@@ -402,8 +402,8 @@
   {
    "symbol": "delta4_squared_x",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "delta4SquaredX (lean/Kepler/Text/IneqClosureDefs.lean:209)",
    "batch": "1",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:835"
   },
@@ -482,8 +482,8 @@
   {
    "symbol": "dih4_x_div_sqrtdelta_posbranch",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "dih4XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:127)",
    "batch": "1",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:163"
   },
@@ -498,8 +498,8 @@
   {
    "symbol": "dih_x_div_sqrtdelta_posbranch",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "dihXDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:95)",
    "batch": "1",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:138"
   },
@@ -666,40 +666,40 @@
   {
    "symbol": "ldih2_x_div_sqrtdelta_posbranch",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "ldih2XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:150)",
    "batch": "1",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:148"
   },
   {
    "symbol": "ldih3_x_div_sqrtdelta_posbranch",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "ldih3XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:154)",
    "batch": "1",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:151"
   },
   {
    "symbol": "ldih5_x_div_sqrtdelta_posbranch",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "ldih5XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:158)",
    "batch": "1",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:154"
   },
   {
    "symbol": "ldih6_x_div_sqrtdelta_posbranch",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "ldih6XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:162)",
    "batch": "1",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:157"
   },
   {
    "symbol": "ldih_x_div_sqrtdelta_posbranch",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "ldihXDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:136)",
    "batch": "1",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:144"
   },
@@ -762,8 +762,8 @@
   {
    "symbol": "matan",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "matan (lean/Kepler/Text/IneqClosureDefs.lean:31)",
    "batch": "1(enabler)",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:728"
   },
@@ -986,40 +986,40 @@
   {
    "symbol": "rotate2",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "rotate2 (lean/Kepler/Text/IneqClosureDefs.lean:62)",
    "batch": "1(enabler)",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:654"
   },
   {
    "symbol": "rotate3",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "rotate3 (lean/Kepler/Text/IneqClosureDefs.lean:66)",
    "batch": "1(enabler)",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:657"
   },
   {
    "symbol": "rotate4",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "rotate4 (lean/Kepler/Text/IneqClosureDefs.lean:70)",
    "batch": "1(enabler)",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:660"
   },
   {
    "symbol": "rotate5",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "rotate5 (lean/Kepler/Text/IneqClosureDefs.lean:74)",
    "batch": "1(enabler)",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:663"
   },
   {
    "symbol": "rotate6",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "rotate6 (lean/Kepler/Text/IneqClosureDefs.lean:78)",
    "batch": "1(enabler)",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:666"
   },
@@ -1050,32 +1050,32 @@
   {
    "symbol": "sol_euler156_x_div_sqrtdelta",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "solEuler156XDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:201)",
    "batch": "1",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:127"
   },
   {
    "symbol": "sol_euler246_x_div_sqrtdelta",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "solEuler246XDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:191)",
    "batch": "1",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:121"
   },
   {
    "symbol": "sol_euler345_x_div_sqrtdelta",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "solEuler345XDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:196)",
    "batch": "1",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:124"
   },
   {
    "symbol": "sol_euler_x_div_sqrtdelta",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
+   "tier": "B",
+   "lean": "solEulerXDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:173)",
    "batch": "1",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:115"
   },
