@@ -89,8 +89,15 @@
   - [ ] G4 粘合收尾：155 定义闭包的 Lean 定义 + 每案例 `evalReal e ρ = 展开式 ρ` 对应引理（依赖 packing 章定义，**主体剩余**）
   - 规格：`pipeline/interval/arb-layer.md` §3/§4
 - [ ] GRKIBMP_B_V2 尖锐边界组单独处理（我们把 ≥ 加强成严格 > 导致等号边界不可闭，需 ε 余量或弱编码）
-- [ ] `ineqdata3q1h.hl` 7 条 Mathematica record 单独解析
-- 数字口径：底账 181 条记录（+3q1h 的 35 条）；y 空间 176 案例 / prep 空间 745 案例
+- [ ] `ineqdata3q1h.hl` 的 Mathematica record 单独解析（2026-09-20 P6-E 更正：实测
+  `raw_nonlindatah` 为 **46 条** record × 5 支 = 230 支不等式，非"7 条/35 条"；与
+  merge_ineq.hl:22-24 "5*46 / 230" 注释一致。ID 清单已量产——`lean/scripts/
+  gen_idlists.py` → `Kepler/Assembly/IdLists.lean` 的 `ox3q1hIds`；record 内容解析
+  仍是本项债务）
+- 数字口径：底账 181 条记录；y 空间 176 案例 / prep 空间 745 案例；Assembly 六分量
+  ID 口径（2026-09-20 实测）：81 + 230 + 109 + 127 + 5 + 28 = 580（去重并集 539；
+  注册表总 547）——更正 phase6-spine.md 的"993"说法，折算登记
+  docs/statement-fidelity.md 附录 B
 
 ## Phase 5 — 文字证明移植 🟡（全项目最大头，已全自动化）
 
