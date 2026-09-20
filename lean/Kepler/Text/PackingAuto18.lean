@@ -68,14 +68,22 @@ regrouping); `CARD4_ALL_DISTINCT`, `LENGTH4_SET2`, `LENGTH4_SET2_SWAP01`;
 `BARV3_TRUNC2`, `STEM_OF_LEAF`, `truncate_set_of_list` (via PA5's
 `TRUNCATE_SIMPLEX_INITIAL_SUBLIST` kit); `LIST_OF_CC_UH`,
 `SET_OF_LIST_CC_UH`, `EL_CC_UH` (from `cc_uh_exists`);
-`MIDPOINT_IN_CONV0`.  NOT proved honestly: `AFF_GT_0_2` is FALSE as ported
-(the Lean `Affsign` sums over `toFinset`, which dedups; at `v = w` the LHS is
-the open ray `{t v | t > 0}` but the RHS is `{v}`) — the HOL lemma must carry
-a `v ≠ w` (or list-affsign) hypothesis; left `sorry`.  The giants stay
-`sorry`: the leaf-cell chain (`YBZFUPO`, `NWVRFMF`, `CFFONNL`, `BDXKHTW`,
-`EWYBJUA`, ...), the arclength derivative/monotonicity chain (`arc_derivative*`,
-`YSSKQOY`) and `SUM_GAMMAX_LMFUN_ESTIMATE` (PA19 shim target; needs the full
-1400-line HL lemma chain).
+`MIDPOINT_IN_CONV0`.
+
+Verdict correction (2026-09-20, false-statement tribunal): the earlier claim
+that `AFF_GT_0_2` is FALSE as ported was wrong.  HOL `affsign` sums over the
+*set* `s ∪ t` and therefore already dedups at `v = w` exactly like the Lean
+`Affsign` `toFinset` sum; at `v = w` both sides of the claimed equality are
+`{v}`.  The HOL lemma (leaf_cell.hl:3589) carries no `v ≠ w` hypothesis, and
+`AFF_GT_0_2` is now proved outright, statement unchanged.  Same wave proved:
+the internal `finrank ≤ 2` step of `AFF_DIM_3` (`finrank_span_le_card`),
+`AFFINE_IMP_CHI_MSB_0` (affine-span extraction + determinant multilinearity),
+`AZIM_BASE_SHIFT_LE` (two `sum4_azim_fan` + linear arithmetic) and
+`AZIM_POS_IMP_SUM_2PI_ALT` (the Geom `azim_compl` complement formula).  The
+giants stay `sorry`: the leaf-cell chain (`YBZFUPO`, `NWVRFMF`, `CFFONNL`,
+`BDXKHTW`, `EWYBJUA`, ...), the arclength derivative/monotonicity chain
+(`arc_derivative*`, `YSSKQOY`) and `SUM_GAMMAX_LMFUN_ESTIMATE` (PA19 shim
+target; needs the full 1400-line HL lemma chain).
 
 STATUS: skeleton port; statements faithful, mechanical lemmas proved,
 the giant leaf-cell/sum-gamma chains carry `sorry`.
@@ -641,7 +649,17 @@ theorem AFF_DIM_3 (a b c : V3) : affDim {a, b, c} ≤ 2 := by
           exact Or.inr (Set.mem_singleton _))
     have hcard : (Module.finrank ℝ
         (Submodule.span ℝ ({a - b, a - c} : Set V3))) ≤ 2 := by
-      sorry
+      refine le_trans (finrank_span_le_card (R := ℝ) (M := V3)
+        (s := ({a - b, a - c} : Set V3))) ?_
+      have hncard : ({a - b, a - c} : Set V3).toFinset.card
+          ≤ ({a - c} : Set V3).ncard + 1 := by
+        have h1 : ({a - b, a - c} : Set V3).ncard ≤ ({a - c} : Set V3).ncard + 1 :=
+          Set.ncard_insert_le (a - b) ({a - c} : Set V3)
+        have h2 : ({a - b, a - c} : Set V3).ncard = ({a - b, a - c} : Set V3).toFinset.card :=
+          Set.ncard_eq_toFinset_card' _
+        omega
+      have h3 : ({a - c} : Set V3).ncard = 1 := Set.ncard_singleton _
+      omega
     have h1 : Module.finrank ℝ (vectorSpan ℝ {a, b, c})
         ≤ Module.finrank ℝ (Submodule.span ℝ ({a - b, a - c} : Set V3)) :=
       Submodule.finrank_mono hsub
@@ -813,6 +831,21 @@ theorem truncate_set_of_list {vl : List V3} {k : ℕ}
 private theorem sub_dot18 (a b c : V3) : (a - b) ⬝ᵥ c = a ⬝ᵥ c - b ⬝ᵥ c :=
   sub_dotProduct (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)
 
+private theorem list3_eq (ul : List V3) (h : ul.length = 3) :
+    ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] := by
+  cases ul with
+  | nil => exact absurd h (by simp)
+  | cons a t =>
+    cases t with
+    | nil => exact absurd h (by simp)
+    | cons b t2 =>
+      cases t2 with
+      | nil => exact absurd h (by simp)
+      | cons c t3 =>
+        cases t3 with
+        | nil => rfl
+        | cons _ _ => exact absurd h (by simp)
+
 private theorem dot_sub18 (a b c : V3) : a ⬝ᵥ (b - c) = a ⬝ᵥ b - a ⬝ᵥ c :=
   dotProduct_sub (a : Fin 3 → ℝ) (b : Fin 3 → ℝ) (c : Fin 3 → ℝ)
 
@@ -973,10 +1006,49 @@ theorem CHI_MSB_CONVEX (ul : List V3) :
   have h2 : 0 ≤ b * chiMsb ul y := mul_nonneg hb hy
   linarith
 
-/-- HOL `AFFINE_IMP_CHI_MSB_0` (leaf_cell.hl:935-942). -/
+/-- HOL `AFFINE_IMP_CHI_MSB_0` (leaf_cell.hl:935-942): `chi_msb` is the signed
+volume over the stem triple, so it vanishes on the triple's affine span
+(linearity of the first determinant row + the two degenerate rows). -/
 theorem AFFINE_IMP_CHI_MSB_0 (ul : List V3) (p : V3) (hlen : ul.length = 3)
     (hp : p ∈ affineSpan ℝ (setOfList ul)) : chiMsb ul p = 0 := by
-  sorry
+  obtain ⟨a, b, c, rfl⟩ : ∃ a b c, ul = [a, b, c] := ⟨_, _, _, list3_eq ul hlen⟩
+  have hset : setOfList [a, b, c] = ({a, b, c} : Set V3) := by
+    ext t
+    simp [setOfList]
+    all_goals tauto
+  rw [hset] at hp
+  have hdir : (p -ᵥ a : V3) ∈ (affineSpan ℝ ({a, b, c} : Set V3)).direction :=
+    AffineSubspace.vsub_mem_direction hp
+      (mem_affineSpan ℝ (Set.mem_insert a ({b, c} : Set V3)))
+  rw [direction_affineSpan] at hdir
+  have hsub : vectorSpan ℝ ({a, b, c} : Set V3) ≤
+      Submodule.span ℝ ({a - b, a - c} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_left (k := ℝ) (Set.mem_insert a ({b, c} : Set V3)),
+      Submodule.span_le]
+    rintro d ⟨x, hx, rfl⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with hx1 | hx1 | hx1
+    · rw [hx1]
+      show (a -ᵥ a : V3) ∈ Submodule.span ℝ ({a - b, a - c} : Set V3)
+      rw [vsub_self]
+      exact Submodule.zero_mem _
+    · rw [hx1]
+      exact Submodule.subset_span (Set.mem_insert (a - b) ({a - c} : Set V3))
+    · rw [hx1]
+      exact Submodule.subset_span (Or.inr (Set.mem_singleton (a - c)))
+  obtain ⟨r2, r3, hv2⟩ := Submodule.mem_span_pair.1 (hsub hdir)
+  have hpa : (p - a : V3) = p -ᵥ a := rfl
+  have hrow : ((p - a : V3) : Fin 3 → ℝ)
+      = (-r2) • ((b - a : V3) : Fin 3 → ℝ) + (-r3) • ((c - a : V3) : Fin 3 → ℝ) := by
+    rw [hpa, ← hv2, coe_add18, coe_smul18, coe_smul18, coe_sub18, coe_sub18]
+    funext i
+    simp only [Pi.add_apply, Pi.smul_apply, Pi.sub_apply, smul_eq_mul, coe_sub18]
+    ring
+  rw [chiMsb_det, hrow]
+  simp only [Matrix.det_fin_three, Matrix.head_cons, Matrix.tail_cons, Matrix.cons_val_zero,
+    Matrix.cons_val_one, Matrix.cons_val_two, Matrix.cons_val_succ, Matrix.cons_val',
+    coe_sub18, Pi.sub_apply, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+  ring
 
 /-- HOL `CHI_MSB_IMP_COPLANAR` (leaf_cell.hl:935-942). -/
 theorem CHI_MSB_IMP_COPLANAR (ul : List V3) (p : V3) (h : chiMsb ul p = 0) :
@@ -1081,21 +1153,6 @@ theorem MCELL_EDGE_FIRST {V : Set V3} {ul : List V3} {k : ℕ} {u v : V3}
     ∃ vl, barV V 3 vl ∧ mcell k V vl = mcell k V ul ∧ u = vl.getD 0 0 ∧
       v = vl.getD 1 0 := by
   sorry
-
-private theorem list3_eq (ul : List V3) (h : ul.length = 3) :
-    ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] := by
-  cases ul with
-  | nil => exact absurd h (by simp)
-  | cons a t =>
-    cases t with
-    | nil => exact absurd h (by simp)
-    | cons b t2 =>
-      cases t2 with
-      | nil => exact absurd h (by simp)
-      | cons c t3 =>
-        cases t3 with
-        | nil => rfl
-        | cons _ _ => exact absurd h (by simp)
 
 private theorem list4_eq (ul : List V3) (h : ul.length = 4) :
     ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0, ul.getD 3 0] := by
@@ -1718,13 +1775,18 @@ theorem FCHKUGT {V : Set V3} {u0 u1 u2 u2' : V3} (hs : saturated V) (hp : Packin
     (hl1 : leaf V [u0, u1, u2]) (hl2 : leaf V [u0, u1, u2']) : u2 = u2' := by
   sorry
 
-/-- HOL `AZIM_BASE_SHIFT_LE` (leaf_cell.hl:3529-3547). -/
+/-- HOL `AZIM_BASE_SHIFT_LE` (leaf_cell.hl:3529-3547), via two applications of
+fan.hl:1698 `sum4_azim_fan` (the three-point azimuth addition) and linear
+arithmetic. -/
 theorem AZIM_BASE_SHIFT_LE (x y b1 b2 w1 w2 : V3)
     (h1 : ¬Collinear3 x y b1) (h2 : ¬Collinear3 x y b2) (h3 : ¬Collinear3 x y w1)
     (h4 : ¬Collinear3 x y w2)
     (h5 : azim x y b1 b2 ≤ azim x y b1 w1) (h6 : azim x y b1 b2 ≤ azim x y b1 w2) :
     azim x y b1 w2 - azim x y b1 w1 = azim x y b2 w2 - azim x y b2 w1 := by
-  sorry
+  have hyx : y ≠ x := fun he => h1 (collinear3_of_eq he)
+  have e1 := sum4_azim_fan hyx h1 h2 h4 h6
+  have e2 := sum4_azim_fan hyx h1 h2 h3 h5
+  linarith
 
 /-- HOL `WEDGE_GE_SPLIT` (leaf_cell.hl:3548-3611). -/
 theorem WEDGE_GE_SPLIT (u0 u1 u2 u3 w : V3)
@@ -1739,11 +1801,76 @@ theorem IN_CONV0_IMP_AZIM_PI_ALT (x e a b : V3) (h : ¬Collinear3 x e a)
     (hx : x ∈ conv0 {a, b}) : azim x e a b = Real.pi := by
   sorry
 
-/-- HOL `AFF_GT_0_2` (leaf_cell.hl:3659-?). -/
+/-- HOL `AFF_GT_0_2` (leaf_cell.hl:3589-3602, proved unconditionally by
+`AFF_TAC`).  The earlier "FALSE as ported" verdict in this file's STATUS was a
+mistake: HOL `affsign` sums over the *set* `s ∪ t` (so it already dedups at
+`v = w`), and the Lean `Affsign` sums over `h.toFinset` with the same set
+semantics.  At `v = w` both sides are `{v}` — the LHS forces `f v = 1`, the
+RHS collapses `t2 • v + t3 • w` to `(t2 + t3) • v = v` — so the statement is
+literally true and is proved outright, faithful to the HOL statement (which
+carries no `v ≠ w` hypothesis). -/
 theorem AFF_GT_0_2 (v w : V3) :
     conv0 {v, w} = {y | ∃ t2 t3 : ℝ, 0 < t2 ∧ 0 < t3 ∧ t2 + t3 = 1 ∧
       y = t2 • v + t3 • w} := by
-  sorry
+  refine Set.ext (fun y => ?_)
+  rw [conv0, affGt, Set.mem_setOf_eq, Set.mem_setOf_eq, Affsign]
+  constructor
+  · rintro ⟨f, hfin, hvec, hpos, hone⟩
+    by_cases hvw : v = w
+    · subst hvw
+      have h1 : hfin.toFinset = ({v} : Finset V3) := by
+        ext z
+        simp [hfin.mem_toFinset]
+      rw [h1, Finset.sum_singleton] at hvec hone
+      exact ⟨1 / 2, 1 / 2, by norm_num, by norm_num, by norm_num, by
+        rw [hvec, hone]; module⟩
+    · have h1 : hfin.toFinset = ({v, w} : Finset V3) := by
+        ext z
+        simp [hfin.mem_toFinset]
+      rw [h1, Finset.sum_insert (show v ∉ ({w} : Finset V3) from by simp [hvw]),
+        Finset.sum_singleton] at hvec hone
+      exact ⟨f v, f w, hpos v (Set.mem_insert v ({w} : Set V3)),
+        hpos w (Set.mem_insert_of_mem v (Set.mem_singleton w)), hone, hvec⟩
+  · rintro ⟨t2, t3, h2, h3, h4, h5⟩
+    have hfin : (∅ ∪ {v, w} : Set V3).Finite :=
+      Set.Finite.union Set.finite_empty (Set.Finite.insert v (Set.finite_singleton w))
+    by_cases hvw : v = w
+    · subst hvw
+      have h1 : hfin.toFinset = ({v} : Finset V3) := by
+        ext z
+        simp [hfin.mem_toFinset]
+      refine ⟨fun _ => 1, hfin, ?_, ?_, ?_⟩
+      · rw [h1, Finset.sum_singleton, h5]
+        show t2 • v + t3 • v = (1 : ℝ) • v
+        rw [← add_smul, h4]
+      · intro z _
+        exact zero_lt_one
+      · rw [h1, Finset.sum_singleton]
+    · have h1 : hfin.toFinset = ({v, w} : Finset V3) := by
+        ext z
+        simp [hfin.mem_toFinset]
+      refine ⟨fun z => if z = v then t2 else if z = w then t3 else 0, hfin, ?_, ?_, ?_⟩
+      · rw [h1, Finset.sum_insert (show v ∉ ({w} : Finset V3) from by simp [hvw]),
+          Finset.sum_singleton, h5]
+        show t2 • v + t3 • w
+            = (if v = v then t2 else if v = w then t3 else 0) • v
+              + (if w = v then t2 else if w = w then t3 else 0) • w
+        rw [if_pos rfl, if_neg (Ne.symm hvw), if_pos rfl]
+      · intro z hz
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+        rcases hz with hz1 | hz1
+        · show 0 < (if z = v then t2 else if z = w then t3 else 0)
+          rw [if_pos hz1]
+          exact h2
+        · show 0 < (if z = v then t2 else if z = w then t3 else 0)
+          rw [if_neg (fun hc => hvw (hc.symm.trans hz1)), if_pos hz1]
+          exact h3
+      · rw [h1, Finset.sum_insert (show v ∉ ({w} : Finset V3) from by simp [hvw]),
+          Finset.sum_singleton]
+        show (if v = v then t2 else if v = w then t3 else 0)
+            + (if w = v then t2 else if w = w then t3 else 0) = 1
+        rw [if_pos rfl, if_neg (Ne.symm hvw), if_pos rfl]
+        exact h4
 
 /-- HOL `MIDPOINT_IN_CONV0` (leaf_cell.hl:3659-?).  When `p = q` the
 `toFinset` in `Affsign` is a singleton, so the witness function is `1`. -/
@@ -1878,10 +2005,19 @@ theorem BDXKHTW {V : Set V3} {X : Set V3} {u0 u1 v1 v2 : V3}
     X ⊆ wedgeGe u0 u1 v1 v2 := by
   sorry
 
-/-- HOL `AZIM_POS_IMP_SUM_2PI_ALT` (leaf_cell.hl:4167-?). -/
+/-- HOL `AZIM_POS_IMP_SUM_2PI_ALT` (leaf_cell.hl:4167-?), from the Geom
+complement formula `azim_compl` (`azim z w w2 w1 = 2π - azim z w w1 w2` off
+the degenerate zero). -/
 theorem AZIM_POS_IMP_SUM_2PI_ALT (a b c d : V3) (h : 0 < azim a b c d) :
     azim a b c d + azim a b d c = 2 * Real.pi := by
-  sorry
+  have hnc : ¬(Collinear3 a b c ∨ Collinear3 a b d) := by
+    intro hc
+    rw [azim, if_pos hc] at h
+    norm_num at h
+  have hnc1 : ¬ Collinear3 a b c := fun hc => hnc (Or.inl hc)
+  have hnc2 : ¬ Collinear3 a b d := fun hc => hnc (Or.inr hc)
+  rw [azim_compl hnc1 hnc2, if_neg (ne_of_gt h)]
+  ring
 
 /-- HOL `WEDGE_GE_COMPLEMENT` (leaf_cell.hl:4167-4201). -/
 theorem WEDGE_GE_COMPLEMENT (u0 u1 v1 v2 : V3) (h : azim u0 u1 v1 v2 ≠ 0) :

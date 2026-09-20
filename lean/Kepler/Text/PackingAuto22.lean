@@ -990,11 +990,59 @@ theorem REAL_CX0 (z : ℂ) (h1 : Complex.im z = 0) (h2 : Complex.re z = 0) :
     z = 0 := by
   exact Complex.ext (by simpa using h2) (by simpa using h1)
 
-/-- HOL `ARG_INV_ALT` (counting_spheres.hl:1791). GIANT. -/
+/-- HOL `Arg` for nonzero arguments (Ysskqoy `ARG` kit, range `[0, 2π)`),
+rebuilt from `Complex.arg` (range `(-π, π]`) by lifting negative arguments to
+`arg + 2π`.  The original port of `ARG_INV_ALT` used `Complex.arg` directly,
+which makes the identity false (HOL `Arg(x/y) = 2*pi - Arg(y/x)` relies on
+`Arg` taking values in `[0, 2π)`). -/
+noncomputable def holArg (z : ℂ) : ℝ :=
+  if 0 ≤ Complex.arg z then Complex.arg z else Complex.arg z + 2 * Real.pi
+
+/-- HOL `ARG_INV_ALT` (counting_spheres.hl:1791), restated over `holArg`
+(the faithful HOL `Arg`): for nonzero `u x y` with distinct `holArg (x/u)`,
+`holArg (y/u)`, the angle from `y` to `x` complements the angle from `x` to
+`y` to `2π`. -/
 theorem ARG_INV_ALT (u x y : ℂ) (hu : u ≠ 0) (hx : x ≠ 0) (hy : y ≠ 0)
-    (h : Complex.arg (x / u) ≠ Complex.arg (y / u)) :
-    Complex.arg (x / y) = 2 * Real.pi - Complex.arg (y / x) := by
-  sorry
+    (h : holArg (x / u) ≠ holArg (y / u)) :
+    holArg (x / y) = 2 * Real.pi - holArg (y / x) := by
+  have hlu : ∀ z : ℂ, holArg z =
+      if 0 ≤ Complex.arg z then Complex.arg z else Complex.arg z + 2 * Real.pi :=
+    fun z => rfl
+  have hxy : x / y = (y / x)⁻¹ := by field_simp
+  -- the hypothesis forces `arg (y/x) ≠ 0`
+  have hargne : Complex.arg (y / x) ≠ 0 := by
+    intro h0
+    have hzx : 0 ≤ (y / x).re ∧ (y / x).im = 0 := Complex.arg_eq_zero_iff.mp h0
+    have hre : 0 < (y / x).re := by
+      have hzne : (y / x).re ≠ 0 := by
+        intro he
+        have hzero : y / x = 0 := Complex.ext (by simpa using he) (by simpa using hzx.2)
+        exact div_ne_zero hy hx hzero
+      exact lt_of_le_of_ne hzx.1 (Ne.symm hzne)
+    have hzre : y / x = ((y / x).re : ℂ) := Complex.ext rfl (by simpa using hzx.2)
+    have h1 : x / u = (y / x)⁻¹ * (y / u) := by field_simp
+    have h2 : (y / x)⁻¹ = (↑(((y / x).re)⁻¹) : ℂ) := by
+      rw [congrArg Inv.inv hzre, ← Complex.ofReal_inv]
+    have harg2 : Complex.arg (x / u) = Complex.arg (y / u) := by
+      rw [h1, h2, Complex.arg_real_mul (y / u) (inv_pos.mpr hre)]
+    exfalso
+    have hne : holArg (x / u) = holArg (y / u) := by simp only [hlu, harg2]
+    exact h hne
+  rcases eq_or_lt_of_le (Complex.arg_le_pi (y / x)) with hπ | hlt
+  · -- `arg (y/x) = π`: both sides equal `π`
+    have hxarg : Complex.arg (x / y) = Real.pi := by
+      rw [hxy, Complex.arg_inv, if_pos hπ]
+    have hp : (0:ℝ) ≤ Real.pi := le_of_lt Real.pi_pos
+    rw [hlu, hlu, hπ, hxarg, if_pos hp]
+    ring
+  · rw [hlu, hlu, hxy, Complex.arg_inv, if_neg (ne_of_lt hlt)]
+    by_cases hge : 0 ≤ Complex.arg (y / x)
+    · have hpos : 0 < Complex.arg (y / x) := lt_of_le_of_ne hge (Ne.symm hargne)
+      rw [if_pos hge, if_neg (by linarith : ¬ (0:ℝ) ≤ -Complex.arg (y / x))]
+      ring
+    · have hneg : Complex.arg (y / x) < 0 := not_le.mp hge
+      rw [if_pos (by linarith : (0:ℝ) ≤ -Complex.arg (y / x)), if_neg hge]
+      ring
 
 /-- HOL `ARG_ORDER` (counting_spheres.hl:1822). GIANT. -/
 theorem ARG_ORDER (u : ℂ) (h : ℕ → ℂ) (n : ℕ) (hu : u ≠ 0)
@@ -1107,15 +1155,62 @@ theorem AZIM_BASE_SHIFT_LT (x y z z' w1 w2 w3 : V3)
     azim x y z' w1 < azim x y z' w2 ∧ azim x y z' w2 < azim x y z' w3 := by
   sorry
 
-/-- HOL `AZIM_COMP_LT` (counting_spheres.hl:2513). GIANT. -/
+/-- HOL `AZIM_COMP_LT` (counting_spheres.hl:2513). Filled as in HOL:
+complement both sides (`azim_compl`, i.e. `AZIM_COMPL_EXT`, proved locally to
+avoid the PackingAuto6/PackingAuto7 name clash) and finish by order
+arithmetic with `azim_nonneg`/`azim_lt_two_pi`. -/
 theorem AZIM_COMP_LT (x y z u v : V3) (h1 : 0 < azim x y z u)
     (h2 : azim x y z u < azim x y z v) : azim x y v z < azim x y u z := by
-  sorry
+  have hzu : azim x y z u ≠ 0 := ne_of_gt h1
+  have e1 : azim x y v z =
+      if azim x y z v = 0 then (0:ℝ) else 2 * Real.pi - azim x y z v := by
+    by_cases hc1 : Collinear3 x y z
+    · simp [azim, hc1]
+    · by_cases hc2 : Collinear3 x y v
+      · simp [azim, hc2]
+      · exact azim_compl hc1 hc2
+  have e2 : azim x y u z =
+      if azim x y z u = 0 then (0:ℝ) else 2 * Real.pi - azim x y z u := by
+    by_cases hc1 : Collinear3 x y z
+    · simp [azim, hc1]
+    · by_cases hc2 : Collinear3 x y u
+      · simp [azim, hc2]
+      · exact azim_compl hc1 hc2
+  rw [e1, e2, if_neg hzu]
+  by_cases hv0 : azim x y z v = 0
+  · rw [if_pos hv0]
+    have hnn := azim_nonneg x y z u
+    have hlt := azim_lt_two_pi x y z u
+    linarith
+  · rw [if_neg hv0]
+    linarith
 
-/-- HOL `AZIM_COMP_LE` (counting_spheres.hl:2524). GIANT. -/
+/-- HOL `AZIM_COMP_LE` (counting_spheres.hl:2524). Filled as `AZIM_COMP_LT`. -/
 theorem AZIM_COMP_LE (x y z u v : V3) (h1 : 0 < azim x y z u)
     (h2 : azim x y z u ≤ azim x y z v) : azim x y v z ≤ azim x y u z := by
-  sorry
+  have hzu : azim x y z u ≠ 0 := ne_of_gt h1
+  have e1 : azim x y v z =
+      if azim x y z v = 0 then (0:ℝ) else 2 * Real.pi - azim x y z v := by
+    by_cases hc1 : Collinear3 x y z
+    · simp [azim, hc1]
+    · by_cases hc2 : Collinear3 x y v
+      · simp [azim, hc2]
+      · exact azim_compl hc1 hc2
+  have e2 : azim x y u z =
+      if azim x y z u = 0 then (0:ℝ) else 2 * Real.pi - azim x y z u := by
+    by_cases hc1 : Collinear3 x y z
+    · simp [azim, hc1]
+    · by_cases hc2 : Collinear3 x y u
+      · simp [azim, hc2]
+      · exact azim_compl hc1 hc2
+  rw [e1, e2, if_neg hzu]
+  by_cases hv0 : azim x y z v = 0
+  · rw [if_pos hv0]
+    have hnn := azim_nonneg x y z u
+    have hlt := azim_lt_two_pi x y z u
+    linarith
+  · rw [if_neg hv0]
+    linarith
 
 /-- HOL `WEDGE_ORDER_DISJOINT` (counting_spheres.hl:2535). GIANT. -/
 theorem WEDGE_ORDER_DISJOINT (x y z : V3) (n : ℕ) (g : ℕ → V3)
@@ -1171,16 +1266,28 @@ theorem FCHANGED_AFFINE (p f : Set V3) (hp : polyhedron p) (hb : Bornology.IsBou
     fchanged f ∩ (affineSpan ℝ f : Set V3) = intrinsicInterior ℝ f := by
   sorry
 
-/-- HOL `RCONE_PREP` (counting_spheres.hl:2765). GIANT (inner-product
-expansion at the foot; the ofLp-coe elaboration drift defeated the algebra
-chain this round — RCONE_DISK/RDISK_R consume it as an axiom). -/
+/-- HOL `RCONE_PREP` (counting_spheres.hl:2765). Filled: direct inner-product
+algebra with the `dotV_*` helpers (all ofLp bookkeeping is confined to those
+lemmas). -/
 theorem RCONE_PREP (p v u0 : V3) (b t : ℝ) (hb : 0 < b) (hv : v ≠ 0)
     (hvv : 0 < v ⬝ᵥ v) (hu0 : u0 = (b / (v ⬝ᵥ v)) • v) (ht1 : 0 < t) (ht2 : t < 1)
     (hpv : p ⬝ᵥ v = b) :
     u0 ⬝ᵥ u0 = b * b / (v ⬝ᵥ v) ∧
       p ⬝ᵥ u0 = b * b / (v ⬝ᵥ v) ∧
       dist p u0 ^ 2 = p ⬝ᵥ p - b * b / (v ⬝ᵥ v) := by
-  sorry
+  have hvne : v ⬝ᵥ v ≠ 0 := ne_of_gt hvv
+  have hu0u0 : u0 ⬝ᵥ u0 = b * b / (v ⬝ᵥ v) := by
+    rw [hu0, dotV_smul_left, WithLp.ofLp_smul, dotV_smul_right]
+    field_simp
+  have hpu0 : p ⬝ᵥ u0 = b * b / (v ⬝ᵥ v) := by
+    rw [hu0, WithLp.ofLp_smul, dotV_smul_right, hpv]
+    field_simp
+  refine ⟨hu0u0, hpu0, ?_⟩
+  have hdn : dist p u0 ^ 2 = ((p - u0 : V3).ofLp) ⬝ᵥ ((p - u0 : V3).ofLp) := by
+    rw [dist_eq_norm, norm_sq_eq_dot]
+  rw [hdn, dotV_sub_left, WithLp.ofLp_sub, dotV_sub_right, dotV_sub_right,
+    dotV_comm u0 p, hpu0, hu0u0]
+  ring
 
 /-- Membership in `rconeGt 0 v t`, rewritten (local copy of `rcone_def_alt`,
 which is proved later in this chapter). -/
@@ -1574,9 +1681,46 @@ theorem c3_lemma (c3 : Set V3) (v : V3) (b : ℝ) (hsub : c3 ⊆ {p : V3 | p ⬝
   rw [hpt, h4, one_smul]
   exact h1
 
-/-- HOL `NOT_COLLINEAR` (counting_spheres.hl:4150). GIANT (analytic core). -/
+/-- HOL `NOT_COLLINEAR` (counting_spheres.hl:4150). Filled: some coordinate
+`v i` is nonzero; shearing a basis vector gives `u ≠ 0` with `v ⬝ᵥ u = 0`,
+which cannot be a real multiple of `v`. -/
 theorem NOT_COLLINEAR (v : V3) (hv : v ≠ 0) : ∃ u : V3, ¬ Collinear3 0 v u := by
-  sorry
+  classical
+  have hcoord : ∃ i : Fin 3, (v : Fin 3 → ℝ) i ≠ 0 := by
+    by_contra hcon
+    push_neg at hcon
+    exact hv (PiLp.ext fun i => by simp [hcon i])
+  obtain ⟨i, hi⟩ := hcoord
+  obtain ⟨j, hji⟩ : ∃ j : Fin 3, j ≠ i := ⟨i + 1, by fin_cases i <;> simp⟩
+  set u : V3 := EuclideanSpace.single j (1:ℝ)
+    - ((v : Fin 3 → ℝ) j / (v : Fin 3 → ℝ) i) • EuclideanSpace.single i (1:ℝ) with hu
+  refine ⟨u, ?_⟩
+  intro hcol
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := (0:V3)) (w := v) (w1 := u) hv).mp hcol
+  rw [sub_zero, sub_zero] at hc
+  have hvs : ∀ k : Fin 3,
+      v ⬝ᵥ (EuclideanSpace.single k (1:ℝ)) = (v : Fin 3 → ℝ) k := by
+    intro k
+    rw [← inner_eq_dot, EuclideanSpace.inner_single_right]
+    simp
+  have hdot0 : v ⬝ᵥ u = 0 := by
+    rw [hu, WithLp.ofLp_sub, WithLp.ofLp_smul, dotV_sub_right, dotV_smul_right, hvs j, hvs i]
+    field_simp
+    ring
+  rw [hc, WithLp.ofLp_smul] at hdot0
+  have hvv : 0 < v ⬝ᵥ v := by
+    rw [show v ⬝ᵥ v = ‖v‖ ^ 2 from (norm_sq_eq_dot v).symm]
+    exact sq_pos_of_pos (norm_pos_iff.mpr hv)
+  have hc0 : c = 0 := by
+    have h1 : c * (v ⬝ᵥ v) = 0 := by
+      rw [← dotV_smul_right v c v]
+      exact hdot0
+    exact mul_right_cancel₀ (ne_of_gt hvv) (by rw [h1, zero_mul])
+  have huj : (u : Fin 3 → ℝ) j = 1 := by
+    rw [hu]
+    simp [WithLp.ofLp_sub, WithLp.ofLp_smul, PiLp.single_apply, hji]
+  rw [hc, hc0, WithLp.ofLp_smul, zero_smul] at huj
+  exact absurd huj (by simp)
 
 /-- HOL `gotcjah_prep` (counting_spheres.hl:4174). GIANT. -/
 theorem gotcjah_prep (c : Set V3) (v : V3) (b : ℝ) (P : Set V3) (WF : Set V3)
@@ -1675,12 +1819,15 @@ theorem rcone_gt_facet (gv gw : ℝ) (v w q p : V3) (h1 : 0 < gv ∧ gv < Real.p
     (h4 : gv + gw ≤ arcV 0 v w) : q ⬝ᵥ w < ‖w‖ * Real.cos gw := by
   sorry
 
-/-- HOL `BIJ_SYM` (counting_spheres.hl:4784). GIANT (true in HOL where all
-types are inhabited; the Lean statement admits empty `a`/`b`, where the
-existence of a function `b → a` can fail — needs `Nonempty` side conditions). -/
-theorem BIJ_SYM {a : Type*} {b : Type*} (A : Set a) (B : Set b)
+/-- HOL `BIJ_SYM` (counting_spheres.hl:4784), restated with `[Nonempty a]`:
+in HOL every type is inhabited so a function `b → a` always exists; in Lean it
+does not when `a` is empty (e.g. `a = Empty`, `b = Unit`, `A = ∅`, `B = univ`
+satisfies the hypothesis), so the side condition is required.  Filled via the
+`invFunOn` inverse bijection. -/
+theorem BIJ_SYM {a : Type*} {b : Type*} [Nonempty a] (A : Set a) (B : Set b)
     (h : ∃ f : a → b, Set.BijOn f A B) : ∃ g : b → a, Set.BijOn g B A := by
-  sorry
+  obtain ⟨f, hf⟩ := h
+  exact ⟨Function.invFunOn f A, hf.symm hf.invOn_invFunOn.symm⟩
 
 /-- HOL `BIJ_TRANS` (counting_spheres.hl:4793). -/
 theorem BIJ_TRANS {a b c : Type*} (A : Set a) (B : Set b) (C : Set c)
@@ -1690,13 +1837,50 @@ theorem BIJ_TRANS {a b c : Type*} (A : Set a) (B : Set b) (C : Set c)
   obtain ⟨g, hg⟩ := h2
   exact ⟨g ∘ f, Set.BijOn.comp hg hf⟩
 
-/-- HOL `PREIMAGE_BIJ` (counting_spheres.hl:4802). GIANT. -/
-theorem PREIMAGE_BIJ {a b c : Type*} (A : Set a) (B : Set b) (C : Set c)
+/-- HOL `PREIMAGE_BIJ` (counting_spheres.hl:4802), restated faithfully with
+`[Nonempty b]`: HOL's `preimage A f {c}` is `{x ∈ A | f x = c}`, whereas the
+original port dropped the `A`/`B` restrictions in `h3`, which breaks the
+theorem (take `a = Unit`, `b = c = ℕ`, `A = ∅`, `B = C = {0}`,
+`f = g = const 0`: the hypotheses hold but no bijection `∅ → {0}` is onto).
+The `Nonempty b` side condition is needed because the total map `a → b` of the
+conclusion need not exist otherwise (`a = Unit`, `b = Empty`, `A = B = C = ∅`).
+Filled by the HOL choice argument `q a := p_{f a} a`. -/
+theorem PREIMAGE_BIJ {a b c : Type*} [Nonempty b] (A : Set a) (B : Set b) (C : Set c)
     (f : a → c) (g : b → c)
     (h1 : ∀ x : a, x ∈ A → f x ∈ C) (h2 : ∀ y : b, y ∈ B → g y ∈ C)
-    (h3 : ∀ z : c, z ∈ C → ∃ p, Set.BijOn p {x : a | f x = z} {y : b | g y = z}) :
+    (h3 : ∀ z : c, z ∈ C → ∃ p, Set.BijOn p {x : a | x ∈ A ∧ f x = z}
+      {y : b | y ∈ B ∧ g y = z}) :
     ∃ q, Set.BijOn q A B := by
-  sorry
+  classical
+  -- totalize the choice: for `z ∉ C` take an arbitrary map (never used below)
+  have ht : ∀ z : c, ∃ p : a → b,
+      (z ∈ C → Set.BijOn p {x : a | x ∈ A ∧ f x = z} {y : b | y ∈ B ∧ g y = z}) := by
+    intro z
+    by_cases hz : z ∈ C
+    · obtain ⟨p, hp⟩ := h3 z hz
+      exact ⟨p, fun _ => hp⟩
+    · exact ⟨fun _ => Classical.choice ‹Nonempty b›, fun hz' => absurd hz' hz⟩
+  choose pp hpp using ht
+  refine ⟨fun x => pp (f x) x, ?_⟩
+  have hmem : ∀ x : a, x ∈ A → pp (f x) x ∈ B ∧ g (pp (f x) x) = f x := by
+    intro x hx
+    show pp (f x) x ∈ {y : b | y ∈ B ∧ g y = f x}
+    exact (hpp (f x) (h1 x hx)).mapsTo ⟨hx, rfl⟩
+  refine ⟨fun x hx => (hmem x hx).1, ?_, ?_⟩
+  · intro x₁ hx₁ x₂ hx₂ heq
+    simp only [] at heq
+    have hg₁ := (hmem x₁ hx₁).2
+    have hg₂ := (hmem x₂ hx₂).2
+    have hf12 : f x₁ = f x₂ := by rw [← hg₁, ← hg₂, heq]
+    have hp12 : pp (f x₁) = pp (f x₂) := by rw [hf12]
+    rw [← hp12] at heq
+    exact (hpp (f x₁) (h1 x₁ hx₁)).injOn ⟨hx₁, rfl⟩ ⟨hx₂, hf12.symm⟩ heq
+  · intro y hy
+    obtain ⟨x, hxmem, hex⟩ := (hpp (g y) (h2 y hy)).surjOn ⟨hy, rfl⟩
+    refine ⟨x, hxmem.1, ?_⟩
+    show pp (f x) x = y
+    rw [hxmem.2]
+    exact hex
 
 /-- HOL `BIJ_FACET_HYPERFACE` (counting_spheres.hl:4821). GIANT. -/
 theorem BIJ_FACET_HYPERFACE (p : Set V3) (hp : polyhedron p) (hb : Bornology.IsBounded p)
@@ -1948,12 +2132,24 @@ theorem FACET_FINITE (p f : Set V3) (hp : polyhedron p) (hf : FacetOf f p) :
   exact FINITE_POLYHEDRON_FACETS hfp
 
 /-- HOL `BIJ_SUM` (counting_spheres.hl:6308). Filled: the image of `A`'s
-finset under the injective `ab` is `B`'s finset, then `Finset.sum_image`. -/
+finset under the `BijOn` map is `B`'s finset (`Finset.sum_image` needs the
+`InjOn` in finset form). -/
 theorem BIJ_SUM {a i : Type*} [DecidableEq a] [DecidableEq i] {A : Set a} {B : Set i}
     [DecidablePred (· ∈ A)] [DecidablePred (· ∈ B)]
     (f : i → ℝ) (ab : a → i) (h : Set.BijOn ab A B) (hA : A.Finite) (hB : B.Finite) :
     (∑ x ∈ hA.toFinset, f (ab x)) = (∑ y ∈ hB.toFinset, f y) := by
-  sorry
+  have himg : hA.toFinset.image ab = hB.toFinset := by
+    ext y
+    simp only [Finset.mem_image, hA.mem_toFinset]
+    constructor
+    · rintro ⟨x, hx, rfl⟩
+      exact hB.mem_toFinset.mpr (h.mapsTo hx)
+    · intro hy
+      obtain ⟨x, hx, hex⟩ := h.surjOn (hB.mem_toFinset.mp hy)
+      exact ⟨x, hx, hex⟩
+  have hinjfin : Set.InjOn ab (hA.toFinset : Set a) := fun x hx y hy he =>
+    h.injOn (hA.mem_toFinset.mp hx) (hA.mem_toFinset.mp hy) he
+  rw [← Finset.sum_image hinjfin, himg]
 
 /-- HOL `CARD_AT_LEAST3` (counting_spheres.hl:6318). -/
 theorem CARD_AT_LEAST3 {α : Type*} [DecidableEq α] (x y z : α) (A : Set α)
@@ -2070,26 +2266,101 @@ theorem THETA_BOUNDS (v : V3) (theta : V3 → ℝ) (hv : v ∈ ballAnnulus)
   subst htheta
   exact ⟨by linarith, by linarith [hacs]⟩
 
-/-- HOL `INJ_FINITE_EXISTS` (counting_spheres.hl:6704). GIANT. -/
-theorem INJ_FINITE_EXISTS {a b : Type*} [DecidableEq a] [DecidableEq b] (n : ℝ)
+/-- HOL `INJ_FINITE_EXISTS` (counting_spheres.hl:6704), restated with
+`[Nonempty b]`: the conclusion asserts a total map `a → b`, which need not
+exist for an empty `b` (e.g. `a = Unit`, `b = Empty`, `A = B = ∅`, `n = 0`).
+Filled from `Set.Finite.exists_injOn_of_encard_le` (HOL's proof is induction
+on `n`, available here as the encard pigeonhole). -/
+theorem INJ_FINITE_EXISTS {a b : Type*} [DecidableEq a] [DecidableEq b] [Nonempty b] (n : ℝ)
     (A : Set a) (B : Set b) (hA : A.Finite ∧ A.ncard = n) (hB : B.Finite)
     (hn : n ≤ B.ncard) : ∃ j : a → b, (∀ x ∈ A, j x ∈ B) ∧ Set.InjOn j A := by
-  sorry
+  have hcard : (A.ncard : ℝ) ≤ (B.ncard : ℝ) := by rw [hA.2]; exact hn
+  have hcard' : A.ncard ≤ B.ncard := Nat.cast_le.mp hcard
+  have henc : A.encard ≤ B.encard := by
+    rw [← hA.1.cast_ncard_eq, ← hB.cast_ncard_eq]
+    exact_mod_cast hcard'
+  obtain ⟨j, hjB, hjinj⟩ := hA.1.exists_injOn_of_encard_le henc
+  exact ⟨j, fun x hx => hjB hx, hjinj⟩
 
-/-- HOL `INJ_EXTENSION` (counting_spheres.hl:6759). GIANT. -/
-theorem INJ_EXTENSION {α β : Type*} [DecidableEq α] [DecidableEq β] (A A' : Set α)
+/-- HOL `INJ_EXTENSION` (counting_spheres.hl:6759), restated with
+`[Nonempty β]` (the total map `α → β` need not exist for empty `β`).
+Filled as in HOL: inject `A \ A'` into `B \ j' '' A'` by the cardinal gap
+`ncard A - ncard A' ≤ ncard B - ncard (j' '' A')`, then paste. -/
+theorem INJ_EXTENSION {α β : Type*} [DecidableEq α] [DecidableEq β] [Nonempty β] (A A' : Set α)
     (B : Set β) (j' : α → β) (hA : A.Finite) (hB : B.Finite) (hsub : A' ⊆ A)
     (hinj : Set.InjOn j' A' ∧ ∀ x ∈ A', j' x ∈ B) (hcard : A.ncard ≤ B.ncard) :
     ∃ j : α → β, Set.InjOn j A ∧ (∀ x ∈ A', j x = j' x) ∧ (∀ x ∈ A, j x ∈ B) := by
-  sorry
+  classical
+  have hA' : A'.Finite := hA.subset hsub
+  have himg : (j' '' A').Finite := hA'.image j'
+  have himgsub : j' '' A' ⊆ B := fun y hy => by
+    obtain ⟨x, hx, hy'⟩ := hy
+    exact hy' ▸ hinj.2 x hx
+  have himgcard : (j' '' A').ncard = A'.ncard := hinj.1.ncard_image
+  have e1 : A'.ncard + (A \ A').ncard = A.ncard := by
+    have h := Set.ncard_inter_add_ncard_sdiff_eq_ncard A A' hA
+    rwa [Set.inter_eq_right.mpr hsub] at h
+  have e2 : (j' '' A').ncard + (B \ j' '' A').ncard = B.ncard := by
+    have h := Set.ncard_inter_add_ncard_sdiff_eq_ncard B (j' '' A') hB
+    rwa [Set.inter_eq_right.mpr himgsub] at h
+  have hd : (A \ A').ncard ≤ (B \ j' '' A').ncard := by omega
+  have hf1 : (A \ A').Finite := hA.sdiff
+  have hf2 : (B \ j' '' A').Finite := hB.sdiff
+  have henc : (A \ A').encard ≤ (B \ j' '' A').encard := by
+    rw [← hf1.cast_ncard_eq, ← hf2.cast_ncard_eq]
+    exact_mod_cast hd
+  obtain ⟨k, hkB, hkinj⟩ := hf1.exists_injOn_of_encard_le henc
+  refine ⟨fun x => if hx : x ∈ A' then j' x else k x, ?_, ?_, ?_⟩
+  · intro x₁ hx₁ x₂ hx₂ heq
+    by_cases h1 : x₁ ∈ A'
+    · simp only [dif_pos h1] at heq
+      by_cases h2 : x₂ ∈ A'
+      · simp only [dif_pos h2] at heq
+        exact hinj.1 h1 h2 heq
+      · simp only [dif_neg h2] at heq
+        exfalso
+        have hb1 : j' x₁ ∈ j' '' A' := ⟨x₁, h1, rfl⟩
+        have hb2 : k x₂ ∈ B \ j' '' A' := hkB ⟨hx₂, h2⟩
+        rw [← heq] at hb2
+        exact hb2.2 hb1
+    · simp only [dif_neg h1] at heq
+      by_cases h2 : x₂ ∈ A'
+      · simp only [dif_pos h2] at heq
+        exfalso
+        have hb2 : k x₁ ∈ B \ j' '' A' := hkB ⟨hx₁, h1⟩
+        have hb1 : j' x₂ ∈ j' '' A' := ⟨x₂, h2, rfl⟩
+        rw [heq] at hb2
+        exact hb2.2 hb1
+      · simp only [dif_neg h2] at heq
+        exact hkinj ⟨hx₁, h1⟩ ⟨hx₂, h2⟩ heq
+  · intro x hx
+    simp only [dif_pos hx]
+  · intro x hx
+    by_cases h1 : x ∈ A'
+    · simp only [dif_pos h1]
+      exact hinj.2 x h1
+    · simp only [dif_neg h1]
+      exact (hkB ⟨hx, h1⟩).1
 
-/-- HOL `BIJ_EXTENDS_INJ` (counting_spheres.hl:6794). GIANT. -/
-theorem BIJ_EXTENDS_INJ {α β : Type*} [DecidableEq α] [DecidableEq β] (A : Set α)
+/-- HOL `BIJ_EXTENDS_INJ` (counting_spheres.hl:6794), restated with
+`[Nonempty β]` (as `INJ_EXTENSION`, the total map needs it).  Filled: extend
+by `INJ_EXTENSION`, then surjectivity from the equal cardinalities. -/
+theorem BIJ_EXTENDS_INJ {α β : Type*} [DecidableEq α] [DecidableEq β] [Nonempty β] (A : Set α)
     (B : Set β) (A' : Set α) (j' : α → β) (hA : A.Finite) (hB : B.Finite)
     (hsub : A' ⊆ A) (hinj : Set.InjOn j' A' ∧ ∀ x ∈ A', j' x ∈ B)
     (hcard : A.ncard = B.ncard) :
     ∃ j : α → β, Set.BijOn j A B ∧ (∀ x ∈ A', j' x = j x) := by
-  sorry
+  obtain ⟨j, hinjA, hext, hmap⟩ :=
+    INJ_EXTENSION A A' B j' hA hB hsub hinj (le_of_eq hcard)
+  refine ⟨j, ⟨fun x hx => hmap x hx, hinjA, ?_⟩, fun x hx => (hext x hx).symm⟩
+  have himgcard : (j '' A).ncard = A.ncard := hinjA.ncard_image
+  have himgB : j '' A = B :=
+    Set.eq_of_subset_of_ncard_le (fun y hy => by
+      obtain ⟨x, hx, hy'⟩ := hy
+      rw [← hy']
+      exact hmap x hx) (by rw [himgcard, hcard]) hB
+  show B ⊆ j '' A
+  rw [himgB]
 
 open Classical in
 /-- HOL `DLWCHEM_VECTOR_sum` (counting_spheres.hl:6814). GIANT. -/

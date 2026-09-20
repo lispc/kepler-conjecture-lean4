@@ -16,6 +16,16 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
   unadorned_MMs/HXHYTIJ twins, LA34 V3_DEFOR tower, LA29 SCS_*_IS_SCS,
   LA36 SCS_*_IS_TRI_STABLE, LA25 ZITHLQN_CASE_4/5/6, LA20 OEHDBEN).
 
+  Re-swept 2026-09-20 (assembly desk): every one of the 74 blocked entries
+  re-verified against the current upstream source, line-by-line. ZERO new
+  discharges landed this round -- the 2026-09-19 sweep had already captured
+  the fill waves' `*_concl` twins, and the newest 2026-09-20 upstream gains
+  (XWNHLMD master+kernel, TBRMXRZ1, VPWSHTO_PRIME, the OEHDBEN pair, the
+  CUXVZOZ/CJBDXXN p21 pair, QKNVMLB3_p35, LA3's build repair) are all
+  proved-but-unbridgeable; see the per-item notes in (d) below and the
+  per-module dispatch map in SWEEP NOTES. LocalAuto3 now builds again
+  (caveat (2) lifted), but LA5/6/10/35 host no dischargeable twins.
+
   Discharged: 16        Blocked: 74
 
   Discharged here (twin · shape status):
@@ -72,6 +82,8 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
       the v2 `WKEIDFT`/`WKEIDFT_EQU_V2` remain sorried),
       PEDSLGV1 (LocalAuto20.PEDSLGV1), PEDSLGV2 (LocalAuto20.PEDSLGV2),
       OIQKKEP (OIQKKEP_p26 = `exact OIQKKEP_concl ...`).
+      [2026-09-20: all 11 re-verified circular verbatim; VASYYAU's LA32
+        mentions are NEEDS-comments only, not twins.]
 
   (c) Downstream twin exists but is itself sorried (45):
       XWITCCN (LA36 CASE_3/4/5 + LA24 CASE_* all sorried; no master),
@@ -97,33 +109,49 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
       QKNVMLB2 (QKNVMLB2_p35), YRTAFYH (YRTAFYH_p17, giant case tree;
         newly tracked -- was missing from the previous ledger's lists).
 
-  (d) Twin proved (code-complete) but shape delta is not bridgeable (7):
+  (d) Twin proved (code-complete) but shape delta is not bridgeable (7).
+      [2026-09-20: this whole class re-audited against the fresh proofs;
+      every blocker below is confirmed non-derivable, with the reason:]
       OEHDBEN -- LocalAuto20.OEHDBEN/OEHDBEN_PRIME are now PROVED but (i)
-        consume `main_nonlinear_terminal_v11` (opaque registry Prop, no
-        bridge to the LA21 anchor) and (ii) conclude the target
+        consume `main_nonlinear_terminal_v11` (opaque registry Prop, not a
+        hypothesis of the registry concl, hence unprovable without a fresh
+        sorry) and (ii) conclude the target
         `{scs6T1, scs5M1, scs4M2, scs3M1}` where the registry concl wants
-        `scs3T1` in that slot.
+        `scs3T1` in that slot (`scs3M1` has d = 0.103 + funlist edge table,
+        `scs3T1` d = 0.11 -- genuinely different systems).
       PQCSXWG2 -- discharged 2026-09-19, see above (the former body-mismatch
         blocker was voided by the deltaX5 dedup).
       EYYPQDW2 -- discharged 2026-09-19, see above.
-      TBRMXRZ1 -- TBRMXRZ1_p22 composes in the opposite order (`g o f`, needs
-        the inner slope `g'` and `0 < f'` which the registry concl does not
-        carry; it concludes `reEqvl h' g'` vs the registry's `reEqvl f' h'`).
-      VPWSHTO -- VPWSHTO_p15 (base, still sorried) and VPWSHTO_PRIME_p15
-        conclude the `EXISTS i IN Icc 0 4` diagonal-bounds form and lack the
-        registry concl's `2 < dist`/distinctness witness conjuncts.
-      XWNHLMD -- XWNHLMD_p26 has an extra `s.d <= s'.d` antecedent not carried
-        by (nor derivable from) the registry concl, and its kernel
-        XWNHLMD_MM_p26 is still sorried.
-      CUXVZOZ / CJBDXXN -- the p21 twins take `mainNonlinearTerminalV11_p21`,
-        a *different* opaque registry Prop from LocalAuto1's
-        `main_nonlinear_terminal_v11`; no bridge exists between the two
-        anchors.
-      QKNVMLB3 -- QKNVMLB3_p35 is now PROVED, but its realisation arguments
-        use the index convention `vv (i % s'.k + p % s.k)` and the
-        `scsHalfSliceV39 s p q d' mkj = s'` equation form, where the registry
-        concl uses `vv ((i + p) % s'.k)` and the `(s', s'') = scsSliceV39 ...`
-        tuple form; the conventions disagree off the mod boundary and no
+      TBRMXRZ1 -- TBRMXRZ1_p22 is now PROVED but composes in the opposite
+        order (`g o f`, needs the inner slope `0 < f'` and concludes
+        `reEqvl h' g'`) where the registry concl carries `f o g` and wants
+        `reEqvl f' h'`; the registry hypotheses carry no information about
+        the inner g-slope sign, so no witness term exists (the registry
+        statement is in fact not provable from its own hypotheses).
+      VPWSHTO -- master VPWSHTO_p15 still sorried. VPWSHTO_PRIME_p15 is now
+        PROVED but concludes the `EXISTS i IN Icc 0 4` diagonal-bounds form
+        and lacks the registry concl's `2 < dist` (strict, not derivable
+        from the `<= 1+sqrt 5` bounds) and distinctness witness conjuncts.
+      XWNHLMD -- XWNHLMD_p26 AND its kernel XWNHLMD_MM_p26 are now PROVED
+        (2026-09-20, via `TAUSTAR_LE_0_XWNHLMD_p26` + `SGTRNAF_p27`), but
+        the master keeps the extra `s.d <= s'.d` antecedent (consumed by
+        `SCS_BASIC_TAUSTAR_p26`); `isScsV39` pins only `s.d < 0.9` (no
+        dTame equation), so the antecedent is not derivable from the
+        registry hypotheses.
+      CUXVZOZ / CJBDXXN -- the p21 twins are now PROVED (modulo the still
+        sorried engine `general_482_deformation_p21`), but they take
+        `mainNonlinearTerminalV11_p21`, a *different* opaque registry Prop
+        from LocalAuto1's `main_nonlinear_terminal_v11`; no bridge exists
+        between the two anchors.
+      QKNVMLB3 -- QKNVMLB3_p35 is now PROVED but only by case-splitting
+        onto the still-sorried `QKNVMLB3_Eq4/LE4_p35` branches, and its
+        realisation arguments use the index convention
+        `vv (i % s'.k + p % s.k)` and the `scsHalfSliceV39 s p q d' mkj = s'`
+        equation form, where the registry concl uses `vv ((i + p) % s'.k)`
+        and the `(s', s'') = scsSliceV39 ...` tuple form (the tuple side
+        *does* bridge via the `scsSliceV39` def); the conventions disagree
+        off the mod boundary (e.g. s.k=6, p=2, q=0, i=4 gives `vv 6` vs
+        `vv 1`, and `Periodic vv s.k` cannot reconcile them) so no
         transport is derivable.
 
   Sweep notes (2026-09-19).  LA29's 16 `SCS_*_IS_SCS`, LA36's 8
@@ -132,6 +160,48 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
   still-sorried wave masters above; none of them is a `*_concl` twin.
   LA12's prop_equ chain (PROP_EQU_IS_SCS / TRANS_MMS_SUBSET / YXIONXL3) is
   the engine of the new YXIONXL3 discharge.
+
+  Sweep notes (2026-09-20): per-module dispatch map of the 74 blocked
+  entries (twin module · what the next upstream fill wave must prove).
+
+    LA11 (1):  PQCSXWG1_p11 sorried; no proved mkSimplex1 distance
+      identities exist in any lane (checked LA11/LA21), so no shim route.
+    LA14 (1):  ZLZTHIC_p14 sorried (lunar-deformation lane).
+    LA16 (2):  BKOSSGE_p16 / CQAOQLR_p16 sorried.
+    LA17 (1):  YRTAFYH_p17 sorried (giant case tree); LA20/24/32/33
+      mentions are per-instance STAB_*_IS_SCS components, not the general
+      twin.
+    LA18 (6):  AURSIPD_p18 + CNICGSF1-5_p18 all sorried.
+    LA20 (5):  AQICLXA / FUNOUYH_SLICE sorried; PEDSLGV1/2 circular;
+      OEHDBEN blocked under (d); WKEIDFT master still sorried (LA24).
+    LA22 (2):  SYNQIWN_p22 (also mnt11-consuming) / TBRMXRZ1 (d) blocked.
+    LA23 (4):  JKQEWGV1/2/3_p23 masters sorried; their CASE_4/5/6_p23
+      components are sorried too, so no re-derivation route; LFLACKU_p23
+      sorried.
+    LA24 (2):  WKEIDFT_concl_p24 circular; XWITCCN_CASE_*_IS_SCS_p24
+      sorried.
+    LA25 (7):  ZITHLQN + 6 VASYYAU.hl re-exports circular.
+    LA26 (6):  PPBTYDQ/MXQTIED/AXJRPNC/RRCWNSJ sorried; OIQKKEP circular;
+      XWNHLMD (d) blocked.
+    LA27 (8):  XWITCCN2/AYQJTMD/EAPGLE/LKGRQUI/FEKTYIY/JCYFMRP/TFITSKC/
+      JLXFDMJ all sorried.
+    LA28 (3):  ODXLSTCv2/IMJXPHRv2/NUXCOEAv2 sorried (LA34's IMJXPHR_p34
+      master is also unproved and anchor-hypothesised).
+    LA29 (3):  JCYFMRP_V2/V3 + HIJQAHA sorried (mnt11-consuming).
+    LA30 (1):  UAGHHBM_p30 sorried (restriction-isScs fork).
+    LA31 (1):  ODXLSTCv2_p31 sorried (consumes the LA31-local opaque
+      anchors ZLZTHIC_concl_p31/MHAEYJN_concl_p31).
+    LA32 (3):  NWDGKXH/YOBIMPP/MIQMCSN sorried (mnt11-consuming).
+    LA33 (3):  YXIONXL2 (extra `3 < s.k` antecedent, uncovered s.k = 3
+      case; the p13 twin lives on the wrong lane type ScsV39P13) /
+      ARDBZYE / FYSSVEV all sorried.
+    LA35 (2):  QKNVMLB1/2_p35 sorried; QKNVMLB3 (d) blocked.
+    LA36 (1):  XWITCCN master sorried; its CASE_3/4/5/6 (+sqrt8/pro_cs/4_3)
+      components in LA36 are sorried too (no case-tree shim route).
+    LA37 (1):  MHAEYJN_p37 sorried; module still fails to build (caveat (5)).
+    none (11): HFNXPZA, EQTTNZI1, EQTTNZI2, DRNDRDV, ASSWPOW, EFLYGAU,
+      BJTDWPS, OTMTOTJ1-4 -- the only upstream mentions (LA16/23/24) are
+      same-shaped hypothesis arrows of other theorems, not twins.
 
   IMPORT CAVEATS.  (1) `Kepler.Text.LocalAnchors` cannot be co-imported with
   `Kepler.Text.LocalAuto1` at all: both declare `Kepler.Text.scsBasicV39`
@@ -143,11 +213,12 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
   LocalAuto1's vocabulary); LocalAnchors' three EXTERNAL-ANCHOR sorries
   (`scsTerminalEdgeEq2Anchor`, `scs4I2Imp4T1Anchor`, `scsSliceArrowAnchor`)
   stay untouched in their own module.
-  (2) `Kepler.Text.LocalAuto3` fails to build on this checkout
-  (pre-existing elaboration errors at LocalAuto3.lean:757+), and
-  LocalAuto5/6/10/35 import it; those five modules are therefore not imported
-  here.  No owed discharge lives in them (the QKNVMLB trio's twins live in
-  LocalAuto35 and are blocked under (c)/(d) regardless).
+  (2) LIFTED 2026-09-20: `Kepler.Text.LocalAuto3` now builds again on this
+  checkout (verified `lake env lean Kepler/Text/LocalAuto3.lean` -- warnings
+  only); LocalAuto5/6/10/35 are therefore importable. Re-audited: they host
+  no dischargeable twins (LA35's QKNVMLB1/2_p35 are sorried and QKNVMLB3_p35
+  is (d)-blocked; LA5/6/10 declare no `*_concl` twins), so the import list
+  is left unchanged this wave to keep the build surface minimal.
   (3) LIFTED 2026-09-19: the SphereKit dedup removed the PackingAuto20/21/25
   re-renderings of `atn2`/`upsX`/`cross3`, so LocalAuto2/9/11 are now
   co-importable with LocalAuto1's tree.  `Kepler.Text.LocalAuto11` is
@@ -163,9 +234,9 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
   this checkout -- its `XRECQNS_UPDATE_p37` proof targets the pre-upgrade
   `LocalFan = True` stub and no longer typechecks after LocalAuto1's LocalFan
   stub upgrade (in flight).  It hosts no proved twins (MHAEYJN_p37 is
-  sorried; MHAEYJN stays blocked under (c) regardless); re-admit when
+  sorried; MHAEYJN stays blocked under (c) regardless; re-verified 2026-09-20
+  with no other MHAEYJN twin in any importable lane); re-admit when
   LocalAuto37 is repaired.
-  blocked under (d) regardless).
 
   Every `<name>_discharged` below is `sorry`-free; note the discharged
   statements transitively rest on upstream sorry'd inputs of their waves
