@@ -637,6 +637,241 @@ def x1DeltaX (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := x1 * deltaX x1 x2 x3 x4 x5 x6
 
 example : x1DeltaX 4 4 4 4 4 4 = 512 := by norm_num [x1DeltaX, deltaX]
 
+/-! ## Batch 4: the arc-length / enclosed family (sphere.hl + leg/*.hl)
+
+The LA38 lane carried these as `sorry` stubs (`solXP38`/`cayleyRP38`/
+`rhazimP38`/`enclosedP38`, LocalAuto38.lean:38-41); per the P6-E batch-4
+decision the real bodies are ported here straight from the HOL sources,
+bypassing LA38 (definitions only — its theorem proofs stay untouched; when
+that lane gets filled in it should align with these canonical names).
+Enablers `arcLength`/`abcOfQuadratic`/`rho`/`sqrt3`/`cayleyR`/`muR` are
+canonical re-ports: their twins sit in PackingAuto18 / LocalAuto19 /
+LocalAuto38 / PackingAuto22 — either not co-importable with SphereKit (the
+`atn2` FQN clash, SphereKit.lean:10-11) or sorry-tainted (`cayleyRP38` is a
+stub, hence so is `muRP38`).  `quadraticRootPlus`/`taum`/`ly`/`const1`/
+`dihY`/`upsX`/`atn2`/`h0` are reused from SphereKit/PackingAuto2. -/
+
+/-- HOL `arclength` (sphere.hl:258-260). Canonical name; verbatim twin
+`arcLength` (PackingAuto18.lean:161, not co-importable). -/
+noncomputable def arcLength (a b c : ℝ) : ℝ :=
+  Real.pi / 2 +
+    atn2 (Real.sqrt (upsX (a * a) (b * b) (c * c))) (c * c - a * a - b * b)
+
+/-- Numeric: the equilateral-triangle angle, `arcLength 1 1 1 =
+π/2 + arctan(-1/√3) = π/3`.  Named for reuse by the wrappers below. -/
+theorem arcLength_one_one_one : arcLength 1 1 1 = Real.pi / 3 := by
+  have hups : upsX (1 * 1) (1 * 1) (1 * 1) = 3 := by norm_num [upsX]
+  have h13 : (1 : ℝ) < Real.sqrt 3 :=
+    (Real.lt_sqrt (by norm_num)).mpr (by norm_num)
+  have htan : Real.tan (Real.pi / 6) = 1 / Real.sqrt 3 := by
+    rw [Real.tan_eq_sin_div_cos, Real.sin_pi_div_six, Real.cos_pi_div_six]
+    field_simp
+  have harctan : Real.arctan (1 / Real.sqrt 3) = Real.pi / 6 := by
+    rw [← htan, Real.arctan_tan (by linarith [Real.pi_pos])
+      (by linarith [Real.pi_pos])]
+  unfold arcLength
+  rw [hups, show (1 : ℝ) * 1 - 1 * 1 - 1 * 1 = -1 by norm_num]
+  unfold atn2
+  rw [if_pos (by rwa [abs_neg, abs_one])]
+  rw [show (-1 : ℝ) / Real.sqrt 3 = -(1 / Real.sqrt 3) by ring,
+    Real.arctan_neg, harctan]
+  ring
+
+/-- HOL `arc_hhn` (sphere.hl:780-781). -/
+noncomputable def arcHhn : ℝ := arcLength (2 * h0) (2 * h0) 2
+
+example : arcHhn = arcLength (2 * h0) (2 * h0) 2 := rfl
+
+/-- HOL `arclength_x_123` (sphere.hl:798-799). -/
+noncomputable def arclengthX123 (x1 x2 x3 _x4 _x5 _x6 : ℝ) : ℝ :=
+  arcLength (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x3)
+
+/-- Numeric: the same equilateral value through the squared-length wrapper. -/
+example : arclengthX123 1 1 1 0 0 0 = Real.pi / 3 := by
+  have e : arclengthX123 1 1 1 0 0 0 = arcLength 1 1 1 := by
+    unfold arclengthX123; rw [Real.sqrt_one]
+  rw [e]; exact arcLength_one_one_one
+
+/-- HOL `arclength_y1` (sphere.hl:762-765). NB the HOL argument order is
+`arclength y1 a b` (y1 first, then the two fixed edges). -/
+noncomputable def arclengthY1 (a b : ℝ) (y1 _y2 _y3 _y4 _y5 _y6 : ℝ) : ℝ :=
+  arcLength y1 a b
+
+/-- Pins the y1-first argument order. -/
+example : arclengthY1 a b y1 y2 y3 y4 y5 y6 = arcLength y1 a b := rfl
+
+/-- HOL `acs_sqrt_x1_d4` (sphere.hl:792-793). -/
+noncomputable def acsSqrtX1D4 (x1 _x2 _x3 _x4 _x5 _x6 : ℝ) : ℝ :=
+  Real.arccos (Real.sqrt x1 / 4)
+
+/-- Numeric: `acsSqrtX1D4 16 … = arccos(4/4) = arccos 1 = 0`. -/
+example : acsSqrtX1D4 16 0 0 0 0 0 = 0 := by
+  unfold acsSqrtX1D4
+  rw [show (16 : ℝ) = 4 ^ 2 by norm_num, Real.sqrt_sq (by norm_num)]
+  norm_num [Real.arccos_one]
+
+/-- HOL `sqrt3` (sphere.hl:77). Twin `sqrt3` at PackingAuto22.lean:112 (not
+co-imported here). -/
+noncomputable def sqrt3 : ℝ := Real.sqrt 3
+
+/-- HOL `asn797k` (sphere.hl:783-784); `cos797` inlined as `cos 0.797`. -/
+noncomputable def asn797k (k : ℝ) (_x2 _x3 _x4 _x5 _x6 : ℝ) : ℝ :=
+  k * Real.arcsin (Real.cos 0.797 * Real.sin (Real.pi / k))
+
+/-- HOL `asnFnhk` (sphere.hl:786-787). Canonical real body for the
+PackingAuto22.lean:209-210 stub. -/
+noncomputable def asnFnhk (h k : ℝ) (_x3 _x4 _x5 _x6 : ℝ) : ℝ :=
+  k * Real.arcsin ((h * sqrt3 / 4.0 + Real.sqrt (1 - (h / 2) ^ 2) / 2) *
+    Real.sin (Real.pi / k))
+
+/-- Numeric: `asnFnhk 2 2 = 2·asn((√3/2 + 0)·sin(π/2)) = 2·asn(√3/2) = 2π/3`. -/
+example : asnFnhk 2 2 0 0 0 0 = 2 * Real.pi / 3 := by
+  have hsin3 : Real.sin (Real.pi / 3) = Real.sqrt 3 / 2 := Real.sin_pi_div_three
+  have h40 : (4.0 : ℝ) = 4 := by norm_num
+  unfold asnFnhk
+  rw [h40, show (2 : ℝ) * sqrt3 / 4 = Real.sqrt 3 / 2 by rw [sqrt3]; ring,
+    show (1 : ℝ) - (2 / 2) ^ 2 = (0 : ℝ) by norm_num, Real.sqrt_zero]
+  norm_num [Real.sin_pi_div_two]
+  rw [← hsin3, Real.arcsin_sin (by linarith [Real.pi_pos])
+    (by linarith [Real.pi_pos])]
+  ring
+
+/-- HOL `node2_y` (sphere.hl:222). Same permutation as `rotate2`, on the
+y-side family. -/
+def node2Y (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  f y2 y3 y1 y5 y6 y4
+
+example : node2Y f y1 y2 y3 y4 y5 y6 = f y2 y3 y1 y5 y6 y4 := rfl
+
+/-- HOL `rho` (sphere.hl:201). Canonical name; twin `rho_p2`
+(LocalAuto2.lean:336). -/
+noncomputable def rho (y : ℝ) : ℝ := 1 + const1 - const1 * ly y
+
+/-- Numeric: `ly 2 = 1`, so `rho 2 = 1`. -/
+example : rho 2 = 1 := by unfold rho; norm_num [ly]
+
+/-- HOL `rhazim` (sphere.hl:211). Canonical real body for the LA38 stub
+`rhazimP38`. -/
+noncomputable def rhazim (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  rho y1 * dihY y1 y2 y3 y4 y5 y6
+
+/-- Numeric: at the edge-2 point the rho factor is 1. -/
+example : rhazim 2 2 2 2 2 2 = dihY 2 2 2 2 2 2 := by
+  unfold rhazim; norm_num [rho, ly]
+
+/-- HOL `rhazim2` (sphere.hl:226): `node2_y rhazim`. -/
+noncomputable def rhazim2 : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ := node2Y rhazim
+
+example : rhazim2 y1 y2 y3 y4 y5 y6 = rhazim y2 y3 y1 y5 y6 y4 := rfl
+
+/-- HOL `cayleyR` (leg/cayleyR_def.hl:32): the 5-vertex Cayley--Menger
+determinant (EDSFZOT/NUHSVLM), quadratic in `x45`. Body emitted mechanically
+from defs.json's `body_ast` (pure arithmetic — no type-annotation truncation
+risk) and cross-validated against the AST at random points; replaces the LA38
+sorry stub `cayleyRP38`. -/
+noncomputable def cayleyR (x12 x13 x14 x15 x23 x24 x25 x34 x35 x45 : ℝ) : ℝ :=
+  
+  ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((-(((x14
+  * x14) * x23) * x23)) + ((((2 * x14) * x15) * x23) * x23)) - (((x15 * x15) * x23) * x23))
+  + ((((2 * x13) * x14) * x23) * x24)) - ((((2 * x13) * x15) * x23) * x24)) - ((((2 * x14) *
+  x15) * x23) * x24)) + ((((2 * x15) * x15) * x23) * x24)) - (((x13 * x13) * x24) * x24)) +
+  ((((2 * x13) * x15) * x24) * x24)) - (((x15 * x15) * x24) * x24)) - ((((2 * x13) * x14) *
+  x23) * x25)) + ((((2 * x14) * x14) * x23) * x25)) + ((((2 * x13) * x15) * x23) * x25)) -
+  ((((2 * x14) * x15) * x23) * x25)) + ((((2 * x13) * x13) * x24) * x25)) - ((((2 * x13) *
+  x14) * x24) * x25)) - ((((2 * x13) * x15) * x24) * x25)) + ((((2 * x14) * x15) * x24) *
+  x25)) - (((x13 * x13) * x25) * x25)) + ((((2 * x13) * x14) * x25) * x25)) - (((x14 * x14)
+  * x25) * x25)) + ((((2 * x12) * x14) * x23) * x34)) - ((((2 * x12) * x15) * x23) * x34)) -
+  ((((2 * x14) * x15) * x23) * x34)) + ((((2 * x15) * x15) * x23) * x34)) + ((((2 * x12) *
+  x13) * x24) * x34)) - ((((2 * x12) * x15) * x24) * x34)) - ((((2 * x13) * x15) * x24) *
+  x34)) + ((((2 * x15) * x15) * x24) * x34)) + ((((4 * x15) * x23) * x24) * x34)) - ((((2 *
+  x12) * x13) * x25) * x34)) - ((((2 * x12) * x14) * x25) * x34)) + ((((4 * x13) * x14) *
+  x25) * x34)) + ((((4 * x12) * x15) * x25) * x34)) - ((((2 * x13) * x15) * x25) * x34)) -
+  ((((2 * x14) * x15) * x25) * x34)) - ((((2 * x14) * x23) * x25) * x34)) - ((((2 * x15) *
+  x23) * x25) * x34)) - ((((2 * x13) * x24) * x25) * x34)) - ((((2 * x15) * x24) * x25) *
+  x34)) + ((((2 * x13) * x25) * x25) * x34)) + ((((2 * x14) * x25) * x25) * x34)) - (((x12 *
+  x12) * x34) * x34)) + ((((2 * x12) * x15) * x34) * x34)) - (((x15 * x15) * x34) * x34)) +
+  ((((2 * x12) * x25) * x34) * x34)) + ((((2 * x15) * x25) * x34) * x34)) - (((x25 * x25) *
+  x34) * x34)) - ((((2 * x12) * x14) * x23) * x35)) + ((((2 * x14) * x14) * x23) * x35)) +
+  ((((2 * x12) * x15) * x23) * x35)) - ((((2 * x14) * x15) * x23) * x35)) - ((((2 * x12) *
+  x13) * x24) * x35)) + ((((4 * x12) * x14) * x24) * x35)) - ((((2 * x13) * x14) * x24) *
+  x35)) - ((((2 * x12) * x15) * x24) * x35)) + ((((4 * x13) * x15) * x24) * x35)) - ((((2 *
+  x14) * x15) * x24) * x35)) - ((((2 * x14) * x23) * x24) * x35)) - ((((2 * x15) * x23) *
+  x24) * x35)) + ((((2 * x13) * x24) * x24) * x35)) + ((((2 * x15) * x24) * x24) * x35)) +
+  ((((2 * x12) * x13) * x25) * x35)) - ((((2 * x12) * x14) * x25) * x35)) - ((((2 * x13) *
+  x14) * x25) * x35)) + ((((2 * x14) * x14) * x25) * x35)) + ((((4 * x14) * x23) * x25) *
+  x35)) - ((((2 * x13) * x24) * x25) * x35)) - ((((2 * x14) * x24) * x25) * x35)) + ((((2 *
+  x12) * x12) * x34) * x35)) - ((((2 * x12) * x14) * x34) * x35)) - ((((2 * x12) * x15) *
+  x34) * x35)) + ((((2 * x14) * x15) * x34) * x35)) - ((((2 * x12) * x24) * x34) * x35)) -
+  ((((2 * x15) * x24) * x34) * x35)) - ((((2 * x12) * x25) * x34) * x35)) - ((((2 * x14) *
+  x25) * x34) * x35)) + ((((2 * x24) * x25) * x34) * x35)) - (((x12 * x12) * x35) * x35)) +
+  ((((2 * x12) * x14) * x35) * x35)) - (((x14 * x14) * x35) * x35)) + ((((2 * x12) * x24) *
+  x35) * x35)) + ((((2 * x14) * x24) * x35) * x35)) - (((x24 * x24) * x35) * x35)) + ((((4 *
+  x12) * x13) * x23) * x45)) - ((((2 * x12) * x14) * x23) * x45)) - ((((2 * x13) * x14) *
+  x23) * x45)) - ((((2 * x12) * x15) * x23) * x45)) - ((((2 * x13) * x15) * x23) * x45)) +
+  ((((4 * x14) * x15) * x23) * x45)) + ((((2 * x14) * x23) * x23) * x45)) + ((((2 * x15) *
+  x23) * x23) * x45)) - ((((2 * x12) * x13) * x24) * x45)) + ((((2 * x13) * x13) * x24) *
+  x45)) + ((((2 * x12) * x15) * x24) * x45)) - ((((2 * x13) * x15) * x24) * x45)) - ((((2 *
+  x13) * x23) * x24) * x45)) - ((((2 * x15) * x23) * x24) * x45)) - ((((2 * x12) * x13) *
+  x25) * x45)) + ((((2 * x13) * x13) * x25) * x45)) + ((((2 * x12) * x14) * x25) * x45)) -
+  ((((2 * x13) * x14) * x25) * x45)) - ((((2 * x13) * x23) * x25) * x45)) - ((((2 * x14) *
+  x23) * x25) * x45)) + ((((4 * x13) * x24) * x25) * x45)) + ((((2 * x12) * x12) * x34) *
+  x45)) - ((((2 * x12) * x13) * x34) * x45)) - ((((2 * x12) * x15) * x34) * x45)) + ((((2 *
+  x13) * x15) * x34) * x45)) - ((((2 * x12) * x23) * x34) * x45)) - ((((2 * x15) * x23) *
+  x34) * x45)) - ((((2 * x12) * x25) * x34) * x45)) - ((((2 * x13) * x25) * x34) * x45)) +
+  ((((2 * x23) * x25) * x34) * x45)) + ((((2 * x12) * x12) * x35) * x45)) - ((((2 * x12) *
+  x13) * x35) * x45)) - ((((2 * x12) * x14) * x35) * x45)) + ((((2 * x13) * x14) * x35) *
+  x45)) - ((((2 * x12) * x23) * x35) * x45)) - ((((2 * x14) * x23) * x35) * x45)) - ((((2 *
+  x12) * x24) * x35) * x45)) - ((((2 * x13) * x24) * x35) * x45)) + ((((2 * x23) * x24) *
+  x35) * x45)) + ((((4 * x12) * x34) * x35) * x45)) - (((x12 * x12) * x45) * x45)) + ((((2 *
+  x12) * x13) * x45) * x45)) - (((x13 * x13) * x45) * x45)) + ((((2 * x12) * x23) * x45) *
+  x45)) + ((((2 * x13) * x23) * x45) * x45)) - (((x23 * x23) * x45) * x45))
+
+/-- Numeric: exact integer evaluation at (1,…,10). -/
+example : cayleyR 1 2 3 4 5 6 7 8 9 10 = 1004 := by norm_num [cayleyR]
+
+/-- HOL `muR` (leg/muR_def.hl:40-42): `cayleyR` at squared lengths, curried
+in the last (x) argument. Canonical real body; LA38's `muRP38` is built on
+the `cayleyRP38` stub. -/
+noncomputable def muR (y1 y2 y3 y4 y5 y6 y7 y8 y9 x : ℝ) : ℝ :=
+  cayleyR (y6 * y6) (y5 * y5) (y1 * y1) (y7 * y7) (y4 * y4) (y2 * y2)
+    (y8 * y8) (y3 * y3) (y9 * y9) x
+
+/-- Pins the squared-length argument permutation. -/
+example : muR y1 y2 y3 y4 y5 y6 y7 y8 y9 x =
+    cayleyR (y6 * y6) (y5 * y5) (y1 * y1) (y7 * y7) (y4 * y4) (y2 * y2)
+      (y8 * y8) (y3 * y3) (y9 * y9) x := rfl
+
+/-- HOL `abc_of_quadratic` (sphere.hl:58-62). Canonical name; verbatim twins
+`abcOfQuadratic_p19` (LocalAuto19.lean:160) / `abcOfQuadraticP38`
+(LocalAuto38.lean:147). -/
+noncomputable def abcOfQuadratic (f : ℝ → ℝ) : ℝ × ℝ × ℝ :=
+  ((f 1 + f (-1)) / 2 - f 0, (f 1 - f (-1)) / 2, f 0)
+
+/-- Numeric: the interpolant of `x ↦ x² + 2x + 3` is (1, 2, 3). -/
+example : abcOfQuadratic (fun x => x ^ 2 + 2 * x + 3) = (1, 2, 3) := by
+  norm_num [abcOfQuadratic]
+
+/-- HOL `enclosed` (leg/enclosed_def.hl:22-24): sqrt of the +root of the
+quadratic interpolant of `muR`.  HOL `quadratic_root_plus` takes a triple;
+SphereKit's `quadraticRootPlus` is the curried twin (same body). -/
+noncomputable def enclosed (y1 y2 y3 y4 y5 y6 y7 y8 y9 : ℝ) : ℝ :=
+  let q := abcOfQuadratic (muR y1 y2 y3 y4 y5 y6 y7 y8 y9)
+  Real.sqrt (quadraticRootPlus q.1 q.2.1 q.2.2)
+
+/-- Numeric: at y = (1,…,1) the `muR` quadratic is `3x² - 8x`, whose larger
+root is 8/3 — so `enclosed (1,…,1) = √(8/3)`. -/
+example : enclosed 1 1 1 1 1 1 1 1 1 = Real.sqrt (8 / 3) := by
+  unfold enclosed muR abcOfQuadratic quadraticRootPlus
+  norm_num [cayleyR]
+
+/-- HOL `tauq` (sphere.hl:244): the two-tetrahedra quad cluster tau. -/
+noncomputable def tauq (y1 y2 y3 y4 y5 y6 y7 y8 y9 : ℝ) : ℝ :=
+  taum y1 y2 y3 y4 y5 y6 + taum y7 y2 y3 y4 y8 y9
+
+/-- Pins the shared-edge argument layout. -/
+example : tauq y1 y2 y3 y4 y5 y6 y7 y8 y9 =
+    taum y1 y2 y3 y4 y5 y6 + taum y7 y2 y3 y4 y8 y9 := rfl
+
 /-! ## Axiom audit (standard three only: propext / Classical.choice /
 Quot.sound) -/
 
@@ -659,5 +894,11 @@ Quot.sound) -/
 #print axioms etaY
 #print axioms rad2X
 #print axioms x1DeltaX
+#print axioms arcLength
+#print axioms asnFnhk
+#print axioms rhazim2
+#print axioms cayleyR
+#print axioms enclosed
+#print axioms tauq
 
 end Kepler.Text
