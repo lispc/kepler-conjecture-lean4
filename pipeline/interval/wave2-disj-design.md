@@ -159,3 +159,23 @@ RUNG <N> <out>            # 全局 rung 不变
 - 不给主 prog 填参（79~83 sqrt 主支未命中，填了也没用；3112-sqrt 怪物案另行）。
 - 不做"最优 hit"选择（first-pass-wins，与 bb_arb 同序但独立判定）。
 - 不动已闭合的 8+ 案例与 Q/549 在制管线。
+
+## 6. W0 实测结论（2026-09-20）
+
+精确复刻 `emit_pair` 的 closed 语义（ite 三支独立栈、closed = 无 push_var）分析各 case
+**被命中支 disj0**：
+
+| case | disj0 atan | 含变量 | disj0 sqrt | 含变量 |
+|---|---|---|---|---|
+| BIXPCGW_7274157868_a | 7 | **3** | 4 | 4 |
+| FHBVYXZ_a / FHBVYXZv2_a | 0 | 0 | 0 | 0 |
+| GLFVCVK4_2477216213 | 0 | 0 | 0 | 0 |
+| QITNPEA_2134082733 | 0 | 0 | 0 | 0 |
+| QITNPEA_5400790175_a | 0 | 0 | 0 | 0 |
+
+结论：
+- D6 两路径策略成立——5 份命中支纯代数（v1 修补路径），仅 BIXPCGW 需 BBTreeGD。
+- BIXPCGW disj0：4 sqrt 全含变量 → 逐叶 mantissa 槽位（每叶 8 int）；
+  7 atan 中 4 个 closed → 固定 (2048,-64)，**3 个 open → 全局 rung 阶梯**。
+  阶梯顶 (128,-100) 是否够由 stage-A 实测裁定（BESTFAIL 即扩档，只改 FillParams.lean
+  一处 + manifest 同步）。
