@@ -29,6 +29,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:632"
   },
   {
@@ -37,6 +38,7 @@
    "tier": "B",
    "lean": "abcOfQuadratic_p19 (lean/Kepler/Text/LocalAuto19.lean:160)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:59"
   },
   {
@@ -45,6 +47,7 @@
    "tier": "A",
    "lean": "Mathlib",
    "batch": "",
+   "note": "",
    "source": ""
   },
   {
@@ -53,6 +56,7 @@
    "tier": "A",
    "lean": "Mathlib",
    "batch": "",
+   "note": "",
    "source": ""
   },
   {
@@ -61,6 +65,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:792"
   },
   {
@@ -69,6 +74,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2985"
   },
   {
@@ -77,6 +83,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2888"
   },
   {
@@ -85,6 +92,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3711"
   },
   {
@@ -93,6 +101,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3236"
   },
   {
@@ -101,6 +110,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3701"
   },
   {
@@ -109,6 +119,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3343"
   },
   {
@@ -117,6 +128,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3903"
   },
   {
@@ -125,6 +137,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3764"
   },
   {
@@ -133,6 +146,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3738"
   },
   {
@@ -141,6 +155,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3103"
   },
   {
@@ -149,6 +164,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:780"
   },
   {
@@ -157,6 +173,7 @@
    "tier": "B",
    "lean": "arcLength (lean/Kepler/Text/PackingAuto18.lean:161)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:258"
   },
   {
@@ -165,6 +182,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:798"
   },
   {
@@ -173,6 +191,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:762"
   },
   {
@@ -181,6 +200,7 @@
    "tier": "A",
    "lean": "Mathlib",
    "batch": "",
+   "note": "",
    "source": ""
   },
   {
@@ -189,6 +209,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:783"
   },
   {
@@ -197,6 +218,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:786"
   },
   {
@@ -205,6 +227,7 @@
    "tier": "A",
    "lean": "Mathlib",
    "batch": "",
+   "note": "",
    "source": ""
   },
   {
@@ -213,6 +236,7 @@
    "tier": "B",
    "lean": "atn2_p16 (lean/Kepler/Text/LocalAuto16.lean:269)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:48"
   },
   {
@@ -221,6 +245,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:634"
   },
   {
@@ -229,6 +254,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:614"
   },
   {
@@ -237,6 +263,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:636"
   },
   {
@@ -245,6 +272,7 @@
    "tier": "B",
    "lean": "bump (lean/Kepler/Text/PackingAuto2.lean:487)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:601"
   },
   {
@@ -253,14 +281,16 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/leg/cayleyR_def.hl:32"
   },
   {
    "symbol": "compose6",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "compose6 (lean/Kepler/Text/IneqClosureDefs.lean:284)",
+   "batch": "2(enabler)",
+   "note": "defs.json body_ast 是截断的 parse 残片（{\"const\":\"f\"}），以 nonlin_def.hl:72-80 原文为准",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:72"
   },
   {
@@ -269,14 +299,16 @@
    "tier": "B",
    "lean": "const1P19 (lean/Kepler/Text/LocalAuto19.lean:128)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:197"
   },
   {
    "symbol": "constant6",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "constant6 (lean/Kepler/Text/IneqClosureDefs.lean:274)",
+   "batch": "2(enabler)",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:249"
   },
   {
@@ -285,6 +317,7 @@
    "tier": "A",
    "lean": "Mathlib",
    "batch": "",
+   "note": "",
    "source": ""
   },
   {
@@ -293,6 +326,7 @@
    "tier": "B",
    "lean": "criticalEdgeY (lean/Kepler/Text/PackingAuto2.lean:491)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:603"
   },
   {
@@ -301,6 +335,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2866"
   },
   {
@@ -309,6 +344,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2591"
   },
   {
@@ -317,6 +353,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2828"
   },
   {
@@ -325,6 +362,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2847"
   },
   {
@@ -333,6 +371,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3373"
   },
   {
@@ -341,6 +380,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3363"
   },
   {
@@ -349,6 +389,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:2697"
   },
   {
@@ -357,6 +398,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3079"
   },
   {
@@ -365,6 +407,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3256"
   },
   {
@@ -373,6 +416,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3552"
   },
   {
@@ -381,6 +425,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3191"
   },
   {
@@ -389,6 +434,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:3046"
   },
   {
@@ -397,6 +443,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/nonlinear/ineq.hl:1863"
   },
   {
@@ -405,6 +452,7 @@
    "tier": "B",
    "lean": "delta4SquaredX (lean/Kepler/Text/IneqClosureDefs.lean:209)",
    "batch": "1",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:835"
   },
   {
@@ -413,6 +461,7 @@
    "tier": "B",
    "lean": "delta4SquaredY_p11 (lean/Kepler/Text/LocalAuto11.lean:198)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:838"
   },
   {
@@ -421,6 +470,7 @@
    "tier": "B",
    "lean": "delta4Y_p11 (lean/Kepler/Text/LocalAuto11.lean:188)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:543"
   },
   {
@@ -429,6 +479,7 @@
    "tier": "B",
    "lean": "delta234X_p11 (lean/Kepler/Text/LocalAuto11.lean:184)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:848"
   },
   {
@@ -437,6 +488,7 @@
    "tier": "B",
    "lean": "deltaXf_p16 (lean/Kepler/Text/LocalAuto16.lean:276)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:86"
   },
   {
@@ -445,6 +497,7 @@
    "tier": "B",
    "lean": "deltaX1f_p11 (lean/Kepler/Text/LocalAuto11.lean:159)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:418"
   },
   {
@@ -453,6 +506,7 @@
    "tier": "B",
    "lean": "deltaX4 (lean/Kepler/Text/LocalAuto1.lean:766)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:110"
   },
   {
@@ -461,6 +515,7 @@
    "tier": "B",
    "lean": "deltaY_p11 (lean/Kepler/Text/LocalAuto11.lean:149)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:92"
   },
   {
@@ -469,6 +524,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:163"
   },
   {
@@ -477,6 +533,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:166"
   },
   {
@@ -485,6 +542,7 @@
    "tier": "B",
    "lean": "dih4XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:127)",
    "batch": "1",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:163"
   },
   {
@@ -493,6 +551,7 @@
    "tier": "B",
    "lean": "dihXf_p16 (lean/Kepler/Text/LocalAuto16.lean:288)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:153"
   },
   {
@@ -501,6 +560,7 @@
    "tier": "B",
    "lean": "dihXDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:95)",
    "batch": "1",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:138"
   },
   {
@@ -509,6 +569,7 @@
    "tier": "B",
    "lean": "dihY_p16 (lean/Kepler/Text/LocalAuto16.lean:294)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:159"
   },
   {
@@ -517,6 +578,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:263"
   },
   {
@@ -525,6 +587,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/leg/enclosed_def.hl:22"
   },
   {
@@ -533,6 +596,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:127"
   },
   {
@@ -541,6 +605,7 @@
    "tier": "C",
    "lean": "eta_y (lean/Kepler/Text/PackingAuto21.lean:177)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:131"
   },
   {
@@ -549,6 +614,7 @@
    "tier": "B",
    "lean": "eulerAx_p19 (lean/Kepler/Text/LocalAuto19.lean:227)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:831"
   },
   {
@@ -557,6 +623,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:383"
   },
   {
@@ -565,6 +632,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:390"
   },
   {
@@ -573,6 +641,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:346"
   },
   {
@@ -581,6 +650,7 @@
    "tier": "B",
    "lean": "gamma2_x_div_azim_v2 (lean/Kepler/Text/PackingAuto21.lean:164)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:341"
   },
   {
@@ -589,6 +659,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:380"
   },
   {
@@ -597,6 +668,7 @@
    "tier": "B",
    "lean": "gamma3f (lean/Kepler/Text/PackingAuto20.lean:138)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:582"
   },
   {
@@ -605,6 +677,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:349"
   },
   {
@@ -613,6 +686,7 @@
    "tier": "B",
    "lean": "gamma4fgcy (lean/Kepler/Text/PackingAuto20.lean:122)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:563"
   },
   {
@@ -621,6 +695,7 @@
    "tier": "B",
    "lean": "gamma4fgcyP25 (lean/Kepler/Text/PackingAuto25.lean:119)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:566"
   },
   {
@@ -629,6 +704,7 @@
    "tier": "B",
    "lean": "h0 (lean/Kepler/Text/PackingAuto2.lean:458)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:203"
   },
   {
@@ -637,6 +713,7 @@
    "tier": "B",
    "lean": "h0cut (lean/Kepler/Text/PackingAuto21.lean:182)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:517"
   },
   {
@@ -645,6 +722,7 @@
    "tier": "B",
    "lean": "hminus (lean/Kepler/Text/PackingAuto2.lean:468)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:529"
   },
   {
@@ -653,6 +731,7 @@
    "tier": "B",
    "lean": "hplus (lean/Kepler/Text/PackingAuto2.lean:431)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:515"
   },
   {
@@ -661,6 +740,7 @@
    "tier": "B",
    "lean": "interp_p2 (lean/Kepler/Text/LocalAuto2.lean:325)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:195"
   },
   {
@@ -669,6 +749,7 @@
    "tier": "B",
    "lean": "ldih2XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:150)",
    "batch": "1",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:148"
   },
   {
@@ -677,6 +758,7 @@
    "tier": "B",
    "lean": "ldih3XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:154)",
    "batch": "1",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:151"
   },
   {
@@ -685,6 +767,7 @@
    "tier": "B",
    "lean": "ldih5XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:158)",
    "batch": "1",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:154"
   },
   {
@@ -693,6 +776,7 @@
    "tier": "B",
    "lean": "ldih6XDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:162)",
    "batch": "1",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:157"
   },
   {
@@ -701,6 +785,7 @@
    "tier": "B",
    "lean": "ldihXDivSqrtdeltaPosbranch (lean/Kepler/Text/IneqClosureDefs.lean:136)",
    "batch": "1",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:144"
   },
   {
@@ -709,6 +794,7 @@
    "tier": "B",
    "lean": "lfun (lean/Kepler/Text/PackingAuto2.lean:461)",
    "batch": "1(enabler)",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:525"
   },
   {
@@ -717,6 +803,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:789"
   },
   {
@@ -725,6 +812,7 @@
    "tier": "B",
    "lean": "lmfun (lean/Kepler/Text/PackingAuto2.lean:464)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:523"
   },
   {
@@ -733,6 +821,7 @@
    "tier": "B",
    "lean": "lnazimP19 (lean/Kepler/Text/LocalAuto19.lean:131)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:213"
   },
   {
@@ -741,6 +830,7 @@
    "tier": "A",
    "lean": "Mathlib",
    "batch": "",
+   "note": "",
    "source": ""
   },
   {
@@ -749,6 +839,7 @@
    "tier": "B",
    "lean": "lyP19 (lean/Kepler/Text/LocalAuto19.lean:124)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:199"
   },
   {
@@ -757,6 +848,7 @@
    "tier": "B",
    "lean": "marchalQuartic (lean/Kepler/Text/PackingAuto2.lean:435)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:519"
   },
   {
@@ -765,30 +857,34 @@
    "tier": "B",
    "lean": "matan (lean/Kepler/Text/IneqClosureDefs.lean:31)",
    "batch": "1(enabler)",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:728"
   },
   {
    "symbol": "mk_126",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "mk126 (lean/Kepler/Text/IneqClosureDefs.lean:290)",
+   "batch": "2",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:267"
   },
   {
    "symbol": "mk_135",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "mk135 (lean/Kepler/Text/IneqClosureDefs.lean:298)",
+   "batch": "2",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:273"
   },
   {
    "symbol": "mk_456",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "mk456 (lean/Kepler/Text/IneqClosureDefs.lean:294)",
+   "batch": "2",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:270"
   },
   {
@@ -797,6 +893,7 @@
    "tier": "B",
    "lean": "mm1 (lean/Kepler/Text/PackingAuto2.lean:425)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:511"
   },
   {
@@ -805,6 +902,7 @@
    "tier": "B",
    "lean": "mm2 (lean/Kepler/Text/PackingAuto2.lean:428)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:513"
   },
   {
@@ -813,6 +911,7 @@
    "tier": "B",
    "lean": "muRP38 (lean/Kepler/Text/LocalAuto38.lean:151)",
    "batch": "",
+   "note": "",
    "source": "auto:reference/flyspeck/text_formalization/leg/muR_def.hl:40"
   },
   {
@@ -821,14 +920,16 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:222"
   },
   {
    "symbol": "norm2hh",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "norm2hh (lean/Kepler/Text/IneqClosureDefs.lean:335)",
+   "batch": "2",
+   "note": "复用 PackingAuto2 的 hminus（Classical.epsilon 版）/hplus",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:597"
   },
   {
@@ -837,94 +938,106 @@
    "tier": "A",
    "lean": "Mathlib",
    "batch": "",
+   "note": "",
    "source": ""
   },
   {
    "symbol": "proj_x1",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "projX1 (lean/Kepler/Text/IneqClosureDefs.lean:233)",
+   "batch": "2(enabler)",
+   "note": "HOL 多态；Lean 只移植闭包用到的 ℝ⁶→ℝ 实例",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:40"
   },
   {
    "symbol": "proj_x2",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "projX2 (lean/Kepler/Text/IneqClosureDefs.lean:236)",
+   "batch": "2",
+   "note": "HOL 多态；同上",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:42"
   },
   {
    "symbol": "proj_x3",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "projX3 (lean/Kepler/Text/IneqClosureDefs.lean:239)",
+   "batch": "2",
+   "note": "HOL 多态；同上",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:44"
   },
   {
    "symbol": "proj_x4",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "projX4 (lean/Kepler/Text/IneqClosureDefs.lean:242)",
+   "batch": "2(enabler)",
+   "note": "HOL 多态；同上",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:46"
   },
   {
    "symbol": "proj_x5",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "projX5 (lean/Kepler/Text/IneqClosureDefs.lean:245)",
+   "batch": "2",
+   "note": "HOL 多态；同上",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:48"
   },
   {
    "symbol": "proj_x6",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "projX6 (lean/Kepler/Text/IneqClosureDefs.lean:248)",
+   "batch": "2",
+   "note": "HOL 多态；同上",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:50"
   },
   {
    "symbol": "proj_y4",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "projY4 (lean/Kepler/Text/IneqClosureDefs.lean:256)",
+   "batch": "2",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:300"
   },
   {
    "symbol": "proj_y5",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "projY5 (lean/Kepler/Text/IneqClosureDefs.lean:259)",
+   "batch": "2",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:303"
   },
   {
    "symbol": "proj_y6",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "projY6 (lean/Kepler/Text/IneqClosureDefs.lean:262)",
+   "batch": "2",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:306"
   },
   {
    "symbol": "promote1_to_6",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "promote1To6 (lean/Kepler/Text/IneqClosureDefs.lean:310)",
+   "batch": "2",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:254"
   },
   {
    "symbol": "promote3_to_6",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "promote3To6 (lean/Kepler/Text/IneqClosureDefs.lean:313)",
+   "batch": "2",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:251"
   },
   {
@@ -933,6 +1046,7 @@
    "tier": "B",
    "lean": "quadraticRootPlus_p11 (lean/Kepler/Text/LocalAuto11.lean:154)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:67"
   },
   {
@@ -941,6 +1055,7 @@
    "tier": "C",
    "lean": "rad2XP25 (lean/Kepler/Text/PackingAuto25.lean:89)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:271"
   },
   {
@@ -949,6 +1064,7 @@
    "tier": "B",
    "lean": "rad2YP25 (lean/Kepler/Text/PackingAuto25.lean:93)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:541"
   },
   {
@@ -957,6 +1073,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:211"
   },
   {
@@ -965,6 +1082,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:226"
   },
   {
@@ -973,6 +1091,7 @@
    "tier": "B",
    "lean": "rho_p2 (lean/Kepler/Text/LocalAuto2.lean:336)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:201"
   },
   {
@@ -981,6 +1100,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:137"
   },
   {
@@ -989,6 +1109,7 @@
    "tier": "B",
    "lean": "rotate2 (lean/Kepler/Text/IneqClosureDefs.lean:62)",
    "batch": "1(enabler)",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:654"
   },
   {
@@ -997,6 +1118,7 @@
    "tier": "B",
    "lean": "rotate3 (lean/Kepler/Text/IneqClosureDefs.lean:66)",
    "batch": "1(enabler)",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:657"
   },
   {
@@ -1005,6 +1127,7 @@
    "tier": "B",
    "lean": "rotate4 (lean/Kepler/Text/IneqClosureDefs.lean:70)",
    "batch": "1(enabler)",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:660"
   },
   {
@@ -1013,6 +1136,7 @@
    "tier": "B",
    "lean": "rotate5 (lean/Kepler/Text/IneqClosureDefs.lean:74)",
    "batch": "1(enabler)",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:663"
   },
   {
@@ -1021,14 +1145,16 @@
    "tier": "B",
    "lean": "rotate6 (lean/Kepler/Text/IneqClosureDefs.lean:78)",
    "batch": "1(enabler)",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:666"
   },
   {
    "symbol": "scalar6",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "scalar6 (lean/Kepler/Text/IneqClosureDefs.lean:326)",
+   "batch": "2",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:279"
   },
   {
@@ -1037,6 +1163,7 @@
    "tier": "A",
    "lean": "Mathlib",
    "batch": "",
+   "note": "",
    "source": ""
   },
   {
@@ -1045,6 +1172,7 @@
    "tier": "B",
    "lean": "sol0 (lean/Kepler/Text/PackingAuto2.lean:419)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:207"
   },
   {
@@ -1053,6 +1181,7 @@
    "tier": "B",
    "lean": "solEuler156XDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:201)",
    "batch": "1",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:127"
   },
   {
@@ -1061,6 +1190,7 @@
    "tier": "B",
    "lean": "solEuler246XDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:191)",
    "batch": "1",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:121"
   },
   {
@@ -1069,6 +1199,7 @@
    "tier": "B",
    "lean": "solEuler345XDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:196)",
    "batch": "1",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:124"
   },
   {
@@ -1077,6 +1208,7 @@
    "tier": "B",
    "lean": "solEulerXDivSqrtdelta (lean/Kepler/Text/IneqClosureDefs.lean:173)",
    "batch": "1",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:115"
   },
   {
@@ -1085,6 +1217,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:181"
   },
   {
@@ -1093,6 +1226,7 @@
    "tier": "B",
    "lean": "solY_p19 (lean/Kepler/Text/LocalAuto19.lean:119)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:185"
   },
   {
@@ -1101,6 +1235,7 @@
    "tier": "A",
    "lean": "Mathlib",
    "batch": "",
+   "note": "",
    "source": ""
   },
   {
@@ -1109,6 +1244,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:76"
   },
   {
@@ -1117,6 +1253,7 @@
    "tier": "B",
    "lean": "sqrt3 (lean/Kepler/Text/PackingAuto22.lean:112)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:77"
   },
   {
@@ -1125,6 +1262,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:75"
   },
   {
@@ -1133,6 +1271,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:803"
   },
   {
@@ -1141,6 +1280,7 @@
    "tier": "B",
    "lean": "tau0 (lean/Kepler/Text/PackingAuto2.lean:422)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:509"
   },
   {
@@ -1149,6 +1289,7 @@
    "tier": "B",
    "lean": "taumP19 (lean/Kepler/Text/LocalAuto19.lean:135)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:215"
   },
   {
@@ -1157,14 +1298,16 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:244"
   },
   {
    "symbol": "two6",
    "class": "resolved",
-   "tier": "D",
-   "lean": "-",
-   "batch": "",
+   "tier": "B",
+   "lean": "two6 (lean/Kepler/Text/IneqClosureDefs.lean:277)",
+   "batch": "2",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:259"
   },
   {
@@ -1173,6 +1316,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:246"
   },
   {
@@ -1181,6 +1325,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:446"
   },
   {
@@ -1189,6 +1334,7 @@
    "tier": "B",
    "lean": "upsX_p11 (lean/Kepler/Text/LocalAuto11.lean:144)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:122"
   },
   {
@@ -1197,6 +1343,7 @@
    "tier": "B",
    "lean": "vol3f (lean/Kepler/Text/PackingAuto20.lean:129)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:573"
   },
   {
@@ -1205,6 +1352,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/nonlinear/nonlin_def.hl:365"
   },
   {
@@ -1213,6 +1361,7 @@
    "tier": "B",
    "lean": "vol3r (lean/Kepler/Text/PackingAuto20.lean:126)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:571"
   },
   {
@@ -1221,6 +1370,7 @@
    "tier": "B",
    "lean": "vol4f (lean/Kepler/Text/PackingAuto20.lean:107)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:549"
   },
   {
@@ -1229,6 +1379,7 @@
    "tier": "B",
    "lean": "volXf (lean/Kepler/Text/PackingAuto20.lean:99)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:251"
   },
   {
@@ -1237,6 +1388,7 @@
    "tier": "B",
    "lean": "volY (lean/Kepler/Text/PackingAuto20.lean:103)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:547"
   },
   {
@@ -1245,6 +1397,7 @@
    "tier": "D",
    "lean": "-",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:840"
   },
   {
@@ -1253,6 +1406,7 @@
    "tier": "B",
    "lean": "x1DeltaY_p11 (lean/Kepler/Text/LocalAuto11.lean:193)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:842"
   },
   {
@@ -1261,6 +1415,7 @@
    "tier": "B",
    "lean": "yOfX_p11 (lean/Kepler/Text/LocalAuto11.lean:177)",
    "batch": "",
+   "note": "",
    "source": "reference/flyspeck/text_formalization/general/sphere.hl:538"
   }
  ]

@@ -68,6 +68,29 @@ BATCH1_ENABLERS = {
     "matan", "lfun", "rotate2", "rotate3", "rotate4", "rotate5", "rotate6",
 }
 
+# P6-E batch 2 (6-ary operator calculus, nonlin_def.hl) + enablers.
+# rotate2-6 are nominally in batch 2's list but were already done in batch 1.
+BATCH2 = {
+    "proj_x2", "proj_x3", "proj_x5", "proj_x6",
+    "proj_y4", "proj_y5", "proj_y6",
+    "promote1_to_6", "promote3_to_6",
+    "mk_126", "mk_135", "mk_456", "scalar6", "two6", "norm2hh",
+}
+BATCH2_ENABLERS = {"compose6", "constant6", "proj_x1", "proj_x4"}
+
+# Per-symbol remarks (rendered in the md 备注 column).
+NOTES = {
+    "compose6": "defs.json body_ast 是截断的 parse 残片（{\"const\":\"f\"}），"
+                "以 nonlin_def.hl:72-80 原文为准",
+    "proj_x1": "HOL 多态；Lean 只移植闭包用到的 ℝ⁶→ℝ 实例",
+    "proj_x2": "HOL 多态；同上",
+    "proj_x3": "HOL 多态；同上",
+    "proj_x4": "HOL 多态；同上",
+    "proj_x5": "HOL 多态；同上",
+    "proj_x6": "HOL 多态；同上",
+    "norm2hh": "复用 PackingAuto2 的 hminus（Classical.epsilon 版）/hplus",
+}
+
 ANCHOR_RE = re.compile(r"/--\s*HOL\s*`([A-Za-z0-9_']+)`")
 DEF_RE = re.compile(
     r"^(?:noncomputable\s+)?(def|theorem|lemma|axiom|opaque)\s+([A-Za-z0-9_']+)")
@@ -143,10 +166,18 @@ def survey_lean():
             with open(path) as f:
                 lines = f.readlines()
             pending_anchor = None     # (hol_name, line_no)
+            in_doc = False            # inside a `/-- ... -/` docstring
             for i, line in enumerate(lines):
+                if in_doc:
+                    if "-/" in line:
+                        in_doc = False
+                    continue
                 m = ANCHOR_RE.search(line)
                 if m:
                     pending_anchor = (m.group(1), i + 1)
+                    if "-/" not in line:
+                        in_doc = True
+                    continue
                 d = DEF_RE.match(line)
                 if d:
                     kind, name = d.groups()
@@ -209,9 +240,12 @@ def main():
         else:
             cls, tier, lean = "missing", "D", "-"
         batch = ("1" if sym in BATCH1
-                 else "1(enabler)" if sym in BATCH1_ENABLERS else "")
+                 else "1(enabler)" if sym in BATCH1_ENABLERS
+                 else "2" if sym in BATCH2
+                 else "2(enabler)" if sym in BATCH2_ENABLERS else "")
         rows.append({"symbol": sym, "class": cls, "tier": tier,
                      "lean": lean, "batch": batch,
+                     "note": NOTES.get(sym, ""),
                      "source": defs.get(sym, {}).get("source",
                                  unsupported.get(sym, {}).get("source", ""))})
 
@@ -240,15 +274,16 @@ def main():
 - tier（Lean 侧现状）: A = 已有真体（项目原生/Mathlib）;
   B = 已按 B 档移植（camelCase + HOL 锚注释）; C = 桩（sorry/axiom）;
   D = 缺席
-- batch: 批次号（1 = sqrtdelta 有理家族；1(enabler) = 批 1 依赖件）
+- batch: 批次号（1 = sqrtdelta 有理家族；2 = 6 元算子演算；
+  N(enabler) = 批 N 依赖件）
 
-| # | symbol | class | tier | Lean 侧 | batch | HOL source |
-|---|--------|-------|------|---------|-------|------------|
+| # | symbol | class | tier | Lean 侧 | batch | HOL source | 备注 |
+|---|--------|-------|------|---------|-------|------------|------|
 """)
         for i, r in enumerate(rows, 1):
-            f.write("| %d | `%s` | %s | %s | %s | %s | %s |\n"
+            f.write("| %d | `%s` | %s | %s | %s | %s | %s | %s |\n"
                     % (i, r["symbol"], r["class"], r["tier"], r["lean"],
-                       r["batch"], r["source"]))
+                       r["batch"], r["source"], r["note"]))
         f.write("\nclosure stats: roots=%d size=%d resolved=%d "
                 "primitives=%d unsupported=%d missing=%d; "
                 "statement variables excluded: %s\n"
