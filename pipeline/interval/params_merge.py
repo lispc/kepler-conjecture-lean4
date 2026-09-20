@@ -33,6 +33,22 @@ def die(msg):
     sys.exit(f"params_merge: {msg}")
 
 
+def load_ladder(d):
+    """Ladder single source of truth (wave-2 design D3): `<dir>/manifest.json`
+    (schema v2) when present; otherwise the hardcoded copy, with a
+    deprecation warning."""
+    p = os.path.join(d, "manifest.json")
+    if os.path.exists(p):
+        m = json.load(open(p))
+        if m.get("schema") != 2 or not m.get("ladder"):
+            die(f"{p}: not a schema-v2 manifest with a ladder")
+        return [tuple(r) for r in m["ladder"]]
+    print(f"params_merge: warning: no {p} — falling back to the hardcoded "
+          "ladder (deprecated; re-emit stage A with schema v2)",
+          file=sys.stderr)
+    return LADDER
+
+
 def box_key(box_json):
     return tuple(E.box_frac(iv) for iv in box_json)
 
@@ -45,6 +61,8 @@ def main():
     repaired = json.load(open(sys.argv[4]))
     rparams = json.load(open(sys.argv[5]))
     outpath = sys.argv[6]
+    ladder = load_ladder(stagea_dir)
+    rank = {r: i for i, r in enumerate(ladder)}
 
     rungs = []
     old = {}
@@ -62,29 +80,38 @@ def main():
                 # be covered by the repair params (final lookup will verify).
                 print(f"params_merge: note BESTFAIL shard {f} ({ln.strip()})",
                       file=sys.stderr)
-            elif parts[0].isdigit() and parts[1] == "PASS":
+            elif parts[0].isdigit() and parts[1] in ("PASS", "PASSV"):
+                # schema v2: `i PASS k s1 t1 ...` / `i PASSV k` — keep the
+                # status word and everything after the local index verbatim
+                # (stage B re-validates against the manifest goals).
                 g = idx * sz + int(parts[0])
-                old[orig_boxes[g]] = parts[2:]
+                old[orig_boxes[g]] = (parts[1], parts[2:])
 
     new = {}
     for l in rparams["leaves"]:
         rungs.append(tuple(l["rung"]))
-        new[box_key(l["box"])] = [str(x) for x in l["params"]]
+        # repair params are v1-shaped (main-goal pos fills)
+        new[box_key(l["box"])] = ("PASS", [str(x) for x in l["params"]])
     if not rungs:
         die("no rungs found in any source")
-    global_rung = max(rungs, key=lambda r: RANK[r])
+    for r in rungs:
+        if r not in rank:
+            die(f"rung {r} not on the ladder")
+    global_rung = max(rungs, key=lambda r: rank[r])
 
     missing = 0
     with open(outpath, "w") as out:
         out.write(f"RUNG {global_rung[0]} {global_rung[1]}\n")
         for i, l in enumerate(repaired["leaves"]):
             key = box_key(l["box"])
-            params = new.get(key) or old.get(key)
-            if params is None:
+            entry = new.get(key) or old.get(key)
+            if entry is None:
                 print(f"missing params for leaf {i}: {key}", file=sys.stderr)
                 missing += 1
                 continue
-            out.write(f"{i} PASS {' '.join(params)}\n")
+            status, params = entry
+            tail = f" {' '.join(params)}" if params else ""
+            out.write(f"{i} {status}{tail}\n")
     if missing:
         die(f"{missing} repaired-cert leaves have no params")
     print(f"params_merge: wrote {outpath} — {len(repaired['leaves'])} leaves, "

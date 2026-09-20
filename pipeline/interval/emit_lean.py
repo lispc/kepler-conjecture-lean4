@@ -23,9 +23,27 @@ v2 (FillParams pipeline, `--fill`): ops sqrt/atan/sin/cos/ln accepted.
   reconstruction still works); the target box of the emitted theorem is the
   shrunk box.
 
+v2 disj (wave-2, design D5/D6):
+- `--bbg --disj-gd --params=FILE [--manifest=FILE]` reads the schema-v2
+  FillParams output (`i PASS k s1 t1 ...` / `i PASSV k`) and the stage-A
+  manifest (single source of truth for goals/ladder; auto-detected as
+  `manifest.json` next to the params file when `--manifest` is absent),
+  and emits `BBTreeGD` shards (CertGD): one `{mod}MkExprK` factory +
+  `{mod}ExprK` dummy global + rfl bridge `{mod}SemK` per *pos* goal K,
+  the full goals list (un-hit branches carry dummy parameters — only
+  expression construction must be legal), leaves `.posLeaf box k e el rfl
+  ({mod}SemK _) (by decide)` / `.varLtLeaf box k (by decide)`, root
+  theorem `∃ g ∈ goals, g.eval ρ` via `bb_sound_disjG`.
+- `--disj-dummy` (v1 repair path, design D6): for disj cases whose *hit*
+  branches are all parameter-free, emit plain BBTreeD with dummy `(0, 0)`
+  sqrt slots / fixed trans params on the un-hit branches instead of
+  dying; a hit branch with sqrt/trans nodes is rejected (route it to
+  `--bbg --disj-gd`).
+
 Usage: emit_lean.py <case.json> <cert.json> <out.lean> [--name NAME]
        [--shard-leaves=N] [--leaves=N] [--fill] [--stage-a]
-       [--bbg --params=FILE]
+       [--bbg --params=FILE] [--bbg --disj-gd --params=FILE [--manifest=FILE]]
+       [--disj-dummy]
 """
 import json
 import sys
@@ -220,6 +238,27 @@ def build_goals(case, rpn):
 
 
 TRANS_KIND = {"atan": "arctanK", "sin": "sinK", "cos": "cosK", "ln": "lnK"}
+
+
+def tree_box_map(t):
+    """cert-form box -> tree (node-form) box over all leaves of a
+    reconstructed tree.  Stage-A drivers must evaluate the *node* forms:
+    the emitted tree carries them (`splitOKB` compares child boxes
+    structurally against `midRadius.c` of the parent), and the `.sqrt`
+    mantissa certificate is form-sensitive (`Dyadic.sqrtI` aligns the
+    mantissa to `e % 2`), so filling parameters on the normalised cert
+    forms can produce mantissas the kernel rejects on the node forms."""
+    m = {}
+
+    def walk(u):
+        if isinstance(u, Leaf):
+            m[u.cert_box] = u.box
+        else:
+            walk(u.l)
+            walk(u.r)
+
+    walk(t)
+    return m
 
 
 class RPN:
@@ -717,6 +756,255 @@ def emit_sharded_bbg(t, mod, n, k, expr, box, hdr, outpath, shard_leaves, params
           f"({t.nleaves} leaves, {len(shards)} shards, BBTreeG)")
 
 
+# ---------------------------------------------------------------------------
+# Wave-2 stage B (design D5): BBTreeGD shards for disj cases with
+# parameterised hit branches, driven by the schema-v2 manifest + params.
+# ---------------------------------------------------------------------------
+
+def case_goals(case):
+    """Schema-v2 goal descriptors derived from the case JSON (the emitted
+    goal list's source of truth; cross-checked against the manifest).
+    `prog` is kept on pos goals for factory emission."""
+    goals = [{"index": 0, "label": "main", "kind": "pos",
+              "sqrt": count_op(case["prog"], "sqrt"), "prog": case["prog"]}]
+    for idx, dj in enumerate(case.get("disj", [])):
+        if "prog" in dj:
+            goals.append({"index": idx + 1, "label": f"disj:{idx}", "kind": "pos",
+                          "sqrt": count_op(dj["prog"], "sqrt"), "prog": dj["prog"]})
+        elif "var_lt" in dj:
+            i, j = dj["var_lt"]
+            goals.append({"index": idx + 1, "label": f"var_lt:{i},{j}",
+                          "kind": "varLt", "i": i, "j": j})
+        else:
+            die(f"disj entry without prog/var_lt: {list(dj)}")
+    return goals
+
+
+def find_manifest(manifest_file, params_file):
+    """Locate the schema-v2 stage-A manifest: explicit --manifest, else
+    `manifest.json` next to the params file."""
+    if manifest_file:
+        return manifest_file
+    cand = os.path.join(os.path.dirname(os.path.abspath(params_file)),
+                        "manifest.json")
+    if os.path.exists(cand):
+        return cand
+    die("--disj-gd needs the stage-A manifest (design D3): pass "
+        "--manifest=FILE or place manifest.json next to the params file")
+
+
+def check_manifest(mf, goals, n, nleaves):
+    """Cross-check the schema-v2 manifest against the case-derived goals
+    (both describe the same goal list; disagreement = wrong input pair)."""
+    if mf.get("schema") != 2:
+        die(f"manifest schema {mf.get('schema')} != 2")
+    if mf.get("n") != n:
+        die(f"manifest n={mf.get('n')} != case vars {n}")
+    if mf.get("nleaves") != nleaves:
+        die(f"manifest nleaves={mf.get('nleaves')} != cert leaves {nleaves}")
+    mg = mf.get("goals") or []
+    if len(mg) != len(goals):
+        die(f"manifest has {len(mg)} goals, case has {len(goals)}")
+    for g, m in zip(goals, mg):
+        for key in ("index", "label", "kind"):
+            if m.get(key) != g[key]:
+                die(f"goal {g['index']} {key}: manifest {m.get(key)} != case {g[key]}")
+        if g["kind"] == "pos":
+            if m.get("sqrt") != g["sqrt"]:
+                die(f"goal {g['index']} sqrt: manifest {m.get('sqrt')} != "
+                    f"case {g['sqrt']}")
+        elif m.get("i") != g["i"] or m.get("j") != g["j"]:
+            die(f"goal {g['index']} var_lt: manifest {m.get('i')},{m.get('j')} "
+                f"!= case {g['i']},{g['j']}")
+    return mf
+
+
+def parse_params_disj(path, nleaves, goals):
+    """Parse schema-v2 FillParams output: `RUNG N out` header plus per-leaf
+    `i PASS k s1 t1 ...` (pos hit, 2*sqrt(goals[k]) ints) / `i PASSV k`
+    (varLt hit, no params) lines.  BESTFAIL/FAIL lines are fatal.  Returns
+    ((N, out), {leaf index: ("pos", k, [(s1, t1), ...]) | ("varLt", k, None)})."""
+    rung = None
+    hits = {}
+    for ln in open(path):
+        parts = ln.split()
+        if not parts:
+            continue
+        if parts[0] == "RUNG":
+            rung = (int(parts[1]), int(parts[2]))
+        elif parts[0] == "BESTFAIL":
+            die(f"FillParams reported failures ({ln.strip()}) — refusing stage B")
+        elif parts[0].isdigit():
+            i = int(parts[0])
+            if i in hits:
+                die(f"duplicate params line for leaf {i}")
+            if parts[1] == "FAIL":
+                die(f"leaf {i} FAIL ({ln.strip()}) — refusing stage B")
+            elif parts[1] == "PASSV":
+                if len(parts) != 3:
+                    die(f"leaf {i}: PASSV takes exactly the goal index: {ln.strip()}")
+                k = int(parts[2])
+                if not (0 <= k < len(goals)) or goals[k]["kind"] != "varLt":
+                    die(f"leaf {i}: PASSV {k} but goal {k} is not a varLt goal")
+                hits[i] = ("varLt", k, None)
+            elif parts[1] == "PASS":
+                k = int(parts[2])
+                if not (0 <= k < len(goals)) or goals[k]["kind"] != "pos":
+                    die(f"leaf {i}: PASS {k} but goal {k} is not a pos goal")
+                nums = [int(x) for x in parts[3:]]
+                if len(nums) != 2 * goals[k]["sqrt"]:
+                    die(f"leaf {i}: goal {k} expects {2 * goals[k]['sqrt']} "
+                        f"mantissas, got {len(nums)}")
+                hits[i] = ("pos", k,
+                           [(nums[j], nums[j + 1]) for j in range(0, len(nums), 2)])
+            else:
+                die(f"leaf {i}: unknown status {parts[1]}: {ln.strip()}")
+    if rung is None:
+        die("params file has no RUNG line")
+    if len(hits) != nleaves or (hits and (min(hits) < 0 or max(hits) >= nleaves)):
+        die(f"params cover {len(hits)} leaves, expected indices 0..{nleaves - 1}")
+    return rung, hits
+
+
+def mkexpr_bbgd(prog, sj, rung):
+    """BBTreeGD pos-goal factory body: sqrt slots read from `ms` (RPN/post
+    order), open trans nodes on the global rung, closed trans fixed at
+    (2048, -64) — the same policy as the BBTreeG factory."""
+    N, out = rung
+    rpn = RPN(sqrt_slot=lambda i: (f"((ms[{i}]'(by decide)).1)",
+                                   f"((ms[{i}]'(by decide)).2)"),
+              trans=lambda op, closed: ("2048", "(-64)") if closed
+              else (str(N), f"({out})"))
+    expr = rpn.emit(prog)
+    if rpn.sqrt_count != sj:
+        die(f"internal: sqrt count {rpn.sqrt_count} != manifest count {sj}")
+    return expr
+
+
+def base_file_bbgd(mod, n, goals, exprs, box):
+    out = [HDR + "import Kepler.Interval.CertGD\n\n"
+           "namespace Kepler.Interval.Cases\n\n"]
+    for g in goals:
+        if g["kind"] != "pos":
+            continue
+        j, sj = g["index"], g["sqrt"]
+        out.append(
+            f"/-- Pos-goal {j} (`{g['label']}`) expression factory: slot `i` of\n"
+            "`ms` carries the per-leaf certificate mantissas `(s₁, s₂)` of the\n"
+            "`i`-th `.sqrt` node (RPN/post order — the order\n"
+            "`Kepler.Interval.Tools.FillParams.evalFill` collects them). -/\n"
+            f"def {mod}MkExpr{j} (ms : Vector (Int × Int) {sj}) : IExpr {n} :=\n"
+            f"  {exprs[j]}\n\n"
+            f"/-- The global goal-{j} expression (dummy parameters; `evalReal`\n"
+            "ignores them).  Un-hit branches appear in the goals list only via\n"
+            "this dummy instance — soundness never checks them. -/\n"
+            f"def {mod}Expr{j} : IExpr {n} := {mod}MkExpr{j} (Vector.replicate {sj} (0, 0))\n\n"
+            "/-- Every parameter instance coincides with the global expression over ℝ\n"
+            "(`IExpr.evalReal` discards the certificate slots definitionally). -/\n"
+            f"theorem {mod}Sem{j} (ms : Vector (Int × Int) {sj}) :\n"
+            f"    ({mod}MkExpr{j} ms).evalReal = ({mod}Expr{j}).evalReal := rfl\n\n")
+    gl = ", ".join(f".pos {mod}Expr{g['index']}" if g["kind"] == "pos"
+                   else f".varLt {g['i']} {g['j']}" for g in goals)
+    out.append("/-- The disjunctive goal list (main prog first, disj entries in\n"
+               "case order). -/\n"
+               f"def {mod}Goals : List (DisjGoal {n}) :=\n  [{gl}]\n\n"
+               "/-- The target box (tree root). -/\n"
+               f"def {mod}Box : Fin {n} → DInterval :=\n  {box}\n\n"
+               "end Kepler.Interval.Cases\n")
+    return "".join(out)
+
+
+def emit_leaf_bbgd(mod, box, hit):
+    """One BBTreeGD leaf: pos hits carry the per-leaf filled factory
+    instance + `rfl` (`goals.get k` reduces on the literal list) + the
+    one-shot semantics bridge; varLt hits are plain box checks."""
+    kl = f"⟨{hit[1]}, by decide⟩"
+    if hit[0] == "varLt":
+        return f"(.varLtLeaf {box_lit(box)} {kl} (by decide))"
+    k, pairs = hit[1], hit[2]
+    return (f"(.posLeaf {box_lit(box)} {kl} {mod}Expr{k} "
+            f"({mod}MkExpr{k} {ms_vec(pairs)}) rfl ({mod}Sem{k} _) (by decide))")
+
+
+def emit_tree_bbgd(u, mod, hits_by_box, depth=0):
+    """BBTreeGD constructor text with inline per-leaf `by decide` certs."""
+    if isinstance(u, Leaf):
+        return emit_leaf_bbgd(mod, u.box, hits_by_box[u.cert_box])
+    pad = "  " * min(depth + 1, 20)
+    return (f"(.node {box_lit(u.box)} {u.d}\n{pad}{emit_tree_bbgd(u.l, mod, hits_by_box, depth + 1)}\n"
+            f"{pad}{emit_tree_bbgd(u.r, mod, hits_by_box, depth + 1)})")
+
+
+def shard_file_bbgd(mod, i, sub, n, hits_by_box):
+    return (HDR + f"import Kepler.Interval.Cases.{mod}.Base\n\n"
+            "set_option maxHeartbeats 0\n"
+            "-- closed-arg atan nodes run N=2048 Taylor terms; the elaborator's\n"
+            "-- whnf recursion budget must cover the `taylorIter` fuel\n"
+            "set_option maxRecDepth 1000000\n\n"
+            "namespace Kepler.Interval.Cases\n\n"
+            f"/-- Shard {i} subtree (per-leaf filled expressions; certs are inline\n"
+            f"kernel `decide`s). -/\n"
+            f"def {mod}Shard{i}Tree : BBTreeGD {n} {mod}Goals :=\n"
+            f"  {emit_tree_bbgd(sub, mod, hits_by_box)}\n\n"
+            f"/-- Covering of shard {i}: one kernel `decide` via `BBTreeGD.coversB`. -/\n"
+            f"theorem {mod}Shard{i}Covers : {mod}Shard{i}Tree.covers :=\n"
+            f"  BBTreeGD.coversB_sound _ (by decide)\n\n"
+            "end Kepler.Interval.Cases\n")
+
+
+def emit_sharded_bbgd(t, mod, n, goals, exprs, box, hdr, outpath, shard_leaves,
+                      hits_by_box):
+    """Stage B (disj, schema v2): Base (per-goal MkExprK/ExprK/SemK + Goals +
+    Box) + BBTreeGD shards + root, closing via `bb_sound_disjG`."""
+    shards = cut_shards(t, shard_leaves)
+    shard_idx = {id(u): i + 1 for i, u in enumerate(shards)}
+    base = os.path.splitext(outpath)[0]
+    os.makedirs(base, exist_ok=True)
+
+    open(os.path.join(base, "Base.lean"), "w").write(
+        base_file_bbgd(mod, n, goals, exprs, box).format(**hdr))
+
+    for i, u in enumerate(shards, 1):
+        open(os.path.join(base, f"Shard{i}.lean"), "w").write(
+            shard_file_bbgd(mod, i, u, n, hits_by_box).format(**hdr))
+
+    def skel_tree(u):
+        if id(u) in shard_idx:
+            return f"{mod}Shard{shard_idx[id(u)]}Tree"
+        if isinstance(u, Leaf):
+            return emit_leaf_bbgd(mod, u.box, hits_by_box[u.cert_box])
+        return f"(.node {box_lit(u.box)} {u.d} {skel_tree(u.l)} {skel_tree(u.r)})"
+
+    def skel_proof(u):
+        if id(u) in shard_idx:
+            return f"{mod}Shard{shard_idx[id(u)]}Covers"
+        if isinstance(u, Leaf):
+            return "trivial"
+        return (f"⟨splitOKB_sound (by decide), {skel_proof(u.l)}, "
+                f"{skel_proof(u.r)}⟩")
+
+    imports = "\n".join(f"import Kepler.Interval.Cases.{mod}.Shard{i}"
+                        for i in range(1, len(shards) + 1))
+    root = (HDR + imports + "\n\nset_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
+            "namespace Kepler.Interval.Cases\n\n"
+            f"/-- The certificate tree, assembled from {len(shards)} shard subtrees. -/\n"
+            f"def {mod}Tree : BBTreeGD {n} {mod}Goals :=\n  {skel_tree(t)}\n\n"
+            f"/-- Covering: per-shard `coversB` certificates glued by `splitOKB`\n"
+            f"on the {len(shards)}-way skeleton. -/\n"
+            f"theorem {mod}_covers : {mod}Tree.covers :=\n  {skel_proof(t)}\n\n"
+            f"/-- Box containment is reflexive here (tree root = target box). -/\n"
+            f"theorem {mod}_sub : boxSub {mod}Box {mod}Tree.box := by\n"
+            "  intro i\n  fin_cases i <;> exact ⟨by decide, by decide⟩\n\n"
+            "/-- End-to-end: some disjunct holds at every point of the box. -/\n"
+            f"theorem {mod}_pos (ρ : Fin {n} → ℝ) (hρ : boxMem {mod}Box ρ) :\n"
+            f"    ∃ g ∈ {mod}Goals, g.eval ρ :=\n"
+            f"  bb_sound_disjG {mod}Tree {mod}Box {mod}_covers {mod}_sub ρ hρ\n\n"
+            f"#print axioms {mod}_pos\n\nend Kepler.Interval.Cases\n")
+    open(outpath, "w").write(root.format(**hdr))
+    print(f"emit_lean: wrote {outpath} + Base/Shard1..{len(shards)} "
+          f"({t.nleaves} leaves, {len(shards)} shards, BBTreeGD)")
+
+
 def main():
     shard_leaves = 128
     sample_n = None
@@ -725,7 +1013,10 @@ def main():
     stage_a_shards = 1
     stage_a_data = False
     bbg = False
+    disj_gd = False
+    disj_dummy = False
     params_file = None
+    manifest_file = None
     args = []
     for a in sys.argv[1:]:
         if a.startswith("--shard-leaves="):
@@ -742,13 +1033,22 @@ def main():
             stage_a_data = True
         elif a == "--bbg":
             bbg = True
+        elif a == "--disj-gd":
+            disj_gd = True
+        elif a == "--disj-dummy":
+            disj_dummy = True
         elif a.startswith("--params="):
             params_file = a.split("=", 1)[1]
+        elif a.startswith("--manifest="):
+            manifest_file = a.split("=", 1)[1]
         elif not a.startswith("--"):
             args.append(a)
     if len(args) != 3:
         die("usage: emit_lean.py <case.json> <cert.json> <out.lean> [--shard-leaves=N]\n"
-            "                [--leaves=N] [--fill] [--stage-a] [--bbg --params=FILE]")
+            "                [--leaves=N] [--fill] [--stage-a] [--bbg --params=FILE]\n"
+            "                [--bbg --disj-gd --params=FILE [--manifest=FILE]] [--disj-dummy]")
+    if disj_gd and not bbg:
+        die("--disj-gd is a stage-B mode: pass --bbg --disj-gd --params=FILE")
     fill = fill or stage_a or bbg
     case = json.load(open(args[0]))
     cid = args[0].split("/")[-1].replace(".json", "")
@@ -790,9 +1090,11 @@ def main():
     if fill:
         # ---- FillParams pipeline (stage A driver / stage B BBTreeG shards) ----
         disj = bool(case.get("disj"))
-        if disj and not stage_a:
-            die("fill pipeline: disj stage B (--bbg) unsupported (wave-2 W3); "
+        if disj and not stage_a and not disj_gd:
+            die("fill pipeline: disj stage B needs --bbg --disj-gd (wave-2 W3); "
                 "--stage-a emits the schema-v2 disj driver")
+        if disj_gd and not disj:
+            die("--disj-gd on a non-disj case: use plain --bbg (BBTreeG)")
         hits = {l["hit"] for l in leaves}
         if not disj and hits != {"main"}:
             die(f"fill pipeline needs main-only hits, got {hits}")
@@ -812,8 +1114,12 @@ def main():
         if stage_a and disj:
             # Disjunctive stage A (schema v2): one fillMkExprK per pos goal,
             # exact-box varLt goals; hit recomputed per leaf (design D2).
+            # Boxes are fed in the *tree node* form (the form the kernel
+            # will check), not the normalised cert form — the `.sqrt`
+            # mantissa certificate is form-sensitive (see tree_box_map).
             mkexprs, terms, goals_manifest = fill_goals(case)
             nslots = sum(g["sqrt"] for g in goals_manifest if g["kind"] == "pos")
+            tbm = tree_box_map(t)
             if stage_a_data:
                 # Data-file mode: tiny shared driver + plain-text box chunks.
                 sz = (len(leaves) + stage_a_shards - 1) // stage_a_shards
@@ -826,7 +1132,7 @@ def main():
                     p = os.path.join(d, f"chunk{i // sz:05d}.txt")
                     with open(p, "w") as f:
                         for l in leaves[i:i + sz]:
-                            b = tuple(box_frac(iv) for iv in l["box"])
+                            b = tbm[tuple(box_frac(iv) for iv in l["box"])]
                             f.write(" ".join(
                                 f"{lo[0]} {lo[1]} {hi[0]} {hi[1]}"
                                 for lo, hi in b) + "\n")
@@ -838,7 +1144,7 @@ def main():
                       f"chunk size {sz}, {len(mkexprs)} pos goals, "
                       f"{nslots} sqrt slots total)")
                 return
-            boxes_lean = [box_lit(tuple(box_frac(iv) for iv in l["box"]))
+            boxes_lean = [box_lit(tbm[tuple(box_frac(iv) for iv in l["box"])])
                           for l in leaves]
             if stage_a_shards > 1:
                 sz = (len(leaves) + stage_a_shards - 1) // stage_a_shards
@@ -865,6 +1171,27 @@ def main():
                            cid, n, goals_manifest, len(leaves), "lean")
             print(f"emit_lean: wrote {args[2]} (disj stage A: {len(leaves)} "
                   f"leaves, {len(mkexprs)} pos goals, {nslots} sqrt slots total)")
+            return
+        if disj_gd:
+            # ---- Wave-2 stage B (design D5): BBTreeGD shards from the
+            # schema-v2 manifest + params (hit recomputed by stage A). ----
+            if params_file is None:
+                die("--bbg --disj-gd needs --params=FILE (schema-v2 FillParams "
+                    "stage-A output)")
+            goals = case_goals(case)
+            mfpath = find_manifest(manifest_file, params_file)
+            mf = check_manifest(json.load(open(mfpath)), goals, n, len(leaves))
+            rung, hits = parse_params_disj(params_file, len(leaves), goals)
+            if list(rung) not in mf["ladder"]:
+                die(f"params rung {rung} not on the manifest ladder "
+                    f"({mfpath}) — mismatched inputs?")
+            exprs = {g["index"]: mkexpr_bbgd(g["prog"], g["sqrt"], rung)
+                     for g in goals if g["kind"] == "pos"}
+            hits_by_box = {}
+            for i, l in enumerate(leaves):
+                hits_by_box[tuple(box_frac(iv) for iv in l["box"])] = hits[i]
+            emit_sharded_bbgd(t, mod, n, goals, exprs, box, hdr, args[2],
+                              shard_leaves, hits_by_box)
             return
         if stage_a:
             rpn = RPN(sqrt_slot=lambda i: ("0", "0"),
@@ -948,7 +1275,17 @@ def main():
         return
 
     # ---- original v1 path (BBTree / BBTreeD) ----
-    rpn = RPN()
+    if disj_dummy:
+        if not case.get("disj"):
+            die("--disj-dummy is only meaningful on disj cases")
+        # v1 repair path (wave-2 design D6): un-hit branches may carry
+        # sqrt/trans nodes; emit them with dummy parameters (legal
+        # expressions, never kernel-checked).  Hit branches are verified
+        # parameter-free below.
+        rpn = RPN(sqrt_slot=lambda i: ("0", "0"),
+                  trans=lambda op, closed: ("2048", "(-64)"))
+    else:
+        rpn = RPN()
     expr = rpn.emit(case["prog"])
     box = box_lean(case["box"])
 
@@ -962,6 +1299,22 @@ def main():
         unknown = hits - set(mode.goal_k)
         if unknown:
             die(f"cert hits not in goal map: {unknown}")
+        if disj_dummy:
+            # A hit pos branch with sqrt/trans nodes would be kernel-checked
+            # against dummy `(0, 0)` slots — route those to --bbg --disj-gd.
+            progs = {"main": case["prog"]}
+            for idx, dj in enumerate(case["disj"]):
+                if "prog" in dj:
+                    progs[f"disj:{idx}"] = dj["prog"]
+            for h in hits:
+                prog = progs.get(h)
+                if prog is None:
+                    continue  # var_lt hit: exact box check, no expression
+                npar = (count_op(prog, "sqrt")
+                        + sum(count_op(prog, t0) for t0 in TRANS_KIND))
+                if npar:
+                    die(f"hit branch {h} has {npar} parameterised node(s) "
+                        f"(sqrt/trans): use --bbg --disj-gd, not --disj-dummy")
     elif hits != {"main"}:
         die(f"cert hits {hits}: case is not disj but cert uses disjuncts")
 
