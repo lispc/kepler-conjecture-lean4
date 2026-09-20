@@ -47,7 +47,7 @@ Encoding notes.
   at the empty base), `plane` ↦ `plane_p2`, `P hull` ↦ `convexHull ℝ`,
   `delta` (collect_geom) ↦ the importable `deltaXf` (same Cayley–Menger
   determinant), `packing` ↦ `Kepler.Packing`, `ball_annulus` ↦
-  `Kepler.Text.ballAnnulus`, `sol_y` ↦ `Kepler.Text.solY`.
+  `Kepler.Text.ballAnnulus`, `sol_y` ↦ `Kepler.Text.solYPA20`.
 -/
 
 import Kepler.Text.Polytope
@@ -329,8 +329,8 @@ noncomputable def interp_p2 (x1 y1 x2 y2 x : ℝ) : ℝ :=
 noncomputable def ly_p2 (y : ℝ) : ℝ := interp_p2 2 1 2.52 0 y
 
 /-- HOL `const1` (sphere.hl:193): `sol_y 2 2 2 2 2 2 / pi`; `sol_y` ↦ the
-importable `Kepler.Text.solY`. NEEDS: merge with the sphere layer. -/
-noncomputable def const1_p2 : ℝ := solY 2 2 2 2 2 2 / Real.pi
+importable `Kepler.Text.solYPA20`. NEEDS: merge with the sphere layer. -/
+noncomputable def const1_p2 : ℝ := solYPA20 2 2 2 2 2 2 / Real.pi
 
 /-- HOL `rho` (sphere.hl:201). NEEDS: merge with `LocalAnchors.rho`. -/
 noncomputable def rho_p2 (y : ℝ) : ℝ := 1 + const1_p2 - const1_p2 * ly_p2 y

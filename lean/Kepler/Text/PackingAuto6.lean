@@ -606,8 +606,9 @@ theorem MHFTTZN4 (V : Set V3) (ul : List V3) (k : ℕ) (u v : V3) (hP : Packing 
     (u - circumcenter (setOfList ul)) ⬝ᵥ (v - circumcenter (setOfList ul)) = 0 :=
   (MHFTTZN_lemma2 V ul k hP hbar).2 u v hu hv
 
-/-- Rogers.hl:5003 `ARCV_GT_PI2`. -/
-theorem ARCV_GT_PI2 (p u v : V3) :
+/-- Rogers.hl:5003 `ARCV_GT_PI2`. (Renamed `ARCV_GT_PI2_PA6`: the canonical
+export is PackingAuto7's, see docs/fqn-conflicts.md.) -/
+theorem ARCV_GT_PI2_PA6 (p u v : V3) :
     Real.pi / 2 < arcV p u v ↔ Real.cos (arcV p u v) < 0 := by
   have hden : 0 ≤ dist u p * dist v p := mul_nonneg dist_nonneg dist_nonneg
   have hcs : |(u - p) ⬝ᵥ (v - p)| ≤ dist u p * dist v p := by
@@ -692,20 +693,25 @@ theorem XYOFCGX_2 (V S : Set V3) (p : V3) (hV : Packing V) (hSV : S ⊆ V)
   sorry
 
 /-- Rogers.hl:5292 `ANGLE_GT_PI2`. (HOL `angle (a,b,c)`; Mathlib
-`EuclideanGeometry.angle a b c`, the angle at `b`.) -/
-theorem ANGLE_GT_PI2 (a b c : V3) :
+`EuclideanGeometry.angle a b c`, the angle at `b`.) (Renamed
+`ANGLE_GT_PI2_PA6`: the canonical export is PackingAuto7's, see
+docs/fqn-conflicts.md.) -/
+theorem ANGLE_GT_PI2_PA6 (a b c : V3) :
     Real.pi / 2 < EuclideanGeometry.angle a b c ↔ (a - b) ⬝ᵥ (c - b) < 0 := by
   sorry
 
-/-- Rogers.hl:5348 `AZIM_COMPL_EXT`. -/
-theorem AZIM_COMPL_EXT (v w a b : V3) :
+/-- Rogers.hl:5348 `AZIM_COMPL_EXT`. (Renamed `AZIM_COMPL_EXT_PA6`: the
+canonical export is PackingAuto7's, see docs/fqn-conflicts.md.) -/
+theorem AZIM_COMPL_EXT_PA6 (v w a b : V3) :
     azim v w b a =
       if azim v w a b = 0 then 0 else 2 * Real.pi - azim v w a b := by
   sorry
 
 /-- Rogers.hl:5365 `AZIM_EQ_SYM`. (Part A boundary; part B
-(`STRICT_CYCLIC_IMP_FAN`, Rogers.hl:5373) in `Kepler/Text/PackingAuto7`.) -/
-theorem AZIM_EQ_SYM (v w a b c : V3) :
+(`STRICT_CYCLIC_IMP_FAN`, Rogers.hl:5373) in `Kepler/Text/PackingAuto7`.)
+(Renamed `AZIM_EQ_SYM_PA6`: the canonical export is PackingAuto7's, see
+docs/fqn-conflicts.md.) -/
+theorem AZIM_EQ_SYM_PA6 (v w a b c : V3) :
     azim v w b a = azim v w c a ↔ azim v w a b = azim v w a c := by
   sorry
 

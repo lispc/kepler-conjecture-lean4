@@ -771,7 +771,7 @@ noncomputable def deltaX4 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
 `delta_x` at `x5`. BODY-FIX 2026-09-17: was a mis-port dropping the
 `- x1 * x3 + x1 * x4` summands; this is the corrected 6-term body, verbatim
 twin of LocalAuto11:165 `deltaX5f_p11` / LocalAuto21:113 `deltaX5_p21` /
-LocalAuto22:120 `deltaX5_p22` (checked as `∂deltaX/∂x5`), now canonical in
+LocalAuto22:120 `deltaX5_p22` (checked as `∂deltaXPA18/∂x5`), now canonical in
 `Kepler.Text.SphereKit`. -/
 noncomputable def deltaX5 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
   -x1 * x3 + x1 * x4 - x2 * x5 + x3 * x6 - x4 * x6 +
@@ -782,8 +782,8 @@ noncomputable def deltaX5 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
 now picks up the corrected `deltaX5` (was the 4-term mis-port), so this
 def's value has changed; the body is unchanged. -/
 noncomputable def mkSimplex1 (v0 v1 v2 : V3) (x1 x2 x3 x4 x5 x6 : ℝ) : V3 :=
-  let uinv := 1 / upsX x1 x2 x6
-  let d := deltaX x1 x2 x3 x4 x5 x6
+  let uinv := 1 / upsXPA18 x1 x2 x6
+  let d := deltaXPA18 x1 x2 x3 x4 x5 x6
   let d5 := deltaX5 x1 x2 x3 x4 x5 x6
   let d4 := deltaX4 x1 x2 x3 x4 x5 x6
   let vcross := cross3 (v1 - v0) (v2 - v0)
@@ -794,7 +794,7 @@ with this def at the EYYPQDW2/EYYPQDW3 call sites (same argument shape). -/
 noncomputable def mkPlanar2 (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 s : ℝ) : V3 :=
   let vcross := cross3 (v1 - v0) (cross3 (v1 - v0) (v2 - v0))
   v0 + ((x1 + x3 - x5) / (2 * x1)) • (v1 - v0) +
-    ((s / x1) * Real.sqrt (upsX x1 x3 x5 / upsX x1 x2 x6)) • vcross
+    ((s / x1) * Real.sqrt (upsXPA18 x1 x3 x5 / upsXPA18 x1 x2 x6)) • vcross
 
 /-- HOL `main_nonlinear_terminal_v11` (terminal.hl:24-44): the closed
 conjunction of `Main_estimate` inequalities built from the nonlinear
@@ -1035,7 +1035,7 @@ theorem PQCSXWG1_concl : ∀ (v0 v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 : ℝ),
     0 < x1 → 0 < x2 → 0 < x3 → 0 < x4 → 0 < x5 → 0 < x6 →
     ¬Collinear ℝ ({v0, v1, v2} : Set V3) →
     x1 = dist v1 v0 ^ 2 → x2 = dist v2 v0 ^ 2 → x6 = dist v1 v2 ^ 2 →
-    0 < deltaX x1 x2 x3 x4 x5 x6 →
+    0 < deltaXPA18 x1 x2 x3 x4 x5 x6 →
     v3 = mkSimplex1 v0 v1 v2 x1 x2 x3 x4 x5 x6 →
     x3 = dist v3 v0 ^ 2 ∧ x5 = dist v3 v1 ^ 2 ∧ x4 = dist v3 v2 ^ 2 ∧
       0 < ((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ
@@ -1047,7 +1047,7 @@ theorem PQCSXWG2_concl : ∀ (v0 v1 v2 v3 : V3) (x1 x2 x3 x4 x5 x6 : ℝ),
     0 < x1 → 0 < x2 → 0 < x3 → 0 < x4 → 0 < x5 → 0 < x6 →
     ¬Collinear ℝ ({v0, v1, v2} : Set V3) →
     x1 = dist v1 v0 ^ 2 → x2 = dist v2 v0 ^ 2 → x6 = dist v1 v2 ^ 2 →
-    0 < deltaX x1 x2 x3 x4 x5 x6 →
+    0 < deltaXPA18 x1 x2 x3 x4 x5 x6 →
     v3 = mkSimplex1 v0 v1 v2 x1 x2 x3 x4 x5 x6 →
     ContinuousAt (fun q => mkSimplex1 v0 v1 v2 x1 x2 x3 x4 q x6) x5 := by
   sorry
@@ -1057,7 +1057,7 @@ theorem EYYPQDW_concl : ∀ (v0 v1 v2 v3 : V3) (x1 x2 x3 x5 x6 s : ℝ),
     0 < x1 → 0 < x2 → 0 < x3 → 0 < x5 → 0 < x6 →
     ¬Collinear ℝ ({v0, v1, v2} : Set V3) →
     x1 = dist v1 v0 ^ 2 → x2 = dist v2 v0 ^ 2 → x6 = dist v1 v2 ^ 2 →
-    0 < upsX x1 x3 x5 → s = 1 ∨ s = -1 →
+    0 < upsXPA18 x1 x3 x5 → s = 1 ∨ s = -1 →
     v3 = mkPlanar2 v0 v1 v2 x1 x2 x3 x5 x6 s →
     Coplanar ({v0, v1, v2, v3} : Set V3) ∧
     x3 = dist v3 v0 ^ 2 ∧ x5 = dist v3 v1 ^ 2 ∧
@@ -1070,7 +1070,7 @@ theorem EYYPQDW2_concl : ∀ (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 s : ℝ),
     0 < x1 → 0 < x2 → 0 < x3 → 0 < x5 → 0 < x6 →
     ¬Collinear ℝ ({v0, v1, v2} : Set V3) →
     x1 = dist v1 v0 ^ 2 → x2 = dist v2 v0 ^ 2 → x6 = dist v1 v2 ^ 2 →
-    0 < upsX x1 x3 x5 →
+    0 < upsXPA18 x1 x3 x5 →
     ContinuousAt (fun q => mkPlanar2 v0 v1 v2 x1 x2 q x5 x6 s) x3 := by
   sorry
 
@@ -1080,7 +1080,7 @@ theorem EYYPQDW3_concl : ∀ (v0 v1 v2 : V3) (x1 x2 x3 x5 x6 s : ℝ),
     0 < x1 → 0 < x2 → 0 < x3 → 0 < x5 → 0 < x6 →
     ¬Collinear ℝ ({v0, v1, v2} : Set V3) →
     x1 = dist v1 v0 ^ 2 → x2 = dist v2 v0 ^ 2 → x6 = dist v1 v2 ^ 2 →
-    0 < upsX x1 x3 x5 →
+    0 < upsXPA18 x1 x3 x5 →
     ContinuousAt (fun q => mkPlanar2 v0 v1 q x1 x2 x3 x5 x6 s) v2 := by
   sorry
 

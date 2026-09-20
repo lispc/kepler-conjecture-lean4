@@ -48,10 +48,10 @@ ENCODING NOTES (polar fan ↔ local fan duality)
     `nnOfHyp_p7`/`ffOfHyp_p7`/`eeOfHyp_p7`, `darts_of_hyp` ↦
     `dartsOfHyp_p7`, `EE` ↦ LocalAuto1's `ee`, `plane` ↦ `plane_p7`.
     Rationale: LocalAuto2 is NOT importable next to LocalAuto1 (the
-    PackingAuto18/PackingAuto20 lanes both own `Kepler.Text.atn2`, so the
+    PackingAuto18/PackingAuto20 lanes both own `Kepler.Text.atn2PA18`, so the
     two import trees clash), and the unsuffixed names stay reserved for
     the LocalAuto1/LocalAnchors lanes per their merge notes.  Merge note:
-    when the atn2 clash is resolved, these `_p7` copies and their `rfl`
+    when the atn2PA18 clash is resolved, these `_p7` copies and their `rfl`
     lemmas should be re-pointed at the shared lane and deleted.
   - `local_fan`/`convex_local_fan` ↦ LocalAuto1's `LocalFan` /
     `ConvexLocalFan` (whose hypermap kit is still a registry stub), so

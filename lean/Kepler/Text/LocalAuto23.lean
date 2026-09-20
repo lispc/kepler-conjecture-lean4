@@ -60,7 +60,7 @@ FILE MAP
 
 ENCODING NOTES
   - Import discipline: this file sits entirely on the LocalAuto1 side of
-    the fatal `atn2` duplication (LocalAuto2/9/11 and PackingAuto20 are
+    the fatal `atn2PA18` duplication (LocalAuto2/9/11 and PackingAuto20 are
     NOT imported; LocalAuto19-27 same-wave lanes are NOT imported). The
     scs record (`ScsV39`, `isScsV39`, `BBsV39`, `taustarV39`, `MMsV39`,
     `scsArrowV39`, the `scs_*I*/T*/M*` registry, `scsStabDiagV39`) and
@@ -115,14 +115,14 @@ noncomputable def deltaX4_p23 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
 /-- HOL `delta_y` (sphere.hl): `delta_x` at squared lengths. Verbatim twin
 of LocalAuto11 `deltaY_p11` / LocalAuto18 `deltaY_p18`. NEEDS: merge. -/
 noncomputable def deltaY_p23 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+  deltaXPA18 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
 
 /-- HOL `dih_y` (sphere.hl:159). Verbatim twin of LocalAuto11
 `dihY_p11` / LocalAuto18 `dihY_p18`. NEEDS: merge. -/
 noncomputable def dihY_p23 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  Real.pi / 2 + atn2
+  Real.pi / 2 + atn2PA18
     (Real.sqrt (4 * (y1 * y1) *
-      deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)))
+      deltaXPA18 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)))
     (-(deltaX4_p23 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5)
       (y6 * y6)))
 

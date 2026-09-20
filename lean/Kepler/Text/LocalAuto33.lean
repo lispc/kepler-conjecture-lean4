@@ -55,7 +55,7 @@ Encoding:
 - HOL `x MOD k` <-> `x % k`; `SUC i` <-> `i + 1`; `&n` <-> `(n : ℝ)`;
   `{}` <-> `∅`; `CARD` <-> `Set.ncard`; `{x | P}` set-builders <-> setOf.
 - `sqrt8` <-> `Real.sqrt 8`; `cstab`, `h0` from `LocalAuto1`; `ups_x` <->
-  `upsX` (Kepler.Geom); `dih_y` <-> `dihY_p18` (LocalAuto18).
+  `upsXPA18` (Kepler.Geom); `dih_y` <-> `dihY_p18` (LocalAuto18).
 - Same-wave files LocalAuto28-32 are NOT imported; everything this lane
   needs from them is re-stated here as `_p33` twins with NEEDS markers
   (`YXIONXL2_p33`, `OPP_IS_SCS_p33`).
@@ -778,7 +778,7 @@ theorem SCS_DIAG_ADD1_p33 (i j : ℕ) (h : scsDiag 4 i j) : scsDiag 4 (i + 1) (j
 theorem ear_acute_p33 (_hmn : main_nonlinear_terminal_v11) :
     ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 ≤ y1 → y1 ≤ 2 * h0 → 2 ≤ y2 → y2 ≤ 2 * h0 →
       2 ≤ y3 → y3 ≤ 2 * h0 → 2 ≤ y4 → y4 ≤ 2 * h0 → 2 ≤ y6 → y6 ≤ 2 * h0 →
-      3 ≤ y5 → 0 < upsX (y1 ^ 2) (y3 ^ 2) (y5 ^ 2) →
+      3 ≤ y5 → 0 < upsXPA18 (y1 ^ 2) (y3 ^ 2) (y5 ^ 2) →
       dihY_p18 y1 y2 y3 y4 y5 y6 < Real.pi / 2 := sorry
   -- DISCHARGES: NEEDS ARDBZYE.hl ear_acute (terminal_nonlinear instance).
 

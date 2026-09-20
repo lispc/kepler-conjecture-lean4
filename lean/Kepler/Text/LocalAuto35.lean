@@ -57,7 +57,7 @@ Encoding:
   `HS : Hypermap (V3 × V3)` with the `IsHypE_p35` predicate (the LocalAuto2
   `IsHyp_p2` pattern over the LocalAuto3 `_p3` HYP pieces; NOTE: LocalAuto2
   itself is NOT importable from this lane — the LocalAuto1 + LocalAuto2
-  import pair clashes on a duplicate `atn2` via PackingAuto18/PackingAuto20);
+  import pair clashes on a duplicate `atn2PA18` via PackingAuto18/PackingAuto20);
   HOL `face` ↦ `Hypermap.face`; `convex_local_fan` ↦ `ConvexLocalFan`
   (LocalAuto1); `sol0`/`setSum` ↦ PackingAuto2.
 - HOL `x MOD k` ↦ `x % k`; `SUC i` ↦ `i + 1`; `IMAGE vv (:num)` ↦

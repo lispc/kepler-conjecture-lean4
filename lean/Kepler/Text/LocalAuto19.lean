@@ -41,12 +41,12 @@ FILE MAP
 
 ENCODING NOTES
   - Import discipline: this file sits on the LocalAuto1/`PackingAuto18` side
-    of the fatal `atn2` duplication (LocalAuto2/`PackingAuto20`, and
+    of the fatal `atn2PA18` duplication (LocalAuto2/`PackingAuto20`, and
     LocalAuto9/11/16 which import LocalAuto2, must NOT be imported next to
     LocalAuto1). Everything needed from those lanes is carried as a verbatim
     `_p19` twin with a NEEDS merge marker. `deltaY_p18`/`dihY_p18`/
     `mainNonlinearTerminalV11_p18` are imported from LocalAuto18 (they are
-    already canonical on this side); `h0`/`sol0` from PackingAuto2; `deltaX`,
+    already canonical on this side); `h0`/`sol0` from PackingAuto2; `deltaXPA18`,
     `derivedForm`, `cstab` from PackingAuto18/LocalAuto1.
   - HOL `real^3`-free file: everything is real-arithmetic over the six
     variables `y1..y6` (the pent/hex terminal box).
@@ -63,7 +63,7 @@ ENCODING NOTES
   - `quadratic_root_plus (a,b,c)` = `quadraticRootPlus_p19 a b c`;
     `abc_of_quadratic f` = `abcOfQuadratic_p19 f`.
   - `taum_sym_cases2_p19` needs the dihedral-angle symmetry kit of sphere.hl
-    (`dih_y` symmetries via `atn2`), which is not yet ported on this side:
+    (`dih_y` symmetries via `atn2PA18`), which is not yet ported on this side:
     sorry + NEEDS. The r755 transfers `r755_ikj_p19`/`r755_jik_p19` consume
     it (their proofs are otherwise mechanical slot transports).
   - Theorems marked NEEDS-DB consume single conjuncts of the opaque
@@ -85,7 +85,7 @@ open Kepler.Geom Set Classical
 /-! ## Section 0: definitional payload (`_p19` twins) -/
 
 /-- HOL `y_of_x` (sphere.hl:538): evaluate an x-level function at squared
-lengths. Verbatim twin of LocalAuto11's `yOfX_p11` (wrong atn2 side). NEEDS:
+lengths. Verbatim twin of LocalAuto11's `yOfX_p11` (wrong atn2PA18 side). NEEDS:
 merge. -/
 def yOfX_p19 (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
   f (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
@@ -124,7 +124,7 @@ noncomputable def solY_p19 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
 noncomputable def lyP19 (y : ℝ) : ℝ := 1 + (y - 2) * (0 - 1) / (2.52 - 2)
 
 /-- HOL `const1` (sphere.hl:197). Twin of LocalAuto2's `const1_p2` (wrong
-atn2 side). NEEDS: merge. -/
+atn2PA18 side). NEEDS: merge. -/
 noncomputable def const1P19 : ℝ := solY_p19 2 2 2 2 2 2 / Real.pi
 
 /-- HOL `lnazim` (sphere.hl:214). -/
@@ -147,13 +147,13 @@ three rotated `rhazim_x_div_sqrtdelta_posbranch`. Stub. NEEDS: tau_x kit. -/
 noncomputable def tauResidualX_p19 : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ := fun _ _ _ _ _ _ => (0 : ℝ)
 
 /-- HOL `delta_126_x` (sphere.hl:844). -/
-def delta126x_p19 (s3 s4 s5 x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := deltaX x1 x2 s3 s4 s5 x6
+def delta126x_p19 (s3 s4 s5 x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := deltaXPA18 x1 x2 s3 s4 s5 x6
 
 /-- HOL `delta_234_x` (sphere.hl:848). -/
-def delta234x_p19 (s1 s5 s6 x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := deltaX s1 x2 x3 x4 s5 s6
+def delta234x_p19 (s1 s5 s6 x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := deltaXPA18 s1 x2 x3 x4 s5 s6
 
 /-- HOL `delta_135_x` (sphere.hl:852). -/
-def delta135x_p19 (s2 s4 s6 x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := deltaX x1 s2 x3 s4 x5 s6
+def delta135x_p19 (s2 s4 s6 x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := deltaXPA18 x1 s2 x3 s4 x5 s6
 
 /-- HOL `abc_of_quadratic` (sphere.hl:59): coefficients of the quadratic
 interpolant through `f` at `0, ±1`. -/
@@ -166,7 +166,7 @@ noncomputable def quadraticRootPlus_p19 (a b c : ℝ) : ℝ :=
 
 /-- HOL `edge2_flatD_x1` (nonlin_def.hl:473). -/
 noncomputable def edge2FlatDX1_p19 (d x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  let abc := abcOfQuadratic_p19 fun x1 => d - deltaX x1 x2 x3 x4 x5 x6
+  let abc := abcOfQuadratic_p19 fun x1 => d - deltaXPA18 x1 x2 x3 x4 x5 x6
   quadraticRootPlus_p19 abc.1 abc.2.1 abc.2.2
 
 /-- HOL `mud_126_x_v1` (nonlin_def.hl:496), x-level composite. -/
@@ -233,15 +233,15 @@ noncomputable def eulerAx_p19 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
 /-- HOL `taud_D1_num_x` (nonlin_def.hl:457), x-level
 (`delta' = delta_x1·2·proj_y1`, `ft' = sol0/(2*h0-2)`). -/
 noncomputable def taudD1numX_p19 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  -0.07 * deltaX x1 x2 x3 x4 x5 x6 +
+  -0.07 * deltaXPA18 x1 x2 x3 x4 x5 x6 +
     (1 / 2) * mu6X_p19 x1 x2 x3 x4 x5 x6 *
       (deltaX1_p19 x1 x2 x3 x4 x5 x6 * 2 * Real.sqrt x1) +
-    (sol0 / (2 * h0 - 2)) * Real.sqrt (deltaX x1 x2 x3 x4 x5 x6)
+    (sol0 / (2 * h0 - 2)) * Real.sqrt (deltaXPA18 x1 x2 x3 x4 x5 x6)
 
 /-- HOL `taud_D2_num_x` (nonlin_def.hl:465), x-level
 (`delta'' = -8·proj_x1·proj_x4 + 2·delta_x1`). -/
 noncomputable def taudD2numX_p19 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  let d : ℝ := deltaX x1 x2 x3 x4 x5 x6
+  let d : ℝ := deltaXPA18 x1 x2 x3 x4 x5 x6
   let delta' : ℝ := deltaX1_p19 x1 x2 x3 x4 x5 x6 * 2 * Real.sqrt x1
   let delta'' : ℝ := -8 * x1 * x4 + deltaX1_p19 x1 x2 x3 x4 x5 x6 * 2
   let mu : ℝ := mu6X_p19 x1 x2 x3 x4 x5 x6
@@ -455,9 +455,9 @@ theorem tau_x_tau_residual_x_general_p19 (x1 x2 x3 x4 x5 x6 : ℝ)
     (h9 : deltaX4_p18 x1 x2 x3 x4 x5 x6 < 0)
     (h10 : 0 < deltaX4_p18 x2 x3 x1 x5 x6 x4)
     (h11 : 0 < deltaX4_p18 x3 x1 x2 x6 x4 x5)
-    (h12 : 0 ≤ deltaX x1 x2 x3 x4 x5 x6) :
+    (h12 : 0 ≤ deltaXPA18 x1 x2 x3 x4 x5 x6) :
     taumX_p19 x1 x2 x3 x4 x5 x6
-      = Real.sqrt (deltaX x1 x2 x3 x4 x5 x6) * tauResidualX_p19 x1 x2 x3 x4 x5 x6
+      = Real.sqrt (deltaXPA18 x1 x2 x3 x4 x5 x6) * tauResidualX_p19 x1 x2 x3 x4 x5 x6
         + flatTermX_p19 x1 := by
   sorry
 
@@ -512,8 +512,8 @@ theorem deltaY_hasDerivAt_p19 (t y2 y3 y4 y5 y6 : ℝ) :
   have hcongr : (fun w => deltaY_p18 w y2 y3 y4 y5 y6)
       = fun w => -(y4 * y4) * ((w * w) * (w * w)) + K0 * (w * w) + C0 := by
     funext w
-    show deltaX (w * w) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) = _
-    unfold deltaX
+    show deltaXPA18 (w * w) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) = _
+    unfold deltaXPA18
     ring
   have hd1 : deltaX1_p19 (t * t) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
       = -2 * (y4 * y4) * (t * t) + K0 := by
@@ -610,23 +610,23 @@ theorem derived_form_taud_ALT_p19 (y1 y2 y3 y4 y5 y6 : ℝ)
       = (yOfX_p19 taudD1numX_p19 y1 y2 y3 y4 y5 y6 /
           Real.sqrt (deltaY_p18 y1 y2 y3 y4 y5 y6))
     have hdy : deltaY_p18 y1 y2 y3 y4 y5 y6
-      = deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) := rfl
+      = deltaXPA18 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) := rfl
     have hs1 : Real.sqrt (y1 * y1) = y1 := Real.sqrt_mul_self hy1
     have hs2 : Real.sqrt (y2 * y2) = y2 := Real.sqrt_mul_self hy2
     have hs3 : Real.sqrt (y3 * y3) = y3 := Real.sqrt_mul_self hy3
-    show ((-0.07 * deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) +
+    show ((-0.07 * deltaXPA18 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) +
         muY_p19 y1 y2 y3 * (deltaX1_p19 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
             (y5 * y5) (y6 * y6) * y1) +
         sol0 / (2 * h0 - 2) *
-          Real.sqrt (deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6))) /
-      Real.sqrt (deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)))
-      = ((-0.07 * deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) +
+          Real.sqrt (deltaXPA18 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6))) /
+      Real.sqrt (deltaXPA18 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)))
+      = ((-0.07 * deltaXPA18 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) +
         (1 / 2) * (muY_p19 (Real.sqrt (y1 * y1)) (Real.sqrt (y2 * y2)) (Real.sqrt (y3 * y3))) *
             (deltaX1_p19 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) * 2 *
               Real.sqrt (y1 * y1)) +
         sol0 / (2 * h0 - 2) *
-          Real.sqrt (deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6))) /
-      Real.sqrt (deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)))
+          Real.sqrt (deltaXPA18 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6))) /
+      Real.sqrt (deltaXPA18 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)))
     rw [hs1, hs2, hs3]
     field_simp
     try ring)
@@ -869,9 +869,9 @@ theorem taud_mud_126_x_p19 (y3 y4 y5 y1 y2 y3' y4' y5' y6 : ℝ) (h1 : 0 ≤ y1)
       = taudP19 y3 y1 y2 y6 y4 y5 - flatTerm_p19 y3 := by
   have hs1 : Real.sqrt (y1 * y1) = y1 := Real.sqrt_mul_self h1
   have hs2 : Real.sqrt (y2 * y2) = y2 := Real.sqrt_mul_self h2
-  have hdp : deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
-      = deltaX (y3 * y3) (y1 * y1) (y2 * y2) (y6 * y6) (y4 * y4) (y5 * y5) := by
-    unfold deltaX; ring
+  have hdp : deltaXPA18 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+      = deltaXPA18 (y3 * y3) (y1 * y1) (y2 * y2) (y6 * y6) (y4 * y4) (y5 * y5) := by
+    unfold deltaXPA18; ring
   rw [yOfX_p19, mud126xV1_p19, delta126x_p19, hs1, hs2, hdp]
   show muY_p19 y3 y1 y2 * Real.sqrt (deltaY_p18 y3 y1 y2 y6 y4 y5)
       = taudP19 y3 y1 y2 y6 y4 y5 - flatTerm_p19 y3
@@ -884,9 +884,9 @@ theorem taud_mud_135_x_p19 (y2 y4 y6 y1 y2' y3 y4' y5 y6' : ℝ) (h1 : 0 ≤ y1)
       = taudP19 y2 y1 y3 y5 y4 y6 - flatTerm_p19 y2 := by
   have hs1 : Real.sqrt (y1 * y1) = y1 := Real.sqrt_mul_self h1
   have hs3 : Real.sqrt (y3 * y3) = y3 := Real.sqrt_mul_self h3
-  have hdp : deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
-      = deltaX (y2 * y2) (y1 * y1) (y3 * y3) (y5 * y5) (y4 * y4) (y6 * y6) := by
-    unfold deltaX; ring
+  have hdp : deltaXPA18 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+      = deltaXPA18 (y2 * y2) (y1 * y1) (y3 * y3) (y5 * y5) (y4 * y4) (y6 * y6) := by
+    unfold deltaXPA18; ring
   rw [yOfX_p19, mud135xV1_p19, delta135x_p19, hs1, hs3, hdp]
   show muY_p19 y2 y1 y3 * Real.sqrt (deltaY_p18 y2 y1 y3 y5 y4 y6)
       = taudP19 y2 y1 y3 y5 y4 y6 - flatTerm_p19 y2
@@ -898,9 +898,9 @@ agree under the slot rotation. -/
 theorem mud_126_135_p19 (y1 y2 y3 y4 y5 y6 y3' y4' y5' : ℝ) :
     mud126xV1_p19 y3' y4' y5' y1 y2 y3 y4 y5 y6
       = mud135xV1_p19 y3' y4' y5' y1 y3 y2 y4 y6 y5 := by
-  have hdp : deltaX y1 y2 (y3' * y3') (y4' * y4') (y5' * y5') y6
-      = deltaX y1 (y3' * y3') y2 (y4' * y4') y6 (y5' * y5') := by
-    unfold deltaX; ring
+  have hdp : deltaXPA18 y1 y2 (y3' * y3') (y4' * y4') (y5' * y5') y6
+      = deltaXPA18 y1 (y3' * y3') y2 (y4' * y4') y6 (y5' * y5') := by
+    unfold deltaXPA18; ring
   unfold mud126xV1_p19 mud135xV1_p19 delta126x_p19 delta135x_p19
   rw [hdp]
 
@@ -1022,10 +1022,10 @@ theorem quadratic_root_plus_eq_p19 (a b c m x : ℝ) (ha : 0 < a) (hm : m ≤ x)
 
 /-- HOL `delta_diff` (pent_hex.hl:1378). -/
 theorem delta_diff_p19 (x1 z1 x2 x3 x4 x5 x6 : ℝ) :
-    deltaX x1 x2 x3 x4 x5 x6
-      = deltaX z1 x2 x3 x4 x5 x6 + deltaX1_p19 x1 x2 x3 x4 x5 x6 * (x1 - z1)
+    deltaXPA18 x1 x2 x3 x4 x5 x6
+      = deltaXPA18 z1 x2 x3 x4 x5 x6 + deltaX1_p19 x1 x2 x3 x4 x5 x6 * (x1 - z1)
         + x4 * (x1 - z1) ^ 2 := by
-  unfold deltaX deltaX1_p19
+  unfold deltaXPA18 deltaX1_p19
   ring
 
 /-- Coefficients of the quadratic through `f` at `0, ±1`. -/
@@ -1044,39 +1044,39 @@ theorem abcOfQuadratic_p19_quad (A B C : ℝ) :
 Cayley value at `x1` and `delta_x1 < 0`, the positive flat-edge root is
 `x1` itself. -/
 theorem edge2_flatD_x1_delta_lemma2_p19 (d x1 x2 x3 x4 x5 x6 : ℝ)
-    (hd : deltaX x1 x2 x3 x4 x5 x6 = d) (hx4 : 0 < x4)
+    (hd : deltaXPA18 x1 x2 x3 x4 x5 x6 = d) (hx4 : 0 < x4)
     (hΔ : deltaX1_p19 x1 x2 x3 x4 x5 x6 < 0) :
     edge2FlatDX1_p19 d x2 x3 x4 x5 x6 = x1 := by
-  have habc : ∀ t : ℝ, d - deltaX t x2 x3 x4 x5 x6
+  have habc : ∀ t : ℝ, d - deltaXPA18 t x2 x3 x4 x5 x6
       = x4 * t * t + (-(2 * x1 * x4 + deltaX1_p19 x1 x2 x3 x4 x5 x6)) * t
         + (x4 * x1 * x1 + deltaX1_p19 x1 x2 x3 x4 x5 x6 * x1) := by
     intro t
     have hdd := delta_diff_p19 x1 t x2 x3 x4 x5 x6
     rw [hd] at hdd
     linarith
-  have habcq : abcOfQuadratic_p19 (fun t => d - deltaX t x2 x3 x4 x5 x6)
+  have habcq : abcOfQuadratic_p19 (fun t => d - deltaXPA18 t x2 x3 x4 x5 x6)
       = (x4, -(2 * x1 * x4 + deltaX1_p19 x1 x2 x3 x4 x5 x6),
           x4 * x1 * x1 + deltaX1_p19 x1 x2 x3 x4 x5 x6 * x1) := by
     rw [Prod.mk.injEq]
     refine And.intro ?_ ?_
-    · show (d - deltaX 1 x2 x3 x4 x5 x6 + (d - deltaX (-1) x2 x3 x4 x5 x6)) / 2
-          - (d - deltaX 0 x2 x3 x4 x5 x6) = x4
+    · show (d - deltaXPA18 1 x2 x3 x4 x5 x6 + (d - deltaXPA18 (-1) x2 x3 x4 x5 x6)) / 2
+          - (d - deltaXPA18 0 x2 x3 x4 x5 x6) = x4
       linarith [habc 1, habc (-1), habc 0]
     · rw [Prod.mk.injEq]
       refine And.intro ?_ ?_
-      · show (d - deltaX 1 x2 x3 x4 x5 x6 - (d - deltaX (-1) x2 x3 x4 x5 x6)) / 2
+      · show (d - deltaXPA18 1 x2 x3 x4 x5 x6 - (d - deltaXPA18 (-1) x2 x3 x4 x5 x6)) / 2
             = -(2 * x1 * x4 + deltaX1_p19 x1 x2 x3 x4 x5 x6)
         linarith [habc 1, habc (-1)]
-      · show d - deltaX 0 x2 x3 x4 x5 x6
+      · show d - deltaXPA18 0 x2 x3 x4 x5 x6
             = x4 * x1 * x1 + deltaX1_p19 x1 x2 x3 x4 x5 x6 * x1
         linarith [habc 0]
   have hsqrtval : Real.sqrt (deltaX1_p19 x1 x2 x3 x4 x5 x6 * deltaX1_p19 x1 x2 x3 x4 x5 x6)
       = -deltaX1_p19 x1 x2 x3 x4 x5 x6 := by
     rw [← pow_two, Real.sqrt_sq_eq_abs, abs_of_nonpos hΔ.le]
   show quadraticRootPlus_p19
-      (abcOfQuadratic_p19 (fun t => d - deltaX t x2 x3 x4 x5 x6)).1
-      (abcOfQuadratic_p19 (fun t => d - deltaX t x2 x3 x4 x5 x6)).2.1
-      (abcOfQuadratic_p19 (fun t => d - deltaX t x2 x3 x4 x5 x6)).2.2 = x1
+      (abcOfQuadratic_p19 (fun t => d - deltaXPA18 t x2 x3 x4 x5 x6)).1
+      (abcOfQuadratic_p19 (fun t => d - deltaXPA18 t x2 x3 x4 x5 x6)).2.1
+      (abcOfQuadratic_p19 (fun t => d - deltaXPA18 t x2 x3 x4 x5 x6)).2.2 = x1
   rw [habcq]
   simp only
   unfold quadraticRootPlus_p19
@@ -1294,11 +1294,11 @@ theorem delta_y_sym_cases2_p19 (y1 y2 y3 y4 y5 y6 a : ℝ) :
     deltaY_p18 a y3 y1 y5 2 2 = deltaY_p18 a y1 y3 y5 2 2 ∧
       deltaY_p18 a y3 y2 y4 2 2 = deltaY_p18 a y2 y3 y4 2 2 ∧
       deltaY_p18 a y2 y1 y6 2 2 = deltaY_p18 a y1 y2 y6 2 2 := by
-  unfold deltaY_p18 deltaX <;> ring <;> trivial
+  unfold deltaY_p18 deltaXPA18 <;> ring <;> trivial
 
 /-- HOL `taum_sym_cases2` (pent_hex.hl:2414): the four S3 symmetries of
 `taum`. NEEDS: the dihedral-angle symmetry kit of sphere.hl (`dih_y`
-symmetries through `atn2`), unported on this side. -/
+symmetries through `atn2PA18`), unported on this side. -/
 theorem taum_sym_cases2_p19 (y1 y2 y3 y4 y5 y6 : ℝ) :
     taumP19 y2 y1 y3 y5 y4 y6 = taumP19 y1 y2 y3 y4 y5 y6 ∧
       taumP19 y1 y3 y2 y4 y6 y5 = taumP19 y1 y2 y3 y4 y5 y6 ∧
@@ -1309,10 +1309,10 @@ theorem taum_sym_cases2_p19 (y1 y2 y3 y4 y5 y6 : ℝ) :
 /-- HOL `edge2_flatD_sym` (pent_hex.hl:2425; via `Merge_ineq.delta_x_sym`). -/
 theorem edge2_flatD_sym_p19 (d y1 y2 y3 a : ℝ) :
     edge2FlatDX1_p19 d y1 y2 y3 a a = edge2FlatDX1_p19 d y2 y1 y3 a a := by
-  have hring : ∀ (t u v : ℝ), deltaX t u v y3 a a = deltaX t v u y3 a a := by
-    intro t u v; unfold deltaX; ring
-  have hfe : (fun t : ℝ => d - deltaX t y1 y2 y3 a a)
-      = (fun t : ℝ => d - deltaX t y2 y1 y3 a a) := by
+  have hring : ∀ (t u v : ℝ), deltaXPA18 t u v y3 a a = deltaXPA18 t v u y3 a a := by
+    intro t u v; unfold deltaXPA18; ring
+  have hfe : (fun t : ℝ => d - deltaXPA18 t y1 y2 y3 a a)
+      = (fun t : ℝ => d - deltaXPA18 t y2 y1 y3 a a) := by
     funext t; rw [hring t y1 y2]
   unfold edge2FlatDX1_p19
   simp only
@@ -1326,11 +1326,11 @@ theorem edge2_flatD_x1_sym_cases_p19 (y1 y2 y3 y4 y5 y6 : ℝ) :
         = edge2FlatDX1_p19 0 (y1 * y1) (y3 * y3) (y5 * y5) (2 * 2) (2 * 2) ∧
       edge2FlatDX1_p19 0 (y2 * y2) (y1 * y1) (y6 * y6) (2 * 2) (2 * 2)
         = edge2FlatDX1_p19 0 (y1 * y1) (y2 * y2) (y6 * y6) (2 * 2) (2 * 2) := by
-  have hring : ∀ (t u v w : ℝ), deltaX t u v w (2 * 2) (2 * 2)
-      = deltaX t v u w (2 * 2) (2 * 2) := by
-    intro t u v w; unfold deltaX; ring
-  have hfe : ∀ (u v w : ℝ), (fun t : ℝ => (0 : ℝ) - deltaX t u v w (2 * 2) (2 * 2))
-      = (fun t : ℝ => (0 : ℝ) - deltaX t v u w (2 * 2) (2 * 2)) := by
+  have hring : ∀ (t u v w : ℝ), deltaXPA18 t u v w (2 * 2) (2 * 2)
+      = deltaXPA18 t v u w (2 * 2) (2 * 2) := by
+    intro t u v w; unfold deltaXPA18; ring
+  have hfe : ∀ (u v w : ℝ), (fun t : ℝ => (0 : ℝ) - deltaXPA18 t u v w (2 * 2) (2 * 2))
+      = (fun t : ℝ => (0 : ℝ) - deltaXPA18 t v u w (2 * 2) (2 * 2)) := by
     intro u v w; funext t; rw [hring t u v w]
   unfold edge2FlatDX1_p19
   simp only
@@ -1365,8 +1365,8 @@ theorem mu_y_sym_cases_p19 (y1 y2 y3 : ℝ) :
 
 /-- Ring symmetry of the Cayley determinant (vertex relabeling used by the
 126/135/234 transfers). -/
-theorem deltaX_perm_p19 (a b c d e f : ℝ) : deltaX a b c d e f = deltaX c a b f d e := by
-  unfold deltaX; ring
+theorem deltaX_perm_p19 (a b c d e f : ℝ) : deltaXPA18 a b c d e f = deltaXPA18 c a b f d e := by
+  unfold deltaXPA18; ring
 
 /-- HOL `nonfunctional_mud_126` (pent_hex.hl:2488). -/
 theorem nonfunctional_mud_126_p19 (a b c y1 y2 y3 y4 y5 y6 : ℝ) :
@@ -1383,8 +1383,8 @@ theorem nonfunctional_mud_234_p19 (a b c y1 y2 y3 y4 y5 y6 : ℝ) :
   rw [yOfX_p19, mud234xV1_p19, delta234x_p19, deltaY_p18]
 
 /-- Ring symmetry of the Cayley determinant (vertex swap 1↔ 2). -/
-theorem deltaX_vert12_p19 (a b c d e f : ℝ) : deltaX a b c d e f = deltaX b a c e d f := by
-  unfold deltaX; ring
+theorem deltaX_vert12_p19 (a b c d e f : ℝ) : deltaXPA18 a b c d e f = deltaXPA18 b a c e d f := by
+  unfold deltaXPA18; ring
 
 /-- HOL `nonfunctional_mud_135` (pent_hex.hl:2511). -/
 theorem nonfunctional_mud_135_p19 (a b c y1 y2 y3 y4 y5 y6 : ℝ) :
@@ -1414,8 +1414,8 @@ theorem nonfunctional_mudLs_126_p19 (y1 y2 x3 x4 x5 y6 : ℝ) :
       = muY_p19 2 (Real.sqrt (y1 * y1)) (Real.sqrt (y2 * y2))
           * (1 / 14 * (deltaY_p18 2 y1 y2 y6 2 2 - 16) + 4) := by
   have hsq : Real.sqrt (2 * 2) = 2 := by norm_num
-  have hdp : deltaX (y1 * y1) (y2 * y2) (2 * 2) (2 * 2) (2 * 2) (y6 * y6)
-      = deltaX (2 * 2) (y1 * y1) (y2 * y2) (y6 * y6) (2 * 2) (2 * 2) := by
+  have hdp : deltaXPA18 (y1 * y1) (y2 * y2) (2 * 2) (2 * 2) (2 * 2) (y6 * y6)
+      = deltaXPA18 (2 * 2) (y1 * y1) (y2 * y2) (y6 * y6) (2 * 2) (2 * 2) := by
     rw [deltaX_perm_p19]
   unfold mudLs126x_p19 mu6X_p19 delta126x_p19
   rw [hsq, hdp, deltaY_p18,
@@ -1439,8 +1439,8 @@ theorem nonfunctional_mudLs_135_p19 (y1 x2 y3 x4 y5 x6 : ℝ) :
       = muY_p19 2 (Real.sqrt (y1 * y1)) (Real.sqrt (y3 * y3))
           * (1 / 14 * (deltaY_p18 2 y1 y3 y5 2 2 - 16) + 4) := by
   have hsq : Real.sqrt (2 * 2) = 2 := by norm_num
-  have hdp : deltaX (y1 * y1) (2 * 2) (y3 * y3) (2 * 2) (y5 * y5) (2 * 2)
-      = deltaX (2 * 2) (y1 * y1) (y3 * y3) (y5 * y5) (2 * 2) (2 * 2) := by
+  have hdp : deltaXPA18 (y1 * y1) (2 * 2) (y3 * y3) (2 * 2) (y5 * y5) (2 * 2)
+      = deltaXPA18 (2 * 2) (y1 * y1) (y3 * y3) (y5 * y5) (2 * 2) (2 * 2) := by
     rw [deltaX_vert12_p19]
   unfold mudLs135x_p19 mu6X_p19 delta135x_p19
   rw [hsq, hdp, deltaY_p18,
@@ -1492,8 +1492,8 @@ theorem ineq_sym_s2_abb_p19 {y5 y6 : ℝ} {p : List (ℝ × ℝ × ℝ)} {r : Pr
     exact ih (hp h2)
 
 /-- Ring symmetry of the Cayley determinant (the `delta_x_sym` swap). -/
-theorem deltaX_swap_p19 (a b c d e f : ℝ) : deltaX a b c d e f = deltaX a c b d f e := by
-  unfold deltaX; ring
+theorem deltaX_swap_p19 (a b c d e f : ℝ) : deltaXPA18 a b c d e f = deltaXPA18 a c b d f e := by
+  unfold deltaXPA18; ring
 
 /-! Slot transports for the r755 transfers. -/
 

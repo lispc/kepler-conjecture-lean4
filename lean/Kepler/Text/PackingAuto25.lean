@@ -45,9 +45,9 @@ ENCODING NOTES
   - `pack_nonlinear_non_ox3q1h`, `tsk_hyp` <-> PackingAuto21 (opaque);
     `TSKAJXY` <-> PackingAuto21:1114; `RDWKARC_concl`/`OXLZLEZ_concl` <->>
     PackingAuto2 `*_concl` (sorried conclusions).
-  - real toolkit: `dih_x/dih_y/eta_y/gamma3f/delta_x/h0cut` <-> PackingAuto21
-    (`dihXf/dihY/eta_y/gamma3f/deltaXf/h0cut`).  `gamma4fgcy` lives only in
-    PackingAuto20, whose olean would make `dihY`/`gamma3f` ambiguous here
+  - real toolkit: `dih_x/dih_y/eta_y/gamma3fPA21/delta_x/h0cut` <-> PackingAuto21
+    (`dihXfPA21/dihYPA21/eta_y/gamma3fPA21/deltaXfPA21/h0cut`).  `gamma4fgcy` lives only in
+    PackingAuto20, whose olean would make `dihYPA21`/`gamma3fPA21` ambiguous here
     (both files re-declare the hub kit), so this file does NOT import 20 and
     carries verbatim `_p25` copies of `vol4f`/`gamma4fgcy` (delete at merge).
   - `_p25` opaque stand-ins (NEEDS upstream bodies):
@@ -93,10 +93,10 @@ NEEDS: sphere.hl body (only used through `radV {...}^2`, TSKAJXY2.hl:455). -/
 noncomputable def rad2YP25 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
   rad2XP25 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
 
-/-- HOL `delta_y` (sphere.hl): `y_of_x delta_x` = `deltaXf` at squared
+/-- HOL `delta_y` (sphere.hl): `y_of_x delta_x` = `deltaXfPA21` at squared
 lengths (same `y_of_x` pattern as rad2_y, TSKAJXY2.hl:457). -/
 noncomputable def deltaYP25 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  deltaXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+  deltaXfPA21 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
 
 /-- HOL `beta_bumpA_y` (Merge_ineq.hl): the y-space bump correction of
 GG_MCELL_GENERAL.  NEEDS: exact Merge_ineq.hl body. -/
@@ -105,26 +105,26 @@ noncomputable def beta_bumpA_yP25 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ := sorry
 /-- HOL `vol4f` (sphere.hl:568); PackingAuto20.lean:105 verbatim. -/
 noncomputable def vol4fP25 (y1 y2 y3 y4 y5 y6 : ℝ) (f : ℝ → ℝ) : ℝ :=
   (2 * mm1 / Real.pi) *
-    (solY y1 y2 y3 y4 y5 y6 + solY y1 y5 y6 y4 y2 y3 +
-      solY y4 y5 y3 y1 y2 y6 + solY y4 y2 y6 y1 y5 y3) -
+    (solYPA21 y1 y2 y3 y4 y5 y6 + solYPA21 y1 y5 y6 y4 y2 y3 +
+      solYPA21 y4 y5 y3 y1 y2 y6 + solYPA21 y4 y2 y6 y1 y5 y3) -
     (8 * mm2 / Real.pi) *
-    (f (y1 / 2) * dihY y1 y2 y3 y4 y5 y6 +
-      f (y2 / 2) * dihY y2 y3 y1 y5 y6 y4 +
-      f (y3 / 2) * dihY y3 y1 y2 y6 y4 y5 +
-      f (y4 / 2) * dihY y4 y3 y5 y1 y6 y2 +
-      f (y5 / 2) * dihY y5 y1 y6 y2 y4 y3 +
-      f (y6 / 2) * dihY y6 y1 y5 y3 y4 y2)
+    (f (y1 / 2) * dihYPA21 y1 y2 y3 y4 y5 y6 +
+      f (y2 / 2) * dihYPA21 y2 y3 y1 y5 y6 y4 +
+      f (y3 / 2) * dihYPA21 y3 y1 y2 y6 y4 y5 +
+      f (y4 / 2) * dihYPA21 y4 y3 y5 y1 y6 y2 +
+      f (y5 / 2) * dihYPA21 y5 y1 y6 y2 y4 y3 +
+      f (y6 / 2) * dihYPA21 y6 y1 y5 y3 y4 y2)
 
 /-- HOL `gamma4fgcy` (sphere.hl:566); PackingAuto20.lean:122 verbatim. -/
 noncomputable def gamma4fgcyP25 (y1 y2 y3 y4 y5 y6 : ℝ) (f : ℝ → ℝ) : ℝ :=
-  volY y1 y2 y3 y4 y5 y6 - vol4fP25 y1 y2 y3 y4 y5 y6 f
+  volYPA21 y1 y2 y3 y4 y5 y6 - vol4fP25 y1 y2 y3 y4 y5 y6 f
 
 /-- HOL `HAS_SIZE n` (used ~40 times below). -/
 def HasSizeP25 (s : Set V3) (n : ℕ) : Prop := s.Finite ∧ s.ncard = n
 
 /-! ## Leaf-cell kit (`_p25` copies from PackingAuto18.lean; the two lanes
 `PackingAuto18` and `PackingAuto21` both declare `MCELL2_SUBSET_AFF_GE` and
-`atn2`, so only one is importable here — we keep 21 for the certified
+`atn2PA21`, so only one is importable here — we keep 21 for the certified
 nonlinear bank + real toolkit.  Delete this section at merge.) -/
 
 /-- HOL `leaf` (leaf_cell.hl:17); PackingAuto18.lean:73 verbatim. -/
@@ -464,39 +464,39 @@ theorem DIST_IMP_UPS_X_POS (u0 u1 u2 : V3)
     0 < upsX (dist u0 u1 ^ 2) (dist u0 u2 ^ 2) (dist u1 u2 ^ 2) := by
   sorry
 
-/-- HOL `dih_x < pi`: the angle computed by `atn2` from a positive first
+/-- HOL `dih_x < pi`: the angle computed by `atn2PA21` from a positive first
 argument stays below `pi/2` in every quadrant branch. -/
 theorem DIH_X_LT_PI {x1 x2 x3 x4 x5 x6 : ℝ} (h1 : 0 < x1)
-    (hd : 0 < deltaXf x1 x2 x3 x4 x5 x6) :
-    dihXf x1 x2 x3 x4 x5 x6 < Real.pi := by
-  unfold dihXf
-  have hx : 0 < Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6) :=
+    (hd : 0 < deltaXfPA21 x1 x2 x3 x4 x5 x6) :
+    dihXfPA21 x1 x2 x3 x4 x5 x6 < Real.pi := by
+  unfold dihXfPA21
+  have hx : 0 < Real.sqrt (4 * x1 * deltaXfPA21 x1 x2 x3 x4 x5 x6) :=
     Real.sqrt_pos.mpr (mul_pos (by linarith) hd)
-  have harg : atn2 (Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6))
-      (-(deltaX4f x1 x2 x3 x4 x5 x6)) < Real.pi / 2 := by
-    unfold atn2
+  have harg : atn2PA21 (Real.sqrt (4 * x1 * deltaXfPA21 x1 x2 x3 x4 x5 x6))
+      (-(deltaX4fPA21 x1 x2 x3 x4 x5 x6)) < Real.pi / 2 := by
+    unfold atn2PA21
     split_ifs with hb hb2 hb3
-    · have hfrac : -(deltaX4f x1 x2 x3 x4 x5 x6) /
-          Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6) < 1 := by
+    · have hfrac : -(deltaX4fPA21 x1 x2 x3 x4 x5 x6) /
+          Real.sqrt (4 * x1 * deltaXfPA21 x1 x2 x3 x4 x5 x6) < 1 := by
         rw [div_lt_one hx]
         have habs := abs_lt.mp hb
         linarith
       exact Real.arctan_lt_pi_div_two _
-    · have hpos : 0 < Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6) /
-            -(deltaX4f x1 x2 x3 x4 x5 x6) := div_pos hx hb2
+    · have hpos : 0 < Real.sqrt (4 * x1 * deltaXfPA21 x1 x2 x3 x4 x5 x6) /
+            -(deltaX4fPA21 x1 x2 x3 x4 x5 x6) := div_pos hx hb2
       have hap := Real.arctan_pos.mpr hpos
       linarith
     · exact by
         have hge := Real.neg_pi_div_two_lt_arctan
-          (Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6) /
-            -(deltaX4f x1 x2 x3 x4 x5 x6))
+          (Real.sqrt (4 * x1 * deltaXfPA21 x1 x2 x3 x4 x5 x6) /
+            -(deltaX4fPA21 x1 x2 x3 x4 x5 x6))
         have hpi : 0 < Real.pi := Real.pi_pos
         linarith
     · exact absurd hx (by
-        have hy : -(deltaX4f x1 x2 x3 x4 x5 x6) = 0 := by linarith
+        have hy : -(deltaX4fPA21 x1 x2 x3 x4 x5 x6) = 0 := by linarith
         rw [hy] at hb
         simp at hb
-        have hle : Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6) = 0 :=
+        have hle : Real.sqrt (4 * x1 * deltaXfPA21 x1 x2 x3 x4 x5 x6) = 0 :=
           Real.sqrt_eq_zero_of_nonpos hb
         linarith)
   linarith
@@ -504,7 +504,7 @@ theorem DIH_X_LT_PI {x1 x2 x3 x4 x5 x6 : ℝ} (h1 : 0 < x1)
 /-- HOL `DIH_Y_LT_PI`. -/
 theorem DIH_Y_LT_PI {y1 y2 y3 y4 y5 y6 : ℝ} (h1 : 0 < y1)
     (hd : 0 < deltaYP25 y1 y2 y3 y4 y5 y6) :
-    dihY y1 y2 y3 y4 y5 y6 < Real.pi := by
+    dihYPA21 y1 y2 y3 y4 y5 y6 < Real.pi := by
   refine DIH_X_LT_PI (by positivity) hd
 
 /-- HOL `CRITICAL_WEIGHT_POS_LE`. -/
@@ -1157,7 +1157,7 @@ theorem WEDGE3_Y4 (V : Set V3) (f : ℕ → V3) (w0 : V3) (n : ℕ) (i : ℕ) (u
     (hy6 : y6 = dist u1 (f i)) :
     ∃ y4, 2 ≤ y4 ∧ y4 ≤ 2 * Real.sqrt 2 ∧
       0 < deltaYP25 y1 y2 y3 y4 y5 y6 ∧
-      dihY y1 y2 y3 y4 y5 y6 ≤ azim u0 u1 (f i) (f (i + 1)) ∧
+      dihYPA21 y1 y2 y3 y4 y5 y6 ≤ azim u0 u1 (f i) (f (i + 1)) ∧
       2 ≤ rad2YP25 y1 y2 y3 y4 y5 y6 ∧
       (azim u0 u1 (f i) (f (i + 1)) < Real.pi →
         dist (f i) (f (i + 1)) ≤ 2 * Real.sqrt 2 → y4 = dist (f i) (f (i + 1))) := by
@@ -1351,7 +1351,7 @@ theorem c_4_azim_mcell_dih_y (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ →
     (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f)
     (h4 : cc_4 V u0 u1 f i) :
     azim_mcell V f u0 u1 i =
-      dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+      dihYPA21 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
         (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) := by
   sorry
 
@@ -1572,7 +1572,7 @@ theorem CC_3_PROPS (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : 
       (∃ y4, 2 ≤ y4 ∧ y4 ≤ 2 * Real.sqrt 2 ∧
         0 < deltaYP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) y4
           (dist u1 (f (i + 1))) (dist u1 (f i)) ∧
-        dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) y4
+        dihYPA21 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) y4
             (dist u1 (f (i + 1))) (dist u1 (f i)) ≤ azim u0 u1 (f i) (f (i + 1)) ∧
         2 ≤ rad2YP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) y4
           (dist u1 (f (i + 1))) (dist u1 (f i)) ∧
@@ -1633,7 +1633,7 @@ theorem mcell3_gammaX_gamma3f (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ �
     (hcey : criticalEdgeY (dist u0 u1)) (hsize : HasSizeP25 (s_leaf V [u0, u1]) n)
     (hn : 1 < n) (hno4 : ¬ cc_4 V u0 u1 f i) :
     gammaX V (ccCell V [u0, u1, f i]) lmfun =
-      gamma3f (dist u0 u1) (dist u0 (f i)) (dist u1 (f i)) (Real.sqrt 2) lmfun := by
+      gamma3fPA21 (dist u0 u1) (dist u0 (f i)) (dist u1 (f i)) (Real.sqrt 2) lmfun := by
   sorry
 
 /-- HOL `mcell3_dihX_dih_y`. -/
@@ -1643,7 +1643,7 @@ theorem mcell3_dihX_dih_y (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3
     (hcey : criticalEdgeY (dist u0 u1)) (hsize : HasSizeP25 (s_leaf V [u0, u1]) n)
     (hn : 1 < n) (hno4 : ¬ cc_4 V u0 u1 f i) :
     dihX V (ccCell V [u0, u1, f i]) (u0, u1) =
-      dihY (dist u0 u1) (dist u0 (f i)) (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2)
+      dihYPA21 (dist u0 u1) (dist u0 (f i)) (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2)
         (dist u1 (f i)) := by
   sorry
 
@@ -1654,7 +1654,7 @@ theorem mcell3_gammaXb_gamma3f (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ �
     (hcey : criticalEdgeY (dist u0 u1)) (hsize : HasSizeP25 (s_leaf V [u0, u1]) n)
     (hn : 1 < n) (hno4 : ¬ cc_4 V u0 u1 f i) :
     gammaX V (ccCell V [u1, u0, f (i + 1)]) lmfun =
-      gamma3f (dist u0 u1) (dist u0 (f (i + 1))) (dist u1 (f (i + 1)))
+      gamma3fPA21 (dist u0 u1) (dist u0 (f (i + 1))) (dist u1 (f (i + 1)))
         (Real.sqrt 2) lmfun := by
   sorry
 
@@ -1665,7 +1665,7 @@ theorem mcell3_dihXb_dih_y (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V
     (hcey : criticalEdgeY (dist u0 u1)) (hsize : HasSizeP25 (s_leaf V [u0, u1]) n)
     (hn : 1 < n) (hno4 : ¬ cc_4 V u0 u1 f i) :
     dihX V (ccCell V [u1, u0, f (i + 1)]) (u0, u1) =
-      dihY (dist u0 u1) (dist u0 (f (i + 1))) (Real.sqrt 2) (Real.sqrt 2)
+      dihYPA21 (dist u0 u1) (dist u0 (f (i + 1))) (Real.sqrt 2) (Real.sqrt 2)
         (Real.sqrt 2) (dist u1 (f (i + 1))) := by
   sorry
 
@@ -2199,14 +2199,14 @@ theorem IXPOTPA_MERGED (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1
     (hb4 : Real.sqrt 8 ≤ y4) (hb4' : y4 ≤ y5 + y6)
     (hb5 : 2 ≤ y5) (hb5' : y5 ≤ 2 * hminus) (hb6 : 2 ≤ y6) (hb6' : y6 ≤ 2 * hminus)
     (hd : 0 < deltaYP25 y1 y2 y3 y4 y5 y6)
-    (hdi1 : dihY y1 y2 y3 y4 y5 y6 ≤ 2.089)
-    (hdi2 : 1.946 ≤ dihY y1 y2 y3 y4 y5 y6)
+    (hdi1 : dihYPA21 y1 y2 y3 y4 y5 y6 ≤ 2.089)
+    (hdi2 : 1.946 ≤ dihYPA21 y1 y2 y3 y4 y5 y6)
     (he1 : eta_y y1 y2 y6 ^ 2 ≤ 1.34 ^ 2) (he2 : eta_y y1 y3 y5 ^ 2 ≤ 1.34 ^ 2) :
-    3 * 0.0057 ≤ gamma3f y1 y2 y6 (Real.sqrt 2) lmfun +
-      gamma3f y1 y3 y5 (Real.sqrt 2) lmfun +
-      (dihY y1 y2 y3 y4 y5 y6 -
-          (dihY y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 +
-            dihY y1 (Real.sqrt 2) y3 (Real.sqrt 2) y5 (Real.sqrt 2))) * 0.008 := by
+    3 * 0.0057 ≤ gamma3fPA21 y1 y2 y6 (Real.sqrt 2) lmfun +
+      gamma3fPA21 y1 y3 y5 (Real.sqrt 2) lmfun +
+      (dihYPA21 y1 y2 y3 y4 y5 y6 -
+          (dihYPA21 y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 +
+            dihYPA21 y1 (Real.sqrt 2) y3 (Real.sqrt 2) y5 (Real.sqrt 2))) * 0.008 := by
   sorry
 
 /-- HOL `TXQTPVC_MERGED`. -/
@@ -2217,14 +2217,14 @@ theorem TXQTPVC_MERGED (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1
     (hrad : 2 ≤ rad2YP25 y1 y2 y3 y4 y5 y6)
     (hb5 : 2 ≤ y5) (hb5' : y5 ≤ 2 * hminus) (hb6 : 2 ≤ y6) (hb6' : y6 ≤ 2 * hminus)
     (hd : 0 < deltaYP25 y1 y2 y3 y4 y5 y6)
-    (hdi1 : dihY y1 y2 y3 y4 y5 y6 ≤ 2.089)
-    (hdi2 : 1.946 ≤ dihY y1 y2 y3 y4 y5 y6)
+    (hdi1 : dihYPA21 y1 y2 y3 y4 y5 y6 ≤ 2.089)
+    (hdi2 : 1.946 ≤ dihYPA21 y1 y2 y3 y4 y5 y6)
     (he1 : eta_y y1 y2 y6 ^ 2 ≤ 1.34 ^ 2) (he2 : eta_y y1 y3 y5 ^ 2 ≤ 1.34 ^ 2) :
-    3 * 0.0057 ≤ gamma3f y1 y2 y6 (Real.sqrt 2) lmfun +
-      gamma3f y1 y3 y5 (Real.sqrt 2) lmfun +
-      (dihY y1 y2 y3 y4 y5 y6 -
-          (dihY y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 +
-            dihY y1 (Real.sqrt 2) y3 (Real.sqrt 2) y5 (Real.sqrt 2))) * 0.008 := by
+    3 * 0.0057 ≤ gamma3fPA21 y1 y2 y6 (Real.sqrt 2) lmfun +
+      gamma3fPA21 y1 y3 y5 (Real.sqrt 2) lmfun +
+      (dihYPA21 y1 y2 y3 y4 y5 y6 -
+          (dihYPA21 y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 +
+            dihYPA21 y1 (Real.sqrt 2) y3 (Real.sqrt 2) y5 (Real.sqrt 2))) * 0.008 := by
   sorry
 
 /-- HOL `TEWNSCJ_MERGED`. -/
@@ -2235,12 +2235,12 @@ theorem TEWNSCJ_MERGED (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1
     (hrad : 2 ≤ rad2YP25 y1 y2 y3 y4 y5 y6)
     (hb5 : 2 ≤ y5) (hb5' : y5 ≤ 2 * hminus) (hb6 : 2 ≤ y6) (hb6' : y6 ≤ 2 * hminus)
     (he1 : eta_y y1 y2 y6 ^ 2 ≤ 1.34 ^ 2) (he2 : eta_y y1 y3 y5 ^ 2 ≤ 1.34 ^ 2) :
-    a_spine5 + b_spine5 * dihY y1 y2 y3 y4 y5 y6 ≤
-      gamma3f y1 y2 y6 (Real.sqrt 2) lmfun +
-        gamma3f y1 y3 y5 (Real.sqrt 2) lmfun +
-        (dihY y1 y2 y3 y4 y5 y6 -
-            (dihY y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 +
-              dihY y1 (Real.sqrt 2) y3 (Real.sqrt 2) y5 (Real.sqrt 2))) * 0.008 := by
+    a_spine5 + b_spine5 * dihYPA21 y1 y2 y3 y4 y5 y6 ≤
+      gamma3fPA21 y1 y2 y6 (Real.sqrt 2) lmfun +
+        gamma3fPA21 y1 y3 y5 (Real.sqrt 2) lmfun +
+        (dihYPA21 y1 y2 y3 y4 y5 y6 -
+            (dihYPA21 y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 +
+              dihYPA21 y1 (Real.sqrt 2) y3 (Real.sqrt 2) y5 (Real.sqrt 2))) * 0.008 := by
   sorry
 
 /-- HOL `CC_3_AZIM_LT_PI_COPLANAR`. -/
@@ -2331,7 +2331,7 @@ theorem PACKING_CHAPTER_MAIN_CONCLUSION (hkc : ¬ keplerConjecture)
 order flattened; all giants) -/
 
 /-- HOL `EDGE_LE_2RAD`. -/
-theorem EDGE_LE_2RAD {x1 x2 x3 x4 x5 x6 : ℝ} (hd : 0 < deltaXf x1 x2 x3 x4 x5 x6)
+theorem EDGE_LE_2RAD {x1 x2 x3 x4 x5 x6 : ℝ} (hd : 0 < deltaXfPA21 x1 x2 x3 x4 x5 x6)
     (h4 : 0 < x4) (h5 : 0 < x5) (h6 : 0 < x6) (hup : 0 < upsX x4 x5 x6) :
     x4 ≤ 4 * rad2XP25 x1 x2 x3 x4 x5 x6 := by
   sorry

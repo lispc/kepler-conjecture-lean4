@@ -44,7 +44,7 @@ Encoding:
    `DEFORMATION_DIST_LE_BLL_EDGE*` (via an in-file `CLOSER_POINTS_LEMMA`
    shim), `CARD_V_EQ_SCS_K1` (via an in-file `VV_INJ_p31` shim — the twin
    `VV_INJ_p35` is proved but LocalAuto35's transitive `Polytope` chain
-   would drag the `atn2` clash into this branch), and `DSV_WW_DEFOR_EQ`
+   would drag the `atn2PA18` clash into this branch), and `DSV_WW_DEFOR_EQ`
    (J-row emptyness + `VV_INJ_p31` + `setSum` congruence). Still `sorry`,
    all blocked by the *same* root cause: `LocalFan V E FF` is the stub
    `fun _ _ _ => True` (LocalAuto1.lean:138), so local-fan-conditioned
@@ -274,7 +274,7 @@ theorem ballAnnulus_norm_p31 {x : V3} (h : x ∈ ballAnnulus) :
 /-- HOL `Qknvmlb.SUC_MOD_NOT_EQ` (shim: same arithmetic as
 LocalAuto35 `SUC_MOD_NOT_EQ_p35` / LocalAuto30 `suc_mod_ne_p30`; re-derived
 in-file since LocalAuto31 imports no same-wave lane and LocalAuto35's
-transitive `Polytope` chain would drag the `atn2` name clash along). -/
+transitive `Polytope` chain would drag the `atn2PA18` name clash along). -/
 theorem SUC_MOD_NOT_EQ_p31 {k : ℕ} (hk : 1 < k) (x : ℕ) :
     x % k ≠ (x + 1) % k := by
   intro hcon

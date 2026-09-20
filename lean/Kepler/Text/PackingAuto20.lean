@@ -28,7 +28,8 @@ ENCODING NOTES
     NOT ported anywhere in this checkout yet, so they are defined here
     (this is the hub's definitional payload despite the .hl carrying no
     defs -- upstream they live in `Sphere`).  HOL `atn2` (sphere.hl:48)
-    is ported verbatim as `atn2`; Mathlib has no `arctan2`.
+    is ported verbatim as `atn2PA20` (renamed, docs/fqn-conflicts.md);
+    Mathlib has no `arctan2`.
   - HOL `real^3` <-> `V3` (Kepler.Geom); `dist (u,v)` <-> `dist u v`;
     `NULLSET X` <-> `nullSet X` (`volume X = 0`); `vol X` (real volume)
     <-> `volume.real X`, matching the convention inside `gammaX`;
@@ -62,8 +63,9 @@ open Kepler.Geom Set Classical MeasureTheory
 
 /-! ## Definitional payload: the sphere.hl nonlinear toolkit -/
 
-/-- HOL `atn2` (sphere.hl:48), the quadrant-aware two-argument arctangent. -/
-noncomputable def atn2 (x y : ℝ) : ℝ :=
+/-- HOL `atn2` (sphere.hl:48), the quadrant-aware two-argument arctangent.
+Renamed `atn2PA20` (docs/fqn-conflicts.md). -/
+noncomputable def atn2PA20 (x y : ℝ) : ℝ :=
   if |y| < x then Real.arctan (y / x)
   else if 0 < y then Real.pi / 2 - Real.arctan (x / y)
   else if y < 0 then -(Real.pi / 2) - Real.arctan (x / y)
@@ -82,17 +84,17 @@ noncomputable def deltaX4f (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
     x1 * (-x1 + x2 + x3 - x4 + x5 + x6)
 
 /-- HOL `dih_x` (sphere.hl:153): dihedral angle from squared lengths. -/
-noncomputable def dihXf (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
-  Real.pi / 2 + atn2 (Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6))
+noncomputable def dihXfPA20 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  Real.pi / 2 + atn2PA20 (Real.sqrt (4 * x1 * deltaXf x1 x2 x3 x4 x5 x6))
     (-(deltaX4f x1 x2 x3 x4 x5 x6))
 
 /-- HOL `dih_y` (sphere.hl:159). -/
-noncomputable def dihY (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  dihXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+noncomputable def dihYPA20 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  dihXfPA20 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
 
 /-- HOL `sol_y` (sphere.hl:185): spherical excess `alpha + beta + gamma - pi`. -/
-noncomputable def solY (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  dihY y1 y2 y3 y4 y5 y6 + dihY y2 y3 y1 y5 y6 y4 + dihY y3 y1 y2 y6 y4 y5 -
+noncomputable def solYPA20 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+  dihYPA20 y1 y2 y3 y4 y5 y6 + dihYPA20 y2 y3 y1 y5 y6 y4 + dihYPA20 y3 y1 y2 y6 y4 y5 -
     Real.pi
 
 /-- HOL `vol_x` (sphere.hl:251): simplex volume from squared lengths. -/
@@ -106,15 +108,15 @@ noncomputable def volY (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
 /-- HOL `vol4f` (sphere.hl:568): fake 4-cell volume. -/
 noncomputable def vol4f (y1 y2 y3 y4 y5 y6 : ℝ) (f : ℝ → ℝ) : ℝ :=
   (2 * mm1 / Real.pi) *
-    (solY y1 y2 y3 y4 y5 y6 + solY y1 y5 y6 y4 y2 y3 +
-      solY y4 y5 y3 y1 y2 y6 + solY y4 y2 y6 y1 y5 y3) -
+    (solYPA20 y1 y2 y3 y4 y5 y6 + solYPA20 y1 y5 y6 y4 y2 y3 +
+      solYPA20 y4 y5 y3 y1 y2 y6 + solYPA20 y4 y2 y6 y1 y5 y3) -
     (8 * mm2 / Real.pi) *
-    (f (y1 / 2) * dihY y1 y2 y3 y4 y5 y6 +
-      f (y2 / 2) * dihY y2 y3 y1 y5 y6 y4 +
-      f (y3 / 2) * dihY y3 y1 y2 y6 y4 y5 +
-      f (y4 / 2) * dihY y4 y3 y5 y1 y6 y2 +
-      f (y5 / 2) * dihY y5 y1 y6 y2 y4 y3 +
-      f (y6 / 2) * dihY y6 y1 y5 y3 y4 y2)
+    (f (y1 / 2) * dihYPA20 y1 y2 y3 y4 y5 y6 +
+      f (y2 / 2) * dihYPA20 y2 y3 y1 y5 y6 y4 +
+      f (y3 / 2) * dihYPA20 y3 y1 y2 y6 y4 y5 +
+      f (y4 / 2) * dihYPA20 y4 y3 y5 y1 y6 y2 +
+      f (y5 / 2) * dihYPA20 y5 y1 y6 y2 y4 y3 +
+      f (y6 / 2) * dihYPA20 y6 y1 y5 y3 y4 y2)
 
 /-- HOL `gamma4f` (sphere.hl:574) and `gamma4fgcy` (sphere.hl:566, its
 definitionally equal alias kept as a separate name for the TSKAJXY
@@ -128,11 +130,11 @@ noncomputable def vol3r (y1 y2 y3 r : ℝ) : ℝ := volY r r r y1 y2 y3
 /-- HOL `vol3f` (sphere.hl:580): fake 3-cell volume. -/
 noncomputable def vol3f (y1 y2 y3 r : ℝ) (f : ℝ → ℝ) : ℝ :=
   (2 * mm1 / Real.pi) *
-    (solY y1 y2 r r r y3 + solY y2 y3 r r r y1 + solY y3 y1 r r r y2) -
+    (solYPA20 y1 y2 r r r y3 + solYPA20 y2 y3 r r r y1 + solYPA20 y3 y1 r r r y2) -
     (8 * mm2 / Real.pi) *
-    (f (y1 / 2) * dihY y1 y2 r r r y3 +
-      f (y2 / 2) * dihY y2 y3 r r r y1 +
-      f (y3 / 2) * dihY y3 y1 r r r y2)
+    (f (y1 / 2) * dihYPA20 y1 y2 r r r y3 +
+      f (y2 / 2) * dihYPA20 y2 y3 r r r y1 +
+      f (y3 / 2) * dihYPA20 y3 y1 r r r y2)
 
 /-- HOL `gamma3f` (sphere.hl:582). -/
 noncomputable def gamma3f (y1 y2 y3 r : ℝ) (f : ℝ → ℝ) : ℝ :=
@@ -185,12 +187,12 @@ theorem DIHX_DIH_Y_lemma (V X : Set V3) (ul : List V3) (u0 u1 u2 u3 : V3) (i : �
     (hul : ul = [u0, u1, u2, u3]) (hy1 : dist u0 u1 = y1) (hy2 : dist u0 u2 = y2)
     (hy3 : dist u0 u3 = y3) (hy4 : dist u2 u3 = y4) (hy5 : dist u1 u3 = y5)
     (hy6 : dist u1 u2 = y6) :
-    dihX V X (u0, u1) = dihY y1 y2 y3 y4 y5 y6 ∧
-      dihX V X (u0, u2) = dihY y2 y3 y1 y5 y6 y4 ∧
-      dihX V X (u0, u3) = dihY y3 y1 y2 y6 y4 y5 ∧
-      dihX V X (u2, u3) = dihY y4 y3 y5 y1 y6 y2 ∧
-      dihX V X (u1, u3) = dihY y5 y1 y6 y2 y4 y3 ∧
-      dihX V X (u1, u2) = dihY y6 y1 y5 y3 y4 y2 := by
+    dihX V X (u0, u1) = dihYPA20 y1 y2 y3 y4 y5 y6 ∧
+      dihX V X (u0, u2) = dihYPA20 y2 y3 y1 y5 y6 y4 ∧
+      dihX V X (u0, u3) = dihYPA20 y3 y1 y2 y6 y4 y5 ∧
+      dihX V X (u2, u3) = dihYPA20 y4 y3 y5 y1 y6 y2 ∧
+      dihX V X (u1, u3) = dihYPA20 y5 y1 y6 y2 y4 y3 ∧
+      dihX V X (u1, u2) = dihYPA20 y6 y1 y5 y3 y4 y2 := by
   sorry
 
 /-- HOL `SOL_SOL_Y_EXPLICIT` (TSKAJXY1.hl:2995): the four vertex solid
@@ -201,10 +203,10 @@ theorem SOL_SOL_Y_EXPLICIT (V X : Set V3) (ul : List V3) (u0 u1 u2 u3 : V3) (i :
     (hul : ul = [u0, u1, u2, u3]) (hy1 : dist u0 u1 = y1) (hy2 : dist u0 u2 = y2)
     (hy3 : dist u0 u3 = y3) (hy4 : dist u2 u3 = y4) (hy5 : dist u1 u3 = y5)
     (hy6 : dist u1 u2 = y6) :
-    sol u0 X = solY y1 y2 y3 y4 y5 y6 ∧
-      sol u1 X = solY y1 y5 y6 y4 y2 y3 ∧
-      sol u2 X = solY y4 y2 y6 y1 y5 y3 ∧
-      sol u3 X = solY y4 y5 y3 y1 y2 y6 := by
+    sol u0 X = solYPA20 y1 y2 y3 y4 y5 y6 ∧
+      sol u1 X = solYPA20 y1 y5 y6 y4 y2 y3 ∧
+      sol u2 X = solYPA20 y4 y2 y6 y1 y5 y3 ∧
+      sol u3 X = solYPA20 y4 y5 y3 y1 y2 y6 := by
   sorry
 
 /-- HOL `gammaX_gamm4fgcy` (TSKAJXY1.hl:3508): volume and `gammaX` of a
@@ -226,12 +228,12 @@ theorem gammaX_gamma3f (V X : Set V3) (ul : List V3) (u0 u1 u2 u3 : V3)
     (hX : X = mcell 3 V ul) (hn : ¬ nullSet X) (hul : ul = [u0, u1, u2, u3])
     (hy4 : dist u1 u2 = y4) (hy5 : dist u0 u2 = y5) (hy6 : dist u0 u1 = y6) :
     volume.real X = volY (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4 y5 y6 ∧
-      sol u0 X = solY y5 y6 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4 ∧
-      sol u1 X = solY y6 y4 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y5 ∧
-      sol u2 X = solY y4 y5 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 ∧
-      dihX V X (u0, u1) = dihY y6 y4 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y5 ∧
-      dihX V X (u0, u2) = dihY y5 y6 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4 ∧
-      dihX V X (u1, u2) = dihY y4 y5 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 ∧
+      sol u0 X = solYPA20 y5 y6 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4 ∧
+      sol u1 X = solYPA20 y6 y4 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y5 ∧
+      sol u2 X = solYPA20 y4 y5 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 ∧
+      dihX V X (u0, u1) = dihYPA20 y6 y4 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y5 ∧
+      dihX V X (u0, u2) = dihYPA20 y5 y6 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4 ∧
+      dihX V X (u1, u2) = dihYPA20 y4 y5 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 ∧
       gammaX V X lmfun = gamma3f y4 y5 y6 (Real.sqrt 2) lmfun := by
   sorry
 

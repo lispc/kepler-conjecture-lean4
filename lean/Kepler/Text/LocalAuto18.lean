@@ -49,7 +49,7 @@ FILE MAP
 
 ENCODING NOTES
   - Import discipline: this file sits on the LocalAuto1/`PackingAuto18`
-    side of the fatal `atn2` duplication — LocalAuto2/`PackingAuto20`
+    side of the fatal `atn2PA18` duplication — LocalAuto2/`PackingAuto20`
     (also LocalAuto9/LocalAuto11, which import LocalAuto2) must NOT be
     imported next to LocalAuto1. Everything needed from those lanes is
     carried as a verbatim `_p18` copy with a NEEDS merge marker:
@@ -62,8 +62,8 @@ ENCODING NOTES
     `(M,3)finite_product` ↔ `FinVec`/`FinMat` (LocalAuto4); HOL 1-based
     `row i (vecmats l)` ↔ `rowV3_p18 l i`; `IMAGE v (:num)` ↔
     `Set.range v`; `num->bool` ↔ `Finset ℕ` where relevant.
-  - Importable kit (no new copies): `reEqvl`, `cross3`, `upsX`, `deltaX`,
-    `atn2`, `arcV`, `azim`, `affGt`/`affGe`, `projection`, `Collinear3`,
+  - Importable kit (no new copies): `reEqvl`, `cross3`, `upsXPA18`, `deltaXPA18`,
+    `atn2PA18`, `arcV`, `azim`, `affGt`/`affGe`, `projection`, `Collinear3`,
     `Coplanar`, `ballAnnulus`, `h0`, `cstab`, `cstab_p4`, `setSum`,
     `Periodic`/`Periodic2`, `ScsV39` + `isScsV39`/`BBsV39`/`MMsV39`/
     `scsGeneric`/`scsIsStr`/`scsDiag`/`scsStabDiagV39`/`scsPropEquV39`/
@@ -96,7 +96,7 @@ namespace Kepler.Text
 
 open Kepler.Geom Set Classical
 
-/-! ## Section 0: verbatim `_p18` copies (atn2 two-sides clash) -/
+/-! ## Section 0: verbatim `_p18` copies (atn2PA18 two-sides clash) -/
 
 /-- HOL `delta_x4` (sphere.hl:110): partial derivative of `delta_x` at
 `x4`. Verbatim twin of PackingAuto20's `deltaX4f`. NEEDS: merge. -/
@@ -105,17 +105,17 @@ noncomputable def deltaX4_p18 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
     x1 * (-x1 + x2 + x3 - x4 + x5 + x6)
 
 /-- HOL `delta_y` (sphere.hl): `delta_x` at squared lengths; verbatim twin
-of LocalAuto11's `deltaY_p11` (body = `deltaX` of PackingAuto18). NEEDS:
+of LocalAuto11's `deltaY_p11` (body = `deltaXPA18` of PackingAuto18). NEEDS:
 merge. -/
 noncomputable def deltaY_p18 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+  deltaXPA18 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
 
 /-- HOL `dih_y` (sphere.hl:159). Verbatim twin of PackingAuto20's `dihY`
 (via `dihXf`). NEEDS: merge. -/
 noncomputable def dihY_p18 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  Real.pi / 2 + atn2
+  Real.pi / 2 + atn2PA18
     (Real.sqrt (4 * (y1 * y1) *
-      deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)))
+      deltaXPA18 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)))
     (-(deltaX4_p18 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5)
       (y6 * y6)))
 
@@ -876,7 +876,7 @@ theorem azim_dih_y_p18 (v₀ v₁ v₂ v₃ : V3)
   sorry
   -- DISCHARGES: HOL AZIM_DIHV_SAME_STRONG (LocalAuto2-side azimuth kit),
   -- Merge_ineq.DIHV_DIH_X and Collect_geom2.NOT_COL_EQ_UPS_X_POS
-  -- (`upsX`-positivity off the non-collinearity hypotheses).
+  -- (`upsXPA18`-positivity off the non-collinearity hypotheses).
 
 /-- HOL `azim5_reduction` (IUNBUIG.hl:1106). Monster statement + giant. -/
 theorem azim5_reduction_p18 (s : ScsV39) (f : V3 → ℝ → V3) (v : ℕ → V3)

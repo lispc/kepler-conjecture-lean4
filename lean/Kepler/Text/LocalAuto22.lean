@@ -28,7 +28,7 @@ ENCODING NOTES
     `xrr`, `deltaX4`, `deltaX5`, `rho`, `cstab`, `dTame`, `Lunar`,
     `azimInFan`, `solLocal`, `interiorAngle1`, `Periodic`, `Periodic2`,
     `main_nonlinear_terminal_v11`, the registry objects `scs6I1`..`scs3M1`,
-    plus `h0`/`sol0`/`dihV` (PackingAuto2) and `upsX`/`deltaX`/`arcLength`/
+    plus `h0`/`sol0`/`dihV` (PackingAuto2) and `upsXPA18`/`deltaXPA18`/`arcLength`/
     `reEqvl` (PackingAuto18)).  LocalAuto16 (the dih_y/taum continuity lane)
     is NOT built in this checkout, so its sphere-kit twins are carried here
     as `_p22` copies instead: `atn2_p22`, `dihXf_p22`, `dihY_p22`,
@@ -44,14 +44,14 @@ ENCODING NOTES
     real Terminal.hl when that lane lands), `const1_p22`, `solY_p22` and
     `eulerP_p22`/`eulerAX_p22` (opaque registry signatures), `acsP22`
     (flyspeck `acs` = `Real.arccos`), `ineqP22` (sphere.hl `ineq`).
-  - HOL `delta_x` ↔ `deltaX` (PackingAuto18:134); `delta_x4`/`delta_x5` ↔
+  - HOL `delta_x` ↔ `deltaXPA18` (PackingAuto18:134); `delta_x4`/`delta_x5` ↔
     LocalAuto1 `deltaX4`/`deltaX5` (same formulas as LocalAuto16
     `deltaX4f_p16` twins).
   - HOL `real^3` ↔ `V3` (Kepler.Geom); `vec 0` ↔ `0`; `dist(v,w)` ↔
     `dist v w`; `dih_x` ↔ `dihXf_p16`; `delta_x` ↔ `deltaXf_p16`;
     `delta_y` ↔ `deltaY_p16`; `dih_y` ↔ `dihY_p16`; `taum` ↔ `taum_p16`;
     `sqrt8` ↔ `Real.sqrt 8`; `acs` ↔ `acsP22`; `arclength` ↔ `arcLength`
-    (PackingAuto18; the `atn2` rendering of `acs(1 - xrr/8)`).
+    (PackingAuto18; the `atn2PA18` rendering of `acs(1 - xrr/8)`).
     `real_open s` ↔ `IsOpen s`; `real_interval (a,b)` ↔ `Set.Ioo a b`;
     `real_continuous f atreal x` ↔ `ContinuousAt f x`; `{y | P y}` ↔
     set-builder; `sum {i | i < n} f` ↔ `Finset.sum (Finset.range n)`;
@@ -86,7 +86,7 @@ y-coordinates. -/
 def yOfX_p22 (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
   f (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
 
-/-- HOL `atn2` (sphere.hl:48-52); verbatim twin of the PackingAuto18 /
+/-- HOL `atn2PA18` (sphere.hl:48-52); verbatim twin of the PackingAuto18 /
 LocalAuto16 renderings. -/
 noncomputable def atn2_p22 (x y : ℝ) : ℝ :=
   if |y| < x then Real.arctan (y / x)
@@ -97,7 +97,7 @@ noncomputable def atn2_p22 (x y : ℝ) : ℝ :=
 /-- HOL `dih_x` (sphere.hl:153). -/
 noncomputable def dihXf_p22 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
   Real.pi / 2 +
-    atn2_p22 (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
+    atn2_p22 (Real.sqrt (4 * x1 * deltaXPA18 x1 x2 x3 x4 x5 x6))
       (-(deltaX4 x1 x2 x3 x4 x5 x6))
 
 /-- HOL `dih_y` (sphere.hl:159): `y_of_x dih_x`. -/
@@ -106,7 +106,7 @@ noncomputable def dihY_p22 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
 
 /-- HOL `delta_y` (sphere.hl): `y_of_x delta_x`. -/
 noncomputable def deltaY_p22 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
-  yOfX_p22 (deltaX) y1 y2 y3 y4 y5 y6
+  yOfX_p22 (deltaXPA18) y1 y2 y3 y4 y5 y6
 
 /-- NEEDS: Terminal.hl `taum` (the truncated tau of a quad); opaque
 registry signature (twins: LocalAuto11 `taum_p11`, LocalAuto16
@@ -243,15 +243,15 @@ theorem hasDerivWithinAt_quad_p22 (a b c x : ℝ) (s : Set ℝ) :
 
 /-- HOL `derived_form_delta_x_wrt_x4`. -/
 theorem derived_form_delta_x_wrt_x4_p22 (x1 x2 x3 x4 x5 x6 : ℝ) :
-    derivedForm True (fun q => deltaX x1 x2 x3 q x5 x6)
+    derivedForm True (fun q => deltaXPA18 x1 x2 x3 q x5 x6)
       (deltaX4 x1 x2 x3 x4 x5 x6) x4 Set.univ := by
   intro _
-  have e : (fun q => deltaX x1 x2 x3 q x5 x6) = fun q =>
+  have e : (fun q => deltaXPA18 x1 x2 x3 q x5 x6) = fun q =>
       (-(x1)) * (q * q)
         + ((x1 * (-x1 + x2 + x3 + x5 + x6) + (x2 * x5 + x3 * x6 - x2 * x3 - x5 * x6)) * q
         + (x2 * x5 * (x1 - x2 + x3 - x5 + x6) + x3 * x6 * (x1 + x2 - x3 + x5 - x6)
           - x1 * x3 * x5 - x1 * x2 * x6)) := by
-    funext q; unfold deltaX; ring
+    funext q; unfold deltaXPA18; ring
   have dv : (-(x1)) * (x4 + x4)
       + (x1 * (-x1 + x2 + x3 + x5 + x6) + (x2 * x5 + x3 * x6 - x2 * x3 - x5 * x6))
       = deltaX4 x1 x2 x3 x4 x5 x6 := by
@@ -261,15 +261,15 @@ theorem derived_form_delta_x_wrt_x4_p22 (x1 x2 x3 x4 x5 x6 : ℝ) :
 
 /-- HOL `derived_form_delta_x_wrt_x5` (with `deltaX5_p22`). -/
 theorem derived_form_delta_x_wrt_x5_p22 (x1 x2 x3 x4 x5 x6 : ℝ) :
-    derivedForm True (fun q => deltaX x1 x2 x3 x4 q x6)
+    derivedForm True (fun q => deltaXPA18 x1 x2 x3 x4 q x6)
       (deltaX5_p22 x1 x2 x3 x4 x5 x6) x5 Set.univ := by
   intro _
-  have e : (fun q => deltaX x1 x2 x3 x4 q x6) = fun q =>
+  have e : (fun q => deltaXPA18 x1 x2 x3 x4 q x6) = fun q =>
       (-(x2)) * (q * q)
         + ((x2 * (x1 - x2 + x3 + x4 + x6) + x1 * x4 + x3 * x6 - x4 * x6 - x1 * x3) * q
         + (x1 * x4 * (-x1 + x2 + x3 - x4 + x6) + x3 * x6 * (x1 + x2 - x3 + x4 - x6)
           - x2 * x3 * x4 - x1 * x2 * x6)) := by
-    funext q; unfold deltaX; ring
+    funext q; unfold deltaXPA18; ring
   have dv : (-(x2)) * (x5 + x5)
       + (x2 * (x1 - x2 + x3 + x4 + x6) + x1 * x4 + x3 * x6 - x4 * x6 - x1 * x3)
       = deltaX5_p22 x1 x2 x3 x4 x5 x6 := by
@@ -281,17 +281,17 @@ theorem derived_form_delta_x_wrt_x5_p22 (x1 x2 x3 x4 x5 x6 : ℝ) :
 
 /-- HOL `ups_x_delta_x`: the discriminant identity. -/
 theorem ups_x_delta_x_p22 (x1 x2 x3 x4 x5 x6 : ℝ) :
-    deltaX4 x1 x2 x3 x4 x5 x6 ^ 2 + 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 =
-      upsX x1 x3 x5 * upsX x1 x2 x6 := by
-  unfold deltaX4 deltaX upsX
+    deltaX4 x1 x2 x3 x4 x5 x6 ^ 2 + 4 * x1 * deltaXPA18 x1 x2 x3 x4 x5 x6 =
+      upsXPA18 x1 x3 x5 * upsXPA18 x1 x2 x6 := by
+  unfold deltaX4 deltaXPA18 upsXPA18
   ring
 
 /-- HOL `delta_diff4`. -/
 theorem delta_diff4_p22 (x1 x2 x3 x4 x5 x6 z4 : ℝ) :
-    deltaX x1 x2 x3 x4 x5 x6 =
-      deltaX x1 x2 x3 z4 x5 x6 + deltaX4 x1 x2 x3 x4 x5 x6 * (x4 - z4)
+    deltaXPA18 x1 x2 x3 x4 x5 x6 =
+      deltaXPA18 x1 x2 x3 z4 x5 x6 + deltaX4 x1 x2 x3 x4 x5 x6 * (x4 - z4)
         + x1 * (x4 - z4) ^ 2 := by
-  unfold deltaX deltaX4
+  unfold deltaXPA18 deltaX4
   ring
 
 /-- HOL `derived_form_xrr`. -/
@@ -337,19 +337,19 @@ theorem xrr_sym_p22 (y1 y2 y6 : ℝ) : xrr y1 y2 y6 = xrr y2 y1 y6 := by
 /-- HOL `delta_y_dim_reduction`. -/
 theorem delta_y_dim_reduction_p22 (y1 y2 y3 y4 y5 y6 : ℝ) (hy1 : y1 ≠ 0)
     (hy2 : y2 ≠ 0) (hy3 : y3 ≠ 0) :
-    deltaX 4 4 4 (8 * (1 - (y2 * y2 + y3 * y3 - y4 * y4) / (2 * y2 * y3)))
+    deltaXPA18 4 4 4 (8 * (1 - (y2 * y2 + y3 * y3 - y4 * y4) / (2 * y2 * y3)))
         (8 * (1 - (y1 * y1 + y3 * y3 - y5 * y5) / (2 * y1 * y3)))
         (8 * (1 - (y1 * y1 + y2 * y2 - y6 * y6) / (2 * y1 * y2))) =
       64 * deltaY_p22 y1 y2 y3 y4 y5 y6 / (y1 * y2 * y3) ^ 2 := by
   unfold deltaY_p22 yOfX_p22
-  unfold deltaX
+  unfold deltaXPA18
   field_simp
   ring
 
 /-- HOL `delta_x_xrr`. -/
 theorem delta_x_xrr_p22 (y1 y2 y3 y4 y5 y6 : ℝ) (hy1 : y1 ≠ 0) (hy2 : y2 ≠ 0)
     (hy3 : y3 ≠ 0) :
-    deltaX 4 4 4 (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6) =
+    deltaXPA18 4 4 4 (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6) =
       64 * deltaY_p22 y1 y2 y3 y4 y5 y6 / (y1 * y2 * y3) ^ 2 := by
   have h4 : xrr y2 y3 y4 = 8 * (1 - (y2 * y2 + y3 * y3 - y4 * y4) / (2 * y2 * y3)) := rfl
   have h5 : xrr y1 y3 y5 = 8 * (1 - (y1 * y1 + y3 * y3 - y5 * y5) / (2 * y1 * y3)) := rfl
@@ -401,30 +401,30 @@ theorem REAL_OPEN_REAL_INTERVAL_p22 (a b : ℝ) : IsOpen (Set.Ioo a b) :=
 
 /-! ## Section E: derived forms for dih_x, num1, and the chain kit -/
 
-/-- HOL `derived_form_dih_x_wrt_x4` (NEEDS the `atn2` derivative kit). -/
+/-- HOL `derived_form_dih_x_wrt_x4` (NEEDS the `atn2PA18` derivative kit). -/
 theorem derived_form_dih_x_wrt_x4_p22 (x1 x2 x3 x4 x5 x6 : ℝ)
-    (h1 : 0 < x1) (h2 : 0 < deltaX x1 x2 x3 x4 x5 x6)
-    (h3 : 0 < upsX x1 x2 x6) (h4 : 0 < upsX x1 x3 x5) :
+    (h1 : 0 < x1) (h2 : 0 < deltaXPA18 x1 x2 x3 x4 x5 x6)
+    (h3 : 0 < upsXPA18 x1 x2 x6) (h4 : 0 < upsXPA18 x1 x3 x5) :
     derivedForm True (fun q => dihXf_p22 x1 x2 x3 q x5 x6)
-      (Real.sqrt x1 / Real.sqrt (deltaX x1 x2 x3 x4 x5 x6)) x4 Set.univ := by
+      (Real.sqrt x1 / Real.sqrt (deltaXPA18 x1 x2 x3 x4 x5 x6)) x4 Set.univ := by
   sorry
 
 /-- HOL `derived_form_dih_x_wrt_x5`. -/
 theorem derived_form_dih_x_wrt_x5_p22 (x1 x2 x3 x4 x5 x6 : ℝ)
-    (h1 : 0 < x1) (h2 : 0 < deltaX x1 x2 x3 x4 x5 x6)
-    (h3 : 0 < upsX x1 x2 x6) (h4 : 0 < upsX x1 x3 x5) :
+    (h1 : 0 < x1) (h2 : 0 < deltaXPA18 x1 x2 x3 x4 x5 x6)
+    (h3 : 0 < upsXPA18 x1 x2 x6) (h4 : 0 < upsXPA18 x1 x3 x5) :
     derivedForm True (fun q => dihXf_p22 x1 x2 x3 x4 q x6)
       (-(Real.sqrt x1 * deltaX6_p22 x1 x2 x3 x4 x5 x6
-        / (upsX x1 x3 x5 * Real.sqrt (deltaX x1 x2 x3 x4 x5 x6)))) x5 Set.univ := by
+        / (upsXPA18 x1 x3 x5 * Real.sqrt (deltaXPA18 x1 x2 x3 x4 x5 x6)))) x5 Set.univ := by
   sorry
 
 /-- HOL `derived_form_dih_x_wrt_x6`. -/
 theorem derived_form_dih_x_wrt_x6_p22 (x1 x2 x3 x4 x5 x6 : ℝ)
-    (h1 : 0 < x1) (h2 : 0 < deltaX x1 x2 x3 x4 x5 x6)
-    (h3 : 0 < upsX x1 x2 x6) (h4 : 0 < upsX x1 x3 x5) :
+    (h1 : 0 < x1) (h2 : 0 < deltaXPA18 x1 x2 x3 x4 x5 x6)
+    (h3 : 0 < upsXPA18 x1 x2 x6) (h4 : 0 < upsXPA18 x1 x3 x5) :
     derivedForm True (fun q => dihXf_p22 x1 x2 x3 x4 x5 q)
       (-(Real.sqrt x1 * deltaX5_p22 x1 x2 x3 x4 x5 x6
-        / (upsX x1 x2 x6 * Real.sqrt (deltaX x1 x2 x3 x4 x5 x6)))) x6 Set.univ := by
+        / (upsXPA18 x1 x2 x6 * Real.sqrt (deltaXPA18 x1 x2 x3 x4 x5 x6)))) x6 Set.univ := by
   sorry
 
 /-- HOL `derived_form_num1`. -/
@@ -459,67 +459,67 @@ theorem derived_form_dnum1_p22 (x4 x5 x6 e1 e2 e3 : ℝ) :
 /-- HOL `derived_form_sum_dih` (NEEDS the dih_x derivative kit). -/
 theorem derived_form_sum_dih_p22 (x1 x2 x3 x4 x5 x6 e1 e2 e3 : ℝ)
     (h1 : 0 < x1) (h2 : 0 < x2) (h3 : 0 < x3)
-    (h4 : 0 < deltaX x1 x2 x3 x4 x5 x6)
-    (h5 : 0 < upsX x1 x2 x6) (h6 : 0 < upsX x1 x3 x5) (h7 : 0 < upsX x2 x3 x4) :
+    (h4 : 0 < deltaXPA18 x1 x2 x3 x4 x5 x6)
+    (h5 : 0 < upsXPA18 x1 x2 x6) (h6 : 0 < upsXPA18 x1 x3 x5) (h7 : 0 < upsXPA18 x2 x3 x4) :
     derivedForm True
       (fun q => e1 * dihXf_p22 x1 x2 x3 q x5 x6
         + e2 * dihXf_p22 x2 x3 x1 x5 x6 q
         + e3 * dihXf_p22 x3 x1 x2 x6 q x5)
-      ((e1 * Real.sqrt x1 * upsX x2 x3 x4
+      ((e1 * Real.sqrt x1 * upsXPA18 x2 x3 x4
         - e2 * Real.sqrt x2 * deltaX6_p22 x1 x2 x3 x4 x5 x6
         - e3 * Real.sqrt x3 * deltaX5_p22 x1 x2 x3 x4 x5 x6)
-        / (upsX x2 x3 x4 * Real.sqrt (deltaX x1 x2 x3 x4 x5 x6))) x4 Set.univ := by
+        / (upsXPA18 x2 x3 x4 * Real.sqrt (deltaXPA18 x1 x2 x3 x4 x5 x6))) x4 Set.univ := by
   sorry
 
 /-- HOL `derived_form_sum_dih444`. -/
 theorem derived_form_sum_dih444_p22 (x4 x5 x6 e1 e2 e3 : ℝ)
     (h4 : 0 < x4 ∧ x4 < 16) (h5 : 0 < x5 ∧ x5 < 16) (h6 : 0 < x6 ∧ x6 < 16)
-    (hd : 0 < deltaX 4 4 4 x4 x5 x6) :
+    (hd : 0 < deltaXPA18 4 4 4 x4 x5 x6) :
     derivedForm True
       (fun q => e1 * dihXf_p22 4 4 4 q x5 x6
         + e2 * dihXf_p22 4 4 4 x5 x6 q
         + e3 * dihXf_p22 4 4 4 x6 q x5)
       (num1_p22 e1 e2 e3 x4 x5 x6
-        / (2 * x4 * (16 - x4) * Real.sqrt (deltaX 4 4 4 x4 x5 x6))) x4 Set.univ := by
+        / (2 * x4 * (16 - x4) * Real.sqrt (deltaXPA18 4 4 4 x4 x5 x6))) x4 Set.univ := by
   sorry
 
 /-- HOL `derived_form_sum_dih444sub`. -/
 theorem derived_form_sum_dih444sub_p22 (x4 x5 x6 e1 e2 e3 : ℝ)
     (h4 : 0 < x4 ∧ x4 < 16) (h5 : 0 < x5 ∧ x5 < 16) (h6 : 0 < x6 ∧ x6 < 16)
-    (hd : 0 < deltaX 4 4 4 x4 x5 x6) :
+    (hd : 0 < deltaXPA18 4 4 4 x4 x5 x6) :
     derivedForm True
       (fun q => e1 * dihXf_p22 4 4 4 q x5 x6
         + e2 * dihXf_p22 4 4 4 x5 x6 q
         + e3 * dihXf_p22 4 4 4 x6 q x5 - (1 + const1_p22) * Real.pi)
       (num1_p22 e1 e2 e3 x4 x5 x6
-        / (2 * x4 * (16 - x4) * Real.sqrt (deltaX 4 4 4 x4 x5 x6))) x4 Set.univ := by
+        / (2 * x4 * (16 - x4) * Real.sqrt (deltaXPA18 4 4 4 x4 x5 x6))) x4 Set.univ := by
   sorry
 
 /-- HOL `derived_form_tau2D`. -/
 theorem derived_form_tau2D_p22 (x4 x5 x6 e1 e2 e3 : ℝ)
     (h4 : 0 < x4 ∧ x4 < 16) (h5 : 0 < x5 ∧ x5 < 16) (h6 : 0 < x6 ∧ x6 < 16)
-    (hd : 0 < deltaX 4 4 4 x4 x5 x6) (hnum : num1_p22 e1 e2 e3 x4 x5 x6 = 0) :
+    (hd : 0 < deltaXPA18 4 4 4 x4 x5 x6) (hnum : num1_p22 e1 e2 e3 x4 x5 x6 = 0) :
     derivedForm True
       (fun q => num1_p22 e1 e2 e3 q x5 x6
-        / (2 * q * (16 - q) * Real.sqrt (deltaX 4 4 4 q x5 x6)))
+        / (2 * q * (16 - q) * Real.sqrt (deltaXPA18 4 4 4 q x5 x6)))
       (4 * dnum1_p22 e1 e2 e3 x4 x5 x6
-        / (2 * x4 * (16 - x4) * Real.sqrt (deltaX 4 4 4 x4 x5 x6))) x4 Set.univ := by
+        / (2 * x4 * (16 - x4) * Real.sqrt (deltaXPA18 4 4 4 x4 x5 x6))) x4 Set.univ := by
   sorry
 
 /-- HOL `derived_form_taum_d3_exists`. -/
 theorem derived_form_taum_d3_exists_p22 (x4 x5 x6 e1 e2 e3 : ℝ) :
     ∃ f'' : ℝ → ℝ, ∃ f''' : ℝ,
       (0 < x4 ∧ x4 < 16 ∧ 0 < x5 ∧ x5 < 16 ∧ 0 < x6 ∧ x6 < 16 ∧
-        0 < deltaX 4 4 4 x4 x5 x6) →
-      (∀ x4', 0 < x4' → x4' < 16 → 0 < deltaX 4 4 4 x4' x5 x6 →
+        0 < deltaXPA18 4 4 4 x4 x5 x6) →
+      (∀ x4', 0 < x4' → x4' < 16 → 0 < deltaXPA18 4 4 4 x4' x5 x6 →
         derivedForm True
           (fun q => num1_p22 e1 e2 e3 q x5 x6
-            / (2 * q * (16 - q) * Real.sqrt (deltaX 4 4 4 q x5 x6)))
+            / (2 * q * (16 - q) * Real.sqrt (deltaXPA18 4 4 4 q x5 x6)))
           (f'' x4') x4' Set.univ) ∧
       derivedForm True f'' f''' x4 Set.univ := by
   sorry
 
-/-- HOL `dih_x_dim_reduction` (NEEDS the atn2 positive-scaling lemma). -/
+/-- HOL `dih_x_dim_reduction` (NEEDS the atn2PA18 positive-scaling lemma). -/
 theorem dih_x_dim_reduction_p22 (y1 y2 y3 y4 y5 y6 : ℝ)
     (hy1 : 0 < y1) (hy2 : 0 < y2) (hy3 : 0 < y3)
     (hd : 0 < deltaY_p22 y1 y2 y3 y4 y5 y6) :
@@ -606,11 +606,11 @@ theorem xrr_lt_16_p22 (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2) (hy6 : 0 < 
 /-- HOL `ups_x_triangle_ineq`. -/
 theorem ups_x_triangle_ineq_p22 (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2)
     (hy6 : 0 < y6) :
-    (0 < upsX (y1 * y1) (y2 * y2) (y6 * y6) ↔
+    (0 < upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6) ↔
       (y1 < y2 + y6 ∧ y2 < y1 + y6 ∧ y6 < y1 + y2)) := by
-  have hf : upsX (y1 * y1) (y2 * y2) (y6 * y6)
+  have hf : upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6)
       = (y6 + y1 - y2) * (y6 - y1 + y2) * ((y1 + y2 - y6) * (y1 + y2 + y6)) := by
-    unfold upsX; ring
+    unfold upsXPA18; ring
   have hD : 0 < y1 + y2 + y6 := by linarith
   constructor
   · intro hpos
@@ -637,14 +637,14 @@ theorem ups_x_triangle_ineq_p22 (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2)
 
 /-- HOL `xrr_bounds`. -/
 theorem xrr_bounds_p22 (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2) (hy6 : 0 < y6)
-    (hu : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6)) :
+    (hu : 0 < upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6)) :
     0 < xrr y1 y2 y6 ∧ xrr y1 y2 y6 < 16 := by
   obtain ⟨t1, t2, t3⟩ := (ups_x_triangle_ineq_p22 y1 y2 y6 hy1 hy2 hy6).1 hu
   exact ⟨xrr_pos_p22 y1 y2 y6 hy1 hy2 t1 t2, xrr_lt_16_p22 y1 y2 y6 hy1 hy2 hy6 t3⟩
 
 /-- HOL `xrr_bounds_2`. -/
 theorem xrr_bounds_2_p22 (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2) (hy6 : 0 < y6) :
-    (0 < upsX (y1 * y1) (y2 * y2) (y6 * y6) ↔
+    (0 < upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6) ↔
       0 < xrr y1 y2 y6 ∧ xrr y1 y2 y6 < 16) := by
   constructor
   · intro hu
@@ -678,14 +678,14 @@ theorem xrr_bounds_2_p22 (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2) (hy6 : 0
 
 /-- HOL `xrr_le_16`. -/
 theorem xrr_le_16_p22 (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2) (hy6 : 0 < y6)
-    (hu : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6)) : xrr y1 y2 y6 ≤ 16 :=
+    (hu : 0 < upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6)) : xrr y1 y2 y6 ≤ 16 :=
   le_of_lt (xrr_bounds_p22 y1 y2 y6 hy1 hy2 hy6 hu).2
 
-/-- HOL `arclength_xrr` (NEEDS the atn2/acs bridge: `arcLength a b c =
-π/2 + atn2 (√upsX) (c²-a²-b²)` equals `acs ((a²+b²-c²)/(2ab))` on the
+/-- HOL `arclength_xrr` (NEEDS the atn2PA18/acs bridge: `arcLength a b c =
+π/2 + atn2PA18 (√upsXPA18) (c²-a²-b²)` equals `acs ((a²+b²-c²)/(2ab))` on the
 positive-ups domain). -/
 theorem arclength_xrr_p22 (y1 y2 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2) (hy6 : 0 < y6)
-    (hu : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6)) :
+    (hu : 0 < upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6)) :
     arcLength y1 y2 y6 = acsP22 (1 - xrr y1 y2 y6 / 8) := by
   sorry
 
@@ -775,7 +775,7 @@ theorem SECOND_DERIVATIVE_TEST_COMPOSE_p22 (P Q : ℝ → Prop) (x y : ℝ) (s :
 theorem delta_y_pos_xrr_p22 (y1 y2 y3 y4 y5 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2)
     (hy3 : 0 < y3) :
     (0 < deltaY_p22 y1 y2 y3 y4 y5 y6 ↔
-      0 < deltaX 4 4 4 (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6)) := by
+      0 < deltaXPA18 4 4 4 (xrr y2 y3 y4) (xrr y1 y3 y5) (xrr y1 y2 y6)) := by
   have h := delta_x_xrr_p22 y1 y2 y3 y4 y5 y6
     (by linarith) (by linarith) (by linarith)
   have h64 : 0 < (64 : ℝ) := by norm_num
@@ -795,11 +795,11 @@ theorem delta_y_pos_xrr_p22 (y1 y2 y3 y4 y5 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < 
 delta-y bridge). -/
 theorem xrr_convert_p22 (y1 y2 y3 y5 y6 : ℝ) (hy1 : 0 < y1) (hy2 : 0 < y2)
     (hy3 : 0 < y3) (hy5 : 0 < y5) (hy6 : 0 < y6)
-    (hu5 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5))
-    (hu6 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6)) :
+    (hu5 : 0 < upsXPA18 (y1 * y1) (y3 * y3) (y5 * y5))
+    (hu6 : 0 < upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6)) :
     {y | 0 < y ∧ 0 < xrr y2 y3 y ∧ xrr y2 y3 y < 16 ∧
-      0 < deltaX 4 4 4 (xrr y2 y3 y) (xrr y1 y3 y5) (xrr y1 y2 y6)} =
-    {y | 0 < y ∧ 0 < upsX (y2 * y2) (y3 * y3) (y * y) ∧
+      0 < deltaXPA18 4 4 4 (xrr y2 y3 y) (xrr y1 y3 y5) (xrr y1 y2 y6)} =
+    {y | 0 < y ∧ 0 < upsXPA18 (y2 * y2) (y3 * y3) (y * y) ∧
       0 < deltaY_p22 y1 y2 y3 y y5 y6} := by
   sorry
 
@@ -820,10 +820,10 @@ theorem real_open_contains_real_interval_p22 (x : ℝ) (s : Set ℝ) (hx : x ∈
 theorem SECOND_DERIVATIVE_TEST_TAUM_p22 (a b y1 y2 y3 y4 y5 y6 : ℝ)
     (hy4 : y4 ∈ Set.Ioo a b)
     (hsub : Set.Ioo a b ⊆ {y | 0 < deltaY_p22 y1 y2 y3 y y5 y6 ∧ 0 < y ∧
-      0 < upsX (y2 * y2) (y3 * y3) (y * y)})
+      0 < upsXPA18 (y2 * y2) (y3 * y3) (y * y)})
     (hy1 : 0 < y1) (hy2 : 0 < y2) (hy3 : 0 < y3) (hy5 : 0 < y5) (hy6 : 0 < y6)
-    (hu6 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6))
-    (hu5 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5))
+    (hu6 : 0 < upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6))
+    (hu5 : 0 < upsXPA18 (y1 * y1) (y3 * y3) (y5 * y5))
     (hcrit : num1_p22 (rho y1) (rho y2) (rho y3) (xrr y2 y3 y4) (xrr y1 y3 y5)
         (xrr y1 y2 y6) = 0 →
       dnum1_p22 (rho y1) (rho y2) (rho y3) (xrr y2 y3 y4) (xrr y1 y3 y5)
@@ -848,9 +848,9 @@ theorem FIRST_DERIVATIVE_TEST_TAUM_p22 (y1 y2 y3 y4 y5 y6 : ℝ)
     (hd : 0 < deltaY_p22 y1 y2 y3 y4 y5 y6)
     (hy1 : 0 < y1) (hy2 : 0 < y2) (hy3 : 0 < y3) (hy5 : 0 < y5) (hy6 : 0 < y6)
     (hy4 : 0 < y4)
-    (hu6 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6))
-    (hu5 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5))
-    (hu4 : 0 < upsX (y2 * y2) (y3 * y3) (y4 * y4))
+    (hu6 : 0 < upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6))
+    (hu5 : 0 < upsXPA18 (y1 * y1) (y3 * y3) (y5 * y5))
+    (hu4 : 0 < upsXPA18 (y2 * y2) (y3 * y3) (y4 * y4))
     (hn : 0 < num1_p22 (rho y1) (rho y2) (rho y3) (xrr y2 y3 y4) (xrr y1 y3 y5)
       (xrr y1 y2 y6)) :
     ∃ a b, y4 ∈ Set.Ioo a b ∧ ∀ y4' y4'', y4' ∈ Set.Ioo a b → y4'' ∈ Set.Ioo a b →
@@ -1335,7 +1335,7 @@ theorem real_open_delta_y_p22 (y1 y2 y3 y5 y6 : ℝ) :
 
 /-- HOL `real_open_ups_y` (NEEDS `ups_x` continuity). -/
 theorem real_open_ups_y_p22 (y1 y2 : ℝ) :
-    IsOpen {y6 | 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6)} := by
+    IsOpen {y6 | 0 < upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6)} := by
   sorry
 
 /-! ## Section L: remaining machinery and the funlist case bank -/
@@ -1421,9 +1421,9 @@ theorem INTERIOR_ANGLE1_AZIM_p22 (s : ScsV39) (vv : ℕ → V3) (i : ℕ)
       interiorAngle1 0 f (vv i) := by
   sorry
 
-/-- HOL `delta_x4_imp_obtuse` (NEEDS the atn2 sign kit). -/
+/-- HOL `delta_x4_imp_obtuse` (NEEDS the atn2PA18 sign kit). -/
 theorem delta_x4_imp_obtuse_p22 (x1 x2 x3 x4 x5 x6 : ℝ)
-    (h1 : 0 < x1) (h2 : 0 ≤ deltaX x1 x2 x3 x4 x5 x6)
+    (h1 : 0 < x1) (h2 : 0 ≤ deltaXPA18 x1 x2 x3 x4 x5 x6)
     (h3 : deltaX4 x1 x2 x3 x4 x5 x6 < 0) :
     Real.pi / 2 < dihXf_p22 x1 x2 x3 x4 x5 x6 := by
   sorry
@@ -1571,10 +1571,10 @@ theorem LEMMA_1834976363_p22 (h : main_nonlinear_terminal_v11)
     (hx5 : (2 / h0) ^ 2 ≤ xrr y1 y3 y5) (hx6 : (2 / h0) ^ 2 ≤ xrr y1 y2 y6)
     (hy4 : y4 ∈ Set.Ioo a b)
     (hsub : Set.Ioo a b ⊆ {y | 0 < deltaY_p22 y1 y2 y3 y y5 y6 ∧ 0 < y ∧
-      0 < upsX (y2 * y2) (y3 * y3) (y * y)})
+      0 < upsXPA18 (y2 * y2) (y3 * y3) (y * y)})
     (hy5 : 0 < y5) (hy6 : 0 < y6)
-    (hu6 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6))
-    (hu5 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5)) :
+    (hu6 : 0 < upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6))
+    (hu5 : 0 < upsXPA18 (y1 * y1) (y3 * y3) (y5 * y5)) :
     ∃ y4', y4' ∈ Set.Ioo a b ∧ taum_p22 y1 y2 y3 y4' y5 y6 < taum_p22 y1 y2 y3 y4 y5 y6 := by
   sorry
 
@@ -1592,9 +1592,9 @@ theorem NUM1_GENERIC_p22 (x4inf x4sup x5inf x5sup x6inf x6sup y1 y2 y3 y4 y5 y6 
     (hx6 : x6inf ≤ xrr y1 y2 y6 ∧ xrr y1 y2 y6 ≤ x6sup)
     (hy4 : 0 < y4) (hy5 : 0 < y5) (hy6 : 0 < y6)
     (hd : 0 < deltaY_p22 y1 y2 y3 y4 y5 y6)
-    (hu4 : 0 < upsX (y2 * y2) (y3 * y3) (y4 * y4))
-    (hu6 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6))
-    (hu5 : 0 < upsX (y1 * y1) (y3 * y3) (y5 * y5)) :
+    (hu4 : 0 < upsXPA18 (y2 * y2) (y3 * y3) (y4 * y4))
+    (hu6 : 0 < upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6))
+    (hu5 : 0 < upsXPA18 (y1 * y1) (y3 * y3) (y5 * y5)) :
     ∃ a b, y4 ∈ Set.Ioo a b ∧ ∀ y4' y4'', y4' ∈ Set.Ioo a b → y4'' ∈ Set.Ioo a b →
       y4' < y4'' → taum_p22 y1 y2 y3 y4' y5 y6 < taum_p22 y1 y2 y3 y4'' y5 y6 := by
   sorry
@@ -1605,7 +1605,7 @@ theorem LEMMA_4828966562_p22 (h : main_nonlinear_terminal_v11) (y1 y2 y3 y4 y5 y
     (hy3 : 2 ≤ y3 ∧ y3 ≤ 2 * h0) (hy4 : 2 ≤ y4 ∧ y4 ≤ 2 * h0)
     (hy5 : 2 ≤ y5 ∧ y5 ≤ 3.01) (hy6 : 3 ≤ y6)
     (hd : 0 < deltaY_p22 y1 y2 y3 y4 y5 y6)
-    (hu6 : 0 < upsX (y1 * y1) (y2 * y2) (y6 * y6)) :
+    (hu6 : 0 < upsXPA18 (y1 * y1) (y2 * y2) (y6 * y6)) :
     ∃ a b, y4 ∈ Set.Ioo a b ∧ ∀ y4' y4'', y4' ∈ Set.Ioo a b → y4'' ∈ Set.Ioo a b →
       y4' < y4'' → taum_p22 y1 y2 y3 y4' y5 y6 < taum_p22 y1 y2 y3 y4'' y5 y6 := by
   sorry

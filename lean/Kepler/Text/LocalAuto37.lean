@@ -48,7 +48,7 @@ Encoding (house conventions, cf. LocalAuto31/34):
   `aff {a,b}` ↔ `affineSpan ℝ ({a, b} : Set V3)`; `collinear {a,b,c}` ↔
   `Collinear ℝ ({a, b, c} : Set V3)`; `azim` ↔ `Kepler.Geom.azim`.
 - `x cross y` ↔ `cross3_p37` (verbatim copy of the shared `cross3`; see the
-  def comment for the PackingAuto18/PackingAuto20 `atn2` conflict);
+  def comment for the PackingAuto18/PackingAuto20 `atn2PA18` conflict);
   `x dot y` ↔ `⬝ᵥ` after coercion to `Fin 3 → ℝ`; `norm` ↔ `‖·‖`.
 - HOL `f continuous atreal r` ↔ `ContinuousAt f r` for point-`atreal`
   statements (LocalAuto6/14 convention).  EXCEPTION, documented: in
@@ -103,8 +103,8 @@ open Kepler.Geom Set Classical
 `PackingAuto18.cross3` / `TopologyFan.cross3` body.  WHY A COPY: this file
 imports `LocalAuto1`, whose tree loads `PackingAuto18`; the same-wave
 `LocalAuto2`/`LocalAuto9` trees load `PackingAuto20`, and the two declare
-conflicting `Kepler.Text.atn2` copies, so the trees cannot coexist.
-NEEDS: switch to the shared `cross3` once the `atn2` shadowing is merged. -/
+conflicting `Kepler.Text.atn2PA18` copies, so the trees cannot coexist.
+NEEDS: switch to the shared `cross3` once the `atn2PA18` shadowing is merged. -/
 noncomputable def cross3_p37 (a b : V3) : V3 :=
   WithLp.toLp 2 (crossProduct ((a : V3) : Fin 3 → ℝ) ((b : V3) : Fin 3 → ℝ))
 
