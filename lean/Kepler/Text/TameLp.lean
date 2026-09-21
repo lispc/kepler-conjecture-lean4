@@ -1,8 +1,10 @@
 /-
   Kepler.Text.TameLp — formal_lp/hypermap 桥章（KCBLRQC / BDJYFFB / CRTTXAT /
   JGTDEBU / SZIPOAS / CDTETAT 群 + `lp_fan` 支撑件）的定理陈述层移植。
-  骨架模式：证明体 `sorry` + DISCHARGES 注明；供主定理债务图
-  （Kepler/Assembly.lean §2c `mqmsmab`、§2d `lpArchiveCertificates`）落锚。
+  填实状态：JGTDEBU 全组 + CDTETAT/SZIPOAS + KCBLRQC/BDJYFFB1/BDJYFFB2
+  已真证明；剩余 sorry = fully_surrounded_perimeter_bound /
+  sum_tauVEF_upper_bound / ineq_tauK_tauVEF_std 群 / CRTTXAT（各依赖
+  未移植深章，见 §8 债务图）。
 
   依赖清单来源：`text_formalization/tame/ssreflect/MQMSMAB-compiled.hl`
   头部 needs（lp_ineqs_proofs / lp_main_estimate / CDTETAT / KCBLRQC）+
@@ -38,6 +40,7 @@ import Kepler.Text.ConformingDefs
 import Kepler.Text.ConformingAuto1
 import Kepler.Text.ConformingAuto21
 import Kepler.Text.ConformingAuto23
+import Kepler.Text.ContraFan
 import Kepler.Geom.LuneVolume
 
 namespace Kepler.Text.TameLp
@@ -348,13 +351,6 @@ noncomputable def faceSetOfFan (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E
 def PerimeterBound (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E) : Prop :=
   ∀ f ∈ faceSetOfFan V E hfan, setSum f (fun d => arcV 0 d.1 d.2) ≤ 2 * Real.pi
 
-/-- HOL `kcblrqc_ineq_def`（`tame/ssreflect/tame_lemmas-compiled.hl:34-46`）：
-HOL 本体是对 Ineq 数据库按 flypaper ID 过滤后的不等式大合取
-（`KCBLRQC`、`3287695934`、`6988401556`、`3862621143 side` 等机器生成项），
-不具可手抄公式形态。骨架期折算为占位 `True`（Assembly §1c `KcblrqcIneqDef`
-同形折算；真化依赖 G4 证书数据库）。 -/
-def KcblrqcIneqDef : Prop := True
-
 /-- HOL `darts_k`（`formal_lp/hypermap/ssreflect/list_hypermap-compiled.hl:19`）。 -/
 def dartsK {α : Type*} [DecidableEq α] (k : ℕ) (H : Hypermap α) : Set α :=
   {d | d ∈ H.darts ∧ (H.face d).ncard = k}
@@ -488,6 +484,51 @@ def TamePlanarHypermap {α : Type*} [DecidableEq α] (H : Hypermap α) : Prop :=
   Tame1 H ∧ Tame2 H ∧ Tame3 H ∧ Tame4 H ∧ Tame5a H ∧ Tame8 H ∧ Tame9a H ∧
     Tame10 H ∧ Tame11a H ∧ Tame11b H ∧ Tame12o H ∧ Tame13a H
 
+/-- CDTETAT :155-160 结论中的 20 个容许 `(p, q+r)` 对
+（`CDTETAT_lemma1` :44-46 的集合字面量；置于 §1 供 `KcblrqcIneqDef`
+表切片引用）。 -/
+def cdTetatPairs : List (ℕ × ℕ) :=
+  [(0, 3), (0, 4), (0, 5), (1, 2), (1, 3), (1, 4), (2, 1), (2, 2), (2, 3),
+    (3, 1), (3, 2), (3, 3), (4, 0), (4, 1), (4, 2), (5, 0), (5, 1),
+    (6, 0), (6, 1), (7, 0)]
+
+/-- HOL `kcblrqc_ineq_def`（`tame/ssreflect/tame_lemmas-compiled.hl:34-46`，
+Ineq 数据库机器大合取）的**本章消费切片**折算。CDTETAT / KCBLRQC /
+BDJYFFB1/2 从 `kcblrqc_ineq_def` 抽取的全部事实为四类：
+1. 两条 azim 边界——`TRIANGULAR_FACE_AZIM_DART_BOUNDS`（tame_general.hl:739-746，
+   机器 ineq `5735387903`/`5490182221`）与 `non_triangular_face_azim_dart_bound`
+   （ssreflect/tame_lemmas-compiled.hl:895-918，机器 `DIH_Y_INEQ`）的结论形；
+2. `get_b_tame_ineq` 表（KCBLRQC.vhl `lp_data`）r = 0 情形：20 个 node-type
+   `(p, q, 0)`（`(p, q) ∈ cdTetatPairs`）给 `b_tame p q ≤ sum
+   (set_of_face_meeting_node H d) tauVEF`（内含 `lp_main_estimate` 消费）；
+3. 同表 6 个 r > 0 node-type（`(6,0,1)/(3,0,3)/(3,1,2)/(3,2,1)/(4,0,2)/(4,1,1)`）
+   的机器不等式组合为数值矛盾（如 `5.8218 ≤ 5.4742…`），折算为 `False`；
+4. 同表 type `(5,0,1)` 行给三角形 tauVEF 和 `≥ 0.6366`（精确数值
+   `0.626·6.28319 − 0.7199 − 3.85 = 0.63662…`；BDJYFFB2 消费）。
+真化依赖 G4 证书数据库；Assembly §1c 同名占位（`True`）独立维持，两处
+接口在 G4 落地后统一。 -/
+def KcblrqcIneqDef : Prop :=
+  (∀ (V : Set V3) (hfan : FAN 0 V (ESTD V)) (y : V3 × V3), Contravening V →
+      y ∈ dartOfFan V (ESTD V) →
+      (((hypermapOfFanTl V (ESTD V) hfan).face y).ncard = 3 →
+          (0.852:ℝ) < azimDart V (ESTD V) y ∧ azimDart V (ESTD V) y < 1.893) ∧
+        (3 < ((hypermapOfFanTl V (ESTD V) hfan).face y).ncard →
+          (1.15:ℝ) < azimDart V (ESTD V) y)) ∧
+  (∀ (hmain : lp_main_estimate) (V : Set V3) (hfan : FAN 0 V (ESTD V)),
+      Contravening V → ∀ d ∈ dartOfFan V (ESTD V), ∀ p q : ℕ, (p, q) ∈ cdTetatPairs →
+        typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d = (p, q, 0) →
+        bTame p q ≤ setSum (setOfFaceMeetingNode (hypermapOfFanTl V (ESTD V) hfan) d)
+          (fun f => tauVEF_p2 V (ESTD V) f)) ∧
+  (∀ (hmain : lp_main_estimate) (V : Set V3) (hfan : FAN 0 V (ESTD V)),
+      Contravening V → ∀ d ∈ dartOfFan V (ESTD V),
+        typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d ∈
+          [(6, 0, 1), (3, 0, 3), (3, 1, 2), (3, 2, 1), (4, 0, 2), (4, 1, 1)] → False) ∧
+  (∀ (hmain : lp_main_estimate) (V : Set V3) (hfan : FAN 0 V (ESTD V)),
+      Contravening V → ∀ d ∈ dartOfFan V (ESTD V),
+        typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d = (5, 0, 1) →
+        (0.6366:ℝ) ≤ setSum {f | f ∈ setOfFaceMeetingNode
+            (hypermapOfFanTl V (ESTD V) hfan) d ∧ f.ncard = 3}
+          (fun f => tauVEF_p2 V (ESTD V) f))
 /-! ## 2. hypermap_of_fan 的 dart 层展开（hypermap_and_fan 组） -/
 
 /-- HOL `COMPONENTS_HYPERMAP_OF_FAN`（`fan/hypermap_and_fan.hl:495-499`）的
@@ -746,13 +787,18 @@ end SurroundedCount
 
 /-- HOL `CONTRAVENING_FAN`（tame_general.hl:247-259）的忠实 twin：
 `(V, ESTD V)` 是 fan。
-DISCHARGES：骨架占位；HOL 证明经 `Ckqowsa.CKQOWSA`（CKQOWSA 章：
-ESTD_fan0/fan1/fan2/fan6 + fan7_2/fan7_3 的 aff_ge 交分配律锥几何核心，
-约 600 行），该章未移植。注：Assembly.lean §2c `contraveningFan`（:444）
-为同一债务的接口占位。 -/
+真证明 2026-09-21（T3 波）：CKQOWSA 章已移植为 `Kepler.Text.ContraFan`
+（18 条定理 16 条真证明；仅两个深几何核 LEMMA_3_POINTS_FINAL ~1300 行/
+LEMMA_4_POINTS_FINAL ~3800 行为骨架陈述，见 ContraFan.lean DISCHARGES）。
+`ESTD` 同体 defeq，`V ≠ ∅` 由 card 合取项（13/14/15）推出。
+注：Assembly.lean §2c `contraveningFan`（:444）为同一债务的接口占位。 -/
 theorem contravening_fanTl (V : Set V3) (hc : Contravening V) :
     FAN 0 V (ESTD V) := by
-  sorry
+  have hne : V ≠ ∅ := by
+    have hcard : V.ncard = 13 ∨ V.ncard = 14 ∨ V.ncard = 15 := hc.2.2.2.2.1
+    rintro rfl
+    simp at hcard
+  exact ContraFan.contraveningFanTl V hc.1 hc.2.1 hne
 
 /-- HOL `contravening_lp_fan` 的 FAN-前提形（lp_ineqs_proofs-compiled.hl
 section Contravening 的 `fanV` 显式化）：除 `CONTRAVENING_FAN` 一步外逐合取
@@ -775,7 +821,7 @@ section `Contravening` finalized 形）。
 HOL 证明 4 步（lp_fan 展开 + fanV/CONTRAVENING_FAN +
 CONTRAVENING_IMP_FULLY_SURROUNDED + IN_ESTD 算术）；后三步由
 `contravening_lp_fan_of_fan` 真证明落地，FAN 合取项经
-`contravening_fanTl`（CKQOWSA 章，未移植）记欠。 -/
+`contravening_fanTl`（ContraFan.lean，T3 波真化）闭合。 -/
 theorem contravening_lp_fan (V : Set V3) (hc : Contravening V) :
     LpFan V (ESTD V) :=
   contravening_lp_fan_of_fan V (contravening_fanTl V hc) hc
@@ -1186,21 +1232,452 @@ theorem JGTDEBU11 (V : Set V3) (hc : Contravening V) (hfan : FAN 0 V (ESTD V)) :
   exact SURROUNDED_IMP_CARD_NODE_GE_3_TL hfan hd1
     (hc.2.2.2.2.2.1 d.1 (FAN_in_setOfEdge 0 V (ESTD V) d.1 d.2 hfan hd1).1)
 
+/-! ### 4b. setSum 计数辅助（SUM_BOUND / SUM_BOUND_LT / SUM_UNION 折算） -/
+
+section SetSumAux
+
+variable {α : Type*}
+
+/-- 常数和的基数倍数（ℕ-基数转 ℝ 的显式归纳，规避 smul/cast 规则细节）。 -/
+private theorem sum_const_cast {t : Finset α} (c : ℝ) :
+    ∑ _y ∈ t, c = (t.card : ℝ) * c := by
+  induction t using Finset.induction_on with
+  | empty => simp
+  | insert a t ha ih =>
+    rw [Finset.sum_insert ha, Finset.card_insert_of_notMem ha, Nat.cast_add,
+      add_mul, ih]
+    ring
+
+/-- HOL `SUM_BOUND`：有限集上逐点下界的和下界。 -/
+theorem setSum_ge_of_le {s : Set α} {f : α → ℝ} {c : ℝ}
+    (hs : s.Finite) (hf : ∀ y ∈ s, c ≤ f y) : s.ncard * c ≤ setSum s f := by
+  rw [setSum, dif_pos hs, Set.ncard_eq_toFinset_card s hs]
+  calc (hs.toFinset.card : ℝ) * c = ∑ _y ∈ hs.toFinset, c := (sum_const_cast c).symm
+    _ ≤ ∑ y ∈ hs.toFinset, f y :=
+      Finset.sum_le_sum
+        (fun y hy => hf y ((Set.Finite.mem_toFinset hs).mp hy))
+
+/-- HOL `SUM_BOUND` 上界版（逐点 ≤ ⟹ 和 ≤ card * c）。 -/
+theorem setSum_le_of_le {s : Set α} {f : α → ℝ} {c : ℝ}
+    (hs : s.Finite) (hf : ∀ y ∈ s, f y ≤ c) : setSum s f ≤ s.ncard * c := by
+  rw [setSum, dif_pos hs, Set.ncard_eq_toFinset_card s hs]
+  calc (∑ y ∈ hs.toFinset, f y) ≤ (∑ _y ∈ hs.toFinset, c) :=
+      Finset.sum_le_sum (fun y hy => hf y ((Set.Finite.mem_toFinset hs).mp hy))
+    _ = (hs.toFinset.card : ℝ) * c := sum_const_cast c
+
+/-- HOL `SUM_BOUND_LT`（逐点 ≤ + 一点 < ⟹ 和 < card * c）。 -/
+theorem setSum_lt_of_le {s : Set α} {f : α → ℝ} {c : ℝ}
+    (hs : s.Finite) (hle : ∀ y ∈ s, f y ≤ c) (hex : ∃ y₀ ∈ s, f y₀ < c) :
+    setSum s f < s.ncard * c := by
+  obtain ⟨y₀, hy₀, hlt⟩ := hex
+  rw [setSum, dif_pos hs, Set.ncard_eq_toFinset_card s hs]
+  have hy₀' : y₀ ∈ hs.toFinset := (Set.Finite.mem_toFinset hs).mpr hy₀
+  have h1 : (∑ y ∈ hs.toFinset, f y) ≤ (∑ _y ∈ hs.toFinset, c) :=
+    Finset.sum_le_sum
+      (fun y hy => hle y ((Set.Finite.mem_toFinset hs).mp hy))
+  have h2 : (∑ y ∈ hs.toFinset, f y) < (∑ _y ∈ hs.toFinset, c) :=
+    Finset.sum_lt_sum
+      (fun y hy => hle y ((Set.Finite.mem_toFinset hs).mp hy))
+      ⟨y₀, hy₀', hlt⟩
+  rw [sum_const_cast c] at h2
+  exact h2
+
+/-- 单点插入的和分解（`SUM_CLAUSES` 折算）。 -/
+theorem setSum_insert {s : Set α} {a : α} (ha : a ∉ s) (hs : s.Finite)
+    (f : α → ℝ) : setSum (insert a s) f = f a + setSum s f := by
+  rw [setSum, setSum, dif_pos (hs.insert a), dif_pos hs,
+    Set.Finite.toFinset_insert (hs.insert a)]
+  exact Finset.sum_insert (by simpa using ha)
+
+/-- HOL `SUM_UNION`（不交有限集的和可加）。 -/
+theorem setSum_union_disjoint [DecidableEq α] {s t : Set α} {f : α → ℝ}
+    (hd : Disjoint s t) (hs : s.Finite) (ht : t.Finite) :
+    setSum (s ∪ t) f = setSum s f + setSum t f := by
+  rw [setSum, setSum, setSum, dif_pos (hs.union ht), dif_pos hs, dif_pos ht,
+    Set.Finite.toFinset_union hs ht]
+  have hd' : Disjoint hs.toFinset ht.toFinset := by
+    rw [Finset.disjoint_left]
+    intro a ha hta
+    exact (Set.disjoint_left.mp hd) ((Set.Finite.mem_toFinset hs).mp ha)
+      ((Set.Finite.mem_toFinset ht).mp hta)
+  exact Finset.sum_union hd'
+
+end SetSumAux
+
 /-! ## 5. CDTETAT / SZIPOAS（tame/CDTETAT.hl，Solovyev 估计，
 ssreflect 子目录专用件） -/
 
-/-- CDTETAT :155-160 结论中的 20 个容许 `(p, q+r)` 对
-（`CDTETAT_lemma1` :44-46 的集合字面量）。 -/
-def cdTetatPairs : List (ℕ × ℕ) :=
-  [(0, 3), (0, 4), (0, 5), (1, 2), (1, 3), (1, 4), (2, 1), (2, 2), (2, 3),
-    (3, 1), (3, 2), (3, 3), (4, 0), (4, 1), (4, 2), (5, 0), (5, 1),
-    (6, 0), (6, 1), (7, 0)]
+/-- HOL `CDTETAT_lemma1`（`tame/CDTETAT.hl:34-173`）：`&p * 0.852 + &t * 1.15 ≤ 2π`
+与 `2π < &p * 1.9 + &t * π` 迫使 `(p, t)` 落入 20 对列表。HOL 证明对 `p ≤ 7`
+与逐 `p` 的 `t` 上下界做 8 分支算术；此处对 `(p, t)` 同时做区间枚举
+（Mathlib `Real.pi_gt_d4`/`Real.pi_lt_d4` = HOL `PI_APPROX_4`），每分支
+`decide`（成员）或 `linarith`（排除）。 -/
+theorem CDTETAT_lemma1 (p t : ℕ)
+    (h1 : (p:ℝ) * 0.852 + (t:ℝ) * 1.15 ≤ 2 * Real.pi)
+    (h2 : (2:ℝ) * Real.pi < (p:ℝ) * 1.9 + (t:ℝ) * Real.pi) :
+    (p, t) ∈ cdTetatPairs := by
+  have hpi1 : (3.1415:ℝ) ≤ Real.pi := Real.pi_gt_d4.le
+  have hpi2 : Real.pi ≤ (3.1416:ℝ) := Real.pi_lt_d4.le
+  have htp : p ≤ 7 := by
+    have h8 : p < 8 := Nat.cast_lt.mp (by linarith : (p:ℝ) < 8)
+    omega
+  have htle : t ≤ 5 := by
+    have h6 : t < 6 := Nat.cast_lt.mp (by linarith : (t:ℝ) < 6)
+    omega
+  interval_cases p <;> interval_cases t
+  all_goals push_cast at h1 h2 ⊢
+  all_goals first
+    | (simp only [cdTetatPairs]; decide)
+    | (exfalso; linarith)
+
+/-- 成对 `(P, T) ∈ cdTetatPairs` 的粗界（成员逐项消解；`List.mem_nil_iff`
+收尾后 `omega`）。 -/
+theorem cdTetatPairs_bound (P T : ℕ) (h : (P, T) ∈ cdTetatPairs) :
+    P ≤ 7 ∧ T ≤ 5 := by
+  simp only [cdTetatPairs, List.mem_cons, List.mem_nil_iff, false_or,
+    Prod.mk.injEq, or_false] at h
+  omega
+
+theorem cdTetatPairs_sum_le (P T : ℕ) (h : (P, T) ∈ cdTetatPairs) : P + T ≤ 7 := by
+  simp only [cdTetatPairs, List.mem_cons, List.mem_nil_iff, false_or,
+    Prod.mk.injEq, or_false] at h
+  omega
+
+/-! ### 5a. CDTETAT 支撑件（hypermap_and_fan.hl:2358/2447 组 +
+tame_general.hl azim 边界的 Lean 折算） -/
+
+section CdtetatAux
+
+variable {V : Set V3} {E : Set (Set V3)}
+
+/-- σ-像的满射性（σ 在 soe 上单射 + `card_sigmaFan_image`）。 -/
+theorem sigmaFan_surj_soe (hfan : FAN 0 V E) (v : V3) (w : V3)
+    (hw : w ∈ setOfEdge v V E) :
+    ∃ z ∈ setOfEdge v V E, sigmaFan 0 V E v z = w := by
+  have hsoe := remark_finite_fan1 v V E hfan.2.2.1.1
+  have hsub : (sigmaFan 0 V E v) '' (setOfEdge v V E) ⊆ setOfEdge v V E := by
+    rintro y ⟨z, hz, rfl⟩
+    exact sigma_fan_in_setOfEdge hfan hz
+  have heq : (sigmaFan 0 V E v) '' (setOfEdge v V E) = setOfEdge v V E := by
+    refine Set.Subset.antisymm hsub ?_
+    intro y hy
+    by_contra hnot
+    have hss : (sigmaFan 0 V E v) '' (setOfEdge v V E) ⊂ setOfEdge v V E :=
+      lt_of_le_of_ne hsub (fun he => hnot (show y ∈ sigmaFan 0 V E v '' setOfEdge v V E by
+        rw [he]; exact hy))
+    have hlt := Set.ncard_lt_ncard hss hsoe
+    rw [card_sigmaFan_image hfan v] at hlt
+    omega
+  have hw' : w ∈ (sigmaFan 0 V E v) '' setOfEdge v V E := by rw [heq]; exact hw
+  obtain ⟨z, hz, rfl⟩ := hw'
+  exact ⟨z, hz, rfl⟩
+
+/-- HOL `INVERSE_SIGMA_FAN` 区域的刻画：`inverse_sigma_fan v w` 是
+`σ_v` 的原像（`w ∈ soe` 时原像唯一：soe 外恒等被迫排除，soe 内由
+`mono_sigma_fan` 唯一；存在性经 `sigmaFan_surj_soe` + `Function.invFun_eq`）。 -/
+theorem inverseSigmaFan_eq (hfan : FAN 0 V E) {v w z : V3}
+    (hw : w ∈ setOfEdge v V E) (hinv : inverseSigmaFan 0 V E v w = z) :
+    z ∈ setOfEdge v V E ∧ sigmaFan 0 V E v z = w := by
+  haveI : Nonempty V3 := ⟨0⟩
+  have hu_soe : ∀ z', extensionSigmaFan 0 V E v z' = w → z' ∈ setOfEdge v V E := by
+    intro z' hz'
+    by_contra hnot
+    simp only [extensionSigmaFan, if_pos hnot] at hz'
+    exact hnot (hz' ▸ hw)
+  obtain ⟨w₀, hw₀, hw₀sig⟩ := sigmaFan_surj_soe hfan v w hw
+  have hw₀' : extensionSigmaFan 0 V E v w₀ = w := by
+    simp only [extensionSigmaFan, if_neg (not_not.mpr hw₀)]
+    exact hw₀sig
+  have happly : extensionSigmaFan 0 V E v (Function.invFun (extensionSigmaFan 0 V E v) w)
+      = w := Function.invFun_eq ⟨w₀, hw₀'⟩
+  rw [inverseSigmaFan] at hinv
+  rw [hinv] at happly
+  have hzsoe : z ∈ setOfEdge v V E := hu_soe _ happly
+  have hsig : sigmaFan 0 V E v z = w := by
+    simp only [extensionSigmaFan, if_neg (not_not.mpr hzsoe)] at happly
+    exact happly
+  exact ⟨hzsoe, hsig⟩
+
+/-- HOL `CARD_FACE_GT_1` + `CARD_SET_OF_EDGE_GT_1_IMP_CARD_FACE_GE_3` 的
+合并折算：所有邻边集 ≥ 3 元时 face 轨道 ≥ 3 元。face = {d, f d} 二元反证：
+`f²d = d` 迫使 `inverse_sigma_fan d.2 d.1 = d.1`，经 `SIGMA_FAN` 矛盾。 -/
+theorem CARD_FACE_GE_3_TL (hfan : FAN 0 V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E)
+    (hcard : ∀ v ∈ V, 3 ≤ (setOfEdge v V E).ncard) :
+    3 ≤ ((hypermapOfFanTl V E hfan).face d).ncard := by
+  set H := hypermapOfFanTl V E hfan with hHdef
+  have hdarts : d ∈ H.darts := mem_dartsTl hd
+  have hself : d ∈ H.face d := H.mem_face_self d
+  have hfd : H.faceMap d ∈ H.face d := apply_mem_orbitMap H.faceMap d
+  have hf_d_eq : H.faceMap d = (d.2, inverseSigmaFan 0 V E d.2 d.1) := by
+    rw [faceMapTl_apply hd]; rfl
+  have hvw : d.1 ≠ d.2 := edge_ne_of_fan hfan hd
+  have hne : H.faceMap d ≠ d := by
+    intro he
+    rw [hf_d_eq, Prod.mk.injEq] at he
+    exact hvw he.1.symm
+  have hperm := H.faceMap_permutes
+  have hfd1 : H.faceMap d ∈ dart1OfFan V E := by
+    rw [← dartsTl_coe]
+    exact hperm.apply_mem hdarts
+  have hfin : (H.face d).Finite := orbitMap_finite hperm d
+  have hpair : ({d, H.faceMap d} : Set (V3 × V3)) ⊆ H.face d := by
+    intro z hz
+    rcases Set.mem_insert_iff.mp hz with rfl | hz
+    · exact hself
+    · rw [Set.mem_singleton_iff] at hz
+      exact hz ▸ hfd
+  have h2 : 2 ≤ (H.face d).ncard := by
+    have hcard2 : ({d, H.faceMap d} : Set (V3 × V3)).ncard = 2 :=
+      Set.ncard_pair (Ne.symm hne)
+    calc 2 = ({d, H.faceMap d} : Set (V3 × V3)).ncard := hcard2.symm
+      _ ≤ (H.face d).ncard := Set.ncard_le_ncard hpair hfin
+  by_contra hcon
+  push_neg at hcon
+  have h2eq : (H.face d).ncard = 2 := by omega
+  have hsub_eq : ({d, H.faceMap d} : Set (V3 × V3)) = H.face d := by
+    refine Set.eq_of_subset_of_ncard_le hpair ?_ hfin
+    rw [h2eq, Set.ncard_pair (Ne.symm hne)]
+  have hf2 : H.faceMap (H.faceMap d) ∈ H.face d := by
+    have h := pow_apply_mem_orbitMap H.faceMap 2 d
+    rwa [show H.faceMap ^ 2 = H.faceMap * H.faceMap from pow_two _,
+      Equiv.Perm.mul_apply] at h
+  have hne2 : H.faceMap (H.faceMap d) ≠ H.faceMap d := fun h =>
+    hne (Equiv.injective H.faceMap h)
+  rw [← hsub_eq] at hf2
+  rw [Set.mem_insert_iff, Set.mem_singleton_iff] at hf2
+  rcases hf2 with h22 | h22
+  · -- f²d = d ⟹ 首分量 inverseSigmaFan d.2 d.1 = d.1
+    have hι : inverseSigmaFan 0 V E d.2 d.1 = d.1 := by
+      have h : H.faceMap (H.faceMap d) = ((d.1 : V3), (d.2 : V3)) := by
+        rw [h22]
+      rw [faceMapTl_apply hfd1, hf_d_eq] at h
+      simp only [fFanPair, Prod.mk.injEq] at h
+      exact h.1
+    have he21 : {d.2, d.1} ∈ E := by rw [Set.pair_comm]; exact hd
+    have hfan21 := FAN_in_setOfEdge 0 V E d.2 d.1 hfan he21
+    obtain ⟨hmem, hsig⟩ := inverseSigmaFan_eq hfan hfan21.2.2.1 hι
+    have h3d2 : 3 ≤ (setOfEdge d.2 V E).ncard := hcard d.2 hfan21.1
+    have hne1 : setOfEdge d.2 V E ≠ {d.1} := by
+      intro he
+      rw [he, Set.ncard_singleton] at h3d2
+      omega
+    exact (SIGMA_FAN hne1 hfan hmem).2.1 hsig
+  · exact hne2 h22
+
+end CdtetatAux
+
+/-! ### 5a. CDTETAT 支撑件（hypermap_and_fan.hl:2358/2447 组 +
+tame_general.hl azim 边界的 Lean 折算） -/
+
+/-- dart 的方位角 = 第 i 步角增量（`azim_fan` 在 `ncard(soe) > 1` 分支的
+展开；`σ_v (σ^[i] u) = σ^[i+1] u` 由 `iterate_succ_apply'` 收口）。 -/
+theorem azimDart_iterate_eq (hfan : FAN 0 V E) {v u : V3} (hvu : {v, u} ∈ E)
+    (hcard1 : 1 < (setOfEdge v V E).ncard) (i : ℕ)
+    (hin : i < (setOfEdge v V E).ncard) :
+    azimDart V E (v, (sigmaFan 0 V E v)^[i] u) = azimIfan 0 V E v u i := by
+  have hvw : v ≠ (sigmaFan 0 V E v)^[i] u := by
+    have he : {v, (sigmaFan 0 V E v)^[i] u} ∈ E :=
+      (properties_of_setOfEdge_fan 0 V E v _ hfan).mpr
+        (iterates_mem_setOfEdge hfan v u
+          ((properties_of_setOfEdge_fan 0 V E v u hfan).mp hvu) i)
+    exact edge_ne_of_fan hfan he
+  show (if (v, _).1 = (v, _).2 then 2 * Real.pi
+      else azimFan 0 V E (v, _).1 (v, _).2) = azimIfan 0 V E v u i
+  rw [if_neg hvw]
+  show (if (setOfEdge v V E).ncard > 1 then
+      azim 0 v ((sigmaFan 0 V E v)^[i] u) (sigmaFan 0 V E v ((sigmaFan 0 V E v)^[i] u))
+    else 2 * Real.pi) = azim 0 v ((sigmaFan 0 V E v)^[i] u)
+      ((sigmaFan 0 V E v)^[i + 1] u)
+  rw [if_pos hcard1, Function.iterate_succ_apply']
+
+/-- HOL `SUM_AZIM_DART_FULLY_SURROUNDED` 的 node 形（hypermap_and_fan.hl:2447）：
+node 轨道上 azim_dart 的和 = 2π。经 `nodeTl_eq_image` + σ-循环的
+`Finset.sum_bij` 重排 + `sum_azims_eq_2pi`。 -/
+theorem SUM_AZIM_DART_NODE_TL (hfan : FAN 0 V E) {d : V3 × V3}
+    (hd : d ∈ dart1OfFan V E) (hsurr : surroundedNode V E d.1) :
+    setSum ((hypermapOfFanTl V E hfan).node d) (fun y => azimDart V E y)
+      = 2 * Real.pi := by
+  rcases d with ⟨v, u⟩
+  have hdE : {v, u} ∈ E := hd
+  have hu_soe : u ∈ setOfEdge v V E := (properties_of_setOfEdge_fan 0 V E v u hfan).mp hdE
+  have hvV : v ∈ V := (FAN_in_setOfEdge 0 V E v u hfan hdE).1
+  have hcard3 := SURROUNDED_IMP_CARD_SET_OF_EDGE_GE_3_TL hfan hvV hsurr
+  have hne_u : setOfEdge v V E ≠ {u} := by
+    intro he
+    rw [he, Set.ncard_singleton] at hcard3
+    omega
+  have hnode : (hypermapOfFanTl V E hfan).node (v, u)
+      = (fun y => (v, y)) '' setOfEdge v V E := nodeTl_eq_image hfan hd
+  have hfin : ((hypermapOfFanTl V E hfan).node (v, u)).Finite :=
+    orbitMap_finite (hypermapOfFanTl V E hfan).nodeMap_permutes (v, u)
+  have hsoefin : (setOfEdge v V E).Finite := remark_finite_fan1 v V E hfan.2.2.1.1
+  have step1 : (∑ i ∈ Finset.range (setOfEdge v V E).ncard,
+        azimDart V E (v, (sigmaFan 0 V E v)^[i] u))
+      = setSum ((hypermapOfFanTl V E hfan).node (v, u)) (fun y => azimDart V E y) := by
+    rw [setSum, dif_pos hfin]
+    refine Finset.sum_bij (fun i _ => (v, (sigmaFan 0 V E v)^[i] u)) ?_ ?_ ?_ ?_
+    · intro i hi
+      have hmem : (v, (sigmaFan 0 V E v)^[i] u) ∈ (hypermapOfFanTl V E hfan).node (v, u) := by
+        have h1 : (hypermapOfFanTl V E hfan).nodeMap^[i] (v, u)
+            = (v, (sigmaFan 0 V E v)^[i] u) := nodeMapTl_iterate hd i
+        rw [← h1]
+        exact pow_apply_mem_orbitMap (hypermapOfFanTl V E hfan).nodeMap i (v, u)
+      exact (Set.Finite.mem_toFinset hfin).mpr hmem
+    · intro i hi j hj heq
+      have hin : i < (setOfEdge v V E).ncard := Finset.mem_range.mp hi
+      have hjn : j < (setOfEdge v V E).ncard := Finset.mem_range.mp hj
+      simp only [Prod.mk.injEq] at heq
+      rcases lt_trichotomy i j with hlt | heqi | hgt
+      · exact absurd heq.2.symm (cyclic_power_sigmaFan 0 V E hfan hdE j i hjn hlt)
+      · exact heqi
+      · exact absurd heq.2 (cyclic_power_sigmaFan 0 V E hfan hdE i j hin hgt)
+    · intro y hy
+      have hyn : y ∈ (hypermapOfFanTl V E hfan).node (v, u) :=
+        (Set.Finite.mem_toFinset hfin).mp hy
+      simp only [Hypermap.node, orbitMap, Set.mem_setOf_eq] at hyn
+      obtain ⟨n, hn⟩ := hyn
+      rw [Equiv.Perm.coe_pow] at hn
+      rw [nodeMapTl_iterate hd n] at hn
+      have hsoe : (sigmaFan 0 V E v)^[n] u ∈ setOfEdge v V E :=
+        iterates_mem_setOfEdge hfan v u hu_soe n
+      obtain ⟨j, hj, hj_eq⟩ := iterates_mem_sigmaFan hfan hdE hsoe
+      refine ⟨j, Finset.mem_range.mpr hj, ?_⟩
+      rw [hj_eq]
+      exact hn
+    · intro i hi
+      rfl
+  have step2 : (∑ i ∈ Finset.range (setOfEdge v V E).ncard,
+        azimDart V E (v, (sigmaFan 0 V E v)^[i] u))
+      = (∑ i ∈ Finset.range (setOfEdge v V E).ncard, azimIfan 0 V E v u i) :=
+    Finset.sum_congr rfl (fun i hi =>
+      azimDart_iterate_eq hfan hdE (by omega) i (Finset.mem_range.mp hi))
+  calc setSum ((hypermapOfFanTl V E hfan).node (v, u)) (fun y => azimDart V E y)
+      = ∑ i ∈ Finset.range (setOfEdge v V E).ncard,
+          azimDart V E (v, (sigmaFan 0 V E v)^[i] u) := step1.symm
+    _ = ∑ i ∈ Finset.range (setOfEdge v V E).ncard, azimIfan 0 V E v u i := step2
+    _ = 2 * Real.pi := sum_azims_eq_2pi hfan hdE hne_u
+
+/-- node 轨道上的 dart 属于 dart 集（`NODE_SUBSET_DART_OF_FAN` 折算）。 -/
+theorem nodeMem_dart1 (hfan : FAN 0 V E) {d y : V3 × V3} (hd : d ∈ dart1OfFan V E)
+    (hy : y ∈ (hypermapOfFanTl V E hfan).node d) : y ∈ dart1OfFan V E := by
+  have h := (hypermapOfFanTl V E hfan).node_subset_darts (mem_dartsTl hd) hy
+  rwa [dartsTl_coe] at h
+
+/-- HOL `FULLY_SURROUNDED_IMP_CARD_FACE_GE_3`（hypermap_and_fan.hl:2342）的
+node 形：surrounded 顶点的 node 轨道上所有 face ≥ 3 元。 -/
+theorem nodeFaceCard_ge_3 (hfan : FAN 0 V E) (hcard : ∀ v ∈ V, 3 ≤ (setOfEdge v V E).ncard)
+    {d y : V3 × V3} (hd : d ∈ dart1OfFan V E)
+    (hy : y ∈ (hypermapOfFanTl V E hfan).node d) : 3 ≤ ((hypermapOfFanTl V E hfan).face y).ncard :=
+  CARD_FACE_GE_3_TL hfan (nodeMem_dart1 hfan hd hy) hcard
+
+/-- HOL `FULLY_SURROUNDED_NODE_DECOMPOSITION`（hypermap_and_fan.hl:2358）
+的 Lean 折算：node = 三角面 dart 集 ⊔ 非三角（≥ 4）面 dart 集。 -/
+theorem FULLY_SURROUNDED_NODE_DECOMPOSITION_TL (hfan : FAN 0 V E)
+    (hcard : ∀ v ∈ V, 3 ≤ (setOfEdge v V E).ncard)
+    {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    {y | y ∈ (hypermapOfFanTl V E hfan).node d ∧ ((hypermapOfFanTl V E hfan).face y).ncard = 3} ∪
+        {y | y ∈ (hypermapOfFanTl V E hfan).node d ∧ 4 ≤ ((hypermapOfFanTl V E hfan).face y).ncard}
+      = (hypermapOfFanTl V E hfan).node d := by
+  ext y
+  simp only [Set.mem_union, Set.mem_setOf_eq]
+  constructor
+  · rintro (⟨hnode, -⟩ | ⟨hnode, -⟩)
+    · exact hnode
+    · exact hnode
+  · intro hmem
+    have h3 := nodeFaceCard_ge_3 hfan hcard hd hmem
+    rcases Nat.eq_or_lt_of_le h3 with heq | hlt
+    · exact Or.inl ⟨hmem, heq.symm⟩
+    · exact Or.inr ⟨hmem, by omega⟩
+
+/-- HOL `FULLY_SURROUNDED_IMP_CARD_NODE_EQ_SUM_NODE_TYPE`（tame_general.hl:500）
+的 Lean 折算：`(node d).ncard = p + q + r`。 -/
+theorem CARD_NODE_EQ_SUM_NODE_TYPE_TL (hfan : FAN 0 V E)
+    (hcard : ∀ v ∈ V, 3 ≤ (setOfEdge v V E).ncard)
+    (hsimple : (hypermapOfFanTl V E hfan).Simple)
+    {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    ((hypermapOfFanTl V E hfan).node d).ncard
+      = (typeOfNode (hypermapOfFanTl V E hfan) d).1
+        + ((typeOfNode (hypermapOfFanTl V E hfan) d).2.1
+          + (typeOfNode (hypermapOfFanTl V E hfan) d).2.2) := by
+  set H := hypermapOfFanTl V E hfan with hHdef
+  have htype := NODE_TYPE_lemma H d hsimple (mem_dartsTl hd)
+  have hBD : {y | y ∈ H.node d ∧ (H.face y).ncard = 4}
+      ∪ {y | y ∈ H.node d ∧ 5 ≤ (H.face y).ncard}
+      = {y | y ∈ H.node d ∧ 4 ≤ (H.face y).ncard} := by
+    ext y
+    simp only [Set.mem_union, Set.mem_setOf_eq]
+    constructor
+    · rintro (⟨hnode, h4⟩ | ⟨hnode, h5⟩)
+      · exact ⟨hnode, by omega⟩
+      · exact ⟨hnode, by omega⟩
+    · intro hmem
+      rcases Nat.eq_or_lt_of_le hmem.2 with heq | hlt
+      · exact Or.inl ⟨hmem.1, heq.symm⟩
+      · exact Or.inr ⟨hmem.1, by omega⟩
+  have hdisjBD : Disjoint {y | y ∈ H.node d ∧ (H.face y).ncard = 4}
+      {y | y ∈ H.node d ∧ 5 ≤ (H.face y).ncard} := by
+    rw [Set.disjoint_left]
+    intro a ha hb
+    rw [Set.mem_setOf_eq] at ha hb
+    omega
+  have hdisjAD : Disjoint {y | y ∈ H.node d ∧ (H.face y).ncard = 3}
+      {y | y ∈ H.node d ∧ 4 ≤ (H.face y).ncard} := by
+    rw [Set.disjoint_left]
+    intro a ha hb
+    rw [Set.mem_setOf_eq] at ha hb
+    omega
+  have hAD := FULLY_SURROUNDED_NODE_DECOMPOSITION_TL hfan hcard hd
+  have hfinN : (H.node d).Finite := orbitMap_finite H.nodeMap_permutes d
+  have hcardA : ({y | y ∈ H.node d ∧ (H.face y).ncard = 3}).Finite :=
+    hfinN.subset fun y hy => (Set.mem_setOf_eq.mp hy).1
+  have hcardD : ({y | y ∈ H.node d ∧ 4 ≤ (H.face y).ncard}).Finite :=
+    hfinN.subset fun y hy => (Set.mem_setOf_eq.mp hy).1
+  have hcardB : ({y | y ∈ H.node d ∧ (H.face y).ncard = 4}).Finite :=
+    hfinN.subset fun y hy => (Set.mem_setOf_eq.mp hy).1
+  have hcardC : ({y | y ∈ H.node d ∧ 5 ≤ (H.face y).ncard}).Finite :=
+    hfinN.subset fun y hy => (Set.mem_setOf_eq.mp hy).1
+  have hsumBD : ({y | y ∈ H.node d ∧ 4 ≤ (H.face y).ncard}).ncard
+      = ({y | y ∈ H.node d ∧ (H.face y).ncard = 4}).ncard
+        + ({y | y ∈ H.node d ∧ 5 ≤ (H.face y).ncard}).ncard := by
+    rw [← Set.ncard_union_eq hdisjBD hcardB hcardC, hBD]
+  rw [htype]
+  have h1 : (H.node d).ncard
+      = ({y | y ∈ H.node d ∧ (H.face y).ncard = 3}).ncard
+        + (({y | y ∈ H.node d ∧ (H.face y).ncard = 4}).ncard
+          + ({y | y ∈ H.node d ∧ 5 ≤ (H.face y).ncard}).ncard) := by
+    rw [← hsumBD, ← Set.ncard_union_eq hdisjAD hcardA hcardD, hAD]
+  omega
+
+
+/-- HOL `TRIANGULAR_FACE_AZIM_DART_BOUNDS`（tame_general.hl:739-746，
+机器 ineq `5735387903`/`5490182221`）的结论形；本群从
+`kcblrqc_ineq_def` 抽取（见 `KcblrqcIneqDef` 切片 1）。 -/
+theorem TRIANGULAR_FACE_AZIM_DART_BOUNDS_TL (hineq : KcblrqcIneqDef)
+    (V : Set V3) (hfan : FAN 0 V (ESTD V)) {y : V3 × V3} (hc : Contravening V)
+    (hy : y ∈ dartOfFan V (ESTD V))
+    (hcard : ((hypermapOfFanTl V (ESTD V) hfan).face y).ncard = 3) :
+    (0.852:ℝ) < azimDart V (ESTD V) y ∧ azimDart V (ESTD V) y < 1.893 :=
+  (hineq.1 V hfan y hc hy).1 hcard
+
+/-- HOL `non_triangular_face_azim_dart_bound`（ssreflect/tame_lemmas-compiled.hl:896，
+机器 `DIH_Y_INEQ`）的结论形；`KcblrqcIneqDef` 切片 1。 -/
+theorem nonTriangularFaceAzimDartBound (hineq : KcblrqcIneqDef)
+    (V : Set V3) (hfan : FAN 0 V (ESTD V)) {y : V3 × V3} (hc : Contravening V)
+    (hy : y ∈ dartOfFan V (ESTD V))
+    (hcard : 3 < ((hypermapOfFanTl V (ESTD V) hfan).face y).ncard) :
+    (1.15:ℝ) < azimDart V (ESTD V) y :=
+  (hineq.1 V hfan y hc hy).2 hcard
 
 /-- HOL `CDTETAT`（`tame/CDTETAT.hl:155-160`，带前提形）。
-DISCHARGES：骨架占位；HOL 证明约 60 步（`NODE_TYPE_lemma` +
+DISCHARGES：HOL 证明约 60 步（`NODE_TYPE_lemma` +
 `SUM_AZIM_DART_FULLY_SURROUNDED` + `FULLY_SURROUNDED_NODE_DECOMPOSITION` +
 `CDTETAT_lemma1` :44-148 的 21 情形实数算术 + `kcblrqc_ineq_def` 的
-`TRIANGULAR_FACE_AZIM_DART_BOUNDS`/`non_triangular_face_azim_dart_bound`）。 -/
+`TRIANGULAR_FACE_AZIM_DART_BOUNDS`/`non_triangular_face_azim_dart_bound`）；
+Lean 折算逐件对应：`NODE_TYPE_lemma`（本文）、`SUM_AZIM_DART_NODE_TL`、
+`FULLY_SURROUNDED_NODE_DECOMPOSITION_TL`、`CDTETAT_lemma1`（区间枚举 +
+`Real.pi_gt_d4`/`Real.pi_lt_d4` = HOL `PI_APPROX_4`）、azim 边界经
+`KcblrqcIneqDef` 切片 1。 -/
 theorem CDTETAT (hineq : KcblrqcIneqDef) (V : Set V3) (hc : Contravening V)
     (hfan : FAN 0 V (ESTD V)) (x : V3 × V3) (hx : x ∈ dartOfFan V (ESTD V)) :
     let H := hypermapOfFanTl V (ESTD V) hfan
@@ -1208,26 +1685,195 @@ theorem CDTETAT (hineq : KcblrqcIneqDef) (V : Set V3) (hc : Contravening V)
     let q := (typeOfNode H x).2.1
     let r := (typeOfNode H x).2.2
     (p, q + r) ∈ cdTetatPairs := by
-  sorry
+  intro H p q r
+  show (p, q + r) ∈ cdTetatPairs
+  -- fully_surrounded 给 x 的 azim < π，排除退化 dart（HOL `f_surr`）
+  have hsurr : surroundedNode V (ESTD V) x.1 :=
+    hc.2.2.2.2.2.1 x.1 (dartOfFan_fst_mem hfan hx)
+  have hlt : azimDart V (ESTD V) x < Real.pi := hsurr x hx rfl
+  have hxne : x.1 ≠ x.2 := by
+    intro he
+    have hx' : x = (x.1, x.1) := Prod.ext rfl he.symm
+    rw [hx'] at hlt
+    have h2pi : azimDart V (ESTD V) (x.1, x.1) = 2 * Real.pi := by simp [azimDart]
+    rw [h2pi] at hlt
+    linarith [Real.pi_pos]
+  have hx1 : x ∈ dart1OfFan V (ESTD V) := by
+    rcases (Set.mem_union _ _ _).mp hx with h | h
+    · exact absurd h.out.1 hxne
+    · exact h
+  have hdarts : x ∈ H.darts := mem_dartsTl hx1
+  -- 全顶点邻边 ≥ 3（HOL `f_surr` 的 SURROUNDED_IMP_CARD_SET_OF_EDGE_GE_3）
+  have hcard : ∀ v ∈ V, 3 ≤ (setOfEdge v V (ESTD V)).ncard := fun v hv =>
+    SURROUNDED_IMP_CARD_SET_OF_EDGE_GE_3_TL hfan hv (hc.2.2.2.2.2.1 v hv)
+  have hsimple := JGTDEBU4 V hc hfan
+  have htype := NODE_TYPE_lemma H x hsimple hdarts
+  set A := {y | y ∈ H.node x ∧ (H.face y).ncard = 3} with hAdef
+  set B := {y | y ∈ H.node x ∧ (H.face y).ncard = 4} with hBdef
+  set C := {y | y ∈ H.node x ∧ 5 ≤ (H.face y).ncard} with hCdef
+  set D := {y | y ∈ H.node x ∧ 4 ≤ (H.face y).ncard} with hDdef
+  have hfinN : (H.node x).Finite := orbitMap_finite H.nodeMap_permutes x
+  have hfinA : A.Finite := hfinN.subset fun y hy => (Set.mem_setOf_eq.mp hy).1
+  have hfinD : D.Finite := hfinN.subset fun y hy => (Set.mem_setOf_eq.mp hy).1
+  have hfinB : B.Finite := hfinN.subset fun y hy => (Set.mem_setOf_eq.mp hy).1
+  have hfinC : C.Finite := hfinN.subset fun y hy => (Set.mem_setOf_eq.mp hy).1
+  -- 分解与计数
+  have hAD := FULLY_SURROUNDED_NODE_DECOMPOSITION_TL hfan hcard hx1
+  have hdisjAD : Disjoint A D := by
+    rw [Set.disjoint_left]
+    intro y ha hb
+    rw [hAdef] at ha
+    rw [hDdef] at hb
+    rw [Set.mem_setOf_eq] at ha hb
+    omega
+  have hdisjBC : Disjoint B C := by
+    rw [Set.disjoint_left]
+    intro y ha hb
+    rw [hBdef] at ha
+    rw [hCdef] at hb
+    rw [Set.mem_setOf_eq] at ha hb
+    omega
+  have hDT : D.ncard = B.ncard + C.ncard := by
+    have hBD : B ∪ C = D := by
+      ext y
+      constructor
+      · rintro (⟨hnode, h4⟩ | ⟨hnode, h5⟩)
+        · rw [hDdef]; exact ⟨hnode, by omega⟩
+        · rw [hDdef]; exact ⟨hnode, by omega⟩
+      · intro hmem
+        rw [hDdef] at hmem
+        rcases Nat.eq_or_lt_of_le hmem.2 with heq | hlt
+        · exact Or.inl ⟨hmem.1, heq.symm⟩
+        · exact Or.inr ⟨hmem.1, by omega⟩
+    rw [← Set.ncard_union_eq hdisjBC hfinB hfinC, hBD]
+  -- azim 边界（KcblrqcIneqDef 切片 1）
+  have hboundA : ∀ y ∈ A, (0.852:ℝ) ≤ azimDart V (ESTD V) y ∧
+      azimDart V (ESTD V) y < 1.9 := by
+    intro y hy
+    rw [hAdef] at hy
+    obtain ⟨hnode, h3⟩ := Set.mem_setOf_eq.mp hy
+    have hyd : y ∈ dartOfFan V (ESTD V) := Set.mem_union_right _ (nodeMem_dart1 hfan hx1 hnode)
+    have hb := (hineq.1 V hfan y hc hyd).1 h3
+    exact ⟨hb.1.le, by linarith⟩
+  have hboundD : ∀ y ∈ D, (1.15:ℝ) ≤ azimDart V (ESTD V) y ∧
+      azimDart V (ESTD V) y < Real.pi := by
+    intro y hy
+    rw [hDdef] at hy
+    obtain ⟨hnode, h4⟩ := Set.mem_setOf_eq.mp hy
+    have hyd : y ∈ dartOfFan V (ESTD V) := Set.mem_union_right _ (nodeMem_dart1 hfan hx1 hnode)
+    have hb := (hineq.1 V hfan y hc hyd).2
+      (show 3 < (H.face y).ncard by omega)
+    have hpi : azimDart V (ESTD V) y < Real.pi :=
+      hc.2.2.2.2.2.1 y.1 (dartOfFan_fst_mem hfan hyd) y hyd rfl
+    exact ⟨hb.le, hpi⟩
+  -- 角和分解
+  have hsplit : setSum A (fun y => azimDart V (ESTD V) y)
+      + setSum D (fun y => azimDart V (ESTD V) y) = 2 * Real.pi := by
+    rw [← setSum_union_disjoint hdisjAD hfinA hfinD, hAD]
+    exact SUM_AZIM_DART_NODE_TL hfan hx1 hsurr
+  have hlowA : A.ncard * (0.852:ℝ) ≤ setSum A (fun y => azimDart V (ESTD V) y) :=
+    setSum_ge_of_le hfinA fun y hy => (hboundA y hy).1
+  have hlowD : D.ncard * (1.15:ℝ) ≤ setSum D (fun y => azimDart V (ESTD V) y) :=
+    setSum_ge_of_le hfinD fun y hy => (hboundD y hy).1
+  have h1 : A.ncard * (0.852:ℝ) + D.ncard * (1.15:ℝ) ≤ 2 * Real.pi := by linarith
+  have hupA : ∀ y ∈ A, azimDart V (ESTD V) y ≤ (1.9:ℝ) := fun y hy =>
+    (hboundA y hy).2.le
+  have hupD : ∀ y ∈ D, azimDart V (ESTD V) y ≤ Real.pi := fun y hy =>
+    (hboundD y hy).2.le
+  have hxA : x ∈ A ∨ x ∈ D := by
+    have hmem : x ∈ H.node x := H.mem_node_self x
+    rw [← hAD] at hmem
+    exact hmem
+  have h2 : (2:ℝ) * Real.pi < A.ncard * (1.9:ℝ) + D.ncard * Real.pi := by
+    rcases hxA with hxA | hxA
+    · have sA : setSum A (fun y => azimDart V (ESTD V) y) < A.ncard * (1.9:ℝ) :=
+        setSum_lt_of_le hfinA hupA ⟨x, hxA, (hboundA x hxA).2⟩
+      have sD : setSum D (fun y => azimDart V (ESTD V) y)
+          ≤ D.ncard * Real.pi := setSum_le_of_le hfinD hupD
+      linarith
+    · have sA : setSum A (fun y => azimDart V (ESTD V) y) ≤ A.ncard * (1.9:ℝ) :=
+        setSum_le_of_le hfinA hupA
+      have sD : setSum D (fun y => azimDart V (ESTD V) y) < D.ncard * Real.pi :=
+        setSum_lt_of_le hfinD hupD ⟨x, hxA, hlt⟩
+      linarith
+  rw [hDT] at h1 h2
+  show ((typeOfNode H x).1, (typeOfNode H x).2.1 + (typeOfNode H x).2.2) ∈ cdTetatPairs
+  rw [htype]
+  simpa using CDTETAT_lemma1 A.ncard (B.ncard + C.ncard) h1 h2
 
 /-- HOL `SZIPOAS`（`tame/CDTETAT.hl:306-308`）：`kcblrqc_ineq_def ⟹
-contravening ⟹ tame_11b`。
-DISCHARGES：骨架占位；HOL 证明经 `FULLY_SURROUNDED_IMP_CARD_NODE_EQ_SUM_NODE_TYPE`
-+ `CDTETAT` 分类 + 20 情形算术。 -/
+contravening ⟹ tame_11b`。HOL 证明经 `FULLY_SURROUNDED_IMP_CARD_NODE_EQ_SUM_NODE_TYPE`
++ `CDTETAT` 分类 + 20 情形算术；Lean 折算为 `CARD_NODE_EQ_SUM_NODE_TYPE_TL`
++ `CDTETAT` + `cdTetatPairs_sum_le` + `omega`。 -/
 theorem SZIPOAS (hineq : KcblrqcIneqDef) (V : Set V3) (hc : Contravening V)
     (hfan : FAN 0 V (ESTD V)) :
     Tame11b (hypermapOfFanTl V (ESTD V) hfan) := by
-  sorry
+  show ∀ d ∈ (hypermapOfFanTl V (ESTD V) hfan).darts,
+    ((hypermapOfFanTl V (ESTD V) hfan).node d).ncard ≤ 7
+  intro d hd
+  have hx1 : d ∈ dart1OfFan V (ESTD V) := dartsTl_mem hd
+  have hcard : ∀ v ∈ V, 3 ≤ (setOfEdge v V (ESTD V)).ncard := fun v hv =>
+    SURROUNDED_IMP_CARD_SET_OF_EDGE_GE_3_TL hfan hv (hc.2.2.2.2.2.1 v hv)
+  have hsum := CARD_NODE_EQ_SUM_NODE_TYPE_TL hfan hcard (JGTDEBU4 V hc hfan) hx1
+  have hmem := CDTETAT hineq V hc hfan d (Set.mem_union_right _ hx1)
+  have hle7 := cdTetatPairs_sum_le _ _ hmem
+  rw [hsum]
+  omega
 
 /-! ## 6. KCBLRQC / BDJYFFB（tame/ssreflect/KCBLRQC-compiled.hl）。
 两个 section（Contravening :927-935 的 contrV，BDJYFFB :922-924 的
 h_main := lp_main_estimate、ineqs := kcblrqc_ineq_def）finalized 形。 -/
 
+/-- `(p, q + r) ∈ cdTetatPairs`、`p + (q + r) = 6`、`1 ≤ r` 时的 node-type
+分类：type = (5,0,1) 或落入 6 个被机器不等式排除的 r > 0 类型
+（BDJYFFB1 第一合取的 20 情形算术；HOL 侧对应 get_b_tame_ineq 的
+(6,0,1)/(3,0,3)/(3,1,2)/(3,2,1)/(4,0,2)/(4,1,1) 数值矛盾行）。 -/
+theorem cdTetatPairs_node6_cases (p q r : ℕ) (hmem : (p, q + r) ∈ cdTetatPairs)
+    (h6 : p + (q + r) = 6) (hr1 : 1 ≤ r) :
+    (p, q, r) = (5, 0, 1) ∨
+      (p, q, r) ∈ [(6, 0, 1), (3, 0, 3), (3, 1, 2), (3, 2, 1), (4, 0, 2), (4, 1, 1)] := by
+  simp only [cdTetatPairs, List.mem_cons, List.mem_nil_iff, false_or, Prod.mk.injEq,
+    or_false] at hmem
+  rcases hmem with ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩
+  all_goals try { exfalso; omega }
+  all_goals
+    rw [h1]
+    have hq : (q = 2 ∧ r = 1) ∨ (q = 1 ∧ r = 2) ∨ (q = 0 ∧ r = 3) ∨
+        (q = 1 ∧ r = 1) ∨ (q = 0 ∧ r = 2) ∨ (q = 0 ∧ r = 1) := by omega
+    rcases hq with ⟨h1', h2'⟩ | ⟨h1', h2'⟩ | ⟨h1', h2'⟩ | ⟨h1', h2'⟩ | ⟨h1', h2'⟩ |
+        ⟨h1', h2'⟩
+    all_goals
+      rw [h1', h2']
+      first
+        | exact Or.inl rfl
+        | exact Or.inr (by decide)
+        | (exfalso; omega)
+
+/-- `(p, q + r) ∈ cdTetatPairs`、`1 ≤ r` 的 20 情形算术：node 和 ≤ 6，
+或退化为唯一越界型 (6,0,1)（BDJYFFB1 第二合取；对应 HOL 脚本
+`do 20?case; try arith` 主干 + get_b_tame_ineq (6,0,1) 的数值矛盾行）。 -/
+theorem cdTetatPairs_node_le6 (p q r : ℕ) (hmem : (p, q + r) ∈ cdTetatPairs)
+    (hr1 : 1 ≤ r) : p + (q + r) ≤ 6 ∨
+      (p, q, r) ∈ [(6, 0, 1), (3, 0, 3), (3, 1, 2), (3, 2, 1), (4, 0, 2), (4, 1, 1)] := by
+  simp only [cdTetatPairs, List.mem_cons, List.mem_nil_iff, Prod.mk.injEq,
+    or_false] at hmem
+  rcases hmem with ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨h1, h2⟩
+  all_goals
+    first
+      | omega
+      | (have hq : q = 0 := by omega
+         subst hq
+         have hr : r = 1 := by omega
+         subst hr
+         have hp : p = 6 := by omega
+         subst hp
+         exact Or.inr (by decide))
+
 /-- HOL `KCBLRQC`（`tame/ssreflect/KCBLRQC-compiled.hl:868-873`，
 node-type 不等式：`r > 0 ∨ sum (set_of_face_meeting_node H d) tauVEF ≥ b_tame p q`）。
-DISCHARGES：骨架占位；HOL 证明 21 情形 b_tame 表算术（get_b_tame_ineq 驱动，
-:874-908，每情形 4-6 步），入口为 `NODE_TYPE_lemma` + `CDTETAT`。规模粗评：
-证明体 ~40 行 tactic + `get_b_tame_ineq` 表。 -/
+HOL 证明：`NODE_TYPE_lemma` + `CDTETAT` 分类 + r = 0 的 20 情形
+get_b_tame_ineq 表算术（:874-908，每情形 4-6 步）；Lean 折算为
+`CDTETAT` + `KcblrqcIneqDef` 切片 2（r = 0 表）逐合取消解。 -/
 theorem KCBLRQC (V : Set V3) (hc : Contravening V)
     (hmain : lp_main_estimate) (hineq : KcblrqcIneqDef)
     (hfan : FAN 0 V (ESTD V)) (d : V3 × V3) (hd : d ∈ dartOfFan V (ESTD V)) :
@@ -1237,22 +1883,99 @@ theorem KCBLRQC (V : Set V3) (hc : Contravening V)
     let r := (typeOfNode H d).2.2
     0 < r ∨ setSum (setOfFaceMeetingNode H d)
         (fun f => tauVEF_p2 V (ESTD V) f) ≥ bTame p q := by
-  sorry
+  intro H p q r
+  show (0:ℕ) < r ∨ setSum (setOfFaceMeetingNode H d)
+      (fun f => tauVEF_p2 V (ESTD V) f) ≥ bTame p q
+  have htypeEq : typeOfNode H d = (p, q, r) := rfl
+  rcases Nat.eq_zero_or_pos r with r0 | rpos
+  · have hmem : ((typeOfNode H d).1, (typeOfNode H d).2.1 + (typeOfNode H d).2.2) ∈
+        cdTetatPairs := CDTETAT hineq V hc hfan d hd
+    rw [show (typeOfNode H d).2.2 = 0 from r0, Nat.add_zero] at hmem
+    have hteq0 : typeOfNode H d =
+        ((typeOfNode H d).1, (typeOfNode H d).2.1, (0:ℕ)) := by
+      rw [htypeEq, r0]
+    exact Or.inr (hineq.2.1 hmain V hfan hc d hd _ _ hmem hteq0)
+  · exact Or.inl rpos
 
 /-- HOL `BDJYFFB1`（`tame/ssreflect/KCBLRQC-compiled.hl:917-919`）：`tame_12o`。
-DISCHARGES：骨架占位；HOL 证明约 35 步（`fully_surrounded_dart_of_fan_eq` +
-`CARD_FACE_GT_1` + `NODE_TYPE_lemma` +
-`FULLY_SURROUNDED_IMP_CARD_NODE_EQ_SUM_NODE_TYPE` + `CDTETAT` +
-get_b_tame_ineq 的 (6,0,1)/(3,0,3)/(3,1,2)/(3,2,1)/(4,0,2)/(4,1,1) 情形）。 -/
+HOL 证明约 35 步（`fully_surrounded_dart_of_fan_eq` + `CARD_FACE_GT_1` +
+`NODE_TYPE_lemma` + `FULLY_SURROUNDED_IMP_CARD_NODE_EQ_SUM_NODE_TYPE` +
+`CDTETAT` + get_b_tame_ineq 的 (6,0,1)/(3,0,3)/(3,1,2)/(3,2,1)/(4,0,2)/(4,1,1)
+数值矛盾行）；Lean 折算为 `cdTetatPairs_node6_cases`（第一合取）+
+`cdTetatPairs_node_le6`（第二合取）+ 切片 3 的 6 类型排除。 -/
 theorem BDJYFFB1 (V : Set V3) (hc : Contravening V)
     (hmain : lp_main_estimate) (hineq : KcblrqcIneqDef)
     (hfan : FAN 0 V (ESTD V)) :
     Tame12o (hypermapOfFanTl V (ESTD V) hfan) := by
-  sorry
+  have hcard : ∀ v ∈ V, 3 ≤ (setOfEdge v V (ESTD V)).ncard := fun v hv =>
+    SURROUNDED_IMP_CARD_SET_OF_EDGE_GE_3_TL hfan hv (hc.2.2.2.2.2.1 v hv)
+  have hsimple := JGTDEBU4 V hc hfan
+  have hsum : ∀ d ∈ (hypermapOfFanTl V (ESTD V) hfan).darts,
+      ((hypermapOfFanTl V (ESTD V) hfan).node d).ncard
+        = (typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d).1
+          + ((typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d).2.1
+            + (typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d).2.2) :=
+    fun d hd => CARD_NODE_EQ_SUM_NODE_TYPE_TL hfan hcard hsimple (dartsTl_mem hd)
+  -- r ≥ 1：d 自己的 exceptional face 记入 C（d ∈ node d）
+  have hCmem : ∀ d ∈ (hypermapOfFanTl V (ESTD V) hfan).darts,
+      5 ≤ ((hypermapOfFanTl V (ESTD V) hfan).face d).ncard →
+        1 ≤ (typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d).2.2 := by
+    intro d hd h5
+    have htype := NODE_TYPE_lemma (hypermapOfFanTl V (ESTD V) hfan) d hsimple hd
+    have hmemC : d ∈ {y | y ∈ (hypermapOfFanTl V (ESTD V) hfan).node d ∧
+        5 ≤ ((hypermapOfFanTl V (ESTD V) hfan).face y).ncard} :=
+      ⟨Hypermap.mem_node_self _ _, h5⟩
+    have hfinN : ({y | y ∈ (hypermapOfFanTl V (ESTD V) hfan).node d ∧
+        5 ≤ ((hypermapOfFanTl V (ESTD V) hfan).face y).ncard}).Finite :=
+      (orbitMap_finite (hypermapOfFanTl V (ESTD V) hfan).nodeMap_permutes d).subset
+        fun y hy => (Set.mem_setOf_eq.mp hy).1
+    have hpos : 0 < ({y | y ∈ (hypermapOfFanTl V (ESTD V) hfan).node d ∧
+        5 ≤ ((hypermapOfFanTl V (ESTD V) hfan).face y).ncard}).ncard := by
+      rw [Set.ncard_pos hfinN]
+      exact ⟨d, hmemC⟩
+    rw [htype]
+    linarith
+  show ∀ d ∈ (hypermapOfFanTl V (ESTD V) hfan).darts,
+    (((5:ℕ) ≤ ((hypermapOfFanTl V (ESTD V) hfan).face d).ncard ∧
+        ((hypermapOfFanTl V (ESTD V) hfan).node d).ncard = 6) →
+      typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d = (5, 0, 1)) ∧
+    (5 ≤ ((hypermapOfFanTl V (ESTD V) hfan).face d).ncard →
+      ((hypermapOfFanTl V (ESTD V) hfan).node d).ncard ≤ 6)
+  intro d hd
+  have hsumD := hsum d hd
+  have hmem := CDTETAT hineq V hc hfan d (Set.mem_union_right _ (dartsTl_mem hd))
+  have htypeEq : typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d
+      = ((typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d).1,
+         (typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d).2.1,
+         (typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d).2.2) := rfl
+  have hdart : d ∈ dartOfFan V (ESTD V) := Set.mem_union_right _ (dartsTl_mem hd)
+  refine ⟨fun h5 => ?_, fun h5 => ?_⟩
+  · obtain ⟨h5, hnode6⟩ := h5
+    have hr1 := hCmem d hd h5
+    have h6 : (typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d).1
+        + ((typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d).2.1
+          + (typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d).2.2) = 6 := by
+      rw [hsumD] at hnode6
+      omega
+    rcases cdTetatPairs_node6_cases _ _ _ hmem h6 hr1 with heq | hin
+    · rwa [htypeEq]
+    · have hin' : typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d ∈
+          [(6, 0, 1), (3, 0, 3), (3, 1, 2), (3, 2, 1), (4, 0, 2), (4, 1, 1)] :=
+        htypeEq ▸ hin
+      exact (hineq.2.2.1 hmain V hfan hc d hdart hin').elim
+  · have hr1 := hCmem d hd h5
+    rcases cdTetatPairs_node_le6 _ _ _ hmem hr1 with hle | hin
+    · rw [hsumD]
+      exact hle
+    · have hin' : typeOfNode (hypermapOfFanTl V (ESTD V) hfan) d ∈
+          [(6, 0, 1), (3, 0, 3), (3, 1, 2), (3, 2, 1), (4, 0, 2), (4, 1, 1)] :=
+        htypeEq ▸ hin
+      exact (hineq.2.2.1 hmain V hfan hc d hdart hin').elim
 
 /-- HOL `BDJYFFB2`（`tame/ssreflect/KCBLRQC-compiled.hl:962-967`）：
 type (5,0,1) 的节点上三角形 tauVEF 和 `> #0.63`（`a_tame`）。
-DISCHARGES：骨架占位；HOL 证明 4 步（get_b_tame_ineq (5,0,1) + 算术）。 -/
+HOL 证明 4 步（get_b_tame_ineq (5,0,1) + 算术）；Lean 折算为
+`KcblrqcIneqDef` 切片 4（`0.6366 ≤` 三角和）+ `linarith`。 -/
 theorem BDJYFFB2 (V : Set V3) (hc : Contravening V)
     (hmain : lp_main_estimate) (hineq : KcblrqcIneqDef)
     (hfan : FAN 0 V (ESTD V)) (d : V3 × V3)
@@ -1261,7 +1984,9 @@ theorem BDJYFFB2 (V : Set V3) (hc : Contravening V)
     aTame < setSum {f | f ∈ setOfFaceMeetingNode (hypermapOfFanTl V (ESTD V) hfan) d ∧
         f.ncard = 3}
       (fun f => tauVEF_p2 V (ESTD V) f) := by
-  sorry
+  have h6366 := hineq.2.2.2 hmain V hfan hc d hd htype
+  have haTame : aTame = 0.63 := rfl
+  linarith
 
 /-! ## 7. CRTTXAT（tame/CRTTXAT.hl，tame_9a 出口，Solovyev 2010） -/
 
@@ -1301,7 +2026,7 @@ theorem CRTTXAT
    SURROUNDED_IMP_CARD_NODE_GE_3_TL）；★ `NODE_TYPE_lemma`（faceInjOn_of_node
    计数核，CDTETAT/KCBLRQC/BDJYFFB1 共用）。
 4. ★ `COMPONENTS_HYPERMAP_OF_FAN`（构造性证明）。
-5. 剩余债务：`contravening_fanTl`（CKQOWSA 章，未移植；`contravening_lp_fan`
+5. 剩余债务：`fully_surrounded_perimeter_bound` 等深章件（`contravening_fanTl` 已于 T3 波经 ContraFan.lean 真化，`contravening_lp_fan`
    仅欠此一步，其余由 `contravening_lp_fan_of_fan` 真证明）→ `CDTETAT`
    （21 情形算术 + kcblrqc_ineq_def 两条 azim 边界）→ `SZIPOAS` →
    `KCBLRQC`/`BDJYFFB1/2`（b_tame 表逐情形算术）。
