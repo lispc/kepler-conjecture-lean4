@@ -54,10 +54,43 @@ CertG.lean 三个 TM2 pilot（内核闭合 + 公理仅标准三）：
 回归：TM0/TM1 全部 6 条 end-to-end + TM2 三条共 9 条公理审计
 `[propext, Classical.choice, Quot.sound]`；lake build CertG/CertTM 绿。
 
-## 3. BIXPCGW 150 叶复测（进行中）
+## 3. BIXPCGW 150 叶复测（受阻：性能墙，诊断完成，方案已定）
 
-探针升级（TM1ProbeBIXPCGW.d/driver.lean）：evalTMHA 加 trans 臂 +
-`genTransTMP`（auto 粒度：recipFloor 成功性由 `out ≤ −b.e` 保证，精度
-下限 2⁻³²）。复跑同一 150 叶样本（rung 12/−64），结果待填。
+探针升级：evalTMHA 加 trans 臂 + genTransTMP。复跑同一 150 叶样本。
+**撞上性能墙**，A/B 对照定位：
 
-## 4. 收尾（待填）
+- probe5nx（trans 臂 = 纯 fallback，其余全同）：5 叶 ×2.6-3.1s/叶，完成。
+- probe5（trans 臂 = TM 规则）：>15min 未出叶 0。
+- probe2（全量 150 叶，trans TM 开）：后台继续跑（截至笔记时 ~108min CPU
+  未完成；nice 19 与其他 runner 共存）。
+
+**根因（高置信）**：`TaylorM.mul`/`inv`/`trans` 的 err 项含 `W.mul W`
+（平方）与 `c³` 级连——BIXPCGW 主 prog 是深左链（~27K op），dyadic 指数
+沿链累加到 −10⁵ 量级，`W.mul W` 把 mantissa 翻倍成 ~10⁵ bit（~100KB
+整数），再经链式 mul/add 复合增长——**值很小但表示爆炸**。裸区间 eval
+（probe1/nx 快）没有 W² 项所以不炸。这不是算法错，是**表示不修剪**。
+
+**方案（下一 session）**：给 TM 内核算术加**外向舍入修剪**：
+err/W 类上界量 ceiling-chop 到目标指数（对上界语义安全：上界放大仍合法），
+fB.lo floor / fB.hi ceil（包围向外放宽合法），dfB 同样外向——需要一个
+`Dyadic.chopFloor/chopCeil : Dyadic → Int → Dyadic` 加 `toReal` 单调性引理
+（~30 行）+ 在 mul/inv/sqrt/trans 规则的 err 合成处插入 chop（目标指数如
+`min (2·box 指数) − 32`）。内核侧 checkPosTM 同样插入（保持 probe≡kernel
+语义）。这使 TM 判定在 27K-op 程序上的成本回到 probe1 量级。
+注意：chop 插入点必须在 evalTM/evalTMH 同一处双侧同步（现有 evalFill
+双侧镜像纪律的 TM 版——设计文档 §5.1 的已知事故点）。
+
+备选快速通道（若只要通过率数字）：探针侧把 W/err 在 VM 里 chop（内核语义
+随后补），先出数。
+
+## 4. 本 session 交付（commit d763cc34）
+
+- evalTM trans 臂 + sin/atan/ln 三规则全证明（零 sorry，atan 走批准的 MVT
+  路线，sin/ln 纯初等）+ TMSafe 扩展 + hybrid 回退 + CertG 三个 TM2 pilot
+  （sin/atan 根盒单叶，ln 深度 1 树）+ 全回归 9 条 end-to-end 公理审计
+  `[propext, Classical.choice, Quot.sound]`。
+- BIXPCGW 复测：性能墙阻断，诊断与修复方案如上（§3）。
+- 在跑：probe2（150 叶全量，probe5nx 对照已证实基线 0/150 立等可取——
+  见 TM1 笔记；trans 规则对通过率的增益待 probe2 或 chop 版复测）。
+- 验收对照：任务 1 ✓（三规则 + evalTM 臂 + TMSafe）；任务 2 部分（复测
+  被性能墙阻断，根因与方案明确）；任务 3 ✓（回归全绿）。
