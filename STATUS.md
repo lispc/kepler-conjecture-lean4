@@ -20,16 +20,19 @@
 > 成本为 Q 案十倍量级）。**波2 双修复治本**：bb_arb disj 支栈污染（`960df850`，
 > 旧 6 份波2 证书 disj hit 全为伪影）+ ite 跨 0 hull 语义入内核（`b081b853`）；
 > W2.5 closed-arg 记忆化落地（BIXPCGW 257s→~1s/叶）。BIXPCGW 19,147 失败叶
-> seeded repair 多轮推进中（通过率 0.03%→28%→49.5% 逐轮翻倍，膨胀稳定 2.0×）；
+> seeded repair 多轮推进中（通过率 0.03%→28%→49.5%→**46.0% plateau**，膨胀稳定
+> 2.0×；约半数失败叶二分不收敛 = 裸区间 O(w) 过估的实证，**原始证明调研确认
+> Flyspeck 用一阶多元 Taylor 模型 + 自适应分割树**——Taylor 双侧设计文档已出
+> `pipeline/interval/taylor-model-design.md`，原始树导入实验进行中）；
 > 5 案诚实重求解 4h 全部超时零产出，待拍板改走 BBTreeGD 管线；145 证书重跑
 > wave1+fallback16 收官（35 份）；prep 原型结论：胶合机制可行零膨胀，但 MKFKQWU 级
 > 案例区间过估固有叶数 ≥10⁹，方向待决策（Taylor 模型 / 符号消 div / 挂起）。
 > **2026-09-20 第二波**：P6-E 155 定义闭包收官（124/124 全 B，`0d1b9cea`）+
 > FQN 冲突治理（`74c083eb`，闭包 19→0；opencode 已自行 merge main 解冲突）+
 > 六 ID 清单（`242aa531`，实测 580/去重 539，勘误"993"口径）；**43,078 LP 定理持久化
-> 内核重跑**（`/home/scroll/lprun-persist/`，~24k/43058，~913/h ETA ~21h，9 个失败
-> 全为 SoPlex 未解最优已知类，尾部 glpsol 精确对偶兜底）；2570626711（190 万叶）
-> stage-a N=2048 运行中（79/512，3 个 BESTFAIL chunk 尾部统一 repair）；
+> 内核重跑**（`/home/scroll/lprun-persist/`，~26.8k/43058，~840/h ETA ~20h，55 个失败
+> 全为 SoPlex 未解最优已知类（161847242261 多发），尾部 glpsol 精确对偶兜底）；2570626711（190 万叶）
+> stage-a N=2048 运行中（87/512，4 个 BESTFAIL chunk 尾部统一 repair）；
 > **⚠️ 完整性修订（2026-09-20）：prep 空间 92 家族"745/745 闭合"记录经根因调查判定不可信**（pass2 无任何可审计执行痕迹且 37 倍预算不可复现），求解层口径从 91% 下修为 39%，92 家族需重新求解（策略未定，见上 prep 原型结论）。单案例"证书→接口"粘合试点已端到端打通（C3397113841：粘合引理 1 行 simp 模板，量产每案例 ~30 行机械模板）。
 > 政策变更（2026-09-17 用户批准，已执行 2026-09-18）：main 允许携带 sorry 债务，
 > wip/auto-packing 已合入 main（`aad4fb35`），债务刻度 = `DEBT.md`（基线 2400）。
@@ -91,7 +94,7 @@
   - [x] **FillParams 参数填充工具链（2026-09-14，`0588df2`）**：Lean 编译态逐叶算 sqrt mantissa（零镜像失真）+ (N,out) 阶梯 + 279 叶小样端到端绿；封闭 atan 参数高 Taylor 阶 trick（阶数后经实测下调，见下）
   - [x] **FillParams stage-a 分片并行化（2026-09-15，wip/g4-emit）**：单体驱动（354MB/96万叶数组字面量）elaboration 不可扩展（11.5h 未果）→ 改造为 `--stage-a-shards=K` 连续切块小驱动 + `runMain` argv 派发（无参走阶梯 / `N out` 钉死单点）+ `stagea_merge.py`（全局 rung 裁定 + STALE 补算 + 全局索引合并）；256 chunk × 64 路并行
   - [x] **repair_leaves.py 叶修复回路（`85f5ae7`）**：编译态逐叶扫描 → 失败叶二分加深（splitOK 对任意细化保持）→ 修复证书
-  - [ ] 现存 16 证书收尾：已闭合 6 份（另加早期 2 小案共 8 案例）；波1 sqrt4/atan7 三份——**QITNPEA_3725403817 已闭合（2026-09-18，`184d4a86`：964,984 叶 = 964,792 + 192 修复衍生，2775 BBTreeG shards，11,441 jobs，根 decide 180s，公理标准三）**；**5490182221 已贯通至内核构建（2026-09-21：stage-A 360/360，残余 1478 叶 repair 8 轮 9 分钟收敛——pinned-rung 二分修复范式确立，1,356,184 叶 6321 shards，构建中）**；2570626711（190万叶）stage-a 79/512（3 个 BESTFAIL chunk 尾部 repair）；**波2 disj+sqrt 家族（2026-09-20/21）**：bb_arb 栈污染修复（旧 6 份证书 disj hit 伪影根因）+ ite hull 语义 + W2.5 记忆化全部入库；BIXPCGW 19,147 失败叶 seeded repair 多轮推进（通过率逐轮翻倍中）；5 案诚实重求解全超时，待改走 BBTreeGD；末位 2 份 3112-sqrt 怪物（需参数共享优化）
+  - [ ] 现存 16 证书收尾：已闭合 6 份（另加早期 2 小案共 8 案例）；波1 sqrt4/atan7 三份——**QITNPEA_3725403817 已闭合（2026-09-18，`184d4a86`：964,984 叶 = 964,792 + 192 修复衍生，2775 BBTreeG shards，11,441 jobs，根 decide 180s，公理标准三）**；**5490182221 已贯通至内核构建（2026-09-21：stage-A 360/360，残余 1478 叶 repair 8 轮 9 分钟收敛——pinned-rung 二分修复范式确立，1,356,184 叶 6321 shards，构建中）**；2570626711（190万叶）stage-a 87/512（4 个 BESTFAIL chunk 尾部 repair）；**波2 disj+sqrt 家族（2026-09-20/21）**：bb_arb 栈污染修复（旧 6 份证书 disj hit 伪影根因）+ ite hull 语义 + W2.5 记忆化全部入库；BIXPCGW 19,147 失败叶 seeded repair 多轮推进（通过率 49.5%→46.0% plateau，半数叶二分不收敛=裸区间 O(w) 过估实证，Taylor 模型设计已出）；5 案诚实重求解全超时，待改走 BBTreeGD；末位 2 份 3112-sqrt 怪物（需参数共享优化）
   - [ ] 证书量产：145 个已闭合案例需 bb_arb `--cert` 重跑出证书——**wave1+fallback16 已收官（2026-09-20，35 份证书落盘 `/home/scroll/bb-cert-rerun/certs/`）**，后续批次随波2/波3 排期（9893763499 案例 bb_arb 失控吐 117GB 日志已记录）
   - [ ] G4 粘合收尾：155 定义闭包的 Lean 定义 + 每案例 `evalReal e ρ = 展开式 ρ` 对应引理（依赖 packing 章定义，**主体剩余**）
   - 规格：`pipeline/interval/arb-layer.md` §3/§4
@@ -195,7 +198,7 @@ P1-P5 分段流水攻克）。**polyhedron.hl 100% 达成（71/71 定理零 sorr
 - [x] **接口 4 `goodListArchive` 闭合（P6-C，2026-09-19，`05b9653d`）**：19,715 图（Tri 9 / Quad 1253 / Pent 16080 / Hex 2373）good_list 三合取项全库 native_decide，23 分片 + 内核组合器（take/drop 链，覆盖完备性由类型检查保证），`#print axioms` 零 sorryAx
 - [x] **可达债务探针（P6-F，`1618f6a4`/`0b9ac85a`）**：DEBT.md 新增"主定理可达债务"节——`the_kepler_conjecture_from_interfaces` 的 `#print axioms` = sorryAx（剩余 3 接口）+ 624 特许 shard 公理 + 标准三，异常项无
 - [ ] 接口 1 `nonlinearInequalities`：**155 定义闭包已 B=112/124 就位**（2026-09-20，批 1/2/3/5/尾批，`42bcf24a`；余批 4×12 赖 LA38 未移植 lane）；单案例粘合试点已打通（C3397113841，IneqPilot 入 main）；待 G4 内核证书接入 + 六 ID 清单填实
-- [ ] 接口 2 `linearProgrammingResults`：桥模式已验证（P6-D 原型）；**持久化重跑进行中（`/home/scroll/lprun-persist/`，~24k/43058 ~913/h ETA ~21h，9 个失败全为 SoPlex 未解最优已知类、尾部 glpsol 兜底；产物含 sha256 + 账本交叉校验 + 公理足迹）**
+- [ ] 接口 2 `linearProgrammingResults`：桥模式已验证（P6-D 原型）；**持久化重跑进行中（`/home/scroll/lprun-persist/`，~26.8k/43058 ~840/h ETA ~20h，55 个失败全为 SoPlex 未解最优已知类、尾部 glpsol 兜底；产物含 sha256 + 账本交叉校验 + 公理足迹）**
 - [ ] 接口 3 `textCapstone`：待 Phase 5 填证收官 + 镜像语义差绕行（ELLLNYZ 析取形，P6-C 原型已探明）
 - [ ] 终装配：脊柱接入根模块 + 替换 Statement.lean:111 的 sorry
 - [ ] 全量公理审计终验（目标：仅 propext / Classical.choice / Quot.sound + 限定 native_decide）
