@@ -27,11 +27,11 @@ LEDGER (honest accounting; ground truth = `#print axioms`, not prose)
       `VORONOI_POLYHEDRON_concl`)
     PackingAuto3 (OXLZLEZ1.hl family) ..................... 9
     PackingAuto24 (`GRUTOTI1_concl_p24`) .................. 1
-      (private statement-copy of Auto2's `GRUTOTI1_concl`;
-      accounted by the GRUTOTI1 entry below — 61 explicit
-      entries + this 1 accounted copy = 62)
+      (private statement-copy of Auto2's `GRUTOTI1_concl`, re-exported
+      publicly as `GRUTOTI1_concl_p24_pub`; accounted by the GRUTOTI1
+      entry below — 61 explicit entries + this 1 accounted copy = 62)
   WIRED here (`exact twin ...`, sorryAx flows through where the twin or
-  a bank antecedent is sorried) ........................ 52
+  a bank antecedent is sorried) ........................ 53
     verbatim twin (term-level `:= twin` / eta) ........... 47
       (the 9 Auto3 OXLZLEZ1-family rows went verbatim in the
       CC4P4-exposure wave: PA4 now states public `*_v11` twins over
@@ -51,14 +51,14 @@ LEDGER (honest accounting; ground truth = `#print axioms`, not prose)
         here, so the twin's REAL by_contra kernel
         (CELL_CLUSTER_ESTIMATE_PROPS + GRHIDFA_concl) is on the
         reachable path)
-  BLOCKED ............................................... 10, reasons:
+  BLOCKED ............................................... 9, reasons:
 
   (a) Twin does not exist: 2
       RVFXZBU1_concl, RVFXZBU2_concl (Auto2:743,750; no twin anywhere
       in Auto3-25).
 
   (b) Twin exists but is NOT statement-compatible (shape mismatch,
-      documented at the entry): 7
+      documented at the entry): 6
       DUUNHOR (twin carries extra `Packing V`/`saturated V` the
         interface does not);
       XYOFCGX (twin needs `Packing V`, interface has none);
@@ -72,9 +72,7 @@ LEDGER (honest accounting; ground truth = `#print axioms`, not prose)
       GOTCJAH (PA22.GOTCJAH is a different encoding: `fchanged c = WF`
         vs `topologicalComponentYfan`, `asn` vs `Real.arcsin`,
         `0 ∈ interior P` + facet-cardinality vs the interface's
-        nonempty-facet/component hypotheses; PA22 not imported);
-      GRUTOTI1 (only twin is PRIVATE `PackingAuto24.GRUTOTI1_concl_p24`
-        — unreachable from any other module).
+        nonempty-facet/component hypotheses; PA22 not imported).
 
   (c) Twin exists only in a parallel PRIVATE encoding: 0 (was 9 — the
       whole Auto3 OXLZLEZ1.hl family: CHQSQEY, MTMLSRF, LXDEYBO,
@@ -597,18 +595,18 @@ theorem KHEJKCI_concl_discharged :
       FaceOf (voronoiList V ul) (voronoiClosed V (hdV ul)) :=
   fun V k ul hs hp hv => KHEJKCI V k ul hs hp hv.1
 
-/-- `PackingAuto2.GRUTOTI1_concl` (Auto2:926), also mirrored by the
-PRIVATE `PackingAuto24.GRUTOTI1_concl_p24` statement-copy.  NO
-REACHABLE TWIN: the only downstream carrier is that PRIVATE copy, which
-no other module can name; PA25 consumes the interface itself
-(`LEAF_RANK_GRUTOTI` lane) rather than proving it. -/
+/-- `PackingAuto2.GRUTOTI1_concl` (Auto2:926), discharged by the
+PA24 statement-copy — formerly `private` (unreachable), now re-exported
+publicly as `PackingAuto24.GRUTOTI1_concl_p24_pub` (same statement,
+verbatim; itself `exact GRUTOTI1_concl …` over Auto2, so the upstream
+sorry taint flows). -/
 theorem GRUTOTI1_concl_discharged :
     ∀ (V : Set V3) (u0 u1 : V3) (e : Set V3), saturated V →
       Packing V → u0 ∈ V → u1 ∈ V → u0 ≠ u1 → hl [u0, u1] < Real.sqrt 2 →
       e = {u0, u1} →
       setSum {X | mcellSet V X ∧ e ∈ edgeX V X} (fun t => dihX V t (u0, u1)) =
-        2 * Real.pi := by
-  sorry
+        2 * Real.pi :=
+  GRUTOTI1_concl_p24_pub
 
 /-- `PackingAuto2.REUHADY_concl` (Auto2:935), discharged by
 `PackingAuto24.REUHADY_p24` (REUHADY.hl) — statement-identical
@@ -760,6 +758,9 @@ theorem GRHIDFA_concl_discharged (cc : CcV11) (_hb : cc_bool_model_v11 cc)
 #print axioms OXLZLEZ_concl_discharged
 #print axioms REUHADY_concl_discharged
 #print axioms REUHADY_concl_version2_discharged
+-- GRUTOTI1 wave: twin un-privatized via PA24's `GRUTOTI1_concl_p24_pub`
+-- (expect `sorryAx` — the Auto2 interface itself is sorried).
+#print axioms GRUTOTI1_concl_discharged
 #print axioms URRPHBZ3_concl_discharged
 -- CC4P4-exposure wave: the nine newly verbatim-wired Auto3-family rows
 -- (expect `sorryAx` on each — the PA4 `*_v11` twins are sorried).

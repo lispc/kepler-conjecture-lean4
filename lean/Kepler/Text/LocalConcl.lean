@@ -38,10 +38,10 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
   anchors `mnt11_anchor` / `p21_anchor` below -- that injection is the
   corpus's own interface convention, not a shape bridge.
 
-    WIRE (real proof term, debt = twin's axioms + injected anchors): 60
-      = the 16 classic discharges below + 44 new assembly wires
-    HOLD (explicit `sorry`, reason recorded): 30
-      = (a) 7 no-twin + (b) 11 circular re-export + 7 (c) non-bridgeable
+    WIRE (real proof term, debt = twin's axioms + injected anchors): 62
+      = the 16 classic discharges below + 46 assembly wires
+    HOLD (explicit `sorry`, reason recorded): 28
+      = (a) 5 no-twin + (b) 11 circular re-export + 7 (c) non-bridgeable
         + 5 (d) shape mismatches
     TOTAL: 90/90 registry contracts exposed at this exit.
 
@@ -55,16 +55,22 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
       OTMTOTJ4 <- LocalAuto24.OTMTOTJ4  (verbatim; OTMTOTJ.hl:1520).
     (The earlier scan's OTMTOTJ1-4 hits in LA16/23 were the same-shaped
     hypothesis arrows of `JEJTVGB_case_breakdown_p16/_p23`, not twins; the
-    owners are LA24 = OTMTOTJ.hl.)  The remaining seven (a) entries stay
-    HOLD with their HOL-provenance audit recorded per entry below:
-      ASSWPOW -- HOL original PROVED at VASYYAU.hl:154 (verbatim registry
-        form); its owning Lean module is LocalAuto25 (VASYYAU.hl bundle),
-        outside this station's editable file set, so the twin statement
-        could not be added this wave.
-      DRNDRDV -- HOL original PROVED at OCBICBY.hl:766
-        (`derived_form_xrr`; aliased `DRNDRDV` at :849; verbatim registry
-        form); owner LocalAuto22 (OCBICBY.hl bundle), outside the editable
-        file set.
+    owners are LA24 = OTMTOTJ.hl.)
+
+  ASSEMBLY WAVE 2026-09-21 III (two more (a) entries with PROVED HOL
+    originals): the owning-module twins landed and this exit wires them:
+      ASSWPOW <- LocalAuto25.ASSWPOW_p25 (faithful restatement of the
+        PROVED VASYYAU.hl:154 original, statement verbatim; the twin's body
+        is a skeleton `sorry` — the HOL fan kit + Flyspeck-constants calc is
+        not yet ported — debt flows),
+      DRNDRDV <- LocalAuto22.derived_form_xrr_p22 (the twin was ALREADY in
+        place: LA22:260, proved, sorry-free, the verbatim statement of the
+        HOL original `derived_form_xrr`, OCBICBY.hl:766, aliased `DRNDRDV`
+        at :849; no new code needed).
+    Both twins are registry-INDEPENDENT proof pieces (neither is derived
+    from its `*_concl` registry sorry), so neither wire is a (b)-style
+    cycle.  The remaining five (a) entries stay HOLD with their
+    HOL-provenance audit recorded per entry below:
       HFNXPZA / EQTTNZI1 / EQTTNZI2 / EFLYGAU / BJTDWPS -- the HOL corpus
       carries these ONLY as appendix.hl registry lets (appendix.hl:710/
         1110/1115/1500/1506); no proved lemma under these names exists
@@ -112,10 +118,11 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
 
   Blocked, with reasons.
 
-  (a) No downstream twin anywhere in LocalAuto2-38 (7; audit 2026-09-21 II):
-      HFNXPZA, EQTTNZI1, EQTTNZI2, DRNDRDV, ASSWPOW, EFLYGAU, BJTDWPS.
+  (a) No downstream twin anywhere in LocalAuto2-38 (5; audit 2026-09-21 III):
+      HFNXPZA, EQTTNZI1, EQTTNZI2, EFLYGAU, BJTDWPS.
       OTMTOTJ1-4 left this class in the 2026-09-21 II wave (faithful
-      restatements `LocalAuto24.OTMTOTJ1-4` wired below).
+      restatements `LocalAuto24.OTMTOTJ1-4` wired below); ASSWPOW and
+      DRNDRDV left in the 2026-09-21 III wave (see the wave note above).
 
   (b) Twin is circular -- it is proved *from* the LocalAuto1 registry sorry
       itself (re-export), so a discharge would be vacuous (11):
@@ -291,15 +298,16 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
     LA36 (1):  XWITCCN master sorried; its CASE_3/4/5/6 (+sqrt8/pro_cs/4_3)
       components in LA36 are sorried too (no case-tree shim route).
     LA37 (1):  MHAEYJN_p37 sorried; module still fails to build (caveat (5)).
-    none (7): HFNXPZA, EQTTNZI1, EQTTNZI2, DRNDRDV, ASSWPOW, EFLYGAU,
-      BJTDWPS -- audit 2026-09-21 II: the first five have no proved HOL
-      original at all (appendix.hl registry lets only); ASSWPOW
-      (VASYYAU.hl:154) and DRNDRDV (= `derived_form_xrr`, OCBICBY.hl:766)
-      have PROVED originals but their owning Lean modules LA25/LA22 are
-      outside this station's editable file set.  The remaining (a)
-      mentions (former OTMTOTJ1-4 in LA16/23) were same-shaped hypothesis
-      arrows of other theorems, not twins; OTMTOTJ1-4 discharged via the
-      new LA24 B6 restatements.
+    none (5): HFNXPZA, EQTTNZI1, EQTTNZI2, EFLYGAU, BJTDWPS -- audit
+      2026-09-21 III: no proved HOL original at all (appendix.hl registry
+      lets only).  Former members: OTMTOTJ1-4 (the earlier (a) mentions in
+      LA16/23 were same-shaped hypothesis arrows of other theorems, not
+      twins; discharged via the new LA24 B6 restatements, 2026-09-21 II),
+      ASSWPOW (VASYYAU.hl:154 proved original; LA25 faithful twin
+      `ASSWPOW_p25` added and wired, 2026-09-21 III), DRNDRDV (=
+      `derived_form_xrr`, OCBICBY.hl:766 proved original; the proved
+      LA22 twin `derived_form_xrr_p22` was already in place and is wired,
+      2026-09-21 III).
 
   IMPORT CAVEATS.  (1) `Kepler.Text.LocalAnchors` cannot be co-imported with
   `Kepler.Text.LocalAuto1` at all: both declare `Kepler.Text.scsBasicV39`
@@ -1046,13 +1054,17 @@ theorem CJBDXXN_discharged : main_nonlinear_terminal_v11 →
 /-! ## Skeleton holds (2026-09-21 wave): entries with no bridgeable twin
 
 Each HOLD re-exposes its registry contract with an explicit `sorry` and the
-blocker recorded.  30 holds = 7 (a) no-twin + 11 (b) circular re-export +
+blocker recorded.  28 holds = 5 (a) no-twin + 11 (b) circular re-export +
 7 (c) non-bridgeable + 5 (d) shape mismatch.  (2026-09-21 II: the four
 OTMTOTJ1-4 holds left this section as WIREs through the new
-`LocalAuto24.OTMTOTJ1-4` restatements.) -/
+`LocalAuto24.OTMTOTJ1-4` restatements.  2026-09-21 III: the ASSWPOW and
+DRNDRDV holds left as WIREs through `LocalAuto25.ASSWPOW_p25` and the
+already-in-place PROVED `LocalAuto22.derived_form_xrr_p22`.) -/
 
-/-! ### (a) No downstream twin anywhere in LocalAuto2-38 (7; after the
-2026-09-21 II wave moved OTMTOTJ1-4 out via the new LA24 restatements) -/
+/-! ### (a) No downstream twin anywhere in LocalAuto2-38 (5; after the
+2026-09-21 II wave moved OTMTOTJ1-4 out via the new LA24 restatements and
+the 2026-09-21 III wave moved ASSWPOW/DRNDRDV out via LA25.ASSWPOW_p25 and
+the proved LA22.derived_form_xrr_p22) -/
 
 /-- HOLD (a) `HFNXPZA_concl`: no twin in any lane.  HOL audit 2026-09-21 II:
 the corpus carries this only as the appendix.hl:710 registry let; no proved
@@ -1082,26 +1094,31 @@ theorem EQTTNZI2_discharged : ∀ (s t : ScsV39), isScsV39 s → s.am = s.bm →
     scsArrowV39 {s} {t} := by
   sorry
 
-/-- HOLD (a) `DRNDRDV_concl`: HOL original PROVED — OCBICBY.hl:766
-`derived_form_xrr` (statement = the registry form verbatim), aliased
-`let DRNDRDV = derived_form_xrr` at OCBICBY.hl:849 — but its owning Lean
-module is LocalAuto22 (the OCBICBY.hl bundle), outside this station's
-editable file set, so the faithful twin statement could not be added this
-wave (audit 2026-09-21 II). -/
+/-- WIRE `LocalAuto1.DRNDRDV_concl` <- PROVED `LocalAuto22.derived_form_xrr_p22`
+(LA22:260).  The faithful twin was ALREADY in place: it is the verbatim Lean
+rendering of the HOL original `derived_form_xrr` (OCBICBY.hl:766; aliased
+`let DRNDRDV = derived_form_xrr` at OCBICBY.hl:849) and its statement
+matches the registry form verbatim — no new code needed (2026-09-21 III).
+The twin's proof is sorry-free (`xrr` re-derived onto the proved
+`hasDerivWithinAt_quad_p22` derivative kernel) and registry-independent, so
+the wire is not a (b)-style cycle. -/
 theorem DRNDRDV_discharged : ∀ y1 y2 y6 : ℝ,
     derivedForm (0 < y1 ∧ 0 < y2) (fun q => xrr y1 y2 q) (8 * y6 / (y1 * y2)) y6
-      (Set.univ : Set ℝ) := by
-  sorry
+      (Set.univ : Set ℝ) :=
+  derived_form_xrr_p22
 
-/-- HOLD (a) `ASSWPOW_concl`: HOL original PROVED at VASYYAU.hl:154 (verbatim
-registry form) — but its owning Lean module is LocalAuto25 (the VASYYAU.hl
-bundle), outside this station's editable file set, so the faithful twin
-statement could not be added this wave (audit 2026-09-21 II). -/
+/-- WIRE `LocalAuto1.ASSWPOW_concl` <- `LocalAuto25.ASSWPOW_p25` (faithful
+twin of the PROVED HOL original VASYYAU.hl:154, statement verbatim; added
+2026-09-21 III in the owning module).  The twin's body is still a skeleton
+`sorry` — the HOL proof runs through the `BBS_IMP_CONVEX_LOCAL_FAN` fan kit
+plus the Flyspeck-constants `arclength_lt_1553` calc, not yet ported — so
+debt flows; the twin is an independent proof piece (not a re-export of the
+registry concl), hence no (b)-style cycle. -/
 theorem ASSWPOW_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s →
     v ∈ MMsV39 s → s.k = 4 → scsBasicV39 s →
     s.b i (i + 1) ≤ 2 * h0 → s.b (i + 1) (i + 2) ≤ 2 * h0 →
-    xrr (norm (v i)) (norm (v (i + 2))) (dist (v i) (v (i + 2))) ≤ 15.53 := by
-  sorry
+    xrr (norm (v i)) (norm (v (i + 2))) (dist (v i) (v (i + 2))) ≤ 15.53 :=
+  ASSWPOW_p25
 
 /-- HOLD (a) `EFLYGAU_concl`: no twin in any lane.  HOL audit 2026-09-21 II:
 appendix.hl:1500 registry let only; no proved lemma in the corpus. -/
@@ -1501,5 +1518,7 @@ inputs (e.g. `YXIONXL1` via an LA12 wave input, `PQCSXWG2` via
 #print axioms OTMTOTJ2_discharged
 #print axioms OTMTOTJ3_discharged
 #print axioms OTMTOTJ4_discharged
+#print axioms ASSWPOW_discharged
+#print axioms DRNDRDV_discharged
 
 end Kepler.Text
