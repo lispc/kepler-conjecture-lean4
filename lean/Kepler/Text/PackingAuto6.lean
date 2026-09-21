@@ -942,13 +942,104 @@ theorem ARCV_GT_PI2 (p u v : V3) :
     constructor <;> intro h <;> linarith
   exact hkey.trans ((Real.arccos_lt_pi_div_two (x := -q)).trans (by simp))
 
+/-- `arcV` is symmetric in its last two arguments. -/
+private theorem p6_arcV_comm (p u v : V3) : arcV p u v = arcV p v u := by
+  unfold arcV
+  simp only [WithLp.ofLp_sub]
+  rw [dotProduct_comm, mul_comm]
+
+/-- `arcV` expressed through Mathlib's real inner product (local copy of
+`LocalAuto6.arcV_eq`, needed before that file can be imported). -/
+private theorem p6_arcV_eq (u v w : V3) :
+    arcV u v w = Real.arccos (inner ℝ (v - u) (w - u) / (dist v u * dist w u)) := by
+  rw [arcV, ← inner_eq_dot]
+  rfl
+
 /-- Rogers.hl:5022 `XYOFCGX_lemma0`. -/
 theorem XYOFCGX_lemma0 (V S : Set V3) (p w : V3) (hV : Packing V) (hSV : S ⊆ V)
     (hS : ¬affineDependent S) (hp : p = circumcenter S) (hr : radV S < Real.sqrt 2)
     (hw : w ∈ V \ S) (hdw : dist p w ≤ radV S) (hcard : 1 < Nat.card S) :
     (∀ u ∈ S, Real.pi / 2 < arcV p w u) ∧
       ∀ u ∈ S, ∀ v ∈ S, u ≠ v → Real.pi / 2 < arcV p u v := by
-  sorry
+  -- key geometry: two points at distance `< √2` from `a` and at distance `≥ 2`
+  -- from each other subtend an obtuse angle at `a` (law of cosines).
+  have key : ∀ a b c : V3, a ≠ b → a ≠ c → dist a b < Real.sqrt 2 →
+      dist a c < Real.sqrt 2 → 2 ≤ dist b c → Real.cos (arcV a b c) < 0 := by
+    intro a b c hab hac hdb hdc hbc
+    have hid : 2 * ((b - a) ⬝ᵥ (c - a)) =
+        dist a b ^ 2 + dist a c ^ 2 - dist b c ^ 2 := by
+      have h := norm_sub_sq_real (b - a) (c - a)
+      rw [inner_eq_dot] at h
+      simp only [WithLp.ofLp_sub] at h ⊢
+      have hsub : (b - a) - (c - a) = b - c := by abel
+      rw [hsub] at h
+      rw [dist_eq_norm, norm_sub_rev a b, dist_eq_norm, norm_sub_rev a c, dist_eq_norm]
+      linarith
+    have h1 : dist a b ^ 2 < 2 := by
+      have hlt : |dist a b| < |Real.sqrt 2| := by
+        rw [abs_of_nonneg dist_nonneg, abs_of_nonneg (Real.sqrt_nonneg 2)]
+        exact hdb
+      have := (sq_lt_sq).mpr hlt
+      rwa [Real.sq_sqrt (by norm_num : (0:ℝ) ≤ 2)] at this
+    have h3 : dist a c ^ 2 < 2 := by
+      have hlt : |dist a c| < |Real.sqrt 2| := by
+        rw [abs_of_nonneg dist_nonneg, abs_of_nonneg (Real.sqrt_nonneg 2)]
+        exact hdc
+      have := (sq_lt_sq).mpr hlt
+      rwa [Real.sq_sqrt (by norm_num : (0:ℝ) ≤ 2)] at this
+    have h4 : 4 ≤ dist b c ^ 2 := by
+      have hle : |(2:ℝ)| ≤ |dist b c| := by
+        rw [abs_of_nonneg (by norm_num : (0:ℝ) ≤ 2), abs_of_nonneg dist_nonneg]
+        exact hbc
+      have := (sq_le_sq).mpr hle
+      norm_num at this ⊢
+      exact this
+    have hdot : (b - a) ⬝ᵥ (c - a) < 0 := by linarith [hid, h1, h3, h4]
+    have hcs : |(b - a) ⬝ᵥ (c - a)| ≤ dist b a * dist c a := by
+      have h := norm_inner_le_norm (𝕜 := ℝ) (b - a) (c - a)
+      rw [inner_eq_dot, Real.norm_eq_abs, ← dist_eq_norm, ← dist_eq_norm] at h
+      exact h
+    have hden : 0 < dist b a * dist c a :=
+      mul_pos (dist_pos.mpr (Ne.symm hab)) (dist_pos.mpr (Ne.symm hac))
+    rw [arcV]
+    have hq1 : -(1:ℝ) ≤ ((b - a) ⬝ᵥ (c - a)) / (dist b a * dist c a) := by
+      rw [le_div_iff₀ hden]
+      nlinarith [(abs_le.mp hcs).1]
+    have hq2 : ((b - a) ⬝ᵥ (c - a)) / (dist b a * dist c a) ≤ 1 := by
+      rw [div_le_iff₀ hden]
+      nlinarith [(abs_le.mp hcs).2]
+    rw [Real.cos_arccos hq1 hq2]
+    exact div_neg_of_neg_of_pos hdot hden
+  have hSne : S.Nonempty := by
+    rw [Set.nonempty_iff_ne_empty]
+    intro h
+    rw [h] at hcard
+    simp at hcard
+  have hp_ne (u : V3) (hu : u ∈ S) : p ≠ u := by
+    rw [hp]
+    exact CIRCUMCENTER_NOT_EQ S hS hcard u hu
+  have hp_dist (u : V3) (hu : u ∈ S) : dist p u < Real.sqrt 2 := by
+    rw [hp, ← OAPVION2 S hS u hu]
+    exact hr
+  have hpw : p ≠ w := by
+    obtain ⟨u₀, hu₀⟩ := hSne
+    intro hpeq
+    have h1 : dist w u₀ < Real.sqrt 2 := by rw [← hpeq]; exact hp_dist u₀ hu₀
+    have h2 : 2 ≤ dist w u₀ :=
+      hV.dist_ge_two hw.1 (hSV hu₀) (by rintro rfl; exact hw.2 hu₀)
+    have h3 : Real.sqrt 2 < 2 := by
+      nlinarith [Real.sq_sqrt (by norm_num : (0:ℝ) ≤ 2), Real.sqrt_nonneg 2]
+    linarith
+  constructor
+  · intro u hu
+    refine (ARCV_GT_PI2 p w u).mpr ?_
+    rw [p6_arcV_comm p w u]
+    exact key p u w (hp_ne u hu) hpw (hp_dist u hu) (lt_of_le_of_lt hdw hr)
+      (hV.dist_ge_two (hSV hu) hw.1 (by rintro rfl; exact hw.2 hu))
+  · intro u hu v hv huv
+    exact (ARCV_GT_PI2 p u v).mpr
+      (key p u v (hp_ne u hu) (hp_ne v hv) (hp_dist u hu) (hp_dist v hv)
+        (hV.dist_ge_two (hSV hu) (hSV hv) huv))
 
 /-- Rogers.hl:5180 `CARD_1_IMP_SING`. -/
 theorem CARD_1_IMP_SING {α : Type*} (s : Set α) (h1 : s.Finite) (h2 : Nat.card s = 1) :
@@ -971,7 +1062,18 @@ theorem XYOFCGX_1 (V S : Set V3) (p : V3) (hV : Packing V) (hSV : S ⊆ V)
     (hS : ¬affineDependent S) (hp : p = circumcenter S) (hr : radV S < Real.sqrt 2)
     (hcard : Nat.card S ≤ 1) :
     ∀ u ∈ S, ∀ v ∈ V \ S, dist v p > dist u p := by
-  sorry
+  intro u hu v hv
+  have hfin : S.Finite :=
+    finite_set_of_fin_dim_affineIndependent (k := ℝ) (not_not.mp hS)
+  have hpos : 0 < Nat.card S := Nat.card_pos_iff.mpr ⟨⟨u, hu⟩, hfin⟩
+  have hcard1 : Nat.card S = 1 := by omega
+  obtain ⟨x, hx⟩ := CARD_1_IMP_SING S hfin hcard1
+  have hux : u = x := by rw [hx] at hu; simpa using hu
+  have hvx : v ≠ x := by
+    intro h
+    exact hv.2 (by rw [hx, h]; simp)
+  rw [hp, hx, CIRCUMCENTER_1, hux, dist_self]
+  exact dist_pos.mpr hvx
 
 /-- Rogers.hl:5222 `CIRCUMCENTER_2`. (HOL `midpoint (a,b)`; Mathlib
 `midpoint ℝ a b`.) -/
@@ -1020,12 +1122,54 @@ theorem CARD_2_IMP_DOUBLE {α : Type*} (s : Set α) (h1 : s.Finite) (h2 : Nat.ca
   obtain ⟨x, y, hxy, hcard⟩ := Finset.card_eq_two.mp hc
   exact ⟨x, y, by rw [← hF, hcard]; simp, hxy⟩
 
+/-- `b - midpoint a b = -(a - midpoint a b)`: the two endpoints of the
+midpoint are opposite vectors from it. -/
+private theorem p6_midpoint_sub (a b : V3) :
+    b - midpoint ℝ a b = -(a - midpoint ℝ a b) := by
+  rw [left_sub_midpoint, right_sub_midpoint, ← smul_neg, neg_sub]
+
+/-- The angles from a point `v` to the two endpoints of a midpoint are
+supplementary: `arcV m v b = π - arcV m v a`. -/
+private theorem p6_arcV_midpoint (a b v : V3) :
+    arcV (midpoint ℝ a b) v b = Real.pi - arcV (midpoint ℝ a b) v a := by
+  set m := midpoint ℝ a b
+  have hsub : b - m = -(a - m) := p6_midpoint_sub a b
+  have hdist : dist b m = dist a m := by
+    rw [dist_comm b, dist_comm a, dist_midpoint_left, dist_midpoint_right]
+  rw [p6_arcV_eq, p6_arcV_eq]
+  have harg : inner ℝ (v - m) (b - m) / (dist v m * dist b m) =
+      -(inner ℝ (v - m) (a - m) / (dist v m * dist a m)) := by
+    rw [hsub, hdist, inner_neg_right]
+    ring
+  rw [harg, Real.arccos_neg]
+
 /-- Rogers.hl:5252 `XYOFCGX_2`. -/
 theorem XYOFCGX_2 (V S : Set V3) (p : V3) (hV : Packing V) (hSV : S ⊆ V)
     (hS : ¬affineDependent S) (hp : p = circumcenter S) (hr : radV S < Real.sqrt 2)
     (hcard : Nat.card S = 2) :
     ∀ u ∈ S, ∀ v ∈ V \ S, dist v p > dist u p := by
-  sorry
+  intro u hu v hv
+  by_contra hcon
+  have hle : dist v p ≤ dist u p := le_of_not_gt hcon
+  have hurad : radV S = dist u p := by
+    rw [hp, dist_comm]; exact OAPVION2 S hS u hu
+  have hdv : dist p v ≤ radV S := by rw [dist_comm, hurad]; exact hle
+  -- `v` also lies within the circumradius, so `XYOFCGX_lemma0` bounds the
+  -- angles from `v` to every point of `S`.
+  have h0 := (XYOFCGX_lemma0 V S p v hV hSV hS hp hr hv hdv (by omega)).1
+  have hfin : S.Finite :=
+    finite_set_of_fin_dim_affineIndependent (k := ℝ) (not_not.mp hS)
+  obtain ⟨a, b, hSab, hab⟩ := CARD_2_IMP_DOUBLE S hfin hcard
+  have ha : a ∈ S := by rw [hSab]; simp
+  have hb : b ∈ S := by rw [hSab]; simp
+  have hpa : p = midpoint ℝ a b := by rw [hp, hSab, CIRCUMCENTER_2]
+  have hA : Real.pi / 2 < arcV p v a := h0 a ha
+  have hB : Real.pi / 2 < arcV p v b := h0 b hb
+  -- the two angles are supplementary, so they cannot both exceed `π/2`.
+  have hrel : arcV p v b = Real.pi - arcV p v a := by
+    rw [hpa]; exact p6_arcV_midpoint a b v
+  rw [hrel] at hB
+  linarith
 
 /-- Rogers.hl:5292 `ANGLE_GT_PI2`. (HOL `angle (a,b,c)`; Mathlib
 `EuclideanGeometry.angle a b c`, the angle at `b`.) -/

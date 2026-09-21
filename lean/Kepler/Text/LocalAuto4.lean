@@ -1330,9 +1330,9 @@ private theorem ee_eq_setOfEdge_p4 {V : Set V3} {E : Set (Set V3)} {v : V3}
   ext w
   constructor
   · intro hw
-    exact ⟨(hfan.1 (Set.mem_sUnion.mpr ⟨{v, w}, hw, by simp⟩)), hw⟩
+    exact ⟨hw, hfan.1 (Set.mem_sUnion.mpr ⟨{v, w}, hw, by simp⟩)⟩
   · intro hw
-    exact hw.2
+    exact hw.1
 
 private theorem ee_v_sy_p4 {m : ℕ} (l : FinVec m 3) (hm : 1 < m)
     (hinj : ∀ i j : Fin m, vecmatsV3_p4 l i = vecmatsV3_p4 l j → i = j)
@@ -1388,7 +1388,6 @@ theorem FF_OF_HYP_EQ {m : ℕ} (l : FinVec m 3)
     simpa [hu, hv] using EDGE_IN_E_SY l i))]
   rw [ee_v_sy_p4 l hm hinj i hu hv hw hfan]
   rw [ivsAzimCycle_p4_either1 (u := u) (w := w) (v0 := 0) (a := v)]
-  rfl
 
 /-- HOL `AZIM_CYCLE_EQ1` (dih2k.hl:2035). -/
 theorem AZIM_CYCLE_EQ1 {m : ℕ} (l : FinVec m 3)

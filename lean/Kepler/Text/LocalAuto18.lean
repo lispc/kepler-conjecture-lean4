@@ -47,8 +47,12 @@ FILE MAP
     `SUM_AZIM_EQ_ANGLE_LE4_FUN_p18`, `AURSIPD_p18` (sorry).
   Section D (CNICGSF): the five `SCS_DIAG_*_p18` (proved, decidable);
     the five slice arrows `SCS_*_SLICE_*_p18` (sorry; `LKGRQUI` lane);
-    `CNICGSF1..5_p18` (sorry; need the `PRO_EQU_ID1`/`YXIONXL3` kit on
-    top of the slices).
+    the in-file rotation kit `funlistV39_add_period_p18` /
+    `funlistV39_add_mul_period_p18` / `propEqu_propEqu_mkUnadorned_p18` /
+    `scsArrowV39_pair_union_p18` / `scsArrowV39_lift_p18`; `CNICGSF1..5_p18`
+    (proved 2026-09-21 from the slice arrows + the importable
+    `LocalAuto1.YXIONXL3_concl`; no `PRO_EQU_ID1`/`FZIOTEF_UNION` import
+    needed — the rotation identity is re-derived in-file).
 
 ENCODING NOTES
   - Import discipline: this file sits on the LocalAuto1/`PackingAuto18`
@@ -1080,40 +1084,169 @@ theorem SCS_5M1_SLICE_24_p18 :
   -- DISCHARGES: LKGRQUI + STAB_5M1_SCS + the (2,4)-slice computation
   -- against scs_3M1/scs_4M5' (HOL CNICGSF.hl:729-874).
 
-/-- HOL `CNICGSF1` (CNICGSF.hl:207). -/
+/-! ### Rotation kit for the `CNICGSF` arrows
+
+`funlistV39`-table registries are `k`-periodic, so a double `scsPropEquV39`
+rotation by `i` then `m` with `i + m ≡ 0 (mod k)` returns the original system.
+This is the in-file `PRO_EQU_ID1` instance used by the HOL `CNICGSF*` proofs
+(the general LocalAuto12 `PRO_EQU_ID1` is not importable next to LocalAuto1). -/
+
+private theorem funlistV39_add_period_p18 (data : List ((ℕ × ℕ) × ℝ)) (d : ℝ)
+    (k j j' : ℕ) :
+    funlistV39 data d k (k + j) (k + j') = funlistV39 data d k j j' := by
+  unfold funlistV39 psort
+  have h1 : (k + j) % k = j % k := by
+    rw [Nat.add_comm k j]
+    simpa using (Nat.add_mul_mod_self_left j 1 k)
+  have h2 : (k + j') % k = j' % k := by
+    rw [Nat.add_comm k j']
+    simpa using (Nat.add_mul_mod_self_left j' 1 k)
+  rw [h1, h2]
+
+private theorem funlistV39_add_mul_period_p18 (data : List ((ℕ × ℕ) × ℝ)) (d : ℝ)
+    (k c j j' : ℕ) :
+    funlistV39 data d k (k * c + j) (k * c + j') = funlistV39 data d k j j' := by
+  induction c with
+  | zero => simp
+  | succ c ih =>
+    rw [show k * (c + 1) + j = k + (k * c + j) from by ring,
+        show k * (c + 1) + j' = k + (k * c + j') from by ring,
+        funlistV39_add_period_p18, ih]
+
+private theorem propEqu_propEqu_mkUnadorned_p18 (k : ℕ) (d : ℝ)
+    (data1 : List ((ℕ × ℕ) × ℝ)) (d1 : ℝ) (data2 : List ((ℕ × ℕ) × ℝ)) (d2 : ℝ)
+    (i m c : ℕ) (h : i + m = k * c) :
+    scsPropEquV39 (scsPropEquV39
+        (mkUnadornedV39 k d (funlistV39 data1 d1 k) (funlistV39 data2 d2 k)) i) m
+      = mkUnadornedV39 k d (funlistV39 data1 d1 k) (funlistV39 data2 d2 k) := by
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, rfl, rfl, rfl, rfl⟩
+  all_goals
+    ext j j'
+    simp only [scsPropEquV39, mkUnadornedV39]
+    rw [show i + (m + j) = k * c + j from by omega,
+        show i + (m + j') = k * c + j' from by omega]
+    exact funlistV39_add_mul_period_p18 _ _ k c j j'
+
+/-- Two-element union of arrows (`FZIOTEF_UNION` at singletons; the LocalAuto20
+copy is not importable next to LocalAuto1). -/
+private theorem scsArrowV39_pair_union_p18 {a b c d : ScsV39}
+    (h1 : scsArrowV39 {a} {b}) (h2 : scsArrowV39 {c} {d}) :
+    scsArrowV39 {a, c} {b, d} := by
+  refine ⟨?_, ?_⟩
+  · intro s hs
+    rcases hs with h | h
+    · rw [h]; exact h1.1 b (by simp)
+    · rw [h]; exact h2.1 d (by simp)
+  · rcases h1.2 with h1e | ⟨s, hs, hne⟩
+    · rcases h2.2 with h2e | ⟨t, ht, hne'⟩
+      · left
+        intro u hu
+        rcases hu with h | h
+        · rw [h]; exact h1e a (by simp)
+        · rw [h]; exact h2e c (by simp)
+      · exact Or.inr ⟨t, Or.inr (Set.mem_singleton_iff.mp ht), hne'⟩
+    · exact Or.inr ⟨s, Or.inl (Set.mem_singleton_iff.mp hs), hne⟩
+
+/-- Rewrite the target of a singleton arrow along an equality of systems. -/
+private theorem scsArrowV39_lift_p18 {a b b' : ScsV39} (h : scsArrowV39 {a} {b'})
+    (heq : b' = b) : scsArrowV39 {a} {b} := by rw [← heq]; exact h
+
+/-- HOL `CNICGSF1` (CNICGSF.hl:207). Composes the `(0,2)`-slice arrow with the
+`scsPropEquV39`-rotations of the `scs3M1`/`scs4M2` terminals back to their
+unrotated forms (HOL `PRO_EQU_ID1`/`YXIONXL3` route). -/
 theorem CNICGSF1_p18 :
     scsArrowV39 {scsStabDiagV39 scs5I1 0 2} {scs3M1, scs4M2} := by
-  sorry
-  -- DISCHARGES: SCS_5I1_SLICE_02_p18 + FZIOTEF_TRANS/FZIOTEF_UNION +
-  -- PRO_EQU_ID1 (MMsV39 ∘ scsPropEquV39 = MMsV39) + YXIONXL3 +
-  -- SCS_3M1_IS_SCS/SCS_4M2_IS_SCS.
+  have his1 : isScsV39 (scsPropEquV39 scs3M1 1) := SCS_5I1_SLICE_02_p18.1 _ (by simp)
+  have his2 : isScsV39 (scsPropEquV39 scs4M2 1) := SCS_5I1_SLICE_02_p18.1 _ (by simp)
+  have heq1 : scsPropEquV39 (scsPropEquV39 scs3M1 1) 2 = scs3M1 :=
+    propEqu_propEqu_mkUnadorned_p18 3 0.103
+      [((0, 1), 2 * h0)] 2 [((0, 1), cstab)] (2 * h0) 1 2 1 (by norm_num)
+  have heq2 : scsPropEquV39 (scsPropEquV39 scs4M2 1) 3 = scs4M2 :=
+    propEqu_propEqu_mkUnadorned_p18 4 0.3789
+      [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2
+      [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 1 3 1 (by norm_num)
+  exact FZIOTEF_TRANS _ _ _ SCS_5I1_SLICE_02_p18
+    (scsArrowV39_pair_union_p18 (scsArrowV39_lift_p18 (YXIONXL3_concl _ 2 his1) heq1)
+      (scsArrowV39_lift_p18 (YXIONXL3_concl _ 3 his2) heq2))
+  -- NEEDS: SCS_5I1_SLICE_02_p18 (above, still sorried: LKGRQUI lane) +
+  -- LocalAuto1.YXIONXL3_concl (importable, discharged at assembly by
+  -- LocalAuto12.YXIONXL3); the rotation identity is the in-file
+  -- `propEqu_propEqu_mkUnadorned_p18` (PRO_EQU_ID1 twin).
 
-/-- HOL `CNICGSF2` (CNICGSF.hl:361). -/
+/-- HOL `CNICGSF2` (CNICGSF.hl:361). Same route as `CNICGSF1_p18` with the
+`(0,2)`-slice of `scs5I2`. -/
 theorem CNICGSF2_p18 :
     scsArrowV39 {scsStabDiagV39 scs5I2 0 2} {scs3T1, scs4M3'} := by
-  sorry
-  -- DISCHARGES: SCS_5I2_SLICE_02_p18 + the PRO_EQU_ID1/YXIONXL3 kit with
-  -- SCS_3T1_IS_SCS/SCS_4M3_IS_SCS.
+  have his1 : isScsV39 (scsPropEquV39 scs3T1 1) := SCS_5I2_SLICE_02_p18.1 _ (by simp)
+  have his2 : isScsV39 (scsPropEquV39 scs4M3' 1) := SCS_5I2_SLICE_02_p18.1 _ (by simp)
+  have heq1 : scsPropEquV39 (scsPropEquV39 scs3T1 1) 2 = scs3T1 := by
+    have h := propEqu_propEqu_mkUnadorned_p18 3 0.11
+      [((0, 1), Real.sqrt 8)] 2 [((0, 1), cstab)] (2 * h0) 1 2 1 (by norm_num)
+    rwa [← scs_3T1] at h
+  have heq2 : scsPropEquV39 (scsPropEquV39 scs4M3' 1) 3 = scs4M3' :=
+    propEqu_propEqu_mkUnadorned_p18 4 0.513
+      [((0, 1), Real.sqrt 8), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)] 2
+      [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 1 3 1 (by norm_num)
+  exact FZIOTEF_TRANS _ _ _ SCS_5I2_SLICE_02_p18
+    (scsArrowV39_pair_union_p18 (scsArrowV39_lift_p18 (YXIONXL3_concl _ 2 his1) heq1)
+      (scsArrowV39_lift_p18 (YXIONXL3_concl _ 3 his2) heq2))
+  -- NEEDS: SCS_5I2_SLICE_02_p18 (still sorried) + LocalAuto1.YXIONXL3_concl.
 
-/-- HOL `CNICGSF3` (CNICGSF.hl:527). -/
+/-- HOL `CNICGSF3` (CNICGSF.hl:527). Same route with the `(0,2)`-slice of
+`scs5M1`; note the `scs3T4` terminal is reached by a `2`-rotation. -/
 theorem CNICGSF3_p18 :
     scsArrowV39 {scsStabDiagV39 scs5M1 0 2} {scs3T4, scs4M2} := by
-  sorry
-  -- DISCHARGES: SCS_5M1_SLICE_02_p18 + the PRO_EQU_ID1/YXIONXL3 kit with
-  -- SCS_3T4_IS_SCS/SCS_4M2_IS_SCS.
+  have his1 : isScsV39 (scsPropEquV39 scs3T4 2) := SCS_5M1_SLICE_02_p18.1 _ (by simp)
+  have his2 : isScsV39 (scsPropEquV39 scs4M2 1) := SCS_5M1_SLICE_02_p18.1 _ (by simp)
+  have heq1 : scsPropEquV39 (scsPropEquV39 scs3T4 2) 1 = scs3T4 :=
+    propEqu_propEqu_mkUnadorned_p18 3 0.2759
+      [((0, 1), 2)] (2 * h0) [((0, 1), 2 * h0)] cstab 2 1 1 (by norm_num)
+  have heq2 : scsPropEquV39 (scsPropEquV39 scs4M2 1) 3 = scs4M2 :=
+    propEqu_propEqu_mkUnadorned_p18 4 0.3789
+      [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2
+      [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 1 3 1 (by norm_num)
+  exact FZIOTEF_TRANS _ _ _ SCS_5M1_SLICE_02_p18
+    (scsArrowV39_pair_union_p18 (scsArrowV39_lift_p18 (YXIONXL3_concl _ 1 his1) heq1)
+      (scsArrowV39_lift_p18 (YXIONXL3_concl _ 3 his2) heq2))
+  -- NEEDS: SCS_5M1_SLICE_02_p18 (still sorried) + LocalAuto1.YXIONXL3_concl.
 
-/-- HOL `CNICGSF4` (CNICGSF.hl:696). -/
+/-- HOL `CNICGSF4` (CNICGSF.hl:696). Same route with the `(0,3)`-slice of
+`scs5M1`. -/
 theorem CNICGSF4_p18 :
     scsArrowV39 {scsStabDiagV39 scs5M1 0 3} {scs4M4', scs3M1} := by
-  sorry
-  -- DISCHARGES: SCS_5M1_SLICE_03_p18 + the PRO_EQU_ID1/YXIONXL3 kit with
-  -- SCS_4M4_IS_SCS/SCS_3M1_IS_SCS.
+  have his1 : isScsV39 (scsPropEquV39 scs4M4' 1) := SCS_5M1_SLICE_03_p18.1 _ (by simp)
+  have his2 : isScsV39 (scsPropEquV39 scs3M1 1) := SCS_5M1_SLICE_03_p18.1 _ (by simp)
+  have heq1 : scsPropEquV39 (scsPropEquV39 scs4M4' 1) 3 = scs4M4' :=
+    propEqu_propEqu_mkUnadorned_p18 4 0.513
+      [((0, 1), 2 * h0), ((1, 2), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2
+      [((0, 1), cstab), ((1, 2), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 1 3 1
+      (by norm_num)
+  have heq2 : scsPropEquV39 (scsPropEquV39 scs3M1 1) 2 = scs3M1 :=
+    propEqu_propEqu_mkUnadorned_p18 3 0.103
+      [((0, 1), 2 * h0)] 2 [((0, 1), cstab)] (2 * h0) 1 2 1 (by norm_num)
+  exact FZIOTEF_TRANS _ _ _ SCS_5M1_SLICE_03_p18
+    (scsArrowV39_pair_union_p18 (scsArrowV39_lift_p18 (YXIONXL3_concl _ 3 his1) heq1)
+      (scsArrowV39_lift_p18 (YXIONXL3_concl _ 2 his2) heq2))
+  -- NEEDS: SCS_5M1_SLICE_03_p18 (still sorried) + LocalAuto1.YXIONXL3_concl.
 
-/-- HOL `CNICGSF5` (CNICGSF.hl:876). -/
+/-- HOL `CNICGSF5` (CNICGSF.hl:876). Same route with the `(2,4)`-slice of
+`scs5M1`. -/
 theorem CNICGSF5_p18 :
     scsArrowV39 {scsStabDiagV39 scs5M1 2 4} {scs3M1, scs4M5'} := by
-  sorry
-  -- DISCHARGES: SCS_5M1_SLICE_24_p18 + the PRO_EQU_ID1/YXIONXL3 kit with
-  -- SCS_3M1_IS_SCS/SCS_4M5_IS_SCS.
+  have his1 : isScsV39 (scsPropEquV39 scs3M1 1) := SCS_5M1_SLICE_24_p18.1 _ (by simp)
+  have his2 : isScsV39 (scsPropEquV39 scs4M5' 1) := SCS_5M1_SLICE_24_p18.1 _ (by simp)
+  have heq1 : scsPropEquV39 (scsPropEquV39 scs3M1 1) 2 = scs3M1 :=
+    propEqu_propEqu_mkUnadorned_p18 3 0.103
+      [((0, 1), 2 * h0)] 2 [((0, 1), cstab)] (2 * h0) 1 2 1 (by norm_num)
+  have heq2 : scsPropEquV39 (scsPropEquV39 scs4M5' 1) 3 = scs4M5' :=
+    propEqu_propEqu_mkUnadorned_p18 4 0.513
+      [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), 2 * h0), ((1, 3), 2 * h0)] 2
+      [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 1 3 1
+      (by norm_num)
+  exact FZIOTEF_TRANS _ _ _ SCS_5M1_SLICE_24_p18
+    (scsArrowV39_pair_union_p18 (scsArrowV39_lift_p18 (YXIONXL3_concl _ 2 his1) heq1)
+      (scsArrowV39_lift_p18 (YXIONXL3_concl _ 3 his2) heq2))
+  -- NEEDS: SCS_5M1_SLICE_24_p18 (still sorried) + LocalAuto1.YXIONXL3_concl.
 
 end Kepler.Text
