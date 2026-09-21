@@ -139,3 +139,10 @@ bb_soundG 适配；两个验收例 + #print axioms；lake build。
 根盒 TM 失败→二分一层收敛）、3✓、4✓。
 
 下一步：commit（CertTM.lean 新增 + CertG.lean 修改 + 本笔记）。
+
+## 3. 收尾（完成，2026-09-21）
+
+commit `456011b5`（wip/g4-emit，未 push）：CertTM.lean 新增 +
+CertG.lean 修改 + 本笔记。TM0 里程碑四项验收全部通过。无遗留 sorry；
+TM1 建议直接在 ∃a-Valid 代数路线上扩展（T1/g'' 债已被此路线化解，
+剩 div/trans 合成规则与 TMParams rung 对接）。
