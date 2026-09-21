@@ -66,6 +66,7 @@ ENCODING NOTES
 import Kepler.Text.Polytope
 import Kepler.Text.PackingAuto2
 import Kepler.Text.PackingAuto3
+import Kepler.Text.PackingAuto18
 import Kepler.Text.PackingAuto21
 import Kepler.Text.SphereKit
 import Kepler.Statement
@@ -125,40 +126,10 @@ def HasSizeP25 (s : Set V3) (n : ℕ) : Prop := s.Finite ∧ s.ncard = n
 section is PA18-lane-duplicated but not SphereKit material; `MCELL2_SUBSET_AFF_GE`
 is *not* redeclared here (PA18's and PA21's statements differ, plan §6.1).) -/
 
-/-- HOL `leaf` (leaf_cell.hl:17); PackingAuto18.lean:73 verbatim. -/
-def leaf (V : Set V3) (ul : List V3) : Prop := barV V 2 ul ∧ hl ul < Real.sqrt 2
-
-/-- HOL `cc_pe_exists` (leaf_cell.hl:1052-1084); PackingAuto18 verbatim. -/
-theorem cc_pe_exists (V : Set V3) (ul : List V3) :
-    ∃ p1 p2 : V3, Packing V → saturated V → leaf V ul →
-      voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3) ∧ p1 ≠ p2 ∧
-        0 < chiMsb ul p1 := by
-  sorry
-
-/-- HOL `cc_pe1` (leaf_cell.hl:1082); PackingAuto18 verbatim. -/
-noncomputable def ccPe1 (V : Set V3) (ul : List V3) : V3 :=
-  Classical.choose (cc_pe_exists V ul)
-
-/-- HOL `cc_pe2` (leaf_cell.hl:1082); PackingAuto18 verbatim. -/
-noncomputable def ccPe2 (V : Set V3) (ul : List V3) : V3 :=
-  Classical.choose (Classical.choose_spec (cc_pe_exists V ul))
-
-/-- HOL `cc_uh_exists` (leaf_cell.hl:1120-1132); PackingAuto18 verbatim. -/
-theorem cc_uh_exists (V : Set V3) (ul : List V3) :
-    ∃ vl : List V3, Packing V → saturated V → leaf V ul →
-      barV V 3 vl ∧ truncateSimplex 2 vl = ul ∧ omegaList V vl = ccPe1 V ul := by
-  sorry
-
-/-- HOL `cc_uh` (leaf_cell.hl:1133); PackingAuto18 verbatim. -/
-noncomputable def ccUh (V : Set V3) (ul : List V3) : List V3 :=
-  Classical.choose (cc_uh_exists V ul)
-
-/-- HOL `cc_ke` (leaf_cell.hl:1136-1137); PackingAuto18 verbatim. -/
-noncomputable def ccKe (V : Set V3) (ul : List V3) : ℕ :=
-  if hl (ccUh V ul) < Real.sqrt 2 then 4 else 3
-
-/-- HOL `cc_cell` (leaf_cell.hl:1142); PackingAuto18 verbatim. -/
-def ccCell (V : Set V3) (ul : List V3) : Set V3 := mcell (ccKe V ul) V (ccUh V ul)
+/-! `leaf`（leaf_cell.hl:17）与 cc_* 块（`cc_pe_exists`/`ccPe1`/`ccPe2`/
+`cc_uh_exists`/`ccUh`/`ccKe`/`ccCell`，leaf_cell.hl:1052-1142）已改为委托
+`Kepler.Text.PackingAuto18`（2026-09-21 骨架化：该块在两文件 verbatim 重复，
+导致 PA18 ⊕ PA25 无法共存于同一 import 环境，Assembly 脊柱需要二者）。 -/
 
 /-! ## DEFINITIONS -/
 
@@ -479,15 +450,110 @@ theorem BARV3_SET_OF_LIST4 (V : Set V3) (ul : List V3) (hp : Packing V)
       simp only [List.length_cons] at h4
       omega
 
-/-- HOL `STRICT_SORT_FINITE`: a finite set with an asymmetric transitive
-`<<` can be enumerated by `1..n` in `<<`-increasing order. -/
-theorem STRICT_SORT_FINITE {α : Type*} {lt : α → α → Prop} (s : Set α) (n : ℕ)
-    (_hirr : ∀ x y, x ∈ s → y ∈ s → lt x y → lt y x → x = y)
-    (_htr : ∀ x y z, x ∈ s → y ∈ s → z ∈ s → lt x y → lt y z → lt x z)
-    (_hs : s.Finite ∧ s.ncard = n) :
+/-- HOL `STRICT_SORT_FINITE` (OXLZLEZ3.hl:163): a finite set with an
+asymmetric transitive `<<` can be enumerated by `1..n` in `<<`-increasing
+order.  FAITHFUL-RESTATEMENT note: the HOL statement quantifies over all
+types because HOL Light types are all inhabited; over an empty `α` the Lean
+statement is FALSE (take `s = ∅`, `n = 0`: no function `ℕ → α` exists at
+all), so the `Nonempty α` class side condition is added.  Proof: rank each
+element by the cardinality of its strict down-set inside `s` (strictly
+monotone along `lt`-comparable pairs by transitivity), then enumerate `s`
+insertion-sorted by that rank (`List.Perm`/`List.Pairwise` bookkeeping). -/
+theorem STRICT_SORT_FINITE {α : Type*} [Nonempty α] {lt : α → α → Prop} (s : Set α) (n : ℕ)
+    (hirr : ∀ x y, x ∈ s → y ∈ s → lt x y → lt y x → x = y)
+    (htr : ∀ x y z, x ∈ s → y ∈ s → z ∈ s → lt x y → lt y z → lt x z)
+    (hs : s.Finite ∧ s.ncard = n) :
     ∃ f : ℕ → α, s = f '' Set.Icc 1 n ∧
       ∀ j k, j ∈ Set.Icc 1 n → k ∈ Set.Icc 1 n → j < k → ¬lt (f k) (f j) := by
-  sorry
+  classical
+  -- every down-set is finite (subset of `s`)
+  have Dfin : ∀ x : α, ({z : α | z ∈ s ∧ lt z x ∧ z ≠ x} : Set α).Finite :=
+    fun x => hs.1.subset fun z hz => hz.1
+  -- rank function: cardinality of the strict down-set
+  obtain ⟨mu, hmu⟩ :
+      ∃ mu : α → ℕ, ∀ x, mu x = Set.ncard {z : α | z ∈ s ∧ lt z x ∧ z ≠ x} :=
+    ⟨_, fun _ => rfl⟩
+  -- the rank strictly increases along `lt`-comparable distinct pairs
+  have key : ∀ x y : α, x ∈ s → y ∈ s → lt x y → x ≠ y → mu x < mu y := by
+    intro x y hx hy hxy hne
+    have hbelow : {z : α | z ∈ s ∧ lt z x ∧ z ≠ x} ⊆
+        {z : α | z ∈ s ∧ lt z y ∧ z ≠ y} := by
+      intro z hz
+      refine ⟨hz.1, htr z x y hz.1 hx hy hz.2.1 hxy, ?_⟩
+      intro hzy
+      have hyx : lt y x := hzy ▸ hz.2.1
+      exact absurd (hzy.trans (hirr x y hx hy hxy hyx).symm) hz.2.2
+    have hxnot : x ∉ ({z : α | z ∈ s ∧ lt z x ∧ z ≠ x} : Set α) := fun h => h.2.2 rfl
+    have hback : ¬ ({z : α | z ∈ s ∧ lt z y ∧ z ≠ y} : Set α) ⊆
+        {z : α | z ∈ s ∧ lt z x ∧ z ≠ x} := by
+      intro hcon
+      exact hxnot (hcon (⟨hx, hxy, hne⟩ :
+        x ∈ ({z : α | z ∈ s ∧ lt z y ∧ z ≠ y} : Set α)))
+    rw [hmu x, hmu y]
+    exact Set.ncard_lt_ncard ⟨hbelow, hback⟩ (Dfin y)
+  -- enumerate `s` as a duplicate-free list
+  set l0 : List α := hs.1.toFinset.toList with hl0def
+  have hl0mem : ∀ a, a ∈ l0 ↔ a ∈ s := by
+    intro a
+    rw [hl0def, Finset.mem_toList, Set.Finite.mem_toFinset]
+  have hl0nd : l0.Nodup := by
+    rw [hl0def]; exact hs.1.toFinset.nodup_toList
+  have hl0len : l0.length = n := by
+    rw [hl0def, Finset.length_toList, ← Set.ncard_eq_toFinset_card s hs.1]
+    exact hs.2
+  -- insertion-sort it by the rank
+  haveI : Std.Total (fun a b => mu a ≤ mu b) := ⟨fun a b => Nat.le_total (mu a) (mu b)⟩
+  haveI : IsTrans α (fun a b => mu a ≤ mu b) := ⟨fun _ _ _ h1 h2 => le_trans h1 h2⟩
+  set l : List α := l0.insertionSort (fun a b => mu a ≤ mu b) with hldef
+  have hlen : l.length = n := by
+    rw [hldef]
+    have hperml := (List.perm_insertionSort (fun a b => mu a ≤ mu b) l0).length_eq
+    rw [hperml]; exact hl0len
+  have hmem : ∀ a, a ∈ l ↔ a ∈ s := by
+    intro a
+    rw [hldef, List.mem_insertionSort, hl0mem a]
+  have hlnd : l.Nodup := by
+    rw [hldef]
+    exact (List.perm_insertionSort (fun a b => mu a ≤ mu b) l0).nodup_iff.mpr hl0nd
+  have hpair : l.Pairwise (fun a b => mu a ≤ mu b) := by
+    rw [hldef]; exact List.pairwise_insertionSort _ l0
+  refine ⟨fun i => l.getD (i - 1) (Classical.choice inferInstance), ?_, ?_⟩
+  · refine Set.ext fun x => ?_
+    constructor
+    · intro hx
+      obtain ⟨i, hi, hli⟩ := List.mem_iff_getElem.mp (hmem x |>.mpr hx)
+      exact ⟨i + 1, ⟨by omega, by omega⟩, by
+        show l.getD (i + 1 - 1) (Classical.choice inferInstance) = x
+        rw [show i + 1 - 1 = i from by omega,
+          List.getD_eq_getElem l (Classical.choice inferInstance) hi]
+        exact hli⟩
+    · rintro ⟨i, ⟨hi1, hi2⟩, rfl⟩
+      show l.getD (i - 1) (Classical.choice inferInstance) ∈ s
+      have hilt : i - 1 < l.length := by rw [hlen]; omega
+      rw [List.getD_eq_getElem l (Classical.choice inferInstance) hilt]
+      exact (hmem _).mp (List.getElem_mem _)
+  · intro j k kj kk hlt
+    obtain ⟨hj1, hjn⟩ := kj
+    obtain ⟨hk1, hkn⟩ := kk
+    have hjlt : j - 1 < l.length := by rw [hlen]; omega
+    have hklt : k - 1 < l.length := by rw [hlen]; omega
+    intro hlt
+    have hjk : j - 1 ≠ k - 1 := by omega
+    have hne' : l[k - 1] ≠ l[j - 1] := by
+      intro hcon
+      exact hjk (congrArg Fin.val
+        (List.nodup_iff_injective_getElem.mp hlnd
+          (show l[(⟨k - 1, hklt⟩ : Fin l.length).val] =
+              l[(⟨j - 1, hjlt⟩ : Fin l.length).val] from hcon))).symm
+    beta_reduce at hlt
+    rw [List.getD_eq_getElem l (Classical.choice inferInstance) hklt,
+        List.getD_eq_getElem l (Classical.choice inferInstance) hjlt] at hlt
+    have hge : mu l[j - 1] ≤ mu l[k - 1] :=
+      List.pairwise_iff_getElem.mp hpair (j - 1) (k - 1) hjlt hklt (by omega)
+    have hmut : mu l[k - 1] < mu l[j - 1] :=
+      key _ _ (hmem _ |>.mp (List.getElem_mem _)) (hmem _ |>.mp (List.getElem_mem _))
+        hlt hne'
+    omega
 
 /-- HOL `MOD_INJ1_ALT` (name sufficed; PackingAuto3.lean:445 has an
 equivalent theorem under this name). -/
@@ -1256,12 +1322,31 @@ theorem MCELL4_DIHX_AZIM (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : �
       azim (elV ul 0) (elV ul 1) (f i) (f (i + 1)) := by
   sorry
 
-/-- HOL `LEAF_RANK_HAS_SIZE`. -/
+/-- HOL `LEAF_RANK_HAS_SIZE`.  Proof: the `n`-periodicity collapses the
+surjective image `f '' univ` to `f '' {i | i < n}` (PERIODIC_IMAGE), and the
+strict `azim`-increase makes `f` injective there (an equal-value pair would
+force `azim w0 x < azim w0 x`), so `Set.ncard (f '' Iio n) = ncard (Iio n) =
+n` (InjOn.ncard_image + ncard_Iio_nat).  The geometric antecedents of the HOL
+proof (S_LEAF_FINITE, LEAF_RANK_AZIM_INJ) are not needed. -/
 theorem LEAF_RANK_HAS_SIZE (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
     (hn : n ≠ 0) (hp : Packing V) (hs : saturated V) (hr : leaf_rank V ul w0 n f)
     (hnc : ¬ Collinear3 (elV ul 0) (elV ul 1) w0) :
     HasSizeP25 (s_leaf V ul) n := by
-  sorry
+  have hper : periodic f n := LEAF_RANK_PERIODIC V ul w0 n f hr
+  have himg : f '' {i : ℕ | i < n} = s_leaf V ul := by
+    rw [PERIODIC_IMAGE hn hper]
+    exact hr.1
+  refine ⟨?_, ?_⟩
+  · rw [← himg]
+    exact (Set.finite_Iio n).image f
+  · have hinj : Set.InjOn f {i : ℕ | i < n} := by
+      intro i hi j hj hij
+      rcases lt_trichotomy i j with hlt | heq | hgt
+      · exact absurd (hr.2.2 i j hi hj hlt) (by rw [← hij]; exact lt_irrefl _)
+      · exact heq
+      · exact absurd (hr.2.2 j i hj hi hgt) (by rw [hij]; exact lt_irrefl _)
+    rw [← himg, Set.InjOn.ncard_image hinj]
+    exact Set.ncard_Iio_nat n
 
 /-- HOL `MCELL4_FULL_WEDGE`: the 4-cell is the unique cell in its wedge. -/
 theorem MCELL4_FULL_WEDGE (V : Set V3) (X : Set V3) (ul : List V3) (w0 : V3) (n : ℕ)
@@ -2376,10 +2461,59 @@ theorem leaf_CIHTIUM (V : Set V3) (u0 u1 u2 : V3) (hnl : pack_nonlinear_non_ox3q
     (hd2 : 2 * hminus ≤ dist u1 u2) : False := by
   sorry
 
-/-- HOL `gamma4fgcy_sym26`. -/
+/-- HOL `gamma4fgcy_sym26`.  The `delta_x`/`delta_x4`/`dih_y` family is
+invariant under the edge-endpoint swap `(2 6) (3 5)` (vertex swap `v0 ↔ v1`)
+and under the face swap `(2 3) (5 6)` (vertex swap `v2 ↔ v3`); both are
+polynomial identities on the bodies, and the four `solY` solid angles plus
+the six `dihY`-weighted edge terms of `vol4f` then match term by term. -/
 theorem gamma4fgcy_sym26 (y1 y2 y3 y4 y5 y6 : ℝ) (f : ℝ → ℝ) :
     gamma4fgcyP25 y1 y2 y3 y4 y5 y6 f = gamma4fgcyP25 y1 y6 y5 y4 y3 y2 f := by
-  sorry
+  have hD1 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX x1 x2 x3 x4 x5 x6 = deltaX x1 x6 x5 x4 x3 x2 := by
+    intro x1 x2 x3 x4 x5 x6; unfold deltaX; ring
+  have hD2 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX x1 x2 x3 x4 x5 x6 = deltaX x1 x3 x2 x4 x6 x5 := by
+    intro x1 x2 x3 x4 x5 x6; unfold deltaX; ring
+  have hD3 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX4 x1 x2 x3 x4 x5 x6 = deltaX4 x1 x6 x5 x4 x3 x2 := by
+    intro x1 x2 x3 x4 x5 x6; unfold deltaX4; ring
+  have hD4 : ∀ x1 x2 x3 x4 x5 x6 : ℝ,
+      deltaX4 x1 x2 x3 x4 x5 x6 = deltaX4 x1 x3 x2 x4 x6 x5 := by
+    intro x1 x2 x3 x4 x5 x6; unfold deltaX4; ring
+  have hdy26 : ∀ a b c d e g : ℝ, dihY a b c d e g = dihY a g e d c b := by
+    intro a b c d e g
+    show dihXf (a * a) (b * b) (c * c) (d * d) (e * e) (g * g) =
+      dihXf (a * a) (g * g) (e * e) (d * d) (c * c) (b * b)
+    unfold dihXf
+    rw [hD1 (a * a) (b * b) (c * c) (d * d) (e * e) (g * g),
+      hD3 (a * a) (b * b) (c * c) (d * d) (e * e) (g * g)]
+  have hdy23 : ∀ a b c d e g : ℝ, dihY a b c d e g = dihY a c b d g e := by
+    intro a b c d e g
+    show dihXf (a * a) (b * b) (c * c) (d * d) (e * e) (g * g) =
+      dihXf (a * a) (c * c) (b * b) (d * d) (g * g) (e * e)
+    unfold dihXf
+    rw [hD2 (a * a) (b * b) (c * c) (d * d) (e * e) (g * g),
+      hD4 (a * a) (b * b) (c * c) (d * d) (e * e) (g * g)]
+  have hvol : volY y1 y2 y3 y4 y5 y6 = volY y1 y6 y5 y4 y3 y2 := by
+    unfold volY volXf
+    rw [hD1 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)]
+  have hsol : solY y1 y6 y5 y4 y3 y2 + solY y1 y3 y2 y4 y6 y5 +
+      solY y4 y3 y5 y1 y6 y2 + solY y4 y6 y2 y1 y3 y5 =
+    solY y1 y2 y3 y4 y5 y6 + solY y1 y5 y6 y4 y2 y3 +
+      solY y4 y5 y3 y1 y2 y6 + solY y4 y2 y6 y1 y5 y3 := by
+    unfold solY
+    rw [hdy26 y1 y6 y5 y4 y3 y2, hdy23 y6 y5 y1 y3 y2 y4, hdy23 y5 y1 y6 y2 y4 y3,
+      hdy26 y1 y3 y2 y4 y6 y5, hdy23 y3 y2 y1 y6 y5 y4, hdy23 y2 y1 y3 y5 y4 y6,
+      hdy23 y4 y3 y5 y1 y6 y2, hdy23 y3 y5 y4 y6 y2 y1, hdy23 y5 y4 y3 y2 y1 y6,
+      hdy23 y4 y6 y2 y1 y3 y5, hdy23 y6 y2 y4 y3 y5 y1, hdy23 y2 y4 y6 y5 y1 y3]
+    ring
+  unfold gamma4fgcyP25 vol4fP25
+  rw [hvol, hsol,
+    hdy26 y1 y6 y5 y4 y3 y2,          -- edge y1 term
+    hdy23 y6 y5 y1 y3 y2 y4,          -- edge y6 term
+    hdy23 y4 y5 y3 y1 y2 y6,          -- edge y4 term
+    hdy23 y2 y1 y3 y5 y4 y6]          -- edge y2 term
+  ring
 
 /-- HOL `gamma4fgcy_POS`. -/
 theorem gamma4fgcy_POS (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1h)
@@ -2842,18 +2976,96 @@ theorem RAD2_Y_SQRT8 {y1 y2 y3 y5 y6 : ℝ} (h5 : 2 ≤ y5) (h6 : 2 ≤ y6)
     2 ≤ rad2YP25 y1 y2 y3 (Real.sqrt 8) y5 y6 := by
   sorry
 
-/-- HOL `DIHV_EQ_0_PI_EQ_COPLANAR_ALT`. -/
+/-- HOL `DIHV_EQ_0_PI_EQ_COPLANAR_ALT`.  Proof: `dihV = 0` forces
+`azim v0 v1 w1 w2 = 0` (below `pi` via AZIM_DIHV_SAME; above `pi` the
+complement identity would push `azim` to `2*pi`), and an `azim`-zero pair
+puts `w1` in the `affGt`-ray of `w2`, hence in `affineSpan {v0, v1, w2}` —
+making the quadruple coplanar. -/
 theorem DIHV_EQ_0_PI_EQ_COPLANAR_ALT (v0 v1 w1 w2 : V3)
     (hnc : ¬ Coplanar ({v0, v1, w1, w2} : Set V3)) :
     ¬ (dihV v0 v1 w1 w2 = 0) := by
-  sorry
+  classical
+  -- a point collinear with the axis already lives in the axis line
+  have axisLine : ∀ x : V3, Collinear3 v0 v1 x →
+      x ∈ (affineSpan ℝ ({v0, v1} : Set V3)) := by
+    intro x hx
+    have hv : v1 ≠ v0 := by
+      intro he
+      have hset : ({v0, v1, w1, w2} : Set V3) = ({v0, w1, w2} : Set V3) := by
+        rw [he]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      exact hnc (by rw [hset]; exact coplanar_triple v0 w1 w2)
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := v0) (w := v1) (w1 := x) hv).mp hx
+    have hmem := smul_vsub_vadd_mem_affineSpan_pair (k := ℝ) (p₁ := v0) (p₂ := v1) (r := c)
+    have heq : (c • (v1 -ᵥ v0) +ᵥ v0 : V3) = x := by
+      rw [vadd_eq_add, vsub_eq_sub, ← hc]; abel
+    rwa [heq] at hmem
+  -- a plane spanned by the axis and either point contains the whole quadruple
+  have copPlane : ∀ x y : V3, Collinear3 v0 v1 x →
+      Coplanar ({v0, v1, x, y} : Set V3) := by
+    intro x y hx
+    refine ⟨v0, v1, y, ?_⟩
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with hpe | hpe | hpe | hpe
+    · rw [hpe]; exact mem_affineSpan ℝ (by simp)
+    · rw [hpe]; exact mem_affineSpan ℝ (by simp)
+    · rw [hpe]
+      exact SetLike.le_def.mp (affineSpan_mono ℝ (by
+        intro q hq; simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢; tauto))
+        (axisLine x hx)
+    · rw [hpe]; exact mem_affineSpan ℝ (by simp)
+  have h1 : ¬ Collinear3 v0 v1 w1 := fun hc => hnc (copPlane w1 w2 hc)
+  have h2 : ¬ Collinear3 v0 v1 w2 := by
+    intro hc
+    have hset : ({v0, v1, w1, w2} : Set V3) = ({v0, v1, w2, w1} : Set V3) := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    exact hnc (by rw [hset]; exact copPlane w2 w1 hc)
+  intro hdih
+  rcases lt_or_ge (azim v0 v1 w1 w2) Real.pi with hlt | hge
+  · have hazi : azim v0 v1 w1 w2 = 0 := by
+      rw [azim_dihv_same h1 h2 hlt]; exact hdih
+    have hw1gt : w1 ∈ affGt ({v0, v1} : Set V3) {w2} := (azim_eq_zero_iff h1 h2).mp hazi
+    have hwv : v0 ≠ v1 := fun he => h1 (collinear3_of_eq he.symm)
+    have hw20 : w2 ≠ v0 := fun he => h2 (collinear3_pair_left he)
+    have hw21 : w2 ≠ v1 := fun he => h2 (collinear3_pair_right he)
+    obtain ⟨c, -, h, hcomb⟩ :=
+      (affGt_pair_iff (v0 := v0) (v1 := v1) (x := w2) (y := w1) hwv hw20 hw21) |>.mp hw1gt
+    refine hnc ⟨v0, v1, w2, ?_⟩
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with hpe | hpe | hpe | hpe
+    · rw [hpe]; exact mem_affineSpan ℝ (by simp)
+    · rw [hpe]; exact mem_affineSpan ℝ (by simp)
+    · rw [hpe]
+      have hw2mem : w2 ∈ (affineSpan ℝ ({v0, v1, w2} : Set V3)) :=
+        mem_affineSpan (k := ℝ) (by simp : w2 ∈ ({v0, v1, w2} : Set V3))
+      have hw1eq : (w1 - w2 : V3) = (1 - c - h) • (v0 - w2) + h • (v1 - w2) := by
+        rw [show (w1 : V3) = v0 + (w1 - v0) from by abel, hcomb]; module
+      have hvv : (w1 - w2 : V3) ∈ vectorSpan ℝ ({v0, v1, w2} : Set V3) := by
+        rw [hw1eq, vectorSpan_eq_span_vsub_set_right ℝ (show w2 ∈ ({v0, v1, w2} : Set V3) from
+          by simp)]
+        have himg1 : (v0 -ᵥ w2 : V3) ∈
+            (fun x : V3 => x -ᵥ w2) '' ({v0, v1, w2} : Set V3) := ⟨v0, by simp, rfl⟩
+        have himg2 : (v1 -ᵥ w2 : V3) ∈
+            (fun x : V3 => x -ᵥ w2) '' ({v0, v1, w2} : Set V3) := ⟨v1, by simp, rfl⟩
+        exact Submodule.add_mem _ (Submodule.smul_mem _ _ (Submodule.subset_span himg1))
+          (Submodule.smul_mem _ _ (Submodule.subset_span himg2))
+      have hres := vadd_mem_affineSpan_of_mem_affineSpan_of_mem_vectorSpan hw2mem hvv
+      rwa [vadd_eq_add, sub_add_cancel] at hres
+    · rw [hpe]; exact mem_affineSpan ℝ (by simp)
+  · have hazi := azim_dihv_compl h1 h2 hge
+    rw [hdih] at hazi
+    have h2pi := azim_lt_two_pi v0 v1 w1 w2
+    linarith
 
-/-- HOL `AZIM_ZERO_SHIFT`. -/
+/-- HOL `AZIM_ZERO_SHIFT`: two leaves subtend the same azimuth from `u2`
+exactly when they lie on the same ray from the stem axis.  Both iff sides
+chain through `w' ∈ affGt {u0, u1} {w}` (AZIM_EQ_AZIM ↔ AZIM_EQ_0_ALT). -/
 theorem AZIM_ZERO_SHIFT (u0 u1 u2 w w' : V3)
     (h1 : ¬ Collinear3 u0 u1 u2) (h2 : ¬ Collinear3 u0 u1 w)
     (h3 : ¬ Collinear3 u0 u1 w') :
-    (azim u0 u1 u2 w = azim u0 u1 u2 w' ↔ azim u0 u1 w w' = 0) := by
-  sorry
+    (azim u0 u1 u2 w = azim u0 u1 u2 w' ↔ azim u0 u1 w w' = 0) :=
+  (azim_eq_azim_iff h1 h2 h3).trans (azim_eq_zero_iff_alt h2 h3).symm
 
 /-- HOL `ORDER_AZIM_SUM2Pi0`: the azim-sorted leaf walk winds once. -/
 theorem ORDER_AZIM_SUM2Pi0 (x y z : V3) (n : ℕ) (g : ℕ → V3)

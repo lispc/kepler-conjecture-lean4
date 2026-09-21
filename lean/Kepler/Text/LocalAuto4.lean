@@ -1179,6 +1179,178 @@ theorem SET_OF_EDGE_CARD_EQ2 {m : ℕ} (l : FinVec m 3) (hm : 1 < m)
       show vecmatsV3_p4 l (finNext (finNext i)) ∈ Set.range (vecmatsV3_p4 l)
       exact Set.mem_range_self (f := vecmatsV3_p4 l) (finNext (finNext i))
 
+/-! ### Private kit for the Section-F batch fills (finNext arithmetic,
+azimuth `either` value lemmas, EE/edge glues) -/
+
+private theorem mod_finNext_p4 {m : ℕ} (hm : 1 < m) (n : ℕ) :
+    finNext ⟨n % m, Nat.mod_lt n (Nat.lt_trans Nat.zero_lt_one hm)⟩ =
+      ⟨(n + 1) % m, Nat.mod_lt (n + 1) (Nat.lt_trans Nat.zero_lt_one hm)⟩ := by
+  apply Fin.ext
+  show (n % m + 1) % m = (n + 1) % m
+  exact Nat.ModEq.add_right (c := 1) (Nat.mod_modEq n m)
+
+private theorem mod_finNext2_p4 {m : ℕ} (hm : 1 < m) (n : ℕ) :
+    finNext (finNext ⟨n % m, Nat.mod_lt n (Nat.lt_trans Nat.zero_lt_one hm)⟩) =
+      ⟨(n + 2) % m, Nat.mod_lt (n + 2) (Nat.lt_trans Nat.zero_lt_one hm)⟩ := by
+  have h1 := mod_finNext_p4 hm n
+  rw [h1]
+  exact mod_finNext_p4 hm (n + 1)
+
+private theorem finNext_injective_p4 {m : ℕ} (hm : 1 < m) :
+    Function.Injective (@finNext m) := by
+  intro a b hab
+  apply Fin.ext
+  have hval : ((a : ℕ) + 1) % m = ((b : ℕ) + 1) % m := congrArg Fin.val hab
+  have h1 : Nat.ModEq m (a : ℕ) (b : ℕ) := Nat.ModEq.add_right_cancel' (c := 1) hval
+  change (a : ℕ) % m = (b : ℕ) % m at h1
+  rwa [Nat.mod_eq_of_lt a.isLt, Nat.mod_eq_of_lt b.isLt] at h1
+
+private def finPrev {m : ℕ} (hm : 1 < m) (i : Fin m) : Fin m :=
+  ⟨(i.val + m - 1) % m, Nat.mod_lt _ (Nat.lt_trans Nat.zero_lt_one hm)⟩
+
+private theorem finNext_finPrev_p4 {m : ℕ} (hm : 1 < m) (i : Fin m) :
+    finNext (finPrev hm i) = i := by
+  apply Fin.ext
+  change (((i : ℕ) + m - 1) % m + 1) % m = (i : ℕ)
+  have hcong : Nat.ModEq m (((i : ℕ) + m - 1) % m + 1) ((i : ℕ) + m) := by
+    calc ((i : ℕ) + m - 1) % m + 1 ≡ (i : ℕ) + m - 1 + 1 [MOD m] :=
+          Nat.ModEq.add_right (c := 1) (Nat.mod_modEq ((i : ℕ) + m - 1) m)
+      _ ≡ (i : ℕ) + m [MOD m] := congrArg (fun x => x % m) (by omega)
+  have hmod : ((i : ℕ) + m) % m = (i : ℕ) % m := by
+    rw [Nat.add_mod, Nat.mod_self, Nat.add_zero, Nat.mod_mod]
+  calc (((i : ℕ) + m - 1) % m + 1) % m = ((i : ℕ) + m) % m := hcong
+    _ = (i : ℕ) % m := hmod
+    _ = (i : ℕ) := Nat.mod_eq_of_lt i.isLt
+
+private theorem finPrev_finNext_p4 {m : ℕ} (hm : 1 < m) (i : Fin m) :
+    finPrev hm (finNext i) = i := by
+  have hfp : finNext (finPrev hm (finNext i)) = finNext i := finNext_finPrev_p4 hm (finNext i)
+  exact (finNext_injective_p4 hm) hfp
+
+private theorem finNext_surjective_p4 {m : ℕ} (hm : 1 < m) :
+    Function.Surjective (@finNext m) := by
+  intro i
+  exact ⟨finPrev hm i, finNext_finPrev_p4 hm i⟩
+
+private theorem azimCycle_p4_either0 {u w v0 a : V3} :
+    azimCycle_p4 ({u, w} : Set V3) v0 a w = u := by
+  unfold azimCycle_p4
+  by_cases huw : u = w
+  · subst u
+    have hpos : ({w, w} : Set V3) ⊆ {w} := by
+      intro z hz
+      simpa using hz
+    rw [if_pos hpos]
+  · have hnotSub : ¬ (({u, w} : Set V3) ⊆ {w}) := by
+      intro hs
+      exact huw (Set.mem_singleton_iff.mp (hs (by simp)))
+    rw [if_neg hnotSub]
+    have hex : ∃ z : V3, z ≠ w ∧ z ∈ ({u, w} : Set V3) ∧ ∀ q ∈ ({u, w} : Set V3), q ≠ w →
+        azim v0 a w z < azim v0 a w q ∨
+          azim v0 a w z = azim v0 a w q ∧
+            ‖projection (z - v0) (a - v0)‖ ≤ ‖projection (q - v0) (a - v0)‖ := by
+      refine ⟨u, huw, by simp, ?_⟩
+      intro q hq hqw
+      rcases (Set.mem_insert_iff.mp hq) with h1 | h1
+      · subst q
+        right
+        constructor <;> rfl
+      · exact absurd h1 hqw
+    have heps := Classical.epsilon_spec hex
+    rcases (Set.mem_insert_iff.mp heps.2.1) with h1 | h1
+    · exact h1
+    · exact absurd (Set.mem_singleton_iff.mp h1) heps.1
+
+private theorem azimCycle_p4_either1 {u w v0 a : V3} :
+    azimCycle_p4 ({u, w} : Set V3) v0 a u = w := by
+  unfold azimCycle_p4
+  by_cases huw : u = w
+  · subst u
+    have hpos : ({w, w} : Set V3) ⊆ {w} := by
+      intro z hz
+      simpa using hz
+    rw [if_pos hpos]
+  · have hwu : w ≠ u := fun h => huw h.symm
+    have hnotSub : ¬ (({u, w} : Set V3) ⊆ {u}) := by
+      intro hs
+      exact huw (Set.mem_singleton_iff.mp (hs (by simp))).symm
+    rw [if_neg hnotSub]
+    have hex : ∃ z : V3, z ≠ u ∧ z ∈ ({u, w} : Set V3) ∧ ∀ q ∈ ({u, w} : Set V3), q ≠ u →
+        azim v0 a u z < azim v0 a u q ∨
+          azim v0 a u z = azim v0 a u q ∧
+            ‖projection (z - v0) (a - v0)‖ ≤ ‖projection (q - v0) (a - v0)‖ := by
+      refine ⟨w, hwu, by simp, ?_⟩
+      intro q hq hqu
+      rcases (Set.mem_insert_iff.mp hq) with h1 | h1
+      · exact absurd h1 hqu
+      · subst q
+        right
+        constructor <;> rfl
+    have heps := Classical.epsilon_spec hex
+    rcases (Set.mem_insert_iff.mp heps.2.1) with h1 | h1
+    · exact absurd h1 heps.1
+    · exact Set.mem_singleton_iff.mp h1
+
+private theorem ivsAzimCycle_p4_either1 {u w v0 a : V3} :
+    ivsAzimCycle_p4 ({u, w} : Set V3) v0 a u = w := by
+  unfold ivsAzimCycle_p4
+  have he : ∃ x, x ∈ ({u, w} : Set V3) ∧ azimCycle_p4 ({u, w} : Set V3) v0 a x = u :=
+    ⟨w, by simp, azimCycle_p4_either0 (u := u) (w := w) (v0 := v0) (a := a)⟩
+  rw [dif_pos he]
+  have hc := he.choose_spec
+  by_cases huw : u = w
+  · subst u
+    simpa using hc.1
+  · rcases (Set.mem_insert_iff.mp hc.1) with h1 | h1
+    · have hc2 : azimCycle_p4 ({u, w} : Set V3) v0 a he.choose = u := hc.2
+      rw [h1, azimCycle_p4_either1 (u := u) (w := w) (v0 := v0) (a := a)] at hc2
+      exfalso
+      exact huw hc2.symm
+    · exact Set.mem_singleton_iff.mp h1
+
+private theorem ivsAzimCycle_p4_either0 {u w v0 a : V3} :
+    ivsAzimCycle_p4 ({u, w} : Set V3) v0 a w = u := by
+  unfold ivsAzimCycle_p4
+  have he : ∃ x, x ∈ ({u, w} : Set V3) ∧ azimCycle_p4 ({u, w} : Set V3) v0 a x = w :=
+    ⟨u, by simp, azimCycle_p4_either1 (u := u) (w := w) (v0 := v0) (a := a)⟩
+  rw [dif_pos he]
+  have hc := he.choose_spec
+  by_cases huw : u = w
+  · subst w
+    simpa using hc.1
+  · rcases (Set.mem_insert_iff.mp hc.1) with h1 | h1
+    · exact h1
+    · have hc2 : azimCycle_p4 ({u, w} : Set V3) v0 a he.choose = w := hc.2
+      rw [h1, azimCycle_p4_either0 (u := u) (w := w) (v0 := v0) (a := a)] at hc2
+      exfalso
+      exact huw hc2
+
+private theorem ee_eq_setOfEdge_p4 {V : Set V3} {E : Set (Set V3)} {v : V3}
+    (hfan : FAN 0 V E) : EE_p4 v E = setOfEdge v V E := by
+  ext w
+  constructor
+  · intro hw
+    exact ⟨hw, hfan.1 (Set.mem_sUnion.mpr ⟨{v, w}, hw, by simp⟩)⟩
+  · intro hw
+    exact hw.1
+
+private theorem ee_v_sy_p4 {m : ℕ} (l : FinVec m 3) (hm : 1 < m)
+    (hinj : ∀ i j : Fin m, vecmatsV3_p4 l i = vecmatsV3_p4 l j → i = j)
+    (i : Fin m) {u v w : V3} (hu : vecmatsV3_p4 l i = u)
+    (hv : vecmatsV3_p4 l (finNext i) = v)
+    (hw : vecmatsV3_p4 l (finNext (finNext i)) = w)
+    (hfan : FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l))) :
+    EE_p4 v (E_SY_p4 (vecmatsV3_p4 l)) = ({u, w} : Set V3) := by
+  rw [ee_eq_setOfEdge_p4 hfan]
+  exact SET_OF_EDGE_CARD_EQ2 l hm hinj i hu hv hw
+
+private theorem mem_darts_ord_p4 {V : Set V3} {E : Set (Set V3)} {v w : V3}
+    (hE : ({v, w} : Set V3) ∈ E) : (v, w) ∈ dartsOfHyp_p4 E V := by
+  unfold dartsOfHyp_p4
+  apply Set.mem_union_left
+  unfold ordPairs_p4
+  exact hE
+
 /-- HOL `INV_AZIM_CYCLE_EQ` (dih2k.hl:1789). -/
 theorem INV_AZIM_CYCLE_EQ {m : ℕ} (l : FinVec m 3)
     (hfan : FAN 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)))
@@ -1187,7 +1359,8 @@ theorem INV_AZIM_CYCLE_EQ {m : ℕ} (l : FinVec m 3)
     (hv : vecmatsV3_p4 l (finNext i) = v)
     (hw : vecmatsV3_p4 l (finNext (finNext i)) = w) :
     ivsAzimCycle_p4 (EE_p4 v (E_SY_p4 (vecmatsV3_p4 l))) 0 v u = w := by
-  sorry
+  rw [ee_v_sy_p4 l hm hinj i hu hv hw hfan]
+  exact ivsAzimCycle_p4_either1 (u := u) (w := w) (v0 := 0) (a := v)
 
 /-- HOL `INV_AZIM_CYCLE_EQ1` (dih2k.hl:1828). -/
 theorem INV_AZIM_CYCLE_EQ1 {m : ℕ} (l : FinVec m 3)
@@ -1197,7 +1370,8 @@ theorem INV_AZIM_CYCLE_EQ1 {m : ℕ} (l : FinVec m 3)
     (hv : vecmatsV3_p4 l (finNext i) = v)
     (hw : vecmatsV3_p4 l (finNext (finNext i)) = w) :
     ivsAzimCycle_p4 (EE_p4 v (E_SY_p4 (vecmatsV3_p4 l))) 0 v w = u := by
-  sorry
+  rw [ee_v_sy_p4 l hm hinj i hu hv hw hfan]
+  exact ivsAzimCycle_p4_either0 (u := u) (w := w) (v0 := 0) (a := v)
 
 /-- HOL `FF_OF_HYP_EQ` (dih2k.hl:1871).  Verify conclusion against
 WRGCVDR `ff_of_hyp` at merge. -/
@@ -1209,7 +1383,11 @@ theorem FF_OF_HYP_EQ {m : ℕ} (l : FinVec m 3)
     (hw : vecmatsV3_p4 l (finNext (finNext i)) = w) :
     ffOfHyp_p4 0 (V_SY_p4 (vecmatsV3_p4 l)) (E_SY_p4 (vecmatsV3_p4 l)) (u, v) =
       (v, w) := by
-  sorry
+  unfold ffOfHyp_p4
+  rw [if_pos (mem_darts_ord_p4 (hE := by
+    simpa [hu, hv] using EDGE_IN_E_SY l i))]
+  rw [ee_v_sy_p4 l hm hinj i hu hv hw hfan]
+  rw [ivsAzimCycle_p4_either1 (u := u) (w := w) (v0 := 0) (a := v)]
 
 /-- HOL `AZIM_CYCLE_EQ1` (dih2k.hl:2035). -/
 theorem AZIM_CYCLE_EQ1 {m : ℕ} (l : FinVec m 3)
@@ -1219,7 +1397,8 @@ theorem AZIM_CYCLE_EQ1 {m : ℕ} (l : FinVec m 3)
     (hv : vecmatsV3_p4 l (finNext i) = v)
     (hw : vecmatsV3_p4 l (finNext (finNext i)) = w) :
     azimCycle_p4 (EE_p4 v (E_SY_p4 (vecmatsV3_p4 l))) 0 v w = u := by
-  sorry
+  rw [ee_v_sy_p4 l hm hinj i hu hv hw hfan]
+  exact azimCycle_p4_either0 (u := u) (w := w) (v0 := 0) (a := v)
 
 /-- HOL `AZIM_CYCLE_EQ` (dih2k.hl:2073). -/
 theorem AZIM_CYCLE_EQ {m : ℕ} (l : FinVec m 3)
@@ -1229,7 +1408,8 @@ theorem AZIM_CYCLE_EQ {m : ℕ} (l : FinVec m 3)
     (hv : vecmatsV3_p4 l (finNext i) = v)
     (hw : vecmatsV3_p4 l (finNext (finNext i)) = w) :
     azimCycle_p4 (EE_p4 v (E_SY_p4 (vecmatsV3_p4 l))) 0 v u = w := by
-  sorry
+  rw [ee_v_sy_p4 l hm hinj i hu hv hw hfan]
+  exact azimCycle_p4_either1 (u := u) (w := w) (v0 := 0) (a := v)
 
 /-- HOL `NN_OF_HYP_EQ1` (dih2k.hl:2110). -/
 theorem NN_OF_HYP_EQ1 {m : ℕ} (l : FinVec m 3)

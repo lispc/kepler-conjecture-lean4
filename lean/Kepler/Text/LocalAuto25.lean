@@ -88,8 +88,15 @@ ENCODING NOTES
     entries 1-8 term by term.
   - `main_nonlinear_terminal_v11` is the LocalAuto1 registry Prop.
   - DISCHARGES: every `sorry` carries a NEEDS note naming the blocking
-    kit; proved items are mechanical (mod arithmetic, set bookkeeping,
-    csAdj value tables, `norm_num` numerics).
+    kit; after the 2026-09-21 re-scan the only three sorries are the two
+    `rhoNode1`-cycle enumerators (`exists_vv_FF_p25`/`exists_vv_p25`, blocked
+    by the unported `ITER`/dart-layer orbit kit) and `TUAPYYU1_p25` (blocked
+    by the interior-angle→azim kit, whose LocalAuto23 plug-ins are still
+    `sorry`). The 7 circuit-concl twins
+    (ZITHLQN/WGDHPPI/TUAPYYU/YEBWJNG/WKZZEEH/PWEIWBZ/VASYYAU) are kept as
+    LocalAuto1 registry re-exports (LocalConcl category (b): vacuous, not
+    discharges). Proved items are mechanical (mod arithmetic, set
+    bookkeeping, csAdj value tables, `norm_num` numerics).
 -/
 
 import Kepler.Text.LocalAuto1
@@ -273,8 +280,17 @@ theorem SMALL_BALL_ANNULUS_6_3_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3
 /-! ### Cyclic enumeration of a local fan -/
 
 /-- HOL `exists_vv_FF` (ZITHLQN.hl:70): the `rho_node1`-cycle enumeration.
-NEEDS: the Fan-chapter cycle kit (`ITER`, `DETER_RHO_NODE`,
-`LOCAL_FAN_ITER_RHO_NODE_IN_V`, `POWER_TO_ITER`) — not yet ported. -/
+The HOL proof witnesses `vv := fun i => ITER i (rho_node1 FF) v` from the dart
+`(v,w) ∈ FF`; `DETER_RHO_NODE` gives `vv 1 = w`, and the mod-periodicity /
+injectivity / `range vv = V` / `range {vv i, vv (i+1)} = E` / `range (vv i,
+vv (i+1)) = FF` identities come from `POWER_TO_ITER`, `LOFA_IMP_ITER_RHO_NODE_ID2`,
+`Hypermap.power_map_fix_point`, `LT_CARD_MONO_LOFA`, `LOCAL_FAN_ORBIT_MAP_VITER*`,
+`LOCAL_RHO_NODE_PAIR_E`, `LOCAL_FAN_RHO_NODE_PROS` (Local_lemmas/Wrgcvdr/Tecoxbm).
+DISCHARGES: none of that `rhoNode1`-iterate↔`orbitMap (hypermapOfFan ...).faceMap`
+dart-layer kit is ported on this side (LocalAuto1 only has the `LocalFan`/`Dih2k`
+head and the generic `Hypermap.orbitMap` permutation theory; no FF→`rhoNode1`
+dynamics bridge), so a non-vacuous proof is impossible here. NEEDS: the
+polar-fan/dart-layer bridge, then `exists_point_in_V_p25` seeds `exists_vv_p25`. -/
 theorem exists_vv_FF_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
     (_hlf : ConvexLocalFan V E FF) (_hp : Kepler.Packing V) (_hb : V ⊆ ballAnnulus)
     (_h3 : 3 ≤ ncard V) (_h6 : ncard V ≤ 6) (v w : V3) (_hvw : (v, w) ∈ FF) :
@@ -286,8 +302,9 @@ theorem exists_vv_FF_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
       (Set.range fun i => (vv i, vv (i + 1)) : Set (V3 × V3)) = FF := by
   sorry
 
-/-- HOL `exists_vv` (ZITHLQN.hl:288). NEEDS: same cycle kit as
-`exists_vv_FF_p25`. -/
+/-- HOL `exists_vv` (ZITHLQN.hl:288). NEEDS: same `rhoNode1`-iterate cycle
+kit as `exists_vv_FF_p25`; HOL seeds the base point via `exists_point_in_V`
+(= the proved `exists_point_in_V_p25` here). -/
 theorem exists_vv_p25 (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
     (_hlf : ConvexLocalFan V E FF) (_hp : Kepler.Packing V) (_hb : V ⊆ ballAnnulus)
     (_h3 : 3 ≤ ncard V) (_h6 : ncard V ≤ 6) :
@@ -1224,10 +1241,19 @@ def TUAPYYU_concl_p25 : Prop :=
     dist (v p) (v (p + 1)) = s.a p (p + 1) ∨ dist (v p) (v (p + 1)) = s.b p (p + 1)
 
 /-- HOL `TUAPYYU1` (VASYYAU.hl:536) = `mk_imp (NEHXMWH1_concl,
-mk_imp (NEHXMWH_concl, TUAPYYU_concl))`. NEEDS: the interior-angle
-machinery (`BBS_IMP_CONVEX_LOCAL_FAN`, `BB_RHO_NODE_IVS`,
-`IN_V_IMP_AZIM_LESS_PI`, the `ivs_rho_node1` bridge) — the JOTSWIX/
-Local_lemmas kit, not yet ported. -/
+mk_imp (NEHXMWH_concl, TUAPYYU_concl))`. DISCHARGES: HOL derives the two
+`interior_angle1 ... < pi` antecedent blocks (the `(p+3)` block feeds
+NEHXMWH1 via BZQNDMN, the `(p+2)` block feeds NEHXMWH) from
+`¬scsIsStr p ∧ ¬scsIsStr (p+1)` through the azim machinery
+`MMS_IMP_BBS` + `BBS_IMP_CONVEX_LOCAL_FAN` (fan from BBs) +
+`BB_RHO_NODE_IVS` + `Local_lemmas.IN_V_IMP_AZIM_LESS_PI`, then applies
+`NOT_MOD_4_CASES`/`NOT_MOD_4_CASES_3`. None of that is ported here, and the
+two plug-ins `LocalAuto23.NEHXMWH_p23` / `BZQNDMN_p23` are themselves still
+`sorry` (need the same kit + terminal registry 5541487347). A vacuous
+re-export `fun _ _ => TUAPYYU_p25` exists but is the LocalConcl-documented
+circular pattern (TUAPYYU_concl is a LocalAuto1 registry `sorry`), so left
+as a genuine `sorry`. NEEDS: the interior-angle→azim kit (JOTSWIX/
+Local_lemmas), then the LocalAuto23 twins. -/
 theorem TUAPYYU1_p25 : NEHXMWH1_concl_p25 → NEHXMWH_concl_p25 → TUAPYYU_concl_p25 := by
   sorry
 

@@ -123,10 +123,15 @@ theorem Dih2k_toDart (H : @Hypermap (V3 × V3) (fun a b => instDecidableEqProd a
   · rw [hdart]; exact hcard
   · intro d hd
     have hb := horb d hd
-    -- REMAINING (instance-juggling): `H.face` is a dot-projection that
-    -- triggers the dartDecEq3-vs-instProd instance clash.  The orbit
-    -- congruence along `toDart_faceMap` / `toDart_nodeMap H` closes this.
-    sorry
+    -- `hypermap_toDart` re-tags the structure verbatim: its projections are
+    -- *definitionally* the `@`-explicit instProd projections of `H`
+    -- (`rfl`-shows pin them syntactically so `rw` can fire).
+    rw [show (hypermap_toDart H).faceMap =
+          @Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b) H from rfl,
+      show (hypermap_toDart H).nodeMap =
+          @Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b) H from rfl,
+      toDart_darts H]
+    exact hb
   · exact hof
   · exact hoe
   · exact hon
@@ -366,6 +371,22 @@ theorem eeOfHyp_p3_eq_edgeMap_fun {x : V3} {V : Set V3} {E : Set (Set V3)}
     (hfan : FAN x V E) :
     eeOfHyp_p3 x V E = ((fanHyp hfan).edgeMap : V3 × V3 → V3 × V3) :=
   funext (eeOfHyp_p3_eq_edgeMap hfan)
+
+/-- Instance-explicit restatement of the edge bridge (the baked projection
+term is definitionally the `@`-projection; same shape as
+`ffOfHyp_p3_eq_faceMapLA1_fun`). -/
+theorem eeOfHyp_p3_eq_edgeMapLA1_fun {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) :
+    eeOfHyp_p3 x V E = ⇑(@Hypermap.edgeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan x V E hfan)) :=
+  eeOfHyp_p3_eq_edgeMap_fun hfan
+
+/-- Instance-explicit restatement of the node bridge. -/
+theorem nnOfHyp_p3_eq_nodeMapLA1_fun {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) :
+    nnOfHyp_p3 x V E = ⇑(@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan x V E hfan)) :=
+  nnOfHyp_p3_eq_nodeMap_fun hfan
 
 /-! ## §3 Iterate and orbit transports -/
 
@@ -628,13 +649,32 @@ theorem localFan_data {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
           (nnOfHyp_p3 0 V E) '' orbitF_p3 (ffOfHyp_p3 0 V E) y = dart1OfFan V E := by
   obtain ⟨hfan, x, hx, hFF, hD⟩ := h
   obtain ⟨hcard, horb, hof, hoe, hon⟩ := hD
-  -- the Dih2k data transports from the LA1 (`instProd`-baked) hypermap to the
-  -- `dartDecEq3` world along the lossless re-tagging `hypermap_toDart`
-  -- REMAINING (instance-juggling): all component bridges are proved (see the
-  -- transport lemmas above); the remaining work is the `dartDecEq3`-vs-instProd
-  -- instance-argument bookkeeping in the rewrite chains (the `@`-explicit
-  -- `Hypermap` projection pinning form), purely mechanical.
-  sorry
+  have hx1 : x ∈ dart1OfFan V E := (mem_darts_hypermapOfFan hfan x).mp hx
+  have hfaceOrb : FF = orbitF_p3 (ffOfHyp_p3 0 V E) x := by
+    rw [hFF, orbitMap_LA1faceMap_eq_orbitF hfan x]
+  have hsub : FF ⊆ dart1OfFan V E := by
+    rw [hFF]
+    -- NOTE: the projection must stay `@`-explicit here: a dot-projection on a
+    -- `hypermapOfFan`-typed term synthesizes LA3's `dartDecEq3` (§0 note).
+    exact Set.Subset.trans (orbitMap_subset_of_permutesOn
+      (@Hypermap.faceMap_permutes (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (hypermapOfFan 0 V E hfan)) hx) (dartsLA1 0 V E hfan).subset
+  have hfin : FF.Finite := (finite_dart1_fan hfan).subset hsub
+  refine ⟨hfan, x, hx1, hfaceOrb, hFF, hsub, hfin, ?_, ?_, ?_, ?_, ?_⟩
+  · rw [← dartsLA1 0 V E hfan, Set.ncard_coe_finset]
+    exact hcard
+  · rw [ffOfHyp_p3_eq_faceMapLA1_fun hfan]
+    exact (hasOrders_iff_hasOrders_p4 _ _).mp hof
+  · rw [eeOfHyp_p3_eq_edgeMapLA1_fun hfan]
+    exact (hasOrders_iff_hasOrders_p4 _ _).mp hoe
+  · rw [nnOfHyp_p3_eq_nodeMapLA1_fun hfan]
+    exact (hasOrders_iff_hasOrders_p4 _ _).mp hon
+  · intro y hy
+    have hy2 : y ∈ @Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (hypermapOfFan 0 V E hfan) := (mem_darts_hypermapOfFan hfan y).mpr hy
+    rw [← orbitMap_LA1faceMap_eq_orbitF hfan y, nnOfHyp_p3_eq_nodeMapLA1_fun hfan,
+      ← dartsLA1 0 V E hfan]
+    exact horb y hy2
 
 /-- `Dih2k` transports along component-function equalities between two
 `dartDecEq3` hypermaps: LA3's `dih2k_p3` rendering gives LA1's `Dih2k`
@@ -699,9 +739,61 @@ instance clash; the proofs are mechanical funext-congruence chains. -/
 theorem LocalFan.of_localFan_p3 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
     (h : localFan_p3 V E FF) (hno : dartsOfHyp_p3 E V = dart1OfFan V E) :
     LocalFan V E FF := by
-  -- REMAINING (instance-juggling): the `dartDecEq3`-vs-instProd instance
-  -- clash in dot-projection elaboration of `Hypermap`-typed terms.
-  sorry
+  obtain ⟨H, hdarts, hedge, hnode, hface, hfan, ⟨x, hx, hFF⟩, hdih⟩ := h
+  -- NOTE: component access via plain `.1`/`.2` projections: a flat-pattern
+  -- `obtain` here whnf-unfolds the `dih2k_p3` def past its intended
+  -- conjunction shape and mis-binds the components.
+  have c1 := hdih.1
+  have c2 := hdih.2.1
+  have c3 := hdih.2.2.1
+  have c4 := hdih.2.2.2.1
+  have c5 := hdih.2.2.2.2
+  -- Fun-level bridges from the abstract `localFan_p3` hypermap `H`
+  -- (`dartDecEq3`-world) to the `@`-explicit instProd-baked `hypermapOfFan`
+  -- projections: the of-hyp data passes through `ff/nn/eeOfHyp_p3`.
+  have hcoF : (H.faceMap : V3 × V3 → V3 × V3) =
+      ⇑(@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (hypermapOfFan 0 V E hfan)) :=
+    hface.trans (ffOfHyp_p3_eq_faceMapLA1_fun hfan)
+  have hcoN : (H.nodeMap : V3 × V3 → V3 × V3) =
+      ⇑(@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (hypermapOfFan 0 V E hfan)) :=
+    hnode.trans (nnOfHyp_p3_eq_nodeMapLA1_fun hfan)
+  have hcoE : (H.edgeMap : V3 × V3 → V3 × V3) =
+      ⇑(@Hypermap.edgeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (hypermapOfFan 0 V E hfan)) :=
+    hedge.trans (eeOfHyp_p3_eq_edgeMapLA1_fun hfan)
+  have hDartF : @Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan) = H.darts :=
+    Finset.coe_injective ((dartsLA1 0 V E hfan).trans (hno.symm.trans hdarts.symm))
+  have hx1 : x ∈ dart1OfFan V E := by
+    rw [← hno, ← hdarts]
+    exact Finset.mem_coe.mp hx
+  have hx' : x ∈ @Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan) := by
+    rw [hDartF]
+    exact hx
+  have hFF' : FF = orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan)) x := by
+    rw [hFF]
+    exact orbitMap_congr hcoF x
+  refine ⟨hfan, x, hx', hFF', ?_⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩
+  · rw [hDartF]
+    exact c1
+  · intro d hd
+    have hd' : d ∈ H.darts := by rw [← hDartF]; exact hd
+    rw [hDartF, hcoN.symm, (orbitMap_congr hcoF d).symm]
+    exact (c2 d hd').symm
+  · refine (hasOrders_iff_hasOrders_p4 _ _).mpr ?_
+    rw [← hcoF]
+    exact c3
+  · refine (hasOrders_iff_hasOrders_p4 _ _).mpr ?_
+    rw [← hcoE]
+    exact c4
+  · refine (hasOrders_iff_hasOrders_p4 _ _).mpr ?_
+    rw [← hcoN]
+    exact c5
 
 /-! ## REMAINING notes
 

@@ -64,7 +64,7 @@ Encoding (house conventions, cf. LocalAuto24/33):
   `taustar_eq_tauStar_gen_p36` (J = ∅ kills `dFun`, `dsv_J_empty` +
   `vecmatsV3_flattenRow_p36` identify the tau_fun arguments).  ② the k = 3
   body set is the CONDITION2-free `B_SY1_nc2_p36` (XWITCCN.hl:1344-1346
-  has no `CONDITION2_SY v`); `IN_NOT_EMPTY_CASE_3`, `NOT_EMPTY_CASE_3`,
+  has no `CONDITION2_SY v`);   `IN_NOT_EMPTY_CASE_3`, `NOT_EMPTY_CASE_3`,
   `IN_B_SY1_COLLINEAR_CASE_3`, `HDPLYGY_CASE_3` restated accordingly, the
   first three PROVED. Sorries: 34 -> 26 theorems (+1 placeholder inside
   `scsToStableSyD_p36`, mirroring `scsToStableSy_p23`): `CARD_SLICE_EQ`,
@@ -73,6 +73,26 @@ Encoding (house conventions, cf. LocalAuto24/33):
   twins), the k >= 4 `IN_NOT_EMPTY_CASE/B1_SY` twins (14, blocked by the
   registry-ConvexLocalFan vs `convexLocalFan_p4` def-bridge — azimCycle_p4
   vs sigmaFan; see NEEDS notes), `XWITCCN_TYPE`/`XWITCCN`.
+- FILL WAVE 3 (2026-09-20, AzimBridge-fuelled): the 14 k >= 4
+  `IN_NOT_EMPTY_CASE/B1_SY` twins are PROVED.  The former family blocker —
+  the registry `ConvexLocalFan` (LA1: sigmaFan vocabulary) vs
+  `convexLocalFan_p4` (LA4: azimCycle_p4 vocabulary) def-bridge — is now
+  Section 0.6 (`convexLocalFan_p4_of_ConvexLocalFan_p36` + converse):
+  `hyp_p4`'s `Hypermap (V3 × V3)` instance, pinned in LocalAuto4 (which
+  does not import LocalAuto3), is Mathlib's `instDecidableEqProd`, i.e.
+  under `FAN 0 V E` it IS the `hypermapOfFan` hypermap, so `face_p4`/
+  `dih2k_p4`/`localFan_p4` are pointwise-convertible to the LA1 registry
+  data with no `dartDecEq3` clash, and the azim/wedge renderings merge
+  through the AzimBridge §4 FAN-conditional bridges (`azimCycle_p4`/`EE_p4`
+  = `_p3` twins are rfl).  Section 0.7 adds the table-independent generic
+  cores `inNotEmpty_core_p36`/`inB1_core_p36` (CONDITION1 needs no cs_adj
+  ladder: the `_p4` body tables are `change_type_v3 s.a (i+1, j+1)` and the
+  `BBsV39` a/b conjunct is exactly that bound at the periodic rows).
+  Sorries: 26 -> 12 theorems (+1 placeholder in `scsToStableSyD_p36`):
+  `CARD_SLICE_EQ`, `HDPLYGY_CASE_3`, `XWITCCN_CASE_*` (8), `XWITCCN_TYPE`,
+  `XWITCCN` — all now blocked by the single HDPLYGY kit
+  (`CONTINUOUS_ON_TAU_STAR` + `MINIMUM_IN_B_SY`, HDPLYGY.hl:1831), an
+  independent analysis giant with no AzimBridge input.
 -/
 
 import Kepler.Text.LocalAuto1
@@ -80,6 +100,7 @@ import Kepler.Text.LocalAuto3
 import Kepler.Text.LocalAuto4
 import Kepler.Text.LocalAuto8
 import Kepler.Text.LocalAuto23
+import Kepler.Text.AzimBridge
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -497,6 +518,271 @@ private theorem taustar_eq_tauStar_gen_p36 {k : ℕ} (hk3 : ¬(k ≤ 3)) (s : Sc
   unfold tauStar_p23 dFun_p23
   rw [hvb, hV, hE, hF, hJ1, setSum_empty_p36, mul_zero, add_zero]
   rfl
+
+
+/-! ## Section 0.6: the registry-`ConvexLocalFan` ↔ `convexLocalFan_p4`
+def-bridge (AzimBridge-fuelled).  Under `Fan.FAN x V E` the LA4 `hyp_p4 x V E`
+IS the instProd-baked `Fan.hypermapOfFan x V E` (`hyp_p4`'s `Hypermap (V3 × V3)`
+instance, pinned in LocalAuto4, is Mathlib's `instDecidableEqProd` — LA4
+does not import LocalAuto3's `dartDecEq3`), so `face_p4`/`dih2k_p4`/
+`localFan_p4` are pointwise-convertible to the LA1 registry data with NO
+instance clash, and the azim/wedge renderings merge through the AzimBridge
+§4 FAN-conditional bridges plus the `azimCycle_p4`/`EE_p4` = `_p3` rfl-twins.
+All `Hypermap` projections are written `@`-explicitly (AzimBridge §0 note):
+dot-projections of instProd-typed terms would synthesize `dartDecEq3` here. -/
+
+/-- `face_p4` is the faceMap orbit on the dart set (pure `Hypermap`
+conversion at the instProd instance; `hypermap.hl` `face`). -/
+theorem face_p4_eq_orbitMap_p36
+    (H : @Hypermap (V3 × V3) (fun a b => instDecidableEqProd a b)) (p : V3 × V3)
+    (hp : p ∈ (@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b) H :
+      Finset (V3 × V3))) :
+    face_p4 H p = orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b) H) p := by
+  unfold face_p4 orbitMap
+  ext y
+  constructor
+  · rintro ⟨hy, n, hn⟩
+    exact ⟨n, hn⟩
+  · rintro ⟨n, hn⟩
+    refine ⟨?_, n, hn⟩
+    have h2 := (@Hypermap.faceMap_permutes (V3 × V3) (fun a b => instDecidableEqProd a b)
+      H).pow_apply_mem n hp
+    rw [← hn]
+    exact Finset.mem_coe.mp h2
+
+/-- The faceMap orbit of a dart stays in the dart set (`PermutesOn.pow_apply_mem`). -/
+theorem orbit_mem_darts_p36
+    (H : @Hypermap (V3 × V3) (fun a b => instDecidableEqProd a b)) (p q : V3 × V3)
+    (hp : p ∈ (@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b) H :
+      Finset (V3 × V3)))
+    (hq : q ∈ orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b) H) p) :
+    q ∈ ((@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b) H :
+      Finset (V3 × V3)) : Set (V3 × V3)) := by
+  simp only [orbitMap, Set.mem_setOf_eq] at hq
+  obtain ⟨n, hn⟩ := hq
+  have h2 := (@Hypermap.faceMap_permutes (V3 × V3) (fun a b => instDecidableEqProd a b)
+    H).pow_apply_mem n hp
+  rw [hn] at h2
+  exact Finset.mem_coe.mp h2
+
+/-- LA4's `dih2k_p4` and LA1's `Dih2k` are the same data at the instProd
+instance (orders via AzimBridge `hasOrders_iff_hasOrders_p4`). -/
+theorem dih2k_p4_iff_Dih2k_p36 (H : @Hypermap (V3 × V3) (fun a b => instDecidableEqProd a b))
+    (k : ℕ) : dih2k_p4 H k ↔ @Dih2k (V3 × V3) (fun a b => instDecidableEqProd a b) H k := by
+  constructor
+  · rintro ⟨hcard, horb, hof, hoe, hon⟩
+    refine ⟨hcard, ?_, (@hasOrders_iff_hasOrders_p4 (V3 × V3)
+        (fun a b => instDecidableEqProd a b) _ _).mpr hof,
+      (@hasOrders_iff_hasOrders_p4 (V3 × V3) (fun a b => instDecidableEqProd a b) _ _).mpr hoe,
+      (@hasOrders_iff_hasOrders_p4 (V3 × V3) (fun a b => instDecidableEqProd a b) _ _).mpr hon⟩
+    intro d hd
+    have h2 : ((@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b) H :
+          Finset (V3 × V3)) : Set (V3 × V3)) = face_p4 H d ∪
+        (@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b) H :
+          V3 × V3 → V3 × V3) '' face_p4 H d := horb d hd
+    rw [face_p4_eq_orbitMap_p36 H d hd] at h2
+    exact h2.symm
+  · rintro ⟨hcard, horb, hof, hoe, hon⟩
+    refine ⟨hcard, ?_, (@hasOrders_iff_hasOrders_p4 (V3 × V3)
+        (fun a b => instDecidableEqProd a b) _ _).mp hof,
+      (@hasOrders_iff_hasOrders_p4 (V3 × V3) (fun a b => instDecidableEqProd a b) _ _).mp hoe,
+      (@hasOrders_iff_hasOrders_p4 (V3 × V3) (fun a b => instDecidableEqProd a b) _ _).mp hon⟩
+    intro p hp
+    rw [face_p4_eq_orbitMap_p36 H p hp]
+    exact (horb p hp).symm
+
+/-- Under `Fan.FAN x V E` the LA4 junk-dite `hyp_p4` picks the fan hypermap. -/
+theorem hyp_p4_of_fan_p36 {x : V3} {V : Set V3} {E : Set (Set V3)} (hfan : Fan.FAN x V E) :
+    hyp_p4 x V E = Fan.hypermapOfFan x V E hfan := by
+  unfold hyp_p4
+  exact dif_pos hfan
+
+/-- Registry → `_p4`: LA1's `LocalFan` gives LA4's `localFan_p4`. -/
+theorem localFan_p4_of_LocalFan_p36 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : LocalFan V E FF) : localFan_p4 V E FF := by
+  obtain ⟨hfan, x, hx, hFF, hD⟩ := h
+  have hhp := hyp_p4_of_fan_p36 hfan
+  refine ⟨hfan, ⟨x, ?_, ?_⟩, ?_⟩
+  · rw [hhp]; exact hx
+  · rw [hhp, hFF, face_p4_eq_orbitMap_p36 (Fan.hypermapOfFan 0 V E hfan) x hx]
+  · rw [hhp]
+    exact (dih2k_p4_iff_Dih2k_p36 (Fan.hypermapOfFan 0 V E hfan) FF.ncard).mpr hD
+
+/-- `_p4` → registry: LA4's `localFan_p4` gives LA1's `LocalFan`. -/
+theorem LocalFan_of_localFan_p4_p36 {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
+    (h : localFan_p4 V E FF) : LocalFan V E FF := by
+  obtain ⟨hfan, ⟨p, hp, hFF⟩, hD⟩ := h
+  have hhp := hyp_p4_of_fan_p36 hfan
+  have hm : p ∈ (@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan) : Finset (V3 × V3)) := by
+    rw [← hhp]; exact hp
+  have heq : FF = orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan)) p := by
+    rw [hhp] at hFF
+    rw [hFF, face_p4_eq_orbitMap_p36 (Fan.hypermapOfFan 0 V E hfan) p hm]
+  have hd : @Dih2k (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan) FF.ncard := by
+    rw [hhp] at hD
+    exact (dih2k_p4_iff_Dih2k_p36 (Fan.hypermapOfFan 0 V E hfan) FF.ncard).mp hD
+  exact ⟨hfan, p, hm, heq, hd⟩
+
+/-- The `azim_in_fan` renderings merge on fan darts: `azimInFan_p4` =
+`azimInFan_p3` (rfl) and the sigmaFan-vs-azimCycle bodies merge through the
+AzimBridge §4 bridge. -/
+theorem azimInFan_p4_eq_azimInFan_p36 {V : Set V3} {E : Set (Set V3)}
+    (hfan : Fan.FAN 0 V E) {d : V3 × V3} (hd : d ∈ Fan.dart1OfFan V E) :
+    azimInFan_p4 d E = azimInFan d E := by
+  rw [show azimInFan_p4 d E = azimInFan_p3 d E from rfl,
+    azimInFan_eq_azimInFan_p3 hfan hd]
+
+/-- The matching `wedge_in_fan_ge` merge. -/
+theorem wedgeInFanGe_p4_eq_wedgeInFanGe_p36 {V : Set V3} {E : Set (Set V3)}
+    (hfan : Fan.FAN 0 V E) {d : V3 × V3} (hd : d ∈ Fan.dart1OfFan V E) :
+    wedgeInFanGe_p4 d E = wedgeInFanGe d E := by
+  rw [show wedgeInFanGe_p4 d E = wedgeInFanGe_p3 d E from rfl,
+    wedgeInFanGe_eq_wedgeInFanGe_p3 hfan hd]
+
+/-- **MASTER (registry → `_p4`)**: the LA1 `ConvexLocalFan` gives LA4's
+`convexLocalFan_p4` verbatim (the fan conjunct of `BBsV39 s vv` yields the
+`CONDITION2_SY_p4` conjunct of `B_SY1_p4`). -/
+theorem convexLocalFan_p4_of_ConvexLocalFan_p36 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (h : ConvexLocalFan V E FF) : convexLocalFan_p4 V E FF := by
+  obtain ⟨hl, haw⟩ := h
+  have hlf : LocalFan V E FF := hl
+  obtain ⟨hfan, x0, hx0, hFF, -⟩ := hl
+  refine ⟨localFan_p4_of_LocalFan_p36 hlf, ?_⟩
+  intro x hxFF
+  have hdart : x ∈ Fan.dart1OfFan V E := by
+    have h1 : x ∈ orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+        (Fan.hypermapOfFan 0 V E hfan)) x0 := by rwa [hFF] at hxFF
+    have h2 := orbit_mem_darts_p36 (Fan.hypermapOfFan 0 V E hfan) x0 x hx0 h1
+    rw [dartsLA1 0 V E hfan] at h2
+    exact h2
+  exact ⟨by rw [azimInFan_p4_eq_azimInFan_p36 hfan hdart]; exact (haw x hxFF).1,
+    by rw [wedgeInFanGe_p4_eq_wedgeInFanGe_p36 hfan hdart]; exact (haw x hxFF).2⟩
+
+/-- **MASTER (`_p4` → registry)**: the converse direction (used by the
+`IN_NOT_EMPTY_B1_SY_*` row-decoding twins to lift `CONDITION2_SY_p4` to the
+`BBsV39` fan conjunct). -/
+theorem ConvexLocalFan_of_convexLocalFan_p4_p36 {V : Set V3} {E : Set (Set V3)}
+    {FF : Set (V3 × V3)} (h : convexLocalFan_p4 V E FF) : ConvexLocalFan V E FF := by
+  obtain ⟨hl, haw⟩ := h
+  have hlf : localFan_p4 V E FF := hl
+  obtain ⟨hfan, ⟨p, hp, hFF⟩, hD⟩ := hl
+  have hhp := hyp_p4_of_fan_p36 hfan
+  have hm : p ∈ (@Hypermap.darts (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan) : Finset (V3 × V3)) := by
+    rw [← hhp]; exact hp
+  have hFF' : FF = orbitMap (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (Fan.hypermapOfFan 0 V E hfan)) p := by
+    rw [hhp] at hFF
+    rw [hFF, face_p4_eq_orbitMap_p36 (Fan.hypermapOfFan 0 V E hfan) p hm]
+  refine ⟨LocalFan_of_localFan_p4_p36 hlf, ?_⟩
+  intro x hxFF
+  have hdart : x ∈ Fan.dart1OfFan V E := by
+    rw [hFF'] at hxFF
+    have h2 := orbit_mem_darts_p36 (Fan.hypermapOfFan 0 V E hfan) p x hm hxFF
+    rw [dartsLA1 0 V E hfan] at h2
+    exact h2
+  exact ⟨by rw [← azimInFan_p4_eq_azimInFan_p36 hfan hdart]; exact (haw x hxFF).1,
+    by rw [← wedgeInFanGe_p4_eq_wedgeInFanGe_p36 hfan hdart]; exact (haw x hxFF).2⟩
+
+/-! ## Section 0.7: the generic k ≥ 4 `B_SY1_p4` cores.  CONDITION1 needs no
+table ladder at all: the `_p4` body tables are `change_type_v3 s.a (i+1, j+1)`
+and the `BBsV39` a/b conjunct is exactly that bound at the periodic rows. -/
+
+/-- Generic core of the k ≥ 4 `IN_NOT_EMPTY_CASE_*` family: `BBsV39 s vv` at
+`s.k = k ≥ 4` puts the flattening of the cyclic rows in `B_SY1_p4` (the
+`CONDITION2` conjunct via the Section 0.6 bridge). -/
+theorem inNotEmpty_core_p36 {k : ℕ} (hk : 4 ≤ k) {s : ScsV39} {vv : ℕ → V3}
+    (hksk : s.k = k) (hBB : BBsV39 s vv) :
+    flattenRow_p23 vv k ∈ B_SY1_p4
+      (fun (i j : Fin k) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+      (fun (i j : Fin k) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) := by
+  have hper : Periodic vv k := by rw [← hksk]; exact hBB.2.1
+  have hconv : ConvexLocalFan (Set.range vv)
+      (Set.range fun i : ℕ => {vv i, vv (i + 1)})
+      (Set.range fun i : ℕ => (vv i, vv (i + 1))) := by
+    rcases hBB.2.2.2 with h3 | hc
+    · have h3k : k ≤ 3 := hksk ▸ h3
+      omega
+    · exact hc
+  refine ⟨cycRow_p23 vv k, ⟨?_, ?_, ?_⟩, rfl⟩
+  · intro i
+    show vv (((i : ℕ) + 1) % k) ∈ ballAnnulus
+    rw [periodic_mod_eq_p23 hper ((i : ℕ) + 1)]
+    exact hBB.1 (Set.mem_range_self ((i : ℕ) + 1))
+  · intro i j
+    have e1 : cycRow_p23 vv k i = vv ((i : ℕ) + 1) :=
+      periodic_mod_eq_p23 hper ((i : ℕ) + 1)
+    have e2 : cycRow_p23 vv k j = vv ((j : ℕ) + 1) :=
+      periodic_mod_eq_p23 hper ((j : ℕ) + 1)
+    have hb := hBB.2.2.1 ((i : ℕ) + 1) ((j : ℕ) + 1)
+    rw [dist_eq_norm] at hb
+    simp only [change_type_v3]
+    rw [e1, e2]
+    exact hb
+  · show convexLocalFan_p4 (V_SY_p4 (cycRow_p23 vv k)) (E_SY_p4 (cycRow_p23 vv k))
+      (F_SY_p4 (cycRow_p23 vv k))
+    rw [vSy_eq_range_p36 (by omega) hper, eSy_eq_range_p36 (by omega) hper,
+      fSy_eq_range_p36 (by omega) hper]
+    exact convexLocalFan_p4_of_ConvexLocalFan_p36 hconv
+
+/-- Generic core of the k ≥ 4 `IN_NOT_EMPTY_B1_SY_*` twins: the body
+conditions on the cyclic rows decode back to `BBsV39 s vv` (the fan
+conjunct via the converse Section 0.6 bridge).  `hmod` is the residue
+periodicity of the value tables — in HOL discharged by `EXPAND_TAC s`
+(the concrete `cs_adj`/`a_pro` ladders); here instantiate it with the
+proved `SCS_A_B__EQ_MOD_k` twins. -/
+theorem inB1_core_p36 {k : ℕ} (hk : 4 ≤ k) {s : ScsV39} {vv : ℕ → V3}
+    (hksk : s.k = k) (hper : Periodic vv k)
+    (hmod : ∀ i j : ℕ, s.a i j = s.a (i % k) (j % k) ∧ s.b i j = s.b (i % k) (j % k))
+    (hball : ∀ i : Fin k, cycRow_p23 vv k i ∈ ballAnnulus)
+    (hC1 : CONDITION1_SY_p4
+      (fun (i j : Fin k) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
+      (fun (i j : Fin k) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
+      (cycRow_p23 vv k))
+    (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv k)) :
+    BBsV39 s vv := by
+  have hc : ConvexLocalFan (Set.range vv)
+      (Set.range fun i : ℕ => {vv i, vv (i + 1)})
+      (Set.range fun i : ℕ => (vv i, vv (i + 1))) := by
+    rw [← vSy_eq_range_p36 (by omega) hper, ← eSy_eq_range_p36 (by omega) hper,
+      ← fSy_eq_range_p36 (by omega) hper]
+    exact ConvexLocalFan_of_convexLocalFan_p4_p36 hC2
+  refine ⟨?_, by rw [hksk]; exact hper, ?_, Or.inr hc⟩
+  · rintro y ⟨n, rfl⟩
+    have hrow : cycRow_p23 vv k ⟨(n % k + k - 1) % k, Nat.mod_lt _ (by omega)⟩
+        = vv (n % k) := by
+      show vv ((((n % k + k - 1) % k + 1) % k : ℕ)) = vv (n % k)
+      rw [modShift_p36 k (n % k) (Nat.mod_lt n (by omega)), Nat.mod_mod]
+    rw [← periodic_mod_eq_p23 hper n, ← hrow]
+    exact hball _
+  · intro i j
+    have hik : i % k < k := Nat.mod_lt i (by omega)
+    have hjk : j % k < k := Nat.mod_lt j (by omega)
+    have hik' : (i % k + k - 1) % k < k := Nat.mod_lt _ (by omega)
+    have hjk' : (j % k + k - 1) % k < k := Nat.mod_lt _ (by omega)
+    have hi : cycRow_p23 vv k ⟨(i % k + k - 1) % k, hik'⟩ = vv (i % k) := by
+      show vv ((((i % k + k - 1) % k + 1) % k : ℕ)) = vv (i % k)
+      rw [modShift_p36 k (i % k) hik, Nat.mod_mod]
+    have hj : cycRow_p23 vv k ⟨(j % k + k - 1) % k, hjk'⟩ = vv (j % k) := by
+      show vv ((((j % k + k - 1) % k + 1) % k : ℕ)) = vv (j % k)
+      rw [modShift_p36 k (j % k) hjk, Nat.mod_mod]
+    have hb := hC1 ⟨(i % k + k - 1) % k, hik'⟩ ⟨(j % k + k - 1) % k, hjk'⟩
+    simp only [change_type_v3] at hb
+    rw [hi, hj] at hb
+    have hii : ((i % k + k - 1) % k + 1) % k = i % k := by
+      rw [modShift_p36 k (i % k) hik, Nat.mod_mod]
+    have hjj : ((j % k + k - 1) % k + 1) % k = j % k := by
+      rw [modShift_p36 k (j % k) hjk, Nat.mod_mod]
+    rw [(hmod i j).1, (hmod i j).2, ← periodic_mod_eq_p23 hper i,
+      ← periodic_mod_eq_p23 hper j, dist_eq_norm]
+    have hb1 := hb.1
+    have hb2 := hb.2
+    rw [(hmod ((i % k + k - 1) % k + 1) ((j % k + k - 1) % k + 1)).1, hii, hjj] at hb1
+    rw [(hmod ((i % k + k - 1) % k + 1) ((j % k + k - 1) % k + 1)).2, hii, hjj] at hb2
+    exact ⟨hb1, hb2⟩
 
 
 /-! ## Section 1: the k = 3 system (XWITCCN.hl:63-2428) -/
@@ -1140,9 +1426,11 @@ theorem HDPLYGY_CASE_3 (k : ℕ) (a b : ℕ → ℕ → ℝ) (J : Set (Set ℕ))
         tau3 (rowSy_p23 x 0) (rowSy_p23 x 1) (rowSy_p23 x 2) ≤
           tau3 (rowSy_p23 y 0) (rowSy_p23 y 1) (rowSy_p23 y 2) := by
   sorry
-  -- DISCHARGES: HOL HDPLYGY.hdplygy (taum existence over the tau3 rows of
-  -- the finite body set); NEEDS the `tau_fun`-minimisation kit (LocalAuto8
-  -- `tauStar_p8` lane, not importable here).
+  -- DISCHARGES: HOL HDPLYGY.hdplygy (XWITCCN.hl:2098) — the tau3-minimiser
+  -- existence over the finite-rendered body set; NEEDS the HDPLYGY kit
+  -- (scripts/local/HDPLYGY.hl:1831): `CONTINUOUS_ON_TAU_STAR` (tau_star
+  -- continuous on B_SY1) + `MINIMUM_IN_B_SY` (minimiser existence); both
+  -- are untouched analysis giants (no bridge input from AzimBridge).
 
 /-- HOL `TAUSTAR_EQ_TAU_STAR_3` (XWITCCN.hl:2283): at `k = 3` the taustar is
 the plain `tau3` of rows 1, 2, 0. -/
@@ -1168,6 +1456,8 @@ theorem XWITCCN_CASE_3 (s : ScsV39) (vv : ℕ → V3)
   -- DISCHARGES: SCS_3_IS_TRI_STABLE + TRI_STABLE_K_EQ_3 + NOT_EMPTY_CASE_3
   -- + IN_B_SY1_COLLINEAR_CASE_3 + HDPLYGY_CASE_3 (minimiser x) +
   -- IN_NOT_EMPTY_B1_SY_3 + TAUSTAR_EQ_TAU_STAR_3 (hta < 0 transfer).
+  -- NEEDS: `HDPLYGY_CASE_3` above (the only open input; the fan/hypermap
+  -- bookkeeping inputs are all discharged in this file).
 
 /-! ## Section 2: the k = 4 system `4I1` (XWITCCN.hl:2429-3231) -/
 
@@ -1241,16 +1531,12 @@ theorem IN_NOT_EMPTY_CASE_4 (s : ScsV39) (vv : ℕ → V3)
     (hBB : BBsV39 s vv) (hk : s.k = 4) :
     flattenRow_p23 vv 4 ∈ B_SY1_p4
       (fun (i j : Fin 4) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
-      (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) := by
-  sorry
-  -- DISCHARGES: BBsV39 unpack — annulus rows via IN_BALL_ANNULUS_ROW_TAC_4 /
-  -- VECTOR_3_4, CONDITION1 via the cs_adj ladder, CONDITION2 via
-  -- V_E_FF_CASE_4 (fan conjunct of BBsV39).
-  -- NEEDS (family blocker for all k ≥ 4 IN_NOT_EMPTY_CASE/B1_SY twins): the
-  -- registry `ConvexLocalFan` (LA1: sigmaFan/ee/wedgeGe vocabulary) vs the
-  -- `_p4` `convexLocalFan_p4` (LA4: azimCycle_p4/EE_p4/wedgeGe_p4) def-bridge:
-  -- azimCycle_p4 (EE_p4 v E) 0 v u = sigmaFan 0 Set.univ E v u (fan-hypothetic),
-  -- wedgeGe_p4 = wedgeGe, EE_p4 = ee, plus localFan_p4 → LocalFan(=True).
+      (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) :=
+  inNotEmpty_core_p36 (by omega) hk hBB
+  -- DISCHARGED (fill wave 3, AzimBridge): generic core `inNotEmpty_core_p36`.
+  -- The former family blocker (registry `ConvexLocalFan` vs `convexLocalFan_p4`
+  -- def-bridge, azimCycle_p4 vs sigmaFan) is Section 0.6; CONDITION1 needs no
+  -- cs_adj ladder — it reads the `BBsV39` a/b conjunct at the periodic rows.
 
 /-- HOL `NOT_EMPTY_CASE_4` (XWITCCN.hl:2737). -/
 theorem NOT_EMPTY_CASE_4 (s : ScsV39) (vv : ℕ → V3)
@@ -1348,10 +1634,12 @@ theorem IN_NOT_EMPTY_B1_SY_4 (s : ScsV39) (vv : ℕ → V3)
       (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
       (cycRow_p23 vv 4))
     (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 4)) :
-    BBsV39 s vv := by
-  sorry
-  -- DISCHARGES: BBsV39 conjunct walk — annulus range lifted by periodicity,
-  -- the cs_adj bound ladder, fan conjunct via V_E_FF_CASE_4 + CONDITION2_SY_p4.
+    BBsV39 s vv :=
+  inB1_core_p36 (by omega) hk hper (fun i j => SCS_A_B__EQ_MOD_4 s hs i j) hball hC1 hC2
+  -- DISCHARGED (fill wave 3, AzimBridge): generic core `inB1_core_p36` — the
+  -- fan conjunct lifts `CONDITION2_SY_p4` through
+  -- `ConvexLocalFan_of_convexLocalFan_p4_p36` (Section 0.6); the table
+  -- residue-periodicity hypothesis is `SCS_A_B__EQ_MOD_4`.
 
 /-- HOL `XWITCCN_CASE_4` (XWITCCN.hl:3118). -/
 theorem XWITCCN_CASE_4 (s : ScsV39) (vv : ℕ → V3)
@@ -1359,9 +1647,15 @@ theorem XWITCCN_CASE_4 (s : ScsV39) (vv : ℕ → V3)
     (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) (hk : s.k = 4) :
     BBprimeV39 s ≠ ∅ := by
   sorry
-  -- DISCHARGES: IS_SCS_STABLE_SYSTEM_p23 (hs, k = 4) + NOT_EMPTY_CASE_4 +
-  -- IN_B_SY1_COLLINEAR-style row kit + HDPLYGY minimiser + IN_NOT_EMPTY_B1_SY_4
-  -- + TAUSTAR_EQ_TAU_STAR_4 (hta < 0 transfer).
+  -- DISCHARGES (HOL XWITCCN.hl:3118 walk): SCS_4_IS_TRI_STABLE +
+  -- NOT_EMPTY_CASE_4 + stable_sy_explicit + HDPLYGY minimiser x over
+  -- `B_SY1_p4` + re-decode x's cyclic rows to `vv1` with
+  -- IN_NOT_EMPTY_B1_SY_4 (now PROVED) + TAUSTAR_EQ_TAU_STAR_4 applied to
+  -- both vv1 and the arbitrary ww ∈ BBs (IN_NOT_EMPTY_CASE_4, now PROVED)
+  -- + hta < 0 transfer.  NEEDS: the HDPLYGY kit only —
+  -- `CONTINUOUS_ON_TAU_STAR` (tau_star continuous on B_SY1) +
+  -- `MINIMUM_IN_B_SY` (minimiser existence; HDPLYGY.hl:1831) — the fan/
+  -- hypermap and body-set bookkeeping is fully discharged by Sections 0.6/0.7.
 
 /-! ## Section 3: the k = 5 system `5I1` (XWITCCN.hl:3232-4071) -/
 
@@ -1422,11 +1716,10 @@ theorem IN_NOT_EMPTY_CASE_5 (s : ScsV39) (vv : ℕ → V3)
     (hBB : BBsV39 s vv) (hk : s.k = 5) :
     flattenRow_p23 vv 5 ∈ B_SY1_p4
       (fun (i j : Fin 5) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
-      (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) := by
-  sorry
-  -- DISCHARGES: BBsV39 unpack — annulus rows via IN_BALL_ANNUUS_TAC_5 /
-  -- VECTOR_3_5, CONDITION1 via the cs_adj ladder, CONDITION2 via
-  -- V_E_FF_CASE_5.
+      (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) :=
+  inNotEmpty_core_p36 (by omega) hk hBB
+  -- DISCHARGED (fill wave 3): `inNotEmpty_core_p36` at k = 5 (annulus rows,
+  -- CONDITION1 from the BBsV39 a/b conjunct, CONDITION2 via Section 0.6).
 
 /-- HOL `NOT_EMPTY_CASE_5` (XWITCCN.hl:3543). -/
 theorem NOT_EMPTY_CASE_5 (s : ScsV39) (vv : ℕ → V3)
@@ -1513,10 +1806,10 @@ theorem IN_NOT_EMPTY_B1_SY_5 (s : ScsV39) (vv : ℕ → V3)
       (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
       (cycRow_p23 vv 5))
     (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 5)) :
-    BBsV39 s vv := by
-  sorry
-  -- DISCHARGES: as IN_NOT_EMPTY_B1_SY_4 at k = 5 (fan conjunct via
-  -- V_E_FF_CASE_5).
+    BBsV39 s vv :=
+  inB1_core_p36 (by omega) hk hper (fun i j => SCS_A_B__EQ_MOD_5 s hs i j) hball hC1 hC2
+  -- DISCHARGED (fill wave 3): `inB1_core_p36` at k = 5 (fan conjunct via
+  -- Section 0.6; table periodicity `SCS_A_B__EQ_MOD_5`).
 
 /-- HOL `XWITCCN_CASE_5` (XWITCCN.hl:3954). -/
 theorem XWITCCN_CASE_5 (s : ScsV39) (vv : ℕ → V3)
@@ -1524,7 +1817,8 @@ theorem XWITCCN_CASE_5 (s : ScsV39) (vv : ℕ → V3)
     (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) (hk : s.k = 5) :
     BBprimeV39 s ≠ ∅ := by
   sorry
-  -- DISCHARGES: as XWITCCN_CASE_4 at k = 5.
+  -- DISCHARGES: as XWITCCN_CASE_4 at k = 5 (NEEDS the HDPLYGY kit only;
+  -- body/fan bookkeeping discharged by Sections 0.6/0.7).
 
 /-! ## Section 3.5: the remaining `IS_TRI_STABLE` statements (source lines
 471-1270, grouped; each is the k-wise twin of `SCS_3_IS_TRI_STABLE`) -/
@@ -1755,10 +2049,9 @@ theorem IN_NOT_EMPTY_CASE_6 (s : ScsV39) (vv : ℕ → V3)
     (hBB : BBsV39 s vv) (hk : s.k = 6) :
     flattenRow_p23 vv 6 ∈ B_SY1_p4
       (fun (i j : Fin 6) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
-      (fun (i j : Fin 6) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) := by
-  sorry
-  -- DISCHARGES: BBsV39 unpack — annulus rows, cs_adj ladder, CONDITION2 via
-  -- V_E_FF_CASE_6.
+      (fun (i j : Fin 6) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) :=
+  inNotEmpty_core_p36 (by omega) hk hBB
+  -- DISCHARGED (fill wave 3): `inNotEmpty_core_p36` at k = 6 (as k = 4/5).
 
 /-- HOL `NOT_EMPTY_CASE_6` (XWITCCN.hl:4378). -/
 theorem NOT_EMPTY_CASE_6 (s : ScsV39) (vv : ℕ → V3)
@@ -1845,9 +2138,10 @@ theorem IN_NOT_EMPTY_B1_SY_6 (s : ScsV39) (vv : ℕ → V3)
       (fun (i j : Fin 6) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
       (cycRow_p23 vv 6))
     (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 6)) :
-    BBsV39 s vv := by
-  sorry
-  -- DISCHARGES: as IN_NOT_EMPTY_B1_SY_4 at k = 6.
+    BBsV39 s vv :=
+  inB1_core_p36 (by omega) hk hper (fun i j => SCS_A_B__EQ_MOD_6 s hs i j) hball hC1 hC2
+  -- DISCHARGED (fill wave 3): `inB1_core_p36` at k = 6 (as k = 4/5; table
+  -- periodicity `SCS_A_B__EQ_MOD_6`).
 
 /-- HOL `XWITCCN_CASE_6` (XWITCCN.hl:4826). -/
 theorem XWITCCN_CASE_6 (s : ScsV39) (vv : ℕ → V3)
@@ -1855,7 +2149,8 @@ theorem XWITCCN_CASE_6 (s : ScsV39) (vv : ℕ → V3)
     (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) (hk : s.k = 6) :
     BBprimeV39 s ≠ ∅ := by
   sorry
-  -- DISCHARGES: as XWITCCN_CASE_4 at k = 6.
+  -- DISCHARGES: as XWITCCN_CASE_4 at k = 6 (NEEDS the HDPLYGY kit only;
+  -- body/fan bookkeeping discharged by Sections 0.6/0.7).
 
 /-! ## Section 5: the `5_sqrt8` system (XWITCCN.hl:4973-5670) -/
 
@@ -1876,9 +2171,10 @@ theorem IN_NOT_EMPTY_CASE_5_sqrt8 (s : ScsV39) (vv : ℕ → V3)
     (hBB : BBsV39 s vv) (hk : s.k = 5) :
     flattenRow_p23 vv 5 ∈ B_SY1_p4
       (fun (i j : Fin 5) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
-      (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) := by
-  sorry
-  -- DISCHARGES: as IN_NOT_EMPTY_CASE_5 over the `5_sqrt8` bound ladder.
+      (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) :=
+  inNotEmpty_core_p36 (by omega) hk hBB
+  -- DISCHARGED (fill wave 3): `inNotEmpty_core_p36` at k = 5 over the
+  -- `5_sqrt8` tables (table-independent core).
 
 /-- HOL `NOT_EMPTY_CASE_5_sqrt8` (XWITCCN.hl:5181). -/
 theorem NOT_EMPTY_CASE_5_sqrt8 (s : ScsV39) (vv : ℕ → V3)
@@ -1926,9 +2222,10 @@ theorem IN_NOT_EMPTY_B1_SY_5_sqrt8 (s : ScsV39) (vv : ℕ → V3)
       (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
       (cycRow_p23 vv 5))
     (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 5)) :
-    BBsV39 s vv := by
-  sorry
-  -- DISCHARGES: as IN_NOT_EMPTY_B1_SY_5 over the `5_sqrt8` system.
+    BBsV39 s vv :=
+  inB1_core_p36 (by omega) hk hper (fun i j => SCS_A_B__EQ_MOD_5_sqrt8 s hs i j) hball hC1 hC2
+  -- DISCHARGED (fill wave 3): `inB1_core_p36` at k = 5 over the `5_sqrt8`
+  -- system (table periodicity `SCS_A_B__EQ_MOD_5_sqrt8`).
 
 /-- HOL `XWITCCN_CASE_5_sqrt8` (XWITCCN.hl:5549). -/
 theorem XWITCCN_CASE_5_sqrt8 (s : ScsV39) (vv : ℕ → V3)
@@ -1936,7 +2233,8 @@ theorem XWITCCN_CASE_5_sqrt8 (s : ScsV39) (vv : ℕ → V3)
     (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) (hk : s.k = 5) :
     BBprimeV39 s ≠ ∅ := by
   sorry
-  -- DISCHARGES: as XWITCCN_CASE_5 over the `5_sqrt8` system.
+  -- DISCHARGES: as XWITCCN_CASE_5 over the `5_sqrt8` system (NEEDS the
+  -- HDPLYGY kit only; body/fan bookkeeping discharged by Sections 0.6/0.7).
 
 /-! ## Section 6: the `5_pro_cs` system (XWITCCN.hl:5671-6450) -/
 
@@ -1959,9 +2257,10 @@ theorem IN_NOT_EMPTY_CASE_5_pro_cs (s : ScsV39) (vv : ℕ → V3)
     (hBB : BBsV39 s vv) (hk : s.k = 5) :
     flattenRow_p23 vv 5 ∈ B_SY1_p4
       (fun (i j : Fin 5) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
-      (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) := by
-  sorry
-  -- DISCHARGES: as IN_NOT_EMPTY_CASE_5 over the `a_pro 5` bound ladder.
+      (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) :=
+  inNotEmpty_core_p36 (by omega) hk hBB
+  -- DISCHARGED (fill wave 3): `inNotEmpty_core_p36` at k = 5 over the
+  -- `a_pro 5` tables (table-independent core).
 
 /-- HOL `NOT_EMPTY_CASE_5_pro_cs` (XWITCCN.hl:5968). -/
 theorem NOT_EMPTY_CASE_5_pro_cs (s : ScsV39) (vv : ℕ → V3)
@@ -2014,9 +2313,10 @@ theorem IN_NOT_EMPTY_B1_SY_5_pro_cs (s : ScsV39) (vv : ℕ → V3)
       (fun (i j : Fin 5) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
       (cycRow_p23 vv 5))
     (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 5)) :
-    BBsV39 s vv := by
-  sorry
-  -- DISCHARGES: as IN_NOT_EMPTY_B1_SY_5 over the `5_pro_cs` system.
+    BBsV39 s vv :=
+  inB1_core_p36 (by omega) hk hper (fun i j => SCS_A_B__EQ_MOD_5_pro_cs s hs i j) hball hC1 hC2
+  -- DISCHARGED (fill wave 3): `inB1_core_p36` at k = 5 over the `5_pro_cs`
+  -- system (table periodicity `SCS_A_B__EQ_MOD_5_pro_cs`).
 
 /-- HOL `XWITCCN_CASE_5_pro_cs` (XWITCCN.hl:6338). -/
 theorem XWITCCN_CASE_5_pro_cs (s : ScsV39) (vv : ℕ → V3)
@@ -2025,7 +2325,8 @@ theorem XWITCCN_CASE_5_pro_cs (s : ScsV39) (vv : ℕ → V3)
     (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) (hk : s.k = 5) :
     BBprimeV39 s ≠ ∅ := by
   sorry
-  -- DISCHARGES: as XWITCCN_CASE_5 over the `5_pro_cs` system.
+  -- DISCHARGES: as XWITCCN_CASE_5 over the `5_pro_cs` system (NEEDS the
+  -- HDPLYGY kit only; body/fan bookkeeping discharged by Sections 0.6/0.7).
 
 /-! ## Section 7: the `4_3` system (XWITCCN.hl:6451-7175) -/
 
@@ -2046,9 +2347,10 @@ theorem IN_NOT_EMPTY_CASE_4_3 (s : ScsV39) (vv : ℕ → V3)
     (hBB : BBsV39 s vv) (hk : s.k = 4) :
     flattenRow_p23 vv 4 ∈ B_SY1_p4
       (fun (i j : Fin 4) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
-      (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) := by
-  sorry
-  -- DISCHARGES: as IN_NOT_EMPTY_CASE_4 over the `cs_adj 4 2 3` ladder.
+      (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) :=
+  inNotEmpty_core_p36 (by omega) hk hBB
+  -- DISCHARGED (fill wave 3): `inNotEmpty_core_p36` at k = 4 over the
+  -- `cs_adj 4 2 3` tables (table-independent core).
 
 /-- HOL `NOT_EMPTY_CASE_4_3` (XWITCCN.hl:6664). -/
 theorem NOT_EMPTY_CASE_4_3 (s : ScsV39) (vv : ℕ → V3)
@@ -2095,9 +2397,10 @@ theorem IN_NOT_EMPTY_B1_SY_4_3 (s : ScsV39) (vv : ℕ → V3)
       (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
       (cycRow_p23 vv 4))
     (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 4)) :
-    BBsV39 s vv := by
-  sorry
-  -- DISCHARGES: as IN_NOT_EMPTY_B1_SY_4 over the `4_3` system.
+    BBsV39 s vv :=
+  inB1_core_p36 (by omega) hk hper (fun i j => SCS_A_B__EQ_MOD_4_3 s hs i j) hball hC1 hC2
+  -- DISCHARGED (fill wave 3): `inB1_core_p36` at k = 4 over the `4_3` system
+  -- (table periodicity `SCS_A_B__EQ_MOD_4_3`).
 
 /-- HOL `XWITCCN_CASE_4_3` (XWITCCN.hl:7045). -/
 theorem XWITCCN_CASE_4_3 (s : ScsV39) (vv : ℕ → V3)
@@ -2105,7 +2408,8 @@ theorem XWITCCN_CASE_4_3 (s : ScsV39) (vv : ℕ → V3)
     (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) (hk : s.k = 4) :
     BBprimeV39 s ≠ ∅ := by
   sorry
-  -- DISCHARGES: as XWITCCN_CASE_4 over the `4_3` system.
+  -- DISCHARGES: as XWITCCN_CASE_4 over the `4_3` system (NEEDS the
+  -- HDPLYGY kit only; body/fan bookkeeping discharged by Sections 0.6/0.7).
 
 /-! ## Section 8: the `4_sqrt8` system (XWITCCN.hl:7262-7940) -/
 
@@ -2128,9 +2432,10 @@ theorem IN_NOT_EMPTY_CASE_4_sqrt8 (s : ScsV39) (vv : ℕ → V3)
     (hBB : BBsV39 s vv) (hk : s.k = 4) :
     flattenRow_p23 vv 4 ∈ B_SY1_p4
       (fun (i j : Fin 4) => change_type_v3 s.a ((i : ℕ) + 1, (j : ℕ) + 1))
-      (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) := by
-  sorry
-  -- DISCHARGES: as IN_NOT_EMPTY_CASE_4 over the `a_pro 4` bound ladder.
+      (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1)) :=
+  inNotEmpty_core_p36 (by omega) hk hBB
+  -- DISCHARGED (fill wave 3): `inNotEmpty_core_p36` at k = 4 over the
+  -- `a_pro 4` tables (table-independent core).
 
 /-- HOL `NOT_EMPTY_CASE_4_sqrt8` (XWITCCN.hl:7461). -/
 theorem NOT_EMPTY_CASE_4_sqrt8 (s : ScsV39) (vv : ℕ → V3)
@@ -2183,9 +2488,10 @@ theorem IN_NOT_EMPTY_B1_SY_4_sqrt8 (s : ScsV39) (vv : ℕ → V3)
       (fun (i j : Fin 4) => change_type_v3 s.b ((i : ℕ) + 1, (j : ℕ) + 1))
       (cycRow_p23 vv 4))
     (hC2 : CONDITION2_SY_p4 (cycRow_p23 vv 4)) :
-    BBsV39 s vv := by
-  sorry
-  -- DISCHARGES: as IN_NOT_EMPTY_B1_SY_4 over the `4_sqrt8` system.
+    BBsV39 s vv :=
+  inB1_core_p36 (by omega) hk hper (fun i j => SCS_A_B__EQ_MOD_4_sqrt8 s hs i j) hball hC1 hC2
+  -- DISCHARGED (fill wave 3): `inB1_core_p36` at k = 4 over the `4_sqrt8`
+  -- system (table periodicity `SCS_A_B__EQ_MOD_4_sqrt8`).
 
 /-- HOL `XWITCCN_CASE_4_sqrt8` (XWITCCN.hl:7827). -/
 theorem XWITCCN_CASE_4_sqrt8 (s : ScsV39) (vv : ℕ → V3)
@@ -2194,7 +2500,8 @@ theorem XWITCCN_CASE_4_sqrt8 (s : ScsV39) (vv : ℕ → V3)
     (hBB : BBsV39 s vv) (hta : taustarV39 s vv < 0) (hk : s.k = 4) :
     BBprimeV39 s ≠ ∅ := by
   sorry
-  -- DISCHARGES: as XWITCCN_CASE_4 over the `4_sqrt8` system.
+  -- DISCHARGES: as XWITCCN_CASE_4 over the `4_sqrt8` system (NEEDS the
+  -- HDPLYGY kit only; body/fan bookkeeping discharged by Sections 0.6/0.7).
 
 /-! ## Section 9: the master conclusions (XWITCCN.hl:7941-8020) -/
 
@@ -2206,7 +2513,8 @@ theorem XWITCCN_TYPE (k : ℕ) (s : ScsV39) (vv : ℕ → V3)
   sorry
   -- DISCHARGES: XWITCCN_CASE_3 / _4 / _5 / _6 / _4_3 / _4_sqrt8 / _5_sqrt8 /
   -- _5_pro_cs, assembled by the explicit `s_init_list_v39` eight-element
-  -- case split (LENGTH_s_init_list, LocalAuto1).
+  -- case split (LENGTH_s_init_list, LocalAuto1).  NEEDS: those eight cases,
+  -- i.e. ultimately the HDPLYGY kit only (see XWITCCN_CASE_4).
 
 /-- HOL `XWITCCN` (XWITCCN.hl:7980): the master conclusion. Twin of the
 `XWITCCN_concl` statement of LocalAuto1 (that lane is `sorry`; here the
@@ -2214,4 +2522,8 @@ theorem XWITCCN_TYPE (k : ℕ) (s : ScsV39) (vv : ℕ → V3)
 theorem XWITCCN : ∀ (s : ScsV39) (vv : ℕ → V3), s ∈ sInitListV39 →
     BBsV39 s vv → taustarV39 s vv < 0 → BBprimeV39 s ≠ ∅ := by
   sorry
-  -- DISCHARGES: XWITCCN_TYPE at k ∈ {3, 4, 5, 6}.
+  -- DISCHARGES: XWITCCN_TYPE at k ∈ {3, 4, 5, 6}; NEEDS: the HDPLYGY kit
+  -- (CONTINUOUS_ON_TAU_STAR + MINIMUM_IN_B_SY, HDPLYGY.hl:1831) via the
+  -- eight XWITCCN_CASE_* — everything downstream of HDPLYGY (the fan/
+  -- hypermap bridges, the B_SY1 body bookkeeping, the taustar=tau_star
+  -- transfers) is discharged in this file (Sections 0.5-0.7).

@@ -1238,13 +1238,97 @@ theorem VORONOI_LIST_3_SINGLETON_EXPLICIT (V : Set V3) (ul : List V3)
 
 /-! ## marchal2.hl:2393 SIMPLEX_FURTHEST_LT_2 -/
 
-/-- HOL `SIMPLEX_FURTHEST_LT_2` (marchal2.hl:2393). Sorried: strict convexity
-(norm-square Jensen) argument; matches the PRIVATE sorry'd copy
-`PackingAuto11.simplexFurthestLt2`. -/
+/-- HOL `SIMPLEX_FURTHEST_LT_2` (marchal2.hl:2393): a hull point outside the
+set is strictly closer to `a` than some set point. Strict convexity of the
+Euclidean ball: `x` is a convex combination over `hs.toFinset`; its support
+holds two distinct points (else `x` would be a vertex, i.e. `x ∈ s`), so
+`norm_sum_lt_of_strictConvexSpace` bounds `x` strictly inside the ball of the
+max-distance vertex `ystar`. Matches `PackingAuto11.simplexFurthestLt2`. -/
 theorem SIMPLEX_FURTHEST_LT_2 (a : V3) (s : Set V3) (hs : s.Finite)
     (hx : x ∈ convexHull ℝ s) (hxs : x ∉ s) :
     ∃ y, y ∈ s ∧ ‖x - a‖ < ‖y - a‖ := by
-  sorry
+  classical
+  let T := hs.toFinset
+  have hxT : x ∈ convexHull ℝ (T : Set V3) := by
+    simpa [T, hs.coe_toFinset] using hx
+  rw [Finset.convexHull_eq] at hxT
+  simp only [Set.mem_setOf_eq] at hxT
+  obtain ⟨w, hw0, hw1, hcm⟩ := hxT
+  have hxsum : (∑ y ∈ T, w y • y) = x := by
+    calc
+      (∑ y ∈ T, w y • y) = T.centerMass w id := (Finset.centerMass_eq_of_sum_1 T id hw1).symm
+      _ = x := hcm
+  have hsumn0 : (∑ y ∈ T, w y) ≠ 0 := by
+    rw [hw1]
+    norm_num
+  have hsup : ∃ y ∈ T, w y ≠ 0 := Finset.exists_ne_zero_of_sum_ne_zero hsumn0
+  have h2pts : ∃ i ∈ T, ∃ j ∈ T, i ≠ j ∧ w i ≠ 0 ∧ w j ≠ 0 := by
+    by_contra hc
+    rcases hsup with ⟨q, hqT, hqw⟩
+    have hzall : ∀ y ∈ T, y ≠ q → w y = 0 := by
+      intro y hyT hyneQ
+      by_contra hwy
+      have hyq : y = q := by
+        by_contra hyneq
+        exact hc ⟨y, hyT, q, hqT, hyneq, hwy, hqw⟩
+      exact hyneQ hyq
+    have hsum : (∑ y ∈ T, w y • y) = w q • q := by
+      exact Finset.sum_eq_single (s := T) (f := fun y => w y • y) (a := q)
+        (fun y hyT hyq => by
+          rw [hzall y hyT hyq, zero_smul])
+        (fun h => False.elim (h hqT))
+    have hwq1 : w q = 1 := by
+      have hsumW : (∑ y ∈ T, w y) = w q :=
+        Finset.sum_eq_single (s := T) (f := w) (a := q)
+          (fun y hyT hyq => hzall y hyT hyq)
+          (fun h => False.elim (h hqT))
+      rw [hw1] at hsumW
+      exact hsumW.symm
+    have hxeq : x = q := by
+      rw [← hxsum, hsum, hwq1, one_smul]
+    have hqm : q ∈ s := (Set.Finite.mem_toFinset hs).mp hqT
+    exact hxs (by simpa [hxeq] using hqm)
+  rcases h2pts with ⟨i, hiT, j, hjT, hij, hwi, hwj⟩
+  have hTne : T.Nonempty := ⟨i, hiT⟩
+  have hIm : (T.image fun y => dist y a).Nonempty := Finset.image_nonempty.2 hTne
+  let r : ℝ := (T.image fun y => dist y a).max' hIm
+  have hle_r : ∀ y ∈ T, dist y a ≤ r := by
+    intro y hy
+    exact Finset.le_max' (T.image fun z => dist z a) (dist y a) (by
+      exact Finset.mem_image.mpr ⟨y, hy, rfl⟩)
+  have hrmem : r ∈ T.image fun y => dist y a := Finset.max'_mem _ _
+  obtain ⟨ystar, hyt, hrdist⟩ := Finset.mem_image.mp hrmem
+  have hzlt : (∑ y ∈ T, w y • (y - a)) = x - a := by
+    calc
+      (∑ y ∈ T, w y • (y - a))
+          = ∑ y ∈ T, (w y • y + w y • (-a : V3)) := by
+            apply Finset.sum_congr rfl
+            intro y hy
+            rw [sub_eq_add_neg, smul_add]
+      _ = (∑ y ∈ T, w y • y) + (∑ y ∈ T, w y) • (-a : V3) := by
+            rw [Finset.sum_add_distrib, ← Finset.sum_smul]
+      _ = x - a := by
+            rw [hxsum, hw1]
+            ext i
+            rw [sub_eq_add_neg]
+            simp
+  have hznorm : ∀ y ∈ T, ‖y - a‖ ≤ r := by
+    intro y hy
+    rw [← dist_eq_norm]
+    exact hle_r y hy
+  have hmain := norm_sum_lt_of_strictConvexSpace (t := T) (w := w) (r := r)
+    (z := fun y : V3 => y - a) hw0 hw1 hiT hjT (by
+      intro hneq
+      exact hij (sub_left_inj.mp hneq)) hwi hwj hznorm
+  have hnorm_lt : ‖x - a‖ < r := by
+    rw [hzlt] at hmain
+    exact hmain
+  have hfinal : ‖x - a‖ < ‖ystar - a‖ := by
+    calc
+      ‖x - a‖ < r := hnorm_lt
+      _ = dist ystar a := hrdist.symm
+      _ = ‖ystar - a‖ := dist_eq_norm _ _
+  exact ⟨ystar, (Set.Finite.mem_toFinset hs).mp hyt, hfinal⟩
 
 /-! ## marchal2.hl:2424 DIST_BETWEEN_FURTHEST_LT -/
 
