@@ -51,6 +51,27 @@ structure SqrtTMP where
   o2 : Int
   deriving Repr
 
+/-- Per-`div`-node (reciprocal) certificate bundle for `evalTM`: `o0`/`o1`/`o2`
+are the `DInterval.recip` granularities for the value enclosure `1/f(y)`, the
+slope enclosure `1/f(y)²`, and the curvature bound `1/c³`.  No sqrt
+certificates are needed. -/
+structure InvTMP where
+  o0 : Int
+  o1 : Int
+  o2 : Int
+  deriving Repr
+
+/-- Per-leaf TM parameters: certificate queues consumed in traversal order —
+`sqrt` nodes from `sqrtCerts`, `div` nodes (reciprocal step) from
+`invCerts`. -/
+structure TMParams where
+  sqrtCerts : List SqrtTMP
+  invCerts : List InvTMP
+  deriving Repr
+
+/-- Empty parameter bundle (expressions without `sqrt`/`div` nodes). -/
+def TMParams.empty : TMParams := ⟨[], []⟩
+
 /-- First-order Taylor model over a box (design doc §1.2). -/
 structure TaylorM (n : ℕ) where
   /-- Center point (in the box; `evalTM` always uses the midpoint). -/
@@ -157,6 +178,29 @@ def sqrt {n : ℕ} (M : TaylorM n) (p : SqrtTMP) : Option (TaylorM n) :=
        (⟨8, 0⟩ : Dyadic).mul ((M.fB.lo.add (-M.W)).mul Jc.lo)⟩ p.o2).map fun K =>
     ⟨M.y, M.w, ⟨Jl.lo, Jh.hi⟩, fun i => (M.dfB i).mul J,
       (M.err.mul J.hi).add ((M.W.mul M.W).mul K.hi)⟩
+  else none
+
+/-- Shared computation of `inv` once a positive lower bound `c` of `|f|` over
+the box is certified. -/
+def invCore {n : ℕ} (M : TaylorM n) (c : Dyadic) (p : InvTMP) : Option (TaylorM n) :=
+  (DInterval.recip M.fB p.o0).bind fun V =>
+  (DInterval.recip ⟨c.mul c, M.fB.abs.hi.mul M.fB.abs.hi⟩ p.o1).bind fun Jp =>
+  (DInterval.recip ⟨c.mul (c.mul c), c.mul (c.mul c)⟩ p.o2).map fun K =>
+  ⟨M.y, M.w, V, fun i => (M.dfB i).mul Jp.neg,
+    (M.err.mul Jp.abs.hi).add ((M.W.mul M.W).mul K.hi)⟩
+
+/-- Model of `1/f`, certificate-light (granularities only).  `c` is a
+certified lower bound of `|f|` over the box: `fB.lo − W` when positive, else
+`−(fB.hi + W)` when positive, else `none` (safe failure).  Remainder: from
+`1/s − 1/t = (t−s)/(s·t)` and `q := −1/f(y)²`,
+`1/f(ρ) − 1/f(y) − q·Δf = Δf²/(f(ρ)·f(y)²)`, bounded by `W²/c³`; the
+`q·(Δf − Σaᵢuᵢ)` part is bounded by `err·|q| ≤ err·Jp.abs.hi` where `Jp ∋
+1/f(y)²`. -/
+def inv {n : ℕ} (M : TaylorM n) (p : InvTMP) : Option (TaylorM n) :=
+  let cpos := M.fB.lo.add (-M.W)
+  let cneg := -(M.fB.hi.add M.W)
+  if cpos.isPos = true then M.invCore cpos p
+  else if cneg.isPos = true then M.invCore cneg p
   else none
 
 /-- Taylor lower bound over the box: `fB.lo + Σᵢ (dfBᵢ · [loᵢ−yᵢ, hiᵢ−yᵢ]).lo
@@ -791,6 +835,201 @@ theorem valid_sqrt {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
   · rw [if_neg hc] at h
     exact absurd h (by simp)
 
+/-! ## The reciprocal/division rule (elementary, no derivatives) -/
+
+/-- **Validity of `invCore`**: given a certified positive lower bound `c` of
+`|f|` over the box, the computed model models `f⁻¹`. -/
+theorem valid_invCore {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
+    {f : (Fin n → ℝ) → ℝ} (hV : M.Valid box f) {c : Dyadic} (p : InvTMP)
+    (hc0 : 0 < c.toReal)
+    (hcle : ∀ ρ, boxMem box ρ → c.toReal ≤ |f ρ|)
+    {M' : TaylorM n} (h : M.invCore c p = some M') :
+    M'.Valid box (fun ρ => (f ρ)⁻¹) ∧ M'.y = M.y ∧ M'.w = M.w := by
+  have hV0 := hV
+  obtain ⟨hmem, hw, hfB, hrem⟩ := hV
+  unfold TaylorM.invCore at h
+  rw [Option.bind_eq_some_iff] at h
+  obtain ⟨V, hVv, h⟩ := h
+  rw [Option.bind_eq_some_iff] at h
+  obtain ⟨Jp, hJp, h⟩ := h
+  rw [Option.map_eq_some_iff] at h
+  obtain ⟨K, hK, h⟩ := h
+  obtain rfl : M' = ⟨M.y, M.w, V, fun i => (M.dfB i).mul Jp.neg,
+    (M.err.mul Jp.abs.hi).add ((M.W.mul M.W).mul K.hi)⟩ := h.symm
+  have hcfy : c.toReal ≤ |f fun i => (M.y i).toReal| := hcle _ (fun i => hmem i)
+  have hfyne : f (fun i => (M.y i).toReal) ≠ 0 :=
+    abs_pos.mp (lt_of_lt_of_le hc0 hcfy)
+  have hsq_abs' : ∀ x : ℝ, |x| * |x| = x * x := fun x => by
+    rw [← pow_two, ← pow_two, sq_abs]
+  have hfy2ge : c.toReal * c.toReal
+      ≤ (f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal) := by
+    have h := mul_le_mul hcfy hcfy hc0.le (le_trans hc0.le hcfy)
+    rwa [hsq_abs'] at h
+  have hfy2le : (f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal)
+      ≤ M.fB.abs.hi.toReal * M.fB.abs.hi.toReal := by
+    have h1 := (DInterval.mem_abs hfB).2
+    have h0 : 0 ≤ M.fB.abs.hi.toReal := le_trans (abs_nonneg _) h1
+    have h := mul_le_mul h1 h1 (abs_nonneg _) h0
+    rwa [hsq_abs'] at h
+  have hJpmem : Jp.mem (1 / ((f fun i => (M.y i).toReal)
+      * (f fun i => (M.y i).toReal))) :=
+    DInterval.recip_sound
+      ⟨by rw [Dyadic.toReal_mul]; exact hfy2ge,
+       by rw [Dyadic.toReal_mul]; exact hfy2le⟩ hJp
+  have hVmem : V.mem (f fun i => (M.y i).toReal)⁻¹ := by
+    have := DInterval.recip_sound hfB hVv
+    rwa [one_div] at this
+  have hKhi : 1 / (c.toReal * (c.toReal * c.toReal)) ≤ K.hi.toReal := by
+    have hmem3 : (⟨c.mul (c.mul c), c.mul (c.mul c)⟩ : DInterval).mem
+        (c.mul (c.mul c)).toReal := ⟨le_rfl, le_rfl⟩
+    have h2 := (DInterval.recip_sound hmem3 hK).2
+    rwa [Dyadic.toReal_mul, Dyadic.toReal_mul] at h2
+  refine ⟨⟨hmem, hw, hVmem, ?_⟩, rfl, rfl⟩
+  intro ρ hρ
+  obtain ⟨a, ha, hbound⟩ := hrem ρ hρ
+  have hcρ := hcle ρ hρ
+  have hfρne : f ρ ≠ 0 := abs_pos.mp (lt_of_lt_of_le hc0 hcρ)
+  have hW := TaylorM.Valid.abs_sub_le_W hV0 hρ ha hbound
+  refine ⟨fun i => a i * (-(1 / ((f fun i => (M.y i).toReal)
+      * (f fun i => (M.y i).toReal)))), fun i => ?_, ?_⟩
+  · show ((M.dfB i).mul Jp.neg).mem _
+    exact DInterval.mem_mul (ha i) (DInterval.mem_neg hJpmem)
+  · have herr' : (⟨M.y, M.w, V, fun i => (M.dfB i).mul Jp.neg,
+        (M.err.mul Jp.abs.hi).add ((M.W.mul M.W).mul K.hi)⟩ : TaylorM n).err.toReal
+        = M.err.toReal * Jp.abs.hi.toReal + M.W.toReal ^ 2 * K.hi.toReal := by
+      show (Dyadic.add (M.err.mul Jp.abs.hi) ((M.W.mul M.W).mul K.hi)).toReal = _
+      rw [Dyadic.toReal_add, Dyadic.toReal_mul, Dyadic.toReal_mul, Dyadic.toReal_mul,
+        pow_two]
+    rw [herr']
+    have hsum : (∑ i, a i * (-(1 / ((f fun i => (M.y i).toReal)
+            * (f fun i => (M.y i).toReal)))) * (ρ i - (M.y i).toReal))
+        = (-(1 / ((f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal))))
+          * ∑ i, a i * (ρ i - (M.y i).toReal) := by
+      rw [Finset.mul_sum]
+      exact Finset.sum_congr rfl fun i _ => by ring
+    have hkey : (f ρ)⁻¹ - (f fun i => (M.y i).toReal)⁻¹
+        - (-(1 / ((f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal))))
+          * (f ρ - (f fun i => (M.y i).toReal))
+        = (f ρ - (f fun i => (M.y i).toReal)) ^ 2
+          / (f ρ * ((f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal))) := by
+      field_simp
+      ring
+    have hdecomp : (f ρ)⁻¹ - (f fun i => (M.y i).toReal)⁻¹
+        - (-(1 / ((f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal))))
+          * ∑ i, a i * (ρ i - (M.y i).toReal)
+        = ((f ρ)⁻¹ - (f fun i => (M.y i).toReal)⁻¹
+            - (-(1 / ((f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal))))
+              * (f ρ - (f fun i => (M.y i).toReal)))
+          + (-(1 / ((f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal))))
+            * (f ρ - (f fun i => (M.y i).toReal)
+              - ∑ i, a i * (ρ i - (M.y i).toReal)) := by
+      ring
+    have hT1 : |(f ρ - (f fun i => (M.y i).toReal)) ^ 2
+        / (f ρ * ((f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal)))|
+        ≤ M.W.toReal ^ 2 * K.hi.toReal := by
+      rw [abs_div, abs_of_nonneg (sq_nonneg _)]
+      have hden : |f ρ * ((f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal))|
+          = |f ρ| * ((f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal)) := by
+        rw [abs_mul, abs_of_nonneg (mul_self_nonneg (f fun i => (M.y i).toReal))]
+      rw [hden]
+      have hW2 : (f ρ - (f fun i => (M.y i).toReal)) ^ 2 ≤ M.W.toReal ^ 2 := by
+        rw [← sq_abs]
+        exact pow_le_pow_left₀ (abs_nonneg _) hW 2
+      have hdge : c.toReal * (c.toReal * c.toReal)
+          ≤ |f ρ| * ((f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal)) :=
+        mul_le_mul hcρ hfy2ge (mul_nonneg hc0.le hc0.le) (le_trans hc0.le hcρ)
+      have hdpos : 0 < |f ρ| * ((f fun i => (M.y i).toReal)
+          * (f fun i => (M.y i).toReal)) :=
+        mul_pos (abs_pos.mpr hfρne) (mul_self_pos.mpr hfyne)
+      have hc3pos : 0 < c.toReal * (c.toReal * c.toReal) :=
+        mul_pos hc0 (mul_pos hc0 hc0)
+      calc (f ρ - (f fun i => (M.y i).toReal)) ^ 2
+            / (|f ρ| * ((f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal)))
+          ≤ M.W.toReal ^ 2
+            / (|f ρ| * ((f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal))) := by
+            rw [div_eq_mul_inv, div_eq_mul_inv]
+            exact mul_le_mul_of_nonneg_right hW2 (inv_nonneg.mpr hdpos.le)
+        _ ≤ M.W.toReal ^ 2 / (c.toReal * (c.toReal * c.toReal)) := by
+            rw [div_eq_mul_inv, div_eq_mul_inv]
+            have h1 := one_div_le_one_div_of_le hc3pos hdge
+            simp only [one_div] at h1
+            exact mul_le_mul_of_nonneg_left h1 (sq_nonneg _)
+        _ ≤ M.W.toReal ^ 2 * K.hi.toReal := by
+            rw [div_eq_mul_inv, ← one_div]
+            exact mul_le_mul_of_nonneg_left hKhi (sq_nonneg _)
+    have hT2 : |(-(1 / ((f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal))))
+        * (f ρ - (f fun i => (M.y i).toReal) - ∑ i, a i * (ρ i - (M.y i).toReal))|
+        ≤ M.err.toReal * Jp.abs.hi.toReal := by
+      rw [abs_mul]
+      have hq : |-(1 / ((f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal)))|
+          ≤ Jp.abs.hi.toReal := by
+        rw [abs_neg]
+        exact (DInterval.mem_abs hJpmem).2
+      have hJ0 : 0 ≤ Jp.abs.hi.toReal := le_trans (abs_nonneg _) hq
+      calc |-(1 / ((f fun i => (M.y i).toReal) * (f fun i => (M.y i).toReal)))|
+          * |f ρ - (f fun i => (M.y i).toReal) - ∑ i, a i * (ρ i - (M.y i).toReal)|
+          ≤ Jp.abs.hi.toReal * M.err.toReal :=
+          mul_le_mul hq hbound (abs_nonneg _) hJ0
+        _ = M.err.toReal * Jp.abs.hi.toReal := mul_comm _ _
+    rw [hsum, hdecomp, hkey]
+    exact le_trans (abs_add_le _ _) (by linarith [hT1, hT2])
+
+/-- **Validity of the reciprocal rule**: two sign cases feeding
+`valid_invCore`. -/
+theorem valid_inv {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
+    {f : (Fin n → ℝ) → ℝ} (hV : M.Valid box f) (p : InvTMP) {M' : TaylorM n}
+    (h : M.inv p = some M') :
+    M'.Valid box (fun ρ => (f ρ)⁻¹) ∧ M'.y = M.y ∧ M'.w = M.w := by
+  have hV0 := hV
+  obtain ⟨hmem, hw, hfB, hrem⟩ := hV
+  unfold TaylorM.inv at h
+  by_cases hcp : (M.fB.lo.add (-M.W)).isPos = true
+  · rw [if_pos hcp] at h
+    refine valid_invCore hV0 p ?_ ?_ h
+    · exact (Dyadic.isPos_iff _).mp hcp
+    · intro ρ hρ
+      obtain ⟨a, ha, hbound⟩ := hrem ρ hρ
+      have hW := TaylorM.Valid.abs_sub_le_W hV0 hρ ha hbound
+      have h1 := (abs_le.mp hW).1
+      have hfy1 := hfB.1
+      have hc0 : 0 < (M.fB.lo.add (-M.W)).toReal := (Dyadic.isPos_iff _).mp hcp
+      have h2 : (M.fB.lo.add (-M.W)).toReal = M.fB.lo.toReal - M.W.toReal := by
+        rw [Dyadic.toReal_add, Dyadic.toReal_neg, sub_eq_add_neg]
+      rw [h2] at hc0 ⊢
+      have hge : M.fB.lo.toReal - M.W.toReal ≤ f ρ := by linarith
+      rw [abs_of_nonneg (by linarith)]
+      exact hge
+  · by_cases hcn : (-(M.fB.hi.add M.W)).isPos = true
+    · rw [if_neg hcp, if_pos hcn] at h
+      refine valid_invCore hV0 p ?_ ?_ h
+      · exact (Dyadic.isPos_iff _).mp hcn
+      · intro ρ hρ
+        obtain ⟨a, ha, hbound⟩ := hrem ρ hρ
+        have hW := TaylorM.Valid.abs_sub_le_W hV0 hρ ha hbound
+        have h2b := (abs_le.mp hW).2
+        have hfy2 := hfB.2
+        have hc0 : 0 < (-(M.fB.hi.add M.W)).toReal := (Dyadic.isPos_iff _).mp hcn
+        have h2 : (-(M.fB.hi.add M.W)).toReal = -(M.fB.hi.toReal + M.W.toReal) := by
+          rw [Dyadic.toReal_neg, Dyadic.toReal_add]
+        rw [h2] at hc0 ⊢
+        have hle : f ρ ≤ M.fB.hi.toReal + M.W.toReal := by linarith
+        rw [abs_of_nonpos (by linarith)]
+        linarith
+    · rw [if_neg hcp, if_neg hcn] at h
+      exact absurd h (by simp)
+
+/-- **Validity of division** (as `f · g⁻¹`). -/
+theorem valid_div {n : ℕ} {Mf Mg : TaylorM n} {box : Fin n → DInterval}
+    {f g : (Fin n → ℝ) → ℝ}
+    (hf : Mf.Valid box f) (hg : Mg.Valid box g)
+    (hy : Mf.y = Mg.y) (hw : Mf.w = Mg.w) (p : InvTMP) {Mi : TaylorM n}
+    (hi : Mg.inv p = some Mi) :
+    (Mf.mul Mi).Valid box (fun ρ => f ρ / g ρ) := by
+  obtain ⟨hVi, hyi, hwi⟩ := valid_inv hg p hi
+  have h := valid_mul hf hVi (by rw [hy, hyi]) (by rw [hw, hwi])
+  convert h using 2
+  rw [div_eq_mul_inv]
+
 /-! ## Single-pass Taylor-model evaluation -/
 
 /-- Single-pass Taylor-model evaluation (TM0: `const`/`var`/`neg`/`add`/`sub`/
@@ -798,7 +1037,7 @@ theorem valid_sqrt {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
 always the box midpoint; `sqrt` certificates are consumed from the list in
 traversal order (each `sqrt` node takes the head bundle). -/
 def evalTM {n : ℕ} (box : Fin n → DInterval) :
-    IExpr n → List SqrtTMP → Option (TaylorM n × List SqrtTMP)
+    IExpr n → TMParams → Option (TaylorM n × TMParams)
   | .const d, ps => some (constTM box d, ps)
   | .var k, ps => some (varTM box k, ps)
   | .neg e, ps => (evalTM box e ps).map fun (M, ps') => (M.neg, ps')
@@ -811,20 +1050,24 @@ def evalTM {n : ℕ} (box : Fin n → DInterval) :
   | .mul e₁ e₂, ps =>
       (evalTM box e₁ ps).bind fun (M₁, ps₁) =>
       (evalTM box e₂ ps₁).map fun (M₂, ps₂) => (M₁.mul M₂, ps₂)
+  | .div e₁ e₂ _, ps =>
+      (evalTM box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTM box e₂ ps₁).bind fun (M₂, ps₂) =>
+      ps₂.invCerts.head?.bind fun p =>
+      (M₂.inv p).map fun Mi => (M₁.mul Mi, ⟨ps₂.sqrtCerts, ps₂.invCerts.tail⟩)
   | .sqrt e _ _, ps =>
       (evalTM box e ps).bind fun (M₀, ps₀) =>
-      ps₀.head?.bind fun p =>
-      (M₀.sqrt p).map fun M' => (M', ps₀.tail)
+      ps₀.sqrtCerts.head?.bind fun p =>
+      (M₀.sqrt p).map fun M' => (M', ⟨ps₀.sqrtCerts.tail, ps₀.invCerts⟩)
   | .abs _, _ => none
   | .ite _ _ _, _ => none
-  | .div _ _ _, _ => none
   | .trans _ _ _ _, _ => none
 
 /-- **Soundness of `evalTM`**: a successful evaluation produces a valid model
 of the real semantics, centered at the box midpoint with the midpoint
 envelope. -/
 theorem evalTM_sound {n : ℕ} {box : Fin n → DInterval} :
-    ∀ (e : IExpr n) (ps ps' : List SqrtTMP) (M : TaylorM n),
+    ∀ (e : IExpr n) (ps ps' : TMParams) (M : TaylorM n),
       (∀ i, (box i).wf = true) →
       evalTM box e ps = some (M, ps') →
       M.Valid box (fun ρ => e.evalReal ρ) ∧ M.y = boxCenter box ∧ M.w = boxW box := by
@@ -912,11 +1155,242 @@ theorem evalTM_sound {n : ℕ} {box : Fin n → DInterval} :
   | div e₁ e₂ out ih₁ ih₂ =>
       intro ps ps' M hwf h
       simp only [evalTM] at h
-      exact absurd h (by simp)
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨p, _hp, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨Mi, hi, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_div hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂]) p hi
   | trans k e N out ih =>
       intro ps ps' M hwf h
       simp only [evalTM] at h
       exact absurd h (by simp)
+
+/-- Syntactic TM-safety check (design §3.2/§5.2): no `abs`/`ite`/`trans`
+nodes.  Semantic safety of `div`/`sqrt` (base away from zero / positive) is
+checked by the `Option`-valued rules at evaluation time — `evalTM` fails safe
+(`none`). -/
+def IExpr.TMSafe {n : ℕ} : IExpr n → Bool
+  | .const _ => true
+  | .var _ => true
+  | .neg e => e.TMSafe
+  | .abs _ => false
+  | .ite _ _ _ => false
+  | .add e₁ e₂ => e₁.TMSafe && e₂.TMSafe
+  | .sub e₁ e₂ => e₁.TMSafe && e₂.TMSafe
+  | .mul e₁ e₂ => e₁.TMSafe && e₂.TMSafe
+  | .div e₁ e₂ _ => e₁.TMSafe && e₂.TMSafe
+  | .sqrt e _ _ => e.TMSafe
+  | .trans _ _ _ _ => false
+
+/-! ## Hybrid evaluation: zero-order fallback for TM-unsafe nodes
+
+For the stage-A-style measurement on real programs (which contain
+`trans`/`ite`/`abs` nodes), the strict `evalTM` would return `none` on the
+whole expression.  `evalTMH` falls back, per unsupported (or failed) node, to
+the **trivial zero-order model**: the plain box enclosure with zero slopes
+and `err = width` — valid because both `f(ρ)` and `f(y)` lie in the
+enclosure.  Trans-node enclosures are rung-tight (`~2⁻⁶⁴`), so the hybrid
+keeps the TM advantage on the algebraic part while degrading gracefully. -/
+
+/-- The trivial zero-order model of any subexpression with a successful plain
+interval evaluation. -/
+def fallbackTM {n : ℕ} (box : Fin n → DInterval) (I : DInterval) : TaylorM n :=
+  ⟨boxCenter box, boxW box, I, fun _ => ⟨⟨0, 0⟩, ⟨0, 0⟩⟩, I.hi.add (-I.lo)⟩
+
+/-- Validity of the zero-order fallback model. -/
+theorem valid_fallback {n : ℕ} {box : Fin n → DInterval} {e : IExpr n} {I : DInterval}
+    (hcell : CellOK box) (hI : e.eval box = some I) :
+    (fallbackTM box I).Valid box (fun ρ => e.evalReal ρ) := by
+  refine ⟨fun i => (hcell i).1, fun i => (hcell i).2, ?_, ?_⟩
+  · exact IExpr.eval_mem e box _ (fun i => (hcell i).1) I hI
+  · intro ρ hρ
+    refine ⟨fun _ => 0, fun i => ?_, ?_⟩
+    · show (⟨⟨0, 0⟩, ⟨0, 0⟩⟩ : DInterval).mem (0 : ℝ)
+      exact ⟨by simp, by simp⟩
+    have h1 := IExpr.eval_mem e box ρ hρ I hI
+    have h2 := IExpr.eval_mem e box _ (fun i => (hcell i).1) I hI
+    have h0 : (∑ i, (0 : ℝ) * (ρ i - ((fallbackTM box I).y i).toReal)) = 0 := by
+      exact Finset.sum_eq_zero fun i _ => by rw [zero_mul]
+    rw [h0]
+    show |e.evalReal ρ - e.evalReal (fun i => (boxCenter box i).toReal) - 0|
+      ≤ (I.hi.add (-I.lo)).toReal
+    rw [sub_zero, Dyadic.toReal_add, Dyadic.toReal_neg, sub_eq_add_neg, abs_le]
+    constructor <;> linarith [h1.1, h1.2, h2.1, h2.2]
+
+/-- Hybrid single-pass evaluation: TM rules for `const`/`var`/`neg`/`add`/
+`sub`/`mul`, TM rules with fallback for `div`/`sqrt`, and plain-fallback for
+`abs`/`ite`/`trans`.  `none` only when even the plain evaluation fails. -/
+def evalTMH {n : ℕ} (box : Fin n → DInterval) :
+    IExpr n → TMParams → Option (TaylorM n × TMParams)
+  | .const d, ps => some (constTM box d, ps)
+  | .var k, ps => some (varTM box k, ps)
+  | .neg e, ps => (evalTMH box e ps).map fun (M, ps') => (M.neg, ps')
+  | .add e₁ e₂, ps =>
+      (evalTMH box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMH box e₂ ps₁).map fun (M₂, ps₂) => (M₁.add M₂, ps₂)
+  | .sub e₁ e₂, ps =>
+      (evalTMH box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMH box e₂ ps₁).map fun (M₂, ps₂) => (M₁.sub M₂, ps₂)
+  | .mul e₁ e₂, ps =>
+      (evalTMH box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMH box e₂ ps₁).map fun (M₂, ps₂) => (M₁.mul M₂, ps₂)
+  | .div e₁ e₂ out, ps =>
+      (evalTMH box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMH box e₂ ps₁).bind fun (M₂, ps₂) =>
+      ps₂.invCerts.head?.bind fun p =>
+      ((M₂.inv p).map fun Mi => (M₁.mul Mi, ⟨ps₂.sqrtCerts, ps₂.invCerts.tail⟩)).orElse
+        (fun _ => ((IExpr.div e₁ e₂ out).eval box).map fun I =>
+          (fallbackTM box I, ⟨ps₂.sqrtCerts, ps₂.invCerts.tail⟩))
+  | .sqrt e s₁ s₂, ps =>
+      (evalTMH box e ps).bind fun (M₀, ps₀) =>
+      ps₀.sqrtCerts.head?.bind fun p =>
+      ((M₀.sqrt p).map fun M' => (M', ⟨ps₀.sqrtCerts.tail, ps₀.invCerts⟩)).orElse
+        (fun _ => ((IExpr.sqrt e s₁ s₂).eval box).map fun I =>
+          (fallbackTM box I, ⟨ps₀.sqrtCerts.tail, ps₀.invCerts⟩))
+  | .abs e, ps => ((IExpr.abs e).eval box).map fun I => (fallbackTM box I, ps)
+  | .ite c t e, ps => ((IExpr.ite c t e).eval box).map fun I => (fallbackTM box I, ps)
+  | .trans k e N out, ps => ((IExpr.trans k e N out).eval box).map fun I => (fallbackTM box I, ps)
+
+/-- **Soundness of `evalTMH`** (same conclusion as `evalTM_sound`). -/
+theorem evalTMH_sound {n : ℕ} {box : Fin n → DInterval} :
+    ∀ (e : IExpr n) (ps ps' : TMParams) (M : TaylorM n),
+      (∀ i, (box i).wf = true) →
+      evalTMH box e ps = some (M, ps') →
+      M.Valid box (fun ρ => e.evalReal ρ) ∧ M.y = boxCenter box ∧ M.w = boxW box := by
+  intro e
+  induction e with
+  | const d =>
+      intro ps ps' M hwf h
+      simp only [evalTMH] at h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+      exact ⟨valid_const (cellOK_of_wf hwf) d, rfl, rfl⟩
+  | var k =>
+      intro ps ps' M hwf h
+      simp only [evalTMH] at h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+      exact ⟨valid_var (cellOK_of_wf hwf) k, rfl, rfl⟩
+  | neg e ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMH] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₀, ps₀⟩, he, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+      exact ⟨valid_neg hV, hy, hw⟩
+  | add e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMH] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_add hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | sub e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMH] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_sub hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | mul e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMH] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_mul hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | div e₁ e₂ out ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMH] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨p, _hp, h⟩ := h
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      cases hi : M₂.inv p with
+      | none =>
+        rw [hi] at h
+        rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+      | some Mi =>
+        rw [hi] at h
+        rw [Option.map_some, Option.orElse_some] at h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+        refine ⟨?_, hy₁, hw₁⟩
+        exact valid_div hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂]) p hi
+  | sqrt e s₁ s₂ ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMH] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₀, ps₀⟩, he, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨p, _hp, h⟩ := h
+      obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+      cases hs : M₀.sqrt p with
+      | none =>
+        rw [hs] at h
+        rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+      | some M' =>
+        rw [hs] at h
+        rw [Option.map_some, Option.orElse_some] at h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+        obtain ⟨hV', hyy, hww⟩ := valid_sqrt hV p hs
+        refine ⟨hV', ?_, ?_⟩
+        · show M'.y = boxCenter box
+          exact hyy.trans hy
+        · show M'.w = boxW box
+          exact hww.trans hw
+  | abs e ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMH] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨I, hI, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+  | ite c t e ihc iht ihe =>
+      intro ps ps' M hwf h
+      simp only [evalTMH] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨I, hI, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+  | trans k e N out ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMH] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨I, hI, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
 
 /-! ## The checker -/
 
@@ -961,7 +1435,7 @@ theorem TaylorM.loBound_sound {n : ℕ} {M : TaylorM n} {box : Fin n → DInterv
 /-- The Taylor-model positivity checker: box well-formedness, successful
 model evaluation, and a strictly positive Taylor lower bound. -/
 def checkPosTM {n : ℕ} (e : IExpr n) (box : Fin n → DInterval)
-    (ps : List SqrtTMP) : Bool :=
+    (ps : TMParams) : Bool :=
   (List.finRange n).all (fun i => (box i).wf) &&
     (match evalTM box e ps with
     | some (M, _) => (M.loBound box).isPos
@@ -971,7 +1445,7 @@ def checkPosTM {n : ℕ} (e : IExpr n) (box : Fin n → DInterval)
 passes, the expression is strictly positive at every real assignment
 pointwise inside the box. -/
 theorem checkPosTM_sound {n : ℕ} {e : IExpr n} {box : Fin n → DInterval}
-    {ps : List SqrtTMP}
+    {ps : TMParams}
     (h : checkPosTM e box ps = true) (ρ : Fin n → ℝ) (hρ : boxMem box ρ) :
     0 < e.evalReal ρ := by
   unfold checkPosTM at h
@@ -986,5 +1460,32 @@ theorem checkPosTM_sound {n : ℕ} {e : IExpr n} {box : Fin n → DInterval}
     have hpos := Dyadic.toReal_pos_of_isPos h
     obtain ⟨hV, _, _⟩ := evalTM_sound e ps ps' M hwf hE
     exact lt_of_lt_of_le hpos (M.loBound_sound hV hρ)
+
+/-- The hybrid checker (same shape as `checkPosTM`). -/
+def checkPosTMH {n : ℕ} (e : IExpr n) (box : Fin n → DInterval)
+    (ps : TMParams) : Bool :=
+  (List.finRange n).all (fun i => (box i).wf) &&
+    (match evalTMH box e ps with
+    | some (M, _) => (M.loBound box).isPos
+    | none => false)
+
+/-- **Soundness of the hybrid checker**. -/
+theorem checkPosTMH_sound {n : ℕ} {e : IExpr n} {box : Fin n → DInterval}
+    {ps : TMParams}
+    (h : checkPosTMH e box ps = true) (ρ : Fin n → ℝ) (hρ : boxMem box ρ) :
+    0 < e.evalReal ρ := by
+  unfold checkPosTMH at h
+  simp only [Bool.and_eq_true, List.all_eq_true] at h
+  obtain ⟨hwfB, h⟩ := h
+  have hwf : ∀ i, (box i).wf = true := fun i => hwfB i (List.mem_finRange i)
+  cases hE : evalTMH box e ps with
+  | none => rw [hE] at h; simp at h
+  | some Mp =>
+    obtain ⟨M, ps'⟩ := Mp
+    rw [hE] at h
+    have hpos := Dyadic.toReal_pos_of_isPos h
+    obtain ⟨hV, _, _⟩ := evalTMH_sound e ps ps' M hwf hE
+    exact lt_of_lt_of_le hpos (M.loBound_sound hV hρ)
+
 
 end Kepler.Interval
