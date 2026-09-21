@@ -102,6 +102,40 @@ loBound_sound → checkPosTM → checkPosTM_sound。
 下一步：CertG.lean 加 taylorLeaf 构造器 + covers_point 一般化 +
 bb_soundG 适配；两个验收例 + #print axioms；lake build。
 
-## 2. CertG 整合（进行中）
+## 2. CertG 整合 + 验收例（完成，2026-09-21）
 
-（待填）
+做了：
+- `CertG.lean`：`import Kepler.Interval.CertTM`；`BBTreeG` 新增构造器
+  `taylorLeaf box ps (hcert : checkPosTM e box ps = true)`；
+  `covers`/`coversB`/`coversB_sound` 加分支；`covers_point` 结论一般化为
+  `∃ box el, el.evalReal = e.evalReal ∧ boxMem box ρ ∧ ∀ σ, boxMem box σ →
+  0 < el.evalReal σ`（leaf 走 `checkPos_sound`，taylorLeaf 走
+  `checkPosTM_sound`）；`bb_soundG` 适配（签名不变）。
+  兼容性：全库无文件对 BBTreeG 做模式匹配（Cases/* 只用
+  `.leaf`/`.node`/`coversB_sound`/`bb_soundG`，签名全不变；FillParams 只在
+  注释提及）。Cases/* 未重建（归其他 runner 的活儿；接口未变）。
+- 验收例 1（sqrt pilot）：`exGExprTM = √x − x·⟨1,−2⟩`（div→mul dyadic 逆元，
+  `exGExprTM_same` 证语义相同）；单叶 `taylorLeaf` 在根盒 `[1,2]` 闭合
+  （对照：裸区间版 `exGTree` 要 2 叶）。证书 `[⟨2,2,2,−3,−2⟩]`。
+  end-to-end：`exGTM_end_to_end : 0 < √x − x/4` on [1,2]。
+- 验收例 2（x²−2 在 √2 邻域）：根盒 `[2897/2048, 3/2]`（2897/2048 是 2¹¹
+  分母下 √2 上方最近 dyadic）；`exTM2Root_fails`：根盒 checkPosTM = false
+  （y²−2−2yw−w² < 0，O(w²) 余项吞掉 9.5e-4 余量）；深度 1 树两叶闭合
+  （`exTM2L_cert`/`exTM2R_cert`）；end-to-end `exTM2_end_to_end :
+  0 < x*x − 2`。诚实对照 `exTM2Root_bare`：裸区间在根盒即闭合（x·x 在正盒
+  上求值精确）——设计文档"裸区间永不收敛"对此例不成立，已记录于 §0。
+- 旧的 exGTree/exG_end_to_end 保留未动（双路径并存）。
+
+验证（全部 lake env lean / lake build，wrapper PATH）：
+- `lake env lean Kepler/Interval/CertG.lean`：零错误；`#print axioms` 输出：
+  - `exGTM_end_to_end`: [propext, Classical.choice, Quot.sound]
+  - `exTM2_end_to_end`: [propext, Classical.choice, Quot.sound]
+  均无 sorryAx ✓（验收 3 通过）
+- `lake build Kepler.Interval.CertG Kepler.Interval.CertGD`：✔ 8666 jobs
+  全绿（验收 4 通过；CertGD 回归无恙）
+- `grep sorry` CertG/CertTM：无
+
+验收 1✓（taylorLeaf 闭合 sqrt pilot）、2✓（x²−2 深度 1 < 2-3 层上限，
+根盒 TM 失败→二分一层收敛）、3✓、4✓。
+
+下一步：commit（CertTM.lean 新增 + CertG.lean 修改 + 本笔记）。
