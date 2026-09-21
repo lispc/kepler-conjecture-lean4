@@ -46,9 +46,14 @@ Encoding:
   definitional folding of `scsHalfSliceV39`, choice/`min_num` arguments).
   The giants are `sorry`.
 - Fill-wave 2026-09-19: `SCS_M_LE_1_p27` and `HXHYTIJ_p27` discharged
-  (10 sorries remain). Blocker re-scan: `LKGRQUI_concl`/`YXIONXL3_concl`/
-  `CUXVZOZ_concl` still `sorry` in LocalAuto1; `XWITCCN` still `sorry` in
-  LocalAuto36; `SCS_M_EQ_1` content still missing corpus-wide.
+    (10 sorries remain). Fill-wave 2026-09-21: `XWITCCN2_p27` and
+    `AYQJTMD_p27` discharged (8 sorries remain) via the new Section F1
+    `sInitListV39` `isScs` substrate (`s_init_scs_p27` and its `init*` tables,
+    including a direct `isScsV39 scs4I3` built off `periodic2_funlist_p20`;
+    upstream `XWITCCN` in LocalAuto36 is NOT used). Blocker re-scan:
+    `LKGRQUI_concl`/`YXIONXL3_concl`/`CUXVZOZ_concl` still `sorry` in
+    LocalAuto1; `XWITCCN` still `sorry` in LocalAuto36; `SCS_M_EQ_1` content
+    still missing corpus-wide.
 
 FILE MAP
   Section 0 (`_p27` substrate; see ENCODING): `periodic_mod_p27`,
@@ -75,13 +80,18 @@ FILE MAP
   Section E (HXHYTIJ): `HXHYTIJ_p27` (proved 2026-09-19: the
     `min_num`/choice argument done directly over the `BBprime`/`BBindexMin`
     definitions).
-  Section F (AYQJTMD): `XWITCCN2_p27` (sorry; NEEDS the `XEIJITAF`
-    s_init cases — `XWITCCN` still `sorry` in LocalAuto36:1511 and
-    LocalAuto1:671; no `s_init`-member `isScsV39` lemma exists yet),
+  Section F (AYQJTMD): Section F1 = the `sInitListV39` `isScs` substrate
+    (`init_pair_01_p27`, `init7a/b_p27`, `init8a/b_p27`,
+    `init8_isScs_p27` — `isScsV39 scs4I3` - `s_init_scs_p27`, proved
+    2026-09-21; entries 1-6 via `is_scs_*_p22`, entry 7 via
+    `SCS_5I3_IS_SCS`); Section F2 = `XWITCCN2_p27` (proved 2026-09-21 via
+    `s_init_scs_p27` + `UXCKFPE2_p27` — the earlier NEEDS note about the
+    sorried `XWITCCN` in LocalAuto36:1511/LocalAuto1:671 is obsolete),
     `unadorned_MMs_p27` (proved 2026-09-18), `S_INIT_IS_UNADORNED_p27`
-    (proved 2026-09-18), `AYQJTMD_p27` (sorry; NEEDS `XWITCCN2_p27` —
-    its other two inputs are proved here), `EAPGLE_p27` (sorry; NEEDS
-    the JEJTVGB registry, LocalAuto1:541-547, `ZITHLQN_concl` pending).
+    (proved 2026-09-18), `AYQJTMD_p27` (proved 2026-09-21 via
+    `SGTRNAF_p27` + `s_init_scs_p27` + `S_INIT_IS_UNADORNED_p27`),
+    `EAPGLE_p27` (sorry; NEEDS the JEJTVGB registry, LocalAuto1:541-547,
+    `ZITHLQN_concl` pending).
   Section G (FEKTYIY): `FEKTYIY_p27` (sorry).
 
   Section H (LKGRQUI): `SLICE_IS_UNADORNED_p27` (proved),
@@ -604,12 +614,210 @@ theorem HXHYTIJ_p27 : ∀ (s : ScsV39) (vv ww : ℕ → V3), isScsV39 s →
 
 /-! ## Section F: AYQJTMD -/
 
-/-- HOL `XWITCCN2` (AYQJTMD.hl:72). -/
+/-! ### Section F1: the `sInitListV39` `isScs` substrate (2026-09-21 fill wave)
+
+`s_init_scs_p27` below closes the only gap between the s_init section (`Section
+F2`) and the proved `UXCKFPE2_p27`/`SGTRNAF_p27` of Section D: an
+`isScsV39` certificate for every `sInitListV39` member. Entries 1-6 of the
+list are the named `scs6I1`..`scs4I2` constants, so their `is_scs_*_p22`
+(LocalAuto22) certificates apply up to `rfl`; entry 7 and entry 8 are inlined
+`a_pro` lambdas, so `init7a/b_p27`, `init8a/b_p27` identify them with the
+`funlistV39` tables of `scs5I3`/`scs4I3`, and `SCS_5I3_IS_SCS` /
+`init8_isScs_p27` give the certificates.
+
+The `init_pair_01_p27` set-equality rewrite is only needed so `simp` can see
+the `{i, j} = {0, 1}` guards as arithmetic; `periodic2_funlist_p20` and
+`funlist_mod_p20` (LocalAuto20) drive the periodicity/cardinality of
+`init8_isScs_p27`. -/
+
+/-- `{a, b} = {0, 1}` (a set of two naturals) iff one is `0` and the other
+`1`; rewrites the `{i, j} = {0, 1}` guards of the raw `a_pro` lambdas in
+`sInitListV39` into arithmetic for `simp`. -/
+@[simp]
+theorem init_pair_01_p27 (a b : ℕ) : ({a, b} : Set ℕ) = {0, 1} ↔
+    (a = 0 ∧ b = 1) ∨ (a = 1 ∧ b = 0) := by
+  constructor
+  · intro h
+    have ha : a = 0 ∨ a = 1 := by
+      have : a ∈ ({0, 1} : Set ℕ) := by rw [← h]; simp
+      simpa using this
+    have hb : b = 0 ∨ b = 1 := by
+      have : b ∈ ({0, 1} : Set ℕ) := by rw [← h]; simp
+      simpa using this
+    rcases ha with ha0 | ha1
+    · rcases hb with hb0 | hb1
+      · exfalso
+        have : (1 : ℕ) ∈ ({a, b} : Set ℕ) := by rw [h]; simp
+        have hc : (1 : ℕ) = a ∨ (1 : ℕ) = b := by simpa using this
+        omega
+      · left; exact ⟨ha0, hb1⟩
+    · rcases hb with hb0 | hb1
+      · right; exact ⟨ha1, hb0⟩
+      · exfalso
+        have : (0 : ℕ) ∈ ({a, b} : Set ℕ) := by rw [h]; simp
+        have hc : (0 : ℕ) = a ∨ (0 : ℕ) = b := by simpa using this
+        omega
+  · intro h
+    rcases h with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+    all_goals ext x
+    all_goals simp
+    all_goals omega
+
+/-- The sInit entry-7 a-field: the inlined `a_pro` lambda (k = 5) equals the
+`funlistV39` table of `scs5I3` (its a-value `2` = the `d` default). -/
+theorem init7a_p27 :
+    (fun i j =>
+      if i % 5 = j % 5 then 0
+      else if ({i % 5, j % 5} : Set ℕ) = {0, 1} then 2 * h0
+      else if j % 5 = (i + 1) % 5 ∨ (j + 1) % 5 = i % 5 then 2 else 2 * h0) =
+      funlistV39 [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0),
+        ((1, 3), 2 * h0), ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5 := by
+  funext i j
+  have hi : i % 5 < 5 := Nat.mod_lt i (by omega)
+  have hj : j % 5 < 5 := Nat.mod_lt j (by omega)
+  rw [← Nat.mod_add_mod i 5 1]
+  rw [← Nat.mod_add_mod j 5 1]
+  simp only [funlistV39, psort]
+  interval_cases i % 5 <;> interval_cases j % 5 <;> simp [assocdV39]
+
+theorem init7b_p27 :
+    (fun i j =>
+      if i % 5 = j % 5 then 0
+      else if ({i % 5, j % 5} : Set ℕ) = {0, 1} then Real.sqrt 8
+      else if j % 5 = (i + 1) % 5 ∨ (j + 1) % 5 = i % 5 then 2 * h0 else 6) =
+      funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((0, 3), 6),
+        ((1, 3), 6), ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 := by
+  funext i j
+  have hi : i % 5 < 5 := Nat.mod_lt i (by omega)
+  have hj : j % 5 < 5 := Nat.mod_lt j (by omega)
+  rw [← Nat.mod_add_mod i 5 1]
+  rw [← Nat.mod_add_mod j 5 1]
+  simp only [funlistV39, psort]
+  interval_cases i % 5 <;> interval_cases j % 5 <;> simp [assocdV39]
+
+theorem init8a_p27 :
+    (fun i j =>
+      if i % 4 = j % 4 then 0
+      else if ({i % 4, j % 4} : Set ℕ) = {0, 1} then 2 * h0
+      else if j % 4 = (i + 1) % 4 ∨ (j + 1) % 4 = i % 4 then 2 else Real.sqrt 8) =
+      funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)] 2 4 := by
+  funext i j
+  have hi : i % 4 < 4 := Nat.mod_lt i (by omega)
+  have hj : j % 4 < 4 := Nat.mod_lt j (by omega)
+  rw [← Nat.mod_add_mod i 4 1]
+  rw [← Nat.mod_add_mod j 4 1]
+  simp only [funlistV39, psort]
+  interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39]
+
+theorem init8b_p27 :
+    (fun i j =>
+      if i % 4 = j % 4 then 0
+      else if ({i % 4, j % 4} : Set ℕ) = {0, 1} then Real.sqrt 8
+      else if j % 4 = (i + 1) % 4 ∨ (j + 1) % 4 = i % 4 then 2 * h0 else 6) =
+      funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((1, 3), 6)] (2 * h0) 4 := by
+  funext i j
+  have hi : i % 4 < 4 := Nat.mod_lt i (by omega)
+  have hj : j % 4 < 4 := Nat.mod_lt j (by omega)
+  rw [← Nat.mod_add_mod i 4 1]
+  rw [← Nat.mod_add_mod j 4 1]
+  simp only [funlistV39, psort]
+  interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39]
+
+/-- `isScsV39 scs4I3` (the sInit entry-8 system, k = 4). Built directly over
+`periodic2_funlist_p20`; the mod-step arithmetic and the `√8` bounds use only
+LocalAuto20 kit (`LE_sqrt8_2`, `sqrt8_LE_6`, `LE_sqrt8_2h0`, `LT_sqrt8_2h0`,
+`sqrt8_LE_CSTAB`, `two_lt_two_h0'`, `two_h0_lt_cstab_p20`). -/
+theorem init8_isScs_p27 : isScsV39 scs4I3 := by
+  unfold isScsV39 scs4I3 mkUnadornedV39
+  dsimp only
+  have pa : Periodic2 (funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8),
+        ((1, 3), Real.sqrt 8)] 2 4) 4 := periodic2_funlist_p20 _ _ _
+  have pb : Periodic2 (funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((1, 3), 6)]
+        (2 * h0) 4) 4 := periodic2_funlist_p20 _ _ _
+  refine ⟨by norm_num, by norm_num, by norm_num, periodic_empty 4, periodic_empty 4,
+    periodic_empty 4, periodic_empty 4, pa, pa, pb, pb,
+    fun _ _ => ⟨rfl, rfl⟩, ?_, ?_, ?_, ?_, ?_, ?_, fun _ _ hj => False.elim hj,
+    fun _ _ hj => False.elim hj, ?_⟩
+  · intro i j
+    simp only [funlistV39, psort]
+    have hz1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hz2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39]
+  · intro i j
+    simp only [funlistV39, psort]
+    refine ⟨le_refl _, ?_, le_refl _⟩
+    have hz1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hz2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4 <;> interval_cases j % 4 <;> simp [assocdV39] <;>
+      first | exact LE_sqrt8_2h0 | exact sqrt8_LE_6 | exact LE_sqrt8_2 | norm_num [h0, cstab]
+  · intro i; simp [funlistV39]
+  · intro i j ⟨hik, hjk, hne⟩
+    interval_cases i <;> interval_cases j <;>
+      simp_all [funlistV39, psort, assocdV39] <;>
+      first | exact LE_sqrt8_2 | exact LE_sqrt8_2h0 | norm_num [h0, cstab]
+  · intro i hk3
+    omega
+  · intro i hk4
+    rw [← funlist_mod_p20 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((1, 3), 6)]
+        (2 * h0) 4 i (i + 1) (by omega), ← Nat.mod_add_mod i 4 1]
+    have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+    interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;>
+      first | exact sqrt8_LE_CSTAB | norm_num [h0, cstab]
+  · have key : ∀ r : ℕ, r < 4 →
+        ((2 * h0 < funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((1, 3), 6)]
+              (2 * h0) 4 r ((r + 1) % 4) ∨
+            2 < funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)]
+              2 4 r ((r + 1) % 4)) ↔ r = 0) := by
+      intro r hr
+      interval_cases r <;>
+        simp [funlistV39, psort, assocdV39, LT_sqrt8_2h0]
+    have hS : {i | i < 4 ∧ (2 * h0 < funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6),
+              ((1, 3), 6)] (2 * h0) 4 i (i + 1) ∨
+            2 < funlistV39 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)]
+              2 4 i (i + 1))} = {0} := by
+      ext i
+      simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+      rw [← funlist_mod_p20 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((1, 3), 6)]
+          (2 * h0) 4 i (i + 1) (by omega),
+        ← funlist_mod_p20 [((0, 1), 2 * h0), ((0, 2), Real.sqrt 8), ((1, 3), Real.sqrt 8)]
+          2 4 i (i + 1) (by omega), ← Nat.mod_add_mod i 4 1]
+      rw [key (i % 4) (Nat.mod_lt i (by omega))]
+      omega
+    rw [hS]
+    simp
+
+/-- Every `sInitListV39` member is an `isScsV39` system: entries 1-6 are the
+named `scs6I1`..`scs4I2` constants (`is_scs_*_p22`, LocalAuto22); entry 7 is
+`scs5I3` (`SCS_5I3_IS_SCS`, LocalAuto20) and entry 8 is `scs4I3`
+(`init8_isScs_p27`), after the inlined `a_pro` lambdas are identified with the
+`funlistV39` tables via `init7a/b_p27`, `init8a/b_p27`. -/
+theorem s_init_scs_p27 (s : ScsV39) (hs : s ∈ sInitListV39) : isScsV39 s := by
+  simp only [sInitListV39, List.mem_cons, List.not_mem_nil] at hs
+  rcases hs with he | he | he | he | he | he | he | he | he
+  · rw [he]; exact is_scs_6I1_p22
+  · rw [he]; exact is_scs_5I1_p22
+  · rw [he]; exact is_scs_4I1_p22
+  · rw [he]; exact is_scs_3I1_p22
+  · rw [he]; exact is_scs_5I2_p22
+  · rw [he]; exact is_scs_4I2_p22
+  · rw [he]
+    rw [init7a_p27, init7b_p27]
+    exact SCS_5I3_IS_SCS
+  · rw [he]
+    rw [init8a_p27, init8b_p27]
+    exact init8_isScs_p27
+  · exact absurd he (by simp)
+
+/-! ### Section F2: `XWITCCN2`, `unadorned_MMs`, `S_INIT_IS_UNADORNED`, `AYQJTMD`, `EAPGLE` -/
+
+/-- HOL `XWITCCN2` (AYQJTMD.hl:72).
+DISCHARGED: `s_init_scs_p27` (Section F1) gives `isScsV39 s` for every
+`sInitListV39` member, so `UXCKFPE2_p27` (Section D) applies with
+`taustarV39 s vv < 0`. -/
 theorem XWITCCN2_p27 : ∀ (s : ScsV39) (vv : ℕ → V3), s ∈ sInitListV39 →
     BBsV39 s vv → taustarV39 s vv < 0 → BBprime2V39 s ≠ ∅ := by
-  sorry
-    -- DISCHARGES: NEEDS the `XEIJITAF`/`UXCKFPE2` s_init cases of the
-    -- `taustar < 0` non-emptiness for the s_init list.
+  intro s vv hs hBB hta
+  exact UXCKFPE2_p27 s vv (s_init_scs_p27 s hs) hBB hta
 
 /-- HOL `unadorned_MMs` (AYQJTMD.hl:161). Also the engine of `SGTRNAF`.
 DISCHARGED: definitional — for an unadorned system the `str`/`lo`/`hi`
@@ -647,19 +855,22 @@ theorem S_INIT_IS_UNADORNED_p27 : ∀ s, s ∈ sInitListV39 → unadornedV39 s :
     | (rw [h]; exact ⟨rfl, rfl, rfl, rfl, rfl⟩)
     | exact absurd h (by simp)
 
-/-- HOL `AYQJTMD` (AYQJTMD.hl:206). -/
+/-- HOL `AYQJTMD` (AYQJTMD.hl:206).
+DISCHARGED: `s_init_scs_p27` (Section F1) plus `S_INIT_IS_UNADORNED_p27`
+put `s` in the scope of `SGTRNAF_p27` (Section D), giving `MMsV39 s ≠ ∅`. -/
 theorem AYQJTMD_p27 : ∀ (s : ScsV39) (vv : ℕ → V3), s ∈ sInitListV39 →
     BBsV39 s vv → taustarV39 s vv < 0 → MMsV39 s ≠ ∅ := by
-  sorry
-    -- DISCHARGES: NEEDS `XWITCCN2` + `S_INIT_IS_UNADORNED` +
-    -- `unadorned_MMs` (the source rewrites `MMs` back to `BBprime2`).
+  intro s vv hs hBB hta
+  exact SGTRNAF_p27 s vv (s_init_scs_p27 s hs) (S_INIT_IS_UNADORNED_p27 s hs) hBB hta
 
 /-- HOL `EAPGLE` (AYQJTMD.hl:222). -/
 theorem EAPGLE_p27 :
     (∀ s ∈ sInitListV39, MMsV39 s = ∅) → JEJTVGB_assume_v39 := by
   sorry
-    -- DISCHARGES: NEEDS `AYQJTMD` modulo the six JEJTVGB items
-    -- (the `JEJTVGB_concl`/`JEJTVGB_assume_v39` registry, LocalAuto1:544).
+    -- DISCHARGES: NEEDS the six JEJTVGB items (the
+    -- `JEJTVGB_concl`/`JEJTVGB_assume_v39` registry, LocalAuto1:544);
+    -- `AYQJTMD` itself is now proved (Section F2) but its contrapositive
+    -- (never-empty `MMs` from `taustar < 0`) is not what EAPGLE consumes.
 
 /-! ## Section G: FEKTYIY -/
 
