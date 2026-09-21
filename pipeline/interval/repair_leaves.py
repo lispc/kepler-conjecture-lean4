@@ -12,7 +12,9 @@ exactly like an original cert.
 
 Usage:
   repair_leaves.py <case.json> <cert.json> <out_cert.json>
-                   [--max-depth=3] [--chunk=40000] [--keep-going]
+                   [--max-depth=3] [--chunk=3544] [--jobs=8] [--keep-going]
+  Rounds are data-file mode + parallel (xargs -P jobs); chunk outs are
+  idempotent, so re-running the same command resumes a killed repair.
 """
 import json
 import os
@@ -50,43 +52,103 @@ def box_json(box):
     return [[dy(lo), dy(hi)] for lo, hi in box]
 
 
-def run_round(mod, n, driver, items, round_no, chunk_size, params_out=None):
+def run_round(mod, n, driver, items, round_no, chunk_size, params_out=None,
+              jobs=8, rung_args=""):
     """items: list of (box, hit, depth).  Returns (failing indices, verdicts)
     where verdicts maps item index -> recomputed hit string (disj drivers
     only; None for single-goal drivers).
     driver: ("single", expr) or ("disj", mkexprs, terms, hit_of_goal).
     When params_out is a dict, records {box: (mantissa ints, rung, hit)} for
-    every PASS/PASSV leaf (rung from the chunk's RUNG / BESTFAIL header)."""
+    every PASS/PASSV leaf (rung from the chunk's RUNG / BESTFAIL header).
+    `rung_args` pins the rung (e.g. " 12 -64") instead of walking the ladder
+    — right when the global rung is known from stage A and higher rungs only
+    re-verified leaves that bisection will anyway re-check tighter.
+
+    Data-file mode + parallel: one shared driver per round (compiled fresh
+    per chunk by `lean --run`, ~10s elaboration) and plain-text chunk txts,
+    evaluated with `xargs -P jobs`.  Chunk outs are idempotent (a chunk is
+    done iff its .out contains a RUNG/BESTFAIL line — compiler warnings can
+    precede it on stdout), so a killed repair can be resumed by simply
+    re-running the same command."""
     kind = driver[0]
     hit_of_goal = driver[3] if kind == "disj" else None
+    # the pinned rung (if any) is part of the workdir identity: chunk outs
+    # from a different rung must never be mistaken for current results
+    rtag = "" if not rung_args else "R" + rung_args.strip().replace(" ", "_").replace("-", "m")
+    workdir = os.path.join(REPAIR_DIR, f"{mod}W{round_no}{rtag}.d")
+    os.makedirs(workdir, exist_ok=True)
+    if kind == "disj":
+        src = E.stage_a_driver_disj(n, driver[1], driver[2])
+    else:
+        src = (E.HDR + "import Kepler.Interval.Tools.FillParams\n\n"
+               "open Kepler.Interval Kepler.Interval.Tools\n\n"
+               f"def fillMkExpr (N : ℕ) (out : Int) : IExpr {n} :=\n"
+               f"  {driver[1]}\n\n"
+               "def main : List String → IO UInt32 :=\n"
+               "  runMainFile fillMkExpr\n")
+    src = src.format(caseid="repair", origop="", vars="", nleaves=len(items),
+                     prec=None, extra="")
+    open(os.path.join(workdir, "driver.lean"), "w").write(src)
+    chunks = []
+    for c0 in range(0, len(items), chunk_size):
+        p = os.path.join(workdir, f"chunk{c0 // chunk_size:05d}.txt")
+        with open(p, "w") as f:
+            for b, _, _ in items[c0:c0 + chunk_size]:
+                f.write(" ".join(f"{lo[0]} {lo[1]} {hi[0]} {hi[1]}"
+                                 for lo, hi in b) + "\n")
+        chunks.append(p)
+    todo = []
+    for p in chunks:
+        done = False
+        if os.path.exists(p + ".out"):
+            with open(p + ".out") as f:
+                for ln in f:
+                    w = ln.split()
+                    if w and w[0] in ("RUNG", "BESTFAIL"):
+                        done = True
+                        break
+                # compiler warnings can precede the RUNG line on stdout
+        if not done:
+            todo.append(p)
+    if todo:
+        print(f"[round {round_no}] {len(items)} boxes in {len(chunks)} chunks "
+              f"({len(todo)} to run, {jobs} jobs) ...", flush=True)
+        status = os.path.join(workdir, "status.txt")
+        runner = os.path.join(workdir, "run_chunk.sh")
+        with open(runner, "w") as f:
+            f.write("#!/bin/bash\n"
+                    f'cd "{LEAN_DIR}" || exit 1\n'
+                    f'lake env lean --run "{workdir}/driver.lean" "$1"'
+                    f'{rung_args} > "$1.out.tmp" 2> "$1.err.tmp"\n'
+                    "rc=$?\n"
+                    'if [ $rc -eq 0 ] || grep -qE "^BESTFAIL " "$1.out.tmp"; then\n'
+                    '  mv "$1.out.tmp" "$1.out"; mv "$1.err.tmp" "$1.err"\n'
+                    "else\n"
+                    '  rm -f "$1.out.tmp" "$1.err.tmp"\n'
+                    f'  echo "$(date +%T) CRASH $1 rc=$rc" >> "{status}"\n'
+                    "fi\n")
+        os.chmod(runner, 0o755)
+        lst = os.path.join(workdir, "todo.txt")
+        open(lst, "w").write("\n".join(todo) + "\n")
+        subprocess.run(["xargs", "-a", lst, "-P", str(jobs), "-n", "1",
+                        runner],
+                       cwd=workdir, check=True, timeout=86400)
     failures = []
     verdicts = {}
-    for c0 in range(0, len(items), chunk_size):
+    for ci, p in enumerate(chunks):
+        c0 = ci * chunk_size
         chunk = items[c0:c0 + chunk_size]
-        cname = f"Dr{round_no}C{c0 // chunk_size}"
-        boxes_lean = [E.box_lit(b) for b, _, _ in chunk]
-        if kind == "disj":
-            src = E.stage_a_file_disj(mod + cname, n, driver[1], driver[2],
-                                      boxes_lean, len(chunk))
-        else:
-            src = E.stage_a_file(mod + cname, n, driver[1], boxes_lean,
-                                 len(chunk))
-        src = src.format(caseid="repair", origop="", vars="", nleaves=len(chunk),
-                         prec=None, extra="")
-        os.makedirs(REPAIR_DIR, exist_ok=True)
-        rel = f"Kepler/Interval/Cases/Repair/{cname}.lean"
-        open(os.path.join(LEAN_DIR, rel), "w").write(src)
-        print(f"[round {round_no}] chunk {c0 // chunk_size}: "
-              f"{len(chunk)} boxes, building+running ...", flush=True)
-        p = subprocess.run(["lake", "env", "lean", "--run", rel],
-                           cwd=LEAN_DIR, capture_output=True, text=True,
-                           timeout=86400)
-        lines = (p.stdout + p.stderr).splitlines()
+        out = p + ".out"
+        if not os.path.exists(out):
+            die(f"chunk {p} did not produce output — aborted/crashed; "
+                "re-run the same command to resume")
+        lines = open(out).read().splitlines()
+        err = open(p + ".err").read() if os.path.exists(p + ".err") else ""
         chunk_fails = 0
         leaf_lines = 0
         driver_errors = []
         rung = None
-        for ln in lines:
+        for ln in lines + err.splitlines():
             parts = ln.split()
             if parts[:1] == ["RUNG"]:
                 rung = [int(parts[1]), int(parts[2])]
@@ -117,24 +179,31 @@ def run_round(mod, n, driver, items, round_no, chunk_size, params_out=None):
             if "error" in ln.lower() and "BESTFAIL" not in ln:
                 driver_errors.append(ln)
         if driver_errors or leaf_lines != len(chunk):
-            die(f"driver chunk {c0 // chunk_size} broken: "
+            die(f"driver chunk {ci} broken: "
                 f"{len(driver_errors)} errors, {leaf_lines}/{len(chunk)} "
                 f"leaf lines — aborting (no silent clean)\n"
                 + "\n".join(driver_errors[:5]))
-        print(f"[round {round_no}] chunk {c0 // chunk_size}: "
+        print(f"[round {round_no}] chunk {ci}: "
               f"{chunk_fails} FAIL / {len(chunk)}", flush=True)
     return failures, verdicts
 
 
 def main():
-    max_depth, chunk_size = 3, 5000
+    max_depth, chunk_size, jobs = 3, 3544, 8
     fails_file = None
+    rung_args = ""
     args = []
     for a in sys.argv[1:]:
         if a.startswith("--max-depth="):
             max_depth = int(a.split("=", 1)[1])
         elif a.startswith("--chunk="):
             chunk_size = int(a.split("=", 1)[1])
+        elif a.startswith("--jobs="):
+            jobs = int(a.split("=", 1)[1])
+        elif a.startswith("--rung="):
+            rn, ro = a.split("=", 1)[1].split(":")
+            int(rn); int(ro)  # validate
+            rung_args = f" {rn} {ro}"
         elif a.startswith("--fails="):
             fails_file = a.split("=", 1)[1]
         elif a == "--keep-going":
@@ -194,8 +263,8 @@ def main():
         start_round = 0
     for round_no in range(start_round, max_depth + 1):
         fails, verdicts = run_round(mod, n, driver, items, round_no,
-                                    chunk_size if round_no == 0 else 100000,
-                                    params_by_box)
+                                    chunk_size, params_by_box, jobs=jobs,
+                                    rung_args=rung_args)
         if not fails:
             # hits recomputed by the driver this round (disj); cert hit kept
             # only where there is no verdict (single-goal driver).

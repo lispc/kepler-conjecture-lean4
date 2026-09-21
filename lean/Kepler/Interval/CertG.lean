@@ -26,8 +26,15 @@
   expression, exactly like `Cert.bb_sound`.
 
   Kernel checks only: no `sorry`, no `native_decide`, no new axioms.
+
+  TM0 (Phase 5): a third leaf form `taylorLeaf` closes a leaf by the
+  **Taylor-model checker** `checkPosTM` (`CertTM.lean`) instead of plain
+  interval evaluation — no specialised expression is needed (the TM
+  parameters `ps` are separate from the expression, and `evalReal` already
+  ignores the in-`IExpr` certificate parameters).
 -/
 import Kepler.Interval.CertBool
+import Kepler.Interval.CertTM
 
 namespace Kepler.Interval
 
@@ -37,6 +44,11 @@ inductive BBTreeG (n : ℕ) (e : IExpr n) : Type where
   | leaf (box : Fin n → DInterval) (el : IExpr n)
       (hsame : el.evalReal = e.evalReal) (hcert : checkPos el box = true) :
       BBTreeG n e
+  /-- Taylor-model leaf: closed by `checkPosTM` (kernel-checked Taylor-model
+  evaluation of `e` itself — TM parameters live in `ps`, outside the
+  expression). -/
+  | taylorLeaf (box : Fin n → DInterval) (ps : List SqrtTMP)
+      (hcert : checkPosTM e box ps = true) : BBTreeG n e
   | node (box : Fin n → DInterval) (d : Fin n) (l r : BBTreeG n e) :
       BBTreeG n e
 
@@ -45,21 +57,28 @@ namespace BBTreeG
 /-- The box of a node (root included). -/
 def box {n : ℕ} {e : IExpr n} : BBTreeG n e → (Fin n → DInterval)
   | .leaf b _ _ _ => b
+  | .taylorLeaf b _ _ => b
   | .node b _ _ _ => b
 
 /-- The covering checker (Prop-level), same shape as `BBTree.covers`. -/
 def covers {n : ℕ} {e : IExpr n} : BBTreeG n e → Prop
   | .leaf _ _ _ _ => True
+  | .taylorLeaf _ _ _ => True
   | .node b d l r => splitOK b d l.box r.box ∧ l.covers ∧ r.covers
 
 /-- **Point-coverage**: a covering tree places every real point of its own
-box inside some leaf (with that leaf's specialised expression and cert). -/
+box inside some leaf, together with that leaf's positivity evidence (interval
+check or Taylor-model check, already applied). -/
 theorem covers_point {n : ℕ} {e : IExpr n} (t : BBTreeG n e)
     (hcov : t.covers) {ρ : Fin n → ℝ} (hρ : boxMem t.box ρ) :
     ∃ (box : Fin n → DInterval) (el : IExpr n),
-      el.evalReal = e.evalReal ∧ checkPos el box = true ∧ boxMem box ρ := by
+      el.evalReal = e.evalReal ∧ boxMem box ρ ∧
+        ∀ σ, boxMem box σ → 0 < el.evalReal σ := by
   induction t with
-  | leaf box el hsame hcert => exact ⟨box, el, hsame, hcert, hρ⟩
+  | leaf box el hsame hcert =>
+    exact ⟨box, el, hsame, hρ, fun σ hσ => checkPos_sound el box hcert σ hσ⟩
+  | taylorLeaf box ps hcert =>
+    exact ⟨box, e, rfl, hρ, fun σ hσ => checkPosTM_sound hcert σ hσ⟩
   | node box d l r ihl ihr =>
     obtain ⟨hsplit, hlcov, hrcov⟩ := hcov
     by_cases hcase : ρ d ≤ (box d).mid.toReal
@@ -97,6 +116,7 @@ theorem covers_point {n : ℕ} {e : IExpr n} (t : BBTreeG n e)
 /-- Bool-valued cover checker (same shape as `BBTree.coversB`). -/
 def coversB {n : ℕ} {e : IExpr n} : BBTreeG n e → Bool
   | .leaf _ _ _ _ => true
+  | .taylorLeaf _ _ _ => true
   | .node b d l r => Bool.and (splitOKB b d l.box r.box) (Bool.and l.coversB r.coversB)
 
 /-- **Soundness of `coversB`**. -/
@@ -104,6 +124,7 @@ theorem coversB_sound {n : ℕ} {e : IExpr n} (t : BBTreeG n e)
     (h : t.coversB = true) : t.covers := by
   induction t with
   | leaf b el hsame hcert => trivial
+  | taylorLeaf b ps hcert => trivial
   | node b d l r ihl ihr =>
     have h' : Bool.and (splitOKB b d l.box r.box) (Bool.and l.coversB r.coversB) = true := h
     simp only [Bool.and_eq_true] at h'
@@ -118,10 +139,10 @@ expression at every point of the target. -/
 theorem bb_soundG {n : ℕ} {e : IExpr n} (t : BBTreeG n e)
     (target : Fin n → DInterval) (hcov : t.covers) (hsub : boxSub target t.box)
     (ρ : Fin n → ℝ) (hρ : boxMem target ρ) : 0 < e.evalReal ρ := by
-  obtain ⟨box, el, hsame, hcert, hmem⟩ :=
+  obtain ⟨box, el, hsame, hmem, hpos⟩ :=
     t.covers_point hcov (boxSub_mem hsub hρ)
   rw [← hsame]
-  exact checkPos_sound el box hcert ρ hmem
+  exact hpos ρ hmem
 
 /-! ## Pilot: per-leaf sqrt mantissas on `√x − x/4 > 0` over `[1,2]`
 
@@ -191,5 +212,132 @@ theorem exG_end_to_end (x : ℝ) (hx1 : 1 ≤ x) (hx2 : x ≤ 2) :
   rwa [hsimp] at h
 
 #print axioms exG_end_to_end
+
+/-! ## TM0 pilots: Taylor-model leaves (`CertTM.lean`)
+
+Two acceptance cases of the TM0 milestone
+(`pipeline/interval/taylor-model-design.md` §4 row 1): the sqrt pilot
+re-closed by a single `taylorLeaf` at the root, and `x² − 2 > 0` adjacent to
+`√2` closed by a depth-1 `taylorLeaf` tree. -/
+
+/-- The sqrt pilot `√x − x/4` in TM-checkable form: `x/4` written as
+`x · 2⁻²` (division by a dyadic constant is multiplication by its inverse —
+TM0's `evalTM` does not support `.div`).  Same real semantics as `exGExpr`. -/
+def exGExprTM : IExpr 1 := .sub (.sqrt (.var 0) 1 1) (.mul (.var 0) (.const ⟨1, -2⟩))
+
+theorem exGExprTM_same : exGExprTM.evalReal = exGExpr.evalReal := by
+  funext ρ
+  simp only [exGExprTM, exGExpr, IExpr.evalReal]
+  rw [Dyadic.toReal_int]
+  have h1 : (⟨1, -2⟩ : Dyadic).toReal = 1 / 4 := by
+    rw [Dyadic.toReal_def]
+    norm_num
+  rw [h1]
+  ring
+
+/-- TM certificate bundle for the sqrt node on `[1,2]` (center `3/2`, center
+enclosure the point `⟨3,-1⟩`, envelope `1/2`, certified lower bound `c = 1`):
+`√(3·2⁻¹)` mantissa `2 = ⌊√6⌋` (used twice — point enclosure), `√1` mantissa
+`2 = ⌊√4⌋`, recip granularities `2⁻³` (slope `1/(2√(3/2))`) and `2⁻²`
+(curvature `1/(8·1·1)`). -/
+def exGTMP : List SqrtTMP := [⟨2, 2, 2, -3, -2⟩]
+
+/-- The single-leaf TM tree closes the whole box `[1,2]` at the root — the
+two-leaf bare-interval bisection of `exGTree` is unnecessary here (kernel
+`decide`). -/
+theorem exGTM_cert : checkPosTM exGExprTM exGBox exGTMP = true := by decide
+
+/-- One-leaf Taylor-model tree for `√x − x/4` on `[1,2]`. -/
+def exGTreeTM : BBTreeG 1 exGExprTM := .taylorLeaf exGBox exGTMP exGTM_cert
+
+theorem exGTreeTM_covers : exGTreeTM.covers := BBTreeG.coversB_sound _ (by decide)
+
+/-- End-to-end: `0 < √x − x/4` for every real `x ∈ [1,2]`, via the TM leaf. -/
+theorem exGTM_end_to_end (x : ℝ) (hx1 : 1 ≤ x) (hx2 : x ≤ 2) :
+    0 < Real.sqrt x - x / 4 := by
+  have hsub : boxSub exGBox exGTreeTM.box := by
+    intro i
+    fin_cases i
+    exact ⟨by decide, by decide⟩
+  have hmem : boxMem exGBox (fun _ => x) := by
+    intro i
+    fin_cases i
+    constructor
+    · show Dyadic.toReal ⟨1, 0⟩ ≤ x
+      rw [Dyadic.toReal_int]
+      exact_mod_cast hx1
+    · show x ≤ Dyadic.toReal ⟨2, 0⟩
+      rw [Dyadic.toReal_int]
+      exact_mod_cast hx2
+  have h := bb_soundG exGTreeTM exGBox exGTreeTM_covers hsub (fun _ => x) hmem
+  rw [exGExprTM_same] at h
+  have hsimp : exGExpr.evalReal (fun _ => x) = Real.sqrt x - x / 4 := by
+    simp only [exGExpr, IExpr.evalReal]
+    rw [Dyadic.toReal_int]
+    norm_num
+  rwa [hsimp] at h
+
+#print axioms exGTM_end_to_end
+
+/-! ### `x² − 2 > 0` adjacent to `√2` -/
+
+/-- `x·x − 2`. -/
+def exTM2Expr : IExpr 1 := .sub (.mul (.var 0) (.var 0)) (.const ⟨2, 0⟩)
+
+/-- Root box `[2897/2048, 3/2]` — `2897/2048 ≈ 1.41430664` is the dyadic just
+above `√2 ≈ 1.41421356` at denominator `2¹¹` (and `2897² = 8392609 >
+8388608 = 2·2048²`). -/
+def exTM2Box : Fin 1 → DInterval := fun _ => ⟨⟨2897, -11⟩, ⟨3, -1⟩⟩
+
+/-- The two halves, defined through `mid` so `splitOKB` closes by `decide`. -/
+def exTM2BoxL : Fin 1 → DInterval := fun _ => ⟨(exTM2Box 0).lo, (exTM2Box 0).mid⟩
+def exTM2BoxR : Fin 1 → DInterval := fun _ => ⟨(exTM2Box 0).mid, (exTM2Box 0).hi⟩
+
+/-- The root box does NOT close under `checkPosTM`: the Taylor lower bound at
+the root is `y² − 2 − 2yw − w² < 0` (the `O(w²)` remainder swamps the
+`≈ 9.5·10⁻⁴` margin).  One bisection layer suffices: both halves close
+(kernel `decide`). -/
+theorem exTM2Root_fails : checkPosTM exTM2Expr exTM2Box [] = false := by decide
+theorem exTM2L_cert : checkPosTM exTM2Expr exTM2BoxL [] = true := by decide
+theorem exTM2R_cert : checkPosTM exTM2Expr exTM2BoxR [] = true := by decide
+
+/-- Depth-1 Taylor-model tree for `x² − 2` on `[2897/2048, 3/2]`. -/
+def exTM2Tree : BBTreeG 1 exTM2Expr :=
+  .node exTM2Box 0 (.taylorLeaf exTM2BoxL [] exTM2L_cert)
+    (.taylorLeaf exTM2BoxR [] exTM2R_cert)
+
+theorem exTM2Tree_covers : exTM2Tree.covers := BBTreeG.coversB_sound _ (by decide)
+
+/-- For the record: plain interval evaluation is *exact* for `x·x` on positive
+boxes, so it closes even the root box here — the TM route's advantage is
+quantitative (leaf counts on dependency-losing leaves), not qualitative for
+this expression (see `pipeline/interval/tm0-progress.md`). -/
+theorem exTM2Root_bare : checkPos exTM2Expr exTM2Box = true := by decide
+
+/-- End-to-end: `0 < x² − 2` for every real `x ∈ [2897/2048, 3/2]`. -/
+theorem exTM2_end_to_end (x : ℝ) (hx1 : 2897 / 2048 ≤ x) (hx2 : x ≤ 3 / 2) :
+    0 < x * x - 2 := by
+  have hsub : boxSub exTM2Box exTM2Tree.box := by
+    intro i
+    fin_cases i
+    exact ⟨by decide, by decide⟩
+  have hmem : boxMem exTM2Box (fun _ => x) := by
+    intro i
+    fin_cases i
+    constructor
+    · show Dyadic.toReal ⟨2897, -11⟩ ≤ x
+      rw [Dyadic.toReal_def]
+      have h : (((2897 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-11 : ℤ)) = 2897 / 2048 := by norm_num
+      rw [h]
+      exact hx1
+    · show x ≤ Dyadic.toReal ⟨3, -1⟩
+      rw [Dyadic.toReal_def]
+      have h : (((3 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-1 : ℤ)) = 3 / 2 := by norm_num
+      rw [h]
+      exact hx2
+  have h := bb_soundG exTM2Tree exTM2Box exTM2Tree_covers hsub (fun _ => x) hmem
+  simpa [exTM2Expr, IExpr.evalReal] using h
+
+#print axioms exTM2_end_to_end
 
 end Kepler.Interval
