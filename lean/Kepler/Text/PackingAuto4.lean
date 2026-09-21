@@ -17,9 +17,14 @@ Flyspeck packing chapter:
    definitions from `OXLZLEZ1.hl` (lines 23-136) — `-- NEEDS: PackingAuto3`
    marker: the parallel lane ports these verbatim into `PackingAuto3`; at
    merge time the `_p4` copies below are deleted and replaced by imports.
-2. The 39 `OXLZLEZ2.hl` theorems (statements faithful to the HL
+2. The    39 `OXLZLEZ2.hl` theorems (statements faithful to the HL
    `prove(_by_refinement)` goals; short arithmetic/modular ones proved,
    the case-analysis giants `sorry`ed — this is a SKELETON batch).
+   2b. Public `*_v11` twins: the nine OXLZLEZ1 conclusion statements
+   re-exposed over `PackingAuto3`'s public `CcV11` interface (PA3 is
+   imported for this; PA3's closure is PA2/Polytope/Statement/Mathlib, so
+   the co-import is clash-free), verbatim to PA3's `*_concl` rows — this
+   is what lets `PackingConcl` discharge its Auto3 family.
 3. `betaBump` (HL `beta_bump_v1`, `pack_defs.hl:180-187`) — see its
    docstring for the integral-semantics encoding note — plus the `bump.hl`
    theorem kit.
@@ -56,6 +61,7 @@ Flyspeck packing chapter:
 -- PackingAuto2; PackingAuto1's voronoi/measure chain is not referenced by
 -- any statement in this file.
 import Kepler.Text.PackingAuto2
+import Kepler.Text.PackingAuto3
 import Kepler.Text.Polytope
 import Kepler.Statement
 import Mathlib
@@ -615,6 +621,81 @@ impossible. -/
 theorem GRHIDFA (cc : CC4P4) (_h1 : ccBoolModelP4 cc) (_h2 : ccBoolPrepP4 cc)
     (_h3 : ccRealModelP4 cc)
     (_h4 : Finset.sum (Finset.Icc 0 (ccCardP4 cc - 1)) (ccGgP4 cc) < 0) :
+    False := by sorry
+
+/-! ## 2b. Public `CcV11` twins of the nine OXLZLEZ1 conclusions
+
+The 39-theorem wave above lives over the file-private `CC4P4` record, so
+outside modules could never name these twins — `PackingConcl`'s whole
+Auto3 `OXLZLEZ1.hl` family stayed unwired ("parallel private encoding").
+The nine theorems below repeat the *statement* half over `PackingAuto3`'s
+public `CcV11` encoding (PA3 imported above), verbatim to PA3's
+`*_concl` rows / HOL originals.  Proof bodies stay `sorry` (skeleton
+batch): the private `CC4P4` twins of section 2 are the eventual proof
+bank these rows will be discharged from. -/
+
+/-- OXLZLEZ1.hl:135-136 (`CHQSQEY_concl`); public `CcV11` twin of
+`CHQSQEY` above. -/
+theorem CHQSQEY_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
+    (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
+    (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    3 ≤ cc_size_v11 cc (cc_4cell_v11 cc) := by sorry
+
+/-- OXLZLEZ1.hl:138-140 (`MTMLSRF_concl`); public `CcV11` twin of
+`MTMLSRF` above. -/
+theorem MTMLSRF_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
+    (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
+    (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    ∃ i, 0 < i ∧ cc_gg_v11 cc i < 0 ∧ cc_qu_v11 cc i ∧
+      cc_4cell_v11 cc (i + 1) ∧ cc_4cell_v11 cc (i - 1) := by sorry
+
+/-- OXLZLEZ1.hl:142-143 (`LXDEYBO_concl`); public `CcV11` twin of
+`LXDEYBO` above. -/
+theorem LXDEYBO_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
+    (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
+    (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    cc_size_v11 cc (cc_4cell_v11 cc) ≤ 4 := by sorry
+
+/-- OXLZLEZ1.hl:145-146 (`UNPNFVW_concl`); public `CcV11` twin of
+`UNPNFVW` above. -/
+theorem UNPNFVW_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
+    (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
+    (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    cc_size_v11 cc (cc_qy_v11 cc) ≤ 1 := by sorry
+
+/-- OXLZLEZ1.hl:156-157 (`IPVICGW_concl`); public `CcV11` twin of
+`IPVICGW` above. -/
+theorem IPVICGW_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
+    (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
+    (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    ∀ i, cc_small_v11 cc i := by sorry
+
+/-- OXLZLEZ1.hl:159-160 (`RSIWAMP_concl`); public `CcV11` twin of
+`RSIWAMP` above. -/
+theorem RSIWAMP_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
+    (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
+    (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    cc_card_v11 cc ≤ 4 := by sorry
+
+/-- OXLZLEZ1.hl:167-168 (`UTEOITF_concl`); public `CcV11` twin of
+`UTEOITF` above. -/
+theorem UTEOITF_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
+    (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
+    (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    ∀ i, cc_4cell_v11 cc i := by sorry
+
+/-- OXLZLEZ1.hl:170-171 (`LUIKGMH_concl`); public `CcV11` twin of
+`LUIKGMH` above. -/
+theorem LUIKGMH_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
+    (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
+    (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
+    4 ≤ cc_card_v11 cc := by sorry
+
+/-- OXLZLEZ1.hl:173-174 (`GRHIDFA_concl`); public `CcV11` twin of
+`GRHIDFA` above: the D-case capstone `False`. -/
+theorem GRHIDFA_v11 (cc : CcV11) (_hb : cc_bool_model_v11 cc)
+    (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
+    (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
     False := by sorry
 
 /-! ## 3. `betaBump` and the `bump.hl` calculus

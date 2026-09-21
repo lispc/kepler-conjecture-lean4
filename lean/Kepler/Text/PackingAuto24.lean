@@ -63,6 +63,9 @@ SORRY INVENTORY (giants, with blockers)
   - `GRUTOTI1_concl_p24`: SHIMMED (2026-09-19) to the statement-identical
     `PackingAuto2.GRUTOTI1_concl` interface (still `sorry`ed there; the
     Auto23 lane owns the real proof). Delete the `_p24` copy at merge.
+    A public re-export `GRUTOTI1_concl_p24_pub` (same file, same
+    statement) was added so the PackingConcl assembly can name the twin
+    (its `private` is file-scoped).
 -/
 
 import Kepler.Text.PackingAuto2
@@ -489,7 +492,9 @@ the parallel Auto23 lane owns the proof of `GRUTOTI1_concl` (already
 sorried in PackingAuto2); the 2π edge-total is the complementary
 measure-splitting fact consumed alongside `REUHADY1` by downstream
 wedge/annulus arguments. This `_p24` copy documents the dependency for
-merge; delete at merge into Auto23's results. -/
+merge; delete at merge into Auto23's results.  `private` is
+file-scoped, so the public re-export below gives the PackingConcl
+assembly a nameable twin. -/
 private theorem GRUTOTI1_concl_p24 : ∀ (V : Set V3) (u0 u1 : V3) (e : Set V3),
     saturated V → Packing V → u0 ∈ V → u1 ∈ V → u0 ≠ u1 →
     hl [u0, u1] < Real.sqrt 2 → e = {u0, u1} →
@@ -497,5 +502,18 @@ private theorem GRUTOTI1_concl_p24 : ∀ (V : Set V3) (u0 u1 : V3) (e : Set V3),
         (fun t => dihX V t (u0, u1)) = 2 * Real.pi := by
   intro V u0 u1 e hs hp hu0 hu1 hne hhl he
   exact GRUTOTI1_concl V u0 u1 e hs hp hu0 hu1 hne hhl he
+
+/-- Public re-export of the private `GRUTOTI1_concl_p24` above — same
+statement, verbatim. PackingConcl discharges Auto2's `GRUTOTI1_concl`
+interface through this name (the `private` modifier hides the original
+from every other module); the upstream `sorry` in
+`PackingAuto2.GRUTOTI1_concl` flows along the proof term. Delete
+together with the `_p24` copy at merge into Auto23's results. -/
+theorem GRUTOTI1_concl_p24_pub : ∀ (V : Set V3) (u0 u1 : V3) (e : Set V3),
+    saturated V → Packing V → u0 ∈ V → u1 ∈ V → u0 ≠ u1 →
+    hl [u0, u1] < Real.sqrt 2 → e = {u0, u1} →
+    setSum {X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X}
+        (fun t => dihX V t (u0, u1)) = 2 * Real.pi :=
+  GRUTOTI1_concl_p24
 
 end Kepler.Text

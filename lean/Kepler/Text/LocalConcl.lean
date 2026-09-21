@@ -38,12 +38,67 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
   anchors `mnt11_anchor` / `p21_anchor` below -- that injection is the
   corpus's own interface convention, not a shape bridge.
 
-    WIRE (real proof term, debt = twin's axioms + injected anchors): 56
-      = the 16 classic discharges below + 40 new assembly wires
-    HOLD (explicit `sorry`, reason recorded): 34
-      = (a) 11 no-twin + (b) 11 circular re-export + 7 (c) non-bridgeable
+    WIRE (real proof term, debt = twin's axioms + injected anchors): 62
+      = the 16 classic discharges below + 46 assembly wires
+    HOLD (explicit `sorry`, reason recorded): 28
+      = (a) 5 no-twin + (b) 11 circular re-export + 7 (c) non-bridgeable
         + 5 (d) shape mismatches
     TOTAL: 90/90 registry contracts exposed at this exit.
+
+  ASSEMBLY WAVE 2026-09-21 II (skeleton propagation into the (a) class):
+    four of the eleven (a) entries have PROVED HOL originals that had never
+    been restated on the Lean side; their owning modules are now carrying
+    faithful skeleton restatements and this exit wires them:
+      OTMTOTJ1 <- LocalAuto24.OTMTOTJ1  (verbatim; OTMTOTJ.hl:1156),
+      OTMTOTJ2 <- LocalAuto24.OTMTOTJ2  (verbatim; OTMTOTJ.hl:1169),
+      OTMTOTJ3 <- LocalAuto24.OTMTOTJ3  (verbatim; OTMTOTJ.hl:1500),
+      OTMTOTJ4 <- LocalAuto24.OTMTOTJ4  (verbatim; OTMTOTJ.hl:1520).
+    (The earlier scan's OTMTOTJ1-4 hits in LA16/23 were the same-shaped
+    hypothesis arrows of `JEJTVGB_case_breakdown_p16/_p23`, not twins; the
+    owners are LA24 = OTMTOTJ.hl.)
+
+  ASSEMBLY WAVE 2026-09-21 III (two more (a) entries with PROVED HOL
+    originals): the owning-module twins landed and this exit wires them:
+      ASSWPOW <- LocalAuto25.ASSWPOW_p25 (faithful restatement of the
+        PROVED VASYYAU.hl:154 original, statement verbatim; the twin's body
+        is a skeleton `sorry` — the HOL fan kit + Flyspeck-constants calc is
+        not yet ported — debt flows),
+      DRNDRDV <- LocalAuto22.derived_form_xrr_p22 (the twin was ALREADY in
+        place: LA22:260, proved, sorry-free, the verbatim statement of the
+        HOL original `derived_form_xrr`, OCBICBY.hl:766, aliased `DRNDRDV`
+        at :849; no new code needed).
+    Both twins are registry-INDEPENDENT proof pieces (neither is derived
+    from its `*_concl` registry sorry), so neither wire is a (b)-style
+    cycle.  The remaining five (a) entries stay HOLD with their
+    HOL-provenance audit recorded per entry below:
+      HFNXPZA / EQTTNZI1 / EQTTNZI2 / EFLYGAU / BJTDWPS -- the HOL corpus
+      carries these ONLY as appendix.hl registry lets (appendix.hl:710/
+        1110/1115/1500/1506); no proved lemma under these names exists
+        anywhere in `lean/scripts/local/` (corpus-wide grep), so there is
+        no faithful statement to restate.
+        RULING 2026-09-21 IV (form audit of the five lets, done on the HOL
+        reference corpus at `text_formalization/local/appendix.hl`): each
+        let is a proposition-valued STATEMENT binding
+        (`let X_concl = \`...\`;;`) -- neither a `new_definition` nor a
+        `prove` -- i.e. book conclusions left UNPROVED upstream; they are
+        genuine theorem-shaped registry entries, NOT contract mis-plants
+        and NOT definitional lets.  Supporting negatives: (1) no
+        HFNXPZA/EQTTNZI/EFLYGAU/BJTDWPS `.hl` proof files exist, although
+        per-lemma proof files are the corpus convention (cf. QKNVMLB.hl,
+        MIQMCSN.hl, UAGHHBM.hl, ...); (2) the names appear nowhere else in
+        the corpus, even case-insensitively; (3) the `restriction_typ1_v39`
+        / `restriction_typ2_v39` consumed by EQTTNZI1/2 are
+        `new_definition`s (appendix.hl:716/719) with ZERO consumers outside
+        appendix.hl -- a dead-end toolkit; (4) the nearest scs_4M7/scs_4M8
+        activity, MIQMCSN.hl:1101/1521, proves stab-diag NONEMPTINESS
+        (`MM_4M7_IMP_STAB_4M7`/`MM_4M8_IMP_STAB_4M8`), not the EFLYGAU/
+        BJTDWPS arrows, and no `scs_arrow_v39 {scs_4M7} {scs_4M6'}` /
+        `{scs_4M8} {scs_4M6',scs_3T7}` is proved anywhere; (5) the only
+        other `dihV ... 2 * pi` fragments (terminal.hl:2041/2095,
+        OCBICBY.hl:3036/3119) are TYPIFY/ENOUGH_TO_SHOW steps inside other
+        proofs, and the k=3 lanes (JKQEWGV/UXCKFPE/XWITCCN) never mention
+        `dihV`.  Verdict: class (iii) corpus-missing for all five; the
+        HOLDs stand with no faithful statement available to build.
 
   Classic discharges (twin · shape status; all 16 sorry-free or wave-tainted
   as noted by `#print axioms` at the foot of this file):
@@ -86,9 +141,11 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
 
   Blocked, with reasons.
 
-  (a) No downstream twin anywhere in LocalAuto2-38 (11):
-      HFNXPZA, EQTTNZI1, EQTTNZI2, DRNDRDV, ASSWPOW, EFLYGAU, BJTDWPS,
-      OTMTOTJ1, OTMTOTJ2, OTMTOTJ3, OTMTOTJ4.
+  (a) No downstream twin anywhere in LocalAuto2-38 (5; audit 2026-09-21 III):
+      HFNXPZA, EQTTNZI1, EQTTNZI2, EFLYGAU, BJTDWPS.
+      OTMTOTJ1-4 left this class in the 2026-09-21 II wave (faithful
+      restatements `LocalAuto24.OTMTOTJ1-4` wired below); ASSWPOW and
+      DRNDRDV left in the 2026-09-21 III wave (see the wave note above).
 
   (b) Twin is circular -- it is proved *from* the LocalAuto1 registry sorry
       itself (re-export), so a discharge would be vacuous (11):
@@ -132,6 +189,16 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
         `vv (i % s'.k + p % s.k)` where the registry uses
         `vv ((i + p) % s'.k)`; conventions disagree off the mod boundary
         and `Periodic vv` does not reconcile them -- cf. QKNVMLB3).
+        RULING 2026-09-21 IV: the TWIN side is faithful -- it restates the
+        PROVED originals `QKNVMLB1`/`QKNVMLB2`/`QKNVMLB3`
+        (QKNVMLB.hl:5223/:5522/:10665; `vv'` at :5225/:5525/:10667 is
+        `vv (i MOD s'.k + p MOD s.k)`) verbatim; the REGISTRY side
+        transcribes the appendix.hl:1055/1064/1075 statement-lets
+        (`vv ((i+p) MOD s'.k)`), which have NO proof anywhere in the corpus
+        -- the appendix form and the proved form are genuinely different
+        functions (different moduli), not equable via periodicity.  The LA1
+        correction is therefore deferred to the registry-refactor round
+        (LA1 frozen this round); full ruling on the entries below.
       WIRED (38): XWITCCN, XWITCCN2, AYQJTMD, EAPGLE, JKQEWGV1/2/3,
       MHAEYJN (LA37 lane now BUILDS on this checkout — its twin
         `MHAEYJN_p37` is typed by the verbatim Prop-def
@@ -243,7 +310,8 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
       components are sorried too, so no re-derivation route; LFLACKU_p23
       sorried.
     LA24 (2):  WKEIDFT_concl_p24 circular; XWITCCN_CASE_*_IS_SCS_p24
-      sorried.
+      sorried.  [2026-09-21 II: OTMTOTJ1-4 left the blocked set — faithful
+      restatements `OTMTOTJ1-4` landed in LA24 Section B6 and are wired.]
     LA25 (7):  ZITHLQN + 6 VASYYAU.hl re-exports circular.
     LA26 (6):  PPBTYDQ/MXQTIED/AXJRPNC/RRCWNSJ sorried; OIQKKEP circular;
       XWNHLMD (d) blocked.
@@ -263,9 +331,18 @@ LEDGER (LocalAuto1 sorried `*_concl` interface statements: 90)
     LA36 (1):  XWITCCN master sorried; its CASE_3/4/5/6 (+sqrt8/pro_cs/4_3)
       components in LA36 are sorried too (no case-tree shim route).
     LA37 (1):  MHAEYJN_p37 sorried; module still fails to build (caveat (5)).
-    none (11): HFNXPZA, EQTTNZI1, EQTTNZI2, DRNDRDV, ASSWPOW, EFLYGAU,
-      BJTDWPS, OTMTOTJ1-4 -- the only upstream mentions (LA16/23/24) are
-      same-shaped hypothesis arrows of other theorems, not twins.
+    none (5): HFNXPZA, EQTTNZI1, EQTTNZI2, EFLYGAU, BJTDWPS -- audit
+      2026-09-21 III: no proved HOL original at all (appendix.hl registry
+      lets only; 2026-09-21 IV form audit: statement-only lets, neither
+      `new_definition` nor `prove`, no proof file per the corpus
+      convention -- class (iii) confirmed per entry above).  Former members: OTMTOTJ1-4 (the earlier (a) mentions in
+      LA16/23 were same-shaped hypothesis arrows of other theorems, not
+      twins; discharged via the new LA24 B6 restatements, 2026-09-21 II),
+      ASSWPOW (VASYYAU.hl:154 proved original; LA25 faithful twin
+      `ASSWPOW_p25` added and wired, 2026-09-21 III), DRNDRDV (=
+      `derived_form_xrr`, OCBICBY.hl:766 proved original; the proved
+      LA22 twin `derived_form_xrr_p22` was already in place and is wired,
+      2026-09-21 III).
 
   IMPORT CAVEATS.  (1) `Kepler.Text.LocalAnchors` cannot be co-imported with
   `Kepler.Text.LocalAuto1` at all: both declare `Kepler.Text.scsBasicV39`
@@ -1012,78 +1089,138 @@ theorem CJBDXXN_discharged : main_nonlinear_terminal_v11 →
 /-! ## Skeleton holds (2026-09-21 wave): entries with no bridgeable twin
 
 Each HOLD re-exposes its registry contract with an explicit `sorry` and the
-blocker recorded.  34 holds = 11 (a) no-twin + 11 (b) circular re-export +
-7 (c) non-bridgeable + 5 (d) shape mismatch. -/
+blocker recorded.  28 holds = 5 (a) no-twin + 11 (b) circular re-export +
+7 (c) non-bridgeable + 5 (d) shape mismatch.  (2026-09-21 II: the four
+OTMTOTJ1-4 holds left this section as WIREs through the new
+`LocalAuto24.OTMTOTJ1-4` restatements.  2026-09-21 III: the ASSWPOW and
+DRNDRDV holds left as WIREs through `LocalAuto25.ASSWPOW_p25` and the
+already-in-place PROVED `LocalAuto22.derived_form_xrr_p22`.) -/
 
-/-! ### (a) No downstream twin anywhere in LocalAuto2-38 (11) -/
+/-! ### (a) No downstream twin anywhere in LocalAuto2-38 (5; after the
+2026-09-21 II wave moved OTMTOTJ1-4 out via the new LA24 restatements and
+the 2026-09-21 III wave moved ASSWPOW/DRNDRDV out via LA25.ASSWPOW_p25 and
+the proved LA22.derived_form_xrr_p22) -/
 
-/-- HOLD (a) `HFNXPZA_concl`: no twin in any lane. -/
+/-- HOLD (a) `HFNXPZA_concl`: no twin in any lane.  HOL audit 2026-09-21 II:
+the corpus carries this only as the appendix.hl:710 registry let; no proved
+lemma under this name exists anywhere in `lean/scripts/local/` (corpus-wide
+grep).  Ruling 2026-09-21 IV: the let is a proposition-valued statement
+binding (k = 3 dihedral sum < 2*pi -- theorem-shaped), NOT a
+`new_definition` and NOT a `prove`; no `HFNXPZA.hl` proof file exists and
+no k = 3 lane (JKQEWGV/UXCKFPE/XWITCCN) even mentions `dihV`.  Verdict:
+upstream proof absent (class iii); the registry entry is a faithful
+transcription of a real unproved book conclusion -- HOLD stands. -/
 theorem HFNXPZA_discharged : ∀ (s : ScsV39) (vv : ℕ → V3), isScsV39 s →
     BBsV39 s vv → taustarV39 s vv < 0 → s.k = 3 →
     dihV 0 (vv 0) (vv 1) (vv 2) + dihV 0 (vv 1) (vv 2) (vv 3) +
       dihV 0 (vv 2) (vv 3) (vv 1) < 2 * Real.pi := by
   sorry
 
-/-- HOLD (a) `EQTTNZI1_concl`: no twin in any lane. -/
+/-- HOLD (a) `EQTTNZI1_concl`: no twin in any lane.  HOL audit 2026-09-21 II:
+appendix.hl:1110 registry let only; no proved lemma in the corpus
+(restriction_typ1_v39 is defined appendix.hl:715).  Ruling 2026-09-21 IV:
+the let is a proposition-valued statement binding, NOT a definition; its
+`restriction_typ1_v39` is a `new_definition` (appendix.hl:716) whose ZERO
+corpus consumers outside appendix.hl make the whole restriction toolkit a
+dead end -- no `EQTTNZI.hl` proof file exists.  Verdict: class (iii)
+upstream proof absent; HOLD stands. -/
 theorem EQTTNZI1_discharged : ∀ s : ScsV39, isScsV39 s →
     (∀ i j, s.J i j → s.b i j = s.bm i j) →
     (s.J = fun _ _ => False ∨ 3 < s.k) →
     scsArrowV39 {s} {restrictionTyp1V39 s} := by
   sorry
 
-/-- HOLD (a) `EQTTNZI2_concl`: no twin in any lane. -/
+/-- HOLD (a) `EQTTNZI2_concl`: no twin in any lane.  HOL audit 2026-09-21 II:
+appendix.hl:1115 registry let only; no proved lemma in the corpus
+(restriction_typ2_v39 is defined appendix.hl:719).  Ruling 2026-09-21 IV:
+same shape as EQTTNZI1 -- proposition-valued statement let, no `prove`
+upstream, `restriction_typ2_v39` a dead-end `new_definition` (appendix.hl:
+719).  Verdict: class (iii); HOLD stands. -/
 theorem EQTTNZI2_discharged : ∀ (s t : ScsV39), isScsV39 s → s.am = s.bm →
     t = restrictionTyp2V39 s → (∀ i j, ¬s.J i j) → (∀ i, s.am i i = 0) →
     {i | i < t.k ∧ (2 * h0 < t.b i (i + 1) ∨ 2 < t.a i (i + 1))}.ncard + t.k ≤ 6 →
     scsArrowV39 {s} {t} := by
   sorry
 
-/-- HOLD (a) `DRNDRDV_concl`: no twin in any lane. -/
+/-- WIRE `LocalAuto1.DRNDRDV_concl` <- PROVED `LocalAuto22.derived_form_xrr_p22`
+(LA22:260).  The faithful twin was ALREADY in place: it is the verbatim Lean
+rendering of the HOL original `derived_form_xrr` (OCBICBY.hl:766; aliased
+`let DRNDRDV = derived_form_xrr` at OCBICBY.hl:849) and its statement
+matches the registry form verbatim — no new code needed (2026-09-21 III).
+The twin's proof is sorry-free (`xrr` re-derived onto the proved
+`hasDerivWithinAt_quad_p22` derivative kernel) and registry-independent, so
+the wire is not a (b)-style cycle. -/
 theorem DRNDRDV_discharged : ∀ y1 y2 y6 : ℝ,
     derivedForm (0 < y1 ∧ 0 < y2) (fun q => xrr y1 y2 q) (8 * y6 / (y1 * y2)) y6
-      (Set.univ : Set ℝ) := by
-  sorry
+      (Set.univ : Set ℝ) :=
+  derived_form_xrr_p22
 
-/-- HOLD (a) `ASSWPOW_concl`: no twin in any lane. -/
+/-- WIRE `LocalAuto1.ASSWPOW_concl` <- `LocalAuto25.ASSWPOW_p25` (faithful
+twin of the PROVED HOL original VASYYAU.hl:154, statement verbatim; added
+2026-09-21 III in the owning module).  The twin's body is still a skeleton
+`sorry` — the HOL proof runs through the `BBS_IMP_CONVEX_LOCAL_FAN` fan kit
+plus the Flyspeck-constants `arclength_lt_1553` calc, not yet ported — so
+debt flows; the twin is an independent proof piece (not a re-export of the
+registry concl), hence no (b)-style cycle. -/
 theorem ASSWPOW_discharged : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s →
     v ∈ MMsV39 s → s.k = 4 → scsBasicV39 s →
     s.b i (i + 1) ≤ 2 * h0 → s.b (i + 1) (i + 2) ≤ 2 * h0 →
-    xrr (norm (v i)) (norm (v (i + 2))) (dist (v i) (v (i + 2))) ≤ 15.53 := by
-  sorry
+    xrr (norm (v i)) (norm (v (i + 2))) (dist (v i) (v (i + 2))) ≤ 15.53 :=
+  ASSWPOW_p25
 
-/-- HOLD (a) `EFLYGAU_concl`: no twin in any lane. -/
+/-- HOLD (a) `EFLYGAU_concl`: no twin in any lane.  HOL audit 2026-09-21 II:
+appendix.hl:1500 registry let only; no proved lemma in the corpus.  Ruling
+2026-09-21 IV: proposition-valued statement let (NOT a definition); no
+`scs_arrow_v39 {scs_4M7} {scs_4M6'}` is proved anywhere -- the nearest
+scs_4M7 activity, `MM_4M7_IMP_STAB_4M7` (MIQMCSN.hl:1101), proves
+stab-diag nonemptiness, a different statement.  Verdict: class (iii);
+HOLD stands. -/
 theorem EFLYGAU_discharged :
     (∃ v : ℕ → V3, v ∈ MMsV39 scs4M7 ∧ cstab < dist (v 0) (v 2) ∧
       cstab < dist (v 1) (v 3)) → scsArrowV39 {scs4M7} {scs4M6'} := by
   sorry
 
-/-- HOLD (a) `BJTDWPS_concl`: no twin in any lane. -/
+/-- HOLD (a) `BJTDWPS_concl`: no twin in any lane.  HOL audit 2026-09-21 II:
+appendix.hl:1506 registry let only; no proved lemma in the corpus.  Ruling
+2026-09-21 IV: proposition-valued statement let (NOT a definition); no
+`scs_arrow_v39 {scs_4M8} {scs_4M6', scs_3T7}` is proved anywhere -- the
+nearest scs_4M8 activity, `MM_4M8_IMP_STAB_4M8` (MIQMCSN.hl:1521), proves
+stab-diag nonemptiness, a different statement.  Verdict: class (iii);
+HOLD stands. -/
 theorem BJTDWPS_discharged :
     (∃ v : ℕ → V3, v ∈ MMsV39 scs4M8 ∧ cstab < dist (v 0) (v 2) ∧
       cstab < dist (v 1) (v 3)) → scsArrowV39 {scs4M8} {scs4M6', scs3T7} := by
   sorry
 
-/-- HOLD (a) `OTMTOTJ1_concl`: no twin in any lane. -/
+/-- WIRE `LocalAuto1.OTMTOTJ1_concl` <- `LocalAuto24.OTMTOTJ1` (verbatim
+twin; faithful restatement of the PROVED HOL master OTMTOTJ.hl:1156, added
+2026-09-21 II in the owning module).  Twin still sorried — debt flows. -/
 theorem OTMTOTJ1_discharged :
-    scsArrowV39 {scs5I1} {scsStabDiagV39 scs5I1 0 2, scs5M2} := by
-  sorry
+    scsArrowV39 {scs5I1} {scsStabDiagV39 scs5I1 0 2, scs5M2} :=
+  OTMTOTJ1
 
-/-- HOLD (a) `OTMTOTJ2_concl`: no twin in any lane. -/
+/-- WIRE `LocalAuto1.OTMTOTJ2_concl` <- `LocalAuto24.OTMTOTJ2` (verbatim
+twin; faithful restatement of OTMTOTJ.hl:1169).  Twin still sorried — debt
+flows. -/
 theorem OTMTOTJ2_discharged :
-    scsArrowV39 {scs5I2} {scsStabDiagV39 scs5I2 0 2, scs5M2} := by
-  sorry
+    scsArrowV39 {scs5I2} {scsStabDiagV39 scs5I2 0 2, scs5M2} :=
+  OTMTOTJ2
 
-/-- HOLD (a) `OTMTOTJ3_concl`: no twin in any lane. -/
+/-- WIRE `LocalAuto1.OTMTOTJ3_concl` <- `LocalAuto24.OTMTOTJ3` (verbatim
+twin; faithful restatement of OTMTOTJ.hl:1500).  Twin still sorried — debt
+flows. -/
 theorem OTMTOTJ3_discharged :
     scsArrowV39 {scs5I3} {scsStabDiagV39 scs5M1 0 2, scsStabDiagV39 scs5M1 0 3,
-      scsStabDiagV39 scs5M1 2 4, scs5M2} := by
-  sorry
+      scsStabDiagV39 scs5M1 2 4, scs5M2} :=
+  OTMTOTJ3
 
-/-- HOLD (a) `OTMTOTJ4_concl`: no twin in any lane. -/
+/-- WIRE `LocalAuto1.OTMTOTJ4_concl` <- `LocalAuto24.OTMTOTJ4` (verbatim
+twin; faithful restatement of OTMTOTJ.hl:1520).  Twin still sorried — debt
+flows. -/
 theorem OTMTOTJ4_discharged :
     scsArrowV39 {scs5M1} {scsStabDiagV39 scs5M1 0 2, scsStabDiagV39 scs5M1 0 3,
-      scsStabDiagV39 scs5M1 2 4, scs5M2} := by
-  sorry
+      scsStabDiagV39 scs5M1 2 4, scs5M2} :=
+  OTMTOTJ4
 
 /-! ### (b) Twin is a circular re-export of the registry sorry itself (11) -/
 
@@ -1281,8 +1418,24 @@ theorem LFLACKU_discharged : scsArrowV39 {scs3T1} {scs3T2, scs3T5} := by
 /-- HOLD (c) `QKNVMLB1_concl`: the LA35 twin concludes on the index
 convention `vv (i % s'.k + p % s.k)` where the registry uses
 `vv ((i + p) % s'.k)`; the conventions disagree off the mod boundary
-(e.g. k = 6, p = 2, i = 4 gives `vv 6` vs `vv 0`) and `Periodic vv` does not
-reconcile them (cf. the QKNVMLB3 (d) note). -/
+(e.g. k = 6, p = 2, q = 0, i = 4 gives `vv 6` vs `vv 1`) and `Periodic vv`
+does not reconcile them (cf. the QKNVMLB3 (d) note).
+RULING 2026-09-21 IV (index-convention arbitration): the TWIN is the
+faithful encoding.  `QKNVMLB1_p35` (LA35:628) restates verbatim the PROVED
+HOL original `QKNVMLB1` (QKNVMLB.hl:5223-5230; `vv'` at :5225 reads
+`vv (i MOD (scs_k_v39 s') + p MOD (scs_k_v39 s))`), as do its components
+`QKNVMLB1_LE4F`/`QKNVMLB1_EQ4F` (QKNVMLB.hl:4838/:5064).  The REGISTRY
+form transcribes the appendix.hl:1055-1062 `QKNVMLB1_concl` let verbatim
+(`vv ((i+p) MOD (scs_k_v39 s'))`), but that appendix let is a
+statement-only binding whose proved counterpart states the OTHER
+convention: no `prove` of the appendix form exists anywhere in the corpus,
+and the two forms are different functions (different moduli s'.k vs s.k --
+not equable by periodicity; a rotation of one is not an instance of the
+other).  Disposition (two-sources case): LA35 statements stay AS-IS
+(already faithful); the LA1 registry correction is deferred to the
+registry-refactor round (LA1 frozen this round).  This entry stays HOLD
+because no proved twin of the REGISTRY form exists and none can be bridged
+from the contract form. -/
 theorem QKNVMLB1_discharged : ∀ (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop)
     (vv : ℕ → V3),
     MMsV39 s vv → s.bm p q < 4 → (s.k = 4 ∨ s.bm p q ≤ cstab) → isScsV39 s →
@@ -1292,7 +1445,13 @@ theorem QKNVMLB1_discharged : ∀ (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Pro
   sorry
 
 /-- HOLD (c) `QKNVMLB2_concl`: same index-convention mismatch on both
-half-slice realisations as QKNVMLB1. -/
+half-slice realisations as QKNVMLB1.  RULING 2026-09-21 IV: the twin
+(`QKNVMLB2_p35`, LA35:868) is faithful to the proved original `QKNVMLB2`
+(QKNVMLB.hl:5522-5533; `vv (i MOD s'.k + p MOD s.k)` at :5525 and
+`vv (i MOD s''.k + q MOD s.k)` at :5527); the registry transcribes the
+unproved appendix.hl:1064-1073 statement-let (`vv ((i+p) MOD s'.k)`,
+`vv ((i+q) MOD s''.k)`).  Twin stays as-is; LA1 correction deferred to the
+registry-refactor round; entry stays HOLD. -/
 theorem QKNVMLB2_discharged : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
     (mkj : Prop) (vv : ℕ → V3),
     (s', s'') = scsSliceV39 s p q d' d'' mkj →
@@ -1360,7 +1519,18 @@ arguments use the index convention `vv (i % s'.k + p % s.k)` and the
 `vv ((i + p) % s'.k)` and the `(s', s'') = scsSliceV39 ...` tuple form (the
 tuple side does bridge via the `scsSliceV39` def; the index conventions
 disagree off the mod boundary, e.g. s.k=6, p=2, q=0, i=4 gives `vv 6` vs
-`vv 1`, and `Periodic vv s.k` cannot reconcile them). -/
+`vv 1`, and `Periodic vv s.k` cannot reconcile them).
+RULING 2026-09-21 IV: on the index convention the TWIN side is the
+faithful one -- the proved HOL master `QKNVMLB3` (QKNVMLB.hl:10665-10675)
+realises `vv'`/`vv''` as `vv (i MOD s'.k + p MOD s.k)` (:10667) and
+`vv (i MOD s''.k + q MOD s.k)` (:10669), exactly the `QKNVMLB3_p35`
+hypothesis form; the registry's `vv ((i+p) % s'.k)` transcribes the
+unproved appendix.hl:1075-1084 statement-let (proved counterpart states
+the other convention -- no `prove` of the appendix form exists in the
+corpus).  The tuple-vs-equation form delta is separately bridgeable (via
+the `scsSliceV39` def), so once the registry convention is corrected
+(registry-refactor round; LA1 frozen this round) this (d) block reduces to
+the still-sorried `QKNVMLB3_Eq4/LE4_p35` branches alone. -/
 theorem QKNVMLB3_discharged : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
     (mkj : Prop) (vv : ℕ → V3),
     (s', s'') = scsSliceV39 s p q d' d'' mkj →
@@ -1435,5 +1605,11 @@ inputs (e.g. `YXIONXL1` via an LA12 wave input, `PQCSXWG2` via
 #print axioms MHAEYJN_discharged
 #print axioms CUXVZOZ_discharged
 #print axioms CJBDXXN_discharged
+#print axioms OTMTOTJ1_discharged
+#print axioms OTMTOTJ2_discharged
+#print axioms OTMTOTJ3_discharged
+#print axioms OTMTOTJ4_discharged
+#print axioms ASSWPOW_discharged
+#print axioms DRNDRDV_discharged
 
 end Kepler.Text

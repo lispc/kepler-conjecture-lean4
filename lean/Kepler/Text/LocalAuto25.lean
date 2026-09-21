@@ -1146,6 +1146,24 @@ theorem arclength_lt_1553_p25 :
     exact hcmp
   linarith
 
+/-- HOL `ASSWPOW` (VASYYAU.hl:154): the `xrr ≤ #15.53` diagonal bound on a
+basic `k = 4` system (the numeric content is exactly the
+`arclength_lt_1553_p25` arcLength constant above).  Faithful twin of the
+LocalAuto1 registry statement `ASSWPOW_concl` (appendix.hl:1452; statement
+verbatim).  DISCHARGES: the HOL original is PROVED (VASYYAU.hl:154) via
+`MMS_IMP_BBPRIME` + `JKQEWGV2` + `BBS_IMP_CONVEX_LOCAL_FAN`/`CVLF_LF_F`
+(fan from BBs) + the `IMJXPHR` diagonal analysis + `ATN2` arcLength bounds +
+the Flyspeck-constants `calc`; that kit is not ported to this lane yet, so
+the twin body is a skeleton `sorry`.  The twin is an INDEPENDENT proof piece
+— NOT derived from the registry `ASSWPOW_concl` — so the LocalConcl wiring
+is not a (b)-style cycle.  NEEDS: the BBS→fan kit and the `IMJXPHR`
+diagonal analysis. -/
+theorem ASSWPOW_p25 (s : ScsV39) (v : ℕ → V3) (i : ℕ) (his : isScsV39 s)
+    (hv : v ∈ MMsV39 s) (hk : s.k = 4) (hbasic : scsBasicV39 s)
+    (hb1 : s.b i (i + 1) ≤ 2 * h0) (hb2 : s.b (i + 1) (i + 2) ≤ 2 * h0) :
+    xrr (norm (v i)) (norm (v (i + 2))) (dist (v i) (v (i + 2))) ≤ 15.53 := by
+  sorry
+
 /-- HOL `NOT_MOD_4_CASES` (VASYYAU.hl:386). -/
 theorem NOT_MOD_4_CASES_p25 (i p : ℕ) :
     (¬(i % 4 = (p + 2) % 4)) ↔

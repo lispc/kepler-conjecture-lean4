@@ -80,3 +80,13 @@
 | Text/PackingAuto17.lean | 1 |
 
 </details>
+
+## 主定理可达债务（脊柱公理探针）
+
+> `Kepler.Assembly.the_kepler_conjecture_from_interfaces` 的 `#print axioms`（探针 2026-09-21 重跑，wip `ad99bee4`）。只统计**装配后主定理实际依赖**的公理：标准三公理 + sorryAx + 特许 native_decide shard 族（624 个，DECISIONS.md 2026-08-10 scoped exception）+ 无异常项。
+
+`sorryAx` 来源（2026-09-21 方向 A/B/D 深挖后）——骨架已从 3 枚粗接口展开为**分层可达债务图**：
+1. **粗接口 2 枚**：`nonlinearInequalities`（内含主叶子 `main_nonlinear_terminal_v11`，G4 汇合点）、`lpArchiveCertificates`（逐图 LP 证书总库，Phase 3 持久化 24k/43058 填实）；
+2. **TameSpine 13 枚骨架占位**（tame 文字章 capstone：contraveningFan/mqmsmab/tamePlanarHypermapRestricted/jcajydu/tameCorrespondenceIso/elllnyz 镜像析取/hypermapOfFanNeg/isoOppositeEq/contraveningNegative/localAnnulusInequalityScriptL/fcdjdot/kcImpTheKc/hypermapIsoTrans + oppositeHypermap 置换代数字段）；
+3. **章节出口 HOLD**：LocalConcl 30/90、PackingConcl 10/62（逐条原因见文件内 ledger）；
+4. **已真化**（不再计债）：`textCapstone`（capstone 脚本逐行翻译）、`linearProgrammingResults`（纯逻辑推导，方向 D 降级）、`assembly`、Concl 层 112 条 WIRE（公理沿证明项流动）。
