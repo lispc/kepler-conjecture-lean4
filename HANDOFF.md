@@ -31,6 +31,15 @@ Phase 5 填证；Kimi 负责 Phase 4 G4（worktree
   `lean/run_stagea_5490182221.sh`）。setsid 后零被杀记录。
 - **封闭 atan Taylor 阶 1024→128**（`1db69bd8`）：四档对照实验全过、rung
   不变，内核 decide 成本 ~1/N，波1/波2 机时省 ~8x。
+- **验证陷阱：`grep '^error'` 漏判（2026-09-21 发现，务必避免）**：`lake env
+  lean <file>` 的错误格式是 `路径:行:列: error: ...`（**不以 `error` 开头**），
+  故 `grep -cE '^error'` 恒返回 0 —— 曾据此误报多个文件"零 error"，掩盖了
+  LA4 的真实类型错误。**正确做法**：用 `lake build Kepler.Text.<Mod>`（构建
+  错误以 `error:` 开头）或 `grep -E ': error:'`；权威门 = `make check`
+  （`lake build` 全树 + AxiomAudit）。另：`lake env lean` **不会**自动补建
+  依赖 olean（删了 Fan.olean 即报 "object file does not exist"），依赖
+  olean 陈旧/缺失会给出误导性结论——单文件验证前先 `lake build <Mod>` 保证
+  依赖链新鲜，或直接 `make check`。
 
 ## 1. 项目目标（不变）
 
