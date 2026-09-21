@@ -13,7 +13,7 @@ import sys
 d, sz, out = sys.argv[1], int(sys.argv[2]), sys.argv[3]
 fails = []
 nchunks = nbest = 0
-for f in sorted(glob.glob(os.path.join(d, "chunk*.out"))):
+for f in sorted(glob.glob(os.path.join(d, "chunk*.txt.out"))):
     idx = int(re.search(r"chunk(\d+)", os.path.basename(f)).group(1))
     hdr = None
     nf = 0

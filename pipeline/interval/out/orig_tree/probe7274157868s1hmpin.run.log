@@ -1,0 +1,14 @@
+note: using toolchain 'g4cap' from override set on '/home/scroll/repos/kepler-g4e/lean'
+note: to remove: elan override unset --path '/home/scroll/repos/kepler-g4e/lean' | to suppress: ELAN_NO_OVERRIDE_NOTICE=1
+read 8 boxes from /home/scroll/repos/kepler-g4e/pipeline/interval/out/orig_tree/probe7274157868s1hmpin.d/boxes.txt
+memoized 4 closed subterms
+rung N=12 out=-64: 8/8 failures
+BESTFAIL N=12 out=-64 failures=8/8
+0 FAIL
+1 FAIL
+2 FAIL
+3 FAIL
+4 FAIL
+5 FAIL
+6 FAIL
+7 FAIL
