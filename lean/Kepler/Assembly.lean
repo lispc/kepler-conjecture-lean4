@@ -521,6 +521,31 @@ theorem hypermapIsoTrans {α β γ : Type*} [DecidableEq α] [DecidableEq β]
     (h1 : HypermapIso H G) (h2 : HypermapIso G K) : HypermapIso H K := by
   sorry
 
+/-! ### 2d. LP 接口结构化（方向 D，2026-09-21）
+
+HOL 蓝图（tame/linear_programming_results.hl）：`linear_programming_results` 的
+证明 = 计算层（`Verify_all.verify_all` 逐图 LP，15+ 小时）产出逐图
+`tame_linear_result` 实例 + 纯逻辑桥 `tame_result_lemma`（MESON 一步）。
+Lean 镜像同构：唯一新接口 = 逐图证书总库（Phase 3 持久化填实，现 24k/43058；
+桥章 formal_lp/hypermap 的 KCBLRQC/BDJYFFB/CRTTXAT 群为填实依赖）；
+`linear_programming_results` 本体降级为纯逻辑真推导。 -/
+
+/-- 接口占位：逐图 LP 证书总库（HOL `Verify_all` 的 Lean 形——每张 archive 图
+的 `tame_linear_result` 实例；前提 `LpIneqs`/`lp_main_estimate` 对应 HOL 证书
+定理的 DISCH 假设）。 -/
+theorem lpArchiveCertificates (hlpineq : LpIneqs) (hmain : lp_main_estimate) :
+    ∀ (V : Set V3) (hfan : FAN 0 V (ESTD V)) (L : fgraph ℕ),
+      L ∈ tameArchiveLists → FanHypermapIsoList V hfan L → ¬Contravening V := by
+  sorry
+
+/-- HOL `tame_result_lemma` + `linear_programming_results_th` 最终装配
+（纯逻辑部分真证明；债务集中于 `lpArchiveCertificates`）。 -/
+theorem linearProgrammingResultsOf (hnl : TheNonlinearInequalities)
+    (hcert : ∀ (V : Set V3) (hfan : FAN 0 V (ESTD V)) (L : fgraph ℕ),
+      L ∈ tameArchiveLists → FanHypermapIsoList V hfan L → ¬Contravening V) :
+    LinearProgrammingResults :=
+  fun V hfan ⟨_, _, ⟨L, hLa, hiso⟩⟩ => hcert V hfan L hLa hiso
+
 /-! ## 3. 接口 sorry 占位（原三接口冻结 2026-09-19；§2b/2c 的骨架占位为
 2026-09-21 方向 A 深挖新增，均计入主定理可达债务图） -/
 
@@ -529,10 +554,15 @@ theorem hypermapIsoTrans {α β γ : Type*} [DecidableEq α] [DecidableEq β]
 theorem nonlinearInequalities : TheNonlinearInequalities := by
   sorry
 
-/-- 接口占位（冻结 2026-09-19）。债务归属：Phase 3 LP 桥量产（P6-D）。
-依赖 P6-C 的 `hypermapOfList` 构造落地（见 `IsHypermapOfList` 差距说明）。 -/
-theorem linearProgrammingResults : LinearProgrammingResults := by
-  sorry
+/-- 接口 2 → 真推导（2026-09-21 方向 D）：`linear_programming_results` 从
+非线性接口的 `LpIneqs` 分量与 `main_nonlinear_terminal_v11`→`lp_main_estimate`
+链 + 逐图证书库真推导；剩余债务集中于 `lpArchiveCertificates` 单枚接口
+（Phase 3 计算层）。原 P6-D 桥与 P6-C `hypermapOfList` 构造依赖移入
+`lpArchiveCertificates` 的填实路径。 -/
+theorem linearProgrammingResults (hnl : TheNonlinearInequalities) :
+    LinearProgrammingResults :=
+  linearProgrammingResultsOf hnl (lpArchiveCertificates hnl.2.2.2.1
+    (nonlinear_imp_lp_main_estimate_p16 hnl.2.2.1))
 
 /-- **接口 3 → 真证明（2026-09-21 方向 A）**：HOL `kepler_conjecture_with_assumptions`
 （the_main_statement.hl:170-251，80 行 tactic 脚本）的镜像。消费 §2c 骨架占位
@@ -612,7 +642,8 @@ theorem assembly (hNL : TheNonlinearInequalities) (hLP : LinearProgrammingResult
 /-- 闭合形态：消费三个接口占位 + 已闭合的 `goodListArchive` 后的主定理。
 `#print axioms` 的 sorryAx 清单即全项目债务图（docs/phase6-spine.md §1）。 -/
 theorem the_kepler_conjecture_from_interfaces : TheKeplerConjecture :=
-  assembly nonlinearInequalities linearProgrammingResults textCapstone
+  assembly nonlinearInequalities (linearProgrammingResults nonlinearInequalities)
+    textCapstone
 
 /-! ## 5. 公理审计 -/
 
