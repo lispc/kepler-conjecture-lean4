@@ -406,17 +406,21 @@ def TamePlanarHypermap (H : Hypermap α) : Prop :=
   Tame1 H ∧ Tame2 H ∧ Tame3 H ∧ Tame4 H ∧ Tame5a H ∧ Tame8 H ∧ Tame9a H ∧
     Tame10 H ∧ Tame11a H ∧ Tame11b H ∧ Tame12o H ∧ Tame13a H
 
-/-- HOL `opposite_hypermap`（tame_defs.hl:185）。镜像绕行用；四个 proof 字段为
-置换代数（骨架期 sorry，填证波秒证）。 -/
+/-- HOL `opposite_hypermap`（tame_defs.hl:185）。四个 proof 字段为置换代数
+（**已闭合 2026-09-21 填证波**）：复合仍 permutes（`PermutesOn.mul`）、symm 仍
+permutes（`PermutesOn.symm`）、结合律 + 逆元消去（`mul_assoc`/`mul_inv_cancel`）。 -/
 def oppositeHypermap (H : Hypermap α) : Hypermap α where
   darts := H.darts
   edgeMap := H.faceMap * H.nodeMap
   nodeMap := H.nodeMap.symm
   faceMap := H.faceMap.symm
-  edgeMap_permutes := sorry -- 置换代数
-  nodeMap_permutes := sorry
-  faceMap_permutes := sorry
-  comp_eq_one := sorry
+  edgeMap_permutes := H.faceMap_permutes.mul H.nodeMap_permutes
+  nodeMap_permutes := H.nodeMap_permutes.symm
+  faceMap_permutes := H.faceMap_permutes.symm
+  comp_eq_one := by
+    have hnn : H.nodeMap * H.nodeMap.symm = 1 := mul_inv_cancel H.nodeMap
+    have hff : H.faceMap * H.faceMap.symm = 1 := mul_inv_cancel H.faceMap
+    rw [mul_assoc H.faceMap H.nodeMap H.nodeMap.symm, hnn, mul_one, hff]
 
 /-- PLACEHOLDER(tame章)（tame_defs2.hl `finalGraph`）。 -/
 def FinalGraph (_ : Graph) : Prop := True
@@ -451,10 +455,38 @@ theorem mqmsmab (V : Set V3) (hkcblrqc : KcblrqcIneqDef) (hmain : lp_main_estima
     TamePlanarHypermap (hypermapOfFan 0 V (ESTD V) hfan) := by
   sorry
 
-/-- 接口占位：HOL `tame_planar_hypermap_restricted`（the_main_statement.hl:143）。 -/
+/-- **接口 → 真证明（2026-09-21 填证波）**：HOL `tame_planar_hypermap_restricted`
+（the_main_statement.hl:143-170；ssreflect/tms.hl 同名引理）。HOL 脚本四步：
+① 定义展开；② `Hypermap.lemma_node_nondegenerate`（tame_11a ⟹ node 非退化）；
+③ tame_9a ⟹ face 基数 ≥ 3；④ tame_8 ⟹ dart 非空（`face_collection H = ∅`
+与 `3 ≤ number_of_faces` 矛盾）。Lean 镜像逐条同构：§2b 幂轨道
+（`nodeOrbit`/`faceOrbit` = `orbitSet`）与 `Hypermap.orbitMap` 依
+`Set.range`/`setOf` 定义可相互 defeq 折算；单点轨道用
+`Hypermap.orbitMap_singleton_iff`；face 集空用 `setOfOrbits` 对空 dart 集
+的坍缩。其余合取项（planar/plain/connected/simple/no-double-joins/edge-
+nondegenerate）与 §2b 对应原语逐项 defeq 传递。 -/
 theorem tamePlanarHypermapRestricted {α : Type*} [DecidableEq α] (H : Hypermap α)
     (ht : TamePlanarHypermap H) : H.IsRestricted := by
-  sorry
+  obtain ⟨⟨hplain, hplanar⟩, ⟨hconn, hsimple⟩, h3, -, h5a, h8, h9a, -, h11a, -, -, -⟩ := ht
+  refine ⟨?_, hplanar, hplain, hconn, hsimple, h5a, h3, ?_, ?_⟩
+  · -- ④ tame_8 ⟹ dart 非空（HOL：face_collection = ∅ 与 3 ≤ number_of_faces 矛盾）
+    intro hempty
+    have hnf : H.numberOfFaces = (setOfOrbits H.darts H.faceMap).ncard := rfl
+    have hfs : setOfOrbits H.darts H.faceMap = ∅ := by
+      ext t
+      simp [setOfOrbits, hempty]
+    have h8' : 3 ≤ H.numberOfFaces := h8
+    rw [hnf, hfs, Set.ncard_empty] at h8'
+    omega
+  · -- ② tame_11a ⟹ node 非退化（HOL lemma_node_nondegenerate）
+    intro x hx hfix
+    have hmem : 3 ≤ (orbitMap H.nodeMap x).ncard := h11a x hx
+    have hnc : (orbitMap H.nodeMap x).ncard = 1 := by
+      rw [(orbitMap_singleton_iff H.nodeMap x).mpr hfix, Set.ncard_singleton]
+    rw [hnc] at hmem
+    linarith
+  · -- ③ tame_9a ⟹ face 基数 ≥ 3
+    exact fun x hx => (h9a x hx).1
 
 /-- 接口占位：HOL `Jcajydu.JCAJYDU` 一般形（premise 版由 Reduction5 供应 list
 版的前提折入——填证时按 HOL 原形拆回，phase6-spine.md §5）。 -/
@@ -514,12 +546,21 @@ Pack_defs `kepler_conjecture`（体积形）⟹ 密度计数形。 -/
 theorem kcImpTheKc (hkc : keplerConjecture) : TheKeplerConjecture := by
   sorry
 
-/-- 骨架辅助：`Hypermap.Iso` 传递性（置换复合；填证波由 `Hypermap.Iso.trans`
-转换或直证）。 -/
+/-- 骨架辅助：`Hypermap.Iso` 传递性（**已闭合 2026-09-21 填证波**；纯逻辑：
+同构 = 双射 + 三映射交换，复合 `g ∘ f` 即得。对应 HOL `ISO_TRANS`/
+`hypermap.hl:9614 iso` 的传递性）。 -/
 theorem hypermapIsoTrans {α β γ : Type*} [DecidableEq α] [DecidableEq β]
     [DecidableEq γ] {H : Hypermap α} {G : Hypermap β} {K : Hypermap γ}
     (h1 : HypermapIso H G) (h2 : HypermapIso G K) : HypermapIso H K := by
-  sorry
+  obtain ⟨f, hf, hfc⟩ := h1
+  obtain ⟨g, hg, hgc⟩ := h2
+  refine ⟨g ∘ f, hg.comp hf, ?_⟩
+  intro x hx
+  have hfx : f x ∈ (G.darts : Set β) := hf.1 hx
+  obtain ⟨he1, hn1, hfa1⟩ := hfc x hx
+  obtain ⟨he2, hn2, hfa2⟩ := hgc (f x) hfx
+  refine ⟨?_, ?_, ?_⟩ <;>
+    simp only [Function.comp_apply, he2, he1, hn2, hn1, hfa2, hfa1]
 
 /-! ### 2d. LP 接口结构化（方向 D，2026-09-21）
 
