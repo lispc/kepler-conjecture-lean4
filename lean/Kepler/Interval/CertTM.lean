@@ -109,6 +109,44 @@ theorem toReal_two : (⟨2, 0⟩ : Dyadic).toReal = 2 := by
 theorem toReal_eight : (⟨8, 0⟩ : Dyadic).toReal = 8 := by
   rw [toReal_def]; norm_num
 
+/-- Ceiling-chop to exponent `e₀`: no-op when `e₀ ≤ d.e`; otherwise drop the
+low `d.e − e₀` mantissa bits, rounding the mantissa UP (`⌈m/2^k⌉` via floored
+division).  Sound one-sided relaxation for upper-bound quantities (`err`,
+`W`): the value only grows.  Kernel- and VM-cheap: `Int` arithmetic only, no
+bit-length computation. -/
+def chopCeilTo (d : Dyadic) (e₀ : Int) : Dyadic :=
+  if e₀ ≤ d.e then d
+  else ⟨(d.m + 2 ^ (e₀ - d.e).toNat - 1) / 2 ^ (e₀ - d.e).toNat, e₀⟩
+
+/-- **Soundness of `chopCeilTo`**: the chopped value dominates. -/
+theorem toReal_le_chopCeilTo (d : Dyadic) (e₀ : Int) :
+    d.toReal ≤ (d.chopCeilTo e₀).toReal := by
+  unfold chopCeilTo
+  split_ifs with hlt
+  · exact le_rfl
+  · have hki : 0 < e₀ - d.e := by omega
+    set k := (e₀ - d.e).toNat with hkdef
+    have hkZ : (k : ℤ) = e₀ - d.e := Int.toNat_of_nonneg (by omega)
+    have hq : (0 : ℤ) < (2 : ℤ) ^ k := by positivity
+    have hdec := Int.mul_ediv_add_emod (d.m + 2 ^ k - 1) (2 ^ k : ℤ)
+    rw [mul_comm] at hdec
+    have hmod0 := Int.emod_nonneg (d.m + 2 ^ k - 1) (ne_of_gt hq)
+    have hmodlt := Int.emod_lt_of_pos (d.m + 2 ^ k - 1) hq
+    have h1 : d.m ≤ ((d.m + 2 ^ k - 1) / (2 ^ k : ℤ)) * (2 ^ k : ℤ) := by omega
+    have h1r : (d.m : ℝ) ≤ ((((d.m + 2 ^ k - 1) / (2 ^ k : ℤ)) * (2 ^ k : ℤ) : ℤ) : ℝ) :=
+      Int.cast_le.mpr h1
+    have hscale : (2 : ℝ) ^ k * (2 : ℝ) ^ d.e = (2 : ℝ) ^ e₀ := by
+      rw [← zpow_natCast, ← zpow_add₀ (by norm_num : (2 : ℝ) ≠ 0), hkZ,
+        sub_add_cancel]
+    show d.toReal ≤ Dyadic.toReal ⟨(d.m + 2 ^ k - 1) / 2 ^ k, e₀⟩
+    rw [toReal_def, toReal_def]
+    calc (d.m : ℝ) * (2 : ℝ) ^ d.e
+        ≤ ((((d.m + 2 ^ k - 1) / (2 ^ k : ℤ)) * (2 ^ k : ℤ) : ℤ) : ℝ) * (2 : ℝ) ^ d.e :=
+        mul_le_mul_of_nonneg_right h1r (zpow_nonneg (by norm_num) _)
+      _ = (((d.m + 2 ^ k - 1) / (2 ^ k : ℤ) : ℤ) : ℝ) * (2 : ℝ) ^ e₀ := by
+        push_cast
+        rw [mul_assoc, hscale]
+
 /-- `toReal` distributes over a `foldl` of `Dyadic.add`. -/
 theorem toReal_foldl_add {α : Type*} (l : List α) (g : α → Dyadic) (init : Dyadic) :
     (l.foldl (fun a i => a.add (g i)) init).toReal
@@ -158,6 +196,17 @@ def W0 {n : ℕ} (M : TaylorM n) : Dyadic :=
 def W {n : ℕ} (M : TaylorM n) : Dyadic :=
   Dyadic.dmax (M.W0.add M.err) ⟨0, 0⟩
 
+/-- The err-chop scale reference: twice the coarsest envelope exponent, minus
+24 bits of slack (chopping is a sound upward relaxation; without it the
+`W²`/`c³` remainder terms square mantissa sizes along deep chains — the
+BIXPCGW-probe performance wall, `tm2-progress.md` §3). -/
+def errScale {n : ℕ} (M : TaylorM n) : Int :=
+  match n with
+  | 0 => M.err.e
+  | n + 1 =>
+      ((List.finRange (n + 1)).foldl (fun a i => min a (M.w i).e)
+        (M.w ⟨0, Nat.zero_lt_succ _⟩).e) * 2 - 24
+
 /-- Model of `f · g`.  Remainder: with `r_f = f − f_y − L_f`,
 `fg − f_yg_y − Σᵢ(a_fᵢ g_y + f_y a_gᵢ)uᵢ
   = L_f L_g + r_f (g_y + L_g + r_g) + r_g (f_y + L_f)`, bounded by
@@ -166,9 +215,9 @@ def W {n : ℕ} (M : TaylorM n) : Dyadic :=
 def mul {n : ℕ} (Mf Mg : TaylorM n) : TaylorM n :=
   ⟨Mf.y, Mf.w, Mf.fB.mul Mg.fB,
     fun i => ((Mf.dfB i).mul Mg.fB).add (Mf.fB.mul (Mg.dfB i)),
-    (Mf.W0.mul Mg.W0).add
+    ((Mf.W0.mul Mg.W0).add
       ((Mf.err.mul ((Mg.fB.abs.hi.add Mg.W0).add Mg.err)).add
-        (Mg.err.mul (Mf.fB.abs.hi.add Mf.W0)))⟩
+        (Mg.err.mul (Mf.fB.abs.hi.add Mf.W0)))).chopCeilTo Mf.errScale⟩
 
 /-- Model of `√f`, certificate-based.  `none` (safe failure) when the
 certified lower bound `c := fB.lo − W` of `f` over the box is not positive or
@@ -187,7 +236,7 @@ def sqrt {n : ℕ} (M : TaylorM n) (p : SqrtTMP) : Option (TaylorM n) :=
       ⟨(⟨8, 0⟩ : Dyadic).mul ((M.fB.lo.add (-M.W)).mul Jc.lo),
        (⟨8, 0⟩ : Dyadic).mul ((M.fB.lo.add (-M.W)).mul Jc.lo)⟩ p.o2).map fun K =>
     ⟨M.y, M.w, ⟨Jl.lo, Jh.hi⟩, fun i => (M.dfB i).mul J,
-      (M.err.mul J.hi).add ((M.W.mul M.W).mul K.hi)⟩
+      ((M.err.mul J.hi).add ((M.W.mul M.W).mul K.hi)).chopCeilTo M.errScale⟩
   else none
 
 /-- Shared computation of `inv` once a positive lower bound `c` of `|f|` over
@@ -197,7 +246,7 @@ def invCore {n : ℕ} (M : TaylorM n) (c : Dyadic) (p : InvTMP) : Option (Taylor
   (DInterval.recip ⟨c.mul c, M.fB.abs.hi.mul M.fB.abs.hi⟩ p.o1).bind fun Jp =>
   (DInterval.recip ⟨c.mul (c.mul c), c.mul (c.mul c)⟩ p.o2).map fun K =>
   ⟨M.y, M.w, V, fun i => (M.dfB i).mul Jp.neg,
-    (M.err.mul Jp.abs.hi).add ((M.W.mul M.W).mul K.hi)⟩
+    ((M.err.mul Jp.abs.hi).add ((M.W.mul M.W).mul K.hi)).chopCeilTo M.errScale⟩
 
 /-- Model of `1/f`, certificate-light (granularities only).  `c` is a
 certified lower bound of `|f|` over the box: `fB.lo − W` when positive, else
@@ -227,16 +276,18 @@ def trans {n : ℕ} (k : TKind) (M : TaylorM n) (N : ℕ) (out : Int) (p : Trans
       (transOn .sinK ⟨M.fB.lo, M.fB.hi⟩ N out).bind fun V =>
       (transOn .cosK ⟨M.fB.lo, M.fB.hi⟩ N out).map fun J =>
       ⟨M.y, M.w, V, fun i => (M.dfB i).mul J,
-        (M.err.mul J.abs.hi).add
-          (((M.W.mul M.W).mul ⟨1, -1⟩).add ((M.W.mul (M.W.mul M.W)).mul ⟨1, -2⟩))⟩
+        ((M.err.mul J.abs.hi).add
+          (((M.W.mul M.W).mul ⟨1, -1⟩).add
+            ((M.W.mul (M.W.mul M.W)).mul ⟨1, -2⟩))).chopCeilTo M.errScale⟩
   | .cosK => none
   | .arctanK =>
       (transOn .arctanK ⟨M.fB.lo, M.fB.hi⟩ N out).bind fun V =>
       (DInterval.recip ⟨(⟨1, 0⟩ : Dyadic).add (M.fB.abs.lo.mul M.fB.abs.lo),
         (⟨1, 0⟩ : Dyadic).add (M.fB.abs.hi.mul M.fB.abs.hi)⟩ p.o1).map fun J =>
       ⟨M.y, M.w, V, fun i => (M.dfB i).mul J,
-        (M.err.mul J.abs.hi).add
-          ((M.W.mul M.W).mul ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W)))⟩
+        ((M.err.mul J.abs.hi).add
+          ((M.W.mul M.W).mul ((⟨2, 0⟩ : Dyadic).mul
+            (M.fB.abs.hi.add M.W)))).chopCeilTo M.errScale⟩
   | .lnK =>
       if (M.fB.lo.add (-M.W)).isPos = true then
         (transOn .lnK ⟨M.fB.lo, M.fB.hi⟩ N out).bind fun V =>
@@ -244,7 +295,7 @@ def trans {n : ℕ} (k : TKind) (M : TaylorM n) (N : ℕ) (out : Int) (p : Trans
         (DInterval.recip ⟨(M.fB.lo.add (-M.W)).mul (M.fB.lo.add (-M.W)),
           (M.fB.lo.add (-M.W)).mul (M.fB.lo.add (-M.W))⟩ p.o2).map fun K =>
         ⟨M.y, M.w, V, fun i => (M.dfB i).mul J,
-          (M.err.mul J.abs.hi).add ((M.W.mul M.W).mul K.hi)⟩
+          ((M.err.mul J.abs.hi).add ((M.W.mul M.W).mul K.hi)).chopCeilTo M.errScale⟩
       else none
 
 /-- Taylor lower bound over the box: `fB.lo + Σᵢ (dfBᵢ · [loᵢ−yᵢ, hiᵢ−yᵢ]).lo
@@ -596,15 +647,23 @@ theorem valid_mul {n : ℕ} {Mf Mg : TaylorM n} {box : Fin n → DInterval}
           + f (fun i => (Mf.y i).toReal) * ag i) * (ρ i - (Mf.y i).toReal)|
         ≤ (Mf.mul Mg).err.toReal
     rw [hsum, hdecomp]
-    have herr : (Mf.mul Mg).err.toReal
+    have herr : ((Mf.W0.mul Mg.W0).add
+          ((Mf.err.mul ((Mg.fB.abs.hi.add Mg.W0).add Mg.err)).add
+            (Mg.err.mul (Mf.fB.abs.hi.add Mf.W0)))).toReal
         = Mf.W0.toReal * Mg.W0.toReal
           + (Mf.err.toReal * (Mg.fB.abs.hi.toReal + Mg.W0.toReal + Mg.err.toReal)
             + Mg.err.toReal * (Mf.fB.abs.hi.toReal + Mf.W0.toReal)) := by
-      show (Dyadic.add (Mf.W0.mul Mg.W0)
-          ((Mf.err.mul ((Mg.fB.abs.hi.add Mg.W0).add Mg.err)).add
-            (Mg.err.mul (Mf.fB.abs.hi.add Mf.W0)))).toReal = _
       rw [Dyadic.toReal_add, Dyadic.toReal_mul, Dyadic.toReal_add, Dyadic.toReal_mul,
         Dyadic.toReal_mul, Dyadic.toReal_add, Dyadic.toReal_add, Dyadic.toReal_add]
+    have hchop : ((Mf.W0.mul Mg.W0).add
+          ((Mf.err.mul ((Mg.fB.abs.hi.add Mg.W0).add Mg.err)).add
+            (Mg.err.mul (Mf.fB.abs.hi.add Mf.W0)))).toReal
+        ≤ (Mf.mul Mg).err.toReal := by
+      show _ ≤ (((Mf.W0.mul Mg.W0).add
+          ((Mf.err.mul ((Mg.fB.abs.hi.add Mg.W0).add Mg.err)).add
+            (Mg.err.mul (Mf.fB.abs.hi.add Mf.W0)))).chopCeilTo Mf.errScale).toReal
+      exact Dyadic.toReal_le_chopCeilTo _ _
+    refine le_trans ?_ hchop
     rw [herr]
     have h1 : |(∑ i, af i * (ρ i - (Mf.y i).toReal))
         * (∑ i, ag i * (ρ i - (Mf.y i).toReal))|
@@ -724,7 +783,8 @@ theorem valid_sqrt {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
     rw [Option.map_eq_some_iff] at h
     obtain ⟨K, hK, h⟩ := h
     obtain rfl : M' = ⟨M.y, M.w, ⟨Jl.lo, Jh.hi⟩, fun i => (M.dfB i).mul J,
-      (M.err.mul J.hi).add ((M.W.mul M.W).mul K.hi)⟩ := h.symm
+      ((M.err.mul J.hi).add ((M.W.mul M.W).mul K.hi)).chopCeilTo M.errScale⟩ :=
+        h.symm
     -- basic real-valued facts
     have hcR : (M.fB.lo.add (-M.W)).toReal = M.fB.lo.toReal - M.W.toReal := by
       rw [Dyadic.toReal_add, Dyadic.toReal_neg, sub_eq_add_neg]
@@ -804,12 +864,18 @@ theorem valid_sqrt {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
       have hfρ_pos : 0 < f ρ := lt_of_lt_of_le hc0 hfρ_ge
       refine ⟨fun i => a i * (1 / (2 * Real.sqrt (f fun i => (M.y i).toReal))),
         fun i => DInterval.mem_mul (ha i) hJmem, ?_⟩
-      have herr' : (⟨M.y, M.w, ⟨Jl.lo, Jh.hi⟩, fun i => (M.dfB i).mul J,
-          (M.err.mul J.hi).add ((M.W.mul M.W).mul K.hi)⟩ : TaylorM n).err.toReal
+      have herr' : ((M.err.mul J.hi).add ((M.W.mul M.W).mul K.hi)).toReal
           = M.err.toReal * J.hi.toReal + M.W.toReal ^ 2 * K.hi.toReal := by
-        show (Dyadic.add (M.err.mul J.hi) ((M.W.mul M.W).mul K.hi)).toReal = _
         rw [Dyadic.toReal_add, Dyadic.toReal_mul, Dyadic.toReal_mul, Dyadic.toReal_mul,
           pow_two]
+      have hchop : ((M.err.mul J.hi).add ((M.W.mul M.W).mul K.hi)).toReal
+          ≤ (⟨M.y, M.w, ⟨Jl.lo, Jh.hi⟩, fun i => (M.dfB i).mul J,
+            ((M.err.mul J.hi).add ((M.W.mul M.W).mul K.hi)).chopCeilTo M.errScale⟩ :
+              TaylorM n).err.toReal := by
+        show _ ≤ (((M.err.mul J.hi).add ((M.W.mul M.W).mul K.hi)).chopCeilTo
+          M.errScale).toReal
+        exact Dyadic.toReal_le_chopCeilTo _ _
+      refine le_trans ?_ hchop
       rw [herr']
       have hsum : (∑ i, a i * (1 / (2 * Real.sqrt (f fun i => (M.y i).toReal)))
             * (ρ i - (M.y i).toReal))
@@ -899,7 +965,8 @@ theorem valid_invCore {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
   rw [Option.map_eq_some_iff] at h
   obtain ⟨K, hK, h⟩ := h
   obtain rfl : M' = ⟨M.y, M.w, V, fun i => (M.dfB i).mul Jp.neg,
-    (M.err.mul Jp.abs.hi).add ((M.W.mul M.W).mul K.hi)⟩ := h.symm
+    ((M.err.mul Jp.abs.hi).add ((M.W.mul M.W).mul K.hi)).chopCeilTo M.errScale⟩ :=
+      h.symm
   have hcfy : c.toReal ≤ |f fun i => (M.y i).toReal| := hcle _ (fun i => hmem i)
   have hfyne : f (fun i => (M.y i).toReal) ≠ 0 :=
     abs_pos.mp (lt_of_lt_of_le hc0 hcfy)
@@ -938,12 +1005,18 @@ theorem valid_invCore {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
       * (f fun i => (M.y i).toReal)))), fun i => ?_, ?_⟩
   · show ((M.dfB i).mul Jp.neg).mem _
     exact DInterval.mem_mul (ha i) (DInterval.mem_neg hJpmem)
-  · have herr' : (⟨M.y, M.w, V, fun i => (M.dfB i).mul Jp.neg,
-        (M.err.mul Jp.abs.hi).add ((M.W.mul M.W).mul K.hi)⟩ : TaylorM n).err.toReal
+  · have herr' : ((M.err.mul Jp.abs.hi).add ((M.W.mul M.W).mul K.hi)).toReal
         = M.err.toReal * Jp.abs.hi.toReal + M.W.toReal ^ 2 * K.hi.toReal := by
-      show (Dyadic.add (M.err.mul Jp.abs.hi) ((M.W.mul M.W).mul K.hi)).toReal = _
       rw [Dyadic.toReal_add, Dyadic.toReal_mul, Dyadic.toReal_mul, Dyadic.toReal_mul,
         pow_two]
+    have hchop : ((M.err.mul Jp.abs.hi).add ((M.W.mul M.W).mul K.hi)).toReal
+        ≤ (⟨M.y, M.w, V, fun i => (M.dfB i).mul Jp.neg,
+          ((M.err.mul Jp.abs.hi).add ((M.W.mul M.W).mul K.hi)).chopCeilTo M.errScale⟩ :
+            TaylorM n).err.toReal := by
+      show _ ≤ (((M.err.mul Jp.abs.hi).add ((M.W.mul M.W).mul K.hi)).chopCeilTo
+        M.errScale).toReal
+      exact Dyadic.toReal_le_chopCeilTo _ _
+    refine le_trans ?_ hchop
     rw [herr']
     have hsum : (∑ i, a i * (-(1 / ((f fun i => (M.y i).toReal)
             * (f fun i => (M.y i).toReal)))) * (ρ i - (M.y i).toReal))
@@ -1251,8 +1324,9 @@ theorem valid_trans_sin {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
   rw [Option.map_eq_some_iff] at h
   obtain ⟨J, hJ, h⟩ := h
   obtain rfl : M' = ⟨M.y, M.w, V, fun i => (M.dfB i).mul J,
-    (M.err.mul J.abs.hi).add
-      (((M.W.mul M.W).mul ⟨1, -1⟩).add ((M.W.mul (M.W.mul M.W)).mul ⟨1, -2⟩))⟩ := h.symm
+    ((M.err.mul J.abs.hi).add
+      (((M.W.mul M.W).mul ⟨1, -1⟩).add
+        ((M.W.mul (M.W.mul M.W)).mul ⟨1, -2⟩))).chopCeilTo M.errScale⟩ := h.symm
   have hJmem : J.mem (Real.cos (f fun i => (M.y i).toReal)) := IExpr.transOn_sound .cosK hfB hJ
   refine ⟨⟨hmem, hw, IExpr.transOn_sound .sinK hfB hVv, ?_⟩, rfl, rfl⟩
   intro ρ hρ
@@ -1261,17 +1335,28 @@ theorem valid_trans_sin {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
   have hW0 := TaylorM.W_nonneg M
   refine ⟨fun i => a i * Real.cos (f fun i => (M.y i).toReal),
     fun i => DInterval.mem_mul (ha i) hJmem, ?_⟩
-  have herr' : (⟨M.y, M.w, V, fun i => (M.dfB i).mul J,
-      (M.err.mul J.abs.hi).add
-        (((M.W.mul M.W).mul ⟨1, -1⟩).add
-          ((M.W.mul (M.W.mul M.W)).mul ⟨1, -2⟩))⟩ : TaylorM n).err.toReal
+  have herr' : ((M.err.mul J.abs.hi).add
+      (((M.W.mul M.W).mul ⟨1, -1⟩).add
+        ((M.W.mul (M.W.mul M.W)).mul ⟨1, -2⟩))).toReal
       = M.err.toReal * J.abs.hi.toReal
         + (M.W.toReal ^ 2 / 2 + M.W.toReal ^ 3 / 4) := by
-    show (Dyadic.add _ _).toReal = _
     rw [Dyadic.toReal_add, Dyadic.toReal_mul, Dyadic.toReal_add, Dyadic.toReal_mul,
       Dyadic.toReal_mul, Dyadic.toReal_mul, Dyadic.toReal_mul, Dyadic.toReal_mul]
     norm_num [Dyadic.toReal_def]
     ring
+  have hchop : ((M.err.mul J.abs.hi).add
+      (((M.W.mul M.W).mul ⟨1, -1⟩).add
+        ((M.W.mul (M.W.mul M.W)).mul ⟨1, -2⟩))).toReal
+      ≤ (⟨M.y, M.w, V, fun i => (M.dfB i).mul J,
+        ((M.err.mul J.abs.hi).add
+          (((M.W.mul M.W).mul ⟨1, -1⟩).add
+            ((M.W.mul (M.W.mul M.W)).mul ⟨1, -2⟩))).chopCeilTo M.errScale⟩ :
+              TaylorM n).err.toReal := by
+    show _ ≤ (((M.err.mul J.abs.hi).add
+        (((M.W.mul M.W).mul ⟨1, -1⟩).add
+          ((M.W.mul (M.W.mul M.W)).mul ⟨1, -2⟩))).chopCeilTo M.errScale).toReal
+    exact Dyadic.toReal_le_chopCeilTo _ _
+  refine le_trans ?_ hchop
   rw [herr']
   have hsum : (∑ i, a i * Real.cos (f fun i => (M.y i).toReal) * (ρ i - (M.y i).toReal))
       = Real.cos (f fun i => (M.y i).toReal) * ∑ i, a i * (ρ i - (M.y i).toReal) := by
@@ -1325,7 +1410,8 @@ theorem valid_trans_ln {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
     rw [Option.map_eq_some_iff] at h
     obtain ⟨K, hK, h⟩ := h
     obtain rfl : M' = ⟨M.y, M.w, V, fun i => (M.dfB i).mul J,
-      (M.err.mul J.abs.hi).add ((M.W.mul M.W).mul K.hi)⟩ := h.symm
+      ((M.err.mul J.abs.hi).add ((M.W.mul M.W).mul K.hi)).chopCeilTo M.errScale⟩ :=
+        h.symm
     set cR := (M.fB.lo.add (-M.W)).toReal with hcRdef
     have hc0 : 0 < cR := (Dyadic.isPos_iff _).mp hc
     have hcR : cR = M.fB.lo.toReal - M.W.toReal := by
@@ -1352,12 +1438,18 @@ theorem valid_trans_ln {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
       linarith [hfB.1]
     refine ⟨fun i => a i * (1 / (f fun i => (M.y i).toReal)),
       fun i => DInterval.mem_mul (ha i) hJmem, ?_⟩
-    have herr' : (⟨M.y, M.w, V, fun i => (M.dfB i).mul J,
-        (M.err.mul J.abs.hi).add ((M.W.mul M.W).mul K.hi)⟩ : TaylorM n).err.toReal
+    have herr' : ((M.err.mul J.abs.hi).add ((M.W.mul M.W).mul K.hi)).toReal
         = M.err.toReal * J.abs.hi.toReal + M.W.toReal ^ 2 * K.hi.toReal := by
-      show (Dyadic.add _ _).toReal = _
       rw [Dyadic.toReal_add, Dyadic.toReal_mul, Dyadic.toReal_mul, Dyadic.toReal_mul,
         pow_two]
+    have hchop : ((M.err.mul J.abs.hi).add ((M.W.mul M.W).mul K.hi)).toReal
+        ≤ (⟨M.y, M.w, V, fun i => (M.dfB i).mul J,
+          ((M.err.mul J.abs.hi).add ((M.W.mul M.W).mul K.hi)).chopCeilTo M.errScale⟩ :
+            TaylorM n).err.toReal := by
+      show _ ≤ (((M.err.mul J.abs.hi).add ((M.W.mul M.W).mul K.hi)).chopCeilTo
+        M.errScale).toReal
+      exact Dyadic.toReal_le_chopCeilTo _ _
+    refine le_trans ?_ hchop
     rw [herr']
     have hsum : (∑ i, a i * (1 / (f fun i => (M.y i).toReal)) * (ρ i - (M.y i).toReal))
         = (1 / (f fun i => (M.y i).toReal)) * ∑ i, a i * (ρ i - (M.y i).toReal) := by
@@ -1426,8 +1518,9 @@ theorem valid_trans_atan {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
   rw [Option.map_eq_some_iff] at h
   obtain ⟨J, hJ, h⟩ := h
   obtain rfl : M' = ⟨M.y, M.w, V, fun i => (M.dfB i).mul J,
-    (M.err.mul J.abs.hi).add
-      ((M.W.mul M.W).mul ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W)))⟩ := h.symm
+    ((M.err.mul J.abs.hi).add
+      ((M.W.mul M.W).mul ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W)))).chopCeilTo
+        M.errScale⟩ := h.symm
   set B := (M.fB.abs.hi.add M.W).toReal with hBdef
   have hBnn : 0 ≤ B := by
     rw [hBdef, Dyadic.toReal_add]
@@ -1480,14 +1573,22 @@ theorem valid_trans_atan {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
     linarith [h1]
   refine ⟨fun i => a i * (1 / (1 + (f fun i => (M.y i).toReal) ^ 2)),
     fun i => DInterval.mem_mul (ha i) hJmem, ?_⟩
-  have herr' : (⟨M.y, M.w, V, fun i => (M.dfB i).mul J,
-      (M.err.mul J.abs.hi).add
-        ((M.W.mul M.W).mul ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W)))⟩ :
-        TaylorM n).err.toReal
+  have herr' : ((M.err.mul J.abs.hi).add
+      ((M.W.mul M.W).mul ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W)))).toReal
       = M.err.toReal * J.abs.hi.toReal + M.W.toReal ^ 2 * (2 * B) := by
-    show (Dyadic.add _ _).toReal = _
     rw [hBdef, Dyadic.toReal_add, Dyadic.toReal_mul, Dyadic.toReal_mul,
       Dyadic.toReal_mul, Dyadic.toReal_mul, Dyadic.toReal_two, pow_two]
+  have hchop : ((M.err.mul J.abs.hi).add
+      ((M.W.mul M.W).mul ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W)))).toReal
+      ≤ (⟨M.y, M.w, V, fun i => (M.dfB i).mul J,
+        ((M.err.mul J.abs.hi).add
+          ((M.W.mul M.W).mul ((⟨2, 0⟩ : Dyadic).mul
+            (M.fB.abs.hi.add M.W)))).chopCeilTo M.errScale⟩ : TaylorM n).err.toReal := by
+    show _ ≤ (((M.err.mul J.abs.hi).add
+        ((M.W.mul M.W).mul ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W)))).chopCeilTo
+        M.errScale).toReal
+    exact Dyadic.toReal_le_chopCeilTo _ _
+  refine le_trans ?_ hchop
   rw [herr']
   have hsum : (∑ i, a i * (1 / (1 + (f fun i => (M.y i).toReal) ^ 2))
         * (ρ i - (M.y i).toReal))
