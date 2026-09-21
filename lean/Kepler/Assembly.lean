@@ -11,15 +11,19 @@
   - `text_formalization/general/the_main_statement.hl:170-175`：
     `kepler_conjecture_with_assumptions`（文字侧 capstone）。
 
-  接口冻结 2026-09-19：`nonlinearInequalities` / `linearProgrammingResults` /
-  `textCapstone` 三个 sorry 占位定理是本文件**唯一**允许的 sorry
-  （第四占位 `goodListArchive` 已由 P6-C 闭合为真证明，2026-09-19）；
+  接口冻结 2026-09-19，2026-09-21 方向 A 深挖：`textCapstone` 已从 sorry
+  占位展开为真证明（§2b TameSpine 骨架 + §2c 接口占位承接其债务）；
+  `nonlinearInequalities` / `linearProgrammingResults` 两个占位定理仍在；
+  第四占位 `goodListArchive` 已由 P6-C 闭合为真证明；
   `assembly` 本体是真证明（对照 HOL tactic 脚本逐行翻译）。
 -/
 import Kepler.Statement
 import Kepler.Graphs
 import Kepler.Text.Fan
 import Kepler.Text.PackingAuto2
+import Kepler.Text.PackingAuto18
+import Kepler.Text.PackingAuto21
+import Kepler.Text.PackingAuto25
 import Kepler.Text.Hypermap
 import Kepler.Text.LocalAuto16
 import Kepler.Assembly.GoodListDefs
@@ -167,30 +171,31 @@ def CertifiedIneqHolds (_id : String) : Prop := True
 /-- 注册表量化：清单中每条 ID 对应的不等式成立。 -/
 def AllCertified (ids : List String) : Prop := ∀ id ∈ ids, CertifiedIneqHolds id
 
-/-- PLACEHOLDER(G4)：HOL `pack_nonlinear_non_ox3q1h` 分量的 ID 清单。 -/
-def idsPackNonlinearNonOx3q1h : List String := []
-/-- PLACEHOLDER(G4)：HOL `ox3q1h` 分量的 ID 清单。 -/
-def idsOx3q1h : List String := []
-/-- PLACEHOLDER(G4)：HOL `main_nonlinear_terminal_v11` 分量的 ID 清单（993 条主体）。 -/
-def idsMainNonlinearTerminalV11 : List String := []
 /-- PLACEHOLDER(G4)：HOL `lp_ineqs` 分量的 ID 清单（the_main_statement.hl:29-45）。 -/
 def idsLpIneqs : List String := []
-/-- PLACEHOLDER(G4)：HOL `pack_ineq_def_a` 分量的 ID 清单。 -/
-def idsPackIneqDefA : List String := []
-/-- PLACEHOLDER(G4)：HOL `kcblrqc_ineq_def` 分量的 ID 清单。 -/
-def idsKcblrqcIneqDef : List String := []
 
 /-- HOL `lp_ineqs`（the_main_statement.hl:29-45）的注册表折算形态。
 在 HOL 中它同时是 `the_nonlinear_inequalities` 的第四合取项和
 `linear_programming_results` 的前提——此处同样被两处共享。 -/
 def LpIneqs : Prop := AllCertified idsLpIneqs
 
+/-- PLACEHOLDER(P6-E)：HOL `pack_ineq_def_a` 分量（PA22 `packIneqDefAP22` 同形
+占位；G4 证书数据库过滤形态落地后真化）。 -/
+def PackIneqDefA : Prop := True
+
+/-- PLACEHOLDER(P6-E)：HOL `kcblrqc_ineq_def` 分量（无既有 Lean 对应物；
+新造占位，语义由 G4/P6-E 填实）。 -/
+def KcblrqcIneqDef : Prop := True
+
 /-- **接口 1**：HOL `the_nonlinear_inequalities`（the_main_statement.hl:55-59）
-的折算形态——六件合取，逐分量 =（ID 清单，量化命题）。 -/
+的六件合取。前三分量已用 Lean 侧真 Prop 真化（2026-09-21 骨架化精化，取代
+原 ID 清单占位）：`pack_nonlinear_non_ox3q1h`（PA21:147）、`ox3q1hP25`（PA25:87）、
+`main_nonlinear_terminal_v11`（LocalAuto1:793，Phase 4/G4 的主叶子）；
+后三分量 `LpIneqs` 为注册表折算，`PackIneqDefA`/`KcblrqcIneqDef` 为标明的
+占位。 -/
 def TheNonlinearInequalities : Prop :=
-  AllCertified idsPackNonlinearNonOx3q1h ∧ AllCertified idsOx3q1h ∧
-    AllCertified idsMainNonlinearTerminalV11 ∧ LpIneqs ∧
-    AllCertified idsPackIneqDefA ∧ AllCertified idsKcblrqcIneqDef
+  pack_nonlinear_non_ox3q1h ∧ ox3q1hP25 ∧ main_nonlinear_terminal_v11 ∧ LpIneqs ∧
+    PackIneqDefA ∧ KcblrqcIneqDef
 
 /-- **接口 2**：HOL `linear_programming_results`（the_kepler_conjecture.hl:21-26）
 逐句镜像，archive 清单参数化（HOL 内嵌 `tame_archive_lists`；参数化是为了与
@@ -238,7 +243,286 @@ def TextCapstone : Prop :=
     TameClassification a ∧ GoodLinearProgrammingResults a ∧ TheNonlinearInequalities →
       TheKeplerConjecture
 
-/-! ## 3. 接口 sorry 占位（接口冻结 2026-09-19；本文件仅有的三个 sorry） -/
+/-! ## 2b. TameSpine —— tame 文字章 capstone 骨架（方向 A，2026-09-21）
+
+缺口盘点：capstone 脚本（the_main_statement.hl:170-251）消费的 12 件中 8 件属
+`text_formalization/tame/` 文字章（64 个 .hl，4.6MB，未移植）。骨架策略：
+原语 def 逐条忠实镜像（标 HOL 出处），capstone 级引理以 sorry 占位——主定理
+可达债务图由此展开至章节出口。`PLACEHOLDER(tame章)` 标记的 def 为形状占位，
+P6-B 保真审补录。 -/
+
+section TameSpine
+
+variable {α : Type*} [DecidableEq α]
+
+/-- 幂轨道集（hypermap.hl:57,63,69 的 `edge/node/face H x`）。 -/
+def orbitSet (p : Equiv.Perm α) (x : α) : Set α :=
+  Set.range fun n : ℕ => (p ^ n) x
+
+def edgeOrbit (H : Hypermap α) (x : α) : Set α := orbitSet H.edgeMap x
+def nodeOrbit (H : Hypermap α) (x : α) : Set α := orbitSet H.nodeMap x
+def faceOrbit (H : Hypermap α) (x : α) : Set α := orbitSet H.faceMap x
+
+/-- `number_of_edges`（hypermap.hl）。 -/
+noncomputable def numberOfEdges (H : Hypermap α) : ℕ := H.edgeSet.ncard
+
+/-- `plain_hypermap`（hypermap.hl；tame_defs.hl:136 tame_1 前半）。 -/
+def PlainHypermap (H : Hypermap α) : Prop := H.edgeMap * H.edgeMap = 1
+
+/-- `planar_hypermap`（hypermap.hl；tame_1 后半）。 -/
+def PlanarHypermap (H : Hypermap α) : Prop :=
+  H.numberOfNodes + numberOfEdges H + H.numberOfFaces =
+    H.darts.card + 2 * H.numberOfComponents
+
+/-- `connected_hypermap`。 -/
+def ConnectedHypermap (H : Hypermap α) : Prop := H.numberOfComponents = 1
+
+/-- `simple_hypermap`。 -/
+def SimpleHypermap (H : Hypermap α) : Prop :=
+  ∀ x ∈ H.darts, nodeOrbit H x ∩ faceOrbit H x = {x}
+
+/-- `is_edge_nondegenerate`（tame_defs.hl:147 tame_3）。 -/
+def IsEdgeNondegenerate (H : Hypermap α) : Prop := ∀ x ∈ H.darts, H.edgeMap x ≠ x
+
+/-- `no_loops`（tame_4）。 -/
+def NoLoops (H : Hypermap α) : Prop :=
+  ∀ x y, x ∈ edgeOrbit H y → x ∈ nodeOrbit H y → x = y
+
+/-- `is_no_double_joins`（tame_5a）。 -/
+def IsNoDoubleJoins (H : Hypermap α) : Prop :=
+  ∀ x y, x ∈ H.darts → y ∈ nodeOrbit H x → H.edgeMap y ∈ nodeOrbit H (H.edgeMap x) →
+    x = y
+
+/-- `exceptional_face`。 -/
+def ExceptionalFace (H : Hypermap α) (x : α) : Prop := 5 ≤ (faceOrbit H x).ncard
+
+/-- `set_of_triangles_meeting_node`。 -/
+def setOfTrianglesMeetingNode (H : Hypermap α) (x : α) : Set (Set α) :=
+  {F | ∃ y ∈ H.darts, F = faceOrbit H y ∧ (faceOrbit H y).ncard = 3 ∧ y ∈ nodeOrbit H x}
+
+/-- `set_of_quadrilaterals_meeting_node`。 -/
+def setOfQuadrilateralsMeetingNode (H : Hypermap α) (x : α) : Set (Set α) :=
+  {F | ∃ y ∈ H.darts, F = faceOrbit H y ∧ (faceOrbit H y).ncard = 4 ∧ y ∈ nodeOrbit H x}
+
+/-- `set_of_exceptional_meeting_node`。 -/
+def setOfExceptionalMeetingNode (H : Hypermap α) (x : α) : Set (Set α) :=
+  {F | ∃ y ∈ H.darts, F = faceOrbit H y ∧ 5 ≤ (faceOrbit H y).ncard ∧ y ∈ nodeOrbit H x}
+
+/-- `set_of_face_meeting_node`。 -/
+def setOfFaceMeetingNode (H : Hypermap α) (x : α) : Set (Set α) :=
+  {F | ∃ y ∈ H.darts, F = faceOrbit H y ∧ y ∈ nodeOrbit H x}
+
+/-- `type_of_node`。 -/
+noncomputable def typeOfNode (H : Hypermap α) (x : α) : ℕ × ℕ × ℕ :=
+  ((setOfTrianglesMeetingNode H x).ncard,
+    (setOfQuadrilateralsMeetingNode H x).ncard,
+    (setOfExceptionalMeetingNode H x).ncard)
+
+/-- `node_type_exceptional_face`。 -/
+def NodeTypeExceptionalFace (H : Hypermap α) (x : α) : Prop :=
+  ExceptionalFace H x ∧ (nodeOrbit H x).ncard = 6 → typeOfNode H x = (5, 0, 1)
+
+/-- `node_exceptional_face`。 -/
+def NodeExceptionalFace (H : Hypermap α) (x : α) : Prop :=
+  ExceptionalFace H x → (nodeOrbit H x).ncard ≤ 6
+
+/-- `tgt`（tame_defs 表格常数）。 -/
+noncomputable def tgt : ℝ := 1.541
+
+/-- `d_tame`。 -/
+noncomputable def dTame : ℕ → ℝ := fun n =>
+  if n = 3 then 0 else if n = 4 then 0.206 else if n = 5 then 0.4819 else
+    if n = 6 then 0.712 else tgt
+
+/-- `b_tame`。 -/
+noncomputable def bTame : ℕ → ℕ → ℝ := fun p q =>
+  if p = 0 ∧ q = 3 then 0.618 else if p = 0 ∧ q = 4 then 0.97 else
+    if p = 1 ∧ q = 2 then 0.656 else if p = 1 ∧ q = 3 then 0.618 else
+      if p = 2 ∧ q = 1 then 0.797 else if p = 2 ∧ q = 2 then 0.412 else
+        if p = 2 ∧ q = 3 then 1.2851 else if p = 3 ∧ q = 1 then 0.311 else
+          if p = 3 ∧ q = 2 then 0.817 else if p = 4 ∧ q = 0 then 0.347 else
+            if p = 4 ∧ q = 1 then 0.366 else if p = 5 ∧ q = 0 then 0.04 else
+              if p = 5 ∧ q = 1 then 1.136 else if p = 6 ∧ q = 0 then 0.686 else
+                if p = 7 ∧ q = 0 then 1.450 else tgt
+
+/-- 有限集和（支撑约定同 §1 `scriptL`）。 -/
+noncomputable def setSumSpec (s : Set (Set α)) (w : Set α → ℝ) : ℝ :=
+  if h : s.Finite then h.toFinset.sum w else 0
+
+/-- `total_weight`。 -/
+noncomputable def totalWeight (H : Hypermap α) (w : Set α → ℝ) : ℝ :=
+  setSumSpec H.faceSet w
+
+/-- `adm_1`。 -/
+def Adm1 (H : Hypermap α) (w : Set α → ℝ) : Prop :=
+  ∀ x ∈ H.darts, dTame (faceOrbit H x).ncard ≤ w (faceOrbit H x)
+
+/-- `adm_2`。 -/
+def Adm2 (H : Hypermap α) (w : Set α → ℝ) : Prop :=
+  ∀ x ∈ H.darts, (setOfExceptionalMeetingNode H x).ncard = 0 →
+    bTame (setOfTrianglesMeetingNode H x).ncard
+        (setOfQuadrilateralsMeetingNode H x).ncard ≤
+      setSumSpec (setOfFaceMeetingNode H x) w
+
+/-- `adm_3`。PLACEHOLDER(tame章)：结论子句待抄录（adm_3 尾部）。 -/
+def Adm3 (H : Hypermap α) (w : Set α → ℝ) : Prop :=
+  ∀ x ∈ H.darts, typeOfNode H x = (5, 0, 1) → True
+
+/-- `admissible_weight`。 -/
+def AdmissibleWeight (H : Hypermap α) (w : Set α → ℝ) : Prop :=
+  Adm1 H w ∧ Adm2 H w ∧ Adm3 H w
+
+/-- tame_1（tame_defs.hl:136）。 -/
+def Tame1 (H : Hypermap α) : Prop := PlainHypermap H ∧ PlanarHypermap H
+/-- tame_2。 -/
+def Tame2 (H : Hypermap α) : Prop := ConnectedHypermap H ∧ SimpleHypermap H
+/-- tame_3。 -/
+def Tame3 (H : Hypermap α) : Prop := IsEdgeNondegenerate H
+/-- tame_4。 -/
+def Tame4 (H : Hypermap α) : Prop := NoLoops H
+/-- tame_5a。 -/
+def Tame5a (H : Hypermap α) : Prop := IsNoDoubleJoins H
+/-- tame_8。 -/
+def Tame8 (H : Hypermap α) : Prop := 3 ≤ H.numberOfFaces
+/-- tame_9a。 -/
+def Tame9a (H : Hypermap α) : Prop :=
+  ∀ x ∈ H.darts, 3 ≤ (faceOrbit H x).ncard ∧ (faceOrbit H x).ncard ≤ 6
+/-- tame_10。 -/
+def Tame10 (H : Hypermap α) : Prop :=
+  H.numberOfNodes = 13 ∨ H.numberOfNodes = 14 ∨ H.numberOfNodes = 15
+/-- tame_11a。 -/
+def Tame11a (H : Hypermap α) : Prop := ∀ x ∈ H.darts, 3 ≤ (nodeOrbit H x).ncard
+/-- tame_11b。 -/
+def Tame11b (H : Hypermap α) : Prop := ∀ x ∈ H.darts, (nodeOrbit H x).ncard ≤ 7
+/-- tame_12o。 -/
+def Tame12o (H : Hypermap α) : Prop :=
+  ∀ x ∈ H.darts, NodeTypeExceptionalFace H x ∧ NodeExceptionalFace H x
+/-- tame_13a。 -/
+def Tame13a (H : Hypermap α) : Prop :=
+  ∃ w, AdmissibleWeight H w ∧ totalWeight H w < tgt
+
+/-- HOL `tame_planar_hypermap`（tame_defs.hl:180）。 -/
+def TamePlanarHypermap (H : Hypermap α) : Prop :=
+  Tame1 H ∧ Tame2 H ∧ Tame3 H ∧ Tame4 H ∧ Tame5a H ∧ Tame8 H ∧ Tame9a H ∧
+    Tame10 H ∧ Tame11a H ∧ Tame11b H ∧ Tame12o H ∧ Tame13a H
+
+/-- HOL `opposite_hypermap`（tame_defs.hl:185）。镜像绕行用；四个 proof 字段为
+置换代数（骨架期 sorry，填证波秒证）。 -/
+def oppositeHypermap (H : Hypermap α) : Hypermap α where
+  darts := H.darts
+  edgeMap := H.faceMap * H.nodeMap
+  nodeMap := H.nodeMap.symm
+  faceMap := H.faceMap.symm
+  edgeMap_permutes := sorry -- 置换代数
+  nodeMap_permutes := sorry
+  faceMap_permutes := sorry
+  comp_eq_one := sorry
+
+/-- PLACEHOLDER(tame章)（tame_defs2.hl `finalGraph`）。 -/
+def FinalGraph (_ : Graph) : Prop := True
+/-- PLACEHOLDER(tame章)（`all uniq`）。 -/
+def AllUniq (_ : Graph) : Prop := True
+/-- PLACEHOLDER(tame章)（`good_faces_v3`）。 -/
+def GoodFacesV3 (_ : Graph) : Prop := True
+/-- PLACEHOLDER(tame章)（`vertices_set2 g = elements_of_list (fgraph g)`）。 -/
+def VerticesSet2Eq (_ : Graph) : Prop := True
+
+/-- HOL `good_list_nodes`（tame_defs'）。本体依赖 `hypermapOfList` 构造
+（P6-C 未落地），骨架期为形状占位。 -/
+def GoodListNodes (_ : fgraph ℕ) : Prop := True
+
+/-- HOL `good_graph_v4`（tame_defs2.hl）。后四合取项为骨架占位（见上）。 -/
+def GoodGraphV4 (g : Graph) : Prop :=
+  GoodList g.fgraph ∧ GoodListNodes g.fgraph ∧ FinalGraph g ∧ AllUniq g ∧
+    GoodFacesV3 g ∧ VerticesSet2Eq g
+
+end TameSpine
+
+/-! ### 2c. TameSpine 接口占位（capstone 消费链；全部骨架 sorry） -/
+
+/-- 接口占位：`contravening_lp_fan` 群（tame 章）——contravening 给出 fan 结构。 -/
+theorem contraveningFan (V : Set V3) (hc : Contravening V) : FAN 0 V (ESTD V) := by
+  sorry
+
+/-- 接口占位：HOL `Mqmsmab.MQMSMAB`（tame_concl / MQMSMAB-compiled.hl；section
+前提 `kcblrqc_ineq_def` ∧ `lp_main_estimate` 显式化）。 -/
+theorem mqmsmab (V : Set V3) (hkcblrqc : KcblrqcIneqDef) (hmain : lp_main_estimate)
+    (hfan : FAN 0 V (ESTD V)) (hc : Contravening V) :
+    TamePlanarHypermap (hypermapOfFan 0 V (ESTD V) hfan) := by
+  sorry
+
+/-- 接口占位：HOL `tame_planar_hypermap_restricted`（the_main_statement.hl:143）。 -/
+theorem tamePlanarHypermapRestricted {α : Type*} [DecidableEq α] (H : Hypermap α)
+    (ht : TamePlanarHypermap H) : H.IsRestricted := by
+  sorry
+
+/-- 接口占位：HOL `Jcajydu.JCAJYDU` 一般形（premise 版由 Reduction5 供应 list
+版的前提折入——填证时按 HOL 原形拆回，phase6-spine.md §5）。 -/
+theorem jcajydu {α : Type*} [DecidableEq α] (H : Hypermap α) (hres : H.IsRestricted) :
+    ∃ g : Graph, PlaneGraphs g ∧ GoodGraphV4 g ∧
+      ∃ H' : Hypermap (ℕ × ℕ), IsHypermapOfList g.fgraph H' ∧ HypermapIso H H' := by
+  sorry
+
+/-- 接口占位：HOL `Wmlnymd.tame_correspondence_iso`（WMLNYMD.hl）。 -/
+theorem tameCorrespondenceIso {α : Type*} [DecidableEq α] (g : Graph) (H : Hypermap α)
+    (H' : Hypermap (ℕ × ℕ)) (hgg : GoodGraphV4 g) (ht : TamePlanarHypermap H)
+    (hiso : HypermapIso H H') (hIs : IsHypermapOfList g.fgraph H') : tame g := by
+  sorry
+
+/-- 接口占位：HOL `Elllnyz.ELLLNYZ`（ELLLNYZ.hl）——镜像析取形，脊柱的图桥
+必须保持此形（phase6-spine.md §5）。`hypermap_of_list y` 侧为存在性产出。 -/
+theorem elllnyz (x y : fgraph ℕ) (hx : GoodList x) (hy : GoodList y)
+    (hiso : iso_fgraph x y) (Hx : Hypermap (ℕ × ℕ)) (hHx : IsHypermapOfList x Hx) :
+    ∃ Hy : Hypermap (ℕ × ℕ), IsHypermapOfList y Hy ∧
+      (HypermapIso Hx Hy ∨ HypermapIso (oppositeHypermap Hx) Hy) := by
+  sorry
+
+/-- 接口占位：HOL `Asfutbf.hypermap_of_fan_neg`（ASFUTBF.hl）。 -/
+theorem hypermapOfFanNeg (V : Set V3) (hc : Contravening V) (hfan : FAN 0 V (ESTD V))
+    (hfan' : FAN 0 ((fun v => -v) '' V) (ESTD ((fun v => -v) '' V))) :
+    HypermapIso
+      (hypermapOfFan 0 ((fun v => -v) '' V) (ESTD ((fun v => -v) '' V)) hfan')
+      (oppositeHypermap (hypermapOfFan 0 V (ESTD V) hfan)) := by
+  sorry
+
+/-- 接口占位：HOL `Asfutbf.iso_opposite_eq`（ASFUTBF.hl）。 -/
+theorem isoOppositeEq {α β : Type*} [DecidableEq α] [DecidableEq β]
+    (H : Hypermap α) (H' : Hypermap β) :
+    HypermapIso H H' ↔ HypermapIso (oppositeHypermap H) (oppositeHypermap H') := by
+  sorry
+
+/-- 接口占位：HOL `Asfutbf.contravening_negative`（ASFUTBF.hl；
+`contravening_negative_concl`）。 -/
+theorem contraveningNegative (V : Set V3) (hc : Contravening V) :
+    Contravening ((fun v => -v) '' V) := by
+  sorry
+
+/-- 接口占位：HOL `Fnjlbxs.local_annulus_inequality_scriptL`（FNJLBXS-compiled.hl）。 -/
+theorem localAnnulusInequalityScriptL (V : Set V3) :
+    localAnnulusInequality V ↔ scriptL V ≤ 12 := by
+  sorry
+
+/-- 接口占位：HOL `Fnjlbxs.FCDJDOT`（FNJLBXS-compiled.hl；前提
+`pack_ineq_def_a` 显式化）。 -/
+theorem fcdjdot (hpa : PackIneqDefA)
+    (h : ∃ W : Set V3, Packing W ∧ W ⊆ ballAnnulus ∧ scriptL W > 12) :
+    ∃ V : Set V3, Contravening V := by
+  sorry
+
+/-- 接口占位：HOL `kc_imp_the_kc`（the_main_statement.hl:82）——
+Pack_defs `kepler_conjecture`（体积形）⟹ 密度计数形。 -/
+theorem kcImpTheKc (hkc : keplerConjecture) : TheKeplerConjecture := by
+  sorry
+
+/-- 骨架辅助：`Hypermap.Iso` 传递性（置换复合；填证波由 `Hypermap.Iso.trans`
+转换或直证）。 -/
+theorem hypermapIsoTrans {α β γ : Type*} [DecidableEq α] [DecidableEq β]
+    [DecidableEq γ] {H : Hypermap α} {G : Hypermap β} {K : Hypermap γ}
+    (h1 : HypermapIso H G) (h2 : HypermapIso G K) : HypermapIso H K := by
+  sorry
+
+/-! ## 3. 接口 sorry 占位（原三接口冻结 2026-09-19；§2b/2c 的骨架占位为
+2026-09-21 方向 A 深挖新增，均计入主定理可达债务图） -/
 
 /-- 接口占位（冻结 2026-09-19）。债务归属：Phase 4 / G4 粘合（P6-E）。
 消除顺序：先填六个 ID 清单与 `CertifiedIneqHolds` 语义，再逐条闭合证书。 -/
@@ -250,10 +534,51 @@ theorem nonlinearInequalities : TheNonlinearInequalities := by
 theorem linearProgrammingResults : LinearProgrammingResults := by
   sorry
 
-/-- 接口占位（冻结 2026-09-19）。债务归属：Phase 5 capstone
-（PackingConcl/LocalConcl 流水线，按 the_main_statement.hl:177-251 脚本复现）。 -/
+/-- **接口 3 → 真证明（2026-09-21 方向 A）**：HOL `kepler_conjecture_with_assumptions`
+（the_main_statement.hl:170-251，80 行 tactic 脚本）的镜像。消费 §2c 骨架占位
++ PA25 `PACKING_CHAPTER_MAIN_CONCLUSION` + LA16 `nonlinear_imp_lp_main_estimate_p16`
++ Phase 2 `tame_classification` + §4 `goodListArchive`。 -/
 theorem textCapstone : TextCapstone := by
-  sorry
+  intro a ⟨hTC, ⟨hAllGood, hLPR⟩, hNL⟩
+  obtain ⟨hpnn, hox3, hmnt, hlpineq, hpacka, hkcblrqc⟩ := hNL
+  have hmain : lp_main_estimate := nonlinear_imp_lp_main_estimate_p16 hmnt
+  refine kcImpTheKc ?_
+  by_contra hneg
+  -- packing 章主结论：¬kc ∧ pnn ∧ ox3q1h → ∃W. packing ∧ ⊆annulus ∧ ¬localAnnulus
+  obtain ⟨W, hWp, hWsub, hWlai⟩ := PACKING_CHAPTER_MAIN_CONCLUSION hneg hpnn hox3
+  have hW12 : 12 < scriptL W := by
+    by_contra hle
+    exact hWlai ((localAnnulusInequalityScriptL W).mpr (not_lt.1 hle))
+  obtain ⟨V, hcV⟩ := fcdjdot hpacka ⟨W, hWp, hWsub, hW12⟩
+  -- contravening V → tame_planar_hypermap (fan-H V)（MQMSMAB）
+  have hfanV : FAN 0 V (ESTD V) := contraveningFan V hcV
+  have htpH : TamePlanarHypermap (hypermapOfFan 0 V (ESTD V) hfanV) :=
+    mqmsmab V hkcblrqc hmain hfanV hcV
+  have hresH : (hypermapOfFan 0 V (ESTD V) hfanV).IsRestricted :=
+    tamePlanarHypermapRestricted _ htpH
+  -- JCAJYDU：restricted → 图对应 gH
+  obtain ⟨g, hgPlane, hgg4, Hg, hHgIs, hIsoFanHg⟩ := jcajydu _ hresH
+  have htameg : tame g := tameCorrespondenceIso g _ _ hgg4 htpH hIsoFanHg hHgIs
+  -- tame_classification：tame g → ∃y ∈ a, iso_fgraph (fgraph g) y
+  obtain ⟨y, hyA, hyG⟩ := hTC g hgPlane htameg
+  -- ELLLNYZ 镜像析取
+  obtain ⟨Hy, hHyIs, hbr1 | hbr2⟩ :=
+    elllnyz g.fgraph y hgg4.1 (hAllGood y hyA) hyG Hg hHgIs
+  · -- 正向分支：iso (fan-H) (hol y) 经 iso_trans，LP 结果给 ¬contravening V
+    exact hLPR V hfanV ⟨hlpineq, hmain, ⟨y, hyA, ⟨Hy, hHyIs,
+      hypermapIsoTrans hIsoFanHg hbr1⟩⟩⟩ hcV
+  · -- 镜像分支：绕行 IMAGE (--) V
+    have hnegV : Contravening ((fun v => -v) '' V) := contraveningNegative V hcV
+    have hfanN : FAN 0 ((fun v => -v) '' V) (ESTD ((fun v => -v) '' V)) :=
+      contraveningFan _ hnegV
+    have hfn : HypermapIso
+        (hypermapOfFan 0 ((fun v => -v) '' V) (ESTD ((fun v => -v) '' V)) hfanN)
+        (oppositeHypermap (hypermapOfFan 0 V (ESTD V) hfanV)) :=
+      hypermapOfFanNeg V hcV hfanV hfanN
+    have hop : HypermapIso (oppositeHypermap (hypermapOfFan 0 V (ESTD V) hfanV))
+        (oppositeHypermap Hg) := (isoOppositeEq _ _).mp hIsoFanHg
+    exact hLPR _ hfanN ⟨hlpineq, hmain, ⟨y, hyA, ⟨Hy, hHyIs,
+      hypermapIsoTrans (hypermapIsoTrans hfn hop) hbr2⟩⟩⟩ hnegV
 
 /-- HOL `Good_list_archive.good_list_archive`（HOL 侧由计算求得 archive 每张图
 满足 `good_list`）。**已闭合（P6-C，2026-09-19）**：19715 张图（Tri 9 / Quad 1253 /

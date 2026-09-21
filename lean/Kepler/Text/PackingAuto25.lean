@@ -66,6 +66,7 @@ ENCODING NOTES
 import Kepler.Text.Polytope
 import Kepler.Text.PackingAuto2
 import Kepler.Text.PackingAuto3
+import Kepler.Text.PackingAuto18
 import Kepler.Text.PackingAuto21
 import Kepler.Text.SphereKit
 import Kepler.Statement
@@ -125,40 +126,10 @@ def HasSizeP25 (s : Set V3) (n : ℕ) : Prop := s.Finite ∧ s.ncard = n
 section is PA18-lane-duplicated but not SphereKit material; `MCELL2_SUBSET_AFF_GE`
 is *not* redeclared here (PA18's and PA21's statements differ, plan §6.1).) -/
 
-/-- HOL `leaf` (leaf_cell.hl:17); PackingAuto18.lean:73 verbatim. -/
-def leaf (V : Set V3) (ul : List V3) : Prop := barV V 2 ul ∧ hl ul < Real.sqrt 2
-
-/-- HOL `cc_pe_exists` (leaf_cell.hl:1052-1084); PackingAuto18 verbatim. -/
-theorem cc_pe_exists (V : Set V3) (ul : List V3) :
-    ∃ p1 p2 : V3, Packing V → saturated V → leaf V ul →
-      voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3) ∧ p1 ≠ p2 ∧
-        0 < chiMsb ul p1 := by
-  sorry
-
-/-- HOL `cc_pe1` (leaf_cell.hl:1082); PackingAuto18 verbatim. -/
-noncomputable def ccPe1 (V : Set V3) (ul : List V3) : V3 :=
-  Classical.choose (cc_pe_exists V ul)
-
-/-- HOL `cc_pe2` (leaf_cell.hl:1082); PackingAuto18 verbatim. -/
-noncomputable def ccPe2 (V : Set V3) (ul : List V3) : V3 :=
-  Classical.choose (Classical.choose_spec (cc_pe_exists V ul))
-
-/-- HOL `cc_uh_exists` (leaf_cell.hl:1120-1132); PackingAuto18 verbatim. -/
-theorem cc_uh_exists (V : Set V3) (ul : List V3) :
-    ∃ vl : List V3, Packing V → saturated V → leaf V ul →
-      barV V 3 vl ∧ truncateSimplex 2 vl = ul ∧ omegaList V vl = ccPe1 V ul := by
-  sorry
-
-/-- HOL `cc_uh` (leaf_cell.hl:1133); PackingAuto18 verbatim. -/
-noncomputable def ccUh (V : Set V3) (ul : List V3) : List V3 :=
-  Classical.choose (cc_uh_exists V ul)
-
-/-- HOL `cc_ke` (leaf_cell.hl:1136-1137); PackingAuto18 verbatim. -/
-noncomputable def ccKe (V : Set V3) (ul : List V3) : ℕ :=
-  if hl (ccUh V ul) < Real.sqrt 2 then 4 else 3
-
-/-- HOL `cc_cell` (leaf_cell.hl:1142); PackingAuto18 verbatim. -/
-def ccCell (V : Set V3) (ul : List V3) : Set V3 := mcell (ccKe V ul) V (ccUh V ul)
+/-! `leaf`（leaf_cell.hl:17）与 cc_* 块（`cc_pe_exists`/`ccPe1`/`ccPe2`/
+`cc_uh_exists`/`ccUh`/`ccKe`/`ccCell`，leaf_cell.hl:1052-1142）已改为委托
+`Kepler.Text.PackingAuto18`（2026-09-21 骨架化：该块在两文件 verbatim 重复，
+导致 PA18 ⊕ PA25 无法共存于同一 import 环境，Assembly 脊柱需要二者）。 -/
 
 /-! ## DEFINITIONS -/
 
