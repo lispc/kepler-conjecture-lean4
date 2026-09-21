@@ -31,8 +31,11 @@ LEDGER (honest accounting; ground truth = `#print axioms`, not prose)
       accounted by the GRUTOTI1 entry below — 61 explicit
       entries + this 1 accounted copy = 62)
   WIRED here (`exact twin ...`, sorryAx flows through where the twin or
-  a bank antecedent is sorried) ........................ 43
-    verbatim twin (term-level `:= twin` / eta) ........... 38
+  a bank antecedent is sorried) ........................ 52
+    verbatim twin (term-level `:= twin` / eta) ........... 47
+      (the 9 Auto3 OXLZLEZ1-family rows went verbatim in the
+      CC4P4-exposure wave: PA4 now states public `*_v11` twins over
+      PA3's `CcV11`, so the parallel-private-encoding block is gone)
     shim/bridge ........................................... 5
       VORONOI_BALL2  <- PackingAuto5.VORONOI_BALL2 (discard unused
         `Packing V` / `v ∈ V`)
@@ -48,7 +51,7 @@ LEDGER (honest accounting; ground truth = `#print axioms`, not prose)
         here, so the twin's REAL by_contra kernel
         (CELL_CLUSTER_ESTIMATE_PROPS + GRHIDFA_concl) is on the
         reachable path)
-  BLOCKED ............................................... 19, reasons:
+  BLOCKED ............................................... 10, reasons:
 
   (a) Twin does not exist: 2
       RVFXZBU1_concl, RVFXZBU2_concl (Auto2:743,750; no twin anywhere
@@ -73,22 +76,23 @@ LEDGER (honest accounting; ground truth = `#print axioms`, not prose)
       GRUTOTI1 (only twin is PRIVATE `PackingAuto24.GRUTOTI1_concl_p24`
         — unreachable from any other module).
 
-  (c) Twin exists only in a parallel PRIVATE encoding: 9 (the whole
-      Auto3 OXLZLEZ1.hl family) — CHQSQEY, MTMLSRF, LXDEYBO, UNPNFVW,
-      IPVICGW, RSIWAMP, UTEOITF, LUIKGMH, GRHIDFA_concl: the Auto4
-      twins live over a `private structure CC4P4` with private accessors
-      (ccBoolModelP4, ...), a parallel encoding of Auto3's `CcV11`
-      interfaces; neither statement nor constants are referable here.
+  (c) Twin exists only in a parallel PRIVATE encoding: 0 (was 9 — the
+      whole Auto3 OXLZLEZ1.hl family: CHQSQEY, MTMLSRF, LXDEYBO,
+      UNPNFVW, IPVICGW, RSIWAMP, UTEOITF, LUIKGMH, GRHIDFA_concl.
+      RESOLVED: PA4's twins live over a private `structure CC4P4`, but
+      PA4 now additionally states the nine rows as public `*_v11`
+      theorems over PA3's `CcV11` — imported, wired above).
 
 IMPORT SET
-  PackingAuto 2,3,4-skipped,5,6,7,8,9,10,11,12,13,16,17,19,21,24,25 plus
+  PackingAuto 2,3,4,5,6,7,8,9,10,11,12,13,16,17,19,21,24,25 plus
   the transitive closure 14,15,18,20 (via 17/19/21/25 — the PA25 cc-block
   delegation and PA21/PA25 bring PA18/PA20 in anyway; neither hosts a
-  twin).  Deliberately NOT imported:
+  twin).  PA4 joined in the CC4P4-exposure wave: its nine OXLZLEZ2 twins
+  gained public `CcV11`-stated `*_v11` copies (PA4 imports PA3 —
+  clash-free, PA3's closure is PA2/Polytope/Statement/Mathlib only).
+  Deliberately NOT imported:
     PackingAuto1  — Space3-based `saturated`/`Packing` CLASH by full name
                     with the Auto2 encodings; no module can import both.
-    PackingAuto4  — its 9 OXLZLEZ2 twins are private-CC4P4-encoded and
-                    therefore unusable; no other twin lives there.
     PackingAuto22 — hosts only the shape-mismatched GOTCJAH twin; kept
                     out to hold the closure clash-free.
     PackingAuto23 — hosts no twin.
@@ -96,6 +100,7 @@ IMPORT SET
 
 import Kepler.Text.PackingAuto2
 import Kepler.Text.PackingAuto3
+import Kepler.Text.PackingAuto4
 import Kepler.Text.PackingAuto5
 import Kepler.Text.PackingAuto6
 import Kepler.Text.PackingAuto7
@@ -645,91 +650,103 @@ theorem REUHADY_concl_version2_discharged :
         azim u0 u1 v1 v2 :=
   REUHADY_version2_p24
 
-/-! ## Auto3 `OXLZLEZ1.hl` family — blocked in a parallel encoding
+/-! ## Auto3 `OXLZLEZ1.hl` family — discharged via PA4's public `*_v11` twins
 
-All nine interfaces live over `PackingAuto3.CcV11`.  The only downstream
-carrier of the matching HL statements is `PackingAuto4`'s OXLZLEZ2 wave,
-whose twins (`CHQSQEY`, `MTMLSRF`, `LXDEYBO`, `UNPNFVW`, `IPVICGW`,
-`RSIWAMP`, `UTEOITF`, `LUIKGMH`, `GRHIDFA`) are stated over a PRIVATE
-`structure CC4P4` with private accessors — a parallel encoding of the
-same HL content.  Neither the type nor the property constants are
-referable outside PA4, so no `exact` can even be written; PA4 is
-deliberately not imported.  (PA25's cc-block consumes these interfaces
-via `cc_data_v8`, it does not prove them.) -/
+All nine interfaces live over `PackingAuto3.CcV11`.  Their downstream
+carriers in `PackingAuto4` (the OXLZLEZ2 wave: `CHQSQEY`, `MTMLSRF`,
+`LXDEYBO`, `UNPNFVW`, `IPVICGW`, `RSIWAMP`, `UTEOITF`, `LUIKGMH`,
+`GRHIDFA`) are stated over a PRIVATE `structure CC4P4` with private
+accessors — a parallel encoding of the same HL content that no other
+module could name, which kept this family blocked.  The CC4P4-exposure
+wave added public `CcV11`-stated `*_v11` rows to PA4 (verbatim to the
+`*_concl` interfaces below); PA4 is now imported and each entry is a
+term-level discharge.  The `*_v11` bodies are `sorry` (skeleton batch —
+PA4's private `CC4P4` twins are the eventual proof bank), so sorryAx
+flows through every entry here.  (PA25's cc-block consumes these
+interfaces via `cc_data_v8`, it does not prove them.) -/
 
-/-- `PackingAuto3.CHSQSQEY_concl` (OXLZLEZ1.hl:135).  缺可引用 twin：
-PackingAuto4 的同名 twin 为私有 CC4P4 平行编码，上游模块 PackingAuto4。 -/
+/-- `PackingAuto3.CHSQSQEY_concl` (OXLZLEZ1.hl:135), discharged by
+`PackingAuto4.CHQSQEY_v11` — the PA4 twin newly exposed in this wave as a
+PUBLIC `CcV11`-stated row (previously reachable only over PA4's private
+`CC4P4`); its body is `sorry` (skeleton batch), so taint flows. -/
 theorem CHQSQEY_concl_discharged (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
-    3 ≤ cc_size_v11 cc (cc_4cell_v11 cc) := by
-  sorry
+    3 ≤ cc_size_v11 cc (cc_4cell_v11 cc) :=
+  CHQSQEY_v11 cc _hb _hp _hr _hsum
 
-/-- `PackingAuto3.MTMLSRF_concl` (OXLZLEZ1.hl:138).  缺可引用 twin：
-PackingAuto4 私有 CC4P4 平行编码，上游模块 PackingAuto4。 -/
+/-- `PackingAuto3.MTMLSRF_concl` (OXLZLEZ1.hl:138), discharged by
+`PackingAuto4.MTMLSRF_v11` (public `CcV11` twin; sorry body — taint
+flows). -/
 theorem MTMLSRF_concl_discharged (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
     ∃ i, 0 < i ∧ cc_gg_v11 cc i < 0 ∧ cc_qu_v11 cc i ∧
-      cc_4cell_v11 cc (i + 1) ∧ cc_4cell_v11 cc (i - 1) := by
-  sorry
+      cc_4cell_v11 cc (i + 1) ∧ cc_4cell_v11 cc (i - 1) :=
+  MTMLSRF_v11 cc _hb _hp _hr _hsum
 
-/-- `PackingAuto3.LXDEYBO_concl` (OXLZLEZ1.hl:142).  缺可引用 twin：
-PackingAuto4 私有 CC4P4 平行编码，上游模块 PackingAuto4。 -/
+/-- `PackingAuto3.LXDEYBO_concl` (OXLZLEZ1.hl:142), discharged by
+`PackingAuto4.LXDEYBO_v11` (public `CcV11` twin; sorry body — taint
+flows). -/
 theorem LXDEYBO_concl_discharged (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
-    cc_size_v11 cc (cc_4cell_v11 cc) ≤ 4 := by
-  sorry
+    cc_size_v11 cc (cc_4cell_v11 cc) ≤ 4 :=
+  LXDEYBO_v11 cc _hb _hp _hr _hsum
 
-/-- `PackingAuto3.UNPNFVW_concl` (OXLZLEZ1.hl:145).  缺可引用 twin：
-PackingAuto4 私有 CC4P4 平行编码，上游模块 PackingAuto4。 -/
+/-- `PackingAuto3.UNPNFVW_concl` (OXLZLEZ1.hl:145), discharged by
+`PackingAuto4.UNPNFVW_v11` (public `CcV11` twin; sorry body — taint
+flows). -/
 theorem UNPNFVW_concl_discharged (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
-    cc_size_v11 cc (cc_qy_v11 cc) ≤ 1 := by
-  sorry
+    cc_size_v11 cc (cc_qy_v11 cc) ≤ 1 :=
+  UNPNFVW_v11 cc _hb _hp _hr _hsum
 
-/-- `PackingAuto3.IPVICGW_concl` (OXLZLEZ1.hl:156).  缺可引用 twin：
-PackingAuto4 私有 CC4P4 平行编码，上游模块 PackingAuto4。 -/
+/-- `PackingAuto3.IPVICGW_concl` (OXLZLEZ1.hl:156), discharged by
+`PackingAuto4.IPVICGW_v11` (public `CcV11` twin; sorry body — taint
+flows). -/
 theorem IPVICGW_concl_discharged (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
-    ∀ i, cc_small_v11 cc i := by
-  sorry
+    ∀ i, cc_small_v11 cc i :=
+  IPVICGW_v11 cc _hb _hp _hr _hsum
 
-/-- `PackingAuto3.RSIWAMP_concl` (OXLZLEZ1.hl:159).  缺可引用 twin：
-PackingAuto4 私有 CC4P4 平行编码，上游模块 PackingAuto4。 -/
+/-- `PackingAuto3.RSIWAMP_concl` (OXLZLEZ1.hl:159), discharged by
+`PackingAuto4.RSIWAMP_v11` (public `CcV11` twin; sorry body — taint
+flows). -/
 theorem RSIWAMP_concl_discharged (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
-    cc_card_v11 cc ≤ 4 := by
-  sorry
+    cc_card_v11 cc ≤ 4 :=
+  RSIWAMP_v11 cc _hb _hp _hr _hsum
 
-/-- `PackingAuto3.UTEOITF_concl` (OXLZLEZ1.hl:167).  缺可引用 twin：
-PackingAuto4 私有 CC4P4 平行编码，上游模块 PackingAuto4。 -/
+/-- `PackingAuto3.UTEOITF_concl` (OXLZLEZ1.hl:167), discharged by
+`PackingAuto4.UTEOITF_v11` (public `CcV11` twin; sorry body — taint
+flows). -/
 theorem UTEOITF_concl_discharged (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
-    ∀ i, cc_4cell_v11 cc i := by
-  sorry
+    ∀ i, cc_4cell_v11 cc i :=
+  UTEOITF_v11 cc _hb _hp _hr _hsum
 
-/-- `PackingAuto3.LUIKGMH_concl` (OXLZLEZ1.hl:170).  缺可引用 twin：
-PackingAuto4 私有 CC4P4 平行编码，上游模块 PackingAuto4。 -/
+/-- `PackingAuto3.LUIKGMH_concl` (OXLZLEZ1.hl:170), discharged by
+`PackingAuto4.LUIKGMH_v11` (public `CcV11` twin; sorry body — taint
+flows). -/
 theorem LUIKGMH_concl_discharged (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
-    4 ≤ cc_card_v11 cc := by
-  sorry
+    4 ≤ cc_card_v11 cc :=
+  LUIKGMH_v11 cc _hb _hp _hr _hsum
 
-/-- `PackingAuto3.GRHIDFA_concl` (OXLZLEZ1.hl:173).  缺可引用 twin：
-PackingAuto4 私有 CC4P4 平行编码，上游模块 PackingAuto4。（PA25.OXLZLEZ
-的 kernel 在等价的 v11 数据上消费本条目。） -/
+/-- `PackingAuto3.GRHIDFA_concl` (OXLZLEZ1.hl:173), discharged by
+`PackingAuto4.GRHIDFA_v11` (public `CcV11` twin; sorry body — taint
+flows).  (PA25.OXLZLEZ 的 kernel 在等价的 v11 数据上消费本条目。) -/
 theorem GRHIDFA_concl_discharged (cc : CcV11) (_hb : cc_bool_model_v11 cc)
     (_hp : cc_bool_prep_v11 cc) (_hr : cc_real_model_v11 cc)
     (_hsum : ∑ i ∈ Finset.Icc 0 (cc_card_v11 cc - 1), cc_gg_v11 cc i < (0 : ℝ)) :
-    False := by
-  sorry
+    False :=
+  GRHIDFA_v11 cc _hb _hp _hr _hsum
 
 -- Self-checks.  Ground truth = `#print axioms`, not prose:
 --  * the first three are the sorry-free discharges of the previous wave
@@ -744,5 +761,16 @@ theorem GRHIDFA_concl_discharged (cc : CcV11) (_hb : cc_bool_model_v11 cc)
 #print axioms REUHADY_concl_discharged
 #print axioms REUHADY_concl_version2_discharged
 #print axioms URRPHBZ3_concl_discharged
+-- CC4P4-exposure wave: the nine newly verbatim-wired Auto3-family rows
+-- (expect `sorryAx` on each — the PA4 `*_v11` twins are sorried).
+#print axioms CHQSQEY_concl_discharged
+#print axioms MTMLSRF_concl_discharged
+#print axioms LXDEYBO_concl_discharged
+#print axioms UNPNFVW_concl_discharged
+#print axioms IPVICGW_concl_discharged
+#print axioms RSIWAMP_concl_discharged
+#print axioms UTEOITF_concl_discharged
+#print axioms LUIKGMH_concl_discharged
+#print axioms GRHIDFA_concl_discharged
 
 end Kepler.Text

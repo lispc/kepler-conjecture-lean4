@@ -16,9 +16,11 @@ LocalAuto24: port of three appendix modules bridging the Local Fan chapter:
     (stabilised, `(i+p) MOD k = p' MOD k`), `WKEIDFT_EQU_V2` and the arrow
     `WKEIDFT` are stated verbatim and `sorry`.
   - `scripts/local/OTMTOTJ.hl` (1542 lines, 47 theorems): the pentagonal
-    ear-arrow chain. The four master arrows `OTMTOTJ1-4` are already stated
-    in `Kepler.Text.LocalAuto1` (`OTMTOTJ1-4_concl`, :1419-1439) and are
-    NOT re-declared; the remaining `44-4` statements are restated, with the
+    ear-arrow chain. The four master arrows `OTMTOTJ1-4`
+    (OTMTOTJ.hl:1156/1169/1500/1520) are restated verbatim in Section B6
+    (skeleton restatements, 2026-09-21 — previously only the LocalAuto1
+    `OTMTOTJ1-4_concl` copies existed, OTMTOTJ.hl:1156/1169/1500/1520);
+    the remaining `44-4` statements are restated, with the
     mechanical `DIAG_5_EQU_PSORT`, `DIAG_EQ_ADD5` and the four
     `SET_STAB_5I1/5I2/5I3/5M1` set identities PROVED (over the PROVED
     `STAB_MOD`/`DIAG_MOD`/`SCS_*_IS_SCS` of LocalAuto20) and the rest
@@ -291,8 +293,9 @@ theorem WKEIDFT (s : ScsV39) (a b a' b' : ℝ) (p q p' q' : ℕ) (b1 : ℝ)
 /-! ## Section B: OTMTOTJ.hl — the pentagonal ear-arrow chain
 
 FILE MAP: the four master arrows `OTMTOTJ1-4` (OTMTOTJ.hl:1156/1169/1500/1520)
-are already stated in `Kepler.Text.LocalAuto1` (`OTMTOTJ1-4_concl`,
-:1419-1439) and are NOT re-declared here; the remaining `47-4` statements
+are restated verbatim in Section B6 below (skeleton restatements, 2026-09-21;
+before that only the LocalAuto1 `OTMTOTJ1-4_concl` copies existed);
+the remaining `47-4` statements
 are below. The mechanical `DIAG_5_EQU_PSORT`, `DIAG_EQ_ADD5` and the four
 `SET_STAB_5I*` identities are PROVED (over the PROVED `PSORT_MOD`/`DIAG_MOD`/
 `STAB_MOD`/`SCS_*_IS_SCS` of LocalAuto20); all `scs_arrow_v39`-conclusions
@@ -586,7 +589,7 @@ theorem SET_EQ_DIAG_STAB_5I2 :
 /-! ### B5. The `5M1`/`5I3` twin chain (OTMTOTJ.hl:1184-1520)
 
 FILE MAP: the master arrows `OTMTOTJ3` (:1500) and `OTMTOTJ4` (:1520) are
-the LocalAuto1 `_concl` statements (see section header). -/
+restated verbatim in Section B6 below (skeleton restatements, 2026-09-21). -/
 
 /-- HOL `BB_5I3_IS_BB_5M1` (OTMTOTJ.hl:1184). -/
 theorem BB_5I3_IS_BB_5M1 : ∀ v : ℕ → V3,
@@ -665,6 +668,45 @@ theorem SET_EQ_DIAG_STAB_5M1 :
   -- DISCHARGES: SET_STAB_5M1 + DIAG_EQ_ADD5 + EXPAND_STAB_DIAG_5I3 +
   -- EXPAND_STAB_DIAG_5M1 + EQ_DIAG_STAB_* (the three singleton arrows,
   -- FZIOTEF-chained).
+
+/-! ### B6. The four master arrows (OTMTOTJ.hl:1156/1169/1500/1520)
+
+Skeleton restatements (2026-09-21): faithful verbatim statements of the HOL
+masters `OTMTOTJ1-4`, previously carried only by the LocalAuto1
+`OTMTOTJ1-4_concl` registry copies (:1419-1439).  The HOL proofs compose
+the Section B3/B5 arrows through the `FZIOTEF` transitivity/union kit. -/
+
+/-- HOL `OTMTOTJ1` (OTMTOTJ.hl:1156). -/
+theorem OTMTOTJ1 :
+    scsArrowV39 {scs5I1} {scsStabDiagV39 scs5I1 0 2, scs5M2} := by
+  sorry
+  -- DISCHARGES: 骨架占位，忠实陈述 (OTMTOTJ.hl:1156). HOL chain:
+  -- FZIOTEF_TRANS over SCS_5I1_BERAK_BY_CSTAB + SET_EQ_DIAG_STAB_5I1 +
+  -- FZIOTEF_UNION + FZIOTEF_REFL + SCS_5M2_IS_SCS.
+
+/-- HOL `OTMTOTJ2` (OTMTOTJ.hl:1169). -/
+theorem OTMTOTJ2 :
+    scsArrowV39 {scs5I2} {scsStabDiagV39 scs5I2 0 2, scs5M2} := by
+  sorry
+  -- DISCHARGES: 骨架占位，忠实陈述 (OTMTOTJ.hl:1169). HOL chain:
+  -- as `OTMTOTJ1` over SCS_5I2_BERAK_BY_CSTAB + SET_EQ_DIAG_STAB_5I2.
+
+/-- HOL `OTMTOTJ3` (OTMTOTJ.hl:1500). -/
+theorem OTMTOTJ3 :
+    scsArrowV39 {scs5I3} {scsStabDiagV39 scs5M1 0 2, scsStabDiagV39 scs5M1 0 3,
+      scsStabDiagV39 scs5M1 2 4, scs5M2} := by
+  sorry
+  -- DISCHARGES: 骨架占位，忠实陈述 (OTMTOTJ.hl:1500). HOL chain:
+  -- FZIOTEF_TRANS over SCS_5I3_BERAK_BY_CSTAB + STAB_5I3_ARROW_STAB_5M1_DIAG
+  -- + SET_EQ_DIAG_STAB_5M1 + FZIOTEF_REFL + SCS_5M2_IS_SCS.
+
+/-- HOL `OTMTOTJ4` (OTMTOTJ.hl:1520). -/
+theorem OTMTOTJ4 :
+    scsArrowV39 {scs5M1} {scsStabDiagV39 scs5M1 0 2, scsStabDiagV39 scs5M1 0 3,
+      scsStabDiagV39 scs5M1 2 4, scs5M2} := by
+  sorry
+  -- DISCHARGES: 骨架占位，忠实陈述 (OTMTOTJ.hl:1520). HOL chain:
+  -- as `OTMTOTJ1` over SCS_5M1_BERAK_BY_CSTAB + SET_EQ_DIAG_STAB_5M1.
 
 /-! ## Section C: UXCKFPE.hl — the k ≤ 6 taustar capstone (2 defs + 20
 theorems)
