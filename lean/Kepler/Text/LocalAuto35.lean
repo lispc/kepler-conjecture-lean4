@@ -624,7 +624,13 @@ theorem QKNVMLB1_EQ4F_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop
   sorry
   -- DISCHARGES: source 5064-5223; k = 4 twin of QKNVMLB1_LE4F.
 
-/-- HOL `QKNVMLB1` (QKNVMLB.hl:5223). -/
+/-- HOL `QKNVMLB1` (QKNVMLB.hl:5223).  RULING 2026-09-21 IV: this twin's
+index convention `vv (i % s'.k + p % s.k)` is the FAITHFUL encoding -- it
+is verbatim the proved original's `vv'` (QKNVMLB.hl:5225).  The LA1
+registry concl carries the appendix.hl:1055 statement-let form
+`vv ((i+p) % s'.k)`, which is unproved upstream and is NOT bridged here;
+the registry correction belongs to the registry-refactor round (ruling
+recorded at LocalConcl `QKNVMLB1_discharged`). -/
 theorem QKNVMLB1_p35 (s : ScsV39) (p q : ℕ) (d' : ℝ) (mkj : Prop) (vv : ℕ → V3)
     (hMM : vv ∈ MMsV39 s) (hbm : s.bm p q < 4)
     (h4 : s.k = 4 ∨ s.bm p q ≤ cstab) (hscs : isScsV39 s) (hd' : d' < 0.9)
@@ -864,7 +870,11 @@ theorem INTER_SLICE_SCS_EMPTY_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ)
     exact INTER_SLICE_SCS_EMPTY1_p35 s s'' s' q p d'' d' mkj hs'' hs' hscs
       ⟨fun e => hdiag.1 e.symm, fun e => hdiag.2.2 e.symm, fun e => hdiag.2.1 e.symm⟩ h
 
-/-- HOL `QKNVMLB2` (QKNVMLB.hl:5522, proof ~2215 ln — the giant). -/
+/-- HOL `QKNVMLB2` (QKNVMLB.hl:5522, proof ~2215 ln — the giant).
+RULING 2026-09-21 IV: this twin's `vv (i % s'.k + p % s.k)` /
+`vv (i % s''.k + q % s.k)` convention is faithful (QKNVMLB.hl:5525/:5527);
+the LA1 registry's `vv ((i+p) % s'.k)` form is the unproved
+appendix.hl:1064 statement-let — see `QKNVMLB1_p35`. -/
 theorem QKNVMLB2_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
     (vv vv' vv'' : ℕ → V3)
     (hs' : scsHalfSliceV39 s p q d' mkj = s')
@@ -1268,7 +1278,10 @@ theorem QKNVMLB3_Eq4_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : P
   -- have k' = 3 (SCS_K_PRIME_CASE_4_p35), tau3-tau3 ≤ tauFun via the
   -- slice-face azimuth identity SUM_AZIM_EQ_ANGLE_EQ4_p35 + DIAGE_VAL_P_Q.
 
-/-- HOL `QKNVMLB3` (QKNVMLB.hl:10665) — the master taustar inequality. -/
+/-- HOL `QKNVMLB3` (QKNVMLB.hl:10665) — the master taustar inequality.
+RULING 2026-09-21 IV: the `i % s'.k + p % s.k` convention is faithful
+(QKNVMLB.hl:10667/:10669); the LA1 registry's `(i+p) % s'.k` form is the
+unproved appendix.hl:1075 statement-let — see `QKNVMLB1_p35`. -/
 theorem QKNVMLB3_p35 (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj : Prop)
     (vv vv' vv'' : ℕ → V3)
     (hs' : scsHalfSliceV39 s p q d' mkj = s')
