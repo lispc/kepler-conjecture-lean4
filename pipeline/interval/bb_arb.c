@@ -18,6 +18,12 @@
  *
  * 退出码：0 闭合；1 COUNTEREXAMPLE；2 节点超限（打印未闭叶）；3 用法/数据错误。
  *
+ * TM 扩展（--tm，设计文档 taylor-model-design.md §2）：每叶判定前先跑一阶
+ * 多元 Taylor 模型前向 AD（tm1_t / eval_prog_tm / tm_decide，见下文 TM1 段），
+ * loBound = f0.lo − W > 0 即闭合（hit "tm"）；失败/不可用（ite guard 跨 0、
+ * abs 跨 0、div/sqrt/log 盒域违例）退既有裸区间路径，该路径零改动。
+ * TM 只在盒宽 ≤ 自适应阈值时启用（阈值只影响性能，不影响 soundness）。
+ *
  * 编译（照抄 README「编译链接本地 GMP/MPFR/FLINT」节，加 -std=c99 -Wall -Wextra）：
  *   TOOLS=$(pwd)/pipeline/tools
  *   gcc -O2 -std=c99 -Wall -Wextra pipeline/interval/bb_arb.c -o pipeline/interval/bb_arb \
@@ -29,6 +35,7 @@
  *     -Wl,-rpath,$TOOLS/mpfr-4.2.2/lib \
  *     -Wl,-rpath,$TOOLS/gmp-6.3.0/lib
  */
+#include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -687,6 +694,559 @@ static evres eval_prog(const prog *p, arb_srcptr vars, arb_t *stk,
     return EV_OK;
 }
 
+/* ---------------- TM1：一阶多元 Taylor 模型前向 AD（设计文档 §2） ----------------
+ *
+ * 每 RPN 栈位一个 tm1_t：
+ *   f0      f(y) 球（中心 y = 盒中点，精确 fmpq 经 arb_set_fmpq 入球）
+ *   df[i]   ∂ᵢf(y) 球（中心点 AD，精度 prec_c）
+ *   ddf[ij] |∂²ᵢⱼf| 盒上幅值界（mag，粗精度 prec_h，数量级正确即可）
+ *   err     ½·Σᵢⱼ wᵢwⱼ·ddfᵢⱼ（mag；全序对和，不用 Schwarz，对齐 T-D0）
+ *   W       振幅界 Σᵢ|dfᵢ|wᵢ + err（缓存；|f(ρ)−f(y)| ≤ W）
+ * 二阶盒界传播（积/链法则的区间形式；Bf := |f0|+Wf，Dfᵢ := |dfᵢ|+Σⱼ wⱼ·ddfᵢⱼ）：
+ *   mul：     Hᵢⱼ ≤ Hfᵢⱼ·Bg + Bf·Hgᵢⱼ + Dfᵢ·Dgⱼ + Dfⱼ·Dgᵢ
+ *   div f/g： Hᵢⱼ ≤ Hfᵢⱼ·M + Bf·Hgᵢⱼ·M² + (DfᵢDgⱼ+DfⱼDgᵢ)·M² + 2·Bf·DgᵢDgⱼ·M³
+ *             （M = 1/min|g(box)| 上界；g 盒值域越零 → 不可用）
+ *   一元 g∘f：Hᵢⱼ ≤ Mg''·Dfᵢ·Dfⱼ + Mg'·Hfᵢⱼ
+ *             sqrt: Mg'=1/(2√c), Mg''=1/(4c^{3/2})（c=f 盒值域下界，c≤0 → 不可用）
+ *             log:  Mg'=1/c,    Mg''=1/c²         （c≤0 → 不可用）
+ *             atan: Mg'=1,      Mg''=min(1, 2·Bf)（|2t/(1+t²)²| ≤ min(2|t|,9/(8√3))）
+ *             sin:  Mg'=1, Mg''=min(1,Bf)；cos: Mg'=min(1,Bf), Mg''=1（|sin t|≤|t|）
+ * 中心点一阶规则（球算术）：mul 积法则、div 商法则、sqrt df/(2√f0)、
+ *   atan df/(1+f0²)、log df/f0、sin df·cos(f0)、cos −df·sin(f0)。
+ * ite：guard 在盒球上裸区间可判定 → 盒上 f 恒等于一支，递归 TM 该支（sound，
+ *   与 eval_prog 严格模式同语义）；跨 0 → 本叶 TM 不可用（hull 合并不做，§6）。
+ * abs：盒值域定号 → identity/neg（Flyspeck m_taylor_abs_pos_compose 的定号
+ *   特款）；跨 0 → 不可用（对齐 TMSafe 排除）。
+ * 任一不可用条件触发即整叶放弃 TM（valid 标志保留在结构里，对齐 §2.2；
+ * 本实现立即返回 1，调用方退裸区间路径——既有路径零改动）。
+ * 判定：y 是中点，线性项逐维端点取 ±wᵢ，故
+ *   loBound = f0.lo + Σᵢ(dfᵢ·[−wᵢ,wᵢ]).lo − err = f0.lo − W。
+ *   loBound > 0 → 叶闭合（hit "tm"），否则退裸区间 + disj + 二分。 */
+
+/* 注意：arb_t/mag_t 是单元素数组类型，数组字段用裸 struct 指针声明，
+   函数实参一律写 base + i（与既有代码的 stk[i] 习惯等价，类型更干净）。 */
+typedef struct {
+    arb_t  f0;
+    arb_struct *df;
+    mag_struct *ddf;
+    mag_t  err;
+    mag_t  W;
+    int    valid;   /* 0 = 该子式 TM 不可用（保留字段，见段头注） */
+} tm1_t;
+
+typedef struct {
+    slong  n;
+    slong  prec_c;    /* 中心/一阶精度（rung_c） */
+    slong  prec_h;    /* Hessian 粗精度（rung_h） */
+    mag_struct *w;    /* n 个半径包 wᵢ 上界 */
+    arb_struct *yb;   /* n 个中心球 */
+    arb_struct *bvars;/* n 个盒球（ite guard 裸区间判定用） */
+    arb_struct *bstk; /* guard 裸区间求值栈（复用主 stk） */
+    mag_struct *Df, *Dg;   /* 临时：n 个一阶幅值界 */
+    arb_struct *ndf;       /* 临时：n 个新一阶球 */
+    int    fail_reason;    /* 诊断：1=guard INDET 2=guard 跨0 3=div越零
+                              4=abs跨0 5=sqrt/log底非正 6=未知op */
+    size_t fail_ip;        /* 诊断：失败指令下标 */
+} tmctx;
+
+static void tm1_init(tm1_t *t, slong n)
+{
+    slong i;
+    arb_init(t->f0);
+    t->df = xmalloc((size_t)n * sizeof(arb_t));
+    t->ddf = xmalloc((size_t)(n * n) * sizeof(mag_t));
+    for (i = 0; i < n; i++) arb_init(t->df + i);
+    for (i = 0; i < n * n; i++) mag_init(t->ddf + i);
+    mag_init(t->err);
+    mag_init(t->W);
+    t->valid = 1;
+}
+
+static void tm1_clear(tm1_t *t, slong n)
+{
+    slong i;
+    arb_clear(t->f0);
+    for (i = 0; i < n; i++) arb_clear(t->df + i);
+    for (i = 0; i < n * n; i++) mag_clear(t->ddf + i);
+    mag_clear(t->err);
+    mag_clear(t->W);
+    free(t->df);
+    free(t->ddf);
+}
+
+/* err = ½·Σᵢⱼ wᵢwⱼ·ddfᵢⱼ（全序对和） */
+static void tm_err_from_ddf(tm1_t *t, const tmctx *cx)
+{
+    slong i, j, n = cx->n;
+    mag_t acc, term;
+    mag_init(acc);
+    mag_init(term);
+    mag_zero(acc);
+    for (i = 0; i < n; i++)
+        for (j = 0; j < n; j++) {
+            mag_mul(term, t->ddf + i * n + j, cx->w + j);
+            mag_mul(term, term, cx->w + i);
+            mag_add(acc, acc, term);
+        }
+    mag_mul_2exp_si(acc, acc, -1);
+    mag_set(t->err, acc);
+    mag_clear(acc);
+    mag_clear(term);
+}
+
+/* W = Σᵢ |dfᵢ|·wᵢ + err */
+static void tm_update_W(tm1_t *t, const tmctx *cx)
+{
+    slong i;
+    mag_t acc, term;
+    mag_init(acc);
+    mag_init(term);
+    mag_set(acc, t->err);
+    for (i = 0; i < cx->n; i++) {
+        arb_get_mag(term, t->df + i);
+        mag_mul(term, term, cx->w + i);
+        mag_add(acc, acc, term);
+    }
+    mag_set(t->W, acc);
+    mag_clear(acc);
+    mag_clear(term);
+}
+
+/* |f| 盒上幅值界 ≤ |f0| + W */
+static void tm_Bmag(mag_t out, const tm1_t *t)
+{
+    arb_get_mag(out, t->f0);
+    mag_add(out, out, t->W);
+}
+
+/* |∂ᵢf| 盒上幅值界 ≤ |dfᵢ(y)| + Σⱼ wⱼ·ddfᵢⱼ（坐标线段 MVT） */
+static void tm_Dmag(mag_t out, const tm1_t *t, const tmctx *cx, slong i)
+{
+    slong j;
+    mag_t term;
+    mag_init(term);
+    arb_get_mag(out, t->df + i);
+    for (j = 0; j < cx->n; j++) {
+        mag_mul(term, t->ddf + i * cx->n + j, cx->w + j);
+        mag_add(out, out, term);
+    }
+    mag_clear(term);
+}
+
+/* f 盒值域 ⊂ [lo,hi]（arf 外向界：f0 球端点 ∓ W） */
+static void tm_range_arf(arf_t lo, arf_t hi, const tm1_t *t, const tmctx *cx)
+{
+    arf_t wm;
+    arf_init(wm);
+    arf_set_mag(wm, t->W);          /* mag 的名义值是其上界，arf 精确可表 */
+    arb_get_lbound_arf(lo, t->f0, cx->prec_h);
+    arb_get_ubound_arf(hi, t->f0, cx->prec_h);
+    arf_sub(lo, lo, wm, cx->prec_h, ARF_RND_FLOOR);
+    arf_add(hi, hi, wm, cx->prec_h, ARF_RND_CEIL);
+    arf_clear(wm);
+}
+
+/* sqrt/log 的 Mg'、Mg'' 上界：c = f 盒值域下界（arf，调用方保证 >0）。
+   粗球算术外扩取 mag；c 取下界 → 倒数值更大，方向 sound。
+   kind 0 = sqrt（1/(2√c), 1/(4c^{3/2})）；kind 1 = log（1/c, 1/c²）。 */
+static void tm_uni_M(mag_t Mg1, mag_t Mg2, const arf_t c, int kind, slong prec)
+{
+    arb_t t, s, u;
+    arb_init(t);
+    arb_init(s);
+    arb_init(u);
+    arb_set_arf(t, c);                /* 退化球 = c 的下界 */
+    if (kind == 0) {
+        arb_sqrt(s, t, prec);         /* ⊇ √c */
+        arb_mul_2exp_si(u, s, 1);     /* 2√c */
+        arb_inv(u, u, prec);          /* ⊇ 1/(2√c) */
+        arb_get_mag(Mg1, u);
+        arb_mul(s, s, t, prec);       /* c^{3/2} */
+        arb_mul_2exp_si(s, s, 2);     /* 4c^{3/2} */
+        arb_inv(s, s, prec);
+        arb_get_mag(Mg2, s);
+    } else {
+        arb_inv(u, t, prec);          /* 1/c */
+        arb_get_mag(Mg1, u);
+        arb_mul(s, t, t, prec);
+        arb_inv(s, s, prec);
+        arb_get_mag(Mg2, s);
+    }
+    arb_clear(t);
+    arb_clear(s);
+    arb_clear(u);
+}
+
+/* M = 1/min|g(box)| 的上界 mag；g 盒值域越零 → 返回 0（不可用） */
+static int tm_inv_range_mag(mag_t M, const tm1_t *g, const tmctx *cx)
+{
+    arf_t lo, hi;
+    arb_t t;
+    int ok = 1;
+    arf_init(lo);
+    arf_init(hi);
+    arb_init(t);
+    tm_range_arf(lo, hi, g, cx);
+    if (arf_sgn(lo) > 0) {
+        arb_set_arf(t, lo);           /* |g| ≥ lo > 0 → 1/|g| ≤ 1/lo */
+    } else if (arf_sgn(hi) < 0) {
+        arf_neg(hi, hi);
+        arb_set_arf(t, hi);           /* |g| ≥ |hi| > 0 */
+    } else {
+        ok = 0;
+    }
+    if (ok) {
+        arb_inv(t, t, cx->prec_h);
+        arb_get_mag(M, t);
+    }
+    arf_clear(lo);
+    arf_clear(hi);
+    arb_clear(t);
+    return ok;
+}
+
+/* 单遍 RPN 前向 AD：0 = 栈顶 TM 有效；1 = 本叶 TM 不可用（立即放弃）。
+   栈纪律与 eval_prog 一致（check_prog 已静态保证）。
+   注：本函数在 GCC -O2 下触发 -Wstringop-overflow/overread 误报（对 FLINT
+   数组 typedef 参数 arb_t = arb_struct[1] 的对象尺寸分析幻觉；-O1/-O3 均无，
+   对象均为完整 tm1_t 槽位）。局部屏蔽，其余文件区域保持默认告警。 */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#pragma GCC diagnostic ignored "-Wstringop-overread"
+#define TM_FAIL(code) do { if (!cx->fail_reason) { \
+        cx->fail_reason = (code); cx->fail_ip = i; } return 1; } while (0)
+static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
+{
+    size_t i;
+    slong n = cx->n;
+    for (i = 0; i < p->n; i++) {
+        const instr *in = &p->is[i];
+        if (in->op == OP_PUSH_VAR || in->op == OP_PUSH_CONST) {
+            tm1_t *t = stk + (*sp)++;
+            slong k;
+            if (in->op == OP_PUSH_VAR) {
+                arb_set(t->f0, cx->yb + in->vi);
+            } else {
+                fmpq_t q;
+                fmpq_init(q);
+                fmpz_set(fmpq_numref(q), in->cn);
+                fmpz_set(fmpq_denref(q), in->cd);
+                arb_set_fmpq(t->f0, q, cx->prec_c);
+                fmpq_clear(q);
+            }
+            for (k = 0; k < n; k++) {
+                if (in->op == OP_PUSH_VAR && k == in->vi) arb_one(t->df + k);
+                else arb_zero(t->df + k);
+            }
+            for (k = 0; k < n * n; k++) mag_zero(t->ddf + k);
+            mag_zero(t->err);
+            tm_update_W(t, cx);
+        } else if (in->op == OP_ITE) {
+            /* guard 盒上裸区间判定：可定 → 盒上 f 恒等于一支，递归 TM 该支 */
+            size_t bsp = 0;
+            evres cs = eval_prog(in->pc, (arb_srcptr)cx->bvars, (arb_t *)cx->bstk, &bsp,
+                                 cx->prec_c, 0, NULL);
+            int take_then = -1;
+            if (cs != EV_OK) TM_FAIL(1);
+            if (in->mode_eq) {
+                if (arb_is_zero(cx->bstk)) take_then = 1;
+                else if (arb_is_positive(cx->bstk) ||
+                         arb_is_negative(cx->bstk)) take_then = 0;
+            } else {
+                if (arb_is_negative(cx->bstk)) take_then = 1;
+                else if (arb_is_nonnegative(cx->bstk)) take_then = 0;
+            }
+            if (take_then < 0) TM_FAIL(2);
+            if (eval_prog_tm(take_then ? in->pt : in->pe, stk, sp, cx))
+                return 1;   /* 保留内层失败原因 */
+        } else if (in->op == OP_ADD || in->op == OP_SUB ||
+                   in->op == OP_MUL || in->op == OP_DIV) {
+            tm1_t *f, *g;
+            slong a, b;
+            if (*sp < 2) die(EXIT_ERR, "TM 运行期 RPN 栈下溢");
+            (*sp) -= 2;
+            f = stk + *sp;
+            g = stk + *sp + 1;
+            if (in->op == OP_ADD || in->op == OP_SUB) {
+                if (in->op == OP_ADD) arb_add(f->f0, f->f0, g->f0, cx->prec_c);
+                else arb_sub(f->f0, f->f0, g->f0, cx->prec_c);
+                for (a = 0; a < n; a++) {
+                    if (in->op == OP_ADD)
+                        arb_add(f->df + a, f->df + a, g->df + a, cx->prec_c);
+                    else
+                        arb_sub(f->df + a, f->df + a, g->df + a, cx->prec_c);
+                }
+                for (a = 0; a < n * n; a++)
+                    mag_add(f->ddf + a, f->ddf + a, g->ddf + a);
+                mag_add(f->err, f->err, g->err);
+                tm_update_W(f, cx);
+            } else if (in->op == OP_MUL) {
+                mag_t Bf, Bg, acc, t1;
+                mag_init(Bf); mag_init(Bg); mag_init(acc); mag_init(t1);
+                tm_Bmag(Bf, f);
+                tm_Bmag(Bg, g);
+                for (a = 0; a < n; a++) {
+                    tm_Dmag(cx->Df + a, f, cx, a);
+                    tm_Dmag(cx->Dg + a, g, cx, a);
+                }
+                /* 二阶盒界（先算，读旧 ddf；同 cell 读后写安全） */
+                for (a = 0; a < n; a++)
+                    for (b = 0; b < n; b++) {
+                        mag_mul(acc, f->ddf + a * n + b, Bg);
+                        mag_mul(t1, Bf, g->ddf + a * n + b);
+                        mag_add(acc, acc, t1);
+                        mag_mul(t1, cx->Df + a, cx->Dg + b);
+                        mag_add(acc, acc, t1);
+                        mag_mul(t1, cx->Df + b, cx->Dg + a);
+                        mag_add(acc, acc, t1);
+                        mag_set(f->ddf + a * n + b, acc);
+                    }
+                /* 中心球：f0 = f·g，dfᵢ = dfᵢ·g0 + f0·dgᵢ（积法则） */
+                {
+                    arb_t nf0, t1a;
+                    arb_init(nf0);
+                    arb_init(t1a);
+                    arb_mul(nf0, f->f0, g->f0, cx->prec_c);
+                    for (a = 0; a < n; a++) {
+                        arb_mul(t1a, f->df + a, g->f0, cx->prec_c);
+                        arb_mul(cx->ndf + a, f->f0, g->df + a, cx->prec_c);
+                        arb_add(cx->ndf + a, cx->ndf + a, t1a, cx->prec_c);
+                    }
+                    arb_set(f->f0, nf0);
+                    for (a = 0; a < n; a++) arb_set(f->df + a, cx->ndf + a);
+                    arb_clear(nf0);
+                    arb_clear(t1a);
+                }
+                tm_err_from_ddf(f, cx);
+                tm_update_W(f, cx);
+                mag_clear(Bf); mag_clear(Bg); mag_clear(acc); mag_clear(t1);
+            } else {  /* OP_DIV：f/g，g 盒值域越零 → 不可用 */
+                mag_t M, M2, M3, Bf, acc, t1;
+                mag_init(M); mag_init(M2); mag_init(M3);
+                mag_init(Bf); mag_init(acc); mag_init(t1);
+                tm_Bmag(Bf, f);
+                if (!tm_inv_range_mag(M, g, cx)) {
+                    mag_clear(M); mag_clear(M2); mag_clear(M3);
+                    mag_clear(Bf); mag_clear(acc); mag_clear(t1);
+                    TM_FAIL(3);
+                }
+                mag_mul(M2, M, M);
+                mag_mul(M3, M2, M);
+                for (a = 0; a < n; a++) {
+                    tm_Dmag(cx->Df + a, f, cx, a);
+                    tm_Dmag(cx->Dg + a, g, cx, a);
+                }
+                /* ∂²ᵢⱼ(f/g) = ∂²ᵢⱼf/g − (∂ᵢf∂ⱼg + ∂ⱼf∂ᵢg)/g²
+                   + f·(2∂ᵢg∂ⱼg/g³ − ∂²ᵢⱼg/g²) 的幅值界 */
+                for (a = 0; a < n; a++)
+                    for (b = 0; b < n; b++) {
+                        mag_mul(acc, f->ddf + a * n + b, M);
+                        mag_mul(t1, Bf, g->ddf + a * n + b);
+                        mag_mul(t1, t1, M2);
+                        mag_add(acc, acc, t1);
+                        mag_mul(t1, cx->Df + a, cx->Dg + b);
+                        mag_mul(t1, t1, M2);
+                        mag_add(acc, acc, t1);
+                        mag_mul(t1, cx->Df + b, cx->Dg + a);
+                        mag_mul(t1, t1, M2);
+                        mag_add(acc, acc, t1);
+                        mag_mul(t1, cx->Dg + a, cx->Dg + b);
+                        mag_mul(t1, t1, Bf);
+                        mag_mul(t1, t1, M3);
+                        mag_mul_2exp_si(t1, t1, 1);
+                        mag_add(acc, acc, t1);
+                        mag_set(f->ddf + a * n + b, acc);
+                    }
+                /* 中心球：f0 = f0/g0，dfᵢ = (dfᵢ·g0 − f0·dgᵢ)/g0²（商法则） */
+                {
+                    arb_t nf0, gsq, t1a;
+                    arb_init(nf0);
+                    arb_init(gsq);
+                    arb_init(t1a);
+                    arb_div(nf0, f->f0, g->f0, cx->prec_c);
+                    arb_mul(gsq, g->f0, g->f0, cx->prec_c);
+                    for (a = 0; a < n; a++) {
+                        arb_mul(t1a, f->df + a, g->f0, cx->prec_c);
+                        arb_mul(cx->ndf + a, f->f0, g->df + a, cx->prec_c);
+                        arb_sub(cx->ndf + a, t1a, cx->ndf + a, cx->prec_c);
+                        arb_div(cx->ndf + a, cx->ndf + a, gsq, cx->prec_c);
+                    }
+                    arb_set(f->f0, nf0);
+                    for (a = 0; a < n; a++) arb_set(f->df + a, cx->ndf + a);
+                    arb_clear(nf0);
+                    arb_clear(gsq);
+                    arb_clear(t1a);
+                }
+                tm_err_from_ddf(f, cx);
+                tm_update_W(f, cx);
+                mag_clear(M); mag_clear(M2); mag_clear(M3);
+                mag_clear(Bf); mag_clear(acc); mag_clear(t1);
+            }
+            (*sp)++;
+        } else {
+            /* 一元：NEG / ABS / SQRT / ATAN / LOG / SIN / COS */
+            tm1_t *f;
+            slong a, b;
+            if (*sp < 1) die(EXIT_ERR, "TM 运行期 RPN 栈下溢");
+            f = stk + (*sp - 1);
+            if (in->op == OP_NEG) {
+                arb_neg(f->f0, f->f0);
+                for (a = 0; a < n; a++) arb_neg(f->df + a, f->df + a);
+                continue;   /* ddf/err/W 不变 */
+            }
+            if (in->op == OP_ABS) {
+                /* 盒值域定号 → ±identity；跨 0 → 不可用（TMSafe 排除） */
+                arf_t lo, hi;
+                arf_init(lo);
+                arf_init(hi);
+                tm_range_arf(lo, hi, f, cx);
+                if (arf_sgn(lo) > 0) {
+                    /* identity：什么都不做 */
+                } else if (arf_sgn(hi) < 0) {
+                    arb_neg(f->f0, f->f0);
+                    for (a = 0; a < n; a++) arb_neg(f->df + a, f->df + a);
+                } else {
+                    arf_clear(lo);
+                    arf_clear(hi);
+                    TM_FAIL(4);
+                }
+                arf_clear(lo);
+                arf_clear(hi);
+                continue;
+            }
+            /* 链法则 g∘f：先定 Mg'、Mg''（盒值域），再中心球，再 ddf/err/W */
+            {
+                mag_t Mg1, Mg2, acc, t1;
+                arf_t lo, hi;
+                mag_init(Mg1); mag_init(Mg2); mag_init(acc); mag_init(t1);
+                arf_init(lo); arf_init(hi);
+                tm_range_arf(lo, hi, f, cx);
+                /* Df（内层 |∂ᵢf| 盒上界）必须在中心球更新 df 之前取——
+                   链法则余项用的是内层偏导，读新 df 会低估（soundness） */
+                for (a = 0; a < n; a++) tm_Dmag(cx->Df + a, f, cx, a);
+                switch (in->op) {
+                case OP_SQRT:
+                    if (arf_sgn(lo) <= 0) goto tm_unary_fail;
+                    tm_uni_M(Mg1, Mg2, lo, 0, cx->prec_h);
+                    {
+                        arb_t s, t2;
+                        arb_init(s);
+                        arb_init(t2);
+                        arb_sqrt(s, f->f0, cx->prec_c);   /* f0 ≥ lo > 0 */
+                        for (a = 0; a < n; a++) {
+                            arb_mul_2exp_si(t2, s, 1);
+                            arb_div(cx->ndf + a, f->df + a, t2, cx->prec_c);
+                        }
+                        arb_set(f->f0, s);
+                        for (a = 0; a < n; a++) arb_set(f->df + a, cx->ndf + a);
+                        arb_clear(s);
+                        arb_clear(t2);
+                    }
+                    break;
+                case OP_LOG:
+                    if (arf_sgn(lo) <= 0) goto tm_unary_fail;
+                    tm_uni_M(Mg1, Mg2, lo, 1, cx->prec_h);
+                    for (a = 0; a < n; a++)
+                        arb_div(cx->ndf + a, f->df + a, f->f0, cx->prec_c);
+                    arb_log(f->f0, f->f0, cx->prec_c);
+                    for (a = 0; a < n; a++) arb_set(f->df + a, cx->ndf + a);
+                    break;
+                case OP_ATAN:
+                    mag_one(Mg1);
+                    tm_Bmag(Mg2, f);
+                    mag_mul_2exp_si(Mg2, Mg2, 1);     /* 2·Bf */
+                    if (mag_cmp(Mg2, Mg1) > 0) mag_set(Mg2, Mg1);  /* min(2Bf,1) */
+                    {
+                        arb_t d;
+                        arb_init(d);
+                        arb_mul(d, f->f0, f->f0, cx->prec_c);
+                        arb_add_ui(d, d, 1, cx->prec_c);
+                        for (a = 0; a < n; a++)
+                            arb_div(cx->ndf + a, f->df + a, d, cx->prec_c);
+                        arb_atan(f->f0, f->f0, cx->prec_c);
+                        for (a = 0; a < n; a++) arb_set(f->df + a, cx->ndf + a);
+                        arb_clear(d);
+                    }
+                    break;
+                case OP_SIN:
+                    /* Mg' = |cos| ≤ 1；Mg'' = |−sin t| ≤ min(1, Bf) */
+                    mag_one(Mg1);
+                    tm_Bmag(Mg2, f);
+                    if (mag_cmp(Mg2, Mg1) > 0) mag_set(Mg2, Mg1);
+                    {
+                        arb_t c0;
+                        arb_init(c0);
+                        arb_cos(c0, f->f0, cx->prec_c);
+                        for (a = 0; a < n; a++)
+                            arb_mul(cx->ndf + a, f->df + a, c0, cx->prec_c);
+                        arb_sin(f->f0, f->f0, cx->prec_c);
+                        for (a = 0; a < n; a++) arb_set(f->df + a, cx->ndf + a);
+                        arb_clear(c0);
+                    }
+                    break;
+                case OP_COS:
+                    /* Mg' = |−sin t| ≤ min(1, Bf)；Mg'' = |−cos| ≤ 1 */
+                    tm_Bmag(Mg1, f);
+                    mag_one(Mg2);
+                    if (mag_cmp(Mg1, Mg2) > 0) mag_set(Mg1, Mg2);
+                    {
+                        arb_t s0;
+                        arb_init(s0);
+                        arb_sin(s0, f->f0, cx->prec_c);
+                        for (a = 0; a < n; a++) {
+                            arb_mul(cx->ndf + a, f->df + a, s0, cx->prec_c);
+                            arb_neg(cx->ndf + a, cx->ndf + a);
+                        }
+                        arb_cos(f->f0, f->f0, cx->prec_c);
+                        for (a = 0; a < n; a++) arb_set(f->df + a, cx->ndf + a);
+                        arb_clear(s0);
+                    }
+                    break;
+                default:
+                    goto tm_unary_fail;
+                }
+                /* Hᵢⱼ ≤ Mg''·Dfᵢ·Dfⱼ + Mg'·Hfᵢⱼ（Df 已在 switch 前用旧 df 算好；
+                   此处读旧 ddf、同 cell 读后写安全） */
+                for (a = 0; a < n; a++)
+                    for (b = 0; b < n; b++) {
+                        mag_mul(acc, cx->Df + a, cx->Df + b);
+                        mag_mul(acc, acc, Mg2);
+                        mag_mul(t1, Mg1, f->ddf + a * n + b);
+                        mag_add(acc, acc, t1);
+                        mag_set(f->ddf + a * n + b, acc);
+                    }
+                tm_err_from_ddf(f, cx);
+                tm_update_W(f, cx);
+                mag_clear(Mg1); mag_clear(Mg2); mag_clear(acc); mag_clear(t1);
+                arf_clear(lo); arf_clear(hi);
+                continue;
+            tm_unary_fail:
+                mag_clear(Mg1); mag_clear(Mg2); mag_clear(acc); mag_clear(t1);
+                arf_clear(lo); arf_clear(hi);
+                TM_FAIL(5);
+            }
+        }
+    }
+    return 0;
+}
+
+/* loBound = f0.lo − W > 0 → 0（闭合）；否则 1。调用方保证 TM 有效。 */
+#pragma GCC diagnostic pop
+static int tm_decide(const tm1_t *root)
+{
+    arf_t lo, wm;
+    int r;
+    arf_init(lo);
+    arf_init(wm);
+    arb_get_lbound_arf(lo, root->f0, 64);
+    arf_set_mag(wm, root->W);
+    arf_sub(lo, lo, wm, 64, ARF_RND_FLOOR);   /* ≤ 真 loBound，外向 */
+    r = (arf_sgn(lo) > 0) ? 0 : 1;
+    arf_clear(lo);
+    arf_clear(wm);
+    return r;
+}
+
 /* ---------------- 叶（盒）与队列 ---------------- */
 
 typedef struct {
@@ -780,11 +1340,70 @@ static slong widest_dim(const leaf *L)
     return best;
 }
 
+/* 叶最大维宽（double，仅作 TM 启用阈值的启发式，不参与 soundness） */
+static double leaf_wmax(const leaf *L)
+{
+    slong i;
+    double m = 0;
+    for (i = 0; i < L->nv; i++) {
+        double lo = fmpz_get_d(L->ln + i) / fmpz_get_d(L->ld + i);
+        double hi = fmpz_get_d(L->hn + i) / fmpz_get_d(L->hd + i);
+        if (hi - lo > m) m = hi - lo;
+    }
+    return m;
+}
+
+/* 每叶 TM 上下文装配：中心球 yb（精确 fmpq 中点入球）、半径包 w（mag 上界）、
+   盒球 bvars（ite guard 裸区间判定用，∋ [lo,hi]）。 */
+static void tm_setup_leaf(tmctx *cx, const leaf *L)
+{
+    slong i;
+    for (i = 0; i < cx->n; i++) {
+        fmpq_t mid, rad;
+        fmpq_init(mid);
+        fmpq_init(rad);
+        /* mid = (ln*hd + hn*ld) / (2*ld*hd)；rad = (hn*ld - ln*hd) / (2*ld*hd) */
+        fmpz_mul(fmpq_numref(mid), L->ln + i, L->hd + i);
+        fmpz_addmul(fmpq_numref(mid), L->hn + i, L->ld + i);
+        fmpz_mul(fmpq_denref(mid), L->ld + i, L->hd + i);
+        fmpz_mul_2exp(fmpq_denref(mid), fmpq_denref(mid), 1);
+        fmpz_mul(fmpq_numref(rad), L->hn + i, L->ld + i);
+        fmpz_submul(fmpq_numref(rad), L->ln + i, L->hd + i);
+        fmpz_mul(fmpq_denref(rad), L->ld + i, L->hd + i);
+        fmpz_mul_2exp(fmpq_denref(rad), fmpq_denref(rad), 1);
+        arb_set_fmpq(cx->yb + i, mid, cx->prec_c);   /* 中心球 ∋ yᵢ */
+        {
+            arb_t r;
+            mag_t R;
+            arb_init(r);
+            mag_init(R);
+            arb_set_fmpq(r, rad, cx->prec_h);
+            arb_get_mag(cx->w + i, r);               /* wᵢ 上界 */
+            arb_clear(r);
+            /* 盒球 = 中点球心 + (rad 上界 + 中点球半径) */
+            arb_set_fmpq(r, rad, cx->prec_c);
+            arb_get_mag(R, r);
+            mag_add(R, R, arb_radref(cx->yb + i));
+            arb_zero(cx->bvars + i);
+            arf_set(arb_midref(cx->bvars + i), arb_midref(cx->yb + i));
+            mag_set(arb_radref(cx->bvars + i), R);
+            arb_clear(r);
+            mag_clear(R);
+        }
+        fmpq_clear(mid);
+        fmpq_clear(rad);
+    }
+}
+
 /* ---------------- 证书（闭叶收集 + JSON 输出） ---------------- */
 
 typedef struct {
     leaf L;
-    char hit[48];        /* "main" | "disj:k" | "var_lt:i,j" */
+    char hit[48];        /* "main" | "disj:k" | "var_lt:i,j" | "tm" */
+    /* TM advisory 块（仅 hit=="tm"；内核不信任，stage-A 种子用，§2.3） */
+    int   has_tm;
+    slong tm_pc, tm_ph;    /* 实测够用的中心/Hessian 精度档 */
+    slong tm_eexp;         /* 余项界数量级 hint：floor(log2(err)) */
 } cleaf;
 
 typedef struct {
@@ -800,7 +1419,20 @@ static void closed_add(cleafq *c, const leaf *L, const char *hit)
     }
     leaf_copy(&c->v[c->n].L, L);
     snprintf(c->v[c->n].hit, sizeof(c->v[c->n].hit), "%s", hit);
+    c->v[c->n].has_tm = 0;
     c->n++;
+}
+
+/* TM 闭合叶：附加 advisory 块（center 默认中点，按 §2.3 省略） */
+static void closed_add_tm(cleafq *c, const leaf *L, slong pc, slong ph,
+                          const mag_t err)
+{
+    closed_add(c, L, "tm");
+    c->v[c->n - 1].has_tm = 1;
+    c->v[c->n - 1].tm_pc = pc;
+    c->v[c->n - 1].tm_ph = ph;
+    c->v[c->n - 1].tm_eexp = mag_is_zero(err)
+        ? -1022 : (slong)floor(mag_get_d_log2_approx(err));
 }
 
 /* JSON 字符串（转义 " \ 与控制字符） */
@@ -907,7 +1539,12 @@ typedef struct {
 static void usage(void)
 {
     fprintf(stderr,
-            "用法: bb_arb <case.json> [--max-nodes N] [--prec P] [--cert out.json]\n");
+            "用法: bb_arb <case.json> [--max-nodes N] [--prec P] [--cert out.json]\n"
+            "       [--tm] [--tm-prec P] [--tm-hprec P] [--tm-w0 D] [--tm-debug]\n"
+            "  --tm：叶判定启用一阶 Taylor 模型先行（默认关闭，裸区间路径零变动）\n"
+            "  --tm-prec：TM 中心/一阶精度（默认 256）；--tm-hprec：Hessian 粗精度（默认 32）\n"
+            "  --tm-w0：TM 启用盒宽阈值初值（默认 0.25，窗口自适应）\n"
+            "  --tm-debug：只对根盒跑一次 TM 并打印包围，随后退出\n");
     exit(EXIT_ERR);
 }
 
@@ -916,6 +1553,9 @@ int main(int argc, char **argv)
     const char *path = NULL, *certpath = NULL;
     slong prec = 64;
     long max_nodes = 1L << 16;
+    int tm_on = 0, tm_debug = 0;
+    slong tm_prec = 256, tm_hprec = 32;
+    double tm_w0 = 0.25;
     int i;
 
     /* ---- 命令行 ---- */
@@ -926,6 +1566,17 @@ int main(int argc, char **argv)
             prec = (slong)strtol(argv[++i], NULL, 10);
         } else if (!strcmp(argv[i], "--cert") && i + 1 < argc) {
             certpath = argv[++i];
+        } else if (!strcmp(argv[i], "--tm")) {
+            tm_on = 1;
+        } else if (!strcmp(argv[i], "--tm-prec") && i + 1 < argc) {
+            tm_prec = (slong)strtol(argv[++i], NULL, 10);
+        } else if (!strcmp(argv[i], "--tm-hprec") && i + 1 < argc) {
+            tm_hprec = (slong)strtol(argv[++i], NULL, 10);
+        } else if (!strcmp(argv[i], "--tm-w0") && i + 1 < argc) {
+            tm_w0 = strtod(argv[++i], NULL);
+        } else if (!strcmp(argv[i], "--tm-debug")) {
+            tm_debug = 1;
+            tm_on = 1;
         } else if (argv[i][0] == '-' && argv[i][1] != '\0') {
             usage();
         } else if (!path) {
@@ -937,6 +1588,9 @@ int main(int argc, char **argv)
     if (!path) usage();
     if (prec < 2 || prec > 4096) die(EXIT_ERR, "--prec 需在 [2,4096]");
     if (max_nodes < 1) die(EXIT_ERR, "--max-nodes 需 >= 1");
+    if (tm_prec < 8 || tm_prec > 4096) die(EXIT_ERR, "--tm-prec 需在 [8,4096]");
+    if (tm_hprec < 8 || tm_hprec > 256) die(EXIT_ERR, "--tm-hprec 需在 [8,256]");
+    if (!(tm_w0 > 0)) die(EXIT_ERR, "--tm-w0 需为正");
 
     /* ---- 读文件 + JSON 解析 ---- */
     {
@@ -1049,6 +1703,34 @@ int main(int argc, char **argv)
         arb_t *vars = xmalloc((size_t)nvars * sizeof(arb_t));
         for (i = 0; i < nvars; i++) arb_init(vars[i]);
 
+        /* ---- TM 栈与上下文（仅 --tm 时分配；裸区间路径零变动） ---- */
+        tm1_t *tstk = NULL;
+        tmctx tcx;
+        memset(&tcx, 0, sizeof(tcx));
+        if (tm_on) {
+            size_t k;
+            tcx.n = nvars;
+            tcx.prec_c = tm_prec;
+            tcx.prec_h = tm_hprec;
+            tcx.w = xmalloc((size_t)nvars * sizeof(mag_t));
+            tcx.yb = xmalloc((size_t)nvars * sizeof(arb_t));
+            tcx.bvars = xmalloc((size_t)nvars * sizeof(arb_t));
+            tcx.Df = xmalloc((size_t)nvars * sizeof(mag_t));
+            tcx.Dg = xmalloc((size_t)nvars * sizeof(mag_t));
+            tcx.ndf = xmalloc((size_t)nvars * sizeof(arb_t));
+            for (i = 0; i < nvars; i++) {
+                mag_init(tcx.w + i);
+                arb_init(tcx.yb + i);
+                arb_init(tcx.bvars + i);
+                mag_init(tcx.Df + i);
+                mag_init(tcx.Dg + i);
+                arb_init(tcx.ndf + i);
+            }
+            tcx.bstk = (arb_struct *)stk;   /* guard 裸区间求值复用主栈（TM 阶段它空闲） */
+            tstk = xmalloc(scap * sizeof(tm1_t));
+            for (k = 0; k < scap; k++) tm1_init(tstk + k, nvars);
+        }
+
         printf("[bb_arb] case: %s  vars=%ld  prec=%ld  max_nodes=%ld\n",
                caseid, (long)nvars, (long)prec, max_nodes);
         printf("[bb_arb] root box: ");
@@ -1065,6 +1747,53 @@ int main(int argc, char **argv)
         leafq q = { NULL, 0, 0 };
         cleafq closed = { NULL, 0, 0 };
         long processed = 0, n_lad128 = 0, n_lad256 = 0, n_ufall = 0;
+        /* TM 统计与自适应阈值（窗口 64 次尝试：全灭减半、过半且 <1 加倍） */
+        long tm_att = 0, tm_ok = 0, tm_inv = 0, tm_val = 0;
+        long tm_inv_r[8] = { 0 };   /* invalid 原因直方图（诊断） */
+        long tm_win = 0, tm_win_ok = 0;
+        double tm_thresh = tm_w0;
+
+        /* ---- --tm-debug：根盒单遍 TM，打印包围后退出 ---- */
+        if (tm_debug) {
+            size_t tsp = 0;
+            tm_setup_leaf(&tcx, &rootbox);
+            if (eval_prog_tm(mainp, tstk, &tsp, &tcx) != 0 || tsp != 1) {
+                printf("[tm] INVALID（根盒 TM 不可用）reason=%d ip=%lu\n",
+                       tcx.fail_reason, (unsigned long)tcx.fail_ip);
+            } else {
+                tm1_t *r = tstk;
+                arf_t lo, hi, wm, lb, hb;
+                slong v;
+                arf_init(lo); arf_init(hi); arf_init(wm);
+                arf_init(lb); arf_init(hb);
+                arb_get_lbound_arf(lo, r->f0, 64);
+                arb_get_ubound_arf(hi, r->f0, 64);
+                arf_set_mag(wm, r->W);
+                arf_sub(lb, lo, wm, 64, ARF_RND_FLOOR);
+                arf_add(hb, hi, wm, 64, ARF_RND_CEIL);
+                printf("[tm] f0=[%.17g, %.17g]  err=%.6e  W=%.6e\n",
+                       arf_get_d(lo, ARF_RND_DOWN), arf_get_d(hi, ARF_RND_UP),
+                       mag_get_d(r->err), mag_get_d(r->W));
+                printf("[tm] |df|:");
+                for (v = 0; v < nvars; v++) {
+                    mag_t m;
+                    mag_init(m);
+                    arb_get_mag(m, r->df + v);
+                    printf(" %.6e", mag_get_d(m));
+                    mag_clear(m);
+                }
+                printf("\n");
+                printf("[tm] loBound=%.17g hiBound=%.17g\n",
+                       arf_get_d(lb, ARF_RND_DOWN), arf_get_d(hb, ARF_RND_UP));
+                printf("[tm] decide=%s\n",
+                       tm_decide(r) == 0 ? "CLOSED" : "OPEN");
+                arf_clear(lo); arf_clear(hi); arf_clear(wm);
+                arf_clear(lb); arf_clear(hb);
+            }
+            /* 跳到清理段（closed 为空、无证书输出） */
+            goto tm_debug_done;
+        }
+
         qpush(&q, &rootbox);
 
         while (q.n > 0) {
@@ -1079,6 +1808,16 @@ int main(int argc, char **argv)
                 size_t k;
                 fprintf(stderr, "[bb_arb] 节点超限（%ld），未闭合叶 %lu 个：\n",
                         max_nodes, (unsigned long)q.n);
+                if (tm_on) {
+                    fprintf(stderr, "[bb_arb] TM: att=%ld  valid=%ld  invalid=%ld"
+                                    "  closed=%ld  thresh=%g\n",
+                            tm_att, tm_val, tm_inv, tm_ok, tm_thresh);
+                    fprintf(stderr, "[bb_arb] TM invalid 原因: guard-INDET=%ld"
+                                    "  guard跨0=%ld  div越零=%ld  abs跨0=%ld"
+                                    "  sqrt/log底非正=%ld  未知=%ld\n",
+                            tm_inv_r[1], tm_inv_r[2], tm_inv_r[3],
+                            tm_inv_r[4], tm_inv_r[5], tm_inv_r[6]);
+                }
                 for (k = 0; k < q.n; k++) {
                     fprintf(stderr, "  leaf %lu: ", (unsigned long)k);
                     print_box_human(stderr, &q.v[k], names);
@@ -1088,6 +1827,39 @@ int main(int argc, char **argv)
             }
             qpop(&q, &L);
             processed++;
+
+            /* TM 先行（§2.3）：盒宽 ≤ 自适应阈值时先跑一阶 Taylor 判定；
+               loBound > 0 → 闭合（hit "tm"），否则落回既有裸区间路径 */
+            if (tm_on && leaf_wmax(&L) <= tm_thresh) {
+                size_t tsp = 0;
+                int closed_tm = 0;
+                tm_att++;
+                tcx.fail_reason = 0;
+                tm_setup_leaf(&tcx, &L);
+                if (eval_prog_tm(mainp, tstk, &tsp, &tcx) == 0 && tsp == 1) {
+                    tm_val++;
+                    closed_tm = (tm_decide(tstk) == 0);
+                } else {
+                    tm_inv++;
+                    if (tcx.fail_reason >= 1 && tcx.fail_reason <= 6)
+                        tm_inv_r[tcx.fail_reason]++;
+                }
+                tm_win++;
+                tm_win_ok += closed_tm;
+                if (tm_win >= 64) {
+                    if (tm_win_ok == 0) tm_thresh *= 0.5;
+                    else if (tm_win_ok * 2 >= tm_win && tm_thresh < 1.0)
+                        tm_thresh *= 2.0;
+                    tm_win = tm_win_ok = 0;
+                }
+                if (closed_tm) {
+                    tm_ok++;
+                    closed_add_tm(&closed, &L, tcx.prec_c, tcx.prec_h,
+                                  tstk[0].err);
+                    leaf_free(&L);
+                    continue;
+                }
+            }
 
             /* 主 prog 求值 + 精度阶梯 */
             for (li = 0; li < nlad; li++) {
@@ -1229,6 +2001,14 @@ int main(int argc, char **argv)
 
         printf("[bb_arb] CLOSED: leaves=%lu  nodes=%ld  (阶梯128=%ld 256=%ld  union=%ld)\n",
                (unsigned long)closed.n, processed, n_lad128, n_lad256, n_ufall);
+        if (tm_on) {
+            printf("[bb_arb] TM: att=%ld  valid=%ld  invalid=%ld  closed=%ld  thresh=%g\n",
+                   tm_att, tm_val, tm_inv, tm_ok, tm_thresh);
+            printf("[bb_arb] TM invalid 原因: guard-INDET=%ld  guard跨0=%ld"
+                   "  div越零=%ld  abs跨0=%ld  sqrt/log底非正=%ld  未知=%ld\n",
+                   tm_inv_r[1], tm_inv_r[2], tm_inv_r[3],
+                   tm_inv_r[4], tm_inv_r[5], tm_inv_r[6]);
+        }
 
         /* ---- 证书输出 ---- */
         if (certpath) {
@@ -1245,6 +2025,11 @@ int main(int argc, char **argv)
                 fjson_box(f, &closed.v[k].L);
                 fprintf(f, ", \"hit\": ");
                 fjson_str(f, closed.v[k].hit);
+                if (closed.v[k].has_tm)
+                    fprintf(f, ", \"tm\": {\"rung_c\": %ld, \"rung_h\": %ld,"
+                               " \"err_exp\": %ld}",
+                            (long)closed.v[k].tm_pc, (long)closed.v[k].tm_ph,
+                            (long)closed.v[k].tm_eexp);
                 fputc('}', f);
             }
             fprintf(f, "%s],\n  \"nodes\": %ld,\n  \"prec\": %ld\n}\n",
@@ -1254,6 +2039,22 @@ int main(int argc, char **argv)
         }
 
         /* ---- 清理 ---- */
+tm_debug_done:
+        if (tstk) {
+            size_t k;
+            for (k = 0; k < scap; k++) tm1_clear(tstk + k, nvars);
+            free(tstk);
+            for (i = 0; i < nvars; i++) {
+                mag_clear(tcx.w + i);
+                arb_clear(tcx.yb + i);
+                arb_clear(tcx.bvars + i);
+                mag_clear(tcx.Df + i);
+                mag_clear(tcx.Dg + i);
+                arb_clear(tcx.ndf + i);
+            }
+            free(tcx.w); free(tcx.yb); free(tcx.bvars);
+            free(tcx.Df); free(tcx.Dg); free(tcx.ndf);
+        }
         for (i = 0; i < (int)scap; i++) arb_clear(stk[i]);
         free(stk);
         for (i = 0; i < nvars; i++) arb_clear(vars[i]);
