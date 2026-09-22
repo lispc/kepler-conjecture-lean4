@@ -773,6 +773,28 @@ typedef struct {
     int    div_ips_n, div_ips_ovf;
     size_t ite_path[24];     /* 当前 ite 递归走廊（诊断用，见 tm_ipent 注） */
     int    ite_depth;
+    /* --hull-stats：OP_ITE 闭合模式计数（仅旗标开启时累加与打印；
+       默认全零且热路径只有旗标判断，既有路径行为与输出零改动）。
+       口径：
+         事件级 = eval_prog_tm 内每次 OP_ITE 判定；
+         盒尝试级 = 主循环/探针对一个盒的一次 eval_prog_tm 调用的归类；
+         dmax = 该盒尝试中 straddle 事件的最大嵌套深度（该 ite 之上的
+         straddle ite 层数）——Lean 侧 hull 宽度 ×2 翻倍次数的直接对应。 */
+    int    hull_stats;       /* --hull-stats 旗标镜像 */
+    long   hs_single;        /* 事件：guard 裸区间定号 → 单支求值（不付 hull 宽） */
+    long   hs_straddle;      /* 事件：guard 跨0 → 双支求值 + hull 合成 */
+    long   hs_strat_d[16];   /* straddle 事件嵌套深度直方图（≥15 入溢出桶） */
+    long   hs_strat_ovf;
+    long   hs_lf_single;     /* 盒尝试：整棵 TM 无 straddle（全定号单支） */
+    long   hs_lf_hull;       /* 盒尝试：≥1 次 straddle-hull */
+    long   hs_lf_dmax[16];   /* 盒尝试 dmax 直方图（≥15 入溢出桶） */
+    long   hs_cl_single;     /* TM 闭合叶分类（hit=="tm"） */
+    long   hs_cl_hull;
+    long   hs_cl_dmax[16];   /* 闭合叶 dmax 直方图（证书叶的 ×2^k 宽度代价谱） */
+    long   hs_fail_r[8];     /* TM 失败按 reason 直方图（1..6；主循环/探针累加） */
+    int    hs_sd;            /* 运行期：当前 straddle 递归层数 */
+    long   hs_a_strat;       /* 运行期草稿：本盒尝试 straddle 事件数（每盒复位） */
+    int    hs_a_dmax;        /* 运行期草稿：本盒尝试最大 straddle 嵌套深度 */
 } tmctx;
 
 static void tm1_init(tm1_t *t, slong n)
@@ -1039,6 +1061,49 @@ static void tm_div_diag_print(FILE *f, const tmctx *cx)
     }
 }
 
+/* --hull-stats 摘要打印（仅旗标开启时调用） */
+static void tm_hull_stats_print(FILE *f, const tmctx *cx)
+{
+    int k;
+    long fail_n = 0;
+    for (k = 1; k <= 6; k++) fail_n += cx->hs_fail_r[k];
+    fprintf(f, "[bb_arb] hull-stats: ite事件 single=%ld  straddle_hull=%ld\n",
+            cx->hs_single, cx->hs_straddle);
+    fprintf(f, "[bb_arb] hull-stats: straddle 嵌套深度直方图"
+               "(上方straddle ite层数:事件数):");
+    for (k = 0; k < 16; k++)
+        if (cx->hs_strat_d[k]) fprintf(f, " %d:%ld", k, cx->hs_strat_d[k]);
+    if (cx->hs_strat_ovf) fprintf(f, " >=16:%ld", cx->hs_strat_ovf);
+    fprintf(f, "\n");
+    {
+        double att = (double)cx->hs_lf_single + (double)cx->hs_lf_hull +
+                     (double)fail_n;
+        fprintf(f, "[bb_arb] hull-stats: 盒尝试 single=%ld(%.3f%%)"
+                   "  straddle_hull=%ld(%.3f%%)  tm_fail=%ld(%.3f%%)"
+                   "  attempts=%.0f\n",
+                cx->hs_lf_single, att ? 100.0 * (double)cx->hs_lf_single / att : 0.0,
+                cx->hs_lf_hull, att ? 100.0 * (double)cx->hs_lf_hull / att : 0.0,
+                fail_n, att ? 100.0 * (double)fail_n / att : 0.0, att);
+    }
+    fprintf(f, "[bb_arb] hull-stats: 尝试最大嵌套深度直方图(层:盒数):");
+    for (k = 0; k < 16; k++)
+        if (cx->hs_lf_dmax[k]) fprintf(f, " %d:%ld", k, cx->hs_lf_dmax[k]);
+    if (cx->hs_lf_hull) fprintf(f, " (仅 straddle_hull 盒计入)");
+    fprintf(f, "\n");
+    fprintf(f, "[bb_arb] hull-stats: TM闭合叶 single=%ld  straddle_hull=%ld"
+               "  (共%ld)\n",
+            cx->hs_cl_single, cx->hs_cl_hull,
+            cx->hs_cl_single + cx->hs_cl_hull);
+    fprintf(f, "[bb_arb] hull-stats: 闭合叶最大嵌套深度直方图(层:叶数):");
+    for (k = 0; k < 16; k++)
+        if (cx->hs_cl_dmax[k]) fprintf(f, " %d:%ld", k, cx->hs_cl_dmax[k]);
+    fprintf(f, "\n");
+    fprintf(f, "[bb_arb] hull-stats: tm_fail 原因: guard-INDET=%ld  guard跨0=%ld"
+               "  div越零=%ld  abs跨0=%ld  sqrt/log底非正=%ld  未知=%ld\n",
+            cx->hs_fail_r[1], cx->hs_fail_r[2], cx->hs_fail_r[3],
+            cx->hs_fail_r[4], cx->hs_fail_r[5], cx->hs_fail_r[6]);
+}
+
 /* 单遍 RPN 前向 AD：0 = 栈顶 TM 有效；1 = 本叶 TM 不可用（立即放弃）。
    栈纪律与 eval_prog 一致（check_prog 已静态保证）。
    注：本函数在 GCC -O2 下触发 -Wstringop-overflow/overread 误报（对 FLINT
@@ -1097,17 +1162,31 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                 if (cx->ite_depth < 24)
                     cx->ite_path[cx->ite_depth] = (size_t)i << 1;
                 cx->ite_depth++;
+                if (cx->hull_stats) cx->hs_sd++;
                 if (eval_prog_tm(in->pt, stk, sp, cx)) {
                     cx->ite_depth--;
+                    if (cx->hull_stats) cx->hs_sd--;
                     return 1;
                 }
                 if (cx->ite_depth > 0 && cx->ite_depth <= 24)
                     cx->ite_path[cx->ite_depth - 1] |= 1;
                 if (eval_prog_tm(in->pe, stk, sp, cx)) {
                     cx->ite_depth--;
+                    if (cx->hull_stats) cx->hs_sd--;
                     return 1;
                 }
                 cx->ite_depth--;
+                if (cx->hull_stats) {
+                    /* 事件：guard 跨0 → 双支求值 + hull 合成。
+                       d0 = 本 ite 之上的 straddle ite 层数（先还原本 ite
+                       入口时的自增，再读剩余计数的即为外层层数）。 */
+                    cx->hs_sd--;
+                    if (cx->hs_sd > cx->hs_a_dmax) cx->hs_a_dmax = cx->hs_sd;
+                    if (cx->hs_sd < 15) cx->hs_strat_d[cx->hs_sd]++;
+                    else cx->hs_strat_ovf++;
+                    cx->hs_straddle++;
+                    cx->hs_a_strat++;
+                }
                 if (cx->ite_hull2) {
                     /* --ite-hull2（df-hull 收紧版）：合成 TM 保留导数结构。
                      *
@@ -1231,6 +1310,7 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                 if (cx->ite_depth < 24)
                     cx->ite_path[cx->ite_depth] =
                         ((size_t)i << 1) | (size_t)(take_then ? 0 : 1);
+                if (cx->hull_stats) cx->hs_single++;   /* 事件：定号单支 */
                 cx->ite_depth++;
                 rt = eval_prog_tm(take_then ? in->pt : in->pe, stk, sp, cx);
                 cx->ite_depth--;
@@ -1895,7 +1975,9 @@ static void usage(void)
             "            切分维改选 |Df|·w 最大维，TM invalid/未尝试维持最宽维，实验）\n"
             "  --tm-prec：TM 中心/一阶精度（默认 256）；--tm-hprec：Hessian 粗精度（默认 32）\n"
             "  --tm-w0：TM 启用盒宽阈值初值（默认 0.25，窗口自适应）\n"
-            "  --tm-debug：只对根盒跑一次 TM 并打印包围，随后退出\n");
+            "  --tm-debug：只对根盒跑一次 TM 并打印包围，随后退出\n"
+            "  --hull-stats：OP_ITE 闭合模式计数 + straddle 嵌套深度直方图\n"
+            "            （摘要打印由本旗标门控；隐含 --tm；配 --probe 时逐盒附 mode）\n");
     exit(EXIT_ERR);
 }
 
@@ -1905,6 +1987,7 @@ int main(int argc, char **argv)
     slong prec = 64;
     long max_nodes = 1L << 16;
     int tm_on = 0, tm_debug = 0, ite_hull = 0, ite_hull2 = 0, gsplit = 0;
+    int hull_stats = 0;
     slong tm_prec = 256, tm_hprec = 32;
     double tm_w0 = 0.25;
     int i;
@@ -1943,6 +2026,13 @@ int main(int argc, char **argv)
             tm_on = 1;
         } else if (!strcmp(argv[i], "--tm-debug")) {
             tm_debug = 1;
+            tm_on = 1;
+        } else if (!strcmp(argv[i], "--hull-stats")) {
+            /* OP_ITE 闭合模式计数（549 工位 instrumentation）：single /
+               straddle_hull / tm_fail 计数 + straddle 嵌套深度直方图，摘要
+               打印与本旗标门控（默认路径零改动）；隐含 --tm，主场景与
+               --ite-hull/--ite-hull2 组合。探针模式逐盒附 mode 字段。 */
+            hull_stats = 1;
             tm_on = 1;
         } else if (!strcmp(argv[i], "--probe") && i + 1 < argc) {
             /* L1 探针（549 加速项目 Phase 0）：逐盒 TM 判定 + 带符号 df/σ dump；
@@ -2104,6 +2194,7 @@ int main(int argc, char **argv)
             }
             tcx.ite_hull = ite_hull;
             tcx.ite_hull2 = ite_hull2;
+            tcx.hull_stats = hull_stats;
             tcx.bstk = (arb_struct *)stk;   /* guard 裸区间求值复用主栈（TM 阶段它空闲） */
             tstk = xmalloc(scap * sizeof(tm1_t));
             for (k = 0; k < scap; k++) tm1_init(tstk + k, nvars);
@@ -2168,6 +2259,7 @@ int main(int argc, char **argv)
                     tm_debug_dump(tstk, nvars);
                 }
             }
+            if (hull_stats) tm_hull_stats_print(stdout, &tcx);
             /* 跳到清理段（closed 为空、无证书输出） */
             goto tm_debug_done;
         }
@@ -2213,14 +2305,40 @@ int main(int argc, char **argv)
                     jrat(L.hn + v, L.hd + v, dim->items[1], "probe 上端点");
                 }
                 tcx.fail_reason = 0;
+                if (hull_stats) { tcx.hs_a_strat = 0; tcx.hs_a_dmax = 0; }
                 tm_setup_leaf(&tcx, &L);
                 if (eval_prog_tm(mainp, tstk, &tsp, &tcx) == 0 && tsp == 1) {
                     arf_t alo, ahi;
                     int closed = (tm_decide(tstk) == 0);
                     arf_init(alo);
                     arf_init(ahi);
-                    printf("{\"i\":%lu,\"valid\":1,\"closed\":%d,\"f0\":[",
-                           (unsigned long)bi, closed);
+                    if (hull_stats) {
+                        /* 逐盒闭合模式（--hull-stats 门控；默认 probe 输出
+                           逐字节不变）：strat = straddle-hull 事件数，
+                           dmax = 最大嵌套深度（Lean 侧宽度 ×2 次数） */
+                        int dmx = tcx.hs_a_dmax < 15 ? tcx.hs_a_dmax : 15;
+                        printf("{\"i\":%lu,\"valid\":1,\"closed\":%d,"
+                               "\"strat\":%ld,\"dmax\":%d,\"mode\":\"%s\","
+                               "\"f0\":[",
+                               (unsigned long)bi, closed,
+                               tcx.hs_a_strat, tcx.hs_a_dmax,
+                               tcx.hs_a_strat ? "straddle_hull" : "single");
+                        /* 盒级归类（与主循环同口径，摘要打印用） */
+                        if (tcx.hs_a_strat == 0) {
+                            tcx.hs_lf_single++;
+                            if (closed) tcx.hs_cl_single++;
+                        } else {
+                            tcx.hs_lf_hull++;
+                            tcx.hs_lf_dmax[dmx]++;
+                            if (closed) {
+                                tcx.hs_cl_hull++;
+                                tcx.hs_cl_dmax[dmx]++;
+                            }
+                        }
+                    } else {
+                        printf("{\"i\":%lu,\"valid\":1,\"closed\":%d,\"f0\":[",
+                               (unsigned long)bi, closed);
+                    }
                     arb_get_lbound_arf(alo, tstk[0].f0, 64);
                     arb_get_ubound_arf(ahi, tstk[0].f0, 64);
                     printf("%.17g,%.17g],\"df\":[",
@@ -2252,10 +2370,14 @@ int main(int argc, char **argv)
                 } else {
                     printf("{\"i\":%lu,\"valid\":0,\"fail\":%d}\n",
                            (unsigned long)bi, tcx.fail_reason);
+                    if (hull_stats && tcx.fail_reason >= 1 &&
+                        tcx.fail_reason <= 6)
+                        tcx.hs_fail_r[tcx.fail_reason]++;
                 }
                 fflush(stdout);
                 leaf_free(&L);
             }
+            if (hull_stats) tm_hull_stats_print(stdout, &tcx);
             goto tm_debug_done;   /* 清理段复用：无证书输出 */
         }
 
@@ -2284,6 +2406,7 @@ int main(int argc, char **argv)
                             tm_inv_r[1], tm_inv_r[2], tm_inv_r[3],
                             tm_inv_r[4], tm_inv_r[5], tm_inv_r[6]);
                     if (ite_hull2) tm_div_diag_print(stderr, &tcx);
+                    if (hull_stats) tm_hull_stats_print(stderr, &tcx);
                     if (gsplit) {
                         fprintf(stderr, "[bb_arb] gsplit（部分跑）: |Df|·w选维=%ld"
                                         "  最宽维回退=%ld\n", n_gs_used, n_gs_fb);
@@ -2306,6 +2429,7 @@ int main(int argc, char **argv)
                 int closed_tm = 0;
                 tm_att++;
                 tcx.fail_reason = 0;
+                if (hull_stats) { tcx.hs_a_strat = 0; tcx.hs_a_dmax = 0; }
                 tm_setup_leaf(&tcx, &L);
                 if (eval_prog_tm(mainp, tstk, &tsp, &tcx) == 0 && tsp == 1) {
                     tm_val++;
@@ -2313,10 +2437,26 @@ int main(int argc, char **argv)
                     /* tstk[0]（df/ddf）与 tcx.w 在二分点前不再被改写，
                        gsplit 选维在二分块零成本取数 */
                     tm_open_valid = !closed_tm;
+                    if (hull_stats) {
+                        int dmx = tcx.hs_a_dmax < 15 ? tcx.hs_a_dmax : 15;
+                        if (tcx.hs_a_strat == 0) {
+                            tcx.hs_lf_single++;
+                            if (closed_tm) tcx.hs_cl_single++;
+                        } else {
+                            tcx.hs_lf_hull++;
+                            tcx.hs_lf_dmax[dmx]++;
+                            if (closed_tm) {
+                                tcx.hs_cl_hull++;
+                                tcx.hs_cl_dmax[dmx]++;
+                            }
+                        }
+                    }
                 } else {
                     tm_inv++;
-                    if (tcx.fail_reason >= 1 && tcx.fail_reason <= 6)
+                    if (tcx.fail_reason >= 1 && tcx.fail_reason <= 6) {
                         tm_inv_r[tcx.fail_reason]++;
+                        if (hull_stats) tcx.hs_fail_r[tcx.fail_reason]++;
+                    }
                 }
                 tm_win++;
                 tm_win_ok += closed_tm;
@@ -2499,6 +2639,7 @@ int main(int argc, char **argv)
                    tm_inv_r[4], tm_inv_r[5], tm_inv_r[6]);
             if (ite_hull2) tm_div_diag_print(stdout, &tcx);
         }
+        if (hull_stats) tm_hull_stats_print(stdout, &tcx);
         if (gsplit) {
             slong v;
             printf("[bb_arb] gsplit: |Df|·w选维=%ld  最宽维回退=%ld"

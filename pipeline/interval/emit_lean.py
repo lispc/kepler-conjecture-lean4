@@ -1006,8 +1006,12 @@ def emit_sharded_bbgd(t, mod, n, goals, exprs, box, hdr, outpath, shard_leaves,
 
 
 # ---------------------------------------------------------------------------
-# M2b hull pilot (`--hull`): TM-closed leaf certificates through the Lean
-# kernel hull checker `checkPosTMHull` (CertTM.lean M2b section).
+# M2b/schema-v3 hull pilot (`--hull`): TM-closed leaf certificates through the
+# Lean kernel hull checker `checkPosTMHull` (CertTM.lean M2b/schema-v3
+# section; since schema v3 the checker runs `evalTMHullD` — guard-decided
+# single-branch, straddle → double-branch hull — and the stage-A probe runs
+# the node-for-node mirror `evalTMHullFill`, guard sqrt mantissas included in
+# the reported triples, guard-first in the queue).
 #
 #   stage A:  emit_lean.py <case.json> <cert.json> <outA.lean> --hull \
 #                     [--leaves=20 --gran=-80 --rung=128 --rung-out=-80]
@@ -1202,7 +1206,7 @@ def hull_main(case, cid, mod, n, args, params_file, gran, rung_n, rung_out,
         open(args[2], "w").write(hull_stage_a_file(
             mod, n, expr, boxes, gran, rung_n, rung_out,
             nsqrt, ndiv, ntrans, len(boxes), meta,
-            f" — M2b HULL PILOT stage A: {ntm} tm leaves, stride {stride}"))
+            f" — SCHEMA-V3 HULLD PILOT stage A: {ntm} tm leaves, stride {stride}"))
         print(f"emit_lean: wrote {args[2]} (M2b hull stage A: {len(boxes)} "
               f"tm leaves of {ntm}, stride {stride}, sqrt {nsqrt}, div "
               f"{ndiv}, trans {ntrans}; run `lake env lean --run {args[2]} "
@@ -1237,7 +1241,7 @@ def hull_main(case, cid, mod, n, args, params_file, gran, rung_n, rung_out,
     n_pos = sum(1 for r in rows if r[2] == "PASS")
     open(args[2], "w").write(hull_stage_b_file(
         mod, n, expr, rows, rung, nsqrt, ndiv, ntrans, meta,
-        f" — M2b HULL PILOT stage B: kernel verdicts on {len(rows)} of "
+        f" — SCHEMA-V3 HULLD PILOT stage B: kernel verdicts on {len(rows)} of "
         f"{ntm} tm leaves ({n_pos} PASS, {len(rows) - n_pos} NEG); NEG\n"
         "  leaves are NOT certificates — the lemma proven per leaf is the\n"
         "  kernel/compiled-run agreement (see CertTM.lean M2b section)"))
@@ -1322,8 +1326,9 @@ def main():
     extra = ""
 
     if hull:
-        # ---- M2b hull pilot (stage A driver / stage B kernel certificate,
-        # route `checkPosTMHull`; see the M2b section of CertTM.lean) ----
+        # ---- M2b/schema-v3 hull pilot (stage A driver / stage B kernel
+        # certificate, route `checkPosTMHull` = evalTMHullD; see the
+        # M2b/schema-v3 section of CertTM.lean) ----
         hull_main(case, cid, mod, n, args, params_file, gran, rung_n,
                   rung_out, sample_n or 20, max_leaves, manifest_file)
         return

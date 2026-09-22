@@ -2311,6 +2311,580 @@ theorem exIteBadGuard_hull_isSome :
 #print axioms exIteBadGuard_hybrid_none
 #print axioms exIteBadGuard_hull_isSome
 
+/-! ## Schema v3: the guard-decided hull evaluator (`evalTMHullD`)
+
+Root cause ② of the 20-leaf NEG pilot: the M2 hull evaluator above never
+looks at the guard and always pays the double-branch constant hull.  On
+leaves where the guard is *sign-definite on the box* — strictly negative, or
+nonnegative; the C-side `take_then` decision in `bb_arb.c` `eval_prog_tm`
+(`OP_ITE`, `mode=="lt"`: guard interval `hi < 0 → then`, `lo ≥ 0 → else`,
+guard eval failure → `TM_FAIL(1)`) — the ite function coincides with one
+branch everywhere on the box, so the hull synthesis is pure width doubling
+(nested `ite`s multiply it into the err) and the constant composite also
+destroys the branch slopes.  `evalTMHullD` ("D" = decidable guard) evaluates
+the guard *first* and:
+
+- guard strictly negative on the box (`C.hi.isNeg`) → evaluates the `then`
+  branch only, verbatim (no hull, no width doubling, slopes kept);
+- guard nonnegative on the box (`C.lo.isNN`) → evaluates the `else` branch
+  only, verbatim;
+- guard straddles → the M2 double-branch hull composite (unchanged);
+- guard evaluation fails → the node fails (C-side `TM_FAIL(1)`).
+
+The guard itself is evaluated by *certified* plain interval evaluation
+(`evalIParams`): the `IExpr.eval` semantics, except that `sqrt` mantissas are
+consumed from `ps.sqrtCerts` (one `SqrtTMP` per `sqrt` node, traversal order —
+549's outer guard contains a `sqrt` whose radicand interval is
+leaf-dependent, so the AST's fixed `(0, 0)` slots cannot serve it), `sqrt` of
+a straddling radicand clamps the lower end to `0` (`Real.sqrt` of a negative
+real is `0`, matching the C-side `ball(0, M)` clamping), and a negative
+radicand or a zero-crossing divisor fails the node.
+
+Soundness: the certified guard interval contains the guard's real value at
+every box point (`evalIParams_mem`), so a sign-definite interval forces the
+same branch at every box point, and validity transports along that pointwise
+branch selection (`valid_iteHullD`); the straddle case is `valid_iteHull`
+verbatim.  Certificate layout: the guard's `sqrt` nodes consume from the
+head of `sqrtCerts` *before* the selected branch(es), so the queue order
+becomes guard-first per `ite` node (mirrored by `evalTMHullFill`). -/
+
+namespace TaylorM
+
+/-- Transport of validity along pointwise equality on the box (`Valid`
+quantifies only over box points, the center included). -/
+theorem Valid.congr_box {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
+    {f g : (Fin n → ℝ) → ℝ} (hV : M.Valid box f)
+    (hEq : ∀ ρ, boxMem box ρ → g ρ = f ρ) : M.Valid box g := by
+  obtain ⟨h1, h2, h3, h4⟩ := hV
+  refine ⟨h1, h2, ?_, ?_⟩
+  · rw [hEq _ h1]
+    exact h3
+  · intro ρ hρ
+    obtain ⟨a, ha, hbound⟩ := h4 ρ hρ
+    refine ⟨a, ha, ?_⟩
+    rw [hEq ρ hρ, hEq _ h1]
+    exact hbound
+
+end TaylorM
+
+/-- Certified plain-interval evaluation of a guard expression (see the
+schema-v3 section header): the `IExpr.eval` semantics with certificate-carried
+`sqrt` mantissas.  Consumes one `SqrtTMP` per `sqrt` node from the head of
+`ps.sqrtCerts`; all other nodes consume nothing. -/
+def evalIParams {n : ℕ} (box : Fin n → DInterval) :
+    IExpr n → TMParams → Option (DInterval × TMParams)
+  | .const d, ps => some (⟨d, d⟩, ps)
+  | .var k, ps => some (box k, ps)
+  | .neg e, ps => (evalIParams box e ps).map fun (I, ps') => (I.neg, ps')
+  | .abs e, ps => (evalIParams box e ps).map fun (I, ps') => (I.abs, ps')
+  | .add e₁ e₂, ps =>
+      (evalIParams box e₁ ps).bind fun (I₁, ps₁) =>
+      (evalIParams box e₂ ps₁).map fun (I₂, ps₂) => (I₁.add I₂, ps₂)
+  | .sub e₁ e₂, ps =>
+      (evalIParams box e₁ ps).bind fun (I₁, ps₁) =>
+      (evalIParams box e₂ ps₁).map fun (I₂, ps₂) => (I₁.sub I₂, ps₂)
+  | .mul e₁ e₂, ps =>
+      (evalIParams box e₁ ps).bind fun (I₁, ps₁) =>
+      (evalIParams box e₂ ps₁).map fun (I₂, ps₂) => (I₁.mul I₂, ps₂)
+  | .div e₁ e₂ out, ps =>
+      (evalIParams box e₁ ps).bind fun (I₁, ps₁) =>
+      (evalIParams box e₂ ps₁).bind fun (I₂, ps₂) =>
+      (DInterval.div I₁ I₂ out).map fun I => (I, ps₂)
+  | .sqrt e _ _, ps =>
+      (evalIParams box e ps).bind fun (I, ps₀) =>
+      ps₀.sqrtCerts.head?.bind fun t =>
+      if I.hi.isNeg then none
+      else
+        (Dyadic.sqrtI I.hi t.shi).bind fun Jh =>
+        (if I.lo.isNN then (Dyadic.sqrtI I.lo t.slo).map (fun Jl => Jl.lo)
+          else some (⟨0, 0⟩ : Dyadic)).map fun L =>
+          (⟨L, Jh.hi⟩, ⟨ps₀.sqrtCerts.tail, ps₀.invCerts, ps₀.transCerts⟩)
+  | .trans k e N out, ps =>
+      (evalIParams box e ps).bind fun (I, ps₀) =>
+      (transOn k I N out).map fun J => (J, ps₀)
+  | .ite c t e, ps =>
+      (evalIParams box c ps).bind fun (C, ps₀) =>
+      if C.hi.isNeg then evalIParams box t ps₀
+      else if C.lo.isNN then evalIParams box e ps₀
+      else
+        (evalIParams box t ps₀).bind fun (T, ps₁) =>
+        (evalIParams box e ps₁).map fun (E, ps₂) => (T.hull E, ps₂)
+
+/-- **Soundness of `evalIParams`** (`IExpr.eval_mem` with certificate-carried
+`sqrt` mantissas): every successful evaluation returns an interval containing
+the real value at every assignment pointwise inside the box. -/
+theorem evalIParams_mem {n : ℕ} {box : Fin n → DInterval} {ρ : Fin n → ℝ}
+    (hρ : ∀ i, (box i).mem (ρ i)) :
+    ∀ (e : IExpr n) (ps ps' : TMParams) (I : DInterval),
+      evalIParams box e ps = some (I, ps') → I.mem (e.evalReal ρ) := by
+  intro e
+  induction e with
+  | const d =>
+      intro ps ps' I h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+      exact ⟨le_rfl, le_rfl⟩
+  | var k =>
+      intro ps ps' I h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+      exact hρ k
+  | neg e ih =>
+      intro ps ps' I h
+      simp only [evalIParams] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨J, ps₀⟩, he, hI⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hI
+      exact DInterval.mem_neg (ih ps ps₀ J he)
+  | abs e ih =>
+      intro ps ps' I h
+      simp only [evalIParams] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨J, ps₀⟩, he, hI⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hI
+      exact DInterval.mem_abs (ih ps ps₀ J he)
+  | add e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' I h
+      simp only [evalIParams] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨I₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨I₂, ps₂⟩, h₂, hI⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hI
+      exact DInterval.mem_add (ih₁ ps ps₁ I₁ h₁) (ih₂ ps₁ ps₂ I₂ h₂)
+  | sub e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' I h
+      simp only [evalIParams] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨I₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨I₂, ps₂⟩, h₂, hI⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hI
+      exact DInterval.mem_sub (ih₁ ps ps₁ I₁ h₁) (ih₂ ps₁ ps₂ I₂ h₂)
+  | mul e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' I h
+      simp only [evalIParams] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨I₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨I₂, ps₂⟩, h₂, hI⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hI
+      exact DInterval.mem_mul (ih₁ ps ps₁ I₁ h₁) (ih₂ ps₁ ps₂ I₂ h₂)
+  | div e₁ e₂ out ih₁ ih₂ =>
+      intro ps ps' I h
+      simp only [evalIParams] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨I₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨I₂, ps₂⟩, h₂, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨K, hK, hI⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hI
+      exact DInterval.div_sound hK (ih₁ ps ps₁ I₁ h₁) (ih₂ ps₁ ps₂ I₂ h₂)
+  | sqrt e _ _ ih =>
+      intro ps ps' I h
+      simp only [evalIParams] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨J, ps₀⟩, he, h⟩ := h
+      dsimp only at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨t, ht, h⟩ := h
+      by_cases hneg : J.hi.isNeg = true
+      · rw [if_pos hneg] at h; simp at h
+      · rw [if_neg hneg] at h
+        rw [Option.bind_eq_some_iff] at h
+        obtain ⟨Jh, hh, h⟩ := h
+        rw [Option.map_eq_some_iff] at h
+        obtain ⟨L, hl, hI⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hI
+        obtain ⟨hy1, hy2⟩ := ih ps ps₀ J he
+        have hhi0 : ¬ (J.hi.toReal < 0) := fun hlt0 =>
+          hneg ((Dyadic.isNeg_iff J.hi).mpr hlt0)
+        obtain ⟨_, hh2⟩ := Dyadic.sqrtI_sound hh
+        have hJh0 : 0 ≤ Jh.hi.toReal :=
+          le_trans (Real.sqrt_nonneg _) hh2
+        constructor
+        · show L.toReal ≤ Real.sqrt (e.evalReal ρ)
+          by_cases hnn : J.lo.isNN = true
+          · rw [if_pos hnn, Option.map_eq_some_iff] at hl
+            obtain ⟨Jl, hJl, hL⟩ := hl
+            subst hL
+            obtain ⟨hl1, _⟩ := Dyadic.sqrtI_sound hJl
+            exact le_trans hl1 (Real.sqrt_le_sqrt hy1)
+          · rw [if_neg hnn] at hl
+            obtain rfl : L = ⟨0, 0⟩ := (Option.some.inj hl).symm
+            rw [Dyadic.toReal_zero]
+            by_cases hx : e.evalReal ρ < 0
+            · have hs : Real.sqrt (e.evalReal ρ) = 0 :=
+                Real.sqrt_eq_zero_of_nonpos (by linarith)
+              linarith
+            · exact Real.sqrt_nonneg _
+        · show Real.sqrt (e.evalReal ρ) ≤ Jh.hi.toReal
+          by_cases hx : e.evalReal ρ < 0
+          · have hs : Real.sqrt (e.evalReal ρ) = 0 :=
+              Real.sqrt_eq_zero_of_nonpos (by linarith)
+            linarith
+          · exact le_trans (Real.sqrt_le_sqrt (by linarith)) hh2
+  | trans k e N out ih =>
+      intro ps ps' I h
+      simp only [evalIParams] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨J, ps₀⟩, he, h⟩ := h
+      dsimp only at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨K, hK, hI⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hI
+      exact IExpr.transOn_sound k (ih ps ps₀ J he) hK
+  | ite c t e ihc iht ihe =>
+      intro ps ps' I h
+      simp only [evalIParams] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨C, ps₀⟩, hc, h⟩ := h
+      dsimp only at h
+      by_cases hneg : C.hi.isNeg = true
+      · rw [if_pos hneg] at h
+        have hC := ihc ps ps₀ C hc
+        have hlt : c.evalReal ρ < 0 :=
+          lt_of_le_of_lt hC.2 ((Dyadic.isNeg_iff C.hi).mp hneg)
+        show I.mem (if c.evalReal ρ < 0 then t.evalReal ρ else e.evalReal ρ)
+        rw [if_pos hlt]
+        exact iht ps₀ ps' I h
+      · rw [if_neg hneg] at h
+        by_cases hnn : C.lo.isNN = true
+        · rw [if_pos hnn] at h
+          have hC := ihc ps ps₀ C hc
+          have hge : 0 ≤ c.evalReal ρ :=
+            le_trans ((Dyadic.isNN_iff C.lo).mp hnn) hC.1
+          have hnot : ¬ c.evalReal ρ < 0 := not_lt.mpr hge
+          show I.mem (if c.evalReal ρ < 0 then t.evalReal ρ else e.evalReal ρ)
+          rw [if_neg hnot]
+          exact ihe ps₀ ps' I h
+        · rw [if_neg hnn] at h
+          rw [Option.bind_eq_some_iff] at h
+          obtain ⟨⟨T, ps₁⟩, ht, h⟩ := h
+          dsimp only at h
+          rw [Option.map_eq_some_iff] at h
+          obtain ⟨⟨E, ps₂⟩, he', hI⟩ := h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hI
+          show (T.hull E).mem
+            (if c.evalReal ρ < 0 then t.evalReal ρ else e.evalReal ρ)
+          by_cases hlt : c.evalReal ρ < 0
+          · rw [if_pos hlt]
+            exact DInterval.mem_hull_left (iht ps₀ ps₁ T ht)
+          · rw [if_neg hlt]
+            exact DInterval.mem_hull_right (ihe ps₁ ps₂ E he')
+
+/-- **Guard-decided branch validity, then-side** (the `evalTMHullD` core):
+if the guard's certified interval is *strictly negative* on the box, the ite
+function coincides with the `then` branch at every box point, so a valid
+model of the `then` branch is a valid model of the whole ite — no hull, no
+width doubling. -/
+theorem valid_iteHullD {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
+    {c t e : IExpr n} {C : DInterval}
+    (hV : M.Valid box (fun ρ => t.evalReal ρ))
+    (hmem : ∀ ρ, boxMem box ρ → C.mem (c.evalReal ρ))
+    (hneg : C.hi.isNeg = true) :
+    M.Valid box (fun ρ => (IExpr.ite c t e).evalReal ρ) := by
+  refine hV.congr_box fun ρ hρ => ?_
+  show (if c.evalReal ρ < 0 then t.evalReal ρ else e.evalReal ρ)
+    = t.evalReal ρ
+  rw [if_pos (lt_of_le_of_lt (hmem ρ hρ).2 ((Dyadic.isNeg_iff C.hi).mp hneg))]
+
+/-- **Guard-decided branch validity, else-side**: if the guard's certified
+interval is *nonnegative* on the box, the ite function coincides with the
+`else` branch at every box point. -/
+theorem valid_iteHullD_else {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
+    {c t e : IExpr n} {C : DInterval}
+    (hV : M.Valid box (fun ρ => e.evalReal ρ))
+    (hmem : ∀ ρ, boxMem box ρ → C.mem (c.evalReal ρ))
+    (hnn : C.lo.isNN = true) :
+    M.Valid box (fun ρ => (IExpr.ite c t e).evalReal ρ) := by
+  refine hV.congr_box fun ρ hρ => ?_
+  show (if c.evalReal ρ < 0 then t.evalReal ρ else e.evalReal ρ)
+    = e.evalReal ρ
+  rw [if_neg (not_lt.mpr
+    (le_trans ((Dyadic.isNN_iff C.lo).mp hnn) (hmem ρ hρ).1))]
+
+/-- M3/schema-v3: the guard-decided hull evaluator.  Full hybrid traversal
+(same TM rules as `evalTMH` for every non-`ite` constructor) except at `ite`
+nodes, where the guard is evaluated first by certified plain interval
+evaluation (`evalIParams`): a sign-definite guard selects the single branch
+to evaluate verbatim, a straddling guard falls back to the M2 double-branch
+hull composite, and a failing guard evaluation fails the node (C-side
+`TM_FAIL(1)`).  Unlike a delegation to `evalTMH` for the non-`ite`
+constructors, the self-recursion threads the D treatment to *every* nested
+`ite` — delegation would leave inner `ite`s on `evalTMH`'s plain-fallback
+arm, whose guard evaluation fails on leaf-dependent `sqrt` radicands (the
+0/20 pilot's actual kernel failure mode). -/
+def evalTMHullD {n : ℕ} (box : Fin n → DInterval) :
+    IExpr n → TMParams → Option (TaylorM n × TMParams)
+  | .const d, ps => some (constTM box d, ps)
+  | .var k, ps => some (varTM box k, ps)
+  | .neg e, ps => (evalTMHullD box e ps).map fun (M, ps') => (M.neg, ps')
+  | .add e₁ e₂, ps =>
+      (evalTMHullD box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD box e₂ ps₁).map fun (M₂, ps₂) => (M₁.add M₂, ps₂)
+  | .sub e₁ e₂, ps =>
+      (evalTMHullD box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD box e₂ ps₁).map fun (M₂, ps₂) => (M₁.sub M₂, ps₂)
+  | .mul e₁ e₂, ps =>
+      (evalTMHullD box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD box e₂ ps₁).map fun (M₂, ps₂) => (M₁.mul M₂, ps₂)
+  | .div e₁ e₂ out, ps =>
+      (evalTMHullD box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD box e₂ ps₁).bind fun (M₂, ps₂) =>
+      ps₂.invCerts.head?.bind fun p =>
+      ((M₂.inv p).map fun Mi => (M₁.mul Mi, ⟨ps₂.sqrtCerts, ps₂.invCerts.tail,
+          ps₂.transCerts⟩)).orElse
+        (fun _ => ((IExpr.div e₁ e₂ out).eval box).map fun I =>
+          (fallbackTM box I, ⟨ps₂.sqrtCerts, ps₂.invCerts.tail, ps₂.transCerts⟩))
+  | .sqrt e s₁ s₂, ps =>
+      (evalTMHullD box e ps).bind fun (M₀, ps₀) =>
+      ps₀.sqrtCerts.head?.bind fun p =>
+      ((M₀.sqrt p).map fun M' => (M', ⟨ps₀.sqrtCerts.tail, ps₀.invCerts,
+          ps₀.transCerts⟩)).orElse
+        (fun _ => ((IExpr.sqrt e s₁ s₂).eval box).map fun I =>
+          (fallbackTM box I, ⟨ps₀.sqrtCerts.tail, ps₀.invCerts, ps₀.transCerts⟩))
+  | .abs e, ps => ((IExpr.abs e).eval box).map fun I => (fallbackTM box I, ps)
+  | .trans k e N out, ps =>
+      if e.isClosed then
+        ((IExpr.trans k e N out).eval box).map fun I => (closedTM box I, ps)
+      else
+        (evalTMHullD box e ps).bind fun (M₀, ps₀) =>
+        ps₀.transCerts.head?.bind fun p =>
+        ((M₀.trans k N out p).map fun M' =>
+            (M', ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩)).orElse
+          (fun _ => ((IExpr.trans k e N out).eval box).map fun I =>
+            (fallbackTM box I, ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩))
+  | .ite c t e, ps =>
+      (evalIParams box c ps).bind fun (C, ps₀) =>
+      if C.hi.isNeg then evalTMHullD box t ps₀
+      else if C.lo.isNN then evalTMHullD box e ps₀
+      else
+        (evalTMHullD box t ps₀).bind fun (Mt, ps₁) =>
+        (evalTMHullD box e ps₁).map fun (Me, ps₂) => (iteHullTM box Mt Me, ps₂)
+
+/-- **Soundness of `evalTMHullD`** (same conclusion as `evalTMH_sound`): the
+non-`ite` cases repeat `evalTMH_sound`'s arguments over the self-recursion,
+and the `ite` case adds the certified-guard branch selection
+(`valid_iteHullD`/`valid_iteHullD_else`) or the straddle fallback
+(`valid_iteHull`). -/
+theorem evalTMHullD_sound {n : ℕ} {box : Fin n → DInterval} :
+    ∀ (e : IExpr n) (ps ps' : TMParams) (M : TaylorM n),
+      (∀ i, (box i).wf = true) →
+      evalTMHullD box e ps = some (M, ps') →
+      M.Valid box (fun ρ => e.evalReal ρ) ∧ M.y = boxCenter box ∧ M.w = boxW box := by
+  intro e
+  induction e with
+  | const d =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD] at h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+      exact ⟨valid_const (cellOK_of_wf hwf) d, rfl, rfl⟩
+  | var k =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD] at h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+      exact ⟨valid_var (cellOK_of_wf hwf) k, rfl, rfl⟩
+  | neg e ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₀, ps₀⟩, he, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+      exact ⟨valid_neg hV, hy, hw⟩
+  | add e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_add hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | sub e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_sub hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | mul e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_mul hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | div e₁ e₂ out ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨p, _hp, h⟩ := h
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      cases hi : M₂.inv p with
+      | none =>
+        rw [hi] at h
+        rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+      | some Mi =>
+        rw [hi] at h
+        rw [Option.map_some, Option.orElse_some] at h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+        refine ⟨?_, hy₁, hw₁⟩
+        exact valid_div hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂]) p hi
+  | sqrt e s₁ s₂ ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₀, ps₀⟩, he, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨p, _hp, h⟩ := h
+      obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+      cases hs : M₀.sqrt p with
+      | none =>
+        rw [hs] at h
+        rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+      | some M' =>
+        rw [hs] at h
+        rw [Option.map_some, Option.orElse_some] at h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+        obtain ⟨hV', hyy, hww⟩ := valid_sqrt hV p hs
+        refine ⟨hV', ?_, ?_⟩
+        · show M'.y = boxCenter box
+          exact hyy.trans hy
+        · show M'.w = boxW box
+          exact hww.trans hw
+  | abs e ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨I, hI, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+  | trans k e N out ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD] at h
+      by_cases hcl : e.isClosed = true
+      · rw [if_pos hcl] at h
+        rw [Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        exact ⟨valid_closed (cellOK_of_wf hwf) hcl hI, rfl, rfl⟩
+      · rw [if_neg hcl] at h
+        rw [Option.bind_eq_some_iff] at h
+        obtain ⟨⟨M₀, ps₀⟩, he, h⟩ := h
+        rw [Option.bind_eq_some_iff] at h
+        obtain ⟨p, _hp, h⟩ := h
+        obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+        cases ht : M₀.trans k N out p with
+        | none =>
+          rw [ht] at h
+          rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
+          obtain ⟨I, hI, hfinal⟩ := h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+          exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+        | some M' =>
+          rw [ht] at h
+          rw [Option.map_some, Option.orElse_some] at h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+          obtain ⟨hV', hyy, hww⟩ := valid_trans hV N out p ht
+          refine ⟨hV', ?_, ?_⟩
+          · show M'.y = boxCenter box
+            exact hyy.trans hy
+          · show M'.w = boxW box
+            exact hww.trans hw
+  | ite c t e _ihc iht ihe =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨C, ps₀⟩, hc, h⟩ := h
+      by_cases hneg : C.hi.isNeg = true
+      · rw [if_pos hneg] at h
+        obtain ⟨hVt, hy, hw⟩ := iht ps₀ ps' M hwf h
+        refine ⟨valid_iteHullD hVt (fun ρ hρ => evalIParams_mem hρ c ps ps₀ C hc)
+          hneg, hy, hw⟩
+      · rw [if_neg hneg] at h
+        by_cases hnn : C.lo.isNN = true
+        · rw [if_pos hnn] at h
+          obtain ⟨hVe, hy, hw⟩ := ihe ps₀ ps' M hwf h
+          refine ⟨valid_iteHullD_else hVe
+            (fun ρ hρ => evalIParams_mem hρ c ps ps₀ C hc) hnn, hy, hw⟩
+        · rw [if_neg hnn] at h
+          rw [Option.bind_eq_some_iff] at h
+          obtain ⟨⟨Mt, ps₁⟩, ht, h⟩ := h
+          rw [Option.map_eq_some_iff] at h
+          obtain ⟨⟨Me, ps₂⟩, he, hfinal⟩ := h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+          obtain ⟨hVt, _, _⟩ := iht ps₀ ps₁ Mt hwf ht
+          obtain ⟨hVe, _, _⟩ := ihe ps₁ ps₂ Me hwf he
+          exact ⟨valid_iteHull c hVt hVe (cellOK_of_wf hwf), rfl, rfl⟩
+
+/-! ### Schema-v3 smoke tests: decided guard = single branch, no hull -/
+
+/-- Box `[1/2, 1]`: the guard `x` of `exIteAbs` is nonnegative throughout. -/
+def exBoxIteD : Fin 1 → DInterval := fun _ => ⟨⟨1, -1⟩, ⟨1, 0⟩⟩
+
+theorem exBoxIteD_wf : ∀ i, (exBoxIteD i).wf = true := fun i => by
+  fin_cases i; decide
+
+/-- On the guard-decided box the D evaluator returns the else-branch model
+verbatim — no hull composite, no certificate consumption. -/
+theorem exIteD_single_branch :
+    evalTMHullD exBoxIteD exIteAbs TMParams.empty
+      = some (varTM exBoxIteD 0, TMParams.empty) := rfl
+
+/-- The produced single-branch model is valid for pointwise `|x|`. -/
+theorem exIteD_valid (ps ps' : TMParams) (M : TaylorM 1)
+    (hE : evalTMHullD exBoxIteD exIteAbs ps = some (M, ps')) :
+    M.Valid exBoxIteD (fun ρ => if ρ 0 < 0 then -ρ 0 else ρ 0) :=
+  (evalTMHullD_sound exIteAbs ps ps' M exBoxIteD_wf hE).1
+
+/-- Contrast: the M2 hull evaluator on the same box always pays both
+branches and returns the constant hull composite. -/
+theorem exIteD_hull_composite :
+    evalTMHull exBoxIteD exIteAbs TMParams.empty
+      = some (iteHullTM exBoxIteD (varTM exBoxIteD 0).neg (varTM exBoxIteD 0),
+        TMParams.empty) := rfl
+
+/-- A guard whose own interval evaluation fails (divisor `[-1,1]` meets 0)
+fails the D node — C-side `TM_FAIL(1)` semantics — where the M2 hull
+evaluator (guard never evaluated) still succeeds. -/
+theorem exIteBadGuard_hullD_none :
+    evalTMHullD exBoxIteHull exIteBadGuard TMParams.empty = none := rfl
+
+#print axioms TaylorM.Valid.congr_box
+#print axioms evalIParams_mem
+#print axioms valid_iteHullD
+#print axioms valid_iteHullD_else
+#print axioms evalTMHullD_sound
+#print axioms exIteD_single_branch
+#print axioms exIteD_valid
+#print axioms exIteD_hull_composite
+#print axioms exIteBadGuard_hullD_none
+
 /-! ## The checker -/
 
 /-- **Soundness of the Taylor lower bound**: `loBound` lower-bounds `f` at
@@ -2406,13 +2980,16 @@ theorem checkPosTMH_sound {n : ℕ} {e : IExpr n} {box : Fin n → DInterval}
     obtain ⟨hV, _, _⟩ := evalTMH_sound e ps ps' M hwf hE
     exact lt_of_lt_of_le hpos (M.loBound_sound hV hρ)
 
-/-! ## M2b: the hull positivity checker (549 driver entry)
+/-! ## M2b/schema-v3: the hull positivity checker (549 driver entry)
 
-Same shape as `checkPosTMH`, but on `evalTMHull`: `ite` nodes (wherever they
-occur) evaluate **both** branches into the constant hull composite and the
-guard is never evaluated, so guard-straddling leaves — the whole 549 lane
-(`C5490182221`, `bb_arb --ite-hull(2)`, leaves with `hit: "tm"`) — close
-without any guard decision.
+Same shape as `checkPosTMH`, but on `evalTMHullD` (schema v3, first cut):
+`ite` nodes with a guard that is *sign-definite* on the leaf box evaluate
+the selected branch only — no hull synthesis, no width doubling, slopes kept
+— while a guard-straddling leaf falls back to the M2 double-branch constant
+hull composite.  Either way the guard decision comes from *certified*
+interval evaluation over the same leaf box, so the checker stays sound
+whatever the driver believed.  The 549 lane (`C5490182221`, `bb_arb
+--ite-hull(2)`, leaves with `hit: "tm"`) closes through this single entry.
 
 **Driver-entry switch guide** (549 驱动入口切换): emit leaf certificates as
 
@@ -2425,23 +3002,23 @@ carries per-leaf `sqrtCerts` (mantissa triples produced by the compiled-run
 tracing evaluator `evalTMHullFill` below, plus fixed recip granularities)
 and fixed `invCerts`/`transCerts` granularities; the `IExpr` keeps dummy
 `(0, 0)` sqrt slots and the atan rungs `(N, out)` as usual.  Note the
-Lean-side hull composite pays the full hull width as `err` (twice the
-C-side half-width), so the kernel check is stricter than the C-side
-`loBound > 0`: leaves whose hull lower end barely clears 0 may still be
-`NEG` here.  Generated by `emit_lean.py --hull` (stage A driver → params →
-stage B certificate). -/
+Lean-side hull composite (straddle fallback) pays the full hull width as
+`err` (twice the C-side half-width), so the kernel check is stricter than
+the C-side `loBound > 0` there; guard-decided leaves have no such premium.
+Generated by `emit_lean.py --hull` (stage A driver → params → stage B
+certificate). -/
 
 /-- The hull checker (same shape as `checkPosTMH`): box well-formedness,
-successful hull-model evaluation, and a strictly positive Taylor lower
-bound. -/
+successful guard-decided hull-model evaluation, and a strictly positive
+Taylor lower bound. -/
 def checkPosTMHull {n : ℕ} (e : IExpr n) (box : Fin n → DInterval)
     (ps : TMParams) : Bool :=
   (List.finRange n).all (fun i => (box i).wf) &&
-    (match evalTMHull box e ps with
+    (match evalTMHullD box e ps with
     | some (M, _) => (M.loBound box).isPos
     | none => false)
 
-/-- **Soundness of the hull checker** (`evalTMHull_sound` + the Taylor lower
+/-- **Soundness of the hull checker** (`evalTMHullD_sound` + the Taylor lower
 bound lemma, the same two-line composition as `checkPosTMH_sound`). -/
 theorem checkPosTMHull_sound {n : ℕ} {e : IExpr n} {box : Fin n → DInterval}
     {ps : TMParams}
@@ -2451,29 +3028,31 @@ theorem checkPosTMHull_sound {n : ℕ} {e : IExpr n} {box : Fin n → DInterval}
   simp only [Bool.and_eq_true, List.all_eq_true] at h
   obtain ⟨hwfB, h⟩ := h
   have hwf : ∀ i, (box i).wf = true := fun i => hwfB i (List.mem_finRange i)
-  cases hE : evalTMHull box e ps with
+  cases hE : evalTMHullD box e ps with
   | none => rw [hE] at h; simp at h
   | some Mp =>
     obtain ⟨M, ps'⟩ := Mp
     rw [hE] at h
     have hpos := Dyadic.toReal_pos_of_isPos h
-    obtain ⟨hV, _, _⟩ := evalTMHull_sound e ps ps' M hwf hE
+    obtain ⟨hV, _, _⟩ := evalTMHullD_sound e ps ps' M hwf hE
     exact lt_of_lt_of_le hpos (M.loBound_sound hV hρ)
 
 /-! ## M2b certificate production: the tracing hull evaluator
 
 Compiled-run tooling for the certificate generator only — no proof
 obligations, no kernel role (the `Tools.FillParams.evalFill` counterpart for
-the TM route).  `evalTMHullFill` mirrors `evalTMHull` node for node — same
-`div`/`sqrt`/`trans` TM rules with the same fallbacks, same constant hull
-composite at `ite` nodes — except that at `.sqrt` nodes the three
-`Dyadic.sqrtI` mantissas are *computed* from the sub-model
-(`Dyadic.sqrtFloor`, exact) instead of being read from `ps.sqrtCerts`; the
-recip granularities still come from the template certificate.  Hence a PASS
-of the probe below predicts the kernel `checkPosTMHull` of the leaf whose
-`sqrtCerts` carry the reported mantissas: with the mantissas baked in, both
-evaluators visit identical sub-models, and the hull composite is
-deterministic. -/
+the TM route).  `evalTMHullFill` mirrors `evalTMHullD` node for node — same
+`div`/`sqrt`/`trans` TM rules with the same fallbacks, same guard-decided
+single-branch selection at `ite` nodes (guard certified by the mirror
+`evalIParamsFill` below), same constant hull composite at guard-straddling
+`ite` nodes — except that at `.sqrt` nodes (branch TM and in-guard interval
+alike) the `Dyadic.sqrtI` mantissas are *computed* from the sub-model or
+sub-interval (`Dyadic.sqrtFloor`, exact) instead of being read from
+`ps.sqrtCerts`; the recip granularities still come from the template
+certificate.  Hence a PASS of the probe below predicts the kernel
+`checkPosTMHull` of the leaf whose `sqrtCerts` carry the reported mantissas:
+with the mantissas baked in, both evaluators visit identical sub-models and
+sub-intervals, and every composite is deterministic. -/
 
 /-- Exact floor-root mantissa of a nonnegative dyadic (a local mirror of
 `Tools.FillParams`'s `Dyadic.sqrtFloor` — CertTM does not import the Tools
@@ -2484,9 +3063,67 @@ gate).  Compiled runs only (`Nat.sqrt` does not kernel-reduce). -/
 def sqrtMantissa (d : Dyadic) : Int :=
   if 0 ≤ d.m then Int.ofNat (Nat.sqrt (d.m * 2 ^ (d.e % 2).toNat).toNat) else 0
 
-/-- Tracing mirror of `evalTMHull` collecting the per-`sqrt`-node mantissa
-triples `(slo, shi, sc)` in traversal order (`then` before `else` at `ite`
-nodes, node after its argument). -/
+/-- Compiled-run mirror of `evalIParams` for the certificate generator: the
+same control flow and the same `ps` threading (one `SqrtTMP` consumed per
+`sqrt` node, so the kernel's queue layout matches), except that the two root
+mantissas are *computed* (`sqrtMantissa`, exact) instead of read from the
+consumed `SqrtTMP`, and each computed pair is reported in the triple list in
+traversal order (guard first at `ite` nodes).  With the reported pairs baked
+into the kernel-side `sqrtCerts`, the kernel `evalIParams` reproduces the
+identical intervals and branch decisions. -/
+def evalIParamsFill {n : ℕ} (box : Fin n → DInterval) :
+    IExpr n → TMParams → Option (DInterval × TMParams × List (Int × Int × Int))
+  | .const d, ps => some (⟨d, d⟩, ps, [])
+  | .var k, ps => some (box k, ps, [])
+  | .neg e, ps =>
+      (evalIParamsFill box e ps).map fun (I, ps', l) => (I.neg, ps', l)
+  | .abs e, ps =>
+      (evalIParamsFill box e ps).map fun (I, ps', l) => (I.abs, ps', l)
+  | .add e₁ e₂, ps =>
+      (evalIParamsFill box e₁ ps).bind fun (I₁, ps₁, l₁) =>
+      (evalIParamsFill box e₂ ps₁).map fun (I₂, ps₂, l₂) =>
+        (I₁.add I₂, ps₂, l₁ ++ l₂)
+  | .sub e₁ e₂, ps =>
+      (evalIParamsFill box e₁ ps).bind fun (I₁, ps₁, l₁) =>
+      (evalIParamsFill box e₂ ps₁).map fun (I₂, ps₂, l₂) =>
+        (I₁.sub I₂, ps₂, l₁ ++ l₂)
+  | .mul e₁ e₂, ps =>
+      (evalIParamsFill box e₁ ps).bind fun (I₁, ps₁, l₁) =>
+      (evalIParamsFill box e₂ ps₁).map fun (I₂, ps₂, l₂) =>
+        (I₁.mul I₂, ps₂, l₁ ++ l₂)
+  | .div e₁ e₂ out, ps =>
+      (evalIParamsFill box e₁ ps).bind fun (I₁, ps₁, l₁) =>
+      (evalIParamsFill box e₂ ps₁).bind fun (I₂, ps₂, l₂) =>
+      (DInterval.div I₁ I₂ out).map fun I => (I, ps₂, l₁ ++ l₂)
+  | .sqrt e _ _, ps =>
+      (evalIParamsFill box e ps).bind fun (I, ps₀, l) =>
+      ps₀.sqrtCerts.head?.bind fun _ =>
+      let slo := sqrtMantissa I.lo
+      let shi := sqrtMantissa I.hi
+      (if I.hi.isNeg then none
+        else
+          (Dyadic.sqrtI I.hi shi).bind fun Jh =>
+          ((if I.lo.isNN then (Dyadic.sqrtI I.lo slo).map (fun Jl => Jl.lo)
+            else some (⟨0, 0⟩ : Dyadic))).map fun L =>
+            (⟨L, Jh.hi⟩, ⟨ps₀.sqrtCerts.tail, ps₀.invCerts, ps₀.transCerts⟩,
+              l ++ [(slo, shi, 0)]))
+  | .trans k e N out, ps =>
+      (evalIParamsFill box e ps).bind fun (I, ps₀, l) =>
+      (transOn k I N out).map fun J => (J, ps₀, l)
+  | .ite c t e, ps =>
+      (evalIParamsFill box c ps).bind fun (C, ps₀, lg) =>
+      if C.hi.isNeg then
+        (evalIParamsFill box t ps₀).map fun (I, ps', l) => (I, ps', lg ++ l)
+      else if C.lo.isNN then
+        (evalIParamsFill box e ps₀).map fun (I, ps', l) => (I, ps', lg ++ l)
+      else
+        (evalIParamsFill box t ps₀).bind fun (T, ps₁, l₁) =>
+        (evalIParamsFill box e ps₁).map fun (E, ps₂, l₂) =>
+          (T.hull E, ps₂, lg ++ l₁ ++ l₂)
+
+/-- Tracing mirror of `evalTMHullD` collecting the per-`sqrt`-node mantissa
+triples `(slo, shi, sc)` in traversal order (guard before the selected
+branch(es) at `ite` nodes, node after its argument). -/
 def evalTMHullFill {n : ℕ} (box : Fin n → DInterval) :
     IExpr n → TMParams → Option (TaylorM n × TMParams × List (Int × Int × Int))
   | .const d, ps => some (constTM box d, ps, [])
@@ -2541,10 +3178,16 @@ def evalTMHullFill {n : ℕ} (box : Fin n → DInterval) :
               ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩, l))
   | .abs e, ps =>
       ((IExpr.abs e).eval box).map fun I => (fallbackTM box I, ps, [])
-  | .ite _ t e, ps =>
-      (evalTMHullFill box t ps).bind fun (Mt, ps₁, l₁) =>
-      (evalTMHullFill box e ps₁).map fun (Me, ps₂, l₂) =>
-        (iteHullTM box Mt Me, ps₂, l₁ ++ l₂)
+  | .ite c t e, ps =>
+      (evalIParamsFill box c ps).bind fun (C, ps₀, lg) =>
+      if C.hi.isNeg then
+        (evalTMHullFill box t ps₀).map fun (M, ps', l) => (M, ps', lg ++ l)
+      else if C.lo.isNN then
+        (evalTMHullFill box e ps₀).map fun (M, ps', l) => (M, ps', lg ++ l)
+      else
+        (evalTMHullFill box t ps₀).bind fun (Mt, ps₁, l₁) =>
+        (evalTMHullFill box e ps₁).map fun (Me, ps₂, l₂) =>
+          (iteHullTM box Mt Me, ps₂, lg ++ l₁ ++ l₂)
 
 /-- One compiled-run leaf probe: PASS flag, the Taylor lower bound
 (mantissa, exponent) for margin diagnostics, and the mantissa triples to
