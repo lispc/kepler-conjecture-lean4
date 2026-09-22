@@ -350,6 +350,48 @@ theorem eval_mem {n : ℕ} (e : IExpr n) (box : Fin n → DInterval) (ρ : Fin n
       dsimp only at h
       exact transOn_sound k (ih J he) h
 
+/-- No `.var` anywhere: the real semantics is a constant function (used by
+the TM layer to give closed `trans` nodes an exact constant model). -/
+def isClosed {n : ℕ} : IExpr n → Bool
+  | .const _ => true
+  | .var _ => false
+  | .neg e => e.isClosed
+  | .abs e => e.isClosed
+  | .ite c t e => c.isClosed && t.isClosed && e.isClosed
+  | .add e₁ e₂ => e₁.isClosed && e₂.isClosed
+  | .sub e₁ e₂ => e₁.isClosed && e₂.isClosed
+  | .mul e₁ e₂ => e₁.isClosed && e₂.isClosed
+  | .div e₁ e₂ _ => e₁.isClosed && e₂.isClosed
+  | .sqrt e _ _ => e.isClosed
+  | .trans _ e _ _ => e.isClosed
+
+/-- **Closed expressions are constant** under real evaluation. -/
+theorem evalReal_const_of_isClosed {n : ℕ} {e : IExpr n}
+    (h : e.isClosed = true) (ρ σ : Fin n → ℝ) : e.evalReal ρ = e.evalReal σ := by
+  induction e with
+  | const d => rfl
+  | var i => simp [isClosed] at h
+  | neg e ih => simp only [isClosed] at h; simp only [evalReal, ih h]
+  | abs e ih => simp only [isClosed] at h; simp only [evalReal, ih h]
+  | ite c t e ihc iht ihe =>
+      simp only [isClosed, Bool.and_eq_true] at h
+      obtain ⟨⟨hc, ht⟩, he⟩ := h
+      simp only [evalReal, ihc hc, iht ht, ihe he]
+  | add e₁ e₂ ih₁ ih₂ =>
+      simp only [isClosed, Bool.and_eq_true] at h
+      simp only [evalReal, ih₁ h.1, ih₂ h.2]
+  | sub e₁ e₂ ih₁ ih₂ =>
+      simp only [isClosed, Bool.and_eq_true] at h
+      simp only [evalReal, ih₁ h.1, ih₂ h.2]
+  | mul e₁ e₂ ih₁ ih₂ =>
+      simp only [isClosed, Bool.and_eq_true] at h
+      simp only [evalReal, ih₁ h.1, ih₂ h.2]
+  | div e₁ e₂ out ih₁ ih₂ =>
+      simp only [isClosed, Bool.and_eq_true] at h
+      simp only [evalReal, ih₁ h.1, ih₂ h.2]
+  | sqrt e s₁ s₂ ih => simp only [isClosed] at h; simp only [evalReal, ih h]
+  | trans k e N out ih => simp only [isClosed] at h; simp only [evalReal, ih h]
+
 end IExpr
 
 /-- The positivity checker: kernel-decidable, all arithmetic in `Int`;

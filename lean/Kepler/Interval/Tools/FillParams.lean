@@ -79,23 +79,8 @@ def countSqrt {n : ℕ} : IExpr n → ℕ
   | .sqrt e _ _ => e.countSqrt + 1
   | .trans _ e _ _ => e.countSqrt
 
-/-- Variable-freedom (leaf-constant) predicate; mirrors the emitter's
-`closed` tracking.  A closed subterm evaluates to the same interval and the
-same sqrt-parameter list at every leaf and every rung — the memo table
-(`Tools.FillCache`) keys on this. -/
-def isClosed {n : ℕ} : IExpr n → Bool
-  | .const _ => true
-  | .var _ => false
-  | .neg e => e.isClosed
-  | .abs e => e.isClosed
-  | .ite c t e => c.isClosed && t.isClosed && e.isClosed
-  | .add e₁ e₂ => e₁.isClosed && e₂.isClosed
-  | .sub e₁ e₂ => e₁.isClosed && e₂.isClosed
-  | .mul e₁ e₂ => e₁.isClosed && e₂.isClosed
-  | .div e₁ e₂ _ => e₁.isClosed && e₂.isClosed
-  | .sqrt e _ _ => e.isClosed
-  | .trans _ e _ _ => e.isClosed
-
+/- (The variable-freedom predicate `IExpr.isClosed` — the memo-table key
+discipline — moved to `Kepler.Interval.Expr` so the TM layer can share it.) -/
 /-- Structural equality (memo-table keys only; the kernel never sees this). -/
 protected def beq {n : ℕ} : IExpr n → IExpr n → Bool
   | .const a, .const b => a == b

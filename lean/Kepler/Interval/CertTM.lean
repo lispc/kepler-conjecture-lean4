@@ -1639,6 +1639,33 @@ theorem valid_trans {k : TKind} {M : TaylorM n} {box : Fin n → DInterval}
   | arctanK => exact valid_trans_atan hV N out p h
   | lnK => exact valid_trans_ln hV N out p h
 
+/-- Exact constant model of a closed (variable-free) subexpression with a
+successful plain evaluation: the value is `ρ`-independent, so zero slopes and
+zero remainder are *exact*.  This is what makes the rung-`2048` closed `trans`
+constants (`arctan 1` etc.) free per leaf — the memoized `evalFillC` enclosure
+is computed once per driver run. -/
+def closedTM {n : ℕ} (box : Fin n → DInterval) (I : DInterval) : TaylorM n :=
+  ⟨boxCenter box, boxW box, I, fun _ => ⟨⟨0, 0⟩, ⟨0, 0⟩⟩, ⟨0, 0⟩⟩
+
+/-- Validity of the constant model. -/
+theorem valid_closed {n : ℕ} {box : Fin n → DInterval} {e : IExpr n} {I : DInterval}
+    (hcell : CellOK box) (hcl : e.isClosed = true) (hI : e.eval box = some I) :
+    (closedTM box I).Valid box (fun ρ => e.evalReal ρ) := by
+  refine ⟨fun i => (hcell i).1, fun i => (hcell i).2,
+    IExpr.eval_mem e box _ (fun i => (hcell i).1) I hI, ?_⟩
+  intro ρ hρ
+  refine ⟨fun _ => 0, fun i => ?_, ?_⟩
+  · show (⟨⟨0, 0⟩, ⟨0, 0⟩⟩ : DInterval).mem (0 : ℝ)
+    exact ⟨by simp, by simp⟩
+  · have hc := IExpr.evalReal_const_of_isClosed hcl ρ (fun i => (boxCenter box i).toReal)
+    have h0 : (∑ i, (0 : ℝ) * (ρ i - ((closedTM box I).y i).toReal)) = 0 := by
+      exact Finset.sum_eq_zero fun i _ => by rw [zero_mul]
+    rw [h0]
+    show |e.evalReal ρ - e.evalReal (fun i => (boxCenter box i).toReal) - 0|
+      ≤ (⟨0, 0⟩ : Dyadic).toReal
+    rw [hc, sub_self, sub_zero, abs_zero, Dyadic.toReal_zero]
+
+
 /-! ## Single-pass Taylor-model evaluation -/
 
 /-- Single-pass Taylor-model evaluation (TM0: `const`/`var`/`neg`/`add`/`sub`/
@@ -1671,10 +1698,13 @@ def evalTM {n : ℕ} (box : Fin n → DInterval) :
       (M₀.sqrt p).map fun M' => (M', ⟨ps₀.sqrtCerts.tail, ps₀.invCerts,
         ps₀.transCerts⟩)
   | .trans k e N out, ps =>
-      (evalTM box e ps).bind fun (M₀, ps₀) =>
-      ps₀.transCerts.head?.bind fun p =>
-      (M₀.trans k N out p).map fun M' =>
-        (M', ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩)
+      if e.isClosed then
+        ((IExpr.trans k e N out).eval box).map fun I => (closedTM box I, ps)
+      else
+        (evalTM box e ps).bind fun (M₀, ps₀) =>
+        ps₀.transCerts.head?.bind fun p =>
+        (M₀.trans k N out p).map fun M' =>
+          (M', ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩)
   | .abs _, _ => none
   | .ite _ _ _, _ => none
 
@@ -1786,20 +1816,27 @@ theorem evalTM_sound {n : ℕ} {box : Fin n → DInterval} :
   | trans k e N out ih =>
       intro ps ps' M hwf h
       simp only [evalTM] at h
-      rw [Option.bind_eq_some_iff] at h
-      obtain ⟨⟨M₀, ps₀⟩, he, h⟩ := h
-      rw [Option.bind_eq_some_iff] at h
-      obtain ⟨p, _hp, h⟩ := h
-      rw [Option.map_eq_some_iff] at h
-      obtain ⟨M', hs, hfinal⟩ := h
-      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
-      obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
-      obtain ⟨hV', hyy, hww⟩ := valid_trans hV N out p hs
-      refine ⟨hV', ?_, ?_⟩
-      · show M'.y = boxCenter box
-        exact hyy.trans hy
-      · show M'.w = boxW box
-        exact hww.trans hw
+      by_cases hcl : e.isClosed = true
+      · rw [if_pos hcl] at h
+        rw [Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        exact ⟨valid_closed (cellOK_of_wf hwf) hcl hI, rfl, rfl⟩
+      · rw [if_neg hcl] at h
+        rw [Option.bind_eq_some_iff] at h
+        obtain ⟨⟨M₀, ps₀⟩, he, h⟩ := h
+        rw [Option.bind_eq_some_iff] at h
+        obtain ⟨p, _hp, h⟩ := h
+        rw [Option.map_eq_some_iff] at h
+        obtain ⟨M', hs, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+        obtain ⟨hV', hyy, hww⟩ := valid_trans hV N out p hs
+        refine ⟨hV', ?_, ?_⟩
+        · show M'.y = boxCenter box
+          exact hyy.trans hy
+        · show M'.w = boxW box
+          exact hww.trans hw
 
 /-- Syntactic TM-safety check (design §3.2/§5.2): no `abs`/`ite`/`trans`
 nodes.  Semantic safety of `div`/`sqrt` (base away from zero / positive) is
@@ -1890,12 +1927,15 @@ def evalTMH {n : ℕ} (box : Fin n → DInterval) :
   | .abs e, ps => ((IExpr.abs e).eval box).map fun I => (fallbackTM box I, ps)
   | .ite c t e, ps => ((IExpr.ite c t e).eval box).map fun I => (fallbackTM box I, ps)
   | .trans k e N out, ps =>
-      (evalTMH box e ps).bind fun (M₀, ps₀) =>
-      ps₀.transCerts.head?.bind fun p =>
-      ((M₀.trans k N out p).map fun M' =>
-          (M', ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩)).orElse
-        (fun _ => ((IExpr.trans k e N out).eval box).map fun I =>
-          (fallbackTM box I, ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩))
+      if e.isClosed then
+        ((IExpr.trans k e N out).eval box).map fun I => (closedTM box I, ps)
+      else
+        (evalTMH box e ps).bind fun (M₀, ps₀) =>
+        ps₀.transCerts.head?.bind fun p =>
+        ((M₀.trans k N out p).map fun M' =>
+            (M', ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩)).orElse
+          (fun _ => ((IExpr.trans k e N out).eval box).map fun I =>
+            (fallbackTM box I, ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩))
 
 /-- **Soundness of `evalTMH`** (same conclusion as `evalTM_sound`). -/
 theorem evalTMH_sound {n : ℕ} {box : Fin n → DInterval} :
@@ -2025,12 +2065,19 @@ theorem evalTMH_sound {n : ℕ} {box : Fin n → DInterval} :
   | trans k e N out ih =>
       intro ps ps' M hwf h
       simp only [evalTMH] at h
-      rw [Option.bind_eq_some_iff] at h
-      obtain ⟨⟨M₀, ps₀⟩, he, h⟩ := h
-      rw [Option.bind_eq_some_iff] at h
-      obtain ⟨p, _hp, h⟩ := h
-      obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
-      cases hs : M₀.trans k N out p with
+      by_cases hcl : e.isClosed = true
+      · rw [if_pos hcl] at h
+        rw [Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        exact ⟨valid_closed (cellOK_of_wf hwf) hcl hI, rfl, rfl⟩
+      · rw [if_neg hcl] at h
+        rw [Option.bind_eq_some_iff] at h
+        obtain ⟨⟨M₀, ps₀⟩, he, h⟩ := h
+        rw [Option.bind_eq_some_iff] at h
+        obtain ⟨p, _hp, h⟩ := h
+        obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+        cases hs : M₀.trans k N out p with
       | none =>
         rw [hs] at h
         rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
