@@ -189,10 +189,30 @@ soundness 注释在代码内；**仅驱动侧实验，内核侧 CertTM 规则归
 
 裸路径回归逐字节吻合（55668/111335）；make check 绿；已合 main。
 
-## 下一步（更新）
+### M2b + gsplit 波（`75eb7231`）
 
-1. emit_lean schema v3（ite 队列序 + abs 脱糖建议已列）+ checkPosTMHull
-   —— 549 驱动切入口吃 4.8× 收益（需与 Kimi schema 评审同步）
-2. div/sqrt 残余 6.7k 的 chop/closed-trans 消解实验（Kimi 线，接口已备）
-3. mono/convex（L1）叠加实验——下一倍数级杠杆
-4. L4 种子树对 60% 有树案例复用（549 本身无树）
+**M2b**：`checkPosTMHull(+sound)` / `evalTMHullFill`（逐节点镜像）落地；
+emit_lean `--hull` 路径 + 修非 dyadic push_const 的 .div 节点饥饿缺口；
+**真叶内核试点 20/20 求值成功、编译绿，但 0 PASS / 20 NEG**：
+
+- 根因（组件级定位）：①C 侧闭合计 err=半宽，Lean 全宽 ⇒ 系统性肥一倍；
+  ②嵌套 ite 每层 hull 宽 ×2 进 err（IT3 宽 25.7 → IT1 err 116）；
+  ③区间积规则丢中心 AD 抵消（W 6.44 vs 真斜率小一个量级）→
+  loBound −68…−374
+- **诚实口径：C 侧 4.8× 尚不能直接转成可验证证书**——schema v3 三件套
+  （evalTMHullD guard 定号单支 / df-hull 合成 / 斜率保真）从"优化"升级为
+  "实证必需"，评审清单已交 Kimi
+
+**gsplit（TM 梯度 |Df|·w 引导切分）：负结果归档**——+10.9% 更差
+（312,578）。机理：贪心切 guard 曲面法向饿死切向细化，贴附细胞铺得更开；
+叶数下界在切向分辨率。M3 维持最宽维；div 6,565 确认与切分层无关
+（TM-invalid 节点走 fallback），归 chop/closed-trans。
+
+## 下一步（再更新）
+
+1. **schema v3 实现**（Lean 侧可先行：evalTMHullD 的 soundness 简单——
+   guard 定号取单支，用 eval_mem + 定号引理；df-hull 合成需 ∃-slope 语义
+   下 C¹ 拼接余项界——M1 设计核心）
+2. div/sqrt 6.7k 的 chop/closed-trans 消解（Kimi 线，接口 tm_div_fail_diag）
+3. L4 种子树对 60% 有树案例复用
+4. 与 Kimi 同步：试点 NEG 数据 + schema 评审清单 + div 接口
