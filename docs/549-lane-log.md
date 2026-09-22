@@ -208,11 +208,24 @@ emit_lean `--hull` 路径 + 修非 dyadic push_const 的 .div 节点饥饿缺口
 叶数下界在切向分辨率。M3 维持最宽维；div 6,565 确认与切分层无关
 （TM-invalid 节点走 fallback），归 chop/closed-trans。
 
-## 下一步（再更新）
+### schema v3 第一刀：evalTMHullD（0/20 → 16/20 PASS）
 
-1. **schema v3 实现**（Lean 侧可先行：evalTMHullD 的 soundness 简单——
-   guard 定号取单支，用 eval_mem + 定号引理；df-hull 合成需 ∃-slope 语义
-   下 C¹ 拼接余项界——M1 设计核心）
-2. div/sqrt 6.7k 的 chop/closed-trans 消解（Kimi 线，接口 tm_div_fail_diag）
-3. L4 种子树对 60% 有树案例复用
-4. 与 Kimi 同步：试点 NEG 数据 + schema 评审清单 + div 接口
+- guard 裸区间定号 → 单支求值（零 hull 宽），跨 0 退双支；关键修复：
+  catch-all 委托 evalTMH 使嵌套 ite guard-sqrt 必败（上轮 0/20 的真实失败
+  模式）——改全构造子自递归 + soundness 全归纳重证；axioms 标准三
+- **同证书同 20 叶复测：16 PASS**（全部 guard 定号单支，loBound
+  +0.36…+0.65，上轮 −1.7e2…−2.1e7）；4 straddle 叶仍 NEG（−3.4…−6.2）
+- **C 侧 --hull-stats 交叉验证吻合**：全量 281,894 叶 = single 75.34% /
+  straddle 24.66%（恰 1 次 hull、嵌套深度全 0——×2 err 在证书叶结构性
+  不存在）；20 叶逐盒 16/4 与 Lean PASS/FAIL 完全一致
+- 结论：**549 现有 80% 证书叶内核可验证**；剩余 20%（69,538 straddle 叶）
+  差 df-hull 合成 + err 半宽语义——最后一公里的路径完全明确
+
+## 下一步（三更）
+
+1. **df-hull Lean 合成**（最后一刀）：∃-slope 语义下 C¹ 拼接余项界；
+   err 半宽对齐（Lean |f(ρ)−f(y)| 语义的覆盖估算按 C 半宽折算）→ 翻转
+   4 NEG → 全量 281,894 叶发射 + stage-A
+2. div/sqrt 6.7k chop/closed-trans 消解（Kimi 线，接口已备）
+3. 与 Kimi 同步：16/20 交叉验证 + schema 评审清单 + div 接口
+4. L4 种子树对 60% 有树案例复用（排后）
