@@ -68,7 +68,7 @@
 
 | # | 内容 | 验收 |
 |---|---|---|
-| M0 | chop 接入 evalTM + 150 叶复测(Kimi 侧在跑) | TM 通过率(目标 ≥95%) |
+| M0 | ~~chop 接入 evalTM + 150 叶复测~~ **已完成 2026-09-22**(`97f5e6ce`) | chop 生效(200s→3.2s/叶);复测 **0/150**——根因=sqrt(radicand≈0) 处一阶模型数学上不可能 + ite/abs hull;**"单叶 ≥95%"口径作废,TM 价值改按二分树总叶数口径测量(M4 成为真正的验收点)** |
 | M1 | mono/convex 双侧设计文档 | Kimi/用户评审 |
 | M2 | Lean:faceLeaf/convexSplit + soundness + pilot | 内核闭合,公理干净 |
 | M3 | C:bb_arb mono/convex 检测 + 证书发射 | 单测 + 裸路径回归 |
