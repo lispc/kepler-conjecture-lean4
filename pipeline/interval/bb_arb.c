@@ -1550,7 +1550,7 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
-    const char *path = NULL, *certpath = NULL;
+    const char *path = NULL, *certpath = NULL, *probe_path = NULL;
     slong prec = 64;
     long max_nodes = 1L << 16;
     int tm_on = 0, tm_debug = 0;
@@ -1576,6 +1576,11 @@ int main(int argc, char **argv)
             tm_w0 = strtod(argv[++i], NULL);
         } else if (!strcmp(argv[i], "--tm-debug")) {
             tm_debug = 1;
+            tm_on = 1;
+        } else if (!strcmp(argv[i], "--probe") && i + 1 < argc) {
+            /* L1 探针（549 加速项目 Phase 0）：逐盒 TM 判定 + 带符号 df/σ dump；
+               不二分、不产证书；隐含 --tm。默认路径零影响。 */
+            probe_path = argv[++i];
             tm_on = 1;
         } else if (argv[i][0] == '-' && argv[i][1] != '\0') {
             usage();
@@ -1792,6 +1797,93 @@ int main(int argc, char **argv)
             }
             /* 跳到清理段（closed 为空、无证书输出） */
             goto tm_debug_done;
+        }
+
+        /* ---- --probe FILE（L1 探针）：逐盒 TM 判定 + 带符号 df/σ dump。
+           σᵢ=Σⱼ wⱼ·ddfᵢⱼ（坐标线段 MVT），盒上 ∂ᵢf ⊆ dfᵢ ± σᵢ；
+           mono 定号率 = ∃i 使 dfᵢ±σᵢ 不跨 0。 ---- */
+        if (probe_path) {
+            FILE *pf = fopen(probe_path, "rb");
+            long psz;
+            char *ptext;
+            jv *proot, *pboxes;
+            size_t bi, nb;
+            if (!pf) die(EXIT_ERR, "无法打开 %s", probe_path);
+            fseek(pf, 0, SEEK_END);
+            psz = ftell(pf);
+            fseek(pf, 0, SEEK_SET);
+            ptext = xmalloc((size_t)psz + 1);
+            if (fread(ptext, 1, (size_t)psz, pf) != (size_t)psz)
+                die(EXIT_ERR, "读取 %s 失败", probe_path);
+            ptext[psz] = '\0';
+            fclose(pf);
+            proot = jparse(ptext, probe_path);
+            pboxes = (jv *)jget(proot, "boxes");
+            if (!pboxes || pboxes->t != J_ARR) die(EXIT_ERR, "probe 缺 boxes 数组");
+            nb = pboxes->n;
+            printf("{\"case\":\"%s\",\"n\":%lu}\n", caseid, (unsigned long)nb);
+            for (bi = 0; bi < nb; bi++) {
+                leaf L;
+                const jv *bx = pboxes->items[bi];
+                size_t tsp = 0;
+                slong v, j2;
+                leaf_init(&L, nvars);
+                if (bx->t != J_ARR || (slong)bx->n != nvars)
+                    die(EXIT_ERR, "probe box[%lu] 需 %ld 维 [lo,hi]",
+                        (unsigned long)bi, (long)nvars);
+                for (v = 0; v < nvars; v++) {
+                    const jv *dim = bx->items[v];
+                    if (dim->t != J_ARR || dim->n != 2)
+                        die(EXIT_ERR, "probe box[%lu][%ld] 需 [lo,hi]",
+                            (unsigned long)bi, (long)v);
+                    jrat(L.ln + v, L.ld + v, dim->items[0], "probe 下端点");
+                    jrat(L.hn + v, L.hd + v, dim->items[1], "probe 上端点");
+                }
+                tcx.fail_reason = 0;
+                tm_setup_leaf(&tcx, &L);
+                if (eval_prog_tm(mainp, tstk, &tsp, &tcx) == 0 && tsp == 1) {
+                    arf_t alo, ahi;
+                    int closed = (tm_decide(tstk) == 0);
+                    arf_init(alo);
+                    arf_init(ahi);
+                    printf("{\"i\":%lu,\"valid\":1,\"closed\":%d,\"f0\":[",
+                           (unsigned long)bi, closed);
+                    arb_get_lbound_arf(alo, tstk[0].f0, 64);
+                    arb_get_ubound_arf(ahi, tstk[0].f0, 64);
+                    printf("%.17g,%.17g],\"df\":[",
+                           arf_get_d(alo, ARF_RND_FLOOR),
+                           arf_get_d(ahi, ARF_RND_CEIL));
+                    for (v = 0; v < nvars; v++) {
+                        arb_get_lbound_arf(alo, tstk[0].df + v, 64);
+                        arb_get_ubound_arf(ahi, tstk[0].df + v, 64);
+                        printf("%s[%.17g,%.17g]", v ? "," : "",
+                               arf_get_d(alo, ARF_RND_FLOOR),
+                               arf_get_d(ahi, ARF_RND_CEIL));
+                    }
+                    printf("],\"sig\":[");
+                    for (v = 0; v < nvars; v++) {
+                        mag_t s, t;
+                        mag_init(s);
+                        mag_init(t);
+                        for (j2 = 0; j2 < nvars; j2++) {
+                            mag_mul(t, tcx.w + j2, tstk[0].ddf + v * nvars + j2);
+                            mag_add(s, s, t);
+                        }
+                        printf("%s%.6e", v ? "," : "", mag_get_d(s));
+                        mag_clear(s);
+                        mag_clear(t);
+                    }
+                    printf("]}\n");
+                    arf_clear(alo);
+                    arf_clear(ahi);
+                } else {
+                    printf("{\"i\":%lu,\"valid\":0,\"fail\":%d}\n",
+                           (unsigned long)bi, tcx.fail_reason);
+                }
+                fflush(stdout);
+                leaf_free(&L);
+            }
+            goto tm_debug_done;   /* 清理段复用：无证书输出 */
         }
 
         qpush(&q, &rootbox);
