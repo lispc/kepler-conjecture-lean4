@@ -130,9 +130,32 @@ df/df²/err 的安全合成（分量 hull / max / 与 C¹ 边界层论证）= M1
 3. M2：CertTM 加对应内核规则（含 soundness 证明），走 make check 纪律
 4. L4 对 549 本身无树可导（1 cell），对 60% 有树案例仍是有用种子源
 
-## 下一步
+### ite-hull 决定性实验结果（2026-09-22 当日）
 
-1. ite-hull 决定性实验（上述 #2）
-2. M1 设计文档（含 hull 规则 + guard 通道）
-3. 向 Kimi 同步：L2 pilot 零削减 + 1-cell 发现——两条线（guard 结构）
-   汇合点一致
+`bb_arb --ite-hull`（OP_ITE guard 跨 0 → 双支求值 + 保守常数 hull 合成，
+soundness 注释在代码内；**仅驱动侧实验，内核侧 CertTM 规则归 M2**）：
+
+| 指标 | TM-only | TM+ite-hull |
+|---|---|---|
+| 叶数 | 1,331,880 | **281,894（4.8×）** |
+| guard 跨 0 invalid | 1,331,842 | **0** |
+| 新 invalid 层 | — | div 越零 6,565 + sqrt/log 底非正 148 |
+| 节点数 | 2,663,759 | 563,787 |
+
+结论：
+1. **分支合成机制证实**——guard 跨 0 清零，叶数 4.8×（且这是最保守的
+   常数 hull；df-hull/保导数合成还有收紧空间）
+2. 新阻塞层 = div/sqrt/log 的 TM 规则（6.7k 处）——**与 Kimi M0 刚落地的
+   closed-trans 常数模型直接同源**，chop 接入后应再消一轮
+3. 距原始 1-cell 还差：mono/convex 组合（L1 未叠加）+ 合成质量 + trans 层
+   ——路径清晰，增量推进
+4. ⚠️ 281,894 叶证书是驱动侧产物；内核验证需 M2（CertTM ite-hull 规则
+   + soundness 证明）先行
+
+## 下一步（更新）
+
+1. **M1 设计文档**：ite-hull 合成规则（常数版 → df-hull 版）双侧 soundness
+   为中枢；mono/convex 与 L2.5 为组合件
+2. **M2**：CertTM 内核 ite-hull 规则 + `#print axioms` 纪律 → make check
+3. 与 Kimi 汇合：closed-trans/chop 对 div/sqrt 残余 6.7k 的消解实验
+4. L4 种子树对 60% 有树案例的复用实验（549 本身无树）

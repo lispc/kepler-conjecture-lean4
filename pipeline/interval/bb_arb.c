@@ -747,6 +747,8 @@ typedef struct {
     int    fail_reason;    /* 诊断：1=guard INDET 2=guard 跨0 3=div越零
                               4=abs跨0 5=sqrt/log底非正 6=未知op */
     size_t fail_ip;        /* 诊断：失败指令下标 */
+    int    ite_hull;       /* --ite-hull：guard 跨0 时双支求值 + hull 合成
+                              （默认 0 = 既有 bail 语义，memset 覆盖） */
 } tmctx;
 
 static void tm1_init(tm1_t *t, slong n)
@@ -956,9 +958,50 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                 if (arb_is_negative(cx->bstk)) take_then = 1;
                 else if (arb_is_nonnegative(cx->bstk)) take_then = 0;
             }
-            if (take_then < 0) TM_FAIL(2);
-            if (eval_prog_tm(take_then ? in->pt : in->pe, stk, sp, cx))
+            if (take_then < 0 && !cx->ite_hull) TM_FAIL(2);
+            if (take_then < 0) {
+                /* --ite-hull（549 车道决定性实验）：分段光滑（分支在判别式
+                   零点 C¹ 吻合）前提下双支求值 + 保守 hull 合成。
+                   soundness：逐点 f(x) ∈ hull(then 界, else 界)；合成 TM
+                   退化为常数界（f0=hull 中点, df=0, ddf=0, err=半宽），
+                   仅用于闭合判定（内核侧规则归 M2/CertTM）。 */
+                if (eval_prog_tm(in->pt, stk, sp, cx)) return 1;
+                if (eval_prog_tm(in->pe, stk, sp, cx)) return 1;
+                {
+                    tm1_t *tt = stk + (*sp - 2);
+                    tm1_t *te = stk + (*sp - 1);
+                    arb_t b1, b2, un, tmp;
+                    arf_t lo, hi, mid, wdt;
+                    mag_t m;
+                    slong a;
+                    arb_init(b1); arb_init(b2); arb_init(un); arb_init(tmp);
+                    arf_init(lo); arf_init(hi); arf_init(mid); arf_init(wdt);
+                    mag_init(m);
+                    arb_set(b1, tt->f0); arb_add_error_mag(b1, tt->W);
+                    arb_set(b2, te->f0); arb_add_error_mag(b2, te->W);
+                    arb_union(un, b1, b2, cx->prec_c);
+                    arb_get_lbound_arf(lo, un, cx->prec_c);
+                    arb_get_ubound_arf(hi, un, cx->prec_c);
+                    arf_add(mid, lo, hi, cx->prec_c, ARF_RND_NEAR);
+                    arf_mul_2exp_si(mid, mid, -1);
+                    arf_sub(wdt, hi, lo, cx->prec_c, ARF_RND_CEIL);
+                    arf_mul_2exp_si(wdt, wdt, -1);
+                    arb_set_arf(tmp, wdt);
+                    arb_get_mag(m, tmp);
+                    arb_set_arf(tt->f0, mid);
+                    for (a = 0; a < cx->n; a++) arb_zero(tt->df + a);
+                    for (a = 0; a < cx->n * cx->n; a++) mag_zero(tt->ddf + a);
+                    mag_set(tt->err, m);
+                    tm_update_W(tt, cx);
+                    arb_clear(b1); arb_clear(b2); arb_clear(un);
+                    arb_clear(tmp);
+                    arf_clear(lo); arf_clear(hi); arf_clear(mid);
+                    arf_clear(wdt); mag_clear(m);
+                    (*sp)--;
+                }
+            } else if (eval_prog_tm(take_then ? in->pt : in->pe, stk, sp, cx)) {
                 return 1;   /* 保留内层失败原因 */
+            }
         } else if (in->op == OP_ADD || in->op == OP_SUB ||
                    in->op == OP_MUL || in->op == OP_DIV) {
             tm1_t *f, *g;
@@ -1553,7 +1596,7 @@ int main(int argc, char **argv)
     const char *path = NULL, *certpath = NULL, *probe_path = NULL;
     slong prec = 64;
     long max_nodes = 1L << 16;
-    int tm_on = 0, tm_debug = 0;
+    int tm_on = 0, tm_debug = 0, ite_hull = 0;
     slong tm_prec = 256, tm_hprec = 32;
     double tm_w0 = 0.25;
     int i;
@@ -1574,6 +1617,11 @@ int main(int argc, char **argv)
             tm_hprec = (slong)strtol(argv[++i], NULL, 10);
         } else if (!strcmp(argv[i], "--tm-w0") && i + 1 < argc) {
             tm_w0 = strtod(argv[++i], NULL);
+        } else if (!strcmp(argv[i], "--ite-hull")) {
+            /* 549 车道决定性实验：ite 双支求值 + hull 合成（实验旗标，
+               默认关闭；需配合 --tm 语义，此处隐含 tm_on） */
+            ite_hull = 1;
+            tm_on = 1;
         } else if (!strcmp(argv[i], "--tm-debug")) {
             tm_debug = 1;
             tm_on = 1;
@@ -1700,6 +1748,7 @@ int main(int argc, char **argv)
 
         /* ---- 求值栈 / 变量区间 ---- */
         size_t scap = mainp->total + 3;
+        if (ite_hull) scap += 8;   /* ite-hull 双支并存槽位余量 */
         for (i = 0; i < (int)dis.n; i++)
             if (!dis.v[i].is_varlt && dis.v[i].p->total + 3 > scap)
                 scap = dis.v[i].p->total + 3;
@@ -1731,6 +1780,7 @@ int main(int argc, char **argv)
                 mag_init(tcx.Dg + i);
                 arb_init(tcx.ndf + i);
             }
+            tcx.ite_hull = ite_hull;
             tcx.bstk = (arb_struct *)stk;   /* guard 裸区间求值复用主栈（TM 阶段它空闲） */
             tstk = xmalloc(scap * sizeof(tm1_t));
             for (k = 0; k < scap; k++) tm1_init(tstk + k, nvars);
