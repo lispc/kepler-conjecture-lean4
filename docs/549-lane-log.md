@@ -152,10 +152,47 @@ soundness 注释在代码内；**仅驱动侧实验，内核侧 CertTM 规则归
 4. ⚠️ 281,894 叶证书是驱动侧产物；内核验证需 M2（CertTM ite-hull 规则
    + soundness 证明）先行
 
+## M2 + df-hull 波（2026-09-22 深夜，重启后重派工完成）
+
+### M2：CertTM 内核 ite-hull 规则（`3e731659`，零公理零 sorry）
+
+- 新增 `TaylorM.valueRange` / `iteHullTM` / `valid_iteHull` / `evalTMHull` /
+  `evalTMHull_sound`；evalTM 语义未动（evalTMHull 对非 ite 构造子定义等价
+  委托 evalTMH）
+- ite 规则 = 双支求值 + 值域 hull + 常数合成，**guard 零依赖**（玩具自测：
+  guard 含 div 越零时 evalTMH 仍 none、evalTMHull 照常 some 且模型相同）
+- soundness 对 e 归纳，点wise 值语义 → 复合天然 sound；`#print axioms`
+  全部 ⊆ 标准三公理
+- 偏差注记：Lean err 界 |f(ρ)−f(y)| vs C 界 |f(ρ)−f0| ⇒ err_lean = 2·err_C
+  （保守方向）；checkPosTMHull 接线建议已记录（emit_lean schema v3 下轮）
+
+### C 侧 df-hull（--ite-hull2）：叶数定理级相同 + **发现常数版真隐患**
+
+- df-hull 保留导数结构（df 分量 hull / ddf max / 基值并 err），四不变量
+  (I1)-(I4) 全恢复；**常数版 df=ddf=0 破坏 I3/I4**——ite 之上再有 mul/div
+  时 Df 低估、理论上可错闭合（549 实测未触发：df-hull 叶数与常数版完全
+  一致 281,894，且 ΔW = ½Σ|Δdfᵢ|wᵢ = O(w²) → 0 有定理）
+- **处置**：C 侧后续以 --ite-hull2 语义为准；Lean 侧因点wise值语义归纳、
+  复合已 sound，无需返工
+- **div越零 6,565 全定性**（Kimi 对接接口，tm_div_fail_diag 已注）：
+  100% plain 型（与 hull 零关联）；失败点仅 2 个（ite7-then 支 ip=221
+  与 ite7-else→ite0-then 支 ip=227 的 atn2 型商）；分母宽 log2 桶
+  (2,6]:5719 → chop 压至 ~2³ 即可转定号——closed-trans/chop 直做，不碰 hull 层
+
+### 三方叶数终表
+
+| 版本 | 叶数 | guard跨0 | div越零 | sqrt/log |
+|---|---|---|---|---|
+| 裸基线 | 1,331,880 | 1,331,842 | — | — |
+| 常数 hull | 281,894 | 0 | 6,565 | 148 |
+| df-hull | 281,894 | 0 | 6,565 | 148 |
+
+裸路径回归逐字节吻合（55668/111335）；make check 绿；已合 main。
+
 ## 下一步（更新）
 
-1. **M1 设计文档**：ite-hull 合成规则（常数版 → df-hull 版）双侧 soundness
-   为中枢；mono/convex 与 L2.5 为组合件
-2. **M2**：CertTM 内核 ite-hull 规则 + `#print axioms` 纪律 → make check
-3. 与 Kimi 汇合：closed-trans/chop 对 div/sqrt 残余 6.7k 的消解实验
-4. L4 种子树对 60% 有树案例的复用实验（549 本身无树）
+1. emit_lean schema v3（ite 队列序 + abs 脱糖建议已列）+ checkPosTMHull
+   —— 549 驱动切入口吃 4.8× 收益（需与 Kimi schema 评审同步）
+2. div/sqrt 残余 6.7k 的 chop/closed-trans 消解实验（Kimi 线，接口已备）
+3. mono/convex（L1）叠加实验——下一倍数级杠杆
+4. L4 种子树对 60% 有树案例复用（549 本身无树）
