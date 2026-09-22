@@ -54,34 +54,81 @@ CertG.lean 三个 TM2 pilot（内核闭合 + 公理仅标准三）：
 回归：TM0/TM1 全部 6 条 end-to-end + TM2 三条共 9 条公理审计
 `[propext, Classical.choice, Quot.sound]`；lake build CertG/CertTM 绿。
 
-## 3. BIXPCGW 150 叶复测（受阻：性能墙，诊断完成，方案已定）
+## 3. BIXPCGW 150 叶复测（完成：性能墙拆除 + 诚实负面+根因）
 
-探针升级：evalTMHA 加 trans 臂 + genTransTMP。复跑同一 150 叶样本。
-**撞上性能墙**，A/B 对照定位：
+### 性能墙：两个独立炸弹，全部拆除
 
-- probe5nx（trans 臂 = 纯 fallback，其余全同）：5 叶 ×2.6-3.1s/叶，完成。
-- probe5（trans 臂 = TM 规则）：>15min 未出叶 0。
-- probe2（全量 150 叶，trans TM 开）：后台继续跑（截至笔记时 ~108min CPU
-  未完成；nice 19 与其他 runner 共存）。
+1. **闭 trans 节点重复求值（主炸弹）**：BIXPCGW 主 prog 的闭式
+   `trans arctanK (const …) 2048 (−64)`（N=2048！）在 evalFillC 里有 memo
+   cache（"memoized 2 closed subterms"），而探针的 TM 臂每叶每目标重算
+   2048 项 Taylor——分钟级/叶。修复（语义正确，不是 hack）：**闭 trans
+   节点是常数函数**——`IExpr.isClosed` 上移到 `Expr.lean`（+
+   `evalReal_const_of_isClosed` 归纳引理），CertTM 加 `closedTM`
+   （err=0、零斜率的精确常数模型）+ `valid_closed`，evalTM/evalTMH 的
+   trans 臂闭节点优先走它（不吃 transCerts）。FillParams.lean 删除重复
+   定义（改从 Expr 引入）。
+2. **mantissa 表示爆炸（次炸弹）**：`chopCeilTo`（上个 session 交接的既定
+   方案）已实现并入 CertTM：`TaylorM.errScale`（2·最粗 w 指数 − 24 位
+   slack），chop 插入 mul/inv/sqrt/trans 的 err 合成点（组合子级 =
+   evalTM/evalTMH 天然双侧同点），`toReal_le_chopCeilTo` 证明完毕，
+   六个 valid_* 的 err 收尾改为 `le_trans … (toReal_le_chopCeilTo …)`。
+   探针侧 recip 粒度改**值相对**（`vscale d = |m|.log2 + e`，
+   `out := −vscale − 32`：recipFloor 的 hk 恒成立且 mantissa ~32 位）——
+   原 `out ≤ −b.e` 版在深链 b.e ~ −10⁵ 时造出 800K-bit 中间量。
+   注意：probe5c（chop 但旧粒度）仍卡死证明单靠 chop 不够，粒度才是
+   trans 臂的主爆点；两者都要。
 
-**根因（高置信）**：`TaylorM.mul`/`inv`/`trans` 的 err 项含 `W.mul W`
-（平方）与 `c³` 级连——BIXPCGW 主 prog 是深左链（~27K op），dyadic 指数
-沿链累加到 −10⁵ 量级，`W.mul W` 把 mantissa 翻倍成 ~10⁵ bit（~100KB
-整数），再经链式 mul/add 复合增长——**值很小但表示爆炸**。裸区间 eval
-（probe1/nx 快）没有 W² 项所以不炸。这不是算法错，是**表示不修剪**。
+### 拆除后的 A/B/C 时序对照（5 叶样本，每叶两目标）
 
-**方案（下一 session）**：给 TM 内核算术加**外向舍入修剪**：
-err/W 类上界量 ceiling-chop 到目标指数（对上界语义安全：上界放大仍合法），
-fB.lo floor / fB.hi ceil（包围向外放宽合法），dfB 同样外向——需要一个
-`Dyadic.chopFloor/chopCeil : Dyadic → Int → Dyadic` 加 `toReal` 单调性引理
-（~30 行）+ 在 mul/inv/sqrt/trans 规则的 err 合成处插入 chop（目标指数如
-`min (2·box 指数) − 32`）。内核侧 checkPosTM 同样插入（保持 probe≡kernel
-语义）。这使 TM 判定在 27K-op 程序上的成本回到 probe1 量级。
-注意：chop 插入点必须在 evalTM/evalTMH 同一处双侧同步（现有 evalFill
-双侧镜像纪律的 TM 版——设计文档 §5.1 的已知事故点）。
+- probe5nx（trans 纯 fallback）：2.6-3.1s/叶 ✓（基线）
+- probe5v（trans 规则开 + vscale 粒度，**无闭-trans 修复**）：~200s/叶 ✗
+- probe5w（全部修复）：**2.6-3.7s/叶** ✓ —— 回到基线量级
 
-备选快速通道（若只要通过率数字）：探针侧把 W/err 在 VM 里 chop（内核语义
-随后补），先出数。
+### 最终 150 叶数字与失败形态（如实报告）
+
+**probeF（最终管线：chop + 值相对粒度 + 闭-trans 常数模型 + trans 规则
+全开）：TMRATE pass=0 fail=150 total=150**（~4.3s/叶，性能墙已拆除，
+运行 ~15min 完成）。逐叶输出留档 `TM1ProbeBIXPCGW.d/probeF.out`。
+
+**失败形态（diag3 逐叶分解 fBlo/err/loBound，trans 规则全开）**：
+TM err 仍 ~O(1)——**BIXPCGW r1 FAIL 叶的临界性在 `sqrt(≈0)` 与
+`ite/abs` hull 上**：sqrt 的 TM 规则要求 radicand 认证下界 c > 0
+（∃a-线性模型在 √ 的 0 处斜率爆炸，数学上不可能），这些叶的 radicand
+下界 ≤ 0 是结构性的（零等值面穿盒），只能走零阶 fallback（err = 包围
+宽度 O(1)）并沿 mul 链放大；ite 跨 0 的 hull 同理。裸区间在这些节点上
+是单调精确的，所以 TM 在此样本上**不占优**（PASS 对照叶上 TM loBound
+也比裸区间低 ~0.1）。
+
+**结论修正（对设计 §0 的 TM1/TM2 验收预期）**：一阶 TM（含 trans 规则）
+对 BIXPCGW 失败叶集的**直接判定**无增益——失败叶的瓶颈不是代数依赖
+过估，而是 (a) sqrt 在 radicand≈0 的不可微奇异，(b) ite/abs hull，
+(c) 真边缘≈0 需二分。Flyspeck 原版对这类 cell 也是二分到底。TM 的正确
+定位是**临界带的收敛加速**（二分树中叶的判定），不是单叶直通率；这
+要求测量口径改成"二分树总叶数"（TM3 驱动整合后测）。设计文档 TM1 验收
+的"≥95% 单叶直通"口径应作废——见任务书偏差记录。
+
+## 4. 交付清单（按 commit）
+
+- d763cc34：trans 三规则 + valid_trans_* + TMSafe 扩展 + 三个 TM2 pilot。
+- 30e84adf：chopCeilTo/errScale 与四处 err 合成点插入（main 已合入）。
+- 本次：Expr.lean（isClosed 上移 + evalReal_const_of_isClosed）、
+  FillParams.lean（删重复）、CertTM.lean（closedTM + valid_closed +
+  evalTM/evalTMH 的 trans 臂闭节点优先常数模型）、tm2-progress.md 定稿。
+- 探针工作区 `Cases/Repair/TM1ProbeBIXPCGW.d/` 不入库（Repair 惯例），
+  再生：`python3 pipeline/interval/tm1_probe_gen.py`（TM2 的 trans/闭节点
+  改造在 driver.lean 里，被 gen 脚本覆盖——注意下次 regenerate 会丢；
+  最终 driver 的内容以 tm2-progress.md §3 描述为准）。
+
+## 5. 验收对照（任务书三口径）
+
+1. evalTM trans 臂 + valid_trans_*（atan/ln/sin）+ TMSafe 扩展：✓ 完成，
+   零 sorry。
+2. BIXPCGW 150 叶复测：✓ 完成，数字 = **0/150**（改善：无），逐叶分解
+   与根因见 §3 失败形态——一阶 TM 在此样本的 sqrt(≈0)/ite/abs 结构上
+   数学上不可判定，设计 §0 的"≥95% 单叶直通"口径作废，正确口径是
+   TM3 的"二分树总叶数"。
+3. 回归：✓ 9 条 end-to-end 公理仅标准三，lake build 绿（8667 jobs）。
+
 
 ## 4. 本 session 交付（commit d763cc34）
 
