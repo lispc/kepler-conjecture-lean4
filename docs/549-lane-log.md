@@ -94,8 +94,45 @@ bb_arb 的 bisection 循环已内置 TM-first + 自适应阈值（64 窗全灭�
 合成点接入无后续提交 → 按交接文档纪律，M2/M3 重仓前向 Kimi 要 150 叶
 复测数字。M1 设计文档不依赖 M0，照常推进。
 
+## L4 探针：azure 原始 cell 清单解剖（2026-09-22 续）
+
+`reference/flyspeck/azure/ineqs.txt`（行格式 `NNN: NNN,(idv,cell): ineqm …`）：
+
+- 23,237 cells 覆盖 **208 案**（需非线性验证器的 prep/terminal 子集）
+- **83 案（40%）= 1 cell 闭合**（无切分树，纯全域）；重尾两案 6320/7318 cells
+- **549 = `prep-5490182221` 单 cell**：x 空间 [#4.0,#6.3504]×6（= 我们的
+  y 空间 [2,2.52]^6 逐点平方，域精确一致），body `dihatn_x + unit6*(−1.893)<0`
+- 原始验证器单 cell 闭合的机制 = TM + 导数旗标 + convex + **abs/分段合成
+  引理**（m_taylor_abs_pos_compose 类）——分段结构在求值器内部消化，
+  不靠域切分
+
+### 549 缺口的最终定位
+
+| 层 | 原始 Flyspeck | 我们现状 |
+|---|---|---|
+| 域 | 1 cell 全域 | 136 万叶 |
+| 分段结构 | 求值器内合成规则（abs/ite TM 规则） | TM_FAIL(2) bail → 裸区间 |
+| 精度 | pp=4-6 + chop | N=2048 rung 阶梯 |
+| 单叶成本 | ~75ms/cell（23k cells ≈ 0.48 核时反推） | 1.5s-28s |
+
+**结论：guard 主导案例的命门 = taylor-model-design.md §6 故意跳过的
+ite/abs hull 合并**。f 分段光滑（分支在判别式零点处 C¹ 吻合），
+hull 合并的 soundness 路线：pointwise f(x) ∈ 两侧 TM 界的 hull；
+df/df²/err 的安全合成（分量 hull / max / 与 C¹ 边界层论证）= M1/M2 的
+核心设计内容，Lean 侧对应 CertTM 新增 ite-hull 内核规则（TMSafe 分支）。
+
+### 修订后路线（549 车道）
+
+1. **M1 设计文档扩容**：ite-hull 合成规则（C+Lean 双侧 soundness 论证）
+   成为中枢；mono/convex 与 L2.5 guard 法向切分降为组合件
+2. **决定性实验（C 侧 ~40 行）**：bb_arb TM 的 OP_ITE 改双支求值 + hull
+   合成 → 全量重解 549 数叶数。若塌缩到 ≤100 叶量级 = 杠杆证实
+3. M2：CertTM 加对应内核规则（含 soundness 证明），走 make check 纪律
+4. L4 对 549 本身无树可导（1 cell），对 60% 有树案例仍是有用种子源
+
 ## 下一步
 
-1. 回填 L2 pilot 叶数 → 决定 M4 pilot 规模预期
-2. M1：mono/convex 双侧设计文档（钉死 soundness 方向 + C 读 Lean 判定表）
-3. 向 Kimi 要：M0 数字 + 15 案单叶成本原始日志（调研报告）
+1. ite-hull 决定性实验（上述 #2）
+2. M1 设计文档（含 hull 规则 + guard 通道）
+3. 向 Kimi 同步：L2 pilot 零削减 + 1-cell 发现——两条线（guard 结构）
+   汇合点一致
