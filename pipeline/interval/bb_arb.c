@@ -1621,6 +1621,40 @@ static slong widest_dim(const leaf *L)
     return best;
 }
 
+/* --gsplit：TM 梯度引导切分维（实验；仅 --ite-hull2 组合启用）。
+ *
+ * 动机：节点 TM 有效但未闭合（hull 太肥）时，最宽维未必是 hull 宽度的
+ * 最大贡献者。切分维 i 使 wᵢ 减半 → 线性项 |dfᵢ|·wᵢ 收缩 ∝ wᵢ，二阶项
+ * ∝ wᵢ²；故 scoreᵢ = |Dfᵢ|·wᵢ（|Dfᵢ| = tm_Dmag 盒上 |∂ᵢf| 界，零成本取数
+ * —— 根 TM 的 df/ddf 已算好）最大的维是 hull 宽度的最大贡献者；
+ * guard-贴附细胞上该方向近似 guard 曲面法向。
+ *
+ * 仅启发式（只影响切分顺序/叶数，不影响 soundness）：log 域比较
+ * （mag_get_d_log2_approx）避免极端量级溢出；全零分数 → -1（退最宽维）。
+ * 零宽维不可切（交叉相乘精确判零）。 */
+static slong gsplit_dim(const leaf *L, const tm1_t *t, const tmctx *cx)
+{
+    slong i, best = -1;
+    double bs = 0;
+    fmpz_t wn;
+    fmpz_init(wn);
+    for (i = 0; i < L->nv; i++) {
+        double s;
+        mag_t dm;
+        fmpz_mul(wn, L->hn + i, L->ld + i);
+        fmpz_submul(wn, L->ln + i, L->hd + i);
+        if (fmpz_is_zero(wn)) continue;          /* 零宽维不可切 */
+        mag_init(dm);
+        tm_Dmag(dm, t, cx, i);
+        if (mag_is_zero(dm)) { mag_clear(dm); continue; }
+        s = mag_get_d_log2_approx(dm) + mag_get_d_log2_approx(cx->w + i);
+        mag_clear(dm);
+        if (best < 0 || s > bs) { best = i; bs = s; }
+    }
+    fmpz_clear(wn);
+    return best;
+}
+
 /* 叶最大维宽（double，仅作 TM 启用阈值的启发式，不参与 soundness） */
 static double leaf_wmax(const leaf *L)
 {
@@ -1857,6 +1891,8 @@ static void usage(void)
             "  --tm：叶判定启用一阶 Taylor 模型先行（默认关闭，裸区间路径零变动）\n"
             "  --ite-hull：ite guard 跨0 时双支求值 + 常数 hull 合成（实验）\n"
             "  --ite-hull2：同上但 df-hull 收紧合成（保留导数结构，实验）\n"
+            "  --gsplit：TM 梯度引导切分（须配 --ite-hull2；TM 有效未闭合节点\n"
+            "            切分维改选 |Df|·w 最大维，TM invalid/未尝试维持最宽维，实验）\n"
             "  --tm-prec：TM 中心/一阶精度（默认 256）；--tm-hprec：Hessian 粗精度（默认 32）\n"
             "  --tm-w0：TM 启用盒宽阈值初值（默认 0.25，窗口自适应）\n"
             "  --tm-debug：只对根盒跑一次 TM 并打印包围，随后退出\n");
@@ -1868,7 +1904,7 @@ int main(int argc, char **argv)
     const char *path = NULL, *certpath = NULL, *probe_path = NULL;
     slong prec = 64;
     long max_nodes = 1L << 16;
-    int tm_on = 0, tm_debug = 0, ite_hull = 0, ite_hull2 = 0;
+    int tm_on = 0, tm_debug = 0, ite_hull = 0, ite_hull2 = 0, gsplit = 0;
     slong tm_prec = 256, tm_hprec = 32;
     double tm_w0 = 0.25;
     int i;
@@ -1899,6 +1935,12 @@ int main(int argc, char **argv)
                eval_prog_tm OP_ITE ite_hull2 分支；隐含 tm_on） */
             ite_hull2 = 1;
             tm_on = 1;
+        } else if (!strcmp(argv[i], "--gsplit")) {
+            /* 549 工位 TM 梯度引导切分（实验）：TM 有效但未闭合（hull 太肥）
+               的节点切分维改选 |Df|·w 最大维；TM invalid / 未尝试节点维持
+               最宽维。须与 --ite-hull2 组合（解析后校验）；隐含 tm_on。 */
+            gsplit = 1;
+            tm_on = 1;
         } else if (!strcmp(argv[i], "--tm-debug")) {
             tm_debug = 1;
             tm_on = 1;
@@ -1921,6 +1963,9 @@ int main(int argc, char **argv)
     if (tm_prec < 8 || tm_prec > 4096) die(EXIT_ERR, "--tm-prec 需在 [8,4096]");
     if (tm_hprec < 8 || tm_hprec > 256) die(EXIT_ERR, "--tm-hprec 需在 [8,256]");
     if (!(tm_w0 > 0)) die(EXIT_ERR, "--tm-w0 需为正");
+    if (gsplit && !ite_hull2)
+        die(EXIT_ERR, "--gsplit 需与 --ite-hull2 组合（df-hull 合成保导数结构，"
+                      "Df 引导才有意义）");
 
     /* ---- 读文件 + JSON 解析 ---- */
     {
@@ -2085,6 +2130,17 @@ int main(int argc, char **argv)
         long tm_inv_r[8] = { 0 };   /* invalid 原因直方图（诊断） */
         long tm_win = 0, tm_win_ok = 0;
         double tm_thresh = tm_w0;
+        /* --gsplit 统计（仅 gsplit 打印；默认路径零输出）：
+           n_gs_used = TM 有效未闭合且 |Df|·w 选维生效；
+           n_gs_fb   = gsplit 模式下退最宽维（TM invalid / 未尝试 / 全零分）；
+           n_gs_dim  = gsplit 实际选中的维直方图 */
+        long n_gs_used = 0, n_gs_fb = 0;
+        long *n_gs_dim = NULL;
+        if (gsplit) {
+            size_t k;
+            n_gs_dim = xmalloc((size_t)nvars * sizeof(long));
+            for (k = 0; k < (size_t)nvars; k++) n_gs_dim[k] = 0;
+        }
 
         /* ---- --tm-debug：根盒单遍 TM，打印包围后退出 ---- */
         if (tm_debug) {
@@ -2211,6 +2267,7 @@ int main(int argc, char **argv)
             size_t sp = 0;
             evres st = EV_INDET;
             double min_sw = 1e300;   /* 本叶最细跨 0 guard 的球宽 */
+            int tm_open_valid = 0;   /* --gsplit：本叶 TM 有效但未闭合（hull 太肥） */
 
             if (processed >= max_nodes) {
                 /* 节点超限：输出未闭合叶列表，exit 2 */
@@ -2227,6 +2284,10 @@ int main(int argc, char **argv)
                             tm_inv_r[1], tm_inv_r[2], tm_inv_r[3],
                             tm_inv_r[4], tm_inv_r[5], tm_inv_r[6]);
                     if (ite_hull2) tm_div_diag_print(stderr, &tcx);
+                    if (gsplit) {
+                        fprintf(stderr, "[bb_arb] gsplit（部分跑）: |Df|·w选维=%ld"
+                                        "  最宽维回退=%ld\n", n_gs_used, n_gs_fb);
+                    }
                 }
                 for (k = 0; k < q.n; k++) {
                     fprintf(stderr, "  leaf %lu: ", (unsigned long)k);
@@ -2249,6 +2310,9 @@ int main(int argc, char **argv)
                 if (eval_prog_tm(mainp, tstk, &tsp, &tcx) == 0 && tsp == 1) {
                     tm_val++;
                     closed_tm = (tm_decide(tstk) == 0);
+                    /* tstk[0]（df/ddf）与 tcx.w 在二分点前不再被改写，
+                       gsplit 选维在二分块零成本取数 */
+                    tm_open_valid = !closed_tm;
                 } else {
                     tm_inv++;
                     if (tcx.fail_reason >= 1 && tcx.fail_reason <= 6)
@@ -2369,11 +2433,26 @@ int main(int argc, char **argv)
                 }
             }
 
-            /* 二分：最宽维、精确有理中点 (lo+hi)/2（fmpz 任意精度） */
+            /* 二分：默认最宽维、精确有理中点 (lo+hi)/2（fmpz 任意精度）。
+               --gsplit：本叶 TM 有效但未闭合（hull 太肥）时改选 |Df|·w 最大维
+               （hull 宽度最大贡献者；guard-贴附细胞上近似 guard 曲面法向）；
+               TM invalid / 未尝试 / 全零分 → 维持最宽维。 */
             {
-                slong d = widest_dim(&L);
+                slong d = -1;
                 leaf a, b;
                 fmpz_t mn, md;
+                if (gsplit && tm_open_valid) {
+                    d = gsplit_dim(&L, tstk, &tcx);
+                    if (d >= 0) {
+                        n_gs_used++;
+                        n_gs_dim[d]++;
+                    } else {
+                        n_gs_fb++;   /* 全零分（罕见）：退最宽维 */
+                    }
+                } else if (gsplit) {
+                    n_gs_fb++;       /* TM invalid / 未尝试：维持最宽维 */
+                }
+                if (d < 0) d = widest_dim(&L);
                 if (d < 0) {
                     fprintf(stderr, "[bb_arb] 盒已退化仍无法闭合（精度不足或断言不真）：");
                     print_box_human(stderr, &L, names);
@@ -2419,6 +2498,18 @@ int main(int argc, char **argv)
                    tm_inv_r[1], tm_inv_r[2], tm_inv_r[3],
                    tm_inv_r[4], tm_inv_r[5], tm_inv_r[6]);
             if (ite_hull2) tm_div_diag_print(stdout, &tcx);
+        }
+        if (gsplit) {
+            slong v;
+            printf("[bb_arb] gsplit: |Df|·w选维=%ld  最宽维回退=%ld"
+                   "  (回退占比 %.2f%%)\n",
+                   n_gs_used, n_gs_fb,
+                   n_gs_used + n_gs_fb
+                       ? 100.0 * (double)n_gs_fb / (double)(n_gs_used + n_gs_fb)
+                       : 0.0);
+            printf("[bb_arb] gsplit 选维直方图:");
+            for (v = 0; v < nvars; v++) printf(" %ld:%ld", (long)v, n_gs_dim[v]);
+            printf("\n");
         }
 
         /* ---- 证书输出 ---- */
@@ -2473,6 +2564,7 @@ tm_debug_done:
         for (i = 0; i < nvars; i++) free(names[i]);
         free(names);
         free(caseid);
+        free(n_gs_dim);
         leaf_free(&rootbox);
         prog_free(mainp);
         for (i = 0; i < (int)dis.n; i++) prog_free(dis.v[i].p);

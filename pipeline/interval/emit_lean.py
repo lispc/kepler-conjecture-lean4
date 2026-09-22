@@ -1005,6 +1005,251 @@ def emit_sharded_bbgd(t, mod, n, goals, exprs, box, hdr, outpath, shard_leaves,
           f"({t.nleaves} leaves, {len(shards)} shards, BBTreeGD)")
 
 
+# ---------------------------------------------------------------------------
+# M2b hull pilot (`--hull`): TM-closed leaf certificates through the Lean
+# kernel hull checker `checkPosTMHull` (CertTM.lean M2b section).
+#
+#   stage A:  emit_lean.py <case.json> <cert.json> <outA.lean> --hull \
+#                     [--leaves=20 --gran=-80 --rung=128 --rung-out=-80]
+#     emits a compiled-run driver (`lake env lean --run outA.lean`) that
+#     probes each sampled tm-hit leaf with `tmHullLeafProbe` and prints
+#       RUNG <N> <out> <oinv0> <oinv1> <oinv2> <osq1> <osq2> <otr1> <otr2>
+#       <k> PASS|NEG <lo_m> <lo_e> <slo shi sc>...   /   <k> FAIL
+#   stage B:  emit_lean.py <case.json> <cert.json> <outB.lean> --hull \
+#                     --params=<stage-A output>
+#     emits the kernel certificate: per-PASS-leaf
+#       theorem <mod>LeafK : checkPosTMHull <mod>Expr <mod>BoxK <mod>P<K>
+#         = true := by decide
+#     glued into a single `<mod>_pilot` conjunction for `#print axioms`.
+# ---------------------------------------------------------------------------
+
+def hull_sel_boxes(cert_path, want, stride=None):
+    """Stride-select up to `want` tm-hit leaves from a bb_arb cert (two
+    streaming passes: count, then pick every stride-th tm leaf).  With an
+    explicit `stride` (stage B reproducing stage A's sample), `want` counts
+    picks, not tm leaves."""
+    _, gen = stream_cert(cert_path)
+    ntm = sum(1 for l in gen if l["hit"] == "tm")
+    if ntm == 0:
+        die("no tm-hit leaves in cert")
+    if stride is None:
+        stride = max(1, ntm // max(1, want))
+    picks, i = [], 0
+    _, gen = stream_cert(cert_path)
+    for l in gen:
+        if l["hit"] == "tm":
+            if i % stride == 0:
+                picks.append(tuple(box_frac(iv) for iv in l["box"]))
+                if len(picks) >= want:
+                    break
+            i += 1
+    return picks, ntm, stride
+
+
+def hull_expr(case, rung_n, rung_out):
+    """The case expression for the hull route: dummy `(0, 0)` sqrt slots
+    (mantissas live in `TMParams.sqrtCerts`, not in the AST), closed trans
+    args pinned at (2048, -64), open trans args at the pilot rung.
+    Identical text in stage A and stage B.  Node counts are taken from the
+    EMITTED text, not the RPN op list: non-dyadic `push_const` entries
+    expand to an extra `.div` node (const numerator / denominator), and the
+    hull route consumes one invCert per emitted div."""
+    rpn = RPN(sqrt_slot=lambda i: ("0", "0"),
+              trans=lambda op, closed: ("2048", "(-64)") if closed
+              else (str(rung_n), f"({rung_out})"))
+    expr = rpn.emit(case["prog"])
+    return (expr, expr.count("(.sqrt "), expr.count("(.div "),
+            expr.count("(.trans "))
+
+
+def hull_stage_a_file(mod, n, expr, boxes, gran, rung_n, rung_out,
+                      nsqrt, ndiv, ntrans, nleaves, meta, extra):
+    """Stage-A probe driver: compiled run (`lake env lean --run`) prints the
+    RUNG header then one probe line per leaf.  Only HDR is .format-ed (the
+    Lean interpolation braces of the probe loop stay literal)."""
+    g = f"({gran})"
+    boxes_lean = ",\n    ".join(
+        f"({box_lit(b)} : Fin {n} → DInterval)" for b in boxes)
+    hdr_text = (HDR.format(nleaves=nleaves, extra=extra, **meta) +
+                "import Kepler.Interval.CertTM\n\n"
+                "set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
+                "open Kepler.Interval\n\n"
+                "/-- Local default (for `Array.get!` in the probe loop only). -/\n"
+                "instance : Inhabited DInterval := ⟨⟨⟨0, 0⟩, ⟨0, 0⟩⟩⟩\n\n"
+                "/-- The case expression for the hull route: dummy `(0, 0)`\n"
+                "sqrt slots (mantissas are carried in `TMParams.sqrtCerts`,\n"
+                "not in the AST); closed atan args pinned at (2048, -64),\n"
+                f"open atan args at the pilot rung ({rung_n}, {rung_out}). -/\n"
+                f"def {mod}Expr : IExpr {n} :=\n  {expr}\n\n"
+                "/-- Template TMParams: dummy mantissas, pilot recip\n"
+                f"granularity {gran} everywhere. -/\n"
+                f"def {mod}Ps : TMParams :=\n"
+                f"  ⟨List.replicate {nsqrt} ⟨0, 0, 0, {g}, {g}⟩,\n"
+                f"   List.replicate {ndiv} ⟨{g}, {g}, {g}⟩,\n"
+                f"   List.replicate {ntrans} ⟨{g}, {g}⟩⟩\n\n"
+                f"/-- The {nleaves} stride-sampled tm-hit leaf boxes. -/\n"
+                f"def {mod}Boxes : Array (Fin {n} → DInterval) :=\n  #["
+                + boxes_lean + "]\n\n"
+                f"def main : List String → IO UInt32 := fun _ => do\n"
+                f"  IO.println \"RUNG {rung_n} {rung_out} {g} {g} {g} {g} {g} {g} {g}\"\n"
+                f"  for i in [0:{mod}Boxes.size] do\n"
+                f"    match tmHullLeafProbe {mod}Expr {mod}Boxes[i]! {mod}Ps with\n"
+                "    | some (p, m, e, l) =>\n"
+                "        let v := if p then \"PASS\" else \"NEG\"\n"
+                "        let trip := String.intercalate \" \"\n"
+                "          (l.map fun t => s!\"{t.1} {t.2.1} {t.2.2}\")\n"
+                "        IO.println s!\"{i} {v} {m} {e} {trip}\"\n"
+                "    | none => IO.println s!\"{i} FAIL\"\n"
+                "  return 0\n")
+    return hdr_text
+
+
+def parse_hull_params(path, nsqrt):
+    """Parse stage-A probe output: the RUNG header + per-leaf lines.
+    Returns (rung tuple (N, out, g0..g6), {k: (verdict, lo_m, lo_e,
+    triples)} for all evaluated leaves; verdict is 'PASS' or 'NEG')."""
+    rung = None
+    verdicts = {}
+    for ln in open(path):
+        ln = ln.strip()
+        if not ln:
+            continue
+        if ln.startswith("RUNG"):
+            tk = ln.split()
+            if len(tk) != 10:
+                die(f"bad RUNG header: {ln}")
+            rung = tuple(int(x.strip("()")) for x in tk[1:])
+            continue
+        tk = ln.split()
+        k = int(tk[0])
+        if tk[1] == "FAIL":
+            continue
+        if tk[1] not in ("PASS", "NEG"):
+            die(f"bad probe line: {ln}")
+        lo_m, lo_e = int(tk[2]), int(tk[3])
+        trip = [int(x) for x in tk[4:]]
+        if len(trip) % 3 != 0 or len(trip) // 3 > nsqrt:
+            die(f"leaf {k}: {len(trip)} mantissas, expected at most "
+                f"{3 * nsqrt} (reached sqrt nodes only)")
+        verdicts[k] = (tk[1], lo_m, lo_e,
+                       [tuple(trip[j:j + 3]) for j in range(0, len(trip), 3)])
+    if rung is None:
+        die("no RUNG header in params file")
+    return rung, verdicts
+
+
+def hull_stage_b_file(mod, n, expr, rows, rung, nsqrt, ndiv, ntrans,
+                      meta, extra):
+    """Stage-B kernel pilot: per-leaf box, filled TMParams and a kernel
+    `decide` theorem stating that `checkPosTMHull` reproduces the stage-A
+    verdict (`= true` on PASS leaves, `= false` on NEG leaves — the lemma
+    proven is the compiled-run/kernel AGREEMENT, not positivity).  All leaf
+    theorems are glued into one conjunction for `#print axioms`;
+    components reference the leaf theorems, no recomputation."""
+    npar, out, g0, g1, g2, g3, g4, g5, g6 = rung
+    out_parts, pf = [], []
+    for j, (k, box, verdict, lo_m, lo_e, triples) in enumerate(rows, 1):
+        sq = ", ".join(f"⟨{a}, {b}, {c}, ({g3}), ({g4})⟩"
+                       for a, b, c in triples)
+        iv = ", ".join(f"⟨({g0}), ({g1}), ({g2})⟩" for _ in range(ndiv))
+        tv = ", ".join(f"⟨({g5}), ({g6})⟩" for _ in range(ntrans))
+        out_parts.append(
+            f"/-- Leaf {k} of the stage-A sample: box, filled TMParams,\n"
+            f"kernel verdict check.  Stage-A margin: loBound {lo_m} * 2^({lo_e}),\n"
+            f"verdict {verdict}. -/\n"
+            f"def {mod}Box{j} : Fin {n} → DInterval :=\n  {box_lit(box)}\n\n"
+            f"def {mod}P{j} : TMParams := ⟨[{sq}], [{iv}], [{tv}]⟩\n\n"
+            f"theorem {mod}Leaf{j} :\n"
+            f"    checkPosTMHull {mod}Expr {mod}Box{j} {mod}P{j} = "
+            f"{'true' if verdict == 'PASS' else 'false'} := by\n  decide\n")
+        pf.append((f"{mod}Leaf{j}",
+                   f"checkPosTMHull {mod}Expr {mod}Box{j} {mod}P{j} = "
+                   f"{'true' if verdict == 'PASS' else 'false'}"))
+    goal = " ∧\n    ".join(v for _, v in pf)
+    conj = (f"⟨{', '.join(t for t, _ in pf)}⟩" if len(pf) > 1
+            else pf[0][0])
+    body = "\n".join(out_parts)
+    return (HDR.format(nleaves=len(rows), extra=extra, **meta) +
+            "import Kepler.Interval.CertTM\n\n"
+            "set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
+            "namespace Kepler.Interval.Cases\n\n"
+            "/-- The case expression for the hull route (dummy sqrt slots;\n"
+            f"atan rungs baked: open ({npar}, ({out})), closed (2048, -64)). -/\n"
+            f"def {mod}Expr : IExpr {n} :=\n  {expr}\n\n"
+            + body +
+            "\n/-- Kernel/compiled-run agreement on all pilot leaves; the\n"
+            "conjunction references the leaf theorems, so no positivity\n"
+            "computation is repeated. -/\n"
+            f"theorem {mod}_pilot :\n    {goal} :=\n  {conj}\n\n"
+            f"#print axioms {mod}_pilot\n\n"
+            "end Kepler.Interval.Cases\n")
+
+
+def hull_main(case, cid, mod, n, args, params_file, gran, rung_n, rung_out,
+              nleaves, max_leaves=None, manifest_file=None):
+    """The `--hull` driver: stage A (probe driver emission) or stage B
+    (kernel certificate emission from the probe output)."""
+    expr, nsqrt, ndiv, ntrans = hull_expr(case, rung_n, rung_out)
+    meta = dict(caseid=cid, origop=case.get("orig_op"), vars=case["vars"],
+                prec="-")
+    if params_file is None:
+        boxes, ntm, stride = hull_sel_boxes(args[1], nleaves)
+        open(os.path.splitext(args[2])[0] + ".manifest.json", "w").write(
+            json.dumps({"case": cid, "ntm": ntm, "stride": stride,
+                        "want": len(boxes), "gran": gran,
+                        "rung": [rung_n, rung_out], "nsqrt": nsqrt,
+                        "ndiv": ndiv, "ntrans": ntrans}, indent=1))
+        open(args[2], "w").write(hull_stage_a_file(
+            mod, n, expr, boxes, gran, rung_n, rung_out,
+            nsqrt, ndiv, ntrans, len(boxes), meta,
+            f" — M2b HULL PILOT stage A: {ntm} tm leaves, stride {stride}"))
+        print(f"emit_lean: wrote {args[2]} (M2b hull stage A: {len(boxes)} "
+              f"tm leaves of {ntm}, stride {stride}, sqrt {nsqrt}, div "
+              f"{ndiv}, trans {ntrans}; run `lake env lean --run {args[2]} "
+              f"> params.txt`)")
+        return
+    mfpath = (manifest_file or
+              os.path.splitext(params_file)[0] + ".manifest.json")
+    if not os.path.exists(mfpath):
+        # params.txt often sits next to the stage-A driver under a
+        # `.params.txt` name — try the driver-side manifest too
+        alt = os.path.splitext(
+            os.path.splitext(params_file)[0])[0] + ".manifest.json"
+        if os.path.exists(alt):
+            mfpath = alt
+    mf = json.load(open(mfpath))
+    if mf["nsqrt"] != nsqrt or mf["ndiv"] != ndiv or mf["ntrans"] != ntrans:
+        die("manifest node counts mismatch the case prog — wrong inputs?")
+    rung, verdicts = parse_hull_params(params_file, nsqrt)
+    if not verdicts:
+        die("no evaluated leaves in stage-A output — nothing to pilot")
+    boxes, ntm, stride = hull_sel_boxes(
+        args[1], mf["want"], stride=mf["stride"])
+    if len(boxes) < max(verdicts) + 1:
+        die(f"manifest sample reproduced only {len(boxes)} boxes, need "
+            f"{max(verdicts) + 1}")
+    rows = []
+    for j, k in enumerate(sorted(verdicts)):
+        if max_leaves is not None and len(rows) >= max_leaves:
+            break
+        verdict, lo_m, lo_e, trip = verdicts[k]
+        rows.append((k, boxes[k], verdict, lo_m, lo_e, trip))
+    n_pos = sum(1 for r in rows if r[2] == "PASS")
+    open(args[2], "w").write(hull_stage_b_file(
+        mod, n, expr, rows, rung, nsqrt, ndiv, ntrans, meta,
+        f" — M2b HULL PILOT stage B: kernel verdicts on {len(rows)} of "
+        f"{ntm} tm leaves ({n_pos} PASS, {len(rows) - n_pos} NEG); NEG\n"
+        "  leaves are NOT certificates — the lemma proven per leaf is the\n"
+        "  kernel/compiled-run agreement (see CertTM.lean M2b section)"))
+    print(f"emit_lean: wrote {args[2]} (M2b hull stage B: {len(rows)} "
+          f"leaves of {ntm} tm leaves — {n_pos} PASS, "
+          f"{len(rows) - n_pos} NEG)")
+
+
+
+
+
+
 def main():
     shard_leaves = 128
     sample_n = None
@@ -1015,6 +1260,11 @@ def main():
     bbg = False
     disj_gd = False
     disj_dummy = False
+    hull = False
+    gran = -80
+    rung_n = 128
+    rung_out = -80
+    max_leaves = None
     params_file = None
     manifest_file = None
     args = []
@@ -1037,6 +1287,16 @@ def main():
             disj_gd = True
         elif a == "--disj-dummy":
             disj_dummy = True
+        elif a == "--hull":
+            hull = True
+        elif a.startswith("--gran="):
+            gran = int(a.split("=", 1)[1])
+        elif a.startswith("--rung="):
+            rung_n = int(a.split("=", 1)[1])
+        elif a.startswith("--rung-out="):
+            rung_out = int(a.split("=", 1)[1])
+        elif a.startswith("--max-leaves="):
+            max_leaves = int(a.split("=", 1)[1])
         elif a.startswith("--params="):
             params_file = a.split("=", 1)[1]
         elif a.startswith("--manifest="):
@@ -1046,7 +1306,8 @@ def main():
     if len(args) != 3:
         die("usage: emit_lean.py <case.json> <cert.json> <out.lean> [--shard-leaves=N]\n"
             "                [--leaves=N] [--fill] [--stage-a] [--bbg --params=FILE]\n"
-            "                [--bbg --disj-gd --params=FILE [--manifest=FILE]] [--disj-dummy]")
+            "                [--bbg --disj-gd --params=FILE [--manifest=FILE]] [--disj-dummy]\n"
+            "                [--hull --params=FILE --gran=G --rung=N --rung-out=O]")
     if disj_gd and not bbg:
         die("--disj-gd is a stage-B mode: pass --bbg --disj-gd --params=FILE")
     fill = fill or stage_a or bbg
@@ -1059,6 +1320,13 @@ def main():
         mod = "C" + "".join(ch if ch.isalnum() else "x" for ch in cid)
     n = len(case["vars"])
     extra = ""
+
+    if hull:
+        # ---- M2b hull pilot (stage A driver / stage B kernel certificate,
+        # route `checkPosTMHull`; see the M2b section of CertTM.lean) ----
+        hull_main(case, cid, mod, n, args, params_file, gran, rung_n,
+                  rung_out, sample_n or 20, max_leaves, manifest_file)
+        return
 
     if sample_n is None:
         cert = json.load(open(args[1]))
