@@ -221,11 +221,31 @@ emit_lean `--hull` 路径 + 修非 dyadic push_const 的 .div 节点饥饿缺口
 - 结论：**549 现有 80% 证书叶内核可验证**；剩余 20%（69,538 straddle 叶）
   差 df-hull 合成 + err 半宽语义——最后一公里的路径完全明确
 
-## 下一步（三更）
+### gsplit2 负结果 + 200 叶发射演练（`a0ac7af7`）
 
-1. **df-hull Lean 合成**（最后一刀）：∃-slope 语义下 C¹ 拼接余项界；
-   err 半宽对齐（Lean |f(ρ)−f(y)| 语义的覆盖估算按 C 半宽折算）→ 翻转
-   4 NEG → 全量 281,894 叶发射 + stage-A
-2. div/sqrt 6.7k chop/closed-trans 消解（Kimi 线，接口已备）
-3. 与 Kimi 同步：16/20 交叉验证 + schema 评审清单 + div 接口
-4. L4 种子树对 60% 有树案例复用（排后）
+**gsplit2（guard 引导切分）：决定性负结果**——281,120 叶（straddle −0.34%）。
+机制：straddle 叶 TM 首次尝试即闭合（付 1 次 hull 宽 loBound 即 >0），
+从不进二分决策；且贴附细胞盒真跨 guard 曲面 ⇒ 任何 sound 区间求值永跨 0
+——**"劈到定号"数学上不可能，df-hull Lean 合成 + err 半宽对齐被实证为
+唯一路径**。双回归逐字节吻合。
+
+**200 叶全量发射演练**（emit_hull_pilot.py + C549Hull200.lean）：
+
+- **158/200 PASS**：single 150/150 全过；straddle 8/50 免 df-hull 翻正
+  （同象限子群，16%）→ 可验证叶上修 **~79%（~223k）**
+- 通量：内核 decide **21.4 s/叶**、4× 完美线性、RSS 40GB/50叶封顶并发
+- 全量外推：**~1,675 core·h**（裸基线 10,800 的 6.5×）；12-25 并发
+  墙钟 2.3-5.8 天；CPU 未吃满、内存封顶
+- 管线缺口单（→Kimi）：stage-A hull 全量化 / shard ≤20-50 叶 /
+  PASS-only 发射 / mode 进 manifest / 汇总定理 ∧ 写法固化
+- 首建失败回退记录：汇总定理 ∷= shard 名类型错已修
+
+## 下一步（四更）
+
+1. **df-hull Lean 合成**（唯一路径，确认）：∃-slope C¹ 拼接余项界 +
+   err 半宽对齐 → 翻转 42/50 straddle NEG → 可验证叶 79%→100%
+2. **decide 提速**（新瓶颈）：21.4 s/叶 → 全量核时主导；chop/精度下放
+   （M0 线）与 native_decide shard 例外（DECISIONS.md）是现成杠杆——
+   M5 目标 ≤10 core·h 需单叶 ~0.13s，尚差 164×，两线必合流
+3. div/sqrt 6.7k chop/closed-trans（Kimi 线）
+4. Kimi 同步包：16/20→158/200 交叉验证 + 评审清单 + div 接口 + 通量数字
