@@ -795,6 +795,13 @@ typedef struct {
     int    hs_sd;            /* 运行期：当前 straddle 递归层数 */
     long   hs_a_strat;       /* 运行期草稿：本盒尝试 straddle 事件数（每盒复位） */
     int    hs_a_dmax;        /* 运行期草稿：本盒尝试最大 straddle 嵌套深度 */
+    /* --gsplit2：straddle 追踪（旗标门控记录，主循环每叶复位）。
+       gs_hit = 本盒 TM 求值触发过 hull（某 ite guard 盒上跨 0 走了双支）；
+       gs_guard = 首个触发 hull 的 ite guard prog（外层先到先记；借用
+       mainp 子树指针，生命周期覆盖全程）。 */
+    int    gsplit2;
+    int    gs_hit;
+    const prog *gs_guard;
 } tmctx;
 
 static void tm1_init(tm1_t *t, slong n)
@@ -1158,6 +1165,13 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
             }
             if (take_then < 0 && !cx->ite_hull && !cx->ite_hull2) TM_FAIL(2);
             if (take_then < 0) {
+                /* --gsplit2：记录"本盒 TM 求值触发过 hull"及首个触发的 ite
+                   guard prog（求值顺序外层先到先记；主循环每叶复位；
+                   旗标门控，默认路径零改动） */
+                if (cx->gsplit2 && !cx->gs_hit) {
+                    cx->gs_hit = 1;
+                    cx->gs_guard = in->pc;
+                }
                 /* 走廊压栈：then/else 各记一级（指令下标<<1|支号），div 诊断用 */
                 if (cx->ite_depth < 24)
                     cx->ite_path[cx->ite_depth] = (size_t)i << 1;
@@ -1735,6 +1749,109 @@ static slong gsplit_dim(const leaf *L, const tm1_t *t, const tmctx *cx)
     return best;
 }
 
+/* 盒一维 [lo,hi]（精确有理）→ 包含它的 Arb 球（定义见后；gsplit2_dim 前向引用） */
+static void set_var_interval(arb_t dst, const fmpz_t ln, const fmpz_t ld,
+                             const fmpz_t hn, const fmpz_t hd, slong prec);
+
+/* --gsplit2：guard 引导切分维（实验；仅 --ite-hull2 组合启用）。
+ *
+ * 动机（区别于 --gsplit 的 |Df|·w hull 收紧目标）：让 straddle 叶变成
+ * guard 定号单支叶（Lean 内核 evalTMHullD 只能验证定号单支叶 / straddle
+ * 叶需付 hull 宽）。本盒 TM 求值触发过 hull（某 ite guard 盒上跨 0）时，
+ * 对首个触发的 guard prog q 做敏感度探测：
+ *   对每个维 i，把该维缩到中点半宽（其余维全盒）裸区间求值 q → q_i；
+ *   区间算术包含单调 ⟹ q_i ⊆ q_full，width(q_i) ≤ width(q_full)。
+ * 选使 q 区间宽度收缩最大（width(q_full)−width(q_i) 最大）的维——该维
+ * 近似 guard 曲面法向，切开后子盒最可能 guard 定号（单支化）。
+ * q_full 求值失败（INDET）、全零/负收缩 → -1（退最宽维）；零宽维跳过
+ * （切不开，选它会层间死循环）。guard prog 小（549 根 guard ~2×10² ops），
+ * nvars+1 次额外裸求值成本可忽略。
+ * 仅启发式（只影响切分顺序/叶数，不影响 soundness）。 */
+static slong gsplit2_dim(const leaf *L, const tmctx *cx,
+                         arb_t *vars, arb_t *stk, size_t scap, slong prec)
+{
+    slong i, v, best = -1;
+    size_t sp;
+    arf_t wf, wi, shr, bshr;
+    fmpz_t t_lh, t_hl, t_den, t_lo, t_hi;
+
+    if (!cx->gs_guard || cx->gs_guard->n == 0) return -1;
+    if (cx->gs_guard->total + 3 > scap) return -1;  /* 栈容量兜底（正常必满足） */
+
+    /* q_full：全盒裸区间求值（vars/stk 复用主循环缓冲，此处已无读者） */
+    for (v = 0; v < cx->n; v++)
+        set_var_interval(vars[v], L->ln + v, L->ld + v, L->hn + v, L->hd + v, prec);
+    sp = 0;
+    if (eval_prog(cx->gs_guard, (arb_srcptr)vars, stk, &sp, prec, 0, NULL) != EV_OK)
+        return -1;
+    arf_init(wf);
+    arf_init(wi);
+    arf_init(shr);
+    arf_init(bshr);
+    arf_zero(bshr);
+    {
+        arf_t lo, hi;
+        arf_init(lo);
+        arf_init(hi);
+        arb_get_lbound_arf(lo, stk[0], prec);
+        arb_get_ubound_arf(hi, stk[0], prec);
+        arf_sub(wf, hi, lo, prec, ARF_RND_CEIL);
+        arf_clear(lo);
+        arf_clear(hi);
+    }
+    fmpz_init(t_lh);
+    fmpz_init(t_hl);
+    fmpz_init(t_den);
+    fmpz_init(t_lo);
+    fmpz_init(t_hi);
+    for (i = 0; i < cx->n; i++) {
+        /* 维 i 缩到中点半宽（其余维全盒）：
+           mid = (ln·hd + hn·ld)/(2 ld·hd)，rad = (hn·ld − ln·hd)/(2 ld·hd)
+           ⟹ lo' = (3 ln·hd + hn·ld)/(4 ld·hd)，
+              hi' = (ln·hd + 3 hn·ld)/(4 ld·hd) */
+        fmpz_mul(t_lh, L->ln + i, L->hd + i);
+        fmpz_mul(t_hl, L->hn + i, L->ld + i);
+        if (fmpz_equal(t_lh, t_hl)) continue;       /* 零宽维不可切 */
+        fmpz_mul(t_den, L->ld + i, L->hd + i);
+        fmpz_mul_2exp(t_den, t_den, 2);
+        fmpz_mul_ui(t_lo, t_lh, 3);
+        fmpz_add(t_lo, t_lo, t_hl);
+        fmpz_mul_ui(t_hi, t_hl, 3);
+        fmpz_add(t_hi, t_hi, t_lh);
+        set_var_interval(vars[i], t_lo, t_den, t_hi, t_den, prec);
+        sp = 0;
+        if (eval_prog(cx->gs_guard, (arb_srcptr)vars, stk, &sp, prec, 0, NULL)
+            == EV_OK) {
+            arf_t lo, hi;
+            arf_init(lo);
+            arf_init(hi);
+            arb_get_lbound_arf(lo, stk[0], prec);
+            arb_get_ubound_arf(hi, stk[0], prec);
+            arf_sub(wi, hi, lo, prec, ARF_RND_CEIL);
+            arf_sub(shr, wf, wi, prec, ARF_RND_NEAR);
+            if (arf_cmp(shr, bshr) > 0) {
+                arf_set(bshr, shr);
+                best = i;
+            }
+            arf_clear(lo);
+            arf_clear(hi);
+        }
+        /* 还原全盒球（下轮迭代对 vars[i] 先写后读，此处仅保不变式） */
+        set_var_interval(vars[i], L->ln + i, L->ld + i, L->hn + i, L->hd + i, prec);
+    }
+    fmpz_clear(t_lh);
+    fmpz_clear(t_hl);
+    fmpz_clear(t_den);
+    fmpz_clear(t_lo);
+    fmpz_clear(t_hi);
+    if (best < 0 || arf_sgn(bshr) <= 0) best = -1;
+    arf_clear(wf);
+    arf_clear(wi);
+    arf_clear(shr);
+    arf_clear(bshr);
+    return best;
+}
+
 /* 叶最大维宽（double，仅作 TM 启用阈值的启发式，不参与 soundness） */
 static double leaf_wmax(const leaf *L)
 {
@@ -1973,6 +2090,9 @@ static void usage(void)
             "  --ite-hull2：同上但 df-hull 收紧合成（保留导数结构，实验）\n"
             "  --gsplit：TM 梯度引导切分（须配 --ite-hull2；TM 有效未闭合节点\n"
             "            切分维改选 |Df|·w 最大维，TM invalid/未尝试维持最宽维，实验）\n"
+            "  --gsplit2：guard 引导切分（须配 --ite-hull2；TM 求值触发过 hull 的\n"
+            "            节点切分维改选 guard 敏感度最大维——把 straddle 叶劈成\n"
+            "            guard 定号单支叶；TM 未触发/未尝试维持最宽维，实验）\n"
             "  --tm-prec：TM 中心/一阶精度（默认 256）；--tm-hprec：Hessian 粗精度（默认 32）\n"
             "  --tm-w0：TM 启用盒宽阈值初值（默认 0.25，窗口自适应）\n"
             "  --tm-debug：只对根盒跑一次 TM 并打印包围，随后退出\n"
@@ -1987,6 +2107,7 @@ int main(int argc, char **argv)
     slong prec = 64;
     long max_nodes = 1L << 16;
     int tm_on = 0, tm_debug = 0, ite_hull = 0, ite_hull2 = 0, gsplit = 0;
+    int gsplit2 = 0;
     int hull_stats = 0;
     slong tm_prec = 256, tm_hprec = 32;
     double tm_w0 = 0.25;
@@ -2024,6 +2145,14 @@ int main(int argc, char **argv)
                最宽维。须与 --ite-hull2 组合（解析后校验）；隐含 tm_on。 */
             gsplit = 1;
             tm_on = 1;
+        } else if (!strcmp(argv[i], "--gsplit2")) {
+            /* 549 工位 guard 引导切分（实验）：TM 求值触发过 hull（某 ite
+               guard 盒上跨 0 走了双支）的节点，二分维改选使 guard prog 裸
+               区间宽度收缩最大的维（guard 曲面法向近似）——把 straddle 叶
+               劈成 guard 定号单支叶（Lean 内核 evalTMHullD 路径）。
+               须与 --ite-hull2 组合（解析后校验）；隐含 tm_on。 */
+            gsplit2 = 1;
+            tm_on = 1;
         } else if (!strcmp(argv[i], "--tm-debug")) {
             tm_debug = 1;
             tm_on = 1;
@@ -2056,6 +2185,12 @@ int main(int argc, char **argv)
     if (gsplit && !ite_hull2)
         die(EXIT_ERR, "--gsplit 需与 --ite-hull2 组合（df-hull 合成保导数结构，"
                       "Df 引导才有意义）");
+    if (gsplit && gsplit2)
+        die(EXIT_ERR, "--gsplit 与 --gsplit2 互斥（目标不同：hull 收紧 vs "
+                      "guard 单支化）");
+    if (gsplit2 && !ite_hull2)
+        die(EXIT_ERR, "--gsplit2 需与 --ite-hull2 组合（guard 跨0 须走 hull "
+                      "路径才会记录触发）");
 
     /* ---- 读文件 + JSON 解析 ---- */
     {
@@ -2194,6 +2329,7 @@ int main(int argc, char **argv)
             }
             tcx.ite_hull = ite_hull;
             tcx.ite_hull2 = ite_hull2;
+            tcx.gsplit2 = gsplit2;
             tcx.hull_stats = hull_stats;
             tcx.bstk = (arb_struct *)stk;   /* guard 裸区间求值复用主栈（TM 阶段它空闲） */
             tstk = xmalloc(scap * sizeof(tm1_t));
@@ -2231,6 +2367,17 @@ int main(int argc, char **argv)
             size_t k;
             n_gs_dim = xmalloc((size_t)nvars * sizeof(long));
             for (k = 0; k < (size_t)nvars; k++) n_gs_dim[k] = 0;
+        }
+        /* --gsplit2 统计（仅 gsplit2 打印；默认路径零输出）：
+           n_gs2_used = TM 触发过 hull 且 guard 敏感度选维生效；
+           n_gs2_fb   = 退最宽维（未触发 hull / TM 未尝试 / 全零负收缩 /
+                        guard 求值失败）；n_gs2_dim = 选中维直方图 */
+        long n_gs2_used = 0, n_gs2_fb = 0;
+        long *n_gs2_dim = NULL;
+        if (gsplit2) {
+            size_t k;
+            n_gs2_dim = xmalloc((size_t)nvars * sizeof(long));
+            for (k = 0; k < (size_t)nvars; k++) n_gs2_dim[k] = 0;
         }
 
         /* ---- --tm-debug：根盒单遍 TM，打印包围后退出 ---- */
@@ -2391,6 +2538,12 @@ int main(int argc, char **argv)
             double min_sw = 1e300;   /* 本叶最细跨 0 guard 的球宽 */
             int tm_open_valid = 0;   /* --gsplit：本叶 TM 有效但未闭合（hull 太肥） */
 
+            /* --gsplit2：straddle 追踪复位（每叶；含 TM 未尝试叶，防陈旧值） */
+            if (gsplit2) {
+                tcx.gs_hit = 0;
+                tcx.gs_guard = NULL;
+            }
+
             if (processed >= max_nodes) {
                 /* 节点超限：输出未闭合叶列表，exit 2 */
                 size_t k;
@@ -2410,6 +2563,10 @@ int main(int argc, char **argv)
                     if (gsplit) {
                         fprintf(stderr, "[bb_arb] gsplit（部分跑）: |Df|·w选维=%ld"
                                         "  最宽维回退=%ld\n", n_gs_used, n_gs_fb);
+                    }
+                    if (gsplit2) {
+                        fprintf(stderr, "[bb_arb] gsplit2（部分跑）: guard敏感度选维=%ld"
+                                        "  最宽维回退=%ld\n", n_gs2_used, n_gs2_fb);
                     }
                 }
                 for (k = 0; k < q.n; k++) {
@@ -2574,14 +2731,30 @@ int main(int argc, char **argv)
             }
 
             /* 二分：默认最宽维、精确有理中点 (lo+hi)/2（fmpz 任意精度）。
-               --gsplit：本叶 TM 有效但未闭合（hull 太肥）时改选 |Df|·w 最大维
-               （hull 宽度最大贡献者；guard-贴附细胞上近似 guard 曲面法向）；
-               TM invalid / 未尝试 / 全零分 → 维持最宽维。 */
+                --gsplit：本叶 TM 有效但未闭合（hull 太肥）时改选 |Df|·w 最大维
+                （hull 宽度最大贡献者；guard-贴附细胞上近似 guard 曲面法向）；
+                TM invalid / 未尝试 / 全零分 → 维持最宽维。
+                --gsplit2：本叶 TM 求值触发过 hull（guard 跨 0）时改选使首个
+                触发的 guard prog 区间宽度收缩最大的维（guard 曲面法向近似，
+                straddle 叶单支化）；未触发 / TM 未尝试 / 全零负收缩 /
+                guard 求值失败 → 维持最宽维。 */
             {
                 slong d = -1;
                 leaf a, b;
                 fmpz_t mn, md;
-                if (gsplit && tm_open_valid) {
+                if (gsplit2) {
+                    if (tcx.gs_hit && tcx.gs_guard) {
+                        d = gsplit2_dim(&L, &tcx, vars, stk, scap, prec);
+                        if (d >= 0) {
+                            n_gs2_used++;
+                            n_gs2_dim[d]++;
+                        } else {
+                            n_gs2_fb++;   /* 全零/负收缩等：退最宽维 */
+                        }
+                    } else {
+                        n_gs2_fb++;       /* 本盒 TM 未触发 hull / 未尝试 */
+                    }
+                } else if (gsplit && tm_open_valid) {
                     d = gsplit_dim(&L, tstk, &tcx);
                     if (d >= 0) {
                         n_gs_used++;
@@ -2652,6 +2825,18 @@ int main(int argc, char **argv)
             for (v = 0; v < nvars; v++) printf(" %ld:%ld", (long)v, n_gs_dim[v]);
             printf("\n");
         }
+        if (gsplit2) {
+            slong v;
+            printf("[bb_arb] gsplit2: guard敏感度选维=%ld  最宽维回退=%ld"
+                   "  (回退占比 %.2f%%)\n",
+                   n_gs2_used, n_gs2_fb,
+                   n_gs2_used + n_gs2_fb
+                       ? 100.0 * (double)n_gs2_fb / (double)(n_gs2_used + n_gs2_fb)
+                       : 0.0);
+            printf("[bb_arb] gsplit2 选维直方图:");
+            for (v = 0; v < nvars; v++) printf(" %ld:%ld", (long)v, n_gs2_dim[v]);
+            printf("\n");
+        }
 
         /* ---- 证书输出 ---- */
         if (certpath) {
@@ -2706,6 +2891,7 @@ tm_debug_done:
         free(names);
         free(caseid);
         free(n_gs_dim);
+        free(n_gs2_dim);
         leaf_free(&rootbox);
         prog_free(mainp);
         for (i = 0; i < (int)dis.n; i++) prog_free(dis.v[i].p);
