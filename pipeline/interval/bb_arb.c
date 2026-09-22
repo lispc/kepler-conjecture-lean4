@@ -732,7 +732,20 @@ typedef struct {
     mag_t  err;
     mag_t  W;
     int    valid;   /* 0 = 该子式 TM 不可用（保留字段，见段头注） */
+    int    from_ite; /* 谱系诊断：0=纯 TM 1=含 ite-hull(常数) 2=含 ite-hull2(df)
+                        3=两者混合（div 越零定性用；不影响任何判定） */
 } tm1_t;
+
+/* div 越零失败指令表条目（同一位置计数合并；srcmask 位 i = from_ite==i 出现过。
+   path = 根 prog 到失败指令所在子程序的 ite 走廊：每级 (指令下标<<1)|支号
+   （0=then 1=else），打印形如 ip=227@7t.3e——与 case JSON 的 ite 嵌套一一对应） */
+typedef struct {
+    size_t ip;
+    long   cnt;
+    int    srcmask;
+    int    depth;
+    size_t path[24];
+} tm_ipent;
 
 typedef struct {
     slong  n;
@@ -749,6 +762,17 @@ typedef struct {
     size_t fail_ip;        /* 诊断：失败指令下标 */
     int    ite_hull;       /* --ite-hull：guard 跨0 时双支求值 + hull 合成
                               （默认 0 = 既有 bail 语义，memset 覆盖） */
+    int    ite_hull2;      /* --ite-hull2：df-hull 收紧版（保留导数结构的合成，
+                              见 eval_prog_tm OP_ITE 注；默认 0） */
+    /* div 越零定性（--ite-hull2 汇总打印；计数只落在失败路径，无判定影响） */
+    long   div_fail_n;
+    long   div_fail_src[4];  /* 分母 TM 来源类别直方图（from_ite 0..3） */
+    long   div_fail_wb[8];   /* 分母盒值域宽 log2 桶：≤-20 / (-20,-10] /
+                                 (-10,-6] / (-6,-2] / (-2,2] / (2,6] / (6,20] / >20 */
+    tm_ipent div_ips[64];    /* 失败指令（子式）表，溢出置 div_ips_ovf */
+    int    div_ips_n, div_ips_ovf;
+    size_t ite_path[24];     /* 当前 ite 递归走廊（诊断用，见 tm_ipent 注） */
+    int    ite_depth;
 } tmctx;
 
 static void tm1_init(tm1_t *t, slong n)
@@ -762,6 +786,7 @@ static void tm1_init(tm1_t *t, slong n)
     mag_init(t->err);
     mag_init(t->W);
     t->valid = 1;
+    t->from_ite = 0;
 }
 
 static void tm1_clear(tm1_t *t, slong n)
@@ -907,6 +932,113 @@ static int tm_inv_range_mag(mag_t M, const tm1_t *g, const tmctx *cx)
     return ok;
 }
 
+/* 谱系合并：0=纯 1=ite-hull 2=ite-hull2 3=混合（非零不同值 → 3） */
+static int tm_src_join(int a, int b)
+{
+    if (a == b) return a;
+    if (!a) return b;
+    if (!b) return a;
+    return 3;
+}
+
+/* div 越零定性（诊断计数，仅 --ite-hull2 汇总打印；不改变任何判定）：
+   记录分母 TM 的谱系类别、盒值域宽 log2 桶、失败指令（子式）ip 表。
+   给 closed-trans/chop 对接的接口语义：
+     ip → RPN 指令下标（prog->is[ip]，即分母子表达式的求值入口）；
+     srcmask → 分母是否经由 ite-hull 合成（合成宽度是 chop 需压掉的部分）；
+     宽桶 → 分母值域盒宽的量级（域切分到宽 < 2^e 时该处转定号）。 */
+static void tm_div_fail_diag(tmctx *cx, const tm1_t *g, size_t ip)
+{
+    arf_t lo, hi;
+    int src;
+    cx->div_fail_n++;
+    src = g->from_ite;
+    if (src < 0 || src > 3) src = 0;
+    cx->div_fail_src[src]++;
+    arf_init(lo);
+    arf_init(hi);
+    tm_range_arf(lo, hi, g, cx);
+    if (arf_cmp(lo, hi) < 0) {
+        arf_t wd;
+        arf_init(wd);
+        arf_sub(wd, hi, lo, 53, ARF_RND_CEIL);
+        {
+            double dv = arf_get_d(wd, ARF_RND_UP);
+            int e = 0, b = 7;
+            if (dv > 0) {
+                frexp(dv, &e);
+                e -= 1;   /* frexp: dv = m·2^e, m∈[0.5,1) → floor(log2) = e−1 */
+            }
+            if (e <= -20) b = 0;
+            else if (e <= -10) b = 1;
+            else if (e <= -6) b = 2;
+            else if (e <= -2) b = 3;
+            else if (e <= 2) b = 4;
+            else if (e <= 6) b = 5;
+            else if (e <= 20) b = 6;
+            cx->div_fail_wb[b]++;
+        }
+        arf_clear(wd);
+    } else {
+        cx->div_fail_wb[0]++;   /* 宽 ≤ 0（退化球）归最细桶 */
+    }
+    arf_clear(lo);
+    arf_clear(hi);
+    {
+        int k, d;
+        d = cx->ite_depth > 24 ? 24 : cx->ite_depth;
+        for (k = 0; k < cx->div_ips_n; k++)
+            if (cx->div_ips[k].ip == ip && cx->div_ips[k].depth == d &&
+                memcmp(cx->div_ips[k].path, cx->ite_path,
+                       (size_t)d * sizeof(size_t)) == 0) {
+                cx->div_ips[k].cnt++;
+                cx->div_ips[k].srcmask |= 1 << src;
+                return;
+            }
+        if (cx->div_ips_n < 64) {
+            tm_ipent *e = cx->div_ips + cx->div_ips_n;
+            e->ip = ip;
+            e->cnt = 1;
+            e->srcmask = 1 << src;
+            e->depth = d;
+            memcpy(e->path, cx->ite_path, (size_t)d * sizeof(size_t));
+            cx->div_ips_n++;
+        } else {
+            cx->div_ips_ovf = 1;
+        }
+    }
+}
+
+/* div 越零定性汇总打印（仅 tm_on && ite_hull2 调用） */
+static void tm_div_diag_print(FILE *f, const tmctx *cx)
+{
+    int k;
+    fprintf(f, "[bb_arb] div越零定性: n=%ld  分母谱系: plain=%ld  ite-hull=%ld"
+               "  ite-hull2=%ld  混合=%ld\n",
+            cx->div_fail_n, cx->div_fail_src[0], cx->div_fail_src[1],
+            cx->div_fail_src[2], cx->div_fail_src[3]);
+    fprintf(f, "[bb_arb] div 分母盒宽 log2 桶: <=-20:%ld  (-20,-10]:%ld"
+               "  (-10,-6]:%ld  (-6,-2]:%ld  (-2,2]:%ld  (2,6]:%ld"
+               "  (6,20]:%ld  >20:%ld\n",
+            cx->div_fail_wb[0], cx->div_fail_wb[1], cx->div_fail_wb[2],
+            cx->div_fail_wb[3], cx->div_fail_wb[4], cx->div_fail_wb[5],
+            cx->div_fail_wb[6], cx->div_fail_wb[7]);
+    if (cx->div_ips_n > 0) {
+        fprintf(f, "[bb_arb] div 失败 ip 表 (ip@ite走廊(次数,谱系位集)):");
+        for (k = 0; k < cx->div_ips_n; k++) {
+            int d;
+            fprintf(f, " %lu@", (unsigned long)cx->div_ips[k].ip);
+            for (d = 0; d < cx->div_ips[k].depth; d++)
+                fprintf(f, "%s%lu%c", d ? "." : "",
+                        (unsigned long)(cx->div_ips[k].path[d] >> 1),
+                        (cx->div_ips[k].path[d] & 1) ? 'e' : 't');
+            fprintf(f, "(x%ld,s%d)", cx->div_ips[k].cnt, cx->div_ips[k].srcmask);
+        }
+        if (cx->div_ips_ovf) fprintf(f, " ...(表满截断)");
+        fprintf(f, "\n");
+    }
+}
+
 /* 单遍 RPN 前向 AD：0 = 栈顶 TM 有效；1 = 本叶 TM 不可用（立即放弃）。
    栈纪律与 eval_prog 一致（check_prog 已静态保证）。
    注：本函数在 GCC -O2 下触发 -Wstringop-overflow/overread 误报（对 FLINT
@@ -942,6 +1074,7 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
             }
             for (k = 0; k < n * n; k++) mag_zero(t->ddf + k);
             mag_zero(t->err);
+            t->from_ite = 0;
             tm_update_W(t, cx);
         } else if (in->op == OP_ITE) {
             /* guard 盒上裸区间判定：可定 → 盒上 f 恒等于一支，递归 TM 该支 */
@@ -958,49 +1091,150 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                 if (arb_is_negative(cx->bstk)) take_then = 1;
                 else if (arb_is_nonnegative(cx->bstk)) take_then = 0;
             }
-            if (take_then < 0 && !cx->ite_hull) TM_FAIL(2);
+            if (take_then < 0 && !cx->ite_hull && !cx->ite_hull2) TM_FAIL(2);
             if (take_then < 0) {
-                /* --ite-hull（549 车道决定性实验）：分段光滑（分支在判别式
-                   零点 C¹ 吻合）前提下双支求值 + 保守 hull 合成。
-                   soundness：逐点 f(x) ∈ hull(then 界, else 界)；合成 TM
-                   退化为常数界（f0=hull 中点, df=0, ddf=0, err=半宽），
-                   仅用于闭合判定（内核侧规则归 M2/CertTM）。 */
-                if (eval_prog_tm(in->pt, stk, sp, cx)) return 1;
-                if (eval_prog_tm(in->pe, stk, sp, cx)) return 1;
-                {
-                    tm1_t *tt = stk + (*sp - 2);
-                    tm1_t *te = stk + (*sp - 1);
-                    arb_t b1, b2, un, tmp;
-                    arf_t lo, hi, mid, wdt;
-                    mag_t m;
-                    slong a;
-                    arb_init(b1); arb_init(b2); arb_init(un); arb_init(tmp);
-                    arf_init(lo); arf_init(hi); arf_init(mid); arf_init(wdt);
-                    mag_init(m);
-                    arb_set(b1, tt->f0); arb_add_error_mag(b1, tt->W);
-                    arb_set(b2, te->f0); arb_add_error_mag(b2, te->W);
-                    arb_union(un, b1, b2, cx->prec_c);
-                    arb_get_lbound_arf(lo, un, cx->prec_c);
-                    arb_get_ubound_arf(hi, un, cx->prec_c);
-                    arf_add(mid, lo, hi, cx->prec_c, ARF_RND_NEAR);
-                    arf_mul_2exp_si(mid, mid, -1);
-                    arf_sub(wdt, hi, lo, cx->prec_c, ARF_RND_CEIL);
-                    arf_mul_2exp_si(wdt, wdt, -1);
-                    arb_set_arf(tmp, wdt);
-                    arb_get_mag(m, tmp);
-                    arb_set_arf(tt->f0, mid);
-                    for (a = 0; a < cx->n; a++) arb_zero(tt->df + a);
-                    for (a = 0; a < cx->n * cx->n; a++) mag_zero(tt->ddf + a);
-                    mag_set(tt->err, m);
-                    tm_update_W(tt, cx);
-                    arb_clear(b1); arb_clear(b2); arb_clear(un);
-                    arb_clear(tmp);
-                    arf_clear(lo); arf_clear(hi); arf_clear(mid);
-                    arf_clear(wdt); mag_clear(m);
-                    (*sp)--;
+                /* 走廊压栈：then/else 各记一级（指令下标<<1|支号），div 诊断用 */
+                if (cx->ite_depth < 24)
+                    cx->ite_path[cx->ite_depth] = (size_t)i << 1;
+                cx->ite_depth++;
+                if (eval_prog_tm(in->pt, stk, sp, cx)) {
+                    cx->ite_depth--;
+                    return 1;
                 }
-            } else if (eval_prog_tm(take_then ? in->pt : in->pe, stk, sp, cx)) {
-                return 1;   /* 保留内层失败原因 */
+                if (cx->ite_depth > 0 && cx->ite_depth <= 24)
+                    cx->ite_path[cx->ite_depth - 1] |= 1;
+                if (eval_prog_tm(in->pe, stk, sp, cx)) {
+                    cx->ite_depth--;
+                    return 1;
+                }
+                cx->ite_depth--;
+                if (cx->ite_hull2) {
+                    /* --ite-hull2（df-hull 收紧版）：合成 TM 保留导数结构。
+                     *
+                     * 前提（与 lane log「分段光滑」同一组假设）：
+                     *  P1 逐点分支选择：f(x) = guard(x)<0 ? then(x) : else(x)（精确实数语义）；
+                     *  P2 分支在 guard 零点面 C¹ 吻合（549 的 dihatn 判别式结构），
+                     *     且各分支在盒上分段 C² ⇒ f 分段 C²、梯度跨面连续；
+                     *  P3 两支 TM 各自盒上有效，即满足四不变量（TM1 段头注记号）：
+                     *     (I1) f_b(x) ∈ f0_b ⊕ Σᵢ df_b,ᵢ·δᵢ ⊕ B(err_b)，δᵢ=xᵢ−yᵢ∈[−wᵢ,wᵢ] 实数
+                     *     (I2) |f_b| ≤ Bf_b   (I3) |∂ᵢf_b| ≤ |df_b,ᵢ|+Σⱼ wⱼ·ddf_b,ᵢⱼ
+                     *     (I4) |∂²ᵢⱼf_b| ≤ ddf_b,ᵢⱼ
+                     *
+                     * 合成：df := 两支 df 逐分量区间 hull（arb_union，外向精确）；
+                     *       ddf := 逐格 max；[c±err] ⊇ hull(f0_then ⊕ B(err_t),
+                     *       f0_else ⊕ B(err_e))（c=中点，err=外向半宽）。
+                     * 注意基值只并 err（余项球），不并 W——线性项改由 df-hull 承载，
+                     * 这是相对常数版（f0±W 全并、df 归零）的收紧来源。
+                     *
+                     * soundness（合成 TM 对 f 满足 (I1)–(I4)）：
+                     *  (I1) 固定 x（即固定实数组 δ）：P3(I1) 给
+                     *      f_b(x) ∈ f0_b ⊕ Σᵢ df_b,ᵢδᵢ ⊕ B(err_b)。
+                     *      df_b,ᵢ ⊆ hᵢ 且区间算术对实数 δᵢ 单调 ⟹ Σᵢ df_b,ᵢδᵢ ⊆ Σᵢ hᵢδᵢ；
+                     *      又 f0_b ⊕ B(err_b) ⊆ c ⊕ B(err_s)（构造）⟹ f_b(x) ∈ c ⊕
+                     *      Σᵢ hᵢδᵢ ⊕ B(err_s)。两支皆然，P1 取支后即 f(x) 同属。∎
+                     *  (I3) 支内点：P3(I3) ≤ |df_b,ᵢ|+Σwⱼddf_b,ᵢⱼ ≤ |hᵢ|+Σwⱼ max(ddf)。
+                     *      零点面上：∂ᵢf 沿面连续（P2 C¹），两侧界成立取极限亦成立。∎
+                     *  (I4) 支内点 = 支 Hessian ≤ 各自 ddf ≤ max。零点面上 f 二阶
+                     *      可导性不需另证——下游规则只用「坐标线段 MVT 的 sup」
+                     *      语义（分段 C² + 梯度连续 ⟹ sup = 两片 sup 之 max）。∎
+                     *  (I2) 由 (I1) 逐点推出。∎
+                     * 下游 add/sub/mul/div/一元规则只消费 (I1)–(I4)，故链式合成
+                     * sound。对照：常数版 df=ddf=0 破坏 (I3)/(I4)（Df 被低估为 0，
+                     * 上游 mul/div 的 H 传播漏 ∂f·∂g 交叉项），仅逐点闭合安全；
+                     * df-hull 版恢复全部四不变量，ite 之上再有复合也 sound。
+                     */
+                    {
+                        tm1_t *tt = stk + (*sp - 2);
+                        tm1_t *te = stk + (*sp - 1);
+                        arb_t b1, b2, un, tmp;
+                        arf_t lo, hi, mid, d1, d2;
+                        slong a;
+                        arb_init(b1); arb_init(b2); arb_init(un); arb_init(tmp);
+                        arf_init(lo); arf_init(hi); arf_init(mid);
+                        arf_init(d1); arf_init(d2);
+                        arb_set(b1, tt->f0); arb_add_error_mag(b1, tt->err);
+                        arb_set(b2, te->f0); arb_add_error_mag(b2, te->err);
+                        arb_union(un, b1, b2, cx->prec_c);
+                        arb_get_lbound_arf(lo, un, cx->prec_c);
+                        arb_get_ubound_arf(hi, un, cx->prec_c);
+                        arf_add(mid, lo, hi, cx->prec_c, ARF_RND_NEAR);
+                        arf_mul_2exp_si(mid, mid, -1);
+                        /* 外向半宽：err = max(hi−mid, mid−lo)（各自 CEIL，保证
+                           [mid−err, mid+err] ⊇ [lo,hi]） */
+                        arf_sub(d1, hi, mid, cx->prec_c, ARF_RND_CEIL);
+                        arf_sub(d2, mid, lo, cx->prec_c, ARF_RND_CEIL);
+                        if (arf_sgn(d1) < 0) arf_zero(d1);
+                        if (arf_cmp(d2, d1) > 0) arf_set(d1, d2);
+                        arb_set_arf(tmp, d1);
+                        arb_get_mag(tt->err, tmp);
+                        arb_set_arf(tt->f0, mid);
+                        for (a = 0; a < cx->n; a++) {
+                            arb_union(cx->ndf + a, tt->df + a, te->df + a,
+                                      cx->prec_c);
+                            arb_set(tt->df + a, cx->ndf + a);
+                        }
+                        for (a = 0; a < cx->n * cx->n; a++)
+                            if (mag_cmp(tt->ddf + a, te->ddf + a) < 0)
+                                mag_set(tt->ddf + a, te->ddf + a);
+                        tt->from_ite = tm_src_join(tt->from_ite, te->from_ite);
+                        if (!tt->from_ite) tt->from_ite = 2;
+                        tm_update_W(tt, cx);
+                        arb_clear(b1); arb_clear(b2); arb_clear(un);
+                        arb_clear(tmp);
+                        arf_clear(lo); arf_clear(hi); arf_clear(mid);
+                        arf_clear(d1); arf_clear(d2);
+                        (*sp)--;
+                    }
+                } else {
+                    /* --ite-hull（549 车道决定性实验）：分段光滑（分支在判别式
+                       零点 C¹ 吻合）前提下双支求值 + 保守 hull 合成。
+                       soundness：逐点 f(x) ∈ hull(then 界, else 界)；合成 TM
+                       退化为常数界（f0=hull 中点, df=0, ddf=0, err=半宽），
+                       仅用于闭合判定（内核侧规则归 M2/CertTM）。 */
+                    {
+                        tm1_t *tt = stk + (*sp - 2);
+                        tm1_t *te = stk + (*sp - 1);
+                        arb_t b1, b2, un, tmp;
+                        arf_t lo, hi, mid, wdt;
+                        mag_t m;
+                        slong a;
+                        arb_init(b1); arb_init(b2); arb_init(un); arb_init(tmp);
+                        arf_init(lo); arf_init(hi); arf_init(mid); arf_init(wdt);
+                        mag_init(m);
+                        arb_set(b1, tt->f0); arb_add_error_mag(b1, tt->W);
+                        arb_set(b2, te->f0); arb_add_error_mag(b2, te->W);
+                        arb_union(un, b1, b2, cx->prec_c);
+                        arb_get_lbound_arf(lo, un, cx->prec_c);
+                        arb_get_ubound_arf(hi, un, cx->prec_c);
+                        arf_add(mid, lo, hi, cx->prec_c, ARF_RND_NEAR);
+                        arf_mul_2exp_si(mid, mid, -1);
+                        arf_sub(wdt, hi, lo, cx->prec_c, ARF_RND_CEIL);
+                        arf_mul_2exp_si(wdt, wdt, -1);
+                        arb_set_arf(tmp, wdt);
+                        arb_get_mag(m, tmp);
+                        arb_set_arf(tt->f0, mid);
+                        for (a = 0; a < cx->n; a++) arb_zero(tt->df + a);
+                        for (a = 0; a < cx->n * cx->n; a++) mag_zero(tt->ddf + a);
+                        mag_set(tt->err, m);
+                        tt->from_ite = tm_src_join(tt->from_ite, te->from_ite);
+                        if (!tt->from_ite) tt->from_ite = 1;
+                        tm_update_W(tt, cx);
+                        arb_clear(b1); arb_clear(b2); arb_clear(un);
+                        arb_clear(tmp);
+                        arf_clear(lo); arf_clear(hi); arf_clear(mid);
+                        arf_clear(wdt); mag_clear(m);
+                        (*sp)--;
+                    }
+                }
+            } else {
+                int rt;
+                if (cx->ite_depth < 24)
+                    cx->ite_path[cx->ite_depth] =
+                        ((size_t)i << 1) | (size_t)(take_then ? 0 : 1);
+                cx->ite_depth++;
+                rt = eval_prog_tm(take_then ? in->pt : in->pe, stk, sp, cx);
+                cx->ite_depth--;
+                if (rt) return 1;   /* 保留内层失败原因 */
             }
         } else if (in->op == OP_ADD || in->op == OP_SUB ||
                    in->op == OP_MUL || in->op == OP_DIV) {
@@ -1022,6 +1256,7 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                 for (a = 0; a < n * n; a++)
                     mag_add(f->ddf + a, f->ddf + a, g->ddf + a);
                 mag_add(f->err, f->err, g->err);
+                f->from_ite = tm_src_join(f->from_ite, g->from_ite);
                 tm_update_W(f, cx);
             } else if (in->op == OP_MUL) {
                 mag_t Bf, Bg, acc, t1;
@@ -1061,6 +1296,7 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                     arb_clear(t1a);
                 }
                 tm_err_from_ddf(f, cx);
+                f->from_ite = tm_src_join(f->from_ite, g->from_ite);
                 tm_update_W(f, cx);
                 mag_clear(Bf); mag_clear(Bg); mag_clear(acc); mag_clear(t1);
             } else {  /* OP_DIV：f/g，g 盒值域越零 → 不可用 */
@@ -1071,6 +1307,7 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                 if (!tm_inv_range_mag(M, g, cx)) {
                     mag_clear(M); mag_clear(M2); mag_clear(M3);
                     mag_clear(Bf); mag_clear(acc); mag_clear(t1);
+                    tm_div_fail_diag(cx, g, i);
                     TM_FAIL(3);
                 }
                 mag_mul(M2, M, M);
@@ -1121,6 +1358,7 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                     arb_clear(t1a);
                 }
                 tm_err_from_ddf(f, cx);
+                f->from_ite = tm_src_join(f->from_ite, g->from_ite);
                 tm_update_W(f, cx);
                 mag_clear(M); mag_clear(M2); mag_clear(M3);
                 mag_clear(Bf); mag_clear(acc); mag_clear(t1);
@@ -1577,6 +1815,38 @@ typedef struct {
     size_t n;
 } disjq;
 
+/* --tm-debug 根盒包围打印（固定 "[tm]" 前缀；ite-hull2 对拍复用同一格式） */
+static void tm_debug_dump(const tm1_t *r, slong nvars)
+{
+    arf_t lo, hi, wm, lb, hb;
+    slong v;
+    arf_init(lo); arf_init(hi); arf_init(wm);
+    arf_init(lb); arf_init(hb);
+    arb_get_lbound_arf(lo, r->f0, 64);
+    arb_get_ubound_arf(hi, r->f0, 64);
+    arf_set_mag(wm, r->W);
+    arf_sub(lb, lo, wm, 64, ARF_RND_FLOOR);
+    arf_add(hb, hi, wm, 64, ARF_RND_CEIL);
+    printf("[tm] f0=[%.17g, %.17g]  err=%.6e  W=%.6e\n",
+           arf_get_d(lo, ARF_RND_DOWN), arf_get_d(hi, ARF_RND_UP),
+           mag_get_d(r->err), mag_get_d(r->W));
+    printf("[tm] |df|:");
+    for (v = 0; v < nvars; v++) {
+        mag_t m;
+        mag_init(m);
+        arb_get_mag(m, r->df + v);
+        printf(" %.6e", mag_get_d(m));
+        mag_clear(m);
+    }
+    printf("\n");
+    printf("[tm] loBound=%.17g hiBound=%.17g\n",
+           arf_get_d(lb, ARF_RND_DOWN), arf_get_d(hb, ARF_RND_UP));
+    printf("[tm] decide=%s\n",
+           tm_decide(r) == 0 ? "CLOSED" : "OPEN");
+    arf_clear(lo); arf_clear(hi); arf_clear(wm);
+    arf_clear(lb); arf_clear(hb);
+}
+
 /* ---------------- 主程序 ---------------- */
 
 static void usage(void)
@@ -1585,6 +1855,8 @@ static void usage(void)
             "用法: bb_arb <case.json> [--max-nodes N] [--prec P] [--cert out.json]\n"
             "       [--tm] [--tm-prec P] [--tm-hprec P] [--tm-w0 D] [--tm-debug]\n"
             "  --tm：叶判定启用一阶 Taylor 模型先行（默认关闭，裸区间路径零变动）\n"
+            "  --ite-hull：ite guard 跨0 时双支求值 + 常数 hull 合成（实验）\n"
+            "  --ite-hull2：同上但 df-hull 收紧合成（保留导数结构，实验）\n"
             "  --tm-prec：TM 中心/一阶精度（默认 256）；--tm-hprec：Hessian 粗精度（默认 32）\n"
             "  --tm-w0：TM 启用盒宽阈值初值（默认 0.25，窗口自适应）\n"
             "  --tm-debug：只对根盒跑一次 TM 并打印包围，随后退出\n");
@@ -1596,7 +1868,7 @@ int main(int argc, char **argv)
     const char *path = NULL, *certpath = NULL, *probe_path = NULL;
     slong prec = 64;
     long max_nodes = 1L << 16;
-    int tm_on = 0, tm_debug = 0, ite_hull = 0;
+    int tm_on = 0, tm_debug = 0, ite_hull = 0, ite_hull2 = 0;
     slong tm_prec = 256, tm_hprec = 32;
     double tm_w0 = 0.25;
     int i;
@@ -1621,6 +1893,11 @@ int main(int argc, char **argv)
             /* 549 车道决定性实验：ite 双支求值 + hull 合成（实验旗标，
                默认关闭；需配合 --tm 语义，此处隐含 tm_on） */
             ite_hull = 1;
+            tm_on = 1;
+        } else if (!strcmp(argv[i], "--ite-hull2")) {
+            /* df-hull 收紧版：合成 TM 保留导数结构（soundness 注释见
+               eval_prog_tm OP_ITE ite_hull2 分支；隐含 tm_on） */
+            ite_hull2 = 1;
             tm_on = 1;
         } else if (!strcmp(argv[i], "--tm-debug")) {
             tm_debug = 1;
@@ -1748,7 +2025,7 @@ int main(int argc, char **argv)
 
         /* ---- 求值栈 / 变量区间 ---- */
         size_t scap = mainp->total + 3;
-        if (ite_hull) scap += 8;   /* ite-hull 双支并存槽位余量 */
+        if (ite_hull || ite_hull2) scap += 8;   /* ite-hull 双支并存槽位余量 */
         for (i = 0; i < (int)dis.n; i++)
             if (!dis.v[i].is_varlt && dis.v[i].p->total + 3 > scap)
                 scap = dis.v[i].p->total + 3;
@@ -1781,6 +2058,7 @@ int main(int argc, char **argv)
                 arb_init(tcx.ndf + i);
             }
             tcx.ite_hull = ite_hull;
+            tcx.ite_hull2 = ite_hull2;
             tcx.bstk = (arb_struct *)stk;   /* guard 裸区间求值复用主栈（TM 阶段它空闲） */
             tstk = xmalloc(scap * sizeof(tm1_t));
             for (k = 0; k < scap; k++) tm1_init(tstk + k, nvars);
@@ -1816,34 +2094,23 @@ int main(int argc, char **argv)
                 printf("[tm] INVALID（根盒 TM 不可用）reason=%d ip=%lu\n",
                        tcx.fail_reason, (unsigned long)tcx.fail_ip);
             } else {
-                tm1_t *r = tstk;
-                arf_t lo, hi, wm, lb, hb;
-                slong v;
-                arf_init(lo); arf_init(hi); arf_init(wm);
-                arf_init(lb); arf_init(hb);
-                arb_get_lbound_arf(lo, r->f0, 64);
-                arb_get_ubound_arf(hi, r->f0, 64);
-                arf_set_mag(wm, r->W);
-                arf_sub(lb, lo, wm, 64, ARF_RND_FLOOR);
-                arf_add(hb, hi, wm, 64, ARF_RND_CEIL);
-                printf("[tm] f0=[%.17g, %.17g]  err=%.6e  W=%.6e\n",
-                       arf_get_d(lo, ARF_RND_DOWN), arf_get_d(hi, ARF_RND_UP),
-                       mag_get_d(r->err), mag_get_d(r->W));
-                printf("[tm] |df|:");
-                for (v = 0; v < nvars; v++) {
-                    mag_t m;
-                    mag_init(m);
-                    arb_get_mag(m, r->df + v);
-                    printf(" %.6e", mag_get_d(m));
-                    mag_clear(m);
+                tm_debug_dump(tstk, nvars);
+            }
+            if (ite_hull2) {
+                /* 对拍：同一根盒用常数 hull 版再跑一遍（--ite-hull2 主跑为
+                   df-hull；此处临时切常数版，打印格式同上供界宽对比） */
+                size_t tsp2 = 0;
+                tcx.ite_hull2 = 0;
+                tcx.ite_hull = 1;
+                tcx.fail_reason = 0;
+                tm_setup_leaf(&tcx, &rootbox);
+                printf("[tm] ---- 常数 hull 版对拍 ----\n");
+                if (eval_prog_tm(mainp, tstk, &tsp2, &tcx) != 0 || tsp2 != 1) {
+                    printf("[tm] INVALID（根盒 TM 不可用）reason=%d ip=%lu\n",
+                           tcx.fail_reason, (unsigned long)tcx.fail_ip);
+                } else {
+                    tm_debug_dump(tstk, nvars);
                 }
-                printf("\n");
-                printf("[tm] loBound=%.17g hiBound=%.17g\n",
-                       arf_get_d(lb, ARF_RND_DOWN), arf_get_d(hb, ARF_RND_UP));
-                printf("[tm] decide=%s\n",
-                       tm_decide(r) == 0 ? "CLOSED" : "OPEN");
-                arf_clear(lo); arf_clear(hi); arf_clear(wm);
-                arf_clear(lb); arf_clear(hb);
             }
             /* 跳到清理段（closed 为空、无证书输出） */
             goto tm_debug_done;
@@ -1959,6 +2226,7 @@ int main(int argc, char **argv)
                                     "  sqrt/log底非正=%ld  未知=%ld\n",
                             tm_inv_r[1], tm_inv_r[2], tm_inv_r[3],
                             tm_inv_r[4], tm_inv_r[5], tm_inv_r[6]);
+                    if (ite_hull2) tm_div_diag_print(stderr, &tcx);
                 }
                 for (k = 0; k < q.n; k++) {
                     fprintf(stderr, "  leaf %lu: ", (unsigned long)k);
@@ -2150,6 +2418,7 @@ int main(int argc, char **argv)
                    "  div越零=%ld  abs跨0=%ld  sqrt/log底非正=%ld  未知=%ld\n",
                    tm_inv_r[1], tm_inv_r[2], tm_inv_r[3],
                    tm_inv_r[4], tm_inv_r[5], tm_inv_r[6]);
+            if (ite_hull2) tm_div_diag_print(stdout, &tcx);
         }
 
         /* ---- 证书输出 ---- */

@@ -2095,6 +2095,222 @@ theorem evalTMH_sound {n : ℕ} {box : Fin n → DInterval} :
         · show M'.w = boxW box
           exact hww.trans hw
 
+/-! ## M2: the kernel ite-hull rule
+
+C-side counterpart: `pipeline/interval/bb_arb.c` (`--ite-hull`, the OP_ITE
+guard-straddle path): both branch TMs are evaluated, their pointwise boxes
+`[f0 − W, f0 + W]` are unioned, and the composite degrades to the constant
+model `f0 = union midpoint`, `df = ddf = 0`, `err = half width`.  Soundness
+is pointwise: whatever the guard selects, `f(ρ)` is one of the two branch
+values, hence lies in the union.
+
+Kernel version (this section): in the ∃-slope `TaylorM.Valid` semantics the
+center value `f(y)` is only known up to the branch taken at `y`, so the
+composite keeps the whole hull interval as `fB` and pays the full hull width
+as `err` (the C-side bounds `|f(ρ) − f0|` while the Lean semantics bounds
+`|f(ρ) − f(y)|`, so `err_lean = 2 · err_C`; both sound, the Lean composite is
+wider by exactly the C-side half-width).  The **guard is never evaluated** —
+hull synthesis depends only on the two branch models, so guard-straddling
+leaves (the whole 549 lane) close without any guard decision, and guards
+whose own interval evaluation fails (e.g. a `div` meeting zero) are fine too.
+A failing *branch* (`div` past its certificates, negative radicand, …) still
+fails the node, as on the C side.  C¹ note: on the 549 lane the two branches
+join C¹ at the discriminant zero, so a `df`-hull composite could tighten
+`err` substantially; this round ships the conservative constant version,
+matching the C-side default. -/
+
+/-- The certified pointwise value range of a model over its box:
+`[fB.lo − W, fB.hi + W]`.  `Valid` puts every box value `f(ρ)` in this
+range (`TaylorM.Valid.abs_sub_le_W`). -/
+def TaylorM.valueRange {n : ℕ} (M : TaylorM n) : DInterval :=
+  ⟨(M.fB.lo).add (-M.W), (M.fB.hi).add M.W⟩
+
+/-- The ite-hull composite model: the constant model over the hull of the
+two branch value ranges (the kernel analogue of the C-side `--ite-hull`
+constant synthesis). -/
+def iteHullTM {n : ℕ} (box : Fin n → DInterval) (Mt Me : TaylorM n) : TaylorM n :=
+  fallbackTM box ((Mt.valueRange).hull Me.valueRange)
+
+/-- **Validity of the ite-hull composite**: if both branch models are valid
+on the box, the constant hull model is valid for the guard-selected function
+`ρ ↦ if c(ρ) < 0 then ft ρ else fe ρ`.  Whatever the guard evaluates to
+(when it evaluates at all), the selected branch value lies in that branch
+model's value range, hence in the hull — and so do the composite's own
+center value and every box value, which bounds all pairwise distances by the
+hull width. -/
+theorem valid_iteHull {n : ℕ} {Mt Me : TaylorM n} {box : Fin n → DInterval}
+    {ft fe : (Fin n → ℝ) → ℝ} (c : IExpr n)
+    (ht : Mt.Valid box ft) (he : Me.Valid box fe) (hcell : CellOK box) :
+    (iteHullTM box Mt Me).Valid box
+      (fun ρ => if c.evalReal ρ < 0 then ft ρ else fe ρ) := by
+  have hIn : ∀ (M : TaylorM n) (f : (Fin n → ℝ) → ℝ), M.Valid box f →
+      ∀ ρ, boxMem box ρ → M.valueRange.mem (f ρ) := by
+    intro M f hV ρ hρ
+    have hV0 := hV
+    obtain ⟨_, _, hfB, hrem⟩ := hV
+    obtain ⟨a, ha, hbound⟩ := hrem ρ hρ
+    have hW := TaylorM.Valid.abs_sub_le_W hV0 hρ ha hbound
+    rw [abs_le] at hW
+    constructor
+    · show Dyadic.toReal ((M.fB.lo).add (-M.W)) ≤ f ρ
+      rw [Dyadic.toReal_add, Dyadic.toReal_neg]
+      linarith [hfB.1, hW.1]
+    · show f ρ ≤ Dyadic.toReal ((M.fB.hi).add M.W)
+      rw [Dyadic.toReal_add]
+      linarith [hfB.2, hW.2]
+  have hcen : boxMem box (fun i => ((iteHullTM box Mt Me).y i).toReal) :=
+    fun i => (hcell i).1
+  have hmemcen : ((Mt.valueRange).hull Me.valueRange).mem
+      (if c.evalReal (fun i => ((iteHullTM box Mt Me).y i).toReal) < 0
+        then ft (fun i => ((iteHullTM box Mt Me).y i).toReal)
+        else fe (fun i => ((iteHullTM box Mt Me).y i).toReal)) := by
+    by_cases hlt : c.evalReal (fun i => ((iteHullTM box Mt Me).y i).toReal) < 0
+    · rw [if_pos hlt]
+      exact DInterval.mem_hull_left (hIn Mt ft ht _ hcen)
+    · rw [if_neg hlt]
+      exact DInterval.mem_hull_right (hIn Me fe he _ hcen)
+  refine ⟨fun i => (hcell i).1, fun i => (hcell i).2, hmemcen, ?_⟩
+  intro ρ hρ
+  refine ⟨fun _ => 0, fun i => ?_, ?_⟩
+  · show (⟨⟨0, 0⟩, ⟨0, 0⟩⟩ : DInterval).mem (0 : ℝ)
+    exact ⟨by simp, by simp⟩
+  have hval : ((Mt.valueRange).hull Me.valueRange).mem
+      (if c.evalReal ρ < 0 then ft ρ else fe ρ) := by
+    by_cases hlt : c.evalReal ρ < 0
+    · rw [if_pos hlt]
+      exact DInterval.mem_hull_left (hIn Mt ft ht ρ hρ)
+    · rw [if_neg hlt]
+      exact DInterval.mem_hull_right (hIn Me fe he ρ hρ)
+  have h0 : (∑ i, (0 : ℝ) * (ρ i - ((iteHullTM box Mt Me).y i).toReal)) = 0 :=
+    Finset.sum_eq_zero fun i _ => by rw [zero_mul]
+  rw [h0, sub_zero]
+  show |(if c.evalReal ρ < 0 then ft ρ else fe ρ)
+        - (if c.evalReal (fun i => ((iteHullTM box Mt Me).y i).toReal) < 0
+            then ft (fun i => ((iteHullTM box Mt Me).y i).toReal)
+            else fe (fun i => ((iteHullTM box Mt Me).y i).toReal))|
+      ≤ (((Mt.valueRange).hull Me.valueRange).hi.add
+          (-((Mt.valueRange).hull Me.valueRange).lo)).toReal
+  rw [Dyadic.toReal_add, Dyadic.toReal_neg, sub_eq_add_neg, abs_le]
+  constructor <;> linarith [hval.1, hval.2, hmemcen.1, hmemcen.2]
+
+/-- M2: hull-based single-pass evaluation.  Identical to `evalTMH` except
+that `ite c t e` recursively evaluates **both** branches and combines the
+two models into the constant hull composite (`iteHullTM`); the guard is
+never evaluated, and a failing branch fails the node (C-side `--ite-hull`
+semantics).  On expressions without `ite` it coincides definitionally with
+`evalTMH`. -/
+def evalTMHull {n : ℕ} (box : Fin n → DInterval) :
+    IExpr n → TMParams → Option (TaylorM n × TMParams)
+  | .ite _ t e, ps =>
+      (evalTMHull box t ps).bind fun (Mt, ps₁) =>
+      (evalTMHull box e ps₁).map fun (Me, ps₂) => (iteHullTM box Mt Me, ps₂)
+  | e, ps => evalTMH box e ps
+
+/-- **Soundness of `evalTMHull`** (same conclusion as `evalTMH_sound`): a
+successful hull evaluation produces a valid model of the real semantics,
+centered at the box midpoint with the midpoint envelope.  Every non-`ite`
+node delegates to `evalTMH` verbatim, so only the `ite` case is new: both
+branch models are valid by the induction hypotheses, and `valid_iteHull`
+closes the hull composite. -/
+theorem evalTMHull_sound {n : ℕ} {box : Fin n → DInterval} :
+    ∀ (e : IExpr n) (ps ps' : TMParams) (M : TaylorM n),
+      (∀ i, (box i).wf = true) →
+      evalTMHull box e ps = some (M, ps') →
+      M.Valid box (fun ρ => e.evalReal ρ) ∧ M.y = boxCenter box ∧ M.w = boxW box := by
+  intro e
+  induction e with
+  | const d =>
+      intro ps ps' M hwf h
+      exact evalTMH_sound _ _ _ _ hwf h
+  | var k =>
+      intro ps ps' M hwf h
+      exact evalTMH_sound _ _ _ _ hwf h
+  | neg e _ih =>
+      intro ps ps' M hwf h
+      exact evalTMH_sound _ _ _ _ hwf h
+  | abs e _ih =>
+      intro ps ps' M hwf h
+      exact evalTMH_sound _ _ _ _ hwf h
+  | add e₁ e₂ _ih₁ _ih₂ =>
+      intro ps ps' M hwf h
+      exact evalTMH_sound _ _ _ _ hwf h
+  | sub e₁ e₂ _ih₁ _ih₂ =>
+      intro ps ps' M hwf h
+      exact evalTMH_sound _ _ _ _ hwf h
+  | mul e₁ e₂ _ih₁ _ih₂ =>
+      intro ps ps' M hwf h
+      exact evalTMH_sound _ _ _ _ hwf h
+  | div e₁ e₂ _out _ih₁ _ih₂ =>
+      intro ps ps' M hwf h
+      exact evalTMH_sound _ _ _ _ hwf h
+  | sqrt e _s₁ _s₂ _ih =>
+      intro ps ps' M hwf h
+      exact evalTMH_sound _ _ _ _ hwf h
+  | trans k e N out _ih =>
+      intro ps ps' M hwf h
+      exact evalTMH_sound _ _ _ _ hwf h
+  | ite c t e _ihc iht ihe =>
+      intro ps ps' M hwf h
+      simp only [evalTMHull] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨Mt, ps₁⟩, ht, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨Me, ps₂⟩, he, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hVt, _, _⟩ := iht ps ps₁ Mt hwf ht
+      obtain ⟨hVe, _, _⟩ := ihe ps₁ ps₂ Me hwf he
+      exact ⟨valid_iteHull c hVt hVe (cellOK_of_wf hwf), rfl, rfl⟩
+
+/-! ## M2 pilot: `|x|`-style `ite` on a guard-straddling box -/
+
+/-- Box `[-1, 1]`. -/
+def exBoxIteHull : Fin 1 → DInterval := fun _ => ⟨⟨-1, 0⟩, ⟨1, 0⟩⟩
+
+/-- `ite(x, −x, x)`: pointwise `|x|`.  The guard interval is `[-1, 1]`
+(straddles 0), so the strict `evalTM` rejects the whole expression. -/
+def exIteAbs : IExpr 1 := .ite (.var 0) (.neg (.var 0)) (.var 0)
+
+theorem exBoxIteHull_wf : ∀ i, (exBoxIteHull i).wf = true := fun i => by
+  fin_cases i; decide
+
+/-- The strict evaluator rejects the whole expression (kernel computation). -/
+theorem exIteHull_strict_none :
+    evalTM exBoxIteHull exIteAbs TMParams.empty = none := rfl
+
+/-- The hull evaluator succeeds (both branches evaluate). -/
+theorem exIteHull_isSome :
+    (evalTMHull exBoxIteHull exIteAbs TMParams.empty).isSome = true := by
+  decide
+
+/-- The produced model is valid for pointwise `|x|`. -/
+theorem exIteHull_valid (ps ps' : TMParams) (M : TaylorM 1)
+    (hE : evalTMHull exBoxIteHull exIteAbs ps = some (M, ps')) :
+    M.Valid exBoxIteHull (fun ρ => if ρ 0 < 0 then -ρ 0 else ρ 0) :=
+  (evalTMHull_sound exIteAbs ps ps' M exBoxIteHull_wf hE).1
+
+/-- A guard that *fails* plain interval evaluation (divisor `[-1,1]` meets
+0): the hybrid `evalTMH` still rejects the whole `ite` because the guard
+must be evaluated, while the hull evaluator succeeds — hull synthesis never
+touches the guard. -/
+def exIteBadGuard : IExpr 1 :=
+  .ite (.div (.var 0) (.var 0) (-1)) (.neg (.var 0)) (.var 0)
+
+theorem exIteBadGuard_hybrid_none :
+    (evalTMH exBoxIteHull exIteBadGuard TMParams.empty).isSome = false := by
+  decide
+
+theorem exIteBadGuard_hull_isSome :
+    (evalTMHull exBoxIteHull exIteBadGuard TMParams.empty).isSome = true := by
+  decide
+
+#print axioms valid_iteHull
+#print axioms evalTMHull_sound
+#print axioms exIteHull_strict_none
+#print axioms exIteHull_isSome
+#print axioms exIteHull_valid
+#print axioms exIteBadGuard_hybrid_none
+#print axioms exIteBadGuard_hull_isSome
+
 /-! ## The checker -/
 
 /-- **Soundness of the Taylor lower bound**: `loBound` lower-bounds `f` at
