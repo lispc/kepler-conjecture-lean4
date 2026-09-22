@@ -47,7 +47,7 @@ inductive BBTreeG (n : ℕ) (e : IExpr n) : Type where
   /-- Taylor-model leaf: closed by `checkPosTM` (kernel-checked Taylor-model
   evaluation of `e` itself — TM parameters live in `ps`, outside the
   expression). -/
-  | taylorLeaf (box : Fin n → DInterval) (ps : List SqrtTMP)
+  | taylorLeaf (box : Fin n → DInterval) (ps : TMParams)
       (hcert : checkPosTM e box ps = true) : BBTreeG n e
   | node (box : Fin n → DInterval) (d : Fin n) (l r : BBTreeG n e) :
       BBTreeG n e
@@ -240,7 +240,7 @@ enclosure the point `⟨3,-1⟩`, envelope `1/2`, certified lower bound `c = 1`)
 `√(3·2⁻¹)` mantissa `2 = ⌊√6⌋` (used twice — point enclosure), `√1` mantissa
 `2 = ⌊√4⌋`, recip granularities `2⁻³` (slope `1/(2√(3/2))`) and `2⁻²`
 (curvature `1/(8·1·1)`). -/
-def exGTMP : List SqrtTMP := [⟨2, 2, 2, -3, -2⟩]
+def exGTMP : TMParams := ⟨[⟨2, 2, 2, -3, -2⟩], [], []⟩
 
 /-- The single-leaf TM tree closes the whole box `[1,2]` at the root — the
 two-leaf bare-interval bisection of `exGTree` is unnecessary here (kernel
@@ -297,14 +297,14 @@ def exTM2BoxR : Fin 1 → DInterval := fun _ => ⟨(exTM2Box 0).mid, (exTM2Box 0
 the root is `y² − 2 − 2yw − w² < 0` (the `O(w²)` remainder swamps the
 `≈ 9.5·10⁻⁴` margin).  One bisection layer suffices: both halves close
 (kernel `decide`). -/
-theorem exTM2Root_fails : checkPosTM exTM2Expr exTM2Box [] = false := by decide
-theorem exTM2L_cert : checkPosTM exTM2Expr exTM2BoxL [] = true := by decide
-theorem exTM2R_cert : checkPosTM exTM2Expr exTM2BoxR [] = true := by decide
+theorem exTM2Root_fails : checkPosTM exTM2Expr exTM2Box .empty = false := by decide
+theorem exTM2L_cert : checkPosTM exTM2Expr exTM2BoxL .empty = true := by decide
+theorem exTM2R_cert : checkPosTM exTM2Expr exTM2BoxR .empty = true := by decide
 
 /-- Depth-1 Taylor-model tree for `x² − 2` on `[2897/2048, 3/2]`. -/
 def exTM2Tree : BBTreeG 1 exTM2Expr :=
-  .node exTM2Box 0 (.taylorLeaf exTM2BoxL [] exTM2L_cert)
-    (.taylorLeaf exTM2BoxR [] exTM2R_cert)
+  .node exTM2Box 0 (.taylorLeaf exTM2BoxL .empty exTM2L_cert)
+    (.taylorLeaf exTM2BoxR .empty exTM2R_cert)
 
 theorem exTM2Tree_covers : exTM2Tree.covers := BBTreeG.coversB_sound _ (by decide)
 
@@ -339,5 +339,341 @@ theorem exTM2_end_to_end (x : ℝ) (hx1 : 2897 / 2048 ≤ x) (hx2 : x ≤ 3 / 2)
   simpa [exTM2Expr, IExpr.evalReal] using h
 
 #print axioms exTM2_end_to_end
+
+/-! ## TM1 pilots: multivariate critical boxes (dependency loss, sqrt, div)
+
+Three TM1 acceptance cases (`pipeline/interval/tm1-progress.md`): a 2-D box
+where plain interval evaluation loses the `x`/`y` dependency and fails at the
+root while the TM closes it outright; a 3-D box with a `sqrt` node whose
+certificate granularity defeats bare interval evaluation at the root; and a
+2-D box with a `div` node closed by a depth-2 `taylorLeaf` tree. -/
+
+/-- A: `x·y − x − y + 1 + 1/64` — bare interval evaluation on
+`[15/16, 17/16]²` gives `w² − 4w + 1/64 < 0` at the root (O(w) dependency
+loss); the TM linear term vanishes at the center `(1,1)` and the remainder is
+`w² = 1/256 < 1/64`, so the root closes. -/
+def exTM1AExpr : IExpr 2 :=
+  .add (.add (.sub (.sub (.mul (.var 0) (.var 1)) (.var 0)) (.var 1)) (.const ⟨1, 0⟩))
+    (.const ⟨1, -6⟩)
+
+/-- Box `[15/16, 17/16]²`. -/
+def exTM1ABox : Fin 2 → DInterval := fun _ => ⟨⟨15, -4⟩, ⟨17, -4⟩⟩
+
+theorem exTM1A_bare_root : checkPos exTM1AExpr exTM1ABox = false := by decide
+theorem exTM1A_cert : checkPosTM exTM1AExpr exTM1ABox .empty = true := by decide
+
+/-- One-leaf TM tree (the root itself). -/
+def exTM1ATree : BBTreeG 2 exTM1AExpr := .taylorLeaf exTM1ABox .empty exTM1A_cert
+
+theorem exTM1ATree_covers : exTM1ATree.covers := BBTreeG.coversB_sound _ (by decide)
+
+/-- End-to-end: `0 < x·y − x − y + 1 + 1/64` on `[15/16, 17/16]²`. -/
+theorem exTM1A_end_to_end (x y : ℝ) (hx0 : 15 / 16 ≤ x) (hx1 : x ≤ 17 / 16)
+    (hy0 : 15 / 16 ≤ y) (hy1 : y ≤ 17 / 16) : 0 < x * y - x - y + 1 + 1 / 64 := by
+  have hmem : boxMem exTM1ABox ![x, y] := by
+    intro i
+    fin_cases i
+    · show DInterval.mem ⟨⟨15, -4⟩, ⟨17, -4⟩⟩ x
+      constructor <;>
+        · rw [Dyadic.toReal_def]
+          first | (have h : (((15 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-4 : ℤ)) = 15 / 16 := by norm_num
+                   rw [h]; exact hx0)
+                | (have h : (((17 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-4 : ℤ)) = 17 / 16 := by norm_num
+                   rw [h]; exact hx1)
+    · show DInterval.mem ⟨⟨15, -4⟩, ⟨17, -4⟩⟩ y
+      constructor <;>
+        · rw [Dyadic.toReal_def]
+          first | (have h : (((15 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-4 : ℤ)) = 15 / 16 := by norm_num
+                   rw [h]; exact hy0)
+                | (have h : (((17 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-4 : ℤ)) = 17 / 16 := by norm_num
+                   rw [h]; exact hy1)
+  have hsub : boxSub exTM1ABox exTM1ATree.box := by
+    intro i
+    fin_cases i <;> exact ⟨by decide, by decide⟩
+  have h := bb_soundG exTM1ATree exTM1ABox exTM1ATree_covers hsub ![x, y] hmem
+  have hsimp : exTM1AExpr.evalReal ![x, y] = x * y - x - y + 1 + (1 / 64 : ℝ) := by
+    simp only [exTM1AExpr, IExpr.evalReal, Dyadic.toReal_int]
+    rw [Dyadic.toReal_def]
+    norm_num
+  rwa [hsimp] at h
+
+#print axioms exTM1A_end_to_end
+
+/-- B: `√(x² + y² + 1) − z` on `[−1/8, 1/8]² × [7/8, 15/16]` — the bare
+interval sqrt certificate at the root box's scale (`⌊√62⌋ = 7` at `2⁻³`) is
+too coarse (lo = `7/8 − 15/16 < 0`); the TM's center evaluation is a point
+(`√1 = 1`) and the remainder is `≈ 0.018 < 1/16`, so the root closes.  The
+bundle: `√(256·2⁻⁸)` mantissa `16`, `√(248·2⁻⁸)` mantissa `15`, recip
+granularities `2⁻⁴`/`2⁻¹²`. -/
+def exTM1BExpr : IExpr 3 :=
+  .sub (.sqrt (.add (.add (.mul (.var 0) (.var 0)) (.mul (.var 1) (.var 1))) (.const ⟨1, 0⟩)) 7 8)
+    (.var 2)
+
+/-- Box `[−1/8, 1/8]² × [7/8, 15/16]`. -/
+def exTM1BBox : Fin 3 → DInterval := fun i =>
+  if i = 2 then ⟨⟨7, -3⟩, ⟨15, -4⟩⟩ else ⟨⟨-1, -3⟩, ⟨1, -3⟩⟩
+
+/-- TM certificates for B's sqrt node. -/
+def exTM1BP : TMParams := ⟨[⟨16, 16, 31, -4, -12⟩], [], []⟩
+
+theorem exTM1B_bare_root : checkPos exTM1BExpr exTM1BBox = false := by decide
+theorem exTM1B_cert : checkPosTM exTM1BExpr exTM1BBox exTM1BP = true := by decide
+
+/-- One-leaf TM tree (the root itself). -/
+def exTM1BTree : BBTreeG 3 exTM1BExpr := .taylorLeaf exTM1BBox exTM1BP exTM1B_cert
+
+theorem exTM1BTree_covers : exTM1BTree.covers := BBTreeG.coversB_sound _ (by decide)
+
+/-- End-to-end: `0 < √(x² + y² + 1) − z` on the box. -/
+theorem exTM1B_end_to_end (x y z : ℝ) (hx0 : -1 / 8 ≤ x) (hx1 : x ≤ 1 / 8)
+    (hy0 : -1 / 8 ≤ y) (hy1 : y ≤ 1 / 8) (hz0 : 7 / 8 ≤ z) (hz1 : z ≤ 15 / 16) :
+    0 < Real.sqrt (x * x + y * y + 1) - z := by
+  have hmem : boxMem exTM1BBox ![x, y, z] := by
+    intro i
+    fin_cases i
+    · show DInterval.mem ⟨⟨-1, -3⟩, ⟨1, -3⟩⟩ x
+      constructor <;> rw [Dyadic.toReal_def]
+      · have h : (((-1 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-3 : ℤ)) = -1 / 8 := by norm_num
+        rw [h]; exact hx0
+      · have h : (((1 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-3 : ℤ)) = 1 / 8 := by norm_num
+        rw [h]; exact hx1
+    · show DInterval.mem ⟨⟨-1, -3⟩, ⟨1, -3⟩⟩ y
+      constructor <;> rw [Dyadic.toReal_def]
+      · have h : (((-1 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-3 : ℤ)) = -1 / 8 := by norm_num
+        rw [h]; exact hy0
+      · have h : (((1 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-3 : ℤ)) = 1 / 8 := by norm_num
+        rw [h]; exact hy1
+    · show DInterval.mem ⟨⟨7, -3⟩, ⟨15, -4⟩⟩ z
+      constructor <;> rw [Dyadic.toReal_def]
+      · have h : (((7 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-3 : ℤ)) = 7 / 8 := by norm_num
+        rw [h]; exact hz0
+      · have h : (((15 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-4 : ℤ)) = 15 / 16 := by norm_num
+        rw [h]; exact hz1
+  have hsub : boxSub exTM1BBox exTM1BTree.box := by
+    intro i
+    fin_cases i <;> exact ⟨by decide, by decide⟩
+  have h := bb_soundG exTM1BTree exTM1BBox exTM1BTree_covers hsub ![x, y, z] hmem
+  have hsimp : exTM1BExpr.evalReal ![x, y, z] = Real.sqrt (x * x + y * y + 1) - z := by
+    simp [exTM1BExpr, IExpr.evalReal, Dyadic.toReal_int]
+  rwa [hsimp] at h
+
+#print axioms exTM1B_end_to_end
+
+/-- C: `x/(1 + y) − 7/16` on `[1, 3/2]×[1/2, 1]` — the TM root fails
+(linear term swamps the `1/16`-scale margin) and the depth-2 tree
+(x-split, then y-split) closes; exercises the `div` rule (`valid_div`). -/
+def exTM1CExpr : IExpr 2 :=
+  .sub (.div (.var 0) (.add (.const ⟨1, 0⟩) (.var 1)) (-64)) (.const ⟨7, -4⟩)
+
+/-- Box `[1, 3/2]×[1/2, 1]` and its quadrants (via `mid`, so `splitOKB`
+closes by `decide`). -/
+def exTM1CBox : Fin 2 → DInterval := fun i =>
+  if i = 0 then ⟨⟨1, 0⟩, ⟨3, -1⟩⟩ else ⟨⟨1, -1⟩, ⟨1, 0⟩⟩
+def exTM1CBoxL : Fin 2 → DInterval := fun i =>
+  if i = 0 then ⟨(exTM1CBox 0).lo, (exTM1CBox 0).mid⟩ else exTM1CBox i
+def exTM1CBoxR : Fin 2 → DInterval := fun i =>
+  if i = 0 then ⟨(exTM1CBox 0).mid, (exTM1CBox 0).hi⟩ else exTM1CBox i
+def exTM1CBoxLL : Fin 2 → DInterval := fun i =>
+  if i = 1 then ⟨(exTM1CBox 1).lo, (exTM1CBox 1).mid⟩ else exTM1CBoxL i
+def exTM1CBoxLR : Fin 2 → DInterval := fun i =>
+  if i = 1 then ⟨(exTM1CBox 1).mid, (exTM1CBox 1).hi⟩ else exTM1CBoxL i
+def exTM1CBoxRL : Fin 2 → DInterval := fun i =>
+  if i = 1 then ⟨(exTM1CBox 1).lo, (exTM1CBox 1).mid⟩ else exTM1CBoxR i
+def exTM1CBoxRR : Fin 2 → DInterval := fun i =>
+  if i = 1 then ⟨(exTM1CBox 1).mid, (exTM1CBox 1).hi⟩ else exTM1CBoxR i
+
+/-- Reciprocal granularities (uniform: fine enough at every leaf). -/
+def exTM1CP : TMParams := ⟨[], [⟨-12, -12, -12⟩], []⟩
+
+theorem exTM1C_root_fails : checkPosTM exTM1CExpr exTM1CBox exTM1CP = false := by decide
+theorem exTM1C_LL : checkPosTM exTM1CExpr exTM1CBoxLL exTM1CP = true := by decide
+theorem exTM1C_LR : checkPosTM exTM1CExpr exTM1CBoxLR exTM1CP = true := by decide
+theorem exTM1C_RL : checkPosTM exTM1CExpr exTM1CBoxRL exTM1CP = true := by decide
+theorem exTM1C_RR : checkPosTM exTM1CExpr exTM1CBoxRR exTM1CP = true := by decide
+
+/-- Depth-2 TM tree for C. -/
+def exTM1CTree : BBTreeG 2 exTM1CExpr :=
+  .node exTM1CBox 0
+    (.node exTM1CBoxL 1 (.taylorLeaf exTM1CBoxLL exTM1CP exTM1C_LL)
+      (.taylorLeaf exTM1CBoxLR exTM1CP exTM1C_LR))
+    (.node exTM1CBoxR 1 (.taylorLeaf exTM1CBoxRL exTM1CP exTM1C_RL)
+      (.taylorLeaf exTM1CBoxRR exTM1CP exTM1C_RR))
+
+theorem exTM1CTree_covers : exTM1CTree.covers := BBTreeG.coversB_sound _ (by decide)
+
+/-- End-to-end: `0 < x/(1+y) − 7/16` on `[1, 3/2]×[1/2, 1]`. -/
+theorem exTM1C_end_to_end (x y : ℝ) (hx0 : 1 ≤ x) (hx1 : x ≤ 3 / 2)
+    (hy0 : 1 / 2 ≤ y) (hy1 : y ≤ 1) : 0 < x / (1 + y) - 7 / 16 := by
+  have hmem : boxMem exTM1CBox ![x, y] := by
+    intro i
+    fin_cases i
+    · show DInterval.mem ⟨⟨1, 0⟩, ⟨3, -1⟩⟩ x
+      constructor
+      · rw [Dyadic.toReal_int]; exact_mod_cast hx0
+      · rw [Dyadic.toReal_def]
+        have h : (((3 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-1 : ℤ)) = 3 / 2 := by norm_num
+        rw [h]; exact hx1
+    · show DInterval.mem ⟨⟨1, -1⟩, ⟨1, 0⟩⟩ y
+      constructor
+      · rw [Dyadic.toReal_def]
+        have h : (((1 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-1 : ℤ)) = 1 / 2 := by norm_num
+        rw [h]; exact hy0
+      · rw [Dyadic.toReal_int]; exact_mod_cast hy1
+  have hsub : boxSub exTM1CBox exTM1CTree.box := by
+    intro i
+    fin_cases i <;> exact ⟨by decide, by decide⟩
+  have h := bb_soundG exTM1CTree exTM1CBox exTM1CTree_covers hsub ![x, y] hmem
+  have hsimp : exTM1CExpr.evalReal ![x, y] = x / (1 + y) - (7 / 16 : ℝ) := by
+    simp only [exTM1CExpr, IExpr.evalReal, Dyadic.toReal_int]
+    rw [Dyadic.toReal_def]
+    norm_num
+  rwa [hsimp] at h
+
+#print axioms exTM1C_end_to_end
+
+/-! ## TM2 pilots: trans nodes (`sin`/`arctan`/`ln`) via `valid_trans`
+
+The TM2 acceptance on the Lean side (`tm2-progress.md`): the three new
+`trans` TM rules exercised end-to-end. -/
+
+/-- `sin x − x/2` on `[1/4, 1/2]` — root closes via the sin rule
+(`transCerts` bundle unused for sin; the value/slope enclosures reuse the
+node's own rung `N = 5, out = −20`). -/
+def exTM2SinExpr : IExpr 1 :=
+  .sub (.trans .sinK (.var 0) 5 (-20)) (.mul (.var 0) (.const ⟨1, -1⟩))
+
+/-- Box `[1/4, 1/2]`. -/
+def exTM2SinBox : Fin 1 → DInterval := fun _ => ⟨⟨1, -2⟩, ⟨1, -1⟩⟩
+
+theorem exTM2Sin_cert : checkPosTM exTM2SinExpr exTM2SinBox ⟨[], [], [⟨-32, -32⟩]⟩
+    = true := by decide
+
+/-- One-leaf TM tree. -/
+def exTM2SinTree : BBTreeG 1 exTM2SinExpr :=
+  .taylorLeaf exTM2SinBox ⟨[], [], [⟨-32, -32⟩]⟩ exTM2Sin_cert
+
+theorem exTM2SinTree_covers : exTM2SinTree.covers := BBTreeG.coversB_sound _ (by decide)
+
+/-- End-to-end: `0 < sin x − x/2` for `x ∈ [1/4, 1/2]`. -/
+theorem exTM2Sin_end_to_end (x : ℝ) (hx0 : 1 / 4 ≤ x) (hx1 : x ≤ 1 / 2) :
+    0 < Real.sin x - x / 2 := by
+  have hmem : boxMem exTM2SinBox (fun _ => x) := by
+    intro i
+    fin_cases i
+    constructor
+    · show Dyadic.toReal ⟨1, -2⟩ ≤ x
+      rw [Dyadic.toReal_def]
+      have h : (((1 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-2 : ℤ)) = 1 / 4 := by norm_num
+      rw [h]; exact hx0
+    · show x ≤ Dyadic.toReal ⟨1, -1⟩
+      rw [Dyadic.toReal_def]
+      have h : (((1 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-1 : ℤ)) = 1 / 2 := by norm_num
+      rw [h]; exact hx1
+  have hsub : boxSub exTM2SinBox exTM2SinTree.box := by
+    intro i
+    fin_cases i
+    exact ⟨by decide, by decide⟩
+  have h := bb_soundG exTM2SinTree exTM2SinBox exTM2SinTree_covers hsub (fun _ => x) hmem
+  have hsimp : exTM2SinExpr.evalReal (fun _ => x) = Real.sin x - x / 2 := by
+    simp only [exTM2SinExpr, IExpr.evalReal, transReal]
+    rw [Dyadic.toReal_def]
+    norm_num
+    ring
+  rwa [hsimp] at h
+
+#print axioms exTM2Sin_end_to_end
+
+/-- `arctan x − x/2` on `[1/2, 1]` — root closes via the arctan rule (the
+`succ` MVT residual `arctan_residual`). -/
+def exTM2AtanExpr : IExpr 1 :=
+  .sub (.trans .arctanK (.var 0) 5 (-20)) (.mul (.var 0) (.const ⟨1, -1⟩))
+
+/-- Box `[1/2, 1]`. -/
+def exTM2AtanBox : Fin 1 → DInterval := fun _ => ⟨⟨1, -1⟩, ⟨1, 0⟩⟩
+
+theorem exTM2Atan_cert : checkPosTM exTM2AtanExpr exTM2AtanBox ⟨[], [], [⟨-32, -32⟩]⟩
+    = true := by decide
+
+/-- One-leaf TM tree. -/
+def exTM2AtanTree : BBTreeG 1 exTM2AtanExpr :=
+  .taylorLeaf exTM2AtanBox ⟨[], [], [⟨-32, -32⟩]⟩ exTM2Atan_cert
+
+theorem exTM2AtanTree_covers : exTM2AtanTree.covers := BBTreeG.coversB_sound _ (by decide)
+
+/-- End-to-end: `0 < arctan x − x/2` for `x ∈ [1/2, 1]`. -/
+theorem exTM2Atan_end_to_end (x : ℝ) (hx0 : 1 / 2 ≤ x) (hx1 : x ≤ 1) :
+    0 < Real.arctan x - x / 2 := by
+  have hmem : boxMem exTM2AtanBox (fun _ => x) := by
+    intro i
+    fin_cases i
+    constructor
+    · show Dyadic.toReal ⟨1, -1⟩ ≤ x
+      rw [Dyadic.toReal_def]
+      have h : (((1 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-1 : ℤ)) = 1 / 2 := by norm_num
+      rw [h]; exact hx0
+    · show x ≤ Dyadic.toReal ⟨1, 0⟩
+      rw [Dyadic.toReal_int]; exact_mod_cast hx1
+  have hsub : boxSub exTM2AtanBox exTM2AtanTree.box := by
+    intro i
+    fin_cases i
+    exact ⟨by decide, by decide⟩
+  have h := bb_soundG exTM2AtanTree exTM2AtanBox exTM2AtanTree_covers hsub (fun _ => x) hmem
+  have hsimp : exTM2AtanExpr.evalReal (fun _ => x) = Real.arctan x - x / 2 := by
+    simp only [exTM2AtanExpr, IExpr.evalReal, transReal]
+    rw [Dyadic.toReal_def]
+    norm_num
+    ring
+  rwa [hsimp] at h
+
+#print axioms exTM2Atan_end_to_end
+
+/-- `log x + 3/4` on `[1/2, 1]` — the TM root fails (curvature `1/c² = 4`
+swamps the margin), the two halves close (depth-1 tree). -/
+def exTM2LnExpr : IExpr 1 := .add (.trans .lnK (.var 0) 8 (-16)) (.const ⟨3, -2⟩)
+
+/-- Box `[1/2, 1]` and its halves. -/
+def exTM2LnBox : Fin 1 → DInterval := fun _ => ⟨⟨1, -1⟩, ⟨1, 0⟩⟩
+def exTM2LnBoxL : Fin 1 → DInterval := fun _ => ⟨(exTM2LnBox 0).lo, (exTM2LnBox 0).mid⟩
+def exTM2LnBoxR : Fin 1 → DInterval := fun _ => ⟨(exTM2LnBox 0).mid, (exTM2LnBox 0).hi⟩
+
+/-- ln certificates: slope `1/f(y)` and curvature `1/c²` recip granularities. -/
+def exTM2LnP : TMParams := ⟨[], [], [⟨-32, -32⟩]⟩
+
+theorem exTM2Ln_root_fails : checkPosTM exTM2LnExpr exTM2LnBox exTM2LnP = false := by decide
+theorem exTM2Ln_L : checkPosTM exTM2LnExpr exTM2LnBoxL exTM2LnP = true := by decide
+theorem exTM2Ln_R : checkPosTM exTM2LnExpr exTM2LnBoxR exTM2LnP = true := by decide
+
+/-- Depth-1 TM tree for the ln pilot. -/
+def exTM2LnTree : BBTreeG 1 exTM2LnExpr :=
+  .node exTM2LnBox 0 (.taylorLeaf exTM2LnBoxL exTM2LnP exTM2Ln_L)
+    (.taylorLeaf exTM2LnBoxR exTM2LnP exTM2Ln_R)
+
+theorem exTM2LnTree_covers : exTM2LnTree.covers := BBTreeG.coversB_sound _ (by decide)
+
+/-- End-to-end: `0 < log x + 3/4` for `x ∈ [1/2, 1]`. -/
+theorem exTM2Ln_end_to_end (x : ℝ) (hx0 : 1 / 2 ≤ x) (hx1 : x ≤ 1) :
+    0 < Real.log x + 3 / 4 := by
+  have hmem : boxMem exTM2LnBox (fun _ => x) := by
+    intro i
+    fin_cases i
+    constructor
+    · show Dyadic.toReal ⟨1, -1⟩ ≤ x
+      rw [Dyadic.toReal_def]
+      have h : (((1 : ℤ) : ℝ)) * (2 : ℝ) ^ ((-1 : ℤ)) = 1 / 2 := by norm_num
+      rw [h]; exact hx0
+    · show x ≤ Dyadic.toReal ⟨1, 0⟩
+      rw [Dyadic.toReal_int]; exact_mod_cast hx1
+  have hsub : boxSub exTM2LnBox exTM2LnTree.box := by
+    intro i
+    fin_cases i
+    exact ⟨by decide, by decide⟩
+  have h := bb_soundG exTM2LnTree exTM2LnBox exTM2LnTree_covers hsub (fun _ => x) hmem
+  have hsimp : exTM2LnExpr.evalReal (fun _ => x) = Real.log x + 3 / 4 := by
+    simp only [exTM2LnExpr, IExpr.evalReal, transReal]
+    rw [Dyadic.toReal_def]
+    norm_num
+  rwa [hsimp] at h
+
+#print axioms exTM2Ln_end_to_end
 
 end Kepler.Interval
