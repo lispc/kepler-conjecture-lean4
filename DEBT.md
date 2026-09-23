@@ -87,7 +87,7 @@
 
 ## 主定理可达债务（脊柱公理探针）
 
-> `Kepler.Assembly.the_kepler_conjecture_from_interfaces` 的 `#print axioms`，探针运行时间 2026-09-22 10:32 +0000（main @ de33ba0c，全闭包自主源编译）。
+> `Kepler.Assembly.the_kepler_conjecture_from_interfaces` 的 `#print axioms`，探针运行时间 2026-09-23 10:15 +0000（main @ 537b2f0b，全闭包自主源编译）。
 > 与上面的 token 计数不同：这里只统计**装配后主定理实际依赖**的公理。
 
 | 类别 | 公理 |
