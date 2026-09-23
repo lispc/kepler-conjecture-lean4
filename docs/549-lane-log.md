@@ -240,12 +240,40 @@ emit_lean `--hull` 路径 + 修非 dyadic push_const 的 .div 节点饥饿缺口
   PASS-only 发射 / mode 进 manifest / 汇总定理 ∧ 写法固化
 - 首建失败回退记录：汇总定理 ∷= shard 名类型错已修
 
-## 下一步（四更）
+### df-hull 合成（iteHullTM2）+ native_decide 提速（`c8ad6870`）
 
-1. **df-hull Lean 合成**（唯一路径，确认）：∃-slope C¹ 拼接余项界 +
-   err 半宽对齐 → 翻转 42/50 straddle NEG → 可验证叶 79%→100%
-2. **decide 提速**（新瓶颈）：21.4 s/叶 → 全量核时主导；chop/精度下放
-   （M0 线）与 native_decide shard 例外（DECISIONS.md）是现成杠杆——
-   M5 目标 ≤10 core·h 需单叶 ~0.13s，尚差 164×，两线必合流
-3. div/sqrt 6.7k chop/closed-trans（Kimi 线）
-4. Kimi 同步包：16/20→158/200 交叉验证 + 评审清单 + div 接口 + 通量数字
+**df-hull：合成层做到语义最优**——锚点判定：Valid 锚真值 f(y) ⇒ 跳变项
+必需且由双支 fB 区间距离给出（比 C 链更紧）；交叉案 witness 取选中支自身
+斜率 ∈ hull（零宽度项）；**无连续性前提，对任意 ite 跳变 sound**。
+试点：single 16/16 零回退；straddle loBound 收紧 **10⁴⁶**
+（根 err 2^74.1 → 2^1.3）——**剩余发丝 NEG 已逐级仪器化定位到分支自身
+余项**（ε_e=2.23，纯 atan/div 链 T3 支，与合成层无关；C 侧闭这 4 叶靠
+存储锚点半宽语义 premium≈ε_e/2——语义性差距）。**翻正路径 = div/sqrt
+分支余项压薄（ε_e 2.23 → <1.1，Kimi closed-trans/chop 线的精确靶子）**。
+
+**decide 提速**：native_decide **6.1×**（21.4 → ~3.5 s/叶；全量
+1,675 → **275 core·h**）。公理形态与 DECISIONS.md 2026-09-19 逐字同形
+（每定理一条 scoped axiom），但 `Kepler.Interval.Cases.*` 不在现行例外
+范围——**投产需新 DECISIONS 条目 + 人工批准**（推荐一次 native 关 50 叶
+合取 = 1 axiom/shard，证据已捕获）。AST 重复率 **574%**（去重需 CertTM
+let 节点，再 3-5×）。rung 超配 16×（8 仍 PASS）——stage-A 自适应最小
+rung 的余量诊断信息。M5（≤10 core·h）需砍求值体积 1-2 个量级：
+去重 + 证书瘦身 + 求值架构出 Lean 运行时。
+
+### 549 车道阶段总结（相对原版 Flyspeck 的位置）
+
+- 叶数：1,331,880 → 281,894（4.7×）；内核可验证 79%（~223k）+
+  straddle 层合成已最优，余项层是最后 ~20% 的靶子
+- 核时：10,800 → 275（native_decide 后，6.5×→39× 累计 vs 基线）；
+  vs 原版 0.48：~570×（从 22,500× 起步）
+- 剩余差距全在：①div/sqrt 分支余项（Kimi 线）②求值体积（去重/瘦身）
+  ③叶数折叠（mono/convex L1 未上）
+
+## 下一步（五更）
+
+1. div/sqrt 分支余项压薄（ε_e 2.23→<1.1）——Kimi closed-trans/chop 线
+   精确靶子，4 straddle 叶翻正即 100% 可验证
+2. AST 去重（CertTM let/证书表节点）+ 证书瘦身——decide 3-5×
+3. mono/convex（L1）叶数折叠——下一倍数级
+4. native_decide 例外扩围（DECISIONS 新条目）——人工批准项
+5. Kimi 同步包全量更新
