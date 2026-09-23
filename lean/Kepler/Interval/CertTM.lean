@@ -3793,5 +3793,702 @@ theorem exIteHullChk_err_tighter :
 #print axioms exIteHullChk_D2_composite
 #print axioms exIteHullChk_err_tighter
 
+/-! ## 549 加速 M5: AST 去重最小可行版 — 证书表 let 节点（`LExpr`）
+
+剖面结论（docs/549-lane-log.md, native_decide 轮）：`C549Hull200Expr` 2,726
+节点、文本重复率 574% —— 判别式多项式 ~6 份副本、`4x₀²·Δ` 根号被开方式
+4 份、unit6 多项式 ~10 份；decide 21.4 s/叶 ∝ 求值体积，去重预期 3-5×。
+
+### 设计选择（二选一的裁决）
+
+任务书给的方案 A 是 `IExpr` 新构造子 `letD (e : IExpr n) (body : IExpr
+(n+1))`（de Bruijn 换元）；方案 B 是"证书表 + 指向既有节点编号的引用"。
+**取 B**，理由（爆炸半径）：
+
+1. `IExpr` 定义在 `Expr.lean`——加构造子要动 `Expr.lean`，且 `IExpr.eval`
+   /`evalReal`/`isClosed`/`eval_mem`/`evalReal_const_of_isClosed` 全部要补
+   `letD` 分支（TKind 路径 `Trans.lean` 亦然），11 个既有求值器/谓词 +
+   CertTM 的 6 个求值器全要动；
+2. 方案 B 全部新增物 living 在本文件的一个新归纳类型 `LExpr` 里，
+   **`evalTM`/`evalTMH`/`evalTMHull`/`evalTMHullD`/`evalTMHullD2`/
+   `evalIParams` 及其 soundness 一行不动**——旧求值器连 `| .letD .. =>
+   none` 补丁都不需要（没有新构造子可漏匹配），这是比任务书设想的
+   fallback 补丁更小的处置面。
+
+### `LExpr` 形状与语义
+
+`LExpr n k` = 长度 `k` 的证书表 `tbl : Fin k → IExpr n` 加一个体节点：
+
+- `.plain f`：无引用的普通子树（整体委托既有 `evalTMHullD2`，包括其
+  内部 ite guard 定号/hull 机制——发射端只在含引用的路径上镜像）；
+- `.ref i`：第 `i` 号表项（点wise 语义 = `(tbl i).evalReal ρ`，即
+  body[ref i := tbl i] 的代入语义——任务书 letD 语义的表形式）；
+- `neg/add/sub/mul/div/sqrt/trans/abs`：与 `IExpr` 同构的组合子，子可含
+  引用；fallback/closed 臂经 `toIExpr`（引用代入 = 展开为普通树）复用
+  既有 `valid_fallback`/`valid_closed`；
+- `.ite c t e`：guard 保持普通 `IExpr n`（引用不入 guard——guard 走
+  `evalIParams` 区间路径，其证书消耗次序与原树一致），分支为 `LExpr`，
+  guard 定号单支/df-hull 合成与 `evalTMHullD2` 逐分支相同。
+
+### 求值与证书次序
+
+`evalTMHullD2L box tbl e ps` = 先 `evalLTable`（表项按下标 0..k-1 各求值
+一次成模型，`.ref` 直接注入该模型——去重的本体），再 `evalTMHullD2B` 走
+体节点。**发射端约定（MVP）**：只折叠不含 sqrt/div/trans/ite/abs 的
+（证书免费）子树 ⇒ 表项消耗零证书，ps 队列次序与未折叠原树逐位相同
+（既有叶证书 P 直接复用）；含证书子树的折叠需用 `evalTMHullFill2L`
+（Fill 镜像，表项先、体后、ite guard 先）重产 params——emit 侧接入
+清单见 `emit_hull_pilot.py stageb-let`。
+
+### Soundness
+
+`evalLTable_sound`：表项模型 = `evalTMHullD2_sound` 逐项（Valid +
+y = boxCenter + w = boxW）。`evalTMHullD2B_sound`：对体结构归纳，
+组合子各支逐字复用 `evalTMHullD2_sound` 对应支（ref 支 = 表项合法性
+假设；fallback/closed 支经 `Valid.congr_box` + `evalReal_toIExpr`）；
+ite 支 = `evalIParams_mem` + `valid_iteHullD_fn`/`_else_fn`（分支函数
+自由版，本节新增）/`valid_iteHull2`。合成
+`evalTMHullD2L_sound` ⇒ `checkPosTMHullL_sound`：与 `checkPosTMHull`
+同构的两行（loBound 下界）。公理面：标准三公理。
+-/
+
+/-- Shared-subexpression certificate table: a sharing layer over `IExpr`
+whose references resolve to a `Fin k → IExpr n` table evaluated once into
+models (see the section header). -/
+inductive LExpr (n k : ℕ) : Type where
+  | plain (e : IExpr n) : LExpr n k
+  | ref (i : Fin k) : LExpr n k
+  | neg (a : LExpr n k) : LExpr n k
+  | abs (a : LExpr n k) : LExpr n k
+  | add (a b : LExpr n k) : LExpr n k
+  | sub (a b : LExpr n k) : LExpr n k
+  | mul (a b : LExpr n k) : LExpr n k
+  | div (a b : LExpr n k) (out : Int) : LExpr n k
+  | sqrt (a : LExpr n k) (s₁ s₂ : Int) : LExpr n k
+  | trans (kk : TKind) (a : LExpr n k) (N : ℕ) (out : Int) : LExpr n k
+  | ite (c : IExpr n) (t e : LExpr n k) : LExpr n k
+
+/-- Reference substitution: the unfolded `IExpr` view of an `LExpr`
+(used to reuse the `valid_fallback`/`valid_closed` fallback arms). -/
+def LExpr.toIExpr {n k : ℕ} : LExpr n k → (Fin k → IExpr n) → IExpr n
+  | .plain f, _ => f
+  | .ref i, tbl => tbl i
+  | .neg a, tbl => .neg (a.toIExpr tbl)
+  | .abs a, tbl => .abs (a.toIExpr tbl)
+  | .add a b, tbl => .add (a.toIExpr tbl) (b.toIExpr tbl)
+  | .sub a b, tbl => .sub (a.toIExpr tbl) (b.toIExpr tbl)
+  | .mul a b, tbl => .mul (a.toIExpr tbl) (b.toIExpr tbl)
+  | .div a b out, tbl => .div (a.toIExpr tbl) (b.toIExpr tbl) out
+  | .sqrt a s₁ s₂, tbl => .sqrt (a.toIExpr tbl) s₁ s₂
+  | .trans kk a N out, tbl => .trans kk (a.toIExpr tbl) N out
+  | .ite c t e, tbl => .ite c (t.toIExpr tbl) (e.toIExpr tbl)
+
+/-- Closedness of the unfolded view, computed without materializing the
+substitution (table references consult the entry directly). -/
+def LExpr.isClosed {n k : ℕ} : LExpr n k → (Fin k → IExpr n) → Bool
+  | .plain f, _ => f.isClosed
+  | .ref i, tbl => (tbl i).isClosed
+  | .neg a, tbl => a.isClosed tbl
+  | .abs a, tbl => a.isClosed tbl
+  | .add a b, tbl => a.isClosed tbl && b.isClosed tbl
+  | .sub a b, tbl => a.isClosed tbl && b.isClosed tbl
+  | .mul a b, tbl => a.isClosed tbl && b.isClosed tbl
+  | .div a b _, tbl => a.isClosed tbl && b.isClosed tbl
+  | .sqrt a _ _, tbl => a.isClosed tbl
+  | .trans _ a _ _, tbl => a.isClosed tbl
+  | .ite c t e, tbl => c.isClosed && t.isClosed tbl && e.isClosed tbl
+
+theorem LExpr.isClosed_toIExpr {n k : ℕ} (e : LExpr n k) (tbl : Fin k → IExpr n) :
+    e.isClosed tbl = (e.toIExpr tbl).isClosed := by
+  induction e with
+  | plain f => rfl
+  | ref i => rfl
+  | neg a ih => simp only [isClosed, toIExpr, IExpr.isClosed, ih]
+  | abs a ih => simp only [isClosed, toIExpr, IExpr.isClosed, ih]
+  | add a b iha ihb =>
+      simp only [isClosed, toIExpr, IExpr.isClosed, iha, ihb, Bool.and_assoc]
+  | sub a b iha ihb =>
+      simp only [isClosed, toIExpr, IExpr.isClosed, iha, ihb, Bool.and_assoc]
+  | mul a b iha ihb =>
+      simp only [isClosed, toIExpr, IExpr.isClosed, iha, ihb, Bool.and_assoc]
+  | div a b _ iha ihb =>
+      simp only [isClosed, toIExpr, IExpr.isClosed, iha, ihb, Bool.and_assoc]
+  | sqrt a _ _ ih => simp only [isClosed, toIExpr, IExpr.isClosed, ih]
+  | trans _ a _ _ ih => simp only [isClosed, toIExpr, IExpr.isClosed, ih]
+  | ite c t e iht ihe =>
+      simp only [isClosed, toIExpr, IExpr.isClosed, iht, ihe, Bool.and_assoc]
+
+/-- Pointwise real semantics: `.ref i` denotes table entry `i` — the
+substitution semantics `body[ref i := tbl i]` of the task's `letD`. -/
+noncomputable def LExpr.evalReal {n k : ℕ} :
+    LExpr n k → (Fin k → IExpr n) → (Fin n → ℝ) → ℝ
+  | .plain f, _, ρ => f.evalReal ρ
+  | .ref i, tbl, ρ => (tbl i).evalReal ρ
+  | .neg a, tbl, ρ => -a.evalReal tbl ρ
+  | .abs a, tbl, ρ => |a.evalReal tbl ρ|
+  | .add a b, tbl, ρ => a.evalReal tbl ρ + b.evalReal tbl ρ
+  | .sub a b, tbl, ρ => a.evalReal tbl ρ - b.evalReal tbl ρ
+  | .mul a b, tbl, ρ => a.evalReal tbl ρ * b.evalReal tbl ρ
+  | .div a b _, tbl, ρ => a.evalReal tbl ρ / b.evalReal tbl ρ
+  | .sqrt a _ _, tbl, ρ => Real.sqrt (a.evalReal tbl ρ)
+  | .trans kk a _ _, tbl, ρ => transReal kk (a.evalReal tbl ρ)
+  | .ite c t e, tbl, ρ =>
+      if c.evalReal ρ < 0 then t.evalReal tbl ρ else e.evalReal tbl ρ
+
+/-- The real semantics of an `LExpr` agrees with its unfolded view. -/
+theorem LExpr.evalReal_toIExpr {n k : ℕ} (e : LExpr n k) (tbl : Fin k → IExpr n)
+    (ρ : Fin n → ℝ) : e.evalReal tbl ρ = (e.toIExpr tbl).evalReal ρ := by
+  induction e with
+  | plain f => rfl
+  | ref i => rfl
+  | neg a ih => simp only [evalReal, toIExpr, IExpr.evalReal, ih]
+  | abs a ih => simp only [evalReal, toIExpr, IExpr.evalReal, ih]
+  | add a b iha ihb =>
+      simp only [evalReal, toIExpr, IExpr.evalReal, iha, ihb]
+  | sub a b iha ihb =>
+      simp only [evalReal, toIExpr, IExpr.evalReal, iha, ihb]
+  | mul a b iha ihb =>
+      simp only [evalReal, toIExpr, IExpr.evalReal, iha, ihb]
+  | div a b _ iha ihb =>
+      simp only [evalReal, toIExpr, IExpr.evalReal, iha, ihb]
+  | sqrt a _ _ ih => simp only [evalReal, toIExpr, IExpr.evalReal, ih]
+  | trans _ a _ _ ih => simp only [evalReal, toIExpr, IExpr.evalReal, ih]
+  | ite c t e iht ihe =>
+      simp only [evalReal, toIExpr, IExpr.evalReal, iht, ihe]
+
+/-- Model-table slot update. -/
+def updTMEnv {n k : ℕ} (env : Fin k → TaylorM n) (i : Fin k) (M : TaylorM n) :
+    Fin k → TaylorM n :=
+  fun j => if j.val = i.val then M else env j
+
+theorem updTMEnv_self {n k : ℕ} {env : Fin k → TaylorM n} {i : Fin k}
+    {M : TaylorM n} : updTMEnv env i M i = M := by
+  show (if i.val = i.val then M else env i) = M
+  rw [if_pos rfl]
+
+theorem updTMEnv_ne {n k : ℕ} {env : Fin k → TaylorM n} {i j : Fin k}
+    (h : j.val ≠ i.val) {M : TaylorM n} : updTMEnv env i M j = env j := by
+  show (if j.val = i.val then M else env j) = env j
+  rw [if_neg h]
+
+/-- Guard-decided branch validity over arbitrary branch functions (the
+`LExpr` layer instantiates `ft`/`fe` with table-recursive semantics;
+otherwise `valid_iteHullD` verbatim). -/
+theorem valid_iteHullD_fn {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
+    {c : IExpr n} {ft fe : (Fin n → ℝ) → ℝ} {C : DInterval}
+    (hV : M.Valid box ft) (hmem : ∀ ρ, boxMem box ρ → C.mem (c.evalReal ρ))
+    (hneg : C.hi.isNeg = true) :
+    M.Valid box (fun ρ => if c.evalReal ρ < 0 then ft ρ else fe ρ) := by
+  refine hV.congr_box fun ρ hρ => ?_
+  show (if c.evalReal ρ < 0 then ft ρ else fe ρ) = ft ρ
+  rw [if_pos (lt_of_le_of_lt (hmem ρ hρ).2 ((Dyadic.isNeg_iff C.hi).mp hneg))]
+
+/-- Else-side arbitrary-function variant of `valid_iteHullD_else`. -/
+theorem valid_iteHullD_else_fn {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
+    {c : IExpr n} {ft fe : (Fin n → ℝ) → ℝ} {C : DInterval}
+    (hV : M.Valid box fe) (hmem : ∀ ρ, boxMem box ρ → C.mem (c.evalReal ρ))
+    (hnn : C.lo.isNN = true) :
+    M.Valid box (fun ρ => if c.evalReal ρ < 0 then ft ρ else fe ρ) := by
+  refine hV.congr_box fun ρ hρ => ?_
+  show (if c.evalReal ρ < 0 then ft ρ else fe ρ) = fe ρ
+  rw [if_neg (not_lt.mpr (le_trans ((Dyadic.isNN_iff C.lo).mp hnn) (hmem ρ hρ).1))]
+
+/-- Table pass: entries `0..i-1` are evaluated once, in index order
+(certificate-free under the MVP emit contract, so `ps` is untouched). -/
+def evalLTable {n k : ℕ} (box : Fin n → DInterval) (tbl : Fin k → IExpr n) :
+    ℕ → TMParams → Option ((Fin k → TaylorM n) × TMParams)
+  | 0, ps => some (fun _ => fallbackTM box ⟨⟨0, 0⟩, ⟨0, 0⟩⟩, ps)
+  | (i + 1), ps =>
+      (evalLTable box tbl i ps).bind fun envps =>
+      if h : i < k then
+        (evalTMHullD2 box (tbl ⟨i, h⟩) envps.2).map
+          fun Mps => (updTMEnv envps.1 ⟨i, h⟩ Mps.1, Mps.2)
+      else some envps
+
+/-- **Soundness of `evalLTable`**: every entry slot below the counter holds
+a valid box-midpoint model of its table expression. -/
+theorem evalLTable_sound {n k : ℕ} {box : Fin n → DInterval}
+    (tbl : Fin k → IExpr n) (hwf : ∀ i, (box i).wf = true) :
+    ∀ (i : ℕ) (ps : TMParams) (env : Fin k → TaylorM n) (ps' : TMParams),
+      evalLTable box tbl i ps = some (env, ps') →
+      ∀ (j : Fin k), (j : ℕ) < i →
+        (env j).Valid box (fun ρ => (tbl j).evalReal ρ) ∧
+        (env j).y = boxCenter box ∧ (env j).w = boxW box := by
+  intro i
+  induction i with
+  | zero => intro ps env ps' h j hj; exact absurd hj (Nat.not_lt_zero j.val)
+  | succ i ih =>
+      intro ps env ps' h
+      simp only [evalLTable] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨env₀, ps₀⟩, h₀, h⟩ := h
+      by_cases hi : i < k
+      · rw [dif_pos hi] at h
+        rw [Option.map_eq_some_iff] at h
+        obtain ⟨⟨M, ps₁⟩, hM, hfinal⟩ := h
+        have hfinal' : (updTMEnv env₀ ⟨i, hi⟩ M, ps₁) = (env, ps') := hfinal
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal'
+        intro j hj
+        by_cases hji : j.val = i
+        · have hjeq : j = ⟨i, hi⟩ := Fin.ext hji
+          rw [hjeq]
+          show (updTMEnv env₀ ⟨i, hi⟩ M ⟨i, hi⟩).Valid box
+              (fun ρ => (tbl ⟨i, hi⟩).evalReal ρ) ∧
+            (updTMEnv env₀ ⟨i, hi⟩ M ⟨i, hi⟩).y = boxCenter box ∧
+              (updTMEnv env₀ ⟨i, hi⟩ M ⟨i, hi⟩).w = boxW box
+          rw [updTMEnv_self]
+          exact evalTMHullD2_sound _ _ _ _ hwf hM
+        · have hne : j.val ≠ (⟨i, hi⟩ : Fin k).val := fun hcon => hji (by rw [hcon])
+          show (updTMEnv env₀ ⟨i, hi⟩ M j).Valid box
+              (fun ρ => (tbl j).evalReal ρ) ∧
+            (updTMEnv env₀ ⟨i, hi⟩ M j).y = boxCenter box ∧
+              (updTMEnv env₀ ⟨i, hi⟩ M j).w = boxW box
+          rw [updTMEnv_ne hne]
+          exact ih ps env₀ ps₀ h₀ j (Nat.lt_of_le_of_ne (Nat.le_of_lt_succ hj) hji)
+      · rw [dif_neg hi] at h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+        exact fun j hj => ih ps env₀ ps₀ h₀ j (by omega)
+
+/-- The let-table hull walker: `.plain` delegates wholesale to
+`evalTMHullD2` (internal ite machinery included), `.ref` injects the
+entry model, composites mirror `evalTMHullD2` verbatim (fallback/closed
+arms go through the unfolded view), `ite` guards stay plain. -/
+def evalTMHullD2B {n k : ℕ} (box : Fin n → DInterval)
+    (tbl : Fin k → IExpr n) (env : Fin k → TaylorM n) :
+    LExpr n k → TMParams → Option (TaylorM n × TMParams)
+  | .plain f, ps => evalTMHullD2 box f ps
+  | .ref i, ps => some (env i, ps)
+  | .neg a, ps => (evalTMHullD2B box tbl env a ps).map fun (M, ps') => (M.neg, ps')
+  | .abs a, ps => ((IExpr.abs (a.toIExpr tbl)).eval box).map fun I =>
+      (fallbackTM box I, ps)
+  | .add a b, ps =>
+      (evalTMHullD2B box tbl env a ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2B box tbl env b ps₁).map fun (M₂, ps₂) => (M₁.add M₂, ps₂)
+  | .sub a b, ps =>
+      (evalTMHullD2B box tbl env a ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2B box tbl env b ps₁).map fun (M₂, ps₂) => (M₁.sub M₂, ps₂)
+  | .mul a b, ps =>
+      (evalTMHullD2B box tbl env a ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2B box tbl env b ps₁).map fun (M₂, ps₂) => (M₁.mul M₂, ps₂)
+  | .div a b out, ps =>
+      (evalTMHullD2B box tbl env a ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2B box tbl env b ps₁).bind fun (M₂, ps₂) =>
+      ps₂.invCerts.head?.bind fun p =>
+      ((M₂.inv p).map fun Mi => (M₁.mul Mi, ⟨ps₂.sqrtCerts, ps₂.invCerts.tail,
+          ps₂.transCerts⟩)).orElse
+        (fun _ => ((IExpr.div (a.toIExpr tbl) (b.toIExpr tbl) out).eval box).map
+          fun I => (fallbackTM box I, ⟨ps₂.sqrtCerts, ps₂.invCerts.tail,
+            ps₂.transCerts⟩))
+  | .sqrt a s₁ s₂, ps =>
+      (evalTMHullD2B box tbl env a ps).bind fun (M₀, ps₀) =>
+      ps₀.sqrtCerts.head?.bind fun p =>
+      ((M₀.sqrt p).map fun M' => (M', ⟨ps₀.sqrtCerts.tail, ps₀.invCerts,
+          ps₀.transCerts⟩)).orElse
+        (fun _ => ((IExpr.sqrt (a.toIExpr tbl) s₁ s₂).eval box).map fun I =>
+          (fallbackTM box I, ⟨ps₀.sqrtCerts.tail, ps₀.invCerts, ps₀.transCerts⟩))
+  | .trans kk a N out, ps =>
+      if a.isClosed tbl then
+        evalTMHullD2 box (LExpr.toIExpr (.trans kk a N out) tbl) ps
+      else
+        (evalTMHullD2B box tbl env a ps).bind fun (M₀, ps₀) =>
+        ps₀.transCerts.head?.bind fun p =>
+        ((M₀.trans kk N out p).map fun M' =>
+            (M', ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩)).orElse
+          (fun _ => ((IExpr.trans kk (a.toIExpr tbl) N out).eval box).map fun I =>
+            (fallbackTM box I, ⟨ps₀.sqrtCerts, ps₀.invCerts,
+              ps₀.transCerts.tail⟩))
+  | .ite c t e, ps =>
+      (evalIParams box c ps).bind fun (C, ps₀) =>
+      if C.hi.isNeg then evalTMHullD2B box tbl env t ps₀
+      else if C.lo.isNN then evalTMHullD2B box tbl env e ps₀
+      else
+        (evalTMHullD2B box tbl env t ps₀).bind fun (Mt, ps₁) =>
+        (evalTMHullD2B box tbl env e ps₁).map fun (Me, ps₂) => (iteHullTM2 Mt Me, ps₂)
+
+/-- **Soundness of the `evalTMHullD2B` walker**: table entries are the
+`evalTMHullD2`-sound models of their entries (given by `henv`, discharged
+by `evalLTable_sound` at the combined entry), and every composite case
+repeats the corresponding `evalTMHullD2_sound` argument. -/
+theorem evalTMHullD2B_sound {n k : ℕ} {box : Fin n → DInterval}
+    {tbl : Fin k → IExpr n} {env : Fin k → TaylorM n}
+    (henv : ∀ i, (env i).Valid box (fun ρ => (tbl i).evalReal ρ) ∧
+      (env i).y = boxCenter box ∧ (env i).w = boxW box) :
+    ∀ (e : LExpr n k) (ps ps' : TMParams) (M : TaylorM n),
+      (∀ i, (box i).wf = true) →
+      evalTMHullD2B box tbl env e ps = some (M, ps') →
+      M.Valid box (fun ρ => e.evalReal tbl ρ) ∧ M.y = boxCenter box ∧
+        M.w = boxW box := by
+  intro e
+  induction e with
+  | plain f =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2B] at h
+      exact evalTMHullD2_sound f ps ps' M hwf h
+  | ref i =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2B] at h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+      exact henv i
+  | neg a ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2B] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₀, ps₀⟩, he, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+      exact ⟨valid_neg hV, hy, hw⟩
+  | abs a ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2B] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨I, hI, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      refine ⟨(valid_fallback (cellOK_of_wf hwf) hI).congr_box fun ρ _ =>
+        LExpr.evalReal_toIExpr _ tbl ρ, rfl, rfl⟩
+  | add a b iha ihb =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2B] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := iha ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ihb ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_add hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | sub a b iha ihb =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2B] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := iha ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ihb ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_sub hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | mul a b iha ihb =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2B] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := iha ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ihb ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_mul hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | div a b out iha ihb =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2B] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨p, _hp, h⟩ := h
+      obtain ⟨hV₁, hy₁, hw₁⟩ := iha ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ihb ps₁ ps₂ M₂ hwf h₂
+      cases hi : M₂.inv p with
+      | none =>
+        rw [hi] at h
+        rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        refine ⟨(valid_fallback (cellOK_of_wf hwf) hI).congr_box fun ρ _ =>
+          LExpr.evalReal_toIExpr _ tbl ρ, rfl, rfl⟩
+      | some Mi =>
+        rw [hi] at h
+        rw [Option.map_some, Option.orElse_some] at h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+        refine ⟨?_, hy₁, hw₁⟩
+        exact valid_div hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂]) p hi
+  | sqrt a s₁ s₂ ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2B] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₀, ps₀⟩, he, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨p, _hp, h⟩ := h
+      obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+      cases hs : M₀.sqrt p with
+      | none =>
+        rw [hs] at h
+        rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        refine ⟨(valid_fallback (cellOK_of_wf hwf) hI).congr_box fun ρ _ =>
+          LExpr.evalReal_toIExpr _ tbl ρ, rfl, rfl⟩
+      | some M' =>
+        rw [hs] at h
+        rw [Option.map_some, Option.orElse_some] at h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+        obtain ⟨hV', hyy, hww⟩ := valid_sqrt hV p hs
+        refine ⟨hV', ?_, ?_⟩
+        · show M'.y = boxCenter box
+          exact hyy.trans hy
+        · show M'.w = boxW box
+          exact hww.trans hw
+  | trans kk a N out ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2B] at h
+      by_cases hcl : a.isClosed tbl = true
+      · rw [if_pos hcl] at h
+        have hV' := evalTMHullD2_sound (LExpr.toIExpr (.trans kk a N out) tbl)
+          ps ps' M hwf h
+        refine ⟨hV'.1.congr_box fun ρ _ => LExpr.evalReal_toIExpr _ tbl ρ,
+          hV'.2.1, hV'.2.2⟩
+      · rw [if_neg hcl] at h
+        rw [Option.bind_eq_some_iff] at h
+        obtain ⟨⟨M₀, ps₀⟩, he, h⟩ := h
+        rw [Option.bind_eq_some_iff] at h
+        obtain ⟨p, _hp, h⟩ := h
+        obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+        cases ht : M₀.trans kk N out p with
+        | none =>
+          rw [ht] at h
+          rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
+          obtain ⟨I, hI, hfinal⟩ := h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+          refine ⟨(valid_fallback (cellOK_of_wf hwf) hI).congr_box fun ρ _ =>
+            LExpr.evalReal_toIExpr _ tbl ρ, rfl, rfl⟩
+        | some M' =>
+          rw [ht] at h
+          rw [Option.map_some, Option.orElse_some] at h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+          obtain ⟨hV', hyy, hww⟩ := valid_trans hV N out p ht
+          refine ⟨hV', ?_, ?_⟩
+          · show M'.y = boxCenter box
+            exact hyy.trans hy
+          · show M'.w = boxW box
+            exact hww.trans hw
+  | ite c t e iht ihe =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2B] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨C, ps₀⟩, hc, h⟩ := h
+      by_cases hneg : C.hi.isNeg = true
+      · rw [if_pos hneg] at h
+        obtain ⟨hVt, hyt, hwt⟩ := iht ps₀ ps' M hwf h
+        refine ⟨valid_iteHullD_fn hVt (fun ρ hρ => evalIParams_mem hρ c ps ps₀ C hc)
+          hneg, hyt, hwt⟩
+      · rw [if_neg hneg] at h
+        by_cases hnn : C.lo.isNN = true
+        · rw [if_pos hnn] at h
+          obtain ⟨hVe, hye, hwe⟩ := ihe ps₀ ps' M hwf h
+          refine ⟨valid_iteHullD_else_fn hVe
+            (fun ρ hρ => evalIParams_mem hρ c ps ps₀ C hc) hnn, hye, hwe⟩
+        · rw [if_neg hnn] at h
+          rw [Option.bind_eq_some_iff] at h
+          obtain ⟨⟨Mt, ps₁⟩, ht, h⟩ := h
+          rw [Option.map_eq_some_iff] at h
+          obtain ⟨⟨Me, ps₂⟩, he, hfinal⟩ := h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+          obtain ⟨hVt, hyt, hwt⟩ := iht ps₀ ps₁ Mt hwf ht
+          obtain ⟨hVe, hye, hwe⟩ := ihe ps₁ ps₂ Me hwf he
+          refine ⟨valid_iteHull2 c hVt hVe (hyt.trans hye.symm)
+            (hwt.trans hwe.symm), hyt, hwt⟩
+
+/-- Combined let-table evaluator: entries once (index order), then the
+body walker with model injection at `.ref`. -/
+def evalTMHullD2L {n k : ℕ} (box : Fin n → DInterval) (tbl : Fin k → IExpr n)
+    (e : LExpr n k) (ps : TMParams) : Option (TaylorM n × TMParams) :=
+  (evalLTable box tbl k ps).bind fun (env, ps₀) =>
+    evalTMHullD2B box tbl env e ps₀
+
+/-- **Soundness of `evalTMHullD2L`** (`evalLTable_sound` discharging the
+walker's table hypothesis, then `evalTMHullD2B_sound`). -/
+theorem evalTMHullD2L_sound {n k : ℕ} {box : Fin n → DInterval}
+    {tbl : Fin k → IExpr n} :
+    ∀ (e : LExpr n k) (ps ps' : TMParams) (M : TaylorM n),
+      (∀ i, (box i).wf = true) →
+      evalTMHullD2L box tbl e ps = some (M, ps') →
+      M.Valid box (fun ρ => e.evalReal tbl ρ) ∧ M.y = boxCenter box ∧
+        M.w = boxW box := by
+  intro e ps ps' M hwf h
+  rw [evalTMHullD2L, Option.bind_eq_some_iff] at h
+  obtain ⟨⟨env, ps₀⟩, henv, h⟩ := h
+  exact evalTMHullD2B_sound
+    (fun i => evalLTable_sound tbl hwf k ps env ps₀ henv i i.isLt) e ps₀ ps' M hwf h
+
+/-- The let-table hull checker (same shape as `checkPosTMHull`). -/
+def checkPosTMHullL {n k : ℕ} (tbl : Fin k → IExpr n) (e : LExpr n k)
+    (box : Fin n → DInterval) (ps : TMParams) : Bool :=
+  (List.finRange n).all (fun i => (box i).wf) &&
+    (match evalTMHullD2L box tbl e ps with
+    | some (M, _) => (M.loBound box).isPos
+    | none => false)
+
+/-- **Soundness of the let-table hull checker** (same two-line composition
+as `checkPosTMHull_sound`). -/
+theorem checkPosTMHullL_sound {n k : ℕ} {tbl : Fin k → IExpr n} {e : LExpr n k}
+    {box : Fin n → DInterval} {ps : TMParams}
+    (h : checkPosTMHullL tbl e box ps = true) (ρ : Fin n → ℝ) (hρ : boxMem box ρ) :
+    0 < e.evalReal tbl ρ := by
+  unfold checkPosTMHullL at h
+  simp only [Bool.and_eq_true, List.all_eq_true] at h
+  obtain ⟨hwfB, h⟩ := h
+  have hwf : ∀ i, (box i).wf = true := fun i => hwfB i (List.mem_finRange i)
+  cases hE : evalTMHullD2L box tbl e ps with
+  | none => rw [hE] at h; simp at h
+  | some Mp =>
+    obtain ⟨M, ps'⟩ := Mp
+    rw [hE] at h
+    have hpos := Dyadic.toReal_pos_of_isPos h
+    obtain ⟨hV, _, _⟩ := evalTMHullD2L_sound e ps ps' M hwf hE
+    exact lt_of_lt_of_le hpos (M.loBound_sound hV hρ)
+
+/-! ### Certificate production: the let-table tracing mirror
+
+`evalTMHullFill2L` mirrors `evalTMHullD2L` node for node on the Fill side
+(entries first in index order, then the body, guard-first at `ite` nodes),
+so a PASS of `tmHullLeafProbeL` predicts the kernel `checkPosTMHullL` of
+the leaf whose `sqrtCerts` carry the reported mantissas.  Required only
+when the emit side folds certificate-*consuming* subtrees; the MVP
+certificate-free contract keeps the original `TMParams` valid verbatim. -/
+
+def evalLTableFill {n k : ℕ} (box : Fin n → DInterval) (tbl : Fin k → IExpr n) :
+    ℕ → TMParams → Option ((Fin k → TaylorM n) × TMParams ×
+      List (Int × Int × Int))
+  | 0, ps => some (fun _ => fallbackTM box ⟨⟨0, 0⟩, ⟨0, 0⟩⟩, ps, [])
+  | (i + 1), ps =>
+      (evalLTableFill box tbl i ps).bind fun (env, ps₀, l₀) =>
+      if h : i < k then
+        (evalTMHullFill2 box (tbl ⟨i, h⟩) ps₀).map
+          fun (M, ps₁, l) => (updTMEnv env ⟨i, h⟩ M, ps₁, l₀ ++ l)
+      else some (env, ps₀, l₀)
+
+/-- Fill-side mirror of the `evalTMHullD2B` walker. -/
+def evalTMHullFill2B {n k : ℕ} (box : Fin n → DInterval)
+    (tbl : Fin k → IExpr n) (env : Fin k → TaylorM n) :
+    LExpr n k → TMParams → Option (TaylorM n × TMParams ×
+      List (Int × Int × Int))
+  | .plain f, ps => evalTMHullFill2 box f ps
+  | .ref i, ps => some (env i, ps, [])
+  | .neg a, ps =>
+      (evalTMHullFill2B box tbl env a ps).map fun (M, ps', l) => (M.neg, ps', l)
+  | .abs a, ps =>
+      ((IExpr.abs (a.toIExpr tbl)).eval box).map fun I => (fallbackTM box I, ps, [])
+  | .add a b, ps =>
+      (evalTMHullFill2B box tbl env a ps).bind fun (M₁, ps₁, l₁) =>
+      (evalTMHullFill2B box tbl env b ps₁).map fun (M₂, ps₂, l₂) =>
+        (M₁.add M₂, ps₂, l₁ ++ l₂)
+  | .sub a b, ps =>
+      (evalTMHullFill2B box tbl env a ps).bind fun (M₁, ps₁, l₁) =>
+      (evalTMHullFill2B box tbl env b ps₁).map fun (M₂, ps₂, l₂) =>
+        (M₁.sub M₂, ps₂, l₁ ++ l₂)
+  | .mul a b, ps =>
+      (evalTMHullFill2B box tbl env a ps).bind fun (M₁, ps₁, l₁) =>
+      (evalTMHullFill2B box tbl env b ps₁).map fun (M₂, ps₂, l₂) =>
+        (M₁.mul M₂, ps₂, l₁ ++ l₂)
+  | .div a b out, ps =>
+      (evalTMHullFill2B box tbl env a ps).bind fun (M₁, ps₁, l₁) =>
+      (evalTMHullFill2B box tbl env b ps₁).bind fun (M₂, ps₂, l₂) =>
+      ps₂.invCerts.head?.bind fun p =>
+      ((M₂.inv p).map fun Mi =>
+          (M₁.mul Mi, ⟨ps₂.sqrtCerts, ps₂.invCerts.tail, ps₂.transCerts⟩,
+            l₁ ++ l₂)).orElse
+        (fun _ => ((IExpr.div (a.toIExpr tbl) (b.toIExpr tbl) out).eval box).map
+          fun I => (fallbackTM box I,
+            ⟨ps₂.sqrtCerts, ps₂.invCerts.tail, ps₂.transCerts⟩, l₁ ++ l₂))
+  | .sqrt a s₁ s₂, ps =>
+      (evalTMHullFill2B box tbl env a ps).bind fun (M₀, ps₀, l) =>
+      ps₀.sqrtCerts.head?.bind fun t =>
+      ((if (M₀.fB.lo.add (-M₀.W)).isPos = true then
+          let slo := sqrtMantissa M₀.fB.lo
+          let shi := sqrtMantissa M₀.fB.hi
+          let sc := sqrtMantissa (M₀.fB.lo.add (-M₀.W))
+          (M₀.sqrt ⟨slo, shi, sc, t.o1, t.o2⟩).map fun M' =>
+            (M', ⟨ps₀.sqrtCerts.tail, ps₀.invCerts, ps₀.transCerts⟩,
+              l ++ [(slo, shi, sc)])
+        else none).orElse
+        (fun _ => ((IExpr.sqrt (a.toIExpr tbl) s₁ s₂).eval box).map fun I =>
+          (fallbackTM box I, ⟨ps₀.sqrtCerts.tail, ps₀.invCerts,
+            ps₀.transCerts⟩, l)))
+  | .trans kk a N out, ps =>
+      if a.isClosed tbl then
+        ((IExpr.trans kk (a.toIExpr tbl) N out).eval box).map fun I =>
+          (closedTM box I, ps, [])
+      else
+        (evalTMHullFill2B box tbl env a ps).bind fun (M₀, ps₀, l) =>
+        ps₀.transCerts.head?.bind fun p =>
+        ((M₀.trans kk N out p).map fun M' =>
+            (M', ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩, l)).orElse
+          (fun _ => ((IExpr.trans kk (a.toIExpr tbl) N out).eval box).map fun I =>
+            (fallbackTM box I,
+              ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩, l))
+  | .ite c t e, ps =>
+      (evalIParamsFill box c ps).bind fun (C, ps₀, lg) =>
+      if C.hi.isNeg then
+        (evalTMHullFill2B box tbl env t ps₀).map fun (M, ps', l) =>
+          (M, ps', lg ++ l)
+      else if C.lo.isNN then
+        (evalTMHullFill2B box tbl env e ps₀).map fun (M, ps', l) =>
+          (M, ps', lg ++ l)
+      else
+        (evalTMHullFill2B box tbl env t ps₀).bind fun (Mt, ps₁, l₁) =>
+        (evalTMHullFill2B box tbl env e ps₁).map fun (Me, ps₂, l₂) =>
+          (iteHullTM2 Mt Me, ps₂, lg ++ l₁ ++ l₂)
+
+/-- Combined Fill mirror of `evalTMHullD2L`. -/
+def evalTMHullFill2L {n k : ℕ} (box : Fin n → DInterval)
+    (tbl : Fin k → IExpr n) (e : LExpr n k) (ps : TMParams) :
+    Option (TaylorM n × TMParams × List (Int × Int × Int)) :=
+  (evalLTableFill box tbl k ps).bind fun (env, ps₀, l₀) =>
+    (evalTMHullFill2B box tbl env e ps₀).map fun (M, ps₁, l) =>
+      (M, ps₁, l₀ ++ l)
+
+/-- One compiled-run let-table leaf probe (same shape as
+`tmHullLeafProbe`). -/
+def tmHullLeafProbeL {n k : ℕ} (tbl : Fin k → IExpr n) (e : LExpr n k)
+    (box : Fin n → DInterval) (ps : TMParams) :
+    Option (Bool × Int × Int × List (Int × Int × Int)) :=
+  (evalTMHullFill2L box tbl e ps).map fun (M, _, l) =>
+    let lb := M.loBound box
+    (lb.isPos, lb.m, lb.e, l)
+
+/-! ### let-table smoke test: shared slot under a straddling guard -/
+
+/-- Table with one shared slot (in miniature, the folded discriminant). -/
+def exLTbl : Fin 1 → IExpr 1 := fun _ => .var 0
+
+/-- `ite (x − 9/4, 2·ref0, ref0 + 2)`: both branches reference the shared
+slot, the guard straddles 0 on `[2, 5/2]` — the 549 leaf shape with the
+duplicated subtree folded into entry `0`. -/
+def exLBody : LExpr 1 1 :=
+  .ite (.sub (.var 0) (.const ⟨9, -2⟩))
+    (.mul (.ref ⟨0, by decide⟩) (.plain (.const ⟨2, 0⟩)))
+    (.add (.ref ⟨0, by decide⟩) (.plain (.const ⟨2, 0⟩)))
+
+/-- The shared slot is injected as the very same model object: the walker's
+`.ref` arm returns `env i` verbatim. -/
+theorem exL_ref_is_env (env : Fin 1 → TaylorM 1) (ps : TMParams) :
+    evalTMHullD2B exBoxHullChk exLTbl env (.ref ⟨0, by decide⟩) ps
+      = some (env ⟨0, by decide⟩, ps) := rfl
+
+/-- The let-table evaluator reproduces the unfolded composite exactly
+(df-hull of the two branch models, shared-slot models included). -/
+theorem exL_D2_composite :
+    evalTMHullD2L exBoxHullChk exLTbl exLBody TMParams.empty
+      = some (iteHullTM2 ((varTM exBoxHullChk 0).mul (constTM exBoxHullChk ⟨2, 0⟩))
+          ((varTM exBoxHullChk 0).add (constTM exBoxHullChk ⟨2, 0⟩)),
+        TMParams.empty) := rfl
+
+/-- The let-table checker closes the straddling toy leaf (kernel `decide`). -/
+theorem exL_checkPos :
+    checkPosTMHullL exLTbl exLBody exBoxHullChk TMParams.empty = true := by
+  decide
+
+#print axioms valid_iteHullD_fn
+#print axioms valid_iteHullD_else_fn
+#print axioms evalTMHullD2L_sound
+#print axioms checkPosTMHullL_sound
+#print axioms exL_ref_is_env
+#print axioms exL_D2_composite
+#print axioms exL_checkPos
+
 
 end Kepler.Interval

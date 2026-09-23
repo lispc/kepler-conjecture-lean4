@@ -19,23 +19,40 @@ Subcommands:
       `tmHullLeafProbe` per leaf; prints the RUNG header then per-leaf
       `<i> PASS|NEG <lo_m> <lo_e> <slo shi sc>...` lines).  Run with
       `lake env lean --run` from the `lean/` package root.
-  stageb <case.json> <boxes.json> <params.txt> <hullstats.jsonl> <out.lean>
-         [--shard=50] [--tactic=decide|native_decide]
-      Emit the kernel pilot file: per-leaf
-      `checkPosTMHull <mod>Expr <mod>BoxK <mod>P<K> = true|false` decide
-      theorems grouped into `--shard`-leaf shard sections (conjunction
-      theorems referencing the leaf theorems — no recomputation), a summary
-      conjunction over the shards, and `#print axioms`.  `--tactic` picks
-      the leaf proof vehicle: `decide` (default, pure kernel, ~21.4 s/leaf)
-      or `native_decide` (Lean compiler+runtime enters the TCB; one scoped
-      `Lean.ofReduceBool`-shaped axiom per leaf — the DECISIONS.md
-      2026-08-10/2026-09-19 scoped exceptions do NOT yet cover
-      `Kepler.Interval.Cases.C549Hull*`, so production use needs its own
-      DECISIONS.md entry + human sign-off).  Joins the C-side
-      `bb_arb --probe --hull-stats` single/straddle classification per box
-      for the known-criteria PASS/FAIL cross-check and prints the group
-      table.  NEG leaves are kernel/compiled-run AGREEMENT checks, not
-      certificates (same honesty note as the 20-leaf pilot).
+   stageb <case.json> <boxes.json> <params.txt> <hullstats.jsonl> <out.lean>
+          [--shard=50] [--tactic=decide|native_decide]
+       Emit the kernel pilot file: per-leaf
+       `checkPosTMHull <mod>Expr <mod>BoxK <mod>P<K> = true|false` decide
+       theorems grouped into `--shard`-leaf shard sections (conjunction
+       theorems referencing the leaf theorems — no recomputation), a summary
+       conjunction over the shards, and `#print axioms`.  `--tactic` picks
+       the leaf proof vehicle: `decide` (default, pure kernel, ~21.4 s/leaf)
+       or `native_decide` (Lean compiler+runtime enters the TCB; one scoped
+       `Lean.ofReduceBool`-shaped axiom per leaf — the DECISIONS.md
+       2026-08-10/2026-09-19 scoped exceptions do NOT yet cover
+       `Kepler.Interval.Cases.C549Hull*`, so production use needs its own
+       DECISIONS.md entry + human sign-off).  Joins the C-side
+       `bb_arb --probe --hull-stats` single/straddle classification per box
+       for the known-criteria PASS/FAIL cross-check and prints the group
+       table.  NEG leaves are kernel/compiled-run AGREEMENT checks, not
+       certificates (same honesty note as the 20-leaf pilot).
+   stageb-let <case.json> <speed.lean> <out.lean>
+          [--leaves=3] [--min-size=12] [--max-lets=6] [--min-occ=2]
+          [--only=both|base|let] [--tactic=decide]
+       AST-dedup pilot (CertTM `LExpr` certificate-table route): fold the
+       duplicated certificate-free subtrees of the case expression into a
+       `Fin k → IExpr n` table + `LExpr` body with `.ref` slots, and emit
+       (a) a baseline control leaf group on the ORIGINAL expression via
+       `checkPosTMHull`, and (b) the let-table leaf group via
+       `checkPosTMHullL` (CertTM evalTMHullD2L).  Boxes/TMParams are
+       harvested from the existing `C549HullSpeed.lean`-style module
+       (<speed.lean>, `def <mod>Box<j>` / `def <mod>P<j>` / leaf verdicts).
+       Selection contract: only subtrees with no sqrt/div/trans/ite/abs
+       nodes are folded, so the kernel `ps` certificate queue order is
+       bit-identical to the unfolded tree and the harvested TMParams stay
+       valid verbatim (no stage-A re-run needed).  `--only` gates which
+       theorem groups are emitted so baseline vs let decide times can be
+       measured in separate builds.
 """
 import json
 import mmap
@@ -50,51 +67,293 @@ LEAF_PAT = re.compile(rb'(?<=\n    )\{"box"')
 HIT_TM = b'"hit": "tm"'
 
 
-def cmd_sample(cert_path, boxes_path, manifest_path, k):
-    """Stride sample k tm-hit leaves through mmap offsets (probe_l1 style)."""
+# ---------------------------------------------------------------------------
+# stageb-let: AST dedup (LExpr certificate table) — text s-expression layer.
+# The emitted IExpr text is fully parenthesized with single spaces
+# (`(.op arg1 arg2)`), so a paren tokenizer + substring slices reproduce the
+# exact original text without any re-formatting drift.
+# ---------------------------------------------------------------------------
+
+CERT_OPS = {".sqrt", ".div", ".trans", ".ite", ".abs"}
+
+
+class N:
+    """Expression node: op token, children, exact span, id, guard flag."""
+
+    __slots__ = ("kids", "start", "end", "nid", "guard")
+
+    def __init__(self, kids, start, end, nid):
+        self.kids = kids          # list of str tokens and N nodes
+        self.start, self.end = start, end
+        self.nid = nid
+        self.guard = False
+
+    @property
+    def op(self):
+        return self.kids[0]
+
+    def text(self, src):
+        return src[self.start:self.end]
+
+
+def parse_sexpr(src):
+    """Parse the emitted expr text into an N tree (exact spans)."""
+    toks = [(m.group(0), m.start()) for m in
+            re.finditer(r'\(|\)|[^\s()]+', src)]
+
+    def rec(pos, nid):
+        assert toks[pos][0] == '(', f"expected ( at {pos}"
+        st = toks[pos][1]
+        pos += 1
+        node = N([], st, None, nid[0])
+        nid[0] += 1
+        while toks[pos][0] != ')':
+            if toks[pos][0] == '(':
+                child, pos = rec(pos, nid)
+                node.kids.append(child)
+            else:
+                node.kids.append(toks[pos][0])
+                pos += 1
+        node.end = toks[pos][1] + 1
+        return node, pos + 1
+
+    tree, pos = rec(0, [0])
+    assert pos == len(toks), "trailing tokens"
+    return tree
+
+
+def node_size(n):
+    return 1 + sum(node_size(k) for k in n.kids if isinstance(k, N))
+
+
+def node_cost(n):
+    """Decide-cost proxy: tree size plus, per closed-trans node, its rung N
+    (the alternating series evaluates ~N big-dyadic terms — the duplicated
+    rung-2048 `arctan(1)` constant dominates its 3-node AST footprint)."""
+    c = 1
+    if n.op == ".trans" and not has_var(n.kids[2]):
+        c += int(n.kids[3])
+    return c + sum(node_cost(k) for k in n.kids if isinstance(k, N))
+
+
+def cert_free(n):
+    """True iff evaluating `n` via `evalTMHullD2` consumes no TMParams
+    certificates: no sqrt/div nodes, no ite/abs, and every trans node has a
+    var-free (closed) child — the closed-trans arm evaluates the interval
+    directly and consumes nothing (this is what lets the 4x-duplicated
+    `arctan(1)` rung-2048 constant into the table)."""
+    if n.op in (".sqrt", ".div", ".ite", ".abs"):
+        return False
+    if n.op == ".trans":
+        return not has_var(n.kids[2])
+    return all(cert_free(k) for k in n.kids if isinstance(k, N))
+
+
+def has_var(n):
+    if n.op == ".var":
+        return True
+    return any(has_var(k) for k in n.kids if isinstance(k, N))
+
+
+def mark_guards(root):
+    """Flag every node living under some ite cond (refs never go there:
+    the LExpr guard position stays a plain ref-free IExpr)."""
+    def rec(x, g):
+        x.guard = g
+        for i, k in enumerate(x.kids):
+            if isinstance(k, N):
+                rec(k, g or (x.op == ".ite" and i == 1))
+    rec(root, False)
+
+
+def contains_ref(x, taken_ids):
+    if x.nid in taken_ids:
+        return True
+    if x.op == ".ite":
+        return any(contains_ref(k, taken_ids) for k in x.kids[2:4]
+                   if isinstance(k, N))
+    return any(contains_ref(k, taken_ids) for k in x.kids
+               if isinstance(k, N))
+
+
+def cmd_stageb_let(case_path, speed_path, out_path, nleaves, min_size,
+                   max_lets, min_occ, only, tactic):
+    """AST-dedup pilot emission (see module docstring)."""
     t0 = time.time()
-    with open(cert_path, "rb") as f:
-        mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-        starts = [m.start() for m in LEAF_PAT.finditer(mm)]
-        n_total = len(starts)
-        # per-leaf hit test: the `"hit":` field follows the box array inside
-        # each leaf object — search a bounded window (box lines are <1KB)
-        n_tm = 0
-        for off in starts:
-            if mm.find(HIT_TM, off, off + 8192) != -1:
-                n_tm += 1
-        if n_tm < k:
-            die(f"cert has {n_tm} tm leaves < requested {k}")
-        stride = max(1, n_tm // k)
-        dec = json.JSONDecoder()
-        picks = []
-        picked_idx = []
-        ti = 0
-        for li, off in enumerate(starts):
-            is_tm = mm.find(HIT_TM, off, off + 8192) != -1
-            if is_tm:
-                if ti % stride == 0:
-                    obj, _ = dec.raw_decode(
-                        mm[off:off + 16384].decode("utf-8", "replace"), 0)
-                    if "box" not in obj:
-                        die(f"leaf decode at offset {off} has no box")
-                    picks.append(obj["box"])
-                    picked_idx.append(li)
-                ti += 1
-                if len(picks) >= k:
-                    break
-        mm.close()
-    json.dump({"case": "5490182221", "n": len(picks), "boxes": picks},
-              open(boxes_path, "w"))
-    json.dump({"schema": "hull-pilot-200", "case": "5490182221",
-               "k": k, "stride": stride, "n_total": n_total,
-               "n_tm": n_tm, "picked_leaf_indices": picked_idx},
-              open(manifest_path, "w"), indent=1)
-    dt = time.time() - t0
-    print(f"[sample] leaves {n_total}  tm {n_tm}  stride {stride}  "
-          f"picked {len(picks)}  ({dt:.1f}s)  -> {boxes_path}")
-    print(f"[sample] picked cert leaf indices 0..{picked_idx[-1]} "
-          f"(first {picked_idx[:3]} ... last {picked_idx[-3:]})")
+    if only not in ("both", "base", "let"):
+        die(f"unknown --only {only!r} (both|base|let)")
+    case = json.load(open(case_path))
+    n = len(case["vars"])
+    if n != 6:
+        die(f"stageb-let MVP assumes 6 vars, case has {n}")
+    expr, nsqrt, ndiv, ntrans = hull_expr(case, 128, -80)
+
+    root = parse_sexpr(expr)
+    mark_guards(root)
+    total_nodes = node_size(root)
+
+    # collect subtree occurrences at replaceable (non-guard) positions;
+    # candidates must be cert-free (see cert_free) — poly ops plus closed
+    # trans constants (the 4x-duplicated rung-2048 `arctan(1)`)
+    occ = {}                                    # text -> [N]
+    stack = [root]
+    while stack:
+        x = stack.pop()
+        if not x.guard and x.op in (".neg", ".add", ".sub", ".mul", ".trans"):
+            occ.setdefault(x.text(expr), []).append(x)
+        for kk in x.kids:
+            if isinstance(kk, N):
+                stack.append(kk)
+
+    # candidates: cert-free, occ >= min_occ, size >= min_size; keep a
+    # maximal non-overlapping occurrence set per candidate (size desc)
+    cands = []
+    for txt, xs in occ.items():
+        if len(xs) < min_occ or node_cost(xs[0]) < min_size:
+            continue
+        if not cert_free(xs[0]):
+            continue
+        kept = []
+        for x in sorted(xs, key=lambda x: -(x.end - x.start)):
+            if all(x.end <= y.start or y.end <= x.start for y in kept):
+                kept.append(x)
+        if len(kept) >= min_occ:
+            cands.append((node_cost(xs[0]) * len(kept), len(kept),
+                          node_cost(xs[0]), txt, kept))
+    cands.sort(reverse=True)
+
+    # greedy cross-candidate selection by profit, disjoint spans
+    taken = []            # (txt, kept occs)
+    consumed = []         # (start, end)
+    for profit, nocc, size, txt, kept in cands:
+        if len(taken) >= max_lets:
+            break
+        free = [x for x in kept
+                if all(x.end <= st or en <= x.start for st, en in consumed)]
+        if len(free) < min_occ:
+            continue
+        taken.append((txt, free))
+        consumed.extend((x.start, x.end) for x in free)
+    if not taken:
+        die("no duplicated cert-free subtrees found — nothing to fold")
+    taken_ids = {x.nid for _, free in taken for x in free}
+    idx = {txt: i for i, (txt, _) in enumerate(taken)}
+
+    def emit_body(x):
+        """LExpr text for a node at a TM (non-guard) position."""
+        def tok(kk):
+            return kk.text(expr) if isinstance(kk, N) else kk
+        if x.nid in taken_ids:
+            return f"(.ref ⟨{idx[x.text(expr)]}, by decide⟩)"
+        if not contains_ref(x, taken_ids):
+            return f"(.plain {x.text(expr)})"
+        op = x.op
+        if op in (".add", ".sub", ".mul"):
+            return f"({op} {emit_body(x.kids[1])} {emit_body(x.kids[2])})"
+        if op == ".neg":
+            return f"(.neg {emit_body(x.kids[1])})"
+        if op == ".div":
+            return (f"(.div {emit_body(x.kids[1])} {emit_body(x.kids[2])} "
+                    f"{tok(x.kids[3])})")
+        if op == ".sqrt":
+            return (f"(.sqrt {emit_body(x.kids[1])} {tok(x.kids[2])} "
+                    f"{tok(x.kids[3])})")
+        if op == ".trans":
+            return (f"(.trans {tok(x.kids[1])} {emit_body(x.kids[2])} "
+                    f"{tok(x.kids[3])} {tok(x.kids[4])})")
+        if op == ".ite":
+            return (f"(.ite {x.kids[1].text(expr)} "
+                    f"{emit_body(x.kids[2])} {emit_body(x.kids[3])})")
+        die(f"emit_body: unsupported op {op} on a ref-bearing path")
+
+    body = emit_body(root)
+    table_txt = ", ".join(t for t, _ in taken)
+    k = len(taken)
+    n_ref = body.count("(.ref ")
+    slot_desc = ", ".join(f"#{i}: {len(f)} refs x {t.count('(.') + 1} nodes"
+                          for i, (t, f) in enumerate(taken))
+
+    # harvest boxes/params/verdicts from the existing speed module
+    speed = open(speed_path).read()
+    boxes = {}
+    for m in re.finditer(
+            r"def \w+Box(\d+) : Fin 6 → DInterval :=\n  (.+)", speed):
+        boxes[int(m.group(1))] = m.group(2)
+    params = {}
+    for m in re.finditer(r"def \w+P(\d+) : TMParams := (.+)", speed):
+        params[int(m.group(1))] = m.group(2)
+    verdicts = {}
+    for m in re.finditer(
+            r"theorem \w+Leaf(\d+) :\n\s+checkPosTMHull \w+ "
+            r"\w+Box\1 \w+P\1 = (true|false) := by\n\s+(\w+)", speed):
+        verdicts[int(m.group(1))] = (m.group(2), m.group(3))
+    if not boxes or not params or not verdicts:
+        die(f"could not harvest Box/P/verdict defs from {speed_path}")
+
+    mod = "C549HullLet"
+    parts = []
+    for j in sorted(verdicts):
+        if j > nleaves:
+            break
+        tgt, tac = verdicts[j]
+        parts.append(
+            f"/-- Leaf {j} box + TMParams (harvested from the speed lab;\n"
+            f"stage-A verdict {tgt}). -/\n"
+            f"def {mod}Box{j} : Fin {n} → DInterval :=\n  {boxes[j]}\n\n"
+            f"def {mod}P{j} : TMParams := {params[j]}\n")
+        if only in ("both", "base") and tac == "decide":
+            parts.append(
+                f"/-- Baseline control leaf {j} (unfolded expression,\n"
+                f"kernel `checkPosTMHull`; plain-kernel `decide` vehicle). -/\n"
+                f"theorem {mod}BaseLeaf{j} :\n"
+                f"    checkPosTMHull {mod}BaseExpr {mod}Box{j} {mod}P{j} = "
+                f"{tgt} := by\n  {tac}\n")
+        if only in ("both", "let"):
+            parts.append(
+                f"/-- Let-table leaf {j} (folded expression, kernel\n"
+                f"`checkPosTMHullL`; same box/params — certificate-free\n"
+                f"fold, ps queue order preserved). -/\n"
+                f"theorem {mod}Leaf{j} :\n"
+                f"    checkPosTMHullL {mod}Tbl {mod}Body {mod}Box{j} {mod}P{j}"
+                f" = {tgt} := by\n  {tactic}\n")
+
+    hdr_extra = (
+        f" — AST DEDUP MVP (CertTM LExpr certificate table):\n"
+        f"  table slots {k} ({slot_desc}), body refs {n_ref},\n"
+        f"  unfolded {total_nodes} nodes; certificate-free fold so the\n"
+        f"  harvested TMParams are consumed in the original order;\n"
+        f"  baseline/let groups gated by --only for isolated timing.")
+    axioms_line = (f"\n#print axioms {mod}Leaf1\n"
+                   if only in ("both", "let") else "")
+    text = (
+        f"/-\n"
+        f"  549 decide-speed lab, AST-dedup pilot (auto-generated by\n"
+        f"  pipeline/interval/emit_hull_pilot.py stageb-let).\n"
+        f"  case: {case['id']}  (orig_op: {case.get('orig_op')},\n"
+        f"  vars: {case['vars']}){hdr_extra}\n"
+        f"-/\n"
+        f"import Kepler.Interval.CertTM\n\n"
+        f"set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
+        f"namespace Kepler.Interval.Cases\n\n"
+        f"/-- The unfolded case expression (baseline control, verbatim\n"
+        f"hull-route emission). -/\n"
+        f"def {mod}BaseExpr : IExpr {n} :=\n  {expr}\n\n"
+        f"/-- The certificate table (duplicated certificate-free subtrees,\n"
+        f"first-occurrence order; entries consume no certificates). -/\n"
+        f"def {mod}Tbl : Fin {k} → IExpr {n} := ![{table_txt}]\n\n"
+        f"/-- The folded body (shared slots referenced via `.ref`; the\n"
+        f"ite guard position stays a plain ref-free `IExpr`). -/\n"
+        f"def {mod}Body : LExpr {n} {k} :=\n  {body}\n\n"
+        + "\n".join(parts) +
+        axioms_line +
+        f"\nend Kepler.Interval.Cases\n")
+    open(out_path, "w").write(text)
+    print(f"[stageb-let] wrote {out_path}  ({time.time() - t0:.1f}s)")
+    print(f"[stageb-let] unfolded nodes {total_nodes}  table slots {k}  "
+          f"body refs {n_ref}")
+    for i, (t, f) in enumerate(taken):
+        print(f"[stageb-let]   slot {i}: {len(f)} refs x "
+              f"{t.count('(.') + 1} nodes  head {t[:60]}")
 
 
 def load_boxes(path):
@@ -289,6 +548,14 @@ def main():
         cmd_stageb(args[1], args[2], args[3], args[4], args[5],
                    int(opts.get("shard", 50)),
                    opts.get("tactic", "decide"))
+    elif cmd == "stageb-let":
+        cmd_stageb_let(args[1], args[2], args[3],
+                       int(opts.get("leaves", 3)),
+                       int(opts.get("min-size", 12)),
+                       int(opts.get("max-lets", 6)),
+                       int(opts.get("min-occ", 2)),
+                       opts.get("only", "both"),
+                       opts.get("tactic", "decide"))
     else:
         die(f"unknown subcommand {cmd}")
 

@@ -802,6 +802,14 @@ typedef struct {
     int    gsplit2;
     int    gs_hit;
     const prog *gs_guard;
+    /* --tm-tight：err 走 Schwarz 型收紧（min 保护）+ atan Mg'' 盒上 sup；
+       均为 sound 收紧（err 只减不增），见 tm_err_from_ddf 注；默认 0。 */
+    int    tm_tight;
+    /* --tm-tight2：mul/div 对角完备化实验（实测负结果，留档对照）；默认 0。 */
+    int    tm_tight2;
+    /* --tm-ddf：诊断 dump（OP_ITE hull 合成事件 + --tm-debug 根盒 ddf 矩阵
+       与 err 分解）；仅打印，不影响任何判定；默认 0。 */
+    int    tm_ddf;
 } tmctx;
 
 static void tm1_init(tm1_t *t, slong n)
@@ -830,7 +838,29 @@ static void tm1_clear(tm1_t *t, slong n)
     free(t->ddf);
 }
 
-/* err = ½·Σᵢⱼ wᵢwⱼ·ddfᵢⱼ（全序对和） */
+/* err = ½·Σᵢⱼ wᵢwⱼ·ddfᵢⱼ（全序对和）。
+ *
+ * --tm-tight（Schwarz 型收紧；旗标门控，默认路径零改动）：
+ *   err_tight = min( err_full, ½·(Σᵢ wᵢ·√ddfᵢᵢ)² )
+ * 后一支仅在最终 ddf 矩阵逐格通过几何均值检验时启用。
+ *
+ * 不等式链（ddfᵢⱼ = 传播所得 |∂²ᵢⱼf| 盒上上界，wᵢ = 盒半宽，δᵢ = xᵢ−yᵢ）：
+ *  (0) Taylor 余项（只消费传播不变量 (I4)）：
+ *      |R₂(x)| = ½|δᵀH(ξ)δ| ≤ ½Σᵢⱼ|δᵢ||δⱼ|ddfᵢⱼ ≤ ½Σᵢⱼ wᵢwⱼ·ddfᵢⱼ = err_full。
+ *  (1) Schwarz/几何均值形：若矩阵逐格满足 ddfᵢⱼ ≤ √(ddfᵢᵢ·ddfⱼⱼ)（对角恒真），
+ *      则 err_full ≤ ½Σᵢⱼwᵢwⱼ·√ddfᵢᵢ√ddfⱼⱼ = ½(Σᵢ wᵢ√ddfᵢᵢ)²
+ *      （(Σᵢaᵢ)² = Σᵢⱼaᵢaⱼ 展开，aᵢ := wᵢ√ddfᵢᵢ ≥ 0）。∎
+ *      soundness 只依赖「最终矩阵」的逐格性质（下方运行时检验认证），
+ *      传播公式不动。结构来源（为何该性质常见）：unary 链 H = Mg''·DfDfᵀ +
+ *      Mg'·Hf 是秩一项（几何均值精确）+ IH 缩放项（继承）；两几何均值阵
+ *      之和仍满足（逐对 Cauchy–Schwarz + (√AᵢAⱼ+√CᵢCⱼ)² ≤ (Aᵢ+Cᵢ)(Aⱼ+Cⱼ)）；
+ *      配 --tm-tight 的 mul/div 对角完备化（2·Df·Dg → Df²+Dg²，见各算术分支
+ *      注）后该结构对所有 op 归纳成立。
+ *  (2) min 保护：两支都是 |R₂| 的有效上界，min 仍有效 ⟹ --tm-tight 的
+ *      err ≤ 既有 err 逐格成立，已闭合叶不可能回退。
+ * 检验实现：只作「选哪支公式」的判定器，绝不允许假通过——格值双精度化后
+ * LHS 逐 op 上取整、RHS 逐 op 下取整（nextafter 余量），溢出/NaN → 判失败
+ * → 退 err_full，永远 sound。 */
 static void tm_err_from_ddf(tm1_t *t, const tmctx *cx)
 {
     slong i, j, n = cx->n;
@@ -845,6 +875,43 @@ static void tm_err_from_ddf(tm1_t *t, const tmctx *cx)
             mag_add(acc, acc, term);
         }
     mag_mul_2exp_si(acc, acc, -1);
+    if (cx->tm_tight) {
+        mag_t ss;
+        double dg[16];
+        int gmok = (n >= 1 && n <= 16);
+        mag_init(ss);
+        mag_zero(ss);
+        for (i = 0; i < n && gmok; i++) {
+            double di = mag_get_d(t->ddf + i * n + i);
+            if (!(di >= 0.0) || (di > 0.0 && di * 2.0 == di)) {
+                gmok = 0;   /* NaN/inf → 退 err_full（0 合法：dg[i]=0） */
+                break;
+            }
+            dg[i] = di > 0.0 ? nextafter(di, 0.0) : 0.0;
+            mag_sqrt(term, t->ddf + i * n + i);
+            mag_mul(term, term, cx->w + i);
+            mag_add(ss, ss, term);
+        }
+        if (gmok)
+            for (i = 0; i < n && gmok; i++)
+                for (j = 0; j < n; j++) {
+                    double du = mag_get_d(t->ddf + i * n + j);
+                    if (du == 0.0) continue;   /* 0 ≤ √(ddfᵢᵢ·ddfⱼⱼ) 恒真 */
+                    {
+                        double li = nextafter(du, HUGE_VAL);
+                        double lhs = nextafter(li * li, HUGE_VAL);
+                        double rhs = nextafter(nextafter(dg[i] * dg[j], 0.0),
+                                               0.0);
+                        if (!(lhs <= rhs)) { gmok = 0; break; }
+                    }
+                }
+        if (gmok) {
+            mag_mul(ss, ss, ss);
+            mag_mul_2exp_si(ss, ss, -1);
+            if (mag_cmp(ss, acc) < 0) mag_set(acc, ss);   /* min 保护 */
+        }
+        mag_clear(ss);
+    }
     mag_set(t->err, acc);
     mag_clear(acc);
     mag_clear(term);
@@ -931,6 +998,82 @@ static void tm_uni_M(mag_t Mg1, mag_t Mg2, const arf_t c, int kind, slong prec)
     arb_clear(t);
     arb_clear(s);
     arb_clear(u);
+}
+
+/* --tm-tight：sup_{t∈[lo,hi]} |atan''(t)|，atan''(t) = −2t/(1+t²)²。
+   |atan''| 偶，在 |t|=1/√3 处取全局峰 9/(8√3)，沿 |t| 在 [0,1/√3] 增、
+   [1/√3,∞) 减。折到 |t| 轴取 a=min(|lo|,|hi|)、b=max(|lo|,|hi|)：
+     b ≤ 1/√3（含球界）→ 增段，sup = g(b)；a ≥ 1/√3（含球界）→ 减段，
+     sup = g(a)；其余（区间触及临界球）→ 全局峰（sound：sup ≤ 全局 sup）。
+   候选点/峰值全部经球算术外向求值（prec_h）⟹ sound 上界；既行
+   min(2·Bf,1) 的直接收紧（旧界 = 该 sup 的粗化：全局帽 1 而非 9/(8√3)）。 */
+static void tm_atan_M2sup(mag_t out, const arf_t lo, const arf_t hi, slong prec)
+{
+    arb_t x, n, d, t3;
+    arf_t a, b;
+    mag_t pk, va;
+    int use_left;
+    arb_init(x);
+    arb_init(n);
+    arb_init(d);
+    arb_init(t3);
+    arf_init(a);
+    arf_init(b);
+    mag_init(pk);
+    mag_init(va);
+    /* 峰值 9/(8√3)：s=√3（球），pk = 9/(8s) 的上界 mag */
+    arb_set_ui(t3, 3);
+    arb_sqrt(t3, t3, prec);
+    arb_mul_ui(n, t3, 8, prec);
+    arb_set_ui(d, 9);
+    arb_div(t3, d, n, prec);           /* 9/(8√3) */
+    arb_get_mag(pk, t3);
+    /* a = min(|lo|,|hi|), b = max(|lo|,|hi|)（arf 精确） */
+    arf_abs(a, lo);
+    arf_abs(b, hi);
+    if (arf_cmp(a, b) > 0) arf_swap(a, b);
+    /* 临界点球 ⊇ 1/√3 = √3/3 */
+    arb_set_ui(d, 3);
+    arb_div(t3, t3, d, prec);
+    {
+        arf_t l3, h3;
+        arf_init(l3);
+        arf_init(h3);
+        arb_get_lbound_arf(l3, t3, prec);
+        arb_get_ubound_arf(h3, t3, prec);
+        if (arf_cmp(b, l3) <= 0) {
+            use_left = 0;              /* b 在临界球左 → 增段，sup=g(b) */
+            arf_set(a, b);
+        } else if (arf_cmp(a, h3) >= 0) {
+            use_left = 1;              /* a 在临界球右 → 减段，sup=g(a) */
+        } else {
+            use_left = -1;             /* 触及临界球 → 全局峰 */
+        }
+        /* x = 选定候选点（use_left=0 时 a 已置为 b），v = 2|x|/(1+x²)² */
+        if (use_left >= 0) {
+            arb_set_arf(x, a);
+            arb_abs(x, x);
+            arb_mul_2exp_si(n, x, 1);          /* 2|x| */
+            arb_mul(d, x, x, prec);
+            arb_add_ui(d, d, 1, prec);
+            arb_mul(d, d, d, prec);
+            arb_div(x, n, d, prec);
+            arb_get_mag(va, x);
+        } else {
+            mag_set(va, pk);
+        }
+        arf_clear(l3);
+        arf_clear(h3);
+    }
+    mag_min(out, va, pk);              /* 墙内永远 ≤ 全局峰（保守并取） */
+    arf_clear(a);
+    arf_clear(b);
+    mag_clear(pk);
+    mag_clear(va);
+    arb_clear(x);
+    arb_clear(n);
+    arb_clear(d);
+    arb_clear(t3);
 }
 
 /* M = 1/min|g(box)| 的上界 mag；g 盒值域越零 → 返回 0（不可用） */
@@ -1036,6 +1179,33 @@ static void tm_div_fail_diag(tmctx *cx, const tm1_t *g, size_t ip)
             cx->div_ips_ovf = 1;
         }
     }
+}
+
+/* --tm-ddf：单 TM 余项解剖行（旗标门控，只打印不判定）：
+   f0 盒值域 / err / W / slopeW=Σᵢ|dfᵢ|wᵢ（W−err = 线性项占比）。 */
+static void tm_ddf_row(const char *tag, const tm1_t *t, const tmctx *cx)
+{
+    arf_t lo, hi;
+    mag_t sw;
+    slong i;
+    arf_init(lo);
+    arf_init(hi);
+    mag_init(sw);
+    tm_range_arf(lo, hi, t, cx);
+    for (i = 0; i < cx->n; i++) {
+        mag_t m;
+        mag_init(m);
+        arb_get_mag(m, t->df + i);
+        mag_mul(m, m, cx->w + i);
+        mag_add(sw, sw, m);
+        mag_clear(m);
+    }
+    printf("[tm-ddf] %s f0=[%.6g,%.6g] err=%.6e W=%.6e slopeW=%.6e\n", tag,
+           arf_get_d(lo, ARF_RND_DOWN), arf_get_d(hi, ARF_RND_UP),
+           mag_get_d(t->err), mag_get_d(t->W), mag_get_d(sw));
+    arf_clear(lo);
+    arf_clear(hi);
+    mag_clear(sw);
 }
 
 /* div 越零定性汇总打印（仅 tm_on && ite_hull2 调用） */
@@ -1242,6 +1412,12 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                         arb_t b1, b2, un, tmp;
                         arf_t lo, hi, mid, d1, d2;
                         slong a;
+                        if (cx->tm_ddf) {
+                            printf("[tm-ddf] hull event: d0=%d\n",
+                                   cx->ite_depth);
+                            tm_ddf_row("  in-then", tt, cx);
+                            tm_ddf_row("  in-else", te, cx);
+                        }
                         arb_init(b1); arb_init(b2); arb_init(un); arb_init(tmp);
                         arf_init(lo); arf_init(hi); arf_init(mid);
                         arf_init(d1); arf_init(d2);
@@ -1272,6 +1448,7 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                         tt->from_ite = tm_src_join(tt->from_ite, te->from_ite);
                         if (!tt->from_ite) tt->from_ite = 2;
                         tm_update_W(tt, cx);
+                        if (cx->tm_ddf) tm_ddf_row("  out-hull", tt, cx);
                         arb_clear(b1); arb_clear(b2); arb_clear(un);
                         arb_clear(tmp);
                         arf_clear(lo); arf_clear(hi); arf_clear(mid);
@@ -1367,10 +1544,24 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                         mag_mul(acc, f->ddf + a * n + b, Bg);
                         mag_mul(t1, Bf, g->ddf + a * n + b);
                         mag_add(acc, acc, t1);
-                        mag_mul(t1, cx->Df + a, cx->Dg + b);
-                        mag_add(acc, acc, t1);
-                        mag_mul(t1, cx->Df + b, cx->Dg + a);
-                        mag_add(acc, acc, t1);
+                        if (a == b && cx->tm_tight2) {
+                            /* 对角完备化（--tm-tight2 实验旗标）：交叉斜率项
+                               在 a=b 处 2·Df·Dg → Df²+Dg²（Cauchy–Schwarz
+                               配平方向）。使传播矩阵结构性满足几何均值
+                               ddfᵢⱼ ≤ √(ddfᵢᵢ·ddfⱼⱼ)（tm_err_from_ddf 注 (1)
+                               的归纳步）。实测（549 试点 4 straddle 叶）：
+                               负结果——对角变肥沿链放大 Df/Bf，根 err 反升
+                               50–80%，故不并入 --tm-tight；留档对照。 */
+                            mag_mul(t1, cx->Df + a, cx->Df + a);
+                            mag_add(acc, acc, t1);
+                            mag_mul(t1, cx->Dg + a, cx->Dg + a);
+                            mag_add(acc, acc, t1);
+                        } else {
+                            mag_mul(t1, cx->Df + a, cx->Dg + b);
+                            mag_add(acc, acc, t1);
+                            mag_mul(t1, cx->Df + b, cx->Dg + a);
+                            mag_add(acc, acc, t1);
+                        }
                         mag_set(f->ddf + a * n + b, acc);
                     }
                 /* 中心球：f0 = f·g，dfᵢ = dfᵢ·g0 + f0·dgᵢ（积法则） */
@@ -1418,12 +1609,25 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                         mag_mul(t1, Bf, g->ddf + a * n + b);
                         mag_mul(t1, t1, M2);
                         mag_add(acc, acc, t1);
-                        mag_mul(t1, cx->Df + a, cx->Dg + b);
-                        mag_mul(t1, t1, M2);
-                        mag_add(acc, acc, t1);
-                        mag_mul(t1, cx->Df + b, cx->Dg + a);
-                        mag_mul(t1, t1, M2);
-                        mag_add(acc, acc, t1);
+                        if (a == b && cx->tm_tight2) {
+                            /* 对角完备化（--tm-tight2 实验旗标，同 mul 分支
+                               注；实测负结果，留档对照）：
+                               2·Df·Dg·M² → (Df²+Dg²)·M²；末项 2Bf·DgᵢDgⱼM³
+                               为秩一项，几何均值精确，不动。 */
+                            mag_mul(t1, cx->Df + a, cx->Df + a);
+                            mag_mul(t1, t1, M2);
+                            mag_add(acc, acc, t1);
+                            mag_mul(t1, cx->Dg + a, cx->Dg + a);
+                            mag_mul(t1, t1, M2);
+                            mag_add(acc, acc, t1);
+                        } else {
+                            mag_mul(t1, cx->Df + a, cx->Dg + b);
+                            mag_mul(t1, t1, M2);
+                            mag_add(acc, acc, t1);
+                            mag_mul(t1, cx->Df + b, cx->Dg + a);
+                            mag_mul(t1, t1, M2);
+                            mag_add(acc, acc, t1);
+                        }
                         mag_mul(t1, cx->Dg + a, cx->Dg + b);
                         mag_mul(t1, t1, Bf);
                         mag_mul(t1, t1, M3);
@@ -1528,9 +1732,14 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                     break;
                 case OP_ATAN:
                     mag_one(Mg1);
-                    tm_Bmag(Mg2, f);
-                    mag_mul_2exp_si(Mg2, Mg2, 1);     /* 2·Bf */
-                    if (mag_cmp(Mg2, Mg1) > 0) mag_set(Mg2, Mg1);  /* min(2Bf,1) */
+                    if (cx->tm_tight) {
+                        tm_atan_M2sup(Mg2, lo, hi, cx->prec_h);
+                    } else {
+                        tm_Bmag(Mg2, f);
+                        mag_mul_2exp_si(Mg2, Mg2, 1);     /* 2·Bf */
+                        if (mag_cmp(Mg2, Mg1) > 0)
+                            mag_set(Mg2, Mg1);            /* min(2Bf,1) */
+                    }
                     {
                         arb_t d;
                         arb_init(d);
@@ -2046,8 +2255,9 @@ typedef struct {
     size_t n;
 } disjq;
 
-/* --tm-debug 根盒包围打印（固定 "[tm]" 前缀；ite-hull2 对拍复用同一格式） */
-static void tm_debug_dump(const tm1_t *r, slong nvars)
+/* --tm-debug 根盒包围打印（固定 "[tm]" 前缀；ite-hull2 对拍复用同一格式）。
+   --tm-ddf 追加：盒半宽 wᵢ + 根 ddf 矩阵逐格（err/W/slope 分解离线算）。 */
+static void tm_debug_dump(const tm1_t *r, slong nvars, const tmctx *cx)
 {
     arf_t lo, hi, wm, lb, hb;
     slong v;
@@ -2074,6 +2284,20 @@ static void tm_debug_dump(const tm1_t *r, slong nvars)
            arf_get_d(lb, ARF_RND_DOWN), arf_get_d(hb, ARF_RND_UP));
     printf("[tm] decide=%s\n",
            tm_decide(r) == 0 ? "CLOSED" : "OPEN");
+    if (cx != NULL && cx->tm_ddf) {
+        slong i, j;
+        printf("[tm-ddf] w:");
+        for (v = 0; v < nvars; v++)
+            printf(" %.6e", mag_get_d(cx->w + v));
+        printf("\n");
+        printf("[tm-ddf] ddf rows (|d2_ij|):\n");
+        for (i = 0; i < nvars; i++) {
+            printf("[tm-ddf]   ");
+            for (j = 0; j < nvars; j++)
+                printf(" %.6e", mag_get_d(r->ddf + i * nvars + j));
+            printf("\n");
+        }
+    }
     arf_clear(lo); arf_clear(hi); arf_clear(wm);
     arf_clear(lb); arf_clear(hb);
 }
@@ -2097,7 +2321,12 @@ static void usage(void)
             "  --tm-w0：TM 启用盒宽阈值初值（默认 0.25，窗口自适应）\n"
             "  --tm-debug：只对根盒跑一次 TM 并打印包围，随后退出\n"
             "  --hull-stats：OP_ITE 闭合模式计数 + straddle 嵌套深度直方图\n"
-            "            （摘要打印由本旗标门控；隐含 --tm；配 --probe 时逐盒附 mode）\n");
+            "            （摘要打印由本旗标门控；隐含 --tm；配 --probe 时逐盒附 mode）\n"
+            "  --tm-tight：TM 余项 Schwarz 型收紧（min 保护）+ atan Mg'' 盒上 sup\n"
+            "            （sound，err 只减不增；默认关）；--tm-tight2：对角完备\n"
+            "            化实验（负结果留档）\n"
+            "  --tm-ddf：余项解剖诊断打印（hull 合成事件 + --tm-debug 根盒\n"
+            "            ddf 矩阵；只打印不判定，默认关）\n");
     exit(EXIT_ERR);
 }
 
@@ -2107,6 +2336,7 @@ int main(int argc, char **argv)
     slong prec = 64;
     long max_nodes = 1L << 16;
     int tm_on = 0, tm_debug = 0, ite_hull = 0, ite_hull2 = 0, gsplit = 0;
+    int tm_tight = 0, tm_tight2 = 0, tm_ddf = 0;
     int gsplit2 = 0;
     int hull_stats = 0;
     slong tm_prec = 256, tm_hprec = 32;
@@ -2162,6 +2392,32 @@ int main(int argc, char **argv)
                打印与本旗标门控（默认路径零改动）；隐含 --tm，主场景与
                --ite-hull/--ite-hull2 组合。探针模式逐盒附 mode 字段。 */
             hull_stats = 1;
+            tm_on = 1;
+        } else if (!strcmp(argv[i], "--tm-tight")) {
+            /* 549 工位：div/sqrt 分支余项压薄（C 侧先导实验）。两件事，
+               均 sound 且 err 只减不增（min 保护）：
+               ① tm_err_from_ddf 的 Schwarz/几何均值形（逐格检验认证，
+                  不过检验即退全序对和）；
+               ② atan Mg'' 用盒上 sup（单调段端点/全局峰 9/(8√3)）替代
+                  min(2Bf,1)。
+               默认关闭；隐含 --tm。
+               注：曾试验 mul/div 对角完备化（2DfDg→Df²+Dg²，使几何均值
+               结构性成立），实测使传播对角变肥、根 err 反升 50–80%（试点
+               4 叶），已移出为 --tm-tight2 留档，不并入本旗标。 */
+            tm_tight = 1;
+            tm_on = 1;
+        } else if (!strcmp(argv[i], "--tm-tight2")) {
+            /* 实验（预期负结果，留档）：mul/div Hessian 对角完备化
+               （2·Df·Dg → Df²+Dg²）。sound 性不变（上界方向），但传播
+               对角变肥沿链放大，试点实测根 err 反升；仅供对照。 */
+            tm_tight2 = 1;
+            tm_on = 1;
+        } else if (!strcmp(argv[i], "--tm-ddf")) {
+            /* 549 工位余项解剖诊断（只打印、不判定，默认路径零输出）：
+               OP_ITE hull 合成事件逐支 err/W/f0 dump + --tm-debug 根盒
+               ddf 矩阵与 err 分解（全序对和 vs Schwarz 候选 + 几何均值
+               检验结果 + 逐格贡献排序）。隐含 --tm。 */
+            tm_ddf = 1;
             tm_on = 1;
         } else if (!strcmp(argv[i], "--probe") && i + 1 < argc) {
             /* L1 探针（549 加速项目 Phase 0）：逐盒 TM 判定 + 带符号 df/σ dump；
@@ -2331,6 +2587,9 @@ int main(int argc, char **argv)
             tcx.ite_hull2 = ite_hull2;
             tcx.gsplit2 = gsplit2;
             tcx.hull_stats = hull_stats;
+            tcx.tm_tight = tm_tight;
+            tcx.tm_tight2 = tm_tight2;
+            tcx.tm_ddf = tm_ddf;
             tcx.bstk = (arb_struct *)stk;   /* guard 裸区间求值复用主栈（TM 阶段它空闲） */
             tstk = xmalloc(scap * sizeof(tm1_t));
             for (k = 0; k < scap; k++) tm1_init(tstk + k, nvars);
@@ -2388,7 +2647,7 @@ int main(int argc, char **argv)
                 printf("[tm] INVALID（根盒 TM 不可用）reason=%d ip=%lu\n",
                        tcx.fail_reason, (unsigned long)tcx.fail_ip);
             } else {
-                tm_debug_dump(tstk, nvars);
+                tm_debug_dump(tstk, nvars, &tcx);
             }
             if (ite_hull2) {
                 /* 对拍：同一根盒用常数 hull 版再跑一遍（--ite-hull2 主跑为
@@ -2403,7 +2662,7 @@ int main(int argc, char **argv)
                     printf("[tm] INVALID（根盒 TM 不可用）reason=%d ip=%lu\n",
                            tcx.fail_reason, (unsigned long)tcx.fail_ip);
                 } else {
-                    tm_debug_dump(tstk, nvars);
+                    tm_debug_dump(tstk, nvars, &tcx);
                 }
             }
             if (hull_stats) tm_hull_stats_print(stdout, &tcx);
