@@ -2885,6 +2885,479 @@ theorem exIteBadGuard_hullD_none :
 #print axioms exIteD_hull_composite
 #print axioms exIteBadGuard_hullD_none
 
+/-! ## Schema v3, second cut: the df-hull ite composite (`iteHullTM2` /
+`evalTMHullD2`)
+
+Root cause ① of the 20-leaf NEG pilot: the M2 straddle composite is the
+*constant* hull (`iteHullTM`), paying the full hull width `H` as `err` and
+destroying the branch slopes.  On the 549 lane the two branches join C¹ at
+the guard surface, so `|Δf0|` is small and a df-hull composite tightens
+`err` by an order of magnitude (C-side counterpart: `bb_arb.c --ite-hull2`).
+
+The Lean synthesis is re-derived for the ∃-slope `TaylorM.Valid` semantics,
+whose anchor is the **true center value** `f(y)` (not a stored constant):
+the composite keeps
+
+- `y`, `w`: the (shared) branch center/envelope;
+- `fB := (Mt.valueRange).hull Me.valueRange` — both branch center values are
+  in their branch `fB ⊆ valueRange ⊆ hull`;
+- `dfB i := (Mt.dfB i).hull (Me.dfB i)` — at a box point the selected
+  branch's witnessed slopes lie in the component hull, so the ∃-slope clause
+  transports verbatim;
+- `err := max err_t err_e + jumpBound Mt.fB Me.fB` where `jumpBound` is the
+  interval distance `max(|fB_t.lo − fB_e.hi|, |fB_t.hi − fB_e.lo|)`.  The
+  jump term is REQUIRED by the true-value anchor: when the guard selects
+  different branches at `ρ` and at the center `y`, the composite residual
+  splits into the selected branch's own remainder (≤ `err_b`, witnessed by
+  that branch's own slope — no hull-width term) plus the center jump
+  `|ft(y) − fe(y)| ≤ jumpBound` (each branch center value lies in its `fB`).
+  No continuity hypothesis is used — the jump is absorbed through the two
+  δ = 0 value bounds, so the composite is sound for ANY guard behavior.
+  (The C side anchors at stored constants `f0_b`, so its jump chain is
+  `err_t + err_e + |f0_t − f0_e|`; the Lean `fB` enclosures give the jump
+  directly, strictly tighter.)
+
+Compared with the constant composite this replaces the full hull width
+`H ≈ W_t + W_e + |Δf0|` by `≈ |Δf0| + max(err_t, err_e)` — the C¹ regime's
+order-of-magnitude `err` cut.  The guard-decided single-branch arms of
+`evalTMHullD` are inherited verbatim (`evalTMHullD2` differs from
+`evalTMHullD` only in the straddle arm), so decided-guard leaves compute
+identically; the old constructions stay referable. -/
+
+/-- The distance between two intervals: `max(|I.lo − J.hi|, |I.hi − J.lo|)`
+— the largest `|x − x'|` over `x ∈ I`, `x' ∈ J`, attained at opposite
+endpoints (0 when the intervals overlap). -/
+def DInterval.jumpBound (I J : DInterval) : Dyadic :=
+  Dyadic.dmax
+    (Dyadic.dmax (I.lo.add (-J.hi)) (J.hi.add (-I.lo)))
+    (Dyadic.dmax (I.hi.add (-J.lo)) (J.lo.add (-I.hi)))
+
+/-- `jumpBound` unfolds to the endpoint distance formula. -/
+theorem DInterval.jumpBound_toReal (I J : DInterval) :
+    (I.jumpBound J).toReal
+      = max (max (I.lo.toReal - J.hi.toReal) (J.hi.toReal - I.lo.toReal))
+          (max (I.hi.toReal - J.lo.toReal) (J.lo.toReal - I.hi.toReal)) := by
+  show Dyadic.toReal (Dyadic.dmax
+      (Dyadic.dmax (I.lo.add (-J.hi)) (J.hi.add (-I.lo)))
+      (Dyadic.dmax (I.hi.add (-J.lo)) (J.lo.add (-I.hi)))) = _
+  simp only [Dyadic.toReal_dmax, Dyadic.toReal_add, Dyadic.toReal_neg,
+    sub_eq_add_neg]
+
+/-- **Distance bound**: `jumpBound I J` dominates `|x − x'|` for `x ∈ I`,
+`x' ∈ J`. -/
+theorem DInterval.jumpBound_ge {I J : DInterval} {x x' : ℝ}
+    (hx : I.mem x) (hx' : J.mem x') : |x - x'| ≤ (I.jumpBound J).toReal := by
+  rw [DInterval.jumpBound_toReal, abs_le]
+  constructor
+  · have hA := le_max_right (I.lo.toReal - J.hi.toReal) (J.hi.toReal - I.lo.toReal)
+    have hB := le_max_left
+      (max (I.lo.toReal - J.hi.toReal) (J.hi.toReal - I.lo.toReal))
+      (max (I.hi.toReal - J.lo.toReal) (J.lo.toReal - I.hi.toReal))
+    linarith [hx.1, hx'.2, hA, hB]
+  · have hC := le_max_left (I.hi.toReal - J.lo.toReal) (J.lo.toReal - I.hi.toReal)
+    have hD := le_max_right
+      (max (I.lo.toReal - J.hi.toReal) (J.hi.toReal - I.lo.toReal))
+      (max (I.hi.toReal - J.lo.toReal) (J.lo.toReal - I.hi.toReal))
+    linarith [hx.2, hx'.1, hC, hD]
+
+/-- `jumpBound` is nonnegative (it dominates an absolute value). -/
+theorem DInterval.jumpBound_nonneg (I J : DInterval) :
+    0 ≤ (I.jumpBound J).toReal := by
+  rw [DInterval.jumpBound_toReal]
+  have h1 := le_max_left (I.lo.toReal - J.hi.toReal) (J.hi.toReal - I.lo.toReal)
+  have h2 := le_max_right (I.lo.toReal - J.hi.toReal) (J.hi.toReal - I.lo.toReal)
+  have h3 := le_max_left
+    (max (I.lo.toReal - J.hi.toReal) (J.hi.toReal - I.lo.toReal))
+    (max (I.hi.toReal - J.lo.toReal) (J.lo.toReal - I.hi.toReal))
+  linarith
+
+/-- Schema-v3 second cut: the df-hull ite composite (see the section
+header). -/
+def iteHullTM2 {n : ℕ} (Mt Me : TaylorM n) : TaylorM n :=
+  ⟨Mt.y, Mt.w, (Mt.valueRange).hull Me.valueRange,
+    fun i => (Mt.dfB i).hull (Me.dfB i),
+    Dyadic.dmax ((Dyadic.dmax Mt.err Me.err).add
+      (Mt.fB.jumpBound Me.fB)) ⟨0, 0⟩⟩
+
+/-- **Validity of the df-hull composite**: if both branch models are valid
+on the box (same center, same envelope), the composite is valid for the
+guard-selected function `ρ ↦ if c(ρ) < 0 then ft ρ else fe ρ`.  Per box
+point the witnessed slope is the selected branch's own (∈ the component
+hull); the residual splits into that branch's remainder plus — only when
+the guard selects the other branch at the center — the center jump
+`|ft(y) − fe(y)| ≤ jumpBound Mt.fB Me.fB`.  No guard or continuity
+hypothesis. -/
+theorem valid_iteHull2 {n : ℕ} {Mt Me : TaylorM n} {box : Fin n → DInterval}
+    {ft fe : (Fin n → ℝ) → ℝ} (c : IExpr n)
+    (ht : Mt.Valid box ft) (he : Me.Valid box fe)
+    (hy : Mt.y = Me.y) (_hw : Mt.w = Me.w) :
+    (iteHullTM2 Mt Me).Valid box
+      (fun ρ => if c.evalReal ρ < 0 then ft ρ else fe ρ) := by
+  obtain ⟨htmem, htw, htfB, htrem⟩ := ht
+  obtain ⟨_, _, hefB, herem⟩ := he
+  rw [← hy] at hefB herem
+  have hvr : ∀ (M : TaylorM n) (x : ℝ), M.fB.mem x → M.valueRange.mem x := by
+    intro M x hx
+    obtain ⟨hx1, hx2⟩ := hx
+    have hW : 0 ≤ M.W.toReal := TaylorM.W_nonneg M
+    constructor
+    · show Dyadic.toReal (M.fB.lo.add (-M.W)) ≤ x
+      rw [Dyadic.toReal_add, Dyadic.toReal_neg]
+      linarith
+    · show x ≤ Dyadic.toReal (M.fB.hi.add M.W)
+      rw [Dyadic.toReal_add]
+      linarith
+  have hjump : |ft (fun i => (Mt.y i).toReal) - fe (fun i => (Mt.y i).toReal)|
+      ≤ (Mt.fB.jumpBound Me.fB).toReal := DInterval.jumpBound_ge htfB hefB
+  have hjump' : |fe (fun i => (Mt.y i).toReal) - ft (fun i => (Mt.y i).toReal)|
+      ≤ (Mt.fB.jumpBound Me.fB).toReal := by
+    rw [abs_sub_comm]
+    exact hjump
+  have hJ0 : 0 ≤ (Mt.fB.jumpBound Me.fB).toReal := DInterval.jumpBound_nonneg _ _
+  have herr : (iteHullTM2 Mt Me).err.toReal
+      = max (max Mt.err.toReal Me.err.toReal + (Mt.fB.jumpBound Me.fB).toReal) 0 := by
+    show Dyadic.toReal (Dyadic.dmax
+      ((Dyadic.dmax Mt.err Me.err).add (Mt.fB.jumpBound Me.fB)) ⟨0, 0⟩) = _
+    rw [Dyadic.toReal_dmax, Dyadic.toReal_add, Dyadic.toReal_dmax, Dyadic.toReal_zero]
+  have hm1 : Mt.err.toReal ≤ max Mt.err.toReal Me.err.toReal := le_max_left _ _
+  have hm2 : Me.err.toReal ≤ max Mt.err.toReal Me.err.toReal := le_max_right _ _
+  have hm3 : max Mt.err.toReal Me.err.toReal + (Mt.fB.jumpBound Me.fB).toReal
+      ≤ max (max Mt.err.toReal Me.err.toReal + (Mt.fB.jumpBound Me.fB).toReal) 0 :=
+    le_max_left _ _
+  refine ⟨htmem, htw, ?_, ?_⟩
+  · show ((Mt.valueRange).hull Me.valueRange).mem
+      (if c.evalReal (fun i => (Mt.y i).toReal) < 0
+        then ft (fun i => (Mt.y i).toReal)
+        else fe (fun i => (Mt.y i).toReal))
+    by_cases hlt : c.evalReal (fun i => (Mt.y i).toReal) < 0
+    · rw [if_pos hlt]
+      exact DInterval.mem_hull_left (hvr Mt _ htfB)
+    · rw [if_neg hlt]
+      exact DInterval.mem_hull_right (hvr Me _ hefB)
+  · intro ρ hρ
+    dsimp only
+    rw [show (iteHullTM2 Mt Me).y = Mt.y from rfl]
+    by_cases hlt : c.evalReal ρ < 0
+    · rw [if_pos hlt]
+      obtain ⟨a, ha, hb⟩ := htrem ρ hρ
+      refine ⟨a, fun i => DInterval.mem_hull_left (ha i), ?_⟩
+      by_cases hcy : c.evalReal (fun i => (Mt.y i).toReal) < 0
+      · rw [if_pos hcy]
+        rw [herr]
+        linarith
+      · rw [if_neg hcy]
+        have hsplit : ft ρ - fe (fun i => (Mt.y i).toReal)
+            - ∑ i, a i * (ρ i - (Mt.y i).toReal)
+            = (ft ρ - ft (fun i => (Mt.y i).toReal)
+                - ∑ i, a i * (ρ i - (Mt.y i).toReal))
+              + (ft (fun i => (Mt.y i).toReal)
+                - fe (fun i => (Mt.y i).toReal)) := by ring
+        rw [hsplit, herr]
+        refine le_trans (abs_add_le _ _) ?_
+        linarith
+    · rw [if_neg hlt]
+      obtain ⟨b, hb, hbe⟩ := herem ρ hρ
+      refine ⟨b, fun i => DInterval.mem_hull_right (hb i), ?_⟩
+      by_cases hcy : c.evalReal (fun i => (Mt.y i).toReal) < 0
+      · rw [if_pos hcy]
+        have hsplit : fe ρ - ft (fun i => (Mt.y i).toReal)
+            - ∑ i, b i * (ρ i - (Mt.y i).toReal)
+            = (fe ρ - fe (fun i => (Mt.y i).toReal)
+                - ∑ i, b i * (ρ i - (Mt.y i).toReal))
+              + (fe (fun i => (Mt.y i).toReal)
+                - ft (fun i => (Mt.y i).toReal)) := by ring
+        rw [hsplit, herr]
+        refine le_trans (abs_add_le _ _) ?_
+        linarith
+      · rw [if_neg hcy]
+        rw [herr]
+        linarith
+
+/-- Schema-v3 second cut: the df-hull evaluator.  Identical to
+`evalTMHullD` except that the guard-straddle `ite` arm composes the two
+branch models into the df-hull composite (`iteHullTM2`) instead of the
+constant hull; the guard-decided single-branch arms are verbatim shared, so
+decided-guard leaves compute identically. -/
+def evalTMHullD2 {n : ℕ} (box : Fin n → DInterval) :
+    IExpr n → TMParams → Option (TaylorM n × TMParams)
+  | .const d, ps => some (constTM box d, ps)
+  | .var k, ps => some (varTM box k, ps)
+  | .neg e, ps => (evalTMHullD2 box e ps).map fun (M, ps') => (M.neg, ps')
+  | .add e₁ e₂, ps =>
+      (evalTMHullD2 box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2 box e₂ ps₁).map fun (M₂, ps₂) => (M₁.add M₂, ps₂)
+  | .sub e₁ e₂, ps =>
+      (evalTMHullD2 box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2 box e₂ ps₁).map fun (M₂, ps₂) => (M₁.sub M₂, ps₂)
+  | .mul e₁ e₂, ps =>
+      (evalTMHullD2 box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2 box e₂ ps₁).map fun (M₂, ps₂) => (M₁.mul M₂, ps₂)
+  | .div e₁ e₂ out, ps =>
+      (evalTMHullD2 box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2 box e₂ ps₁).bind fun (M₂, ps₂) =>
+      ps₂.invCerts.head?.bind fun p =>
+      ((M₂.inv p).map fun Mi => (M₁.mul Mi, ⟨ps₂.sqrtCerts, ps₂.invCerts.tail,
+          ps₂.transCerts⟩)).orElse
+        (fun _ => ((IExpr.div e₁ e₂ out).eval box).map fun I =>
+          (fallbackTM box I, ⟨ps₂.sqrtCerts, ps₂.invCerts.tail, ps₂.transCerts⟩))
+  | .sqrt e s₁ s₂, ps =>
+      (evalTMHullD2 box e ps).bind fun (M₀, ps₀) =>
+      ps₀.sqrtCerts.head?.bind fun p =>
+      ((M₀.sqrt p).map fun M' => (M', ⟨ps₀.sqrtCerts.tail, ps₀.invCerts,
+          ps₀.transCerts⟩)).orElse
+        (fun _ => ((IExpr.sqrt e s₁ s₂).eval box).map fun I =>
+          (fallbackTM box I, ⟨ps₀.sqrtCerts.tail, ps₀.invCerts, ps₀.transCerts⟩))
+  | .abs e, ps => ((IExpr.abs e).eval box).map fun I => (fallbackTM box I, ps)
+  | .trans k e N out, ps =>
+      if e.isClosed then
+        ((IExpr.trans k e N out).eval box).map fun I => (closedTM box I, ps)
+      else
+        (evalTMHullD2 box e ps).bind fun (M₀, ps₀) =>
+        ps₀.transCerts.head?.bind fun p =>
+        ((M₀.trans k N out p).map fun M' =>
+            (M', ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩)).orElse
+          (fun _ => ((IExpr.trans k e N out).eval box).map fun I =>
+            (fallbackTM box I, ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩))
+  | .ite c t e, ps =>
+      (evalIParams box c ps).bind fun (C, ps₀) =>
+      if C.hi.isNeg then evalTMHullD2 box t ps₀
+      else if C.lo.isNN then evalTMHullD2 box e ps₀
+      else
+        (evalTMHullD2 box t ps₀).bind fun (Mt, ps₁) =>
+        (evalTMHullD2 box e ps₁).map fun (Me, ps₂) => (iteHullTM2 Mt Me, ps₂)
+
+/-- **Soundness of `evalTMHullD2`** (same conclusion as `evalTMHullD_sound`):
+the non-`ite` cases repeat `evalTMHullD_sound`'s arguments over the
+self-recursion, and the `ite` case adds the certified-guard branch selection
+(`valid_iteHullD`/`valid_iteHullD_else`) or the df-hull straddle composite
+(`valid_iteHull2`, with the shared center/envelope discharged from the
+induction hypotheses). -/
+theorem evalTMHullD2_sound {n : ℕ} {box : Fin n → DInterval} :
+    ∀ (e : IExpr n) (ps ps' : TMParams) (M : TaylorM n),
+      (∀ i, (box i).wf = true) →
+      evalTMHullD2 box e ps = some (M, ps') →
+      M.Valid box (fun ρ => e.evalReal ρ) ∧ M.y = boxCenter box ∧ M.w = boxW box := by
+  intro e
+  induction e with
+  | const d =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2] at h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+      exact ⟨valid_const (cellOK_of_wf hwf) d, rfl, rfl⟩
+  | var k =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2] at h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+      exact ⟨valid_var (cellOK_of_wf hwf) k, rfl, rfl⟩
+  | neg e ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₀, ps₀⟩, he, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+      exact ⟨valid_neg hV, hy, hw⟩
+  | add e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_add hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | sub e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_sub hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | mul e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_mul hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | div e₁ e₂ out ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨p, _hp, h⟩ := h
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      cases hi : M₂.inv p with
+      | none =>
+        rw [hi] at h
+        rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+      | some Mi =>
+        rw [hi] at h
+        rw [Option.map_some, Option.orElse_some] at h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+        refine ⟨?_, hy₁, hw₁⟩
+        exact valid_div hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂]) p hi
+  | sqrt e s₁ s₂ ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₀, ps₀⟩, he, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨p, _hp, h⟩ := h
+      obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+      cases hs : M₀.sqrt p with
+      | none =>
+        rw [hs] at h
+        rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+      | some M' =>
+        rw [hs] at h
+        rw [Option.map_some, Option.orElse_some] at h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+        obtain ⟨hV', hyy, hww⟩ := valid_sqrt hV p hs
+        refine ⟨hV', ?_, ?_⟩
+        · show M'.y = boxCenter box
+          exact hyy.trans hy
+        · show M'.w = boxW box
+          exact hww.trans hw
+  | abs e ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨I, hI, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+  | trans k e N out ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2] at h
+      by_cases hcl : e.isClosed = true
+      · rw [if_pos hcl] at h
+        rw [Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        exact ⟨valid_closed (cellOK_of_wf hwf) hcl hI, rfl, rfl⟩
+      · rw [if_neg hcl] at h
+        rw [Option.bind_eq_some_iff] at h
+        obtain ⟨⟨M₀, ps₀⟩, he, h⟩ := h
+        rw [Option.bind_eq_some_iff] at h
+        obtain ⟨p, _hp, h⟩ := h
+        obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+        cases ht : M₀.trans k N out p with
+        | none =>
+          rw [ht] at h
+          rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
+          obtain ⟨I, hI, hfinal⟩ := h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+          exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+        | some M' =>
+          rw [ht] at h
+          rw [Option.map_some, Option.orElse_some] at h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+          obtain ⟨hV', hyy, hww⟩ := valid_trans hV N out p ht
+          refine ⟨hV', ?_, ?_⟩
+          · show M'.y = boxCenter box
+            exact hyy.trans hy
+          · show M'.w = boxW box
+            exact hww.trans hw
+  | ite c t e _ihc iht ihe =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨C, ps₀⟩, hc, h⟩ := h
+      by_cases hneg : C.hi.isNeg = true
+      · rw [if_pos hneg] at h
+        obtain ⟨hVt, hyt, hwt⟩ := iht ps₀ ps' M hwf h
+        refine ⟨valid_iteHullD hVt (fun ρ hρ => evalIParams_mem hρ c ps ps₀ C hc)
+          hneg, hyt, hwt⟩
+      · rw [if_neg hneg] at h
+        by_cases hnn : C.lo.isNN = true
+        · rw [if_pos hnn] at h
+          obtain ⟨hVe, hye, hwe⟩ := ihe ps₀ ps' M hwf h
+          refine ⟨valid_iteHullD_else hVe
+            (fun ρ hρ => evalIParams_mem hρ c ps ps₀ C hc) hnn, hye, hwe⟩
+        · rw [if_neg hnn] at h
+          rw [Option.bind_eq_some_iff] at h
+          obtain ⟨⟨Mt, ps₁⟩, ht, h⟩ := h
+          rw [Option.map_eq_some_iff] at h
+          obtain ⟨⟨Me, ps₂⟩, he, hfinal⟩ := h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+          obtain ⟨hVt, hyt, hwt⟩ := iht ps₀ ps₁ Mt hwf ht
+          obtain ⟨hVe, hye, hwe⟩ := ihe ps₁ ps₂ Me hwf he
+          refine ⟨valid_iteHull2 c hVt hVe (hyt.trans hye.symm)
+            (hwt.trans hwe.symm), hyt, hwt⟩
+
+/-! ### Schema-v3 second-cut smoke tests: df-hull composite -/
+
+/-- On the guard-straddling toy box the D2 evaluator returns the df-hull
+composite of the two branch models. -/
+theorem exIteHull2_straddle_composite :
+    evalTMHullD2 exBoxIteHull exIteAbs TMParams.empty
+      = some (iteHullTM2 (varTM exBoxIteHull 0).neg (varTM exBoxIteHull 0),
+        TMParams.empty) := rfl
+
+/-- The df-hull composite's err on the toy: `max(0,0) + jump([0,0],[0,0])
+= 0` — vs the constant composite's full hull width `2`. -/
+theorem exIteHull2_err_zero :
+    (iteHullTM2 (varTM exBoxIteHull 0).neg (varTM exBoxIteHull 0)).err
+      = ⟨0, 0⟩ := rfl
+
+/-- The df-hull err dominates nothing extra but is strictly below the
+constant composite's hull width. -/
+theorem exIteHull2_err_tighter :
+    Dyadic.ble (iteHullTM2 (varTM exBoxIteHull 0).neg (varTM exBoxIteHull 0)).err
+      (iteHullTM exBoxIteHull (varTM exBoxIteHull 0).neg
+        (varTM exBoxIteHull 0)).err = true := by
+  decide
+
+/-- The produced df-hull composite is valid for pointwise `|x|`. -/
+theorem exIteHull2_valid (ps ps' : TMParams) (M : TaylorM 1)
+    (hE : evalTMHullD2 exBoxIteHull exIteAbs ps = some (M, ps')) :
+    M.Valid exBoxIteHull (fun ρ => if ρ 0 < 0 then -ρ 0 else ρ 0) :=
+  (evalTMHullD2_sound exIteAbs ps ps' M exBoxIteHull_wf hE).1
+
+/-- Decided-guard behavior is inherited verbatim (same single-branch arms,
+definitional). -/
+theorem exIteD2_single_branch :
+    evalTMHullD2 exBoxIteD exIteAbs TMParams.empty
+      = some (varTM exBoxIteD 0, TMParams.empty) := rfl
+
+/-- A failing guard still fails the D2 node (C-side `TM_FAIL(1)`). -/
+theorem exIteBadGuard_hullD2_none :
+    evalTMHullD2 exBoxIteHull exIteBadGuard TMParams.empty = none := rfl
+
+#print axioms DInterval.jumpBound_ge
+#print axioms DInterval.jumpBound_nonneg
+#print axioms valid_iteHull2
+#print axioms evalTMHullD2_sound
+#print axioms exIteHull2_straddle_composite
+#print axioms exIteHull2_err_zero
+#print axioms exIteHull2_err_tighter
+#print axioms exIteHull2_valid
+#print axioms exIteD2_single_branch
+#print axioms exIteBadGuard_hullD2_none
+
 /-! ## The checker -/
 
 /-- **Soundness of the Taylor lower bound**: `loBound` lower-bounds `f` at
@@ -2982,14 +3455,19 @@ theorem checkPosTMH_sound {n : ℕ} {e : IExpr n} {box : Fin n → DInterval}
 
 /-! ## M2b/schema-v3: the hull positivity checker (549 driver entry)
 
-Same shape as `checkPosTMH`, but on `evalTMHullD` (schema v3, first cut):
-`ite` nodes with a guard that is *sign-definite* on the leaf box evaluate
-the selected branch only — no hull synthesis, no width doubling, slopes kept
-— while a guard-straddling leaf falls back to the M2 double-branch constant
-hull composite.  Either way the guard decision comes from *certified*
-interval evaluation over the same leaf box, so the checker stays sound
-whatever the driver believed.  The 549 lane (`C5490182221`, `bb_arb
---ite-hull(2)`, leaves with `hit: "tm"`) closes through this single entry.
+Same shape as `checkPosTMHull`, but on the guard-decided hull evaluator —
+since the second cut this is `evalTMHullD2`: `ite` nodes with a guard that
+is *sign-definite* on the leaf box evaluate the selected branch only — no
+hull synthesis, no width doubling, slopes kept — while a guard-straddling
+leaf composes the two branch models into the df-hull composite (`iteHullTM2`
+: slope hull / value-range hull / `err = max err_b + jump`), replacing the
+M2 constant hull whose full-width `err` was the 20-leaf pilot's straddle
+NEG cause.  Either way the guard decision comes from *certified* interval
+evaluation over the same leaf box, so the checker stays sound whatever the
+driver believed.  The 549 lane (`C5490182221`, `bb_arb --ite-hull(2)`,
+leaves with `hit: "tm"`) closes through this single entry.  The old
+constant-composite behavior stays referable via `evalTMHullD` +
+`evalTMHullD_sound` (M2b first cut).
 
 **Driver-entry switch guide** (549 驱动入口切换): emit leaf certificates as
 
@@ -2999,27 +3477,25 @@ theorem leafK : checkPosTMHull expr boxK psK = true := by decide
 
 instead of the interval `checkPos`/`checkPosTM`/`checkPosTMH` forms.  `psK`
 carries per-leaf `sqrtCerts` (mantissa triples produced by the compiled-run
-tracing evaluator `evalTMHullFill` below, plus fixed recip granularities)
+tracing evaluator `evalTMHullFill2` below — the node-for-node mirror of
+`evalTMHullD2` — plus fixed recip granularities)
 and fixed `invCerts`/`transCerts` granularities; the `IExpr` keeps dummy
-`(0, 0)` sqrt slots and the atan rungs `(N, out)` as usual.  Note the
-Lean-side hull composite (straddle fallback) pays the full hull width as
-`err` (twice the C-side half-width), so the kernel check is stricter than
-the C-side `loBound > 0` there; guard-decided leaves have no such premium.
+`(0, 0)` sqrt slots and the atan rungs `(N, out)` as usual.
 Generated by `emit_lean.py --hull` (stage A driver → params → stage B
 certificate). -/
 
 /-- The hull checker (same shape as `checkPosTMH`): box well-formedness,
-successful guard-decided hull-model evaluation, and a strictly positive
+successful guard-decided df-hull-model evaluation, and a strictly positive
 Taylor lower bound. -/
 def checkPosTMHull {n : ℕ} (e : IExpr n) (box : Fin n → DInterval)
     (ps : TMParams) : Bool :=
   (List.finRange n).all (fun i => (box i).wf) &&
-    (match evalTMHullD box e ps with
+    (match evalTMHullD2 box e ps with
     | some (M, _) => (M.loBound box).isPos
     | none => false)
 
-/-- **Soundness of the hull checker** (`evalTMHullD_sound` + the Taylor lower
-bound lemma, the same two-line composition as `checkPosTMH_sound`). -/
+/-- **Soundness of the hull checker** (`evalTMHullD2_sound` + the Taylor
+lower bound lemma, the same two-line composition as `checkPosTMH_sound`). -/
 theorem checkPosTMHull_sound {n : ℕ} {e : IExpr n} {box : Fin n → DInterval}
     {ps : TMParams}
     (h : checkPosTMHull e box ps = true) (ρ : Fin n → ℝ) (hρ : boxMem box ρ) :
@@ -3028,13 +3504,13 @@ theorem checkPosTMHull_sound {n : ℕ} {e : IExpr n} {box : Fin n → DInterval}
   simp only [Bool.and_eq_true, List.all_eq_true] at h
   obtain ⟨hwfB, h⟩ := h
   have hwf : ∀ i, (box i).wf = true := fun i => hwfB i (List.mem_finRange i)
-  cases hE : evalTMHullD box e ps with
+  cases hE : evalTMHullD2 box e ps with
   | none => rw [hE] at h; simp at h
   | some Mp =>
     obtain ⟨M, ps'⟩ := Mp
     rw [hE] at h
     have hpos := Dyadic.toReal_pos_of_isPos h
-    obtain ⟨hV, _, _⟩ := evalTMHullD_sound e ps ps' M hwf hE
+    obtain ⟨hV, _, _⟩ := evalTMHullD2_sound e ps ps' M hwf hE
     exact lt_of_lt_of_le hpos (M.loBound_sound hV hρ)
 
 /-! ## M2b certificate production: the tracing hull evaluator
@@ -3049,10 +3525,11 @@ single-branch selection at `ite` nodes (guard certified by the mirror
 alike) the `Dyadic.sqrtI` mantissas are *computed* from the sub-model or
 sub-interval (`Dyadic.sqrtFloor`, exact) instead of being read from
 `ps.sqrtCerts`; the recip granularities still come from the template
-certificate.  Hence a PASS of the probe below predicts the kernel
-`checkPosTMHull` of the leaf whose `sqrtCerts` carry the reported mantissas:
-with the mantissas baked in, both evaluators visit identical sub-models and
-sub-intervals, and every composite is deterministic. -/
+certificate.  `evalTMHullFill2` is the same mirror for `evalTMHullD2`
+(df-hull straddle composite).  Hence a PASS of the probe below predicts the
+kernel `checkPosTMHull` of the leaf whose `sqrtCerts` carry the reported
+mantissas: with the mantissas baked in, both evaluators visit identical
+sub-models and sub-intervals, and every composite is deterministic. -/
 
 /-- Exact floor-root mantissa of a nonnegative dyadic (a local mirror of
 `Tools.FillParams`'s `Dyadic.sqrtFloor` — CertTM does not import the Tools
@@ -3189,12 +3666,85 @@ def evalTMHullFill {n : ℕ} (box : Fin n → DInterval) :
         (evalTMHullFill box e ps₁).map fun (Me, ps₂, l₂) =>
           (iteHullTM box Mt Me, ps₂, lg ++ l₁ ++ l₂)
 
+/-- Tracing mirror of `evalTMHullD2` (schema-v3 second cut): identical to
+`evalTMHullFill` except that the guard-straddling `ite` arm composes the
+df-hull composite (`iteHullTM2`), so the probe below predicts the kernel
+`checkPosTMHull` (which runs `evalTMHullD2`) leaf for leaf — including the
+df-hull `err` and the smaller `W` entering `sqrt`'s `sc` mantissa on
+sub-models below a straddle composite. -/
+def evalTMHullFill2 {n : ℕ} (box : Fin n → DInterval) :
+    IExpr n → TMParams → Option (TaylorM n × TMParams × List (Int × Int × Int))
+  | .const d, ps => some (constTM box d, ps, [])
+  | .var k, ps => some (varTM box k, ps, [])
+  | .neg e, ps =>
+      (evalTMHullFill2 box e ps).map fun (M, ps', l) => (M.neg, ps', l)
+  | .add e₁ e₂, ps =>
+      (evalTMHullFill2 box e₁ ps).bind fun (M₁, ps₁, l₁) =>
+      (evalTMHullFill2 box e₂ ps₁).map fun (M₂, ps₂, l₂) =>
+        (M₁.add M₂, ps₂, l₁ ++ l₂)
+  | .sub e₁ e₂, ps =>
+      (evalTMHullFill2 box e₁ ps).bind fun (M₁, ps₁, l₁) =>
+      (evalTMHullFill2 box e₂ ps₁).map fun (M₂, ps₂, l₂) =>
+        (M₁.sub M₂, ps₂, l₁ ++ l₂)
+  | .mul e₁ e₂, ps =>
+      (evalTMHullFill2 box e₁ ps).bind fun (M₁, ps₁, l₁) =>
+      (evalTMHullFill2 box e₂ ps₁).map fun (M₂, ps₂, l₂) =>
+        (M₁.mul M₂, ps₂, l₁ ++ l₂)
+  | .div e₁ e₂ out, ps =>
+      (evalTMHullFill2 box e₁ ps).bind fun (M₁, ps₁, l₁) =>
+      (evalTMHullFill2 box e₂ ps₁).bind fun (M₂, ps₂, l₂) =>
+      ps₂.invCerts.head?.bind fun p =>
+      ((M₂.inv p).map fun Mi =>
+          (M₁.mul Mi, ⟨ps₂.sqrtCerts, ps₂.invCerts.tail, ps₂.transCerts⟩,
+            l₁ ++ l₂)).orElse
+        (fun _ => ((IExpr.div e₁ e₂ out).eval box).map fun I =>
+          (fallbackTM box I, ⟨ps₂.sqrtCerts, ps₂.invCerts.tail, ps₂.transCerts⟩,
+            l₁ ++ l₂))
+  | .sqrt e s₁ s₂, ps =>
+      (evalTMHullFill2 box e ps).bind fun (M₀, ps₀, l) =>
+      ps₀.sqrtCerts.head?.bind fun t =>
+      ((if (M₀.fB.lo.add (-M₀.W)).isPos = true then
+          let slo := sqrtMantissa M₀.fB.lo
+          let shi := sqrtMantissa M₀.fB.hi
+          let sc := sqrtMantissa (M₀.fB.lo.add (-M₀.W))
+          (M₀.sqrt ⟨slo, shi, sc, t.o1, t.o2⟩).map fun M' =>
+            (M', ⟨ps₀.sqrtCerts.tail, ps₀.invCerts, ps₀.transCerts⟩,
+              l ++ [(slo, shi, sc)])
+        else none).orElse
+        (fun _ => ((IExpr.sqrt e s₁ s₂).eval box).map fun I =>
+          (fallbackTM box I, ⟨ps₀.sqrtCerts.tail, ps₀.invCerts, ps₀.transCerts⟩, l)))
+  | .trans k e N out, ps =>
+      if e.isClosed then
+        ((IExpr.trans k e N out).eval box).map fun I => (closedTM box I, ps, [])
+      else
+        (evalTMHullFill2 box e ps).bind fun (M₀, ps₀, l) =>
+        ps₀.transCerts.head?.bind fun p =>
+        ((M₀.trans k N out p).map fun M' =>
+            (M', ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩, l)).orElse
+          (fun _ => ((IExpr.trans k e N out).eval box).map fun I =>
+            (fallbackTM box I,
+              ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩, l))
+  | .abs e, ps =>
+      ((IExpr.abs e).eval box).map fun I => (fallbackTM box I, ps, [])
+  | .ite c t e, ps =>
+      (evalIParamsFill box c ps).bind fun (C, ps₀, lg) =>
+      if C.hi.isNeg then
+        (evalTMHullFill2 box t ps₀).map fun (M, ps', l) => (M, ps', lg ++ l)
+      else if C.lo.isNN then
+        (evalTMHullFill2 box e ps₀).map fun (M, ps', l) => (M, ps', lg ++ l)
+      else
+        (evalTMHullFill2 box t ps₀).bind fun (Mt, ps₁, l₁) =>
+        (evalTMHullFill2 box e ps₁).map fun (Me, ps₂, l₂) =>
+          (iteHullTM2 Mt Me, ps₂, lg ++ l₁ ++ l₂)
+
 /-- One compiled-run leaf probe: PASS flag, the Taylor lower bound
 (mantissa, exponent) for margin diagnostics, and the mantissa triples to
-bake into the kernel-side `TMParams.sqrtCerts`. -/
+bake into the kernel-side `TMParams.sqrtCerts`.  Runs the `evalTMHullD2`
+mirror, so the prediction matches the kernel `checkPosTMHull` (df-hull
+straddle composite included). -/
 def tmHullLeafProbe {n : ℕ} (e : IExpr n) (box : Fin n → DInterval)
     (ps : TMParams) : Option (Bool × Int × Int × List (Int × Int × Int)) :=
-  (evalTMHullFill box e ps).map fun (M, _, l) =>
+  (evalTMHullFill2 box e ps).map fun (M, _, l) =>
     let lb := M.loBound box
     (lb.isPos, lb.m, lb.e, l)
 
@@ -3214,13 +3764,34 @@ def exIteHullChk : IExpr 1 :=
 theorem exBoxHullChk_wf : ∀ i, (exBoxHullChk i).wf = true := fun i => by
   fin_cases i; decide
 
-/-- The hull checker closes the straddling leaf (kernel `decide`). -/
+/-- The hull checker closes the straddling leaf (kernel `decide`) — under
+the df-hull checker switch the composite is `iteHullTM2`, with strictly
+smaller err than the M2 constant hull. -/
 theorem exIteHullChk_checkPos :
     checkPosTMHull exIteHullChk exBoxHullChk TMParams.empty = true := by
   decide
 
+/-- The D2 straddle composite is the df-hull of the two branch models
+(algebraic-branch leaf shape in miniature). -/
+theorem exIteHullChk_D2_composite :
+    evalTMHullD2 exBoxHullChk exIteHullChk TMParams.empty
+      = some (iteHullTM2 ((varTM exBoxHullChk 0).mul (constTM exBoxHullChk ⟨2, 0⟩))
+          ((varTM exBoxHullChk 0).add (constTM exBoxHullChk ⟨2, 0⟩)),
+        TMParams.empty) := rfl
+
+/-- The df-hull err is strictly below the constant composite's hull width. -/
+theorem exIteHullChk_err_tighter :
+    Dyadic.ble (iteHullTM2 ((varTM exBoxHullChk 0).mul (constTM exBoxHullChk ⟨2, 0⟩))
+        ((varTM exBoxHullChk 0).add (constTM exBoxHullChk ⟨2, 0⟩))).err
+      (iteHullTM exBoxHullChk
+        ((varTM exBoxHullChk 0).mul (constTM exBoxHullChk ⟨2, 0⟩))
+        ((varTM exBoxHullChk 0).add (constTM exBoxHullChk ⟨2, 0⟩))).err = true := by
+  decide
+
 #print axioms checkPosTMHull_sound
 #print axioms exIteHullChk_checkPos
+#print axioms exIteHullChk_D2_composite
+#print axioms exIteHullChk_err_tighter
 
 
 end Kepler.Interval
