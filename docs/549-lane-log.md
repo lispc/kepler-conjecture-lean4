@@ -269,11 +269,34 @@ rung 的余量诊断信息。M5（≤10 core·h）需砍求值体积 1-2 个量�
 - 剩余差距全在：①div/sqrt 分支余项（Kimi 线）②求值体积（去重/瘦身）
   ③叶数折叠（mono/convex L1 未上）
 
-## 下一步（五更）
+### 余项压薄（--tm-tight）+ 证书表去重 MVP（`7d1ca613`）
 
-1. div/sqrt 分支余项压薄（ε_e 2.23→<1.1）——Kimi closed-trans/chop 线
-   精确靶子，4 straddle 叶翻正即 100% 可验证
-2. AST 去重（CertTM let/证书表节点）+ 证书瘦身——decide 3-5×
-3. mono/convex（L1）叶数折叠——下一倍数级
-4. native_decide 例外扩围（DECISIONS 新条目）——人工批准项
-5. Kimi 同步包全量更新
+**余项压薄**：解剖定位——根余项 100% 在 T3 atan/div 支，肥在 atan Mg''
+全局帽（真 sup 0.6495 vs 码内 1）；Schwarz 候选形 = sound no-op（否证链
+归档）。atan sup 收紧后：4 straddle 叶 ε_e −38~−41% 全 CLOSED；
+**549 全量 281,894 → 212,798 叶（−24.5%）**。lane log 的 ε_e=2.23 系
+证书口径，C 侧活体 0.45-0.73——<1.1 靶子 C 侧已独立解决有余。
+Lean 翻正预估：err 消费宽度 k=1.5 → 4/4；k=2 → 3/4（Leaf5 刀刃叶）。
+双回归逐字节吻合。
+
+**证书表去重 MVP**：`LExpr n k` 方案落地（否决 letD：IExpr 在 Expr.lean
++11 求值器爆炸半径）——旧求值器一行未动，全链 soundness + axioms 干净。
+**诚实口径：折叠加速仅 1.1-1.4×**（证书免费子树非成本大头）；成本在
+证书消耗链（10^90 级 fB 上 atan 链，折叠需重产 params）——
+`tmHullLeafProbeL` 已就位，下一轮 stage-A-let 才能吃到真收益。
+
+### 阶段位置（vs 原版 0.48 核时）
+
+tight 后全量叶数 212,798；native_decide ~3.5s/叶 → **~207 core·h**
+（基线 10,800 的 **52×**；原版的 ~430×）。剩余三杠杆：
+①div/sqrt 残余 6,713（chop/closed-trans，Kimi 线）②证书消耗链去重
+（stage-A-let）③mono/convex 叶数折叠（L1）。
+
+## 下一步（六更）
+
+1. stage-A-let（证书含消耗子树折叠，params 重产）——decide 真收益实验
+2. mono/convex（L1）叶数折叠——设计先行（C 侧检测已有 dfB；内核
+   faceLeaf 规则是 M1 核心数学）
+3. div/sqrt 6,713 残余（Kimi 线，接口不变）
+4. native_decide 例外扩围（DECISIONS 新条目）——待批准
+5. Kimi 同步包全量更新（含 tight 后叶数/通量修订）
