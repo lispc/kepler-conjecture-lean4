@@ -36,26 +36,59 @@ Subcommands:
        for the known-criteria PASS/FAIL cross-check and prints the group
        table.  NEG leaves are kernel/compiled-run AGREEMENT checks, not
        certificates (same honesty note as the 20-leaf pilot).
-   stageb-let <case.json> <speed.lean> <out.lean>
-          [--leaves=3] [--min-size=12] [--max-lets=6] [--min-occ=2]
-          [--only=both|base|let] [--tactic=decide]
-       AST-dedup pilot (CertTM `LExpr` certificate-table route): fold the
-       duplicated certificate-free subtrees of the case expression into a
-       `Fin k → IExpr n` table + `LExpr` body with `.ref` slots, and emit
-       (a) a baseline control leaf group on the ORIGINAL expression via
-       `checkPosTMHull`, and (b) the let-table leaf group via
-       `checkPosTMHullL` (CertTM evalTMHullD2L).  Boxes/TMParams are
-       harvested from the existing `C549HullSpeed.lean`-style module
-       (<speed.lean>, `def <mod>Box<j>` / `def <mod>P<j>` / leaf verdicts).
-       Selection contract: only subtrees with no sqrt/div/trans/ite/abs
-       nodes are folded, so the kernel `ps` certificate queue order is
-       bit-identical to the unfolded tree and the harvested TMParams stay
-       valid verbatim (no stage-A re-run needed).  `--only` gates which
-       theorem groups are emitted so baseline vs let decide times can be
-       measured in separate builds.
-"""
+    stageb-let <case.json> <speed.lean> <out.lean>
+           [--leaves=3] [--min-size=12] [--max-lets=6] [--min-occ=2]
+           [--only=both|base|let] [--tactic=decide]
+        AST-dedup pilot (CertTM `LExpr` certificate-table route): fold the
+        duplicated certificate-free subtrees of the case expression into a
+        `Fin k → IExpr n` table + `LExpr` body with `.ref` slots, and emit
+        (a) a baseline control leaf group on the ORIGINAL expression via
+        `checkPosTMHull`, and (b) the let-table leaf group via
+        `checkPosTMHullL` (CertTM evalTMHullD2L).  Boxes/TMParams are
+        harvested from the existing `C549HullSpeed.lean`-style module
+        (<speed.lean>, `def <mod>Box<j>` / `def <mod>P<j>` / leaf verdicts).
+        Selection contract: only subtrees with no sqrt/div/trans/ite/abs
+        nodes are folded, so the kernel `ps` certificate queue order is
+        bit-identical to the unfolded tree and the harvested TMParams stay
+        valid verbatim (no stage-A re-run needed).  `--only` gates which
+        theorem groups are emitted so baseline vs let decide times can be
+        measured in separate builds.
+    stagea-let <case.json> <speed.lean> <out_driver.lean>
+           [--leaves=3] [--min-size=12] [--max-lets=6] [--min-occ=2]
+           [--gran=-80] [--rung=128] [--rung-out=-80]
+        Stage-A-let probe driver for the FULL fold (certificate-consuming
+        subtrees folded too — same planner as stageb-let with the
+        certificate-free gate lifted).  Emits a compiled-run driver
+        evaluating `tmHullLeafProbeL` per leaf (CertTM evalTMHullFill2L:
+        table entries first in index order, then the body, guard-first)
+        printing the RUNG header then per-leaf
+        `<i> PASS|NEG <lo_m> <lo_e> <slo shi sc>...` lines — the mantissa
+        queue in the NEW consumption order.  Run with
+        `lake env lean --run` from the `lean/` package root; output is a
+        stageb-let2 params file.  A manifest (fold stats, harvest
+        provenance, probe command) is written next to the driver.
+    stageb-let2 <case.json> <speed.lean> <params.txt> <out.lean>
+           [--leaves=3] [--min-size=12] [--max-lets=6] [--min-occ=2]
+           [--tactic=decide] [--split-dir=DIR]
+        Kernel pilot for the FULL fold: re-plans the identical fold
+        (deterministic given the flags), joins the stagea-let probe
+        params per leaf, and emits the combined module (per-leaf
+        `checkPosTMHullL <mod>Tbl <mod>Body <mod>Box<j> <mod>P<j> = true`
+        decide theorems + `#print axioms`) plus a manifest.  With
+        `--split-dir=DIR` it additionally writes per-leaf single-theorem
+        timing modules for all three arms — base (unfolded
+        `checkPosTMHull`), free (certificate-free fold, MVP params),
+        full (full fold, probe params) — for isolated `lake build` /
+        `lake env lean` timing.  Architectural note: folding
+        certificate-consuming subtrees permutes the `ps` queue (entries
+        evaluate first), so the C-side certificates no longer line up
+        positionally — the params of the full-fold route can only be
+        produced by the Lean compiled probe (two-layer pipeline: C emits
+        boxes, Lean re-produces params).
+ """
 import json
 import mmap
+import os
 import re
 import sys
 import time
@@ -176,42 +209,55 @@ def contains_ref(x, taken_ids):
                if isinstance(k, N))
 
 
-def cmd_stageb_let(case_path, speed_path, out_path, nleaves, min_size,
-                   max_lets, min_occ, only, tactic):
-    """AST-dedup pilot emission (see module docstring)."""
-    t0 = time.time()
-    if only not in ("both", "base", "let"):
-        die(f"unknown --only {only!r} (both|base|let)")
-    case = json.load(open(case_path))
-    n = len(case["vars"])
-    if n != 6:
-        die(f"stageb-let MVP assumes 6 vars, case has {n}")
-    expr, nsqrt, ndiv, ntrans = hull_expr(case, 128, -80)
+def plan_fold(case, min_size, max_lets, min_occ, cert_free_only):
+    """Shared fold planner for the stageb-let family.
 
+    Collects duplicated subtree texts at replaceable (non-guard)
+    positions of the emitted hull-route expression, scores candidates by
+    `node_cost * occurrences`, and greedily takes a profit-ordered,
+    span-disjoint selection bounded by `max_lets` (identical planning in
+    stagea-let and stageb-let2: the flags fully determine the fold).
+
+    With `cert_free_only` (stageb-let MVP contract) only subtrees whose
+    evaluation consumes no TMParams certificate are foldable, so the
+    harvested params stay valid verbatim.  With the gate lifted (full
+    fold) sqrt/div/trans-bearing duplicates enter the table too — the ps
+    consumption ORDER then changes (entries evaluate first, index order,
+    before any body node), so params must be re-produced per leaf by the
+    stagea-let compiled probe (`tmHullLeafProbeL`); the C-side
+    certificate correspondence is broken positionally (architecture
+    note in the module docstring).
+
+    Returns a dict: expr / nsqrt / ndiv / ntrans / total_nodes / taken
+    [(text, kept occurrences)] / body / table_txt / k / n_ref /
+    slot_desc."""
+    expr, nsqrt, ndiv, ntrans = hull_expr(case, 128, -80)
     root = parse_sexpr(expr)
     mark_guards(root)
     total_nodes = node_size(root)
 
     # collect subtree occurrences at replaceable (non-guard) positions;
-    # candidates must be cert-free (see cert_free) — poly ops plus closed
-    # trans constants (the 4x-duplicated rung-2048 `arctan(1)`)
+    # with cert_free_only the candidates must be cert-free (see
+    # cert_free) — poly ops plus closed trans constants; otherwise
+    # certificate-consuming duplicates (div/sqrt/trans chains) fold too
     occ = {}                                    # text -> [N]
     stack = [root]
     while stack:
         x = stack.pop()
-        if not x.guard and x.op in (".neg", ".add", ".sub", ".mul", ".trans"):
+        if not x.guard and x.op in (".neg", ".add", ".sub", ".mul",
+                                    ".trans", ".div", ".sqrt"):
             occ.setdefault(x.text(expr), []).append(x)
         for kk in x.kids:
             if isinstance(kk, N):
                 stack.append(kk)
 
-    # candidates: cert-free, occ >= min_occ, size >= min_size; keep a
+    # candidates: (cert-free), occ >= min_occ, size >= min_size; keep a
     # maximal non-overlapping occurrence set per candidate (size desc)
     cands = []
     for txt, xs in occ.items():
         if len(xs) < min_occ or node_cost(xs[0]) < min_size:
             continue
-        if not cert_free(xs[0]):
+        if cert_free_only and not cert_free(xs[0]):
             continue
         kept = []
         for x in sorted(xs, key=lambda x: -(x.end - x.start)):
@@ -236,44 +282,53 @@ def cmd_stageb_let(case_path, speed_path, out_path, nleaves, min_size,
         consumed.extend((x.start, x.end) for x in free)
     if not taken:
         die("no duplicated cert-free subtrees found — nothing to fold")
-    taken_ids = {x.nid for _, free in taken for x in free}
-    idx = {txt: i for i, (txt, _) in enumerate(taken)}
+    body = emit_fold_body(root, expr, {x.nid for _, free in taken
+                                       for x in free},
+                          {txt: i for i, (txt, _) in enumerate(taken)})
+    table_txt = ", ".join(t for t, _ in taken)
+    k = len(taken)
+    n_ref = body.count("(.ref ")
+    slot_desc = ", ".join(f"#{i}: {len(f)} refs x {t.count('(.') + 1} nodes"
+                          for i, (t, f) in enumerate(taken))
+    return dict(expr=expr, nsqrt=nsqrt, ndiv=ndiv, ntrans=ntrans,
+                total_nodes=total_nodes, taken=taken, body=body,
+                table_txt=table_txt, k=k, n_ref=n_ref, slot_desc=slot_desc)
 
-    def emit_body(x):
-        """LExpr text for a node at a TM (non-guard) position."""
-        def tok(kk):
-            return kk.text(expr) if isinstance(kk, N) else kk
+
+def emit_fold_body(root, expr, taken_ids, idx):
+    """LExpr body text for the planned fold (see plan_fold)."""
+    def tok(kk):
+        return kk.text(expr) if isinstance(kk, N) else kk
+
+    def rec(x):
         if x.nid in taken_ids:
             return f"(.ref ⟨{idx[x.text(expr)]}, by decide⟩)"
         if not contains_ref(x, taken_ids):
             return f"(.plain {x.text(expr)})"
         op = x.op
         if op in (".add", ".sub", ".mul"):
-            return f"({op} {emit_body(x.kids[1])} {emit_body(x.kids[2])})"
+            return f"({op} {rec(x.kids[1])} {rec(x.kids[2])})"
         if op == ".neg":
-            return f"(.neg {emit_body(x.kids[1])})"
+            return f"(.neg {rec(x.kids[1])})"
         if op == ".div":
-            return (f"(.div {emit_body(x.kids[1])} {emit_body(x.kids[2])} "
+            return (f"(.div {rec(x.kids[1])} {rec(x.kids[2])} "
                     f"{tok(x.kids[3])})")
         if op == ".sqrt":
-            return (f"(.sqrt {emit_body(x.kids[1])} {tok(x.kids[2])} "
+            return (f"(.sqrt {rec(x.kids[1])} {tok(x.kids[2])} "
                     f"{tok(x.kids[3])})")
         if op == ".trans":
-            return (f"(.trans {tok(x.kids[1])} {emit_body(x.kids[2])} "
+            return (f"(.trans {tok(x.kids[1])} {rec(x.kids[2])} "
                     f"{tok(x.kids[3])} {tok(x.kids[4])})")
         if op == ".ite":
             return (f"(.ite {x.kids[1].text(expr)} "
-                    f"{emit_body(x.kids[2])} {emit_body(x.kids[3])})")
-        die(f"emit_body: unsupported op {op} on a ref-bearing path")
+                    f"{rec(x.kids[2])} {rec(x.kids[3])})")
+        die(f"emit_fold_body: unsupported op {op} on a ref-bearing path")
+    return rec(root)
 
-    body = emit_body(root)
-    table_txt = ", ".join(t for t, _ in taken)
-    k = len(taken)
-    n_ref = body.count("(.ref ")
-    slot_desc = ", ".join(f"#{i}: {len(f)} refs x {t.count('(.') + 1} nodes"
-                          for i, (t, f) in enumerate(taken))
 
-    # harvest boxes/params/verdicts from the existing speed module
+def harvest_speed(speed_path):
+    """Boxes / TMParams / verdicts harvested from a C549Hull*-style speed
+    module (the stageb-let-family provenance contract)."""
     speed = open(speed_path).read()
     boxes = {}
     for m in re.finditer(
@@ -289,6 +344,24 @@ def cmd_stageb_let(case_path, speed_path, out_path, nleaves, min_size,
         verdicts[int(m.group(1))] = (m.group(2), m.group(3))
     if not boxes or not params or not verdicts:
         die(f"could not harvest Box/P/verdict defs from {speed_path}")
+    return boxes, params, verdicts
+
+
+def cmd_stageb_let(case_path, speed_path, out_path, nleaves, min_size,
+                   max_lets, min_occ, only, tactic):
+    """AST-dedup pilot emission (see module docstring)."""
+    t0 = time.time()
+    if only not in ("both", "base", "let"):
+        die(f"unknown --only {only!r} (both|base|let)")
+    case = json.load(open(case_path))
+    n = len(case["vars"])
+    if n != 6:
+        die(f"stageb-let MVP assumes 6 vars, case has {n}")
+    plan = plan_fold(case, min_size, max_lets, min_occ, cert_free_only=True)
+    expr, total_nodes = plan["expr"], plan["total_nodes"]
+
+    # harvest boxes/params/verdicts from the existing speed module
+    boxes, params, verdicts = harvest_speed(speed_path)
 
     mod = "C549HullLet"
     parts = []
@@ -319,10 +392,10 @@ def cmd_stageb_let(case_path, speed_path, out_path, nleaves, min_size,
 
     hdr_extra = (
         f" — AST DEDUP MVP (CertTM LExpr certificate table):\n"
-        f"  table slots {k} ({slot_desc}), body refs {n_ref},\n"
-        f"  unfolded {total_nodes} nodes; certificate-free fold so the\n"
-        f"  harvested TMParams are consumed in the original order;\n"
-        f"  baseline/let groups gated by --only for isolated timing.")
+        f"  table slots {plan['k']} ({plan['slot_desc']}), body refs "
+        f"{plan['n_ref']},\n  unfolded {total_nodes} nodes; certificate-free "
+        f"fold so the\n  harvested TMParams are consumed in the original "
+        f"order;\n  baseline/let groups gated by --only for isolated timing.")
     axioms_line = (f"\n#print axioms {mod}Leaf1\n"
                    if only in ("both", "let") else "")
     text = (
@@ -340,20 +413,331 @@ def cmd_stageb_let(case_path, speed_path, out_path, nleaves, min_size,
         f"def {mod}BaseExpr : IExpr {n} :=\n  {expr}\n\n"
         f"/-- The certificate table (duplicated certificate-free subtrees,\n"
         f"first-occurrence order; entries consume no certificates). -/\n"
-        f"def {mod}Tbl : Fin {k} → IExpr {n} := ![{table_txt}]\n\n"
+        f"def {mod}Tbl : Fin {plan['k']} → IExpr {n} := "
+        f"![{plan['table_txt']}]\n\n"
         f"/-- The folded body (shared slots referenced via `.ref`; the\n"
         f"ite guard position stays a plain ref-free `IExpr`). -/\n"
-        f"def {mod}Body : LExpr {n} {k} :=\n  {body}\n\n"
+        f"def {mod}Body : LExpr {n} {plan['k']} :=\n  {plan['body']}\n\n"
         + "\n".join(parts) +
         axioms_line +
         f"\nend Kepler.Interval.Cases\n")
     open(out_path, "w").write(text)
     print(f"[stageb-let] wrote {out_path}  ({time.time() - t0:.1f}s)")
-    print(f"[stageb-let] unfolded nodes {total_nodes}  table slots {k}  "
-          f"body refs {n_ref}")
-    for i, (t, f) in enumerate(taken):
+    print(f"[stageb-let] unfolded nodes {total_nodes}  table slots "
+          f"{plan['k']}  body refs {plan['n_ref']}")
+    for i, (t, f) in enumerate(plan["taken"]):
         print(f"[stageb-let]   slot {i}: {len(f)} refs x "
               f"{t.count('(.') + 1} nodes  head {t[:60]}")
+
+
+def params_lit(rung, ndiv, ntrans, trips):
+    """TMParams literal from the RUNG header granularities plus one leaf's
+    stage-A(-let) mantissa-triple queue (sqrt certs carry the mantissas;
+    inv/trans certs are granularity records, order-insensitive)."""
+    npar, out_e, g0, g1, g2, g3, g4, g5, g6 = rung
+    sq = ", ".join(f"⟨{a}, {b}, {c}, ({g3}), ({g4})⟩" for a, b, c in trips)
+    iv = ", ".join(f"⟨({g0}), ({g1}), ({g2})⟩" for _ in range(ndiv))
+    tv = ", ".join(f"⟨({g5}), ({g6})⟩" for _ in range(ntrans))
+    return f"⟨[{sq}], [{iv}], [{tv}]⟩"
+
+
+def cmd_stagea_let(case_path, speed_path, out_path, nleaves, min_size,
+                   max_lets, min_occ, gran, rung_n, rung_out):
+    """Stage-A-let probe driver emission for the FULL fold (see module
+    docstring): compiled-run `tmHullLeafProbeL` per leaf, producing the
+    mantissa queue in the new (entries-first) ps consumption order."""
+    t0 = time.time()
+    case = json.load(open(case_path))
+    n = len(case["vars"])
+    if n != 6:
+        die(f"stagea-let MVP assumes 6 vars, case has {n}")
+    plan = plan_fold(case, min_size, max_lets, min_occ, cert_free_only=False)
+    boxes, params, verdicts = harvest_speed(speed_path)
+    leaves = [j for j in sorted(verdicts) if j <= nleaves]
+    if len(leaves) != nleaves:
+        die(f"speed module covers verdict leaves {sorted(verdicts)[:3]}..., "
+            f"need 1..{nleaves}")
+    nsqrt, ndiv, ntrans = plan["nsqrt"], plan["ndiv"], plan["ntrans"]
+    if nsqrt == 0:
+        die("no sqrt nodes — mantissa params would be empty (unexpected "
+            "for the 549 hull route)")
+    g = f"({gran})"
+    mod = "C549HullLet2A"
+    boxes_lean = ",\n    ".join(
+        f"({boxes[j]} : Fin {n} → DInterval)" for j in leaves)
+    manifest = {
+        "schema": "stagea-let",
+        "case": case["id"],
+        "driver": out_path,
+        "params_out": out_path.rsplit(".lean", 1)[0] + ".params.txt",
+        "probe_cmd": f"lake env lean --run {out_path} > {out_path.rsplit('.lean', 1)[0] + '.params.txt'}",
+        "fold": {"min_size": min_size, "max_lets": max_lets,
+                 "min_occ": min_occ, "cert_free_only": False,
+                 "slots": plan["k"], "body_refs": plan["n_ref"],
+                 "unfolded_nodes": plan["total_nodes"],
+                 "slot_desc": plan["slot_desc"]},
+        "counts": {"sqrt": nsqrt, "div": ndiv, "trans": ntrans},
+        "template": {"rung_n": rung_n, "rung_out": rung_out, "gran": gran},
+        "ps_contract": "entries first in index order, then body, "
+                       "guard-first; mantissa triples report that order",
+        "leaves": [{"j": j, "speed_verdict": verdicts[j][0],
+                    "params_source": f"{speed_path}:P{j}"} for j in leaves],
+        "harvest": speed_path,
+        "generated": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "emit_elapsed_s": round(time.time() - t0, 1),
+    }
+    # only HDR-ish f-strings; the probe loop keeps its Lean braces literal
+    text = (
+        f"/-\n"
+        f"  549 stage-A-let probe driver (auto-generated by\n"
+        f"  pipeline/interval/emit_hull_pilot.py stagea-let).\n"
+        f"  case: {case['id']}  (orig_op: {case.get('orig_op')},\n"
+        f"  vars: {case['vars']}) — FULL FOLD (certificate-consuming\n"
+        f"  subtrees folded): table slots {plan['k']} "
+        f"({plan['slot_desc']}),\n  body refs {plan['n_ref']}, unfolded "
+        f"{plan['total_nodes']} nodes.\n"
+        f"  ps contract: table entries evaluate first in index order,\n"
+        f"  then the body, guard-first at ite nodes — exactly the order\n"
+        f"  tmHullLeafProbeL reports (mantissa triples; inv/trans certs\n"
+        f"  are granularity records).  These params are the ONLY valid\n"
+        f"  ones for the folded route: the C-side certificate order is\n"
+        f"  broken positionally by the fold (two-layer pipeline: C emits\n"
+        f"  boxes, Lean re-produces params).\n"
+        f"  Run from lean/: lake env lean --run {out_path} > params.txt\n"
+        f"-/\n"
+        f"import Kepler.Interval.CertTM\n\n"
+        f"set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
+        f"open Kepler.Interval\n\n"
+        f"/-- Local default (for `Array.get!` in the probe loop only). -/\n"
+        f"instance : Inhabited DInterval := ⟨⟨⟨0, 0⟩, ⟨0, 0⟩⟩⟩\n\n"
+        f"/-- The certificate table (FULL fold: certificate-consuming\n"
+        f"duplicates included; entries consume ps certs first). -/\n"
+        f"def {mod}Tbl : Fin {plan['k']} → IExpr {n} := "
+        f"![{plan['table_txt']}]\n\n"
+        f"/-- The folded body (shared slots referenced via `.ref`; the\n"
+        f"ite guard positions stay plain ref-free `IExpr`). -/\n"
+        f"def {mod}Body : LExpr {n} {plan['k']} :=\n  {plan['body']}\n\n"
+        f"/-- Template TMParams: dummy mantissas, pilot recip granularity\n"
+        f"{gran} everywhere. -/\n"
+        f"def {mod}Ps : TMParams :=\n"
+        f"  ⟨List.replicate {nsqrt} ⟨0, 0, 0, {g}, {g}⟩,\n"
+        f"   List.replicate {ndiv} ⟨{g}, {g}, {g}⟩,\n"
+        f"   List.replicate {ntrans} ⟨{g}, {g}⟩⟩\n\n"
+        f"/-- The {nleaves} harvested speed-lab leaf boxes. -/\n"
+        f"def {mod}Boxes : Array (Fin {n} → DInterval) :=\n  #["
+        + boxes_lean + "]\n\n"
+        "def main : List String → IO UInt32 := fun _ => do\n"
+        f"  IO.println \"RUNG {rung_n} {rung_out} {g} {g} {g} {g} {g} {g} {g}\"\n"
+        f"  for i in [0:{mod}Boxes.size] do\n"
+        f"    let t0 ← IO.monoMsNow\n"
+        f"    match tmHullLeafProbeL {mod}Tbl {mod}Body {mod}Boxes[i]! {mod}Ps with\n"
+        "    | some (p, m, e, l) =>\n"
+        "        let ms ← IO.monoMsNow\n"
+        "        let v := if p then \"PASS\" else \"NEG\"\n"
+        "        let trip := String.intercalate \" \"\n"
+        "          (l.map fun t => s!\"{t.1} {t.2.1} {t.2.2}\")\n"
+        "        IO.eprintln s!\"probe {i}: {ms - t0} ms\"\n"
+        "        IO.println s!\"{i} {v} {m} {e} {trip}\"\n"
+        "    | none =>\n"
+        "        let ms ← IO.monoMsNow\n"
+        "        IO.eprintln s!\"probe {i}: {ms - t0} ms FAIL\"\n"
+        "        IO.println s!\"{i} FAIL\"\n"
+        "  return 0\n")
+    open(out_path, "w").write(text)
+    json.dump(manifest, open(out_path.rsplit(".lean", 1)[0] +
+                             ".manifest.json", "w"), indent=1)
+    print(f"[stagea-let] wrote {out_path}  ({time.time() - t0:.1f}s)  "
+          f"sqrt {nsqrt}  div {ndiv}  trans {ntrans}")
+    print(f"[stagea-let] FULL fold: slots {plan['k']}  body refs "
+          f"{plan['n_ref']}  unfolded {plan['total_nodes']} nodes")
+    for i, (t, f) in enumerate(plan["taken"]):
+        cf = "cert-free" if cert_free(parse_sexpr(t)) else "cert-consuming"
+        print(f"[stagea-let]   slot {i}: {len(f)} refs x "
+              f"{t.count('(.') + 1} nodes  {cf}  head {t[:52]}")
+    print(f"[stagea-let] run from lean/: lake env lean --run {out_path} "
+          f"> {manifest['params_out']}")
+
+
+def cmd_stageb_let2(case_path, speed_path, params_path, out_path, nleaves,
+                    min_size, max_lets, min_occ, tactic, split_dir):
+    """Kernel pilot for the FULL fold (see module docstring): identical
+    fold re-planned, stage-A-let probe params joined per leaf, combined
+    `checkPosTMHullL` decide module + manifest, optional per-leaf timing
+    modules for the base/free/full three-way comparison."""
+    t0 = time.time()
+    if tactic not in ("decide", "native_decide"):
+        die(f"unknown tactic {tactic!r} (decide|native_decide)")
+    case = json.load(open(case_path))
+    n = len(case["vars"])
+    if n != 6:
+        die(f"stageb-let2 MVP assumes 6 vars, case has {n}")
+    plan = plan_fold(case, min_size, max_lets, min_occ, cert_free_only=False)
+    plan_free = plan_fold(case, min_size, max_lets, min_occ,
+                          cert_free_only=True)
+    boxes, params, verdicts = harvest_speed(speed_path)
+    rung, probe = parse_hull_params(params_path, plan["nsqrt"])
+    leaves = [j for j in sorted(verdicts) if j <= nleaves]
+    if len(leaves) != nleaves:
+        die(f"speed module covers verdict leaves {sorted(verdicts)[:3]}..., "
+            f"need 1..{nleaves}")
+    missing = [j for j in leaves if (j - 1) not in probe]
+    if missing:
+        die(f"stage-A-let params cover {sorted(probe)[:3]}..., missing "
+            f"leaves {missing} (re-run stagea-let with --leaves={nleaves})")
+    mod = out_path.rsplit("/", 1)[-1].rsplit(".lean", 1)[0]
+    rows = []
+    for j in leaves:
+        verd, lo_m, lo_e, trips = probe[j - 1]
+        tgt, _tac = verdicts[j]
+        if (verd == "PASS") != (tgt == "true"):
+            print(f"[stageb-let2] WARNING leaf {j}: probe {verd} vs speed "
+                  f"harvest {tgt} — emitting the probe verdict as an "
+                  f"agreement check")
+        rows.append((j, boxes[j], verd, lo_m, lo_e, trips))
+
+    parts = []
+    for (j, box, verd, lo_m, lo_e, trips) in rows:
+        tgt = "true" if verd == "PASS" else "false"
+        parts.append(
+            f"/-- Leaf {j}: box from the speed lab; TMParams RE-PRODUCED\n"
+            f"by the stage-A-let compiled probe (full fold: entries\n"
+            f"consume certs first, so the C-side queue order no longer\n"
+            f"applies); stage-A-let margin loBound {lo_m} * 2^({lo_e}),\n"
+            f"verdict {verd}. -/\n"
+            f"def {mod}Box{j} : Fin {n} → DInterval :=\n  {box}\n\n"
+            f"def {mod}P{j} : TMParams := "
+            f"{params_lit(rung, plan['ndiv'], plan['ntrans'], trips)}\n\n"
+            f"/-- Full-fold leaf {j} (kernel `checkPosTMHullL`,\n"
+            f"`{tactic}` vehicle): kernel/compiled-run agreement on the\n"
+            f"re-produced params — PASS on the folded route. -/\n"
+            f"theorem {mod}Leaf{j} :\n"
+            f"    checkPosTMHullL {mod}Tbl {mod}Body {mod}Box{j} {mod}P{j}"
+            f" = {tgt} := by\n  {tactic}\n")
+    text = (
+        f"/-\n"
+        f"  549 stage-A-let kernel pilot, FULL FOLD (auto-generated by\n"
+        f"  pipeline/interval/emit_hull_pilot.py stageb-let2).\n"
+        f"  case: {case['id']}  (orig_op: {case.get('orig_op')},\n"
+        f"  vars: {case['vars']}) — table slots {plan['k']} "
+        f"({plan['slot_desc']}),\n  body refs {plan['n_ref']}, unfolded "
+        f"{plan['total_nodes']} nodes.\n"
+        f"  Certificate-consuming duplicates folded: the ps queue is\n"
+        f"  consumed entries-first, so these TMParams are the Lean-probe\n"
+        f"  re-production (stagea-let, {params_path}) — the C-side\n"
+        f"  certificate correspondence is positional-broken by design\n"
+        f"  (two-layer pipeline: C emits boxes, Lean re-produces params).\n"
+        f"-/\n"
+        f"import Kepler.Interval.CertTM\n\n"
+        f"set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
+        f"namespace Kepler.Interval.Cases\n\n"
+        f"/-- The certificate table (FULL fold). -/\n"
+        f"def {mod}Tbl : Fin {plan['k']} → IExpr {n} := "
+        f"![{plan['table_txt']}]\n\n"
+        f"/-- The folded body (ite guards stay plain ref-free `IExpr`). -/\n"
+        f"def {mod}Body : LExpr {n} {plan['k']} :=\n  {plan['body']}\n\n"
+        + "\n".join(parts) +
+        f"\n#print axioms {mod}Leaf1\n"
+        f"\nend Kepler.Interval.Cases\n")
+    open(out_path, "w").write(text)
+    n_pass = sum(1 for r in rows if r[2] == "PASS")
+    manifest = {
+        "schema": "stageb-let2",
+        "case": case["id"],
+        "module": mod, "out": out_path,
+        "params_source": params_path,
+        "fold": {"min_size": min_size, "max_lets": max_lets,
+                 "min_occ": min_occ, "cert_free_only": False,
+                 "slots": plan["k"], "body_refs": plan["n_ref"],
+                 "unfolded_nodes": plan["total_nodes"],
+                 "slot_desc": plan["slot_desc"]},
+        "fold_free_mvp": {"slots": plan_free["k"],
+                          "slot_desc": plan_free["slot_desc"]},
+        "tactic": tactic,
+        "leaves": [{"j": j, "probe_verdict": verd,
+                    "lo_m": lo_m, "lo_e": lo_e,
+                    "n_sqrt_trips": len(trips),
+                    "speed_verdict": verdicts[j][0]}
+                   for (j, _, verd, lo_m, lo_e, trips) in rows],
+        "split_dir": split_dir,
+        "generated": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "emit_elapsed_s": round(time.time() - t0, 1),
+    }
+    if split_dir:
+        os.makedirs(split_dir, exist_ok=True)
+        written = []
+        for j, box, verd, lo_m, lo_e, trips in rows:
+            for arm in ("base", "free", "full"):
+                if arm == "base":
+                    body_txt = (
+                        f"/- TIMING MODULE arm=base leaf {j}: unfolded\n"
+                        f"expression, harvested speed-lab params, plain\n"
+                        f"kernel `decide` on `checkPosTMHull`. -/\n"
+                        f"import Kepler.Interval.CertTM\n\n"
+                        f"set_option maxHeartbeats 0\n"
+                        f"set_option maxRecDepth 1000000\n\n"
+                        f"namespace Kepler.Interval.Cases\n\n"
+                        f"def Expr : IExpr {n} :=\n  {plan['expr']}\n\n"
+                        f"def Box : Fin {n} → DInterval :=\n  {box}\n\n"
+                        f"def P : TMParams := {params[j]}\n\n"
+                        f"theorem leaf :\n"
+                        f"    checkPosTMHull Expr Box P = "
+                        f"{verdicts[j][0]} := by\n  decide\n\n"
+                        f"end Kepler.Interval.Cases\n")
+                elif arm == "free":
+                    body_txt = (
+                        f"/- TIMING MODULE arm=free leaf {j}: certificate-\n"
+                        f"free fold (MVP contract, {plan_free['k']} slots),\n"
+                        f"harvested speed-lab params (ps order preserved),\n"
+                        f"kernel `checkPosTMHullL`. -/\n"
+                        f"import Kepler.Interval.CertTM\n\n"
+                        f"set_option maxHeartbeats 0\n"
+                        f"set_option maxRecDepth 1000000\n\n"
+                        f"namespace Kepler.Interval.Cases\n\n"
+                        f"def Tbl : Fin {plan_free['k']} → IExpr {n} := "
+                        f"![{plan_free['table_txt']}]\n\n"
+                        f"def Body : LExpr {n} {plan_free['k']} :=\n"
+                        f"  {plan_free['body']}\n\n"
+                        f"def Box : Fin {n} → DInterval :=\n  {box}\n\n"
+                        f"def P : TMParams := {params[j]}\n\n"
+                        f"theorem leaf :\n"
+                        f"    checkPosTMHullL Tbl Body Box P = "
+                        f"{verdicts[j][0]} := by\n  {tactic}\n\n"
+                        f"end Kepler.Interval.Cases\n")
+                else:
+                    body_txt = (
+                        f"/- TIMING MODULE arm=full leaf {j}: FULL fold\n"
+                        f"(certificate-consuming duplicates folded,\n"
+                        f"{plan['k']} slots), stage-A-let probe params,\n"
+                        f"kernel `checkPosTMHullL`. -/\n"
+                        f"import Kepler.Interval.CertTM\n\n"
+                        f"set_option maxHeartbeats 0\n"
+                        f"set_option maxRecDepth 1000000\n\n"
+                        f"namespace Kepler.Interval.Cases\n\n"
+                        f"def Tbl : Fin {plan['k']} → IExpr {n} := "
+                        f"![{plan['table_txt']}]\n\n"
+                        f"def Body : LExpr {n} {plan['k']} :=\n"
+                        f"  {plan['body']}\n\n"
+                        f"def Box : Fin {n} → DInterval :=\n  {box}\n\n"
+                        f"def P : TMParams := "
+                        f"{params_lit(rung, plan['ndiv'], plan['ntrans'], trips)}\n\n"
+                        f"theorem leaf :\n"
+                        f"    checkPosTMHullL Tbl Body Box P = "
+                        f"{'true' if verd == 'PASS' else 'false'}"
+                        f" := by\n  {tactic}\n\n"
+                        f"end Kepler.Interval.Cases\n")
+                fp = os.path.join(split_dir, f"{mod}{arm.capitalize()}"
+                                  f"{j}.lean")
+                open(fp, "w").write(body_txt)
+                written.append(fp)
+        manifest["timing_modules"] = written
+    open(out_path.rsplit(".lean", 1)[0] + ".manifest.json", "w").write(
+        json.dumps(manifest, indent=1))
+    print(f"[stageb-let2] wrote {out_path}  ({time.time() - t0:.1f}s)  "
+          f"{len(rows)} leaves, FULL fold slots {plan['k']}, "
+          f"probe PASS {n_pass}/{len(rows)}")
+    if split_dir:
+        print(f"[stageb-let2] {len(written)} timing modules (base/free/full "
+              f"x {len(rows)} leaves) in {split_dir}")
 
 
 def load_boxes(path):
@@ -556,6 +940,23 @@ def main():
                        int(opts.get("min-occ", 2)),
                        opts.get("only", "both"),
                        opts.get("tactic", "decide"))
+    elif cmd == "stagea-let":
+        cmd_stagea_let(args[1], args[2], args[3],
+                       int(opts.get("leaves", 3)),
+                       int(opts.get("min-size", 12)),
+                       int(opts.get("max-lets", 6)),
+                       int(opts.get("min-occ", 2)),
+                       int(opts.get("gran", -80)),
+                       int(opts.get("rung", 128)),
+                       int(opts.get("rung-out", -80)))
+    elif cmd == "stageb-let2":
+        cmd_stageb_let2(args[1], args[2], args[3], args[4],
+                        int(opts.get("leaves", 3)),
+                        int(opts.get("min-size", 12)),
+                        int(opts.get("max-lets", 6)),
+                        int(opts.get("min-occ", 2)),
+                        opts.get("tactic", "decide"),
+                        opts.get("split-dir"))
     else:
         die(f"unknown subcommand {cmd}")
 
