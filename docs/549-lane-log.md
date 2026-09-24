@@ -338,10 +338,38 @@ native 口径 ~10-15 core·h——**M5（≤10）进入射程**。剩余三杠�
 TameLp 同型接线）——§2c 占位 **11→10**，Assembly sorry 13→12，sorryAx
 仅沿双核流动，审计行永久入 §5。
 
-## 下一步（九更）
+### facePos 全量评估 + 导数叶去重/右移（`8e61e2ca`）
 
-1. facePos 全量评估：mono 折叠对 549 全量的叶数/通量净收益实测
-   （DerivSafeOn 发射已闭环，剩下是 scale 出题）
-2. else 支真叶试点（找 guard 定号正的叶）+ 导数叶 LExpr 去重
-3. div/sqrt 6,713 残余（Kimi 线）；native_decide 扩围（待批准）
-4. Kimi 同步包全量更新（含 facePos 闭环/T5）
+**全量评估（212,798 叶精确普查 + 221 叶全链实测）**：
+- 资格：guard 定号 then **77.6%**/straddle 22.4%；**else 支结构性空集**
+  （双 guard 多项式逐字节相同——mode=false 机制保留但 549 无实例）
+- facePos 可回收 C 侧 guard 包络保守性 **10.4pp（~22,000 叶）**
+- 全链 PASS **50.7%**：瓶颈 cert 层（guard 证书叶损 35.3%）；face 零损失；
+  方向 100% lo；112 条 Sem 定理 axioms 全标准三
+- 发射坑修复：simp only 折叠定理 35min/叶不收敛 → have/show/rw 零开销
+- **净收益表**：mono+÷7.7 粗化 = 233 decide/**67 native core·h**
+  （wall 2.6h@25 并发）；无粗化净负；保本线 ≥3.7 叶/折叠组
+
+**导数叶去重（负结果）+ 真杠杆（rung 右移）**：
+- 成本归因：闭环 arctan(1) rung-2048 **值宽传播 59%**（去重不可及）；
+  多项式段 ≈0；去重 1.02-1.04×（与 stage-A-let 同型，机理闭环）
+- **rung 2048→128：导数叶 38.6→16.5s、面叶 32.5→10.6s**，全 PASS 且
+  loBound 逐位不变（充分性由逐叶 stage-A 探针把守）→ 折叠对
+  2.19×→**0.83×（低于基线）**⇒ facePos 净吞吐 **3.2×→~9.2×**
+- 建议：emit 层钉死 rung=128 + 逐叶 PASS 自适应（薄余量叶回退 512）
+
+### 阶段位置（十更）
+
+组合口径（mono 折叠 + ÷7.7 粗化 + rung-128 折叠对 0.83× + native）：
+外推 **~30-50 native core·h**（wall <1h@25 并发）——**M5（≤10）只差
+最后 3-5×**，剩余来源：cert 层瘦身（guard 证书叶 35.3% 损耗）、
+div/sqrt 残余 6,713（Kimi 线）、native_decide 扩围（待批准）。
+
+## 下一步（十一更）
+
+1. cert 层瘦身：guard 证书叶为什么损 35.3%——逐叶归因 + 收紧
+   （与 tight 传播口径对齐？）
+2. rung-128 右移正式化（emit 层 + 自适应回退）+ mono 折叠全量预演
+   （≥1000 叶批量）
+3. div/sqrt 6,713（Kimi 线）；native_decide 扩围（待批准）
+4. Kimi 同步包全量更新
