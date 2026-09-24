@@ -6,27 +6,31 @@
   原版 Flyspeck 的主折叠杠杆：`∂ⱼf` 在盒上定号 ⇒ 下界在某一面取得，验
   n−1 维面即可。本模块给出该折叠的完整 Lean 语义链（零新增公理）：
 
-  1. `derivIExpr`：`IExpr` 的符号偏导（纯语法构造子变换：`±×÷√atan(sin/cos/ln)`
-     链式/商法则；`ite` 微分 guard 定号选中的 then 支——soundness 由
-     `DerivSafeOn.iteNeg` 消费；`abs` 返回零桩——`abs` 无 `DerivSafeOn` 构造子，
-     桩永不被消费）。
-  2. `DerivSafeOn box e`：可导性安全谓词（div 分母盒上非零、sqrt 底盒上为正、
-     ln 底盒上非零、ite guard 盒上严格负）。对偶数链规则
-     `derivIExpr_hasDerivWithinAt`：对 e 归纳，`HasDerivWithinAt` 版（uIcc 闭线段，
-     端点安全——ite 经 within-集 eventual congruence）。
+  1. `derivIExprM`：`IExpr` 的符号偏导（纯语法构造子变换：`±×÷√atan(sin/cos/ln)`
+      链式/商法则；`ite` 按模式 `m` 微分选中支——`m = true` then 支（guard 定号
+      负）、`m = false` else 支（guard 定号非负）；`abs` 返回零桩——`abs` 无
+      `DerivSafeOnM` 构造子，桩永不被消费）。`derivIExpr`/`derivIExprE` 为
+      then/else 模式包装。
+  2. `DerivSafeOnM box m e`：可导性安全谓词（模式索引：div 分母盒上非零、
+      sqrt 底盒上为正、ln 底盒上非零、ite guard 盒上按模式定号负/非负）。
+      对偶数链规则 `derivIExprM_hasDerivWithinAt`：对 e 归纳，`HasDerivWithinAt`
+      版（uIcc 闭线段，端点安全——ite 经 within-集 eventual congruence）；
+      `derivIExpr_hasDerivWithinAt`/`derivIExprE_hasDerivWithinAt` 为双模式包装。
   3. `faceBoxLo`/`faceBoxHi`：j 坐标钉在 lo/hi 端点的退化面盒；
-     `facePosLo`/`facePosHi`：坐标线段 MVT（`exists_hasDerivAt_eq_slope`）——
-     `∂ⱼf > 0` ⇒ `f(ρ) ≥ f(ρ[j←lo])`，故面正 ⇒ 盒正（`∂ⱼf < 0` 对称取 hi 面）。
+      `facePosLo`/`facePosHi`：坐标线段 MVT（`exists_hasDerivAt_eq_slope`）——
+      `∂ⱼf > 0` ⇒ `f(ρ) ≥ f(ρ[j←lo])`，故面正 ⇒ 盒正（`∂ⱼf < 0` 对称取 hi 面）。
   4. `checkPosFaceLo`/`checkPosFaceHi`：**mono 折叠检查器** =
-     `checkPosTMHull ±∂ⱼf box`（导数正性叶，全盒）`&&` `checkPosTMHull e faceBox`
-     （面叶，n−1 维）——两叶 PASS 即折叠掉原全盒叶（soundness：
-     `checkPosFaceLo_sound`/`checkPosFaceHi_sound`）。
+      `checkPosTMHull ±∂ⱼf box`（导数正性叶，全盒）`&&` `checkPosTMHull e faceBox`
+      （面叶，n−1 维）——两叶 PASS 即折叠掉原全盒叶（soundness：
+      `checkPosFaceLo_sound`/`checkPosFaceHi_sound` 及 else 支版 `*E_sound`）。
+  5. **证书叶 discharge 引理**（DerivSafeOn 发射侧）：`safeDivPos`/`safeDivNeg`/
+      `safeDivAbs`/`safeSqrtPos`/`safeLnNe`/`safeIteNeg`/`safeIteNN`/`safeConstNe`
+      把 `checkPosTMHull` 符号证书叶变成 `DerivSafeOnM` 构造子的逐节点前提；
+      发射器（pipeline/interval/emit_mono.py）对真实表达式逐节点拼装嵌套
+      `DerivSafeOnM` 证明项——折叠结论从"Bool 一致性"升级为完整语义正性。
 
   叶数折叠预期：全 6 坐标均匀二叉加细下 2^(6k) → 2^(5k)，即
   叶数^(5/6)（212,798 → ≈2.8 万，保守）。
-
-  M2 待办（本模块不声称）：对真实 549 表达式发射 `DerivSafeOn` 证明项
-  （per-div/per-sqrt 定号证书叶 + ite guard 定号证书链）、ite else 支支持。
 
   无 `sorry`、无 `native_decide`、无新增 axiom。
 -/
@@ -37,63 +41,84 @@ set_option maxRecDepth 1000000
 
 namespace Kepler.Interval
 
-/-! ## 符号偏导 `derivIExpr`（语法层） -/
+/-! ## 符号偏导 `derivIExprM`（语法层，按 ite 分支选择模式参数化） -/
 
 /-- `IExpr` 对坐标 `j` 的符号偏导：纯语法构造子变换（链式/商法则）。
-`ite` 微分 then 支（guard 定号负时 sound——`DerivSafeOn.iteNeg`）；
-`abs` 返回零桩（`abs` 不可导，无 `DerivSafeOn` 构造子，桩永不被消费）；
-生成的 `div` 粒度参数只影响区间精度，不影响语义正确性。 -/
-def derivIExpr {n : ℕ} (e : IExpr n) (j : Fin n) : IExpr n :=
-  match e with
-  | .const _ => .const ⟨0, 0⟩
-  | .var i => if i = j then .const ⟨1, 0⟩ else .const ⟨0, 0⟩
-  | .neg a => .neg (derivIExpr a j)
-  | .abs _ => .const ⟨0, 0⟩
-  | .ite _ t _ => derivIExpr t j
-  | .add a b => .add (derivIExpr a j) (derivIExpr b j)
-  | .sub a b => .sub (derivIExpr a j) (derivIExpr b j)
-  | .mul a b => .add (.mul (derivIExpr a j) b) (.mul a (derivIExpr b j))
-  | .div a b out =>
-      .div (.sub (.mul (derivIExpr a j) b) (.mul a (derivIExpr b j))) (.mul b b) out
-  | .sqrt a s₁ s₂ =>
-      .div (derivIExpr a j) (.add (.sqrt a s₁ s₂) (.sqrt a s₁ s₂)) 0
-  | .trans k a N out =>
+模式 `m = true` 微分 then 支（guard 盒上严格负时 sound——`iteNeg`）；
+`m = false` 微分 else 支（guard 盒上 ≥0 时 sound——`iteNN`）；
+`abs` 返回零桩（`abs` 不可导，无 `DerivSafeOnM` 构造子，桩永不被消费）；
+生成的 `div` 粒度参数只影响区间精度，不影响语义正确性。
+`derivIExpr`（then 模式）与 `derivIExprE`(else 模式) 是其包装。 -/
+def derivIExprM {n : ℕ} : Bool → IExpr n → Fin n → IExpr n
+  | _, .const _, _ => .const ⟨0, 0⟩
+  | _, .var i, j => if i = j then .const ⟨1, 0⟩ else .const ⟨0, 0⟩
+  | m, .neg a, j => .neg (derivIExprM m a j)
+  | _, .abs _, _ => .const ⟨0, 0⟩
+  | true, .ite _ t _, j => derivIExprM true t j
+  | false, .ite _ _ e', j => derivIExprM false e' j
+  | m, .add a b, j => .add (derivIExprM m a j) (derivIExprM m b j)
+  | m, .sub a b, j => .sub (derivIExprM m a j) (derivIExprM m b j)
+  | m, .mul a b, j => .add (.mul (derivIExprM m a j) b) (.mul a (derivIExprM m b j))
+  | m, .div a b out, j =>
+      .div (.sub (.mul (derivIExprM m a j) b) (.mul a (derivIExprM m b j))) (.mul b b) out
+  | m, .sqrt a s₁ s₂, j =>
+      .div (derivIExprM m a j) (.add (.sqrt a s₁ s₂) (.sqrt a s₁ s₂)) 0
+  | m, .trans k a N out, j =>
       match k with
-      | .sinK => .mul (.trans .cosK a N out) (derivIExpr a j)
-      | .cosK => .neg (.mul (.trans .sinK a N out) (derivIExpr a j))
-      | .arctanK => .div (derivIExpr a j) (.add (.const ⟨1, 0⟩) (.mul a a)) 0
-      | .lnK => .div (derivIExpr a j) a 0
+      | .sinK => .mul (.trans .cosK a N out) (derivIExprM m a j)
+      | .cosK => .neg (.mul (.trans .sinK a N out) (derivIExprM m a j))
+      | .arctanK => .div (derivIExprM m a j) (.add (.const ⟨1, 0⟩) (.mul a a)) 0
+      | .lnK => .div (derivIExprM m a j) a 0
 
-/-! ## 可导性安全谓词 `DerivSafeOn` -/
+/-- then 支符号偏导（guard 定号负时 sound）。 -/
+def derivIExpr {n : ℕ} (e : IExpr n) (j : Fin n) : IExpr n := derivIExprM true e j
 
-/-- `e` 在 `box` 上对每个坐标可导、且导数 = `(derivIExpr e j).evalReal`（对每个
+/-- else 支符号偏导（guard 定号非负时 sound）。 -/
+def derivIExprE {n : ℕ} (e : IExpr n) (j : Fin n) : IExpr n := derivIExprM false e j
+
+/-! ## 可导性安全谓词 `DerivSafeOnM`（模式索引） -/
+
+/-- `e` 在 `box` 上对每个坐标可导、且导数 = `(derivIExprM m e j).evalReal`（对每个
 `j`）所需的逐节点安全条件：div 分母盒上非零、sqrt 底盒上严格正、ln 底盒上
-非零、ite guard 盒上严格负（then 支选中；else 支为 M2 扩展）。 -/
-inductive DerivSafeOn {n : ℕ} (box : Fin n → DInterval) : IExpr n → Prop
-  | const (d : Dyadic) : DerivSafeOn box (.const d)
-  | var (i : Fin n) : DerivSafeOn box (.var i)
-  | neg {e : IExpr n} (h : DerivSafeOn box e) : DerivSafeOn box (.neg e)
-  | add {e₁ e₂ : IExpr n} (h₁ : DerivSafeOn box e₁) (h₂ : DerivSafeOn box e₂) :
-      DerivSafeOn box (.add e₁ e₂)
-  | sub {e₁ e₂ : IExpr n} (h₁ : DerivSafeOn box e₁) (h₂ : DerivSafeOn box e₂) :
-      DerivSafeOn box (.sub e₁ e₂)
-  | mul {e₁ e₂ : IExpr n} (h₁ : DerivSafeOn box e₁) (h₂ : DerivSafeOn box e₂) :
-      DerivSafeOn box (.mul e₁ e₂)
-  | div {e₁ e₂ : IExpr n} {out : Int} (h₁ : DerivSafeOn box e₁)
-      (h₂ : DerivSafeOn box e₂) (hz : ∀ ρ : Fin n → ℝ, boxMem box ρ → e₂.evalReal ρ ≠ 0) :
-      DerivSafeOn box (.div e₁ e₂ out)
-  | sqrt {e : IExpr n} {s₁ s₂ : Int} (h : DerivSafeOn box e)
+非零；ite 按模式定号——`m = true` 要求 guard 盒上严格负（then 支选中）、
+`m = false` 要求 guard 盒上 ≥0（else 支选中）。模式单调：一旦 else 支，
+全程 else 支（ite 构造子钉死子模式）。 -/
+inductive DerivSafeOnM {n : ℕ} (box : Fin n → DInterval) : Bool → IExpr n → Prop
+  | const (d : Dyadic) {m : Bool} : DerivSafeOnM box m (.const d)
+  | var (i : Fin n) {m : Bool} : DerivSafeOnM box m (.var i)
+  | neg {m : Bool} {e : IExpr n} (h : DerivSafeOnM box m e) : DerivSafeOnM box m (.neg e)
+  | add {m : Bool} {e₁ e₂ : IExpr n} (h₁ : DerivSafeOnM box m e₁) (h₂ : DerivSafeOnM box m e₂) :
+      DerivSafeOnM box m (.add e₁ e₂)
+  | sub {m : Bool} {e₁ e₂ : IExpr n} (h₁ : DerivSafeOnM box m e₁) (h₂ : DerivSafeOnM box m e₂) :
+      DerivSafeOnM box m (.sub e₁ e₂)
+  | mul {m : Bool} {e₁ e₂ : IExpr n} (h₁ : DerivSafeOnM box m e₁) (h₂ : DerivSafeOnM box m e₂) :
+      DerivSafeOnM box m (.mul e₁ e₂)
+  | div {m : Bool} {e₁ e₂ : IExpr n} {out : Int} (h₁ : DerivSafeOnM box m e₁)
+      (h₂ : DerivSafeOnM box m e₂) (hz : ∀ ρ : Fin n → ℝ, boxMem box ρ → e₂.evalReal ρ ≠ 0) :
+      DerivSafeOnM box m (.div e₁ e₂ out)
+  | sqrt {m : Bool} {e : IExpr n} {s₁ s₂ : Int} (h : DerivSafeOnM box m e)
       (hp : ∀ ρ : Fin n → ℝ, boxMem box ρ → 0 < e.evalReal ρ) :
-      DerivSafeOn box (.sqrt e s₁ s₂)
-  | trans {k : TKind} {e : IExpr n} {N : ℕ} {out : Int} (h : DerivSafeOn box e)
+      DerivSafeOnM box m (.sqrt e s₁ s₂)
+  | trans {m : Bool} {k : TKind} {e : IExpr n} {N : ℕ} {out : Int} (h : DerivSafeOnM box m e)
       (hk : k = .sinK ∨ k = .cosK ∨ k = .arctanK) :
-      DerivSafeOn box (.trans k e N out)
-  | transLn {e : IExpr n} {N : ℕ} {out : Int} (h : DerivSafeOn box e)
+      DerivSafeOnM box m (.trans k e N out)
+  | transLn {m : Bool} {e : IExpr n} {N : ℕ} {out : Int} (h : DerivSafeOnM box m e)
       (hz : ∀ ρ : Fin n → ℝ, boxMem box ρ → e.evalReal ρ ≠ 0) :
-      DerivSafeOn box (.trans .lnK e N out)
-  | iteNeg {c t e : IExpr n} (h : DerivSafeOn box t)
+      DerivSafeOnM box m (.trans .lnK e N out)
+  | iteNeg {c t e : IExpr n} (h : DerivSafeOnM box true t)
       (hneg : ∀ ρ : Fin n → ℝ, boxMem box ρ → c.evalReal ρ < 0) :
-      DerivSafeOn box (.ite c t e)
+      DerivSafeOnM box true (.ite c t e)
+  | iteNN {c t e : IExpr n} (h : DerivSafeOnM box false e)
+      (hnn : ∀ ρ : Fin n → ℝ, boxMem box ρ → 0 ≤ c.evalReal ρ) :
+      DerivSafeOnM box false (.ite c t e)
+
+/-- then 支安全谓词（原有接口，`iteNeg` 路线）。 -/
+abbrev DerivSafeOn {n : ℕ} (box : Fin n → DInterval) (e : IExpr n) : Prop :=
+  DerivSafeOnM box true e
+
+/-- else 支安全谓词（`iteNN` 路线）。 -/
+abbrev DerivSafeOnE {n : ℕ} (box : Fin n → DInterval) (e : IExpr n) : Prop :=
+  DerivSafeOnM box false e
 
 /-! ## 面盒 -/
 
@@ -147,29 +172,30 @@ theorem boxMem_faceBoxHi {n : ℕ} {box : Fin n → DInterval} {j : Fin n}
   · rw [faceBoxHi, updR, Function.update_of_ne h, Function.update_of_ne h]
     exact hρ i
 
-/-! ## 链式法则（对 `DerivSafeOn` 归纳） -/
+/-! ## 链式法则（对 `DerivSafeOnM` 归纳，双模式一次证明） -/
 
-/-- **导数正确性**（链式法则）：盒上线段上，`e.evalReal ∘ 线段` 在
-`uIcc lo hi` 内每点可导，导数 = `(derivIExpr e j).evalReal ∘ 线段`。
+/-- **导数正确性**（链式法则，then/else 双模式）：盒上线段上，`e.evalReal ∘ 线段`
+在 `uIcc lo hi` 内每点可导，导数 = `(derivIExprM m e j).evalReal ∘ 线段`。
 用 `HasDerivWithinAt`（闭线段）表述：端点安全（ite 经 within-集
 eventual congruence；非 ite 节点的安全条件逐点成立）。 -/
-theorem derivIExpr_hasDerivWithinAt {n : ℕ} {box : Fin n → DInterval} {j : Fin n}
+theorem derivIExprM_hasDerivWithinAt {n : ℕ} {box : Fin n → DInterval} {j : Fin n}
     {ρ : Fin n → ℝ} (hρ : boxMem box ρ) :
-    ∀ {e : IExpr n}, DerivSafeOn box e → ∀ {x : ℝ}, (box j).lo.toReal ≤ x →
-      x ≤ (box j).hi.toReal →
+    ∀ (m : Bool) {e : IExpr n}, DerivSafeOnM box m e → ∀ {x : ℝ},
+      (box j).lo.toReal ≤ x → x ≤ (box j).hi.toReal →
       HasDerivWithinAt (fun x' => e.evalReal (updR ρ j x'))
-        ((derivIExpr e j).evalReal (updR ρ j x))
+        ((derivIExprM m e j).evalReal (updR ρ j x))
         (Set.uIcc (box j).lo.toReal (box j).hi.toReal) x := by
   have hlohi : (box j).lo.toReal ≤ (box j).hi.toReal := (hρ j).1.trans (hρ j).2
   have hlohi' : Set.uIcc (box j).lo.toReal (box j).hi.toReal
       = Set.Icc (box j).lo.toReal (box j).hi.toReal := Set.uIcc_of_le hlohi
-  intro e hD
+  intro m e hD
   induction hD with
   | const d =>
       intro x _ _
-      simp only [derivIExpr, IExpr.evalReal, Dyadic.toReal_zero]
+      simp only [derivIExprM, IExpr.evalReal, Dyadic.toReal_zero]
       exact hasDerivWithinAt_const x _ (d.toReal)
   | var i =>
+      rename_i m2
       intro x _ _
       by_cases h : i = j
       · have hfun : (fun x' => (IExpr.var i).evalReal (updR ρ j x'))
@@ -177,8 +203,8 @@ theorem derivIExpr_hasDerivWithinAt {n : ℕ} {box : Fin n → DInterval} {j : F
           funext x'
           simp only [IExpr.evalReal, updR]
           rw [h, Function.update_self]
-        have hdv : (derivIExpr (IExpr.var i) j).evalReal (updR ρ j x) = 1 := by
-          simp only [derivIExpr, if_pos h, IExpr.evalReal, Dyadic.toReal_one]
+        have hdv : (derivIExprM m2 (IExpr.var i) j).evalReal (updR ρ j x) = 1 := by
+          simp only [derivIExprM, if_pos h, IExpr.evalReal, Dyadic.toReal_one]
         rw [hfun, hdv]
         exact hasDerivWithinAt_id x _
       · have hfun : (fun x' => (IExpr.var i).evalReal (updR ρ j x'))
@@ -186,56 +212,56 @@ theorem derivIExpr_hasDerivWithinAt {n : ℕ} {box : Fin n → DInterval} {j : F
           funext x'
           simp only [IExpr.evalReal, updR]
           rw [Function.update_of_ne h]
-        have hdv : (derivIExpr (IExpr.var i) j).evalReal (updR ρ j x) = 0 := by
-          simp only [derivIExpr, if_neg h, IExpr.evalReal, Dyadic.toReal_zero]
+        have hdv : (derivIExprM m2 (IExpr.var i) j).evalReal (updR ρ j x) = 0 := by
+          simp only [derivIExprM, if_neg h, IExpr.evalReal, Dyadic.toReal_zero]
         rw [hfun, hdv]
         exact hasDerivWithinAt_const x _ (ρ i)
   | neg h ih =>
       intro x hx1 hx2
-      simp only [derivIExpr, IExpr.evalReal]
+      simp only [derivIExprM, IExpr.evalReal]
       exact (ih hx1 hx2).neg.congr_deriv (by simp)
   | add h₁ h₂ ih₁ ih₂ =>
       intro x hx1 hx2
-      simp only [derivIExpr, IExpr.evalReal]
+      simp only [derivIExprM, IExpr.evalReal]
       exact (ih₁ hx1 hx2).add (ih₂ hx1 hx2)
   | sub h₁ h₂ ih₁ ih₂ =>
       intro x hx1 hx2
-      simp only [derivIExpr, IExpr.evalReal]
+      simp only [derivIExprM, IExpr.evalReal]
       exact (ih₁ hx1 hx2).sub (ih₂ hx1 hx2)
   | mul h₁ h₂ ih₁ ih₂ =>
       intro x hx1 hx2
-      simp only [derivIExpr, IExpr.evalReal]
+      simp only [derivIExprM, IExpr.evalReal]
       exact (ih₁ hx1 hx2).mul (ih₂ hx1 hx2)
   | div h₁ h₂ hz ih₁ ih₂ =>
       intro x hx1 hx2
       have hσ := boxMem_updR hρ ⟨hx1, hx2⟩
       have hne := hz (updR ρ j x) hσ
-      simp only [derivIExpr, IExpr.evalReal]
+      simp only [derivIExprM, IExpr.evalReal]
       exact ((ih₁ hx1 hx2).div (ih₂ hx1 hx2) hne).congr_deriv (by ring)
   | sqrt h hp ih =>
       intro x hx1 hx2
       have hσ := boxMem_updR hρ ⟨hx1, hx2⟩
       have hpos := hp (updR ρ j x) hσ
-      simp only [derivIExpr, IExpr.evalReal]
+      simp only [derivIExprM, IExpr.evalReal]
       refine ((ih hx1 hx2).sqrt (ne_of_gt hpos)).congr_deriv ?_
       rw [two_mul]
   | trans h hk ih =>
       intro x hx1 hx2
       rcases hk with rfl | rfl | rfl
-      · simp only [derivIExpr, IExpr.evalReal, transReal]
+      · simp only [derivIExprM, IExpr.evalReal, transReal]
         refine ((Real.hasDerivAt_sin _).comp_hasDerivWithinAt x (ih hx1 hx2)).congr_deriv ?_
         ring
-      · simp only [derivIExpr, IExpr.evalReal, transReal]
+      · simp only [derivIExprM, IExpr.evalReal, transReal]
         refine ((Real.hasDerivAt_cos _).comp_hasDerivWithinAt x (ih hx1 hx2)).congr_deriv ?_
         ring
-      · simp only [derivIExpr, IExpr.evalReal, transReal, Dyadic.toReal_one]
+      · simp only [derivIExprM, IExpr.evalReal, transReal, Dyadic.toReal_one]
         refine ((Real.hasDerivAt_arctan _).comp_hasDerivWithinAt x (ih hx1 hx2)).congr_deriv ?_
         ring
   | transLn h hz ih =>
       intro x hx1 hx2
       have hσ := boxMem_updR hρ ⟨hx1, hx2⟩
       have hne := hz (updR ρ j x) hσ
-      simp only [derivIExpr, IExpr.evalReal, transReal]
+      simp only [derivIExprM, IExpr.evalReal, transReal]
       refine ((Real.hasDerivAt_log hne).comp_hasDerivWithinAt x (ih hx1 hx2)).congr_deriv ?_
       ring
   | iteNeg h hneg ih =>
@@ -249,6 +275,40 @@ theorem derivIExpr_hasDerivWithinAt {n : ℕ} {box : Fin n → DInterval} {j : F
         rw [if_pos (hneg _ hσ)]
       · simp only [IExpr.evalReal]
         rw [if_pos (hneg _ hσx)]
+  | iteNN h hnn ih =>
+      rename_i c t e
+      intro x hx1 hx2
+      have hσx := boxMem_updR hρ ⟨hx1, hx2⟩
+      refine HasDerivWithinAt.congr (ih hx1 hx2) ?_ ?_
+      · intro y hy
+        rw [hlohi'] at hy
+        have hσ := boxMem_updR hρ hy
+        have hle := hnn _ hσ
+        simp only [IExpr.evalReal]
+        rw [if_neg (not_lt.mpr hle)]
+      · have hle := hnn _ hσx
+        simp only [IExpr.evalReal]
+        rw [if_neg (not_lt.mpr hle)]
+
+/-- **导数正确性（then 支）**——原接口，`derivIExpr` 语句保持不变。 -/
+theorem derivIExpr_hasDerivWithinAt {n : ℕ} {box : Fin n → DInterval} {j : Fin n}
+    {ρ : Fin n → ℝ} (hρ : boxMem box ρ) :
+    ∀ {e : IExpr n}, DerivSafeOn box e → ∀ {x : ℝ}, (box j).lo.toReal ≤ x →
+      x ≤ (box j).hi.toReal →
+      HasDerivWithinAt (fun x' => e.evalReal (updR ρ j x'))
+        ((derivIExpr e j).evalReal (updR ρ j x))
+        (Set.uIcc (box j).lo.toReal (box j).hi.toReal) x :=
+  fun hD => derivIExprM_hasDerivWithinAt hρ true hD
+
+/-- **导数正确性（else 支）**：`DerivSafeOnE` + `derivIExprE`。 -/
+theorem derivIExprE_hasDerivWithinAt {n : ℕ} {box : Fin n → DInterval} {j : Fin n}
+    {ρ : Fin n → ℝ} (hρ : boxMem box ρ) :
+    ∀ {e : IExpr n}, DerivSafeOnE box e → ∀ {x : ℝ}, (box j).lo.toReal ≤ x →
+      x ≤ (box j).hi.toReal →
+      HasDerivWithinAt (fun x' => e.evalReal (updR ρ j x'))
+        ((derivIExprE e j).evalReal (updR ρ j x))
+        (Set.uIcc (box j).lo.toReal (box j).hi.toReal) x :=
+  fun hD => derivIExprM_hasDerivWithinAt hρ false hD
 
 /-! ## facePos 折叠引理（坐标线段 MVT） -/
 
@@ -404,6 +464,110 @@ theorem checkPosFaceHi_sound {n : ℕ} {e : IExpr n} {box : Fin n → DInterval}
   · intro ρ' hρ'
     exact checkPosTMHull_sound hf ρ' hρ'
 
+/-- **mono 折叠 soundness（lo 面，else 支导数）**：`checkPosFaceLo` 两叶 PASS +
+`DerivSafeOnE` ⇒ `0 < e.evalReal ρ` 对盒上每点成立。 -/
+theorem checkPosFaceLoE_sound {n : ℕ} {e : IExpr n} {box : Fin n → DInterval}
+    {j : Fin n} {ps psd : TMParams} (hD : DerivSafeOnE box e)
+    (h : checkPosFaceLo e (derivIExprE e j) box j ps psd = true)
+    {ρ : Fin n → ℝ} (hρ : boxMem box ρ) : 0 < e.evalReal ρ := by
+  simp only [checkPosFaceLo, Bool.and_eq_true] at h
+  obtain ⟨hd, hf⟩ := h
+  refine facePosLo (j := j) (f := e.evalReal) (d := (derivIExprE e j).evalReal) ?_ ?_ ?_ hρ
+  · intro ρ' hρ' x hx1 hx2
+    exact derivIExprE_hasDerivWithinAt hρ' hD hx1 hx2
+  · exact fun ρ' hρ' => checkPosTMHull_sound hd ρ' hρ'
+  · exact fun ρ' hρ' => checkPosTMHull_sound hf ρ' hρ'
+
+/-- **mono 折叠 soundness（hi 面，else 支导数）**：`checkPosFaceHi` 两叶 PASS +
+`DerivSafeOnE` ⇒ `0 < e.evalReal ρ` 对盒上每点成立。 -/
+theorem checkPosFaceHiE_sound {n : ℕ} {e : IExpr n} {box : Fin n → DInterval}
+    {j : Fin n} {ps psd : TMParams} (hD : DerivSafeOnE box e)
+    (h : checkPosFaceHi e (derivIExprE e j) box j ps psd = true)
+    {ρ : Fin n → ℝ} (hρ : boxMem box ρ) : 0 < e.evalReal ρ := by
+  simp only [checkPosFaceHi, Bool.and_eq_true] at h
+  obtain ⟨hd, hf⟩ := h
+  refine facePosHi (j := j) (f := e.evalReal) (d := (derivIExprE e j).evalReal) ?_ ?_ ?_ hρ
+  · intro ρ' hρ' x hx1 hx2
+    exact derivIExprE_hasDerivWithinAt hρ' hD hx1 hx2
+  · intro ρ' hρ'
+    have hv : 0 < -(derivIExprE e j).evalReal ρ' :=
+      checkPosTMHull_sound hd ρ' hρ'
+    linarith
+  · intro ρ' hρ'
+    exact checkPosTMHull_sound hf ρ' hρ'
+
+
+/-! ## 证书叶 discharge 引理（checkPosTMHull 叶 ⇒ DerivSafeOnM 逐节点前提） -/
+
+/-- div 分母盒上严格正 ⇒ 分母盒上非零（正形证书叶）。 -/
+theorem safeDivPos {n : ℕ} {b : IExpr n} {box : Fin n → DInterval} {ps : TMParams}
+    (h : checkPosTMHull b box ps = true) :
+    ∀ ρ : Fin n → ℝ, boxMem box ρ → b.evalReal ρ ≠ 0 :=
+  fun ρ hρ => ne_of_gt (checkPosTMHull_sound h ρ hρ)
+
+/-- div 分母盒上严格负 ⇒ 分母盒上非零（neg 形证书叶）。 -/
+theorem safeDivNeg {n : ℕ} {b : IExpr n} {box : Fin n → DInterval} {ps : TMParams}
+    (h : checkPosTMHull (IExpr.neg b) box ps = true) :
+    ∀ ρ : Fin n → ℝ, boxMem box ρ → b.evalReal ρ ≠ 0 := by
+  intro ρ hρ
+  have h2 : 0 < (IExpr.neg b).evalReal ρ := checkPosTMHull_sound h ρ hρ
+  simp only [IExpr.evalReal] at h2
+  linarith
+
+/-- div 分母盒上 |b| 严格正 ⇒ 分母盒上非零（abs 形证书叶；TM 侧 abs 为
+区间 fallback 模型，证书只用于符号判定）。 -/
+theorem safeDivAbs {n : ℕ} {b : IExpr n} {box : Fin n → DInterval} {ps : TMParams}
+    (h : checkPosTMHull (IExpr.abs b) box ps = true) :
+    ∀ ρ : Fin n → ℝ, boxMem box ρ → b.evalReal ρ ≠ 0 := by
+  intro ρ hρ
+  have h2 : 0 < (IExpr.abs b).evalReal ρ := checkPosTMHull_sound h ρ hρ
+  simp only [IExpr.evalReal] at h2
+  intro h0
+  rw [h0] at h2
+  simp at h2
+
+/-- sqrt 底盒上严格正（sqrt 节点前提的直接证书叶）。 -/
+theorem safeSqrtPos {n : ℕ} {a : IExpr n} {box : Fin n → DInterval} {ps : TMParams}
+    (h : checkPosTMHull a box ps = true) :
+    ∀ ρ : Fin n → ℝ, boxMem box ρ → 0 < a.evalReal ρ :=
+  fun ρ hρ => checkPosTMHull_sound h ρ hρ
+
+/-- ln 底盒上 |a| 严格正 ⇒ 非零（ln 节点前提的 abs 形证书叶）。 -/
+theorem safeLnNe {n : ℕ} {a : IExpr n} {box : Fin n → DInterval} {ps : TMParams}
+    (h : checkPosTMHull (IExpr.abs a) box ps = true) :
+    ∀ ρ : Fin n → ℝ, boxMem box ρ → a.evalReal ρ ≠ 0 := by
+  intro ρ hρ
+  have h2 : 0 < (IExpr.abs a).evalReal ρ := checkPosTMHull_sound h ρ hρ
+  simp only [IExpr.evalReal] at h2
+  intro h0
+  rw [h0] at h2
+  simp at h2
+
+/-- ite guard 盒上严格负（then 支选中的证书叶，neg 形）。 -/
+theorem safeIteNeg {n : ℕ} {c : IExpr n} {box : Fin n → DInterval} {ps : TMParams}
+    (h : checkPosTMHull (IExpr.neg c) box ps = true) :
+    ∀ ρ : Fin n → ℝ, boxMem box ρ → c.evalReal ρ < 0 := by
+  intro ρ hρ
+  have h2 : 0 < (IExpr.neg c).evalReal ρ := checkPosTMHull_sound h ρ hρ
+  simp only [IExpr.evalReal] at h2
+  linarith
+
+/-- ite guard 盒上 ≥0（else 支选中的证书叶；经由严格正——≥0 的充分条件，
+边界零测损失见工位报告）。 -/
+theorem safeIteNN {n : ℕ} {c : IExpr n} {box : Fin n → DInterval} {ps : TMParams}
+    (h : checkPosTMHull c box ps = true) :
+    ∀ ρ : Fin n → ℝ, boxMem box ρ → 0 ≤ c.evalReal ρ :=
+  fun ρ hρ => le_of_lt (checkPosTMHull_sound h ρ hρ)
+
+/-- 常数分母非零（mantissa `m ≠ 0` 时无证书叶，内核直接判定）。 -/
+theorem safeConstNe {n : ℕ} (m eo : Int) (hm : m ≠ 0) (ρ : Fin n → ℝ) :
+    (IExpr.const ⟨m, eo⟩).evalReal ρ ≠ 0 := by
+  simp only [IExpr.evalReal, Dyadic.toReal_def]
+  intro h0
+  rcases mul_eq_zero.mp h0 with h | h
+  · exact hm (Int.cast_eq_zero.mp h)
+  · exact zpow_ne_zero eo (by norm_num) h
+
 
 /-! ## 微型端到端（DerivSafeOn 完全放行 + 两叶折叠 ⇒ 语义结论） -/
 
@@ -474,6 +638,63 @@ theorem miniSemantic (ρ : Fin 2 → ℝ) (hρ : boxMem miniBox ρ) : 0 < miniE.
 #print axioms checkPosFaceHi_sound
 #print axioms miniSemantic
 #print axioms miniFolded
+
+/-! ### 微型 else 支端到端（iteNN + derivIExprE + checkPosFaceLoE_sound）
+
+`f(x) = ite (x − 1/4) 9 (2x)`，盒 [1/2, 1]：guard ≡ x − 1/4 ≥ 3/4 ≥ 0
+（else 支选中），`∂ₓf = 2 > 0` ⇒ lo 面折叠。两叶零证书参数（纯多项式）。 -/
+
+/-- 迷你 else 支表达式。 -/
+def miniE2 : IExpr 1 :=
+  .ite (.sub (.var 0) (.const ⟨1, -2⟩)) (.const ⟨9, 6⟩)
+    (.mul (.var 0) (.const ⟨2, 0⟩))
+
+/-- 迷你盒 [1/2, 1]。 -/
+def miniBox2 : Fin 1 → DInterval := fun _ => ⟨⟨32, -6⟩, ⟨64, -6⟩⟩
+
+/-- guard 盒上 ≥0（iteNN 前提，由盒端点直接放行）。 -/
+theorem miniDSafe2_nn : ∀ ρ : Fin 1 → ℝ, boxMem miniBox2 ρ →
+    0 ≤ (IExpr.sub (IExpr.var 0) (IExpr.const ⟨1, -2⟩)).evalReal ρ := by
+  intro ρ hρ
+  have h : Dyadic.toReal ⟨32, -6⟩ ≤ ρ 0 := (hρ 0).1
+  have h4 : ρ 0 ≤ Dyadic.toReal ⟨64, -6⟩ := (hρ 0).2
+  have h2 : (⟨32, -6⟩ : Dyadic).toReal = 1 / 2 := by rw [Dyadic.toReal_def]; norm_num
+  have h3 : (⟨64, -6⟩ : Dyadic).toReal = 1 := by rw [Dyadic.toReal_def]; norm_num
+  have h5 : (⟨1, -2⟩ : Dyadic).toReal = 1 / 4 := by rw [Dyadic.toReal_def]; norm_num
+  show ρ 0 - (⟨1, -2⟩ : Dyadic).toReal ≥ 0
+  rw [h2] at h
+  rw [h3] at h4
+  rw [h5]
+  linarith
+
+/-- `DerivSafeOnE miniBox2 miniE2` 放行（iteNN 路线）。 -/
+theorem miniDSafe2 : DerivSafeOnE miniBox2 miniE2 :=
+  .iteNN (.mul (.var 0) (.const ⟨2, 0⟩)) miniDSafe2_nn
+
+/-- lo 面叶（else 支 `2x` 于 x = 1/2 处取下界 1 > 0）。 -/
+theorem miniFace2 :
+    checkPosTMHull miniE2 (faceBoxLo miniBox2 0) TMParams.empty = true := by
+  decide
+
+/-- 导数定号叶（else 支导数 `derivIExprE` ≡ 2 > 0，全盒）。 -/
+theorem miniDer2 :
+    checkPosTMHull (derivIExprE miniE2 0) miniBox2 TMParams.empty = true := by
+  decide
+
+/-- else 支 mono 折叠组合。 -/
+theorem miniFolded2 :
+    checkPosFaceLo miniE2 (derivIExprE miniE2 0) miniBox2 0 TMParams.empty
+      TMParams.empty = true := by
+  simp only [checkPosFaceLo, Bool.and_eq_true]
+  exact ⟨miniDer2, miniFace2⟩
+
+/-- else 支折叠结论：`checkPosFaceLoE_sound`，零附加假设。 -/
+theorem miniSemantic2 (ρ : Fin 1 → ℝ) (hρ : boxMem miniBox2 ρ) : 0 < miniE2.evalReal ρ :=
+  checkPosFaceLoE_sound miniDSafe2 miniFolded2 hρ
+
+#print axioms miniDSafe2_nn
+#print axioms miniFolded2
+#print axioms miniSemantic2
 
 /-! ## 549 mono 折叠试点（pipeline/interval/emit_diff.py 生成；勿手改）。
 自包含：仅 import Kepler.Interval.CertTM（C549HullSpeed 模式）。 -/

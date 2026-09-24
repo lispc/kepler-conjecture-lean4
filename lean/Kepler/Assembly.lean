@@ -25,6 +25,7 @@ import Kepler.Text.PackingAuto18
 import Kepler.Text.PackingAuto21
 import Kepler.Text.PackingAuto25
 import Kepler.Text.Hypermap
+import Kepler.Text.ContraFan
 import Kepler.Text.LocalAuto16
 import Kepler.Assembly.GoodListDefs
 import Kepler.Assembly.GoodListAll
@@ -442,11 +443,23 @@ def GoodGraphV4 (g : Graph) : Prop :=
 
 end TameSpine
 
-/-! ### 2c. TameSpine 接口占位（capstone 消费链；全部骨架 sorry） -/
+/-! ### 2c. TameSpine 接口占位（capstone 消费链；`contraveningFan` 已真化
+2026-09-24，其余为骨架 sorry） -/
 
-/-- 接口占位：`contravening_lp_fan` 群（tame 章）——contravening 给出 fan 结构。 -/
+/-- **接口 → 真证明（2026-09-24 接线波 T5）**：HOL `CONTRAVENING_FAN`
+（tame_general.hl:247-259）——contravening 给出 fan 结构。证明内核为
+CKQOWSA 章移植 `Kepler.Text.ContraFan`（18 条定理 16 条真证明；仅深几何核
+LEMMA_3_POINTS_FINAL / LEMMA_4_POINTS_FINAL 为骨架，sorryAx 仅沿该双核
+流动，与 `TameLp.contravening_fanTl` 同型）。三前提取自 `Contravening V`
+合取项：`hpack = hc.1`、`hann = hc.2.1`、`hne` 由 card 合取项（13/14/15，
+ncard > 0 排除空集）推出；`ContraFan.ESTD` 与本文件 §1 `ESTD` 同体 defeq，
+`exact` 直接消化。 -/
 theorem contraveningFan (V : Set V3) (hc : Contravening V) : FAN 0 V (ESTD V) := by
-  sorry
+  have hne : V ≠ ∅ := by
+    have hcard : V.ncard = 13 ∨ V.ncard = 14 ∨ V.ncard = 15 := hc.2.2.2.2.1
+    rintro rfl
+    simp at hcard
+  exact ContraFan.contraveningFanTl V hc.1 hc.2.1 hne
 
 /-- 接口占位：HOL `Mqmsmab.MQMSMAB`（tame_concl / MQMSMAB-compiled.hl；section
 前提 `kcblrqc_ineq_def` ∧ `lp_main_estimate` 显式化）。 -/
@@ -689,6 +702,7 @@ theorem the_kepler_conjecture_from_interfaces : TheKeplerConjecture :=
 /-! ## 5. 公理审计 -/
 
 #print axioms assembly
+#print axioms contraveningFan
 #print axioms the_kepler_conjecture_from_interfaces
 #print axioms Kepler.the_kepler_conjecture
 
