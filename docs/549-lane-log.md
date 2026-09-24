@@ -321,11 +321,27 @@ native 口径 ~10-15 core·h——**M5（≤10）进入射程**。剩余三杠�
 ①facePos 全量化（DerivSafeOn 发射 + ite-else）②div/sqrt 残余 6,713
 （Kimi 线）③native_decide 扩围（待批准）。
 
-## 下一步（八更）
+### facePos 全量化第一波 + T5（`make check` 绿，已合 main）
 
-1. facePos 全量化第一波：DerivSafeOn 证书发射（per-div/per-sqrt 定号叶
-   + iteNeg 链）——试点叶的 hD 前提从显式变为已证
-2. ite-else 支（iteNN + 发射侧支替换）
-3. 导数叶 LExpr 去重（574% 重复，tmHullLeafProbeL 口径）
-4. div/sqrt 6,713 残余（Kimi 线）；native_decide 扩围（待批准）
-5. Kimi 同步包全量更新
+**facePos 全链闭环**（C549Mono +393/−90 + emit_mono.py + C549Mono2）：
+- derivIExprM 双模式（iteNeg/iteNN）——ite-else 支补齐，链式法则一次证明
+  覆盖双模式
+- DerivSafeOn 证书发射：每叶 3 张 TM 证书叶（guardNeg 224 节点/div 分母
+  151/sqrt 底 150）+ 2 内联常数分母；discharge 引理族逐节点拼装
+- **全链 fold 定理达成**：面叶 + 导数叶 + 证书叶 decides ⇒
+  `0 < e.evalReal ρ`（全盒语义正性，非 Bool 一致性）——3/3 试点全绿，
+  axioms 标准三
+- 边界：else 支真叶试点（该 3 叶实测定号负）/guard 触 0 零测叶诚实 NEG/
+  abs-guard 拒发/lnK 无实例
+
+**T5（Kepler 主线）**：Assembly `contraveningFan` 真化（经 ContraFan，
+TameLp 同型接线）——§2c 占位 **11→10**，Assembly sorry 13→12，sorryAx
+仅沿双核流动，审计行永久入 §5。
+
+## 下一步（九更）
+
+1. facePos 全量评估：mono 折叠对 549 全量的叶数/通量净收益实测
+   （DerivSafeOn 发射已闭环，剩下是 scale 出题）
+2. else 支真叶试点（找 guard 定号正的叶）+ 导数叶 LExpr 去重
+3. div/sqrt 6,713 残余（Kimi 线）；native_decide 扩围（待批准）
+4. Kimi 同步包全量更新（含 facePos 闭环/T5）
