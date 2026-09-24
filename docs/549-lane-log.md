@@ -292,11 +292,40 @@ tight 后全量叶数 212,798；native_decide ~3.5s/叶 → **~207 core·h**
 ①div/sqrt 残余 6,713（chop/closed-trans，Kimi 线）②证书消耗链去重
 （stage-A-let）③mono/convex 叶数折叠（L1）。
 
-## 下一步（六更）
+### stage-A-let 负结果 + facePos 落地（`94d89947`）
 
-1. stage-A-let（证书含消耗子树折叠，params 重产）——decide 真收益实验
-2. mono/convex（L1）叶数折叠——设计先行（C 侧检测已有 dfB；内核
-   faceLeaf 规则是 M1 核心数学）
-3. div/sqrt 6,713 残余（Kimi 线，接口不变）
-4. native_decide 例外扩围（DECISIONS 新条目）——待批准
-5. Kimi 同步包全量更新（含 tight 后叶数/通量修订）
+**stage-A-let：去重杠杆正式关闭**——全折叠 0.97×（±8% 噪声）。decide 成本
+∝AST 体积前提被证伪：折叠链仅占内核求值 ~1%；成本由唯一 atan/div/sqrt
+链 + 内核固定开销主导（与 native_decide 6× 互证）。全折叠净负（探针层
++3.1s/叶 = +183 core·h）。**架构建议**：折叠方案移植 bb_arb（C 原生
+entries-first 队列 ~ms/叶），Lean 探针降级抽查——恢复单层成本。
+50 叶批量探针 44/6 与 speed 模块逐叶吻合；mantissa 队列 19.7 叶/分钟。
+
+**facePos（M1 核心数学）落地**——`C549Mono.lean`（718 行）+ `emit_diff.py`：
+- facePosLo/Hi（线段 MVT：`exists_hasDerivAt_eq_slope`）+ 
+  derivIExpr_hasDerivWithinAt（DerivSafeOn 归纳链式法则，ite 定号分支）+
+  checkPosFaceLo/Hi(+sound) 双叶组合——零新公理，CertTM 零改动
+  （语义层全部放试点模块，爆炸半径最小化）
+- 试点 5/5 判定一致；折叠方向按 stage-A 实测定向（lo 面）
+- **诚实口径**：折叠对 2.4× 单叶成本（导数叶 2184 节点 34s）→ 净吞吐
+  **3.2×**（非理论 7.7×）；导数叶的 574% 重复可走 LExpr 再压
+- 叶数折叠预期：212,798 → ~2.8 万叶（7.7×）
+- 边界：DerivSafeOn 证明项未发射（hD 显式前提，per-div/sqrt 定号证书
+  叶 + iteNeg 链待做）；ite-else 支待做；迷你端到端已完整放行
+
+### 阶段位置（七更）
+
+tight 212,798 叶 + native_decide ~3.5s/叶 = **~207 core·h**；
+facePos 全量后 ~2.8 万叶 × 2.4× 折叠对成本 → decide 口径 ~70-90 core·h，
+native 口径 ~10-15 core·h——**M5（≤10）进入射程**。剩余三杠杆：
+①facePos 全量化（DerivSafeOn 发射 + ite-else）②div/sqrt 残余 6,713
+（Kimi 线）③native_decide 扩围（待批准）。
+
+## 下一步（八更）
+
+1. facePos 全量化第一波：DerivSafeOn 证书发射（per-div/per-sqrt 定号叶
+   + iteNeg 链）——试点叶的 hD 前提从显式变为已证
+2. ite-else 支（iteNN + 发射侧支替换）
+3. 导数叶 LExpr 去重（574% 重复，tmHullLeafProbeL 口径）
+4. div/sqrt 6,713 残余（Kimi 线）；native_decide 扩围（待批准）
+5. Kimi 同步包全量更新
