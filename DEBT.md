@@ -1,12 +1,12 @@
 # DEBT.md — sorry 债务账本
 
-> 由 `lean/scripts/debt_ledger.py` 生成；勿手改。总计 **2080** 个 sorry。
+> 由 `lean/scripts/debt_ledger.py` 生成；勿手改。总计 **2079** 个 sorry。
 
 | 区域 | sorry 数 | 涉及文件数 |
 |---|---|---|
 | Text | 2066 | 68 |
-| (root) | 14 | 2 |
-| **合计** | **2080** | **70** |
+| (root) | 13 | 2 |
+| **合计** | **2079** | **70** |
 
 <details><summary>逐文件明细</summary>
 
@@ -52,9 +52,9 @@
 | Text/LocalAuto16.lean | 17 |
 | Text/LocalAuto31.lean | 17 |
 | Text/PackingAuto6.lean | 15 |
-| Assembly.lean | 13 |
 | Text/LocalAuto36.lean | 13 |
 | Text/LocalAuto8.lean | 13 |
+| Assembly.lean | 12 |
 | Text/LocalAuto15.lean | 12 |
 | Text/LocalAuto26.lean | 10 |
 | Text/PackingConcl.lean | 10 |
@@ -87,7 +87,7 @@
 
 ## 主定理可达债务（脊柱公理探针）
 
-> `Kepler.Assembly.the_kepler_conjecture_from_interfaces` 的 `#print axioms`，探针运行时间 2026-09-23 10:15 +0000（main @ 537b2f0b，全闭包自主源编译）。
+> `Kepler.Assembly.the_kepler_conjecture_from_interfaces` 的 `#print axioms`，探针运行时间 2026-09-24 10:13 +0000（main @ 6edcebc2，全闭包自主源编译）。
 > 与上面的 token 计数不同：这里只统计**装配后主定理实际依赖**的公理。
 
 | 类别 | 公理 |
