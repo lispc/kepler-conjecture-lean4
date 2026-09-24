@@ -1,0 +1,84 @@
+{
+ "schema": "stageb-let2",
+ "case": "5490182221",
+ "module": "C549HullLet2",
+ "out": "../../lean/Kepler/Interval/Cases/C549HullLet2.lean",
+ "params_source": "/tmp/opencode/stagealet/C549HullLet2A.params.txt",
+ "fold": {
+  "min_size": 12,
+  "max_lets": 8,
+  "min_occ": 2,
+  "cert_free_only": false,
+  "slots": 3,
+  "body_refs": 10,
+  "unfolded_nodes": 1083,
+  "slot_desc": "#0: 4 refs x 5 nodes, #1: 3 refs x 152 nodes, #2: 3 refs x 71 nodes"
+ },
+ "fold_free_mvp": {
+  "slots": 3,
+  "slot_desc": "#0: 4 refs x 5 nodes, #1: 3 refs x 151 nodes, #2: 3 refs x 71 nodes"
+ },
+ "tactic": "decide",
+ "leaves": [
+  {
+   "j": 1,
+   "probe_verdict": "PASS",
+   "lo_m": 11871729256053467357638071024856530435803597004952067933282113551865940877018547720718604761184014989537717177015026020226500256586581664298523936728968729445746306065195856461177659612407347399570294308864,
+   "lo_e": -682,
+   "n_sqrt_trips": 2,
+   "speed_verdict": "true"
+  },
+  {
+   "j": 2,
+   "probe_verdict": "PASS",
+   "lo_m": 9550317157402750327631677125616095354117502960738416741561297907023794424068745220425302670569447397735030381020734235740152966555224482714800447079416194890824777090306363580980342403645896119816139309056,
+   "lo_e": -682,
+   "n_sqrt_trips": 2,
+   "speed_verdict": "true"
+  },
+  {
+   "j": 3,
+   "probe_verdict": "PASS",
+   "lo_m": 11301230610083722015933153096814710817986022004505565835097998386224202471358902075642685729875779170462490611390084220981060736797125871371176552760115196514824496345943646073915410824123658384318635442176,
+   "lo_e": -682,
+   "n_sqrt_trips": 2,
+   "speed_verdict": "true"
+  },
+  {
+   "j": 4,
+   "probe_verdict": "PASS",
+   "lo_m": 11278158041174328563088439371307023543591182167293972406576790389096554676584434104857643058461156687393696627851125045599045533700168500008674327574752914893365107562116419173514540020447676725100197969920,
+   "lo_e": -682,
+   "n_sqrt_trips": 2,
+   "speed_verdict": "true"
+  },
+  {
+   "j": 5,
+   "probe_verdict": "PASS",
+   "lo_m": 11168316440170023314304435863219162268395673956770597298144714568787413118385675387435579449279328674469707062898476007003097049224043543103197119869632872614480800661236407414884121107515607875201747910656,
+   "lo_e": -682,
+   "n_sqrt_trips": 2,
+   "speed_verdict": "true"
+  }
+ ],
+ "split_dir": "/tmp/opencode/stagealet/timing",
+ "generated": "2026-09-23T23:19:33",
+ "emit_elapsed_s": 0.0,
+ "timing_modules": [
+  "/tmp/opencode/stagealet/timing/C549HullLet2Base1.lean",
+  "/tmp/opencode/stagealet/timing/C549HullLet2Free1.lean",
+  "/tmp/opencode/stagealet/timing/C549HullLet2Full1.lean",
+  "/tmp/opencode/stagealet/timing/C549HullLet2Base2.lean",
+  "/tmp/opencode/stagealet/timing/C549HullLet2Free2.lean",
+  "/tmp/opencode/stagealet/timing/C549HullLet2Full2.lean",
+  "/tmp/opencode/stagealet/timing/C549HullLet2Base3.lean",
+  "/tmp/opencode/stagealet/timing/C549HullLet2Free3.lean",
+  "/tmp/opencode/stagealet/timing/C549HullLet2Full3.lean",
+  "/tmp/opencode/stagealet/timing/C549HullLet2Base4.lean",
+  "/tmp/opencode/stagealet/timing/C549HullLet2Free4.lean",
+  "/tmp/opencode/stagealet/timing/C549HullLet2Full4.lean",
+  "/tmp/opencode/stagealet/timing/C549HullLet2Base5.lean",
+  "/tmp/opencode/stagealet/timing/C549HullLet2Free5.lean",
+  "/tmp/opencode/stagealet/timing/C549HullLet2Full5.lean"
+ ]
+}
