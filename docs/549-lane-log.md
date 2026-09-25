@@ -365,11 +365,35 @@ TameLp 同型接线）——§2c 占位 **11→10**，Assembly sorry 13→12，s
 最后 3-5×**，剩余来源：cert 层瘦身（guard 证书叶 35.3% 损耗）、
 div/sqrt 残余 6,713（Kimi 线）、native_decide 扩围（待批准）。
 
-## 下一步（十一更）
+### cert 瘦身 + straddle 批量（`make check` 绿，已合 main）
 
-1. cert 层瘦身：guard 证书叶为什么损 35.3%——逐叶归因 + 收紧
-   （与 tight 传播口径对齐？）
-2. rung-128 右移正式化（emit 层 + 自适应回退）+ mono 折叠全量预演
-   （≥1000 叶批量）
+**cert 层瘦身（knife B）**：归因干净——唯 iteNeg 失败（TM 余项肥；
+div/sqrt 证书 100% 过）。**裸区间定号（走已证 evalIParams_mem 路径）**：
+534/534 PASS、32× 快于 TM 探针、与 C --tm-tight 正交。全链 PASS
+65.2% → **78.3%**（并修正上轮 50.7% 为探针切片 artifact）。cert 叶
+decide 4.5×。净收益 226 decide/65 native core·h。
+
+**straddle HullD2 批量（生产口径另一半）**：38.1% 翻正（vs 16% 基线）
+——但翻正**全部**来自 Lean guard 判定更准（61/61 单支全过）；真 df-hull
+双支 0/99 仍全 NEG。**err 语义被实证为唯一瓶颈**（所需收缩因子
+0.049-0.453；×2 = 全宽 vs 存储锚点半宽，中位再 ×4 = hull 溢价）——
+合成质量无关、rung 无关（128 零翻转）。全量可验证率 **79.8% 实测修订**
+（~169,800 叶）；残余 20.2% ≈ 43,000 同构叶，Kimi 接口带精确收缩因子。
+
+### 阶段位置（十二更）
+
+- 可验证率 79.8%（批量实测）；mono 折叠 + cert 瘦身 + rung-128 + native
+  组合口径：**~65 native core·h**（wall ~1.5h@25 并发）
+- 距 M5（≤10）≈ 6.5×；唯一未动用的大杠杆 = **err 语义对齐**
+  （Lean Valid 改存储锚点半宽形——CertTM 语义层变更，需设计轮）+
+  cert 瘦身延伸 + div/sqrt 残余（Kimi）
+
+## 下一步（十三更）
+
+1. **err 语义对齐设计**：Lean Valid 是否可切换存储锚点形
+   （|f(ρ)−f0| 语义，C 对齐）——审计现链依赖（evalTMHullD2/iteHullTM2/
+   Hull Fill 全链返工量评估）；或折中：仅 iteHullTM2 的 err 消费处改
+   半宽形 + 专用引理
+2. rung-128 右移正式化 + mono 折叠 ≥1000 叶批量预演
 3. div/sqrt 6,713（Kimi 线）；native_decide 扩围（待批准）
-4. Kimi 同步包全量更新
+4. Kimi 同步包（err 语义线精确接口 + 79.8% 实测）
