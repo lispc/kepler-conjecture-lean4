@@ -388,12 +388,40 @@ decide 4.5×。净收益 226 decide/65 native core·h。
   （Lean Valid 改存储锚点半宽形——CertTM 语义层变更，需设计轮）+
   cert 瘦身延伸 + div/sqrt 残余（Kimi）
 
-## 下一步（十三更）
+### range-composition 证伪 err 语义 + rung-128 千叶批量（`c3dab727`）
 
-1. **err 语义对齐设计**：Lean Valid 是否可切换存储锚点形
-   （|f(ρ)−f0| 语义，C 对齐）——审计现链依赖（evalTMHullD2/iteHullTM2/
-   Hull Fill 全链返工量评估）；或折中：仅 iteHullTM2 的 err 消费处改
-   半宽形 + 专用引理
-2. rung-128 右移正式化 + mono 折叠 ≥1000 叶批量预演
-3. div/sqrt 6,713（Kimi 线）；native_decide 扩围（待批准）
-4. Kimi 同步包（err 语义线精确接口 + 79.8% 实测）
+**range-composition（evalRangeHull/checkPosRange）**：洞察实现且 sound
+（ite 节点直接贡献分支值域 hull，guard 零依赖零跳变项）——但 99 叶仍 0/99。
+**err 语义假说证伪**：逐节点插值钉死真凶——根 err 98% = arctanK TM-trans
+曲率界 `W²·2(|fB|+W)`，而真 |atan''| sup = 0.359，**~15× 过认证**
+（曲率峰 9√3/16 在 1/√3）。**真杠杆 = 一条公式**：arctanK err 项换
+exact-sup 曲率界（端点 max + 峰项，dyadic 上取整认证）——模拟口径
+**99/99 翻正**；残差引理在 Trans.lean（arctan_residual），checkPosTMHull
+入口与证书布局零改动。range-composition 留作 ite 语义备胎。
+
+**rung-128 正式化 + 1080 叶批量**：RUNG_DEFAULT=128 钉死 + ladder 自适应
++ locheck 对账 + batch 轮次化。**全链 PASS 97.8%**（1056/1080），全收官
+于 128，回退 2.2% 全为 der 层真不可折叠；locheck 零翻转；1057 条 Sem
+定理全标准三。⚠️ 纠正车道日志：折叠对实为 **~3.1×**（0.83× 不可复现，
+同机重编旧模块确认）——净收益靠 ÷7.7 粗化 + native 4.9×。
+全量外推终版：**109 native core·h**（wall 2.7h@40）；运维参数已注。
+
+### 阶段位置（十四更）
+
+| 项 | 数值 |
+|---|---|
+| 叶数 | 212,798（tight 后） |
+| 可验证率 | 79.8%（批量实测） |
+| mono 折叠批量 | 97.8% 全链 PASS @ rung 128 |
+| 全量外推 | **109 native core·h**（基线 10,800 的 **99×**；原版 0.48 的 ~227×） |
+
+**最后 10× 的路径已收窄为一条公式**：arctanK 曲率紧致化
+（Trans.lean arctan_residual + CertTM arctanK err 项）→ 模拟 99/99 翻正
++ 全线 W_t 收紧（不止 straddle——所有 atan 支的余项都松 15×）。
+
+## 下一步（十五更）
+
+1. **arctan 曲率紧致化**（最后公式）：Trans.lean arctan_residual 界替换 +
+   CertTM arctanK err 项 → 99 叶实测翻正 → 全量重演
+2. div/sqrt 6,713（Kimi 线）；native_decide 扩围（待批准）
+3. Kimi 同步包（arctan 曲率接口 + 千叶批量终版数字）
