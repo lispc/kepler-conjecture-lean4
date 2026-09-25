@@ -573,6 +573,95 @@ def run_stagea3(mod, n, exprs, probes, gran, tmpdir="/tmp/opencode"):
     return rows
 
 
+# ---- cert 层瘦身工位：裸区间（evalIParams）定号探针 ----
+# guard/div/sqrt 证书叶的区间路线对照：evalIParamsFill 是已证 sound 的
+# evalIParams 的编译镜像（CertTM.lean），探针回传区间端点 mantissa 与
+# sqrt 证书三元组（烘回内核侧 sqrtCerts 后内核 evalIParams 复现同一区间）。
+
+STAGEA4_TMPL = """/-  emit_mono.py interval-probe driver (scratch). -/
+import Kepler.Interval.CertTM
+
+set_option maxHeartbeats 0
+set_option maxRecDepth 1000000
+
+open Kepler.Interval
+
+namespace Probe{mod}
+
+instance : Inhabited DInterval := ⟨⟨⟨0, 0⟩, ⟨0, 0⟩⟩⟩
+
+instance : Inhabited (IExpr {n}) := ⟨.const ⟨0, 0⟩⟩
+
+def Exprs : Array (IExpr {n}) := #[
+    {exprs}
+]
+
+def Ps (nsqrt ndiv ntrans : ℕ) : TMParams :=
+  ⟨List.replicate nsqrt ⟨0, 0, 0, ({gran}), ({gran})⟩,
+   List.replicate ndiv ⟨({gran}), ({gran}), ({gran})⟩,
+   List.replicate ntrans ⟨({gran}), ({gran})⟩⟩
+
+/-- probes: (exprIdx, box, nsqrt, ndiv, ntrans) -/
+def Probes : Array (ℕ × (Fin {n} → DInterval) × ℕ × ℕ × ℕ) := #[
+    {probes}
+]
+
+/-- 裸区间探针：区间端点 mantissa/exponent + sqrt 证书三元组（实验对照）。 -/
+def iLeafProbe {{n : ℕ}} (e : IExpr n) (box : Fin n → DInterval)
+    (ps : TMParams) :
+    Option (Int × Int × Int × Int × List (Int × Int × Int)) :=
+  (evalIParamsFill box e ps).map fun (I, _, l) =>
+    (I.lo.m, I.lo.e, I.hi.m, I.hi.e, l)
+
+end Probe{mod}
+
+open Probe{mod} in
+def main : List String → IO UInt32 := fun _ => do
+  IO.println "RUNG mono4"
+  for i in [0:Probes.size] do
+    let (ei, bx, ns, ni, nt) := Probes[i]!
+    let t0 ← IO.monoMsNow
+    match iLeafProbe Exprs[ei]! bx (Ps ns ni nt) with
+    | some (lm, le, hm, he, l) =>
+        let t1 ← IO.monoMsNow
+        let trip := String.intercalate " " (l.map fun t => s!"{{t.1}} {{t.2.1}} {{t.2.2}}")
+        IO.println s!"{{i}} IV {{lm}} {{le}} {{hm}} {{he}} {{t1-t0}} {{trip}}"
+    | none =>         IO.println s!"{{i}} FAIL 0 0 0 0 0"
+  return 0
+"""
+
+
+def run_stagea4(mod, n, exprs, probes, gran, tmpdir="/tmp/opencode"):
+    """裸区间批量探针。probes: (expr_idx, box_text, ns, ni, nt)。
+    返回 rows: list of (verdict, lo_m, lo_e, hi_m, hi_e, ms, triples)。"""
+    path = f"{tmpdir}/{mod}_stagea.lean"
+    text = STAGEA4_TMPL.format(
+        mod=mod, n=n,
+        exprs=",\n    ".join(f"({e} : IExpr {n})" for e in exprs),
+        gran=gran,
+        probes=",\n    ".join(f"({ei}, ({bt} : Fin {n} → DInterval), {ns}, {ni}, {nt})"
+                              for ei, bt, ns, ni, nt in probes))
+    with open(path, "w") as f:
+        f.write(text)
+    lean_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "lean")
+    proc = subprocess.run(["lake", "env", "lean", "--run", path], cwd=lean_root,
+                          capture_output=True, text=True, timeout=7200)
+    out = proc.stdout
+    if "RUNG mono4" not in out:
+        die(f"stage-A interval {mod} failed: {proc.stderr[-2000:]}")
+    rows = []
+    for ln in out.splitlines():
+        tk = ln.split()
+        if len(tk) >= 7 and tk[0].isdigit():
+            trip = [int(x) for x in tk[7:]]
+            rows.append((tk[1], int(tk[2]), int(tk[3]), int(tk[4]), int(tk[5]),
+                         int(tk[6]),
+                         [tuple(trip[q:q + 3]) for q in range(0, len(trip), 3)]))
+    if len(rows) != len(probes):
+        die(f"stage-A interval rows {len(rows)} != probes {len(probes)}")
+    return rows
+
+
 def read_jsonl(path):
     rows = []
     with open(path) as f:
@@ -584,7 +673,7 @@ def read_jsonl(path):
 
 
 def cmd_probe(case_path, census_path, stage, der_path, from_, to_, gran,
-              rung_n, rung_out, out_path, tag):
+              rung_n, rung_out, out_path, tag, route="tm"):
     from emit_lean import box_frac, box_lit
     case = json.load(open(case_path))
     n = len(case["vars"])
@@ -627,10 +716,18 @@ def cmd_probe(case_path, census_path, stage, der_path, from_, to_, gran,
         for r in rows:
             if r["mode"] == "none":
                 continue
-            for ci, c in enumerate(certs[r["mode"]]):
-                for fl, ft in c["forms"]:
+            if route == "interval":
+                # 裸区间路线：每证书只探首选形（iteNeg→neg / divNe→pos /
+                # sqrtPos→pos；即发射侧将采用的形式）。
+                for ci, c in enumerate(certs[r["mode"]]):
+                    fl, ft = c["forms"][0]
                     fs, fi, ftn = node_counts(ft)
                     add_probe((r["idx"], ci, fl), ft, r["box"], fs, fi, ftn)
+            else:
+                for ci, c in enumerate(certs[r["mode"]]):
+                    for fl, ft in c["forms"]:
+                        fs, fi, ftn = node_counts(ft)
+                        add_probe((r["idx"], ci, fl), ft, r["box"], fs, fi, ftn)
     elif stage == "full":
         for r in rows:
             add_probe((r["idx"], "full"), expr, r["box"], nsqrt, ndiv, ntrans)
@@ -652,16 +749,29 @@ def cmd_probe(case_path, census_path, stage, der_path, from_, to_, gran,
     else:
         die(f"unknown stage {stage}")
 
-    print(f"probe {stage}{tag}: {len(rows)} leaves, {len(probes)} probes, "
+    print(f"probe {stage}{tag}[{route}]: {len(rows)} leaves, {len(probes)} probes, "
           f"{len(exprs)} distinct exprs")
     if not probes:
         die("no probes")
-    res = run_stagea3(f"M{stage}{tag}", n, exprs, probes, gran)
+    if stage == "cert" and route == "interval":
+        res = run_stagea4(f"I{stage}{tag}", n, exprs, probes, gran)
+    else:
+        res = run_stagea3(f"M{stage}{tag}", n, exprs, probes, gran)
     with open(out_path, "w") as f:
         f.write(json.dumps(dict(schema=f"probe549-{stage}", case=case_path,
                                 census=census_path, j=meta["j"], gran=gran,
-                                counts=meta.get("counts"), tag=tag)) + "\n")
+                                route=route, counts=meta.get("counts"),
+                                tag=tag)) + "\n")
         for mt, rr in zip(meta_tags, res):
+            if stage == "cert" and route == "interval":
+                vv, lm, le, hm, he, ms, trip = rr
+                # 与 TM 路线同构：form 文本（(.neg g)/(.abs den)/裸式）的区间
+                # 下端 > 0 即 PASS（checkPosI 语义）。
+                v = ("PASS" if lm > 0 else "NEG") if vv == "IV" else "FAIL"
+                rec = dict(idx=mt[0], v=v, ms=ms, trip=trip, iv=[lm, le, hm, he])
+                rec["ci"], rec["form"] = mt[1], mt[2]
+                f.write(json.dumps(rec) + "\n")
+                continue
             v, m_, e_, ms, trip = rr
             rec = dict(idx=mt[0], v=v, ms=ms, trip=trip)
             if stage == "der":
@@ -671,9 +781,14 @@ def cmd_probe(case_path, census_path, stage, der_path, from_, to_, gran,
                 rec["ci"], rec["form"] = mt[1], mt[2]
             elif stage == "face":
                 rec["dir"] = mt[1]
+            if v != "FAIL":
+                # Taylor 下界 (mantissa, exponent)——归因/相关性分析用
+                # （loBound ≤ 0 的 NEG 叶给出余项肥瘦的直接度量）。
+                rec["lb_m"], rec["lb_e"] = m_, e_
             f.write(json.dumps(rec) + "\n")
-    npass = sum(1 for r in res if r[0] == "PASS")
-    ms_all = [r[3] for r in res if r[0] != "FAIL"]
+    npass = sum(1 for r in res if r[0] in ("PASS", "IV"))
+    ms_all = [r[5] if (stage == "cert" and route == "interval") else r[3]
+              for r in res if r[0] != "FAIL"]
     print(f"probe {stage}{tag}: PASS {npass}/{len(res)}"
           + (f"  ms med={sorted(ms_all)[len(ms_all)//2]} max={max(ms_all)}"
              if ms_all else ""))
@@ -793,6 +908,21 @@ CERT_LEMMA = {("divNe", "pos"): "safeDivPos", ("divNe", "neg"): "safeDivNeg",
               ("sqrtPos", "pos"): "safeSqrtPos", ("iteNeg", "neg"): "safeIteNeg",
               ("iteNN", "pos"): "safeIteNN"}
 
+# 裸区间路线（C549CertSlimDefs）：discharge 引理 + Bool 检查器。
+# 只走已证 sound 路径（checkPosI_sound 等由 evalIParams_mem 组装，标准三公理）。
+# 关键同构：form 文本已携带 neg/abs 包裹（(.neg guard)/(.abs den)），而
+# checkPosTMHull 与 checkPosI 一样断言"给定表达式 > 0"——故所有形统一走
+# checkPosI；discharge 引理按 (kind, form) 选同型包装（safeIteNegI 等）。
+CERT_ROUTE_I = {("divNe", "pos"): ("safeDivPosI", "checkPosI"),
+                ("divNe", "neg"): ("safeDivNegI", "checkPosI"),
+                ("divNe", "abs"): ("safeDivAbsI", "checkPosI"),
+                ("lnNe", "pos"): ("safeDivPosI", "checkPosI"),
+                ("lnNe", "neg"): ("safeDivNegI", "checkPosI"),
+                ("lnNe", "abs"): ("safeDivAbsI", "checkPosI"),
+                ("sqrtPos", "pos"): ("safeSqrtPosI", "checkPosI"),
+                ("iteNeg", "neg"): ("safeIteNegI", "checkPosI"),
+                ("iteNN", "pos"): ("safeIteNNI", "checkPosI")}
+
 
 def cert_target(kind, sub):
     if kind in ("divNe", "lnNe"):
@@ -805,10 +935,15 @@ def cert_target(kind, sub):
 
 
 def shard_module_text(ns, n, expr, leaves, j, gran, ndiv, ntrans, decide_tac,
-                      layers, tag):
+                      layers, tag, cert_route="tm"):
     """全链 shard 模块文本。layers ⊆ {"cert","der","face","fold"}（阶梯计时用
-    子集）；decide_tac 为 "decide" 或 "native_decide"（实验对照）。"""
-    parts = ["import Kepler.Interval.Cases.C549Mono\n",
+    子集）；decide_tac 为 "decide" 或 "native_decide"（实验对照）；
+    cert_route 为 "tm"（checkPosTMHull 叶，原口径）或 "interval"
+    （checkNegI/checkPosI/checkNeI 裸区间叶，C549CertSlimDefs 路线）。"""
+    imports = "import Kepler.Interval.Cases.C549Mono\n"
+    if cert_route == "interval":
+        imports += "import Kepler.Interval.Cases.C549CertSlimDefs\n"
+    parts = [imports,
              "/-! ## 549 facePos 全量评估（emit_mono.py 生成；勿手改）。\n\n"
              f"{ns} — {tag}\n"
              "每叶：面叶 + 导数叶 + DerivSafeOn 证书叶 ⇒ 嵌套 DSafe ⇒\n"
@@ -829,13 +964,23 @@ def shard_module_text(ns, n, expr, leaves, j, gran, ndiv, ntrans, decide_tac,
         parts.append(f"def B{i} : Fin {n} → DInterval :=\n  {L['box']}")
         if "cert" in layers:
             for (ci, kind, sub, form, form_text, trip, (fs, fi, ft), _ms) in L["certs"]:
-                lemma = CERT_LEMMA[(kind, form)]
-                parts.append(f"/-- 证书叶 {i}.C{ci}（{kind}，{form} 形）. -/")
-                parts.append(f"def S{i}C{ci}P : TMParams :=\n  "
-                             f"{params_lit(trip, fi, ft, gran)}")
-                parts.append(f"theorem S{i}C{ci} :\n    checkPosTMHull "
-                             f"({form_text}) B{i} S{i}C{ci}P = true := by\n"
-                             f"  {decide_tac}")
+                if cert_route == "interval":
+                    lemma, checker = CERT_ROUTE_I[(kind, form)]
+                    parts.append(f"/-- 证书叶 {i}.C{ci}（{kind}，{form} 形，"
+                                 f"裸区间 {checker}）. -/")
+                    parts.append(f"def S{i}C{ci}P : TMParams :=\n  "
+                                 f"{params_lit(trip, 0, 0, gran)}")
+                    parts.append(f"theorem S{i}C{ci} :\n    {checker}\n"
+                                 f"    ({form_text}) B{i} S{i}C{ci}P = true := by\n"
+                                 f"  {decide_tac}")
+                else:
+                    lemma = CERT_LEMMA[(kind, form)]
+                    parts.append(f"/-- 证书叶 {i}.C{ci}（{kind}，{form} 形）. -/")
+                    parts.append(f"def S{i}C{ci}P : TMParams :=\n  "
+                                 f"{params_lit(trip, fi, ft, gran)}")
+                    parts.append(f"theorem S{i}C{ci} :\n    checkPosTMHull "
+                                 f"({form_text}) B{i} S{i}C{ci}P = true := by\n"
+                                 f"  {decide_tac}")
                 parts.append(f"/-- 逐节点前提（{lemma}）叶 {i}.C{ci}. -/")
                 parts.append(f"theorem S{i}D{ci} (ρ : Fin {n} → ℝ) "
                              f"(hρ : boxMem B{i} ρ) :\n    "
@@ -1150,7 +1295,7 @@ def dref_neg(dref, direction):
 
 def cmd_emit(case_path, census_path, der_path, face_path, cert_path, full_path,
              out_dir, shard_size, name, do_baseline, do_native, do_ladder,
-             gran, rung_n, rung_out):
+             gran, rung_n, rung_out, cert_route="tm", ns_prefix=None):
     meta, expr, (nsqrt, ndiv, ntrans), tree, src, j, comp, stats = \
         gather_complete(case_path, census_path, der_path, face_path, cert_path,
                         full_path, gran, rung_n, rung_out)
@@ -1163,16 +1308,18 @@ def cmd_emit(case_path, census_path, der_path, face_path, cert_path, full_path,
     if not comp:
         die("no complete leaves")
     os.makedirs(out_dir, exist_ok=True)
+    base = ns_prefix or f"C549MonoEval{name}"
     import math
     nsh = max(1, math.ceil(len(comp) / shard_size))
     manifest = []
     for s in range(nsh):
         batch = comp[s * shard_size:(s + 1) * shard_size]
-        ns = f"C549MonoEval{name}{s+1}"
+        ns = f"{base}{s+1}"
         text = shard_module_text(ns, n, expr, batch, j, gran, ndiv, ntrans,
                                  "decide", ("cert", "der", "face", "fold"),
                                  f"全量评估 shard {s+1}/{nsh}（{len(batch)} 叶；"
-                                 f"modes {sorted(set(b['mode'] for b in batch))}）")
+                                 f"modes {sorted(set(b['mode'] for b in batch))}）",
+                                 cert_route=cert_route)
         path = os.path.join(out_dir, f"{ns}.lean")
         with open(path, "w") as f:
             f.write(text)
@@ -1211,11 +1358,12 @@ def cmd_emit(case_path, census_path, der_path, face_path, cert_path, full_path,
                 continue
             for li, layers in enumerate((("cert",), ("cert", "der"),
                                          ("cert", "der", "face", "fold"))):
-                ns = f"C549MonoEval{name}Ladder{mode.capitalize()}{li+1}"
+                ns = f"{base}Ladder{mode.capitalize()}{li+1}"
                 text = shard_module_text(ns, n, expr, [L], j, gran, ndiv,
                                          ntrans, "decide", layers,
                                          f"三层阶梯 L{li+1}（叶 {L['idx']}，"
-                                         f"{mode} 支；层集 {sorted(layers)}）")
+                                         f"{mode} 支；层集 {sorted(layers)}）",
+                                         cert_route=cert_route)
                 path = os.path.join(out_dir, f"{ns}.lean")
                 with open(path, "w") as f:
                     f.write(text)
@@ -1257,14 +1405,15 @@ def main():
                   int(opts.get("gran", -80)), int(opts.get("rung", 128)),
                   int(opts.get("rung_out", -80)),
                   opts["out"] if "out" in opts else die("probe needs --out"),
-                  opts.get("tag", ""))
+                  opts.get("tag", ""), opts.get("route", "tm"))
     elif cmd == "emit":
         cmd_emit(pos[0], pos[1], opts["der"], opts.get("face"), opts.get("cert"),
                  opts.get("full"), opts.get("out_dir", "lean/Kepler/Interval/Cases"),
                  int(opts.get("shard", 20)), opts.get("name", "Shard"),
                  "baseline" in flags, ("native_ctl" in flags or "native-ctl" in flags), "ladder" in flags,
                  int(opts.get("gran", -80)), int(opts.get("rung", 128)),
-                 int(opts.get("rung_out", -80)))
+                 int(opts.get("rung_out", -80)), opts.get("cert_route", "tm"),
+                 opts.get("ns_prefix"))
     else:
         die(f"unknown cmd {cmd}")
 

@@ -13,6 +13,14 @@ Subcommands:
       (no full JSON parse; one bounded raw_decode per pick).  Writes a
       bb_arb --probe-compatible boxes file plus a manifest (stride, picked
       cert leaf indices, sampling provenance).
+  pick-straddle <boxes.json> <hullstats.jsonl> <case.json> <out-prefix>
+                [--cap=160]
+      Filter a sampled boxes file (after a bb_arb --probe --hull-stats
+      classification pass) to valid+closed `straddle_hull` leaves,
+      renumbered 0..M-1: writes <prefix>.boxes.json /
+      <prefix>.hullstats.jsonl / <prefix>.manifest.json (kept cert leaf
+      indices, drop accounting, exact-rational ite-guard census per leaf —
+      the advisory root-guard straddle criterion).
   stagea <case.json> <boxes.json> <out_driver.lean>
          [--rung=N --rung-out=E --gran=G]
       Emit the compiled-run probe driver (emit_lean --hull stage-A shape:
@@ -20,22 +28,32 @@ Subcommands:
       `<i> PASS|NEG <lo_m> <lo_e> <slo shi sc>...` lines).  Run with
       `lake env lean --run` from the `lean/` package root.
    stageb <case.json> <boxes.json> <params.txt> <hullstats.jsonl> <out.lean>
-          [--shard=50] [--tactic=decide|native_decide]
-       Emit the kernel pilot file: per-leaf
-       `checkPosTMHull <mod>Expr <mod>BoxK <mod>P<K> = true|false` decide
-       theorems grouped into `--shard`-leaf shard sections (conjunction
-       theorems referencing the leaf theorems — no recomputation), a summary
-       conjunction over the shards, and `#print axioms`.  `--tactic` picks
-       the leaf proof vehicle: `decide` (default, pure kernel, ~21.4 s/leaf)
-       or `native_decide` (Lean compiler+runtime enters the TCB; one scoped
-       `Lean.ofReduceBool`-shaped axiom per leaf — the DECISIONS.md
-       2026-08-10/2026-09-19 scoped exceptions do NOT yet cover
-       `Kepler.Interval.Cases.C549Hull*`, so production use needs its own
-       DECISIONS.md entry + human sign-off).  Joins the C-side
-       `bb_arb --probe --hull-stats` single/straddle classification per box
-       for the known-criteria PASS/FAIL cross-check and prints the group
-       table.  NEG leaves are kernel/compiled-run AGREEMENT checks, not
-       certificates (same honesty note as the 20-leaf pilot).
+           [--shard=50] [--tactic=decide|native_decide]
+        Emit the kernel pilot file: per-leaf
+        `checkPosTMHull <mod>Expr <mod>BoxK <mod>P<K> = true|false` decide
+        theorems grouped into `--shard`-leaf shard sections (conjunction
+        theorems referencing the leaf theorems — no recomputation), a summary
+        conjunction over the shards, and `#print axioms`.  `--tactic` picks
+        the leaf proof vehicle: `decide` (default, pure kernel, ~21.4 s/leaf)
+        or `native_decide` (Lean compiler+runtime enters the TCB; one scoped
+        `Lean.ofReduceBool`-shaped axiom per leaf — the DECISIONS.md
+        2026-08-10/2026-09-19 scoped exceptions do NOT yet cover
+        `Kepler.Interval.Cases.C549Hull*`, so production use needs its own
+        DECISIONS.md entry + human sign-off).  Joins the C-side
+        `bb_arb --probe --hull-stats` single/straddle classification per box
+        for the known-criteria PASS/FAIL cross-check and prints the group
+        table.  NEG leaves are kernel/compiled-run AGREEMENT checks, not
+        certificates (same honesty note as the 20-leaf pilot).
+    stageb-shards <case.json> <boxes.json> <params.txt> <hullstats.jsonl>
+                  <out-dir> [--mod=C549StraddleBatch] [--shard=20]
+                  [--rung=128] [--tactic=decide] [--compare=<params2.txt>]
+        Straddle BATCH kernel pilot (production HullD2 half): one Base
+        module (the case expr), one module per <=shard-leaf group
+        (`checkPosTMHull ... = true|false` per leaf + shard conjunction,
+        separate modules so `lake build` can compile them in parallel), a
+        summary module over the shard theorems, and a manifest joining
+        verdicts / loBounds / hullstats (plus an optional second stage-A
+        params file — e.g. the rung-2048 arm — for the rung comparison).
     stageb-let <case.json> <speed.lean> <out.lean>
            [--leaves=3] [--min-size=12] [--max-lets=6] [--min-occ=2]
            [--only=both|base|let] [--tactic=decide]
@@ -98,6 +116,60 @@ from emit_lean import (box_frac, box_lit, die, hull_expr, hull_stage_a_file,
 
 LEAF_PAT = re.compile(rb'(?<=\n    )\{"box"')
 HIT_TM = b'"hit": "tm"'
+
+
+def cmd_sample(cert_path, boxes_path, manifest_path, k):
+    """Stride sample k tm-hit leaves through mmap offsets (probe_l1 style)."""
+    t0 = time.time()
+    with open(cert_path, "rb") as f:
+        mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+        starts = [m.start() for m in LEAF_PAT.finditer(mm)]
+        n_total = len(starts)
+        # per-leaf hit test: the `"hit":` field follows the box array inside
+        # each leaf object — search a bounded window (box lines are <1KB)
+        n_tm = 0
+        for off in starts:
+            if mm.find(HIT_TM, off, off + 8192) != -1:
+                n_tm += 1
+        if n_tm < k:
+            die(f"cert has {n_tm} tm leaves < requested {k}")
+        stride = max(1, n_tm // k)
+        dec = json.JSONDecoder()
+        picks = []
+        picked_idx = []
+        ti = 0
+        for li, off in enumerate(starts):
+            is_tm = mm.find(HIT_TM, off, off + 8192) != -1
+            if is_tm:
+                if ti % stride == 0:
+                    obj, _ = dec.raw_decode(
+                        mm[off:off + 16384].decode("utf-8", "replace"), 0)
+                    if "box" not in obj:
+                        die(f"leaf decode at offset {off} has no box")
+                    picks.append(obj["box"])
+                    picked_idx.append(li)
+                ti += 1
+                if len(picks) >= k:
+                    break
+        head = mm[:200].decode("utf-8", "replace")
+        mm.close()
+    m = re.search(r'"id"\s*:\s*"([^"]+)"', head)
+    if not m:
+        die(f"could not read case id from cert head: {head[:60]}...")
+    caseid = m.group(1)
+    json.dump({"case": caseid, "n": len(picks), "boxes": picks},
+              open(boxes_path, "w"))
+    json.dump({"schema": "hull-pilot-sample", "case": caseid,
+               "cert": cert_path, "k": k, "stride": stride,
+               "n_total": n_total, "n_tm": n_tm,
+               "picked_leaf_indices": picked_idx},
+              open(manifest_path, "w"), indent=1)
+    dt = time.time() - t0
+    print(f"[sample] case {caseid}  leaves {n_total}  tm {n_tm}  "
+          f"stride {stride}  picked {len(picks)}  ({dt:.1f}s)  "
+          f"-> {boxes_path}")
+    print(f"[sample] picked cert leaf indices 0..{picked_idx[-1]} "
+          f"(first {picked_idx[:3]} ... last {picked_idx[-3:]})")
 
 
 # ---------------------------------------------------------------------------
@@ -749,7 +821,419 @@ def load_boxes(path):
                           for dim in data["boxes"]]
 
 
-def cmd_stagea(case_path, boxes_path, out_path, gran, rung_n, rung_out):
+# ---------------------------------------------------------------------------
+# straddle batch pilot (production HullD2 half): pick the --hull-stats
+# straddle leaves out of a sampled boxes file and batch-verify them through
+# the kernel `checkPosTMHull` (= evalTMHullD2 df-hull) in <=20-leaf shard
+# modules built in parallel.  An exact-rational interval evaluation of the
+# ite guard polynomials per box gives the advisory root-guard census (the
+# 77.6%/22.4% eligibility criterion) alongside the C-side any-guard
+# straddle_hull mode.
+# ---------------------------------------------------------------------------
+
+def parse_hullstats_full(path):
+    """--probe --hullstats jsonl -> {i: full line dict}."""
+    rows = {}
+    for ln in open(path):
+        if not ln.startswith('{"i"'):
+            continue
+        d = json.loads(ln)
+        rows[d["i"]] = d
+    return rows
+
+
+def iv_straddle(v):
+    """True iff 0 lies in the interval (plain or sq-tagged ends)."""
+    if _is_sq(v):
+        return _sgn_end(v[1]) <= 0 and _sgn_end(v[2]) >= 0
+    lo, hi = v
+    return lo <= 0 <= hi
+
+
+def guard_conds(case):
+    """The ite guard cond subtrees of the hull-route expr, outermost first
+    (poly+abs only for 549; anything else marks the guard unevaluable)."""
+    root = parse_sexpr(hull_expr(case, 128, -80)[0])
+    conds = []
+
+    def walk(x):
+        if x.op == ".ite":
+            conds.append(x.kids[1])
+        for k in x.kids:
+            if isinstance(k, N):
+                walk(k)
+    walk(root)
+    return conds
+
+
+CONST_PAT = re.compile(r"⟨\s*(-?\d+),\s*(-?\d+)\s*⟩")
+
+
+def _const_frac(x):
+    m = CONST_PAT.fullmatch(" ".join(x.kids[1:]))
+    if not m:
+        raise ValueError(f"const token {' '.join(x.kids[1:])!r} not ⟨m, e⟩")
+    from fractions import Fraction
+    return Fraction(int(m.group(1))) * (Fraction(2) ** int(m.group(2)))
+
+
+def _is_sq(v):
+    return isinstance(v, tuple) and len(v) == 3 and v[0] == "sq"
+
+
+def _sgn_end(e):
+    """sign of a + s·√b for exact Fractions (b ≥ 0; √b need not be in Q)."""
+    a, b, s = e
+    if b < 0:
+        raise ValueError("sqrt domain negative")
+    if s < 0:
+        if a > 0:
+            return _cmp(a * a, b)
+        return 0 if (a == 0 and b == 0) else -1
+    if a >= 0:
+        return 0 if (a == 0 and b == 0) else 1
+    return _cmp(b, a * a)
+
+
+def _cmp(x, y):
+    return -1 if x < y else (1 if x > y else 0)
+
+
+def _neg_end(e):
+    return (-e[0], e[1], -e[2])
+
+
+def iv_eval(x, env):
+    """Exact-rational interval evaluation of a guard cond tree; env = list
+    of (lo, hi) Fraction pairs per var.  Intervals are (lo, hi) Fraction
+    pairs, or ("sq", e1, e2) with exact algebraic ends e = (a, b, s) =
+    a + s·√b (a single sqrt is supported; anything else raises ValueError —
+    callers treat the guard as unevaluable)."""
+    from fractions import Fraction
+    op = x.op
+    if op == ".var":
+        return env[int(x.kids[1])]
+    if op == ".const":
+        c = _const_frac(x)
+        return (c, c)
+    if op == ".neg":
+        lo, hi = iv_eval(x.kids[1], env)
+        if _is_sq(lo):
+            return ("sq", _neg_end(hi[1]), _neg_end(lo[2]))
+        return (-hi, -lo)
+    if op == ".abs":
+        lo, hi = iv_eval(x.kids[1], env)
+        if _is_sq(lo):
+            if _sgn_end(lo[1]) >= 0:
+                return (lo, hi)
+            if _sgn_end(hi[2]) <= 0:
+                return ("sq", _neg_end(hi[1]), _neg_end(lo[2]))
+            raise ValueError("abs of sq-interval straddling 0")
+        if lo >= 0:
+            return (lo, hi)
+        if hi <= 0:
+            return (-hi, -lo)
+        return (Fraction(0), max(-lo, hi))
+    if op in (".add", ".sub"):
+        a = iv_eval(x.kids[1], env)
+        b = iv_eval(x.kids[2], env)
+        if _is_sq(a) or _is_sq(b):
+            if _is_sq(a) and _is_sq(b):
+                raise ValueError("sqrt ± sqrt not exact-evaluable")
+            sq, r = (a, b) if _is_sq(a) else (b, a)
+            if _is_sq(r):
+                raise ValueError("sq ± non-rational not exact-evaluable")
+            e1, e2 = sq[1], sq[2]
+            if op == ".add":
+                return ("sq", (e1[0] + r[0], e1[1], e1[2]),
+                        (e2[0] + r[1], e2[1], e2[2]))
+            return ("sq", (e1[0] - r[1], e1[1], e1[2]),
+                    (e2[0] - r[0], e2[1], e2[2]))
+        alo, ahi = a
+        blo, bhi = b
+        if op == ".add":
+            return (alo + blo, ahi + bhi)
+        return (alo - bhi, ahi - blo)
+    if op == ".mul":
+        a = iv_eval(x.kids[1], env)
+        b = iv_eval(x.kids[2], env)
+        if _is_sq(a) or _is_sq(b):
+            raise ValueError("mul with sqrt endpoint not exact-evaluable")
+        alo, ahi = a
+        blo, bhi = b
+        c = [alo * blo, alo * bhi, ahi * blo, ahi * bhi]
+        return (min(c), max(c))
+    if op == ".sqrt":
+        lo, hi = iv_eval(x.kids[1], env)
+        if _is_sq(lo):
+            raise ValueError("nested sqrt not exact-evaluable")
+        if lo < 0:
+            raise ValueError("sqrt arg interval has negative part (TM would "
+                             "be invalid, guard INDET)")
+        return ("sq", (Fraction(0), lo, 1), (Fraction(0), hi, 1))
+    raise ValueError(f"guard cond op {op} not exact-evaluable")
+
+
+def cmd_pick_straddle(boxes_path, stats_path, case_path, out_prefix, cap):
+    """Filter a sampled boxes file to C-side valid+closed straddle_hull
+    leaves (renumbered), and record the exact-rational root-guard census
+    per kept leaf (the 22.4%-census advisory criterion)."""
+    t0 = time.time()
+    data = json.load(open(boxes_path))
+    boxes, caseid = data["boxes"], data["case"]
+    stats = parse_hullstats_full(stats_path)
+    if sorted(stats) != list(range(len(boxes))):
+        die(f"hullstats covers {len(stats)} boxes, expected {len(boxes)}")
+    case = json.load(open(case_path))
+    if case["id"] != caseid:
+        die(f"boxes case {caseid} != case id {case['id']}")
+    conds = guard_conds(case)
+
+    def census(box):
+        env = [(Fraction(d[0]["num"], d[0]["den"]),
+                Fraction(d[1]["num"], d[1]["den"])) for d in box]
+        out = []
+        for c in conds:
+            try:
+                out.append(iv_straddle(iv_eval(c, env)))
+            except ValueError:
+                out.append(None)
+        return out
+
+    from fractions import Fraction
+    keep, drop = [], {"single": 0, "not_closed": 0, "invalid": 0,
+                      "capped": 0}
+    for i in range(len(boxes)):
+        s = stats[i]
+        if not s.get("valid"):
+            drop["invalid"] += 1
+        elif not s.get("closed"):
+            drop["not_closed"] += 1
+        elif s.get("mode") != "straddle_hull":
+            drop["single"] += 1
+        elif len(keep) >= cap:
+            drop["capped"] += 1
+        else:
+            keep.append(i)
+    leaves = []
+    for j, i in enumerate(keep):
+        s = stats[i]
+        flags = census(boxes[i])
+        leaves.append({"j": j, "orig_i": i, "mode": s.get("mode"),
+                       "strat": s.get("strat"), "dmax": s.get("dmax"),
+                       "root_straddle": flags[0] if flags else None,
+                       "census": flags,
+                       "f0_lo": s.get("f0", [None])[0]})
+    json.dump({"case": caseid, "n": len(keep), "boxes": [boxes[i] for i in keep]},
+              open(out_prefix + ".boxes.json", "w"))
+    with open(out_prefix + ".hullstats.jsonl", "w") as f:
+        for j, i in enumerate(keep):
+            d = dict(stats[i])
+            d["i"] = j
+            f.write(json.dumps(d) + "\n")
+    json.dump({"schema": "straddle-pick", "case": caseid,
+               "source_boxes": boxes_path, "source_hullstats": stats_path,
+               "sampled": len(boxes), "kept": len(keep), "dropped": drop,
+               "n_guards": len(conds),
+               "root_straddle_kept": sum(1 for l in leaves
+                                         if l["root_straddle"]),
+               "leaves": leaves},
+              open(out_prefix + ".manifest.json", "w"), indent=1)
+    n_root = sum(1 for l in leaves if l["root_straddle"])
+    print(f"[pick-straddle] sampled {len(boxes)} -> kept {len(keep)} "
+          f"straddle leaves (dropped {drop})  ({time.time() - t0:.1f}s)")
+    print(f"[pick-straddle] root-guard straddle (census criterion): "
+          f"{n_root}/{len(keep)};  inner-only: {len(keep) - n_root}")
+    dm = {}
+    for l in leaves:
+        dm[l["dmax"]] = dm.get(l["dmax"], 0) + 1
+    print(f"[pick-straddle] dmax histogram: {dict(sorted(dm.items()))}")
+
+
+def params_sq_iv_tv(rung, ndiv, ntrans, trip):
+    """TMParams component literals for one leaf (cmd_stageb pattern)."""
+    _, _, g0, g1, g2, g3, g4, g5, g6 = rung
+    sq = ", ".join(f"⟨{a}, {b}, {c}, ({g3}), ({g4})⟩" for a, b, c in trip)
+    iv = ", ".join(f"⟨({g0}), ({g1}), ({g2})⟩" for _ in range(ndiv))
+    tv = ", ".join(f"⟨({g5}), ({g6})⟩" for _ in range(ntrans))
+    return f"⟨[{sq}], [{iv}], [{tv}]⟩"
+
+
+def cmd_stageb_shards(case_path, boxes_path, params_path, stats_path,
+                      out_dir, mod, shard_size, rung_n, tactic, compare_path):
+    """Straddle batch kernel pilot: one Base module (expr), one module per
+    <=shard_size-leaf group (per-leaf `checkPosTMHull ... = true|false`
+    decide theorems + shard conjunction), a summary module over the shard
+    theorems, and a manifest joining verdicts/loBounds/hullstats (+ an
+    optional second stage-A params file, e.g. the rung-2048 arm, for the
+    rung comparison).  Build: lake build <mod>S1 .. <mod>Sk <mod>Sum."""
+    t0 = time.time()
+    if tactic not in ("decide", "native_decide"):
+        die(f"unknown tactic {tactic!r} (decide|native_decide)")
+    case = json.load(open(case_path))
+    cid, boxes = load_boxes(boxes_path)
+    if cid != case["id"]:
+        die(f"boxes case {cid} != case id {case['id']}")
+    n = len(case["vars"])
+    expr, nsqrt, ndiv, ntrans = hull_expr(case, rung_n, -80)
+    rung, verdicts = parse_hull_params(params_path, nsqrt)
+    if rung[0] != rung_n or rung[1] != -80:
+        die(f"params rung {rung[0]},{rung[1]} != baked expr rung {rung_n},-80")
+    if sorted(verdicts) != list(range(len(boxes))):
+        die(f"params cover {sorted(verdicts)[:3]}..., expected 0..{len(boxes) - 1}")
+    stats = parse_hullstats_full(stats_path)
+    if sorted(stats) != list(range(len(boxes))):
+        die(f"hullstats covers {len(stats)} boxes, expected {len(boxes)}")
+    compare = None
+    if compare_path:
+        rung2, compare = parse_hull_params(compare_path, nsqrt)
+        if sorted(compare) != list(range(len(boxes))):
+            die(f"compare params cover {sorted(compare)[:3]}..., expected all")
+        if rung2[0] == rung[0]:
+            die(f"compare rung {rung2[0]} equals primary rung {rung[0]}")
+
+    rows = []
+    for k in range(len(boxes)):
+        verdict, lo_m, lo_e, trip = verdicts[k]
+        s = stats[k]
+        if not s.get("valid") or not s.get("closed"):
+            die(f"leaf {k}: C-side valid={s.get('valid')} "
+                f"closed={s.get('closed')} — not a closed leaf")
+        rows.append((k, boxes[k], verdict, lo_m, lo_e, trip, s))
+    n_pass = sum(1 for r in rows if r[2] == "PASS")
+    nshards = (len(rows) + shard_size - 1) // shard_size
+    os.makedirs(out_dir, exist_ok=True)
+
+    hdr = (f"/-\n"
+           f"  549 straddle BATCH pilot (auto-generated by\n"
+           f"  pipeline/interval/emit_hull_pilot.py stageb-shards).\n"
+           f"  case: {case['id']}  (orig_op: {case.get('orig_op')},\n"
+           f"  vars: {case['vars']})\n"
+           f"  Production HullD2 half: {len(rows)} C-side straddle_hull\n"
+           f"  closed leaves, kernel `checkPosTMHull` (evalTMHullD2 df-hull\n"
+           f"  composite), atan rungs open ({rung_n}, -80) / closed\n"
+           f"  (2048, -64).  {n_pass} PASS / {len(rows) - n_pass} NEG;\n"
+           f"  NEG leaf theorems state `= false` — kernel/compiled-run\n"
+           f"  AGREEMENT checks, NOT certificates.\n"
+           f"  Do not edit by hand.\n"
+           f"-/\n")
+    base_txt = (hdr +
+                "import Kepler.Interval.CertTM\n\n"
+                "set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
+                "namespace Kepler.Interval.Cases\n\n"
+                "/-- The case expression for the hull route (dummy sqrt\n"
+                f"slots; atan rungs baked: open ({rung_n}, -80), closed\n"
+                "(2048, -64)). -/\n"
+                f"def {mod}Expr : IExpr {n} :=\n  {expr}\n\n"
+                "end Kepler.Interval.Cases\n")
+    base_fp = os.path.join(out_dir, f"{mod}Base.lean")
+    open(base_fp, "w").write(base_txt)
+
+    shard_names = []
+    leaves_meta = []
+    for si in range(nshards):
+        chunk = rows[si * shard_size:(si + 1) * shard_size]
+        sname = f"{mod}S{si + 1}"
+        parts = []
+        names = []
+        for (k, box, verdict, lo_m, lo_e, trip, st) in chunk:
+            j = k + 1
+            tgt = "true" if verdict == "PASS" else "false"
+            cmp_txt = ""
+            if compare is not None:
+                cv, cm, ce, _ = compare[k]
+                cmp_txt = (f"; rung-{rung2[0]} arm {cv}, loBound "
+                           f"{cm} * 2^({ce})")
+            parts.append(
+                f"/-- Straddle leaf {j} (cert leaf {st.get('orig_i', k)};"
+                f" mode {st.get('mode')}, strat {st.get('strat')}, dmax"
+                f" {st.get('dmax')}; C f0 lo {st.get('f0', [None])[0]});\n"
+                f"stage-A margin loBound {lo_m} * 2^({lo_e}), verdict "
+                f"{verdict}{cmp_txt}). -/\n"
+                f"def Box{j} : Fin {n} → DInterval :=\n  {box_lit(box)}\n\n"
+                f"def P{j} : TMParams := "
+                f"{params_sq_iv_tv(rung, ndiv, ntrans, trip)}\n\n"
+                f"theorem Leaf{j} :\n"
+                f"    checkPosTMHull {mod}Expr Box{j} P{j} = {tgt} := by\n"
+                f"  {tactic}\n")
+            names.append((f"Leaf{j}",
+                          f"checkPosTMHull {mod}Expr Box{j} P{j} = {tgt}"))
+            leaves_meta.append({"j": j, "shard": si + 1,
+                                "verdict": verdict, "lo_m": lo_m,
+                                "lo_e": lo_e,
+                                "f0_lo": st.get("f0", [None])[0],
+                                "strat": st.get("strat"),
+                                "dmax": st.get("dmax"),
+                                "mode": st.get("mode")})
+        goal = " ∧\n    ".join(p for _, p in names)
+        conj = "⟨" + ", ".join(t for t, _ in names) + "⟩"
+        c_pass = sum(1 for r in chunk if r[2] == "PASS")
+        parts.append(
+            f"/-- Shard {si + 1}: straddle leaves {chunk[0][0]}.."
+            f"{chunk[-1][0]} (PASS {c_pass}, NEG {len(chunk) - c_pass});\n"
+            "kernel/compiled-run agreement on every leaf; references the\n"
+            "leaf theorems — no recomputation. -/\n"
+            f"theorem theShard :\n    {goal} :=\n  {conj}\n\n"
+            f"#print axioms theShard\n")
+        shard_names.append(f"{mod}S{si + 1}")
+        txt = (hdr +
+               f"import Kepler.Interval.Cases.{mod}Base\n\n"
+               "set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
+               f"namespace Kepler.Interval.Cases.{sname}\n\n"
+               + "\n".join(parts) +
+               f"\nend Kepler.Interval.Cases.{sname}\n")
+        open(os.path.join(out_dir, f"{sname}.lean"), "w").write(txt)
+
+    flat = []
+    for si in range(nshards):
+        for (k, _box, verdict, lo_m, lo_e, _trip, _st) in \
+                rows[si * shard_size:(si + 1) * shard_size]:
+            j = k + 1
+            tgt = "true" if verdict == "PASS" else "false"
+            flat.append((f"{mod}S{si + 1}.Leaf{j}",
+                         f"checkPosTMHull {mod}Expr {mod}S{si + 1}.Box{j} "
+                         f"{mod}S{si + 1}.P{j} = {tgt}"))
+    goal = " ∧\n    ".join(p for _, p in flat)
+    conj = "⟨" + ", ".join(t for t, _ in flat) + "⟩"
+    sum_txt = (hdr +
+               "\n".join(f"import Kepler.Interval.Cases.{s}"
+                         for s in shard_names) +
+               "\n\nset_option maxHeartbeats 0\n\n"
+               "namespace Kepler.Interval.Cases\n\n"
+               "/-- Batch summary: the full leaf-property conjunction (the\n"
+               "shards state the same props; operands mirror the leaf props\n"
+               "and close with the shard theorems — no recomputation). -/\n"
+               f"theorem {mod}_batch :\n    {goal} :=\n  {conj}\n\n"
+               f"#print axioms {mod}_batch\n\n"
+               "end Kepler.Interval.Cases\n")
+    open(os.path.join(out_dir, f"{mod}Sum.lean"), "w").write(sum_txt)
+
+    manifest = {"schema": "straddle-batch", "case": case["id"],
+                "out_dir": out_dir, "mod": mod, "tactic": tactic,
+                "rung": [rung_n, -80], "shard": shard_size,
+                "n_leaves": len(rows), "n_shards": nshards,
+                "n_pass": n_pass,
+                "compare_rung": rung2[0] if compare_path else None,
+                "modules": [f"{mod}Base"] + shard_names + [f"{mod}Sum"],
+                "leaves": leaves_meta,
+                "generated": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "emit_elapsed_s": round(time.time() - t0, 1)}
+    open(os.path.join(out_dir, f"{mod}.manifest.json"), "w").write(
+        json.dumps(manifest, indent=1))
+    print(f"[stageb-shards] wrote {mod}Base + {nshards} shard modules "
+          f"(<= {shard_size} leaves) + {mod}Sum  ({time.time() - t0:.1f}s)")
+    print(f"[stageb-shards] {len(rows)} straddle leaves, {n_pass} PASS / "
+          f"{len(rows) - n_pass} NEG (probe verdict; kernel confirms via "
+          f"{tactic})")
+    if compare is not None:
+        c_pass = sum(1 for k in range(len(rows)) if compare[k][0] == "PASS")
+        print(f"[stageb-shards] compare arm rung {rung2[0]}: {c_pass} PASS / "
+              f"{len(rows) - c_pass} NEG (compiled-run probe only)")
+
+
+
+def cmd_stagea(case_path, boxes_path, out_path, gran, rung_n, rung_out,
+               mod="C549HullA200"):
     """Stage-A probe driver emission (emit_lean --hull stage-A semantics)."""
     t0 = time.time()
     case = json.load(open(case_path))
@@ -761,10 +1245,10 @@ def cmd_stagea(case_path, boxes_path, out_path, gran, rung_n, rung_out):
     meta = dict(caseid=case["id"], origop=case.get("orig_op"),
                 vars=case["vars"], prec="-")
     out = hull_stage_a_file(
-        "C549HullA200", n, expr, boxes, gran, rung_n, rung_out,
+        mod, n, expr, boxes, gran, rung_n, rung_out,
         nsqrt, ndiv, ntrans, len(boxes), meta,
-        f" — SCHEMA-V3 HULLD LAUNCH DRILL stage A: {len(boxes)} tm leaves "
-        f"(stride sample of {case['id']})")
+        f" — SCHEMA-V3 HULLD stage A: {len(boxes)} tm leaves "
+        f"(straddle batch, rung {rung_n})")
     open(out_path, "w").write(out)
     print(f"[stagea] wrote {out_path}  ({time.time() - t0:.1f}s)  "
           f"sqrt {nsqrt}  div {ndiv}  trans {ntrans};  run from lean/: "
@@ -925,9 +1409,20 @@ def main():
     cmd = args[0]
     if cmd == "sample":
         cmd_sample(args[1], args[2], args[3], int(opts.get("k", 200)))
+    elif cmd == "pick-straddle":
+        cmd_pick_straddle(args[1], args[2], args[3], args[4],
+                          int(opts.get("cap", 160)))
     elif cmd == "stagea":
         cmd_stagea(args[1], args[2], args[3], int(opts.get("gran", -80)),
-                   int(opts.get("rung", 128)), int(opts.get("rung-out", -80)))
+                   int(opts.get("rung", 128)), int(opts.get("rung-out", -80)),
+                   opts.get("mod", "C549HullA200"))
+    elif cmd == "stageb-shards":
+        cmd_stageb_shards(args[1], args[2], args[3], args[4], args[5],
+                          opts.get("mod", "C549StraddleBatch"),
+                          int(opts.get("shard", 20)),
+                          int(opts.get("rung", 128)),
+                          opts.get("tactic", "decide"),
+                          opts.get("compare"))
     elif cmd == "stageb":
         cmd_stageb(args[1], args[2], args[3], args[4], args[5],
                    int(opts.get("shard", 50)),
