@@ -44,10 +44,33 @@ stage-A 收割走单驱动批量探针（每 (子表达式, 盒, 形) 一探针�
   emit <case.json> <census.jsonl> --der=<der.jsonl> --face=<face.jsonl>
        --cert=<cert.jsonl> [--full=<full.jsonl>] [--out-dir=<dir>]
        [--shard=20] [--name=Shard] [--baseline] [--native-ctl] [--ladder]
+       [--cert-route=tm|interval] [--ns-prefix=C549MonoEval<name>]
+       [--baseline-cap=0]
       合格叶全链 shard 出题（≤shard 叶/模块）：面叶+导数叶+证书叶+DSafe+Sem。
-      --baseline：同批叶原盒全叶 decide 基线模块（需 --full）。
+      --baseline：同批叶原盒全叶 decide 基线模块（需 --full；--baseline-cap
+        封顶基线叶数，0=全量）。
       --native-ctl：同内容的 native_decide 实验对照模块（不进主结论）。
       --ladder：单叶三层阶梯模块（CERT→+DER→+FOLD），decide 口径耗时分解。
+      rung-128 正式化：发射层钉死 rung=128（RUNG_DEFAULT）；判定行带 rung
+        字段时按 rung 分组出题（回退组模块名 R{rung} 后缀），回退率入
+        emitstats（逐叶 stage rung 一致性由断言把关）。
+
+  ---- rung-128 右移正式化 + 批量预演（十三更工位） ----
+
+  probe 的 rung 自适应与对账（--ladder / --locheck=N）：
+    --ladder  逐叶 PASS 自适应：rung 判定非 PASS 的叶回退下一级
+              （128→512→2048，RUNG_LADDER），行带 rung 字段，回退率入 meta；
+    --locheck=N  loBound 与 2048 口径抽查对账（抽样 max(N,50) 叶；
+              仅 rung 敏感 stage face/full）：verdict 翻转 + loBound
+              指数/尾数一致性，另写 *.locheck2048.jsonl。
+  batch <case.json> <pool_census.jsonl> [--n=1080] [--stride=0] [--par=12]
+        [--out-dir=/tmp/opencode/r128] [--cert-route=interval]
+        [--locheck=60] [--no-full] [--j=2]
+      ≥1000 叶批量预演（轮次化全管线）：合格池（guard 定号）stride 抽样 →
+      每轮单 rung 跑 der→cert(∥)→full(∥)→face → 完备叶收官、非完备叶回退
+      下一 rung（回退叶全部层在新 rung 重证）→ loBound 对账（翻转叶保守
+      回退 2048 重证）→ batch_report.json + batch_{der,cert,face,full}.jsonl
+      （emit 直接可用）+ census_batch.jsonl。
 
 用法：在 pipeline/interval/ 下 `python3 emit_mono.py ...`；
 stage-A 运行在 lean/ 包根下 `lake env lean --run`。
@@ -62,6 +85,16 @@ from fractions import Fraction
 from emit_lean import RPN, die, hull_expr
 from emit_diff import (bal, dtext as dtext_then, face_box_lit, parse_leaf_defs,
                        parse_sexpr, params_lit)
+
+# ---- rung-128 右移正式化（十三更工位）：发射层钉死参数 ----
+# open trans 段的 rung 在发射层全局钉死为 128（closed atan(1) 段本就钉在
+# 2048，见 emit_lean.hull_expr）。stage-A 逐叶 PASS 自适应：128 判定非 PASS
+# 的叶沿 RUNG_LADDER 回退（512 → 2048），回退率入批报告；安全机制 =
+# loBound 指数与 2048 口径抽查对账（≥LOCHECK_MIN 叶）。
+RUNG_DEFAULT = 128
+RUNG_OUT_DEFAULT = -80
+RUNG_LADDER = (128, 512, 2048)
+LOCHECK_MIN = 50
 
 
 # `derivIExprM` 的 Python 镜像（else 支）；dtext_then 已镜像 then 支。
@@ -672,17 +705,18 @@ def read_jsonl(path):
     return rows
 
 
-def cmd_probe(case_path, census_path, stage, der_path, from_, to_, gran,
-              rung_n, rung_out, out_path, tag, route="tm"):
-    from emit_lean import box_frac, box_lit
+def _build_stage(case_path, rows, stage, j, rung_n, rung_out, der_pass=None,
+                 cert_route="tm"):
+    """构造单 stage 探针集（probe/batch 共用）。rows: census 行切片。
+
+    der_pass: {idx: dir}（仅 face 需要——方向取自 der 判定）。
+    返回 (exprs, probes, meta_tags, n, dcounts, counts)。"""
+    from emit_lean import box_lit
     case = json.load(open(case_path))
     n = len(case["vars"])
     expr, nsqrt, ndiv, ntrans = hull_expr(case, rung_n, rung_out)
     tree = parse_sexpr(expr)
     src = expr
-    meta = read_jsonl(census_path)[0]
-    rows = [r for r in read_jsonl(census_path) if "mode" in r][from_:to_]
-    j = int(meta["j"])
 
     # 模式缓存：导数表达式与证书清单
     dexprs = {"then": dtext_then(tree, src, j),
@@ -716,7 +750,7 @@ def cmd_probe(case_path, census_path, stage, der_path, from_, to_, gran,
         for r in rows:
             if r["mode"] == "none":
                 continue
-            if route == "interval":
+            if cert_route == "interval":
                 # 裸区间路线：每证书只探首选形（iteNeg→neg / divNe→pos /
                 # sqrtPos→pos；即发射侧将采用的形式）。
                 for ci, c in enumerate(certs[r["mode"]]):
@@ -732,46 +766,42 @@ def cmd_probe(case_path, census_path, stage, der_path, from_, to_, gran,
         for r in rows:
             add_probe((r["idx"], "full"), expr, r["box"], nsqrt, ndiv, ntrans)
     elif stage == "face":
-        if not der_path:
-            die("face stage needs --der")
-        by_leaf = {}
-        for d in read_jsonl(der_path):
-            if d["v"] == "PASS":
-                by_leaf.setdefault(d["idx"], set()).add(d["dir"])
+        if der_pass is None:
+            die("face stage needs der_pass (der directions)")
         for r in rows:
-            dirs = by_leaf.get(r["idx"], set())
-            if not dirs:
+            dl = der_pass.get(r["idx"])
+            if dl is None:
                 continue
-            dl = "lo" if "lo" in dirs else "hi"
             fb = face_box_lit(re.findall(r"⟨⟨[^⟨⟩]*⟩, ⟨[^⟨⟩]*⟩⟩", r["box"]),
-                              int(meta["j"]), hi=(dl == "hi"))
+                              j, hi=(dl == "hi"))
             add_probe((r["idx"], dl), expr, fb, nsqrt, ndiv, ntrans)
     else:
         die(f"unknown stage {stage}")
+    return exprs, probes, meta_tags, n, dcounts, (nsqrt, ndiv, ntrans)
 
-    print(f"probe {stage}{tag}[{route}]: {len(rows)} leaves, {len(probes)} probes, "
-          f"{len(exprs)} distinct exprs")
+
+def _run_stage_probes(case_path, rows, stage, j, rung_n, rung_out, mod,
+                      der_pass=None, cert_route="tm", gran=-80):
+    """构造并跑单 stage 批探针，返回 (rows_out, n)。
+
+    rows_out 项 = probe 判定行（dict，带 rung 字段），序同探针序。"""
+    exprs, probes, meta_tags, n, dcounts, counts = _build_stage(
+        case_path, rows, stage, j, rung_n, rung_out, der_pass=der_pass,
+        cert_route=cert_route)
     if not probes:
-        die("no probes")
-    if stage == "cert" and route == "interval":
-        res = run_stagea4(f"I{stage}{tag}", n, exprs, probes, gran)
+        return [], n
+    if stage == "cert" and cert_route == "interval":
+        res = run_stagea4(mod, n, exprs, probes, gran)
     else:
-        res = run_stagea3(f"M{stage}{tag}", n, exprs, probes, gran)
-    with open(out_path, "w") as f:
-        f.write(json.dumps(dict(schema=f"probe549-{stage}", case=case_path,
-                                census=census_path, j=meta["j"], gran=gran,
-                                route=route, counts=meta.get("counts"),
-                                tag=tag)) + "\n")
-        for mt, rr in zip(meta_tags, res):
-            if stage == "cert" and route == "interval":
-                vv, lm, le, hm, he, ms, trip = rr
-                # 与 TM 路线同构：form 文本（(.neg g)/(.abs den)/裸式）的区间
-                # 下端 > 0 即 PASS（checkPosI 语义）。
-                v = ("PASS" if lm > 0 else "NEG") if vv == "IV" else "FAIL"
-                rec = dict(idx=mt[0], v=v, ms=ms, trip=trip, iv=[lm, le, hm, he])
-                rec["ci"], rec["form"] = mt[1], mt[2]
-                f.write(json.dumps(rec) + "\n")
-                continue
+        res = run_stagea3(mod, n, exprs, probes, gran)
+    rows_out = []
+    for mt, rr in zip(meta_tags, res):
+        if stage == "cert" and cert_route == "interval":
+            vv, lm, le, hm, he, ms, trip = rr
+            v = ("PASS" if lm > 0 else "NEG") if vv == "IV" else "FAIL"
+            rec = dict(idx=mt[0], v=v, ms=ms, trip=trip, iv=[lm, le, hm, he],
+                       ci=mt[1], form=mt[2])
+        else:
             v, m_, e_, ms, trip = rr
             rec = dict(idx=mt[0], v=v, ms=ms, trip=trip)
             if stage == "der":
@@ -782,17 +812,147 @@ def cmd_probe(case_path, census_path, stage, der_path, from_, to_, gran,
             elif stage == "face":
                 rec["dir"] = mt[1]
             if v != "FAIL":
-                # Taylor 下界 (mantissa, exponent)——归因/相关性分析用
-                # （loBound ≤ 0 的 NEG 叶给出余项肥瘦的直接度量）。
                 rec["lb_m"], rec["lb_e"] = m_, e_
-            f.write(json.dumps(rec) + "\n")
-    npass = sum(1 for r in res if r[0] in ("PASS", "IV"))
-    ms_all = [r[5] if (stage == "cert" and route == "interval") else r[3]
-              for r in res if r[0] != "FAIL"]
-    print(f"probe {stage}{tag}: PASS {npass}/{len(res)}"
-          + (f"  ms med={sorted(ms_all)[len(ms_all)//2]} max={max(ms_all)}"
-             if ms_all else ""))
+        rec["rung"] = rung_n
+        rows_out.append(rec)
+    return rows_out, n
+
+
+def der_pass_dirs(der_rows):
+    """der 判定行 → {idx: dir}（lo 优先；face 探针方向）。"""
+    by_leaf = {}
+    for d in der_rows:
+        if d.get("v") == "PASS":
+            by_leaf.setdefault(d["idx"], set()).add(d["dir"])
+    return {i: ("lo" if "lo" in s else "hi") for i, s in by_leaf.items()}
+
+
+def _probe_rows_text(stage, rows_out, census_path, case_path, j, gran, route,
+                     counts, tag, rung_n, ladder, fallback):
+    meta = dict(schema=f"probe549-{stage}", case=case_path, census=census_path,
+                j=j, gran=gran, route=route, counts=list(counts), tag=tag,
+                rung=rung_n, rung_default=RUNG_DEFAULT,
+                ladder=list(ladder) if ladder else None,
+                fallback=fallback)
+    lines = [json.dumps(meta)]
+    for rec in rows_out:
+        lines.append(json.dumps(rec))
+    return "\n".join(lines) + "\n"
+
+
+def _stage_summary(stage, tag, rows_out, ladder, rung_n):
+    npass = sum(1 for r in rows_out if r["v"] in ("PASS",))
+    ms_all = sorted(r["ms"] for r in rows_out if r["v"] != "FAIL")
+    msg = (f"probe {stage}{tag}@{rung_n}: PASS {npass}/{len(rows_out)}"
+           + (f"  ms med={ms_all[len(ms_all)//2]} max={ms_all[-1]}"
+              if ms_all else ""))
+    if ladder:
+        fails = [r for r in rows_out if r["v"] != "PASS"]
+        msg += f"  non-PASS {len(fails)}"
+    print(msg)
+
+
+def cmd_probe(case_path, census_path, stage, der_path, from_, to_, gran,
+              rung_n, rung_out, out_path, tag, route="tm", ladder=False,
+              locheck_n=0):
+    """stage-A 批探针。--ladder：逐叶 PASS 自适应——rung 判定非 PASS 的叶
+    回退下一级（128→512→2048），行带 rung 字段，回退率入 meta。
+    --locheck=N：loBound 与 2048 口径抽查对账（抽样 max(N, 50) 叶，仅
+    rung 敏感 stage face/full 有意义）——比对 verdict 翻转与 loBound
+    指数/尾数一致性，另写 *.locheck2048.jsonl。"""
+    meta = read_jsonl(census_path)[0]
+    all_rows = [r for r in read_jsonl(census_path) if "mode" in r]
+    rows = all_rows[from_:to_]
+    j = int(meta["j"])
+    ladder_seq = RUNG_LADDER if ladder else (rung_n,)
+    if rung_n not in ladder_seq:
+        die(f"--rung={rung_n} 不在阶梯 {RUNG_LADDER} 内（--ladder 口径）")
+
+    # der 方向（face 用）：rung 敏感度低，方向取自 der 判定文件
+    der_pass = None
+    if stage == "face":
+        if not der_path:
+            die("face stage needs --der")
+        der_pass = der_pass_dirs(read_jsonl(der_path))
+
+    rows_out, n, fallback = [], None, None
+    fb = {"triggered": 0, "to": {}}
+    for ri, rung in enumerate(ladder_seq):
+        if ri == 0:
+            cur = rows
+        else:
+            cur = [r for r in all_rows
+                   if r["idx"] in {x["idx"] for x in nonpass}]
+        mod = f"M{stage}{tag}R{rung}"
+        round_rows, n = _run_stage_probes(
+            case_path, cur, stage, j, rung, rung_out, mod,
+            der_pass=der_pass, cert_route=route if stage == "cert" else "tm",
+            gran=gran)
+        if ri == 0:
+            rows_out = round_rows
+        else:
+            by_idx = {r["idx"]: r for r in rows_out}
+            for rec in round_rows:
+                by_idx[rec["idx"]] = rec
+            rows_out = [by_idx[x["idx"]] for x in rows]
+        nonpass = [r for r in round_rows if r["v"] != "PASS"]
+        if nonpass and ri + 1 < len(ladder_seq):
+            nxt = ladder_seq[ri + 1]
+            fb["triggered"] += len(nonpass)
+            fb["to"][nxt] = fb["to"].get(nxt, 0) + len(nonpass)
+            print(f"probe {stage}{tag}: {len(nonpass)} non-PASS @{rung} "
+                  f"-> fallback {nxt}")
+        else:
+            fallback = dict(fb) if fb["triggered"] else None
+            break
+        fallback = dict(fb) if fb["triggered"] else None
+
+    counts = list(meta.get("counts") or (n and [0, 0, 0]) or [0, 0, 0])
+    with open(out_path, "w") as f:
+        f.write(_probe_rows_text(stage, rows_out, census_path, case_path, j,
+                                 gran, route, counts, tag,
+                                 ladder_seq[-1] if ladder else rung_n,
+                                 ladder, fallback))
+    _stage_summary(stage, tag, rows_out, ladder,
+                   ladder_seq[-1] if ladder else rung_n)
     print(f"wrote {out_path}")
+
+    # ---- 安全机制：loBound 与 2048 口径抽查对账 ----
+    if locheck_n > 0:
+        if stage not in ("face", "full"):
+            print(f"locheck: stage {stage} rung 无关（跳过，建议 face/full）")
+            return
+        n_sample = max(locheck_n, LOCHECK_MIN)
+        step = max(1, len(rows_out) // n_sample)
+        sample_rows = rows_out[::step][:n_sample]
+        sidx = {r["idx"] for r in sample_rows}
+        srows = [r for r in rows if r["idx"] in sidx]
+        ref = {r["idx"]: r for r in sample_rows}
+        chk, _ = _run_stage_probes(
+            case_path, srows, stage, j, 2048, rung_out,
+            f"M{stage}{tag}Lchk", der_pass=der_pass,
+            cert_route=route if stage == "cert" else "tm", gran=gran)
+        flips = [r["idx"] for r in chk
+                 if (ref[r["idx"]]["v"] == "PASS") != (r["v"] == "PASS")]
+        ebad = [r["idx"] for r in chk
+                if r["v"] == "PASS" and ref[r["idx"]]["v"] == "PASS"
+                and ref[r["idx"]].get("lb_e") != r.get("lb_e")]
+        mbad = [r["idx"] for r in chk
+                if r["v"] == "PASS" and ref[r["idx"]]["v"] == "PASS"
+                and ref[r["idx"]].get("lb_m") != r.get("lb_m")]
+        rep = dict(schema="locheck549", stage=stage, sample=len(chk),
+                   base_rung=RUNG_DEFAULT, check_rung=2048,
+                   verdict_flips=flips, lb_e_mismatch=ebad, lb_m_mismatch=mbad)
+        lp = out_path.replace(".jsonl", ".locheck2048.jsonl")
+        with open(lp, "w") as f:
+            f.write(json.dumps(rep) + "\n")
+            for r in chk:
+                f.write(json.dumps(dict(idx=r["idx"], v2048=r["v"],
+                                        lb2048=[r.get("lb_m"), r.get("lb_e")],
+                                        ms=r["ms"])) + "\n")
+        print(f"locheck {stage}{tag}: sample {len(chk)} @{2048} vs @"
+              f"{RUNG_DEFAULT}: flips {len(flips)}  lb_e mismatch "
+              f"{len(ebad)}  lb_m mismatch {len(mbad)}  -> {lp}")
 
 
 def r_mode_of(rows, idx):
@@ -806,19 +966,37 @@ def r_mode_of(rows, idx):
 
 def gather_complete(case_path, census_path, der_path, face_path, cert_path,
                     full_path, gran, rung_n, rung_out):
-    """汇总各 stage 判定，选出全链完备叶；返回 (meta, expr, counts, tree, src,
-    j, complete_leaves, stats)。complete_leaves 项:
-    dict(idx, mode, dir, box, fbox, pf, dp, dexpr, dcounts,
+    """汇总各 stage 判定，选出全链完备叶；返回 (meta, j, n, complete_leaves,
+    stats, rctx)。complete_leaves 项:
+    dict(idx, mode, dir, rung, box, fbox, pf, dp, dexpr, dcounts,
          certs=[(ci, kind, sub, form, form_text, trip, counts, ms)],
-         ms={face,der,cert,full}, full=None|trip)"""
+         ms={face,der,cert,full}, full=None|trip)
+
+    rctx: rung → dict(expr, tree, src, counts, dexprs, dcounts, certs)——
+    逐叶 rung 口径的发射上下文（128 正式化后叶可回退 512/2048，E549 与
+    导数镜像文本随 rung 变化，必须按叶的最终 rung 取上下文）。"""
     case = json.load(open(case_path))
     n = len(case["vars"])
-    expr, nsqrt, ndiv, ntrans = hull_expr(case, rung_n, rung_out)
-    tree = parse_sexpr(expr)
-    src = expr
     meta = read_jsonl(census_path)[0]
     j = int(meta["j"])
     rows = {r["idx"]: r for r in read_jsonl(census_path) if "mode" in r}
+
+    def row_rung(r):
+        return int(r.get("rung", RUNG_DEFAULT))
+
+    rctx = {}
+
+    def ctx_for(rung):
+        if rung not in rctx:
+            e, ns_, nd_, nt_ = hull_expr(case, rung, rung_out)
+            t = parse_sexpr(e)
+            dexp = {"then": dtext_then(t, e, j),
+                    "else": dtextM(t, e, j, "else")}
+            rctx[rung] = dict(
+                expr=e, tree=t, src=e, counts=(ns_, nd_, nt_),
+                dexprs=dexp, dcounts={m: node_counts(d) for m, d in dexp.items()},
+                certs={m: cert_list(t, e, m) for m in ("then", "else")})
+        return rctx[rung]
 
     def load_stage(path):
         if not path:
@@ -832,10 +1010,6 @@ def gather_complete(case_path, census_path, der_path, face_path, cert_path,
     face = load_stage(face_path)
     cert = load_stage(cert_path)
     full = load_stage(full_path)
-
-    dexprs = {"then": dtext_then(tree, src, j), "else": dtextM(tree, src, j, "else")}
-    dcounts = {m: node_counts(d) for m, d in dexprs.items()}
-    certs_by_mode = {m: cert_list(tree, src, m) for m in ("then", "else")}
 
     complete = []
     stats = dict(n=len(rows), mode_then=0, mode_else=0, mode_none=0,
@@ -862,7 +1036,10 @@ def gather_complete(case_path, census_path, der_path, face_path, cert_path,
         for c in cert.get(idx, []):
             by_ci.setdefault(c["ci"], []).append(c)
         picked, ok, ms_cert = [], True, 0
-        for ci, c in enumerate(certs_by_mode[r["mode"]]):
+        # 证书清单按叶最终 rung 的上下文取（rung 无关，但形式一致性由
+        # 上下文统一给出）
+        used_rows = [drec, frec]
+        for ci, c in enumerate(ctx_for(RUNG_DEFAULT)["certs"][r["mode"]]):
             forms_rank = [fl for fl, _ in c["forms"]]
             cands = [x for x in by_ci.get(ci, []) if x["v"] == "PASS"]
             cands.sort(key=lambda x: forms_rank.index(x["form"]))
@@ -874,6 +1051,7 @@ def gather_complete(case_path, census_path, der_path, face_path, cert_path,
             picked.append((ci, c["kind"], c["sub"], x["form"], form_text,
                            x["trip"], node_counts(form_text), x["ms"]))
             ms_cert += x["ms"]
+            used_rows.append(x)
         if not ok:
             continue
         stats["cert_ok"] += 1
@@ -883,9 +1061,20 @@ def gather_complete(case_path, census_path, der_path, face_path, cert_path,
         frecs_full = full.get(idx) or []
         full_rec = frecs_full[0] if frecs_full and frecs_full[0]["v"] == "PASS" \
             else (frecs_full[0] if frecs_full else None)
-        item = dict(idx=idx, mode=r["mode"], dir=dl, box=r["box"], fbox=fbox,
-                    pf=frec["trip"], dp=drec["trip"],
-                    dexpr=dexprs[r["mode"]], dcounts=dcounts[r["mode"]],
+        # 逐叶 rung：该叶全部 stage 判定行的 rung 必须一致（batch 轮次
+        # 语义保证）；老判定文件无 rung 字段 → 默认 128 口径。
+        used_rows2 = used_rows + ([full_rec] if full_rec else [])
+        rgs = {row_rung(x) for x in used_rows2}
+        if len(rgs) != 1:
+            die(f"leaf {idx}: stage rung inconsistent {sorted(rgs)} "
+                f"(回退轮次语义被破坏)")
+        rl = rgs.pop()
+        ctx = ctx_for(rl)
+        item = dict(idx=idx, mode=r["mode"], dir=dl, rung=rl, box=r["box"],
+                    fbox=fbox, pf=frec["trip"], dp=drec["trip"],
+                    dexpr=ctx["dexprs"][r["mode"]],
+                    dcounts=ctx["dcounts"][r["mode"]],
+                    counts=ctx["counts"],
                     certs=picked,
                     ms=dict(face=frec["ms"], der=drec["ms"], cert=ms_cert,
                             full=(full_rec["ms"] if full_rec else None)),
@@ -899,7 +1088,7 @@ def gather_complete(case_path, census_path, der_path, face_path, cert_path,
             if item["full_v"] == "PASS":
                 stats["ms_fullbox"].append(item["ms"]["full"])
         complete.append(item)
-    return meta, expr, (nsqrt, ndiv, ntrans), tree, src, j, complete, stats
+    return meta, j, n, complete, stats, rctx
 
 
 CERT_LEMMA = {("divNe", "pos"): "safeDivPos", ("divNe", "neg"): "safeDivNeg",
@@ -1295,11 +1484,17 @@ def dref_neg(dref, direction):
 
 def cmd_emit(case_path, census_path, der_path, face_path, cert_path, full_path,
              out_dir, shard_size, name, do_baseline, do_native, do_ladder,
-             gran, rung_n, rung_out, cert_route="tm", ns_prefix=None):
-    meta, expr, (nsqrt, ndiv, ntrans), tree, src, j, comp, stats = \
-        gather_complete(case_path, census_path, der_path, face_path, cert_path,
-                        full_path, gran, rung_n, rung_out)
-    n = int(meta["n"])
+             gran, rung_n, rung_out, cert_route="tm", ns_prefix=None,
+             baseline_cap=0):
+    """合格叶全链 shard 出题（rung-128 正式化口径）。
+
+    发射层钉死 rung：缺省 rung=RUNG_DEFAULT=128；逐叶自适应回退的叶
+    （rung 字段 512/2048）按 rung 分组出题——模块名 R{rung} 后缀，E549/
+    导数镜像/面叶参数全部取该 rung 口径（gather_complete 一致性断言把
+    关）。回退率入 emitstats。"""
+    meta, j, n, comp, stats, rctx = gather_complete(
+        case_path, census_path, der_path, face_path, cert_path, full_path,
+        gran, rung_n, rung_out)
     print(f"emit: census {stats['n']} = then {stats['mode_then']} + "
           f"else {stats['mode_else']} + none {stats['mode_none']}; "
           f"der_ok {stats['der_ok']}  face_ok {stats['face_ok']}  "
@@ -1310,66 +1505,471 @@ def cmd_emit(case_path, census_path, der_path, face_path, cert_path, full_path,
     os.makedirs(out_dir, exist_ok=True)
     base = ns_prefix or f"C549MonoEval{name}"
     import math
-    nsh = max(1, math.ceil(len(comp) / shard_size))
+
+    # rung 分组（连续 shard 编号；128 组不加后缀，回退组 R{rung}）
+    rungs = sorted({L["rung"] for L in comp})
+    groups = [(r, [L for L in comp if L["rung"] == r]) for r in rungs]
+    nsh_total = sum(max(1, math.ceil(len(g) / shard_size)) for _, g in groups)
+    n_att = stats["n"] - stats["mode_none"]
+    fallback_n = sum(len(g) for r, g in groups if r != RUNG_DEFAULT)
+    stats["emit_rungs"] = {str(r): len(g) for r, g in groups}
+    stats["emit_fallback"] = dict(
+        leaves=fallback_n, attempted=n_att,
+        rate=round(fallback_n / n_att, 4) if n_att else None)
+
     manifest = []
-    for s in range(nsh):
-        batch = comp[s * shard_size:(s + 1) * shard_size]
-        ns = f"{base}{s+1}"
-        text = shard_module_text(ns, n, expr, batch, j, gran, ndiv, ntrans,
-                                 "decide", ("cert", "der", "face", "fold"),
-                                 f"全量评估 shard {s+1}/{nsh}（{len(batch)} 叶；"
-                                 f"modes {sorted(set(b['mode'] for b in batch))}）",
+    s = 0
+    for rung, grp in groups:
+        ctx = rctx[rung]
+        expr_r, (nsq_r, ndv_r, ntr_r) = ctx["expr"], ctx["counts"]
+        tag_r = (f"rung {rung}（{RUNG_DEFAULT} 回退）" if rung != RUNG_DEFAULT
+                 else f"rung {RUNG_DEFAULT}（发射钉死）")
+        nsh = max(1, math.ceil(len(grp) / shard_size))
+        for k in range(nsh):
+            s += 1
+            batch = grp[k * shard_size:(k + 1) * shard_size]
+            ns = f"{base}{'R%d' % rung if rung != RUNG_DEFAULT else ''}{s}"
+            text = shard_module_text(
+                ns, n, expr_r, batch, j, gran, ndv_r, ntr_r,
+                "decide", ("cert", "der", "face", "fold"),
+                f"{tag_r} shard {s}/{nsh_total}（{len(batch)} 叶；"
+                f"modes {sorted(set(b['mode'] for b in batch))}）",
+                cert_route=cert_route)
+            path = os.path.join(out_dir, f"{ns}.lean")
+            with open(path, "w") as f:
+                f.write(text)
+            print(f"wrote {path} ({len(batch)} leaves)")
+            for L in batch:
+                manifest.append(dict(shard=s, rung=rung,
+                                     **{k2: L[k2] for k2 in
+                                        ("idx", "mode", "dir", "ms")}))
+    with open(os.path.join(out_dir, f"{base}.manifest.json"), "w") as f:
+        json.dump(manifest, f, indent=1)
+    first_rung, first_grp = groups[0][0], groups[0][1]
+    first = first_grp[:shard_size]
+    if do_baseline:
+        # 基线对照（原盒全叶 decide）：按 rung 分组，baseline_cap 封顶
+        emitted = 0
+        for rung, grp in groups:
+            if baseline_cap and emitted >= baseline_cap:
+                break
+            ctx = rctx[rung]
+            need = [L for L in grp if L["full"] is not None]
+            if baseline_cap:
+                need = need[:max(0, baseline_cap - emitted)]
+            if not need:
+                continue
+            emitted += len(need)
+            ns = (f"{base}Base" + (f"R{rung}" if rung != RUNG_DEFAULT else ""))
+            text = baseline_module_text(ns, n, ctx["expr"], need, j, gran,
+                                        ctx["counts"][1], ctx["counts"][2])
+            path = os.path.join(out_dir, f"{ns}.lean")
+            with open(path, "w") as f:
+                f.write(text)
+            print(f"wrote {path} ({len(need)} baseline leaves, rung {rung})")
+    if do_native:
+        ctx = rctx[first_rung]
+        ns = f"{base}NativeCtl"
+        text = shard_module_text(ns, n, ctx["expr"], first, j, gran,
+                                 ctx["counts"][1], ctx["counts"][2],
+                                 "native_decide", ("cert", "der", "face", "fold"),
+                                 "**实验对照模块**（native_decide 对照，不进主结论；"
+                                 f"axioms 含 Lean.ofReduceBool 属预期；rung {first_rung}）",
                                  cert_route=cert_route)
         path = os.path.join(out_dir, f"{ns}.lean")
         with open(path, "w") as f:
             f.write(text)
-        print(f"wrote {path} ({len(batch)} leaves)")
-        for L in batch:
-            manifest.append(dict(shard=s + 1, **{k: L[k] for k in
-                                                 ("idx", "mode", "dir", "ms")}))
-    with open(os.path.join(out_dir, f"{name}.manifest.json"), "w") as f:
-        json.dump(manifest, f, indent=1)
-    first = comp[:shard_size]
-    if do_baseline:
-        need = [L for L in first if L["full"] is not None]
-        if not need:
-            print("baseline: skipped (no full harvest)")
-        else:
-            ns = f"C549MonoEval{name}Base"
-            text = baseline_module_text(ns, n, expr, need, j, gran, ndiv, ntrans)
-            path = os.path.join(out_dir, f"{ns}.lean")
-            with open(path, "w") as f:
-                f.write(text)
-            print(f"wrote {path} ({len(need)} baseline leaves)")
-    if do_native:
-        ns = f"C549MonoEval{name}NativeCtl"
-        text = shard_module_text(ns, n, expr, first, j, gran, ndiv, ntrans,
-                                 "native_decide", ("cert", "der", "face", "fold"),
-                                 "**实验对照模块**（native_decide 对照，不进主结论；"
-                                 "axioms 含 Lean.ofReduceBool 属预期）")
-        path = os.path.join(out_dir, f"{ns}.lean")
-        with open(path, "w") as f:
-            f.write(text)
-        print(f"wrote {path} ({len(first)} leaves, native_decide)")
+        print(f"wrote {path} ({len(first)} leaves, native_decide, rung {first_rung})")
     if do_ladder:
         for mode in ("then", "else"):
             L = next((x for x in comp if x["mode"] == mode), None)
             if L is None:
                 continue
+            ctx = rctx[L["rung"]]
             for li, layers in enumerate((("cert",), ("cert", "der"),
                                          ("cert", "der", "face", "fold"))):
                 ns = f"{base}Ladder{mode.capitalize()}{li+1}"
-                text = shard_module_text(ns, n, expr, [L], j, gran, ndiv,
-                                         ntrans, "decide", layers,
+                text = shard_module_text(ns, n, ctx["expr"], [L], j, gran,
+                                         ctx["counts"][1], ctx["counts"][2],
+                                         "decide", layers,
                                          f"三层阶梯 L{li+1}（叶 {L['idx']}，"
-                                         f"{mode} 支；层集 {sorted(layers)}）",
+                                         f"{mode} 支，rung {L['rung']}；"
+                                         f"层集 {sorted(layers)}）",
                                          cert_route=cert_route)
                 path = os.path.join(out_dir, f"{ns}.lean")
                 with open(path, "w") as f:
                     f.write(text)
                 print(f"wrote {path}")
-    with open(os.path.join(out_dir, f"{name}.emitstats.json"), "w") as f:
+    with open(os.path.join(out_dir, f"{base}.emitstats.json"), "w") as f:
         json.dump(stats, f, indent=1)
+
+
+# ---- rung-128 正式化批量预演（轮次化全管线；十三更工位） ----
+
+def _select_pool(pool_path, n_leaves, stride, out_path, mode_filter="then"):
+    """从全量普查池 stride 抽样合格叶（guard 定号池），写 census 子集文件
+    （emit/probe 直接可用：单 meta 行 + 行）。"""
+    allr = read_jsonl(pool_path)
+    meta = allr[0]
+    rows = [r for r in allr[1:] if r.get("mode") == mode_filter]
+    if stride <= 0:
+        stride = max(1, len(rows) // max(1, n_leaves))
+    sel = rows[::stride][:n_leaves]
+    bmeta = dict(schema="census549", case=meta.get("case"),
+                 cert=meta.get("cert"), j=meta["j"], k=len(sel), stride=stride,
+                 skip=0, total=meta.get("total"), n=meta["n"],
+                 counts=meta.get("counts"),
+                 guards_then=meta.get("guards_then"),
+                 guards_else=meta.get("guards_else"),
+                 sampled=len(sel), pool=pool_path,
+                 pool_mode_rows=len(rows),
+                 rung_default=RUNG_DEFAULT,
+                 note=f"rung-{RUNG_DEFAULT} 正式化批量预演抽查"
+                      f"（{mode_filter} 池 stride {stride}）")
+    with open(out_path, "w") as f:
+        f.write(json.dumps(bmeta) + "\n")
+        for r in sel:
+            f.write(json.dumps(r) + "\n")
+    print(f"batch: pool {pool_path} mode={mode_filter} rows {len(rows)} "
+          f"stride {stride} -> selected {len(sel)} -> {out_path}")
+    return out_path, sel, bmeta
+
+
+def _sharded_probe(case_path, census_path, stage, rung, out_dir, tag, par,
+                   gran, rung_out, der_path=None, route="tm",
+                   timeout=10800):
+    """并行分片跑单 stage 单 rung 探针（probe 子命令 × --from/--to 切片），
+    返回本 stage 本 rung 的全部判定行。"""
+    import concurrent.futures
+    allr = read_jsonl(census_path)
+    nrows = len(allr) - 1
+    par = max(1, min(par, nrows))
+    os.makedirs(out_dir, exist_ok=True)
+    files = []
+
+    def one(i):
+        a = i * nrows // par
+        b = (i + 1) * nrows // par
+        op = os.path.join(out_dir, f"r{rung}_{stage}_{tag}_{i}.jsonl")
+        cmd = ["nice", "-n", "19", "python3", os.path.abspath(__file__),
+               "probe", case_path, census_path, stage,
+               "--from=%d" % a, "--to=%d" % b, "--rung=%d" % rung,
+               "--rung-out=%d" % rung_out, "--gran=%d" % gran,
+               "--out=%s" % op, "--tag=%s%d" % (tag, i)]
+        if der_path:
+            cmd.append("--der=%s" % der_path)
+        if route != "tm":
+            cmd.append("--route=%s" % route)
+        with open(op + ".log", "w") as lf:
+            p = subprocess.run(cmd, stdout=lf, stderr=subprocess.STDOUT,
+                               timeout=timeout, cwd=os.path.dirname(os.path.abspath(__file__)))
+        if p.returncode != 0:
+            die(f"shard probe {stage} r{rung} #{i} exit {p.returncode} "
+                f"(log {op}.log)")
+        return op
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=par) as ex:
+        files = list(ex.map(one, range(par)))
+    rows = []
+    for fp in files:
+        rows.extend(read_jsonl(fp)[1:])
+    return rows
+
+
+def _rows_merge_by_idx(rounds_rows, rows_order):
+    """轮次行合并：每叶只保留最终轮次行（顺序按 rows_order 的叶序）。"""
+    by_idx = {}
+    for rr in rounds_rows:
+        by_idx[rr["idx"]] = rr          # 后轮覆盖前轮
+    return [by_idx[x["idx"]] for x in rows_order if x["idx"] in by_idx]
+
+
+def _ms_stats(ms_list):
+    if not ms_list:
+        return None
+    s = sorted(ms_list)
+    return dict(n=len(s), med=s[len(s) // 2], p95=s[min(len(s) - 1, int(len(s) * .95))],
+                max=s[-1], sum=sum(s))
+
+
+def cmd_batch(case_path, pool_path, out_dir, n_leaves, stride, par, gran,
+              rung_out, cert_route="interval", locheck_n=60, do_full=True,
+              j=2):
+    """rung-128 正式化批量预演（≥1000 叶）。
+
+    流程（轮次 = RUNG_LADDER）：
+      1. 合格池 stride 抽样 n_leaves 叶 → census 子集；
+      2. 每轮单 rung 口径跑全管线 der→cert(∥)→full(∥)→face（der 后）；
+      3. 全链完备叶收官于该 rung；非完备叶回退下一 rung（旧轮行整体
+         作废——回退叶的全部层都在新 rung 重证，params 一致性由
+         gather_complete 的逐叶 rung 断言把关）；
+      4. loBound 对账：done@128 抽样 ≥50 叶与 2048 口径比对 verdict/
+         loBound 指数；翻转/指数不一致叶保守回退 2048 重证；
+      5. 产 batch_report.json + batch_{der,cert,face,full}.jsonl
+        （emit 直接可用）+ census 子集。"""
+    import time
+    t0 = time.time()
+    os.makedirs(out_dir, exist_ok=True)
+    census_batch = os.path.join(out_dir, "census_batch.jsonl")
+    _, sel, bmeta = _select_pool(pool_path, n_leaves, stride, census_batch)
+    ladder = RUNG_LADDER
+
+    stage_rows = {st: {} for st in ("der", "cert", "face", "full")}
+    # stage_rows[st][idx] = 该叶最终轮次的全部判定行（der 两方向 / cert
+    # 多证书；回退叶旧轮行整体作废）
+    done = {}          # idx -> rung
+    rounds = []
+    promoted_from = {}  # idx -> 首次回退的层级
+    pending = list(sel)
+    for ri, rung in enumerate(ladder):
+        if not pending:
+            break
+        tr = time.time()
+        print(f"batch: round rung={rung} leaves={len(pending)}", flush=True)
+        # 轮次工作集 census：首轮=全部抽样叶，回退轮=仅 pending 叶
+        # （分片 --from/--to 基于该文件——回退轮只重探回退叶，省
+        # rung 敏感层的整机开销；2048 口径 full ~120s/叶级）
+        if ri == 0:
+            census_round = census_batch
+        else:
+            census_round = os.path.join(out_dir, f"census_r{rung}.jsonl")
+            with open(census_round, "w") as f:
+                f.write(json.dumps(dict(bmeta, sampled=len(pending),
+                                        note=f"回退轮 rung {rung} 工作集")) + "\n")
+                for r in pending:
+                    f.write(json.dumps(r) + "\n")
+        # der / cert / full 互相独立，先并行发射
+        f_der = _sharded_probe(case_path, census_round, "der", rung, out_dir,
+                               "b", par, gran, rung_out)
+        f_cert = _sharded_probe(case_path, census_round, "cert", rung, out_dir,
+                                "b", max(2, par // 4), gran, rung_out,
+                                route=cert_route)
+        f_full = (_sharded_probe(case_path, census_round, "full", rung,
+                                 out_dir, "b", max(2, par // 4), gran,
+                                 rung_out) if do_full else [])
+        # face 依赖 der 方向（同轮口径）
+        der_pass = der_pass_dirs(f_der)
+        f_face = _sharded_face(case_path, census_round, rung, out_dir, gran,
+                               rung_out, par, der_pass)
+
+        pidx = {r["idx"] for r in pending}
+        f_der = [r for r in f_der if r["idx"] in pidx]
+        f_cert = [r for r in f_cert if r["idx"] in pidx]
+        f_face = [r for r in f_face if r["idx"] in pidx]
+        f_full = [r for r in f_full if r["idx"] in pidx]
+
+        cert_by_idx = {}
+        for c in f_cert:
+            cert_by_idx.setdefault(c["idx"], []).append(c)
+        face_pass = {r["idx"] for r in f_face if r["v"] == "PASS"}
+        complete, promote = [], []
+        for r in pending:
+            idx = r["idx"]
+            dpass = idx in der_pass
+            cpass = (cert_by_idx.get(idx) and
+                     all(c["v"] == "PASS" for c in cert_by_idx[idx]))
+            fpass = idx in face_pass
+            if dpass and cpass and fpass:
+                complete.append(idx)
+                done[idx] = rung
+            else:
+                promote.append(idx)
+                if idx not in promoted_from and ri + 1 < len(ladder):
+                    layer = ("der" if not dpass else
+                             "face" if not fpass else "cert")
+                    promoted_from[idx] = layer
+        # 回退叶旧轮行整体作废（只留最终轮）
+        keep = set(complete) | (set(promote) if ri + 1 >= len(ladder) else set())
+        for st, rr in (("der", f_der), ("cert", f_cert), ("face", f_face),
+                       ("full", f_full)):
+            m = stage_rows[st]
+            for row in rr:
+                m.setdefault(row["idx"], []).append(row)
+            for idx in list(m):
+                if idx in pidx and idx not in keep:
+                    del m[idx]
+        rounds.append(dict(
+            rung=rung, attempted=len(pending),
+            der_pass=len(der_pass), face_pass=len(face_pass),
+            cert_pass=sum(1 for v in cert_by_idx.values()
+                          if all(c["v"] == "PASS" for c in v)),
+            complete=len(complete), promoted=len(promote),
+            wall_s=round(time.time() - tr, 1)))
+        print(f"batch: round rung={rung} complete={len(complete)} "
+              f"promoted={len(promote)} wall={rounds[-1]['wall_s']}s",
+              flush=True)
+        pending = [r for r in pending if r["idx"] in set(promote)] \
+            if ri + 1 < len(ladder) else []
+        # 回退叶下一步重探所需：把 pending 的 census 行保留（census 子集
+        # 已含全部抽样叶，无需改文件）
+
+    hard_fail = [dict(idx=r["idx"], mode=r["mode"]) for r in pending]
+
+    # ---- loBound 对账（安全机制）：done@128 抽样 vs 2048 口径 ----
+    locheck = dict(schema="locheck549", sample=0, flips=[], lb_e_mismatch=[],
+                   lb_m_mismatch=[], flagged=[])
+    done128 = sorted(i for i, rg in done.items() if rg == RUNG_DEFAULT)
+    if locheck_n > 0 and done128:
+        nsamp = max(locheck_n, LOCHECK_MIN)
+        step = max(1, len(done128) // nsamp)
+        sample = done128[::step][:nsamp]
+        srows = [r for r in sel if r["idx"] in set(sample)]
+        # locheck 专用 census 子集（分片切片基于该文件）
+        census_lc = os.path.join(out_dir, "census_locheck.jsonl")
+        with open(census_lc, "w") as f:
+            f.write(json.dumps(dict(bmeta, sampled=len(srows),
+                                    note="loBound 对账抽样")) + "\n")
+            for r in srows:
+                f.write(json.dumps(r) + "\n")
+        sset = set(sample)
+        ref_face = {r["idx"]: r for i in sample for r in stage_rows["face"].get(i, [])
+                    if r["idx"] in sset}
+        ref_full = {r["idx"]: r for i in sample for r in stage_rows["full"].get(i, [])
+                    if r["idx"] in sset}
+        dp = der_pass_dirs([r for i in sample for r in stage_rows["der"].get(i, [])])
+        tl = time.time()
+        # 2048 口径探针 39× 慢（full 120s/叶级）——必须分片（基于抽样子集）
+        chk_face = _sharded_face(case_path, census_lc, 2048, out_dir, gran,
+                                 rung_out, max(2, par // 2), dp)
+        chk_full = _sharded_probe(case_path, census_lc, "full", 2048,
+                                  out_dir, "lc", max(2, par // 2), gran,
+                                  rung_out)
+        flagged = set()
+
+        def cmp(rows_chk, ref, st):
+            for r in rows_chk:
+                b = ref.get(r["idx"])
+                if b is None:
+                    continue
+                if (b["v"] == "PASS") != (r["v"] == "PASS"):
+                    locheck["flips"].append(dict(idx=r["idx"], stage=st,
+                                                 v128=b["v"], v2048=r["v"]))
+                    flagged.add(r["idx"])
+                elif b["v"] == "PASS":
+                    if b.get("lb_e") != r.get("lb_e"):
+                        locheck["lb_e_mismatch"].append(
+                            dict(idx=r["idx"], stage=st, e128=b.get("lb_e"),
+                                 e2048=r.get("lb_e")))
+                        flagged.add(r["idx"])
+                    elif b.get("lb_m") != r.get("lb_m"):
+                        locheck["lb_m_mismatch"].append(
+                            dict(idx=r["idx"], stage=st))
+        cmp(chk_face, ref_face, "face")
+        cmp(chk_full, ref_full, "full")
+        locheck.update(sample=len(sample),
+                       wall_s=round(time.time() - tl, 1))
+        print(f"batch: locheck sample={len(sample)} flips={len(locheck['flips'])} "
+              f"lb_e={len(locheck['lb_e_mismatch'])} "
+              f"lb_m={len(locheck['lb_m_mismatch'])}", flush=True)
+        # 对账不一致叶：保守回退 2048 全链重证
+        if flagged:
+            print(f"batch: locheck flagged {len(flagged)} -> re-verify @2048",
+                  flush=True)
+            census_fl = os.path.join(out_dir, "census_flagged.jsonl")
+            prows = [r for r in sel if r["idx"] in flagged]
+            with open(census_fl, "w") as f:
+                f.write(json.dumps(dict(bmeta, sampled=len(prows),
+                                        note="locheck flagged 重证")) + "\n")
+                for r in prows:
+                    f.write(json.dumps(r) + "\n")
+            f_der = _sharded_probe(case_path, census_fl, "der", 2048,
+                                   out_dir, "lc", max(2, par // 4), gran,
+                                   rung_out)
+            dp2 = der_pass_dirs(f_der)
+            f_cert = _sharded_probe(case_path, census_fl, "cert", 2048,
+                                    out_dir, "lc", 2, gran, rung_out,
+                                    route=cert_route)
+            f_face = _sharded_face(case_path, census_fl, 2048, out_dir,
+                                   gran, rung_out, max(2, par // 4), dp2)
+            cert_by_idx = {}
+            for c in f_cert:
+                cert_by_idx.setdefault(c["idx"], []).append(c)
+            face_pass = {r["idx"] for r in f_face if r["v"] == "PASS"}
+            for r in prows:
+                idx = r["idx"]
+                okc = (cert_by_idx.get(idx) and
+                       all(c["v"] == "PASS" for c in cert_by_idx[idx]))
+                if idx in dp2 and idx in face_pass and okc:
+                    done[idx] = 2048
+                    for st, rr in (("der", f_der), ("cert", f_cert),
+                                   ("face", f_face)):
+                        stage_rows[st][idx] = [x for x in rr
+                                               if x["idx"] == idx]
+                else:
+                    del done[idx]
+                    hard_fail.append(dict(idx=idx, mode=r["mode"],
+                                          reason="locheck flagged, 2048 仍不完备"))
+            locheck["flagged"] = sorted(flagged)
+
+    # ---- 汇总产出 ----
+    order = sorted(r["idx"] for r in sel)
+    hdr_extra = dict(case=case_path, census=census_batch, j=j, gran=gran,
+                     rung_default=RUNG_DEFAULT, ladder=list(ladder))
+    files_out = {}
+    for st in ("der", "cert", "face", "full"):
+        rows = [r for i in order for r in stage_rows[st].get(i, [])]
+        meta = dict(schema=f"probe549-{st}", **hdr_extra,
+                    route=(cert_route if st == "cert" else "tm"),
+                    counts=bmeta.get("counts"), tag="batch")
+        fp = os.path.join(out_dir, f"batch_{st}.jsonl")
+        with open(fp, "w") as f:
+            f.write(json.dumps(meta) + "\n")
+            for r in rows:
+                f.write(json.dumps(r) + "\n")
+        files_out[st] = fp
+
+    rung_dist = {}
+    for rg in done.values():
+        rung_dist[str(rg)] = rung_dist.get(str(rg), 0) + 1
+    n_att = len(sel)
+    fb_layers = {}
+    for idx, layer in promoted_from.items():
+        if idx in done or idx in {h["idx"] for h in hard_fail}:
+            fb_layers[layer] = fb_layers.get(layer, 0) + 1
+    ms128 = {}
+    for st in ("der", "cert", "face", "full"):
+        ms128[st] = _ms_stats([r["ms"] for rows in stage_rows[st].values()
+                               for r in rows
+                               if r.get("rung") == RUNG_DEFAULT
+                               and r["v"] != "FAIL"])
+    report = dict(
+        schema="batch549", rung_default=RUNG_DEFAULT, ladder=list(ladder),
+        case=case_path, pool=pool_path, census=census_batch,
+        selected=n_att, j=j, cert_route=cert_route,
+        done=len(done), done_rate=round(len(done) / n_att, 4),
+        rung_dist=rung_dist,
+        fallback=dict(promoted=len(promoted_from),
+                      rate=round(len(promoted_from) / n_att, 4),
+                      first_fail_layer=fb_layers),
+        hard_fail=hard_fail, rounds=rounds, locheck=locheck,
+        ms128=ms128, wall_s=round(time.time() - t0, 1),
+        stage_files=files_out)
+    rp = os.path.join(out_dir, "batch_report.json")
+    with open(rp, "w") as f:
+        json.dump(report, f, indent=1)
+    print(f"batch: DONE {len(done)}/{n_att} ({report['done_rate']:.1%}) "
+          f"rung_dist {rung_dist} fallback {report['fallback']['rate']:.1%} "
+          f"wall {report['wall_s']}s -> {rp}", flush=True)
+
+
+def _write_derdir(out_dir, rung, der_pass):
+    """der 方向表 → 临时行文件（probe 子命令 face 消费）。"""
+    dpf = os.path.join(out_dir, f"_derdir_r{rung}.jsonl")
+    with open(dpf, "w") as f:
+        for idx, dl in sorted(der_pass.items()):
+            f.write(json.dumps(dict(idx=idx, dir=dl, v="PASS")) + "\n")
+    return dpf
+
+
+def _sharded_face(case_path, census_path, rung, out_dir, gran, rung_out, par,
+                  der_pass):
+    """face 探针分片（方向来自本轮 der 判定；写临时 der 行文件供 probe
+    子命令消费）。der 方向空集（本轮无叶可用）→ 直接返回空。"""
+    if not der_pass:
+        return []
+    return _sharded_probe(case_path, census_path, "face", rung, out_dir,
+                          "b", par, gran, rung_out,
+                          der_path=_write_derdir(out_dir, rung, der_pass))
 
 
 def main():
@@ -1389,8 +1989,8 @@ def main():
         cmd_census(pos[0], int(opts.get("j", 2)))
     elif cmd == "pilot2":
         cmd_pilot2(pos[0], pos[1], int(opts.get("j", 2)), int(opts.get("k", 3)),
-                   int(opts.get("gran", -80)), int(opts.get("rung", 128)),
-                   int(opts.get("rung_out", -80)),
+                   int(opts.get("gran", -80)), int(opts.get("rung", RUNG_DEFAULT)),
+                   int(opts.get("rung_out", RUNG_OUT_DEFAULT)),
                    opts.get("out", "pipeline/interval/out/p549hull/C549Mono2Gen.lean"),
                    opts.get("dir", "lo"), opts.get("mode", "then"))
     elif cmd == "boxes":
@@ -1398,22 +1998,33 @@ def main():
                   int(opts.get("stride", 0)), int(opts.get("skip", 0)),
                   int(opts.get("want_else", 8)), int(opts.get("extra_cap", 6000)),
                   opts.get("out", "/tmp/opencode/mv/census549.jsonl"),
-                  int(opts.get("rung", 128)), int(opts.get("rung_out", -80)))
+                  int(opts.get("rung", RUNG_DEFAULT)),
+                  int(opts.get("rung_out", RUNG_OUT_DEFAULT)))
     elif cmd == "probe":
         cmd_probe(pos[0], pos[1], pos[2], opts.get("der"),
                   int(opts.get("from", 0)), int(opts.get("to", 10**9)),
-                  int(opts.get("gran", -80)), int(opts.get("rung", 128)),
-                  int(opts.get("rung_out", -80)),
+                  int(opts.get("gran", -80)), int(opts.get("rung", RUNG_DEFAULT)),
+                  int(opts.get("rung_out", RUNG_OUT_DEFAULT)),
                   opts["out"] if "out" in opts else die("probe needs --out"),
-                  opts.get("tag", ""), opts.get("route", "tm"))
+                  opts.get("tag", ""), opts.get("route", "tm"),
+                  "ladder" in flags, int(opts.get("locheck", 0)))
+    elif cmd == "batch":
+        cmd_batch(pos[0], pos[1], opts.get("out_dir", "/tmp/opencode/r128"),
+                  int(opts.get("n", 1080)), int(opts.get("stride", 0)),
+                  int(opts.get("par", 12)), int(opts.get("gran", -80)),
+                  int(opts.get("rung_out", RUNG_OUT_DEFAULT)),
+                  opts.get("cert_route", "interval"),
+                  int(opts.get("locheck", 60)),
+                  "no_full" not in flags, int(opts.get("j", 2)))
     elif cmd == "emit":
         cmd_emit(pos[0], pos[1], opts["der"], opts.get("face"), opts.get("cert"),
                  opts.get("full"), opts.get("out_dir", "lean/Kepler/Interval/Cases"),
                  int(opts.get("shard", 20)), opts.get("name", "Shard"),
                  "baseline" in flags, ("native_ctl" in flags or "native-ctl" in flags), "ladder" in flags,
-                 int(opts.get("gran", -80)), int(opts.get("rung", 128)),
-                 int(opts.get("rung_out", -80)), opts.get("cert_route", "tm"),
-                 opts.get("ns_prefix"))
+                 int(opts.get("gran", -80)), int(opts.get("rung", RUNG_DEFAULT)),
+                 int(opts.get("rung_out", RUNG_OUT_DEFAULT)),
+                 opts.get("cert_route", "tm"), opts.get("ns_prefix"),
+                 int(opts.get("baseline_cap", 0)))
     else:
         die(f"unknown cmd {cmd}")
 

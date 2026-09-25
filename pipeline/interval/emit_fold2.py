@@ -49,12 +49,18 @@ from emit_hull_pilot import (N, emit_fold_body, has_var,
                              mark_guards, node_cost, node_size,
                              parse_hull_params, parse_sexpr as parse_tree)
 
+# rung-128 右移正式化（十三更工位）：发射层钉死参数，与 emit_mono.py
+# 同一口径（open trans 段 rung=128 / err=-80；closed atan(1) 段 2048）。
+RUNG_DEFAULT = 128
+RUNG_OUT_DEFAULT = -80
+
 
 # ---------------------------------------------------------------------------
 # 导数表达式重建与收割（C549Mono2 口径）
 # ---------------------------------------------------------------------------
 
-def build_dexpr(case_path, j=2, rung_n=128, rung_out=-80):
+def build_dexpr(case_path, j=2, rung_n=RUNG_DEFAULT,
+                rung_out=RUNG_OUT_DEFAULT):
     """重建 emit_mono.py 口径的导数叶文本（dtext = derivIExpr then 镜像）。"""
     case = json.load(open(case_path))
     expr, ns, ni, nt = hull_expr(case, rung_n, rung_out)
@@ -437,7 +443,7 @@ def plan_fold_text(expr, min_size, max_lets, min_occ, cert_free_only):
 # ---------------------------------------------------------------------------
 
 def cmd_localize(case_path, mono2_path, j, leaf, out_dir, gran,
-                 rung_n=128, rung_out=-80):
+                 rung_n=RUNG_DEFAULT, rung_out=RUNG_OUT_DEFAULT):
     t0 = time.time()
     lean_root = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              "..", "..", "lean")
@@ -850,8 +856,8 @@ def main():
                        int(opts.get("max-lets", 8)),
                        int(opts.get("min-occ", 2)),
                        int(opts.get("gran", -80)),
-                       int(opts.get("rung", 128)),
-                       int(opts.get("rung-out", -80)))
+                       int(opts.get("rung", RUNG_DEFAULT)),
+                       int(opts.get("rung-out", RUNG_OUT_DEFAULT)))
     elif cmd == "stageb-der":
         cmd_stageb_der(args[1], args[2], args[3], args[4],
                        int(opts.get("leaves", 3)),
