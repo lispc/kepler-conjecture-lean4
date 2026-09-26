@@ -734,6 +734,20 @@ typedef struct {
     int    valid;   /* 0 = 该子式 TM 不可用（保留字段，见段头注） */
     int    from_ite; /* 谱系诊断：0=纯 TM 1=含 ite-hull(常数) 2=含 ite-hull2(df)
                         3=两者混合（div 越零定性用；不影响任何判定） */
+    /* --tm-div2 认证幅值下界（旗标门控维护；默认路径零改动）：
+       loa ≤ |f(x)| ∀x∈盒 的认证下界（0 = 未知）。注入点：push_var（盒端
+       点）、push_const、sqrt（√(参数 TM 值域下界)——sqrt 规则的成功条件
+       本身就是「参数模型值域下界 > 0」，该认证在结果 TM 的线性包络变肥后
+       依然成立）、abs（定号时较近端点）。其余算术 op 置 0（保守），
+       neg 不变。消费点仅 tm_div2_salvage。不参与 (I1)-(I4)。 */
+    mag_t  loa;
+    /* --tm-div2 认证值域对（arf 外向舍入；区间算术逐 op 组合）：
+       cvalid=1 时 [cLo,cHi] ⊇ 子表达式盒上真值域。与 TM 模型值域
+       [f0−W, f0+W] 互补：模型值域在 trans 节点后被线性包络+err 撑肥，
+       本轨道在 sqrt/log/atan 处按单调性直接换算端点（紧），在算术 op 处
+       标准区间组合。消费点仅 tm_div2_salvage（第二通道）。 */
+    arf_t  cLo, cHi;
+    int    cvalid;
 } tm1_t;
 
 /* div 越零失败指令表条目（同一位置计数合并；srcmask 位 i = from_ite==i 出现过。
@@ -771,6 +785,14 @@ typedef struct {
                                  (-10,-6] / (-6,-2] / (-2,2] / (2,6] / (6,20] / >20 */
     tm_ipent div_ips[64];    /* 失败指令（子式）表，溢出置 div_ips_ovf */
     int    div_ips_n, div_ips_ovf;
+    /* --tm-div2：den 倒数界裸区间认证通道（旗标门控计数，默认全零零输出）。
+       div2_n = div越零事件数（旗标开启时）；div2_saved = 裸区间轨道给出
+       |den| > 0 认证下界、div 规则经 M=1/loa 继续的事件数；
+       div2_unsaved = 轨道失效或仍跨 0（真跨 0 或裸区间也肥）事件数；
+       div2_lb[] = saved 事件 loa=log₂|den|下界 桶（口径同 div_fail_wb）。 */
+    long   div2_n, div2_saved, div2_unsaved;
+    long   div2_src1, div2_src2;   /* 通道占比：1=trans 注入 loa 2=值域对定号 */
+    long   div2_lb[8];
     size_t ite_path[24];     /* 当前 ite 递归走廊（诊断用，见 tm_ipent 注） */
     int    ite_depth;
     /* --hull-stats：OP_ITE 闭合模式计数（仅旗标开启时累加与打印；
@@ -810,6 +832,9 @@ typedef struct {
     /* --tm-ddf：诊断 dump（OP_ITE hull 合成事件 + --tm-debug 根盒 ddf 矩阵
        与 err 分解）；仅打印，不影响任何判定；默认 0。 */
     int    tm_ddf;
+    /* --tm-div2：div 越零的裸区间认证通道（旗标门控；默认 0 = 既有
+       TM_FAIL(3) 语义逐字节不变，见 tm_div2_salvage 注）。 */
+    int    tm_div2;
 } tmctx;
 
 static void tm1_init(tm1_t *t, slong n)
@@ -824,6 +849,10 @@ static void tm1_init(tm1_t *t, slong n)
     mag_init(t->W);
     t->valid = 1;
     t->from_ite = 0;
+    mag_init(t->loa);
+    arf_init(t->cLo);
+    arf_init(t->cHi);
+    t->cvalid = 0;
 }
 
 static void tm1_clear(tm1_t *t, slong n)
@@ -834,6 +863,9 @@ static void tm1_clear(tm1_t *t, slong n)
     for (i = 0; i < n * n; i++) mag_clear(t->ddf + i);
     mag_clear(t->err);
     mag_clear(t->W);
+    mag_clear(t->loa);
+    arf_clear(t->cLo);
+    arf_clear(t->cHi);
     free(t->df);
     free(t->ddf);
 }
@@ -1104,6 +1136,168 @@ static int tm_inv_range_mag(mag_t M, const tm1_t *g, const tmctx *cx)
     return ok;
 }
 
+/* --tm-div2 认证值域对的区间组合（arf 外向舍入；端点 arf 已是各自
+   子表达式真值域的外向界 ⟹ 组合结果仍是外向界）。 */
+
+static void tm_pair_add(arf_t lo, arf_t hi, const arf_t a, const arf_t b,
+                        const arf_t c, const arf_t d, slong prec)
+{
+    arf_add(lo, a, c, prec, ARF_RND_FLOOR);
+    arf_add(hi, b, d, prec, ARF_RND_CEIL);
+}
+
+static void tm_pair_sub(arf_t lo, arf_t hi, const arf_t a, const arf_t b,
+                        const arf_t c, const arf_t d, slong prec)
+{
+    arf_sub(lo, a, d, prec, ARF_RND_FLOOR);
+    arf_sub(hi, b, c, prec, ARF_RND_CEIL);
+}
+
+/* 标准区间乘/除：四端点组合，min 取 FLOOR、max 取 CEIL（除法要求
+   分母区间不含 0，调用方保证）。 */
+static void tm_pair_muldiv(arf_t lo, arf_t hi,
+                           const arf_t a, const arf_t b,
+                           const arf_t c, const arf_t d,
+                           slong prec, int isdiv)
+{
+    arf_t p[2][4];
+    arf_t mn, mx;
+    const arf_struct *num[2], *den[2];
+    int i, j;
+    num[0] = a; num[1] = b;
+    den[0] = c; den[1] = d;
+    for (i = 0; i < 2; i++)
+        for (j = 0; j < 4; j++)
+            arf_init(p[i][j]);
+    arf_init(mn);
+    arf_init(mx);
+    for (j = 0; j < 4; j++) {
+        const arf_struct *x = num[j & 1];
+        const arf_struct *y = den[j >> 1];
+        if (isdiv) {
+            arf_div(p[0][j], x, y, prec, ARF_RND_FLOOR);
+            arf_div(p[1][j], x, y, prec, ARF_RND_CEIL);
+        } else {
+            arf_mul(p[0][j], x, y, prec, ARF_RND_FLOOR);
+            arf_mul(p[1][j], x, y, prec, ARF_RND_CEIL);
+        }
+    }
+    arf_set(mn, p[0][0]);
+    arf_set(mx, p[1][0]);
+    for (j = 1; j < 4; j++) {
+        if (arf_cmp(mn, p[0][j]) > 0) arf_set(mn, p[0][j]);
+        if (arf_cmp(mx, p[1][j]) < 0) arf_set(mx, p[1][j]);
+    }
+    arf_set(lo, mn);
+    arf_set(hi, mx);
+    for (i = 0; i < 2; i++)
+        for (j = 0; j < 4; j++)
+            arf_clear(p[i][j]);
+    arf_clear(mn);
+    arf_clear(mx);
+}
+
+/* 单调 trans 换算（kind：0=sqrt 需 a>0，1=log 需 a>0，2=atan 全域单调；
+   经 arb 中转做端点外向舍入）。返回 0 = 前置条件不满足。 */
+static int tm_pair_trans(arf_t lo, arf_t hi, const arf_t a, const arf_t b,
+                         slong prec, int kind)
+{
+    arb_t t;
+    arf_t r;
+    int ok = 1;
+    if (kind <= 1 && arf_sgn(a) <= 0) return 0;
+    arb_init(t);
+    arf_init(r);
+    arb_set_arf(t, a);
+    if (kind == 0) arb_sqrt(t, t, prec);
+    else if (kind == 1) arb_log(t, t, prec);
+    else arb_atan(t, t, prec);
+    arb_get_lbound_arf(r, t, prec);
+    arf_set(lo, r);
+    arb_set_arf(t, b);
+    if (kind == 0) arb_sqrt(t, t, prec);
+    else if (kind == 1) arb_log(t, t, prec);
+    else arb_atan(t, t, prec);
+    arb_get_ubound_arf(r, t, prec);
+    arf_set(hi, r);
+    arf_clear(r);
+    arb_clear(t);
+    return ok;
+}
+
+/* --tm-div2：div 越零的认证通道（旗标门控；默认路径零改动）。
+ *
+ * 背景：tm_inv_range_mag 用 TM 模型值域 [f0−W, f0+W] 判 |g| 下界；线性项
+ * 沿链传播肥厚时该包络跨 0（549 的 6,565 处 div越零 全部如此，分母宽桶
+ * (2,6] 占 87%——「宽盒大振幅」），但真分母在盒上可能定号——模型包络跨 0
+ * 只说明*线性包络*够不着 1/g 的界，不说明 g 真的变号。
+ *
+ * 机制：TM 槽携带认证幅值下界 loa ≤ |g(x)|（tm1_t 注：sqrt/abs 规则在
+ * 通过自身成功条件时注入——该条件本身就是对真值域的认证，不随下游线性
+ * 包络变肥失效）。取
+ *   M := 1/loa   （arb_inv 外向 + arb_get_mag 上取）
+ * 则 M ≥ 1/|g(x)| 处处成立，方向 sound；下游 M²/M³ Hessian 传播与中心
+ * 商法则与常规路径逐式相同（只换 M 来源），(I1)-(I4) 论证不变。
+ * loa = 0（无认证）→ 放弃，维持 TM_FAIL(3) 既有语义。
+ *
+ * 返回 1 = M 已置、div 规则继续；0 = 不可救（调用方走原失败路径）。 */
+static int tm_div2_salvage(mag_t M, const tm1_t *g, tmctx *cx)
+{
+    arb_t t;
+    arf_t la;
+    int ok = 0;
+    cx->div2_n++;
+    arf_init(la);
+    arb_init(t);
+    /* 通道 1：trans 注入的 |·| 下界（sqrt/abs/push；最紧的单跳认证） */
+    if (!mag_is_zero(g->loa)) {
+        arf_set_mag(la, g->loa);      /* mag 名义值 = loa 的精确表示 */
+        ok = 1;
+        cx->div2_src1++;
+    }
+    /* 通道 2：认证值域对定号（区间组合轨道；sqrt·quad+r 型和链可过） */
+    if (!ok && g->cvalid) {
+        if (arf_sgn(g->cLo) > 0) {
+            arf_set(la, g->cLo);
+            ok = 1;
+            cx->div2_src2++;
+        } else if (arf_sgn(g->cHi) < 0) {
+            arf_neg(la, g->cHi);
+            ok = 1;
+            cx->div2_src2++;
+        }
+    }
+    if (ok) {
+        arb_set_arf(t, la);           /* t = loa ≤ |g| */
+        arb_inv(t, t, cx->prec_h);
+        arb_get_mag(M, t);
+        cx->div2_saved++;
+        /* loa 桶（log₂|den| 下界）——肥 M 预警（valid 但难闭合） */
+        {
+            double dv = arf_get_d(la, ARF_RND_DOWN);
+            int e = 0, b = 0;
+            if (dv > 0) {
+                frexp(dv, &e);
+                e -= 1;
+            }
+            if (e <= -20) b = 0;
+            else if (e <= -10) b = 1;
+            else if (e <= -6) b = 2;
+            else if (e <= -2) b = 3;
+            else if (e <= 2) b = 4;
+            else if (e <= 6) b = 5;
+            else if (e <= 20) b = 6;
+            else b = 7;
+            cx->div2_lb[b]++;
+        }
+    } else {
+        cx->div2_unsaved++;
+    }
+    arf_clear(la);
+    arb_clear(t);
+    return ok;
+}
+
 /* 谱系合并：0=纯 1=ite-hull 2=ite-hull2 3=混合（非零不同值 → 3） */
 static int tm_src_join(int a, int b)
 {
@@ -1236,6 +1430,20 @@ static void tm_div_diag_print(FILE *f, const tmctx *cx)
         if (cx->div_ips_ovf) fprintf(f, " ...(表满截断)");
         fprintf(f, "\n");
     }
+    if (cx->tm_div2) {
+        fprintf(f, "[bb_arb] div2 裸区间认证: n=%ld  saved=%ld  unsaved=%ld"
+                   "  (saved 占比 %.2f%%；通道1 trans-loa=%ld 通道2 值域对=%ld)\n",
+                cx->div2_n, cx->div2_saved, cx->div2_unsaved,
+                cx->div2_n ? 100.0 * (double)cx->div2_saved / (double)cx->div2_n
+                           : 0.0,
+                cx->div2_src1, cx->div2_src2);
+        fprintf(f, "[bb_arb] div2 loa=log₂|den|下界 桶: <=-20:%ld  (-20,-10]:%ld"
+                   "  (-10,-6]:%ld  (-6,-2]:%ld  (-2,2]:%ld  (2,6]:%ld"
+                   "  (6,20]:%ld  >20:%ld\n",
+                cx->div2_lb[0], cx->div2_lb[1], cx->div2_lb[2],
+                cx->div2_lb[3], cx->div2_lb[4], cx->div2_lb[5],
+                cx->div2_lb[6], cx->div2_lb[7]);
+    }
 }
 
 /* --hull-stats 摘要打印（仅旗标开启时调用） */
@@ -1317,6 +1525,39 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
             for (k = 0; k < n * n; k++) mag_zero(t->ddf + k);
             mag_zero(t->err);
             t->from_ite = 0;
+            if (cx->tm_div2) {
+                /* 认证下界注入：|xᵥ| ≥ 盒端点（bvars 球端点外向）；
+                   |c| ≥ 常数球下界。arb_get_mag_lower 向下取 → sound。 */
+                arb_t ab;
+                arb_init(ab);
+                if (in->op == OP_PUSH_VAR) {
+                    arf_t lb2, hb2;
+                    arf_init(lb2);
+                    arf_init(hb2);
+                    arb_get_lbound_arf(lb2, cx->bvars + in->vi, cx->prec_h);
+                    arb_get_ubound_arf(hb2, cx->bvars + in->vi, cx->prec_h);
+                    if (arf_sgn(lb2) > 0) {
+                        arb_set_arf(ab, lb2);
+                        arb_get_mag_lower(t->loa, ab);
+                    } else if (arf_sgn(hb2) < 0) {
+                        arb_neg(ab, cx->bvars + in->vi);
+                        arb_get_mag_lower(t->loa, ab);
+                    }
+                    /* 值域对 = 盒球端点（外向） */
+                    arf_set(t->cLo, lb2);
+                    arf_set(t->cHi, hb2);
+                    t->cvalid = 1;
+                    arf_clear(lb2);
+                    arf_clear(hb2);
+                } else {
+                    arb_get_mag_lower(t->loa, t->f0);
+                    /* 值域对 = 常数球端点 */
+                    arb_get_lbound_arf(t->cLo, t->f0, cx->prec_h);
+                    arb_get_ubound_arf(t->cHi, t->f0, cx->prec_h);
+                    t->cvalid = 1;
+                }
+                arb_clear(ab);
+            }
             tm_update_W(t, cx);
         } else if (in->op == OP_ITE) {
             /* guard 盒上裸区间判定：可定 → 盒上 f 恒等于一支，递归 TM 该支 */
@@ -1447,6 +1688,22 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                                 mag_set(tt->ddf + a, te->ddf + a);
                         tt->from_ite = tm_src_join(tt->from_ite, te->from_ite);
                         if (!tt->from_ite) tt->from_ite = 2;
+                        if (cx->tm_div2) {
+                            /* 认证下界：x 落某支 → |f(x)| ≥ 两支较小者
+                               （双双有认证才有效） */
+                            if (!mag_is_zero(tt->loa) && !mag_is_zero(te->loa))
+                                mag_min(tt->loa, tt->loa, te->loa);
+                            else
+                                mag_zero(tt->loa);
+                            /* 值域对 = 两支并集 */
+                            tt->cvalid = tt->cvalid && te->cvalid;
+                            if (tt->cvalid) {
+                                if (arf_cmp(tt->cLo, te->cLo) > 0)
+                                    arf_set(tt->cLo, te->cLo);
+                                if (arf_cmp(tt->cHi, te->cHi) < 0)
+                                    arf_set(tt->cHi, te->cHi);
+                            }
+                        }
                         tm_update_W(tt, cx);
                         if (cx->tm_ddf) tm_ddf_row("  out-hull", tt, cx);
                         arb_clear(b1); arb_clear(b2); arb_clear(un);
@@ -1488,6 +1745,19 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                         mag_set(tt->err, m);
                         tt->from_ite = tm_src_join(tt->from_ite, te->from_ite);
                         if (!tt->from_ite) tt->from_ite = 1;
+                        if (cx->tm_div2) {
+                            if (!mag_is_zero(tt->loa) && !mag_is_zero(te->loa))
+                                mag_min(tt->loa, tt->loa, te->loa);
+                            else
+                                mag_zero(tt->loa);
+                            tt->cvalid = tt->cvalid && te->cvalid;
+                            if (tt->cvalid) {
+                                if (arf_cmp(tt->cLo, te->cLo) > 0)
+                                    arf_set(tt->cLo, te->cLo);
+                                if (arf_cmp(tt->cHi, te->cHi) < 0)
+                                    arf_set(tt->cHi, te->cHi);
+                            }
+                        }
                         tm_update_W(tt, cx);
                         arb_clear(b1); arb_clear(b2); arb_clear(un);
                         arb_clear(tmp);
@@ -1528,6 +1798,20 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                     mag_add(f->ddf + a, f->ddf + a, g->ddf + a);
                 mag_add(f->err, f->err, g->err);
                 f->from_ite = tm_src_join(f->from_ite, g->from_ite);
+                if (cx->tm_div2) {
+                    mag_zero(f->loa);   /* 和/差认证不传播（幅值） */
+                    /* 值域对：区间加/减（端点外向，输出可别名输入） */
+                    if (f->cvalid && g->cvalid) {
+                        if (in->op == OP_ADD)
+                            tm_pair_add(f->cLo, f->cHi, f->cLo, f->cHi,
+                                        g->cLo, g->cHi, cx->prec_h);
+                        else
+                            tm_pair_sub(f->cLo, f->cHi, f->cLo, f->cHi,
+                                        g->cLo, g->cHi, cx->prec_h);
+                    } else {
+                        f->cvalid = 0;
+                    }
+                }
                 tm_update_W(f, cx);
             } else if (in->op == OP_MUL) {
                 mag_t Bf, Bg, acc, t1;
@@ -1582,6 +1866,15 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                 }
                 tm_err_from_ddf(f, cx);
                 f->from_ite = tm_src_join(f->from_ite, g->from_ite);
+                if (cx->tm_div2) {
+                    mag_zero(f->loa);   /* 积认证不传播（幅值，保守） */
+                    /* 值域对：区间乘 */
+                    if (f->cvalid && g->cvalid)
+                        tm_pair_muldiv(f->cLo, f->cHi, f->cLo, f->cHi,
+                                       g->cLo, g->cHi, cx->prec_h, 0);
+                    else
+                        f->cvalid = 0;
+                }
                 tm_update_W(f, cx);
                 mag_clear(Bf); mag_clear(Bg); mag_clear(acc); mag_clear(t1);
             } else {  /* OP_DIV：f/g，g 盒值域越零 → 不可用 */
@@ -1589,7 +1882,10 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                 mag_init(M); mag_init(M2); mag_init(M3);
                 mag_init(Bf); mag_init(acc); mag_init(t1);
                 tm_Bmag(Bf, f);
-                if (!tm_inv_range_mag(M, g, cx)) {
+                /* --tm-div2：模型值域跨 0 时试裸区间认证通道（M=1/loa，
+                   sound 性见 tm_div2_salvage 注）；旗标关 → 与原路径一致 */
+                if (!tm_inv_range_mag(M, g, cx) &&
+                    !(cx->tm_div2 && tm_div2_salvage(M, g, cx))) {
                     mag_clear(M); mag_clear(M2); mag_clear(M3);
                     mag_clear(Bf); mag_clear(acc); mag_clear(t1);
                     tm_div_fail_diag(cx, g, i);
@@ -1657,6 +1953,16 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                 }
                 tm_err_from_ddf(f, cx);
                 f->from_ite = tm_src_join(f->from_ite, g->from_ite);
+                if (cx->tm_div2) {
+                    mag_zero(f->loa);   /* 商结果无认证 */
+                    /* 值域对：区间商（分母对跨 0 → 轨道失效） */
+                    if (f->cvalid && g->cvalid &&
+                        !(arf_sgn(g->cLo) <= 0 && arf_sgn(g->cHi) >= 0))
+                        tm_pair_muldiv(f->cLo, f->cHi, f->cLo, f->cHi,
+                                       g->cLo, g->cHi, cx->prec_h, 1);
+                    else
+                        f->cvalid = 0;
+                }
                 tm_update_W(f, cx);
                 mag_clear(M); mag_clear(M2); mag_clear(M3);
                 mag_clear(Bf); mag_clear(acc); mag_clear(t1);
@@ -1671,7 +1977,16 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
             if (in->op == OP_NEG) {
                 arb_neg(f->f0, f->f0);
                 for (a = 0; a < n; a++) arb_neg(f->df + a, f->df + a);
-                continue;   /* ddf/err/W 不变 */
+                if (cx->tm_div2 && f->cvalid) {
+                    /* 值域对端点交换取负（loa 不变） */
+                    arf_t tmp;
+                    arf_init(tmp);
+                    arf_set(tmp, f->cLo);
+                    arf_neg(f->cLo, f->cHi);
+                    arf_neg(f->cHi, tmp);
+                    arf_clear(tmp);
+                }
+                continue;   /* ddf/err/W 不变（loa 对 neg 也不变） */
             }
             if (in->op == OP_ABS) {
                 /* 盒值域定号 → ±identity；跨 0 → 不可用（TMSafe 排除） */
@@ -1680,10 +1995,41 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                 arf_init(hi);
                 tm_range_arf(lo, hi, f, cx);
                 if (arf_sgn(lo) > 0) {
-                    /* identity：什么都不做 */
+                    /* identity：什么都不做；|abs(f)| ≥ lo（认证注入） */
+                    if (cx->tm_div2) {
+                        arb_t ab;
+                        arb_init(ab);
+                        arb_set_arf(ab, lo);
+                        arb_get_mag_lower(f->loa, ab);
+                        arb_clear(ab);
+                        /* 值域对：|f| ∈ [0, max(|cLo|,|cHi|)]（sound） */
+                        if (f->cvalid) {
+                            if (arf_cmpabs(f->cLo, f->cHi) > 0)
+                                arf_abs(f->cHi, f->cLo);
+                            else
+                                arf_abs(f->cHi, f->cHi);
+                            arf_zero(f->cLo);
+                        }
+                    }
                 } else if (arf_sgn(hi) < 0) {
                     arb_neg(f->f0, f->f0);
                     for (a = 0; a < n; a++) arb_neg(f->df + a, f->df + a);
+                    if (cx->tm_div2) {
+                        /* |abs(f)| = |f| ≥ |hi|（认证注入） */
+                        arb_t ab;
+                        arb_init(ab);
+                        arb_neg(ab, f->f0);   /* −f0 球 ⊇ −f(y) > 0 */
+                        arb_get_mag_lower(f->loa, ab);
+                        arb_clear(ab);
+                        /* 值域对：同上 */
+                        if (f->cvalid) {
+                            if (arf_cmpabs(f->cLo, f->cHi) > 0)
+                                arf_abs(f->cHi, f->cLo);
+                            else
+                                arf_abs(f->cHi, f->cHi);
+                            arf_zero(f->cLo);
+                        }
+                    }
                 } else {
                     arf_clear(lo);
                     arf_clear(hi);
@@ -1721,6 +2067,23 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                         arb_clear(s);
                         arb_clear(t2);
                     }
+                    if (cx->tm_div2) {
+                        /* 认证注入：√arg(x) ≥ √lo（lo = 参数模型值域下界
+                           > 0，即 sqrt 成功条件本身；mag_lower 向下取）。
+                           该认证不随后游线性包络变肥失效——div2 的关键。 */
+                        arb_t ab;
+                        arb_init(ab);
+                        arb_set_arf(ab, lo);
+                        arb_sqrt(ab, ab, cx->prec_h);
+                        arb_get_mag_lower(f->loa, ab);
+                        arb_clear(ab);
+                        /* 值域对：单调换算（认证端点 > 0 才有效） */
+                        if (f->cvalid && arf_sgn(f->cLo) > 0)
+                            tm_pair_trans(f->cLo, f->cHi, f->cLo, f->cHi,
+                                          cx->prec_h, 0);
+                        else
+                            f->cvalid = 0;
+                    }
                     break;
                 case OP_LOG:
                     if (arf_sgn(lo) <= 0) goto tm_unary_fail;
@@ -1729,6 +2092,14 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                         arb_div(cx->ndf + a, f->df + a, f->f0, cx->prec_c);
                     arb_log(f->f0, f->f0, cx->prec_c);
                     for (a = 0; a < n; a++) arb_set(f->df + a, cx->ndf + a);
+                    if (cx->tm_div2) {
+                        mag_zero(f->loa);
+                        if (f->cvalid && arf_sgn(f->cLo) > 0)
+                            tm_pair_trans(f->cLo, f->cHi, f->cLo, f->cHi,
+                                          cx->prec_h, 1);
+                        else
+                            f->cvalid = 0;
+                    }
                     break;
                 case OP_ATAN:
                     mag_one(Mg1);
@@ -1751,6 +2122,12 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                         for (a = 0; a < n; a++) arb_set(f->df + a, cx->ndf + a);
                         arb_clear(d);
                     }
+                    if (cx->tm_div2) {
+                        mag_zero(f->loa);   /* atan 后无 |·| 认证 */
+                        if (f->cvalid)
+                            tm_pair_trans(f->cLo, f->cHi, f->cLo, f->cHi,
+                                          cx->prec_h, 2);
+                    }
                     break;
                 case OP_SIN:
                     /* Mg' = |cos| ≤ 1；Mg'' = |−sin t| ≤ min(1, Bf) */
@@ -1766,6 +2143,13 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                         arb_sin(f->f0, f->f0, cx->prec_c);
                         for (a = 0; a < n; a++) arb_set(f->df + a, cx->ndf + a);
                         arb_clear(c0);
+                    }
+                    if (cx->tm_div2) {
+                        mag_zero(f->loa);
+                        /* 值域对：sin ⊆ [-1,1]（无条件 sound） */
+                        arf_set_si(f->cLo, -1);
+                        arf_set_si(f->cHi, 1);
+                        f->cvalid = 1;
                     }
                     break;
                 case OP_COS:
@@ -1784,6 +2168,12 @@ static int eval_prog_tm(const prog *p, tm1_t *stk, size_t *sp, tmctx *cx)
                         arb_cos(f->f0, f->f0, cx->prec_c);
                         for (a = 0; a < n; a++) arb_set(f->df + a, cx->ndf + a);
                         arb_clear(s0);
+                    }
+                    if (cx->tm_div2) {
+                        mag_zero(f->loa);
+                        arf_set_si(f->cLo, -1);
+                        arf_set_si(f->cHi, 1);
+                        f->cvalid = 1;
                     }
                     break;
                 default:
@@ -2326,7 +2716,10 @@ static void usage(void)
             "            （sound，err 只减不增；默认关）；--tm-tight2：对角完备\n"
             "            化实验（负结果留档）\n"
             "  --tm-ddf：余项解剖诊断打印（hull 合成事件 + --tm-debug 根盒\n"
-            "            ddf 矩阵；只打印不判定，默认关）\n");
+            "            ddf 矩阵；只打印不判定，默认关）\n"
+            "  --tm-div2：div 越零的裸区间认证通道（TM 槽并行裸区间轨道，\n"
+            "            倒数界 M=1/loa 改由 |den| 认证下界；方向 sound，\n"
+            "            默认关 = TM_FAIL(3) 语义逐字节不变）\n");
     exit(EXIT_ERR);
 }
 
@@ -2337,6 +2730,7 @@ int main(int argc, char **argv)
     long max_nodes = 1L << 16;
     int tm_on = 0, tm_debug = 0, ite_hull = 0, ite_hull2 = 0, gsplit = 0;
     int tm_tight = 0, tm_tight2 = 0, tm_ddf = 0;
+    int tm_div2 = 0;
     int gsplit2 = 0;
     int hull_stats = 0;
     slong tm_prec = 256, tm_hprec = 32;
@@ -2418,6 +2812,13 @@ int main(int argc, char **argv)
                ddf 矩阵与 err 分解（全序对和 vs Schwarz 候选 + 几何均值
                检验结果 + 逐格贡献排序）。隐含 --tm。 */
             tm_ddf = 1;
+            tm_on = 1;
+        } else if (!strcmp(argv[i], "--tm-div2")) {
+            /* 549 工位 div 规则收紧（C 侧独立于 Lean closed-trans/chop）：
+               TM 槽并行裸区间认证轨道，tm_inv_range_mag 的模型值域跨 0
+               时改用 |den| 认证下界（M=1/loa，方向 sound）。默认关闭 =
+               div越零 TM_FAIL(3) 语义逐字节不变。隐含 --tm。 */
+            tm_div2 = 1;
             tm_on = 1;
         } else if (!strcmp(argv[i], "--probe") && i + 1 < argc) {
             /* L1 探针（549 加速项目 Phase 0）：逐盒 TM 判定 + 带符号 df/σ dump；
@@ -2590,6 +2991,7 @@ int main(int argc, char **argv)
             tcx.tm_tight = tm_tight;
             tcx.tm_tight2 = tm_tight2;
             tcx.tm_ddf = tm_ddf;
+            tcx.tm_div2 = tm_div2;
             tcx.bstk = (arb_struct *)stk;   /* guard 裸区间求值复用主栈（TM 阶段它空闲） */
             tstk = xmalloc(scap * sizeof(tm1_t));
             for (k = 0; k < scap; k++) tm1_init(tstk + k, nvars);

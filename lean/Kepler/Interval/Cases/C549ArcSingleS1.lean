@@ -11,12 +11,12 @@
   AGREEMENT checks, NOT certificates.
   Do not edit by hand.
 -/
-import Kepler.Interval.Cases.C549StraddleBatchSingleBase
+import Kepler.Interval.Cases.C549ArcSingleBase
 
 set_option maxHeartbeats 0
 set_option maxRecDepth 1000000
 
-namespace Kepler.Interval.Cases.C549StraddleBatchSingleS1
+namespace Kepler.Interval.Cases.C549ArcSingleS1
 
 /-- Straddle leaf 1 (cert leaf 0; mode single, strat 0, dmax 0; C f0 lo 0.6620405826592253);
 stage-A margin loBound 11871729256053467357638071024856530435803597004952067933282113551865940877018547720718604761184014989537717177015026020226500256586581664298523936728968729445746306065195856461177659612407347399570294308864 * 2^(-682), verdict PASS). -/
@@ -26,7 +26,7 @@ def Box1 : Fin 6 → DInterval :=
 def P1 : TMParams := ⟨[⟨395358989154285186146491279829791604279813, 93250317514592560731441416803864450113205, 0, (-80), (-80)⟩, ⟨9433584887784091440199691029173883623587746, 9433584887784091440199691029173883623587746, 1153437688406796784244047395759195612193466511351, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf1 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box1 P1 = true := by
+    checkPosTMHull C549ArcSingleExpr Box1 P1 = true := by
   decide
 
 /-- Straddle leaf 2 (cert leaf 1; mode single, strat 0, dmax 0; C f0 lo 0.6592072931593639);
@@ -37,7 +37,7 @@ def Box2 : Fin 6 → DInterval :=
 def P2 : TMParams := ⟨[⟨162376028078163835346711336671635395392575, 639423498915203063085944261093335071057715, 0, (-80), (-80)⟩, ⟨8004260174771082604853555729094367107149283, 8004260174771082604853555729094367107149283, 974695074245718515691801225926706394403276876544, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf2 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box2 P2 = true := by
+    checkPosTMHull C549ArcSingleExpr Box2 P2 = true := by
   decide
 
 /-- Straddle leaf 3 (cert leaf 2; mode single, strat 0, dmax 0; C f0 lo 0.7017937339580383);
@@ -48,7 +48,7 @@ def Box3 : Fin 6 → DInterval :=
 def P3 : TMParams := ⟨[⟨338615350950826892409251137168308706895165, 83063036185205877729882773879816226845523, 0, (-80), (-80)⟩, ⟨8326146471864207671170535601324732583151774, 8326146471864207671170535601324732583151774, 1014668191979886420359845157471282004704212706606, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf3 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box3 P3 = true := by
+    checkPosTMHull C549ArcSingleExpr Box3 P3 = true := by
   decide
 
 /-- Straddle leaf 4 (cert leaf 3; mode single, strat 0, dmax 0; C f0 lo 0.6909120376827038);
@@ -59,7 +59,7 @@ def Box4 : Fin 6 → DInterval :=
 def P4 : TMParams := ⟨[⟨332388536241616290160386111079971129631717, 81964836495180883819862975366894549317413, 0, (-80), (-80)⟩, ⟨8206285736082045889577454220861336299953940, 8206285736082045889577454220861336299953940, 999649206140055553820998641522351834716848963928, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf4 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box4 P4 = true := by
+    checkPosTMHull C549ArcSingleExpr Box4 P4 = true := by
   decide
 
 /-- Straddle leaf 5 (cert leaf 4; mode single, strat 0, dmax 0; C f0 lo 0.6643772015702962);
@@ -70,7 +70,7 @@ def Box5 : Fin 6 → DInterval :=
 def P5 : TMParams := ⟨[⟨162226619582178902713765885563981991015891, 639281442335782220459931831762484884403480, 0, (-80), (-80)⟩, ⟨8001183669908340461435752265150123873555223, 8001183669908340461435752265150123873555223, 974291182084366352813565127309515599506782494543, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf5 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box5 P5 = true := by
+    checkPosTMHull C549ArcSingleExpr Box5 P5 = true := by
   decide
 
 /-- Straddle leaf 6 (cert leaf 5; mode single, strat 0, dmax 0; C f0 lo 0.6329824689948433);
@@ -81,7 +81,7 @@ def Box6 : Fin 6 → DInterval :=
 def P6 : TMParams := ⟨[⟨78865943798257733522881014872706127916764, 620148122493031060539096654137968552711748, 0, (-80), (-80)⟩, ⟨7762944025251868018627256039090569073872037, 7762944025251868018627256039090569073872037, 944884733055731593549665265825215670635004472021, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf6 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box6 P6 = true := by
+    checkPosTMHull C549ArcSingleExpr Box6 P6 = true := by
   decide
 
 /-- Straddle leaf 7 (cert leaf 6; mode single, strat 0, dmax 0; C f0 lo 0.6121799219455518);
@@ -92,7 +92,7 @@ def Box7 : Fin 6 → DInterval :=
 def P7 : TMParams := ⟨[⟨303836555813000433610896016241687708191620, 302891014490141849692514424962368494175727, 0, (-80), (-80)⟩, ⟨7560367902658996738963117594395417809593590, 7560367902658996738963117594395417809593590, 919385961780220811192319255785100007721762320463, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf7 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box7 P7 = true := by
+    checkPosTMHull C549ArcSingleExpr Box7 P7 = true := by
   decide
 
 /-- Straddle leaf 8 (cert leaf 7; mode single, strat 0, dmax 0; C f0 lo 0.6718453522273923);
@@ -103,7 +103,7 @@ def Box8 : Fin 6 → DInterval :=
 def P8 : TMParams := ⟨[⟨322965739879558182674847171918884982718364, 318329228020811155650648870707476090917722, 0, (-80), (-80)⟩, ⟨7966243740785350202894309095426508576464636, 7966243740785350202894309095426508576464636, 969982274129899931662150266898308415814494292312, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf8 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box8 P8 = true := by
+    checkPosTMHull C549ArcSingleExpr Box8 P8 = true := by
   decide
 
 /-- Straddle leaf 9 (cert leaf 8; mode single, strat 0, dmax 0; C f0 lo 0.6082585411942547);
@@ -114,7 +114,7 @@ def Box9 : Fin 6 → DInterval :=
 def P9 : TMParams := ⟨[⟨306343414554079316854949853057510735402093, 303575640595513590502367032837988186963368, 0, (-80), (-80)⟩, ⟨7587323308661718453434931062392546584178620, 7587323308661718453434931062392546584178620, 922869961631068159722946901083222084893871543072, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf9 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box9 P9 = true := by
+    checkPosTMHull C549ArcSingleExpr Box9 P9 = true := by
   decide
 
 /-- Straddle leaf 10 (cert leaf 9; mode single, strat 0, dmax 0; C f0 lo 0.6444483051269096);
@@ -125,7 +125,7 @@ def Box10 : Fin 6 → DInterval :=
 def P10 : TMParams := ⟨[⟨347223568976476801034571288805400787340433, 85707959658626551633879115282105389023946, 0, (-80), (-80)⟩, ⟨8580079855218659461320075678322809496091732, 8580079855218659461320075678322809496091732, 1046039448054603260181031972773917177224102812750, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf10 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box10 P10 = true := by
+    checkPosTMHull C549ArcSingleExpr Box10 P10 = true := by
   decide
 
 /-- Straddle leaf 11 (cert leaf 10; mode single, strat 0, dmax 0; C f0 lo 0.6005823410433647);
@@ -136,7 +136,7 @@ def Box11 : Fin 6 → DInterval :=
 def P11 : TMParams := ⟨[⟨306356799230707796412199795598091302790450, 78878451528088128645285882310234672348445, 0, (-80), (-80)⟩, ⟨7824773654635737021055360936275583719059750, 7824773654635737021055360936275583719059750, 951276110192908754429555743168193347378131805133, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf11 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box11 P11 = true := by
+    checkPosTMHull C549ArcSingleExpr Box11 P11 = true := by
   decide
 
 /-- Straddle leaf 12 (cert leaf 11; mode single, strat 0, dmax 0; C f0 lo 0.6675151907764403);
@@ -147,7 +147,7 @@ def Box12 : Fin 6 → DInterval :=
 def P12 : TMParams := ⟨[⟨314790507292963443734430065747107676043078, 79435533801430566714050960074762899787571, 0, (-80), (-80)⟩, ⟨7913055904170705666136939944287980104681562, 7913055904170705666136939944287980104681562, 962690829446743018463514521960834469627672408582, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf12 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box12 P12 = true := by
+    checkPosTMHull C549ArcSingleExpr Box12 P12 = true := by
   decide
 
 /-- Straddle leaf 13 (cert leaf 12; mode single, strat 0, dmax 0; C f0 lo 0.5998599164499879);
@@ -158,7 +158,7 @@ def Box13 : Fin 6 → DInterval :=
 def P13 : TMParams := ⟨[⟨301220529915213373667711447331322769125371, 77879297631462069146200355187801591868965, 0, (-80), (-80)⟩, ⟨7718857842802592959485645620216578302369187, 7718857842802592959485645620216578302369187, 938024239170073436988147296235115799627199628493, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf13 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box13 P13 = true := by
+    checkPosTMHull C549ArcSingleExpr Box13 P13 = true := by
   decide
 
 /-- Straddle leaf 14 (cert leaf 13; mode single, strat 0, dmax 0; C f0 lo 0.6857869213683803);
@@ -169,7 +169,7 @@ def Box14 : Fin 6 → DInterval :=
 def P14 : TMParams := ⟨[⟨151955516109057402586642911959386181833751, 612564309942961999504693794639184029281032, 0, (-80), (-80)⟩, ⟨7628432188526672114477727201318349546941615, 7628432188526672114477727201318349546941615, 927495642866702576608131179098176749256205074728, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf14 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box14 P14 = true := by
+    checkPosTMHull C549ArcSingleExpr Box14 P14 = true := by
   decide
 
 /-- Straddle leaf 15 (cert leaf 14; mode single, strat 0, dmax 0; C f0 lo 0.6422716239713046);
@@ -180,7 +180,7 @@ def Box15 : Fin 6 → DInterval :=
 def P15 : TMParams := ⟨[⟨74637499086992351562864539148506760884519, 595960577198221192406446605979906896947269, 0, (-80), (-80)⟩, ⟨7434567606266973545800192173047015025359551, 7434567606266973545800192173047015025359551, 903808274444651829917758435797474057354785813193, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf15 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box15 P15 = true := by
+    checkPosTMHull C549ArcSingleExpr Box15 P15 = true := by
   decide
 
 /-- Straddle leaf 16 (cert leaf 15; mode single, strat 0, dmax 0; C f0 lo 0.6511294386060559);
@@ -191,7 +191,7 @@ def Box16 : Fin 6 → DInterval :=
 def P16 : TMParams := ⟨[⟨72590054156202614414808505539239919876725, 586650988667179447043676332154672408494588, 0, (-80), (-80)⟩, ⟨7299050728627402902282686889273349504732960, 7299050728627402902282686889273349504732960, 886728402019024635606206906291006602161859816655, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf16 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box16 P16 = true := by
+    checkPosTMHull C549ArcSingleExpr Box16 P16 = true := by
   decide
 
 /-- Straddle leaf 17 (cert leaf 16; mode single, strat 0, dmax 0; C f0 lo 0.6182966613141115);
@@ -202,7 +202,7 @@ def Box17 : Fin 6 → DInterval :=
 def P17 : TMParams := ⟨[⟨274007810505986197707546400393598013283610, 284978297639913262810505055124265104366928, 0, (-80), (-80)⟩, ⟨7049389721344725263684929887687223006019602, 7049389721344725263684929887687223006019602, 855145845118860661586746287047840655376351717427, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf17 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box17 P17 = true := by
+    checkPosTMHull C549ArcSingleExpr Box17 P17 = true := by
   decide
 
 /-- Straddle leaf 18 (cert leaf 17; mode single, strat 0, dmax 0; C f0 lo 0.6945418072554447);
@@ -213,7 +213,7 @@ def Box18 : Fin 6 → DInterval :=
 def P18 : TMParams := ⟨[⟨293130292548536537989396886520857693747352, 294979895311429361165108579578516853820486, 0, (-80), (-80)⟩, ⟨7347610347425350020555248023134374621003978, 7347610347425350020555248023134374621003978, 892793704446161380905787311532476472919055781532, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf18 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box18 P18 = true := by
+    checkPosTMHull C549ArcSingleExpr Box18 P18 = true := by
   decide
 
 /-- Straddle leaf 19 (cert leaf 18; mode single, strat 0, dmax 0; C f0 lo 0.5760994684092204);
@@ -224,7 +224,7 @@ def Box19 : Fin 6 → DInterval :=
 def P19 : TMParams := ⟨[⟨77904893761684693736744453901372080997225, 637791510971074858533328993192846916108625, 0, (-80), (-80)⟩, ⟨7918033670701206685600982419294703268612914, 7918033670701206685600982419294703268612914, 963059325461591968242279805107728263044839805564, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf19 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box19 P19 = true := by
+    checkPosTMHull C549ArcSingleExpr Box19 P19 = true := by
   decide
 
 /-- Straddle leaf 20 (cert leaf 19; mode single, strat 0, dmax 0; C f0 lo 0.6028125493308892);
@@ -235,35 +235,35 @@ def Box20 : Fin 6 → DInterval :=
 def P20 : TMParams := ⟨[⟨156605905947666854561614361635787957010708, 627950204179094222070363398643474490742124, 0, (-80), (-80)⟩, ⟨7829514372909112005951528811443710559010055, 7829514372909112005951528811443710559010055, 952565427223992725379252040331847400751795263438, (-80), (-80)⟩], [⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩, ⟨(-80), (-80), (-80)⟩], [⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩, ⟨(-80), (-80)⟩]⟩
 
 theorem Leaf20 :
-    checkPosTMHull C549StraddleBatchSingleExpr Box20 P20 = true := by
+    checkPosTMHull C549ArcSingleExpr Box20 P20 = true := by
   decide
 
 /-- Shard 1: straddle leaves 0..19 (PASS 20, NEG 0);
 kernel/compiled-run agreement on every leaf; references the
 leaf theorems — no recomputation. -/
 theorem theShard :
-    checkPosTMHull C549StraddleBatchSingleExpr Box1 P1 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box2 P2 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box3 P3 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box4 P4 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box5 P5 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box6 P6 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box7 P7 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box8 P8 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box9 P9 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box10 P10 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box11 P11 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box12 P12 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box13 P13 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box14 P14 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box15 P15 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box16 P16 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box17 P17 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box18 P18 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box19 P19 = true ∧
-    checkPosTMHull C549StraddleBatchSingleExpr Box20 P20 = true :=
+    checkPosTMHull C549ArcSingleExpr Box1 P1 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box2 P2 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box3 P3 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box4 P4 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box5 P5 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box6 P6 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box7 P7 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box8 P8 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box9 P9 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box10 P10 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box11 P11 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box12 P12 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box13 P13 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box14 P14 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box15 P15 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box16 P16 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box17 P17 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box18 P18 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box19 P19 = true ∧
+    checkPosTMHull C549ArcSingleExpr Box20 P20 = true :=
   ⟨Leaf1, Leaf2, Leaf3, Leaf4, Leaf5, Leaf6, Leaf7, Leaf8, Leaf9, Leaf10, Leaf11, Leaf12, Leaf13, Leaf14, Leaf15, Leaf16, Leaf17, Leaf18, Leaf19, Leaf20⟩
 
 #print axioms theShard
 
-end Kepler.Interval.Cases.C549StraddleBatchSingleS1
+end Kepler.Interval.Cases.C549ArcSingleS1

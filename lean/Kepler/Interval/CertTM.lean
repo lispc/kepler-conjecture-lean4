@@ -63,7 +63,8 @@ structure InvTMP where
 
 /-- Per-`trans`-node certificate: `o1`/`o2` are `DInterval.recip`
 granularities (`ln`: slope `1/f(y)` and curvature `1/c²`; `atan`: slope
-`1/(1+f(y)²)`, curvature is dyadic-exact; `sin`: unused).  The value
+`1/(1+f(y)²)` and the exact-sup curvature endpoint value `1/(1+c²)` at the
+off-band endpoint `c` (`atanCurv`); `sin`: unused).  The value
 enclosure reuses the node's own `(N, out)` rung parameters via `transOn`. -/
 structure TransTMP where
   o1 : Int
@@ -172,6 +173,30 @@ theorem sqrtI_lo_nonneg {d : Dyadic} {s : Int} {I : DInterval}
 
 end Dyadic
 
+/-- The curvature band threshold `5/8`: `5/8 ≥ 1/√3` (since `25/64 ≥ 1/3`),
+so `2|x|/(1+x²)²` is antitone in `|x|` beyond it. -/
+def atanCurvBand : Dyadic := ⟨5, -3⟩
+
+/-- **Exact-sup curvature coefficient** for the `arctan` trans rule: a dyadic
+`C` with `2|x|/(1+x²)² ≤ C` on the whole value range `[rLo, rHi]` of `f` over
+the box.  When the range lies entirely off the band `[-5/8, 5/8]`, `C` is the
+endpoint curvature `2c/(1+c²)²` at the endpoint `c` closest to `0` (one kernel
+`DInterval.recip` at granularity `o2`, plus exact dyadic squares); otherwise
+the global cap `7/8`. -/
+def atanCurv (rLo rHi : Dyadic) (o2 : Int) : Dyadic :=
+  if Dyadic.ble rHi (-atanCurvBand) then
+    match DInterval.recip ⟨(⟨1, 0⟩ : Dyadic).add ((-rHi).mul (-rHi)),
+        (⟨1, 0⟩ : Dyadic).add ((-rHi).mul (-rHi))⟩ o2 with
+    | some Jc => ((⟨2, 0⟩ : Dyadic).mul (-rHi)).mul (Jc.hi.mul Jc.hi)
+    | none => ⟨7, -3⟩
+  else if Dyadic.ble atanCurvBand rLo then
+    match DInterval.recip ⟨(⟨1, 0⟩ : Dyadic).add (rLo.mul rLo),
+        (⟨1, 0⟩ : Dyadic).add (rLo.mul rLo)⟩ o2 with
+    | some Jc => ((⟨2, 0⟩ : Dyadic).mul rLo).mul (Jc.hi.mul Jc.hi)
+    | none => ⟨7, -3⟩
+  else ⟨7, -3⟩
+
+
 namespace TaylorM
 
 /-- Model of `-f`. -/
@@ -266,9 +291,15 @@ def inv {n : ℕ} (M : TaylorM n) (p : InvTMP) : Option (TaylorM n) :=
 `none` — the hybrid evaluator falls back to the zero-order model).  The value
 enclosure `V` reuses the node's own rung `(N, out)` via `transOn` on the
 center enclosure.  Curvature constants (design §1.3, elementary forms proved
-in `sin_residual`/`log_residual`/`arctan_residual`):
+in `sin_residual`/`log_residual`/`arctan_residual_sup`):
 `sin: W²/2 + W³/4`; `ln: W²/c²` with `c := fB.lo − W > 0`;
-`atan: W²·(2·(|fB| + W))`. -/
+`atan: W²·C` with `C := min(atanCurv (fB.lo−W) (fB.hi+W) p.o2) (2·(|fB|+W))`
+— the exact-sup curvature coefficient over the whole value range of `f` on
+the box (`atanCurv_sound`): the endpoint curvature `2c/(1+c²)²` (c the
+off-band endpoint closest to 0) when the range misses `[-5/8, 5/8]`, else
+the global cap `7/8` (true peak `3√3/8 ≈ 0.65`), each dominating the legacy
+`2·(|fB|+W)` cap.  This is the 549 final formula (arctanK err was 98% of
+root err on the 99 NEG straddle leaves, ~15× over-certified). -/
 def trans {n : ℕ} (k : TKind) (M : TaylorM n) (N : ℕ) (out : Int) (p : TransTMP) :
     Option (TaylorM n) :=
   match k with
@@ -286,8 +317,9 @@ def trans {n : ℕ} (k : TKind) (M : TaylorM n) (N : ℕ) (out : Int) (p : Trans
         (⟨1, 0⟩ : Dyadic).add (M.fB.abs.hi.mul M.fB.abs.hi)⟩ p.o1).map fun J =>
       ⟨M.y, M.w, V, fun i => (M.dfB i).mul J,
         ((M.err.mul J.abs.hi).add
-          ((M.W.mul M.W).mul ((⟨2, 0⟩ : Dyadic).mul
-            (M.fB.abs.hi.add M.W)))).chopCeilTo M.errScale⟩
+          ((M.W.mul M.W).mul (Dyadic.dmin
+            (atanCurv (M.fB.lo.add (-M.W)) (M.fB.hi.add M.W) p.o2)
+            ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W))))).chopCeilTo M.errScale⟩
   | .lnK =>
       if (M.fB.lo.add (-M.W)).isPos = true then
         (transOn .lnK ⟨M.fB.lo, M.fB.hi⟩ N out).bind fun V =>
@@ -1296,6 +1328,365 @@ theorem arctan_residual {s t : ℝ} {B : ℝ} (hs : |s| ≤ B) (ht : |t| ≤ B) 
     _ ≤ |s - t| * (|s - t| * (B + B)) := mul_le_mul_of_nonneg_left htξ (abs_nonneg _)
     _ = (s - t) ^ 2 * (2 * B) := by rw [← sq_abs]; ring
 
+/-! ### arctan curvature: the exact-sup bound (549 final formula) -/
+
+/-- Bracket identity driving both arctan-curvature monotonicity lemmas. -/
+private theorem atan_curv_bracket (u v : ℝ) :
+    v * (1 + u ^ 2) ^ 2 - u * (1 + v ^ 2) ^ 2
+      = (v - u) * (1 - u * v * (2 + u ^ 2 + u * v + v ^ 2)) := by
+  ring
+
+/-- `2u/(1+u²)²` is monotone on `[0, 4/7]`: there
+`uv(2+u²+uv+v²) ≤ (4/7)²(2+3(4/7)²) = 2336/2401 < 1`. -/
+theorem atan_curv_mono {u v : ℝ} (hu : 0 ≤ u) (huv : u ≤ v) (hv : v ≤ 4 / 7) :
+    2 * u / (1 + u ^ 2) ^ 2 ≤ 2 * v / (1 + v ^ 2) ^ 2 := by
+  have hu47 : u ≤ (4:ℝ) / 7 := huv.trans hv
+  have hv0 : (0:ℝ) ≤ v := le_trans hu huv
+  have huv1 : u * v ≤ (16:ℝ) / 49 := by nlinarith
+  have hu2 : u ^ 2 ≤ (16:ℝ) / 49 := by nlinarith
+  have hv2 : v ^ 2 ≤ (16:ℝ) / 49 := by nlinarith
+  have hsum : (2:ℝ) + u ^ 2 + u * v + v ^ 2 ≤ (2:ℝ) + 3 * (16 / 49) := by linarith
+  have hpos2 : (0:ℝ) ≤ 2 + u ^ 2 + u * v + v ^ 2 := by
+    nlinarith [sq_nonneg u, sq_nonneg v]
+  have hprod : u * v * (2 + u ^ 2 + u * v + v ^ 2) ≤ (1:ℝ) := by
+    have h1 : u * v * (2 + u ^ 2 + u * v + v ^ 2)
+        ≤ (16:ℝ) / 49 * (2 + u ^ 2 + u * v + v ^ 2) :=
+      mul_le_mul_of_nonneg_right huv1 hpos2
+    have h2 : (16:ℝ) / 49 * (2 + u ^ 2 + u * v + v ^ 2)
+        ≤ (16:ℝ) / 49 * (2 + 3 * (16 / 49)) :=
+      mul_le_mul_of_nonneg_left hsum (by norm_num)
+    have h3 : (16:ℝ) / 49 * (2 + 3 * (16 / 49)) ≤ 1 := by norm_num
+    exact le_trans (le_trans h1 h2) h3
+  have hbr : (0:ℝ) ≤ 1 - u * v * (2 + u ^ 2 + u * v + v ^ 2) := by linarith
+  have hstep : u * (1 + v ^ 2) ^ 2 ≤ v * (1 + u ^ 2) ^ 2 := by
+    have hid := atan_curv_bracket u v
+    have h2 : (0:ℝ) ≤ v * (1 + u ^ 2) ^ 2 - u * (1 + v ^ 2) ^ 2 := by
+      rw [hid]
+      exact mul_nonneg (by linarith) hbr
+    linarith
+  rw [div_le_div_iff₀ (by positivity) (by positivity)]
+  calc (2:ℝ) * u * (1 + v ^ 2) ^ 2 = 2 * (u * (1 + v ^ 2) ^ 2) := by ring
+    _ ≤ 2 * (v * (1 + u ^ 2) ^ 2) := by exact mul_le_mul_of_nonneg_left hstep (by norm_num)
+    _ = (2:ℝ) * v * (1 + u ^ 2) ^ 2 := by ring
+
+/-- `2u/(1+u²)²` is antitone on `[5/8, ∞)`: there
+`uv(2+u²+uv+v²) ≥ (5/8)²(2+3(5/8)²) = 5075/4096 > 1` (in particular
+`5/8 ≥ 1/√3` since `(5/8)² = 25/64 ≥ 1/3`). -/
+theorem atan_curv_anti {u v : ℝ} (hu : 5 / 8 ≤ u) (huv : u ≤ v) :
+    2 * v / (1 + v ^ 2) ^ 2 ≤ 2 * u / (1 + u ^ 2) ^ 2 := by
+  have hv58 : (5:ℝ) / 8 ≤ v := hu.trans huv
+  have huv1 : (25:ℝ) / 64 ≤ u * v := by nlinarith
+  have hu2 : (25:ℝ) / 64 ≤ u ^ 2 := by nlinarith
+  have hv2 : (25:ℝ) / 64 ≤ v ^ 2 := by nlinarith
+  have hsum : (2:ℝ) + 3 * (25 / 64) ≤ (2:ℝ) + u ^ 2 + u * v + v ^ 2 := by linarith
+  have hprod : (1:ℝ) ≤ u * v * (2 + u ^ 2 + u * v + v ^ 2) := by
+    have h1 : (1:ℝ) ≤ (25:ℝ) / 64 * (2 + 3 * (25 / 64)) := by norm_num
+    have h2 : (25:ℝ) / 64 * (2 + 3 * (25 / 64)) ≤ u * v * (2 + 3 * (25 / 64)) :=
+      mul_le_mul_of_nonneg_right huv1 (by norm_num)
+    have h3 : u * v * (2 + 3 * (25 / 64)) ≤ u * v * (2 + u ^ 2 + u * v + v ^ 2) :=
+      mul_le_mul_of_nonneg_left hsum (le_trans (by norm_num) huv1)
+    exact le_trans (le_trans h1 h2) h3
+  have hbr : (1:ℝ) - u * v * (2 + u ^ 2 + u * v + v ^ 2) ≤ 0 := by linarith
+  have hstep : v * (1 + u ^ 2) ^ 2 ≤ u * (1 + v ^ 2) ^ 2 := by
+    have hid := atan_curv_bracket u v
+    have h2 : v * (1 + u ^ 2) ^ 2 - u * (1 + v ^ 2) ^ 2 ≤ 0 := by
+      rw [hid]
+      have h3 : (0:ℝ) ≤ -(1 - u * v * (2 + u ^ 2 + u * v + v ^ 2)) := by linarith
+      have h4 : (0:ℝ) ≤ (v - u) * -(1 - u * v * (2 + u ^ 2 + u * v + v ^ 2)) :=
+        mul_nonneg (by linarith) h3
+      linarith
+    linarith
+  rw [div_le_div_iff₀ (by positivity) (by positivity)]
+  calc (2:ℝ) * v * (1 + u ^ 2) ^ 2 = 2 * (v * (1 + u ^ 2) ^ 2) := by ring
+    _ ≤ 2 * (u * (1 + v ^ 2) ^ 2) := by exact mul_le_mul_of_nonneg_left hstep (by norm_num)
+    _ = (2:ℝ) * u * (1 + v ^ 2) ^ 2 := by ring
+
+/-- **Global cap for the arctan curvature**: `2|x|/(1+x²)² ≤ 7/8` for all
+real `x` (true peak `3√3/8 ≈ 0.6495` at `|x| = 1/√3`; here: below `4/7` use
+monotonicity to the endpoint `g(4/7) = 19208/29575`, above use the AM-GM
+bound `(1+u²)² ≥ 4u²` giving `g ≤ 1/(2u)`). -/
+theorem atan_curv_le_semi (x : ℝ) : 2 * |x| / (1 + x ^ 2) ^ 2 ≤ 7 / 8 := by
+  have hxu : x ^ 2 = |x| ^ 2 := by
+    have h := abs_pow x 2
+    rwa [abs_of_nonneg (sq_nonneg x)] at h
+  rw [hxu]
+  rcases le_or_gt |x| ((4:ℝ) / 7) with hs | hb
+  · have h1 := atan_curv_mono (u := |x|) (v := (4:ℝ) / 7) (abs_nonneg x) hs (by norm_num)
+    calc 2 * |x| / (1 + |x| ^ 2) ^ 2
+        ≤ 2 * ((4:ℝ) / 7) / (1 + ((4:ℝ) / 7) ^ 2) ^ 2 := h1
+      _ ≤ (7:ℝ) / 8 := by norm_num
+  · have hxbig : (0:ℝ) < 2 * |x| := by linarith
+    have hAM : (2:ℝ) * |x| ≤ 1 + |x| ^ 2 := by nlinarith [sq_nonneg (|x| - 1)]
+    have hden : (0:ℝ) < (1 + |x| ^ 2) ^ 2 := by positivity
+    have h2 : 2 * |x| / (1 + |x| ^ 2) ^ 2 ≤ 1 / (2 * |x|) := by
+      rw [div_le_div_iff₀ hden hxbig]
+      nlinarith [sq_nonneg (|x| ^ 2 - 1)]
+    have h3 : 1 / (2 * |x|) ≤ (7:ℝ) / 8 := by
+      rw [div_le_iff₀ hxbig]
+      nlinarith
+    exact le_trans h2 h3
+
+/-- Off-band endpoint bound: for `c ≤ |x|` with `c ≥ 5/8`, the arctan
+curvature at `x` is at most the curvature at `c` (antitone in `|x|` beyond
+`1/√3`). -/
+theorem atan_curv_le_of_ge {x c : ℝ} (hc : 5 / 8 ≤ c) (hcx : c ≤ |x|) :
+    2 * |x| / (1 + x ^ 2) ^ 2 ≤ 2 * c / (1 + c ^ 2) ^ 2 := by
+  have hxu : x ^ 2 = |x| ^ 2 := by
+    have h := abs_pow x 2
+    rwa [abs_of_nonneg (sq_nonneg x)] at h
+  rw [hxu]
+  exact atan_curv_anti hc hcx
+
+/-- **arctan second-order residual, exact-sup form**: if `C` bounds
+`2|x|/(1+x²)²` on `[lo, hi] ∋ s, t`, then
+`|atan s − atan t − (s−t)/(1+t²)| ≤ (s−t)²·C`.  Route: MVT on `atan`
+(`ξ ∈ uIcc s t`) + MVT on `u ↦ 1/(1+u²)` (slope `−2u/(1+u²)²`), so the
+slope-enclosure error is `|ξ−t|·|atan''(ζ)| ≤ |s−t|·C`.  This replaces the
+legacy `arctan_residual` cap `(s−t)²·2B` (which dropped the `1/(1+ξ²)(1+t²)`
+denominator and paid `2(|fB|+W)` for `|t+ξ|` — ~15× over-certified on the
+549 straddle enclosures). -/
+theorem arctan_residual_sup {s t : ℝ} {lo hi C : ℝ}
+    (hs : lo ≤ s) (hs' : s ≤ hi) (ht : lo ≤ t) (ht' : t ≤ hi)
+    (hC : ∀ x, lo ≤ x → x ≤ hi → 2 * |x| / (1 + x ^ 2) ^ 2 ≤ C) :
+    |Real.arctan s - Real.arctan t - (s - t) / (1 + t ^ 2)|
+      ≤ (s - t) ^ 2 * C := by
+  have hC0 : (0:ℝ) ≤ C :=
+    le_trans (div_nonneg (by nlinarith [abs_nonneg s]) (by positivity)) (hC s hs hs')
+  have hinv : ∀ x : ℝ, HasDerivAt (fun y : ℝ => 1 / (1 + y ^ 2))
+      (-2 * x / (1 + x ^ 2) ^ 2) x := by
+    intro x
+    have h1 : HasDerivAt (fun _ : ℝ => (1:ℝ)) 0 x := hasDerivAt_const (c := (1:ℝ)) (x := x)
+    have h2 : HasDerivAt (fun y : ℝ => y ^ 2) (2 * x) x :=
+      (hasDerivAt_pow 2 x).congr_deriv (by ring)
+    have hc : HasDerivAt (fun y : ℝ => 1 + y ^ 2) (2 * x) x := by
+      have h := h1.add h2
+      rw [show ((fun _ : ℝ => (1:ℝ)) + (fun y : ℝ => y ^ 2))
+            = (fun y : ℝ => (1:ℝ) + y ^ 2) from rfl,
+          show ((0:ℝ) + 2 * x) = 2 * x from by ring] at h
+      exact h
+    have hfin := hc.inv (by positivity)
+    rw [Pi.inv_def,
+        show (-(2 * x) / (1 + x ^ 2) ^ 2) = (-2 * x / (1 + x ^ 2) ^ 2) from by ring,
+        show ((fun y : ℝ => (1 + y ^ 2)⁻¹) = (fun y : ℝ => 1 / (1 + y ^ 2))) from
+          funext fun y => (one_div _).symm] at hfin
+    exact hfin
+  have hcont : Continuous (fun y : ℝ => 1 / (1 + y ^ 2)) :=
+    Continuous.div continuous_const (continuous_const.add (continuous_pow 2))
+      (fun x => ne_of_gt (by positivity))
+  have hmvt : ∃ ξ ∈ Set.uIcc s t,
+      Real.arctan s - Real.arctan t = (s - t) / (1 + ξ ^ 2) := by
+    rcases lt_trichotomy s t with hlt | rfl | hlt
+    · obtain ⟨ξ, hξ, hsl⟩ := exists_hasDerivAt_eq_slope (f := Real.arctan)
+        (f' := fun x => 1 / (1 + x ^ 2)) hlt Real.continuous_arctan.continuousOn
+        (fun x _ => Real.hasDerivAt_arctan x)
+      refine ⟨ξ, Set.mem_uIcc.mpr (Or.inl ⟨hξ.1.le, hξ.2.le⟩), ?_⟩
+      have hts : t - s ≠ 0 := sub_ne_zero.mpr hlt.ne'
+      have h2 : Real.arctan t - Real.arctan s = (t - s) * (1 / (1 + ξ ^ 2)) := by
+        rw [hsl, mul_comm]
+        exact (div_mul_cancel₀ _ hts).symm
+      have h3 : Real.arctan s - Real.arctan t = -(Real.arctan t - Real.arctan s) := by ring
+      rw [h3, h2, div_eq_mul_inv]
+      ring
+    · exact ⟨s, Set.mem_uIcc.mpr (Or.inl ⟨le_rfl, le_rfl⟩), by simp⟩
+    · obtain ⟨ξ, hξ, hsl⟩ := exists_hasDerivAt_eq_slope (f := Real.arctan)
+        (f' := fun x => 1 / (1 + x ^ 2)) hlt Real.continuous_arctan.continuousOn
+        (fun x _ => Real.hasDerivAt_arctan x)
+      refine ⟨ξ, Set.mem_uIcc.mpr (Or.inr ⟨hξ.1.le, hξ.2.le⟩), ?_⟩
+      have hts : s - t ≠ 0 := sub_ne_zero.mpr hlt.ne'
+      have h2 : Real.arctan s - Real.arctan t = (s - t) * (1 / (1 + ξ ^ 2)) := by
+        rw [hsl, mul_comm]
+        exact (div_mul_cancel₀ _ hts).symm
+      rw [h2, div_eq_mul_inv]
+      ring
+  obtain ⟨ξ, hξ, hid⟩ := hmvt
+  have hξr : lo ≤ ξ ∧ ξ ≤ hi := by
+    rcases Set.mem_uIcc.mp hξ with ⟨h1, h2⟩ | ⟨h1, h2⟩
+    · exact ⟨le_trans hs h1, le_trans h2 ht'⟩
+    · exact ⟨le_trans ht h1, le_trans h2 hs'⟩
+  have hξt : |ξ - t| ≤ |s - t| := by
+    rcases Set.mem_uIcc.mp hξ with ⟨h1, h2⟩ | ⟨h1, h2⟩
+    · have hst : |s - t| = t - s := by
+        rw [abs_of_nonpos (sub_nonpos.mpr (le_trans h1 h2))]; ring
+      rw [abs_le, hst]
+      constructor <;> linarith
+    · have hst : |s - t| = s - t := abs_of_nonneg (sub_nonneg.mpr (le_trans h1 h2))
+      rw [abs_le, hst]
+      constructor <;> linarith
+  -- the residual factors through the slope difference at `ξ` vs `t`
+  have hid' : Real.arctan s - Real.arctan t - (s - t) / (1 + t ^ 2)
+      = (s - t) * ((1 / (1 + ξ ^ 2)) - (1 / (1 + t ^ 2))) := by
+    rw [hid]
+    ring
+  -- the second MVT: slope difference = (ξ−t)·(atan'' ζ), ζ in range
+  by_cases hξeq : ξ = t
+  · subst hξeq
+    rw [hid', sub_self, mul_zero, abs_zero]
+    exact mul_nonneg (sq_nonneg _) hC0
+  · -- the absolute value of the atan'' shape
+    have hab : ∀ z : ℝ, |(-2 * z / (1 + z ^ 2) ^ 2 : ℝ)|
+        = 2 * |z| / (1 + z ^ 2) ^ 2 := by
+      intro z
+      rw [abs_div, abs_mul, abs_neg, abs_of_pos (by norm_num : (0:ℝ) < 2),
+        abs_of_pos (by positivity : (0:ℝ) < (1 + z ^ 2) ^ 2)]
+    rcases lt_or_gt_of_ne hξeq with hlt | hlt
+    · -- ξ < t: slope on [ξ, t]
+      obtain ⟨ζ, hζ, hsl⟩ := exists_hasDerivAt_eq_slope
+        (f := fun y : ℝ => 1 / (1 + y ^ 2)) (f' := fun y => -2 * y / (1 + y ^ 2) ^ 2)
+        hlt hcont.continuousOn (fun y _ => hinv y)
+      have hts : t - ξ ≠ 0 := sub_ne_zero.mpr (ne_of_gt (by linarith))
+      have hstep : (t - ξ) * (-2 * ζ / (1 + ζ ^ 2) ^ 2)
+          = (1 / (1 + t ^ 2)) - (1 / (1 + ξ ^ 2)) := by
+        rw [mul_comm (t - ξ) (-2 * ζ / (1 + ζ ^ 2) ^ 2), hsl]
+        exact div_mul_cancel₀ _ hts
+      have hdif : (1 / (1 + ξ ^ 2)) - (1 / (1 + t ^ 2))
+          = (ξ - t) * (-2 * ζ / (1 + ζ ^ 2) ^ 2) := by
+        linear_combination hstep
+      rw [hid', hdif, abs_mul, abs_mul, hab ζ]
+      have h5 : |ξ - t| * (2 * |ζ| / (1 + ζ ^ 2) ^ 2) ≤ |s - t| * C :=
+        mul_le_mul hξt (hC ζ (le_trans hξr.1 hζ.1.le) (le_trans hζ.2.le ht'))
+          (div_nonneg (by linarith [abs_nonneg ζ]) (by positivity)) (abs_nonneg _)
+      calc |s - t| * (|ξ - t| * (2 * |ζ| / (1 + ζ ^ 2) ^ 2))
+          ≤ |s - t| * (|s - t| * C) := mul_le_mul_of_nonneg_left h5 (abs_nonneg _)
+        _ = (s - t) ^ 2 * C := by rw [← sq_abs]; ring
+    · -- t < ξ: slope on [t, ξ]
+      obtain ⟨ζ, hζ, hsl⟩ := exists_hasDerivAt_eq_slope
+        (f := fun y : ℝ => 1 / (1 + y ^ 2)) (f' := fun y => -2 * y / (1 + y ^ 2) ^ 2)
+        hlt hcont.continuousOn (fun y _ => hinv y)
+      have hts : ξ - t ≠ 0 := sub_ne_zero.mpr (ne_of_gt (by linarith))
+      have hdif : (1 / (1 + ξ ^ 2)) - (1 / (1 + t ^ 2))
+          = (ξ - t) * (-2 * ζ / (1 + ζ ^ 2) ^ 2) := by
+        rw [mul_comm (ξ - t) (-2 * ζ / (1 + ζ ^ 2) ^ 2), hsl]
+        exact (div_mul_cancel₀ _ hts).symm
+      rw [hid', hdif, abs_mul, abs_mul, hab ζ]
+      have h5 : |ξ - t| * (2 * |ζ| / (1 + ζ ^ 2) ^ 2) ≤ |s - t| * C :=
+        mul_le_mul hξt (hC ζ (le_trans ht hζ.1.le) (le_trans hζ.2.le hξr.2))
+          (div_nonneg (by linarith [abs_nonneg ζ]) (by positivity)) (abs_nonneg _)
+      calc |s - t| * (|ξ - t| * (2 * |ζ| / (1 + ζ ^ 2) ^ 2))
+          ≤ |s - t| * (|s - t| * C) := mul_le_mul_of_nonneg_left h5 (abs_nonneg _)
+        _ = (s - t) ^ 2 * C := by rw [← sq_abs]; ring
+
+theorem atanCurv_seven_eighth : (⟨7, -3⟩ : Dyadic).toReal = 7 / 8 := by
+  rw [Dyadic.toReal_def]; norm_num
+
+/-- **Soundness of `atanCurv`**: the returned coefficient bounds the arctan
+curvature on the whole range. -/
+theorem atanCurv_sound (rLo rHi : Dyadic) (o2 : Int) :
+    ∀ x : ℝ, rLo.toReal ≤ x → x ≤ rHi.toReal →
+      2 * |x| / (1 + x ^ 2) ^ 2 ≤ (atanCurv rLo rHi o2).toReal := by
+  have hband : (atanCurvBand).toReal = (5:ℝ) / 8 := by
+    show (⟨5, -3⟩ : Dyadic).toReal = (5:ℝ) / 8
+    rw [Dyadic.toReal_def]; norm_num
+  intro x hlo hhi
+  unfold atanCurv
+  split_ifs with hneg hpos
+  · -- range entirely negative: closest-to-zero endpoint is `c := -rHi`
+    have hgate : rHi.toReal ≤ (-atanCurvBand).toReal := Dyadic.ble_toReal hneg
+    rw [Dyadic.toReal_neg, hband] at hgate
+    have hnegx : x < 0 := by linarith
+    set c := (-rHi).toReal with hcdef
+    have hc58 : (5:ℝ) / 8 ≤ c := by rw [hcdef, Dyadic.toReal_neg]; linarith
+    have hcval : rHi.toReal = -c := by rw [hcdef, Dyadic.toReal_neg]; ring
+    have hc2pos : (0:ℝ) ≤ 2 * c := by linarith
+    have hwpos : (0:ℝ) ≤ 1 / (1 + c * c) :=
+      div_nonneg (by norm_num) (by positivity)
+    have hA2pos : (0:ℝ) ≤ 2 * c * (1 / (1 + c * c)) := by nlinarith
+    cases hrec : DInterval.recip ⟨(⟨1, 0⟩ : Dyadic).add ((-rHi).mul (-rHi)),
+        (⟨1, 0⟩ : Dyadic).add ((-rHi).mul (-rHi))⟩ o2 with
+    | none => rw [atanCurv_seven_eighth]; exact atan_curv_le_semi x
+    | some Jc =>
+      have hval : Dyadic.toReal ((⟨1, 0⟩ : Dyadic).add ((-rHi).mul (-rHi)))
+          = 1 + c * c := by
+        rw [Dyadic.toReal_add, Dyadic.toReal_one, Dyadic.toReal_mul, ← hcdef]
+      have hImem : (⟨(⟨1, 0⟩ : Dyadic).add ((-rHi).mul (-rHi)),
+          (⟨1, 0⟩ : Dyadic).add ((-rHi).mul (-rHi))⟩ : DInterval).mem
+          (⟨(⟨1, 0⟩ : Dyadic).add ((-rHi).mul (-rHi)),
+            (⟨1, 0⟩ : Dyadic).add ((-rHi).mul (-rHi))⟩ : DInterval).lo.toReal :=
+        ⟨le_rfl, le_rfl⟩
+      obtain ⟨_, hJ2⟩ := DInterval.recip_sound hImem hrec
+      rw [hval] at hJ2
+      have hcx : c ≤ |x| := by
+        rw [abs_of_neg hnegx]
+        rw [hcval] at hhi
+        linarith
+      calc 2 * |x| / (1 + x ^ 2) ^ 2
+          ≤ 2 * c / (1 + c ^ 2) ^ 2 := atan_curv_le_of_ge hc58 hcx
+        _ = 2 * c * (1 / (1 + c * c)) * (1 / (1 + c * c)) := by
+            field_simp
+        _ ≤ 2 * c * (1 / (1 + c * c)) * Jc.hi.toReal :=
+            mul_le_mul_of_nonneg_left hJ2 hA2pos
+        _ ≤ 2 * c * Jc.hi.toReal * Jc.hi.toReal := by
+            have hJhipos : (0:ℝ) ≤ Jc.hi.toReal := le_trans hwpos hJ2
+            have inner : (1 / (1 + c * c)) * Jc.hi.toReal
+                ≤ Jc.hi.toReal * Jc.hi.toReal :=
+              mul_le_mul_of_nonneg_right hJ2 hJhipos
+            have e1 : ((2:ℝ) * c * (1 / (1 + c * c)) * Jc.hi.toReal)
+                = (2:ℝ) * c * ((1 / (1 + c * c)) * Jc.hi.toReal) := by ring
+            have e2 : ((2:ℝ) * c * Jc.hi.toReal * Jc.hi.toReal)
+                = (2:ℝ) * c * (Jc.hi.toReal * Jc.hi.toReal) := by ring
+            rw [e1, e2]
+            exact mul_le_mul_of_nonneg_left inner hc2pos
+        _ = (((⟨2, 0⟩ : Dyadic).mul (-rHi)).mul (Jc.hi.mul Jc.hi)).toReal := by
+            rw [Dyadic.toReal_mul, Dyadic.toReal_mul, Dyadic.toReal_mul,
+              Dyadic.toReal_two, ← hcdef]
+            ring
+  · -- range entirely positive: closest-to-zero endpoint is `c := rLo`
+    have hgate : (atanCurvBand).toReal ≤ rLo.toReal := Dyadic.ble_toReal hpos
+    rw [hband] at hgate
+    set c := rLo.toReal with hcdef
+    have hc58 : (5:ℝ) / 8 ≤ c := hgate
+    have hc0 : (0:ℝ) ≤ c := le_trans (by norm_num) hc58
+    have hc2pos : (0:ℝ) ≤ 2 * c := by linarith
+    have hwpos : (0:ℝ) ≤ 1 / (1 + c * c) :=
+      div_nonneg (by norm_num) (by positivity)
+    have hA2pos : (0:ℝ) ≤ 2 * c * (1 / (1 + c * c)) := by nlinarith
+    cases hrec : DInterval.recip ⟨(⟨1, 0⟩ : Dyadic).add (rLo.mul rLo),
+        (⟨1, 0⟩ : Dyadic).add (rLo.mul rLo)⟩ o2 with
+    | none => rw [atanCurv_seven_eighth]; exact atan_curv_le_semi x
+    | some Jc =>
+      have hval : Dyadic.toReal ((⟨1, 0⟩ : Dyadic).add (rLo.mul rLo))
+          = 1 + c * c := by
+        rw [Dyadic.toReal_add, Dyadic.toReal_one, Dyadic.toReal_mul, ← hcdef]
+      have hImem : (⟨(⟨1, 0⟩ : Dyadic).add (rLo.mul rLo),
+          (⟨1, 0⟩ : Dyadic).add (rLo.mul rLo)⟩ : DInterval).mem
+          (⟨(⟨1, 0⟩ : Dyadic).add (rLo.mul rLo),
+            (⟨1, 0⟩ : Dyadic).add (rLo.mul rLo)⟩ : DInterval).lo.toReal :=
+        ⟨le_rfl, le_rfl⟩
+      obtain ⟨_, hJ2⟩ := DInterval.recip_sound hImem hrec
+      rw [hval] at hJ2
+      have hcx : c ≤ |x| := by
+        rw [abs_of_nonneg (by linarith)]
+        exact le_trans hcdef.symm.le hlo
+      calc 2 * |x| / (1 + x ^ 2) ^ 2
+          ≤ 2 * c / (1 + c ^ 2) ^ 2 := atan_curv_le_of_ge hc58 hcx
+        _ = 2 * c * (1 / (1 + c * c)) * (1 / (1 + c * c)) := by
+            field_simp
+        _ ≤ 2 * c * (1 / (1 + c * c)) * Jc.hi.toReal :=
+            mul_le_mul_of_nonneg_left hJ2 hA2pos
+        _ ≤ 2 * c * Jc.hi.toReal * Jc.hi.toReal := by
+            have hJhipos : (0:ℝ) ≤ Jc.hi.toReal := le_trans hwpos hJ2
+            have inner : (1 / (1 + c * c)) * Jc.hi.toReal
+                ≤ Jc.hi.toReal * Jc.hi.toReal :=
+              mul_le_mul_of_nonneg_right hJ2 hJhipos
+            have e1 : ((2:ℝ) * c * (1 / (1 + c * c)) * Jc.hi.toReal)
+                = (2:ℝ) * c * ((1 / (1 + c * c)) * Jc.hi.toReal) := by ring
+            have e2 : ((2:ℝ) * c * Jc.hi.toReal * Jc.hi.toReal)
+                = (2:ℝ) * c * (Jc.hi.toReal * Jc.hi.toReal) := by ring
+            rw [e1, e2]
+            exact mul_le_mul_of_nonneg_left inner hc2pos
+        _ = (((⟨2, 0⟩ : Dyadic).mul rLo).mul (Jc.hi.mul Jc.hi)).toReal := by
+            rw [Dyadic.toReal_mul, Dyadic.toReal_mul, Dyadic.toReal_mul,
+              Dyadic.toReal_two, ← hcdef]
+            ring
+  · rw [atanCurv_seven_eighth]
+    exact atan_curv_le_semi x
+
+#print axioms atan_curv_mono
+#print axioms atan_curv_anti
+#print axioms atan_curv_le_semi
+#print axioms atan_curv_le_of_ge
+#print axioms arctan_residual_sup
+#print axioms atanCurv_sound
+
 /-- `DInterval.abs` has a nonnegative lower endpoint. -/
 theorem DInterval.abs_lo_nonneg (I : DInterval) : 0 ≤ I.abs.lo.toReal := by
   unfold DInterval.abs
@@ -1505,7 +1896,13 @@ theorem valid_trans_ln {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
     exact le_trans (abs_add_le _ _) (by linarith [hT1, hT2])
   · exact absurd h (by simp)
 
-/-- **Validity of the arctan rule**. -/
+/-- **Validity of the arctan rule** (exact-sup curvature bound): the err
+curvature term is `W² · C` with
+`C := min(atanCurv (fB.lo−W) (fB.hi+W) p.o2) (2·(|fB|+W))`, which bounds the
+arctan curvature `2|x|/(1+x²)²` on the whole value range `[fB.lo−W, fB.hi+W]`
+of `f` over the box (`atanCurv_sound` plus the elementary cap
+`g ≤ 2|x| ≤ 2(|fB|+W)`); the residual is then `(s−t)²·C` by
+`arctan_residual_sup`. -/
 theorem valid_trans_atan {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
     {f : (Fin n → ℝ) → ℝ} (hV : M.Valid box f) (N : ℕ) (out : Int) (p : TransTMP)
     {M' : TaylorM n} (h : M.trans .arctanK N out p = some M') :
@@ -1519,15 +1916,77 @@ theorem valid_trans_atan {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
   obtain ⟨J, hJ, h⟩ := h
   obtain rfl : M' = ⟨M.y, M.w, V, fun i => (M.dfB i).mul J,
     ((M.err.mul J.abs.hi).add
-      ((M.W.mul M.W).mul ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W)))).chopCeilTo
-        M.errScale⟩ := h.symm
+      ((M.W.mul M.W).mul (Dyadic.dmin
+        (atanCurv (M.fB.lo.add (-M.W)) (M.fB.hi.add M.W) p.o2)
+        ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W))))).chopCeilTo
+          M.errScale⟩ := h.symm
   set B := (M.fB.abs.hi.add M.W).toReal with hBdef
+  set Cc := (Dyadic.dmin (atanCurv (M.fB.lo.add (-M.W)) (M.fB.hi.add M.W) p.o2)
+      ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W))).toReal with hCcdef
+  have hW0 := TaylorM.W_nonneg M
   have hBnn : 0 ≤ B := by
     rw [hBdef, Dyadic.toReal_add]
     have h1 := (DInterval.mem_abs hfB).2
-    have h2 := TaylorM.W_nonneg M
     have h3 : 0 ≤ M.fB.abs.hi.toReal := le_trans (abs_nonneg _) h1
     linarith
+  -- `Cc` bounds the arctan curvature on the whole value range of `f`
+  have hCc : ∀ x : ℝ, (M.fB.lo.add (-M.W)).toReal ≤ x →
+      x ≤ (M.fB.hi.add M.W).toReal → 2 * |x| / (1 + x ^ 2) ^ 2 ≤ Cc := by
+    intro x hx1 hx2
+    rw [hCcdef, Dyadic.toReal_dmin]
+    have h1 := atanCurv_sound (M.fB.lo.add (-M.W)) (M.fB.hi.add M.W) p.o2 x hx1 hx2
+    -- the legacy cap `2·(|fB|+W)`: `g ≤ 2|x| ≤ 2B`
+    have hMabs : M.fB.abs.hi.toReal
+        = max (max M.fB.lo.toReal (-M.fB.lo.toReal))
+            (max M.fB.hi.toReal (-M.fB.hi.toReal)) := by
+      show (Dyadic.dmax (Dyadic.dmax M.fB.lo (-M.fB.lo))
+          (Dyadic.dmax M.fB.hi (-M.fB.hi))).toReal = _
+      rw [Dyadic.toReal_dmax, Dyadic.toReal_dmax, Dyadic.toReal_dmax,
+        Dyadic.toReal_neg, Dyadic.toReal_neg]
+    have hb3 : M.fB.hi.toReal ≤ M.fB.abs.hi.toReal := by
+      rw [hMabs]; exact le_trans (le_max_left _ _) (le_max_right _ _)
+    have hb2 : -(M.fB.lo.toReal) ≤ M.fB.abs.hi.toReal := by
+      rw [hMabs]; exact le_trans (le_max_right _ _) (le_max_left _ _)
+    have hx1' : M.fB.lo.toReal - M.W.toReal ≤ x := by
+      have h := hx1
+      rw [Dyadic.toReal_add, Dyadic.toReal_neg] at h
+      linarith
+    have hx2' : x ≤ M.fB.hi.toReal + M.W.toReal := by
+      have h := hx2
+      rw [Dyadic.toReal_add] at h
+      linarith
+    have hxB : |x| ≤ B := by
+      rw [abs_le, hBdef, Dyadic.toReal_add]
+      constructor <;> linarith [hb2, hb3, hx1', hx2']
+    have hge : (1:ℝ) ≤ (1 + x ^ 2) ^ 2 := by nlinarith [sq_nonneg x]
+    have hd1 : 2 * |x| / (1 + x ^ 2) ^ 2 ≤ 2 * |x| :=
+      le_trans (div_le_div_of_nonneg_left (by linarith [abs_nonneg x])
+          (by positivity) hge)
+        (by rw [div_one])
+    have hd2 : ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W)).toReal
+        = 2 * B := by
+      rw [Dyadic.toReal_mul, Dyadic.toReal_two]
+    exact le_min h1
+      (le_trans hd1 (by rw [hd2]; exact mul_le_mul_of_nonneg_left hxB (by norm_num)))
+  refine ⟨⟨hmem, hw, IExpr.transOn_sound .arctanK hfB hVv, ?_⟩, rfl, rfl⟩
+  intro ρ hρ
+  obtain ⟨a, ha, hbound⟩ := hrem ρ hρ
+  have hW := TaylorM.Valid.abs_sub_le_W hV0 hρ ha hbound
+  -- the value range of `f` over the box
+  have hrange1 : (M.fB.lo.add (-M.W)).toReal ≤ f ρ := by
+    rw [Dyadic.toReal_add, Dyadic.toReal_neg]
+    have := (abs_le.mp hW).1
+    linarith [hfB.1]
+  have hrange2 : f ρ ≤ (M.fB.hi.add M.W).toReal := by
+    rw [Dyadic.toReal_add]
+    have := (abs_le.mp hW).2
+    linarith [hfB.2]
+  have hranget1 : (M.fB.lo.add (-M.W)).toReal ≤ f (fun i => (M.y i).toReal) := by
+    rw [Dyadic.toReal_add, Dyadic.toReal_neg]
+    linarith [hfB.1, hW0]
+  have hranget2 : f (fun i => (M.y i).toReal) ≤ (M.fB.hi.add M.W).toReal := by
+    rw [Dyadic.toReal_add]
+    linarith [hfB.2, hW0]
   have hJmem : J.mem (1 / (1 + (f fun i => (M.y i).toReal) ^ 2)) := by
     have hlo : 0 ≤ M.fB.abs.lo.toReal := DInterval.abs_lo_nonneg M.fB
     have h1 := DInterval.mem_abs hfB
@@ -1549,43 +2008,29 @@ theorem valid_trans_atan {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
         constructor <;> rw [Dyadic.toReal_add, Dyadic.toReal_mul, Dyadic.toReal_one]
         · linarith [h2]
         · linarith [h3]) hJ
-  refine ⟨⟨hmem, hw, IExpr.transOn_sound .arctanK hfB hVv, ?_⟩, rfl, rfl⟩
-  intro ρ hρ
-  obtain ⟨a, ha, hbound⟩ := hrem ρ hρ
-  have hW := TaylorM.Valid.abs_sub_le_W hV0 hρ ha hbound
-  have hW0 := TaylorM.W_nonneg M
-  have hBρ : |f ρ| ≤ B := by
-    have h1 := (DInterval.mem_abs hfB).2
-    rw [hBdef, Dyadic.toReal_add]
-    have := (abs_le.mp hW).1
-    have := (abs_le.mp hW).2
-    -- |fρ| ≤ |fy| + |fρ − fy| ≤ fB.abs.hi + W
-    have habs : |f ρ| ≤ |f (fun i => (M.y i).toReal)| + M.W.toReal := by
-      have hsub : f ρ = (f fun i => (M.y i).toReal)
-          + (f ρ - (f fun i => (M.y i).toReal)) := by ring
-      rw [hsub]
-      exact le_trans (abs_add_le _ _) (add_le_add le_rfl hW)
-    linarith [h1]
-  have hBy : |f (fun i => (M.y i).toReal)| ≤ B := by
-    have h1 := (DInterval.mem_abs hfB).2
-    rw [hBdef, Dyadic.toReal_add]
-    have h2 := TaylorM.W_nonneg M
-    linarith [h1]
   refine ⟨fun i => a i * (1 / (1 + (f fun i => (M.y i).toReal) ^ 2)),
     fun i => DInterval.mem_mul (ha i) hJmem, ?_⟩
   have herr' : ((M.err.mul J.abs.hi).add
-      ((M.W.mul M.W).mul ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W)))).toReal
-      = M.err.toReal * J.abs.hi.toReal + M.W.toReal ^ 2 * (2 * B) := by
-    rw [hBdef, Dyadic.toReal_add, Dyadic.toReal_mul, Dyadic.toReal_mul,
-      Dyadic.toReal_mul, Dyadic.toReal_mul, Dyadic.toReal_two, pow_two]
+      ((M.W.mul M.W).mul (Dyadic.dmin
+        (atanCurv (M.fB.lo.add (-M.W)) (M.fB.hi.add M.W) p.o2)
+        ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W))))).toReal
+      = M.err.toReal * J.abs.hi.toReal + M.W.toReal ^ 2 * Cc := by
+    rw [hCcdef, Dyadic.toReal_add, Dyadic.toReal_mul, Dyadic.toReal_mul,
+      Dyadic.toReal_mul, Dyadic.toReal_dmin, ← pow_two]
   have hchop : ((M.err.mul J.abs.hi).add
-      ((M.W.mul M.W).mul ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W)))).toReal
+      ((M.W.mul M.W).mul (Dyadic.dmin
+        (atanCurv (M.fB.lo.add (-M.W)) (M.fB.hi.add M.W) p.o2)
+        ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W))))).toReal
       ≤ (⟨M.y, M.w, V, fun i => (M.dfB i).mul J,
         ((M.err.mul J.abs.hi).add
-          ((M.W.mul M.W).mul ((⟨2, 0⟩ : Dyadic).mul
-            (M.fB.abs.hi.add M.W)))).chopCeilTo M.errScale⟩ : TaylorM n).err.toReal := by
+          ((M.W.mul M.W).mul (Dyadic.dmin
+            (atanCurv (M.fB.lo.add (-M.W)) (M.fB.hi.add M.W) p.o2)
+            ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W))))).chopCeilTo
+              M.errScale⟩ : TaylorM n).err.toReal := by
     show _ ≤ (((M.err.mul J.abs.hi).add
-        ((M.W.mul M.W).mul ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W)))).chopCeilTo
+        ((M.W.mul M.W).mul (Dyadic.dmin
+          (atanCurv (M.fB.lo.add (-M.W)) (M.fB.hi.add M.W) p.o2)
+          ((⟨2, 0⟩ : Dyadic).mul (M.fB.abs.hi.add M.W))))).chopCeilTo
         M.errScale).toReal
     exact Dyadic.toReal_le_chopCeilTo _ _
   refine le_trans ?_ hchop
@@ -1607,14 +2052,23 @@ theorem valid_trans_atan {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
     rw [div_eq_mul_inv]
     ring
   rw [hsum, hdecomp]
+  have hCc0 : (0:ℝ) ≤ Cc := by
+    have h := hCc (f (fun i => (M.y i).toReal)) hranget1 hranget2
+    have hpos : (0:ℝ) ≤ 2 * |f (fun i => (M.y i).toReal)|
+        / (1 + (f fun i => (M.y i).toReal) ^ 2) ^ 2 :=
+      div_nonneg (by nlinarith [abs_nonneg (f fun i => (M.y i).toReal)])
+        (by positivity)
+    linarith
   have hT1 : |Real.arctan (f ρ) - Real.arctan (f fun i => (M.y i).toReal)
       - (f ρ - (f fun i => (M.y i).toReal)) / (1 + (f fun i => (M.y i).toReal) ^ 2)|
-      ≤ M.W.toReal ^ 2 * (2 * B) := by
-    refine le_trans (arctan_residual hBρ hBy) ?_
+      ≤ M.W.toReal ^ 2 * Cc := by
+    have hres := arctan_residual_sup (s := f ρ) (t := f fun i => (M.y i).toReal)
+      (lo := (M.fB.lo.add (-M.W)).toReal) (hi := (M.fB.hi.add M.W).toReal) (C := Cc)
+      hrange1 hrange2 hranget1 hranget2 hCc
     have hW2 : (f ρ - (f fun i => (M.y i).toReal)) ^ 2 ≤ M.W.toReal ^ 2 := by
       rw [← sq_abs]
       exact pow_le_pow_left₀ (abs_nonneg _) hW 2
-    exact mul_le_mul_of_nonneg_right hW2 (by linarith)
+    exact le_trans hres (mul_le_mul_of_nonneg_right hW2 hCc0)
   have hT2 : |(1 / (1 + (f fun i => (M.y i).toReal) ^ 2))
       * (f ρ - (f fun i => (M.y i).toReal) - ∑ i, a i * (ρ i - (M.y i).toReal))|
       ≤ M.err.toReal * J.abs.hi.toReal := by
