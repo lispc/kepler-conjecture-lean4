@@ -1,4 +1,4 @@
-# 项目总进度（Status）— 2026-09-25
+# 项目总进度（Status）— 2026-09-26
 
 > 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新（cron 自动 push）。
 > 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
@@ -40,7 +40,13 @@
 > （`7d1ca613`，诚实口径阶段位置 52×）+ **M1 facePos 单调性折叠规则落地**
 > （`94d89947`/`d2d5b37c`，mono/convex 进入实质开发，T5 contraveningFan 真化 §2c 11→10）
 > + facePos 全量评估（资格 77.6%/全链 PASS 50.7%，`8e61e2ca`）+ **cert 层瘦身 78.3%**
-> （裸区间定号全链）+ straddle HullD2 批量 79.8%（`de84f9c3`，err 语义=唯一瓶颈）；
+> （裸区间定号全链）+ straddle HullD2 批量 79.8%（`de84f9c3`，err 语义=唯一瓶颈）
+> + **arctan 曲率紧致化落地（`3715ad81`，81/99 翻正、Hull200 200/200，全量
+> ~95%+ 可验证、wall ~2.7h@40 逼近 M5）**；**Kimi 线 atn2 复合规则交付**
+> （`wip/atn2-chop` `0b603559`：atn2DivTM/valid_atn2Div + checkPosTMHullA，
+> 纯追加 559 行零 sorry，侦察报告 `docs/atn2-chop-design.md` 已入 main
+> `8a5d87ad`——@227 div 越零 26,415 叶分类，关键结论：guard 全跨零下 hull
+> 语义结构性 NEG、chop 压定号机制不成立，救回主体在 guard 层收紧/域切分）；
 > 5 案诚实重求解 4h 全部超时零产出，待拍板改走 BBTreeGD 管线；145 证书重跑
 > wave1+fallback16 收官（35 份）；prep 原型结论：胶合机制可行零膨胀，但 MKFKQWU 级
 > 案例区间过估固有叶数 ≥10⁹，方向待决策（Taylor 模型 / 符号消 div / 挂起）。
@@ -239,6 +245,6 @@ P1-P5 分段流水攻克）。**polyhedron.hl 100% 达成（71/71 定理零 sorr
 
 ## 验证纪律
 
-1. main 分支：`lake build Kepler` 全绿；**2026-09-17 政策变更（DECISIONS.md）：main 允许携带 sorry 债务，债务刻度 = `DEBT.md`（`lean/scripts/debt_ledger.py --with-spine` 生成，基线 2400，2026-09-24 现值 **2079**（TameSpine 填证波清偿中），含主定理可达债务探针节）**；终验标准不变只是推迟——项目终点要求主定理证明本体零 sorry 可达 + `#print axioms` 仅 `[propext, Classical.choice, Quot.sound]`（+ Phase 2 限定 native_decide）；陈述保真审查（`docs/statement-fidelity.md`）是唯一质量阀门，不随本政策放宽；
+1. main 分支：`lake build Kepler` 全绿；**2026-09-17 政策变更（DECISIONS.md）：main 允许携带 sorry 债务，债务刻度 = `DEBT.md`（`lean/scripts/debt_ledger.py --with-spine` 生成，基线 2400，2026-09-26 现值 **2079**（TameSpine 填证波清偿中），含主定理可达债务探针节）**；终验标准不变只是推迟——项目终点要求主定理证明本体零 sorry 可达 + `#print axioms` 仅 `[propext, Classical.choice, Quot.sound]`（+ Phase 2 限定 native_decide）；陈述保真审查（`docs/statement-fidelity.md`）是唯一质量阀门，不随本政策放宽；
 2. 批次闭合标准：该批全部定理零 sorry + 根模块构建绿 + 陈述保真抽查；
 3. 自动化 harness 的提交由机械闸背书 + 主 agent 审计兜底；人工派工的提交由主 agent 逐块验收。
