@@ -3,9 +3,10 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
-## 2026-09-25 — [DRAFT 待批准] native_decide scoped exception 扩展至 `Kepler.Interval.Cases.C549*`（549 加速项目）
+## 2026-09-25 — native_decide scoped exception 扩展至 `Kepler.Interval.Cases.C549*`（549 加速项目）【已批准 2026-09-26】
 
-> **状态：DRAFT 待批准——本条不是已决事项。** 人类批准前，native_decide 的
+> **状态：已批准（2026-09-26，用户口头批准"可以使用 native decide"，本条即批准记录）。**
+> 生效范围以本条四段式为准；既有例外两条（2026-08-10/2026-09-19）不变。 人类批准前，native_decide 的
 > 允许范围仍以 2026-08-10 与 2026-09-19 两条为准（`Kepler.Graphs.Cert*` +
 > `Kepler.Assembly.GoodListShard*`），CI/lint 对其余文件的零命中检查继续
 > 拦截。既有实验模块（`lean/Kepler/Interval/Cases/C549HullSpeed.lean`）按
@@ -73,8 +74,9 @@ stage-A shard 化参数 ≤20-50）；`make check` 纪律与双回归（裸路�
 退回 529 core·h 口径），或整体回退本条范围（CI/lint 恢复零命中拦截）。
 任何一次审计出现非预期公理 = 即时撤销 + 全量排查，无需另行决议。
 
-**审批状态**：[DRAFT 待批准]。批准后在本节追加批准日期与批准人，并将标题
-的 [DRAFT 待批准] 改记为已决。
+**审批状态**：**已批准**——2026-09-26 用户批准（"可以使用 native decide"）。
+执行形态：50 叶合取一次 native = 1 axiom/shard；每 shard `#print axioms`
+入 AxiomAudit 台账；非预期公理即触发即时撤销条款。
 
 ## 2026-09-19 — P6-C：native_decide scoped exception 扩展至 `Kepler.Assembly.GoodList*`
 
