@@ -4944,5 +4944,564 @@ theorem exL_checkPos :
 #print axioms exL_D2_composite
 #print axioms exL_checkPos
 
+/-! ## atn2-composite rule: `arctan` of a zero-straddling quotient (549 @227)
+
+5490182221 的 div 越零残余叶(@227,ite7-else→ite0-then 支)形如
+`trans arctanK (div (sqrt …) (neg …))`(atn2 型商):分母 TM 包络与朴素区间
+enclosure 均跨 0,`inv` 规则与区间 fallback 同时失败,`evalTMHullD2` 返回
+`none`(内核不可验证叶的直接成因)。但 Real 语义下 `arctan (num/den)` 是
+**全函数**:`|arctan x| < π/2` 对所有 `x : ℝ` 成立(`x/0 = 0` 处值为
+`arctan 0 = 0`,同样被覆盖),所以商越零在 atan 复合层可消化——本节给出
+`ρ ↦ arctan (f₁ ρ / f₂ ρ)` 的零斜率复合模型 `TaylorM.atn2DivTM`:
+
+- **中心收紧支**(分母中心 enclosure `fB₂` 定号,即 `0 ∉ fB₂`,
+  `DInterval.div` 成功):`fB = transOn arctanK (fB₁/fB₂)`——`g(y)` 的 rung
+  紧致 enclosure;`err = P + |fB|`,`P = atanDivHalfPiBound` 为 `π/2` 的
+  dyadic 严格上界,覆盖 `|g(ρ) − g(y)| ≤ |g(ρ)| + |g(y)| ≤ P + |g(y)|`。
+- **全宽 hull 支**(中心也不定号——真跨零):`fB = [−P, P]`,`err = 2P`,
+  覆盖 `|g(ρ) − g(y)| ≤ 2P`。
+
+健全性不依赖分母定号的任何假设(包络跨零正是使用场景),err 末尾沿
+`chopCeilTo errScale` 范式。`evalTMHullD2A` 逐臂克隆 `evalTMHullD2`,仅在
+`trans` 臂的旧链(TM 规则 → 区间 fallback)返回 `none` 后追加复合规则作为
+最终 fallback;既有定义与定理**零改动**,旧路径语义逐字节保持。证书队列
+纪律与既有节点对齐:复合规则消费 div 节点的一枚 `invCert` 与 trans 节点的
+一枚 `transCert`(内容不使用,仅为遍历序对齐)。 -/
+
+/-- **`π/2` 的 dyadic 严格上界**: `1609·2⁻¹⁰ = 1.5712890625`,由
+`Real.pi_lt_d6`(`π < 3.141593`)认证。 -/
+def atanDivHalfPiBound : Dyadic := ⟨1609, -10⟩
+
+/-- `|arctan x|` 的全局 dyadic 界:值域 `(−π/2, π/2)` 严格含于 `[−P, P]`。 -/
+theorem abs_arctan_le_atanDivHalfPiBound (x : ℝ) :
+    |Real.arctan x| ≤ atanDivHalfPiBound.toReal := by
+  have hlt := Real.arctan_lt_pi_div_two x
+  have hgt := Real.neg_pi_div_two_lt_arctan x
+  have hP : atanDivHalfPiBound.toReal = (1609 : ℝ) / 1024 := by
+    unfold atanDivHalfPiBound
+    rw [Dyadic.toReal_def]
+    norm_num
+  have hpi : Real.pi / 2 < atanDivHalfPiBound.toReal := by
+    rw [hP]
+    have h6 := Real.pi_lt_d6
+    linarith
+  rw [abs_le]
+  constructor <;> linarith
+
+/-- **atn2 复合模型**:分母包络跨零的 `arctan (f₁/f₂)` 的零斜率模型
+(两分支见本节注;`outd` 为中心商的 `DInterval.div` 粒度,`N`/`out` 为
+`arctanI` rung)。 -/
+def TaylorM.atn2DivTM {n : ℕ} (M₁ M₂ : TaylorM n) (N : ℕ) (out outd : Int) :
+    TaylorM n :=
+  Option.getD
+    ((DInterval.div M₁.fB M₂.fB outd).bind fun Q =>
+      (transOn .arctanK Q N out).map fun V =>
+      ⟨M₁.y, M₁.w, V, fun _ => ⟨⟨0, 0⟩, ⟨0, 0⟩⟩,
+        (atanDivHalfPiBound.add V.abs.hi).chopCeilTo M₁.errScale⟩)
+    ⟨M₁.y, M₁.w, ⟨-atanDivHalfPiBound, atanDivHalfPiBound⟩,
+      fun _ => ⟨⟨0, 0⟩, ⟨0, 0⟩⟩,
+      (atanDivHalfPiBound.add atanDivHalfPiBound).chopCeilTo M₁.errScale⟩
+
+/-- 复合模型的中心就是 `M₁.y`。 -/
+theorem TaylorM.atn2DivTM_y {n : ℕ} (M₁ M₂ : TaylorM n) (N : ℕ) (out outd : Int) :
+    (TaylorM.atn2DivTM M₁ M₂ N out outd).y = M₁.y := by
+  unfold TaylorM.atn2DivTM
+  cases hdiv : DInterval.div M₁.fB M₂.fB outd with
+  | none => rfl
+  | some Q =>
+      simp only [Option.bind_some]
+      cases ht : transOn .arctanK Q N out with
+      | none => rfl
+      | some V => rfl
+
+/-- 复合模型的包络就是 `M₁.w`。 -/
+theorem TaylorM.atn2DivTM_w {n : ℕ} (M₁ M₂ : TaylorM n) (N : ℕ) (out outd : Int) :
+    (TaylorM.atn2DivTM M₁ M₂ N out outd).w = M₁.w := by
+  unfold TaylorM.atn2DivTM
+  cases hdiv : DInterval.div M₁.fB M₂.fB outd with
+  | none => rfl
+  | some Q =>
+      simp only [Option.bind_some]
+      cases ht : transOn .arctanK Q N out with
+      | none => rfl
+      | some V => rfl
+
+/-- **atn2 复合规则的健全性**:`M₁`/`M₂` 合法(同中心同包络)即得
+`ρ ↦ arctan (f₁ ρ / f₂ ρ)` 的合法模型——不假设分母定号(Real 除法
+`x/0 = 0`,`|arctan|` 恒 `< π/2`)。 -/
+theorem valid_atn2Div {n : ℕ} {M₁ M₂ : TaylorM n} {box : Fin n → DInterval}
+    {f₁ f₂ : (Fin n → ℝ) → ℝ}
+    (hV₁ : M₁.Valid box f₁) (hV₂ : M₂.Valid box f₂)
+    (hy : M₁.y = M₂.y) (_hw : M₁.w = M₂.w) (N : ℕ) (out outd : Int) :
+    (TaylorM.atn2DivTM M₁ M₂ N out outd).Valid box
+      (fun ρ => Real.arctan (f₁ ρ / f₂ ρ)) := by
+  obtain ⟨hmem₁, hw₁, hfB₁, _⟩ := hV₁
+  obtain ⟨_, _, hfB₂, _⟩ := hV₂
+  rw [← hy] at hfB₂
+  have hgb := abs_arctan_le_atanDivHalfPiBound
+  have hullMem : (⟨-atanDivHalfPiBound, atanDivHalfPiBound⟩ : DInterval).mem
+      (Real.arctan (f₁ (fun i => (M₁.y i).toReal) / f₂ (fun i => (M₁.y i).toReal))) := by
+    have h := hgb (f₁ (fun i => (M₁.y i).toReal) / f₂ (fun i => (M₁.y i).toReal))
+    rw [abs_le] at h
+    constructor
+    · show (-atanDivHalfPiBound).toReal ≤ _
+      rw [Dyadic.toReal_neg]
+      linarith [h.1]
+    · exact h.2
+  have hullRem : ∀ ρ, boxMem box ρ →
+      ∃ a : Fin n → ℝ,
+        (∀ i, (⟨⟨0, 0⟩, ⟨0, 0⟩⟩ : DInterval).mem (a i)) ∧
+        |Real.arctan (f₁ ρ / f₂ ρ)
+          - Real.arctan (f₁ (fun i => (M₁.y i).toReal)
+              / f₂ (fun i => (M₁.y i).toReal))
+          - ∑ i, a i * (ρ i - (M₁.y i).toReal)|
+          ≤ ((atanDivHalfPiBound.add atanDivHalfPiBound).chopCeilTo
+              M₁.errScale).toReal := by
+    intro ρ hρ
+    refine ⟨fun _ => 0, fun i => ⟨by simp, by simp⟩, ?_⟩
+    have h0 : (∑ i, (0 : ℝ) * (ρ i - (M₁.y i).toReal)) = 0 :=
+      Finset.sum_eq_zero fun i _ => by rw [zero_mul]
+    rw [h0, sub_zero]
+    calc |Real.arctan (f₁ ρ / f₂ ρ)
+          - Real.arctan (f₁ (fun i => (M₁.y i).toReal)
+            / f₂ (fun i => (M₁.y i).toReal))|
+        = |Real.arctan (f₁ ρ / f₂ ρ)
+          + -Real.arctan (f₁ (fun i => (M₁.y i).toReal)
+            / f₂ (fun i => (M₁.y i).toReal))| := by rw [sub_eq_add_neg]
+      _ ≤ |Real.arctan (f₁ ρ / f₂ ρ)|
+          + |-Real.arctan (f₁ (fun i => (M₁.y i).toReal)
+            / f₂ (fun i => (M₁.y i).toReal))| := abs_add_le _ _
+      _ = |Real.arctan (f₁ ρ / f₂ ρ)|
+          + |Real.arctan (f₁ (fun i => (M₁.y i).toReal)
+            / f₂ (fun i => (M₁.y i).toReal))| := by rw [abs_neg]
+      _ ≤ atanDivHalfPiBound.toReal + atanDivHalfPiBound.toReal :=
+        add_le_add (hgb _) (hgb _)
+      _ = (atanDivHalfPiBound.add atanDivHalfPiBound).toReal :=
+        (Dyadic.toReal_add _ _).symm
+      _ ≤ ((atanDivHalfPiBound.add atanDivHalfPiBound).chopCeilTo
+            M₁.errScale).toReal :=
+        Dyadic.toReal_le_chopCeilTo _ _
+  unfold TaylorM.atn2DivTM
+  cases hdiv : DInterval.div M₁.fB M₂.fB outd with
+  | none =>
+      simp only [Option.bind_none, Option.getD_none]
+      exact ⟨hmem₁, hw₁, hullMem, hullRem⟩
+  | some Q =>
+      simp only [Option.bind_some]
+      cases ht : transOn .arctanK Q N out with
+      | none =>
+          simp only [Option.map_none, Option.getD_none]
+          exact ⟨hmem₁, hw₁, hullMem, hullRem⟩
+      | some V =>
+          simp only [Option.map_some, Option.getD_some]
+          refine ⟨hmem₁, hw₁, ?_, ?_⟩
+          · exact IExpr.transOn_sound .arctanK
+              (DInterval.div_sound hdiv hfB₁ hfB₂) ht
+          · intro ρ hρ
+            refine ⟨fun _ => 0, fun i => ⟨by simp, by simp⟩, ?_⟩
+            have h0 : (∑ i, (0 : ℝ) * (ρ i - (M₁.y i).toReal)) = 0 :=
+              Finset.sum_eq_zero fun i _ => by rw [zero_mul]
+            rw [h0, sub_zero]
+            have hgy : |Real.arctan (f₁ (fun i => (M₁.y i).toReal)
+                  / f₂ (fun i => (M₁.y i).toReal))| ≤ V.abs.hi.toReal :=
+              (DInterval.mem_abs
+                (IExpr.transOn_sound .arctanK
+                  (DInterval.div_sound hdiv hfB₁ hfB₂) ht)).2
+            calc |Real.arctan (f₁ ρ / f₂ ρ)
+                  - Real.arctan (f₁ (fun i => (M₁.y i).toReal)
+                    / f₂ (fun i => (M₁.y i).toReal))|
+                = |Real.arctan (f₁ ρ / f₂ ρ)
+                  + -Real.arctan (f₁ (fun i => (M₁.y i).toReal)
+                    / f₂ (fun i => (M₁.y i).toReal))| := by rw [sub_eq_add_neg]
+              _ ≤ |Real.arctan (f₁ ρ / f₂ ρ)|
+                  + |-Real.arctan (f₁ (fun i => (M₁.y i).toReal)
+                    / f₂ (fun i => (M₁.y i).toReal))| := abs_add_le _ _
+              _ = |Real.arctan (f₁ ρ / f₂ ρ)|
+                  + |Real.arctan (f₁ (fun i => (M₁.y i).toReal)
+                    / f₂ (fun i => (M₁.y i).toReal))| := by rw [abs_neg]
+              _ ≤ atanDivHalfPiBound.toReal + V.abs.hi.toReal :=
+                add_le_add (hgb _) hgy
+              _ = (atanDivHalfPiBound.add V.abs.hi).toReal :=
+                (Dyadic.toReal_add _ _).symm
+              _ ≤ ((atanDivHalfPiBound.add V.abs.hi).chopCeilTo
+                    M₁.errScale).toReal :=
+                Dyadic.toReal_le_chopCeilTo _ _
+
+/-- **atn2 复合 fallback**(只在 `trans` 臂旧链返回 `none` 后触发):模式
+`trans arctanK (div e₁ e₂)` 时以**基线** `evalTMHullD2` 求取 num/den 子模型并
+合成 `TaylorM.atn2DivTM`;消费 div 节点的一枚 `invCert` 与 trans 节点的一枚
+`transCert`(仅遍历序对齐)。 -/
+def atn2DivFallback {n : ℕ} (box : Fin n → DInterval) (k : TKind) (e : IExpr n)
+    (N : ℕ) (out : Int) (ps : TMParams) : Option (TaylorM n × TMParams) :=
+  match k, e with
+  | .arctanK, .div e₁ e₂ outd =>
+      (evalTMHullD2 box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2 box e₂ ps₁).bind fun (M₂, ps₂) =>
+      ps₂.invCerts.head?.bind fun _pi =>
+      (ps₂.transCerts.head?.map fun _pt =>
+        (TaylorM.atn2DivTM M₁ M₂ N out outd,
+          ⟨ps₂.sqrtCerts, ps₂.invCerts.tail, ps₂.transCerts.tail⟩))
+  | _, _ => none
+
+/-- **D2 + atn2 复合的求值器**:逐臂克隆 `evalTMHullD2`,仅 `trans` 臂在旧链
+(TM 规则 → 区间 fallback)失败后追加 atn2 复合规则(子模型经基线
+`evalTMHullD2` 求值——复合规则的健全性直接复用 `evalTMHullD2_sound`,无需
+对孙子项归纳)。 -/
+def evalTMHullD2A {n : ℕ} (box : Fin n → DInterval) :
+    IExpr n → TMParams → Option (TaylorM n × TMParams)
+  | .const d, ps => some (constTM box d, ps)
+  | .var k, ps => some (varTM box k, ps)
+  | .neg e, ps => (evalTMHullD2A box e ps).map fun (M, ps') => (M.neg, ps')
+  | .add e₁ e₂, ps =>
+      (evalTMHullD2A box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2A box e₂ ps₁).map fun (M₂, ps₂) => (M₁.add M₂, ps₂)
+  | .sub e₁ e₂, ps =>
+      (evalTMHullD2A box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2A box e₂ ps₁).map fun (M₂, ps₂) => (M₁.sub M₂, ps₂)
+  | .mul e₁ e₂, ps =>
+      (evalTMHullD2A box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2A box e₂ ps₁).map fun (M₂, ps₂) => (M₁.mul M₂, ps₂)
+  | .div e₁ e₂ out, ps =>
+      (evalTMHullD2A box e₁ ps).bind fun (M₁, ps₁) =>
+      (evalTMHullD2A box e₂ ps₁).bind fun (M₂, ps₂) =>
+      ps₂.invCerts.head?.bind fun p =>
+      ((M₂.inv p).map fun Mi => (M₁.mul Mi, ⟨ps₂.sqrtCerts, ps₂.invCerts.tail,
+          ps₂.transCerts⟩)).orElse
+        (fun _ => ((IExpr.div e₁ e₂ out).eval box).map fun I =>
+          (fallbackTM box I, ⟨ps₂.sqrtCerts, ps₂.invCerts.tail, ps₂.transCerts⟩))
+  | .sqrt e s₁ s₂, ps =>
+      (evalTMHullD2A box e ps).bind fun (M₀, ps₀) =>
+      ps₀.sqrtCerts.head?.bind fun p =>
+      ((M₀.sqrt p).map fun M' => (M', ⟨ps₀.sqrtCerts.tail, ps₀.invCerts,
+          ps₀.transCerts⟩)).orElse
+        (fun _ => ((IExpr.sqrt e s₁ s₂).eval box).map fun I =>
+          (fallbackTM box I, ⟨ps₀.sqrtCerts.tail, ps₀.invCerts, ps₀.transCerts⟩))
+  | .abs e, ps => ((IExpr.abs e).eval box).map fun I => (fallbackTM box I, ps)
+  | .trans k e N out, ps =>
+      if e.isClosed then
+        ((IExpr.trans k e N out).eval box).map fun I => (closedTM box I, ps)
+      else
+        match evalTMHullD2A box e ps with
+        | some (M₀, ps₀) =>
+            match ps₀.transCerts.head? with
+            | some p =>
+                match M₀.trans k N out p with
+                | some M' =>
+                    some (M', ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩)
+                | none =>
+                    ((IExpr.trans k e N out).eval box).map fun I =>
+                      (fallbackTM box I,
+                        ⟨ps₀.sqrtCerts, ps₀.invCerts, ps₀.transCerts.tail⟩)
+            | none => none
+        | none => atn2DivFallback box k e N out ps
+  | .ite c t e, ps =>
+      (evalIParams box c ps).bind fun (C, ps₀) =>
+      if C.hi.isNeg then evalTMHullD2A box t ps₀
+      else if C.lo.isNN then evalTMHullD2A box e ps₀
+      else
+        (evalTMHullD2A box t ps₀).bind fun (Mt, ps₁) =>
+        (evalTMHullD2A box e ps₁).map fun (Me, ps₂) => (iteHullTM2 Mt Me, ps₂)
+
+/-- **Soundness of `evalTMHullD2A`**(同 `evalTMHullD2_sound` 的结论形状;
+`trans` 臂追加的复合规则由 `valid_atn2Div` + 基线 `evalTMHullD2_sound`
+闭合)。 -/
+theorem evalTMHullD2A_sound {n : ℕ} {box : Fin n → DInterval} :
+    ∀ (e : IExpr n) (ps ps' : TMParams) (M : TaylorM n),
+      (∀ i, (box i).wf = true) →
+      evalTMHullD2A box e ps = some (M, ps') →
+      M.Valid box (fun ρ => e.evalReal ρ) ∧ M.y = boxCenter box ∧ M.w = boxW box := by
+  intro e
+  induction e with
+  | const d =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2A] at h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+      exact ⟨valid_const (cellOK_of_wf hwf) d, rfl, rfl⟩
+  | var k =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2A] at h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+      exact ⟨valid_var (cellOK_of_wf hwf) k, rfl, rfl⟩
+  | neg e ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2A] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₀, ps₀⟩, he, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+      exact ⟨valid_neg hV, hy, hw⟩
+  | add e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2A] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_add hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | sub e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2A] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_sub hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | mul e₁ e₂ ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2A] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      refine ⟨?_, hy₁, hw₁⟩
+      exact valid_mul hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂])
+  | div e₁ e₂ out ih₁ ih₂ =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2A] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₂, ps₂⟩, h₂, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨p, _hp, h⟩ := h
+      obtain ⟨hV₁, hy₁, hw₁⟩ := ih₁ ps ps₁ M₁ hwf h₁
+      obtain ⟨hV₂, hy₂, hw₂⟩ := ih₂ ps₁ ps₂ M₂ hwf h₂
+      cases hi : M₂.inv p with
+      | none =>
+        rw [hi] at h
+        rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+      | some Mi =>
+        rw [hi] at h
+        rw [Option.map_some, Option.orElse_some] at h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+        refine ⟨?_, hy₁, hw₁⟩
+        exact valid_div hV₁ hV₂ (by rw [hy₁, hy₂]) (by rw [hw₁, hw₂]) p hi
+  | sqrt e s₁ s₂ ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2A] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨M₀, ps₀⟩, he, h⟩ := h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨p, _hp, h⟩ := h
+      obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+      cases hs : M₀.sqrt p with
+      | none =>
+        rw [hs] at h
+        rw [Option.map_none, Option.orElse_none, Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+      | some M' =>
+        rw [hs] at h
+        rw [Option.map_some, Option.orElse_some] at h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+        obtain ⟨hV', hyy, hww⟩ := valid_sqrt hV p hs
+        refine ⟨hV', ?_, ?_⟩
+        · show M'.y = boxCenter box
+          exact hyy.trans hy
+        · show M'.w = boxW box
+          exact hww.trans hw
+  | abs e ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2A] at h
+      rw [Option.map_eq_some_iff] at h
+      obtain ⟨I, hI, hfinal⟩ := h
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+      exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+  | trans k e N out ih =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2A] at h
+      by_cases hcl : e.isClosed = true
+      · rw [if_pos hcl] at h
+        rw [Option.map_eq_some_iff] at h
+        obtain ⟨I, hI, hfinal⟩ := h
+        obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+        exact ⟨valid_closed (cellOK_of_wf hwf) hcl hI, rfl, rfl⟩
+      · rw [if_neg hcl] at h
+        split at h
+        · next M₀ ps₀ he =>
+            split at h
+            · next p hp =>
+                split at h
+                · next M' ht =>
+                    obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp (Option.some.inj h)
+                    obtain ⟨hV, hy, hw⟩ := ih ps ps₀ M₀ hwf he
+                    obtain ⟨hV', hyy, hww⟩ := valid_trans hV N out p ht
+                    refine ⟨hV', ?_, ?_⟩
+                    · show M'.y = boxCenter box
+                      exact hyy.trans hy
+                    · show M'.w = boxW box
+                      exact hww.trans hw
+                · next ht =>
+                    rw [Option.map_eq_some_iff] at h
+                    obtain ⟨I, hI, hfinal⟩ := h
+                    obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+                    exact ⟨valid_fallback (cellOK_of_wf hwf) hI, rfl, rfl⟩
+            · next hp => simp at h
+        · next he =>
+            unfold atn2DivFallback at h
+            split at h
+            · next e₁ e₂ outd =>
+                rw [Option.bind_eq_some_iff] at h
+                obtain ⟨⟨M₁, ps₁⟩, h₁, h⟩ := h
+                rw [Option.bind_eq_some_iff] at h
+                obtain ⟨⟨M₂, ps₂⟩, h₂, h⟩ := h
+                rw [Option.bind_eq_some_iff] at h
+                obtain ⟨pi, _hpi, h⟩ := h
+                rw [Option.map_eq_some_iff] at h
+                obtain ⟨pt, _hpt, hfinal⟩ := h
+                obtain ⟨hM, hps⟩ := Prod.ext_iff.mp hfinal
+                obtain ⟨hV₁, hy₁, hw₁⟩ := evalTMHullD2_sound _ ps ps₁ M₁ hwf h₁
+                obtain ⟨hV₂, hy₂, hw₂⟩ := evalTMHullD2_sound _ ps₁ ps₂ M₂ hwf h₂
+                have hM' : TaylorM.atn2DivTM M₁ M₂ N out outd = M := hM
+                rw [← hM', TaylorM.atn2DivTM_y, TaylorM.atn2DivTM_w]
+                exact ⟨valid_atn2Div hV₁ hV₂ (hy₁.trans hy₂.symm)
+                  (hw₁.trans hw₂.symm) N out outd, hy₁, hw₁⟩
+            · simp at h
+  | ite c t e _ihc iht ihe =>
+      intro ps ps' M hwf h
+      simp only [evalTMHullD2A] at h
+      rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨C, ps₀⟩, hc, h⟩ := h
+      by_cases hneg : C.hi.isNeg = true
+      · rw [if_pos hneg] at h
+        obtain ⟨hVt, hyt, hwt⟩ := iht ps₀ ps' M hwf h
+        refine ⟨valid_iteHullD hVt (fun ρ hρ => evalIParams_mem hρ c ps ps₀ C hc)
+          hneg, hyt, hwt⟩
+      · rw [if_neg hneg] at h
+        by_cases hnn : C.lo.isNN = true
+        · rw [if_pos hnn] at h
+          obtain ⟨hVe, hye, hwe⟩ := ihe ps₀ ps' M hwf h
+          refine ⟨valid_iteHullD_else hVe
+            (fun ρ hρ => evalIParams_mem hρ c ps ps₀ C hc) hnn, hye, hwe⟩
+        · rw [if_neg hnn] at h
+          rw [Option.bind_eq_some_iff] at h
+          obtain ⟨⟨Mt, ps₁⟩, ht, h⟩ := h
+          rw [Option.map_eq_some_iff] at h
+          obtain ⟨⟨Me, ps₂⟩, he, hfinal⟩ := h
+          obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hfinal
+          obtain ⟨hVt, hyt, hwt⟩ := iht ps₀ ps₁ Mt hwf ht
+          obtain ⟨hVe, hye, hwe⟩ := ihe ps₁ ps₂ Me hwf he
+          refine ⟨valid_iteHull2 c hVt hVe (hyt.trans hye.symm)
+            (hwt.trans hwe.symm), hyt, hwt⟩
+
+/-- **D2A 检查器**(同 `checkPosTMHull` 形状;`evalTMHullD2A` 成功且 Taylor
+下界严格为正)。549 atn2 残余叶的驱动入口。 -/
+def checkPosTMHullA {n : ℕ} (e : IExpr n) (box : Fin n → DInterval)
+    (ps : TMParams) : Bool :=
+  (List.finRange n).all (fun i => (box i).wf) &&
+    (match evalTMHullD2A box e ps with
+    | some (M, _) => (M.loBound box).isPos
+    | none => false)
+
+/-- **Soundness of the D2A checker**(`evalTMHullD2A_sound` + Taylor 下界引理,
+两行复合同 `checkPosTMHull_sound`)。 -/
+theorem checkPosTMHullA_sound {n : ℕ} {e : IExpr n} {box : Fin n → DInterval}
+    {ps : TMParams}
+    (h : checkPosTMHullA e box ps = true) (ρ : Fin n → ℝ) (hρ : boxMem box ρ) :
+    0 < e.evalReal ρ := by
+  unfold checkPosTMHullA at h
+  simp only [Bool.and_eq_true, List.all_eq_true] at h
+  obtain ⟨hwfB, h⟩ := h
+  have hwf : ∀ i, (box i).wf = true := fun i => hwfB i (List.mem_finRange i)
+  cases hE : evalTMHullD2A box e ps with
+  | none => rw [hE] at h; simp at h
+  | some Mp =>
+    obtain ⟨M, ps'⟩ := Mp
+    rw [hE] at h
+    have hpos := Dyadic.toReal_pos_of_isPos h
+    obtain ⟨hV, _, _⟩ := evalTMHullD2A_sound e ps ps' M hwf hE
+    exact lt_of_lt_of_le hpos (M.loBound_sound hV hρ)
+
+/-! ### atn2-composite smoke tests: 真跨零(hull 支)/ 中心定号(收紧支) -/
+
+set_option maxRecDepth 1000000
+
+/-- Box `x ∈ [1, 2]`, `y ∈ [−1, 1]`:商 `x/y` 的分母**真跨零**。 -/
+def exABoxStraddle : Fin 2 → DInterval := ![⟨⟨1, 0⟩, ⟨2, 0⟩⟩, ⟨⟨-1, 0⟩, ⟨1, 0⟩⟩]
+
+/-- `5 − arctan (x/y)`:分母跨零使旧链(inv 规则与区间 fallback 同时)失败。 -/
+def exAExprStraddle : IExpr 2 :=
+  .sub (.const ⟨5, 0⟩) (.trans .arctanK (.div (.var 0) (.var 1) (-64)) 8 (-64))
+
+/-- 玩具证书队列(div/trans 各一枚,复合规则只消费不对内容取值)。 -/
+def exAParams : TMParams := ⟨[], [⟨-80, -80, -80⟩], [⟨-80, -80⟩]⟩
+
+/-- 回归锚点:旧求值器对跨零商安全失败(`none`)。 -/
+theorem exA_straddle_old_none :
+    evalTMHullD2 exABoxStraddle exAExprStraddle exAParams = none := rfl
+
+/-- 扩展性回归:D2 成功处 D2A 逐字节一致(复合规则只在 `none` 后触发)。 -/
+theorem exA_D2A_agree_on_D2_success :
+    evalTMHullD2A exBoxIteHull exIteAbs TMParams.empty
+      = evalTMHullD2 exBoxIteHull exIteAbs TMParams.empty := rfl
+
+/-- **真跨零救回**(hull 支):D2A 经 atn2 复合规则给出模型,
+`5 − arctan(x/y) ≥ 5 − 3P = 293·2⁻¹⁰ > 0`(Real 语义 `|arctan| < π/2 < P`,
+含 `y = 0` 点 `x/0 = 0`)。 -/
+theorem exA_straddle_checkPos :
+    checkPosTMHullA exAExprStraddle exABoxStraddle exAParams = true := by decide
+
+/-- 端到端:内核证书到实不等式(`y = 0` 也在盒内,Real 除法 `x/0 = 0`)。 -/
+theorem exA_straddle_end_to_end (x y : ℝ) (hx0 : 1 ≤ x) (hx1 : x ≤ 2)
+    (hy0 : -1 ≤ y) (hy1 : y ≤ 1) : 0 < 5 - Real.arctan (x / y) := by
+  have hmem : ∀ i : Fin 2, (exABoxStraddle i).mem (![x, y] i) := by
+    intro i
+    fin_cases i
+    · exact ⟨by simpa [exABoxStraddle, Dyadic.toReal_int] using hx0,
+        by simpa [exABoxStraddle, Dyadic.toReal_int] using hx1⟩
+    · exact ⟨by simpa [exABoxStraddle] using hy0,
+        by simpa [exABoxStraddle] using hy1⟩
+  have h := checkPosTMHullA_sound exA_straddle_checkPos ![x, y] hmem
+  have hsimp : exAExprStraddle.evalReal ![x, y] = 5 - Real.arctan (x / y) := by
+    simp [exAExprStraddle, IExpr.evalReal, transReal, Dyadic.toReal_int]
+  rw [hsimp] at h
+  exact h
+
+/-- Box `x ∈ [1/2, 1]`:分母 `x − 5/8` 的中心值 `1/8 > 0`(中心 enclosure
+定号)但包络 `[−1/8, 3/8]` 跨零——中心收紧支的形态。 -/
+def exABoxCentered : Fin 1 → DInterval := fun _ => ⟨⟨1, -1⟩, ⟨1, 0⟩⟩
+
+/-- `5 − arctan (1/(x − 5/8))`:中心商 `1/(1/8) = 8` 有限,rung 紧致。 -/
+def exAExprCentered : IExpr 1 :=
+  .sub (.const ⟨5, 0⟩)
+    (.trans .arctanK (.div (.const ⟨1, 0⟩) (.sub (.var 0) (.const ⟨5, -3⟩)) (-64))
+      8 (-64))
+
+/-- 中心收紧支同样通过(`5 − (arctan 8 + P + arctan 8) ≈ 0.53 > 0`)。 -/
+theorem exA_centered_checkPos :
+    checkPosTMHullA exAExprCentered exABoxCentered exAParams = true := by decide
+
+/-- 中心收紧支的 err 严格小于全宽 hull 的 `P + P`(结构性区分两分支)。 -/
+def exACenteredErrLtHull : Bool :=
+  match evalTMHullD2A exABoxCentered exAExprCentered exAParams with
+  | some (M, _) => Dyadic.blt M.err ⟨13, -2⟩
+  | none => false
+
+theorem exA_centered_err_lt_hull : exACenteredErrLtHull = true := by decide
+
+#print axioms abs_arctan_le_atanDivHalfPiBound
+#print axioms valid_atn2Div
+#print axioms evalTMHullD2A_sound
+#print axioms checkPosTMHullA_sound
+#print axioms exA_straddle_old_none
+#print axioms exA_straddle_checkPos
+#print axioms exA_straddle_end_to_end
+#print axioms exA_centered_checkPos
+#print axioms exA_centered_err_lt_hull
 
 end Kepler.Interval
