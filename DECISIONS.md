@@ -3,14 +3,13 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
-## 2026-09-25 — [DRAFT 待批准] native_decide scoped exception 扩展至 `Kepler.Interval.Cases.C549*`（549 加速项目）
+## 2026-09-25 — native_decide scoped exception 扩展至 `Kepler.Interval.Cases.C549*`（549 加速项目）
 
-> **状态：DRAFT 待批准——本条不是已决事项。** 人类批准前，native_decide 的
-> 允许范围仍以 2026-08-10 与 2026-09-19 两条为准（`Kepler.Graphs.Cert*` +
-> `Kepler.Assembly.GoodListShard*`），CI/lint 对其余文件的零命中检查继续
-> 拦截。既有实验模块（`lean/Kepler/Interval/Cases/C549HullSpeed.lean`）按
-> 其文件头声明的 "experiment module, NOT a production certificate" 处置，
-> 不构成本条已获批的先例。
+> **状态：已批准（2026-09-26，用户拍板"允许 native decide"）。** native_decide
+> 允许范围在 2026-08-10 与 2026-09-19 两条（`Kepler.Graphs.Cert*` +
+> `Kepler.Assembly.GoodListShard*`）之上，新增 `Kepler.Interval.Cases.C549*`，
+> 形态与审计要求按下文执行（50 叶合取 = 1 axiom/shard、逐 shard `#print axioms`
+> 台账、sorryAx/Classical.choice 出现即 fail）。量产 native 发射自本批准起开闸。
 
 **变更（拟议）**：在上述两条范围之上，另允许 `native_decide` 出现在
 `Kepler.Interval.Cases.C549*`（5490182221 案例的 hull/HullD2/mono 折叠/
