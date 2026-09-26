@@ -419,9 +419,37 @@ exact-sup 曲率界（端点 max + 峰项，dyadic 上取整认证）——模�
 （Trans.lean arctan_residual + CertTM arctanK err 项）→ 模拟 99/99 翻正
 + 全线 W_t 收紧（不止 straddle——所有 atan 支的余项都松 15×）。
 
-## 下一步（十五更）
+### arctan 曲率紧致化 + div2 + 全量重演第一步（`3715ad81`）
 
-1. **arctan 曲率紧致化**（最后公式）：Trans.lean arctan_residual 界替换 +
-   CertTM arctanK err 项 → 99 叶实测翻正 → 全量重演
-2. div/sqrt 6,713（Kimi 线）；native_decide 扩围（待批准）
-3. Kimi 同步包（arctan 曲率接口 + 千叶批量终版数字）
+**最后公式落地（CertTM，零 axiom，Trans.lean 零改动）**：
+- atan_curv 引理链（纯代数：[0,4/7] 增/[5/8,∞) 减/AM-GM 全局帽 7/8）；
+  修正峰值记录：真峰 **3√3/8≈0.6495**（9√3/16 系笔误，早更正确）
+- arctanK err 项 = `W²·min(atanCurv, 旧项)`——dmin 逐点不增，零回退结构保证
+- **实测：straddle 61→142/160（81/99 翻正 81.8%）；single 40/40 零回退；
+  loBound −4.84→+0.14 量级跳变**
+
+**C 侧 div2 通道**：trans 注入 |·| 下界认证（sqrt 成功即认证分母定号）——
+div越零 6,565→5,928（@221 全消；@227 的 5,706 包络层数学不可救——需
+Lean 侧 chop 或 atn2 复合规则）。叶数/证书零变化（被救叶 valid-but-open）。
+
+**全量重演第一步——四族再生**：Straddle 61→**142/160**、HullPilot 16→
+**20/20**、HullSpeed 44→**50/50**、**Hull200 158→200/200**（构建 71→53min）。
+全部构建零 error、axioms 标准内。make check 绿、已合 main。
+
+### 阶段位置（十五更——M5 攻坚完成度）
+
+| 项 | 数值 |
+|---|---|
+| 试点可验证率 | Straddle 88.75%、Hull200/HullPilot/Speed **100%** |
+| 全量口径 | mono 折叠池 97.8% + straddle 翻正 88.75% → **全量 ~95%+ 可验证**（待全量重演确认） |
+| 核时 | 109 native core·h（straddle 修复后 leaf-count 或再降——重演量） |
+| 距 M5 | wall 已 ~2.7h@40；核时口径差 ~10×（native_decide 扩围后 ~11 core·h，**逼近 M5**） |
+
+**残余**：18 NEG（div/sqrt 份额 + guard-hull 溢价，需 >15×）→ Kimi 线
+（chop/atn2 复合规则）；div 5,928（同线）；native_decide 扩围（待批准）。
+
+## 下一步（十六更）
+
+1. **全量重演主体**：212,798 叶全管线（hull/HullD2/mono 折叠 @128 + 曲率紧致化）重产 + 批量构建——产出终版可验证率与核时
+2. native_decide 扩围 DECISIONS 草案（含 549 全量 axiom 面：50 叶 1 axiom 形态）
+3. Kimi 同步包（arctan 曲率落地 + div 5,928 精确残余 + chop/atn2 需求）
