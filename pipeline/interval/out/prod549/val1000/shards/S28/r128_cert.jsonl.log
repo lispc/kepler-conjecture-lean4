@@ -1,0 +1,2 @@
+probe certg28@128: PASS 60/60  ms med=1 max=5
+wrote /home/scroll/repos/kepler-conjecture-lean4/pipeline/interval/out/prod549/val1000/shards/S28/r128_cert.jsonl

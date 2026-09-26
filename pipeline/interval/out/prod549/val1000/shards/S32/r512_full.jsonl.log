@@ -1,0 +1,2 @@
+probe fullg32@512: PASS 3/3  ms med=5167 max=5173
+wrote /home/scroll/repos/kepler-conjecture-lean4/pipeline/interval/out/prod549/val1000/shards/S32/r512_full.jsonl

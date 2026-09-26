@@ -29,3 +29,4 @@ pipeline/interval/out/dreal_log/
 pipeline/interval/bb_arb
 pipeline/interval/out/cert/
 lean/scripts/planarity.hl
+pipeline/interval/out/prod549/

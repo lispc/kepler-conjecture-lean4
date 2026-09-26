@@ -1,0 +1,316 @@
+⚠ [8658/8665] Replayed Kepler.Interval.Trans
+info: Kepler/Interval/Trans.lean:1689:4: Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+warning: Kepler/Interval/Trans.lean:1685:15: This simp argument is unused:
+  Nat.mul_zero
+
+Hint: Omit it from the simp argument list.
+  simp only [̵N̵a̵t̵.̵m̵u̵l̵_̵z̵e̵r̵o̵,̵ ̵z̵e̵r̵o̵_̵a̵d̵d̵,̵[̲z̲e̲r̲o̲_̲a̲d̲d̲,̲ Nat.add_zero, mul_one, pow_zero, Nat.mul_one, neg_one_mul, neg_add_cancel,
+  ̲  ̲ ̲ ̲ ̲ ̲zero_mul, zero_div, add_zero, one_mul]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/Trans.lean:1685:39: This simp argument is unused:
+  Nat.add_zero
+
+Hint: Omit it from the simp argument list.
+  simp only [Nat.mul_zero, zero_add, N̵a̵t̵.̵a̵d̵d̵_̵z̵e̵r̵o̵,̵ ̵mul_one, pow_zero, Nat.mul_one, neg_one_mul, neg_add_cancel,
+  ̲  ̲ ̲ ̲ ̲ ̲zero_mul, zero_div, add_zero, one_mul]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/Trans.lean:1685:53: This simp argument is unused:
+  mul_one
+
+Hint: Omit it from the simp argument list.
+  simp only [Nat.mul_zero, zero_add, Nat.add_zero, m̵u̵l̵_̵o̵n̵e̵,̵ ̵pow_zero,
+  ̵  ̵ ̵ ̵ ̵ ̵Nat.mul_one, neg_one_mul,
+  ̲  ̲ ̲ ̲ ̲ ̲neg_add_cancel, zero_mul, zero_div,
+  ̵  ̵ ̵ ̵ ̵ ̵add_zero, one_mul]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/Trans.lean:1685:62: This simp argument is unused:
+  pow_zero
+
+Hint: Omit it from the simp argument list.
+  simp only [Nat.mul_zero, zero_add, Nat.add_zero, mul_one, p̵o̵w̵_̵z̵e̵r̵o̵,̵
+  ̵ ̵ ̵ ̵ ̵ ̵ ̵Nat.mul_one, neg_one_mul,
+  ̲  ̲ ̲ ̲ ̲ ̲neg_add_cancel, zero_mul, zero_div,
+  ̵  ̵ ̵ ̵ ̵ ̵add_zero, one_mul]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/Trans.lean:1686:6: This simp argument is unused:
+  Nat.mul_one
+
+Hint: Omit it from the simp argument list.
+  simp only [Nat.mul_zero, zero_add, Nat.add_zero, mul_one, pow_zero, N̵a̵t̵.̵m̵u̵l̵_̵o̵n̵e̵,̵ ̵neg_one_mul, neg_add_cancel,
+  ̲  ̲ ̲ ̲ ̲ ̲zero_mul, zero_div, add_zero, one_mul]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/Trans.lean:1686:19: This simp argument is unused:
+  neg_one_mul
+
+Hint: Omit it from the simp argument list.
+  simp only [Nat.mul_zero, zero_add, Nat.add_zero, mul_one, pow_zero, Nat.mul_one, n̵e̵g̵_̵o̵n̵e̵_̵m̵u̵l̵,̵ ̵neg_add_cancel,
+  ̲  ̲ ̲ ̲ ̲ ̲zero_mul, zero_div, add_zero, one_mul]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/Trans.lean:1687:16: This simp argument is unused:
+  one_mul
+
+Hint: Omit it from the simp argument list.
+  simp only [Nat.mul_zero, zero_add, Nat.add_zero, mul_one, pow_zero,
+  ̵  ̵ ̵ ̵ ̵ ̵Nat.mul_one, neg_one_mul,
+  ̲  ̲ ̲ ̲ ̲ ̲neg_add_cancel, zero_mul, zero_div,
+  ̵  ̵ ̵ ̵ ̵ ̵add_zero,̵ ̵o̵n̵e̵_̵m̵u̵l̵]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/Trans.lean:1827:2: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+warning: Kepler/Interval/Trans.lean:2158:6: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+info: Kepler/Interval/Trans.lean:2307:0: "LO 1224655577355317812672749160327866723349967285393905504954131495570636800 -240 HI 42085329585838210803442803349249924358298003759478113232823474495553149061564465166 -274"
+info: Kepler/Interval/Trans.lean:2311:0: 'Kepler.Interval.logInterval_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Trans.lean:2312:0: 'Kepler.Interval.log2D_mem' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Trans.lean:2313:0: 'Kepler.Interval.iscale_mem' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Trans.lean:2314:0: 'Kepler.Interval.logPoint_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Trans.lean:2315:0: 'Kepler.Interval.lnI_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Trans.lean:2317:0: 'Kepler.Interval.logInterval_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Trans.lean:2318:0: 'Kepler.Interval.log2D_mem' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Trans.lean:2319:0: 'Kepler.Interval.logPoint_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Trans.lean:2320:0: 'Kepler.Interval.lnI_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+⚠ [8660/8665] Replayed Kepler.Interval.Expr
+warning: Kepler/Interval/Expr.lean:667:2: exponent 261 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+info: Kepler/Interval/Expr.lean:690:0: 'Kepler.Interval.exLn_accept' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/Expr.lean:691:0: 'Kepler.Interval.exLn_eval' depends on axioms: [propext, Quot.sound]
+⚠ [8662/8665] Replayed Kepler.Interval.CertTM
+info: Kepler/Interval/CertTM.lean:1683:0: 'Kepler.Interval.atan_curv_mono' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:1684:0: 'Kepler.Interval.atan_curv_anti' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:1685:0: 'Kepler.Interval.atan_curv_le_semi' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:1686:0: 'Kepler.Interval.atan_curv_le_of_ge' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:1687:0: 'Kepler.Interval.arctan_residual_sup' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:1688:0: 'Kepler.Interval.atanCurv_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2760:0: 'Kepler.Interval.valid_iteHull' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2761:0: 'Kepler.Interval.evalTMHull_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2762:0: 'Kepler.Interval.exIteHull_strict_none' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2763:0: 'Kepler.Interval.exIteHull_isSome' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2764:0: 'Kepler.Interval.exIteHull_valid' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2765:0: 'Kepler.Interval.exIteBadGuard_hybrid_none' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2766:0: 'Kepler.Interval.exIteBadGuard_hull_isSome' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3332:0: 'Kepler.Interval.TaylorM.Valid.congr_box' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3333:0: 'Kepler.Interval.evalIParams_mem' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3334:0: 'Kepler.Interval.valid_iteHullD' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3335:0: 'Kepler.Interval.valid_iteHullD_else' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3336:0: 'Kepler.Interval.evalTMHullD_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3337:0: 'Kepler.Interval.exIteD_single_branch' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3338:0: 'Kepler.Interval.exIteD_valid' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3339:0: 'Kepler.Interval.exIteD_hull_composite' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3340:0: 'Kepler.Interval.exIteBadGuard_hullD_none' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3804:0: 'Kepler.Interval.DInterval.jumpBound_ge' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3805:0: 'Kepler.Interval.DInterval.jumpBound_nonneg' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3806:0: 'Kepler.Interval.valid_iteHull2' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3807:0: 'Kepler.Interval.evalTMHullD2_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3808:0: 'Kepler.Interval.exIteHull2_straddle_composite' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3809:0: 'Kepler.Interval.exIteHull2_err_zero' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3810:0: 'Kepler.Interval.exIteHull2_err_tighter' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3811:0: 'Kepler.Interval.exIteHull2_valid' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3812:0: 'Kepler.Interval.exIteD2_single_branch' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3813:0: 'Kepler.Interval.exIteBadGuard_hullD2_none' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:4245:0: 'Kepler.Interval.checkPosTMHull_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:4246:0: 'Kepler.Interval.exIteHullChk_checkPos' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:4247:0: 'Kepler.Interval.exIteHullChk_D2_composite' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:4248:0: 'Kepler.Interval.exIteHullChk_err_tighter' depends on axioms: [propext, Quot.sound]
+warning: Kepler/Interval/CertTM.lean:4363:62: This simp argument is unused:
+  Bool.and_assoc
+
+Hint: Omit it from the simp argument list.
+  simp only [isClosed, toIExpr, IExpr.isClosed, iha, ihb,̵ ̵B̵o̵o̵l̵.̵a̵n̵d̵_̵a̵s̵s̵o̵c̵]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/CertTM.lean:4365:62: This simp argument is unused:
+  Bool.and_assoc
+
+Hint: Omit it from the simp argument list.
+  simp only [isClosed, toIExpr, IExpr.isClosed, iha, ihb,̵ ̵B̵o̵o̵l̵.̵a̵n̵d̵_̵a̵s̵s̵o̵c̵]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/CertTM.lean:4367:62: This simp argument is unused:
+  Bool.and_assoc
+
+Hint: Omit it from the simp argument list.
+  simp only [isClosed, toIExpr, IExpr.isClosed, iha, ihb,̵ ̵B̵o̵o̵l̵.̵a̵n̵d̵_̵a̵s̵s̵o̵c̵]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/CertTM.lean:4369:62: This simp argument is unused:
+  Bool.and_assoc
+
+Hint: Omit it from the simp argument list.
+  simp only [isClosed, toIExpr, IExpr.isClosed, iha, ihb,̵ ̵B̵o̵o̵l̵.̵a̵n̵d̵_̵a̵s̵s̵o̵c̵]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+info: Kepler/Interval/CertTM.lean:4939:0: 'Kepler.Interval.valid_iteHullD_fn' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:4940:0: 'Kepler.Interval.valid_iteHullD_else_fn' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:4941:0: 'Kepler.Interval.evalTMHullD2L_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:4942:0: 'Kepler.Interval.checkPosTMHullL_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:4943:0: 'Kepler.Interval.exL_ref_is_env' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:4944:0: 'Kepler.Interval.exL_D2_composite' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:4945:0: 'Kepler.Interval.exL_checkPos' depends on axioms: [propext, Quot.sound]
+⚠ [8663/8665] Replayed Kepler.Interval.Cases.C549Mono
+info: Kepler/Interval/Cases/C549Mono.lean:634:0: 'Kepler.Interval.derivIExpr_hasDerivWithinAt' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Cases/C549Mono.lean:635:0: 'Kepler.Interval.facePosLo' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Cases/C549Mono.lean:636:0: 'Kepler.Interval.facePosHi' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Cases/C549Mono.lean:637:0: 'Kepler.Interval.checkPosFaceLo_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Cases/C549Mono.lean:638:0: 'Kepler.Interval.checkPosFaceHi_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Cases/C549Mono.lean:639:0: 'Kepler.Interval.miniSemantic' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Cases/C549Mono.lean:640:0: 'Kepler.Interval.miniFolded' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/Cases/C549Mono.lean:695:0: 'Kepler.Interval.miniDSafe2_nn' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Cases/C549Mono.lean:696:0: 'Kepler.Interval.miniFolded2' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/Cases/C549Mono.lean:697:0: 'Kepler.Interval.miniSemantic2' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549Mono.lean:792:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549Mono.lean:798:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549Mono.lean:823:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549Mono.lean:829:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549Mono.lean:854:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549Mono.lean:860:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549Mono.lean:885:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549Mono.lean:891:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549Mono.lean:916:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549Mono.lean:922:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+info: Kepler/Interval/Cases/C549Mono.lean:933:0: 'Kepler.Interval.Cases.C549MonoFace1' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/Cases/C549Mono.lean:934:0: 'Kepler.Interval.Cases.C549MonoDer1' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/Cases/C549Mono.lean:935:0: 'Kepler.Interval.Cases.C549MonoFold1' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/Cases/C549Mono.lean:936:0: 'Kepler.Interval.Cases.C549MonoFold2' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/Cases/C549Mono.lean:937:0: 'Kepler.Interval.Cases.C549MonoFold3' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/Cases/C549Mono.lean:938:0: 'Kepler.Interval.Cases.C549MonoFold4' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/Cases/C549Mono.lean:939:0: 'Kepler.Interval.Cases.C549MonoFold5' depends on axioms: [propext, Quot.sound]
+ℹ [8664/8665] Replayed Kepler.Interval.Cases.C549CertSlimDefs
+info: Kepler/Interval/Cases/C549CertSlimDefs.lean:173:0: 'Kepler.Interval.checkNegI_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Cases/C549CertSlimDefs.lean:174:0: 'Kepler.Interval.checkPosI_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Cases/C549CertSlimDefs.lean:175:0: 'Kepler.Interval.checkNeI_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Cases/C549CertSlimDefs.lean:176:0: 'Kepler.Interval.safeIteNegI' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Cases/C549CertSlimDefs.lean:177:0: 'Kepler.Interval.safeDivNegI' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Cases/C549CertSlimDefs.lean:178:0: 'Kepler.Interval.safeDivAbsI' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Cases/C549CertSlimDefs.lean:179:0: 'Kepler.Interval.miniIteNegI' depends on axioms: [propext, Classical.choice, Quot.sound]
+⚠ [8665/8665] Built Kepler.Interval.Cases.C549ProdS0002 (934s)
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:88:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:100:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:102:0: Definition `DSafe100277` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:124:0: 'Kepler.Interval.C549ProdS0002.Sem100277' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:187:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:199:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:201:0: Definition `DSafe104537` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:223:0: 'Kepler.Interval.C549ProdS0002.Sem104537' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:286:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:298:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:300:0: Definition `DSafe109770` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:322:0: 'Kepler.Interval.C549ProdS0002.Sem109770' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:385:2: exponent 313 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:397:2: exponent 313 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:399:0: Definition `DSafe114678` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:421:0: 'Kepler.Interval.C549ProdS0002.Sem114678' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:484:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:496:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:498:0: Definition `DSafe119068` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:520:0: 'Kepler.Interval.C549ProdS0002.Sem119068' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:583:2: exponent 313 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:595:2: exponent 313 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:597:0: Definition `DSafe138060` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:619:0: 'Kepler.Interval.C549ProdS0002.Sem138060' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:682:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:694:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:696:0: Definition `DSafe142271` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:718:0: 'Kepler.Interval.C549ProdS0002.Sem142271' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:781:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:793:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:795:0: Definition `DSafe152420` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:817:0: 'Kepler.Interval.C549ProdS0002.Sem152420' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:880:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:892:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:894:0: Definition `DSafe157588` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:916:0: 'Kepler.Interval.C549ProdS0002.Sem157588' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:979:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:991:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:993:0: Definition `DSafe161851` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:1015:0: 'Kepler.Interval.C549ProdS0002.Sem161851' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1078:2: exponent 313 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1090:2: exponent 313 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1092:0: Definition `DSafe166654` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:1114:0: 'Kepler.Interval.C549ProdS0002.Sem166654' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1177:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1189:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1191:0: Definition `DSafe170797` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:1213:0: 'Kepler.Interval.C549ProdS0002.Sem170797' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1276:2: exponent 313 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1288:2: exponent 313 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1290:0: Definition `DSafe181671` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:1312:0: 'Kepler.Interval.C549ProdS0002.Sem181671' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1375:2: exponent 313 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1387:2: exponent 313 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1389:0: Definition `DSafe185854` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:1411:0: 'Kepler.Interval.C549ProdS0002.Sem185854' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1474:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1486:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1488:0: Definition `DSafe189997` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:1510:0: 'Kepler.Interval.C549ProdS0002.Sem189997' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1573:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1585:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1587:0: Definition `DSafe194140` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:1609:0: 'Kepler.Interval.C549ProdS0002.Sem194140' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1672:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1684:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1686:0: Definition `DSafe200092` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:1708:0: 'Kepler.Interval.C549ProdS0002.Sem200092' depends on axioms: [propext, Classical.choice, Quot.sound]
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1771:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1783:2: exponent 306 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+warning: Kepler/Interval/Cases/C549ProdS0002.lean:1785:0: Definition `DSafe207591` is a proposition; use `theorem` instead of `def`
+
+Note: This linter can be disabled with `set_option linter.defProp false`
+info: Kepler/Interval/Cases/C549ProdS0002.lean:1807:0: 'Kepler.Interval.C549ProdS0002.Sem207591' depends on axioms: [propext, Classical.choice, Quot.sound]
+Build completed successfully (8665 jobs).
+RSS 11078404 KB

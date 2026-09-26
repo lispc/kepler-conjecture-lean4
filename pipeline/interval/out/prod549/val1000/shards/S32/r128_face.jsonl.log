@@ -1,0 +1,2 @@
+probe faceg32@128: PASS 17/17  ms med=3439 max=8531
+wrote /home/scroll/repos/kepler-conjecture-lean4/pipeline/interval/out/prod549/val1000/shards/S32/r128_face.jsonl

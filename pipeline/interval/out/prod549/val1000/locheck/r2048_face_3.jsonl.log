@@ -1,0 +1,2 @@
+probe faceg0@2048: PASS 10/10  ms med=120576 max=122635
+wrote /home/scroll/repos/kepler-conjecture-lean4/pipeline/interval/out/prod549/val1000/locheck/r2048_face_3.jsonl

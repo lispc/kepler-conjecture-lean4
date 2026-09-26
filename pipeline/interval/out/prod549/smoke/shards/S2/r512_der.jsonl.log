@@ -1,0 +1,2 @@
+probe derg2@512: PASS 0/4  ms med=6570 max=6609
+wrote /home/scroll/repos/kepler-conjecture-lean4/pipeline/interval/out/prod549/smoke/shards/S2/r512_der.jsonl

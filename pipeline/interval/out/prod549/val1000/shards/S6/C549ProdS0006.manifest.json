@@ -1,0 +1,262 @@
+[
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 21664,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 8009,
+   "der": 6771,
+   "cert": 4,
+   "full": 7558
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 21939,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 7807,
+   "der": 6434,
+   "cert": 3,
+   "full": 5574
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 22120,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 4436,
+   "der": 6533,
+   "cert": 4,
+   "full": 3902
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 22303,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3462,
+   "der": 6653,
+   "cert": 3,
+   "full": 5797
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 22469,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3597,
+   "der": 6584,
+   "cert": 4,
+   "full": 6526
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 22639,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3528,
+   "der": 6425,
+   "cert": 3,
+   "full": 6502
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 22805,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3466,
+   "der": 6502,
+   "cert": 2,
+   "full": 6484
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 22970,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3762,
+   "der": 6799,
+   "cert": 3,
+   "full": 6548
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 23136,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3670,
+   "der": 6721,
+   "cert": 3,
+   "full": 6478
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 23301,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3665,
+   "der": 6432,
+   "cert": 4,
+   "full": 6506
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 23466,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3681,
+   "der": 6417,
+   "cert": 3,
+   "full": 6499
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 23631,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3531,
+   "der": 6566,
+   "cert": 1,
+   "full": 6497
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 23796,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3545,
+   "der": 6750,
+   "cert": 3,
+   "full": 6425
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 24010,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3485,
+   "der": 6512,
+   "cert": 3,
+   "full": 4862
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 24176,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3463,
+   "der": 6657,
+   "cert": 4,
+   "full": 3552
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 24350,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3744,
+   "der": 6463,
+   "cert": 3,
+   "full": 3398
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 24528,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3519,
+   "der": 6454,
+   "cert": 1,
+   "full": 3258
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 24693,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3415,
+   "der": 6567,
+   "cert": 4,
+   "full": 3184
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 24867,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3508,
+   "der": 6510,
+   "cert": 3,
+   "full": 3178
+  }
+ },
+ {
+  "shard": 1,
+  "rung": 128,
+  "idx": 25032,
+  "mode": "then",
+  "dir": "lo",
+  "ms": {
+   "face": 3471,
+   "der": 6805,
+   "cert": 3,
+   "full": 3188
+  }
+ }
+]

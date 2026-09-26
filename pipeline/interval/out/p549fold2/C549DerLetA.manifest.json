@@ -1,0 +1,31 @@
+{
+ "schema": "stagea-der",
+ "case": "5490182221",
+ "driver": "out/p549fold2/C549DerLetA.lean",
+ "params_out": "out/p549fold2/C549DerLetA.params.txt",
+ "probe_cmd": "lake env lean --run out/p549fold2/C549DerLetA.lean > out/p549fold2/C549DerLetA.params.txt",
+ "fold": {
+  "min_size": 12,
+  "max_lets": 8,
+  "min_occ": 2,
+  "cert_free_only": false,
+  "slots": 8,
+  "body_refs": 21,
+  "unfolded_nodes": 2191,
+  "slot_desc": "#0: 2 refs x 223 nodes, #1: 5 refs x 152 nodes, #2: 2 refs x 3 nodes, #3: 4 refs x 25 nodes, #4: 2 refs x 24 nodes, #5: 2 refs x 24 nodes, #6: 2 refs x 49 nodes, #7: 2 refs x 24 nodes"
+ },
+ "counts": {
+  "sqrt": 7,
+  "div": 8,
+  "trans": 2
+ },
+ "template": {
+  "rung_n": 128,
+  "rung_out": -80,
+  "gran": -80
+ },
+ "ps_contract": "entries first in index order, then body; mantissa triples report that order",
+ "harvest": "../../lean/Kepler/Interval/Cases/C549Mono2.lean",
+ "generated": "2026-09-24T11:49:30",
+ "emit_elapsed_s": 0.0
+}

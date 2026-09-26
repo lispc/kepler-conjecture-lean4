@@ -1,0 +1,664 @@
+{
+ "tag": "val1000",
+ "cls": "single",
+ "selection": {
+  "schema": "selection549",
+  "cls": "single",
+  "start": 0,
+  "count": 1000,
+  "stride": 165,
+  "pool_size": 165219,
+  "selected": 1000,
+  "shards": 50,
+  "shard_size": 20,
+  "master": "/home/scroll/repos/kepler-conjecture-lean4/pipeline/interval/out/prod549/val1000/master.manifest.jsonl"
+ },
+ "selected": 1000,
+ "leaf": {
+  "pass": 977,
+  "fail": 23
+ },
+ "pass_rate": 0.977,
+ "fail_layers": {
+  "der": 23
+ },
+ "rung_dist": {
+  "128": 977
+ },
+ "fullbox": {
+  "PASS": 1000
+ },
+ "stageA_ms_sums": {
+  "der": 13059858,
+  "cert": 3747,
+  "face": 4963500,
+  "full": 7684318
+ },
+ "stageA_ms_n": {
+  "der": 2000,
+  "cert": 3000,
+  "face": 977,
+  "full": 1000
+ },
+ "stageA_core_s_per_leaf": 25.71,
+ "build": {
+  "modules": 50,
+  "leaves": 977,
+  "wall_med": 1024.4,
+  "wall_min": 782.2,
+  "wall_max": 1082.4,
+  "rss_med_mb": 11016.26,
+  "rss_max_mb": 11787.86,
+  "s_per_leaf": 51.5,
+  "native": {
+   "wall_s": 208.229587464,
+   "leaves": 20,
+   "s_per_leaf": 10.4
+  },
+  "src_kb_per_leaf": 18.5,
+  "olean_kb_per_leaf": 81.4
+ },
+ "phase_wall_s": {
+  "manifest": 2.7,
+  "select": 1.0,
+  "stagea": 1467.1,
+  "merge": 1.7,
+  "locheck": 1216.0,
+  "emit": 5.8,
+  "build": 4977.5,
+  "report": 0.1,
+  "note": "stagea+build 为 1000 叶主跑实测；locheck 为修正判据后对账 pass 实测（2048 face 120s/叶 × 60 叶 ÷6 路）；端到端 6461s"
+ },
+ "shards": [
+  {
+   "shard": 1,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 2,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 3,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 4,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 5,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 6,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 7,
+   "leaves": 20,
+   "leaves_pass": 17,
+   "leaves_fail": 3,
+   "layers": {
+    "der": 3
+   },
+   "rungs": {
+    "128": 17
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 8,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 9,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 10,
+   "leaves": 20,
+   "leaves_pass": 18,
+   "leaves_fail": 2,
+   "layers": {
+    "der": 2
+   },
+   "rungs": {
+    "128": 18
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 11,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 12,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 13,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 14,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 15,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 16,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 17,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 18,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 19,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 20,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 21,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 22,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 23,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 24,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 25,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 26,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 27,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 28,
+   "leaves": 20,
+   "leaves_pass": 17,
+   "leaves_fail": 3,
+   "layers": {
+    "der": 3
+   },
+   "rungs": {
+    "128": 17
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 29,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 30,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 31,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 32,
+   "leaves": 20,
+   "leaves_pass": 17,
+   "leaves_fail": 3,
+   "layers": {
+    "der": 3
+   },
+   "rungs": {
+    "128": 17
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 33,
+   "leaves": 20,
+   "leaves_pass": 15,
+   "leaves_fail": 5,
+   "layers": {
+    "der": 5
+   },
+   "rungs": {
+    "128": 15
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 34,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 35,
+   "leaves": 20,
+   "leaves_pass": 18,
+   "leaves_fail": 2,
+   "layers": {
+    "der": 2
+   },
+   "rungs": {
+    "128": 18
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 36,
+   "leaves": 20,
+   "leaves_pass": 16,
+   "leaves_fail": 4,
+   "layers": {
+    "der": 4
+   },
+   "rungs": {
+    "128": 16
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 37,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 38,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 39,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 40,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 41,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 42,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 43,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 44,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 45,
+   "leaves": 20,
+   "leaves_pass": 19,
+   "leaves_fail": 1,
+   "layers": {
+    "der": 1
+   },
+   "rungs": {
+    "128": 19
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 46,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 47,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 48,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 49,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 50,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  }
+ ],
+ "extrapolate": {
+  "pool_single": 165219,
+  "budget": {
+   "a_jobs": 16,
+   "build_jobs": 12
+  },
+  "stageA_wall_h": 73.8,
+  "est_emitted": 161418,
+  "est_shards": 8071,
+  "build_core_h": 2309.2,
+  "build_wall_h": 192.4,
+  "src_gb": 2.85,
+  "olean_gb": 12.53
+ },
+ "locheck": {
+  "sample": 60,
+  "flips": 0,
+  "lb_e_drift": 9,
+  "lb_m_drift": 30,
+  "flagged": 0,
+  "criterion": "flag = verdict flip only；lb 漂移=信息性（两 rung 下界均 sound）",
+  "face2048_ms_med": 120368
+ },
+ "note": "slice_report 由修正判据后 merge,report 相位再生；build 数据为主跑实测"
+}

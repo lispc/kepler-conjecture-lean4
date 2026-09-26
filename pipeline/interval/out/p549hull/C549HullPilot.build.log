@@ -1,0 +1,171 @@
+⚠ [8658/8663] Replayed Kepler.Interval.Trans
+info: Kepler/Interval/Trans.lean:1689:4: Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+warning: Kepler/Interval/Trans.lean:1685:15: This simp argument is unused:
+  Nat.mul_zero
+
+Hint: Omit it from the simp argument list.
+  simp only [̵N̵a̵t̵.̵m̵u̵l̵_̵z̵e̵r̵o̵,̵ ̵z̵e̵r̵o̵_̵a̵d̵d̵,̵[̲z̲e̲r̲o̲_̲a̲d̲d̲,̲ Nat.add_zero, mul_one, pow_zero, Nat.mul_one, neg_one_mul, neg_add_cancel,
+  ̲  ̲ ̲ ̲ ̲ ̲zero_mul, zero_div, add_zero, one_mul]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/Trans.lean:1685:39: This simp argument is unused:
+  Nat.add_zero
+
+Hint: Omit it from the simp argument list.
+  simp only [Nat.mul_zero, zero_add, N̵a̵t̵.̵a̵d̵d̵_̵z̵e̵r̵o̵,̵ ̵mul_one, pow_zero, Nat.mul_one, neg_one_mul, neg_add_cancel,
+  ̲  ̲ ̲ ̲ ̲ ̲zero_mul, zero_div, add_zero, one_mul]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/Trans.lean:1685:53: This simp argument is unused:
+  mul_one
+
+Hint: Omit it from the simp argument list.
+  simp only [Nat.mul_zero, zero_add, Nat.add_zero, m̵u̵l̵_̵o̵n̵e̵,̵ ̵pow_zero,
+  ̵  ̵ ̵ ̵ ̵ ̵Nat.mul_one, neg_one_mul,
+  ̲  ̲ ̲ ̲ ̲ ̲neg_add_cancel, zero_mul, zero_div,
+  ̵  ̵ ̵ ̵ ̵ ̵add_zero, one_mul]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/Trans.lean:1685:62: This simp argument is unused:
+  pow_zero
+
+Hint: Omit it from the simp argument list.
+  simp only [Nat.mul_zero, zero_add, Nat.add_zero, mul_one, p̵o̵w̵_̵z̵e̵r̵o̵,̵
+  ̵ ̵ ̵ ̵ ̵ ̵ ̵Nat.mul_one, neg_one_mul,
+  ̲  ̲ ̲ ̲ ̲ ̲neg_add_cancel, zero_mul, zero_div,
+  ̵  ̵ ̵ ̵ ̵ ̵add_zero, one_mul]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/Trans.lean:1686:6: This simp argument is unused:
+  Nat.mul_one
+
+Hint: Omit it from the simp argument list.
+  simp only [Nat.mul_zero, zero_add, Nat.add_zero, mul_one, pow_zero, N̵a̵t̵.̵m̵u̵l̵_̵o̵n̵e̵,̵ ̵neg_one_mul, neg_add_cancel,
+  ̲  ̲ ̲ ̲ ̲ ̲zero_mul, zero_div, add_zero, one_mul]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/Trans.lean:1686:19: This simp argument is unused:
+  neg_one_mul
+
+Hint: Omit it from the simp argument list.
+  simp only [Nat.mul_zero, zero_add, Nat.add_zero, mul_one, pow_zero, Nat.mul_one, n̵e̵g̵_̵o̵n̵e̵_̵m̵u̵l̵,̵ ̵neg_add_cancel,
+  ̲  ̲ ̲ ̲ ̲ ̲zero_mul, zero_div, add_zero, one_mul]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/Trans.lean:1687:16: This simp argument is unused:
+  one_mul
+
+Hint: Omit it from the simp argument list.
+  simp only [Nat.mul_zero, zero_add, Nat.add_zero, mul_one, pow_zero,
+  ̵  ̵ ̵ ̵ ̵ ̵Nat.mul_one, neg_one_mul,
+  ̲  ̲ ̲ ̲ ̲ ̲neg_add_cancel, zero_mul, zero_div,
+  ̵  ̵ ̵ ̵ ̵ ̵add_zero,̵ ̵o̵n̵e̵_̵m̵u̵l̵]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Kepler/Interval/Trans.lean:1827:2: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+warning: Kepler/Interval/Trans.lean:2158:6: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+info: Kepler/Interval/Trans.lean:2307:0: "LO 1224655577355317812672749160327866723349967285393905504954131495570636800 -240 HI 42085329585838210803442803349249924358298003759478113232823474495553149061564465166 -274"
+info: Kepler/Interval/Trans.lean:2311:0: 'Kepler.Interval.logInterval_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Trans.lean:2312:0: 'Kepler.Interval.log2D_mem' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Trans.lean:2313:0: 'Kepler.Interval.iscale_mem' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Trans.lean:2314:0: 'Kepler.Interval.logPoint_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Trans.lean:2315:0: 'Kepler.Interval.lnI_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Trans.lean:2317:0: 'Kepler.Interval.logInterval_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Trans.lean:2318:0: 'Kepler.Interval.log2D_mem' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Trans.lean:2319:0: 'Kepler.Interval.logPoint_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/Trans.lean:2320:0: 'Kepler.Interval.lnI_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+⚠ [8660/8663] Replayed Kepler.Interval.Expr
+warning: Kepler/Interval/Expr.lean:667:2: exponent 261 exceeds the threshold 256, exponentiation operation was not evaluated, use `set_option exponentiation.threshold <num>` to set a new threshold
+info: Kepler/Interval/Expr.lean:690:0: 'Kepler.Interval.exLn_accept' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/Expr.lean:691:0: 'Kepler.Interval.exLn_eval' depends on axioms: [propext, Quot.sound]
+ℹ [8662/8663] Replayed Kepler.Interval.CertTM
+info: Kepler/Interval/CertTM.lean:2306:0: 'Kepler.Interval.valid_iteHull' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2307:0: 'Kepler.Interval.evalTMHull_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2308:0: 'Kepler.Interval.exIteHull_strict_none' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2309:0: 'Kepler.Interval.exIteHull_isSome' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2310:0: 'Kepler.Interval.exIteHull_valid' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2311:0: 'Kepler.Interval.exIteBadGuard_hybrid_none' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2312:0: 'Kepler.Interval.exIteBadGuard_hull_isSome' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2723:0: 'Kepler.Interval.TaylorM.Valid.congr_box' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2724:0: 'Kepler.Interval.evalIParams_mem' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2725:0: 'Kepler.Interval.valid_iteHullD' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2726:0: 'Kepler.Interval.valid_iteHullD_else' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2727:0: 'Kepler.Interval.evalTMHullD_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2728:0: 'Kepler.Interval.exIteD_single_branch' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2729:0: 'Kepler.Interval.exIteD_valid' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2730:0: 'Kepler.Interval.exIteD_hull_composite' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:2731:0: 'Kepler.Interval.exIteBadGuard_hullD_none' depends on axioms: [propext, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3067:0: 'Kepler.Interval.checkPosTMHull_sound' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Kepler/Interval/CertTM.lean:3068:0: 'Kepler.Interval.exIteHullChk_checkPos' depends on axioms: [propext, Quot.sound]
+✖ [8663/8663] Building Kepler.Interval.Cases.C549HullPilot (26s)
+trace: .> LEAN_PATH=/home/scroll/repos/kepler-conjecture-lean4/lean/.lake/packages/Cli/.lake/build/lib/lean:/home/scroll/repos/kepler-conjecture-lean4/lean/.lake/packages/batteries/.lake/build/lib/lean:/home/scroll/repos/kepler-conjecture-lean4/lean/.lake/packages/Qq/.lake/build/lib/lean:/home/scroll/repos/kepler-conjecture-lean4/lean/.lake/packages/aesop/.lake/build/lib/lean:/home/scroll/repos/kepler-conjecture-lean4/lean/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/scroll/repos/kepler-conjecture-lean4/lean/.lake/packages/importGraph/.lake/build/lib/lean:/home/scroll/repos/kepler-conjecture-lean4/lean/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/scroll/repos/kepler-conjecture-lean4/lean/.lake/packages/plausible/.lake/build/lib/lean:/home/scroll/repos/kepler-conjecture-lean4/lean/.lake/packages/mathlib/.lake/build/lib/lean:/home/scroll/repos/kepler-conjecture-lean4/lean/.lake/build/lib/lean /home/scroll/.elan/toolchains/leanprover--lean4---v4.32.2/bin/lean /home/scroll/repos/kepler-conjecture-lean4/lean/Kepler/Interval/Cases/C549HullPilot.lean -o /home/scroll/repos/kepler-conjecture-lean4/lean/.lake/build/lib/lean/Kepler/Interval/Cases/C549HullPilot.olean -i /home/scroll/repos/kepler-conjecture-lean4/lean/.lake/build/lib/lean/Kepler/Interval/Cases/C549HullPilot.ilean -c /home/scroll/repos/kepler-conjecture-lean4/lean/.lake/build/ir/Kepler/Interval/Cases/C549HullPilot.c --setup /home/scroll/repos/kepler-conjecture-lean4/lean/.lake/build/ir/Kepler/Interval/Cases/C549HullPilot.setup.json --json
+error: Kepler/Interval/Cases/C549HullPilot.lean:31:2: Tactic `decide` proved that the proposition
+  checkPosTMHull C549HullPilotExpr C549HullPilotBox1 C549HullPilotP1 = true
+is false
+error: Kepler/Interval/Cases/C549HullPilot.lean:43:2: Tactic `decide` proved that the proposition
+  checkPosTMHull C549HullPilotExpr C549HullPilotBox2 C549HullPilotP2 = true
+is false
+error: Kepler/Interval/Cases/C549HullPilot.lean:55:2: Tactic `decide` proved that the proposition
+  checkPosTMHull C549HullPilotExpr C549HullPilotBox3 C549HullPilotP3 = true
+is false
+error: Kepler/Interval/Cases/C549HullPilot.lean:67:2: Tactic `decide` proved that the proposition
+  checkPosTMHull C549HullPilotExpr C549HullPilotBox4 C549HullPilotP4 = true
+is false
+error: Kepler/Interval/Cases/C549HullPilot.lean:91:2: Tactic `decide` proved that the proposition
+  checkPosTMHull C549HullPilotExpr C549HullPilotBox6 C549HullPilotP6 = true
+is false
+error: Kepler/Interval/Cases/C549HullPilot.lean:103:2: Tactic `decide` proved that the proposition
+  checkPosTMHull C549HullPilotExpr C549HullPilotBox7 C549HullPilotP7 = true
+is false
+error: Kepler/Interval/Cases/C549HullPilot.lean:115:2: Tactic `decide` proved that the proposition
+  checkPosTMHull C549HullPilotExpr C549HullPilotBox8 C549HullPilotP8 = true
+is false
+error: Kepler/Interval/Cases/C549HullPilot.lean:127:2: Tactic `decide` proved that the proposition
+  checkPosTMHull C549HullPilotExpr C549HullPilotBox9 C549HullPilotP9 = true
+is false
+error: Kepler/Interval/Cases/C549HullPilot.lean:139:2: Tactic `decide` proved that the proposition
+  checkPosTMHull C549HullPilotExpr C549HullPilotBox10 C549HullPilotP10 = true
+is false
+error: Kepler/Interval/Cases/C549HullPilot.lean:175:2: Tactic `decide` proved that the proposition
+  checkPosTMHull C549HullPilotExpr C549HullPilotBox13 C549HullPilotP13 = true
+is false
+error: Kepler/Interval/Cases/C549HullPilot.lean:187:2: Tactic `decide` proved that the proposition
+  checkPosTMHull C549HullPilotExpr C549HullPilotBox14 C549HullPilotP14 = true
+is false
+error: Kepler/Interval/Cases/C549HullPilot.lean:199:2: Tactic `decide` proved that the proposition
+  checkPosTMHull C549HullPilotExpr C549HullPilotBox15 C549HullPilotP15 = true
+is false
+error: Kepler/Interval/Cases/C549HullPilot.lean:211:2: Tactic `decide` proved that the proposition
+  checkPosTMHull C549HullPilotExpr C549HullPilotBox16 C549HullPilotP16 = true
+is false
+error: Kepler/Interval/Cases/C549HullPilot.lean:235:2: Tactic `decide` proved that the proposition
+  checkPosTMHull C549HullPilotExpr C549HullPilotBox18 C549HullPilotP18 = true
+is false
+error: Kepler/Interval/Cases/C549HullPilot.lean:247:2: Tactic `decide` proved that the proposition
+  checkPosTMHull C549HullPilotExpr C549HullPilotBox19 C549HullPilotP19 = true
+is false
+error: Kepler/Interval/Cases/C549HullPilot.lean:259:2: Tactic `decide` proved that the proposition
+  checkPosTMHull C549HullPilotExpr C549HullPilotBox20 C549HullPilotP20 = true
+is false
+info: Kepler/Interval/Cases/C549HullPilot.lean:287:0: 'Kepler.Interval.Cases.C549HullPilot_pilot' depends on axioms: [propext, sorryAx, Quot.sound]
+error: Lean exited with code 1
+Some required targets logged failures:
+- Kepler.Interval.Cases.C549HullPilot
+error: build failed

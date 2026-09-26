@@ -1,0 +1,2 @@
+probe derg31@128: PASS 20/40  ms med=6511 max=6816
+wrote /home/scroll/repos/kepler-conjecture-lean4/pipeline/interval/out/prod549/val1000/shards/S31/r128_der.jsonl

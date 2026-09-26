@@ -1198,7 +1198,8 @@ def cmd_stageb_shards(case_path, boxes_path, params_path, stats_path,
     sum_txt = (hdr +
                "\n".join(f"import Kepler.Interval.Cases.{s}"
                          for s in shard_names) +
-               "\n\nset_option maxHeartbeats 0\n\n"
+               "\n\nset_option maxHeartbeats 0"
+               "\nset_option maxRecDepth 1000000\n\n"
                "namespace Kepler.Interval.Cases\n\n"
                "/-- Batch summary: the full leaf-property conjunction (the\n"
                "shards state the same props; operands mirror the leaf props\n"

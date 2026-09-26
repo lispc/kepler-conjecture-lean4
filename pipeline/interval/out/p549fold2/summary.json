@@ -1,0 +1,81 @@
+{
+ "schema": "p549fold2-summary",
+ "case": "5490182221",
+ "date": "2026-09-24",
+ "machine_note": "wall time of `lake env lean <module>`, incl ~4.2s import harness; decide = plain kernel",
+ "localize_leaf1": {
+  "base_kernel_derivIExpr": 38.3,
+  "dexpr_mirror": 38.7,
+  "noatan1_series_to_const": 15.8,
+  "seg1_30nodes_two_series_copies": 27.1,
+  "seg2_2147nodes_chain": 14.4,
+  "seg0_12nodes": 4.7,
+  "skel_poly_only": 4.2,
+  "diag_entries_prepass_only": 4.15,
+  "attribution": "arctan(1) rung-2048 wide-dyadic downstream propagation ~22.9s (59%); div/sqrt chain ~10s; poly ~0; matcher ~0"
+ },
+ "three_way_decide": {
+  "base": [
+   38.36,
+   38.56,
+   38.25
+  ],
+  "dexpr": [
+   38.97,
+   38.84,
+   38.73
+  ],
+  "free": [
+   38.73,
+   38.82,
+   39.67
+  ],
+  "full": [
+   39.95,
+   40.02,
+   39.34
+  ],
+  "pass_consistency": "all 9 arms = true; C549DerLet_pilot build green, axioms [propext, Quot.sound]",
+  "fold_verdict": "decide: free 1.02x, full 1.04x SLOWER — no gain; compiled probe 6.5->3.5s (1.9x)"
+ },
+ "rung_sweep_closed_arctan1": {
+  "der_leaf": {
+   "2048": [
+    38.6,
+    6.5
+   ],
+   "512": [
+    19.1,
+    1.03
+   ],
+   "256": [
+    17.3,
+    0.77
+   ],
+   "128": [
+    16.5,
+    0.71
+   ]
+  },
+  "face_leaf": {
+   "2048": [
+    32.5,
+    3.13
+   ],
+   "128": [
+    10.6,
+    0.16
+   ]
+  },
+  "note": "[decide_s, compiled_s]; PASS all, lo_e unchanged (-1466 der / -682 face)"
+ },
+ "throughput_revision": {
+  "fullbox_leaf_2048": 32.5,
+  "pair_2048": 71.1,
+  "pair_ratio_2048": 2.19,
+  "pair_128": 27.1,
+  "pair_ratio_128": 0.83,
+  "leaf_count_fold": 7.7,
+  "net_decide_throughput_at_128": "7.7/0.83 ~= 9.2x (was 3.2x)"
+ }
+}

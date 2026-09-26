@@ -1,0 +1,111 @@
+{
+ "tag": "smoke",
+ "cls": "single",
+ "selection": {
+  "schema": "selection549",
+  "cls": "single",
+  "start": 0,
+  "count": 40,
+  "stride": 4130,
+  "pool_size": 165219,
+  "selected": 40,
+  "shards": 2,
+  "shard_size": 20,
+  "master": "/home/scroll/repos/kepler-conjecture-lean4/pipeline/interval/out/prod549/smoke/master.manifest.jsonl"
+ },
+ "selected": 40,
+ "leaf": {
+  "pass": 38,
+  "fail": 2
+ },
+ "pass_rate": 0.95,
+ "fail_layers": {
+  "der": 2
+ },
+ "rung_dist": {
+  "128": 38
+ },
+ "fullbox": {
+  "PASS": 40
+ },
+ "stageA_ms_sums": {
+  "der": 540305,
+  "cert": 109,
+  "face": 118091,
+  "full": 357836
+ },
+ "stageA_ms_n": {
+  "der": 80,
+  "cert": 120,
+  "face": 38,
+  "full": 40
+ },
+ "stageA_core_s_per_leaf": 25.41,
+ "build": {
+  "modules": 2,
+  "leaves": 38,
+  "wall_med": 979.4,
+  "wall_min": 938.3,
+  "wall_max": 1020.6,
+  "rss_med_mb": 10903.89,
+  "rss_max_mb": 10989.02,
+  "s_per_leaf": 51.5,
+  "native": {
+   "wall_s": 402.312874171,
+   "leaves": 20,
+   "s_per_leaf": 20.1
+  },
+  "src_kb_per_leaf": null,
+  "olean_kb_per_leaf": 82.3
+ },
+ "phase_wall_s": {
+  "manifest": 858.3,
+  "select": 854.7,
+  "stagea": 1989.1,
+  "merge": 1564.6,
+  "locheck": 1563.1,
+  "emit": 1563.0,
+  "build": 2583.7,
+  "report": 2082.0
+ },
+ "shards": [
+  {
+   "shard": 1,
+   "leaves": 20,
+   "leaves_pass": 20,
+   "leaves_fail": 0,
+   "layers": {},
+   "rungs": {
+    "128": 20
+   },
+   "state": "PASS"
+  },
+  {
+   "shard": 2,
+   "leaves": 20,
+   "leaves_pass": 18,
+   "leaves_fail": 2,
+   "layers": {
+    "der": 2
+   },
+   "rungs": {
+    "128": 18
+   },
+   "state": "PASS"
+  }
+ ],
+ "extrapolate": {
+  "pool_single": 165219,
+  "budget": {
+   "a_jobs": 8,
+   "build_jobs": 2
+  },
+  "stageA_wall_h": 145.8,
+  "est_emitted": 156958,
+  "est_shards": 7848,
+  "build_core_h": 2245.4,
+  "build_wall_h": 1122.7,
+  "src_gb": 0.0,
+  "olean_gb": 12.32
+ }
+}

@@ -1,0 +1,35 @@
+{
+ "C549ProdS0001": {
+  "shard": 1,
+  "kind": "main",
+  "leaves": 20,
+  "rc": 0,
+  "wall_s": 1020.560204672,
+  "rss_kb": 11252756,
+  "error_lines": 0,
+  "axiom_lines": 98,
+  "sorry_lines": 0
+ },
+ "C549ProdS0001NativeCtl": {
+  "shard": 1,
+  "kind": "native",
+  "leaves": 20,
+  "rc": 0,
+  "wall_s": 402.312874171,
+  "rss_kb": 13266060,
+  "error_lines": 0,
+  "axiom_lines": 98,
+  "sorry_lines": 0
+ },
+ "C549ProdS0002": {
+  "shard": 2,
+  "kind": "main",
+  "leaves": 18,
+  "rc": 0,
+  "wall_s": 938.267149688,
+  "rss_kb": 11078404,
+  "error_lines": 0,
+  "axiom_lines": 96,
+  "sorry_lines": 0
+ }
+}

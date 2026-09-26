@@ -1,0 +1,2 @@
+probe certg10@512: PASS 6/6  ms med=1 max=2
+wrote /home/scroll/repos/kepler-conjecture-lean4/pipeline/interval/out/prod549/val1000/shards/S10/r512_cert.jsonl

@@ -1,0 +1,2 @@
+probe certg35@2048: PASS 6/6  ms med=1 max=3
+wrote /home/scroll/repos/kepler-conjecture-lean4/pipeline/interval/out/prod549/val1000/shards/S35/r2048_cert.jsonl

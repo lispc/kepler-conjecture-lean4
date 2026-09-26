@@ -1,0 +1,2 @@
+probe fullg28@128: PASS 20/20  ms med=3662 max=9606
+wrote /home/scroll/repos/kepler-conjecture-lean4/pipeline/interval/out/prod549/val1000/shards/S28/r128_full.jsonl

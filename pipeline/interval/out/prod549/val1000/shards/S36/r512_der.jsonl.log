@@ -1,0 +1,2 @@
+probe derg36@512: PASS 0/8  ms med=6509 max=6556
+wrote /home/scroll/repos/kepler-conjecture-lean4/pipeline/interval/out/prod549/val1000/shards/S36/r512_der.jsonl

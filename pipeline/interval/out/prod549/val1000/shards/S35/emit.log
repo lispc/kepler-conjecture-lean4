@@ -1,0 +1,3 @@
+emit: census 20 = then 20 + else 0 + none 0; der_ok 18  face_ok 18  cert_ok 18  ALL 18
+emit: per-layer ms totals over ALL_OK leaves: {'face': 99777, 'der': 117953, 'cert': 103, 'full': 100374}
+wrote /home/scroll/repos/kepler-conjecture-lean4/pipeline/interval/out/prod549/val1000/shards/S35/em/C549ProdS0035T1.lean (18 leaves)

@@ -3,6 +3,79 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-09-25 — [DRAFT 待批准] native_decide scoped exception 扩展至 `Kepler.Interval.Cases.C549*`（549 加速项目）
+
+> **状态：DRAFT 待批准——本条不是已决事项。** 人类批准前，native_decide 的
+> 允许范围仍以 2026-08-10 与 2026-09-19 两条为准（`Kepler.Graphs.Cert*` +
+> `Kepler.Assembly.GoodListShard*`），CI/lint 对其余文件的零命中检查继续
+> 拦截。既有实验模块（`lean/Kepler/Interval/Cases/C549HullSpeed.lean`）按
+> 其文件头声明的 "experiment module, NOT a production certificate" 处置，
+> 不构成本条已获批的先例。
+
+**变更（拟议）**：在上述两条范围之上，另允许 `native_decide` 出现在
+`Kepler.Interval.Cases.C549*`（5490182221 案例的 hull/HullD2/mono 折叠/
+ArcBatch 等证书 shard 模块及其汇总定理）。用途：549 全量 212,798 叶证书的
+内核验证提速——kernel `decide` 21.4 s/叶 → `native_decide` ~3.5 s/叶
+（6.1×，C549HullSpeed 实测）；全量口径 **529 → 109 core·h**（mono 折叠 +
+cert 瘦身 + rung-128 + 曲率紧致化组合口径）。
+
+**公理形态（推荐：50 叶/shard 一次 native = 1 axiom/shard）**：
+
+- 推荐发射形态：每 shard 对"50 叶合取"整体做**一次** `native_decide`，
+  逐叶定理用 `.1`/`.2` 投影导出——每 shard 恰 **1** 条 scoped axiom
+  `<shard>._native.native_decide.ax_1_1 : decide P = true`。
+- **已有实测证据**（构建捕获）：`C549Hull200Shard_speed depends on axioms:
+  [propext, Quot.sound, C549Hull200Shard_speed._native.native_decide.ax_1_1]`
+  （`C549HullSpeed.lean` 文件头 FOLLOW-UP 记录）。
+- 形态与 2026-08-10 / 2026-09-19 两批**逐字同形**：本工具链（v4.32.2）的
+  公理足迹 = 每定理一条作用域公理（`Lean.Meta.nativeEqTrue`，
+  Lean.Meta/Native.lean:31-33）；`#print axioms` = propext + Quot.sound +
+  N 条 scoped axiom，无 sorryAx、无 Classical.choice。
+- 对照：逐叶 native 形态（同文件叶 2..50）为 49 axiom/50 叶 shard，全量
+  ~2×10⁵ 条；合取形态把公理面压 ~50×。合取形态另有共享求值收益（
+  `C549Hull200Expr` 单 AST 一次求值 vs 逐叶内核重复展开），十五更外推
+  全量可再降至 **~11 core·h**（逼近 M5 ≤ 10 core·h；以全量重演实测为准）。
+
+**影响面（axiom 面数字）**：549 全量 **~10,600 shard → ~10,600 条 scoped
+axioms**（1 条/shard；确切 shard 数以全量重演实际发射为准，straddle 修复后
+叶数或再降）。相对现存两批总量（2026-08-10 批 ~624 + 2026-09-19 批 23 =
+~647 条）约 **16×**。TCB 增量类别不变：Lean 编译器+运行时进 TCB，与
+2026-08-10 条同一性质，无新信任基类别。
+
+**审计要求**：
+
+- 每 shard 模块尾部固定 `#print axioms <shard 汇总定理>`（既有惯例，同
+  `C549HullSpeed.lean` 与 CertTM 曲率轮 :1683-1688 print 块），并入
+  `lean/scripts/AxiomAudit.lean` 台账（逐 shard 行或每族代表行 + 计数台账，
+  批准时定案）；
+- 审计口径：propext + Quot.sound + N 条 `..._native.native_decide.ax_1_1`；
+  出现 sorryAx / Classical.choice / 任何非预期公理即 fail；
+- native axiom 计数随轮次入 `docs/549-lane-log.md` 阶段位置节（可度量、
+  可对账）。
+
+**结构配套**：发射器默认产 50 叶合取 shard（模块叶数上限沿用管线缺口单的
+stage-A shard 化参数 ≤20-50）；`make check` 纪律与双回归（裸路径逐字节）
+照旧；549 全量重演（十六更第 1 项）先行，量产 native 发射在本条获批后
+开闸。
+
+**风险**：
+
+1. TCB：信任边界 = Lean 编译器+运行时正确性；被决策命题 `decide P = true`
+   本身内核可读，撤销后 kernel `decide` 可独立重验任一 shard。
+2. 公理面规模：~10,600 条使 `#print axioms` 输出与审计台账线性膨胀
+   （~16× 现存）；以 shard 汇总定理为审计单位控制输出体积。
+3. 形态漂移：549 全量重演未完成，shard 尺寸/合取结构可能调整；形态微调
+   不需新条目，但 axiom 面数字须随轮次在 lane log 更新。
+4. 双路径一致性：native 与 kernel decide 消费同一命题，不存在两套判据；
+   唯一风险源是编译器误编译——与既有两批同型。
+
+**撤销路径**：发射器单旗标切回 kernel `decide` 重发（正确性零影响，成本
+退回 529 core·h 口径），或整体回退本条范围（CI/lint 恢复零命中拦截）。
+任何一次审计出现非预期公理 = 即时撤销 + 全量排查，无需另行决议。
+
+**审批状态**：[DRAFT 待批准]。批准后在本节追加批准日期与批准人，并将标题
+的 [DRAFT 待批准] 改记为已决。
+
 ## 2026-09-19 — P6-C：native_decide scoped exception 扩展至 `Kepler.Assembly.GoodList*`
 
 **变更**：2026-08-10 条"native_decide 只允许出现在 `Kepler.Graphs.Cert*`"

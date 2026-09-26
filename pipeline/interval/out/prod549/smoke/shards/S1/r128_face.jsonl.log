@@ -1,0 +1,2 @@
+probe faceg1@128: PASS 20/20  ms med=3053 max=3085
+wrote /home/scroll/repos/kepler-conjecture-lean4/pipeline/interval/out/prod549/smoke/shards/S1/r128_face.jsonl

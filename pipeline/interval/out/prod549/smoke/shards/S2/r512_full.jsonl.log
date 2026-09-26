@@ -1,0 +1,2 @@
+probe fullg2@512: PASS 2/2  ms med=5131 max=5131
+wrote /home/scroll/repos/kepler-conjecture-lean4/pipeline/interval/out/prod549/smoke/shards/S2/r512_full.jsonl

@@ -912,7 +912,7 @@ def cmd_probe(case_path, census_path, stage, der_path, from_, to_, gran,
         f.write(_probe_rows_text(stage, rows_out, census_path, case_path, j,
                                  gran, route, counts, tag,
                                  ladder_seq[-1] if ladder else rung_n,
-                                 ladder, fallback))
+                                 ladder_seq if ladder else None, fallback))
     _stage_summary(stage, tag, rows_out, ladder,
                    ladder_seq[-1] if ladder else rung_n)
     print(f"wrote {out_path}")

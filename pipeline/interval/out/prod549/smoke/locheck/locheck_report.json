@@ -1,0 +1,10 @@
+{
+ "schema": "locheck549",
+ "sample": 0,
+ "base_rung": 128,
+ "check_rung": 2048,
+ "flips": [],
+ "lb_e_mismatch": [],
+ "lb_m_mismatch": [],
+ "flagged": []
+}
