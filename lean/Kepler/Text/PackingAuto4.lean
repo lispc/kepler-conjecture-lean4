@@ -62,6 +62,12 @@ Flyspeck packing chapter:
 -- any statement in this file.
 import Kepler.Text.PackingAuto2
 import Kepler.Text.PackingAuto3
+-- AJRIPQN-port: the `LEPJBDJ`/`LEPJBDJ_0` pair (PA11, fully proved) is the
+-- missing ingredient of the `HDTFNFZ` kit (`VX V X = V ∩ X`) that the
+-- bump-cluster fills below consume. PA11's import closure is
+-- PA2/PA5/PA6/PA7/PA8/Polytope — it does not reach PA4, so the edge is acyclic
+-- (PA4's only importer is PackingConcl).
+import Kepler.Text.PackingAuto11
 import Kepler.Text.Polytope
 import Kepler.Statement
 import Mathlib
@@ -728,6 +734,271 @@ noncomputable def betaBump (V : Set V3) (e : Set V3) (X : Set V3) : ℝ :=
 
 namespace BumpP4
 
+/-! ### AJRIPQN-port kit (HDTFNFZ / bump-cluster prerequisites)
+
+The bump cluster below (HDTFNFZ_SUBSET … SUM_BETA_BUMP_LEMMA, HOL bump.hl
+211-1198) is blocked in the HOL sources by `Ajripqn.AJRIPQN` only through the
+`cell_params`-uniqueness theorems (`MCELL_CELL_PARAMETERS_EXIST` family,
+which remain open with NEEDS notes). Everything else in the cluster needs
+only `HDTFNFZ` (`VX V X = V ∩ X`), whose proof route (HDTFNFZ.hl:44-111, as
+assembled in PackingAuto17's `hdtfnfz_p17`) consumes just the PA11 pair
+`LEPJBDJ`/`LEPJBDJ_0` plus the epsilon-witness trick for `cell_params`. The
+private `_p4` lemmas below re-prove that kit in-file; no statement from any
+an unproved upstream theorem is consumed. -/
+
+/-- Prefix spec for `truncateSimplex` once the list is long enough (the
+epsilon in `truncateSimplex` has a witness only under `ul.length ≥ j + 1`). -/
+private theorem truncateSimplex_spec_p4 {ul : List V3} {j : ℕ} (h : j + 1 ≤ ul.length) :
+    (truncateSimplex j ul).length = j + 1 ∧ initialSublist (truncateSimplex j ul) ul := by
+  refine Classical.epsilon_spec
+    (p := fun vl : List V3 => vl.length = j + 1 ∧ initialSublist vl ul) ⟨ul.take (j + 1), ?_, ?_⟩
+  · rw [List.length_take]
+    omega
+  · exact ⟨ul.drop (j + 1), (List.take_append_drop (j + 1) ul).symm⟩
+
+/-- Same-length initial sublists coincide. -/
+private theorem initialSublist_length_p4 {xl yl : List V3} (h : initialSublist xl yl)
+    (hl : xl.length = yl.length) : xl = yl := by
+  obtain ⟨t, ht⟩ := h
+  subst ht
+  rw [List.length_append] at hl
+  have h0 : t.length = 0 := by omega
+  rw [List.length_eq_zero_iff.1 h0, List.append_nil]
+
+/-- `setOfList (truncateSimplex 0 ul)` is the singleton of the head. -/
+private theorem setOfList_truncateSimplex0_p4 {ul : List V3} (h : 0 < ul.length) :
+    setOfList (truncateSimplex 0 ul) = {hdV ul} := by
+  rcases ul with _ | ⟨a, t⟩
+  · simp at h
+  · obtain ⟨hl, hin⟩ := truncateSimplex_spec_p4 (ul := a :: t) (j := 0) (by omega)
+    have heq : truncateSimplex 0 (a :: t) = [a] := by
+      obtain ⟨y, hy⟩ := hin
+      rcases hc : truncateSimplex 0 (a :: t) with _ | ⟨b, s⟩
+      · rw [hc] at hl; simp at hl
+      · rw [hc] at hl hy
+        have hs0 : s = [] := by
+          rw [List.length_cons] at hl
+          exact List.length_eq_zero_iff.1 (by omega)
+        rw [List.cons_append, hs0, List.nil_append] at hy
+        have hba : b = a := (List.cons.inj hy).1.symm
+        rw [hs0, hba]
+    rw [heq]
+    simp [setOfList, hdV]
+
+/-- A length-4 list equals its own 3-truncation as a set. -/
+private theorem setOfList_truncateSimplex3_p4 {ul : List V3} (h : ul.length = 4) :
+    setOfList (truncateSimplex 3 ul) = setOfList ul := by
+  obtain ⟨hl, hin⟩ := truncateSimplex_spec_p4 (ul := ul) (j := 3) (by omega)
+  have heq : truncateSimplex 3 ul = ul := initialSublist_length_p4 hin (by rw [hl, h])
+  rw [heq]
+
+/-- The `cell_params` pair of a candidate cell `X = mcell k V ul` satisfies
+the defining predicate (HL HDTFNFZ.hl:53-78 `SELECT_AX` at `((if k ≤ 3 then k
+else 4), ul)`; here the `k ≥ 4` branch is the `mcell` dispatch itself, so no
+PA12 `MCELL_EXPLICIT` is needed). -/
+private theorem cellParams_spec_p4 {V : Set V3} {ul : List V3} {k : ℕ} {X : Set V3}
+    (hbar : barV V 3 ul) (hX : X = mcell k V ul) :
+    (cellParams V X).1 ≤ 4 ∧ barV V 3 (cellParams V X).2 ∧
+      X = mcell (cellParams V X).1 V (cellParams V X).2 := by
+  have hex : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 := by
+    rcases Nat.lt_or_ge k 4 with hk | hk
+    · exact ⟨(k, ul), by omega, hbar, hX⟩
+    · refine ⟨(4, ul), le_refl 4, hbar, ?_⟩
+      rw [hX]
+      have hdispatch : mcell k V ul = mcell4 V ul := by
+        simp only [mcell]
+        split_ifs with h0 h1 h2 h3
+        · omega
+        · omega
+        · omega
+        · omega
+        · rfl
+      rw [hdispatch]
+      rfl
+  exact Classical.epsilon_spec (p := fun p : ℕ × List V3 =>
+    p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2) hex
+
+/-- HOL `HDTFNFZ` (HDTFNFZ.hl:44-111): the vertex set of a non-null cell is
+`V ∩ X`. Route as in PackingAuto17's `hdtfnfz_p17`: `cellParams_spec_p4`
+identifies the parameter pair, the `k' = 0` branch is `LEPJBDJ_0`, the
+`k' > 0` branch is `LEPJBDJ`, and the empty-cell branch dies by
+`measure_empty`. -/
+private theorem hdtfnfz_p4 {V : Set V3} {ul : List V3} {k : ℕ} {X : Set V3}
+    (hsat : saturated V) (hpack : Packing V) (hbar : barV V 3 ul)
+    (hX : X = mcell k V ul) (hnull : ¬nullSet X) :
+    VX V X = V ∩ X := by
+  obtain ⟨h4, hbar', hX'⟩ := cellParams_spec_p4 hbar hX
+  set N := cellParams V X with hN
+  have hne : mcell N.1 V N.2 ≠ ∅ := by
+    intro hc
+    refine hnull ?_
+    show MeasureTheory.volume X = 0
+    rw [hX', hc]
+    exact MeasureTheory.measure_empty
+  have hvx : VX V X = (if N.1 = 0 then ∅
+      else setOfList (truncateSimplex (N.1 - 1) N.2)) := by
+    simp only [VX, if_neg hnull, ← hN]
+  rw [hvx, hX']
+  rcases Nat.eq_zero_or_pos N.1 with h0 | h0
+  · rw [if_pos h0, h0, LEPJBDJ_0 V N.2 hsat hpack hbar']
+  · rw [if_neg (by omega : N.1 ≠ 0),
+      LEPJBDJ V N.2 N.1 hsat hpack hbar' (by omega) h4 hne]
+
+/-- `barV` prefix lists with the same point set have the same length: the
+`voronoiNondg` length formula `affDim (voronoiList) + length = 4` and the fact
+that `voronoiList` only sees `setOfList` (PackingAuto2 `voronoiList`). -/
+private theorem barV_length_inj_p4 {V : Set V3} {ul : List V3} (hb : barV V 3 ul)
+    {w1 w2 : List V3} (h1 : initialSublist w1 ul) (h01 : 0 < w1.length)
+    (h2 : initialSublist w2 ul) (h02 : 0 < w2.length)
+    (hS : setOfList w1 = setOfList w2) : w1.length = w2.length := by
+  have hd1 := hb.2 w1 ⟨h1, h01⟩
+  have hd2 := hb.2 w2 ⟨h2, h02⟩
+  have hvo : voronoiList V w1 = voronoiList V w2 := by
+    show voronoiSet V (setOfList w1) = voronoiSet V (setOfList w2)
+    rw [hS]
+  have e1 : affDim (voronoiList V w1) + (w1.length : ℤ) = 4 := hd1.2.2
+  have e2 : affDim (voronoiList V w2) + (w2.length : ℤ) = 4 := hd2.2.2
+  rw [hvo] at e1
+  omega
+
+/-- The four points of a `barV V 3` list are pairwise distinct: if
+`el i = el j` with `i < j` then the first `j` points and the first `j + 1`
+points have the same set, so the two prefixes coincide as lists of different
+lengths — contradicting `barV_length_inj_p4`. -/
+private theorem barV_elV_ne_p4 {V : Set V3} {ul : List V3} (hb : barV V 3 ul)
+    {i j : ℕ} (hi : i < 4) (hj : j < 4) (hij : i ≠ j) : elV ul i ≠ elV ul j := by
+  obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hb
+  subst hul
+  have key : ∀ (w1 w2 : List V3), initialSublist w1 [u0, u1, u2, u3] →
+      initialSublist w2 [u0, u1, u2, u3] → 0 < w1.length → 0 < w2.length →
+      setOfList w1 = setOfList w2 → w1.length = w2.length :=
+    fun w1 w2 ha1 ha2 hl1 hl2 hS => barV_length_inj_p4 hb ha1 hl1 ha2 hl2 hS
+  intro hcon
+  interval_cases i <;> interval_cases j <;> simp [elV] at hcon
+  · omega
+  · -- (0, 1): u0 = u1
+    exact absurd (key [u0] [u0, u1] ⟨[u1, u2, u3], rfl⟩ ⟨[u2, u3], rfl⟩ (by simp) (by simp)
+      (by ext x; simp [setOfList, hcon] <;> try tauto)) (by simp)
+  · -- (0, 2): u0 = u2
+    exact absurd (key [u0, u1] [u0, u1, u2] ⟨[u2, u3], rfl⟩ ⟨[u3], rfl⟩ (by simp) (by simp)
+      (by ext x; simp [setOfList, hcon] <;> try tauto)) (by simp)
+  · -- (0, 3): u0 = u3
+    exact absurd (key [u0, u1, u2] [u0, u1, u2, u3] ⟨[u3], rfl⟩ ⟨[], rfl⟩ (by simp) (by simp)
+      (by ext x; simp [setOfList, hcon] <;> try tauto)) (by simp)
+  · -- (1, 0): u1 = u0
+    exact absurd (key [u0, u1] [u0] ⟨[u2, u3], rfl⟩ ⟨[u1, u2, u3], rfl⟩ (by simp) (by simp)
+      (by ext x; simp [setOfList, hcon] <;> try tauto)) (by simp)
+  · omega
+  · -- (1, 2): u1 = u2
+    exact absurd (key [u0, u1] [u0, u1, u2] ⟨[u2, u3], rfl⟩ ⟨[u3], rfl⟩ (by simp) (by simp)
+      (by ext x; simp [setOfList, hcon] <;> try tauto)) (by simp)
+  · -- (1, 3): u1 = u3
+    exact absurd (key [u0, u1, u2] [u0, u1, u2, u3] ⟨[u3], rfl⟩ ⟨[], rfl⟩ (by simp) (by simp)
+      (by ext x; simp [setOfList, hcon] <;> try tauto)) (by simp)
+  · -- (2, 0): u2 = u0
+    exact absurd (key [u0, u1, u2] [u0, u1] ⟨[u3], rfl⟩ ⟨[u2, u3], rfl⟩ (by simp) (by simp)
+      (by ext x; simp [setOfList, hcon] <;> try tauto)) (by simp)
+  · -- (2, 1): u2 = u1
+    exact absurd (key [u0, u1, u2] [u0, u1] ⟨[u3], rfl⟩ ⟨[u2, u3], rfl⟩ (by simp) (by simp)
+      (by ext x; simp [setOfList, hcon] <;> try tauto)) (by simp)
+  · omega
+  · -- (2, 3): u2 = u3
+    exact absurd (key [u0, u1, u2] [u0, u1, u2, u3] ⟨[u3], rfl⟩ ⟨[], rfl⟩ (by simp) (by simp)
+      (by ext x; simp [setOfList, hcon] <;> try tauto)) (by simp)
+  · -- (3, 0): u3 = u0
+    exact absurd (key [u0, u1, u2, u3] [u0, u1, u2] ⟨[], rfl⟩ ⟨[u3], rfl⟩ (by simp) (by simp)
+      (by ext x; simp [setOfList, hcon] <;> try tauto)) (by simp)
+  · -- (3, 1): u3 = u1
+    exact absurd (key [u0, u1, u2, u3] [u0, u1, u2] ⟨[], rfl⟩ ⟨[u3], rfl⟩ (by simp) (by simp)
+      (by ext x; simp [setOfList, hcon] <;> try tauto)) (by simp)
+  · -- (3, 2): u3 = u2
+    exact absurd (key [u0, u1, u2, u3] [u0, u1, u2] ⟨[], rfl⟩ ⟨[u3], rfl⟩ (by simp) (by simp)
+      (by ext x; simp [setOfList, hcon] <;> try tauto)) (by simp)
+  · omega
+
+/-- No edges off an empty vertex set. -/
+private theorem edgeX_empty_p4 {V : Set V3} {X : Set V3} (h : VX V X = ∅) :
+    edgeX V X = ∅ := by
+  ext e
+  simp only [edgeX, Set.mem_setOf_eq, Set.mem_empty_iff_false, false_iff]
+  constructor
+  · rintro ⟨u, v, rfl, hu, -, -⟩
+    rw [h] at hu
+    exact hu
+  · exact fun hc => hc.elim
+
+/-- No edges off a subsingleton vertex set. -/
+private theorem edgeX_subsingleton_p4 {V : Set V3} {X : Set V3} {v : V3}
+    (h : VX V X ⊆ {v}) : edgeX V X = ∅ := by
+  ext e
+  simp only [edgeX, Set.mem_setOf_eq, Set.mem_empty_iff_false, false_iff]
+  constructor
+  · rintro ⟨u, w, rfl, hu, hw, huvw⟩
+    have hu' : u = v := h hu
+    have hw' : w = v := h hw
+    rw [hu', hw'] at huvw
+    exact huvw rfl
+  · exact fun hc => hc.elim
+
+/-- An initial sublist's point set is contained in the host's. -/
+private theorem setOfList_initialSublist_p4 {xl yl : List V3} (h : initialSublist xl yl) :
+    setOfList xl ⊆ setOfList yl := by
+  rintro x hx
+  obtain ⟨t, ht⟩ := h
+  rw [ht]
+  simp only [setOfList, List.mem_append]
+  exact Or.inl hx
+
+/-- `hdV` is `elV · 0`. -/
+private theorem hdV_elV_p4 (ul : List V3) : hdV ul = elV ul 0 := by
+  cases ul with
+  | nil => simp [hdV, elV]
+  | cons a t => simp [hdV, elV]
+
+/-- Membership of an explicit pair edge, given the vertex set (HL
+bump.hl:806/956 helper form: `edgeX` membership ↔ two distinct vertices). -/
+private theorem edgeX_pair_iff_p4 {V : Set V3} {X : Set V3} {s : Set V3}
+    (hvx : VX V X = s) {u v : V3} :
+    ({u, v} : Set V3) ∈ edgeX V X ↔ u ≠ v ∧ {u, v} ⊆ s := by
+  simp only [edgeX, Set.mem_setOf_eq, hvx]
+  constructor
+  · rintro ⟨u', v', hpair, hu', hv', hne'⟩
+    have h1 : u ∈ ({u', v'} : Set V3) := by rw [← hpair]; simp
+    have h2 : v ∈ ({u', v'} : Set V3) := by rw [← hpair]; simp
+    refine ⟨?_, ?_⟩
+    · intro huv
+      subst huv
+      have hsub' : ({u', v'} : Set V3) ⊆ {u} := by
+        rw [← hpair]
+        exact Set.insert_subset_iff.2 ⟨by simp, Set.Subset.rfl⟩
+      have h3 : u' = u := Set.mem_singleton_iff.1 (hsub' (by simp))
+      have h4 : v' = u := Set.mem_singleton_iff.1 (hsub' (by simp))
+      exact absurd (h3.trans h4.symm) hne'
+    · intro x hx
+      have hx' : x ∈ ({u', v'} : Set V3) := by rw [← hpair]; exact hx
+      rcases Set.mem_insert_iff.1 hx' with hxe | hxe
+      · rw [hxe]
+        exact hu'
+      · rw [Set.mem_singleton_iff.1 hxe]
+        exact hv'
+  · rintro ⟨huv, hsub⟩
+    exact ⟨u, v, rfl, hsub (by simp), hsub (by simp : v ∈ ({u, v} : Set V3)), huv⟩
+
+/-- `mcell` dispatch at `k = 0` (the public `MCELL0` below is stated only
+later in this file, so the kit carries its own copy). -/
+private theorem mcell0_dispatch_p4 (V : Set V3) (ul : List V3) :
+    mcell0 V ul = mcell 0 V ul := by
+  simp [mcell]
+
+/-- `mcell` dispatch at `k = 1`. -/
+private theorem mcell1_dispatch_p4 (V : Set V3) (ul : List V3) :
+    mcell1 V ul = mcell 1 V ul := by
+  simp [mcell]
+
+end BumpP4
+
+namespace BumpP4
+
 /-- HL `BIJ` rendered over sets. -/
 private def BIJP4 {α β : Type} (f : α → β) (s : Set α) (t : Set β) : Prop :=
   Set.BijOn f s t
@@ -739,7 +1010,20 @@ theorem BETA_ORDERED_PAIR_THM {α β γ : Type} (g : α → β → γ) (x : α �
 /-- bump.hl:37. -/
 theorem BIJ_SUM {α β : Type} [Fintype α] [Fintype β] (A : Set α) (B : Set β)
     (f : β → ℝ) (ab : α ≃ β) (_h : Set.BijOn ab A B) :
-    setSum A (fun a => f (ab a)) = setSum B f := by sorry
+    setSum A (fun a => f (ab a)) = setSum B f := by
+  have hBimg : Set.image ab A = B := Set.BijOn.image_eq _h
+  have hA : A.Finite := Set.toFinite A
+  have hBfinA : (Set.image ab A).Finite := hA.image ab
+  haveI : Fintype ↑(Set.image ab A) := hBfinA.fintype
+  haveI : Fintype ↑A := hA.fintype
+  rw [← hBimg]
+  classical
+  simp only [setSum, dif_pos hA, dif_pos hBfinA]
+  simp only [Set.Finite.toFinset_image ab hA hBfinA]
+  convert
+    (Finset.sum_image (f := fun x : β => f x) (g := ab) (s := hA.toFinset)
+      (fun x _ y _ hxy => ab.injective hxy)).symm <;>
+    · rfl
 
 /-- bump.hl:47. -/
 theorem EL_EXPLICIT (h : V3) (t : List V3) :
@@ -861,11 +1145,75 @@ theorem set_of_list4 {α : Type} [Inhabited α] (ul : List α) (h : ul.length = 
 
 /-- bump.hl:179. -/
 theorem SET_OF_LIST_TRUNCATE_1 (ul : List V3) (h : 2 ≤ ul.length) :
-    setOfList (truncateSimplex 1 ul) = {elV ul 0, elV ul 1} := by sorry
+    setOfList (truncateSimplex 1 ul) = {elV ul 0, elV ul 1} := by
+  cases ul with
+  | nil => simp at h
+  | cons a t =>
+    cases t with
+    | nil => simp at h
+    | cons b t2 =>
+      have hw : (truncateSimplex 1 (a :: b :: t2)).length = 1 + 1 ∧
+          initialSublist (truncateSimplex 1 (a :: b :: t2)) (a :: b :: t2) :=
+        Classical.epsilon_spec
+          (p := fun vl : List V3 => vl.length = 1 + 1 ∧ initialSublist vl (a :: b :: t2))
+          ⟨[a, b], rfl, ⟨t2, rfl⟩⟩
+      have heqL : truncateSimplex 1 (a :: b :: t2) = [a, b] := by
+        -- same-length initial sublists coincide (PA5 INITIAL_SUBLIST_UNIQUE, inlined)
+        have hgen : ∀ xl yl : List V3, initialSublist xl (a :: b :: t2) → xl.length = 2 →
+            initialSublist yl (a :: b :: t2) → yl.length = 2 → xl = yl := by
+          intro xl yl hp1 hp2 hp3 hp4
+          obtain ⟨t1, ht1⟩ := hp1
+          obtain ⟨t2', ht2⟩ := hp3
+          have heq : xl ++ t1 = yl ++ t2' := by rw [← ht1, ht2]
+          rcases List.append_eq_append_iff.1 heq with ⟨t, rfl, -⟩ | ⟨t, rfl, -⟩
+          · rw [List.length_append, hp2] at hp4
+            have ht0 : t.length = 0 := by omega
+            rw [List.length_eq_zero_iff.1 ht0, List.append_nil]
+          · rw [List.length_append, hp4] at hp2
+            have ht0 : t.length = 0 := by omega
+            rw [List.length_eq_zero_iff.1 ht0, List.append_nil]
+        exact hgen _ _ hw.2 hw.1 ⟨t2, rfl⟩ rfl
+      rw [heqL]
+      ext x
+      simp [setOfList, elV]
 
 /-- bump.hl:194. -/
 theorem SET_OF_LIST_TRUNCATE_2 (ul : List V3) (h : 3 ≤ ul.length) :
-    setOfList (truncateSimplex 2 ul) = {elV ul 0, elV ul 1, elV ul 2} := by sorry
+    setOfList (truncateSimplex 2 ul) = {elV ul 0, elV ul 1, elV ul 2} := by
+  cases ul with
+  | nil => simp at h
+  | cons a t =>
+    cases t with
+    | nil => simp at h
+    | cons b t2 =>
+      cases t2 with
+      | nil => simp at h
+      | cons c t3 =>
+        have hw : (truncateSimplex 2 (a :: b :: c :: t3)).length = 2 + 1 ∧
+            initialSublist (truncateSimplex 2 (a :: b :: c :: t3)) (a :: b :: c :: t3) :=
+          Classical.epsilon_spec
+            (p := fun vl : List V3 => vl.length = 2 + 1 ∧ initialSublist vl (a :: b :: c :: t3))
+            ⟨[a, b, c], rfl, ⟨t3, rfl⟩⟩
+        have heqL : truncateSimplex 2 (a :: b :: c :: t3) = [a, b, c] := by
+          -- same-length initial sublists coincide (PA5 INITIAL_SUBLIST_UNIQUE, inlined)
+          have hgen : ∀ xl yl : List V3, initialSublist xl (a :: b :: c :: t3) →
+              xl.length = 3 → initialSublist yl (a :: b :: c :: t3) → yl.length = 3 →
+              xl = yl := by
+            intro xl yl hp1 hp2 hp3 hp4
+            obtain ⟨t1, ht1⟩ := hp1
+            obtain ⟨t3', ht2⟩ := hp3
+            have heq : xl ++ t1 = yl ++ t3' := by rw [← ht1, ht2]
+            rcases List.append_eq_append_iff.1 heq with ⟨t, rfl, -⟩ | ⟨t, rfl, -⟩
+            · rw [List.length_append, hp2] at hp4
+              have ht0 : t.length = 0 := by omega
+              rw [List.length_eq_zero_iff.1 ht0, List.append_nil]
+            · rw [List.length_append, hp4] at hp2
+              have ht0 : t.length = 0 := by omega
+              rw [List.length_eq_zero_iff.1 ht0, List.append_nil]
+          exact hgen _ _ hw.2 hw.1 ⟨t3, rfl⟩ rfl
+        rw [heqL]
+        ext x
+        simp [setOfList, elV]
 
 /-- bump.hl:211. -/
 theorem VX_EMPTY (V : Set V3) (vl : List V3) (k : ℕ) (h : nullSet (mcell k V vl)) :
@@ -881,13 +1229,19 @@ theorem RIJRIED (V : Set V3) (vl : List V3) (k : ℕ) (h : nullSet (mcell k V vl
 /-- bump.hl:232. -/
 theorem HDTFNFZ_SUBSET (V : Set V3) (ul : List V3) (k : ℕ) (X : Set V3)
     (_hs : saturated V) (_hp : Packing V) (_hb : barV V 3 ul) (_hX : X = mcell k V ul) :
-    VX V X ⊆ V ∩ X := by sorry
+    VX V X ⊆ V ∩ X := by
+  by_cases hn : nullSet X
+  · intro x hx
+    simp only [VX, if_pos hn] at hx
+    exact hx.elim
+  · rw [hdtfnfz_p4 _hs _hp _hb _hX hn]
 
 /-- bump.hl:248. -/
 theorem HDTFNFZ_ALT (V : Set V3) (ul : List V3) (k : ℕ) (X : Set V3)
     (_hs : saturated V) (_hp : Packing V) (_hb : barV V 3 ul)
     (_hX : X = mcell k V ul) (_hn : ¬nullSet X) :
-    VX V X = V ∩ X := by sorry
+    VX V X = V ∩ X := by
+  exact hdtfnfz_p4 _hs _hp _hb _hX _hn
 
 /-- bump.hl:262. -/
 theorem VORONOI_V (V : Set V3) (w : V3) (hw : w ∈ V) :
@@ -905,27 +1259,91 @@ theorem VORONOI_V (V : Set V3) (w : V3) (hw : w ∈ V) :
 /-- bump.hl:273. -/
 theorem V_CELL0_EMPTY (V : Set V3) (vl : List V3) (_hs : saturated V)
     (_hp : Packing V) (_hb : barV V 3 vl) :
-    V ∩ mcell0 V vl = ∅ := by sorry
+    V ∩ mcell0 V vl = ∅ := by
+  rw [mcell0_dispatch_p4]
+  exact LEPJBDJ_0 V vl _hs _hp _hb
 
 /-- bump.hl:300. -/
 theorem V_CELL1_SINGLE (V : Set V3) (vl : List V3) (_hs : saturated V)
     (_hp : Packing V) (_hb : barV V 3 vl) :
-    V ∩ mcell1 V vl ⊆ {hdV vl} := by sorry
+    V ∩ mcell1 V vl ⊆ {hdV vl} := by
+  by_cases h0 : mcell 1 V vl = ∅
+  · simp [mcell1_dispatch_p4, h0]
+  · have hkey := LEPJBDJ V vl 1 _hs _hp _hb (by omega) (by omega) h0
+    rw [mcell1_dispatch_p4, hkey,
+      setOfList_truncateSimplex0_p4 (by have := _hb.1; omega)]
 
 /-- bump.hl:327. -/
 theorem EDGE_IMP_K2 (V : Set V3) (vl : List V3) (k : ℕ) (_hs : saturated V)
     (_hp : Packing V) (_hb : barV V 3 vl) (_hk : k ≤ 1) :
-    edgeX V (mcell k V vl) = ∅ := by sorry
+    edgeX V (mcell k V vl) = ∅ := by
+  have hVX0 : ∀ X : Set V3, nullSet X → VX V X = ∅ := by
+    intro X hn
+    simp only [VX, if_pos hn]
+  rcases Nat.eq_zero_or_pos k with rfl | hk
+  · -- k = 0: the vertex set is empty (LEPJBDJ_0)
+    have hVX : VX V (mcell 0 V vl) = ∅ := by
+      by_cases hn : nullSet (mcell 0 V vl)
+      · exact hVX0 _ hn
+      · rw [hdtfnfz_p4 _hs _hp _hb rfl hn, LEPJBDJ_0 V vl _hs _hp _hb]
+    rw [edgeX_empty_p4 hVX]
+  · -- k = 1: the vertex set is empty (null case) or the singleton {hdV vl}
+    have hk1 : k = 1 := by omega
+    subst hk1
+    by_cases hn : nullSet (mcell 1 V vl)
+    · rw [edgeX_empty_p4 (hVX0 _ hn)]
+    · have hne : mcell 1 V vl ≠ ∅ := by
+        intro hc
+        refine hn ?_
+        rw [hc]
+        exact MeasureTheory.measure_empty
+      have hVX : VX V (mcell 1 V vl) ⊆ {hdV vl} := by
+        rw [hdtfnfz_p4 _hs _hp _hb rfl hn,
+          LEPJBDJ V vl 1 _hs _hp _hb (by omega) (by omega) hne,
+          setOfList_truncateSimplex0_p4 (by have := _hb.1; omega)]
+      rw [edgeX_subsingleton_p4 hVX]
 
 /-- bump.hl:358. -/
 theorem MCELL2_VERTEX (V : Set V3) (ul : List V3) (_hs : saturated V)
     (_hp : Packing V) (_hb : barV V 3 ul) :
-    VX V (mcell2 V ul) ⊆ {elV ul 0, elV ul 1} := by sorry
+    VX V (mcell2 V ul) ⊆ {elV ul 0, elV ul 1} := by
+  have hdis : mcell2 V ul = mcell 2 V ul := by simp [mcell]
+  rw [hdis]
+  by_cases hn : nullSet (mcell 2 V ul)
+  · simp only [VX, if_pos hn]
+    exact Set.empty_subset _
+  · have hne : mcell 2 V ul ≠ ∅ := by
+      intro hc
+      refine hn ?_
+      rw [hc]
+      exact MeasureTheory.measure_empty
+    rw [hdtfnfz_p4 _hs _hp _hb rfl hn,
+      LEPJBDJ V ul 2 _hs _hp _hb (by omega) (by omega) hne,
+      show (2 : ℕ) - 1 = 1 from rfl,
+      SET_OF_LIST_TRUNCATE_1 ul (by have := _hb.1; omega)]
 
 /-- bump.hl:428. -/
 theorem MCELL2_EDGE (V : Set V3) (ul : List V3) (e : Set V3) (_hs : saturated V)
     (_hp : Packing V) (_hb : barV V 3 ul) (_he : e ∈ edgeX V (mcell2 V ul)) :
-    e = {elV ul 0, elV ul 1} := by sorry
+    e = {elV ul 0, elV ul 1} := by
+  obtain ⟨u, v, rfl, hu, hv, huv⟩ := _he
+  have hsub : VX V (mcell2 V ul) ⊆ {elV ul 0, elV ul 1} :=
+    MCELL2_VERTEX V ul _hs _hp _hb
+  have hu' : u = elV ul 0 ∨ u = elV ul 1 := by
+    rcases Set.mem_insert_iff.1 (hsub hu) with h | h
+    · exact Or.inl h
+    · exact Or.inr (Set.mem_singleton_iff.1 h)
+  have hv' : v = elV ul 0 ∨ v = elV ul 1 := by
+    rcases Set.mem_insert_iff.1 (hsub hv) with h | h
+    · exact Or.inl h
+    · exact Or.inr (Set.mem_singleton_iff.1 h)
+  rcases hu' with rfl | rfl <;> rcases hv' with rfl | rfl
+  · exact absurd rfl huv
+  · rfl
+  · ext x
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  · exact absurd rfl huv
 
 /-- bump.hl:448. -/
 theorem MCELL4 (V : Set V3) (ul : List V3) : mcell4 V ul = mcell 4 V ul := by
@@ -947,11 +1365,23 @@ theorem MCELL1 (V : Set V3) (ul : List V3) : mcell1 V ul = mcell 1 V ul := by
 theorem MCELL0 (V : Set V3) (ul : List V3) : mcell0 V ul = mcell 0 V ul := by
   simp [mcell]
 
+  -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
+  -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
+  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
+  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
+
 /-- bump.hl:488. -/
 theorem MCELL_CELL_PARAMETERS_EXIST (V : Set V3) (ul : List V3) (k : ℕ) (X : Set V3)
     (_hk : k ≤ 4) (_hp : Packing V) (_hs : saturated V) (_hX : X = mcell k V ul)
     (_hb : barV V 3 ul) (_hn : ¬nullSet X) :
     (cellParams V X).1 = k := by sorry
+
+  -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
+  -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
+  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
+  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
 
 /-- bump.hl:513. -/
 theorem MCELL4_CELL_PARAMETERS_EXIST (V : Set V3) (ul : List V3) (X : Set V3)
@@ -959,11 +1389,23 @@ theorem MCELL4_CELL_PARAMETERS_EXIST (V : Set V3) (ul : List V3) (X : Set V3)
     (_hb : barV V 3 ul) (_hn : ¬nullSet X) :
     (cellParams V X).1 = 4 := by sorry
 
+  -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
+  -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
+  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
+  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
+
 /-- bump.hl:523. -/
 theorem MCELL3_CELL_PARAMETERS_EXIST (V : Set V3) (ul : List V3) (X : Set V3)
     (_hp : Packing V) (_hs : saturated V) (_hX : X = mcell3 V ul)
     (_hb : barV V 3 ul) (_hn : ¬nullSet X) :
     (cellParams V X).1 = 3 := by sorry
+
+  -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
+  -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
+  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
+  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
 
 /-- bump.hl:533. -/
 theorem MCELL2_CELL_PARAMETERS_EXIST (V : Set V3) (ul : List V3) (X : Set V3)
@@ -971,11 +1413,23 @@ theorem MCELL2_CELL_PARAMETERS_EXIST (V : Set V3) (ul : List V3) (X : Set V3)
     (_hb : barV V 3 ul) (_hn : ¬nullSet X) :
     (cellParams V X).1 = 2 := by sorry
 
+  -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
+  -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
+  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
+  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
+
 /-- bump.hl:543. -/
 theorem MCELL_PARAM_UL (V : Set V3) (ul vl : List V3) (X : Set V3) (k : ℕ)
     (_hk : k ≤ 4) (_hp : Packing V) (_hs : saturated V) (_hX : X = mcell k V ul)
     (_hb : barV V 3 ul) (_hn : ¬nullSet X) (_hvl : vl = (cellParams V X).2) :
     X = mcell k V vl ∧ barV V 3 vl := by sorry
+
+  -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
+  -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
+  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
+  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
 
 /-- bump.hl:568. -/
 theorem MCELL4_PARAM_UL (V : Set V3) (ul vl : List V3) (X : Set V3)
@@ -983,11 +1437,23 @@ theorem MCELL4_PARAM_UL (V : Set V3) (ul vl : List V3) (X : Set V3)
     (_hb : barV V 3 ul) (_hn : ¬nullSet X) (_hvl : vl = (cellParams V X).2) :
     X = mcell4 V vl ∧ barV V 3 vl := by sorry
 
+  -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
+  -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
+  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
+  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
+
 /-- bump.hl:580. -/
 theorem MCELL3_PARAM_UL (V : Set V3) (ul vl : List V3) (X : Set V3)
     (_hp : Packing V) (_hs : saturated V) (_hX : X = mcell3 V ul)
     (_hb : barV V 3 ul) (_hn : ¬nullSet X) (_hvl : vl = (cellParams V X).2) :
     X = mcell3 V vl ∧ barV V 3 vl := by sorry
+
+  -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
+  -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
+  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
+  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
 
 /-- bump.hl:592. -/
 theorem MCELL2_PARAM_UL (V : Set V3) (ul vl : List V3) (X : Set V3)
@@ -998,9 +1464,30 @@ theorem MCELL2_PARAM_UL (V : Set V3) (ul vl : List V3) (X : Set V3)
 /-- bump.hl:604. -/
 theorem MCELL4_VX (V : Set V3) (ul : List V3) (X : Set V3) (_hp : Packing V)
     (_hs : saturated V) (_hX : X = mcell4 V ul) (_hb : barV V 3 ul) :
-    VX V X ⊆ setOfList (cellParams V X).2 := by sorry
+    VX V X ⊆ setOfList (cellParams V X).2 := by
+  obtain ⟨h4, hbar', -⟩ :=
+    cellParams_spec_p4 (k := 4) (ul := ul) (X := X) _hb (by rw [_hX]; simp [mcell])
+  by_cases hn : nullSet X
+  · intro x hx
+    simp only [VX, if_pos hn] at hx
+    exact hx.elim
+  · intro x hx
+    simp only [VX, if_neg hn] at hx
+    by_cases h0 : (cellParams V X).1 = 0
+    · rw [if_pos h0] at hx
+      exact hx.elim
+    · rw [if_neg h0] at hx
+      exact setOfList_initialSublist_p4
+        (truncateSimplex_spec_p4 (ul := (cellParams V X).2)
+          (j := (cellParams V X).1 - 1) (by have := hbar'.1; have := h4; omega)).2 hx
 
 /-- bump.hl:629. -/
+  -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
+  -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
+  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
+  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
+
 theorem MCELL3_VX (V : Set V3) (ul : List V3) (X : Set V3) (_hp : Packing V)
     (_hs : saturated V) (_hX : X = mcell3 V ul) (_hb : barV V 3 ul) :
     VX V X ⊆ setOfList (truncateSimplex 2 (cellParams V X).2) := by sorry
@@ -1009,25 +1496,60 @@ theorem MCELL3_VX (V : Set V3) (ul : List V3) (X : Set V3) (_hp : Packing V)
 theorem MCELL4_SET_OF_LIST_VX (V : Set V3) (ul : List V3) (X : Set V3)
     (_hp : Packing V) (_hs : saturated V) (_hX : X = mcell4 V ul)
     (_hn : ¬nullSet X) (_hb : barV V 3 ul) :
-    setOfList ul = V ∩ X := by sorry
+    setOfList ul = V ∩ X := by
+  have hne : mcell4 V ul ≠ ∅ := by
+    intro hc
+    refine _hn ?_
+    rw [_hX, hc]
+    exact MeasureTheory.measure_empty
+  rw [_hX, show mcell4 V ul = mcell 4 V ul from by simp [mcell],
+    LEPJBDJ V ul 4 _hs _hp _hb (by omega) (by omega) hne,
+    ← setOfList_truncateSimplex3_p4 (by have := _hb.1; omega)]
 
 /-- bump.hl:694. -/
 theorem MCELL3_SET_OF_LIST_VX (V : Set V3) (ul : List V3) (X : Set V3)
     (_hp : Packing V) (_hs : saturated V) (_hX : X = mcell3 V ul)
     (_hn : ¬nullSet X) (_hb : barV V 3 ul) :
-    setOfList (truncateSimplex 2 ul) = V ∩ X := by sorry
+    setOfList (truncateSimplex 2 ul) = V ∩ X := by
+  have hne : mcell3 V ul ≠ ∅ := by
+    intro hc
+    refine _hn ?_
+    rw [_hX, hc]
+    exact MeasureTheory.measure_empty
+  rw [_hX, show mcell3 V ul = mcell 3 V ul from by simp [mcell],
+    LEPJBDJ V ul 3 _hs _hp _hb (by omega) (by omega) hne,
+    show (3 : ℕ) - 1 = 2 from rfl]
 
 /-- bump.hl:766. -/
 theorem MCELL4_EDGE (V : Set V3) (ul : List V3) (u v : V3) (_hp : Packing V)
     (_hs : saturated V) (_hn : ¬nullSet (mcell4 V ul)) (_hb : barV V 3 ul) :
     ({u, v} : Set V3) ∈ edgeX V (mcell4 V ul) ↔
-      u ≠ v ∧ {u, v} ⊆ setOfList ul := by sorry
+      u ≠ v ∧ {u, v} ⊆ setOfList ul := by
+  have hdis : mcell4 V ul = mcell 4 V ul := by simp [mcell]
+  have hn' : ¬nullSet (mcell 4 V ul) := fun hc => _hn (by rw [hdis]; exact hc)
+  have hne : mcell 4 V ul ≠ ∅ := fun hc =>
+    hn' (by rw [hc]; exact MeasureTheory.measure_empty)
+  have hvx : VX V (mcell 4 V ul) = setOfList ul := by
+    rw [hdtfnfz_p4 _hs _hp _hb rfl hn',
+      LEPJBDJ V ul 4 _hs _hp _hb (by omega) (by omega) hne,
+      setOfList_truncateSimplex3_p4 (by have := _hb.1; omega)]
+  rw [hdis]
+  exact edgeX_pair_iff_p4 hvx
 
 /-- bump.hl:786. -/
 theorem MCELL3_EDGE (V : Set V3) (ul : List V3) (u v : V3) (_hp : Packing V)
     (_hs : saturated V) (_hn : ¬nullSet (mcell3 V ul)) (_hb : barV V 3 ul) :
     ({u, v} : Set V3) ∈ edgeX V (mcell3 V ul) ↔
-      u ≠ v ∧ {u, v} ⊆ setOfList (truncateSimplex 2 ul) := by sorry
+      u ≠ v ∧ {u, v} ⊆ setOfList (truncateSimplex 2 ul) := by
+  have hdis : mcell3 V ul = mcell 3 V ul := by simp [mcell]
+  have hn' : ¬nullSet (mcell 3 V ul) := fun hc => _hn (by rw [hdis]; exact hc)
+  have hne : mcell 3 V ul ≠ ∅ := fun hc =>
+    hn' (by rw [hc]; exact MeasureTheory.measure_empty)
+  have hvx : VX V (mcell 3 V ul) = setOfList (truncateSimplex 2 ul) := by
+    rw [hdtfnfz_p4 _hs _hp _hb rfl hn',
+      LEPJBDJ V ul 3 _hs _hp _hb (by omega) (by omega) hne]
+  rw [hdis]
+  exact edgeX_pair_iff_p4 hvx
 
 /-- bump.hl:806. -/
 theorem EDGE_MCELL_EL (V : Set V3) (X : Set V3) (e : Set V3) (he : e ∈ edgeX V X) :
@@ -1039,14 +1561,57 @@ theorem EDGE_MCELL_EL (V : Set V3) (X : Set V3) (e : Set V3) (he : e ∈ edgeX V
 theorem MCELL_EDGE (V : Set V3) (ul : List V3) (k : ℕ) (e : Set V3) (_hk : k < 4)
     (_hp : Packing V) (_hs : saturated V) (_hn : ¬nullSet (mcell k V ul))
     (_hb : barV V 3 ul) (_he : e ∈ edgeX V (mcell k V ul)) :
-    e ⊆ setOfList (truncateSimplex 2 ul) := by sorry
-
-/-- bump.hl:940 (`MCELL_BUMP_0`; the bump.hl:851 twin is its commented
-`beta_bumpA` predecessor). -/
-theorem MCELL_BUMP_0 (V : Set V3) (ul : List V3) (e : Set V3) (k : ℕ)
-    (_hk : k < 4) (_hp : Packing V) (_hs : saturated V) (_hb : barV V 3 ul)
-    (_hn : ¬nullSet (mcell k V ul)) :
-    betaBump V e (mcell k V ul) = 0 := by sorry
+    e ⊆ setOfList (truncateSimplex 2 ul) := by
+  have hne : mcell k V ul ≠ ∅ := by
+    intro hc
+    refine _hn ?_
+    rw [hc]
+    exact MeasureTheory.measure_empty
+  have hle : 3 ≤ ul.length := by have := _hb.1; omega
+  obtain ⟨p, q, rfl, hp, hq, -⟩ := _he
+  have hVX : VX V (mcell k V ul) = V ∩ mcell k V ul :=
+    hdtfnfz_p4 _hs _hp _hb rfl _hn
+  have hp' : p ∈ V ∩ mcell k V ul := by rw [← hVX]; exact hp
+  have hq' : q ∈ V ∩ mcell k V ul := by rw [← hVX]; exact hq
+  interval_cases k
+  · rw [LEPJBDJ_0 V ul _hs _hp _hb] at hp'
+    exact hp'.elim
+  · rw [LEPJBDJ V ul 1 _hs _hp _hb (by omega) (by omega) hne,
+      setOfList_truncateSimplex0_p4 (by have := _hb.1; omega)] at hp' hq'
+    rw [SET_OF_LIST_TRUNCATE_2 ul hle]
+    intro y hy
+    rcases Set.mem_insert_iff.1 hy with hxe | hxe
+    · rw [hxe, Set.mem_singleton_iff.1 hp', hdV_elV_p4]
+      simp
+    · rw [hxe, Set.mem_singleton_iff.1 hq', hdV_elV_p4]
+      simp
+  · rw [LEPJBDJ V ul 2 _hs _hp _hb (by omega) (by omega) hne,
+      show (2 : ℕ) - 1 = 1 from rfl,
+      SET_OF_LIST_TRUNCATE_1 ul (by have := _hb.1; omega)] at hp' hq'
+    rw [SET_OF_LIST_TRUNCATE_2 ul hle]
+    intro y hy
+    have hsub21 : ({elV ul 0, elV ul 1} : Set V3) ⊆ {elV ul 0, elV ul 1, elV ul 2} := by
+      intro z hz
+      rcases Set.mem_insert_iff.1 hz with h | h
+      · rw [h]
+        simp
+      · rw [Set.mem_singleton_iff.1 h]
+        simp
+    rcases Set.mem_insert_iff.1 hy with hxe | hxe
+    · rw [hxe]
+      exact hsub21 hp'
+    · rw [Set.mem_singleton_iff.1 hxe]
+      exact hsub21 hq'
+  · rw [LEPJBDJ V ul 3 _hs _hp _hb (by omega) (by omega) hne,
+      show (3 : ℕ) - 1 = 2 from rfl,
+      SET_OF_LIST_TRUNCATE_2 ul hle] at hp' hq'
+    rw [SET_OF_LIST_TRUNCATE_2 ul hle]
+    intro y hy
+    rcases Set.mem_insert_iff.1 hy with hxe | hxe
+    · rw [hxe]
+      exact hp'
+    · rw [Set.mem_singleton_iff.1 hxe]
+      exact hq'
 
 /-- bump.hl:871. -/
 theorem CARD2_EDGEX (V : Set V3) (X : Set V3) (e : Set V3) (he : e ∈ edgeX V X) :
@@ -1062,28 +1627,198 @@ theorem CARD2_EDGEX (V : Set V3) (X : Set V3) (e : Set V3) (he : e ∈ edgeX V X
 theorem DIFF_EDGEX (V : Set V3) (X : Set V3) (ul : List V3) (k : ℕ) (e : Set V3)
     (_hk : k < 4) (_hp : Packing V) (_hs : saturated V) (_hX : X = mcell k V ul)
     (_hn : ¬nullSet X) (_hb : barV V 3 ul) (_he : e ∈ edgeX V X) :
-    VX V X \ e ∉ edgeX V X := by sorry
+    VX V X \ e ∉ edgeX V X := by
+  -- AJRIPQN-port note: direct pigeonhole — both `e` and `VX \ e` sit inside
+  -- the 3-point truncation set (MCELL_EDGE twice), are disjoint, and carry
+  -- two distinct points each: four distinct points in a three-point set.
+  intro hcon
+  rw [_hX] at _he hcon
+  have hn' : ¬nullSet (mcell k V ul) := by rw [← _hX]; exact _hn
+  obtain ⟨p, q, rfl, hp, hq, hpq⟩ := _he
+  obtain ⟨p', q', heq', hp', hq', hpq'⟩ := hcon
+  have hp'sub : p' ∈ VX V (mcell k V ul) \ ({p, q} : Set V3) := by rw [heq']; simp
+  have hq'sub : q' ∈ VX V (mcell k V ul) \ ({p, q} : Set V3) := by rw [heq']; simp
+  have hd1 : p' ≠ p ∧ p' ≠ q := by
+    have h1 : p' ∉ ({p, q} : Set V3) ∧ p' ∈ VX V (mcell k V ul) := by
+      simp only [Set.mem_sdiff] at hp'sub
+      tauto
+    exact ⟨fun h => h1.1 (by simp [h]), fun h => h1.1 (by simp [h])⟩
+  have hd2 : q' ≠ p ∧ q' ≠ q := by
+    have h1 : q' ∉ ({p, q} : Set V3) ∧ q' ∈ VX V (mcell k V ul) := by
+      simp only [Set.mem_sdiff] at hq'sub
+      tauto
+    exact ⟨fun h => h1.1 (by simp [h]), fun h => h1.1 (by simp [h])⟩
+  have hE : ({p, q} : Set V3) ⊆ setOfList (truncateSimplex 2 ul) :=
+    MCELL_EDGE V ul k ({p, q}) _hk _hp _hs hn' _hb (⟨p, q, rfl, hp, hq, hpq⟩)
+  have hE' : (VX V (mcell k V ul) \ ({p, q} : Set V3))
+      ⊆ setOfList (truncateSimplex 2 ul) :=
+    MCELL_EDGE V ul k (VX V (mcell k V ul) \ {p, q}) _hk _hp _hs hn' _hb
+      (⟨p', q', heq', hp', hq', hpq'⟩)
+  rw [heq'] at hE'
+  have hS : ({p, q, p', q'} : Set V3) ⊆ setOfList (truncateSimplex 2 ul) := by
+    intro z hz
+    rcases Set.mem_insert_iff.1 hz with hz | hz
+    · exact hE (by rw [hz]; simp)
+    rcases Set.mem_insert_iff.1 hz with hz | hz
+    · exact hE (by rw [hz]; simp)
+    rcases Set.mem_insert_iff.1 hz with hz | hz
+    · exact hE' (by rw [hz]; simp)
+    · exact hE' (by rw [hz]; simp)
+  have hsub : ({p, q, p', q'} : Set V3)
+      ⊆ ({elV ul 0, elV ul 1, elV ul 2} : Set V3) := by
+    intro z hz
+    have hz' : z ∈ setOfList (truncateSimplex 2 ul) := hS hz
+    rw [SET_OF_LIST_TRUNCATE_2 ul (by have := _hb.1; omega)] at hz'
+    exact hz'
+  have h4 : ({p, q, p', q'} : Set V3).ncard = 4 := by
+    rw [Set.ncard_insert_of_notMem (s := ({q, p', q'} : Set V3))
+        (by simp [hpq, Ne.symm hd1.1, Ne.symm hd1.2, Ne.symm hd2.1, Ne.symm hd2.2]),
+      Set.ncard_insert_of_notMem (s := ({p', q'} : Set V3))
+        (by simp [hpq', Ne.symm hd1.2, Ne.symm hd2.2]),
+      Set.ncard_insert_of_notMem (s := ({q'} : Set V3)) (by simp [hpq'])]
+    simp
+  have h3 : ({elV ul 0, elV ul 1, elV ul 2} : Set V3).ncard = 3 := by
+    rw [Set.ncard_insert_of_notMem (s := ({elV ul 1, elV ul 2} : Set V3))
+        (by simp [barV_elV_ne_p4 _hb (i := 0) (j := 1) (by omega) (by omega) (by omega),
+          barV_elV_ne_p4 _hb (i := 0) (j := 2) (by omega) (by omega) (by omega)]),
+      Set.ncard_insert_of_notMem (s := ({elV ul 2} : Set V3))
+        (by simp [barV_elV_ne_p4 _hb (i := 1) (j := 2) (by omega) (by omega) (by omega)])]
+    simp
+  have hle : ({p, q, p', q'} : Set V3).ncard
+      ≤ ({elV ul 0, elV ul 1, elV ul 2} : Set V3).ncard :=
+    Set.ncard_le_ncard hsub (Set.toFinite _)
+  rw [h4, h3] at hle
+  exact absurd hle (by omega)
+
+/-- bump.hl:940 (`MCELL_BUMP_0`; the bump.hl:851 twin is its commented
+`beta_bumpA` predecessor). -/
+theorem MCELL_BUMP_0 (V : Set V3) (ul : List V3) (e : Set V3) (k : ℕ)
+    (_hk : k < 4) (_hp : Packing V) (_hs : saturated V) (_hb : barV V 3 ul)
+    (_hn : ¬nullSet (mcell k V ul)) :
+    betaBump V e (mcell k V ul) = 0 := by
+  -- AJRIPQN-port note: discharged WITHOUT the cellParams-uniqueness cluster —
+  -- the bump condition needs BOTH `e` and `e' = VX \ e` critical, and either
+  -- `e ∈ edgeX` (then DIFF_EDGEX kills `e' ∈ edgeX`) or `e ∉ edgeX` (then
+  -- `e ∉ criticalEdgeX` by the defining setOf) makes the condition fail.
+  by_cases he : e ∈ edgeX V (mcell k V ul)
+  · have hdiff : VX V (mcell k V ul) \ e ∉ edgeX V (mcell k V ul) :=
+      DIFF_EDGEX V (mcell k V ul) ul k e _hk _hp _hs rfl _hn _hb he
+    simp only [betaBump]
+    rw [if_neg (fun hcon => by
+      have hc := hcon.2.2.2.1
+      simp only [criticalEdgeX, Set.mem_setOf_eq] at hc
+      obtain ⟨u, v, -, hxe, -, -⟩ := hc
+      exact hdiff hxe)]
+  · simp only [betaBump]
+    rw [if_neg (fun hcon => by
+      have hc := hcon.2.2.1
+      simp only [criticalEdgeX, Set.mem_setOf_eq] at hc
+      obtain ⟨u, v, -, hxe, -, -⟩ := hc
+      exact he hxe)]
 
 /-- bump.hl:920. -/
 theorem CRITICAL_EDGEX_ALT (V : Set V3) (X : Set V3) (e : Set V3) :
     e ∈ criticalEdgeX V X ↔ e ∈ edgeX V X ∧ hminus ≤ radV e ∧ radV e ≤ hplus := by
-  sorry
+  have hlr : ∀ u v : V3, hl [u, v] = radV ({u, v} : Set V3) := by
+    intro u v
+    simp only [hl, setOfList]
+    congr 1
+    ext x
+    simp
+  simp only [criticalEdgeX, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨u, v, rfl, he, hlo, hhi⟩
+    rw [hlr u v] at hlo hhi
+    exact ⟨he, hlo, hhi⟩
+  · rintro ⟨he, hlo, hhi⟩
+    obtain ⟨u, v, rfl, -, -, -⟩ :=
+      (fun hx : e ∈ edgeX V X =>
+        (hx : ∃ u v : V3, e = {u, v} ∧ u ∈ VX V X ∧ v ∈ VX V X ∧ u ≠ v)) he
+    rw [← hlr u v] at hlo hhi
+    exact ⟨u, v, rfl, he, hlo, hhi⟩
 
 /-- bump.hl:930. -/
 theorem SUBCRITICAL_EDGEX_ALT (V : Set V3) (X : Set V3) (e : Set V3) :
     e ∈ subcriticalEdgeX V X ↔ e ∈ edgeX V X ∧ radV e < hminus := by
-  sorry
+  have hlr : ∀ u v : V3, hl [u, v] = radV ({u, v} : Set V3) := by
+    intro u v
+    simp only [hl, setOfList]
+    congr 1
+    ext x
+    simp
+  simp only [subcriticalEdgeX, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨u, v, rfl, he, hlo⟩
+    rw [hlr u v] at hlo
+    exact ⟨he, hlo⟩
+  · rintro ⟨he, hlo⟩
+    obtain ⟨u, v, rfl, -, -, -⟩ :=
+      (fun hx : e ∈ edgeX V X =>
+        (hx : ∃ u v : V3, e = {u, v} ∧ u ∈ VX V X ∧ v ∈ VX V X ∧ u ≠ v)) he
+    rw [← hlr u v] at hlo
+    exact ⟨u, v, rfl, he, hlo⟩
 
 /-- bump.hl:956. -/
 theorem MCELL4_EDGE_OPP (V : Set V3) (ul : List V3) (_hp : Packing V)
     (_hs : saturated V) (_hb : barV V 3 ul) (_hn : ¬nullSet (mcell4 V ul)) :
-    VX V (mcell4 V ul) \ {elV ul 0, elV ul 1} = {elV ul 2, elV ul 3} := by sorry
+    VX V (mcell4 V ul) \ {elV ul 0, elV ul 1} = {elV ul 2, elV ul 3} := by
+  have hdis : mcell4 V ul = mcell 4 V ul := by simp [mcell]
+  have hn' : ¬nullSet (mcell 4 V ul) := fun hc => _hn (by rw [hdis]; exact hc)
+  have hne : mcell 4 V ul ≠ ∅ := fun hc =>
+    hn' (by rw [hc]; exact MeasureTheory.measure_empty)
+  have hvx : VX V (mcell 4 V ul) = setOfList ul := by
+    rw [hdtfnfz_p4 _hs _hp _hb rfl hn',
+      LEPJBDJ V ul 4 _hs _hp _hb (by omega) (by omega) hne,
+      setOfList_truncateSimplex3_p4 (by have := _hb.1; omega)]
+  rw [hdis, hvx]
+  obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul _hb
+  subst hul
+  have hE0 : elV [u0, u1, u2, u3] 0 = u0 := rfl
+  have hE1 : elV [u0, u1, u2, u3] 1 = u1 := rfl
+  have hE2 : elV [u0, u1, u2, u3] 2 = u2 := rfl
+  have hE3 : elV [u0, u1, u2, u3] 3 = u3 := rfl
+  have hset : setOfList [u0, u1, u2, u3]
+      = {elV [u0, u1, u2, u3] 0, elV [u0, u1, u2, u3] 1,
+          elV [u0, u1, u2, u3] 2, elV [u0, u1, u2, u3] 3} := by
+    rw [hE0, hE1, hE2, hE3]
+    ext x
+    simp [setOfList]
+  have d02 : u2 ≠ u0 := by
+    simpa [elV] using barV_elV_ne_p4 _hb (i := 2) (j := 0) (by omega) (by omega) (by omega)
+  have d03 : u3 ≠ u0 := by
+    simpa [elV] using barV_elV_ne_p4 _hb (i := 3) (j := 0) (by omega) (by omega) (by omega)
+  have d12 : u2 ≠ u1 := by
+    simpa [elV] using barV_elV_ne_p4 _hb (i := 2) (j := 1) (by omega) (by omega) (by omega)
+  have d13 : u3 ≠ u1 := by
+    simpa [elV] using barV_elV_ne_p4 _hb (i := 3) (j := 1) (by omega) (by omega) (by omega)
+  ext x
+  rw [hset, Set.mem_sdiff, hE0, hE1, hE2, hE3]
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or]
+  constructor
+  · rintro ⟨h4, hn0, hn1⟩
+    rcases h4 with h0 | h1 | h2 | h3
+    · exact absurd h0 hn0
+    · exact absurd h1 hn1
+    · exact Or.inl h2
+    · exact Or.inr h3
+  · intro hx
+    rcases hx with hxe | hxe
+    · have hx2 : x = u2 := hxe
+      exact ⟨by simp [hx2], fun hc => d02 (hx2.symm.trans hc),
+        fun hc => d12 (hx2.symm.trans hc)⟩
+    · have hx3 : x = u3 := Set.mem_singleton_iff.1 hxe
+      exact ⟨by simp [hx3], fun hc => d03 (hx3.symm.trans hc),
+        fun hc => d13 (hx3.symm.trans hc)⟩
 
 /-- bump.hl:999. -/
 theorem MCELL_BUMP_OPP (V : Set V3) (ul : List V3) (_hp : Packing V)
     (_hs : saturated V) (_hb : barV V 3 ul) (_hn : ¬nullSet (mcell4 V ul))
     (_hc : ({elV ul 2, elV ul 3} : Set V3) ∉ criticalEdgeX V (mcell4 V ul)) :
-    betaBump V {elV ul 0, elV ul 1} (mcell4 V ul) = 0 := by sorry
+    betaBump V {elV ul 0, elV ul 1} (mcell4 V ul) = 0 := by
+  have hopp : VX V (mcell4 V ul) \ {elV ul 0, elV ul 1} = {elV ul 2, elV ul 3} :=
+    MCELL4_EDGE_OPP V ul _hp _hs _hb _hn
+  simp only [betaBump, hopp]
+  rw [if_neg (fun hcon => _hc hcon.2.2.2.1)]
 
 /-- bump.hl:1051. -/
 theorem BETA_BUMP_INVOLUTION (V : Set V3) (X : Set V3) (r : Set V3 → Set V3)
@@ -1127,21 +1862,88 @@ theorem BETA_BUMP_ALT (V : Set V3) (X : Set V3) (r : Set V3 → Set V3) (e : Set
       if ¬nullSet X ∧ e ∈ criticalEdgeX V X ∧ r e ∈ criticalEdgeX V X ∧
           (∀ f ∈ edgeX V X, f = e ∨ f = r e ∨ f ∈ subcriticalEdgeX V X) then
         bump (radV e) - bump (radV (r e))
-      else 0 := by sorry
+      else 0 := by
+  have hr' : ∀ w : Set V3, r w = VX V X \ w := fun w => by rw [← hr]
+  simp only [betaBump]
+  rw [hr']
+  by_cases hc : ¬nullSet X ∧ e ∈ criticalEdgeX V X ∧ VX V X \ e ∈ criticalEdgeX V X ∧
+      (∀ f ∈ edgeX V X, f = e ∨ f = VX V X \ e ∨ f ∈ subcriticalEdgeX V X)
+  · have hcond : X ∈ mcellSet V ∧ ¬nullSet X ∧ e ∈ criticalEdgeX V X ∧
+      VX V X \ e ∈ criticalEdgeX V X ∧
+      (∀ f ∈ edgeX V X, f = e ∨ f = VX V X \ e ∨ f ∈ subcriticalEdgeX V X) := ⟨_hm, hc⟩
+    rw [if_pos hcond, if_pos hc]
+  · rw [if_neg (fun hconj => hc ⟨hconj.2.1, hconj.2.2.1, hconj.2.2.2.1, hconj.2.2.2.2⟩),
+      if_neg hc]
 
 /-- bump.hl:1086. -/
 theorem BETA_BUMP_INVOLUTION_CRITICAL (V : Set V3) (X : Set V3)
     (r : Set V3 → Set V3) (e : Set V3) (_hs : saturated V) (_hp : Packing V)
     (_hm : X ∈ mcellSet V) (_he : e ∈ criticalEdgeX V X)
     (_hb : betaBump V e X ≠ 0) (hr : (fun e => VX V X \ e) = r) :
-    r e ∈ criticalEdgeX V X := by sorry
+    r e ∈ criticalEdgeX V X := by
+  have hr' : ∀ w : Set V3, r w = VX V X \ w := fun w => by rw [← hr]
+  by_contra hcon
+  simp only [betaBump] at _hb
+  rw [if_neg (fun hconj => hcon (by rw [hr']; exact hconj.2.2.2.1))] at _hb
+  exact _hb rfl
 
 /-- bump.hl:1100. -/
 theorem BETA_BUMP_INVOLUTION_NEG (V : Set V3) (X : Set V3) (r : Set V3 → Set V3)
     (e : Set V3) (_hs : saturated V) (_hp : Packing V) (_hm : X ∈ mcellSet V)
     (_he : e ∈ criticalEdgeX V X) (_hb : betaBump V e X ≠ 0)
     (hr : (fun e => VX V X \ e) = r) :
-    betaBump V (r e) X = -betaBump V e X := by sorry
+    betaBump V (r e) X = -betaBump V e X := by
+  have hr' : ∀ w : Set V3, r w = VX V X \ w := fun w => by rw [← hr]
+  have hsub : e ⊆ VX V X := by
+    simp only [criticalEdgeX, Set.mem_setOf_eq] at _he
+    obtain ⟨u, v, rfl, hxe, -, -⟩ := _he
+    obtain ⟨w, w', heq, hw, hw', -⟩ := hxe
+    have hu' : u = w ∨ u = w' := by
+      have hmem : u ∈ ({w, w'} : Set V3) := by rw [← heq]; simp
+      simpa using hmem
+    have hv' : v = w ∨ v = w' := by
+      have hmem : v ∈ ({w, w'} : Set V3) := by rw [← heq]; simp
+      simpa using hmem
+    intro x hx
+    rcases Set.mem_insert_iff.1 hx with rfl | rfl
+    · rcases hu' with h | h
+      · rw [h]
+        exact hw
+      · rw [h]
+        exact hw'
+    · rcases hv' with h | h
+      · rw [h]
+        exact hw
+      · rw [h]
+        exact hw'
+  have hE0 : VX V X \ (VX V X \ e) = e := by
+    ext x
+    simp only [Set.mem_sdiff]
+    constructor
+    · rintro ⟨h1, h2⟩
+      by_contra hx
+      exact h2 ⟨h1, hx⟩
+    · intro hx
+      exact ⟨hsub hx, fun h => h.2 hx⟩
+  have hcond : X ∈ mcellSet V ∧ ¬nullSet X ∧ e ∈ criticalEdgeX V X ∧
+      VX V X \ e ∈ criticalEdgeX V X ∧
+      ∀ f ∈ edgeX V X, f = e ∨ f = VX V X \ e ∨ f ∈ subcriticalEdgeX V X := by
+    by_contra hcf
+    simp only [betaBump] at _hb
+    rw [if_neg (fun hconj => hcf ⟨hconj.1, hconj.2.1, hconj.2.2.1, hconj.2.2.2.1,
+      hconj.2.2.2.2⟩)] at _hb
+    exact _hb rfl
+  have hc2 : X ∈ mcellSet V ∧ ¬nullSet X ∧ VX V X \ e ∈ criticalEdgeX V X ∧
+      e ∈ criticalEdgeX V X ∧
+      ∀ f ∈ edgeX V X, f = VX V X \ e ∨ f = e ∨ f ∈ subcriticalEdgeX V X :=
+    ⟨hcond.1, hcond.2.1, hcond.2.2.2.1, hcond.2.2.1, fun f hf => by
+      rcases hcond.2.2.2.2 f hf with h | h | h
+      · exact Or.inr (Or.inl h)
+      · exact Or.inl h
+      · exact Or.inr (Or.inr h)⟩
+  simp only [betaBump, hr', hE0]
+  rw [if_pos hc2, if_pos hcond]
+  ring
 
 /-- bump.hl:1129. -/
 theorem BETA_BUMP_INVOLUTION_BIJ (V : Set V3) (X : Set V3) (s : Set (Set V3))
@@ -1149,12 +1951,114 @@ theorem BETA_BUMP_INVOLUTION_BIJ (V : Set V3) (X : Set V3) (s : Set (Set V3))
     (_hm : X ∈ mcellSet V)
     (_hsdef : {e | e ∈ criticalEdgeX V X ∧ betaBump V e X ≠ 0} = s)
     (hr : (fun e => VX V X \ e) = r) :
-    BIJP4 r s s := by sorry
+    BIJP4 r s s := by
+  have hmem : ∀ e ∈ s, e ∈ criticalEdgeX V X ∧ betaBump V e X ≠ 0 := by
+    intro e he
+    rw [← _hsdef] at he
+    exact he
+  refine ⟨?_, ?_, ?_⟩
+  · intro e he
+    obtain ⟨hcrit, hne⟩ := hmem e he
+    have hrc := BETA_BUMP_INVOLUTION_CRITICAL V X r e _hs _hp _hm hcrit hne hr
+    have hrne := BETA_BUMP_INVOLUTION_NEG V X r e _hs _hp _hm hcrit hne hr
+    rw [← _hsdef]
+    refine ⟨hrc, fun hzero => hne ?_⟩
+    rw [hrne] at hzero
+    linarith
+  · intro e he f hf hcon
+    have h1 := BETA_BUMP_INVOLUTION V X r e _hs _hp _hm (hmem e he).1 hr
+    have h2 := BETA_BUMP_INVOLUTION V X r f _hs _hp _hm (hmem f hf).1 hr
+    rw [← h1, ← h2, hcon]
+  · intro y hy
+    obtain ⟨hcrit, hne⟩ := hmem y hy
+    have hrcy := BETA_BUMP_INVOLUTION_CRITICAL V X r y _hs _hp _hm hcrit hne hr
+    have hrny := BETA_BUMP_INVOLUTION_NEG V X r y _hs _hp _hm hcrit hne hr
+    rw [← _hsdef]
+    refine ⟨r y, ⟨hrcy, fun hzero => hne ?_⟩, ?_⟩
+    · rw [hrny] at hzero
+      linarith
+    · exact BETA_BUMP_INVOLUTION V X r y _hs _hp _hm hcrit hr
 
 /-- bump.hl:1169. -/
 theorem SUM_BETA_BUMP_LEMMA (V : Set V3) (X : Set V3) (_hs : saturated V)
     (_hp : Packing V) (_hm : X ∈ mcellSet V) :
-    setSum {e | e ∈ criticalEdgeX V X} (fun e => betaBump V e X) = 0 := by sorry
+    setSum {e | e ∈ criticalEdgeX V X} (fun e => betaBump V e X) = 0 := by
+  classical
+  set r : Set V3 → Set V3 := fun e => VX V X \ e with hrdef
+  have hr' : (fun e => VX V X \ e) = r := rfl
+  -- the vertex set of `X` is (empty or) a list-point-set, hence finite
+  have hfinVX : (VX V X).Finite := by
+    by_cases hn : nullSet X
+    · simp only [VX, if_pos hn]
+      exact Set.finite_empty
+    · simp only [VX, if_pos hn]
+      split_ifs
+      · exact Set.finite_empty
+      · exact Set.Finite.ofFinset
+          (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2).toFinset
+          (fun x => by simp [setOfList])
+  have hfinE : (edgeX V X).Finite := by
+    have hsub : edgeX V X
+        ⊆ (fun p : V3 × V3 => ({p.1, p.2} : Set V3)) '' (VX V X ×ˢ VX V X) := by
+      rintro e ⟨u, v, rfl, hu, hv, -⟩
+      exact ⟨(u, v), ⟨hu, hv⟩, rfl⟩
+    exact (Set.Finite.image _ (hfinVX.prod hfinVX)).subset hsub
+  have hfin : {e : Set V3 | e ∈ criticalEdgeX V X}.Finite := by
+    refine Set.Finite.subset hfinE ?_
+    intro e he
+    simp only [criticalEdgeX, Set.mem_setOf_eq] at he
+    obtain ⟨u, v, rfl, hxe, -, -⟩ := he
+    exact hxe
+  haveI : Fintype ↥({e : Set V3 | e ∈ criticalEdgeX V X} : Set (Set V3)) := hfin.fintype
+  set F := hfin.toFinset.filter (fun e => betaBump V e X ≠ 0) with hFdef
+  -- split the sum: the `β = 0` part contributes nothing
+  have hsplit : ∑ e ∈ hfin.toFinset, betaBump V e X
+      = ∑ e ∈ F, betaBump V e X := by
+    rw [hFdef, Finset.sum_filter]
+    refine Finset.sum_congr rfl (fun e he => ?_)
+    by_cases hm : betaBump V e X = 0
+    · rw [if_neg (fun hne => absurd hm hne), hm]
+    · rw [if_pos hm]
+  have hFmaps : ∀ e ∈ F, r e ∈ F := by
+    intro e he
+    have hne : betaBump V e X ≠ 0 := (Finset.mem_filter.1 he).2
+    have hcrit : e ∈ criticalEdgeX V X := by simpa using (Finset.mem_filter.1 he).1
+    have hrc := BETA_BUMP_INVOLUTION_CRITICAL V X r e _hs _hp _hm hcrit hne hr'
+    have hrne := BETA_BUMP_INVOLUTION_NEG V X r e _hs _hp _hm hcrit hne hr'
+    refine Finset.mem_filter.2 ⟨by simpa using hrc, fun hzero => hne ?_⟩
+    rw [hrne] at hzero
+    linarith
+  have hFinv : ∀ e ∈ F, r (r e) = e := fun e he =>
+    BETA_BUMP_INVOLUTION V X r e _hs _hp _hm (by simpa using
+      (Finset.mem_filter.1 he).1) hr'
+  have hFpair : ∀ e ∈ F, betaBump V (r e) X = -betaBump V e X := fun e he =>
+    BETA_BUMP_INVOLUTION_NEG V X r e _hs _hp _hm (by simpa using
+      (Finset.mem_filter.1 he).1) (by simpa using (Finset.mem_filter.1 he).2) hr'
+  have hFsum : ∑ e ∈ F, betaBump V e X = 0 := by
+    have hinj : ∀ e ∈ F, ∀ f ∈ F, r e = r f → e = f := by
+      intro e he f hf hcon
+      rw [← hFinv e he, ← hFinv f hf, hcon]
+    have hFimg : F.image r = F := by
+      ext e
+      simp only [Finset.mem_image]
+      constructor
+      · rintro ⟨f, hf, rfl⟩
+        exact hFmaps f hf
+      · intro he
+        exact ⟨r e, hFmaps e he, hFinv e he⟩
+    have hre : ∑ e ∈ F.image r, betaBump V e X
+        = ∑ e ∈ F, betaBump V (r e) X := by
+      rw [Finset.sum_image (fun x hx y hy hcon =>
+        hinj x (Finset.mem_coe.mp hx) y (Finset.mem_coe.mp hy) hcon)]
+    have hFI : ∑ e ∈ F.image r, betaBump V e X
+        = ∑ e ∈ F, betaBump V e X := by
+      rw [hFimg]
+    have hpairS : ∑ e ∈ F, betaBump V (r e) X
+        = -∑ e ∈ F, betaBump V e X := by
+      rw [← Finset.sum_neg_distrib]
+      exact Finset.sum_congr rfl (fun e he => hFpair e he)
+    linarith [hre, hFI, hpairS]
+  rw [setSum, dif_pos hfin, hsplit, hFsum]
 
 /-- bump.hl:1198. -/
 theorem REAL_ABS_TRIANGLE_BOUND (a b x : ℝ) (ha : a ≤ x) (hb : x ≤ b) :
@@ -1204,12 +2108,61 @@ theorem CRITICAL_EDGEX_BOUND :
 /-- bump.hl:1219. -/
 theorem ABS_BUMP (h c1 : ℝ) (hc : abs (h - h0) ≤ c1) :
     abs (bump h) ≤ abs 0.005 * (1 + c1 ^ 2 / abs ((hplus - h0) ^ 2)) := by
-  sorry
+  have hden : (0:ℝ) < abs ((hplus - h0) ^ 2) :=
+    abs_pos.mpr (pow_ne_zero 2 (show hplus - h0 ≠ 0 by norm_num [hplus, h0]))
+  have hsq : abs (h - h0) ^ 2 ≤ c1 ^ 2 := by
+    nlinarith [abs_nonneg (h - h0), hc]
+  unfold bump
+  have h1 : abs (1 - (h - h0) ^ 2 / (hplus - h0) ^ 2)
+      ≤ 1 + abs ((h - h0) ^ 2) / abs ((hplus - h0) ^ 2) := by
+    have hq : abs ((h - h0) ^ 2 / (hplus - h0) ^ 2)
+        ≤ abs ((h - h0) ^ 2) / abs ((hplus - h0) ^ 2) := by
+      rw [abs_div]
+    rcases le_or_gt 1 ((h - h0) ^ 2 / (hplus - h0) ^ 2) with hx | hx
+    · rw [abs_of_nonpos (by linarith)]
+      linarith [le_abs_self ((h - h0) ^ 2 / (hplus - h0) ^ 2), hq]
+    · rw [abs_of_pos (by linarith)]
+      linarith [neg_le_abs ((h - h0) ^ 2 / (hplus - h0) ^ 2), hq]
+  have hD : (0:ℝ) < (abs ((hplus - h0) ^ 2))⁻¹ := inv_pos.mpr hden
+  have hsq2 : abs ((h - h0) ^ 2) ≤ c1 ^ 2 := by rw [abs_pow]; exact hsq
+  have h2 : abs ((h - h0) ^ 2) / abs ((hplus - h0) ^ 2)
+      ≤ c1 ^ 2 / abs ((hplus - h0) ^ 2) := by
+    rw [div_eq_inv_mul, div_eq_inv_mul]
+    exact mul_le_mul_of_nonneg_left hsq2 (le_of_lt hD)
+  calc abs (0.005 * (1 - (h - h0) ^ 2 / (hplus - h0) ^ 2))
+      = abs 0.005 * abs (1 - (h - h0) ^ 2 / (hplus - h0) ^ 2) := abs_mul _ _
+    _ ≤ abs 0.005 * (1 + c1 ^ 2 / abs ((hplus - h0) ^ 2)) :=
+        mul_le_mul_of_nonneg_left (by linarith [h1, h2]) (abs_nonneg _)
 
 /-- bump.hl:1244. -/
 theorem BOUND_BETA_BUMP :
     ∃ c : ℝ, ∀ (V : Set V3) (X : Set V3) (e : Set V3), saturated V → Packing V →
       X ∈ mcellSet V → e ∈ criticalEdgeX V X → betaBump V e X ≤ c := by
-  sorry
+  obtain ⟨c1, hc1⟩ := CRITICAL_EDGEX_BOUND
+  have hbound : (0:ℝ) ≤ abs 0.005 * (1 + c1 ^ 2 / abs ((hplus - h0) ^ 2)) := by
+    refine mul_nonneg (abs_nonneg _) ?_
+    have h1 : (0:ℝ) ≤ c1 ^ 2 := sq_nonneg c1
+    have h2 : (0:ℝ) ≤ abs ((hplus - h0) ^ 2) := abs_nonneg _
+    have h3 : (0:ℝ) ≤ c1 ^ 2 / abs ((hplus - h0) ^ 2) := div_nonneg h1 h2
+    linarith
+  refine ⟨2 * abs 0.005 * (1 + c1 ^ 2 / abs ((hplus - h0) ^ 2)),
+    fun V X e _ _ _ he => ?_⟩
+  by_cases hcond : X ∈ mcellSet V ∧ ¬nullSet X ∧ e ∈ criticalEdgeX V X ∧
+      VX V X \ e ∈ criticalEdgeX V X ∧
+      ∀ f ∈ edgeX V X, f = e ∨ f = VX V X \ e ∨ f ∈ subcriticalEdgeX V X
+  · have hb : betaBump V e X = bump (radV e) - bump (radV (VX V X \ e)) := by
+      simp only [betaBump]
+      rw [if_pos hcond]
+    rw [hb]
+    have hab := ABS_BUMP (radV e) c1 (hc1 V X e he)
+    have hab' := ABS_BUMP (radV (VX V X \ e)) c1 (hc1 V X (VX V X \ e) hcond.2.2.2.1)
+    calc bump (radV e) - bump (radV (VX V X \ e))
+        ≤ abs (bump (radV e)) + abs (bump (radV (VX V X \ e))) := by
+          linarith [le_abs_self (bump (radV e)),
+            neg_le_abs (bump (radV (VX V X \ e)))]
+      _ ≤ 2 * abs 0.005 * (1 + c1 ^ 2 / abs ((hplus - h0) ^ 2)) := by linarith
+  · simp only [betaBump]
+    rw [if_neg hcond]
+    linarith
 
 end BumpP4
