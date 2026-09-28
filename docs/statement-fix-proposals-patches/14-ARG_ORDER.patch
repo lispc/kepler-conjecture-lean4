@@ -1,0 +1,41 @@
+# Item 14 — ARG_ORDER (PA22 r2) — 分级 A′: 改述为 holArg 版(照抄本文件
+#   holArg/ARG_INV_ALT 已批改法), 证明待完成(草案已 80% 机器化, 见下注)。
+# 文件: lean/Kepler/Text/PackingAuto22.lean (PA22@HEAD 陈述冻结文本)。
+# 反例(机器已核, scratch ScratchA §4, ARG_ORDER_counter): n = 3, u = 1,
+#   h 1 = 1, h 2 = I, h 3 = -1: 前提(Complex.arg 按 (-π,π] 排序 0 < π/2 < π)
+#   全部可满足, 而结论在 (i, j) = (2, 1) 处要求
+#   arg(h 3/h 2) = arg(-1/I) = π/2 ≤ arg(h 1/h 2) = arg(1/I) = -π/2, 假。
+# 根因: Complex.arg 取值 (-π, π], HOL Arg(Ysskqoy) 取值 [0, 2π) —— 排序前提
+#   在两语义下不相容, 结论文绕 2π 的不等式随之而假。本文件 holArg/ARG_INV_ALT
+#   已因同病改述并过闸, 本补丁照抄该改法。
+# 证明状态: holArg 版陈述为真(HOL 证明 ARG_ORDER 原文即 holArg 语义;
+#   scratch 草案已完成极坐标机器 holArg_mem_Ico / polar_rep / polar_inj /
+#   polar_div / holArg_div_polar 全套辅助引理中的前四件并端到端编译,
+#   主证明按 θ 排序 + δ 归一化的 8 分支已写出, 尚有 ~4 处 rw 对齐未收口)。
+#   **本补丁的 sorry 体须由修复波按草案补齐后方可过闸第⑤道**;
+#   完成前 ARG_ORDER 保持冻结黑名单(假陈述无人可填, 无债务风险)。
+diff --git a/lean/Kepler/Text/PackingAuto22.lean b/lean/Kepler/Text/PackingAuto22.lean
+--- a/lean/Kepler/Text/PackingAuto22.lean
++++ b/lean/Kepler/Text/PackingAuto22.lean
+@@
+ theorem ARG_ORDER (u : ℂ) (h : ℕ → ℂ) (n : ℕ) (hu : u ≠ 0)
+     (h1 : ∀ i : ℕ, i ∈ Finset.Icc 1 n → h i ≠ 0)
+     (h2 : ∀ i j : ℕ, i ∈ Finset.Icc 1 n → j ∈ Finset.Icc 1 n → i < j →
+-      Complex.arg (h i / u) < Complex.arg (h j / u))
++      holArg (h i / u) < holArg (h j / u))
+     (h3 : h (n + 1) = h 1) :
+     ∀ i j : ℕ, i ∈ Finset.Icc 1 n → j ∈ Finset.Icc 1 n → i ≠ j →
+-      Complex.arg (h (i + 1) / h i) ≤ Complex.arg (h j / h i) := by
+-  sorry
++      holArg (h (i + 1) / h i) ≤ holArg (h j / h i) := by
++  -- NEEDS: 极坐标机器证明收口。草案(ScratchA r2, 80%): 辅助引理
++  --   holArg_mem_Ico (holArg ∈ [0,2π)) / polar_rep (z = ‖z‖·(cos θ + sin θ·I),
++  --   θ = holArg z, 经 Complex.cos_arg/sin_arg + 周期性) / polar_inj
++  --   (arg_cos_sin_I 经 Complex.arg_cos_add_sin_mul_I + 减 2π 折返) /
++  --   polar_div (单位元 (cos b + sin b·I)(cos b − sin b·I) = 1, 
++  --   Real.cos_sq_add_sin_sq + 差角公式) / holArg_div_polar
++  --   (holArg(x/y) = if q ≤ p then p - q else p - q + 2π, 经 polar_inj)。
++  --   主证明: θᵢ := holArg (h i / u) 严格递增(h2), θ(n+1) = θ 1(h3),
++  --   j > i: δ(θᵢ,θⱼ) 同侧相消; j < i: 加 2π 侧, 由 θ < 2π 收口(i = n 分支
++  --   用 h3 折回 θ 1)。四处 rw 对齐未收口, 均为机械项。
++  sorry

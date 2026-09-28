@@ -390,3 +390,218 @@ STATEMENT-FIX 闸门模式验收（DECISIONS.md 2026-09-28 条）。
 5. **项 13**（DUUNHOR_concl，2026-09-28 增补，A′）：先试无前提版反例；补
    `Packing V ∧ saturated V` + PA6:841 背引用同步加参；补丁起草后存档
    `13-DUUNHOR_concl.patch` 走 STATEMENT-FIX 闸门。
+
+---
+
+# 第二轮提案（r2，2026-09-28 增补）
+
+> 第二轮（PA22 r2 四枚 + PA7 两枚 + DUUNHOR + 项 1 复核）。纪律同 R1：零 .lean
+> 改动，全部交付 = 本文件增补 + `docs/statement-fix-proposals-patches/` 补丁草案；
+> scratch 模块 `ScratchA.lean`（未跟踪，验证后删除）。对照基准：
+> `reference/flyspeck` @ `1ce0353`。机器验证：`lake env lean`，ScratchA 最终
+> **0 error**（反例 + 修复后陈述全验证；详见各项 (b)）。
+
+## 14'. r2 总表与分级统计
+
+| # | 陈述 | Lean 位置 | HOL 原文 | 偏差性质 | 分级 |
+|---|---|---|---|---|---|
+| 11 | `facet_rep_uniq` | PackingAuto22.lean:333 | counting_spheres.hl:161 | 弱化定义（facetOfC 缺 ≠∅ 与 aff_dim）| **A**（补 ≠∅ 前提即闭合）|
+| 12 | `affine_facet_hyper` | PackingAuto22.lean:564 | counting_spheres.hl:320 | 弱化定义（同上，且需 aff_dim）| **C**（需重移植/定义立项）|
+| 13a | `pad2d3d_facet` | PackingAuto22.lean:1275 | counting_spheres.hl:1737 | 弱化定义（结论侧 facetOfC 计数混入 ∅ 与顶点面）| **C**（同上）|
+| 14 | `ARG_ORDER` | PackingAuto22.lean:1349 | counting_spheres.hl:1822 | 语义错植（Complex.arg (-π,π] vs HOL Arg [0,2π)）| **A′**（改述 holArg，证明待收口）|
+| 15 | `KSOQKWL` | PackingAuto7.lean:787 | Rogers.hl:9588 | 弱化定义（permutes 缺补集逐点固定）| **A′**（补 hpout 前提）|
+| 16 | `IVFICRK` | PackingAuto7.lean:796 | Rogers.hl:9929 | **无病**（弱编码下仍真；HOL 的 g 不可移植）| 解除（附 g 重构注记）|
+| 1′ | `SUM_INTER` 补丁复核 | LocalAuto38.lean:419 | terminal.hl:233 | — | 维持 **A**|
+| 13′ | `DUUNHOR_concl` | PackingAuto2.lean:565 | Rogers.hl:1682 | 前提缺失 | **A′**（补丁已起草）|
+
+**r2 统计：A = 1（项 11），A′ = 2（项 14、15）+ 1（项 13 维持），C = 2（项 12、13a），
+解除 = 1（项 16）；另项 1 复核通过（补丁更正后重归修复队列）。**
+
+编号注记：任务书将 PA22 r2 四枚编为 11–14，而 R1 增补项 13（DUUNHOR_concl）
+的补丁名 `13-DUUNHOR_concl.patch` 已在 DECISIONS 2026-09-28 登记 —— 编号 13
+双占，以文件名全称消歧（`13-pad2d3d_facet.patch` vs `13-DUUNHOR_concl.patch`）。
+下文 PA22 r2 的 pad2d3d_facet 记作 **13a** 以免混淆。
+
+结构性结论（r2 立项建议）：`facetOfC`（= faceOfC ∧ f ≠ s）与 `polyhedronC`
+（每点在某"真面"内）均系对 flyspeck polytope1.ml 定义的误移植
+（HOL `facet_of` = face_of ∧ ~(f = {}) ∧ aff_dim f = aff_dim s − 1；
+HOL `polyhedron` = 有限半空间交，H-表示）。这使 14 枚已填 planar-kit 填证
+空洞化为真（经 p22_ball_face_contra 的 vacuous 路线）。若修复波纠正定义，
+该 14 枚需按 HOL 原文重填。**建议单独立项**（含 ℂ 上 aff_dim 重移植），
+本轮不提案定义改动。
+
+## 15'. 项 11 `facet_rep_uniq` — 分级 A（补 c1 ≠ ∅ ∧ c2 ≠ ∅ 前提）
+
+**(a) HOL 裁决**：`counting_spheres.hl:161`：`!(P:real^2->bool) a b1 b2.
+polyhedron P /\ c1 facet_of P /\ c2 facet_of P /\ ... ==> (b1 = b2) /\ (c1 = c2)`。
+Lean 陈述（PA22:333-339）逐字同义，唯 `facet_of` 被弱化为 `facetOfC`
+（= faceOfC ∧ f ≠ s，缺 `~(f = {})` 与 aff_dim 条件）。
+
+**(b) 机器验证（ScratchA §1，0 error）**：反例 P = {0, 1, I}
+（`polyhedronC_triangle`：三点集每点为极点，openSegment 27 案例全验），
+c1 = c2 = ∅（`facetOfC ∅ P`：faceOfC ∅ 平凡 + ∅ ≠ P），a = 0，b1 = 1，b2 = 2：
+`c1 = P ∩ {x | dot2 0 x = 1} = ∅` 同 c2，全部前提可满足而 b1 = b2 假
+（`facet_rep_uniq_counter` 端到端编译）。
+
+**(c) 修复补丁**：`11-facet_rep_uniq.patch` —— 补前提
+`(h1ne : c1.Nonempty) (h2ne : c2.Nonempty)` + 小学级证明（b1 ≤ b2 ≤ b1 纯由
+非空点的支撑不等式推出，不需 face/facet 内容）：`facet_rep_uniq_fixed`
+已在 ScratchA §7 端到端编译验证。消费者核查：全树 grep 无 `facet_rep_uniq`
+消费点（`facet_rep_uniq_c` 由 facet_rep_spec 另行推导，不受影响）。
+
+**(d) 保真论证**：补的 ≠∅ 恰为 HOL `facet_of` 的 `~(f = {})` 合取支
+（aff_dim 支未补 —— 本定理证明不需它，见 (c)；若定义立项落地，本补丁前提
+被新 facetOfC 蕴含，陈述自动弱化为 HOL 镜像，无需回滚）。冻结前缀
+`theorem facet_rep_uniq (P c1 c2 : Set ℂ) (a : ℂ) (b1 b2 : ℝ) ` 逐字不变。
+
+**(e) 分级：A**（前提补全即闭合 + 零消费者波及 + 证明已机器验证）。
+
+## 16'. 项 12 `affine_facet_hyper` — 分级 C（需重移植，零补丁）
+
+**(a) HOL 裁决**：`counting_spheres.hl:320`：`c facet_of P /\ polyhedron P /(affine hull P = (:real^N)) /\ ~(a = vec 0) /\ P INTER {x | a dot x = b} = c ==>
+(affine hull c = {x | a dot x = b})`。Lean 陈述（PA22:564-568）逐字同义，
+唯 facet_of/polyhedron 为弱化移植。
+
+**(b) 机器验证（ScratchA §2，0 error）**：反例一
+（`affine_facet_hyper_counter`）：P = {0, 1, I}（全维 + polyhedronC），
+c = ∅，a = 1，b = −1：P ∩ {x | x.re = −1} = ∅ = c，而 affineSpan ∅ = ∅ ≠
+该直线。**反例二（纸面已核）：仅补 c ≠ ∅ 仍假** —— P = {0, 1, I}，
+c = {0}（顶点面，facetOfC {0} P ✓），a = 1+i，b = 0：
+P ∩ {x | x₁+x₂ = 0} = {0} = c，而 affineSpan {0} = {0} ≠ 该直线。
+
+**(c) 修复评估**：HOL 证明走 AFF_DIM_EQ_AFFINE_HULL（aff_dim c =
+aff_dim P − 1 + P 全维 ⇒ 同 hull），本质消费 aff_dim 内容；前提补 ∅ 排除
+不足以顶掉顶点面。修复需 ℂ 上 aff_dim + 真 facet_of —— 归入定义立项。
+
+**(d)** 陈述冻结黑名单（假陈述无人可填）。
+
+**(e) 分级：C**（零补丁；`12-affine_facet_hyper.patch` 为裁决存档）。
+
+## 17'. 项 13a `pad2d3d_facet` — 分级 C（需重移植，零补丁）
+
+**(a) HOL 裁决**：`counting_spheres.hl:1737`：`!P n. polyhedron P /(!u. u IN P ==> u$3 = &0) /\ {c | c facet_of P} HAS_SIZE n ==>
+{d | d facet_of (IMAGE (dropout 3) P)} HAS_SIZE n`。Lean 陈述
+（PA22:1275-1281）逐字同义，但前提侧 FacetOf 为真移植（Polytope.lean，
+含 aff_dim），结论侧 facetOfC 为弱化版 —— 计数口径不一。
+
+**(b) 机器验证（ScratchA §3，0 error）**：反例
+（`pad2d3d_facet_counter`）：P = {(0:V3)}：polyhedron ✓（六半空间交显式
+给出）、hz ✓、{c | FacetOf c P} = ∅（Finite ✓ ncard = 0 ✓ —— FacetOf c P
+⇒ c ⊆ {0} ⇒ c = ∅（违 ≠∅）或 c = {0}（affDim 0 ≠ 0 − 1）），
+而结论侧 {d | facetOfC d (dropout3P22 '' P)} ∋ ∅（facetOfC ∅
+{dropout 0} ✓），ncard ≥ 1 ≠ 0。
+
+**(c) 修复评估**：仅排 ∅ 不够 —— 顶点面混入（n 边形：真 facet n 个 vs
+弱计数 n + 顶点数 + 1）；修复需 ℂ 上真 facet_of。归入定义立项。
+
+**(d)** 陈述冻结黑名单。
+
+**(e) 分级：C**（`13-pad2d3d_facet.patch` 为裁决存档；编号 13 双占见 14' 注）。
+
+## 18'. 项 14 `ARG_ORDER` — 分级 A′（改述 holArg，证明待收口）
+
+**(a) HOL 裁决**：`counting_spheres.hl:1822`：`!u h n. ~(u = Cx &0) /(!i. i IN 1..n ==> ~(h i = Cx &0)) /\ (!i j. i IN 1..n /\ j IN 1..n /\ i < j ==>
+Arg (h i/ u) < Arg (h j/ u)) /\ h (n+1) = h 1 ==> (!i j. ... ==>
+Arg (h (i+1)/h i) <= Arg (h j/h i))`。HOL Arg（Ysskqoy kit）取值 [0, 2π)。
+Lean 陈述（PA22:1349-1356）逐字同义但用 `Complex.arg`（取值 (−π, π]）——
+与本文件 holArg/ARG_INV_ALT 已批改述同病。
+
+**(b) 机器验证（ScratchA §4，0 error）**：反例
+（`ARG_ORDER_counter`）：n = 3，u = 1，h 1 = 1，h 2 = I，h 3 = −1：
+前提（Complex.arg 排序 0 < π/2 < π）全真，结论在 (i, j) = (2, 1) 处要求
+arg(−1/I) = arg I = π/2 ≤ arg(1/I) = −π/2，假。（n = 2 不构成反例 ——
+两对 (i,j) 的结论平凡为等式，首版 n = 2 反例被 scratch 否决后改为 n = 3。）
+
+**(c) 修复补丁**：`14-ARG_ORDER.patch` —— 前提与结论的 Complex.arg 改为
+`holArg`（照抄本文件 ARG_INV_ALT 已批改法）。**证明状态**：holArg 版为真
+（HOL 原文即该语义）；scratch 草案已完成辅助引理 holArg_mem_Ico / polar_rep
+/ arg_cos_sin_I（经 arg_myform + Complex.arg_cos_add_sin_mul_I）/ polar_inj
+/ polar_div / holArg_div_polar 中的前四件并编译，主证明 8 分支尚有 ~4 处
+rw 对齐未收口 —— **补丁体暂以 sorry 标注，修复波按草案收口后方可过闸第⑤
+道；完成前 ARG_ORDER 保持冻结黑名单**（假陈述无人可填）。
+
+**(d) 保真论证**：holArg 即 HOL Arg 的忠实重构（[0, 2π) 语义），改述后
+陈述与 HOL 逐字同义；消费者核查：全树无 ARG_ORDER 消费点
+（POLYSORT_BIJ2 为 sorry，其 NEEDS 注记按 holArg 语义读）。
+
+**(e) 分级：A′**（改述方向 + 反例已核；证明收口后升 A）。
+
+## 19'. 项 15 `KSOQKWL` — 分级 A′（补 hpout 前提）
+
+**(a) HOL 裁决**：`Rogers.hl:9588`：`!V ul p k. packing V /\ ul IN barV V k /hl ul < sqrt2 /\ p permutes (0..k) /\ rogers V ul = rogers V (left_action_list p ul)
+==> p = identity`。HOL `permutes`（permutations.ml:9）=
+`!x. ¬(x IN s) ==> p(x) = x`（补集逐点固定）；Lean `permutes`
+（PA2:162）= `∀ x, x ∈ s ↔ p x ∈ s`（集合稳定）—— 弱化。
+
+**(b) 反例（结构已核；几何实例化见注）**：p := Equiv.swap (k+1) (k+2)：
+0..k 逐点不动 → 弱前提真；ul.length = k+1 时 leftActionList p ul = ul
+（PA2:156：各位 i ≤ k 有 p.symm i = i）→ hrog 平凡真；结论 p = refl 假。
+HOL 原文下该 p 不满足 permutes（k+1 在补集中被 p 移动）。**机器验证状态**：
+p/leftActionList/permutes/rogers-平凡性半边可在 scratch 闭验，barV/Packing/
+hl ul < √2 的几何实例化（barV V 0 [0]：V 取 {0, 2e₁, 2e₂, 2e₃}，需 voronoi
+胞 affDim = 3 计算）本轮未收口 —— 反例构造完整给出，修复波或黑名单登记时
+补机器验证。
+
+**(c) 修复补丁**：`15-KSOQKWL.patch` —— 补前提
+`(hpout : ∀ x : ℕ, k < x → p x = x)`（恰为 HOL permutes 的补集固定内容；
+Equiv.Perm 类型自带双射 = HOL permutes 的第二合取支）。补后陈述 ≡ HOL 原文。
+证明体保持 sorry（闭合需 NOT_ID_IMP_LISTS_NOT_EQ → KSOQKWL_lemma0/1 →
+ROGERS_EQ 唯一性链，GIANT；该链 5 枚同病桥的修复波同批处理时照抄本补丁模式）。
+
+**(d) 保真论证**：hpout = HOL permutes 的缺失合取支，补后逐字同义；
+不改 `permutes` 定义（改定义波及 PA5/PA7 全部消费点，另立项）。
+
+**(e) 分级：A′**。
+
+## 20'. 项 16 `IVFICRK` — 裁决：无病（解除，附重构注记）
+
+**(a) 疑点**：工人报"同编码可疑"。裁决：**假指控不成立，但 HOL 的显式 g
+不可移植** —— 弱编码下目标集 T 含补集上任意移动的置换，HOL 的 g ≈
+τ(i,k+1)∘σ 不必落入 T。
+
+**(b) 真性论证（纸面）**：弱编码下存在显式修正 g：ψ = (g(i,σ)).symm
+分段 —— x ≤ k：σ.symm x + (if i ≤ σ.symm x then 1 else 0)；x = k+1：i；
+x ≥ k+2：φ⁻¹(σ(φ x))，φ x = x − 1。三段双射拼合为置换；应用子句经
+`(dropIth ul i).getD m = ul.getD (m + (i ≤ m))`（PA2:144，对一切 ul 归纳
+可证）+ ψ 在 0..k 的逐点式直接闭合；InjOn/SurjOn 经 i（ψ(k+1) 位）、
+σ|_{Icc 0 k}（0..k 位）、σ 尾段（φ 共轭）三分量恢复。全部 Equiv/List
+机械题（~250 行，无几何）。**机器验证未做** —— 裁决"无病"为纸面论证，
+修复波吃下证明时若发现反例再回滚本裁决。
+
+**(c) 零补丁**（陈述冻结；`16-IVFICRK.patch` 为裁决与 g 重构注记存档）。
+
+**(d)/(e)**：解除（不适用 A/B/C）。
+
+## 21'. 项 1 复核（r2）— SUM_INTER 补丁更正后重归队列
+
+**发现**：R1 草案 `01-SUM_INTER.patch` 的 hunk 头新侧行数误记（27，实际
+29），`git apply` 拒绝（patch(1) 可过，但 STATEMENT-FIX 闸门按 git 工具链
+验收）。**更正**：同内容经 `git diff` 规范重生成（旧侧行与 LA38@HEAD
+415-445 逐字节一致，`--check` 通过），冻结前缀
+`theorem SUM_INTER {α : Type*} (A B : Set α) (f : α → ℝ) ` 逐字不变，
+唯一 sorry 出现为删除行（净计数 −1）。新证明体另在 r2 scratch 重验编译
+（SUM_INTER_fixed）。修复队列顺位不变（第 2 位，项 7 之后）。
+
+## 22'. 项 13（R1 增补）r2 进展 — DUUNHOR_concl 补丁已起草
+
+**(b)-进展**：无前提版反例尝试：构造可行（V = 两簇远距四点组，ul/vl 各为一簇
+barV 3 序：8 组 affDim + 两侧共球唯一性 + 半空间分离；机器化估 ~400 行），
+超出本轮预算未收口。按 DECISIONS 2026-09-28 授权改走保真对齐：
+**`13-DUUNHOR_concl.patch` 已起草**（两文件：PA2:565 陈述补
+`Packing V → saturated V`；PA6:592 背引用同步加参 hP hs + 陈旧 docstring
+更正 + PA2 原位 NEEDS 注记记录裁决）。**(c)** 补前提后 ≡ HOL 原文；
+PA4:1370 等 9 处"缺件"注记与 PA17:275/304、PackingConcl:132 的孪生注记
+（TWIN MISMATCH：接口无 packing）由修复波一并复核（孪生
+`DUUNHOR_concl_discharged` 为独立 sorry 陈述，不在本补丁范围，注记需同步）。
+**(d)** 落地路线不变（GIANT）。**(e)** 闸门验收；零 sorry 净变化。
+
+## 23'. r2 执行顺序建议（修复波）
+
+1. **项 11**（A，补丁 11）：前提补全 + 证明已验证，第 1 顺位；
+2. **项 15**（A′，补丁 15）：前提补全（证明体 GIANT 另行）；
+3. **项 13**（A′，补丁 13-DUUNHOR_concl）：两文件前提补全（证明体 GIANT 另行）；
+4. **项 14**（A′，补丁 14）：改述 holArg —— **须先按 scratch 草案收口证明**
+   （gate ⑤），收口前不动；
+5. **项 12、13a**（C）：等"planar 编码定义纠正"立项（facetOfC/polyhedronC/
+   ℂ-affDim），立项前冻结黑名单；
+6. **项 16**（解除）：零动作；PA7 若吃 IVFICRK 证明，按 16-patch 注记重构 g。

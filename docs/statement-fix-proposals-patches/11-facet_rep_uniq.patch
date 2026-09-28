@@ -1,0 +1,35 @@
+# Item 11 — facet_rep_uniq (PA22 r2) — 分级 A: 补前提 (c1 ≠ ∅ ∧ c2 ≠ ∅)
+# 文件: lean/Kepler/Text/PackingAuto22.lean (PA22@HEAD, 陈述冻结文本见下)
+# 反例(机器已核, scratch ScratchA §1): P = {0, 1, I}(polyhedronC_triangle:
+#   三点集每点为极点), c1 = c2 = ∅ (facetOfC ∅ P 对一切非空 P 成立 —— faceOfC ∅
+#   平凡 + ∅ ≠ P), a = 0, b1 = 1, b2 = 2: 全部前提可满足而结论 b1 = b2 假。
+# 根因: facetOfC 弱化为 "faceOfC ∧ f ≠ s"(真面), 而 HOL facet_of
+#   (polytope1.ml:1506) = face_of ∧ ~(f = {}) ∧ aff_dim f = aff_dim s - 1 ——
+#   ∅ 与顶点面成合法面。修法评估: 本定理补 ≠∅ 前提即足(证明不需 aff_dim 内容,
+#   b1 ≤ b2 ≤ b1 纯由支撑不等式推出), 改 facetOfC 定义影响 14 枚已填 planar-kit,
+#   需单独立项(见提案 §12)。
+# 证明: 小学级(b1 ≤ b2 由 c1 非空点的支撑不等式), 已在 ScratchA §7 端到端
+#   编译验证(facet_rep_uniq_fixed, 0 error)。
+# 上下文漂移不敏感(闸门①), 内容严格; 陈述冻结前缀
+#   `theorem facet_rep_uniq (P c1 c2 : Set ℂ) (a : ℂ) (b1 b2 : ℝ) ` 逐字不变。
+diff --git a/lean/Kepler/Text/PackingAuto22.lean b/lean/Kepler/Text/PackingAuto22.lean
+--- a/lean/Kepler/Text/PackingAuto22.lean
++++ b/lean/Kepler/Text/PackingAuto22.lean
+@@ -333,8 +333,26 @@
+ theorem facet_rep_uniq (P c1 c2 : Set ℂ) (a : ℂ) (b1 b2 : ℝ)
+     (hP : polyhedronC P) (h1 : facetOfC c1 P) (h2 : facetOfC c2 P)
++    (h1ne : c1.Nonempty) (h2ne : c2.Nonempty)
+     (s1 : P ⊆ {x : ℂ | dot2 a x ≤ b1}) (s2 : P ⊆ {x : ℂ | dot2 a x ≤ b2})
+     (e1 : c1 = P ∩ {x : ℂ | dot2 a x = b1}) (e2 : c2 = P ∩ {x : ℂ | dot2 a x = b2}) :
+     b1 = b2 ∧ c1 = c2 := by
+-  sorry
++  obtain ⟨x, hx1⟩ := h1ne
++  obtain ⟨y, hy1⟩ := h2ne
++  have hxP : x ∈ P := ((e1 ▸ hx1).1 : x ∈ P)
++  have hyP : y ∈ P := ((e2 ▸ hy1).1 : y ∈ P)
++  have hxb1 : dot2 a x = b1 := (e1 ▸ hx1).2
++  have hyb2 : dot2 a y = b2 := (e2 ▸ hy1).2
++  have hb12 : b1 ≤ b2 := by rw [← hxb1]; exact s2 hxP
++  have hb21 : b2 ≤ b1 := by rw [← hyb2]; exact s1 hyP
++  refine ⟨le_antisymm hb12 hb21, ?_⟩
++  rw [e1, e2, le_antisymm hb12 hb21]

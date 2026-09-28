@@ -1,0 +1,16 @@
+# Item 12 — affine_facet_hyper (PA22 r2) — 分级 C: 需重移植(定义级), 零补丁。
+#
+# 反例(机器已核, scratch ScratchA §2, affine_facet_hyper_counter):
+#   P = {0, 1, I}(全维: affineSpan = univ; 每点为极点 → polyhedronC ✓),
+#   c = ∅(facetOfC ∅ P ✓, ∅ ≠ P), a = 1, b = -1:
+#   P ∩ {x | dot2 1 x = -1} = ∅ = c, 但 affineSpan ∅ = ∅ ≠ {x | x.re = -1}。
+# 仅补 c ≠ ∅ 仍假(二级反例, 纸面已核): P = {0, 1, I}, c = {0}(顶点面,
+#   facetOfC {0} P ✓), a = 1+i, b = 0: P ∩ {x | x₁+x₂ = 0} = {0} = c ✓,
+#   而 affineSpan {0} = {0} ≠ 该直线 —— 顶点面是弱合法面所致。
+# 根因与修法评估: HOL facet_of(polytope1.ml:1506)含 aff_dim f = aff_dim s - 1,
+#   本定理的证明( AFF_DIM_EQ_AFFINE_HULL 路线)本质消费该维数条件;
+#   补前提方案需在 ℂ 上重移植 aff_dim(项目现版 affDim 仅 V3), 且 facetOfC
+#   改定义波及 14 枚已填 planar-kit —— 应与 polyhedronC(H-表示误移植)一并
+#   走"planar 编码定义纠正"单独立项。立项前陈述冻结黑名单
+#   (假陈述, 无人可填, 无债务风险)。
+# 零 diff(本文件无补丁体, 仅裁决与立项建议存档)。

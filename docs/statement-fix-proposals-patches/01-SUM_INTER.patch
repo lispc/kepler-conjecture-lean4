@@ -5,17 +5,35 @@
 # 消费者: 全树 grep 无 (仅 SUM_INTERIOR_AGL_LEMMA 同名前缀, 无关)。
 # 注意: setSumDifneg_p38 在删除两个 junk 分支后成为死代码;
 #   闸门只许删 sorry/空行/纯注释行, 故保留 (无害)。
+# r2 复核 (2026-09-28, 提案官): r1 草案的 hunk 头新侧行数误记 (27, 实为 29),
+#   git apply 拒绝 (patch(1) 可过但 STATEMENT-FIX 闸门按 git 工具链验收)。
+#   本版 = 同内容经 git diff 规范重生成: 旧侧行与 LA38@HEAD 415-445 逐字节一致
+#   (--check 通过), 冻结前缀 `theorem SUM_INTER {α : Type*} (A B : Set α) (f : α → ℝ) `
+#   逐字不变 (hA 插在其后), 唯一 sorry 出现为删除行 (净计数 -1)。
+diff --git a/lean/Kepler/Text/LocalAuto38.lean b/lean/Kepler/Text/LocalAuto38.lean
+index 72f14b3..202cb04 100644
 --- a/lean/Kepler/Text/LocalAuto38.lean
 +++ b/lean/Kepler/Text/LocalAuto38.lean
-@@ -415,31 +415,27 @@
+@@ -412,37 +412,35 @@ private theorem setSumDifneg_p38 {α : Type*} {s : Set α} (g : α → ℝ)
+   · exact absurd ‹s.Finite› h
+   · rfl
+ 
 -/-- HOL `SUM_INTER` (terminal.hl:233). The HOL `sum` junk convention (0 on
 -infinite sets) matches `setSum`; proved here for finite `A`, and in the junk
 -regime (`A` infinite) for `(A ∩ B)` infinite; the remaining mixed case is
 -the flyspeck-junk hole (their use sites keep `A` finite). -/
 -theorem SUM_INTER {α : Type*} (A B : Set α) (f : α → ℝ) :
--    setSum (A ∩ B) f = setSum A (fun i => if i ∈ B then f i else 0) := by
--  by_cases hAB : (A ∩ B).Finite
--  · rw [setSumDifpos_p38 f hAB]
++/-- HOL `SUM_INTER` (terminal.hl:233). Under the project `setSum` junk
++convention (0 on infinite sets, PackingAuto2.lean:124) the unconditional HOL
++statement is FALSE (counterexample `A = univ, B = {0}, f = const 1`: LHS 1,
++RHS 0) — HOL's `sum` is support-based while the port's `setSum` is set-based.
++Every Flyspeck use site keeps `A` finite, so the `A.Finite` premise is the
++faithful repair (counterexample machine-verified in the statement-fix
++proposal round's scratch module). -/
++theorem SUM_INTER {α : Type*} (A B : Set α) (f : α → ℝ) (hA : A.Finite) :
+     setSum (A ∩ B) f = setSum A (fun i => if i ∈ B then f i else 0) := by
+   by_cases hAB : (A ∩ B).Finite
+   · rw [setSumDifpos_p38 f hAB]
 -    by_cases hAf : A.Finite
 -    · rw [setSumDifpos_p38 (fun i => if i ∈ B then f i else 0) hAf]
 -      have hsub : hAB.toFinset ⊆ hAf.toFinset := by
@@ -39,17 +57,6 @@
 -  · by_cases hAf : A.Finite
 -    · exact absurd (Set.Finite.subset hAf Set.inter_subset_left) hAB
 -    · rw [setSumDifneg_p38 f hAB, setSumDifneg_p38 _ hAf]
-+/-- HOL `SUM_INTER` (terminal.hl:233). Under the project `setSum` junk
-+convention (0 on infinite sets, PackingAuto2.lean:124) the unconditional HOL
-+statement is FALSE (counterexample `A = univ, B = {0}, f = const 1`: LHS 1,
-+RHS 0) — HOL's `sum` is support-based while the port's `setSum` is set-based.
-+Every Flyspeck use site keeps `A` finite, so the `A.Finite` premise is the
-+faithful repair (counterexample machine-verified in the statement-fix
-+proposal round's scratch module). -/
-+theorem SUM_INTER {α : Type*} (A B : Set α) (f : α → ℝ) (hA : A.Finite) :
-+    setSum (A ∩ B) f = setSum A (fun i => if i ∈ B then f i else 0) := by
-+  by_cases hAB : (A ∩ B).Finite
-+  · rw [setSumDifpos_p38 f hAB]
 +    rw [setSumDifpos_p38 (fun i => if i ∈ B then f i else 0) hA]
 +    have hsub : hAB.toFinset ⊆ hA.toFinset := by
 +      intro w hw
@@ -68,3 +75,6 @@
 +      rw [if_pos hw.2]
 +    rw [key, Finset.sum_subset hsub h0]
 +  · exact absurd (Set.Finite.subset hA Set.inter_subset_left) hAB
+ 
+ /-- Helper for `dsv_fun3`/`taustar3_fun`: the k = 3 edge set, expanded over
+ `{0, 1, 2}` (the trailing `+ &0` is verbatim from the source). -/

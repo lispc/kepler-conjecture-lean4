@@ -1,0 +1,29 @@
+# Item 15 — KSOQKWL (PA7 r2) — 分级 A′: 补前提 hpout(HOL permutes 的补集逐点
+#   固定内容), 证明体保持 GIANT sorry(上游 NOT_ID_IMP_LISTS_NOT_EQ 等 5 枚
+#   同病桥全部未证)。
+# 文件: lean/Kepler/Text/PackingAuto7.lean (PA7@HEAD 陈述冻结文本)。
+# 反例(结构已核, 几何实例化待机器补): 弱编码 permutes p (Icc 0 k)
+#   (PA2:162 = ∀ x, x ∈ s ↔ p x ∈ s) 不固定补集: 取 p := Equiv.swap (k+1) (k+2)
+#   —— 0..k 逐点不动 → 前提真; ul.length = k+1 时 leftActionList p ul = ul
+#   (PA2:156 逐字: range (k+1) 各位 i ∈ 0..k 有 p.symm i = i) → hrog = rfl 真;
+#   结论 p = Equiv.refl ℕ 假。HOL 原文 permutes(Library/permutations.ml:9)
+#   = !x. ¬(x IN s) → p(x) = x (补集逐点固定), 恰为缺失的前提内容。
+# 修法: 逐定理补前提 hpout(与改 PA2.permutes 定义相比零波及; 改定义影响
+#   PA5/PA7 全部 permutes 消费点, 需单独立项)。补前提后 KSOQKWL ≡ HOL 原文
+#   (Equiv.Perm 类型自带双射性, 即 HOL permutes 的第二合取支)。
+# 证明体: 不变(sorry 保留, 净计数 0)。真正闭合需 Rogers 唯一性链
+#   (NOT_ID_IMP_LISTS_NOT_EQ → KSOQKWL_lemma0/1 → ROGERS_EQ), GIANT。
+# 注: 同构弱编码的 NOT_ID_IMP_LISTS_NOT_EQ(PA7:770)/NOT_ID_IMP_EXISTS_MAX_EQ_
+#   TRUNCATE_SIMPLEX(PA7:779) 同病, 文件内已有同注; 本轮只立项 KSOQKWL,
+#   另两枚若修复波同批处理, 补丁模式照抄本文件。
+diff --git a/lean/Kepler/Text/PackingAuto7.lean b/lean/Kepler/Text/PackingAuto7.lean
+--- a/lean/Kepler/Text/PackingAuto7.lean
++++ b/lean/Kepler/Text/PackingAuto7.lean
+@@
+ theorem KSOQKWL (V : Set V3) (ul : List V3) (p : Equiv.Perm ℕ) (k : ℕ)
+     (hV : Packing V) (hb : barV V k ul) (hl2 : hl ul < Real.sqrt 2)
+     (hperm : permutes p (Set.Icc 0 k))
++    (hpout : ∀ x : ℕ, k < x → p x = x)
+     (hrog : rogers V ul = rogers V (leftActionList p ul)) :
+     p = Equiv.refl ℕ := by
+   sorry

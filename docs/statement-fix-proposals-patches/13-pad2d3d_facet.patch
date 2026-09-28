@@ -1,0 +1,14 @@
+# Item 13 — pad2d3d_facet (PA22 r2) — 分级 C: 需重移植(定义级), 零补丁。
+#
+# 反例(机器已核, scratch ScratchA §3, pad2d3d_facet_counter):
+#   P = {(0:V3)}(平面, z = 0; polyhedron ✓ —— 六半空间交 F 已显式给出并验证;
+#   FacetOf c P 无解: c ⊆ {0} → c = ∅(违 ≠∅)或 c = {0}(affDim 0 ≠ 0 - 1)),
+#   n = 0: 前提全真, 而结论侧 {d | facetOfC d (dropout3P22 '' P)} 含 ∅
+#   (facetOfC ∅ {dropout 0} ✓), ncard ≥ 1 ≠ 0。
+# 根因: 前提侧用的是真 FacetOf(Polytope.lean, 含 aff_dim 条件), 结论侧用的是
+#   弱 facetOfC(faceOfC ∧ f ≠ s): ∅ 与顶点面混入计数, 差额非空。
+# 修法评估: 仅排除 ∅ 不够 —— 顶点面同样混入(多边形 P 的 n 边 vs 弱计数
+#   n + 顶点数 + 1); 必须把结论侧改用带 aff_dim 的真 facet_of —— 需在 ℂ 上
+#   重移植 aff_dim/facet_of, 与 facetOfC/polyhedronC 纠正同属
+#   "planar 编码定义纠正"单独立项。立项前陈述冻结黑名单。
+# 零 diff(本文件无补丁体, 仅裁决与立项建议存档)。

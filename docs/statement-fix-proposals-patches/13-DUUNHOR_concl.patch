@@ -1,0 +1,72 @@
+# Item 13 (R1 增补) — DUUNHOR_concl — 分级 A′(前提补全型): 补 Packing V ∧
+#   saturated V + PA6:841 背引用同步加参, 两文件一个补丁。
+# 文件: lean/Kepler/Text/PackingAuto2.lean (DUUNHOR_concl, PA2@HEAD)
+#       lean/Kepler/Text/PackingAuto6.lean (DUUNHOR 背引用 + 陈旧 docstring)
+# (a) HOL 裁决: Rogers.hl:1682 `DUUNHOR` 带 packing V ∧ saturated V; HOL 证明
+#   第一步即经 VORONOI_CLOSED_EQ_LEMMA(Rogers.hl:1256, 带 packing)消费 packing
+#   —— PA6:837 "前提未用" 注记与 HOL 原文不符(侦察 lane 2026-09-28)。
+# (b) 无前提版反例尝试(本轮, 提案官): 构造可行但机器化成本高未收口 —— 取
+#   V = 两簇远距四点组(各为边 2 正四面体顶点, 簇间距 ~100), ul/vl 各为一簇的
+#   4 点序: barV V 3 双侧可满足(各初始子列表的 Voronoi 交维数 = 4 - 长度,
+#   需 8 组 affDim 计算 + 4 点共球唯一性), 两侧 Rogers 单形各自含于
+#   x₁ ≤ 50 / x₁ ≥ 50 半空间(ω 点 ∈ 所属簇胞), 交空而 hne 真。机器化估
+#   ~400 行, 超出本轮预算; 按 DECISIONS 2026-09-28 授权改走保真对齐补前提。
+# (c) 补前提后 DUUNHOR_concl ≡ HOL 原文(Equiv 封装之差为接口形态);
+#   PA6:841 背引用同步加参(hP hs 本就在作用域), PA6 陈旧 docstring 更新;
+#   PA2 原位 NEEDS 注记同步记录裁决。零 sorry 净变化(陈述 sorry 保留)。
+# (d) 落地路线不变: ROGERS_AFF_DIM_FULL(PA6:763)、POLYHEDRON_VORONOI_LIST
+#   (PA5:1454)、OMEGA_LIST_N_LEMMA(PA5:1502), GIANT。
+# (e) 闸门: STATEMENT-FIX 模式验收; Packing/saturated 为 PA2 既有公开定义
+#   (PackingAuto2:263 saturated / Kepler.Statement.lean:35 Packing)。
+# 注: 编号 13 双占 —— 本文件(任务书既定名)与本轮 13-pad2d3d_facet.patch,
+#   文件名全称消歧, 提案总表已注。
+diff --git a/lean/Kepler/Text/PackingAuto2.lean b/lean/Kepler/Text/PackingAuto2.lean
+--- a/lean/Kepler/Text/PackingAuto2.lean
++++ b/lean/Kepler/Text/PackingAuto2.lean
+@@ -562,16 +562,19 @@ theorem GLTVHUM_concl : ∀ (V : Set V3) (u0 p : V3), Packing V ∧ saturated V
+ 
+ /-- HOL `DUUNHOR_concl` (pack_concl.hl:21-23): distinct Rogers simplices
+ meet in a coplanar set. -/
+-theorem DUUNHOR_concl : ∀ (V : Set V3) (ul vl : List V3), barV V 3 ul → barV V 3 vl →
+-    rogers V ul ≠ rogers V vl → Coplanar (rogers V ul ∩ rogers V vl) := by
++theorem DUUNHOR_concl : ∀ (V : Set V3) (ul vl : List V3), Packing V → saturated V →
++    barV V 3 ul → barV V 3 vl → rogers V ul ≠ rogers V vl →
++    Coplanar (rogers V ul ∩ rogers V vl) := by
+   -- NEEDS: HOL 本体 Rogers.hl:1682-~2450（~770 行，两个 num_WF 强归纳 + 大段凸组合
+   -- 比较）为 GIANT；依赖 ROGERS_AFF_DIM_FULL（PA6:763 未证）、POLYHEDRON_VORONOI_LIST
+   -- （PA5:1454 未证）、OMEGA_LIST_N_LEMMA（PA5:1502 未证）；PA6:841 DUUNHOR 亦为本桥
+-  -- 背引用。另有陈述分歧：本桥无 Packing/saturated 前提，而 HOL 证明第一步即经
+-  -- VORONOI_CLOSED_EQ_LEMMA（Rogers.hl:1256，带 packing 前提）消费 packing——
+-  -- PA6:837 "前提未用" 注记与 HOL 原文不符；修复波需复核是否补前提（若补，
+-  -- PA6:841 背引用需同步加参）。affDim≤2 的退化分支机械（PA6:707 可引），
+-  -- 卡的是双满维主情形。
++  -- 背引用。陈述分歧 r2 裁决(提案官 2026-09-28)：本桥原无 Packing/saturated 前提，
++  -- 而 HOL 证明第一步即经 VORONOI_CLOSED_EQ_LEMMA（Rogers.hl:1256，带 packing
++  -- 前提）消费 packing——PA6:837 "前提未用" 注记与 HOL 原文不符。按 DECISIONS
++  -- 2026-09-28 授权走保真对齐：本陈述已补 Packing V ∧ saturated V，PA6:841
++  -- 背引用已同步加参（无前提版反例构造可行——两簇远距 barV 3 四面体，V 取 8 点
++  -- 显式集，机器化成本高未收口，见提案项 13 (b)）。affDim≤2 的退化分支机械
++  -- （PA6:707 可引），卡的是双满维主情形。
+   sorry
+ 
+ /-- HOL `QXSKIIT_concl` (pack_concl.hl:25-28): unique interpolation on the
+diff --git a/lean/Kepler/Text/PackingAuto6.lean b/lean/Kepler/Text/PackingAuto6.lean
+index f96ac9e..f0a86fe 100644
+--- a/lean/Kepler/Text/PackingAuto6.lean
++++ b/lean/Kepler/Text/PackingAuto6.lean
+@@ -585,11 +585,13 @@ theorem AFF_DIM_FINITE_UNION_LE (s t : Set V3) (hs : s.Finite) :
+   sorry
+ 
+ /-- Rogers.hl:1682 `DUUNHOR`: distinct Rogers simplices meet in a coplanar
+-set. (The `packing`/`saturated` hypotheses are unused here.) -/
++set. (The `packing`/`saturated` hypotheses are consumed by
++`PackingAuto2.DUUNHOR_concl`; the r2 statement-fix added them there —
++see docs/statement-fix-proposals.md item 13.) -/
+ theorem DUUNHOR (V : Set V3) (ul vl : List V3) (hP : Packing V) (hs : saturated V)
+     (hul : barV V 3 ul) (hvl : barV V 3 vl) (hne : rogers V ul ≠ rogers V vl) :
+     Coplanar (rogers V ul ∩ rogers V vl) :=
+-  DUUNHOR_concl V ul vl hul hvl hne
++  DUUNHOR_concl V ul vl hP hs hul hvl hne
+ 
+ /-- Rogers.hl:3106 `AFFINE_INDEPENDENT_IMP_INDEPENDENT`. -/
+ theorem AFFINE_INDEPENDENT_IMP_INDEPENDENT (S : Set V3) (hS : ¬affineDependent S) :
