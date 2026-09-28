@@ -80,6 +80,18 @@ END {
 #    NOTES-LANE 2026-09-28: a zero-deletion diff (pure comment insertions, e.g.
 #    NEEDS annotations from scout lanes) is provably structure-preserving; the
 #    sorry-consumed requirement only governs fill lanes.
+# docstring interior (2026-09-28): lines inside a deleted `/- … -/` block are
+# comment text (docstring rewording) — collected into $cmt and excused below.
+# Safety rail: an "interior" line starting with a code keyword ends the
+# comment state (unclosed-opening poisoning would void the rest of the gate).
+cmt=$(printf '%s\n' "$dels" | awk '
+  !incmt && /^-\/(-!)?/ { incmt = 1; next }
+  incmt {
+    if ($0 ~ /^-(theorem|def|lemma|example|instance|abbrev|namespace|end|open|import|set_option|macro|syntax|notation)\b/) { incmt = 0; next }
+    print
+    if ($0 ~ /-\//) incmt = 0
+    next
+  }')
 if [ -n "$dels" ]; then
   printf '%s\n' "$dels" | grep -qE '^-[[:space:]]*sorry\b|:=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$' \
     || fail "no sorry consumed (theorem untouched?)"
@@ -97,6 +109,10 @@ while IFS= read -r line; do
   # multiset of code lines is preserved, and a duplicate declaration would
   # crash rule 4 anyway.
   if printf '%s\n' "$adds" | grep -qF -- "${line#-}"; then
+    continue
+  fi
+  # docstring interior (see $cmt above): pure comment rewording
+  if printf '%s\n' "$cmt" | grep -qF -- "${line#-}"; then
     continue
   fi
   prefix=$(printf '%s' "$line" | sed -E 's/^-[[:space:]]*(.*):=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$/\1/')
