@@ -64,6 +64,134 @@ if [ "${GATE_MODE:-}" = "STATEMENT-FIX" ]; then
     || fail "STATEMENT-FIX: deletions differ from approved patch (see $SF_PATCH)"
   diff <(printf '%s\n' "$adds" | sort) <(printf '%s\n' "$padds" | sort) > /dev/null \
     || fail "STATEMENT-FIX: additions differ from approved patch (see $SF_PATCH)"
+elif [ "${GATE_MODE:-}" = "DEF-FIX" ]; then
+# 2-DF. DEF-FIX mode (approved 2026-09-29, DECISIONS.md "planar 编码定义纠正"):
+# definition corrections land only as the faithful application of a
+# human-approved charter. The charter's ```diff fences must be FULLY applied
+# (charter ⊆ tree, line-multiset); tree lines beyond the charter must each be
+# (a) blank/comment/docstring-interior/sorry-bearing/block-move, or (b) inside
+# a whitelisted declaration ($DF_NAMES — charter §3a refill set + sanctioned
+# statement-touchers). Net new sorries must equal $DF_SORRY_NET (the refill
+# debt is the deliverable, charter §4.2-6).
+  [ -n "${DF_PATCH:-}" ] || fail "DEF-FIX: DF_PATCH (charter path) not set"
+  case "$DF_PATCH" in /*) ;; *) DF_PATCH="$REPO_ROOT/$DF_PATCH" ;; esac
+  [ -f "$DF_PATCH" ] || fail "DEF-FIX: charter $DF_PATCH missing"
+  for anchor in polytope1.ml:1506 polytope1.ml:2546 sphere.hl:290; do
+    grep -qF "$anchor" "$DF_PATCH" \
+      || fail "DEF-FIX: charter lacks HOL anchor $anchor"
+  done
+  psec=$(sed -n '/^### 2.1/,/^### 2.2/p' "$DF_PATCH" \
+    | awk '/^```/{ f = !f; next } f')
+  [ -n "$psec" ] || fail "DEF-FIX: no diff fences under charter §2.1"
+  pdels=$(printf '%s\n' "$psec" | grep -E '^-' || true)
+  padds=$(printf '%s\n' "$psec" | grep -E '^[+]' || true)
+  # hand-written charter fences vs git-minimal tree diff: a charter -/+ line
+  # whose content is IDENTICAL old↔new shows up as unchanged context, not as
+  # -/+ — accept charter ⊆ (dels ∪ ctx) / (adds ∪ ctx); truly removed lines
+  # can never appear in ctx, so strictness is preserved.
+  ctx=$(git diff HEAD -- "$FILE" | grep '^ ' | sort -u || true)
+  xb=$(comm -23 <(printf '%s\n' "$pdels" | sort -u) \
+                <(cat <(printf '%s\n' "$dels" | sort -u) \
+                    <(printf '%s\n' "$ctx" | sed 's/^ /-/') | sort -u))
+  [ -z "$xb" ] || fail "DEF-FIX: charter deletion not applied: $(printf '%s' "$xb" | head -2)"
+  xb=$(comm -23 <(printf '%s\n' "$padds" | sort -u) \
+                <(cat <(printf '%s\n' "$adds" | sort -u) \
+                    <(printf '%s\n' "$ctx" | sed 's/^ /+/') | sort -u))
+  [ -z "$xb" ] || fail "DEF-FIX: charter addition not applied: $(printf '%s' "$xb" | head -2)"
+  # declaration attribution map (name TAB line) for a file content on stdin:
+  # enclosing declaration = last start ≤ line; docstring blocks are re-bound
+  # to the declaration they precede.
+  declmap='
+    /^[[:space:]]*((private|protected|noncomputable|unsafe)[[:space:]]+)*(theorem|lemma|def|abbrev|instance|example)[[:space:]]/ {
+      l2 = $0
+      sub(/^[[:space:]]*((private|protected|noncomputable|unsafe)[[:space:]]+)*(theorem|lemma|def|abbrev|instance|example)[[:space:]]+/, "", l2)
+      split(l2, w, /[[:space:](]/)
+      if (!(w[1] in seen)) { seen[w[1]] = 1; k++; starts[k] = NR; names[k] = w[1] }
+    }
+    { lines[NR] = $0
+      if (!indoc && $0 ~ /^\/(-!)?/) { indoc = 1 }
+      if (indoc && $0 ~ /-\//) { indoc = 0; dclose[++dc] = NR } }
+    END {
+      j = 0
+      for (i = 1; i <= NR; i++) {
+        while (j < k && starts[j+1] <= i) j++
+        enc[i] = (j >= 1) ? names[j] : "HEADER"
+      }
+      for (x = 1; x <= dc; x++) {
+        c = dclose[x]
+        for (m = 1; m <= k; m++) if (starts[m] > c) break
+        s = c
+        while (s >= 1 && lines[s] !~ /^\/(-!)?/) s--
+        for (i = s; i <= c; i++) enc[i] = (m <= k) ? names[m] : "HEADER"
+      }
+      for (i = 1; i <= NR; i++) print enc[i] "\t" lines[i]
+    }'
+  [ -n "${DF_NAMES:-}" ] || fail "DEF-FIX: DF_NAMES (whitelisted declarations) not set"
+  inlist() {  # name in DF_NAMES (space/comma separated)
+    printf '%s\n' " ${DF_NAMES} " | grep -qE "[ ,]${1}[ ,]"
+  }
+  anyinlist() {  # any enclosing-decl name (one per line) whitelisted?
+    local n
+    while IFS= read -r n; do
+      [ -n "$n" ] || continue
+      inlist "$n" && return 0
+    done
+    return 1
+  }
+  # NB: identical tactic lines recur across proofs — a body line is excused
+  # when ANY of its occurrences sits in a whitelisted declaration.
+  xdels=$(comm -23 <(printf '%s\n' "$dels" | sort -u) \
+                  <(printf '%s\n' "$pdels" | sort -u) | grep -vE '^-$' || true)
+  # docstring interiors are lexically inert (rule ② philosophy): excuse
+  # del/add lines sitting inside any /- … -/ block of the OLD file (del side)
+  # / CURRENT file (add side) — covers interior rewording whose opener/closer
+  # are unchanged context lines.
+  dint=$(git show HEAD:"./$FILE" | awk '
+    !incmt && /^\/(-!)?/ { incmt = 1; next }
+    incmt { print; if ($0 ~ /-\//) incmt = 0; next }' | sort -u)
+  cint=$(awk '
+    !incmt && /^\/(-!)?/ { incmt = 1; next }
+    incmt { print; if ($0 ~ /-\//) incmt = 0; next }' "$FILE" | sort -u)
+  headmap=$(git show HEAD:"./$FILE" | awk "$declmap")
+  rest=""
+  while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    body="${line#-}"
+    if printf '%s\n' "$adds" | grep -qF -- "$body"; then continue; fi
+    if printf '%s\n' "$dint" | grep -qF -- "$body"; then continue; fi
+    case "$body" in '--'*|'/-'*|*'-/') continue ;; esac
+    case "$body" in *sorry*) continue ;; esac
+    if printf '%s\n' "$headmap" | awk -F'\t' -v b="$body" '$2 == b { print $1 }' | anyinlist; then continue; fi
+    rest+="$line"$'\n'
+  done <<EOF3
+$xdels
+EOF3
+  [ -z "$rest" ] || fail "DEF-FIX: deletion outside charter+whitelist: $(printf '%s' "$rest" | head -3)"
+  xadds=$(comm -23 <(printf '%s\n' "$adds" | sort -u) \
+                  <(printf '%s\n' "$padds" | sort -u) | grep -vE '^[+]$' || true)
+  curmap=$(cat "$FILE" | awk "$declmap")
+  rest=""
+  while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    body="${line#+}"
+    case "$body" in '--'*|'/-'*|*'-/') continue ;; esac
+    case "$body" in *'sorry -- DEF-FIX:'*) continue ;; esac
+    if printf '%s\n' "$cint" | grep -qF -- "$body"; then continue; fi
+    if printf '%s\n' "$curmap" | awk -F'\t' -v b="$body" '$2 == b { print $1 }' | anyinlist; then continue; fi
+    rest+="$line"$'\n'
+  done <<EOF3
+$xadds
+EOF3
+  # added docstring interiors (e.g. hunk 6 ENCODING NOTES rewording)
+  rest=$(printf '%s\n' "$rest" | awk '
+    !incmt && /^[+]\/(-!)?/ { incmt = 1; next }
+    incmt { if ($0 ~ /^[+]-</ || $0 ~ /-\/[[:space:]]*$/) incmt = 0; next }
+    { print }')
+  [ -z "$rest" ] || fail "DEF-FIX: addition outside charter+refill markers: $(printf '%s' "$rest" | head -3)"
+  [ "$(( $(printf '%s\n' "$adds" | grep -cE '^[+][[:space:]]*sorry\b') - \
+          $(printf '%s\n' "$dels" | grep -cE '^-[[:space:]]*sorry\b') ))" \
+      -eq "${DF_SORRY_NET:-15}" ] \
+    || fail "DEF-FIX: net new sorry != ${DF_SORRY_NET:-15}"
 else
 # skeleton-tail pair (2026-09-28): the split-statement skeleton shape is
 # `… := by` + next-line `sorry`; a fill may switch to term mode
@@ -137,8 +265,14 @@ fi # STATEMENT-FIX else
 adds=$(git diff HEAD -- "$FILE" | grep -E '^[+]' | grep -v '^[+][+][+]' || true)
 nsorry_dels=$(printf '%s\n' "$dels" | grep -cE '^-[[:space:]]*sorry\b')
 nsorry_adds=$(printf '%s\n' "$adds" | grep -cE '^[+][[:space:]]*sorry\b')
-[ "$nsorry_adds" -le "$nsorry_dels" ] \
-  || fail "new sorry lines added ($nsorry_adds > $nsorry_dels)"
+if [ "${GATE_MODE:-}" = "DEF-FIX" ]; then
+  # DEF-FIX: the net refill debt is charter-specified (§3a/§3b), not forbidden
+  [ "$((nsorry_adds - nsorry_dels))" -eq "${DF_SORRY_NET:-15}" ] \
+    || fail "DEF-FIX: net new sorry = $((nsorry_adds - nsorry_dels)), expected ${DF_SORRY_NET:-15}"
+else
+  [ "$nsorry_adds" -le "$nsorry_dels" ] \
+    || fail "new sorry lines added ($nsorry_adds > $nsorry_dels)"
+fi
 printf '%s\n' "$adds" | grep -qE '\b(admit|native_decide)\b' \
   && fail "banned token in added lines"
 

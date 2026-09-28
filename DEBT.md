@@ -22,7 +22,7 @@
 | Text/LocalAuto28.lean | 63 |
 | Text/LocalAuto34.lean | 60 |
 | Text/LocalAuto6.lean | 60 |
-| Text/PackingAuto22.lean | 53 |
+| Text/PackingAuto22.lean | 60 |
 | Text/LocalAuto38.lean | 50 |
 | Text/PackingAuto2.lean | 49 |
 | Text/PackingAuto7.lean | 48 |
@@ -106,3 +106,11 @@
 2026-09-26 探针时的"剩三接口"口径已过期：`textCapstone` 已真化（现消费 PA25
 `PACKING_CHAPTER_MAIN_CONCLUSION` sorry + Assembly §2c 接口占位 12 枚 + ContraFan
 深几何双核；逐枚清单/分级/成本见 `docs/e2e-debt-map.md`）。
+
+> **DEF-FIX 注记（2026-09-29，手工记账）**：planar 编码定义纠正
+> （`docs/planar-encoding-fix.md`）落地，PA22 **+15（45→60，账面口径）** = hunk-3
+> 回退 14 枚 + `cone0_subset_lune` 严格化回退 1 枚（`sorry -- DEF-FIX:` 标记行共
+> 16 条，其中 `AFF_GT_RELATIVE_INTERIOR` 系原 sorry 加注、非新增）。表中 PA22 旧值
+> 53 系上次脚本重生成时树态（其后 planar-kit 填证等未提交改动已将该文件降至 45）；
+> 区域表/合计均为旧值，待下次 `debt_ledger.py` 全量重生成时归一（勿与本注记期间
+> 的并行 lane 改动混淆）。

@@ -35,8 +35,8 @@ ENCODING NOTES
   - HOL `real^2` (planar section: facets, `Arg`-sorts, EUSOTYP_simple) <-> `ℂ`:
     complex `Arg`, `/`, `norm` are native there; the planar dot product is
     `dot2 a b = (a * conj b).re` (= the standard real inner product under
-    re/im coordinates); planar `polyhedron/facet_of` are the `*C` copies of
-    Polytope's `polyhedron/FacetOf` (proper-face form `c ≠ P` for facets).
+    re/im coordinates); planar `polyhedron/facet_of` are faithful copies of
+    polytope1.ml facet_of/polyhedron (H-representation, aff_dim form).
   - `facet_rep_a/b` and `bisector_point` are `new_specification`s: ported via
     `Classical.choose` from their existence theorems (faithful and
     choice-free-in-statements).
@@ -58,7 +58,7 @@ ENCODING NOTES
     simple_hypermap H` map to the `Hypermap` API fields; `d1_fan`, `e_fan`,
     `vertices p`, `edges p`, `dartset_leads_into_fan`,
     `topological_component_yfan` are `_p22` opaque stubs.
-  - `cone0 x U` is DEFINED here as `affGe {x} U` (flyspeck cone0 = aff_gt of
+  - `cone0 x U` is DEFINED here as `affGt {x} U` (flyspeck cone0 = aff_gt of
     the apex through U; CONE0_AFF_GT becomes rfl).
   - `regular_spherical_polygon_area th k` is DEFINED here in closed form
     `2*pi - 2*k*asn(cos th * sin (pi/k))` (matches its flyspeck value at
@@ -112,60 +112,26 @@ noncomputable def acs (x : ℝ) : ℝ := Real.arccos x
 /-- HOL `sqrt3`. -/
 noncomputable def sqrt3 : ℝ := Real.sqrt 3
 
+/-- Planar copy of HOL `aff_dim` (convex1.ml:3784; twin of Polytope.affDim):
+`∅ ↦ -1`, else the finrank of the direction of the affine hull. -/
+noncomputable def affDimC (s : Set ℂ) : ℤ :=
+  if s = ∅ then -1 else (Module.finrank ℝ (vectorSpan ℝ s) : ℤ)
+
 /-- Planar copy of Polytope.`FaceOf` (polytope1.ml:22 face kit). -/
 def faceOfC (t s : Set ℂ) : Prop :=
   t ⊆ s ∧ Convex ℝ t ∧
     ∀ a b x : ℂ, a ∈ s → b ∈ s → x ∈ t → x ∈ openSegment ℝ a b → a ∈ t ∧ b ∈ t
 
-/-- Planar copy of HOL `facet_of` (proper face). -/
-def facetOfC (f s : Set ℂ) : Prop := faceOfC f s ∧ f ≠ s
+/-- Planar copy of HOL `facet_of` (polytope1.ml:1506): `f facet_of s <=>
+f face_of s /\ ~(f = {}) /\ aff_dim f = aff_dim s - &1`. -/
+def facetOfC (f s : Set ℂ) : Prop :=
+  faceOfC f s ∧ f ≠ ∅ ∧ affDimC f = affDimC s - 1
 
-/-- Planar copy of HOL `polyhedron` (polytope1.ml:2546): every point is in a
-facet. -/
+/-- Planar copy of HOL `polyhedron` (polytope1.ml:2546): finite intersection
+of halfspaces `{x | a dot x ≤ b}` with `a ≠ 0` (H-representation). -/
 def polyhedronC (P : Set ℂ) : Prop :=
-  ∀ x : ℂ, x ∈ P → ∃ c : Set ℂ, facetOfC c P ∧ x ∈ c
-
-/-- A set in which every point lies in a proper face (e.g. a polyhedral
-surface, the encoding's `polyhedronC` reading) has no interior point: an
-interior point `x` of `P` contained in the proper face `c` forces every
-`y ∈ P` into `c` (wiggle from `x` away from `y` stays in `P`, and `x` is an
-interior point of the segment).  Consequently `polyhedronC P` together with a
-ball `B(0, r) ⊆ P` is contradictory — the planar-kit theorems below carrying
-both hypotheses are vacuously true and discharged by this lemma. -/
-private theorem p22_ball_face_contra (P : Set ℂ) (hP : polyhedronC P) (r : ℝ)
-    (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) : False := by
-  have h0 : (0 : ℂ) ∈ P := hrad 0 (by simpa using hr)
-  obtain ⟨c, hface, h0c⟩ := hP 0 h0
-  obtain ⟨y, hyP, hyc⟩ : ∃ y : ℂ, y ∈ P ∧ y ∉ c := by
-    by_contra hcon
-    push_neg at hcon
-    exact hface.2 (subset_antisymm hface.1.1 hcon)
-  by_cases hy0 : y = 0
-  · subst hy0
-    exact hyc h0c
-  have hypos : 0 < ‖y‖ := norm_pos_iff.mpr hy0
-  set δ : ℝ := r / (2 * ‖y‖) with hδ
-  have hδpos : 0 < δ := div_pos hr (mul_pos two_pos hypos)
-  have hball : ∀ a : ℂ, a ∈ Metric.ball (0:ℂ) r → a ∈ P := fun a ha => hrad a (by
-    rwa [Metric.mem_ball, dist_zero_right] at ha)
-  have ha : (-(δ:ℝ)) • y ∈ P := by
-    refine hball _ (Metric.mem_ball.mpr ?_)
-    have hny : ‖(-(δ:ℝ)) • y‖ = δ * ‖y‖ := by
-      rw [norm_smul, Real.norm_eq_abs, abs_neg, abs_of_pos hδpos]
-    have hhalf : δ * ‖y‖ = r / 2 := by
-      rw [hδ, div_mul_eq_mul_div, mul_div_mul_right r 2 hypos.ne']
-    rw [dist_zero_right, hny, hhalf]
-    linarith
-  have hseg : (0:ℂ) ∈ openSegment ℝ (-(δ:ℝ) • y) y := by
-    have ht1 : 0 < 1 / (1 + δ) := div_pos one_pos (by linarith)
-    have ht2 : 0 < δ / (1 + δ) := div_pos hδpos (by linarith)
-    have hsum : 1 / (1 + δ) + δ / (1 + δ) = 1 := by field_simp
-    rw [openSegment, Set.mem_setOf]
-    refine ⟨1 / (1 + δ), δ / (1 + δ), ht1, ht2, hsum, ?_⟩
-    have hc1 : 1 / (1 + δ) * -(δ:ℝ) = -(δ / (1 + δ)) := by
-      field_simp
-    rw [smul_smul, hc1, neg_smul, neg_add_cancel]
-  exact hyc (hface.1.2.2 (-(δ:ℝ) • y) y 0 ha hyP h0c hseg).2
+  ∃ F : Set (Set ℂ), F.Finite ∧ P = ⋂₀ F ∧
+    ∀ h ∈ F, ∃ a : ℂ, ∃ b : ℝ, a ≠ 0 ∧ h = {x : ℂ | dot2 a x ≤ b}
 
 /-- HOL `P hull S` = convex hull of `P ∪ S`. -/
 def hullP22 (P S : Set V3) : Set V3 := convexHull ℝ (P ∪ S)
@@ -237,8 +203,10 @@ def dartsetLeadsIntoFanP22 (x : V3) (V : Set V3) (E : Set (Set V3))
 def topologicalComponentYfanP22 (x : V3) (V : Set V3) (E : Set (Set V3))
     (U : Set V3) : Prop := True
 
-/-- HOL `cone0 x U` (3d.tex): the open cone `aff_gt {x} U`. -/
-def cone0P22 (x : V3) (U : Set V3) : Set V3 := affGe {x} U
+/-- HOL `cone0 x U` (sphere.hl:290 `cone0 v S = affsign sgn_gt {v} S`), i.e.
+the open cone `aff_gt {x} U` (`Kepler.Geom.affGt`, counting_spheres.hl:3770
+CONE0_AFF_GT). -/
+def cone0P22 (x : V3) (U : Set V3) : Set V3 := affGt {x} U
 
 /-- HOL `pad2d3d : real^2 -> real^3`: embed the plane as the 3rd-coordinate-0
 subspace (planar `real^2` encoded as `ℂ`). -/
@@ -440,14 +408,14 @@ theorem facet_rep_in_facet (P c1 c2 : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     (h1 : facetOfC c1 P) (h2 : facetOfC c2 P) (hr : 0 < r)
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
     (h : facet_rep_b P c1 ≤ dot2 (facet_rep_a P c1) (r • facet_rep_a P c2)) :
-    c1 = c2 :=
-  (p22_ball_face_contra P hP r hr hrad).elim
+    c1 = c2 := by
+  sorry -- DEF-FIX: refill per counting_spheres.hl:227 §3a
 
 /-- HOL `facet_rep_refl` (counting_spheres.hl:257). GIANT. -/
 theorem facet_rep_refl (P c : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     (hc : facetOfC c P) (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) :
-    dot2 (facet_rep_a P c) (r • facet_rep_a P c) ≤ facet_rep_b P c :=
-  (p22_ball_face_contra P hP r hr hrad).elim
+    dot2 (facet_rep_a P c) (r • facet_rep_a P c) ≤ facet_rep_b P c := by
+  sorry -- DEF-FIX: refill per counting_spheres.hl:257 §3a
 
 /-- Additivity of `dot2` in the second argument. -/
 theorem dot2_add_right (a x y : ℂ) : dot2 a (x + y) = dot2 a x + dot2 a y := by
@@ -571,14 +539,14 @@ theorem affine_facet_hyper (P c : Set ℂ) (a : ℂ) (b : ℝ)
 theorem POLYHEDRON_MEMBER (P : Set ℂ) (r : ℝ) (x : ℂ) (hP : polyhedronC P)
     (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
     (h : ∀ c : Set ℂ, facetOfC c P → dot2 (facet_rep_a P c) x ≤ facet_rep_b P c) :
-    x ∈ P :=
-  (p22_ball_face_contra P hP r hr hrad).elim
+    x ∈ P := by
+  sorry -- DEF-FIX: refill per counting_spheres.hl:346 §3a
 
 /-- HOL `facet_rep_in_poly` (counting_spheres.hl:435). GIANT. -/
 theorem facet_rep_in_poly (P c : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     (hc : facetOfC c P) (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) :
-    (r • facet_rep_a P c : ℂ) ∈ P :=
-  (p22_ball_face_contra P hP r hr hrad).elim
+    (r • facet_rep_a P c : ℂ) ∈ P := by
+  sorry -- DEF-FIX: refill per counting_spheres.hl:435 §3a
 
 /-- HOL `facet_arg_lt_pi` (counting_spheres.hl:453). GIANT. -/
 theorem facet_arg_lt_pi (P c : Set ℂ) (r : ℝ) (hP : polyhedronC P)
@@ -586,8 +554,8 @@ theorem facet_arg_lt_pi (P c : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) :
     ∃ c' : Set ℂ, facetOfC c' P ∧
       0 < Complex.arg (facet_rep_a P c' / facet_rep_a P c) ∧
-      Complex.arg (facet_rep_a P c' / facet_rep_a P c) < Real.pi :=
-  (p22_ball_face_contra P hP r hr hrad).elim
+      Complex.arg (facet_rep_a P c' / facet_rep_a P c) < Real.pi := by
+  sorry -- DEF-FIX: refill per counting_spheres.hl:453 §3a
 
 /-- HOL `eus_cos` (counting_spheres.hl:510). -/
 theorem eus_cos (phi psi : ℝ) (h1 : 0 ≤ psi) (h2 : psi ≤ phi)
@@ -624,16 +592,16 @@ theorem insert_v (P c c' : Set ℂ) (r : ℝ) (v : ℂ) (psi : ℝ)
     (h4 : Complex.arg (facet_rep_a P c' / facet_rep_a P c) = 2 * psi)
     (h5 : ∀ c'' : Set ℂ, facetOfC c'' P →
       Complex.arg (facet_rep_a P c'' / facet_rep_a P c) < 2 * psi → c'' = c)
-    (h6 : ‖v‖ = r / Real.cos psi) : v ∈ P :=
-  (p22_ball_face_contra P hP r hr hrad).elim
+    (h6 : ‖v‖ = r / Real.cos psi) : v ∈ P := by
+  sorry -- DEF-FIX: refill per counting_spheres.hl:529 §3a
 
 /-- HOL `facet_rep_a_uniq` (counting_spheres.hl:640). GIANT. -/
 theorem facet_rep_a_uniq (P c1 c2 : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     (h1 : facetOfC c1 P) (h2 : facetOfC c2 P) (hr : 0 < r)
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
     (h : ∃ s : ℝ, 0 < s ∧ facet_rep_a P c1 = s • facet_rep_a P c2) :
-    c1 = c2 :=
-  (p22_ball_face_contra P hP r hr hrad).elim
+    c1 = c2 := by
+  sorry -- DEF-FIX: refill per counting_spheres.hl:640 §3a
 
 /-- HOL `poly_sort_fn` (counting_spheres.hl:678, the chapter's single
 `new_definition`). -/
@@ -645,8 +613,8 @@ def poly_sort_fn (P : Set ℂ) (u : ℂ) (c1 c2 : Set ℂ) : Prop :=
 theorem poly_sort_antisym (P : Set ℂ) (u : ℂ) (c1 c2 : Set ℂ) (r : ℝ)
     (hP : polyhedronC P) (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
     (h12 : poly_sort_fn P u c1 c2) (h21 : poly_sort_fn P u c2 c1) (hu : u ≠ 0) :
-    c1 = c2 :=
-  (p22_ball_face_contra P hP r hr hrad).elim
+    c1 = c2 := by
+  sorry -- DEF-FIX: refill per counting_spheres.hl:682 §3a
 
 /-- HOL `poly_sort_trans` (counting_spheres.hl:715). GIANT. -/
 theorem poly_sort_trans (P : Set ℂ) (u : ℂ) (c1 c2 c3 : Set ℂ) (r : ℝ)
@@ -660,8 +628,8 @@ theorem POLY_SORT_LEMMA (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) (hu : u ≠ 0)
     (hsize : s.Finite ∧ s.ncard = n) :
     ∃ f : ℕ → Set ℂ, s = f '' Set.Icc 1 n ∧ ∀ j k : ℕ, j ∈ Set.Icc 1 n →
-      k ∈ Set.Icc 1 n → j < k → ¬ poly_sort_fn P u (f k) (f j) :=
-  (p22_ball_face_contra P hP r hr hrad).elim
+      k ∈ Set.Icc 1 n → j < k → ¬ poly_sort_fn P u (f k) (f j) := by
+  sorry -- DEF-FIX: refill per counting_spheres.hl:729 §3a
 
 /-- HOL `POLY_SORT` (counting_spheres.hl:746). GIANT. -/
 theorem POLY_SORT (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u : ℂ)
@@ -671,8 +639,8 @@ theorem POLY_SORT (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u : ℂ
     ∃ f : ℕ → Set ℂ, s = f '' Set.Icc 1 n ∧ ∀ j k : ℕ, j ∈ Set.Icc 1 n →
       k ∈ Set.Icc 1 n → j < k →
       Complex.arg (facet_rep_a P (f j) / u) <
-        Complex.arg (facet_rep_a P (f k) / u) :=
-  (p22_ball_face_contra P hP r hr hrad).elim
+        Complex.arg (facet_rep_a P (f k) / u) := by
+  sorry -- DEF-FIX: refill per counting_spheres.hl:746 §3a
 
 /-- HOL `POLY_SORT_BIJ` (counting_spheres.hl:795). GIANT. -/
 theorem POLY_SORT_BIJ (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u : ℂ)
@@ -682,8 +650,8 @@ theorem POLY_SORT_BIJ (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u :
     ∃ f : ℕ → Set ℂ, s = f '' Set.Icc 1 n ∧ Set.BijOn f (Set.Icc 1 n) s ∧
       ∀ j k : ℕ, j ∈ Set.Icc 1 n → k ∈ Set.Icc 1 n → j < k →
       Complex.arg (facet_rep_a P (f j) / u) <
-        Complex.arg (facet_rep_a P (f k) / u) :=
-  (p22_ball_face_contra P hP r hr hrad).elim
+        Complex.arg (facet_rep_a P (f k) / u) := by
+  sorry -- DEF-FIX: refill per counting_spheres.hl:795 §3a
 
 /-- HOL `facet_rep_nz` (counting_spheres.hl:817). -/
 theorem facet_rep_nz (P c : Set ℂ) (hP : polyhedronC P) (hc : facetOfC c P) :
@@ -704,9 +672,7 @@ theorem bisector_point_exists (P c c' : Set ℂ) (r : ℝ) :
       v ∈ P ∧ ‖v‖ = r / Real.cos psi ∧
       Complex.arg (v / facet_rep_a P c) = psi ∧
       Complex.arg (facet_rep_a P c' / v) = psi := by
-  refine ⟨0, ?_⟩
-  intro psi hP hc hc' hr hrad hpsi hmin hlt hne
-  exact (p22_ball_face_contra P hP r hr hrad).elim
+  sorry -- DEF-FIX: refill per counting_spheres.hl:825 §3a
 
 /-- HOL `bisector_point` (new_specification, counting_spheres.hl:943). -/
 noncomputable def bisector_point (P c c' : Set ℂ) (r : ℝ) : ℂ :=
@@ -1369,8 +1335,8 @@ theorem POLYSORT_BIJ2 (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u :
       f (n + 1) = f 1 ∧
       (∀ j k : ℕ, j ∈ Set.Icc 1 n → k ∈ Set.Icc 1 n → j < k →
         Complex.arg (facet_rep_a P (f j) / u) <
-          Complex.arg (facet_rep_a P (f k) / u)) :=
-  (p22_ball_face_contra P hP r hr hrad).elim
+          Complex.arg (facet_rep_a P (f k) / u)) := by
+  sorry -- DEF-FIX: refill per counting_spheres.hl:1964 §3a
 
 /-- HOL `EMPTY_NOT_EXISTS_IN` (counting_spheres.hl:2104). -/
 theorem EMPTY_NOT_EXISTS_IN {α : Type*} (a : Set α) :
@@ -1397,8 +1363,8 @@ theorem EUSOTYP_simple (P : Set ℂ) (s : Set (Set ℂ)) (r n : ℕ) (u2 : ℂ)
       1 < n ∧
       (∀ i : ℕ, i ∈ Finset.Icc 1 n → g i ≠ 0) ∧
       (∀ i : ℕ, i ∈ Finset.Icc 1 n → h i ≠ 0) ∧
-      (∀ i : ℕ, i ∈ Finset.Icc 1 n → Complex.arg (g (i + 1) / g i) < Real.pi) :=
-  (p22_ball_face_contra P hP (r : ℝ) (by exact_mod_cast hr) hrad).elim
+      (∀ i : ℕ, i ∈ Finset.Icc 1 n → Complex.arg (g (i + 1) / g i) < Real.pi) := by
+  sorry -- DEF-FIX: refill per counting_spheres.hl:2112 §3a
 
 /-- HOL `pad2d3d_SUB` (counting_spheres.hl:2325). -/
 theorem pad2d3d_SUB (x y : ℂ) :
@@ -2118,34 +2084,8 @@ theorem WEDGE_SPLIT (u0 u1 u2 u3 w : V3) (h1 : ¬ Collinear3 u0 u1 u2)
 
 /-- HOL `cone0_subset_lune` (counting_spheres.hl:3058). GIANT. -/
 theorem cone0_subset_lune (u0 u1 u2 u3 : V3) :
-    cone0P22 u0 {u1, u2, u3} ⊆ affGe {u0, u1} {u2, u3} := by
-  intro v hv
-  -- both `Affsign` instances range over the same point set `{u0,u1,u2,u3}`;
-  -- the coefficient function transfers verbatim (the sign constraint only
-  -- weakens: `{u2,u3} ⊆ {u1,u2,u3}`).
-  have hv' : Affsign (fun x : ℝ => 0 ≤ x) ({u0} : Set V3) ({u1, u2, u3} : Set V3) v := hv
-  obtain ⟨f, hK, hvsum, hsign, hone⟩ := hv'
-  have hK4 : hK.toFinset = ({u0, u1, u2, u3} : Finset V3) := by
-    ext w
-    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
-      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton, or_assoc]
-  have hK' : (({u0, u1} ∪ {u2, u3} : Set V3).Finite) := by
-    apply Set.Finite.union
-    · exact Set.Finite.insert u0 (Set.finite_singleton u1)
-    · exact Set.Finite.insert u2 (Set.finite_singleton u3)
-  have hK4' : hK'.toFinset = ({u0, u1, u2, u3} : Finset V3) := by
-    ext w
-    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
-      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton, or_assoc]
-  refine ⟨f, hK', ?_, ?_, ?_⟩
-  · rw [hK4', ← hK4]
-    exact hvsum
-  · intro w hw
-    rcases (by simpa using hw : w = u2 ∨ w = u3) with h | h
-    · exact hsign w (by simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; simp [h])
-    · exact hsign w (by simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; simp [h])
-  · rw [hK4', ← hK4]
-    exact hone
+    cone0P22 u0 {u1, u2, u3} ⊆ affGt {u0, u1} {u2, u3} := by
+  sorry -- DEF-FIX: refill（原证明的严格版逐字搬运，见 §3b）
 
 /-- HOL `COLLINEAR_UNEQUAL` (counting_spheres.hl:3075). -/
 theorem COLLINEAR_UNEQUAL {a : Type*} [AddCommGroup a] [Module ℝ a] (u0 u1 u2 : a)
@@ -2211,8 +2151,8 @@ theorem TWO_IMP_HAS_SIZE_GE_2 {α : Type*} [DecidableEq α] (s : Set α) (x y : 
 
 /-- HOL `AFF_GT_RELATIVE_INTERIOR` (counting_spheres.hl:3120). GIANT. -/
 theorem AFF_GT_RELATIVE_INTERIOR (s : Set V3) (hf : s.Finite) (h : 1 < s.ncard) :
-    affGe (∅ : Set V3) s ⊆ intrinsicInterior ℝ (convexHull ℝ s) := by
-  sorry
+    affGt (∅ : Set V3) s ⊆ intrinsicInterior ℝ (convexHull ℝ s) := by
+  sorry -- DEF-FIX: 陈述纠正（原为假：弱锥含边界点，不在相对内部）
 
 /-- HOL `NOT_COLLINEAR_AFF_DIM_2` (counting_spheres.hl:3160). GIANT. -/
 theorem NOT_COLLINEAR_AFF_DIM_2 (u0 u1 u2 : V3) (h : ¬ Collinear3 u0 u1 u2) :
@@ -2355,7 +2295,7 @@ theorem CONE0_SUBSET_WEDGE (v u w : V3) (h1 : ¬ Collinear3 0 v u)
   sorry
 
 /-- HOL `CONE0_AFF_GT` (counting_spheres.hl:3770). -/
-theorem CONE0_AFF_GT (x : V3) (U : Set V3) : cone0P22 x U = affGe {x} U := rfl
+theorem CONE0_AFF_GT (x : V3) (U : Set V3) : cone0P22 x U = affGt {x} U := rfl
 
 /-- HOL `DISJOINT0_SCALE` (counting_spheres.hl:3778). -/
 theorem DISJOINT0_SCALE (t : ℝ) (u0 u1 u2 : V3)
@@ -2403,7 +2343,7 @@ theorem gotcjah_sol_half (c3 : Set V3) (v : V3) (b : ℝ) (P W : Set V3) (t rho 
     (hbet : dihV 0 v w0 w1 = bet) (h1 : (w1 - w0) ⬝ᵥ v = 0)
     (h2 : (w1 - w0) ⬝ᵥ w0 = 0) :
     ∃ X : Set V3, X = cone0P22 0 {v, w0, w1} ∧
-      X ⊆ affGe {0, v} {w0, w1} ∩ W ∧
+      X ⊆ affGt {0, v} {w0, w1} ∩ W ∧
       MeasurableSet (X ∩ normballP22 0 rho) ∧
       radialNorm rho 0 (X ∩ normballP22 0 rho) ∧
       bet - asn (Real.sin bet * t) = sol 0 X := by

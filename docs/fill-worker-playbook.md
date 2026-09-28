@@ -107,12 +107,18 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   `p ∈ affineSpan ℝ ∅` 不可满足，原"f=∅ 反例"指控不成立；原陈述经已证 helper
   `p22_face_of_affine_rint` 逐字填证通过——免豁免、无需加前提，修复波第 1 顺位）、
   `BIJ_DART_POLYEDGE`、`PACK_INEQ_DEF_A_797`（卡 arclength 落地）。
-- **PA22 r2 新增疑似假 4 枚（2026-09-28，一句话反例已核，待提案官立项）**：
-  `facet_rep_uniq`/`affine_facet_hyper`/`pad2d3d_facet`（根因同源：`facetOfC` 弱化为
-  "真面"，∅ 与顶点面成合法面）；`ARG_ORDER`（`Complex.arg` 范围 (−π,π] vs HOL Arg
-  [0,2π)，文件内 holArg/ARG_INV_ALT 已因同病改述）。**结构性发现**：`polyhedronC`
-  系对 flyspeck polyhedron（H-表示）的误移植——r2 的 14 枚 planar-kit 填证在陈述
-  冻结下合法但空洞化；若修复波改正该定义，这 14 枚需重填。
+- **PA22 r2 新增疑似假 4 枚（2026-09-28 立项）——【2026-09-29：DEF-FIX 定义纠正
+  已落地，`docs/planar-encoding-fix.md` §2 补丁已应用】**：`facetOfC` 补 ≠∅+affDimC、
+  `polyhedronC` 改 H-表示、`cone0P22` 改严格 `affGt`。据此：
+  项 12 `affine_facet_hyper` 与项 13a `pad2d3d_facet` **定义纠正已落地**（陈述即
+  HOL 镜像，解冻前置就绪；仍冻结待 §2.3 kit：affDimC kit / FACET_OF_POLYHEDRONC
+  _EXPLICIT / FACET_OF_LINEAR_IMAGE ℂ 版，落地前不入重填队列）；项 11
+  `facet_rep_uniq` 的 ≠∅ 前提已由新 `facetOfC` 自带（补丁 11 撤回勿再应用）；
+  `ARG_ORDER`（holArg 改述）与 DEF-FIX 无关、维持 A′。**CONE0 族：定义纠正已落地**
+  （`affGe→affGt` + 陈述侧三处同病纠正 + `gotcjah_sol_half`），弱语义假化解除，
+  CONE0_FCHANGED 家族各枚为真待重填（移出"假陈述"黑名单、入重填队列）。
+  r2 的 14 枚 planar-kit 填证已按章程回退为 `sorry -- DEF-FIX`，待按 HOL 原文重填
+  （优先序见章程 §3d；`gotcjah_sol_half` 仍归 GOTCJAH 专项）。
 - **PA7 疑似假 2 枚（r2 报告，待提案官立项）**：`KSOQKWL`——`permutes` 弱集合
   稳定编码下为假（p 在固定段 0..k 之外可动，hrog 平凡成立而结论 p = refl 不成立）；
   `IVFICRK` 同编码可疑。

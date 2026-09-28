@@ -477,6 +477,12 @@ aff_dim P − 1 + P 全维 ⇒ 同 hull），本质消费 aff_dim 内容；前�
 
 **(e) 分级：C**（零补丁；`12-affine_facet_hyper.patch` 为裁决存档）。
 
+**(f) DEF-FIX 状态（2026-09-29）：解冻前置已就绪** —— planar 编码定义纠正
+（`docs/planar-encoding-fix.md` §2 补丁）已落地：新 `facetOfC` 自带 ≠∅ + `affDimC`
+条件、新 `polyhedronC` 为 HOL 镜像，本项陈述在新定义下即真（HOL 镜像）。
+仍按 (d) 冻结至重填 kit（affDimC 超平面 kit → §2.3 表）落地后入重填队列
+（章程 §3c：中等档，kit 后）。
+
 ## 17'. 项 13a `pad2d3d_facet` — 分级 C（需重移植，零补丁）
 
 **(a) HOL 裁决**：`counting_spheres.hl:1737`：`!P n. polyhedron P /(!u. u IN P ==> u$3 = &0) /\ {c | c facet_of P} HAS_SIZE n ==>
@@ -497,6 +503,12 @@ aff_dim P − 1 + P 全维 ⇒ 同 hull），本质消费 aff_dim 内容；前�
 **(d)** 陈述冻结黑名单。
 
 **(e) 分级：C**（`13-pad2d3d_facet.patch` 为裁决存档；编号 13 双占见 14' 注）。
+
+**(f) DEF-FIX 状态（2026-09-29）：解冻前置已就绪** —— planar 编码定义纠正
+（`docs/planar-encoding-fix.md` §2 补丁）已落地：结论侧 `facetOfC` 已含 ≠∅ +
+`affDimC` 条件，前提/结论计数口径统一（HOL 镜像），(b) 的 ∅ 混入反例不再成立。
+仍按 (d) 冻结至重填 kit（`FACET_OF_LINEAR_IMAGE` ℂ 版，§2.3 表）落地后入重填
+队列（章程 §3c：GIANT 档）。
 
 ## 18'. 项 14 `ARG_ORDER` — 分级 A′（改述 holArg，证明待收口）
 
