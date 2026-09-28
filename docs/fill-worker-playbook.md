@@ -47,18 +47,28 @@
 
 ## 3. 自查命令（收工必做）
 
+**终验（收笔终查）必须用闸门同款构建**——`lake env lean` 会假绿（本波 PA2/PA4 lane
+实测：env-lean 对 `abs_add` 等改名/模块模式可见性差异全部放行，`lake build` 全部拒绝；
+grep 双格式防不住这种分歧）：
+
 ```bash
 export PATH="$HOME/.elan/bin:$PATH"
 cd /Users/zhangzhuo/repos/kepler-conjecture-lean4/lean
-lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
-# 必须为 0。sorry 警告（declaration uses 'sorry'）是正常的，不用管。
+lake build Kepler.Text.<你的文件模块名>        # 终验：必须自然退出且 0 error
 ```
 
-⚠️ **自查格式陷阱（wave1 真实翻车）**：`lake env lean` 的错误行格式会随依赖 olean
-的新旧**翻转**——`路径:行:列: error: msg` 与 `error: 路径:行:列: msg` 两种都出现。
-用上面的双格式模式 `(^|[ :])error:`；**不要用**单一 `": error:"`（会假阴性 0，
-wave1 PA25 就这样带着 5 个错误报了 0 error，整单被闸门打回）。
-最稳的终验是直接跑闸门同款：`lake build Kepler.Text.<Module>`。
+中途快速迭代可以用（每 3–5 枚一次）：
+
+```bash
+lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
+```
+
+⚠️ 两个已知陷阱：
+- **env-lean 假绿**（见上）——它只配当迭代工具，不配当终验；
+- **错误行格式随依赖 olean 新旧翻转**——`路径:行:列: error: msg` 与
+  `error: 路径:行:列: msg` 两种都出现，grep 用双格式 `(^|[ :])error:`，
+  不要用单一 `": error:"`（wave1 PA25 假阴性翻车案例）。
+- sorry 警告（declaration uses 'sorry'）是正常的，不用管。
 
 注意：`lake env lean` 不会自动补建依赖 olean——如果你怀疑依赖陈旧，报告里说明，
 让编排者处理；自己不要跑 `lake build` 大目标。
@@ -103,9 +113,20 @@ wave1 PA25 就这样带着 5 个错误报了 0 error，整单被闸门打回）�
 |---|---|
 | `Basis ι R M` | `Module.Basis ι R M` |
 | `Basis.span_eq` | `Module.Basis.span_eq` |
-| `List.mem_nil` | `List.Mem.nil` |
+| `List.mem_nil` | `List.Mem.nil`（或改用 `List.not_mem_nil` 语义） |
+| `abs_add` | `abs_add_le` |
+| `neg_le_abs_self` | `neg_le_abs` |
+| `div_le_div_iff(_right)`（ℝ 上） | 不可用；改 `div_eq_inv_mul` + `mul_le_mul_of_nonneg_left/right` |
+| `le_or_lt` | `le_or_gt` |
+| `List.take_all_of_le` / `take_eq_self_iff` | 不可见（模块模式），换 `List.take_take`/长度推理 |
+| `Classical.epsilon` 消除 | `epsilon_spec (p := …)` 显式给谓词 |
 
-（发现新的改名陷阱：写报告第 5 项，编排者入表。）
+（发现新的改名陷阱：写报告第 5 项，编排者入表。**改名类错误只有 `lake build` 能稳定
+暴露**，env-lean 会放行旧名——见 §3。）
+
+技巧：build 模式下 `simp only [edgeX, Set.mem_setOf_eq] at h` 会清掉假设导致
+后续 Unknown identifier；拆 setOf 定义用 defeq-lambda 最稳：
+`(fun hx : e ∈ edgeX V X => (hx : ∃ u v, …)) he`。
 
 ### 5.4 各 lane 已知卡点速查（收工后追加）
 
@@ -114,18 +135,44 @@ wave1 PA25 就这样带着 5 个错误报了 0 error，整单被闸门打回）�
   11 枚扇几何残差卡 `LOCAL_FAN_RHO_NODE_PROS2`/`sum4_azim_fan` 导入/
   `AZIM_LE_PI_EQ_DIHV`/`DELTA_Y_POS_4POINTS`/chi_msb 二分。
   **下一轮解锁路径**：在 LA38 内自证 `taum_dih_y`（纯算术）→ 开 6 枚。
+- **PA2**（52 remaining @2026-09-28 桥 lane 后）：`OAPVION1/2/3_concl` 三件套已闭合
+  （Mathlib `AffineIndependent.existsUnique_dist_eq` 路线，可复用于一切
+  circumcenter/radV-epsilon 类桥）；其余大多卡各章 capstone。
+- **PA4**（65 remaining，含 **AJRIPQN 超簇 ~18 枚**）：根阻塞 =
+  `Ajripqn.AJRIPQN`（Ajripqn.hl:32-37/89ff，Marchal cell 唯一表示定理，**整树未移植**，
+  PA16:68 有注记）→ `MCELL_CELL_PARAMETERS_EXIST`（PA4:951，HOL bump.hl:488 仅 ~15 行）
+  → `DIFF_EDGEX`/`MCELL_BUMP_0` 全链。**落 AJRIPQN 或其推论 = wave3 最高杠杆专项**。
+  另：`MCELL4_EDGE`(:1021) 与 `MCELL_EDGE`(:1039) 在 ¬nullSet 下疑似不相容，
+  陈述修复波需复核。
+- **PA25**（144 remaining）：~40 卡具名桥（PA2 OAPVION2 ✅已解除；PA18
+  `cc_uh_exists`/`cc_pe_exists`；Bump 通道等 AJRIPQN；`ORDER_AZIM_SUM2Pi0`；
+  `coplanar_delta_y`/`ETA_Y_*`）；~90 是 certified bank 外部锚（等接口 2 LP 桥，
+  **不可填证解决**）。
 
 ## 6. 教训日志（编排者每波收工后追加；工人有观察也写报告里）
 
-### 2026-09-28 · Wave 1（LA38：66→58，8 枚+17 辅助；PA25 进行中）
+### 2026-09-28 · Wave 1（LA38：66→58，8 枚+17 辅助；PA25：155→144，11 枚+6 辅助；桥 lane：PA2+PA4）
 
 - **成本基线**：84 min / 39.5M tokens / 196 工具调用 / +513 行。token/产出比偏差的
   四个根因 → 全部固化为 §2：①整读+重复读大文件（LA38 2.4k 行、TopologyFan 4.3k 行）
   ②分类滞后（目标 ≥15 定在分类前，实际机械题只有 ~10）③17 个新引理零查重
   ④1-2 枚一验的编译节奏。
+- **PA25 打回事件**：末段编辑后未终查 + `": error:"` 单一 grep 假阴性 → 5 个编译错误
+  整单被闸门拦下打回（返工仅 11 min/8.3M tokens，闸门价值实证）→ §2.7 收笔终查 +
+  §3 双格式。
+- **桥 lane 实证 `lake env lean` 假绿**：env-lean 放行 `abs_add` 等旧名/模块模式
+  不可见项，`lake build` 拒绝 → §3 终验升级为 lake build 同款。**这是环境级发现，
+  不是个例。**
+- **桥 lane 战果**：OAPVION2_concl 闭合（Mathlib `existsUnique_dist_eq` 路线 + 附带
+  OAPVION1/3）；MCELL_BUMP_0 精确 NEEDS → 根子是 AJRIPQN 未移植（§5.4 PA4 条）。
+  "桥作为 lane 目标"模式验证成功：一份投入解锁下游成簇。
+- **编排侧教训（GATE_ROOTS）**：被并行 lane 半成品污染的收官根会让无关 lane 的闸门
+  误伤——用 GATE_ROOTS 换成"干净的中段模块根"（如 PA12 覆盖 packing 家族撞名网）；
+  选根前先确认其 import 闭包不含 dirty 文件（TameLp 竟能经某链到达 LA5）。
 - **正面经验**（复用）：①`sigmaFan 0 univ E (vv i) (vv (i+1))` 是两点集 epsilon 唯一性
   计算，**不需要扇几何**——看似几何的题先找纯集合/算术内核；②HOL 的 LP 论证有
   时可用初等算术复现（`delta_4680581274`：配方法拆成 `−4(c−4)²<0` + 恒正项）；
-  ③动手前备份原文件到 /tmp（`orig38.lean` 救场待命）。
+  ③Mathlib 现成的 `AffineIndependent.existsUnique_dist_eq` 能整链复刻 HOL 的
+  CIRCUMCENTER_LEMMA——先查 Mathlib 再手搓；④动手前备份原文件到 /tmp。
 - **闸门 mac 适配完成**：perl timeout shim / Text 七收官根替代 Kepler 全根 /
   `LANE_FILES` 并行 lane 轮换验收（b0bed032）。工人无需关心，编排者操作。
