@@ -888,6 +888,57 @@ theorem REAL_CONVEX_ON_SECOND_SECANT (f f' f'' : ℝ → ℝ) (s : Set ℝ)
     rw [hempty] at hx
     exact absurd hx (by simp)
 
+/-- Derivative of `sin y * t` (chain-rule helper for the `g`-function kit). -/
+private theorem p22_g_sin_mul (t : ℝ) (x : ℝ) :
+    HasDerivAt (fun y => Real.sin y * t) (Real.cos x * t) x :=
+  (Real.hasDerivAt_sin x).mul_const t
+
+/-- First derivative of `x - asn(sin x · t)`. -/
+private theorem p22_g_deriv1 (t : ℝ) (x : ℝ) (h1 : Real.sin x * t ≠ -1)
+    (h2 : Real.sin x * t ≠ 1) :
+    HasDerivAt (fun y => y - asn (Real.sin y * t))
+      (1 - t * Real.cos x / Real.sqrt (1 - (Real.sin x * t) ^ 2)) x := by
+  have harc := (Real.hasDerivAt_arcsin h1 h2).comp x (p22_g_sin_mul t x)
+  refine (hasDerivAt_id x).sub (harc.congr_deriv ?_)
+  ring
+
+/-- Second derivative of `x - asn(sin x · t)`, in normalized form. -/
+private theorem p22_g_deriv2 (t : ℝ) (x : ℝ) (hx : |Real.sin x * t| < 1) :
+    HasDerivAt (fun y => 1 - t * Real.cos y / Real.sqrt (1 - (Real.sin y * t) ^ 2))
+      (t * (1 - t ^ 2) * Real.sin x *
+        ((Real.sqrt (1 - (Real.sin x * t) ^ 2)) ^ 3)⁻¹) x := by
+  have hApos : 0 < 1 - (Real.sin x * t) ^ 2 := by
+    obtain ⟨hlo, hhi⟩ := abs_lt.mp hx
+    nlinarith [hlo, hhi]
+  have hAnz : (1:ℝ) - (Real.sin x * t) ^ 2 ≠ 0 := ne_of_gt hApos
+  have hA : HasDerivAt (fun y => 1 - (Real.sin y * t) ^ 2)
+      (0 - 2 * (Real.sin x * t) ^ (2 - 1) * (Real.cos x * t)) x :=
+    (hasDerivAt_const (c := (1:ℝ)) (x := x)).sub ((p22_g_sin_mul t x).pow 2)
+  have hS : HasDerivAt (fun y => (Real.sqrt (1 - (Real.sin y * t) ^ 2))⁻¹)
+      (-(1 / (2 * Real.sqrt (1 - (Real.sin x * t) ^ 2)) *
+          (0 - 2 * (Real.sin x * t) ^ (2 - 1) * (Real.cos x * t))) /
+        ((Real.sqrt (1 - (Real.sin x * t) ^ 2)) ^ 2)) x :=
+    HasDerivAt.inv ((Real.hasDerivAt_sqrt hAnz).comp x hA)
+      (ne_of_gt (Real.sqrt_pos.mpr hApos))
+  have hc : HasDerivAt (fun y => t * Real.cos y)
+      (0 * Real.cos x + t * (-Real.sin x)) x :=
+    (hasDerivAt_const (c := t) (x := x)).mul (Real.hasDerivAt_cos x)
+  have hmul := hc.mul hS
+  exact ((hasDerivAt_const (c := (1:ℝ)) (x := x)).sub hmul).congr_deriv (by
+    have hSin2 : t ^ 2 * Real.sin x ^ 2 = (Real.sin x * t) ^ 2 := by ring
+    have hApos' : 0 < 1 - t ^ 2 * Real.sin x ^ 2 := by rw [hSin2]; exact hApos
+    have hSq : (Real.sqrt (1 - t ^ 2 * Real.sin x ^ 2)) ^ 2 = 1 - t ^ 2 * Real.sin x ^ 2 :=
+      Real.sq_sqrt (le_of_lt hApos')
+    have hS0 : Real.sqrt (1 - t ^ 2 * Real.sin x ^ 2) ≠ 0 :=
+      ne_of_gt (Real.sqrt_pos.mpr hApos')
+    have hc2 : Real.cos x ^ 2 = 1 - Real.sin x ^ 2 := by
+      linarith [Real.sin_sq_add_cos_sq x]
+    field_simp [hSq, hS0]
+    rw [hSq]
+    ring_nf
+    rw [hc2]
+    ring)
+
 /-- HOL `asn_sin_t''_alt` (counting_spheres.hl:1122, Calc_derivative form).
 GIANT. -/
 theorem asn_sin_t_sec_alt (x t alpha : ℝ) (h1 : |Real.sin x * t| < 1)
@@ -895,8 +946,15 @@ theorem asn_sin_t_sec_alt (x t alpha : ℝ) (h1 : |Real.sin x * t| < 1)
     derivedFormP22 (fun x => 1 - (Real.cos x * t) * (Real.sqrt (1 - (Real.sin x * t) ^ 2))⁻¹)
       (fun x => t * (1 - t ^ 2) * Real.sin x * (|Real.sin alpha| ^ 3)⁻¹) x
       (Set.Icc 0 Real.pi) := by
-  sorry
-
+  unfold derivedFormP22
+  have habs : |Real.sin alpha| = Real.sqrt (1 - (Real.sin x * t) ^ 2) := by
+    have hsq : (|Real.sin alpha|) ^ 2 = 1 - (Real.sin x * t) ^ 2 := by
+      rw [sq_abs (Real.sin alpha), ← h2]
+      linarith [Real.sin_sq_add_cos_sq alpha]
+    rw [← hsq]
+    exact (Real.sqrt_sq (abs_nonneg (Real.sin alpha))).symm
+  rw [habs]
+  refine (p22_g_deriv2 t x h1).hasDerivWithinAt.congr (fun y _ => by ring) (by ring)
 /-- HOL `real_interval_not_sing` (counting_spheres.hl:1159). -/
 theorem real_interval_not_sing (a b : ℝ) (h : a < b) :
     ¬ ∃ c : ℝ, Set.Icc a b = {c} := by
@@ -911,23 +969,101 @@ theorem real_interval_not_sing (a b : ℝ) (h : a < b) :
     exact Set.mem_singleton_iff.mp this
   exact absurd (ha.trans hb.symm) (ne_of_lt h)
 
-/-- HOL `g_convex` (counting_spheres.hl:1173). GIANT. -/
+/-- HOL `g_convex` (counting_spheres.hl:1173). Filled via the explicit derivative
+pair `(f', f'')` with `f'' x = t(1-t²) sin x (1-t²sin²x)^{-3/2} ≥ 0` on `[0,π]`. -/
 theorem g_convex (t : ℝ) (ht : 0 < t ∧ t < 1) :
     ∃ s : Set ℝ, ∃ f' f'' : ℝ → ℝ,
       s = Set.Icc 0 Real.pi ∧ isRealIntervalP22 s ∧ ¬ ∃ a : ℝ, s = {a} ∧
       (∀ x : ℝ, x ∈ s → HasDerivWithinAt (fun x => x - asn (Real.sin x * t)) (f' x) s x) ∧
       (∀ x : ℝ, x ∈ s → HasDerivWithinAt f' (f'' x) s x) ∧
       (∀ x : ℝ, x ∈ s → 0 ≤ f'' x) := by
-  sorry
+  refine ⟨Set.Icc 0 Real.pi,
+    fun x => 1 - t * Real.cos x / Real.sqrt (1 - (Real.sin x * t) ^ 2),
+    fun x => t * (1 - t ^ 2) * Real.sin x *
+      ((Real.sqrt (1 - (Real.sin x * t) ^ 2)) ^ 3)⁻¹,
+    rfl, ⟨0, Real.pi, rfl⟩, ?_⟩
+  -- the ¬-conjunct absorbs the three HasDerivWithinAt/≤ clauses by precedence
+  rintro ⟨a, ha⟩
+  have h0 : (0:ℝ) ∈ Set.Icc 0 Real.pi := ⟨le_refl _, Real.pi_pos.le⟩
+  have hpi : (Real.pi:ℝ) ∈ Set.Icc 0 Real.pi := ⟨Real.pi_pos.le, le_refl _⟩
+  rw [ha.1, Set.mem_singleton_iff] at h0 hpi
+  exact Real.pi_ne_zero (hpi.trans h0.symm)
 
-/-- HOL `GOTCJAH_convex_sum` (counting_spheres.hl:1230). GIANT. -/
+/-- HOL `GOTCJAH_convex_sum` (counting_spheres.hl:1230). Filled: Jensen for
+`g = x - asn(sin x · t)` on `[0,π]` (convex by `f'' ≥ 0`). -/
 theorem GOTCJAH_convex_sum (n : ℕ) (t : ℝ) (bet : ℕ → ℝ) (u : ℝ) (hn : 0 < n)
     (hu1 : u ≤ n * Real.pi) (hu2 : 0 ≤ u) (ht : 0 < t ∧ t < 1)
     (hsum : ∑ i ∈ Finset.range n, bet i = u)
     (hb : ∀ i : ℕ, i < n → 0 ≤ bet i ∧ bet i ≤ Real.pi) :
     u - n * asn (Real.sin (u / n) * t) ≤
       ∑ i ∈ Finset.range n, (bet i - asn (Real.sin (bet i) * t)) := by
-  sorry
+  classical
+  have hn0 : (n:ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (ne_of_gt hn)
+  -- `g` is convex on [0,π]: second derivative `t(1-t²) sin x · (1-t²sin²x)^{-3/2} ≥ 0`
+  have habs : ∀ y : ℝ, |Real.sin y * t| < 1 := fun y => by
+    rw [abs_mul, abs_of_pos ht.1]
+    calc |Real.sin y| * t ≤ 1 * t :=
+          mul_le_mul_of_nonneg_right (Real.abs_sin_le_one y) (le_of_lt ht.1)
+      _ < 1 := by linarith
+  have hqne : ∀ y : ℝ, Real.sin y * t ≠ -1 ∧ Real.sin y * t ≠ 1 := fun y => by
+    have hb := habs y
+    refine ⟨fun hc => ?_, fun hc => ?_⟩
+    · rw [hc] at hb; simp at hb
+    · rw [hc] at hb; simp at hb
+  have hD : Convex ℝ (Set.Icc 0 Real.pi) := convex_Icc 0 Real.pi
+  have hcont1 : Continuous (fun x => asn (Real.sin x * t)) :=
+    Real.continuous_arcsin.comp ((Real.continuous_sin).mul continuous_const)
+  have hf : ContinuousOn (fun x => x - asn (Real.sin x * t)) (Set.Icc 0 Real.pi) :=
+    (Continuous.sub continuous_id hcont1).continuousOn
+  have hcv : ConvexOn ℝ (Set.Icc 0 Real.pi) (fun x => x - asn (Real.sin x * t)) :=
+    convexOn_of_hasDerivWithinAt2_nonneg hD hf
+      (fun _ _ => (p22_g_deriv1 t _ (hqne _).1 (hqne _).2).hasDerivWithinAt)
+      (fun _ _ => (p22_g_deriv2 t _ (habs _)).hasDerivWithinAt)
+      (fun x hx => by
+        have hxI : x ∈ Set.Icc (0:ℝ) Real.pi := interior_subset hx
+        have h1 : 0 ≤ t := le_of_lt ht.1
+        have h2 : 0 ≤ 1 - t ^ 2 := by
+          have hte : t ^ 2 ≤ t := by nlinarith [ht.1, ht.2]
+          nlinarith
+        have h3 : 0 ≤ Real.sin x := Real.sin_nonneg_of_mem_Icc hxI
+        have h4 : 0 < 1 - (Real.sin x * t) ^ 2 := by
+          obtain ⟨hlo, hhi⟩ := abs_lt.mp (habs x)
+          nlinarith [hlo, hhi]
+        exact mul_nonneg (mul_nonneg (mul_nonneg h1 h2) h3)
+          (inv_nonneg.mpr (le_of_lt (pow_pos (Real.sqrt_pos.mpr h4) 3))))
+  have hun : u / n ∈ Set.Icc 0 Real.pi := by
+    rw [Set.mem_Icc]
+    constructor
+    · exact div_nonneg hu2 (le_of_lt (by positivity))
+    · rw [div_le_iff₀ (by positivity), mul_comm Real.pi (n:ℝ)]
+      exact hu1
+  have hw0 : ∀ i ∈ Finset.range n, (0:ℝ) ≤ 1 / n := fun i _ =>
+    div_nonneg zero_le_one (le_of_lt (by positivity))
+  have hw1 : ∑ i ∈ Finset.range n, ((1:ℝ) / n) = 1 := by
+    rw [← Finset.sum_div, Finset.sum_const, Finset.card_range, Nat.smul_one_eq_cast,
+      div_self (by positivity)]
+  have hmem : ∀ i ∈ Finset.range n, bet i ∈ Set.Icc 0 Real.pi := fun i hi =>
+    Set.mem_Icc.mpr (hb i (Finset.mem_range.mp hi))
+  have key := hcv.map_sum_le hw0 hw1 hmem
+  have hL : ∑ i ∈ Finset.range n, ((1:ℝ)/n) • bet i = u / n := by
+    have h1 : ∀ i ∈ Finset.range n, ((1:ℝ)/n) • bet i = (1:ℝ)/n * bet i := fun i _ => rfl
+    rw [Finset.sum_congr rfl h1, ← Finset.mul_sum, hsum]
+    field_simp
+  rw [hL] at key
+  have key' : (fun x => x - asn (Real.sin x * t)) (u / n)
+      ≤ (1:ℝ)/n * ∑ i ∈ Finset.range n, (bet i - asn (Real.sin (bet i) * t)) := by
+    have h2 : ∀ i ∈ Finset.range n, ((1:ℝ)/n) • (bet i - asn (Real.sin (bet i) * t))
+        = (1:ℝ)/n * (bet i - asn (Real.sin (bet i) * t)) := fun i _ => rfl
+    rw [Finset.sum_congr rfl h2, ← Finset.mul_sum] at key
+    exact key
+  have hfinal := mul_le_mul_of_nonneg_left key'
+      (le_of_lt (show (0:ℝ) < n from by positivity))
+  rw [← mul_assoc, mul_one_div_cancel hn0, one_mul] at hfinal
+  have e1 : (n:ℝ) * ((fun x => x - asn (Real.sin x * t)) (u / n))
+      = u - n * asn (Real.sin (u / n) * t) := by
+    rw [mul_sub, mul_div_cancel₀ _ hn0]
+  rw [← e1]
+  exact hfinal
 
 /-- Linearity of `⬝ᵥ` in the left argument. -/
 theorem dotV_smul_left (t : ℝ) (a b : V3) : (t • a) ⬝ᵥ b = t * (a ⬝ᵥ b) := by
@@ -1659,7 +1795,19 @@ theorem AFFINE_VEC0 (u : V3) (t : ℝ) (ht : t ≠ 1) :
 theorem RELATIVE_INTERIOR_AFFINE_FACE (C : Set V3) (p : V3) (f : Set V3)
     (hc : Convex ℝ C) (hf : FaceOf f C) (hap : p ∈ (affineSpan ℝ f : Set V3))
     (hip : p ∈ intrinsicInterior ℝ C) : f = C := by
-  sorry
+  -- Filled per docs/statement-fix-proposals.md item 7: `f = ∅` makes `hap`
+  -- unsatisfiable (`affineSpan ℝ ∅ = ⊥` has empty carrier); otherwise the
+  -- argument of `p22_face_of_affine_rint` (defined below in this file, hence
+  -- inlined here) closes the goal.
+  have hfne : f.Nonempty := by
+    by_contra h0
+    rw [Set.not_nonempty_iff_eq_empty.mp h0, AffineSubspace.span_empty,
+      AffineSubspace.bot_coe] at hap
+    exact hap
+  by_contra hne2
+  have hdisj := faceOf_disjoint_rinterior hf hne2
+  have hsub := faceOf_eq_affineInter hc hf
+  exact (Set.disjoint_left.mp hdisj (hsub ⟨hap, (mem_rint_iff.mp hip).1⟩)) hip
 
 /-- HOL `SUBSET_P_HULL` (counting_spheres.hl:2720). -/
 theorem SUBSET_P_HULL (P S : Set V3) : S ⊆ hullP22 P S := by
@@ -1915,12 +2063,89 @@ theorem WEDGE_SPLIT (u0 u1 u2 u3 w : V3) (h1 : ¬ Collinear3 u0 u1 u2)
       wedge u0 u1 u2 w ∩ wedge u0 u1 w u3 = ∅ ∧
       wedge u0 u1 u2 w ⊆ wedge u0 u1 u2 u3 ∧
       wedge u0 u1 w u3 ⊆ wedge u0 u1 u2 u3 := by
-  sorry
+  rw [wedge, Set.mem_setOf_eq] at hw
+  obtain ⟨hw3, hw0, hwlt⟩ := hw
+  have hxy : u1 ≠ u0 := p22_y_ne_x h1
+  refine ⟨hw3, ?_, ?_, ?_⟩
+  · rw [Set.eq_empty_iff_forall_notMem]
+    intro y hy
+    have ex1 : y ∈ wedge u0 u1 u2 w := hy.1
+    have ex2 : y ∈ wedge u0 u1 w u3 := hy.2
+    rw [wedge, Set.mem_setOf_eq] at ex1 ex2
+    obtain ⟨hync, hy1, hy2⟩ := ex1
+    obtain ⟨-, hy3, hy4⟩ := ex2
+    have hge : azim u0 u1 u2 y ≤ azim u0 u1 u2 w := le_of_lt hy2
+    have e1 : azim u0 u1 u2 w = azim u0 u1 u2 y + azim u0 u1 y w :=
+      sum4_azim_fan hxy h1 hync hw3 hge
+    have e2 : azim u0 u1 u2 u3 = azim u0 u1 u2 w + azim u0 u1 w u3 :=
+      sum4_azim_fan hxy h1 hw3 h2 hwlt.le
+    have hywp : 0 < azim u0 u1 y w := by linarith
+    have hyw0 : azim u0 u1 y w ≠ 0 := ne_of_gt hywp
+    have hcomp : azim u0 u1 w y = 2 * Real.pi - azim u0 u1 y w := by
+      have h := azim_compl hync hw3
+      rwa [if_neg hyw0] at h
+    have hlt := azim_lt_two_pi u0 u1 u2 u3
+    linarith
+  · intro y hy
+    rw [wedge, Set.mem_setOf_eq] at hy ⊢
+    obtain ⟨hync, hy1, hy2⟩ := hy
+    exact ⟨hync, hy1, lt_trans hy2 hwlt⟩
+  · intro y hy
+    rw [wedge, Set.mem_setOf_eq] at hy ⊢
+    obtain ⟨hync, hy1, hy2⟩ := hy
+    have hyw0 : azim u0 u1 y w ≠ 0 := by
+      intro h0
+      exact absurd (azim_compl_eq_zero hync hw3 h0) (ne_of_gt hy1)
+    rcases le_total (azim u0 u1 u2 w) (azim u0 u1 u2 y) with hc | hc
+    · have e1 : azim u0 u1 u2 y = azim u0 u1 u2 w + azim u0 u1 w y :=
+        sum4_azim_fan hxy h1 hw3 hync hc
+      have e2 : azim u0 u1 u2 u3 = azim u0 u1 u2 w + azim u0 u1 w u3 :=
+        sum4_azim_fan hxy h1 hw3 h2 hwlt.le
+      exact ⟨hync, by linarith, by linarith⟩
+    · -- `y` before `w` while `azim w y > 0` is impossible on one revolution
+      exfalso
+      have e1 : azim u0 u1 u2 w = azim u0 u1 u2 y + azim u0 u1 y w :=
+        sum4_azim_fan hxy h1 hync hw3 hc
+      have hywp : 0 < azim u0 u1 y w := lt_of_le_of_ne' (azim_nonneg u0 u1 y w) hyw0
+      have hcomp : azim u0 u1 w y = 2 * Real.pi - azim u0 u1 y w := by
+        have h := azim_compl hync hw3
+        rwa [if_neg hyw0] at h
+      have e2 : azim u0 u1 u2 u3 = azim u0 u1 u2 w + azim u0 u1 w u3 :=
+        sum4_azim_fan hxy h1 hw3 h2 hwlt.le
+      have hlt := azim_lt_two_pi u0 u1 u2 u3
+      have hnn := azim_nonneg u0 u1 u2 y
+      linarith
 
 /-- HOL `cone0_subset_lune` (counting_spheres.hl:3058). GIANT. -/
 theorem cone0_subset_lune (u0 u1 u2 u3 : V3) :
     cone0P22 u0 {u1, u2, u3} ⊆ affGe {u0, u1} {u2, u3} := by
-  sorry
+  intro v hv
+  -- both `Affsign` instances range over the same point set `{u0,u1,u2,u3}`;
+  -- the coefficient function transfers verbatim (the sign constraint only
+  -- weakens: `{u2,u3} ⊆ {u1,u2,u3}`).
+  have hv' : Affsign (fun x : ℝ => 0 ≤ x) ({u0} : Set V3) ({u1, u2, u3} : Set V3) v := hv
+  obtain ⟨f, hK, hvsum, hsign, hone⟩ := hv'
+  have hK4 : hK.toFinset = ({u0, u1, u2, u3} : Finset V3) := by
+    ext w
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton, or_assoc]
+  have hK' : (({u0, u1} ∪ {u2, u3} : Set V3).Finite) := by
+    apply Set.Finite.union
+    · exact Set.Finite.insert u0 (Set.finite_singleton u1)
+    · exact Set.Finite.insert u2 (Set.finite_singleton u3)
+  have hK4' : hK'.toFinset = ({u0, u1, u2, u3} : Finset V3) := by
+    ext w
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton, or_assoc]
+  refine ⟨f, hK', ?_, ?_, ?_⟩
+  · rw [hK4', ← hK4]
+    exact hvsum
+  · intro w hw
+    rcases (by simpa using hw : w = u2 ∨ w = u3) with h | h
+    · exact hsign w (by simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; simp [h])
+    · exact hsign w (by simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; simp [h])
+  · rw [hK4', ← hK4]
+    exact hone
 
 /-- HOL `COLLINEAR_UNEQUAL` (counting_spheres.hl:3075). -/
 theorem COLLINEAR_UNEQUAL {a : Type*} [AddCommGroup a] [Module ℝ a] (u0 u1 u2 : a)
@@ -2043,7 +2268,25 @@ theorem NOT_COLLINEAR_AFF_DIM_2 (u0 u1 u2 : V3) (h : ¬ Collinear3 u0 u1 u2) :
 /-- HOL `FACET_AFF_DIM_2` (counting_spheres.hl:3171). GIANT. -/
 theorem FACET_AFF_DIM_2 (p f : Set V3) (hp : polyhedron p)
     (hi : (0 : V3) ∈ interior p) (hf : FacetOf f p) : affDim f = 2 := by
-  sorry
+  -- `0 ∈ interior p` forces `p` full-dimensional, hence `affDim p = 3`; the
+  -- facet equation `affDim f = affDim p - 1` finishes.
+  have hap : affineSpan ℝ p = ⊤ := by
+    have h1 : affineSpan ℝ (interior p) = ⊤ :=
+      isOpen_interior.affineSpan_eq_top ⟨(0 : V3), hi⟩
+    rw [eq_top_iff, ← h1]
+    exact affineSpan_mono ℝ interior_subset
+  have hvtop : vectorSpan ℝ p = ⊤ := by
+    first
+      | rw [← direction_affineSpan ℝ p, hap, AffineSubspace.direction_top]
+      | rw [← direction_affineSpan ℝ p, hap, direction_top]
+      | rw [← AffineSubspace.direction_affineSpan ℝ p, hap,
+          AffineSubspace.direction_top]
+  have hpne : p ≠ ∅ := Set.nonempty_iff_ne_empty.mp ⟨(0 : V3), interior_subset hi⟩
+  have hpd : affDim p = 3 := by
+    rw [affDim, if_neg hpne, hvtop, finrank_top]
+    exact_mod_cast finrank_euclideanSpace_fin
+  rw [hf.2.2, hpd]
+  norm_num
 
 /-- HOL `CONE0_FCHANGED_AFF_GT` (counting_spheres.hl:3185). GIANT. -/
 theorem CONE0_FCHANGED_AFF_GT (s : Set V3) (hf : s.Finite) (h : 1 < s.ncard)
@@ -2957,7 +3200,16 @@ theorem FINITE_EDGE (P : Set V3) (hp : polyhedron P) (hb : Bornology.IsBounded P
     (∀ f : Set V3, FacetOf f P → ({e : Set V3 | FacetOf e f}).Finite) ∧
       ({f : Set V3 | FacetOf f P}).Finite ∧
       ({fe : Set V3 × Set V3 | FacetOf fe.1 P ∧ FacetOf fe.2 fe.1}).Finite := by
-  sorry
+  refine ⟨fun f hf => FINITE_POLYHEDRON_FACETS (FACE_OF_POLYHEDRON_POLYHEDRON hp hf.1),
+    FINITE_POLYHEDRON_FACETS hp, ?_⟩
+  have hE' : (⋃ f ∈ ({f : Set V3 | FacetOf f P} : Set (Set V3)),
+      {e : Set V3 | FacetOf e f}).Finite :=
+    (FINITE_POLYHEDRON_FACETS hp).biUnion
+      (fun f hf => FINITE_POLYHEDRON_FACETS (FACE_OF_POLYHEDRON_POLYHEDRON hp hf.1))
+  refine Set.Finite.subset
+    (Set.Finite.prod (FINITE_POLYHEDRON_FACETS hp) hE') ?_
+  rintro ⟨a, b⟩ ⟨h1, h2⟩
+  exact ⟨h1, Set.mem_biUnion h1 h2⟩
 
 open Classical in
 /-- HOL `polyhedron_sum_sum_edge` (counting_spheres.hl:5443). GIANT. -/
