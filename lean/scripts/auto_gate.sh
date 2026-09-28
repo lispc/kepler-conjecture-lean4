@@ -37,7 +37,9 @@ bad=$(printf '%s\n' "$dels" \
 [ -z "$bad" ] || fail "non-sorry lines deleted: $(printf '%s' "$bad" | head -3)"
 
 # 3. banned tokens in added lines
-adds=$(git diff HEAD -- "$FILE" | grep -E '^\+' | grep -v '^\+\+\+' || true)
+#    NB: use [+] not \+ — \+ is undefined in POSIX ERE; BSD grep errors out
+#    (silently empty adds => check void) while GNU grep accepts it.
+adds=$(git diff HEAD -- "$FILE" | grep -E '^[+]' | grep -v '^[+][+][+]' || true)
 printf '%s\n' "$adds" | grep -qE '\b(sorry|admit|native_decide)\b' \
   && fail "banned token in added lines"
 
