@@ -3,6 +3,39 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-09-28 — 硬件迁移：旧服务器报废 + 工人通道换 ZCode sub agent + 重型计算挂起
+
+**事件**：旧生产服务器（128 核 / 503G RAM）于 2026-09-28 确认硬件报废，磁盘不可恢复。
+仓库本体零损失（git 全量，origin GitHub，cron 自动 push 保持至 2026-09-26 HEAD
+`a5b5aba8`）；**仅存本机外部存储的产物随盘丢失**：
+
+- `cert549_tight.json`（549 全量重演输入，212,798 叶 tight 证书，原在 /tmp）
+- LP 43,078 持久化产物 + 账本（~/lprun-persist、~/lprun-logs）
+- bb_arb 重跑证书 35 份（~/bb-cert-rerun/certs）
+- 549/257 内核构建分片源 + olean（kepler-g4e 工作树，6,321 + 12,553 shard）
+- 全量 `.lake` 构建缓存（Phase 2 分片 ~7 天重建成本归零重来）
+
+以上全部可由 git 内工具链重生成；重算在新硬件基线下重估，**不因换机降低验收标准**。
+
+**新硬件基线与算力政策**：Apple M3 Pro（12 核 6P+6E / 36GB / 磁盘余 183GB）。
+运行预算上限：kernel decide ≤2 路、native_decide ≤4 路、stage-A ≤8 路、lake `-J 6`。
+**重型批处理挂起待强机器**：549 全量重演主体（single+straddle）、LP 43,078 持久化
+重跑、145 证书批量重跑、Phase 2 CertShards 全量重建、92 prep 家族重解。
+期间主力 = Phase 5 填证 + 轻量 Lean 任务（单文件编译级）+ 小时级单进程 C。
+
+**工人通道变更**：Phase 5 填证与卫星任务的 LLM 工人从 opencode CLI（deepseek 等
+外部通道）改为 **ZCode Agent sub agents**。`auto_pipeline.sh` 五道机械闸与
+`auto_gate.sh` 验收流程不变（闸与工人实现本就解耦）；HANDOFF 中 opencode 特有
+经验（auth.json、external_directory、配额重置等）转为历史记录。
+
+**政策强化（数据丢失教训）**：证书/大产物"仅活在本机外部存储"不再可接受。今后
+批次产物落盘即登记 `certificates/README.md`（该表自项目启动起仍为空，即此教训）
+并同步第二份外部存储（私有仓/release/协作强机器），哈希清单与本体分离存储的旧
+做法补充"本体必须有异机副本"。
+
+**审批状态**：已执行（2026-09-28 用户在会话中确认换机并批准新工作模式：
+"只跑非重型计算任务……主要用 sub agents 干活"）。
+
 ## 2026-09-25 — native_decide scoped exception 扩展至 `Kepler.Interval.Cases.C549*`（549 加速项目）
 
 > **状态：已批准（2026-09-26，用户拍板"允许 native decide"）。** native_decide

@@ -1,5 +1,13 @@
-# 项目总进度（Status）— 2026-09-26
+# 项目总进度（Status）— 2026-09-28
 
+> **⚠️ 环境变更（2026-09-28）：旧生产服务器（128 核/503G）报废**，磁盘不可恢复。
+> 仅存本机外部存储的产物丢失（cert549_tight.json / LP 43,078 持久化产物 / bb_arb 重跑
+> 证书 35 份 / 549·257 分片 olean / .lake 缓存；完整清单见 DECISIONS.md 2026-09-28 条）
+> ——代码与文档零损失（git 全量）。新基线：Apple M3 Pro 12 核/36GB。
+> **重型计算全部挂起待强机器，本文件所有旧机时间口径作废**；主力转向 Phase 5 填证
+> 与轻量 Lean 任务（LLM 工人 = ZCode sub agents，opencode CLI 退役）。
+> 遗留风险：本机 GitHub key 无 push 权限（denied to lispczz），解决前成果仅本地 commit。
+>
 > 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新（cron 自动 push）。
 > 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
 > 当前 main @ 见本 commit；最近验收：各批次根构建绿（wip/auto-packing 批次提交信息 "38-way root clean"，`aa4baf6b`；HANDOFF 记录 `make check` 绿 `c425db2`，2026-09-14）。

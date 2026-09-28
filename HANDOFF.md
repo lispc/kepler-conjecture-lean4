@@ -4,6 +4,25 @@
 > 待办与优先级。一页进度看板见 `STATUS.md`（每日刷新），长期设计决策见
 > `DECISIONS.md`，阶段计划见 `PLAN.md`，模块对照见 `docs/module-map.md`。
 
+## 2026-09-28 换机与环境重建（先读，最高优先级）
+
+- **旧服务器报废**（128c/503G，磁盘不可恢复）。数据损失清单与算力口径变化见
+  `DECISIONS.md` 2026-09-28 条。**本文件以下所有环境细节（/home/scroll/... 路径、
+  g4cap wrapper、/dev/shm、双 3090、opencode auth.json）全部作废，仅作历史参考。**
+- **新机器**：Apple M3 Pro，12 核（6P+6E）/ 36GB / 磁盘余 183GB，macOS + Xcode CLT +
+  brew。仓库 = `~/repos/kepler-conjecture-lean4`；工具链 elan 在 `~/.elan`
+  （2026-09-28 重建，toolchain 仍锁 v4.32.2）。
+- **并发预算（硬性）**：kernel decide 构建 ≤2 路（shard RSS ~11.5GB）、native ≤4 路
+  （6.6GB）、stage-A ≤8 路（3GB）、lake 常规构建 `-J 6`；栈上限 `ulimit -s 65532`
+  （macOS 无 unlimited）。
+- **工人通道**：opencode CLI 退役，Phase 5 填证与卫星任务改用 ZCode Agent sub agents
+  （主 agent 编排派工，`auto_gate.sh` 五道机械闸照用——闸与工人实现解耦）。
+- **⚠️ push 权限缺口（待用户处理）**：本机唯一可用 GitHub key（`~/.ssh/id_rsa`）认证为
+  账号 lispczz，对 lispc/kepler-conjecture-lean4 **无写权限**（push denied 实测）。
+  解决前所有成果仅本地 commit；鉴于本次数据丢失教训，这是当前最高优先级环境风险。
+- **重活禁区**：549 全量重演主体 / LP 43,078 持久化重跑 / Phase 2 全量重建 /
+  92 prep 家族重解一律挂起待强机器；允许的是单文件级 Lean 编译验收与小时级单进程 C。
+
 ## 0. 一句话现状
 
 main @ 见 git（2026-09-18：`aad4fb35` 合入 wip/auto-packing + 债务账本
