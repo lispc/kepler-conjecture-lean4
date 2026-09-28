@@ -860,10 +860,300 @@ theorem AZIM_LAST_POINT_IN_RHO_SET (h : localFan_p2 V E FF) {v : V3} (hv : v ∈
     (hlsne : ∀ i : ℕ, i < l → ls ≠ (rhoNode1_p2 FF)^[i] v) :
     azimCycle_p2 U 0 e ls = v := sorry
 
+/-- Lane support (LA5 r3): `q`-periodic points stay fixed under multiples
+of the period. -/
+private theorem la5_period_mul {α : Type*} (f : α → α) {x : α} {q : ℕ}
+    (hqx : f^[q] x = x) (k : ℕ) : f^[k * q] x = x := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+    rw [Nat.succ_mul, Function.iterate_add_apply, hqx, ih]
+
+/-- Lane support (LA5 r3): index reduction modulo a period. -/
+private theorem la5_period_mod {α : Type*} (f : α → α) {x : α} {q : ℕ}
+    (hqx : f^[q] x = x) (n : ℕ) : f^[n] x = f^[n % q] x := by
+  have hsplit : n / q * q + n % q = n := Nat.div_add_mod' n q
+  have hqx' : f^[q] (f^[n % q] x) = f^[n % q] x := by
+    rw [← Function.iterate_add_apply, Nat.add_comm, Function.iterate_add_apply, hqx]
+  calc f^[n] x = f^[n / q * q + n % q] x := by rw [hsplit]
+    _ = f^[n / q * q] (f^[n % q] x) := Function.iterate_add_apply f (n / q * q) (n % q) x
+    _ = f^[n % q] x := la5_period_mul f hqx' (n / q)
+
+/-- Lane support (LA5 r3): under the orbit condition, coinciding iterates
+of a point force it to be periodic with the index difference (the second
+point lies in the orbit of the first). -/
+private theorem la5_orbit_key {α : Type*} {f : α → α} {V : Set α}
+    (horb : ∀ x ∈ V, orbitF_p2 f x = V) {x : α} (hx : x ∈ V) {i j : ℕ}
+    (hij2 : i ≤ j) (hij : f^[i] x = f^[j] x) : f^[j - i] x = x := by
+  have hEq : j - i + i = j := by omega
+  have hy : f^[j] x = f^[j - i] (f^[i] x) := by
+    have h := Function.iterate_add_apply f (j - i) i x
+    rwa [hEq] at h
+  have hmem : ∀ n : ℕ, f^[n] x ∈ V := by
+    intro n
+    rw [← horb x hx]
+    exact ⟨n, rfl⟩
+  have hyV : f^[i] x ∈ V := hmem i
+  have hxO : x ∈ orbitF_p2 f (f^[i] x) := by rw [horb (f^[i] x) hyV]; exact hx
+  obtain ⟨t, hxt⟩ := hxO
+  have hfix : f^[j - i] (f^[i] x) = f^[i] x := hy.symm.trans hij.symm
+  calc f^[j - i] x = f^[j - i] (f^[t] (f^[i] x)) := by rw [hxt]
+    _ = f^[(j - i) + t] (f^[i] x) := (Function.iterate_add_apply f (j - i) t (f^[i] x)).symm
+    _ = f^[t + (j - i)] (f^[i] x) := by rw [Nat.add_comm]
+    _ = f^[t] (f^[j - i] (f^[i] x)) := Function.iterate_add_apply f t (j - i) (f^[i] x)
+    _ = f^[t] (f^[i] x) := by rw [hfix]
+    _ = x := hxt
+
+/-- Lane support (LA5 r3): the orbit condition makes `V` a finite cycle;
+`p` is a common period with `0 < p`, the first `p` iterates are pairwise
+distinct and exhaust `V`, and `V.ncard = p`. -/
+private theorem la5_orbit_cycle {α : Type*} {f : α → α} {V : Set α}
+    (horb : ∀ x ∈ V, orbitF_p2 f x = V) {x : α} (hx : x ∈ V) :
+    ∃ p : ℕ, 0 < p ∧ f^[p] x = x ∧
+      (∀ i j : ℕ, i < j → j < p → f^[i] x ≠ f^[j] x) ∧
+      ({f^[n] x | n < p} : Set α) = V ∧ V.ncard = p := by
+  have hmem : ∀ n : ℕ, f^[n] x ∈ V := by
+    intro n
+    rw [← horb x hx]
+    exact ⟨n, rfl⟩
+  have hper : ∃ p : ℕ, 0 < p ∧ f^[p] x = x := by
+    have hfx : f x ∈ V := hmem 1
+    have hxO : x ∈ orbitF_p2 f (f x) := by rw [horb (f x) hfx]; exact hx
+    obtain ⟨n, hn⟩ := hxO
+    exact ⟨n + 1, Nat.succ_pos n, by rw [Function.iterate_succ_apply f n x]; exact hn⟩
+  have hex : ∃ n, 0 < n ∧ f^[n] x = x := hper
+  have hp0 : 0 < Nat.find hex := (Nat.find_spec hex).1
+  have hpx : f^[Nat.find hex] x = x := (Nat.find_spec hex).2
+  have hmin : ∀ m : ℕ, 0 < m → m < Nat.find hex → f^[m] x ≠ x :=
+    fun m hm0 hmlt hcon => Nat.find_min hex hmlt ⟨hm0, hcon⟩
+  have hkey : ∀ i j : ℕ, i ≤ j → f^[i] x = f^[j] x → f^[j - i] x = x :=
+    fun i j hle hij' => la5_orbit_key horb hx hle hij'
+  have hdis : ∀ i j : ℕ, i < j → j < Nat.find hex → f^[i] x ≠ f^[j] x := by
+    intro i j hij hjp hcon
+    exact hmin (j - i) (by omega) (by omega) (hkey i j (Nat.le_of_lt hij) hcon)
+  have hset : ({f^[n] x | n < Nat.find hex} : Set α) = V := by
+    ext y
+    constructor
+    · rintro ⟨n, -, rfl⟩
+      exact hmem n
+    · intro hy
+      have hYO : y ∈ orbitF_p2 f x := by rw [horb x hx]; exact hy
+      obtain ⟨m, hm⟩ := hYO
+      refine ⟨m % Nat.find hex, Nat.mod_lt _ hp0, ?_⟩
+      rw [← la5_period_mod f hpx m]
+      exact hm
+  have hcard : V.ncard = Nat.find hex := by
+    have himage : ({f^[n] x | n < Nat.find hex} : Set α) =
+        (fun n : ℕ => f^[n] x) '' Set.Iio (Nat.find hex) := rfl
+    rw [← hset, himage]
+    have hInj : Set.InjOn (fun n : ℕ => f^[n] x) (Set.Iio (Nat.find hex)) := by
+      intro i hi j hj hcon
+      rcases Nat.lt_trichotomy i j with h | h | h
+      · exact absurd hcon (hdis i j h (Set.mem_Iio.mp hj))
+      · exact h
+      · exact absurd hcon.symm (hdis j i h (Set.mem_Iio.mp hi))
+    rw [Set.InjOn.ncard_image hInj]
+    exact Set.ncard_Iio_nat _
+  exact ⟨Nat.find hex, hp0, hpx, hdis, hset, hcard⟩
+
+/-- Lane support (LA5 r3): a positive normalized two-point combination is in
+the open segment. -/
+private theorem la5_seg_member {p v w : V3} {a b : ℝ} (ha : 0 < a) (hb : 0 < b)
+    (h : (a + b) • p = a • v + b • w) : p ∈ conv0_p2 ({v, w} : Set V3) := by
+  have hab : a + b ≠ 0 := by linarith
+  by_cases hvw : v = w
+  · subst hvw
+    have hpa : p = v := by
+      rw [← add_smul a b v] at h
+      exact smul_right_injective V3 hab h
+    have hfin₀ : (((∅ : Set V3) ∪ ({v, v} : Set V3))).Finite := by simp
+    have hEq : hfin₀.toFinset = ({v} : Finset V3) := by ext z; simp
+    refine ⟨fun _ => 1, hfin₀, ?_, ?_, ?_⟩
+    · rw [hpa, hEq, Finset.sum_singleton, one_smul]
+    · intro z hz
+      norm_num
+    · rw [hEq, Finset.sum_singleton]
+  · have hp' : p = (a / (a + b)) • v + (b / (a + b)) • w := by
+      have e1 : p = (1 / (a + b)) • ((a + b) • p) := by
+        rw [smul_smul, show (1:ℝ) / (a + b) * (a + b) = 1 from by field_simp, one_smul]
+      rw [e1, h, smul_add, smul_smul, smul_smul,
+        show (1:ℝ) / (a + b) * a = a / (a + b) from by ring,
+        show (1:ℝ) / (a + b) * b = b / (a + b) from by ring]
+    have hfin₀ : (((∅ : Set V3) ∪ ({v, w} : Set V3))).Finite := by simp
+    have hEq : hfin₀.toFinset = ({v, w} : Finset V3) := by ext z; simp [hvw]
+    have hv0 : (fun z : V3 => if z = v then a / (a + b) else b / (a + b)) v = a / (a + b) :=
+      if_pos rfl
+    have hw0 : (fun z : V3 => if z = v then a / (a + b) else b / (a + b)) w = b / (a + b) :=
+      if_neg (Ne.symm hvw)
+    refine ⟨fun z => if z = v then a / (a + b) else b / (a + b), hfin₀, ?_, ?_, ?_⟩
+    · rw [hEq, Finset.sum_insert (show ¬((v:V3) ∈ ({w} : Finset V3)) from by simp [hvw]),
+        Finset.sum_singleton, hv0, hw0, hp']
+    · intro z hz
+      have hz' : z = v ∨ z = w := by
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+        tauto
+      rcases hz' with hzv | hzw
+      · rw [hzv, hv0]
+        exact div_pos ha (by linarith)
+      · rw [hzw, hw0]
+        exact div_pos hb (by linarith)
+    · rw [hEq, Finset.sum_insert (show ¬((v:V3) ∈ ({w} : Finset V3)) from by simp [hvw]),
+        Finset.sum_singleton, if_pos rfl, if_neg (Ne.symm hvw)]
+      field_simp
+
+/-- Lane support (LA5 r3): the intersection point of the `x u` line with the
+open segment, in coefficient form. -/
+private theorem la5_lineMap_seg_eq {x u v w : V3} {b' b c : ℝ}
+    (hcore : b' • (u - x) = b • (v - x) + c • (w - x)) (hbc : 0 < b + c) :
+    (b + c) • (AffineMap.lineMap x u (b' / (b + c))) = b • v + c • w := by
+  have hb0 : (b:ℝ) + c ≠ 0 := by linarith
+  have hsc : ((b:ℝ) + c) * (b' / ((b:ℝ) + c)) = b' := by field_simp
+  rw [AffineMap.lineMap_apply_module', smul_add, smul_smul, hsc, hcore]
+  module
+
+/-- Lane support (LA5 r3): an affine span is closed under `lineMap`. -/
+private theorem la5_lineMap_mem_span {S : Set V3} {p q : V3} (s : ℝ)
+    (hp : p ∈ (affineSpan ℝ S : Set V3)) (hq : q ∈ (affineSpan ℝ S : Set V3)) :
+    AffineMap.lineMap p q s ∈ (affineSpan ℝ S : Set V3) := by
+  have h1 : q -ᵥ p ∈ (affineSpan ℝ S).direction :=
+    AffineSubspace.vsub_mem_direction hq hp
+  have h2 : AffineMap.lineMap p q s -ᵥ p ∈ (affineSpan ℝ S).direction := by
+    rw [AffineMap.lineMap_vsub_left]
+    exact (affineSpan ℝ S).direction.smul_mem s h1
+  have h3 := AffineSubspace.vadd_mem_of_mem_direction h2 hp
+  rwa [vsub_vadd] at h3
+
+/-- Lane support (LA5 r3): extraction of the ray form from `affGt {x} {v, w}`
+(valid for all coincidence patterns of the three points). -/
+private theorem la5_affGt_extract {x v w t : V3}
+    (ht : t ∈ affGt ({x} : Set V3) ({v, w} : Set V3)) :
+    ∃ b c : ℝ, 0 < b ∧ 0 < c ∧ t - x = b • (v - x) + c • (w - x) := by
+  obtain ⟨f, hfin, hvec, hpos, hsum⟩ := ht
+  have hEqPair : ∀ {a b : V3} (h : ({a} ∪ {b, b} : Set V3).Finite),
+      h.toFinset = ({a, b} : Finset V3) := by
+    intro a b h
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  have hEq3 : ∀ {a b : V3} (h : ({a} ∪ {a, b} : Set V3).Finite),
+      h.toFinset = ({a, b} : Finset V3) := by
+    intro a b h
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  by_cases hvw : v = w
+  · subst hvw
+    by_cases hxv : x = v
+    · subst hxv
+      have hEq : hfin.toFinset = ({x} : Finset V3) := by ext z; simp
+      rw [hEq] at hvec hsum
+      simp only [Finset.sum_singleton] at hvec hsum
+      refine ⟨1 / 2, 1 / 2, by norm_num, by norm_num, ?_⟩
+      rw [hvec, hsum, one_smul]
+      module
+    · have hEq : hfin.toFinset = ({x, v} : Finset V3) := hEqPair hfin
+      rw [hEq] at hvec hsum
+      rw [Finset.sum_insert (Finset.mem_singleton.not.mpr hxv),
+        Finset.sum_singleton] at hvec hsum
+      have hfv : 0 < f v := hpos v (by simp)
+      refine ⟨f v / 2, f v / 2, div_pos hfv (by linarith), div_pos hfv (by linarith), ?_⟩
+      have hx1 : x = (f x + f v) • x := by rw [hsum, one_smul]
+      rw [hvec]
+      nth_rewrite 3 [hx1]
+      module
+  · by_cases hxv : x = v
+    · subst hxv
+      have hEq : hfin.toFinset = ({x, w} : Finset V3) := hEq3 hfin
+      rw [hEq] at hvec hsum
+      rw [Finset.sum_insert (Finset.mem_singleton.not.mpr hvw),
+        Finset.sum_singleton] at hvec hsum
+      refine ⟨f x, f w, hpos x (by simp), hpos w (by simp), ?_⟩
+      have hx1 : x = (f x + f w) • x := by rw [hsum, one_smul]
+      rw [hvec]
+      nth_rewrite 3 [hx1]
+      module
+    · by_cases hxw : x = w
+      · subst hxw
+        have hEq : hfin.toFinset = ({x, v} : Finset V3) := by
+          ext z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+          tauto
+        rw [hEq] at hvec hsum
+        rw [Finset.sum_insert (Finset.mem_singleton.not.mpr hxv),
+          Finset.sum_singleton] at hvec hsum
+        refine ⟨f v, f x, hpos v (by simp), hpos x (by simp), ?_⟩
+        have hx1 : x = (f x + f v) • x := by rw [hsum, one_smul]
+        rw [hvec]
+        nth_rewrite 3 [hx1]
+        module
+      · have hEq : hfin.toFinset = ({x, v, w} : Finset V3) := by
+          ext z
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+        rw [hEq] at hvec hsum
+        rw [Finset.sum_insert (show ¬((x:V3) ∈ ({v, w} : Finset V3)) from by simp [hxv, hxw]),
+          Finset.sum_insert (Finset.mem_singleton.not.mpr hvw),
+          Finset.sum_singleton] at hvec hsum
+        refine ⟨f v, f w, hpos v (by simp), hpos w (by simp), ?_⟩
+        have hx1 : x = (f x + (f v + f w)) • x := by rw [hsum, one_smul]
+        rw [hvec]
+        nth_rewrite 3 [hx1]
+        module
+
+/-- Lane support (LA5 r3): extraction of the ray form from `affLt {x} {u}`. -/
+private theorem la5_affLt_extract {x u t : V3}
+    (ht : t ∈ affLt ({x} : Set V3) ({u} : Set V3)) :
+    ∃ b : ℝ, b < 0 ∧ t - x = b • (u - x) := by
+  obtain ⟨f, hfin, hvec, hneg, hsum⟩ := ht
+  by_cases hxu : x = u
+  · subst hxu
+    have hEq : hfin.toFinset = ({x} : Finset V3) := by ext z; simp
+    rw [hEq] at hvec hsum
+    simp only [Finset.sum_singleton] at hvec hsum
+    have h1 : (f x : ℝ) = 1 := hsum
+    have h2 : (f x : ℝ) < 0 := hneg x (Set.mem_singleton x)
+    exfalso
+    linarith
+  · have hEq : hfin.toFinset = ({x, u} : Finset V3) := by
+      ext z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+        Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    rw [hEq] at hvec hsum
+    rw [Finset.sum_insert (Finset.mem_singleton.not.mpr hxu),
+      Finset.sum_singleton] at hvec hsum
+    refine ⟨f u, hneg u (Set.mem_singleton u), ?_⟩
+    have hx1 : x = (f x + f u) • x := by rw [hsum, one_smul]
+    rw [hvec]
+    nth_rewrite 3 [hx1]
+    module
+
+/-- Lane support (LA5 r3): line re-parameterization through two fixed points. -/
+private theorem la5_lineMap_reparam {a b x y : V3} {r s : ℝ} (hrs : s ≠ r)
+    (hx : x = (1 - r) • a + r • b) (hy : y = (1 - s) • a + s • b) (c t : ℝ)
+    (hct : r + c * (s - r) = t) :
+    AffineMap.lineMap x y c = AffineMap.lineMap a b t := by
+  have pfA : ((1:ℝ) - c) * (1 - r) + c * (1 - s) = 1 - t := by
+    have h9 : ((1:ℝ) - c) * (1 - r) + c * (1 - s) = 1 - (((1:ℝ) - c) * r + c * s) := by ring
+    rw [h9, show ((1:ℝ) - c) * r + c * s = r + c * (s - r) from by ring, hct]
+  have pfB : ((1:ℝ) - c) * r + c * s = t := by
+    rw [show ((1:ℝ) - c) * r + c * s = r + c * (s - r) from by ring, hct]
+  rw [AffineMap.lineMap_apply_module, hx, hy, AffineMap.lineMap_apply_module, smul_add,
+    smul_add, smul_smul, smul_smul, smul_smul, smul_smul, ← hct]
+  module
+
 /-- HOL `LOOP_MAP_IMP_DIFF_FIRST_ELMS` (local_lemmas.hl:1625). -/
 theorem LOOP_MAP_IMP_DIFF_FIRST_ELMS {α : Type*} {f : α → α} {V : Set α}
     (horb : ∀ v ∈ V, orbitF_p2 f v = V) {v : α} (hv : v ∈ V) {k l : ℕ}
-    (hk : k < V.ncard) (hl : l < k) : f^[k] v ≠ f^[l] v := sorry
+    (hk : k < V.ncard) (hl : l < k) : f^[k] v ≠ f^[l] v := by
+  obtain ⟨p, hp0, hpx, hdis, -, hcard⟩ := la5_orbit_cycle horb hv
+  rw [hcard] at hk
+  intro hcon
+  have hd : f^[k - l] v = v := la5_orbit_key horb hv (Nat.le_of_lt hl) hcon.symm
+  exact hdis 0 (k - l) (by omega) (by omega) hd.symm
+
 
 /-- HOL `CARD_IMAGE_INJ2` (local_lemmas.hl:1656). -/
 theorem CARD_IMAGE_INJ2 {α β : Type*} {f : α → β} {A : Set α} {B : Set β}
@@ -1243,7 +1533,55 @@ theorem S_SUBSET_IMP_AFF_S_TOO {S SS : Set V3} (h : S ⊆ (affineSpan ℝ SS : S
 /-- HOL `AFF2_DET_BY_TWO_POINTS` (local_lemmas.hl:2542). -/
 theorem AFF2_DET_BY_TWO_POINTS {a b x y : V3} (hsub : ({x, y} : Set V3) ⊆
     ((affineSpan ℝ ({a, b} : Set V3) : Set V3))) (hxy : x ≠ y) :
-    (affineSpan ℝ ({a, b} : Set V3) : Set V3) = (affineSpan ℝ ({x, y} : Set V3) : Set V3) := sorry
+    (affineSpan ℝ ({a, b} : Set V3) : Set V3) = (affineSpan ℝ ({x, y} : Set V3) : Set V3) := by
+  have hx : x ∈ (affineSpan ℝ ({a, b} : Set V3) : Set V3) := hsub (Set.mem_insert x _)
+  have hy : y ∈ (affineSpan ℝ ({a, b} : Set V3) : Set V3) :=
+    hsub (Set.mem_insert_of_mem x (Set.mem_singleton y))
+  obtain ⟨r, hr⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp hx
+  obtain ⟨s, hs⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp hy
+  have hrs : r ≠ s := by
+    intro hcon
+    rw [hcon] at hr
+    exact hxy (hr.symm.trans hs)
+  have hrs' : (r:ℝ) - s ≠ 0 := sub_ne_zero.mpr hrs
+  have hrs2 : (s:ℝ) - r ≠ 0 := sub_ne_zero.mpr (Ne.symm hrs)
+  have hxn : x = (1 - r) • a + r • b := by rw [← hr, AffineMap.lineMap_apply_module]
+  have hyn : y = (1 - s) • a + s • b := by rw [← hs, AffineMap.lineMap_apply_module]
+  refine Set.eq_of_subset_of_subset ?_ ?_
+  · have hax : a ∈ (affineSpan ℝ ({x, y} : Set V3) : Set V3) := by
+      rw [SetLike.mem_coe, mem_affineSpan_pair_iff_exists_lineMap_eq]
+      refine ⟨r / (r - s), ?_⟩
+      have hct : r + r / (r - s) * (s - r) = 0 := by
+        rw [show (s:ℝ) - r = -(r - s) from by ring, mul_neg, div_mul_eq_mul_div,
+          show (r:ℝ) + -(r * (r - s) / (r - s)) = r - r * (r - s) / (r - s) from by ring,
+          show (r:ℝ) * (r - s) / (r - s) = r from by field_simp]
+        ring
+      rw [la5_lineMap_reparam (Ne.symm hrs) hxn hyn (r / (r - s)) 0 hct,
+        AffineMap.lineMap_apply_module]
+      simp
+    have hbx : b ∈ (affineSpan ℝ ({x, y} : Set V3) : Set V3) := by
+      rw [SetLike.mem_coe, mem_affineSpan_pair_iff_exists_lineMap_eq]
+      refine ⟨(1 - r) / (s - r), ?_⟩
+      have hct : r + (1 - r) / (s - r) * (s - r) = 1 := by
+        rw [div_mul_eq_mul_div]
+        field_simp
+        ring
+      rw [la5_lineMap_reparam (Ne.symm hrs) hxn hyn ((1 - r) / (s - r)) 1 hct,
+        AffineMap.lineMap_apply_module]
+      simp
+    exact affineSpan_le.mpr (by
+      intro z hz
+      have hz' : z = a ∨ z = b := Set.mem_insert_iff.mp hz
+      rcases hz' with hz' | hz'
+      · rw [hz']; exact hax
+      · rw [hz']; exact hbx)
+  · exact affineSpan_le.mpr (by
+      intro z hz
+      have hz' : z = x ∨ z = y := Set.mem_insert_iff.mp hz
+      rcases hz' with hz' | hz'
+      · rw [hz']; exact hx
+      · rw [hz']; exact hy)
+
 
 /-- Lane support (LA5 r2): extract positive affine coefficients from a
 two-point `conv0_p2` membership. -/
@@ -1345,13 +1683,37 @@ theorem CONDS_FOR_INTER_AFF_CONV0 {x v w u t : V3} {t1 t2 t3 t1' t2' ss : ℝ}
     (ht2 : 0 < t2) (ht3 : 0 < t3) (h1 : t1 + t2 + t3 = ss)
     (h2 : t = t1 • x + t2 • v + t3 • w) (h3 : t1' + t2' = ss)
     (h4 : t = t1' • x + t2' • u) :
-    ∃ tt : V3, tt ∈ (affineSpan ℝ ({x, u} : Set V3) : Set V3) ∩ conv0_p2 ({v, w} : Set V3) := sorry
+    ∃ tt : V3, tt ∈ (affineSpan ℝ ({x, u} : Set V3) : Set V3) ∩ conv0_p2 ({v, w} : Set V3) := by
+  have hcore : t2' • (u - x) = t2 • (v - x) + t3 • (w - x) := by
+    have e1 : t2' • (u - x) = t - ss • x := by
+      rw [smul_sub, h4, ← h3]
+      module
+    rw [e1, h2, ← h1]
+    module
+  by_cases ht2' : t2' = 0
+  · refine ⟨x, left_mem_affineSpan_pair _ _ _, ?_⟩
+    rw [ht2', zero_smul] at hcore
+    refine la5_seg_member ht2 ht3 ?_
+    linear_combination (norm := module) hcore
+  · refine ⟨AffineMap.lineMap x u (t2' / (t2 + t3)), ?_, ?_⟩
+    · rw [SetLike.mem_coe, mem_affineSpan_pair_iff_exists_lineMap_eq]
+      exact ⟨_, rfl⟩
+    · exact la5_seg_member ht2 ht3 (la5_lineMap_seg_eq hcore (by linarith))
+
 
 /-- HOL `INTER_AFF_GT_LT_IMP_INTER_AFF_CONV0` (local_lemmas.hl:2644). -/
 theorem INTER_AFF_GT_LT_IMP_INTER_AFF_CONV0 {x v w u t : V3}
     (hdis : Disjoint ({x} : Set V3) ({v, w} : Set V3)) (hxu : u ≠ x)
     (ht : t ∈ affGt ({x} : Set V3) ({v, w} : Set V3) ∩ affLt ({x} : Set V3) ({u} : Set V3)) :
-    ∃ tt : V3, tt ∈ (affineSpan ℝ ({x, u} : Set V3) : Set V3) ∩ conv0_p2 ({v, w} : Set V3) := sorry
+    ∃ tt : V3, tt ∈ (affineSpan ℝ ({x, u} : Set V3) : Set V3) ∩ conv0_p2 ({v, w} : Set V3) := by
+  obtain ⟨b, c, hb, hc, hgt⟩ := la5_affGt_extract ht.1
+  obtain ⟨b', hb', hlt⟩ := la5_affLt_extract ht.2
+  have hcore : b' • (u - x) = b • (v - x) + c • (w - x) := by rw [← hgt, hlt]
+  refine ⟨AffineMap.lineMap x u (b' / (b + c)), ?_, ?_⟩
+  · rw [SetLike.mem_coe, mem_affineSpan_pair_iff_exists_lineMap_eq]
+    exact ⟨_, rfl⟩
+  · exact la5_seg_member hb hc (la5_lineMap_seg_eq hcore (by linarith))
+
 
 /-- HOL `SUBSET_AFF2_IMP_COLL` (local_lemmas.hl:2657). -/
 theorem SUBSET_AFF2_IMP_COLL {S : Set V3} {a b : V3}
@@ -1594,7 +1956,55 @@ theorem INTER_EQ_EM_EXPAND {α : Type*} (A B : Set α) :
 /-- HOL `NOT_INTER_EQ_EM_IMP_AFF_SUBSET` (local_lemmas.hl:2772). -/
 theorem NOT_INTER_EQ_EM_IMP_AFF_SUBSET {x u v w x' : V3}
     (hx' : x' ∈ affGt ({x} : Set V3) ({v, w} : Set V3) ∩ affLt ({x} : Set V3) ({u} : Set V3)) :
-    (affineSpan ℝ ({x, u} : Set V3) : Set V3) ⊆ affineSpan ℝ ({x, v, w} : Set V3) := sorry
+    (affineSpan ℝ ({x, u} : Set V3) : Set V3) ⊆ affineSpan ℝ ({x, v, w} : Set V3) := by
+  obtain ⟨b, c, hb, hc, hgt⟩ := la5_affGt_extract hx'.1
+  obtain ⟨b', hb', hlt⟩ := la5_affLt_extract hx'.2
+  have hcore : b' • (u - x) = b • (v - x) + c • (w - x) := by rw [← hgt, hlt]
+  have hb'0 : (b':ℝ) ≠ 0 := ne_of_lt hb'
+  have hA : (b:ℝ) + c ≠ 0 := by linarith
+  have key : ({x, u} : Set V3) ⊆ (affineSpan ℝ ({x, v, w} : Set V3) : Set V3) := by
+    intro z hz
+    have hz' : z = x ∨ z = u := Set.mem_insert_iff.mp hz
+    rcases hz' with hz' | hz'
+    · rw [hz']
+      exact mem_affineSpan ℝ (Set.mem_insert x {v, w})
+    · rw [hz']
+      have hz1 : AffineMap.lineMap v w (c / (b + c)) - x =
+          (1 / (b + c)) • (b • (v - x) + c • (w - x)) := by
+        have e1 : (b + c) • (AffineMap.lineMap v w (c / (b + c)) - x) =
+            b • (v - x) + c • (w - x) := by
+          rw [AffineMap.lineMap_apply_module', smul_sub, smul_add, smul_smul,
+            show ((b:ℝ) + c) * (c / ((b:ℝ) + c)) = c from by field_simp,
+            smul_sub, smul_sub]
+          module
+        have e2 : AffineMap.lineMap v w (c / (b + c)) - x =
+            (1 / (b + c)) • ((b + c) • (AffineMap.lineMap v w (c / (b + c)) - x)) := by
+          rw [smul_smul, show ((1:ℝ) / (b + c) * (b + c)) = 1 from by field_simp, one_smul]
+        rw [e2, e1]
+      have hux : AffineMap.lineMap x (AffineMap.lineMap v w (c / (b + c))) ((b + c) / b') - x =
+          (1 / b') • (b • (v - x) + c • (w - x)) := by
+        rw [AffineMap.lineMap_apply_module', hz1, smul_smul,
+          show ((b:ℝ) + c) / b' * (1 / (b + c)) = 1 / b' from by field_simp,
+          add_sub_cancel_right]
+      have hu0 : u - x = (1 / b') • (b • (v - x) + c • (w - x)) := by
+        have h1 : b' • (u - x) = b' • ((1 / b') • (b • (v - x) + c • (w - x))) := by
+          rw [smul_smul, show ((b':ℝ) * (1 / b')) = 1 from by field_simp, one_smul]
+          exact hcore
+        exact smul_right_injective V3 hb'0 h1
+      have hzspan : AffineMap.lineMap v w (c / (b + c)) ∈
+          (affineSpan ℝ ({x, v, w} : Set V3) : Set V3) := by
+        have hp : AffineMap.lineMap v w (c / (b + c)) ∈
+            (affineSpan ℝ ({v, w} : Set V3) : Set V3) :=
+          AffineMap.lineMap_mem_affineSpan_pair _ _ _
+        exact affineSpan_mono ℝ (Set.subset_insert x {v, w}) (SetLike.mem_coe.mp hp)
+      have hueq : u = AffineMap.lineMap x (AffineMap.lineMap v w (c / (b + c)))
+          ((b + c) / b') := by
+        rw [← sub_add_cancel (a := u) (b := x), hu0, ← hux, sub_add_cancel]
+      rw [hueq]
+      exact la5_lineMap_mem_span ((b + c) / b')
+        (mem_affineSpan ℝ (Set.mem_insert x {v, w})) hzspan
+  exact affineSpan_le.mpr key
+
 
 /-- HOL `IN_AFF_HULL_3` (local_lemmas.hl:2796). -/
 theorem IN_AFF_HULL_3 {x u v w x' : V3}
@@ -1679,7 +2089,20 @@ theorem CARD_RECUSIVE_EQ {α : Type*} (f : α → α) (x : α) {k : ℕ} (hk : 0
 /-- HOL `LE_CARDV_IMP_CARD_DETERED` (local_lemmas.hl:3129). -/
 theorem LE_CARDV_IMP_CARD_DETERED {α : Type*} {f : α → α} {V : Set α}
     (horb : ∀ v ∈ V, orbitF_p2 f v = V) {v : α} (hv : v ∈ V) :
-    ∀ l : ℕ, l ≤ V.ncard → ({f^[n] v | n < l} : Set α).ncard = l := sorry
+    ∀ l : ℕ, l ≤ V.ncard → ({f^[n] v | n < l} : Set α).ncard = l := by
+  obtain ⟨p, hp0, hpx, hdis, -, hcard⟩ := la5_orbit_cycle horb hv
+  intro l hl
+  rw [hcard] at hl
+  have himage : ({f^[n] v | n < l} : Set α) = (fun n : ℕ => f^[n] v) '' Set.Iio l := rfl
+  have hInj : Set.InjOn (fun n : ℕ => f^[n] v) (Set.Iio l) := by
+    intro i hi j hj hcon
+    rcases Nat.lt_trichotomy i j with h | h | h
+    · exact absurd hcon (hdis i j h (by have := Set.mem_Iio.mp hj; omega))
+    · exact h
+    · exact absurd hcon.symm (hdis j i h (by have := Set.mem_Iio.mp hi; omega))
+  rw [himage, Set.InjOn.ncard_image hInj]
+  exact Set.ncard_Iio_nat l
+
 
 /-- HOL `LEMMA_SUBSET_ORBIT_MAP` (local_lemmas.hl:3149). -/
 theorem LEMMA_SUBSET_ORBIT_MAP {α : Type*} (p : α → α) (x : α) (n : ℕ) :
@@ -1698,7 +2121,11 @@ theorem LEMMA_SUBSET_ORBIT_MAP_LT {α : Type*} (p : α → α) (x : α) (n : ℕ
 /-- HOL `LOOP_SET_DETER_FIRTS_ELMS` (local_lemmas.hl:3161). -/
 theorem LOOP_SET_DETER_FIRTS_ELMS {α : Type*} {f : α → α} {V : Set α}
     (horb : ∀ v ∈ V, orbitF_p2 f v = V) (v : α) (hv : v ∈ V) :
-    {f^[n] v | n < V.ncard} = V := sorry
+    {f^[n] v | n < V.ncard} = V := by
+  obtain ⟨p, hp0, hpx, hdis, hset, hcard⟩ := la5_orbit_cycle horb hv
+  rw [hcard]
+  exact hset
+
 
 
 /-- HOL `lemma_in_orbit_iter` (local_lemmas.hl:3186). -/
@@ -1986,7 +2413,11 @@ theorem LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT (h : convexLocalFan_p2 V E FF)
 
 /-- HOL `LOOP_SET_ITER_CARD_ID` (local_lemmas.hl:4930). -/
 theorem LOOP_SET_ITER_CARD_ID {α : Type*} {f : α → α} {V : Set α}
-    (horb : ∀ v ∈ V, orbitF_p2 f v = V) {v : α} (hv : v ∈ V) : f^[V.ncard] v = v := sorry
+    (horb : ∀ v ∈ V, orbitF_p2 f v = V) {v : α} (hv : v ∈ V) : f^[V.ncard] v = v := by
+  obtain ⟨p, hp0, hpx, hdis, -, hcard⟩ := la5_orbit_cycle horb hv
+  rw [hcard]
+  exact hpx
+
 
 /-- HOL `LOFA_IMP_ITER_RHO_NODE_ID` (local_lemmas.hl:4991). -/
 theorem LOFA_IMP_ITER_RHO_NODE_ID (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) :
