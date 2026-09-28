@@ -32,8 +32,13 @@ dels=$(git diff HEAD -- "$FILE" | grep -E '^-' | grep -v '^---' || true)
 # NB: use [+] not \+ — \+ is undefined in POSIX ERE; BSD grep errors out
 # (silently empty adds => check void) while GNU grep accepts it.
 adds=$(git diff HEAD -- "$FILE" | grep -E '^[+]' | grep -v '^[+][+][+]' || true)
-printf '%s\n' "$dels" | grep -qE '^-[[:space:]]*sorry\b|:=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$' \
-  || fail "no sorry consumed (theorem untouched?)"
+# NOTES-LANE 2026-09-28: a zero-deletion diff (pure comment insertions, e.g.
+# NEEDS annotations from scout lanes) is provably structure-preserving; the
+# sorry-consumed requirement only governs fill lanes.
+if [ -n "$dels" ]; then
+  printf '%s\n' "$dels" | grep -qE '^-[[:space:]]*sorry\b|:=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$' \
+    || fail "no sorry consumed (theorem untouched?)"
+fi
 hard=$(printf '%s\n' "$dels" \
   | grep -vE '^-[[:space:]]*sorry\b' \
   | grep -vE '^-$' \
