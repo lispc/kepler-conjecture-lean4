@@ -33,7 +33,7 @@ printf '%s\n' "$dels" | grep -qE '^-[[:space:]]*sorry\b' \
 bad=$(printf '%s\n' "$dels" \
   | grep -vE '^-[[:space:]]*sorry\b' \
   | grep -vE '^-$' \
-  | grep -vE '^-[[:space:]]*(--|/-|(/\*))' || true)
+  | grep -vE '^-[[:space:]]*(--|/-)' || true)
 [ -z "$bad" ] || fail "non-sorry lines deleted: $(printf '%s' "$bad" | head -3)"
 
 # 3. banned tokens in added lines
