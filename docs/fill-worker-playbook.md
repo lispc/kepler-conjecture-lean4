@@ -93,6 +93,11 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 - def 桩（`_p38` 式 `def ... := sorry`——闸门禁新增 sorry，def 桩只能等外部落）；
 - 已知假陈述：`SUM_INTER`（`LocalAuto38.lean:441` 附近，junk 分支有反例
   `A=univ, B={0}, f=const 1`；需加 `A.Finite` 前提才能关闭，等陈述修复波）。
+- **DUUNHOR_concl（PA2:557）前提缺失疑点（侦察 lane 2026-09-28）**：比 HOL
+  （Rogers.hl:1682）少 `Packing V ∧ saturated V`；HOL 证明第一步即经
+  `VORONOI_CLOSED_EQ_LEMMA`（Rogers.hl:1256，带 packing）消费 packing，
+  PA6:837"前提未用"注记与原文不符。补前提会破坏 PA6:841 背引用（需同步加参）。
+  已入假陈述修复提案清单。
 - **PA22 桩致假 8 枚（wave2，修复 = 等 def 落地或改陈述前提，均一句话反例已核）**：
   `regular_spherical_polygon_area_asnFnhk`（asnFnhkP22=0 桩）、`vol_solid_triangle_ortho`、
   `EDGE_PAIR_pr23`（eFanP22 恒等桩）、`BIJ_FACET_HYPERFACE`/`HYPERFACE_EXISTS`
@@ -184,12 +189,21 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 - **PA2**（52 remaining @2026-09-28 桥 lane 后）：`OAPVION1/2/3_concl` 三件套已闭合
   （Mathlib `AffineIndependent.existsUnique_dist_eq` 路线，可复用于一切
   circumcenter/radV-epsilon 类桥）；其余大多卡各章 capstone。
+  `GLTVHUM_concl`(:550)/`DUUNHOR_concl`(:557) 已侦察定级 **GIANT**（NEEDS 注记在
+  原位）：GLTVHUM = "Voronoi 胞 = 根在 u0 的 Rogers 单形之并"（Marchal 分解等价形，
+  非 OAPVION 族），攻坚顺序 = PA6:418 FACET_OF_POLYHEDRON_EXPLICIT_BIS（先扫
+  Polytope.lean）→ PA6:431 IDBEZAL（saturation 进场）→ PA6:439
+  VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS（~130 行）→ PA6:487 GLTVHUM_lemma1
+  （k-归纳 ~325 行）→ PA2:550 装配；DUUNHOR 另需 ROGERS_AFF_DIM_FULL(PA6:763)、
+  POLYHEDRON_VORONOI_LIST(PA5:1454)、OMEGA_LIST_N_LEMMA(PA5:1502)。两桥闭合即自动
+  变绿 PA6:497/838 零内容背引用。
 - **PA4**（39 remaining @攻坚后，原 65）：**簇解锁路径已修正**——bump 簇真阻塞是
   `HDTFNFZ`（VX V X = V∩X，经 PA11 LEPJBDJ kit 可证，PA17 `hdtfnfz_p17` 有示范），
   **不是 AJRIPQN**：DIFF_EDGEX（MCELL_EDGE×2 + 4>3 鸽笼）与 MCELL_BUMP_0 已绕开
   AJRIPQN 闭合。AJRIPQN 真实解锁面 = cellParams 唯一性族 **9 枚**
   （MCELL_CELL_PARAMETERS_EXIST 及 MCELL{4,3,2}_CELL_PARAMETERS_EXIST/PARAM_UL、
-  MCELL3_VX），其上游短缺点 = **GLTVHUM_concl（PA2:550，下一波最优先）**；
+  MCELL3_VX），其上游短缺点 = **GLTVHUM_concl（PA2:550，已侦察定级 GIANT：
+  ~600 HOL 行五级链，需专门移植波，见 PA2 条，非单桥 lane）**；
   DUUNHOR_concl(PA2:557)、SLTSTLO1/2(PA13，3100 行 GIANT)、DDZUPHJ、QZKSYKG1/2
   (PA14，1900 行 GIANT) 仍未证；TIWWFYQ(PA5)、RVFXZBU(PA10) 已变真。
   另：OXLZLEZ2 cc_*_v11 案例分析巨石 ~30 枚（非本簇）。
@@ -255,3 +269,8 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   CIRCUMCENTER_LEMMA——先查 Mathlib 再手搓；④动手前备份原文件到 /tmp。
 - **闸门 mac 适配完成**：perl timeout shim / Text 七收官根替代 Kepler 全根 /
   `LANE_FILES` 并行 lane 轮换验收（b0bed032）。工人无需关心，编排者操作。
+- **NOTES-LANE 定型（2026-09-28）**：侦察/桥 lane 的合法交付物 = 纯注释 NEEDS
+  注记（零删行），不强行填错题——GLTVHUM lane 零填证但产出五级链地图 + 一条
+  陈述分歧，就是成功。闸门已配套：规则②⑤对零删行 diff 自动豁免
+  （54d9ed0f/2a9cfed9）。编排侧footgun：`LANE_FILES` 是**替换式**白名单，
+  设置时必须把 lane 文件本身也列进去（已两次踩坑）。
