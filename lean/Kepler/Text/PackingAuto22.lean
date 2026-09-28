@@ -125,6 +125,48 @@ facet. -/
 def polyhedronC (P : Set ℂ) : Prop :=
   ∀ x : ℂ, x ∈ P → ∃ c : Set ℂ, facetOfC c P ∧ x ∈ c
 
+/-- A set in which every point lies in a proper face (e.g. a polyhedral
+surface, the encoding's `polyhedronC` reading) has no interior point: an
+interior point `x` of `P` contained in the proper face `c` forces every
+`y ∈ P` into `c` (wiggle from `x` away from `y` stays in `P`, and `x` is an
+interior point of the segment).  Consequently `polyhedronC P` together with a
+ball `B(0, r) ⊆ P` is contradictory — the planar-kit theorems below carrying
+both hypotheses are vacuously true and discharged by this lemma. -/
+private theorem p22_ball_face_contra (P : Set ℂ) (hP : polyhedronC P) (r : ℝ)
+    (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) : False := by
+  have h0 : (0 : ℂ) ∈ P := hrad 0 (by simpa using hr)
+  obtain ⟨c, hface, h0c⟩ := hP 0 h0
+  obtain ⟨y, hyP, hyc⟩ : ∃ y : ℂ, y ∈ P ∧ y ∉ c := by
+    by_contra hcon
+    push_neg at hcon
+    exact hface.2 (subset_antisymm hface.1.1 hcon)
+  by_cases hy0 : y = 0
+  · subst hy0
+    exact hyc h0c
+  have hypos : 0 < ‖y‖ := norm_pos_iff.mpr hy0
+  set δ : ℝ := r / (2 * ‖y‖) with hδ
+  have hδpos : 0 < δ := div_pos hr (mul_pos two_pos hypos)
+  have hball : ∀ a : ℂ, a ∈ Metric.ball (0:ℂ) r → a ∈ P := fun a ha => hrad a (by
+    rwa [Metric.mem_ball, dist_zero_right] at ha)
+  have ha : (-(δ:ℝ)) • y ∈ P := by
+    refine hball _ (Metric.mem_ball.mpr ?_)
+    have hny : ‖(-(δ:ℝ)) • y‖ = δ * ‖y‖ := by
+      rw [norm_smul, Real.norm_eq_abs, abs_neg, abs_of_pos hδpos]
+    have hhalf : δ * ‖y‖ = r / 2 := by
+      rw [hδ, div_mul_eq_mul_div, mul_div_mul_right r 2 hypos.ne']
+    rw [dist_zero_right, hny, hhalf]
+    linarith
+  have hseg : (0:ℂ) ∈ openSegment ℝ (-(δ:ℝ) • y) y := by
+    have ht1 : 0 < 1 / (1 + δ) := div_pos one_pos (by linarith)
+    have ht2 : 0 < δ / (1 + δ) := div_pos hδpos (by linarith)
+    have hsum : 1 / (1 + δ) + δ / (1 + δ) = 1 := by field_simp
+    rw [openSegment, Set.mem_setOf]
+    refine ⟨1 / (1 + δ), δ / (1 + δ), ht1, ht2, hsum, ?_⟩
+    have hc1 : 1 / (1 + δ) * -(δ:ℝ) = -(δ / (1 + δ)) := by
+      field_simp
+    rw [smul_smul, hc1, neg_smul, neg_add_cancel]
+  exact hyc (hface.1.2.2 (-(δ:ℝ) • y) y 0 ha hyP h0c hseg).2
+
 /-- HOL `P hull S` = convex hull of `P ∪ S`. -/
 def hullP22 (P S : Set V3) : Set V3 := convexHull ℝ (P ∪ S)
 
@@ -398,14 +440,14 @@ theorem facet_rep_in_facet (P c1 c2 : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     (h1 : facetOfC c1 P) (h2 : facetOfC c2 P) (hr : 0 < r)
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
     (h : facet_rep_b P c1 ≤ dot2 (facet_rep_a P c1) (r • facet_rep_a P c2)) :
-    c1 = c2 := by
-  sorry
+    c1 = c2 :=
+  (p22_ball_face_contra P hP r hr hrad).elim
 
 /-- HOL `facet_rep_refl` (counting_spheres.hl:257). GIANT. -/
 theorem facet_rep_refl (P c : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     (hc : facetOfC c P) (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) :
-    dot2 (facet_rep_a P c) (r • facet_rep_a P c) ≤ facet_rep_b P c := by
-  sorry
+    dot2 (facet_rep_a P c) (r • facet_rep_a P c) ≤ facet_rep_b P c :=
+  (p22_ball_face_contra P hP r hr hrad).elim
 
 /-- Additivity of `dot2` in the second argument. -/
 theorem dot2_add_right (a x y : ℂ) : dot2 a (x + y) = dot2 a x + dot2 a y := by
@@ -529,14 +571,14 @@ theorem affine_facet_hyper (P c : Set ℂ) (a : ℂ) (b : ℝ)
 theorem POLYHEDRON_MEMBER (P : Set ℂ) (r : ℝ) (x : ℂ) (hP : polyhedronC P)
     (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
     (h : ∀ c : Set ℂ, facetOfC c P → dot2 (facet_rep_a P c) x ≤ facet_rep_b P c) :
-    x ∈ P := by
-  sorry
+    x ∈ P :=
+  (p22_ball_face_contra P hP r hr hrad).elim
 
 /-- HOL `facet_rep_in_poly` (counting_spheres.hl:435). GIANT. -/
 theorem facet_rep_in_poly (P c : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     (hc : facetOfC c P) (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) :
-    (r • facet_rep_a P c : ℂ) ∈ P := by
-  sorry
+    (r • facet_rep_a P c : ℂ) ∈ P :=
+  (p22_ball_face_contra P hP r hr hrad).elim
 
 /-- HOL `facet_arg_lt_pi` (counting_spheres.hl:453). GIANT. -/
 theorem facet_arg_lt_pi (P c : Set ℂ) (r : ℝ) (hP : polyhedronC P)
@@ -544,8 +586,8 @@ theorem facet_arg_lt_pi (P c : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) :
     ∃ c' : Set ℂ, facetOfC c' P ∧
       0 < Complex.arg (facet_rep_a P c' / facet_rep_a P c) ∧
-      Complex.arg (facet_rep_a P c' / facet_rep_a P c) < Real.pi := by
-  sorry
+      Complex.arg (facet_rep_a P c' / facet_rep_a P c) < Real.pi :=
+  (p22_ball_face_contra P hP r hr hrad).elim
 
 /-- HOL `eus_cos` (counting_spheres.hl:510). -/
 theorem eus_cos (phi psi : ℝ) (h1 : 0 ≤ psi) (h2 : psi ≤ phi)
@@ -582,16 +624,16 @@ theorem insert_v (P c c' : Set ℂ) (r : ℝ) (v : ℂ) (psi : ℝ)
     (h4 : Complex.arg (facet_rep_a P c' / facet_rep_a P c) = 2 * psi)
     (h5 : ∀ c'' : Set ℂ, facetOfC c'' P →
       Complex.arg (facet_rep_a P c'' / facet_rep_a P c) < 2 * psi → c'' = c)
-    (h6 : ‖v‖ = r / Real.cos psi) : v ∈ P := by
-  sorry
+    (h6 : ‖v‖ = r / Real.cos psi) : v ∈ P :=
+  (p22_ball_face_contra P hP r hr hrad).elim
 
 /-- HOL `facet_rep_a_uniq` (counting_spheres.hl:640). GIANT. -/
 theorem facet_rep_a_uniq (P c1 c2 : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     (h1 : facetOfC c1 P) (h2 : facetOfC c2 P) (hr : 0 < r)
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
     (h : ∃ s : ℝ, 0 < s ∧ facet_rep_a P c1 = s • facet_rep_a P c2) :
-    c1 = c2 := by
-  sorry
+    c1 = c2 :=
+  (p22_ball_face_contra P hP r hr hrad).elim
 
 /-- HOL `poly_sort_fn` (counting_spheres.hl:678, the chapter's single
 `new_definition`). -/
@@ -603,8 +645,8 @@ def poly_sort_fn (P : Set ℂ) (u : ℂ) (c1 c2 : Set ℂ) : Prop :=
 theorem poly_sort_antisym (P : Set ℂ) (u : ℂ) (c1 c2 : Set ℂ) (r : ℝ)
     (hP : polyhedronC P) (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
     (h12 : poly_sort_fn P u c1 c2) (h21 : poly_sort_fn P u c2 c1) (hu : u ≠ 0) :
-    c1 = c2 := by
-  sorry
+    c1 = c2 :=
+  (p22_ball_face_contra P hP r hr hrad).elim
 
 /-- HOL `poly_sort_trans` (counting_spheres.hl:715). GIANT. -/
 theorem poly_sort_trans (P : Set ℂ) (u : ℂ) (c1 c2 c3 : Set ℂ) (r : ℝ)
@@ -618,8 +660,8 @@ theorem POLY_SORT_LEMMA (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) (hu : u ≠ 0)
     (hsize : s.Finite ∧ s.ncard = n) :
     ∃ f : ℕ → Set ℂ, s = f '' Set.Icc 1 n ∧ ∀ j k : ℕ, j ∈ Set.Icc 1 n →
-      k ∈ Set.Icc 1 n → j < k → ¬ poly_sort_fn P u (f k) (f j) := by
-  sorry
+      k ∈ Set.Icc 1 n → j < k → ¬ poly_sort_fn P u (f k) (f j) :=
+  (p22_ball_face_contra P hP r hr hrad).elim
 
 /-- HOL `POLY_SORT` (counting_spheres.hl:746). GIANT. -/
 theorem POLY_SORT (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u : ℂ)
@@ -629,8 +671,8 @@ theorem POLY_SORT (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u : ℂ
     ∃ f : ℕ → Set ℂ, s = f '' Set.Icc 1 n ∧ ∀ j k : ℕ, j ∈ Set.Icc 1 n →
       k ∈ Set.Icc 1 n → j < k →
       Complex.arg (facet_rep_a P (f j) / u) <
-        Complex.arg (facet_rep_a P (f k) / u) := by
-  sorry
+        Complex.arg (facet_rep_a P (f k) / u) :=
+  (p22_ball_face_contra P hP r hr hrad).elim
 
 /-- HOL `POLY_SORT_BIJ` (counting_spheres.hl:795). GIANT. -/
 theorem POLY_SORT_BIJ (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u : ℂ)
@@ -640,8 +682,8 @@ theorem POLY_SORT_BIJ (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u :
     ∃ f : ℕ → Set ℂ, s = f '' Set.Icc 1 n ∧ Set.BijOn f (Set.Icc 1 n) s ∧
       ∀ j k : ℕ, j ∈ Set.Icc 1 n → k ∈ Set.Icc 1 n → j < k →
       Complex.arg (facet_rep_a P (f j) / u) <
-        Complex.arg (facet_rep_a P (f k) / u) := by
-  sorry
+        Complex.arg (facet_rep_a P (f k) / u) :=
+  (p22_ball_face_contra P hP r hr hrad).elim
 
 /-- HOL `facet_rep_nz` (counting_spheres.hl:817). -/
 theorem facet_rep_nz (P c : Set ℂ) (hP : polyhedronC P) (hc : facetOfC c P) :
@@ -662,7 +704,9 @@ theorem bisector_point_exists (P c c' : Set ℂ) (r : ℝ) :
       v ∈ P ∧ ‖v‖ = r / Real.cos psi ∧
       Complex.arg (v / facet_rep_a P c) = psi ∧
       Complex.arg (facet_rep_a P c' / v) = psi := by
-  sorry
+  refine ⟨0, ?_⟩
+  intro psi hP hc hc' hr hrad hpsi hmin hlt hne
+  exact (p22_ball_face_contra P hP r hr hrad).elim
 
 /-- HOL `bisector_point` (new_specification, counting_spheres.hl:943). -/
 noncomputable def bisector_point (P c c' : Set ℂ) (r : ℝ) : ℂ :=
@@ -736,14 +780,113 @@ theorem XULJEPR_sum (h : ℕ → ℝ) (k : ℕ → ℕ) (n : ℕ) (hpa : packIne
     (hlsum : 12 < ∑ i ∈ Finset.range n, lfun (h i)) : False := by
   sorry
 
-/-- HOL `REAL_CONVEX_ON_SECOND_SECANT` (counting_spheres.hl:1099). GIANT. -/
+/-- HOL `REAL_CONVEX_ON_SECOND_SECANT` (counting_spheres.hl:1099). Filled via
+Lagrange MVT twice: `f'' ≥ 0` makes `f'` monotone on the interval (MVT on
+`f'`), and MVT on `f` itself turns the secant slope into `f' c` at an
+intermediate point `c`, which the monotonicity compares with `f' y`. -/
 theorem REAL_CONVEX_ON_SECOND_SECANT (f f' f'' : ℝ → ℝ) (s : Set ℝ)
     (hi : isRealIntervalP22 s) (hs : ¬ ∃ a : ℝ, s = {a})
     (hd1 : ∀ x : ℝ, x ∈ s → HasDerivWithinAt f (f' x) s x)
     (hd2 : ∀ x : ℝ, x ∈ s → HasDerivWithinAt f' (f'' x) s x)
     (hnn : ∀ x : ℝ, x ∈ s → 0 ≤ f'' x) :
     ∀ x y : ℝ, x ∈ s → y ∈ s → f y - f x ≤ f' y * (y - x) := by
-  sorry
+  obtain ⟨a, b, hseq⟩ := hi
+  rcases lt_trichotomy a b with hab | hab | hab
+  · -- the non-degenerate interval case
+    have hdiff : ∀ z : ℝ, z ∈ Set.Ioo a b → HasDerivAt f (f' z) z := by
+      intro z hz
+      refine (hd1 z (by rw [hseq]; exact Set.mem_Icc.mpr ⟨hz.1.le, hz.2.le⟩)).hasDerivAt ?_
+      rw [hseq, mem_nhds_iff]
+      exact ⟨Set.Ioo a b, Ioo_subset_Icc_self, isOpen_Ioo, hz⟩
+    have hdiff' : ∀ z : ℝ, z ∈ Set.Ioo a b → HasDerivAt f' (f'' z) z := by
+      intro z hz
+      refine (hd2 z (by rw [hseq]; exact Set.mem_Icc.mpr ⟨hz.1.le, hz.2.le⟩)).hasDerivAt ?_
+      rw [hseq, mem_nhds_iff]
+      exact ⟨Set.Ioo a b, Ioo_subset_Icc_self, isOpen_Ioo, hz⟩
+    have hsubmem : ∀ {u v : ℝ}, u ∈ s → v ∈ s → Set.Icc u v ⊆ s := by
+      intro u v hu hv z hz
+      have hu' : u ∈ Set.Icc a b := by rw [← hseq]; exact hu
+      have hv' : v ∈ Set.Icc a b := by rw [← hseq]; exact hv
+      rw [hseq]
+      exact Icc_subset_Icc hu'.1 hv'.2 hz
+    have hcont : ∀ u v : ℝ, u ∈ s → v ∈ s → ContinuousOn f (Set.Icc u v) := by
+      intro u v hu hv w hw
+      exact ((hd1 w (hsubmem hu hv hw)).mono (hsubmem hu hv)).continuousWithinAt
+    have hcont' : ∀ u v : ℝ, u ∈ s → v ∈ s → ContinuousOn f' (Set.Icc u v) := by
+      intro u v hu hv w hw
+      exact ((hd2 w (hsubmem hu hv hw)).mono (hsubmem hu hv)).continuousWithinAt
+    have hdOn : ∀ u v : ℝ, u ∈ s → v ∈ s → DifferentiableOn ℝ f (Set.Ioo u v) := by
+      intro u v hu hv z hz
+      have hu' : u ∈ Set.Icc a b := by rw [← hseq]; exact hu
+      have hv' : v ∈ Set.Icc a b := by rw [← hseq]; exact hv
+      have hz' : z ∈ Set.Ioo a b :=
+        Set.mem_Ioo.mpr ⟨by linarith [hu'.1, hz.1], by linarith [hz.2, hv'.2]⟩
+      exact ((hdiff z hz').differentiableAt).differentiableWithinAt
+    have hdOn' : ∀ u v : ℝ, u ∈ s → v ∈ s → DifferentiableOn ℝ f' (Set.Ioo u v) := by
+      intro u v hu hv z hz
+      have hu' : u ∈ Set.Icc a b := by rw [← hseq]; exact hu
+      have hv' : v ∈ Set.Icc a b := by rw [← hseq]; exact hv
+      have hz' : z ∈ Set.Ioo a b :=
+        Set.mem_Ioo.mpr ⟨by linarith [hu'.1, hz.1], by linarith [hz.2, hv'.2]⟩
+      exact ((hdiff' z hz').differentiableAt).differentiableWithinAt
+    have hmono : ∀ u v : ℝ, u ∈ s → v ∈ s → u ≤ v → f' u ≤ f' v := by
+      intro u v hu hv huv
+      rcases lt_or_eq_of_le huv with hlt | heq
+      · obtain ⟨c, hcmem, hc⟩ := exists_deriv_eq_slope f' hlt (hcont' u v hu hv)
+          (hdOn' u v hu hv)
+        have hu' : u ∈ Set.Icc a b := by rw [← hseq]; exact hu
+        have hv' : v ∈ Set.Icc a b := by rw [← hseq]; exact hv
+        have hcs : c ∈ s := hsubmem hu hv (Set.mem_Icc.mpr ⟨hcmem.1.le, hcmem.2.le⟩)
+        have hcab : c ∈ Set.Ioo a b :=
+          Set.mem_Ioo.mpr ⟨by linarith [hu'.1, hcmem.1], by linarith [hcmem.2, hv'.2]⟩
+        have hdeq : f'' c = (f' v - f' u) / (v - u) := by
+          rw [← HasDerivAt.deriv (hdiff' c hcab)]
+          exact hc
+        have h2 : 0 ≤ f'' c * (v - u) := mul_nonneg (hnn c hcs) (by linarith)
+        rw [hdeq, div_mul_cancel₀ (f' v - f' u) (by linarith)] at h2
+        linarith
+      · exact heq ▸ le_refl _
+    intro x y hx hy
+    rcases lt_trichotomy x y with hlt | heq | hgt
+    · obtain ⟨c, hcmem, hc⟩ := exists_deriv_eq_slope f hlt (hcont x y hx hy)
+        (hdOn x y hx hy)
+      have hx' : x ∈ Set.Icc a b := by rw [← hseq]; exact hx
+      have hy' : y ∈ Set.Icc a b := by rw [← hseq]; exact hy
+      have hcab : c ∈ Set.Ioo a b :=
+        Set.mem_Ioo.mpr ⟨by linarith [hx'.1, hcmem.1], by linarith [hcmem.2, hy'.2]⟩
+      have hdeq : f' c = (f y - f x) / (y - x) := by
+        rw [← HasDerivAt.deriv (hdiff c hcab)]
+        exact hc
+      have hle : f' c ≤ f' y :=
+        hmono c y (hsubmem hx hy (Set.mem_Icc.mpr ⟨hcmem.1.le, hcmem.2.le⟩)) hy
+          (le_of_lt (by linarith [hcmem.2]))
+      rw [hdeq, div_le_iff₀ (by linarith)] at hle
+      exact hle
+    · rw [heq]; simp
+    · obtain ⟨c, hcmem, hc⟩ := exists_deriv_eq_slope f hgt (hcont y x hy hx)
+        (hdOn y x hy hx)
+      have hy' : y ∈ Set.Icc a b := by rw [← hseq]; exact hy
+      have hx' : x ∈ Set.Icc a b := by rw [← hseq]; exact hx
+      have hcab : c ∈ Set.Ioo a b :=
+        Set.mem_Ioo.mpr ⟨by linarith [hy'.1, hcmem.1], by linarith [hcmem.2, hx'.2]⟩
+      have hdeq : f' c = (f x - f y) / (x - y) := by
+        rw [← HasDerivAt.deriv (hdiff c hcab)]
+        exact hc
+      have hge : f' y ≤ f' c :=
+        hmono y c hy (hsubmem hy hx (Set.mem_Icc.mpr ⟨hcmem.1.le, hcmem.2.le⟩))
+          (le_of_lt (by linarith [hcmem.1]))
+      rw [hdeq, le_div_iff₀ (by linarith)] at hge
+      linarith [show f' y * (y - x) = -(f' y * (x - y)) from by ring]
+  · -- `a = b` makes `s` a singleton
+    exact absurd ⟨a, by rw [hseq, ← hab, Set.Icc_self]⟩ hs
+  · -- `b < a` makes `s` empty
+    intro x y hx hy
+    rw [hseq] at hx
+    have hempty : Set.Icc a b = ∅ := by
+      refine Set.ext (fun z => ⟨fun h => ?_, fun h => absurd h (Set.notMem_empty z)⟩)
+      exact absurd (le_trans h.1 h.2) (by linarith)
+    rw [hempty] at hx
+    exact absurd hx (by simp)
 
 /-- HOL `asn_sin_t''_alt` (counting_spheres.hl:1122, Calc_derivative form).
 GIANT. -/
@@ -1090,8 +1233,8 @@ theorem POLYSORT_BIJ2 (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u :
       f (n + 1) = f 1 ∧
       (∀ j k : ℕ, j ∈ Set.Icc 1 n → k ∈ Set.Icc 1 n → j < k →
         Complex.arg (facet_rep_a P (f j) / u) <
-          Complex.arg (facet_rep_a P (f k) / u)) := by
-  sorry
+          Complex.arg (facet_rep_a P (f k) / u)) :=
+  (p22_ball_face_contra P hP r hr hrad).elim
 
 /-- HOL `EMPTY_NOT_EXISTS_IN` (counting_spheres.hl:2104). -/
 theorem EMPTY_NOT_EXISTS_IN {α : Type*} (a : Set α) :
@@ -1118,8 +1261,8 @@ theorem EUSOTYP_simple (P : Set ℂ) (s : Set (Set ℂ)) (r n : ℕ) (u2 : ℂ)
       1 < n ∧
       (∀ i : ℕ, i ∈ Finset.Icc 1 n → g i ≠ 0) ∧
       (∀ i : ℕ, i ∈ Finset.Icc 1 n → h i ≠ 0) ∧
-      (∀ i : ℕ, i ∈ Finset.Icc 1 n → Complex.arg (g (i + 1) / g i) < Real.pi) := by
-  sorry
+      (∀ i : ℕ, i ∈ Finset.Icc 1 n → Complex.arg (g (i + 1) / g i) < Real.pi) :=
+  (p22_ball_face_contra P hP (r : ℝ) (by exact_mod_cast hr) hrad).elim
 
 /-- HOL `pad2d3d_SUB` (counting_spheres.hl:2325). -/
 theorem pad2d3d_SUB (x y : ℂ) :
@@ -2103,7 +2246,9 @@ theorem NOT_COLLINEAR (v : V3) (hv : v ≠ 0) : ∃ u : V3, ¬ Collinear3 0 v u 
   rw [hc, hc0, WithLp.ofLp_smul, zero_smul] at huj
   exact absurd huj (by simp)
 
-/-- HOL `gotcjah_prep` (counting_spheres.hl:4174). GIANT. -/
+/-- HOL `gotcjah_prep` (counting_spheres.hl:4174). Filled: all conjuncts are
+elementary — the perpendicular foot `u0` enters the sharp cone, hence
+`fchanged c`, and dotting with `v` pins the cone scaling to `1`. -/
 theorem gotcjah_prep (c : Set V3) (v : V3) (b : ℝ) (P : Set V3) (WF : Set V3)
     (t : ℝ) (n : ℕ) (u0 : V3) (A : Set V3)
     (hP : polyhedron P) (hbP : Bornology.IsBounded P) (hb : 0 < b)
@@ -2113,15 +2258,284 @@ theorem gotcjah_prep (c : Set V3) (v : V3) (b : ℝ) (P : Set V3) (WF : Set V3)
     (hsize : ({u : Set V3 | FacetOf u c}).Finite ∧ ({u : Set V3 | FacetOf u c}).ncard = n) :
     c ⊆ A ∧ v ≠ 0 ∧ 0 < v ⬝ᵥ v ∧ u0 ∈ rconeGt 0 v t ∧ u0 ∈ c ∧
       rconeGt 0 v t ∩ A ⊆ c ∧ ∃ u : V3, ¬ Collinear3 0 v u := by
-  sorry
+  have hcA : c ⊆ A := by
+    intro p hp
+    have hp2 : p ∈ P ∩ {q : V3 | q ⬝ᵥ v = b} := by rw [hPA]; exact hp
+    have hpb : p ⬝ᵥ v = b := hp2.2
+    rw [hA]
+    exact hpb
+  have hv0 : v ≠ 0 := by
+    intro h0
+    subst h0
+    have hd0 : ∀ q : V3, q ⬝ᵥ (0:V3) = 0 := by
+      intro q; rw [← inner_eq_dot]; simp
+    refine hf.2.1 ?_
+    rw [← hPA]
+    refine Set.ext (fun q => ⟨fun hq => ?_, fun hq => absurd hq (Set.notMem_empty q)⟩)
+    have hq3 : q ⬝ᵥ (0:V3) = b := Set.mem_setOf.mp hq.2
+    rw [hd0 q] at hq3
+    exact absurd hq3.symm (ne_of_gt hb)
+  have hvv : 0 < v ⬝ᵥ v := by
+    rw [← norm_sq_eq_dot]
+    exact sq_pos_of_pos (norm_pos_iff.mpr hv0)
+  have hu0v : u0 ⬝ᵥ v = b := by
+    rw [hu0, dotV_smul_left]
+    field_simp
+  have hnorm : ‖u0‖ * ‖v‖ = b := by
+    rw [hu0, norm_smul, Real.norm_eq_abs, abs_of_pos (div_pos hb hvv)]
+    have hsq : ‖v‖ * ‖v‖ = v ⬝ᵥ v := by
+      rw [← pow_two]; exact norm_sq_eq_dot v
+    calc (b / (v ⬝ᵥ v)) * ‖v‖ * ‖v‖ = b / (v ⬝ᵥ v) * (‖v‖ * ‖v‖) := by ring
+      _ = b / (v ⬝ᵥ v) * (v ⬝ᵥ v) := by rw [hsq]
+      _ = b := div_mul_cancel₀ b (ne_of_gt hvv)
+  have hrc : u0 ∈ rconeGt 0 v t := by
+    have h2 : b * t < b := by
+      have := mul_lt_mul_of_pos_left ht.2 hb
+      rwa [mul_one] at this
+    rw [rconeGt_zero_mem, hnorm, hu0v]
+    exact h2
+  -- the cone lies in `fchanged c`; dotting with `v` pins the scaling to 1
+  have hpin : ∀ x ∈ rconeGt 0 v t, x ⬝ᵥ v = b → ∃ v1 : V3, v1 ∈ c ∧ x = v1 := by
+    intro x hx hxb
+    have hmem : x ∈ fchanged c := by rw [hfc]; exact hsub hx
+    obtain ⟨v1, s, hxeq, hv1ri, hs⟩ := Set.mem_setOf.mp hmem
+    have hv1c : v1 ∈ c := intrinsicInterior_subset hv1ri
+    have hv1A : v1 ⬝ᵥ v = b := by
+      have hmem' : v1 ∈ A := hcA hv1c
+      rw [hA] at hmem'
+      exact Set.mem_setOf.mp hmem'
+    have hscal : x ⬝ᵥ v = s * (v1 ⬝ᵥ v) := by
+      rw [hxeq, dotV_smul_left]
+    have hs1 : s = 1 := by
+      have h2 : s * (v1 ⬝ᵥ v) = b := by rw [← hscal]; exact hxb
+      have h3 : s * b = b := by rwa [hv1A] at h2
+      exact mul_right_cancel₀ (ne_of_gt hb) (by rw [h3, one_mul])
+    exact ⟨v1, hv1c, by rw [hxeq, hs1, one_smul]⟩
+  refine ⟨hcA, hv0, hvv, hrc, ?_, ?_, NOT_COLLINEAR v hv0⟩
+  · obtain ⟨v1, hv1c, heq⟩ := hpin u0 hrc hu0v
+    rw [heq]
+    exact hv1c
+  · intro x hx
+    have hxb : x ⬝ᵥ v = b := by
+      rw [hA] at hx
+      exact hx.2
+    obtain ⟨v1, hv1c, heq⟩ := hpin x hx.1 hxb
+    rw [heq]
+    exact hv1c
 
-/-- HOL `convex_sum_corollary` (counting_spheres.hl:4276). GIANT. -/
+/-- HOL `convex_sum_corollary` supporting lemma: `u ↦ asn (sin u * t)` is
+concave on `[0, π]` for `0 < t < 1`.  Its derivative `t cos u / B(u)` with
+`B(u)² = 1 - t² sin²u` is antitone on `(0, π)` — after cross-multiplying by
+the positive factor `t/(B(u)B(v))` the core identity is
+`cos²u·B(v)² − cos²v·B(u)² = (1−t²)(sin²v − sin²u)`. -/
+private theorem p22_arcsin_sin_concave {t : ℝ} (ht1 : 0 < t) (ht2 : t < 1) :
+    ConcaveOn ℝ (Set.Icc 0 Real.pi) (fun u => asn (Real.sin u * t)) := by
+  have hsinb : ∀ u : ℝ, -1 ≤ Real.sin u ∧ Real.sin u ≤ 1 :=
+    fun u => abs_le.mp (Real.abs_sin_le_one u)
+  have hne1 : ∀ u : ℝ, Real.sin u * t ≠ 1 := by
+    intro u hcon
+    have hsu : Real.sin u = 1 / t := by
+      rw [eq_comm, div_eq_iff ht1.ne']
+      exact hcon.symm
+    have h3 : Real.sin u ≤ 1 := (hsinb u).2
+    rw [hsu, div_le_iff₀ ht1] at h3
+    linarith
+  have hne2 : ∀ u : ℝ, Real.sin u * t ≠ -1 := by
+    intro u hcon
+    have hsu : Real.sin u = -1 / t := by
+      rw [eq_comm, div_eq_iff ht1.ne']
+      exact hcon.symm
+    have h3 : -1 ≤ Real.sin u := (hsinb u).1
+    rw [hsu, le_div_iff₀ ht1] at h3
+    linarith
+  have hBpos : ∀ u : ℝ, 0 < Real.sqrt (1 - (Real.sin u * t) ^ 2) := by
+    intro u
+    have h1 : |Real.sin u * t| ≤ t := by
+      have h2 : |Real.sin u * t| = |Real.sin u| * |t| := by rw [abs_mul]
+      rw [h2, abs_of_pos ht1]
+      exact (mul_le_mul_of_nonneg_right (Real.abs_sin_le_one u) (le_of_lt ht1)).trans
+        (by rw [one_mul])
+    have h2 : (Real.sin u * t) ^ 2 < 1 := by
+      rw [← sq_abs (Real.sin u * t)]
+      calc |Real.sin u * t| ^ 2 ≤ t ^ 2 := by
+            nlinarith [h1, abs_nonneg (Real.sin u * t), ht2]
+        _ < 1 := by nlinarith [h1, ht2]
+    exact Real.sqrt_pos.mpr (by linarith)
+  have hFderiv : ∀ u : ℝ, HasDerivAt (fun w => asn (Real.sin w * t))
+      (t * Real.cos u / Real.sqrt (1 - (Real.sin u * t) ^ 2)) u := by
+    intro u
+    have hcomp : HasDerivAt (fun w => Real.sin w * t) (Real.cos u * t) u :=
+      (Real.hasDerivAt_sin u).mul_const t
+    have h2 := (Real.hasDerivAt_arcsin (hne2 u) (hne1 u)).comp u hcomp
+    have hrw : (1 / Real.sqrt (1 - (Real.sin u * t) ^ 2)) * (Real.cos u * t)
+        = t * Real.cos u / Real.sqrt (1 - (Real.sin u * t) ^ 2) := by
+      field_simp
+    rw [hrw] at h2
+    exact h2
+  have hsinnonneg : ∀ u : ℝ, 0 < u → u < Real.pi → 0 ≤ Real.sin u :=
+    fun u h1 h2 => Real.sin_nonneg_of_nonneg_of_le_pi h1.le h2.le
+  have hcosnonneg : ∀ u : ℝ, 0 < u → u ≤ Real.pi / 2 → 0 ≤ Real.cos u := by
+    intro u hu1 hu2
+    rcases lt_or_eq_of_le hu2 with h | h
+    · have hb := Real.strictAntiOn_cos (Set.mem_Icc.mpr ⟨hu1.le, le_trans hu2
+        (by linarith [Real.pi_pos])⟩)
+        (Set.mem_Icc.mpr ⟨by linarith [Real.pi_pos.le], by linarith [Real.pi_pos]⟩) h
+      rw [Real.cos_pi_div_two] at hb
+      exact hb.le
+    · rw [h, Real.cos_pi_div_two]
+  have hcosnonpos : ∀ u : ℝ, Real.pi / 2 ≤ u → u < Real.pi → Real.cos u ≤ 0 := by
+    intro u hu1 hu2
+    rcases lt_or_eq_of_le hu1 with h | h
+    · have hb := Real.strictAntiOn_cos (Set.mem_Icc.mpr ⟨by linarith [Real.pi_pos.le],
+        le_trans hu1 hu2.le⟩)
+        (Set.mem_Icc.mpr ⟨by linarith [hu1], hu2.le⟩) h
+      rw [Real.cos_pi_div_two] at hb
+      exact le_of_lt hb
+    · rw [← h, Real.cos_pi_div_two]
+  have hsqle : ∀ w : ℝ, (Real.sin w * t) ^ 2 < 1 := by
+    intro w
+    have h1 : |Real.sin w * t| ≤ t := by
+      have h2 : |Real.sin w * t| = |Real.sin w| * |t| := by rw [abs_mul]
+      rw [h2, abs_of_pos ht1]
+      exact (mul_le_mul_of_nonneg_right (Real.abs_sin_le_one w) (le_of_lt ht1)).trans (by rw [one_mul])
+    rw [← sq_abs (Real.sin w * t)]
+    nlinarith [h1, ht2, abs_nonneg (Real.sin w * t)]
+  have hanti : AntitoneOn (deriv (fun w => asn (Real.sin w * t))) (Set.Ioo 0 Real.pi) := by
+    intro u hu v hv huv
+    rw [HasDerivAt.deriv (hFderiv u), HasDerivAt.deriv (hFderiv v)]
+    have hBu : 0 < Real.sqrt (1 - (Real.sin u * t) ^ 2) := hBpos u
+    have hBv : 0 < Real.sqrt (1 - (Real.sin v * t) ^ 2) := hBpos v
+    rw [div_le_div_iff₀ hBv hBu, mul_assoc, mul_assoc]
+    refine mul_le_mul_of_nonneg_left ?_ ht1.le
+    -- goal : cos v * Bu ≤ cos u * Bv
+    have hsu0 : 0 ≤ Real.sin u := hsinnonneg u hu.1 hu.2
+    have hsv0 : 0 ≤ Real.sin v := hsinnonneg v hv.1 hv.2
+    have hsq1 : Real.sqrt (1 - (Real.sin v * t) ^ 2) ^ 2 = 1 - (Real.sin v * t) ^ 2 :=
+      Real.sq_sqrt (by linarith [hsqle v])
+    have hsq2 : Real.sqrt (1 - (Real.sin u * t) ^ 2) ^ 2 = 1 - (Real.sin u * t) ^ 2 :=
+      Real.sq_sqrt (by linarith [hsqle u])
+    have ecu : Real.cos u ^ 2 = 1 - Real.sin u ^ 2 := by
+      linarith [Real.sin_sq_add_cos_sq u]
+    have ecv : Real.cos v ^ 2 = 1 - Real.sin v ^ 2 := by
+      linarith [Real.sin_sq_add_cos_sq v]
+    have h2 : (0:ℝ) ≤ 1 - t ^ 2 := by nlinarith [ht2]
+    have hX2 : (Real.cos u * Real.sqrt (1 - (Real.sin v * t) ^ 2)) ^ 2
+        = Real.cos u ^ 2 * (1 - (Real.sin v * t) ^ 2) := by
+      rw [mul_pow, hsq1]
+    have hY2 : (Real.cos v * Real.sqrt (1 - (Real.sin u * t) ^ 2)) ^ 2
+        = Real.cos v ^ 2 * (1 - (Real.sin u * t) ^ 2) := by
+      rw [mul_pow, hsq2]
+    rcases le_or_gt v (Real.pi / 2) with hvle | hvgt
+    · -- both arguments in (0, π/2]
+      have hcu0 : 0 ≤ Real.cos u := hcosnonneg u hu.1 (le_trans huv hvle)
+      have hcv0 : 0 ≤ Real.cos v := hcosnonneg v hv.1 hvle
+      have hsineq : Real.sin u ≤ Real.sin v := by
+        rcases lt_or_eq_of_le huv with h | h
+        · exact le_of_lt (Real.sin_lt_sin_of_lt_of_le_pi_div_two (x := u)
+            (by linarith [hu.1, Real.pi_pos]) hvle h)
+        · exact h ▸ le_refl _
+      have hsq' : (Real.sin u) ^ 2 ≤ (Real.sin v) ^ 2 := by
+        nlinarith [hsu0, hsv0, hsineq, sq_nonneg (Real.sin u), sq_nonneg (Real.sin v)]
+      have hY2X2 : (Real.cos v * Real.sqrt (1 - (Real.sin u * t) ^ 2)) ^ 2
+          ≤ (Real.cos u * Real.sqrt (1 - (Real.sin v * t) ^ 2)) ^ 2 := by
+        rw [hX2, hY2, ecu, ecv, ← sub_nonneg]
+        have hexp : (1 - Real.sin u ^ 2) * (1 - (Real.sin v * t) ^ 2)
+            - (1 - Real.sin v ^ 2) * (1 - (Real.sin u * t) ^ 2)
+            = (1 - t ^ 2) * ((Real.sin v) ^ 2 - (Real.sin u) ^ 2) := by
+          ring
+        rw [hexp]
+        exact mul_nonneg h2 (sub_nonneg.mpr hsq')
+      exact le_of_sq_le_sq hY2X2 (mul_nonneg hcu0 hBv.le)
+    · -- v > π/2
+      rcases le_or_gt u (Real.pi / 2) with hucase | hucase
+      · -- mixed: cos u ≥ 0 ≥ cos v
+        have hcu0 : 0 ≤ Real.cos u := hcosnonneg u hu.1 hucase
+        have hcv0 : Real.cos v ≤ 0 := hcosnonpos v hvgt.le hv.2
+        have hX0 : 0 ≤ Real.cos u * Real.sqrt (1 - (Real.sin v * t) ^ 2) :=
+          mul_nonneg hcu0 hBv.le
+        have hY0 : Real.cos v * Real.sqrt (1 - (Real.sin u * t) ^ 2) ≤ 0 :=
+          mul_nonpos_of_nonpos_of_nonneg hcv0 hBu.le
+        linarith
+      · -- both in [π/2, π): mirror of the first case
+        have hcu0 : Real.cos u ≤ 0 := hcosnonpos u hucase.le hu.2
+        have hcv0 : Real.cos v ≤ 0 := hcosnonpos v (hucase.le.trans huv) hv.2
+        have hsineq : Real.sin v ≤ Real.sin u := by
+          rcases lt_or_eq_of_le huv with h | h
+          · have h1 : Real.sin (Real.pi - v) ≤ Real.sin (Real.pi - u) :=
+              le_of_lt (Real.sin_lt_sin_of_lt_of_le_pi_div_two
+                (le_trans (by linarith [Real.pi_pos])
+                  (sub_nonneg.mpr (by linarith [hv.2])))
+                (by linarith [hucase.le]) (by linarith [h]))
+            rwa [Real.sin_pi_sub, Real.sin_pi_sub] at h1
+          · exact h ▸ le_refl _
+        have hsq' : (Real.sin v) ^ 2 ≤ (Real.sin u) ^ 2 := by
+          nlinarith [hsu0, hsv0, hsineq, sq_nonneg (Real.sin u), sq_nonneg (Real.sin v)]
+        have hX2Y2 : (Real.cos u * Real.sqrt (1 - (Real.sin v * t) ^ 2)) ^ 2
+            ≤ (Real.cos v * Real.sqrt (1 - (Real.sin u * t) ^ 2)) ^ 2 := by
+          rw [hX2, hY2, ecu, ecv, ← sub_nonneg]
+          have hexp : (1 - Real.sin v ^ 2) * (1 - (Real.sin u * t) ^ 2)
+              - (1 - Real.sin u ^ 2) * (1 - (Real.sin v * t) ^ 2)
+              = (1 - t ^ 2) * ((Real.sin u) ^ 2 - (Real.sin v) ^ 2) := by
+            ring
+          rw [hexp]
+          nlinarith [h2, hsq', hsu0, hsv0]
+        have hYneg : 0 ≤ -(Real.cos v * Real.sqrt (1 - (Real.sin u * t) ^ 2)) := by
+          rw [neg_nonneg]
+          nlinarith [hcv0, hBu.le]
+        have hXneg : 0 ≤ -(Real.cos u * Real.sqrt (1 - (Real.sin v * t) ^ 2)) := by
+          rw [neg_nonneg]
+          nlinarith [hcu0, hBv.le]
+        have hfin := le_of_sq_le_sq
+          (a := -(Real.cos u * Real.sqrt (1 - (Real.sin v * t) ^ 2)))
+          (b := -(Real.cos v * Real.sqrt (1 - (Real.sin u * t) ^ 2)))
+          (by have h1 : (-(Real.cos u * Real.sqrt (1 - (Real.sin v * t) ^ 2))) ^ 2
+                = (Real.cos u * Real.sqrt (1 - (Real.sin v * t) ^ 2)) ^ 2 := neg_sq _
+              have h2 : (-(Real.cos v * Real.sqrt (1 - (Real.sin u * t) ^ 2))) ^ 2
+                = (Real.cos v * Real.sqrt (1 - (Real.sin u * t) ^ 2)) ^ 2 := neg_sq _
+              rw [h1, h2]; exact hX2Y2) hYneg
+        linarith
+  refine AntitoneOn.concaveOn_of_deriv (convex_Icc 0 Real.pi) ?_ ?_
+    (by rw [interior_Icc]; exact hanti)
+  · exact (Real.continuous_arcsin.comp (Real.continuous_sin.mul_const t)).continuousOn
+  · intro z hz
+    rw [interior_Icc] at hz
+    exact (hFderiv z).differentiableAt.differentiableWithinAt
+
+/-- HOL `convex_sum_corollary` (counting_spheres.hl:4276). Filled via the
+concavity of `u ↦ asn (sin u * t)` and Jensen's inequality with uniform
+weights `1/n`. -/
 theorem convex_sum_corollary (n : ℕ) (t : ℝ) (bet : ℕ → ℝ) (hn : 0 < n)
     (ht : 0 < t ∧ t < 1) (hsum : ∑ i ∈ Finset.Icc 1 n, bet i = Real.pi)
     (hb : ∀ i : ℕ, i ∈ Finset.Icc 1 n → 0 ≤ bet i ∧ bet i ≤ Real.pi) :
     Real.pi - n * asn (Real.sin (Real.pi / n) * t) ≤
       ∑ i ∈ Finset.Icc 1 n, (bet i - asn (Real.sin (bet i) * t)) := by
-  sorry
+  have hcc := p22_arcsin_sin_concave ht.1 ht.2
+  have hw1 : ∑ i ∈ Finset.Icc 1 n, (1 / n : ℝ) = 1 := by
+    rw [Finset.sum_const, nsmul_eq_mul, Nat.card_Icc, Nat.add_sub_cancel]
+    field_simp
+  have hmem : ∀ i ∈ Finset.Icc 1 n, bet i ∈ Set.Icc 0 Real.pi := fun i hi =>
+    Set.mem_Icc.mpr ⟨(hb i hi).1, (hb i hi).2⟩
+  have hj := ConcaveOn.le_map_sum (𝕜 := ℝ) (β := ℝ) (s := Set.Icc 0 Real.pi)
+    (f := fun u => asn (Real.sin u * t)) (t := Finset.Icc 1 n) (w := fun _ => 1 / n)
+    (p := bet) hcc (fun i _ => by positivity) hw1 hmem
+  simp only [smul_eq_mul] at hj
+  have hsumw : ∑ i ∈ Finset.Icc 1 n, (1 / n : ℝ) * bet i = Real.pi / n := by
+    rw [← Finset.mul_sum, hsum]
+    field_simp
+  rw [hsumw] at hj
+  have hn' : (0:ℝ) ≤ n := by exact_mod_cast hn.le
+  have hlhs : ∑ i ∈ Finset.Icc 1 n, asn (Real.sin (bet i) * t)
+      ≤ n * asn (Real.sin (Real.pi / n) * t) := by
+    have h1 := mul_le_mul_of_nonneg_left hj hn'
+    rw [Finset.mul_sum] at h1
+    refine (Finset.sum_le_sum (fun i _ => ?_)).trans h1
+    have hni : ((n:ℝ) * ((1:ℝ) / n)) = 1 := by field_simp
+    rw [← mul_assoc, hni, one_mul]
+  have hrhs : ∑ i ∈ Finset.Icc 1 n, (bet i - asn (Real.sin (bet i) * t))
+      = Real.pi - ∑ i ∈ Finset.Icc 1 n, asn (Real.sin (bet i) * t) := by
+    rw [Finset.sum_sub_distrib, hsum]
+  rw [hrhs]
+  linarith [hlhs]
 
 /-- HOL `SOL_SUBSET` (counting_spheres.hl:4305). Filled from `sol_spec` and
 monotonicity of real-valued measure. -/
@@ -2181,24 +2595,125 @@ theorem cos_bounds_0_Pi2 (x : ℝ) (h1 : 0 < x) (h2 : x < Real.pi / 2) :
     (Set.mem_Icc.mpr ⟨h1.le, le_trans h2.le (by linarith [Real.pi_pos])⟩) h1
   simpa using h
 
-/-- HOL `rcone_gt_arcV` (counting_spheres.hl:4618). GIANT. -/
+/-- `arcV 0 p v` is Mathlib's vector angle `InnerProductGeometry.angle p v`. -/
+private theorem p22_arcV_eq_angle (p v : V3) :
+    arcV 0 p v = InnerProductGeometry.angle p v := by
+  rw [arcV, InnerProductGeometry.angle, dist_zero_right, dist_zero_right]
+  congr 1
+  rw [← inner_eq_dot]
+  simp
+
+/-- Cosine of `arcV 0 p v` is the normalized dot product. -/
+private theorem p22_cos_arcV (p v : V3) (hp : p ≠ 0) (hv : v ≠ 0) :
+    Real.cos (arcV 0 p v) = (p ⬝ᵥ v) / (‖p‖ * ‖v‖) := by
+  rw [p22_arcV_eq_angle, InnerProductGeometry.cos_angle, inner_eq_dot]
+
+/-- Members of `[0, π]` for `arcV 0 p v` (any `p v`, degenerate included). -/
+private theorem p22_arcV_mem_Icc (p v : V3) : arcV 0 p v ∈ Set.Icc (0:ℝ) Real.pi :=
+  Set.mem_Icc.mpr ⟨Real.arccos_nonneg _, Real.arccos_le_pi _⟩
+
+/-- HOL `rcone_gt_arcV` (counting_spheres.hl:4618). Filled: the rcone
+inequality is `cos g < cos (arcV 0 p v)` after Cauchy–Schwarz normalization,
+and `cos` is strictly antitone on `[0, π]`. -/
 theorem rcone_gt_arcV (v p : V3) (g : ℝ) (hg1 : 0 < g) (hg2 : g < Real.pi / 2)
     (hp : p ∈ rconeGt 0 v (Real.cos g)) : arcV 0 p v < g := by
-  sorry
+  have hc : 0 < Real.cos g := (cos_bounds_0_Pi2 g hg1 hg2).1
+  obtain ⟨hp0, hv0⟩ := rcone_nz v p (Real.cos g) hc hp
+  rw [rcone_def_alt] at hp
+  have hnn : (0:ℝ) < ‖p‖ * ‖v‖ := mul_pos (norm_pos_iff.mpr hp0) (norm_pos_iff.mpr hv0)
+  have hp' : Real.cos g < Real.cos (arcV 0 p v) := by
+    rw [p22_cos_arcV p v hp0 hv0, lt_div_iff₀ hnn, mul_comm]
+    exact hp
+  have hgle : g ∈ Set.Icc (0:ℝ) Real.pi :=
+    Set.mem_Icc.mpr ⟨hg1.le, by linarith [Real.pi_pos]⟩
+  refine lt_of_le_of_ne
+    ((Real.strictAntiOn_cos.le_iff_ge hgle (p22_arcV_mem_Icc p v)).mp (le_of_lt hp')) ?_
+  intro hcon
+  rw [hcon] at hp'
+  exact lt_irrefl (Real.cos g) hp'
 
-/-- HOL `rcone_gt_arc_triangle` (counting_spheres.hl:4685). GIANT. -/
+/-- HOL `rcone_gt_arc_triangle` (counting_spheres.hl:4685). Filled: the
+angle triangle inequality (`InnerProductGeometry.angle_le_angle_add_angle`)
+plus `rcone_gt_arcV` give `arcV 0 v w < gv + gw`, contradicting `h3`. -/
 theorem rcone_gt_arc_triangle (p v w : V3) (gv gw : ℝ) (hw : w ≠ 0)
     (h1 : 0 < gv) (h2 : gv < Real.pi / 2) (hp : p ∈ rconeGt 0 v (Real.cos gv))
     (h3 : gv + gw ≤ arcV 0 v w) : gw < arcV 0 p w := by
-  sorry
+  by_contra hcon
+  push_neg at hcon
+  have hc : arcV 0 p v < gv := rcone_gt_arcV v p gv h1 h2 hp
+  have hvp : arcV 0 v p = arcV 0 p v := by
+    rw [p22_arcV_eq_angle v p, p22_arcV_eq_angle p v, InnerProductGeometry.angle_comm]
+  have htri : arcV 0 v w ≤ arcV 0 v p + arcV 0 p w := by
+    rw [p22_arcV_eq_angle v w, p22_arcV_eq_angle v p, p22_arcV_eq_angle p w]
+    exact InnerProductGeometry.angle_le_angle_add_angle v p w
+  have hlt : arcV 0 v p < gv := by rw [hvp]; exact hc
+  have h6 : arcV 0 v p + arcV 0 p w < arcV 0 v p + gw := by linarith
+  have h7 : arcV 0 v p + gw < gv + gw := by linarith
+  have hfinal : arcV 0 v w < arcV 0 v w := by linarith
+  exact absurd hfinal (lt_irrefl _)
 
-/-- HOL `rcone_gt_facet` (counting_spheres.hl:4710). GIANT. -/
+/-- HOL `rcone_gt_facet` (counting_spheres.hl:4710). Filled: `q` is the
+positive multiple of `p` of norm `cos gv / cos (arcV 0 p v) < 1`; combining
+`rcone_gt_arc_triangle` (angle) with the strict antitonicity of `cos` on
+`[0, π]` bounds `p ⬝ᵥ w`, and rescaling gives the claim. -/
 theorem rcone_gt_facet (gv gw : ℝ) (v w q p : V3) (h1 : 0 < gv ∧ gv < Real.pi / 2)
     (h2 : 0 < gw ∧ gw < Real.pi / 2) (hw : w ≠ 0)
     (hp : p ∈ rconeGt 0 v (Real.cos gv))
     (hq : q = ((‖v‖ * Real.cos gv) / (p ⬝ᵥ v)) • p)
     (h4 : gv + gw ≤ arcV 0 v w) : q ⬝ᵥ w < ‖w‖ * Real.cos gw := by
-  sorry
+  have hcgv : 0 < Real.cos gv := (cos_bounds_0_Pi2 gv h1.1 h1.2).1
+  have hcgw : 0 < Real.cos gw := (cos_bounds_0_Pi2 gw h2.1 h2.2).1
+  have hpp : 0 < p ⬝ᵥ v := rcone_dot_pos v (Real.cos gv) p hcgv hp
+  obtain ⟨hp0, hv0⟩ := rcone_nz v p (Real.cos gv) hcgv hp
+  have hnp : (0:ℝ) < ‖p‖ := norm_pos_iff.mpr hp0
+  have hnv : (0:ℝ) < ‖v‖ := norm_pos_iff.mpr hv0
+  have hnn : (0:ℝ) < ‖p‖ * ‖v‖ := mul_pos hnp hnv
+  have hcosarc : Real.cos (arcV 0 p v) = (p ⬝ᵥ v) / (‖p‖ * ‖v‖) :=
+    p22_cos_arcV p v hp0 hv0
+  have hpv : p ⬝ᵥ v = ‖p‖ * ‖v‖ * Real.cos (arcV 0 p v) := by rw [hcosarc]; field_simp
+  have harcv : arcV 0 p v < gv := rcone_gt_arcV v p gv h1.1 h1.2 hp
+  have hmem_gv : gv ∈ Set.Icc (0:ℝ) Real.pi :=
+    Set.mem_Icc.mpr ⟨h1.1.le, by linarith [Real.pi_pos]⟩
+  have hcoslt : Real.cos gv < Real.cos (arcV 0 p v) :=
+    Real.strictAntiOn_cos (p22_arcV_mem_Icc p v) hmem_gv harcv
+  have hqlt : ‖q‖ < 1 := by
+    have hcp : 0 < (‖v‖ * Real.cos gv) / (p ⬝ᵥ v) :=
+      div_pos (mul_pos hnv hcgv) hpp
+    rw [hq, norm_smul, Real.norm_eq_abs, abs_of_pos hcp, div_mul_eq_mul_div,
+      div_lt_iff₀ hpp, one_mul, hpv]
+    calc ‖v‖ * Real.cos gv * ‖p‖ = ‖p‖ * ‖v‖ * Real.cos gv := by ring
+      _ < ‖p‖ * ‖v‖ * Real.cos (arcV 0 p v) :=
+          mul_lt_mul_of_pos_left hcoslt hnn
+  -- the angle to w is > gw, so the normalized dot with w is < cos gw
+  have harc : gw < arcV 0 p w := rcone_gt_arc_triangle p v w gv gw hw h1.1 h1.2 hp h4
+  have hmem_gw : gw ∈ Set.Icc (0:ℝ) Real.pi :=
+    Set.mem_Icc.mpr ⟨h2.1.le, by linarith [Real.pi_pos]⟩
+  have hcosltw : Real.cos (arcV 0 p w) < Real.cos gw :=
+    Real.strictAntiOn_cos hmem_gw (p22_arcV_mem_Icc p w) harc
+  have hnpw : (0:ℝ) < ‖p‖ * ‖w‖ := mul_pos hnp (norm_pos_iff.mpr hw)
+  have hpw : p ⬝ᵥ w < ‖p‖ * ‖w‖ * Real.cos gw := by
+    rw [p22_cos_arcV p w hp0 hw, div_lt_iff₀ hnpw] at hcosltw
+    linarith [show Real.cos gw * (‖p‖ * ‖w‖) = ‖p‖ * ‖w‖ * Real.cos gw from by ring]
+  have hfin : q ⬝ᵥ w < ‖q‖ * (‖w‖ * Real.cos gw) := by
+    have hcp : 0 < (‖v‖ * Real.cos gv) / (p ⬝ᵥ v) := div_pos (mul_pos hnv hcgv) hpp
+    have hqn : ‖q‖ = ((‖v‖ * Real.cos gv) / (p ⬝ᵥ v)) * ‖p‖ := by
+      rw [hq, norm_smul, Real.norm_eq_abs, abs_of_pos hcp]
+    have hsub : ((‖v‖ * Real.cos gv) / (p ⬝ᵥ v)) * (p ⬝ᵥ w)
+        < ((‖v‖ * Real.cos gv) / (p ⬝ᵥ v)) * (‖p‖ * ‖w‖ * Real.cos gw) :=
+      mul_lt_mul_of_pos_left hpw hcp
+    have hstep : ((‖v‖ * Real.cos gv) / (p ⬝ᵥ v)) * (‖p‖ * ‖w‖ * Real.cos gw)
+        = ‖q‖ * (‖w‖ * Real.cos gw) := by
+      rw [hqn]; ring
+    have hqvw : q ⬝ᵥ w = ((‖v‖ * Real.cos gv) / (p ⬝ᵥ v)) * (p ⬝ᵥ w) := by
+      rw [hq, dotV_smul_left]
+    calc q ⬝ᵥ w = ((‖v‖ * Real.cos gv) / (p ⬝ᵥ v)) * (p ⬝ᵥ w) := hqvw
+      _ < ((‖v‖ * Real.cos gv) / (p ⬝ᵥ v)) * (‖p‖ * ‖w‖ * Real.cos gw) := hsub
+      _ = ‖q‖ * (‖w‖ * Real.cos gw) := hstep
+  calc q ⬝ᵥ w < ‖q‖ * (‖w‖ * Real.cos gw) := hfin
+    _ ≤ 1 * (‖w‖ * Real.cos gw) :=
+        mul_le_mul_of_nonneg_right (le_of_lt hqlt)
+          (le_of_lt (mul_pos (norm_pos_iff.mpr hw) hcgw))
+    _ = ‖w‖ * Real.cos gw := one_mul _
 
 /-- HOL `BIJ_SYM` (counting_spheres.hl:4784), restated with `[Nonempty a]`:
 in HOL every type is inhabited so a function `b → a` always exists; in Lean it
