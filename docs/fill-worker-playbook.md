@@ -167,6 +167,20 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   不存在（用 `Finset.mem_singleton`；Set 侧才是 `Set.mem_singleton_iff`）；
   `obtain … := h` 会清除 h（先 `have hkeep := h`）；同文件禁前向引用；
   U+209D 不是合法标识符字符。
+- **PA18**（71 remaining @wave2）：本轮落下**三座 azim↔affine 桥**（private，
+  回灌时去 private）：`pa18_azim_zero_affGe`（azim=0 ↔ affGe，即 LA5:1312
+  AZIM_EQ_0_GE_ALT2 的证明版）、`pa18_affGe_affGt_of_ncol`、
+  `pa18_collinear3_line_affGe`。cc 簇最短解锁路径：**MHFTTZN3（PA6:848）可由
+  MHFTTZN4+BARV_CIRCUMCENTER_EXISTS+XYOFCGX(PA7:343) 自证** → JDHAWAY_0 →
+  cc_pe_exists → PA25 全通；FUZBZGI_0 链另需 PA12 VORONOI_LIST_3_SINGLETON_EXPLICIT。
+  azim 工具箱全在 `Geom/AzimLemmas.lean`（azim_eq_azim_iff(_alt)/azim_compl/
+  azim_frame_spec 全已证）+ `Geom/Aff.lean` 的 Affsign。
+  命名坑补充：`smul_right_injective` 存在；`Set.not_mem_empty` 不存在（用 simp）；
+  `direction_eq_vectorSpan` 要 `AffineSubspace.` 前缀；`convex_segment` 的 𝕜 隐式；
+  `linear_combination (norm := module)` 方向敏感（用 `first |…|…` 双向）；
+  归约 if 用一条 `simp only [h01, h0w.symm, …]` 而非顺序 rw。
+- **效率招：/tmp 隔离迭代法**：新私理在 `lake env lean /tmp/test.lean`（import 所需
+  模块、私有依赖自带副本）分钟级迭代，定稿再粘回 lane——避免大文件反复全编。
 - **PA2**（52 remaining @2026-09-28 桥 lane 后）：`OAPVION1/2/3_concl` 三件套已闭合
   （Mathlib `AffineIndependent.existsUnique_dist_eq` 路线，可复用于一切
   circumcenter/radV-epsilon 类桥）；其余大多卡各章 capstone。
