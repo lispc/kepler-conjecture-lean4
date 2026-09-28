@@ -6,13 +6,23 @@
 > ——代码与文档零损失（git 全量）。新基线：Apple M3 Pro 12 核/36GB。
 > **重型计算全部挂起待强机器，本文件所有旧机时间口径作废**；主力转向 Phase 5 填证
 > 与轻量 Lean 任务（LLM 工人 = ZCode sub agents，opencode CLI 退役）。
-> 遗留风险：本机 GitHub key 无 push 权限（denied to lispczz），解决前成果仅本地 commit。
+> 遗留风险：~~本机 GitHub key 无 push 权限~~（2026-09-28 已解决，main 全天正常 push）。
 >
 > 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新（cron 自动 push）。
 > 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
 > 当前 main @ 见本 commit；最近验收：各批次根构建绿（wip/auto-packing 批次提交信息 "38-way root clean"，`aa4baf6b`；HANDOFF 记录 `make check` 绿 `c425db2`，2026-09-14）。
 > 注意：2026-09-13 起接班 agent 改为 main 直推模式，允许在制骨架 sorry 短暂存在；
 > 历史 sanctioned 占位仍为 `Statement.lean` 主定理（见 Phase 1）。
+> **Wave 2/2r 收官（2026-09-28 晚）**：换机后首个全 sub-agent 波收官——
+> 9 条 lane 全部过闸落地（LA38 二轮+DIHV 桥 / PA18 / PA4 攻坚 / PA22 桩致假 8 枚立
+> 案+二轮 20 枚 / PA2 OAPVION 三件套+GLTVHUM·DUUNHOR 侦察注记 / PA25 11 枚 / LA5
+> 二轮 8 枚+假陈述提案官 10 项裁决），**全天两波合计 ~115 枚 sorry 清偿（精确数见
+> DEBT.md）**。闸门同日四演进（NOTES-LANE/STATEMENT-FIX 模式/规则②逐字加回与
+> 拆行骨架豁免/规则③ sorry 净计数/规则⑤ sorryAx 转白）；陈述修复波获授权
+> （DECISIONS.md 2026-09-28 条，提案文档+补丁草案已入库）。**下一 milestone = M5′
+> 主定理端到端可达**（`docs/phase6-spine.md` §6：脊柱已存在，债务图 instrumentation
+> 为 Step 0，lane 按"主定理可达 sorry 递减"排序）。环境纪律：worktree/共享 .lake
+> 符号链接禁令、lake 环境级操作禁并发（当日两次 mathlib 包目录事故的教训）。
 > **重大进展（2026-09-19）**：**Phase 6 装配脊柱已立（`0742680a`）**——
 > `Kepler/Assembly.lean` 冻结四接口 sorry + 真证明装配定理（Phase 2 tame_classification
 > 已接线），`the_kepler_conjecture_from_interfaces` 的 `#print axioms` = 全项目债务图入口；

@@ -372,3 +372,33 @@ LocalConcl 每轮扫）。
   `exact` 的换算也不可靠——分量级（`ext i` + Fin.sum_univ_three + ring）与
   inner 级（`real_inner_*` + ring）两条路是本文件几何代数的可靠姿势，已沉淀为
   `p12_norm_sq_convex` 等私件。
+
+## 2026-09-28 晚 · Wave 2/2r 收官补记（ZCode sub agents 首个全波）
+
+**交付**：9 lanes 全过闸落地——LA38 二轮(8)+DIHV 桥(2, taustar 双件回退待重填)/
+PA18(18)/PA4 攻坚(26, 65→39)/PA22 r1(11)+r2(20)/PA25(11)/PA2 OAPVION 三件套+
+GLTVHUM·DUUNHOR 侦察注记/LA5 r1(12)+r2(8)；假陈述提案官 10 项(A2/B7/解除1)。
+全天 ~115 枚清偿。七收官根统一构建 0 error（含全部新落地模块）。
+
+**闸门当日演进总账**（全部有 commit）：NOTES-LANE 零删行豁免（54d9ed0f/2a9cfed9）→
+STATEMENT-FIX 模式（c5d9f7cc，用户拍板）→ 规则②逐字加回豁免+docstring 闭合行过滤
++拆行骨架项模式收尾豁免 → 规则③ sorry 净计数制 → 规则⑤ sorryAx 转白。
+申报口径：五闸语义变化全部是"合法填法形态扩容"，拦截强度不减（重复声明闸④兜底、
+非标公理仍拦、净增 sorry 仍拦）。
+
+**波内事故三起与对策**：①mathlib 包目录被 worktree+符号链接实验打掉（禁令入
+playbook，cache get! 恢复路径固化）；②mathlib 波内第二次消失（根因未查明，
+已加 SPINE_CACHE_ROOT mac port；再发排查并行整树副本窗口）；③编排者 perl -i
+宽字符清空 playbook（297 行回滚，文档修订一律 Edit 工具）。
+
+**关键方法沉淀**：env-lean 假绿最大实证（PA6+7：env 0 错/lake ~50 错，分量法唯一
+稳定路线）；修复工单模式（编排者精确错误清单+回退规程保护阀 → 修理工一次清
+PA18/PA4/LA38 全部编译错）；"全树副本+脏文件还原 HEAD"自助终验法（PA22，12G 副本
+用完即删）；陈述修复波全流程就绪（STATEMENT-FIX 闸门+提案文档+补丁存档，
+DECISIONS 2026-09-28 条）。
+
+**下一波入口**：`docs/phase6-spine.md` §6（M5′ 路线图）——Step 0 债务图
+instrumentation → 下一波 lane 按主定理可达性排（廉价接口 5 枚/PACKING_CHAPTER_
+MAIN_CONCLUSION/RELATIVE_INTERIOR_AFFINE_FACE 原位填证/LA5 orbit 白捡 4 枚）+
+陈述修复波（项7→项1→项13）。工人最佳实践：`docs/fill-worker-playbook.md`（每波
+更新）。
