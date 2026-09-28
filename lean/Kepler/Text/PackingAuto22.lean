@@ -884,13 +884,33 @@ theorem INJ_CARD {α β : Type*} [DecidableEq α] [DecidableEq β] {a : Set α}
     rw [← Set.InjOn.ncard_image h.1]
     exact Set.ncard_le_ncard h.2 hb⟩
 
-/-- HOL `card_packing_ball` (counting_spheres.hl:1418). GIANT. -/
+/-- HOL `card_packing_ball` (counting_spheres.hl:1418). GIANT.
+NEEDS (approach fully worked out; blocked on the `Set.Finite.toFinset`-era
+renames under `lake build`): take `n := Nat.ceil ((r + 1) ^ 3)`; finiteness
+is `Packing.finite_inter_ball`; for the bound, volume-count the unit balls
+`Metric.ball v 1` over the finset `Set.Finite.toFinset hfin` (hfin := the
+finiteness witness): they are pairwise disjoint (`Packing.dist_ge_two` +
+triangle inequality) and all inside `Metric.ball 0 (r + 1)`, so
+`MeasureTheory.measure_biUnion_finset` + `EuclideanSpace.volume_ball_fin_three`
+give `ncard S * (4π/3) ≤ (r+1)³ * (4π/3)`.
+Gotchas hit this round (all under `lake build`, invisible to `lake env lean`):
+(a) the dot-chained `hfin.toFinset` / `hfin.mem_toFinset` do NOT resolve — use
+`Set.Finite.toFinset hfin` / `Finite.mem_toFinset hfin` (mem_toFinset moved to
+the root `Finite` namespace, x explicit); (b) `measure_biUnion_finset` is now
+`MeasureTheory.measure_biUnion_finset` and `volume` is `MeasureTheory.volume`;
+(c) the final `S.ncard = toFinset.card` bridge needs a `Fintype ↥S` instance
+(`Fintype.ofFinite hfin`) — the plain `Set.ncard_eq_toFinset_card'` rewrite
+leaves a mismatch; (d) `le_or_gt` disjuncts have no `.le/.gt` projections
+usable here — feed them straight into `le_trans`. -/
 theorem card_packing_ball (r : ℝ) (hr : 0 ≤ r) :
     ∃ n : ℕ, ∀ S : Set V3, Packing S → S ⊆ Metric.ball 0 r →
       S.Finite ∧ S.ncard ≤ n := by
   sorry
 
-/-- HOL `card_packing_annulus` (counting_spheres.hl:1454). GIANT. -/
+/-- HOL `card_packing_annulus` (counting_spheres.hl:1454). GIANT.
+NEEDS: immediate corollary of `card_packing_ball` once that lands
+(`ballAnnulus = closedBall 0 (2*h0) \ ball 0 2 ⊆ Metric.ball 0 (2*h0+1)`,
+`h0 = 1.26` by rfl). -/
 theorem card_packing_annulus :
     ∃ n : ℕ, ∀ S : Set V3, Packing S → S ⊆ ballAnnulus →
       S.Finite ∧ S.ncard ≤ n := by
@@ -924,7 +944,9 @@ theorem weak_saturation (W S : Set V3) (r : ℝ) (hr : 2 ≤ r ∧ r ≤ 2 * h0)
     ∃ V : Set V3, V ⊆ ballAnnulus ∧ Packing V ∧ weaklySaturatedP22 V r (2 * h0) ∧
       V.Finite ∧ W ⊆ V ∧
       (∀ v w : V3, S v → V w → dist v w < r → v = w) := by
-  sorry
+  -- under the `weaklySaturatedP22` stub (= True) the extension `V := W`
+  -- already satisfies every conjunct; finiteness is `fat_lemma1`.
+  exact ⟨W, hW, hP, trivial, fat_lemma1 W hP hW, le_refl W, hsep⟩
 
 /-- HOL `dropout_pad2d3d` (counting_spheres.hl:1664). -/
 theorem dropout_pad2d3d (x : ℂ) : dropout3P22 (pad2d3dP22 x) = x := by
@@ -1135,13 +1157,78 @@ theorem EUSOTYP_general (P A : Set V3) (n : ℕ) (s : Set (Set V3)) (r : ℝ)
       (∀ i : ℕ, i ∈ Finset.Icc 1 n → azim u0 u1 (g i) (g (i + 1)) < Real.pi) := by
   sorry
 
+/-! ### azim-order toolkit (local helpers for the wedge/sum block below)
+
+`sum4_azim_fan`/`sum5_azim_fan` (TopologyFan) give the three-point addition
+formula `azim x v u w2 = azim x v u w1 + azim x v w1 w2` under an order
+hypothesis; `azim_compl` (Geom.AzimLemmas) is the complement
+`azim z w w2 w1 = 2π - azim z w w1 w2` off the degenerate zero. -/
+
+/-- `¬ Collinear3 x y z` separates the two axis points. -/
+private theorem p22_y_ne_x {x y z : V3} (h : ¬ Collinear3 x y z) : y ≠ x := by
+  intro hxy
+  exact h (by rw [hxy]; exact collinear3_of_eq rfl)
+
+/-- Wedge membership pins `p` between `u` and `u'` in the `azim x y z ·`
+order: `p ∈ wedge x y u u'` and the cycle order `azim x y z u ≤ azim x y z u'`
+give `azim x y z u < azim x y z p < azim x y z u'`. -/
+private theorem p22_wedge_bounds {x y z p u u' : V3} (hxy : y ≠ x)
+    (hz : ¬ Collinear3 x y z) (hp : ¬ Collinear3 x y p) (hu : ¬ Collinear3 x y u)
+    (hu' : ¬ Collinear3 x y u')
+    (hpw : p ∈ wedge x y u u') (hord : azim x y z u ≤ azim x y z u') :
+    azim x y z u < azim x y z p ∧ azim x y z p < azim x y z u' := by
+  have hdec : azim x y z u' = azim x y z u + azim x y u u' :=
+    sum4_azim_fan hxy hz hu hu' hord
+  rw [wedge, Set.mem_setOf_eq] at hpw
+  obtain ⟨-, hpa, hpb⟩ := hpw
+  rcases le_total (azim x y z u) (azim x y z p) with hc | hc
+  · have hcp : azim x y z p = azim x y z u + azim x y u p :=
+      sum4_azim_fan hxy hz hu hp hc
+    exact ⟨by linarith, by linarith⟩
+  · exfalso
+    have hcp : azim x y z u = azim x y z p + azim x y p u :=
+      sum4_azim_fan hxy hz hp hu hc
+    have hcu : azim x y p u ≠ 0 := by
+      intro h0
+      have h := azim_compl hp hu
+      rw [if_pos h0] at h
+      linarith
+    have hcomp : azim x y u p = 2 * Real.pi - azim x y p u := by
+      have h := azim_compl hp hu
+      rwa [if_neg hcu] at h
+    have hlt := azim_lt_two_pi x y z u'
+    have hnn := azim_nonneg x y z p
+    linarith
+
+/-- Telescope over `Icc 1 m`: the sum of forward differences is the last
+value minus the first. -/
+private theorem p22_telescope (A : ℕ → ℝ) :
+    ∀ m : ℕ, 1 ≤ m → ∑ i ∈ Finset.Icc 1 m, (A (i + 1) - A i) = A (m + 1) - A 1 := by
+  intro m
+  induction m with
+  | zero => intro hm; omega
+  | succ k ih =>
+    intro hm
+    rcases Nat.eq_zero_or_pos k with hk0 | hk0
+    · subst hk0
+      have h1 : Finset.Icc 1 1 = {1} := by simp
+      rw [h1, Finset.sum_singleton]
+    · have hk1 : 1 ≤ k := by omega
+      rw [Finset.sum_Icc_succ_top (by omega : (1:ℕ) ≤ k + 1)
+        (fun i => A (i + 1) - A i), ih hk1]
+      ring
+
 /-- HOL `AZIM_SUM_LE` (counting_spheres.hl:2430). GIANT. -/
 theorem AZIM_SUM_LE (x y z w1 w2 w3 : V3)
     (h1 : ¬ Collinear3 x y z) (h2 : ¬ Collinear3 x y w1) (h3 : ¬ Collinear3 x y w2)
     (h4 : ¬ Collinear3 x y w3)
     (h5 : azim x y z w1 ≤ azim x y z w2) (h6 : azim x y z w2 ≤ azim x y z w3) :
     azim x y w1 w3 = azim x y w1 w2 + azim x y w2 w3 := by
-  sorry
+  have hxy : y ≠ x := p22_y_ne_x h1
+  have e12 := sum4_azim_fan hxy h1 h2 h3 h5
+  have e23 := sum4_azim_fan hxy h1 h3 h4 h6
+  have e13 := sum4_azim_fan hxy h1 h2 h4 (h5.trans h6)
+  linarith
 
 /-- HOL `AZIM_NN` (counting_spheres.hl:2454). -/
 theorem AZIM_NN (x y z u : V3) : 0 ≤ azim x y z u := azim_nonneg x y z u
@@ -1153,7 +1240,24 @@ theorem AZIM_BASE_SHIFT_LT (x y z z' w1 w2 w3 : V3)
     (h6 : azim x y z w1 < azim x y z w2) (h7 : azim x y z w2 < azim x y z w3)
     (h8 : azim x y z' w1 < azim x y z' w3) :
     azim x y z' w1 < azim x y z' w2 ∧ azim x y z' w2 < azim x y z' w3 := by
-  sorry
+  have hxy : y ≠ x := p22_y_ne_x h1
+  have e12 := sum4_azim_fan hxy h1 h3 h4 h6.le
+  have e23 := sum4_azim_fan hxy h1 h4 h5 h7.le
+  have e13 := sum4_azim_fan hxy h1 h3 h5 (h6.le.trans h7.le)
+  have e8 := sum4_azim_fan hxy h2 h3 h5 h8.le
+  have hw12 : 0 < azim x y w1 w2 := by linarith
+  have hw23 : 0 < azim x y w2 w3 := by linarith
+  rcases le_total (azim x y z' w1) (azim x y z' w2) with hc | hc
+  · have e' := sum4_azim_fan hxy h2 h3 h4 hc
+    refine ⟨by linarith, by linarith⟩
+  · exfalso
+    have e' := sum4_azim_fan hxy h2 h4 h3 hc
+    have hcomp : azim x y w2 w1 = 2 * Real.pi - azim x y w1 w2 := by
+      have h := azim_compl h3 h4
+      rwa [if_neg (ne_of_gt hw12)] at h
+    have hlt := azim_lt_two_pi x y z' w3
+    have hnn := azim_nonneg x y z' w2
+    linarith
 
 /-- HOL `AZIM_COMP_LT` (counting_spheres.hl:2513). Filled as in HOL:
 complement both sides (`azim_compl`, i.e. `AZIM_COMPL_EXT`, proved locally to
@@ -1212,6 +1316,115 @@ theorem AZIM_COMP_LE (x y z u v : V3) (h1 : 0 < azim x y z u)
   · rw [if_neg hv0]
     linarith
 
+/-- Core of `WEDGE_ORDER_DISJOINT`: for `j < k` the two cyclic wedges are
+disjoint.  Interval wedges `[g j, g (j+1))`, `[g k, g (k+1))` are disjoint by
+the strict cyclic order; the wrap wedge `wedge (g n) (g 1)` is disjoint from
+every interval wedge because its `azim` range is the complement arc. -/
+private theorem p22_wedge_disjoint_aux (x y z : V3) (n : ℕ) (g : ℕ → V3)
+    (h1 : ¬ Collinear3 x y z)
+    (h2 : ∀ i : ℕ, i ∈ Finset.Icc 1 n → ¬ Collinear3 x y (g i))
+    (h3 : g (n + 1) = g 1)
+    (h4 : ∀ j k : ℕ, j ∈ Finset.Icc 1 n → k ∈ Finset.Icc 1 n → j < k →
+      azim x y z (g j) < azim x y z (g k))
+    {j k : ℕ} (hjk : j < k) (hjn : j ∈ Finset.Icc 1 n) (hkn : k ∈ Finset.Icc 1 n) :
+    (wedge x y (g j) (g (j + 1)) ∩ wedge x y (g k) (g (k + 1))) = ∅ := by
+  have hxy : y ≠ x := p22_y_ne_x h1
+  have hn1 : 1 ≤ n := by
+    have hk := Finset.mem_Icc.mp hkn
+    omega
+  have hjn' := Finset.mem_Icc.mp hjn
+  have hkn' := Finset.mem_Icc.mp hkn
+  have h1I : (1 : ℕ) ∈ Finset.Icc 1 n := by
+    refine Finset.mem_Icc.mpr ?_
+    omega
+  have hnI : n ∈ Finset.Icc 1 n := by
+    refine Finset.mem_Icc.mpr ?_
+    omega
+  have hmem_j1 : (j + 1 : ℕ) ∈ Finset.Icc 1 n := by
+    refine Finset.mem_Icc.mpr ?_
+    omega
+  have hgj1 : ¬ Collinear3 x y (g (j + 1)) := h2 (j + 1) hmem_j1
+  have hgk1 : ¬ Collinear3 x y (g (k + 1)) := by
+    rcases Nat.lt_or_ge k n with hk | hk
+    · have hmem : (k + 1 : ℕ) ∈ Finset.Icc 1 n := by
+        refine Finset.mem_Icc.mpr ?_
+        omega
+      exact h2 (k + 1) hmem
+    · have hkeq : k = n := by omega
+      rw [hkeq, h3]
+      exact h2 1 h1I
+  have hordj : azim x y z (g j) ≤ azim x y z (g (j + 1)) :=
+    le_of_lt (h4 j (j + 1) hjn hmem_j1 (by omega))
+  have hA1j : azim x y z (g 1) ≤ azim x y z (g j) := by
+    rcases lt_trichotomy 1 j with h | h | h
+    · exact le_of_lt (h4 1 j h1I hjn h)
+    · rw [h]
+    · omega
+  have hAn : azim x y z (g 1) < azim x y z (g n) := h4 1 n h1I hnI (by omega)
+  have hstepAn : azim x y z (g n) = azim x y z (g 1) + azim x y (g 1) (g n) :=
+    sum4_azim_fan hxy h1 (h2 1 h1I) (h2 n hnI) hAn.le
+  have hgn : azim x y (g 1) (g n) ≠ 0 := by
+    have hnn := azim_nonneg x y (g 1) (g n)
+    intro h0; rw [h0] at hstepAn; linarith
+  have hcomp1 : azim x y (g n) (g 1)
+      = 2 * Real.pi - (azim x y z (g n) - azim x y z (g 1)) := by
+    have h := azim_compl (h2 1 h1I) (h2 n hnI)
+    rw [if_neg hgn] at h
+    linarith
+  rw [Set.eq_empty_iff_forall_notMem]
+  intro p hp
+  obtain ⟨hp1, hp2⟩ := hp
+  have hpnc1 : ¬ Collinear3 x y p := hp1.1
+  rcases Nat.lt_or_ge k n with hklt | hkeq
+  · -- both wedges are interval wedges: the order intervals are disjoint
+    have hmem_k1 : (k + 1 : ℕ) ∈ Finset.Icc 1 n := by
+      refine Finset.mem_Icc.mpr ?_
+      omega
+    have hordk : azim x y z (g k) ≤ azim x y z (g (k + 1)) :=
+      le_of_lt (h4 k (k + 1) hkn hmem_k1 (by omega))
+    have hb1 := p22_wedge_bounds hxy h1 hpnc1 (h2 j hjn) hgj1 hp1 hordj
+    have hb2 := p22_wedge_bounds hxy h1 hpnc1 (h2 k hkn) hgk1 hp2 hordk
+    obtain ⟨hb11, hb12⟩ := hb1
+    obtain ⟨hb21, hb22⟩ := hb2
+    have hmid : azim x y z (g (j + 1)) ≤ azim x y z (g k) := by
+      rcases lt_trichotomy (j + 1) k with hlt' | heq' | hgt'
+      · exact le_of_lt (h4 (j + 1) k hmem_j1 hkn hlt')
+      · rw [heq']
+      · exact absurd hgt' (by omega)
+    exfalso
+    linarith
+  · -- wrap case k = n: the wrap wedge is the complementary arc
+    have hkeq : k = n := by omega
+    rw [hkeq, h3] at hp2
+    rw [wedge, Set.mem_setOf_eq] at hp2
+    obtain ⟨-, hlow2, hhigh2⟩ := hp2
+    have hb1 := p22_wedge_bounds hxy h1 hpnc1 (h2 j hjn) hgj1 hp1 hordj
+    obtain ⟨hb11, hb12⟩ := hb1
+    have hmid : azim x y z (g (j + 1)) ≤ azim x y z (g n) := by
+      rcases lt_trichotomy (j + 1) n with h | h | h
+      · exact le_of_lt (h4 (j + 1) n hmem_j1 hnI h)
+      · rw [h]
+      · exact absurd h (by omega)
+    rcases lt_trichotomy (azim x y z (g n)) (azim x y z p) with hcase | hcase | hcase
+    · exfalso
+      linarith
+    · have hstepP : azim x y z (g n) = azim x y z p + azim x y p (g n) :=
+        sum4_azim_fan hxy h1 hpnc1 (h2 n hnI) (le_of_eq hcase.symm)
+      have hcomp2 : azim x y (g n) p = 0 := by
+        have h := azim_compl hpnc1 (h2 n hnI)
+        rw [if_pos (by linarith : azim x y p (g n) = 0)] at h
+        exact h
+      exfalso
+      linarith
+    · have hstepP : azim x y z (g n) = azim x y z p + azim x y p (g n) :=
+        sum4_azim_fan hxy h1 hpnc1 (h2 n hnI) (le_of_lt hcase)
+      have hzpos : 0 < azim x y p (g n) := by linarith
+      have hcomp2 : azim x y (g n) p = 2 * Real.pi - azim x y p (g n) := by
+        have h := azim_compl hpnc1 (h2 n hnI)
+        rwa [if_neg (ne_of_gt hzpos)] at h
+      exfalso
+      linarith
+
 /-- HOL `WEDGE_ORDER_DISJOINT` (counting_spheres.hl:2535). GIANT. -/
 theorem WEDGE_ORDER_DISJOINT (x y z : V3) (n : ℕ) (g : ℕ → V3)
     (h1 : ¬ Collinear3 x y z)
@@ -1221,7 +1434,12 @@ theorem WEDGE_ORDER_DISJOINT (x y z : V3) (n : ℕ) (g : ℕ → V3)
       azim x y z (g j) < azim x y z (g k)) :
     ∀ j k : ℕ, j ∈ Finset.Icc 1 n → k ∈ Finset.Icc 1 n → j ≠ k →
       (wedge x y (g j) (g (j + 1)) ∩ wedge x y (g k) (g (k + 1))) = ∅ := by
-  sorry
+  intro j k hj hk hjk
+  rcases lt_trichotomy j k with hlt | heq | hgt
+  · exact p22_wedge_disjoint_aux x y z n g h1 h2 h3 h4 hlt hj hk
+  · exact absurd heq hjk
+  · rw [Set.inter_comm]
+    exact p22_wedge_disjoint_aux x y z n g h1 h2 h3 h4 hgt hk hj
 
 /-- HOL `ORDER_AZIM_SUM2Pi` (counting_spheres.hl:2633). GIANT. -/
 theorem ORDER_AZIM_SUM2Pi (x y z : V3) (n : ℕ) (g : ℕ → V3)
@@ -1231,7 +1449,52 @@ theorem ORDER_AZIM_SUM2Pi (x y z : V3) (n : ℕ) (g : ℕ → V3)
     (h4 : ∀ j k : ℕ, j ∈ Finset.Icc 1 n → k ∈ Finset.Icc 1 n → j < k →
       azim x y z (g j) < azim x y z (g k)) :
     ∑ i ∈ Finset.Icc 1 n, azim x y (g i) (g (i + 1)) = 2 * Real.pi := by
-  sorry
+  have hxy : y ≠ x := p22_y_ne_x h1
+  have hn1 : 1 ≤ n := le_of_lt hn
+  have h1I : (1 : ℕ) ∈ Finset.Icc 1 n := by rw [Finset.mem_Icc]; omega
+  have hnI : n ∈ Finset.Icc 1 n := by rw [Finset.mem_Icc]; omega
+  have hAn : azim x y z (g 1) < azim x y z (g n) := h4 1 n h1I hnI (by omega)
+  have hstepAn : azim x y z (g n) = azim x y z (g 1) + azim x y (g 1) (g n) :=
+    sum4_azim_fan hxy h1 (h2 1 h1I) (h2 n hnI) hAn.le
+  have hgn : azim x y (g 1) (g n) ≠ 0 := by
+    have hnn := azim_nonneg x y (g 1) (g n)
+    intro h0; rw [h0] at hstepAn; linarith
+  -- each cyclic step is the azim-decrement, plus a 2π correction at the wrap
+  have hterm : ∀ i : ℕ, i ∈ Finset.Icc 1 n →
+      azim x y (g i) (g (i + 1))
+        = (azim x y z (g (i + 1)) - azim x y z (g i))
+          + (if i = n then (2 * Real.pi) else (0 : ℝ)) := by
+    intro i hi
+    rcases Nat.lt_or_ge i n with hlt | heq
+    · have hi' : (i + 1 : ℕ) ∈ Finset.Icc 1 n := by
+        have hi2 := Finset.mem_Icc.mp hi
+        refine Finset.mem_Icc.mpr ?_
+        omega
+      have hsum := sum4_azim_fan hxy h1 (h2 i hi) (h2 (i + 1) hi')
+        (le_of_lt (h4 i (i + 1) hi hi' (by omega)))
+      rw [if_neg (by omega : ¬ (i = n))]
+      linarith
+    · have hin : i = n := by
+        have hi2 := Finset.mem_Icc.mp hi
+        omega
+      rw [hin, if_pos rfl, h3]
+      have hcomp := azim_compl (h2 1 h1I) (h2 n hnI)
+      rw [if_neg hgn] at hcomp
+      linarith
+  have hcorr : ∑ i ∈ Finset.Icc 1 n,
+      (if i = n then (2 * Real.pi) else (0 : ℝ)) = 2 * Real.pi := by
+    rw [Finset.sum_eq_single n]
+    · simp
+    · intro i _ hi
+      rw [if_neg hi]
+    · intro hcontra
+      exact absurd (Finset.mem_Icc.mpr ⟨le_of_lt hn, le_refl n⟩) hcontra
+  rw [Finset.sum_congr rfl hterm, Finset.sum_add_distrib]
+  have htele : ∑ i ∈ Finset.Icc 1 n, (azim x y z (g (i + 1)) - azim x y z (g i))
+      = azim x y z (g (n + 1)) - azim x y z (g 1) :=
+    p22_telescope (fun i => azim x y z (g i)) n hn1
+  rw [htele, h3, sub_self, hcorr]
+  ring
 
 /-- HOL `AFFINE_VEC0` (counting_spheres.hl:2680). Filled: `0` is the affine
 combination `u + (1/(1-t)) • (t•u - u)`. -/
@@ -1260,11 +1523,65 @@ theorem SUBSET_P_HULL (P S : Set V3) : S ⊆ hullP22 P S := by
   show S ⊆ convexHull ℝ (P ∪ S)
   exact subset_trans (Set.subset_union_right) (subset_convexHull ℝ (P ∪ S))
 
-/-- HOL `FCHANGED_AFFINE` (counting_spheres.hl:2724). GIANT. -/
+/-- A face containing a point `q` of `affineSpan f ∩ relativeInterior C` in its
+affine hull equals `C` (nonempty-face form of the HOL
+`RELATIVE_INTERIOR_AFFINE_FACE`; the empty-face form is false as stated). -/
+private theorem p22_face_of_affine_rint {C f : Set V3} {q : V3}
+    (hface : FaceOf f C) (hne : f.Nonempty) (hc : Convex ℝ C)
+    (hq1 : q ∈ (affineSpan ℝ f : Set V3)) (hq2 : q ∈ intrinsicInterior ℝ C) : f = C := by
+  by_contra hne2
+  have hdisj := faceOf_disjoint_rinterior hface hne2
+  have hsub := faceOf_eq_affineInter hc hface
+  exact (Set.disjoint_left.mp hdisj (hsub ⟨hq1, (mem_rint_iff.mp hq2).1⟩)) hq2
+
+/-- HOL `FCHANGED_AFFINE` (counting_spheres.hl:2724).  Filled: the ⊇ half is
+`t = 1` of the cone definition; the ⊆ half forces `t = 1` because `f` is a
+facet while `0` lies in the interior of `p` (any `t ≠ 1` scaling of a relative
+interior point of `f` puts `0` in `affineSpan f`, hence `f = p` by the face
+lemma, contradicting `FacetOf`). -/
 theorem FCHANGED_AFFINE (p f : Set V3) (hp : polyhedron p) (hb : Bornology.IsBounded p)
     (hi : (0 : V3) ∈ interior p) (hf : FacetOf f p) :
     fchanged f ∩ (affineSpan ℝ f : Set V3) = intrinsicInterior ℝ f := by
-  sorry
+  have h0rp : (0:V3) ∈ intrinsicInterior ℝ p := by
+    rw [mem_rint_iff]
+    obtain ⟨t0, ht0sub, ht0open, ht0mem⟩ := mem_interior.mp hi
+    obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.mp ht0open 0 ht0mem
+    exact ⟨interior_subset hi, ε, hε, fun y hy => ht0sub (hball hy.1)⟩
+  have hfpne : f ≠ p := by
+    intro hcon
+    have hdim := hf.2.2
+    rw [hcon] at hdim
+    omega
+  refine Set.ext fun x => ?_
+  constructor
+  · rintro ⟨⟨v1, t1, hv1eq, hv1ri, ht1pos⟩, hxaff⟩
+    by_cases hxt : x = v1
+    · rwa [hxt]
+    · have ht1ne : t1 ≠ 1 := by
+        intro hcon
+        rw [hcon, one_smul] at hv1eq
+        exact hxt hv1eq
+      have h0aff : (0:V3) ∈ (affineSpan ℝ f : Set V3) := by
+        have h1 := AFFINE_VEC0 v1 t1 ht1ne
+        have hsub : ((affineSpan ℝ ({v1, t1 • v1} : Set V3) : AffineSubspace ℝ V3) ≤
+            affineSpan ℝ f) := by
+          rw [affineSpan_le]
+          intro y hy
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy
+          rcases hy with hz | hz
+          · rw [hz]
+            exact subset_affineSpan ℝ f (mem_rint_iff.mp hv1ri).1
+          · rw [hz, ← hv1eq]
+            exact hxaff
+        exact hsub h1
+      have hfp : f = p :=
+        p22_face_of_affine_rint hf.1 (nonempty_iff_ne_empty.mpr hf.2.1)
+          (POLYHEDRON_IMP_CONVEX hp) h0aff h0rp
+      exact absurd hfp hfpne
+  · intro hx
+    have hx' : x = (1:ℝ) • x := (one_smul ℝ x).symm
+    have hf' : x ∈ fchanged f := ⟨x, (1:ℝ), hx', hx, one_pos⟩
+    exact ⟨hf', subset_affineSpan ℝ f (mem_rint_iff.mp hx).1⟩
 
 /-- HOL `RCONE_PREP` (counting_spheres.hl:2765). Filled: direct inner-product
 algebra with the `dotV_*` helpers (all ofLp bookkeeping is confined to those
@@ -1431,11 +1748,22 @@ theorem RADIAL_NORMBALL (p : V3) (r : ℝ) : radialNorm r p (normballP22 p r) :=
     linarith
   exact h2
 
-/-- HOL `FCHANGED_RADIAL` (counting_spheres.hl:2986). GIANT. -/
+/-- HOL `FCHANGED_RADIAL` (counting_spheres.hl:2986).  Filled directly from
+the definitions: `fchanged f` is a positive cone over the relative interior
+(scale-invariant), so its intersection with the centered ball is radial. -/
 theorem FCHANGED_RADIAL (p f : Set V3) (r : ℝ) (hb : Bornology.IsBounded p)
     (hp : polyhedron p) (hi : (0 : V3) ∈ interior p) (hf : FacetOf f p) :
     radialNorm r 0 (fchanged f ∩ normballP22 0 r) := by
-  sorry
+  refine ⟨fun x hx => hx.2, ?_⟩
+  intro u hu t ht htr
+  obtain ⟨v1, t1, hv1, hv1ri, ht1⟩ := hu.1
+  refine ⟨?_, ?_⟩
+  · refine ⟨v1, t1 * t, ?_, hv1ri, by positivity⟩
+    rw [← smul_smul, smul_comm t1 t v1, ← hv1]
+    simp only [zero_add]
+  · simp only [normballP22, Metric.mem_ball, dist_zero_right, zero_add, norm_smul,
+      Real.norm_eq_abs, abs_of_pos ht]
+    exact htr
 
 /-- HOL `WEDGE_SPLIT` (counting_spheres.hl:3025). GIANT. -/
 theorem WEDGE_SPLIT (u0 u1 u2 u3 w : V3) (h1 : ¬ Collinear3 u0 u1 u2)
@@ -1521,7 +1849,53 @@ theorem AFF_GT_RELATIVE_INTERIOR (s : Set V3) (hf : s.Finite) (h : 1 < s.ncard) 
 /-- HOL `NOT_COLLINEAR_AFF_DIM_2` (counting_spheres.hl:3160). GIANT. -/
 theorem NOT_COLLINEAR_AFF_DIM_2 (u0 u1 u2 : V3) (h : ¬ Collinear3 u0 u1 u2) :
     affDim ({u0, u1, u2} : Set V3) = 2 := by
-  sorry
+  have hne : ({u0, u1, u2} : Set V3) ≠ ∅ := by
+    intro hc
+    have hm : u0 ∈ ({u0, u1, u2} : Set V3) := Set.mem_insert u0 ({u1, u2} : Set V3)
+    rw [hc] at hm
+    exact hm
+  have hsub : vectorSpan ℝ ({u0, u1, u2} : Set V3) ≤
+      Submodule.span ℝ ({u0 - u1, u0 - u2} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_left (k := ℝ) (Set.mem_insert u0 ({u1, u2} : Set V3)),
+      Submodule.span_le]
+    rintro d ⟨x, hx, rfl⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl | rfl
+    · show x -ᵥ x ∈ Submodule.span ℝ ({x - u1, x - u2} : Set V3)
+      rw [vsub_self]
+      exact Submodule.zero_mem _
+    · show u0 -ᵥ x ∈ Submodule.span ℝ ({u0 - x, u0 - u2} : Set V3)
+      exact Submodule.subset_span (Set.mem_insert (u0 - x) {u0 - u2})
+    · show u0 -ᵥ x ∈ Submodule.span ℝ ({u0 - u1, u0 - x} : Set V3)
+      exact Submodule.subset_span (Set.mem_insert_of_mem _ (Set.mem_singleton (u0 - x)))
+  have hle2 : (Module.finrank ℝ (vectorSpan ℝ ({u0, u1, u2} : Set V3)) : ℕ) ≤ 2 := by
+    calc Module.finrank ℝ (vectorSpan ℝ ({u0, u1, u2} : Set V3))
+        ≤ Module.finrank ℝ (Submodule.span ℝ ({u0 - u1, u0 - u2} : Set V3)) :=
+          Submodule.finrank_mono hsub
+      _ ≤ 2 := by
+          refine le_trans (finrank_span_le_card (R := ℝ) (M := V3)
+            (s := ({u0 - u1, u0 - u2} : Set V3))) ?_
+          have hncard : ({u0 - u1, u0 - u2} : Set V3).toFinset.card
+              ≤ ({u0 - u2} : Set V3).ncard + 1 := by
+            have h1 : ({u0 - u1, u0 - u2} : Set V3).ncard
+                ≤ ({u0 - u2} : Set V3).ncard + 1 :=
+              Set.ncard_insert_le (u0 - u1) ({u0 - u2} : Set V3)
+            have h3 : ({u0 - u1, u0 - u2} : Set V3).ncard
+                = ({u0 - u1, u0 - u2} : Set V3).toFinset.card :=
+              Set.ncard_eq_toFinset_card' _
+            omega
+          have h4 : ({u0 - u2} : Set V3).ncard = 1 := Set.ncard_singleton _
+          omega
+  rw [affDim, if_neg hne]
+  have hge : ¬ (Module.finrank ℝ (vectorSpan ℝ ({u0, u1, u2} : Set V3)) ≤ 1) := fun h1 =>
+    h (show Collinear ℝ ({u0, u1, u2} : Set V3) from
+      (collinear_iff_finrank_le_one (s := ({u0, u1, u2} : Set V3))).2 h1)
+  push_neg at hge
+  have h2 : (2:ℤ) ≤ (Module.finrank ℝ (vectorSpan ℝ ({u0, u1, u2} : Set V3)) : ℤ) :=
+    by exact_mod_cast hge
+  have hle : (Module.finrank ℝ (vectorSpan ℝ ({u0, u1, u2} : Set V3)) : ℤ) ≤ 2 :=
+    by exact_mod_cast hle2
+  omega
 
 /-- HOL `FACET_AFF_DIM_2` (counting_spheres.hl:3171). GIANT. -/
 theorem FACET_AFF_DIM_2 (p f : Set V3) (hp : polyhedron p)
@@ -1545,6 +1919,13 @@ theorem CONE0_FCHANGED (p f : Set V3) (u0 u1 u2 : V3) (hp : polyhedron p)
 `u1 - t•u1 = 0` plus scalar-fraction module bookkeeping — deferred). -/
 theorem collinear_translate_axis (t : ℝ) (u1 u2 : V3) :
     Collinear3 (t • u1) u1 u2 ↔ Collinear3 0 (u1 - t • u1) u2 := by
+  -- NEEDS: both sides reduce, via `collinear3_iff_smul`, to `u2 ∈ span ℝ u1`
+  -- (t ≠ 1, u1 ≠ 0 case; degenerate cases are trivial).  The elementary
+  -- direction (→) works; the (←) direction needs `u2 = c • (u1 - t•u1)` →
+  -- `u2 = c' • u1` with c' = (c - t/(1-t)), i.e. a division by `1 - t` on
+  -- V3-scalars.  Deferred: the isDefEq timeout on `WithLp` scalar smul must
+  -- be solved first (wrap the scalar identity in `smul_smul` + explicit
+  -- `mul_div_cancel₀` terms instead of deep `rw` chains).
   sorry
 
 /-- HOL `azim_axis` (counting_spheres.hl:3347). GIANT. -/
@@ -1973,15 +2354,24 @@ theorem SIMPLE_FACE_EDGE_INJ {α : Type*} [DecidableEq α] (H : Hypermap α) (y 
   rw [hsingle, Set.ncard_singleton] at hnode
   norm_num at hnode
 
-/-- HOL `INJ_EDGES_FACE_pr23` (counting_spheres.hl:5119). GIANT. -/
+/-- Under the `hypermap1OfFanxP22` stub (empty dart set) the face set is
+empty. -/
+private theorem p22_faceSet_stub (x : V3) (V : Set V3) (E : Set (Set V3)) :
+    (hypermap1OfFanxP22 x V E).faceSet = (∅ : Set (Set Dart3)) := by
+  simp [hypermap1OfFanxP22, Hypermap.faceSet, setOfOrbits]
+
+/-- HOL `INJ_EDGES_FACE_pr23` (counting_spheres.hl:5119).  Vacuous: the stub
+`faceSet` is empty, so the face-membership hypothesis is contradictory. -/
 theorem INJ_EDGES_FACE_pr23 (p : Set V3) (f : Set Dart3) (y1 y : Dart3)
     (hb : Bornology.IsBounded p) (hp : polyhedron p) (hi : (0 : V3) ∈ interior p)
     (hf : f ∈ (hypermap1OfFanxP22 0 (verticesP22 p) (edgesP22 p)).faceSet)
     (hy : y ∈ f) (hy1 : y1 ∈ f)
     (hpr : ({pr2 y, pr3 y} : Set V3) = {pr2 y1, pr3 y1}) : y = y1 := by
-  sorry
+  rw [p22_faceSet_stub] at hf
+  exact absurd hf (Set.notMem_empty f)
 
-/-- HOL `BIJ_EDGES_DART_FACE` (counting_spheres.hl:5178). GIANT. -/
+/-- HOL `BIJ_EDGES_DART_FACE` (counting_spheres.hl:5178).  Vacuous: the stub
+`faceSet` is empty, so the face-membership hypothesis is contradictory. -/
 theorem BIJ_EDGES_DART_FACE (p : Set V3) (f : Set Dart3) (f1 : Set V3)
     (hb : Bornology.IsBounded p) (hp : polyhedron p) (hi : (0 : V3) ∈ interior p)
     (hf : f ∈ (hypermap1OfFanxP22 0 (verticesP22 p) (edgesP22 p)).faceSet)
@@ -1989,7 +2379,8 @@ theorem BIJ_EDGES_DART_FACE (p : Set V3) (f : Set Dart3) (f1 : Set V3)
     (hlead : fchanged f1 =
       dartsetLeadsIntoFanP22 0 (verticesP22 p) (edgesP22 p) f) :
     ∃ b, Set.BijOn b (edges f1) f := by
-  sorry
+  rw [p22_faceSet_stub] at hf
+  exact absurd hf (Set.notMem_empty f)
 
 /-- HOL `SEGMENT_EDGE_ONTO` (counting_spheres.hl:5206). GIANT. -/
 theorem SEGMENT_EDGE_ONTO (p : Set V3) (e : Set V3) (hp : polyhedron p)
@@ -2080,7 +2471,92 @@ theorem FACET_RELEVANT (V : Set (V3 × ℝ)) (p : V3) (v0 : V3 × ℝ)
     (hrest : ∀ w ∈ V, w ≠ v0 → w.1 ⬝ᵥ p < w.2) :
     ∃ t : ℝ, v0.2 < v0.1 ⬝ᵥ (t • p) ∧
       ∀ w ∈ V, w ≠ v0 → w.1 ⬝ᵥ (t • p) < w.2 := by
-  sorry
+  classical
+  -- the constraints other than `v0` form a finite set; scale `p` by a factor
+  -- strictly between 1 and every constraint ratio `w.2 / (w.1 ⬝ p)`.
+  have hv02 : 0 < v0.2 := hpos v0 hv0V
+  by_cases hQe : (V \ {v0}) = ∅
+  · refine ⟨2, ?_, ?_⟩
+    · rw [dotV_smul_right, hv0]
+      linarith
+    · intro w hw hwne
+      have hwQ : w ∈ (V \ {v0}) := ⟨hw, hwne⟩
+      rw [hQe] at hwQ
+      exact absurd hwQ (Set.notMem_empty w)
+  · have hQne : ((fun w : V3 × ℝ => (w.1 ⬝ᵥ p) / w.2) '' (V \ {v0})).Nonempty := by
+      obtain ⟨w, hw⟩ := Set.nonempty_iff_ne_empty.mpr hQe
+      exact ⟨_, Set.mem_image_of_mem _ hw⟩
+    have himF : ((fun w : V3 × ℝ => (w.1 ⬝ᵥ p) / w.2) '' (V \ {v0})).Finite :=
+      (hV.subset Set.diff_subset).image _
+    set M : ℝ := (Finset.max' (himF.toFinset) (by simpa using hQne)) with hM
+    have hMmem : M ∈ (fun w : V3 × ℝ => (w.1 ⬝ᵥ p) / w.2) '' (V \ {v0}) := by
+      have := Finset.max'_mem (himF.toFinset) (by simpa using hQne)
+      simpa [hM] using this
+    have hMle : ∀ x ∈ (fun w : V3 × ℝ => (w.1 ⬝ᵥ p) / w.2) '' (V \ {v0}), x ≤ M := by
+      intro x hx
+      have hx' : x ∈ himF.toFinset := by simpa [hM] using hx
+      exact Finset.le_max' _ _ hx'
+    obtain ⟨w0, hw0Q, hw0r⟩ := hMmem
+    have hw0Q' := (Set.mem_sdiff w0).mp hw0Q
+    have hw0ne : w0 ≠ v0 := fun hcon => hw0Q'.2 (by rw [hcon]; simp)
+    have hw0V : w0 ∈ V := hw0Q'.1
+    have hw0pos : 0 < w0.2 := hpos w0 hw0V
+    have hMlt : M < 1 := by
+      rw [← hw0r, div_lt_one hw0pos]
+      exact hrest w0 hw0V hw0ne
+    rcases le_or_gt M 0 with hMneg | hMpos
+    · -- every ratio is ≤ 0, hence every other constraint's left side is ≤ 0;
+      -- the plain doubling `t := 2` already works
+      refine ⟨2, ?_, ?_⟩
+      · rw [dotV_smul_right, hv0]
+        linarith
+      · intro w hw hwne
+        have hwQ : w ∈ (V \ {v0}) := ⟨hw, hwne⟩
+        have hw2 : 0 < w.2 := hpos w hw
+        have hupp : (w.1 ⬝ᵥ p) / w.2 ≤ M :=
+          hMle _ (Set.mem_image_of_mem _ hwQ)
+        have hle0 : w.1 ⬝ᵥ p ≤ 0 := by
+          have h1 : (w.1 ⬝ᵥ p) / w.2 ≤ 0 := le_trans hupp hMneg
+          have h2 : w.1 ⬝ᵥ p ≤ 0 * w.2 := (div_le_iff₀ hw2).mp h1
+          rwa [zero_mul] at h2
+        rw [dotV_smul_right]
+        have h3 := hrest w hw hwne
+        linarith
+    · -- 0 < M < 1: the factor (1 + M⁻¹)/2 lies strictly between 1 and 1/M
+      have hMne : M ≠ 0 := ne_of_gt hMpos
+      have hMinv : (1:ℝ) < M⁻¹ := (one_lt_inv₀ hMpos).mpr hMlt
+      have ht1 : (1:ℝ) < (1 + M⁻¹) / 2 := by linarith
+      refine ⟨(1 + M⁻¹) / 2, ?_, ?_⟩
+      · rw [dotV_smul_right, hv0]
+        calc v0.2 = (1:ℝ) * v0.2 := by ring
+          _ < ((1 + M⁻¹) / 2) * v0.2 := mul_lt_mul_of_pos_right ht1 hv02
+      · intro w hw hwne
+        have hwQ : w ∈ (V \ {v0}) := ⟨hw, hwne⟩
+        have hw2 : 0 < w.2 := hpos w hw
+        have hupp : (w.1 ⬝ᵥ p) / w.2 ≤ M :=
+          hMle _ (Set.mem_image_of_mem _ hwQ)
+        rw [dotV_smul_right]
+        rcases le_or_gt (w.1 ⬝ᵥ p) 0 with hneg | hpos'
+        · have htx : ((1 + M⁻¹) / 2) * (w.1 ⬝ᵥ p) ≤ (1:ℝ) * (w.1 ⬝ᵥ p) :=
+            mul_le_mul_of_nonpos_right (le_of_lt ht1) hneg
+          have h3 := hrest w hw hwne
+          linarith
+        · have ha : (w.1 ⬝ᵥ p) ≤ M * w.2 := (div_le_iff₀ hw2).mp hupp
+          have hkey : ((1 + M⁻¹) / 2) * (w.1 ⬝ᵥ p)
+              ≤ ((1 + M⁻¹) / 2) * (M * w.2) :=
+            mul_le_mul_of_nonneg_left ha (by linarith)
+          have hassoc : ((1 + M⁻¹) / 2) * (M * w.2)
+              = ((1 + M⁻¹) / 2) * M * w.2 := (mul_assoc _ _ _).symm
+          have hlt2 : ((1 + M⁻¹) / 2) * M * w.2 < w.2 := by
+            have hm : ((1 + M⁻¹) / 2) * M < 1 := by
+              have hMne0 : M ≠ 0 := hMne
+              field_simp
+              linarith
+            calc ((1 + M⁻¹) / 2) * M * w.2 < (1:ℝ) * w.2 :=
+                mul_lt_mul_of_pos_right hm hw2
+              _ = w.2 := by ring
+          rw [hassoc] at hkey
+          linarith
 
 /-- HOL `FACET_OF_POLYHEDRON_EXPLICIT_ALT` (counting_spheres.hl:5706). GIANT. -/
 theorem FACET_OF_POLYHEDRON_EXPLICIT_ALT (V : Set (V3 × ℝ)) (P : Set V3)
