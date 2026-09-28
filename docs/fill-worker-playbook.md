@@ -113,6 +113,9 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   [0,2π)，文件内 holArg/ARG_INV_ALT 已因同病改述）。**结构性发现**：`polyhedronC`
   系对 flyspeck polyhedron（H-表示）的误移植——r2 的 14 枚 planar-kit 填证在陈述
   冻结下合法但空洞化；若修复波改正该定义，这 14 枚需重填。
+- **PA7 疑似假 2 枚（r2 报告，待提案官立项）**：`KSOQKWL`——`permutes` 弱集合
+  稳定编码下为假（p 在固定段 0..k 之外可动，hrog 平凡成立而结论 p = refl 不成立）；
+  `IVFICRK` 同编码可疑。
 
 ### 5.2 桥引理位置表（找工具先看这里，别全树乱摸）
 
@@ -142,6 +145,9 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 | `Classical.epsilon` 消除 | `epsilon_spec (p := …)` 显式给谓词 |
 | `affineSpan_empty` | 无此名；`AffineSubspace.span_empty` + `bot_coe` |
 | `Real.pi_lt_22_div_7` | 无此名；用 `Real.pi_lt_four` |
+| `Module.Basis.constr`（旧签名） | `hb.constr ℝ f`/`hb.constr_basis ℝ f i`——**R 与目标模显式**（`Module.Basis ι R M` 的 R 也显式） |
+| `div_mul_cancel₀` | 无；用 `div_mul_cancel`（PA7 r2 实测） |
+| `Nat.card (Set.range f)` 基数 | `Nat.card_range_of_injective`；`Set.Finite.ofFinset` 为 iff-binder 形状 |
 
 （发现新的改名陷阱：写报告第 5 项，编排者入表。**改名类错误只有 `lake build` 能稳定
 暴露**，env-lean 会放行旧名——见 §3。）
@@ -200,7 +206,9 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   回灌时去 private）：`pa18_azim_zero_affGe`（azim=0 ↔ affGe，即 LA5:1312
   AZIM_EQ_0_GE_ALT2 的证明版）、`pa18_affGe_affGt_of_ncol`、
   `pa18_collinear3_line_affGe`。cc 簇最短解锁路径：**MHFTTZN3（PA6:848）可由
-  MHFTTZN4+BARV_CIRCUMCENTER_EXISTS+XYOFCGX(PA7:343) 自证** → JDHAWAY_0 →
+  MHFTTZN4+BARV_CIRCUMCENTER_EXISTS+XYOFCGX(PA7:343) 自证**（⚠ 时效：PA7 r2 已
+  整体回退，BARV_CIRCUMCENTER_EXISTS 等待按 `docs/pa7-proofdump.md` 落盘，
+  见 PA6+PA7 条）→ JDHAWAY_0 →
   cc_pe_exists → PA25 全通；FUZBZGI_0 链另需 PA12 VORONOI_LIST_3_SINGLETON_EXPLICIT。
   azim 工具箱全在 `Geom/AzimLemmas.lean`（azim_eq_azim_iff(_alt)/azim_compl/
   azim_frame_spec 全已证）+ `Geom/Aff.lean` 的 Affsign。
@@ -237,6 +245,18 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   可复用：`hdtfnfz_p4` kit（16 个 `_p4` 私件）、`(by simpa using (Finset.mem_filter.1 he).1)`
   桥、`Set.ncard_insert_of_notMem + Set.ncard_le_ncard` 计数安全路
   （`Finset.card_le_card` 已单参、`Set.Finite.card_le_card`/`toFinset_cong` 不存在或签名变）。
+- **PA6+PA7**（wave2-r2 零净填充，两文件 pristine 双绿 = 干净起跑线）：r2 写好
+  env-0-error 的 PA7 19 枚 + PA6 多枚，被 lake build ~50 系统性偏差打回
+  （**env-lean 假绿最大实证**，见 §6）。证明全文 + 逐错误诊断落盘于
+  `docs/pa7-proofdump.md`（下一轮按图施工）。下一轮优先级：① PA7 逐枚落盘
+  （HL_DECREASE/投影簇/TRUNCATE kit 等，多为小错）② PA6 MHFTTZN3 +
+  p6_affdep_of_dim（PA18 钥匙；**BARV_AFFINE_INDEPENDENT 解锁链**：
+  MHFTTZN_lemma2.1 → `List.toFinset_card_le` →
+  `Submodule.exists_finset_span_eq_linearIndepOn` + `linearIndepOn_id_range_iff` +
+  `affineIndependent_set_iff_linearIndependent_vsub`，API 已验证存在）
+  ③ HALFSPACE_EQ 分量法重写。**分量法（`ext i` + `Fin.sum_univ_three` + ring）
+  是 ⬝ᵥ/WithLp 证明唯一稳定路线**，rw 深链全灭。回退不攻：
+  ANGLE_EQ_DIHV、AFFINES_INTER_BALL_EQ_IMP_EQ（ofLp-rw 沼泽）。
 - **PA22**（53 remaining @r2，wave2-r2 已落 20 枚）：**万能钥匙 `p22_ball_face_contra`**
   （PA22:135：polyhedronC P → 0<r → 球含于 P → False——planar-面 kit 14 枚全走它）；
   arcV 桥三私件（`p22_arcV_eq_angle`/`p22_cos_arcV`/`p22_arcV_mem_Icc`）azim/arc
@@ -330,3 +350,9 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   （polyhedronC/facetOfC 弱化）可使一族陈述空洞化为真——修复定义则整族需重填；
   ⑤编排者自教训：playbook 行级字节手术用 perl -i 遇宽字符可整文件清空——文档修订
   一律走 Edit 工具（本条即为付出 297 行回滚代价换来的）。
+- **PA6+PA7 回退事件（2026-09-28）**：env-lean 0-error / lake ~50 error 的**最大规模
+  假绿实证**——偏差模式（`⬝ᵥ` 的 WithLp.ofLp 包裹形状、`mpr ⟨w⟩` 方向、beta-redex
+  上的匿名构造器）固化进 §5.4 PA6+PA7 条，分量法为唯一稳定解；预算耗尽前整体
+  回退 pristine 保住双绿基线，证明文本落盘 `docs/pa7-proofdump.md`——"宁可零填充
+  不留半成品"是正确止损。同日 `.lake/packages/mathlib` 波内第二次中途消失
+  （`lake exe cache get` 11 秒恢复）——共享包目录稳定性存疑，波收尾排查根因。
