@@ -82,6 +82,34 @@ Encoding (house conventions, cf. LocalAuto1/19/36):
   registry bank (`OWZLKVY*`, `EAR_*`, `quad_4680581274_*`, `empty_3T2`,
   `delta_4680581274`, `ineq_5691615370_asym`, ...). Compile state:
   0 errors.
+- LEDGER (proof-fill pass 2026-09-28): 8 further theorems DISCHARGED
+  (statements untouched): `EE_vv`, `tau_fun_azim`, `vv_rho_node1`,
+  `ITER_vv_rho_node1`, `vv_azim_le`, `convex_local_fan_azim_le_pi`,
+  `delta_4680581274`, `terminal_quad_lemma`, over 16 new private helpers
+  (mod-residue kit `nat_succ_mod_p38`/`nat_pred_mod_p38`/`cycle_*`, the
+  `sigmaFan`/`azimInFan` cycle evaluations `cycle_sigma_fan_p38`/
+  `cycle_azim_in_fan_p38`, the dart reindexing kit `cycle_dart_*_p38`,
+  `setSum_lt4_p38`). Key observations: the cycle darts form a `k`-element
+  set and `sigmaFan 0 univ E (vv i) (vv (i+1)) = vv (i + (k-1))` is a pure
+  epsilon-uniqueness computation over `EE_vv`'s two-point edge set, so
+  `tau_fun_azim` needs no fan geometry; `vv_azim_le`/
+  `convex_local_fan_azim_le_pi` drop out of the `ConvexLocalFan` wedge/
+  azimInFan conjuncts; `delta_4680581274` is the HOL proof's elementary
+  two-variable residue (no LP); `terminal_quad_lemma` now composes
+  `tau_fun_azim` with `dsv_J_empty`. Remaining 44 theorem sorries are all
+  stub/anchor-bound, each annotated `BLOCKED:` at the site: the 14
+  `_p38` def stubs; the `DIHV_EQ_DIH_Y` + `taum_dih_y` pair (blocks the
+  `tau3_taum`/`taustar_taum` bank of 6); `Collect_geom.DELTA_POS_4POINTS`
+  (`DELTA_Y_POS_4POINTS`); `LOCAL_FAN_RHO_NODE_PROS2` (blocks
+  `PRIOR_TO_LESS_THAN_PI_LEMMA_ALT`, `IN_V_IMP_AZIM_LESS_PI_ALT`);
+  `sum4_azim_fan`/`EGHNAVX` (TopologyFan/local_lemmas lanes; blocks
+  `vv_split_azim`, `EGHNAVX1_ALT`, `vv_split_azim_generic`);
+  `AZIM_LE_PI_EQ_DIHV` (unproven even at LocalAuto5:1788; blocks
+  `vv_quad_split012/123/short`, contributes to `vv_enclosed4`);
+  `enclosed4_lemma` (chi_msb dichotomy); `SUM_INTER`'s junk branch is
+  FALSE as stated under the 0-on-infinite convention (annotated); and the
+  `main_nonlinear_terminal_v11` + LP registry bank. Compile state:
+  0 errors.
 -/
 
 import Kepler.Text.PackingAuto2
@@ -263,6 +291,7 @@ theorem sol_x_nn :
       0 < solXP38 x1 x2 x3 x4 x5 x6 := by
   intro x1 x2 x3 x4 x5 x6 _ _ _ _ _ _ _ _
   sorry -- DISCHARGES: sphere.hl sol_x positivity chain (deep analysis)
+  -- BLOCKED: solXP38 stub (sphere.hl body unported; external anchor).
 
 /-- HOL `DIH_X_NN` (terminal.hl:85). -/
 theorem DIH_X_NN :
@@ -316,6 +345,7 @@ theorem DIH_Y_LT_RHAZIM :
       dihY y1 y2 y3 y4 y5 y6 ≤ rhazimP38 y1 y2 y3 y4 y5 y6 := by
   intro y1 y2 y3 y4 y5 y6 _ _
   sorry -- DISCHARGES: rhazimP38 body (external anchor)
+  -- BLOCKED: rhazimP38 stub (sphere.hl rhazim body unported).
 
 /-- HOL `taum_taum_x` (terminal.hl:169): `taum` is `y_of_x taum_x`. -/
 theorem taum_taum_x :
@@ -324,6 +354,7 @@ theorem taum_taum_x :
       taum y1 y2 y3 y4 y5 y6 = yOfX taumXP38 y1 y2 y3 y4 y5 y6 := by
   intro y1 y2 y3 y4 y5 y6 _ _ _ _ _ _
   sorry -- DISCHARGES: taum_x body (external anchor taumXP38 = stub)
+  -- BLOCKED: taumXP38 stub (nonlin_def.hl taum_x body unported).
 
 /-! ## Section B: the scs record kit (terminal.hl:184-309) -/
 
@@ -332,6 +363,7 @@ theorem BBs_terminal :
     ∀ s ∈ scsTerminalV116_p38, ∀ vv : ℕ → V3, BBsV39 s vv → 0 ≤ taustarV39 s vv := by
   intro s _ _
   sorry -- DISCHARGES: the scs_terminal_v116 case list (local-fan lane anchor)
+  -- BLOCKED: scsTerminalV116_p38 stub (the 116-case list, unported).
 
 /-- HOL `scs_unadorned_explicit` (terminal.hl:186). -/
 theorem scs_unadorned_explicit :
@@ -666,6 +698,7 @@ theorem tau3_taum (v0 v1 v2 : V3) :
       taum ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1) := by
   intro _ _ _ _ _ _ _ _ _
   sorry -- DISCHARGES: tau3-to-taum formula transfer
+  -- BLOCKED: needs DIHV_EQ_DIH_Y + taum_dih_y (open at LocalAuto16:459).
 
 /-- HOL `tau3_taum_40` (terminal.hl:513): the `< &4` variant. -/
 theorem tau3_taum_40 (v0 v1 v2 : V3) :
@@ -676,12 +709,14 @@ theorem tau3_taum_40 (v0 v1 v2 : V3) :
       taum ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1) := by
   intro _ _ _ _ _ _ _ _ _
   sorry -- DISCHARGES: tau3-to-taum formula transfer
+  -- BLOCKED: as tau3_taum (DIHV_EQ_DIH_Y + taum_dih_y).
 
 /-- HOL `DELTA_Y_POS_4POINTS` (terminal.hl:537). -/
 theorem DELTA_Y_POS_4POINTS (v0 v1 v2 v3 : V3) :
     0 ≤ deltaY (dist v0 v1) (dist v0 v2) (dist v0 v3) (dist v2 v3)
       (dist v1 v3) (dist v1 v2) := by
   sorry -- DISCHARGES: Cayley-Menger positivity of a 4-point simplex
+  -- BLOCKED: needs Collect_geom.DELTA_POS_4POINTS (unported).
 
 /-- HOL `tau3_taum_d` (terminal.hl:548). -/
 theorem tau3_taum_d (d a01 a12 a02 b01 b12 b02 : ℝ)
@@ -697,6 +732,7 @@ theorem tau3_taum_d (d a01 a12 a02 b01 b12 b02 : ℝ)
     dist v0 v2 ≤ b02 → d ≤ tau3 v0 v1 v2 := by
   intro _ _ _ _ _ _ _ _ _ _ _ _
   sorry -- DISCHARGES: tau3_taum
+  -- BLOCKED: as tau3_taum (DIHV_EQ_DIH_Y + taum_dih_y).
 
 /-- HOL `tau3_taum_dfun` (terminal.hl:583): tau3_taum_d with the
 edge-correction functional `f`. -/
@@ -713,6 +749,7 @@ theorem tau3_taum_dfun (d : ℝ) (a01 a12 a02 b01 b12 b02 : ℝ) (f : ℝ → �
     dist v0 v2 ≤ b02 → d + f (dist v1 v2) (dist v0 v2) (dist v0 v1) ≤ tau3 v0 v1 v2 := by
   intro _ _ _ _ _ _ _ _ _ _ _ _
   sorry -- DISCHARGES: tau3_taum
+  -- BLOCKED: as tau3_taum (DIHV_EQ_DIH_Y + taum_dih_y).
 
 /-- HOL `taustar_taum` (terminal.hl:618). -/
 theorem taustar_taum (d : ℝ) (a b : ℕ → ℕ → ℝ) (h1 : 2 ≤ a 0 1) (h2 : 2 ≤ a 1 2)
@@ -726,6 +763,7 @@ theorem taustar_taum (d : ℝ) (a b : ℕ → ℕ → ℝ) (h1 : 2 ≤ a 0 1) (h
     (vv : ℕ → V3) (hbb : BBsV39 (mkUnadornedV39 3 d a b) vv) :
     0 ≤ taustarV39 (mkUnadornedV39 3 d a b) vv := by
   sorry -- DISCHARGES: tau3_taum (box-to-vector transfer)
+  -- BLOCKED: as tau3_taum (DIHV_EQ_DIH_Y + taum_dih_y).
 
 /-- HOL `taustar_taum_dfun` (terminal.hl:642). -/
 theorem taustar_taum_dfun (d : ℝ) (a b : ℕ → ℕ → ℝ) (f : ℕ → ℕ → Prop)
@@ -745,6 +783,7 @@ theorem taustar_taum_dfun (d : ℝ) (a b : ℕ → ℕ → ℝ) (f : ℕ → ℕ
     0 ≤ taustarV39 (ScsV39.mk 3 d a a b b f (fun _ => False) (fun _ => False)
       (fun _ => False)) vv := by
   sorry -- DISCHARGES: tau3_taum (box-to-vector transfer)
+  -- BLOCKED: as tau3_taum (DIHV_EQ_DIH_Y + taum_dih_y).
 
 /-! ## Section D: taum symmetry and the funlist/periodicity kit
 (terminal.hl:684-1211) -/
@@ -1247,14 +1286,296 @@ theorem REAL_WLOG_SQUARE2_LEMMA (P : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ
 
 /-! ## Section E: the fan / azim bank (terminal.hl:1254-2230) -/
 
-/-- HOL `EE_vv` (terminal.hl:1254). -/
+/-! ### Proof-fill kit (2026-09-28): periodic-cycle helpers shared by the
+`EE_vv`/`tau_fun_azim`/`vv_rho_node1`/`ITER_vv_rho_node1`/`vv_azim_le`/
+`convex_local_fan_azim_le_pi` discharges. -/
+
+/-- Helper (proved here 2026-09-28): transfer of a successor-residue
+equality back to the indices. -/
+private theorem nat_succ_mod_p38 {k : ℕ} (hk : 0 < k) {a b : ℕ}
+    (h : (a + 1) % k = (b + 1) % k) : a % k = b % k := by
+  have e1 : a % k = (a + k) % k := (Nat.add_mod_right a k).symm
+  have e2 : a + k = a + 1 + (k - 1) := by omega
+  have e3 : b + k = b + 1 + (k - 1) := by omega
+  rw [e1, e2, Nat.add_mod, h, ← Nat.add_mod, ← e3, Nat.add_mod_right]
+
+/-- Helper (proved here 2026-09-28): transfer of a successor-residue
+equality with a plain residue target to the shifted index. -/
+private theorem nat_pred_mod_p38 {k : ℕ} (hk : 0 < k) {a b : ℕ}
+    (h : (a + 1) % k = b % k) : a % k = (b + (k - 1)) % k := by
+  have e1 : a % k = (a + k) % k := (Nat.add_mod_right a k).symm
+  have e2 : a + k = a + 1 + (k - 1) := by omega
+  rw [e1, e2, Nat.add_mod, h]
+  exact (Nat.add_mod b (k - 1) k).symm
+
+/-- Helper (proved here 2026-09-28): `vv` only sees the residue along one
+period (the `Oxl_def.periodic_mod` down-pass; kept local because
+`periodic_vv_inj` sits later in the file). -/
+private theorem cycle_vv_mod_p38 {vv : ℕ → V3} {k : ℕ} (hper : Periodic vv k)
+    (hk0 : 0 < k) (a : ℕ) : vv a = vv (a % k) := by
+  have hdown : ∀ a : ℕ, vv a = vv (a % k) := by
+    intro a
+    induction a using Nat.strong_induction_on with
+    | _ a ih =>
+      rcases Nat.lt_or_ge a k with hak | hak
+      · rw [Nat.mod_eq_of_lt hak]
+      · rw [show a = (a - k) + k by omega, hper (a - k), ih (a - k) (by omega),
+          Nat.add_mod_right]
+  exact hdown a
+
+/-- Helper (proved here 2026-09-28): equal vertices give equal residues. -/
+private theorem cycle_mod_inj_p38 {vv : ℕ → V3} {k : ℕ} (hper : Periodic vv k)
+    (hk0 : 0 < k) (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j)
+    {a b : ℕ} (h : vv a = vv b) : a % k = b % k := by
+  rw [cycle_vv_mod_p38 hper hk0 a, cycle_vv_mod_p38 hper hk0 b] at h
+  exact hinj (a % k) (b % k) ⟨Nat.mod_lt a (by omega), Nat.mod_lt b (by omega), h⟩
+
+/-- Helper (proved here 2026-09-28): equal residues give equal vertices. -/
+private theorem cycle_mod_congr_p38 {vv : ℕ → V3} {k : ℕ} (hper : Periodic vv k)
+    (hk0 : 0 < k) {a b : ℕ} (h : a % k = b % k) : vv a = vv b := by
+  rw [cycle_vv_mod_p38 hper hk0 a, h, cycle_vv_mod_p38 hper hk0 b]
+
+/-- Helper (proved here 2026-09-28): the cycle successor is never the same
+vertex once `3 ≤ k`. -/
+private theorem cycle_succ_ne_p38 {vv : ℕ → V3} {k : ℕ} (hper : Periodic vv k)
+    (hk : 3 ≤ k) (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j)
+    (j : ℕ) : vv (j + 1) ≠ vv j := by
+  have hk0 : 0 < k := by omega
+  intro he
+  have h4 : (j % k + 1) % k = j % k := by
+    rw [Nat.mod_add_mod j k 1, cycle_mod_inj_p38 hper hk0 hinj he]
+  have hr : j % k < k := Nat.mod_lt j hk0
+  rcases Nat.lt_or_ge (j % k + 1) k with hlt | hge
+  · rw [Nat.mod_eq_of_lt hlt] at h4; omega
+  · rw [Nat.mod_eq_sub_mod hge] at h4
+    rw [Nat.mod_eq_of_lt (by omega : j % k + 1 - k < k)] at h4
+    omega
+
+/-- Helper (proved here 2026-09-28): the two cycle neighbours of `vv i` are
+distinct once `3 ≤ k`. -/
+private theorem cycle_edge_ne_p38 {vv : ℕ → V3} {k : ℕ} (hper : Periodic vv k)
+    (hk : 3 ≤ k) (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j)
+    (i : ℕ) : vv (i + 1) ≠ vv (i + (k - 1)) := by
+  have hk0 : 0 < k := by omega
+  intro he
+  have hres := cycle_mod_inj_p38 hper hk0 hinj he
+  have h2 : (i + 2) % k = i % k := by
+    have t1 : (i + 2) % k = ((i + 1) % k + 1) % k :=
+      (Nat.mod_add_mod (i + 1) k 1).symm
+    rw [t1, hres, Nat.mod_add_mod (i + (k - 1)) k 1,
+      show i + (k - 1) + 1 = i + k by omega, Nat.add_mod_right]
+  have hr : i % k < k := Nat.mod_lt i hk0
+  have h3 : (i % k + 2) % k = i % k := by
+    rw [Nat.mod_add_mod i k 2]; exact h2
+  rcases Nat.lt_or_ge (i % k + 2) k with hlt | hge
+  · rw [Nat.mod_eq_of_lt hlt] at h3; omega
+  · rw [Nat.mod_eq_sub_mod hge] at h3
+    rw [Nat.mod_eq_of_lt (by omega : i % k + 2 - k < k)] at h3
+    omega
+
+/-- HOL `EE_vv` (terminal.hl:1254). DISCHARGED 2026-09-28: both inclusions
+reduce, over the dart-pair equality `{vv j, vv (j + 1)} = {vv i, ww}`, to
+`periodic_vv_inj` residue transfers (the degenerate singletons force
+`vv (j + 1) = vv j`, excluded by `cycle_succ_ne_p38`). -/
 theorem EE_vv (vv : ℕ → V3) (k i : ℕ) (hper : Periodic vv k) (hk : 3 ≤ k)
     (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j) :
     ee (vv i) (Set.range fun i => {vv i, vv (i + 1)}) =
       {vv (i + 1), vv (i + (k - 1))} := by
-  sorry -- DISCHARGES: ee-of-cycle-edge characterization
+  have hk0 : 0 < k := by omega
+  have hsucc := cycle_succ_ne_p38 hper hk hinj
+  ext ww
+  simp only [ee, Set.mem_setOf_eq, Set.mem_range, Set.mem_insert_iff,
+    Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨j, hj⟩
+    -- hj : {vv j, vv (j + 1)} = {vv i, ww}
+    have hvj : vv j = vv i ∨ vv j = ww := by
+      have hm : vv j ∈ ({vv i, ww} : Set V3) := by rw [← hj]; simp
+      simpa using hm
+    have hvj1 : vv (j + 1) = vv i ∨ vv (j + 1) = ww := by
+      have hm : vv (j + 1) ∈ ({vv i, ww} : Set V3) := by rw [← hj]; simp
+      simpa using hm
+    have hww : ww = vv j ∨ ww = vv (j + 1) := by
+      have hm : ww ∈ ({vv j, vv (j + 1)} : Set V3) := by rw [hj]; simp
+      simpa using hm
+    rcases hvj with hAv | hAv
+    · rcases hww with hBw | hBw
+      · -- ww = vv j: the dart pair collapses to a singleton
+        exfalso
+        rw [← hAv] at hvj1
+        rcases hvj1 with h | h
+        · exact absurd h (hsucc j)
+        · exact absurd (h.trans hBw) (hsucc j)
+      · -- ww = vv (j + 1): residue transfer to the cycle successor
+        refine Or.inl ?_
+        have e1 : j % k = i % k := cycle_mod_inj_p38 hper hk0 hinj hAv
+        have e2 : (j + 1) % k = (i + 1) % k := by
+          rw [← Nat.mod_add_mod j k 1, e1, Nat.mod_add_mod i k 1]
+        exact hBw.trans (cycle_mod_congr_p38 hper hk0 e2)
+    · -- vv j = ww
+      rcases hvj1 with hAv1 | hAv1
+      · -- vv (j + 1) = vv i: residue transfer to the cycle predecessor
+        refine Or.inr ?_
+        have e1 : (j + 1) % k = i % k := cycle_mod_inj_p38 hper hk0 hinj hAv1
+        have e2 : j % k = (i + (k - 1)) % k := nat_pred_mod_p38 hk0 e1
+        exact hAv.symm.trans (cycle_mod_congr_p38 hper hk0 e2)
+      · -- vv (j + 1) = ww = vv j: singleton clash again
+        exfalso
+        exact absurd (hAv1.trans hAv.symm) (hsucc j)
+  · rintro (rfl | hw)
+    · exact ⟨i, rfl⟩
+    · refine ⟨i + (k - 1), ?_⟩
+      have hlast : vv ((i + (k - 1)) + 1) = vv i := by
+        rw [show (i + (k - 1)) + 1 = i + k by omega, hper i]
+      rw [hlast, hw, Set.pair_comm]
 
-/-- HOL `tau_fun_azim` (terminal.hl:1316). -/
+/-- Helper (proved here 2026-09-28): the cycle edge set has exactly two
+elements. -/
+private theorem cycle_ee_ncard_p38 (vv : ℕ → V3) (k i : ℕ) (hper : Periodic vv k)
+    (hk : 3 ≤ k) (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j) :
+    (ee (vv i) (Set.range fun i => {vv i, vv (i + 1)})).ncard = 2 := by
+  rw [EE_vv vv k i hper hk hinj]
+  exact Set.ncard_pair (cycle_edge_ne_p38 hper hk hinj i)
+
+/-- Helper (proved here 2026-09-28): `set_of_edge` over `Set.univ` is `ee`. -/
+private theorem setOfEdge_univ_p38 (v : V3) (E : Set (Set V3)) :
+    Kepler.Text.Fan.setOfEdge v Set.univ E = ee v E := by
+  ext w
+  simp [Kepler.Text.Fan.setOfEdge, ee]
+
+/-- Helper (proved here 2026-09-28): the fan successor `sigmaFan` at a cycle
+dart is the predecessor vertex `vv (i + (k - 1))` (the azim-minimal neighbour
+is unique on the two-point edge set). -/
+private theorem cycle_sigma_fan_p38 (vv : ℕ → V3) (k i : ℕ) (hper : Periodic vv k)
+    (hk : 3 ≤ k) (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j) :
+    Kepler.Text.Fan.sigmaFan 0 Set.univ (Set.range fun i => {vv i, vv (i + 1)}) (vv i)
+      (vv (i + 1)) = vv (i + (k - 1)) := by
+  set E : Set (Set V3) := Set.range fun i => {vv i, vv (i + 1)} with hEd
+  have hE := EE_vv vv k i hper hk hinj
+  have hne := cycle_edge_ne_p38 hper hk hinj i
+  have hsoe : Kepler.Text.Fan.setOfEdge (vv i) Set.univ E = ee (vv i) E :=
+    setOfEdge_univ_p38 (vv i) E
+  have hcond : Kepler.Text.Fan.setOfEdge (vv i) Set.univ E ≠ {vv (i + 1)} := by
+    intro hc
+    rw [hsoe, hE] at hc
+    have hmem : vv (i + (k - 1)) ∈ ({vv (i + 1)} : Set V3) := by rw [← hc]; simp
+    rw [Set.mem_singleton_iff] at hmem
+    exact hne hmem.symm
+  have key : ∀ w, w ∈ Kepler.Text.Fan.setOfEdge (vv i) Set.univ E ∧ w ≠ vv (i + 1) ∧
+      (∀ w1 ∈ Kepler.Text.Fan.setOfEdge (vv i) Set.univ E, w1 ≠ vv (i + 1) →
+        azim 0 (vv i) (vv (i + 1)) w ≤ azim 0 (vv i) (vv (i + 1)) w1) →
+      w = vv (i + (k - 1)) := by
+    rw [hsoe, hE]
+    rintro w ⟨hmem, hne2, -⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+    rcases hmem with h | h
+    · exact absurd h hne2
+    · exact h
+  have hex : ∃ y, y ∈ Kepler.Text.Fan.setOfEdge (vv i) Set.univ E ∧ y ≠ vv (i + 1) ∧
+      (∀ w1 ∈ Kepler.Text.Fan.setOfEdge (vv i) Set.univ E, w1 ≠ vv (i + 1) →
+        azim 0 (vv i) (vv (i + 1)) y ≤ azim 0 (vv i) (vv (i + 1)) w1) := by
+    refine ⟨vv (i + (k - 1)), ?_, hne.symm, ?_⟩
+    · rw [hsoe, hE]; simp
+    · rintro w1 hmem hne1
+      rw [hsoe, hE] at hmem
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+      rcases hmem with h | h
+      · exact absurd h hne1
+      · rw [h]
+  simp only [Kepler.Text.Fan.sigmaFan]
+  split
+  · next hc => exact absurd hc hcond
+  · next =>
+    have heps := Classical.epsilon_spec_aux inferInstance _ hex
+    exact key _ heps
+
+/-- Helper (proved here 2026-09-28): `azim_in_fan` at a cycle dart is the
+azimuth onto the cycle predecessor. -/
+private theorem cycle_azim_in_fan_p38 (vv : ℕ → V3) (k i : ℕ) (hper : Periodic vv k)
+    (hk : 3 ≤ k) (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j) :
+    azimInFan (vv i, vv (i + 1)) (Set.range fun i => {vv i, vv (i + 1)})
+      = azim 0 (vv i) (vv (i + 1)) (vv (i + (k - 1))) := by
+  have hnc := cycle_ee_ncard_p38 vv k i hper hk hinj
+  have hs := cycle_sigma_fan_p38 vv k i hper hk hinj
+  rw [azimInFan, if_pos (show 1 < (ee (vv i) (Set.range fun i => {vv i, vv (i + 1)})).ncard
+    from by rw [hnc]; norm_num), hs]
+
+/-- Helper (proved here 2026-09-28): the cycle dart at index `i` is the dart
+of the reduced index. -/
+private theorem cycle_dart_mod_p38 {vv : ℕ → V3} {k : ℕ} (hper : Periodic vv k)
+    (hk0 : 0 < k) (i : ℕ) :
+    (vv i, vv (i + 1)) = (vv (i % k), vv (i % k + 1)) := by
+  have h1 : vv i = vv (i % k) := cycle_vv_mod_p38 hper hk0 i
+  have h2 : vv (i + 1) = vv (i % k + 1) := by
+    have e1 : vv (i + 1) = vv ((i + 1) % k) := cycle_vv_mod_p38 hper hk0 (i + 1)
+    have e2 : (i + 1) % k = (i % k + 1) % k := (Nat.mod_add_mod i k 1).symm
+    rw [e1, e2, ← cycle_vv_mod_p38 hper hk0]
+  rw [h1, h2]
+
+/-- Helper (proved here 2026-09-28): the dart range is the image of one
+period. -/
+private theorem cycle_dart_image_p38 {vv : ℕ → V3} {k : ℕ} (hper : Periodic vv k)
+    (hk0 : 0 < k) :
+    Set.range (fun i => (vv i, vv (i + 1))) =
+      (fun i => (vv i, vv (i + 1))) '' {i | i < k} := by
+  ext p
+  simp only [Set.mem_range, Set.mem_image, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨i, rfl⟩
+    exact ⟨i % k, Nat.mod_lt i hk0, (cycle_dart_mod_p38 hper hk0 i).symm⟩
+  · rintro ⟨i, -, rfl⟩
+    exact Set.mem_range_self i
+
+/-- Helper (proved here 2026-09-28): the dart map is injective on one
+period. -/
+private theorem cycle_dart_inj_p38 {vv : ℕ → V3} {k : ℕ} (hk : 3 ≤ k)
+    (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j) :
+    Set.InjOn (fun i => (vv i, vv (i + 1))) (↑(Finset.range k) : Set ℕ) := by
+  intro a ha b hb hab
+  rw [Finset.mem_coe, Finset.mem_range] at ha hb
+  rw [Prod.mk.injEq] at hab
+  exact hinj a b ⟨ha, hb, hab.1⟩
+
+/-- Helper (proved here 2026-09-28): the dart range has `k` elements. -/
+private theorem cycle_dart_ncard_p38 {vv : ℕ → V3} {k : ℕ} (hper : Periodic vv k)
+    (hk : 3 ≤ k) (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j) :
+    (Set.range fun i => (vv i, vv (i + 1))).ncard = k := by
+  have hk0 : 0 < k := by omega
+  rw [cycle_dart_image_p38 hper hk0,
+    show (({i | i < k} : Set ℕ) : Set ℕ) = (↑(Finset.range k) : Set ℕ) from by
+      rw [Finset.coe_range]; rfl,
+    Set.InjOn.ncard_image (cycle_dart_inj_p38 hk hinj), Set.ncard_coe_finset,
+    Finset.card_range]
+
+/-- Helper (proved here 2026-09-28): `setSum` over the cycle dart range
+reindexes to a sum over `Finset.range k`. -/
+private theorem cycle_dart_sum_p38 {g : V3 × V3 → ℝ} {vv : ℕ → V3} {k : ℕ}
+    (hper : Periodic vv k) (hk : 3 ≤ k)
+    (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j) :
+    setSum (Set.range fun i => (vv i, vv (i + 1))) g
+      = ∑ i ∈ Finset.range k, g (vv i, vv (i + 1)) := by
+  have hk0 : 0 < k := by omega
+  have hfin : (Set.range fun i => (vv i, vv (i + 1))).Finite := by
+    rw [cycle_dart_image_p38 hper hk0]
+    exact Set.Finite.image _ (Set.toFinite _)
+  rw [setSumDifpos_p38 g hfin]
+  have hto : hfin.toFinset =
+      Finset.image (fun i => (vv i, vv (i + 1))) (Finset.range k) := by
+    ext p
+    rw [Set.Finite.mem_toFinset hfin, Set.mem_range, Finset.mem_image]
+    constructor
+    · rintro ⟨i, -, rfl⟩
+      exact ⟨i % k, Finset.mem_range.mpr (Nat.mod_lt i hk0),
+        (cycle_dart_mod_p38 hper hk0 i).symm⟩
+    · rintro ⟨i, -, rfl⟩
+      exact ⟨i, rfl⟩
+  rw [hto, Finset.sum_image (cycle_dart_inj_p38 hk hinj)]
+
+/-- HOL `tau_fun_azim` (terminal.hl:1316). DISCHARGED 2026-09-28: the dart
+range has `k` elements and the `setSum` reindexes over one period
+(`cycle_dart_sum_p38`, `cycle_dart_ncard_p38`); each `azim_in_fan` value is
+the azimuth onto `vv (i + (k - 1))` via `EE_vv` + `cycle_sigma_fan_p38`
+(`cycle_azim_in_fan_p38`). -/
 theorem tau_fun_azim (vv : ℕ → V3) (k : ℕ) (hper : Periodic vv k) (hk : 3 ≤ k)
     (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j) :
     tauFun (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
@@ -1262,21 +1583,69 @@ theorem tau_fun_azim (vv : ℕ → V3) (k : ℕ) (hper : Periodic vv k) (hk : 3 
       setSum {i | i < k}
           (fun i => rhoFun ‖vv i‖ * azim 0 (vv i) (vv (i + 1)) (vv (i + (k - 1)))) -
         (Real.pi + sol0) * (k - 2) := by
-  sorry -- DISCHARGES: tau_fun over a periodic fan (sol_local characterization)
+  have hnc := cycle_dart_ncard_p38 hper hk hinj
+  have hrhs : setSum {i | i < k}
+      (fun i => rhoFun ‖vv i‖ * azim 0 (vv i) (vv (i + 1)) (vv (i + (k - 1))))
+      = ∑ i ∈ Finset.range k,
+        (rhoFun ‖vv i‖ * azim 0 (vv i) (vv (i + 1)) (vv (i + (k - 1)))) := by
+    have hfin : ({i | i < k} : Set ℕ).Finite := Set.toFinite _
+    rw [setSumDifpos_p38 _ hfin]
+    have hto : hfin.toFinset = Finset.range k := by
+      ext j
+      rw [Set.Finite.mem_toFinset hfin, Set.mem_setOf_eq, Finset.mem_range]
+    rw [hto]
+  show setSum (Set.range fun i => (vv i, vv (i + 1)))
+      (fun e => rhoFun ‖e.1‖ * azimInFan e (Set.range fun i => {vv i, vv (i + 1)})) -
+    (Real.pi + sol0) *
+      (((Set.range fun i => (vv i, vv (i + 1))).ncard - 2 : ℕ) : ℝ) = _
+  have hkcast : ((k : ℝ) - 2) = ((k - 2 : ℕ) : ℝ) :=
+    (Nat.cast_sub (show 2 ≤ k by omega)).symm
+  have hsum : (∑ i ∈ Finset.range k,
+      (fun e => rhoFun ‖e.1‖ * azimInFan e (Set.range fun i => {vv i, vv (i + 1)}))
+        (vv i, vv (i + 1)))
+      = ∑ i ∈ Finset.range k,
+        (rhoFun ‖vv i‖ * azim 0 (vv i) (vv (i + 1)) (vv (i + (k - 1)))) := by
+    refine Finset.sum_congr rfl (fun j _ => ?_)
+    simp only []
+    rw [cycle_azim_in_fan_p38 vv k j hper hk hinj]
+  rw [cycle_dart_sum_p38 hper hk hinj, hnc, hrhs, hkcast, hsum]
 
-/-- HOL `vv_rho_node1` (terminal.hl:1382). -/
+/-- HOL `vv_rho_node1` (terminal.hl:1382). DISCHARGED 2026-09-28: the dart
+`(vv i, vv (i + 1))` is the unique `FF`-dart out of `vv i` (residue transfer
+via `periodic_vv_inj`), so the defining `Classical.epsilon` picks it. -/
 theorem vv_rho_node1 (vv : ℕ → V3) (k : ℕ) (hper : Periodic vv k) (hk : 3 ≤ k)
     (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j)
     (i : ℕ) :
     rhoNode1 (Set.range fun i => (vv i, vv (i + 1))) (vv i) = vv (i + 1) := by
-  sorry -- DISCHARGES: rho_node1 of the cycle dart
+  have hk0 : 0 < k := by omega
+  have hspec : ∀ w, (vv i, w) ∈ Set.range (fun i => (vv i, vv (i + 1))) →
+      w = vv (i + 1) := by
+    rintro w ⟨j, hj⟩
+    rw [Prod.mk.injEq] at hj
+    obtain ⟨hj1, hj2⟩ := hj
+    have e1 : j % k = i % k := cycle_mod_inj_p38 hper hk0 hinj hj1
+    have e2 : (j + 1) % k = (i + 1) % k := by
+      rw [← Nat.mod_add_mod j k 1, e1, Nat.mod_add_mod i k 1]
+    exact hj2.symm.trans (cycle_mod_congr_p38 hper hk0 e2)
+  show Classical.epsilon
+      (fun w => (vv i, w) ∈ Set.range (fun i => (vv i, vv (i + 1)))) = vv (i + 1)
+  have heps := Classical.epsilon_spec_aux inferInstance
+    (fun w => (vv i, w) ∈ Set.range (fun i => (vv i, vv (i + 1))))
+    ⟨vv (i + 1), Set.mem_range_self i⟩
+  exact hspec _ heps
 
-/-- HOL `ITER_vv_rho_node1` (terminal.hl:1418). -/
+/-- HOL `ITER_vv_rho_node1` (terminal.hl:1418). DISCHARGED 2026-09-28 by
+induction on `j` over `vv_rho_node1` (`vv (i + j + 1) = vv (i + (j + 1))` is
+`omega` on the index). -/
 theorem ITER_vv_rho_node1 (vv : ℕ → V3) (k j : ℕ) (hper : Periodic vv k)
     (hk : 3 ≤ k) (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j)
     (i : ℕ) :
     (rhoNode1 (Set.range fun i => (vv i, vv (i + 1))))^[j] (vv i) = vv (i + j) := by
-  sorry -- DISCHARGES: iterates of rho_node1 along the cycle
+  induction j with
+  | zero => simp
+  | succ j ih =>
+    rw [Function.iterate_succ_apply', ih, vv_rho_node1 vv k hper hk hinj (i + j)]
+    congr 1
 
 /-- HOL `PRIOR_TO_LESS_THAN_PI_LEMMA_ALT` (terminal.hl:1440). -/
 theorem PRIOR_TO_LESS_THAN_PI_LEMMA_ALT (V : Set V3) (E : Set (Set V3))
@@ -1286,8 +1655,14 @@ theorem PRIOR_TO_LESS_THAN_PI_LEMMA_ALT (V : Set V3) (E : Set (Set V3))
       azim 0 v (rhoNode1 FF v)
         (azimCycle_p18 (ee v E) 0 v (rhoNode1 FF v)) := by
   sorry -- DISCHARGES: prior-to-less-than-pi fan lemma
+  -- BLOCKED: needs LOCAL_FAN_RHO_NODE_PROS2 ((v, rhoNode1 FF v) in FF;
+    -- hypermap-orbit content, unported).
+    -- LocalFan; hypermap-orbit content, unported)
 
-/-- HOL `vv_azim_le` (terminal.hl:1452). -/
+/-- HOL `vv_azim_le` (terminal.hl:1452). DISCHARGED 2026-09-28: the convex
+local fan wedge condition at the dart `(vv i, vv (i + 1))` (whose edge set
+has two elements, so `wedge_in_fan_ge` is the `wedgeGe` sector) reads off as
+the claim once `sigmaFan` is computed (`cycle_sigma_fan_p38`). -/
 theorem vv_azim_le (vv : ℕ → V3) (k i j : ℕ)
     (hper : Periodic vv k) (hk : 3 ≤ k)
     (hsub : Set.range vv ⊆ ballAnnulus)
@@ -1301,7 +1676,17 @@ theorem vv_azim_le (vv : ℕ → V3) (k i j : ℕ)
     (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j) :
     azim 0 (vv i) (vv (i + 1)) (vv j) ≤
       azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) := by
-  sorry -- DISCHARGES: vv_azim_le fan geometry
+  have hnc := cycle_ee_ncard_p38 vv k i hper hk hinj
+  have hin : vv j ∈ wedgeInFanGe (vv i, vv (i + 1))
+      (Set.range fun i => {vv i, vv (i + 1)}) :=
+    (hcf.2 _ (Set.mem_range_self i)).2 (Set.mem_range_self j)
+  rw [wedgeInFanGe, if_pos (show 1 < (ee (vv i, vv (i + 1)).1
+      (Set.range fun i => {vv i, vv (i + 1)})).ncard from by
+        rw [cycle_ee_ncard_p38 vv k i hper hk hinj]; norm_num)] at hin
+  simp only [wedgeGe, Set.mem_setOf_eq] at hin
+  rw [cycle_sigma_fan_p38 vv k i hper hk hinj] at hin
+  rw [show i + k - 1 = i + (k - 1) by omega]
+  exact hin.2
 
 /-- HOL `vv_split_azim` (terminal.hl:1492). -/
 theorem vv_split_azim (vv : ℕ → V3) (k i j : ℕ)
@@ -1319,6 +1704,9 @@ theorem vv_split_azim (vv : ℕ → V3) (k i j : ℕ)
       azim 0 (vv i) (vv (i + 1)) (vv j) +
         azim 0 (vv i) (vv j) (vv (i + k - 1)) := by
   sorry -- DISCHARGES: azim splitting in the fan
+  -- BLOCKED: needs sum4_azim_fan (TopologyFan.lean, not on this import
+    -- lane) applied over vv_azim_le.
+    -- import lane) applied over vv_azim_le
 
 /-- HOL `EGHNAVX1_ALT` (terminal.hl:1536). -/
 theorem EGHNAVX1_ALT (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
@@ -1330,6 +1718,7 @@ theorem EGHNAVX1_ALT (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
     (i j : ℕ) (hij : i < j ∧ j < k) :
     bta i ≤ bta j := by
   sorry -- DISCHARGES: monotone azim sequence around a fan vertex
+  -- BLOCKED: needs Local_lemmas.EGHNAVX (deep monotonicity, unported).
 
 /-- HOL `vv_split_azim_generic` (terminal.hl:1552). -/
 theorem vv_split_azim_generic (vv : ℕ → V3) (k i j j' : ℕ)
@@ -1342,6 +1731,8 @@ theorem vv_split_azim_generic (vv : ℕ → V3) (k i j j' : ℕ)
       azim 0 (vv i) (vv (i + 1)) (vv (i + j)) +
         azim 0 (vv i) (vv (i + j)) (vv (i + j')) := by
   sorry -- DISCHARGES: generic azim splitting
+  -- BLOCKED: needs EGHNAVX1_ALT + sum4_azim_fan (TopologyFan lane).
+    -- sum4_azim_fan (TopologyFan lane)
 
 /-- HOL `muR_ALT` (terminal.hl:1610): `rfl` by the `muRP38` definition. -/
 theorem muR_ALT (y1 y2 y3 y4 y5 y6 y7 y8 y9 : ℝ) :
@@ -1359,6 +1750,7 @@ theorem enclosed4_lemma (v0 v1 v2 v3 : V3) :
           ‖v3‖ (dist v0 v3) (dist v2 v3) := by
   intro _ _
   sorry -- DISCHARGES: chi_msb sign dichotomy (the enclosing-arc dichotomy)
+  -- BLOCKED: enclosedP38 stub + the chi_msb branch identity (unported).
 
 /-- HOL `IN_V_IMP_AZIM_LESS_PI_ALT` (terminal.hl:1768). -/
 theorem IN_V_IMP_AZIM_LESS_PI_ALT (V : Set V3) (E : Set (Set V3))
@@ -1366,6 +1758,8 @@ theorem IN_V_IMP_AZIM_LESS_PI_ALT (V : Set V3) (E : Set (Set V3))
     (w : V3) (hw : w ∈ V) :
     azim 0 v (rhoNode1 FF v) w ≤ Real.pi := by
   sorry -- DISCHARGES: fan azim < pi
+  -- BLOCKED: PRIOR_TO chain (LOCAL_FAN_RHO_NODE_PROS2 hole).
+    -- hole)
 
 /-- HOL `vv_enclosed4` (terminal.hl:1777). -/
 theorem vv_enclosed4 (vv : ℕ → V3) (i : ℕ)
@@ -1384,20 +1778,27 @@ theorem vv_enclosed4 (vv : ℕ → V3) (i : ℕ)
         ‖vv i‖ ‖vv (i + 3)‖ (dist (vv i) (vv (i + 3)))
         (dist (vv (i + 2)) (vv (i + 3))) := by
   sorry -- DISCHARGES: the k = 4 enclosed-arc identity (via vv_split_azim)
+  -- BLOCKED: enclosedP38 stub + AZIM_LE_PI_EQ_DIHV (open at LocalAuto5).
+    -- LocalAuto5:1788)
 
 /-- HOL `enclosed_sym` (terminal.hl:1930). -/
 theorem enclosed_sym (y1 y2 y3 y4 y5 y6 y7 y8 y9 : ℝ) :
     enclosedP38 y1 y5 y6 y4 y2 y3 y7 y8 y9 =
       enclosedP38 y1 y6 y5 y4 y3 y2 y7 y9 y8 := by
   sorry -- DISCHARGES: enclosedP38 body (external anchor)
+  -- BLOCKED: enclosedP38 stub (body unported).
 
 /-- HOL `enclosed_sym2` (terminal.hl:1946). -/
 theorem enclosed_sym2 (y1 y2 y3 y4 y5 y6 y7 y8 y9 : ℝ) :
     enclosedP38 y1 y5 y6 y4 y2 y3 y7 y8 y9 =
       enclosedP38 y7 y8 y9 y4 y2 y3 y1 y5 y6 := by
   sorry -- DISCHARGES: enclosedP38 body (external anchor)
+  -- BLOCKED: enclosedP38 stub (body unported).
 
-/-- HOL `convex_local_fan_azim_le_pi` (terminal.hl:1962). -/
+/-- HOL `convex_local_fan_azim_le_pi` (terminal.hl:1962). DISCHARGED
+2026-09-28: the second `convex_local_fan` conjunct gives
+`azim_in_fan (vv i, vv (i + 1)) ≤ pi`, and `cycle_azim_in_fan_p38` computes
+that value as the claim. -/
 theorem convex_local_fan_azim_le_pi (vv : ℕ → V3) (k i : ℕ)
     (hper : Periodic vv k) (hk : 3 ≤ k)
     (hinj : ∀ i j : ℕ, i < k ∧ j < k ∧ vv i = vv j → i = j)
@@ -1405,7 +1806,10 @@ theorem convex_local_fan_azim_le_pi (vv : ℕ → V3) (k i : ℕ)
       (Set.range fun i => {vv i, vv (i + 1)}) (Set.range fun i => (vv i, vv (i + 1))))
     (hsub : Set.range vv ⊆ ballAnnulus) :
     azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) ≤ Real.pi := by
-  sorry -- DISCHARGES: fan wedge closure
+  have hle := (hcf.2 _ (Set.mem_range_self i)).1
+  rw [cycle_azim_in_fan_p38 vv k i hper hk hinj] at hle
+  rw [show i + k - 1 = i + (k - 1) by omega]
+  exact hle
 
 /-- HOL `vv_quad_split012` (terminal.hl:1996). -/
 theorem vv_quad_split012 (vv : ℕ → V3)
@@ -1424,6 +1828,9 @@ theorem vv_quad_split012 (vv : ℕ → V3)
       (Real.pi + sol0) * 2 =
       tau3 (vv 0) (vv 1) (vv 2) + tau3 (vv 2) (vv 3) (vv 0) := by
   sorry -- DISCHARGES: quad azim sum splitting
+  -- BLOCKED: needs AZIM_LE_PI_EQ_DIHV (open at LocalAuto5:1788) +
+    -- vv_split_azim.
+    -- vv_split_azim
 
 /-- HOL `vv_quad_split123` (terminal.hl:2049). -/
 theorem vv_quad_split123 (vv : ℕ → V3)
@@ -1442,6 +1849,9 @@ theorem vv_quad_split123 (vv : ℕ → V3)
       (Real.pi + sol0) * 2 =
       tau3 (vv 1) (vv 2) (vv 3) + tau3 (vv 3) (vv 0) (vv 1) := by
   sorry -- DISCHARGES: quad azim sum splitting
+  -- BLOCKED: needs AZIM_LE_PI_EQ_DIHV (open at LocalAuto5:1788) +
+    -- vv_split_azim.
+    -- vv_split_azim
 
 /-- HOL `vv_quad_split_short` (terminal.hl:2103). -/
 theorem vv_quad_split_short (vv : ℕ → V3)
@@ -1462,6 +1872,7 @@ theorem vv_quad_split_short (vv : ℕ → V3)
         tau3 (vv i) (vv (i + 1)) (vv (i + 2)) +
           tau3 (vv (i + 2)) (vv (i + 3)) (vv i) := by
   sorry -- DISCHARGES: the short-diagonal quad split
+  -- BLOCKED: needs vv_quad_split012/123 (AZIM_LE_PI_EQ_DIHV hole).
 
 /-! ## Section F: terminal inequalities, k ≤ 3 bank (terminal.hl:2145-3100) -/
 
@@ -1482,10 +1893,37 @@ theorem cs_adj4_EXPLICIT (a b : ℝ) :
     csAdj 4 a b 3 3 = 0 := by
   norm_num [csAdj]
 
-/-- HOL `delta_4680581274` (terminal.hl:2179). -/
+/-- HOL `delta_4680581274` (terminal.hl:2179). DISCHARGED 2026-09-28 (the
+HOL proof's arithmetic, no LP needed): with `y = y1^2`, `z = y4^2`,
+`c = cstab^2`, the delta value is `(-64 + 32c - 4c^2) - y*z*(y + z - 12 - c)`;
+the first summand is negative (as `c = 9.0601`), and the second is positive
+since `y ≥ c > 0`, `z ≥ 16` and `y + z > 12 + c`. -/
 theorem delta_4680581274 (y1 y4 : ℝ) (hy1 : cstab ≤ y1) (hy4 : 4 ≤ y4) :
     deltaY y1 2 2 y4 2 cstab < 0 := by
-  sorry -- DISCHARGES: the 4680581274 delta drop on the 2-2 spine
+  have hy1p : 0 < y1 := lt_of_lt_of_le (by norm_num [cstab] : (0:ℝ) < cstab) hy1
+  have hy4p : 0 < y4 := lt_of_lt_of_le (by norm_num : (0:ℝ) < 4) hy4
+  have hcpos : (0 : ℝ) < cstab := by norm_num [cstab]
+  have hy1c : 0 ≤ y1 - cstab := sub_nonneg.mpr hy1
+  have hy4c : 0 ≤ y4 - 4 := sub_nonneg.mpr hy4
+  have hyy : cstab * cstab ≤ y1 * y1 := by
+    nlinarith [hy1c, hcpos]
+  have hzz : 16 ≤ y4 * y4 := by
+    nlinarith [hy4c, hy4p]
+  have hsum : 12 + cstab * cstab < y1 * y1 + y4 * y4 := by linarith
+  have key : deltaY y1 2 2 y4 2 cstab =
+      (-64 : ℝ) + 32 * (cstab * cstab) - 4 * (cstab * cstab) ^ 2 -
+        y1 * y1 * (y4 * y4) * (y1 * y1 + y4 * y4 - (12 + cstab * cstab)) := by
+    show deltaX (y1 * y1) ((2 : ℝ) * 2) ((2 : ℝ) * 2) (y4 * y4) ((2 : ℝ) * 2)
+      (cstab * cstab) = _
+    simp only [deltaX]
+    ring
+  have hterm1 : (-64 : ℝ) + 32 * (cstab * cstab) - 4 * (cstab * cstab) ^ 2 < 0 := by
+    norm_num [cstab]
+  have hterm2 : 0 < y1 * y1 * (y4 * y4) * (y1 * y1 + y4 * y4 - (12 + cstab * cstab)) :=
+    mul_pos (mul_pos (mul_pos hy1p hy1p) (mul_pos hy4p hy4p))
+      (by nlinarith [hsum])
+  rw [key]
+  linarith
 
 /-- HOL `tau3_sym` (terminal.hl:2218). DISCHARGED 2026-09-20: both
 symmetries follow from `dihV_swap23_p38` — each `dihV` term rewrites to the
@@ -1579,6 +2017,8 @@ theorem sqrt8_bounds :
 theorem empty_3T2 (h : main_nonlinear_terminal_v11) :
     ∀ vv : ℕ → V3, BBsV39 scs3T2 vv → 0 ≤ taustarV39 scs3T2 vv := by
   sorry -- DISCHARGES: the scs_3T2 emptiness of the BB set
+  -- BLOCKED: taustar_taum (tau3_taum hole) + LP registry OMKYNLT 3336871894.
+    -- registry OMKYNLT 3336871894 (external anchor)
 
 /-- HOL `ineq_5691615370_asym` (terminal.hl:2797). -/
 theorem ineq_5691615370_asym (h : main_nonlinear_terminal_v11) :
@@ -1589,7 +2029,40 @@ theorem ineq_5691615370_asym (h : main_nonlinear_terminal_v11) :
           y2 + y3 + y5 + y6 > 8.472) := by
   sorry -- DISCHARGES: LEMMA_5691615370 (LP asymmetric variant)
 
-/-- HOL `terminal_quad_lemma` (terminal.hl:2834). -/
+/-- Helper (proved here 2026-09-28): the 4-element index set sum expanded
+over `{0, 1, 2, 3}` (generic form of `setSum4_p38`). -/
+private theorem setSum_lt4_p38 (f : ℕ → ℝ) :
+    setSum {i | i < 4} f = f 0 + f 1 + f 2 + f 3 + 0 := by
+  have hsub : {i | i < 4} ⊆ {0, 1, 2, 3} := by
+    intro x hx
+    simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff] at hx ⊢
+    rcases x with _ | _ | _ | _ | x <;> simp_all <;> omega
+  have hfin : ({i | i < 4} : Set ℕ).Finite :=
+    Set.Finite.subset (Set.toFinite ({0, 1, 2, 3} : Set ℕ)) hsub
+  rw [setSumDifpos_p38 f hfin]
+  have hfinsub : hfin.toFinset ⊆ ({0, 1, 2, 3} : Finset ℕ) := by
+    intro x hx
+    rw [Set.Finite.mem_toFinset] at hx
+    simp only [Finset.mem_insert, Finset.mem_singleton] at hx ⊢
+    rcases x with _ | _ | _ | _ | x <;> simp_all <;> omega
+  have h0 : ∀ x ∈ ({0, 1, 2, 3} : Finset ℕ), x ∉ hfin.toFinset →
+      (if x ∈ ({i | i < 4} : Set ℕ) then f x else 0) = 0 := by
+    intro x _ hx
+    exact if_neg (fun hm => hx ((Set.Finite.mem_toFinset hfin).mpr hm))
+  have key : ∑ w ∈ hfin.toFinset, f w =
+      ∑ w ∈ hfin.toFinset, (if w ∈ ({i | i < 4} : Set ℕ) then f w else 0) := by
+    apply Finset.sum_congr rfl
+    intro w hw
+    rw [Set.Finite.mem_toFinset] at hw
+    exact (if_pos hw).symm
+  rw [key, Finset.sum_subset hfinsub h0]
+  simp [Set.mem_setOf_eq]
+  ring
+
+/-- HOL `terminal_quad_lemma` (terminal.hl:2834). DISCHARGED 2026-09-28: the
+`k = 4` BB transfer expands `taustar_v39` (`dsv_J_empty` gives `dsv = d`),
+reindexes `tau_fun` over one period via `tau_fun_azim` + `setSum_lt4_p38`,
+and reads off `h2` (the `a`-positivity gives the cycle injectivity). -/
 theorem terminal_quad_lemma (d : ℝ) (a b : ℕ → ℕ → ℝ)
     (h : ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ i ≠ j → 0 < a i j)
     (h2 : ∀ vv : ℕ → V3, Set.range vv ⊆ ballAnnulus → Periodic vv 4 →
@@ -1604,7 +2077,27 @@ theorem terminal_quad_lemma (d : ℝ) (a b : ℕ → ℕ → ℝ)
           (Real.pi + sol0) * (4 - 2))
     (vv : ℕ → V3) (hbb : BBsV39 (mkUnadornedV39 4 d a b) vv) :
     0 ≤ taustarV39 (mkUnadornedV39 4 d a b) vv := by
-  sorry -- DISCHARGES: the k = 4 BB-minimality transfer (tau_fun side)
+  obtain ⟨hrange, hper, hdij, hfan⟩ := hbb
+  simp only [mkUnadornedV39] at hper hdij hfan
+  have hfan' : ConvexLocalFan (Set.range vv)
+      (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) := by
+    rcases hfan with hle | h
+    · exact absurd hle (by norm_num)
+    · exact h
+  have hinj' : ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ vv i = vv j → i = j := by
+    intro i j hijk
+    by_contra hne
+    have hd0 : a i j ≤ dist (vv i) (vv j) := (hdij i j).1
+    rw [hijk.2.2, dist_self] at hd0
+    linarith [h i j ⟨hijk.1, hijk.2.1, hne⟩]
+  show 0 ≤ tauFun (Set.range vv) (Set.range fun i => {vv i, vv (i + 1)})
+      (Set.range fun i => (vv i, vv (i + 1))) - dsvV39 (mkUnadornedV39 4 d a b) vv
+  rw [dsv_J_empty _ vv rfl]
+  simp only [mkUnadornedV39]
+  rw [tau_fun_azim vv 4 hper (by norm_num) hinj', setSum_lt4_p38]
+  norm_num
+  linarith [h2 vv hrange hper hdij hfan']
 
 /-! ## Section G: the x-space residual kit and the 4680581274 bank
 (terminal.hl:3069-3950) -/
