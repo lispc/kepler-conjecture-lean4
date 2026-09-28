@@ -160,7 +160,25 @@ HOL proof transports via `face H x SUBSET dart H` + `UNIONS E SUBSET V`;
 cf. `LOCAL_FAN_IMP_IN_V2` below). -/
 theorem LOCAL_FAN_IMP_IN_V (h : localFan_p2 V E FF) {d1 d2 : V3 × V3}
     (hd1 : d1 ∈ FF) (hd2 : d2 ∈ FF) :
-    d1.1 ∈ V ∧ d1.2 ∈ V ∧ d2.1 ∈ V ∧ d2.2 ∈ V := sorry
+    d1.1 ∈ V ∧ d1.2 ∈ V ∧ d2.1 ∈ V ∧ d2.2 ∈ V := by
+  obtain ⟨HS, hd, -, -, -, hfan, ⟨x, hx, hFx⟩, -⟩ := h
+  have hfaceSub := HS.face_subset_darts hx
+  have hmem : ∀ z : V3 × V3, z ∈ FF → z ∈ dartsOfHyp_p2 E V := by
+    intro z hz
+    rw [hFx] at hz
+    rw [← hd]
+    exact hfaceSub hz
+  have hV : ∀ z : V3 × V3, z ∈ dartsOfHyp_p2 E V → z.1 ∈ V ∧ z.2 ∈ V := by
+    intro z hz
+    have hEsub : (⋃₀ E) ⊆ V := hfan.1
+    rcases Set.mem_or_mem_of_mem_union (show z ∈ (ordPairs_p2 E ∪ selfPairs_p2 E V) from hz) with
+      ho | hs
+    · exact ⟨(Set.subset_sUnion_of_mem ho).trans hEsub (Set.mem_insert z.1 ({z.2} : Set V3)),
+        (Set.subset_sUnion_of_mem ho).trans hEsub (Set.mem_insert_of_mem z.1 rfl)⟩
+    · exact ⟨hs.2.1, by rw [← hs.1]; exact hs.2.1⟩
+  have e1 := hV d1 (hmem d1 hd1)
+  have e2 := hV d2 (hmem d2 hd2)
+  exact ⟨e1.1, e1.2, e2.1, e2.2⟩
 
 /-- HOL `LOCAL_FAN_RHO_NODE_PROS` (local_lemmas.hl:69): the rho-node maps
 `V` onto successor darts, and every dart is `(FST x, rho_node1 FF (FST x))`. -/
@@ -284,6 +302,114 @@ theorem FAN_FST_EQ_SND_SUPPER_EQ (hfan : FAN 0 V E) {y : V3 × V3}
   · unfold eeOfHyp_p2 nnOfHyp_p2 ffOfHyp_p2
     exact ⟨if_neg hd, if_neg hd, if_neg hd⟩
 
+/-- Lane support (LA5): the `FAN 0 V E` component of a local fan. -/
+private theorem la5_FAN_of_localFan (h : localFan_p2 V E FF) : FAN 0 V E := by
+  obtain ⟨-, -, -, -, -, hfan, -, -⟩ := h
+  exact hfan
+
+/-- Lane support (LA5): a local-fan face is contained in the dart set. -/
+private theorem la5_FF_subset_darts (h : localFan_p2 V E FF) :
+    FF ⊆ dartsOfHyp_p2 E V := by
+  obtain ⟨HS, hd, -, -, -, -, ⟨x, hx, hFx⟩, -⟩ := h
+  have hsub := HS.face_subset_darts hx
+  intro d hdF
+  rw [hFx] at hdF
+  rw [← hd]
+  exact hsub hdF
+
+/-- Lane support (LA5): both endpoints of a dart lie in `V`. -/
+private theorem la5_dart_mem_V (hfan : FAN 0 V E) {d : V3 × V3}
+    (hd : d ∈ dartsOfHyp_p2 E V) : d.1 ∈ V ∧ d.2 ∈ V := by
+  have hEsub : (⋃₀ E) ⊆ V := hfan.1
+  rcases Set.mem_or_mem_of_mem_union (show d ∈ (ordPairs_p2 E ∪ selfPairs_p2 E V) from hd) with
+    ho | hs
+  · exact ⟨(Set.subset_sUnion_of_mem ho).trans hEsub (Set.mem_insert d.1 ({d.2} : Set V3)),
+      (Set.subset_sUnion_of_mem ho).trans hEsub (Set.mem_insert_of_mem d.1 rfl)⟩
+  · exact ⟨hs.2.1, by rw [← hs.1]; exact hs.2.1⟩
+
+/-- Lane support (LA5): a local-fan face is never a singleton (cardinality
+engine: `dih2k` forces `CARD dart = 2 * CARD FF`). -/
+private theorem la5_not_face_card_one (h : localFan_p2 V E FF) (h1 : FF.ncard = 1) :
+    False := by
+  have hsub0 := la5_FF_subset_darts h
+  obtain ⟨HS, hd, h2, h3, h4, hfan, ⟨x, hx, hFx⟩, hdih⟩ := h
+  have hsub : FF ⊆ (↑HS.darts : Set (V3 × V3)) := by
+    intro z hz
+    rw [hd]
+    exact hsub0 hz
+  have hfin : FF.Finite := (HS.darts.finite_toSet).subset hsub
+  have hne0 : ∃ e, e ∈ FF := by
+    by_contra h0
+    push_neg at h0
+    rw [Set.eq_empty_iff_forall_notMem.mpr h0, Set.ncard_empty] at h1
+    norm_num at h1
+  obtain ⟨e, heF⟩ := hne0
+  have he : FF = {e} := by
+    refine Set.eq_singleton_iff_unique_mem.mpr ⟨heF, ?_⟩
+    intro z hz
+    by_contra hne
+    have hsub2 : ({e, z} : Set (V3 × V3)) ⊆ FF := by
+      intro w hw
+      rcases Set.mem_insert_iff.mp hw with h | h
+      · exact h ▸ heF
+      · exact h ▸ hz
+    have h2c : ({e, z} : Set (V3 × V3)).ncard = 2 := Set.ncard_pair (fun h => hne h.symm)
+    have hle := Set.ncard_le_ncard hsub2 hfin
+    rw [h2c] at hle
+    omega
+  have hcard2 : HS.darts.card = 2 := by rw [hdih.1, h1]
+  have heD : e ∈ (↑HS.darts : Set (V3 × V3)) := hsub (by rw [he]; simp)
+  have hmem : e ∈ dartsOfHyp_p2 E V := by rw [← hd]; exact heD
+  have hfx : e ∈ HS.face x := by rw [← hFx, he]; simp
+  obtain ⟨m, hm⟩ := hfx
+  rcases eq_or_ne e.1 e.2 with hself | hne2
+  · have hfixF : (HS.faceMap : V3 × V3 → V3 × V3) e = e := by
+      rw [h4]; exact (FAN_FST_EQ_SND_SUPPER_EQ hfan hself).2.2
+    have hfixN : (HS.nodeMap : V3 × V3 → V3 × V3) e = e := by
+      rw [h3]; exact (FAN_FST_EQ_SND_SUPPER_EQ hfan hself).2.1
+    have hfaceE1 : HS.face e = {e} := orbitMap_eq_singleton hfixF
+    have hunion := hdih.2.1 e heD
+    rw [hfaceE1, Set.image_singleton, hfixN, Set.union_self] at hunion
+    rw [← Set.ncard_coe_finset, hunion] at hcard2
+    simp at hcard2
+  · have hfe : (ffOfHyp_p2 0 V E e).1 = e.2 := by
+      simp only [ffOfHyp_p2, if_pos hmem]
+    have hfaceE : (HS.faceMap : V3 × V3 → V3 × V3) e ∈ HS.face x := by
+      refine ⟨m + 1, ?_⟩
+      rw [pow_succ', Equiv.Perm.mul_apply, hm]
+    rw [← hFx, he] at hfaceE
+    have hfixed : (HS.faceMap : V3 × V3 → V3 × V3) e = e := by
+      simpa using hfaceE
+    rw [h4] at hfixed
+    refine hne2 ?_
+    have hff := congrArg Prod.fst hfixed
+    rw [hfe] at hff
+    exact hff.symm
+
+/-- Lane support (LA5): a self-pair dart inside the face collapses the face
+to a singleton. -/
+private theorem la5_face_singleton_of_mem_self {d : V3 × V3} (h : localFan_p2 V E FF)
+    (hdF : d ∈ FF) (hself : d.1 = d.2) : FF = {d} := by
+  obtain ⟨HS, hd, -, -, h4, hfan, ⟨x, hx, hFx⟩, -⟩ := h
+  have hsub := HS.face_subset_darts hx
+  have hdD : d ∈ (↑HS.darts : Set (V3 × V3)) := by
+    rw [hFx] at hdF
+    exact hsub hdF
+  have hmem : d ∈ dartsOfHyp_p2 E V := by rw [← hd]; exact hdD
+  have hfixD : (HS.faceMap : V3 × V3 → V3 × V3) d = d := by
+    rw [h4]; exact (FAN_FST_EQ_SND_SUPPER_EQ hfan hself).2.2
+  have hpow : ∀ n : ℕ, ((HS.faceMap : Equiv.Perm (V3 × V3)) ^ n) d = d := by
+    intro n
+    induction n with
+    | zero => simp
+    | succ k ih =>
+        rw [pow_succ, Equiv.Perm.mul_apply, hfixD, ih]
+  obtain ⟨m, hm⟩ := by rw [hFx] at hdF; exact hdF
+  have hxd : x = d := Equiv.injective (HS.faceMap ^ m) (hm.trans (hpow m).symm)
+  rw [hFx, hxd]
+  show orbitMap (HS.faceMap : Equiv.Perm (V3 × V3)) d = ({d} : Set (V3 × V3))
+  exact orbitMap_eq_singleton hfixD
+
 /-- HOL `COLLINEAR_CROSS_0` (local_lemmas.hl:190). Cross rendered via
 `crossProduct` and the `WithLp.toLp` idiom. -/
 theorem COLLINEAR_CROSS_0 {x y z : V3} :
@@ -322,24 +448,45 @@ theorem THREE_NOT_COLL_DETER_PLANE {P : Set V3} {a b c : V3} (hP : plane_p2 P)
     affineSpan ℝ ({a, b, c} : Set V3) = P := sorry
 
 /-- HOL `LOCAL_FAN_NOT_V_SING` (local_lemmas.hl:266). -/
-theorem LOCAL_FAN_NOT_V_SING (h : localFan_p2 V E FF) : ¬ ∃ v : V3, V = {v} := sorry
+theorem LOCAL_FAN_NOT_V_SING (h : localFan_p2 V E FF) : ¬ ∃ v : V3, V = {v} := by
+  rintro ⟨v, rfl⟩
+  obtain ⟨HS, hd, -, -, -, hfan, -, hdih⟩ := h
+  have hcard : HS.darts.card = 1 := by
+    rw [← Set.ncard_coe_finset, hd, FAN_SINGLETON_V_DARTS hfan rfl]
+    simp
+  rw [hdih.1] at hcard
+  omega
 
 /-- HOL `LOCAL_FAN_NOT_SING_FF` (local_lemmas.hl:288). -/
 theorem LOCAL_FAN_NOT_SING_FF (h : localFan_p2 V E FF) :
-    ¬ ∃ x : V3 × V3, FF = {x} := sorry
+    ¬ ∃ x : V3 × V3, FF = {x} := by
+  rintro ⟨d, rfl⟩
+  exact la5_not_face_card_one h (by simp)
 
 /-- HOL `LOCAL_FAN_IN_FF_DISTINCT` (local_lemmas.hl:309). -/
 theorem LOCAL_FAN_IN_FF_DISTINCT (h : localFan_p2 V E FF) {d : V3 × V3}
-    (hd : d ∈ FF) : d.1 ≠ d.2 := sorry
+    (hd : d ∈ FF) : d.1 ≠ d.2 := by
+  intro hself
+  have h1 : FF = {d} := la5_face_singleton_of_mem_self h hd hself
+  exact la5_not_face_card_one h (by rw [h1]; simp)
 
 
 /-- HOL `LOCAL_FAN_IN_FF_IN_ORD_PAIRS` (local_lemmas.hl:338). -/
 theorem LOCAL_FAN_IN_FF_IN_ORD_PAIRS (h : localFan_p2 V E FF) {d : V3 × V3}
-    (hd : d ∈ FF) : d ∈ ordPairs_p2 E := sorry
+    (hd : d ∈ FF) : d ∈ ordPairs_p2 E := by
+  have hdD : d ∈ dartsOfHyp_p2 E V := la5_FF_subset_darts h hd
+  have hne := LOCAL_FAN_IN_FF_DISTINCT h hd
+  obtain ⟨-, -, -, -, -, hfan, -, -⟩ := h
+  rcases Set.mem_or_mem_of_mem_union hdD with ho | hs
+  · exact ho
+  · exact absurd ((FAN_IN_DARTS_FST_EQ_SND_SELF_PAIRS hfan hdD).mpr hs) hne
 
 /-- HOL `LOCAL_FAN_IN_FF_NOT_COLLINEAR` (local_lemmas.hl:364). -/
 theorem LOCAL_FAN_IN_FF_NOT_COLLINEAR (h : localFan_p2 V E FF) {d : V3 × V3}
-    (hd : d ∈ FF) : ¬ Collinear ℝ ({0, d.1, d.2} : Set V3) := sorry
+    (hd : d ∈ FF) : ¬ Collinear ℝ ({0, d.1, d.2} : Set V3) := by
+  have hE := LOCAL_FAN_IN_FF_IN_ORD_PAIRS h hd
+  obtain ⟨-, -, -, -, -, hfan, -, -⟩ := h
+  exact hfan.2.2.2.2.1 _ hE
 
 /-- HOL `LOCAL_FAN_CHARACTER_OF_RHO_NODE` (local_lemmas.hl:377). -/
 theorem LOCAL_FAN_CHARACTER_OF_RHO_NODE (h : localFan_p2 V E FF) {v : V3}
@@ -474,7 +621,16 @@ theorem FAN_IN_E_DIFF (hfan : FAN 0 V E) : ∀ x y : V3, ({x, y} : Set V3) ∈ E
 
 /-- HOL `LOCAL_FAN_NOT_TWO_V_IN_E` (local_lemmas.hl:441). -/
 theorem LOCAL_FAN_NOT_TWO_V_IN_E (h : localFan_p2 V E FF) :
-    ¬ ∃ v1 v2 : V3, V = {v1, v2} ∧ ({v1, v2} : Set V3) ∈ E := sorry
+    ¬ ∃ v1 v2 : V3, V = {v1, v2} ∧ ({v1, v2} : Set V3) ∈ E := by
+  have hkeep := h
+  rintro ⟨v1, v2, rfl, he⟩
+  obtain ⟨HS, hd, -, -, -, hfan, -, hdih⟩ := h
+  have hne : (v1:V3) ≠ v2 := GRAPH_WITH_SET2 hfan.2.1 v1 v2 he
+  have hcard : HS.darts.card = 2 := by
+    rw [← Set.ncard_coe_finset, hd, FAN_V_TWO_ELMS_IN_E_DARTS2 hfan rfl he]
+    simp [hne]
+  rw [hdih.1] at hcard
+  exact la5_not_face_card_one hkeep (by omega)
 
 /-- HOL `LOCAL_FAN_ORBIT_MAP_V` (local_lemmas.hl:469). -/
 theorem LOCAL_FAN_ORBIT_MAP_V (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) :
@@ -1359,7 +1515,8 @@ theorem azim_in_fan2 (x : V3 × V3) (E : Set (Set V3)) :
   · simp [azimInFan_p2, h]
 
 /-- HOL `LOFA_IMP_NOT_INCLUDE_VEC0` (local_lemmas.hl:3769). -/
-theorem LOFA_IMP_NOT_INCLUDE_VEC0 (h : localFan_p2 V E FF) : ¬((0:V3) ∈ V) := sorry
+theorem LOFA_IMP_NOT_INCLUDE_VEC0 (h : localFan_p2 V E FF) : ¬((0:V3) ∈ V) :=
+  fun h0 => (la5_FAN_of_localFan h).2.2.2.1 h0
 
 /-- HOL `AZIM_SPEC_DEGENERATE` (local_lemmas.hl:3778). -/
 theorem AZIM_SPEC_DEGENERATE (v0 v1 w1 : V3) :
@@ -1419,7 +1576,8 @@ theorem AZIM_EQ_0_SYM2 (v0 v1 w1 w2 : V3) :
 /-- HOL `LOCAL_FAN_IN_FF_IN_ORD_PAIRS2` (local_lemmas.hl:3979). -/
 theorem LOCAL_FAN_IN_FF_IN_ORD_PAIRS2 (h : localFan_p2 V E FF) {x y : V3 × V3}
     (hx : x ∈ FF) (hy : y ∈ FF) :
-    ({x.1, x.2} : Set V3) ∈ E ∧ ({y.1, y.2} : Set V3) ∈ E := sorry
+    ({x.1, x.2} : Set V3) ∈ E ∧ ({y.1, y.2} : Set V3) ∈ E :=
+  ⟨LOCAL_FAN_IN_FF_IN_ORD_PAIRS h hx, LOCAL_FAN_IN_FF_IN_ORD_PAIRS h hy⟩
 
 /-- HOL `INTERIOR_ANGLE1_POS` (local_lemmas.hl:3989). -/
 theorem INTERIOR_ANGLE1_POS (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) :
@@ -1831,10 +1989,12 @@ theorem SURJ_IMP_FINITE {α β : Type*} (f : α → β) {A : Set α} {B : Set β
   exact ⟨a, ha, hab⟩
 
 /-- HOL `LOFA_V_NOT_EMP` (local_lemmas.hl:6090). -/
-theorem LOFA_V_NOT_EMP (h : localFan_p2 V E FF) : V ≠ ∅ := sorry
+theorem LOFA_V_NOT_EMP (h : localFan_p2 V E FF) : V ≠ ∅ :=
+  (la5_FAN_of_localFan h).2.2.1.2
 
 /-- HOL `LOCAL_FAN_FINITE_V` (local_lemmas.hl:6096). -/
-theorem LOCAL_FAN_FINITE_V (h : localFan_p2 V E FF) : V.Finite := sorry
+theorem LOCAL_FAN_FINITE_V (h : localFan_p2 V E FF) : V.Finite :=
+  (la5_FAN_of_localFan h).2.2.1.1
 
 /-- HOL `ITER_CARD_MINUS1_EQ_IVS_RN1` (local_lemmas.hl:6106). -/
 theorem ITER_CARD_MINUS1_EQ_IVS_RN1 (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) :
@@ -1853,7 +2013,10 @@ theorem DETERMINE_WEDGE_IN_FAN (h : localFan_p2 V E FF) {x : V3 × V3} (hx : x �
 
 /-- HOL `LOCAL_FAN_IMP_IN_V2` (local_lemmas.hl:6186). -/
 theorem LOCAL_FAN_IMP_IN_V2 (h : localFan_p2 V E FF) {d : V3 × V3} (hd : d ∈ FF) :
-    d.1 ∈ V ∧ d.2 ∈ V := sorry
+    d.1 ∈ V ∧ d.2 ∈ V := by
+  have h1 := la5_FF_subset_darts h hd
+  obtain ⟨-, -, -, -, -, hfan, -, -⟩ := h
+  exact la5_dart_mem_V hfan h1
 
 /-- HOL `LOFA_DETERMINE_AZIM_IN_FA` (local_lemmas.hl:6199). -/
 theorem LOFA_DETERMINE_AZIM_IN_FA (h : localFan_p2 V E FF) {x : V3 × V3} (hx : x ∈ FF) :
