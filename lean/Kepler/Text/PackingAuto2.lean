@@ -567,24 +567,109 @@ theorem QXSKIIT_concl : ∀ {A : Type} (vf : A → V3) (b : A → ℝ),
       ∀ i j : A, p ⬝ᵥ (vf i - vf j) = b i - b j := by
   sorry
 
+/-- 辅助引理（本波新增，`_p2` 后缀，statement 冻结纪律见任务书）：Mathlib
+`AffineIndependent.existsUnique_dist_eq` 桥——非空仿射无关点集在仿射包上有
+唯一的等距点，且 `circumcenter`/`radV` 两个 `Classical.epsilon` 恰好选中它。
+这是 HOL Rogers.hl:3816 `CIRCUMCENTER_LEMMA` 的完整复刻，用于清偿
+`OAPVION{1,2,3}_concl` 三座 pack_concl 桥。 -/
+private theorem circumcenterRadVUnique_p2 (S : Set V3) (hne : S.Nonempty)
+    (hind : ¬affineDependent S) :
+    ∃ q : V3, circumcenter S = q ∧ q ∈ (affineSpan ℝ S : Set V3) ∧
+      (∀ z ∈ S, radV S = dist q z) ∧
+      (∀ q' : V3, q' ∈ (affineSpan ℝ S : Set V3) →
+        (∃ c : ℝ, ∀ z ∈ S, dist q' z = c) → q' = q) := by
+  haveI : Nonempty ↥S := hne.to_subtype
+  have hai : AffineIndependent ℝ (fun x : S => (x : V3)) := by
+    rw [affineDependent, not_not] at hind
+    exact hind
+  haveI : Finite ↥S :=
+    haveI : FiniteDimensional ℝ V3 := inferInstance
+    finite_of_fin_dim_affineIndependent ℝ hai
+  have hrange : Set.range (fun x : S => (x : V3)) = S := by
+    ext z
+    constructor
+    · rintro ⟨x, rfl⟩
+      exact x.2
+    · intro hz
+      exact ⟨⟨z, hz⟩, rfl⟩
+  obtain ⟨cs, ⟨hcmem, hcontains⟩, hcsuniq⟩ := hai.existsUnique_dist_eq
+  rw [hrange] at hcmem hcontains
+  have hdist : ∀ z ∈ S, dist z cs.center = cs.radius := fun z hz => hcontains hz
+  have hdist' : ∀ z ∈ S, cs.radius = dist cs.center z := fun z hz => by
+    rw [dist_comm]
+    exact (hdist z hz).symm
+  have hccp : circumcenter S = cs.center := by
+    have hcpred : (circumcenter S) ∈ (affineSpan ℝ S : Set V3) ∧
+        ∃ c : ℝ, ∀ z ∈ S, c = dist (circumcenter S) z :=
+      Classical.epsilon_spec
+        (p := fun v : V3 => v ∈ (affineSpan ℝ S : Set V3) ∧ ∃ c : ℝ, ∀ z ∈ S, c = dist v z)
+        ⟨cs.center, hcmem, cs.radius, hdist'⟩
+    obtain ⟨hcpred1, c₀, hc₀⟩ := hcpred
+    have heq : EuclideanGeometry.Sphere.mk (circumcenter S) c₀ = cs := by
+      refine hcsuniq _ ⟨?_, ?_⟩
+      · rw [hrange]
+        exact hcpred1
+      · intro x hx
+        obtain ⟨z, rfl⟩ := hx
+        show dist (z : V3) (circumcenter S) = c₀
+        rw [hc₀ z z.2, dist_comm]
+    exact congrArg EuclideanGeometry.Sphere.center heq
+  have hrad : radV S = cs.radius := by
+    obtain ⟨z0, hz0⟩ := hne
+    have hspec : ∀ z ∈ S, radV S = dist (circumcenter S) z :=
+      Classical.epsilon_spec
+        (p := fun c : ℝ => ∀ z ∈ S, c = dist (circumcenter S) z)
+        ⟨cs.radius, fun z hz => by rw [hccp]; exact hdist' z hz⟩
+    have h1 := hspec z0 hz0
+    rw [hccp, dist_comm] at h1
+    exact h1.trans (hdist z0 hz0)
+  refine ⟨cs.center, hccp, hcmem, fun z hz => hrad.trans (hdist' z hz), ?_⟩
+  rintro q' hqm' ⟨c', hc'⟩
+  have heq : EuclideanGeometry.Sphere.mk q' c' = cs := by
+    refine hcsuniq _ ⟨?_, ?_⟩
+    · rw [hrange]
+      exact hqm'
+    · intro x hx
+      obtain ⟨z, rfl⟩ := hx
+      rw [Metric.mem_sphere]
+      exact (dist_comm (z : V3) q').trans (hc' z z.2)
+  exact congrArg EuclideanGeometry.Sphere.center heq
+
 /-- HOL `OAPVION1_concl` (pack_concl.hl:35-36): the circumcenter lies on the
 affine hull. -/
 theorem OAPVION1_concl : ∀ S : Set V3, S ≠ ∅ → ¬affineDependent S →
     circumcenter S ∈ (affineSpan ℝ S : Set V3) := by
-  sorry
+  intro S h1 h2
+  obtain ⟨q, hccp, hqm, -, -⟩ :=
+    circumcenterRadVUnique_p2 S (Set.nonempty_iff_ne_empty.mpr h1) h2
+  rw [hccp]
+  exact hqm
 
 /-- HOL `OAPVION2_concl` (pack_concl.hl:38-39): all points are at
 circumradius distance from the circumcenter. -/
 theorem OAPVION2_concl : ∀ S : Set V3, ¬affineDependent S →
     ∀ w ∈ S, radV S = dist (circumcenter S) w := by
-  sorry
+  intro S h2 w hw
+  obtain ⟨q, hccp, -, hd, -⟩ := circumcenterRadVUnique_p2 S ⟨w, hw⟩ h2
+  rw [hccp]
+  exact hd w hw
 
 /-- HOL `OAPVION3_concl` (pack_concl.hl:41-42): characterization of the
 circumcenter by equidistance on the affine hull. -/
 theorem OAPVION3_concl : ∀ S : Set V3, ¬affineDependent S →
     ∀ p : V3, p ∈ (affineSpan ℝ S : Set V3) → (∃ c : ℝ, ∀ w ∈ S, dist p w = c) →
       p = circumcenter S := by
-  sorry
+  intro S h2 p hspan hc
+  obtain ⟨c, hc⟩ := hc
+  by_cases hse : S = ∅
+  · subst hse
+    have hb : (affineSpan ℝ (∅ : Set V3)) = ⊥ :=
+      (affineSpan_eq_bot (k := ℝ)).2 rfl
+    rw [hb] at hspan
+    exact absurd hspan (AffineSubspace.notMem_bot ℝ V3 p)
+  · obtain ⟨w, hw⟩ := Set.nonempty_iff_ne_empty.mpr hse
+    obtain ⟨q, hccp, -, -, hu⟩ := circumcenterRadVUnique_p2 S ⟨w, hw⟩ h2
+    exact (hu p hspan ⟨c, hc⟩).trans hccp.symm
 
 /-- HOL `MHFTTZN1_concl` (pack_concl.hl:44-45): the points of a `barV V k`
 list span dimension exactly `k`. -/
