@@ -23,18 +23,33 @@ ALLOW=$(printf '%s' "${LANE_FILES:-$FILE}" | tr ',' '\n' | sort)
 bad=$(comm -23 <(printf '%s\n' "$changed" | sort) <(printf '%s\n' "$ALLOW" | sort))
 [ -z "$bad" ] || fail "tracked changes outside lane: [$bad]"
 
-# 2. signature freeze: deletions are limited to (a) sorry lines — bare or with
-#    a trailing comment (skeleton files write `sorry -- NEEDS: ...`), (b) blank
-#    lines, (c) pure comment/docstring lines. Any structural code line deleted
-#    => reject. At least one sorry must actually be consumed.
+# 2. signature freeze: deletions must be sorry-bearing. Allowed shapes:
+#    (a) pure sorry lines (bare or with trailing comment); (b) blank/comment/
+#    docstring lines; (c) one-line `… := sorry` (skeleton style!) whose
+#    statement prefix is re-added VERBATIM among the added lines. Anything
+#    else => reject. At least one sorry must actually be consumed.
 dels=$(git diff HEAD -- "$FILE" | grep -E '^-' | grep -v '^---' || true)
-printf '%s\n' "$dels" | grep -qE '^-[[:space:]]*sorry\b' \
+# NB: use [+] not \+ — \+ is undefined in POSIX ERE; BSD grep errors out
+# (silently empty adds => check void) while GNU grep accepts it.
+adds=$(git diff HEAD -- "$FILE" | grep -E '^[+]' | grep -v '^[+][+][+]' || true)
+printf '%s\n' "$dels" | grep -qE '^-[[:space:]]*sorry\b|:=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$' \
   || fail "no sorry consumed (theorem untouched?)"
-bad=$(printf '%s\n' "$dels" \
+hard=$(printf '%s\n' "$dels" \
   | grep -vE '^-[[:space:]]*sorry\b' \
   | grep -vE '^-$' \
   | grep -vE '^-[[:space:]]*(--|/-)' || true)
-[ -z "$bad" ] || fail "non-sorry lines deleted: $(printf '%s' "$bad" | head -3)"
+rest=""
+while IFS= read -r line; do
+  [ -z "$line" ] && continue
+  prefix=$(printf '%s' "$line" | sed -E 's/^-[[:space:]]*(.*):=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$/\1/')
+  if [ -n "$prefix" ] && [ "$prefix" != "$line" ] && printf '%s\n' "$adds" | grep -qF -- "$prefix"; then
+    continue
+  fi
+  rest+="$line"$'\n'
+done <<EOF2
+$hard
+EOF2
+[ -z "$rest" ] || fail "non-sorry lines deleted: $(printf '%s' "$rest" | head -3)"
 
 # 3. banned tokens in added lines
 #    NB: use [+] not \+ — \+ is undefined in POSIX ERE; BSD grep errors out
