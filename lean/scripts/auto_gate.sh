@@ -5,6 +5,7 @@
 set -u
 export PATH="$HOME/.elan/bin:$PATH"
 cd "$(dirname "$0")/.."   # lean/ — git diff paths must be cwd-relative
+REPO_ROOT="$(cd .. && pwd)"   # repo root — for repo-level paths (SF_PATCH etc.)
 FILE="$1"; THM="$2"
 MODULE=$(echo "$FILE" | sed 's|/|.|g; s|\.lean$||')
 
@@ -43,11 +44,12 @@ adds=$(git diff HEAD -- "$FILE" | grep -E '^[+]' | grep -v '^[+][+][+]' || true)
 # FIXED theorem to be sorryAx-free).
 if [ "${GATE_MODE:-}" = "STATEMENT-FIX" ]; then
   [ -n "${SF_PATCH:-}" ] || fail "STATEMENT-FIX: SF_PATCH (archived patch path) not set"
+  case "$SF_PATCH" in /*) ;; *) SF_PATCH="$REPO_ROOT/$SF_PATCH" ;; esac
   [ -f "$SF_PATCH" ] || fail "STATEMENT-FIX: patch $SF_PATCH missing"
   [ -n "${SF_ITEM:-}" ] || fail "STATEMENT-FIX: SF_ITEM (proposals doc item no.) not set"
   grep -qF "+++ b/lean/$FILE" "$SF_PATCH" \
     || fail "STATEMENT-FIX: patch does not target lean/$FILE"
-  sed -n "/^## ${SF_ITEM}\./,/^### /p" docs/statement-fix-proposals.md \
+  sed -n "/^## ${SF_ITEM}\./,/^### /p" "$REPO_ROOT/docs/statement-fix-proposals.md" \
     | grep -q '(a) HOL' \
     || fail "STATEMENT-FIX: item $SF_ITEM lacks (a) HOL citation in proposals doc"
   sec=$(awk -v want="+++ b/lean/$FILE" '
