@@ -131,6 +131,55 @@ is *not* redeclared here (PA18's and PA21's statements differ, plan §6.1).) -/
 `Kepler.Text.PackingAuto18`（2026-09-21 骨架化：该块在两文件 verbatim 重复，
 导致 PA18 ⊕ PA25 无法共存于同一 import 环境，Assembly 脊柱需要二者）。 -/
 
+/-! ## FILL-ROUND STATUS (2026-09-28 wave: 155 -> 144 sorries)
+
+Filled this round (all self-contained, no unproved upstream dependencies):
+`MCELL3_CONVEX_HULL`, `MCELL4_CONVEX_HULL`, `MCELL3_EXTREME_CARD`,
+`MCELL4_CARD4`, `DIST_I_SUCI`, `s_leaf_collinear`, `LEAF_RANK_COLLINEAR`,
+`LEAF_RANK_AZIM_INJ`, `LEAF_RANK_AZIM_NZ`, `S_LEAF_SYM`, `NOT_COPLANAR_AFF_3`
+(+ private helpers `p25_collinear3_eq_dist`, `p25_take_cancel`,
+`p25_truncate_take`, `p25_null_conv3`, `p25_set4_dedup`, `p25_leaf_swap`).
+
+Remaining sorries, classified:
+  - 机械未填 (defs-level, doable next round): none identified beyond the above.
+  - 卡具名桥 / 上游未证引理 (named-bridge blockers):
+    `GAMMAX_NO_BETA` (needs Bump-lane `MCELL_BUMP_0`: betaBumpV1 = 0 for
+      k < 4 cells), `radius_le_circumradius(_all)` (needs PA2
+      `OAPVION2_concl`, itself unproved: radV-circumcenter bridge),
+      `S_LEAF_BOUNDED`/`S_LEAF_FINITE`/`MCELL_AVOID_LEAVES` (need the
+      leaf chord bound dist <= 2 * hl, i.e. the circumradius bridge),
+      `LEAF_RANK_REUHADY`/`c_4_azim_mcell_dih_y`/`real_model_sum_azim`
+      (need REUHADY / GRUTOTI lanes), `cc_4_*`/`CC_4_*`/`K3_*/K4_*`/
+      `NO_4CELL_IMP_K3`/`CC_CELL_*`/`LEAF_RANK4_*`/`cc_4_UL`/`CC_3_SUM_*`/
+      `LEAF_RANK_BIJ`/`MCELL_WEDGE_UNIQUE`/`MCELL_IN_WEDGE`/
+      `LEAF_RANKING_LEMMA`/`LEAF_RANK_PROPS`/`CELL_CLUSTER_ESTIMATE_*`/
+      `OXLZLEZ`-adjacent assembly (need PA18 `cc_uh_exists`/`cc_pe_exists`
+      and the wedge-uniqueness chain), `HL_IMP_BARV`/`AFF_DEP_COPLANAR`
+      (need full voronoi-face dimension theory),
+      `coplanar_delta_y`/`RADV_ETAY`/`ETA_Y_*` (need the eta_y body /
+      Cayley-Menger bridge), `ORDER_AZIM_SUM2Pi0` (needs azim fan-sum
+      induction), `MCELL4_REPARAM` (permuted-prefix barV transfer),
+      `MCELL{2,3}_DIHX*`/`MCELL3_DOMAIN`/`MCELL4_*`-cell-structure cluster
+      (need the VX/cellParams characterization of edgeX/dihX).
+  - 卡外部锚 (certified banks / external anchors, skip):
+    `rad2XP25`/`ox3q1hP25`/`beta_bumpA_yP25` opaque defs; `GDRQXLGv3`,
+    `EDGE_LE_2RAD`, `RAD2_Y_SQRT8`, `TSKAJXY_3`, `JSPEVYT_EXPLICIT`,
+    `JSP_BOUNDS`, `leaf_CIHTIUM`, `real_model_*` bank (azim_c4, gamma_qu,
+    fhv2(2), gckb, ox3q1h_merge, gamma3f-cluster, quqy(2), ztg4, azim1,
+    gaz4/6/9, gamma_qx, g_qxd, gamma8/b, gamma10/11, azim2, pema/pemb,
+    txq, tew, 008, cell23(2), GAMMAX_008a/b, 3a/3b, gr, cell23_008),
+    `MCELL4_DOMAIN`, `real_model_azim_c4`, `CC_4_BETA_BUMP_EXPLICIT/0`,
+    `critical_weight*`, `CC_2_PROPS`, `MCELL2_CRITICAL_WEIGHT1`,
+    `MCELL3_CRITICAL_WEIGHT`, `MCELL3_008`, `real_model_008`,
+    `gamma4fgcy_POS`, `c2089`, `c1946`, `IXPOTPA/TXQTPVC/TEWNSCJ_MERGED`,
+    `CC_3_PROPS`, `WEDGE3_Y4`, `RAD_PI_IMP_WEDGE4`, `CELL_CLUSTER_N_LE_1`,
+    `PACKING_CHAPTER_MAIN_CONCLUSION` (TSKAJXY assembly merge),
+    `REUHADY` (PackingAuto24 lane).
+  - 疑似假陈述: none found this round (GAMMAX_NO_BETA is faithful to
+    OXLZLEZ3.hl:797; its proof needs the upstream MCELL_BUMP_0 lemma).
+
+-/
+
 /-! ## DEFINITIONS -/
 
 /-- HOL `s_leaf` (OXLZLEZ3.hl:24): set-valued rendering — the leaves on the
@@ -996,10 +1045,126 @@ theorem REUHADY (V : Set V3) (u0 u1 v1 v2 : V3) (hs : saturated V) (hp : Packing
 theorem s_leaf_leaf (V : Set V3) (ul : List V3) (x : V3) (hx : x ∈ s_leaf V ul) :
     leaf V [elV ul 0, elV ul 1, x] := hx.1
 
-/-- HOL `s_leaf_collinear`. -/
+/-- Helper: three distinct collinear points have no equidistant point. -/
+private theorem p25_collinear3_eq_dist {a b x p : V3} (hcol : Collinear3 a b x)
+    (hab : a ≠ b) (h1 : dist p a = dist p b) (h2 : dist p a = dist p x) :
+    x = a ∨ x = b := by
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := a) (w := b) (w1 := x) (Ne.symm hab)).mp hcol
+  have hd : (b - a : V3) ≠ 0 := by
+    intro h
+    rw [sub_eq_zero] at h
+    exact hab h.symm
+  have heq1 : ‖p - b‖ ^ 2 = ‖p - a‖ ^ 2 := by
+    rw [← dist_eq_norm, ← dist_eq_norm, h1]
+  have e1 : 2 * (inner ℝ (p - a) (b - a)) = ‖(b - a : V3)‖ ^ 2 := by
+    have hsq : ‖p - b‖ ^ 2 =
+        ‖p - a‖ ^ 2 - 2 * inner ℝ (p - a) (b - a) + ‖(b - a : V3)‖ ^ 2 := by
+      rw [show (p - b : V3) = (p - a) - (b - a) from by abel, norm_sub_sq_real]
+    linarith
+  have heq2 : ‖p - x‖ ^ 2 = ‖p - a‖ ^ 2 := by
+    rw [← dist_eq_norm, ← dist_eq_norm, h2]
+  have e2 : 2 * (c * inner ℝ (p - a) (b - a)) = c ^ 2 * ‖(b - a : V3)‖ ^ 2 := by
+    have hx' : x = c • (b - a) + a := sub_eq_iff_eq_add.mp hc
+    have hpx : (p - x : V3) = (p - a) - c • (b - a) := by
+      rw [hx']; abel
+    have hsq : ‖p - x‖ ^ 2 =
+        ‖p - a‖ ^ 2 - 2 * inner ℝ (p - a) (c • (b - a : V3)) +
+          ‖c • (b - a : V3)‖ ^ 2 := by
+      rw [hpx, norm_sub_sq_real]
+    rw [norm_smul, Real.norm_eq_abs, mul_pow, sq_abs, real_inner_smul_right] at hsq
+    linarith
+  by_cases hc0 : c = 0
+  · left
+    rw [hc0] at hc
+    have hza : x - a = 0 := by simpa using hc
+    exact sub_eq_zero.mp hza
+  · right
+    have hY : ‖(b - a : V3)‖ ^ 2 ≠ 0 := pow_ne_zero 2 (norm_ne_zero_iff.mpr hd)
+    have hz : c * (1 - c) * ‖(b - a : V3)‖ ^ 2 = 0 := by
+      linear_combination (norm := ring_nf) (e2 - c * e1)
+    rcases mul_eq_zero.mp hz with hz1 | hz1
+    · rcases mul_eq_zero.mp hz1 with hz2 | hz2
+      · exact absurd hz2 hc0
+      · have hc1 : c = 1 := by linarith
+        have hcs : x - a = b - a := by rw [hc1] at hc; simpa using hc
+        calc x = x - a + a := by abel
+          _ = b - a + a := by rw [hcs]
+          _ = b := by abel
+    · exact absurd hz1 hY
+
+/-- HOL `s_leaf_collinear`.  Proof: the `voronoi_nondg` clauses of
+`barV V 2 [u0, u1, x]` force the affDim values 3 / 2 / 1 on the three
+initial sublists; a degenerate or collinear triple makes two of them refer
+to the same voronoi set (or, when the three points are distinct and
+collinear, to an empty set of equidistant points), contradicting the
+distinct affine dimensions. -/
 theorem s_leaf_collinear (V : Set V3) (ul : List V3) (x : V3) (hp : Packing V)
     (hs : saturated V) (hx : x ∈ s_leaf V ul) : ¬ Collinear3 (elV ul 0) (elV ul 1) x := by
-  sorry
+  have hleaf : leaf V [elV ul 0, elV ul 1, x] := hx.1
+  have hfull := hleaf.1.2 [elV ul 0, elV ul 1, x] ⟨⟨[], rfl⟩, by simp⟩
+  have hpair := hleaf.1.2 [elV ul 0, elV ul 1] ⟨⟨[x], rfl⟩, by simp⟩
+  have hsingle := hleaf.1.2 [elV ul 0] ⟨⟨[elV ul 1, x], rfl⟩, by simp⟩
+  have hdim1 : affDim (voronoiList V [elV ul 0, elV ul 1, x]) = 1 := by
+    have h := hfull.2.2
+    rw [show ((([elV ul 0, elV ul 1, x] : List V3).length : ℤ)) = 3 from by simp] at h
+    omega
+  have hdim2 : affDim (voronoiList V [elV ul 0, elV ul 1]) = 2 := by
+    have h := hpair.2.2
+    rw [show ((([elV ul 0, elV ul 1] : List V3).length : ℤ)) = 2 from by simp] at h
+    omega
+  have hdim3 : affDim (voronoiList V [elV ul 0]) = 3 := by
+    have h := hsingle.2.2
+    rw [show ((([elV ul 0] : List V3).length : ℤ)) = 1 from by simp] at h
+    omega
+  intro hcol
+  have vlist_eq : ∀ l1 l2 : List V3, setOfList l1 = setOfList l2 →
+      voronoiList V l1 = voronoiList V l2 := by
+    intro l1 l2 h
+    show voronoiSet V (setOfList l1) = voronoiSet V (setOfList l2)
+    rw [h]
+  by_cases hab : elV ul 0 = elV ul 1
+  · rw [hab] at hdim2 hdim3
+    have hset := vlist_eq [elV ul 1, elV ul 1] [elV ul 1] (by
+      ext q; simp [setOfList])
+    rw [hset] at hdim2
+    omega
+  by_cases hax : elV ul 0 = x
+  · rw [← hax] at hdim1
+    have hset := vlist_eq [elV ul 0, elV ul 1, elV ul 0] [elV ul 0, elV ul 1] (by
+      ext q
+      simp only [setOfList, Set.mem_setOf_eq, List.mem_cons, List.not_mem_nil]
+      tauto)
+    rw [hset] at hdim1
+    omega
+  by_cases hbx : elV ul 1 = x
+  · rw [← hbx] at hdim1
+    have hset := vlist_eq [elV ul 0, elV ul 1, elV ul 1] [elV ul 0, elV ul 1] (by
+      ext q; simp [setOfList])
+    rw [hset] at hdim1
+    omega
+  · -- distinct and collinear: no equidistant point exists
+    obtain ⟨p, hpmem⟩ : (voronoiList V [elV ul 0, elV ul 1, x] : Set V3).Nonempty := by
+      by_contra hcon
+      push_neg at hcon
+      rw [hcon] at hdim1
+      rw [affDim_empty] at hdim1
+      omega
+    simp only [voronoiList, voronoiSet, Set.mem_sInter] at hpmem
+    have hmem : ∀ w ∈ (setOfList [elV ul 0, elV ul 1, x] : Set V3),
+        ∀ z ∈ (setOfList [elV ul 0, elV ul 1, x] : Set V3), dist p w ≤ dist p z := by
+      intro w hw z hz
+      have hw' : p ∈ voronoiClosed V w :=
+        hpmem (voronoiClosed V w) ⟨w, hw, rfl⟩
+      exact hw' z (hfull.2.1 hz)
+    have hab' : dist p (elV ul 0) = dist p (elV ul 1) :=
+      le_antisymm (hmem _ (by simp [setOfList]) _ (by simp [setOfList]))
+        (hmem _ (by simp [setOfList]) _ (by simp [setOfList]))
+    have hax' : dist p (elV ul 0) = dist p x :=
+      le_antisymm (hmem _ (by simp [setOfList]) _ (by simp [setOfList]))
+        (hmem _ (by simp [setOfList]) _ (by simp [setOfList]))
+    rcases p25_collinear3_eq_dist hcol hab hab' hax' with he | he
+    · exact hax he.symm
+    · exact hbx he.symm
 
 /-- HOL `LEAF_RANKING_LEMMA`: existence of the azim-ordered cyclic
 parametrization of `s_leaf`. -/
@@ -1022,7 +1187,10 @@ theorem S_LEAF_SET (V : Set V3) (ul : List V3) :
 theorem LEAF_RANK_COLLINEAR (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
     (k : ℕ) (hp : Packing V) (hs : saturated V) (hr : leaf_rank V ul w0 n f) :
     ¬ Collinear3 (elV ul 0) (elV ul 1) (f k) := by
-  sorry
+  have hm : f k ∈ s_leaf V ul := by
+    have h1 : f k ∈ f '' (univ : Set ℕ) := ⟨k, Set.mem_univ _, rfl⟩
+    exact hr.1 ▸ h1
+  exact s_leaf_collinear V ul (f k) hp hs hm
 
 /-- HOL `S_LEAF_SUBSET_PACKING`. -/
 theorem S_LEAF_SUBSET_PACKING (V : Set V3) (ul : List V3) (hp : Packing V)
@@ -1044,10 +1212,150 @@ theorem S_LEAF_FINITE (V : Set V3) (ul : List V3) (hp : Packing V)
     (hs : saturated V) : (s_leaf V ul).Finite := by
   sorry
 
-/-- HOL `S_LEAF_SYM`. -/
+/-- Helper: prefix-cancel for `take` (used to pin down prefixes). -/
+private theorem p25_take_cancel {α : Type*} {l1 l2 : List α} (n : ℕ) (h : n ≤ l1.length) :
+    (l1 ++ l2).take n = l1.take n := by
+  induction l1 generalizing n with
+  | nil => simp at h; simp [h]
+  | cons a t ih =>
+    cases n with
+    | zero => simp
+    | succ n =>
+      have key : (t ++ l2).take n = t.take n := ih n (Nat.le_of_succ_le_succ h)
+      simp [key]
+
+/-- Helper: `leaf` only sees the point set of a length-3 list and the
+singleton-voronoi full-dimensionality (`AFF_DIM_VORONOI_CLOSED`), so the two
+stem endpoints of a leaf may be swapped. -/
+private theorem p25_leaf_swap (V : Set V3) (hp : Packing V) (a b c : V3)
+    (hle : leaf V [a, b, c]) : leaf V [b, a, c] := by
+  have hlt : hl [a, b, c] < Real.sqrt 2 := hle.2
+  have horig := hle.1.2
+  have h2 := horig [a, b] ⟨⟨[c], rfl⟩, by simp⟩
+  have h3 := horig [a, b, c] ⟨⟨[], rfl⟩, by simp⟩
+  have hvb : voronoiList V [b] = voronoiClosed V b := by
+    refine Set.ext fun q => ?_
+    simp only [voronoiList, voronoiSet, Set.mem_sInter]
+    constructor
+    · intro h
+      exact h (voronoiClosed V b) ⟨b, by simp [setOfList], rfl⟩
+    · intro h t ht
+      obtain ⟨v, hv, hvt⟩ := ht
+      subst hvt
+      rw [show v = b from by simpa [setOfList] using hv]
+      exact h
+  have hsetabc : setOfList [b, a, c] = setOfList [a, b, c] := by
+    refine Set.ext fun q => ?_
+    simp only [setOfList, Set.mem_setOf_eq]
+    constructor
+    · intro h
+      rcases List.mem_cons.mp h with h1 | h
+      · exact List.mem_cons.mpr (Or.inr (List.mem_cons.mpr (Or.inl h1)))
+      rcases List.mem_cons.mp h with h1 | h
+      · exact List.mem_cons.mpr (Or.inl h1)
+      · exact List.mem_cons.mpr (Or.inr (List.mem_cons.mpr (Or.inr h)))
+    · intro h
+      rcases List.mem_cons.mp h with h1 | h
+      · exact List.mem_cons.mpr (Or.inr (List.mem_cons.mpr (Or.inl h1)))
+      rcases List.mem_cons.mp h with h1 | h
+      · exact List.mem_cons.mpr (Or.inl h1)
+      · exact List.mem_cons.mpr (Or.inr (List.mem_cons.mpr (Or.inr h)))
+  have hsetab : setOfList [b, a] = setOfList [a, b] := by
+    refine Set.ext fun q => ?_
+    simp only [setOfList, Set.mem_setOf_eq]
+    constructor
+    · intro h
+      rcases List.mem_cons.mp h with h1 | h
+      · exact List.mem_cons.mpr (Or.inr (List.mem_cons.mpr (Or.inl h1)))
+      rcases List.mem_cons.mp h with h1 | h
+      · exact List.mem_cons.mpr (Or.inl h1)
+      · exact absurd h (by simp)
+    · intro h
+      rcases List.mem_cons.mp h with h1 | h
+      · exact List.mem_cons.mpr (Or.inr (List.mem_cons.mpr (Or.inl h1)))
+      rcases List.mem_cons.mp h with h1 | h
+      · exact List.mem_cons.mpr (Or.inl h1)
+      · exact absurd h (by simp)
+  refine ⟨⟨by rfl, ?_⟩, ?_⟩
+  · intro vl hv
+    obtain ⟨zl, hzl⟩ := hv.1
+    have htake : vl = [b, a, c].take vl.length := by
+      rw [hzl, p25_take_cancel vl.length (Nat.le_refl _), List.take_length]
+    rcases zl with _ | ⟨y, t⟩
+    · have hv0 : vl = [b, a, c] := by
+        rw [List.append_nil] at hzl
+        exact hzl.symm
+      subst hv0
+      refine ⟨h3.1, ?_, ?_⟩
+      · rw [hsetabc]; exact h3.2.1
+      · have he : voronoiList V [b, a, c] = voronoiList V [a, b, c] := by
+          show voronoiSet V (setOfList [b, a, c]) = voronoiSet V (setOfList [a, b, c])
+          rw [hsetabc]
+        rw [he]
+        exact h3.2.2
+    · rcases t with _ | u
+      · have hv2 : vl.length = 2 := by
+          have h := congrArg List.length hzl
+          simp only [List.length_append, List.length_cons, List.length_nil] at h
+          omega
+        have hveq : vl = [b, a] := by
+          rw [hv2] at htake
+          simpa using htake
+        subst hveq
+        refine ⟨h2.1, ?_, ?_⟩
+        · rw [hsetab]; exact h2.2.1
+        · have he : voronoiList V [b, a] = voronoiList V [a, b] := by
+            show voronoiSet V (setOfList [b, a]) = voronoiSet V (setOfList [a, b])
+            rw [hsetab]
+          rw [he]
+          exact h2.2.2
+      · have hv1 : vl.length = 1 := by
+          have h := congrArg List.length hzl
+          simp only [List.length_append, List.length_cons, List.length_nil] at h
+          omega
+        have hveq : vl = [b] := by
+          rw [hv1] at htake
+          simpa using htake
+        subst hveq
+        refine ⟨by simp, ?_, ?_⟩
+        · intro q hq
+          have hqb : q = b := by simpa [setOfList] using hq
+          refine h3.2.1 ?_
+          simp only [setOfList, List.mem_cons]
+          exact Or.inr (Or.inl hqb)
+        · rw [hvb, AFF_DIM_VORONOI_CLOSED V b hp]
+          simp
+  · show radV (setOfList [b, a, c]) < Real.sqrt 2
+    rwa [hsetabc]
+
+/-- HOL `S_LEAF_SYM`.  Proof: swapping the stem endpoints preserves `leaf`
+(`p25_leaf_swap`, everything reads off the point set) and the `ccKe = 4`
+disjunction is symmetric. -/
 theorem S_LEAF_SYM (V : Set V3) (u0 u1 : V3) (hp : Packing V) (hs : saturated V) :
     s_leaf V [u1, u0] = s_leaf V [u0, u1] := by
-  sorry
+  have h0 : elV [u1, u0] 0 = u1 := rfl
+  have h1 : elV [u1, u0] 1 = u0 := rfl
+  have h2 : elV [u0, u1] 0 = u0 := rfl
+  have h3 : elV [u0, u1] 1 = u1 := rfl
+  ext u
+  show (leaf V [elV [u1, u0] 0, elV [u1, u0] 1, u] ∧
+      (ccKe V [elV [u1, u0] 0, elV [u1, u0] 1, u] = 4 ∨
+        ccKe V [elV [u1, u0] 1, elV [u1, u0] 0, u] = 4)) ↔
+    (leaf V [elV [u0, u1] 0, elV [u0, u1] 1, u] ∧
+      (ccKe V [elV [u0, u1] 0, elV [u0, u1] 1, u] = 4 ∨
+        ccKe V [elV [u0, u1] 1, elV [u0, u1] 0, u] = 4))
+  rw [h0, h1, h2, h3]
+  constructor
+  · rintro ⟨h, hc⟩
+    refine ⟨p25_leaf_swap V hp u1 u0 u h, ?_⟩
+    rcases hc with hc | hc
+    · exact Or.inr hc
+    · exact Or.inl hc
+  · rintro ⟨h, hc⟩
+    refine ⟨p25_leaf_swap V hp u0 u1 u h, ?_⟩
+    rcases hc with hc | hc
+    · exact Or.inr hc
+    · exact Or.inl hc
 
 /-- HOL `S_LEAF_TRUNCATE`. -/
 theorem S_LEAF_TRUNCATE (V : Set V3) (ul : List V3) :
@@ -1077,19 +1385,48 @@ theorem MCELL_WEDGE_UNIQUE (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : 
 theorem LEAF_RANK_PERIODIC (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
     (hr : leaf_rank V ul w0 n f) : periodic f n := hr.2.1
 
-/-- HOL `LEAF_RANK_AZIM_INJ`. -/
+/-- HOL `LEAF_RANK_AZIM_INJ`.  Proof: `azim u0 u1 (f i) (f j) = 0` says the
+two leaves share an azimuthal ray, which by `AZIM_ZERO_SHIFT` makes their
+`w0`-azimuths equal — impossible under the strict `w0`-ordering unless
+`i ≡ j (mod n)`; conversely `f i = f j` when the residues agree. -/
 theorem LEAF_RANK_AZIM_INJ (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
     (i j : ℕ) (hs : saturated V) (hp : Packing V) (hn : n ≠ 0)
     (hnc : ¬ Collinear3 (elV ul 0) (elV ul 1) w0) (hr : leaf_rank V ul w0 n f) :
     (azim (elV ul 0) (elV ul 1) (f i) (f j) = 0 ↔ i % n = j % n) := by
-  sorry
+  have hper : periodic f n := LEAF_RANK_PERIODIC V ul w0 n f hr
+  have hcol : ∀ k : ℕ, ¬ Collinear3 (elV ul 0) (elV ul 1) (f k) := fun k =>
+    LEAF_RANK_COLLINEAR V ul w0 n f k hp hs hr
+  constructor
+  · intro h0
+    by_contra hne
+    have hlt1 : i % n < n := Nat.mod_lt i (by omega)
+    have hlt2 : j % n < n := Nat.mod_lt j (by omega)
+    have hfi : f (i % n) = f i := p25_f_mod hper i
+    have hfj : f (j % n) = f j := p25_f_mod hper j
+    rcases lt_trichotomy (i % n) (j % n) with hlt | heq | hgt
+    · have hord := hr.2.2 (i % n) (j % n) hlt1 hlt2 hlt
+      rw [hfi, hfj] at hord
+      have hz : azim (elV ul 0) (elV ul 1) w0 (f i) = azim (elV ul 0) (elV ul 1) w0 (f j) :=
+        ((azim_eq_azim_iff hnc (hcol i) (hcol j)).trans
+          (azim_eq_zero_iff_alt (hcol i) (hcol j)).symm).mpr h0
+      linarith
+    · exact hne heq
+    · have hord := hr.2.2 (j % n) (i % n) hlt2 hlt1 hgt
+      rw [hfj, hfi] at hord
+      have hz : azim (elV ul 0) (elV ul 1) w0 (f j) = azim (elV ul 0) (elV ul 1) w0 (f i) :=
+        ((azim_eq_azim_iff hnc (hcol j) (hcol i)).trans
+          (azim_eq_zero_iff (hcol i) (hcol j)).symm).mpr h0
+      linarith
+  · intro hm
+    rw [PERIODIC_EQ_IMAGE hn hper hm, azim_self]
 
 /-- HOL `LEAF_RANK_AZIM_NZ`. -/
 theorem LEAF_RANK_AZIM_NZ (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
     (i : ℕ) (hs : saturated V) (hp : Packing V) (hr : leaf_rank V ul w0 n f)
     (hn : 1 < n) (hnc : ¬ Collinear3 (elV ul 0) (elV ul 1) w0) :
     ¬ (azim (elV ul 0) (elV ul 1) (f i) (f (i + 1)) = 0) := by
-  sorry
+  rw [LEAF_RANK_AZIM_INJ V ul w0 n f i (i + 1) hs hp (by omega) hnc hr]
+  exact MOD_INJ1_ALT_p25 (by omega) (by omega) (by norm_num) i
 
 /-- HOL `MCELL_IN_WEDGE`. -/
 theorem MCELL_IN_WEDGE (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -1151,20 +1488,132 @@ theorem MCELL2_DIHX_POS (V : Set V3) (X : Set V3) (ul : List V3) (hs : saturated
     0 < dihX V X (elV ul 0, elV ul 1) := by
   sorry
 
+/-- Helper: `truncateSimplex j ul` is the `j+1`-st prefix of `ul` whenever
+that prefix exists (unfolding the `Classical.epsilon`). -/
+private theorem p25_truncate_take (ul : List V3) (j : ℕ) (hj : j + 1 ≤ ul.length) :
+    truncateSimplex j ul = ul.take (j + 1) := by
+  have hwit : ∃ vl : List V3, vl.length = j + 1 ∧ initialSublist vl ul :=
+    ⟨ul.take (j + 1), by rw [List.length_take]; omega,
+      ⟨ul.drop (j + 1), (List.take_append_drop (j + 1) ul).symm⟩⟩
+  set eps := Classical.epsilon
+    fun vl : List V3 => vl.length = j + 1 ∧ initialSublist vl ul with he
+  obtain ⟨htl, w, hzl⟩ := Classical.epsilon_spec hwit
+  rw [← he] at htl hzl
+  have hkey : ul.take eps.length = eps := by
+    rw [hzl, p25_take_cancel _ (Nat.le_refl _), List.take_length]
+  show eps = ul.take (j + 1)
+  rw [← hkey, htl]
+
+/-- Helper: the convex hull of three points is a null set (it lives in a
+proper affine subspace). -/
+private theorem p25_null_conv3 (a b c : V3) :
+    nullSet (convexHull ℝ ({a, b, c} : Set V3)) := by
+  refine measure_mono_null (convexHull_subset_affineSpan (s := ({a, b, c} : Set V3))) ?_
+  exact Measure.addHaar_affineSubspace volume (affineSpan ℝ ({a, b, c} : Set V3))
+    (p25_affineSpan_three_ne_top a b c)
+
+/-- Helper: a 4-element set of cardinality at most 3 is covered by one of
+its 3-element subsets. -/
+private theorem p25_set4_dedup {α : Type*} {a b c d : α}
+    (h : Set.ncard ({a, b, c, d} : Set α) ≠ 4) :
+    ({a, b, c, d} : Set α) ⊆ ({a, c, d} : Set α) ∨
+      ({a, b, c, d} : Set α) ⊆ ({a, b, d} : Set α) ∨
+      ({a, b, c, d} : Set α) ⊆ ({a, b, c} : Set α) ∨
+      ({a, b, c, d} : Set α) ⊆ ({b, c, d} : Set α) := by
+  have hle3 : Set.ncard ({a, b, c, d} : Set α) ≤ 3 := by
+    have e1 := Set.ncard_insert_le a ({b, c, d} : Set α)
+    have e2 := Set.ncard_insert_le b ({c, d} : Set α)
+    have e3 := Set.ncard_insert_le c ({d} : Set α)
+    have e4 : Set.ncard ({d} : Set α) = 1 := Set.ncard_singleton d
+    omega
+  have hdup : a = b ∨ a = c ∨ a = d ∨ b = c ∨ b = d ∨ c = d := by
+    by_contra hall
+    push_neg at hall
+    have h4 : Set.ncard ({a, b, c, d} : Set α) = 4 := by
+      rw [Set.ncard_insert_of_notMem (show a ∉ ({b, c, d} : Set α) from by
+        simp [hall.1, hall.2.1, hall.2.2.1]),
+        Set.ncard_insert_of_notMem (show b ∉ ({c, d} : Set α) from by
+          simp [hall.2.2.2.1, hall.2.2.2.2.1]),
+        Set.ncard_insert_of_notMem (show c ∉ ({d} : Set α) from by
+          simp [hall.2.2.2.2.2]),
+        Set.ncard_singleton]
+    omega
+  rcases hdup with rfl | rfl | rfl | rfl | rfl | rfl
+  · refine Or.inl fun q hq => ?_
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+    tauto
+  · refine Or.inr (Or.inl fun q hq => ?_)
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+    tauto
+  · refine Or.inr (Or.inr (Or.inl fun q hq => ?_))
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+    tauto
+  · refine Or.inr (Or.inl fun q hq => ?_)
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+    tauto
+  · refine Or.inr (Or.inr (Or.inl fun q hq => ?_))
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+    tauto
+  · refine Or.inr (Or.inr (Or.inl fun q hq => ?_))
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+    tauto
+
 /-- HOL `MCELL3_CONVEX_HULL`. -/
 theorem MCELL3_CONVEX_HULL (V : Set V3) (ul : List V3) (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 ul)
     (hn : ¬ nullSet (mcell3 V ul)) :
     mcell3 V ul =
       convexHull ℝ ({elV ul 0, elV ul 1, elV ul 2, mxi V ul} : Set V3) := by
-  sorry
+  have hlen : ul.length = 4 := hb.1
+  rcases ul with _ | ⟨u0, _ | ⟨u1, _ | ⟨u2, _ | ⟨u3, t⟩⟩⟩⟩
+  · simp at hlen
+  · simp at hlen
+  · simp at hlen
+  · simp at hlen
+  · have ht : t = [] := by
+      cases t with
+      | nil => rfl
+      | cons a tl => simp at hlen
+    subst ht
+    have htr : truncateSimplex 2 [u0, u1, u2, u3] =
+        [elV [u0, u1, u2, u3] 0, elV [u0, u1, u2, u3] 1, elV [u0, u1, u2, u3] 2] := by
+      rw [p25_truncate_take _ 2 (by simp)]
+      rfl
+    by_cases hlt : hl (truncateSimplex 2 [u0, u1, u2, u3]) < Real.sqrt 2 ∧
+        Real.sqrt 2 ≤ hl [u0, u1, u2, u3]
+    · have heq : mcell3 V [u0, u1, u2, u3] =
+          convexHull ℝ (setOfList (truncateSimplex 2 [u0, u1, u2, u3]) ∪
+            {mxi V [u0, u1, u2, u3]}) := by
+        unfold mcell3
+        rw [if_pos hlt]
+      rw [heq, htr]
+      congr 1
+      ext q
+      simp only [Set.mem_union, Set.mem_singleton_iff, setOfList, Set.mem_setOf_eq,
+        List.mem_cons, Set.mem_insert_iff]
+      tauto
+    · have heq : mcell3 V [u0, u1, u2, u3] = ∅ := by
+        unfold mcell3
+        rw [if_neg hlt]
+      rw [heq] at hn
+      exact absurd measure_empty hn
 
-/-- HOL `MCELL3_EXTREME_CARD`. -/
+/-- HOL `MCELL3_EXTREME_CARD`.  Proof: by `MCELL3_CONVEX_HULL` the cell is
+the hull of the four points; a repeated point would collapse the set onto a
+3-element subset, whose hull is null (`p25_null_conv3`). -/
 theorem MCELL3_EXTREME_CARD (V : Set V3) (ul : List V3) (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 ul)
     (hn : ¬ nullSet (mcell3 V ul)) :
     Set.ncard ({elV ul 0, elV ul 1, elV ul 2, mxi V ul} : Set V3) = 4 := by
-  sorry
+  have hcv := MCELL3_CONVEX_HULL V ul hp hs hb hn
+  by_contra hcon
+  refine hn ?_
+  rw [hcv]
+  rcases p25_set4_dedup hcon with hsub | hsub | hsub | hsub
+  · exact measure_mono_null (convexHull_mono hsub) (p25_null_conv3 _ _ _)
+  · exact measure_mono_null (convexHull_mono hsub) (p25_null_conv3 _ _ _)
+  · exact measure_mono_null (convexHull_mono hsub) (p25_null_conv3 _ _ _)
+  · exact measure_mono_null (convexHull_mono hsub) (p25_null_conv3 _ _ _)
 
 /-- HOL `MCELL3_DIHX`. -/
 theorem MCELL3_DIHX (V : Set V3) (X : Set V3) (ul : List V3) (hs : saturated V)
@@ -1208,17 +1657,38 @@ theorem MCELL4_LEAF2 (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturate
     leaf V [elV ul 0, elV ul 1, elV ul 2] := by
   sorry
 
-/-- HOL `MCELL4_CONVEX_HULL`. -/
+/-- HOL `MCELL4_CONVEX_HULL`.  Proof: a null `mcell4` is the empty branch of
+its `if`, so the `hl ul < sqrt 2` branch must hold and the cell is the hull
+of the (reordered) point set (`BARV3_SET_OF_LIST4`). -/
 theorem MCELL4_CONVEX_HULL (V : Set V3) (ul : List V3) (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 ul) (hn : ¬ nullSet (mcell4 V ul)) :
     mcell4 V ul = convexHull ℝ ({elV ul 0, elV ul 1, elV ul 2, elV ul 3} : Set V3) := by
-  sorry
+  by_cases hlt : hl ul < Real.sqrt 2
+  · have heq : mcell4 V ul = convexHull ℝ (setOfList ul) := by
+      unfold mcell4
+      rw [if_pos hlt]
+    rw [heq, BARV3_SET_OF_LIST4 V ul hp hb]
+  · have heq : mcell4 V ul = ∅ := by
+      unfold mcell4
+      rw [if_neg hlt]
+    rw [heq] at hn
+    exact absurd measure_empty hn
 
-/-- HOL `MCELL4_CARD4`. -/
+/-- HOL `MCELL4_CARD4`.  Proof: by `MCELL4_CONVEX_HULL` the cell is the hull
+of the four points; a repeated point would collapse the set onto one of its
+3-element subsets, whose hull is null (`p25_null_conv3`). -/
 theorem MCELL4_CARD4 (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturated V)
     (hb : barV V 3 ul) (hn : ¬ nullSet (mcell4 V ul)) :
     Set.ncard ({elV ul 0, elV ul 1, elV ul 2, elV ul 3} : Set V3) = 4 := by
-  sorry
+  by_contra hcon
+  have hcv := MCELL4_CONVEX_HULL V ul hp hs hb hn
+  refine hn ?_
+  rw [hcv]
+  rcases p25_set4_dedup hcon with hsub | hsub | hsub | hsub
+  · exact measure_mono_null (convexHull_mono hsub) (p25_null_conv3 _ _ _)
+  · exact measure_mono_null (convexHull_mono hsub) (p25_null_conv3 _ _ _)
+  · exact measure_mono_null (convexHull_mono hsub) (p25_null_conv3 _ _ _)
+  · exact measure_mono_null (convexHull_mono hsub) (p25_null_conv3 _ _ _)
 
 /-- HOL `MCELL4_LEAF3`. -/
 theorem MCELL4_LEAF3 (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturated V)
@@ -1625,12 +2095,22 @@ theorem LEAF_RANK_SUC_INJ (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3
     rw [← h1, ← h2, heq] at hord
     linarith
 
-/-- HOL `DIST_I_SUCI`. -/
+/-- HOL `DIST_I_SUCI`.  Proof: consecutive leaves are packing points
+(`leaf` carries `setOfList ⊆ V`) and distinct (`LEAF_RANK_SUC_INJ`), so the
+packing separation gives the bound. -/
 theorem DIST_I_SUCI (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
     (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V)
     (hs : saturated V) (hnc : ¬ Collinear3 u0 u1 w0) (hr : leaf_rank V [u0, u1] w0 n f) :
     2 ≤ dist (f i) (f (i + 1)) := by
-  sorry
+  have hmem : ∀ k : ℕ, f k ∈ V := by
+    intro k
+    have hz : f k ∈ s_leaf V [u0, u1] := by
+      have h1 : f k ∈ f '' (univ : Set ℕ) := ⟨k, Set.mem_univ _, rfl⟩
+      exact hr.1 ▸ h1
+    have hpre := hz.1.1.2 [u0, u1, f k] ⟨⟨[], rfl⟩, by simp⟩
+    exact hpre.2.1 (by simp [setOfList])
+  have hne := LEAF_RANK_SUC_INJ V u0 u1 w0 n f i hp hs hr hnc hn
+  exact hp.dist_ge_two (hmem i) (hmem (i + 1)) hne
 
 /-- HOL `WEDGE3_Y4`: a 3-cell wedge yields the analytic `y4` certificate. -/
 theorem WEDGE3_Y4 (V : Set V3) (f : ℕ → V3) (w0 : V3) (n : ℕ) (i : ℕ) (u0 u1 : V3)
@@ -3117,10 +3597,82 @@ theorem INITIAL_SUBLIST_TRUNCATE (vl ul : List V3) (hl : ul.length = 4)
         (List.take_append_drop vl.length (truncateSimplex 2 ul)).symm⟩
     exact absurd e3 h2
 
-/-- HOL `NOT_COPLANAR_AFF_3`. -/
+/-- HOL `NOT_COPLANAR_AFF_3`.  Proof: if the direction of the affine span
+had rank `< 3`, it would be spanned by two vectors `v1, v2` (a basis of the
+rank-2 case, `finrank_le_one_iff` twice for the rank-`≤ 1` case), and `s`
+would sit inside the plane `affineSpan {p, p + v1, p + v2}` — contradicting
+non-coplanarity. -/
 theorem NOT_COPLANAR_AFF_3 (s : Set V3) (hnc : ¬ Coplanar s) :
     affDim s = 3 := by
-  sorry
+  by_contra hne
+  have hsne : s ≠ ∅ := by
+    intro he
+    rw [he] at hnc
+    exact hnc coplanar_empty
+  have haff : affDim s = ((Module.finrank ℝ (vectorSpan ℝ s) : ℕ) : ℤ) := by
+    rw [affDim, if_neg hsne]
+  have hcast : ((Module.finrank ℝ (vectorSpan ℝ s) : ℕ) : ℤ) ≠ 3 := by
+    rw [← haff]; exact hne
+  have hle : Module.finrank ℝ (vectorSpan ℝ s) ≤ 3 := by
+    simpa [finrank_euclideanSpace_fin] using Submodule.finrank_le (vectorSpan ℝ s)
+  have hlt : Module.finrank ℝ (vectorSpan ℝ s) < 3 := by omega
+  obtain ⟨v1, v2, hspan⟩ : ∃ v1 v2 : V3,
+      (vectorSpan ℝ s : Submodule ℝ V3) ≤ Submodule.span ℝ ({v1, v2} : Set V3) := by
+    by_cases h2 : Module.finrank ℝ (vectorSpan ℝ s) = 2
+    · have hb : Module.Basis (Fin 2) ℝ ↥(vectorSpan ℝ s) :=
+        Module.finBasisOfFinrankEq ℝ (vectorSpan ℝ s) h2
+      refine ⟨(hb 0 : V3), (hb 1 : V3), ?_⟩
+      intro w hw
+      have hwspan : (⟨w, hw⟩ : ↥(vectorSpan ℝ s)) ∈
+          (Submodule.span ℝ (Set.range hb) :
+            Submodule ℝ ↥(vectorSpan ℝ s)) := by
+        rw [Module.Basis.span_eq]
+        exact Submodule.mem_top
+      have hrng : Set.range hb ⊆
+          ({(hb 0 : ↥(vectorSpan ℝ s)), (hb 1 : ↥(vectorSpan ℝ s))} :
+            Set ↥(vectorSpan ℝ s)) := by
+        intro y hy
+        obtain ⟨i, rfl⟩ := hy
+        fin_cases i
+        · simp
+        · simp
+      have hwpairW : (⟨w, hw⟩ : ↥(vectorSpan ℝ s)) ∈
+          (Submodule.span ℝ ({(hb 0 : ↥(vectorSpan ℝ s)), (hb 1 : ↥(vectorSpan ℝ s))} :
+            Set ↥(vectorSpan ℝ s))) := Submodule.span_mono hrng hwspan
+      obtain ⟨r, t, hrt⟩ := Submodule.mem_span_pair.mp hwpairW
+      refine Submodule.mem_span_pair.mpr ⟨r, t, ?_⟩
+      exact congrArg (fun x : ↥(vectorSpan ℝ s) => (x : V3)) hrt
+    · have h1 : Module.finrank ℝ (vectorSpan ℝ s) ≤ 1 := by omega
+      obtain ⟨v, hv⟩ := (finrank_le_one_iff (K := ℝ) (V := ↥(vectorSpan ℝ s))).mp h1
+      refine ⟨(v : V3), 0, fun w hw => ?_⟩
+      obtain ⟨c, hc⟩ := hv ⟨w, hw⟩
+      refine Submodule.mem_span_pair.mpr ⟨c, 0, ?_⟩
+      rw [zero_smul, add_zero]
+      have hcoe : ((c • v : ↥(vectorSpan ℝ s)) : V3)
+          = (c : ℝ) • ((v : V3)) := rfl
+      rw [← hcoe, hc]
+  obtain ⟨p, hp⟩ := Set.nonempty_iff_ne_empty.mpr hsne
+  refine absurd ?_ hnc
+  refine ⟨p, p + v1, p + v2, ?_⟩
+  intro q hq
+  have hqp : q -ᵥ p ∈ (vectorSpan ℝ s) := by
+    have hvd := AffineSubspace.vsub_mem_direction (subset_affineSpan ℝ s hq)
+      (subset_affineSpan ℝ s hp)
+    rwa [direction_affineSpan] at hvd
+  have hdir : Submodule.span ℝ ({v1, v2} : Set V3) ≤
+      (affineSpan ℝ ({p, p + v1, p + v2} : Set V3)).direction := by
+    rw [direction_affineSpan,
+      vectorSpan_eq_span_vsub_set_right ℝ (show p ∈ ({p, p + v1, p + v2} : Set V3) from by simp)]
+    refine Submodule.span_mono ?_
+    intro z hz
+    rcases Set.mem_insert_iff.mp hz with hz1 | hz1
+    · rw [hz1]
+      exact ⟨p + v1, by simp, by simp⟩
+    · rw [Set.mem_singleton_iff.mp hz1]
+      exact ⟨p + v2, by simp, by simp⟩
+  rw [show (q : V3) = (q -ᵥ p) +ᵥ p from (vsub_vadd ..).symm]
+  exact AffineSubspace.vadd_mem_of_mem_direction (hdir (hspan hqp))
+    (mem_affineSpan ℝ (by simp : p ∈ ({p, p + v1, p + v2} : Set V3)))
 
 /-- HOL `AFF_DEP_COPLANAR`. -/
 theorem AFF_DEP_COPLANAR (a b c d : V3)
