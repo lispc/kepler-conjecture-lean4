@@ -90,8 +90,10 @@ the giant leaf-cell/sum-gamma chains carry `sorry`.
 -/
 
 import Kepler.Text.PackingAuto13
+import Kepler.Text.PackingAuto17
 import Kepler.Text.SphereKit
 import Kepler.Text.Polytope
+import Kepler.Text.TopologyFan
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -203,6 +205,111 @@ def SUM_GAMMAX_LMFUN_ESTIMATE_concl : Prop :=
     cellClusterInequality V → TSKAJXY_statement →
     c * r ^ 2 ≤ setSum {X | X ⊆ Metric.ball 0 r ∧ mcellSet V X}
       (fun X => gammaX V X lmfun)
+
+/-! ## Private azimuth–affine bridge kit (for the leaf-cell wedge lemmas) -/
+
+private theorem pa18_toFinset3 {v0 v1 w : V3} (h01 : v0 ≠ v1) (h0w : v0 ≠ w) (h1w : v1 ≠ w)
+    (hfin : ({v0, v1} ∪ {w} : Set V3).Finite) :
+    hfin.toFinset = insert v0 (insert v1 ({w} : Finset V3)) := by
+  ext z
+  simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+    Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+  tauto
+
+private theorem pa18_collinear3_line_affGe {v0 v1 w x : V3} (hcolx : Collinear3 v0 v1 x)
+    (hw : ¬Collinear3 v0 v1 w) : x ∈ affGe ({v0, v1} : Set V3) ({w} : Set V3) := by
+  have h01 : v0 ≠ v1 := ne₁₂_of_not_collinear hw
+  have h0w : v0 ≠ w := ne₁₃_of_not_collinear hw
+  have h1w : v1 ≠ w := ne₂₃_of_not_collinear hw
+  have hfin : ({v0, v1} ∪ {w} : Set V3).Finite :=
+    Set.Finite.union (Set.Finite.insert v0 (Set.finite_singleton v1)) (Set.finite_singleton w)
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := v0) (w := v1) h01.symm).1 hcolx
+  have hv0 : v0 ∉ insert v1 ({w} : Finset V3) := by
+    intro hcon
+    simp only [Finset.mem_insert, Finset.mem_singleton] at hcon
+    rcases hcon with h | h
+    · exact h01 h
+    · exact h0w h
+  have hv1 : v1 ∉ ({w} : Finset V3) := by
+    intro hcon
+    simp only [Finset.mem_singleton] at hcon
+    exact h1w hcon
+  rw [affGe, Set.mem_setOf_eq, Affsign]
+  refine ⟨fun z => if z = v0 then 1 - c else if z = v1 then c else 0, hfin, ?_, ?_, ?_⟩
+  · rw [pa18_toFinset3 h01 h0w h1w hfin, Finset.sum_insert hv0, Finset.sum_insert hv1,
+      Finset.sum_singleton]
+    simp only [h01, h0w, h1w, h0w.symm, h1w.symm, if_neg (Ne.symm h01), if_neg (Ne.symm h0w),
+      if_neg (Ne.symm h1w), if_pos rfl, reduceIte]
+    linear_combination (norm := module) hc
+  · intro z hz
+    rw [Set.mem_singleton_iff.1 hz]
+    simp only [h0w.symm, h1w.symm, if_neg, reduceIte]
+    norm_num
+  · rw [pa18_toFinset3 h01 h0w h1w hfin, Finset.sum_insert hv0, Finset.sum_insert hv1,
+      Finset.sum_singleton]
+    simp only [h01, h0w, h1w, h0w.symm, h1w.symm, if_neg (Ne.symm h01), if_neg (Ne.symm h0w),
+      if_neg (Ne.symm h1w), if_pos rfl, reduceIte]
+    norm_num
+
+/-- A point of `affGe {v0,v1} {w}` off the base line lies in `affGt`: expand
+the combination and split on the coefficient of `w`. -/
+private theorem pa18_affGe_affGt_of_ncol {v0 v1 w x : V3} (hw : ¬Collinear3 v0 v1 w)
+    (hx : ¬Collinear3 v0 v1 x) (hmem : x ∈ affGe ({v0, v1} : Set V3) ({w} : Set V3)) :
+    x ∈ affGt ({v0, v1} : Set V3) ({w} : Set V3) := by
+  have h01 : v0 ≠ v1 := ne₁₂_of_not_collinear hw
+  have h0w : v0 ≠ w := ne₁₃_of_not_collinear hw
+  have h1w : v1 ≠ w := ne₂₃_of_not_collinear hw
+  have hfin : ({v0, v1} ∪ {w} : Set V3).Finite :=
+    Set.Finite.union (Set.Finite.insert v0 (Set.finite_singleton v1)) (Set.finite_singleton w)
+  have hv0 : v0 ∉ insert v1 ({w} : Finset V3) := by
+    intro hcon
+    simp only [Finset.mem_insert, Finset.mem_singleton] at hcon
+    rcases hcon with h | h
+    · exact h01 h
+    · exact h0w h
+  have hv1 : v1 ∉ ({w} : Finset V3) := by
+    intro hcon
+    simp only [Finset.mem_singleton] at hcon
+    exact h1w hcon
+  rw [affGe, Set.mem_setOf_eq, Affsign] at hmem
+  obtain ⟨f, hf, hvec, hpos, hone⟩ := hmem
+  have hvec3 := hvec
+  have hone3 := hone
+  rw [pa18_toFinset3 h01 h0w h1w hf] at hvec3 hone3
+  simp only [Finset.sum_insert hv0, Finset.sum_insert hv1, Finset.sum_singleton] at hvec3 hone3
+  rw [affGt, Set.mem_setOf_eq, Affsign]
+  refine ⟨f, hf, hvec, ?_, hone⟩
+  intro z hz
+  have hzw : z = w := Set.mem_singleton_iff.1 hz
+  have hle := hpos z hz
+  rw [hzw] at hle ⊢
+  by_cases hfw : f w = 0
+  · exfalso
+    apply hx
+    simp only [hfw, zero_smul, add_zero] at hvec3
+    have hsum1 : f v0 + f v1 = 1 := by rw [← hone3, hfw, add_zero]
+    rw [collinear3_iff_smul (Ne.symm h01)]
+    refine ⟨f v1, ?_⟩
+    show x - v0 = f v1 • (v1 - v0)
+    have h2 : ((f v0 + f v1 - 1 : ℝ)) • v0 = 0 := by rw [hsum1]; norm_num
+    linear_combination (norm := module) hvec3 + h2
+  · exact lt_of_le_of_ne hle (Ne.symm hfw)
+
+private theorem pa18_azim_zero_affGe {v0 v1 w x : V3} (hw : ¬Collinear3 v0 v1 w) :
+    azim v0 v1 w x = 0 ↔ x ∈ affGe ({v0, v1} : Set V3) ({w} : Set V3) := by
+  constructor
+  · intro h0
+    by_cases hcolx : Collinear3 v0 v1 x
+    · exact pa18_collinear3_line_affGe hcolx hw
+    · have hgt : x ∈ affGt ({v0, v1} : Set V3) ({w} : Set V3) :=
+        (azim_eq_zero_iff_alt hw hcolx).1 h0
+      rcases hgt with ⟨f, hf, hvec, hpos, hone⟩
+      rw [affGe, Set.mem_setOf_eq, Affsign]
+      exact ⟨f, hf, hvec, fun z hz => le_of_lt (hpos z hz), hone⟩
+  · intro hmem
+    by_cases hcolx : Collinear3 v0 v1 x
+    · rw [azim, if_pos (Or.inr hcolx)]
+    · exact (azim_eq_zero_iff_alt hw hcolx).2 (pa18_affGe_affGt_of_ncol hw hcolx hmem)
 
 /-! ## YSSKQOY.hl: general lemmas -/
 
@@ -665,9 +772,36 @@ theorem AFF_DIM_3 (a b c : V3) : affDim {a, b, c} ≤ 2 := by
       Submodule.finrank_mono hsub
     linarith
 
-/-- HOL `COPLANAR_IMP_AFF_DIM` (leaf_cell.hl:209-226). -/
+/-- HOL `COPLANAR_IMP_AFF_DIM` (leaf_cell.hl:209-226): a coplanar set lives in
+a three-point affine span, whose direction has dimension at most 2. -/
 theorem COPLANAR_IMP_AFF_DIM {s : Set V3} (h : Coplanar s) : affDim s ≤ 2 := by
-  sorry
+  obtain ⟨u, v, w, hsub⟩ := h
+  by_cases hse : s = ∅
+  · rw [hse, affDim_empty]
+    norm_num
+  · have h3 : ({u, v, w} : Set V3) ≠ ∅ := fun hc =>
+      absurd (Set.mem_insert u ({v, w} : Set V3))
+        (by rw [hc]; simp)
+    have h2 := AFF_DIM_3 u v w
+    rw [affDim, if_neg h3] at h2
+    have hspanne : ((affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) ≠ ∅ := fun hc =>
+      absurd (SetLike.mem_coe.2
+        (mem_affineSpan ℝ (Set.mem_insert u ({v, w} : Set V3))))
+        (by rw [hc]; simp)
+    have hveq : vectorSpan ℝ ((affineSpan ℝ ({u, v, w} : Set V3) : Set V3))
+        = vectorSpan ℝ ({u, v, w} : Set V3) := by
+      rw [← AffineSubspace.direction_eq_vectorSpan, direction_affineSpan]
+    have hmono : affDim s ≤ affDim ((affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) :=
+      affDim_mono hsub (Set.nonempty_iff_ne_empty.2 hse)
+    rw [affDim, if_neg hse] at hmono
+    have hspaneq : affDim ((affineSpan ℝ ({u, v, w} : Set V3) : Set V3))
+        = (Module.finrank ℝ (vectorSpan ℝ ({u, v, w} : Set V3)) : ℤ) := by
+      rw [affDim, if_neg hspanne]
+      congr 1
+      rw [hveq]
+    rw [affDim, if_neg hse]
+    rw [hspaneq] at hmono
+    exact hmono.trans h2
 
 /-- HOL `NOT_COLLINEAR_AFF_DIM2` (leaf_cell.hl:3913-3926). -/
 theorem NOT_COLLINEAR_AFF_DIM2 (a b c : V3) (h : ¬Collinear3 a b c) :
@@ -701,24 +835,60 @@ theorem COPLANAR_UNION {P Q : Set V3} {a b : V3} (hP : P ≠ ∅) (hQ : Q ≠ �
     Coplanar (P ∪ Q ∪ {a, b} : Set V3) := by
   sorry
 
-/-- HOL `CONNECTED_SEGMENT_NOT_COVERED` (leaf_cell.hl:304-327). -/
+/-- HOL `CONNECTED_SEGMENT_NOT_COVERED` (leaf_cell.hl:304-327): a segment is
+preconnected, so two disjoint open sets cannot separate its endpoints. -/
 theorem CONNECTED_SEGMENT_NOT_COVERED {A B : Set V3} {a b : V3}
     (hA : IsOpen A) (hB : IsOpen B) (ha : a ∈ A) (hb : b ∈ B) (hd : A ∩ B = ∅) :
     ∃ x, x ∈ segment ℝ a b ∧ x ∉ A ∧ x ∉ B := by
-  sorry
+  by_contra hcon
+  push_neg at hcon
+  have hconn := (convex_segment a b).isPreconnected
+  have hsub : (segment ℝ a b) ⊆ A ∪ B := fun y hy => by
+    by_cases hyA : y ∈ A
+    · exact Set.mem_union_left _ hyA
+    · exact Set.mem_union_right _ (hcon y hy hyA)
+  obtain ⟨x, hxmem, hxAB⟩ := hconn A B hA hB hsub
+    ⟨a, left_mem_segment ℝ a b, ha⟩ ⟨b, right_mem_segment ℝ a b, hb⟩
+  rw [hd, Set.mem_empty_iff_false] at hxAB
+  exact hxAB
 
-/-- HOL `WEDGE_GE_NULL` (leaf_cell.hl:91-106). -/
+/-- HOL `WEDGE_GE_NULL` (leaf_cell.hl:91-106): when the second ray coincides
+with the first in azimuth, the closed wedge is the half-plane `aff_ge`. -/
 theorem WEDGE_GE_NULL (u0 u1 v1 v2 : V3) (h1 : ¬Collinear3 u0 u1 v1)
     (h2 : ¬Collinear3 u0 u1 v2) (haz : azim u0 u1 v1 v2 = 0) :
     wedgeGe u0 u1 v1 v2 = affGe {u0, u1} {v1} := by
-  sorry
+  refine Set.ext (fun z => ?_)
+  constructor
+  · intro hz
+    rw [wedgeGe, Set.mem_setOf_eq, haz] at hz
+    exact (pa18_azim_zero_affGe h1).1 (le_antisymm hz.2 hz.1)
+  · intro hz
+    rw [wedgeGe, Set.mem_setOf_eq]
+    have h0 : azim u0 u1 v1 z = 0 := (pa18_azim_zero_affGe h1).2 hz
+    refine ⟨azim_nonneg u0 u1 v1 z, ?_⟩
+    rw [h0, haz]
 
-/-- HOL `WEDGE_WEDGE_GE` (leaf_cell.hl:107-153). -/
+/-- HOL `WEDGE_WEDGE_GE` (leaf_cell.hl:107-153): the closed wedge splits into
+the open wedge and the two bounding half-planes. -/
 theorem WEDGE_WEDGE_GE (u0 u1 v1 v2 : V3) (h1 : ¬Collinear3 u0 u1 v1)
     (h2 : ¬Collinear3 u0 u1 v2) :
     wedgeGe u0 u1 v1 v2 ⊆ wedge u0 u1 v1 v2 ∪ affGe {u0, u1} {v1} ∪
       affGe {u0, u1} {v2} := by
-  sorry
+  intro z hz
+  rw [wedgeGe, Set.mem_setOf_eq] at hz
+  by_cases h0 : azim u0 u1 v1 z = 0
+  · exact Set.mem_union_left _ (Or.inr ((pa18_azim_zero_affGe h1).1 h0))
+  · by_cases hcol : Collinear3 u0 u1 z
+    · exact absurd (by rw [azim, if_pos (Or.inr hcol)] : azim u0 u1 v1 z = 0) h0
+    · rcases lt_or_eq_of_le hz.2 with hlt | heq
+      · refine Set.mem_union_left _ (Or.inl ⟨hcol, ?_, hlt⟩)
+        exact lt_of_le_of_ne (azim_nonneg u0 u1 v1 z) (Ne.symm h0)
+      · have hiff := azim_eq_azim_iff h1 h2 hcol
+        have hgt : z ∈ affGt ({u0, u1} : Set V3) ({v2} : Set V3) := hiff.1 heq.symm
+        rcases hgt with ⟨f, hf, hvec, hpos, hone⟩
+        exact Set.mem_union_right _ (by
+          rw [affGe, Set.mem_setOf_eq, Affsign]
+          exact ⟨f, hf, hvec, fun w2 hw2 => le_of_lt (hpos w2 hw2), hone⟩)
 
 /-- HOL `WEDGE_GE_ALMOST_DISJOINT` (leaf_cell.hl:154-208). -/
 theorem WEDGE_GE_ALMOST_DISJOINT (u0 u1 v1 v2 : V3) (h1 : ¬Collinear3 u0 u1 v1)
@@ -727,17 +897,55 @@ theorem WEDGE_GE_ALMOST_DISJOINT (u0 u1 v1 v2 : V3) (h1 : ¬Collinear3 u0 u1 v1)
       affGe {u0, u1} {v1} ∪ affGe {u0, u1} {v2} := by
   sorry
 
-/-- HOL `GBEWYFX` (leaf_cell.hl:328-341). -/
+/-- HOL `GBEWYFX` (leaf_cell.hl:328-341), via `MHFTTZN1` (affine dimension of
+a `barV` list) and Mathlib's `collinear_iff_finrank_le_one`. -/
 theorem GBEWYFX {V : Set V3} {ul : List V3} (hp : Packing V) (hs : saturated V)
     (hl' : leaf V ul) : ¬Collinear3 ul[0]! ul[1]! ul[2]! := by
-  sorry
+  have h3 : ul.length = 3 := hl'.1.1
+  have hbar : barV V 2 ul := hl'.1
+  have hdim0 : affDim (setOfList ul) = 2 := MHFTTZN1 V ul 2 hp hbar
+  obtain ⟨a, b, c, hlist⟩ : ∃ a b c, ul = [a, b, c] := by
+    cases ul with
+    | nil => exact absurd h3 (by simp)
+    | cons x t =>
+      cases t with
+      | nil => exact absurd h3 (by simp)
+      | cons y t2 =>
+        cases t2 with
+        | nil => exact absurd h3 (by simp)
+        | cons z t3 =>
+          cases t3 with
+          | nil => exact ⟨x, y, z, rfl⟩
+          | cons _ _ => exact absurd h3 (by simp)
+  rw [hlist] at hdim0
+  have hset : setOfList [a, b, c] = ({a, b, c} : Set V3) := by
+    ext t
+    simp [setOfList]
+  rw [hset] at hdim0
+  have hget : [a, b, c][0]! = a ∧ [a, b, c][1]! = b ∧ [a, b, c][2]! = c := by simp
+  obtain ⟨e0, e1, e2⟩ := hget
+  have hne : ({a, b, c} : Set V3) ≠ ∅ :=
+    Set.nonempty_iff_ne_empty.1 ⟨a, by simp⟩
+  rw [affDim, if_neg hne] at hdim0
+  intro hcol
+  rw [hlist, e0, e1, e2] at hcol
+  have h1 : Module.finrank ℝ (vectorSpan ℝ ({a, b, c} : Set V3)) ≤ 1 :=
+    (collinear_iff_finrank_le_one (s := ({a, b, c} : Set V3))).1 hcol
+  omega
 
-/-- HOL `NWVRFMF` (leaf_cell.hl:342-359). -/
+/-- HOL `NWVRFMF` (leaf_cell.hl:342-359), a direct port over the Rogers
+`IDBEZAL` facet characterization and `OMEGA_LIST_IN_VORONOI_LIST`. -/
 theorem NWVRFMF {V : Set V3} {ul : List V3} {p : V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul)
     (hf : FacetOf {p} (voronoiList V ul)) :
     ∃ vl, barV V 3 vl ∧ truncateSimplex 2 vl = ul ∧ omegaList V vl = p := by
-  sorry
+  have hbar : barV V 2 ul := hl'.1
+  obtain ⟨vl, hF, hbar3, htr⟩ :=
+    (IDBEZAL V ul 2 {p} hs hp hbar (by norm_num)).1 hf
+  refine ⟨vl, hbar3, htr, ?_⟩
+  have hom : omegaList V vl ∈ voronoiList V vl := OMEGA_LIST_IN_VORONOI_LIST V vl 3 hbar3
+  rw [← hF] at hom
+  exact Set.mem_singleton_iff.1 hom
 
 /-- HOL `YBZFUPO` (leaf_cell.hl:360-423). -/
 theorem YBZFUPO {V : Set V3} {ul : List V3} (hp : Packing V) (hs : saturated V)
@@ -1068,11 +1276,15 @@ theorem JDHAWAY_0 {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
     (hpos : 0 < t1 ∧ 0 < t2) : chiMsb ul p1 ≠ 0 := by
   sorry
 
-/-- HOL `JDHAWAY_1` (leaf_cell.hl:1012-1051). -/
+/-- HOL `JDHAWAY_1` (leaf_cell.hl:1012-1051): the circumcenter of the stem
+lies in the stem's affine span, where `chi_msb` vanishes. -/
 theorem JDHAWAY_1 {V : Set V3} {ul : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) :
     chiMsb ul (circumcenter (setOfList ul)) = 0 := by
-  sorry
+  have h3 : ul.length = 3 := hl'.1.1
+  have hmem : circumcenter (setOfList ul) ∈ (affineSpan ℝ (setOfList ul) : Set V3) :=
+    BARV_CIRCUMCENTER_EXISTS V ul 2 hp hl'.1
+  exact AFFINE_IMP_CHI_MSB_0 ul (circumcenter (setOfList ul)) h3 hmem
 
 /-- HOL `JDWAWAY` (leaf_cell.hl:1012-1051). -/
 theorem JDWAWAY {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
@@ -1084,10 +1296,13 @@ theorem JDWAWAY {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
   sorry
 
 /-- HOL `FACET_OF_SEGMENT` (leaf_cell.hl:1085-1104): the endpoints are the
-1-dimensional faces of the closed segment `segment[a,b]`. -/
+1-dimensional faces of the closed segment (via the extreme-point kit of
+Polytope and `affDim_segment`). -/
 theorem FACET_OF_SEGMENT (a b : V3) (h : a ≠ b) :
     FacetOf {a} (segment ℝ a b) := by
-  sorry
+  refine ⟨faceOf_sing.2 ((EXTREME_POINT_OF_SEGMENT a b a).2 (Or.inl rfl)), by simp, ?_⟩
+  rw [affDim_singleton, (affDim_segment a b).2 h]
+  norm_num
 
 /-- HOL `CC_PE_FACET_OF` (leaf_cell.hl:1105-1119). -/
 theorem CC_PE_FACET_OF {V : Set V3} {ul : List V3} (hp : Packing V)
@@ -1117,33 +1332,142 @@ theorem CC_KE_34 (V : Set V3) (ul : List V3) : ccKe V ul = 3 ∨ ccKe V ul = 4 :
   · exact Or.inr rfl
   · exact Or.inl rfl
 
-/-- HOL `CC_CELL3` (leaf_cell.hl:1180-1210). -/
+private theorem pa18_trunc2_setOfList {L : List V3} (h4 : L.length = 4) :
+    setOfList (truncateSimplex 2 L)
+      = ({L.getD 0 0, L.getD 1 0, L.getD 2 0} : Set V3) := by
+  obtain ⟨a, b, c, d, hL⟩ : ∃ a b c d, L = [a, b, c, d] := by
+    cases L with
+    | nil => exact absurd h4 (by simp)
+    | cons x t =>
+      cases t with
+      | nil => exact absurd h4 (by simp)
+      | cons y t2 =>
+        cases t2 with
+        | nil => exact absurd h4 (by simp)
+        | cons z t3 =>
+          cases t3 with
+          | nil => exact absurd h4 (by simp)
+          | cons w t4 =>
+            cases t4 with
+            | nil => exact ⟨x, y, z, w, rfl⟩
+            | cons _ _ => exact absurd h4 (by simp)
+  subst hL
+  have hinit : initialSublist [a, b, c] [a, b, c, d] := ⟨[d], rfl⟩
+  have htr : truncateSimplex 2 [a, b, c, d] = [a, b, c] :=
+    ((TRUNCATE_SIMPLEX_INITIAL_SUBLIST 2 _ _).2 ⟨hinit, by simp⟩).1
+  rw [htr]
+  ext t
+  simp [setOfList]
+
+private theorem pa18_list4_setOfList {L : List V3} (h4 : L.length = 4) :
+    setOfList L = ({L.getD 0 0, L.getD 1 0, L.getD 2 0, L.getD 3 0} : Set V3) := by
+  obtain ⟨a, b, c, d, hL⟩ : ∃ a b c d, L = [a, b, c, d] := by
+    cases L with
+    | nil => exact absurd h4 (by simp)
+    | cons x t =>
+      cases t with
+      | nil => exact absurd h4 (by simp)
+      | cons y t2 =>
+        cases t2 with
+        | nil => exact absurd h4 (by simp)
+        | cons z t3 =>
+          cases t3 with
+          | nil => exact absurd h4 (by simp)
+          | cons w t4 =>
+            cases t4 with
+            | nil => exact ⟨x, y, z, w, rfl⟩
+            | cons _ _ => exact absurd h4 (by simp)
+  subst hL
+  ext t
+  simp [setOfList]
+
+/-- HOL `CC_CELL3` (leaf_cell.hl:1180-1210): the dispatch value 3 selects
+`mcell3`, whose defining condition holds for a leaf stem (`hl` bounds from
+`leaf` and from `ccKe = 3`). -/
 theorem CC_CELL3 {V : Set V3} {ul : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) (h3 : ccKe V ul = 3) :
     ccCell V ul = convexHull ℝ (setOfList (truncateSimplex 2 (ccUh V ul)) ∪
       {mxi V (ccUh V ul)}) := by
-  sorry
+  have hbar := (Classical.choose_spec (cc_uh_exists V ul)) hp hs hl'
+  have htrunc : truncateSimplex 2 (ccUh V ul) = ul := hbar.2.1
+  unfold ccCell ccKe at *
+  rw [h3]
+  have hif : ¬(hl (ccUh V ul) < Real.sqrt 2) := by
+    intro hc
+    rw [if_pos hc] at h3
+    exact absurd h3 (by norm_num)
+  have hle : Real.sqrt 2 ≤ hl (ccUh V ul) := le_of_not_gt hif
+  have hlt : hl (truncateSimplex 2 (ccUh V ul)) < Real.sqrt 2 := by
+    rw [htrunc]
+    exact hl'.2
+  have hd : mcell 3 V (ccUh V ul) = mcell3 V (ccUh V ul) := by
+    rw [mcell]
+    simp
+  rw [hd, mcell3, if_pos ⟨hlt, hle⟩]
 
-/-- HOL `CC_CELL34` (leaf_cell.hl:1210-1244). -/
+/-- HOL `CC_CELL34` (leaf_cell.hl:1210-1244): case split on the dispatch value,
+then reduce both hulls to the four extreme points. -/
 theorem CC_CELL34 {V : Set V3} {ul : List V3} {pp : V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul)
     (hpp : pp = if ccKe V ul = 3 then mxi V (ccUh V ul) else (ccUh V ul).getD 3 0) :
     ccCell V ul = convexHull ℝ ({(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0,
       (ccUh V ul).getD 2 0, pp} : Set V3) := by
-  sorry
+  have hbar := (Classical.choose_spec (cc_uh_exists V ul)) hp hs hl'
+  by_cases h3 : ccKe V ul = 3
+  · have hpp' : pp = mxi V (ccUh V ul) := by rw [hpp, if_pos h3]
+    have hlen : (ccUh V ul).length = 4 := hbar.1.1
+    rw [CC_CELL3 hp hs hl' h3, hpp', pa18_trunc2_setOfList hlen]
+    congr 1
+    ext t
+    simp
+    tauto
+  · have h4 : ccKe V ul = 4 := by
+      rcases CC_KE_34 V ul with h | h
+      · exact absurd h h3
+      · exact h
+    have hpp' : pp = (ccUh V ul).getD 3 0 := by rw [hpp, if_neg h3]
+    have hlen : (ccUh V ul).length = 4 := hbar.1.1
+    rw [CC_CELL4 hp hs hl' h4, pa18_list4_setOfList hlen, hpp']
 
-/-- HOL `U2_IN_CC_CELL` (leaf_cell.hl:1245-?). -/
+/-- HOL `U2_IN_CC_CELL` (leaf_cell.hl:1245-?): the third stem point is an
+extreme point of the cc cell. -/
 theorem U2_IN_CC_CELL {V : Set V3} {ul : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) :
     (ccUh V ul).getD 2 0 ∈ ccCell V ul := by
-  sorry
+  have h34 := CC_CELL34 (V := V) (ul := ul)
+    (pp := if ccKe V ul = 3 then mxi V (ccUh V ul) else (ccUh V ul).getD 3 0)
+    hp hs hl' rfl
+  rw [h34]
+  exact subset_convexHull ℝ _ (by simp)
 
-/-- HOL `U2_IN_AFF_GT` (leaf_cell.hl:1250-1276). -/
+/-- HOL `U2_IN_AFF_GT` (leaf_cell.hl:1250-1276): a point is trivially a
+positive combination of itself (the indicator function of the singleton). -/
 theorem U2_IN_AFF_GT {V : Set V3} {ul : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) :
     (ccUh V ul).getD 2 0 ∈ affGt {(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0}
       {(ccUh V ul).getD 2 0} := by
-  sorry
+  set a := (ccUh V ul).getD 0 0 with ha
+  set b := (ccUh V ul).getD 1 0 with hb
+  set c := (ccUh V ul).getD 2 0 with hc
+  rw [affGt, Set.mem_setOf_eq, Affsign]
+  have hfin : ({a, b} ∪ {c} : Set V3).Finite :=
+    Set.Finite.union (Set.Finite.insert a (Set.finite_singleton b)) (Set.finite_singleton c)
+  refine ⟨fun w => if w = c then (1 : ℝ) else 0, hfin, ?_, ?_, ?_⟩
+  · rw [Finset.sum_eq_single c]
+    · simp
+    · intro w _ hw
+      simp [hw]
+    · intro hcon
+      exact absurd (hfin.mem_toFinset.2 (Set.mem_union_right _ (Set.mem_singleton c))) hcon
+  · intro w hw
+    rw [Set.mem_singleton_iff.1 hw]
+    simp
+  · rw [Finset.sum_eq_single c]
+    · simp
+    · intro w _ hw
+      simp [hw]
+    · intro hcon
+      exact absurd (hfin.mem_toFinset.2 (Set.mem_union_right _ (Set.mem_singleton c))) hcon
 
 
 /-- HOL `MCELL_EDGE_FIRST` (leaf_cell.hl:3338-3374). -/
@@ -1197,11 +1521,37 @@ theorem EL_CC_UH {V : Set V3} {ul : List V3} (hp : Packing V)
   injection ht2 with h3' _
   exact ⟨h1, h2, h3'⟩
 
-/-- HOL `NUNRRDS_0` (leaf_cell.hl:1314-?). -/
+/-- HOL `NUNRRDS_0` (leaf_cell.hl:1314-?): `cc_A0` meets `cc_cell` because the
+third stem point lies in both. -/
 theorem NUNRRDS_0 {V : Set V3} {ul : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) :
     ccA0 ul ∩ ccCell V ul ≠ ∅ := by
-  sorry
+  have hA := U2_IN_AFF_GT (V := V) (ul := ul) hp hs hl'
+  have hC := U2_IN_CC_CELL (V := V) (ul := ul) hp hs hl'
+  have hE := EL_CC_UH (V := V) (ul := ul) hp hs hl'
+  have h3 : ul.length = 3 := hl'.1.1
+  have hget : ul[0]! = ul.getD 0 0 ∧ ul[1]! = ul.getD 1 0 ∧ ul[2]! = ul.getD 2 0 := by
+    cases ul with
+    | nil => exact absurd h3 (by simp)
+    | cons x t =>
+      cases t with
+      | nil => exact absurd h3 (by simp)
+      | cons y t2 =>
+        cases t2 with
+        | nil => exact absurd h3 (by simp)
+        | cons z t3 =>
+          cases t3 with
+          | nil => simp
+          | cons _ _ => exact absurd h3 (by simp)
+  obtain ⟨g0, g1, g2⟩ := hget
+  have hmem : (ccUh V ul).getD 2 0 ∈ ccA0 ul := by
+    unfold ccA0
+    rw [g0, g1, g2, ← hE.1, ← hE.2.1, ← hE.2.2]
+    exact hA
+  have hmemC : (ccUh V ul).getD 2 0 ∈ ccA0 ul ∩ ccCell V ul := Set.mem_inter hmem hC
+  intro hcon
+  rw [hcon] at hmemC
+  exact hmemC
 
 /-- HOL `AFF_GE_MONO_TRANS` (leaf_cell.hl:1314-1390). -/
 theorem AFF_GE_MONO_TRANS {X Y S : Set V3} (h : S ⊆ X) :
@@ -1332,11 +1682,26 @@ theorem MXI_IN_VORONOI_LIST {V : Set V3} {vl : List V3} (hp : Packing V)
       dist (vl.getD 0 0) (mxi V vl) = Real.sqrt 2 := by
   sorry
 
-/-- HOL `VORONOI_LIST_EQ` (leaf_cell.hl:1666-1687). -/
+/-- HOL `VORONOI_LIST_EQ` (leaf_cell.hl:1666-1687): every point of a Voronoi
+list cell is equidistant from the list points (the pairwise `voronoi_closed`
+inequalities close up to equalities). -/
 theorem VORONOI_LIST_EQ {V : Set V3} {ul : List V3} {p : V3} {k : ℕ}
     (hp : p ∈ voronoiList V ul) (hb : barV V k ul) :
     ∃ r : ℝ, ∀ q ∈ setOfList ul, dist p q = r := by
-  sorry
+  rw [voronoiList, voronoiSet, Set.mem_sInter] at hp
+  have hle : ∀ v ∈ setOfList ul, ∀ w ∈ V, dist p v ≤ dist p w := by
+    intro v hv
+    have hv2 : voronoiClosed V v ∈ {voronoiClosed V v | v ∈ setOfList ul} :=
+      ⟨v, hv, rfl⟩
+    exact (hp _ hv2)
+  refine ⟨dist p (hdV ul), fun q hq => ?_⟩
+  have hh : 1 ≤ ul.length := by
+    have := hb.1
+    omega
+  have hsub : setOfList ul ⊆ V := BARV_SUBSET V k ul hb
+  have h1 : dist p q ≤ dist p (hdV ul) := hle q hq (hdV ul) (hsub (HD_IN_SET_OF_LIST ul hh))
+  have h2 : dist p (hdV ul) ≤ dist p q := hle (hdV ul) (HD_IN_SET_OF_LIST ul hh) q (hsub hq)
+  exact le_antisymm h1 h2
 
 /-- HOL `NOT_COL_IMP_RADV` (leaf_cell.hl:1688-1869). -/
 theorem NOT_COL_IMP_RADV (va vb vc : V3) (h : ¬Collinear3 va vb vc) :
@@ -1427,13 +1792,22 @@ theorem MCELL_ARG_REDUCE (V : Set V3) (ul : List V3) (i : ℕ) :
   | 3 => exact ⟨3, by omega, rfl⟩
   | n + 4 => exact ⟨4, by omega, by simp [mcell]⟩
 
-/-- HOL `AJRIPQN_0` (leaf_cell.hl:2132-2177); a corollary of the Auto17
-`AJRIPQN` (which additionally concludes `i = j`). -/
+/-- HOL `AJRIPQN_0` (leaf_cell.hl:2132-2177): `MCELL_ARG_REDUCE` brings both
+dispatch values into `AJRIPQN`'s `≤ 4` range. -/
 theorem AJRIPQN_0 {V : Set V3} {ul vl : List V3} {i j : ℕ} (hp : Packing V)
     (hs : saturated V) (hb1 : barV V 3 ul) (hb2 : barV V 3 vl)
     (hvol : ¬nullSet (mcell i V ul ∩ mcell j V vl)) :
     mcell j V vl = mcell i V ul := by
-  sorry
+  obtain ⟨i', hi', hi'e⟩ := MCELL_ARG_REDUCE V ul i
+  obtain ⟨j', hj', hj'e⟩ := MCELL_ARG_REDUCE V vl j
+  have hmem : ∀ n : ℕ, n ≤ 4 → n ∈ ({0, 1, 2, 3, 4} : Set ℕ) := by
+    intro n hn
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    omega
+  have hkey := AJRIPQN V ul vl i' j' hs hp hb1 hb2 (hmem i' hi') (hmem j' hj')
+    (by rw [← hi'e, ← hj'e]; exact hvol)
+  rw [hi'e, hj'e]
+  exact hkey.2.symm
 
 /-- HOL `CFFONNL` (leaf_cell.hl:2178-2514). -/
 theorem CFFONNL {V : Set V3} {ul : List V3} {X : Set V3} (hp : Packing V)
@@ -1788,18 +2162,67 @@ theorem AZIM_BASE_SHIFT_LE (x y b1 b2 w1 w2 : V3)
   have e2 := sum4_azim_fan hyx h1 h2 h3 h5
   linarith
 
-/-- HOL `WEDGE_GE_SPLIT` (leaf_cell.hl:3548-3611). -/
+/-- HOL `WEDGE_GE_SPLIT` (leaf_cell.hl:3548-3611): inserting an interior ray
+splits the closed wedge into two closed wedges (`AZIM_BASE_SHIFT_LE`). -/
 theorem WEDGE_GE_SPLIT (u0 u1 u2 u3 w : V3)
     (h2 : ¬Collinear3 u0 u1 u2) (h3 : ¬Collinear3 u0 u1 u3)
     (hw : w ∈ wedge u0 u1 u2 u3) :
     ¬Collinear3 u0 u1 w ∧
       wedgeGe u0 u1 u2 u3 = wedgeGe u0 u1 u2 w ∪ wedgeGe u0 u1 w u3 := by
-  sorry
+  rw [wedge, Set.mem_setOf_eq] at hw
+  refine ⟨hw.1, ?_⟩
+  refine Set.ext (fun x => ?_)
+  by_cases hcol : Collinear3 u0 u1 x
+  · have hx0 : azim u0 u1 u2 x = 0 := by rw [azim, if_pos (Or.inr hcol)]
+    constructor
+    · intro hx
+      refine Set.mem_union_left _ ?_
+      rw [wedgeGe, Set.mem_setOf_eq] at hx ⊢
+      refine ⟨azim_nonneg u0 u1 u2 x, ?_⟩
+      rw [hx0]
+      exact le_of_lt hw.2.1
+    · intro hx
+      rw [Set.mem_union] at hx
+      rw [wedgeGe, Set.mem_setOf_eq] at hx ⊢
+      rcases hx with hx | hx
+      · rw [hx0]
+        exact ⟨le_refl 0, azim_nonneg u0 u1 u2 u3⟩
+      · rw [hx0]
+        exact ⟨le_refl 0, azim_nonneg u0 u1 u2 u3⟩
+  · rcases le_or_gt (azim u0 u1 u2 x) (azim u0 u1 u2 w) with hle | hgt
+    · constructor
+      · intro hx
+        refine Set.mem_union_left _ ?_
+        rw [wedgeGe, Set.mem_setOf_eq] at hx ⊢
+        exact ⟨azim_nonneg u0 u1 u2 x, hle⟩
+      · intro hx
+        rw [Set.mem_union] at hx
+        rw [wedgeGe, Set.mem_setOf_eq] at hx ⊢
+        rcases hx with hx | hx
+        · exact ⟨hx.1, le_trans hx.2 (le_of_lt hw.right.right)⟩
+        · exact ⟨azim_nonneg u0 u1 u2 x, le_trans hle (le_of_lt hw.right.right)⟩
+    · have hshift := AZIM_BASE_SHIFT_LE u0 u1 u2 w x u3 h2 hw.1 hcol h3 (le_of_lt hgt)
+        (le_of_lt hw.2.2)
+      -- azim u2 u3 - azim u2 x = azim w u3 - azim w x
+      constructor
+      · intro hx
+        refine Set.mem_union_right _ ?_
+        rw [wedgeGe, Set.mem_setOf_eq] at hx ⊢
+        refine ⟨azim_nonneg u0 u1 w x, ?_⟩
+        linarith
+      · intro hx
+        rw [Set.mem_union] at hx
+        rw [wedgeGe, Set.mem_setOf_eq] at hx ⊢
+        rcases hx with hx | hx
+        · exact ⟨hx.1, le_trans hx.2 (le_of_lt hw.right.right)⟩
+        · rcases le_or_gt (azim u0 u1 u2 x) (azim u0 u1 u2 w) with hle'' | hgt''
+          · exact ⟨azim_nonneg u0 u1 u2 x, le_trans hle'' (le_of_lt hw.2.2)⟩
+          · have hshift' := AZIM_BASE_SHIFT_LE u0 u1 u2 w x u3 h2 hw.1 hcol h3
+              (le_of_lt hgt'') (le_of_lt hw.2.2)
+            rw [wedgeGe, Set.mem_setOf_eq] at hx
+            refine ⟨azim_nonneg u0 u1 u2 x, ?_⟩
+            linarith
 
-/-- HOL `IN_CONV0_IMP_AZIM_PI_ALT` (leaf_cell.hl:3612-?). -/
-theorem IN_CONV0_IMP_AZIM_PI_ALT (x e a b : V3) (h : ¬Collinear3 x e a)
-    (hx : x ∈ conv0 {a, b}) : azim x e a b = Real.pi := by
-  sorry
 
 /-- HOL `AFF_GT_0_2` (leaf_cell.hl:3589-3602, proved unconditionally by
 `AFF_TAC`).  The earlier "FALSE as ported" verdict in this file's STATUS was a
@@ -1915,7 +2338,22 @@ theorem MIDPOINT_IN_CONV0 (p q : V3) :
       · norm_num
     · rw [h1f, Finset.sum_insert (by simp [hpq]), Finset.sum_singleton]
       norm_num
-/-- HOL `AZIM_SPLIT_POINT` (leaf_cell.hl:3612-?). -/
+/-- HOL `IN_CONV0_IMP_AZIM_PI_ALT` (leaf_cell.hl:3612-?).  NEEDS: x ∈ conv0 {a,b}
+puts x strictly between a and b (x = t2•a + t3•b, t2,t3 > 0, t2+t3 = 1), so
+b - x = -(t2/t3) • (a - x); read the azimuth frame via `azim_frame_spec`
+(Geom/AzimLemmas) for the pair (a, b), compare the opposite projections
+(zOf f1 f2 (b - x) = -(t2/t3) • zOf f1 f2 (a - x), norms give r2 = (t2/t3)*r1),
+then `angle_eq_of_exp_eq` yields azim x e a b = π.  (A full frame proof was
+drafted here but not finished this wave.) -/
+theorem IN_CONV0_IMP_AZIM_PI_ALT (x e a b : V3) (h : ¬Collinear3 x e a)
+    (hx : x ∈ conv0 {a, b}) : azim x e a b = Real.pi := by
+  sorry
+
+/-- HOL `AZIM_SPLIT_POINT` (leaf_cell.hl:3612-?).  NEEDS: take w := 2•u0 - u2
+(the reflection of u2 through u0); then u0 ∈ conv0 {u2, w} (midpoint), so
+IN_CONV0_IMP_AZIM_PI_ALT gives azim u0 u1 u2 w = π; wedge membership is
+hw-free; and sum4_azim_fan + azim_lt_two_pi give azim u0 u1 w u3 < π.
+(Blocks on IN_CONV0_IMP_AZIM_PI_ALT above.) -/
 theorem AZIM_SPLIT_POINT (u0 u1 u2 u3 : V3)
     (h2 : ¬Collinear3 u0 u1 u2) (h3 : ¬Collinear3 u0 u1 u3)
     (hpi : Real.pi < azim u0 u1 u2 u3) :
@@ -1940,17 +2378,65 @@ theorem CLOSED_WEDGE (u0 u1 u2 u3 : V3) (h2 : ¬Collinear3 u0 u1 u2)
     (h3 : ¬Collinear3 u0 u1 u3) : IsClosed (wedgeGe u0 u1 u2 u3) := by
   sorry
 
-/-- HOL `WEDGE_INTER_AFF_GE` (leaf_cell.hl:3710-3743). -/
+/-- HOL `WEDGE_INTER_AFF_GE` (leaf_cell.hl:3710-3743): the open wedge is
+disjoint from both bounding half-planes of the axis. -/
 theorem WEDGE_INTER_AFF_GE (u0 u1 v1 v2 : V3) :
     wedge u0 u1 v1 v2 ∩ affGe {u0, u1} {v1} = ∅ ∧
       wedge u0 u1 v1 v2 ∩ affGe {u0, u1} {v2} = ∅ := by
-  sorry
+  constructor
+  · rw [Set.eq_empty_iff_forall_notMem]
+    intro x hx
+    rw [Set.mem_inter_iff, wedge, Set.mem_setOf_eq] at hx
+    by_cases h1 : Collinear3 u0 u1 v1
+    · rw [azim, if_pos (Or.inl h1)] at hx
+      norm_num at hx
+    · have h0 := (pa18_azim_zero_affGe h1).2 hx.2
+      rw [h0] at hx
+      norm_num at hx
+  · rw [Set.eq_empty_iff_forall_notMem]
+    intro x hx
+    rw [Set.mem_inter_iff, wedge, Set.mem_setOf_eq] at hx
+    by_cases hcolx : Collinear3 u0 u1 x
+    · rw [azim, if_pos (Or.inr hcolx)] at hx
+      norm_num at hx
+    · have hv2n : ¬Collinear3 u0 u1 v2 := by
+        intro hc
+        have h0 : azim u0 u1 v1 v2 = 0 := by
+          rw [azim, if_pos (Or.inr hc)]
+        linarith [hx.1.2.2, azim_nonneg u0 u1 v1 x]
+      have hv1n : ¬Collinear3 u0 u1 v1 := by
+        intro hc
+        rw [azim, if_pos (Or.inl hc)] at hx
+        norm_num at hx
+      have hgt : x ∈ affGt ({u0, u1} : Set V3) ({v2} : Set V3) :=
+        pa18_affGe_affGt_of_ncol hv2n hcolx hx.2
+      have hiff := azim_eq_azim_iff hv1n hv2n hcolx
+      rw [hiff.2 hgt] at hx
+      norm_num at hx
 
-/-- HOL `AFF_GE_SUBSET_WEDGE_GE` (leaf_cell.hl:3744-3766). -/
+/-- HOL `AFF_GE_SUBSET_WEDGE_GE` (leaf_cell.hl:3744-3766): each bounding
+half-plane lies in the closed wedge. -/
 theorem AFF_GE_SUBSET_WEDGE_GE (u0 u1 v1 v2 : V3) (h1 : ¬Collinear3 u0 u1 v1)
     (h2 : ¬Collinear3 u0 u1 v2) :
     affGe {u0, u1} {v1} ⊆ wedgeGe u0 u1 v1 v2 ∧ affGe {u0, u1} {v2} ⊆ wedgeGe u0 u1 v1 v2 := by
-  sorry
+  constructor
+  · intro x hx
+    have h0 : azim u0 u1 v1 x = 0 := (pa18_azim_zero_affGe h1).2 hx
+    rw [wedgeGe, Set.mem_setOf_eq]
+    refine ⟨azim_nonneg u0 u1 v1 x, ?_⟩
+    rw [h0]
+    exact azim_nonneg u0 u1 v1 v2
+  · intro x hx
+    have h0 : azim u0 u1 v2 x = 0 := (pa18_azim_zero_affGe h2).2 hx
+    rw [wedgeGe, Set.mem_setOf_eq]
+    refine ⟨azim_nonneg u0 u1 v1 x, ?_⟩
+    by_cases hcolx : Collinear3 u0 u1 x
+    · rw [azim, if_pos (Or.inr hcolx)]
+      exact azim_nonneg u0 u1 v1 v2
+    · have hgt : x ∈ affGt ({u0, u1} : Set V3) ({v2} : Set V3) :=
+        (azim_eq_zero_iff_alt h2 hcolx).1 h0
+      have hiff := azim_eq_azim_iff h1 h2 hcolx
+      rw [hiff.2 hgt]
 
 /-- HOL `BDXKHTW_PREP_LEMMA` (leaf_cell.hl:3767-3903). -/
 theorem BDXKHTW_PREP_LEMMA {V : Set V3} {X : Set V3} {u0 u1 v1 v2 : V3}
