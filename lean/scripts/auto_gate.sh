@@ -32,9 +32,40 @@ dels=$(git diff HEAD -- "$FILE" | grep -E '^-' | grep -v '^---' || true)
 # NB: use [+] not \+ — \+ is undefined in POSIX ERE; BSD grep errors out
 # (silently empty adds => check void) while GNU grep accepts it.
 adds=$(git diff HEAD -- "$FILE" | grep -E '^[+]' | grep -v '^[+][+][+]' || true)
-# NOTES-LANE 2026-09-28: a zero-deletion diff (pure comment insertions, e.g.
-# NEEDS annotations from scout lanes) is provably structure-preserving; the
-# sorry-consumed requirement only governs fill lanes.
+
+# 2-SF. STATEMENT-FIX mode (approved 2026-09-28, DECISIONS.md): statement
+# modifications are only legal as the verbatim application of a human-approved
+# patch draft archived under docs/statement-fix-proposals-patches/ and cited
+# by an item in docs/statement-fix-proposals.md carrying an HOL fidelity
+# citation. The working diff must equal the approved patch line-for-line
+# (multiset compare — robust to hunk-context drift, strict on content).
+# Replaces rule 2 below; rules 1/3/4/4b/5 unchanged (rule 5 then requires the
+# FIXED theorem to be sorryAx-free).
+if [ "${GATE_MODE:-}" = "STATEMENT-FIX" ]; then
+  [ -n "${SF_PATCH:-}" ] || fail "STATEMENT-FIX: SF_PATCH (archived patch path) not set"
+  [ -f "$SF_PATCH" ] || fail "STATEMENT-FIX: patch $SF_PATCH missing"
+  [ -n "${SF_ITEM:-}" ] || fail "STATEMENT-FIX: SF_ITEM (proposals doc item no.) not set"
+  grep -qF "+++ b/lean/$FILE" "$SF_PATCH" \
+    || fail "STATEMENT-FIX: patch does not target lean/$FILE"
+  sed -n "/^## ${SF_ITEM}\./,/^### /p" docs/statement-fix-proposals.md \
+    | grep -q '(a) HOL' \
+    || fail "STATEMENT-FIX: item $SF_ITEM lacks (a) HOL citation in proposals doc"
+  sec=$(awk -v want="+++ b/lean/$FILE" '
+      /^--- a\// { insec = 0 }
+      /^\+\+\+ b\// { insec = ($0 == want) ? 1 : 0 }
+      insec { print }
+    ' "$SF_PATCH")
+  [ -n "$sec" ] || fail "STATEMENT-FIX: patch section for lean/$FILE is empty"
+  pdels=$(printf '%s\n' "$sec" | grep -E '^-' | grep -v -- '^--- a/' || true)
+  padds=$(printf '%s\n' "$sec" | grep -E '^[+]' | grep -v '^[+][+][+]' || true)
+  diff <(printf '%s\n' "$dels" | sort) <(printf '%s\n' "$pdels" | sort) > /dev/null \
+    || fail "STATEMENT-FIX: deletions differ from approved patch (see $SF_PATCH)"
+  diff <(printf '%s\n' "$adds" | sort) <(printf '%s\n' "$padds" | sort) > /dev/null \
+    || fail "STATEMENT-FIX: additions differ from approved patch (see $SF_PATCH)"
+else
+#    NOTES-LANE 2026-09-28: a zero-deletion diff (pure comment insertions, e.g.
+#    NEEDS annotations from scout lanes) is provably structure-preserving; the
+#    sorry-consumed requirement only governs fill lanes.
 if [ -n "$dels" ]; then
   printf '%s\n' "$dels" | grep -qE '^-[[:space:]]*sorry\b|:=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$' \
     || fail "no sorry consumed (theorem untouched?)"
@@ -55,6 +86,7 @@ done <<EOF2
 $hard
 EOF2
 [ -z "$rest" ] || fail "non-sorry lines deleted: $(printf '%s' "$rest" | head -3)"
+fi # STATEMENT-FIX else
 
 # 3. banned tokens in added lines
 #    NB: use [+] not \+ — \+ is undefined in POSIX ERE; BSD grep errors out
