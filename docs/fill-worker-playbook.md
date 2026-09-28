@@ -146,11 +146,17 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 
 ### 5.4 各 lane 已知卡点速查（收工后追加）
 
-- **LA38**（58 remaining @2026-09-28）：14 def 桩封 ~11 枚；15 枚卡
-  `main_nonlinear_terminal_v11`/LP；6 枚卡 `DIHV_EQ_DIH_Y`+`taum_dih_y`；
-  11 枚扇几何残差卡 `LOCAL_FAN_RHO_NODE_PROS2`/`sum4_azim_fan` 导入/
-  `AZIM_LE_PI_EQ_DIHV`/`DELTA_Y_POS_4POINTS`/chi_msb 二分。
-  **下一轮解锁路径**：在 LA38 内自证 `taum_dih_y`（纯算术）→ 开 6 枚。
+- **LA38**（52 remaining @二轮后：38 tactic sorry + 14 def 桩）：二轮闭合 6 枚
+  （DELTA_Y_POS_4POINTS 走 **Gram 行列式路线** `det M²≥0` 纯线性代数，Collect_geom
+  移植非必需；vv_split_azim/vv_quad_split 三件套用 `sum4_azim_fan`+私件
+  `p38_azim_eq_dihV`——**AZIM_LE_PI_EQ_DIHV 已不必等 LocalAuto5**，LuneVolume 的
+  `azim_dihv_same`/`azim_dihv_compl` 拼合即得）。tau3_taum/taustar_taum 族 6 枚
+  **只差 `DIHV_EQ_DIH_Y` 一座桥**（taum 侧恒等式已闭合：私件 `p38_taum_dih_y`/
+  `p38_const1_eq`/`p38_dihY222222`=arccos(1/3) 纯算术）；其余 13 枚卡
+  `main_nonlinear_terminal_v11`/LP、4 枚卡 enclosedP38 桩、3 枚卡 cayleyR 桩、
+  12 枚深扇几何/外部。
+  **【重大坑】`i+(k-1)` 与 `i+k-1` 符号 k 下不 defeq**，直传参数 → elaborator
+  whnf 死循环（10M 心跳不够）；先 `have hik : … = … := by omega` 归一索引形再动手。
 - **PA2**（52 remaining @2026-09-28 桥 lane 后）：`OAPVION1/2/3_concl` 三件套已闭合
   （Mathlib `AffineIndependent.existsUnique_dist_eq` 路线，可复用于一切
   circumcenter/radV-epsilon 类桥）；其余大多卡各章 capstone。
