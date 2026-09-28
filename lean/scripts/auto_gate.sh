@@ -73,10 +73,18 @@ fi
 hard=$(printf '%s\n' "$dels" \
   | grep -vE '^-[[:space:]]*sorry\b' \
   | grep -vE '^-$' \
-  | grep -vE '^-[[:space:]]*(--|/-)' || true)
+  | grep -vE '^-[[:space:]]*(--|/-)' \
+  | grep -vE '^-.*/-[[:space:]]*$' || true)
 rest=""
 while IFS= read -r line; do
   [ -z "$line" ] && continue
+  # verbatim re-add (2026-09-28): a line deleted at one position and re-added
+  # identically elsewhere = pure block move (forward-reference fixes); the
+  # multiset of code lines is preserved, and a duplicate declaration would
+  # crash rule 4 anyway.
+  if printf '%s\n' "$adds" | grep -qF -- "${line#-}"; then
+    continue
+  fi
   prefix=$(printf '%s' "$line" | sed -E 's/^-[[:space:]]*(.*):=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$/\1/')
   if [ -n "$prefix" ] && [ "$prefix" != "$line" ] && printf '%s\n' "$adds" | grep -qF -- "$prefix"; then
     continue
