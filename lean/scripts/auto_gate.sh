@@ -63,6 +63,20 @@ if [ "${GATE_MODE:-}" = "STATEMENT-FIX" ]; then
   diff <(printf '%s\n' "$adds" | sort) <(printf '%s\n' "$padds" | sort) > /dev/null \
     || fail "STATEMENT-FIX: additions differ from approved patch (see $SF_PATCH)"
 else
+# skeleton-tail pair (2026-09-28): the split-statement skeleton shape is
+# `… := by` + next-line `sorry`; a fill may switch to term mode
+# (`… :=` + term proof), so the tail line is excused when its deleted
+# successor is a bare sorry.
+dels=$(printf '%s\n' "$dels" | awk '{
+  a[NR] = $0
+}
+END {
+  for (i = 1; i <= NR; i++)
+    if (a[i] ~ /:=[[:space:]]*by[[:space:]]*$/ && i < NR && a[i+1] ~ /^-[[:space:]]*sorry[[:space:]]*$/)
+      continue
+    else
+      print a[i]
+}')
 #    NOTES-LANE 2026-09-28: a zero-deletion diff (pure comment insertions, e.g.
 #    NEEDS annotations from scout lanes) is provably structure-preserving; the
 #    sorry-consumed requirement only governs fill lanes.
