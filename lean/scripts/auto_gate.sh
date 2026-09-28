@@ -96,11 +96,18 @@ EOF2
 [ -z "$rest" ] || fail "non-sorry lines deleted: $(printf '%s' "$rest" | head -3)"
 fi # STATEMENT-FIX else
 
-# 3. banned tokens in added lines
+# 3. banned tokens in added lines. sorry: net-count rule (2026-09-28) — a
+#    block move re-adds the same sorry at a new position, so only a NET
+#    increase of sorry lines is a violation. admit/native_decide: zero
+#    tolerance (Text modules have no scoped exception).
 #    NB: use [+] not \+ — \+ is undefined in POSIX ERE; BSD grep errors out
 #    (silently empty adds => check void) while GNU grep accepts it.
 adds=$(git diff HEAD -- "$FILE" | grep -E '^[+]' | grep -v '^[+][+][+]' || true)
-printf '%s\n' "$adds" | grep -qE '\b(sorry|admit|native_decide)\b' \
+nsorry_dels=$(printf '%s\n' "$dels" | grep -cE '^-[[:space:]]*sorry\b')
+nsorry_adds=$(printf '%s\n' "$adds" | grep -cE '^[+][[:space:]]*sorry\b')
+[ "$nsorry_adds" -le "$nsorry_dels" ] \
+  || fail "new sorry lines added ($nsorry_adds > $nsorry_dels)"
+printf '%s\n' "$adds" | grep -qE '\b(admit|native_decide)\b' \
   && fail "banned token in added lines"
 
 # 4. build green (timeout => fail, safe direction; errors in log => fail)
