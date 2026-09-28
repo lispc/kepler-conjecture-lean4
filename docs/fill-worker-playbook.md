@@ -93,6 +93,12 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 - def 桩（`_p38` 式 `def ... := sorry`——闸门禁新增 sorry，def 桩只能等外部落）；
 - 已知假陈述：`SUM_INTER`（`LocalAuto38.lean:441` 附近，junk 分支有反例
   `A=univ, B={0}, f=const 1`；需加 `A.Finite` 前提才能关闭，等陈述修复波）。
+- **PA22 桩致假 8 枚（wave2，修复 = 等 def 落地或改陈述前提，均一句话反例已核）**：
+  `regular_spherical_polygon_area_asnFnhk`（asnFnhkP22=0 桩）、`vol_solid_triangle_ortho`、
+  `EDGE_PAIR_pr23`（eFanP22 恒等桩）、`BIJ_FACET_HYPERFACE`/`HYPERFACE_EXISTS`
+  （落空 faceSet）、`RELATIVE_INTERIOR_AFFINE_FACE`（f=∅ 反例；
+  **已有修复版 helper `p22_face_of_affine_rint`**：加 `f.Nonempty` 前提即可关闭）、
+  `BIJ_DART_POLYEDGE`、`PACK_INEQ_DEF_A_797`（卡 arclength 落地）。
 
 ### 5.2 桥引理位置表（找工具先看这里，别全树乱摸）
 
@@ -128,6 +134,16 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 后续 Unknown identifier；拆 setOf 定义用 defeq-lambda 最稳：
 `(fun hx : e ∈ edgeX V X => (hx : ∃ u v, …)) he`。
 
+**lake build vs env-lean 可见性差异清单（PA22 wave2 实测）**：点链式 dot-notation
+（`hfin.toFinset`/`hfin.mem_toFinset`）build 下不可解析，必须全限定
+`Set.Finite.toFinset hfin`/`Finite.mem_toFinset hfin`（mem_toFinset 已迁根 `Finite`
+命名空间且 x 为显式参）；`measure_biUnion_finset`→`MeasureTheory.measure_biUnion_finset`、
+`volume`→`MeasureTheory.volume`；`Set.mem_diff`→`Set.mem_sdiff`（x 显式，
+`(Set.mem_sdiff x).mp h`）；`Set.not_mem_empty`→`Set.notMem_empty`；
+`Module.finrank_mono`→`Submodule.finrank_mono`（需 `[Module.Finite ℝ ↥t]` 实例）；
+`div_le_iff`→`div_le_iff₀`、`one_lt_inv`→`one_lt_inv₀`；
+`Set.Finite.exists_maximal_wrt` 不存在，用 `Set.Finite.sSup_mem`/`Finset.max'`。
+
 ### 5.4 各 lane 已知卡点速查（收工后追加）
 
 - **LA38**（58 remaining @2026-09-28）：14 def 桩封 ~11 枚；15 枚卡
@@ -144,6 +160,17 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   → `DIFF_EDGEX`/`MCELL_BUMP_0` 全链。**落 AJRIPQN 或其推论 = wave3 最高杠杆专项**。
   另：`MCELL4_EDGE`(:1021) 与 `MCELL_EDGE`(:1039) 在 ¬nullSet 下疑似不相容，
   陈述修复波需复核。
+- **PA22**（73 remaining @wave2）：钥匙引理 = `TopologyFan.sum4/sum5_azim_fan`
+  （azim 三点加法，PA2-15 传递可见）+ `Geom.AzimLemmas.azim_compl`（补角）——
+  组合可解全部 azim 排序族。**Polytope.lean 是 PA22 最大未开发富矿**：
+  `faceOf_eq_affineInter`/`faceOf_disjoint_rinterior`/`minrep_skolem`（经
+  FACET_OF_POLYHEDRON_EXPLICIT 公开入口）/`affDim_hyperplane`/
+  `FINITE_POLYHEDRON_FACETS/FACES`/`mem_rint_iff`，攻 planar-面 15 枚前先扫。
+  桩真值表：`hypermap1OfFanxP22` 的 faceSet/darts=∅；`eFanP22`=恒等；
+  `weaklySaturatedP22`/`localAnnulusInequalityP22`/`packIneqDefAP22`=True；
+  `regularSphericalPolygonAreaP22` 是真公式。
+  isDefEq 超时坑：V3 标量-smul 恒等式深 rw 链会 5M 心跳超时——把恒等式
+  整体 `have` 出来用 `smul_smul`+`mul_div_cancel₀` 显式闭合。
 - **PA25**（144 remaining）：~40 卡具名桥（PA2 OAPVION2 ✅已解除；PA18
   `cc_uh_exists`/`cc_pe_exists`；Bump 通道等 AJRIPQN；`ORDER_AZIM_SUM2Pi0`；
   `coplanar_delta_y`/`ETA_Y_*`）；~90 是 certified bank 外部锚（等接口 2 LP 桥，
