@@ -3,6 +3,24 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-09-28 — STATEMENT-FIX 闸门模式批准 + 陈述修复波授权
+
+**拍板**（用户）：新增 `auto_gate.sh` STATEMENT-FIX 模式（c5d9f7cc）——陈述修改
+唯一合法形态 = **逐字应用已批准的补丁草案**。机制：`GATE_MODE=STATEMENT-FIX` +
+`SF_PATCH`（`docs/statement-fix-proposals-patches/` 存档补丁）+ `SF_ITEM`
+（提案项号）；闸门校验 ①工作区 diff 与补丁逐行多重集一致（上下文漂移不敏感、
+内容严格）②提案项含 (a) HOL 出处 ③规则③④⑤照常（⑤要求修复后定理无 sorryAx）。
+
+**修复波执行序**（提案官 10 项裁决 + 增补，见 `docs/statement-fix-proposals.md`）：
+项 7 `RELATIVE_INTERIOR_AFFINE_FACE`（复核无病，免豁免原位填证，第 1 顺位）→
+项 1 `SUM_INTER`（A 级，加 `A.Finite` 前提，补丁 01 已存档）→
+项 13 `DUUNHOR_concl`（编排者同意补前提：HOL Rogers.hl:1682 证明第一步即消费
+packing，PA6:837"前提未用"注记不实；修复波先尝试无前提版反例，反例成立或按
+保真对齐原则补 `Packing V ∧ saturated V` 并同步 PA6:841 背引用加参）→
+B 类 7 枚等 def 落地后按各项 (d) 节路线闭合。PA22 r2 新增 4 疑似假
+（facet_rep_uniq/affine_facet_hyper/ARG_ORDER/pad2d3d_facet）待提案官立项后
+同流程处理；其 `polyhedronC` 定义误移植问题（14 枚空洞化填证的根源）一并立项评估。
+
 ## 2026-09-28 — 硬件迁移：旧服务器报废 + 工人通道换 ZCode sub agent + 重型计算挂起
 
 **事件**：旧生产服务器（128 核 / 503G RAM）于 2026-09-28 确认硬件报废，磁盘不可恢复。

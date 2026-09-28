@@ -107,6 +107,12 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   `p ∈ affineSpan ℝ ∅` 不可满足，原"f=∅ 反例"指控不成立；原陈述经已证 helper
   `p22_face_of_affine_rint` 逐字填证通过——免豁免、无需加前提，修复波第 1 顺位）、
   `BIJ_DART_POLYEDGE`、`PACK_INEQ_DEF_A_797`（卡 arclength 落地）。
+- **PA22 r2 新增疑似假 4 枚（2026-09-28，一句话反例已核，待提案官立项）**：
+  `facet_rep_uniq`/`affine_facet_hyper`/`pad2d3d_facet`（根因同源：`facetOfC` 弱化为
+  "真面"，∅ 与顶点面成合法面）；`ARG_ORDER`（`Complex.arg` 范围 (−π,π] vs HOL Arg
+  [0,2π)，文件内 holArg/ARG_INV_ALT 已因同病改述）。**结构性发现**：`polyhedronC`
+  系对 flyspeck polyhedron（H-表示）的误移植——r2 的 14 枚 planar-kit 填证在陈述
+  冻结下合法但空洞化；若修复波改正该定义，这 14 枚需重填。
 
 ### 5.2 桥引理位置表（找工具先看这里，别全树乱摸）
 
@@ -167,13 +173,26 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   12 枚深扇几何/外部。
   **【重大坑】`i+(k-1)` 与 `i+k-1` 符号 k 下不 defeq**，直传参数 → elaborator
   whnf 死循环（10M 心跳不够）；先 `have hik : … = … := by omega` 归一索引形再动手。
-- **LA5**（123 remaining @wave2）：本轮私件 `la5_not_face_card_one`（FF 单点即矛盾的
-  基数引擎）+ `la5_FF_subset_darts`/`la5_dart_mem_V` 已编译可用；解锁路径 = 基数法
-  推广到 dih2k `hasOrders` 可清 `LOFA_CARD_EE_V_1` 簇；SPAN 桥 4 枚的系数提取已就位
-  （`la5_conv02_extract`）、affGe 简化语义（符号条件**只约束第二个集合**）模板
-  `la5_affGe2_extract`。
+- **LA5**（115 remaining @r2，wave2-r2 已落 8 枚：SPAN 桥 4 + affGe 2 + SELF_CYCLIC 2
+  + 10 私件）：**WRGCVDR 巨石是 LOFA 簇根阻塞**（LOFA_CARD_EE_V_1/EXISTS_INVERSE_OF_V/
+  LOCAL_FAN_ORBIT_MAP_V——"每点恰 2 邻"就是轨道循环性内容本身，纯计数路线不可行）。
+  orbit 引擎（la5_orbit_period/la5_iterate_mod/la5_min_period 等）已就位可白捡 4 枚：
+  LOOP_MAP_IMP_DIFF_FIRST_ELMS(:866，早于私件块 :962，需内联 la5_self_cyclic_finite
+  5 行论证)→LE_CARDV_IMP_CARD_DETERED(:1424)→LOOP_SET_DETER_FIRTS_ELMS(:1443)→
+  LOOP_SET_ITER_CARD_ID(:1731)；:1735 仍卡 WRGCVDR。SPAN 套件邻簇直接清：
+  CONDS_FOR_INTER_AFF_CONV0(:1142)/INTER_AFF_GT_LT_IMP_INTER_AFF_CONV0(:1148)/
+  NOT_INTER_EQ_EM_IMP_AFF_SUBSET(:1339)（la5_conv02_partner 的 1/β 射线构造）；
+  AFF2_DET_BY_TWO_POINTS(:1122) bonus 路线 = lineMap 参数 s/(s−t) 研磨。
+  lunar/HKIRPEP 深簇按指令跳过。
   **命名/战术坑（LA5 实测）**：`Function.iterate_succ_apply` 是 `f^[n+1] x = f^[n] (f x)`
-  （与惯常相反，`'` 版才是 `f (f^[n] x)`，且 f 显式首参）；`Finset.mem_singleton_iff`
+  （与惯常相反，`'` 版才是 `f (f^[n] x)`，且 f 显式首参）；`Function.iterate_add_apply`
+  全显式参；`Nat.find_min` 首参 `(h : ∃ n, p n)` 显式、`Nat.find_le` 收见证项不收
+  hex；`(q-1)+1` 被 elaboration 归一为 `(q-1).succ`（show/omega 按 succ 形态写）；
+  omega 不做符号 div/mod（用 `Nat.div_add_mod'`）；`Set.BijOn` 的 SurjOn 是 ∀-def
+  **必须 intro 风格**不能用匿名构造器；`mem_affineSpan_pair_iff_exists_lineMap_eq`
+  方向 = `∃ r, lineMap p₁ p₂ r = p`；`AffineMap.lineMap_mem` 三显式参；
+  目标里 `(affineSpan … : Set V3)` 的 SetLike coe 挡 rw，先 `rw [SetLike.mem_coe]`；
+  单点等式代换用 `nth_rewrite 1`（rw 殃及所有出现）；`Finset.mem_singleton_iff`
   不存在（用 `Finset.mem_singleton`；Set 侧才是 `Set.mem_singleton_iff`）；
   `obtain … := h` 会清除 h（先 `have hkeep := h`）；同文件禁前向引用；
   U+209D 不是合法标识符字符。
@@ -218,7 +237,11 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   可复用：`hdtfnfz_p4` kit（16 个 `_p4` 私件）、`(by simpa using (Finset.mem_filter.1 he).1)`
   桥、`Set.ncard_insert_of_notMem + Set.ncard_le_ncard` 计数安全路
   （`Finset.card_le_card` 已单参、`Set.Finite.card_le_card`/`toFinset_cong` 不存在或签名变）。
-- **PA22**（73 remaining @wave2）：钥匙引理 = `TopologyFan.sum4/sum5_azim_fan`
+- **PA22**（53 remaining @r2，wave2-r2 已落 20 枚）：**万能钥匙 `p22_ball_face_contra`**
+  （PA22:135：polyhedronC P → 0<r → 球含于 P → False——planar-面 kit 14 枚全走它）；
+  arcV 桥三私件（`p22_arcV_eq_angle`/`p22_cos_arcV`/`p22_arcV_mem_Icc`）azim/arc
+  族可复用；GOTCJAH 三枚（gotcjah_sol_half/lemma/GOTCJAH）需锥体立体角测度计算
+  （数百行，独立专项）；eus1 为实质深题（HOL ~75 行）。钥匙引理 = `TopologyFan.sum4/sum5_azim_fan`
   （azim 三点加法，PA2-15 传递可见）+ `Geom.AzimLemmas.azim_compl`（补角）——
   组合可解全部 azim 排序族。**Polytope.lean 是 PA22 最大未开发富矿**：
   `faceOf_eq_affineInter`/`faceOf_disjoint_rinterior`/`minrep_skolem`（经
@@ -295,3 +318,15 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   `docs/statement-fix-proposals-patches/`）+ scratch 验证后删除，零 .lean 改动；
   ③RELATIVE_INTERIOR_AFFINE_FACE 无病可原位填证，不占豁免额度（修复波第 1 顺位）；
   ④"移植错误"（SUM_INTER junk 约定失配）与"桩依赖"要分开定级。
+- **r2 波方法论沉淀（LA5+PA22，2026-09-28）**：①PA22 "全树副本到 /tmp + 脏文件
+  `git show HEAD:` 还原 + 注入本 lane 文件"终验法 ≈ 编排者 stash 验收条件——
+  import 耦合严重时的自助终验模板（副本须 diff 确认逐字节一致；此法为**整树复制**
+  而非符号链接共享，不触环境事故禁令）；②linarith 不解构 Set.Mem 形假设
+  （`hu : u ∈ Ioo 0 π` 显式传 `hu.1`），by 块作多参引理首参会提前 elaboration
+  （metavar 未固定→假失败，用 `(x := u)` 具名参修复）；③Mathlib 富矿：
+  `InnerProductGeometry.angle_le_angle_add_angle`/`Real.strictAntiOn_cos`/
+  `exists_deriv_eq_slope`（MVT）/`ConcaveOn.le_map_sum`（Jensen）/
+  `convexOn_of_hasDerivWithinAt2_nonneg`；④假陈述定级再+1 来源：**定义误移植**
+  （polyhedronC/facetOfC 弱化）可使一族陈述空洞化为真——修复定义则整族需重填；
+  ⑤编排者自教训：playbook 行级字节手术用 perl -i 遇宽字符可整文件清空——文档修订
+  一律走 Edit 工具（本条即为付出 297 行回滚代价换来的）。

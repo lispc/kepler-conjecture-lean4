@@ -20,6 +20,7 @@
 | 8 | `BIJ_DART_POLYEDGE` | PackingAuto22.lean:2934 | counting_spheres.hl:5301 | 桩依赖（darts=∅） | B |
 | 9 | `PACK_INEQ_DEF_A_797` | PackingAuto22.lean:3172 | counting_spheres.hl:6540 | 桩依赖（arclength22=0） | B |
 | 10 | `MCELL4_EDGE` vs `MCELL_EDGE` | PackingAuto4.lean:1524 / 1561 | bump.hl:766 / 816 | **无病**（疑点解除） | 解除（零补丁） |
+| 13 | `DUUNHOR_concl` | PackingAuto2.lean:556 | Rogers.hl:1682 | 前提缺失（缺 Packing/saturated） | **A′**（前提补全型） |
 
 **统计：A = 2（项 1、7），B = 7（项 2–6、8、9），C = 0；另项 10 = 疑点解除，无需修复。**
 
@@ -361,3 +362,31 @@ PA22 暂不可 import——ScratchStmtCheck2 因此改为仅依赖健康模块 +
    `arclength22`（等 PackingAuto1/pack1.hl）列入 def 落地波的需求单，
    落地即按各项 (d) 注记的证明路线填证；
 4. **项 10**：划掉 §5.4 PA4 疑点注记，零动作。
+
+---
+
+## 13. `DUUNHOR_concl` — 分级 A′（前提补全型，2026-09-28 增补；流程已授权）
+
+**(a) HOL 裁决**：`reference/flyspeck/text_formalization/packing/Rogers.hl:1682`
+（侦察 lane 2026-09-28）：陈述带 `packing V ∧ saturated V`。当前 Lean 陈述
+（PackingAuto2.lean:556-558）缺这两前提；HOL 证明第一步（Rogers.hl:1745）即经
+`VORONOI_CLOSED_EQ_LEMMA`（Rogers.hl:1256，陈述带 `packing V`）证明 `HD ul = HD vl`
+——PA6:837"前提未用"注记与 HOL 原文不符。
+
+**(b) 机器验证状态**：无前提版真伪未验证（可能假、也可能只是不可证）；修复波
+第一步先尝试无前提版反例（`barV`/`rogers` 语义下的反例空间待探）。
+
+**(c) 修复方向**：前提补全型——补 `Packing V ∧ saturated V` 与 HOL 对齐；
+**连带**：PA6:841 `DUUNHOR` 背引用同步加参（零内容背引用，加参后仍自动变绿）。
+
+**(d) 落地路线**：依赖 ROGERS_AFF_DIM_FULL（PA6:763 未证）、POLYHEDRON_VORONOI_LIST
+（PA5:1454 未证）、OMEGA_LIST_N_LEMMA（PA5:1502 未证）——详见 PA2:557 原位
+NEEDS 注记（commit 8d8d898f）。affDim≤2 退化分支机械（PA6:707 可引），
+卡双满维主情形（~770 行，GIANT）。
+
+**(e) 补丁**：修复波起草后存档
+`docs/statement-fix-proposals-patches/13-DUUNHOR_concl.patch`，经
+STATEMENT-FIX 闸门模式验收（DECISIONS.md 2026-09-28 条）。
+5. **项 13**（DUUNHOR_concl，2026-09-28 增补，A′）：先试无前提版反例；补
+   `Packing V ∧ saturated V` + PA6:841 背引用同步加参；补丁起草后存档
+   `13-DUUNHOR_concl.patch` 走 STATEMENT-FIX 闸门。
