@@ -157,6 +157,16 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   12 枚深扇几何/外部。
   **【重大坑】`i+(k-1)` 与 `i+k-1` 符号 k 下不 defeq**，直传参数 → elaborator
   whnf 死循环（10M 心跳不够）；先 `have hik : … = … := by omega` 归一索引形再动手。
+- **LA5**（123 remaining @wave2）：本轮私件 `la5_not_face_card_one`（FF 单点即矛盾的
+  基数引擎）+ `la5_FF_subset_darts`/`la5_dart_mem_V` 已编译可用；解锁路径 = 基数法
+  推广到 dih2k `hasOrders` 可清 `LOFA_CARD_EE_V_1` 簇；SPAN 桥 4 枚的系数提取已就位
+  （`la5_conv02_extract`）、affGe 简化语义（符号条件**只约束第二个集合**）模板
+  `la5_affGe2_extract`。
+  **命名/战术坑（LA5 实测）**：`Function.iterate_succ_apply` 是 `f^[n+1] x = f^[n] (f x)`
+  （与惯常相反，`'` 版才是 `f (f^[n] x)`，且 f 显式首参）；`Finset.mem_singleton_iff`
+  不存在（用 `Finset.mem_singleton`；Set 侧才是 `Set.mem_singleton_iff`）；
+  `obtain … := h` 会清除 h（先 `have hkeep := h`）；同文件禁前向引用；
+  U+209D 不是合法标识符字符。
 - **PA2**（52 remaining @2026-09-28 桥 lane 后）：`OAPVION1/2/3_concl` 三件套已闭合
   （Mathlib `AffineIndependent.existsUnique_dist_eq` 路线，可复用于一切
   circumcenter/radV-epsilon 类桥）；其余大多卡各章 capstone。
@@ -185,6 +195,20 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 ## 6. 教训日志（编排者每波收工后追加；工人有观察也写报告里）
 
 ### 2026-09-28 · Wave 1（LA38：66→58，8 枚+17 辅助；PA25：155→144，11 枚+6 辅助；桥 lane：PA2+PA4）
+
+**编排侧新招与教训（wave2 实战）**：
+- **scratch-root 闸门技巧**：并行 lane 弄脏所有自然收官根时，用**未跟踪** scratch
+  模块做 GATE_ROOTS（git diff 看不见它，不触闸门①；import 选干净近邻织撞名网；
+  用完即删）。PA22 用 {PA22,PA23,Polytope,TopologyFan}、LA5 用 {LA5,LA2,LA3}。
+  **选根前必须核对闭包**：LA7→PA18、PA25→PA18、TameLp→LA5 这些边不看 import 列表
+  根本想不到。
+- **import 耦合的 lane 编排**：同波 lane 文件有 import 边时，下游 lane 的终验会被
+  上游 lane 的编辑中状态卡死（LA38-r2 被 PA18 卡 → 协调为"工人停止轮询交报告，
+  编排者统一终验"）。以后排 wave 尽量让 import 相邻文件不同波；否则默认
+  工人自验+编排者统一构建。
+- **闸门规则②再次演进**：骨架普遍是单行陈述 `theorem FOO … := sorry`，工人删整行
+  重写时陈述文本随之进 diff——允许 `… := sorry` 整行删除但**陈述前缀必须在新增行
+  逐字重现**（sed 提取前缀 + grep -F 校验），冻结语义不变。
 
 - **成本基线**：84 min / 39.5M tokens / 196 工具调用 / +513 行。token/产出比偏差的
   四个根因 → 全部固化为 §2：①整读+重复读大文件（LA38 2.4k 行、TopologyFan 4.3k 行）
