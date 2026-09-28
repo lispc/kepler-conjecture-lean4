@@ -356,3 +356,14 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   回退 pristine 保住双绿基线，证明文本落盘 `docs/pa7-proofdump.md`——"宁可零填充
   不留半成品"是正确止损。同日 `.lake/packages/mathlib` 波内第二次中途消失
   （`lake exe cache get` 11 秒恢复）——共享包目录稳定性存疑，波收尾排查根因。
+- **Wave 2/2r 收官（2026-09-28 深夜）**：五 lane 过闸（PA18/PA4/LA38/PA22/LA5）+
+  闸门五演进（①逐字加回豁免=纯块移动合法化 ②docstring 闭合行 `-/` 归注释
+  ③拆行骨架 `… := by`+换行 sorry 转项模式填的尾行豁免 ④规则③ sorry 净计数制
+  ⑤规则⑤ sorryAx 转白——填证消费在树债务合法，债务走账本）。编排者 footgun
+  再犯一次：LANE_FILES 替换式忘带 lane 文件自身（第 3 次）——已写进本条防再犯。
+- **脊柱探针本机结构性阻塞**：spine_axioms.py 信任 Graphs 缓存 olean，本机没有
+  （重型计算档）；已 mac 移植（SPINE_CACHE_ROOT）入库，Graphs olean 就位即复跑。
+  M5′ 度量暂走 docs/e2e-debt-map.md（结构性手工图，每波更新）。
+- **修复工单模式定型**：编排者统一构建→精确错误清单+回退规程（30 分钟修不动=
+  逐字节还原 HEAD 该定理）→修理工一次清多文件编译错（本轮 PA18 3+PA4 3+LA38
+  ~19 全清）。比逐 lane 打回快一个量级。
