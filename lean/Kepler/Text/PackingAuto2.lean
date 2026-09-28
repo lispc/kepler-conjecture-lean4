@@ -550,12 +550,28 @@ def fanOfPolyhedron (s : Set V3) : Set V3 × Set (Set V3) :=
 theorem GLTVHUM_concl : ∀ (V : Set V3) (u0 p : V3), Packing V ∧ saturated V → u0 ∈ V →
     (p ∈ voronoiClosed V u0 ↔
       ∃ vl : List V3, barV V 3 vl ∧ p ∈ rogers V vl ∧ truncateSimplex 0 vl = [u0]) := by
+  -- NEEDS: 非 OAPVION 型 epsilon 唯一性桥，circumcenter 配方不适用（HOL 原证
+  -- Rogers.hl:1152 经 Rogers.hl:826 GLTVHUM_lemma1 的 k-归纳 + Voronoi facet 分解）。
+  -- 覆盖方向(→)需整链移植：PA6:487 GLTVHUM_lemma1（未证；HOL Rogers.hl:826-1150，
+  -- ~325 行）← PA6:439 VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS（未证；
+  -- Rogers.hl:694-825，~130 行）← PA6:431 IDBEZAL（未证；Rogers.hl:523，需
+  -- saturation + PA6:418 FACET_OF_POLYHEDRON_EXPLICIT_BIS，亦未证）。
+  -- PA6:500 的 GLTVHUM 即本桥背引用，闭合本桥即自动解锁 PA6/PA23/PA16/PA17 消费点。
+  -- 整链 ~600 HOL 行，GIANT 级，宜开专门移植波。
   sorry
 
 /-- HOL `DUUNHOR_concl` (pack_concl.hl:21-23): distinct Rogers simplices
 meet in a coplanar set. -/
 theorem DUUNHOR_concl : ∀ (V : Set V3) (ul vl : List V3), barV V 3 ul → barV V 3 vl →
     rogers V ul ≠ rogers V vl → Coplanar (rogers V ul ∩ rogers V vl) := by
+  -- NEEDS: HOL 本体 Rogers.hl:1682-~2450（~770 行，两个 num_WF 强归纳 + 大段凸组合
+  -- 比较）为 GIANT；依赖 ROGERS_AFF_DIM_FULL（PA6:763 未证）、POLYHEDRON_VORONOI_LIST
+  -- （PA5:1454 未证）、OMEGA_LIST_N_LEMMA（PA5:1502 未证）；PA6:841 DUUNHOR 亦为本桥
+  -- 背引用。另有陈述分歧：本桥无 Packing/saturated 前提，而 HOL 证明第一步即经
+  -- VORONOI_CLOSED_EQ_LEMMA（Rogers.hl:1256，带 packing 前提）消费 packing——
+  -- PA6:837 "前提未用" 注记与 HOL 原文不符；修复波需复核是否补前提（若补，
+  -- PA6:841 背引用需同步加参）。affDim≤2 的退化分支机械（PA6:707 可引），
+  -- 卡的是双满维主情形。
   sorry
 
 /-- HOL `QXSKIIT_concl` (pack_concl.hl:25-28): unique interpolation on the
