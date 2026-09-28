@@ -1,0 +1,13 @@
+# Item 6 — HYPERFACE_EXISTS (grade B: 等 hypermap/topological_component_yfan 落地)
+# 文件: lean/Kepler/Text/PackingAuto22.lean:2925-2932
+# 阻塞(三重桩): faceSet = ∅ + topologicalComponentYfanP22 := True (PA22:230-231,
+#   使前提平凡可满足) + dartsetLeadsIntoFanP22 := ∅ (PA22:219-220)。
+# 桩机制(机器可核): 对任何满足三个真实前提的 P、任何 U, 结论
+#   ∃! f, f ∈ ∅ ∧ … 不可满足 (取 ∃! 的存在半边即得 f ∈ ∅)。
+#   真实前提可满足(纸面): P = ±e_i 的凸包(八面体): bounded ✓, polyhedron ✓
+#   (6 个半空间交), 0 ∈ interior ✓ — 故桩语义下陈述为假, 陈述忠实无病。
+# 陈述冻结(与 HOL counting_spheres.hl:5286-5291 逐字同义): 现文不动。
+# 落地要求: hypermap1OfFanxP22 / verticesP22 / edgesP22 /
+#   topologicalComponentYfanP22 / dartsetLeadsIntoFanP22 真定义;
+#   落地后按 HOL 原证明 (Polyhedron.WBLARHH_BIJ) 重移植。
+# 无陈述修改, 无补丁 — 纯等 def。

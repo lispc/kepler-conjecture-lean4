@@ -1,0 +1,14 @@
+# Item 5 — BIJ_FACET_HYPERFACE (grade B: 等 hypermap1_of_fanx/vertices/edges 落地)
+# 文件: lean/Kepler/Text/PackingAuto22.lean:2767-2774
+# 阻塞(三重桩): hypermap1OfFanxP22 faceSet=∅ (PA22:204-209) +
+#   verticesP22 = ∅ + edgesP22 = ∅ (PA22:222-228)。
+# 桩机制(机器可核): faceSet = setOfOrbits ∅ _ = ∅; Set.BijOn b S ∅ 的 MapsTo
+#   分量强制 S = ∅。但 {f | FacetOf f p} 对任何满足前提的 p 非空
+#   (有界多面体 + 内点 ⇒ 多面体 ⇒ 有 facet, 经典多面体论; HOL 自身证明经
+#   BIJ_TRANS 过 topological_component_yfan 构造双射, 故 HOL 侧 face_set 非空)。
+#   ⇒ 桩语义下陈述不可满足, 陈述忠实无病。
+# 陈述冻结(与 HOL counting_spheres.hl:4821-4825 逐字同义): 现文不动。
+# 落地要求: hypermap1OfFanxP22 / verticesP22 / edgesP22 真定义 (fan.hl +
+#   polytope lane), 外加 topological_component_yfan 与 WBLARHH_BIJ 链。
+# 落地后证明: 按 HOL 原证明重移植 (BIJ_TRANS 两跳)。
+# 无陈述修改, 无补丁 — 纯等 def。

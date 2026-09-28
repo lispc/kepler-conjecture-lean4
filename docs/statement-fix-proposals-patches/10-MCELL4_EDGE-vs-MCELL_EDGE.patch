@@ -1,0 +1,21 @@
+# Item 10 — MCELL4_EDGE vs MCELL_EDGE 裁决 (结论: 无不相容, 疑点解除, 零补丁)
+# 文件: lean/Kepler/Text/PackingAuto4.lean (现 1524-1537 / 1561-1611)
+# (a) HOL 对照:
+#   MCELL4_EDGE  = bump.hl:766-768:  packing ∧ saturated ∧ ¬NULLSET(mcell4 V ul)
+#     ∧ barV V 3 ul ==> ({u,v} ∈ edgeX V (mcell4 V ul) ↔ u≠v ∧ {u,v} ⊆ set_of_list ul)
+#   MCELL_EDGE   = bump.hl:816-819:  k<4 ∧ packing ∧ saturated ∧ ¬NULLSET(mcell k V ul)
+#     ∧ barV V 3 ul ∧ e ∈ edgeX V (mcell k V ul) ==> e ⊆ set_of_list(truncate_simplex 2 ul)
+#   两个 Lean 陈述与之逐字同义 (前提排列次序不同, 内容一致), 移植无误。
+# (b) 不相容疑点不成立的两个独立理由:
+#   1. 论域不相交: MCELL_EDGE 有 k<4 前提, 只谈 mcell 0..3; MCELL4_EDGE 只谈
+#      mcell 4(=mcell4)。疑点的唯一来源是在 k=4 处误用 MCELL_EDGE 的结论
+#      (mcell 4 的边 {el 0 ul, el 3 ul} ⊄ set_of_list(trunc 2 ul)) — 被 k<4 挡死。
+#      同一 ul 下 mcell k(k<4) 与 mcell4 还在 hl 条件上互斥(mcell3 要求
+#      √2 ≤ hl ul, mcell4 要求 hl ul < √2), ¬nullSet 下两者不能同为非空胞。
+#   2. 机器事实: 两定理当前在 PA4 内均已完整证明(无 sorry), 其 helper 链
+#      (edgeX_pair_iff_p4, hdtfnfz_p4, LEPJBDJ, SET_OF_LIST_TRUNCATE_2,
+#      setOfList_truncateSimplex3_p4, EDGE_IMP_K2, MCELL2_EDGE, DIFF_EDGEX)
+#      均为已证引理; 一致内核中两条已证定理不可能不相容。
+#      (待环境恢复后跑 lake build Kepler.Text.PackingAuto4 复核二者无
+#      "uses 'sorry'" 警告 — 修复提案波执行时顺手完成。)
+# (c) 零补丁: 两处陈述均冻结不动。

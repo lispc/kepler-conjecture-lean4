@@ -1,0 +1,25 @@
+# Item 7 — RELATIVE_INTERIOR_AFFINE_FACE (grade A: 陈述本身无病, 原位填证即可)
+# 文件: lean/Kepler/Text/PackingAuto22.lean:1658-1662
+# 裁决: playbook 的 "f=∅ 反例" 不成立。f = ∅ 时前提 hap : p ∈ affineSpan ℝ ∅
+#   不可满足 (AffineSubspace.span_empty + bot_coe: 载体 = ∅), 陈述空真;
+#   f ≠ ∅ 时已有的私有 helper p22_face_of_affine_rint 直接闭合。
+#   故无需加 f.Nonempty 前提 (那是对 HOL 的无谓弱化; 虽然 f.Nonempty 可从
+#   hap 导出故也算忠实, 原位填证严格更优 — 陈述文本与 HOL 逐字一致保持冻结)。
+# 机器验证: ScratchStmtCheck1 (陈述修复提案波) 已按逐字相同陈述完整证明
+#   (direct lean, 0 error, 2026-09-28); 本 patch 的 rw 形式另经 probe 文件验证。
+# 注: 证明体与 helper 逐字一致, 仅前置一步非空推导;
+#   p22_face_of_affine_rint 与本定理同文件 (private 可见)。
+--- a/lean/Kepler/Text/PackingAuto22.lean
++++ b/lean/Kepler/Text/PackingAuto22.lean
+@@ -1658,7 +1658,13 @@
+ /-- HOL `RELATIVE_INTERIOR_AFFINE_FACE` (counting_spheres.hl:2702). GIANT. -/
+ theorem RELATIVE_INTERIOR_AFFINE_FACE (C : Set V3) (p : V3) (f : Set V3)
+     (hc : Convex ℝ C) (hf : FaceOf f C) (hap : p ∈ (affineSpan ℝ f : Set V3))
+     (hip : p ∈ intrinsicInterior ℝ C) : f = C := by
+-  sorry
++  have hfne : f.Nonempty := by
++    by_contra h0
++    rw [Set.not_nonempty_iff_eq_empty.mp h0, AffineSubspace.span_empty,
++      AffineSubspace.bot_coe] at hap
++    exact hap
++  exact p22_face_of_affine_rint hf hfne hc hap hip

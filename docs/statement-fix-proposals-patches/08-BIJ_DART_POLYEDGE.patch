@@ -1,0 +1,11 @@
+# Item 8 — BIJ_DART_POLYEDGE (grade B: 等 hypermap1_of_fanx 落地)
+# 文件: lean/Kepler/Text/PackingAuto22.lean:2933-2939
+# 阻塞: darts = ∅ 桩 (hypermap1OfFanxP22, PA22:204-209)。
+# 桩机制(机器可核): 源集 ∅ 时 Set.BijOn 的 SurjOn 分量强制
+#   目标 {fe | FacetOf fe.2 fe.1 ∧ FacetOf fe.1 P} ⊆ b '' ∅ = ∅;
+#   而该目标对有界多面体 P 非空(取 f1 facet of P, e facet of f1 — 多边形有边;
+#   纸面论证)。⇒ 桩语义下不可满足, 陈述忠实无病。
+# 陈述冻结(与 HOL counting_spheres.hl:5301-5306 逐字同义): 现文不动。
+# 落地要求: hypermap1OfFanxP22 真定义; 落地后按 HOL 原证明 (PREIMAGE_BIJ,
+#   b := (fchanged ∘ SND)) 重移植。
+# 无陈述修改, 无补丁 — 纯等 def。

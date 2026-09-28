@@ -1,0 +1,13 @@
+# Item 9 — PACK_INEQ_DEF_A_797 (grade B: 等 arclength 落地)
+# 文件: lean/Kepler/Text/PackingAuto22.lean:3169-3175
+# 阻塞: arclength22 = 0 桩 (PA22:3170, "NEEDS HOL arclength (pack1.hl;
+#   PackingAuto1, no olean)")。
+# 反例(机器已核路径): v0 = single 0 2, v = single 0 (−2):
+#   ‖v0‖=2 ✓, 2h0=2.52 ≤ 4 = dist v v0 ✓, 2 ≤ ‖v‖=2 ≤ 2.52 ✓;
+#   桩下结论: 0.797 + acs(1/2) − π/6 < 0; 但 acs(1/2) = arccos(1/2) ≥ 0 且
+#   0.797 > π/6 (π < 22/7), LHS > 0, 矛盾。前提可满足 ⇒ 桩语义下为假。
+# 陈述冻结(与 HOL counting_spheres.hl:6540-6546 逐字同义): 现文不动。
+# 落地要求: arclength (pack1.hl) 先落 PackingAuto1, 再接 arclength22;
+#   落地后按 HOL 原证明 (REWRITE[Sphere.ineq; acs_sqrt_x1_d4; arclength_x_123]
+#   + Ysskqoy ineq 实例化 (‖v‖², ‖v0‖², (2h0)², 1, 1, 1)) 重移植。
+# 无陈述修改, 无补丁 — 纯等 def。

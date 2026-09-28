@@ -1,0 +1,70 @@
+# Item 1 — SUM_INTER (grade A: 可立即修)
+# 文件: lean/Kepler/Text/LocalAuto38.lean:415-445
+# 反例(机器已核, scratch 波): A = univ(Set ℕ), B = {0}, f = const 1
+#   LHS = setSum({0}, const 1) = 1,  RHS = setSum(univ, …) = 0 (junk convention)
+# 消费者: 全树 grep 无 (仅 SUM_INTERIOR_AGL_LEMMA 同名前缀, 无关)。
+# 注意: setSumDifneg_p38 在删除两个 junk 分支后成为死代码;
+#   闸门只许删 sorry/空行/纯注释行, 故保留 (无害)。
+--- a/lean/Kepler/Text/LocalAuto38.lean
++++ b/lean/Kepler/Text/LocalAuto38.lean
+@@ -415,31 +415,27 @@
+-/-- HOL `SUM_INTER` (terminal.hl:233). The HOL `sum` junk convention (0 on
+-infinite sets) matches `setSum`; proved here for finite `A`, and in the junk
+-regime (`A` infinite) for `(A ∩ B)` infinite; the remaining mixed case is
+-the flyspeck-junk hole (their use sites keep `A` finite). -/
+-theorem SUM_INTER {α : Type*} (A B : Set α) (f : α → ℝ) :
+-    setSum (A ∩ B) f = setSum A (fun i => if i ∈ B then f i else 0) := by
+-  by_cases hAB : (A ∩ B).Finite
+-  · rw [setSumDifpos_p38 f hAB]
+-    by_cases hAf : A.Finite
+-    · rw [setSumDifpos_p38 (fun i => if i ∈ B then f i else 0) hAf]
+-      have hsub : hAB.toFinset ⊆ hAf.toFinset := by
+-        intro w hw
+-        rw [Set.Finite.mem_toFinset] at hw ⊢
+-        exact hw.1
+-      have h0 : ∀ w ∈ hAf.toFinset, w ∉ hAB.toFinset →
+-          (if w ∈ B then f w else 0) = 0 := by
+-        intro w hAw hw
+-        rw [if_neg (fun hB => hw ((Set.Finite.mem_toFinset hAB).mpr
+-          ⟨(Set.Finite.mem_toFinset hAf).mp hAw, hB⟩))]
+-      have key : ∑ w ∈ hAB.toFinset, f w =
+-          ∑ w ∈ hAB.toFinset, (if w ∈ B then f w else 0) := by
+-        apply Finset.sum_congr rfl
+-        intro w hw
+-        rw [Set.Finite.mem_toFinset] at hw
+-        rw [if_pos hw.2]
+-      rw [key, Finset.sum_subset hsub h0]
+-    · rw [setSumDifneg_p38 (fun i => if i ∈ B then f i else 0) hAf]
+-      sorry -- junk caveat: `A ∩ B` finite while `A` infinite (never used)
+-  · by_cases hAf : A.Finite
+-    · exact absurd (Set.Finite.subset hAf Set.inter_subset_left) hAB
+-    · rw [setSumDifneg_p38 f hAB, setSumDifneg_p38 _ hAf]
++/-- HOL `SUM_INTER` (terminal.hl:233). Under the project `setSum` junk
++convention (0 on infinite sets, PackingAuto2.lean:124) the unconditional HOL
++statement is FALSE (counterexample `A = univ, B = {0}, f = const 1`: LHS 1,
++RHS 0) — HOL's `sum` is support-based while the port's `setSum` is set-based.
++Every Flyspeck use site keeps `A` finite, so the `A.Finite` premise is the
++faithful repair (counterexample machine-verified in the statement-fix
++proposal round's scratch module). -/
++theorem SUM_INTER {α : Type*} (A B : Set α) (f : α → ℝ) (hA : A.Finite) :
++    setSum (A ∩ B) f = setSum A (fun i => if i ∈ B then f i else 0) := by
++  by_cases hAB : (A ∩ B).Finite
++  · rw [setSumDifpos_p38 f hAB]
++    rw [setSumDifpos_p38 (fun i => if i ∈ B then f i else 0) hA]
++    have hsub : hAB.toFinset ⊆ hA.toFinset := by
++      intro w hw
++      rw [Set.Finite.mem_toFinset] at hw ⊢
++      exact hw.1
++    have h0 : ∀ w ∈ hA.toFinset, w ∉ hAB.toFinset →
++        (if w ∈ B then f w else 0) = 0 := by
++      intro w hAw hw
++      rw [if_neg (fun hB => hw ((Set.Finite.mem_toFinset hAB).mpr
++        ⟨(Set.Finite.mem_toFinset hA).mp hAw, hB⟩))]
++    have key : ∑ w ∈ hAB.toFinset, f w =
++        ∑ w ∈ hAB.toFinset, (if w ∈ B then f w else 0) := by
++      apply Finset.sum_congr rfl
++      intro w hw
++      rw [Set.Finite.mem_toFinset] at hw
++      rw [if_pos hw.2]
++    rw [key, Finset.sum_subset hsub h0]
++  · exact absurd (Set.Finite.subset hA Set.inter_subset_left) hAB

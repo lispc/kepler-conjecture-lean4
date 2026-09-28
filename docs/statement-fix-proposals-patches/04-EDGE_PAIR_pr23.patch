@@ -1,0 +1,10 @@
+# Item 4 — EDGE_PAIR_pr23 (grade B: 等 e_fan def 落地)
+# 文件: lean/Kepler/Text/PackingAuto22.lean:2814-2817
+# 阻塞: eFanP22 = 恒等桩 (PA22:216)。反例(机器已核路径): 取 d = (0, x, 0),
+#   x = EuclideanSpace.single 0 1 ≠ 0: 桩下前提 eFanP22 x V E d = d' 取 d'=d
+#   平凡成立, 结论要求 pr2 d = pr3 d 即 x = 0, 矛盾。
+# 陈述冻结(与 HOL counting_spheres.hl:5003-5006 逐字同义): 现文不动。
+# 落地要求: eFanP22 换成 Fan.e_fan 真定义 (fan.hl, Planarity lane)。
+# 落地后证明: HOL = REWRITE_TAC[Fan.e_fan; Fan.pr2; Fan.pr3] + PAIR_SURJECTIVE
+#   — 定义展开级。
+# 无陈述修改, 无补丁 — 纯等 def。

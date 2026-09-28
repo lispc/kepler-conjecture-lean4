@@ -91,8 +91,10 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 - LP registry / 证书依赖项（OWZLKVY*、EAR_*、quad_*、ineq_asym、taud_x_taum_x、
   empty_3T2 等，注记带 "+LP" 的）；
 - def 桩（`_p38` 式 `def ... := sorry`——闸门禁新增 sorry，def 桩只能等外部落）；
-- 已知假陈述：`SUM_INTER`（`LocalAuto38.lean:441` 附近，junk 分支有反例
-  `A=univ, B={0}, f=const 1`；需加 `A.Finite` 前提才能关闭，等陈述修复波）。
+- 已知假陈述：`SUM_INTER`（LocalAuto38:419，**移植错误非桩**：HOL `sum` 按支撑集取
+  junk、项目 `setSum` 按集合取 junk，反例 `A=univ, B={0}, f=const 1` 机器证实；
+  修复 = 加 `A.Finite` 前提，新陈述+证明已端到端编译验证，全树零消费者）。
+  提案已入库 `docs/statement-fix-proposals.md` 项 1（A 级，等闸门豁免拍板）。
 - **DUUNHOR_concl（PA2:557）前提缺失疑点（侦察 lane 2026-09-28）**：比 HOL
   （Rogers.hl:1682）少 `Packing V ∧ saturated V`；HOL 证明第一步即经
   `VORONOI_CLOSED_EQ_LEMMA`（Rogers.hl:1256，带 packing）消费 packing，
@@ -101,8 +103,9 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 - **PA22 桩致假 8 枚（wave2，修复 = 等 def 落地或改陈述前提，均一句话反例已核）**：
   `regular_spherical_polygon_area_asnFnhk`（asnFnhkP22=0 桩）、`vol_solid_triangle_ortho`、
   `EDGE_PAIR_pr23`（eFanP22 恒等桩）、`BIJ_FACET_HYPERFACE`/`HYPERFACE_EXISTS`
-  （落空 faceSet）、`RELATIVE_INTERIOR_AFFINE_FACE`（f=∅ 反例；
-  **已有修复版 helper `p22_face_of_affine_rint`**：加 `f.Nonempty` 前提即可关闭）、
+  （落空 faceSet）、`RELATIVE_INTERIOR_AFFINE_FACE`（**无病**：提案官复核 f=∅ 时
+  `p ∈ affineSpan ℝ ∅` 不可满足，原"f=∅ 反例"指控不成立；原陈述经已证 helper
+  `p22_face_of_affine_rint` 逐字填证通过——免豁免、无需加前提，修复波第 1 顺位）、
   `BIJ_DART_POLYEDGE`、`PACK_INEQ_DEF_A_797`（卡 arclength 落地）。
 
 ### 5.2 桥引理位置表（找工具先看这里，别全树乱摸）
@@ -131,6 +134,8 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 | `le_or_lt` | `le_or_gt` |
 | `List.take_all_of_le` / `take_eq_self_iff` | 不可见（模块模式），换 `List.take_take`/长度推理 |
 | `Classical.epsilon` 消除 | `epsilon_spec (p := …)` 显式给谓词 |
+| `affineSpan_empty` | 无此名；`AffineSubspace.span_empty` + `bot_coe` |
+| `Real.pi_lt_22_div_7` | 无此名；用 `Real.pi_lt_four` |
 
 （发现新的改名陷阱：写报告第 5 项，编排者入表。**改名类错误只有 `lake build` 能稳定
 暴露**，env-lean 会放行旧名——见 §3。）
@@ -207,8 +212,9 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   DUUNHOR_concl(PA2:557)、SLTSTLO1/2(PA13，3100 行 GIANT)、DDZUPHJ、QZKSYKG1/2
   (PA14，1900 行 GIANT) 仍未证；TIWWFYQ(PA5)、RVFXZBU(PA10) 已变真。
   另：OXLZLEZ2 cc_*_v11 案例分析巨石 ~30 枚（非本簇）。
-  `MCELL4_EDGE`(:1021) 与 `MCELL_EDGE`(:1039) 在 ¬nullSet 下疑似不相容，
-  陈述修复波需复核（攻坚轮复核维持此疑点）。
+  `MCELL4_EDGE`(:1524) 与 `MCELL_EDGE`(:1561) 疑点已**解除**（提案官 2026-09-28）：
+  两陈述各与 bump.hl:766/816 逐字同义，论域被 k<4 挡死不相交，且两定理及 helper
+  链已全部无 sorry——一致内核内不可能不相容，无需修复。
   可复用：`hdtfnfz_p4` kit（16 个 `_p4` 私件）、`(by simpa using (Finset.mem_filter.1 he).1)`
   桥、`Set.ncard_insert_of_notMem + Set.ncard_le_ncard` 计数安全路
   （`Finset.card_le_card` 已单参、`Set.Finite.card_le_card`/`toFinset_cong` 不存在或签名变）。
@@ -282,3 +288,10 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   统一口径"环境事故，恢复后重试秒过，不要自行修复环境"。恢复路径：
   杀源码编 Mathlib 进程 → `lake exe cache get!`（cloud cache，5-15 分钟）→
   smoke build 后统一放行。
+- **假陈述提案轮（2026-09-28）**：10 项裁决 A=2/B=7/解除=1/C=0——8 枚 PA22 陈述
+  全部与 HOL 逐字同义（无一移植错误），假陈述主要来源是**桩语义**而非抄错。
+  方法论：①进黑名单前反例必须机器验证（本轮"f=∅ 反例"指控被复核推翻——纸面
+  反例不可靠）；②交付物 = 提案文档 + 补丁草案（已存档
+  `docs/statement-fix-proposals-patches/`）+ scratch 验证后删除，零 .lean 改动；
+  ③RELATIVE_INTERIOR_AFFINE_FACE 无病可原位填证，不占豁免额度（修复波第 1 顺位）；
+  ④"移植错误"（SUM_INTER junk 约定失配）与"桩依赖"要分开定级。

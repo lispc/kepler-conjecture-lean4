@@ -1,0 +1,16 @@
+# Item 3 — vol_solid_triangle_ortho (grade B: 等 volSolidTriangle def 落地)
+# 文件: lean/Kepler/Text/PackingAuto22.lean:1007-1014
+# 阻塞: volSolidTriangleP22 = 0 桩 (PA22:263)。
+# 反例(纸面, 全步骤初等): u = e1, v = e2, w = e1+e3:
+#   · (w−u)·v = e3·e2 = 0 ✓, (w−u)·u = e3·e1 = 0 ✓;
+#   · ¬Coplanar{0,e1,e2,e1+e3}: det[e1;e2;e1+e3] = 1 ≠ 0 (仿射无关);
+#   · t = cos(arcV 0 e2 e1) = cos(arccos 0) = 0;
+#   · bet = dihV 0 e2 e1 (e1+e3): va=e1, vb=e1+e3, vc=e2 全部已正交化
+#     → vap=e1, vbp=e1+e3 → bet = arcV 0 e1 (e1+e3) = arccos(1/√2) = π/4;
+#   · 桩下定理断言 3·0 = π/4 − asn(sin(π/4)·0) = π/4 − 0 = π/4, 假。
+#   (LuneVolume.lean:35-43 的 dihV 定义可逐项代入, 上述数值可机器复核,
+#    仅 ¬Coplanar 需仿射无关引理链 — 环境 post-recovery 可补机器验证。)
+# 陈述冻结(与 HOL counting_spheres.hl:1335-1341 逐字同义): 现文不动。
+# 落地要求: volSolidTriangleP22 换成 Sphere.vol_solid_triangle 真定义
+#   (HOL 证明 = REWRITE_TAC[vol_solid_triangle] 后解析归零)。
+# 无陈述修改, 无补丁 — 纯等 def。

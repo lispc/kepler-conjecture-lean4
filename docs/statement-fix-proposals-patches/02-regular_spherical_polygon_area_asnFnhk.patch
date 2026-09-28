@@ -1,0 +1,18 @@
+# Item 2 — regular_spherical_polygon_area_asnFnhk (grade B: 等 asnFnhk def 落地)
+# 文件: lean/Kepler/Text/PackingAuto22.lean:729-737
+# 阻塞: asnFnhkP22 = 0 桩 (PA22:261)。反例(纸面+机器路径已核): h=1, k=3:
+#   LHS = 2π − 6·asn(3/4) ≠ 2π = 2π − 2·3·asnFnhkP22 1 3 1 1 1 1 (桩值0),
+#   因 asn(3/4) > 0 (arcsin 在 (0,1) 上严格正)。
+# 陈述冻结(与 HOL counting_spheres.hl:945-947 逐字同义):
+theorem regular_spherical_polygon_area_asnFnhk (h : ℝ) (k : ℕ) (hk : 3 ≤ k)
+    (hh : 1 ≤ h ∧ h ≤ h0) :
+    regularSphericalPolygonAreaP22
+        (h * sqrt3 / 4 + Real.sqrt (1 - (h / 2) ^ 2) / 2) k =
+      2 * Real.pi - 2 * k * asnFnhkP22 h k 1 1 1 1 := by
+  sorry  -- 保留至 asnFnhkP22 落地
+# 落地要求: asnFnhkP22 换成 Ysskqoy.hl 的 asnFnhk 真定义 (PackingAuto18 bank)。
+# 落地后证明: HOL 侧即 REWRITE_TAC[regular_spherical_polygon_area; asnFnhk; h0]
+#   三条定义展开 — Lean 侧 unfold regularSphericalPolygonAreaP22 + asnFnhk 新
+#   定义方程 + congr/ring, 一 lines 级 (参照同文件已证
+#   regular_spherical_polygon_area_797: unfold + congr 1)。
+# 无陈述修改, 无补丁 — 纯等 def。
