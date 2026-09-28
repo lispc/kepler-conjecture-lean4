@@ -95,3 +95,56 @@ import_tame_classification ∧ linear_programming_results ∧ the_nonlinear_ineq
   batch2a（slack<0）两种 schema 需两个模板，只认列主序 PilotCM 形态。
 - 脊柱会引用 packing/local 的 sorry 定理名；骨架期接口名可能漂移——
   脊柱落地后把接口名冻结写进本文档。
+
+## 6. 2026-09-28 现状盘点与 M5′ 路线图（用户拍板）
+
+**里程碑重定义**：下一个 milestone = **M5′ 主定理端到端可达**。骨架即本脊柱——
+`Kepler.Assembly.the_kepler_conjecture_from_interfaces : TheKeplerConjecture` 已在
+main 编译。目标 = 其 sorryAx 可达债务图完全枚举 + 按杠杆率分段归零。
+度量 = 单一数字（主定理可达 sorry 数）+ DAG（`docs/e2e-debt-map.md`，Step 0 产出）。
+
+### 6.1 装配链真伪现状（2026-09-28 逐件核对）
+
+真证明：`assembly`、`textCapstone`（方向 A，2026-09-21，含镜像 fan 绕行分支）、
+`linearProgrammingResults`（方向 D 降级为真推导，债务集中于 `lpArchiveCertificates`
+单枚）、`goodListArchive`（P6-C，19715 图）、`contraveningFan`（T5，经 ContraFan）、
+`tamePlanarHypermapRestricted`、`hypermapIsoTrans`、`oppositeHypermap`、
+LA16 `nonlinear_imp_lp_main_estimate_p16`（term 级，LocalAuto16:192）。
+
+脊柱接口 sorry（12，全部带 HOL 出处，Assembly.lean）：`nonlinearInequalities`、
+`lpArchiveCertificates`、`mqmsmab`、`jcajydu`、`tameCorrespondenceIso`、`elllnyz`、
+`hypermapOfFanNeg`、`isoOppositeEq`、`contraveningNegative`、
+`localAnnulusInequalityScriptL`、`fcdjdot`、`kcImpTheKc`。
+
+已达的直接下游债务（经消费链流入主定理；探针刷新时精确枚举）：
+- `PACKING_CHAPTER_MAIN_CONCLUSION`（PA25:3438，sorry——textCapstone 直接消费）；
+- ContraFan 深几何双核 `LEMMA_3_POINTS_FINAL`/`LEMMA_4_POINTS_FINAL`
+  （经 `contraveningFan` → `CKQOWSA`）；
+- LA16 `JEJTVGB_p16` 链（经 `nonlinear_imp_lp_main_estimate_p16`）。
+（DEBT.md"脊柱公理探针"节"剩三接口"的记载已 stale：textCapstone 已真化、
+§2c 11 枚在账，Step 0 一并刷新。）
+
+### 6.2 四步路线（用户批准 2026-09-28）
+
+- **Step 0 instrumentation**（本机，~1–2h，本波收工后立即）：刷新探针 + 写
+  spine-debt 枚举工具（从 `the_kepler_conjecture_from_interfaces` 遍历 Lean 环境
+  依赖闭包，枚举 value 含 sorryAx 的常量 → 自动生成 `docs/e2e-debt-map.md`，
+  DEBT.md 主定理可达节改由工具生成）+ M5′ 写进 STATUS。
+- **Step 1 廉价接口波**（sub-agent）：`isoOppositeEq`（置换代数）、
+  `contraveningNegative`（V↦−V 对称）、`localAnnulusInequalityScriptL`
+  （`hl [vec 0;v] = ‖v‖/2` 定义性恒等 + 求和约定，需一次 HOL 对照确认）、
+  `kcImpTheKc`（体积形⟹计数密度形，中等）、`hypermapOfFanNeg`（中等）。
+- **Step 2 填证主线转向"脊柱可达优先"**：lane 选择标准从"模块进度"改为
+  "是否减少主定理可达 sorry"。优先序：`PACKING_CHAPTER_MAIN_CONCLUSION`
+  （最高优先，RDWKARC 链 + TSKAJXY 表面对齐，已可达）→ MQMSMAB 小章
+  （ssreflect 17KB，contravening→tame_planar_hypermap）→ tame 文字章
+  （64 个 .hl / 4.6MB 最大领土：`jcajydu`/`tameCorrespondenceIso`/`elllnyz`
+  + P6-C 遗留 `hypermapOfList` 构造）。假陈述修复波直接服务于此。
+  情报源：docs/fill-worker-playbook.md §5（GLTVHUM 五级链 / DUUNHOR
+  前提缺失第 11 项，2026-09-28 侦察 lane 入库）。
+- **Step 3 数据密集接口**（本机只冻结形态，重型机到位灌数据）：
+  `lpArchiveCertificates`（LP 43,078 持久化重跑 ~324 核时 + P6-D 两 schema
+  逐行实例化模板已试点）；`nonlinearInequalities`/G4（993 条注册表
+  `CertifiedIneqHolds` 语义填实 + 549 重跑；CertTM.lean 线在铺）。
+
+现役 wave 的 lane 不打断；下一波（Step 0 之后）按可达性排。
