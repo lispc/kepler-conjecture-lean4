@@ -66,6 +66,7 @@ ENCODING NOTES
 import Kepler.Text.Polytope
 import Kepler.Text.PackingAuto2
 import Kepler.Text.PackingAuto3
+import Kepler.Text.PackingAuto4
 import Kepler.Text.PackingAuto18
 import Kepler.Text.PackingAuto21
 import Kepler.Text.SphereKit
@@ -177,6 +178,33 @@ Remaining sorries, classified:
     `REUHADY` (PackingAuto24 lane).
   - 疑似假陈述: none found this round (GAMMAX_NO_BETA is faithful to
     OXLZLEZ3.hl:797; its proof needs the upstream MCELL_BUMP_0 lemma).
+
+FILL-ROUND STATUS r2 (2026-09-29 wave: 144 -> 137 sorries)
+
+Filled this round (7):
+  `PACKING_CHAPTER_MAIN_CONCLUSION` (the HOL Oxlzlez assembly goes through
+    VERBATIM: `RDWKARC_concl` + `OXLZLEZ` + pointwise `TSKAJXY` with the
+    `hnl` bank antecedent — PA21:1407's capstone IS `TSKAJXY_statement`
+    pointwise once the bank hypothesis is supplied; the "conclusion-surface
+    mismatch" in the r1 note was only the antecedent),
+  `GAMMAX_NO_BETA` (new import: `Kepler.Text.PackingAuto4` — `MCELL_BUMP_0`
+    was closed in PA4 wave2; `betaBumpV1`/`betaBump` are body-identical),
+  `S_LEAF_BOUNDED`/`S_LEAF_FINITE` (r1 said "circumradius bridge" — that
+    bridge now exists: PA2 `OAPVION2_concl` closed wave2; leaf chord bound
+    = 2 * radV via the circumcenter triangle, triple aff-independence via
+    `s_leaf_collinear` + private `p25_not_affdep3`),
+  `MCELL_AVOID_LEAVES` (HOL OXLZLEZ3.hl:1081 measure argument verbatim:
+    finite leaf planes + `NULLSET_AFF_2_1`),
+  `radius_le_circumradius(_all)` (same bridge; private
+    `p25_affdep4_coplanar` = forward half of `AFF_DEP_COPLANAR`).
+New helpers (all fully proved): `p25_not_affdep3`, `p25_mem_affSpan3`,
+  `p25_affdep4_coplanar`.
+Remaining blockers unchanged from the r1 lists above, except:
+  - `AFF_DEP_COPLANAR` backward (Coplanar + 4 distinct -> affineDependent)
+    is the ONLY open half; route: `AffineIndependent.card_le_card_of_subset_
+    affineSpan` (Mathlib FiniteDimensional.lean:252) with S.toFinset card 4
+    vs the Coplanar witness triple. `p25_affdep4_coplanar` is its forward
+    half and is done.
 
 -/
 
@@ -1024,13 +1052,22 @@ theorem DIH_Y_LT_PI {y1 y2 y3 y4 y5 y6 : ℝ} (h1 : 0 < y1)
 theorem CRITICAL_WEIGHT_POS_LE (V X : Set V3) : 0 ≤ criticalWeight V X :=
   div_nonneg zero_le_one (Nat.cast_nonneg _)
 
-/-- HOL `GAMMAX_NO_BETA`. -/
+/-- HOL `GAMMAX_NO_BETA`.  Proof: for `k < 4` cells the bump correction
+`betaBumpV1` vanishes (`MCELL_BUMP_0`, PackingAuto4 — the bump condition
+needs both `e` and its complement critical, killed by `k < 4`), and the
+remaining product is nonnegative. -/
 theorem GAMMAX_NO_BETA (V : Set V3) (ul : List V3) (X : Set V3) (e : Set V3) (k : ℕ)
     (hp : Packing V) (hs : saturated V) (hb : barV V 3 ul) (hX : X = mcell k V ul)
     (hn : ¬ nullSet X) (hk : k < 4) (he : e ∈ criticalEdgeX V X)
     (hg : gammaX V X lmfun ≥ 0) :
     gammaX V X lmfun * criticalWeight V X + betaBumpV1 V e X ≥ 0 := by
-  sorry
+  have hbb : betaBumpV1 V e X = 0 := by
+    have hco : betaBumpV1 V e X = betaBump V e X := rfl
+    have hnm : ¬ nullSet (mcell k V ul) := by rw [← hX]; exact hn
+    rw [hco, hX]
+    exact BumpP4.MCELL_BUMP_0 V ul e k hk hp hs hb hnm
+  rw [hbb]
+  exact add_nonneg (mul_nonneg hg (CRITICAL_WEIGHT_POS_LE V X)) (by simp)
 
 /-- HOL `REUHADY` (owned by the REUHADY.hl lane — PackingAuto24; the copy
 here is the form consumed by `LEAF_RANK_REUHADY` below). -/
@@ -1201,16 +1238,105 @@ theorem S_LEAF_SUBSET_PACKING (V : Set V3) (ul : List V3) (hp : Packing V)
   have hv := hpre [elV ul 0, elV ul 1, x] ⟨⟨[], rfl⟩, by simp⟩
   exact hv.2.1 (by simp [setOfList])
 
-/-- HOL `S_LEAF_BOUNDED`. -/
+/-- Helper: a non-collinear triple is affinely independent as a set (the
+`affineIndependent_set_iff_linearIndependent_vsub` route; the span of one
+offset vector would make the third point lie on the line through the other
+two). -/
+private theorem p25_not_affdep3 {a b x : V3} (hab : a ≠ b) (hax : a ≠ x) (_hbx : b ≠ x)
+    (hcol : ¬ Collinear3 a b x) : ¬ affineDependent ({a, b, x} : Set V3) := by
+  intro haff
+  have hmem_a : (a : V3) ∈ ({a, b, x} : Set V3) := by simp
+  refine haff ((affineIndependent_set_iff_linearIndependent_vsub (k := ℝ) hmem_a).mpr ?_)
+  have hdiff : (({a, b, x} : Set V3) \ {a}) = ({b, x} : Set V3) := by
+    ext z
+    by_cases hz : z = a
+    · subst hz; simp [hab, hax]
+    · simp only [Set.mem_sdiff, Set.mem_insert_iff, Set.mem_singleton_iff, hz,
+        not_false_iff]
+      by_cases h1 : z = b <;> by_cases h2 : z = x <;> simp [h1, h2]
+  have himg : ((fun p : V3 => (p -ᵥ a)) '' ({b, x} : Set V3))
+      = ({b - a, x - a} : Set V3) := by
+    rw [Set.image_insert_eq, Set.image_singleton]
+    rfl
+  rw [hdiff, himg]
+  apply (linearIndependent_subtype_iff).mpr
+  refine LinearIndepOn.id_insert (s := ({x - a} : Set V3)) ?_ ?_
+  · exact LinearIndepOn.singleton (show (x - a : V3) ≠ 0 from sub_ne_zero.mpr hax.symm)
+  · intro hm
+    obtain ⟨c, hc⟩ := Submodule.mem_span_singleton.mp hm
+    by_cases hc0 : c = 0
+    · rw [hc0, zero_smul] at hc
+      exact hab (sub_eq_zero.mp hc.symm).symm
+    · exact hcol ((collinear3_iff_smul (hw := Ne.symm hab)).mpr ⟨c⁻¹, by
+        rw [hc.symm, smul_smul, inv_mul_cancel₀ hc0, one_smul]⟩)
+
+/-- HOL `S_LEAF_BOUNDED`.  Proof: a leaf `x` on the stem has circumradius
+`hl [u0, u1, x] < sqrt 2`, and the stem point is at most twice the
+circumradius from `x` (both are on the circumsphere, `OAPVION2_concl` —
+the triple is affinely independent by `p25_not_affdep3` + `s_leaf_collinear`). -/
 theorem S_LEAF_BOUNDED (V : Set V3) (ul : List V3) (hp : Packing V)
     (hs : saturated V) :
     s_leaf V ul ⊆ Metric.ball (elV ul 0) (2 * Real.sqrt 2) := by
-  sorry
+  intro x hx
+  have hleaf : leaf V [elV ul 0, elV ul 1, x] := hx.1
+  have hnc : ¬ Collinear3 (elV ul 0) (elV ul 1) x := s_leaf_collinear V ul x hp hs hx
+  have h01 : (elV ul 0 : V3) ≠ elV ul 1 := by
+    intro he
+    refine hnc (show Collinear ℝ ({elV ul 0, elV ul 1, x} : Set V3) from ?_)
+    have hset : ({elV ul 0, elV ul 1, x} : Set V3) = ({elV ul 1, x} : Set V3) := by
+      rw [he]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact collinear_pair _ _ _
+  have h0x : (elV ul 0 : V3) ≠ x := by
+    intro he
+    refine hnc (show Collinear ℝ ({elV ul 0, elV ul 1, x} : Set V3) from ?_)
+    have hset : ({elV ul 0, elV ul 1, x} : Set V3) = ({x, elV ul 1} : Set V3) := by
+      rw [he]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact collinear_pair _ _ _
+  have h1x : (elV ul 1 : V3) ≠ x := by
+    intro he
+    refine hnc (show Collinear ℝ ({elV ul 0, elV ul 1, x} : Set V3) from ?_)
+    have hset : ({elV ul 0, elV ul 1, x} : Set V3) = ({elV ul 0, x} : Set V3) := by
+      rw [he]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact collinear_pair _ _ _
+  have haff : ¬ affineDependent ({elV ul 0, elV ul 1, x} : Set V3) :=
+    p25_not_affdep3 h01 h0x h1x hnc
+  have hradlt : radV ({elV ul 0, elV ul 1, x} : Set V3) < Real.sqrt 2 := by
+    have h2 : hl [elV ul 0, elV ul 1, x] < Real.sqrt 2 := hleaf.2
+    rw [hl] at h2
+    have hset : setOfList [elV ul 0, elV ul 1, x] = ({elV ul 0, elV ul 1, x} : Set V3) := by
+      ext q; simp [setOfList]
+    rw [hset] at h2
+    exact h2
+  have d0 := OAPVION2_concl ({elV ul 0, elV ul 1, x} : Set V3) haff (elV ul 0) (by simp)
+  have d1 := OAPVION2_concl ({elV ul 0, elV ul 1, x} : Set V3) haff x (by simp)
+  have htri : dist (elV ul 0) x ≤
+      dist (elV ul 0) (circumcenter ({elV ul 0, elV ul 1, x} : Set V3)) +
+        dist (circumcenter ({elV ul 0, elV ul 1, x} : Set V3)) x :=
+    dist_triangle _ _ _
+  rw [dist_comm (elV ul 0) (circumcenter ({elV ul 0, elV ul 1, x} : Set V3)), ← d0, ← d1] at htri
+  simp only [Metric.mem_ball]
+  rw [dist_comm x (elV ul 0)]
+  linarith
 
-/-- HOL `S_LEAF_FINITE`. -/
+/-- HOL `S_LEAF_FINITE`.  Proof: `s_leaf` sits inside the packing and inside
+a bounded ball (`S_LEAF_BOUNDED`), so it is finite by volume counting
+(`Packing.finite_inter_ball`, Kepler.Statement). -/
 theorem S_LEAF_FINITE (V : Set V3) (ul : List V3) (hp : Packing V)
     (hs : saturated V) : (s_leaf V ul).Finite := by
-  sorry
+  have hb := S_LEAF_BOUNDED V ul hp hs
+  have hsub := S_LEAF_SUBSET_PACKING V ul hp hs
+  refine Set.Finite.subset
+    (hp.finite_inter_ball (2 * Real.sqrt 2 + ‖(elV ul 0 : V3)‖ + 1)) ?_
+  intro x hx
+  have hbc := hb hx
+  refine ⟨hsub hx, ?_⟩
+  have hdist : ‖(x : V3)‖ ≤ ‖(x - elV ul 0 : V3)‖ + ‖(elV ul 0 : V3)‖ := by
+    conv_lhs => rw [show (x : V3) = (x - elV ul 0) + elV ul 0 from by abel]
+    exact norm_add_le _ _
+  simp only [Metric.mem_ball] at hbc
+  rw [dist_eq_norm] at hbc
+  simp only [Metric.mem_ball, dist_zero_right]
+  linarith
 
 /-- Helper: prefix-cancel for `take` (used to pin down prefixes). -/
 private theorem p25_take_cancel {α : Type*} {l1 l2 : List α} (n : ℕ) (h : n ≤ l1.length) :
@@ -1362,11 +1488,24 @@ theorem S_LEAF_TRUNCATE (V : Set V3) (ul : List V3) :
     s_leaf V ul = s_leaf V [elV ul 0, elV ul 1] := by
   simp [s_leaf, elV]
 
-/-- HOL `MCELL_AVOID_LEAVES`. -/
+/-- HOL `MCELL_AVOID_LEAVES`.  Proof (HOL OXLZLEZ3.hl:1081): otherwise `X`
+is covered by the finitely many leaf planes `aff_ge {u0,u1} {u}` (`s_leaf`
+is finite by `S_LEAF_FINITE`, and each is null by `NULLSET_AFF_2_1`), so
+`X` itself is null — contradiction. -/
 theorem MCELL_AVOID_LEAVES (V : Set V3) (ul : List V3) (X : Set V3) (hp : Packing V)
     (hs : saturated V) (hn : ¬ nullSet X) (hm : mcellSet V X) :
     ∃ v, v ∈ X ∧ ∀ u, u ∈ s_leaf V ul → ¬ v ∈ affGe {elV ul 0, elV ul 1} {u} := by
-  sorry
+  by_contra hcon
+  push_neg at hcon
+  have hsub : X ⊆ ⋃ u ∈ (s_leaf V ul), affGe {elV ul 0, elV ul 1} {u} := by
+    intro v hv
+    obtain ⟨u, hu, hvu⟩ := hcon v hv
+    exact Set.mem_biUnion hu hvu
+  have hsfin := S_LEAF_FINITE V ul hp hs
+  have hnull : volume (⋃ u ∈ (s_leaf V ul), affGe {elV ul 0, elV ul 1} {u}) = 0 :=
+    (measure_biUnion_null_iff hsfin.countable).mpr
+      (fun u _ => NULLSET_AFF_2_1 (elV ul 0) (elV ul 1) u)
+  exact hn (measure_mono_null hsub hnull)
 
 /-- HOL `MCELL_WEDGE_UNIQUE`: a non-null cell with the stem edge sits in at
 most one leaf wedge. -/
@@ -2421,11 +2560,114 @@ theorem NOT_COPLANAR_IMP_CARD4_ALT (u0 u1 u2 u3 : V3)
       · exact Or.inr (Or.inr ha)
       · exact Or.inr (Or.inr (ha.trans h.symm))))⟩
 
-/-- HOL `radius_le_circumradius`. -/
+/-- Helper: a point whose offset from `a` lies in the span of the `u-a`,
+`v-a` offsets lies in the plane through `a, u, v`. -/
+private theorem p25_mem_affSpan3 {a u v p : V3}
+    (hp : (p - a : V3) ∈ Submodule.span ℝ ({u - a, v - a} : Set V3)) :
+    p ∈ (affineSpan ℝ ({a, u, v} : Set V3) : Set V3) := by
+  have hpv : (p : V3) = (p -ᵥ a) +ᵥ a := (vsub_vadd p a).symm
+  rw [hpv]
+  refine AffineSubspace.vadd_mem_of_mem_direction ?_ (mem_affineSpan ℝ (by simp))
+  rw [direction_affineSpan,
+    vectorSpan_eq_span_vsub_set_right ℝ (show (a : V3) ∈ ({a, u, v} : Set V3) from by simp)]
+  have hsub : ({u - a, v - a} : Set V3) ⊆
+      ((fun q : V3 => (q -ᵥ a)) '' ({a, u, v} : Set V3)) := by
+    intro z hz
+    rcases Set.mem_insert_iff.mp hz with rfl | hz
+    · exact ⟨u, by simp, rfl⟩
+    · rcases Set.mem_singleton_iff.mp hz with rfl
+      exact ⟨v, by simp, rfl⟩
+  exact Submodule.span_mono hsub hp
+
+/-- Helper: an affinely dependent 4-point set is coplanar — the forward
+direction of `AFF_DEP_COPLANAR` (HOL Oxl_2012; here via the
+`affineIndependent_set_iff_linearIndependent_vsub` characterization: failure
+of independence puts one offset in the span of the other two). -/
+private theorem p25_affdep4_coplanar {a b c d : V3}
+    (h : affineDependent ({a, b, c, d} : Set V3)) :
+    Coplanar ({a, b, c, d} : Set V3) := by
+  -- degenerate stem coincidences: the set drops to three points, which is
+  -- coplanar outright
+  rcases eq_or_ne a b with hab | hab
+  · have hset : ({a, b, c, d} : Set V3) = ({b, c, d} : Set V3) := by
+      rw [hab]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact coplanar_triple b c d
+  rcases eq_or_ne a c with hac | hac
+  · have hset : ({a, b, c, d} : Set V3) = ({b, c, d} : Set V3) := by
+      rw [hac]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact coplanar_triple b c d
+  rcases eq_or_ne a d with had | had
+  · have hset : ({a, b, c, d} : Set V3) = ({b, c, d} : Set V3) := by
+      rw [had]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact coplanar_triple b c d
+  have hmem_a : (a : V3) ∈ ({a, b, c, d} : Set V3) := by simp
+  have hdiff : (({a, b, c, d} : Set V3) \ {a}) = ({b, c, d} : Set V3) := by
+    ext z
+    by_cases hz : z = a
+    · subst hz; simp [hab, hac, had]
+    · simp only [Set.mem_sdiff, Set.mem_insert_iff, Set.mem_singleton_iff, hz,
+        not_false_iff]
+      tauto
+  have himg : ((fun p : V3 => (p -ᵥ a)) '' ({b, c, d} : Set V3))
+      = ({b - a, c - a, d - a} : Set V3) := by
+    rw [Set.image_insert_eq, Set.image_insert_eq, Set.image_singleton]
+    rfl
+  rw [affineDependent,
+    affineIndependent_set_iff_linearIndependent_vsub (k := ℝ) hmem_a, hdiff, himg] at h
+  have h' : ¬ LinearIndepOn ℝ id ({b - a, c - a, d - a} : Set V3) := h
+  by_cases hbb : (b - a : V3) ∈ Submodule.span ℝ ({c - a, d - a} : Set V3)
+  · refine ⟨a, c, d, ?_⟩
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with he | he | he | he
+    · rw [he]; exact mem_affineSpan ℝ (by simp)
+    · rw [he]; exact p25_mem_affSpan3 hbb
+    · rw [he]; exact mem_affineSpan ℝ (by simp)
+    · rw [he]; exact mem_affineSpan ℝ (by simp)
+  · by_cases hcc : (c - a : V3) ∈ Submodule.span ℝ ({b - a, d - a} : Set V3)
+    · refine ⟨a, b, d, ?_⟩
+      intro p hp
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+      rcases hp with he | he | he | he
+      · rw [he]; exact mem_affineSpan ℝ (by simp)
+      · rw [he]; exact mem_affineSpan ℝ (by simp)
+      · rw [he]; exact p25_mem_affSpan3 hcc
+      · rw [he]; exact mem_affineSpan ℝ (by simp)
+    · by_cases hdd : (d - a : V3) ∈ Submodule.span ℝ ({b - a, c - a} : Set V3)
+      · refine ⟨a, b, c, ?_⟩
+        intro p hp
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+        rcases hp with he | he | he | he
+        · rw [he]; exact mem_affineSpan ℝ (by simp)
+        · rw [he]; exact mem_affineSpan ℝ (by simp)
+        · rw [he]; exact mem_affineSpan ℝ (by simp)
+        · rw [he]; exact p25_mem_affSpan3 hdd
+      · exfalso
+        have hda : d ≠ a := fun heq => hdd (by rw [heq]; simp)
+        have hca : c ≠ a := fun heq => hcc (by rw [heq]; simp)
+        have s1 : LinearIndepOn ℝ id ({d - a} : Set V3) :=
+          LinearIndepOn.singleton (show (d - a : V3) ≠ 0 from sub_ne_zero.mpr hda)
+        have s2 : LinearIndepOn ℝ id ({c - a, d - a} : Set V3) :=
+          LinearIndepOn.id_insert (s := ({d - a} : Set V3)) s1
+            (fun hm => hcc (Submodule.span_mono (Set.subset_insert _ _) hm))
+        exact h' (LinearIndepOn.id_insert (s := ({c - a, d - a} : Set V3)) s2 hbb)
+
+/-- HOL `radius_le_circumradius`.  Proof: the non-coplanar quadruple is
+affinely independent (`p25_affdep4_coplanar`), so both endpoints sit on the
+circumsphere (`OAPVION2_concl`) and the chord is at most the diameter. -/
 theorem radius_le_circumradius (u0 u1 u2 u3 : V3)
     (hnc : ¬ Coplanar ({u0, u1, u2, u3} : Set V3)) :
     dist u0 u1 ≤ 2 * radV {u0, u1, u2, u3} := by
-  sorry
+  have haff : ¬ affineDependent ({u0, u1, u2, u3} : Set V3) :=
+    fun hd => hnc (p25_affdep4_coplanar hd)
+  have d0 := OAPVION2_concl ({u0, u1, u2, u3} : Set V3) haff u0 (by simp)
+  have d1 := OAPVION2_concl ({u0, u1, u2, u3} : Set V3) haff u1 (by simp)
+  have htri : dist u0 u1 ≤
+      dist u0 (circumcenter ({u0, u1, u2, u3} : Set V3)) +
+        dist (circumcenter ({u0, u1, u2, u3} : Set V3)) u1 :=
+    dist_triangle _ _ _
+  rw [dist_comm u0 (circumcenter ({u0, u1, u2, u3} : Set V3)), ← d0, ← d1] at htri
+  linarith
 
 /-- HOL `radius_le_circumradius_all`. -/
 theorem radius_le_circumradius_all (u0 u1 u2 u3 : V3)
@@ -2436,7 +2678,17 @@ theorem radius_le_circumradius_all (u0 u1 u2 u3 : V3)
       dist u1 u2 ≤ 2 * radV {u0, u1, u2, u3} ∧
       dist u1 u3 ≤ 2 * radV {u0, u1, u2, u3} ∧
       dist u2 u3 ≤ 2 * radV {u0, u1, u2, u3} := by
-  sorry
+  have hperm : ∀ (p q r s : V3), ({p, q, r, s} : Set V3) = ({u0, u1, u2, u3} : Set V3) →
+      dist p q ≤ 2 * radV ({u0, u1, u2, u3} : Set V3) := by
+    intro p q r s he
+    have hkey := radius_le_circumradius p q r s (by rw [he]; exact hnc)
+    rw [he] at hkey
+    exact hkey
+  refine ⟨hperm u0 u1 u2 u3 rfl, hperm u0 u2 u1 u3 ?_, hperm u0 u3 u1 u2 ?_,
+    hperm u1 u2 u0 u3 ?_, hperm u1 u3 u0 u2 ?_, hperm u2 u3 u0 u1 ?_⟩
+  repeat' ext q
+  repeat' simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+  all_goals tauto
 
 /-- HOL `MCELL4_DOMAIN`: the 4-cell wedge distance certificate. -/
 theorem MCELL4_DOMAIN (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
@@ -3432,13 +3684,24 @@ theorem OXLZLEZ (V : Set V3) (hnl : pack_nonlinear_non_ox3q1h) (hox : ox3q1hP25)
 
 /-- HOL `PACKING_CHAPTER_MAIN_CONCLUSION`: the packing chapter main
 conclusion, via `RDWKARC` + `TSKAJXY`.  The HOL proof rewrites with
-`Pack_concl.TSKAJXY_statement` and applies `Tskajxy.TSKAJXY`; the Lean
-`TSKAJXY` (PackingAuto21:1114) has a non-matching conclusion surface, so
-the assembly is left to the merge. -/
+`Pack_concl.TSKAJXY_statement` and applies `Tskajxy.TSKAJXY`.  The Lean
+`TSKAJXY` (PackingAuto21:1407) is the pointwise form of
+`TSKAJXY_statement` with the extra `pack_nonlinear_non_ox3q1h` bank
+antecedent, which is exactly this theorem's `hnl` — so the HOL rewrite +
+match assembly goes through verbatim. -/
 theorem PACKING_CHAPTER_MAIN_CONCLUSION (hkc : ¬ keplerConjecture)
     (hnl : pack_nonlinear_non_ox3q1h) (hox : ox3q1hP25) :
     ∃ V : Set V3, Packing V ∧ V ⊆ ballAnnulus ∧ ¬ localAnnulusInequality V := by
-  sorry
+  refine RDWKARC_concl hkc ?_ ?_
+  · -- the `OXLZLEZ` arm of the HOL proof: `ASM_REWRITE_TAC[]` discharges
+    -- both banks from the context.
+    intro V hp hs
+    exact OXLZLEZ V hnl hox hp hs
+  · -- `REWRITE_TAC[Pack_concl.TSKAJXY_statement]` then `MATCH_MP_TAC
+    -- Tskajxy.TSKAJXY`: the statement is the pointwise shape of PA21's
+    -- capstone with the bank antecedent taken from `hnl`.
+    intro V X hs hp hm hcrit
+    exact TSKAJXY V X hnl hs hp hm hcrit
 
 /-! ## Backfill: remaining source statements (kept with the file's section
 order flattened; all giants) -/
@@ -3674,7 +3937,13 @@ theorem NOT_COPLANAR_AFF_3 (s : Set V3) (hnc : ¬ Coplanar s) :
   exact AffineSubspace.vadd_mem_of_mem_direction (hdir (hspan hqp))
     (mem_affineSpan ℝ (by simp : p ∈ ({p, p + v1, p + v2} : Set V3)))
 
-/-- HOL `AFF_DEP_COPLANAR`. -/
+/-- HOL `AFF_DEP_COPLANAR`.  NEEDS (r2): only the backward direction is
+open (Coplanar + `ncard = 4` -> affineDependent).  Route: transfer
+`AffineIndependent` to `S.toFinset` (`affineIndependent_equiv` with
+`Equiv.Set.toFinset`) and contradict
+`AffineIndependent.card_le_card_of_subset_affineSpan` (Mathlib
+FiniteDimensional.lean:252, `#s ≤ #t`) with the Coplanar witness triple.
+The forward direction is private `p25_affdep4_coplanar` (proved, below). -/
 theorem AFF_DEP_COPLANAR (a b c d : V3)
     (hc : Set.ncard ({a, b, c, d} : Set V3) = 4) :
     (affineDependent ({a, b, c, d} : Set V3) ↔ Coplanar ({a, b, c, d} : Set V3)) := by
