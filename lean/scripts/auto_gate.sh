@@ -74,7 +74,7 @@ hard=$(printf '%s\n' "$dels" \
   | grep -vE '^-[[:space:]]*sorry\b' \
   | grep -vE '^-$' \
   | grep -vE '^-[[:space:]]*(--|/-)' \
-  | grep -vE '^-.*/-[[:space:]]*$' || true)
+  | grep -vE '^.*-/[[:space:]]*$' || true)
 rest=""
 while IFS= read -r line; do
   [ -z "$line" ] && continue
