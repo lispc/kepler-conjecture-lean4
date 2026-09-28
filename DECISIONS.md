@@ -3,6 +3,26 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-09-29 — "planar 编码定义纠正"单独立项（用户拍板：同意）
+
+**背景**：提案官两轮裁决实证 PA22 的 `facetOfC`（弱化为"真面"）与 `polyhedronC`
+（对 flyspeck polyhedron H-表示的误移植，注释声称"每点属于面"）系**定义级误移植**
+（HOL `facet_of` = polytope1.ml:1506：face_of ∧ ≠∅ ∧ aff_dim 条件）——14 枚
+planar-kit 填证在陈述冻结下合法但**空洞化**；提案 12（affine_facet_hyper，C 级）
+与 13a（pad2d3d_facet，C 级）冻结待本立项。wave3 另发现同族：`cone0P22 := affGe`
+（应为严格 affGt）使 CONE0_FCHANGED 家族 5 枚假化。
+
+**授权范围**：
+1. 定义纠正 = `facetOfC`/`polyhedronC`/`cone0P22` 三个 def 对齐 HOL 语义
+   （含 ℂ 上 affDim 支撑件如需）；
+2. 闸门豁免形态 = STATEMENT-FIX 模式的定义扩展（DEF-FIX）：同样**只许逐字应用
+   已批准补丁**（SF_PATCH 机制复用），提案官出定义补丁草案 → 用户审定 → 修复波
+   应用；
+3. 波及面先清点后动手：14 枚 planar-kit 空洞化填证的重填清单 + 12/13a 解冻 +
+   CONE0 族 5 枚假陈述修复，全部在该项目内闭环；
+4. 执行顺序：(a) 定义补丁草案 + 波及面清单 + 重填路线（侦察轮，只读）→
+   (b) 用户审定补丁 → (c) 应用 + 重填波。
+
 ## 2026-09-28 — STATEMENT-FIX 闸门模式批准 + 陈述修复波授权
 
 **拍板**（用户）：新增 `auto_gate.sh` STATEMENT-FIX 模式（c5d9f7cc）——陈述修改
