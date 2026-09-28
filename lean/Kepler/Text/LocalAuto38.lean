@@ -117,6 +117,7 @@ import Kepler.Text.LocalAuto1
 import Kepler.Text.LocalAuto18
 import Kepler.Text.LocalAuto23
 import Kepler.Text.SphereKit
+import Kepler.Text.TopologyFan
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -689,6 +690,589 @@ theorem NONPARALLEL_BALL_ANNULUS40_ALT (v w : V3) :
   rw [dist_eq_norm] at h2 h4
   exact nonparallel_annulus4_p38 hv hw h2 h4
 
+/-- Helper (proved here 2026-09-28): the regular tetrahedron dihedral —
+`dih_y` at the all-2s point is `arccos (1/3)`. Pure arithmetic: the atn2
+argument pair evaluates to `(32·√2, −16)` on the `|y| < x` branch, and
+`π/2 − arctan(1/(2√2)) = arcsin(1/3)`-shifts to `arccos(1/3)`. -/
+private theorem p38_dihY222222 : dihY 2 2 2 2 2 2 = Real.arccos (1 / 3) := by
+  have hdx : (deltaX 4 4 4 4 4 4 : ℝ) = 128 := by norm_num [deltaX]
+  have hdx4 : (deltaX4 4 4 4 4 4 4 : ℝ) = 16 := by norm_num [deltaX4]
+  have hd : dihY 2 2 2 2 2 2 = Real.pi / 2 + atn2 (Real.sqrt 2048) (-16) := by
+    simp only [dihY, dihXf]
+    norm_num [hdx, hdx4]
+  have hsqrt2 : Real.sqrt (2048 : ℝ) = 32 * Real.sqrt 2 := by
+    rw [show (2048 : ℝ) = 1024 * 2 by norm_num, Real.sqrt_mul (by norm_num)]
+    norm_num
+  have hsq2 : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)
+  have hs : Real.sin (Real.arctan (1 / (2 * Real.sqrt 2))) = 1 / 3 := by
+    rw [Real.sin_arctan]
+    have hden : (1 : ℝ) + (1 / (2 * Real.sqrt 2)) ^ 2 = 9 / 8 := by
+      have e1 : (1 / (2 * Real.sqrt 2)) ^ 2 = 1 / (2 * Real.sqrt 2) ^ 2 := by
+        rw [one_div_pow]
+      have e2 : (2 * Real.sqrt 2) ^ 2 = 8 := by rw [mul_pow, hsq2]; norm_num
+      rw [e1, e2]
+      norm_num
+    have hr8 : Real.sqrt (9 / 8) = 3 / (2 * Real.sqrt 2) := by
+      have hval : (9 / 8 : ℝ) = (3 / (2 * Real.sqrt 2)) ^ 2 := by
+        rw [div_pow, mul_pow, hsq2]
+        norm_num
+      rw [hval, Real.sqrt_sq (by positivity)]
+    rw [hden, hr8]
+    field_simp
+  have hθ : Real.arcsin (1 / 3) = Real.arctan (1 / (2 * Real.sqrt 2)) := by
+    rw [← hs]
+    obtain ⟨hm1, hm2⟩ := Real.arctan_mem_Ioo (1 / (2 * Real.sqrt 2))
+    exact Real.arcsin_sin' ⟨le_of_lt hm1, le_of_lt hm2⟩
+  have hv : atn2 (32 * Real.sqrt 2) (-16) = -(Real.arcsin (1 / 3)) := by
+    have h1s : (1 : ℝ) < Real.sqrt 2 :=
+      (Real.lt_sqrt (x := (1 : ℝ)) (by norm_num)).mpr (by norm_num)
+    have hbr : |(-16 : ℝ)| < 32 * Real.sqrt 2 := by
+      rw [abs_of_neg (by norm_num : (-16 : ℝ) < 0), neg_neg]
+      calc (16 : ℝ) = 16 * 1 := by ring
+        _ < 16 * (2 * Real.sqrt 2) :=
+          mul_lt_mul_of_pos_left (by linarith) (by positivity)
+        _ = 32 * Real.sqrt 2 := by ring
+    have hconv : (-16 : ℝ) / (32 * Real.sqrt 2) = -(1 / (2 * Real.sqrt 2)) := by
+      field_simp
+      ring
+    simp only [atn2, hbr, if_true, hconv, Real.arctan_neg, ← hθ]
+  rw [hd, hsqrt2, hv, Real.arccos_eq_pi_div_two_sub_arcsin (1 / 3)]
+  ring
+
+/-- Helper (proved here 2026-09-28): `const1 = sol0 / π` — the all-2s solid
+angle is three regular-tetrahedron dihedrals minus π, i.e. exactly `sol0`
+(PackingAuto2's `3·arccos(1/3) − π`). -/
+private theorem p38_const1_eq : const1 = sol0 / Real.pi := by
+  have hs0 : sol0 = 3 * Real.arccos (1 / 3) - Real.pi := rfl
+  have hsol : solY 2 2 2 2 2 2 = 3 * Real.arccos (1 / 3) - Real.pi := by
+    show dihY 2 2 2 2 2 2 + dihY 2 2 2 2 2 2 + dihY 2 2 2 2 2 2 - Real.pi = _
+    rw [p38_dihY222222]
+    ring
+  show solY 2 2 2 2 2 2 / Real.pi = sol0 / Real.pi
+  rw [hs0, hsol]
+
+/-- Helper (proved here 2026-09-28): the pure-arithmetic half of the HOL
+`taum_dih_y` bridge (BKOSSGE.hl:168, open at LocalAuto16:459 as
+`taum_dih_y_p16`) — `taum` is `Σ rho(yᵢ)·dihYᵢ − (π + sol0)` once
+`const1 = sol0/π` is known. Groundwork for the `tau3_taum` family: the
+remaining input of that family is the `DIHV_EQ_DIH_Y` bridge (geometric
+`dihV` vs analytic `dihY`), which is still unported. -/
+private theorem p38_taum_dih_y (y1 y2 y3 y4 y5 y6 : ℝ) :
+    taum y1 y2 y3 y4 y5 y6 =
+      rho y1 * dihY y1 y2 y3 y4 y5 y6 +
+        rho y2 * dihY y2 y3 y1 y5 y6 y4 +
+        rho y3 * dihY y3 y1 y2 y6 y4 y5 - (Real.pi + sol0) := by
+  have hc : const1 = sol0 / Real.pi := p38_const1_eq
+  have ht : (2 : ℝ) * h0 - 2 ≠ 0 := by norm_num [h0]
+  have hly : ∀ y : ℝ, ly y = 1 - (y - 2) / (2 * h0 - 2) := by
+    intro y
+    have h252 : (2.52 - 2 : ℝ) = 2 * h0 - 2 := by norm_num [h0]
+    show 1 + (y - 2) * (0 - 1) / (2.52 - 2) = 1 - (y - 2) / (2 * h0 - 2)
+    rw [h252]
+    ring
+  show solY y1 y2 y3 y4 y5 y6 * (1 + const1) -
+    const1 * (lnazim y1 y2 y3 y4 y5 y6 +
+      lnazim y2 y3 y1 y5 y6 y4 + lnazim y3 y1 y2 y6 y4 y5) = _
+  simp only [solY, lnazim, hc, hly, rho]
+  field_simp [ht, Real.pi_ne_zero]
+  ring
+
+/-! ### The `DIHV_EQ_DIH_Y` bridge (2026-09-28 lane): geometric `dihV` vs
+analytic `dih_y` at a tetrahedron with apex `0`, plus the `tau3`-transfer
+consumers.  Route: both angles have cosine
+`deltaX4 x / √(4·x1·deltaX x + deltaX4 x²)` — the Gram numerator identity
+`deltaX4 = 4·(a·r̃ − p̃·q̃)` and `4·x1·deltaX + deltaX4² =
+ups_x(x1,x2,x6)·ups_x(x1,x3,x5)` are pure algebra, the `atn2`-to-`arccos`
+rendering is a branch-by-branch trig identity, and the Cayley–Menger
+nonnegativity enters as `p38_deltaY_pos_4` (the `DELTA_Y_POS_4POINTS`
+content, duplicated here because `tau3_taum`/`tau3_taum_40` precede
+`DELTA_Y_POS_4POINTS` in this file; `DELTA_Y_POS_4POINTS` now cites it). -/
+
+private theorem p38_coe_sub (a b : V3) :
+    ((a - b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) - (b : Fin 3 → ℝ) := rfl
+
+private theorem p38_coe_smul (t : ℝ) (a : V3) :
+    ((t • a : V3) : Fin 3 → ℝ) = t • (a : Fin 3 → ℝ) := rfl
+
+private theorem p38_coe_zero : ((0 : V3) : Fin 3 → ℝ) = 0 := rfl
+
+/-- Helper (2026-09-28): the cosine law — `2·(x⬝y)` from the squared
+lengths. -/
+private theorem p38_cos_law (x y : V3) :
+    2 * (x ⬝ᵥ y) = ‖x‖ * ‖x‖ + ‖y‖ * ‖y‖ - dist x y * dist x y := by
+  have h1 : dist x y * dist x y
+      = ((x - y : V3) : Fin 3 → ℝ) ⬝ᵥ ((x - y : V3) : Fin 3 → ℝ) := by
+    rw [dist_eq_norm, ← pow_two]
+    exact norm_sq_eq_dot (x - y)
+  have h2 : ‖x‖ * ‖x‖ = (x : Fin 3 → ℝ) ⬝ᵥ (x : Fin 3 → ℝ) := by
+    rw [← norm_sq_eq_dot, pow_two]
+  have h3 : ‖y‖ * ‖y‖ = (y : Fin 3 → ℝ) ⬝ᵥ (y : Fin 3 → ℝ) := by
+    rw [← norm_sq_eq_dot, pow_two]
+  rw [h1, h2, h3, p38_coe_sub]
+  simp only [dotProduct_sub, sub_dotProduct, dotProduct_comm]
+  ring
+
+/-- Helper (2026-09-28): the analytic rendering `π/2 + atn2 s (−t) =
+arccos (t / √(s²+t²))` on the nondegenerate half-plane `0 ≤ s`,
+`0 < s² + t²`. -/
+private theorem p38_atn2_arccos {s t : ℝ} (hs : 0 ≤ s) (hr : 0 < s ^ 2 + t ^ 2) :
+    Real.pi / 2 + atn2 s (-t) = Real.arccos (t / Real.sqrt (s * s + t * t)) := by
+  have hr0 : 0 < s * s + t * t := by
+    have h9 : s * s = s ^ 2 := by ring
+    have h10 : t * t = t ^ 2 := by ring
+    rw [h9, h10]
+    exact hr
+  have hr' : Real.sqrt (s * s + t * t) ≠ 0 := ne_of_gt (Real.sqrt_pos.mpr hr0)
+  rw [atn2]
+  split
+  · next h =>
+    -- branch `|−t| < s`: atn2 = arctan (−t/s)
+    have hs1 : 0 < s := by
+      rcases abs_lt.mp h with ⟨h1, h2⟩
+      have h9 : -t = -1 * t := by ring
+      linarith
+    have hden : Real.sqrt (1 + (-(t / s)) ^ 2) = Real.sqrt (s * s + t * t) / s := by
+      have he : 1 + (-(t / s)) ^ 2 = (s * s + t * t) / (s * s) := by
+        field_simp
+      rw [he, Real.sqrt_div (by positivity : (0:ℝ) ≤ s * s + t * t),
+        Real.sqrt_mul_self (le_of_lt hs1)]
+    have hcos : t / Real.sqrt (s * s + t * t)
+        = Real.cos (Real.pi / 2 + Real.arctan (-(t / s))) := by
+      rw [Real.cos_add, Real.cos_pi_div_two, Real.sin_pi_div_two, Real.sin_arctan,
+        hden]
+      field_simp [show s ≠ 0 from ne_of_gt hs1, hr']
+      ring
+    rw [hcos, show -t / s = -(t / s) from by ring]
+    exact (Real.arccos_cos
+      (x := Real.pi / 2 + Real.arctan (-(t / s)))
+      (by linarith [Real.neg_pi_div_two_lt_arctan (-(t / s))])
+      (by linarith [Real.arctan_lt_pi_div_two (-(t / s))])).symm
+  · next h1 =>
+    split
+    · next h2 =>
+      -- branch `0 < −t`: atn2 = π/2 − arctan (s/(−t))
+      have hyt : t < 0 := by
+        have h9 : -t = -1 * t := by ring
+        linarith
+      have ht0 : (t : ℝ) ≠ 0 := ne_of_lt hyt
+      have hden : Real.sqrt (1 + (s / -t) ^ 2) = Real.sqrt (s * s + t * t) / -t := by
+        have he : 1 + (s / -t) ^ 2 = (s * s + t * t) / (t * t) := by
+          rw [div_pow, show (-t) ^ 2 = t ^ 2 from by ring,
+            eq_div_iff (mul_ne_zero ht0 ht0)]
+          field_simp
+          ring
+        rw [he, Real.sqrt_div (by positivity : (0:ℝ) ≤ s * s + t * t),
+          show (t * t) = t ^ 2 from by ring, Real.sqrt_sq_eq_abs, abs_of_neg hyt]
+      have hcos : t / Real.sqrt (s * s + t * t)
+          = Real.cos (Real.pi / 2 + (Real.pi / 2 - Real.arctan (s / -t))) := by
+        have eA : Real.pi / 2 + (Real.pi / 2 - Real.arctan (s / -t))
+            = Real.pi - Real.arctan (s / -t) := by ring
+        rw [eA, Real.cos_pi_sub, Real.cos_arctan, hden]
+        field_simp [ht0, hr']
+      rw [hcos]
+      have hA0 : 0 ≤ s / -t := div_nonneg hs (le_of_lt h2)
+      exact (Real.arccos_cos
+        (x := Real.pi / 2 + (Real.pi / 2 - Real.arctan (s / -t)))
+        (by linarith [Real.arctan_nonneg.mpr hA0, Real.arctan_lt_pi_div_two (s / -t),
+          Real.pi_pos])
+        (by linarith [Real.arctan_nonneg.mpr hA0, Real.arctan_lt_pi_div_two (s / -t),
+          Real.pi_pos])).symm
+    · next h3 =>
+      split
+      · next h4 =>
+        -- branch `−t < 0`: atn2 = −π/2 − arctan (s/(−t))
+        have hyt : 0 < t := by
+          have h9 : -t = -1 * t := by ring
+          linarith
+        have ht0 : (t : ℝ) ≠ 0 := ne_of_gt hyt
+        have hden : Real.sqrt (1 + (s / -t) ^ 2) = Real.sqrt (s * s + t * t) / t := by
+          have he : 1 + (s / -t) ^ 2 = (s * s + t * t) / (t * t) := by
+            rw [div_pow, show (-t) ^ 2 = t ^ 2 from by ring,
+              eq_div_iff (mul_ne_zero ht0 ht0)]
+            field_simp
+            ring
+          rw [he, Real.sqrt_div (by positivity : (0:ℝ) ≤ s * s + t * t),
+            show (t * t) = t ^ 2 from by ring, Real.sqrt_sq_eq_abs, abs_of_pos hyt]
+        have hcos : t / Real.sqrt (s * s + t * t)
+            = Real.cos (Real.pi / 2 + (-(Real.pi / 2) - Real.arctan (s / -t))) := by
+          have eA : Real.pi / 2 + (-(Real.pi / 2) - Real.arctan (s / -t))
+              = -(Real.arctan (s / -t)) := by ring
+          rw [eA, Real.cos_neg, Real.cos_arctan, hden]
+          field_simp [ht0, hr']
+        rw [hcos]
+        have hA0 : s / -t ≤ 0 := div_nonpos_of_nonneg_of_nonpos hs (le_of_lt h4)
+        have hA1 : Real.arctan (s / -t) ≤ 0 := by
+          have h2x : 0 ≤ -(s / -t) := by linarith
+          have h3x := Real.arctan_nonneg.mpr h2x
+          rw [Real.arctan_neg] at h3x
+          linarith
+        exact (Real.arccos_cos
+          (x := Real.pi / 2 + (-(Real.pi / 2) - Real.arctan (s / -t)))
+          (by linarith)
+          (by linarith [Real.neg_pi_div_two_lt_arctan (s / -t), Real.pi_pos])).symm
+      · next h5 =>
+        -- junk branch: `−t = 0` and `s = 0` contradict `0 < s² + t²`
+        exfalso
+        have h6 : -t = 0 := le_antisymm (not_lt.mp h3) (not_lt.mp h5)
+        have ht0 : t = 0 := by
+          have h9 : -t = -1 * t := by ring
+          linarith
+        have h7 : s = 0 := by
+          have h8 : ¬ (0 < s) := fun hc => h1 (by simpa [h6] using hc)
+          linarith
+        rw [h7, ht0] at hr0
+        norm_num at hr0
+
+/-- Helper (2026-09-28): `ups_x` in Gram form from `2p = a + b − f`. -/
+private theorem p38_upsX_gram (a b f p : ℝ) (h : 2 * p = a + b - f) :
+    upsX a b f = 4 * (a * b - p * p) := by
+  simp only [upsX]
+  linear_combination (2 * p + a + b - f) * h
+
+/-- Helper (2026-09-28): `delta_x4` is `4·(a·r̃ − p̃·q̃)` in Gram form. -/
+private theorem p38_deltaX4_gram (a b c d e f p q r : ℝ)
+    (hp : 2 * p = a + b - f) (hq : 2 * q = a + c - e) (hr : 2 * r = b + c - d) :
+    deltaX4 a b c d e f = 4 * (a * r - p * q) := by
+  have hd : d = b + c - 2 * r := by linarith
+  have he : e = a + c - 2 * q := by linarith
+  have hf : f = a + b - 2 * p := by linarith
+  subst hd; subst he; subst hf
+  simp only [deltaX4]
+  ring
+
+/-- Helper (2026-09-28): `4·x1·delta_x + delta_x4² =
+ups_x(x1,x2,x6)·ups_x(x1,x3,x5)`. -/
+private theorem p38_ups_delta (a b c d e f p q r : ℝ)
+    (hp : 2 * p = a + b - f) (hq : 2 * q = a + c - e) (hr : 2 * r = b + c - d) :
+    4 * a * deltaX a b c d e f + deltaX4 a b c d e f ^ 2 =
+      upsX a b f * upsX a c e := by
+  have hd : d = b + c - 2 * r := by linarith
+  have he : e = a + c - 2 * q := by linarith
+  have hf : f = a + b - 2 * p := by linarith
+  subst hd; subst he; subst hf
+  simp only [deltaX, deltaX4, upsX]
+  ring
+
+/-- Helper (2026-09-28): `ups_x` is positive on the annulus box — the Heron
+factorization `ups = ((‖x‖+‖y‖)² − d²)(d² − (‖x‖−‖y‖)²)` with both factors
+forced by `2 ≤ ‖v‖`, `‖v‖ ≤ 2·h0`, `2 ≤ dist < 4`. -/
+private theorem p38_upsX_pos_box {x y : V3} (x2 : 2 ≤ ‖x‖) (xu : ‖x‖ ≤ 2 * h0)
+    (y2 : 2 ≤ ‖y‖) (yu : ‖y‖ ≤ 2 * h0) (hd : 2 ≤ dist x y) (h4 : dist x y < 4) :
+    0 < upsX (‖x‖ * ‖x‖) (‖y‖ * ‖y‖) (dist x y * dist x y) := by
+  have h0v : h0 = 1.26 := rfl
+  have he : upsX (‖x‖ * ‖x‖) (‖y‖ * ‖y‖) (dist x y * dist x y)
+      = ((‖x‖ + ‖y‖) ^ 2 - dist x y * dist x y)
+        * (dist x y * dist x y - (‖x‖ - ‖y‖) ^ 2) := by
+    simp only [upsX]
+    ring
+  rw [he, show dist x y * dist x y = dist x y ^ 2 from by ring]
+  have hs4 : (4 : ℝ) ≤ ‖x‖ + ‖y‖ := by linarith
+  have hsum : (4 : ℝ) ^ 2 ≤ (‖x‖ + ‖y‖) ^ 2 := sq_le_sq' (by linarith) hs4
+  have hdb : dist x y ^ 2 < (4 : ℝ) ^ 2 := sq_lt_sq' (by linarith) h4
+  have hdd : (2 : ℝ) ^ 2 ≤ dist x y ^ 2 := sq_le_sq' (by linarith) hd
+  have habs : |‖x‖ - ‖y‖| ≤ 2 * h0 - 2 := abs_le.mpr ⟨by linarith, by linarith⟩
+  have hsub : (‖x‖ - ‖y‖) ^ 2 ≤ (2 * h0 - 2) ^ 2 := sq_le_sq' (by linarith) (by linarith)
+  have hf1 : (0:ℝ) < (‖x‖ + ‖y‖) ^ 2 - dist x y ^ 2 := by linarith
+  have hf2 : (0:ℝ) < dist x y ^ 2 - (‖x‖ - ‖y‖) ^ 2 := by
+    have h52 : (2 * h0 - 2) ^ 2 < 4 := by norm_num [h0v]
+    linarith
+  exact mul_pos hf1 hf2
+
+/-- Helper (proved here 2026-09-28): the Gram-form of `delta_x` with the
+Gram entries given directly (`2p = a+b−f`, `2q = a+c−e`, `2r = b+c−d`). -/
+private theorem p38_deltaX_gram_aux (a b c d e f p q r : ℝ)
+    (hp : 2 * p = a + b - f) (hq : 2 * q = a + c - e) (hr : 2 * r = b + c - d) :
+    deltaX a b c d e f =
+      4 * (a * (b * c - r ^ 2) - p * (p * c - q * r) + q * (p * r - b * q)) := by
+  have hd : d = b + c - 2 * r := by linarith
+  have he : e = a + c - 2 * q := by linarith
+  have hf : f = a + b - 2 * p := by linarith
+  subst hd; subst he; subst hf
+  simp only [deltaX]
+  ring
+
+/-- Helper (proved here 2026-09-28): `delta_x` is 4× the Gram determinant
+of three edge vectors — `det [[a,p,q],[p,b,r],[q,r,c]]` with
+`p = (a+b−f)/2`, `q = (a+c−e)/2`, `r = (b+c−d)/2`. Pure algebra. -/
+private theorem p38_deltaX_gram (a b c d e f : ℝ) :
+    deltaX a b c d e f =
+      4 * (a * (b * c - ((b + c - d) / 2) ^ 2)
+        - ((a + b - f) / 2) * (((a + b - f) / 2) * c
+          - ((a + c - e) / 2) * ((b + c - d) / 2))
+        + ((a + c - e) / 2) * (((a + b - f) / 2) * ((b + c - d) / 2)
+          - b * ((a + c - e) / 2))) := by
+  have hp : 2 * ((a + b - f) / 2) = a + b - f := by ring
+  have hq : 2 * ((a + c - e) / 2) = a + c - e := by ring
+  have hr : 2 * ((b + c - d) / 2) = b + c - d := by ring
+  rw [p38_deltaX_gram_aux a b c d e f ((a + b - f) / 2) ((a + c - e) / 2)
+    ((b + c - d) / 2) hp hq hr]
+
+/-- Helper (proved here 2026-09-28): the Gram determinant of three vectors
+equals the determinant of the matrix with those rows, squared — hence
+nonnegative. -/
+private theorem p38_det_gram_eq (u v w : Fin 3 → ℝ) :
+    u ⬝ᵥ u * (v ⬝ᵥ v * w ⬝ᵥ w - (v ⬝ᵥ w) ^ 2)
+      - (u ⬝ᵥ v) * ((u ⬝ᵥ v) * w ⬝ᵥ w - (u ⬝ᵥ w) * (v ⬝ᵥ w))
+      + (u ⬝ᵥ w) * ((u ⬝ᵥ v) * (v ⬝ᵥ w) - v ⬝ᵥ v * (u ⬝ᵥ w))
+      = Matrix.det
+          (Matrix.of fun i j =>
+            (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) i ⬝ᵥ
+              (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) j) := by
+  rw [Matrix.det_fin_three]
+  simp [dotProduct, Matrix.of_apply, mul_comm]
+  ring
+
+private theorem p38_det_gram_nn (u v w : Fin 3 → ℝ) :
+    0 ≤ u ⬝ᵥ u * (v ⬝ᵥ v * w ⬝ᵥ w - (v ⬝ᵥ w) ^ 2)
+      - (u ⬝ᵥ v) * ((u ⬝ᵥ v) * w ⬝ᵥ w - (u ⬝ᵥ w) * (v ⬝ᵥ w))
+      + (u ⬝ᵥ w) * ((u ⬝ᵥ v) * (v ⬝ᵥ w) - v ⬝ᵥ v * (u ⬝ᵥ w)) := by
+  have hdet := p38_det_gram_eq u v w
+  have hGM : (Matrix.of fun i j =>
+      (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) i ⬝ᵥ
+        (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) j)
+      = (Matrix.of fun i j => (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) i j) *
+        (Matrix.of fun i j => (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) j i) := by
+    ext i j
+    simp [Matrix.mul_apply, dotProduct, Matrix.of_apply]
+  have hdMt : Matrix.det (Matrix.of fun i j =>
+      (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) j i)
+      = Matrix.det (Matrix.of fun i j =>
+        (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) i j) := by
+    rw [← show Matrix.transpose (Matrix.of fun i j =>
+          (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) j i)
+        = (Matrix.of fun i j => (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) i j) from rfl,
+      Matrix.det_transpose]
+  rw [hdet, hGM, Matrix.det_mul, hdMt]
+  linarith [sq_nonneg (Matrix.det (Matrix.of fun i j =>
+    (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) i j)), pow_two (Matrix.det (Matrix.of
+    fun i j => (![u, v, w] : Fin 3 → (Fin 3 → ℝ)) i j))]
+
+/-- Helper (2026-09-28): Cayley–Menger nonnegativity for a tetrahedron with
+apex `0` — the `DELTA_Y_POS_4POINTS` content (that theorem now cites this
+lemma; the copy here is needed because `tau3_taum` precedes it). -/
+
+private theorem p38_deltaY_pos_4 (v0 v1 v2 v3 : V3) :
+    0 ≤ deltaY (dist v0 v1) (dist v0 v2) (dist v0 v3) (dist v2 v3)
+      (dist v1 v3) (dist v1 v2) := by
+  have hA : dist v0 v1 * dist v0 v1
+      = ((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v1 - v0 : V3) : Fin 3 → ℝ) := by
+    rw [dist_eq_norm, ← pow_two, norm_sub_rev]
+    exact norm_sq_eq_dot (v1 - v0)
+  have hB : dist v0 v2 * dist v0 v2
+      = ((v2 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v2 - v0 : V3) : Fin 3 → ℝ) := by
+    rw [dist_eq_norm, ← pow_two, norm_sub_rev]
+    exact norm_sq_eq_dot (v2 - v0)
+  have hC : dist v0 v3 * dist v0 v3
+      = ((v3 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v3 - v0 : V3) : Fin 3 → ℝ) := by
+    rw [dist_eq_norm, ← pow_two, norm_sub_rev]
+    exact norm_sq_eq_dot (v3 - v0)
+  have hP : 2 * (((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v2 - v0 : V3) : Fin 3 → ℝ))
+      = ((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v1 - v0 : V3) : Fin 3 → ℝ)
+        + ((v2 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v2 - v0 : V3) : Fin 3 → ℝ)
+        - dist v1 v2 * dist v1 v2 := by
+    have hc := p38_cos_law (v1 - v0) (v2 - v0)
+    rw [show ‖(v1 - v0 : V3)‖ = dist v0 v1 from by rw [dist_eq_norm, norm_sub_rev],
+      show ‖(v2 - v0 : V3)‖ = dist v0 v2 from by rw [dist_eq_norm, norm_sub_rev]] at hc
+    rw [hA, hB] at hc
+    rw [show dist v1 v2 = dist (v1 - v0) (v2 - v0) from by
+      rw [dist_eq_norm, dist_eq_norm, sub_sub_sub_cancel_right]]
+    exact hc
+  have hQ : 2 * (((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v3 - v0 : V3) : Fin 3 → ℝ))
+      = ((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v1 - v0 : V3) : Fin 3 → ℝ)
+        + ((v3 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v3 - v0 : V3) : Fin 3 → ℝ)
+        - dist v1 v3 * dist v1 v3 := by
+    have hc := p38_cos_law (v1 - v0) (v3 - v0)
+    rw [show ‖(v1 - v0 : V3)‖ = dist v0 v1 from by rw [dist_eq_norm, norm_sub_rev],
+      show ‖(v3 - v0 : V3)‖ = dist v0 v3 from by rw [dist_eq_norm, norm_sub_rev]] at hc
+    rw [hA, hC] at hc
+    rw [show dist v1 v3 = dist (v1 - v0) (v3 - v0) from by
+      rw [dist_eq_norm, dist_eq_norm, sub_sub_sub_cancel_right]]
+    exact hc
+  have hR : 2 * (((v2 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v3 - v0 : V3) : Fin 3 → ℝ))
+      = ((v2 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v2 - v0 : V3) : Fin 3 → ℝ)
+        + ((v3 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v3 - v0 : V3) : Fin 3 → ℝ)
+        - dist v2 v3 * dist v2 v3 := by
+    have hc := p38_cos_law (v2 - v0) (v3 - v0)
+    rw [show ‖(v2 - v0 : V3)‖ = dist v0 v2 from by rw [dist_eq_norm, norm_sub_rev],
+      show ‖(v3 - v0 : V3)‖ = dist v0 v3 from by rw [dist_eq_norm, norm_sub_rev]] at hc
+    rw [hB, hC] at hc
+    rw [show dist v2 v3 = dist (v2 - v0) (v3 - v0) from by
+      rw [dist_eq_norm, dist_eq_norm, sub_sub_sub_cancel_right]]
+    exact hc
+  rw [deltaY, hA, hB, hC,
+    p38_deltaX_gram_aux
+      (((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v1 - v0 : V3) : Fin 3 → ℝ))
+      (((v2 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v2 - v0 : V3) : Fin 3 → ℝ))
+      (((v3 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v3 - v0 : V3) : Fin 3 → ℝ))
+      (dist v2 v3 * dist v2 v3) (dist v1 v3 * dist v1 v3)
+      (dist v1 v2 * dist v1 v2)
+      (((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v2 - v0 : V3) : Fin 3 → ℝ))
+      (((v1 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v3 - v0 : V3) : Fin 3 → ℝ))
+      (((v2 - v0 : V3) : Fin 3 → ℝ) ⬝ᵥ ((v3 - v0 : V3) : Fin 3 → ℝ))
+      hP hQ hR]
+  linarith [p38_det_gram_nn ((v1 - v0 : V3) : Fin 3 → ℝ)
+    ((v2 - v0 : V3) : Fin 3 → ℝ) ((v3 - v0 : V3) : Fin 3 → ℝ)]
+
+/-- The `DIHV_EQ_DIH_Y` bridge (2026-09-28): at a tetrahedron with apex `0`,
+the geometric dihedral `dihV 0 w1 w2 w3` equals the analytic `dih_y` of the
+squared-length box — both angles have cosine
+`deltaX4 x / √(4·x1·deltaX x + deltaX4 x²)`.  `hΔy` is the Cayley–Menger
+nonnegativity (`p38_deltaY_pos_4`). -/
+private theorem p38_dihV_eq_dihY (w1 w2 w3 : V3)
+    (hw1 : 0 < ‖w1‖)
+    (hΔy : 0 ≤ deltaY ‖w1‖ ‖w2‖ ‖w3‖ (dist w2 w3) (dist w1 w3) (dist w1 w2))
+    (hu2 : 0 < upsX (‖w1‖ * ‖w1‖) (‖w2‖ * ‖w2‖) (dist w1 w2 * dist w1 w2))
+    (hu3 : 0 < upsX (‖w1‖ * ‖w1‖) (‖w3‖ * ‖w3‖) (dist w1 w3 * dist w1 w3)) :
+    dihV 0 w1 w2 w3 =
+      dihY ‖w1‖ ‖w2‖ ‖w3‖ (dist w2 w3) (dist w1 w3) (dist w1 w2) := by
+  set a : ℝ := ‖w1‖ * ‖w1‖ with ha
+  set b : ℝ := ‖w2‖ * ‖w2‖ with hb
+  set c : ℝ := ‖w3‖ * ‖w3‖ with hc
+  set d : ℝ := dist w2 w3 * dist w2 w3 with hd
+  set e : ℝ := dist w1 w3 * dist w1 w3 with he
+  set f : ℝ := dist w1 w2 * dist w1 w2 with hf
+  set p : ℝ := w1 ⬝ᵥ w2 with hp
+  set q : ℝ := w1 ⬝ᵥ w3 with hq
+  set r : ℝ := w2 ⬝ᵥ w3 with hr
+  have gA : a = w1 ⬝ᵥ w1 := by rw [ha, ← norm_sq_eq_dot, pow_two]
+  have gB : b = w2 ⬝ᵥ w2 := by rw [hb, ← norm_sq_eq_dot, pow_two]
+  have gC : c = w3 ⬝ᵥ w3 := by rw [hc, ← norm_sq_eq_dot, pow_two]
+  have hP' : 2 * p = a + b - f := p38_cos_law w1 w2
+  have hQ' : 2 * q = a + c - e := p38_cos_law w1 w3
+  have hR' : 2 * r = b + c - d := p38_cos_law w2 w3
+  have hU2 : upsX a b f = 4 * (a * b - p * p) := p38_upsX_gram a b f p hP'
+  have hU3 : upsX a c e = 4 * (a * c - q * q) := p38_upsX_gram a c e q hQ'
+  have hD4 : deltaX4 a b c d e f = 4 * (a * r - p * q) :=
+    p38_deltaX4_gram a b c d e f p q r hP' hQ' hR'
+  have hUD : 4 * a * deltaX a b c d e f + deltaX4 a b c d e f ^ 2
+      = upsX a b f * upsX a c e := p38_ups_delta a b c d e f p q r hP' hQ' hR'
+  have hap : (0:ℝ) < a := by positivity
+  have hΔx : deltaX a b c d e f
+      = deltaY ‖w1‖ ‖w2‖ ‖w3‖ (dist w2 w3) (dist w1 w3) (dist w1 w2) := by
+    rw [deltaY, ← ha, ← hb, ← hc, ← hd, ← he, ← hf]
+  have hΔ0 : 0 ≤ 4 * a * deltaX a b c d e f := by
+    have h1x : 0 ≤ deltaX a b c d e f := by rw [hΔx]; exact hΔy
+    exact mul_nonneg (by positivity) h1x
+  have hden : 0 < 4 * a * deltaX a b c d e f + deltaX4 a b c d e f ^ 2 := by
+    rw [hUD]; exact mul_pos hu2 hu3
+  have hdihY : dihY ‖w1‖ ‖w2‖ ‖w3‖ (dist w2 w3) (dist w1 w3) (dist w1 w2)
+      = Real.pi / 2 + atn2 (Real.sqrt (4 * a * deltaX a b c d e f))
+          (-(deltaX4 a b c d e f)) := by
+    rw [dihY, show ‖w1‖ * ‖w1‖ = a from ha.symm, show ‖w2‖ * ‖w2‖ = b from hb.symm,
+      show ‖w3‖ * ‖w3‖ = c from hc.symm,
+      show dist w2 w3 * dist w2 w3 = d from hd.symm,
+      show dist w1 w3 * dist w1 w3 = e from he.symm,
+      show dist w1 w2 * dist w1 w2 = f from hf.symm, dihXf]
+  have hdihv0 : dihV 0 w1 w2 w3
+      = arcV 0 (a • w2 - p • w1) (a • w3 - q • w1) := by
+    unfold dihV
+    dsimp only
+    simp only [sub_zero]
+    rw [dotProduct_comm w2 w1, dotProduct_comm w3 w1, ← gA, ← hp, ← hq]
+  have harc : arcV 0 (a • w2 - p • w1) (a • w3 - q • w1)
+      = Real.arccos (((a • w2 - p • w1 : V3) ⬝ᵥ (a • w3 - q • w1))
+        / (dist (a • w2 - p • w1) (0:V3) * dist (a • w3 - q • w1) (0:V3))) := by
+    rw [arcV]
+    simp only [p38_coe_zero, p38_coe_sub, p38_coe_smul, sub_zero, dist_zero_right]
+  have hnum : ((a • w2 - p • w1 : V3) ⬝ᵥ (a • w3 - q • w1)) = a * (a * r - p * q) := by
+    simp only [p38_coe_sub, p38_coe_smul]
+    simp only [dotProduct_sub, sub_dotProduct, dotProduct_smul, smul_dotProduct]
+    rw [dotProduct_comm w2 w1, ← gA, ← hp, ← hq, ← hr]
+    ring
+  have hab1 : 0 < a * b - p * p := by linarith
+  have hab2 : 0 < a * c - q * q := by linarith
+  have hnn2 : ((a • w2 - p • w1 : V3) ⬝ᵥ (a • w2 - p • w1)) = a * (a * b - p * p) := by
+    simp only [p38_coe_sub, p38_coe_smul]
+    simp only [dotProduct_sub, sub_dotProduct, dotProduct_smul, smul_dotProduct]
+    rw [dotProduct_comm w2 w1, ← gA, ← hp, ← gB]
+    ring
+  have hnn3 : ((a • w3 - q • w1 : V3) ⬝ᵥ (a • w3 - q • w1)) = a * (a * c - q * q) := by
+    simp only [p38_coe_sub, p38_coe_smul]
+    simp only [dotProduct_sub, sub_dotProduct, dotProduct_smul, smul_dotProduct]
+    rw [dotProduct_comm w3 w1, ← gA, ← hq, ← gC]
+    ring
+  have hdist2 : dist (a • w2 - p • w1) (0:V3) = Real.sqrt (a * (a * b - p * p)) := by
+    rw [dist_zero_right, ← Real.sqrt_sq (norm_nonneg _), norm_sq_eq_dot]
+    exact congrArg Real.sqrt hnn2
+  have hdist3 : dist (a • w3 - q • w1) (0:V3) = Real.sqrt (a * (a * c - q * q)) := by
+    rw [dist_zero_right, ← Real.sqrt_sq (norm_nonneg _), norm_sq_eq_dot]
+    exact congrArg Real.sqrt hnn3
+  have hden' : dist (a • w2 - p • w1) (0:V3) * dist (a • w3 - q • w1) (0:V3)
+      = a * Real.sqrt ((a * b - p * p) * (a * c - q * q)) := by
+    rw [hdist2, hdist3]
+    calc Real.sqrt (a * (a * b - p * p)) * Real.sqrt (a * (a * c - q * q))
+        = Real.sqrt ((a * (a * b - p * p)) * (a * (a * c - q * q))) :=
+          (Real.sqrt_mul (by positivity : (0:ℝ) ≤ a * (a * b - p * p)) _).symm
+      _ = Real.sqrt ((a * a) * ((a * b - p * p) * (a * c - q * q))) := by
+          rw [show (a * (a * b - p * p)) * (a * (a * c - q * q))
+            = (a * a) * ((a * b - p * p) * (a * c - q * q)) from by ring]
+      _ = a * Real.sqrt ((a * b - p * p) * (a * c - q * q)) := by
+          rw [Real.sqrt_mul (by positivity : (0:ℝ) ≤ a * a),
+            Real.sqrt_mul_self (le_of_lt hap)]
+  have harg : (a * (a * r - p * q)) / (a * Real.sqrt ((a * b - p * p) * (a * c - q * q)))
+      = deltaX4 a b c d e f / Real.sqrt (4 * a * deltaX a b c d e f
+        + deltaX4 a b c d e f ^ 2) := by
+    rw [hUD, hD4, hU2, hU3]
+    have hsq16 : Real.sqrt ((4:ℝ) * (a * b - p * p) * (4 * (a * c - q * q)))
+        = 4 * Real.sqrt ((a * b - p * p) * (a * c - q * q)) := by
+      rw [show (4:ℝ) * (a * b - p * p) * (4 * (a * c - q * q))
+            = 16 * ((a * b - p * p) * (a * c - q * q)) from by ring,
+        Real.sqrt_mul (by positivity : (0:ℝ) ≤ 16)]
+      have h16 : Real.sqrt 16 = 4 := by norm_num
+      rw [h16]
+    rw [hsq16]
+    have hane : a ≠ 0 := ne_of_gt hap
+    have hzne : Real.sqrt ((a * b - p * p) * (a * c - q * q)) ≠ 0 :=
+      ne_of_gt (Real.sqrt_pos.mpr (mul_pos hab1 hab2))
+    field_simp [hane, hzne]
+  rw [hdihv0, harc, hnum, hden', harg, hdihY]
+  have hdens : 0 < (Real.sqrt (4 * a * deltaX a b c d e f)) ^ 2
+      + deltaX4 a b c d e f ^ 2 := by
+    rw [Real.sq_sqrt hΔ0]
+    exact hden
+  have hz := p38_atn2_arccos (s := Real.sqrt (4 * a * deltaX a b c d e f))
+    (t := deltaX4 a b c d e f) (Real.sqrt_nonneg _) hdens
+  rw [show Real.sqrt (4 * a * deltaX a b c d e f)
+        * Real.sqrt (4 * a * deltaX a b c d e f)
+      = (Real.sqrt (4 * a * deltaX a b c d e f)) ^ 2 from by ring,
+    show deltaX4 a b c d e f * deltaX4 a b c d e f
+      = deltaX4 a b c d e f ^ 2 from by ring,
+    Real.sq_sqrt hΔ0] at hz
+  exact hz.symm
+
+/-- The `tau3` = `taum` transfer on the annulus box (2026-09-28): the
+composed `DIHV_EQ_DIH_Y` + `taum_dih_y` route.  `hΔ` is the Cayley–Menger
+nonnegativity in norm form (`p38_deltaY_pos_4 0 v w u` + `dist_zero_left`). -/
+private theorem p38_tau3_eq_taum {v0 v1 v2 : V3}
+    (hΔ : ∀ v w u : V3, 0 ≤ deltaY ‖v‖ ‖w‖ ‖u‖ (dist w u) (dist v u) (dist v w))
+    (m0 : 2 ≤ ‖v0‖) (m0u : ‖v0‖ ≤ 2 * h0) (m1 : 2 ≤ ‖v1‖) (m1u : ‖v1‖ ≤ 2 * h0)
+    (m2 : 2 ≤ ‖v2‖) (m2u : ‖v2‖ ≤ 2 * h0)
+    (d01 : 2 ≤ dist v0 v1) (d01u : dist v0 v1 < 4) (d02 : 2 ≤ dist v0 v2)
+    (d02u : dist v0 v2 < 4) (d12 : 2 ≤ dist v1 v2) (d12u : dist v1 v2 < 4) :
+    tau3 v0 v1 v2 =
+      taum ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1) := by
+  have dc01 : 2 ≤ dist v1 v0 := by rw [dist_comm]; exact d01
+  have dc02 : 2 ≤ dist v2 v0 := by rw [dist_comm]; exact d02
+  have dc12 : 2 ≤ dist v2 v1 := by rw [dist_comm]; exact d12
+  have dc01u : dist v1 v0 < 4 := by rw [dist_comm]; exact d01u
+  have dc02u : dist v2 v0 < 4 := by rw [dist_comm]; exact d02u
+  have dc12u : dist v2 v1 < 4 := by rw [dist_comm]; exact d12u
+  have u01 := p38_upsX_pos_box m0 m0u m1 m1u d01 d01u
+  have u02 := p38_upsX_pos_box m0 m0u m2 m2u d02 d02u
+  have u12 := p38_upsX_pos_box m1 m1u m2 m2u d12 d12u
+  have u10 := p38_upsX_pos_box m1 m1u m0 m0u dc01 dc01u
+  have u20 := p38_upsX_pos_box m2 m2u m0 m0u dc02 dc02u
+  have u21 := p38_upsX_pos_box m2 m2u m1 m1u dc12 dc12u
+  have p0 : 0 < ‖v0‖ := lt_of_lt_of_le (by norm_num : (0:ℝ) < 2) m0
+  have p1 : 0 < ‖v1‖ := lt_of_lt_of_le (by norm_num : (0:ℝ) < 2) m1
+  have p2 : 0 < ‖v2‖ := lt_of_lt_of_le (by norm_num : (0:ℝ) < 2) m2
+  simp only [tau3]
+  rw [p38_dihV_eq_dihY v0 v1 v2 p0 (hΔ v0 v1 v2) u01 u02,
+      p38_dihV_eq_dihY v1 v2 v0 p1 (hΔ v1 v2 v0) u12 u10,
+      p38_dihV_eq_dihY v2 v0 v1 p2 (hΔ v2 v0 v1) u20 u21]
+  rw [dist_comm v2 v0, dist_comm v1 v0, dist_comm v2 v1]
+  exact (p38_taum_dih_y ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1)).symm
+
 /-- HOL `tau3_taum` (terminal.hl:489). -/
 theorem tau3_taum (v0 v1 v2 : V3) :
     v0 ∈ ballAnnulus → v1 ∈ ballAnnulus → v2 ∈ ballAnnulus →
@@ -697,8 +1281,25 @@ theorem tau3_taum (v0 v1 v2 : V3) :
     tau3 v0 v1 v2 =
       taum ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1) := by
   intro _ _ _ _ _ _ _ _ _
-  sorry -- DISCHARGES: tau3-to-taum formula transfer
-  -- BLOCKED: needs DIHV_EQ_DIH_Y + taum_dih_y (open at LocalAuto16:459).
+  have hA : v0 ∈ ballAnnulus := by assumption
+  have hB : v1 ∈ ballAnnulus := by assumption
+  have hC : v2 ∈ ballAnnulus := by assumption
+  have h01 : 2 ≤ dist v0 v1 := by assumption
+  have h02 : 2 ≤ dist v0 v2 := by assumption
+  have h12 : 2 ≤ dist v1 v2 := by assumption
+  have h01u : dist v0 v1 ≤ 3.62 := by assumption
+  have h02u : dist v0 v2 ≤ 3.62 := by assumption
+  have h12u : dist v1 v2 ≤ 3.62 := by assumption
+  obtain ⟨n0, n0u⟩ := ballAnnulus_norm_bounds hA
+  obtain ⟨n1, n1u⟩ := ballAnnulus_norm_bounds hB
+  obtain ⟨n2, n2u⟩ := ballAnnulus_norm_bounds hC
+  exact p38_tau3_eq_taum (fun v w u => by
+      have h := p38_deltaY_pos_4 0 v w u
+      rwa [dist_zero_left, dist_zero_left, dist_zero_left] at h)
+    n0 n0u n1 n1u n2 n2u
+    h01 (lt_of_le_of_lt h01u (by norm_num : (3.62:ℝ) < 4))
+    h02 (lt_of_le_of_lt h02u (by norm_num : (3.62:ℝ) < 4))
+    h12 (lt_of_le_of_lt h12u (by norm_num : (3.62:ℝ) < 4))
 
 /-- HOL `tau3_taum_40` (terminal.hl:513): the `< &4` variant. -/
 theorem tau3_taum_40 (v0 v1 v2 : V3) :
@@ -708,15 +1309,32 @@ theorem tau3_taum_40 (v0 v1 v2 : V3) :
     tau3 v0 v1 v2 =
       taum ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1) := by
   intro _ _ _ _ _ _ _ _ _
-  sorry -- DISCHARGES: tau3-to-taum formula transfer
-  -- BLOCKED: as tau3_taum (DIHV_EQ_DIH_Y + taum_dih_y).
+  have hA : v0 ∈ ballAnnulus := by assumption
+  have hB : v1 ∈ ballAnnulus := by assumption
+  have hC : v2 ∈ ballAnnulus := by assumption
+  have h01 : 2 ≤ dist v0 v1 := by assumption
+  have h02 : 2 ≤ dist v0 v2 := by assumption
+  have h12 : 2 ≤ dist v1 v2 := by assumption
+  have h01u : dist v0 v1 < 4 := by assumption
+  have h02u : dist v0 v2 < 4 := by assumption
+  have h12u : dist v1 v2 < 4 := by assumption
+  obtain ⟨n0, n0u⟩ := ballAnnulus_norm_bounds hA
+  obtain ⟨n1, n1u⟩ := ballAnnulus_norm_bounds hB
+  obtain ⟨n2, n2u⟩ := ballAnnulus_norm_bounds hC
+  exact p38_tau3_eq_taum (fun v w u => by
+      have h := p38_deltaY_pos_4 0 v w u
+      rwa [dist_zero_left, dist_zero_left, dist_zero_left] at h)
+    n0 n0u n1 n1u n2 n2u h01 h01u h02 h02u h12 h12u
 
-/-- HOL `DELTA_Y_POS_4POINTS` (terminal.hl:537). -/
+/-- HOL `DELTA_Y_POS_4POINTS` (terminal.hl:537). DISCHARGED 2026-09-28:
+`delta_y` is 4× the Gram determinant of the three edge vectors `v1 − v0`,
+`v2 − v0`, `v3 − v0` (via `p38_deltaX_gram`), the cross terms come from
+`‖x − y‖²` dot expansions, and the Gram determinant equals
+`det M · det Mᵀ = det M² ≥ 0` (`p38_det_gram_nn`). -/
 theorem DELTA_Y_POS_4POINTS (v0 v1 v2 v3 : V3) :
     0 ≤ deltaY (dist v0 v1) (dist v0 v2) (dist v0 v3) (dist v2 v3)
-      (dist v1 v3) (dist v1 v2) := by
-  sorry -- DISCHARGES: Cayley-Menger positivity of a 4-point simplex
-  -- BLOCKED: needs Collect_geom.DELTA_POS_4POINTS (unported).
+      (dist v1 v3) (dist v1 v2) :=
+  p38_deltaY_pos_4 v0 v1 v2 v3
 
 /-- HOL `tau3_taum_d` (terminal.hl:548). -/
 theorem tau3_taum_d (d a01 a12 a02 b01 b12 b02 : ℝ)
@@ -731,8 +1349,11 @@ theorem tau3_taum_d (d a01 a12 a02 b01 b12 b02 : ℝ)
     a12 ≤ dist v1 v2 → dist v1 v2 ≤ b12 → a02 ≤ dist v0 v2 →
     dist v0 v2 ≤ b02 → d ≤ tau3 v0 v1 v2 := by
   intro _ _ _ _ _ _ _ _ _ _ _ _
-  sorry -- DISCHARGES: tau3_taum
-  -- BLOCKED: as tau3_taum (DIHV_EQ_DIH_Y + taum_dih_y).
+  sorry -- NEEDS: the DIHV_EQ_DIH_Y bridge is DONE (p38_dihV_eq_dihY above),
+  -- but this statement's hypotheses do NOT force `2 ≤ dist v_i v_j`, so the
+  -- ups_x-factors of the bridge can vanish on parallel wedges (where
+  -- dihV = π/2-junk ≠ dihY ∈ {0,π,3π/2}).  Remaining work: a degenerate-case
+  -- analysis showing d ≤ tau3 from h's box-bound (statement-level question).
 
 /-- HOL `tau3_taum_dfun` (terminal.hl:583): tau3_taum_d with the
 edge-correction functional `f`. -/
@@ -748,8 +1369,8 @@ theorem tau3_taum_dfun (d : ℝ) (a01 a12 a02 b01 b12 b02 : ℝ) (f : ℝ → �
     a12 ≤ dist v1 v2 → dist v1 v2 ≤ b12 → a02 ≤ dist v0 v2 →
     dist v0 v2 ≤ b02 → d + f (dist v1 v2) (dist v0 v2) (dist v0 v1) ≤ tau3 v0 v1 v2 := by
   intro _ _ _ _ _ _ _ _ _ _ _ _
-  sorry -- DISCHARGES: tau3_taum
-  -- BLOCKED: as tau3_taum (DIHV_EQ_DIH_Y + taum_dih_y).
+  sorry -- NEEDS: as tau3_taum_d above (bridge done; degenerate parallel-wedge
+  -- case blocks the ups_x-positivity — statement-level question).
 
 /-- HOL `taustar_taum` (terminal.hl:618). -/
 theorem taustar_taum (d : ℝ) (a b : ℕ → ℕ → ℝ) (h1 : 2 ≤ a 0 1) (h2 : 2 ≤ a 1 2)
@@ -764,6 +1385,27 @@ theorem taustar_taum (d : ℝ) (a b : ℕ → ℕ → ℝ) (h1 : 2 ≤ a 0 1) (h
     0 ≤ taustarV39 (mkUnadornedV39 3 d a b) vv := by
   sorry -- DISCHARGES: tau3_taum (box-to-vector transfer)
   -- BLOCKED: as tau3_taum (DIHV_EQ_DIH_Y + taum_dih_y).
+
+/-- Helper (2026-09-28): `setSum` over the `{i | i < 3 ∧ f i (i+1)}` index
+set evaluates to the three-way `if`. -/
+private theorem p38_setSum3 (f : ℕ → ℕ → Prop) (g : ℕ → ℝ) :
+    setSum {i | i < 3 ∧ f i (i + 1)} g
+      = (if f 0 1 then g 0 else 0) + (if f 1 2 then g 1 else 0)
+        + (if f 2 3 then g 2 else 0) := by
+  rw [setSum]
+  have hfin : Set.Finite {i | i < 3 ∧ f i (i + 1)} :=
+    Set.Finite.subset (Set.finite_Iio 3) (fun _ hx => hx.1)
+  rw [dif_pos hfin]
+  have hF : hfin.toFinset = Finset.filter (fun i => f i (i + 1)) (Finset.range 3) := by
+    ext i
+    simp only [Set.Finite.mem_toFinset, Set.mem_setOf_eq, Finset.mem_filter,
+      Finset.mem_range]
+  rw [hF, Finset.sum_filter,
+    Finset.sum_range_succ (fun i => (if f i (i + 1) then g i else 0)) 2,
+    Finset.sum_range_succ (fun i => (if f i (i + 1) then g i else 0)) 1,
+    Finset.sum_range_succ (fun i => (if f i (i + 1) then g i else 0)) 0]
+  simp only [Finset.sum_empty, Nat.reduceAdd, zero_add]
+  ring
 
 /-- HOL `taustar_taum_dfun` (terminal.hl:642). -/
 theorem taustar_taum_dfun (d : ℝ) (a b : ℕ → ℕ → ℝ) (f : ℕ → ℕ → Prop)
@@ -1688,7 +2330,32 @@ theorem vv_azim_le (vv : ℕ → V3) (k i j : ℕ)
   rw [show i + k - 1 = i + (k - 1) by omega]
   exact hin.2
 
-/-- HOL `vv_split_azim` (terminal.hl:1492). -/
+/-- Helper (proved here 2026-09-28): `(i + c) % k ≠ i % k` whenever `2 ≤ k`
+and `c` is not a multiple of `k`. -/
+private theorem p38_mod_add_ne {k c i : ℕ} (hk : 2 ≤ k) (hc : ¬(c % k = 0)) :
+    (i + c) % k ≠ i % k := by
+  have h1 : (i + c) % k = (i % k + c % k) % k := Nat.add_mod i c k
+  have hilt : i % k < k := Nat.mod_lt i (by omega)
+  have hclt : c % k < k := Nat.mod_lt c (by omega)
+  rw [h1]
+  rcases Nat.lt_or_ge (i % k + c % k) k with hlt | hge
+  · rw [Nat.mod_eq_of_lt hlt]
+    intro hcon
+    exact hc (by omega)
+  · have h2 : (i % k + c % k) % k = i % k + c % k - k := by
+      have h3 : i % k + c % k - k < k := by omega
+      have hx : i % k + c % k = (i % k + c % k - k) + k := by omega
+      conv_lhs => rw [hx]
+      rw [Nat.add_mod_right, Nat.mod_eq_of_lt h3]
+    rw [h2]
+    intro hcon
+    exact hc (by omega)
+
+set_option maxHeartbeats 10000000 in
+/-- HOL `vv_split_azim` (terminal.hl:1492). DISCHARGED 2026-09-28: this is
+`sum4_azim_fan` (TopologyFan, now on the import lane) applied over the
+in-file `vv_azim_le` ordering, with the three non-collinearity side
+conditions read off `NONPARALLEL_BALL_ANNULUS40_ALT` from the annulus box. -/
 theorem vv_split_azim (vv : ℕ → V3) (k i j : ℕ)
     (hper : Periodic vv k) (hk : 3 ≤ k)
     (hsub : Set.range vv ⊆ ballAnnulus)
@@ -1703,10 +2370,55 @@ theorem vv_split_azim (vv : ℕ → V3) (k i j : ℕ)
     azim 0 (vv i) (vv (i + 1)) (vv (i + k - 1)) =
       azim 0 (vv i) (vv (i + 1)) (vv j) +
         azim 0 (vv i) (vv j) (vv (i + k - 1)) := by
-  sorry -- DISCHARGES: azim splitting in the fan
-  -- BLOCKED: needs sum4_azim_fan (TopologyFan.lean, not on this import
-    -- lane) applied over vv_azim_le.
-    -- import lane) applied over vv_azim_le
+  have hk0 : ¬(k = 0) := by omega
+  have hk2 : 2 ≤ k := by omega
+  have h1mod : 1 % k = 1 := Nat.mod_eq_of_lt (by omega)
+  have hkm1 : (k - 1) % k = k - 1 := Nat.mod_eq_of_lt (by omega)
+  have hdown : ∀ a : ℕ, vv a = vv (a % k) := by
+    intro a
+    induction a using Nat.strong_induction_on with
+    | _ a ih =>
+      rcases Nat.lt_or_ge a k with hak | hak
+      · rw [Nat.mod_eq_of_lt hak]
+      · rw [show a = (a - k) + k by omega, hper (a - k), ih (a - k) (by omega),
+          Nat.add_mod_right]
+  have hcoll : ∀ m n : ℕ, 2 ≤ dist (vv m) (vv n) → dist (vv m) (vv n) < 4 →
+      ¬ Collinear3 0 (vv m) (vv n) :=
+    fun m n hge hlt => NONPARALLEL_BALL_ANNULUS40_ALT (vv m) (vv n) hge hlt
+      (hsub (Set.mem_range_self m)) (hsub (Set.mem_range_self n))
+  have hne0 : vv i ≠ 0 := by
+    obtain ⟨hb, _⟩ := ballAnnulus_norm_bounds (hsub (Set.mem_range_self i))
+    intro he
+    rw [he] at hb
+    rw [norm_zero] at hb
+    linarith
+  have hpv : ∀ m n : ℕ, vv m = vv n ↔ m % k = n % k := by
+    intro m n
+    constructor
+    · intro he
+      refine hinj (m % k) (n % k) ⟨Nat.mod_lt _ (by omega), Nat.mod_lt _ (by omega), ?_⟩
+      rw [← hdown m, ← hdown n, he]
+    · intro h
+      rw [hdown m, hdown n, h]
+  have hsucc : ¬(vv i = vv (i + 1)) := fun he =>
+    p38_mod_add_ne (k := k) (c := 1) (i := i) hk2
+      (by rw [h1mod]; omega) (hpv _ _ |>.mp he).symm
+  have hik : (i + (k - 1) : ℕ) = i + k - 1 := by omega
+  have hge1 : 2 ≤ dist (vv i) (vv (i + 1)) := hsep i (i + 1) hsucc
+  have hgej : 2 ≤ dist (vv i) (vv j) := hsep i j
+    (fun he => hmod (hpv i j |>.mp he))
+  have hgeik : 2 ≤ dist (vv i) (vv (i + k - 1)) := by
+    have h := hsep i (i + (k - 1)) (fun he =>
+      p38_mod_add_ne (k := k) (c := k - 1) (i := i) hk2
+        (by rw [hkm1]; omega) (hpv _ _ |>.mp he).symm)
+    rwa [hik] at h
+  have hd2k : dist (vv i) (vv (i + k - 1)) < 4 := by
+    rw [← hik]
+    exact hd2
+  exact sum4_azim_fan (x := 0) (v := vv i) (u := vv (i + 1)) (w1 := vv j)
+    (w2 := vv (i + k - 1)) hne0 (hcoll i (i + 1) hge1 hd1) (hcoll i j hgej hd3)
+    (hcoll i (i + k - 1) hgeik hd2k)
+    (vv_azim_le vv k i j hper hk hsub hd1 hd2 hd3 hmod hsep hcf hinj)
 
 /-- HOL `EGHNAVX1_ALT` (terminal.hl:1536). -/
 theorem EGHNAVX1_ALT (V : Set V3) (E : Set (Set V3)) (FF : Set (V3 × V3))
@@ -1811,7 +2523,36 @@ theorem convex_local_fan_azim_le_pi (vv : ℕ → V3) (k i : ℕ)
   rw [show i + k - 1 = i + (k - 1) by omega]
   exact hle
 
-/-- HOL `vv_quad_split012` (terminal.hl:1996). -/
+/-- Helper (proved here 2026-09-28): the `AZIM_LE_PI_EQ_DIHV` bridge rendered
+locally from LuneVolume's public `azim_dihv_same` / `azim_dihv_compl` —
+on `azim ≤ π` the azimuth equals the geometric dihedral. -/
+private theorem p38_azim_eq_dihV {v w v1 v2 : V3} (h1 : ¬ Collinear3 v w v1)
+    (h2 : ¬ Collinear3 v w v2) (hp : azim v w v1 v2 ≤ Real.pi) :
+    azim v w v1 v2 = dihV v w v1 v2 := by
+  rcases lt_or_eq_of_le hp with hlt | heq
+  · exact azim_dihv_same h1 h2 hlt
+  · have hle : Real.pi ≤ azim v w v1 v2 := by rw [heq]
+    have hc := azim_dihv_compl h1 h2 hle
+    rw [heq]
+    linarith
+
+/-- Helper (proved here 2026-09-28): quad non-collinearity from the k = 4
+separation kit — the annulus box plus `NONPARALLEL_BALL_ANNULUS40_ALT`. -/
+private theorem p38_quad_ncoll {vv : ℕ → V3} (hsub : Set.range vv ⊆ ballAnnulus)
+    (hsep : ∀ i j : ℕ, ¬(vv i = vv j) → 2 ≤ dist (vv i) (vv j))
+    (hinj : ∀ i j : ℕ, i < 4 ∧ j < 4 ∧ vv i = vv j → i = j)
+    {m n : ℕ} (hm : m < 4) (hn : n < 4) (hne : ¬(m = n))
+    (hlt : dist (vv m) (vv n) < 4) : ¬ Collinear3 0 (vv m) (vv n) := by
+  refine NONPARALLEL_BALL_ANNULUS40_ALT (vv m) (vv n) ?_ hlt
+    (hsub (Set.mem_range_self m)) (hsub (Set.mem_range_self n))
+  exact hsep m n (fun he => hne (hinj m n ⟨hm, hn, he⟩))
+
+set_option maxHeartbeats 10000000 in
+/-- HOL `vv_quad_split012` (terminal.hl:1996). DISCHARGED 2026-09-28: corners
+0 and 2 split along the short diagonal by `vv_split_azim`, corners 1 and 3
+convert wholesale via `p38_azim_eq_dihV`; after `rhoFun = rho` the four
+`dihV`-corner terms rearrange into `tau3 (vv 0) (vv 1) (vv 2)` +
+`tau3 (vv 2) (vv 3) (vv 0)` by `ring`. -/
 theorem vv_quad_split012 (vv : ℕ → V3)
     (hper : Periodic vv 4) (hsub : Set.range vv ⊆ ballAnnulus)
     (hd1 : dist (vv 0) (vv 1) < 4) (hd2 : dist (vv 0) (vv 2) < 4)
@@ -1827,12 +2568,76 @@ theorem vv_quad_split012 (vv : ℕ → V3)
         rhoFun ‖vv 3‖ * azim 0 (vv 3) (vv 0) (vv 2)) -
       (Real.pi + sol0) * 2 =
       tau3 (vv 0) (vv 1) (vv 2) + tau3 (vv 2) (vv 3) (vv 0) := by
-  sorry -- DISCHARGES: quad azim sum splitting
-  -- BLOCKED: needs AZIM_LE_PI_EQ_DIHV (open at LocalAuto5:1788) +
-    -- vv_split_azim.
-    -- vv_split_azim
+  have h40 : vv 4 = vv 0 := by rw [show (4 : ℕ) = 0 + 4 by norm_num]; exact hper 0
+  have h50 : vv 5 = vv 1 := by rw [show (5 : ℕ) = 1 + 4 by norm_num]; exact hper 1
+  have h62 : vv 6 = vv 2 := by rw [show (6 : ℕ) = 2 + 4 by norm_num]; exact hper 2
+  have hS0 : azim 0 (vv 0) (vv 1) (vv 3)
+      = azim 0 (vv 0) (vv 1) (vv 2) + azim 0 (vv 0) (vv 2) (vv 3) :=
+    vv_split_azim vv 4 0 2 hper (by norm_num) hsub hd1 hd3 hd2 (by norm_num) hsep
+      hcf hinj
+  have hd52 : dist (vv 2) (vv (2 + (4 - 1))) < 4 := by
+    rw [show (2 + (4 - 1) : ℕ) = 5 by norm_num, h50, dist_comm]
+    exact hd4
+  have hd20 : dist (vv 2) (vv 0) < 4 := by
+    rw [dist_comm]
+    exact hd2
+  have hS2 : azim 0 (vv 2) (vv 3) (vv 1)
+      = azim 0 (vv 2) (vv 3) (vv 0) + azim 0 (vv 2) (vv 0) (vv 1) := by
+    have hs := vv_split_azim vv 4 2 0 hper (by norm_num) hsub hd5 hd52 hd20
+      (by norm_num) hsep hcf hinj
+    rwa [show (2 + 4 - 1 : ℕ) = 5 by norm_num, h50] at hs
+  have hpi0 : azim 0 (vv 0) (vv 1) (vv 3) ≤ Real.pi :=
+    convex_local_fan_azim_le_pi vv 4 0 hper (by norm_num) hinj hcf hsub
+  have hpi1 : azim 0 (vv 1) (vv 2) (vv 0) ≤ Real.pi := by
+    have h := convex_local_fan_azim_le_pi vv 4 1 hper (by norm_num) hinj hcf hsub
+    rwa [show (1 + 4 - 1 : ℕ) = 4 by norm_num, h40] at h
+  have hpi2 : azim 0 (vv 2) (vv 3) (vv 1) ≤ Real.pi := by
+    have h := convex_local_fan_azim_le_pi vv 4 2 hper (by norm_num) hinj hcf hsub
+    rwa [show (2 + 4 - 1 : ℕ) = 5 by norm_num, h50] at h
+  have hpi3 : azim 0 (vv 3) (vv 0) (vv 2) ≤ Real.pi := by
+    have h := convex_local_fan_azim_le_pi vv 4 3 hper (by norm_num) hinj hcf hsub
+    rwa [show (3 + 4 - 1 : ℕ) = 6 by norm_num, h62, h40] at h
+  have hnc01 := p38_quad_ncoll (m := 0) (n := 1) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) hd1
+  have hnc02 := p38_quad_ncoll (m := 0) (n := 2) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) hd2
+  have hnc03 := p38_quad_ncoll (m := 0) (n := 3) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) hd3
+  have hnc12 := p38_quad_ncoll (m := 1) (n := 2) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) hd4
+  have hnc23 := p38_quad_ncoll (m := 2) (n := 3) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) hd5
+  have hnc10 := p38_quad_ncoll (m := 1) (n := 0) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) (by rw [dist_comm]; exact hd1)
+  have hnc20 := p38_quad_ncoll (m := 2) (n := 0) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) (by rw [dist_comm]; exact hd2)
+  have hnc21 := p38_quad_ncoll (m := 2) (n := 1) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) (by rw [dist_comm]; exact hd4)
+  have hnc30 := p38_quad_ncoll (m := 3) (n := 0) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) (by rw [dist_comm]; exact hd3)
+  have hnc32 := p38_quad_ncoll (m := 3) (n := 2) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) (by rw [dist_comm]; exact hd5)
+  have ha012 : 0 ≤ azim 0 (vv 0) (vv 1) (vv 2) := azim_nonneg _ _ _ _
+  have ha023 : 0 ≤ azim 0 (vv 0) (vv 2) (vv 3) := azim_nonneg _ _ _ _
+  have hp012 : azim 0 (vv 0) (vv 1) (vv 2) ≤ Real.pi := by linarith
+  have hp023 : azim 0 (vv 0) (vv 2) (vv 3) ≤ Real.pi := by linarith
+  have ha230 : 0 ≤ azim 0 (vv 2) (vv 3) (vv 0) := azim_nonneg _ _ _ _
+  have ha201 : 0 ≤ azim 0 (vv 2) (vv 0) (vv 1) := azim_nonneg _ _ _ _
+  have hp230 : azim 0 (vv 2) (vv 3) (vv 0) ≤ Real.pi := by linarith
+  have hp201 : azim 0 (vv 2) (vv 0) (vv 1) ≤ Real.pi := by linarith
+  rw [rho_rho_fun, rho_rho_fun, rho_rho_fun, rho_rho_fun]
+  simp only [tau3]
+  rw [hS0, hS2, p38_azim_eq_dihV hnc01 hnc02 hp012,
+    p38_azim_eq_dihV hnc02 hnc03 hp023, p38_azim_eq_dihV hnc12 hnc10 hpi1,
+    p38_azim_eq_dihV hnc23 hnc20 hp230, p38_azim_eq_dihV hnc20 hnc21 hp201,
+    p38_azim_eq_dihV hnc30 hnc32 hpi3]
+  ring
 
-/-- HOL `vv_quad_split123` (terminal.hl:2049). -/
+set_option maxHeartbeats 10000000 in
+/-- HOL `vv_quad_split123` (terminal.hl:2049). DISCHARGED 2026-09-28: mirror
+of `vv_quad_split012` — corners 1 and 3 split, corners 0 and 2 convert
+wholesale; the four `dihV` terms rearrange into `tau3 (vv 1) (vv 2) (vv 3)` +
+`tau3 (vv 3) (vv 0) (vv 1)`. -/
 theorem vv_quad_split123 (vv : ℕ → V3)
     (hper : Periodic vv 4) (hsub : Set.range vv ⊆ ballAnnulus)
     (hd1 : dist (vv 0) (vv 1) < 4) (hd2 : dist (vv 0) (vv 3) < 4)
@@ -1848,12 +2653,84 @@ theorem vv_quad_split123 (vv : ℕ → V3)
         rhoFun ‖vv 3‖ * azim 0 (vv 3) (vv 0) (vv 2)) -
       (Real.pi + sol0) * 2 =
       tau3 (vv 1) (vv 2) (vv 3) + tau3 (vv 3) (vv 0) (vv 1) := by
-  sorry -- DISCHARGES: quad azim sum splitting
-  -- BLOCKED: needs AZIM_LE_PI_EQ_DIHV (open at LocalAuto5:1788) +
-    -- vv_split_azim.
-    -- vv_split_azim
+  have h40 : vv 4 = vv 0 := by rw [show (4 : ℕ) = 0 + 4 by norm_num]; exact hper 0
+  have h50 : vv 5 = vv 1 := by rw [show (5 : ℕ) = 1 + 4 by norm_num]; exact hper 1
+  have h62 : vv 6 = vv 2 := by rw [show (6 : ℕ) = 2 + 4 by norm_num]; exact hper 2
+  have hd14 : dist (vv 1) (vv (1 + (4 - 1))) < 4 := by
+    rw [show (1 + (4 - 1) : ℕ) = 4 by norm_num, h40, dist_comm]
+    exact hd1
+  have hd31 : dist (vv 3) (vv 1) < 4 := by
+    rw [dist_comm]
+    exact hd4
+  have hS1 : azim 0 (vv 1) (vv 2) (vv 0)
+      = azim 0 (vv 1) (vv 2) (vv 3) + azim 0 (vv 1) (vv 3) (vv 0) := by
+    have hs := vv_split_azim vv 4 1 3 hper (by norm_num) hsub hd3 hd14 hd4
+      (by norm_num) hsep hcf hinj
+    rwa [show (1 + 4 - 1 : ℕ) = 4 by norm_num, h40] at hs
+  have hd34 : dist (vv 3) (vv (3 + (4 - 1))) < 4 := by
+    rw [show (3 + (4 - 1) : ℕ) = 6 by norm_num, h62, dist_comm]
+    exact hd5
+  have hd30 : dist (vv 3) (vv 0) < 4 := by
+    rw [dist_comm]
+    exact hd2
+  have hS3 : azim 0 (vv 3) (vv 0) (vv 2)
+      = azim 0 (vv 3) (vv 0) (vv 1) + azim 0 (vv 3) (vv 1) (vv 2) := by
+    have hs := vv_split_azim vv 4 3 1 hper (by norm_num) hsub
+      (by rw [show (3 + 1 : ℕ) = 4 by norm_num, h40]; exact hd30) hd34 hd31
+      (by norm_num) hsep hcf hinj
+    rwa [show (3 + 4 - 1 : ℕ) = 6 by norm_num, h62, h40] at hs
+  have hpi0 : azim 0 (vv 0) (vv 1) (vv 3) ≤ Real.pi :=
+    convex_local_fan_azim_le_pi vv 4 0 hper (by norm_num) hinj hcf hsub
+  have hpi1 : azim 0 (vv 1) (vv 2) (vv 0) ≤ Real.pi := by
+    have h := convex_local_fan_azim_le_pi vv 4 1 hper (by norm_num) hinj hcf hsub
+    rwa [show (1 + 4 - 1 : ℕ) = 4 by norm_num, h40] at h
+  have hpi2 : azim 0 (vv 2) (vv 3) (vv 1) ≤ Real.pi := by
+    have h := convex_local_fan_azim_le_pi vv 4 2 hper (by norm_num) hinj hcf hsub
+    rwa [show (2 + 4 - 1 : ℕ) = 5 by norm_num, h50] at h
+  have hpi3 : azim 0 (vv 3) (vv 0) (vv 2) ≤ Real.pi := by
+    have h := convex_local_fan_azim_le_pi vv 4 3 hper (by norm_num) hinj hcf hsub
+    rwa [show (3 + 4 - 1 : ℕ) = 6 by norm_num, h62, h40] at h
+  have hnc01 := p38_quad_ncoll (m := 0) (n := 1) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) hd1
+  have hnc03 := p38_quad_ncoll (m := 0) (n := 3) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) hd2
+  have hnc12 := p38_quad_ncoll (m := 1) (n := 2) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) hd3
+  have hnc13 := p38_quad_ncoll (m := 1) (n := 3) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) hd4
+  have hnc23 := p38_quad_ncoll (m := 2) (n := 3) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) hd5
+  have hnc10 := p38_quad_ncoll (m := 1) (n := 0) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) (by rw [dist_comm]; exact hd1)
+  have hnc21 := p38_quad_ncoll (m := 2) (n := 1) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) (by rw [dist_comm]; exact hd3)
+  have hnc30 := p38_quad_ncoll (m := 3) (n := 0) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) (by rw [dist_comm]; exact hd2)
+  have hnc31 := p38_quad_ncoll (m := 3) (n := 1) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) (by rw [dist_comm]; exact hd4)
+  have hnc32 := p38_quad_ncoll (m := 3) (n := 2) hsub hsep hinj (by norm_num) (by norm_num)
+    (by norm_num) (by rw [dist_comm]; exact hd5)
+  have ha123 : 0 ≤ azim 0 (vv 1) (vv 2) (vv 3) := azim_nonneg _ _ _ _
+  have ha130 : 0 ≤ azim 0 (vv 1) (vv 3) (vv 0) := azim_nonneg _ _ _ _
+  have hp123 : azim 0 (vv 1) (vv 2) (vv 3) ≤ Real.pi := by linarith
+  have hp130 : azim 0 (vv 1) (vv 3) (vv 0) ≤ Real.pi := by linarith
+  have ha301 : 0 ≤ azim 0 (vv 3) (vv 0) (vv 1) := azim_nonneg _ _ _ _
+  have ha312 : 0 ≤ azim 0 (vv 3) (vv 1) (vv 2) := azim_nonneg _ _ _ _
+  have hp301 : azim 0 (vv 3) (vv 0) (vv 1) ≤ Real.pi := by linarith
+  have hp312 : azim 0 (vv 3) (vv 1) (vv 2) ≤ Real.pi := by linarith
+  rw [rho_rho_fun, rho_rho_fun, rho_rho_fun, rho_rho_fun]
+  simp only [tau3]
+  rw [hS1, hS3, p38_azim_eq_dihV hnc01 hnc03 hpi0,
+    p38_azim_eq_dihV hnc12 hnc13 hp123, p38_azim_eq_dihV hnc13 hnc10 hp130,
+    p38_azim_eq_dihV hnc23 hnc21 hpi2, p38_azim_eq_dihV hnc30 hnc31 hp301,
+    p38_azim_eq_dihV hnc31 hnc32 hp312]
+  ring
 
-/-- HOL `vv_quad_split_short` (terminal.hl:2103). -/
+set_option maxHeartbeats 10000000 in
+/-- HOL `vv_quad_split_short` (terminal.hl:2103). DISCHARGED 2026-09-28:
+compare the two diagonals and invoke `vv_quad_split012` (resp.
+`vv_quad_split123`) at `i = 0` (resp. `i = 1`); the `i + 2` / `i + 3`
+index arithmetic is discharged by periodicity at `k = 4`. -/
 theorem vv_quad_split_short (vv : ℕ → V3)
     (hper : Periodic vv 4) (hsub : Set.range vv ⊆ ballAnnulus)
     (hd1 : dist (vv 0) (vv 1) < 4) (hd2 : dist (vv 0) (vv 3) < 4)
@@ -1871,8 +2748,17 @@ theorem vv_quad_split_short (vv : ℕ → V3)
         (Real.pi + sol0) * 2 =
         tau3 (vv i) (vv (i + 1)) (vv (i + 2)) +
           tau3 (vv (i + 2)) (vv (i + 3)) (vv i) := by
-  sorry -- DISCHARGES: the short-diagonal quad split
-  -- BLOCKED: needs vv_quad_split012/123 (AZIM_LE_PI_EQ_DIHV hole).
+  rcases le_or_gt (dist (vv 0) (vv 2)) (dist (vv 1) (vv 3)) with hdiag | hdiag
+  · refine ⟨0, by norm_num, hdiag, ?_⟩
+    exact vv_quad_split012 vv hper hsub hd1 hd3 hd2 hd4 hd6 hsep hcf hinj
+  · refine ⟨1, by norm_num, ?_, ?_⟩
+    · rw [show (1 + 2 : ℕ) = 3 by norm_num]
+      have h24 : dist (vv 2) (vv (1 + 3)) = dist (vv 0) (vv 2) := by
+        rw [show (1 + 3 : ℕ) = 0 + 4 by norm_num, hper 0, dist_comm]
+      rw [h24]
+      linarith
+    · rw [show (1 + 3 : ℕ) = 0 + 4 by norm_num, hper 0]
+      exact vv_quad_split123 vv hper hsub hd1 hd2 hd4 hd5 hd6 hsep hcf hinj
 
 /-! ## Section F: terminal inequalities, k ≤ 3 bank (terminal.hl:2145-3100) -/
 
@@ -2221,7 +3107,11 @@ theorem quad_cross_diag2_x_bound (x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 : ℝ)
 theorem sq_imp_nn (c x : ℝ) (h : c ^ 2 ≤ x) : 0 ≤ x :=
   le_trans (sq_nonneg c) h
 
-/-- HOL `LEMMA_4680581274_delta_issue_ups` (terminal.hl:3604). -/
+/-- HOL `LEMMA_4680581274_delta_issue_ups` (terminal.hl:3604). DISCHARGED
+2026-09-28: the first disjunct alone settles it — on the box
+`x2, x3 ∈ [4, 6.3504]`, `x4 ∈ [9.0601, 10.023556]` one has
+`upsX x2 x3 x4 = 4·x2·x3 − (x4 − x2 − x3)² ≥ 64 − 3.7² > 0`; every
+out-of-box alternative closes its own `ineqP38` disjunct. -/
 theorem LEMMA_4680581274_delta_issue_ups (x1 x2 x3 x4 x5 x6 : ℝ) :
     ineqP38 [(4.0, x1, 2.0 * 1.26 * 2.0 * 1.26), (4.0, x2, 2.0 * 1.26 * 2.0 * 1.26),
       (4.0, x3, 2.0 * 1.26 * 2.0 * 1.26), (3.01 * 3.01, x4, 3.166 * 3.166),
@@ -2229,7 +3119,56 @@ theorem LEMMA_4680581274_delta_issue_ups (x1 x2 x3 x4 x5 x6 : ℝ) :
       (0 < upsX x2 x3 x4 ∨
         10 + deltaX x1 x2 x3 x4 x5 x6 * -1 < 0 ∨
         deltaX4 x1 x2 x3 x4 x5 x6 * -1 < 0) := by
-  sorry -- DISCHARGES: the 4680581274 ups escape (LP)
+  have hnum1 : (2.0 * 1.26 * 2.0 * 1.26 : ℝ) = 6.3504 := by norm_num
+  have hnum2 : (3.01 * 3.01 : ℝ) = 9.0601 := by norm_num
+  have hnum3 : (3.166 * 3.166 : ℝ) = 10.023556 := by norm_num
+  rw [hnum1, hnum2, hnum3]
+  rcases lt_or_ge x1 4.0 with c | c
+  · exact Or.inl c
+  rcases lt_or_ge 6.3504 x1 with c | c
+  · exact Or.inr (Or.inl c)
+  rcases lt_or_ge x2 4.0 with h2lo | h2lo
+  · exact Or.inr (Or.inr (Or.inl h2lo))
+  rcases lt_or_ge 6.3504 x2 with h2hi | h2hi
+  · exact Or.inr (Or.inr (Or.inr (Or.inl h2hi)))
+  rcases lt_or_ge x3 4.0 with h3lo | h3lo
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h3lo))))
+  rcases lt_or_ge 6.3504 x3 with h3hi | h3hi
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h3hi)))))
+  rcases lt_or_ge x4 9.0601 with c | c
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl c))))))
+  rcases lt_or_ge 10.023556 x4 with h4hi | h4hi
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl h4hi)))))))
+  rcases lt_or_ge x5 4.0 with c | c
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr
+      (Or.inl c))))))))
+  rcases lt_or_ge 4.0 x5 with c | c
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr
+      (Or.inl c)))))))))
+  rcases lt_or_ge x6 4.0 with c | c
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr
+      (Or.inr (Or.inl c))))))))))
+  rcases lt_or_ge 4.0 x6 with c | c
+  · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr
+      (Or.inr (Or.inr (Or.inl c)))))))))))
+  -- all six coordinates lie in their boxes
+  have hge : (4 : ℝ) * x2 * x3 ≥ 64 := by nlinarith
+  have htsq : (x4 - x2 - x3) ^ 2 ≤ 3.7 ^ 2 := by
+    have hp : (0 : ℝ) ≤ 3.7 + (x4 - x2 - x3) := by linarith
+    have hq : (0 : ℝ) ≤ 3.7 - (x4 - x2 - x3) := by linarith
+    have hprod : (3.7 + (x4 - x2 - x3)) * (3.7 - (x4 - x2 - x3)) ≥ 0 :=
+      mul_nonneg hp hq
+    have hexp : 3.7 ^ 2 - (x4 - x2 - x3) ^ 2 =
+        (3.7 + (x4 - x2 - x3)) * (3.7 - (x4 - x2 - x3)) := by ring
+    linarith
+  have hups : 0 < upsX x2 x3 x4 := by
+    have hring : upsX x2 x3 x4 = 4 * x2 * x3 - (x4 - x2 - x3) ^ 2 := by
+      simp only [upsX]
+      ring
+    rw [hring]
+    linarith
+  exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Or.inr
+    (Or.inr (Or.inr (Or.inr (Or.inl hups))))))))))))
 
 /-- HOL `quad_4680581274_delta_issue` (terminal.hl:3639; the leading
 `// quad_nonlinear_v4 /` source-comment artifact is dropped, anchor kept). -/
