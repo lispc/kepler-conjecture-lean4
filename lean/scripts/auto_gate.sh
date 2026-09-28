@@ -10,10 +10,18 @@ MODULE=$(echo "$FILE" | sed 's|/|.|g; s|\.lean$||')
 
 fail(){ echo "GATE-FAIL $THM: $*" | tee -a /tmp/auto_gate.log; exit 1; }
 
+# portable timeout (macOS has no coreutils `timeout`): SIGALRM after N seconds
+timeout(){ local t=$1; shift; perl -e 'alarm shift; exec @ARGV' "$t" "$@"; }
+
 # 1. only $FILE has tracked modifications vs HEAD
 #    (--relative: paths shown relative to cwd, matching $FILE)
 changed=$(git diff HEAD --name-only --relative)
-[ "$changed" = "$FILE" ] || fail "tracked changes: [$changed] (expected only $FILE)"
+[ -n "$changed" ] || fail "no tracked changes (nothing to gate?)"
+# LANE_FILES: comma-separated extra files allowed to be dirty (parallel lanes
+# gated one at a time by the orchestrator). Default: only $FILE.
+ALLOW=$(printf '%s' "${LANE_FILES:-$FILE}" | tr ',' '\n' | sort)
+bad=$(comm -23 <(printf '%s\n' "$changed" | sort) <(printf '%s\n' "$ALLOW" | sort))
+[ -z "$bad" ] || fail "tracked changes outside lane: [$bad]"
 
 # 2. signature freeze: every deleted line must be a bare sorry line,
 #    and at least one sorry must actually be consumed
@@ -34,11 +42,16 @@ if ! timeout 3600 lake build "$MODULE" > /tmp/auto_gate_build.log 2>&1; then
 fi
 grep -qE '(^| )error:' /tmp/auto_gate_build.log && fail "errors in build log"
 
-# 4b. root-module build: catches cross-module declaration collisions that the
+# 4b. closure-root build: catches cross-module declaration collisions that the
 #     per-module build above cannot see (e.g. two Auto files binding the same
-#     name; only the root Kepler.lean imports both). Incremental, so cheap.
-if ! timeout 3600 lake build Kepler > /tmp/auto_gate_root_build.log 2>&1; then
-  fail "lake build Kepler (root) failed, see /tmp/auto_gate_root_build.log"
+#     name). MAC ADAPTATION 2026-09-28: full `lake build Kepler` pulls the
+#     Phase 2 Graphs cert chain (~7-day compile on the old 128c server —
+#     infeasible on M3 Pro). The seven Text closure roots below cover the
+#     whole Text/ tree (the gate target of all current fill work). Restore
+#     `lake build Kepler` before any Graphs/Interval/Cases work. Incremental.
+ROOTS="Kepler.Text.Hypermap Kepler.Text.PackingConcl Kepler.Text.LocalConcl Kepler.Text.LocalBridge Kepler.Text.TameLp Kepler.Text.AzimBridge Kepler.Text.ContraFan"
+if ! timeout 3600 lake build $ROOTS > /tmp/auto_gate_root_build.log 2>&1; then
+  fail "lake build Text roots failed, see /tmp/auto_gate_root_build.log"
 fi
 grep -qE '(^| )error:' /tmp/auto_gate_root_build.log && fail "errors in root build log"
 
