@@ -184,12 +184,20 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 - **PA2**（52 remaining @2026-09-28 桥 lane 后）：`OAPVION1/2/3_concl` 三件套已闭合
   （Mathlib `AffineIndependent.existsUnique_dist_eq` 路线，可复用于一切
   circumcenter/radV-epsilon 类桥）；其余大多卡各章 capstone。
-- **PA4**（65 remaining，含 **AJRIPQN 超簇 ~18 枚**）：根阻塞 =
-  `Ajripqn.AJRIPQN`（Ajripqn.hl:32-37/89ff，Marchal cell 唯一表示定理，**整树未移植**，
-  PA16:68 有注记）→ `MCELL_CELL_PARAMETERS_EXIST`（PA4:951，HOL bump.hl:488 仅 ~15 行）
-  → `DIFF_EDGEX`/`MCELL_BUMP_0` 全链。**落 AJRIPQN 或其推论 = wave3 最高杠杆专项**。
-  另：`MCELL4_EDGE`(:1021) 与 `MCELL_EDGE`(:1039) 在 ¬nullSet 下疑似不相容，
-  陈述修复波需复核。
+- **PA4**（39 remaining @攻坚后，原 65）：**簇解锁路径已修正**——bump 簇真阻塞是
+  `HDTFNFZ`（VX V X = V∩X，经 PA11 LEPJBDJ kit 可证，PA17 `hdtfnfz_p17` 有示范），
+  **不是 AJRIPQN**：DIFF_EDGEX（MCELL_EDGE×2 + 4>3 鸽笼）与 MCELL_BUMP_0 已绕开
+  AJRIPQN 闭合。AJRIPQN 真实解锁面 = cellParams 唯一性族 **9 枚**
+  （MCELL_CELL_PARAMETERS_EXIST 及 MCELL{4,3,2}_CELL_PARAMETERS_EXIST/PARAM_UL、
+  MCELL3_VX），其上游短缺点 = **GLTVHUM_concl（PA2:550，下一波最优先）**；
+  DUUNHOR_concl(PA2:557)、SLTSTLO1/2(PA13，3100 行 GIANT)、DDZUPHJ、QZKSYKG1/2
+  (PA14，1900 行 GIANT) 仍未证；TIWWFYQ(PA5)、RVFXZBU(PA10) 已变真。
+  另：OXLZLEZ2 cc_*_v11 案例分析巨石 ~30 枚（非本簇）。
+  `MCELL4_EDGE`(:1021) 与 `MCELL_EDGE`(:1039) 在 ¬nullSet 下疑似不相容，
+  陈述修复波需复核（攻坚轮复核维持此疑点）。
+  可复用：`hdtfnfz_p4` kit（16 个 `_p4` 私件）、`(by simpa using (Finset.mem_filter.1 he).1)`
+  桥、`Set.ncard_insert_of_notMem + Set.ncard_le_ncard` 计数安全路
+  （`Finset.card_le_card` 已单参、`Set.Finite.card_le_card`/`toFinset_cong` 不存在或签名变）。
 - **PA22**（73 remaining @wave2）：钥匙引理 = `TopologyFan.sum4/sum5_azim_fan`
   （azim 三点加法，PA2-15 传递可见）+ `Geom.AzimLemmas.azim_compl`（补角）——
   组合可解全部 azim 排序族。**Polytope.lean 是 PA22 最大未开发富矿**：
