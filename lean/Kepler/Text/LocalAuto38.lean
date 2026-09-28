@@ -412,37 +412,35 @@ private theorem setSumDifneg_p38 {α : Type*} {s : Set α} (g : α → ℝ)
   · exact absurd ‹s.Finite› h
   · rfl
 
-/-- HOL `SUM_INTER` (terminal.hl:233). The HOL `sum` junk convention (0 on
-infinite sets) matches `setSum`; proved here for finite `A`, and in the junk
-regime (`A` infinite) for `(A ∩ B)` infinite; the remaining mixed case is
-the flyspeck-junk hole (their use sites keep `A` finite). -/
-theorem SUM_INTER {α : Type*} (A B : Set α) (f : α → ℝ) :
+/-- HOL `SUM_INTER` (terminal.hl:233). Under the project `setSum` junk
+convention (0 on infinite sets, PackingAuto2.lean:124) the unconditional HOL
+statement is FALSE (counterexample `A = univ, B = {0}, f = const 1`: LHS 1,
+RHS 0) — HOL's `sum` is support-based while the port's `setSum` is set-based.
+Every Flyspeck use site keeps `A` finite, so the `A.Finite` premise is the
+faithful repair (counterexample machine-verified in the statement-fix
+proposal round's scratch module). -/
+theorem SUM_INTER {α : Type*} (A B : Set α) (f : α → ℝ) (hA : A.Finite) :
     setSum (A ∩ B) f = setSum A (fun i => if i ∈ B then f i else 0) := by
   by_cases hAB : (A ∩ B).Finite
   · rw [setSumDifpos_p38 f hAB]
-    by_cases hAf : A.Finite
-    · rw [setSumDifpos_p38 (fun i => if i ∈ B then f i else 0) hAf]
-      have hsub : hAB.toFinset ⊆ hAf.toFinset := by
-        intro w hw
-        rw [Set.Finite.mem_toFinset] at hw ⊢
-        exact hw.1
-      have h0 : ∀ w ∈ hAf.toFinset, w ∉ hAB.toFinset →
-          (if w ∈ B then f w else 0) = 0 := by
-        intro w hAw hw
-        rw [if_neg (fun hB => hw ((Set.Finite.mem_toFinset hAB).mpr
-          ⟨(Set.Finite.mem_toFinset hAf).mp hAw, hB⟩))]
-      have key : ∑ w ∈ hAB.toFinset, f w =
-          ∑ w ∈ hAB.toFinset, (if w ∈ B then f w else 0) := by
-        apply Finset.sum_congr rfl
-        intro w hw
-        rw [Set.Finite.mem_toFinset] at hw
-        rw [if_pos hw.2]
-      rw [key, Finset.sum_subset hsub h0]
-    · rw [setSumDifneg_p38 (fun i => if i ∈ B then f i else 0) hAf]
-      sorry -- junk caveat: `A ∩ B` finite while `A` infinite (never used)
-  · by_cases hAf : A.Finite
-    · exact absurd (Set.Finite.subset hAf Set.inter_subset_left) hAB
-    · rw [setSumDifneg_p38 f hAB, setSumDifneg_p38 _ hAf]
+    rw [setSumDifpos_p38 (fun i => if i ∈ B then f i else 0) hA]
+    have hsub : hAB.toFinset ⊆ hA.toFinset := by
+      intro w hw
+      rw [Set.Finite.mem_toFinset] at hw ⊢
+      exact hw.1
+    have h0 : ∀ w ∈ hA.toFinset, w ∉ hAB.toFinset →
+        (if w ∈ B then f w else 0) = 0 := by
+      intro w hAw hw
+      rw [if_neg (fun hB => hw ((Set.Finite.mem_toFinset hAB).mpr
+        ⟨(Set.Finite.mem_toFinset hA).mp hAw, hB⟩))]
+    have key : ∑ w ∈ hAB.toFinset, f w =
+        ∑ w ∈ hAB.toFinset, (if w ∈ B then f w else 0) := by
+      apply Finset.sum_congr rfl
+      intro w hw
+      rw [Set.Finite.mem_toFinset] at hw
+      rw [if_pos hw.2]
+    rw [key, Finset.sum_subset hsub h0]
+  · exact absurd (Set.Finite.subset hA Set.inter_subset_left) hAB
 
 /-- Helper for `dsv_fun3`/`taustar3_fun`: the k = 3 edge set, expanded over
 `{0, 1, 2}` (the trailing `+ &0` is verbatim from the source). -/
