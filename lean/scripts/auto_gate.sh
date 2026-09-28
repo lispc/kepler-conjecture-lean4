@@ -23,12 +23,17 @@ ALLOW=$(printf '%s' "${LANE_FILES:-$FILE}" | tr ',' '\n' | sort)
 bad=$(comm -23 <(printf '%s\n' "$changed" | sort) <(printf '%s\n' "$ALLOW" | sort))
 [ -z "$bad" ] || fail "tracked changes outside lane: [$bad]"
 
-# 2. signature freeze: every deleted line must be a bare sorry line,
-#    and at least one sorry must actually be consumed
+# 2. signature freeze: deletions are limited to (a) sorry lines — bare or with
+#    a trailing comment (skeleton files write `sorry -- NEEDS: ...`), (b) blank
+#    lines, (c) pure comment/docstring lines. Any structural code line deleted
+#    => reject. At least one sorry must actually be consumed.
 dels=$(git diff HEAD -- "$FILE" | grep -E '^-' | grep -v '^---' || true)
-printf '%s\n' "$dels" | grep -qE '^-[[:space:]]*sorry[[:space:]]*$' \
+printf '%s\n' "$dels" | grep -qE '^-[[:space:]]*sorry\b' \
   || fail "no sorry consumed (theorem untouched?)"
-bad=$(printf '%s\n' "$dels" | grep -vE '^-[[:space:]]*sorry[[:space:]]*$' || true)
+bad=$(printf '%s\n' "$dels" \
+  | grep -vE '^-[[:space:]]*sorry\b' \
+  | grep -vE '^-$' \
+  | grep -vE '^-[[:space:]]*(--|/-|(/\*))' || true)
 [ -z "$bad" ] || fail "non-sorry lines deleted: $(printf '%s' "$bad" | head -3)"
 
 # 3. banned tokens in added lines

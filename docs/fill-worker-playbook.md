@@ -16,8 +16,9 @@
 ## 1. 硬性纪律（`auto_gate.sh` 五道机械闸会机器检查，违反即废）
 
 - **只改 lane 文件这一个 tracked 文件**；草稿/探针一律放 `/tmp`；
-- **只允许删除整行的 bare `sorry`**；一切定理/定义陈述冻结（删除行只能是 sorry 行，
-  删多删少闸都挂）；
+- **只允许删除：sorry 行（bare 或带行尾注记，如 `sorry -- NEEDS: ...`）/ 空行 /
+  纯注释行**；一切结构性代码行（theorem/def/lemma/namespace/证明内容行）禁止删除，
+  一切定理/定义陈述冻结（闸门第 ② 道机械检查）；
 - **新增行禁词：`sorry` / `admit` / `native_decide`——连注释里都不行**；
 - 新增辅助引理必须自身完全证明（不得带 sorry）；
 - **绝不 `git commit`，绝不自己跑 `scripts/auto_gate.sh`**（编排者统一验收：
