@@ -41,6 +41,9 @@
 5. **备份习惯**：动手前 `cp <lane文件> /tmp/orig<文件名>.lean`，弄坏了能回。
 6. **学习环境**：动手前读 lane 文件 10–20 个**已证明**定理，吃透本文件的证明习惯
    （策略组合、私有引理惯例、命名风格）再下笔——照着周围代码写，成功率远高于自由发挥。
+7. **收笔终查**：**最后一枚填完、最后一行改完之后**，必须再跑一次 §3 自查并确认为 0。
+   "中途验过 = 终态没验"是真实翻车源（wave1 PA25：末段编辑后未终查，闸门拦下 5 个
+   编译错误整单打回）。
 
 ## 3. 自查命令（收工必做）
 
@@ -88,7 +91,17 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -c ": error:"
 | `deltaY`/`deltaX`/`atn2`/`taum`/`solY` 等 kit | SphereKit.lean | canonical | 别再定义本地副本 |
 | AzimBridge（azimCycle↔sigmaFan 主桥） | Text/AzimBridge.lean | 808 行 0 sorry | azim 族先查这里 |
 
-### 5.3 各 lane 已知卡点速查（收工后追加）
+### 5.3 本 toolchain 的 Mathlib 改名速查（工人训练数据多为旧名，这里是雷区清单）
+
+| 旧名（训练数据常见） | 本 toolchain（v4.32.2/Mathlib v4.32.2）正确名 |
+|---|---|
+| `Basis ι R M` | `Module.Basis ι R M` |
+| `Basis.span_eq` | `Module.Basis.span_eq` |
+| `List.mem_nil` | `List.Mem.nil` |
+
+（发现新的改名陷阱：写报告第 5 项，编排者入表。）
+
+### 5.4 各 lane 已知卡点速查（收工后追加）
 
 - **LA38**（58 remaining @2026-09-28）：14 def 桩封 ~11 枚；15 枚卡
   `main_nonlinear_terminal_v11`/LP；6 枚卡 `DIHV_EQ_DIH_Y`+`taum_dih_y`；
