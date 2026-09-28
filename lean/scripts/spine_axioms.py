@@ -32,7 +32,7 @@ ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(
 LEAN_DIR = os.path.join(ROOT, "lean")
 PROBE = ".spine_probe.lean"
 TARGET = "Kepler.Assembly.the_kepler_conjecture_from_interfaces"
-CACHE_ROOT = "/home/scroll/spine-cache"
+CACHE_ROOT = os.environ.get("SPINE_CACHE_ROOT", "/tmp/spine-cache")  # mac port 2026-09-28: was /home/scroll/spine-cache
 
 STANDARD = {"propext", "Classical.choice", "Quot.sound"}
 # DECISIONS.md 2026-08-10 scoped exception: native_decide 证书公理，
