@@ -50,9 +50,15 @@
 ```bash
 export PATH="$HOME/.elan/bin:$PATH"
 cd /Users/zhangzhuo/repos/kepler-conjecture-lean4/lean
-lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -c ": error:"
+lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 # 必须为 0。sorry 警告（declaration uses 'sorry'）是正常的，不用管。
 ```
+
+⚠️ **自查格式陷阱（wave1 真实翻车）**：`lake env lean` 的错误行格式会随依赖 olean
+的新旧**翻转**——`路径:行:列: error: msg` 与 `error: 路径:行:列: msg` 两种都出现。
+用上面的双格式模式 `(^|[ :])error:`；**不要用**单一 `": error:"`（会假阴性 0，
+wave1 PA25 就这样带着 5 个错误报了 0 error，整单被闸门打回）。
+最稳的终验是直接跑闸门同款：`lake build Kepler.Text.<Module>`。
 
 注意：`lake env lean` 不会自动补建依赖 olean——如果你怀疑依赖陈旧，报告里说明，
 让编排者处理；自己不要跑 `lake build` 大目标。
