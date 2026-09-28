@@ -238,7 +238,31 @@ theorem ANGLE_SUM_BOUND (V : Set V3) (p : V3) (a : ℝ) (ha : 0 ≤ a)
     (hfin : V.Finite) (hcard : 2 ≤ Nat.card V)
     (hazim : ∀ v w, v ∈ V → w ∈ V → v ≠ w → a < azim 0 p v w) :
     a * (Nat.card V) < 2 * Real.pi := by
-  sorry
+  have hazim' : ∀ v w : V3, v ∈ V → w ∈ V → v ≠ w → 0 < azim 0 p v w :=
+    fun v w hv hw hne => lt_of_le_of_lt ha (hazim v w hv hw hne)
+  obtain ⟨f, hf, hsum⟩ := ANGLE_SUM_lemma V p hfin hcard hazim'
+  haveI : Fintype (↑V : Set V3) := Set.Finite.fintype hfin
+  have hcardF : Nat.card V = hfin.toFinset.card := by
+    rw [Nat.card_eq_fintype_card, Set.Finite.card_toFinset hfin]
+  have hsum2 : ∑ w ∈ hfin.toFinset, azim 0 p w (f w) = 2 * Real.pi := by
+    unfold setSum at hsum
+    rw [dif_pos hfin] at hsum
+    exact hsum
+  rw [← hsum2, hcardF]
+  have hFne : hfin.toFinset.Nonempty := by
+    have h2 : 0 < hfin.toFinset.card := by
+      rw [← hcardF]
+      exact lt_of_lt_of_le (by norm_num : (0:ℕ) < 2) hcard
+    exact Finset.card_pos.mp h2
+  have hmem : ∀ w ∈ hfin.toFinset, a < azim 0 p w (f w) := by
+    intro w hw
+    have hwV : w ∈ V := by simpa using hw
+    exact hazim w (f w) hwV ((hf w hwV).1) (hf w hwV).2
+  show a * hfin.toFinset.card < ∑ w ∈ hfin.toFinset, azim 0 p w (f w)
+  calc a * hfin.toFinset.card = ∑ w ∈ hfin.toFinset, a := by
+        simp; ring
+    _ < ∑ w ∈ hfin.toFinset, azim 0 p w (f w) :=
+        Finset.sum_lt_sum_of_nonempty hFne hmem
 
 /-- HL `DIHV_LE_AZIM` (Rogers.hl:6037). -/
 theorem DIHV_LE_AZIM (v w x y : V3) (h1 : ¬ Collinear3 v w x)
@@ -443,8 +467,10 @@ theorem HL_PROPERTIES (V : Set V3) (ul : List V3) (k : ℕ) (hV : Packing V)
 /-- HL `BARV_CIRCUMCENTER_EXISTS` (Rogers.hl:7057). -/
 theorem BARV_CIRCUMCENTER_EXISTS (V : Set V3) (ul : List V3) (k : ℕ)
     (hV : Packing V) (hb : barV V k ul) :
-    circumcenter (setOfList ul) ∈ (affineSpan ℝ (setOfList ul) : Set V3) := by
-  sorry
+    circumcenter (setOfList ul) ∈ (affineSpan ℝ (setOfList ul) : Set V3) :=
+  OAPVION1_concl (setOfList ul)
+    (Set.nonempty_iff_ne_empty.mp ⟨hdV ul, HD_IN_SET_OF_LIST ul (by rw [hb.1]; omega)⟩)
+    (BARV_AFFINE_INDEPENDENT V ul k hV hb)
 
 /-- HL `HL_EQ_DIST0` (Rogers.hl:7081). -/
 theorem HL_EQ_DIST0 (V : Set V3) (k : ℕ) (ul : List V3) (hV : Packing V)
@@ -467,12 +493,34 @@ theorem BARV_CIRCUMCENTER_PROJECTION (V : Set V3) (ul : List V3) (k i : ℕ)
         = circumcenter (setOfList (truncateSimplex i ul)) + n ∧
       ∀ v ∈ setOfList (truncateSimplex i ul), ∀ w ∈ setOfList (truncateSimplex i ul),
         (v - w) ⬝ᵥ n = 0 := by
-  sorry
+  have hlen : i + 1 ≤ ul.length := by rw [hb.1]; omega
+  have hinit : initialSublist (truncateSimplex i ul) ul :=
+    (Classical.epsilon_spec
+      (p := fun vl : List V3 => vl.length = i + 1 ∧ initialSublist vl ul)
+      ⟨ul.take (i + 1), by rw [List.length_take]; omega,
+        ⟨ul.drop (i + 1), (List.take_append_drop (i + 1) ul).symm⟩⟩).2
+  exact AFFINE_HULL_CIRCUMCENTER_PROJECTION (setOfList ul)
+    (setOfList (truncateSimplex i ul))
+    (BARV_AFFINE_INDEPENDENT V ul k hV hb)
+    (SET_OF_LIST_INITIAL_SUBLIST_SUBSET hinit)
+    (Set.nonempty_iff_ne_empty.mp ⟨hdV (truncateSimplex i ul),
+      HD_IN_SET_OF_LIST _ (by rw [LENGTH_TRUNCATE_SIMPLEX i ul hlen]; omega)⟩)
 
 /-- HL `HL_DECREASE` (Rogers.hl:7135). -/
 theorem HL_DECREASE (V : Set V3) (ul : List V3) (k i : ℕ) (hV : Packing V)
     (hb : barV V k ul) (hik : i ≤ k) : hl (truncateSimplex i ul) ≤ hl ul := by
-  sorry
+  have hlen : i + 1 ≤ ul.length := by rw [hb.1]; omega
+  have hinit : initialSublist (truncateSimplex i ul) ul :=
+    (Classical.epsilon_spec
+      (p := fun vl : List V3 => vl.length = i + 1 ∧ initialSublist vl ul)
+      ⟨ul.take (i + 1), by rw [List.length_take]; omega,
+        ⟨ul.drop (i + 1), (List.take_append_drop (i + 1) ul).symm⟩⟩).2
+  show radV (setOfList (truncateSimplex i ul)) ≤ radV (setOfList ul)
+  exact RADV_MONO (setOfList ul) (setOfList (truncateSimplex i ul))
+    (BARV_AFFINE_INDEPENDENT V ul k hV hb)
+    (SET_OF_LIST_INITIAL_SUBLIST_SUBSET hinit)
+    (Set.nonempty_iff_ne_empty.mp ⟨hdV (truncateSimplex i ul),
+      HD_IN_SET_OF_LIST _ (by rw [LENGTH_TRUNCATE_SIMPLEX i ul hlen]; omega)⟩)
 
 /-- HL `XNHPWAB1` (Rogers.hl:7194). -/
 theorem XNHPWAB1 (V : Set V3) (ul : List V3) (k : ℕ) (hV : Packing V)
@@ -544,7 +592,31 @@ theorem IN_VORONOI_LIST_IMP_IN_BIS (V : Set V3) (ul : List V3) (k : ℕ) (x : V3
 /-- HL `WAUFCHE1` (Rogers.hl:8186). -/
 theorem WAUFCHE1 (V : Set V3) (ul : List V3) (k : ℕ) (hV : Packing V)
     (hb : barV V k ul) : hl ul ≤ dist (omegaList V ul) (hdV ul) := by
-  sorry
+  have hlen : 1 ≤ ul.length := by rw [hb.1]; omega
+  have hdVmem : hdV ul ∈ setOfList ul := HD_IN_SET_OF_LIST ul hlen
+  have hind := BARV_AFFINE_INDEPENDENT V ul k hV hb
+  obtain ⟨x, n, hp, hx, hn⟩ := AFFINE_HULL_PROJECTION_EXISTS (setOfList ul)
+    (omegaList V ul) (Set.nonempty_iff_ne_empty.mp ⟨hdV ul, hdVmem⟩)
+  have homem := OMEGA_LIST_IN_VORONOI_LIST V ul k hb
+  have hxeq : ∀ v ∈ setOfList ul, dist x v = dist x (hdV ul) := by
+    intro v hv
+    have hv2 : v ∈ V := BARV_SUBSET V k ul hb hv
+    have hvd : hdV ul ∈ V := BARV_SUBSET V k ul hb hdVmem
+    have h2 : omegaList V ul ∈ voronoiClosed V v := homem _ (by simpa using ⟨v, hv, rfl⟩)
+    have h3 : omegaList V ul ∈ voronoiClosed V (hdV ul) :=
+      homem _ (by simpa using ⟨hdV ul, hdVmem, rfl⟩)
+    have h1 : dist (omegaList V ul) v = dist (omegaList V ul) (hdV ul) :=
+      le_antisymm (h2 (hdV ul) hvd) (h3 v hv2)
+    exact AFFINE_HULL_PROJECTION_DIST_EQ (setOfList ul) (omegaList V ul) v (hdV ul) x n
+      hv hdVmem h1 hp hn
+  have hxc : x = circumcenter (setOfList ul) :=
+    OAPVION3_concl (setOfList ul) hind x hx ⟨dist x (hdV ul), fun w hw => hxeq w hw⟩
+  have hle : dist x (hdV ul) ≤ dist (omegaList V ul) (hdV ul) :=
+    AFFINE_HULL_PROJECTION_DIST_LE (setOfList ul) (omegaList V ul) (hdV ul) x n
+      hdVmem hp hx hn
+  show radV (setOfList ul) ≤ dist (omegaList V ul) (hdV ul)
+  rw [OAPVION2_concl (setOfList ul) hind (hdV ul) hdVmem, ← hxc]
+  exact hle
 
 /-- HL `WAUFCHE2` (Rogers.hl:8249). -/
 theorem WAUFCHE2 (V : Set V3) (ul : List V3) (k : ℕ) (hV : Packing V)
@@ -556,7 +628,20 @@ theorem WAUFCHE2 (V : Set V3) (ul : List V3) (k : ℕ) (hV : Packing V)
 theorem CIRCUMCENTER_IN_VORONOI_SET (V S : Set V3) (hV : Packing V)
     (hSV : S ⊆ V) (hind : ¬ affineDependent S) (hr : radV S < Real.sqrt 2) :
     circumcenter S ∈ voronoiSet V S := by
-  sorry
+  have hxy := XYOFCGX V S (circumcenter S) hV hSV hind rfl hr
+  show circumcenter S ∈ ⋂₀ {voronoiClosed V v | v ∈ S}
+  rw [Set.mem_sInter]
+  intro T hT
+  obtain ⟨w, hwS, rfl⟩ := by simpa using hT
+  intro w' hw'
+  by_cases hmem : w' ∈ S
+  · have h1 := OAPVION2_concl S hind w hwS
+    have h2 := OAPVION2_concl S hind w' hmem
+    rw [← h1, ← h2]
+  · have hw'V : w' ∈ V \ S := ⟨hw', hmem⟩
+    have hgap := hxy w w' hwS hw'V
+    rw [dist_comm w' (circumcenter S), dist_comm w (circumcenter S)] at hgap
+    exact le_of_lt hgap
 
 /-- HL `NEIGHBORHOOD_lemma` (Rogers.hl:8305). -/
 theorem NEIGHBORHOOD_lemma (V S : Set V3) (p : V3) (hV : Packing V)
@@ -564,8 +649,82 @@ theorem NEIGHBORHOOD_lemma (V S : Set V3) (p : V3) (hV : Packing V)
     (hgap : ∀ u ∈ S, ∀ v ∈ V \ S, dist v p > dist u p) :
     ∃ r : ℝ, 0 < r ∧ ∀ x ∈ Metric.ball p r, ∀ u ∈ S, ∀ v ∈ V \ S,
       dist v x > dist u x := by
-  sorry
-
+  by_cases hSE : S = ∅
+  · refine ⟨1, by norm_num, ?_⟩
+    rw [hSE]
+    intro x _ u hu
+    exact absurd hu (by simp)
+  by_cases hVE : V \ S = ∅
+  · refine ⟨1, by norm_num, ?_⟩
+    intro x _ u _ v hv
+    exact absurd hv (by simp [hVE])
+  obtain ⟨v0, hv0⟩ := Set.nonempty_iff_ne_empty.mpr hVE
+  have hR : ∀ u ∈ S, dist u p < dist v0 p := fun u hu => hgap u hu v0 hv0
+  have hfin1 : (V ∩ Metric.ball p (dist v0 p)).Finite := KIUMVTC p (dist v0 p) V hV
+  have hfin2 : (V ∩ Metric.ball p (dist v0 p + 2)).Finite :=
+    KIUMVTC p (dist v0 p + 2) V hV
+  have hSfin : S.Finite := hfin1.subset fun u hu =>
+    ⟨hSV hu, Metric.mem_ball.mpr (hR u hu)⟩
+  have hWfin : ((V \ S) ∩ Metric.ball p (dist v0 p + 2)).Finite :=
+    hfin2.subset fun z hz => ⟨hz.1.1, hz.2⟩
+  obtain ⟨u0, hu0⟩ := Set.nonempty_iff_ne_empty.mpr hSE
+  have hv0b : v0 ∈ Metric.ball p (dist v0 p + 2) :=
+    Metric.mem_ball.mpr (show dist v0 p < dist v0 p + 2 by linarith)
+  have hv0W : v0 ∈ (V \ S) ∩ Metric.ball p (dist v0 p + 2) := ⟨hv0, hv0b⟩
+  have hPW : (S ×ˢ ((V \ S) ∩ Metric.ball p (dist v0 p + 2))).Finite :=
+    hSfin.prod hWfin
+  have hmem0 : (u0, v0) ∈ S ×ˢ ((V \ S) ∩ Metric.ball p (dist v0 p + 2)) :=
+    ⟨hu0, hv0W⟩
+  have hPWne : (S ×ˢ ((V \ S) ∩ Metric.ball p (dist v0 p + 2))).Nonempty :=
+    ⟨(u0, v0), hmem0⟩
+  have hgapU : (fun z : V3 × V3 => dist z.2 p - dist z.1 p) (u0, v0) ∈
+      (Set.Finite.toFinset hPW).image
+        (fun z : V3 × V3 => dist z.2 p - dist z.1 p) := by
+    refine Finset.mem_image.mpr ⟨(u0, v0), ?_, rfl⟩
+    exact Set.Finite.mem_toFinset _ |>.mpr hmem0
+  have hgne : ((Set.Finite.toFinset hPW).image
+      (fun z : V3 × V3 => dist z.2 p - dist z.1 p)).Nonempty :=
+    ⟨_, hgapU⟩
+  set gaps : Finset ℝ := (Set.Finite.toFinset hPW).image
+      (fun z : V3 × V3 => dist z.2 p - dist z.1 p) with hgdef
+  set d : ℝ := Finset.min' gaps hgne with hddef
+  have hdmin2 : ∀ b ∈ gaps, d ≤ b := fun b hb => Finset.min'_le gaps b hb
+  have hdm0 : d ≤ dist v0 p - dist u0 p := by
+    have h1 := hdmin2 ((fun z : V3 × V3 => dist z.2 p - dist z.1 p) (u0, v0)) hgapU
+    simpa using h1
+  have hdin2 : d ∈ gaps := Finset.min'_mem gaps hgne
+  obtain ⟨w, hwU, hdweq⟩ := Finset.mem_image.mp hdin2
+  have hwP : w ∈ S ×ˢ ((V \ S) ∩ Metric.ball p (dist v0 p + 2)) :=
+    (Set.Finite.mem_toFinset _).mp hwU
+  have hdw : dist w.2 p - dist w.1 p = d := hdweq
+  have hgtw : dist w.1 p < dist w.2 p := hgap w.1 hwP.1 w.2 hwP.2.1
+  have hdpos : 0 < d := by rw [← hdw]; linarith
+  refine ⟨min (d / 2) (1 / 2), lt_min (by linarith) (by norm_num), ?_⟩
+  intro x hx u hu v hv
+  have hxp : dist p x < min (d / 2) (1 / 2) := by
+    rw [dist_comm]; exact Metric.mem_ball.mp hx
+  have hxd : dist p x < d / 2 := lt_of_lt_of_le hxp (min_le_left _ _)
+  have hxh : dist p x < 1 / 2 := lt_of_lt_of_le hxp (min_le_right _ _)
+  have hsymm : dist p x = dist x p := dist_comm p x
+  by_cases hvin : v ∈ (V \ S) ∩ Metric.ball p (dist v0 p + 2)
+  · have hmem2 : (u, v) ∈ S ×ˢ ((V \ S) ∩ Metric.ball p (dist v0 p + 2)) :=
+      ⟨hu, hvin⟩
+    have hd' : d ≤ dist v p - dist u p := by
+      have h1 := hdmin2 ((fun z : V3 × V3 => dist z.2 p - dist z.1 p) (u, v))
+        (Finset.mem_image.mpr ⟨(u, v), Set.Finite.mem_toFinset _ |>.mpr hmem2, rfl⟩)
+      simpa using h1
+    have h1 : dist v p ≤ dist v x + dist x p := dist_triangle v x p
+    have h2 : dist u x ≤ dist u p + dist p x := dist_triangle u p x
+    linarith
+  · have hfar : dist v0 p + 2 ≤ dist v p := by
+      have h1' : ¬ dist v p < dist v0 p + 2 := fun h =>
+        hvin ⟨hv, Metric.mem_ball.mpr h⟩
+      exact le_of_not_gt h1'
+    have h2' : dist u p < dist v0 p := hR u hu
+    have h3 : dist v p - dist x p ≤ dist v x := by
+      linarith [dist_triangle v x p]
+    have h4' : dist u x ≤ dist u p + dist p x := dist_triangle u p x
+    linarith
 /-- HL `SUBSPACES_INTER_BALL_EQ_IMP_EQ` (Rogers.hl:8454). HL `subspace s`
 (linear-subspace-as-set predicate) is rendered by the existential over
 `Submodule ℝ V3`. -/
@@ -716,14 +875,39 @@ theorem HL_TRUNCATE_SIMPLEX_OMEGA_N (V : Set V3) (k : ℕ) (ul : List V3) (j : �
     (hV : Packing V) (hb : barV V k ul) (hjk : j ≤ k)
     (hl2 : hl ul < Real.sqrt 2) :
     hl (truncateSimplex j ul) = dist (omegaListN V ul j) (hdV ul) := by
-  sorry
+  have hlen : j + 1 ≤ ul.length := by rw [hb.1]; omega
+  have htr : barV V j (truncateSimplex j ul) := TRUNCATE_SIMPLEX_BARV V j k ul hb hjk
+  have hdec := HL_DECREASE V ul k j hV hb hjk
+  have hlt : hl (truncateSimplex j ul) < Real.sqrt 2 := by linarith
+  have hw := WAUFCHE2 V (truncateSimplex j ul) j hV htr hlt
+  rw [hw, OMEGA_LIST_LEMMA V ul j hlen, HD_TRUNCATE_SIMPLEX ul j hlen]
 
 /-- HL `KSOQKWL_lemma0` (Rogers.hl:9197). -/
 theorem KSOQKWL_lemma0 (V : Set V3) (ul vl : List V3) (k : ℕ) (hV : Packing V)
     (hb1 : barV V k ul) (hb2 : barV V k vl) (hhd : ¬ (hdV ul = hdV vl)) :
     ¬ ({omegaListN V ul i | i ∈ Finset.Icc 0 k} =
         {omegaListN V vl i | i ∈ Finset.Icc 0 k}) := by
-  sorry
+  intro heq
+  have h0 : hdV ul ∈ {omegaListN V ul i | i ∈ Finset.Icc 0 k} := by
+    rw [Set.mem_setOf_eq]
+    exact ⟨0, Finset.mem_Icc.mpr (by omega), rfl⟩
+  rw [heq] at h0
+  rw [Set.mem_setOf_eq] at h0
+  obtain ⟨j, hj, hjv⟩ := h0
+  have hjk : j ≤ k := (Finset.mem_Icc.mp hj).2
+  have hlen : j + 1 ≤ vl.length := by rw [hb2.1]; omega
+  have hom : omegaListN V vl j ∈ voronoiList V (truncateSimplex j vl) :=
+    OMEGA_LIST_N_IN_VORONOI_LIST V vl k j hb2 hjk
+  have hcell : omegaListN V vl j ∈ voronoiClosed V (hdV vl) := by
+    rw [← HD_TRUNCATE_SIMPLEX vl j hlen]
+    exact (VORONOI_LIST_SUBSET_VORONOI_CLOSED _ _
+      (by rw [LENGTH_TRUNCATE_SIMPLEX j vl hlen]; omega)) hom
+  have hlenU : 1 ≤ ul.length := by rw [hb1.1]; omega
+  have hsub : hdV ul ∈ V := BARV_SUBSET V k ul hb1 (HD_IN_SET_OF_LIST ul hlenU)
+  have hz : dist (omegaListN V vl j) (hdV vl) ≤ dist (omegaListN V vl j) (hdV ul) :=
+    hcell _ hsub
+  rw [hjv, dist_self] at hz
+  exact hhd (dist_eq_zero.mp (le_antisymm hz dist_nonneg))
 
 /-- HL `KSOQKWL_lemma1` (Rogers.hl:9264). -/
 theorem KSOQKWL_lemma1 (V : Set V3) (ul vl : List V3) (k j : ℕ) (hV : Packing V)
@@ -750,7 +934,50 @@ theorem ROGERS_EQ (V : Set V3) (ul vl : List V3) (k : ℕ) (hV : Packing V)
     rogers V ul = rogers V vl ↔
       {omegaListN V ul i | i ∈ Finset.Icc 0 k} =
         {omegaListN V vl i | i ∈ Finset.Icc 0 k} := by
-  sorry
+  have hlen1 : ul.length = k + 1 := hb1.1
+  have hlen2 : vl.length = k + 1 := hb2.1
+  have hset1 : omegaListN V ul '' {j : ℕ | j < ul.length} =
+      {omegaListN V ul i | i ∈ Finset.Icc 0 k} := by
+    ext x
+    constructor
+    · intro him
+      rw [Set.mem_image] at him
+      obtain ⟨j, hj, hjx⟩ := him
+      have hlt : j < ul.length := hj
+      exact (⟨j, Finset.mem_Icc.mpr (by omega), hjx⟩ :
+        ∃ i, i ∈ Finset.Icc 0 k ∧ omegaListN V ul i = x)
+    · intro him
+      rw [Set.mem_setOf_eq] at him
+      obtain ⟨j, hj, hjx⟩ := him
+      have hjk : j ≤ k := (Finset.mem_Icc.mp hj).2
+      have hlt : j < ul.length := by omega
+      rw [Set.mem_image]
+      exact ⟨j, hlt, hjx⟩
+  have hset2 : omegaListN V vl '' {j : ℕ | j < vl.length} =
+      {omegaListN V vl i | i ∈ Finset.Icc 0 k} := by
+    ext x
+    constructor
+    · intro him
+      rw [Set.mem_image] at him
+      obtain ⟨j, hj, hjx⟩ := him
+      have hlt : j < vl.length := hj
+      exact (⟨j, Finset.mem_Icc.mpr (by omega), hjx⟩ :
+        ∃ i, i ∈ Finset.Icc 0 k ∧ omegaListN V vl i = x)
+    · intro him
+      rw [Set.mem_setOf_eq] at him
+      obtain ⟨j, hj, hjx⟩ := him
+      have hjk : j ≤ k := (Finset.mem_Icc.mp hj).2
+      have hlt : j < vl.length := by omega
+      rw [Set.mem_image]
+      exact ⟨j, hlt, hjx⟩
+  show convexHull ℝ (omegaListN V ul '' {j : ℕ | j < ul.length})
+      = convexHull ℝ (omegaListN V vl '' {j : ℕ | j < vl.length}) ↔
+    {omegaListN V ul i | i ∈ Finset.Icc 0 k} =
+      {omegaListN V vl i | i ∈ Finset.Icc 0 k}
+  rw [hset1, hset2]
+  exact CONVEX_HULL_EQ_EQ_SET_EQ _ _
+    (AFFINE_INDEPENDENT_OMEGA_LIST_N V ul k hV hb1 hl1)
+    (AFFINE_INDEPENDENT_OMEGA_LIST_N V vl k hV hb2 hl2)
 
 /-- HL `NUM_FINITE_IMP_MAX_EXISTS` (Rogers.hl:9409). -/
 theorem NUM_FINITE_IMP_MAX_EXISTS (K : Set ℕ) (hK : K.Finite) (hne : K ≠ ∅) :
@@ -813,8 +1040,8 @@ theorem IVFICRK_real3 (k : ℕ) :
       ∀ (ul : List V3) (i : ℕ) (σ : Equiv.Perm ℕ) (j : ℕ), ul.length = k + 2 →
         j ≤ k → i ∈ Set.Icc 0 (k + 1) → permutes σ (Set.Icc 0 k) →
           (leftActionList (g (i, σ)) ul).getD j default =
-            (leftActionList σ (dropIth ul i)).getD j default := by
-  sorry
+            (leftActionList σ (dropIth ul i)).getD j default :=
+  IVFICRK (A := V3) k
 
 /-- HL `WQPRRDY` (Rogers.hl:10534) — CAPSTONE / main Rogers bound: the hull
 of a barfixed simplex is the union of its Rogers simplices over all vertex
