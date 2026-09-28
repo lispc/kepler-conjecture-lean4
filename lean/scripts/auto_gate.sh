@@ -49,7 +49,10 @@ grep -qE '(^| )error:' /tmp/auto_gate_build.log && fail "errors in build log"
 #     infeasible on M3 Pro). The seven Text closure roots below cover the
 #     whole Text/ tree (the gate target of all current fill work). Restore
 #     `lake build Kepler` before any Graphs/Interval/Cases work. Incremental.
-ROOTS="Kepler.Text.Hypermap Kepler.Text.PackingConcl Kepler.Text.LocalConcl Kepler.Text.LocalBridge Kepler.Text.TameLp Kepler.Text.AzimBridge Kepler.Text.ContraFan"
+#     GATE_ROOTS: comma/space-separated override — use when another lane's
+#     mid-edit file would break an unrelated root (e.g. exclude the root that
+#     imports a still-being-edited lane file). Must still cover $FILE's tree.
+ROOTS="${GATE_ROOTS:-Kepler.Text.Hypermap Kepler.Text.PackingConcl Kepler.Text.LocalConcl Kepler.Text.LocalBridge Kepler.Text.TameLp Kepler.Text.AzimBridge Kepler.Text.ContraFan}"
 if ! timeout 3600 lake build $ROOTS > /tmp/auto_gate_root_build.log 2>&1; then
   fail "lake build Text roots failed, see /tmp/auto_gate_root_build.log"
 fi
