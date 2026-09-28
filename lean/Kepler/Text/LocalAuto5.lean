@@ -959,16 +959,140 @@ theorem HYP_MAPS_INVERABLE {α : Type*} [DecidableEq α] (H : Hypermap α) :
 theorem LOFA_DARTS_FF_UNION_SWITCH_FF (h : localFan_p2 V E FF) :
     dartsOfHyp_p2 E V = FF ∪ {p : V3 × V3 | (p.2, p.1) ∈ FF} := sorry
 
+/-- Lane support (LA5 r2): every point of a self-cyclic set is periodic. -/
+private theorem la5_orbit_period {α : Type*} (f : α → α) {S : Set α}
+    (h : ∀ x ∈ S, S = orbitF_p2 f x) {x : α} (hx : x ∈ S) :
+    ∃ p : ℕ, 0 < p ∧ f^[p] x = x := by
+  have hfx : f x ∈ S := by
+    rw [h x hx]
+    exact ⟨1, rfl⟩
+  have h2 := h (f x) hfx
+  have hxmem : x ∈ orbitF_p2 f (f x) := by rw [← h2]; exact hx
+  obtain ⟨n, hn⟩ := hxmem
+  refine ⟨n + 1, Nat.succ_pos n, ?_⟩
+  rw [Function.iterate_succ_apply f n x]
+  exact hn
+
+/-- Lane support (LA5 r2): the least period of a periodic point. -/
+private theorem la5_min_period {α : Type*} (f : α → α) {x : α} {p : ℕ}
+    (hp : 0 < p) (hpx : f^[p] x = x) :
+    ∃ q : ℕ, 0 < q ∧ q ≤ p ∧ f^[q] x = x ∧ ∀ i : ℕ, 0 < i → i < q → f^[i] x ≠ x := by
+  have hex : ∃ n, 0 < n ∧ f^[n] x = x := ⟨p, hp, hpx⟩
+  have hspec : 0 < Nat.find hex ∧ f^[Nat.find hex] x = x := Nat.find_spec hex
+  refine ⟨Nat.find hex, hspec.1, Nat.find_le ⟨hp, hpx⟩, hspec.2, ?_⟩
+  intro i hi0 hilt hcon
+  exact Nat.find_min hex hilt ⟨hi0, hcon⟩
+
+/-- Lane support (LA5 r2): `q`-periodic points have `q`-multiple periods. -/
+private theorem la5_iterate_mul {α : Type*} (f : α → α) {x : α} {q : ℕ}
+    (hqx : f^[q] x = x) (k : ℕ) : f^[k * q] x = x := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+    rw [Nat.succ_mul, Function.iterate_add_apply, hqx, ih]
+
+/-- Lane support (LA5 r2): index reduction modulo a period. -/
+private theorem la5_iterate_mod {α : Type*} (f : α → α) {x : α} {q : ℕ}
+    (hqx : f^[q] x = x) (n : ℕ) : f^[n] x = f^[n % q] x := by
+  have hsplit : n / q * q + n % q = n := Nat.div_add_mod' n q
+  have hqx' : f^[q] (f^[n % q] x) = f^[n % q] x := by
+    rw [← Function.iterate_add_apply, Nat.add_comm, Function.iterate_add_apply, hqx]
+  calc f^[n] x = f^[n / q * q + n % q] x := by rw [hsplit]
+    _ = f^[n / q * q] (f^[n % q] x) := Function.iterate_add_apply f (n / q * q) (n % q) x
+    _ = f^[n % q] x := la5_iterate_mul f hqx' (n / q)
+
+
+/-- Lane support (LA5 r2): a self-cyclic set is finite (placed before
+`LOOP_MAP_IMP_DIFF_FIRST_ELMS`, which sits earlier in the file). -/
+private theorem la5_self_cyclic_finite {α : Type*} (f : α → α) (V : Set α)
+    (h : ∀ x ∈ V, V = orbitF_p2 f x) : V.Finite := by
+  by_cases hV : V = ∅
+  · rw [hV]
+    exact Set.finite_empty
+  · obtain ⟨x₀, hx₀⟩ := Set.nonempty_iff_ne_empty.mpr hV
+    obtain ⟨p, hp0, hper⟩ := la5_orbit_period f h hx₀
+    have hsub : V ⊆ ({f^[i] x₀ | i < p} : Set α) := by
+      rw [h x₀ hx₀]
+      intro y hy
+      obtain ⟨m, hm⟩ := hy
+      have hr : m % p < p := Nat.mod_lt _ hp0
+      refine ⟨m % p, hr, ?_⟩
+      exact (la5_iterate_mod f hper m).symm.trans hm
+    exact (FINTE_OF_N_FIRST_ELMS2 f x₀ p).subset hsub
+
 /-- HOL `SELF_CYCLIC_IMP_FINITE` (local_lemmas.hl:1843): the orbit condition
 forces finiteness (in HOL via the cyclic-orbit machinery; the plain-function
 rendering keeps the statement, see the HL proof's `ITER_CYCLIC_ORBIT`). -/
 theorem SELF_CYCLIC_IMP_FINITE {α : Type*} (f : α → α) (V : Set α)
-    (h : ∀ x ∈ V, V = orbitF_p2 f x) : V.Finite := sorry
+    (h : ∀ x ∈ V, V = orbitF_p2 f x) : V.Finite :=
+  la5_self_cyclic_finite f V h
 
 
 /-- HOL `SELF_CYCLIC_IMP_BIJ` (local_lemmas.hl:1879). -/
 theorem SELF_CYCLIC_IMP_BIJ {α : Type*} (f : α → α) (S : Set α)
-    (h : ∀ x ∈ S, S = orbitF_p2 f x) : Set.BijOn f S S := sorry
+    (h : ∀ x ∈ S, S = orbitF_p2 f x) : Set.BijOn f S S := by
+  refine ⟨?_, ?_, ?_⟩
+  · intro y hy
+    rw [h y hy]
+    exact ⟨1, rfl⟩
+  · -- InjOn: least-period argument; only iterate_add/succ identities, no
+    -- stripping of `f` (f need not be injective off `S`)
+    intro a ha b hb hab
+    obtain ⟨q0, hq0, hqb⟩ := la5_orbit_period f h hb
+    obtain ⟨q, hqpos, -, hqb', hmin⟩ := la5_min_period f hq0 hqb
+    have hxmem : a ∈ orbitF_p2 f b := by rw [← h b hb]; exact ha
+    obtain ⟨m, hm⟩ := hxmem
+    have hage : a = f^[m % q] b := by rw [← hm, la5_iterate_mod f hqb' m]
+    by_cases hr0 : m % q = 0
+    · rw [hage, hr0, Function.iterate_zero_apply]
+    · have hr1 : 0 < m % q := Nat.pos_of_ne_zero hr0
+      have hrq : m % q < q := Nat.mod_lt _ hqpos
+      have hstep : f (f^[m % q] b) = f b := by rw [← hage, hab]
+      have hc : f^[m % q] (f b) = f b := by
+        rw [← Function.iterate_succ_apply f (m % q) b,
+          Function.iterate_succ_apply' f (m % q) b]
+        exact hstep
+      have hbq : b = f^[q - 1] (f b) := calc
+        b = f^[q] b := hqb'.symm
+        _ = f^[(q - 1) + 1] b := by rw [show (q - 1) + 1 = q from by omega]
+        _ = f^[q - 1] (f b) := Function.iterate_add_apply f (q - 1) 1 b
+      have hra : f^[m % q] b = b := by
+        rw [hbq, ← Function.iterate_add_apply, Nat.add_comm,
+          Function.iterate_add_apply, hc]
+      rw [hage, hra]
+  · intro z hz
+    obtain ⟨q, hq0, hqz⟩ := la5_orbit_period f h hz
+    refine ⟨f^[q - 1] z, ?_, ?_⟩
+    · rw [h z hz]
+      exact ⟨q - 1, rfl⟩
+    · rw [← Function.iterate_succ_apply' f (q - 1) z,
+        show (q - 1).succ = q from by omega, hqz]
+
+/-- Lane support (LA5 r2): under the least period the first `p` iterates are
+pairwise distinct (backward-orbit commutation, no stripping of `f`). -/
+private theorem la5_min_period_inj {α : Type*} (f : α → α) {x : α} {p : ℕ}
+    (hpx : f^[p] x = x) (hmin : ∀ i : ℕ, 0 < i → i < p → f^[i] x ≠ x) :
+    Set.InjOn (fun n => f^[n] x) (Set.Iio p) := by
+  have key : ∀ i j : ℕ, i < j → j < p → f^[i] x = f^[j] x → False := by
+    intro i j hij hjp hcon
+    have hd1 : 0 < j - i := by omega
+    have hdp : j - i < p := by omega
+    have hcd : f^[j - i] (f^[i] x) = f^[i] x := by
+      rw [← Function.iterate_add_apply, Nat.sub_add_cancel (Nat.le_of_lt hij),
+        ← hcon]
+    have hxback : x = f^[p - i] (f^[i] x) := by
+      have e1 : f^[p - i] (f^[i] x) = f^[(p - i) + i] x :=
+        (Function.iterate_add_apply f (p - i) i x).symm
+      rw [e1, show (p - i) + i = p from by omega, hpx]
+    have hdx : f^[j - i] x = x := by
+      rw [hxback, ← Function.iterate_add_apply, Nat.add_comm,
+        Function.iterate_add_apply, hcd, ← hxback]
+    exact absurd hdx (hmin (j - i) hd1 hdp)
+  intro i hi j hj hcon
+  rcases lt_trichotomy i j with h | h | h
+  · exact absurd hcon (key i j h hj)
+  · exact h
+  · exact absurd hcon.symm (key j i h hi)
 
 /-- HOL `LOFA_IN_E_IMP_IN_FF` (local_lemmas.hl:1887). -/
 theorem LOFA_IN_E_IMP_IN_FF (h : localFan_p2 V E FF) {a b : V3}
@@ -1121,18 +1245,100 @@ theorem AFF2_DET_BY_TWO_POINTS {a b x y : V3} (hsub : ({x, y} : Set V3) ⊆
     ((affineSpan ℝ ({a, b} : Set V3) : Set V3))) (hxy : x ≠ y) :
     (affineSpan ℝ ({a, b} : Set V3) : Set V3) = (affineSpan ℝ ({x, y} : Set V3) : Set V3) := sorry
 
+/-- Lane support (LA5 r2): extract positive affine coefficients from a
+two-point `conv0_p2` membership. -/
+private theorem la5_conv02_extract {a b x : V3} (hx : x ∈ conv0_p2 ({a, b} : Set V3)) :
+    ∃ α β : ℝ, 0 < α ∧ 0 < β ∧ α + β = 1 ∧ x = α • a + β • b := by
+  obtain ⟨f, hfin, hvec, hpos, hsum⟩ := hx
+  by_cases hab : a = b
+  · subst hab
+    have hEq : hfin.toFinset = ({a} : Finset V3) := by ext w; simp
+    rw [hEq] at hvec hsum
+    simp only [Finset.sum_singleton] at hvec hsum
+    have hfa : f a = 1 := hsum
+    refine ⟨1 / 2, 1 / 2, by norm_num, by norm_num, by norm_num, ?_⟩
+    rw [hvec, hfa]
+    module
+  · have hEq : hfin.toFinset = ({a, b} : Finset V3) := by ext w; simp [hab]
+    rw [hEq] at hvec hsum
+    simp only [Finset.sum_insert (by simp [hab] : ¬(a ∈ ({b} : Finset V3))),
+      Finset.sum_singleton] at hvec hsum
+    exact ⟨f a, f b, hpos a (by simp [hab]), hpos b (by simp [hab]), by linarith, hvec⟩
+
+/-- Lane support (LA5 r2): an affine combination of two points lies in their
+affine span. -/
+private theorem la5_affComb_mem_affSpan {a b x : V3} {α β : ℝ} (hsum : α + β = 1)
+    (hx : x = α • a + β • b) : x ∈ (affineSpan ℝ ({a, b} : Set V3) : Set V3) := by
+  rw [SetLike.mem_coe, mem_affineSpan_pair_iff_exists_lineMap_eq]
+  refine ⟨β, ?_⟩
+  rw [AffineMap.lineMap_apply_module, hx, show (1:ℝ) - β = α from by linarith]
+
+/-- Lane support (LA5 r2): from `t = α•x + β•y` (`α+β=1`, `β≠0`) the partner
+point `y` sits on the ray from `x` through `t` at parameter `1/β`. -/
+private theorem la5_conv02_partner {x y t : V3} {α β : ℝ} (hsum : α + β = 1)
+    (hβ : β ≠ 0) (htxy : t = α • x + β • y) :
+    y = AffineMap.lineMap x t (1 / β) := by
+  rw [AffineMap.lineMap_apply_module, htxy, smul_add, smul_smul, smul_smul,
+    show (1:ℝ) / β * β = 1 from by field_simp, one_smul,
+    show (1:ℝ) / β * α = α / β from by ring]
+  rw [← add_assoc, ← add_smul, show (1:ℝ) - 1 / β + α / β = 0 by field_simp; linarith,
+    zero_smul, zero_add]
+
 /-- HOL `IN_CONV0_EQ_EQ` (local_lemmas.hl:2560). -/
 theorem IN_CONV0_EQ_EQ {a b x : V3} (hx : x ∈ conv0_p2 ({a, b} : Set V3)) :
-    x = a ↔ a = b := sorry
+    x = a ↔ a = b := by
+  obtain ⟨α, β, hα, hβ, hsum, hxa⟩ := la5_conv02_extract hx
+  constructor
+  · intro hxa2
+    rw [hxa2] at hxa
+    -- hxa : a = α • a + β • b
+    have h3 : a - α • a = β • b := by
+      nth_rewrite 1 [hxa]
+      rw [add_sub_cancel_left]
+    have s1 : (1:ℝ) - α = β := by linarith
+    have e4 : β • a = a - α • a := by
+      rw [show β = (1:ℝ) - α from s1.symm, sub_smul, one_smul]
+    have h3' : β • a = β • b := e4.trans h3
+    have h5 : β • (a - b) = (0:V3) := by rw [smul_sub, h3', sub_self]
+    rcases smul_eq_zero.mp h5 with h | h
+    · linarith
+    · exact sub_eq_zero.mp h
+  · intro hab
+    subst hab
+    rw [hxa, ← add_smul, hsum, one_smul]
 
 /-- HOL `IN_CONV0_IMP_AFF_EQ` (local_lemmas.hl:2580). -/
 theorem IN_CONV0_IMP_AFF_EQ {x y a : V3} (ha : a ∈ conv0_p2 ({x, y} : Set V3)) :
-    (affineSpan ℝ ({x, y} : Set V3) : Set V3) = (affineSpan ℝ ({x, a} : Set V3) : Set V3) := sorry
+    (affineSpan ℝ ({x, y} : Set V3) : Set V3) = (affineSpan ℝ ({x, a} : Set V3) : Set V3) := by
+  obtain ⟨α, β, hα, hβ, hsum, hab⟩ := la5_conv02_extract ha
+  have hβ0 : β ≠ 0 := hβ.ne'
+  refine le_antisymm ?_ ?_
+  · refine S_SUBSET_IMP_AFF_S_TOO ?_
+    intro z hz
+    rcases Set.mem_insert_iff.mp hz with rfl | rfl
+    · exact left_mem_affineSpan_pair _ _ _
+    · rw [SetLike.mem_coe, mem_affineSpan_pair_iff_exists_lineMap_eq]
+      exact ⟨1 / β, (la5_conv02_partner hsum hβ0 hab).symm⟩
+  · refine S_SUBSET_IMP_AFF_S_TOO ?_
+    intro z hz
+    rcases Set.mem_insert_iff.mp hz with rfl | rfl
+    · exact left_mem_affineSpan_pair _ _ _
+    · exact la5_affComb_mem_affSpan hsum hab
 
 /-- HOL `IN_CONV0_AFF_SUBSET` (local_lemmas.hl:2600). -/
 theorem IN_CONV0_AFF_SUBSET {a b x y t : V3} (ht : t ∈ ((affineSpan ℝ ({a, b} : Set V3) :
     Set V3) ∩ conv0_p2 ({x, y} : Set V3))) (hx : x ∈ (affineSpan ℝ ({a, b} : Set V3) : Set V3)) :
-    (affineSpan ℝ ({x, y} : Set V3) : Set V3) ⊆ (affineSpan ℝ ({a, b} : Set V3) : Set V3) := sorry
+    (affineSpan ℝ ({x, y} : Set V3) : Set V3) ⊆ (affineSpan ℝ ({a, b} : Set V3) : Set V3) := by
+  obtain ⟨α, β, hα, hβ, hsum, htxy⟩ := la5_conv02_extract ht.2
+  have hβ0 : β ≠ 0 := hβ.ne'
+  refine S_SUBSET_IMP_AFF_S_TOO ?_
+  intro z hz
+  rcases Set.mem_insert_iff.mp hz with rfl | rfl
+  · exact hx
+  · rw [SetLike.mem_coe, la5_conv02_partner hsum hβ0 htxy]
+    have ht1 : t ∈ (affineSpan ℝ ({a, b} : Set V3)) := ht.1
+    have hx1 : x ∈ (affineSpan ℝ ({a, b} : Set V3)) := hx
+    exact AffineMap.lineMap_mem (1 / β) hx1 ht1
 
 /-- HOL `CONDS_FOR_INTER_AFF_CONV0` (local_lemmas.hl:2611). -/
 theorem CONDS_FOR_INTER_AFF_CONV0 {x v w u t : V3} {t1 t2 t3 t1' t2' ss : ℝ}
@@ -1203,19 +1409,71 @@ theorem CONDS_IN_HAFL_LINE {x a b : V3} {t : ℝ} (ht : 0 ≤ t)
     · rw [hEq, Finset.sum_insert hx', Finset.sum_singleton]
       simp [hxb]
 
+/-- Lane support (LA5 r2): ray extraction from `affGe {x} {v}` membership
+(valid also in the degenerate `x = v` case). -/
+private theorem la5_affGe2_extract {x v y : V3}
+    (hy : y ∈ affGe ({x} : Set V3) ({v} : Set V3)) :
+    ∃ t : ℝ, 0 ≤ t ∧ y - x = t • (v - x) := by
+  obtain ⟨f, hfin, hvec, hsgn, hsum⟩ := hy
+  by_cases hxv : x = v
+  · refine ⟨0, le_refl 0, ?_⟩
+    subst hxv
+    have hEq : hfin.toFinset = ({x} : Finset V3) := by ext w; simp
+    rw [hEq] at hvec hsum
+    simp only [Finset.sum_singleton] at hvec hsum
+    rw [hvec, hsum, one_smul, sub_self, zero_smul]
+  · refine ⟨f v, hsgn v (by simp), ?_⟩
+    rw [sum_insert_single_v hfin hxv] at hvec
+    rw [sum_insert_single_s hfin hxv] at hsum
+    have hfx : f x = 1 - f v := by linarith
+    rw [hvec, hfx]
+    module
+
 /-- HOL `PRESERABLE_AFF_GE_SUBSET` (local_lemmas.hl:2676). -/
 theorem PRESERABLE_AFF_GE_SUBSET {x a b : V3} (ha : a ∈ affGe ({x} : Set V3) ({b} : Set V3)) :
-    affGe ({x} : Set V3) ({a} : Set V3) ⊆ affGe ({x} : Set V3) ({b} : Set V3) := sorry
+    affGe ({x} : Set V3) ({a} : Set V3) ⊆ affGe ({x} : Set V3) ({b} : Set V3) := by
+  obtain ⟨t, ht0, hta⟩ := la5_affGe2_extract ha
+  intro z hz
+  obtain ⟨s, hs0, hsz⟩ := la5_affGe2_extract hz
+  exact CONDS_IN_HAFL_LINE (mul_nonneg hs0 ht0) (by rw [hsz, hta, smul_smul])
 
 /-- HOL `AFF_GE_EQ` (local_lemmas.hl:2686). -/
 theorem AFF_GE_EQ {x a b : V3} {t : ℝ} (ht : 0 < t) (heq : a - x = t • (b - x)) :
-    affGe ({x} : Set V3) ({a} : Set V3) = affGe ({x} : Set V3) ({b} : Set V3) := sorry
+    affGe ({x} : Set V3) ({a} : Set V3) = affGe ({x} : Set V3) ({b} : Set V3) := by
+  refine Set.eq_of_subset_of_subset ?_ ?_
+  · intro z hz
+    obtain ⟨s, hs0, hsz⟩ := la5_affGe2_extract hz
+    exact CONDS_IN_HAFL_LINE (mul_nonneg hs0 ht.le) (by rw [hsz, heq, smul_smul])
+  · intro z hz
+    obtain ⟨s, hs0, hsz⟩ := la5_affGe2_extract hz
+    have hbx : b - x = t⁻¹ • (a - x) := by
+      rw [heq, smul_smul, inv_mul_cancel₀ ht.ne', one_smul]
+    exact CONDS_IN_HAFL_LINE (mul_nonneg hs0 (inv_nonneg.2 ht.le)) (by rw [hsz, hbx, smul_smul])
 
 /-- HOL `AFF2_ITR_CONV0_IMP_SAME_ENDS` (local_lemmas.hl:2709). -/
 theorem AFF2_ITR_CONV0_IMP_SAME_ENDS {x y a b t : V3}
     (ht : t ∈ ((affineSpan ℝ ({x, y} : Set V3) : Set V3) ∩
       conv0_p2 ({a, b} : Set V3))) :
-    (a ∈ affineSpan ℝ ({x, y} : Set V3) ↔ b ∈ affineSpan ℝ ({x, y} : Set V3)) := sorry
+    (a ∈ affineSpan ℝ ({x, y} : Set V3) ↔ b ∈ affineSpan ℝ ({x, y} : Set V3)) := by
+  have key : ∀ u v : V3, t ∈ conv0_p2 ({u, v} : Set V3) →
+      v ∈ (affineSpan ℝ ({x, y} : Set V3) : Set V3) →
+      u ∈ (affineSpan ℝ ({x, y} : Set V3) : Set V3) := by
+    intro u v hconv hv
+    obtain ⟨α, β, hα, hβ, hsum, htuv⟩ := la5_conv02_extract hconv
+    have h1 : t = β • v + α • u := by rw [htuv, add_comm]
+    rw [SetLike.mem_coe, la5_conv02_partner (by linarith) hα.ne' h1]
+    have ht1 : t ∈ (affineSpan ℝ ({x, y} : Set V3)) := ht.1
+    exact AffineMap.lineMap_mem (1 / α) hv ht1
+  constructor
+  · intro ha
+    have hsym : t ∈ conv0_p2 ({b, a} : Set V3) := by
+      have hca : conv0_p2 ({b, a} : Set V3) = conv0_p2 ({a, b} : Set V3) := by
+        rw [Set.pair_comm (a := b) (b := a)]
+      rw [hca]
+      exact ht.2
+    exact key b a hsym ha
+  · intro hb
+    exact key a b ht.2 hb
 
 /-- HOL `AFF_XX_CASES` (local_lemmas.hl:2725). -/
 theorem AFF_XX_CASES (x : V3) :
