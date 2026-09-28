@@ -274,3 +274,11 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   陈述分歧，就是成功。闸门已配套：规则②⑤对零删行 diff 自动豁免
   （54d9ed0f/2a9cfed9）。编排侧footgun：`LANE_FILES` 是**替换式**白名单，
   设置时必须把 lane 文件本身也列进去（已两次踩坑）。
+- **环境事故（2026-09-28，全波通报）**：worktree+共享 packages 符号链接的隔离方案
+  引发 lake 缺 manifest→mathlib 重克隆，与并行 lane 并发竞争，共享 mathlib olean
+  全失。**禁令**：①工人不得自建 worktree/符号链接共享 `.lake`——隔离迭代一律走
+  untracked scratch 模块路线（§2）；②任何 lane 不得并发跑 lake 环境级操作
+  （update/cache get/重克隆）；③环境修复由编排者串行接管，其他 lane 见构建报错
+  统一口径"环境事故，恢复后重试秒过，不要自行修复环境"。恢复路径：
+  杀源码编 Mathlib 进程 → `lake exe cache get!`（cloud cache，5-15 分钟）→
+  smoke build 后统一放行。
