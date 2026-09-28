@@ -562,16 +562,19 @@ theorem GLTVHUM_concl : ∀ (V : Set V3) (u0 p : V3), Packing V ∧ saturated V 
 
 /-- HOL `DUUNHOR_concl` (pack_concl.hl:21-23): distinct Rogers simplices
 meet in a coplanar set. -/
-theorem DUUNHOR_concl : ∀ (V : Set V3) (ul vl : List V3), barV V 3 ul → barV V 3 vl →
-    rogers V ul ≠ rogers V vl → Coplanar (rogers V ul ∩ rogers V vl) := by
+theorem DUUNHOR_concl : ∀ (V : Set V3) (ul vl : List V3), Packing V → saturated V →
+    barV V 3 ul → barV V 3 vl → rogers V ul ≠ rogers V vl →
+    Coplanar (rogers V ul ∩ rogers V vl) := by
   -- NEEDS: HOL 本体 Rogers.hl:1682-~2450（~770 行，两个 num_WF 强归纳 + 大段凸组合
   -- 比较）为 GIANT；依赖 ROGERS_AFF_DIM_FULL（PA6:763 未证）、POLYHEDRON_VORONOI_LIST
   -- （PA5:1454 未证）、OMEGA_LIST_N_LEMMA（PA5:1502 未证）；PA6:841 DUUNHOR 亦为本桥
-  -- 背引用。另有陈述分歧：本桥无 Packing/saturated 前提，而 HOL 证明第一步即经
-  -- VORONOI_CLOSED_EQ_LEMMA（Rogers.hl:1256，带 packing 前提）消费 packing——
-  -- PA6:837 "前提未用" 注记与 HOL 原文不符；修复波需复核是否补前提（若补，
-  -- PA6:841 背引用需同步加参）。affDim≤2 的退化分支机械（PA6:707 可引），
-  -- 卡的是双满维主情形。
+  -- 背引用。陈述分歧 r2 裁决(提案官 2026-09-28)：本桥原无 Packing/saturated 前提，
+  -- 而 HOL 证明第一步即经 VORONOI_CLOSED_EQ_LEMMA（Rogers.hl:1256，带 packing
+  -- 前提）消费 packing——PA6:837 "前提未用" 注记与 HOL 原文不符。按 DECISIONS
+  -- 2026-09-28 授权走保真对齐：本陈述已补 Packing V ∧ saturated V，PA6:841
+  -- 背引用已同步加参（无前提版反例构造可行——两簇远距 barV 3 四面体，V 取 8 点
+  -- 显式集，机器化成本高未收口，见提案项 13 (b)）。affDim≤2 的退化分支机械
+  -- （PA6:707 可引），卡的是双满维主情形。
   sorry
 
 /-- HOL `QXSKIIT_concl` (pack_concl.hl:25-28): unique interpolation on the

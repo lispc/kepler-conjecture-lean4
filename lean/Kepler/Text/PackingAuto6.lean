@@ -585,11 +585,13 @@ theorem AFF_DIM_FINITE_UNION_LE (s t : Set V3) (hs : s.Finite) :
   sorry
 
 /-- Rogers.hl:1682 `DUUNHOR`: distinct Rogers simplices meet in a coplanar
-set. (The `packing`/`saturated` hypotheses are unused here.) -/
+set. (The `packing`/`saturated` hypotheses are consumed by
+`PackingAuto2.DUUNHOR_concl`; the r2 statement-fix added them there —
+see docs/statement-fix-proposals.md item 13.) -/
 theorem DUUNHOR (V : Set V3) (ul vl : List V3) (hP : Packing V) (hs : saturated V)
     (hul : barV V 3 ul) (hvl : barV V 3 vl) (hne : rogers V ul ≠ rogers V vl) :
     Coplanar (rogers V ul ∩ rogers V vl) :=
-  DUUNHOR_concl V ul vl hul hvl hne
+  DUUNHOR_concl V ul vl hP hs hul hvl hne
 
 /-- Rogers.hl:3106 `AFFINE_INDEPENDENT_IMP_INDEPENDENT`. -/
 theorem AFFINE_INDEPENDENT_IMP_INDEPENDENT (S : Set V3) (hS : ¬affineDependent S) :
