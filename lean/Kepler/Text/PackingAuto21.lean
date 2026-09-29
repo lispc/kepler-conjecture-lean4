@@ -481,6 +481,589 @@ theorem GRKIBMP : grk_bank → GRKIBMP_concl := by
     exact hB y 1 1 1 1 1 hge hy8 le_rfl le_rfl le_rfl le_rfl le_rfl
       le_rfl le_rfl le_rfl le_rfl le_rfl
 
+/-! ## MERGE-INEQ wave 2a: the cell3 kit (docs/merge-ineq-channel.md §4.2-3)
+
+The thirteen 2a kit items for `cell3_from_ineq_thm` (wave 2b), each with its
+HOL anchor (all in `text_formalization/nonlinear/merge_ineq.hl` or its
+dependencies).  Per charter §6.2 the HOL `ineq` box wrapper is not ported:
+statements are the arrow/implication form throughout.  Registration of the
+two def-level items:
+
+- **Item 1** `gamma3f_x_div_sqrtdelta`: already carried by the tree at
+  `IneqClosureDefs.lean:441` (`gamma3fXDivSqrtdelta`, verbatim operator
+  composition against the batch-2 kit) — reused, no local def.
+- **Item 2** `eulerA_x`: already materialized above (:162 `eulerAX`) —
+  skipped.
+
+The `mi_` prefix (Merge_ineq kit) is collision-free tree-wide.  -/
+
+/-! ### Item 13: the Flyspeck-constants numeric seeds (norm_num-affine) -/
+
+/-- Numeric seed: `1.414213 < sqrt 2` (Flyspeck_constants.bounds slice;
+the PA19:357 pattern). -/
+private theorem mi_sqrt2_lb : (1.414213 : ℝ) < Real.sqrt 2 :=
+  (Real.lt_sqrt (by norm_num)).mpr (by norm_num)
+
+/-- Numeric seed: `sqrt 2 < 1.414214`. -/
+private theorem mi_sqrt2_ub : Real.sqrt 2 < 1.414214 :=
+  (Real.sqrt_lt' (by norm_num)).mpr (by norm_num)
+
+/-- `sqrt 8 = 2 * sqrt 2` (HOL `Nonlinear_lemma.sqrt8_sqrt2`,
+nonlinear_lemma.hl:182). -/
+theorem mi_sqrt8_eq : Real.sqrt 8 = 2 * Real.sqrt 2 := by
+  rw [show (8 : ℝ) = 2 ^ 2 * 2 from by norm_num, Real.sqrt_mul (by norm_num),
+    Real.sqrt_sq (by norm_num)]
+
+/-- Numeric seed: `2.8 < sqrt 8`. -/
+private theorem mi_sqrt8_lb : (2.8 : ℝ) < Real.sqrt 8 := by
+  rw [mi_sqrt8_eq]; linarith [mi_sqrt2_lb]
+
+/-! ### Item 3: eta_y_nn -/
+
+/-- HOL `eta_y_nn` (merge_ineq.hl:3452-3462): nonnegativity of `eta_y`
+(`sqrt` is nonnegative; the hypothesis keeps the HOL shape). -/
+theorem mi_eta_y_nn (y4 y5 y6 : ℝ) (_h : 0 ≤ upsX (y4 * y4) (y5 * y5) (y6 * y6)) :
+    0 ≤ eta_y y4 y5 y6 := Real.sqrt_nonneg _
+
+/-- eta_y swap symmetries (the `Collect_geom.ETA_Y_SYYM` slice used by
+`ETA_Y_LE_IMP_LT_ALL`/`gamma3f_sym`; `ups_x` is a symmetric polynomial). -/
+theorem mi_eta_y_sym (y1 y2 y3 : ℝ) :
+    eta_y y1 y2 y3 = eta_y y2 y1 y3 ∧ eta_y y1 y2 y3 = eta_y y1 y3 y2 := by
+  constructor
+  · show etaX (y1 * y1) (y2 * y2) (y3 * y3) = etaX (y2 * y2) (y1 * y1) (y3 * y3)
+    simp only [etaX, upsX]; congr 1; ring
+  · show etaX (y1 * y1) (y2 * y2) (y3 * y3) = etaX (y1 * y1) (y3 * y3) (y2 * y2)
+    simp only [etaX, upsX]; congr 1; ring
+
+/-! ### Item 4: UPS_X_POS -/
+
+/-- HOL `TRI_UPS_X_STRICT_POS` (YSSKQOY.hl:340-346).  PackingAuto18 hosts
+the chapter copy but sits outside this file's import closure, so the short
+Heron-factorization proof is mirrored here (PackingAuto18.lean:478-505). -/
+private theorem mi_sqUpsX (a b c : ℝ) :
+    upsX (a * a) (b * b) (c * c)
+      = (a + b + c) * (-a + b + c) * (a - b + c) * (a + b - c) := by
+  simp only [upsX]; ring
+
+/-- HOL `TRI_UPS_X_STRICT_POS` (YSSKQOY.hl:340-346). -/
+private theorem mi_TRI_UPS_X_STRICT_POS (a b c : ℝ) (ha : 0 < a) (_hb : 0 < b) (_hc : 0 ≤ c)
+    (h1 : c < a + b) (h2 : a < b + c) (h3 : b < c + a) :
+    0 < upsX (a * a) (b * b) (c * c) := by
+  rw [mi_sqUpsX]
+  refine mul_pos (mul_pos (mul_pos (by linarith) (by linarith)) (by linarith)) (by linarith)
+
+/-- HOL `UPS_X_POS` (merge_ineq.hl:2917-2928). -/
+theorem mi_UPS_X_POS (y1 y2 y3 : ℝ) (h1 : 2 ≤ y1) (h1' : y1 < 4) (h2 : 2 ≤ y2)
+    (h2' : y2 < 4) (h3 : 2 ≤ y3) (h3' : y3 < 4) :
+    0 < upsX (y1 * y1) (y2 * y2) (y3 * y3) :=
+  mi_TRI_UPS_X_STRICT_POS y1 y2 y3 (by linarith) (by linarith) (by linarith)
+    (by linarith) (by linarith) (by linarith)
+
+/-! ### Item 5: cell_3_delta_x_eta_x -/
+
+/-- `sqrt t < sqrt 2 ↔ t < 2` for `0 ≤ t` (workhorse for items 5/6/7). -/
+private theorem mi_sqrt_lt_sqrt2 {t : ℝ} (_ht : 0 ≤ t) :
+    Real.sqrt t < Real.sqrt 2 ↔ t < 2 := by
+  rw [Real.sqrt_lt' (Real.sqrt_pos.mpr (by norm_num)),
+    Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)]
+
+/-- HOL `cell_3_delta_x_eta_x` (merge_ineq.hl:2873-2886): at the
+`(2,2,2)`-pinned Cayley determinant, positivity is equivalent to
+`eta_x < sqrt 2` (via `delta_x 2 2 2 x4 x5 x6 = 2*ups_x - x4*x5*x6`). -/
+theorem mi_cell_3_delta_x_eta_x (x4 x5 x6 : ℝ) (h4 : 0 < x4) (h5 : 0 < x5) (h6 : 0 < x6)
+    (hu : 0 < upsX x4 x5 x6) :
+    (0 < deltaX 2 2 2 x4 x5 x6 ↔ etaX x4 x5 x6 < Real.sqrt 2) := by
+  have hD : deltaX 2 2 2 x4 x5 x6 = 2 * upsX x4 x5 x6 - x4 * x5 * x6 := by
+    simp only [deltaX, upsX]; ring
+  have hprod : 0 < x4 * x5 * x6 := by positivity
+  have ht : 0 ≤ x4 * x5 * x6 / upsX x4 x5 x6 := div_nonneg (le_of_lt hprod) (le_of_lt hu)
+  constructor
+  · intro hd
+    rw [hD] at hd
+    show Real.sqrt (x4 * x5 * x6 / upsX x4 x5 x6) < Real.sqrt 2
+    rw [mi_sqrt_lt_sqrt2 ht, div_lt_iff₀ hu]
+    linarith
+  · intro he
+    rw [hD]
+    have he' : Real.sqrt (x4 * x5 * x6 / upsX x4 x5 x6) < Real.sqrt 2 := he
+    have ht2 : x4 * x5 * x6 / upsX x4 x5 x6 < 2 := (mi_sqrt_lt_sqrt2 ht).mp he'
+    rw [div_lt_iff₀ hu] at ht2
+    linarith
+
+/-- Core of `ETA_Y_BOUNDS`/`ETA_Y_LE_IMP_LT` (merge_ineq.hl:3179-3253):
+under the `2 ≤ y < 4` box, `eta_y < sqrt 2` forces the `(2,2,2)`-pinned
+Cayley determinant positive (UPS_X_POS + cell_3_delta_x_eta_x). -/
+theorem mi_etaY_lt_sqrt2_delta (y4 y5 y6 : ℝ) (h4 : 2 ≤ y4) (h4' : y4 < 4)
+    (h5 : 2 ≤ y5) (h5' : y5 < 4) (h6 : 2 ≤ y6) (h6' : y6 < 4)
+    (het : eta_y y4 y5 y6 < Real.sqrt 2) :
+    0 < deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6) := by
+  have hcu := mi_UPS_X_POS y4 y5 y6 h4 h4' h5 h5' h6 h6'
+  have key := mi_cell_3_delta_x_eta_x (y4 * y4) (y5 * y5) (y6 * y6)
+    (mul_pos (by linarith) (by linarith)) (mul_pos (by linarith) (by linarith))
+    (mul_pos (by linarith) (by linarith)) hcu
+  exact key.mpr het
+
+/-! ### Item 6: ETA_Y_BOUNDS -/
+
+/-- HOL `ETA_Y_BOUNDS` (merge_ineq.hl:3223-3253). -/
+theorem mi_ETA_Y_BOUNDS (y4 y5 y6 : ℝ) (h4 : 2 ≤ y4) (h4' : y4 ≤ Real.sqrt 8)
+    (h5 : 2 ≤ y5) (h5' : y5 ≤ Real.sqrt 8) (h6 : 2 ≤ y6) (h6' : y6 ≤ Real.sqrt 8)
+    (het : eta_y y4 y5 y6 < Real.sqrt 2) :
+    0 < upsX (y4 * y4) (y5 * y5) (y6 * y6) ∧
+      0 < deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6) := by
+  have h84 : Real.sqrt 8 < 4 := by rw [mi_sqrt8_eq]; linarith [mi_sqrt2_ub]
+  have hlt4 : y4 < 4 := by linarith
+  have hlt5 : y5 < 4 := by linarith
+  have hlt6 : y6 < 4 := by linarith
+  exact ⟨mi_UPS_X_POS y4 y5 y6 h4 hlt4 h5 hlt5 h6 hlt6,
+    mi_etaY_lt_sqrt2_delta y4 y5 y6 h4 hlt4 h5 hlt5 h6 hlt6 het⟩
+
+/-! ### Item 7: ETA_Y_LE_IMP_LT_ALL -/
+
+/-- HOL `ETA_Y_LE_IMP_LT` (merge_ineq.hl:3179-3200), the single-slot base:
+a maximizer at `sqrt 8` would make the `(2,2,2)`-determinant equal
+`-2*(y5²+y6²-8)² ≤ 0`. -/
+private theorem mi_ETA_Y_LE_IMP_LT (y4 y5 y6 : ℝ) (h4 : 2 ≤ y4) (h4' : y4 ≤ Real.sqrt 8)
+    (h5 : 2 ≤ y5) (h5' : y5 ≤ Real.sqrt 8) (h6 : 2 ≤ y6) (h6' : y6 ≤ Real.sqrt 8)
+    (het : eta_y y4 y5 y6 < Real.sqrt 2) : y4 < Real.sqrt 8 := by
+  have h84 : Real.sqrt 8 < 4 := by rw [mi_sqrt8_eq]; linarith [mi_sqrt2_ub]
+  have hlt4 : y4 < 4 := by linarith
+  have hlt5 : y5 < 4 := by linarith
+  have hlt6 : y6 < 4 := by linarith
+  by_contra hcon
+  have h8 : y4 = Real.sqrt 8 := le_antisymm h4' (le_of_not_gt hcon)
+  have hsq : y4 * y4 = 8 := by rw [h8]; exact Real.mul_self_sqrt (by norm_num)
+  have hd := mi_etaY_lt_sqrt2_delta y4 y5 y6 h4 hlt4 h5 hlt5 h6 hlt6 het
+  rw [hsq] at hd
+  have hid : deltaX 2 2 2 8 (y5 * y5) (y6 * y6) = -2 * (y5 * y5 + y6 * y6 - 8) ^ 2 := by
+    simp only [deltaX]; ring
+  rw [hid] at hd
+  linarith [sq_nonneg (y5 * y5 + y6 * y6 - 8)]
+
+/-- HOL `ETA_Y_LE_IMP_LT_ALL` (merge_ineq.hl:3214-3222): all three slots,
+via `eta_y` swap symmetry. -/
+theorem mi_ETA_Y_LE_IMP_LT_ALL (y4 y5 y6 : ℝ) (h4 : 2 ≤ y4) (h4' : y4 ≤ Real.sqrt 8)
+    (h5 : 2 ≤ y5) (h5' : y5 ≤ Real.sqrt 8) (h6 : 2 ≤ y6) (h6' : y6 ≤ Real.sqrt 8)
+    (het : eta_y y4 y5 y6 < Real.sqrt 2) :
+    y4 < Real.sqrt 8 ∧ y5 < Real.sqrt 8 ∧ y6 < Real.sqrt 8 := by
+  have h54 : eta_y y5 y4 y6 < Real.sqrt 2 := by
+    have he : eta_y y4 y5 y6 = eta_y y5 y4 y6 := (mi_eta_y_sym y4 y5 y6).1
+    rw [← he]; exact het
+  have h64 : eta_y y6 y5 y4 < Real.sqrt 2 := by
+    have he : eta_y y4 y5 y6 = eta_y y6 y5 y4 := by
+      rw [(mi_eta_y_sym y4 y5 y6).2, (mi_eta_y_sym y4 y6 y5).1,
+        (mi_eta_y_sym y6 y4 y5).2]
+    rw [← he]; exact het
+  exact ⟨mi_ETA_Y_LE_IMP_LT y4 y5 y6 h4 h4' h5 h5' h6 h6' het,
+    mi_ETA_Y_LE_IMP_LT y5 y4 y6 h5 h5' h4 h4' h6 h6' h54,
+    mi_ETA_Y_LE_IMP_LT y6 y5 y4 h6 h6' h5 h5' h4 h4' h64⟩
+
+/-! ### Item 12a: lmfun_h0cut -/
+
+/-- HOL `lmfun_h0cut` (merge_ineq.hl:2889-2896): `lmfun` is `lfun` cut off
+by the `h0cut` weight. -/
+theorem mi_lmfun_h0cut (y : ℝ) : lmfun (y / 2) = lfun (y / 2) * h0cut y := by
+  unfold lmfun lfun h0cut
+  by_cases hy : y ≤ 2 * h0
+  · rw [if_pos hy, if_pos (by linarith : y / 2 ≤ h0)]; ring
+  · rw [if_neg hy, if_neg (by linarith : ¬ (y / 2 ≤ h0))]; ring
+
+/-! ### Item 13 (cont.): the hminus cluster
+
+`mi_hminus_exists` is the one non-mechanical 2a point (charter §6.1): the
+IVT sign change of `marchal_quartic - lfun` over `[1.2, 1.26]` (HOL
+`hminus_exists`, nonlinear_lemma.hl:846-880, `REAL_IVT_INCREASING`), then
+epsilon spec (:882-890) and the `marchal_quartic > 0` on `[1, hplus)`
+argument (:902-935) give `hminus < h0` (:937-951). -/
+
+private theorem mi_marchalQuartic_sub_lfun_cont :
+    ContinuousOn (fun h : ℝ => marchalQuartic h - lfun h) (Set.Icc 1.2 1.26) := by
+  have hC : (Real.sqrt 2 - 1) * 5 * (hplus - 1) ≠ 0 := by
+    rw [show hplus = 1.3254 from rfl]
+    exact ne_of_gt (mul_pos (mul_pos (by linarith [mi_sqrt2_lb]) (by norm_num))
+      (by norm_num))
+  have hc1 : Continuous marchalQuartic := by
+    unfold marchalQuartic
+    refine Continuous.div ?_ continuous_const (fun _ => hC)
+    refine Continuous.mul ?_ ?_
+    · exact Continuous.mul (continuous_const.sub continuous_id)
+        (continuous_id.sub continuous_const)
+    · exact (by fun_prop :
+        Continuous fun h : ℝ => (9 : ℝ) * h ^ 2 - 17 * h + 3)
+
+  have hc2 : Continuous lfun := by
+    unfold lfun
+    exact Continuous.div (continuous_const.sub continuous_id) continuous_const
+      (fun _ => by show (1.26 : ℝ) - 1 ≠ 0; norm_num)
+  exact hc1.sub hc2 |>.continuousOn
+
+private theorem mi_ivt_neg : marchalQuartic 1.2 - lfun 1.2 < 0 := by
+  have hs1 : (1.414213 : ℝ) < Real.sqrt 2 := mi_sqrt2_lb
+  have hs2 : Real.sqrt 2 < 1.414214 := mi_sqrt2_ub
+  rw [sub_lt_zero]
+  have hl : lfun 1.2 = 3 / 13 := by unfold lfun h0; norm_num
+  rw [hl]
+  show (Real.sqrt 2 - 1.2) * (1.2 - hplus) * (9 * 1.2 ^ 2 - 17 * 1.2 + 3)
+      / ((Real.sqrt 2 - 1) * 5 * (hplus - 1)) < 3 / 13
+  rw [show hplus = 1.3254 from rfl]
+  rw [div_lt_iff₀ (mul_pos (mul_pos (by linarith [mi_sqrt2_lb]) (by norm_num))
+    (by norm_num))]
+  ring_nf
+  linarith
+
+private theorem mi_ivt_pos : 0 < marchalQuartic 1.26 - lfun 1.26 := by
+  have hl : lfun 1.26 = 0 := by unfold lfun h0; norm_num
+  rw [hl, sub_zero]
+  show (0 : ℝ) < (Real.sqrt 2 - 1.26) * (1.26 - hplus) * (9 * 1.26 ^ 2 - 17 * 1.26 + 3)
+      / ((Real.sqrt 2 - 1) * 5 * (hplus - 1))
+  rw [show hplus = 1.3254 from rfl]
+  have hB : (0 : ℝ) < (Real.sqrt 2 - 1) * 5 * (1.3254 - 1) :=
+    mul_pos (mul_pos (by linarith [mi_sqrt2_lb]) (by norm_num)) (by norm_num)
+  refine div_pos ?_ hB
+  have e1 : (0 : ℝ) < Real.sqrt 2 - 1.26 := by linarith [mi_sqrt2_lb]
+  have hbc : (0 : ℝ) < (1.26 - 1.3254) * (9 * 1.26 ^ 2 - 17 * 1.26 + 3) :=
+    mul_pos_of_neg_of_neg (by norm_num) (by norm_num)
+  rw [mul_assoc]
+  exact mul_pos e1 hbc
+
+/-- HOL `Nonlinear_lemma.hminus_exists` (nonlinear_lemma.hl:846-880):
+the `marchal_quartic = lfun` crossing inside `[1.2, 1.26]`. -/
+private theorem mi_hminus_exists :
+    ∃ x, 1.2 ≤ x ∧ x < 1.3 ∧ marchalQuartic x = lmfun x := by
+  have hcu : ContinuousOn (fun h : ℝ => marchalQuartic h - lfun h) (uIcc (1.2 : ℝ) 1.26) := by
+    rw [Set.uIcc_of_le (by norm_num : (1.2 : ℝ) ≤ 1.26)]
+    exact mi_marchalQuartic_sub_lfun_cont
+  obtain ⟨x, hx, hfx⟩ := intermediate_value_uIcc hcu
+    (Set.mem_uIcc_of_le (le_of_lt mi_ivt_neg) (le_of_lt mi_ivt_pos))
+  have hxI : x ∈ Set.Icc (1.2 : ℝ) 1.26 := by
+    rwa [Set.uIcc_of_le (by norm_num : (1.2 : ℝ) ≤ 1.26)] at hx
+  have h12 : (1.2 : ℝ) ≤ x := hxI.1
+  have h126 : x ≤ 1.26 := hxI.2
+  have hx0 : x ≤ h0 := by show x ≤ 1.26; exact h126
+  have hml : marchalQuartic x = lfun x := by
+    have hfx' : marchalQuartic x - lfun x = 0 := hfx
+    linarith [hfx']
+  refine ⟨x, h12, by linarith, ?_⟩
+  unfold lmfun
+  rw [if_pos hx0]
+  exact hml
+
+/-- HOL `Nonlinear_lemma.hminus_prop` (nonlinear_lemma.hl:882-890):
+the epsilon-selected `hminus` satisfies its defining predicate. -/
+theorem mi_hminus_prop :
+    1.2 ≤ hminus ∧ hminus < 1.3 ∧ marchalQuartic hminus = lmfun hminus :=
+  Classical.epsilon_spec mi_hminus_exists
+
+/-- HOL `Nonlinear_lemma.hminus_lt_h0` step (nonlinear_lemma.hl:902-935):
+`marchal_quartic` is positive on `[1, hplus)`. -/
+private theorem mi_marchalQuartic_pos (h : ℝ) (h1 : 1 ≤ h) (h2 : h < hplus) :
+    0 < marchalQuartic h := by
+  have h2' : h < 1.3254 := h2
+  unfold marchalQuartic
+  rw [show hplus = 1.3254 from rfl]
+  refine div_pos ?_ (mul_pos (mul_pos (by linarith [mi_sqrt2_lb]) (by norm_num))
+    (by norm_num))
+  have hsh : (0 : ℝ) < Real.sqrt 2 - h := by linarith [mi_sqrt2_lb]
+  have hq : (9 : ℝ) * h ^ 2 - 17 * h + 3 < 0 := by
+    have hpos : (0 : ℝ) < h := by linarith
+    have hsq : 9 * h ^ 2 < 9 * 1.3254 * h := by nlinarith [h2', hpos]
+    linarith
+  have hbc : (0 : ℝ) < (h - 1.3254) * (9 * h ^ 2 - 17 * h + 3) := by
+    have e2 : (0 : ℝ) < -(h - 1.3254) := by linarith
+    have e3 : (0 : ℝ) < -(9 * h ^ 2 - 17 * h + 3) := by linarith
+    nlinarith
+  rw [mul_assoc]
+  exact mul_pos hsh hbc
+
+/-- HOL `Nonlinear_lemma.hminus_lt_h0` (nonlinear_lemma.hl:937-951). -/
+theorem mi_hminus_lt_h0 : hminus < h0 := by
+  by_contra hcon
+  obtain ⟨hm1, hm2, hm3⟩ := mi_hminus_prop
+  have hge : h0 ≤ hminus := le_of_not_gt hcon
+  have hl0 : lmfun hminus = 0 := by
+    unfold lmfun
+    split
+    · have heq : hminus = h0 := le_antisymm ‹hminus ≤ h0› hge
+      rw [heq, sub_self, zero_div]
+    · rfl
+  have hlt : hminus < hplus := by
+    rw [show hplus = 1.3254 from rfl]; linarith [hm2]
+  have hmq := mi_marchalQuartic_pos hminus (by linarith [hm1]) hlt
+  rw [hl0] at hm3
+  rw [hm3] at hmq
+  exact lt_irrefl (0 : ℝ) hmq
+
+/-- Numeric corollaries used by the cell3 tracks and `y_bounds`
+(HOL: Flyspeck_constants.bounds + Nonlinear_lemma + REAL_ARITH). -/
+theorem mi_two_hminus_le_two_h0 : 2 * hminus ≤ 2 * h0 := by
+  linarith [mi_hminus_lt_h0]
+
+theorem mi_two_le_two_hminus : 2 ≤ 2 * hminus := by
+  linarith [mi_hminus_prop.1]
+
+theorem mi_two_hminus_le_sqrt8 : 2 * hminus ≤ Real.sqrt 8 := by
+  linarith [mi_hminus_prop.2.1, mi_sqrt8_lb]
+
+theorem mi_two_hminus_le_two_sqrt2 : 2 * hminus ≤ 2 * Real.sqrt 2 := by
+  rw [← mi_sqrt8_eq]; exact mi_two_hminus_le_sqrt8
+
+theorem mi_two_hplus_le_two_sqrt2 : 2 * hplus ≤ 2 * Real.sqrt 2 := by
+  have hhp : hplus = 1.3254 := rfl
+  linarith [mi_sqrt8_eq, mi_sqrt8_lb, hhp]
+
+theorem mi_201_le_two_h0 : (2.01 : ℝ) ≤ 2 * h0 := by norm_num [h0]
+
+theorem mi_201_le_sqrt8 : (2.01 : ℝ) ≤ Real.sqrt 8 := by
+  rw [mi_sqrt8_eq]; linarith [mi_sqrt2_lb]
+
+/-! ### Item 12b: y_bounds -/
+
+/-- HOL `y_bounds` (merge_ineq.hl:3809-3846): the eleven box-bridging
+arithmetic implications. -/
+theorem mi_y_bounds (y : ℝ) :
+    (y ≤ 2 * hminus → y ≤ Real.sqrt 8) ∧
+      (y ≤ Real.sqrt 8 → y ≤ 2 * Real.sqrt 2) ∧
+      (y ≤ 2 * Real.sqrt 2 → y < 4) ∧
+      (y < 2 * hminus → y ≤ 2 * hminus) ∧
+      (y < 2 * hminus → y ≤ 2 * Real.sqrt 2) ∧
+      (2 ≤ y → 0 < y) ∧
+      (2 * hminus ≤ y → 2 ≤ y) ∧
+      (2 ≤ y → 0 ≤ y) ∧
+      (2 * hminus ≤ y → 0 ≤ y) ∧
+      (y ≤ 2 * hminus → y ≤ 2 * h0) ∧
+      (y ≤ 2 * hplus → y ≤ 2 * Real.sqrt 2) := by
+  refine ⟨fun h => ?_, fun h => ?_, fun h => ?_, fun h => le_of_lt h, fun h => ?_,
+    fun h => ?_, fun h => ?_, fun h => by linarith, fun h => ?_, fun h => ?_,
+    fun h => ?_⟩
+  · linarith [mi_two_hminus_le_sqrt8]
+  · rw [← mi_sqrt8_eq]; exact h
+  · linarith [mi_sqrt2_ub]
+  · linarith [mi_two_hminus_le_two_sqrt2]
+  · linarith
+  · linarith [mi_two_le_two_hminus]
+  · linarith [mi_two_le_two_hminus]
+  · linarith [mi_two_hminus_le_two_h0]
+  · linarith [mi_two_hplus_le_two_sqrt2, mi_sqrt2_ub]
+
+/-! ### Item 8: dih_y_div_sqrtdelta_pos -/
+
+/-- Positivity of the posbranch body (service lemma for item 8; the HOL
+route `dih_x_dih_x_div_sqrtdelta_posbranch` merge_ineq.hl:920 +
+`dih_x_div_sqrtdelta_pos` :3158 is taken directly at the body here). -/
+theorem mi_dihXDivSqrtdeltaPosbranch_nn (x1 x2 x3 x4 x5 x6 : ℝ)
+    (h1 : 0 < x1) (hd : 0 < deltaX x1 x2 x3 x4 x5 x6)
+    (hd4 : 0 < deltaX4 x1 x2 x3 x4 x5 x6) :
+    0 ≤ dihXDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 := by
+  have ht : 0 < 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 / deltaX4 x1 x2 x3 x4 x5 x6 ^ 2 :=
+    div_pos (by positivity) (by positivity)
+  show 0 ≤ (Real.sqrt (4 * x1) / deltaX4 x1 x2 x3 x4 x5 x6) *
+    matan (4 * x1 * deltaX x1 x2 x3 x4 x5 x6 / deltaX4 x1 x2 x3 x4 x5 x6 ^ 2)
+  refine mul_nonneg (div_nonneg (Real.sqrt_nonneg (4 * x1)) (le_of_lt hd4)) ?_
+  rw [matan, if_neg (ne_of_gt ht), if_pos ht]
+  exact le_of_lt (div_pos (Real.arctan_pos.mpr (Real.sqrt_pos.mpr ht))
+    (Real.sqrt_pos.mpr ht))
+
+/-- HOL `delta_x4_pos` (merge_ineq.hl:2996-3009, via `delta_x4_2` :2991). -/
+theorem mi_delta_x4_pos (x4 x5 x6 : ℝ) (h4 : 4 ≤ x4) (h5 : 4 ≤ x5) (h6 : 0 < x6)
+    (h8 : x6 < 8) : 0 < deltaX4 x6 2 x5 2 x4 2 := by
+  have hid : deltaX4 x6 2 x5 2 x4 2 = x6 * (x4 + x5 - x6) := by
+    simp only [deltaX4]; ring
+  rw [hid]
+  exact mul_pos h6 (by linarith)
+
+/-- HOL `dih_y_div_sqrtdelta_pos` (merge_ineq.hl:3264-3290). -/
+theorem mi_dih_y_div_sqrtdelta_pos (y4 y5 y6 : ℝ) (h4 : 2 ≤ y4) (h5 : 2 ≤ y5)
+    (h6 : 2 ≤ y6) (h4' : y4 ≤ 2 * Real.sqrt 2) (h5' : y5 ≤ 2 * Real.sqrt 2)
+    (h6' : y6 ≤ 2 * Real.sqrt 2) (het : eta_y y4 y5 y6 < Real.sqrt 2) :
+    0 ≤ yOfX dih4XDivSqrtdeltaPosbranch (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2)
+      y4 y5 y6 := by
+  have h8a : y4 ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact h4'
+  have h8b : y5 ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact h5'
+  have h8c : y6 ≤ Real.sqrt 8 := by rw [mi_sqrt8_eq]; exact h6'
+  obtain ⟨hlt4, hlt5, hlt6⟩ :=
+    mi_ETA_Y_LE_IMP_LT_ALL y4 y5 y6 h4 h8a h5 h8b h6 h8c het
+  obtain ⟨hu, hd⟩ := mi_ETA_Y_BOUNDS y4 y5 y6 h4 h8a h5 h8b h6 h8c het
+  have hs4 : 0 ≤ y4 := by linarith
+  have hs5 : 0 ≤ y5 := by linarith
+  have hs6 : 0 ≤ y6 := by linarith
+  have hp4 : 0 < y4 * y4 := by positivity
+  have hsq4 : y4 * y4 < 8 := by
+    have h1 : y4 * y4 < Real.sqrt 8 * Real.sqrt 8 := by
+      nlinarith [hlt4, hs4, Real.sqrt_nonneg 8]
+    rwa [Real.mul_self_sqrt (by norm_num : (0 : ℝ) ≤ 8)] at h1
+  have hyOfX : yOfX dih4XDivSqrtdeltaPosbranch (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2)
+      y4 y5 y6 = dih4XDivSqrtdeltaPosbranch 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6) := by
+    unfold yOfX
+    rw [show Real.sqrt 2 * Real.sqrt 2 = 2 from Real.mul_self_sqrt (by norm_num)]
+  rw [hyOfX, show dih4XDivSqrtdeltaPosbranch 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6)
+      = dihXDivSqrtdeltaPosbranch (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2 from rfl]
+  refine mi_dihXDivSqrtdeltaPosbranch_nn _ _ _ _ _ _ hp4 ?_ ?_
+  · have hid : deltaX (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2
+        = deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6) := by
+      simp only [deltaX]; ring
+    rw [hid]; exact hd
+  · have hid : deltaX4 (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2
+        = y4 * y4 * (y5 * y5 + y6 * y6 - y4 * y4) := by
+      simp only [deltaX4]; ring
+    rw [hid]
+    have h8 : y5 * y5 + y6 * y6 - y4 * y4 > 0 := by
+      have h5p : 4 ≤ y5 * y5 := by nlinarith
+      have h6p : 4 ≤ y6 * y6 := by nlinarith
+      linarith
+    exact mul_pos hp4 h8
+
+/-! ### Item 9: gamma3f_gamma3f_x_div_sqrtdelta -/
+
+/-- HOL `gamma3f_x_div_sqrtdelta_arg3` (merge_ineq.hl:3331-3336): the
+operator body ignores its first three slots. -/
+theorem mi_gamma3fXDivSqrtdelta_arg3 (m4 m5 m6 x1 x2 x3 x4 x5 x6 : ℝ) :
+    gamma3fXDivSqrtdelta m4 m5 m6 x1 x2 x3 x4 x5 x6
+      = gamma3fXDivSqrtdelta m4 m5 m6 1 1 1 x4 x5 x6 := rfl
+
+/-- HOL `gamma3f_y_div_sqrtdelta_arg3` (merge_ineq.hl:3343-3348): the same
+invariance in the `y_of_x` packaging used by the bank entries. -/
+theorem mi_gamma3fYDivSqrtdelta_arg3 (m4 m5 m6 : ℝ → ℝ) (y1 y2 y3 y4 y5 y6 : ℝ) :
+    yOfX (gamma3fXDivSqrtdelta (m4 y4) (m5 y5) (m6 y6)) y1 y2 y3 y4 y5 y6
+      = yOfX (gamma3fXDivSqrtdelta (m4 y4) (m5 y5) (m6 y6)) 1 1 1 y4 y5 y6 := rfl
+
+/-- HOL `gamma3f_gamma3f_x_div_sqrtdelta` (merge_ineq.hl:3292-3310).
+Statement frozen for the wave 2b track-7 consumer.  NEEDS: the proof body
+runs `gamma3f_gamma3f_x_div_sqrtdelta_WEAK2` (merge_ineq.hl:3079) →
+`..._WEAK` (:3024), which needs the solid-angle conversions
+`sol_x_sol_euler_x` (:841 — via `simplex_exists` +
+`Euler_main_theorem.EULER_TRIANGLE`, both absent from the tree), plus the
+matan-level `sol_euler_x = sqrt(delta_x) * sol_euler_x_div_sqrtdelta`
+(:1060) and `dih_x = sqrt(delta_x) * dih_x_div_sqrtdelta_posbranch`
+(:920) conversions. -/
+theorem mi_gamma3f_gamma3f_x_div_sqrtdelta (a b c y4 y5 y6 : ℝ)
+    (h4 : 2 ≤ y4) (h5 : 2 ≤ y5) (h6 : 2 ≤ y6) (h4' : y4 ≤ 2 * Real.sqrt 2)
+    (h5' : y5 ≤ 2 * Real.sqrt 2) (h6' : y6 ≤ 2 * Real.sqrt 2)
+    (het : eta_y y4 y5 y6 < Real.sqrt 2) :
+    gamma3f y4 y5 y6 (Real.sqrt 2) lmfun
+      = gamma3fXDivSqrtdelta (h0cut y4) (h0cut y5) (h0cut y6) a b c
+          (y4 * y4) (y5 * y5) (y6 * y6)
+        * Real.sqrt (deltaX 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6)) := by
+  -- NEEDS: merge_ineq.hl:3024/3079 WEAK/WEAK2 (+ :841/:920/:1060 conversions; EULER_TRIANGLE absent) — see docstring
+  sorry
+
+/-! ### Item 10: gamma3f_sym -/
+
+/-- Klein-group symmetry of `dihXf` under `(2 3)(5 6)` (HOL `dih_x_sym`,
+nonlinear_lemma.hl:481; polynomial identity level). -/
+private theorem mi_dihXf_g1 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    dihXf x1 x2 x3 x4 x5 x6 = dihXf x1 x3 x2 x4 x6 x5 := by
+  have hd : deltaX x1 x3 x2 x4 x6 x5 = deltaX x1 x2 x3 x4 x5 x6 := by
+    simp only [deltaX]; ring
+  have hd4 : deltaX4 x1 x3 x2 x4 x6 x5 = deltaX4 x1 x2 x3 x4 x5 x6 := by
+    simp only [deltaX4]; ring
+  simp only [dihXf, hd, hd4]
+
+/-- Klein-group symmetry of `dihXf` under `(2 6)(3 5)` (the composite
+`g1∘g2` of the HOL `dih_x_sym`/`dih_x_sym2` maps, nonlinear_lemma.hl:481/
+:493; polynomial identity level). -/
+private theorem mi_dihXf_2635 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    dihXf x1 x2 x3 x4 x5 x6 = dihXf x1 x6 x5 x4 x3 x2 := by
+  have hd : deltaX x1 x6 x5 x4 x3 x2 = deltaX x1 x2 x3 x4 x5 x6 := by
+    simp only [deltaX]; ring
+  have hd4 : deltaX4 x1 x6 x5 x4 x3 x2 = deltaX4 x1 x2 x3 x4 x5 x6 := by
+    simp only [deltaX4]; ring
+  simp only [dihXf, hd, hd4]
+
+/-- The `(1 2)(4 5)`-slot symmetry of `solX` (HOL `sol_x_sym`/`sol_x_sym2`
+composition, merge_ineq.hl:1111/:1122): each of the three `dihXf` terms of
+the swapped sum is a `mi_dihXf_g1` image of an original term. -/
+private theorem mi_solX_sym12 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    solX x1 x2 x3 x4 x5 x6 = solX x2 x1 x3 x5 x4 x6 := by
+  have h1 : dihXf x2 x1 x3 x5 x4 x6 = dihXf x2 x3 x1 x5 x6 x4 :=
+    mi_dihXf_g1 x2 x1 x3 x5 x4 x6
+  have h2 : dihXf x1 x3 x2 x4 x6 x5 = dihXf x1 x2 x3 x4 x5 x6 :=
+    mi_dihXf_g1 x1 x3 x2 x4 x6 x5
+  have h3 : dihXf x3 x2 x1 x6 x5 x4 = dihXf x3 x1 x2 x6 x4 x5 :=
+    mi_dihXf_g1 x3 x2 x1 x6 x5 x4
+  show dihXf x1 x2 x3 x4 x5 x6 + dihXf x2 x3 x1 x5 x6 x4 + dihXf x3 x1 x2 x6 x4 x5 - Real.pi
+      = dihXf x2 x1 x3 x5 x4 x6 + dihXf x1 x3 x2 x4 x6 x5 + dihXf x3 x2 x1 x6 x5 x4 - Real.pi
+  rw [h1, h2, h3]
+  ring
+
+/-- HOL `gamma3f_sym` (merge_ineq.hl:3354-3388): `gamma3f` at the fixed
+`sqrt 2` radius is symmetric under swapping its last two length arguments
+and under the 3-cycle.  The vol/sol/dihedral summands match term-wise via
+the polynomial slot symmetries (`mi_dihXf_g1`, `mi_dihXf_2635`,
+`mi_solX_sym12`) plus commutativity. -/
+theorem mi_gamma3f_sym (y4 y5 y6 : ℝ) :
+    gamma3f y4 y5 y6 (Real.sqrt 2) lmfun = gamma3f y4 y6 y5 (Real.sqrt 2) lmfun ∧
+      gamma3f y4 y5 y6 (Real.sqrt 2) lmfun = gamma3f y5 y6 y4 (Real.sqrt 2) lmfun := by
+  have hV : vol3r y4 y5 y6 (Real.sqrt 2) = vol3r y4 y6 y5 (Real.sqrt 2) := by
+    unfold vol3r volY volXf
+    congr 1
+    simp only [deltaX]; ring
+  have hV2 : vol3r y4 y5 y6 (Real.sqrt 2) = vol3r y5 y6 y4 (Real.sqrt 2) := by
+    unfold vol3r volY volXf
+    congr 1
+    simp only [deltaX]; ring
+  have hS : ∀ a b c : ℝ,
+      solY a b (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) c
+        + solY b c (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) a
+        + solY c a (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) b
+      = solY a c (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) b
+        + solY c b (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) a
+        + solY b a (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) c := by
+    intro a b c
+    have e1 : ∀ u v w : ℝ, solY u v (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) w
+        = solY v u (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) w := fun u v w =>
+      mi_solX_sym12 (u * u) (v * v) (Real.sqrt 2 * Real.sqrt 2)
+        (Real.sqrt 2 * Real.sqrt 2) (Real.sqrt 2 * Real.sqrt 2) (w * w)
+    rw [e1 a c b, e1 c b a, e1 b a c]
+    ring
+  have hD : ∀ a b c : ℝ,
+      lmfun (a / 2) * dihY a b (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) c
+        + lmfun (b / 2) * dihY b c (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) a
+        + lmfun (c / 2) * dihY c a (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) b
+      = lmfun (a / 2) * dihY a c (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) b
+        + lmfun (c / 2) * dihY c b (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) a
+        + lmfun (b / 2) * dihY b a (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) c := by
+    intro a b c
+    have e1 : ∀ u v w : ℝ, dihY u v (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) w
+        = dihY u w (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) v := fun u v w =>
+      mi_dihXf_2635 (u * u) (v * v) (Real.sqrt 2 * Real.sqrt 2)
+        (Real.sqrt 2 * Real.sqrt 2) (Real.sqrt 2 * Real.sqrt 2) (w * w)
+    rw [e1 a b c, e1 c b a, e1 b a c]
+    ring
+  constructor
+  · show vol3r y4 y5 y6 (Real.sqrt 2) - vol3f y4 y5 y6 (Real.sqrt 2) lmfun
+        = vol3r y4 y6 y5 (Real.sqrt 2) - vol3f y4 y6 y5 (Real.sqrt 2) lmfun
+    unfold vol3f
+    rw [hV, hS y4 y5 y6, hD y4 y5 y6]
+  · show vol3r y4 y5 y6 (Real.sqrt 2) - vol3f y4 y5 y6 (Real.sqrt 2) lmfun
+        = vol3r y5 y6 y4 (Real.sqrt 2) - vol3f y5 y6 y4 (Real.sqrt 2) lmfun
+    unfold vol3f
+    rw [hV2]
+    ring
+
+/-! ### Item 11: REAL_WLOG_SIMPLEX_3d -/
+
+/-- HOL `REAL_WLOG_SIMPLEX_3d` (merge_ineq.hl:3412-3425): the symmetry
+reduction for 3-argument predicates.  The HOL boolean-equality hypotheses
+are rendered as `Iff` (standard HOL→Lean encoding); the six linear orders
+are discharged by hand (charter §6.8; no wlog plumbing needed at this
+size). -/
+theorem mi_REAL_WLOG_SIMPLEX_3d {P : ℝ → ℝ → ℝ → Prop}
+    (h1 : ∀ y4 y5 y6 : ℝ, P y4 y5 y6 ↔ P y4 y6 y5)
+    (h2 : ∀ y4 y5 y6 : ℝ, P y4 y5 y6 ↔ P y5 y6 y4)
+    (h3 : ∀ y4 y5 y6 : ℝ, y6 ≤ y5 → y5 ≤ y4 → P y4 y5 y6)
+    (y4 y5 y6 : ℝ) : P y4 y5 y6 := by
+  rcases le_total y5 y4 with h54 | h45
+  · rcases le_total y6 y5 with h65 | h56
+    · exact h3 y4 y5 y6 h65 h54
+    · rcases le_total y6 y4 with h64 | h46
+      · rw [h1]; exact h3 y4 y6 y5 h56 h64
+      · rw [h2, h2]; exact h3 y6 y4 y5 h54 h46
+  · rcases le_total y6 y5 with h65 | h56
+    · rcases le_total y6 y4 with h64 | h46
+      · rw [h2, h1]; exact h3 y5 y4 y6 h64 h45
+      · rw [h2]; exact h3 y5 y6 y4 h46 h65
+    · rw [h2, h2, h1]; exact h3 y6 y5 y4 h45 h56
+
 /-- HOL `TSKAJXY_statement_special_case` (TSKAJXY2.hl:80-88, a
 `new_definition`). -/
 def TSKAJXY_statement_special_case : Prop :=
