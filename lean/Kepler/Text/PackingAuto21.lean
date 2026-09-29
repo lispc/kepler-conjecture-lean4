@@ -417,12 +417,12 @@ def GRKIBMP_concl : Prop :=
 /-- HOL `tsk_hyp_new` (TSKAJXY2.hl:77-78). -/
 def tsk_hyp_new : Prop := GRKIBMP_concl ∧ cell3_from_ineq ∧ tsk_hyp
 
-/-- HOL `cell3_from_ineq_thm` (merge_ineq.hl:3507, statement
-`mk_imp(cell3_hyp, cell3_from_ineq)`; GIANT ~240-line refinement proof
-to :3745 over the nine COMMENT tracks of charter §1.3).  MERGE-INEQ
-wave 0 skeleton — do NOT wire into the :1428 arm before waves 1-2. -/
-theorem cell3_from_ineq_thm : cell3_bank → cell3_from_ineq := by
-  sorry -- MERGE-INEQ: merge_ineq.hl:3507-3745 (cell3_hyp :3490-3495; entries ineq.hl:1372/1389/1406/1425/1443/1462/1479)
+/- HOL `cell3_from_ineq_thm` — its declaration block was moved verbatim
+(pure block move; statement and docstring byte-identical) to the end of the
+wave-2a kit below, after `mi_REAL_WLOG_SIMPLEX_3d`, so the wave-2b proof can
+consume the `mi_*` kit (Lean has no forward references; the HOL source makes
+the same move: the theorem sits at merge_ineq.hl:3507, after its kit at
+:2873-3425).  See `cell3_from_ineq_thm` below. -/
 
 /-! ## MERGE-INEQ wave 1: GRKIBMP dispatcher helpers
 
@@ -1063,6 +1063,238 @@ theorem mi_REAL_WLOG_SIMPLEX_3d {P : ℝ → ℝ → ℝ → Prop}
       · rw [h2, h1]; exact h3 y5 y4 y6 h64 h45
       · rw [h2]; exact h3 y5 y6 y4 h46 h65
     · rw [h2, h2, h1]; exact h3 y6 y5 y4 h45 h56
+
+/-! ## MERGE-INEQ wave 2b: `cell3_from_ineq_thm` (the cell3 dispatcher)
+
+The GIANT refinement (merge_ineq.hl:3507-3745) over the nine COMMENT tracks
+of charter §1.3.  Track map (kit consumers in parentheses):
+1. remove excess variables — the `bank_*` entries are instantiated at their
+   pinned `y1 y2 y3` values and projected onto the shared `(1,1,1)`-pinned
+   `x`-form (`p21_bank_proj`, via `mi_gamma3fXDivSqrtdelta_arg3`);
+2. insert Q — pure logic (the hypothesis bundle of `p21_cell3_core`);
+3. remove eta_y — every `eta_y^2 > 2` disjunct dies against `Q`'s
+   `eta_y < sqrt 2` (`mi_eta_y_nn` + `mi_ETA_Y_BOUNDS` +
+   `mi_sqrt_lt_sqrt2`); CIHTIUM/CJFZZDW collapse into empty-box
+   contrapositives;
+4. remove dih_4 — `0.008 * dih_y >= 0` under `Q`
+   (`mi_dih_y_div_sqrtdelta_pos`);
+5. make strict + h0cut y4/y5/y6 branches — `p21_h0cutA`/`p21_h0cutB` +
+   `mi_two_hminus_le_two_h0`/`p21_h0_lt_hplus` (the wt2-A `/2` step is plain
+   arithmetic against track 4);
+7. gamma3f — `p21_track7` consumes `mi_gamma3f_gamma3f_x_div_sqrtdelta`
+   (the one inherited wave-2a debt) and closes with the nonnegative
+   `sqrt(delta_x 2 2 2 …)` factor; the `mi_lmfun_h0cut` consumer lives
+   inside that key equation (HOL :3049 `GSYM lmfun_h0cut`);
+8. symmetry reduction — `mi_REAL_WLOG_SIMPLEX_3d` + `mi_gamma3f_sym` +
+   `mi_eta_y_sym` (the two symmetry `Iff`s below);
+9. `2*hminus < y4` closeout — the case tree of `p21_cell3_core`, boxes
+   ranked `2.01 / 2*hminus / 2*hplus / sqrt8` over the
+   `2*h0`-calibrated `h0cut` weights (`bank_QZECFICwt0corner`/`wt0`/`wt1`/
+   `wt2A`/`CIHTIUM`/`CJFZZDW` instances).
+
+(The theorem block itself was moved here verbatim from its wave-0 skeleton
+position — pure block move, statement/docstring frozen — mirroring the HOL
+layout, where `cell3_from_ineq_thm` :3507 sits after its kit :2873-3425.)  -/
+
+/-- Track 1/7 bridge: the `y_of_x` packaging of the bank entries projects
+onto the `(1,1,1)`-pinned `x`-form (`yOfX` squares its arguments;
+`mi_gamma3fXDivSqrtdelta_arg3`: the operator body ignores its first three
+slots, so the pinned values `1`/`sqrt 2` of the boxes are irrelevant). -/
+private theorem p21_bank_proj (m4 m5 m6 v1 v2 v3 y4 y5 y6 : ℝ) :
+    yOfX (gamma3fXDivSqrtdelta m4 m5 m6) v1 v2 v3 y4 y5 y6
+      = gamma3fXDivSqrtdelta m4 m5 m6 1 1 1 (y4 * y4) (y5 * y5) (y6 * y6) := by
+  unfold yOfX
+  exact mi_gamma3fXDivSqrtdelta_arg3 m4 m5 m6 _ _ _ _ _ _
+
+/-- Track 7: from the `h0cut`-weighted `gamma3f_x_div_sqrtdelta` bound to
+the goal.  The `sqrt(delta_x 2 2 2 …)` factor is nonnegative, so
+`mul_nonneg` closes. -/
+private theorem p21_track7 (y4 y5 y6 : ℝ) (h4 : 2 ≤ y4) (h5 : 2 ≤ y5) (h6 : 2 ≤ y6)
+    (h4' : y4 ≤ 2 * Real.sqrt 2) (h5' : y5 ≤ 2 * Real.sqrt 2) (h6' : y6 ≤ 2 * Real.sqrt 2)
+    (het : eta_y y4 y5 y6 < Real.sqrt 2)
+    (hX : 0 ≤ gamma3fXDivSqrtdelta (h0cut y4) (h0cut y5) (h0cut y6) 1 1 1
+      (y4 * y4) (y5 * y5) (y6 * y6)) :
+    0 ≤ gamma3f y4 y5 y6 (Real.sqrt 2) lmfun := by
+  rw [mi_gamma3f_gamma3f_x_div_sqrtdelta 1 1 1 y4 y5 y6 h4 h5 h6 h4' h5' h6' het]
+  exact mul_nonneg hX (Real.sqrt_nonneg _)
+
+/-- Tracks 1-5 and 9: the sorted-order core.  Under `y6 <= y5 <= y4` and the
+`Q` box, the seven cell3 entries cover every region of `[2, 2*sqrt2]^3` on
+which `Q` is satisfiable: CIHTIUM/CJFZZDW empty the `> 2*hminus` corner
+(their boxes force `eta_y^2 > 2`), and the five `QZECFIC` entries (ranked
+`2.01 / 2*hminus / 2*hplus / sqrt8`) cover the rest, each firing exactly on
+its own box. -/
+private theorem p21_cell3_core (h_wt0 : bank_QZECFICwt0)
+    (h_corner : bank_QZECFICwt0corner) (h_sqrt8 : bank_QZECFICwt0sqrt8)
+    (h_wt1 : bank_QZECFICwt1) (h_wt2 : bank_QZECFICwt2A)
+    (h_ciht : bank_CIHTIUM) (h_cjfzz : bank_CJFZZDW)
+    (y4 y5 y6 : ℝ) (h4 : 2 ≤ y4) (h5 : 2 ≤ y5) (h6 : 2 ≤ y6)
+    (h4' : y4 ≤ 2 * Real.sqrt 2) (h5' : y5 ≤ 2 * Real.sqrt 2) (h6' : y6 ≤ 2 * Real.sqrt 2)
+    (het : eta_y y4 y5 y6 < Real.sqrt 2) (h65 : y6 ≤ y5) (h54 : y5 ≤ y4) :
+    0 ≤ gamma3fXDivSqrtdelta (h0cut y4) (h0cut y5) (h0cut y6) 1 1 1
+      (y4 * y4) (y5 * y5) (y6 * y6) := by
+  have h8eq : Real.sqrt 8 = 2 * Real.sqrt 2 := mi_sqrt8_eq
+  have b4 : y4 ≤ Real.sqrt 8 := by rw [h8eq]; exact h4'
+  have b5 : y5 ≤ Real.sqrt 8 := by rw [h8eq]; exact h5'
+  have b6 : y6 ≤ Real.sqrt 8 := by rw [h8eq]; exact h6'
+  obtain ⟨hups, _hdelta⟩ := mi_ETA_Y_BOUNDS y4 y5 y6 h4 b4 h5 b5 h6 b6 het
+  -- track 3: `Q` kills every `eta_y^2 > 2` disjunct (`eta_y` is a `sqrt`,
+  -- so its square is the quotient inside)
+  have hq0 : 0 ≤ (y4 * y4) * (y5 * y5) * (y6 * y6) /
+      upsX (y4 * y4) (y5 * y5) (y6 * y6) :=
+    div_nonneg (by positivity) (le_of_lt hups)
+  have het2 : eta_y y4 y5 y6 ^ 2 < 2 := by
+    have hsq : eta_y y4 y5 y6 ^ 2
+        = (y4 * y4) * (y5 * y5) * (y6 * y6) / upsX (y4 * y4) (y5 * y5) (y6 * y6) :=
+      Real.sq_sqrt hq0
+    have hlt := (mi_sqrt_lt_sqrt2 hq0).1
+      (show Real.sqrt ((y4 * y4) * (y5 * y5) * (y6 * y6) /
+          upsX (y4 * y4) (y5 * y5) (y6 * y6)) < Real.sqrt 2 from het)
+    rw [hsq]; exact hlt
+  -- track 9: the eta_y-killed CIHTIUM / CJFZZDW entries are empty-box
+  -- contrapositives under `Q`
+  have hciht : ¬(2 * hminus ≤ y4 ∧ 2 * hminus ≤ y5 ∧ 2 * hminus ≤ y6) := by
+    rintro ⟨k4, k5, k6⟩
+    have hbig := h_ciht 1 1 1 y4 y5 y6 le_rfl le_rfl le_rfl le_rfl le_rfl le_rfl
+      k4 b4 k5 b5 k6 b6
+    exact absurd hbig (not_lt.mpr (le_of_lt het2))
+  have hcjfzz : ¬(2 * hplus ≤ y4 ∧ 2 * hplus ≤ y5) := by
+    rintro ⟨k4, k5⟩
+    have hbig := h_cjfzz 1 1 1 y4 y5 y6 le_rfl le_rfl le_rfl le_rfl le_rfl le_rfl
+      k4 b4 k5 b5 h6 b6
+    exact absurd hbig (not_lt.mpr (le_of_lt het2))
+  -- track 4: the dihedral term is nonnegative under `Q`
+  have hdih := mi_dih_y_div_sqrtdelta_pos y4 y5 y6 h4 h5 h6 h4' h5' h6' het
+  rcases le_or_gt y4 (2 * hminus) with hk4 | hk4
+  · -- track 8, first chop: `y4 <= 2*hminus` (then all three are, by
+    -- sorting); the wt0/corner pair covers `[2, 2*hminus]` split at `2.01`
+    have h5k : y5 ≤ 2 * hminus := by linarith
+    have h6k : y6 ≤ 2 * hminus := by linarith
+    have hc4 : h0cut y4 = 1 := p21_h0cutA y4 (by linarith [mi_two_hminus_le_two_h0, hk4])
+    have hc5 : h0cut y5 = 1 := p21_h0cutA y5 (by linarith [mi_two_hminus_le_two_h0, h5k])
+    have hc6 : h0cut y6 = 1 := p21_h0cutA y6 (by linarith [mi_two_hminus_le_two_h0, h6k])
+    rcases le_or_gt (2.01 : ℝ) y4 with h201 | h201
+    · -- `QZECFIC wt0` fires on [2.01, 2hminus] × [2, 2hminus]²
+      have hcon := h_wt0 1 1 1 y4 y5 y6 le_rfl le_rfl le_rfl le_rfl le_rfl le_rfl
+        h201 hk4 h5 h5k h6 h6k
+      rw [hc4, hc5, hc6, ← p21_bank_proj 1 1 1 1 1 1 y4 y5 y6]
+      exact le_of_lt hcon
+    · -- `QZECFIC wt0 corner` fires on [2, 2.01]³ (all three, by sorting)
+      have hcon := h_corner 1 1 1 y4 y5 y6 le_rfl le_rfl le_rfl le_rfl le_rfl le_rfl
+        h4 (le_of_lt h201) h5 (show y5 ≤ (2.01 : ℝ) from by linarith)
+          h6 (show y6 ≤ (2.01 : ℝ) from by linarith)
+      rw [hc4, hc5, hc6, ← p21_bank_proj 1 1 1 1 1 1 y4 y5 y6]
+      exact hcon
+  · -- track 9, main run: `2*hminus <= y4`; CIHTIUM forces `y6 < 2*hminus`
+    have h6k : y6 < 2 * hminus := by
+      rcases le_or_gt (2 * hminus) y6 with hh | hh
+      · exact absurd ⟨le_of_lt hk4, le_trans hh h65, hh⟩ hciht
+      · exact hh
+    have hc6 : h0cut y6 = 1 := p21_h0cutA y6 (by linarith [mi_two_hminus_le_two_h0, h6k])
+    rcases le_or_gt (2 * hminus) y5 with h5k | h5k
+    · -- track 9, third disjunct: `QZECFIC wt2 A` fires (its `/2` handled by
+      -- plain arithmetic against `hdih`)
+      obtain hcon | hcon := h_wt2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4 y5 y6
+        le_rfl le_rfl le_rfl le_rfl le_rfl le_rfl (le_of_lt hk4) b4 h5k b5 h6
+          (le_of_lt h6k)
+      · have h008 : (0 : ℝ) ≤ 0.008 * yOfX dih4XDivSqrtdeltaPosbranch (Real.sqrt 2)
+            (Real.sqrt 2) (Real.sqrt 2) y4 y5 y6 := mul_nonneg (by norm_num) hdih
+        have hX1 : 0 < yOfX (gamma3fXDivSqrtdelta (h0cut y4) (h0cut y5) 1)
+            (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4 y5 y6 := by linarith
+        rw [hc6, ← p21_bank_proj (h0cut y4) (h0cut y5) 1 (Real.sqrt 2) (Real.sqrt 2)
+          (Real.sqrt 2) y4 y5 y6]
+        exact le_of_lt hX1
+      · exact absurd hcon (not_lt.mpr (le_of_lt het2))
+    · -- `y5 < 2*hminus`; split `y4` at `2*hplus`
+      have hc5 : h0cut y5 = 1 := p21_h0cutA y5 (by linarith [mi_two_hminus_le_two_h0, h5k])
+      rcases le_or_gt (2 * hplus) y4 with h4p | h4p
+      · -- track 9, fourth disjunct: `QZECFIC wt0 sqrt8` fires
+        obtain hcon | hcon := h_sqrt8 1 1 1 y4 y5 y6 le_rfl le_rfl le_rfl le_rfl
+          le_rfl le_rfl h4p b4 h5 (le_of_lt h5k) h6 (le_of_lt h6k)
+        · have hc4 : h0cut y4 = 0 :=
+            p21_h0cutB y4 (by linarith [p21_h0_lt_hplus, h4p])
+          rw [hc4, hc5, hc6, ← p21_bank_proj 0 1 1 1 1 1 y4 y5 y6]
+          exact le_of_lt hcon
+        · exact absurd hcon (not_lt.mpr (le_of_lt het2))
+      · -- track 9, final branch: `QZECFIC wt1` fires
+        obtain hcon | hcon := h_wt1 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4 y5 y6
+          le_rfl le_rfl le_rfl le_rfl le_rfl le_rfl (le_of_lt hk4) (le_of_lt h4p) h5
+            (le_of_lt h5k) h6 (le_of_lt h6k)
+        · have h008 : (0 : ℝ) ≤ 0.008 * yOfX dih4XDivSqrtdeltaPosbranch (Real.sqrt 2)
+              (Real.sqrt 2) (Real.sqrt 2) y4 y5 y6 := mul_nonneg (by norm_num) hdih
+          have hX1 : 0 < yOfX (gamma3fXDivSqrtdelta (h0cut y4) 1 1) (Real.sqrt 2)
+              (Real.sqrt 2) (Real.sqrt 2) y4 y5 y6 := by linarith
+          rw [hc5, hc6, ← p21_bank_proj (h0cut y4) 1 1 (Real.sqrt 2) (Real.sqrt 2)
+            (Real.sqrt 2) y4 y5 y6]
+          exact le_of_lt hX1
+        · exact absurd hcon (not_lt.mpr (le_of_lt het2))
+
+/-- HOL `cell3_from_ineq_thm` (merge_ineq.hl:3507, statement
+`mk_imp(cell3_hyp, cell3_from_ineq)`; GIANT ~240-line refinement proof
+to :3745 over the nine COMMENT tracks of charter §1.3).  MERGE-INEQ
+wave 0 skeleton — do NOT wire into the :1428 arm before waves 1-2. -/
+theorem cell3_from_ineq_thm : cell3_bank → cell3_from_ineq := by
+  -- tracks 1-5/7/9 are packaged as `p21_cell3_core` + `p21_track7`; track 8
+  -- is the `mi_REAL_WLOG_SIMPLEX_3d` reduction below (hol :3690-3710).
+  intro hb
+  obtain ⟨h_wt0, h_corner, h_sqrt8, h_wt1, h_wt2, h_ciht, h_cjfzz⟩ := hb
+  intro y4 y5 y6 h4 h5 h6 h4' h5' h6' het
+  have hsorted : ∀ a b c : ℝ, c ≤ b → b ≤ a → 2 ≤ a → 2 ≤ b → 2 ≤ c →
+      a ≤ 2 * Real.sqrt 2 → b ≤ 2 * Real.sqrt 2 → c ≤ 2 * Real.sqrt 2 →
+      eta_y a b c < Real.sqrt 2 → 0 ≤ gamma3f a b c (Real.sqrt 2) lmfun := by
+    intro a b c hcb hba ha hb hc ha' hb' hc' heta
+    exact p21_track7 a b c ha hb hc ha' hb' hc' heta
+      (p21_cell3_core h_wt0 h_corner h_sqrt8 h_wt1 h_wt2 h_ciht h_cjfzz a b c ha hb hc
+        ha' hb' hc' heta hcb hba)
+  -- the swap symmetry `P a b c <-> P a c b` (gamma3f_sym + eta_y sym)
+  have hs1 : ∀ a b c : ℝ,
+      (2 ≤ a → 2 ≤ b → 2 ≤ c → a ≤ 2 * Real.sqrt 2 → b ≤ 2 * Real.sqrt 2 →
+        c ≤ 2 * Real.sqrt 2 → eta_y a b c < Real.sqrt 2 →
+        0 ≤ gamma3f a b c (Real.sqrt 2) lmfun) ↔
+      (2 ≤ a → 2 ≤ c → 2 ≤ b → a ≤ 2 * Real.sqrt 2 → c ≤ 2 * Real.sqrt 2 →
+        b ≤ 2 * Real.sqrt 2 → eta_y a c b < Real.sqrt 2 →
+        0 ≤ gamma3f a c b (Real.sqrt 2) lmfun) := by
+    intro a b c
+    constructor
+    · intro h ha hc hb ha' hc' hb' heta
+      have het' : eta_y a b c < Real.sqrt 2 := by
+        rw [← (mi_eta_y_sym a b c).2] at heta
+        exact heta
+      rw [← (mi_gamma3f_sym a b c).1]
+      exact h ha hb hc ha' hb' hc' het'
+    · intro h ha hb hc ha' hb' hc' heta
+      have het' : eta_y a c b < Real.sqrt 2 := by
+        rw [(mi_eta_y_sym a b c).2] at heta
+        exact heta
+      rw [← (mi_gamma3f_sym a c b).1]
+      exact h ha hc hb ha' hc' hb' het'
+  -- the 3-cycle symmetry `P a b c <-> P b c a`
+  have hs2 : ∀ a b c : ℝ,
+      (2 ≤ a → 2 ≤ b → 2 ≤ c → a ≤ 2 * Real.sqrt 2 → b ≤ 2 * Real.sqrt 2 →
+        c ≤ 2 * Real.sqrt 2 → eta_y a b c < Real.sqrt 2 →
+        0 ≤ gamma3f a b c (Real.sqrt 2) lmfun) ↔
+      (2 ≤ b → 2 ≤ c → 2 ≤ a → b ≤ 2 * Real.sqrt 2 → c ≤ 2 * Real.sqrt 2 →
+        a ≤ 2 * Real.sqrt 2 → eta_y b c a < Real.sqrt 2 →
+        0 ≤ gamma3f b c a (Real.sqrt 2) lmfun) := by
+    intro a b c
+    constructor
+    · intro h hb hc ha hb' hc' ha' heta
+      have het' : eta_y a b c < Real.sqrt 2 := by
+        rw [(mi_eta_y_sym b c a).2, (mi_eta_y_sym b a c).1] at heta
+        exact heta
+      rw [← (mi_gamma3f_sym a b c).2]
+      exact h ha hb hc ha' hb' hc' het'
+    · intro h ha hb hc ha' hb' hc' heta
+      have het' : eta_y b c a < Real.sqrt 2 := by
+        rw [← (mi_eta_y_sym b a c).1, ← (mi_eta_y_sym b c a).2] at heta
+        exact heta
+      rw [(mi_gamma3f_sym a b c).2]
+      exact h hb hc ha hb' hc' ha' het'
+  exact mi_REAL_WLOG_SIMPLEX_3d
+    (P := fun a b c : ℝ => 2 ≤ a → 2 ≤ b → 2 ≤ c → a ≤ 2 * Real.sqrt 2 →
+      b ≤ 2 * Real.sqrt 2 → c ≤ 2 * Real.sqrt 2 → eta_y a b c < Real.sqrt 2 →
+      0 ≤ gamma3f a b c (Real.sqrt 2) lmfun)
+    hs1 hs2 hsorted y4 y5 y6 h4 h5 h6 h4' h5' h6' het
 
 /-- HOL `TSKAJXY_statement_special_case` (TSKAJXY2.hl:80-88, a
 `new_definition`). -/
