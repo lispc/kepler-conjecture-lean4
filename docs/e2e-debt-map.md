@@ -59,9 +59,15 @@
   **GT-1 已落账 (2026-09-30，`0d3243c0`)**：`ConicCapVolume.lean` 1110 行——
   `volumeConicCap`（2/3·π·(1−a)·r³ 完整推导）+Pos/Measurable/Bounded 四公开件
   公理全净，纯 Geom.* 零 sorry 依赖；余 3 sorry 带账（sliceWedge 仅剩 Real.lt/le
-  order 结构体对接、wedge kernel、AZIM_EQ_0_PI 桥）。波次：GT-2(S/M 机械)/
-  GT-3(cell_vol)/GT-4(region) 可排；⚠ `grutoti_volD_pos` 冻结陈述 u1=u0 时为假
-  （STATEMENT-FIX 候选入 merge 裁决清单）。
+  order 结构体对接、wedge kernel、AZIM_EQ_0_PI 桥）。
+  **GT-2 前段已落账 (2026-09-30，`dfd748ed`+`d67e5fcf`)**：PA15 ★×2 转真
+  （FINITE_EDGE_X2/MCELL_SUBSET_BALL8_1——**i=2 深坑正面攻下**：mutual-rconeGe
+  代数相加，23→21）；PA23 p23_ kit ×4（Pack2 测度桥有限版银行化）。
+  **陈述缺陷发现 ×3**：①volD_pos 缺 `hne`（STATEMENT-FIX 提案项 18 已立案
+  `1137ad92`，patch 可贴性实测 0 error，**待用户裁决**）；②sum_volD 缺
+  Packing/saturated 前提；③pivot 缺 region 覆盖假设——②③登记未立项，等
+  grutoti_region 落地后补前提走同一流程。GT-3 剩余关键路径：CONIC_CAP trio
+  (PA15:818-828，GT-1 公式在手预估 100-200 行)/grutoti_region(giant)/AJRIPQN。
 - **Phase 2 Graphs 链**：wave3 收官构建发现 `lake build Kepler.Assembly` 会自展
   式重建 Graphs CertShards（本机 30-2100s/片，9000+ jobs 量级）——后台跑完后
   脊柱探针解锁，DEBT.md"结构性不可用"注记作废。
