@@ -432,6 +432,21 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   DUUNHOR 三前件（ROGERS_AFF_DIM_FULL/POLYHEDRON_VORONOI_LIST/
   OMEGA_LIST_N_LEMMA）均 sorry，路线已注 PA2:577-580。
   `Set.mem_setOf` 隐式参数方向与旧版不同（用 `Set.mem_setOf.2 ⟨…⟩`）。
+- **PA16 @U-2B/2C 后**（4 remaining @`9bc5b5bd`，KIZHLTL1/2 双闭合）：
+  **KIZHLTL4（波 3）路线全备**——可复用本波 kit：`p16_step8`（HL Step 8 独立
+  预算件）、`p16_mcell_cap4`、`p16_measure_setSum_image`、`p16_hyperplane_null`、
+  `p16_nat_card_sdiff`、setSum 全家（mono/subset/const/fubini/filter）；
+  外部 ★ 三颗（PA15 `DIHX_SYM`/`FINITE_EDGE_X2`/`SUM_PAIR_2_SET`）。雷区：
+  `rw … at hX.2` 投影后缀位置语法不支持（先 `have hX' : And型 := hX` 再 at）；
+  `Finset.sum_le_sum_of_subset` 现收 `CanonicallyOrderedAdd`（ℝ 不可用，用
+  `Finset.sum_sdiff`+`sum_nonneg` 自组，本波 `p16_sol_nonneg` 无条件替代了
+  HL 的 URRPHBZ2+sol_spec 非负支、PA13 依赖不需要）；`Finset.inter_eq_right`
+  右偏；`ENNReal.toReal_le_toReal` 已改名→`ENNReal.toReal_mono (hb : b ≠ ⊤)`；
+  `Measure.real_nonneg`→`measureReal_nonneg`（μ 隐式）；card-diff 用
+  `Nat.card_coe_set_eq : Nat.card ↑s = s.ncard`（无 `Nat.card_diff`）。
+  **巨声明心跳**：KIZHLTL2 超 5M——文件级 `set_option maxHeartbeats` 后追加
+  增量行（`set_option … in` 放 docstring 与 theorem 之间会触发解析错误，勿用）；
+  `HDTFNFZ` 的 `{v}` 隐参陈述中不可合成——`@HDTFNFZ V ul i u X …` 显式喂。
 
 ## 6. 教训日志（编排者每波收工后追加；工人有观察也写报告里）
 
