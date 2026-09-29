@@ -3461,4 +3461,166 @@ theorem la7_hypermapOfList_map (L : fgraph ℕ) {phi : ℕ → ℕ}
     · rfl
 
 end LA7ReverseMap
+
+/-! ## 12. Hypermap 类型层桥：IsHypermapOfListTl 规格桥 + REVERSE/MAP 类型层运输
+
+Assembly §1b `IsHypermapOfList`（Assembly.lean:108-117；本模块不 import
+`Kepler.Assembly`（环）故不可见）的 TameLp 侧**逐字段同体孪生** + §9 构造件的
+规格实例定理；REVERSE 共轭束（ELLLNYZ.hl:235 `dart_REVERSE` / :254
+`edge_map_reverse` / :370 `face_map_reverse` / :440 `hypermap_of_list_reverse`，
+face/node 互换 = opposite_hypermap 语义，类型层取 eList-共轭形）与 MAP 类型层
+Iso（tame_list.hl:3486 `hypermap_of_list_map`，同构函数 = pair-lift）。
+列表层三向交换全部引 §10 `la7_*` 现成件，无新增列表层机器。 -/
+
+section HypermapTypeBridge
+open Kepler.Assembly (listOfDarts eList fList nList GoodList)
+open Kepler.Graphs (fgraph)
+
+/-- Assembly §1b `IsHypermapOfList`（Assembly.lean:108-117）的逐字段同体孪生：
+dart 集恰为 `listOfDarts L` 的像集，且三映射在 dart 上与 `eList`/`nList L`/
+`fList L` 一致（HOL `hypermap_of_list` 规格级镜像，list_hypermap-compiled.hl:60；
+HOL 侧 `res` 的"dart 集外恒等"约定由 `Hypermap` 的 `PermutesOn` 字段内置）。
+装配 lane 折算：`Assembly.IsHypermapOfList L H ↔ IsHypermapOfListTl L H`
+（两结构体字段名/类型逐槽同体，匿名构造器四槽一步）。 -/
+structure IsHypermapOfListTl (L : fgraph ℕ) (H : Hypermap (ℕ × ℕ)) : Prop where
+  /-- `dart (hypermap_of_list L) = darts_of_list L`（list_hypermap-compiled.hl:22,60）。 -/
+  darts_eq : (↑H.darts : Set (ℕ × ℕ)) = {d | d ∈ listOfDarts L}
+  /-- `edge_map` 在 dart 上 = `e_list`（:54,57,60）。 -/
+  edgeMap_eq : ∀ d ∈ H.darts, H.edgeMap d = eList d
+  /-- `node_map` 在 dart 上 = `n_list`（:55,58,60）。 -/
+  nodeMap_eq : ∀ d ∈ H.darts, H.nodeMap d = nList L d
+  /-- `face_map` 在 dart 上 = `f_list`（:53,56,60）。 -/
+  faceMap_eq : ∀ d ∈ H.darts, H.faceMap d = fList L d
+
+/-- 规格实例定理（Assembly 侧待证件 `IsHypermapOfList L (hypermapOfList L)` 的
+TameLp 侧构造件）：§9 构造逐字段满足规格桥——四槽 = §9 四定理直接组装
+（`comp_eq_one` 由 `Hypermap` 打包字段承载，无需在此重述）。 -/
+theorem hypermapOfList_isHypermapOfListTl (L : fgraph ℕ) (hL : GoodList L) :
+    IsHypermapOfListTl L (hypermapOfList L hL) :=
+  ⟨darts_hypermapOfList L hL, fun _ hd => edgeMap_hypermapOfList L hL hd,
+    fun _ hd => nodeMap_hypermapOfList L hL hd, fun _ hd => faceMap_hypermapOfList L hL hd⟩
+
+/-! ### REVERSE 类型层共轭束（ELLLNYZ.hl:235/254/370/440） -/
+
+/-- HOL `dart_REVERSE`（ELLLNYZ.hl:235）的类型层折算：REVERSE 后构造的超映射
+与原构造有同一 dart 集。 -/
+theorem darts_hypermapOfList_reverse (L : fgraph ℕ) (hgood : GoodList L) :
+    (↑(hypermapOfList (L.map List.reverse) (la7_goodList_reverse L hgood)).darts :
+        Set (ℕ × ℕ))
+      = (↑(hypermapOfList L hgood).darts : Set (ℕ × ℕ)) := by
+  rw [darts_hypermapOfList, darts_hypermapOfList]
+  exact la7_darts_reverse L hgood
+
+/-- REVERSE 侧 dart 集成员转移（dart 集相等 + `GoodList` 交换性；eList 自逆
+使 eList d 回落原 dart 集）。 -/
+theorem mem_darts_hypermapOfList_reverse (L : fgraph ℕ) (hgood : GoodList L)
+    {d : ℕ × ℕ} (hd : d ∈ (hypermapOfList L hgood).darts) :
+    eList d ∈ (hypermapOfList (L.map List.reverse) (la7_goodList_reverse L hgood)).darts := by
+  have hdL : d ∈ listOfDarts L := by
+    have h5 : d ∈ (↑(hypermapOfList L hgood).darts : Set (ℕ × ℕ)) := hd
+    rw [darts_hypermapOfList] at h5
+    exact h5
+  have h : (eList d : ℕ × ℕ) ∈
+      (↑(hypermapOfList (L.map List.reverse) (la7_goodList_reverse L hgood)).darts :
+        Set (ℕ × ℕ)) := by
+    rw [darts_hypermapOfList_reverse L hgood, darts_hypermapOfList L hgood]
+    exact hgood.2.2 d hdL
+  exact h
+
+/-- HOL `edge_map_reverse`（ELLLNYZ.hl:254）的 eList-共轭形：
+`edge_map L' (e_list d) = e_list (edge_map L d)`（两边同为 `d`，由单对换自逆）。 -/
+theorem edgeMap_hypermapOfList_reverse (L : fgraph ℕ) (hgood : GoodList L)
+    {d : ℕ × ℕ} (hd : d ∈ (hypermapOfList L hgood).darts) :
+    (hypermapOfList (L.map List.reverse) (la7_goodList_reverse L hgood)).edgeMap (eList d)
+      = eList ((hypermapOfList L hgood).edgeMap d) := by
+  have hmem := mem_darts_hypermapOfList_reverse L hgood hd
+  rw [edgeMap_hypermapOfList (L.map List.reverse) (la7_goodList_reverse L hgood) hmem,
+    edgeMap_hypermapOfList L hgood hd]
+
+/-- HOL `face_map_reverse`（ELLLNYZ.hl:370；`hypermap_of_list_reverse` 的
+opposite_hypermap 语义）的类型层形：REVERSE 侧 faceMap 与原侧 nodeMap 经
+eList 互换。 -/
+theorem faceMap_hypermapOfList_reverse (L : fgraph ℕ) (hgood : GoodList L)
+    {d : ℕ × ℕ} (hd : d ∈ (hypermapOfList L hgood).darts) :
+    (hypermapOfList (L.map List.reverse) (la7_goodList_reverse L hgood)).faceMap (eList d)
+      = (hypermapOfList L hgood).nodeMap d := by
+  have hmem := mem_darts_hypermapOfList_reverse L hgood hd
+  have hdL : d ∈ listOfDarts L := by
+    have h4 : d ∈ (↑(hypermapOfList L hgood).darts : Set (ℕ × ℕ)) := hd
+    rw [darts_hypermapOfList] at h4
+    exact h4
+  rw [faceMap_hypermapOfList (L.map List.reverse) (la7_goodList_reverse L hgood) hmem,
+    la7_faceMap_reverse L hgood d hdL]
+  exact (nodeMap_hypermapOfList L hgood hd).symm
+
+/-- HOL `face_map_reverse` 的对偶（nodeMap 侧，REVERSE 共轭的 node/face 互换
+另一半，la7_nodeMap_reverse = tame_list 列表层件）。 -/
+theorem nodeMap_hypermapOfList_reverse (L : fgraph ℕ) (hgood : GoodList L)
+    {d : ℕ × ℕ} (hd : d ∈ (hypermapOfList L hgood).darts) :
+    (hypermapOfList (L.map List.reverse) (la7_goodList_reverse L hgood)).nodeMap (eList d)
+      = (hypermapOfList L hgood).faceMap d := by
+  have hmem := mem_darts_hypermapOfList_reverse L hgood hd
+  have hdL : d ∈ listOfDarts L := by
+    have h4 : d ∈ (↑(hypermapOfList L hgood).darts : Set (ℕ × ℕ)) := hd
+    rw [darts_hypermapOfList] at h4
+    exact h4
+  rw [nodeMap_hypermapOfList (L.map List.reverse) (la7_goodList_reverse L hgood) hmem,
+    la7_nodeMap_reverse L hgood d hdL]
+  exact (faceMap_hypermapOfList L hgood hd).symm
+
+/-! ### MAP 类型层 Iso（tame_list.hl:3486 `hypermap_of_list_map`） -/
+
+/-- HOL `hypermap_of_list_map`（tame_list.hl:3486-3488）的 Hypermap 类型层落地：
+`iso (hypermap_of_list L) (hypermap_of_list (MAP (MAP phi) L))`，同构函数 =
+pair-lift `\d. phi (FST d), phi (SND d)`；injectivity 形状 = `∀ u ∈ L.flatten`
+（= HOL `inj_on phi (elements_of_list L)` 的折算）。 -/
+theorem hypermapOfList_iso_map (L : fgraph ℕ) {phi : ℕ → ℕ}
+    (hinj : ∀ u ∈ L.flatten, ∀ v ∈ L.flatten, phi u = phi v → u = v)
+    (hgood : GoodList L) :
+    Hypermap.Iso (hypermapOfList L hgood)
+      (hypermapOfList (L.map (List.map phi)) (la7_mapGoodList L hinj hgood)) := by
+  have hbij := (la7_hypermapOfList_map L hinj hgood).1
+  have hmaps := (la7_hypermapOfList_map L hinj hgood).2
+  have hbij' : Set.BijOn (fun d : ℕ × ℕ => (phi d.1, phi d.2))
+      (↑(hypermapOfList L hgood).darts : Set (ℕ × ℕ))
+      (↑(hypermapOfList (L.map (List.map phi)) (la7_mapGoodList L hinj hgood)).darts :
+        Set (ℕ × ℕ)) := by
+    rw [darts_hypermapOfList L hgood,
+      darts_hypermapOfList (L.map (List.map phi)) (la7_mapGoodList L hinj hgood)]
+    exact hbij
+  refine ⟨fun d => (phi d.1, phi d.2), hbij', ?_⟩
+  intro d hd
+  have hd2 : (phi d.1, phi d.2) ∈
+      (hypermapOfList (L.map (List.map phi)) (la7_mapGoodList L hinj hgood)).darts :=
+    hbij'.1 hd
+  have hds : d ∈ ({e : ℕ × ℕ | e ∈ listOfDarts L} : Set (ℕ × ℕ)) := by
+    have h4 : d ∈ (↑(hypermapOfList L hgood).darts : Set (ℕ × ℕ)) := hd
+    rw [darts_hypermapOfList] at h4
+    exact h4
+  obtain ⟨hn, hf, he⟩ := hmaps d hds
+  refine ⟨?_, ?_, ?_⟩
+  · show (hypermapOfList (L.map (List.map phi)) (la7_mapGoodList L hinj hgood)).edgeMap
+        (phi d.1, phi d.2)
+      = (phi ((hypermapOfList L hgood).edgeMap d).1,
+          phi ((hypermapOfList L hgood).edgeMap d).2)
+    rw [edgeMap_hypermapOfList (L.map (List.map phi)) (la7_mapGoodList L hinj hgood) hd2,
+      edgeMap_hypermapOfList L hgood hd]
+    exact he
+  · show (hypermapOfList (L.map (List.map phi)) (la7_mapGoodList L hinj hgood)).nodeMap
+        (phi d.1, phi d.2)
+      = (phi ((hypermapOfList L hgood).nodeMap d).1,
+          phi ((hypermapOfList L hgood).nodeMap d).2)
+    rw [nodeMap_hypermapOfList (L.map (List.map phi)) (la7_mapGoodList L hinj hgood) hd2,
+      nodeMap_hypermapOfList L hgood hd]
+    exact hn
+  · show (hypermapOfList (L.map (List.map phi)) (la7_mapGoodList L hinj hgood)).faceMap
+        (phi d.1, phi d.2)
+      = (phi ((hypermapOfList L hgood).faceMap d).1,
+          phi ((hypermapOfList L hgood).faceMap d).2)
+    rw [faceMap_hypermapOfList (L.map (List.map phi)) (la7_mapGoodList L hinj hgood) hd2,
+      faceMap_hypermapOfList L hgood hd]
+    exact hf
+
+end HypermapTypeBridge
+
 end Kepler.Text.TameLp
