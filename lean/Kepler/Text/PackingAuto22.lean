@@ -490,11 +490,33 @@ theorem facet_rep_in_facet (P c1 c2 : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     norm1_cauchy_eq _ _ hn1 hn2 (le_antisymm hcs0 h1cd)
   exact facet_rep_uniq_c P c1 c2 hP h1 h2 haeq
 
-/-- HOL `facet_rep_refl` (counting_spheres.hl:257). GIANT. -/
+/-- HOL `facet_rep_refl` (counting_spheres.hl:257). Filled: ball points pin the
+supporting value from below (`r ≤ facet_rep_b P c`), and `dot2 â (r • â) = r`. -/
 theorem facet_rep_refl (P c : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     (hc : facetOfC c P) (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) :
     dot2 (facet_rep_a P c) (r • facet_rep_a P c) ≤ facet_rep_b P c := by
-  sorry -- DEF-FIX: refill per counting_spheres.hl:257 §3a
+  have hpr := facet_rep_props P c hP hc
+  have hn1 : ‖facet_rep_a P c‖ = 1 := hpr.1
+  -- every ball point pins the supporting value from below
+  have hpt : ∀ t : ℝ, 0 ≤ t → t < r → t ≤ facet_rep_b P c := by
+    intro t htnn htlt
+    have hnb : ‖(t • facet_rep_a P c : ℂ)‖ < r := by
+      rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg htnn, hn1]
+      simpa using htlt
+    have hle : dot2 (facet_rep_a P c) (t • facet_rep_a P c) ≤ facet_rep_b P c :=
+      hpr.2.2.1 (hrad _ hnb)
+    rw [p22_dot2_smul_right, p22_dot2_self, hn1] at hle
+    simpa using hle
+  have hrb : r ≤ facet_rep_b P c := by
+    by_contra hcon
+    have hblt : facet_rep_b P c < r := lt_of_not_ge hcon
+    rcases lt_or_ge (facet_rep_b P c) 0 with hneg | hpos
+    · have h0 := hpt 0 (by norm_num) hr
+      linarith
+    · have ht := hpt ((facet_rep_b P c + r) / 2) (by linarith) (by linarith)
+      linarith
+  rw [p22_dot2_smul_right, p22_dot2_self, hn1]
+  simpa using hrb
 
 /-- Additivity of `dot2` in the second argument. -/
 theorem dot2_add_right (a x y : ℂ) : dot2 a (x + y) = dot2 a x + dot2 a y := by
@@ -797,34 +819,1001 @@ theorem affine_facet_hyper (P c : Set ℂ) (a : ℂ) (b : ℝ)
   exact affineSpanC_eq_of_affDimC_eq hcne hcsub _
     (coe_dotHyperplaneC hp0) hcdim
 
-/-- HOL `POLYHEDRON_MEMBER` (counting_spheres.hl:346). GIANT. -/
+/-! ## FACET_OF_POLYHEDRONC_EXPLICIT kit — ℂ port of the Polytope.lean
+minrep/slice mechanism (template :252-1790; planar-encoding-fix.md §2.3).
+The V3 dot `⬝ᵥ` becomes `dot2`, `dotRight` becomes `dotRightC`; the minrep
+statement keeps the `affineSpan` conjunct of the V3 template verbatim. -/
+
+/-- ℂ twin of Polytope.`mem_rint_iff` (:252). -/
+private theorem p22_mem_rint_iffC {s : Set ℂ} {x : ℂ} :
+    x ∈ intrinsicInterior ℝ s ↔
+      x ∈ s ∧ ∃ ε > 0, (Metric.ball x ε ∩ (affineSpan ℝ s : Set ℂ)) ⊆ s := by
+  constructor
+  · intro hmem
+    rw [mem_intrinsicInterior] at hmem
+    obtain ⟨y, hy, rfl⟩ := hmem
+    have hxmem : ↑y ∈ s := Set.mem_preimage.1 (interior_subset hy)
+    refine ⟨hxmem, ?_⟩
+    obtain ⟨t, htsub, htopen, hyt⟩ := mem_interior.1 hy
+    have hopen := Metric.isOpen_iff.1 htopen
+    obtain ⟨ε, hε, hball⟩ := hopen y hyt
+    refine ⟨ε, hε, fun w hw => ?_⟩
+    have hwball : (⟨w, hw.2⟩ : ↥(affineSpan ℝ s)) ∈ Metric.ball y ε :=
+      Metric.mem_ball.2 (show dist (w : ℂ) (y : ℂ) < ε from hw.1)
+    exact Set.mem_preimage.1 (htsub (hball hwball))
+  · rintro ⟨hxmem, ε, hε, hsub⟩
+    have hxaff : x ∈ (affineSpan ℝ s : Set ℂ) := subset_affineSpan ℝ s hxmem
+    have hsub' : Metric.ball (⟨x, hxaff⟩ : ↥(affineSpan ℝ s)) ε ⊆
+        (Subtype.val ⁻¹' s) := by
+      intro w hw
+      have hwball : w.1 ∈ Metric.ball x ε := hw
+      exact Set.mem_preimage.2 (hsub (Set.mem_inter hwball w.2))
+    rw [mem_intrinsicInterior]
+    exact ⟨⟨x, hxaff⟩, mem_interior.2 ⟨Metric.ball (⟨x, hxaff⟩ : ↥(affineSpan ℝ s)) ε,
+      hsub', Metric.isOpen_ball, Metric.mem_ball_self hε⟩, rfl⟩
+
+/-- ℂ twin of Polytope.`affineSpan_lineq` (:280). -/
+private theorem p22_affineSpan_lineqC {s : Set ℂ} {p p' q : ℂ}
+    (hp : p ∈ (affineSpan ℝ s : Set ℂ)) (hp' : p' ∈ (affineSpan ℝ s : Set ℂ))
+    (hq : q ∈ (affineSpan ℝ s : Set ℂ)) (t : ℝ) :
+    p' + t • (q - p) ∈ (affineSpan ℝ s : Set ℂ) := by
+  have hdir : t • (q -ᵥ p) ∈ (affineSpan ℝ s).direction :=
+    Submodule.smul_mem _ t (AffineSubspace.vsub_mem_direction hq hp)
+  have hvadd : (t • (q -ᵥ p)) +ᵥ p' = p' + t • (q - p) := by
+    rw [vadd_eq_add, vsub_eq_sub]
+    module
+  rw [← hvadd]
+  exact AffineSubspace.vadd_mem_of_mem_direction hdir hp'
+
+/-- ℂ twin of Polytope.`subset_of_faceOf` (:369). -/
+private theorem p22_subset_of_faceOfC {t s u : Set ℂ} (hface : faceOfC t s) (husub : u ⊆ s)
+    (hdisj : ¬Disjoint t (intrinsicInterior ℝ u)) : u ⊆ t := by
+  obtain ⟨b, hb⟩ := Set.not_disjoint_iff.1 hdisj
+  obtain ⟨hbu, ε, hε0, hball⟩ := p22_mem_rint_iffC.1 hb.2
+  have hbt : b ∈ t := hb.1
+  have hbu_aff : b ∈ (affineSpan ℝ u : Set ℂ) := subset_affineSpan ℝ u hbu
+  intro c hc
+  by_cases hcb : c = b
+  · rw [hcb]
+    exact hbt
+  · have hnb : ‖b - c‖ ≠ 0 := by
+      intro h
+      exact hcb (sub_eq_zero.1 (norm_eq_zero.mp h)).symm
+    set lam := ε / (2 * ‖b - c‖) with hlam
+    have hlam0 : 0 < lam := by
+      rw [hlam]
+      exact div_pos hε0 (by positivity)
+    have hdm : b + lam • (b - c) ∈ u := by
+      refine hball (Set.mem_inter ?_ ?_)
+      · refine Metric.mem_ball.2 ?_
+        have hdd : dist (b + lam • (b - c)) b = lam * ‖b - c‖ := by
+          rw [dist_eq_norm, add_sub_cancel_left, norm_smul, Real.norm_eq_abs,
+            abs_of_pos hlam0]
+        rw [hdd, hlam]
+        have h2 : (ε / (2 * ‖b - c‖)) * ‖b - c‖ = ε / 2 := by field_simp
+        rw [h2]
+        linarith
+      · exact p22_affineSpan_lineqC (subset_affineSpan ℝ u hc) hbu_aff hbu_aff lam
+    have hd : b + lam • (b - c) ∈ s := husub hdm
+    have hbseg : b ∈ openSegment ℝ c (b + lam • (b - c)) := by
+      have hpos : 0 < 1 + lam := by linarith
+      have hnn : (1 + lam : ℝ) ≠ 0 := by linarith
+      have hkey : (1 + lam) • b = lam • c + (b + lam • (b - c)) := by module
+      have hkey2 : b + lam • (b - c) = (1 + lam) • b - lam • c := by
+        rw [hkey]
+        module
+      refine ⟨lam / (1 + lam), 1 / (1 + lam), div_pos hlam0 hpos,
+        div_pos zero_lt_one hpos, by field_simp; ring, ?_⟩
+      rw [hkey2, smul_sub, one_div, div_eq_inv_mul, smul_smul, smul_smul,
+        mul_comm (1 + lam)⁻¹ lam, inv_mul_cancel₀ hnn, one_smul, add_sub_cancel]
+    exact (hface.2.2 c _ b (husub hc) hd hbt hbseg).1
+
+/-- ℂ twin of Polytope.`faceOf_eq` (:416). -/
+private theorem p22_faceOfC_eq {s t u : Set ℂ} (ht : faceOfC t s) (hu : faceOfC u s)
+    (h : ¬Disjoint (intrinsicInterior ℝ t) (intrinsicInterior ℝ u)) : t = u := by
+  refine subset_antisymm ?_ ?_
+  · refine p22_subset_of_faceOfC hu ht.1 fun hd => h ?_
+    exact (Disjoint.mono_left intrinsicInterior_subset hd).symm
+  · refine p22_subset_of_faceOfC ht hu.1 fun hd => h ?_
+    exact Disjoint.mono_left intrinsicInterior_subset hd
+
+/-- ℂ twin of Polytope.`faceOf_disjoint_rinterior` (:427). -/
+private theorem p22_faceOfC_disjoint_rinterior {f s : Set ℂ} (hf : faceOfC f s)
+    (hne : f ≠ s) : Disjoint f (intrinsicInterior ℝ s) := by
+  by_contra h
+  exact hne (subset_antisymm hf.1 (p22_subset_of_faceOfC hf (subset_refl s) h))
+
+/-- ℂ twin of Polytope.`faceOf_eq_affineInter` (:461). -/
+private theorem p22_faceOfC_eq_affineInter {t s : Set ℂ} (_hs : Convex ℝ s)
+    (hface : faceOfC t s) : (affineSpan ℝ t : Set ℂ) ∩ s ⊆ t := by
+  by_cases hte : t = ∅
+  · rintro (y ⟨hyaff, -⟩)
+    rw [hte, AffineSubspace.span_empty, AffineSubspace.bot_coe] at hyaff
+    exact absurd hyaff (by simp)
+  · obtain ⟨x0, hx0⟩ := nonempty_iff_ne_empty.2 hte
+    obtain ⟨x0i, hx0i⟩ := Set.Nonempty.intrinsicInterior hface.2.1 ⟨x0, hx0⟩
+    obtain ⟨hx0mem, ε, hε0, hball⟩ := p22_mem_rint_iffC.1 hx0i
+    have hx0aff : x0i ∈ (affineSpan ℝ t : Set ℂ) := subset_affineSpan ℝ t hx0mem
+    rintro y ⟨hyaff, hys⟩
+    by_cases hey : y = x0i
+    · rw [hey]
+      exact hx0mem
+    ·
+      have hnpos : 0 < ‖y - x0i‖ := norm_pos_iff.2 (sub_ne_zero.2 hey)
+      have h3p : 0 < 3 * ‖y - x0i‖ := by linarith
+      set α := min (ε / (3 * ‖y - x0i‖)) (1 / 2) with hαdef
+      have hα0 : 0 < α := lt_min (div_pos hε0 h3p) one_half_pos
+      have hαhalf : α ≤ 1 / 2 := min_le_right _ _
+      have hαe : α * ‖y - x0i‖ ≤ ε / 3 := by
+        rw [le_div_iff₀ (by linarith : (0:ℝ) < 3)]
+        have h1 : α ≤ ε / (3 * ‖y - x0i‖) := min_le_left _ _
+        rw [le_div_iff₀ h3p] at h1
+        nlinarith
+      have hx0' : x0i + α • (y - x0i) ∈ t := by
+        refine hball (Set.mem_inter ?_ (p22_affineSpan_lineqC hx0aff hx0aff hyaff α))
+        refine Metric.mem_ball.2 ?_
+        rw [dist_eq_norm, add_sub_cancel_left, norm_smul, Real.norm_eq_abs,
+          abs_of_pos hα0]
+        calc α * ‖y - x0i‖ ≤ ε / 3 := hαe
+          _ < ε := by linarith
+      have hx0's : x0i + α • (y - x0i) ∈ s := hface.1 hx0'
+      have hx0'a : x0i + α • (y - x0i) ∈ (affineSpan ℝ t : Set ℂ) :=
+        p22_affineSpan_lineqC hx0aff hx0aff hyaff α
+      have hdmid : x0i + α • (y - x0i) + α • (y - (x0i + α • (y - x0i))) ∈ t := by
+        refine hball (Set.mem_inter ?_ (p22_affineSpan_lineqC hx0'a hx0'a hyaff α))
+        refine Metric.mem_ball.2 ?_
+        have hdd : (x0i + α • (y - x0i) + α • (y - (x0i + α • (y - x0i)))) - x0i
+            = ((2 - α) * α) • (y - x0i) := by
+          have h1 : (x0i + α • (y - x0i) + α • (y - (x0i + α • (y - x0i)))) - x0i
+              = α • (y - x0i) + α • ((y - x0i) - α • (y - x0i)) := by
+            module
+          rw [h1, smul_sub, ← smul_smul]
+          module
+        rw [dist_eq_norm, hdd, norm_smul, Real.norm_eq_abs, abs_mul,
+          abs_of_nonneg (by linarith : (0:ℝ) ≤ 2 - α),
+          abs_of_nonneg (by linarith : (0:ℝ) ≤ α)]
+        have hnn : (0:ℝ) ≤ 2 - α := by linarith
+        have h5 : (2 - α) * (α * ‖y - x0i‖) ≤ (2 - α) * (ε / 3) :=
+          mul_le_mul_of_nonneg_left hαe hnn
+        have h6 : (2 - α) * (ε / 3) ≤ 2 * (ε / 3) :=
+          mul_le_mul_of_nonneg_right (show (2:ℝ) - α ≤ 2 by linarith)
+            (by linarith)
+        linarith
+      have hdmidseg : x0i + α • (y - x0i) + α • (y - (x0i + α • (y - x0i)))
+          ∈ openSegment ℝ (x0i + α • (y - x0i)) y := by
+        refine ⟨1 - α, α, by linarith, by linarith, by ring, ?_⟩
+        module
+      exact (hface.2.2 _ _ _ hx0's hys hdmid hdmidseg).2
+
+/-- A planar halfspace is convex. -/
+private theorem p22_convex_halfspaceC (a : ℂ) (b : ℝ) :
+    Convex ℝ {x : ℂ | dot2 a x ≤ b} := by
+  intro u hu v hv c d hc hd hcd
+  simp only [Set.mem_setOf_eq] at hu hv ⊢
+  rw [dot2_add_right, dot2_smul_right, dot2_smul_right]
+  have h1 : c * dot2 a u ≤ c * b := mul_le_mul_of_nonneg_left hu hc
+  have h2 : d * dot2 a v ≤ d * b := mul_le_mul_of_nonneg_left hv hd
+  have h3 : c * b + d * b = b := by rw [← add_mul, hcd, one_mul]
+  linarith
+
+/-- A planar polyhedron is convex (doc §2.2 scratch twin). -/
+private theorem p22_polyhedronC_convex {P : Set ℂ} (hP : polyhedronC P) : Convex ℝ P := by
+  obtain ⟨F, hFfin, hs, hFprop⟩ := hP
+  refine hs ▸ convex_sInter ?_
+  intro G hG
+  obtain ⟨a, b, -, hGeq⟩ := hFprop G hG
+  rw [hGeq]
+  exact p22_convex_halfspaceC a b
+
+/-- HOL `POLYHEDRON_INTER_AFFINE_MINIMAL` ℂ 版 (Polytope:831)：polyhedronC 容许
+*冗余无关*的有限半空间表示（真子族必严格放大 `affineSpan ∩ ⋂₀`）。 -/
+private theorem p22_polyhedronC_minrep {P : Set ℂ} (hP : polyhedronC P) :
+    ∃ F : Set (Set ℂ), F.Finite ∧
+      P = (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F ∧
+      (∀ h ∈ F, ∃ a : ℂ, ∃ b : ℝ, a ≠ 0 ∧ h = {x : ℂ | dot2 a x ≤ b}) ∧
+      ∀ F', F' ⊂ F → P ⊂ (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F' := by
+  classical
+  obtain ⟨F0, hF0, hs0, hF0prop⟩ := hP
+  have hs0' : P = (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F0 := by
+    refine Set.ext fun x => ?_
+    constructor
+    · intro hx
+      exact ⟨subset_affineSpan ℝ P hx, hs0 ▸ hx⟩
+    · rintro ⟨-, hx⟩
+      exact hs0 ▸ hx
+  set Swit : Set (Set (Set ℂ)) := {G : Set (Set ℂ) | G.Finite ∧
+    P = (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ G ∧
+    (∀ h ∈ G, ∃ a : ℂ, ∃ b : ℝ, a ≠ 0 ∧ h = {x : ℂ | dot2 a x ≤ b})} with hSwit
+  have hWne : Swit.Nonempty := ⟨F0, by
+    rw [hSwit, Set.mem_setOf_eq]
+    exact ⟨hF0, hs0', hF0prop⟩⟩
+  set F := Function.argminOn (f := Set.ncard) Swit hWne with hFdef
+  have hFmem : F ∈ Swit := Function.argminOn_mem (f := Set.ncard) Swit hWne
+  obtain ⟨hF, hs, hFprop⟩ : (F.Finite ∧ P = (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F ∧
+      ∀ h ∈ F, ∃ a : ℂ, ∃ b : ℝ, a ≠ 0 ∧ h = {x : ℂ | dot2 a x ≤ b}) := hFmem
+  refine ⟨F, hF, hs, hFprop, ?_⟩
+  intro F' hsub
+  have hsubFF : F' ⊆ F := hsub.1
+  have hF'fin : F'.Finite := hF.subset hsubFF
+  have hF'prop : ∀ h ∈ F', ∃ a : ℂ, ∃ b : ℝ, a ≠ 0 ∧ h = {x : ℂ | dot2 a x ≤ b} :=
+    fun h hk => hFprop h (hsubFF hk)
+  have hssub : P ⊆ (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F' := by
+    refine Set.subset_inter (subset_affineSpan ℝ P) ?_
+    calc P = (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F := hs
+      _ ⊆ ⋂₀ F := Set.inter_subset_right
+      _ ⊆ ⋂₀ F' := Set.sInter_subset_sInter hsubFF
+  refine Set.ssubset_iff_subset_ne.2 ⟨hssub, fun heq => ?_⟩
+  have hF'mem : F' ∈ Swit := by
+    rw [hSwit, Set.mem_setOf_eq]
+    exact ⟨hF'fin, heq, hF'prop⟩
+  have hlt : F'.ncard < F.ncard := Set.ncard_lt_ncard hsub hF
+  exact Function.not_lt_argminOn (f := Set.ncard) Swit hF'mem hlt
+
+/-- ℂ twin of Polytope.`convex_of_minrep` (:1105). -/
+private theorem p22_convex_of_minrep {P : Set ℂ} {F : Set (Set ℂ)}
+    (hF : F.Finite)
+    (hs : P = (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, ∃ a : ℂ, ∃ b : ℝ, a ≠ 0 ∧ h = {x : ℂ | dot2 a x ≤ b}) :
+    Convex ℝ P := by
+  have haff : Convex ℝ (affineSpan ℝ P : Set ℂ) := (affineSpan ℝ P).convex
+  have hinter : Convex ℝ (⋂₀ F) := convex_sInter (fun G hG => by
+    obtain ⟨a, b, -, hGeq⟩ := hFprop G hG
+    rw [hGeq]
+    exact p22_convex_halfspaceC a b)
+  refine hs ▸ Convex.inter haff hinter
+
+/-- Continuity of the planar linear functional `x ↦ dot2 a x`. -/
+private theorem p22_continuous_dot2C (a : ℂ) : Continuous (dot2 a) := by
+  have h : dot2 a = fun x => a.re * x.re + a.im * x.im := by
+    funext x
+    exact dot2_expand a x
+  rw [h]
+  refine Continuous.add ?_ ?_
+  · exact Continuous.mul continuous_const Complex.continuous_re
+  · exact Continuous.mul continuous_const Complex.continuous_im
+
+/-- HOL `RELATIVE_INTERIOR_POLYHEDRON_EXPLICIT` ℂ 版 (Polytope:874)。 -/
+private theorem p22_rint_minrepC {P : Set ℂ} {F : Set (Set ℂ)}
+    (a : Set ℂ → ℂ) (b : Set ℂ → ℝ)
+    (hF : F.Finite)
+    (hs : P = (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : ℂ | dot2 (a h) x ≤ b h})
+    (hmin : ∀ F', F' ⊂ F → P ⊂ (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F') :
+    intrinsicInterior ℝ P = {x : ℂ | x ∈ P ∧ ∀ h ∈ F, dot2 (a h) x < b h} := by
+  classical
+  haveI : Finite F := hF
+  ext x
+  constructor
+  · intro hx
+    obtain ⟨hxmem, ε, hε0, hball⟩ := p22_mem_rint_iffC.1 hx
+    refine ⟨hxmem, fun h hk => ?_⟩
+    obtain ⟨haH, hh⟩ := hFprop h hk
+    have hxInter : x ∈ ⋂₀ F := by rw [hs] at hxmem; exact hxmem.2
+    have hxh : x ∈ h := Set.mem_sInter.1 hxInter h hk
+    rw [hh, Set.mem_setOf_eq] at hxh
+    have hxA : dot2 (a h) x ≤ b h := hxh
+    by_contra hcon
+    push_neg at hcon
+    have heq : dot2 (a h) x = b h := le_antisymm hxA hcon
+    have hsdiff : F \ {h} ⊂ F := by
+      refine Set.ssubset_iff_subset_ne.2 ⟨Set.sdiff_subset, fun hEq => ?_⟩
+      have hmem' : h ∈ F \ {h} := by rw [hEq]; exact hk
+      exact absurd hmem'.2 (by simp)
+    obtain ⟨-, z, hzT, hzs⟩ := Set.ssubset_iff_exists.1 (hmin _ hsdiff)
+    have hzaff : z ∈ (affineSpan ℝ P : Set ℂ) := hzT.1
+    have hall : ∀ i ∈ F \ {h}, z ∈ i := fun i hi =>
+      Set.mem_sInter.1 hzT.2 i hi
+    have hzF : z ∉ ⋂₀ F := by
+      rw [hs] at hzs
+      exact fun hz' => hzs ⟨hzaff, hz'⟩
+    obtain ⟨i, hiF, hzi⟩ : ∃ i ∈ F, z ∉ i := by
+      by_contra hcon'
+      push_neg at hcon'
+      exact hzF (Set.mem_sInter.2 hcon')
+    have hih : i = h := by
+      by_contra hne
+      exact hzi (hall i ⟨hiF, by simp [hne]⟩)
+    have hAz : b h < dot2 (a h) z := by
+      have hkz : z ∉ h := by rw [← hih]; exact hzi
+      rw [hh] at hkz
+      simpa only [Set.mem_setOf_eq, not_le] using hkz
+    set t : ℝ := min (1 / 2) (ε / (2 * (‖z - x‖ + 1))) with htdef
+    have ht0 : 0 < t := lt_min (by norm_num : (0:ℝ) < 1 / 2)
+      (div_pos hε0 (by positivity))
+    have ht1 : t < 1 := lt_of_le_of_lt (min_le_left _ _) (by norm_num : (1 / 2 : ℝ) < 1)
+    have hwball : ‖x + t • (z - x) - x‖ < ε := by
+      have hstep : x + t • (z - x) - x = t • (z - x) := by rw [smul_sub]; module
+      rw [hstep, norm_smul, Real.norm_eq_abs, abs_of_pos ht0]
+      have h1 : t ≤ ε / (2 * (‖z - x‖ + 1)) := min_le_right _ _
+      have hK0 : 0 ≤ ε / (2 * (‖z - x‖ + 1)) := div_nonneg hε0.le (by positivity)
+      have h2 : ‖z - x‖ ≤ ‖z - x‖ + 1 := by linarith [norm_nonneg (z - x)]
+      calc t * ‖z - x‖ ≤ (ε / (2 * (‖z - x‖ + 1))) * ‖z - x‖ :=
+          mul_le_mul_of_nonneg_right h1 (norm_nonneg (z - x))
+        _ ≤ (ε / (2 * (‖z - x‖ + 1))) * (‖z - x‖ + 1) :=
+          mul_le_mul_of_nonneg_left h2 hK0
+        _ = ε / 2 := by field_simp
+      linarith
+    have hxaff : x ∈ (affineSpan ℝ P : Set ℂ) := subset_affineSpan ℝ P hxmem
+    have hwdist : dist (x + t • (z - x)) x < ε := by
+      rw [dist_eq_norm]
+      exact hwball
+    have hw : x + t • (z - x) ∈ P :=
+      hball ⟨Metric.mem_ball.2 hwdist, p22_affineSpan_lineqC hxaff hxaff hzaff t⟩
+    have hws : x + t • (z - x) ∈ ⋂₀ F := by rw [hs] at hw; exact hw.2
+    have hwh : x + t • (z - x) ∈ h := Set.mem_sInter.1 hws h hk
+    rw [hh, Set.mem_setOf_eq] at hwh
+    have hwA : dot2 (a h) (x + t • (z - x)) ≤ b h := hwh
+    have hAw : dot2 (a h) (x + t • (z - x))
+        = dot2 (a h) x + t * (dot2 (a h) z - dot2 (a h) x) := by
+      have e1 : dot2 (a h) (x + t • (z - x))
+          = dot2 (a h) x + dot2 (a h) (t • (z - x)) := dot2_add_right _ _ _
+      have e2 : dot2 (a h) (t • (z - x)) = t * (dot2 (a h) (z - x)) :=
+        dot2_smul_right _ _ _
+      have e3 : dot2 (a h) (z - x) = dot2 (a h) z - dot2 (a h) x := dot2_sub_r _ _ _
+      rw [e1, e2, e3]
+    rw [heq] at hAw
+    rw [hAw] at hwA
+    have hpos' : 0 < t * (dot2 (a h) z - b h) := mul_pos ht0 (by linarith)
+    linarith
+  · rintro ⟨hxmem, hstrict⟩
+    set O : Set ℂ := ⋂ h : {y // y ∈ F}, {y : ℂ | dot2 (a h) y < b h} with hO
+    have hOopen : IsOpen O := by
+      rw [hO]
+      exact isOpen_iInter_of_finite fun h => isOpen_lt
+        (p22_continuous_dot2C (a h.1)) continuous_const
+    have hxO : x ∈ O := by
+      rw [hO, Set.mem_iInter]
+      exact fun h => hstrict h.1 h.2
+    obtain ⟨δ, hδ0, hballδ⟩ := Metric.isOpen_iff.1 hOopen x hxO
+    refine p22_mem_rint_iffC.2 ⟨hxmem, δ, hδ0, fun y hy => ?_⟩
+    rw [hs]
+    refine ⟨hy.2, fun i hi => ?_⟩
+    obtain ⟨-, hhi⟩ := hFprop i hi
+    have hyO : y ∈ O := hballδ (Metric.mem_ball.2 hy.1)
+    rw [hO] at hyO
+    have hyi : dot2 (a i) y < b i := Set.mem_iInter.1 hyO ⟨i, hi⟩
+    rw [hhi]
+    exact Set.mem_setOf.2 (le_of_lt hyi)
+
+/-- ℂ twin of Polytope.`faceOf_supporting_eq` (:983): a supporting hyperplane
+cuts a face. -/
+private theorem p22_faceOfC_supporting_eq {s : Set ℂ} (hs : Convex ℝ s) (a : ℂ) (c : ℝ)
+    (hsub : ∀ x ∈ s, dot2 a x ≤ c) :
+    faceOfC (s ∩ {x : ℂ | dot2 a x = c}) s := by
+  refine ⟨Set.inter_subset_left, ?_, ?_⟩
+  · intro p hp q hq u v hu1 hv1 hab
+    simp only [Set.mem_inter_iff, Set.mem_setOf_eq] at hp hq ⊢
+    obtain ⟨hps, hpP⟩ := hp
+    obtain ⟨hqs, hqP⟩ := hq
+    refine ⟨hs hps hqs hu1 hv1 hab, ?_⟩
+    have e1 : dot2 a (u • p + v • q) = u * (dot2 a p) + v * (dot2 a q) := by
+      rw [dot2_add_right, dot2_smul_right, dot2_smul_right]
+    rw [e1, hpP, hqP]
+    have hcc : (u + v) * c = c := by rw [hab, one_mul]
+    linarith [mul_add u v c, mul_comm v c, hcc]
+  · rintro p q x hps hqs hx hseg
+    simp only [Set.mem_inter_iff, Set.mem_setOf_eq] at hx ⊢
+    obtain ⟨hxs, hxe⟩ := hx
+    obtain ⟨u, v, hu0, hv0, huv, hxuv⟩ := hseg
+    have e1 : dot2 a (u • p + v • q) = u * (dot2 a p) + v * (dot2 a q) := by
+      rw [dot2_add_right, dot2_smul_right, dot2_smul_right]
+    have hpx : dot2 a x = u * (dot2 a p) + v * (dot2 a q) := by
+      rw [← hxuv, e1]
+    rw [hxe] at hpx
+    have key : u * (c - dot2 a p) + v * (c - dot2 a q) = 0 := by
+      have h2 : u * (c - dot2 a p) + v * (c - dot2 a q)
+          = (u + v) * c - (u * (dot2 a p) + v * (dot2 a q)) := by ring
+      rw [h2, huv, one_mul, ← hpx]
+      ring
+    have hpp : dot2 a p = c := by
+      by_contra hne
+      have hgt : dot2 a p < c := lt_of_le_of_ne (hsub p hps) hne
+      have hppos : 0 < u * (c - dot2 a p) := mul_pos hu0 (sub_pos.2 hgt)
+      have hqpos : 0 ≤ v * (c - dot2 a q) :=
+        mul_nonneg hv0.le (sub_nonneg.2 (hsub q hqs))
+      linarith
+    have hqq : dot2 a q = c := by
+      by_contra hne
+      have hgt : dot2 a q < c := lt_of_le_of_ne (hsub q hqs) hne
+      have hppos : 0 < v * (c - dot2 a q) := mul_pos hv0 (sub_pos.2 hgt)
+      have hqpos : 0 ≤ u * (c - dot2 a p) :=
+        mul_nonneg hu0.le (sub_nonneg.2 (hsub p hps))
+      linarith
+    exact ⟨⟨hps, hpp⟩, ⟨hqs, hqq⟩⟩
+
+/-- ℂ twin of Polytope.`FACE_OF_POLYHEDRON_SLICE` (:1030). -/
+private theorem p22_faceOfC_slice {P : Set ℂ} {F : Set (Set ℂ)}
+    (a : Set ℂ → ℂ) (b : Set ℂ → ℝ) (hF : F.Finite)
+    (hs : P = (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : ℂ | dot2 (a h) x ≤ b h})
+    (hmin : ∀ F', F' ⊂ F → P ⊂ (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F')
+    (h : Set ℂ) (hk : h ∈ F) :
+    faceOfC (P ∩ {x : ℂ | dot2 (a h) x = b h}) P := by
+  obtain ⟨-, hh⟩ := hFprop h hk
+  have hsup : ∀ x ∈ P, dot2 (a h) x ≤ b h := by
+    intro x hx
+    have hxInter : x ∈ ⋂₀ F := by rw [hs] at hx; exact hx.2
+    have hxh : x ∈ h := Set.mem_sInter.1 hxInter h hk
+    rw [hh, Set.mem_setOf_eq] at hxh
+    exact hxh
+  exact p22_faceOfC_supporting_eq
+    (p22_convex_of_minrep hF hs (fun k hk => ⟨a k, b k, (hFprop k hk).1, (hFprop k hk).2⟩))
+    (a h) (b h) hsup
+
+/-- ℂ twin of Polytope.`slice_sides` (:1115). -/
+private theorem p22_slice_sides {P : Set ℂ} {F : Set (Set ℂ)}
+    (a : Set ℂ → ℂ) (b : Set ℂ → ℝ) (hF : F.Finite)
+    (hs : P = (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : ℂ | dot2 (a h) x ≤ b h})
+    (hmin : ∀ F', F' ⊂ F → P ⊂ (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F')
+    (hsne : P ≠ ∅) (h : Set ℂ) (hh : h ∈ F) :
+    ∃ x z : ℂ, x ∈ P ∧ (∀ i ∈ F, dot2 (a i) x < b i) ∧
+      z ∈ (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ (F \ {h}) ∧
+      dot2 (a h) x < b h ∧ b h < dot2 (a h) z := by
+  have hconv := p22_convex_of_minrep hF hs
+    (fun k hk => ⟨a k, b k, (hFprop k hk).1, (hFprop k hk).2⟩)
+  have hrie : intrinsicInterior ℝ P = {x : ℂ | x ∈ P ∧ ∀ i ∈ F, dot2 (a i) x < b i} :=
+    p22_rint_minrepC a b hF hs hFprop hmin
+  obtain ⟨x, hx⟩ := Set.Nonempty.intrinsicInterior hconv (nonempty_iff_ne_empty.2 hsne)
+  have hx' : x ∈ P ∧ ∀ i ∈ F, dot2 (a i) x < b i := by rw [hrie] at hx; exact hx
+  have hsdiff : F \ {h} ⊂ F := by
+    refine Set.ssubset_iff_subset_ne.2 ⟨Set.sdiff_subset, fun hEq => ?_⟩
+    have hmem' : h ∈ F \ {h} := by rw [hEq]; exact hh
+    exact absurd hmem'.2 (by simp)
+  obtain ⟨-, z, hzT, hzs⟩ := Set.ssubset_iff_exists.1 (hmin _ hsdiff)
+  have hzaff : z ∈ (affineSpan ℝ P : Set ℂ) := hzT.1
+  have hzF : z ∉ ⋂₀ F := by
+    rw [hs] at hzs
+    exact fun hz' => hzs ⟨hzaff, hz'⟩
+  obtain ⟨i, hiF, hzi⟩ : ∃ i ∈ F, z ∉ i := by
+    by_contra hcon'
+    push_neg at hcon'
+    exact hzF (Set.mem_sInter.2 hcon')
+  have hih : i = h := by
+    by_contra hne
+    exact hzi (Set.mem_sInter.1 hzT.2 i ⟨hiF, by simp [hne]⟩)
+  have hzA : b h < dot2 (a h) z := by
+    have hkz : z ∉ h := by rw [← hih]; exact hzi
+    rw [(hFprop h hh).2] at hkz
+    simpa only [Set.mem_setOf_eq, not_le] using hkz
+  exact ⟨x, z, hx'.1, hx'.2, ⟨hzaff, hzT.2⟩, hx'.2 h hh, hzA⟩
+
+/-- ℂ twin of Polytope.`slice_cross` (:1152). -/
+private theorem p22_slice_cross {P : Set ℂ} {F : Set (Set ℂ)}
+    (a : Set ℂ → ℂ) (b : Set ℂ → ℝ) (hF : F.Finite)
+    (hs : P = (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : ℂ | dot2 (a h) x ≤ b h})
+    (hmin : ∀ F', F' ⊂ F → P ⊂ (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F')
+    (hsne : P ≠ ∅) (h : Set ℂ) (hh : h ∈ F) :
+    ∃ x : ℂ, x ∈ P ∧ dot2 (a h) x = b h ∧
+      (∀ i ∈ F, i ≠ h → dot2 (a i) x < b i) ∧ x ∈ (affineSpan ℝ P : Set ℂ) := by
+  obtain ⟨p, z, hps, hpstrict, hzs, hpl, hzg⟩ :=
+    p22_slice_sides a b hF hs hFprop hmin hsne h hh
+  have hpaff : p ∈ (affineSpan ℝ P : Set ℂ) := subset_affineSpan ℝ P hps
+  have hzaff : z ∈ (affineSpan ℝ P : Set ℂ) := hzs.1
+  obtain ⟨t, htp, ht1, htden⟩ : ∃ t : ℝ, 0 < t ∧ t < 1 ∧
+      t * (dot2 (a h) z - dot2 (a h) p) = b h - dot2 (a h) p :=
+    ⟨(b h - dot2 (a h) p) / (dot2 (a h) z - dot2 (a h) p),
+      div_pos (by linarith) (by linarith),
+      (div_lt_one (by linarith)).2 (by linarith), div_mul_cancel₀ _ (by linarith)⟩
+  have hqdot : ∀ w : ℂ, dot2 w (p + t • (z - p)) = dot2 w p + t * (dot2 w z - dot2 w p) := by
+    intro w
+    have e1 : dot2 w (p + t • (z - p)) = dot2 w p + dot2 w (t • (z - p)) :=
+      dot2_add_right _ _ _
+    have e2 : dot2 w (t • (z - p)) = t * (dot2 w (z - p)) := dot2_smul_right _ _ _
+    have e3 : dot2 w (z - p) = dot2 w z - dot2 w p := dot2_sub_r _ _ _
+    rw [e1, e2, e3]
+  refine ⟨p + t • (z - p), ?_, ?_, ?_, ?_⟩
+  · rw [hs]
+    refine ⟨p22_affineSpan_lineqC hpaff hpaff hzaff t, fun i hi => ?_⟩
+    rw [(hFprop i hi).2, Set.mem_setOf_eq, hqdot (a i)]
+    by_cases hih : i = h
+    · rw [← hih] at htden
+      linarith
+    · have hiz : dot2 (a i) z ≤ b i := by
+        have hzi : z ∈ i :=
+          Set.mem_sInter.1 hzs.2 i ((Set.mem_sdiff i).2 ⟨hi, hih⟩)
+        rw [(hFprop i hi).2] at hzi
+        exact hzi
+      have hstep : t * (dot2 (a i) z - dot2 (a i) p) ≤ t * (b i - dot2 (a i) p) :=
+        mul_le_mul_of_nonneg_left (by linarith) htp.le
+      have hkey : t * (b i - dot2 (a i) p) < b i - dot2 (a i) p := by
+        refine lt_of_lt_of_le
+          (mul_lt_mul_of_pos_right ht1 (by linarith [hpstrict i hi])) ?_
+        rw [one_mul]
+      linarith
+  · rw [hqdot (a h)]
+    linarith
+  · intro i hi hih
+    rw [hqdot (a i)]
+    have hiz : dot2 (a i) z ≤ b i := by
+      have hzi : z ∈ i := Set.mem_sInter.1 hzs.2 i ((Set.mem_sdiff i).2 ⟨hi, hih⟩)
+      rw [(hFprop i hi).2] at hzi
+      exact hzi
+    have hstep : t * (dot2 (a i) z - dot2 (a i) p) ≤ t * (b i - dot2 (a i) p) :=
+      mul_le_mul_of_nonneg_left (by linarith) htp.le
+    have hkey : t * (b i - dot2 (a i) p) < b i - dot2 (a i) p := by
+      refine lt_of_lt_of_le
+        (mul_lt_mul_of_pos_right ht1 (by linarith [hpstrict i hi])) ?_
+      rw [one_mul]
+    linarith
+  · exact p22_affineSpan_lineqC hpaff hpaff hzaff t
+
+/-- ℂ twin of Polytope.`vectorSpan_slice` (:1212): the span of a nonempty
+hyperplane slice of `P` is the direction of `P` killed by the slice normal. -/
+private theorem p22_vectorSpan_slice {P : Set ℂ} {F : Set (Set ℂ)}
+    (a : Set ℂ → ℂ) (b : Set ℂ → ℝ) (hF : F.Finite)
+    (hs : P = (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : ℂ | dot2 (a h) x ≤ b h})
+    (hmin : ∀ F', F' ⊂ F → P ⊂ (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F')
+    (hsne : P ≠ ∅) (h : Set ℂ) (hh : h ∈ F) :
+    vectorSpan ℝ (P ∩ {x : ℂ | dot2 (a h) x = b h})
+      = vectorSpan ℝ P ⊓ LinearMap.ker (dotRightC (a h)) := by
+  classical
+  obtain ⟨x0, hx0s, hx0eq, hx0st, hx0aff⟩ := p22_slice_cross a b hF hs hFprop hmin hsne h hh
+  haveI : Finite F := hF
+  have hlin : ∀ u x y : ℂ, ∀ r : ℝ, dot2 u (x + r • y) = dot2 u x + r * (dot2 u y) := by
+    intro u x y r
+    have e1 : dot2 u (x + r • y) = dot2 u x + dot2 u (r • y) := dot2_add_right _ _ _
+    have e2 : dot2 u (r • y) = r * dot2 u y := dot2_smul_right _ _ _
+    rw [e1, e2]
+  refine le_antisymm (le_inf (vectorSpan_mono ℝ Set.inter_subset_left) ?_) ?_
+  · rw [vectorSpan_def, Submodule.span_le]
+    rintro w ⟨p, hp, q, hq, rfl⟩
+    simp only [Set.mem_inter_iff, Set.mem_setOf_eq] at hp hq
+    change (p -ᵥ q) ∈ ((LinearMap.ker (dotRightC (a h)) : Submodule ℝ ℂ) : Set ℂ)
+    rw [vsub_eq_sub, SetLike.mem_coe, LinearMap.mem_ker, LinearMap.map_sub,
+      dotRightC_apply, dotRightC_apply]
+    have hp' : dot2 (a h) p = b h := hp.2
+    have hq' : dot2 (a h) q = b h := hq.2
+    rw [hp', hq', sub_self]
+  · intro w hw
+    obtain ⟨hwW, hwK⟩ := Submodule.mem_inf.1 hw
+    have hwK' : dotRightC (a h) w = 0 := LinearMap.mem_ker.1 hwK
+    have hwK'' : dot2 (a h) w = 0 := hwK'
+    have hwdir : w ∈ (affineSpan ℝ P).direction := by
+      rw [direction_affineSpan]
+      exact hwW
+    set O : Set ℂ := ⋂ i : {y // y ∈ F}, {y : ℂ | dot2 (a i) y < b i ∨ i.1 = h} with hO
+    have hOopen : IsOpen O := by
+      rw [hO]
+      refine isOpen_iInter_of_finite fun i => ?_
+      by_cases hih : i.1 = h
+      · have hset : {y : ℂ | dot2 (a i) y < b i ∨ i.1 = h} = (univ : Set ℂ) := by
+          ext y
+          simp [hih]
+        rw [hset]
+        exact isOpen_univ
+      · have hset : {y : ℂ | dot2 (a i) y < b i ∨ i.1 = h}
+            = {y : ℂ | dot2 (a i) y < b i} := by
+          ext y
+          simp [hih]
+        rw [hset]
+        exact isOpen_lt (p22_continuous_dot2C (a i.1)) continuous_const
+    have hx0O : x0 ∈ O := by
+      rw [hO, Set.mem_iInter]
+      intro i
+      by_cases hih : i.1 = h
+      · right
+        exact hih
+      · left
+        exact hx0st i.1 i.2 hih
+    obtain ⟨ε, hε0, hballO⟩ := Metric.isOpen_iff.1 hOopen x0 hx0O
+    have htex : ∃ t : ℝ, 0 < t ∧ ‖x0 + t • w - x0‖ < ε := by
+      refine ⟨ε / (2 * (‖w‖ + 1)), div_pos hε0 (by positivity), ?_⟩
+      have hstep : x0 + (ε / (2 * (‖w‖ + 1))) • w - x0
+          = (ε / (2 * (‖w‖ + 1))) • w := by rw [add_sub_cancel_left]
+      rw [hstep, norm_smul, Real.norm_eq_abs, abs_of_pos (div_pos hε0 (by positivity))]
+      calc (ε / (2 * (‖w‖ + 1))) * ‖w‖
+          ≤ (ε / (2 * (‖w‖ + 1))) * (‖w‖ + 1) :=
+            mul_le_mul_of_nonneg_left (by linarith [norm_nonneg w])
+              (div_nonneg hε0.le (by positivity))
+        _ = ε / 2 := by field_simp
+      linarith
+    obtain ⟨t, ht0, htball⟩ := htex
+    have htbdist : dist (x0 + t • w) x0 < ε := by
+      rw [dist_eq_norm]
+      exact htball
+    have hqA : x0 + t • w ∈ (affineSpan ℝ P : Set ℂ) := by
+      have hv : (t • w) +ᵥ x0 = x0 + t • w := by rw [vadd_eq_add]; module
+      rw [← hv]
+      exact AffineSubspace.vadd_mem_of_mem_direction (Submodule.smul_mem _ t hwdir) hx0aff
+    have hqH : dot2 (a h) (x0 + t • w) = b h := by
+      rw [hlin, hx0eq, hwK'', mul_zero, add_zero]
+    have h1 : x0 + t • w ∈ ⋂₀ F := by
+      refine Set.mem_sInter.2 fun i hi => ?_
+      rw [(hFprop i hi).2, Set.mem_setOf_eq]
+      by_cases hih : i = h
+      · have hie : dot2 (a i) (x0 + t • w) = b i := by rw [hih]; exact hqH
+        rw [hie]
+      · have hqO : x0 + t • w ∈ O := hballO (Metric.mem_ball.2 htbdist)
+        rw [hO] at hqO
+        rcases Set.mem_iInter.1 hqO ⟨i, hi⟩ with h1' | h2
+        · exact le_of_lt h1'
+        · exact absurd h2 hih
+    have hqs : x0 + t • w ∈ P := by
+      rw [hs]
+      exact ⟨hqA, h1⟩
+    have hmemH : x0 + t • w ∈ {y : ℂ | dot2 (a h) y = b h} := by
+      rw [Set.mem_setOf_eq]
+      exact hqH
+    have hmemH0 : x0 ∈ {y : ℂ | dot2 (a h) y = b h} := by
+      rw [Set.mem_setOf_eq]
+      exact hx0eq
+    have hgen : (x0 + t • w - x0 : ℂ) ∈ vectorSpan ℝ (P ∩ {y : ℂ | dot2 (a h) y = b h}) :=
+      Submodule.subset_span (Set.mem_vsub.2 ⟨x0 + t • w, ⟨hqs, hmemH⟩,
+        x0, ⟨hx0s, hmemH0⟩, by rw [vsub_eq_sub]⟩)
+    have hscale : w = (1 / t) • (x0 + t • w - x0) := by
+      have hstep : x0 + t • w - x0 = t • w := by rw [add_sub_cancel_left]
+      rw [hstep, smul_smul, one_div, inv_mul_cancel₀ ht0.ne', one_smul]
+    rw [hscale]
+    exact Submodule.smul_mem _ _ hgen
+
+/-- ℂ twin of Polytope.`affDim_slice` (:1318): the slice has codimension one. -/
+private theorem p22_affDim_slice {P : Set ℂ} {F : Set (Set ℂ)}
+    (a : Set ℂ → ℂ) (b : Set ℂ → ℝ) (hF : F.Finite)
+    (hs : P = (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : ℂ | dot2 (a h) x ≤ b h})
+    (hmin : ∀ F', F' ⊂ F → P ⊂ (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F')
+    (hsne : P ≠ ∅) (h : Set ℂ) (hh : h ∈ F) :
+    affDimC (P ∩ {x : ℂ | dot2 (a h) x = b h}) = affDimC P - 1 := by
+  classical
+  obtain ⟨x0, hx0s, hx0eq, -, -⟩ := p22_slice_cross a b hF hs hFprop hmin hsne h hh
+  have hune : (P ∩ {x : ℂ | dot2 (a h) x = b h}).Nonempty :=
+    ⟨x0, ⟨hx0s, by rw [Set.mem_setOf_eq]; exact hx0eq⟩⟩
+  obtain ⟨p, z, hps, -, hzs, hpl, hzg⟩ := p22_slice_sides a b hF hs hFprop hmin hsne h hh
+  have hpaff : p ∈ (affineSpan ℝ P : Set ℂ) := subset_affineSpan ℝ P hps
+  have hzaff : z ∈ (affineSpan ℝ P : Set ℂ) := hzs.1
+  have hwW : z - p ∈ vectorSpan ℝ P := by
+    rw [← direction_affineSpan]
+    exact AffineSubspace.vsub_mem_direction hzaff hpaff
+  have hwne : dotRightC (a h) (z - p) ≠ 0 := by
+    show dot2 (a h) (z - p) ≠ 0
+    rw [dot2_sub_r]
+    linarith
+  have hzp : (z - p : ℂ) ≠ 0 := fun hc => hwne (by rw [hc]; simp)
+  have hveq : vectorSpan ℝ (P ∩ {x : ℂ | dot2 (a h) x = b h})
+      = vectorSpan ℝ P ⊓ LinearMap.ker (dotRightC (a h)) :=
+    p22_vectorSpan_slice a b hF hs hFprop hmin hsne h hh
+  have hsup : ((vectorSpan ℝ P ⊓ LinearMap.ker (dotRightC (a h))) ⊔
+      (ℝ ∙ (z - p) : Submodule ℝ ℂ)) = vectorSpan ℝ P := by
+    refine le_antisymm (sup_le inf_le_left ?_) ?_
+    · exact Submodule.span_le.2 (Set.singleton_subset_iff.2 hwW)
+    · intro v hv
+      have hd0 : dotRightC (a h) (z - p) ≠ 0 := hwne
+      refine Submodule.mem_sup.2 ⟨v - (dotRightC (a h) v / dotRightC (a h) (z - p)) • (z - p),
+        ?_, (dotRightC (a h) v / dotRightC (a h) (z - p)) • (z - p), ?_, ?_⟩
+      · refine ⟨Submodule.sub_mem (p := vectorSpan ℝ P) hv
+            (Submodule.smul_mem _ _ hwW), ?_⟩
+        rw [SetLike.mem_coe, LinearMap.mem_ker, LinearMap.map_sub, LinearMap.map_smul,
+          smul_eq_mul]
+        field_simp
+        ring
+      · exact Submodule.mem_span_singleton.2 ⟨_, rfl⟩
+      · rw [sub_add_cancel]
+  have hinf : ((vectorSpan ℝ P ⊓ LinearMap.ker (dotRightC (a h))) ⊓
+      (ℝ ∙ (z - p) : Submodule ℝ ℂ)) = ⊥ := by
+    rw [Submodule.eq_bot_iff]
+    intro v hv
+    obtain ⟨hvW, hvS⟩ := Submodule.mem_inf.1 hv
+    obtain ⟨-, hvK⟩ := Submodule.mem_inf.1 hvW
+    obtain ⟨c, hc⟩ := Submodule.mem_span_singleton.1 hvS
+    have hker : dotRightC (a h) v = 0 := hvK
+    rw [← hc, LinearMap.map_smul, smul_eq_mul] at hker
+    have hcv : c = 0 := by
+      rcases mul_eq_zero.1 hker with h0 | h0
+      · exact h0
+      · exact absurd h0 hwne
+    rw [← hc, hcv, zero_smul]
+  have h1 := Submodule.finrank_sup_add_finrank_inf_eq
+    (vectorSpan ℝ P ⊓ LinearMap.ker (dotRightC (a h))) (ℝ ∙ (z - p))
+  rw [hsup, hinf, finrank_bot, finrank_span_singleton hzp] at h1
+  simp only [affDimC, if_neg (nonempty_iff_ne_empty.1 hune), if_neg hsne]
+  rw [hveq]
+  have e1 : (↑(Module.finrank ℝ (vectorSpan ℝ P)) : ℤ)
+      = ↑(Module.finrank ℝ
+          (vectorSpan ℝ P ⊓ LinearMap.ker (dotRightC (a h)) : Submodule ℝ ℂ)) + 1 := by
+    omega
+  omega
+
+/-! ## #13 facetOfCPolyhedronExplicit (ℂ port of Polytope.lean:1390,
+HOL polytope.ml:4718 FACET_OF_POLYHEDRON_EXPLICIT) -/
+
+/-- HOL `FACET_OF_POLYHEDRON_EXPLICIT` ℂ 版：对给定冗余无关半空间表示的
+polyhedron，facets 恰为单个约束切出的超平面截口。 -/
+theorem facetOfCPolyhedronExplicit {P : Set ℂ} {F : Set (Set ℂ)}
+    (a : Set ℂ → ℂ) (b : Set ℂ → ℝ) (hF : F.Finite)
+    (hs : P = (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F)
+    (hFprop : ∀ h ∈ F, a h ≠ 0 ∧ h = {x : ℂ | dot2 (a h) x ≤ b h})
+    (hmin : ∀ F', F' ⊂ F → P ⊂ (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F')
+    (c : Set ℂ) :
+    facetOfC c P ↔ ∃ h, h ∈ F ∧ c = P ∩ {x : ℂ | dot2 (a h) x = b h} := by
+  classical
+  have hrie : intrinsicInterior ℝ P = {y : ℂ | y ∈ P ∧ ∀ i ∈ F, dot2 (a i) y < b i} :=
+    p22_rint_minrepC a b hF hs hFprop hmin
+  constructor
+  · rintro ⟨hface, hcne, hcdim⟩
+    by_cases hse : P = ∅
+    · rw [hse] at hface
+      exact absurd (Set.eq_empty_of_subset_empty hface.1) hcne
+    · have hconv : Convex ℝ P := p22_convex_of_minrep hF hs
+        (fun h hk => ⟨a h, b h, (hFprop h hk).1, (hFprop h hk).2⟩)
+      have hcs : c ≠ P := by
+        intro heq
+        rw [heq] at hcdim
+        have hpos : (0 : ℤ) ≤ affDimC P := by
+          simp only [affDimC, if_neg hse]
+          have hh : (0 : ℤ) ≤ (Module.finrank ℝ (vectorSpan ℝ P) : ℤ) := by
+            exact_mod_cast Nat.zero_le _
+          exact hh
+        linarith
+      -- a point of the relative interior of the facet
+      obtain ⟨x, hx⟩ := Set.Nonempty.intrinsicInterior hface.2.1
+        (nonempty_iff_ne_empty.2 hcne)
+      have hxc : x ∈ c := (p22_mem_rint_iffC.1 hx).1
+      have hxinS : x ∈ P := hface.1 hxc
+      have hxnot : x ∉ intrinsicInterior ℝ P :=
+        Set.disjoint_left.1 (p22_faceOfC_disjoint_rinterior hface hcs) hxc
+      -- the tight constraint `j` of the minimal representation at `x`
+      obtain ⟨j, hjF, hj⟩ : ∃ i ∈ F, ¬(dot2 (a i) x < b i) := by
+        by_contra hcon
+        push_neg at hcon
+        exact hxnot (by rw [hrie]; exact ⟨hxinS, hcon⟩)
+      have hxmem2 : x ∈ ⋂₀ F := by
+        rw [hs] at hxinS
+        exact hxinS.2
+      have hxj : dot2 (a j) x ≤ b j := by
+        have h0 : x ∈ j := Set.mem_sInter.1 hxmem2 j hjF
+        rw [(hFprop j hjF).2] at h0
+        exact h0
+      have hjeq : dot2 (a j) x = b j := le_antisymm hxj (not_lt.1 hj)
+      have hxu : x ∈ P ∩ {y : ℂ | dot2 (a j) y = b j} :=
+        ⟨hxinS, by rw [Set.mem_setOf_eq]; exact hjeq⟩
+      -- the facet is contained in the slice (both faces, rint's meet at x)
+      have hcu : c ⊆ P ∩ {y : ℂ | dot2 (a j) y = b j} :=
+        p22_subset_of_faceOfC (p22_faceOfC_slice a b hF hs hFprop hmin j hjF)
+          hface.1 (Set.not_disjoint_iff.2 ⟨x, hxu, hx⟩)
+      -- dimension descent
+      have hun : (P ∩ {y : ℂ | dot2 (a j) y = b j}).Nonempty := ⟨x, hxu⟩
+      have hc' : c.Nonempty := nonempty_iff_ne_empty.2 hcne
+      have hcdim' := p22_affDim_slice a b hF hs hFprop hmin hse j hjF
+      have hfeq2 : Module.finrank ℝ (vectorSpan ℝ c)
+          = Module.finrank ℝ (vectorSpan ℝ (P ∩ {y : ℂ | dot2 (a j) y = b j})) := by
+        have h1 : affDimC c = affDimC (P ∩ {y : ℂ | dot2 (a j) y = b j}) := by
+          rw [hcdim, hcdim']
+        simp only [affDimC, if_neg (nonempty_iff_ne_empty.1 hc'),
+          if_neg (nonempty_iff_ne_empty.1 hun)] at h1
+        exact_mod_cast h1
+      have hveq : vectorSpan ℝ c = vectorSpan ℝ (P ∩ {y : ℂ | dot2 (a j) y = b j}) :=
+        Submodule.eq_of_le_of_finrank_le (vectorSpan_mono ℝ hcu)
+          (le_of_eq hfeq2.symm)
+      have heq2 : (affineSpan ℝ c : AffineSubspace ℝ ℂ)
+          = affineSpan ℝ (P ∩ {y : ℂ | dot2 (a j) y = b j}) := by
+        refine AffineSubspace.eq_of_direction_eq_of_nonempty_of_le ?_
+          ⟨x, subset_affineSpan ℝ _ hxc⟩ (affineSpan_mono ℝ hcu)
+        rw [direction_affineSpan, direction_affineSpan, hveq]
+      -- the slice is contained in the facet, since their spans agree
+      refine ⟨j, hjF, subset_antisymm hcu ?_⟩
+      intro y hy
+      refine p22_faceOfC_eq_affineInter hconv hface ⟨?_, hy.1⟩
+      rw [heq2]
+      exact subset_affineSpan ℝ _ hy
+  · rintro ⟨j, hjF, rfl⟩
+    by_cases hse : P = ∅
+    · -- an irredundant representation of `P = ∅` uses `F = ∅`
+      have hFe : F = ∅ := by
+        by_contra hFne
+        have hne0 : (∅ : Set (Set ℂ)) ⊂ F :=
+          Set.ssubset_iff_subset_ne.2 ⟨Set.empty_subset _, Ne.symm hFne⟩
+        obtain ⟨-, w, hwT, -⟩ := Set.ssubset_iff_exists.1 (hmin _ hne0)
+        rw [hse, AffineSubspace.span_empty, AffineSubspace.bot_coe] at hwT
+        exact absurd hwT.1 (by simp)
+      exact absurd hjF (by rw [hFe]; simp)
+    · obtain ⟨x0, hx0s, hx0eq, -, -⟩ := p22_slice_cross a b hF hs hFprop hmin hse j hjF
+      refine ⟨p22_faceOfC_slice a b hF hs hFprop hmin j hjF, ?_, ?_⟩
+      · exact nonempty_iff_ne_empty.1
+          ⟨x0, ⟨hx0s, by rw [Set.mem_setOf_eq]; exact hx0eq⟩⟩
+      · exact p22_affDim_slice a b hF hs hFprop hmin hse j hjF
+
+/-- Skolemized minimal halfspace representation of a planar polyhedron
+(ℂ twin of Polytope.`minrep_skolem` :1736). -/
+private theorem p22_minrep_skolem {P : Set ℂ} (hP : polyhedronC P) :
+    ∃ F : Set (Set ℂ), F.Finite ∧ P = (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F ∧
+      ∃ a : Set ℂ → ℂ, ∃ b : Set ℂ → ℝ,
+        (∀ h ∈ F, a h ≠ 0 ∧ h = {x : ℂ | dot2 (a h) x ≤ b h}) ∧
+        ∀ F', F' ⊂ F → P ⊂ (affineSpan ℝ P : Set ℂ) ∩ ⋂₀ F' := by
+  classical
+  obtain ⟨F, hF, hs, hFprop, hmin⟩ := p22_polyhedronC_minrep hP
+  have hFprop' : ∀ h : Set ℂ, ∃ a : ℂ, ∃ b : ℝ, h ∈ F →
+      a ≠ 0 ∧ h = {x : ℂ | dot2 a x ≤ b} := by
+    intro h
+    by_cases hh : h ∈ F
+    · obtain ⟨a, b, ha, hb⟩ := hFprop h hh
+      exact ⟨a, b, fun _ => ⟨ha, hb⟩⟩
+    · refine ⟨0, 0, fun hF0 => absurd hF0 hh⟩
+  choose a b ha hb using hFprop'
+  exact ⟨F, hF, hs, a, b, fun h hh => ⟨ha h hh, hb h hh⟩, hmin⟩
+
+/-- HOL `FACET_OF_POLYHEDRON` ℂ 版 (Polytope:1753)：polyhedron 的每个 facet
+由单个支撑半空间切出。 -/
+theorem p22_facetOfCPolyhedron {P : Set ℂ} (hP : polyhedronC P) {c : Set ℂ}
+    (hcf : facetOfC c P) :
+    ∃ a : ℂ, ∃ b : ℝ, a ≠ 0 ∧ P ⊆ {x : ℂ | dot2 a x ≤ b} ∧
+      c = P ∩ {x : ℂ | dot2 a x = b} := by
+  obtain ⟨F, hF, hs, a, b, hFprop, hmin⟩ := p22_minrep_skolem hP
+  obtain ⟨j, hjF, rfl⟩ := (facetOfCPolyhedronExplicit a b hF hs hFprop hmin c).1 hcf
+  refine ⟨a j, b j, (hFprop j hjF).1, ?_, rfl⟩
+  intro x hx
+  rw [hs] at hx
+  have h0 : x ∈ j := Set.mem_sInter.1 hx.2 j hjF
+  rw [(hFprop j hjF).2] at h0
+  exact h0
+
+/-- HOL `POLYHEDRON_MEMBER` (counting_spheres.hl:346). Filled (EXPLICIT kit
+wave): the ball makes `P` full-dimensional; the minimal representation then
+satisfies `P = ⋂₀ F`; per constraint the slice is a `facetOfC`
+(`facetOfCPolyhedronExplicit`), whose two hyperplane descriptions
+(`affine_facet_hyper` twice) transfer the hypothesis via `DOT_EQ_IMP_INEQ`. -/
 theorem POLYHEDRON_MEMBER (P : Set ℂ) (r : ℝ) (x : ℂ) (hP : polyhedronC P)
     (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
     (h : ∀ c : Set ℂ, facetOfC c P → dot2 (facet_rep_a P c) x ≤ facet_rep_b P c) :
     x ∈ P := by
-  -- NEEDS: counting_spheres.hl:346. Blocked on `FACET_OF_POLYHEDRONC_EXPLICIT`
-  -- (planar-encoding-fix.md §2.3, ~500 lines: port of the minrep/slice machinery
-  -- in Polytope.lean:1390-1790 to ℂ). Route: `CONTAINS_BALL_AFFINE_HULL_C`
-  -- (landed above) gives `affineSpan ℝ P = univ`; `POLYHEDRON_INTER_AFFINE_MINIMAL`
-  -- writes `P = ↑(affineSpan ℝ P) ∩ ⋂₀ F`; per `h ∈ F` the slice `P ∩ {dot2 a = b}`
-  -- is a facetOfC via the EXPLICIT kit + `affine_facet_hyper` (landed above) +
-  -- `facet_rep_def`; then `h`-hypothesis + `CONTAINS_BALL_AFFINE_HULL_C` close.
-  sorry
+  classical
+  -- the ball around 0 makes the polyhedron full-dimensional
+  have haff := CONTAINS_BALL_AFFINE_HULL_C (s := P) (x := (0 : ℂ)) (r := r) hr
+    (fun p hp => hrad p (by simpa [dist_zero_right] using hp))
+  obtain ⟨F, hFfin, hs, a, b, hFprop, hmin⟩ := p22_minrep_skolem hP
+  have hs' : P = ⋂₀ F := by rw [hs, haff, Set.univ_inter]
+  rw [hs']
+  refine Set.mem_sInter.2 fun h₀ h₀F => ?_
+  obtain ⟨ha₀, h₀eq⟩ := hFprop h₀ h₀F
+  -- the hyperplane slice of constraint h₀ is a facet (EXPLICIT kit)
+  set c₀ : Set ℂ := P ∩ {y : ℂ | dot2 (a h₀) y = b h₀} with hc₀def
+  have hc₀fac : facetOfC c₀ P :=
+    (facetOfCPolyhedronExplicit a b hFfin hs hFprop hmin c₀).2 ⟨h₀, h₀F, hc₀def.symm⟩
+  obtain ⟨hn1, hbball, hsub, hceq⟩ := facet_rep_props P c₀ hP hc₀fac
+  have hbpos : 0 < facet_rep_b P c₀ :=
+    lt_of_lt_of_le hr (hbball r hr hrad)
+  have hanz : facet_rep_a P c₀ ≠ 0 := by
+    intro h0
+    rw [h0] at hn1
+    exact absurd hn1 (by simp)
+  -- both hyperplanes are the affine hull of the slice
+  have hA1 : (affineSpan ℝ c₀ : Set ℂ) = {y : ℂ | dot2 (a h₀) y = b h₀} :=
+    affine_facet_hyper P c₀ (a h₀) (b h₀) hc₀fac hP haff ha₀ hc₀def.symm
+  have hA2 : (affineSpan ℝ c₀ : Set ℂ)
+      = {y : ℂ | dot2 (facet_rep_a P c₀) y = facet_rep_b P c₀} :=
+    affine_facet_hyper P c₀ (facet_rep_a P c₀) (facet_rep_b P c₀) hc₀fac hP haff
+      hanz hceq.symm
+  -- hence the two hyperplanes coincide as point sets
+  have hiff : ∀ y : ℂ, dot2 (a h₀) y = b h₀ ↔
+      dot2 (facet_rep_a P c₀) y = facet_rep_b P c₀ := by
+    intro y
+    refine ⟨fun hm => ?_, fun hm => ?_⟩
+    · have m1 : y ∈ (affineSpan ℝ c₀ : Set ℂ) := by
+        rw [hA1]
+        exact Set.mem_setOf.2 hm
+      have m2 : y ∈ {y : ℂ | dot2 (facet_rep_a P c₀) y = facet_rep_b P c₀} := by
+        rw [← hA2]
+        exact m1
+      exact Set.mem_setOf.1 m2
+    · have m1 : y ∈ (affineSpan ℝ c₀ : Set ℂ) := by
+        rw [hA2]
+        exact Set.mem_setOf.2 hm
+      have m2 : y ∈ {y : ℂ | dot2 (a h₀) y = b h₀} := by
+        rw [← hA1]
+        exact m1
+      exact Set.mem_setOf.1 m2
+  -- `0 ∈ P` pins `b h₀` from below
+  have h0P : (0 : ℂ) ∈ P := hrad 0 (by simpa using hr)
+  have h0in : (0 : ℂ) ∈ h₀ := by
+    have h0P' : (0 : ℂ) ∈ ⋂₀ F := by rw [← hs']; exact h0P
+    exact Set.mem_sInter.1 h0P' h₀ h₀F
+  have hb₀ : 0 ≤ b h₀ := by
+    have h0m : dot2 (a h₀) (0 : ℂ) ≤ b h₀ := by
+      have hk := h0in
+      rw [h₀eq, Set.mem_setOf_eq] at hk
+      exact hk
+    have h00 : dot2 (a h₀) (0 : ℂ) = 0 := by rw [dot2_expand]; norm_num
+    rw [h00] at h0m
+    exact h0m
+  have hfin := DOT_EQ_IMP_INEQ (a h₀) (facet_rep_a P c₀) (b h₀)
+    (facet_rep_b P c₀) hiff hb₀ hbpos
+  show x ∈ h₀
+  rw [h₀eq, Set.mem_setOf_eq]
+  exact (hfin x).mpr (h c₀ hc₀fac)
 
-/-- HOL `facet_rep_in_poly` (counting_spheres.hl:435). GIANT. -/
+/-- HOL `facet_rep_in_poly` (counting_spheres.hl:435). Filled (EXPLICIT kit
+wave): `POLYHEDRON_MEMBER` + `facet_rep_refl` (`c' = c` arm) +
+`facet_rep_in_facet` (`c' ≠ c` arm). -/
 theorem facet_rep_in_poly (P c : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     (hc : facetOfC c P) (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) :
     (r • facet_rep_a P c : ℂ) ∈ P := by
-  sorry -- DEF-FIX: refill per counting_spheres.hl:435 §3a
+  refine POLYHEDRON_MEMBER P r (r • facet_rep_a P c) hP hr hrad fun c' hc' => ?_
+  by_cases heq : c' = c
+  · rw [heq]
+    exact facet_rep_refl P c r hP hc hr hrad
+  · by_contra hcon
+    push_neg at hcon
+    exact heq (facet_rep_in_facet P c' c r hP hc' hc hr hrad (le_of_lt hcon))
 
-/-- HOL `facet_arg_lt_pi` (counting_spheres.hl:453). GIANT. -/
+/-- HOL `facet_arg_lt_pi` (counting_spheres.hl:453). Filled (EXPLICIT kit wave):
+by contradiction, `p := (A+1) • (I * facet_rep_a P c)` lies in `P` by
+`POLYHEDRON_MEMBER` — every facet normal satisfies `Im (â'/â) ≤ 0` under the
+negated goal — yet `‖p‖ = A+1` exceeds the boundedness radius `A`. -/
 theorem facet_arg_lt_pi (P c : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     (hb : Bornology.IsBounded P) (hc : facetOfC c P) (hr : 0 < r)
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) :
     ∃ c' : Set ℂ, facetOfC c' P ∧
       0 < Complex.arg (facet_rep_a P c' / facet_rep_a P c) ∧
       Complex.arg (facet_rep_a P c' / facet_rep_a P c) < Real.pi := by
-  sorry -- DEF-FIX: refill per counting_spheres.hl:453 §3a
+  classical
+  -- the boundedness radius
+  obtain ⟨A, hA⟩ := (Metric.isBounded_iff_subset_closedBall (0 : ℂ)).1 hb
+  have hAle : ∀ x ∈ P, ‖x‖ ≤ A := by
+    intro x hx
+    have h1 := hA hx
+    rwa [Metric.mem_closedBall, dist_zero_right] at h1
+  -- the reference facet normal
+  have hpr := facet_rep_props P c hP hc
+  have hn1 : ‖facet_rep_a P c‖ = 1 := hpr.1
+  have hac : facet_rep_a P c ≠ 0 := by
+    intro h0
+    rw [h0] at hn1
+    exact absurd hn1 (by simp)
+  by_contra hcon
+  have h0P : (0 : ℂ) ∈ P := hrad 0 (by simpa using hr)
+  have hAnonneg : 0 ≤ A := le_trans (norm_nonneg 0) (hAle 0 h0P)
+  set p : ℂ := (A + 1) • (Complex.I * facet_rep_a P c) with hpdef
+  have hpnorm : ‖p‖ = A + 1 := by
+    rw [hpdef, norm_smul, Real.norm_eq_abs, abs_of_pos (by linarith : (0 : ℝ) < A + 1),
+      norm_mul, Complex.norm_I, hn1]
+    norm_num
+  -- `p ∈ P` via POLYHEDRON_MEMBER
+  have hpP : p ∈ P := by
+    refine POLYHEDRON_MEMBER P r p hP hr hrad fun c' hc' => ?_
+    have hpr' := facet_rep_props P c' hP hc'
+    have hb'pos : 0 < facet_rep_b P c' := lt_of_lt_of_le hr (hpr'.2.1 r hr hrad)
+    -- `Im (â'/â) ≤ 0` from the negated goal
+    have him : (facet_rep_a P c' / facet_rep_a P c).im ≤ 0 := by
+      by_contra himpos
+      push_neg at himpos
+      have hzne : facet_rep_a P c' / facet_rep_a P c ≠ 0 := by
+        have hac' : facet_rep_a P c' ≠ 0 := by
+          intro h0
+          rw [h0] at hpr'
+          exact absurd hpr'.1 (by simp)
+        exact div_ne_zero hac' hac
+      have hargpos : 0 < Complex.arg (facet_rep_a P c' / facet_rep_a P c) := by
+        have h1 : 0 ≤ Complex.arg (facet_rep_a P c' / facet_rep_a P c) :=
+          Complex.arg_nonneg_iff.2 (le_of_lt himpos)
+        have h2 : Complex.arg (facet_rep_a P c' / facet_rep_a P c) ≠ 0 := by
+          intro h0
+          have hzig := (Complex.arg_eq_zero_iff.1 h0).2
+          exact absurd hzig (ne_of_gt himpos)
+        exact lt_of_le_of_ne h1 (Ne.symm h2)
+      have harglt : Complex.arg (facet_rep_a P c' / facet_rep_a P c) < Real.pi :=
+        (Complex.arg_lt_pi_iff).2 (Or.inr (ne_of_gt himpos))
+      exact hcon ⟨c', hc', hargpos, harglt⟩
+    -- `dot2 â' p = (A+1) * Im (â'/â)`
+    have hkey : dot2 (facet_rep_a P c') p
+        = (A + 1) * (facet_rep_a P c' / facet_rep_a P c).im := by
+      have hsq : Complex.normSq (facet_rep_a P c) = 1 := by
+        rw [← Complex.sq_norm, hn1]
+        norm_num
+      rw [hpdef, p22_dot2_smul_right, dot2_expand, Complex.I_mul_re, Complex.I_mul_im,
+        div_eq_inv_mul, Complex.mul_im, Complex.inv_re,
+        Complex.inv_im, hsq]
+      field_simp
+      ring
+    have hkey' : dot2 (facet_rep_a P c') p ≤ 0 := by
+      rw [hkey]
+      exact mul_nonpos_of_nonneg_of_nonpos (show 0 ≤ A + 1 by linarith) him
+    exact le_trans hkey' (le_of_lt hb'pos)
+  -- contradiction with the boundedness radius
+  have hfinal : ‖p‖ ≤ A := hAle p hpP
+  rw [hpnorm] at hfinal
+  linarith
 
 /-- HOL `eus_cos` (counting_spheres.hl:510). -/
 theorem eus_cos (phi psi : ℝ) (h1 : 0 ≤ psi) (h2 : psi ≤ phi)
@@ -864,13 +1853,22 @@ theorem insert_v (P c c' : Set ℂ) (r : ℝ) (v : ℂ) (psi : ℝ)
     (h6 : ‖v‖ = r / Real.cos psi) : v ∈ P := by
   sorry -- DEF-FIX: refill per counting_spheres.hl:529 §3a
 
-/-- HOL `facet_rep_a_uniq` (counting_spheres.hl:640). GIANT. -/
+/-- HOL `facet_rep_a_uniq` (counting_spheres.hl:640). Filled: the positive-real
+multiple hypothesis forces `‖facet_rep_a P c1‖ = s` and `s = 1`, so the normal
+directions coincide and `facet_rep_uniq_c` identifies the facets. -/
 theorem facet_rep_a_uniq (P c1 c2 : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     (h1 : facetOfC c1 P) (h2 : facetOfC c2 P) (hr : 0 < r)
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
     (h : ∃ s : ℝ, 0 < s ∧ facet_rep_a P c1 = s • facet_rep_a P c2) :
     c1 = c2 := by
-  sorry -- DEF-FIX: refill per counting_spheres.hl:640 §3a
+  obtain ⟨s, hs0, hseq⟩ := h
+  have hn1 : ‖facet_rep_a P c1‖ = 1 := (facet_rep_props P c1 hP h1).1
+  have hn2 : ‖facet_rep_a P c2‖ = 1 := (facet_rep_props P c2 hP h2).1
+  have hns : ‖facet_rep_a P c1‖ = s := by
+    rw [hseq, norm_smul, Real.norm_eq_abs, abs_of_pos hs0, hn2, mul_one]
+  have hs1 : s = 1 := by rw [← hns, hn1]
+  rw [hs1, one_smul] at hseq
+  exact facet_rep_uniq_c P c1 c2 hP h1 h2 hseq
 
 /-- HOL `poly_sort_fn` (counting_spheres.hl:678, the chapter's single
 `new_definition`). -/
@@ -878,12 +1876,49 @@ def poly_sort_fn (P : Set ℂ) (u : ℂ) (c1 c2 : Set ℂ) : Prop :=
   facetOfC c1 P ∧ facetOfC c2 P ∧
     Complex.arg (facet_rep_a P c1 / u) ≤ Complex.arg (facet_rep_a P c2 / u)
 
-/-- HOL `poly_sort_antisym` (counting_spheres.hl:682). GIANT. -/
+/-- HOL `poly_sort_antisym` (counting_spheres.hl:682). Filled: the two
+`poly_sort_fn` hypotheses give equal arguments; `Complex.arg_eq_arg_iff` makes
+the normals positive-real multiples and `facet_rep_a_uniq` concludes. -/
 theorem poly_sort_antisym (P : Set ℂ) (u : ℂ) (c1 c2 : Set ℂ) (r : ℝ)
     (hP : polyhedronC P) (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
     (h12 : poly_sort_fn P u c1 c2) (h21 : poly_sort_fn P u c2 c1) (hu : u ≠ 0) :
     c1 = c2 := by
-  sorry -- DEF-FIX: refill per counting_spheres.hl:682 §3a
+  have harg : Complex.arg (facet_rep_a P c1 / u) = Complex.arg (facet_rep_a P c2 / u) :=
+    le_antisymm h12.2.2 h21.2.2
+  have ha1 : facet_rep_a P c1 ≠ 0 := by
+    intro h0
+    have h1 : ‖facet_rep_a P c1‖ = 1 := (facet_rep_props P c1 hP h12.1).1
+    rw [h0] at h1
+    exact absurd h1 (by simp)
+  have ha2 : facet_rep_a P c2 ≠ 0 := by
+    intro h0
+    have h1 : ‖facet_rep_a P c2‖ = 1 := (facet_rep_props P c2 hP h21.1).1
+    rw [h0] at h1
+    exact absurd h1 (by simp)
+  have hd1 : facet_rep_a P c1 / u ≠ 0 := div_ne_zero ha1 hu
+  have hd2 : facet_rep_a P c2 / u ≠ 0 := div_ne_zero ha2 hu
+  -- equal arguments ⟹ positive-real multiple of each other
+  have hkey : ((‖facet_rep_a P c2 / u‖ / ‖facet_rep_a P c1 / u‖ : ℝ) : ℂ)
+        * (facet_rep_a P c1 / u) = facet_rep_a P c2 / u := by
+      exact_mod_cast (Complex.arg_eq_arg_iff hd1 hd2).mp harg
+  have hpos : 0 < ‖facet_rep_a P c2 / u‖ / ‖facet_rep_a P c1 / u‖ :=
+    div_pos (norm_pos_iff.mpr hd2) (norm_pos_iff.mpr hd1)
+  -- cancel `/ u`
+  have hcancel : ((‖facet_rep_a P c2 / u‖ / ‖facet_rep_a P c1 / u‖ : ℝ) : ℂ)
+      * facet_rep_a P c1 = facet_rep_a P c2 := by
+    calc ((‖facet_rep_a P c2 / u‖ / ‖facet_rep_a P c1 / u‖ : ℝ) : ℂ)
+        * facet_rep_a P c1 = ((‖facet_rep_a P c2 / u‖ / ‖facet_rep_a P c1 / u‖ : ℝ) : ℂ)
+            * (facet_rep_a P c1 / u) * u := by
+          rw [mul_assoc, div_mul_cancel₀ _ hu]
+      _ = (facet_rep_a P c2 / u) * u := by rw [hkey]
+      _ = facet_rep_a P c2 := by
+          rw [div_mul_cancel₀ _ hu]
+  refine facet_rep_a_uniq P c1 c2 r hP h12.1 h21.1 hr hrad
+    ⟨(‖facet_rep_a P c2 / u‖ / ‖facet_rep_a P c1 / u‖)⁻¹, inv_pos.mpr hpos, ?_⟩
+  have htne : ((‖facet_rep_a P c2 / u‖ / ‖facet_rep_a P c1 / u‖ : ℝ) : ℂ) ≠ 0 :=
+    by exact_mod_cast ne_of_gt hpos
+  rw [Complex.real_smul, Complex.ofReal_inv, eq_inv_mul_iff_mul_eq₀ htne]
+  exact hcancel
 
 /-- HOL `poly_sort_trans` (counting_spheres.hl:715). GIANT. -/
 theorem poly_sort_trans (P : Set ℂ) (u : ℂ) (c1 c2 c3 : Set ℂ) (r : ℝ)
@@ -891,16 +1926,142 @@ theorem poly_sort_trans (P : Set ℂ) (u : ℂ) (c1 c2 c3 : Set ℂ) (r : ℝ)
     (hu : u ≠ 0) (h12 : poly_sort_fn P u c1 c2) (h23 : poly_sort_fn P u c2 c3) :
     poly_sort_fn P u c1 c3 := ⟨h12.1, h23.2.1, le_trans h12.2.2 h23.2.2⟩
 
-/-- HOL `POLY_SORT_LEMMA` (counting_spheres.hl:729). GIANT. -/
+/-! ## TOPOLOGICAL_SORT ℂ 版：有限集上单射实值函数的严格递增枚举 -/
+
+/-- HOL `TOPOLOGICAL_SORT` 直译（counting_spheres.hl 的 `poly_sort` 族共用）：
+有限集上的单射实值函数可排成严格递增枚举。 -/
+private theorem p22_enum_sorted {α : Type*} [Nonempty α] {g : α → ℝ} {s : Set α}
+    {n : ℕ} (hs : s.Finite) (hcard : s.ncard = n)
+    (hinj : Set.InjOn g s) :
+    ∃ f : ℕ → α, s = f '' Set.Icc 1 n ∧
+      ∀ j k : ℕ, j ∈ Set.Icc 1 n → k ∈ Set.Icc 1 n → j < k → g (f j) < g (f k) := by
+  classical
+  haveI : Finite ↥s := hs
+  haveI : Fintype ↥s := Fintype.ofFinite _
+  set t : Finset ↥s := Finset.univ with htdef
+  set vals : Finset ℝ := t.image (fun c : ↥s => g c) with hvdef
+  have hvcard : vals.card = n := by
+    rw [hvdef, htdef, Finset.card_image_of_injOn]
+    · rw [Finset.card_univ, Set.fintypeCard_eq_ncard]
+      exact hcard
+    · intro a ha b hab habc
+      exact Subtype.ext (hinj a.prop b.prop habc)
+  set e := vals.orderIsoOfFin hvcard with hedef
+  have hidx : ∀ k : ℕ, 1 ≤ k → k ≤ n → k - 1 < n := by
+    intro k hk1 hkn
+    omega
+  set w : ℕ → ℝ := fun k =>
+    if h : 1 ≤ k ∧ k ≤ n then ((e ⟨k - 1, hidx k h.1 h.2⟩ : ↥vals) : ℝ) else 0 with hwdef
+  set f : ℕ → α := fun k =>
+    if h : ∃ c ∈ s, g c = w k then Classical.choose h else Classical.arbitrary α with hfdef
+  have hwval : ∀ k : ℕ, 1 ≤ k → k ≤ n → w k ∈ (vals : Set ℝ) := by
+    intro k hk1 hkn
+    simp only [hwdef]
+    rw [dif_pos ⟨hk1, hkn⟩]
+    exact (e ⟨k - 1, hidx k hk1 hkn⟩).2
+  have hwlt : ∀ j k : ℕ, 1 ≤ j → j < k → k ≤ n → w j < w k := by
+    intro j k hj1 hjk hkn
+    simp only [hwdef]
+    rw [dif_pos ⟨hj1, le_trans (le_of_lt hjk) hkn⟩, dif_pos ⟨hj1.trans (le_of_lt hjk), hkn⟩]
+    have hilt : (⟨j - 1, hidx j hj1 (le_trans (le_of_lt hjk) hkn)⟩ : Fin n)
+        < (⟨k - 1, hidx k (hj1.trans (le_of_lt hjk)) hkn⟩ : Fin n) := by
+      have hidxj : ((⟨j - 1, hidx j hj1 (le_trans (le_of_lt hjk) hkn)⟩ : Fin n) : ℕ) = j - 1 := rfl
+      have hidxk : ((⟨k - 1, hidx k (hj1.trans (le_of_lt hjk)) hkn⟩ : Fin n) : ℕ) = k - 1 := rfl
+      rw [Fin.lt_def, hidxj, hidxk]
+      exact Nat.sub_lt_sub_right hj1 hjk
+    have hle : ((e ⟨j - 1, hidx j hj1 (le_trans (le_of_lt hjk) hkn)⟩ : ↥vals) : ℝ)
+        ≤ ((e ⟨k - 1, hidx k (hj1.trans (le_of_lt hjk)) hkn⟩ : ↥vals) : ℝ) := by
+      rw [Subtype.coe_le_coe]
+      exact e.map_rel_iff.2 hilt.le
+    have hne : ((e ⟨j - 1, hidx j hj1 (le_trans (le_of_lt hjk) hkn)⟩ : ↥vals) : ℝ)
+        ≠ ((e ⟨k - 1, hidx k (hj1.trans (le_of_lt hjk)) hkn⟩ : ↥vals) : ℝ) := by
+      intro hcc
+      have hfe : (⟨j - 1, hidx j hj1 (le_trans (le_of_lt hjk) hkn)⟩ : Fin n)
+          = (⟨k - 1, hidx k (hj1.trans (le_of_lt hjk)) hkn⟩ : Fin n) :=
+        e.injective (Subtype.coe_injective hcc)
+      have hveq : j - 1 = k - 1 := congrArg Fin.val hfe
+      have hlt2 : j - 1 < k - 1 := Nat.sub_lt_sub_right hj1 hjk
+      rw [hveq] at hlt2
+      exact lt_irrefl _ hlt2
+    exact lt_of_le_of_ne hle hne
+  have hfval : ∀ k : ℕ, 1 ≤ k → k ≤ n → g (f k) = w k ∧ f k ∈ s := by
+    intro k hk1 hkn
+    have hwmem := hwval k hk1 hkn
+    have hv : w k ∈ g '' s := by
+      rw [hvdef, htdef, SetLike.mem_coe, Finset.mem_image] at hwmem
+      obtain ⟨a, -, hga⟩ := hwmem
+      exact ⟨a, a.prop, hga⟩
+    obtain ⟨c, hcs, hgc⟩ := hv
+    have hex : ∃ c ∈ s, g c = w k := ⟨c, hcs, hgc⟩
+    simp only [hfdef]
+    rw [dif_pos hex]
+    exact ⟨(Classical.choose_spec hex).2, (Classical.choose_spec hex).1⟩
+  refine ⟨f, ?_, ?_⟩
+  · refine Set.ext fun c => ?_
+    constructor
+    · intro hcs
+      have hgmem : g c ∈ (vals : Set ℝ) := by
+        rw [hvdef, htdef, SetLike.mem_coe, Finset.mem_image]
+        exact ⟨⟨c, hcs⟩, Finset.mem_univ _, rfl⟩
+      set i := e.symm ⟨g c, hgmem⟩ with hidef
+      have hil : i.val < n := i.isLt
+      have heq : ((e i : ↥vals) : ℝ) = g c := by
+        rw [hidef]
+        exact congrArg Subtype.val (OrderIso.apply_symm_apply e ⟨g c, hgmem⟩)
+      have hwval1 : w (i.val + 1) = g c := by
+        simp only [hwdef]
+        rw [dif_pos (by omega : 1 ≤ i.val + 1 ∧ i.val + 1 ≤ n)]
+        have hfin : (⟨i.val + 1 - 1, hidx (i.val + 1) (by omega) (by omega)⟩ : Fin n) = i := by
+          refine Fin.ext ?_
+          show i.val + 1 - 1 = i.val
+          omega
+        rw [hfin]
+        exact heq
+      have hfval1 : g (f (i.val + 1)) = g c := by
+        have hv1 := hfval (i.val + 1) (by omega) (by omega)
+        rw [hv1.1]
+        exact hwval1
+      refine ⟨i.val + 1, ⟨by omega, by omega⟩, ?_⟩
+      have hex : ∃ c' ∈ s, g c' = w (i.val + 1) := ⟨c, hcs, hwval1.symm⟩
+      simp only [hfdef]
+      rw [dif_pos hex]
+      have hfeq : g (Classical.choose hex) = g c := by
+        rw [(Classical.choose_spec hex).2]
+        exact hwval1
+      exact hinj (Classical.choose_spec hex).1 hcs hfeq
+    · rintro ⟨k, hk, rfl⟩
+      exact (hfval k hk.1 hk.2).2
+  · intro j k hj hk hjk
+    rw [(hfval j hj.1 hj.2).1, (hfval k hk.1 hk.2).1]
+    exact hwlt j k hj.1 hjk hk.2
+
+/-- HOL `POLY_SORT_LEMMA` (counting_spheres.hl:729). Filled (EXPLICIT kit
+wave): the argument map is injective on the facet set (`poly_sort_antisym`);
+`p22_enum_sorted` (TOPOLOGICAL_SORT) produces the increasing enumeration. -/
 theorem POLY_SORT_LEMMA (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u : ℂ)
     (hs : s = {c : Set ℂ | facetOfC c P}) (hP : polyhedronC P) (hr : 0 < r)
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) (hu : u ≠ 0)
     (hsize : s.Finite ∧ s.ncard = n) :
     ∃ f : ℕ → Set ℂ, s = f '' Set.Icc 1 n ∧ ∀ j k : ℕ, j ∈ Set.Icc 1 n →
       k ∈ Set.Icc 1 n → j < k → ¬ poly_sort_fn P u (f k) (f j) := by
-  sorry -- DEF-FIX: refill per counting_spheres.hl:729 §3a
+  have hinj : Set.InjOn (fun c : Set ℂ => Complex.arg (facet_rep_a P c / u)) s := by
+    intro c1 hc1 c2 hc2 harg
+    have hf1 : facetOfC c1 P := by
+      have h1 : c1 ∈ s := hc1
+      rw [hs] at h1
+      exact h1
+    have hf2 : facetOfC c2 P := by
+      have h1 : c2 ∈ s := hc2
+      rw [hs] at h1
+      exact h1
+    exact poly_sort_antisym P u c1 c2 r hP hr hrad
+      ⟨hf1, hf2, le_of_eq harg⟩ ⟨hf2, hf1, le_of_eq harg.symm⟩ hu
+  obtain ⟨f, hfim, hfmono⟩ := p22_enum_sorted (α := Set ℂ) hsize.1 hsize.2 hinj
+  refine ⟨f, hfim, ?_⟩
+  intro j k hj hk hjk hcon
+  exact absurd hcon.2.2 (not_le.2 (hfmono j k hj hk hjk))
 
-/-- HOL `POLY_SORT` (counting_spheres.hl:746). GIANT. -/
+/-- HOL `POLY_SORT` (counting_spheres.hl:746). Filled (EXPLICIT kit wave). -/
 theorem POLY_SORT (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u : ℂ)
     (hs : s = {c : Set ℂ | facetOfC c P}) (hP : polyhedronC P) (hr : 0 < r)
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) (hu : u ≠ 0)
@@ -909,9 +2070,24 @@ theorem POLY_SORT (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u : ℂ
       k ∈ Set.Icc 1 n → j < k →
       Complex.arg (facet_rep_a P (f j) / u) <
         Complex.arg (facet_rep_a P (f k) / u) := by
-  sorry -- DEF-FIX: refill per counting_spheres.hl:746 §3a
+  obtain ⟨f, hfim, hfnot⟩ := POLY_SORT_LEMMA P n s r u hs hP hr hrad hu hsize
+  refine ⟨f, hfim, ?_⟩
+  intro j k hj hk hjk
+  by_contra hcon
+  push_neg at hcon
+  have hfk : facetOfC (f k) P := by
+    have h1 : f k ∈ f '' Set.Icc 1 n := ⟨k, hk, rfl⟩
+    rw [← hfim] at h1
+    rw [hs] at h1
+    exact h1
+  have hfj : facetOfC (f j) P := by
+    have h1 : f j ∈ f '' Set.Icc 1 n := ⟨j, hj, rfl⟩
+    rw [← hfim] at h1
+    rw [hs] at h1
+    exact h1
+  exact hfnot j k hj hk hjk ⟨hfk, hfj, hcon⟩
 
-/-- HOL `POLY_SORT_BIJ` (counting_spheres.hl:795). GIANT. -/
+/-- HOL `POLY_SORT_BIJ` (counting_spheres.hl:795). Filled (EXPLICIT kit wave). -/
 theorem POLY_SORT_BIJ (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u : ℂ)
     (hs : s = {c : Set ℂ | facetOfC c P}) (hP : polyhedronC P) (hr : 0 < r)
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) (hu : u ≠ 0)
@@ -920,7 +2096,28 @@ theorem POLY_SORT_BIJ (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u :
       ∀ j k : ℕ, j ∈ Set.Icc 1 n → k ∈ Set.Icc 1 n → j < k →
       Complex.arg (facet_rep_a P (f j) / u) <
         Complex.arg (facet_rep_a P (f k) / u) := by
-  sorry -- DEF-FIX: refill per counting_spheres.hl:795 §3a
+  obtain ⟨f, hfim, hfstrict⟩ := POLY_SORT P n s r u hs hP hr hrad hu hsize
+  have hfmem : ∀ k ∈ Set.Icc 1 n, f k ∈ s := by
+    intro k hk
+    have h1 : f k ∈ f '' Set.Icc 1 n := ⟨k, hk, rfl⟩
+    rw [← hfim] at h1
+    exact h1
+  refine ⟨f, hfim, ⟨?_, ?_, ?_⟩, hfstrict⟩
+  · intro k hk
+    exact hfmem k hk
+  · intro a ha b hb hab
+    by_contra hne
+    rcases lt_or_gt_of_ne hne with h | h
+    · have hlt := hfstrict a b ha hb h
+      rw [hab] at hlt
+      exact lt_irrefl _ hlt
+    · have hlt := hfstrict b a hb ha h
+      rw [hab.symm] at hlt
+      exact lt_irrefl _ hlt
+  · intro c hc
+    have h1 : c ∈ f '' Set.Icc 1 n := by rw [← hfim]; exact hc
+    obtain ⟨k, hk, rfl⟩ := h1
+    exact ⟨k, hk, rfl⟩
 
 /-- HOL `facet_rep_nz` (counting_spheres.hl:817). -/
 theorem facet_rep_nz (P c : Set ℂ) (hP : polyhedronC P) (hc : facetOfC c P) :
