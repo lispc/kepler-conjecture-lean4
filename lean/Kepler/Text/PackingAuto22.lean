@@ -303,7 +303,21 @@ theorem facet_rep_uniq (P c1 c2 : Set ℂ) (a : ℂ) (b1 b2 : ℝ)
     (s1 : P ⊆ {x : ℂ | dot2 a x ≤ b1}) (s2 : P ⊆ {x : ℂ | dot2 a x ≤ b2})
     (e1 : c1 = P ∩ {x : ℂ | dot2 a x = b1}) (e2 : c2 = P ∩ {x : ℂ | dot2 a x = b2}) :
     b1 = b2 ∧ c1 = c2 := by
-  sorry
+  -- The new `facetOfC` carries `f ≠ ∅` as its second conjunct (§3a ★note): a
+  -- nonempty point of each facet pins the supporting value from both sides
+  -- (b1 ≤ b2 ≤ b1 by the supporting inequalities at x and y).
+  have h1ne : c1.Nonempty := Set.nonempty_iff_ne_empty.mpr h1.2.1
+  have h2ne : c2.Nonempty := Set.nonempty_iff_ne_empty.mpr h2.2.1
+  obtain ⟨x, hx1⟩ := h1ne
+  obtain ⟨y, hy1⟩ := h2ne
+  have hxP : x ∈ P := ((e1 ▸ hx1).1 : x ∈ P)
+  have hyP : y ∈ P := ((e2 ▸ hy1).1 : y ∈ P)
+  have hxb1 : dot2 a x = b1 := (e1 ▸ hx1).2
+  have hyb2 : dot2 a y = b2 := (e2 ▸ hy1).2
+  have hb12 : b1 ≤ b2 := by rw [← hxb1]; exact s2 hxP
+  have hb21 : b2 ≤ b1 := by rw [← hyb2]; exact s1 hyP
+  refine ⟨le_antisymm hb12 hb21, ?_⟩
+  rw [e1, e2, le_antisymm hb12 hb21]
 
 /-- The facet representation pair chosen by `facet_rep_spec`. -/
 private noncomputable def facetRepPair : Set ℂ × Set ℂ → ℂ × ℝ :=
@@ -2082,10 +2096,38 @@ theorem WEDGE_SPLIT (u0 u1 u2 u3 w : V3) (h1 : ¬ Collinear3 u0 u1 u2)
       have hnn := azim_nonneg u0 u1 u2 y
       linarith
 
+/-- Coefficient-witness transfer between `Affsign` instances with the same
+union `s ∪ t = s' ∪ t'` and shrinking sign side `t' ⊆ t` (planar CONE0 kit;
+HOL `affsign` def-expansion, counting_spheres.hl:3058 proof core). -/
+private theorem p22_affsign_transfer {sgn : ℝ → Prop} {s s' t t' : Set V3} {v : V3}
+    (hu : s ∪ t = s' ∪ t') (ht : t' ⊆ t)
+    (h : Affsign sgn s t v) : Affsign sgn s' t' v := by
+  obtain ⟨f, hK, hvsum, hsign, hone⟩ := h
+  have hK' : (s' ∪ t').Finite := by rw [← hu]; exact hK
+  have hTeq : hK'.toFinset = hK.toFinset := by
+    ext w
+    simp only [Set.Finite.mem_toFinset, ← hu]
+  refine ⟨f, hK', ?_, fun w hw => hsign w (ht hw), ?_⟩
+  · rw [hTeq]; exact hvsum
+  · rw [hTeq]; exact hone
+
 /-- HOL `cone0_subset_lune` (counting_spheres.hl:3058). GIANT. -/
 theorem cone0_subset_lune (u0 u1 u2 u3 : V3) :
     cone0P22 u0 {u1, u2, u3} ⊆ affGt {u0, u1} {u2, u3} := by
-  sorry -- DEF-FIX: refill（原证明的严格版逐字搬运，见 §3b）
+  -- Both `Affsign` instances range over the same point set `{u0,u1,u2,u3}`;
+  -- the coefficient function transfers verbatim and the strict sign condition
+  -- is only restricted to the smaller set `{u2,u3}` (strict → strict).
+  intro v hv
+  have hv' : Affsign (fun x : ℝ => 0 < x) ({u0} : Set V3) ({u1, u2, u3} : Set V3) v := hv
+  have hu : ({u0} : Set V3) ∪ {u1, u2, u3} = ({u0, u1} : Set V3) ∪ {u2, u3} := by
+    ext w
+    simp only [Set.mem_union, Set.mem_singleton_iff, Set.mem_insert_iff]
+    tauto
+  have ht : ({u2, u3} : Set V3) ⊆ ({u1, u2, u3} : Set V3) := by
+    intro w hw
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw ⊢
+    tauto
+  exact p22_affsign_transfer hu ht hv'
 
 /-- HOL `COLLINEAR_UNEQUAL` (counting_spheres.hl:3075). -/
 theorem COLLINEAR_UNEQUAL {a : Type*} [AddCommGroup a] [Module ℝ a] (u0 u1 u2 : a)
@@ -2319,7 +2361,115 @@ theorem DISJOINT0_SCALE (t : ℝ) (u0 u1 u2 : V3)
 theorem CONE0_SCALE (t : ℝ) (u0 u1 u2 : V3)
     (hd : Disjoint ({0} : Set V3) {u0, u1, u2}) (ht : 0 < t) :
     cone0P22 0 {u0, u1, u2} = cone0P22 0 {t • u0, u1, u2} := by
-  sorry
+  -- Both sides unfold, via `AFF_GT_1_3`, to the explicit 4-coefficient form;
+  -- the `u0`-coefficient rescales by `t` (`f u0 ↦ f u0 / t`), the `vec 0`
+  -- apex coefficient absorbs the change in the scalar sum.
+  have ht0 : t ≠ 0 := ne_of_gt ht
+  have hdis' : Disjoint ({0} : Set V3) {t • u0, u1, u2} := DISJOINT0_SCALE t u0 u1 u2 hd ht0
+  show affGt ({0} : Set V3) {u0, u1, u2} = affGt ({0} : Set V3) {t • u0, u1, u2}
+  rw [AFF_GT_1_3 (0 : V3) u0 u1 u2 hd, AFF_GT_1_3 (0 : V3) (t • u0) u1 u2 hdis']
+  ext y
+  simp only [Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨a, b, c, d, hb, hc, hdd, hsum, hyeq⟩
+    refine ⟨1 - b / t - c - d, b / t, c, d, div_pos hb ht, hc, hdd, ?_, ?_⟩
+    · linarith
+    · rw [hyeq]
+      have hbb : b / t * t = b := by field_simp
+      have hbc : (b / t) • (t • u0) = b • u0 := by
+        rw [smul_smul, hbb]
+      simp only [smul_zero, hbc]
+  · rintro ⟨a, b, c, d, hb, hc, hdd, hsum, hyeq⟩
+    refine ⟨1 - b * t - c - d, b * t, c, d, mul_pos hb ht, hc, hdd, ?_, ?_⟩
+    · linarith
+    · rw [hyeq]
+      have hbc : (b * t) • u0 = b • (t • u0) := (smul_smul b t u0).symm
+      simp only [smul_zero, hbc]
+
+/-- `¬ Coplanar {0,u0,u1,u2}` separates each `uᵢ` from the origin (HOL
+`Planarity.notcoplanar_disjoint`, counting_spheres.hl:3837 proof step). -/
+private theorem p22_notCoplanar_ne0 {u0 u1 u2 : V3}
+    (hcp : ¬ Coplanar ({0, u0, u1, u2} : Set V3)) : u0 ≠ 0 ∧ u1 ≠ 0 ∧ u2 ≠ 0 := by
+  refine ⟨fun h => hcp ?_, fun h => hcp ?_, fun h => hcp ?_⟩
+  · have hset : ({0, u0, u1, u2} : Set V3) = ({u0, u1, u2} : Set V3) := by
+      rw [h]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]
+    exact coplanar_triple u0 u1 u2
+  · have hset : ({0, u0, u1, u2} : Set V3) = ({0, u0, u2} : Set V3) := by
+      rw [h]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]
+    exact coplanar_triple 0 u0 u2
+  · have hset : ({0, u0, u1, u2} : Set V3) = ({0, u0, u1} : Set V3) := by
+      rw [h]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]
+    exact coplanar_triple 0 u0 u1
+
+/-- Scaling one point by `t ≠ 0` preserves non-coplanarity with the origin
+(HOL `COPLANAR_SPECIAL_SCALE`, counting_spheres.hl:3837 proof step). -/
+private theorem p22_coplanar_scale {u0 u1 u2 : V3}
+    (hcp : ¬ Coplanar ({0, u0, u1, u2} : Set V3)) {t : ℝ} (ht : t ≠ 0) :
+    ¬ Coplanar ({0, t • u0, u1, u2} : Set V3) := by
+  intro hc
+  obtain ⟨a, b, c, hsub⟩ := hc
+  have h0 : (0 : V3) ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+  have hx : t • u0 ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := hsub (by simp)
+  refine hcp ⟨a, b, c, fun p hp => ?_⟩
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+  rcases hp with hp0 | hpt | hpu1 | hpu2
+  · rw [hp0]; exact h0
+  · -- the plane through `a,b,c` contains `0`, hence is closed under scalars
+    have hlm : AffineMap.lineMap (0 : V3) (t • u0) t⁻¹ ∈
+        (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) :=
+      AffineMap.lineMap_mem (t⁻¹ : ℝ) h0 hx
+    have hid : u0 = AffineMap.lineMap (0 : V3) (t • u0) t⁻¹ := by
+      rw [AffineMap.lineMap_apply]
+      have hvsub : (t • u0) -ᵥ (0 : V3) = t • u0 := by simp only [vsub_eq_sub, sub_zero]
+      rw [hvsub, vadd_eq_add, add_zero, smul_smul, inv_mul_cancel₀ ht, one_smul]
+    rw [hpt, hid]
+    exact hlm
+  · rw [hpu1]; exact hsub (by simp)
+  · rw [hpu2]; exact hsub (by simp)
+
+/-- HOL `NOT_COPLANAR_NOT_COLLINEAR` (counting_spheres.hl:3837 proof step):
+`¬ Coplanar {0,u0,u1,u2}` forces the last three points off a common line. -/
+private theorem p22_notCollinear3_of_notCoplanar {u0 u1 u2 : V3}
+    (hcp : ¬ Coplanar ({0, u0, u1, u2} : Set V3)) : ¬ Collinear3 u0 u1 u2 := by
+  intro hc
+  apply hcp
+  rw [Collinear3, collinear_iff_exists_forall_eq_smul_vadd] at hc
+  obtain ⟨p₀, v, hv⟩ := hc
+  have hsub3 : ({p₀, p₀ + v} : Set V3) ⊆ ({p₀, p₀ + v, 0} : Set V3) := by
+    intro q hq
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+    tauto
+  have hmono : ∀ q : V3, q ∈ (affineSpan ℝ ({p₀, p₀ + v} : Set V3) : Set V3) →
+      q ∈ (affineSpan ℝ ({p₀, p₀ + v, 0} : Set V3) : Set V3) := by
+    intro q hq
+    exact affineSpan_mono ℝ hsub3 hq
+  have hid (w : V3) (hw : w ∈ ({u0, u1, u2} : Set V3)) :
+      ∃ r : ℝ, w = AffineMap.lineMap (p₀ : V3) (p₀ + v) r ∧
+        AffineMap.lineMap (p₀ : V3) (p₀ + v) r ∈
+          (affineSpan ℝ ({p₀, p₀ + v} : Set V3) : Set V3) := by
+    obtain ⟨r, hr⟩ := hv w hw
+    refine ⟨r, ?_, AffineMap.lineMap_mem_affineSpan_pair r p₀ (p₀ + v)⟩
+    rw [AffineMap.lineMap_apply]
+    have hvsub : (p₀ + v) -ᵥ p₀ = v := by simp only [vsub_eq_sub]; abel
+    rw [hvsub]
+    exact hr
+  refine ⟨p₀, p₀ + v, (0 : V3), fun p hp => ?_⟩
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+  rcases hp with hp0 | hpu0 | hpu1 | hpu2
+  · rw [hp0]
+    exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (by simp))
+  · obtain ⟨r, hid0, hlm⟩ := hid u0 (by simp)
+    rw [hpu0, hid0]
+    exact hmono _ hlm
+  · obtain ⟨r, hid1, hlm⟩ := hid u1 (by simp)
+    rw [hpu1, hid1]
+    exact hmono _ hlm
+  · obtain ⟨r, hid2, hlm⟩ := hid u2 (by simp)
+    rw [hpu2, hid2]
+    exact hmono _ hlm
 
 /-- HOL `CONE0_FCHANGED_SCALE` (counting_spheres.hl:3837). GIANT. -/
 theorem CONE0_FCHANGED_SCALE (p f : Set V3) (u0 u1 u2 : V3) (t : ℝ)
@@ -2327,7 +2477,22 @@ theorem CONE0_FCHANGED_SCALE (p f : Set V3) (u0 u1 u2 : V3) (t : ℝ)
     (hf : FacetOf f p) (hcp : ¬ Coplanar ({0, u0, u1, u2} : Set V3))
     (hsub : {t • u0, u1, u2} ⊆ f) (ht : 0 < t) :
     cone0P22 0 {u0, u1, u2} ⊆ fchanged f := by
-  sorry
+  -- CONE0_SCALE rescales the cone to `{t•u0, u1, u2}`; the coplanarity kit
+  -- feeds the scaled triple to `CONE0_FCHANGED` (HOL proof assembly).
+  have ht0 : t ≠ 0 := ne_of_gt ht
+  obtain ⟨hu0, hu1, hu2⟩ := p22_notCoplanar_ne0 hcp
+  have hd : Disjoint ({0} : Set V3) ({u0, u1, u2} : Set V3) := by
+    rw [Set.disjoint_singleton_left]
+    intro h0in
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h0in
+    rcases h0in with h | h | h
+    · exact hu0 h.symm
+    · exact hu1 h.symm
+    · exact hu2 h.symm
+  have hcp' : ¬ Coplanar ({0, t • u0, u1, u2} : Set V3) := p22_coplanar_scale hcp ht0
+  have hnc : ¬ Collinear3 (t • u0) u1 u2 := p22_notCollinear3_of_notCoplanar hcp'
+  rw [CONE0_SCALE t u0 u1 u2 hd ht]
+  exact CONE0_FCHANGED p f (t • u0) u1 u2 hp hb hi hf hnc hsub
 
 /-- HOL `gotcjah_sol_half` (counting_spheres.hl:3879). GIANT. -/
 theorem gotcjah_sol_half (c3 : Set V3) (v : V3) (b : ℝ) (P W : Set V3) (t rho : ℝ)
