@@ -23,9 +23,10 @@
   - 真证明：twin 前奏（§0-1）、`cf4_cone_inter_imp_segment_conv`（件 1）、
     `cf4_separation_plane_4_points`（件 2）、旋转族机器（件 3）、
     穿越不变量易侧（件 4 的 `cf4_aff_ge_inter_segments` 等）、外心预备（件 5）；
-  - NEEDS 脚手架（带账）：`cf4_continuous_intersection_point`、
-    `cf4_continuous_lemma_aff_ge`（穿越不变量在连续旋转族下的传递，
-    HOL continuous_lemma_aff_ge :2204-2869 共 665 行——CF-4b 主件）。
+  - CF-4c 后（2026-09-28）：旋转族机器全净（rotation_lemma/family_special/
+    rotation_about_axis）+ `cf4_continuous_intersection_point`（Cramer 连续参数化）
+    均闭合；仅余主件 `cf4_continuous_lemma_aff_ge`（穿越不变量在连续旋转族下的
+    传递，HOL continuous_lemma_aff_ge :2204-2869 共 665 行——CF-4b 主件，带账）。
 -/
 import Kepler.Geom.Aff
 import Kepler.Text.PackingAuto2
@@ -1028,9 +1029,8 @@ e := (sin φ)⁻¹•(u − cos φ•v)（⊥ v、‖e‖ = ‖v‖），
 f t := cos(φ•t)•v + sin(φ•t)•e（2×2 旋转嵌入 span{v,e}）。
 性质：f 0 = v、f 1 = u（sin φ•e = u − cos φ•v）、‖f t‖ = ‖v‖
 （cos² + sin² = 1）、f t ∈ cone{v,u}（系数 sin(φ(1−t))/sinφ ≥ 0 与
-sin(φt)/sinφ ≥ 0，φ(1−t) ∈ [0,π]）、连续。
-NEEDS: CF-4b 移植（Mathlib 侧 InnerProductGeometry.angle/cos_angle/sin_angle
-已核可；约 120 行）。 -/
+sin(φt)/sinφ ≥ 0，φ(1−t) ∈ [0,π]）、连续。已闭合（Mathlib 侧
+InnerProductGeometry.angle/cos_angle/sin_angle）。 -/
 theorem cf4_rotation_lemma
     (hcol : ¬ Collinear ℝ (insert (0:V3) ({v, u} : Set V3))) (hnorm : ‖v‖ = ‖u‖) :
     ∃ f : ℝ → V3, f 0 = v ∧ f 1 = u ∧ (∀ t, ‖f t‖ = ‖v‖) ∧
@@ -1190,60 +1190,305 @@ private theorem cf4_orth_pair_norm {a b : V3} (hab : inner ℝ a b = 0) (hn : �
 
 /-- HOL `rotation_lemma_special`（CKQOWSA_4.hl:1012-1240）：v·n = w·n = 0 时
 v 绕轴 n 转向 (‖v‖/‖w‖)•w 的连续族（保范、保轴正交性、不增距、保锥）。
-NEEDS: 组装路线已试写至逐行（CF-4b 未完，卡点见下）：
-1. 非共线分支：`cf4_rotation_lemma`（v, u := (‖v‖/‖w‖)•w）给出 f 0 = v、f 1 = u、
-   保范、cone{v,u}、连续；cone{v,u} → cone{v,w} 经 `cf4_aff_ge_eq_smul`；
-   ⟪f t,n⟫ = 0 用 cone 二系数展开 + hvn/hunn2；dist 不增用
-   `cf4_rotation_dist_decrease`。注意 rotation_lemma 的锥成员只在 [0,1] 上成立，
-   而本陈述的保范+⊥n 是 ∀ t——需 min/max 夹逼延拓 g t = f (min (max t 0) 1)
-   （连续性 hfcont.comp (by fun_prop)；三段 g t = 0 / g t = t / g t = 1 分别取
-   f 0 = v（⟨rfl, hvn⟩）/ 中段 / f 1 = u（⟨hunn, hunn2⟩）。
-   ⚠ 夹逼段的 goal 是 β 未约简形 `(fun t => f (g t)) t`，先 `show f (g t) …`
-   再 rw，否则 rw [hg_*] 全部失配。
-   ⚠ hg_* 三件的证法：`show min (max t 0) 1 = 0` 后
-   `rw [max_eq_right ht, min_eq_left (by norm_num)]`（hg_le0，ht : t ≤ 0）；
-   hg_ge1 用 max_eq_left (0 ≤ t) + min_eq_right ht；hg_mid 用
-   max_eq_left ht.1.le + min_eq_left ht.2.le（Ioo 严格对 0 端）。
-2. 共线分支：`cf4_collinear_smul` 给 w = c•v；|c| = ‖w‖/‖v‖ 且 c < 0
-   （c > 0 给 u = v 矛盾）⟹ w = -(‖w‖/‖v‖)•v。⊥ 补方向 e 由叉积构造：
-   ∃ p ≠ 0、p ∦ v、⟪n, cf4Cross v p⟫ = 0（n ≠ 0 取 p = n 用
-   cf4Cross_dot_right v n；n = 0 取 x ∉ span{v}——span{v} ≠ ⊤ 经
-   finrank_span_singleton hv 与 finrank_top 矛盾——此时 ⟪n,·⟫ = 0 平凡），
-   e := (‖v‖/‖cf4Cross v p‖)•cf4Cross v p，f t = cos(πt)•v + sin(πt)•e；
-   范数与 dist 用 `cf4_orth_pair_norm(_sq)`（⊥ 对双线性恒等式），
-   dist² 差 = 2k(cos πt − 1)·‖v‖² ≤ 0（nlinarith [sin_sq_add_cos_sq, h1p]）。
-   锥条件在共线分支空缺（前提 ¬Collinear 直接矛盾）。
-3. 通用雷区：`rw [hcw]`（hcw : w = c•v）会同时改写目标里的 ‖w‖——目标含
-   ‖w‖ 时改用 congrArg 迁移等式；`set u with hu` 后 hunn2 的 smul 在左
-   （real_inner_smul_left）；∃! 的匿名构造子须 ⟨w, ?_, ?_⟩ + show β 约简
-   （ExistsUnique 在此版本是 ∃ x, P x ∧ ∀ y, P y → y = x 的 def）；
-   div_eq_zero_iff 无参数形式给三岐 Or；LT.lt.ne/ne' 在本 toolchain 都是
-   a ≠ b 方向（用 ne_of_gt）。 -/
+CF-4c 已闭合。B1 非共线：`cf4_rotation_lemma`（v, u := (‖v‖/‖w‖)•w）+
+min/max 夹逼延拓 g t = f (min (max t 0) 1)（⟪g t,n⟫ = 0 与 dist/锥三件全由
+夹逼段 ∈ [0,1] 的锥表示经 `cf4_aff_ge_eq_smul`（cone{v,c•w} = cone{v,w}）
+统一给出，无需三段分析；dist 用 `cf4_rotation_dist_decrease`）。
+B2 共线（w = c•v）：c > 0 时 (‖v‖/‖w‖)•w = v 取常数族；c < 0 时 ⊥ 补方向
+e := (‖v‖/‖cf4Cross v p‖)•cf4Cross v p（n ≠ 0 取 p = n：⟪v,n⟫ = 0 ⟹ v,n
+不共线；n = 0 取 x ∉ span{v}），π 旋转族 f t = cos(πt)•v + sin(πt)•e，
+范数/内积用 `cf4_orth_pair_norm(_sq)`，dist² 差 = ((cosπt−c)²+sin²−(1−c)²)·‖v‖² ≤ 0。 -/
 theorem cf4_rotation_family_special {v w n : V3} (hv : v ≠ 0) (hw : w ≠ 0)
     (hvn : inner ℝ v n = 0) (hwn : inner ℝ w n = 0) :
     ∃ f : ℝ → V3, Continuous f ∧ f 0 = v ∧ f 1 = (‖v‖ / ‖w‖) • w ∧
       (∀ t, ‖f t‖ = ‖v‖ ∧ inner ℝ (f t) n = 0) ∧
       (∀ t ∈ Set.Icc 0 1, dist (f t) w ≤ dist v w) ∧
       (¬ Collinear ℝ (insert (0:V3) ({v, w} : Set V3)) →
-        ∀ t ∈ Set.Icc 0 1, f t ∈ affGe {0} ({v, w} : Set V3)) :=
-  -- NEEDS: rotation_lemma_special CKQOWSA_4.hl:1012（CF-4b/4c；逐行试写记录见上 docstring）
-  sorry
+        ∀ t ∈ Set.Icc 0 1, f t ∈ affGe {0} ({v, w} : Set V3)) := by
+  by_cases hcol : Collinear ℝ (insert (0:V3) ({v, w} : Set V3))
+  · -- B2 共线分支：w = c•v
+    obtain ⟨c, hwc⟩ := cf4_collinear_smul hv hcol
+    have hc0 : c ≠ 0 := by
+      intro h
+      rw [h, zero_smul] at hwc
+      exact hw hwc
+    rcases lt_or_gt_of_ne hc0 with hc | hc
+    · -- c < 0：w = -(‖w‖/‖v‖)•v，π 旋转族（⊥ 补方向 e 由叉积构造）
+      obtain ⟨p, hpcol, hpinn⟩ : ∃ p : V3,
+          ¬ Collinear ℝ (insert (0:V3) ({v, p} : Set V3)) ∧ inner ℝ n (cf4Cross v p) = 0 := by
+        by_cases hn0 : n = 0
+        · -- n = 0：任取 x ∉ span{v}，此时 ⟪n,·⟫ = 0 平凡
+          have hsp : (Submodule.span ℝ ({v} : Set V3)) ≠ (⊤ : Submodule ℝ V3) := by
+            intro htop
+            have h1 : Module.finrank ℝ (Submodule.span ℝ ({v} : Set V3)) = 1 :=
+              finrank_span_singleton hv
+            rw [htop, finrank_top, finrank_euclideanSpace_fin] at h1
+            norm_num at h1
+          obtain ⟨x, hx⟩ := SetLike.exists_not_mem_of_ne_top _ hsp
+          refine ⟨x, cf4_not_collinear_mk hv ?_ ?_, ?_⟩
+          · intro hx0
+            rw [hx0] at hx
+            exact hx (Submodule.zero_mem _)
+          · intro k hk
+            exact hx (Submodule.mem_span_singleton.2 ⟨k, hk.symm⟩)
+          · rw [hn0]
+            exact inner_zero_left _
+        · -- n ≠ 0：⟪v,n⟫ = 0 ⟹ v, n 不共线，p := n
+          refine ⟨n, cf4_not_collinear_mk hv hn0 ?_, cf4Cross_dot_right v n⟩
+          intro k hk
+          have hvn' := hvn
+          rw [hk, real_inner_smul_right, real_inner_self_eq_norm_sq] at hvn'
+          have hv2 : (0:ℝ) < ‖v‖ ^ 2 := pow_pos (norm_pos_iff.2 hv) 2
+          rcases mul_eq_zero.1 hvn' with hk0 | hk0
+          · rw [hk0, zero_smul] at hk
+            exact hn0 hk
+          · exact absurd hk0 hv2.ne'
+      obtain ⟨e, hev, hen, heinn⟩ :
+          ∃ e : V3, inner ℝ v e = 0 ∧ ‖e‖ = ‖v‖ ∧ inner ℝ e n = 0 := by
+        have hcz : cf4Cross v p ≠ 0 := cf4Cross_ne_zero hpcol
+        refine ⟨(‖v‖ / ‖cf4Cross v p‖) • cf4Cross v p, ?_, ?_, ?_⟩
+        · rw [real_inner_smul_right, cf4Cross_dot_left]
+          ring
+        · rw [norm_smul, Real.norm_eq_abs,
+            abs_of_pos (div_pos (norm_pos_iff.2 hv) (norm_pos_iff.2 hcz))]
+          field_simp
+        · rw [real_inner_smul_left, real_inner_comm n (cf4Cross v p), hpinn]
+          ring
+      refine ⟨fun t => Real.cos (Real.pi * t) • v + Real.sin (Real.pi * t) • e,
+        by fun_prop, ?_, ?_, ?_, ?_, fun hfalse => (hfalse hcol).elim⟩
+      · show Real.cos (Real.pi * 0) • v + Real.sin (Real.pi * 0) • e = v
+        rw [mul_zero, Real.cos_zero, Real.sin_zero, one_smul, zero_smul, add_zero]
+      · show Real.cos (Real.pi * 1) • v + Real.sin (Real.pi * 1) • e = (‖v‖ / ‖w‖) • w
+        have hwn2 : ‖w‖ = -(c) * ‖v‖ := by
+          rw [hwc, norm_smul, Real.norm_eq_abs, abs_of_neg hc]
+        rw [mul_one, Real.cos_pi, neg_one_smul, Real.sin_pi, zero_smul, add_zero, hwn2,
+          hwc, smul_smul]
+        have h2 : (‖v‖ / (-(c) * ‖v‖)) * c = -1 := by field_simp
+        rw [h2, neg_one_smul]
+      · intro t
+        show ‖Real.cos (Real.pi * t) • v + Real.sin (Real.pi * t) • e‖ = ‖v‖ ∧
+          inner ℝ (Real.cos (Real.pi * t) • v + Real.sin (Real.pi * t) • e) n = 0
+        refine ⟨cf4_orth_pair_norm hev hen _ _
+          (by rw [← pow_two, ← pow_two]; exact Real.sin_sq_add_cos_sq _), ?_⟩
+        rw [inner_add_left, real_inner_smul_left, real_inner_smul_left, hvn, heinn]
+        ring
+      · intro t _
+        have hcos : Real.cos (Real.pi * t) ≤ 1 := Real.cos_le_one _
+        have hineq : (Real.cos (Real.pi * t) - c) ^ 2 + Real.sin (Real.pi * t) ^ 2
+            ≤ (1 - c) ^ 2 := by
+          have h1 : Real.sin (Real.pi * t) ^ 2 + Real.cos (Real.pi * t) ^ 2 = 1 :=
+            Real.sin_sq_add_cos_sq _
+          nlinarith [hcos, h1, le_of_lt hc]
+        have h5 : v - c • v = (1 - c) • v := by module
+        have hfw : Real.cos (Real.pi * t) • v + Real.sin (Real.pi * t) • e - w
+            = (Real.cos (Real.pi * t) - c) • v + Real.sin (Real.pi * t) • e := by
+          rw [hwc]
+          module
+        have hd1 : dist (Real.cos (Real.pi * t) • v + Real.sin (Real.pi * t) • e) w ^ 2
+            = ((Real.cos (Real.pi * t) - c) ^ 2 + Real.sin (Real.pi * t) ^ 2) * ‖v‖ ^ 2 := by
+          rw [dist_eq_norm, hfw, cf4_orth_pair_norm_sq hev hen]
+          ring
+        have hd2 : dist v w ^ 2 = (1 - c) ^ 2 * ‖v‖ ^ 2 := by
+          rw [dist_eq_norm, hwc, h5, norm_smul, Real.norm_eq_abs,
+            abs_of_pos (by linarith : (0:ℝ) < 1 - c)]
+          ring
+        refine nonneg_le_nonneg_of_sq_le_sq dist_nonneg ?_
+        rw [← pow_two, ← pow_two, hd1, hd2]
+        exact mul_le_mul_of_nonneg_right hineq (sq_nonneg ‖v‖)
+    · -- c > 0：(‖v‖/‖w‖)•w = v，常数族 f t = v
+      have hwn2 : ‖w‖ = c * ‖v‖ := by
+        rw [hwc, norm_smul, Real.norm_eq_abs, abs_of_pos hc]
+      refine ⟨fun _ => v, continuous_const, rfl, ?_, ?_, ?_, fun hfalse => (hfalse hcol).elim⟩
+      · show v = (‖v‖ / ‖w‖) • w
+        rw [hwn2, hwc, smul_smul]
+        have h2 : (‖v‖ / (c * ‖v‖)) * c = 1 := by field_simp
+        rw [h2, one_smul]
+      · intro t
+        exact ⟨rfl, hvn⟩
+      · intro t _
+        exact le_refl _
+  · -- B1 非共线分支：rotation_lemma + min/max 夹逼延拓
+    obtain ⟨-, hw0, hnc⟩ := cf4_not_collinear_smul hcol
+    have hcpos : (0:ℝ) < ‖v‖ / ‖w‖ := div_pos (norm_pos_iff.2 hv) (norm_pos_iff.2 hw)
+    have hvw : v ≠ w := by
+      intro he
+      refine hcol ?_
+      rw [he, Set.pair_eq_singleton]
+      exact collinear_pair ℝ (0:V3) w
+    have hncu : ¬ Collinear ℝ (insert (0:V3) ({v, (‖v‖ / ‖w‖) • w} : Set V3)) := by
+      refine cf4_not_collinear_mk hv (smul_ne_zero hcpos.ne' hw0) ?_
+      intro k hk
+      refine hnc (k / (‖v‖ / ‖w‖)) ?_
+      have h2 := congrArg (fun z : V3 => ((‖v‖ / ‖w‖)⁻¹ : ℝ) • z) hk
+      rw [inv_smul_smul₀ hcpos.ne', smul_smul] at h2
+      have h3 : (‖v‖ / ‖w‖)⁻¹ * k = k / (‖v‖ / ‖w‖) := by field_simp
+      rw [h3] at h2
+      exact h2
+    have hwnz : ‖w‖ ≠ 0 := ne_of_gt (norm_pos_iff.2 hw)
+    have hnormu : ‖v‖ = ‖(‖v‖ / ‖w‖) • w‖ := by
+      rw [norm_smul, Real.norm_eq_abs, abs_of_pos hcpos]
+      field_simp
+    obtain ⟨f, hf0, hf1, hfnorm, hfcone, hfcont⟩ := cf4_rotation_lemma hncu hnormu
+    have hvcw : v ≠ (‖v‖ / ‖w‖) • w := by
+      intro he
+      refine hnc ((‖v‖ / ‖w‖)⁻¹) ?_
+      have h2 := congrArg (fun z : V3 => ((‖v‖ / ‖w‖)⁻¹ : ℝ) • z) he
+      rw [inv_smul_smul₀ hcpos.ne'] at h2
+      exact h2.symm
+    have hconeeq : affGe {0} ({v, (‖v‖ / ‖w‖) • w} : Set V3)
+        = affGe {0} ({v, w} : Set V3) :=
+      cf4_aff_ge_eq_smul hv hw hvw hvcw hcpos
+    refine ⟨fun t => f (min (max t 0) 1), ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · have hcl : Continuous fun t : ℝ => min (max t 0) (1:ℝ) :=
+        Continuous.min (Continuous.max continuous_id continuous_const) continuous_const
+      exact hfcont.comp hcl
+    · show f (min (max 0 0) 1) = v
+      rw [max_self, min_eq_left (by norm_num : (0:ℝ) ≤ 1)]
+      exact hf0
+    · show f (min (max 1 0) 1) = (‖v‖ / ‖w‖) • w
+      rw [max_eq_left (by norm_num : (0:ℝ) ≤ 1), min_self]
+      exact hf1
+    · intro t
+      show ‖f (min (max t 0) 1)‖ = ‖v‖ ∧ inner ℝ (f (min (max t 0) 1)) n = 0
+      have hcl01 : min (max t 0) (1:ℝ) ∈ Set.Icc (0:ℝ) 1 := by
+        constructor
+        · have hle : min (0:ℝ) 1 ≤ min (max t 0) (1:ℝ) :=
+            min_le_min (le_max_right t 0) (le_refl (1:ℝ))
+          rw [min_eq_left (by norm_num : (0:ℝ) ≤ 1)] at hle
+          exact hle
+        · exact min_le_right _ _
+      have hm : f (min (max t 0) 1) ∈ affGe {0} ({v, w} : Set V3) := by
+        have h1 := hfcone _ hcl01
+        rwa [hconeeq] at h1
+      obtain ⟨a, b, -, -, hfab⟩ := (affGe_0_2_char hv hw hvw _).1 hm
+      exact ⟨hfnorm _, by
+        rw [hfab, inner_add_left, real_inner_smul_left, real_inner_smul_left, hvn, hwn]
+        ring⟩
+    · intro t ht
+      show dist (f (min (max t 0) 1)) w ≤ dist v w
+      have heq : min (max t 0) (1:ℝ) = t := by
+        rw [max_eq_left ht.1, min_eq_left ht.2]
+      rw [heq]
+      have h1 := hfcone t ht
+      rw [hconeeq] at h1
+      exact cf4_rotation_dist_decrease hv hw h1 (hfnorm t)
+    · intro _ t ht
+      have heq : min (max t 0) (1:ℝ) = t := by
+        rw [max_eq_left ht.1, min_eq_left ht.2]
+      show f (min (max t 0) 1) ∈ affGe {0} ({v, w} : Set V3)
+      rw [heq]
+      have h1 := hfcone t ht
+      rwa [hconeeq] at h1
 
 /-- HOL `rotation_about_axis`（CKQOWSA_4.hl:1676-1758）：绕轴直线 ℝd 转动 v 到
 a•w + b•d（a > 0 为正交分量的比例、b 由 d 分量决定），轴上点距离不变、
 对 w 距离不增。构造：⊥ 分量 pv := v − (⟪v,d⟫/‖d‖²)•d 经
 `cf4_rotation_family_special`（n := d）旋转至 (‖pv‖/‖pw‖)•pw，f t := g t +
-(⟪v,d⟫/‖d‖²)•d；轴距不变由 ‖f t‖ = ‖pv‖ 与 ∥-分量不变合成。
-NEEDS: CF-4c（上游 cf4_rotation_family_special 未闭合，见其 docstring 卡点）。 -/
+(⟪v,d⟫/‖d‖²)•d；轴距不变由 ‖f t‖ = ‖pv‖ 与 ∥-分量不变合成。 -/
 theorem cf4_rotation_about_axis {d v w : V3} (hd : d ≠ 0)
     (hvw : v - (inner ℝ v d / ‖d‖ ^ 2) • d ≠ 0)
     (hww : w - (inner ℝ w d / ‖d‖ ^ 2) • d ≠ 0) :
     ∃ f : ℝ → V3, ∃ a b : ℝ, 0 < a ∧ Continuous f ∧ f 0 = v ∧
       f 1 = a • w + b • d ∧
       (∀ t c : ℝ, dist (f t) (c • d) = dist v (c • d)) ∧
-      (∀ t ∈ Set.Icc 0 1, dist (f t) w ≤ dist v w) :=
-  -- NEEDS: rotation_about_axis CKQOWSA_4.hl:1676（CF-4c）
-  sorry
+      (∀ t ∈ Set.Icc 0 1, dist (f t) w ≤ dist v w) := by
+  have hd2 : (0:ℝ) < ‖d‖ ^ 2 := pow_pos (norm_pos_iff.2 hd) 2
+  -- ⊥ 分量 + ∥ 分量系数的抽象化（lam/mu 不透明，绕开 rw 连带改写 inner ℝ v d）
+  obtain ⟨pv, lam, hpvadd, hpvne, hpvd⟩ :
+      ∃ pv : V3, ∃ lam : ℝ, pv + lam • d = v ∧ pv ≠ 0 ∧ inner ℝ pv d = 0 :=
+    ⟨v - (inner ℝ v d / ‖d‖ ^ 2) • d, inner ℝ v d / ‖d‖ ^ 2, by module, hvw, by
+      rw [inner_sub_left, real_inner_smul_left, real_inner_self_eq_norm_sq]
+      field_simp
+      ring⟩
+  obtain ⟨pw, mu, hpwadd, hpwne, hpwd⟩ :
+      ∃ pw : V3, ∃ mu : ℝ, pw + mu • d = w ∧ pw ≠ 0 ∧ inner ℝ pw d = 0 :=
+    ⟨w - (inner ℝ w d / ‖d‖ ^ 2) • d, inner ℝ w d / ‖d‖ ^ 2, by module, hww, by
+      rw [inner_sub_left, real_inner_smul_left, real_inner_self_eq_norm_sq]
+      field_simp
+      ring⟩
+  obtain ⟨g, hgcont, hg0, hg1, hgprop, hgdist, -⟩ :=
+    cf4_rotation_family_special (v := pv) (w := pw) (n := d) hpvne hpwne hpvd hpwd
+  refine ⟨fun t => g t + lam • d, ‖pv‖ / ‖pw‖, lam - (‖pv‖ / ‖pw‖) * mu,
+    div_pos (norm_pos_iff.2 hpvne) (norm_pos_iff.2 hpwne), by fun_prop, ?_, ?_, ?_, ?_⟩
+  · show g 0 + lam • d = v
+    rw [hg0, hpvadd]
+  · show g 1 + lam • d =
+      (‖pv‖ / ‖pw‖) • w + (lam - (‖pv‖ / ‖pw‖) * mu) • d
+    have h2 : (‖pv‖ / ‖pw‖) * mu + (lam - (‖pv‖ / ‖pw‖) * mu) = lam := by ring
+    rw [hg1, ← hpwadd, smul_add, smul_smul, add_assoc, ← add_smul, h2]
+  · intro t c
+    show dist (g t + lam • d) ((c:ℝ) • d) = dist v ((c:ℝ) • d)
+    refine sq_eq_sq₀ dist_nonneg dist_nonneg |>.1 ?_
+    have e1 : dist (g t + lam • d) ((c:ℝ) • d) = ‖g t + (lam - c) • d‖ := by
+      rw [dist_eq_norm]
+      refine congrArg norm ?_
+      module
+    have e2 : dist v ((c:ℝ) • d) = ‖pv + (lam - c) • d‖ := by
+      rw [dist_eq_norm]
+      refine congrArg norm ?_
+      rw [← hpvadd]
+      module
+    have hgn : ‖g t‖ = ‖pv‖ := (hgprop t).1
+    have hgd : inner ℝ (g t) d = 0 := (hgprop t).2
+    have s1 : ‖g t + (lam - c) • d‖ ^ 2 = ‖g t‖ ^ 2 + (lam - c) ^ 2 * ‖d‖ ^ 2 := by
+      have h1 : ‖g t + (lam - c) • d‖ ^ 2
+          = inner ℝ (g t + (lam - c) • d) (g t + (lam - c) • d) :=
+        (real_inner_self_eq_norm_sq _).symm
+      rw [h1, inner_add_left, inner_add_right, inner_add_right, real_inner_smul_left,
+        real_inner_smul_left, real_inner_smul_right, real_inner_smul_right,
+        real_inner_comm (g t) d, hgd, real_inner_self_eq_norm_sq,
+        real_inner_self_eq_norm_sq]
+      ring
+    have s2 : ‖pv + (lam - c) • d‖ ^ 2 = ‖pv‖ ^ 2 + (lam - c) ^ 2 * ‖d‖ ^ 2 := by
+      have h1 : ‖pv + (lam - c) • d‖ ^ 2
+          = inner ℝ (pv + (lam - c) • d) (pv + (lam - c) • d) :=
+        (real_inner_self_eq_norm_sq _).symm
+      rw [h1, inner_add_left, inner_add_right, inner_add_right, real_inner_smul_left,
+        real_inner_smul_left, real_inner_smul_right, real_inner_smul_right,
+        real_inner_comm pv d, hpvd, real_inner_self_eq_norm_sq,
+        real_inner_self_eq_norm_sq]
+      ring
+    rw [e1, s1, hgn, ← s2, ← e2]
+  · intro t ht
+    show dist (g t + lam • d) w ≤ dist v w
+    refine nonneg_le_nonneg_of_sq_le_sq dist_nonneg ?_
+    have e1 : dist (g t + lam • d) w = ‖(g t - pw) + (lam - mu) • d‖ := by
+      rw [dist_eq_norm]
+      refine congrArg norm ?_
+      rw [← hpwadd]
+      module
+    have e2 : dist v w = ‖(pv - pw) + (lam - mu) • d‖ := by
+      rw [dist_eq_norm]
+      refine congrArg norm ?_
+      rw [← hpvadd, ← hpwadd]
+      module
+    have hgd : inner ℝ (g t) d = 0 := (hgprop t).2
+    have s1 : ‖(g t - pw) + (lam - mu) • d‖ ^ 2
+        = ‖g t - pw‖ ^ 2 + (lam - mu) ^ 2 * ‖d‖ ^ 2 := by
+      have h1 : ‖(g t - pw) + (lam - mu) • d‖ ^ 2
+          = inner ℝ ((g t - pw) + (lam - mu) • d) ((g t - pw) + (lam - mu) • d) :=
+        (real_inner_self_eq_norm_sq _).symm
+      rw [h1, inner_add_left, inner_add_right, inner_add_right, real_inner_smul_left,
+        real_inner_smul_left, real_inner_smul_right, real_inner_smul_right,
+        real_inner_comm (g t - pw) d, inner_sub_left (g t) pw d,
+        (hgprop t).2, hpwd, real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq]
+      ring
+    have s2 : ‖(pv - pw) + (lam - mu) • d‖ ^ 2
+        = ‖pv - pw‖ ^ 2 + (lam - mu) ^ 2 * ‖d‖ ^ 2 := by
+      have h1 : ‖(pv - pw) + (lam - mu) • d‖ ^ 2
+          = inner ℝ ((pv - pw) + (lam - mu) • d) ((pv - pw) + (lam - mu) • d) :=
+        (real_inner_self_eq_norm_sq _).symm
+      rw [h1, inner_add_left, inner_add_right, inner_add_right, real_inner_smul_left,
+        real_inner_smul_left, real_inner_smul_right, real_inner_smul_right,
+        real_inner_comm (pv - pw) d, inner_sub_left pv pw d,
+        hpvd, hpwd, real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq]
+      ring
+    have hle : ‖g t - pw‖ ^ 2 ≤ ‖pv - pw‖ ^ 2 := by
+      have h := hgdist t ht
+      rw [dist_eq_norm, dist_eq_norm] at h
+      exact pow_le_pow_left₀ (norm_nonneg _) h 2
+    rw [← pow_two, ← pow_two, e1, e2, s1, s2]
+    linarith
 
 /-! ## 6. 件 4：穿越不变量的起始端（aff_ge_inter_segments :1238 + 连续性陈述）
 
@@ -1299,13 +1544,14 @@ theorem cf4_aff_ge_inter_segments {v w u p : V3}
 
 /-- HOL `continuous_intersection_point`（CKQOWSA_4.hl:1785-1928）：交点对参数的
 连续依赖（2×2 线性组的 Cramer 解连续，continuous_solution_aux :1748）。
-NEEDS: CF-4b。路线：s t := -⟪f t,n⟫/(⟪w,n⟫-⟪f t,n⟫) ∈ [0,1]（分母 > 0 严格），
-交点 x t = (1-s t)•f t + s t•w；{v1,v2} 线性无关（cf4_linearIndependent_pair）
-⟹ Gram 行列式 G = ⟪v1,v1⟫⟪v2,v2⟫-⟪v1,v2⟫² > 0（严格 Cauchy–Schwarz 反证），
-α β 取显式 Cramer 公式（⟪x,vᵢ⟫ 的线性组合除以 G），连续性全部落在
-ContinuousOn.inner + 四则运算封闭；交唯一性由 s 的方程 (1-s)A+sW=0 的唯一解。
-辅助路线（可复用）：span{v1,v2} = {x : ⟪x,n⟫ = 0} 的成员表示经
-`cf4_plane_repr`（本文件已备）。 -/
+CF-4c 已闭合。路线：s t := -⟪f t,n⟫/(⟪w,n⟫-⟪f t,n⟫) ∈ [0,1]（分母 > 0 严格），
+交点 x t = (1-s t)•f t + s t•w 落在平面 ⟪·,n⟫ = 0 内；{v1,v2} 线性无关
+（cf4_linearIndependent_pair）⟹ Gram 行列式 G > 0（严格 Cauchy–Schwarz，
+等号情形经 inner_eq_norm_mul_iff_real 归结到共线矛盾），α β 取显式 Cramer 公式
+（⟪x,vᵢ⟫ 的线性组合除以 G），连续性全部落在 ContinuousOn.inner + 四则封闭；
+平面表示核 = `cf4_plane_repr` + affineSpan {0,v1,v2} = span{v1,v2}
+（mem_affineSpan_iff_exists + vectorSpan_eq_span_vsub_set_left 双向）；
+交唯一性由 σ + τ = 1 与 ⟪z,n⟫ = 0 联立的 s 唯一解。 -/
 theorem cf4_continuous_intersection_point {v1 v2 w n : V3} (f : ℝ → V3) (t1 : ℝ)
     (ht1 : 0 ≤ t1)
     (hcol : ¬ Collinear ℝ (insert (0:V3) ({v1, v2} : Set V3)))
@@ -1315,9 +1561,264 @@ theorem cf4_continuous_intersection_point {v1 v2 w n : V3} (f : ℝ → V3) (t1 
     ∃ α β : ℝ → ℝ, (ContinuousOn α (Set.Icc 0 t1) ∧ ContinuousOn β (Set.Icc 0 t1)) ∧
       ∀ t ∈ Set.Icc 0 t1,
         segment ℝ (f t) w ∩ affineSpan ℝ (insert (0:V3) ({v1, v2} : Set V3))
-          = {α t • v1 + β t • v2} :=
-  -- NEEDS: continuous_intersection_point CKQOWSA_4.hl:1785（CF-4b）
-  sorry
+          = {α t • v1 + β t • v2} := by
+  obtain ⟨hv10, hv20, hnc⟩ := cf4_not_collinear_smul hcol
+  have hindep : LinearIndependent ℝ ![v1, v2] := cf4_linearIndependent_pair hcol
+  have hn0 : n ≠ 0 := by
+    intro h
+    rw [h, inner_zero_right] at hwn
+    norm_num at hwn
+  -- 严格 Cauchy–Schwarz：|⟪v1,v2⟫| < ‖v1‖‖v2‖（线性无关 ⟹ 等号情形共线矛盾）
+  have habs : |inner ℝ v1 v2| < ‖v1‖ * ‖v2‖ := by
+    by_contra hcon
+    push_neg at hcon
+    have heq : |inner ℝ v1 v2| = ‖v1‖ * ‖v2‖ :=
+      le_antisymm (abs_real_inner_le_norm v1 v2) hcon
+    rcases (abs_eq (show (0:ℝ) ≤ ‖v1‖ * ‖v2‖ by positivity)).1 heq with hsgn | hsgn
+    · have h2 : ‖v2‖ • v1 = ‖v1‖ • v2 :=
+        (inner_eq_norm_mul_iff_real (x := v1) (y := v2)).1 hsgn
+      have h3 := congrArg (fun z : V3 => (‖v1‖⁻¹ : ℝ) • z) h2
+      rw [inv_smul_smul₀ (ne_of_gt (norm_pos_iff.2 hv10)), smul_smul] at h3
+      exact hnc (‖v1‖⁻¹ * ‖v2‖) h3.symm
+    · have h2' : ‖-v2‖ • v1 = ‖v1‖ • (-v2) :=
+        (inner_eq_norm_mul_iff_real (x := v1) (y := -v2)).1 (by
+          rw [inner_neg_right, norm_neg, hsgn]
+          ring)
+      rw [norm_neg] at h2'
+      have h3 := congrArg (fun z : V3 => (‖v1‖⁻¹ : ℝ) • z) h2'
+      rw [inv_smul_smul₀ (ne_of_gt (norm_pos_iff.2 hv10)), smul_smul] at h3
+      exact hnc (-(‖v1‖⁻¹ * ‖v2‖)) (by rw [neg_smul, h3, neg_neg])
+  -- Gram 行列式 hG > 0
+  obtain ⟨hG, hGpos, hGdef⟩ : ∃ hG : ℝ, 0 < hG ∧
+      hG = inner ℝ v1 v1 * inner ℝ v2 v2 - inner ℝ v1 v2 * inner ℝ v1 v2 := by
+    refine ⟨inner ℝ v1 v1 * inner ℝ v2 v2 - inner ℝ v1 v2 * inner ℝ v1 v2, ?_, rfl⟩
+    have hsq : inner ℝ v1 v2 ^ 2 < ‖v1‖ ^ 2 * ‖v2‖ ^ 2 := by
+      have hA : (0:ℝ) < ‖v1‖ * ‖v2‖ := by positivity
+      have hnn : (0:ℝ) ≤ |inner ℝ v1 v2| := abs_nonneg _
+      calc inner ℝ v1 v2 ^ 2
+          = |inner ℝ v1 v2| ^ 2 := (sq_abs _).symm
+        _ = |inner ℝ v1 v2| * |inner ℝ v1 v2| := by rw [sq]
+        _ ≤ (‖v1‖ * ‖v2‖) * |inner ℝ v1 v2| :=
+              mul_le_mul_of_nonneg_right (le_of_lt habs) hnn
+        _ < (‖v1‖ * ‖v2‖) * (‖v1‖ * ‖v2‖) := mul_lt_mul_of_pos_left habs hA
+        _ = ‖v1‖ ^ 2 * ‖v2‖ ^ 2 := by ring
+    rw [real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq]
+    linarith
+  have hGne : hG ≠ 0 := ne_of_gt hGpos
+  -- 平面 {⟪x,n⟫ = 0} 内点的显式 Cramer 表示
+  have hrepr : ∀ x : V3, inner ℝ x n = 0 →
+      ∃ α₀ β₀ : ℝ, x = α₀ • v1 + β₀ • v2 ∧
+        α₀ * hG = inner ℝ x v1 * inner ℝ v2 v2 - inner ℝ x v2 * inner ℝ v1 v2 ∧
+        β₀ * hG = inner ℝ v1 v1 * inner ℝ x v2 - inner ℝ v1 v2 * inner ℝ x v1 := by
+    intro x hxn
+    obtain ⟨a, b, hx⟩ := cf4_plane_repr (v2 := v1) (v4 := v2) hindep hn0 h1n h2n hxn
+    have hd1 : inner ℝ x v1 = a * inner ℝ v1 v1 + b * inner ℝ v1 v2 := by
+      rw [hx, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+        real_inner_comm v1 v2]
+    have hd2 : inner ℝ x v2 = a * inner ℝ v1 v2 + b * inner ℝ v2 v2 := by
+      rw [hx, inner_add_left, real_inner_smul_left, real_inner_smul_left]
+    refine ⟨a, b, hx, ?_, ?_⟩
+    · rw [hGdef, hd1, hd2]
+      ring
+    · rw [hGdef, hd1, hd2]
+      ring
+  -- affineSpan {0,v1,v2} = span{v1,v2} 的双向刻画
+  have hv1mem : v1 ∈ insert (0:V3) ({v1, v2} : Set V3) :=
+    Set.mem_insert_of_mem _ (Set.mem_insert v1 ({v2} : Set V3))
+  have hvspeq : vectorSpan ℝ (insert (0:V3) ({v1, v2} : Set V3))
+      = Submodule.span ℝ ((fun y : V3 => v1 -ᵥ y) '' (insert (0:V3) ({v1, v2} : Set V3))) :=
+    vectorSpan_eq_span_vsub_set_left ℝ hv1mem
+  have hspan_le : Submodule.span ℝ ({v1, v2} : Set V3) ≤ Submodule.span ℝ
+      ((fun y : V3 => v1 -ᵥ y) '' (insert (0:V3) ({v1, v2} : Set V3))) := by
+    rw [Submodule.span_le]
+    intro w2 hw2
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw2
+    rcases hw2 with hw2' | hw2'
+    · rw [hw2']
+      exact Submodule.subset_span ⟨(0:V3), by simp,
+        by show v1 - 0 = v1; rw [sub_zero]⟩
+    · rw [hw2']
+      have hv2eq : (v2:V3) = (v1 -ᵥ (0:V3)) - (v1 -ᵥ v2) := by
+        show v2 = v1 - 0 - (v1 - v2)
+        rw [sub_zero, sub_sub_cancel]
+      rw [hv2eq]
+      exact Submodule.sub_mem _
+        (Submodule.subset_span ⟨(0:V3), by simp, rfl⟩)
+        (Submodule.subset_span ⟨v2, by simp, rfl⟩)
+  have himg_sub : ∀ w2 ∈ (fun y : V3 => v1 -ᵥ y) '' (insert (0:V3) ({v1, v2} : Set V3)),
+      w2 ∈ Submodule.span ℝ ({v1, v2} : Set V3) := by
+    rintro w2 ⟨y, hy, rfl⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy
+    rcases hy with hy' | hy' | hy'
+    · rw [hy']
+      show v1 - (0:V3) ∈ Submodule.span ℝ ({v1, v2} : Set V3)
+      rw [sub_zero]
+      exact Submodule.subset_span (by simp)
+    · rw [hy']
+      show v1 - v1 ∈ Submodule.span ℝ ({v1, v2} : Set V3)
+      rw [sub_self]
+      exact Submodule.zero_mem _
+    · rw [hy']
+      show v1 - v2 ∈ Submodule.span ℝ ({v1, v2} : Set V3)
+      exact Submodule.mem_span_pair.2 ⟨1, -1, by module⟩
+  have haff_sub : ∀ z : V3, z ∈ affineSpan ℝ (insert (0:V3) ({v1, v2} : Set V3)) →
+      z ∈ Submodule.span ℝ ({v1, v2} : Set V3) := by
+    intro z hz
+    rw [mem_affineSpan_iff_exists] at hz
+    obtain ⟨p₁, hp₁, v2', hv2', rfl⟩ := hz
+    rw [hvspeq] at hv2'
+    have hv' : v2' ∈ Submodule.span ℝ ({v1, v2} : Set V3) := by
+      have hle : Submodule.span ℝ
+          ((fun y : V3 => v1 -ᵥ y) '' (insert (0:V3) ({v1, v2} : Set V3)))
+          ≤ Submodule.span ℝ ({v1, v2} : Set V3) := Submodule.span_le.2 himg_sub
+      exact hle hv2'
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp₁
+    rcases hp₁ with hp₁' | hp₁' | hp₁'
+    · rw [hp₁']
+      show v2' + (0:V3) ∈ Submodule.span ℝ ({v1, v2} : Set V3)
+      rw [add_zero]
+      exact hv'
+    · rw [hp₁']
+      show v2' + v1 ∈ Submodule.span ℝ ({v1, v2} : Set V3)
+      exact Submodule.add_mem _ hv' (Submodule.subset_span (by simp))
+    · rw [hp₁']
+      show v2' + v2 ∈ Submodule.span ℝ ({v1, v2} : Set V3)
+      exact Submodule.add_mem _ hv' (Submodule.subset_span (by simp))
+  have haff_sup : ∀ z : V3, z ∈ Submodule.span ℝ ({v1, v2} : Set V3) →
+      z ∈ affineSpan ℝ (insert (0:V3) ({v1, v2} : Set V3)) := by
+    intro z hz
+    rw [mem_affineSpan_iff_exists]
+    refine ⟨(0:V3), by simp, z, ?_, ?_⟩
+    · rw [hvspeq]
+      exact hspan_le hz
+    · show z = z + (0:V3)
+      rw [add_zero]
+  -- α β 的显式 Cramer 公式（连续性归约到 ContinuousOn 四则）
+  have hfc : ContinuousOn (fun t => inner ℝ (f t) n) (Set.Icc 0 t1) :=
+    hf.inner continuous_const.continuousOn
+  have hfv1 : ContinuousOn (fun t => inner ℝ (f t) v1) (Set.Icc 0 t1) :=
+    hf.inner continuous_const.continuousOn
+  have hfv2 : ContinuousOn (fun t => inner ℝ (f t) v2) (Set.Icc 0 t1) :=
+    hf.inner continuous_const.continuousOn
+  have hs : ContinuousOn (fun t => -inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
+      (Set.Icc 0 t1) :=
+    ContinuousOn.div hfc.neg (continuous_const.continuousOn.sub hfc) (fun t ht =>
+      ne_of_gt (by linarith [hfn t ht]))
+  have hA1 : ContinuousOn (fun t => inner ℝ (f t) v1
+      + (-inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
+        * (inner ℝ w v1 - inner ℝ (f t) v1)) (Set.Icc 0 t1) :=
+    hfv1.add (hs.mul (continuous_const.continuousOn.sub hfv1))
+  have hA2 : ContinuousOn (fun t => inner ℝ (f t) v2
+      + (-inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
+        * (inner ℝ w v2 - inner ℝ (f t) v2)) (Set.Icc 0 t1) :=
+    hfv2.add (hs.mul (continuous_const.continuousOn.sub hfv2))
+  refine ⟨fun t => ((inner ℝ (f t) v1
+        + (-inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
+          * (inner ℝ w v1 - inner ℝ (f t) v1)) * inner ℝ v2 v2
+      - (inner ℝ (f t) v2
+        + (-inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
+          * (inner ℝ w v2 - inner ℝ (f t) v2)) * inner ℝ v1 v2) / hG,
+    fun t => (inner ℝ v1 v1
+        * (inner ℝ (f t) v2 + (-inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
+            * (inner ℝ w v2 - inner ℝ (f t) v2))
+      - inner ℝ v1 v2 * (inner ℝ (f t) v1
+        + (-inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
+          * (inner ℝ w v1 - inner ℝ (f t) v1))) / hG,
+    ⟨ContinuousOn.div ((hA1.mul continuous_const.continuousOn).sub
+        (hA2.mul continuous_const.continuousOn)) continuous_const.continuousOn
+        (fun _ _ => hGne),
+      ContinuousOn.div ((continuous_const.continuousOn.mul hA2).sub
+        (continuous_const.continuousOn.mul hA1)) continuous_const.continuousOn
+        (fun _ _ => hGne)⟩,
+    ?_⟩
+  intro t ht
+  have hD : (0:ℝ) < inner ℝ w n - inner ℝ (f t) n := by linarith [hfn t ht]
+  have hDne : inner ℝ w n - inner ℝ (f t) n ≠ 0 := ne_of_gt hD
+  obtain ⟨s, hs⟩ : ∃ s : ℝ,
+      s = -inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n) := ⟨_, rfl⟩
+  have hs01 : 0 ≤ s ∧ s ≤ 1 := by
+    rw [hs]
+    constructor
+    · have h0 := hfn t ht
+      exact div_nonneg (by linarith) hD.le
+    · rw [div_le_iff₀ hD]
+      linarith
+  -- 交点 x = (1-s)•f t + s•w 落在平面 ⟪·,n⟫ = 0 内
+  have hxn : inner ℝ ((1 - s) • f t + s • w) n = 0 := by
+    rw [hs, inner_add_left, real_inner_smul_left, real_inner_smul_left]
+    field_simp
+    all_goals { ring }
+  obtain ⟨α₀, β₀, hxpt, hα, hβ⟩ := hrepr ((1 - s) • f t + s • w) hxn
+  -- ⟪x,vᵢ⟫ 的展开与 α₀ β₀ = 显式 Cramer 公式的衔接
+  have hv1x : inner ℝ ((1 - s) • f t + s • w) v1
+      = inner ℝ (f t) v1 + s * (inner ℝ w v1 - inner ℝ (f t) v1) := by
+    rw [inner_add_left, real_inner_smul_left, real_inner_smul_left]
+    ring
+  have hv2x : inner ℝ ((1 - s) • f t + s • w) v2
+      = inner ℝ (f t) v2 + s * (inner ℝ w v2 - inner ℝ (f t) v2) := by
+    rw [inner_add_left, real_inner_smul_left, real_inner_smul_left]
+    ring
+  have hxat : (1 - s) • f t + s • w
+      = (((inner ℝ (f t) v1
+          + (-inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
+            * (inner ℝ w v1 - inner ℝ (f t) v1)) * inner ℝ v2 v2
+        - (inner ℝ (f t) v2
+          + (-inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
+            * (inner ℝ w v2 - inner ℝ (f t) v2)) * inner ℝ v1 v2) / hG) • v1
+        + ((inner ℝ v1 v1
+          * (inner ℝ (f t) v2 + (-inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
+              * (inner ℝ w v2 - inner ℝ (f t) v2))
+        - inner ℝ v1 v2 * (inner ℝ (f t) v1
+          + (-inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
+            * (inner ℝ w v1 - inner ℝ (f t) v1))) / hG) • v2 := by
+    rw [hxpt]
+    have e1 : ((inner ℝ (f t) v1
+          + (-inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
+            * (inner ℝ w v1 - inner ℝ (f t) v1)) * inner ℝ v2 v2
+        - (inner ℝ (f t) v2
+          + (-inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
+            * (inner ℝ w v2 - inner ℝ (f t) v2)) * inner ℝ v1 v2) / hG = α₀ := by
+      rw [← hs, ← hv1x, ← hv2x, ← hα]
+      field_simp
+    have e2 : (inner ℝ v1 v1
+          * (inner ℝ (f t) v2 + (-inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
+              * (inner ℝ w v2 - inner ℝ (f t) v2))
+        - inner ℝ v1 v2 * (inner ℝ (f t) v1
+          + (-inner ℝ (f t) n / (inner ℝ w n - inner ℝ (f t) n))
+            * (inner ℝ w v1 - inner ℝ (f t) v1))) / hG = β₀ := by
+      rw [← hs, ← hv1x, ← hv2x, ← hβ]
+      field_simp
+    rw [e1, e2]
+  -- 交唯一性：z ∈ segment ∩ 平面 ⟹ z = 交点
+  ext z
+  constructor
+  · rintro ⟨hseg, haff⟩
+    obtain ⟨σ, τ, hσ, hτ, hστ, hz⟩ := hseg
+    have hzn : inner ℝ z n = 0 := by
+      have hzsp := haff_sub z haff
+      obtain ⟨a, b, hzab⟩ := Submodule.mem_span_pair.1 hzsp
+      rw [← hzab, inner_add_left, real_inner_smul_left, real_inner_smul_left, h1n, h2n]
+      ring
+    have hzinn : inner ℝ z n
+        = inner ℝ (f t) n + τ * (inner ℝ w n - inner ℝ (f t) n) := by
+      rw [← hz, inner_add_left, real_inner_smul_left, real_inner_smul_left]
+      have hsc : σ = 1 - τ := by linarith
+      rw [hsc]
+      ring
+    have hτs : τ = s := by
+      rw [hs, eq_div_iff hDne]
+      have h2 : τ * (inner ℝ w n - inner ℝ (f t) n)
+          = -inner ℝ (f t) n := by linarith [hzinn, hzn]
+      exact h2
+    have hσs : σ = 1 - s := by linarith
+    rw [← hz, hτs, hσs]
+    exact hxat
+  · rintro hz
+    refine ⟨⟨1 - s, s, by linarith, hs01.1, by ring, ?_⟩, ?_⟩
+    · rw [hz]
+      exact hxat
+    · rw [hz]
+      exact haff_sup _ (Submodule.mem_span_pair.2 ⟨_, _, rfl⟩)
 
 /-- HOL `continuous_lemma_aff_ge`（CKQOWSA_4.hl:2204-2869，全章最大单件 665 行）：
 穿越不变量在连续旋转族下的传递。NEEDS: CF-4b 主件（保留 sorry）。
@@ -1325,11 +1826,11 @@ theorem cf4_continuous_intersection_point {v1 v2 w n : V3} (f : ℝ → V3) (t1 
 ①in_aff_ge_cases_lemma :1928 + segment_intersects_aff_ge_lemma :2138（穿锥判别
 两分支，未移植）②continuous_intersection_point（α β 连续参数化，见上件）③
 aff_ge_inter_segments（本文件已闭合）④IVT 打靶（dist_decreasing_ivt 家族，未移植）。
+CF-4c 后上游状态：cf4_rotation_family_special 与 cf4_continuous_intersection_point
+均已闭合（见上两件），穿锥判别 ①与 IVT ④仍未移植——主件保留 sorry。
 Lean 路线建议：记 S := {t ∈ [0,h] | segment[f t,w] ∩ cone{v1,v2} ≠ ∅}，用
 f 的连续性 + 分离超平面 {x : ⟪x,n⟫ = 0}（v1 v2 n 的正交关系）证 S 同时开闭，
-再由 [0,h] 连通得 S = [0,h] 或给出 x 分界点（结论的二支）。上游依赖：
-cf4_rotation_family_special（本文件 NEEDS，试写记录见其 docstring）与
-cf4_continuous_intersection_point（见上件）。 -/
+再由 [0,h] 连通得 S = [0,h] 或给出 x 分界点（结论的二支）。 -/
 theorem cf4_continuous_lemma_aff_ge {v1 v2 w : V3} (f : ℝ → V3) (h : ℝ) (hh : 0 ≤ h)
     (hf : ContinuousOn f (Set.Icc 0 h))
     (hstart : (segment ℝ (f 0) w ∩ affGe {0} ({v1, v2} : Set V3)).Nonempty)
