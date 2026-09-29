@@ -483,6 +483,11 @@ aff_dim P − 1 + P 全维 ⇒ 同 hull），本质消费 aff_dim 内容；前�
 仍按 (d) 冻结至重填 kit（affDimC 超平面 kit → §2.3 表）落地后入重填队列
 （章程 §3c：中等档，kit 后）。
 
+**(g) 编排者复核（2026-09-29）：反例消解确认，正式转入 kit 波填证队列** ——
+两级反例（∅ 面 / 顶点面 {0}）在新 `facetOfC` 的 `affDimC f = affDimC s - 1`
+条件下均不可满足（affDimC ∅ = -1 ≠ 1；affDimC {0} = 0 ≠ 1），陈述冻结解除；
+填证路线 = (b) 所记 HOL `AFF_DIM_EQ_AFFINE_HULL`，前置件 = affDimC kit（§2.3）。
+
 ## 17'. 项 13a `pad2d3d_facet` — 分级 C（需重移植，零补丁）
 
 **(a) HOL 裁决**：`counting_spheres.hl:1737`：`!P n. polyhedron P /(!u. u IN P ==> u$3 = &0) /\ {c | c facet_of P} HAS_SIZE n ==>
@@ -509,6 +514,11 @@ aff_dim P − 1 + P 全维 ⇒ 同 hull），本质消费 aff_dim 内容；前�
 `affDimC` 条件，前提/结论计数口径统一（HOL 镜像），(b) 的 ∅ 混入反例不再成立。
 仍按 (d) 冻结至重填 kit（`FACET_OF_LINEAR_IMAGE` ℂ 版，§2.3 表）落地后入重填
 队列（章程 §3c：GIANT 档）。
+
+**(g) 编排者复核（2026-09-29）：反例消解确认，正式转入 kit 波填证队列** ——
+前提/结论计数口径已随 DEF-FIX 统一（双侧 affDimC 忠实形），(b) 的 ∅/顶点面
+混入反例均不可满足；前置件 = `FACET_OF_LINEAR_IMAGE` ℂ 版（§2.3 kit），
+GIANT 档顺延波 3。
 
 ## 18'. 项 14 `ARG_ORDER` — 分级 A′（改述 holArg，证明待收口）
 
