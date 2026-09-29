@@ -666,10 +666,204 @@ theorem AFFINE_HULL_3_INSERT (a : V3) (S : Set V3) (h : a ∈ (affineSpan ℝ S 
   congrArg (fun t : AffineSubspace ℝ V3 => (t : Set V3))
     (affineSpan_insert_eq_affineSpan ℝ (SetLike.mem_coe.mp h))
 
+/-! ### GT-2 lane private kit: translated-packing finiteness + cell boundedness
+
+These feed `FINITE_EDGE_X2` and `MCELL_SUBSET_BALL8_1` (both consumed by the
+GRUTOTI chain, PackingAuto23). -/
+
+/-- A translate of a packing is a packing (rigidity of `dist`). -/
+private theorem p15_packing_translate (V : Set V3) (t : V3) (hp : Packing V) :
+    Packing ((fun w => w - t) '' V) := by
+  intro a ha b hb hdist
+  obtain ⟨u, huV, rfl⟩ := ha
+  obtain ⟨v, hvV, rfl⟩ := hb
+  simp only [] at hdist ⊢
+  have hd : dist (u - t) (v - t) = dist u v := by
+    simp only [dist_eq_norm]
+    congr 1
+    abel
+  rw [hd] at hdist
+  have huv := hp u huV v hvV hdist
+  rw [huv]
+
+/-- Finiteness of the packing points in a ball centered at an arbitrary point
+(`Packing.finite_inter_ball` is stated for balls centered at `0`). -/
+private theorem p15_finite_inter_ball_at (V : Set V3) (c : V3) (r : ℝ) (hp : Packing V) :
+    (V ∩ Metric.ball c r).Finite := by
+  classical
+  have hfin : ((fun w : V3 => w - c) '' V ∩ Metric.ball 0 r).Finite :=
+    (p15_packing_translate V c hp).finite_inter_ball r
+  have hsub : V ∩ Metric.ball c r ⊆
+      (fun w : V3 => w + c) '' ((fun w : V3 => w - c) '' V ∩ Metric.ball 0 r) := by
+    rintro x ⟨hxV, hxb⟩
+    refine ⟨x - c, ⟨⟨x, hxV, rfl⟩, ?_⟩, by simp⟩
+    rw [Metric.mem_ball, dist_zero_right]
+    have hxc : dist x c < r := Metric.mem_ball.mp hxb
+    rw [dist_eq_norm] at hxc
+    exact hxc
+  exact (hfin.image (fun w : V3 => w + c)).subset hsub
+
+/-- Every point of a `voronoiClosed` set is within `2` of its center
+(saturation). -/
+private theorem p15_voronoi_dist_lt2 {V : Set V3} {s x : V3} (hs : saturated V)
+    (hx : x ∈ voronoiClosed V s) : dist x s < 2 := by
+  obtain ⟨y, hyV, hyd⟩ := hs x
+  have h1 : dist x s ≤ dist x y := by
+    simpa only [voronoiClosed, Set.mem_setOf_eq] using hx y hyV
+  linarith
+
+/-- Mutual-cone cancellation for the `j = 2` edge cells: two points obeying the
+mutual `rconeGe` inequalities at parameter `A` with `A·(2√2) = L`, `L > 0`, are
+endpoint-distance-sum bounded by `2√2` (adding the two cone inequalities gives
+`‖u1-u0‖² ≥ (d(x,u0)+d(x,u1))·‖u1-u0‖·A`, and `A = hl [u0;u1]/√2` by `HL_2`). -/
+private theorem p15_cone_pair_bound {x u0 u1 : V3} {A : ℝ}
+    (hLpos : 0 < dist u0 u1)
+    (hself : inner ℝ (u1 - u0) (u1 - u0) = dist u0 u1 * dist u0 u1)
+    (hA : A * (2 * Real.sqrt 2) = dist u0 u1)
+    (hc1 : (x - u0) ⬝ᵥ (u1 - u0) ≥ dist x u0 * dist u1 u0 * A)
+    (hc2 : (x - u1) ⬝ᵥ (u0 - u1) ≥ dist x u1 * dist u0 u1 * A) :
+    dist x u0 + dist x u1 ≤ 2 * Real.sqrt 2 := by
+  have hk : (0:ℝ) < 2 * Real.sqrt 2 := by positivity
+  have hApos : (0:ℝ) < A := by
+    rcases le_or_gt A 0 with h | h
+    · exfalso
+      have h1 : A * (2 * Real.sqrt 2) ≤ (0:ℝ) * (2 * Real.sqrt 2) :=
+        mul_le_mul_of_nonneg_right h (le_of_lt hk)
+      rw [zero_mul] at h1
+      linarith
+    · exact h
+  have hc1' : inner ℝ (x - u0) (u1 - u0) ≥ dist x u0 * (dist u0 u1 * A) := by
+    rw [inner_eq_dot]
+    have h2 := hc1
+    rw [dist_comm u1 u0, mul_assoc] at h2
+    exact h2
+  have hc2' : inner ℝ (x - u1) (u1 - u0) ≤ -(dist x u1 * (dist u0 u1 * A)) := by
+    have h : inner ℝ (x - u1) (u0 - u1) ≥ dist x u1 * (dist u0 u1 * A) := by
+      rw [inner_eq_dot]
+      have h2 := hc2
+      rw [mul_assoc] at h2
+      exact h2
+    have huv : (u0 - u1 : V3) = -(u1 - u0) := by abel
+    rw [huv, inner_neg_right] at h
+    linarith
+  have hkey : inner ℝ (u1 - u0) (u1 - u0)
+      ≥ dist x u0 * (dist u0 u1 * A) + dist x u1 * (dist u0 u1 * A) := by
+    have hlin : inner ℝ (u1 - u0) (u1 - u0)
+        = inner ℝ (x - u0) (u1 - u0) - inner ℝ (x - u1) (u1 - u0) := by
+      have hsub := @inner_sub_left ℝ V3 _ _ _ (x - u0) (x - u1) (u1 - u0)
+      have hab : (x - u0 : V3) - (x - u1) = u1 - u0 := by abel
+      rwa [hab] at hsub
+    rw [hlin]
+    linarith
+  have h1 : (dist x u0 + dist x u1) * (dist u0 u1 * A) ≤ dist u0 u1 * dist u0 u1 := by
+    linarith [hkey, hself]
+  -- `dist u0 u1 = A·(2√2)` turns the bound into `S·(L·A) ≤ k·(L·A)`
+  have eL : dist u0 u1 * dist u0 u1 = (2 * Real.sqrt 2) * (dist u0 u1 * A) := by
+    rw [hA.symm]
+    ring
+  rw [eL] at h1
+  have hApos' : (0:ℝ) < A := by linarith [div_pos hLpos hk, hA]
+  exact le_of_mul_le_mul_right h1 (mul_pos hLpos hApos')
+
 /-- marchal3.hl:2184 `FINITE_EDGE_X2`. -/
 theorem FINITE_EDGE_X2 (V : Set V3) (e : Set V3) (u0 u1 : V3) (hp : Packing V)
     (hs : saturated V) (he : e = {u0, u1}) :
-    {X : Set V3 | mcellSet V X ∧ edgeX V X e}.Finite := sorry
+    {X : Set V3 | mcellSet V X ∧ edgeX V X e}.Finite := by
+  classical
+  -- the finite index tuples: 4-point lists drawn from `V ∩ ball u0 4`
+  have hVb : (V ∩ Metric.ball u0 4).Finite := p15_finite_inter_ball_at V u0 4 hp
+  have hT : {ul : List V3 | ∃ a b c d : V3, a ∈ V ∩ Metric.ball u0 4 ∧
+      b ∈ V ∩ Metric.ball u0 4 ∧ c ∈ V ∩ Metric.ball u0 4 ∧
+      d ∈ V ∩ Metric.ball u0 4 ∧ ul = [a, b, c, d]}.Finite := by
+    have hsub : {ul : List V3 | ∃ a b c d : V3, a ∈ V ∩ Metric.ball u0 4 ∧
+        b ∈ V ∩ Metric.ball u0 4 ∧ c ∈ V ∩ Metric.ball u0 4 ∧
+        d ∈ V ∩ Metric.ball u0 4 ∧ ul = [a, b, c, d]} ⊆
+        (fun q : V3 × V3 × V3 × V3 => [q.1, q.2.1, q.2.2.1, q.2.2.2]) ''
+        ((V ∩ Metric.ball u0 4) ×ˢ ((V ∩ Metric.ball u0 4) ×ˢ
+          ((V ∩ Metric.ball u0 4) ×ˢ (V ∩ Metric.ball u0 4)))) := by
+      intro l hl
+      rw [Set.mem_setOf_eq] at hl
+      obtain ⟨a, b, c, d, h0, h1', h2', h3', rfl⟩ := hl
+      exact ⟨(a, b, c, d),
+        Set.mem_prod.mpr ⟨h0, Set.mem_prod.mpr ⟨h1', Set.mem_prod.mpr ⟨h2', h3'⟩⟩⟩, rfl⟩
+    exact Set.Finite.subset ((hVb.prod (hVb.prod (hVb.prod hVb))).image _) hsub
+  have hsub : {X : Set V3 | mcellSet V X ∧ edgeX V X e} ⊆
+      (fun t : ℕ × List V3 => mcell t.1 V t.2) ''
+        ((Set.Iic (4 : ℕ)) ×ˢ
+          {ul : List V3 | ∃ a b c d : V3, a ∈ V ∩ Metric.ball u0 4 ∧
+            b ∈ V ∩ Metric.ball u0 4 ∧ c ∈ V ∩ Metric.ball u0 4 ∧
+            d ∈ V ∩ Metric.ball u0 4 ∧ ul = [a, b, c, d]}) := by
+    intro X hX
+    obtain ⟨hm, hedge⟩ := hX
+    simp only [mcellSet] at hm
+    obtain ⟨i, ul, hXmul, hbul⟩ := hm
+    simp only [edgeX] at hedge
+    obtain ⟨w0, w1, he0, hw0, hw1, hwne⟩ := hedge
+    have heq : {w0, w1} = {u0, u1} := he0.symm.trans he
+    have hw0in : w0 ∈ ({u0, u1} : Set V3) := by rw [← heq]; exact Set.mem_insert w0 {w1}
+    have hu0in : u0 ∈ ({w0, w1} : Set V3) := by rw [heq]; exact Set.mem_insert u0 {u1}
+    have hu1in : u1 ∈ ({w0, w1} : Set V3) := by
+      rw [heq]
+      exact Set.mem_insert_of_mem u0 (Set.mem_singleton u1)
+    have hu0vx : u0 ∈ VX V X := by
+      rcases Set.mem_insert_iff.mp hu0in with h | h
+      · rw [h]
+        exact hw0
+      · rcases Set.mem_singleton_iff.mp h with h
+        rw [h]
+        exact hw1
+    by_cases hnull : nullSet X
+    · exfalso
+      have hvx0 : VX V X = ∅ := by rw [VX, if_pos hnull]
+      rw [hvx0] at hu0vx
+      simp at hu0vx
+    -- extract the cell parameters chosen by `cellParams`
+    have hwit : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 := by
+      refine ⟨(if i ≤ 4 then i else 4, ul), ?_, hbul, ?_⟩
+      · by_cases hle : i ≤ 4 <;> simp [hle]
+      · by_cases hle : i ≤ 4
+        · rw [if_pos hle, hXmul]
+        · rw [if_neg hle]
+          exact hXmul.trans ((MCELL_EXPLICIT i V ul).2.2.2.2 (by omega))
+    have hspec := Classical.epsilon_spec
+      (p := fun p : ℕ × List V3 => p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2) hwit
+    obtain ⟨hk4, hbarp, hXp⟩ := hspec
+    by_cases hk0 : (cellParams V X).1 = 0
+    · exfalso
+      have hvx0 : VX V X = ∅ := by rw [VX, if_neg hnull, if_pos hk0]
+      rw [hvx0] at hu0vx
+      simp at hu0vx
+    · -- `u0` is a list point of the parameter list
+      have hvx : VX V X =
+          setOfList (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2) := by
+        rw [VX, if_neg hnull, if_neg hk0]
+      have hu0tr : u0 ∈ setOfList (truncateSimplex ((cellParams V X).1 - 1)
+          (cellParams V X).2) := hvx ▸ hu0vx
+      have hk4' : (cellParams V X).1 ≤ 4 := hk4
+      have hk0' : (cellParams V X).1 ≠ 0 := hk0
+      have hlen4 : (cellParams V X).2.length = 3 + 1 := hbarp.1
+      have hinit := (TRUNCATE_SIMPLEX_INITIAL_SUBLIST ((cellParams V X).1 - 1)
+        (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2)
+          (cellParams V X).2).1
+        ⟨rfl, by omega⟩
+      obtain ⟨hsubl, -⟩ := hinit
+      rcases hsubl with ⟨yl, hyl⟩
+      have hu0list : u0 ∈ setOfList (cellParams V X).2 := by
+        rw [hyl]
+        exact List.mem_append_left _ hu0tr
+      obtain ⟨a, b, c, d, hulp⟩ := BARV_3_EXPLICIT V (cellParams V X).2 hbarp
+      have hball := p15_barV3ImpFinite2 hp hs hbarp hu0list
+      have hpts : ∀ z ∈ setOfList (cellParams V X).2, z ∈ V ∩ Metric.ball u0 4 := by
+        intro z hz
+        exact ⟨BARV_SUBSET V 3 (cellParams V X).2 hbarp hz, hball hz⟩
+      refine ⟨((cellParams V X).1, (cellParams V X).2),
+        ⟨hk4, ⟨a, b, c, d, ?_, ?_, ?_, ?_, hulp⟩⟩, hXp.symm⟩
+      · exact hpts a (by rw [hulp]; simp [setOfList])
+      · exact hpts b (by rw [hulp]; simp [setOfList])
+      · exact hpts c (by rw [hulp]; simp [setOfList])
+      · exact hpts d (by rw [hulp]; simp [setOfList])
+  exact Set.Finite.subset
+    ((((Set.finite_Iic 4).prod hT).image (fun t : ℕ × List V3 => mcell t.1 V t.2))) hsub
 
 /-! ## marchal3.hl:2304-2350: the LIFT_* continuity kit
 
@@ -788,10 +982,152 @@ theorem SMALLEST_ANGLE_LINE_PROPERTY (m n u0 u1 x y : V3) (hu0 : u0 ≠ u1)
   rw [hx, smallestAngleLine, smallestAngleSet]
   exact (Classical.epsilon_spec hex).2 y hy
 
+/-- marchal3.hl:2465 `MCELL_SUBSET_BALL8_1`. FILLED (GT-2 lane): the whole cell
+lies in `ball (hdV ul) 4` — rogers cells via `ROGERS_SUBSET_VORONOI_CLOSED` +
+saturation (`< 2`), the `j = 2` mutual-cone cell via `p15_cone_pair_bound`
+(the cone parameter is `hl (trunc 1 ul)/√2 > 0`, `BARV_IMP_HL_1_POS_LT`), the
+`j = 3` hull via `MXI_EXPLICIT` (mxi at distance `√2` from the head), and the
+`j = 4` hull via `p15_barV3ImpFinite2` — then `dist v x < 4 + 4 = 8`. -/
+private theorem p15_mcell_subset_ball4_hd (V : Set V3) (ul : List V3) (hp : Packing V)
+    (hs : saturated V) (hb : barV V 3 ul) :
+    ∀ j : ℕ, j ≤ 4 → mcell j V ul ⊆ Metric.ball (hdV ul) 4 := by
+  obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hb
+  have hhdmem : hdV ul ∈ setOfList ul :=
+    HD_IN_SET_OF_LIST ul (by rw [hb.1]; omega)
+  have hlist : setOfList ul ⊆ Metric.ball (hdV ul) 4 :=
+    p15_barV3ImpFinite2 hp hs hb hhdmem
+  have homega : ∀ t : ℕ, t ≤ 3 → omegaListN V ul t ∈
+      Metric.ball (hdV ul) 2 := by
+    intro t ht
+    refine Metric.mem_ball.mpr ?_
+    rw [dist_comm]
+    exact p15_omega_dist_hd V ul hp hs hb t ht
+  have hrogers : rogers V ul ⊆ Metric.ball (hdV ul) 2 := by
+    rw [ROGERS_EXPLICIT V ul hs hp hb]
+    refine convexHull_min ?_ (convex_ball _ _)
+    intro z hz
+    rcases Set.mem_insert_iff.mp hz with rfl | hz
+    · exact homega 0 (by omega)
+    · rcases Set.mem_insert_iff.mp hz with rfl | hz
+      · exact homega 1 (by omega)
+      · rcases Set.mem_insert_iff.mp hz with rfl | hz
+        · exact homega 2 (by omega)
+        · rcases Set.mem_singleton_iff.mp hz with rfl
+          exact homega 3 (by omega)
+  have htr1 : truncateSimplex 1 ul = [u0, u1] := by
+    rw [hul]
+    exact (TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2
+  have htr2 : truncateSimplex 2 ul = [u0, u1, u2] := by
+    rw [hul]
+    exact (TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2
+  have e0 : hdV ul = u0 := by rw [hul]; rfl
+  have e1 : hdV ul.tail = u1 := by rw [hul]; rfl
+  have hhl1 : 0 < hl (truncateSimplex 1 ul) := BARV_IMP_HL_1_POS_LT V ul hs hp hb
+  have hHL2 : hl (truncateSimplex 1 ul) = dist u0 u1 / 2 := by rw [htr1, HL_2]
+  have hLpos : 0 < dist u0 u1 := by rw [hHL2] at hhl1; linarith
+  have hAeq : ∀ A : ℝ, A = hl (truncateSimplex 1 ul) / Real.sqrt 2 →
+      A * (2 * Real.sqrt 2) = dist u0 u1 := by
+    intro A hA
+    rw [hA, hHL2]
+    field_simp
+  have hq : Real.sqrt 2 < 2 := by
+    have hq2 := Real.sqrt_lt_sqrt (x := 2) (y := 4) (by norm_num) (by norm_num)
+    rwa [show Real.sqrt 4 = 2 from by norm_num] at hq2
+  intro j hj
+  rcases Nat.lt_or_ge j 1 with h0 | h0
+  · have hj0 : j = 0 := by omega
+    rw [hj0, (MCELL_EXPLICIT 0 V ul).1]
+    intro x hx
+    rw [mcell0, Set.mem_sdiff] at hx
+    refine Metric.mem_ball.mpr ?_
+    have h2 := p15_voronoi_dist_lt2 hs
+      (ROGERS_SUBSET_VORONOI_CLOSED V ul hs hp hb hx.1)
+    linarith
+  rcases Nat.lt_or_ge j 2 with h1 | h1
+  · have hj1 : j = 1 := by omega
+    rw [hj1, (MCELL_EXPLICIT 1 V ul).2.1]
+    intro x hx
+    rw [mcell1] at hx
+    split_ifs at hx
+    · rw [Set.mem_sdiff] at hx
+      refine Metric.mem_ball.mpr ?_
+      have h2 := p15_voronoi_dist_lt2 hs
+        (ROGERS_SUBSET_VORONOI_CLOSED V ul hs hp hb hx.1.1)
+      linarith
+    · simp at hx
+  rcases Nat.lt_or_ge j 3 with h2c | h2c
+  · -- j = 2: the mutual-cone cell; bounded by cone arithmetic
+    have hj2 : j = 2 := by omega
+    rw [hj2, (MCELL_EXPLICIT 2 V ul).2.2.1]
+    intro x hx
+    rw [mcell2] at hx
+    split_ifs at hx with hcond
+    · simp only [] at hx
+      set A : ℝ := hl (truncateSimplex 1 ul) / Real.sqrt 2 with hAdef
+      obtain ⟨⟨hc1, hc2⟩, -⟩ := hx
+      simp only [rconeGe, Set.mem_setOf_eq] at hc1 hc2
+      rw [e0, e1] at hc1 hc2
+      have hself : inner ℝ (u1 - u0) (u1 - u0) = dist u0 u1 * dist u0 u1 := by
+        rw [real_inner_self_eq_norm_sq, ← dist_eq_norm (u1) (u0), dist_comm u1 u0,
+          pow_two]
+      have hxS : dist x u0 + dist x u1 ≤ 2 * Real.sqrt 2 :=
+        p15_cone_pair_bound hLpos hself (hAeq A hAdef) hc1 hc2
+      rw [e0]
+      refine Metric.mem_ball.mpr ?_
+      have hdn : (0:ℝ) ≤ dist x u1 := dist_nonneg
+      linarith
+    · simp at hx
+  rcases Nat.lt_or_ge j 4 with h3 | h3
+  · -- j = 3: the hull of the first three list points and `mxi`
+    have hj3 : j = 3 := by omega
+    rw [hj3, (MCELL_EXPLICIT 3 V ul).2.2.2.1]
+    intro x hx
+    rw [mcell3] at hx
+    split_ifs at hx with hcond
+    · obtain ⟨w1, w2⟩ := hcond
+      obtain ⟨s, -, hsdist, hsmxi⟩ :=
+        MXI_EXPLICIT V ul u0 u1 u2 u3 hs hp hb hul w1 w2
+      have hgen : setOfList (truncateSimplex 2 ul) ∪ {mxi V ul} ⊆
+          Metric.ball (hdV ul) 4 := by
+        intro z hz
+        rw [Set.mem_union] at hz
+        rcases hz with hz | hz
+        · rw [htr2, setOfList] at hz
+          rcases List.mem_cons.mp hz with h | h
+          · exact hlist (by rw [h]; simp [setOfList, hul])
+          · rcases List.mem_cons.mp h with h | h
+            · exact hlist (by rw [h]; simp [setOfList, hul])
+            · rcases List.mem_cons.mp h with h | h
+              · exact hlist (by rw [h]; simp [setOfList, hul])
+              · exact absurd h (by simp)
+        · rcases Set.mem_singleton_iff.mp hz with rfl
+          rw [hsmxi] at hsdist
+          rw [Metric.mem_ball, dist_comm, hsdist]
+          linarith
+      exact convexHull_min hgen (convex_ball _ _) hx
+    · simp at hx
+  · -- j = 4: the tetrahedron hull
+    have hj4 : j = 4 := by omega
+    rw [hj4, (MCELL_EXPLICIT 4 V ul).2.2.2.2 (le_refl 4)]
+    intro x hx
+    rw [mcell4] at hx
+    split_ifs at hx
+    · exact convexHull_min (fun z hz => hlist hz) (convex_ball _ _) hx
+    · simp at hx
+
 /-- marchal3.hl:2465 `MCELL_SUBSET_BALL8_1`. -/
 theorem MCELL_SUBSET_BALL8_1 (v : V3) (ul : List V3) (i : ℕ) (V : Set V3)
     (hi : i ≤ 4) (hp : Packing V) (hs : saturated V) (hb : barV V 3 ul)
-    (hv : v ∈ mcell i V ul) : mcell i V ul ⊆ Metric.ball v 8 := sorry
+    (hv : v ∈ mcell i V ul) : mcell i V ul ⊆ Metric.ball v 8 := by
+  have h4 := p15_mcell_subset_ball4_hd V ul hp hs hb i hi
+  intro x hx
+  have hv' : dist v (hdV ul) < 4 := Metric.mem_ball.mp (h4 hv)
+  have hx' : dist x (hdV ul) < 4 := Metric.mem_ball.mp (h4 hx)
+  refine Metric.mem_ball.mpr ?_
+  have t := dist_triangle v (hdV ul) x
+  rw [dist_comm (hdV ul) x] at t
+  have t2 := dist_comm x v
+  linarith
 
 /-- marchal3.hl:2585 `MCELL_SUBSET_BALL8`. -/
 theorem MCELL_SUBSET_BALL8 (v : V3) (ul : List V3) (i : ℕ) (V : Set V3)
