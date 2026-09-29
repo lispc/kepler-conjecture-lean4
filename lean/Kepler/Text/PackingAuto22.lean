@@ -607,19 +607,209 @@ theorem DOT_EQ_IMP_INEQ (a a' : ℂ) (b b' : ℝ)
       exact le_of_mul_le_mul_left h2 hb'
 
 
-/-- HOL `affine_facet_hyper` (counting_spheres.hl:320). GIANT. -/
+theorem affDimC_empty : affDimC (∅ : Set ℂ) = -1 :=
+  if_pos rfl
+
+theorem affDimC_singleton (x : ℂ) : affDimC {x} = 0 := by
+  rw [affDimC, if_neg (by simp)]
+  simp [vectorSpan_singleton]
+
+theorem affDimC_mono {s t : Set ℂ} (hsub : s ⊆ t) (hs : s.Nonempty) :
+    affDimC s ≤ affDimC t := by
+  have hs' : s ≠ ∅ := nonempty_iff_ne_empty.1 hs
+  have ht' : t ≠ ∅ := nonempty_iff_ne_empty.1 (hs.mono hsub)
+  simp only [affDimC, if_neg hs', if_neg ht']
+  exact Nat.cast_le.2 (Submodule.finrank_mono (vectorSpan_mono ℝ hsub))
+
+/-- The linear functional `x ↦ dot2 a x`. -/
+def dotRightC (a : ℂ) : ℂ →ₗ[ℝ] ℝ where
+  toFun x := dot2 a x
+  map_add' x y := dot2_add_right a x y
+  map_smul' r x := by
+    show dot2 a (r • x) = (RingHom.id ℝ) r • dot2 a x
+    rw [dot2_smul_right]
+    simp
+
+
+
+theorem dotRightC_apply (a x : ℂ) : dotRightC a x = dot2 a x := rfl
+
+theorem dotRightC_surjective {a : ℂ} (ha : a ≠ 0) : Function.Surjective (dotRightC a) := by
+  intro r
+  refine ⟨(r / dot2 a a) • a, ?_⟩
+  have hnz : dot2 a a ≠ 0 := ne_of_gt (dot2_self_pos a ha)
+  rw [dotRightC_apply, dot2_smul_right, div_mul_eq_mul_div]
+  field_simp
+
+theorem affDimC_hyperplane {a : ℂ} (ha : a ≠ 0) (b : ℝ) :
+    affDimC {x : ℂ | dot2 a x = b} = 1 := by
+  set H := {x : ℂ | dot2 a x = b} with hH
+  have hker : ∀ x : ℂ, x ∈ LinearMap.ker (dotRightC a) ↔ dot2 a x = 0 :=
+    fun x => LinearMap.mem_ker
+  have hsurj : Function.Surjective (dotRightC a) := dotRightC_surjective ha
+  obtain ⟨p0, hp0'⟩ := hsurj b
+  have hp0 : dot2 a p0 = b := hp0'
+  have key : vectorSpan ℝ H = LinearMap.ker (dotRightC a) := by
+    refine le_antisymm ?_ ?_
+    · rw [vectorSpan_def, Submodule.span_le]
+      rintro z ⟨p, hp, q, hq, rfl⟩
+      simp only [hH, Set.mem_setOf_eq] at hp hq
+      have hp' : dot2 a p = b := hp
+      have hq' : dot2 a q = b := hq
+      have hdiff : dot2 a (p - q) = dot2 a p - dot2 a q := dot2_sub_r a p q
+      show dot2 a (p - q) = 0
+      rw [hdiff, hp', hq', sub_self]
+    · intro z hz
+      have hzk : dotRightC a z = 0 := LinearMap.mem_ker.1 hz
+      have hpmz : p0 - z ∈ H := by
+        simp only [hH, Set.mem_setOf_eq]
+        have hsplit : dot2 a (p0 - z) = dot2 a p0 - dot2 a z := dot2_sub_r a p0 z
+        rw [hsplit, hp0, show dot2 a z = 0 from hzk, sub_zero]
+      show z ∈ vectorSpan ℝ H
+      rw [vectorSpan_def]
+      exact Submodule.subset_span (Set.mem_vsub.2 ⟨p0, by rw [hH]; exact hp0, p0 - z, hpmz,
+        by rw [vsub_eq_sub, sub_sub_self]⟩)
+  have h1 : Module.finrank ℝ (LinearMap.ker (dotRightC a)) = 1 := by
+    have hnk := LinearMap.finrank_range_add_finrank_ker (dotRightC a)
+    rw [LinearMap.range_eq_top.2 hsurj, finrank_top] at hnk
+    have h2 : Module.finrank ℝ ℝ = 1 := by
+      first
+        | exact Module.finrank_self ℝ
+        | exact finrank_self
+        | norm_num
+    rw [h2, Complex.finrank_real_complex] at hnk
+    omega
+  have hHne : H.Nonempty := ⟨p0, by rw [hH]; exact hp0⟩
+  rw [affDimC, if_neg (nonempty_iff_ne_empty.1 hHne), key, h1]
+  norm_num
+
+/-- Full-dimensionality from `affineSpan = univ`. -/
+theorem affDimC_eq_two_of_affineSpan_eq_univ {P : Set ℂ}
+    (haff : (affineSpan ℝ P : Set ℂ) = univ) (hne : P ≠ ∅) : affDimC P = 2 := by
+  rw [affDimC, if_neg hne]
+  have haff' : (affineSpan ℝ P) = (⊤ : AffineSubspace ℝ ℂ) := by
+    refine le_antisymm le_top ?_
+    rw [AffineSubspace.le_def']
+    intro x _
+    show x ∈ (affineSpan ℝ P : Set ℂ)
+    rw [haff]
+    trivial
+  have hvtop : vectorSpan ℝ P = ⊤ := by
+    rw [← direction_affineSpan ℝ P, haff', AffineSubspace.direction_top]
+  rw [hvtop, finrank_top, Complex.finrank_real_complex]
+  norm_num
+
+/-! ## AFF_DIM_EQ_AFFINE_HULL ℂ kit -/
+
+/-- `HOL AFF_DIM_EQ_AFFINE_HULL` ℂ 版：等维数 + 含于仿射子空间 → 仿射包相等。 -/
+theorem affineSpanC_eq_of_affDimC_eq {s H : Set ℂ} (hs : s.Nonempty) (hsub : s ⊆ H)
+    (Hsp : AffineSubspace ℝ ℂ) (hH : (↑Hsp : Set ℂ) = H) (hdim : affDimC s = affDimC H) :
+    (affineSpan ℝ s : Set ℂ) = H := by
+  have hHne : (↑Hsp : Set ℂ).Nonempty := hs.mono (by rw [hH]; exact hsub)
+  have hHne2 : H ≠ ∅ := by
+    rw [← hH]
+    exact Set.nonempty_iff_ne_empty.1 hHne
+  have hKle : (affineSpan ℝ s) ≤ Hsp := affineSpan_le.2 (by rw [hH]; exact hsub)
+  -- vectorSpan of the carrier equals the direction
+  have hspan : (affineSpan ℝ (↑Hsp : Set ℂ)) = Hsp := by
+    refine le_antisymm (affineSpan_le.2 Set.Subset.rfl) ?_
+    rw [AffineSubspace.le_def']
+    intro x hx
+    exact subset_affineSpan ℝ _ hx
+  have hvdir : vectorSpan ℝ (↑Hsp : Set ℂ) = Hsp.direction := by
+    rw [← direction_affineSpan ℝ (↑Hsp : Set ℂ), hspan]
+  have hfinZ : (Module.finrank ℝ ↥(affineSpan ℝ s).direction : ℤ)
+      = (Module.finrank ℝ ↥Hsp.direction : ℤ) := by
+    rw [direction_affineSpan ℝ s]
+    have h1 : affDimC s = (Module.finrank ℝ (vectorSpan ℝ s) : ℤ) := by
+      rw [affDimC, if_neg (nonempty_iff_ne_empty.1 hs)]
+    have h2 : affDimC H = (Module.finrank ℝ (vectorSpan ℝ H) : ℤ) := by
+      rw [affDimC, if_neg hHne2]
+    have h2' : affDimC H = (Module.finrank ℝ ↥Hsp.direction : ℤ) := by
+      rw [h2, ← hvdir, hH]
+    rw [← h1]
+    calc affDimC s = affDimC H := hdim
+      _ = (Module.finrank ℝ ↥Hsp.direction : ℤ) := h2'
+  have hfin := Nat.cast_injective hfinZ
+  have hdir : (affineSpan ℝ s).direction = Hsp.direction :=
+    Submodule.eq_of_le_of_finrank_eq
+      (le_trans (AffineSubspace.direction_le hKle) (le_of_eq hvdir.symm)) hfin
+  have hspanne : (affineSpan ℝ s : Set ℂ).Nonempty := ⟨_, subset_affineSpan ℝ s hs.some_mem⟩
+  have hHcoe : ∀ x : ℂ, x ∈ (↑Hsp : Set ℂ) ↔ x ∈ H := fun x => by rw [hH]
+  refine Set.ext fun x => ?_
+  constructor
+  · exact fun hx => (hHcoe x).1 (SetLike.mem_coe.2 (hKle hx))
+  · intro hx
+    obtain ⟨y, hy⟩ := hspanne
+    have hxx : x = (x -ᵥ y) +ᵥ y := (vsub_vadd x y).symm
+    have hvy : x -ᵥ y ∈ Hsp.direction :=
+      AffineSubspace.vsub_mem_direction ((hHcoe x).2 hx) (SetLike.mem_coe.2 (hKle hy))
+    have hmem : (x -ᵥ y) +ᵥ y ∈ (affineSpan ℝ s : Set ℂ) :=
+      AffineSubspace.vadd_mem_of_mem_direction (by rw [hdir]; exact hvy) hy
+    rwa [← hxx] at hmem
+
+
+/-- The hyperplane `{x | dot2 a x = b}` as the carrier of an affine subspace. -/
+theorem coe_dotHyperplaneC {a : ℂ} {b : ℝ} {p0 : ℂ} (hp0 : dot2 a p0 = b) :
+    (↑(AffineSubspace.mk' p0 (LinearMap.ker (dotRightC a))) : Set ℂ)
+      = {x : ℂ | dot2 a x = b} := by
+  refine Set.ext fun x => ?_
+  show (x -ᵥ p0) ∈ (LinearMap.ker (dotRightC a)) ↔ x ∈ {x : ℂ | dot2 a x = b}
+  rw [vsub_eq_sub, LinearMap.mem_ker, map_sub, dotRightC_apply, dotRightC_apply, hp0,
+    sub_eq_zero]
+  exact Iff.rfl
+
+/-- HOL `CONTAINS_BALL_AFFINE_HULL` (Packing3) ℂ 版：含开球 → 仿射包为全空间. -/
+theorem CONTAINS_BALL_AFFINE_HULL_C {s : Set ℂ} {x : ℂ} {r : ℝ} (hr : 0 < r)
+    (hsub : Metric.ball x r ⊆ s) : (affineSpan ℝ s : Set ℂ) = univ := by
+  have h1 : affineSpan ℝ (Metric.ball x r) = ⊤ :=
+    Metric.isOpen_ball.affineSpan_eq_top ⟨x, Metric.mem_ball_self hr⟩
+  have h2 : (affineSpan ℝ s) = (⊤ : AffineSubspace ℝ ℂ) := by
+    rw [eq_top_iff, ← h1]
+    exact affineSpan_mono ℝ hsub
+  rw [h2]
+  rfl
+
+/-- HOL `affine_facet_hyper` (counting_spheres.hl:320). Filled (kit wave): the
+facet equals `P ∩ H` for the hyperplane `H`, hence `affDimC c = affDimC P - 1`
+with `affDimC P = 2` (full-dim) and `affDimC H = 1` (`affDimC_hyperplane`), so
+`affineSpanC_eq_of_affDimC_eq` identifies the affine span with `H`. -/
 theorem affine_facet_hyper (P c : Set ℂ) (a : ℂ) (b : ℝ)
     (hc : facetOfC c P) (hP : polyhedronC P) (haff : (affineSpan ℝ P : Set ℂ) = univ)
     (ha : a ≠ 0) (h : P ∩ {x : ℂ | dot2 a x = b} = c) :
     (affineSpan ℝ c : Set ℂ) = {x : ℂ | dot2 a x = b} := by
-  sorry
+  have hcsubP : c ⊆ P := by rw [← h]; exact Set.inter_subset_left
+  have hcsub : c ⊆ {x : ℂ | dot2 a x = b} := by rw [← h]; exact Set.inter_subset_right
+  have hcne : c.Nonempty := nonempty_iff_ne_empty.2 hc.2.1
+  have hPne : P ≠ ∅ := by
+    obtain ⟨xc, hxc⟩ := hcne
+    intro hcc
+    rw [hcc] at hcsubP
+    exact hcsubP hxc
+  have hPdim : affDimC P = 2 := affDimC_eq_two_of_affineSpan_eq_univ haff hPne
+  have hcdim : affDimC c = affDimC {x : ℂ | dot2 a x = b} := by
+    rw [hc.2.2, hPdim, affDimC_hyperplane ha b]
+    norm_num
+  obtain ⟨p0, hp0⟩ : ∃ p0 : ℂ, dot2 a p0 = b := ⟨(b / dot2 a a) • a, by
+    have hdd : dot2 a a ≠ 0 := ne_of_gt (dot2_self_pos a ha)
+    rw [dot2_smul_right]
+    field_simp⟩
+  exact affineSpanC_eq_of_affDimC_eq hcne hcsub _
+    (coe_dotHyperplaneC hp0) hcdim
 
 /-- HOL `POLYHEDRON_MEMBER` (counting_spheres.hl:346). GIANT. -/
 theorem POLYHEDRON_MEMBER (P : Set ℂ) (r : ℝ) (x : ℂ) (hP : polyhedronC P)
     (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
     (h : ∀ c : Set ℂ, facetOfC c P → dot2 (facet_rep_a P c) x ≤ facet_rep_b P c) :
     x ∈ P := by
-  sorry -- DEF-FIX: refill per counting_spheres.hl:346 §3a
+  -- NEEDS: counting_spheres.hl:346. Blocked on `FACET_OF_POLYHEDRONC_EXPLICIT`
+  -- (planar-encoding-fix.md §2.3, ~500 lines: port of the minrep/slice machinery
+  -- in Polytope.lean:1390-1790 to ℂ). Route: `CONTAINS_BALL_AFFINE_HULL_C`
+  -- (landed above) gives `affineSpan ℝ P = univ`; `POLYHEDRON_INTER_AFFINE_MINIMAL`
+  -- writes `P = ↑(affineSpan ℝ P) ∩ ⋂₀ F`; per `h ∈ F` the slice `P ∩ {dot2 a = b}`
+  -- is a facetOfC via the EXPLICIT kit + `affine_facet_hyper` (landed above) +
+  -- `facet_rep_def`; then `h`-hypothesis + `CONTAINS_BALL_AFFINE_HULL_C` close.
+  sorry
 
 /-- HOL `facet_rep_in_poly` (counting_spheres.hl:435). GIANT. -/
 theorem facet_rep_in_poly (P c : Set ℂ) (r : ℝ) (hP : polyhedronC P)
@@ -1322,6 +1512,12 @@ theorem pad2d3d_facet (P : Set V3) (n : ℕ) (hP : polyhedron P)
     (hn : ({c : Set V3 | FacetOf c P}).Finite ∧ ({c : Set V3 | FacetOf c P}).ncard = n) :
     ({d : Set ℂ | facetOfC d (dropout3P22 '' P)}).Finite ∧
       ({d : Set ℂ | facetOfC d (dropout3P22 '' P)}).ncard = n := by
+  -- NEEDS: counting_spheres.hl:1737. GIANT. Route (planar-encoding-fix.md
+  -- §3c): `BIJECTIONS_HAS_SIZE` transports the facet-count through
+  -- `dropout3P22 '' P`; each facet maps to a facetOfC of the dropout image via
+  -- `FACET_OF_LINEAR_IMAGE` ℂ-version + the affine-isometry facts of
+  -- `pad2d3dP22`/`dropout3P22` (dropout_pad2d3d/pad2d3d_dropout landed), plus
+  -- the FACET_OF_POLYHEDRONC_EXPLICIT-style explicit facet kit on the V3 side.
   sorry
 
 /-- HOL `complex_frac_cancel` (counting_spheres.hl:1767). -/
@@ -2259,22 +2455,262 @@ theorem TWO_IMP_HAS_SIZE_GE_2 {α : Type*} [DecidableEq α] (s : Set α) (x y : 
 /-- HOL `AFF_GT_RELATIVE_INTERIOR` (counting_spheres.hl:3120). GIANT. -/
 theorem AFF_GT_RELATIVE_INTERIOR (s : Set V3) (hf : s.Finite) (h : 1 < s.ncard) :
     affGt (∅ : Set V3) s ⊆ intrinsicInterior ℝ (convexHull ℝ s) := by
-  -- NEEDS (wave-2 attempt, not landed; ≈200 lines of kit were machine-checked
-  -- piecewise but the final assembly did not land in this lane's budget).
-  -- Verified route: (1) `y` is a strict positive combination of `s`, hence in
-  -- the hull via `Finset.centerMass_id_mem_convexHull`; (2) `mem_rint_iff`
-  -- (Polytope.lean) reduces to `∃ ε > 0, ball y ε ∩ affineSpan ℝ s ⊆ hull`;
-  -- (3) take a basis of `D := vectorSpan ℝ s` inside the difference family
-  -- `(w₀ -ᵥ ·) '' s` via `Module.Basis.ofSpan` (+ `Basis.indexEquiv` reindex to
-  -- `Fin n`); (4) a zero-sum representation of `vectorSpan` elements
-  -- (`e = ∑ g w • w, ∑ g = 0`, via `Submodule.mem_span_range_iff_exists_fun` on
-  -- `Finset.mem_span_finite_of_mem_span` output) gives the core move
-  -- `y + τ • e ∈ hull` for `|τ| ≤ μ := 1/(1 + ∑ |g w| / f w)`; (5) coordinates
-  -- via `Basis.coord` + `ContinuousLinearMap.le_opNorm`; (6) assemble
-  -- `z = ∑ (1/n) • (y + n tᵥ eᵥ)` by `Finset.centerMass_mem_convexHull`.
-  -- Engineering residue: the `ofSpan` index-type/reindex bookkeeping and the
-  -- `Fin n` 0/>0 split (verified designs in the wave-2 lane notes).
-  sorry -- DEF-FIX: 陈述纠正（原为假：弱锥含边界点，不在相对内部）
+  -- Filled (kit wave): basis of `D := vectorSpan ℝ s` extracted inside the
+  -- difference family `(w₀ -ᵥ ·) '' s` (`exists_linearIndependent` + `Basis.mk`),
+  -- coordinates bounded via `Basis.coord` + `ContinuousLinearMap.le_opNorm`,
+  -- zero-sum representation `z - y = ∑ g w • w`, coefficients `f w + g w ≥ 0`
+  -- for `‖z - y‖ < f wδ / (2 * (Csum + 1))`, assembled by
+  -- `Finset.centerMass_mem_convexHull` + `mem_rint_iff`.
+
+  -- Coefficient family of the aff_gt witness.
+  rintro y ⟨f, hfinU, hy, hpos, hone⟩
+  set T := hfinU.toFinset with hTdef
+  have hTsub : ∀ w ∈ T, w ∈ s := by
+    intro w hw
+    have hw2 : w ∈ ((∅ : Set V3) ∪ s) := (Set.Finite.mem_toFinset hfinU).mp hw
+    simpa using hw2
+  have hsT : ∀ w ∈ s, w ∈ T := by
+    intro w hw
+    exact (Set.Finite.mem_toFinset hfinU).mpr (by simpa using hw)
+  have hfT : ∀ w ∈ T, 0 < f w := fun w hw => hpos w (hTsub w hw)
+  have hTne : T.Nonempty := by
+    by_contra hc
+    have hce : T = ∅ := not_not.mp ((Finset.nonempty_iff_ne_empty.not).mp hc)
+    rw [hce] at hone
+    simp at hone
+  obtain ⟨w₀, hw₀T⟩ := id hTne
+  have hw₀s : w₀ ∈ s := hTsub w₀ hw₀T
+  -- y ∈ hull via strict center of mass.
+  have hymm : T.centerMass f id = ∑ w ∈ T, f w • w := by
+    simp [Finset.centerMass, hone]
+  have hymem : y ∈ convexHull ℝ s := by
+    rw [hy, ← hymm]
+    refine Finset.centerMass_mem_convexHull _ (fun w hw => le_of_lt (hfT w hw)) ?_
+      (fun w hw => hTsub w hw)
+    rw [hone]; norm_num
+  -- Basis of the direction inside the difference family.
+  have hmemfam : ∀ x ∈ s, (w₀ -ᵥ x : V3) ∈ vectorSpan ℝ s := by
+    intro x hx
+    rw [vectorSpan_eq_span_vsub_set_left ℝ hw₀s]
+    exact Submodule.subset_span ⟨x, hx, rfl⟩
+  set D := vectorSpan ℝ s with hDdef
+  haveI : Finite ↥s := hf
+  set fam : Set D := (fun (u : {x // x ∈ s}) =>
+    (⟨w₀ -ᵥ (u : V3), hmemfam _ u.2⟩ : D)) '' Set.univ with hfamdef
+  have hfamfin : fam.Finite := by
+    rw [hfamdef]
+    exact Set.finite_univ.image _
+  have hfamspan : Submodule.span ℝ ((fun x => w₀ -ᵥ x) '' s) = D := by
+    rw [hDdef, vectorSpan_eq_span_vsub_set_left ℝ hw₀s]
+  have h'im : (fun (u : {x // x ∈ s}) => (w₀ -ᵥ (u : V3) : V3)) '' (Set.univ : Set ↥s)
+      = (fun x => w₀ -ᵥ x) '' s := by
+    ext z
+    simp only [Set.mem_image, Set.mem_univ, true_and]
+    constructor
+    · rintro ⟨u, hu⟩
+      exact ⟨(u : V3), u.2, hu⟩
+    · rintro ⟨x, hx, hx2⟩
+      exact ⟨⟨x, hx⟩, hx2⟩
+  have hfamD : (Submodule.span ℝ fam).map (Submodule.subtype D) = D := by
+    rw [Submodule.map_span, hfamdef, ← Set.image_comp]
+    have hcomp : (Submodule.subtype D ∘ fun (u : {x // x ∈ s}) =>
+        (⟨w₀ -ᵥ (u : V3), hmemfam _ u.2⟩ : D))
+        = fun (u : {x // x ∈ s}) => (w₀ -ᵥ (u : V3) : V3) := by
+      funext u
+      rfl
+    rw [hcomp, h'im, hfamspan]
+  have hinj : Function.Injective (Submodule.subtype D : D → V3) := fun a b hab => Subtype.ext hab
+  have hfamtop : Submodule.span ℝ fam = ⊤ := by
+    have h2 : (Submodule.span ℝ fam).map (Submodule.subtype D)
+        = (⊤ : Submodule ℝ D).map (Submodule.subtype D) := by
+      rw [Submodule.map_top, Submodule.range_subtype]
+      exact hfamD
+    exact Submodule.map_injective_of_injective hinj h2
+  obtain ⟨b, hbsub, hbsp, hbli⟩ := exists_linearIndependent ℝ fam
+  rw [hfamtop] at hbsp
+  have hbfin : b.Finite := hfamfin.subset hbsub
+  haveI : Fintype ↥b := Finite.fintype hbfin
+  have hbsp' : ⊤ ≤ Submodule.span ℝ (Set.range (Subtype.val : ↥b → D)) := by
+    rw [Subtype.range_coe]
+    exact hbsp.ge
+  set hbasis : Module.Basis ↥b ℝ D := Module.Basis.mk hbli hbsp' with hbk
+  choose u hu using fun (i : ↥b) => hbsub i.2
+  simp only [Set.mem_univ, true_and] at hu
+  have hui : ∀ i : ↥b, (u i : V3) ∈ s := fun i => (u i).2
+  have huc : ∀ i : ↥b, (⟨w₀ -ᵥ (u i : V3), hmemfam _ (u i).2⟩ : D) = (i : D) := fun i => hu i
+  have hcoec : ∀ i : ↥b, ((i : D) : V3) = w₀ -ᵥ (u i : V3) := by
+    intro i
+    have hcc := congrArg (Submodule.subtype D) (huc i)
+    simpa [Submodule.coe_subtype] using hcc.symm
+  -- coordinate bound constants
+  obtain ⟨Csum, hCdef⟩ : ∃ C : ℝ, C = ∑ i ∈ (Finset.univ : Finset ↥b),
+    ‖(LinearMap.toContinuousLinearMap (hbasis.coord i) : D →L[ℝ] ℝ)‖ := ⟨_, rfl⟩
+  have hCpos : 0 ≤ Csum := by
+    rw [hCdef]
+    exact Finset.sum_nonneg (fun i _ => by positivity)
+  obtain ⟨wδ, hwδT, hwδmin⟩ := Finset.exists_min_image T f hTne
+  have hfδ : 0 < f wδ := hfT wδ hwδT
+  -- the rint criterion
+  refine mem_rint_iff.2 ⟨hymem, ?_⟩
+  rw [affineSpan_convexHull]
+  refine ⟨f wδ / (2 * (Csum + 1)), div_pos hfδ (by linarith), ?_⟩
+  rintro z ⟨hzball, hzaff⟩
+  have hzdist : dist z y < f wδ / (2 * (Csum + 1)) := Metric.mem_ball.1 hzball
+  -- direction membership
+  have hyspan : y ∈ (affineSpan ℝ s : Set V3) := by
+    rw [← affineSpan_convexHull]
+    exact subset_affineSpan ℝ _ hymem
+  have hzdir : (z -ᵥ y) ∈ D := by
+    rw [hDdef, ← direction_affineSpan ℝ s]
+    exact AffineSubspace.vsub_mem_direction hzaff hyspan
+  obtain ⟨eD, heDcoe⟩ : ∃ eD : D, ((eD : D) : V3) = z -ᵥ y :=
+    ⟨⟨z -ᵥ y, hzdir⟩, rfl⟩
+  have heDdist : ‖((eD : D) : V3)‖ < f wδ / (2 * (Csum + 1)) := by
+    rw [heDcoe, vsub_eq_sub]
+    rwa [dist_eq_norm] at hzdist
+  obtain ⟨t, htdef⟩ : ∃ t : ↥b → ℝ, ∀ i, t i = hbasis.coord i eD := ⟨_, fun _ => rfl⟩
+  have hcoord : ∀ i : ↥b, |t i| ≤
+      ‖(LinearMap.toContinuousLinearMap (hbasis.coord i) : D →L[ℝ] ℝ)‖ * ‖((eD : D) : V3)‖ := by
+    intro i
+    have h1 := ContinuousLinearMap.le_opNorm
+      (LinearMap.toContinuousLinearMap (hbasis.coord i) : D →L[ℝ] ℝ) eD
+    rw [Real.norm_eq_abs] at h1
+    rw [htdef]
+    calc |hbasis.coord i eD| = ‖(LinearMap.toContinuousLinearMap
+          (hbasis.coord i) : D →L[ℝ] ℝ) eD‖ := by
+          rw [Real.norm_eq_abs]; rfl
+      _ ≤ ‖(LinearMap.toContinuousLinearMap (hbasis.coord i) : D →L[ℝ] ℝ)‖ * ‖(eD : D)‖ := h1
+      _ = ‖(LinearMap.toContinuousLinearMap (hbasis.coord i) : D →L[ℝ] ℝ)‖ * ‖((eD : D) : V3)‖ := by
+          simp
+  have hcoordsum : ∑ i ∈ (Finset.univ : Finset ↥b), |t i| ≤ Csum * ‖((eD : D) : V3)‖ := by
+    calc ∑ i ∈ (Finset.univ : Finset ↥b), |t i| ≤ ∑ i ∈ (Finset.univ : Finset ↥b),
+          (‖(LinearMap.toContinuousLinearMap (hbasis.coord i) : D →L[ℝ] ℝ)‖ * ‖((eD : D) : V3)‖) :=
+          Finset.sum_le_sum (fun i _ => hcoord i)
+      _ = (∑ i ∈ (Finset.univ : Finset ↥b),
+            ‖(LinearMap.toContinuousLinearMap (hbasis.coord i) : D →L[ℝ] ℝ)‖) * ‖((eD : D) : V3)‖ :=
+          (Finset.sum_mul _ _ _).symm
+      _ = Csum * ‖((eD : D) : V3)‖ := by rw [hCdef]
+  obtain ⟨g, hgdef⟩ : ∃ g : V3 → ℝ, ∀ w, g w = (∑ i ∈ (Finset.univ : Finset ↥b),
+      if (u i : V3) = w then -(t i) else 0)
+      + (if w = w₀ then ∑ i ∈ (Finset.univ : Finset ↥b), t i else 0) := ⟨_, fun _ => rfl⟩
+  -- the zero-sum representation of z - y
+  have hrepr : ((eD : D) : V3) = ∑ i ∈ (Finset.univ : Finset ↥b), t i • ((i : D) : V3) := by
+    have h4 := congrArg (Submodule.subtype D) (hbasis.sum_repr (eD : D))
+    rw [map_sum, hbk] at h4
+    simp only [map_smul, Submodule.coe_subtype, Module.Basis.mk_apply] at h4
+    rw [h4.symm]
+    refine Finset.sum_congr rfl (fun i _ => ?_)
+    have hbr : ((Module.Basis.mk hbli hbsp').repr eD) i = t i := by
+      rw [← hbk]
+      exact (htdef i).symm
+    rw [hbr]
+  have hsplit : ∑ i ∈ (Finset.univ : Finset ↥b), t i • ((i : D) : V3)
+      = (∑ i ∈ (Finset.univ : Finset ↥b), t i) • w₀
+        + ∑ i ∈ (Finset.univ : Finset ↥b), (-(t i)) • (u i : V3) := by
+    rw [Finset.sum_congr rfl (fun i _ => by rw [hcoec i, vsub_eq_sub, smul_sub])]
+    rw [Finset.sum_sub_distrib, ← Finset.sum_smul,
+      Finset.sum_congr rfl (fun i _ => neg_smul (t i) ((u i : V3))), Finset.sum_neg_distrib,
+      sub_eq_add_neg]
+  have hA2' : ∀ i : ↥b, ∑ w ∈ T, (if (u i : V3) = w then -(t i) • w else 0)
+      = -(t i) • ((u i : V3)) := by
+    intro i
+    rw [Finset.sum_ite_eq T (u i : V3) (fun w => -(t i) • w), if_pos (hsT (u i : V3) (hui i))]
+  have hgvec : ∑ w ∈ T, g w • w = ((eD : D) : V3) := by
+    have hgw' : ∀ w ∈ T, g w • w = (∑ i ∈ (Finset.univ : Finset ↥b),
+        if (u i : V3) = w then -(t i) • w else 0)
+        + (if w = w₀ then (∑ i ∈ (Finset.univ : Finset ↥b), t i) • w else 0) := by
+      intro w _
+      rw [hgdef w, add_smul, Finset.sum_smul]
+      simp only [ite_smul, zero_smul]
+    rw [Finset.sum_congr rfl (fun w hw => hgw' w hw),
+      Finset.sum_add_distrib, Finset.sum_comm]
+    rw [Finset.sum_congr rfl (fun i (_ : i ∈ Finset.univ) => hA2' i)]
+    rw [Finset.sum_ite_eq' T w₀ (fun w => (∑ i ∈ (Finset.univ : Finset ↥b), t i) • w),
+      if_pos hw₀T]
+    rw [add_comm, ← hsplit, ← hrepr]
+  have hsumg : ∑ w ∈ T, g w = 0 := by
+    have hA' : ∀ i : ↥b, ∑ w ∈ T, (if (u i : V3) = w then -(t i) else 0) = -(t i) := by
+      intro i
+      rw [Finset.sum_ite_eq T (u i : V3) (fun _ => -(t i)), if_pos (hsT (u i : V3) (hui i))]
+    have hA : ∑ w ∈ T, (∑ i ∈ (Finset.univ : Finset ↥b), if (u i : V3) = w then -(t i) else 0)
+        = ∑ i ∈ (Finset.univ : Finset ↥b), -(t i) := by
+      rw [Finset.sum_comm]
+      exact Finset.sum_congr rfl (fun i (_ : i ∈ Finset.univ) => hA' i)
+    have hB : ∑ w ∈ T, (if w = w₀ then ∑ i ∈ (Finset.univ : Finset ↥b), t i else 0)
+        = ∑ i ∈ (Finset.univ : Finset ↥b), t i := by
+      rw [Finset.sum_ite_eq' T w₀ (fun _ => ∑ i ∈ (Finset.univ : Finset ↥b), t i),
+        if_pos hw₀T]
+    rw [Finset.sum_congr rfl (fun w (_ : w ∈ T) => by rw [hgdef w])]
+    rw [Finset.sum_add_distrib, hA, hB, Finset.sum_neg_distrib]
+    ring
+  -- nonnegativity of the combined coefficients
+  have hgw : ∀ w : V3, |g w| ≤ 2 * Csum * ‖((eD : D) : V3)‖ := by
+    intro w
+    have h1 : |g w| ≤ |∑ i ∈ (Finset.univ : Finset ↥b), if (u i : V3) = w then -(t i) else 0|
+        + |if w = w₀ then ∑ i ∈ (Finset.univ : Finset ↥b), t i else 0| := by
+      rw [hgdef w]
+      exact abs_add_le _ _
+    have h2 : |∑ i ∈ (Finset.univ : Finset ↥b), if (u i : V3) = w then -(t i) else 0|
+        ≤ ∑ i ∈ (Finset.univ : Finset ↥b), |t i| := by
+      refine le_trans (Finset.abs_sum_le_sum_abs
+        (fun i => if (u i : V3) = w then -(t i) else 0) Finset.univ) ?_
+      have hpi : ∀ i : ↥b, |if (u i : V3) = w then -(t i) else 0| ≤ |t i| := by
+        intro i
+        by_cases hic : (u i : V3) = w
+        · rw [if_pos hic, abs_neg]
+        · rw [if_neg hic, abs_zero]
+          exact abs_nonneg (t i)
+      exact Finset.sum_le_sum (fun i _ => hpi i)
+    have h4 : |if w = w₀ then ∑ i ∈ (Finset.univ : Finset ↥b), t i else 0|
+        ≤ |∑ i ∈ (Finset.univ : Finset ↥b), t i| := by
+      by_cases hc : w = w₀
+      · rw [if_pos hc]
+      · rw [if_neg hc]
+        norm_num
+    have h5 : |∑ i ∈ (Finset.univ : Finset ↥b), t i|
+        ≤ ∑ i ∈ (Finset.univ : Finset ↥b), |t i| :=
+      Finset.abs_sum_le_sum_abs (fun i => t i) Finset.univ
+    calc |g w| ≤ ∑ i ∈ (Finset.univ : Finset ↥b), |t i|
+          + ∑ i ∈ (Finset.univ : Finset ↥b), |t i| := by linarith
+      _ ≤ Csum * ‖((eD : D) : V3)‖ + Csum * ‖((eD : D) : V3)‖ := by linarith
+      _ = 2 * Csum * ‖((eD : D) : V3)‖ := by ring
+  have hcoeffpos : ∀ w ∈ T, 0 ≤ f w + g w := by
+    intro w hw
+    have hkey : |g w| < f w := by
+      have hm : 0 < 2 * (Csum + 1) := by linarith
+      have hbridge : 2 * Csum * ‖((eD : D) : V3)‖
+          ≤ 2 * (Csum + 1) * ‖((eD : D) : V3)‖ := by
+        nlinarith [hCpos, norm_nonneg ((eD : D) : V3)]
+      have hlt : 2 * (Csum + 1) * ‖((eD : D) : V3)‖
+          < 2 * (Csum + 1) * (f wδ / (2 * (Csum + 1))) :=
+        mul_lt_mul_of_pos_left heDdist hm
+      have hle : 2 * (Csum + 1) * (f wδ / (2 * (Csum + 1))) ≤ f wδ := by
+        rw [mul_comm, div_mul_eq_mul_div, div_le_iff₀ hm]
+      calc |g w| ≤ 2 * Csum * ‖((eD : D) : V3)‖ := hgw w
+        _ ≤ 2 * (Csum + 1) * ‖((eD : D) : V3)‖ := hbridge
+        _ < 2 * (Csum + 1) * (f wδ / (2 * (Csum + 1))) := hlt
+        _ ≤ f wδ := hle
+        _ ≤ f w := hwδmin w hw
+    have habs := abs_lt.1 hkey
+    linarith
+  have hcoeffsum : ∑ w ∈ T, (f w + g w) = 1 := by
+    rw [Finset.sum_add_distrib, hone, hsumg]
+    ring
+  -- final assembly
+  have hjoin : ∑ w ∈ T, g w • w + ∑ w ∈ T, f w • w = ∑ w ∈ T, (f w + g w) • w := by
+    rw [← Finset.sum_add_distrib]
+    exact Finset.sum_congr rfl (fun w (_ : w ∈ T) =>
+      (add_smul (g w) (f w) w).symm.trans (congrArg (fun r => r • w) (add_comm (g w) (f w))))
+  have hzexp : z = ∑ w ∈ T, (f w + g w) • w := by
+    have h1 : z = (z -ᵥ y) + y := by rw [vsub_eq_sub]; exact (sub_add_cancel z y).symm
+    have h2 : (z -ᵥ y) = ((eD : D) : V3) := heDcoe.symm
+    rw [h1, h2, ← hgvec, hy]
+    rw [hjoin]
+  have hzcm : T.centerMass (fun w => f w + g w) id = ∑ w ∈ T, (f w + g w) • w := by
+    simp [Finset.centerMass, hcoeffsum]
+  rw [hzexp, ← hzcm]
+  exact Finset.centerMass_mem_convexHull T (fun w hw => hcoeffpos w hw)
+    (by rw [hcoeffsum]; norm_num) (fun w hw => hTsub w hw)
 
 /-- HOL `NOT_COLLINEAR_AFF_DIM_2` (counting_spheres.hl:3160). GIANT. -/
 theorem NOT_COLLINEAR_AFF_DIM_2 (u0 u1 u2 : V3) (h : ¬ Collinear3 u0 u1 u2) :
@@ -2353,18 +2789,91 @@ theorem FACET_AFF_DIM_2 (p f : Set V3) (hp : polyhedron p)
 /-- HOL `CONE0_FCHANGED_AFF_GT` (counting_spheres.hl:3185). GIANT. -/
 theorem CONE0_FCHANGED_AFF_GT (s : Set V3) (hf : s.Finite) (h : 1 < s.ncard)
     (h0 : (0 : V3) ∉ s) : cone0P22 0 s ⊆ fchanged (convexHull ℝ s) := by
-  -- NEEDS (wave-2 attempt, not landed): paper-verified transport
-  -- `v = (1 - a) • v₁`, `a = f 0`, `1 - a = ∑_{hf.toFinset} f w > 0`
-  -- (from `f x' ≤ ∑ f`, `x' ∈ s`, via `h : 1 < s.ncard`),
-  -- `v₁ = ∑_{s.toFinset} (f w / (1 - a)) • w ∈ affGt ∅ s`, closed by
-  -- AFF_GT_RELATIVE_INTERIOR + the `fchanged` anon.  Engineering residue:
-  -- Finset-instance bookkeeping (`haveI : Fintype ↑s := hf.fintype` makes
-  -- `s.toFinset` take the Fintype path while `hf.toFinset` is the Finite path;
-  -- bridge with `Finset.ext fun w => simp [Set.Finite.mem_toFinset hf]`), and
-  -- `hTform0 : hfin.toFinset = insert 0 hf.toFinset` for the apex-term split
-  -- (`Finset.sum_insert`).  Best finished together with
-  -- AFF_GT_RELATIVE_INTERIOR (supplies the relative-interior side).
-  sorry -- DEF-FIX: 重填波 3 路线已验证，待组装
+  -- Filled (kit wave): transport `v = (1 - f 0) • v₁` with `1 - f 0 > 0`
+  -- (nonapex point `x'` via `h : 1 < s.ncard`), rescaled coefficients
+  -- `g w = f w / (1 - f 0)` give `v₁ ∈ affGt ∅ s`, closed by
+  -- AFF_GT_RELATIVE_INTERIOR + the `fchanged` anon.
+
+  rintro v ⟨f, hfin, hv, hpos, hone⟩
+  set T := hfin.toFinset with hTdef
+  have hfinmem : ∀ w ∈ T, w ∈ ({0} ∪ s) := fun w hw => (Set.Finite.mem_toFinset hfin).mp hw
+  have h0T : (0:V3) ∈ T := (Set.Finite.mem_toFinset hfin).mpr (Set.mem_union_left _ (Set.mem_singleton 0))
+  have h0' : (0:V3) ∉ hf.toFinset := fun hmem =>
+    h0 (by have := (Set.Finite.mem_toFinset hf).mp hmem; simpa using this)
+  have hsT : ∀ w ∈ s, w ∈ T := fun w hw =>
+    (Set.Finite.mem_toFinset hfin).mpr (Set.mem_union_right _ hw)
+  have hTs : ∀ w ∈ T, w ≠ 0 → w ∈ s := by
+    intro w hw hw0
+    rcases hfinmem w hw with hw0' | hws
+    · exact absurd hw0' hw0
+    · exact hws
+  have hTeq : T = insert 0 hf.toFinset := by
+    refine Finset.ext fun w => ?_
+    constructor
+    · intro hw
+      have hw' := hfinmem w hw
+      rcases hw' with hw0 | hws
+      · exact Finset.mem_insert.2 (Or.inl hw0)
+      · exact Finset.mem_insert.2 (Or.inr ((Set.Finite.mem_toFinset hf).mpr hws))
+    · intro hw
+      have hw' := Finset.mem_insert.1 hw
+      rcases hw' with hw0 | hw
+      · exact (Set.Finite.mem_toFinset hfin).mpr (Or.inl hw0)
+      · exact (Set.Finite.mem_toFinset hfin).mpr (Or.inr ((Set.Finite.mem_toFinset hf).mp hw))
+  -- a nonapex point of s
+  have hsne : s ≠ ∅ := by
+    intro hc
+    rw [hc] at h
+    simp at h
+  obtain ⟨x', hx'⟩ := Set.nonempty_iff_ne_empty.mpr hsne
+  have hx'T : x' ∈ hf.toFinset := by
+    refine (Set.Finite.mem_toFinset hf).mpr ?_
+    simpa using hx'
+  -- 1 - f 0 > 0
+  have honeE : ∑ w ∈ hf.toFinset, f w = 1 - f 0 := by
+    have h1 := hone
+    rw [hTeq, Finset.sum_insert h0'] at h1
+    linarith
+  have hEx' : f x' ≤ ∑ w ∈ hf.toFinset, f w :=
+    Finset.single_le_sum
+      (fun w hw => le_of_lt (hpos w (by
+        simpa using (Set.Finite.mem_toFinset hf).mp hw)))
+      hx'T
+  have hfx' : 0 < f x' := hpos x' hx'
+  have h1a : 0 < 1 - f 0 := by
+    rw [← honeE]
+    exact lt_of_lt_of_le hfx' hEx'
+  -- the rescaled coefficients give a relative-interior point
+  have hvenz : (1 - f 0) ≠ 0 := ne_of_gt h1a
+  set g : V3 → ℝ := fun w => f w / (1 - f 0) with hgdef
+  have hgpos : ∀ w ∈ s, 0 < g w := fun w hw => div_pos (hpos w hw) h1a
+  have hgsum : ∑ w ∈ hf.toFinset, g w = 1 := by
+    rw [hgdef, ← Finset.sum_div, honeE]
+    exact div_self hvenz
+  have hfinU : ((∅ : Set V3) ∪ s).Finite := by simpa using hf
+  have hUeq : hfinU.toFinset = hf.toFinset := by
+    refine Finset.ext fun w => ?_
+    rw [Set.Finite.mem_toFinset hfinU, Set.Finite.mem_toFinset hf]
+    simp
+  -- v = (1 - f 0) • v1 where v1 is the relative-interior point
+  have hveq : v = (1 - f 0) • ∑ w ∈ hfinU.toFinset, g w • w := by
+    rw [hUeq, hgdef, Finset.smul_sum]
+    have h2' : ∑ w ∈ hf.toFinset, (1 - f 0) • (g w • w)
+        = ∑ w ∈ hf.toFinset, ((1 - f 0) * (f w / (1 - f 0))) • w := by
+      refine Finset.sum_congr rfl (fun w hw => ?_)
+      rw [hgdef, smul_smul]
+    have h2 : ∑ w ∈ hf.toFinset, ((1 - f 0) * (f w / (1 - f 0))) • w
+        = ∑ w ∈ hf.toFinset, f w • w :=
+      Finset.sum_congr rfl (fun w hw => by
+        rw [mul_div_cancel₀ (f w) hvenz])
+    have h3 : ∑ w ∈ T, f w • w = ∑ w ∈ hf.toFinset, f w • w := by
+      rw [hTeq, Finset.sum_insert h0', smul_zero, zero_add]
+    rw [h2', h2, ← h3]
+    exact hv
+  have hgsumU : ∑ w ∈ hfinU.toFinset, g w = 1 := by rw [hUeq]; exact hgsum
+  have v1mem : (∑ w ∈ hfinU.toFinset, g w • w) ∈ intrinsicInterior ℝ (convexHull ℝ s) :=
+    AFF_GT_RELATIVE_INTERIOR s hf h ⟨g, hfinU, rfl, hgpos, hgsumU⟩
+  refine ⟨∑ w ∈ hfinU.toFinset, g w • w, 1 - f 0, hveq, v1mem, h1a⟩
 
 /-- HOL `CONE0_FCHANGED` (counting_spheres.hl:3288). GIANT. -/
 theorem CONE0_FCHANGED (p f : Set V3) (u0 u1 u2 : V3) (hp : polyhedron p)
