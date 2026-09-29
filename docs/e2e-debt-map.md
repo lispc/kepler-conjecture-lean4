@@ -27,7 +27,10 @@
 | 节点 | 位置 | 流入路径 | 状态 |
 |---|---|---|---|
 | ~~`PACKING_CHAPTER_MAIN_CONCLUSION`~~ | PA25 | textCapstone 直接消费 | **已真化 (wave3)**：装配步闭合，债务上移至 RDWKARC_concl(PA2)+TSKAJXY(PA21) 两枚树内 sorry |
-| `TSKAJXY` 0/3/4 臂（:1428） | PA21 | PA25:3704 `exact TSKAJXY …` 唯一消费 | **GIANT**（2026-09-29 侦察结案）：Merge_ineq 通道三重阻断（银行无结构 + GRKIBMP/cell3_from_ineq_thm 未移植 + eta_y body 缺）——**章程已审定** `docs/merge-ineq-channel.md`（三波收口，执行待 owner 批准） |
+| ~~`RDWKARC_concl`~~ | PA2 | PA25:3695 `refine RDWKARC_concl hkc ?_ ?_` 唯一消费 | **已真化 (2026-09-29，`16f31f68`)**：RDWKARC.hl:180-314 装配/平移/重编论证全真；债务上移 `UPFZBZM_concl`(PA2，NEGLIGIBLE_FUNC GIANT) + `JGXZYGW_KY_p2`(PA2，NEEDS PA1:1026 `JGXZYGW` 巨件；PA19 有私件孪生可参照) |
+| `MHFTTZN_lemma2` | PA6 | MHFTTZN1/2/3/4 + BARV_AFFINE_INDEPENDENT 链 | **已真化 (2026-09-29，`eafa4874`)**：MHFTTZN 全链（lemma/lemma2/1/2/3/4）`#print axioms` 仅标准三零 sorryAx |
+| `facet_rep_in_facet` | PA22 | planar 面-表示链 | **已真化 (2026-09-29，`3538883a`)**；余 `AFF_GT_RELATIVE_INTERIOR`/`CONE0_FCHANGED_AFF_GT` 两枚 NEEDS 已带 6 步路线+API 全名就地注记（波 3 GIANT 直取） |
+| `TSKAJXY` 0/3/4 臂（:1428） | PA21 | PA25:3704 `exact TSKAJXY …` 唯一消费 | **GIANT**（2026-09-29 侦察结案）：Merge_ineq 通道三重阻断——波 0（银行结构化）+ 波 1（GRKIBMP 闭合）已落账（`2f2c431c`/`1591e1c1`），余波 2a kit（在飞）→ 2b 主定理 → 3 行机械收口 |
 | `LEMMA_3_POINTS_FINAL`/`LEMMA_4_POINTS_FINAL` | ContraFan | contraveningFan → CKQOWSA | **侦察结案 (2026-09-29)**：CF-3 = L3F 走路线 B（内积角加法+有理余弦界，中等 250-400 行）可先行；CF-4 = L4F 忠实移植 GIANT 2000-3000 行三波（独立模块 ContraFanDeep.lean，依赖 CF-3）；见 docs/contrafan-scout.md |
 | LA38 `tau3_taum_d`/`tau3_taum_dfun` | LocalAuto38 | （经 main_nonlinear_terminal_v11 合取项间接）| 陈述级：缺 `2 ≤ dist` 下界，待对照 HOL 补陈（走 STATEMENT-FIX） |
 
