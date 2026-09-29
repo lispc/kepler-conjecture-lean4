@@ -417,13 +417,78 @@ theorem norm1_cauchy_eq (x y : ℂ) (hx : ‖x‖ = 1) (hy : ‖y‖ = 1)
   have hxy0 : x - y = 0 := norm_eq_zero.mp (sq_eq_zero_iff.mp h0)
   exact eq_of_sub_eq_zero hxy0
 
+/-- Homogeneity of `dot2` in the second argument (private copy placed before
+`facet_rep_in_facet`, which precedes `dot2_smul_right` in this file). -/
+private theorem p22_dot2_smul_right (a x : ℂ) (c : ℝ) : dot2 a (c • x) = c * dot2 a x := by
+  rw [dot2_expand, dot2_expand]
+  have h1 : (c • x : ℂ).re = c * x.re := by simp
+  have h2 : (c • x : ℂ).im = c * x.im := by simp
+  rw [h1, h2]
+  ring
+
+/-- Self inner product equals squared norm (used by `facet_rep_in_facet`). -/
+private theorem p22_dot2_self (w : ℂ) : dot2 w w = ‖w‖ ^ 2 := by
+  rw [dot2_expand, Complex.sq_norm, Complex.normSq_apply]
+
+/-- Cauchy–Schwarz for the planar dot product (counting_spheres.hl:227 proof
+core: `NORM_CAUCHY_SCHWARZ`). -/
+private theorem p22_dot2_cauchy (x y : ℂ) : dot2 x y ≤ ‖x‖ * ‖y‖ := by
+  have hxs : ‖x‖ ^ 2 = x.re * x.re + x.im * x.im := by
+    rw [Complex.sq_norm]; exact Complex.normSq_apply x
+  have hys : ‖y‖ ^ 2 = y.re * y.re + y.im * y.im := by
+    rw [Complex.sq_norm]; exact Complex.normSq_apply y
+  have hnn : 0 ≤ ‖x‖ * ‖y‖ := mul_nonneg (norm_nonneg _) (norm_nonneg _)
+  rcases lt_or_ge (dot2 x y) 0 with h0 | h0
+  · linarith
+  · have hs : (dot2 x y) ^ 2 ≤ (‖x‖ * ‖y‖) ^ 2 := by
+      rw [dot2_expand, mul_pow, hxs, hys]
+      nlinarith [sq_nonneg (x.re * y.im - x.im * y.re)]
+    have hle : |dot2 x y| ≤ |‖x‖ * ‖y‖| := (sq_le_sq).mp hs
+    calc dot2 x y ≤ |dot2 x y| := le_abs_self _
+      _ ≤ |‖x‖ * ‖y‖| := hle
+      _ = ‖x‖ * ‖y‖ := abs_of_nonneg hnn
+
 /-- HOL `facet_rep_in_facet` (counting_spheres.hl:227). GIANT. -/
 theorem facet_rep_in_facet (P c1 c2 : Set ℂ) (r : ℝ) (hP : polyhedronC P)
     (h1 : facetOfC c1 P) (h2 : facetOfC c2 P) (hr : 0 < r)
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
     (h : facet_rep_b P c1 ≤ dot2 (facet_rep_a P c1) (r • facet_rep_a P c2)) :
     c1 = c2 := by
-  sorry -- DEF-FIX: refill per counting_spheres.hl:227 §3a
+  have hpr1 := facet_rep_props P c1 hP h1
+  have hpr2 := facet_rep_props P c2 hP h2
+  have hn1 : ‖facet_rep_a P c1‖ = 1 := hpr1.1
+  have hn2 : ‖facet_rep_a P c2‖ = 1 := hpr2.1
+  -- every ball point pins the supporting value from below: r ≤ facet_rep_b P c1
+  have hpt : ∀ t : ℝ, 0 ≤ t → t < r → t ≤ facet_rep_b P c1 := by
+    intro t htnn htlt
+    have hnb : ‖(t • facet_rep_a P c1 : ℂ)‖ < r := by
+      rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg htnn, hn1]
+      simpa using htlt
+    have hle : dot2 (facet_rep_a P c1) (t • facet_rep_a P c1) ≤ facet_rep_b P c1 :=
+      hpr1.2.2.1 (hrad _ hnb)
+    rw [p22_dot2_smul_right, p22_dot2_self, hn1] at hle
+    simpa using hle
+  have hrb : r ≤ facet_rep_b P c1 := by
+    by_contra hcon
+    have hblt : facet_rep_b P c1 < r := lt_of_not_ge hcon
+    rcases lt_or_ge (facet_rep_b P c1) 0 with hneg | hpos
+    · have h0 := hpt 0 (by norm_num) hr
+      linarith
+    · have ht := hpt ((facet_rep_b P c1 + r) / 2) (by linarith) (by linarith)
+      linarith
+  -- the hypothesis plus Cauchy–Schwarz forces the inner product to be 1
+  rw [p22_dot2_smul_right] at h
+  have hcs0 : dot2 (facet_rep_a P c1) (facet_rep_a P c2)
+      ≤ ‖facet_rep_a P c1‖ * ‖facet_rep_a P c2‖ :=
+    p22_dot2_cauchy _ _
+  rw [hn1, hn2, mul_one] at hcs0
+  have h1cd : (1 : ℝ) ≤ dot2 (facet_rep_a P c1) (facet_rep_a P c2) := by
+    have hmul : r * 1 ≤ r * dot2 (facet_rep_a P c1) (facet_rep_a P c2) := by
+      rw [mul_one]; exact hrb.trans h
+    exact le_of_mul_le_mul_left hmul hr
+  have haeq : facet_rep_a P c1 = facet_rep_a P c2 :=
+    norm1_cauchy_eq _ _ hn1 hn2 (le_antisymm hcs0 h1cd)
+  exact facet_rep_uniq_c P c1 c2 hP h1 h2 haeq
 
 /-- HOL `facet_rep_refl` (counting_spheres.hl:257). GIANT. -/
 theorem facet_rep_refl (P c : Set ℂ) (r : ℝ) (hP : polyhedronC P)
@@ -2194,6 +2259,21 @@ theorem TWO_IMP_HAS_SIZE_GE_2 {α : Type*} [DecidableEq α] (s : Set α) (x y : 
 /-- HOL `AFF_GT_RELATIVE_INTERIOR` (counting_spheres.hl:3120). GIANT. -/
 theorem AFF_GT_RELATIVE_INTERIOR (s : Set V3) (hf : s.Finite) (h : 1 < s.ncard) :
     affGt (∅ : Set V3) s ⊆ intrinsicInterior ℝ (convexHull ℝ s) := by
+  -- NEEDS (wave-2 attempt, not landed; ≈200 lines of kit were machine-checked
+  -- piecewise but the final assembly did not land in this lane's budget).
+  -- Verified route: (1) `y` is a strict positive combination of `s`, hence in
+  -- the hull via `Finset.centerMass_id_mem_convexHull`; (2) `mem_rint_iff`
+  -- (Polytope.lean) reduces to `∃ ε > 0, ball y ε ∩ affineSpan ℝ s ⊆ hull`;
+  -- (3) take a basis of `D := vectorSpan ℝ s` inside the difference family
+  -- `(w₀ -ᵥ ·) '' s` via `Module.Basis.ofSpan` (+ `Basis.indexEquiv` reindex to
+  -- `Fin n`); (4) a zero-sum representation of `vectorSpan` elements
+  -- (`e = ∑ g w • w, ∑ g = 0`, via `Submodule.mem_span_range_iff_exists_fun` on
+  -- `Finset.mem_span_finite_of_mem_span` output) gives the core move
+  -- `y + τ • e ∈ hull` for `|τ| ≤ μ := 1/(1 + ∑ |g w| / f w)`; (5) coordinates
+  -- via `Basis.coord` + `ContinuousLinearMap.le_opNorm`; (6) assemble
+  -- `z = ∑ (1/n) • (y + n tᵥ eᵥ)` by `Finset.centerMass_mem_convexHull`.
+  -- Engineering residue: the `ofSpan` index-type/reindex bookkeeping and the
+  -- `Fin n` 0/>0 split (verified designs in the wave-2 lane notes).
   sorry -- DEF-FIX: 陈述纠正（原为假：弱锥含边界点，不在相对内部）
 
 /-- HOL `NOT_COLLINEAR_AFF_DIM_2` (counting_spheres.hl:3160). GIANT. -/
@@ -2273,7 +2353,18 @@ theorem FACET_AFF_DIM_2 (p f : Set V3) (hp : polyhedron p)
 /-- HOL `CONE0_FCHANGED_AFF_GT` (counting_spheres.hl:3185). GIANT. -/
 theorem CONE0_FCHANGED_AFF_GT (s : Set V3) (hf : s.Finite) (h : 1 < s.ncard)
     (h0 : (0 : V3) ∉ s) : cone0P22 0 s ⊆ fchanged (convexHull ℝ s) := by
-  sorry
+  -- NEEDS (wave-2 attempt, not landed): paper-verified transport
+  -- `v = (1 - a) • v₁`, `a = f 0`, `1 - a = ∑_{hf.toFinset} f w > 0`
+  -- (from `f x' ≤ ∑ f`, `x' ∈ s`, via `h : 1 < s.ncard`),
+  -- `v₁ = ∑_{s.toFinset} (f w / (1 - a)) • w ∈ affGt ∅ s`, closed by
+  -- AFF_GT_RELATIVE_INTERIOR + the `fchanged` anon.  Engineering residue:
+  -- Finset-instance bookkeeping (`haveI : Fintype ↑s := hf.fintype` makes
+  -- `s.toFinset` take the Fintype path while `hf.toFinset` is the Finite path;
+  -- bridge with `Finset.ext fun w => simp [Set.Finite.mem_toFinset hf]`), and
+  -- `hTform0 : hfin.toFinset = insert 0 hf.toFinset` for the apex-term split
+  -- (`Finset.sum_insert`).  Best finished together with
+  -- AFF_GT_RELATIVE_INTERIOR (supplies the relative-interior side).
+  sorry -- DEF-FIX: 重填波 3 路线已验证，待组装
 
 /-- HOL `CONE0_FCHANGED` (counting_spheres.hl:3288). GIANT. -/
 theorem CONE0_FCHANGED (p f : Set V3) (u0 u1 u2 : V3) (hp : polyhedron p)
