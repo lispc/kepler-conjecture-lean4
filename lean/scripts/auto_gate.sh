@@ -228,6 +228,21 @@ cmt=$(git show HEAD:"./$FILE" | awk '
     if ($0 ~ /-\//) incmt = 0
     next
   }' | sort -u)
+# EVOLUTION 11 (2026-09-29): interior of a sorry-bearing-at-HEAD declaration is
+# unfalsified content — a fill may restructure it freely (the statement stays
+# frozen and rules 3/4/5 still verify the result). Collect the full text of
+# every HEAD declaration whose body contains a sorry; rest-loop deletions
+# matching it verbatim are excused.
+sorbody=$(git show HEAD:"./$FILE" | awk '
+  /^[[:space:]]*((private|protected|noncomputable|unsafe|partial)[[:space:]]+)*(theorem|lemma|def|abbrev|instance|example)\b/ {
+    if (insor) printf "%s", buf
+    indecl = 1; insor = 0; buf = $0 "\n"; next
+  }
+  indecl {
+    if ($0 ~ /^[[:space:]]*sorry\b/ || $0 ~ /:=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$/) insor = 1
+    buf = buf $0 "\n"
+  }
+  END { if (insor) printf "%s", buf }' | sort -u)
 if [ -n "$dels" ]; then
   printf '%s\n' "$dels" | grep -qE '^-[[:space:]]*sorry\b|:=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$' \
     || fail "no sorry consumed (theorem untouched?)"
@@ -258,6 +273,10 @@ while IFS= read -r line; do
   fi
   # docstring interior (see $cmt above): pure comment rewording
   if printf '%s\n' "$cmt" | grep -qF -- "${line#-}"; then
+    continue
+  fi
+  # EVOLUTION 11: deletion inside a sorry-bearing-at-HEAD declaration
+  if [ -n "$sorbody" ] && printf '%s\n' "$sorbody" | grep -qF -- "${line#-}"; then
     continue
   fi
   prefix=$(printf '%s' "$line" | sed -E 's/^-[[:space:]]*(.*):=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$/\1/')
