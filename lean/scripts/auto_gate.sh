@@ -245,11 +245,23 @@ sorbody=$(git show HEAD:"./$FILE" | awk '
   END { if (insor) printf "%s", buf }' | sort -u)
 if [ -n "$dels" ]; then
   # EVOLUTION 12 (2026-09-30): a purely cosmetic diff (all deletions are
-  # comment/docstring/blank — nothing in `hard`, no sorry deleted) changes no
-  # code by construction; the sorry-consumed requirement only governs fills.
-  cosmetic=$(printf '%s\n' "$dels" \
-    | grep -vE '^-[[:space:]]*sorry\b' | grep -vE '^-$' \
-    | grep -vE '^-[[:space:]]*(--|/-)' | grep -vE '^.*-/[[:space:]]*$' || true)
+  # comment/docstring-interior/blank — nothing in `hard`, no sorry deleted)
+  # changes no code by construction; the sorry-consumed requirement only
+  # governs fills. Interior lines are matched against $cmt (EVOLUTION 10's
+  # HEAD docstring interiors) and $sorbody (EVOLUTION 11) exactly as the
+  # rest-loop would excuse them.
+  cosmetic=""
+  while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    case "$line" in '-'[[:space:]]*'sorry'*) continue ;; esac
+    case "$line" in '-'[[:space:]]*'--'*|'-'[[:space:]]*'/-'*|*'-'/) continue ;; esac
+    body="${line#-}"
+    printf '%s\n' "$cmt" | grep -qF -- "$body" && continue
+    printf '%s\n' "$sorbody" | grep -qF -- "$body" && continue
+    cosmetic+="$line"$'\n'
+  done <<EOF12
+$dels
+EOF12
   if [ -z "$cosmetic" ]; then
     : # comments-only lane (NOTES-LANE generalization): waive
   else
