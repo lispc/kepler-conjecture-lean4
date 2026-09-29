@@ -289,9 +289,78 @@ theorem FACET_OF_POLYHEDRON_EXPLICIT_BIS (V : Set V3) (K : Set (Set V3)) (s : Se
     (h4 : ∀ K' ⊂ K, s ⊂ (affineSpan ℝ s : Set V3) ∩ ⋂₀ K') :
     ∀ c : Set V3, FacetOf c s ↔
       ∃ v ∈ V, (bisLe v u ∈ K ∨ bisLe u v ∈ K) ∧ c = s ∩ bis u v := by
-  sorry
+  classical
+  intro c
+  -- every bisector constraint is a nonzero linear halfspace (Rogers.hl:417,
+  -- the Skolem step `bis_le v u = {x | 2 % (u - v) dot x ≤ u dot u - v dot v}`)
+  obtain ⟨a, b, hab⟩ : ∃ a : Set V3 → V3, ∃ b : Set V3 → ℝ,
+      ∀ h ∈ K, a h ≠ 0 ∧ h = {x : V3 | a h ⬝ᵥ x ≤ b h} := by
+    have hsk : ∀ h : Set V3, ∃ a : V3, ∃ b : ℝ,
+        h ∈ K → (a ≠ 0 ∧ h = {x : V3 | a ⬝ᵥ x ≤ b}) := by
+      intro h
+      by_cases hK : h ∈ K
+      · obtain ⟨v, hvV, hvu, hcase⟩ := h3 h hK
+        rcases hcase with heq | heq
+        · refine ⟨(2 : ℝ) • (u - v), u ⬝ᵥ u - v ⬝ᵥ v, ?_⟩
+          intro _
+          refine ⟨?_, ?_⟩
+          · intro hcon
+            exact hvu (sub_eq_zero.mp
+              ((smul_eq_zero.mp hcon).resolve_left (by norm_num))).symm
+          · rw [heq, BIS_LE_EQ_HALFSPACE]
+            ext x
+            simp only [Set.mem_setOf_eq, WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul]
+        · refine ⟨(2 : ℝ) • (v - u), v ⬝ᵥ v - u ⬝ᵥ u, ?_⟩
+          intro _
+          refine ⟨?_, ?_⟩
+          · intro hcon
+            exact hvu (sub_eq_zero.mp
+              ((smul_eq_zero.mp hcon).resolve_left (by norm_num)))
+          · rw [heq, BIS_LE_EQ_HALFSPACE]
+            ext x
+            simp only [Set.mem_setOf_eq, WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul]
+      · exact ⟨0, 0, fun hm => absurd hm hK⟩
+    choose a b hab using hsk
+    exact ⟨a, b, fun h hK => hab h hK⟩
+  have hmain := FACET_OF_POLYHEDRON_EXPLICIT (s := s) (F := K) a b h1 h2 hab h4 c
+  rw [hmain]
+  constructor
+  · rintro ⟨h, hK, rfl⟩
+    obtain ⟨v, hvV, hvu, hcase⟩ := h3 h hK
+    rcases hcase with heq | heq
+    · have hplane := HALFSPACE_EQ_BIS_LE_IMP_HYPERPLANE_EQ_BIS (a h) v u (b h)
+        (hab h hK).1 ((hab h hK).2.symm.trans heq)
+      exact ⟨v, hvV, Or.inl (by rw [← heq]; exact hK), by rw [hplane, BIS_SYM]⟩
+    · have hplane := HALFSPACE_EQ_BIS_LE_IMP_HYPERPLANE_EQ_BIS (a h) u v (b h)
+        (hab h hK).1 ((hab h hK).2.symm.trans heq)
+      exact ⟨v, hvV, Or.inr (by rw [← heq]; exact hK), by rw [hplane]⟩
+  · rintro ⟨v, hvV, hKmem, rfl⟩
+    rcases hKmem with hKmem | hKmem
+    · have hplane := HALFSPACE_EQ_BIS_LE_IMP_HYPERPLANE_EQ_BIS (a (bisLe v u))
+        v u (b (bisLe v u)) (hab _ hKmem).1 (hab _ hKmem).2.symm
+      exact ⟨bisLe v u, hKmem, by rw [hplane, BIS_SYM]⟩
+    · have hplane := HALFSPACE_EQ_BIS_LE_IMP_HYPERPLANE_EQ_BIS (a (bisLe u v))
+        u v (b (bisLe u v)) (hab _ hKmem).1 (hab _ hKmem).2.symm
+      exact ⟨bisLe u v, hKmem, by rw [hplane]⟩
 
 /-! ## Rogers.hl:523-825 — facets of Voronoi lists, existence of barV lists -/
+
+/-- Prefix criterion: if `w` and `u` are both initial sublists of a common
+list, `w` is an initial sublist of `u`. -/
+private theorem p6_initial_sublist_prefix {w u z : List V3}
+    (h1 : initialSublist w z) (h2 : initialSublist u z) (hlen : w.length ≤ u.length) :
+    initialSublist w u := by
+  obtain ⟨t1, ht1⟩ := h1
+  obtain ⟨t2, ht2⟩ := h2
+  have heq : w ++ t1 = u ++ t2 := by rw [← ht1, ← ht2]
+  rcases List.append_eq_append_iff.mp heq with hcase | hcase
+  · obtain ⟨t, hw, -⟩ := hcase
+    exact ⟨t, hw⟩
+  · obtain ⟨t, hu, -⟩ := hcase
+    rw [hu, List.length_append] at hlen
+    have ht0 : t = [] := List.length_eq_zero_iff.mp (by omega)
+    rw [ht0, List.append_nil] at hu
+    exact ⟨[], by rw [hu, List.append_nil]⟩
 
 /-- Rogers.hl:523 `IDBEZAL`: facets of a Voronoi list of dimension `< 3`. -/
 theorem IDBEZAL (V : Set V3) (ul : List V3) (k : ℕ) (F : Set V3) (hs : saturated V)
@@ -299,7 +368,242 @@ theorem IDBEZAL (V : Set V3) (ul : List V3) (k : ℕ) (F : Set V3) (hs : saturat
     FacetOf F (voronoiList V ul) ↔
       ∃ vl : List V3, F = voronoiList V vl ∧ barV V (k + 1) vl ∧
         truncateSimplex k vl = ul := by
-  sorry
+  constructor
+  · intro hF
+    obtain ⟨h, t, hcons, hhd⟩ := BARV_CONS V k ul hbar
+    have hcons' : ul = hdV ul :: t := hcons.trans (by rw [← hhd])
+    have hsub : setOfList ul ⊆ V := BARV_SUBSET V k ul hbar
+    obtain ⟨K, hKfin, hKeq, hKprop, hKmin⟩ := VORONOI_BARV_CANONICAL V k ul hP hs hbar
+    obtain ⟨v, hvV, hKin, hFv⟩ :=
+      (FACET_OF_POLYHEDRON_EXPLICIT_BIS V K (voronoiList V ul) (hdV ul) hKfin hKeq
+        hKprop hKmin F).mp hF
+    have hts : truncateSimplex k (ul ++ [v]) = ul :=
+      ((TRUNCATE_SIMPLEX_INITIAL_SUBLIST k ul (ul ++ [v])).2
+        ⟨INITIAL_SUBLIST_APPEND ul [v], hbar.1⟩).1
+    have hFext : voronoiList V (ul ++ [v]) = F := by
+      rw [← VORONOI_LIST_INTER_BIS V ul v (hdV ul) t hsub hvV hcons', hFv]
+    have hbarext : barV V (k + 1) (ul ++ [v]) := by
+      refine ⟨by rw [List.length_append, List.length_singleton, hbar.1], ?_⟩
+      rintro w ⟨hwinit, hwpos⟩
+      by_cases hlen : w.length ≤ k + 1
+      · have hwinit' : initialSublist w ul :=
+          p6_initial_sublist_prefix hwinit (INITIAL_SUBLIST_APPEND ul [v])
+            (by rw [hbar.1]; exact hlen)
+        exact hbar.2 w ⟨hwinit', hwpos⟩
+      · have hlenEq : w.length = (ul ++ [v]).length := by
+          have hwle := INITIAL_SUBLIST_LENGTH_LE hwinit
+          rw [List.length_append, List.length_singleton, hbar.1] at hwle ⊢
+          omega
+        have hwEq : w = ul ++ [v] :=
+          INITIAL_SUBLIST_UNIQUE hwinit (INITIAL_SUBLIST_REFL (ul ++ [v])) hlenEq rfl
+        subst hwEq
+        have hlen4 : (ul ++ [v]).length = k + 2 := by
+          rw [List.length_append, List.length_singleton, hbar.1]
+        refine ⟨by rw [hlen4]; omega, ?_, ?_⟩
+        · intro z hz
+          rcases List.mem_append.1 hz with hz | hz
+          · exact hsub hz
+          · rw [List.mem_singleton] at hz
+            rw [hz]
+            exact hvV
+        · rw [hFext, hlen4]
+          have h1 := hF.2.2
+          rw [AFF_DIM_VORONOI_LIST V ul k hbar] at h1
+          omega
+    exact ⟨ul ++ [v], hFext.symm, hbarext, hts⟩
+  · rintro ⟨vl, hFvl, hbarvl, hts⟩
+    obtain ⟨hinit, hlenul⟩ := (TRUNCATE_SIMPLEX_INITIAL_SUBLIST k ul vl).1 ⟨hts, by
+      have := hbarvl.1
+      omega⟩
+    rw [hFvl]
+    refine ⟨KHEJKCI_GEN V k (k + 1) ul vl hs hP hbar hbarvl hinit, ?_, ?_⟩
+    · exact BARV_IMP_VORONOI_LIST_NOT_EMPTY V vl (k + 1) hbarvl
+    · rw [AFF_DIM_VORONOI_LIST V vl (k + 1) hbarvl, AFF_DIM_VORONOI_LIST V ul k hbar]
+      omega
+
+/-- The supremum of a nonempty, bounded-above, closed set of reals belongs
+to the set. -/
+private theorem p6_sSup_mem_closed (I : Set ℝ) (hne : I.Nonempty) (hbdd : BddAbove I)
+    (hcl : IsClosed I) : sSup I ∈ I := by
+  by_contra hnot
+  obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.1 hcl.isOpen_compl (sSup I) (by
+    simpa using hnot)
+  have hbound : ∀ x ∈ I, x ≤ sSup I - ε := by
+    intro x hx
+    have hxle : x ≤ sSup I := le_csSup hbdd hx
+    have hlt : x < sSup I := by
+      rcases eq_or_lt_of_le hxle with he | hl
+      · exact absurd (he ▸ hx) hnot
+      · exact hl
+    have hballmem : x ∉ Metric.ball (sSup I) ε := fun hm => hball hm hx
+    have hdist : ε ≤ dist x (sSup I) :=
+      le_of_not_gt fun hlt' => hballmem (Metric.mem_ball.2 hlt')
+    rw [Real.dist_eq, abs_of_neg (by linarith)] at hdist
+    linarith
+  have hsup := csSup_le hne hbound
+  linarith
+
+/-- A compact convex set of positive affine dimension has two distinct
+points. -/
+private theorem p6_two_distinct_of_affDim_pos {s : Set V3} (hsne : s.Nonempty)
+    (hdim : 0 < affDim s) : ∃ x ∈ s, ∃ y ∈ s, x ≠ y := by
+  by_contra hall
+  push_neg at hall
+  obtain ⟨x₀, hx₀⟩ := hsne
+  have hseq : s = {x₀} :=
+    Set.eq_singleton_iff_unique_mem.2 ⟨hx₀, fun z hz => hall z hz x₀ hx₀⟩
+  rw [hseq, affDim_singleton] at hdim
+  omega
+
+/-- Boundary-point lemma behind Rogers.hl:694: a point of a compact
+polyhedron lies in the convex hull of `p0` and a facet (or is `p0`
+itself). -/
+private theorem p6_mem_hull_insert_facet (s : Set V3) (p0 v : V3)
+    (hsp : polyhedron s) (hcomp : _root_.IsCompact s) (hp0 : p0 ∈ s) (hv : v ∈ s) :
+    v = p0 ∨ ∃ f : Set V3, FacetOf f s ∧ v ∈ convexHull ℝ (insert p0 f) := by
+  classical
+  by_cases hv0 : v = p0
+  · exact Or.inl hv0
+  · right
+    have hdnz : v - p0 ≠ 0 := sub_ne_zero.2 hv0
+    have hnormpos : (0 : ℝ) < ‖v - p0‖ := norm_pos_iff.2 hdnz
+    have hcont : Continuous fun t : ℝ => p0 + t • (v - p0) := by fun_prop
+    have hIcl : IsClosed {t : ℝ | p0 + t • (v - p0) ∈ s} :=
+      (IsCompact.isClosed hcomp).preimage hcont
+    have hone : (1 : ℝ) ∈ {t : ℝ | p0 + t • (v - p0) ∈ s} := by
+      simp only [Set.mem_setOf_eq, one_smul, add_sub_cancel]
+      exact hv
+    have hzero : (0 : ℝ) ∈ {t : ℝ | p0 + t • (v - p0) ∈ s} := by
+      simp only [Set.mem_setOf_eq, zero_smul, add_zero]
+      exact hp0
+    have hbdd : BddAbove {t : ℝ | p0 + t • (v - p0) ∈ s} := by
+      obtain ⟨C, hC⟩ := IsCompact.exists_isMaxOn hcomp ⟨p0, hp0⟩
+        (f := fun x : V3 => ‖x‖) (by fun_prop)
+      refine ⟨(2 * ‖C‖) / ‖v - p0‖, ?_⟩
+      intro t ht
+      have hC0 : ‖p0‖ ≤ ‖C‖ := hC.2 hp0
+      have h1 : ‖t • (v - p0)‖ ≤ ‖C‖ + ‖p0‖ := by
+        have h2 : ‖t • (v - p0)‖ = ‖(p0 + t • (v - p0)) - p0‖ := by
+          rw [add_sub_cancel_left]
+        rw [h2]
+        calc ‖(p0 + t • (v - p0)) - p0‖ ≤ ‖p0 + t • (v - p0)‖ + ‖p0‖ := norm_sub_le _ _
+          _ ≤ ‖C‖ + ‖p0‖ := by
+              exact add_le_add (hC.2 ht) (le_refl _)
+      have h3 : |t| * ‖v - p0‖ ≤ ‖C‖ + ‖p0‖ := by
+        rw [norm_smul, Real.norm_eq_abs] at h1
+        exact h1
+      have h4 : t * ‖v - p0‖ ≤ ‖C‖ + ‖p0‖ := by
+        rcases abs_choice t with hc | hc
+        · rw [← hc]
+          exact h3
+        · have ht0 : t ≤ 0 := by
+            have habs : 0 ≤ |t| := abs_nonneg t
+            linarith
+          have hd0 : 0 ≤ ‖v - p0‖ := norm_nonneg _
+          have hS0 : 0 ≤ ‖C‖ + ‖p0‖ := by
+            have h1' : 0 ≤ ‖C‖ := norm_nonneg _
+            have h2' : 0 ≤ ‖p0‖ := norm_nonneg _
+            linarith
+          nlinarith
+      exact (le_div_iff₀ hnormpos).2 (by linarith)
+    set T := sSup {t : ℝ | p0 + t • (v - p0) ∈ s} with hTdef
+    have hTmem : p0 + T • (v - p0) ∈ s :=
+      hTdef ▸ p6_sSup_mem_closed _ ⟨0, hzero⟩ hbdd hIcl
+    have hT1 : (1 : ℝ) ≤ T := le_csSup hbdd hone
+    -- the farthest point of the polytope on the ray is not in the relative interior
+    have haff : ∀ r : ℝ, p0 + r • (v - p0) ∈ (affineSpan ℝ s : Set V3) := by
+      intro r
+      have hA0 : p0 ∈ (affineSpan ℝ s : Set V3) := subset_affineSpan ℝ s hp0
+      have hdir : (v - p0 : V3) ∈ (affineSpan ℝ s).direction := by
+        rw [direction_affineSpan]
+        exact vsub_mem_vectorSpan ℝ hv hp0
+      have hv2 := AffineSubspace.vadd_mem_of_mem_direction
+        (Submodule.smul_mem _ r hdir) hA0
+      rw [vadd_eq_add, add_comm] at hv2
+      exact hv2
+    have hwint : p0 + T • (v - p0) ∉ intrinsicInterior ℝ s := by
+      intro hm
+      obtain ⟨-, ε, hε, hball⟩ := mem_rint_iff.1 hm
+      have hpos : 0 < ε / (2 * ‖v - p0‖) := by
+        apply div_pos hε
+        linarith
+      have hd : dist (p0 + (T + ε / (2 * ‖v - p0‖)) • (v - p0))
+          (p0 + T • (v - p0)) < ε := by
+        rw [dist_eq_norm, add_sub_add_left_eq_sub, ← sub_smul, add_sub_cancel_left,
+          norm_smul, Real.norm_eq_abs, abs_of_pos hpos]
+        field_simp
+        linarith
+      have hmem : (T + ε / (2 * ‖v - p0‖)) ∈
+          {t : ℝ | p0 + t • (v - p0) ∈ s} :=
+        Set.mem_setOf.2 (hball ⟨hd, haff _⟩)
+      have hle := le_csSup hbdd hmem
+      linarith
+    rw [RELATIVE_INTERIOR_OF_POLYHEDRON hsp] at hwint
+    have hU : p0 + T • (v - p0) ∈ ⋃₀ {f : Set V3 | FacetOf f s} := by
+      by_contra hcon
+      exact hwint ((Set.mem_sdiff _).2 ⟨hTmem, hcon⟩)
+    obtain ⟨f, hf, hwf⟩ := Set.mem_sUnion.1 hU
+    refine ⟨f, hf, ?_⟩
+    have hTpos : (0 : ℝ) < T := by linarith
+    have hseg : v ∈ convexHull ℝ {p0, p0 + T • (v - p0)} := by
+      rw [convexHull_pair, segment_eq_image' ℝ p0 (p0 + T • (v - p0))]
+      have hθ1 : (0:ℝ) ≤ 1 / T := div_nonneg (by norm_num) hTpos.le
+      have hθ2 : 1 / T ≤ 1 := (div_le_one hTpos).2 hT1
+      refine ⟨1 / T, ⟨hθ1, hθ2⟩, ?_⟩
+      show p0 + (1 / T) • ((p0 + T • (v - p0)) - p0) = v
+      rw [add_sub_cancel_left, smul_smul, one_div, inv_mul_cancel₀ (ne_of_gt hTpos),
+        one_smul, add_sub_cancel]
+    refine convexHull_mono ?_ hseg
+    intro z hz
+    rcases Set.mem_insert_iff.1 hz with hz | hz
+    · subst hz
+      exact Set.mem_insert z f
+    · subst hz
+      exact Set.mem_insert_of_mem _ hwf
+
+/-- Specialization of HOL `POLYTOPE_UNION_CONVEX_HULL_FACETS` (polytope.ml)
+to a compact polyhedron of positive dimension. -/
+private theorem p6_union_convex_hull_facets (s : Set V3) (p : V3) (hsp : polyhedron s)
+    (hcomp : _root_.IsCompact s) (hdim : 0 < affDim s) (hp : p ∈ s) :
+    s = ⋃₀ {convexHull ℝ (insert p f) | f ∈ {f : Set V3 | FacetOf f s}} := by
+  classical
+  have hsne : s.Nonempty := ⟨p, hp⟩
+  have hconv : Convex ℝ s := POLYHEDRON_IMP_CONVEX hsp
+  obtain ⟨x, hx, y, hy, hxy⟩ := p6_two_distinct_of_affDim_pos hsne hdim
+  have hfacet : ∃ f : Set V3, FacetOf f s := by
+    rcases eq_or_ne x p with hx0 | hx0
+    · obtain ⟨f, hf, -⟩ := (p6_mem_hull_insert_facet s p y hsp hcomp hp hy).resolve_left
+        (fun heq => hxy (by rw [hx0]; exact heq.symm))
+      exact ⟨f, hf⟩
+    · obtain ⟨f, hf, -⟩ := (p6_mem_hull_insert_facet s p x hsp hcomp hp hx).resolve_left hx0
+      exact ⟨f, hf⟩
+  ext v
+  constructor
+  · intro hv
+    by_cases hv0 : v = p
+    · obtain ⟨f, hf⟩ := hfacet
+      rw [hv0]
+      exact Set.mem_sUnion.2 ⟨convexHull ℝ (insert p f), ⟨f, hf, rfl⟩,
+        subset_convexHull ℝ _ (Set.mem_insert p f)⟩
+    · obtain ⟨f, hf, hvm⟩ :=
+        (p6_mem_hull_insert_facet s p v hsp hcomp hp hv).resolve_left hv0
+      exact Set.mem_sUnion.2 ⟨convexHull ℝ (insert p f), ⟨f, hf, rfl⟩, hvm⟩
+  · rintro ⟨T, ⟨f, hf, rfl⟩, hvT⟩
+    have hsub : insert p f ⊆ s := by
+      intro z hz
+      rcases Set.mem_insert_iff.1 hz with hz | hz
+      · rw [hz]; exact hp
+      · exact hf.1.1 hz
+    exact convexHull_min hsub hconv hvT
+
+/-- Monotonicity of Voronoi lists under initial sublists. -/
+private theorem p6_voronoi_list_mono_init (V : Set V3) (t u : List V3)
+    (h : initialSublist t u) : voronoiList V u ⊆ voronoiList V t := by
+  intro x hx
+  simp only [voronoiList, voronoiSet, Set.mem_sInter] at hx ⊢
+  intro A hA
+  obtain ⟨v, hv, rfl⟩ := hA
+  exact hx _ ⟨v, SET_OF_LIST_INITIAL_SUBLIST_SUBSET h hv, rfl⟩
 
 /-- Rogers.hl:694 `VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS`. -/
 theorem VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS (V : Set V3) (ul : List V3) (k : ℕ)
@@ -308,7 +612,30 @@ theorem VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS (V : Set V3) (ul : List V3) (k 
     voronoiList V ul =
       ⋃₀ {convexHull ℝ (insert p (voronoiList V vl)) | vl ∈ {vl : List V3 |
         barV V (k + 1) vl ∧ truncateSimplex k vl = ul}} := by
-  sorry
+  classical
+  have hcomp : _root_.IsCompact (voronoiList V ul) :=
+    POLYTOPE_IMP_COMPACT (POLYTOPE_VORONOI_LIST_BARV V ul k hP hs hbar)
+  have hsp : polyhedron (voronoiList V ul) :=
+    POLYHEDRON_VORONOI_LIST V ul hP hs (BARV_SUBSET V k ul hbar)
+  have hdim : 0 < affDim (voronoiList V ul) := by
+    rw [AFF_DIM_VORONOI_LIST V ul k hbar]
+    omega
+  have hmain := p6_union_convex_hull_facets (voronoiList V ul) p hsp hcomp hdim hp
+  have hfam : {convexHull ℝ (insert p f) | f ∈ {f : Set V3 |
+      FacetOf f (voronoiList V ul)}} =
+      {convexHull ℝ (insert p (voronoiList V vl)) | vl ∈ {vl : List V3 |
+        barV V (k + 1) vl ∧ truncateSimplex k vl = ul}} := by
+    ext T
+    constructor
+    · rintro ⟨f, hf, hTeq⟩
+      obtain ⟨vl, hvl1, hvl2, hvl3⟩ := (IDBEZAL V ul k f hs hP hbar hk3).mp hf
+      exact ⟨vl, ⟨hvl2, hvl3⟩, by rw [← hTeq, hvl1]⟩
+    · rintro ⟨vl, hmem, hTeq⟩
+      obtain ⟨hvl2, hvl3⟩ := hmem
+      have hf : FacetOf (voronoiList V vl) (voronoiList V ul) :=
+        (IDBEZAL V ul k (voronoiList V vl) hs hP hbar hk3).mpr ⟨vl, rfl, hvl2, hvl3⟩
+      exact ⟨voronoiList V vl, hf, by rw [hTeq]⟩
+  rw [hmain, hfam]
 
 /-- Rogers.hl:754 `NUMSEG_SUBSET_INDUCT`. -/
 theorem NUMSEG_SUBSET_INDUCT (s : Set ℕ) (a b : ℕ) (ha : a ∈ s)
@@ -349,6 +676,124 @@ theorem BARV_EXISTS_ALT (V : Set V3) (k : ℕ) (hP : Packing V) (hs : saturated 
 
 /-! ## Rogers.hl:826-1255 — GLTVHUM (Rogers simplex covering) -/
 
+/-- `hull (A ∪ hull B) = hull (A ∪ B)` (pack3.hl:144 `CONV_UNION_lemma`). -/
+private theorem p6_convexHull_union_hull (A B : Set V3) :
+    convexHull ℝ (A ∪ convexHull ℝ B) = convexHull ℝ (A ∪ B) := by
+  refine subset_antisymm ?_ ?_
+  · refine convexHull_min ?_ (convex_convexHull ℝ (A ∪ B))
+    intro z hz
+    simp only [Set.mem_union] at hz
+    rcases hz with hz | hz
+    · exact subset_convexHull ℝ (A ∪ B) (Set.mem_union_left _ hz)
+    · exact (convexHull_mono (Set.subset_union_right : B ⊆ A ∪ B)) hz
+  · refine convexHull_min ?_ (convex_convexHull ℝ (A ∪ convexHull ℝ B))
+    intro z hz
+    simp only [Set.mem_union] at hz
+    rcases hz with hz | hz
+    · exact subset_convexHull ℝ (A ∪ convexHull ℝ B) (Set.mem_union_left _ hz)
+    · exact subset_convexHull ℝ (A ∪ convexHull ℝ B)
+        (Set.mem_union_right _ (subset_convexHull ℝ B hz))
+
+/-- Image-congruent families have equal unions. -/
+private theorem p6_sUnion_image_congr {α : Type*} {F : Set α} {f g : α → Set V3}
+    (h : ∀ x ∈ F, f x = g x) : ⋃₀ {f x | x ∈ F} = ⋃₀ {g x | x ∈ F} := by
+  ext z
+  simp only [Set.mem_sUnion, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨T, hT, hz⟩
+    obtain ⟨x, hx, rfl⟩ := hT
+    exact ⟨g x, ⟨x, hx, rfl⟩, h x hx ▸ hz⟩
+  · rintro ⟨T, hT, hz⟩
+    obtain ⟨x, hx, rfl⟩ := hT
+    exact ⟨f x, ⟨x, hx, rfl⟩, (h x hx).symm ▸ hz⟩
+
+/-- Star lemma (HOL convex1.ml:2999 `CONVEX_HULL_UNION_UNIONS`): for a
+nonempty family with convex union, the hull of `S ∪ ⋃₀ 𝒞` is the union of
+the hulls of `S ∪ c`. -/
+private theorem p6_convexHull_sUnion_left (S : Set V3) (𝒞 : Set (Set V3))
+    (hne : 𝒞.Nonempty) (hconv : Convex ℝ (⋃₀ 𝒞)) :
+    convexHull ℝ (S ∪ ⋃₀ 𝒞) = ⋃₀ {convexHull ℝ (S ∪ c) | c ∈ 𝒞} := by
+  classical
+  obtain ⟨c₀, hc₀⟩ := hne
+  refine subset_antisymm ?_ ?_
+  · -- the hull is inside the union of the pairwise hulls
+    intro x hx
+    by_cases hSe : S.Nonempty
+    · by_cases hUe : (⋃₀ 𝒞).Nonempty
+      · have hxj : x ∈ convexJoin ℝ (convexHull ℝ S) (convexHull ℝ (⋃₀ 𝒞)) := by
+          rw [← convexHull_union hSe hUe]
+          exact hx
+        obtain ⟨p, hp, q, hq, hseg⟩ := mem_convexJoin.1 hxj
+        have hqU : q ∈ ⋃₀ 𝒞 := hconv.convexHull_eq ▸ hq
+        obtain ⟨c₁, hc₁, hqc₁⟩ := Set.mem_sUnion.1 hqU
+        refine ⟨convexHull ℝ (S ∪ c₁), ⟨c₁, hc₁, rfl⟩, ?_⟩
+        obtain ⟨θ, ϑ, hθ0, hϑ0, hsum, hxq⟩ := hseg
+        refine (convex_iff_segment_subset.1 (convex_convexHull ℝ (S ∪ c₁))
+          ((convexHull_mono (Set.subset_union_left : S ⊆ S ∪ c₁)) hp)
+          (subset_convexHull ℝ _ (Set.mem_union_right _ hqc₁))) ?_
+        rw [segment_eq_image]
+        refine (Set.mem_image _ _ _).2 ⟨ϑ, ⟨hϑ0, by linarith⟩, ?_⟩
+        show (1 - ϑ) • p + ϑ • q = x
+        rw [show 1 - ϑ = θ from by linarith]
+        exact hxq
+      · have hU0 : ⋃₀ 𝒞 = ∅ := Set.not_nonempty_iff_eq_empty.1 hUe
+        rw [hU0, Set.union_empty] at hx
+        exact ⟨convexHull ℝ (S ∪ c₀), ⟨c₀, hc₀, rfl⟩,
+          (convexHull_mono (Set.subset_union_left : S ⊆ S ∪ c₀)) hx⟩
+    · have hSe0 : S = ∅ := Set.not_nonempty_iff_eq_empty.1 hSe
+      have hx2 : x ∈ convexHull ℝ (⋃₀ 𝒞) := by
+        rw [hSe0, Set.empty_union] at hx
+        exact hx
+      have hx3 : x ∈ ⋃₀ 𝒞 := hconv.convexHull_eq ▸ hx2
+      obtain ⟨c₁, hc₁, xc₁⟩ := Set.mem_sUnion.1 hx3
+      exact ⟨convexHull ℝ (S ∪ c₁), ⟨c₁, hc₁, rfl⟩, by
+        rw [hSe0, Set.empty_union]
+        exact subset_convexHull ℝ c₁ xc₁⟩
+  · -- each member hull (S ∪ c) is inside the hull
+    rintro x ⟨T, hT, hx⟩
+    obtain ⟨c, hc, rfl⟩ := hT
+    exact (convexHull_mono (Set.union_subset_union (Subset.refl _)
+      (Set.subset_sUnion_of_mem hc))) hx
+
+/-- Step lemma (C) of `GLTVHUM_lemma1`: the union of the "one-point
+extension" hulls around a Voronoi list is the list itself (this is
+`VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS` at the point `omega_list_n wl k`). -/
+private theorem p6_gltvhum_union_g (V : Set V3) (wl : List V3) (k : ℕ) (hP : Packing V)
+    (hs : saturated V) (hk3 : k < 3) (hbar : barV V k wl) :
+    ⋃₀ {convexHull ℝ (insert (omegaListN V vl k) (voronoiList V vl)) | vl ∈
+      {vl : List V3 | barV V (k + 1) vl ∧ truncateSimplex k vl = wl}} =
+    voronoiList V wl := by
+  have hp : omegaListN V wl k ∈ voronoiList V wl := by
+    have h1 := OMEGA_LIST_N_IN_VORONOI_LIST V wl k k hbar (le_refl k)
+    rwa [TRUNCATE_SIMPLEX_REFL k wl hbar.1] at h1
+  rw [VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS V wl k (omegaListN V wl k) hP hs hbar
+    hk3 hp]
+  ext T
+  simp only [Set.mem_sUnion, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨t, hT, hx⟩
+    obtain ⟨vl, hbarvl, hts, rfl⟩ := hT
+    obtain ⟨hbarvl, hts⟩ := hbarvl
+    have homega : omegaListN V vl k = omegaListN V wl k := by
+      have hlen : vl.length = k + 2 := hbarvl.1
+      have h5 := OMEGA_LIST_N_LEMMA V vl k 0 (by omega)
+      rw [Nat.add_zero, hts] at h5
+      exact h5
+    rw [homega] at hx
+    refine ⟨convexHull ℝ (insert (omegaListN V wl k) (voronoiList V vl)),
+      Set.mem_setOf.2 ⟨vl, ⟨hbarvl, hts⟩, rfl⟩, hx⟩
+  · rintro ⟨t, hT, hx⟩
+    obtain ⟨vl, hbarvl, hts, rfl⟩ := hT
+    obtain ⟨hbarvl, hts⟩ := hbarvl
+    have homega : omegaListN V vl k = omegaListN V wl k := by
+      have hlen : vl.length = k + 2 := hbarvl.1
+      have h5 := OMEGA_LIST_N_LEMMA V vl k 0 (by omega)
+      rw [Nat.add_zero, hts] at h5
+      exact h5
+    rw [← homega] at hx
+    refine ⟨convexHull ℝ (insert (omegaListN V vl k) (voronoiList V vl)),
+      Set.mem_setOf.2 ⟨vl, ⟨hbarvl, hts⟩, rfl⟩, hx⟩
+
 /-- Rogers.hl:826 `GLTVHUM_lemma1`. -/
 theorem GLTVHUM_lemma1 (V : Set V3) (ul : List V3) (j : ℕ) (hP : Packing V)
     (hs : saturated V) (hj : j < 3) (hbar : barV V j ul) :
@@ -356,6 +801,22 @@ theorem GLTVHUM_lemma1 (V : Set V3) (ul : List V3) (j : ℕ) (hP : Packing V)
       ⋃₀ {convexHull ℝ ({omegaListN V vl i | i ∈ Finset.Icc j (k - 1)} ∪
         voronoiList V vl) | vl ∈ {vl : List V3 |
         barV V k vl ∧ truncateSimplex j vl = ul}}} = (Finset.Icc j 3 : Set ℕ) := by
+  -- NEEDS: Rogers.hl:826-1150 的 k-归纳主体。既有件已闭合（本轮）：①
+  -- FACET_OF_POLYHEDRON_EXPLICIT_BIS（PA6:286）、② IDBEZAL（PA6:349）、③
+  -- VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS（PA6:424，经边界点引理
+  -- p6_mem_hull_insert_facet+polyhedron 的 RELATIVE_INTERIOR_OF_POLYHEDRON+
+  -- 射线-sup 参数替代 POLYTOPE_UNION_CONVEX_HULL_FACETS 的移植）。④ 主体
+  -- 路线（HOL Rogers.hl:830-1150 的逐步对应，本轮已写至 hinner 的
+  -- star-lemma+(C) 组合，仅剩家族-成员 bookkeeping 未收口，见 git 历史本波
+  -- diff）：base k=j：fam={ul}（TRUNCATE_SIMPLEX_INITIAL_SUBLIST+INITIAL_
+  -- SUBLIST_UNIQUE），j=0 用 VORONOI_LIST_SING+CENTER_IN_VORONOI_CELL+
+  -- CONVEX_VORONOI_CLOSED，j>0 用 Finset.Icc_eq_empty+CONVEX_VORONOI_LIST；
+  -- step：p6_union_split（(A) 重排，∃-And 链的 obtain-嵌套需 ⟨vl, ⟨hbarvl,
+  -- hts⟩, rfl⟩ 形）→ hinner：hQ=P6_convexHull_union_hull+omega-窗拆分
+  -- （hset 的 Finset.mem_Icc.1/.mpr 形）→ p6_sUnion_image_congr（ω vl→ω wl
+  -- 逐点一致）→ p6_convexHull_sUnion_left（星引理，𝒞=hulled-insert 家族，
+  -- hCU=p6_gltvhum_union_g 即 (C)，BARV_EXISTS 供非空）→ hmu。⑤ GLTVHUM
+  -- （PA6:690）在本桥闭合后自动解锁（其证明体背引用本桥）。
   sorry
 
 /-- Rogers.hl:1152 `GLTVHUM`: the closed Voronoi cell of `u0` is covered by
