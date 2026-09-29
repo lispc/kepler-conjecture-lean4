@@ -172,6 +172,15 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 `div_le_iff`→`div_le_iff₀`、`one_lt_inv`→`one_lt_inv₀`；
 `Set.Finite.exists_maximal_wrt` 不存在，用 `Set.Finite.sSup_mem`/`Finset.max'`。
 
+**PackingJGXZYGW 实测新增（2026-09-29，lane J）**：`volume_empty` 不存在→
+`MeasureTheory.measure_empty`；`Set.Finite.image` 实为根命名空间
+`Finite.image (f) (hs)`（**函数在前**）；`rfl`-pattern 在 `var = 定理级变量` 上
+env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理变量），一律改
+显式 `have hwS : w = S` + 定向 `rw`——这是 env-lean 两度假绿的典型来源；
+`EuclideanSpace.volume_ball_fin_three` 形状是 `ofReal r^3 * ofReal (π*4/3)`
+（ofReal 在幂内层）；`Real.sqrt_mul {x} (hx : 0 ≤ x) (y)` 首因子由 hx 固定；
+`div_le_iff₀ (hc : 0 < c) : b / c ≤ a ↔ b ≤ a * c`（mp 需要 `≤ a*c` 形状）。
+
 ### 5.4 各 lane 已知卡点速查（收工后追加）
 
 - **LA38**（52 remaining @二轮后：38 tactic sorry + 14 def 桩）：二轮闭合 6 枚
@@ -309,8 +318,39 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   无环，ContraFan 仅 2 行转发），切 CF-4a/4b/4c 三波，依赖 CF-3。
   陷阱：PA21:131 `eta_y := sorry` 是 def-sorry 严禁依赖；V3 内积一律走
   `inner ℝ` 泛型（避 ⬝ᵥ/ofLp 假绿）；`affGe` 闭锥是忠实移植，勿"修正"为 affGt。
+- **PA19**（UPFZBZM W1 已清 @abfd2fcb）：NEGLIGIBLE_FUNC 架构已真证；`let q :=
+  …` 出现在 goal 内时先 `simp only []` zeta 归一再 rewrite（本轮主要坑）；
+  `Finset.sum_const` 产生 ℕ-smul，走 `nsmul_eq_mul` + `Nat.card_coe_set_eq`；
+  voronoiOpen P16→P19 差异用定义性 ascription 吸收（`hb1 : … := hc1 …`），零 shim。
+  余债 = 上游四巨物（KIZHLTL1/2/4+SUM_GAMMAX）。
+- **PackingJGXZYGW**（JGXZ 链已全清 @83f5ea04，公共件可直接 import 复用）：
+  `jgxzygw_p` 公开 capstone + 33 枚 `jg_` private（测度主点
+  `MeasureTheory.measure_biUnion_finset`+PairwiseDisjoint、negligible 系、
+  step1-4 全套）——后续任何 voronoi 测度链 lane 先看本模块，勿重写。
 
 ## 6. 教训日志（编排者每波收工后追加；工人有观察也写报告里）
+
+### 2026-09-29 · Wave 6（Merge_ineq 波2a-3 / UPFZBZM W1 / JGXZ 全链 / 双 shim / 双侦察降档）
+
+- **规则⑤审计目标必须是公开名**：private 定理（如 `JGXZYGW_KY_p2`）在
+  `#print axioms` 外部文件里是 Unknown constant——闸门审计目标一律选本文件
+  公开消费者（同陈述或直接下游），不要为过闸把 private 改公开。
+- **闸门演化 10**：规则② docstring 内行豁免自引入以来是死代码——dels 扫
+  opener 的近似在"首行留作上下文"的改写下找不到被删块开头，且 cmt 收集带
+  `-` 前缀与比对侧剥前缀永不相等。改为从 HEAD 文件内容收集（同 DEF-FIX
+  dint 法）+ `· --` 战术位注释行入硬过滤豁免。首次真实行使即暴露。
+- **新模块 lane 的 shim 串行协议**：新叶模块（PackingJGXZYGW）与既有银行文件
+  （PA2/PA19）的双向债，拆两个 lane 时 shim 一律由 lane 交付**补丁文本**、
+  编排者在两 lane 落地后串行贴+闸——否则两工人同写 PA19 必撞车。
+- **侦察先行降档实测两连**：JGXZ"GIANT"实为 PA1 半成品山（12/22 已证，210-360
+  行，单 lane 全清）；UPFZBZM"GIANT"实为装配 100% 完成 + 一枚 bare sorry。
+  定级先看树内存量（骨架覆盖度），再决定侦察 or 直接填——侦察报告就是规格书。
+- **新文件闸门流程**：untracked 文件规则①看不见 → 编排者先 `git add` 再跑闸
+  （ContraFanDeep/PackingJGXZYGW 两次实践）；`git show HEAD:新文件` 在 cmt
+  收集处 fatal 到 stderr 但 `$( )` 吞掉不致死——无害，可忽略。
+- **env-lean 两度假绿的系统性根治**：rfl-pattern 在 `var = 定理级变量` 上
+  env/build 替换方向相反（JGXZ lane 三处返工）——一律显式 `have` + 定向 `rw`；
+  收工终验必须 `lake build`（§3 已有，本波再+1 实证）。
 
 ### 2026-09-29 · Wave 4 六 lane 批（PA22 波1 / TameLp W1 / PA21 / PA6 / LA38 / ContraFan）
 
