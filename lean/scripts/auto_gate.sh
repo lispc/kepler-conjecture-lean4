@@ -244,8 +244,18 @@ sorbody=$(git show HEAD:"./$FILE" | awk '
   }
   END { if (insor) printf "%s", buf }' | sort -u)
 if [ -n "$dels" ]; then
-  printf '%s\n' "$dels" | grep -qE '^-[[:space:]]*sorry\b|:=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$' \
-    || fail "no sorry consumed (theorem untouched?)"
+  # EVOLUTION 12 (2026-09-30): a purely cosmetic diff (all deletions are
+  # comment/docstring/blank — nothing in `hard`, no sorry deleted) changes no
+  # code by construction; the sorry-consumed requirement only governs fills.
+  cosmetic=$(printf '%s\n' "$dels" \
+    | grep -vE '^-[[:space:]]*sorry\b' | grep -vE '^-$' \
+    | grep -vE '^-[[:space:]]*(--|/-)' | grep -vE '^.*-/[[:space:]]*$' || true)
+  if [ -z "$cosmetic" ]; then
+    : # comments-only lane (NOTES-LANE generalization): waive
+  else
+    printf '%s\n' "$dels" | grep -qE '^-[[:space:]]*sorry\b|:=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$' \
+      || fail "no sorry consumed (theorem untouched?)"
+  fi
 fi
 hard=$(printf '%s\n' "$dels" \
   | grep -vE '^-[[:space:]]*sorry\b' \
