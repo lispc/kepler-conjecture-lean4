@@ -794,6 +794,77 @@ private theorem p6_gltvhum_union_g (V : Set V3) (wl : List V3) (k : ℕ) (hP : P
     refine ⟨convexHull ℝ (insert (omegaListN V vl k) (voronoiList V vl)),
       Set.mem_setOf.2 ⟨vl, ⟨hbarvl, hts⟩, rfl⟩, hx⟩
 
+/-- The `j..k` omega-window splits into the `j..k-1` window plus the top
+point (HOL Rogers.hl:944-964). -/
+private theorem p6_image_Icc_succ (f : ℕ → V3) (j k : ℕ) (hjk : j ≤ k) :
+    {f i | i ∈ Finset.Icc j (k - 1)} ∪ {f k} = {f i | i ∈ Finset.Icc j k} := by
+  ext x
+  simp only [Set.mem_union, Set.mem_setOf_eq, Set.mem_singleton_iff, Finset.mem_Icc]
+  constructor
+  · rintro (⟨i, hi, rfl⟩ | rfl)
+    · exact ⟨i, by omega, rfl⟩
+    · exact ⟨k, by omega, rfl⟩
+  · rintro ⟨i, hi, rfl⟩
+    rcases eq_or_ne i k with rfl | hik
+    · exact Or.inr rfl
+    · exact Or.inl ⟨i, by omega, rfl⟩
+
+/-- Re-indexing a family union through the family image (the ∃-setOf
+bookkeeping between the star lemma's `c ∈ 𝒞` form and the `vl`-indexed
+form). -/
+private theorem p6_sUnion_image_image {α β : Type*} {F : Set α} (g : α → β)
+    (h : β → Set V3) :
+    ⋃₀ {h (g x) | x ∈ F} = ⋃₀ {h y | y ∈ {g x | x ∈ F}} := by
+  ext z
+  simp only [Set.mem_sUnion, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨T, ⟨x, hxF, rfl⟩, hzT⟩
+    exact ⟨h (g x), ⟨g x, ⟨x, hxF, rfl⟩, rfl⟩, hzT⟩
+  · rintro ⟨T, ⟨y, ⟨x, hxF, rfl⟩, rfl⟩, hzT⟩
+    exact ⟨h (g x), ⟨x, hxF, rfl⟩, hzT⟩
+
+/-- A singleton-indexed family union collapses to the member. -/
+private theorem p6_sUnion_singleton_image {α : Type*} (q : α → Set V3) (a : α) :
+    ⋃₀ {q v | v ∈ ({a} : Set α)} = q a := by
+  ext z
+  simp only [Set.mem_sUnion, Set.mem_setOf_eq, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨T, ⟨v, rfl, rfl⟩, hzT⟩
+    exact hzT
+  · intro hz
+    exact ⟨q a, ⟨a, rfl, rfl⟩, hz⟩
+
+/-- Step lemma (A) of `GLTVHUM_lemma1` (HOL Rogers.hl:905-942): split the
+`(k+1)`-family through the truncation at level `k`. -/
+private theorem p6_union_split (V : Set V3) (ul : List V3) (j k : ℕ) (hjk : j ≤ k)
+    (Q : List V3 → Set V3) :
+    ⋃₀ {Q vl | vl ∈ {vl : List V3 | barV V (k + 1) vl ∧ truncateSimplex j vl = ul}} =
+    ⋃₀ {⋃₀ {Q vl | vl ∈ {vl : List V3 | barV V (k + 1) vl ∧ truncateSimplex k vl = wl}} |
+      wl ∈ {wl : List V3 | barV V k wl ∧ truncateSimplex j wl = ul}} := by
+  classical
+  ext z
+  simp only [Set.mem_sUnion, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨T, ⟨vl, ⟨hb, ht⟩, rfl⟩, hzT⟩
+    have hlen : vl.length = k + 2 := hb.1
+    have hbart : barV V k (truncateSimplex k vl) :=
+      TRUNCATE_SIMPLEX_BARV V k (k + 1) vl hb (by omega)
+    have htwl : truncateSimplex j (truncateSimplex k vl) = ul := by
+      rw [TRUNCATE_TRUNCATE_SIMPLEX vl j k hjk (by omega)]
+      exact ht
+    refine ⟨⋃₀ {Q v | v ∈ {v : List V3 | barV V (k + 1) v ∧
+      truncateSimplex k v = truncateSimplex k vl}},
+      ⟨truncateSimplex k vl, ⟨hbart, htwl⟩, rfl⟩, ?_⟩
+    exact ⟨Q vl, ⟨vl, ⟨hb, rfl⟩, rfl⟩, hzT⟩
+  · rintro ⟨W, ⟨wl, ⟨hbw, htw⟩, rfl⟩, hzW⟩
+    obtain ⟨T, ⟨v, ⟨hb, hvw⟩, rfl⟩, hzT⟩ := hzW
+    have hlen : v.length = k + 2 := hb.1
+    have htv : truncateSimplex j (truncateSimplex k v) = ul := by
+      rw [hvw]
+      exact htw
+    exact ⟨Q v, ⟨v, ⟨hb,
+      (TRUNCATE_TRUNCATE_SIMPLEX v j k hjk (by omega)).symm.trans htv⟩, rfl⟩, hzT⟩
+
 /-- Rogers.hl:826 `GLTVHUM_lemma1`. -/
 theorem GLTVHUM_lemma1 (V : Set V3) (ul : List V3) (j : ℕ) (hP : Packing V)
     (hs : saturated V) (hj : j < 3) (hbar : barV V j ul) :
@@ -801,23 +872,153 @@ theorem GLTVHUM_lemma1 (V : Set V3) (ul : List V3) (j : ℕ) (hP : Packing V)
       ⋃₀ {convexHull ℝ ({omegaListN V vl i | i ∈ Finset.Icc j (k - 1)} ∪
         voronoiList V vl) | vl ∈ {vl : List V3 |
         barV V k vl ∧ truncateSimplex j vl = ul}}} = (Finset.Icc j 3 : Set ℕ) := by
-  -- NEEDS: Rogers.hl:826-1150 的 k-归纳主体。既有件已闭合（本轮）：①
-  -- FACET_OF_POLYHEDRON_EXPLICIT_BIS（PA6:286）、② IDBEZAL（PA6:349）、③
-  -- VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS（PA6:424，经边界点引理
-  -- p6_mem_hull_insert_facet+polyhedron 的 RELATIVE_INTERIOR_OF_POLYHEDRON+
-  -- 射线-sup 参数替代 POLYTOPE_UNION_CONVEX_HULL_FACETS 的移植）。④ 主体
-  -- 路线（HOL Rogers.hl:830-1150 的逐步对应，本轮已写至 hinner 的
-  -- star-lemma+(C) 组合，仅剩家族-成员 bookkeeping 未收口，见 git 历史本波
-  -- diff）：base k=j：fam={ul}（TRUNCATE_SIMPLEX_INITIAL_SUBLIST+INITIAL_
-  -- SUBLIST_UNIQUE），j=0 用 VORONOI_LIST_SING+CENTER_IN_VORONOI_CELL+
-  -- CONVEX_VORONOI_CLOSED，j>0 用 Finset.Icc_eq_empty+CONVEX_VORONOI_LIST；
-  -- step：p6_union_split（(A) 重排，∃-And 链的 obtain-嵌套需 ⟨vl, ⟨hbarvl,
-  -- hts⟩, rfl⟩ 形）→ hinner：hQ=P6_convexHull_union_hull+omega-窗拆分
-  -- （hset 的 Finset.mem_Icc.1/.mpr 形）→ p6_sUnion_image_congr（ω vl→ω wl
-  -- 逐点一致）→ p6_convexHull_sUnion_left（星引理，𝒞=hulled-insert 家族，
-  -- hCU=p6_gltvhum_union_g 即 (C)，BARV_EXISTS 供非空）→ hmu。⑤ GLTVHUM
-  -- （PA6:690）在本桥闭合后自动解锁（其证明体背引用本桥）。
-  sorry
+  -- k-归纳（NUMSEG_SUBSET_INDUCT）。≡-claim：`barV V j` 家族是单点 {ul}
+  -- （TRUNCATE_SIMPLEX_INITIAL_SUBLIST + TRUNCATE_SIMPLEX_REFL）。
+  have hclaim : ∀ vl : List V3, barV V j vl ∧ truncateSimplex j vl = ul ↔ vl = ul := by
+    intro vl
+    constructor
+    · rintro ⟨hbarvl, hts⟩
+      have h1 := (TRUNCATE_SIMPLEX_INITIAL_SUBLIST j vl vl).2
+        ⟨INITIAL_SUBLIST_REFL vl, hbarvl.1⟩
+      exact (hts.symm.trans h1.1).symm
+    · rintro rfl
+      exact ⟨hbar, TRUNCATE_SIMPLEX_REFL _ _ hbar.1⟩
+  -- base k=j：家族={ul}；j=0 用 VORONOI_LIST_SING+CENTER_IN_VORONOI_CELL+
+  -- CONVEX_VORONOI_CLOSED，j>0 用 Icc_eq_empty+CONVEX_VORONOI_LIST。
+  have hbase : voronoiList V ul =
+      ⋃₀ {convexHull ℝ ({omegaListN V vl i | i ∈ Finset.Icc j (j - 1)} ∪
+        voronoiList V vl) | vl ∈ {vl : List V3 |
+        barV V j vl ∧ truncateSimplex j vl = ul}} := by
+    have hsingleton : {vl : List V3 | barV V j vl ∧ truncateSimplex j vl = ul} = {ul} := by
+      ext v
+      simpa only [Set.mem_setOf_eq, Set.mem_singleton_iff] using hclaim v
+    rw [hsingleton, p6_sUnion_singleton_image]
+    rcases Nat.eq_zero_or_pos j with hj0 | hj0
+    · subst hj0
+      obtain ⟨y, rfl⟩ := List.length_eq_one_iff.1 (show ul.length = 1 from hbar.1)
+      rw [VORONOI_LIST_SING, show (0 : ℕ) - 1 = 0 from by omega]
+      have h0 : {omegaListN V [y] i | i ∈ Finset.Icc 0 0} = {y} := by
+        ext z
+        simp only [Set.mem_setOf_eq, Set.mem_singleton_iff, Finset.mem_Icc]
+        constructor
+        · rintro ⟨i, hi1, hi2, rfl⟩
+          rw [show i = 0 from by omega]
+          rfl
+        · rintro rfl
+          exact ⟨0, by omega, rfl⟩
+      rw [h0, Set.singleton_union,
+        Set.insert_eq_of_mem (CENTER_IN_VORONOI_CELL V y).1,
+        (CONVEX_VORONOI_CLOSED V y).convexHull_eq]
+    · have hempty : Finset.Icc j (j - 1) = ∅ := Finset.Icc_eq_empty_iff.2 (by omega)
+      have himge : {omegaListN V ul i | i ∈ Finset.Icc j (j - 1)} = (∅ : Set V3) := by
+        rw [hempty]
+        ext z
+        simp
+      rw [himge, Set.empty_union, (CONVEX_VORONOI_LIST V ul).convexHull_eq]
+  -- step k→k+1：(A) p6_union_split 重排 → (B) stepB 壳-窗 rearrange →
+  -- omega-窗 vl↔wl 逐点一致（OMEGA_LIST_N_LEMMA）→ p6_convexHull_sUnion_left
+  -- （星引理；非空=BARV_EXISTS，凸性=ℂ-并=p6_gltvhum_union_g+CONVEX_
+  -- VORONOI_LIST）→ p6_sUnion_image_image（𝒞-重指标）→ 归纳假设。
+  have hstep : ∀ k : ℕ, j ≤ k → k + 1 ≤ 3 →
+      (voronoiList V ul =
+        ⋃₀ {convexHull ℝ ({omegaListN V vl i | i ∈ Finset.Icc j (k - 1)} ∪
+          voronoiList V vl) | vl ∈ {vl : List V3 |
+          barV V k vl ∧ truncateSimplex j vl = ul}}) →
+      (voronoiList V ul =
+        ⋃₀ {convexHull ℝ ({omegaListN V vl i | i ∈ Finset.Icc j k} ∪
+          voronoiList V vl) | vl ∈ {vl : List V3 |
+          barV V (k + 1) vl ∧ truncateSimplex j vl = ul}}) := by
+    intro k hjk hk2 ih
+    have hk3 : k < 3 := by omega
+    -- (B) `hull (window ∪ cell) = hull (window' ∪ hull (ω_k insert cell))`
+    have stepB : ∀ v : List V3,
+        convexHull ℝ ({omegaListN V v i | i ∈ Finset.Icc j k} ∪ voronoiList V v) =
+        convexHull ℝ ({omegaListN V v i | i ∈ Finset.Icc j (k - 1)} ∪
+          convexHull ℝ (insert (omegaListN V v k) (voronoiList V v))) := by
+      intro v
+      rw [p6_convexHull_union_hull, Set.insert_eq, ← Set.union_assoc,
+        ← p6_image_Icc_succ (omegaListN V v) j k hjk]
+    -- (C)+(D) hinner：对固定 wl（barV V k wl），`vl`-族的并 = S_wl 的壳。
+    have wl2 : ∀ wl : List V3, barV V k wl →
+        ⋃₀ {convexHull ℝ ({omegaListN V v i | i ∈ Finset.Icc j k} ∪ voronoiList V v) |
+            v ∈ {v : List V3 | barV V (k + 1) v ∧ truncateSimplex k v = wl}} =
+        convexHull ℝ ({omegaListN V wl i | i ∈ Finset.Icc j (k - 1)} ∪
+          voronoiList V wl) := by
+      intro wl hbw
+      have hkC := p6_gltvhum_union_g V wl k hP hs hk3 hbw
+      obtain ⟨v0, hv0, hv0t⟩ := BARV_EXISTS V wl k hP hs hk3 hbw
+      have hne : ({convexHull ℝ (insert (omegaListN V v k) (voronoiList V v)) |
+          v ∈ {v : List V3 | barV V (k + 1) v ∧ truncateSimplex k v = wl}} :
+            Set (Set V3)).Nonempty :=
+        ⟨convexHull ℝ (insert (omegaListN V v0 k) (voronoiList V v0)),
+          ⟨v0, ⟨hv0, hv0t⟩, rfl⟩⟩
+      have hconv : Convex ℝ (⋃₀ {convexHull ℝ (insert (omegaListN V v k) (voronoiList V v)) |
+          v ∈ {v : List V3 | barV V (k + 1) v ∧ truncateSimplex k v = wl}}) := by
+        rw [hkC]
+        exact CONVEX_VORONOI_LIST V wl
+      have hstar := p6_convexHull_sUnion_left
+        {omegaListN V wl i | i ∈ Finset.Icc j (k - 1)}
+        {convexHull ℝ (insert (omegaListN V v k) (voronoiList V v)) |
+          v ∈ {v : List V3 | barV V (k + 1) v ∧ truncateSimplex k v = wl}}
+        hne hconv
+      have hpt : ∀ v ∈ {v : List V3 | barV V (k + 1) v ∧ truncateSimplex k v = wl},
+          convexHull ℝ ({omegaListN V v i | i ∈ Finset.Icc j k} ∪ voronoiList V v) =
+          convexHull ℝ ({omegaListN V wl i | i ∈ Finset.Icc j (k - 1)} ∪
+            convexHull ℝ (insert (omegaListN V v k) (voronoiList V v))) := by
+        intro v hv
+        obtain ⟨hb, htk⟩ := hv
+        have hlen : v.length = k + 2 := hb.1
+        rw [stepB v]
+        have hom : ∀ i, j ≤ i → i ≤ k - 1 → omegaListN V v i = omegaListN V wl i := by
+          intro i hi1 hi2
+          have h5 := OMEGA_LIST_N_LEMMA V v i (k - i) (by omega)
+          rw [show i + (k - i) = k from by omega] at h5
+          rw [htk] at h5
+          exact h5
+        have himg : {omegaListN V v i | i ∈ Finset.Icc j (k - 1)} =
+            {omegaListN V wl i | i ∈ Finset.Icc j (k - 1)} := by
+          ext z
+          simp only [Set.mem_setOf_eq, Finset.mem_Icc]
+          constructor
+          · rintro ⟨i, hi, rfl⟩
+            refine ⟨i, hi, ?_⟩
+            rw [hom i hi.1 hi.2]
+          · rintro ⟨i, hi, rfl⟩
+            refine ⟨i, hi, ?_⟩
+            rw [hom i hi.1 hi.2]
+        rw [himg]
+      exact (p6_sUnion_image_congr hpt).trans
+        ((p6_sUnion_image_image
+            (F := {v : List V3 | barV V (k + 1) v ∧ truncateSimplex k v = wl})
+            (fun v => convexHull ℝ (insert (omegaListN V v k) (voronoiList V v)))
+            (fun c => convexHull ℝ ({omegaListN V wl i | i ∈ Finset.Icc j (k - 1)} ∪ c))).trans
+          (hstar.symm.trans (by rw [hkC])))
+    -- (A) 拆分后逐 wl 套 wl2，收回归纳假设。
+    rw [p6_union_split V ul j k hjk
+      (fun vl => convexHull ℝ ({omegaListN V vl i | i ∈ Finset.Icc j k} ∪
+        voronoiList V vl))]
+    refine ih.trans (p6_sUnion_image_congr ?_).symm
+    intro wl hwl
+    obtain ⟨hbw, -⟩ := hwl
+    exact wl2 wl hbw
+  ext k
+  constructor
+  · rintro ⟨hk, -⟩
+    exact hk
+  · intro hk
+    have hkle : j ≤ k ∧ k ≤ 3 := Finset.mem_Icc.1 (Finset.mem_coe.1 hk)
+    exact NUMSEG_SUBSET_INDUCT
+      (fun k : ℕ => k ∈ (Finset.Icc j 3 : Set ℕ) ∧
+        voronoiList V ul =
+          ⋃₀ {convexHull ℝ ({omegaListN V vl i | i ∈ Finset.Icc j (k - 1)} ∪
+            voronoiList V vl) | vl ∈ {vl : List V3 |
+            barV V k vl ∧ truncateSimplex j vl = ul}})
+      j 3
+      ⟨Finset.mem_coe.2 (Finset.mem_Icc.2 ⟨le_refl j, Nat.le_of_lt hj⟩), hbase⟩
+      (fun k hk1 hk2 hmem =>
+        ⟨Finset.mem_coe.2 (Finset.mem_Icc.2 ⟨Nat.le_succ_of_le hk1, hk2⟩),
+          hstep k hk1 hk2 hmem.2⟩)
+      (Set.mem_Icc.2 hkle)
 
 /-- Rogers.hl:1152 `GLTVHUM`: the closed Voronoi cell of `u0` is covered by
 the Rogers simplices rooted at `u0`. -/
