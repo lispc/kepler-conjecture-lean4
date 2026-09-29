@@ -2645,18 +2645,28 @@ REVERSE 理论与 MAP 运输家族的序列件层（`la7_*` 前缀；HOL `rot 1`
 `REVERSE` ↦ `List.reverse`、`\d. SND d, FST d` ↦ `eList`）。已证：rotOne 基本群、
 `la7_idxOf_rotOne`/`_shift`（index_rot）、`la7_idxOf_map`（Seq.index_map）、
 `la7_idxOf_reverse`（indexl_rev）、`la7_nextEl_rotOne`/`la7_prevEl_rotOne`
-（next_el_rot_eq/prev_el_rot_eq，∈ 分支一处 NEEDS）、`la7_nextEl_reverse`/
-`la7_prevEl_reverse`（next_el_rev/对偶）、`la7_prevEl_map`/`la7_nextEl_map`
-（prev_el_map/next_el_MEM_map，后者 NEEDS）。
-待下一波：`la7_mapGoodList`/`la7_findFace_map`/`la7_hypermapOfList_map`（MAP 运输主三件）、
-`la7_goodList_reverse`/`la7_darts_reverse`/`la7_findFace_reverse`/`la7_faceMap_reverse`/
-`la7_nodeMap_reverse`/`la7_hypermapOfList_reverse`（REVERSE 主链剩余件）及
-`la7_nextEl_rotOne`/`la7_prevEl_rotOne` 的分支收尾、`la7_nextEl_map` 的
-无 DecidableEq 独立证明。 -/
+（next_el_rot_eq/prev_el_rot_eq）、`la7_nextEl_reverse`/`la7_prevEl_reverse`
+（next_el_rev/对偶）、`la7_prevEl_map`/`la7_nextEl_map`（prev_el_map/
+next_el_MEM_map）。
+已证（MAP/REVERSE 运输块）：`la7_listPairs_reverse`（list_pairs2_rev，
+tame_list.hl:1156）、`la7_mem_listPairs_reverse`/`la7_listOfDarts_reverse`
+（list_pairs_rev_eq/list_of_darts_rev）、`la7_listPairs_map`/`la7_listOfDarts_map`/
+`la7_mapGoodList`（map_list_pairs/map_list_of_darts/map_good_list）、
+`la7_dart_in_findFace`/`la7_findFace_nodup`/`la7_findFace_mem`（dart_in_face/
+uniq_find_face）、`la7_findFace_reverse`/`la7_findFace_map`（find_face_rev/
+find_face_map）、`la7_goodList_reverse`/`la7_darts_reverse`/`la7_edgeMap_reverse`/
+`la7_faceMap_reverse`/`la7_nodeMap_reverse`/`la7_hypermapOfList_reverse`
+（good_list_REVERSE/dart_REVERSE/edge·face·node_map_reverse 共轭束，face/node
+互换方向：fList L' (eList d) = nList L d、nList L' (eList d) = fList L d）。
+另证（MAP Iso 束）：`la7_hypermapOfList_map`（tame_list.hl:3493 的列表层 Iso，
+同构函数 = pair-lift：Set.BijOn 三件 + nList/fList/eList 三向交换）。
+仍未做：`Hypermap` 类型层的 `hypermapOfList` 构造与 Hypermap.Iso（Assembly
+IsHypermapOfList 桥，超出列表层预算）。 -/
 
 section LA7ReverseMap
 open Kepler.Assembly (listPairs listOfDarts findFaceDarts eList fList nList nextEl prevEl
   GoodList)
+open scoped List
 open Kepler.Graphs (fgraph)
 
 variable {α : Type*} [BEq α] [LawfulBEq α] [DecidableEq α]
@@ -2977,6 +2987,478 @@ theorem la7_length_listPairs {α : Type*} (l : List α) :
   unfold listPairs
   rw [List.length_zip, List.length_append, List.length_drop, List.length_take]
   omega
+
+/-- HOL `list_pairs2_rev`（tame_list.hl:1156）：`list_pairs (REVERSE x)
+= rot 1 (REVERSE (MAP e_list (list_pairs x)))`。逐点 `List.ext_get`，分支一/二由
+`(i+1) % len` 的两支折算，getElem zip/rotate/reverse/map 逐层搬运。 -/
+theorem la7_listPairs_reverse (l : List α) :
+    listPairs l.reverse
+      = la7RotOne (((listPairs l).map (fun d : α × α => (d.2, d.1))).reverse) := by
+  have hzlp : (l.zip (l.drop 1 ++ l.take 1)).length = l.length := la7_length_listPairs l
+  have hlen : (listPairs l.reverse).length
+      = (la7RotOne (((listPairs l).map (fun d : α × α => (d.2, d.1))).reverse)).length := by
+    simp only [la7_length_rotOne, List.length_reverse, List.length_map, la7_length_listPairs]
+  refine List.ext_get hlen ?_
+  intro i hi1 hi2
+  show (listPairs l.reverse)[i]'hi1
+    = (la7RotOne (((listPairs l).map (fun d : α × α => (d.2, d.1))).reverse))[i]'hi2
+  have hilt : i < l.length := by
+    have h2 : (listPairs l.reverse).length = l.length := by
+      rw [la7_length_listPairs, List.length_reverse]
+    omega
+  have hrev : l.reverse.length = l.length := List.length_reverse
+  rcases Nat.lt_or_ge i (l.length - 1) with hA | hB
+  · -- 分支一：i + 1 < l.length
+    have hA1 : i < (l.reverse.drop 1).length := by rw [List.length_drop]; omega
+    have hA2 : l.length - 1 - (i + 1) < (l.drop 1).length := by
+      rw [List.length_drop]; omega
+    have hAmod : (i + 1) % l.length = i + 1 := Nat.mod_eq_of_lt (by omega)
+    have hAnorm : l.length - 1 - i = l.length - 1 - (i + 1) + 1 := by omega
+    simp only [listPairs, la7RotOne, hzlp, List.getElem_zip, List.getElem_rotate, hAmod,
+      List.getElem_append_left hA1, List.getElem_append_left hA2,
+      List.getElem_drop, Nat.add_comm 1 i, Nat.add_comm 1 (l.length - 1 - (i + 1)),
+      List.getElem_reverse, List.length_reverse, List.length_map, List.getElem_map, hAnorm]
+  · -- 分支二：i + 1 = l.length
+    obtain hiB : i = l.length - 1 := by omega
+    subst hiB
+    have hB1 : (l.reverse.drop 1).length ≤ l.length - 1 := by
+      rw [List.length_drop, List.length_reverse]
+    have hB2 : (l.drop 1).length ≤ l.length - 1 := by rw [List.length_drop]
+    have hB3 : l.length - 1 - (l.reverse.drop 1).length = 0 := by
+      rw [List.length_drop, List.length_reverse]; omega
+    have hB4 : l.length - 1 - (l.drop 1).length = 0 := by rw [List.length_drop]; omega
+    have hB5 : l.length - 1 - (l.length - 1) = 0 := by omega
+    have hBmod : (l.length - 1 + 1) % l.length = 0 := by
+      rw [Nat.sub_add_cancel (show 1 ≤ l.length from by omega), Nat.mod_self]
+    simp only [listPairs, la7RotOne, hzlp, List.getElem_zip, List.getElem_rotate, hBmod,
+      List.getElem_append_right hB1, List.getElem_append_right hB2, hB3, hB4, hB5,
+      List.getElem_reverse, Nat.sub_zero, List.length_reverse, List.length_map,
+      List.getElem_take, List.getElem_map]
+
+/-- tame_list.hl:1229 `list_pairs_rev_eq`。 -/
+theorem la7_mem_listPairs_reverse {l : List α} {d : α × α} :
+    d ∈ listPairs l.reverse ↔ (d.2, d.1) ∈ listPairs l := by
+  rw [la7_listPairs_reverse, la7_mem_rotOne, List.mem_reverse, List.mem_map]
+  constructor
+  · rintro ⟨c, hc, hcd⟩
+    rw [← hcd]
+    exact hc
+  · intro h
+    exact ⟨(d.2, d.1), h, rfl⟩
+
+/-- `d ∈ listOfDarts L` 展开到所属面。 -/
+private theorem la7_mem_listOfDarts_iff_face (L : fgraph ℕ) (d : ℕ × ℕ) :
+    d ∈ listOfDarts L ↔ ∃ l ∈ L, d ∈ listPairs l := by
+  unfold listOfDarts
+  simp only [List.mem_flatten, List.mem_map]
+  constructor
+  · rintro ⟨b, hb, hdb⟩
+    obtain ⟨l, hl, hlb⟩ := hb
+    subst hlb
+    exact ⟨l, hl, hdb⟩
+  · rintro ⟨l, hl, hdl⟩
+    exact ⟨listPairs l, ⟨l, hl, rfl⟩, hdl⟩
+
+/-- tame_list.hl:1239 `list_of_darts_rev`。 -/
+theorem la7_listOfDarts_reverse (L : fgraph ℕ) (d : ℕ × ℕ) :
+    (d.2, d.1) ∈ listOfDarts (L.map List.reverse) ↔ d ∈ listOfDarts L := by
+  rw [la7_mem_listOfDarts_iff_face, la7_mem_listOfDarts_iff_face]
+  constructor
+  · rintro ⟨l', hl', hmem⟩
+    obtain ⟨l, hl, hlr⟩ := List.mem_map.mp hl'
+    subst hlr
+    exact ⟨l, hl, (la7_mem_listPairs_reverse (l := l) (d := (d.2, d.1))).mp hmem⟩
+  · rintro ⟨l, hl, hmem⟩
+    refine ⟨List.reverse l, List.mem_map.mpr ⟨l, hl, rfl⟩,
+      (la7_mem_listPairs_reverse (l := l) (d := (d.2, d.1))).mpr hmem⟩
+
+/-- tame_list.hl:3403 `map_list_pairs`。 -/
+theorem la7_listPairs_map {α β : Type*} (phi : α → β) (l : List α) :
+    listPairs (l.map phi) = (listPairs l).map (Prod.map phi phi) := by
+  show (l.map phi).zip ((l.map phi).drop 1 ++ (l.map phi).take 1)
+      = (l.zip (l.drop 1 ++ l.take 1)).map (Prod.map phi phi)
+  rw [← List.map_drop, ← List.map_take, ← List.map_append, ← List.zip_map]
+
+/-- tame_list.hl `map_list_of_darts`（find_face_map 上游件）。 -/
+theorem la7_listOfDarts_map (L : fgraph ℕ) (phi : ℕ → ℕ) :
+    listOfDarts (L.map (List.map phi))
+      = (listOfDarts L).map (fun d : ℕ × ℕ => (phi d.1, phi d.2)) := by
+  show ((L.map (List.map phi)).map listPairs).flatten
+      = ((L.map listPairs).flatten).map (fun d : ℕ × ℕ => (phi d.1, phi d.2))
+  rw [List.map_map,
+    List.map_congr_left (f := listPairs ∘ List.map phi)
+      (g := fun l => (listPairs l).map (fun d : ℕ × ℕ => (phi d.1, phi d.2)))
+      (fun l _ => la7_listPairs_map phi l)]
+  show List.flatMap (fun l => (listPairs l).map (fun d : ℕ × ℕ => (phi d.1, phi d.2))) L
+      = List.map (fun d : ℕ × ℕ => (phi d.1, phi d.2)) (List.flatMap listPairs L)
+  rw [List.map_flatMap]
+
+/-- `lift`（pair-lift）在 `listOfDarts L` 上的单射性（flatten-元素 ⊆ flatten L）。 -/
+private theorem la7_injOn_listOfDarts (L : fgraph ℕ) {phi : ℕ → ℕ}
+    (hinj : ∀ u ∈ L.flatten, ∀ v ∈ L.flatten, phi u = phi v → u = v)
+    (d e : ℕ × ℕ) (hd : d ∈ listOfDarts L) (he : e ∈ listOfDarts L)
+    (h : (phi d.1, phi d.2) = (phi e.1, phi e.2)) : d = e := by
+  have h1 : phi d.1 = phi e.1 := congrArg Prod.fst h
+  have h2 : phi d.2 = phi e.2 := congrArg Prod.snd h
+  obtain ⟨l, hl, hdl⟩ := (la7_mem_listOfDarts_iff_face L d).mp hd
+  obtain ⟨m, hm, hem⟩ := (la7_mem_listOfDarts_iff_face L e).mp he
+  have hd1 : d.1 ∈ l ∧ d.2 ∈ (l.drop 1 ++ l.take 1) := by
+    have h2 : (d.1, d.2) ∈ l.zip (l.drop 1 ++ l.take 1) := hdl
+    exact List.of_mem_zip h2
+  have he1 : e.1 ∈ m ∧ e.2 ∈ (m.drop 1 ++ m.take 1) := by
+    have h2 : (e.1, e.2) ∈ m.zip (m.drop 1 ++ m.take 1) := hem
+    exact List.of_mem_zip h2
+  have hd2 : d.2 ∈ l := by
+    rcases List.mem_append.mp hd1.2 with h | h
+    · exact List.drop_subset 1 l h
+    · exact List.take_subset 1 l h
+  have he2 : e.2 ∈ m := by
+    rcases List.mem_append.mp he1.2 with h | h
+    · exact List.drop_subset 1 m h
+    · exact List.take_subset 1 m h
+  have h11 : d.1 = e.1 :=
+    hinj d.1 (List.mem_flatten.mpr ⟨l, hl, hd1.1⟩) e.1
+      (List.mem_flatten.mpr ⟨m, hm, he1.1⟩) h1
+  have h12 : d.2 = e.2 :=
+    hinj d.2 (List.mem_flatten.mpr ⟨l, hl, hd2⟩) e.2
+      (List.mem_flatten.mpr ⟨m, hm, he2⟩) h2
+  show Prod.mk d.1 d.2 = Prod.mk e.1 e.2
+  rw [h11, h12]
+
+/-- tame_list.hl:3403 `map_good_list`。 -/
+theorem la7_mapGoodList (L : fgraph ℕ) {phi : ℕ → ℕ}
+    (hinj : ∀ u ∈ L.flatten, ∀ v ∈ L.flatten, phi u = phi v → u = v)
+    (hgood : GoodList L) : GoodList (L.map (List.map phi)) := by
+  obtain ⟨hnd, hne, hswap⟩ := hgood
+  refine ⟨?_, ?_, ?_⟩
+  · rw [la7_listOfDarts_map]
+    exact la7_nodup_map_on (f := fun d : ℕ × ℕ => (phi d.1, phi d.2))
+      (fun u hu v hv huv => la7_injOn_listOfDarts L hinj u v hu hv huv) hnd
+  · intro l hl
+    obtain ⟨m, hm, hme⟩ := List.mem_map.mp hl
+    rw [← hme]
+    intro hc
+    exact hne m hm (List.map_eq_nil_iff.mp hc)
+  · intro d hd
+    rw [la7_listOfDarts_map, List.mem_map] at hd
+    obtain ⟨c, hc, hcd⟩ := hd
+    rw [← hcd, la7_listOfDarts_map, List.mem_map]
+    exact ⟨eList c, hswap c hc, rfl⟩
+
+theorem la7_dart_in_findFace (L : fgraph ℕ) (d : ℕ × ℕ)
+    (hd : d ∈ listOfDarts L) : d ∈ findFaceDarts L d := by
+  obtain ⟨l, hl, hdl⟩ := (la7_mem_listOfDarts_iff_face L d).mp hd
+  unfold findFaceDarts
+  cases hf : List.find? (fun l => decide (d ∈ listPairs l)) L with
+  | none =>
+    have hnone : ¬ d ∈ listOfDarts L := by
+      intro hmem
+      obtain ⟨x, hx, hdx⟩ := (la7_mem_listOfDarts_iff_face L d).mp hmem
+      have h2 := List.find?_eq_none.mp hf x hx
+      exact h2 (decide_eq_true hdx)
+    exact absurd hd hnone
+  | some m =>
+    have hmt : d ∈ listPairs m := by
+      have h2 := List.find?_some hf
+      simpa using h2
+    exact hmt
+
+theorem la7_findFace_nodup (L : fgraph ℕ) (d : ℕ × ℕ)
+    (hnd : (listOfDarts L).Nodup) : (findFaceDarts L d).Nodup := by
+  unfold findFaceDarts
+  cases hf : List.find? (fun l => decide (d ∈ listPairs l)) L with
+  | none => simp [listPairs]
+  | some m =>
+    have hms : m ∈ L := List.mem_of_find?_eq_some hf
+    show (listPairs m).Nodup
+    exact (List.nodup_flatten.mp hnd).1 (listPairs m) (List.mem_map.mpr ⟨m, hms, rfl⟩)
+
+theorem la7_findFace_mem (L : fgraph ℕ) (d x : ℕ × ℕ)
+    (hx : x ∈ findFaceDarts L d) : x ∈ listOfDarts L := by
+  unfold findFaceDarts at hx
+  cases hf : List.find? (fun l => decide (d ∈ listPairs l)) L with
+  | none =>
+    rw [hf] at hx
+    exfalso
+    have h2 : x ∈ listPairs [] := hx
+    simp [listPairs] at h2
+  | some m =>
+    have hms : m ∈ L := List.mem_of_find?_eq_some hf
+    rw [hf] at hx
+    exact (la7_mem_listOfDarts_iff_face L x).mpr ⟨m, hms, hx⟩
+
+/-- 逐面 Perm：`list_pairs (REVERSE l)` 与 `eList`-像同元素（rotate + reverse）。 -/
+private theorem la7_listPairs_reverse_perm (l : List ℕ) :
+    listPairs (List.reverse l) ~ (listPairs l).map (fun d : ℕ × ℕ => (d.2, d.1)) := by
+  rw [la7_listPairs_reverse]
+  show ((listPairs l).map (fun d : ℕ × ℕ => (d.2, d.1))).reverse.rotate 1
+    ~ (listPairs l).map (fun d : ℕ × ℕ => (d.2, d.1))
+  exact List.Perm.trans (List.rotate_perm _ 1) (List.reverse_perm _)
+
+theorem la7_findFace_reverse (L : fgraph ℕ) (hgood : GoodList L) (p1 p2 : ℕ)
+    (hd : (p1, p2) ∈ listOfDarts L) :
+    findFaceDarts (L.map List.reverse) (p1, p2)
+      = la7RotOne (((findFaceDarts L (p2, p1)).map (fun d : ℕ × ℕ => (d.2, d.1))).reverse) := by
+  unfold findFaceDarts
+  rw [List.find?_map]
+  show listPairs ((Option.map List.reverse
+    (L.find? (fun l => decide ((p1, p2) ∈ listPairs (List.reverse l))))).getD [])
+    = la7RotOne (((findFaceDarts L (p2, p1)).map (fun d : ℕ × ℕ => (d.2, d.1))).reverse)
+  have hpred : ∀ l ∈ L, decide ((p1, p2) ∈ listPairs (List.reverse l))
+      = decide ((p2, p1) ∈ listPairs l) := fun l _ =>
+    Bool.decide_congr (la7_mem_listPairs_reverse (l := l) (d := (p1, p2)))
+  rw [List.find?_congr hpred]
+  cases hf : List.find? (fun l => decide ((p2, p1) ∈ listPairs l)) L with
+  | none =>
+    exfalso
+    have hswap : (p2, p1) ∈ listOfDarts L := hgood.2.2 _ hd
+    obtain ⟨l, hl, hdl⟩ := (la7_mem_listOfDarts_iff_face L (p2, p1)).mp hswap
+    have hnone := List.find?_eq_none.mp hf
+    exact hnone l hl (decide_eq_true hdl)
+  | some m =>
+    have hFF : findFaceDarts L (p2, p1) = listPairs m := by
+      unfold findFaceDarts
+      rw [hf]
+      rfl
+    rw [hFF]
+    exact la7_listPairs_reverse m
+
+theorem la7_findFace_map (L : fgraph ℕ) {phi : ℕ → ℕ}
+    (hinj : ∀ u ∈ L.flatten, ∀ v ∈ L.flatten, phi u = phi v → u = v)
+    (d : ℕ × ℕ) (hd : d ∈ listOfDarts L) :
+    findFaceDarts (L.map (List.map phi)) (phi d.1, phi d.2)
+      = (findFaceDarts L d).map (fun x : ℕ × ℕ => (phi x.1, phi x.2)) := by
+  have hdm : d.1 ∈ L.flatten ∧ d.2 ∈ L.flatten := by
+    obtain ⟨l, hl, hdl⟩ := (la7_mem_listOfDarts_iff_face L d).mp hd
+    have h1 : d.1 ∈ l ∧ d.2 ∈ (l.drop 1 ++ l.take 1) := by
+      have h2 : (d.1, d.2) ∈ l.zip (l.drop 1 ++ l.take 1) := hdl
+      exact List.of_mem_zip h2
+    refine ⟨List.mem_flatten.mpr ⟨l, hl, h1.1⟩, ?_⟩
+    rcases List.mem_append.mp h1.2 with h | h
+    · exact List.mem_flatten.mpr ⟨l, hl, List.drop_subset 1 l h⟩
+    · exact List.mem_flatten.mpr ⟨l, hl, List.take_subset 1 l h⟩
+  unfold findFaceDarts
+  rw [List.find?_map]
+  show listPairs ((Option.map (List.map phi)
+    (L.find? (fun l => decide ((phi d.1, phi d.2) ∈ listPairs (l.map phi))))).getD [])
+    = (findFaceDarts L d).map (fun x : ℕ × ℕ => (phi x.1, phi x.2))
+  have hpred : ∀ l ∈ L, decide ((phi d.1, phi d.2) ∈ listPairs (l.map phi))
+      = decide (d ∈ listPairs l) := by
+    intro l hl
+    have hstep : (phi d.1, phi d.2) ∈ listPairs (l.map phi) ↔ d ∈ listPairs l := by
+      rw [la7_listPairs_map, List.mem_map]
+      constructor
+      · rintro ⟨c, hc, hcd⟩
+        have h1 : phi c.1 = phi d.1 := congrArg Prod.fst hcd
+        have h2 : phi c.2 = phi d.2 := congrArg Prod.snd hcd
+        have hc1 : c.1 ∈ l ∧ c.2 ∈ (l.drop 1 ++ l.take 1) := by
+          have h3 : (c.1, c.2) ∈ l.zip (l.drop 1 ++ l.take 1) := hc
+          exact List.of_mem_zip h3
+        have hc2 : c.2 ∈ l := by
+          rcases List.mem_append.mp hc1.2 with h | h
+          · exact List.drop_subset 1 l h
+          · exact List.take_subset 1 l h
+        have h11 : c.1 = d.1 :=
+          hinj c.1 (List.mem_flatten.mpr ⟨l, hl, hc1.1⟩) d.1 hdm.1 h1
+        have h12 : c.2 = d.2 :=
+          hinj c.2 (List.mem_flatten.mpr ⟨l, hl, hc2⟩) d.2 hdm.2 h2
+        have hcd' : c = d := by
+          show Prod.mk c.1 c.2 = Prod.mk d.1 d.2
+          rw [h11, h12]
+        rw [← hcd']
+        exact hc
+      · rintro hmem
+        exact ⟨d, hmem, rfl⟩
+    exact Bool.decide_congr hstep
+  rw [List.find?_congr hpred]
+  cases hf : List.find? (fun l => decide (d ∈ listPairs l)) L with
+  | none =>
+    exfalso
+    have hnone := List.find?_eq_none.mp hf
+    obtain ⟨l, hl, hdl⟩ := (la7_mem_listOfDarts_iff_face L d).mp hd
+    exact hnone l hl (decide_eq_true hdl)
+  | some m =>
+    have hFF : findFaceDarts L d = listPairs m := by
+      unfold findFaceDarts
+      rw [hf]
+      rfl
+    rw [hFF]
+    exact la7_listPairs_map phi m
+
+/-- flatten-逐面 Perm 提升。 -/
+private theorem la7_flatMap_congr {γ δ : Type*} {f g : List γ → List δ} :
+    ∀ (L : List (List γ)), (∀ x ∈ L, f x ~ g x) →
+      (L.map f).flatten ~ (L.map g).flatten := by
+  intro L
+  induction L with
+  | nil => intro _; exact List.Perm.nil
+  | cons a t ih =>
+    intro h
+    show f a ++ (t.map f).flatten ~ g a ++ (t.map g).flatten
+    exact List.Perm.append (h a List.mem_cons_self)
+      (ih (fun x hx => h x (List.mem_cons_of_mem a hx)))
+
+/-- `eList` 全局单射（swap 对合）。 -/
+private theorem la7_eList_injective : ∀ u v : ℕ × ℕ, (u.2, u.1) = (v.2, v.1) → u = v :=
+  fun u v h => by
+    rw [Prod.mk.injEq] at h
+    show Prod.mk u.1 u.2 = Prod.mk v.1 v.2
+    rw [h.2, h.1]
+
+theorem la7_goodList_reverse (L : fgraph ℕ) (hgood : GoodList L) :
+    GoodList (L.map List.reverse) := by
+  obtain ⟨hnd, hne, hswap⟩ := hgood
+  refine ⟨?_, ?_, ?_⟩
+  · have hperm : listOfDarts (L.map List.reverse)
+        ~ (listOfDarts L).map (fun d : ℕ × ℕ => (d.2, d.1)) := by
+      show ((L.map List.reverse).map listPairs).flatten
+        ~ List.map (fun d : ℕ × ℕ => (d.2, d.1)) ((L.map listPairs).flatten)
+      rw [List.map_map]
+      show List.flatMap (listPairs ∘ List.reverse) L
+        ~ List.map (fun d : ℕ × ℕ => (d.2, d.1)) (List.flatMap listPairs L)
+      rw [List.map_flatMap]
+      exact la7_flatMap_congr L (f := listPairs ∘ List.reverse)
+        (g := fun l : List ℕ => (listPairs l).map (fun d : ℕ × ℕ => (d.2, d.1)))
+        (fun l _ => la7_listPairs_reverse_perm l)
+    exact (List.Perm.nodup_iff hperm).mpr
+      (la7_nodup_map_on (l := listOfDarts L)
+        (fun u _ v _ huv => la7_eList_injective u v huv) hnd)
+  · intro l hl
+    obtain ⟨m, hm, hme⟩ := List.mem_map.mp hl
+    rw [← hme]
+    intro hc
+    exact hne m hm (List.reverse_eq_nil_iff.mp hc)
+  · intro d hd
+    have h1 : (d.2, d.1) ∈ listOfDarts L :=
+      (la7_listOfDarts_reverse L (d.2, d.1)).mp
+        (show (d.1, d.2) ∈ listOfDarts (L.map List.reverse) from hd)
+    exact (la7_listOfDarts_reverse L (d.1, d.2)).mpr (hswap (d.2, d.1) h1)
+
+theorem la7_darts_reverse (L : fgraph ℕ) (hgood : GoodList L) :
+    {d : ℕ × ℕ | d ∈ listOfDarts (L.map List.reverse)}
+      = {d : ℕ × ℕ | d ∈ listOfDarts L} := by
+  ext d
+  simp only [Set.mem_setOf_eq]
+  constructor
+  · intro h
+    exact hgood.2.2 _ ((la7_listOfDarts_reverse L (eList d)).mp h)
+  · intro h
+    exact (la7_listOfDarts_reverse L (d.2, d.1)).mpr (hgood.2.2 d h)
+
+theorem la7_edgeMap_reverse (L : fgraph ℕ) (hgood : GoodList L) (d : ℕ × ℕ)
+    (hd : d ∈ listOfDarts L) : eList (eList d) = d := la7_eList_involutory d
+
+theorem la7_faceMap_reverse (L : fgraph ℕ) (hgood : GoodList L) (d : ℕ × ℕ)
+    (hd : d ∈ listOfDarts L) :
+    fList (L.map List.reverse) (eList d) = nList L d := by
+  have hnd : (listOfDarts L).Nodup := hgood.1
+  have hd' : (d.2, d.1) ∈ listOfDarts L := hgood.2.2 d hd
+  have hFd : d ∈ findFaceDarts L (d.1, d.2) := la7_dart_in_findFace L d hd
+  have hFF := la7_findFace_reverse L hgood d.2 d.1 hd'
+  have hmem : (d.2, d.1) ∈ (findFaceDarts L (d.1, d.2)).map (fun x : ℕ × ℕ => (x.2, x.1)) :=
+    List.mem_map.mpr ⟨d, hFd, rfl⟩
+  have hinjF : ∀ u ∈ findFaceDarts L (d.1, d.2), ∀ v ∈ findFaceDarts L (d.1, d.2),
+      (u.2, u.1) = (v.2, v.1) → u = v :=
+    fun u _ v _ huv => la7_eList_injective u v huv
+  have hFnodup : (findFaceDarts L (d.1, d.2)).Nodup :=
+    la7_findFace_nodup L (d.1, d.2) hnd
+  have hmapnodup : ((findFaceDarts L (d.1, d.2)).map (fun x : ℕ × ℕ => (x.2, x.1))).Nodup :=
+    la7_nodup_map_on (l := findFaceDarts L (d.1, d.2)) hinjF hFnodup
+  have hRnodup : (((findFaceDarts L (d.1, d.2)).map (fun x : ℕ × ℕ => (x.2, x.1))).reverse).Nodup :=
+    List.nodup_reverse.mpr hmapnodup
+  unfold fList nList
+  show nextEl (findFaceDarts (L.map List.reverse) (d.2, d.1)) (d.2, d.1)
+    = eList (prevEl (findFaceDarts L d) d)
+  rw [hFF, la7_nextEl_rotOne hRnodup, la7_nextEl_reverse hmapnodup hmem,
+    la7_prevEl_map (f := fun x : ℕ × ℕ => (x.2, x.1)) hinjF hFd]
+  rfl
+
+theorem la7_nodeMap_reverse (L : fgraph ℕ) (hgood : GoodList L) (d : ℕ × ℕ)
+    (hd : d ∈ listOfDarts L) :
+    nList (L.map List.reverse) (eList d) = fList L d := by
+  have hnd : (listOfDarts L).Nodup := hgood.1
+  have hd' : (d.2, d.1) ∈ listOfDarts L := hgood.2.2 d hd
+  have hFF := la7_findFace_reverse L hgood d.2 d.1 hd'
+  have hFd : d ∈ findFaceDarts L (d.1, d.2) := la7_dart_in_findFace L d hd
+  have hmem : (d.2, d.1) ∈ (findFaceDarts L (d.1, d.2)).map (fun x : ℕ × ℕ => (x.2, x.1)) :=
+    List.mem_map.mpr ⟨d, hFd, rfl⟩
+  have hinjF : ∀ u ∈ findFaceDarts L (d.1, d.2), ∀ v ∈ findFaceDarts L (d.1, d.2),
+      (u.2, u.1) = (v.2, v.1) → u = v :=
+    fun u _ v _ huv => la7_eList_injective u v huv
+  have hFnodup : (findFaceDarts L (d.1, d.2)).Nodup :=
+    la7_findFace_nodup L (d.1, d.2) hnd
+  have hmapnodup : ((findFaceDarts L (d.1, d.2)).map (fun x : ℕ × ℕ => (x.2, x.1))).Nodup :=
+    la7_nodup_map_on (l := findFaceDarts L (d.1, d.2)) hinjF hFnodup
+  have hRnodup : (((findFaceDarts L (d.1, d.2)).map (fun x : ℕ × ℕ => (x.2, x.1))).reverse).Nodup :=
+    List.nodup_reverse.mpr hmapnodup
+  unfold fList nList
+  show eList (prevEl (findFaceDarts (L.map List.reverse) (d.2, d.1)) (d.2, d.1))
+    = nextEl (findFaceDarts L d) d
+  rw [hFF, la7_prevEl_rotOne hRnodup (List.mem_reverse.mpr hmem),
+    la7_prevEl_reverse hmapnodup hmem,
+    la7_nextEl_map (f := fun x : ℕ × ℕ => (x.2, x.1)) hinjF hFd]
+  exact la7_eList_involutory _
+
+theorem la7_hypermapOfList_reverse (L : fgraph ℕ) (hgood : GoodList L) :
+    Set.BijOn id {d : ℕ × ℕ | d ∈ listOfDarts (L.map List.reverse)}
+        {d : ℕ × ℕ | d ∈ listOfDarts L}
+      ∧ ∀ d ∈ listOfDarts L,
+          eList (eList d) = d
+          ∧ fList (L.map List.reverse) (eList d) = nList L d
+          ∧ nList (L.map List.reverse) (eList d) = fList L d := by
+  refine ⟨?_, fun d hd => ⟨la7_eList_involutory d, la7_faceMap_reverse L hgood d hd,
+    la7_nodeMap_reverse L hgood d hd⟩⟩
+  have hA := la7_darts_reverse L hgood
+  refine ⟨?_, ?_, ?_⟩
+  · intro x hx
+    rw [hA] at hx
+    exact hx
+  · intro x _ y _ h
+    exact h
+  · intro x hx
+    refine ⟨x, ?_, rfl⟩
+    rw [hA]
+    exact hx
+
+/-- tame_list.hl:3493 `hypermap_of_list_map` 的列表层 Iso（同构函数 = pair-lift）。 -/
+theorem la7_hypermapOfList_map (L : fgraph ℕ) {phi : ℕ → ℕ}
+    (hinj : ∀ u ∈ L.flatten, ∀ v ∈ L.flatten, phi u = phi v → u = v)
+    (hgood : GoodList L) :
+    Set.BijOn (fun d : ℕ × ℕ => (phi d.1, phi d.2))
+        {d : ℕ × ℕ | d ∈ listOfDarts L}
+        {d : ℕ × ℕ | d ∈ listOfDarts (L.map (List.map phi))}
+      ∧ ∀ d ∈ listOfDarts L,
+          nList (L.map (List.map phi)) (phi d.1, phi d.2)
+            = (phi (nList L d).1, phi (nList L d).2)
+          ∧ fList (L.map (List.map phi)) (phi d.1, phi d.2)
+            = (phi (fList L d).1, phi (fList L d).2)
+          ∧ eList (phi d.1, phi d.2) = (phi (eList d).1, phi (eList d).2) := by
+  refine ⟨?_, fun d hd => ?_⟩
+  · refine ⟨?_, ?_, ?_⟩
+    · intro x hx
+      rw [la7_listOfDarts_map]
+      exact List.mem_map.mpr ⟨x, hx, rfl⟩
+    · intro x hx y hy hxy
+      exact la7_injOn_listOfDarts L hinj x y hx hy hxy
+    · intro y hy
+      simp only [Set.mem_setOf_eq] at hy
+      rw [la7_listOfDarts_map, List.mem_map] at hy
+      obtain ⟨c, hc, hcd⟩ := hy
+      exact ⟨c, hc, hcd⟩
+  · have hFF := la7_findFace_map L hinj d hd
+    have hinjF : ∀ u ∈ findFaceDarts L d, ∀ v ∈ findFaceDarts L d,
+        (phi u.1, phi u.2) = (phi v.1, phi v.2) → u = v :=
+      fun u hu v hv huv =>
+        la7_injOn_listOfDarts L hinj u v (la7_findFace_mem L d u hu)
+          (la7_findFace_mem L d v hv) huv
+    have hFd : d ∈ findFaceDarts L d := la7_dart_in_findFace L d hd
+    refine ⟨?_, ?_, ?_⟩
+    · unfold nList
+      rw [hFF, la7_prevEl_map (f := fun x : ℕ × ℕ => (phi x.1, phi x.2)) hinjF hFd]
+      rfl
+    · unfold fList
+      rw [hFF, la7_nextEl_map (f := fun x : ℕ × ℕ => (phi x.1, phi x.2)) hinjF hFd]
+    · rfl
 
 end LA7ReverseMap
 end Kepler.Text.TameLp
