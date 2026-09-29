@@ -464,6 +464,22 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   `(fun x => by tac…)` 内带 `_` 的 lemma 应用 tactic 二跑失败（提为块内
   `have` 显式类型）；`List.of_mem_zip` 对 def 包着的 zip 先显式换形且输出侧
   对齐 expected-type；`find?_congr` 复合谓词先 `show` β-形。
+- **PA21 @A2 后**（15 战术 @`52a01dfd`）：**A2+（小）**= MCELL1_SOL_RESTRICT
+  按 :1800 注记两路线之一收口（p21e 副本上提 ~450 行，或编排者裁决区块后移）。
+  **B2（按序）**：FRUSTT_WEDGE_RCONE_GE（import PA18 取 WEDGE_WEDGE_GE/
+  WEDGE_SUBSET_WEDGE_GE + `p21_symmDiff_inter_le`/`p21_affSpan3_null` 两 ~30 行
+  私件）→ NOT_COPLANAR_EXTREME_MCELL2（COPLANAR→null 私件 +
+  `MCELL2_SUBSET_AFF_GE_p21`）→ MCELL2_DIHV_AZIM（import `Kepler.Geom.LuneVolume`
+  取 azim_dihv_same/compl + DIHV_SYM_2，全已证）→ MCELL2_DIHV_LT_PI（dihV=π ⇒
+  Gram −1 ⇒ 反平行 ⇒ coplanar，~120 行代数）→ LEFT_ACTION/PERMUTE_01（卡
+  PA14:231/258/286 具名桥，PA14 未清不可填）；MCELL2_VOL_SPLIT_EXPLICIT 需
+  VOLUME_FRUSTT_WEDGE 闭式（WedgeVolume 切片模板 GIANT）。**A2 波雷区**：
+  env-lean 假绿再实锤（9 处 build 才暴露：private 前向引用/`BumpP4.` 前缀/
+  rcases-rfl 方向/ofLp 拆分形态/`Submodule.span` Module-meta）——闭环必 lake
+  build；`p21e_split_both`（show+`WithLp.ofLp_sub` 归一）可复用于 ofLp 整体
+  包裹形态；`Fin.sum_univ_three` 用 simp only 非 rw；`Submodule.mem_span_range_iff_exists_fun`
+  需显式 `(R := ℝ)`；`(-1)•x` 原子 abel 不识别（先 `simp only [neg_one_smul,
+  smul_smul, smul_neg, neg_smul]` 预归一）。
 - **PA19 SUM_GAMMAX 波地图（KIZHLTL4 后最后一枚上游）**：
   `SUM_GAMMAX_LMFUN_ESTIMATE`(PA18:2538, bare sorry)——sum_gamma.hl 1400 行，
   需 `BOUND_GAMMA_X_lmfun`/`CARD_MCELL_CONTAINS_POINT_klemma`/
