@@ -39,13 +39,15 @@
 
 - tame 文字章 64 个 .hl/4.6MB（A7-A9）：侦察情报见 playbook §5（GLTVHUM 五级链、
   DUUNHOR 三共享缺件）；`hypermapOfList` 构造（P6-C 遗留）是 A9 前置。
-- **GLTVHUM 五级链进展 (2026-09-30，`2c71cde2`)**：①②③ 已闭合（PA6 sorry
-  13→10：FACET_OF_POLYHEDRON_EXPLICIT_BIS/IDBEZAL/VORONOI_LIST_EQ_UNION…，
-  ③绕开未移植 POLYTOPE_UNION_CONVEX_HULL_FACETS 走紧 polyhedron 边界点引理）；
-  ④ GLTVHUM_lemma1 数学路线全推导入 NEEDS（仅 ∃-setOf bookkeeping 收口）；
-  ⑤ **结构性阻塞**：装配件在 PA2 而 PA6 import PA2——需整链复制 PA2 侧
-  （~600 行 p2_ 私件 + 5 个 PA5-sorry 黑盒）或架构调整，**待编排者/用户裁决**；
-  PA4 cellParams 9 枚族与 DUUNHOR（三前件均 sorry）等 ④⑤。
+- **GLTVHUM 五级链进展 (2026-09-30，`2c71cde2`+`3a30af3e`)**：①②③④ 已闭合
+  （④ `GLTVHUM_lemma1` 落地：base/step 全按 NEEDS 路线 + 4 私件全真证；
+  ③绕开未移植 POLYTOPE_UNION_CONVEX_HULL_FACETS 走紧 polyhedron 边界点引理）。
+  **⑤ 预研修正（`3a30af3e` 报告）**：链复制实际只需 `p6_sUnion_image_congr`
+  （10 行）+ 新证 rogers-窗引理一枚（HOL Rogers.hl:1170-1225 原型），公开件
+  （lemma1/BARV_0/VORONOI_LIST_SING/AFF_DIM_VORONOI_LIST 等）PA2 侧零复制
+  直接消费；`PackingConcl.GLTVHUM_concl_discharged` 桥已路由 PA6.GLTVHUM，
+  PA2 侧闭合即全线解锁——**架构裁决可倾向 (a) 链复制**（成本已大降）；
+  PA4 cellParams 9 枚族与 DUUNHOR（三前件均 sorry）等 ⑤。
 - **新增在账（wave3 侦察）**：PA22 cone0P22=affGe 弱编码族 5 枚 + PA7 permutes 弱
   编码族（KSOQKWL 等）——提案 r2 已出补丁（11/14/15/DUUNHOR），结构性立项
   "planar 编码定义纠正"待用户拍板。

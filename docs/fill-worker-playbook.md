@@ -493,6 +493,20 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   包裹形态；`Fin.sum_univ_three` 用 simp only 非 rw；`Submodule.mem_span_range_iff_exists_fun`
   需显式 `(R := ℝ)`；`(-1)•x` 原子 abel 不识别（先 `simp only [neg_one_smul,
   smul_smul, smul_neg, neg_smul]` 预归一）。
+- **PA6 @GLTVHUM ④ 后**（9 remaining @`3a30af3e`）：`GLTVHUM_lemma1` 已闭合
+  （base/step 全落地）。**⑤ 装配（PA2 侧）链复制清单已修正**：零复制公开件 =
+  lemma1/BARV_0(PA5:1149)/VORONOI_LIST_SING(PA5:1326)/AFF_DIM_VORONOI_LIST
+  (PA5:1531, sorry)/OMEGA_LIST_N_IN_VORONOI_LIST(PA5:1568, sorry)/
+  TRUNCATE_SIMPLEX_REFL(PA5:1200)；仅 `p6_sUnion_image_congr`(PA6:698,10 行)
+  需复制或 PA2 内联 ext 重证；新证一小件 rogers-窗引理
+  （barV V 3 vl → hull({ω vl i|i∈Icc 0 2}∪voronoiList V vl)=rogers V vl，
+  HOL Rogers.hl:1170-1225 原型）。`PackingConcl.GLTVHUM_concl_discharged`
+  已路由 PA6.GLTVHUM——PA2 侧闭合即全线解锁无循环。**bookkeeping 雷区**：
+  集合族记号 `{f v | v ∈ F}` 是 setOf 形非 `Set.image`（一切 image-rewrite 必死）；
+  匿名构造器/rcases 不自动裂解 setOf 成员里的 And（显式嵌套 `⟨T, ⟨vl, ⟨hb, ht⟩,
+  rfl⟩, hzT⟩`，扁平模式报 "right✝ : … is not an inductive datatype"）；多余
+  rcases 模式递归进最后分量；mvar 型 `{a}` 需类型注记；`Set.union_assoc` 需
+  `←` 定向。
 - **PA19 SUM_GAMMAX 波地图（KIZHLTL4 后最后一枚上游）**：
   `SUM_GAMMAX_LMFUN_ESTIMATE`(PA18:2538, bare sorry)——sum_gamma.hl 1400 行，
   需 `BOUND_GAMMA_X_lmfun`/`CARD_MCELL_CONTAINS_POINT_klemma`/
