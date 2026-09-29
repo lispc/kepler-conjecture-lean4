@@ -282,8 +282,29 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   `cc_uh_exists`/`cc_pe_exists`；Bump 通道等 AJRIPQN；`ORDER_AZIM_SUM2Pi0`；
   `coplanar_delta_y`/`ETA_Y_*`）；~90 是 certified bank 外部锚（等接口 2 LP 桥，
   **不可填证解决**）。
+- **PA21**（34 remaining；2026-09-29 侦察结案）：被消费主结论 = `TSKAJXY`
+  （:1407），唯一链上消费点 PA25:3704 `exact TSKAJXY …`；其 0/3/4 臂 sorry
+  （:1428）**GIANT 结案，勿再盲目重试**——三重硬阻断：①`pack_nonlinear_non_ox3q1h`
+  （:147）是不透明 Prop 银行（19 条子不等式无从抽取，且与 `tsk_hyp` 不 defeq，
+  探针实证）②`Merge_ineq.GRKIBMP`/`cell3_from_ineq_thm` 全树未移植
+  （merge_ineq.hl:3794/:3507，依赖 Optimize.h0cutB、nonf_gamma2_x1_div_a_v2、
+  ineq-演算 ~200 行）③`eta_y`（:131）body 缺失（PA25:160 亦有记载）。
+  收口路径：银行结构化（陈述级，走 STATEMENT-FIX）→ 移植两分发器及其依赖 →
+  :1428 机械闭合 `exact TSKAJXY_034 ⟨GRKIBMP …, cell3_from_ineq_thm …, …⟩ …`。
+  HOL 锚点：TSKAJXY3.hl:2251（capstone，0/3/4 臂 2255-2272）、TSKAJXY2.hl:61-92
+  （特形件）、merge_ineq.hl:118-134（银行 def）。1/2-cell 臂已闭合（:1419/:1425）。
 
 ## 6. 教训日志（编排者每波收工后追加；工人有观察也写报告里）
+
+### 2026-09-29 · Wave 4 六 lane 批（PA22 波1 / TameLp W1 / PA21 / PA6 / LA38 / ContraFan）
+
+- **不透明 Prop 臂先探针后动工**：PA21 TSKAJXY 0/3/4 臂侦察实证——目标臂的
+  消费前提是不透明 Prop（`:= sorry` 银行）时，先写 5 行 defeq 探针（`lake env lean`
+  里直接试 `exact`）再决定是否填证；本次 5 分钟的探针拦下了数小时的无效证明
+  写作（Type mismatch 实证：两个不透明 Prop 连合取投影都拿不到）。
+- **侦察结案必须回流债务图**：GIANT 结案不是"白跑"——e2e-debt-map B 表加行 +
+  playbook §5.4 加条，下一波就不会对同一目标重复侦察（B 表行同步给出收口路径，
+  把"填不了"转成"差什么"）。
 
 ### 2026-09-28 · Wave 1（LA38：66→58，8 枚+17 辅助；PA25：155→144，11 枚+6 辅助；桥 lane：PA2+PA4）
 
