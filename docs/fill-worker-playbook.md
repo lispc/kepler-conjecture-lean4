@@ -157,6 +157,10 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 | `Set.Finite.subset`（参数序） | `(hs : s.Finite) (ht : t ⊆ s)`——**有限集在前**，与旧训练数据相反（PA15 实测） |
 | `Set.mem_image/mem_prod/mem_sdiff` 显式参 `.mpr` | 点投影 Unknown constant；改匿名构造器（membership 定义性展开）或 `simp only`（PA15 实测） |
 | WithLp 内积自点积 | `have h : inner ℝ d d = d ⬝ᵥ d := inner_eq_dot _ _` 再 `rw [← h, real_inner_self_eq_norm_sq, dist_eq_norm]`——单次 dist_eq_norm 同时改写两处（PA15 实测） |
+| omega 双 nat-sub | `j - 1 < k - 1`（两侧同时 sub）omega 失败且反例是垃圾原子；单侧 sub 正常——用 `Nat.sub_lt_sub_right`/`Nat.sub_le_sub_right`（PA22 w3 实测） |
+| `by omega` 作证明项 | 未定隐参位置会因 metavariable 失败（如 `Nat.sub_lt (by omega) …`）——显式 `(a := j)` 或 `show` 定形 |
+| `Metric.mem_ball` 匿名构造器 | 部分位置不吃 dist-defeq——一律显式 `Metric.mem_ball.2 (…dist 形式…)` 最稳 |
+| Complex arg / 杂项（PA22 w3） | `Complex.arg_eq_arg_iff`（ARG_EQ 正名，含 ‖‖-商形）、`arg_lt_pi_iff`/`arg_nonneg_iff`、`Metric.isBounded_iff_subset_closedBall`（`Metric` 名下）、`Set.fintypeCard_eq_ncard`、`Set.BijOn` 是三合取 def、`Finset.orderIsoOfFin (h : s.card = k)`（卡等式作参绕开 Fin 索引）、`Complex.real_smul` 定义性、`div_mul_cancel₀` 此处形状 `(a/b)*b = a`、`List.Sorted` 已废→`List.SortedLE/SortedLT`（= Monotone/StrictMono l.get）、`Complex.mul_conj` 存在（conj 旧名） |
 
 （发现新的改名陷阱：写报告第 5 项，编排者入表。**改名类错误只有 `lake build` 能稳定
 暴露**，env-lean 会放行旧名——见 §3。）
@@ -357,6 +361,19 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   `eq_circumcenter_of_dist_eq`，仅 span/range 换算）⑤aff_ge_inter_segments/
   continuous_intersection_point（初等代数/Cramer 连续性）⑥rotation_about_axis
   （CF-4c，⊥-分量经 family_special 平移）。
+- **PA22 wave-3 后**（43 remaining @`e4248c02`）：EXPLICIT ℂ kit 19 件就位
+  （模板对应表见交付报告，公开入口 `facetOfCPolyhedronExplicit`/
+  `p22_facetOfCPolyhedron`）。**eus1 收口 = 下一波首选（~40 行机械）**：
+  路线 = `p22_facetOfCPolyhedron` + 单位法向缩放（â=a/‖a‖、b̂=b/‖a‖）+
+  球点上确界（t•â ∈ 球 ⇒ t ≤ b̂）；**唯一阻塞是同文件序**——eus1(:293) 在
+  kit(:800+) 之前且被 facetRepPair/facet_rep_spec(:322-361) 消费，需把这组
+  一起下移到 kit 之后（编排者裁量，动序后全文件重 build 验证）。闭后
+  facet_rep_props→facet_rep_spec→eus1 继承的 9 枚全部脱 sorryAx。
+  **pad2d3d_facet 波**：ℂ 侧 kit 已就位，还需 V3 侧同构 kit（§1 表逐段
+  镜像，WithLp 噪声按 Polytope 原样）+ `FACET_OF_LINEAR_IMAGE` ℂ 版 +
+  `BIJECTIONS_HAS_SIZE`。insert_v/bisector_point_exists/POLYSORT_BIJ2/
+  EUSOTYP_simple 是 bisector/Arg 几何专项 GIANT 波（HOL
+  :529/:825/:1964/:2112），勿当"只差 EXPLICIT kit"硬填。
 
 ## 6. 教训日志（编排者每波收工后追加；工人有观察也写报告里）
 
