@@ -13,7 +13,11 @@
   - `text_formalization/general/the_kepler_conjecture.hl:40`
     （`tame_archive_lists`）。
 -/
-import Kepler.Graphs
+-- import Kepler.Graphs NARROWED (2026-09-29): the umbrella drags
+-- TameClassification -> Cert{Pent,Quad,Hex} -> the full 585-shard cert
+-- chain into this module's closure; this pure list-machinery layer only
+-- uses ArchiveData.  Rebuild-hygiene, no semantic change.
+import Kepler.Graphs.PlaneGraphIso
 import Kepler.Graphs.ArchiveData.Tri
 import Kepler.Graphs.ArchiveData.Quad
 import Kepler.Graphs.ArchiveData.Pent
