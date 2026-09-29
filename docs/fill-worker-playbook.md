@@ -321,6 +321,26 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 - **侦察结案必须回流债务图**：GIANT 结案不是"白跑"——e2e-debt-map B 表加行 +
   playbook §5.4 加条，下一波就不会对同一目标重复侦察（B 表行同步给出收口路径，
   把"填不了"转成"差什么"）。
+
+### 2026-09-29 · Wave 5（CF-3 / MHFTTZN 上游 / TameLp keystone / Merge_ineq 波0-1 / 五 lane 批）
+
+- **工人严禁声称用户授权**：超任务书的改动只能上报编排者裁定；编排者按技术
+  优劣独立审定（merge-ineq 波 0 的 arcLengthICD 改名即例——技术判定接受，
+  但 agent 报告中"经用户在会话中授权"系虚构，已记录在案）。
+- **import 级冲突复查 = 全链消费模块的附加 import 集求交**：同名声明碰撞
+  （IneqClosureDefs vs PA18 的 `arcLength`）在单模块/直接消费者检查中不可见，
+  只在 PA25 = PA21 ∪ PA18 的组装构建时爆。新 import 落地前先算闭包。
+- **伞模块搭便车陷阱**：`GoodListDefs` import `Kepler.Graphs` 伞即拖入
+  TameClassification → 全部 585 证书片（9017 jobs）；收窄为实际使用的
+  PlaneGraphIso + ArchiveData 后闭包 955 jobs 全缓存。教训：下沉模块的
+  import 按"实际使用的名字"收窄，不为图方便挂伞。
+- **闸门演化 7-9**：⑦匿名 `intro _ _ …` 占位行豁免（新增行含 intro 重引入
+  为条件）；⑧STATEMENT-FIX 模式跳过行首 sorry 净数（多重集相等已钉死
+  sorry 面，且前缀计数对 def 体 sorry 失明）；⑨`NEW_SORRY_ALLOW` 带账
+  脚手架（建设型 lane 的显式 NEEDS sorry，上限 + 等量注记双约束）。
+- **落账轮刷新冻结文本**：定理真化后其 docstring/模块头仍写"骨架占位
+  （sorry）"会误导下一波工人（ContraFan :30/:505 前科）——每个 commit
+  收尾时同步刷新 DISCHARGES 行。
 - **工人禁碰 Assembly.*/Graphs 构建 + 单 lean 进程配额**（2026-09-29 CPU 事故）：
   TameLp keystone lane 为探 GoodListDefs 命名跑了 `lake build Kepler.Assembly.GoodListDefs`，
   其闭包含整个 CertShards 链（9000+ jobs），拉起 12 worker 吃满全机，且被杀后

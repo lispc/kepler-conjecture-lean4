@@ -27,9 +27,11 @@
     ESTD_fan0/fan1/fan2/fan6、fan7_2、fan7_3、fan7_4_0、fan7_4_1_cases、
     fan7_4_1_one_case、fan7_4_1、fan7_4_2、ESTD_fan7、CKQOWSA、
     contraveningFanTl；
-  - sorry（深几何核，仅陈述 + DISCHARGES 注记）：`LEMMA_3_POINTS_FINAL`
-    （CKQOWSA_3.hl:1350-1356）、`LEMMA_4_POINTS_FINAL`
-    （CKQOWSA_4.hl:4093-4096）。二者的 HOL 依赖链（LEMMA_3_POINTS:1306 ←
+  - 深几何核二枚：`LEMMA_3_POINTS_FINAL`（CKQOWSA_3.hl:1350-1356）已按路线 B
+    真化（CF-3，2026-09-29，commit e9ee264a：内积角加法 + 有理余弦界，绕开 HOL
+    连续旋转链）；`LEMMA_4_POINTS_FINAL`（CKQOWSA_4.hl:4093-4096）仍 sorry
+    （CF-4 三波进行中，新模块 ContraFanDeep.lean 承载）。HOL 依赖链存档：
+    LEMMA_3_POINTS:1306 ←
     lemma_3_points:1147（IVT :1106）← rotation_lemma:828 ← 投影/三角链；
     LEMMA_4_POINTS_FINAL ← lemma_4_points_contradiction:4035 ←
     lemma_4_points_circumcenter:3866 ← 旋转段相交链 + ETA_Y_4_POINTS_INEQ）
@@ -502,12 +504,15 @@ private theorem two_arccos_gt :
 
 /-- HOL `LEMMA_3_POINTS_FINAL`（CKQOWSA_3.hl:1350-1356）：annulus 中三点，
 第三点在锥内、两两距离约束 ⟹ 矛盾。
-DISCHARGES：骨架占位（sorry）。HOL 依赖链：`LEMMA_3_POINTS`（:1306）←
+DISCHARGES：已真化（CF-3，2026-09-29，commit e9ee264a）——路线 B 绕开 HOL 连续
+旋转链：`angle_eq_angle_add_add_angle_add_of_mem_span`（锥内角加法）+ 有理余弦界
+（cos ≤ 2719/3969、cos ≥ 1031/7938，`quad_corner` 角点恒等）+ 退化三分支
+`annulus_ray_absurd`；`#print axioms` 无 sorryAx。
+HOL 原链（未走，存档备查）：`LEMMA_3_POINTS`（:1306）←
 `lemma_3_points`（:1147，经 `dist_decreasing_ivt_lemma` :1106 的 IVT 论证）←
 `rotation_lemma`（:828，连续旋转归约）← `triangle_height_lemma`（:283）、
 `in_aff_ge_dist_lemma`（:327）、`in_aff_ge_dist_lower_bound`（:436）、
-`rotation_dist_decrease`（:673）、`projection_lemma`（:42）等，约 1300 行。
-后续轮次移植。 -/
+`rotation_dist_decrease`（:673）、`projection_lemma`（:42）等，约 1300 行。 -/
 theorem LEMMA_3_POINTS_FINAL {v1 v2 v3 : V3}
     (hcone : v3 ∈ affGe {0} ({v1, v2} : Set V3))
     (hb1 : v1 ∈ ballAnnulus) (hb2 : v2 ∈ ballAnnulus) (hb3 : v3 ∈ ballAnnulus)
