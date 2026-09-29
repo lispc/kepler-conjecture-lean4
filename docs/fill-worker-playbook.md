@@ -409,6 +409,29 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   `List.Perm.nodup`；flatten 恒等式用 `List.flatten_reverse`（勿信
   `S.reverse.flatten = S.flatten.reverse`，假命题）。完整 400 行证明脚本已
   试写验证过逻辑（仅被上游点式引理拖累），10 条踩雷清单在 §5.3。
+- **PA21 @T-A1B1 后**（20 战术 sorry @`af3f31fc`，A1+B1 全清）：A2/B2/B3
+  攻击顺序——**A2（6 枚，1 胞测度-装配）**：OMEGA_LIST_BISECTOR（最深几何）
+  → MCELL1_SOL_RESTRICT → MCELL1_RADIAL → MCELL1_VOL → GAMMAX_MCELL1 →
+  TSKAJXY_1；**B2（7 枚）**：先 port WEDGE_WEDGE_GE/WEDGE_SUBSET_WEDGE_GE
+  （import PA18）→ FRUSTT_WEDGE_RCONE_GE（核心 FRUSTT_RCONE_GE 已备，
+  `p21_zOf_norm_sq`/`p21_on3_norm_sq`/`p21_cone_surf_null` 可复用）→
+  NOT_COPLANAR_EXTREME_MCELL2 → MCELL2_DIHV_LT_PI/AZIM → LEFT_ACTION →
+  PERMUTE_01，楔形体积闭式照 WedgeVolume 切片模板；**B3（5 枚）**：
+  GAMMAX_MCELL2 → MCELL2_VOL → MCELL2_SOL（最大单件）→ GAMMAX_GAMMA2_X →
+  TSKAJXY_2。A1 全清使 B2/B3 与 A2 完全解耦。雷区：`vectorSpan_eq_span_vsub_set_left`
+  的 `(p -ᵥ ·)` 方向（p 左，项是 p−q/p−r，需 neg_mem 反号）；`Real.sqrt_sq_eq_norm`
+  不存在（用 `Real.sqrt_sq`+`Real.sqrt_sq_eq_abs`）；`linear_combination` 只在
+  tactic 位可用；`zero_le` 无显式参；PA21 已 import WedgeVolume——其私有
+  helper 改动需与 `p21_*` 副本同步。
+- **PA6 @GLTVHUM 波后**（10 remaining @`2c71cde2`）：五级链①②③ 已闭合
+  （③ 用紧 polyhedron 边界点引理 `p6_mem_hull_insert_facet` 替代未移植的
+  POLYTOPE_UNION_CONVEX_HULL_FACETS——一般版需另开移植）；④ GLTVHUM_lemma1
+  的 base/step 数学路线全推导已写入原位 NEEDS（PA6:660-684，含 (A)(B)(C)(D)
+  分解与 hinner 星引理），铺垫私件 9 枚已证；⑤ GLTVHUM_concl 装配在 PA2 而
+  PA6 import PA2——结构性阻塞，需链复制到 PA2 或架构调整（裁决项）。
+  DUUNHOR 三前件（ROGERS_AFF_DIM_FULL/POLYHEDRON_VORONOI_LIST/
+  OMEGA_LIST_N_LEMMA）均 sorry，路线已注 PA2:577-580。
+  `Set.mem_setOf` 隐式参数方向与旧版不同（用 `Set.mem_setOf.2 ⟨…⟩`）。
 
 ## 6. 教训日志（编排者每波收工后追加；工人有观察也写报告里）
 
