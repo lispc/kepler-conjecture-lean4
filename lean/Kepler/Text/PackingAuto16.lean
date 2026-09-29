@@ -100,8 +100,12 @@ HOL sources:
   KIZHLTL2 needs only the SIGN `0 ≤ mm1` of the Flyspeck constant (proved
   from `cos_pi_div_five` + arccos antitonicity; no Taylor machinery). The
   `KIZHLTL1` proof of this file also discharges the wave-2 scout's pieces 1-4
-  without needing `IsOpen (voronoi_open)`. Still sorried: `MCELL_SET_NOT_EMPTY`,
-  `QZYZMJC`, `KIZHLTL3` (no HL proof exists), `KIZHLTL4`.
+  without needing `IsOpen (voronoi_open)`. KIZHLTL4 discharged (wave 3,
+  2026-09-30): the edge-dihedral capstone, consuming PA15's three ★ stars
+  (`DIHX_SYM` / `FINITE_EDGE_X2` / `SUM_PAIR_2_SET`) + PA2 `GRUTOTI1_concl`
+  directly (see its docstring; `MCELL_SUBSET_BALL_4`/`PACKING_BALL_BOUNDARY`
+  turned out unnecessary). Still sorried: `MCELL_SET_NOT_EMPTY`,
+  `QZYZMJC`, `KIZHLTL3` (no HL proof exists).
 -/
 
 import Kepler.Text.PackingAuto2
@@ -1226,19 +1230,197 @@ theorem KIZHLTL3 : ∀ (V : Set V3) (f : ℝ → ℝ), ∃ c : ℝ, ∀ r : ℝ,
           (fun v => f (hl [u, v])))) := by
   sorry
 
-/-- GIANT — HOL `KIZHLTL4` (KIZHLTL.hl:533-546 concl, 548-1032 proof): the
+/-! ### KIZHLTL4 support kit -/
+
+/-! == NEW KIT for KIZHLTL4 == -/
+
+/-- Flyspeck constant `0 ≤ mm2` (PA19's `ZERO_LE_MM2_LEMMA` lives downstream —
+PA19 imports this file, so the sign fact is re-derived here by exact algebra:
+`sol0 ≥ π/6` ⟺ `arccos(1/3) ≥ 7π/18` ⟺ `cos(7π/18) = sin(π/9) ≥ 1/3`, the
+last via the triple-angle identity `sin π/3 = 3 sin(π/9) - 4 sin(π/9)³` and the
+factorization `g(1/3) - g(s) = (1/3 - s)(3 - 4(s² + s/3 + 1/9))` for
+`g = 3s - 4s³`.) -/
+private theorem p16_mm2_nonneg : 0 ≤ mm2 := by
+  have hpos : (0:ℝ) < Real.pi / 9 := by linarith [Real.pi_pos]
+  have hlt : Real.pi / 9 < Real.pi := by linarith [Real.pi_pos]
+  have hs0 : 0 ≤ Real.sin (Real.pi / 9) :=
+    le_of_lt (Real.sin_pos_of_pos_of_lt_pi hpos hlt)
+  have htri : Real.sin (Real.pi / 3)
+      = 3 * Real.sin (Real.pi / 9) - 4 * Real.sin (Real.pi / 9) ^ 3 := by
+    have hshape : Real.pi / 3 = 3 * (Real.pi / 9) := by ring
+    rw [hshape, Real.sin_three_mul]
+  have hval : Real.sqrt 3 / 2
+      = 3 * Real.sin (Real.pi / 9) - 4 * Real.sin (Real.pi / 9) ^ 3 := by
+    rw [← Real.sin_pi_div_three]; exact htri
+  have hsq3 : (23:ℝ) / 27 < Real.sqrt 3 / 2 := by
+    have h46sq : ((46:ℝ) / 27) ^ 2 < 3 := by norm_num
+    have h46 := Real.sqrt_lt_sqrt (by norm_num : (0:ℝ) ≤ ((46:ℝ) / 27) ^ 2) h46sq
+    rw [Real.sqrt_sq (by norm_num : (0:ℝ) ≤ (46:ℝ) / 27)] at h46
+    linarith
+  have hge : (1:ℝ) / 3 ≤ Real.sin (Real.pi / 9) := by
+    by_contra hcon
+    have hf1 : (0:ℝ) < 1 / 3 - Real.sin (Real.pi / 9) := by linarith
+    have hsq : Real.sin (Real.pi / 9) * Real.sin (Real.pi / 9) < 1 / 9 := by
+      have h1 : Real.sin (Real.pi / 9) * Real.sin (Real.pi / 9)
+          ≤ Real.sin (Real.pi / 9) * (1 / 3) :=
+        mul_le_mul_of_nonneg_left (le_of_not_ge hcon) hs0
+      have h2 : Real.sin (Real.pi / 9) * (1 / 3) < (1 / 3) * (1 / 3) :=
+        mul_lt_mul_of_pos_right (lt_of_not_ge hcon) (by norm_num)
+      linarith
+    have hfac : 23 / 27 - (3 * Real.sin (Real.pi / 9)
+          - 4 * Real.sin (Real.pi / 9) ^ 3)
+        = (1 / 3 - Real.sin (Real.pi / 9)) *
+            (3 - 4 * (Real.sin (Real.pi / 9) * Real.sin (Real.pi / 9)
+              + Real.sin (Real.pi / 9) / 3 + 1 / 9)) := by ring
+    have hprod : (0:ℝ) < (1 / 3 - Real.sin (Real.pi / 9)) *
+        (3 - 4 * (Real.sin (Real.pi / 9) * Real.sin (Real.pi / 9)
+          + Real.sin (Real.pi / 9) / 3 + 1 / 9)) := by
+      have h1 : (0:ℝ) < 1 / 3 - Real.sin (Real.pi / 9) := by linarith
+      have hT : Real.sin (Real.pi / 9) * Real.sin (Real.pi / 9)
+          + Real.sin (Real.pi / 9) / 3 + 1 / 9 < 1 / 3 := by linarith
+      have h2 : (0:ℝ) < 3 - 4 * (Real.sin (Real.pi / 9) * Real.sin (Real.pi / 9)
+          + Real.sin (Real.pi / 9) / 3 + 1 / 9) := by linarith [hT]
+      exact mul_pos h1 h2
+    have hlt23 : 3 * Real.sin (Real.pi / 9) - 4 * Real.sin (Real.pi / 9) ^ 3
+        < 23 / 27 := by linarith
+    linarith [hsq3, hval, hlt23]
+  have hshape : 7 * Real.pi / 18 = Real.pi / 2 - Real.pi / 9 := by ring
+  have hcos : (1:ℝ) / 3 ≤ Real.cos (7 * Real.pi / 18) := by
+    rw [hshape, Real.cos_pi_div_two_sub]
+    exact hge
+  have hkey : 7 * Real.pi / 18 ≤ Real.arccos (1 / 3) := by
+    have h1 := Real.arccos_le_arccos hcos
+    rw [Real.arccos_cos (by linarith [Real.pi_pos]) (by linarith [Real.pi_pos])] at h1
+    exact h1
+  have hkey' : (7:ℝ) * Real.pi / 6 ≤ 3 * Real.arccos (1 / 3) := by
+    have h1 : (7:ℝ) * Real.pi / 18 * 3 ≤ Real.arccos (1 / 3) * 3 :=
+      mul_le_mul_of_nonneg_right hkey (le_of_lt (by norm_num : (0:ℝ) < 3))
+    linarith
+  have hsol0 : Real.pi / 6 ≤ sol0 := by
+    unfold sol0
+    linarith
+  have htau : (0:ℝ) < 6 * tau0 := by linarith [p16_tau0_pos]
+  unfold mm2
+  refine div_nonneg (mul_nonneg ?_ (Real.sqrt_nonneg 2)) (le_of_lt htau)
+  linarith
+
+/-- The epsilon-fixed pair representation of an edge (PA19
+`p19_epsilon_pair` template). -/
+private theorem p16_epsilon_pair {e : Set V3} (h : ∃ p : V3 × V3, e = {p.1, p.2}) :
+    {(Classical.epsilon fun w : V3 × V3 => e = {w.1, w.2}).1,
+      (Classical.epsilon fun w : V3 × V3 => e = {w.1, w.2}).2} = e :=
+  Eq.symm (Classical.epsilon_spec_aux (by infer_instance)
+    (fun w : V3 × V3 => e = {w.1, w.2}) h)
+
+/-- The KIZHLTL4 inner summand function: the HL `\{u,v}. if {u,v} IN edgeX V X
+then dihX V X (u,v) * lmfun (hl [u;v]) else &0` pattern lambda (epsilon
+encoding, guard on the edge set). -/
+private noncomputable def p16_gammaE (V X : Set V3) (f : ℝ → ℝ) (e : Set V3) : ℝ :=
+  if e ∈ edgeX V X then
+    dihX V X ((Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}).1,
+      (Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}).2) *
+      f (hl [(Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}).1,
+        (Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}).2])
+  else 0
+
+/-- `p16_gammaE` is nonnegative on Marchal cells for a pointwise-nonnegative
+weight (`DIHX_RANGE` + `hf`; replaces the HOL `gamma_y_pos_le`, whose PA15
+`gammaY` uses the private `pairOf`). -/
+private theorem p16_gammaE_nonneg (V X : Set V3) (f : ℝ → ℝ) (hf : ∀ x, 0 ≤ f x)
+    (e : Set V3) (hm : mcellSet V X) (he : e ∈ edgeX V X) : 0 ≤ p16_gammaE V X f e := by
+  unfold p16_gammaE
+  rw [if_pos he]
+  exact mul_nonneg (DIHX_RANGE V X _ _).1 (hf _)
+
+/-- A `setSum` over a finite support with vanishing summands is zero. -/
+private theorem p16_setSum_eq_zero {α : Type*} {s : Set α} (hs : s.Finite) (f : α → ℝ)
+    (h : ∀ a ∈ s, f a = 0) : setSum s f = 0 := by
+  unfold setSum
+  rw [dif_pos hs, Finset.sum_eq_zero fun a ha => h a ((Set.Finite.mem_toFinset hs).mp ha)]
+
+/-- Sum transfer across an equality of summation domains. -/
+private theorem p16_setSum_domain {α : Type*} {s t : Set α} (heq : s = t) (f : α → ℝ) :
+    setSum s f = setSum t f := by
+  rw [heq]
+
+/-- HOL `SUM_SUPERSET` (equality form) in `setSum` form. -/
+private theorem p16_setSum_superset_eq {α : Type*} {s t : Set α} (hs : s.Finite)
+    (ht : t.Finite) (hsub : s ⊆ t) (f : α → ℝ)
+    (hz : ∀ a ∈ t, a ∉ s → f a = 0) : setSum s f = setSum t f := by
+  have hsd : ht.toFinset \ hs.toFinset ⊆ ht.toFinset := fun a ha =>
+    (Finset.mem_sdiff.mp ha).1
+  have hsplit : ∑ x ∈ ht.toFinset \ hs.toFinset, f x + ∑ x ∈ hs.toFinset, f x
+      = ∑ x ∈ ht.toFinset, f x := Finset.sum_sdiff
+      (fun a ha => (Set.Finite.mem_toFinset ht).mpr
+        (hsub ((Set.Finite.mem_toFinset hs).mp ha)))
+  have hzero : ∑ x ∈ ht.toFinset \ hs.toFinset, f x = 0 := by
+    refine Finset.sum_eq_zero fun x hx => ?_
+    have h1 : x ∈ t := (Set.Finite.mem_toFinset ht).mp (Finset.mem_sdiff.mp hx).1
+    have h2 : x ∉ s := by
+      intro hcon
+      exact absurd ((Set.Finite.mem_toFinset hs).mpr hcon) (Finset.mem_sdiff.mp hx).2
+    exact hz x h1 h2
+  unfold setSum
+  rw [dif_pos hs, dif_pos ht]
+  linarith [hsplit, hzero]
+
+/-- HOL `SUM_LMUL` in `setSum` form. -/
+private theorem p16_setSum_lmull {α : Type*} {s : Set α} (hs : s.Finite) (c : ℝ)
+    (f : α → ℝ) : setSum s (fun x => c * f x) = c * setSum s f := by
+  unfold setSum
+  rw [dif_pos hs, dif_pos hs, Finset.mul_sum]
+
+/-- HOL `SUM_SUM_PRODUCT` (ordered-pair reindexing) for a rectangular product. -/
+private theorem p16_setSum_prod {A U : Set V3} (hA : A.Finite) (hU : U.Finite)
+    (F : V3 × V3 → ℝ) :
+    setSum (A ×ˢ U) F = setSum A (fun u => setSum U (fun v => F (u, v))) := by
+  unfold setSum
+  rw [dif_pos (hA.prod hU), dif_pos hA]
+  simp only [dif_pos hU]
+  rw [← Set.Finite.toFinset_prod hA hU]
+  exact Finset.sum_product _ _ _
+
+/-- A pointwise-nonnegative summand gives a nonnegative `setSum` (junk `0`
+included). -/
+private theorem p16_setSum_nonneg {α : Type*} {s : Set α} (f : α → ℝ)
+    (h : ∀ a ∈ s, 0 ≤ f a) : 0 ≤ setSum s f := by
+  unfold setSum
+  split
+  · rename_i hs
+    exact Finset.sum_nonneg fun a ha => h a ((Set.Finite.mem_toFinset hs).mp ha)
+  · exact le_refl 0
+
+/-- `radV {u, v} = hl [u, v]` (the pair circumradius is the half-distance). -/
+private theorem p16_radV_pair (u v : V3) : radV {u, v} = hl [u, v] := by
+  unfold hl
+  congr 1
+  ext x
+  simp [setOfList]
+
+/-- DISCHARGED — HOL `KIZHLTL4` (KIZHLTL.hl:533-546 concl, 548-1032 proof): the
 `lmfun` specialization of the edge bound, `dist <= 2 * h0` (with `c = 0` in
 the HL proof's annulus budget `8 * mm2 * (0)`). The inner edge sum keeps the
 HL `\{u,v}. if {u,v} IN edgeX V X then ... else &0` guard verbatim (encoded
-by the gammaX epsilon convention); the reordering
-`sum S1 (sum (edgeX) (g X)) = sum (pairs) (sum over cells)` uses NEEDS
-DIHX_SYM (marchal3.hl — parallel-owned Auto15, `_p16` copy at fill-in),
-NEEDS FINITE_MCELL_SET_LEMMA / MCELL_SUBSET_BALL_4 / PACKING_BALL_BOUNDARY
-(marchal3.hl), NEEDS FINITE_LIST_KY_LEMMA_2, and the bound `|lmfun|` against
-the `V∩ball 0 r`-edge sum reuses the KIZHLTL3 architecture.
+by the gammaX epsilon convention; the guard-form summand is `p16_gammaE`).
+Proof chain (port of the HL steps): cell-edge double sum reindexes over
+`T1` = pairs of `V ∩ ball 0 r` (filter + Fubini), restricts to `T2` (edges
+with `hl ≤ h0`; off-`T2` summands vanish because `lmfun` cuts off at `h0`),
+each `T2` edge contributes `2π · lmfun (radV e)` by `GRUTOTI1_concl` (the
+PackingAuto2 interface shim, discharged by PackingAuto23's `GRUTOTI`), and the
+final unordered→ordered-pair comparison runs PA15 `SUM_PAIR_2_SET` + a
+product-set reindexing (`p16_setSum_prod`) + `radV {u,v} = hl [u,v]`
+(`HL_2`). Consumed upstream pieces: PA15 `FINITE_MCELL_SET_LEMMA`,
+`FINITE_EDGE_X2` / `DIHX_SYM` / `SUM_PAIR_2_SET` (the three ★ stars — consumed
+directly since PackingAuto15 is imported; the parallel lane's proofs land
+in-place, no `_p16` copies needed), PA10 `HDTFNFZ`, PA2 `GRUTOTI1_concl`.
+`0 ≤ mm2` is re-derived locally (`p16_mm2_nonneg`, exact triple-angle
+algebra) because PA19's `ZERO_LE_MM2_LEMMA` lives downstream (PA19 imports
+this file). NOT needed (contrary to the earlier header estimate):
+`MCELL_SUBSET_BALL_4` / `PACKING_BALL_BOUNDARY` / `QZYZMJC`.
 
 DISCHARGES: none (`KIZHLTL4` is local to KIZHLTL.hl with no `pack_concl`
 interface; it feeds UPFZBZM (UPFZBZM.hl:122) downstream). -/
+
 theorem KIZHLTL4 : ∀ V : Set V3, ∃ c : ℝ, ∀ r : ℝ, saturated V → Packing V →
     1 ≤ r →
     (8 * mm2 / Real.pi) *
@@ -1252,4 +1434,315 @@ theorem KIZHLTL4 : ∀ V : Set V3, ∃ c : ℝ, ∀ r : ℝ, saturated V → Pac
       8 * mm2 * setSum (V ∩ Metric.ball 0 r)
         (fun u => setSum {v | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
           (fun v => lmfun (hl [u, v]))) := by
-  sorry
+  intro V
+  by_cases hmain : saturated V ∧ Packing V
+  · obtain ⟨hs, hp⟩ := hmain
+    refine ⟨0, fun r _ _ _hr => ?_⟩
+    classical
+    set S1 : Set (Set V3) := {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X}
+      with hS1def
+    set V1 : Set V3 := V ∩ Metric.ball 0 r with hV1def
+    set T1 : Set (Set V3) := {e : Set V3 | ∃ u ∈ V1, ∃ v ∈ V1, e = {u, v}}
+      with hT1def
+    set T2 : Set (Set V3) :=
+      {e : Set V3 | ∃ m ∈ V1, ∃ n ∈ V1, m ≠ n ∧ dist m n ≤ 2 * h0 ∧ e = {m, n}}
+      with hT2def
+    have hS1fin : S1.Finite := FINITE_MCELL_SET_LEMMA V r hp hs
+    have hV1fin : V1.Finite := hp.finite_inter_ball r
+    have hT1fin : T1.Finite := FINITE_SET_PRODUCT_KY_LEMMA V1 hV1fin
+    have hT2sub : T2 ⊆ T1 := by
+      intro e he
+      obtain ⟨m, hm, n, hn, _hne, _hd, hme⟩ := he
+      exact ⟨m, hm, n, hn, hme⟩
+    have hT2fin : T2.Finite := Set.Finite.subset hT1fin hT2sub
+    have hVXsub : ∀ X : Set V3, mcellSet V X → (VX V X : Set V3) ⊆ V ∩ X := by
+      intro X hm z hz
+      obtain ⟨i, ul, hXm, hb⟩ := Set.mem_setOf.mp hm
+      by_cases hnull : nullSet X
+      · have h0 : (VX V X : Set V3) = ∅ := by
+          unfold VX
+          split
+          · rfl
+          · rename_i hcon
+            exact absurd hnull hcon
+        rw [h0] at hz
+        exact absurd hz (Set.notMem_empty z)
+      · have heq := @HDTFNFZ V ul i z X hs hp hb hXm hnull
+        rw [heq] at hz
+        exact hz
+    have hEsubT1 : ∀ X : Set V3, X ∈ S1 → ∀ e ∈ edgeX V X, e ∈ T1 := by
+      intro X hX e he
+      obtain ⟨u, v, huv, hu, hv, _hne⟩ := he
+      have huVX : u ∈ V ∩ X := hVXsub X hX.2 hu
+      have hvVX : v ∈ V ∩ X := hVXsub X hX.2 hv
+      rw [huv]
+      exact ⟨u, ⟨huVX.1, hX.1 huVX.2⟩, v, ⟨hvVX.1, hX.1 hvVX.2⟩, rfl⟩
+    have hinner : ∀ X ∈ S1,
+        setSum (edgeX V X) (fun e =>
+            let q := Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}
+            if {q.1, q.2} ∈ edgeX V X then
+              dihX V X (q.1, q.2) * lmfun (hl [q.1, q.2])
+            else 0)
+        = setSum {e : Set V3 | e ∈ T1 ∧ e ∈ edgeX V X}
+            (fun e => p16_gammaE V X lmfun e) := by
+      intro X hX
+      have hdom : (edgeX V X : Set (Set V3)) = {e : Set V3 | e ∈ T1 ∧ e ∈ edgeX V X} := by
+        apply Set.eq_of_subset_of_subset
+        · intro e he
+          exact ⟨hEsubT1 X hX e he, he⟩
+        · intro e he
+          exact he.2
+      have hcongr : setSum (edgeX V X) (fun e =>
+            let q := Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}
+            if {q.1, q.2} ∈ edgeX V X then
+              dihX V X (q.1, q.2) * lmfun (hl [q.1, q.2])
+            else 0)
+          = setSum (edgeX V X) (fun e => p16_gammaE V X lmfun e) := by
+        refine p16_setSumCongr fun e he => ?_
+        obtain ⟨u, v, huv, _hu, _hv, _hne⟩ := id he
+        have hguard : {(Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}).1,
+            (Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}).2} ∈ edgeX V X := by
+          rw [p16_epsilon_pair (e := e) ⟨(u, v), huv⟩]
+          exact he
+        rw [if_pos hguard]
+        unfold p16_gammaE
+        exact (if_pos he).symm
+      rw [hcongr]
+      exact p16_setSum_domain hdom (fun e => p16_gammaE V X lmfun e)
+    have hstep1 : setSum S1 (fun X => setSum (edgeX V X) (fun e =>
+            let q := Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}
+            if {q.1, q.2} ∈ edgeX V X then
+              dihX V X (q.1, q.2) * lmfun (hl [q.1, q.2])
+            else 0))
+        = setSum S1 (fun X => setSum {e : Set V3 | e ∈ T1 ∧ e ∈ edgeX V X}
+            (fun e => p16_gammaE V X lmfun e)) :=
+      p16_setSumCongr fun X hX => hinner X hX
+    have hstep2 : setSum S1 (fun X => setSum {e : Set V3 | e ∈ T1 ∧ e ∈ edgeX V X}
+          (fun e => p16_gammaE V X lmfun e))
+        = setSum T1 (fun e => setSum {X : Set V3 | X ∈ S1 ∧ e ∈ edgeX V X}
+            (fun X => p16_gammaE V X lmfun e)) := by
+      rw [p16_setSumCongr (fun X _ =>
+          p16_setSum_filter hT1fin (fun e => e ∈ edgeX V X)
+            (fun e => p16_gammaE V X lmfun e))]
+      try simp only []
+      rw [p16_setSum_fubini hS1fin hT1fin (fun X e => if e ∈ edgeX V X then
+          p16_gammaE V X lmfun e else 0)]
+      try simp only []
+      rw [p16_setSumCongr (fun e _ =>
+          (p16_setSum_filter hS1fin (fun X => e ∈ edgeX V X)
+            (fun X => p16_gammaE V X lmfun e)).symm)]
+    have hstep3 : setSum T1 (fun e => setSum {X : Set V3 | X ∈ S1 ∧ e ∈ edgeX V X}
+          (fun X => p16_gammaE V X lmfun e))
+        = setSum T2 (fun e => setSum {X : Set V3 | X ∈ S1 ∧ e ∈ edgeX V X}
+            (fun X => p16_gammaE V X lmfun e)) := by
+      refine (p16_setSum_superset_eq hT2fin hT1fin hT2sub _ ?_).symm
+      intro e he1 he2
+      obtain ⟨u, hu, v, hv, huv⟩ := he1
+      have hkey : u = v ∨ 2 * h0 < dist u v := by
+        by_contra hcon
+        exact he2 ⟨u, hu, v, hv, fun hc => hcon (Or.inl hc),
+          le_of_not_gt (fun hc => hcon (Or.inr hc)), huv⟩
+      have hfin : ({X : Set V3 | X ∈ S1 ∧ e ∈ edgeX V X}).Finite :=
+        Set.Finite.subset hS1fin fun X hX => hX.1
+      refine p16_setSum_eq_zero hfin _ fun X hX => ?_
+      obtain ⟨_hXS, hed⟩ := hX
+      by_cases hcuv : u = v
+      · have hne : ¬(e ∈ edgeX V X) := by
+          rintro ⟨p, q, hpq, _hp, _hq, hpqne⟩
+          rw [huv, hcuv] at hpq
+          rcases Set.pair_eq_pair_iff.mp hpq with ⟨r1, r2⟩ | ⟨r1, r2⟩
+          · exact hpqne (by rw [← r1, ← r2])
+          · exact hpqne (by rw [← r1, ← r2])
+        unfold p16_gammaE
+        rw [if_neg hne]
+      · have hdist : 2 * h0 < dist u v := by
+          rcases hkey with h | h
+          · exact absurd h hcuv
+          · exact h
+        have hlE : hl [(Classical.epsilon fun w : V3 × V3 => e = {w.1, w.2}).1,
+            (Classical.epsilon fun w : V3 × V3 => e = {w.1, w.2}).2] = dist u v / 2 := by
+          rw [HL_2]
+          have heps := p16_epsilon_pair (e := e) ⟨(u, v), huv⟩
+          rcases Set.pair_eq_pair_iff.mp (heps.trans huv) with ⟨r1, r2⟩ | ⟨r1, r2⟩
+          · rw [r1, r2]
+          · rw [r1, r2, dist_comm]
+        unfold p16_gammaE
+        rw [if_pos hed, hlE,
+          show lmfun (dist u v / 2) = 0 from by
+            unfold lmfun
+            split_ifs with hle
+            · exact absurd hle (by linarith)
+            · rfl]
+        ring
+    have hstep4 : setSum T2 (fun e => setSum {X : Set V3 | X ∈ S1 ∧ e ∈ edgeX V X}
+          (fun X => p16_gammaE V X lmfun e))
+        ≤ setSum T2 (fun e => setSum {X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X}
+            (fun X => p16_gammaE V X lmfun e)) := by
+      refine p16_setSum_mono hT2fin _ _ fun e he => ?_
+      obtain ⟨m, hm, n, hn, hne, hdist, hme⟩ := he
+      have hf1 : ({X : Set V3 | X ∈ S1 ∧ e ∈ edgeX V X}).Finite :=
+        Set.Finite.subset hS1fin fun X hX => hX.1
+      have hf2 : ({X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X}).Finite :=
+        FINITE_EDGE_X2 V e m n hp hs hme
+      exact p16_setSum_le_of_subset hf1 hf2 (fun X hX => ⟨hX.1.2, hX.2⟩)
+        (fun X => p16_gammaE V X lmfun e)
+        (fun X hX => p16_gammaE_nonneg V X lmfun lmfun_pos_le e hX.1 hX.2)
+    have hstep5 : setSum T2 (fun e => setSum {X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X}
+          (fun X => p16_gammaE V X lmfun e))
+        = setSum T2 (fun e => 2 * Real.pi * lmfun (radV e)) := by
+      refine p16_setSumCongr fun e he => ?_
+      obtain ⟨m, hm, n, hn, hne, hdist, hme⟩ := he
+      subst hme
+      have hXfin : ({X : Set V3 | mcellSet V X ∧ {m, n} ∈ edgeX V X}).Finite :=
+        FINITE_EDGE_X2 V {m, n} m n hp hs rfl
+      have hperX : ∀ X ∈ {X : Set V3 | mcellSet V X ∧ {m, n} ∈ edgeX V X},
+          p16_gammaE V X lmfun {m, n} = dihX V X (m, n) * lmfun (hl [m, n]) := by
+        intro X hX
+        obtain ⟨hmset, hed⟩ := hX
+        unfold p16_gammaE
+        rw [if_pos hed]
+        obtain ⟨p, q, hpq, _hp, _hq, _hpqne⟩ := id hed
+        have heps := p16_epsilon_pair (e := {m, n}) ⟨(p, q), hpq⟩
+        rcases Set.pair_eq_pair_iff.mp heps with ⟨r1, r2⟩ | ⟨r1, r2⟩
+        · congr 1
+          · rw [r1, r2]
+          · rw [r1, r2]
+        · congr 1
+          · rw [r1, r2, DIHX_SYM V X m n hp hs hmset hed]
+          · rw [r1, r2, HL_2, HL_2, dist_comm]
+      rw [p16_setSumCongr hperX,
+        p16_setSumCongr
+          (fun X _ => mul_comm (dihX V X (m, n)) (lmfun (hl [m, n]))),
+        p16_setSum_lmull hXfin (lmfun (hl [m, n])) (fun X => dihX V X (m, n)),
+        GRUTOTI1_concl V m n {m, n} hs hp hm.1 hn.1 hne
+          (by rw [HL_2]; linarith [H0_LT_SQRT2, hdist]) rfl,
+        p16_radV_pair m n]
+      ring
+    have hstep6 : (8 * mm2 / Real.pi) * setSum T2 (fun e => 2 * Real.pi * lmfun (radV e))
+        = 8 * mm2 * (2 * setSum T2 (fun e => lmfun (radV e))) := by
+      have hp0 : Real.pi ≠ 0 := ne_of_gt Real.pi_pos
+      have hsc : (8 * mm2 / Real.pi) * (2 * Real.pi) = 16 * mm2 := by
+        field_simp
+        ring
+      rw [p16_setSum_lmull hT2fin (2 * Real.pi) (fun e => lmfun (radV e)),
+        ← mul_assoc (8 * mm2 / Real.pi) (2 * Real.pi)
+          (setSum T2 (fun e => lmfun (radV e))), hsc]
+      ring
+    have hscale : 0 ≤ 8 * mm2 / Real.pi :=
+      div_nonneg (by linarith [p16_mm2_nonneg]) Real.pi_pos.le
+    have h8nn : 0 ≤ 8 * mm2 := by linarith [p16_mm2_nonneg]
+    have hmc1 : (8 * mm2 / Real.pi) * setSum S1 (fun X => setSum (edgeX V X)
+            (fun e =>
+              let q := Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}
+              if {q.1, q.2} ∈ edgeX V X then
+                dihX V X (q.1, q.2) * lmfun (hl [q.1, q.2])
+              else 0))
+        = (8 * mm2 / Real.pi) * setSum T1 (fun e =>
+              setSum {X : Set V3 | X ∈ S1 ∧ e ∈ edgeX V X}
+                (fun X => p16_gammaE V X lmfun e)) := by
+      rw [hstep1, hstep2]
+    have hmc2 : (8 * mm2 / Real.pi) * setSum T1 (fun e =>
+            setSum {X : Set V3 | X ∈ S1 ∧ e ∈ edgeX V X}
+              (fun X => p16_gammaE V X lmfun e))
+        ≤ 8 * mm2 * (2 * setSum T2 (fun e => lmfun (radV e))) := by
+      calc (8 * mm2 / Real.pi) * setSum T1 (fun e =>
+                setSum {X : Set V3 | X ∈ S1 ∧ e ∈ edgeX V X}
+                  (fun X => p16_gammaE V X lmfun e))
+          ≤ (8 * mm2 / Real.pi) * setSum T2 (fun e =>
+                setSum {X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X}
+                  (fun X => p16_gammaE V X lmfun e)) :=
+            mul_le_mul_of_nonneg_left (le_trans (le_of_eq hstep3) hstep4) hscale
+        _ = (8 * mm2 / Real.pi) * setSum T2 (fun e => 2 * Real.pi * lmfun (radV e)) := by
+              rw [hstep5]
+        _ = 8 * mm2 * (2 * setSum T2 (fun e => lmfun (radV e))) := hstep6
+    set OPB : Set (V3 × V3) :=
+      {p : V3 × V3 | p.1 ∈ V1 ∧ p.2 ∈ V ∧ p.2 ≠ p.1 ∧ dist p.1 p.2 ≤ 2 * h0}
+      with hOPBdef
+    have hsubV2 : ∀ p : V3 × V3, p.1 ∈ V1 → p.2 ∈ V → p.2 ≠ p.1 →
+        dist p.1 p.2 ≤ 2 * h0 → p.2 ∈ V ∩ Metric.ball 0 (r + 2 * h0) := by
+      rintro ⟨p1, p2⟩ h1 h2 _hne hd
+      have hd' : dist p1 p2 ≤ 2 * h0 := hd
+      have hb : p2 ∈ Metric.ball 0 (r + 2 * h0) := by
+        have ht : dist 0 p2 ≤ dist 0 p1 + dist p1 p2 := dist_triangle 0 p1 p2
+        have hlt : dist p1 0 < r := Metric.mem_ball.1 h1.2
+        have hc : dist p1 0 = dist 0 p1 := dist_comm p1 0
+        have hc2 : dist p2 0 = dist 0 p2 := dist_comm p2 0
+        exact Metric.mem_ball.2 (by linarith)
+      exact Set.mem_inter h2 hb
+    have hoprod : setSum OPB (fun p => lmfun (radV {p.1, p.2}))
+        = setSum V1 (fun u => setSum {v | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+            (fun v => lmfun (radV {u, v}))) := by
+      have hV2fin : (V ∩ Metric.ball 0 (r + 2 * h0)).Finite := hp.finite_inter_ball _
+      have hseteq : OPB = {p : V3 × V3 |
+          p ∈ V1 ×ˢ (V ∩ Metric.ball 0 (r + 2 * h0)) ∧
+            p.2 ≠ p.1 ∧ dist p.1 p.2 ≤ 2 * h0} := by
+        ext p
+        simp only [hOPBdef, Set.mem_setOf_eq]
+        constructor
+        · intro hP
+          have hP' := Set.mem_setOf.mp hP
+          exact ⟨Set.mem_prod.mpr ⟨hP'.1, hsubV2 p hP'.1 hP'.2.1 hP'.2.2.1 hP'.2.2.2⟩,
+            hP'.2.2.1, hP'.2.2.2⟩
+        · intro hP
+          have hP' := Set.mem_setOf.mp hP
+          obtain ⟨h1, h2⟩ := Set.mem_prod.mp hP'.1
+          exact ⟨h1, h2.1, hP'.2.1, hP'.2.2⟩
+      rw [hseteq, p16_setSum_filter (hV1fin.prod hV2fin)
+        (fun p : V3 × V3 => p.2 ≠ p.1 ∧ dist p.1 p.2 ≤ 2 * h0)
+        (fun p => lmfun (radV {p.1, p.2}))]
+      try simp only []
+      rw [p16_setSum_prod hV1fin hV2fin (fun p : V3 × V3 =>
+          if p.2 ≠ p.1 ∧ dist p.1 p.2 ≤ 2 * h0 then lmfun (radV {p.1, p.2}) else 0)]
+      try simp only []
+      refine p16_setSumCongr fun u hu => ?_
+      rw [← p16_setSum_filter hV2fin (fun v => v ≠ u ∧ dist u v ≤ 2 * h0)
+        (fun v => lmfun (radV {u, v}))]
+      have hveq : ({v : V3 | v ∈ V ∩ Metric.ball 0 (r + 2 * h0) ∧ v ≠ u ∧ dist u v ≤ 2 * h0})
+          = {v : V3 | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0} := by
+        ext v
+        simp only [Set.mem_setOf_eq, Set.mem_inter_iff]
+        constructor
+        · rintro ⟨⟨hV, _hB⟩, hQ⟩
+          exact ⟨hV, hQ⟩
+        · rintro ⟨hV, hQ⟩
+          obtain ⟨_hne, hd⟩ := hQ
+          have hb : v ∈ Metric.ball 0 (r + 2 * h0) := by
+            have ht : dist 0 v ≤ dist 0 u + dist u v := dist_triangle 0 u v
+            have hlt : dist u 0 < r := Metric.mem_ball.1 hu.2
+            have hc : dist u 0 = dist 0 u := dist_comm u 0
+            have hc2 : dist v 0 = dist 0 v := dist_comm v 0
+            exact Metric.mem_ball.2 (by linarith)
+          exact ⟨Set.mem_inter hV hb, _hne, hd⟩
+      rw [hveq]
+    have hfinalkey : 2 * setSum T2 (fun e => lmfun (radV e))
+        ≤ setSum V1 (fun u => setSum {v | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+          (fun v => lmfun (hl [u, v]))) := by
+      have hV2fin : (V ∩ Metric.ball 0 (r + 2 * h0)).Finite := hp.finite_inter_ball _
+      have hOPA : ({p : V3 × V3 | p.1 ∈ V1 ∧ p.2 ∈ V1 ∧ p.1 ≠ p.2 ∧
+          dist p.1 p.2 ≤ 2 * h0}).Finite :=
+        Set.Finite.subset (hV1fin.prod hV1fin) fun p hp => ⟨hp.1, hp.2.1⟩
+      have hOPB : OPB.Finite :=
+        Set.Finite.subset (hV1fin.prod hV2fin) fun p hp => by
+          have h1 : p.1 ∈ V1 := hp.1
+          have h2 : p.2 ∈ V := hp.2.1
+          have h3 : p.2 ≠ p.1 := hp.2.2.1
+          have h4 : dist p.1 p.2 ≤ 2 * h0 := hp.2.2.2
+          have hb : p.2 ∈ Metric.ball 0 (r + 2 * h0) := by
+            have ht : dist 0 p.2 ≤ dist 0 p.1 + dist p.1 p.2 := dist_triangle 0 p.1 p.2
+            have hlt : dist p.1 0 < r := Metric.mem_ball.1 h1.2
+            have hc : dist p.1 0 = dist 0 p.1 := dist_comm p.1 0
+            have hc2 : dist p.2 0 = dist 0 p.2 := dist_comm p.2 0
+            exact Metric.mem_ball.2 (by linarith)
+          exact ⟨h1, Set.mem_inter h2 hb⟩
+      rw [hT2def, ← SUM_PAIR_2_SET (fun e => lmfun (radV e)) V1 (2 * h0) hV1fin]
+      refine le_trans (p16_setSum_le_of_subset hOPA hOPB ?_
+        (fun p => lmfun (radV {p.1, p.2})) (fun p _ => lmfun_pos_le _)) ?_
+      · intro p hp
+        exact ⟨hp.1, hp.2.1.1, Ne.symm hp.2.2.1, hp.2.2.2⟩
+      · rw [hoprod]
+        exact p16_setSum_mono hV1fin _ _ fun u _ =>
+          le_of_eq (p16_setSumCongr (fun v _ => congrArg lmfun (p16_radV_pair u v)))
+    rw [zero_mul, add_zero, hmc1]
+    have hfinal := mul_le_mul_of_nonneg_left hfinalkey h8nn
+    exact le_trans hmc2 hfinal
+  · exact ⟨0, fun r hs' hp' _ => absurd ⟨hs', hp'⟩ hmain⟩
