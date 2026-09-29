@@ -1408,7 +1408,53 @@ appends `v` to the list. -/
 theorem VORONOI_LIST_INTER_BIS (V : Set V3) (ul : List V3) (v : V3) (h : V3) (t : List V3)
     (hsub : setOfList ul ⊆ V) (hv : v ∈ V) (hcons : ul = h :: t) :
     voronoiList V ul ∩ bis h v = voronoiList V (ul ++ [v]) := by
-  sorry
+  subst hcons
+  have hVh : h ∈ V := hsub (by simp [setOfList])
+  ext x
+  simp only [Set.mem_inter_iff, bis, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨hxl, hbis⟩
+    intro T hT
+    obtain ⟨w, hw, rfl⟩ := hT
+    intro z hz
+    have hw2 : w ∈ (h :: (t ++ [v]) : List V3) := hw
+    rcases List.mem_cons.1 hw2 with heq | hwt
+    · rw [heq]
+      have hm : h ∈ setOfList (h :: t) := by simp [setOfList]
+      exact hxl (voronoiClosed V h) ⟨h, hm, rfl⟩ z hz
+    · rcases List.mem_append.1 hwt with hw' | heq2
+      · have hm : w ∈ setOfList (h :: t) := by
+          simp only [setOfList, List.mem_cons]
+          exact Or.inr hw'
+        exact hxl (voronoiClosed V w) ⟨w, hm, rfl⟩ z hz
+      · rw [List.mem_singleton.1 heq2, ← hbis]
+        have hm : h ∈ setOfList (h :: t) := by simp [setOfList]
+        exact hxl (voronoiClosed V h) ⟨h, hm, rfl⟩ z hz
+  · rintro hxm
+    refine ⟨?_, ?_⟩
+    · intro T hT
+      obtain ⟨w, hw, rfl⟩ := hT
+      intro z hz
+      have hw2 : w ∈ (h :: t : List V3) := hw
+      rcases List.mem_cons.1 hw2 with heq | hw'
+      · rw [heq]
+        have hm : h ∈ setOfList (h :: (t ++ [v])) := by
+          simp only [setOfList, List.mem_cons]
+          exact Or.inl rfl
+        exact hxm (voronoiClosed V h) ⟨h, hm, rfl⟩ z hz
+      · have hm : w ∈ setOfList (h :: (t ++ [v])) := by
+          simp only [setOfList, List.mem_cons, List.mem_append]
+          exact Or.inr (Or.inl hw')
+        exact hxm (voronoiClosed V w) ⟨w, hm, rfl⟩ z hz
+    · have hm1 : h ∈ setOfList (h :: (t ++ [v])) := by
+        simp only [setOfList, List.mem_cons]
+        exact Or.inl rfl
+      have hm2 : v ∈ setOfList (h :: (t ++ [v])) := by
+        simp only [setOfList, List.mem_cons, List.mem_append]
+        exact Or.inr (Or.inr (Or.inl rfl))
+      have h1 : dist x h ≤ dist x v := hxm (voronoiClosed V h) ⟨h, hm1, rfl⟩ v hv
+      have h2 : dist x v ≤ dist x h := hxm (voronoiClosed V v) ⟨v, hm2, rfl⟩ h hVh
+      exact le_antisymm h1 h2
 
 /-- pack3.hl:2145 `SUPSET_INTER`. -/
 theorem SUPSET_INTER (s t u : Set V3) (h1 : s ⊆ t) (h2 : s = u) : u = t ∩ u := by

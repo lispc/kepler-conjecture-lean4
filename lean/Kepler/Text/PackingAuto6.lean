@@ -810,13 +810,483 @@ theorem AFF_INTER_SUBSET_INTER_AFF (s t : Set V3) :
   exact ⟨SetLike.le_def.mp (affineSpan_mono ℝ Set.inter_subset_left) hx,
     SetLike.le_def.mp (affineSpan_mono ℝ Set.inter_subset_right) hx⟩
 
+/-- Dot product as ℝ-linear map (inline copy of the private `dotRight`). -/
+private def p6dot (a : V3) : V3 →ₗ[ℝ] ℝ where
+  toFun x := a ⬝ᵥ x
+  map_add' x y := by
+    show a.ofLp ⬝ᵥ (x.ofLp + y.ofLp) = a.ofLp ⬝ᵥ x.ofLp + a.ofLp ⬝ᵥ y.ofLp
+    exact dotProduct_add a.ofLp x.ofLp y.ofLp
+  map_smul' r x := by
+    show a.ofLp ⬝ᵥ (r • x.ofLp) = (RingHom.id ℝ) r • (a.ofLp ⬝ᵥ x.ofLp)
+    rw [dotProduct_smul]
+    simp
+
+private theorem p6dot_apply (a x : V3) : p6dot a x = a ⬝ᵥ x := rfl
+
+private theorem p6_dot_sub_r (a x y : V3) : (x - y) ⬝ᵥ a = x ⬝ᵥ a - y ⬝ᵥ a :=
+  sub_dotProduct x.ofLp y.ofLp a.ofLp
+
+private theorem p6_dot_sub_l (a x y : V3) : a ⬝ᵥ (x - y) = a ⬝ᵥ x - a ⬝ᵥ y :=
+  dotProduct_sub a.ofLp x.ofLp y.ofLp
+
+private theorem p6_dot_sub_l_vsub (a x y : V3) : a ⬝ᵥ (x -ᵥ y) = a ⬝ᵥ x - a ⬝ᵥ y :=
+  p6_dot_sub_l a x y
+
+private theorem p6_dot_add_l (a x y : V3) : a ⬝ᵥ (x + y) = a ⬝ᵥ x + a ⬝ᵥ y :=
+  dotProduct_add a.ofLp x.ofLp y.ofLp
+
+private theorem p6_dot_smul_l (a x : V3) (r : ℝ) : a ⬝ᵥ (r • x) = r * (a ⬝ᵥ x) := by
+  show a.ofLp ⬝ᵥ (r • x.ofLp) = r * (a.ofLp ⬝ᵥ x.ofLp)
+  rw [dotProduct_smul]; simp
+
+private theorem p6_dot_smul_r (a x : V3) (r : ℝ) : (r • a) ⬝ᵥ x = r * (a ⬝ᵥ x) := by
+  show (r • a).ofLp ⬝ᵥ x.ofLp = r * (a.ofLp ⬝ᵥ x.ofLp)
+  rw [WithLp.ofLp_smul, dotProduct_comm, dotProduct_smul, dotProduct_comm]; simp
+
+/-- Squared-distance expansion. -/
+private theorem p6_dot_expand (x z : V3) :
+    (x - z) ⬝ᵥ (x - z) = x ⬝ᵥ x - 2 * (x ⬝ᵥ z) + z ⬝ᵥ z := by
+  have h1 : (x - z) ⬝ᵥ (x - z) = (x - z) ⬝ᵥ x - (x - z) ⬝ᵥ z :=
+    dotProduct_sub (x - z).ofLp x.ofLp z.ofLp
+  have h2 : (x - z) ⬝ᵥ x = x ⬝ᵥ x - z ⬝ᵥ x :=
+    sub_dotProduct x.ofLp z.ofLp x.ofLp
+  have h3 : (x - z) ⬝ᵥ z = x ⬝ᵥ z - z ⬝ᵥ z :=
+    sub_dotProduct x.ofLp z.ofLp z.ofLp
+  calc (x - z) ⬝ᵥ (x - z) = (x - z) ⬝ᵥ x - (x - z) ⬝ᵥ z := h1
+    _ = (x ⬝ᵥ x - z ⬝ᵥ x) - (x ⬝ᵥ z - z ⬝ᵥ z) := by rw [h2, h3]
+    _ = x ⬝ᵥ x - 2 * (x ⬝ᵥ z) + z ⬝ᵥ z := by rw [dotProduct_comm z x]; ring
+
+/-- `bis u v` in hyperplane form (HOL `BIS_EQ_HYPERPLANE`). -/
+private theorem p6_bis_dot (p q x : V3) :
+    x ∈ bis p q ↔ 2 * ((q - p) ⬝ᵥ x) = q ⬝ᵥ q - p ⬝ᵥ p := by
+  have hsq : dist x p ^ 2 = x ⬝ᵥ x - 2 * (x ⬝ᵥ p) + p ⬝ᵥ p := by
+    show ‖x - p‖ ^ 2 = x ⬝ᵥ x - 2 * (x ⬝ᵥ p) + p ⬝ᵥ p
+    rw [norm_sq_eq_dot]
+    exact p6_dot_expand x p
+  have hsq2 : dist x q ^ 2 = x ⬝ᵥ x - 2 * (x ⬝ᵥ q) + q ⬝ᵥ q := by
+    show ‖x - q‖ ^ 2 = x ⬝ᵥ x - 2 * (x ⬝ᵥ q) + q ⬝ᵥ q
+    rw [norm_sq_eq_dot]
+    exact p6_dot_expand x q
+  have hsub : 2 * ((q - p) ⬝ᵥ x) = 2 * (x ⬝ᵥ q) - 2 * (x ⬝ᵥ p) := by
+    rw [p6_dot_sub_r, dotProduct_comm q x, dotProduct_comm p x]
+    ring
+  constructor
+  · intro h
+    have hd : dist x p = dist x q := h
+    have h2 : dist x p ^ 2 = dist x q ^ 2 := by rw [hd]
+    rw [hsq, hsq2] at h2
+    rw [hsub]
+    linarith
+  · intro h
+    show dist x p = dist x q
+    refine (sq_eq_sq₀ dist_nonneg dist_nonneg).mp ?_
+    rw [hsq, hsq2]
+    rw [hsub] at h
+    linarith
+
+/-- `bis u v` is affine (HOL `BIS_EQ_HYPERPLANE` + `AFFINE_HYPERPLANE`). -/
+private theorem p6_bis_affspan (p q : V3) :
+    (affineSpan ℝ (bis p q) : Set V3) = bis p q := by
+  by_cases hpq : p = q
+  · subst hpq
+    have hb : bis p p = Set.univ := by
+      ext x
+      simp [bis]
+    rw [hb, AffineSubspace.span_univ]
+    rfl
+  · have hcne : (2 : ℝ) • (q - p) ≠ 0 := by
+      intro h0
+      rcases smul_eq_zero.mp h0 with h2 | hqp
+      · norm_num at h2
+      · exact hpq (sub_eq_zero.mp hqp).symm
+    have hcc : ((2 : ℝ) • (q - p)) ⬝ᵥ ((2 : ℝ) • (q - p)) ≠ 0 := by
+      intro h
+      have hz := dotProduct_self_eq_zero.1 h
+      rw [WithLp.ofLp_eq_zero] at hz
+      exact hcne hz
+    have hcxdot : ∀ x : V3, ((2 : ℝ) • (q - p)) ⬝ᵥ x = 2 * ((q - p) ⬝ᵥ x) :=
+      fun x => p6_dot_smul_r (q - p) x 2
+    set c : V3 := (2 : ℝ) • (q - p) with hcdef
+    set x0 : V3 := ((q ⬝ᵥ q - p ⬝ᵥ p) / (c ⬝ᵥ c)) • c with hx0def
+    have hx0 : c ⬝ᵥ x0 = q ⬝ᵥ q - p ⬝ᵥ p := by
+      have h1 : c ⬝ᵥ x0 = ((q ⬝ᵥ q - p ⬝ᵥ p) / (c ⬝ᵥ c)) * (c ⬝ᵥ c) :=
+        p6_dot_smul_l c c ((q ⬝ᵥ q - p ⬝ᵥ p) / (c ⬝ᵥ c))
+      rw [h1]
+      exact div_mul_cancel₀ _ hcc
+    have hmem : ∀ x : V3, x ∈ bis p q ↔
+        x -ᵥ x0 ∈ LinearMap.ker (p6dot c) := by
+      intro x
+      rw [p6_bis_dot, LinearMap.mem_ker, p6dot_apply]
+      constructor
+      · intro h
+        rw [p6_dot_sub_l_vsub, hx0, sub_eq_zero, hcxdot x]
+        exact h
+      · intro h
+        rw [p6_dot_sub_l_vsub] at h
+        rw [hx0] at h
+        rw [sub_eq_zero] at h
+        rw [hcxdot x] at h
+        exact h
+    have hW : bis p q = ↑(AffineSubspace.mk' x0 (LinearMap.ker (p6dot c))) := by
+      ext x
+      rw [hmem x, SetLike.mem_coe, AffineSubspace.mem_mk']
+    rw [hW, AffineSubspace.affineSpan_coe]
+
+/-- `affDim` of an affine hull (HOL `AFF_DIM_AFFINE_HULL`). -/
+private theorem p6_affDim_affineSpan (s : Set V3) :
+    affDim ((affineSpan ℝ s : Set V3)) = affDim s := by
+  rcases s.eq_empty_or_nonempty with hs | hs
+  · rw [hs, affDim_empty, AffineSubspace.span_empty, AffineSubspace.bot_coe, affDim_empty]
+  · have hne : s ≠ ∅ := Set.nonempty_iff_ne_empty.mp hs
+    have hne2 : (affineSpan ℝ s : Set V3) ≠ ∅ := by
+      intro h0
+      exact hne (Set.subset_empty_iff.1 (h0 ▸ subset_affineSpan ℝ s))
+    simp only [affDim, if_neg hne, if_neg hne2]
+    rw [← AffineSubspace.direction_eq_vectorSpan (affineSpan ℝ s), direction_affineSpan]
+
+/-- Equal affine dimension inside an affine set forces equal affine hulls
+(HOL `AFF_DIM_EQ_AFFINE_HULL`). -/
+private theorem p6_affspan_eq_of_dim (s t : Set V3) (hs : s.Nonempty) (hsub : s ⊆ t)
+    (ht : (affineSpan ℝ t : Set V3) = t) (hd : affDim s = affDim t) :
+    (affineSpan ℝ s : Set V3) = t := by
+  have hle : affineSpan ℝ s ≤ affineSpan ℝ t := by
+    refine affineSpan_le.2 ?_
+    intro x hx
+    have hxt : x ∈ t := hsub hx
+    rw [← ht] at hxt
+    exact hxt
+  have hdirs : (affineSpan ℝ s).direction = (affineSpan ℝ t).direction := by
+    rw [direction_affineSpan, direction_affineSpan]
+    have hmono : vectorSpan ℝ s ≤ vectorSpan ℝ t := vectorSpan_mono (k := ℝ) hsub
+    have hfr : Module.finrank ℝ (vectorSpan ℝ t) ≤ Module.finrank ℝ (vectorSpan ℝ s) := by
+      have h1 := hd
+      simp only [affDim, if_neg (Set.nonempty_iff_ne_empty.mp hs),
+        if_neg (Set.nonempty_iff_ne_empty.mp (hs.mono hsub))] at h1
+      exact (Nat.cast_injective h1).ge
+    exact Submodule.eq_of_le_of_finrank_le hmono hfr
+  have hnon : (affineSpan ℝ s : Set V3).Nonempty := by
+    rcases hs with ⟨p0, hp0⟩
+    exact ⟨p0, subset_affineSpan ℝ s hp0⟩
+  have hEq : affineSpan ℝ s = affineSpan ℝ t :=
+    AffineSubspace.eq_of_direction_eq_of_nonempty_of_le hdirs hnon hle
+  rw [hEq]
+  exact ht
+
+/-- Codimension-one slice: an affine set cut by a hyperplane it does not
+fill, along a nonempty piece, loses one dimension (HOL
+`AFF_DIM_AFFINE_INTER_HYPERPLANE` special case). Here the hyperplane is
+given as `H` with an explicit nontrivial functional. -/
+private theorem p6_affDim_inter_hyper (A H : Set V3) (c : V3) (d : ℝ)
+    (hHmem : ∀ x : V3, x ∈ H ↔ c ⬝ᵥ x = d)
+    (hcne : c ≠ 0)
+    (hA : (affineSpan ℝ A : Set V3) = A) (hIntNe : (A ∩ H).Nonempty)
+    (hnot : ¬ A ⊆ H) :
+    affDim (A ∩ H) = affDim A - 1 := by
+  classical
+  have hIntNe' := hIntNe
+  have hH : ∀ x : V3, x ∈ H ↔ c ⬝ᵥ x = (d : ℝ) := hHmem
+  obtain ⟨p0, hp0A, hp0H⟩ := hIntNe
+  have hp0H' : c ⬝ᵥ p0 = d := (hH p0).1 hp0H
+  obtain ⟨z, hzA, hzH⟩ := Set.not_subset.mp hnot
+  have hz' : c ⬝ᵥ z ≠ d := fun h => hzH ((hH z).2 h)
+  have hfune : ∃ u ∈ vectorSpan ℝ A, c ⬝ᵥ u ≠ 0 := by
+    by_contra hall
+    push_neg at hall
+    have hthis : c ⬝ᵥ (z - p0) = 0 := hall _ (by
+      rw [vectorSpan_def]
+      exact Submodule.subset_span (Set.mem_vsub.2 ⟨z, hzA, p0, hp0A, rfl⟩))
+    have hsub0 : c ⬝ᵥ z - c ⬝ᵥ p0 = 0 := Eq.trans (p6_dot_sub_l c z p0).symm hthis
+    have hz2 : c ⬝ᵥ z = c ⬝ᵥ p0 := by linarith
+    rw [hz2] at hz'
+    exact hz' hp0H'
+  obtain ⟨u, huD, hu0⟩ := hfune
+  set K : Submodule ℝ V3 := vectorSpan ℝ (A ∩ H) with hKdef
+  have hKkerle : vectorSpan ℝ (A ∩ H) ≤ LinearMap.ker (p6dot c) := by
+    rw [vectorSpan_def, Submodule.span_le]
+    intro g hg
+    obtain ⟨x, hx, y, hy, rfl⟩ := Set.mem_vsub.1 hg
+    rw [SetLike.mem_coe, LinearMap.mem_ker, p6dot_apply]
+    exact Eq.trans (p6_dot_sub_l_vsub c x y)
+      (by rw [(hH x).1 hx.2, (hH y).1 hy.2, sub_self])
+  have hKle : K ≤ vectorSpan ℝ A := vectorSpan_mono (k := ℝ) Set.inter_subset_left
+  have hkerD : ∀ w ∈ vectorSpan ℝ A, c ⬝ᵥ w = 0 → w ∈ K := by
+    intro w hwD hw0
+    have hp0aff : p0 ∈ (affineSpan ℝ A : Set V3) := subset_affineSpan ℝ A hp0A
+    have hwdir : w ∈ (affineSpan ℝ A).direction := by
+      rw [direction_affineSpan]; exact hwD
+    have hmemA : w +ᵥ p0 ∈ (affineSpan ℝ A : Set V3) :=
+      AffineSubspace.vadd_mem_of_mem_direction hwdir hp0aff
+    have hmemH : c ⬝ᵥ (w +ᵥ p0) = d := by
+      have h1 : (w +ᵥ p0 : V3) = p0 + w := by rw [vadd_eq_add, add_comm]
+      have h2 : c ⬝ᵥ (w +ᵥ p0) = c ⬝ᵥ p0 + c ⬝ᵥ w := by rw [h1]; exact p6_dot_add_l c p0 w
+      rw [h2, hp0H', hw0, add_zero]
+    have hmem : w +ᵥ p0 ∈ A ∩ H :=
+      ⟨hA ▸ hmemA, (hH _).2 hmemH⟩
+    have hp0mem : p0 ∈ A ∩ H := ⟨hp0A, hp0H⟩
+    rw [hKdef, vectorSpan_def]
+    refine Submodule.subset_span (Set.mem_vsub.2 ⟨w +ᵥ p0, hmem, p0, hp0mem, ?_⟩)
+    have hvsub : ((w +ᵥ p0 : V3) -ᵥ p0) = w := by simp
+    exact hvsub
+  have hsup : vectorSpan ℝ A = K ⊔ Submodule.span ℝ {u} := by
+    have h1 : K ⊔ Submodule.span ℝ {u} ≤ vectorSpan ℝ A := by
+      intro w hw
+      rcases Submodule.mem_sup.1 hw with ⟨a, ha, b, hb, hab⟩
+      have haD : a ∈ vectorSpan ℝ A := hKle ha
+      have hbD : b ∈ vectorSpan ℝ A := by
+        have hsb : Submodule.span ℝ {u} ≤ vectorSpan ℝ A := Submodule.span_le.2
+          (Set.singleton_subset_iff.2 huD)
+        exact hsb hb
+      rw [← hab]
+      exact add_mem haD hbD
+    have h2 : vectorSpan ℝ A ≤ K ⊔ Submodule.span ℝ {u} := by
+      intro w hwD
+      by_cases hw0 : c ⬝ᵥ w = 0
+      · exact Submodule.mem_sup.2 ⟨w, hkerD w hwD hw0, 0, Submodule.zero_mem _, by rw [add_zero]⟩
+      · have hsm : (c ⬝ᵥ w / c ⬝ᵥ u) • u ∈ vectorSpan ℝ A := Submodule.smul_mem _ _ huD
+        have hwm : w - (c ⬝ᵥ w / c ⬝ᵥ u) • u ∈ vectorSpan ℝ A :=
+          add_mem hwD (neg_mem hsm)
+        refine Submodule.mem_sup.2 ⟨w - (c ⬝ᵥ w / c ⬝ᵥ u) • u, hkerD _ hwm ?_,
+          (c ⬝ᵥ w / c ⬝ᵥ u) • u, Submodule.mem_span_singleton.2 ⟨_, rfl⟩, by
+            rw [sub_add_cancel]⟩
+        · calc c ⬝ᵥ (w - (c ⬝ᵥ w / c ⬝ᵥ u) • u)
+              = c ⬝ᵥ w - c ⬝ᵥ ((c ⬝ᵥ w / c ⬝ᵥ u) • u) := p6_dot_sub_l c w _
+            _ = c ⬝ᵥ w - (c ⬝ᵥ w / c ⬝ᵥ u) * (c ⬝ᵥ u) := by rw [p6_dot_smul_l]
+            _ = 0 := by
+                rw [div_mul_cancel₀ _ hu0]
+                ring
+    exact le_antisymm h2 h1
+  have hinf : K ⊓ Submodule.span ℝ {u} = ⊥ := by
+    rw [Submodule.eq_bot_iff]
+    intro w hw
+    have hwK : w ∈ K := (Submodule.mem_inf.1 hw).1
+    have hwS := (Submodule.mem_inf.1 hw).2
+    obtain ⟨s, rfl⟩ := Submodule.mem_span_singleton.1 hwS
+    have h1 : c ⬝ᵥ (s • u) = 0 := by
+      have hk := hKkerle hwK
+      rw [LinearMap.mem_ker, p6dot_apply] at hk
+      exact hk
+    rw [p6_dot_smul_l] at h1
+    rcases mul_eq_zero.mp h1 with h | h
+    · rw [h]; simp
+    · exact absurd h hu0
+  have hune : u ≠ 0 := by
+    intro h
+    apply hu0
+    rw [h]
+    simp
+  have hfr : Module.finrank ℝ K + 1 = Module.finrank ℝ (vectorSpan ℝ A) := by
+    have h2 := Submodule.finrank_sup_add_finrank_inf_eq K (Submodule.span ℝ {u})
+    rw [hinf, finrank_bot] at h2
+    have h3 : Module.finrank ℝ (Submodule.span ℝ {u}) = 1 := finrank_span_singleton hune
+    rw [h3] at h2
+    rw [hsup]
+    omega
+  rcases hIntNe' with ⟨q0, hq0⟩
+  have hne' : A ∩ H ≠ ∅ := Set.nonempty_iff_ne_empty.mp ⟨q0, hq0⟩
+  have hneA' : A ≠ ∅ := fun h0 => hne' (by rw [h0]; simp)
+  simp only [affDim, if_neg hne', if_neg hneA']
+  rw [<- hKdef]
+  have hfr'' : (Module.finrank ℝ K : ℤ) + 1
+      = (Module.finrank ℝ (vectorSpan ℝ A) : ℤ) := by
+    exact_mod_cast hfr
+  linarith
+
+/-- The affine hull of an affine set cut by the coe of an affine
+subspace is that intersection. -/
+private theorem p6_affspan_inter_coe (s : Set V3) (W : AffineSubspace ℝ V3)
+    (hs : (affineSpan ℝ s : Set V3) = s) :
+    (affineSpan ℝ (s ∩ (↑W : Set V3)) : Set V3) = s ∩ (↑W : Set V3) := by
+  refine le_antisymm ?_ (subset_affineSpan ℝ _)
+  intro x hx
+  refine ⟨?_, ?_⟩
+  · have h1 : (affineSpan ℝ (s ∩ (↑W : Set V3)) : AffineSubspace ℝ V3)
+        ≤ affineSpan ℝ s := affineSpan_mono ℝ Set.inter_subset_left
+    have hx1 : x ∈ (affineSpan ℝ s : Set V3) := (AffineSubspace.le_def _ _).mp h1 hx
+    rw [hs] at hx1
+    exact hx1
+  · have h2 : (affineSpan ℝ (s ∩ (↑W : Set V3)) : AffineSubspace ℝ V3) ≤ W := by
+      refine le_trans (affineSpan_mono ℝ Set.inter_subset_right) ?_
+      exact (AffineSubspace.affineSpan_coe W).le
+    exact (AffineSubspace.le_def _ _).mp h2 hx
+
+/-- The hyperplane-intersection fact for a bisector (bridges `p6_bis_dot`
+to `p6_affDim_inter_hyper`). -/
+private theorem p6_affDim_inter_bis (A : Set V3) (p q : V3)
+    (hA : (affineSpan ℝ A : Set V3) = A) (hIntNe : (A ∩ bis p q).Nonempty)
+    (hnot : ¬ A ⊆ bis p q) :
+    affDim (A ∩ bis p q) = affDim A - 1 := by
+  have hcxdot : ∀ x : V3, ((2 : ℝ) • (q - p)) ⬝ᵥ x = 2 * ((q - p) ⬝ᵥ x) :=
+    fun x => p6_dot_smul_r (q - p) x 2
+  refine p6_affDim_inter_hyper A (bis p q) ((2 : ℝ) • (q - p))
+    (q ⬝ᵥ q - p ⬝ᵥ p) (fun x => ?_) ?_ hA hIntNe hnot
+  · rw [p6_bis_dot, hcxdot x]
+  · intro h0
+    apply hnot
+    rw [(smul_eq_zero.mp h0).elim (fun h2 => absurd h2 (by norm_num))
+      (fun hqp => sub_eq_zero.mp hqp)]
+    intro x _
+    exact rfl
+
 /-- Rogers.hl:4053 `MHFTTZN_lemma`. -/
 theorem MHFTTZN_lemma (V : Set V3) (ul : List V3) (k : ℕ) (hP : Packing V)
     (hbar : barV V k ul) :
     (affineSpan ℝ (voronoiList V ul) : Set V3) =
       ⋂₀ {bis (hdV ul) u | u ∈ setOfList ul} := by
-  sorry
 
+  revert ul
+  induction k with
+  | zero =>
+    intro ul hbar
+    have h1 := hbar.1
+    have hVh : hdV ul ∈ V := BARV_SUBSET V 0 ul hbar (HD_IN_SET_OF_LIST ul (by omega))
+    have hball : Metric.ball (hdV [hdV ul]) 1 ⊆ voronoiClosed V (hdV [hdV ul]) := by
+      intro x hx w hw
+      rcases eq_or_ne w (hdV [hdV ul]) with rfl | hne
+      · exact le_refl _
+      · have hge : 2 ≤ dist w (hdV [hdV ul]) := by
+          by_contra hc
+          exact hne ((packing_lt V).mp hP w (hdV [hdV ul]) hw hVh (not_le.1 hc))
+        have hlt : dist x (hdV [hdV ul]) < 1 := Metric.mem_ball.1 hx
+        have htri : dist w (hdV [hdV ul]) ≤ dist w x + dist x (hdV [hdV ul]) :=
+          dist_triangle w x (hdV [hdV ul])
+        have hcomm : dist w x = dist x w := dist_comm w x
+        linarith
+    have hLHS : (affineSpan ℝ (voronoiList V [hdV ul]) : Set V3) = Set.univ := by
+      have htop := CONTAINS_BALL_AFFINE_HULL (voronoiClosed V (hdV ul)) (hdV ul) 1 one_pos hball
+      rw [VORONOI_LIST_SING, htop, AffineSubspace.top_coe]
+    have hRHS : (⋂₀ {bis (hdV [hdV ul]) u | u ∈ setOfList [hdV ul]} : Set V3) = Set.univ := by
+      have hset : setOfList [hdV ul] = ({hdV ul} : Set V3) := by simp [setOfList]
+      rw [hset]
+      have himg : {bis (hdV [hdV ul]) u | u ∈ ({hdV ul} : Set V3)}
+          = {bis (hdV [hdV ul]) (hdV ul)} := by
+        ext T
+        simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+        constructor
+        · rintro ⟨u, rfl, rfl⟩
+          rfl
+        · intro h
+          exact ⟨hdV ul, rfl, h.symm⟩
+      rw [himg, Set.sInter_singleton]
+      ext x
+      simp [bis, hdV]
+    rw [LENGTH_1_LEMMA ul h1, hLHS, hRHS]
+  | succ k ih =>
+    intro ul hbar
+    have hkle : k + 1 ≤ 3 := BARV_IMP_K_LE_3 V ul (k + 1) hbar
+    have hlen : ul.length = k + 1 + 1 := hbar.1
+    have h2le : 2 ≤ ul.length := by omega
+    have htr : truncateSimplex k ul = ul.dropLast := by
+      have h := TRUNCATE_SIMPLEX_EQ_BUTLAST ul h2le
+      rwa [show ul.length - 2 = k from by omega] at h
+    have hbarv : barV V k (truncateSimplex k ul) :=
+      TRUNCATE_SIMPLEX_BARV V k (k + 1) ul hbar (by omega)
+    have hbarvl : barV V k ul.dropLast := htr ▸ hbarv
+    have hhdv : hdV ul.dropLast = hdV ul := by
+      rw [← htr]
+      exact HD_TRUNCATE_SIMPLEX ul k (by omega)
+    have ihvl := ih ul.dropLast hbarvl
+    rw [hhdv] at ihvl
+    have hlt : ul.length - 1 < ul.length := by omega
+    have hlast : elV ul (ul.length - 1) ∈ setOfList ul := by
+      have h1 : elV ul (ul.length - 1) = ul[ul.length - 1] :=
+        List.getD_eq_getElem (l := ul) (0:V3) hlt
+      have h2 : ul[ul.length - 1] ∈ ul := List.getElem_mem hlt
+      rw [h1]
+      exact h2
+    have hlastV : elV ul (ul.length - 1) ∈ V := BARV_SUBSET V (k + 1) ul hbar hlast
+    have happend : ul = ul.dropLast ++ [elV ul (ul.length - 1)] := by
+      have hLE := LIST_EQ_TRUNCATE_SIMPLEX_APPEND_LAST ul h2le
+      rw [show ul.length - 2 = k from by omega, htr] at hLE
+      exact hLE
+    have hdl1 : 1 ≤ ul.dropLast.length := by
+      have hbl := LENGTH_BUTLAST ul (by omega)
+      omega
+    obtain ⟨h0, tl0, hcons0⟩ := LENGTH_IMP_CONS ul.dropLast hdl1
+    have hh0 : h0 = hdV ul.dropLast := by rw [hcons0]; simp [hdV]
+    have hB1 := VORONOI_LIST_INTER_BIS V ul.dropLast (elV ul (ul.length - 1)) h0 tl0
+      (BARV_SUBSET V k ul.dropLast hbarvl) hlastV hcons0
+    rw [hh0, hhdv] at hB1
+    have hB1' : voronoiList V ul.dropLast ∩ bis (hdV ul) (elV ul (ul.length - 1))
+        = voronoiList V ul := by
+      rw [hB1]
+      conv_rhs => rw [happend]
+    have hsetsplit : setOfList ul
+        = insert (elV ul (ul.length - 1)) (setOfList ul.dropLast) := by
+      conv_lhs => rw [happend]
+      ext x
+      simp only [setOfList, Set.mem_setOf_eq, List.mem_append, List.mem_singleton,
+        Set.mem_insert_iff]
+      tauto
+    have himg : {bis (hdV ul) u | u ∈ insert (elV ul (ul.length - 1)) (setOfList ul.dropLast)}
+        = insert (bis (hdV ul) (elV ul (ul.length - 1)))
+            {bis (hdV ul) u | u ∈ setOfList ul.dropLast} := by
+      ext T
+      simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff, Set.mem_image]
+      constructor
+      · rintro ⟨u, (rfl | hu), rfl⟩
+        · exact Or.inl rfl
+        · exact Or.inr ⟨u, hu, rfl⟩
+      · rintro (rfl | ⟨u, hu, rfl⟩)
+        · exact ⟨elV ul (ul.length - 1), Or.inl rfl, rfl⟩
+        · exact ⟨u, Or.inr hu, rfl⟩
+    set A0 := (affineSpan ℝ (voronoiList V ul.dropLast) : Set V3) with hA0def
+    rw [← hB1', hsetsplit, himg, Set.sInter_insert]
+    by_cases hcase : A0 ⊆ bis (hdV ul) (elV ul (ul.length - 1))
+    · have hveq : voronoiList V ul.dropLast ∩ bis (hdV ul) (elV ul (ul.length - 1))
+          = voronoiList V ul.dropLast :=
+        Set.inter_eq_self_of_subset_left (fun x hx => hcase (subset_affineSpan ℝ _ hx))
+      have hsub2 : ⋂₀ {bis (hdV ul) u | u ∈ setOfList ul.dropLast}
+          ⊆ bis (hdV ul) (elV ul (ul.length - 1)) := by
+        intro x hx
+        refine hcase ?_
+        rw [ihvl]
+        exact hx
+      rw [hveq, ← hA0def, ihvl, Set.inter_comm, Set.inter_eq_self_of_subset_left hsub2]
+    · have hsubA1 : voronoiList V ul.dropLast ∩ bis (hdV ul) (elV ul (ul.length - 1))
+          ⊆ A0 ∩ bis (hdV ul) (elV ul (ul.length - 1)) :=
+        Set.inter_subset_inter (fun x hx => subset_affineSpan ℝ _ hx) Subset.rfl
+      have hvne : (voronoiList V ul).Nonempty := by
+        by_contra h0
+        have h0' : voronoiList V ul = ∅ := Set.not_nonempty_iff_eq_empty.mp h0
+        have hdim := AFF_DIM_VORONOI_LIST V ul (k + 1) hbar
+        rw [h0', affDim_empty] at hdim
+        omega
+      have hvne2 : (voronoiList V ul.dropLast
+          ∩ bis (hdV ul) (elV ul (ul.length - 1))).Nonempty := by
+        rw [← hB1'] at hvne
+        exact hvne
+      have hIntNe : (A0 ∩ bis (hdV ul) (elV ul (ul.length - 1))).Nonempty :=
+        ⟨hvne2.choose, hsubA1 hvne2.choose_spec⟩
+      have hAaff : (affineSpan ℝ A0 : Set V3) = A0 := by
+        rw [hA0def, AffineSubspace.affineSpan_coe]
+      have hdimA0 : affDim A0 = 3 - k := by
+        rw [hA0def, p6_affDim_affineSpan]
+        exact AFF_DIM_VORONOI_LIST V ul.dropLast k hbarvl
+      have hdimA1 : affDim (A0 ∩ bis (hdV ul) (elV ul (ul.length - 1)))
+          = affDim (voronoiList V ul) := by
+        rw [p6_affDim_inter_bis A0 (hdV ul) (elV ul (ul.length - 1)) hAaff hIntNe hcase,
+          hdimA0, AFF_DIM_VORONOI_LIST V ul (k + 1) hbar]
+        omega
+      refine (p6_affspan_eq_of_dim
+        (voronoiList V ul.dropLast ∩ bis (hdV ul) (elV ul (ul.length - 1)))
+        (A0 ∩ bis (hdV ul) (elV ul (ul.length - 1))) hvne2 hsubA1 ?_ ?_).trans ?_
+      · rw [← p6_bis_affspan]
+        exact p6_affspan_inter_coe A0
+          (affineSpan ℝ (bis (hdV ul) (elV ul (ul.length - 1)))) hAaff
+      · rw [hB1', AFF_DIM_VORONOI_LIST V ul (k + 1) hbar,
+          p6_affDim_inter_bis A0 (hdV ul) (elV ul (ul.length - 1)) hAaff hIntNe hcase, hdimA0]
+        omega
+      · rw [ihvl, Set.inter_comm]
+
+
+-- NEEDS (2026-09-29 wave): ~520-HOL-line k-induction; a near-complete Lean
+-- proof (same induction: Part 1 via `p6_affDim_insert` + the hull-monotonicity
+-- contradiction through `MHFTTZN_lemma`/`VORONOI_LIST_INTER_BIS`, Part 2 via
+-- `p6_affdep_of_dim` + OAPVION1/2 + `p6_bis_dot` + vectorSpan-kernel closure)
+-- is worked out in the wave scratch (/tmp/mhft_test3.lean, imports this file;
+-- `test_MHFTTZN2` there has ~6 local errors left: wrapped-vs-distributed
+-- `⬝ᵥ`-ofLp rw-matching in `h4`/`hsubhull`/`hsplitA1` areas). Transplant from
+-- there and finish; do not re-derive from scratch.
 /-- Rogers.hl:4340 `MHFTTZN_lemma2`. -/
 theorem MHFTTZN_lemma2 (V : Set V3) (ul : List V3) (k : ℕ) (hP : Packing V)
     (hbar : barV V k ul) :
