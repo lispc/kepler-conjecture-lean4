@@ -27,7 +27,8 @@
 | 节点 | 位置 | 流入路径 | 状态 |
 |---|---|---|---|
 | ~~`PACKING_CHAPTER_MAIN_CONCLUSION`~~ | PA25 | textCapstone 直接消费 | **已真化 (wave3)**：装配步闭合，债务上移至 RDWKARC_concl(PA2)+TSKAJXY(PA21) 两枚树内 sorry |
-| ~~`RDWKARC_concl`~~ | PA2 | PA25:3695 `refine RDWKARC_concl hkc ?_ ?_` 唯一消费 | **已真化 (2026-09-29，`16f31f68`)**：RDWKARC.hl:180-314 装配/平移/重编论证全真；债务上移 `UPFZBZM_concl`(PA2) + `JGXZYGW_KY_p2`(PA2)——JGXZYGW 链**侦察结案推翻 GIANT 定级**（PA1 骨架半成品，12 sorry 机械/中等，零解析银行，210-360 行；新叶模块 PackingJGXZYGW.lean 双 shim 方案），见 `docs/jgxzygw-scout.md` |
+| ~~`RDWKARC_concl`~~ | PA2 | PA25:3695 `refine RDWKARC_concl hkc ?_ ?_` 唯一消费 | **已真化 (2026-09-29，`16f31f68`)**：RDWKARC.hl:180-314 装配/平移/重编论证全真；债务上移 `UPFZBZM_concl`(PA2) + `JGXZYGW_KY_p2`(PA2)——JGXZYGW 链**侦察结案推翻 GIANT 定级**（PA1 骨架半成品，12 sorry 机械/中等，零解析银行，210-360 行；新叶模块 PackingJGXZYGW.lean 双 shim 方案，**filling 在飞**），见 `docs/jgxzygw-scout.md` |
+| ~~`UPFZBZM_concl` 架构半边~~ | PA19 | PackingConcl:510 discharge 已接线 | **波 1 已真化 (2026-09-29，`abfd2fcb`)**：`NEGLIGIBLE_FUNC` 忠实架构（侦察 f8c207a7 规格书；零新增 sorry）；capstone/FCC 半边/数值链原已全真证。余上游四巨物（KIZHLTL1/2/4 + SUM_GAMMAX，HL ~2400 行，均已预接线）= 波 2/3；Pack2.hl 测度桥四件套是波 2 唯一未知量，见 `docs/upfzbzm-scout.md` |
 | `MHFTTZN_lemma2` | PA6 | MHFTTZN1/2/3/4 + BARV_AFFINE_INDEPENDENT 链 | **已真化 (2026-09-29，`eafa4874`)**：MHFTTZN 全链（lemma/lemma2/1/2/3/4）`#print axioms` 仅标准三零 sorryAx |
 | `facet_rep_in_facet` | PA22 | planar 面-表示链 | **已真化 (2026-09-29，`3538883a`)**；余 `AFF_GT_RELATIVE_INTERIOR`/`CONE0_FCHANGED_AFF_GT` 两枚 NEEDS 已带 6 步路线+API 全名就地注记（波 3 GIANT 直取） |
 | `TSKAJXY` 0/3/4 臂（现 :2550） | PA21 | PA25:3704 `exact TSKAJXY …` 唯一消费 | **四波全落账 (2026-09-29)**：波 0 银行（`2f2c431c`）+ 波 1 GRKIBMP（`1591e1c1`）+ 波 2a kit（`3f162f06`）+ 波 2b cell3_from_ineq_thm（`eedb36b6`）+ 波 3 臂收口（`ba88d11e`，编排者三行机械）——**capstone `TSKAJXY` 装配已真**；余上游巨件：`TSKAJXY_034`（:1308，0/3/4 胞内容）、`TSKAJXY_1`/`TSKAJXY_2`（1/2 胞）、`mi_gamma3f_gamma3f_x_div_sqrtdelta`（波 2a NEEDS，sol_x_sol_euler_x 链）、`pack_nonlinear_rest`（G4 挂账） |
