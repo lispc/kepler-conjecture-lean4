@@ -32,7 +32,8 @@ HOL sources (chapter Packing, VU KHAC KY):
 2. `SUM_GAMMAX_LMFUN_ESTIMATE_p19` (sum_gamma.hl:53-57 — parallel-owned
    PackingAuto18, NOT importable here: `_p19` copy + NEEDS).
 3. UPFZBZM.hl: `FCC_COMPATABILITY_FUNC` (proved), `NEGLIGIBLE_FUNC`
-   (GIANT, sorried), `UPFZBZM` (proved from parts 1-2).
+   (proved 2026-09-29 from the PA15/PA16/PA18 inputs below), `UPFZBZM`
+   (proved from parts 1-2).
 4. RDWKARC.hl: `JGXZYGW_p19` copy + `JGXZYGW_KY` (proved),
    `PACKING_SUBSET`/`PACKING_TRANS`/`SATURATED_TRANS`/`RADV_TRANS_EQ`
    (proved), `RDWKARC` (GIANT, sorried).
@@ -46,26 +47,29 @@ HOL sources (chapter Packing, VU KHAC KY):
 - `GOTCJAH` (fan solid-angle bound, pack_concl.hl:251) belongs to the
   polyhedron/fan lane and has no source in this lane's three files; NOT
   restated here.
-- Import policy: PackingAuto2 + PackingAuto12 + (2026-09-19) PackingAuto18 —
-  the PA18 olean has landed, so the SUM_GAMMAX `_p19` copy is now a shim to
-  it. The oleans of PackingAuto15/16 remain unbuilt in this checkout, and
-  nothing PROVED here needs them: `DIHX_POS` is proved directly from the
-  `dihX` case split via `DIHV_LE_0`, and the `KIZHLTL1/2/4` / `DIHX_RANGE` /
-  `BOUND_GAMMA_X_lmfun` statements of the Auto15/16 lanes enter only the
-  `NEGLIGIBLE_FUNC` fill-in architecture below. At merge time, import
-  PackingAuto15/16 and delete the `_p19` copies flagged below.
+- Import policy: PackingAuto2 + PackingAuto12 + PackingAuto15 + PackingAuto16 +
+  PackingAuto18 (2026-09-29: the PA15/PA16 oleans have landed, so the
+  `NEGLIGIBLE_FUNC` fill-in below imports `KIZHLTL1/2/4` (PA16) and
+  `FINITE_MCELL_SET_LEMMA` (PA15) directly; PA18 was already imported
+  2026-09-19 for the SUM_GAMMAX shim). `DIHX_POS` is still proved directly
+  from the `dihX` case split via `DIHV_LE_0` (no PA15 dependency). No import
+  cycle: PA15 ← PA2, 5-8, 10-13; PA16 ← PA2, 12; PA19 is consumed only by
+  PackingConcl.
 
 ## NEEDS (giant fill-in markers)
 
-- `NEGLIGIBLE_FUNC`: NEEDS KIZHLTL1 / KIZHLTL2 / KIZHLTL4 (PackingAuto16),
-  NEEDS SUM_GAMMAX_LMFUN_ESTIMATE (now SHIMMED to PackingAuto18 via import,
-  still `sorry`ed upstream there), NEEDS FINITE_MCELL_SET_LEMMA (PackingAuto15)
-  for the `T1 + T2 + T3 = sum B (gammaX V X lmfun)` regrouping
-  (SUM_ADD/SUB/LMUL over the finite cell family `B`), NEEDS FINITE_PACK_LEMMA
-  (`Packing3.KIUMVTC` — Kepler.Statement `Packing.finite_inter_ball` analog)
-  for the sums over `V ∩ ball 0 r`, NEEDS MEASURE_VORONOI_CLOSED_OPEN
-  (Pack2.hl, not on the Lean side) only to bridge KIZHLTL1's `voronoiOpenP16`
-  to `voronoiOpenP19` (identical bodies, delta at merge).
+- `NEGLIGIBLE_FUNC`: PROVED (2026-09-29, architecture fill). It consumes the
+  four upstream inputs — KIZHLTL1 / KIZHLTL2 / KIZHLTL4 (PackingAuto16, still
+  `sorry`ed there), SUM_GAMMAX_LMFUN_ESTIMATE (shimmed to PackingAuto18, still
+  `sorry`ed there) and FINITE_MCELL_SET_LEMMA (PackingAuto15, still `sorry`ed
+  there) for the `T1 + T2 + T3 = sum B (gammaX V X lmfun)` regrouping, plus
+  the PROVED `Kepler.Statement.Packing.finite_inter_ball` for the sums over
+  `V ∩ ball 0 r`. The KIZHLTL1 `voronoiOpenP16` → `voronoiOpenP19` bridge and
+  the `gammaX`/`KIZHLTL4` epsilon-guard alignment are handled inside the
+  fill-in (`p19_epsilon_pair`/`p19_inner_guard_congr` + a definitional
+  ascription of the KIZHLTL1 hypothesis); no MEASURE_VORONOI_CLOSED_OPEN
+  step is needed on the Lean side. The upstream four remain the chain's
+  open giants (Wave 2/3 lanes).
 - `SUM_GAMMAX_LMFUN_ESTIMATE_p19`: SHIMMED (2026-09-19) to
   `PackingAuto18.SUM_GAMMAX_LMFUN_ESTIMATE` (import added; upstream sorry
   remains in Auto18).
@@ -111,17 +115,22 @@ HOL sources (chapter Packing, VU KHAC KY):
   `lmfun (hl [0, v])` to the `V`-sum via `hl` translation invariance
   (`RADV_TRANS_EQ`, `hl [0, v] = hl [-u, v - u]`).
 
-Proof status (2026-09-19): the mechanical support chain, both UPFZBZM parts
-assembly (`UPFZBZM`), `FCC_COMPATABILITY_FUNC`, `JGXZYGW_KY`, the four
-RDWKARC translation lemmas and the two numerical Flyspeck-constants bounds
-(`tau0_gt_p19`, `mm2_gt_p19`, proved from Mathlib π-bounds + a certified
-Taylor bracket of `sin`) are proved here; `NEGLIGIBLE_FUNC`, `RDWKARC` and
-`JGXZYGW_p19` remain sorried giants; `SUM_GAMMAX_LMFUN_ESTIMATE_p19` is a
-documented shim to PackingAuto18's (still-sorried-upstream) capstone.
+Proof status (2026-09-29): the mechanical support chain, both UPFZBZM parts
+(`FCC_COMPATABILITY_FUNC` and `NEGLIGIBLE_FUNC` — the latter filled in
+2026-09-29 as the setSum-regrouping architecture consuming KIZHLTL1/2/4,
+SUM_GAMMAX_LMFUN_ESTIMATE and FINITE_MCELL_SET_LEMMA from the PA15/16/18
+oleans), the capstone `UPFZBZM`, `JGXZYGW_KY`, the four RDWKARC translation
+lemmas and the two numerical Flyspeck-constants bounds (`tau0_gt_p19`,
+`mm2_gt_p19`, proved from Mathlib π-bounds + a certified Taylor bracket of
+`sin`) are proved here; `RDWKARC` and `JGXZYGW_p19` remain the only sorried
+giants in this file; `SUM_GAMMAX_LMFUN_ESTIMATE_p19` is a documented shim to
+PackingAuto18's (still-sorried-upstream) capstone.
 -/
 
 import Kepler.Text.PackingAuto2
 import Kepler.Text.PackingAuto12
+import Kepler.Text.PackingAuto15
+import Kepler.Text.PackingAuto16
 import Kepler.Text.PackingAuto18
 import Mathlib
 
@@ -608,6 +617,125 @@ theorem FCC_COMPATABILITY_FUNC (V : Set V3) (hs : saturated V) (hp : Packing V)
     _ = volume.real (voronoiOpenP19 V v) +
         (-volume.real (voronoiOpenP19 V v) + 8 * mm1 - 8 * mm2 * S) := by ring
 
+/-! ### setSum rearrangement kit for the `NEGLIGIBLE_FUNC` body
+
+UPFZBZM.hl:113-220 runs the whole part-2 argument as `SUM_ADD`/`SUM_SUB`/
+`SUM_NEG`/`SUM_CONST`/`SUM_LMUL` re-indexings of HOL `sum` over the finite
+families `V ∩ ball (vec 0, r)` and `B = {X | X ⊆ ball (vec 0, r) ∧ mcell_set
+V X}`. The Lean `setSum` (junk 0 on infinite sets) supports the same
+algebra; `_p19`-private to avoid clashing with the parallel lanes
+(cf. PackingAuto2's private `setSumCongr_p2`). -/
+
+/-- Pointwise congruence of the summand (same junk-0 convention on both
+sides; pattern of PackingAuto2's private `setSumCongr_p2`). -/
+private theorem p19_setSumCongr {α : Type*} {s : Set α} {f g : α → ℝ}
+    (h : ∀ a ∈ s, f a = g a) : setSum s f = setSum s g := by
+  by_cases hs : Set.Finite s
+  · unfold setSum
+    rw [dif_pos hs, dif_pos hs]
+    exact Finset.sum_congr rfl fun a ha => h a (hs.mem_toFinset.mp ha)
+  · unfold setSum
+    rw [dif_neg hs, dif_neg hs]
+
+/-- HOL `SUM_ADD` in `setSum` form. -/
+private theorem p19_setSum_add {α : Type*} {s : Set α} (f g : α → ℝ) :
+    setSum s (fun a => f a + g a) = setSum s f + setSum s g := by
+  by_cases hs : Set.Finite s
+  · unfold setSum
+    rw [dif_pos hs, dif_pos hs, dif_pos hs]
+    exact Finset.sum_add_distrib
+  · unfold setSum
+    rw [dif_neg hs, dif_neg hs, dif_neg hs]
+    simp
+
+/-- HOL `SUM_SUB` in `setSum` form. -/
+private theorem p19_setSum_sub {α : Type*} {s : Set α} (f g : α → ℝ) :
+    setSum s (fun a => f a - g a) = setSum s f - setSum s g := by
+  by_cases hs : Set.Finite s
+  · unfold setSum
+    rw [dif_pos hs, dif_pos hs, dif_pos hs, Finset.sum_sub_distrib]
+  · unfold setSum
+    rw [dif_neg hs, dif_neg hs, dif_neg hs]
+    simp
+
+/-- HOL `SUM_NEG` in `setSum` form. -/
+private theorem p19_setSum_neg {α : Type*} {s : Set α} (f : α → ℝ) :
+    setSum s (fun a => -f a) = -setSum s f := by
+  by_cases hs : Set.Finite s
+  · unfold setSum
+    rw [dif_pos hs, dif_pos hs, Finset.sum_neg_distrib]
+  · unfold setSum
+    rw [dif_neg hs, dif_neg hs]
+    simp
+
+/-- HOL `SUM_LMUL` in `setSum` form. -/
+private theorem p19_setSum_smul {α : Type*} {s : Set α} (c : ℝ) (f : α → ℝ) :
+    setSum s (fun a => c * f a) = c * setSum s f := by
+  by_cases hs : Set.Finite s
+  · unfold setSum
+    rw [dif_pos hs, dif_pos hs]
+    exact (Finset.mul_sum _ _ _).symm
+  · unfold setSum
+    rw [dif_neg hs, dif_neg hs]
+    simp
+
+/-- HOL `SUM_CONST` in `setSum` form, folded into the `Nat.card` shape of
+`KIZHLTL2` (finiteness consumed from `Statement.Packing.finite_inter_ball`). -/
+private theorem p19_setSum_const {α : Type*} {s : Set α} (hs : s.Finite) (c : ℝ) :
+    setSum s (fun _ => c) = (Nat.card s : ℝ) * c := by
+  unfold setSum
+  rw [dif_pos hs, Finset.sum_const, nsmul_eq_mul]
+  simp [Nat.card_coe_set_eq, Set.ncard_eq_toFinset_card s hs]
+
+/-- The `T1 + T2 + T3 = Σ_B gammaX` regrouping core over the finite cell
+family `B` (finiteness is consumed exactly where the HL proof consumes
+`FINITE_MCELL_SET_LEMMA`, PackingAuto15). -/
+private theorem p19_setSum_split3 {s : Set (Set V3)} (hf : s.Finite)
+    (volF tsF inG : Set V3 → ℝ) (a b : ℝ) :
+    setSum s volF - a * setSum s tsF + b * setSum s inG
+      = setSum s (fun X => volF X - a * tsF X + b * inG X) := by
+  unfold setSum
+  rw [dif_pos hf, dif_pos hf, dif_pos hf, dif_pos hf,
+    Finset.sum_add_distrib, Finset.sum_sub_distrib]
+  have e1 : ∑ x ∈ hf.toFinset, a * tsF x = a * ∑ x ∈ hf.toFinset, tsF x :=
+    (Finset.mul_sum _ _ _).symm
+  have e2 : ∑ x ∈ hf.toFinset, b * inG x = b * ∑ x ∈ hf.toFinset, inG x :=
+    (Finset.mul_sum _ _ _).symm
+  rw [e1, e2]
+
+/-- The epsilon-fixed pair representation of an edge: if `e` is a two-point
+set `{u, v}` then `Classical.epsilon` returns a pair whose unordered pair is
+`e` (used to align the `gammaX` and `KIZHLTL4` guard encodings). -/
+private theorem p19_epsilon_pair {e : Set V3} (h : ∃ p : V3 × V3, e = {p.1, p.2}) :
+    {(Classical.epsilon fun w : V3 × V3 => e = {w.1, w.2}).1,
+      (Classical.epsilon fun w : V3 × V3 => e = {w.1, w.2}).2} = e :=
+  Eq.symm (Classical.epsilon_spec_aux (by infer_instance)
+    (fun w : V3 × V3 => e = {w.1, w.2}) h)
+
+/-- The two encodings of the cell-edge inner sum agree: `gammaX` (PA2:448)
+guards on `e ∈ edgeX V X` and then fixes the pair representation `q` of `e`
+by `Classical.epsilon`, while `KIZHLTL4` (PackingAuto16:310) fixes `q` first
+and guards on `{q.1, q.2} ∈ edgeX V X`. On the summation domain `edgeX V X`
+every `e` is a pair `{u, v}`, so the two guards coincide. -/
+private theorem p19_inner_guard_congr (V X : Set V3) :
+    setSum (edgeX V X) (fun e =>
+        if e ∈ edgeX V X then
+          let q := Classical.epsilon fun r : V3 × V3 => e = {r.1, r.2}
+          dihX V X (q.1, q.2) * lmfun (hl [q.1, q.2])
+        else 0)
+      = setSum (edgeX V X) (fun e =>
+          let q := Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}
+          if {q.1, q.2} ∈ edgeX V X then
+            dihX V X (q.1, q.2) * lmfun (hl [q.1, q.2])
+          else 0) := by
+  refine p19_setSumCongr (fun e he => ?_)
+  simp only [edgeX, Set.mem_setOf_eq] at he
+  obtain ⟨u, v, rfl, hu, hv, hne⟩ := he
+  have hmemUV : {u, v} ∈ edgeX V X := ⟨u, v, rfl, hu, hv, hne⟩
+  -- zeta-normalize the `let q := …` guard, then identify the epsilon pair
+  simp only []
+  rw [p19_epsilon_pair (e := {u, v}) ⟨(u, v), rfl⟩, if_pos hmemUV]
+
 /-- GIANT — HOL `NEGLIGIBLE_FUNC` (UPFZBZM.hl:66-220, part 2 of UPFZBZM):
 the same functional `G` has quadratic growth (`negligible_fun_0`). HL proof
 architecture: split `sum (V ∩ ball 0 r) G = sum f1 + sum f3 - sum f4`
@@ -628,7 +756,155 @@ theorem NEGLIGIBLE_FUNC (V : Set V3) (hs : saturated V) (hp : Packing V)
     (hG : G = fun u => -volume.real (voronoiOpenP19 V u) + 8 * mm1 -
       8 * mm2 * setSum {v | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
         (fun v => lmfun (hl [u, v]))) : negligibleFun0 G V := by
-  sorry
+  subst hG
+  rw [negligible_fun_any_C]
+  -- the four upstream inputs (KIZHLTL.hl ×3 + sum_gamma.hl)
+  obtain ⟨c, hc1⟩ := KIZHLTL1 V
+  obtain ⟨c', hc2⟩ := KIZHLTL2 V
+  obtain ⟨c'', hc3⟩ := KIZHLTL4 V
+  obtain ⟨c''', hc4⟩ := SUM_GAMMAX_LMFUN_ESTIMATE_p19 V
+  refine ⟨-c''' - c - c' - c'', fun r hr => ?_⟩
+  -- finiteness of the two summation families (HL FINITE_PACK_LEMMA via
+  -- `Statement.Packing.finite_inter_ball`, FINITE_MCELL_SET_LEMMA via PA15)
+  have hfinV : (V ∩ Metric.ball 0 r).Finite := hp.finite_inter_ball r
+  have hfinB : ({X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X}).Finite :=
+    FINITE_MCELL_SET_LEMMA V r hp hs
+  -- the three cell-family aggregates (HL abbreviations T1/T2/T3)
+  obtain ⟨T1, hT1⟩ : ∃ T : ℝ,
+      T = setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X} volume.real :=
+    ⟨_, rfl⟩
+  obtain ⟨T2, hT2⟩ : ∃ T : ℝ, T = -((2 * mm1 / Real.pi) *
+      setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X} (totalSolid V)) :=
+    ⟨_, rfl⟩
+  obtain ⟨T3, hT3⟩ : ∃ T : ℝ, T = (8 * mm2 / Real.pi) *
+      setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X}
+        (fun X : Set V3 => setSum (edgeX V X) fun e =>
+          let q := Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}
+          if {q.1, q.2} ∈ edgeX V X then
+            dihX V X (q.1, q.2) * lmfun (hl [q.1, q.2])
+          else 0) :=
+    ⟨_, rfl⟩
+  -- Σ_B gammaX unfolds to the vol / totalSolid / edge triple, with the
+  -- inner epsilon-guard aligned to KIZHLTL4's encoding
+  have hgam : setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X}
+      (fun X => gammaX V X lmfun)
+      = setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X} (fun X : Set V3 =>
+          volume.real X - (2 * mm1 / Real.pi) * totalSolid V X
+            + (8 * mm2 / Real.pi) * setSum (edgeX V X) fun e =>
+              let q := Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}
+              if {q.1, q.2} ∈ edgeX V X then
+                dihX V X (q.1, q.2) * lmfun (hl [q.1, q.2])
+              else 0) := by
+    refine p19_setSumCongr (fun X _ => ?_)
+    unfold gammaX
+    rw [p19_inner_guard_congr V X]
+  -- the `T1 + T2 + T3 = Σ_B gammaX` regrouping over the finite family B
+  have hsplitB : setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X} volume.real
+        - (2 * mm1 / Real.pi) *
+          setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X} (totalSolid V)
+        + (8 * mm2 / Real.pi) *
+          setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X}
+            (fun X : Set V3 => setSum (edgeX V X) fun e =>
+              let q := Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}
+              if {q.1, q.2} ∈ edgeX V X then
+                dihX V X (q.1, q.2) * lmfun (hl [q.1, q.2])
+              else 0)
+      = setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X} (fun X : Set V3 =>
+          volume.real X - (2 * mm1 / Real.pi) * totalSolid V X
+            + (8 * mm2 / Real.pi) * setSum (edgeX V X) fun e =>
+              let q := Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}
+              if {q.1, q.2} ∈ edgeX V X then
+                dihX V X (q.1, q.2) * lmfun (hl [q.1, q.2])
+              else 0) :=
+    p19_setSum_split3 hfinB volume.real (totalSolid V) (fun X : Set V3 =>
+      setSum (edgeX V X) fun e =>
+        let q := Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}
+        if {q.1, q.2} ∈ edgeX V X then
+          dihX V X (q.1, q.2) * lmfun (hl [q.1, q.2])
+        else 0) (2 * mm1 / Real.pi) (8 * mm2 / Real.pi)
+  have hregroup : T1 + T2 + T3
+      = setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X}
+          (fun X => gammaX V X lmfun) := by
+    linarith [hT1, hT2, hT3, hsplitB, hgam]
+  have hkey : c''' * r ^ 2 ≤ T1 + T2 + T3 := by
+    linarith [hc4 r hs hp hr hcc _hT, hregroup]
+  -- sum(V ∩ ball 0 r) G = sum f1 + sum f3 - sum f4 (HL f1/f2/f3/f4/f5 split)
+  have hsplit : setSum (V ∩ Metric.ball 0 r)
+        (fun u : V3 => -volume.real (voronoiOpenP19 V u) + 8 * mm1 -
+          8 * mm2 * setSum {v | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+            (fun v => lmfun (hl [u, v])))
+      = setSum (V ∩ Metric.ball 0 r)
+          (fun u : V3 => -volume.real (voronoiOpenP19 V u)) +
+        setSum (V ∩ Metric.ball 0 r) (fun u : V3 => 8 * mm1 -
+          8 * mm2 * setSum {v | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+            (fun v => lmfun (hl [u, v]))) := by
+    have hre : setSum (V ∩ Metric.ball 0 r)
+        (fun u : V3 => -volume.real (voronoiOpenP19 V u) + 8 * mm1 -
+          8 * mm2 * setSum {v | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+            (fun v => lmfun (hl [u, v])))
+        = setSum (V ∩ Metric.ball 0 r) (fun u : V3 =>
+            -volume.real (voronoiOpenP19 V u) +
+              (8 * mm1 - 8 * mm2 * setSum {v | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+                (fun v => lmfun (hl [u, v])))) :=
+      p19_setSumCongr (fun u _ => by ring)
+    rw [hre, p19_setSum_add]
+  have hsplit2 : setSum (V ∩ Metric.ball 0 r) (fun u : V3 => 8 * mm1 -
+        8 * mm2 * setSum {v | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+          (fun v => lmfun (hl [u, v])))
+      = setSum (V ∩ Metric.ball 0 r) (fun _ : V3 => (8 : ℝ) * mm1)
+        - 8 * mm2 * setSum (V ∩ Metric.ball 0 r) (fun u : V3 =>
+            setSum {v | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+              (fun v => lmfun (hl [u, v]))) := by
+    rw [p19_setSum_sub, p19_setSum_smul (8 * mm2) (fun u : V3 =>
+      setSum {v | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0} (fun v => lmfun (hl [u, v])))]
+  -- bound sum f1 by KIZHLTL1 (voronoiOpenP16 summand is definitionally the
+  -- voronoiOpenP19 one, so the ascribed statement type-checks verbatim)
+  have hb1 : setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X} volume.real
+        + c * r ^ 2
+      ≤ setSum (V ∩ Metric.ball 0 r)
+          (fun u : V3 => volume.real (voronoiOpenP19 V u)) :=
+    hc1 r hs hp hr
+  have hneg1 : setSum (V ∩ Metric.ball 0 r)
+      (fun u : V3 => -volume.real (voronoiOpenP19 V u))
+      = -setSum (V ∩ Metric.ball 0 r)
+          (fun u : V3 => volume.real (voronoiOpenP19 V u)) :=
+    p19_setSum_neg _
+  have hb1' : setSum (V ∩ Metric.ball 0 r)
+      (fun u : V3 => -volume.real (voronoiOpenP19 V u)) ≤ -T1 - c * r ^ 2 := by
+    linarith [hneg1, hb1, hT1]
+  -- bound sum f3 by KIZHLTL2 (SUM_CONST fold + card shape)
+  have hb2 : ((Nat.card ((V ∩ Metric.ball 0 r : Set V3)) : ℕ) : ℝ) * 8 * mm1
+        + c' * r ^ 2
+      ≤ (2 * mm1 / Real.pi) *
+        setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X} (totalSolid V) :=
+    hc2 r hs hp hr
+  have hconst : setSum (V ∩ Metric.ball 0 r) (fun _ : V3 => (8 : ℝ) * mm1)
+      = ((Nat.card ((V ∩ Metric.ball 0 r : Set V3)) : ℕ) : ℝ) * 8 * mm1 :=
+    p19_setSum_const hfinV (8 * mm1) |>.trans (by ring)
+  have hb2' : setSum (V ∩ Metric.ball 0 r) (fun _ : V3 => (8 : ℝ) * mm1)
+      ≤ -T2 - c' * r ^ 2 := by
+    linarith [hconst, hb2, hT2]
+  -- bound sum f4 by KIZHLTL4
+  have hb3 : (8 * mm2 / Real.pi) *
+        setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X}
+          (fun X : Set V3 => setSum (edgeX V X) fun e =>
+            let q := Classical.epsilon fun u : V3 × V3 => e = {u.1, u.2}
+            if {q.1, q.2} ∈ edgeX V X then
+              dihX V X (q.1, q.2) * lmfun (hl [q.1, q.2])
+            else 0)
+      + c'' * r ^ 2 ≤
+      8 * mm2 * setSum (V ∩ Metric.ball 0 r)
+        (fun u : V3 => setSum {v | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+          (fun v => lmfun (hl [u, v]))) :=
+    hc3 r hs hp hr
+  have hb3' : T3 + c'' * r ^ 2 ≤ 8 * mm2 * setSum (V ∩ Metric.ball 0 r)
+      (fun u : V3 => setSum {v | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+        (fun v => lmfun (hl [u, v]))) := by
+    linarith [hT3, hb3]
+  -- witness arithmetic: C = -c''' - c - c' - c''
+  have hwit : (-c''' - c - c' - c'') * r ^ 2
+      = -(c''' * r ^ 2) - (c * r ^ 2 + c' * r ^ 2 + c'' * r ^ 2) := by ring
+  linarith [hsplit, hsplit2, hb1', hb2', hb3', hkey, hwit]
 
 /-- HOL `UPFZBZM` (UPFZBZM.hl:227-235), the book-lemma capstone: from the
 cluster/density hypothesis bundle there exists an `fcc_compatible` and
