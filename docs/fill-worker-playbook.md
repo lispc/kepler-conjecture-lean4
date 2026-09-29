@@ -175,6 +175,7 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 | Real.lt/le order 结构体（GT-1 实测） | `Set.mem_setOf_eq` 展开后 `a < b`/`a ≤ b` 产生 `Real.lt✝`/`Real.le✝` 结构体（非 LT/LE class 实例），linarith/rcases 匿名构造器/obtain 不直接消费——必须经 `sq_lt_sq₀`/`sq_le_sq₀`/`min_eq_right`/`Real.lt_sqrt` 显式转换 |
 | 杂项 API（GT-1） | `ENNReal.ofReal_mul` 单假设 `(hp : 0 ≤ p)`；`integral_pow` 在根命名空间（非 intervalIntegral.）；`RCLike.frontier_ball : frontier (ball x r) = sphere x r`（需 `.symm` 方向注意） |
 | CF-4c 杂项 13 条 | `absurd (h : ¬P) (hP : P)` 对 `hcol : P` 类型错——用 `(h hcol).elim`；`Real.sin_sq_add_cos_sq` 出 `^2` 形（喂 `s*s+c*c` 先 `rw [← pow_two, ← pow_two]`）；`pow_mul` 本 toolchain 展开成错误重载 pattern——`(k*‖v‖)²` 类收尾直接 `ring`；**`rcases h with rfl` 在 set-literal 成员上会消错变量**（改 `rcases h with h'|h'` + `rw`）；`inner_sub_left/right` 选向且须显式 args 钉实例（裸 lemma 会先展开 `inner (g-pw) (g-pw)`）；`inner_eq_norm_mul_iff_real` 取 `.1`；嵌套匿名构造器槽位数（∃f,∃a b,6-∧ 共 9 槽）少一个 `?_` 远处报错；`field_simp` 留残差接 `all_goals { ring }`；**`X / hG • v` 解析为 `X / (hG • v)`**——`((…) / hG) • v`；`linarith [hfn t ht]` 可能不取 ∀ 假设——先 `have h0 := hfn t ht` 物化；**affineSpan 刻画 kit（新沉淀可复用）**：`mem_affineSpan_iff_exists` + `vectorSpan_eq_span_vsub_set_left k hp`（p 取集合内一点），affineSpan{0,v1,v2}=span{v1,v2} 双向仅 ~30 行 |
+| rw 旁目标/自动 rfl（TameLp 桥实测） | `rw [带显式假设参的引理]` 不喂参时若假设参嵌在 LHS 模式的函数应用内，unification 留下**以形参名命名**的旁目标（`case hgood ⊢` 形，极易误读为变量 case）——自定义等式引理进 rw 一律显式喂参（`rw … at h` 同引理却正常，形状敏感）；rw 链使目标变成定义等式会**自动 rfl 收尾**——其后手写 rfl 报 "No goals"（先确认）；`Set.Mem`(coe Finset)↔`Finset.Mem` 双向 exact 直递可用（勿多引 mem_coe） |
 
 （发现新的改名陷阱：写报告第 5 项，编排者入表。**改名类错误只有 `lake build` 能稳定
 暴露**，env-lean 会放行旧名——见 §3。）
@@ -464,6 +465,18 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   `(fun x => by tac…)` 内带 `_` 的 lemma 应用 tactic 二跑失败（提为块内
   `have` 显式类型）；`List.of_mem_zip` 对 def 包着的 zip 先显式换形且输出侧
   对齐 expected-type；`find?_congr` 复合谓词先 `show` β-形。
+- **TameLp @类型层桥后**（列表层+类型层已齐 @`f2bf7db8`）：`hypermapOfList`
+  构造本体 W1（`9d775467`）已落——`IsHypermapOfListTl` 规格桥 +
+  REVERSE/MAP 类型层运输 7 件全真证。**Assembly 对接转发计划**（不跨文件）：
+  四字段一步折算 `IsHypermapOfList L H ← IsHypermapOfListTl L H`
+  （`⟨darts_eq, edgeMap_eq, nodeMap_eq, faceMap_eq⟩` 两结构体同体 Iff）；
+  实例化即 `IsHypermapOfList L (hypermapOfList L hL)`——解锁 Assembly:508-521
+  tame_of_iso 家族。**import 方向待编排者裁决**：TameLp 只 import
+  `Kepler.Assembly.GoodListDefs`（无环），但 Assembly import TameLp 前须核
+  TameLp 闭包（经某链达 LA5，恐成环）；退路 = 折算留在 Assembly 侧以
+  `IsHypermapOfListTl` 为语义锚。⚠ REVERSE 语义：`Hypermap.Iso H (H of
+  REVERSE)` 是**假命题**（需 faceMap/nodeMap 换位）——下游勿试 Iso 形，
+  用字段定理四槽；MAP 侧 `hypermapOfList_iso_map` 是真 Iso 直通。
 - **PA21 @A2 后**（15 战术 @`52a01dfd`）：**A2+（小）**= MCELL1_SOL_RESTRICT
   按 :1800 注记两路线之一收口（p21e 副本上提 ~450 行，或编排者裁决区块后移）。
   **B2（按序）**：FRUSTT_WEDGE_RCONE_GE（import PA18 取 WEDGE_WEDGE_GE/
