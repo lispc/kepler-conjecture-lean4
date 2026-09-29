@@ -90,6 +90,7 @@ NEEDS (giant fill-in markers): GAMMAX_MCELL1, MCELL2_VX_PROPS,
 -/
 
 import Kepler.Text.PackingAuto2
+import Kepler.Text.PackingAuto4
 import Kepler.Text.PackingAuto5
 import Kepler.Text.PackingAuto6
 import Kepler.Text.PackingAuto7
@@ -99,10 +100,12 @@ import Kepler.Text.PackingAuto11
 import Kepler.Text.PackingAuto12
 import Kepler.Text.PackingAuto13
 import Kepler.Text.PackingAuto15
+import Kepler.Text.PackingAuto17
 import Kepler.Text.PackingAuto20
 import Kepler.Text.SphereKit
 import Kepler.Text.IneqClosureDefs
 import Kepler.Text.Polytope
+import Kepler.Geom.WedgeVolume
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -110,6 +113,7 @@ set_option maxHeartbeats 5000000
 namespace Kepler.Text
 
 open Kepler.Geom Set Classical MeasureTheory
+open scoped Matrix
 
 /-! ## Sphere.hl toolkit (atn2-merge, docs/atn2-merge-plan.md §5.3)
 
@@ -1307,6 +1311,7 @@ def TSKAJXY_statement_special_case : Prop :=
 /-- HOL `TSKAJXY_034` (TSKAJXY2.hl:92-722; giant: 0-cell, 4-cell and
 3-cell cases, ~600 refinement steps). -/
 theorem TSKAJXY_034 : tsk_hyp_new → TSKAJXY_statement_special_case := by
+  -- NEEDS: TSKAJXY2.hl:92-722（0/3/4 胞巨案，~600 步 refinement）；路线：G 轨 cell3_bank/tsk_bank 切片 + cell3_from_ineq 链，capstone 仍假设叶喂入
   sorry
 
 /-! ## Dot-algebra bridges (V3 = WithLp 2 (Fin 3 → ℝ)) -/
@@ -1446,15 +1451,143 @@ theorem GAMMAX_MCELL1 (V X : Set V3) (ul : List V3) (_hs : saturated V)
     (_hn : ¬nullSet X) :
     gammaX V X lmfun =
       volume.real X - (2 * mm1 / Real.pi) * sol (elV ul 0) X := by
+  -- NEEDS: TSKAJXY3.hl:48；路线（A2 波）：MCELL1_VOL + MCELL1_SOL + V_CELL1_SINGLE（VX={u0}、edgeX=∅）系数比对
   sorry
 
-/-- HOL `MCELL2_VX_PROPS` (TSKAJXY3.hl:89; giant). -/
+/-- The degenerate `mcell2` null lemma (the "u = v" backstop): if the edge
+endpoints coincide, the cell sits in `u + span {mxi - u, omega3 - u}`, a
+translate of a ≤2-dimensional subspace, hence null. -/
+private theorem p21_mcell2_uv_null (V : Set V3) (ul : List V3)
+    (huv : elV ul 0 = elV ul 1) : nullSet (mcell2 V ul) := by
+  by_cases hcond : hl (truncateSimplex 1 ul) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ul
+  · have hcent : hdV ul = elV ul 0 ∧ hdV ul.tail = elV ul 1 := by
+      cases ul with
+      | nil => exact ⟨rfl, rfl⟩
+      | cons a t =>
+        cases t with
+        | nil => exact ⟨rfl, rfl⟩
+        | cons b t => exact ⟨rfl, rfl⟩
+    have hWne : (Submodule.span ℝ
+        ({mxi V ul - elV ul 0, omegaListN V ul 3 - elV ul 0} : Set V3)) ≠ ⊤ := by
+      intro htop
+      have h3 : Module.finrank ℝ
+          (Submodule.span ℝ ({mxi V ul - elV ul 0, omegaListN V ul 3 - elV ul 0} : Set V3)) = 3 := by
+        rw [htop]; simp
+      have hfr : Module.finrank ℝ
+          (Submodule.span ℝ ({mxi V ul - elV ul 0, omegaListN V ul 3 - elV ul 0} : Set V3)) ≤ 2 := by
+        refine le_trans (finrank_span_le_card (R := ℝ) (M := V3)
+          (s := ({mxi V ul - elV ul 0, omegaListN V ul 3 - elV ul 0} : Set V3))) ?_
+        have h4 : ({mxi V ul - elV ul 0, omegaListN V ul 3 - elV ul 0} : Set V3).toFinset.card ≤ 2 := by
+          have h5 := Set.ncard_insert_le (mxi V ul - elV ul 0)
+            ({omegaListN V ul 3 - elV ul 0} : Set V3)
+          have h6 : ({omegaListN V ul 3 - elV ul 0} : Set V3).ncard = 1 :=
+            Set.ncard_singleton _
+          have h7 : ({mxi V ul - elV ul 0, omegaListN V ul 3 - elV ul 0} : Set V3).ncard
+              = ({mxi V ul - elV ul 0, omegaListN V ul 3 - elV ul 0} : Set V3).toFinset.card :=
+            Set.ncard_eq_toFinset_card' _
+          omega
+        exact h4
+      omega
+    have hAffNe : ((AffineSubspace.mk' (elV ul 0)
+          (Submodule.span ℝ ({mxi V ul - elV ul 0, omegaListN V ul 3 - elV ul 0} : Set V3))
+          : AffineSubspace ℝ V3)) ≠ ⊤ := by
+      intro htop
+      refine hWne ?_
+      have h5 : ((AffineSubspace.mk' (elV ul 0)
+          (Submodule.span ℝ ({mxi V ul - elV ul 0, omegaListN V ul 3 - elV ul 0} : Set V3))
+          : AffineSubspace ℝ V3)).direction
+        = Submodule.span ℝ ({mxi V ul - elV ul 0, omegaListN V ul 3 - elV ul 0} : Set V3) :=
+        AffineSubspace.direction_mk' _ _
+      rw [htop, AffineSubspace.direction_top] at h5
+      exact h5.symm
+    have hsub : mcell2 V ul ⊆
+        ((AffineSubspace.mk' (elV ul 0)
+            (Submodule.span ℝ ({mxi V ul - elV ul 0, omegaListN V ul 3 - elV ul 0} : Set V3))
+            : AffineSubspace ℝ V3) : Set V3) := by
+      intro x hx
+      rw [mcell2, if_pos hcond] at hx
+      obtain ⟨_, hx2⟩ := hx
+      simp only [affGe, Affsign, Set.mem_setOf_eq] at hx2
+      obtain ⟨f, hfin, hxv, _, hsum⟩ := hx2
+      have hmem : ∀ w ∈ hfin.toFinset, w = elV ul 0 ∨ w = mxi V ul ∨ w = omegaListN V ul 3 := by
+        intro w hw
+        have hw' : w ∈ (({hdV ul, hdV ul.tail} : Set V3) ∪ {mxi V ul, omegaListN V ul 3} : Set V3) := by
+          simpa [Set.Finite.mem_toFinset] using hw
+        simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff,
+          hcent.1, hcent.2.trans huv.symm] at hw'
+        tauto
+      have hkey : x - elV ul 0 = ∑ w ∈ hfin.toFinset, f w • (w - elV ul 0) := by
+        have h1 : ∑ w ∈ hfin.toFinset, f w • (w - elV ul 0)
+            = (∑ w ∈ hfin.toFinset, f w • w)
+              - (∑ w ∈ hfin.toFinset, f w) • elV ul 0 := by
+          rw [Finset.sum_smul, ← Finset.sum_sub_distrib]
+          exact Finset.sum_congr rfl fun w _ => by rw [smul_sub]
+        rw [h1, hxv, hsum]
+        simp
+      have hin : x - elV ul 0 ∈ Submodule.span ℝ
+          ({mxi V ul - elV ul 0, omegaListN V ul 3 - elV ul 0} : Set V3) := by
+        rw [hkey]
+        refine Submodule.sum_mem _ fun w hw => ?_
+        rcases hmem w hw with rfl | rfl | rfl
+        · rw [sub_self, smul_zero]
+          exact Submodule.zero_mem _
+        · exact Submodule.smul_mem _ _ (Submodule.subset_span
+            (Set.mem_insert (mxi V ul - elV ul 0)
+              ({omegaListN V ul 3 - elV ul 0} : Set V3)))
+        · exact Submodule.smul_mem _ _ (Submodule.subset_span
+            (Set.mem_insert_of_mem _ (Set.mem_singleton (omegaListN V ul 3 - elV ul 0))))
+      rw [SetLike.mem_coe, AffineSubspace.mem_mk', vsub_eq_sub]
+      exact hin
+    refine measure_mono_null hsub (MeasureTheory.Measure.addHaar_affineSubspace volume _ hAffNe)
+  · rw [mcell2, if_neg hcond]
+    exact measure_empty
+
+/-- HOL `MCELL2_VX_PROPS` (TSKAJXY3.hl:89; proved 2026-09-29 wave B1:
+`HDTFNFZ_ALT` + `LEPJBDJ` (k = 2) + `SET_OF_LIST_TRUNCATE_1` for the vertex
+set, the u = v null backstop for distinctness, and direct `edgeX` algebra). -/
 theorem MCELL2_VX_PROPS (V X : Set V3) (ul : List V3) (_hs : saturated V)
     (_hp : Packing V) (_hb : barV V 3 ul) (_hX : X = mcell2 V ul)
     (_hn : ¬nullSet X) :
     VX V X = {elV ul 0, elV ul 1} ∧ elV ul 0 ≠ elV ul 1 ∧
       edgeX V X = {{elV ul 0, elV ul 1}} := by
-  sorry
+  have hs : saturated V := _hs
+  have hp : Packing V := _hp
+  have hb : barV V 3 ul := _hb
+  have hX : X = mcell2 V ul := _hX
+  have hn : ¬nullSet X := _hn
+  have huv : elV ul 0 ≠ elV ul 1 := fun heq =>
+    hn (by rw [hX]; exact p21_mcell2_uv_null V ul heq)
+  have hne : mcell2 V ul ≠ ∅ := fun he => hn (by
+    rw [hX, he]; exact measure_empty)
+  have hvx : VX V X = {elV ul 0, elV ul 1} := by
+    rw [BumpP4.HDTFNFZ_ALT V ul 2 X hs hp hb hX hn, hX, BumpP4.MCELL2,
+      LEPJBDJ V ul 2 hs hp hb (by norm_num) (by norm_num) hne,
+      BumpP4.SET_OF_LIST_TRUNCATE_1 ul (by have := hb.1; omega)]
+  have hmem : ∀ z : V3, z ∈ VX V X ↔ z = elV ul 0 ∨ z = elV ul 1 := by
+    intro z
+    rw [hvx]
+    simp [Set.mem_insert_iff, Set.mem_singleton_iff]
+  have hedg : edgeX V X = {{elV ul 0, elV ul 1}} := by
+    refine Set.Subset.antisymm ?_ ?_
+    · intro e he
+      simp only [edgeX, Set.mem_setOf_eq] at he
+      obtain ⟨a, b, rfl, ha, hb', hab⟩ := he
+      have ha' : a = elV ul 0 ∨ a = elV ul 1 := (hmem a).mp ha
+      have hb'' : b = elV ul 0 ∨ b = elV ul 1 := (hmem b).mp hb'
+      rcases ha' with rfl | rfl
+      · rcases hb'' with rfl | rfl
+        · exact absurd rfl hab
+        · rfl
+      · rcases hb'' with rfl | rfl
+        · rw [Set.pair_comm]
+          rfl
+        · exact absurd rfl hab
+    · intro e he
+      simp only [Set.mem_singleton_iff] at he
+      subst he
+      exact ⟨elV ul 0, elV ul 1, rfl, (hmem _).mpr (Or.inl rfl),
+        (hmem _).mpr (Or.inr rfl), huv⟩
+  exact ⟨hvx, huv, hedg⟩
 
 /-- HOL `GAMMAX_MCELL2` (TSKAJXY3.hl:138; giant). -/
 theorem GAMMAX_MCELL2 (V X : Set V3) (ul : List V3) (_hs : saturated V)
@@ -1464,6 +1597,7 @@ theorem GAMMAX_MCELL2 (V X : Set V3) (ul : List V3) (_hs : saturated V)
       volume.real X - (2 * mm1 / Real.pi) * (sol (elV ul 0) X + sol (elV ul 1) X) +
         (8 * mm2 / Real.pi) * lmfun (hl [elV ul 0, elV ul 1]) *
           dihX V X (elV ul 0, elV ul 1) := by
+  -- NEEDS: TSKAJXY3.hl:138；路线（B3 波）：HDTFNFZ_ALT（PA4:1240，需 import PA4）+ MCELL2_VOL/MCELL2_SOL/MCELL2_DIHX + MCELL2_VX_PROPS 装配
   sorry
 
 /-- HOL `BALL_DIFF_RCONE_GT` (TSKAJXY3.hl:176; proved: pure inner-product
@@ -1615,6 +1749,7 @@ theorem MCELL1_SOL_RESTRICT (V X : Set V3) (ul : List V3) (hs : saturated V)
     (hn : ¬nullSet X) :
     sol (elV ul 0) X =
       sol (elV ul 0) (X ∩ Metric.ball (elV ul 0) (Real.sqrt 2)) := by
+  -- NEEDS: TSKAJXY3.hl:285；路线（A2 波）：URRPHBZ2-k1 径向 + sol_spec 密度；rogers 尾巴可走 k=1 具体化绕 URRPHBZ2
   sorry
 
 /-- HOL `CONV_CONVEX_HULL` (TSKAJXY3.hl:328). -/
@@ -1626,20 +1761,445 @@ theorem CONV_CONVEX_HULL (s : Set V3) : Convex ℝ s ↔ (convexHull ℝ s : Set
     rw [← h]
     exact convex_convexHull ℝ s
 
-/-- HOL `CONVEX_HULL_4_AFF_GE` (TSKAJXY3.hl:336; giant). -/
+/-! ## Wave-A1 private kit: 4-point convex hull vs `affGe` (2026-09-29)
+
+The HOL proofs of CONVEX_HULL_4_AFF_GE / CONVEX_HULL_SCALE go through the
+explicit weight characterisations `Cfyxfty.AFF_GE_3_1` / `Planarity.AFF_GE_1_3`
+plus the coefficient-uniqueness of a non-coplanar quadruple.  Ported here as
+private kit (`p21_*`); copies of the PA12 vertex/convexity helpers, which are
+private there. -/
+
+/-- A finite set's `toFinset` is determined by its elements (copy of
+PackingAuto12 `p12_finite_toFinset_eq`, private there). -/
+private theorem p21_finite_toFinset_eq {S : Set V3} {hS : S.Finite} {T : Finset V3}
+    (h : S = (T : Set V3)) : hS.toFinset = T :=
+  Finset.coe_inj.1 (by rw [hS.coe_toFinset, h])
+
+/-- A vertex of `s` lies in `affGe s t` (finite `s ∪ t`; copy of PA12
+`p12_mem_affGe_vertex`). -/
+private theorem p21_mem_affGe_vertex {s t : Set V3} (hfin : (s ∪ t).Finite) {v : V3}
+    (hv : v ∈ s) : v ∈ affGe s t := by
+  have hvF : v ∈ hfin.toFinset := by
+    simpa [Set.Finite.mem_toFinset] using Set.mem_union_left _ hv
+  refine ⟨fun p => if p = v then 1 else 0, hfin, ?_, ?_, ?_⟩
+  · show v = ∑ p ∈ hfin.toFinset, (if p = v then (1:ℝ) else 0) • p
+    have heq : ∀ p ∈ hfin.toFinset, p ≠ v → (if p = v then (1:ℝ) else 0) • p = 0 := by
+      intro p _ hpv
+      simp [hpv]
+    rw [Finset.sum_eq_single v heq (fun h => absurd hvF h)]
+    simp
+  · intro p hp
+    by_cases hpv : p = v <;> simp [hpv]
+  · show (∑ p ∈ hfin.toFinset, (if p = v then (1:ℝ) else 0)) = 1
+    have heq : ∀ p ∈ hfin.toFinset, p ≠ v → (if p = v then (1:ℝ) else 0) = 0 := by
+      intro p _ hpv
+      simp [hpv]
+    rw [Finset.sum_eq_single v heq (fun h => absurd hvF h)]
+    simp
+
+/-- A vertex of `t` lies in `affGe s t` (finite `s ∪ t`; copy of PA12
+`p12_mem_affGe_vertex_t`). -/
+private theorem p21_mem_affGe_vertex_t {s t : Set V3} (hfin : (s ∪ t).Finite) {v : V3}
+    (hv : v ∈ t) : v ∈ affGe s t := by
+  have hvF : v ∈ hfin.toFinset := by
+    simpa [Set.Finite.mem_toFinset] using Set.mem_union_right _ hv
+  refine ⟨fun p => if p = v then 1 else 0, hfin, ?_, ?_, ?_⟩
+  · show v = ∑ p ∈ hfin.toFinset, (if p = v then (1:ℝ) else 0) • p
+    have heq : ∀ p ∈ hfin.toFinset, p ≠ v → (if p = v then (1:ℝ) else 0) • p = 0 := by
+      intro p _ hpv
+      simp [hpv]
+    rw [Finset.sum_eq_single v heq (fun h => absurd hvF h)]
+    simp
+  · intro p hp
+    by_cases hpv : p = v <;> simp [hpv]
+  · show (∑ p ∈ hfin.toFinset, (if p = v then (1:ℝ) else 0)) = 1
+    have heq : ∀ p ∈ hfin.toFinset, p ≠ v → (if p = v then (1:ℝ) else 0) = 0 := by
+      intro p _ hpv
+      simp [hpv]
+    rw [Finset.sum_eq_single v heq (fun h => absurd hvF h)]
+    simp
+
+/-- `affGe s t` is convex for finite `s ∪ t` (copy of PA12
+`p12_convex_affGe`). -/
+private theorem p21_convex_affGe {s t : Set V3} (hfin : (s ∪ t).Finite) :
+    Convex ℝ (affGe s t) := by
+  intro x hx y hy a b ha hb hab
+  simp only [affGe, Affsign, Set.mem_setOf_eq] at hx hy
+  obtain ⟨f1, _, hx1, hx2, hx3⟩ := hx
+  obtain ⟨f2, _, hy1, hy2, hy3⟩ := hy
+  refine ⟨fun p => a * f1 p + b * f2 p, hfin, ?_, ?_, ?_⟩
+  · have key : ∀ (g : V3 → ℝ) (c : ℝ), ∑ q ∈ hfin.toFinset, (c * g q) • q
+        = c • ∑ q ∈ hfin.toFinset, g q • q := by
+      intro g c
+      rw [Finset.smul_sum]
+      exact Finset.sum_congr rfl fun q _ => by rw [smul_smul]
+    have hsum1 : ∑ q ∈ hfin.toFinset, (a * f1 q + b * f2 q) • q
+        = ∑ q ∈ hfin.toFinset, ((a * f1 q) • q + (b * f2 q) • q) := by
+      exact Finset.sum_congr rfl fun q _ => by rw [add_smul]
+    rw [hsum1, Finset.sum_add_distrib, key, key, hx1, hy1]
+  · intro p hp
+    have h1 : 0 ≤ f1 p := hx2 p hp
+    have h2 : 0 ≤ f2 p := hy2 p hp
+    show 0 ≤ a * f1 p + b * f2 p
+    exact add_nonneg (mul_nonneg ha h1) (mul_nonneg hb h2)
+  · show (∑ q ∈ hfin.toFinset, (a * f1 q + b * f2 q)) = 1
+    have h3' : ∑ q ∈ hfin.toFinset, (a * f1 q + b * f2 q)
+        = a * ∑ q ∈ hfin.toFinset, f1 q + b * ∑ q ∈ hfin.toFinset, f2 q := by
+      rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
+    rw [h3', hx3, hy3]
+    simp only [mul_one]
+    exact hab
+
+/-- A set that collapses to three points is coplanar (it sits in the
+affine span of those three). -/
+private theorem p21_coplanar_of_pair_eq (S : Set V3) {x y p q : V3} (hxy : x = y)
+    (hS : S ⊆ ({x, y, p, q} : Set V3)) : Coplanar S := by
+  subst hxy
+  refine ⟨x, p, q, fun z hz => ?_⟩
+  rcases hS hz with he | he | he | he <;> rw [he] <;>
+    exact SetLike.mem_coe.2 (mem_affineSpan ℝ (by simp))
+
+/-- A non-coplanar quadruple is pairwise distinct. -/
+private theorem p21_ne_of_notCoplanar {w0 w1 w2 w3 : V3}
+    (hcp : ¬Coplanar ({w0, w1, w2, w3} : Set V3)) :
+    w0 ≠ w1 ∧ w0 ≠ w2 ∧ w0 ≠ w3 ∧ w1 ≠ w2 ∧ w1 ≠ w3 ∧ w2 ≠ w3 := by
+  refine ⟨fun h => hcp (p21_coplanar_of_pair_eq _ h (fun z hz => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢; tauto)),
+    fun h => hcp (p21_coplanar_of_pair_eq _ h (fun z hz => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢; tauto)),
+    fun h => hcp (p21_coplanar_of_pair_eq _ h (fun z hz => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢; tauto)),
+    fun h => hcp (p21_coplanar_of_pair_eq _ h (fun z hz => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢; tauto)),
+    fun h => hcp (p21_coplanar_of_pair_eq _ h (fun z hz => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢; tauto)),
+    fun h => hcp (p21_coplanar_of_pair_eq _ h (fun z hz => by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢; tauto))⟩
+
+/-- An affine combination with weights summing to 1 of three points lies in
+their affine span (via the `vectorSpan` characterisation
+`mem_affineSpan_iff_exists`). -/
+private theorem p21_mem_affineSpan_of_sum {p0 p1 p2 x : V3} {c0 c1 c2 : ℝ}
+    (hsum : c0 + c1 + c2 = 1) (hx : x = c0 • p0 + c1 • p1 + c2 • p2) :
+    x ∈ (affineSpan ℝ ({p0, p1, p2} : Set V3) : Set V3) := by
+  refine (mem_affineSpan_iff_exists (k := ℝ)).mpr
+    ⟨p2, Set.mem_insert_of_mem p0 (Set.mem_insert_of_mem p1 (Set.mem_singleton p2)),
+      x - p2, ?_, by simp⟩
+  rw [vectorSpan_def]
+  have hexp : x - p2 = c0 • (p0 - p2) + c1 • (p1 - p2) := by
+    rw [hx]
+    have h1 : (c0 + c1 + c2) • p2 = p2 := by rw [hsum]; simp
+    calc (c0 • p0 + c1 • p1 + c2 • p2) - p2
+        = (c0 • p0 + c1 • p1 + c2 • p2) - (c0 + c1 + c2) • p2 := by rw [h1]
+      _ = c0 • (p0 - p2) + c1 • (p1 - p2) := by module
+  rw [hexp]
+  refine Submodule.add_mem _ ?_ ?_
+  · exact Submodule.smul_mem _ _ (Submodule.subset_span
+      ⟨p0, Set.mem_insert p0 {p1, p2}, p2,
+        Set.mem_insert_of_mem p0 (Set.mem_insert_of_mem p1 (Set.mem_singleton p2)), rfl⟩)
+  · exact Submodule.smul_mem _ _ (Submodule.subset_span
+      ⟨p1, Set.mem_insert_of_mem p0 (Set.mem_insert p1 {p2}), p2,
+        Set.mem_insert_of_mem p0 (Set.mem_insert_of_mem p1 (Set.mem_singleton p2)), rfl⟩)
+
+/-- Coefficient uniqueness for a non-coplanar quadruple: two affine
+representations with weights summing to 1 coincide. -/
+private theorem p21_coeff_unique {w0 w1 w2 w3 : V3}
+    (hcp : ¬Coplanar ({w0, w1, w2, w3} : Set V3)) {t0 t1 t2 t3 s0 s1 s2 s3 : ℝ}
+    (htsum : t0 + t1 + t2 + t3 = 1) (hssum : s0 + s1 + s2 + s3 = 1)
+    (hy : t0 • w0 + t1 • w1 + t2 • w2 + t3 • w3 = s0 • w0 + s1 • w1 + s2 • w2 + s3 • w3) :
+    t0 = s0 ∧ t1 = s1 ∧ t2 = s2 ∧ t3 = s3 := by
+  have hsum : t0 - s0 + (t1 - s1) + (t2 - s2) + (t3 - s3) = 0 := by linarith
+  have hvec : (t0 - s0) • w0 + (t1 - s1) • w1 + (t2 - s2) • w2 + (t3 - s3) • w3 = 0 := by
+    have hsub : (t0 • w0 + t1 • w1 + t2 • w2 + t3 • w3)
+        - (s0 • w0 + s1 • w1 + s2 • w2 + s3 • w3) = 0 := by
+      rw [sub_eq_zero]
+      exact hy
+    calc (t0 - s0) • w0 + (t1 - s1) • w1 + (t2 - s2) • w2 + (t3 - s3) • w3
+        = (t0 • w0 + t1 • w1 + t2 • w2 + t3 • w3)
+          - (s0 • w0 + s1 • w1 + s2 • w2 + s3 • w3) := by module
+      _ = 0 := hsub
+  -- the key: a nonzero coefficient puts the corresponding point in the span
+  -- of the other three, which makes any superset coplanar
+  have key : ∀ (S : Set V3) (e a b c : V3) (de da db dc : ℝ), de ≠ 0 →
+      da + db + dc + de = 0 → da • a + db • b + dc • c + de • e = 0 →
+      S ⊆ ({e, a, b, c} : Set V3) → Coplanar S := by
+    intro S e a b c de da db dc hde hsum hvec hS
+    refine ⟨a, b, c, fun z hz => ?_⟩
+    have hzin : z = e ∨ z = a ∨ z = b ∨ z = c := by
+      have := hS hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at this
+      tauto
+    have hcop : e ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) := by
+      refine p21_mem_affineSpan_of_sum (c0 := -da / de) (c1 := -db / de)
+        (c2 := -dc / de) ?_ ?_
+      · show (-da / de) + (-db / de) + (-dc / de) = 1
+        field_simp
+        linarith
+      · show e = (-da / de) • a + (-db / de) • b + (-dc / de) • c
+        have h1 : (da • a + db • b + dc • c) + de • e = 0 := hvec
+        have hscal : de • e = (-da) • a + (-db) • b + (-dc) • c := by
+          have h2 : de • e + (da • a + db • b + dc • c) = 0 := by
+            rw [add_comm]
+            exact h1
+          first
+            | linear_combination (norm := module) h2
+            | linear_combination (norm := module) -h2
+        calc e = (de⁻¹) • (de • e) := by
+              rw [smul_smul, inv_mul_cancel₀ hde, one_smul]
+          _ = (de⁻¹) • ((-da) • a + (-db) • b + (-dc) • c) := by rw [hscal]
+          _ = (-da / de) • a + (-db / de) • b + (-dc / de) • c := by module
+    rcases hzin with he | he | he | he
+    · rw [he]
+      exact hcop
+    · rw [he]
+      exact SetLike.mem_coe.2 (mem_affineSpan ℝ (by simp))
+    · rw [he]
+      exact SetLike.mem_coe.2 (mem_affineSpan ℝ (by simp))
+    · rw [he]
+      exact SetLike.mem_coe.2 (mem_affineSpan ℝ (by simp))
+  have hsub4 : ({w0, w1, w2, w3} : Set V3) ⊆ ({w3, w0, w1, w2} : Set V3) := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+    tauto
+  have hsub2 : ({w0, w1, w2, w3} : Set V3) ⊆ ({w2, w0, w1, w3} : Set V3) := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+    tauto
+  have hsub1 : ({w0, w1, w2, w3} : Set V3) ⊆ ({w1, w0, w2, w3} : Set V3) := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+    tauto
+  rcases eq_or_ne (t0 - s0) 0 with h0 | h0
+  · rcases eq_or_ne (t1 - s1) 0 with h1 | h1
+    · rcases eq_or_ne (t2 - s2) 0 with h2 | h2
+      · rcases eq_or_ne (t3 - s3) 0 with h3 | h3
+        · exact ⟨sub_eq_zero.mp h0, sub_eq_zero.mp h1, sub_eq_zero.mp h2, sub_eq_zero.mp h3⟩
+        · exact absurd (key ({w0, w1, w2, w3} : Set V3) w3 w0 w1 w2 (t3 - s3) (t0 - s0)
+            (t1 - s1) (t2 - s2) h3 (by linarith) hvec hsub4) hcp
+      · exact absurd (key ({w0, w1, w2, w3} : Set V3) w2 w0 w1 w3 (t2 - s2) (t0 - s0)
+          (t1 - s1) (t3 - s3) h2 (by linarith)
+          (by first
+            | linear_combination (norm := module) hvec
+            | linear_combination (norm := module) -hvec) hsub2) hcp
+    · exact absurd (key ({w0, w1, w2, w3} : Set V3) w1 w0 w2 w3 (t1 - s1) (t0 - s0)
+        (t2 - s2) (t3 - s3) h1 (by linarith)
+        (by first
+          | linear_combination (norm := module) hvec
+          | linear_combination (norm := module) -hvec) hsub1) hcp
+  · exact absurd (key ({w0, w1, w2, w3} : Set V3) w0 w1 w2 w3 (t0 - s0) (t1 - s1)
+      (t2 - s2) (t3 - s3) h0 (by linarith)
+      (by first
+        | linear_combination (norm := module) hvec
+        | linear_combination (norm := module) -hvec) (Subset.refl _)) hcp
+
+/-- Explicit weight characterisation of `affGe {p} {q1, q2, q3}` for a
+pairwise-distinct quadruple (the 4-distinct branch of HOL `AFF_GE_1_3`,
+Cfyxfty.hl). -/
+private theorem p21_affGe_1_3_char {p q1 q2 q3 : V3}
+    (hd : p ≠ q1 ∧ p ≠ q2 ∧ p ≠ q3 ∧ q1 ≠ q2 ∧ q1 ≠ q3 ∧ q2 ≠ q3) (y : V3) :
+    y ∈ affGe ({p} : Set V3) ({q1, q2, q3} : Set V3) ↔
+      ∃ t0 t1 t2 t3 : ℝ, 0 ≤ t1 ∧ 0 ≤ t2 ∧ 0 ≤ t3 ∧
+        t0 + t1 + t2 + t3 = 1 ∧ y = t0 • p + t1 • q1 + t2 • q2 + t3 • q3 := by
+  have hfin : ((({p} : Set V3) ∪ {q1, q2, q3}) : Set V3).Finite := by simp
+  have hF : hfin.toFinset = insert p (insert q1 (insert q2 {q3})) := by
+    refine p21_finite_toFinset_eq ?_
+    ext z
+    simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff, Finset.mem_coe,
+      Finset.mem_insert, Finset.mem_singleton]
+    all_goals tauto
+  have hp' : p ∉ (insert q1 (insert q2 {q3}) : Finset V3) := by
+    simp [hd.1, hd.2.1, hd.2.2.1]
+  have hq' : q1 ∉ (insert q2 {q3} : Finset V3) := by
+    simp [hd.2.2.2.1, hd.2.2.2.2.1]
+  have hr' : q2 ∉ ({q3} : Finset V3) := by simp [hd.2.2.2.2.2]
+  constructor
+  · rintro ⟨f, _, hy, hpos, hsum⟩
+    have hy' : y = f p • p + f q1 • q1 + f q2 • q2 + f q3 • q3 := by
+      have h2 := hy
+      rw [hF, Finset.sum_insert hp', Finset.sum_insert hq', Finset.sum_insert hr',
+        Finset.sum_singleton] at h2
+      have h3 : f p • p + (f q1 • q1 + (f q2 • q2 + f q3 • q3))
+          = f p • p + f q1 • q1 + f q2 • q2 + f q3 • q3 := by module
+      rw [← h3]
+      exact h2
+    have hsum' : f p + f q1 + f q2 + f q3 = 1 := by
+      have h2 := hsum
+      rw [hF, Finset.sum_insert hp', Finset.sum_insert hq', Finset.sum_insert hr',
+        Finset.sum_singleton] at h2
+      linarith
+    refine ⟨f p, f q1, f q2, f q3,
+      hpos q1 (by simp), hpos q2 (by simp), hpos q3 (by simp), hsum', hy'⟩
+  · rintro ⟨t0, t1, t2, t3, ht1, ht2, ht3, htsum, hty⟩
+    refine ⟨fun w => if w = p then t0 else if w = q1 then t1 else if w = q2 then t2 else t3,
+      hfin, ?_, ?_, ?_⟩
+    · rw [hF, Finset.sum_insert hp', Finset.sum_insert hq', Finset.sum_insert hr',
+        Finset.sum_singleton]
+      simp [Ne.symm hd.1, Ne.symm hd.2.1, Ne.symm hd.2.2.1, Ne.symm hd.2.2.2.1,
+        Ne.symm hd.2.2.2.2.1, Ne.symm hd.2.2.2.2.2]
+      rw [hty]
+      module
+    · intro w hw
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+      rcases hw with rfl | rfl | rfl
+      · simp [hd.1, Ne.symm hd.1, ht1]
+      · simp [hd.2.1, Ne.symm hd.2.1, hd.2.2.2.1, Ne.symm hd.2.2.2.1, ht2]
+      · simp [hd.2.2.1, Ne.symm hd.2.2.1, hd.2.2.2.2.1, Ne.symm hd.2.2.2.2.1,
+          hd.2.2.2.2.2, Ne.symm hd.2.2.2.2.2, ht3]
+    · rw [hF, Finset.sum_insert hp', Finset.sum_insert hq', Finset.sum_insert hr',
+        Finset.sum_singleton]
+      simp [Ne.symm hd.1, Ne.symm hd.2.1, Ne.symm hd.2.2.1, Ne.symm hd.2.2.2.1,
+        Ne.symm hd.2.2.2.2.1, Ne.symm hd.2.2.2.2.2]
+      linarith
+
+/-- Explicit weight characterisation of `affGe {q1, q2, q3} {p}` for a
+pairwise-distinct quadruple (the 4-distinct branch of HOL `AFF_GE_3_1`,
+Cfyxfty.hl). -/
+private theorem p21_affGe_3_1_char {p q1 q2 q3 : V3}
+    (hd : p ≠ q1 ∧ p ≠ q2 ∧ p ≠ q3 ∧ q1 ≠ q2 ∧ q1 ≠ q3 ∧ q2 ≠ q3) (y : V3) :
+    y ∈ affGe ({q1, q2, q3} : Set V3) ({p} : Set V3) ↔
+      ∃ s0 s1 s2 s3 : ℝ, 0 ≤ s0 ∧ s0 + s1 + s2 + s3 = 1 ∧
+        y = s0 • p + s1 • q1 + s2 • q2 + s3 • q3 := by
+  have hfin : ((({q1, q2, q3} : Set V3) ∪ {p}) : Set V3).Finite := by simp
+  have hF : hfin.toFinset = insert q1 (insert q2 (insert q3 {p})) := by
+    refine p21_finite_toFinset_eq ?_
+    ext z
+    simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff, Finset.mem_coe,
+      Finset.mem_insert, Finset.mem_singleton]
+    all_goals tauto
+  have hq1' : q1 ∉ (insert q2 (insert q3 {p}) : Finset V3) := by
+    simp [hd.1, Ne.symm hd.1, hd.2.2.2.1, hd.2.2.2.2.1, hd.2.2.2.2.2]
+  have hq2' : q2 ∉ (insert q3 {p} : Finset V3) := by
+    simp [hd.2.1, Ne.symm hd.2.1, hd.2.2.2.2.2, Ne.symm hd.2.2.2.1]
+  have hq3' : q3 ∉ ({p} : Finset V3) := by simp [hd.2.2.1, Ne.symm hd.2.2.1]
+  constructor
+  · rintro ⟨f, _, hy, hpos, hsum⟩
+    have hy' : y = f p • p + f q1 • q1 + f q2 • q2 + f q3 • q3 := by
+      have h2 := hy
+      rw [hF, Finset.sum_insert hq1', Finset.sum_insert hq2', Finset.sum_insert hq3',
+        Finset.sum_singleton] at h2
+      have h3 : f q1 • q1 + (f q2 • q2 + (f q3 • q3 + f p • p))
+          = f p • p + f q1 • q1 + f q2 • q2 + f q3 • q3 := by module
+      rw [← h3]
+      exact h2
+    have hsum' : f p + f q1 + f q2 + f q3 = 1 := by
+      have h2 := hsum
+      rw [hF, Finset.sum_insert hq1', Finset.sum_insert hq2', Finset.sum_insert hq3',
+        Finset.sum_singleton] at h2
+      linarith
+    exact ⟨f p, f q1, f q2, f q3, hpos p (Set.mem_singleton p), hsum', hy'⟩
+  · rintro ⟨s0, s1, s2, s3, hs0, hssum, hsy⟩
+    refine ⟨fun w => if w = p then s0 else if w = q1 then s1 else if w = q2 then s2 else s3,
+      hfin, ?_, ?_, ?_⟩
+    · rw [hF, Finset.sum_insert hq1', Finset.sum_insert hq2', Finset.sum_insert hq3',
+        Finset.sum_singleton]
+      simp [Ne.symm hd.1, Ne.symm hd.2.1, Ne.symm hd.2.2.1, Ne.symm hd.2.2.2.1,
+        Ne.symm hd.2.2.2.2.1, Ne.symm hd.2.2.2.2.2]
+      rw [hsy]
+      module
+    · intro w hw
+      simp only [Set.mem_singleton_iff] at hw
+      subst hw
+      simp [hd.1, hd.2.1, hd.2.2.1, hs0]
+    · rw [hF, Finset.sum_insert hq1', Finset.sum_insert hq2', Finset.sum_insert hq3',
+        Finset.sum_singleton]
+      simp [Ne.symm hd.1, Ne.symm hd.2.1, Ne.symm hd.2.2.1, Ne.symm hd.2.2.2.1,
+        Ne.symm hd.2.2.2.2.1, Ne.symm hd.2.2.2.2.2]
+      linarith
+
+/-- Membership in the hull of four points from nonnegative weights summing
+to 1 (via `mem_convexHull_of_exists_fintype` at `ι = Fin 4`). -/
+private theorem p21_mem_hull4 {w0 w1 w2 w3 y : V3} {c0 c1 c2 c3 : ℝ}
+    (hc0 : 0 ≤ c0) (hc1 : 0 ≤ c1) (hc2 : 0 ≤ c2) (hc3 : 0 ≤ c3)
+    (hcsum : c0 + c1 + c2 + c3 = 1)
+    (hy : y = c0 • w0 + c1 • w1 + c2 • w2 + c3 • w3) :
+    y ∈ convexHull ℝ ({w0, w1, w2, w3} : Set V3) := by
+  refine mem_convexHull_of_exists_fintype ![c0, c1, c2, c3] ![w0, w1, w2, w3] ?_ ?_ ?_ ?_
+  · intro i
+    fin_cases i <;> simp [hc0, hc1, hc2, hc3]
+  · rw [Fin.sum_univ_four]
+    simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons]
+    exact hcsum
+  · intro i
+    fin_cases i <;> simp
+  · rw [Fin.sum_univ_four, hy]
+    simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons]
+    simp
+
+/-- HOL `CONVEX_HULL_4_AFF_GE` (TSKAJXY3.hl:336; proved 2026-09-29 wave A1:
+both containments from the explicit weight characterisations of the two
+`affGe`s, the coefficient uniqueness closing the reverse one). -/
 theorem CONVEX_HULL_4_AFF_GE (w0 w1 w2 w3 : V3) (hcp : ¬Coplanar ({w0, w1, w2, w3} : Set V3)) :
     convexHull ℝ ({w0, w1, w2, w3} : Set V3) =
       affGe ({w0} : Set V3) {w1, w2, w3} ∩
         affGe ({w1, w2, w3} : Set V3) ({w0} : Set V3) := by
-  sorry
+  have hd := p21_ne_of_notCoplanar hcp
+  have hfin1 : ((({w0} : Set V3) ∪ {w1, w2, w3}) : Set V3).Finite := by simp
+  have hfin2 : ((({w1, w2, w3} : Set V3) ∪ {w0}) : Set V3).Finite := by simp
+  have hconv : Convex ℝ (affGe ({w0} : Set V3) {w1, w2, w3} ∩
+      affGe ({w1, w2, w3} : Set V3) ({w0} : Set V3)) :=
+    (p21_convex_affGe hfin1).inter (p21_convex_affGe hfin2)
+  have hsub : ({w0, w1, w2, w3} : Set V3) ⊆ affGe ({w0} : Set V3) {w1, w2, w3} ∩
+      affGe ({w1, w2, w3} : Set V3) ({w0} : Set V3) := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with he | he | he | he
+    · rw [he]
+      exact ⟨p21_mem_affGe_vertex hfin1 (Set.mem_singleton w0),
+        p21_mem_affGe_vertex_t hfin2 (Set.mem_singleton w0)⟩
+    · rw [he]
+      exact ⟨p21_mem_affGe_vertex_t hfin1 (Set.mem_insert w1 {w2, w3}),
+        p21_mem_affGe_vertex hfin2 (Set.mem_insert w1 {w2, w3})⟩
+    · rw [he]
+      exact ⟨p21_mem_affGe_vertex_t hfin1 (Set.mem_insert_of_mem _ (Set.mem_insert w2 {w3})),
+        p21_mem_affGe_vertex hfin2 (Set.mem_insert_of_mem _ (Set.mem_insert w2 {w3}))⟩
+    · rw [he]
+      exact ⟨p21_mem_affGe_vertex_t hfin1
+          (Set.mem_insert_of_mem _ (Set.mem_insert_of_mem _ (Set.mem_singleton w3))),
+        p21_mem_affGe_vertex hfin2
+          (Set.mem_insert_of_mem _ (Set.mem_insert_of_mem _ (Set.mem_singleton w3)))⟩
+  refine Set.Subset.antisymm (convexHull_min hsub hconv) ?_
+  intro y hy
+  obtain ⟨t0, t1, t2, t3, ht1, ht2, ht3, htsum, hty⟩ :=
+    (p21_affGe_1_3_char hd y).mp hy.1
+  obtain ⟨s0, s1, s2, s3, hs0, hssum, hsy⟩ :=
+    (p21_affGe_3_1_char hd y).mp hy.2
+  have heq : t0 • w0 + t1 • w1 + t2 • w2 + t3 • w3 = s0 • w0 + s1 • w1 + s2 • w2 + s3 • w3 :=
+    hty.symm.trans hsy
+  obtain ⟨rfl, rfl, rfl, rfl⟩ := p21_coeff_unique hcp htsum hssum heq
+  exact p21_mem_hull4 hs0 ht1 ht2 ht3 htsum hty
 
-/-- HOL `CONVEX_HULL_SCALE` (TSKAJXY3.hl:363; giant). -/
+/-- HOL `CONVEX_HULL_SCALE` (TSKAJXY3.hl:363; proved 2026-09-29 wave A1:
+coefficient comparison against the `affGe {w1,w2,w3} {w0}` witness via the
+non-coplanar coefficient uniqueness). -/
 theorem CONVEX_HULL_SCALE (w0 w1 w2 w3 w : V3) (t : ℝ)
     (hcp : ¬Coplanar ({w0, w1, w2, w3} : Set V3)) (hw : w ∈ convexHull ℝ ({w0, w1, w2, w3} : Set V3))
     (ht : 0 ≤ t)
     (hmem : w0 + t • (w - w0) ∈ affGe ({w1, w2, w3} : Set V3) ({w0} : Set V3)) :
     w0 + t • (w - w0) ∈ convexHull ℝ ({w0, w1, w2, w3} : Set V3) := by
-  sorry
+  have hd := p21_ne_of_notCoplanar hcp
+  rw [CONVEX_HULL_4_AFF_GE w0 w1 w2 w3 hcp] at hw
+  obtain ⟨u0, u1, u2, u3, hu1, hu2, hu3, husum, huw⟩ :=
+    (p21_affGe_1_3_char hd w).mp hw.1
+  obtain ⟨s0, s1, s2, s3, hs0, hssum, hsy⟩ :=
+    (p21_affGe_3_1_char hd (w0 + t • (w - w0))).mp hmem
+  have hc0 : 1 - t + t * u0 + t * u1 + t * u2 + t * u3 = 1 := by
+    have hkey : 1 - t + t * u0 + t * u1 + t * u2 + t * u3
+        = 1 + t * (u0 + u1 + u2 + u3 - 1) := by ring
+    rw [hkey, husum]
+    ring
+  have hvec : w0 + t • (w - w0)
+      = (1 - t + t * u0) • w0 + (t * u1) • w1 + (t * u2) • w2 + (t * u3) • w3 := by
+    rw [huw]
+    module
+  have hEq : (1 - t + t * u0) • w0 + (t * u1) • w1 + (t * u2) • w2 + (t * u3) • w3
+      = s0 • w0 + s1 • w1 + s2 • w2 + s3 • w3 := by
+    rw [← hvec, ← hsy]
+  obtain ⟨hc0eq, hc1eq, hc2eq, hc3eq⟩ := p21_coeff_unique hcp hc0 hssum hEq
+  refine p21_mem_hull4 ?_ ?_ ?_ ?_ hc0 hvec
+  · linarith
+  · exact mul_nonneg ht hu1
+  · exact mul_nonneg ht hu2
+  · exact mul_nonneg ht hu3
 
 /-- HOL `IMAGE_4_EXPLICIT` (TSKAJXY3.hl:394). -/
 theorem IMAGE_4_EXPLICIT {B : Type*} (f : ℕ → B) :
@@ -1651,28 +2211,161 @@ theorem IMAGE_4_EXPLICIT {B : Type*} (f : ℕ → B) :
   · rintro (rfl | rfl | rfl | rfl) <;> exact ⟨_, by norm_num, rfl⟩
 
 /-- HOL `NULLSET_MCELL1` applied form `NOT_COPLANAR_OMEGA_LIST_N`
-(TSKAJXY3.hl:422; giant). -/
+(TSKAJXY3.hl:422; proved 2026-09-29 wave A1: the Rogers simplex is the hull
+of the four omega points, a coplanar hull dies inside the null span of a
+three-point affine hull, and `mcell1 ⊆ rogers`). -/
 theorem NOT_COPLANAR_OMEGA_LIST_N (V : Set V3) (ul : List V3) (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 ul) (h1 : ¬nullSet (mcell1 V ul)) :
     ¬Coplanar {omegaListN V ul i | i ≤ 3} := by
-  sorry
+  intro hcp
+  obtain ⟨p, q, r, hsub⟩ := hcp
+  have hlen : ul.length = 4 := hb.1
+  have himg : ∀ j : ℕ, j < ul.length →
+      omegaListN V ul j ∈ {omegaListN V ul i | i ≤ 3} := by
+    intro j hj
+    exact ⟨j, by omega, rfl⟩
+  have hspan : rogers V ul ⊆ (affineSpan ℝ ({p, q, r} : Set V3) : Set V3) := by
+    have hstep1 : rogers V ul ⊆
+        (affineSpan ℝ (omegaListN V ul '' {j : ℕ | j < ul.length}) : Set V3) := by
+      rw [rogers]
+      exact convexHull_subset_affineSpan _
+    have hstep2 : affineSpan ℝ (omegaListN V ul '' {j : ℕ | j < ul.length})
+        ≤ affineSpan ℝ ({p, q, r} : Set V3) := by
+      refine affineSpan_le.2 ?_
+      rintro x ⟨j, hj, rfl⟩
+      simp only [Set.mem_image, Set.mem_setOf_eq] at hj
+      exact hsub (himg j hj)
+    intro x hx
+    exact SetLike.mem_coe.2 (hstep2 (hstep1 hx))
+  have hsub1 : mcell1 V ul ⊆ rogers V ul := by
+    rw [mcell1]
+    by_cases hcond : Real.sqrt 2 ≤ hl ul
+    · rw [if_pos hcond]
+      exact Set.diff_subset.trans Set.inter_subset_left
+    · rw [if_neg hcond]
+      exact Set.empty_subset _
+  have hne : (affineSpan ℝ ({p, q, r} : Set V3) : AffineSubspace ℝ V3) ≠ ⊤ := by
+    have hle2 : Module.finrank ℝ (vectorSpan ℝ ({p, q, r} : Set V3)) ≤ 2 := by
+      have hvs : vectorSpan ℝ ({p, q, r} : Set V3)
+          ≤ Submodule.span ℝ ({q - p, r - p} : Set V3) := by
+        rw [vectorSpan_eq_span_vsub_set_left (k := ℝ)
+          (Set.mem_insert p ({q, r} : Set V3)), Submodule.span_le]
+        rintro z ⟨x, hx, rfl⟩
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+        rcases hx with he | he | he
+        · rw [he]; simp
+        · rw [he]
+          simp only [vsub_eq_sub]
+          have hneg : (p - q : V3) = -(q - p) := by rw [neg_sub]
+          rw [hneg]
+          exact Submodule.neg_mem _ (Submodule.subset_span
+            (Set.mem_insert (q - p) ({r - p} : Set V3)))
+        · rw [he]
+          simp only [vsub_eq_sub]
+          have hneg : (p - r : V3) = -(r - p) := by rw [neg_sub]
+          rw [hneg]
+          exact Submodule.neg_mem _ (Submodule.subset_span
+            (Set.mem_insert_of_mem (q - p) (Set.mem_singleton (r - p))))
+      refine le_trans (Submodule.finrank_mono hvs) ?_
+      refine le_trans (finrank_span_le_card (R := ℝ) (M := V3)
+        (s := ({q - p, r - p} : Set V3))) ?_
+      have hncard : ({q - p, r - p} : Set V3).toFinset.card ≤ 2 := by
+        have h1 : ({q - p, r - p} : Set V3).ncard
+            ≤ ({r - p} : Set V3).ncard + 1 := Set.ncard_insert_le _ _
+        have h2 : ({r - p} : Set V3).ncard = 1 := Set.ncard_singleton _
+        have h3 : ({q - p, r - p} : Set V3).ncard
+            = ({q - p, r - p} : Set V3).toFinset.card := Set.ncard_eq_toFinset_card' _
+        omega
+      exact hncard
+    intro htop
+    have hvec : vectorSpan ℝ ({p, q, r} : Set V3) = ⊤ := by
+      rw [← direction_affineSpan, htop, AffineSubspace.direction_top]
+    have hfr : Module.finrank ℝ (vectorSpan ℝ ({p, q, r} : Set V3)) = 3 := by
+      rw [hvec]
+      simp
+    omega
+  have hnull : volume ((affineSpan ℝ ({p, q, r} : Set V3) : Set V3)) = 0 :=
+    MeasureTheory.Measure.addHaar_affineSubspace volume _ hne
+  have h0 : volume (mcell1 V ul) = 0 :=
+    measure_mono_null hsub1 (measure_mono_null hspan hnull)
+  exact h1 h0
 
-/-- HOL `NOT_COPLANAR_R3` (TSKAJXY3.hl:452; giant: needs the aff_dim
-characterisation of `Coplanar`). -/
+/-- HOL `NOT_COPLANAR_R3` (TSKAJXY3.hl:452; proved 2026-09-29 wave A1:
+`affDim s = 3` via the contrapositive of `AFF_DIM_LE_2_IMP_COPLANAR`
+(PA6) and the `finrank`-characterisation of `affineSpan = ⊤`. -/
 theorem NOT_COPLANAR_R3 (s : Set V3) (h : ¬Coplanar s) :
     (affineSpan ℝ s : Set V3) = Set.univ := by
-  sorry
+  have hne : s ≠ ∅ := fun he => h (by rw [he]; exact coplanar_empty)
+  have h3 : 3 ≤ affDim s := by
+    by_contra hle
+    exact h (AFF_DIM_LE_2_IMP_COPLANAR s (by
+      simpa using show (affDim s : ℤ) ≤ 2 from by omega))
+  have hle3 : affDim s ≤ 3 := by
+    simp only [affDim, if_neg (nonempty_iff_ne_empty.1 (Set.nonempty_iff_ne_empty.2 hne))]
+    have h1 : Module.finrank ℝ (vectorSpan ℝ s) ≤ 3 := by
+      have h2 : Module.finrank ℝ (vectorSpan ℝ s)
+          ≤ Module.finrank ℝ (⊤ : Submodule ℝ V3) := Submodule.finrank_mono le_top
+      have h3 : Module.finrank ℝ (⊤ : Submodule ℝ V3) = Module.finrank ℝ V3 :=
+        finrank_top ℝ V3
+      have h4 : Module.finrank ℝ V3 = 3 := finrank_euclideanSpace_fin
+      omega
+    exact Nat.cast_le.2 h1
+  have hfin3 : affDim s = 3 := le_antisymm hle3 h3
+  have hdir : (affineSpan ℝ s : AffineSubspace ℝ V3).direction = ⊤ := by
+    rw [direction_affineSpan]
+    refine Submodule.eq_top_of_finrank_eq ?_
+    have hfr : Module.finrank ℝ (vectorSpan ℝ s) = 3 := by
+      have h4 := hfin3
+      simp only [affDim, if_neg (nonempty_iff_ne_empty.1 (Set.nonempty_iff_ne_empty.2 hne))] at h4
+      omega
+    rw [hfr]
+    exact (finrank_euclideanSpace_fin (𝕜 := ℝ) (n := 3)).symm
+  obtain ⟨x, hx⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  have htop : (affineSpan ℝ s : AffineSubspace ℝ V3) = ⊤ :=
+    (AffineSubspace.direction_eq_top_iff_of_nonempty
+      (⟨x, SetLike.mem_coe.2 (mem_affineSpan ℝ hx)⟩ :
+        ((affineSpan ℝ s : AffineSubspace ℝ V3) : Set V3).Nonempty)).mp hdir
+  rw [htop]
+  rfl
 
-/-- HOL `BARV_DISTINCT` (TSKAJXY3.hl:464; giant). -/
+/-- BARV-level distinctness of the first two entries (the
+`voronoi_nondg` length bookkeeping: `[u0, u1]` and `[u0]` would force
+`affDim (voronoiList V ·)` to be both `2` and `3`). -/
+private theorem p21_el01_ne_of_barV {k : ℕ} (V : Set V3) (ul : List V3) (hb : barV V k ul)
+    (hlen : ul.length = 2) : elV ul 0 ≠ elV ul 1 := by
+  rcases ul with _ | ⟨a, t⟩
+  · simp at hlen
+  rcases t with _ | ⟨b, t⟩
+  · simp at hlen
+  have ht : t = [] := by
+    simpa [List.length_cons] using hlen
+  subst ht
+  have hv1 : voronoiNondg V [a, b] := hb.2 [a, b] ⟨⟨[], rfl⟩, by simp⟩
+  have hv0 : voronoiNondg V [a] := hb.2 [a] ⟨⟨[b], rfl⟩, by simp⟩
+  have h1 : affDim (voronoiList V [a, b]) + (2 : ℤ) = 4 := by simpa using hv1.2.2
+  have h2 : affDim (voronoiList V [a]) + (1 : ℤ) = 4 := by simpa using hv0.2.2
+  intro heq
+  have hset : setOfList [a, b] = setOfList [a] := by
+    ext x
+    simp only [setOfList, Set.mem_setOf_eq, List.mem_cons, List.not_mem_nil, or_false]
+    exact ⟨fun h => h.elim (fun h1 => h1) (fun h' => by rw [h']; exact heq.symm),
+      fun h => Or.inl h⟩
+  have hveq : voronoiList V [a, b] = voronoiList V [a] := by
+    rw [voronoiList, voronoiList, hset]
+  rw [hveq] at h1
+  omega
+
+/-- HOL `BARV_DISTINCT` (TSKAJXY3.hl:464; proved 2026-09-29 wave A1). -/
 theorem BARV_DISTINCT (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturated V)
-    (hb : barV V 1 ul) : elV ul 0 ≠ elV ul 1 := by
-  sorry
+    (hb : barV V 1 ul) : elV ul 0 ≠ elV ul 1 :=
+  p21_el01_ne_of_barV V ul hb (by simpa using hb.1)
 
 /-- HOL `OMEGA_LIST_BISECTOR` (TSKAJXY3.hl:495; giant). -/
 theorem OMEGA_LIST_BISECTOR (V : Set V3) (ul : List V3) (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 ul) (h1 : ¬nullSet (mcell1 V ul)) :
     affGe {omegaListN V ul 1, omegaListN V ul 2, omegaListN V ul 3} ({elV ul 0} : Set V3)
       = bisLe (elV ul 0) (elV ul 1) := by
+  -- NEEDS: TSKAJXY3.hl:495；路线（A2 波，1 胞臂最深几何）：face ⊆ 二分面 + 维数/半空间双向夹逼 affGe=bisLe
   sorry
 
 /-- HOL `DIFF_INTER` (TSKAJXY3.hl:589). -/
@@ -1691,6 +2384,7 @@ theorem BARV3_TRUNC1 (V : Set V3) (ul : List V3) (hb : barV V 3 ul) :
 theorem MCELL1_RADIAL (V X : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V)
     (hb : barV V 3 ul) (hX : X = mcell1 V ul) (hn : ¬nullSet X) :
     radialNorm (Real.sqrt 2) (elV ul 0) (X ∩ Metric.ball (elV ul 0) (Real.sqrt 2)) := by
+  -- NEEDS: TSKAJXY3.hl:624；路线（A2 波）：mcell1 四件径向 kit（球壳差集 + 锥差集）组装 radialNorm
   sorry
 
 /-- HOL `MCELL1_VOL` (TSKAJXY3.hl:731; giant: needs the `sol` density
@@ -1698,6 +2392,7 @@ specification at the `sqrt 2`-ball). -/
 theorem MCELL1_VOL (V X : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V)
     (hb : barV V 3 ul) (hX : X = mcell1 V ul) (hn : ¬nullSet X) :
     volume.real X = Real.sqrt 2 ^ 3 / 3 * sol (elV ul 0) X := by
+  -- NEEDS: TSKAJXY3.hl:731；路线（A2 波）：MCELL1_SOL_RESTRICT + sol_spec 合成 vol = √2³/3·sol
   sorry
 
 -- atn2-merge: `HJKDESR1a_1cell` (TSKAJXY3.hl:766 = TSKAJXY1.hl:5652) is
@@ -1707,14 +2402,29 @@ theorem MCELL1_VOL (V X : Set V3) (ul : List V3) (hs : saturated V) (hp : Packin
 /-- HOL `TSKAJXY_1` (TSKAJXY3.hl:780; giant: the 1-cell case of TSKAJXY). -/
 theorem TSKAJXY_1 (V : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V)
     (hb : barV V 3 ul) : gammaX V (mcell1 V ul) lmfun ≥ 0 := by
+  -- NEEDS: TSKAJXY3.hl:780；路线（A2 波）：GAMMAX_MCELL1 + MCELL1_VOL + HJKDESR1a_1cell（PA20 数值种子）实数账
   sorry
 
-/-- HOL `MCELL_CELL_PARAMETERS_D_EXIST` (TSKAJXY3.hl:841; giant). -/
+/-- HOL `MCELL_CELL_PARAMETERS_D_EXIST` (TSKAJXY3.hl:841; proved 2026-09-29
+wave B1: the `cellParamsD` epsilon satisfies its predicate (`epsilon_spec`
+with the witness `(k, ul)`), and `AJRIPQN` (PA17, sorry-tainted upstream)
+identifies its first component with `k`). -/
 theorem MCELL_CELL_PARAMETERS_D_EXIST (V : Set V3) (ul vl : List V3) (k : ℕ) (X : Set V3)
     (hk : k ≤ 4) (hp : Packing V) (hs : saturated V) (hX : X = mcell k V ul)
     (hb : barV V 3 ul) (his : initialSublist vl ul) (hn : ¬nullSet X) :
     (cellParamsD V X vl).1 = k := by
-  sorry
+  have hex : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧
+      initialSublist vl p.2 := ⟨(k, ul), hk, hb, hX, his⟩
+  have heps := Classical.epsilon_spec (p := fun p : ℕ × List V3 =>
+    p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧ initialSublist vl p.2) hex
+  have hb1 : barV V 3 (cellParamsD V X vl).2 := heps.2.1
+  have hi1 : (cellParamsD V X vl).1 ≤ 4 := heps.1
+  have hXw : X = mcell (cellParamsD V X vl).1 V (cellParamsD V X vl).2 := heps.2.2.1
+  have hAj := AJRIPQN V (cellParamsD V X vl).2 ul (cellParamsD V X vl).1 k hs hp hb1 hb
+    (by simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; omega)
+    (by simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; omega)
+    (by rw [← hXw, ← hX, Set.inter_self]; exact hn)
+  exact hAj.1
 
 /-- HOL `INITIAL_SUBLIST_2` (TSKAJXY3.hl:868). -/
 theorem INITIAL_SUBLIST_2 (ul : List V3) (h : ul.length = 4) :
@@ -1729,34 +2439,102 @@ theorem INITIAL_SUBLIST_2 (ul : List V3) (h : ul.length = 4) :
   · simp at h
   · simp [initialSublist, elV]
 
-/-- HOL `MCELL2_CELL_PARAMETERS_EXIST` (TSKAJXY3.hl:884; giant). -/
+/-- HOL `MCELL2_CELL_PARAMETERS_EXIST` (TSKAJXY3.hl:884; proved 2026-09-29
+wave B1: `MCELL_CELL_PARAMETERS_D_EXIST` at `k = 2` with the pair as the
+initial sublist, via `INITIAL_SUBLIST_2`). -/
 theorem MCELL2_CELL_PARAMETERS_EXIST (V : Set V3) (ul : List V3) (X : Set V3)
     (hp : Packing V) (hs : saturated V) (hX : X = mcell2 V ul) (hb : barV V 3 ul)
     (hn : ¬nullSet X) : (cellParamsD V X [elV ul 0, elV ul 1]).1 = 2 := by
-  sorry
+  refine MCELL_CELL_PARAMETERS_D_EXIST V ul [elV ul 0, elV ul 1] 2 X (by norm_num) hp hs
+    ?_ hb (INITIAL_SUBLIST_2 ul (by simpa using hb.1)) hn
+  rw [hX, BumpP4.MCELL2]
 
-/-- HOL `MCELL_PARAM_D_UL` (TSKAJXY3.hl:897; giant). -/
+/-- HOL `MCELL_PARAM_D_UL` (TSKAJXY3.hl:897; proved 2026-09-29 wave B1:
+`cellParamsD V X ul'`'s epsilon satisfies its predicate, and `AJRIPQN`
+(PA17, sorry-tainted upstream) transfers the parameters). -/
 theorem MCELL_PARAM_D_UL (V : Set V3) (ul ul' vl : List V3) (X : Set V3) (k : ℕ)
     (hk : k ≤ 4) (hp : Packing V) (hs : saturated V) (hX : X = mcell k V ul)
     (hb : barV V 3 ul) (hn : ¬nullSet X) (his : initialSublist ul' ul)
     (hvl : vl = (cellParamsD V X ul').2) :
     X = mcell k V vl ∧ barV V 3 vl ∧ initialSublist ul' vl := by
-  sorry
+  have hex : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧
+      initialSublist ul' p.2 := ⟨(k, ul), hk, hb, hX, his⟩
+  have heps := Classical.epsilon_spec (p := fun p : ℕ × List V3 =>
+    p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧ initialSublist ul' p.2) hex
+  have hb1 : barV V 3 (cellParamsD V X ul').2 := heps.2.1
+  have hi1 : (cellParamsD V X ul').1 ≤ 4 := heps.1
+  have hXw : X = mcell (cellParamsD V X ul').1 V (cellParamsD V X ul').2 := heps.2.2.1
+  have hvl' : vl = (cellParamsD V X ul').2 := hvl
+  subst hvl'
+  have hAj := AJRIPQN V ul (cellParamsD V X ul').2 k (cellParamsD V X ul').1 hs hp hb hb1
+    (by simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; omega)
+    (by simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; omega)
+    (by rw [← hXw, ← hX, Set.inter_self]; exact hn)
+  rw [hvl, hAj.1, ← hAj.2, ← hX]
+  refine ⟨rfl, hb1, heps.2.2.2⟩
 
-/-- HOL `MCELL2_PARAM_D_UL` (TSKAJXY3.hl:923; giant). -/
+/-- HOL `MCELL2_PARAM_D_UL` (TSKAJXY3.hl:923; proved 2026-09-29 wave B1:
+`MCELL_PARAM_D_UL` at `k = 2`). -/
 theorem MCELL2_PARAM_D_UL (V : Set V3) (ul ul' vl : List V3) (X : Set V3)
     (hp : Packing V) (hs : saturated V) (hX : X = mcell2 V ul) (hb : barV V 3 ul)
     (hn : ¬nullSet X) (his : initialSublist ul' ul)
     (hvl : vl = (cellParamsD V X ul').2) :
     X = mcell2 V vl ∧ barV V 3 vl ∧ initialSublist ul' vl := by
-  sorry
+  have hres := MCELL_PARAM_D_UL V ul ul' vl X 2 (by norm_num) hp hs hX hb hn his hvl
+  rw [BumpP4.MCELL2]
+  exact hres
 
-/-- HOL `MCELL2_DIHX` (TSKAJXY3.hl:936; giant). -/
+/-- HOL `MCELL2_DIHX` (TSKAJXY3.hl:936; proved 2026-09-29 wave B1: the
+`cellParamsD` witness at `k = 2` has the same first two entries and, by the
+cell-rigidity kit (`MCELL_ID_MXI_2` / `MCELL_ID_OMEGA_LIST_N`, PA15), the
+same `mxi` and `omega_list_n 3`, so `dihX` folds back to `dihu2 V ul`). -/
 theorem MCELL2_DIHX (V X : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V)
     (hb : barV V 3 ul) (hX : X = mcell2 V ul) (hn : ¬nullSet X) :
     dihX V X (elV ul 0, elV ul 1) =
       dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) := by
-  sorry
+  have hq1 : (cellParamsD V X [elV ul 0, elV ul 1]).1 = 2 :=
+    MCELL2_CELL_PARAMETERS_EXIST V ul X hp hs hX hb hn
+  have hex : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧
+      initialSublist [elV ul 0, elV ul 1] p.2 := ⟨(2, ul), by norm_num, hb,
+    by rw [hX, BumpP4.MCELL2], INITIAL_SUBLIST_2 ul (by simpa using hb.1)⟩
+  have heps := Classical.epsilon_spec (p := fun p : ℕ × List V3 =>
+    p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧
+      initialSublist [elV ul 0, elV ul 1] p.2) hex
+  have hb1 : barV V 3 (cellParamsD V X [elV ul 0, elV ul 1]).2 := heps.2.1
+  have heq1 : (cellParamsD V X [elV ul 0, elV ul 1]).1 = 2 := hq1
+  have hinit : initialSublist [elV ul 0, elV ul 1]
+      (cellParamsD V X [elV ul 0, elV ul 1]).2 := heps.2.2.2
+  -- the witness list starts with the same two points
+  have hpre : elV (cellParamsD V X [elV ul 0, elV ul 1]).2 0 = elV ul 0 ∧
+      elV (cellParamsD V X [elV ul 0, elV ul 1]).2 1 = elV ul 1 := by
+    obtain ⟨yl, hy⟩ := hinit
+    rw [hy]
+    exact ⟨by simp [elV, List.getD_append], by simp [elV, List.getD_append]⟩
+  have hXw : X = mcell (cellParamsD V X [elV ul 0, elV ul 1]).1
+      V (cellParamsD V X [elV ul 0, elV ul 1]).2 := heps.2.2.1
+  have hXe : mcell 2 V (cellParamsD V X [elV ul 0, elV ul 1]).2 = mcell 2 V ul := by
+    have h5 : mcell (cellParamsD V X [elV ul 0, elV ul 1]).1
+        V (cellParamsD V X [elV ul 0, elV ul 1]).2
+        = mcell 2 V (cellParamsD V X [elV ul 0, elV ul 1]).2 :=
+      congrArg (fun i : ℕ => mcell i V (cellParamsD V X [elV ul 0, elV ul 1]).2) heq1
+    exact Eq.trans h5.symm (Eq.trans hXw.symm (Eq.trans hX (BumpP4.MCELL2 V ul)))
+  have hd : ¬nullSet (mcell 2 V (cellParamsD V X [elV ul 0, elV ul 1]).2) := by
+    rw [hXe]
+    intro hc
+    exact hn (by rw [hX]; exact hc)
+  have hI := (MCELL_ID_OMEGA_LIST_N V 2 2 (cellParamsD V X [elV ul 0, elV ul 1]).2 ul hp hs
+    hb1 hb hXe hd (by simp) (by simp)).2 3 (by omega)
+  have hM := MCELL_ID_MXI_2 V 2 2 (cellParamsD V X [elV ul 0, elV ul 1]).2 ul hp hs
+    hb1 hb hXe hd (by simp) (by simp)
+  rw [dihX, if_neg hn]
+  simp only [hq1, if_true, dihu2]
+  have final : dihV (elV (cellParamsD V X [elV ul 0, elV ul 1]).2 0)
+        (elV (cellParamsD V X [elV ul 0, elV ul 1]).2 1)
+        (mxi V (cellParamsD V X [elV ul 0, elV ul 1]).2)
+        (omegaListN V (cellParamsD V X [elV ul 0, elV ul 1]).2 3)
+      = dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) := by
+    rw [hpre.1, hpre.2, hM, hI]
+  exact final
 
 /-- HOL `BIS_LE_INTER` (TSKAJXY3.hl:978). -/
 theorem BIS_LE_INTER (u0 u1 : V3) : bisLe u0 u1 ∩ bisLe u1 u0 = bis u0 u1 := by
@@ -2176,42 +2954,195 @@ theorem RCONE_PAIR (u v : V3) (t : ℝ) (huv : u ≠ v) (ht : 0 < t) (ht1 : t �
   rw [Set.mem_setOf_eq]
   exact hfinal
 
-/-- NEEDS (NOT discharged this wave): the degenerate-`mcell2` null lemma and
-its consumers. Filling `MCELL2_SPLIT`/`MCELL2_VOL_SPLIT` needs, for
-`u := elV ul 0`, `v := elV ul 1`:
-  1. `u ≠ v` from `¬nullSet (mcell2 V ul)`:
-     `u = v` forces `mcell2 V ul = ((rc∩rc) ∩ affGe {u,u} {mxi,omega})` with
-     `rc = ⊤`, so the cell sits in `u + span {mxi - u, omega - u}`, a
-     translate of a ≤2-dim subspace (`finrank_span_finset_le_card`),
-     null by `Measure.addHaar_submodule`. (Drafted; abandoned: the
-     `Finset.sum`-membership bookkeeping under the `ofLp`-coercions made the
-     `conv_lhs/rw`-chains too brittle for this wave.)
-  2. `RCONE_PAIR` (this file, proved below) for the `rconeGe v u a` half of
-     `MCELL2_SPLIT`, plus `MCELL2_HL_LT_SQRT2` + the `√2 ≤ hl ul` half.
-  3. `MCELL2_VOL_SPLIT` additionally needs the null bisector hyperplane
-     (`BIS_HYPERPLANE` + `p21_hyperplane_null`-style: strict affine subspace
-     `p₀ + ker(p ↦ c ⬝ᵥ p)`, null by `Measure.addHaar_affineSubspace`), the
-     `volume.real`-level union-inter additivity, and `BIS_LE_INTER`/`BIS_LE_UNION`.
--/
+/-- HOL `MCELL2_HL_LT_SQRT2` (TSKAJXY3.hl:1678; ported 2026-09-29 wave B1 —
+was missing from the skeleton AND the NEEDS list (scout §5.1); one-line
+by-contradiction from the `mcell2` definition: a failed side condition makes
+the cell empty, hence null). -/
+theorem MCELL2_HL_LT_SQRT2 (V : Set V3) (ul : List V3) (hs : saturated V)
+    (hp : Packing V) (hb : barV V 3 ul) (hn : ¬nullSet (mcell2 V ul)) :
+    hl (truncateSimplex 1 ul) < Real.sqrt 2 := by
+  by_contra hge
+  refine hn (by rw [mcell2, if_neg (fun hc => hge hc.1)]; exact measure_empty)
+
 theorem MCELL2_SPLIT (V X : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V)
     (hb : barV V 3 ul) (hX : X = mcell2 V ul) (hn : ¬nullSet X) :
     X ∩ bisLe (elV ul 0) (elV ul 1) =
       rconeGe (elV ul 0) (elV ul 1) (hl (truncateSimplex 1 ul) / Real.sqrt 2) ∩
         affGe {elV ul 0, elV ul 1} {mxi V ul, omegaListN V ul 3} ∩
           bisLe (elV ul 0) (elV ul 1) := by
-  sorry
+  have huv : elV ul 0 ≠ elV ul 1 := fun heq =>
+    hn (by rw [hX]; exact p21_mcell2_uv_null V ul heq)
+  have hlt := MCELL2_HL_LT_SQRT2 V ul hs hp hb (by rw [← hX]; exact hn)
+  have hpos := BARV_IMP_HL_1_POS_LT V ul hs hp hb
+  have hcond : hl (truncateSimplex 1 ul) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ul := by
+    refine ⟨hlt, ?_⟩
+    by_contra hge
+    refine hn ?_
+    rw [hX, mcell2, if_neg (fun hc => hge hc.2)]
+    exact measure_empty
+  have h1 : 0 < hl (truncateSimplex 1 ul) / Real.sqrt 2 :=
+    div_pos hpos (Real.sqrt_pos.mpr (by norm_num))
+  have h2 : hl (truncateSimplex 1 ul) / Real.sqrt 2 ≤ 1 :=
+    (div_le_one (Real.sqrt_pos.mpr (by norm_num))).mpr
+      (le_trans (le_of_lt hlt) (Real.sqrt_le_sqrt (by norm_num : (2:ℝ) ≤ 2)))
+  have hcent : hdV ul = elV ul 0 ∧ hdV ul.tail = elV ul 1 := by
+    cases ul with
+    | nil => exact absurd hb.1 (by simp)
+    | cons a t =>
+      cases t with
+      | nil => exact absurd hb.1 (by simp)
+      | cons b t => exact ⟨rfl, rfl⟩
+  refine Set.Subset.antisymm ?_ ?_
+  · intro x hx
+    rw [Set.mem_inter_iff] at hx
+    obtain ⟨hxX, hxb⟩ := hx
+    rw [hX, mcell2, if_pos hcond, hcent.1, hcent.2, Set.mem_inter_iff,
+      Set.mem_inter_iff] at hxX
+    obtain ⟨hcc, f2, hfin2, hxw, hxb'⟩ := hxX
+    obtain ⟨hc1, hc2⟩ := hcc
+    refine And.intro (And.intro hc1 ⟨f2, hfin2, hxw, hxb'⟩) hxb
+  · intro x hx
+    rw [Set.mem_inter_iff] at hx
+    obtain ⟨hxAB, hxb⟩ := hx
+    rw [Set.mem_inter_iff] at hxAB
+    obtain ⟨hc1, hxw⟩ := hxAB
+    rw [hX, mcell2, if_pos hcond, hcent.1, hcent.2]
+    refine And.intro (And.intro (And.intro hc1 ?_) hxw) hxb
+    exact RCONE_PAIR (elV ul 0) (elV ul 1) (hl (truncateSimplex 1 ul) / Real.sqrt 2)
+      huv h1 h2 ⟨hc1, hxb⟩
 
 theorem MCELL2_VOL_SPLIT (V X : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V)
     (hb : barV V 3 ul) (hX : X = mcell2 V ul) (hn : ¬nullSet X) :
     volume.real X = volume.real (X ∩ bisLe (elV ul 0) (elV ul 1)) +
       volume.real (X ∩ bisLe (elV ul 1) (elV ul 0)) := by
-  sorry
+  have huv : elV ul 0 ≠ elV ul 1 := fun heq =>
+    hn (by rw [hX]; exact p21_mcell2_uv_null V ul heq)
+  have hXm : MeasurableSet X := by rw [hX]; exact MEASURABLE_MCELL V ul 2 hs hp hb
+  have hA : MeasurableSet (X ∩ bisLe (elV ul 0) (elV ul 1)) :=
+    MCELL2_INTER_BIS_LE_MEASURABLE (elV ul 0) (elV ul 1) V X ul hp hs hb hX
+  have hB : MeasurableSet (X ∩ bisLe (elV ul 1) (elV ul 0)) :=
+    MCELL2_INTER_BIS_LE_MEASURABLE (elV ul 1) (elV ul 0) V X ul hp hs hb hX
+  have hc : (2:ℝ) • ((elV ul 0 : V3) - elV ul 1) ≠ 0 := by
+    intro hz
+    apply huv
+    apply sub_eq_zero.mp
+    have h5 : ‖(2:ℝ) • ((elV ul 0 : V3) - elV ul 1)‖ = 2 * ‖(elV ul 0 : V3) - elV ul 1‖ := by
+      rw [norm_smul]; simp
+    rw [hz, norm_zero] at h5
+    exact norm_eq_zero.mp (by linarith)
+  have hnullbis : volume (bis (elV ul 0) (elV ul 1)) = 0 := by
+    rw [BIS_HYPERPLANE]
+    exact p21_hyperplane_null ((2:ℝ) • ((elV ul 0 : V3) - elV ul 1)) hc _
+  have hDm : MeasurableSet (X ∩ {y : V3 | dist y (elV ul 1) < dist y (elV ul 0)}) :=
+    hXm.inter (isOpen_lt (continuous_id.dist continuous_const)
+      (continuous_id.dist continuous_const)).measurableSet
+  have hdis : Disjoint (X ∩ bisLe (elV ul 0) (elV ul 1))
+      (X ∩ {y : V3 | dist y (elV ul 1) < dist y (elV ul 0)}) := by
+    refine Set.disjoint_left.mpr fun x hx => ?_
+    rw [Set.mem_inter_iff] at hx
+    obtain ⟨haX, hble⟩ := hx
+    intro hx2
+    rw [Set.mem_inter_iff] at hx2
+    obtain ⟨_, hdst⟩ := hx2
+    simp only [bisLe, Set.mem_setOf_eq] at hble
+    simp only [Set.mem_setOf_eq] at hdst
+    exfalso
+    linarith
+  have hcover : X ⊆ (X ∩ bisLe (elV ul 0) (elV ul 1)) ∪
+      (X ∩ {y : V3 | dist y (elV ul 1) < dist y (elV ul 0)}) := by
+    intro x hx
+    by_cases hlt : dist x (elV ul 1) < dist x (elV ul 0)
+    · exact Or.inr
+        ((Set.mem_inter_iff (x := x) (a := X)
+            (b := {y : V3 | dist y (elV ul 1) < dist y (elV ul 0)})).mpr ⟨hx, hlt⟩)
+    · exact Or.inl
+        ((Set.mem_inter_iff (x := x) (a := X) (b := bisLe (elV ul 0) (elV ul 1))).mpr
+          ⟨hx, le_of_not_gt hlt⟩)
+  have hDsubB : X ∩ {y : V3 | dist y (elV ul 1) < dist y (elV ul 0)}
+      ⊆ X ∩ bisLe (elV ul 1) (elV ul 0) := by
+    intro x hx
+    rw [Set.mem_inter_iff] at hx
+    obtain ⟨hxX, hxd⟩ := hx
+    have hle : dist x (elV ul 1) ≤ dist x (elV ul 0) := le_of_lt hxd
+    exact (Set.mem_inter_iff (x := x) (a := X) (b := bisLe (elV ul 1) (elV ul 0))).mpr
+      ⟨hxX, hle⟩
+  have hBsplit : X ∩ bisLe (elV ul 1) (elV ul 0) ⊆
+      (X ∩ {y : V3 | dist y (elV ul 1) < dist y (elV ul 0)}) ∪ (X ∩ bis (elV ul 0) (elV ul 1)) := by
+    intro x hx
+    rw [Set.mem_inter_iff] at hx
+    obtain ⟨hxX, hxd⟩ := hx
+    by_cases heq : dist x (elV ul 1) = dist x (elV ul 0)
+    · refine Or.inr ⟨hxX, ?_⟩
+      simp only [bis, Set.mem_setOf_eq]
+      exact heq.symm
+    · refine Or.inl ⟨hxX, lt_of_le_of_ne hxd heq⟩
+  have hbnd : Bornology.IsBounded X := by rw [hX]; exact BOUNDED_MCELL V ul 2 hs hp hb
+  have hXlt : volume X < ⊤ := hbnd.measure_lt_top
+  have hXne : volume X ≠ ⊤ := ne_of_lt hXlt
+  have hAne : volume (X ∩ bisLe (elV ul 0) (elV ul 1)) ≠ ⊤ :=
+    ne_top_of_lt (lt_of_le_of_lt (measure_mono Set.inter_subset_left) hXlt)
+  have hBne : volume (X ∩ bisLe (elV ul 1) (elV ul 0)) ≠ ⊤ :=
+    ne_top_of_lt (lt_of_le_of_lt (measure_mono Set.inter_subset_left) hXlt)
+  have hE1 : volume X = volume (X ∩ bisLe (elV ul 0) (elV ul 1)) +
+      volume (X ∩ {y : V3 | dist y (elV ul 1) < dist y (elV ul 0)}) := by
+    refine le_antisymm ?_ ?_
+    · refine le_trans (measure_mono hcover) ?_
+      rw [measure_union hdis hDm]
+    · refine le_trans (le_of_eq (Eq.symm (measure_union hdis hDm))) ?_
+      refine measure_mono ?_
+      exact Set.union_subset
+        (Set.inter_subset_left : X ∩ bisLe (elV ul 0) (elV ul 1) ⊆ X)
+        (Set.inter_subset_left : X ∩ {y : V3 | dist y (elV ul 1) < dist y (elV ul 0)} ⊆ X)
+  have hDB : volume (X ∩ {y : V3 | dist y (elV ul 1) < dist y (elV ul 0)})
+      = volume (X ∩ bisLe (elV ul 1) (elV ul 0)) := by
+    refine le_antisymm (measure_mono hDsubB) ?_
+    calc volume (X ∩ bisLe (elV ul 1) (elV ul 0))
+        ≤ volume ((X ∩ {y : V3 | dist y (elV ul 1) < dist y (elV ul 0)}) ∪
+            (X ∩ bis (elV ul 0) (elV ul 1))) := measure_mono hBsplit
+      _ ≤ volume (X ∩ {y : V3 | dist y (elV ul 1) < dist y (elV ul 0)}) +
+            volume (X ∩ bis (elV ul 0) (elV ul 1)) :=
+          measure_union_le (X ∩ {y : V3 | dist y (elV ul 1) < dist y (elV ul 0)})
+            (X ∩ bis (elV ul 0) (elV ul 1))
+      _ = volume (X ∩ {y : V3 | dist y (elV ul 1) < dist y (elV ul 0)}) + 0 := by
+          rw [measure_mono_null
+            (Set.inter_subset_right : (X ∩ bis (elV ul 0) (elV ul 1)) ⊆ bis (elV ul 0) (elV ul 1))
+            hnullbis]
+      _ = volume (X ∩ {y : V3 | dist y (elV ul 1) < dist y (elV ul 0)}) := add_zero _
+  rw [Measure.real_def, Measure.real_def, Measure.real_def, hE1, hDB]
+  exact ENNReal.toReal_add hAne hBne
 
-/-- HOL `FRUSTT_RCONE_GE` (TSKAJXY3.hl:1275; giant). -/
-theorem FRUSTT_RCONE_GE (u v : V3) (h a : ℝ) (ha : 0 < a) (huv : u ≠ v) :
-    nullSet (symmDiff (frustt u v h a)
-      (rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖})) := by
-  sorry
+/-- A single point is Lebesgue-null in `V3` (it is the affine subspace
+`u + ⊥`). -/
+private theorem p21_point_null (u : V3) : volume ({u} : Set V3) = 0 := by
+  have h0 : volume ((AffineSubspace.mk' u (⊥ : Submodule ℝ V3) : AffineSubspace ℝ V3) : Set V3) = 0 :=
+    MeasureTheory.Measure.addHaar_affineSubspace volume _ (by
+      intro h
+      have h4 : ((AffineSubspace.mk' u (⊥ : Submodule ℝ V3) : AffineSubspace ℝ V3)).direction
+          = (⊥ : Submodule ℝ V3) := AffineSubspace.direction_mk' _ _
+      rw [h, AffineSubspace.direction_top] at h4
+      exact bot_ne_top h4.symm)
+  refine measure_mono_null (Set.singleton_subset_iff.2 ?_) h0
+  exact SetLike.mem_coe.2 (AffineSubspace.mem_mk'.mpr (by simp))
+
+/-- A translate of the line `u + ℝ • w` is Lebesgue-null in `V3`. -/
+private theorem p21_ray_null (u w : V3) (hw : w ≠ 0) :
+    volume {x : V3 | x - u ∈ Submodule.span ℝ ({w} : Set V3)} = 0 := by
+  have h0 : volume ((AffineSubspace.mk' u (Submodule.span ℝ ({w} : Set V3)) :
+      AffineSubspace ℝ V3) : Set V3) = 0 :=
+    MeasureTheory.Measure.addHaar_affineSubspace volume _ (by
+      intro h
+      have h4 : ((AffineSubspace.mk' u (Submodule.span ℝ ({w} : Set V3)) :
+          AffineSubspace ℝ V3)).direction = Submodule.span ℝ ({w} : Set V3) :=
+        AffineSubspace.direction_mk' _ _
+      rw [h, AffineSubspace.direction_top] at h4
+      have h5 : Module.finrank ℝ (Submodule.span ℝ ({w} : Set V3)) = 1 :=
+        finrank_span_singleton hw
+      have h6 : Module.finrank ℝ (⊤ : Submodule ℝ V3) = 3 := by simp
+      rw [← h4] at h5
+      omega)
+  refine measure_mono_null ?_ h0
+  intro x hx
+  exact SetLike.mem_coe.2 (AffineSubspace.mem_mk'.mpr hx)
 
 /-- HOL `SDIFF_SUBSET` (TSKAJXY3.hl:1339). -/
 theorem SDIFF_SUBSET (X Y Z : Set V3) :
@@ -2237,6 +3168,211 @@ theorem NULL_SDIFF_TRANS (X Y Z : Set V3) (h1 : nullSet (symmDiff X Y))
   rw [h1, h2, add_zero] at hle
   exact le_antisymm hle (by simp)
 
+/-! ## FRUSTT_RCONE_GE: the circular-cone-surface null engine (TSKAJXY3.hl:1275)
+
+The HOL proof reduces `FRUSTT_RCONE_GE` to the null-ness of the
+`circular_cone` surface (its `NULLSET_RULES` step).  In Lean that surface is
+handled by slicing with the `Kepler.Geom.WedgeVolume` frame projection
+(`measurePreserving_proj`): the `t`-sections of the surface are circles in
+`ℂ`, so `measure_prod_null_of_ae_null` closes it.  WedgeVolume was not in the
+import closure (scout §3.4 flagged PA4/PA18; this wave adds the acyclic
+`Kepler.Geom.WedgeVolume` import — it imports only Mathlib + Kepler.Geom
+modules).  The two frame identities below are copies of the PRIVATE
+`Kepler.Geom.WedgeVolume` helpers `zOf_norm_sq`/`on3_norm_sq`. -/
+
+/-- Frame identity: `‖zOf e1 e2 x‖² = (x⬝e1)² + (x⬝e2)²` (copy of the private
+`Kepler.Geom.WedgeVolume.zOf_norm_sq`). -/
+private theorem p21_zOf_norm_sq (e1 e2 : V3) (x : V3) :
+    ‖zOf e1 e2 x‖ ^ 2 = (x ⬝ᵥ e1) ^ 2 + (x ⬝ᵥ e2) ^ 2 := by
+  rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+  simp only [zOf, Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im,
+    Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, mul_zero,
+    add_zero, zero_add, mul_one, sub_self]
+  ring
+
+/-- Frame identity: `‖x‖² = (x⬝e1)² + (x⬝e2)² + (x⬝e3)²` for an ON frame (copy
+of the private `Kepler.Geom.WedgeVolume.on3_norm_sq`). -/
+private theorem p21_on3_norm_sq (e1 e2 e3 : V3) (he : Orthonormal3 e1 e2 e3) (x : V3) :
+    ‖x‖ ^ 2 = (x ⬝ᵥ e1) ^ 2 + (x ⬝ᵥ e2) ^ 2 + (x ⬝ᵥ e3) ^ 2 := by
+  have h12 : e1 ⬝ᵥ e2 = 0 := he.2.2.2.1
+  have h21 : e2 ⬝ᵥ e1 = 0 := by rw [p21_dot_comm]; exact he.2.2.2.1
+  have h13 : e1 ⬝ᵥ e3 = 0 := he.2.2.2.2.1
+  have h31 : e3 ⬝ᵥ e1 = 0 := by rw [p21_dot_comm]; exact he.2.2.2.2.1
+  have h23 : e2 ⬝ᵥ e3 = 0 := he.2.2.2.2.2.1
+  have h32 : e3 ⬝ᵥ e2 = 0 := by rw [p21_dot_comm]; exact he.2.2.2.2.2.1
+  rw [norm_sq_eq_dot, on3_expand he x]
+  simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+    smul_dotProduct, dotProduct_smul, smul_eq_mul]
+  rw [he.1, he.2.1, he.2.2.1, h12, h21, h13, h31, h23, h32]
+  ring
+
+/-- The surface of the circular cone `{x | x ⬝ᵥ w = ‖x‖ * ‖w‖ * a}` about the
+`w`-axis is Lebesgue-null (`w ≠ 0`, `0 < a`).  In a right-hand ON frame with
+axis `e3 ∥ w` the measure-preserving projection `x ↦ (x ⬝ᵥ e3, zOf e1 e2 x)`
+carries it into a set whose `t`-sections are the circles
+`{ζ | ‖ζ‖ = t·√(1−a²)/a}` (degenerate to `{0}` when `a ≥ 1`), so Fubini
+(`measure_prod_null_of_ae_null`) applies.  This is the `circular_cone` step
+of HOL `FRUSTT_RCONE_GE` (TSKAJXY3.hl:1275). -/
+private theorem p21_cone_surf_null (w : V3) (hw : w ≠ 0) (a : ℝ) (ha : 0 < a) :
+    volume {x : V3 | x ⬝ᵥ w = ‖x‖ * ‖w‖ * a} = 0 := by
+  obtain ⟨e1, e2, e3, he, hax⟩ := exists_on3_eq_smul w hw
+  have hw0 : (0:ℝ) < ‖w‖ := norm_pos_iff.2 hw
+  have hzOf := p21_zOf_norm_sq e1 e2
+  have hNx := p21_on3_norm_sq e1 e2 e3 he
+  -- the surface is carried into T' by the measure-preserving frame projection
+  have hsub : {x : V3 | x ⬝ᵥ w = ‖x‖ * ‖w‖ * a}
+      ⊆ (fun x : V3 => (x ⬝ᵥ e3, zOf e1 e2 x)) ⁻¹'
+          {p : ℝ × ℂ | p.1 * ‖w‖ = Real.sqrt (p.1 ^ 2 + ‖p.2‖ ^ 2) * ‖w‖ * a} := by
+    intro x hx
+    simp only [Set.mem_setOf_eq, Set.mem_preimage] at hx ⊢
+    have h1 : x ⬝ᵥ w = ‖w‖ * (x ⬝ᵥ e3) := by
+      have h0 : x ⬝ᵥ w = x ⬝ᵥ (‖w‖ • e3) :=
+        congrArg (fun z : V3 => x ⬝ᵥ z) hax
+      rw [h0, p21_dot_smul]
+    have hsq : Real.sqrt ((x ⬝ᵥ e3) ^ 2 + ‖zOf e1 e2 x‖ ^ 2) = ‖x‖ := by
+      have h5 : (x ⬝ᵥ e3) ^ 2 + ‖zOf e1 e2 x‖ ^ 2 = ‖x‖ ^ 2 := by
+        rw [hzOf x, hNx x]; ring
+      rw [h5, Real.sqrt_sq (norm_nonneg x)]
+    show (x ⬝ᵥ e3) * ‖w‖
+        = Real.sqrt ((x ⬝ᵥ e3) ^ 2 + ‖zOf e1 e2 x‖ ^ 2) * ‖w‖ * a
+    rw [h1] at hx
+    rw [hsq, mul_comm (x ⬝ᵥ e3) ‖w‖]
+    exact hx
+  have hmeas : MeasurableSet {p : ℝ × ℂ | p.1 * ‖w‖
+      = Real.sqrt (p.1 ^ 2 + ‖p.2‖ ^ 2) * ‖w‖ * a} := by
+    have hf : Measurable (fun p : ℝ × ℂ => p.1 * ‖w‖) :=
+      measurable_fst.mul measurable_const
+    have hsq2 : Measurable (fun p : ℝ × ℂ => p.1 ^ 2 + ‖p.2‖ ^ 2) :=
+      (measurable_fst.pow_const 2).add (measurable_snd.norm.pow_const 2)
+    have hg : Measurable (fun p : ℝ × ℂ =>
+        Real.sqrt (p.1 ^ 2 + ‖p.2‖ ^ 2) * ‖w‖ * a) :=
+      (((Real.continuous_sqrt.measurable).comp hsq2).mul
+        measurable_const).mul measurable_const
+    have hsub0 : {p : ℝ × ℂ | p.1 * ‖w‖ = Real.sqrt (p.1 ^ 2 + ‖p.2‖ ^ 2) * ‖w‖ * a}
+        = (fun p : ℝ × ℂ => p.1 * ‖w‖
+            - Real.sqrt (p.1 ^ 2 + ‖p.2‖ ^ 2) * ‖w‖ * a) ⁻¹' ({0} : Set ℝ) := by
+      ext p
+      simp only [Set.mem_setOf_eq, Set.mem_preimage, Set.mem_singleton_iff,
+        sub_eq_zero]
+    rw [hsub0]
+    exact (hf.sub hg) (measurableSet_singleton 0)
+  -- the per-section claim: the ζ-slice is the circle of radius `t·√(1−a²)/a`
+  have hchar : ∀ (t : ℝ) (ζ : ℂ),
+      t * ‖w‖ = Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2) * ‖w‖ * a →
+      ‖ζ‖ = t * Real.sqrt (1 - a ^ 2) / a := by
+    intro t ζ hζ
+    obtain ⟨s, hs, hts⟩ : ∃ s : ℝ, s = Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2) ∧ t = a * s :=
+      ⟨_, rfl, mul_right_cancel₀ hw0.ne' (by rw [hζ]; ring)⟩
+    have htnn : (0:ℝ) ≤ t := by
+      rw [hts]; exact mul_nonneg ha.le (by rw [hs]; exact Real.sqrt_nonneg _)
+    have hsqeq : t ^ 2 = a ^ 2 * s ^ 2 := by rw [hts]; ring
+    have hs2 : s ^ 2 = t ^ 2 + ‖ζ‖ ^ 2 := by
+      rw [hs]; exact Real.sq_sqrt (add_nonneg (sq_nonneg t) (sq_nonneg ‖ζ‖))
+    have hzsq' : a ^ 2 * ‖ζ‖ ^ 2 = t ^ 2 * (1 - a ^ 2) := by
+      rw [hs2] at hsqeq
+      nlinarith [hsqeq]
+    by_cases ha1 : a < 1
+    · have hpos1 : (0:ℝ) < 1 - a ^ 2 := by nlinarith [ha1, ha]
+      have hrhs : (t * Real.sqrt (1 - a ^ 2) / a) ^ 2
+          = t ^ 2 * (1 - a ^ 2) / a ^ 2 := by
+        rw [div_pow, mul_pow, Real.sq_sqrt hpos1.le]
+      have ha2 : (0:ℝ) < a ^ 2 := by positivity
+      have h4 : ‖ζ‖ ^ 2 = (t * Real.sqrt (1 - a ^ 2) / a) ^ 2 := by
+        rw [hrhs, eq_div_iff ha2.ne', mul_comm]
+        exact hzsq'
+      have hrnn : (0:ℝ) ≤ t * Real.sqrt (1 - a ^ 2) / a :=
+        div_nonneg (mul_nonneg htnn (Real.sqrt_nonneg _)) ha.le
+      have h6 := congrArg Real.sqrt h4
+      rw [Real.sqrt_sq (norm_nonneg ζ), Real.sqrt_sq_eq_abs, abs_of_nonneg hrnn] at h6
+      exact h6
+    · have ha1 : (1:ℝ) ≤ a := le_of_not_gt ha1
+      have h2 : (1:ℝ) ≤ a ^ 2 := by nlinarith [sq_nonneg a, ha1]
+      have h3 : t ^ 2 ≤ t ^ 2 * a ^ 2 := le_mul_of_one_le_right (sq_nonneg t) h2
+      have hzle : a ^ 2 * ‖ζ‖ ^ 2 ≤ 0 := by
+        rw [hs2] at hsqeq
+        nlinarith [sq_nonneg t]
+      have hz0 : ‖ζ‖ = 0 := by
+        have hzero : a ^ 2 * ‖ζ‖ ^ 2 = 0 := le_antisymm hzle (by positivity)
+        rcases mul_eq_zero.1 hzero with h | h
+        · exact absurd h (by positivity)
+        · exact sq_eq_zero_iff.1 h
+      rw [hz0, Real.sqrt_eq_zero_of_nonpos (by linarith)]
+      ring
+  have hsec : ∀ t : ℝ, volume (Prod.mk t ⁻¹'
+      {p : ℝ × ℂ | p.1 * ‖w‖ = Real.sqrt (p.1 ^ 2 + ‖p.2‖ ^ 2) * ‖w‖ * a}) = 0 := by
+    intro t
+    refine measure_mono_null ?_ (Measure.addHaar_sphere volume (0:ℂ)
+      (t * Real.sqrt (1 - a ^ 2) / a))
+    intro ζ hζ
+    simp only [Set.mem_preimage, Set.mem_setOf_eq] at hζ
+    rw [Metric.mem_sphere, dist_zero_right]
+    exact hchar t ζ hζ
+  have hv2 : (volume.prod volume) {p : ℝ × ℂ | p.1 * ‖w‖
+      = Real.sqrt (p.1 ^ 2 + ‖p.2‖ ^ 2) * ‖w‖ * a} = 0 := by
+    refine Measure.measure_prod_null_of_ae_null hmeas ?_
+    filter_upwards with t
+    exact hsec t
+  have hle : volume {x : V3 | x ⬝ᵥ w = ‖x‖ * ‖w‖ * a}
+      ≤ (volume.prod volume) {p : ℝ × ℂ | p.1 * ‖w‖
+          = Real.sqrt (p.1 ^ 2 + ‖p.2‖ ^ 2) * ‖w‖ * a} := by
+    calc volume {x : V3 | x ⬝ᵥ w = ‖x‖ * ‖w‖ * a}
+        ≤ volume ((fun x : V3 => (x ⬝ᵥ e3, zOf e1 e2 x)) ⁻¹'
+            {p : ℝ × ℂ | p.1 * ‖w‖ = Real.sqrt (p.1 ^ 2 + ‖p.2‖ ^ 2) * ‖w‖ * a}) :=
+          measure_mono hsub
+      _ = (volume.prod volume) {p : ℝ × ℂ | p.1 * ‖w‖
+            = Real.sqrt (p.1 ^ 2 + ‖p.2‖ ^ 2) * ‖w‖ * a} :=
+          (measurePreserving_proj e1 e2 e3 he).measure_preimage hmeas.nullMeasurableSet
+  exact le_antisymm (le_trans hle hv2.le) zero_le
+
+/-- HOL `FRUSTT_RCONE_GE` (TSKAJXY3.hl:1275; proved 2026-09-29 wave B1:
+the symmetric difference dies because `frustt ⊆ rconeGe ∩ H` makes one side
+empty, and the other side lands in the circular-cone surface
+`{x | (x-u)·(v-u) = dist x u * dist v u * a}`, which is null by
+`p21_cone_surf_null`). -/
+theorem FRUSTT_RCONE_GE (u v : V3) (h a : ℝ) (ha : 0 < a) (huv : u ≠ v) :
+    nullSet (symmDiff (frustt u v h a)
+      (rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖})) := by
+  -- the circular-cone surface is null (translate the apex to 0)
+  have hB : volume {x : V3 | (x - u) ⬝ᵥ (v - u) = dist x u * dist v u * a} = 0 := by
+    have hT : volume {y : V3 | y ⬝ᵥ (v - u) = ‖y‖ * ‖v - u‖ * a} = 0 :=
+      p21_cone_surf_null (v - u) (sub_ne_zero.2 (Ne.symm huv)) a ha
+    have hsub : {x : V3 | (x - u) ⬝ᵥ (v - u) = dist x u * dist v u * a}
+        ⊆ (fun y : V3 => u + y) '' {y : V3 | y ⬝ᵥ (v - u) = ‖y‖ * ‖v - u‖ * a} := by
+      rintro x hx
+      refine ⟨x - u, ?_, by abel⟩
+      simp only [Set.mem_setOf_eq, dist_eq_norm] at hx ⊢
+      exact hx
+    have hle : volume {x : V3 | (x - u) ⬝ᵥ (v - u) = dist x u * dist v u * a}
+        ≤ volume ((fun y : V3 => u + y) '' {y : V3 | y ⬝ᵥ (v - u) = ‖y‖ * ‖v - u‖ * a}) :=
+      measure_mono hsub
+    rw [volume_image_add_left, hT] at hle
+    exact le_antisymm hle zero_le
+  -- the symmetric difference lands inside the surface
+  have hsub : symmDiff (frustt u v h a)
+      (rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖})
+      ⊆ {x : V3 | (x - u) ⬝ᵥ (v - u) = dist x u * dist v u * a} := by
+    intro x hx
+    rw [Set.mem_symmDiff] at hx
+    rcases hx with ⟨hxA, hxB⟩ | ⟨hxA, hxB⟩
+    · exfalso
+      simp only [frustt, frustum, rconeGt, Set.mem_inter_iff, Set.mem_setOf_eq] at hxA
+      obtain ⟨⟨hf1, hf2⟩, hgt⟩ := hxA
+      have hge : (x - u) ⬝ᵥ (v - u) ≥ dist x u * dist v u * a := le_of_lt hgt
+      exact hxB ⟨hge, hf2⟩
+    · obtain ⟨hge, hH⟩ := hxA
+      simp only [frustt, frustum, rconeGt, Set.mem_inter_iff, Set.mem_setOf_eq] at hxB
+      show (x - u) ⬝ᵥ (v - u) = dist x u * dist v u * a
+      by_cases hgt : (x - u) ⬝ᵥ (v - u) > dist x u * dist v u * a
+      · exfalso
+        refine hxB ⟨⟨?_, hH⟩, hgt⟩
+        have hnn : (0:ℝ) ≤ dist x u * dist v u * a :=
+          mul_nonneg (mul_nonneg dist_nonneg dist_nonneg) ha.le
+        exact le_of_lt (lt_of_le_of_lt hnn hgt)
+      · exact le_antisymm (not_lt.1 hgt) hge
+  show volume (symmDiff (frustt u v h a)
+      (rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖})) = 0
+  exact le_antisymm (le_trans (measure_mono hsub) hB.le) zero_le
+
 /-- HOL `FRUSTT_WEDGE_RCONE_GE` (TSKAJXY3.hl:1368; giant). -/
 theorem FRUSTT_WEDGE_RCONE_GE (u v w1 w2 : V3) (h a : ℝ) (ha : 0 < a) (huv : u ≠ v)
     (ha1 : a ≤ 1) (hnn : 0 ≤ h)
@@ -2244,6 +3380,7 @@ theorem FRUSTT_WEDGE_RCONE_GE (u v w1 w2 : V3) (h a : ℝ) (ha : 0 < a) (huv : u
     nullSet (symmDiff (frustt u v h a ∩ wedge u v w1 w2)
       (rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖} ∩
         wedgeGe u v w1 w2)) := by
+  -- NEEDS: TSKAJXY3.hl:1368；路线（B2 波）：FRUSTT_RCONE_GE（本波已证）+ WEDGE_WEDGE_GE/WEDGE_SUBSET_WEDGE_GE（PA18:873/2457，需 import PA18）+ NULL_SDIFF_TRANS
   sorry
 
 /-- HOL `MCELL2_SUBSET_AFF_GE` (TSKAJXY3.hl:1419).  Suffixed `_p21` at the
@@ -2273,6 +3410,7 @@ theorem MCELL2_SUBSET_AFF_GE_p21 (V : Set V3) (ul : List V3) (hp : Packing V)
 theorem NOT_COPLANAR_EXTREME_MCELL2 (V : Set V3) (ul : List V3) (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 ul) (hn : ¬nullSet (mcell2 V ul)) :
     ¬Coplanar ({elV ul 0, elV ul 1, mxi V ul, omegaListN V ul 3} : Set V3) := by
+  -- NEEDS: TSKAJXY3.hl:1434；路线（B2 波）：MCELL2_SPLIT 具体化 + MCELL2_SUBSET_AFF_GE_p21 + 非退化极点论证
   sorry
 
 /-- HOL `MCELL2_DIHV_LT_PI` (TSKAJXY3.hl:1456; giant). -/
@@ -2280,6 +3418,7 @@ theorem MCELL2_DIHV_LT_PI (V X : Set V3) (ul : List V3) (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 ul) (hX : X = mcell2 V ul)
     (hn : ¬nullSet X) :
     dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) < Real.pi := by
+  -- NEEDS: TSKAJXY3.hl:1456；路线（B2 波）：mcell2 ⊆ 楔形 ⇒ dihV < π（wedge 奇性排除）
   sorry
 
 /-- HOL `MCELL2_DIHV_AZIM` (TSKAJXY3.hl:1477; giant). -/
@@ -2289,6 +3428,7 @@ theorem MCELL2_DIHV_AZIM (V X : Set V3) (ul : List V3) (hp : Packing V)
     ∃ w1 w2 : V3, {w1, w2} = ({mxi V ul, omegaListN V ul 3} : Set V3) ∧
       dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) =
         azim (elV ul 0) (elV ul 1) w1 w2 := by
+  -- NEEDS: TSKAJXY3.hl:1477；路线（B2 波）：azim_dihv_same 桥（Kepler.Geom）+ MCELL2_SUBSET_AFF_GE_p21 见证迁移
   sorry
 
 /-- HOL `BIS_LE_NORM` (TSKAJXY3.hl:1510; proved by coordinate expansion of
@@ -2406,6 +3546,7 @@ theorem MCELL2_VOL_SPLIT_EXPLICIT (V X : Set V3) (ul : List V3) (h : ℝ)
     volume.real (X ∩ bisLe (elV ul 0) (elV ul 1)) =
       dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) *
         (2 - h ^ 2) * h / 6 := by
+  -- NEEDS: TSKAJXY3.hl:1555；路线（B2/B3 波）：楔形体积闭式 vol(frustum∩wedge) = dihV·h³(1−h²/2)/6（HOL vol1.hl:473 公理级；照 WedgeVolume 切片模板组）
   sorry
 
 /-- HOL `LEFT_ACTION_LIST_1_PROPERTIES_ALT` (TSKAJXY3.hl:1694; giant: a
@@ -2420,6 +3561,7 @@ theorem LEFT_ACTION_LIST_1_PROPERTIES_ALT (V : Set V3) (ul : List V3) (xl : List
       omegaListN V xl 2 = omegaListN V ul 2 ∧
       omegaListN V xl 3 = omegaListN V ul 3 ∧
       mxi V xl = mxi V ul := by
+  -- NEEDS: TSKAJXY3.hl:1694；路线（B2 波）：HOL 本体一行 rewrite；Lean 需补 PA14 left-action kit（PA14:231/258/286 仍 sorry）的置换引理移植
   sorry
 
 /-- HOL `MCELL2_PERMUTE_01` (TSKAJXY3.hl:1714; giant). -/
@@ -2429,6 +3571,7 @@ theorem MCELL2_PERMUTE_01 (V : Set V3) (ul : List V3) (hs : saturated V)
       mxi V ul = mxi V vl ∧ omegaListN V ul 3 = omegaListN V vl 3 ∧
       hl (truncateSimplex 1 ul) = hl (truncateSimplex 1 vl) ∧
       mcell2 V ul = mcell2 V vl ∧ barV V 3 vl := by
+  -- NEEDS: TSKAJXY3.hl:1714；路线（B2 波）：消费 LEFT_ACTION_LIST_1_PROPERTIES_ALT（上一件）做 01-交换见证迁移
   sorry
 
 /-- HOL `MCELL2_VOL` (TSKAJXY3.hl:1774; giant). -/
@@ -2438,6 +3581,7 @@ theorem MCELL2_VOL (V X : Set V3) (ul : List V3) (h : ℝ) (hs : saturated V)
     volume.real X =
       dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) *
         (2 - h ^ 2) * h / 3 := by
+  -- NEEDS: TSKAJXY3.hl:1774；路线（B3 波）：MCELL2_VOL_SPLIT + 2× MCELL2_VOL_SPLIT_EXPLICIT（经 MCELL2_PERMUTE_01）
   sorry
 
 /-- HOL `BALL_SUBSET_BIS_LE` (TSKAJXY3.hl:1817). -/
@@ -2485,6 +3629,7 @@ theorem MCELL2_SOL (V X : Set V3) (ul : List V3) (h : ℝ) (hs : saturated V)
     sol (elV ul 0) X =
       dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) *
         (1 - h / Real.sqrt 2) := by
+  -- NEEDS: TSKAJXY3.hl:1859；路线（B3 波，臂内最大单件 HOL 205 行）：URRPHBZ2-k2 径向 + VOLUME_CONIC_CAP(_WEDGE) 闭式 + SDIFF 账
   sorry
 
 /-- HOL `GAMMAX_GAMMA2_X` (TSKAJXY3.hl:2070; giant: reduces `gammaX` of a
@@ -2500,6 +3645,7 @@ theorem GAMMAX_GAMMA2_X (V X : Set V3) (ul : List V3) (y1 y2 y3 y4 y5 y6 : ℝ)
     0 ≤ dihY y1 y2 y3 y4 y5 y6 ∧
       gammaX V X lmfun =
         gamma2_x_div_azim_v2 (h0cut y1) (y1 * y1) * dihY y1 y2 y3 y4 y5 y6 := by
+  -- NEEDS: TSKAJXY3.hl:2070；路线（B3 波）：GAMMAX_MCELL2 + MCELL2_VOL + MCELL2_SOL + PERMUTE_01 + MCELL2_DIHX + DIHV_EQ_DIH_Y/DIHV_RANGE + lmfun_h0cut + sqrt8_sqrt2
   sorry
 
 /-- HOL `TSKAJXY_2` (TSKAJXY3.hl:2181; giant: the 2-cell case, consuming
@@ -2507,6 +3653,7 @@ GAMMAX_GAMMA2_X + the GRKIBMP bank). -/
 theorem TSKAJXY_2 (V X : Set V3) (ul : List V3) (hnl : pack_nonlinear_non_ox3q1h)
     (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul)
     (hX : X = mcell2 V ul) : gammaX V X lmfun ≥ 0 := by
+  -- NEEDS: TSKAJXY3.hl:2181；路线（B3 波）：GAMMAX_GAMMA2_X + GRKIBMP（:465 已证）+ mi_y_bounds + 实数账
   sorry
 
 /-- HOL `tsk_required_ineq` (TSKAJXY3.hl:2240): the string keys of the
