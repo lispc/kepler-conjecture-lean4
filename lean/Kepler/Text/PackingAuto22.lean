@@ -288,15 +288,6 @@ theorem endpoint_closure_lemma (a2 b c : ℝ) (ha : 0 < a2) (hc : 0 < c)
     linarith
   · exact h t ht hlt
 
-/-- HOL `eus1` (counting_spheres.hl:85): facets of a planar polyhedron have
-supporting-hyperplane representations.  GIANT. -/
-theorem eus1 (P c : Set ℂ) (hP : polyhedronC P) (hc : facetOfC c P) :
-    ∃ a : ℂ, ∃ b : ℝ, ‖a‖ = 1 ∧
-      (∀ r : ℝ, 0 < r → (∀ p : ℂ, ‖p‖ < r → p ∈ P) → r ≤ b) ∧
-      P ⊆ {x : ℂ | dot2 a x ≤ b} ∧
-      c = P ∩ {x : ℂ | dot2 a x = b} := by
-  sorry
-
 /-- HOL `facet_rep_uniq` (counting_spheres.hl:161). GIANT. -/
 theorem facet_rep_uniq (P c1 c2 : Set ℂ) (a : ℂ) (b1 b2 : ℝ)
     (hP : polyhedronC P) (h1 : facetOfC c1 P) (h2 : facetOfC c2 P)
@@ -318,67 +309,6 @@ theorem facet_rep_uniq (P c1 c2 : Set ℂ) (a : ℂ) (b1 b2 : ℝ)
   have hb21 : b2 ≤ b1 := by rw [← hyb2]; exact s1 hyP
   refine ⟨le_antisymm hb12 hb21, ?_⟩
   rw [e1, e2, le_antisymm hb12 hb21]
-
-/-- The facet representation pair chosen by `facet_rep_spec`. -/
-private noncomputable def facetRepPair : Set ℂ × Set ℂ → ℂ × ℝ :=
-  fun Pc => if h : polyhedronC Pc.1 ∧ facetOfC Pc.2 Pc.1 then
-    ((eus1 Pc.1 Pc.2 h.1 h.2).choose,
-      Classical.choose (Classical.choose_spec (eus1 Pc.1 Pc.2 h.1 h.2)))
-    else (0, 0)
-
-/-- HOL `facet_rep_spec` (counting_spheres.hl:184): a global choice of facet
-representations; gives `facet_rep_a` / `facet_rep_b`. -/
-theorem facet_rep_spec :
-    ∃ a : Set ℂ → Set ℂ → ℂ, ∃ b : Set ℂ → Set ℂ → ℝ, ∀ (P c : Set ℂ),
-      polyhedronC P → facetOfC c P →
-        ‖a P c‖ = 1 ∧
-        (∀ r : ℝ, 0 < r → (∀ p : ℂ, ‖p‖ < r → p ∈ P) → r ≤ b P c) ∧
-        P ⊆ {x : ℂ | dot2 (a P c) x ≤ b P c} ∧
-        c = P ∩ {x : ℂ | dot2 (a P c) x = b P c} := by
-  classical
-  refine ⟨fun P c => (facetRepPair (P, c)).1, fun P c => (facetRepPair (P, c)).2, ?_⟩
-  intro P c hP hF
-  have hspec := Classical.choose_spec (Classical.choose_spec (eus1 P c hP hF))
-  simp only [facetRepPair]
-  split
-  · exact hspec
-  · rename_i h
-    exact absurd (And.intro hP hF) h
-
-/-- HOL `facet_rep_def` (new_specification of `facet_rep_a`). -/
-noncomputable def facet_rep_a (P c : Set ℂ) : ℂ := Classical.choose facet_rep_spec P c
-
-/-- HOL `facet_rep_def` (new_specification of `facet_rep_b`). -/
-noncomputable def facet_rep_b (P c : Set ℂ) : ℝ :=
-  Classical.choose (Classical.choose_spec facet_rep_spec) P c
-
-/-- Unfolding of the `facet_rep_a/b` specification. -/
-theorem facet_rep_props (P c : Set ℂ) (hP : polyhedronC P) (hc : facetOfC c P) :
-    ‖facet_rep_a P c‖ = 1 ∧
-      (∀ r : ℝ, 0 < r → (∀ p : ℂ, ‖p‖ < r → p ∈ P) → r ≤ facet_rep_b P c) ∧
-      P ⊆ {x : ℂ | dot2 (facet_rep_a P c) x ≤ facet_rep_b P c} ∧
-      c = P ∩ {x : ℂ | dot2 (facet_rep_a P c) x = facet_rep_b P c} :=
-  (Classical.choose_spec (Classical.choose_spec facet_rep_spec)) P c hP hc
-
-/-- HOL `facet_rep_uniq_c` (counting_spheres.hl:200). Filled from
-`facet_rep_uniq` applied at the common normal direction. -/
-theorem facet_rep_uniq_c (P c1 c2 : Set ℂ) (hP : polyhedronC P)
-    (h1 : facetOfC c1 P) (h2 : facetOfC c2 P)
-    (h : facet_rep_a P c1 = facet_rep_a P c2) : c1 = c2 := by
-  have s1 : P ⊆ {x : ℂ | dot2 (facet_rep_a P c1) x ≤ facet_rep_b P c1} :=
-    (facet_rep_props P c1 hP h1).2.2.1
-  have e1 : c1 = P ∩ {x : ℂ | dot2 (facet_rep_a P c1) x = facet_rep_b P c1} :=
-    (facet_rep_props P c1 hP h1).2.2.2
-  have s2 : P ⊆ {x : ℂ | dot2 (facet_rep_a P c1) x ≤ facet_rep_b P c2} := by
-    have hs := (facet_rep_props P c2 hP h2).2.2.1
-    rw [← h] at hs
-    exact hs
-  have e2 : c2 = P ∩ {x : ℂ | dot2 (facet_rep_a P c1) x = facet_rep_b P c2} := by
-    have he := (facet_rep_props P c2 hP h2).2.2.2
-    rw [← h] at he
-    exact he
-  exact (facet_rep_uniq P c1 c2 (facet_rep_a P c1) (facet_rep_b P c1)
-    (facet_rep_b P c2) hP h1 h2 s1 s2 e1 e2).2
 
 /-- Expansion of the planar dot product in coordinates. -/
 theorem dot2_expand (z w : ℂ) : dot2 z w = z.re * w.re + z.im * w.im := by
@@ -417,8 +347,8 @@ theorem norm1_cauchy_eq (x y : ℂ) (hx : ‖x‖ = 1) (hy : ‖y‖ = 1)
   have hxy0 : x - y = 0 := norm_eq_zero.mp (sq_eq_zero_iff.mp h0)
   exact eq_of_sub_eq_zero hxy0
 
-/-- Homogeneity of `dot2` in the second argument (private copy placed before
-`facet_rep_in_facet`, which precedes `dot2_smul_right` in this file). -/
+/-- Homogeneity of `dot2` in the second argument (private frozen copy kept for
+the `facet_rep_*` kit; identical to the public `dot2_smul_right`). -/
 private theorem p22_dot2_smul_right (a x : ℂ) (c : ℝ) : dot2 a (c • x) = c * dot2 a x := by
   rw [dot2_expand, dot2_expand]
   have h1 : (c • x : ℂ).re = c * x.re := by simp
@@ -447,76 +377,6 @@ private theorem p22_dot2_cauchy (x y : ℂ) : dot2 x y ≤ ‖x‖ * ‖y‖ := 
     calc dot2 x y ≤ |dot2 x y| := le_abs_self _
       _ ≤ |‖x‖ * ‖y‖| := hle
       _ = ‖x‖ * ‖y‖ := abs_of_nonneg hnn
-
-/-- HOL `facet_rep_in_facet` (counting_spheres.hl:227). GIANT. -/
-theorem facet_rep_in_facet (P c1 c2 : Set ℂ) (r : ℝ) (hP : polyhedronC P)
-    (h1 : facetOfC c1 P) (h2 : facetOfC c2 P) (hr : 0 < r)
-    (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
-    (h : facet_rep_b P c1 ≤ dot2 (facet_rep_a P c1) (r • facet_rep_a P c2)) :
-    c1 = c2 := by
-  have hpr1 := facet_rep_props P c1 hP h1
-  have hpr2 := facet_rep_props P c2 hP h2
-  have hn1 : ‖facet_rep_a P c1‖ = 1 := hpr1.1
-  have hn2 : ‖facet_rep_a P c2‖ = 1 := hpr2.1
-  -- every ball point pins the supporting value from below: r ≤ facet_rep_b P c1
-  have hpt : ∀ t : ℝ, 0 ≤ t → t < r → t ≤ facet_rep_b P c1 := by
-    intro t htnn htlt
-    have hnb : ‖(t • facet_rep_a P c1 : ℂ)‖ < r := by
-      rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg htnn, hn1]
-      simpa using htlt
-    have hle : dot2 (facet_rep_a P c1) (t • facet_rep_a P c1) ≤ facet_rep_b P c1 :=
-      hpr1.2.2.1 (hrad _ hnb)
-    rw [p22_dot2_smul_right, p22_dot2_self, hn1] at hle
-    simpa using hle
-  have hrb : r ≤ facet_rep_b P c1 := by
-    by_contra hcon
-    have hblt : facet_rep_b P c1 < r := lt_of_not_ge hcon
-    rcases lt_or_ge (facet_rep_b P c1) 0 with hneg | hpos
-    · have h0 := hpt 0 (by norm_num) hr
-      linarith
-    · have ht := hpt ((facet_rep_b P c1 + r) / 2) (by linarith) (by linarith)
-      linarith
-  -- the hypothesis plus Cauchy–Schwarz forces the inner product to be 1
-  rw [p22_dot2_smul_right] at h
-  have hcs0 : dot2 (facet_rep_a P c1) (facet_rep_a P c2)
-      ≤ ‖facet_rep_a P c1‖ * ‖facet_rep_a P c2‖ :=
-    p22_dot2_cauchy _ _
-  rw [hn1, hn2, mul_one] at hcs0
-  have h1cd : (1 : ℝ) ≤ dot2 (facet_rep_a P c1) (facet_rep_a P c2) := by
-    have hmul : r * 1 ≤ r * dot2 (facet_rep_a P c1) (facet_rep_a P c2) := by
-      rw [mul_one]; exact hrb.trans h
-    exact le_of_mul_le_mul_left hmul hr
-  have haeq : facet_rep_a P c1 = facet_rep_a P c2 :=
-    norm1_cauchy_eq _ _ hn1 hn2 (le_antisymm hcs0 h1cd)
-  exact facet_rep_uniq_c P c1 c2 hP h1 h2 haeq
-
-/-- HOL `facet_rep_refl` (counting_spheres.hl:257). Filled: ball points pin the
-supporting value from below (`r ≤ facet_rep_b P c`), and `dot2 â (r • â) = r`. -/
-theorem facet_rep_refl (P c : Set ℂ) (r : ℝ) (hP : polyhedronC P)
-    (hc : facetOfC c P) (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) :
-    dot2 (facet_rep_a P c) (r • facet_rep_a P c) ≤ facet_rep_b P c := by
-  have hpr := facet_rep_props P c hP hc
-  have hn1 : ‖facet_rep_a P c‖ = 1 := hpr.1
-  -- every ball point pins the supporting value from below
-  have hpt : ∀ t : ℝ, 0 ≤ t → t < r → t ≤ facet_rep_b P c := by
-    intro t htnn htlt
-    have hnb : ‖(t • facet_rep_a P c : ℂ)‖ < r := by
-      rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg htnn, hn1]
-      simpa using htlt
-    have hle : dot2 (facet_rep_a P c) (t • facet_rep_a P c) ≤ facet_rep_b P c :=
-      hpr.2.2.1 (hrad _ hnb)
-    rw [p22_dot2_smul_right, p22_dot2_self, hn1] at hle
-    simpa using hle
-  have hrb : r ≤ facet_rep_b P c := by
-    by_contra hcon
-    have hblt : facet_rep_b P c < r := lt_of_not_ge hcon
-    rcases lt_or_ge (facet_rep_b P c) 0 with hneg | hpos
-    · have h0 := hpt 0 (by norm_num) hr
-      linarith
-    · have ht := hpt ((facet_rep_b P c + r) / 2) (by linarith) (by linarith)
-      linarith
-  rw [p22_dot2_smul_right, p22_dot2_self, hn1]
-  simpa using hrb
 
 /-- Additivity of `dot2` in the second argument. -/
 theorem dot2_add_right (a x y : ℂ) : dot2 a (x + y) = dot2 a x + dot2 a y := by
@@ -1648,6 +1508,211 @@ theorem p22_facetOfCPolyhedron {P : Set ℂ} (hP : polyhedronC P) {c : Set ℂ}
   have h0 : x ∈ j := Set.mem_sInter.1 hx.2 j hjF
   rw [(hFprop j hjF).2] at h0
   exact h0
+
+/-- HOL `eus1` (counting_spheres.hl:85): facets of a planar polyhedron have
+supporting-hyperplane representations.  GIANT. -/
+theorem eus1 (P c : Set ℂ) (hP : polyhedronC P) (hc : facetOfC c P) :
+    ∃ a : ℂ, ∃ b : ℝ, ‖a‖ = 1 ∧
+      (∀ r : ℝ, 0 < r → (∀ p : ℂ, ‖p‖ < r → p ∈ P) → r ≤ b) ∧
+      P ⊆ {x : ℂ | dot2 a x ≤ b} ∧
+      c = P ∩ {x : ℂ | dot2 a x = b} := by
+  -- the supporting halfspace from the facet kit, rescaled to a unit normal
+  obtain ⟨a₀, b₀, ha₀, hsub₀, heq₀⟩ := p22_facetOfCPolyhedron hP hc
+  have ht : 0 < ‖a₀‖ := norm_pos_iff.mpr ha₀
+  have htne : ‖a₀‖ ≠ 0 := ne_of_gt ht
+  -- homogeneity of `dot2` in its *first* argument (via commutativity)
+  have hsmull : ∀ (t : ℝ) (u w : ℂ), dot2 (t • u) w = t * dot2 u w := by
+    intro t u w
+    rw [dot2_comm (t • u) w, dot2_smul_right w u t, dot2_comm w u]
+  -- the unit normal â := ‖a₀‖⁻¹ • a₀
+  have hnormâ : ‖((‖a₀‖⁻¹ : ℝ) • a₀ : ℂ)‖ = 1 := by
+    rw [norm_smul, Real.norm_eq_abs, abs_of_pos (inv_pos.mpr ht), inv_mul_cancel₀ htne]
+  refine ⟨(‖a₀‖⁻¹ : ℝ) • a₀, b₀ / ‖a₀‖, hnormâ, ?_, ?_, ?_⟩
+  · -- the ball pins the supporting value: r ≤ b₀ / ‖a₀‖
+    intro r hr hball
+    have h0in : (0 : ℂ) ∈ P := hball 0 (by simpa using hr)
+    have hb₀nn : 0 ≤ b₀ := by
+      have h0 := hsub₀ h0in
+      rw [Set.mem_setOf_eq, dot2_expand] at h0
+      simpa using h0
+    -- every ball point pins the supporting value from below: s * ‖a₀‖ ≤ b₀
+    have hpt : ∀ s : ℝ, 0 ≤ s → s < r → s * ‖a₀‖ ≤ b₀ := by
+      intro s hsnn hslt
+      have hnb : ‖(s • ((‖a₀‖⁻¹ : ℝ) • a₀) : ℂ)‖ < r := by
+        rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg hsnn, hnormâ, mul_one]
+        exact hslt
+      have hle := hsub₀ (hball _ hnb)
+      rw [Set.mem_setOf_eq, smul_smul, dot2_smul_right, p22_dot2_self] at hle
+      have hconv : (s * ‖a₀‖⁻¹) * ‖a₀‖ ^ 2 = s * ‖a₀‖ := by field_simp
+      rw [hconv] at hle
+      exact hle
+    by_contra hcon
+    push_neg at hcon
+    have hbllt : b₀ < r * ‖a₀‖ := (div_lt_iff₀ ht).mp hcon
+    have hb₀dnn : 0 ≤ b₀ / ‖a₀‖ := div_nonneg hb₀nn ht.le
+    have hsnn : 0 ≤ (b₀ / ‖a₀‖ + r) / 2 := div_nonneg (by linarith) (by norm_num)
+    have hmid : (b₀ / ‖a₀‖ + r) / 2 < r := by
+      rw [div_lt_iff₀ (by norm_num : (0:ℝ) < 2)]
+      linarith
+    have hle := hpt _ hsnn hmid
+    have hgt : b₀ < (b₀ / ‖a₀‖ + r) / 2 * ‖a₀‖ := by
+      have h2t : ((b₀ / ‖a₀‖ + r) / 2 * ‖a₀‖) * 2 = b₀ + r * ‖a₀‖ := by field_simp
+      linarith
+    linarith
+  · -- the supporting halfspace, rescaled
+    intro x hx
+    have hle : dot2 a₀ x ≤ b₀ := hsub₀ hx
+    rw [Set.mem_setOf_eq, dot2_comm, dot2_smul_right, dot2_comm, le_div_iff₀ ht,
+      mul_assoc, mul_comm (dot2 a₀ x) ‖a₀‖, ← mul_assoc, inv_mul_cancel₀ htne,
+      one_mul]
+    exact hle
+  · -- the facet is exactly the slice of the rescaled hyperplane
+    rw [heq₀]
+    ext x
+    refine ⟨fun hx' => ?_, fun hx' => ?_⟩
+    · obtain ⟨hxP, hxe⟩ := hx'
+      rw [Set.mem_setOf_eq] at hxe
+      refine ⟨hxP, ?_⟩
+      rw [Set.mem_setOf_eq, hsmull, hxe]
+      ring
+    · obtain ⟨hxP, hxe⟩ := hx'
+      rw [Set.mem_setOf_eq, hsmull] at hxe
+      refine ⟨hxP, ?_⟩
+      rw [Set.mem_setOf_eq]
+      have h2 := congrArg (fun v : ℝ => v * ‖a₀‖) hxe
+      field_simp at h2
+      exact h2
+
+/-- The facet representation pair chosen by `facet_rep_spec`. -/
+private noncomputable def facetRepPair : Set ℂ × Set ℂ → ℂ × ℝ :=
+  fun Pc => if h : polyhedronC Pc.1 ∧ facetOfC Pc.2 Pc.1 then
+    ((eus1 Pc.1 Pc.2 h.1 h.2).choose,
+      Classical.choose (Classical.choose_spec (eus1 Pc.1 Pc.2 h.1 h.2)))
+    else (0, 0)
+
+/-- HOL `facet_rep_spec` (counting_spheres.hl:184): a global choice of facet
+representations; gives `facet_rep_a` / `facet_rep_b`. -/
+theorem facet_rep_spec :
+    ∃ a : Set ℂ → Set ℂ → ℂ, ∃ b : Set ℂ → Set ℂ → ℝ, ∀ (P c : Set ℂ),
+      polyhedronC P → facetOfC c P →
+        ‖a P c‖ = 1 ∧
+        (∀ r : ℝ, 0 < r → (∀ p : ℂ, ‖p‖ < r → p ∈ P) → r ≤ b P c) ∧
+        P ⊆ {x : ℂ | dot2 (a P c) x ≤ b P c} ∧
+        c = P ∩ {x : ℂ | dot2 (a P c) x = b P c} := by
+  classical
+  refine ⟨fun P c => (facetRepPair (P, c)).1, fun P c => (facetRepPair (P, c)).2, ?_⟩
+  intro P c hP hF
+  have hspec := Classical.choose_spec (Classical.choose_spec (eus1 P c hP hF))
+  simp only [facetRepPair]
+  split
+  · exact hspec
+  · rename_i h
+    exact absurd (And.intro hP hF) h
+
+/-- HOL `facet_rep_def` (new_specification of `facet_rep_a`). -/
+noncomputable def facet_rep_a (P c : Set ℂ) : ℂ := Classical.choose facet_rep_spec P c
+
+/-- HOL `facet_rep_def` (new_specification of `facet_rep_b`). -/
+noncomputable def facet_rep_b (P c : Set ℂ) : ℝ :=
+  Classical.choose (Classical.choose_spec facet_rep_spec) P c
+
+/-- Unfolding of the `facet_rep_a/b` specification. -/
+theorem facet_rep_props (P c : Set ℂ) (hP : polyhedronC P) (hc : facetOfC c P) :
+    ‖facet_rep_a P c‖ = 1 ∧
+      (∀ r : ℝ, 0 < r → (∀ p : ℂ, ‖p‖ < r → p ∈ P) → r ≤ facet_rep_b P c) ∧
+      P ⊆ {x : ℂ | dot2 (facet_rep_a P c) x ≤ facet_rep_b P c} ∧
+      c = P ∩ {x : ℂ | dot2 (facet_rep_a P c) x = facet_rep_b P c} :=
+  (Classical.choose_spec (Classical.choose_spec facet_rep_spec)) P c hP hc
+
+/-- HOL `facet_rep_uniq_c` (counting_spheres.hl:200). Filled from
+`facet_rep_uniq` applied at the common normal direction. -/
+theorem facet_rep_uniq_c (P c1 c2 : Set ℂ) (hP : polyhedronC P)
+    (h1 : facetOfC c1 P) (h2 : facetOfC c2 P)
+    (h : facet_rep_a P c1 = facet_rep_a P c2) : c1 = c2 := by
+  have s1 : P ⊆ {x : ℂ | dot2 (facet_rep_a P c1) x ≤ facet_rep_b P c1} :=
+    (facet_rep_props P c1 hP h1).2.2.1
+  have e1 : c1 = P ∩ {x : ℂ | dot2 (facet_rep_a P c1) x = facet_rep_b P c1} :=
+    (facet_rep_props P c1 hP h1).2.2.2
+  have s2 : P ⊆ {x : ℂ | dot2 (facet_rep_a P c1) x ≤ facet_rep_b P c2} := by
+    have hs := (facet_rep_props P c2 hP h2).2.2.1
+    rw [← h] at hs
+    exact hs
+  have e2 : c2 = P ∩ {x : ℂ | dot2 (facet_rep_a P c1) x = facet_rep_b P c2} := by
+    have he := (facet_rep_props P c2 hP h2).2.2.2
+    rw [← h] at he
+    exact he
+  exact (facet_rep_uniq P c1 c2 (facet_rep_a P c1) (facet_rep_b P c1)
+    (facet_rep_b P c2) hP h1 h2 s1 s2 e1 e2).2
+
+/-- HOL `facet_rep_in_facet` (counting_spheres.hl:227). GIANT. -/
+theorem facet_rep_in_facet (P c1 c2 : Set ℂ) (r : ℝ) (hP : polyhedronC P)
+    (h1 : facetOfC c1 P) (h2 : facetOfC c2 P) (hr : 0 < r)
+    (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
+    (h : facet_rep_b P c1 ≤ dot2 (facet_rep_a P c1) (r • facet_rep_a P c2)) :
+    c1 = c2 := by
+  have hpr1 := facet_rep_props P c1 hP h1
+  have hpr2 := facet_rep_props P c2 hP h2
+  have hn1 : ‖facet_rep_a P c1‖ = 1 := hpr1.1
+  have hn2 : ‖facet_rep_a P c2‖ = 1 := hpr2.1
+  -- every ball point pins the supporting value from below: r ≤ facet_rep_b P c1
+  have hpt : ∀ t : ℝ, 0 ≤ t → t < r → t ≤ facet_rep_b P c1 := by
+    intro t htnn htlt
+    have hnb : ‖(t • facet_rep_a P c1 : ℂ)‖ < r := by
+      rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg htnn, hn1]
+      simpa using htlt
+    have hle : dot2 (facet_rep_a P c1) (t • facet_rep_a P c1) ≤ facet_rep_b P c1 :=
+      hpr1.2.2.1 (hrad _ hnb)
+    rw [p22_dot2_smul_right, p22_dot2_self, hn1] at hle
+    simpa using hle
+  have hrb : r ≤ facet_rep_b P c1 := by
+    by_contra hcon
+    have hblt : facet_rep_b P c1 < r := lt_of_not_ge hcon
+    rcases lt_or_ge (facet_rep_b P c1) 0 with hneg | hpos
+    · have h0 := hpt 0 (by norm_num) hr
+      linarith
+    · have ht := hpt ((facet_rep_b P c1 + r) / 2) (by linarith) (by linarith)
+      linarith
+  -- the hypothesis plus Cauchy–Schwarz forces the inner product to be 1
+  rw [p22_dot2_smul_right] at h
+  have hcs0 : dot2 (facet_rep_a P c1) (facet_rep_a P c2)
+      ≤ ‖facet_rep_a P c1‖ * ‖facet_rep_a P c2‖ :=
+    p22_dot2_cauchy _ _
+  rw [hn1, hn2, mul_one] at hcs0
+  have h1cd : (1 : ℝ) ≤ dot2 (facet_rep_a P c1) (facet_rep_a P c2) := by
+    have hmul : r * 1 ≤ r * dot2 (facet_rep_a P c1) (facet_rep_a P c2) := by
+      rw [mul_one]; exact hrb.trans h
+    exact le_of_mul_le_mul_left hmul hr
+  have haeq : facet_rep_a P c1 = facet_rep_a P c2 :=
+    norm1_cauchy_eq _ _ hn1 hn2 (le_antisymm hcs0 h1cd)
+  exact facet_rep_uniq_c P c1 c2 hP h1 h2 haeq
+
+/-- HOL `facet_rep_refl` (counting_spheres.hl:257). Filled: ball points pin the
+supporting value from below (`r ≤ facet_rep_b P c`), and `dot2 â (r • â) = r`. -/
+theorem facet_rep_refl (P c : Set ℂ) (r : ℝ) (hP : polyhedronC P)
+    (hc : facetOfC c P) (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) :
+    dot2 (facet_rep_a P c) (r • facet_rep_a P c) ≤ facet_rep_b P c := by
+  have hpr := facet_rep_props P c hP hc
+  have hn1 : ‖facet_rep_a P c‖ = 1 := hpr.1
+  -- every ball point pins the supporting value from below
+  have hpt : ∀ t : ℝ, 0 ≤ t → t < r → t ≤ facet_rep_b P c := by
+    intro t htnn htlt
+    have hnb : ‖(t • facet_rep_a P c : ℂ)‖ < r := by
+      rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg htnn, hn1]
+      simpa using htlt
+    have hle : dot2 (facet_rep_a P c) (t • facet_rep_a P c) ≤ facet_rep_b P c :=
+      hpr.2.2.1 (hrad _ hnb)
+    rw [p22_dot2_smul_right, p22_dot2_self, hn1] at hle
+    simpa using hle
+  have hrb : r ≤ facet_rep_b P c := by
+    by_contra hcon
+    have hblt : facet_rep_b P c < r := lt_of_not_ge hcon
+    rcases lt_or_ge (facet_rep_b P c) 0 with hneg | hpos
+    · have h0 := hpt 0 (by norm_num) hr
+      linarith
+    · have ht := hpt ((facet_rep_b P c + r) / 2) (by linarith) (by linarith)
+      linarith
+  rw [p22_dot2_smul_right, p22_dot2_self, hn1]
+  simpa using hrb
 
 /-- HOL `POLYHEDRON_MEMBER` (counting_spheres.hl:346). Filled (EXPLICIT kit
 wave): the ball makes `P` full-dimensional; the minimal representation then
