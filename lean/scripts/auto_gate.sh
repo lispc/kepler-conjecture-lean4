@@ -214,14 +214,20 @@ END {
 # comment text (docstring rewording) — collected into $cmt and excused below.
 # Safety rail: an "interior" line starting with a code keyword ends the
 # comment state (unclosed-opening poisoning would void the rest of the gate).
-cmt=$(printf '%s\n' "$dels" | awk '
-  !incmt && /^-\/(-!)?/ { incmt = 1; next }
+# EVOLUTION 10 (2026-09-29): docstring interiors must be collected from the
+# HEAD file content (à la DEF-FIX dint), not from diff openers — a rewording
+# that keeps the `/-` opener as a context line leaves the deleted block
+# opener-less in the diff and the dels-based scan finds nothing (also: strip
+# the diff `-` prefix so the consumer's `${line#-}` comparison can match).
+# Safety rail kept: a code keyword ends the comment state.
+cmt=$(git show HEAD:"./$FILE" | awk '
+  !incmt && /^\/(-!)?/ { incmt = 1; next }
   incmt {
-    if ($0 ~ /^-(theorem|def|lemma|example|instance|abbrev|namespace|end|open|import|set_option|macro|syntax|notation)\b/) { incmt = 0; next }
+    if ($0 ~ /^(theorem|def|lemma|example|instance|abbrev|namespace|end|open|import|set_option|macro|syntax|notation)\b/) { incmt = 0; next }
     print
     if ($0 ~ /-\//) incmt = 0
     next
-  }')
+  }' | sort -u)
 if [ -n "$dels" ]; then
   printf '%s\n' "$dels" | grep -qE '^-[[:space:]]*sorry\b|:=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$' \
     || fail "no sorry consumed (theorem untouched?)"
@@ -230,6 +236,7 @@ hard=$(printf '%s\n' "$dels" \
   | grep -vE '^-[[:space:]]*sorry\b' \
   | grep -vE '^-$' \
   | grep -vE '^-[[:space:]]*(--|/-)' \
+  | grep -vE '^-[[:space:]]*·[[:space:]]*--' \
   | grep -vE '^.*-/[[:space:]]*$' || true)
 # anonymous-intro scaffolding (2026-09-29): a deleted `intro _ _ …` placeholder
 # carries no information (r1 tactic skeletons) — excused when the fill

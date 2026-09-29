@@ -1230,9 +1230,10 @@ private theorem p21_cell3_core (h_wt0 : bank_QZECFICwt0)
         · exact absurd hcon (not_lt.mpr (le_of_lt het2))
 
 /-- HOL `cell3_from_ineq_thm` (merge_ineq.hl:3507, statement
-`mk_imp(cell3_hyp, cell3_from_ineq)`; GIANT ~240-line refinement proof
-to :3745 over the nine COMMENT tracks of charter §1.3).  MERGE-INEQ
-wave 0 skeleton — do NOT wire into the :1428 arm before waves 1-2. -/
+`mk_imp(cell3_hyp, cell3_from_ineq)`; refinement proof to :3745 over the
+nine COMMENT tracks of charter §1.3).  MERGE-INEQ wave 2b closure (2026-09-29):
+tracks 1-5/7/8/9 all discharged; the sole inherited debt is track 7's
+`mi_gamma3f_gamma3f_x_div_sqrtdelta` (wave-2a NEEDS, sol_x_sol_euler_x chain). -/
 theorem cell3_from_ineq_thm : cell3_bank → cell3_from_ineq := by
   -- tracks 1-5/7/9 are packaged as `p21_cell3_core` + `p21_track7`; track 8
   -- is the `mi_REAL_WLOG_SIMPLEX_3d` reduction below (hol :3690-3710).
@@ -2547,8 +2548,10 @@ theorem TSKAJXY (V X : Set V3) (hnl : pack_nonlinear_non_ox3q1h)
         unfold mcell
         simp
       exact TSKAJXY_2 V X ul hnl hs hp hb hX'
-  · -- the 0/3/4-cell arm: TSKAJXY_034 needs the GRKIBMP/cell3_from_ineq
-    -- components of the (opaque) Merge_ineq bank; fill in at merge time.
-    sorry
+  · -- the 0/3/4-cell arm: the Merge_ineq bank slices (grk/cell3/tsk) feed
+    -- TSKAJXY_034 via GRKIBMP (wave 1) and cell3_from_ineq_thm (wave 2b).
+    have hgrk : GRKIBMP_concl := GRKIBMP (proj_grk_bank hnl)
+    have hc3 : cell3_from_ineq := cell3_from_ineq_thm (proj_cell3_bank hnl)
+    exact TSKAJXY_034 ⟨hgrk, hc3, proj_tsk_bank hnl⟩ V X hs hp hm hcase hcrit
 
 end Kepler.Text
