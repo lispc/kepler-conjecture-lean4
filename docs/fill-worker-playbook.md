@@ -450,6 +450,20 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   **巨声明心跳**：KIZHLTL2 超 5M——文件级 `set_option maxHeartbeats` 后追加
   增量行（`set_option … in` 放 docstring 与 theorem 之间会触发解析错误，勿用）；
   `HDTFNFZ` 的 `{v}` 隐参陈述中不可合成——`@HDTFNFZ V ul i u X …` 显式喂。
+- **PA19 SUM_GAMMAX 波地图（KIZHLTL4 后最后一枚上游）**：
+  `SUM_GAMMAX_LMFUN_ESTIMATE`(PA18:2538, bare sorry)——sum_gamma.hl 1400 行，
+  需 `BOUND_GAMMA_X_lmfun`/`CARD_MCELL_CONTAINS_POINT_klemma`/
+  `Bump.BOUND_BETA_BUMP`/簇和 T1/T2/T3 拆分；结论形状 PA18:203（额外前提
+  `cellClusterInequality`/`TSKAJXY_statement`——后者字节同 PA2 编码可复用）。
+  闭合即 PA19 `NEGLIGIBLE_FUNC` 全链只剩 GRUTOTI 系（GT 链）。
+  **PA16 KIZHLTL4 波雷区**：`rw [dif_pos h]` 对 binder 内层 dite 失效（用
+  `simp only [dif_pos h]`；have-不透明后 `.toFinset` rw 失配——`dif_pos` 内联）；
+  乘积有限是 `Set.Finite.prod`（dot-call `hA.prod hU`，无 `Set.Finite.product`）；
+  `Set.mem_inter` 是双前提蕴含非 Iff；rintro/obtain 不 β-约简早前假设（投影
+  原子残留先 `have hd' : … := hd` β-改名）；dihX 参数写投影对 `((eps).1,
+  (eps).2)` 与 guard-form 同形绕开 Prod.eta 泥潭；`Set.mem_setOf_eq` 展开后的
+  `Real.le✝`-struct 分量不可嵌套解构（先 `.mp` 再投影链）；docstring 后紧跟
+  `/-!` 段落报 "expected 'lemma'"（私有 kit 段放目标 docstring 之前）。
 - **ConicCapVolume @GT-1 后**（3 remaining @`0d3243c0`）：帽侧全链已证
   （`volumeConicCap`/`Pos`/`Measurable`/`Bounded` 公理全净；ccvConicCap 私拷
   与 PA15:109 正本同体，消费 lane 一行 `rfl` 转移）。**剩余三件的顺序**：
