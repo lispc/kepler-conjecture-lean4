@@ -1,4 +1,4 @@
-# 项目总进度（Status）— 2026-09-28
+# 项目总进度（Status）— 2026-09-29
 
 > **⚠️ 环境变更（2026-09-28）：旧生产服务器（128 核/503G）报废**，磁盘不可恢复。
 > 仅存本机外部存储的产物丢失（cert549_tight.json / LP 43,078 持久化产物 / bb_arb 重跑
@@ -13,6 +13,27 @@
 > 当前 main @ 见本 commit；最近验收：各批次根构建绿（wip/auto-packing 批次提交信息 "38-way root clean"，`aa4baf6b`；HANDOFF 记录 `make check` 绿 `c425db2`，2026-09-14）。
 > 注意：2026-09-13 起接班 agent 改为 main 直推模式，允许在制骨架 sorry 短暂存在；
 > 历史 sanctioned 占位仍为 `Statement.lean` 主定理（见 Phase 1）。
+> **2026-09-29 日班（M5′ 填证，18 commits）**：四线并进——
+> ①**Merge_ineq 通道开张即收割**：章程入库（`ccc003a4`，81 条银行/19 切片逐字锚点）→
+> 波 0 银行结构化 + eta_y 重指向（`2f2c431c`）→ 波 1 **GRKIBMP 闭合**（`1591e1c1`）；
+> TSKAJXY（PA21:1428）距收口剩波 2a kit（在飞）→ 波 2b 主定理 → 3 行机械闭合。
+> ②**CF-3 `LEMMA_3_POINTS_FINAL` 真化**（`e9ee264a`，路线 B 二次型角点恒等 + 有理余弦界，
+> contraveningFan 深几何核 −1；CF-4 开新模块 ContraFanDeep.lean 三波进行中）。
+> ③**TameLp W1 keystone 落地**（`9d775467`，+492 行 hypermapOfList 构造 + Iso 实例化 +
+> GoodListNodesTl def 层，A7/A9 硬阻塞解除），前置 **GoodListDefs import 收窄**
+> （`9cb0cf9f`，伞模块闭包 9017→955 jobs）——**Text 侧填证从此不被 Graphs 分片尾巴阻塞**
+> （换机后 CertShards 重建 2-worker feeder 推进中：585 片余 343，尾部 18 枚 15-23h
+> 超重根，预估 5-7 天，用户拍板不扩容）。
+> ④**陈述/定义修复波**：DEF-FIX 首件 planar 编码纠正（`be9e777a`，净 +15 显式入账，
+> auto_gate 新增 GATE_MODE=DEF-FIX）+ SF13 DUUNHOR 双前提（`88951853`）+
+> SF17 tau3_taum 补陈 + LA38 机械填证 24/26 行（`5bcb4e11`/`8939b636`）+
+> planar 重填波 1 四枚（`4eff461a`）。另 MHFTTZN 上游专项 −3（`53e0438d`/`0178ce1f`：
+> PA5 16→15、PA6 14→13，lemma2 留 GIANT 带完整草稿 NEEDS 注记）。
+> 侦察五份入账（tame 章 A7-A9 / MQMSMAB A10 / TSKAJXY / ContraFan / 项 12-13a 复核）；
+> 闸门第 7-9 演化 + playbook §6 Wave 5 五条教训。
+> 债务：账本 07:45 = **1951**（DEF-FIX +15 入账后），日内填证净 **−8**（在飞 6 lane
+> 未计：lemma2 / 波 2a kit / TameLp 脚手架 / CF-4a / PA2 RDWKARC / PA22 波 2；
+> 账本重生成待静默窗口）。
 > **Wave 2/2r 收官（2026-09-28 晚）**：换机后首个全 sub-agent 波收官——
 > 9 条 lane 全部过闸落地（LA38 二轮+DIHV 桥 / PA18 / PA4 攻坚 / PA22 桩致假 8 枚立
 > 案+二轮 20 枚 / PA2 OAPVION 三件套+GLTVHUM·DUUNHOR 侦察注记 / PA25 11 枚 / LA5
@@ -105,6 +126,10 @@
 - [x] 19,715 张 tame 平面图全量枚举 + 内核验证（585 个 CertShards 分片）
 - [x] 公理审计通过（`make check`；601 个限定范围 native_decide 信任公理，零 sorryAx）
 - [x] 新机器全量重建验证过
+- ⚠️ **换机后 CertShards 分片重建进行中（2026-09-29）**：旧机 olean 随磁盘丢失，
+  M3 Pro 上 2-worker 顺序 feeder 重建（585 片余 343，尾部 18 枚 15-23h 超重根，
+  预估 5-7 天，用户拍板不扩容）；**Text 侧已解耦**——GoodListDefs import 收窄
+  （`9cb0cf9f`）后，填证 lane / 闸门不再被 Graphs 尾部构建阻塞
 - ⚠️ 红线：绝不 `rm -rf lean/.lake`，分片重建需 ~7 天
 
 ## Phase 3 — 线性规划 ✅ 100%（2026-09-07 全闭合）
@@ -263,6 +288,6 @@ P1-P5 分段流水攻克）。**polyhedron.hl 100% 达成（71/71 定理零 sorr
 
 ## 验证纪律
 
-1. main 分支：`lake build Kepler` 全绿；**2026-09-17 政策变更（DECISIONS.md）：main 允许携带 sorry 债务，债务刻度 = `DEBT.md`（`lean/scripts/debt_ledger.py --with-spine` 生成，基线 2400，2026-09-26 现值 **2079**（TameSpine 填证波清偿中），含主定理可达债务探针节）**；终验标准不变只是推迟——项目终点要求主定理证明本体零 sorry 可达 + `#print axioms` 仅 `[propext, Classical.choice, Quot.sound]`（+ Phase 2 限定 native_decide）；陈述保真审查（`docs/statement-fidelity.md`）是唯一质量阀门，不随本政策放宽；
+1. main 分支：`lake build Kepler` 全绿；**2026-09-17 政策变更（DECISIONS.md）：main 允许携带 sorry 债务，债务刻度 = `DEBT.md`（`lean/scripts/debt_ledger.py --with-spine` 生成，基线 2400，2026-09-29 账本现值 **1951**（07:45 再生，DEF-FIX +15 显式入账后；日内填证净 −8，重生成待静默窗口），含主定理可达债务探针节）**；终验标准不变只是推迟——项目终点要求主定理证明本体零 sorry 可达 + `#print axioms` 仅 `[propext, Classical.choice, Quot.sound]`（+ Phase 2 限定 native_decide）；陈述保真审查（`docs/statement-fidelity.md`）是唯一质量阀门，不随本政策放宽；
 2. 批次闭合标准：该批全部定理零 sorry + 根模块构建绿 + 陈述保真抽查；
 3. 自动化 harness 的提交由机械闸背书 + 主 agent 审计兜底；人工派工的提交由主 agent 逐块验收。
