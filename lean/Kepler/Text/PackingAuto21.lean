@@ -1445,14 +1445,73 @@ theorem GAMMAX_NULLSET (V : Set V3) (f : ℝ → ℝ) (X : Set V3) (ul : List V3
   rw [gammaX, hvol, hTS, hEdge]
   simp [setSum]
 
-/-- HOL `GAMMAX_MCELL1` (TSKAJXY3.hl:48; giant). -/
+/-- HOL `GAMMAX_MCELL1` (TSKAJXY3.hl:48; proved 2026-09-29 wave A2: non-null
+forces `sqrt 2 ≤ hl ul`, `EDGE_IMP_K2` kills the edge term, and
+`HDTFNFZ_ALT`+`V_CELL1_SINGLE`+`HD_IN_MCELL` pin `VX V X = {EL 0 ul}` so the
+total solid collapses to the single vertex term). -/
 theorem GAMMAX_MCELL1 (V X : Set V3) (ul : List V3) (_hs : saturated V)
     (_hp : Packing V) (_hb : barV V 3 ul) (_hX : X = mcell1 V ul)
     (_hn : ¬nullSet X) :
     gammaX V X lmfun =
       volume.real X - (2 * mm1 / Real.pi) * sol (elV ul 0) X := by
-  -- NEEDS: TSKAJXY3.hl:48；路线（A2 波）：MCELL1_VOL + MCELL1_SOL + V_CELL1_SINGLE（VX={u0}、edgeX=∅）系数比对
-  sorry
+  have hs : saturated V := _hs
+  have hp : Packing V := _hp
+  have hb : barV V 3 ul := _hb
+  have hX : X = mcell1 V ul := _hX
+  have hn : ¬nullSet X := _hn
+  have hneX : X ≠ ∅ := fun he => hn (by rw [he]; exact measure_empty)
+  -- non-nullness forces the `sqrt 2` branch of `mcell1`
+  have hcond : Real.sqrt 2 ≤ hl ul := by
+    by_contra hle
+    refine hn ?_
+    rw [hX]
+    unfold mcell1
+    rw [if_neg (by omega)]
+    exact measure_empty
+  -- no edges for a 1-cell
+  have hedge : edgeX V X = ∅ := by
+    rw [hX, BumpP4.MCELL1]
+    exact BumpP4.EDGE_IMP_K2 V ul 1 hs hp hb (by omega)
+  -- the vertex set is the singleton of the head
+  have hvx : VX V X = {elV ul 0} := by
+    refine Set.Subset.antisymm ?_ ?_
+    · rw [BumpP4.HDTFNFZ_ALT V ul 1 X hs hp hb (by rw [hX, BumpP4.MCELL1]) hn, hX]
+      refine Set.Subset.trans (BumpP4.V_CELL1_SINGLE V ul hs hp hb) ?_
+      rw [show hdV ul = elV ul 0 from by
+        cases ul with
+        | nil => rfl
+        | cons a t => rfl]
+    · rw [BumpP4.HDTFNFZ_ALT V ul 1 X hs hp hb (by rw [hX, BumpP4.MCELL1]) hn]
+      intro hz hmem0
+      have hz0 : hz = elV ul 0 := Set.mem_singleton_iff.mp hmem0
+      subst hz0
+      refine Set.mem_inter ?_ ?_
+      · have hnv := hb.2 ul
+          (And.intro (⟨[], (List.append_nil ul).symm⟩ :
+            ∃ yl : List V3, ul = ul ++ yl)
+            (by rw [hb.1]; omega))
+        have h0 : elV ul 0 ∈ setOfList ul := by
+          cases ul with
+          | nil => exact absurd _hb.1 (by simp)
+          | cons a t => simp [setOfList, elV]
+        exact hnv.2.1 h0
+      · have hdin := HD_IN_MCELL V ul 1 X hp hs hb (by rw [hX, BumpP4.MCELL1]) hneX
+          (by omega)
+        rwa [show hdV ul = elV ul 0 from by
+          cases ul with
+          | nil => rfl
+          | cons a t => rfl] at hdin
+  -- the total solid collapses to the single vertex term
+  have hTS : totalSolid V X = sol (elV ul 0) X := by
+    rw [totalSolid, hvx, setSum]
+    have hfin : ({elV ul 0} : Set V3).Finite := by simp
+    rw [dif_pos hfin]
+    have hts : hfin.toFinset = ({elV ul 0} : Finset V3) := by
+      ext z
+      simp
+    rw [hts, Finset.sum_singleton]
+  rw [gammaX, hedge, hTS]
+  simp [setSum]
 
 /-- The degenerate `mcell2` null lemma (the "u = v" backstop): if the edge
 endpoints coincide, the cell sits in `u + span {mxi - u, omega3 - u}`, a
@@ -1749,7 +1808,13 @@ theorem MCELL1_SOL_RESTRICT (V X : Set V3) (ul : List V3) (hs : saturated V)
     (hn : ¬nullSet X) :
     sol (elV ul 0) X =
       sol (elV ul 0) (X ∩ Metric.ball (elV ul 0) (Real.sqrt 2)) := by
-  -- NEEDS: TSKAJXY3.hl:285；路线（A2 波）：URRPHBZ2-k1 径向 + sol_spec 密度；rogers 尾巴可走 k=1 具体化绕 URRPHBZ2
+  -- NEEDS: TSKAJXY3.hl:285；路线（A2+波，已侦察完备）：两次 sol_spec 在公共半径 r' ≤ √2 处比对即可，
+  -- 无需 URRPHBZ2/OMEGA 之外的新几何。唯一次真卡点 = 文件序：本定理位于 :1750，而其证明所需的
+  -- MCELL1_RADIAL 式径向性依赖 OMEGA_LIST_BISECTOR(:2700) 与 CONVEX_HULL_SCALE(:2200)、
+  -- NOT_COPLANAR_OMEGA_LIST_N(:2250)（三者均在其后，同文件禁前向引用）。
+  -- 剩余路线（A2+ 波二选一）：(a) 把 A1-kit 的 p21_affGe_3_1_char/p21_coeff_unique/CONVEX_HULL_SCALE
+  -- + 本波 omega 距离相等 kit 以 p21e_ 前缀副本上提至本定理之前（~450 行重复，收口后合并去重）；
+  -- 或 (b) 编排者将该定理与 MCELL1_RADIAL 区块整体后移至 OMEGA_LIST_BISECTOR 之后（陈述冻结的移动需裁决）。
   sorry
 
 /-- HOL `CONV_CONVEX_HULL` (TSKAJXY3.hl:328). -/
@@ -2360,13 +2425,322 @@ theorem BARV_DISTINCT (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturat
     (hb : barV V 1 ul) : elV ul 0 ≠ elV ul 1 :=
   p21_el01_ne_of_barV V ul hb (by simpa using hb.1)
 
-/-- HOL `OMEGA_LIST_BISECTOR` (TSKAJXY3.hl:495; giant). -/
+/-! ## Wave-A2 private kit: the omega tower in the pair Voronoi cell
+(2026-09-29)
+
+`OMEGA_LIST_BISECTOR` needs the three distance equalities
+`dist (omegaListN V ul i) (EL 0 ul) = dist (omegaListN V ul i) (EL 1 ul)` for
+`i = 1,2,3`.  HOL gets them from `Rogers.OMEGA_LIST_N_IN_VORONOI_LIST_GEN`
+(the omega-tower projection kit, sorry-tainted at PA5/PA6).  We route around
+it: each truncated `barV` list carries its own `voronoi_nondg` (hence a
+NONEMPTY cell), so `closest_point` lands in the truncated cell by the epsilon
+specification, and `VORONOI_SET_SUBSET` shrinks the larger truncated cells
+down to the pair cell. -/
+
+private theorem p21_vndg_trunc (V : Set V3) (ul : List V3) (hb : barV V 3 ul)
+    (j : ℕ) (hj : j ≤ 3) : voronoiNondg V (truncateSimplex j ul) := by
+  have hbar := TRUNCATE_SIMPLEX_BARV V j 3 ul hb hj
+  exact hbar.2 (truncateSimplex j ul)
+    (And.intro
+      (⟨[], (List.append_nil (truncateSimplex j ul)).symm⟩ :
+        ∃ yl : List V3, truncateSimplex j ul = truncateSimplex j ul ++ yl)
+      (by rw [hbar.1]; omega))
+
+private theorem p21_omega_in_voronoi_pair (V : Set V3) (ul : List V3)
+    (hb : barV V 3 ul) (j : ℕ) (hj1 : 1 ≤ j) (hj3 : j ≤ 3) :
+    omegaListN V ul j ∈ voronoiList V (truncateSimplex 1 ul) := by
+  have hnd := p21_vndg_trunc V ul hb j hj3
+  have hlen : (truncateSimplex j ul : List V3).length = j + 1 :=
+    LENGTH_TRUNCATE_SIMPLEX j ul (by have := hb.1; omega)
+  have hne : voronoiList V (truncateSimplex j ul) ≠ ∅ := by
+    intro he
+    rw [voronoiNondg, he, hlen] at hnd
+    have hneg : (affDim (∅ : Set V3) : ℤ) = -1 := by simp [affDim]
+    rw [hneg] at hnd
+    omega
+  -- the cell is complete and convex, so the distance to it attains its infimum
+  have hconv : Convex ℝ (voronoiList V (truncateSimplex j ul)) := by
+    simp only [voronoiList, voronoiSet]
+    refine convex_sInter ?_
+    rintro S ⟨v, _, rfl⟩
+    exact CONVEX_VORONOI_CLOSED V v
+  have hcomp : IsComplete (voronoiList V (truncateSimplex j ul)) :=
+    (CLOSED_VORONOI_LIST V (truncateSimplex j ul)).isComplete
+  have hneS : (voronoiList V (truncateSimplex j ul) : Set V3).Nonempty :=
+    Set.nonempty_iff_ne_empty.2 hne
+  obtain ⟨y, hyK, hymin⟩ := exists_norm_eq_iInf_of_complete_convex hneS hcomp hconv
+    (omegaListN V ul (j - 1))
+  have hex : ∃ y : V3, y ∈ voronoiList V (truncateSimplex j ul) ∧
+      ∀ z ∈ voronoiList V (truncateSimplex j ul),
+        dist (omegaListN V ul (j - 1)) y ≤ dist (omegaListN V ul (j - 1)) z := by
+    refine ⟨y, hyK, ?_⟩
+    intro z hz
+    have hbb : BddBelow (Set.range fun w : ({y | y ∈ voronoiList V (truncateSimplex j ul)} : Set V3) =>
+        ‖omegaListN V ul (j - 1) - (w : V3)‖) :=
+      ⟨0, by rintro w ⟨v, rfl⟩; exact norm_nonneg _⟩
+    have hle := ciInf_le hbb
+      (⟨z, hz⟩ : ({y | y ∈ voronoiList V (truncateSimplex j ul)} : Set V3))
+    rw [dist_eq_norm, dist_eq_norm, hymin]
+    exact hle
+  have hrw : omegaListN V ul j
+      = closestPoint (voronoiList V (truncateSimplex j ul))
+          (omegaListN V ul (j - 1)) := by
+    have hj : j = (j - 1) + 1 := by omega
+    rw [hj]
+    rfl
+  have hmem : omegaListN V ul j ∈ voronoiList V (truncateSimplex j ul) := by
+    rw [hrw]
+    exact (Classical.epsilon_spec hex).1
+  exact VORONOI_SET_SUBSET V (setOfList (truncateSimplex 1 ul))
+    (setOfList (truncateSimplex j ul))
+    (TRUNCATE_SIMPLEX_SUBSET ul j 1 hj1 (by have := hb.1; omega)) hmem
+
+/-- The four omega points, as an explicit quadruple with the head first, are
+not coplanar (repackaging of `NOT_COPLANAR_OMEGA_LIST_N`). -/
+private theorem p21_omega4_ncp (V : Set V3) (ul : List V3) (hp : Packing V)
+    (hs : saturated V) (hb : barV V 3 ul) (h1 : ¬nullSet (mcell1 V ul)) :
+    ¬Coplanar ({hdV ul, omegaListN V ul 1, omegaListN V ul 2, omegaListN V ul 3} : Set V3) := by
+  have h := NOT_COPLANAR_OMEGA_LIST_N V ul hp hs hb h1
+  refine fun hc => h ?_
+  rw [IMAGE_4_EXPLICIT]
+  exact hc
+
+/-- A non-coplanar quadruple `p, q1, q2, q3` has its vertex differences
+spanning the whole space (the affine hull is everything, and the direction of
+the affine hull is dominated by the three differences). -/
+private theorem p21_span3_top {p q1 q2 q3 : V3}
+    (hcp : ¬Coplanar ({p, q1, q2, q3} : Set V3)) :
+    Submodule.span ℝ ({q1 - p, q2 - p, q3 - p} : Set V3) = ⊤ := by
+  have huniv : (affineSpan ℝ ({p, q1, q2, q3} : Set V3) : Set V3) = Set.univ :=
+    NOT_COPLANAR_R3 _ hcp
+  have htopA : (affineSpan ℝ ({p, q1, q2, q3} : Set V3) : AffineSubspace ℝ V3) = ⊤ := by
+    rw [AffineSubspace.ext_iff, AffineSubspace.top_coe]
+    exact huniv
+  have hdir : (affineSpan ℝ ({p, q1, q2, q3} : Set V3) : AffineSubspace ℝ V3).direction = ⊤ := by
+    rw [htopA, AffineSubspace.direction_top]
+  have hle : vectorSpan ℝ ({p, q1, q2, q3} : Set V3)
+      ≤ Submodule.span ℝ ({q1 - p, q2 - p, q3 - p} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_left (k := ℝ)
+      (Set.mem_insert p ({q1, q2, q3} : Set V3)), Submodule.span_le]
+    have himg : ∀ x ∈ ({p, q1, q2, q3} : Set V3),
+        (p - x : V3) ∈ Submodule.span ℝ ({q1 - p, q2 - p, q3 - p} : Set V3) := by
+      intro x hx
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+      rcases hx with hx1 | hx1 | hx1 | hx1
+      · rw [hx1]
+        simp
+      · rw [hx1]
+        have hneg : p - q1 = -(q1 - p) := by abel
+        rw [hneg]
+        exact Submodule.neg_mem _ (Submodule.subset_span (Set.mem_insert _ _))
+      · rw [hx1]
+        have hneg : p - q2 = -(q2 - p) := by abel
+        rw [hneg]
+        exact Submodule.neg_mem _ (Submodule.subset_span
+          (Set.mem_insert_of_mem _ (Set.mem_insert _ _)))
+      · rw [hx1]
+        have hmem : (q3 - p : V3) ∈ Submodule.span ℝ ({q1 - p, q2 - p, q3 - p} : Set V3) :=
+          Submodule.subset_span (Set.mem_insert_of_mem _ (Set.mem_insert_of_mem _
+            (Set.mem_singleton _)))
+        have hneg : p - q3 = -(q3 - p) := by abel
+        rw [hneg]
+        exact Submodule.neg_mem _ hmem
+    rintro z ⟨x, hx, rfl⟩
+    exact himg x hx
+  have htop : (⊤ : Submodule ℝ V3)
+      ≤ Submodule.span ℝ ({q1 - p, q2 - p, q3 - p} : Set V3) := by
+    rw [← hdir, direction_affineSpan]
+    exact hle
+  exact le_antisymm le_top htop
+
+/-- The double-subtraction dot split (ofLp-robust form used by the wave-A2
+dot bookkeeping; `show` normalizes the `⬝ᵥ`-elaboration first). -/
+private theorem p21e_split_both (a b c d : V3) :
+    (a - b) ⬝ᵥ (c - d) = a ⬝ᵥ c - a ⬝ᵥ d - (b ⬝ᵥ c - b ⬝ᵥ d) := by
+  show dotProduct (WithLp.ofLp (a - b)) (WithLp.ofLp (c - d))
+      = dotProduct (WithLp.ofLp a) (WithLp.ofLp c)
+        - dotProduct (WithLp.ofLp a) (WithLp.ofLp d)
+        - (dotProduct (WithLp.ofLp b) (WithLp.ofLp c)
+          - dotProduct (WithLp.ofLp b) (WithLp.ofLp d))
+  rw [WithLp.ofLp_sub, WithLp.ofLp_sub, p21_dotPi_sub_l, p21_dotPi_sub_r,
+    p21_dotPi_sub_r]
+
+/-- Squares agree iff values agree, for nonneg reals (early copy of the
+private `p21_sq_eq`, which sits later in this file). -/
+private theorem p21e_sq_eq {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) :
+    a = b ↔ a ^ 2 = b ^ 2 := by
+  constructor
+  · intro h; rw [h]
+  · intro h
+    by_contra hne
+    rcases lt_or_gt_of_ne hne with hlt | hgt
+    · nlinarith [h, hlt, ha]
+    · nlinarith [h, hgt, hb]
+
+/-- The tower points `ω1, ω2, ω3` are equidistant from the first two list
+entries (pair-Voronoi membership from `p21_omega_in_voronoi_pair`). -/
+private theorem p21_omega_dist_eq (V : Set V3) (ul : List V3) (hp : Packing V)
+    (hs : saturated V) (hb : barV V 3 ul) (j : ℕ) (hj1 : 1 ≤ j) (hj3 : j ≤ 3) :
+    dist (omegaListN V ul j) (elV ul 0) = dist (omegaListN V ul j) (elV ul 1) := by
+  have htr1 : truncateSimplex 1 ul = [elV ul 0, elV ul 1] := by
+    obtain ⟨a, b, c, d, rfl⟩ := BARV_3_EXPLICIT V ul hb
+    exact (TRUNCATE_SIMPLEX_EXPLICIT_1 a b c d).2.2
+  have hmem := p21_omega_in_voronoi_pair V ul hb j hj1 hj3
+  rw [htr1] at hmem
+  have hset : setOfList [elV ul 0, elV ul 1] = ({elV ul 0, elV ul 1} : Set V3) := by
+    ext z
+    simp [setOfList]
+  simp only [voronoiList, voronoiSet, Set.mem_sInter] at hmem
+  rw [hset] at hmem
+  have hsub : ({elV ul 0, elV ul 1} : Set V3) ⊆ V := by
+    have hnd := p21_vndg_trunc V ul hb 1 (by omega)
+    rw [htr1] at hnd
+    rw [voronoiNondg, hset] at hnd
+    exact hnd.2.1
+  have h0 := hmem (voronoiClosed V (elV ul 0)) ⟨elV ul 0, by simp, rfl⟩
+  have h1 := hmem (voronoiClosed V (elV ul 1)) ⟨elV ul 1, by simp, rfl⟩
+  simp only [voronoiClosed, Set.mem_setOf_eq] at h0 h1
+  exact le_antisymm (h0 (elV ul 1) (hsub (by simp))) (h1 (elV ul 0) (hsub (by simp)))
+
+/-- HOL `OMEGA_LIST_BISECTOR` (TSKAJXY3.hl:495; proved 2026-09-29 wave A2:
+the face `{ω1,ω2,ω3}` spans the bisector half-space — distance equalities
+from the pair-Voronoi kit `p21_omega_dist_eq`, the half-space pivoting on
+`p21_dist_le_half2`, and the affine decomposition of an arbitrary point from
+the span lemma `p21_span3_top`). -/
 theorem OMEGA_LIST_BISECTOR (V : Set V3) (ul : List V3) (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 ul) (h1 : ¬nullSet (mcell1 V ul)) :
     affGe {omegaListN V ul 1, omegaListN V ul 2, omegaListN V ul 3} ({elV ul 0} : Set V3)
       = bisLe (elV ul 0) (elV ul 1) := by
-  -- NEEDS: TSKAJXY3.hl:495；路线（A2 波，1 胞臂最深几何）：face ⊆ 二分面 + 维数/半空间双向夹逼 affGe=bisLe
-  sorry
+  classical
+  obtain ⟨u0, u1, u2, u3, rflu⟩ := BARV_3_EXPLICIT V ul hb
+  subst rflu
+  have hdV0 : hdV ([u0, u1, u2, u3] : List V3) = u0 := rfl
+  have hncp := p21_omega4_ncp V [u0, u1, u2, u3] hp hs hb h1
+  rw [hdV0] at hncp
+  have hd := p21_ne_of_notCoplanar hncp
+  have hbar1 : barV V 1 [u0, u1] := by
+    rw [← (TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2]
+    exact TRUNCATE_SIMPLEX_BARV V 1 3 [u0, u1, u2, u3] hb (by omega)
+  have hd01 : u0 ≠ u1 := BARV_DISTINCT V [u0, u1] hp hs hbar1
+  have hdeq := p21_omega_dist_eq V [u0, u1, u2, u3] hp hs hb
+  -- each tower point sits at half the axis-squared distance from `u0`
+  have hdot : ∀ i : ℕ, 1 ≤ i → i ≤ 3 →
+      (omegaListN V [u0, u1, u2, u3] i - u0) ⬝ᵥ (u1 - u0) = ‖u1 - u0‖ ^ 2 / 2 := by
+    intro i hi1 hi3
+    have hdi := hdeq i hi1 hi3
+    have hsq : ‖omegaListN V [u0, u1, u2, u3] i - u1‖ ^ 2
+        = ‖omegaListN V [u0, u1, u2, u3] i - u0‖ ^ 2 := by
+      rw [← p21e_sq_eq (norm_nonneg _) (norm_nonneg _), ← dist_eq_norm, ← dist_eq_norm]
+      exact hdi.symm
+    have e0 := p21_sq_sub (omegaListN V [u0, u1, u2, u3] i) u0
+    have e1 := p21_sq_sub (omegaListN V [u0, u1, u2, u3] i) u1
+    have h2 : 2 * (omegaListN V [u0, u1, u2, u3] i ⬝ᵥ u1
+        - omegaListN V [u0, u1, u2, u3] i ⬝ᵥ u0) = u1 ⬝ᵥ u1 - u0 ⬝ᵥ u0 := by
+      rw [e0, e1] at hsq
+      linarith
+    have dn0 := p21_sq_sub u1 u0
+    have dnc : u1 ⬝ᵥ u0 = u0 ⬝ᵥ u1 := p21_dot_comm u1 u0
+    rw [dnc] at dn0
+    have hexp : (omegaListN V [u0, u1, u2, u3] i - u0) ⬝ᵥ (u1 - u0)
+        = omegaListN V [u0, u1, u2, u3] i ⬝ᵥ u1 - omegaListN V [u0, u1, u2, u3] i ⬝ᵥ u0
+          - (u0 ⬝ᵥ u1 - u0 ⬝ᵥ u0) := by
+      rw [p21e_split_both]
+    rw [hexp]
+    linarith
+  -- the half-plane pivoting: the `u0`-weight is nonnegative iff the point is
+  -- on the `u0` side of the bisector
+  have hhalf : ∀ (x : V3) (t1 t2 t3 t4 : ℝ), t1 + t2 + t3 + t4 = 1 →
+      x = t4 • u0 + t1 • omegaListN V [u0, u1, u2, u3] 1
+        + t2 • omegaListN V [u0, u1, u2, u3] 2
+        + t3 • omegaListN V [u0, u1, u2, u3] 3 →
+      (0 ≤ t4 ↔ dist x u0 ≤ dist x u1) := by
+    intro x t1 t2 t3 t4 hsum hxy
+    have h1' : t1 + t2 + t3 = 1 - t4 := by linarith
+    have hk : (0:ℝ) < ‖u1 - u0‖ ^ 2 / 2 := by
+      have h1 : (0:ℝ) < ‖u1 - u0‖ := by
+        rw [← dist_eq_norm]
+        exact dist_pos.2 (Ne.symm hd01)
+      exact div_pos (sq_pos_of_ne_zero (ne_of_gt h1)) (by norm_num)
+    have hxd : x - u0
+        = t1 • (omegaListN V [u0, u1, u2, u3] 1 - u0)
+          + t2 • (omegaListN V [u0, u1, u2, u3] 2 - u0)
+          + t3 • (omegaListN V [u0, u1, u2, u3] 3 - u0) := by
+      rw [hxy, show t4 = 1 - t1 - t2 - t3 from by linarith]
+      module
+    have hdotx : (x - u0) ⬝ᵥ (u1 - u0) = (1 - t4) * (‖u1 - u0‖ ^ 2 / 2) := by
+      rw [hxd, p21_add_dot_whole, p21_add_dot_whole, p21_smul_dot, p21_smul_dot,
+        p21_smul_dot, hdot 1 (by omega) (by omega), hdot 2 (by omega) (by omega),
+        hdot 3 (by omega) (by omega)]
+      have hswap : (t1 + t2 + t3) * (‖u1 - u0‖ ^ 2 / 2)
+          = t1 * (‖u1 - u0‖ ^ 2 / 2) + t2 * (‖u1 - u0‖ ^ 2 / 2)
+            + t3 * (‖u1 - u0‖ ^ 2 / 2) := by
+        ring
+      rw [← hswap, h1']
+    constructor
+    · -- `0 ≤ t4` forces the half-plane side, hence the bisector inequality
+      intro hle
+      refine (p21_dist_le_half2 x u0 u1).2 ?_
+      rw [hdotx, show (1 - t4) * (‖u1 - u0‖ ^ 2 / 2)
+          = ‖u1 - u0‖ ^ 2 / 2 - t4 * (‖u1 - u0‖ ^ 2 / 2) from by ring]
+      have hprod : 0 ≤ t4 * (‖u1 - u0‖ ^ 2 / 2) := by nlinarith
+      linarith
+    · -- the bisector inequality forces `0 ≤ t4`
+      intro h4
+      have h2 := (p21_dist_le_half2 x u0 u1).1 h4
+      rw [hdotx, show (1 - t4) * (‖u1 - u0‖ ^ 2 / 2)
+          = ‖u1 - u0‖ ^ 2 / 2 - t4 * (‖u1 - u0‖ ^ 2 / 2) from by ring] at h2
+      have hprod : 0 ≤ t4 * (‖u1 - u0‖ ^ 2 / 2) := by linarith
+      by_cases h : 0 ≤ t4
+      · exact h
+      · exact absurd (by nlinarith : t4 * (‖u1 - u0‖ ^ 2 / 2) < 0) (by linarith)
+  ext x
+  constructor
+  · intro hx
+    obtain ⟨s0, s1, s2, s3, hs0, hssum, hsy⟩ := (p21_affGe_3_1_char hd x).mp hx
+    have hssum' : s1 + s2 + s3 + s0 = 1 := by linarith
+    exact (hhalf x s1 s2 s3 s0 hssum' hsy).1 hs0
+  · intro hx
+    have hrange : Set.range (![omegaListN V [u0, u1, u2, u3] 1 - u0,
+        omegaListN V [u0, u1, u2, u3] 2 - u0, omegaListN V [u0, u1, u2, u3] 3 - u0] : Fin 3 → V3)
+        = ({omegaListN V [u0, u1, u2, u3] 1 - u0, omegaListN V [u0, u1, u2, u3] 2 - u0,
+          omegaListN V [u0, u1, u2, u3] 3 - u0} : Set V3) := by
+      ext y
+      constructor
+      · rintro ⟨i, hi⟩
+        fin_cases i <;> simp_all [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons]
+      · rintro (rfl | rfl | rfl)
+        · exact ⟨0, rfl⟩
+        · exact ⟨1, rfl⟩
+        · exact ⟨2, rfl⟩
+    have hx' : x - u0
+        ∈ Submodule.span ℝ ({omegaListN V [u0, u1, u2, u3] 1 - u0,
+          omegaListN V [u0, u1, u2, u3] 2 - u0, omegaListN V [u0, u1, u2, u3] 3 - u0} : Set V3) := by
+      rw [p21_span3_top hncp]
+      exact Submodule.mem_top
+    rw [← hrange] at hx'
+    obtain ⟨t, ht⟩ :=
+      (Submodule.mem_span_range_iff_exists_fun (R := ℝ) (x := x - u0)).1 hx'
+    have ht' : x - u0 = t 0 • (omegaListN V [u0, u1, u2, u3] 1 - u0)
+        + t 1 • (omegaListN V [u0, u1, u2, u3] 2 - u0)
+        + t 2 • (omegaListN V [u0, u1, u2, u3] 3 - u0) := by
+      simpa [Fin.sum_univ_three] using ht.symm
+    have hxy2 : x = (1 - (t 0 + t 1 + t 2)) • u0
+        + t 0 • omegaListN V [u0, u1, u2, u3] 1
+        + t 1 • omegaListN V [u0, u1, u2, u3] 2
+        + t 2 • omegaListN V [u0, u1, u2, u3] 3 := by
+      calc x = u0 + (x - u0) := by abel
+        _ = u0 + (t 0 • (omegaListN V [u0, u1, u2, u3] 1 - u0)
+            + t 1 • (omegaListN V [u0, u1, u2, u3] 2 - u0)
+            + t 2 • (omegaListN V [u0, u1, u2, u3] 3 - u0)) := by rw [ht']
+        _ = (1 - (t 0 + t 1 + t 2)) • u0 + t 0 • omegaListN V [u0, u1, u2, u3] 1
+            + t 1 • omegaListN V [u0, u1, u2, u3] 2
+            + t 2 • omegaListN V [u0, u1, u2, u3] 3 := by
+            module
+    have hsum2 : t 0 + t 1 + t 2 + (1 - (t 0 + t 1 + t 2)) = 1 := by ring
+    have hsum3 : (1 - (t 0 + t 1 + t 2)) + t 0 + t 1 + t 2 = 1 := by ring
+    have h4 := (hhalf x (t 0) (t 1) (t 2) (1 - (t 0 + t 1 + t 2)) hsum2 hxy2).2 hx
+    exact (p21_affGe_3_1_char hd x).mpr
+      ⟨1 - (t 0 + t 1 + t 2), t 0, t 1, t 2, h4, hsum3, hxy2⟩
 
 /-- HOL `DIFF_INTER` (TSKAJXY3.hl:589). -/
 theorem DIFF_INTER (X Y Z : Set V3) : (X \ Y) ∩ Z = (X ∩ Z) \ Y := by
@@ -2380,30 +2754,201 @@ theorem BARV3_TRUNC1 (V : Set V3) (ul : List V3) (hb : barV V 3 ul) :
   obtain ⟨u0, u1, u2, u3, rfl⟩ := BARV_3_EXPLICIT V ul hb
   exact (TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2
 
-/-- HOL `MCELL1_RADIAL` (TSKAJXY3.hl:624; giant). -/
+
+/-- Pushed-coercion smul-dot identity (copy of the private
+`p21_smul_dotP`, which is defined later in this file). -/
+private theorem p21e_smul_dotP (t : ℝ) (a b c : V3) :
+    (t • a).ofLp ⬝ᵥ (b.ofLp - c.ofLp)
+      = t * ((a.ofLp ⬝ᵥ b.ofLp) - (a.ofLp ⬝ᵥ c.ofLp)) := by
+  rw [show WithLp.ofLp b - WithLp.ofLp c = WithLp.ofLp (b - c) from
+    (WithLp.ofLp_sub 2 b c).symm, p21_smul_dot t a (b - c), WithLp.ofLp_sub 2 b c,
+    p21_dot_sub_whole a b c]
+
+/-- Copy of `RCONE_GT_SCALE` (which sits later in this file): strict-cone
+membership is positively homogeneous along rays from the apex. -/
+private theorem p21e_rcone_gt_scale (u0 u1 u : V3) (a t : ℝ) (ht : 0 < t)
+    (h : u0 + u ∈ rconeGt u0 u1 a) : u0 + t • u ∈ rconeGt u0 u1 a := by
+  have hmem := h
+  unfold rconeGt at hmem
+  rw [Set.mem_setOf_eq] at hmem
+  rw [show u0 + u - u0 = u from by abel, dist_eq_norm,
+    show u0 + u - u0 = u from by abel] at hmem
+  unfold rconeGt
+  rw [Set.mem_setOf_eq]
+  rw [show u0 + t • u - u0 = t • u from by abel, p21e_smul_dotP t u u1 u0,
+    dist_eq_norm, show u0 + t • u - u0 = t • u from by abel, norm_smul,
+    Real.norm_eq_abs, abs_of_pos ht]
+  have hdot := p21_dot_sub_whole u u1 u0
+  rw [← hdot, gt_iff_lt]
+  have h2 : t * ‖u‖ * dist u1 u0 * a < t * (u.ofLp ⬝ᵥ (u1.ofLp - u0.ofLp)) := by
+    have hh := mul_lt_mul_of_pos_left hmem ht
+    have hEq : t * (‖u‖ * dist u1 u0 * a) = t * ‖u‖ * dist u1 u0 * a := by ring
+    linarith
+  exact h2
+
+/-- HOL `MCELL1_RADIAL` (TSKAJXY3.hl:624; proved 2026-09-29 wave A2: the
+radial ray from `u0` through a point of `mcell1` stays in `rogers` by
+`CONVEX_HULL_SCALE`, whose `affGe` side-condition is `OMEGA_LIST_BISECTOR`
+plus `BALL_DIFF_RCONE_GT_BISECTOR`; the cone part dies by the contrapositive
+of `RCONE_GT_SCALE`). -/
 theorem MCELL1_RADIAL (V X : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V)
     (hb : barV V 3 ul) (hX : X = mcell1 V ul) (hn : ¬nullSet X) :
     radialNorm (Real.sqrt 2) (elV ul 0) (X ∩ Metric.ball (elV ul 0) (Real.sqrt 2)) := by
-  -- NEEDS: TSKAJXY3.hl:624；路线（A2 波）：mcell1 四件径向 kit（球壳差集 + 锥差集）组装 radialNorm
-  sorry
+  classical
+  obtain ⟨u0, u1, u2, u3, rflu⟩ := BARV_3_EXPLICIT V ul hb
+  subst rflu
+  have h1 : ¬nullSet (mcell1 V [u0, u1, u2, u3]) := by rw [← hX]; exact hn
+  have hncp := p21_omega4_ncp V [u0, u1, u2, u3] hp hs hb h1
+  refine ⟨Set.inter_subset_right, ?_⟩
+  intro u hu t ht htn
+  obtain ⟨hx, _⟩ := hu
+  have hballmem : u0 + t • u ∈ Metric.ball u0 (Real.sqrt 2) := by
+    rw [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left, norm_smul, Real.norm_eq_abs,
+      abs_of_pos ht]
+    exact htn
+  rw [hX, MCELL1_EXPLICIT V (mcell1 V [u0, u1, u2, u3]) [u0, u1, u2, u3] hs hp hb rfl
+    (by rw [← hX]; exact hn)] at hx
+  rw [show hdV ([u0, u1, u2, u3] : List V3) = u0 from rfl,
+    show hdV ([u0, u1, u2, u3].tail : List V3) = u1 from rfl,
+    show elV [u0, u1, u2, u3] 0 = u0 from rfl] at hx
+  obtain ⟨⟨hR, hcb⟩, hcon⟩ := hx
+  -- the ray-homogeneity contrapositive: a scaled ray point in the cone pulls
+  -- the original point back into the cone
+  have hconeBack : u0 + t • u
+      ∈ rconeGt u0 u1 (hl (truncateSimplex 1 [u0, u1, u2, u3]) / Real.sqrt 2) →
+      u0 + u ∈ rconeGt u0 u1 (hl (truncateSimplex 1 [u0, u1, u2, u3]) / Real.sqrt 2) := by
+    intro hmem
+    have hsc := p21e_rcone_gt_scale u0 u1 (t • u)
+      (hl (truncateSimplex 1 [u0, u1, u2, u3]) / Real.sqrt 2) (1 / t)
+      (div_pos (by norm_num : (0:ℝ) < 1) ht) hmem
+    rwa [smul_smul, show (1:ℝ) / t * t = 1 from by field_simp, one_smul] at hsc
+  rw [hX, MCELL1_EXPLICIT V (mcell1 V [u0, u1, u2, u3]) [u0, u1, u2, u3] hs hp hb rfl
+    (by rw [← hX]; exact hn)]
+  rw [show hdV ([u0, u1, u2, u3] : List V3) = u0 from rfl,
+    show hdV ([u0, u1, u2, u3].tail : List V3) = u1 from rfl,
+    show elV [u0, u1, u2, u3] 0 = u0 from rfl]
+  -- the Rogers simplex is the hull of the four omega points
+  have h4 : ([u0, u1, u2, u3] : List V3).length = 4 := rfl
+  have himg4 : omegaListN V [u0, u1, u2, u3] '' {j : ℕ | j < ([u0, u1, u2, u3] : List V3).length}
+      ⊆ ({u0, omegaListN V [u0, u1, u2, u3] 1, omegaListN V [u0, u1, u2, u3] 2,
+        omegaListN V [u0, u1, u2, u3] 3} : Set V3) := by
+    rintro y ⟨j, hj, rfl⟩
+    have hj4 : j < 4 := by simpa [h4] using hj
+    interval_cases j
+    · exact Or.inl rfl
+    · exact Set.mem_insert_of_mem _ (Or.inl rfl)
+    · exact Set.mem_insert_of_mem _ (Set.mem_insert_of_mem _ (Or.inl rfl))
+    · exact Set.mem_insert_of_mem _ (Set.mem_insert_of_mem _
+        (Set.mem_insert_of_mem _ (Set.mem_singleton _)))
+  have hsub4 : ({u0, omegaListN V [u0, u1, u2, u3] 1, omegaListN V [u0, u1, u2, u3] 2,
+      omegaListN V [u0, u1, u2, u3] 3} : Set V3)
+      ⊆ omegaListN V [u0, u1, u2, u3] '' {j : ℕ | j < ([u0, u1, u2, u3] : List V3).length} := by
+    rintro y hy
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy
+    rcases hy with rfl | rfl | rfl | rfl
+    · exact ⟨0, by norm_num, rfl⟩
+    · exact ⟨1, by norm_num, rfl⟩
+    · exact ⟨2, by norm_num, rfl⟩
+    · exact ⟨3, by norm_num, rfl⟩
+  have hreq : rogers V [u0, u1, u2, u3]
+      = convexHull ℝ ({u0, omegaListN V [u0, u1, u2, u3] 1,
+        omegaListN V [u0, u1, u2, u3] 2, omegaListN V [u0, u1, u2, u3] 3} : Set V3) := by
+    rw [rogers]
+    exact congrArg (convexHull ℝ) (Set.Subset.antisymm himg4 hsub4)
+  rw [hreq, Set.mem_inter_iff, Set.mem_sdiff, Set.mem_inter_iff]
+  refine ⟨⟨⟨?_, ?_⟩, ?_⟩, ?_⟩
+  · -- the Rogers-simplex part, via CONVEX_HULL_SCALE + OMEGA_LIST_BISECTOR
+    rw [show u = u0 + u - u0 from (by abel : u0 + u - u0 = u).symm]
+    rw [hreq] at hR
+    refine CONVEX_HULL_SCALE u0 (omegaListN V [u0, u1, u2, u3] 1)
+      (omegaListN V [u0, u1, u2, u3] 2) (omegaListN V [u0, u1, u2, u3] 3) (u0 + u) t hncp hR
+      (le_of_lt ht) ?_
+    rw [show u0 + u - u0 = u from by abel]
+    have hvel : elV [u0, u1, u2, u3] 0 = u0 := rfl
+    have homega := OMEGA_LIST_BISECTOR V [u0, u1, u2, u3] hp hs hb h1
+    rw [hvel] at homega
+    rw [homega]
+    show dist (u0 + t • u) u0 ≤ dist (u0 + t • u) u1
+    refine BALL_DIFF_RCONE_GT_BISECTOR u0 u1 (u0 + t • u) (Real.sqrt 2)
+      (hl (truncateSimplex 1 [u0, u1, u2, u3])) ⟨hballmem, ?_⟩ ?_
+      (Real.sqrt_pos.2 (by norm_num))
+    · intro hmem
+      exact hcon (hconeBack hmem)
+    · rw [(TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2, HL_2 u0 u1, dist_comm u0 u1]
+      ring
+  · -- the closed-ball part
+    rw [Metric.mem_closedBall, dist_eq_norm, add_sub_cancel_left, norm_smul,
+      Real.norm_eq_abs, abs_of_pos ht]
+    exact htn.le
+  · -- the strict-cone part dies by ray homogeneity
+    intro hmem
+    exact hcon (hconeBack hmem)
+  · -- the open-ball part of the intersection
+    exact hballmem
 
-/-- HOL `MCELL1_VOL` (TSKAJXY3.hl:731; giant: needs the `sol` density
-specification at the `sqrt 2`-ball). -/
+/-- HOL `MCELL1_VOL` (TSKAJXY3.hl:731; proved 2026-09-29 wave A2: both `sol`
+values are evaluated at the common radius `sqrt 2` via `sol_spec`, using
+`MCELL1_VOL_RESTRICT` and `MCELL1_RADIAL`). -/
 theorem MCELL1_VOL (V X : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V)
     (hb : barV V 3 ul) (hX : X = mcell1 V ul) (hn : ¬nullSet X) :
     volume.real X = Real.sqrt 2 ^ 3 / 3 * sol (elV ul 0) X := by
-  -- NEEDS: TSKAJXY3.hl:731；路线（A2 波）：MCELL1_SOL_RESTRICT + sol_spec 合成 vol = √2³/3·sol
-  sorry
+  have hres := MCELL1_VOL_RESTRICT V X ul hs hp hb hX hn
+  have hrad := MCELL1_RADIAL V X ul hs hp hb hX hn
+  have hmeas : MeasurableSet (X ∩ Metric.ball (elV ul 0) (Real.sqrt 2)) := by
+    rw [hX]
+    exact (MEASURABLE_MCELL V ul 1 hs hp hb).inter Metric.isOpen_ball.measurableSet
+  have hsol := sol_spec (x := elV ul 0) (C := X) (r := Real.sqrt 2)
+    (Real.sqrt_pos.2 (by norm_num)) hmeas hrad
+  rw [hres, hsol]
+  have h2ne : Real.sqrt 2 ≠ 0 := (Real.sqrt_pos.2 (by norm_num)).ne'
+  field_simp
 
 -- atn2-merge: `HJKDESR1a_1cell` (TSKAJXY3.hl:766 = TSKAJXY1.hl:5652) is
 -- byte-identical to PackingAuto20.lean's declaration; with the hub now
 -- imported above, its copy serves both files (plan §5.3).
 
-/-- HOL `TSKAJXY_1` (TSKAJXY3.hl:780; giant: the 1-cell case of TSKAJXY). -/
+/-- HOL `TSKAJXY_1` (TSKAJXY3.hl:780; proved 2026-09-29 wave A2: `GAMMAX_MCELL1`
++ `MCELL1_VOL` factor `gammaX = sol · (sqrt2^3/3 - 2·mm1/π)`, the bracket
+positive by the PA20 numeric seed `HJKDESR1a_1cell`). -/
 theorem TSKAJXY_1 (V : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V)
     (hb : barV V 3 ul) : gammaX V (mcell1 V ul) lmfun ≥ 0 := by
-  -- NEEDS: TSKAJXY3.hl:780；路线（A2 波）：GAMMAX_MCELL1 + MCELL1_VOL + HJKDESR1a_1cell（PA20 数值种子）实数账
-  sorry
+  by_cases hnull : nullSet (mcell1 V ul)
+  · rw [GAMMAX_NULLSET V lmfun (mcell1 V ul) ul 1 hs hp hb (BumpP4.MCELL1 V ul) hnull]
+  · have hv := GAMMAX_MCELL1 V (mcell1 V ul) ul hs hp hb rfl hnull
+    have hv1 := MCELL1_VOL V (mcell1 V ul) ul hs hp hb rfl hnull
+    -- the solid angle is nonnegative (three times a volume over a positive cube)
+    have hsolnn : 0 ≤ sol (elV ul 0) (mcell1 V ul) := by
+      have hvolnn : 0 ≤ volume.real (mcell1 V ul) := by
+        rw [Measure.real_def]
+        exact ENNReal.toReal_nonneg
+      have hpos : (0:ℝ) < Real.sqrt 2 ^ 3 / 3 := by positivity
+      have h2ne : Real.sqrt 2 ≠ 0 := (Real.sqrt_pos.2 (by norm_num)).ne'
+      have hform : sol (elV ul 0) (mcell1 V ul)
+          = volume.real (mcell1 V ul) / (Real.sqrt 2 ^ 3 / 3) := by
+        rw [hv1]
+        field_simp
+      rw [hform]
+      exact div_nonneg hvolnn (le_of_lt hpos)
+    have h8 : Real.sqrt 2 ^ 3 = 2 * Real.sqrt 2 := by
+      have h2sq : Real.sqrt 2 * Real.sqrt 2 = 2 :=
+        Real.mul_self_sqrt (show (0:ℝ) ≤ 2 by norm_num)
+      rw [show (3:ℕ) = 2 + 1 from rfl, pow_add, pow_two, pow_one, h2sq]
+    have hmm : mm1 < Real.pi * Real.sqrt 2 / 3 := by
+      have hH := HJKDESR1a_1cell
+      linarith
+    have hdiff : 0 < Real.sqrt 2 ^ 3 / 3 - 2 * mm1 / Real.pi := by
+      rw [h8]
+      have h2' : (3:ℝ) * mm1 < Real.pi * Real.sqrt 2 := by linarith
+      have hdiv : 2 * mm1 / Real.pi < 2 * Real.sqrt 2 / 3 := by
+        refine div_lt_iff₀ Real.pi_pos |>.2 ?_
+        nlinarith [Real.sqrt_pos.2 (show (0:ℝ) < 2 by norm_num)]
+      linarith
+    have hkey : sol (elV ul 0) (mcell1 V ul)
+        * (Real.sqrt 2 ^ 3 / 3 - 2 * mm1 / Real.pi)
+        = Real.sqrt 2 ^ 3 / 3 * sol (elV ul 0) (mcell1 V ul)
+          - 2 * mm1 / Real.pi * sol (elV ul 0) (mcell1 V ul) := by ring
+    rw [ge_iff_le, hv, hv1, ← hkey]
+    exact mul_nonneg hsolnn hdiff.le
 
 /-- HOL `MCELL_CELL_PARAMETERS_D_EXIST` (TSKAJXY3.hl:841; proved 2026-09-29
 wave B1: the `cellParamsD` epsilon satisfies its predicate (`epsilon_spec`
