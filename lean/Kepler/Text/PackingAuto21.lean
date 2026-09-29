@@ -101,11 +101,13 @@ import Kepler.Text.PackingAuto12
 import Kepler.Text.PackingAuto13
 import Kepler.Text.PackingAuto15
 import Kepler.Text.PackingAuto17
+import Kepler.Text.PackingAuto18
 import Kepler.Text.PackingAuto20
 import Kepler.Text.SphereKit
 import Kepler.Text.IneqClosureDefs
 import Kepler.Text.Polytope
 import Kepler.Geom.WedgeVolume
+import Kepler.Geom.LuneVolume
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -1800,32 +1802,6 @@ theorem MCELL1_VOL_RESTRICT (V X : Set V3) (ul : List V3) (hs : saturated V)
     le_antisymm h1 h2
   rw [Measure.real_def, Measure.real_def, hEQ]
 
-/-- HOL `MCELL1_SOL_RESTRICT` (TSKAJXY3.hl:285; giant: solid-angle
-invariance of `mcell1` under the `sqrt 2`-ball restriction, via
-URRPHBZ2 + the `sol` density specification). -/
-theorem MCELL1_SOL_RESTRICT (V X : Set V3) (ul : List V3) (hs : saturated V)
-    (hp : Packing V) (hb : barV V 3 ul) (hX : X = mcell1 V ul)
-    (hn : ¬nullSet X) :
-    sol (elV ul 0) X =
-      sol (elV ul 0) (X ∩ Metric.ball (elV ul 0) (Real.sqrt 2)) := by
-  -- NEEDS: TSKAJXY3.hl:285；路线（A2+波，已侦察完备）：两次 sol_spec 在公共半径 r' ≤ √2 处比对即可，
-  -- 无需 URRPHBZ2/OMEGA 之外的新几何。唯一次真卡点 = 文件序：本定理位于 :1750，而其证明所需的
-  -- MCELL1_RADIAL 式径向性依赖 OMEGA_LIST_BISECTOR(:2700) 与 CONVEX_HULL_SCALE(:2200)、
-  -- NOT_COPLANAR_OMEGA_LIST_N(:2250)（三者均在其后，同文件禁前向引用）。
-  -- 剩余路线（A2+ 波二选一）：(a) 把 A1-kit 的 p21_affGe_3_1_char/p21_coeff_unique/CONVEX_HULL_SCALE
-  -- + 本波 omega 距离相等 kit 以 p21e_ 前缀副本上提至本定理之前（~450 行重复，收口后合并去重）；
-  -- 或 (b) 编排者将该定理与 MCELL1_RADIAL 区块整体后移至 OMEGA_LIST_BISECTOR 之后（陈述冻结的移动需裁决）。
-  sorry
-
-/-- HOL `CONV_CONVEX_HULL` (TSKAJXY3.hl:328). -/
-theorem CONV_CONVEX_HULL (s : Set V3) : Convex ℝ s ↔ (convexHull ℝ s : Set V3) = s := by
-  constructor
-  · intro h
-    exact Subset.antisymm (convexHull_min le_rfl h) (subset_convexHull ℝ s)
-  · intro h
-    rw [← h]
-    exact convex_convexHull ℝ s
-
 /-! ## Wave-A1 private kit: 4-point convex hull vs `affGe` (2026-09-29)
 
 The HOL proofs of CONVEX_HULL_4_AFF_GE / CONVEX_HULL_SCALE go through the
@@ -2886,6 +2862,43 @@ theorem MCELL1_RADIAL (V X : Set V3) (ul : List V3) (hs : saturated V) (hp : Pac
   · -- the open-ball part of the intersection
     exact hballmem
 
+/-- HOL `MCELL1_SOL_RESTRICT` (TSKAJXY3.hl:285; proved 2026-09-30: both `sol`
+values are evaluated at the common radius `sqrt 2` via `sol_spec` — the
+`MCELL1_RADIAL` kit (whose file-order blockage is closed by hoisting the
+wave-A1/A2 kit ahead of this theorem) makes both instances of `sol_spec`
+evaluate on the very same restricted set). -/
+theorem MCELL1_SOL_RESTRICT (V X : Set V3) (ul : List V3) (hs : saturated V)
+    (hp : Packing V) (hb : barV V 3 ul) (hX : X = mcell1 V ul)
+    (hn : ¬nullSet X) :
+    sol (elV ul 0) X =
+      sol (elV ul 0) (X ∩ Metric.ball (elV ul 0) (Real.sqrt 2)) := by
+  have hmeas : MeasurableSet X := by
+    rw [hX]; exact MEASURABLE_MCELL V ul 1 hs hp hb
+  have hmeas2 : MeasurableSet (X ∩ Metric.ball (elV ul 0) (Real.sqrt 2)) :=
+    hmeas.inter Metric.isOpen_ball.measurableSet
+  have hrad := MCELL1_RADIAL V X ul hs hp hb hX hn
+  -- the restricted set is radial in its own right (double ball collapses)
+  have hbb : (X ∩ Metric.ball (elV ul 0) (Real.sqrt 2)) ∩
+      Metric.ball (elV ul 0) (Real.sqrt 2)
+      = X ∩ Metric.ball (elV ul 0) (Real.sqrt 2) := by
+    rw [Set.inter_assoc, Set.inter_self]
+  have h1 := sol_spec (x := elV ul 0) (C := X) (r := Real.sqrt 2)
+    (Real.sqrt_pos.2 (by norm_num)) hmeas2 hrad
+  have h2 := sol_spec (x := elV ul 0)
+    (C := X ∩ Metric.ball (elV ul 0) (Real.sqrt 2)) (r := Real.sqrt 2)
+    (Real.sqrt_pos.2 (by norm_num)) (by rw [hbb]; exact hmeas2)
+    (by rw [hbb]; exact hrad)
+  rw [h1, h2, hbb]
+
+/-- HOL `CONV_CONVEX_HULL` (TSKAJXY3.hl:328). -/
+theorem CONV_CONVEX_HULL (s : Set V3) : Convex ℝ s ↔ (convexHull ℝ s : Set V3) = s := by
+  constructor
+  · intro h
+    exact Subset.antisymm (convexHull_min le_rfl h) (subset_convexHull ℝ s)
+  · intro h
+    rw [← h]
+    exact convex_convexHull ℝ s
+
 /-- HOL `MCELL1_VOL` (TSKAJXY3.hl:731; proved 2026-09-29 wave A2: both `sol`
 values are evaluated at the common radius `sqrt 2` via `sol_spec`, using
 `MCELL1_VOL_RESTRICT` and `MCELL1_RADIAL`). -/
@@ -3918,15 +3931,345 @@ theorem FRUSTT_RCONE_GE (u v : V3) (h a : ℝ) (ha : 0 < a) (huv : u ≠ v) :
       (rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖})) = 0
   exact le_antisymm (le_trans (measure_mono hsub) hB.le) zero_le
 
-/-- HOL `FRUSTT_WEDGE_RCONE_GE` (TSKAJXY3.hl:1368; giant). -/
+/-! ## B2-wave private kit: null planes & the `dihV = π` antiparallel engine (2026-09-30)
+
+Consumed by `FRUSTT_WEDGE_RCONE_GE` / `NOT_COPLANAR_EXTREME_MCELL2` /
+`MCELL2_DIHV_LT_PI`: any three points span a proper affine subspace of `V3`
+(hence null — the ConformingAuto2 `affineSpan_three_ne_top` mechanism, copied
+here as private kit), affine combinations of points of an affine subspace stay
+in it, and `dihV = π` forces the first projected difference to be antiparallel
+to the second (the equality case of Cauchy–Schwarz), putting the four points
+into one plane. -/
+
+/-- A 2-vector span has rank at most 2 (copy of the private ConformingAuto2
+`finrank_span_pair_le_two_auto2`). -/
+private theorem p21_finrank_span_pair_le_two (a b : V3) :
+    Module.finrank ℝ (Submodule.span ℝ ({a, b} : Set V3)) ≤ 2 := by
+  have h := finrank_span_finset_le_card (R := ℝ) ({a, b} : Finset V3)
+  unfold Set.finrank at h
+  rw [show (({a, b} : Finset V3) : Set V3) = ({a, b} : Set V3) from by simp] at h
+  have h2 : ({a, b} : Finset V3).card ≤ 2 := by
+    calc ({a, b} : Finset V3).card ≤ ({b} : Finset V3).card + 1 := Finset.card_insert_le a {b}
+      _ = 2 := by simp
+  omega
+
+/-- The affine span of three points of `V3` is a proper affine subspace. -/
+private theorem p21_affSpan3_ne_top (a b c : V3) :
+    (affineSpan ℝ ({a, b, c} : Set V3)) ≠ ⊤ := by
+  intro htop
+  have hdir : (affineSpan ℝ ({a, b, c} : Set V3)).direction = ⊤ := by
+    rw [htop]; exact AffineSubspace.direction_top ℝ V3 V3
+  have hvs : vectorSpan ℝ ({a, b, c} : Set V3)
+      = Submodule.span ℝ ({b - a, c - a} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_right ℝ (show a ∈ ({a, b, c} : Set V3) from by simp)]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro p ⟨q, hq, rfl⟩
+      rcases hq with rfl | rfl | rfl
+      · simp
+      · exact Submodule.subset_span (by left; rfl)
+      · exact Submodule.subset_span (by right; rfl)
+    · rw [Submodule.span_le]
+      rintro p (rfl | rfl)
+      · exact Submodule.subset_span ⟨b, by simp, rfl⟩
+      · exact Submodule.subset_span ⟨c, by simp, rfl⟩
+  have hle : Module.finrank ℝ (affineSpan ℝ ({a, b, c} : Set V3)).direction ≤ 2 := by
+    rw [direction_affineSpan, hvs]
+    exact p21_finrank_span_pair_le_two (b - a) (c - a)
+  rw [hdir, finrank_top] at hle
+  have h3 : Module.finrank ℝ V3 = 3 := by simp [V3]
+  omega
+
+/-- The affine span of three points of `V3` is Lebesgue-null. -/
+private theorem p21_affSpan3_null (a b c : V3) :
+    volume ((affineSpan ℝ ({a, b, c} : Set V3) : Set V3)) = 0 :=
+  Measure.addHaar_affineSubspace volume _ (p21_affSpan3_ne_top a b c)
+
+/-- An affine combination (weights summing to 1) of points of an affine
+subspace stays in the subspace. -/
+private theorem p21_affineCombo_mem_of_mem {S : AffineSubspace ℝ V3} {F : Finset V3}
+    {f : V3 → ℝ} {b : V3} (hS : ∀ z ∈ F, (z : V3) ∈ (S : Set V3)) (hb : b ∈ S)
+    (hsum : ∑ z ∈ F, f z = 1) {x : V3} (hx : x = ∑ z ∈ F, f z • z) :
+    x ∈ (S : Set V3) := by
+  have hdir : ∑ z ∈ F, f z • (z - b) ∈ S.direction := by
+    refine Submodule.sum_mem _ (fun z hz => ?_)
+    exact Submodule.smul_mem _ _ (AffineSubspace.vsub_mem_direction (hS z hz) hb)
+  have hsplit : ∑ z ∈ F, f z • z
+      = ∑ z ∈ F, f z • (z - b) + (∑ z ∈ F, f z) • b := by
+    rw [Finset.sum_smul, ← Finset.sum_add_distrib]
+    exact Finset.sum_congr rfl (fun z _ => by rw [← smul_add, sub_add_cancel])
+  have hx' : x = ∑ z ∈ F, f z • (z - b) + b := by
+    rw [hx, hsplit, hsum, one_smul]
+  rw [hx']
+  exact AffineSubspace.vadd_mem_of_mem_direction hdir hb
+
+/-- The half-plane `affGe {u,v} {w}` is null (it lives in the plane spanned by
+`u, v, w`, a proper affine subspace of `V3`). -/
+private theorem p21_affGe_null (u v w : V3) :
+    volume (affGe ({u, v} : Set V3) ({w} : Set V3)) = 0 := by
+  refine measure_mono_null (fun x hx => ?_) (p21_affSpan3_null u v w)
+  obtain ⟨f, hfin, hx, -, hsum⟩ := hx
+  refine p21_affineCombo_mem_of_mem (S := affineSpan ℝ ({u, v, w} : Set V3))
+    (F := hfin.toFinset) (f := f) (b := w) (x := x) ?_ ?_ hsum hx
+  · intro z hz
+    have hz' : z ∈ ({u, v} : Set V3) ∪ ({w} : Set V3) := by
+      simpa [Set.Finite.mem_toFinset] using hz
+    rcases hz' with hz' | hz'
+    · rcases hz' with rfl | rfl
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact subset_affineSpan ℝ _ (by simp)
+    · rw [hz']
+      exact subset_affineSpan ℝ _ (by simp)
+  · exact subset_affineSpan ℝ _ (by simp)
+
+/-- Membership of a four-point set, in a deterministic disjunction order. -/
+private theorem p21_mem_quad {α : Type*} {z a b c d : α}
+    (hz : z ∈ ({a, b, c, d} : Set α)) : z = a ∨ z = b ∨ z = c ∨ z = d := by
+  rcases Set.mem_insert_iff.1 hz with rfl | h2
+  · exact Or.inl rfl
+  · rcases Set.mem_insert_iff.1 h2 with rfl | h3
+    · exact Or.inr (Or.inl rfl)
+    · rcases Set.mem_insert_iff.1 h3 with rfl | h4
+      · exact Or.inr (Or.inr (Or.inl rfl))
+      · exact Or.inr (Or.inr (Or.inr (Set.mem_singleton_iff.1 h4)))
+
+/-- A coplanar quadruple forces the `affGe` slab spanned by one diagonal pair
+against the other to be null (both diagonal pairs sit in one plane). -/
+private theorem p21_coplanar_affGe_null {a b c d : V3}
+    (hcp : Coplanar ({a, b, c, d} : Set V3)) :
+    volume (affGe ({a, b} : Set V3) ({c, d} : Set V3)) = 0 := by
+  obtain ⟨p, q, r, hsub⟩ := hcp
+  refine measure_mono_null (fun x hx => ?_) (p21_affSpan3_null p q r)
+  obtain ⟨f, hfin, hx, -, hsum⟩ := hx
+  refine p21_affineCombo_mem_of_mem (S := affineSpan ℝ ({p, q, r} : Set V3))
+    (F := hfin.toFinset) (f := f) (b := r) (x := x) ?_ ?_ hsum hx
+  · intro z hz
+    rcases (Set.Finite.mem_toFinset hfin).mp hz with ((rfl | rfl) | (rfl | rfl))
+    · exact hsub (by simp)
+    · exact hsub (by simp)
+    · exact hsub (by simp)
+    · exact hsub (by simp)
+  · exact subset_affineSpan ℝ _ (by simp)
+
+/-- Three collinear points plus any fourth are coplanar. -/
+private theorem p21_collinear3_coplanar4 (a b c d : V3) (h : Collinear3 a b c) :
+    Coplanar ({a, b, c, d} : Set V3) := by
+  by_cases hab : a = b
+  · refine ⟨a, c, d, fun z hz => ?_⟩
+    rcases p21_mem_quad hz with h1 | h2 | h3 | h4
+    · rw [h1]; exact subset_affineSpan ℝ _ (by simp)
+    · rw [h2, ← hab]; exact subset_affineSpan ℝ _ (by simp)
+    · rw [h3]; exact subset_affineSpan ℝ _ (by simp)
+    · rw [h4]; exact subset_affineSpan ℝ _ (by simp)
+  · refine ⟨a, b, d, fun z hz => ?_⟩
+    have hsub2 : ({a, b} : Set V3) ⊆ ({a, b, d} : Set V3) := by
+      intro x hx
+      rcases Set.mem_insert_iff.1 hx with rfl | hx2
+      · exact Set.mem_insert_iff.2 (Or.inl rfl)
+      · rcases Set.mem_singleton_iff.1 hx2 with rfl
+        exact Set.mem_insert_iff.2 (Or.inr (Set.mem_insert_iff.2 (Or.inl rfl)))
+    rcases p21_mem_quad hz with h1 | h2 | h3 | h4
+    · rw [h1]; exact subset_affineSpan ℝ _ (by simp)
+    · rw [h2]; exact subset_affineSpan ℝ _ (by simp)
+    · rw [h3]; exact affineSpan_mono ℝ hsub2
+        (Collinear.mem_affineSpan_of_mem_of_ne (p₁ := a) (p₂ := b) (p₃ := c)
+          h (by simp) (by simp) (by simp) hab)
+    · rw [h4]; exact subset_affineSpan ℝ _ (by simp)
+
+/-- Variant of `p21_collinear3_coplanar4` with the collinear point in the last
+slot. -/
+private theorem p21_collinear3_coplanar4_last (a b c d : V3) (h : Collinear3 a b d) :
+    Coplanar ({a, b, c, d} : Set V3) := by
+  by_cases hab : a = b
+  · refine ⟨a, c, d, fun z hz => ?_⟩
+    rcases p21_mem_quad hz with h1 | h2 | h3 | h4
+    · rw [h1]; exact subset_affineSpan ℝ _ (by simp)
+    · rw [h2, ← hab]; exact subset_affineSpan ℝ _ (by simp)
+    · rw [h3]; exact subset_affineSpan ℝ _ (by simp)
+    · rw [h4]; exact subset_affineSpan ℝ _ (by simp)
+  · refine ⟨a, b, c, fun z hz => ?_⟩
+    have hsub2 : ({a, b} : Set V3) ⊆ ({a, b, c} : Set V3) := by
+      intro x hx
+      rcases Set.mem_insert_iff.1 hx with rfl | hx2
+      · exact Set.mem_insert_iff.2 (Or.inl rfl)
+      · rcases Set.mem_singleton_iff.1 hx2 with rfl
+        exact Set.mem_insert_iff.2 (Or.inr (Set.mem_insert_iff.2 (Or.inl rfl)))
+    rcases p21_mem_quad hz with h1 | h2 | h3 | h4
+    · rw [h1]; exact subset_affineSpan ℝ _ (by simp)
+    · rw [h2]; exact subset_affineSpan ℝ _ (by simp)
+    · rw [h3]; exact subset_affineSpan ℝ _ (by simp)
+    · rw [h4]; exact affineSpan_mono ℝ hsub2
+        (Collinear.mem_affineSpan_of_mem_of_ne (p₁ := a) (p₂ := b) (p₃ := d)
+          h (by simp) (by simp) (by simp) hab)
+
+/-- `dihV = π` forces the first projected difference to be antiparallel to the
+second: `w2 - w0` lands in the span of `w3 - w0` and `w1 - w0` (Gram
+antiparallelism — the equality case of Cauchy–Schwarz on the projected
+vectors `vap`, `vbp`). -/
+private theorem p21_dihV_eq_pi_span {w0 w1 w2 w3 : V3} (hvc : w1 - w0 ≠ 0)
+    (hpi : dihV w0 w1 w2 w3 = Real.pi) :
+    ∃ s t : ℝ, (w2 - w0 : V3) = s • (w3 - w0) + t • (w1 - w0) := by
+  have hA : (0:ℝ) < (w1 - w0) ⬝ᵥ (w1 - w0) := by
+    have hp : (0:ℝ) < ‖(w1 - w0 : V3)‖ ^ 2 := by
+      have h := norm_pos_iff.2 hvc; nlinarith
+    rwa [p21_norm_sq] at hp
+  -- unpack `dihV` as the arccos of the normalized projected dot
+  have hdih : dihV w0 w1 w2 w3
+      = Real.arccos ((((w1 - w0) ⬝ᵥ (w1 - w0)) • (w2 - w0)
+            - ((w2 - w0) ⬝ᵥ (w1 - w0)) • (w1 - w0)) ⬝ᵥ
+          (((w1 - w0) ⬝ᵥ (w1 - w0)) • (w3 - w0)
+            - ((w3 - w0) ⬝ᵥ (w1 - w0)) • (w1 - w0))
+        / (‖(((w1 - w0) ⬝ᵥ (w1 - w0)) • (w2 - w0)
+            - ((w2 - w0) ⬝ᵥ (w1 - w0)) • (w1 - w0) : V3)‖
+          * ‖(((w1 - w0) ⬝ᵥ (w1 - w0)) • (w3 - w0)
+            - ((w3 - w0) ⬝ᵥ (w1 - w0)) • (w1 - w0) : V3)‖)) := by
+    show arcV 0 ((((w1 - w0) ⬝ᵥ (w1 - w0)) • (w2 - w0)
+          - ((w2 - w0) ⬝ᵥ (w1 - w0)) • (w1 - w0) : V3))
+      ((((w1 - w0) ⬝ᵥ (w1 - w0)) • (w3 - w0)
+          - ((w3 - w0) ⬝ᵥ (w1 - w0)) • (w1 - w0) : V3)) = _
+    rw [arcV]
+    simp [sub_zero, dist_zero_right]
+  set vap := ((w1 - w0) ⬝ᵥ (w1 - w0)) • (w2 - w0)
+    - ((w2 - w0) ⬝ᵥ (w1 - w0)) • (w1 - w0) with hvap
+  set vbp := ((w1 - w0) ⬝ᵥ (w1 - w0)) • (w3 - w0)
+    - ((w3 - w0) ⬝ᵥ (w1 - w0)) • (w1 - w0) with hvbp
+  rw [hdih, ← Real.arccos_neg_one] at hpi
+  -- the normalized projected dot lies in [-1, 1] (Cauchy–Schwarz)
+  have hrange : |(vap ⬝ᵥ vbp : ℝ)| ≤ ‖vap‖ * ‖vbp‖ := by
+    have h1 := abs_real_inner_le_norm (x := vap) (y := vbp)
+    rwa [inner_eq_dot] at h1
+  have hRabs : |(vap ⬝ᵥ vbp : ℝ) / (‖vap‖ * ‖vbp‖)| ≤ 1 := by
+    rcases eq_or_ne (‖vap‖ * ‖vbp‖) 0 with h0 | h0
+    · rw [h0, div_zero]; norm_num
+    · rw [abs_div, abs_of_nonneg (mul_nonneg (norm_nonneg _) (norm_nonneg _))]
+      exact (div_le_one
+        (lt_of_le_of_ne (mul_nonneg (norm_nonneg _) (norm_nonneg _)) (Ne.symm h0))).2 hrange
+  have hrat : ((vap ⬝ᵥ vbp : ℝ) / (‖vap‖ * ‖vbp‖)) = -1 :=
+    (Real.arccos_inj (abs_le.1 hRabs).1 (abs_le.1 hRabs).2
+      (by norm_num) (by norm_num)).1 hpi
+  have hden : ‖vap‖ * ‖vbp‖ ≠ 0 := by
+    intro h0
+    rw [h0, div_zero] at hrat
+    norm_num at hrat
+  have hbpne : ‖vbp‖ ≠ 0 := fun hh => hden (by rw [hh, mul_zero])
+  have hbppos : 0 < ‖vbp‖ := lt_of_le_of_ne (norm_nonneg _) (Ne.symm hbpne)
+  -- the equality case of Cauchy–Schwarz: `vap` is antiparallel to `vbp`
+  have hdot : inner ℝ vap vbp = -‖vap‖ * ‖vbp‖ := by
+    have h := congrArg (fun r : ℝ => r * (‖vap‖ * ‖vbp‖)) hrat
+    rw [← inner_eq_dot, div_mul_cancel₀ _ hden] at h
+    linarith
+  have hzero : vap + (‖vap‖ / ‖vbp‖) • vbp = 0 := by
+    have hsq : ‖vap + (‖vap‖ / ‖vbp‖) • vbp‖ ^ 2 = 0 := by
+      have hform := norm_add_sq_real (x := vap) (y := (‖vap‖ / ‖vbp‖) • vbp)
+      rw [real_inner_smul_right, hdot, norm_smul, Real.norm_eq_abs,
+        abs_of_nonneg (by positivity : (0:ℝ) ≤ ‖vap‖ / ‖vbp‖)] at hform
+      have hR0 : ‖vap‖ ^ 2 + 2 * (‖vap‖ / ‖vbp‖ * (-‖vap‖ * ‖vbp‖))
+          + (‖vap‖ / ‖vbp‖ * ‖vbp‖) ^ 2 = 0 := by
+        have e1 : (‖vap‖ : ℝ) / ‖vbp‖ * ‖vbp‖ = ‖vap‖ := div_mul_cancel₀ _ hbpne
+        have e2 : (‖vap‖ : ℝ) / ‖vbp‖ * (‖vap‖ * ‖vbp‖) = ‖vap‖ ^ 2 := by
+          rw [mul_comm ‖vap‖ ‖vbp‖, ← mul_assoc, div_mul_cancel₀ _ hbpne, sq]
+        calc ‖vap‖ ^ 2 + 2 * (‖vap‖ / ‖vbp‖ * (-‖vap‖ * ‖vbp‖))
+            + (‖vap‖ / ‖vbp‖ * ‖vbp‖) ^ 2
+          = ‖vap‖ ^ 2 - 2 * ((‖vap‖ / ‖vbp‖) * (‖vap‖ * ‖vbp‖))
+            + ((‖vap‖ / ‖vbp‖) * ‖vbp‖) ^ 2 := by ring
+        _ = ‖vap‖ ^ 2 - 2 * ‖vap‖ ^ 2 + ‖vap‖ ^ 2 := by rw [e2, e1]
+        _ = 0 := by ring
+      rw [hform, hR0]
+    have h0 : ‖vap + (‖vap‖ / ‖vbp‖) • vbp‖ = 0 := sq_eq_zero_iff.1 hsq
+    exact norm_eq_zero.1 h0
+  rw [hvap, hvbp] at hzero
+  have hvapneg : ((w1 - w0) ⬝ᵥ (w1 - w0)) • (w2 - w0)
+      - ((w2 - w0) ⬝ᵥ (w1 - w0)) • (w1 - w0)
+      = -((‖vap‖ / ‖vbp‖) • (((w1 - w0) ⬝ᵥ (w1 - w0)) • (w3 - w0)
+          - ((w3 - w0) ⬝ᵥ (w1 - w0)) • (w1 - w0))) :=
+    eq_neg_of_add_eq_zero_left hzero
+  -- solve for `w2 - w0`
+  refine ⟨-(‖vap‖ / ‖vbp‖),
+    (((w2 - w0) ⬝ᵥ (w1 - w0)) + (‖vap‖ / ‖vbp‖) * ((w3 - w0) ⬝ᵥ (w1 - w0)))
+      / ((w1 - w0) ⬝ᵥ (w1 - w0)), ?_⟩
+  have hAne : ((w1 - w0) ⬝ᵥ (w1 - w0) : ℝ) ≠ 0 := ne_of_gt hA
+  have hstep : ((w1 - w0) ⬝ᵥ (w1 - w0)) • (w2 - w0)
+      = (((w2 - w0) ⬝ᵥ (w1 - w0)) + (‖vap‖ / ‖vbp‖) * ((w3 - w0) ⬝ᵥ (w1 - w0))) • (w1 - w0)
+        + (-(‖vap‖ / ‖vbp‖) * ((w1 - w0) ⬝ᵥ (w1 - w0))) • (w3 - w0) := by
+    linear_combination (norm := module) hvapneg
+  calc w2 - w0
+      = (1 / ((w1 - w0) ⬝ᵥ (w1 - w0))) •
+          (((w1 - w0) ⬝ᵥ (w1 - w0)) • (w2 - w0)) := by
+        rw [one_div, inv_smul_smul₀ hAne]
+    _ = (1 / ((w1 - w0) ⬝ᵥ (w1 - w0))) •
+          ((((w2 - w0) ⬝ᵥ (w1 - w0)) + (‖vap‖ / ‖vbp‖) * ((w3 - w0) ⬝ᵥ (w1 - w0))) • (w1 - w0)
+        + (-(‖vap‖ / ‖vbp‖) * ((w1 - w0) ⬝ᵥ (w1 - w0))) • (w3 - w0)) := by rw [hstep]
+    _ = (-(‖vap‖ / ‖vbp‖)) • (w3 - w0)
+        + ((((w2 - w0) ⬝ᵥ (w1 - w0)) + (‖vap‖ / ‖vbp‖) * ((w3 - w0) ⬝ᵥ (w1 - w0)))
+          / ((w1 - w0) ⬝ᵥ (w1 - w0))) • (w1 - w0) := by
+        rw [smul_add, smul_smul, smul_smul]
+        have h1 : ((1 / ((w1 - w0) ⬝ᵥ (w1 - w0)) : ℝ) *
+              (((w2 - w0) ⬝ᵥ (w1 - w0)) + (‖vap‖ / ‖vbp‖) * ((w3 - w0) ⬝ᵥ (w1 - w0))))
+            = (((w2 - w0) ⬝ᵥ (w1 - w0)) + (‖vap‖ / ‖vbp‖) * ((w3 - w0) ⬝ᵥ (w1 - w0)))
+              / ((w1 - w0) ⬝ᵥ (w1 - w0)) := by ring
+        have h2 : ((1 / ((w1 - w0) ⬝ᵥ (w1 - w0)) : ℝ) *
+              (-(‖vap‖ / ‖vbp‖) * ((w1 - w0) ⬝ᵥ (w1 - w0))))
+            = -(‖vap‖ / ‖vbp‖) := by field_simp
+        rw [h1, h2, add_comm]
+
+/-- HOL `FRUSTT_WEDGE_RCONE_GE` (TSKAJXY3.hl:1368; proved 2026-09-30 wave B2:
+the symmetric difference dies inside `symmDiff (frustt) (rconeGe ∩ H)` — null
+by `FRUSTT_RCONE_GE` — together with the two bounding half-planes of the
+closed wedge, which stick out of the open wedge by `WEDGE_WEDGE_GE`
+(PA18:873) and are null planes by `p21_affGe_null`; `WEDGE_SUBSET_WEDGE_GE`
+(PA18:2457) kills the first branch outright). -/
 theorem FRUSTT_WEDGE_RCONE_GE (u v w1 w2 : V3) (h a : ℝ) (ha : 0 < a) (huv : u ≠ v)
     (ha1 : a ≤ 1) (hnn : 0 ≤ h)
     (hc1 : ¬Collinear3 u v w1) (hc2 : ¬Collinear3 u v w2) :
     nullSet (symmDiff (frustt u v h a ∩ wedge u v w1 w2)
       (rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖} ∩
         wedgeGe u v w1 w2)) := by
-  -- NEEDS: TSKAJXY3.hl:1368；路线（B2 波）：FRUSTT_RCONE_GE（本波已证）+ WEDGE_WEDGE_GE/WEDGE_SUBSET_WEDGE_GE（PA18:873/2457，需 import PA18）+ NULL_SDIFF_TRANS
-  sorry
+  classical
+  have hsub : symmDiff (frustt u v h a ∩ wedge u v w1 w2)
+      (rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖} ∩
+        wedgeGe u v w1 w2)
+      ⊆ symmDiff (frustt u v h a)
+          (rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖})
+        ∪ affGe ({u, v} : Set V3) ({w1} : Set V3)
+        ∪ affGe ({u, v} : Set V3) ({w2} : Set V3) := by
+    intro x hx
+    rw [Set.mem_symmDiff] at hx
+    rcases hx with ⟨⟨hxA, hxW⟩, hxN⟩ | ⟨⟨⟨hxB, hxH⟩, hxWg⟩, hxN⟩
+    · by_cases hxB2 : x ∈ rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖}
+      · exact (hxN ⟨hxB2, WEDGE_SUBSET_WEDGE_GE u v w1 w2 hxW⟩).elim
+      · exact Or.inl (Or.inl (Set.mem_symmDiff.2 (Or.inl ⟨hxA, hxB2⟩)))
+    · by_cases hxA : x ∈ frustt u v h a
+      · have hxW : x ∉ wedge u v w1 w2 := fun hw =>
+          hxN ⟨hxA, hw⟩
+        rcases WEDGE_WEDGE_GE u v w1 w2 hc1 hc2 hxWg with (hy | hy) | hy
+        · exact absurd hy hxW
+        · exact Or.inl (Or.inr hy)
+        · exact Or.inr hy
+      · exact Or.inl (Or.inl (Set.mem_symmDiff.2 (Or.inr ⟨⟨hxB, hxH⟩, hxA⟩)))
+  have hA := FRUSTT_RCONE_GE u v h a ha huv
+  have hB := p21_affGe_null u v w1
+  have hC := p21_affGe_null u v w2
+  unfold nullSet at hA ⊢
+  refine le_antisymm ?_ (by simp)
+  calc volume (symmDiff (frustt u v h a ∩ wedge u v w1 w2)
+        (rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖} ∩
+          wedgeGe u v w1 w2))
+      ≤ volume (symmDiff (frustt u v h a)
+          (rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖})
+        ∪ affGe ({u, v} : Set V3) ({w1} : Set V3)
+        ∪ affGe ({u, v} : Set V3) ({w2} : Set V3)) := measure_mono hsub
+    _ ≤ volume (symmDiff (frustt u v h a)
+          (rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖}))
+        + volume (affGe ({u, v} : Set V3) ({w1} : Set V3))
+        + volume (affGe ({u, v} : Set V3) ({w2} : Set V3)) := by
+        have hstep2 : volume ((symmDiff (frustt u v h a)
+              (rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖})) ∪
+            affGe ({u, v} : Set V3) ({w1} : Set V3))
+            ≤ volume (symmDiff (frustt u v h a)
+                (rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖}))
+              + volume (affGe ({u, v} : Set V3) ({w1} : Set V3)) := measure_union_le _ _
+        exact le_trans (measure_union_le _ _) (add_le_add_left hstep2 _)
+    _ = 0 := by rw [hA, hB, hC]; ring
 
 /-- HOL `MCELL2_SUBSET_AFF_GE` (TSKAJXY3.hl:1419).  Suffixed `_p21` at the
 atn2-merge: PackingAuto18.lean hosts a same-named `MCELL2_SUBSET_AFF_GE`
@@ -3951,30 +4294,83 @@ theorem MCELL2_SUBSET_AFF_GE_p21 (V : Set V3) (ul : List V3) (hp : Packing V)
   · rw [if_neg hcond] at hx
     exact absurd hx (by simp)
 
-/-- HOL `NOT_COPLANAR_EXTREME_MCELL2` (TSKAJXY3.hl:1434; giant). -/
+/-- HOL `NOT_COPLANAR_EXTREME_MCELL2` (TSKAJXY3.hl:1434; proved 2026-09-30
+wave B2: `mcell2` lives in the half-plane `affGe {e0,e1} {mxi, ω3}` (its
+defining slab), which is a null plane once the four extreme points are
+coplanar — so coplanarity would force `mcell2` null, against `hn`). -/
 theorem NOT_COPLANAR_EXTREME_MCELL2 (V : Set V3) (ul : List V3) (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 ul) (hn : ¬nullSet (mcell2 V ul)) :
     ¬Coplanar ({elV ul 0, elV ul 1, mxi V ul, omegaListN V ul 3} : Set V3) := by
-  -- NEEDS: TSKAJXY3.hl:1434；路线（B2 波）：MCELL2_SPLIT 具体化 + MCELL2_SUBSET_AFF_GE_p21 + 非退化极点论证
-  sorry
+  intro hcp
+  refine hn (measure_mono_null (MCELL2_SUBSET_AFF_GE_p21 V ul hp hs hb) ?_)
+  exact p21_coplanar_affGe_null hcp
 
-/-- HOL `MCELL2_DIHV_LT_PI` (TSKAJXY3.hl:1456; giant). -/
+/-- HOL `MCELL2_DIHV_LT_PI` (TSKAJXY3.hl:1456; proved 2026-09-30 wave B2:
+`dihV = π` forces the Gram antiparallelism of the projected differences
+(`p21_dihV_eq_pi_span`, the Cauchy–Schwarz equality case), which puts the
+four extreme points into the plane `affineSpan {e0, e1, ω3}` — contradicting
+`NOT_COPLANAR_EXTREME_MCELL2`). -/
 theorem MCELL2_DIHV_LT_PI (V X : Set V3) (ul : List V3) (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 ul) (hX : X = mcell2 V ul)
     (hn : ¬nullSet X) :
     dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) < Real.pi := by
-  -- NEEDS: TSKAJXY3.hl:1456；路线（B2 波）：mcell2 ⊆ 楔形 ⇒ dihV < π（wedge 奇性排除）
-  sorry
+  by_cases hlt : dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) < Real.pi
+  · exact hlt
+  · exfalso
+    have hn2 : ¬nullSet (mcell2 V ul) := by rw [← hX]; exact hn
+    have hncp := NOT_COPLANAR_EXTREME_MCELL2 V ul hp hs hb hn2
+    have h1 : ¬Collinear3 (elV ul 0) (elV ul 1) (mxi V ul) := fun hc =>
+      hncp (p21_collinear3_coplanar4 _ _ _ _ hc)
+    have he1 : (elV ul 1 - elV ul 0 : V3) ≠ 0 := by
+      intro h0
+      exact h1 (collinear3_of_eq (sub_eq_zero.1 h0))
+    have hpi : dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) = Real.pi :=
+      le_antisymm (Real.arccos_le_pi _) (not_lt.1 hlt)
+    obtain ⟨s, t, hspan⟩ := p21_dihV_eq_pi_span he1 hpi
+    refine hncp ⟨elV ul 0, elV ul 1, omegaListN V ul 3, fun z hz => ?_⟩
+    rcases p21_mem_quad hz with rfl | rfl | rfl | rfl
+    · exact subset_affineSpan ℝ _ (by simp)
+    · exact subset_affineSpan ℝ _ (by simp)
+    · have hmx : mxi V ul
+          = (1 - s - t) • elV ul 0 + t • elV ul 1 + s • omegaListN V ul 3 := by
+        linear_combination (norm := module) hspan
+      exact p21_mem_affineSpan_of_sum (by ring) hmx
+    · exact subset_affineSpan ℝ _ (by simp)
 
-/-- HOL `MCELL2_DIHV_AZIM` (TSKAJXY3.hl:1477; giant). -/
+/-- HOL `MCELL2_DIHV_AZIM` (TSKAJXY3.hl:1477; proved 2026-09-30 wave B2: the
+two extreme points are individually non-collinear with the axis (three
+collinear of the four would be coplanar), so `azim_dihv_same` below `π` and
+`azim_dihv_compl` + `azim_compl` above `π` give `dihV = azim` with the pair
+taken in the matching order). -/
 theorem MCELL2_DIHV_AZIM (V X : Set V3) (ul : List V3) (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 ul) (hX : X = mcell2 V ul)
     (hn : ¬nullSet X) :
     ∃ w1 w2 : V3, {w1, w2} = ({mxi V ul, omegaListN V ul 3} : Set V3) ∧
       dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) =
         azim (elV ul 0) (elV ul 1) w1 w2 := by
-  -- NEEDS: TSKAJXY3.hl:1477；路线（B2 波）：azim_dihv_same 桥（Kepler.Geom）+ MCELL2_SUBSET_AFF_GE_p21 见证迁移
-  sorry
+  have hn2 : ¬nullSet (mcell2 V ul) := by rw [← hX]; exact hn
+  have hncp := NOT_COPLANAR_EXTREME_MCELL2 V ul hp hs hb hn2
+  have h1 : ¬Collinear3 (elV ul 0) (elV ul 1) (mxi V ul) := fun hc =>
+    hncp (p21_collinear3_coplanar4 _ _ _ _ hc)
+  have h2 : ¬Collinear3 (elV ul 0) (elV ul 1) (omegaListN V ul 3) := fun hc =>
+    hncp (p21_collinear3_coplanar4_last (elV ul 0) (elV ul 1) (mxi V ul)
+      (omegaListN V ul 3) hc)
+  by_cases hlt : azim (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) < Real.pi
+  · refine ⟨mxi V ul, omegaListN V ul 3, rfl, (azim_dihv_same h1 h2 hlt).symm⟩
+  · have hge : Real.pi ≤ azim (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) :=
+      not_lt.1 hlt
+    have hne0 : azim (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) ≠ 0 := by
+      intro hh
+      rw [hh] at hge
+      linarith [Real.pi_pos]
+    have hdihv : dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3)
+        = 2 * Real.pi - azim (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) := by
+      linarith [azim_dihv_compl h1 h2 hge]
+    have hswap : azim (elV ul 0) (elV ul 1) (omegaListN V ul 3) (mxi V ul)
+        = 2 * Real.pi - azim (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) := by
+      rw [azim_compl h1 h2, if_neg hne0]
+    refine ⟨omegaListN V ul 3, mxi V ul, Set.pair_comm _ _, ?_⟩
+    rw [hswap]; linarith
 
 /-- HOL `BIS_LE_NORM` (TSKAJXY3.hl:1510; proved by coordinate expansion of
 the half-space form `BIS_LE_EQ_HALFSPACE`). -/
