@@ -25,8 +25,12 @@
     穿越不变量易侧（件 4 的 `cf4_aff_ge_inter_segments` 等）、外心预备（件 5）；
   - CF-4c 后（2026-09-28）：旋转族机器全净（rotation_lemma/family_special/
     rotation_about_axis）+ `cf4_continuous_intersection_point`（Cramer 连续参数化）
-    均闭合；仅余主件 `cf4_continuous_lemma_aff_ge`（穿越不变量在连续旋转族下的
-    传递，HOL continuous_lemma_aff_ge :2204-2869 共 665 行——CF-4b 主件，带账）。
+    均闭合。
+  - CF-4d 后（2026-09-28）：主件上游四件（affineSpan 刻画 / IVT 打靶
+    cf4_ivt_first_hit·dec / 穿锥判别 cf4_in_aff_ge_cases +
+    cf4_segment_intersects_aff_ge，HOL :1928/:2138/:785/:967）全部移植闭合，
+    主件 `cf4_continuous_lemma_aff_ge`（HOL :2204-2869）按 HOL 逐段闭合——
+    本模块 sorry 归零。
 -/
 import Kepler.Geom.Aff
 import Kepler.Text.PackingAuto2
@@ -1820,17 +1824,383 @@ theorem cf4_continuous_intersection_point {v1 v2 w n : V3} (f : ℝ → V3) (t1 
     · rw [hz]
       exact haff_sup _ (Submodule.mem_span_pair.2 ⟨_, _, rfl⟩)
 
+/-! ### 6.5 主石上游四件（CF-4d）：affineSpan 刻画 / IVT 打靶 / 穿锥判别两件
+
+HOL 锚点：`in_aff_ge_cases_lemma`（CKQOWSA_4.hl:1928-2134）、
+`segment_intersects_aff_ge_lemma`（:2138-2197）、IVT 打靶族
+`continuous_lemma_inc`（:785）/`continuous_lemma_dec`（:967，经取负归约到 inc）。 -/
+
+/-- `affineSpan ℝ {0,v1,v2}` 的显式二系数刻画（含退化情形；HOL `AFFINE_HULL_3`
+的组合形。提取自 cf4_continuous_intersection_point 内联论证，正向 = haff_sub
+路线（mem_affineSpan_iff_exists + vectorSpan 换 span），反向 = haff_sup 路线）。 -/
+private theorem cf4_affSpan3_char (v1 v2 z : V3) :
+    z ∈ affineSpan ℝ (insert (0:V3) ({v1, v2} : Set V3)) ↔
+      ∃ a b : ℝ, z = a • v1 + b • v2 := by
+  have hv1mem : v1 ∈ insert (0:V3) ({v1, v2} : Set V3) :=
+    Set.mem_insert_of_mem _ (Set.mem_insert v1 ({v2} : Set V3))
+  have hvspeq : vectorSpan ℝ (insert (0:V3) ({v1, v2} : Set V3))
+      = Submodule.span ℝ ((fun y : V3 => v1 -ᵥ y) '' (insert (0:V3) ({v1, v2} : Set V3))) :=
+    vectorSpan_eq_span_vsub_set_left ℝ hv1mem
+  have hsp_le : Submodule.span ℝ ({v1, v2} : Set V3) ≤ Submodule.span ℝ
+      ((fun y : V3 => v1 -ᵥ y) '' (insert (0:V3) ({v1, v2} : Set V3))) := by
+    rw [Submodule.span_le]
+    intro w2 hw2
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw2
+    rcases hw2 with hw2' | hw2'
+    · rw [hw2']
+      exact Submodule.subset_span ⟨(0:V3), by simp,
+        by show v1 - 0 = v1; rw [sub_zero]⟩
+    · rw [hw2']
+      have hv2eq : (v2:V3) = (v1 -ᵥ (0:V3)) - (v1 -ᵥ v2) := by
+        show v2 = v1 - 0 - (v1 - v2)
+        rw [sub_zero, sub_sub_cancel]
+      rw [hv2eq]
+      exact Submodule.sub_mem _
+        (Submodule.subset_span ⟨(0:V3), by simp, rfl⟩)
+        (Submodule.subset_span ⟨v2, by simp, rfl⟩)
+  have himg_le : ∀ w2 ∈ (fun y : V3 => v1 -ᵥ y) '' (insert (0:V3) ({v1, v2} : Set V3)),
+      w2 ∈ Submodule.span ℝ ({v1, v2} : Set V3) := by
+    rintro w2 ⟨y, hy, rfl⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy
+    rcases hy with hy' | hy' | hy'
+    · rw [hy']
+      show v1 - (0:V3) ∈ Submodule.span ℝ ({v1, v2} : Set V3)
+      rw [sub_zero]
+      exact Submodule.subset_span (by simp)
+    · rw [hy']
+      show v1 - v1 ∈ Submodule.span ℝ ({v1, v2} : Set V3)
+      rw [sub_self]
+      exact Submodule.zero_mem _
+    · rw [hy']
+      show v1 - v2 ∈ Submodule.span ℝ ({v1, v2} : Set V3)
+      exact Submodule.mem_span_pair.2 ⟨1, -1, by module⟩
+  constructor
+  · intro hz
+    rw [mem_affineSpan_iff_exists] at hz
+    obtain ⟨p₁, hp₁, z', hz'mem, hz4⟩ := hz
+    rw [hvspeq] at hz'mem
+    have hz'span : z' ∈ Submodule.span ℝ ({v1, v2} : Set V3) :=
+      Submodule.span_le.2 himg_le hz'mem
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp₁
+    obtain ⟨a, b, hz'eq⟩ := Submodule.mem_span_pair.1 hz'span
+    rw [hz4]
+    rcases hp₁ with rfl | rfl | rfl
+    · exact ⟨a, b, by rw [vadd_eq_add, add_zero, hz'eq]⟩
+    · refine ⟨a + 1, b, ?_⟩
+      rw [vadd_eq_add, ← hz'eq]
+      module
+    · refine ⟨a, b + 1, ?_⟩
+      rw [vadd_eq_add, ← hz'eq]
+      module
+  · rintro ⟨a, b, rfl⟩
+    rw [mem_affineSpan_iff_exists]
+    refine ⟨(0:V3), by simp, a • v1 + b • v2, ?_, by rw [vadd_eq_add, add_zero]⟩
+    rw [hvspeq]
+    exact hsp_le (Submodule.mem_span_pair.2 ⟨a, b, rfl⟩)
+
+/-- 平面 {⟪x,n⟫ = 0} 中的点落在 affineSpan {0,v1,v2} 内
+（`cf4_plane_repr` + `cf4_affSpan3_char` 反向；HOL `affine_hull_3_plane`
+的 ⊇ 单侧，主石 f 0 / w 入平面刻画用）。 -/
+private theorem cf4_mem_affSpan3_of_inner_eq {v1 v2 n x : V3}
+    (hindep : LinearIndependent ℝ ![v1, v2]) (hn : n ≠ 0)
+    (h1n : inner ℝ v1 n = 0) (h2n : inner ℝ v2 n = 0)
+    (hxn : inner ℝ x n = 0) :
+    x ∈ affineSpan ℝ (insert (0:V3) ({v1, v2} : Set V3)) := by
+  obtain ⟨a, b, hx⟩ := cf4_plane_repr (v2 := v1) (v4 := v2) hindep hn h1n h2n hxn
+  exact (cf4_affSpan3_char v1 v2 x).2 ⟨a, b, hx⟩
+
+/-- HOL `continuous_lemma_inc`（CKQOWSA_4.hl:785-965）：首次达位——g 连续于 [0,t1]、
+g 0 ≤ c ≤ g t1 ⟹ 存在首个 x：g x = c 且 [0,x) 上严格小于 c。
+途径：S := [0,t1] ∩ g⁻¹[c,∞)（闭，`ContinuousOn.preimage_isClosed_of_isClosed`），
+x := sInf S（`IsClosed.isLeast_csInf` 给 ∈ S + 下界）；g x > c 由左侧连续点
+（邻域取 Ioi((g x+c)/2)）与 sInf 邻近点矛盾，g x < c 由右侧 Iio c 邻域 +
+`csInf_lt_iff` 取 S 邻近点矛盾。 -/
+private theorem cf4_ivt_first_hit (g : ℝ → ℝ) (c t1 : ℝ) (ht1 : 0 ≤ t1)
+    (hgc : ContinuousOn g (Set.Icc 0 t1)) (h0 : g 0 ≤ c) (h1 : c ≤ g t1) :
+    ∃ x, 0 ≤ x ∧ x ≤ t1 ∧ g x = c ∧ ∀ t ∈ Set.Ico 0 x, g t < c := by
+  obtain ⟨S, hScc, hSmem⟩ : ∃ S : Set ℝ, IsClosed S ∧
+      ∀ t, t ∈ S ↔ 0 ≤ t ∧ t ≤ t1 ∧ c ≤ g t :=
+    ⟨Set.Icc 0 t1 ∩ g ⁻¹' (Set.Ici c),
+      hgc.preimage_isClosed_of_isClosed isClosed_Icc isClosed_Ici,
+      fun t => by
+        simp only [Set.mem_inter_iff, Set.mem_Icc, Set.mem_preimage, Set.mem_Ici]
+        tauto⟩
+  have ht1mem : t1 ∈ S := (hSmem t1).2 ⟨ht1, le_refl t1, h1⟩
+  have hne : S.Nonempty := ⟨t1, ht1mem⟩
+  have hbd : BddBelow S := ⟨0, fun y hy => ((hSmem y).1 hy).1⟩
+  obtain ⟨xmem, xlb⟩ := hScc.isLeast_csInf hne hbd
+  have hxlb : ∀ y ∈ S, sInf S ≤ y := fun y hy => mem_lowerBounds.1 xlb y hy
+  have h3 := (hSmem _).1 xmem
+  refine ⟨sInf S, h3.1, h3.2.1, ?_, ?_⟩
+  · -- g (sInf S) = c：∈ S 给 c ≤ g x（下侧），左邻域点夹逼给 g x ≤ c
+    rcases eq_or_lt_of_le h3.2.2 with heq | hgt
+    · exact heq.symm
+    · -- g x > c：x = 0 与 h0 矛盾；x > 0 取左侧点 y ∈ S 且 g y > c，与下界矛盾
+      exfalso
+      rcases eq_or_lt_of_le h3.1 with hx0 | hx0p
+      · rw [← hx0] at hgt
+        exact absurd hgt (not_lt.2 h0)
+      · obtain ⟨U, hUmem, hU⟩ := Filter.eventually_iff_exists_mem.1
+          (Filter.tendsto_iff_eventually.1 (hgc (sInf S) (Set.mem_Icc.2 ⟨h3.1, h3.2.1⟩))
+            ((Ioi_mem_nhds (by linarith : (g (sInf S) + c) / 2 < g (sInf S)) :
+              ∀ᶠ y in nhds (g (sInf S)),
+                y ∈ Set.Ioi ((g (sInf S) + c) / 2))))
+        obtain ⟨W, hWx, hWsub⟩ := mem_nhdsWithin_iff_exists_mem_nhds_inter.1 hUmem
+        obtain ⟨δ, hδ, hball⟩ := Metric.mem_nhds_iff.1 hWx
+        have hmine : (0:ℝ) < min (δ / 2) (sInf S / 2) :=
+          lt_min (by linarith) (by linarith)
+        have hminle : min (δ / 2) (sInf S / 2) ≤ sInf S :=
+          le_trans (min_le_right _ _) (by linarith)
+        have hy0 : (0:ℝ) ≤ sInf S - min (δ / 2) (sInf S / 2) := by linarith
+        have hyx : sInf S - min (δ / 2) (sInf S / 2) < sInf S := by linarith
+        have hydist : dist (sInf S - min (δ / 2) (sInf S / 2)) (sInf S) < δ := by
+          rw [Real.dist_eq, show sInf S - min (δ / 2) (sInf S / 2) - sInf S
+            = -(min (δ / 2) (sInf S / 2)) by ring, abs_neg, abs_of_nonneg (le_of_lt hmine)]
+          exact lt_of_le_of_lt (min_le_left _ _) (by linarith)
+        have hyI : sInf S - min (δ / 2) (sInf S / 2) ∈ Set.Icc 0 t1 :=
+          ⟨hy0, le_trans (le_of_lt hyx) h3.2.1⟩
+        have hyc : c < g (sInf S - min (δ / 2) (sInf S / 2)) := by
+          have h1' := hU _ (hWsub ⟨hball hydist, hyI⟩)
+          linarith
+        have hyS : sInf S - min (δ / 2) (sInf S / 2) ∈ S :=
+          (hSmem _).2 ⟨hy0, le_trans (le_of_lt hyx) h3.2.1, le_of_lt hyc⟩
+        exact absurd hyx (not_lt.2 (hxlb (sInf S - min (δ / 2) (sInf S / 2)) hyS))
+  · intro t ht
+    by_contra hcon
+    push_neg at hcon
+    exact absurd ht.2 (not_lt.2 (hxlb t ((hSmem t).2 ⟨ht.1, le_trans (le_of_lt ht.2) h3.2.1,
+      hcon⟩)))
+
+/-- HOL `continuous_lemma_dec`（CKQOWSA_4.hl:967-1010）：反向首次达位
+（HOL 由 `\t. --f t` 归约到 inc，本处同法）。 -/
+private theorem cf4_ivt_first_dec (g : ℝ → ℝ) (c t1 : ℝ) (ht1 : 0 ≤ t1)
+    (hgc : ContinuousOn g (Set.Icc 0 t1)) (h0 : c ≤ g 0) (h1 : g t1 ≤ c) :
+    ∃ x, 0 ≤ x ∧ x ≤ t1 ∧ g x = c ∧ ∀ t ∈ Set.Ico 0 x, c < g t := by
+  obtain ⟨x, hx0, hxt, hxc, hlt⟩ :=
+    cf4_ivt_first_hit (fun t => -g t) (-c) t1 ht1 (hgc.neg)
+      (neg_le_neg h0) (neg_le_neg h1)
+  have hxc' : -g x = -c := hxc
+  have hlt' : ∀ t ∈ Set.Ico 0 x, -g t < -c := hlt
+  refine ⟨x, hx0, hxt, by linarith, fun t ht => by linarith [hlt' t ht]⟩
+
+/-- HOL `in_aff_ge_cases_lemma`（CKQOWSA_4.hl:1928-2134）：穿锥判别之一。
+v ∈ affineSpan{0,v1,v2}、w ∈ cone{v1,v2}、0 ∉ segment[v,w]、非共线
+⟹ v ∈ cone ∨ v1 ∈ cone{v,w} ∨ v2 ∈ cone{v,w}。
+路线（同 HOL）：v 的二系数分解含负系数 + w 的非负系数分解；t3 = 0 / t4 = 0
+退化分支直取端点；主分支 Cramer 消元
+v2 = (t3·v − t1·w)/d、v1 = (t4·v − t2·w)/(−d)（d := t2·t3 − t1·t4 ≠ 0，
+d = 0 时退到 zero_not_between 的异侧射线不相交），按 t1 t2 d 符号四分。 -/
+private theorem cf4_in_aff_ge_cases {v1 v2 v w : V3}
+    (hcol : ¬ Collinear ℝ (insert (0:V3) ({v1, v2} : Set V3)))
+    (hnb : (0:V3) ∉ segment ℝ v w)
+    (hv : v ∈ affineSpan ℝ (insert (0:V3) ({v1, v2} : Set V3)))
+    (hw : w ∈ affGe {0} ({v1, v2} : Set V3)) :
+    v ∈ affGe {0} ({v1, v2} : Set V3) ∨
+      v1 ∈ affGe {0} ({v, w} : Set V3) ∨
+      v2 ∈ affGe {0} ({v, w} : Set V3) := by
+  obtain ⟨hv10, hv20, hnc⟩ := cf4_not_collinear_smul hcol
+  have hv12 : v1 ≠ v2 := fun he => hnc 1 (by rw [he, one_smul])
+  obtain ⟨hv0, hw0, hznb⟩ := cf4_zero_not_between hnb
+  by_cases hvcone : v ∈ affGe {0} ({v1, v2} : Set V3)
+  · exact Or.inl hvcone
+  · obtain ⟨t1, t2, hveq⟩ := (cf4_affSpan3_char v1 v2 v).1 hv
+    have hneg : t1 < 0 ∨ t2 < 0 := by
+      by_contra hcon
+      push_neg at hcon
+      exact hvcone ((affGe_0_2_char hv10 hv20 hv12 _).2 ⟨t1, t2, hcon.1, hcon.2, hveq⟩)
+    obtain ⟨t3, t4, ht3, ht4, hw'⟩ := (affGe_0_2_char hv10 hv20 hv12 w).1 hw
+    have hvne : v ≠ 0 := by
+      intro he
+      refine hvcone ?_
+      rw [he]
+      exact (affGe_0_2_char hv10 hv20 hv12 (0:V3)).2 ⟨0, 0, le_refl _, le_refl _, by simp⟩
+    have hvw : v ≠ w := by
+      intro he
+      refine hvcone ?_
+      rw [he]
+      exact hw
+    rcases eq_or_lt_of_le ht3 with ht30 | ht3p
+    · -- t3 = 0：w = t4•v2，v2 = t4⁻¹•w ∈ cone{v,w}（第三支）
+      subst ht30
+      have ht4p : 0 < t4 := by
+        rcases lt_or_eq_of_le ht4 with h | h
+        · exact h
+        · exfalso
+          refine hw0 ?_
+          rw [hw', zero_smul, zero_add, ← h, zero_smul]
+      refine Or.inr (Or.inr ((affGe_0_2_char hvne hw0 hvw v2).2
+        ⟨0, t4⁻¹, by norm_num, by positivity, ?_⟩))
+      rw [zero_smul, zero_add]
+      have hwt : t4 • v2 = w := by rw [hw', zero_smul, zero_add]
+      rw [← hwt, inv_smul_smul₀ ht4p.ne']
+    rcases eq_or_lt_of_le ht4 with ht40 | ht4p
+    · -- t4 = 0：w = t3•v1，v1 = t3⁻¹•w ∈ cone{v,w}（第二支）
+      subst ht40
+      refine Or.inr (Or.inl ((affGe_0_2_char hvne hw0 hvw v1).2
+        ⟨0, t3⁻¹, by norm_num, by positivity, ?_⟩))
+      rw [zero_smul, zero_add]
+      have hwt : t3 • v1 = w := by rw [hw', zero_smul, add_zero]
+      rw [← hwt, inv_smul_smul₀ ht3p.ne']
+    -- 主分支：t3, t4 > 0
+    have key1 : t3 • v - t1 • w = (t2 * t3 - t1 * t4) • v2 := by
+      rw [hveq, hw']
+      module
+    have key2 : t2 • w - t4 • v = (t2 * t3 - t1 * t4) • v1 := by
+      rw [hveq, hw']
+      module
+    have key3 : t4 • v - t2 • w = (t1 * t4 - t2 * t3) • v1 := by
+      rw [hveq, hw']
+      module
+    have hdne : t2 * t3 - t1 * t4 ≠ 0 := by
+      intro hh0
+      rcases hneg with h1n | h2n
+      · exact hznb t1 t3 h1n ht3p (sub_eq_zero.mp (by rw [key1, hh0, zero_smul])).symm
+      · exact hznb t2 t4 h2n ht4p (sub_eq_zero.mp (by rw [key2, hh0, zero_smul]))
+    -- 主分支按 d := t2t3 − t1t4 的符号三分：d = 0 已排除；d > 0 强制 t1 ≤ 0（v2 支），
+    -- d < 0 强制 t2 ≤ 0（v1 支）（若反向符号则 hneg 矛盾）。
+    rcases lt_trichotomy 0 (t2 * t3 - t1 * t4) with hdp | hdpz | hdpn
+    · -- d > 0：t1 ≤ 0：v2 = (t3/d)•v + (−t1/d)•w ∈ cone{v,w}
+      have h1n0 : t1 ≤ 0 := by
+        rcases hneg with h1n | h2n
+        · exact le_of_lt h1n
+        · have h2' : t2 * t3 < 0 := mul_neg_of_neg_of_pos h2n ht3p
+          have hd0 : t2 * t3 - t1 * t4 = t2 * t3 + -(t1 * t4) := by ring
+          have h4' : t1 * t4 < 0 := by linarith
+          rcases lt_trichotomy 0 t1 with k1 | k2 | k3
+          · exfalso
+            linarith [mul_pos k1 ht4p]
+          · exfalso
+            rw [← k2, zero_mul] at h4'
+            linarith
+          · exact le_of_lt k3
+      refine Or.inr (Or.inr ((affGe_0_2_char hvne hw0 hvw v2).2
+        ⟨(t2 * t3 - t1 * t4)⁻¹ * t3, (t2 * t3 - t1 * t4)⁻¹ * -t1,
+          mul_nonneg (inv_nonneg.2 (le_of_lt hdp)) ht3,
+          mul_nonneg (inv_nonneg.2 (le_of_lt hdp)) (neg_nonneg.2 h1n0), ?_⟩))
+      have hinv : (t2 * t3 - t1 * t4)⁻¹ • (t3 • v - t1 • w) = v2 := by
+        rw [key1, inv_smul_smul₀ hdne]
+      rw [← hinv, smul_sub, smul_smul, smul_smul]
+      module
+    · -- d = 0：已排除
+      exact absurd hdpz.symm hdne
+    · -- d < 0：t2 ≤ 0：v1 = (t4/(−d))•v + (t2/(−d))•w ∈ cone{v,w}
+      have h2n0 : t2 ≤ 0 := by
+        rcases hneg with h1n | h2n
+        · have h2' : (0:ℝ) < -t1 * t4 := mul_pos (neg_pos.2 h1n) ht4p
+          have hb4 : -t1 * t4 = -(t1 * t4) := by ring
+          have h3' : t2 * t3 < 0 := by linarith
+          rcases lt_trichotomy 0 t2 with k1 | k2 | k3
+          · exfalso
+            linarith [mul_pos k1 ht3p]
+          · exfalso
+            rw [← k2, zero_mul] at h3'
+            linarith
+          · exact le_of_lt k3
+        · exact le_of_lt h2n
+      have hd2p : 0 < t1 * t4 - t2 * t3 := by
+        have hh : t1 * t4 - t2 * t3 ≠ 0 := by
+          intro hh0
+          apply hdne
+          linarith
+        linarith [le_of_lt hdpn, hh]
+      refine Or.inr (Or.inl ((affGe_0_2_char hvne hw0 hvw v1).2
+        ⟨(t1 * t4 - t2 * t3)⁻¹ * t4, (t1 * t4 - t2 * t3)⁻¹ * -t2,
+          mul_nonneg (inv_nonneg.2 (le_of_lt hd2p)) ht4,
+          mul_nonneg (inv_nonneg.2 (le_of_lt hd2p)) (neg_nonneg.2 h2n0), ?_⟩))
+      have hinv : (t1 * t4 - t2 * t3)⁻¹ • (t4 • v - t2 • w) = v1 := by
+        rw [key3, inv_smul_smul₀ hd2p.ne']
+      rw [← hinv, smul_sub, smul_smul, smul_smul]
+      module
+
+/-- HOL `segment_intersects_aff_ge_lemma`（CKQOWSA_4.hl:2138-2197）：穿锥判别之二。
+v, w ∈ affineSpan{0,v1,v2}、0 ∉ segment[v,w]、segment[v,w] 穿锥
+⟹ v ∈ cone ∨ v1 ∈ cone{v,w} ∨ v2 ∈ cone{v,w}。
+路线（同 HOL）：取穿点 p ∈ segment[v,w] ∩ cone；v = w 或 u'（w 系数）= 0 时
+p = v ∈ cone 直取第一支；否则对 (v,p) 用 `cf4_in_aff_ge_cases`
+（segment[v,p] ⊆ segment[v,w] 保 0 ∉），锥单调 cone{v,p} ⊆ cone{v,w}
+（p ∈ segment[v,w] ⊆ cone{v,w}，`cf4_cone_mono`）把两支迁到 {v,w}。 -/
+private theorem cf4_segment_intersects_aff_ge {v1 v2 v w : V3}
+    (hcol : ¬ Collinear ℝ (insert (0:V3) ({v1, v2} : Set V3)))
+    (hnb : (0:V3) ∉ segment ℝ v w)
+    (hv : v ∈ affineSpan ℝ (insert (0:V3) ({v1, v2} : Set V3)))
+    (hw : w ∈ affineSpan ℝ (insert (0:V3) ({v1, v2} : Set V3)))
+    (hcross : (segment ℝ v w ∩ affGe {0} ({v1, v2} : Set V3)).Nonempty) :
+    v ∈ affGe {0} ({v1, v2} : Set V3) ∨
+      v1 ∈ affGe {0} ({v, w} : Set V3) ∨
+      v2 ∈ affGe {0} ({v, w} : Set V3) := by
+  obtain ⟨hv0, hw0, -⟩ := cf4_zero_not_between hnb
+  obtain ⟨p, hpsegm, hpcone⟩ := hcross
+  obtain ⟨u, u', hu, hu', huu, hpeq⟩ := hpsegm
+  rcases eq_or_ne v w with hvw0 | hvw
+  · -- v = w：p = v ∈ cone
+    refine Or.inl ?_
+    have hvp : v = p := by rw [← hpeq, hvw0, ← add_smul, huu, one_smul]
+    rw [hvp]
+    exact hpcone
+  · have hsub : segment ℝ v p ⊆ segment ℝ v w := by
+      intro q hq
+      obtain ⟨s, s', hs, hs', hss, hqeq⟩ := hq
+      have hsum : s + s' * u + s' * u' = 1 := by
+        rw [add_assoc, ← mul_add, huu, mul_one]
+        exact hss
+      refine ⟨s + s' * u, s' * u', by nlinarith, by nlinarith, hsum, ?_⟩
+      rw [← hqeq, ← hpeq]
+      module
+    have hb0 : (0:V3) ∉ segment ℝ v p := fun h0 => hnb (hsub h0)
+    obtain hd := cf4_in_aff_ge_cases hcol hb0 hv hpcone
+    rcases eq_or_lt_of_le hu' with hu'0 | hu'p
+    · -- u' = 0：p = v ∈ cone
+      refine Or.inl ?_
+      have hvp : v = p := by
+        rw [← hpeq, ← hu'0, zero_smul, add_zero, (show u = 1 from by linarith), one_smul]
+      rw [hvp]
+      exact hpcone
+    · -- 0 < u'：主分支
+      have hpne : p ≠ 0 := by
+        intro he
+        refine hnb ?_
+        rw [← he]
+        exact ⟨u, u', hu, hu', huu, hpeq⟩
+      have hvvp : v ≠ p := by
+        intro he
+        refine hvw ?_
+        rw [he] at hpeq
+        have h2 : u' • w = v - u • v := by
+          rw [he]
+          have h3 : u' • w + u • p = p := by
+            rw [add_comm]
+            exact hpeq
+          exact eq_sub_of_add_eq h3
+        have h5 : v - u • v = (1 - u) • v := by
+          rw [sub_smul, one_smul]
+        rw [h5, (show 1 - u = u' from by linarith)] at h2
+        have h3 : u' • (w - v) = 0 := by
+          rw [smul_sub, h2, sub_self]
+        rcases smul_eq_zero.1 h3 with h4 | h4
+        · exact absurd h4 hu'p.ne'
+        · exact (sub_eq_zero.mp h4).symm
+      have hvcone' : v ∈ affGe {0} ({v, w} : Set V3) :=
+        (affGe_0_2_char hv0 hw0 hvw v).2 ⟨1, 0, by norm_num, by norm_num,
+          by rw [one_smul, zero_smul, add_zero]⟩
+      have hpcone' : p ∈ affGe {0} ({v, w} : Set V3) :=
+        cf4_segment_mem_cone hv0 hw0 hvw ⟨u, u', hu, hu', huu, hpeq⟩
+      have hmono : affGe {0} ({v, p} : Set V3) ⊆ affGe {0} ({v, w} : Set V3) :=
+        cf4_cone_mono hv0 hw0 hvw hv0 hpne hvvp hvcone' hpcone'
+      rcases hd with hd1 | hd2 | hd3
+      · exact Or.inl hd1
+      · exact Or.inr (Or.inl (hmono hd2))
+      · exact Or.inr (Or.inr (hmono hd3))
+
 /-- HOL `continuous_lemma_aff_ge`（CKQOWSA_4.hl:2204-2869，全章最大单件 665 行）：
-穿越不变量在连续旋转族下的传递。NEEDS: CF-4b 主件（保留 sorry）。
-卡点诊断（CF-4b 试写后）：HOL 的证明依赖
-①in_aff_ge_cases_lemma :1928 + segment_intersects_aff_ge_lemma :2138（穿锥判别
-两分支，未移植）②continuous_intersection_point（α β 连续参数化，见上件）③
-aff_ge_inter_segments（本文件已闭合）④IVT 打靶（dist_decreasing_ivt 家族，未移植）。
-CF-4c 后上游状态：cf4_rotation_family_special 与 cf4_continuous_intersection_point
-均已闭合（见上两件），穿锥判别 ①与 IVT ④仍未移植——主件保留 sorry。
-Lean 路线建议：记 S := {t ∈ [0,h] | segment[f t,w] ∩ cone{v1,v2} ≠ ∅}，用
-f 的连续性 + 分离超平面 {x : ⟪x,n⟫ = 0}（v1 v2 n 的正交关系）证 S 同时开闭，
-再由 [0,h] 连通得 S = [0,h] 或给出 x 分界点（结论的二支）。 -/
+穿越不变量在连续旋转族下的传递。CF-4d 闭合。
+移植结构（同 HOL 逐段）：①全通则左支直接收；②法向量 n := ±(v1×v2) 取
+f 0·n ≤ 0（HOL :2277）；③起点内积方程 (HOL :2301)；④三分类 w·n < 0 / = 0 / > 0
+（HOL :2312/:2346/:2395）：< 0 时 f 0 = 交点 x := 0；= 0 时
+`cf4_segment_intersects_aff_ge` 给 x := 0 的三支；> 0 时 IVT 打靶 r
+（`cf4_ivt_first_hit` 作用于 ⟪f t,n⟫，HOL :2398-2482），再经
+`cf4_continuous_intersection_point` 的 α β（HOL :2499-2605）+ `cf4_ivt_first_dec`
+对 α/β 的首穿点 x（HOL :2609-2762），终局 a x = 0 ∨ b x = 0 给 v1/v2 入
+cone{f x,w}（HOL :2800-2862）。 -/
 theorem cf4_continuous_lemma_aff_ge {v1 v2 w : V3} (f : ℝ → V3) (h : ℝ) (hh : 0 ≤ h)
     (hf : ContinuousOn f (Set.Icc 0 h))
     (hstart : (segment ℝ (f 0) w ∩ affGe {0} ({v1, v2} : Set V3)).Nonempty)
@@ -1841,9 +2211,314 @@ theorem cf4_continuous_lemma_aff_ge {v1 v2 w : V3} (f : ℝ → V3) (h : ℝ) (h
         (∀ t ∈ Set.Icc 0 x, (segment ℝ (f t) w ∩ affGe {0} ({v1, v2} : Set V3)).Nonempty) ∧
         (f x ∈ affGe {0} ({v1, v2} : Set V3) ∨
           v1 ∈ affGe {0} ({f x, w} : Set V3) ∨
-          v2 ∈ affGe {0} ({f x, w} : Set V3))) :=
-  -- NEEDS: continuous_lemma_aff_ge CKQOWSA_4.hl:2204（CF-4b，600-1000 行）
-  sorry
+          v2 ∈ affGe {0} ({f x, w} : Set V3))) := by
+  -- §A 基本事实：v1 v2 非零异线；hfw 展开 0 ∉ segment[f t,w]
+  obtain ⟨hv10, hv20, hnc⟩ := cf4_not_collinear_smul hcol
+  have hv12 : v1 ≠ v2 := fun he => hnc 1 (by rw [he, one_smul])
+  have hindep : LinearIndependent ℝ ![v1, v2] := cf4_linearIndependent_pair hcol
+  obtain ⟨hf00, hw0, -⟩ := cf4_zero_not_between (hnb 0 (Set.mem_Icc.2 ⟨le_refl 0, hh⟩))
+  have hfw : ∀ t ∈ Set.Icc 0 h, f t ≠ 0 ∧ ∀ u : ℝ, 0 ≤ u → u ≤ 1 →
+      (1 - u) • f t + u • w ≠ (0:V3) := by
+    intro t ht
+    obtain ⟨hft0, -, hznb⟩ := cf4_zero_not_between (hnb t ht)
+    refine ⟨hft0, fun u hu1 hu2 heq => ?_⟩
+    rcases eq_or_lt_of_le hu1 with hu0 | hu0p
+    · rw [← hu0, sub_zero, one_smul, zero_smul, add_zero] at heq
+      exact hft0 heq
+    rcases eq_or_lt_of_le hu2 with hu10 | hu1p
+    · rw [hu10, sub_self, zero_smul, one_smul, zero_add] at heq
+      exact hw0 heq
+    · exact hznb (-u) (1 - u) (by linarith) (by linarith)
+        (((eq_neg_of_add_eq_zero_left heq).trans (neg_smul u w).symm).symm :
+          (-u) • w = (1 - u) • f t)
+  -- §B 主分叉
+  by_cases hall : ∀ t ∈ Set.Icc 0 h,
+      (segment ℝ (f t) w ∩ affGe {0} ({v1, v2} : Set V3)).Nonempty
+  · exact Or.inl hall
+  · rw [not_forall] at hall
+    obtain ⟨t1, ht1e⟩ := hall
+    push_neg at ht1e
+    obtain ⟨ht1I, ht1ne⟩ := ht1e
+    -- 统一空交形态为 Nonempty 的否定
+    have ht1nen : ¬ (segment ℝ (f t1) w ∩ affGe {0} ({v1, v2} : Set V3)).Nonempty := by
+      rintro ⟨x, hx⟩
+      rw [ht1ne] at hx
+      exact absurd hx (Set.mem_empty_iff_false x).mp
+    -- §C 法向量 n := ±(v1 × v2)（f 0·n ≤ 0）
+    have hcne : cf4Cross v1 v2 ≠ 0 := cf4Cross_ne_zero hcol
+    have hv1c : inner ℝ v1 (cf4Cross v1 v2) = 0 := cf4Cross_dot_left v1 v2
+    have hv2c : inner ℝ v2 (cf4Cross v1 v2) = 0 := cf4Cross_dot_right v1 v2
+    obtain ⟨n, hn0, hv1n, hv2n, hf0n⟩ :
+        ∃ n : V3, n ≠ 0 ∧ inner ℝ v1 n = 0 ∧ inner ℝ v2 n = 0 ∧ inner ℝ (f 0) n ≤ 0 := by
+      rcases le_or_gt (inner ℝ (f 0) (cf4Cross v1 v2)) 0 with hsign | hsign
+      · exact ⟨cf4Cross v1 v2, hcne, hv1c, hv2c, hsign⟩
+      · refine ⟨-cf4Cross v1 v2, by simpa using hcne, by simp [hv1c], by simp [hv2c],
+          by rw [inner_neg_right]; linarith⟩
+    -- §D 锥 ⟹ 内积零；§E 起点内积方程
+    have hcone_n : ∀ p ∈ affGe {0} ({v1, v2} : Set V3), inner ℝ p n = 0 := by
+      intro p hp
+      obtain ⟨a, b, ha, hb, hpab⟩ := (affGe_0_2_char hv10 hv20 hv12 p).1 hp
+      rw [hpab, inner_add_left, real_inner_smul_left, real_inner_smul_left, hv1n, hv2n]
+      ring
+    obtain ⟨p0, hp0seg, hp0cone⟩ := hstart
+    obtain ⟨u0, u0', hu00, hu00', hu001, hp0eq⟩ := hp0seg
+    have hDu0 : u0 * inner ℝ (f 0) n + u0' * inner ℝ w n = 0 := by
+      have h1 : inner ℝ p0 n = 0 := hcone_n p0 hp0cone
+      rw [← hp0eq, inner_add_left, real_inner_smul_left, real_inner_smul_left] at h1
+      exact h1
+    -- §F/G/H 按 w·n 三分类
+    rcases lt_trichotomy (inner ℝ w n) 0 with hwn | hwn | hwn
+    · -- w·n < 0：u0' = 0 ⟹ p0 = f 0 ∈ cone，x := 0
+      have hu0z : u0' = 0 := by
+        rcases eq_or_lt_of_le hu00' with h | h
+        · exact h.symm
+        · exfalso
+          have h1 : u0 * inner ℝ (f 0) n ≤ 0 := mul_nonpos_of_nonneg_of_nonpos hu00 hf0n
+          have h2 : u0' * inner ℝ w n < 0 := mul_neg_of_pos_of_neg h hwn
+          linarith
+      have hp0f0 : p0 = f 0 := by
+        rw [← hp0eq, hu0z, zero_smul, add_zero, (show u0 = 1 from by linarith), one_smul]
+      refine Or.inr ⟨0, le_refl 0, hh, ?_, Or.inl ?_⟩
+      · intro t ht
+        rw [le_antisymm ht.2 ht.1]
+        exact ⟨p0, ⟨u0, u0', hu00, hu00', hu001, hp0eq⟩, hp0cone⟩
+      · rw [← hp0f0]
+        exact hp0cone
+    · -- w·n = 0：f 0·n = 0，两件入平面，cf4_segment_intersects_aff_ge 收
+      by_cases hwcone : w ∈ affGe {0} ({v1, v2} : Set V3)
+      · exact absurd (⟨w, ⟨⟨(0:ℝ), 1, by norm_num, by norm_num, by norm_num,
+          by rw [zero_smul, zero_add, one_smul]⟩, hwcone⟩⟩ :
+          (segment ℝ (f t1) w ∩ affGe {0} ({v1, v2} : Set V3)).Nonempty) ht1nen
+      have hu0ne : u0 ≠ 0 := by
+        intro hz
+        refine hwcone ?_
+        have hpw : p0 = w := by
+          rw [← hp0eq, hz, zero_smul, zero_add, (show u0' = 1 from by linarith),
+            one_smul]
+        rw [← hpw]
+        exact hp0cone
+      have hf0n0 : inner ℝ (f 0) n = 0 := by
+        have h2 := hDu0
+        rw [hwn, mul_zero, add_zero] at h2
+        exact (mul_eq_zero.1 h2).resolve_left hu0ne
+      have hf0aff : f 0 ∈ affineSpan ℝ (insert (0:V3) ({v1, v2} : Set V3)) :=
+        cf4_mem_affSpan3_of_inner_eq hindep hn0 hv1n hv2n hf0n0
+      have hwaff : w ∈ affineSpan ℝ (insert (0:V3) ({v1, v2} : Set V3)) :=
+        cf4_mem_affSpan3_of_inner_eq hindep hn0 hv1n hv2n hwn
+      have hdisj := cf4_segment_intersects_aff_ge hcol
+        (hnb 0 (Set.mem_Icc.2 ⟨le_refl 0, hh⟩)) hf0aff hwaff
+        ⟨p0, ⟨u0, u0', hu00, hu00', hu001, hp0eq⟩, hp0cone⟩
+      refine Or.inr ⟨0, le_refl 0, hh, ?_, hdisj⟩
+      · intro t ht
+        rw [le_antisymm ht.2 ht.1]
+        exact ⟨p0, ⟨u0, u0', hu00, hu00', hu001, hp0eq⟩, hp0cone⟩
+    · -- w·n > 0：IVT 打靶 r（HOL :2398 SUBGOAL）
+      have hgfun : ContinuousOn (fun t => inner ℝ (f t) n) (Set.Icc 0 h) :=
+        hf.inner continuous_const.continuousOn
+      obtain ⟨r, hr0, hrh, hrle, hrdisj⟩ :
+          ∃ r, 0 ≤ r ∧ r ≤ h ∧ (∀ t ∈ Set.Icc 0 r, inner ℝ (f t) n ≤ 0) ∧
+            (((∀ t ∈ Set.Icc 0 r,
+                  (segment ℝ (f t) w ∩ affGe {0} ({v1, v2} : Set V3)).Nonempty) ∧
+                f r ∈ affGe {0} ({v1, v2} : Set V3)) ∨
+              (∃ t1 ∈ Set.Icc 0 r,
+                segment ℝ (f t1) w ∩ affGe {0} ({v1, v2} : Set V3) = ∅)) := by
+        by_cases hle : ∀ t ∈ Set.Icc 0 h, inner ℝ (f t) n ≤ 0
+        · exact ⟨h, hh, le_refl h, hle, Or.inr ⟨t1, ht1I, ht1ne⟩⟩
+        · push_neg at hle
+          obtain ⟨tt, httI, htt⟩ := hle
+          obtain ⟨x, hx0, hxt, hxc, hlt⟩ :=
+            cf4_ivt_first_hit (fun t => inner ℝ (f t) n) 0 tt httI.1
+              (hgfun.mono (Set.Icc_subset_Icc le_rfl httI.2)) hf0n htt.le
+          have hxc' : inner ℝ (f x) n = 0 := hxc
+          have hlt' : ∀ t ∈ Set.Ico 0 x, inner ℝ (f t) n < 0 := hlt
+          refine ⟨x, hx0, le_trans hxt httI.2, ?_, ?_⟩
+          · intro t ht
+            rcases eq_or_lt_of_le ht.2 with htx | htx
+            · rw [htx]
+              exact hxc'.le
+            · exact le_of_lt (hlt' t ⟨ht.1, htx⟩)
+          · by_cases hx1 : ∀ t ∈ Set.Icc 0 x,
+                (segment ℝ (f t) w ∩ affGe {0} ({v1, v2} : Set V3)).Nonempty
+            · -- f x ∈ cone：x 处交点参数 ub = 0
+              refine Or.inl ⟨hx1, ?_⟩
+              obtain ⟨p', hp'seg, hp'cone⟩ := hx1 x ⟨hx0, le_refl x⟩
+              obtain ⟨ua, ub, hua, hub, huab, hp'eq⟩ := hp'seg
+              have hub0 : ub = 0 := by
+                have h1 : inner ℝ p' n = 0 := hcone_n p' hp'cone
+                rw [← hp'eq, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+                  hxc', mul_zero, zero_add] at h1
+                rcases mul_eq_zero.1 h1 with h | h
+                · exact h
+                · exact absurd h (ne_of_gt hwn)
+              have hp'x : p' = f x := by
+                rw [← hp'eq, hub0, zero_smul, add_zero, (show ua = 1 from by linarith),
+                  one_smul]
+              rw [← hp'x]
+              exact hp'cone
+            · push_neg at hx1
+              obtain ⟨t1', ht1'I, ht1'e⟩ := hx1
+              exact Or.inr ⟨t1', ht1'I, ht1'e⟩
+      -- §I 终局装配（HOL :2486-2862）
+      rcases hrdisj with ⟨hrempty, hrcone⟩ | ⟨t1', ht1'I, ht1ne'⟩
+      · exact Or.inr ⟨r, hr0, hrh, hrempty, Or.inl hrcone⟩
+      · -- 主案例：continuous_intersection_point 的 α β + IVT 首穿
+        obtain ⟨α, β, habcont, habpoint⟩ :=
+          cf4_continuous_intersection_point f r hr0 hcol
+            (hf.mono (Set.Icc_subset_Icc le_rfl hrh)) hv1n hv2n hwn hrle
+        have ha1 : ∀ t ∈ Set.Icc 0 r,
+            α t • v1 + β t • v2 ∈ segment ℝ (f t) w ∩
+              affineSpan ℝ (insert (0:V3) ({v1, v2} : Set V3)) := by
+          intro t ht
+          rw [habpoint t ht]
+          exact Set.mem_singleton _
+        have ha2 : ∀ t ∈ Set.Icc 0 r, ∃ u : ℝ, 0 ≤ u ∧ u ≤ 1 ∧
+            α t • v1 + β t • v2 = (1 - u) • f t + u • w := by
+          intro t ht
+          obtain ⟨c1, c2, hc1, hc2, hc12, hceq⟩ := (ha1 t ht).1
+          refine ⟨c2, hc2, by linarith, ?_⟩
+          rw [← hceq, (show c1 = 1 - c2 from by linarith)]
+        have ha3 : ∀ t ∈ Set.Icc 0 r, 0 ≤ α t → 0 ≤ β t →
+            (segment ℝ (f t) w ∩ affGe {0} ({v1, v2} : Set V3)).Nonempty := by
+          intro t ht' ha hb
+          exact ⟨α t • v1 + β t • v2, (ha1 t ht').1,
+            (affGe_0_2_char hv10 hv20 hv12 _).2 ⟨α t, β t, ha, hb, rfl⟩⟩
+        have ha4 : ∀ t ∈ Set.Icc 0 r,
+            (segment ℝ (f t) w ∩ affGe {0} ({v1, v2} : Set V3)).Nonempty →
+            0 ≤ α t ∧ 0 ≤ β t := by
+          intro t ht ⟨x, hxseg, hxcone⟩
+          have hxaff : x ∈ affineSpan ℝ (insert (0:V3) ({v1, v2} : Set V3)) := by
+            obtain ⟨s, u, hs, hu, hxeq⟩ := (affGe_0_2_char hv10 hv20 hv12 x).1 hxcone
+            exact (cf4_affSpan3_char v1 v2 x).2 ⟨s, u, hxeq⟩
+          have hx2 : x ∈ segment ℝ (f t) w ∩
+              affineSpan ℝ (insert (0:V3) ({v1, v2} : Set V3)) := ⟨hxseg, hxaff⟩
+          rw [habpoint t ht] at hx2
+          have hxeq : x = α t • v1 + β t • v2 := Set.mem_singleton_iff.1 hx2
+          obtain ⟨s, u, hs, hu, hxrepr⟩ := (affGe_0_2_char hv10 hv20 hv12 x).1 hxcone
+          obtain ⟨e1, e2⟩ := cf4_repr_unique hindep hxeq.symm hxrepr.symm
+          refine ⟨?_, ?_⟩
+          · rw [e1]
+            exact hs
+          · rw [e2]
+            exact hu
+        have ha5 : 0 ≤ α 0 ∧ 0 ≤ β 0 :=
+          ha4 0 (Set.mem_Icc.2 ⟨le_refl 0, hr0⟩) ⟨p0, ⟨u0, u0', hu00, hu00', hu001, hp0eq⟩,
+            hp0cone⟩
+        have hconta : ∀ s : ℝ, 0 ≤ s → s ≤ r → ContinuousOn α (Set.Icc 0 s) := fun s _ hs2 =>
+          habcont.1.mono (Set.Icc_subset_Icc le_rfl hs2)
+        have hcontb : ∀ s : ℝ, 0 ≤ s → s ≤ r → ContinuousOn β (Set.Icc 0 s) := fun s _ hs2 =>
+          habcont.2.mono (Set.Icc_subset_Icc le_rfl hs2)
+        -- α/β 的 IVT 首穿点 x
+        obtain ⟨x, hx0, hxr, hxA, hxAB⟩ :
+            ∃ x, 0 ≤ x ∧ x ≤ r ∧ (∀ t ∈ Set.Icc 0 x, 0 ≤ α t ∧ 0 ≤ β t) ∧
+              (α x = 0 ∨ β x = 0) := by
+          by_cases hA : ∀ t ∈ Set.Icc 0 r, 0 ≤ α t
+          · -- α 全 ≥ 0：β 在 [0,t1'] 首穿 0
+            have hb1 : β t1' < 0 := by
+              by_contra hcon
+              push_neg at hcon
+              obtain ⟨x, hx⟩ := ha3 t1' ht1'I (hA t1' ht1'I) hcon
+              rw [ht1ne'] at hx
+              exact absurd hx (Set.mem_empty_iff_false x).mp
+            obtain ⟨xb, hxb0, hxb1, hbxc, hblt⟩ :=
+              cf4_ivt_first_dec β 0 t1' ht1'I.1 (hcontb t1' ht1'I.1 ht1'I.2) ha5.2 hb1.le
+            refine ⟨xb, hxb0, le_trans hxb1 ht1'I.2, ?_, Or.inr hbxc⟩
+            intro t ht
+            have hbR : t ≤ r := le_trans ht.2 (le_trans hxb1 ht1'I.2)
+            rcases eq_or_lt_of_le ht.2 with htx | htx
+            · rw [htx]
+              exact ⟨hA xb (Set.mem_Icc.2 ⟨hxb0, le_trans hxb1 ht1'I.2⟩),
+                hbxc.symm.le⟩
+            · exact ⟨hA t (Set.mem_Icc.2 ⟨ht.1, hbR⟩),
+                le_of_lt (hblt t ⟨ht.1, htx⟩)⟩
+          · push_neg at hA
+            obtain ⟨ta, htaI, hta⟩ := hA
+            obtain ⟨xa, hxa0, hxta, hxac, halt⟩ :=
+              cf4_ivt_first_dec α 0 ta htaI.1 (hconta ta htaI.1 htaI.2) ha5.1 hta.le
+            have hαxa : ∀ t ∈ Set.Icc 0 xa, 0 ≤ α t := by
+              intro t ht
+              rcases eq_or_lt_of_le ht.2 with htx | htx
+              · rw [htx]
+                exact hxac.symm.le
+              · exact le_of_lt (halt t ⟨ht.1, htx⟩)
+            by_cases hB : ∀ t ∈ Set.Icc 0 r, 0 ≤ β t
+            · -- β 全 ≥ 0：x := xa
+              refine ⟨xa, hxa0, le_trans hxta htaI.2, ?_, Or.inl hxac⟩
+              intro t ht
+              exact ⟨hαxa t ⟨ht.1, ht.2⟩,
+                hB t (Set.mem_Icc.2 ⟨ht.1,
+                  le_trans (le_trans ht.2 hxta) htaI.2⟩)⟩
+            · push_neg at hB
+              obtain ⟨tb, htbI, htb⟩ := hB
+              obtain ⟨xb, hxb0, hxtb, hbxc, hblt⟩ :=
+                cf4_ivt_first_dec β 0 tb htbI.1 (hcontb tb htbI.1 htbI.2) ha5.2 htb.le
+              have hβxb : ∀ t ∈ Set.Icc 0 xb, 0 ≤ β t := by
+                intro t ht
+                rcases eq_or_lt_of_le ht.2 with htx | htx
+                · rw [htx]
+                  exact hbxc.symm.le
+                · exact le_of_lt (hblt t ⟨ht.1, htx⟩)
+              refine ⟨min xa xb, by positivity,
+                le_trans (min_le_left xa xb) (le_trans hxta htaI.2), ?_, ?_⟩
+              · intro t ht
+                exact ⟨hαxa t ⟨ht.1, le_trans ht.2 (min_le_left xa xb)⟩,
+                  hβxb t ⟨ht.1, le_trans ht.2 (min_le_right xa xb)⟩⟩
+              · rcases le_total xa xb with hle | hle
+                · rw [min_eq_left hle]
+                  exact Or.inl hxac
+                · rw [min_eq_right hle]
+                  exact Or.inr hbxc
+        have hxIr : x ∈ Set.Icc 0 r := ⟨hx0, hxr⟩
+        have hxInH : x ∈ Set.Icc 0 h := ⟨hx0, le_trans hxr hrh⟩
+        have hxAx : 0 ≤ α x ∧ 0 ≤ β x := hxA x ⟨hx0, le_refl x⟩
+        refine Or.inr ⟨x, hx0, le_trans hxr hrh, ?_, ?_⟩
+        · intro t ht
+          exact ha3 t (Set.mem_Icc.2 ⟨ht.1, le_trans ht.2 hxr⟩)
+            (hxA t ht).1 (hxA t ht).2
+        · rcases hxAB with hxaz | hxbz
+          · -- α x = 0：v2 ∈ cone{f x,w}（第三支）
+            right
+            right
+            obtain ⟨u, hu1, hu2, hueq⟩ := ha2 x hxIr
+            rw [hxaz, zero_smul, zero_add] at hueq
+            have hbx : β x ≠ 0 := by
+              intro hz
+              rw [hz, zero_smul] at hueq
+              exact (hfw x hxInH).2 u hu1 hu2 hueq.symm
+            have hvfxw : f x ≠ w := by
+              intro he
+              have hle := hrle x hxIr
+              rw [he] at hle
+              linarith
+            have heq : v2 = ((β x)⁻¹ * (1 - u)) • f x + ((β x)⁻¹ * u) • w := by
+              have h2 := congrArg (fun z : V3 => (β x)⁻¹ • z) hueq
+              rw [inv_smul_smul₀ hbx, smul_add, smul_smul, smul_smul] at h2
+              exact h2
+            exact (affGe_0_2_char (hfw x hxInH).1 hw0 hvfxw v2).2
+              ⟨(β x)⁻¹ * (1 - u), (β x)⁻¹ * u,
+                mul_nonneg (inv_nonneg.2 hxAx.2) (sub_nonneg.2 hu2),
+                mul_nonneg (inv_nonneg.2 hxAx.2) hu1, heq⟩
+          · -- β x = 0：v1 ∈ cone{f x,w}（第二支）
+            right
+            left
+            obtain ⟨u, hu1, hu2, hueq⟩ := ha2 x hxIr
+            rw [hxbz, zero_smul, add_zero] at hueq
+            have hax : α x ≠ 0 := by
+              intro hz
+              rw [hz, zero_smul] at hueq
+              exact (hfw x hxInH).2 u hu1 hu2 hueq.symm
+            have hvfxw : f x ≠ w := by
+              intro he
+              have hle := hrle x hxIr
+              rw [he] at hle
+              linarith
+            have heq : v1 = ((α x)⁻¹ * (1 - u)) • f x + ((α x)⁻¹ * u) • w := by
+              have h2 := congrArg (fun z : V3 => (α x)⁻¹ • z) hueq
+              rw [inv_smul_smul₀ hax, smul_add, smul_smul, smul_smul] at h2
+              exact h2
+            exact (affGe_0_2_char (hfw x hxInH).1 hw0 hvfxw v1).2
+              ⟨(α x)⁻¹ * (1 - u), (α x)⁻¹ * u,
+                mul_nonneg (inv_nonneg.2 hxAx.1) (sub_nonneg.2 hu2),
+                mul_nonneg (inv_nonneg.2 hxAx.1) hu1, heq⟩
 
 /-! ## 7. 件 5：外心终端预备（lemma_4_points_circumcenter :3866 的前置件）
 
@@ -1922,5 +2597,6 @@ theorem cf4_circumcenter3_existsUnique {v2 v4 : V3}
     · rw [dist_comm]; exact hy12.symm.trans hy01.symm
   exact congrArg EuclideanGeometry.Sphere.center
     (hcuniq (EuclideanGeometry.Sphere.mk y (dist y (0:V3))) (And.intro hspan hp))
+
 
 end Kepler.Text.ContraFanDeep
