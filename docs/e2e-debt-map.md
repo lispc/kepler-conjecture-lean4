@@ -54,10 +54,14 @@
   骨架 + capstone 组装已在树（9 机械件已证 + 5 枚 giant sorry，全树零 importer）；
   实际量级 Lean 2800–5000 行（region/cell_vol 双 GIANT）。三座共享银行：
   锥帽体积套件（**源不在本仓**，与 REUHADY(PA24)/TSKAJXY3 三链共享，GT-1 先导波
-  建新模块 ConicCapVolume.lean）、Pack2.hl 测度桥（与 UPFZBZM wave-2/KIZHLTL1 共享）、
-  PA15 marchal3 套件 ≥9 枚。波次：GT-1 → GT-2(S/M 机械)/GT-3(cell_vol)/GT-4(region)
-  三线并行。⚠ `grutoti_volD_pos` 冻结陈述 u1=u0 时为假（须补 hne，STATEMENT-FIX
-  候选入 merge 裁决清单）。
+  建新模块 ConicCapVolume.lean）、Pack2.hl 测度桥（与 UPFZBZM wave-2/KIZHLTL1 共享，
+  **已实化**：KIZHLTL1/2 `9bc5b5bd`）、PA15 marchal3 套件 ≥9 枚。
+  **GT-1 已落账 (2026-09-30，`0d3243c0`)**：`ConicCapVolume.lean` 1110 行——
+  `volumeConicCap`（2/3·π·(1−a)·r³ 完整推导）+Pos/Measurable/Bounded 四公开件
+  公理全净，纯 Geom.* 零 sorry 依赖；余 3 sorry 带账（sliceWedge 仅剩 Real.lt/le
+  order 结构体对接、wedge kernel、AZIM_EQ_0_PI 桥）。波次：GT-2(S/M 机械)/
+  GT-3(cell_vol)/GT-4(region) 可排；⚠ `grutoti_volD_pos` 冻结陈述 u1=u0 时为假
+  （STATEMENT-FIX 候选入 merge 裁决清单）。
 - **Phase 2 Graphs 链**：wave3 收官构建发现 `lake build Kepler.Assembly` 会自展
   式重建 Graphs CertShards（本机 30-2100s/片，9000+ jobs 量级）——后台跑完后
   脊柱探针解锁，DEBT.md"结构性不可用"注记作废。

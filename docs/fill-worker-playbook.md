@@ -172,6 +172,8 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 | 杂项 API（CF-4b） | `LT.lt.ne/ne'` 本 toolchain 均给 `a ≠ b`（要 `b ≠ a` 用 `ne_of_gt`）；`mul_div_cancel₀ : a*(b/a)=b`、`div_mul_cancel₀` 不存在（用 `div_mul_cancel`）；`lt_or_le` 不存在（`lt_or_ge` ✓）；`Real.sin_pos`→`Real.sin_pos_of_pos_of_lt_pi`；`le_iff_eq_or_lt`/`sq_eq_sq₀ (ha)(hb)`/无参三岐 `div_eq_zero_iff` |
 | set/with 与 witness β（CF-4b） | `set x := e with h` 后新语句中 x 被 zeta 展开——抽象化改用 `obtain ⟨e, hev, …⟩ : ∃ e, …` 把性质作为不透明前提；`fun t => …` witness 的分支目标不 β 约简——先 `show` β 形再 rw；`rw [hvw]`（w = c•v 型）会同时改写目标里的 ‖w‖，用 congrArg 迁移 |
 | ∃! / Sphere（CF-4b） | `∃! c, P c` 是 def 非结构体，含 λ 谓词时扁平元组失配——`refine ⟨w, ?_, ?_⟩` + `show`；`Sphere` 全限定 `EuclideanGeometry.Sphere`，`mk` 只收 center/radius；错误行新格式 `error(lean.unknownIdentifier):`（自查 grep 用 `grep -nE "error"` 兜底） |
+| Real.lt/le order 结构体（GT-1 实测） | `Set.mem_setOf_eq` 展开后 `a < b`/`a ≤ b` 产生 `Real.lt✝`/`Real.le✝` 结构体（非 LT/LE class 实例），linarith/rcases 匿名构造器/obtain 不直接消费——必须经 `sq_lt_sq₀`/`sq_le_sq₀`/`min_eq_right`/`Real.lt_sqrt` 显式转换 |
+| 杂项 API（GT-1） | `ENNReal.ofReal_mul` 单假设 `(hp : 0 ≤ p)`；`integral_pow` 在根命名空间（非 intervalIntegral.）；`RCLike.frontier_ball : frontier (ball x r) = sphere x r`（需 `.symm` 方向注意） |
 
 （发现新的改名陷阱：写报告第 5 项，编排者入表。**改名类错误只有 `lake build` 能稳定
 暴露**，env-lean 会放行旧名——见 §3。）
@@ -447,6 +449,17 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   **巨声明心跳**：KIZHLTL2 超 5M——文件级 `set_option maxHeartbeats` 后追加
   增量行（`set_option … in` 放 docstring 与 theorem 之间会触发解析错误，勿用）；
   `HDTFNFZ` 的 `{v}` 隐参陈述中不可合成——`@HDTFNFZ V ul i u X …` 显式喂。
+- **ConicCapVolume @GT-1 后**（3 remaining @`0d3243c0`）：帽侧全链已证
+  （`volumeConicCap`/`Pos`/`Measurable`/`Bounded` 公理全净；ccvConicCap 私拷
+  与 PA15:109 正本同体，消费 lane 一行 `rfl` 转移）。**剩余三件的顺序**：
+  ①`ccv_volume_sliceWedge`（骨架全备，仅剩 Real.lt/le order 结构体对接，
+  对照已证同形 `ccv_volume_sliceCap`）→ ②`ccv_volume_conicCapWedge_zero`
+  （照 `ccv_volume_conicCap_zero` 骨架 + Fubini 包装）→ ③
+  `AZIM_EQ_0_PI_IMP_COPLANAR`（S 档，azim=0 经 `azim_eq_zero_iff_alt`；
+  azim=π 需移植 `azim_eq_pi_iff`）。**下游接线即开**：PA24:428
+  `volumeConicCapWedgeGeVsConicCap` shim（帽侧直用 + wedgeGe vs wedge 小桥，
+  等②）；PA23 `grutoti_volD_pos`（GT-2 的第一件，`volumeConicCapPos` 直取 +
+  补 `hne`——注意 volD_pos 冻结陈述缺陷在 STATEMENT-FIX 裁决清单）。
 
 ## 6. 教训日志（编排者每波收工后追加；工人有观察也写报告里）
 
