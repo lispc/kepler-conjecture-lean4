@@ -168,6 +168,10 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 | Eq 证明取字段 / getElem 下标 rw | Eq 的 Prod 字段用 `congrArg Prod.fst/snd h`（`h.1` 对 Eq 非法）；rw 改 `l[i]'h` 下标时位置证明 h 提及下标则 motive 崩——改写 getD 下标（无证明分量）或 `congr 1`+裸 Nat `have`+omega |
 | Set 成员头目标（PA22 eus1 实测） | `P ⊆ {x | …}` intro 后目标仍是 Membership 头——任何 `dot2` 模式 rw 必须先 `rw [Set.mem_setOf_eq]`，否则报"did not find occurrence"（极具误导性）；假设同头用 `have hle : dot2 a₀ x ≤ b₀ := hsub hx` defeq 展开直取；多段 rw-at 失败回滚不可依赖，先加 mem_setOf 一把到位 |
 | dot2 第一参 smul / 0<c 签名 | 第一参 smul 无公开件（`dot2_comm` 两次本地闭合）；`div_lt_iff₀`/`le_div_iff₀`/`inv_mul_cancel₀` 收 `0 < c`（非 ≠ 0）；后台编译验证别走 grep/head 管道（截掉级联错误），`> /tmp/x.log 2>&1` 全量落盘 |
+| `real_inner_comm` 参数反向（CF-4b 实测） | `(x y) : ⟪y,x⟫ = ⟪x,y⟫`——`rw [real_inner_comm v w]` 把 ⟪v,w⟫ 改成 ⟪w,v⟫，与直觉相反且一个应用改写全部同型实例；连续内积展开一律 `simp only [real_inner_comm a b, …]` 比 rw 链稳健 |
+| 杂项 API（CF-4b） | `LT.lt.ne/ne'` 本 toolchain 均给 `a ≠ b`（要 `b ≠ a` 用 `ne_of_gt`）；`mul_div_cancel₀ : a*(b/a)=b`、`div_mul_cancel₀` 不存在（用 `div_mul_cancel`）；`lt_or_le` 不存在（`lt_or_ge` ✓）；`Real.sin_pos`→`Real.sin_pos_of_pos_of_lt_pi`；`le_iff_eq_or_lt`/`sq_eq_sq₀ (ha)(hb)`/无参三岐 `div_eq_zero_iff` |
+| set/with 与 witness β（CF-4b） | `set x := e with h` 后新语句中 x 被 zeta 展开——抽象化改用 `obtain ⟨e, hev, …⟩ : ∃ e, …` 把性质作为不透明前提；`fun t => …` witness 的分支目标不 β 约简——先 `show` β 形再 rw；`rw [hvw]`（w = c•v 型）会同时改写目标里的 ‖w‖，用 congrArg 迁移 |
+| ∃! / Sphere（CF-4b） | `∃! c, P c` 是 def 非结构体，含 λ 谓词时扁平元组失配——`refine ⟨w, ?_, ?_⟩` + `show`；`Sphere` 全限定 `EuclideanGeometry.Sphere`，`mk` 只收 center/radius；错误行新格式 `error(lean.unknownIdentifier):`（自查 grep 用 `grep -nE "error"` 兜底） |
 
 （发现新的改名陷阱：写报告第 5 项，编排者入表。**改名类错误只有 `lake build` 能稳定
 暴露**，env-lean 会放行旧名——见 §3。）
@@ -368,6 +372,19 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   `eq_circumcenter_of_dist_eq`，仅 span/range 换算）⑤aff_ge_inter_segments/
   continuous_intersection_point（初等代数/Cramer 连续性）⑥rotation_about_axis
   （CF-4c，⊥-分量经 family_special 平移）。
+- **ContraFanDeep @CF-4b 后**（4 remaining @`dd20ae50`）：五件已闭合
+  （rotation_dist_decrease 继承前驱骨架修复、circumcenter 两枚经
+  `AffineIndependent.existsUnique_dist_eq`、aff_ge_inter_segments 代数核、
+  rotation_lemma 圆弧构造——⊥/范数/输运三元组 obtain 抽象化绕开 set-let
+  展开）。**CF-4c 地图**：①`cf4_rotation_family_special`——逐行试写记录全文
+  在其 docstring（B1 非共线 = rotation_lemma+min/max 夹逼延拓三段 g 分析、
+  B2 共线 = 叉积 ⊥+π 旋转族+`cf4_orth_pair_norm(_sq)`），预计 1-2 循环；
+  ②`cf4_continuous_intersection_point`——Cramer 路线+`cf4_plane_repr` 复用
+  （NEEDS 已注）；③`cf4_rotation_about_axis`——上游件 6；④主石
+  `cf4_continuous_lemma_aff_ge`——上游四件齐备前不开攻（穿锥判别
+  :1928/:2138 未移植、IVT 未移植；Lean 路线 S={t∈[0,h]|穿越非空} 连通二分
+  已写入 NEEDS）。可复用新私件：`cf4_collinear_smul`/`cf4_not_collinear_mk`/
+  `cf4_orth_pair_norm(_sq)`。
 - **PA22 wave-3 后**（43 remaining @`e4248c02`→**42 @`87a39f04`**）：EXPLICIT ℂ kit 19 件就位
   （模板对应表见交付报告，公开入口 `facetOfCPolyhedronExplicit`/
   `p22_facetOfCPolyhedron`）。**eus1 已收口（`87a39f04`）**：同文件序手术 +
