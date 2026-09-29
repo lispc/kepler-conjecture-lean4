@@ -424,11 +424,62 @@ wave 0 skeleton — do NOT wire into the :1428 arm before waves 1-2. -/
 theorem cell3_from_ineq_thm : cell3_bank → cell3_from_ineq := by
   sorry -- MERGE-INEQ: merge_ineq.hl:3507-3745 (cell3_hyp :3490-3495; entries ineq.hl:1372/1389/1406/1425/1443/1462/1479)
 
+/-! ## MERGE-INEQ wave 1: GRKIBMP dispatcher helpers
+
+Mirror pieces of the HOL proof body (merge_ineq.hl:3794-3816), kept
+private: the two `if`-expansions of `h0cut` (optimize.hl:138/146), the
+numeric `h0 < hplus` (Nonlinear_lemma.hl:957-961), and the
+`funext`-shape projection `nonf_gamma2_x1_div_a_v2
+(functional_equation.hl:1237-1244)`. -/
+
+/-- HOL `Optimize.h0cutA` (optimize.hl:138-144): at or below the cut
+`2 * h0` the weight is `1`. -/
+private theorem p21_h0cutA (y : ℝ) (hy : y ≤ 2 * h0) : h0cut y = 1 := by
+  simp only [h0cut, if_pos hy]
+
+/-- HOL `Optimize.h0cutB` (optimize.hl:146-152): above the cut the
+weight is `0`. -/
+private theorem p21_h0cutB (y : ℝ) (hy : 2 * h0 < y) : h0cut y = 0 := by
+  simp only [h0cut, if_neg (show ¬(y ≤ 2 * h0) from fun hc => absurd hy (by linarith))]
+
+/-- HOL `Nonlinear_lemma.h0_lt_hplus` (Nonlinear_lemma.hl:957-961):
+numeric (`1.26 < 1.3254`). -/
+private theorem p21_h0_lt_hplus : h0 < hplus := by norm_num [h0, hplus]
+
+/-- HOL `Functional_equation.nonf_gamma2_x1_div_a_v2`
+(functional_equation.hl:1237-1244): the six-variable lift of
+`gamma2_x_div_azim_v2` ignores its last five arguments. -/
+private theorem p21_nonf_gamma2x1DivAV2 (m x1 x2 x3 x4 x5 x6 : ℝ) :
+    gamma2x1DivAV2 m x1 x2 x3 x4 x5 x6 = gamma2_x_div_azim_v2 m x1 := rfl
+
+/-- The same projection in the `y_of_x`-packaged form the bank entries
+are stated in (`yOfX` rescales to squared lengths, and the lift projects
+back to `y1` alone, exactly the `(y * y)` x-argument of `GRKIBMP_concl`). -/
+private theorem p21_nonf_gamma2x1DivAV2_yOfX (m y1 y2 y3 y4 y5 y6 : ℝ) :
+    yOfX (gamma2x1DivAV2 m) y1 y2 y3 y4 y5 y6 = gamma2_x_div_azim_v2 m (y1 * y1) :=
+  rfl
+
 /-- HOL `GRKIBMP` (merge_ineq.hl:3794-3816, `add_hyp ["GRKIBMP A V2";
 "GRKIBMP B V2"] GRKIBMP_concl`; ~20-line proof: entries ineq.hl:1520-1535 /
 1537-1552 instantiated at y2..y6 := 1).  MERGE-INEQ wave 0 skeleton. -/
 theorem GRKIBMP : grk_bank → GRKIBMP_concl := by
-  sorry -- MERGE-INEQ: merge_ineq.hl:3794-3816 (entries ineq.hl:1520/1537)
+  -- :3799-3800 strip the two bank entries and instantiate them at
+  -- y2..y6 := 1 (the [1,1] singleton boxes close by `le_rfl`).
+  rintro ⟨hA, hB⟩ y hy2 hy8
+  rcases lt_or_ge y (2 * hplus) with hlt | hge
+  · -- :3815 short-edge side: entry A keeps `h0cut y` symbolic and gives
+    -- the strict bound `> 0.008`; final REAL_ARITH lifts it to `≥ 0`.
+    have hA1 := hA y 1 1 1 1 1 hy2 (le_of_lt hlt) le_rfl le_rfl le_rfl le_rfl
+      le_rfl le_rfl le_rfl le_rfl le_rfl le_rfl
+    rw [p21_nonf_gamma2x1DivAV2_yOfX] at hA1
+    linarith
+  · -- :3805-3810 long-edge side: `2 * h0 < 2 * hplus ≤ y` forces
+    -- `h0cut y = 0` (h0cutB via h0_lt_hplus); entry B then supplies the
+    -- nonnegativity with x-argument `y * y` unchanged (via the nonf
+    -- defeq `p21_nonf_gamma2x1DivAV2_yOfX`).
+    rw [p21_h0cutB y (by linarith [p21_h0_lt_hplus, hge])]
+    exact hB y 1 1 1 1 1 hge hy8 le_rfl le_rfl le_rfl le_rfl le_rfl
+      le_rfl le_rfl le_rfl le_rfl le_rfl
 
 /-- HOL `TSKAJXY_statement_special_case` (TSKAJXY2.hl:80-88, a
 `new_definition`). -/
