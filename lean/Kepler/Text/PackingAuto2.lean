@@ -553,12 +553,16 @@ theorem GLTVHUM_concl : ∀ (V : Set V3) (u0 p : V3), Packing V ∧ saturated V 
       ∃ vl : List V3, barV V 3 vl ∧ p ∈ rogers V vl ∧ truncateSimplex 0 vl = [u0]) := by
   -- NEEDS: 非 OAPVION 型 epsilon 唯一性桥，circumcenter 配方不适用（HOL 原证
   -- Rogers.hl:1152 经 Rogers.hl:826 GLTVHUM_lemma1 的 k-归纳 + Voronoi facet 分解）。
-  -- 覆盖方向(→)需整链移植：PA6:487 GLTVHUM_lemma1（未证；HOL Rogers.hl:826-1150，
-  -- ~325 行）← PA6:439 VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS（未证；
-  -- Rogers.hl:694-825，~130 行）← PA6:431 IDBEZAL（未证；Rogers.hl:523，需
-  -- saturation + PA6:418 FACET_OF_POLYHEDRON_EXPLICIT_BIS，亦未证）。
-  -- PA6:500 的 GLTVHUM 即本桥背引用，闭合本桥即自动解锁 PA6/PA23/PA16/PA17 消费点。
-  -- 整链 ~600 HOL 行，GIANT 级，宜开专门移植波。
+  -- 状态（GIANT 移植波 2026-09-28）：五级链下三级已在 PA6 闭合——①
+  -- FACET_OF_POLYHEDRON_EXPLICIT_BIS（PA6:286，经 Polytope.FACET_OF_POLYHEDRON_
+  -- EXPLICIT + HALFSPACE_EQ_BIS_LE 半空间化）、② IDBEZAL（PA6:349，经
+  -- VORONOI_BARV_CANONICAL + VORONOI_LIST_INTER_BIS + KHEJKCI_GEN 双向）、③
+  -- VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS（PA6:424，经边界点引理
+  -- p6_mem_hull_insert_facet：polyhedron 的 RELATIVE_INTERIOR_OF_POLYHEDRON +
+  -- 紧集射线-sup 参数替代 POLYTOPE_UNION_CONVEX_HULL_FACETS 的移植）。
+  -- 剩余：④ GLTVHUM_lemma1（PA6:660 仍 sorry；k-归纳 base/step 的家族-成员
+  -- bookkeeping，NEEDS 注记附逐步路线）与 ⑤ 本桥装配；⑤ 闭合即解锁
+  -- PA6:690 GLTVHUM（背引用本桥）与 PA4 cellParams 唯一性族 9 枚。
   sorry
 
 /-- HOL `DUUNHOR_concl` (pack_concl.hl:21-23): distinct Rogers simplices
@@ -575,7 +579,10 @@ theorem DUUNHOR_concl : ∀ (V : Set V3) (ul vl : List V3), Packing V → satura
   -- 2026-09-28 授权走保真对齐：本陈述已补 Packing V ∧ saturated V，PA6:841
   -- 背引用已同步加参（无前提版反例构造可行——两簇远距 barV 3 四面体，V 取 8 点
   -- 显式集，机器化成本高未收口，见提案项 13 (b)）。affDim≤2 的退化分支机械
-  -- （PA6:707 可引），卡的是双满维主情形。
+  -- （PA6:707 可引），卡的是双满维主情形。三前件复核（GIANT 移植波
+  -- 2026-09-28）：ROGERS_AFF_DIM_FULL（PA6:577）、POLYHEDRON_VORONOI_LIST
+  -- （PA5:1501）、OMEGA_LIST_N_LEMMA（PA5:1551）三者均仍为 sorry——本桥本轮
+  -- 不做，待上三件 + GLTVHUM_concl 闭合后另开移植波。
   sorry
 
 /-- HOL `QXSKIIT_concl` (pack_concl.hl:25-28): unique interpolation on the
