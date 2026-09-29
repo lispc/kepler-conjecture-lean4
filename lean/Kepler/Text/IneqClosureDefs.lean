@@ -644,22 +644,26 @@ The LA38 lane carried these as `sorry` stubs (`solXP38`/`cayleyRP38`/
 decision the real bodies are ported here straight from the HOL sources,
 bypassing LA38 (definitions only — its theorem proofs stay untouched; when
 that lane gets filled in it should align with these canonical names).
-Enablers `arcLength`/`abcOfQuadratic`/`rho`/`sqrt3`/`cayleyR`/`muR` are
+Enablers `arcLengthICD`/`abcOfQuadratic`/`rho`/`sqrt3`/`cayleyR`/`muR` are
 canonical re-ports: their twins sit in PackingAuto18 / LocalAuto19 /
 LocalAuto38 / PackingAuto22 — either not co-importable with SphereKit (the
 `atn2` FQN clash, SphereKit.lean:10-11) or sorry-tainted (`cayleyRP38` is a
 stub, hence so is `muRP38`).  `quadraticRootPlus`/`taum`/`ly`/`const1`/
 `dihY`/`upsX`/`atn2`/`h0` are reused from SphereKit/PackingAuto2. -/
 
-/-- HOL `arclength` (sphere.hl:258-260). Canonical name; verbatim twin
-`arcLength` (PackingAuto18.lean:161, not co-importable). -/
-noncomputable def arcLength (a b c : ℝ) : ℝ :=
+/-- HOL `arclength` (sphere.hl:258-260).  Verbatim twin of `arcLength`
+(PackingAuto18.lean:183, not co-importable); renamed `arcLengthICD`
+(MERGE-INEQ wave 0, user-authorized 2026-09-29): PackingAuto21 now imports
+this module and PackingAuto25 co-imports both with PackingAuto18, so the
+plain name collided in `Kepler.Text`.  This module had zero importers
+before the wave-0 import, hence zero external churn. -/
+noncomputable def arcLengthICD (a b c : ℝ) : ℝ :=
   Real.pi / 2 +
     atn2 (Real.sqrt (upsX (a * a) (b * b) (c * c))) (c * c - a * a - b * b)
 
-/-- Numeric: the equilateral-triangle angle, `arcLength 1 1 1 =
+/-- Numeric: the equilateral-triangle angle, `arcLengthICD 1 1 1 =
 π/2 + arctan(-1/√3) = π/3`.  Named for reuse by the wrappers below. -/
-theorem arcLength_one_one_one : arcLength 1 1 1 = Real.pi / 3 := by
+theorem arcLength_one_one_one : arcLengthICD 1 1 1 = Real.pi / 3 := by
   have hups : upsX (1 * 1) (1 * 1) (1 * 1) = 3 := by norm_num [upsX]
   have h13 : (1 : ℝ) < Real.sqrt 3 :=
     (Real.lt_sqrt (by norm_num)).mpr (by norm_num)
@@ -669,7 +673,7 @@ theorem arcLength_one_one_one : arcLength 1 1 1 = Real.pi / 3 := by
   have harctan : Real.arctan (1 / Real.sqrt 3) = Real.pi / 6 := by
     rw [← htan, Real.arctan_tan (by linarith [Real.pi_pos])
       (by linarith [Real.pi_pos])]
-  unfold arcLength
+  unfold arcLengthICD
   rw [hups, show (1 : ℝ) * 1 - 1 * 1 - 1 * 1 = -1 by norm_num]
   unfold atn2
   rw [if_pos (by rwa [abs_neg, abs_one])]
@@ -678,27 +682,27 @@ theorem arcLength_one_one_one : arcLength 1 1 1 = Real.pi / 3 := by
   ring
 
 /-- HOL `arc_hhn` (sphere.hl:780-781). -/
-noncomputable def arcHhn : ℝ := arcLength (2 * h0) (2 * h0) 2
+noncomputable def arcHhn : ℝ := arcLengthICD (2 * h0) (2 * h0) 2
 
-example : arcHhn = arcLength (2 * h0) (2 * h0) 2 := rfl
+example : arcHhn = arcLengthICD (2 * h0) (2 * h0) 2 := rfl
 
 /-- HOL `arclength_x_123` (sphere.hl:798-799). -/
 noncomputable def arclengthX123 (x1 x2 x3 _x4 _x5 _x6 : ℝ) : ℝ :=
-  arcLength (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x3)
+  arcLengthICD (Real.sqrt x1) (Real.sqrt x2) (Real.sqrt x3)
 
 /-- Numeric: the same equilateral value through the squared-length wrapper. -/
 example : arclengthX123 1 1 1 0 0 0 = Real.pi / 3 := by
-  have e : arclengthX123 1 1 1 0 0 0 = arcLength 1 1 1 := by
+  have e : arclengthX123 1 1 1 0 0 0 = arcLengthICD 1 1 1 := by
     unfold arclengthX123; rw [Real.sqrt_one]
   rw [e]; exact arcLength_one_one_one
 
 /-- HOL `arclength_y1` (sphere.hl:762-765). NB the HOL argument order is
 `arclength y1 a b` (y1 first, then the two fixed edges). -/
 noncomputable def arclengthY1 (a b : ℝ) (y1 _y2 _y3 _y4 _y5 _y6 : ℝ) : ℝ :=
-  arcLength y1 a b
+  arcLengthICD y1 a b
 
 /-- Pins the y1-first argument order. -/
-example : arclengthY1 a b y1 y2 y3 y4 y5 y6 = arcLength y1 a b := rfl
+example : arclengthY1 a b y1 y2 y3 y4 y5 y6 = arcLengthICD y1 a b := rfl
 
 /-- HOL `acs_sqrt_x1_d4` (sphere.hl:792-793). -/
 noncomputable def acsSqrtX1D4 (x1 _x2 _x3 _x4 _x5 _x6 : ℝ) : ℝ :=
@@ -894,7 +898,7 @@ Quot.sound) -/
 #print axioms etaY
 #print axioms rad2X
 #print axioms x1DeltaX
-#print axioms arcLength
+#print axioms arcLengthICD
 #print axioms asnFnhk
 #print axioms rhazim2
 #print axioms cayleyR

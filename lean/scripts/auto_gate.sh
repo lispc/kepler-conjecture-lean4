@@ -277,6 +277,12 @@ if [ "${GATE_MODE:-}" = "DEF-FIX" ]; then
   # DEF-FIX: the net refill debt is charter-specified (§3a/§3b), not forbidden
   [ "$((nsorry_adds - nsorry_dels))" -eq "${DF_SORRY_NET:-15}" ] \
     || fail "DEF-FIX: net new sorry = $((nsorry_adds - nsorry_dels)), expected ${DF_SORRY_NET:-15}"
+elif [ "${GATE_MODE:-}" = "STATEMENT-FIX" ]; then
+  # STATEMENT-FIX (2026-09-29): skip the line-prefix net-count — the SF
+  # multiset equality already pins the sorry surface to the human-approved
+  # patch, and the prefix heuristic is blind to def-bodied sorries
+  # (`def x … := sorry` deleted vs bare `sorry` lines added reads as +N).
+  :
 else
   [ "$nsorry_adds" -le "$nsorry_dels" ] \
     || fail "new sorry lines added ($nsorry_adds > $nsorry_dels)"

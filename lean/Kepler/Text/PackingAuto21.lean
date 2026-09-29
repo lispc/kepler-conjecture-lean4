@@ -55,16 +55,22 @@ ENCODING NOTES
     `lmfun x = h0cut (2*x) * lfun x` hold (used by GAMMAX_GAMMA2_X's
     `lmfun_h0cut` step); `frustum`/`frustt` are reconstructed from use
     sites (slab `0 <= (x-u).dot(v-u) <= h*norm(v-u)`, resp. its
-    intersection with `rcone_gt u v a`); `eta_y`/`tsk_hyp`/
-    `pack_nonlinear_non_ox3q1h` are opaque (`sorry`-bodied constants) —
-    they enter only sorried capstone statements/proofs.
+    intersection with `rcone_gt u v a`).  MERGE-INEQ wave 0
+    (docs/merge-ineq-channel.md §2.1/§2.2): `eta_y` is re-pointed to the
+    faithful `IneqClosureDefs.etaY` (sphere.hl:131-135), and `tsk_hyp`/
+    `pack_nonlinear_non_ox3q1h` are structured as the 19 TSKAJXY
+    consumption slices (`bank_*` entries + `cell3_bank`/`tsk_bank`/
+    `grk_bank`) plus the 62-entry rest leaf `pack_nonlinear_rest`
+    (G4 placeholder).
   - `l ~/ y` in ATN2_Y_NEG etc. uses `Real.arctan`; `atn2` is
     Kepler.Text.SphereKit.atn2 (verbatim sphere.hl:48).
 
 DISCHARGES
   - NONE of the concl interfaces match verbatim: the capstone `TSKAJXY`
     carries the extra antecedent `pack_nonlinear_non_ox3q1h` (the
-    Merge_ineq certified-inequality bank, not ported), so it implies but
+    Merge_ineq certified-inequality bank; structured in wave 0 as
+    19 slices + rest leaf, still assumption-fed at the capstones), so it
+    implies but
     does not discharge `Kepler.Text.TSKAJXY_statement`
     (PackingAuto2.lean:845); `TSKAJXY_034` additionally needs
     `tsk_hyp_new`.  No `pack_concl` lemma is re-proved here.
@@ -95,6 +101,7 @@ import Kepler.Text.PackingAuto13
 import Kepler.Text.PackingAuto15
 import Kepler.Text.PackingAuto20
 import Kepler.Text.SphereKit
+import Kepler.Text.IneqClosureDefs
 import Kepler.Text.Polytope
 import Mathlib
 
@@ -124,27 +131,265 @@ noncomputable def gamma2_x_div_azim_v2 (m x : ℝ) : ℝ :=
 
 -- HOL `bis` (sphere.hl:360): already public in Kepler.Text.PackingAuto5.lean:65.
 
-/-- HOL `eta_y` (sphere.hl): the 3-leg auxiliary entering
-`cell3_from_ineq`.  The upstream body is not among local sources (use
-sites pin it only through that statement, whose consumers are sorried);
-opaque constant of the right type. -/
-noncomputable def eta_y (y4 y5 y6 : ℝ) : ℝ := sorry
+/-- HOL `eta_y` (sphere.hl:131-135): `eta_x` at squared lengths, i.e.
+`sqrt(x1*x2*x3/ups_x …)`（忠实体 = `IneqClosureDefs.etaY`，单一来源）. -/
+noncomputable def eta_y (y4 y5 y6 : ℝ) : ℝ := etaY y4 y5 y6
 
 /-- HOL `h0cut` (Merge_ineq.hl).  Reconstruction: the unique `if`-body
 with `lmfun x = h0cut (2 * x) * lfun x` (the upstream `lmfun_h0cut` used
 inside GAMMAX_GAMMA2_X): for `x <= 2 * h0` the factor is `1`, else `0`. -/
 noncomputable def h0cut (x : ℝ) : ℝ := if x ≤ 2 * h0 then 1 else 0
 
-/-- HOL `tsk_hyp` (Merge_ineq bank, consumed via `tsk_hyp_new`): the
-conjunction of the ten certified TSKAJXY inequalities keyed
-`TSKAJXY-GXSABWC DIV`, ..., `TSKAJXY-eulerA` (see `tsk_required_ineq`
-below).  Opaque: the bank is not among local sources. -/
-def tsk_hyp : Prop := sorry
+/-! ## Merge_ineq bank: the 19 TSKAJXY consumption slices (MERGE-INEQ
+wave 0, docs/merge-ineq-channel.md §2.2)
 
-/-- HOL `pack_nonlinear_non_ox3q1h` (Merge_ineq.hl): the certified
-nonlinear inequality bank.  Opaque; enters as an antecedent of the
-capstones `TSKAJXY_2`/`TSKAJXY` (and the OXLZLEZ3 lane). -/
-def pack_nonlinear_non_ox3q1h : Prop := sorry
+HOL `pack_nonlinear_non_ox3q1h` (merge_ineq.hl:118-122) is the
+conjunction of the 81-entry `packing_ineq_data` filter over the Ineq
+database (`IdLists.lean:43-126 packNonlinearNonOx3q1hIds`).  Per charter
+§2.0 route A' the bank is re-bodied here as: the 19 entries consumed by
+TSKAJXY (`tsk_required_ineq`, TSKAJXY3.hl:2240-2249 = `cell3_hyp`
+(merge_ineq.hl:3490-3495) @ `tsk_hyp` (:1370-1377) @ GRKIBMP (:3795)),
+materialized verbatim in arrow form (HOL `Sphere.ineq` boxes unfolded;
+charter §6.2), plus one honest 62-entry rest leaf.  Entry naming:
+`bank_` + the idv string whitespace-squeezed; each docstring carries the
+HOL idv and its ineq.hl registration line.  Conjunction order = the
+consumer groups, not the HOL prepend order — registered reconciliation
+(charter §4.3 item 8). -/
+
+/-- HOL `eulerA_x` (sphere.hl:830-833): verbatim the let-bound `a` of
+`sol_euler_x_div_sqrtdelta` (IneqClosureDefs.solEulerXDivSqrtdelta,
+with `sqrt(x1*x2*x3)` split into the three-factor product of eulerA_x). -/
+noncomputable def eulerAX (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  Real.sqrt x1 * Real.sqrt x2 * Real.sqrt x3 +
+    Real.sqrt x1 * (x2 + x3 - x4) / 2 +
+    Real.sqrt x2 * (x1 + x3 - x5) / 2 +
+    Real.sqrt x3 * (x1 + x2 - x6) / 2
+
+/-- HOL `gamma2_x1_div_a_v2` (nonlin_def.hl:346-347):
+`promote1_to_6 (gamma2_x_div_azim_v2 m)`, the six-variable lift. -/
+noncomputable def gamma2x1DivAV2 (m : ℝ) : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ :=
+  fun x1 _x2 _x3 _x4 _x5 _x6 => gamma2_x_div_azim_v2 m x1
+
+/-- HOL ineq entry `QZECFIC wt0` (ineq.hl:1372).  Box
+[1,1]³×[2.01,2hmin]×[2,2hmin]². -/
+def bank_QZECFICwt0 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 1 ≤ y1 → y1 ≤ 1 → 1 ≤ y2 → y2 ≤ 1 → 1 ≤ y3 → y3 ≤ 1 →
+    2.01 ≤ y4 → y4 ≤ 2 * hminus → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    0 < yOfX (gamma3fXDivSqrtdelta 1 1 1) y1 y2 y3 y4 y5 y6
+
+/-- HOL ineq entry `QZECFIC wt0 corner` (ineq.hl:1389).  Box
+[1,1]³×[2,2.01]³. -/
+def bank_QZECFICwt0corner : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 1 ≤ y1 → y1 ≤ 1 → 1 ≤ y2 → y2 ≤ 1 → 1 ≤ y3 → y3 ≤ 1 →
+    2 ≤ y4 → y4 ≤ 2.01 → 2 ≤ y5 → y5 ≤ 2.01 → 2 ≤ y6 → y6 ≤ 2.01 →
+    0 ≤ yOfX (gamma3fXDivSqrtdelta 1 1 1) y1 y2 y3 y4 y5 y6
+
+/-- HOL ineq entry `QZECFIC wt0 sqrt8` (ineq.hl:1406).  Box
+[1,1]³×[2hplus,√8]×[2,2hmin]×[2,2hmin]. -/
+def bank_QZECFICwt0sqrt8 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 1 ≤ y1 → y1 ≤ 1 → 1 ≤ y2 → y2 ≤ 1 → 1 ≤ y3 → y3 ≤ 1 →
+    2 * hplus ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    0 < yOfX (gamma3fXDivSqrtdelta 0 1 1) y1 y2 y3 y4 y5 y6 ∨
+      eta_y y4 y5 y6 ^ 2 > 2
+
+/-- HOL ineq entry `QZECFIC wt1` (ineq.hl:1425).  Box
+[√2,√2]³×[2hmin,2hplus]×[2,2hmin]×[2,2hmin]. -/
+def bank_QZECFICwt1 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, Real.sqrt 2 ≤ y1 → y1 ≤ Real.sqrt 2 →
+    Real.sqrt 2 ≤ y2 → y2 ≤ Real.sqrt 2 → Real.sqrt 2 ≤ y3 → y3 ≤ Real.sqrt 2 →
+    2 * hminus ≤ y4 → y4 ≤ 2 * hplus → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    yOfX (gamma3fXDivSqrtdelta (h0cut y4) 1 1) y1 y2 y3 y4 y5 y6 >
+        0.008 * yOfX dih4XDivSqrtdeltaPosbranch y1 y2 y3 y4 y5 y6 ∨
+      eta_y y4 y5 y6 ^ 2 > 2
+
+/-- HOL ineq entry `QZECFIC wt2 A` (ineq.hl:1443).  Box
+[√2,√2]³×[2hmin,√8]×[2hmin,√8]×[2,2hmin]. -/
+def bank_QZECFICwt2A : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, Real.sqrt 2 ≤ y1 → y1 ≤ Real.sqrt 2 →
+    Real.sqrt 2 ≤ y2 → y2 ≤ Real.sqrt 2 → Real.sqrt 2 ≤ y3 → y3 ≤ Real.sqrt 2 →
+    2 * hminus ≤ y4 → y4 ≤ Real.sqrt 8 → 2 * hminus ≤ y5 → y5 ≤ Real.sqrt 8 →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    yOfX (gamma3fXDivSqrtdelta (h0cut y4) (h0cut y5) 1) y1 y2 y3 y4 y5 y6 / 2 >
+        0.008 * yOfX dih4XDivSqrtdeltaPosbranch y1 y2 y3 y4 y5 y6 ∨
+      eta_y y4 y5 y6 ^ 2 > 2
+
+/-- HOL ineq entry `CIHTIUM` (ineq.hl:1462).  Box [1,1]³×[2hmin,√8]³. -/
+def bank_CIHTIUM : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 1 ≤ y1 → y1 ≤ 1 → 1 ≤ y2 → y2 ≤ 1 → 1 ≤ y3 → y3 ≤ 1 →
+    2 * hminus ≤ y4 → y4 ≤ Real.sqrt 8 → 2 * hminus ≤ y5 → y5 ≤ Real.sqrt 8 →
+    2 * hminus ≤ y6 → y6 ≤ Real.sqrt 8 →
+    eta_y y4 y5 y6 ^ 2 > 2
+
+/-- HOL ineq entry `CJFZZDW` (ineq.hl:1479).  Box
+[1,1]³×[2hplus,√8]×[2hplus,√8]×[2,√8]. -/
+def bank_CJFZZDW : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 1 ≤ y1 → y1 ≤ 1 → 1 ≤ y2 → y2 ≤ 1 → 1 ≤ y3 → y3 ≤ 1 →
+    2 * hplus ≤ y4 → y4 ≤ Real.sqrt 8 → 2 * hplus ≤ y5 → y5 ≤ Real.sqrt 8 →
+    2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    eta_y y4 y5 y6 ^ 2 > 2
+
+/-- HOL ineq entry `TSKAJXY-GXSABWC DIV` (ineq.hl:359).  x-space entry
+(variables are squared lengths).  Box
+[2.8²,8]×[4,2.01²]×[4,2.01²]×[2.8²,8]×[4,2.01²]×[4,2.01²]. -/
+def bank_TSKAJXYGXSA : Prop :=
+  ∀ x1 x2 x3 x4 x5 x6 : ℝ, (2.8 : ℝ) ^ 2 ≤ x1 → x1 ≤ 8 →
+    4 ≤ x2 → x2 ≤ 2.01 ^ 2 → 4 ≤ x3 → x3 ≤ 2.01 ^ 2 →
+    (2.8 : ℝ) ^ 2 ≤ x4 → x4 ≤ 8 → 4 ≤ x5 → x5 ≤ 2.01 ^ 2 →
+    4 ≤ x6 → x6 ≤ 2.01 ^ 2 →
+    1 / 12 - (2 * mm1 / Real.pi) *
+        (solEulerXDivSqrtdelta x1 x2 x3 x4 x5 x6 +
+          solEuler345XDivSqrtdelta x1 x2 x3 x4 x5 x6 +
+          solEuler156XDivSqrtdelta x1 x2 x3 x4 x5 x6 +
+          solEuler246XDivSqrtdelta x1 x2 x3 x4 x5 x6) -
+      (8 * mm2 / Real.pi) *
+        (ldih2XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 +
+          ldih3XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 +
+          ldih5XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6 +
+          ldih6XDivSqrtdeltaPosbranch x1 x2 x3 x4 x5 x6) ≥ 0 ∨
+      deltaX x1 x2 x3 x4 x5 x6 < 0
+
+/-- HOL ineq entry `TSKAJXY-delta_x4` (ineq.hl:341).  x-space entry.  Box
+[4,2.01²]×[4,2.01²]×[2.8²,8]×[4,2.01²]×[4,2.01²]×[2.8²,8]. -/
+def bank_TSKAJXYdx4 : Prop :=
+  ∀ x1 x2 x3 x4 x5 x6 : ℝ, 4 ≤ x1 → x1 ≤ 2.01 ^ 2 → 4 ≤ x2 → x2 ≤ 2.01 ^ 2 →
+    (2.8 : ℝ) ^ 2 ≤ x3 → x3 ≤ 8 → 4 ≤ x4 → x4 ≤ 2.01 ^ 2 →
+    4 ≤ x5 → x5 ≤ 2.01 ^ 2 → (2.8 : ℝ) ^ 2 ≤ x6 → x6 ≤ 8 →
+    0 < deltaX4 x1 x2 x3 x4 x5 x6
+
+/-- HOL ineq entry `TSKAJXY-eulerA` (ineq.hl:324).  x-space entry.  Box
+[2.8²,8]×[4,2.01²]×[4,2.01²]×[2.8²,8]×[4,2.01²]×[4,2.01²]. -/
+def bank_TSKAJXYeulerA : Prop :=
+  ∀ x1 x2 x3 x4 x5 x6 : ℝ, (2.8 : ℝ) ^ 2 ≤ x1 → x1 ≤ 8 →
+    4 ≤ x2 → x2 ≤ 2.01 ^ 2 → 4 ≤ x3 → x3 ≤ 2.01 ^ 2 →
+    (2.8 : ℝ) ^ 2 ≤ x4 → x4 ≤ 8 → 4 ≤ x5 → x5 ≤ 2.01 ^ 2 →
+    4 ≤ x6 → x6 ≤ 2.01 ^ 2 →
+    0 < eulerAX x1 x2 x3 x4 x5 x6
+
+/-- HOL ineq entry `TSKAJXY-XLLIPLS` (ineq.hl:304).  Box
+[2hplus,√8]×[2,2.01]×[2,2.01]×[2hplus,2.8]×[2,2.01]×[2,2.01]. -/
+def bank_TSKAJXYXLLIPLS : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hplus ≤ y1 → y1 ≤ Real.sqrt 8 →
+    2 ≤ y2 → y2 ≤ 2.01 → 2 ≤ y3 → y3 ≤ 2.01 →
+    2 * hplus ≤ y4 → y4 ≤ 2.8 → 2 ≤ y5 → y5 ≤ 2.01 → 2 ≤ y6 → y6 ≤ 2.01 →
+    0 < gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun
+
+/-- HOL ineq entry `TSKAJXY-WKGUESB sym` (ineq.hl:281).  Box
+[2hplus,√8]×[2.01,2hmin]×[2,2hmin]×[2hplus,√8]×[2,2hmin]×[2,2hmin]. -/
+def bank_TSKAJXYWKGUESBsym : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hplus ≤ y1 → y1 ≤ Real.sqrt 8 →
+    2.01 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 * hplus ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    0 < gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun ∨
+      y2 < y3 ∨ y2 < y5 ∨ y2 < y6 ∨ y1 < y4
+
+/-- HOL ineq entry `TSKAJXY-IYOUOBF sharp v2` (ineq.hl:242).  Box
+[2hplus,√8]×[2,2.001]×[2,2.001]×[2,2hmin]×[2,2.001]×[2,2.001]. -/
+def bank_TSKAJXYIYOUOBFsharpv2 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hplus ≤ y1 → y1 ≤ Real.sqrt 8 →
+    2 ≤ y2 → y2 ≤ 2.001 → 2 ≤ y3 → y3 ≤ 2.001 → 2 ≤ y4 → y4 ≤ 2 * hminus →
+    2 ≤ y5 → y5 ≤ 2.001 → 2 ≤ y6 → y6 ≤ 2.001 →
+    0 ≤ gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun
+
+/-- HOL ineq entry `TSKAJXY-IYOUOBF sym` (ineq.hl:223).  Box
+[2hplus,√8]×[2.001,2hmin]×[2,2hmin]×[2,2hmin]×[2,2hmin]×[2,2hmin]. -/
+def bank_TSKAJXYIYOUOBFsym : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hplus ≤ y1 → y1 ≤ Real.sqrt 8 →
+    2.001 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 ≤ y4 → y4 ≤ 2 * hminus → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    0 ≤ gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun ∨ y2 < y3 ∨ y2 < y5 ∨ y2 < y6
+
+/-- HOL ineq entry `TSKAJXY-RIBCYXU sym` (ineq.hl:183).  Box
+[2.001,2hmin]×[2,2hmin]⁵. -/
+def bank_TSKAJXYRIBCYXUsym : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2.001 ≤ y1 → y1 ≤ 2 * hminus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 ≤ y4 → y4 ≤ 2 * hminus → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    0 < gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun ∨
+      y1 < y2 ∨ y1 < y3 ∨ y1 < y4 ∨ y1 < y5 ∨ y1 < y6 ∨
+      y2 < y3 ∨ y2 < y5 ∨ y2 < y6
+
+/-- HOL ineq entry `TSKAJXY-RIBCYXU sharp` (ineq.hl:165).  Box
+[2,2.001]⁶. -/
+def bank_TSKAJXYRIBCYXUsharp : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 ≤ y1 → y1 ≤ 2.001 → 2 ≤ y2 → y2 ≤ 2.001 →
+    2 ≤ y3 → y3 ≤ 2.001 → 2 ≤ y4 → y4 ≤ 2.001 → 2 ≤ y5 → y5 ≤ 2.001 →
+    2 ≤ y6 → y6 ≤ 2.001 →
+    0 ≤ gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun
+
+/-- HOL ineq entry `TSKAJXY-TADIAMB` (ineq.hl:127).  Box
+[2hplus,√8]×[2hplus,√8]×[2,√8]⁴. -/
+def bank_TSKAJXYTADIAMB : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hplus ≤ y1 → y1 ≤ Real.sqrt 8 →
+    2 * hplus ≤ y2 → y2 ≤ Real.sqrt 8 → 2 ≤ y3 → y3 ≤ Real.sqrt 8 →
+    2 ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ Real.sqrt 8 →
+    2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    2 < yOfX rad2X y1 y2 y3 y4 y5 y6
+
+/-- HOL ineq entry `GRKIBMP A V2` (ineq.hl:1520).  Box
+[2,2hplus]×[1,1]⁵. -/
+def bank_GRKIBMPAV2 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 ≤ y1 → y1 ≤ 2 * hplus → 1 ≤ y2 → y2 ≤ 1 →
+    1 ≤ y3 → y3 ≤ 1 → 1 ≤ y4 → y4 ≤ 1 → 1 ≤ y5 → y5 ≤ 1 → 1 ≤ y6 → y6 ≤ 1 →
+    0.008 < yOfX (gamma2x1DivAV2 (h0cut y1)) y1 y2 y3 y4 y5 y6
+
+/-- HOL ineq entry `GRKIBMP B V2` (ineq.hl:1537).  Box
+[2hplus,√8]×[1,1]⁵. -/
+def bank_GRKIBMPBV2 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hplus ≤ y1 → y1 ≤ Real.sqrt 8 →
+    1 ≤ y2 → y2 ≤ 1 → 1 ≤ y3 → y3 ≤ 1 → 1 ≤ y4 → y4 ≤ 1 →
+    1 ≤ y5 → y5 ≤ 1 → 1 ≤ y6 → y6 ≤ 1 →
+    0 ≤ yOfX (gamma2x1DivAV2 0) y1 y2 y3 y4 y5 y6
+
+/-- HOL `cell3_hyp` (merge_ineq.hl:3490-3495). -/
+def cell3_bank : Prop :=
+  bank_QZECFICwt0 ∧ bank_QZECFICwt0corner ∧ bank_QZECFICwt0sqrt8 ∧
+    bank_QZECFICwt1 ∧ bank_QZECFICwt2A ∧ bank_CIHTIUM ∧ bank_CJFZZDW
+
+/-- HOL `tsk_hyp` (merge_ineq.hl:1370-1377, string order). -/
+def tsk_bank : Prop :=
+  bank_TSKAJXYGXSA ∧ bank_TSKAJXYIYOUOBFsharpv2 ∧ bank_TSKAJXYIYOUOBFsym ∧
+    bank_TSKAJXYRIBCYXUsharp ∧ bank_TSKAJXYRIBCYXUsym ∧ bank_TSKAJXYTADIAMB ∧
+    bank_TSKAJXYWKGUESBsym ∧ bank_TSKAJXYXLLIPLS ∧ bank_TSKAJXYdx4 ∧
+    bank_TSKAJXYeulerA
+
+/-- HOL bank entries `GRKIBMP A V2` ∧ `GRKIBMP B V2`
+(`add_hyp` order, merge_ineq.hl:3795). -/
+def grk_bank : Prop := bank_GRKIBMPAV2 ∧ bank_GRKIBMPBV2
+
+/-- HOL bank remainder: the other 62 entries of the 81-entry registry
+`packNonlinearNonOx3q1hIds` (IdLists.lean:43-126) — JSPEVYT, IXPOTPA,
+TXQTPVC, TEWNSCJ, the QITNPEA family, the ZTGIJCF0/4 generated families,
+GCKBQEA, RQWUDDU, 6096597438, 1965189142, ....  PLACEHOLDER(G4): to be
+split into single-entry leaves when `CertifiedIneqHolds` lands. -/
+def pack_nonlinear_rest : Prop := sorry
+  -- MERGE-INEQ: 62-entry remainder leaf — NEEDS: G4 主案（Merge_ineq 章程 §2.2/附则1）
+
+/-- HOL `pack_nonlinear_non_ox3q1h` (merge_ineq.hl:118-122).  Structured
+form (MERGE-INEQ wave 0, route A'): the 19 TSKAJXY consumption slices
+(§1.2 table) + the 62-entry rest leaf.  Against the 81-entry HOL bank
+this differs by conjunction reordering + rest folding — registered
+reconciliation (charter §4.3 item 8). -/
+def pack_nonlinear_non_ox3q1h : Prop :=
+  cell3_bank ∧ tsk_bank ∧ grk_bank ∧ pack_nonlinear_rest
+
+/-- HOL `tsk_hyp` (body was `sorry`; now the tsk slice bank). -/
+def tsk_hyp : Prop := tsk_bank
+
+/-- Named projection of the cell3 slice group (no bare `.1` chains;
+charter §6.5). -/
+theorem proj_cell3_bank (h : pack_nonlinear_non_ox3q1h) : cell3_bank := h.1
+
+/-- Named projection of the tsk slice group. -/
+theorem proj_tsk_bank (h : pack_nonlinear_non_ox3q1h) : tsk_bank := h.2.1
+
+/-- Named projection of the GRKIBMP slice group. -/
+theorem proj_grk_bank (h : pack_nonlinear_non_ox3q1h) : grk_bank := h.2.2.1
 
 /-- HOL `frustum u v h a` (vol1.hl; 4th argument inert, kept for arity):
 the slab `0 <= (x-u).dot(v-u) <= h * norm(v-u)`.  Reconstructed from use
@@ -171,6 +416,19 @@ def GRKIBMP_concl : Prop :=
 
 /-- HOL `tsk_hyp_new` (TSKAJXY2.hl:77-78). -/
 def tsk_hyp_new : Prop := GRKIBMP_concl ∧ cell3_from_ineq ∧ tsk_hyp
+
+/-- HOL `cell3_from_ineq_thm` (merge_ineq.hl:3507, statement
+`mk_imp(cell3_hyp, cell3_from_ineq)`; GIANT ~240-line refinement proof
+to :3745 over the nine COMMENT tracks of charter §1.3).  MERGE-INEQ
+wave 0 skeleton — do NOT wire into the :1428 arm before waves 1-2. -/
+theorem cell3_from_ineq_thm : cell3_bank → cell3_from_ineq := by
+  sorry -- MERGE-INEQ: merge_ineq.hl:3507-3745 (cell3_hyp :3490-3495; entries ineq.hl:1372/1389/1406/1425/1443/1462/1479)
+
+/-- HOL `GRKIBMP` (merge_ineq.hl:3794-3816, `add_hyp ["GRKIBMP A V2";
+"GRKIBMP B V2"] GRKIBMP_concl`; ~20-line proof: entries ineq.hl:1520-1535 /
+1537-1552 instantiated at y2..y6 := 1).  MERGE-INEQ wave 0 skeleton. -/
+theorem GRKIBMP : grk_bank → GRKIBMP_concl := by
+  sorry -- MERGE-INEQ: merge_ineq.hl:3794-3816 (entries ineq.hl:1520/1537)
 
 /-- HOL `TSKAJXY_statement_special_case` (TSKAJXY2.hl:80-88, a
 `new_definition`). -/

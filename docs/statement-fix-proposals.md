@@ -757,3 +757,91 @@ theorem tau3_taum_dfun (d : ℝ) (a01 a12 a02 b01 b12 b02 : ℝ) (f : ℝ → �
 
 ### (f) 状态：草案待审（2026-09-28 officer lane 产出；补丁可贴性已验，
 编译与闸门验收待修复波）。
+
+## merge-ineq-bank. 波 0 ——银行结构化 + eta_y 重指向（Merge_ineq 通道章程 §2）
+
+> 立项与章程：`docs/merge-ineq-channel.md`（编排者审定通过，见章程末
+> "附：编排者审定意见"）。本条目为波 0（陈述级）的**执行存档**：补丁已于
+> 2026-09-29 落地 `lean/Kepler/Text/PackingAuto21.lean`（下称 PA21），构建
+> 与台账验收实测见 (f)。补丁正文不再重复誊写，以章程 §2.1/§2.2 为准。
+
+### (a) HOL 裁决
+
+- **银行 def**：merge_ineq.hl:118-134——`packing_ineq_data` =
+  `has_flypaper_tag ["UKBRPFE";"BIEFJHU";"OXLZLEZ";"TSKAJXY"] ∧ ¬is_ox3q1h`
+  对 Ineq 数据库的全库过滤合取；`mk_pack_nonlinear` 把合取注册为常量
+  `pack_nonlinear_non_ox3q1h`，`get_pack_nonlinear_non_ox3q1h` 按名投影。
+  全量 81 条（IdLists.lean:43-126 + :128 `rfl`）；TSKAJXY 消费切片 19 条
+  （`tsk_required_ineq`，TSKAJXY3.hl:2240-2249），逐条 idv/box/结论见章程
+  §1.2 表（cell3 组 7 + tsk 组 10 + grk 组 2；grk 组定义锚点 =
+  ineq.hl:1520-1535/:1537-1552）。
+- **eta_y**：sphere.hl:131-135，`eta_y y1 y2 y3 = eta_x (y1²) (y2²) (y3²)`，
+  `eta_x = sqrt(x1·x2·x3/ups_x …)`。忠实体在树内：
+  `IneqClosureDefs.lean etaY`（经 etaX/upsX，逐字）。
+- **陈述级结论**：19 条切片在 PA21 以箭头形逐字材料化（HOL `Sphere.ineq`
+  区间蕴含包装按章程 §6.2 决策不移植，直接展平为
+  `∀ y1…y6, a_i ≤ y_i → y_i ≤ b_i → … → concl`）；x-空间三条目
+  （GXSABWC DIV/delta_x4/eulerA）变量名用 x。
+
+### (b) 诊断
+
+PA21 原三枚 def-sorry 不透明阻断收口链：`eta_y := sorry`（PA21 旧 :131）、
+`tsk_hyp := sorry`（旧 :142，HOL = 10 条合取）、
+`pack_nonlinear_non_ox3q1h := sorry`（旧 :147，81 条银行）——三者使
+TSKAJXY:1428 的 0/3/4 臂无法从银行投影任何前提，且 `eta_y` 不透明使
+PA25 的 ETA_Y_* 填证队列（RADV_ETAY、ETA_Y_POS_LE_ALT 等）整体冻结。
+
+### (c) 补丁正文
+
+= 章程 §2.1（eta_y 一行重指向 `:= etaY y4 y5 y6` + import
+`Kepler.Text.IneqClosureDefs`）+ §2.2（19 条 `bank_*` def + 三组显式合取
+`cell3_bank`/`tsk_bank`/`grk_bank` + `pack_nonlinear_rest := sorry` 62 条
+单叶挂账【`-- NEEDS: G4 主案（Merge_ineq 章程 §2.2/附则1）` 注记入账】+
+`pack_nonlinear_non_ox3q1h := cell3_bank ∧ tsk_bank ∧ grk_bank ∧
+pack_nonlinear_rest` + `tsk_hyp := tsk_bank` + 具名投影引理三枚
+`proj_cell3_bank`/`proj_tsk_bank`/`proj_grk_bank`）+ 骨架两枚
+（`GRKIBMP : grk_bank → GRKIBMP_concl`、`cell3_from_ineq_thm :
+cell3_bank → cell3_from_ineq`，体 `sorry -- MERGE-INEQ: <HOL 锚点>
+merge_ineq.hl:3794-3816 / :3507-3745`；**未接** :1428 臂，0/3/4 臂保持
+原 sorry，防假绿）。落地新增配套 def 两枚：`eulerAX`
+（sphere.hl:830-833 逐字）、`gamma2x1DivAV2`（nonlin_def.hl:346-347
+promote1_to_6 形）；`gamma3fXDivSqrtdelta` 章程时点判缺、实测已由
+IneqClosureDefs:441 忠实承载，直接复用（比章程少一枚新 def）。
+
+### (d) 消费面
+
+= 章程 §3：`pack_nonlinear_non_ox3q1h` 全部 76 处消费（PA21 3 + PA25 ~70 +
+PackingConcl 1 + Assembly 2）零改动——换体不改常量类型，无任何
+unfold/rw 触及（§2.3 逐条论证；机器落点 = PA25:3704
+`exact TSKAJXY V X hnl …` 在换体后重构建绿，实测见 (f)）。
+`eta_y`/`tsk_hyp`/`tsk_hyp_new`/`TSKAJXY_034` 等消费点同理零改动。
+
+### (e) 风险
+
+1. **执行期实证缺陷（已处置）**：章程 §2.1/§3d 断言 import
+   IneqClosureDefs "无环、无名冲突"只在 PA21 闭包内实测；PA25 = PA18 ∪
+   PA21 闭包，而 IneqClosureDefs:656 与 PackingAuto18:183 同在
+   `Kepler.Text` 声明 `arcLength`，import 即报
+   `environment already contains`（PA25/PackingConcl/Assembly 全链红）。
+   经全库 top-decl 相交实测，冲突面**仅此 1 名**；经用户授权（2026-09-29
+   波 0 会话），IneqClosureDefs 内 `arcLength → arcLengthICD`（同文件
+   def + 内部引用 + `#print axioms` 行，~12 处；该模块彼时全库零
+   importer，外部零波及；PA18 侧及其消费者 LA1/LA25/LA29 不动）。
+   教训：import 级冲突面应按**全链消费模块**（PA25/Assembly 的附加
+   import 集）相交复查，不能只查直接受益文件。
+2. 62 条挂账叶 `pack_nonlinear_rest` 为单叶 sorry：PA25 的
+   IXPOTPA/TXQTPVC/TEWNSCJ_MERGED、JSP_BOUNDS 等将来填证向其取前提，
+   最终由 G4 主案拆单（路线 A′ 既定）；拆单前 TSKAJXY 链透传债不变。
+3. 折算登记（statement-fidelity 附录口径）：①合取顺序 = 消费组序而非
+   81 条前插序；②62 条并入单叶；③`Sphere.ineq` 包装不移植、条目展平为
+   箭头形；④`Real.sqrt 8`/`2.8^2`/十进制字面量按 §6.1 内联口径。
+4. 波 3 前禁接 ：1428；`GRKIBMP`/`cell3_from_ineq_thm` 两骨架对
+   TSKAJXY 的 `#print axioms` 无新增影响（未被 capstone 引用）。
+
+### (f) 状态：章程已审定，本条目为执行存档（2026-09-29 波 0 落地）。
+验收实测：`lake env lean` PA21 0 error；`lake build Kepler.Text.PackingAuto21`
+/ `Kepler.Text.PackingAuto25` / `Kepler.Text.PackingConcl` 三构建退出码
+全 0（PA25 零适配回归成立）；sorry 台账净 +0（eta_y/tsk_hyp/
+pack_nonlinear_non_ox3q1h 三枚 def-sorry 消失，pack_nonlinear_rest +
+GRKIBMP + cell3_from_ineq_thm 三枚新增，全带 `-- MERGE-INEQ:` 标签；
+PA21 声明级 sorry 37 → 37）；:1428 臂与六条冻结陈述零改动。
