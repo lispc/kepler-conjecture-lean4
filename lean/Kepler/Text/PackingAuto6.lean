@@ -831,6 +831,58 @@ theorem MHFTTZN1 (V : Set V3) (ul : List V3) (k : ℕ) (hP : Packing V)
     (hbar : barV V k ul) : affDim (setOfList ul) = (k : ℤ) :=
   (MHFTTZN_lemma2 V ul k hP hbar).1
 
+/-- HOL `AFF_DIM_LE_CARD` content (Mathlib side): for a nonempty finite set,
+`affDim S + 1 ≤ Nat.card S`. -/
+private theorem p6_affDim_le_card (S : Set V3) (hfin : S.Finite) (hne : S.Nonempty) :
+    affDim S + 1 ≤ (Nat.card S : ℤ) := by
+  haveI : Fintype ↥S := hfin.fintype
+  haveI : Nonempty ↥S := ⟨hne.choose, hne.choose_spec⟩
+  have hne' : S ≠ ∅ := Set.nonempty_iff_ne_empty.mp hne
+  have hrange : Set.range (fun x : ↥S => (x : V3)) = S := by
+    ext y
+    constructor
+    · rintro ⟨x, rfl⟩; exact x.2
+    · intro hy; exact ⟨⟨y, hy⟩, rfl⟩
+  have h1 := finrank_vectorSpan_range_add_one_le (k := ℝ) (V := V3) (P := V3)
+    (fun x : ↥S => (x : V3))
+  rw [hrange] at h1
+  have hdim : affDim S = (Module.finrank ℝ (vectorSpan ℝ S) : ℤ) := if_neg hne'
+  rw [hdim]
+  have h3 : (Nat.card S : ℤ) = ((Fintype.card ↥S : ℕ) : ℤ) := by
+    rw [Nat.card_eq_fintype_card]
+  omega
+
+/-- HOL `AFFINE_INDEPENDENT_IFF_CARD` direction (Rogers.hl:4934 usage inside
+`MHFTTZN3`): a finite set with `Nat.card S ≤ affDim S + 1` is affinely
+independent. This is the `BARV_AFFINE_INDEPENDENT` unlock key for PA18 (via
+`MHFTTZN1` + `BARV_IMP_LENGTH_EQ_CARD`). -/
+theorem p6_affdep_of_dim (S : Set V3) (hfin : S.Finite)
+    (h : (Nat.card S : ℤ) ≤ affDim S + 1) : ¬affineDependent S := by
+  rw [affineDependent, not_not]
+  rcases S.eq_empty_or_nonempty with hE | hne
+  · have hsub : Subsingleton ↥S := by
+      rw [hE]
+      exact ⟨fun a b => absurd a.2 (Set.notMem_empty _)⟩
+    exact affineIndependent_of_subsingleton ℝ _
+  · haveI : Fintype ↥S := hfin.fintype
+    haveI : Nonempty ↥S := ⟨hne.choose, hne.choose_spec⟩
+    have hcardpos : 0 < Nat.card S := Nat.card_pos
+    have hdim : affDim S = (Module.finrank ℝ (vectorSpan ℝ S) : ℤ) :=
+      if_neg (Set.nonempty_iff_ne_empty.mp hne)
+    have hle : Nat.card S - 1 ≤ Module.finrank ℝ (vectorSpan ℝ S) := by
+      rw [hdim] at h
+      omega
+    have hrange : Set.range (fun x : ↥S => (x : V3)) = S := by
+      ext y
+      constructor
+      · rintro ⟨x, rfl⟩; exact x.2
+      · intro hy; exact ⟨⟨y, hy⟩, rfl⟩
+    have hpos : 0 < Fintype.card ↥S := Fintype.card_pos
+    rw [affineIndependent_iff_le_finrank_vectorSpan ℝ (fun x : ↥S => (x : V3))
+      (show Fintype.card ↥S = Nat.card S - 1 + 1 by
+        rw [Nat.card_eq_fintype_card]; omega), hrange]
+    exact hle
+
 /-- Rogers.hl:4871 `MHFTTZN2`. -/
 theorem MHFTTZN2 (V : Set V3) (ul : List V3) (k : ℕ) (hP : Packing V)
     (hbar : barV V k ul) :
@@ -851,7 +903,54 @@ theorem MHFTTZN3 (V : Set V3) (ul : List V3) (k : ℕ) (hP : Packing V)
     (hbar : barV V k ul) :
     (affineSpan ℝ (voronoiList V ul) : Set V3) ∩
       (affineSpan ℝ (setOfList ul) : Set V3) = {circumcenter (setOfList ul)} := by
-  sorry
+  have hlen : ul.length = k + 1 := hbar.1
+  have hulne : ul ≠ [] := by
+    intro h
+    rw [h] at hlen
+    simp at hlen
+  have hhd : hdV ul ∈ setOfList ul := by
+    cases ul with
+    | nil => exact absurd rfl hulne
+    | cons a t => simp [setOfList, hdV]
+  have hne : (setOfList ul).Nonempty := ⟨hdV ul, hhd⟩
+  have hne' : setOfList ul ≠ ∅ := Set.nonempty_iff_ne_empty.mp hne
+  have hE : (setOfList ul : Set V3) = (ul.toFinset : Set V3) := by
+    ext x
+    simp [setOfList]
+  have hfinS : (setOfList ul).Finite := hE ▸ ul.toFinset.finite_toSet
+  -- `CARD (set_of_list ul) = k + 1` (HOL:4922): `≤` via the list, `≥` via the dimension
+  have hcard_le : Nat.card (setOfList ul) ≤ k + 1 := by
+    have h2 : Nat.card (setOfList ul) = ul.toFinset.card := by
+      rw [hE, Nat.card_coe_set_eq, ncard_coe_finset]
+    rw [h2]
+    exact (List.toFinset_card_le ul).trans (le_of_eq hlen)
+  have hcard_ge : (k + 1 : ℕ) ≤ Nat.card (setOfList ul) := by
+    have h1 := p6_affDim_le_card (setOfList ul) hfinS hne
+    rw [MHFTTZN1 V ul k hP hbar] at h1
+    omega
+  have hcard : Nat.card (setOfList ul) = k + 1 := le_antisymm hcard_le hcard_ge
+  have hdep : ¬affineDependent (setOfList ul) :=
+    p6_affdep_of_dim _ hfinS (by rw [hcard, MHFTTZN1 V ul k hP hbar]; omega)
+  -- `⊆`: orthogonality at `u := v := w` forces `w = circumcenter`
+  ext w
+  simp only [Set.mem_inter_iff, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨hw1, hw2⟩
+    have hkey := (MHFTTZN_lemma2 V ul k hP hbar).2 w w hw1 hw2
+    have hzero : inner ℝ (w - circumcenter (setOfList ul))
+        (w - circumcenter (setOfList ul)) = 0 := by
+      rw [inner_eq_dot]
+      exact hkey
+    have hw0 : w - circumcenter (setOfList ul) = 0 := inner_self_eq_zero.mp hzero
+    rw [sub_eq_zero] at hw0
+    exact hw0
+  · rintro rfl
+    refine ⟨(MHFTTZN2 V ul k hP hbar _).mpr ?_, OAPVION1 _ hne' hdep⟩
+    intro u hu
+    have h1 := OAPVION2 (setOfList ul) hdep u hu
+    have h2 := OAPVION2 (setOfList ul) hdep (hdV ul) hhd
+    show dist (circumcenter (setOfList ul)) (hdV ul) = dist (circumcenter (setOfList ul)) u
+    rw [← h1, ← h2]
 
 /-- Rogers.hl:4985 `MHFTTZN4`. -/
 theorem MHFTTZN4 (V : Set V3) (ul : List V3) (k : ℕ) (u v : V3) (hP : Packing V)
