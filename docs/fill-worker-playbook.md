@@ -154,6 +154,9 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 | `Module.Basis.constr`（旧签名） | `hb.constr ℝ f`/`hb.constr_basis ℝ f i`——**R 与目标模显式**（`Module.Basis ι R M` 的 R 也显式） |
 | `div_mul_cancel₀` | 无；用 `div_mul_cancel`（PA7 r2 实测） |
 | `Nat.card (Set.range f)` 基数 | `Nat.card_range_of_injective`；`Set.Finite.ofFinset` 为 iff-binder 形状 |
+| `Set.Finite.subset`（参数序） | `(hs : s.Finite) (ht : t ⊆ s)`——**有限集在前**，与旧训练数据相反（PA15 实测） |
+| `Set.mem_image/mem_prod/mem_sdiff` 显式参 `.mpr` | 点投影 Unknown constant；改匿名构造器（membership 定义性展开）或 `simp only`（PA15 实测） |
+| WithLp 内积自点积 | `have h : inner ℝ d d = d ⬝ᵥ d := inner_eq_dot _ _` 再 `rw [← h, real_inner_self_eq_norm_sq, dist_eq_norm]`——单次 dist_eq_norm 同时改写两处（PA15 实测） |
 
 （发现新的改名陷阱：写报告第 5 项，编排者入表。**改名类错误只有 `lake build` 能稳定
 暴露**，env-lean 会放行旧名——见 §3。）
@@ -327,6 +330,33 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   `jgxzygw_p` 公开 capstone + 33 枚 `jg_` private（测度主点
   `MeasureTheory.measure_biUnion_finset`+PairwiseDisjoint、negligible 系、
   step1-4 全套）——后续任何 voronoi 测度链 lane 先看本模块，勿重写。
+- **PA15**（23 remaining @2026-09-29 U-2A 后）：三件套已闭合——`HD_IN_MCELL`
+  真证全净（四 case：i=1/2 锥支 tip-零 dot 爆、i=2 affGe 支走
+  `CONVEX_HULL_4_SUBSET_AFF_GE_2_2`(PA12)+`IN_SET_IMP_IN_CONVEX_HULL_SET`、
+  i=3 经 `HD_TRUNCATE_SIMPLEX` 回写、i≥4 `MCELL_EXPLICIT .2.2.2.2`+omega）；
+  `FINITE_MCELL_SET_lemma1/LEMMA` 真证，唯一染色 = PA12
+  `VORONOI_LIST_3_SINGLETON_EXPLICIT`（GIANT 落地即自动转净）。可复用新私件：
+  `p15_barV3ImpFinite1/2`（PA16:149-180 模板自拷）、`p15_omega_dist_hd`
+  （barV3 omega 点距 head<2）。**MCELL_SUBSET_BALL_4 唯一卡点 = i=2**：
+  affGe 楔无界（`affGe_ray`），有界性只能来自 mutual-rconeGe 代数 + 需
+  u0 ≠ u1（p17 `volPosLtAffDim3_p17` 自拷 ~60 行 + saturation 有界性）；
+  HOL 的 i∈{1,2,3} 走 QZKSYKG2（PA14 GIANT）不可走，i∈{0,1,3,4} 初等
+  路线已就地注记。PACKING_BALL_BOUNDARY π 勘误：只需 π > 3/4
+  （`Real.pi_gt_three` 已足够，无需有理夹逼）。
+- **ContraFanDeep**（CF-4a 已落账 @f25bcc49，9 带账 NEEDS；模块不 import
+  ContraFan，改 ContraFan 侧 L3F 时 twin 两处同步）：件 1/2 真证——分离平面
+  四点件用 `cf4_plane_repr`（finrank+double-orthogonal 替代 HOL
+  affine_hull_3_plane）+ Cramer 符号四分。CF-4b 交接地图（难点序）：
+  ①`cf4_continuous_lemma_aff_ge`（HOL CKQOWSA_4.hl:2204-2869，665 行，唯一
+  无把握大件，单设 checkpoint）②`cf4_rotation_dist_decrease`（骨架+恒等式+
+  四分路线全在注释：模长约束→g²−c² 恒等式→四分 nlinarith，仅剩 14 步内积
+  rw 链）③rotation_lemma/family_special（圆弧构造 φ=∠(v,u)、
+  e=(sin φ)⁻¹(u−cos φ•v)，Mathlib 角 API 已核）④circumcenter3 两枚（Mathlib
+  `Affine.Simplex` 路线已核：`hai.existsUnique_dist_eq` +
+  `Affine.Simplex.circumcenter_mem_affineSpan`/`dist_circumcenter_eq_circumradius`/
+  `eq_circumcenter_of_dist_eq`，仅 span/range 换算）⑤aff_ge_inter_segments/
+  continuous_intersection_point（初等代数/Cramer 连续性）⑥rotation_about_axis
+  （CF-4c，⊥-分量经 family_special 平移）。
 
 ## 6. 教训日志（编排者每波收工后追加；工人有观察也写报告里）
 
