@@ -961,12 +961,255 @@ theorem UPFZBZM_concl : ∀ V : Set V3, saturated V → Packing V →
     ∃ G : V3 → ℝ, negligibleFun0 G V ∧ fccCompatible G V := by
   sorry
 
-/-- HOL `RDWKARC_concl` (pack_concl.hl:247-249, modified Dec 31 2012). -/
+/-! ### RDWKARC_concl 支撑件（本波新增，`_p2` 后缀；对应 RDWKARC.hl 的
+translation/re-index 小引理组，证明形态逐条对照 PackingAuto19 的已证版本）-/
+
+/-- HOL `PACKING_TRANS` (RDWKARC.hl:115): packings are translation invariant.
+(证明照搬 PackingAuto19.PACKING_TRANS，本文件不能反向 import PA19。) -/
+private theorem packingTrans_p2 (V : Set V3) (hV : Packing V) (x : V3) :
+    Packing {u : V3 | u + x ∈ V} := by
+  intro u hu v hv hlt
+  have hd : dist (u + x) (v + x) = dist u v := by
+    rw [dist_eq_norm, dist_eq_norm]
+    abel
+  exact add_right_cancel (hV _ hu _ hv (by rwa [hd]))
+
+/-- HOL `RADV_TRANS_EQ` core (RDWKARC.hl:171): the circumradius of a
+two-point set is half the distance. (照搬 PackingAuto19.radV_pair。) -/
+private theorem radVPair_p2 (u v : V3) (huv : u ≠ v) :
+    radV {u, v} = dist u v / 2 := by
+  have hmem : AffineMap.lineMap (k := ℝ) u v (1 / 2) ∈ (affineSpan ℝ {u, v} : Set V3) :=
+    AffineMap.lineMap_mem_affineSpan_pair (1 / 2) u v
+  have hmd1 : dist u v / 2 = dist (AffineMap.lineMap (k := ℝ) u v (1 / 2)) u := by
+    rw [dist_lineMap_left]
+    norm_num
+    ring
+  have hmd2 : dist u v / 2 = dist (AffineMap.lineMap (k := ℝ) u v (1 / 2)) v := by
+    rw [dist_lineMap_right]
+    norm_num
+    ring
+  have hwit : ∃ y : V3, y ∈ (affineSpan ℝ {u, v} : Set V3) ∧
+      ∃ c : ℝ, ∀ w ∈ ({u, v} : Set V3), c = dist y w := by
+    refine ⟨AffineMap.lineMap (k := ℝ) u v (1 / 2), hmem, dist u v / 2, fun w hw => ?_⟩
+    rcases Set.mem_insert_iff.mp hw with rfl | rfl
+    · exact hmd1
+    · exact hmd2
+  have hcc : (fun v0 : V3 => v0 ∈ (affineSpan ℝ {u, v} : Set V3) ∧
+      ∃ c : ℝ, ∀ w ∈ ({u, v} : Set V3), c = dist v0 w) (circumcenter {u, v}) :=
+    Classical.epsilon_spec hwit
+  obtain ⟨hccmem, c₀, hc₀⟩ := hcc
+  have hu : u ∈ (affineSpan ℝ {u, v} : Set V3) := mem_affineSpan (k := ℝ) (by simp)
+  have hdir : circumcenter {u, v} - u ∈ vectorSpan ℝ {u, v} := by
+    have h5 : circumcenter {u, v} -ᵥ u ∈ (affineSpan ℝ {u, v}).direction :=
+      AffineSubspace.vsub_mem_direction hccmem hu
+    rwa [direction_affineSpan] at h5
+  rw [vectorSpan_pair (k := ℝ) u v] at hdir
+  obtain ⟨t, ht⟩ := Submodule.mem_span_singleton.mp hdir
+  have ht' : t • (u - v) = circumcenter {u, v} - u := ht
+  have hduv : dist u v ≠ 0 := fun hzz => huv (dist_eq_zero.mp hzz)
+  have h1 : |t| * dist u v = dist (circumcenter {u, v}) u := by
+    rw [dist_eq_norm, dist_eq_norm, ← ht', norm_smul, Real.norm_eq_abs]
+  have hv2 : circumcenter {u, v} - v = (t + 1) • (u - v) := by
+    rw [show (t + 1) • (u - v) = t • (u - v) + (u - v) from by rw [add_smul, one_smul], ht']
+    abel
+  have h2 : |t + 1| * dist u v = dist (circumcenter {u, v}) v := by
+    rw [dist_eq_norm, dist_eq_norm, hv2, norm_smul, Real.norm_eq_abs]
+  have habs : |t| = |t + 1| := by
+    have h3 : |t| * dist u v = |t + 1| * dist u v := by
+      rw [h1, h2, ← hc₀ _ (Set.mem_insert u {v}),
+        ← hc₀ _ (Set.mem_insert_of_mem _ (by simp))]
+    exact mul_right_cancel₀ hduv h3
+  have hhalf : t = -(1 / 2) := by
+    rcases abs_eq_abs.mp habs with h | h
+    · linarith
+    · linarith
+  have hfin : dist (circumcenter {u, v}) u = dist u v / 2 := by
+    rw [← h1, hhalf, abs_of_neg (show (0 : ℝ) > -(1 / 2) from by norm_num)]
+    ring
+  have hQ : (fun c : ℝ => ∀ w ∈ ({u, v} : Set V3),
+      c = dist (circumcenter {u, v}) w) (radV {u, v}) :=
+    Classical.epsilon_spec
+      (p := fun c : ℝ => ∀ w ∈ ({u, v} : Set V3), c = dist (circumcenter {u, v}) w)
+      ⟨c₀, hc₀⟩
+  rw [hQ u (Set.mem_insert u {v})]
+  exact hfin
+
+/-- HOL `RADV_TRANS_EQ` (RDWKARC.hl:171): pair circumradii are translation
+invariant. (照搬 PackingAuto19.RADV_TRANS_EQ。) -/
+private theorem radVTransEq_p2 (u v x : V3) (h : ¬(u = v)) :
+    radV {u, v} = radV {u + x, v + x} := by
+  have hd : dist (u + x) (v + x) = dist u v := by
+    rw [dist_eq_norm, dist_eq_norm]
+    abel
+  rw [radVPair_p2 u v (fun huv => h huv),
+    radVPair_p2 (u + x) (v + x) (by simp [h]), hd]
+
+/-- Re-index key: `hl [0, a] = hl [u, a + u]` for `a ≠ 0` (RDWKARC.hl 末段的
+`hl` translation invariance，经 `set_of_list`/`RADV_TRANS_EQ`)。 -/
+private theorem hlPairAdd_p2 {a u : V3} (ha : a ≠ 0) : hl [0, a] = hl [u, a + u] := by
+  have hsl : ∀ x y : V3, setOfList [x, y] = {x, y} := by
+    intro x y
+    ext b
+    simp [setOfList]
+  have hkey := radVTransEq_p2 (0 : V3) a u (Ne.symm ha)
+  rw [zero_add] at hkey
+  show radV (setOfList [0, a]) = radV (setOfList [u, a + u])
+  rw [hsl, hsl]
+  exact hkey
+
+/-- `setSum` respects pointwise congruence of the summand. -/
+private theorem setSumCongr_p2 {α : Type*} {s : Set α} {f g : α → ℝ}
+    (h : ∀ a ∈ s, f a = g a) : setSum s f = setSum s g := by
+  by_cases hs : Set.Finite s
+  · unfold setSum
+    rw [dif_pos hs, dif_pos hs]
+    exact Finset.sum_congr rfl fun a ha => h a (hs.mem_toFinset.mp ha)
+  · unfold setSum
+    rw [dif_neg hs, dif_neg hs]
+
+/-- `setSum` re-indexes along an injective image (SUM_EQ_GENERAL_INVERSES 的
+Lean 形；junk 约定两侧同赌有限性)。 -/
+private theorem setSumImage_p2 (g : V3 → V3) (A : Set V3) (f : V3 → ℝ)
+    (hinj : Set.InjOn g A) (hA : A.Finite) :
+    setSum (g '' A) f = setSum A (fun a => f (g a)) := by
+  classical
+  have himg : (g '' A).Finite := hA.image g
+  unfold setSum
+  rw [dif_pos himg, dif_pos hA, Set.Finite.toFinset_image g hA himg,
+    Finset.sum_image (fun a ha b hb h => hinj (hA.mem_toFinset.mp ha)
+      (hA.mem_toFinset.mp hb) h)]
+
+/-- HOL `JGXZYGW_KY` (RDWKARC.hl:76-91): the `JGXZYGW` density bound at the
+origin in the `negligible_fun_0` functional form (`negligibleFun0` is by
+definition `negligibleFunP _ _ 0`, so this is literally `JGXZYGW` at `p = 0`).
+
+NEEDS: pack1.hl `JGXZYGW` 链（measure_ineq_lm53_2 / ineq_lm5_3_step3/4，Lean 侧
+未移植；PackingAuto1:1026 有同陈述 sorried `JGXZYGW`）。PA19 以 private
+`JGXZYGW_p19` + 已证桥 `JGXZYGW_KY` 携带同件；此处不可 import（PA19 imports
+PA2；PA1 受文件头 merge note 的 name-clash 政策阻断）。merge 时改为从
+`PackingAuto1.JGXZYGW`（p = 0）推出。 -/
+private theorem JGXZYGW_KY_p2 (S : Set V3) (hV : Packing S) (hs : saturated S)
+    (hA : ∃ A : V3 → ℝ, fccCompatible A S ∧ negligibleFun0 A S) :
+    ∃ c : ℝ, ∀ r : ℝ, 1 ≤ r →
+      volume.real ((⋃ v ∈ S, Metric.ball v 1) ∩ Metric.ball (0 : V3) r) /
+        volume.real (Metric.ball (0 : V3) r) ≤ Real.pi / Real.sqrt 18 + c / r := by
+  -- NEEDS: PA1.JGXZYGW（p = 0），见上方 docstring
+  sorry
+
+/-- HOL `RDWKARC_concl` (pack_concl.hl:247-249, modified Dec 31 2012).
+证明 = RDWKARC.hl:180-314（去 UPFZBZM/JGXZYGW 两座解析银行）：.unpack
+`¬kepler_conjecture` 取反例 `V`；若 `lmfunInequality V`，`UPFZBZM_concl` +
+`JGXZYGW_KY_p2` 给出密度上界，矛盾；故存在 `u ∈ V` 使边 lmfun 和 > 12；取
+ witness `{v | v + u ∈ V} ∩ ballAnnulus`（PACKING_TRANS + PACKING_SUBSET），
+ annulus 和沿 `v ↦ v + u` 重编为 `V`-边和（SUM_EQ_GENERAL_INVERSES，packing
+ 分离处理 `v = u` junk 情形，`hl` 平移不变性经 `radVPair_p2`）。 -/
 theorem RDWKARC_concl : ¬keplerConjecture →
     (∀ V : Set V3, Packing V → saturated V → cellClusterInequality V) →
     TSKAJXY_statement →
     ∃ V : Set V3, Packing V ∧ V ⊆ ballAnnulus ∧ ¬localAnnulusInequality V := by
-  sorry
+  intro hkc hcc hT
+  -- RDWKARC.hl:189-193 — unpack `¬kepler_conjecture` to a failing witness.
+  obtain ⟨V, hP, hs, hden⟩ : ∃ V : Set V3, Packing V ∧ saturated V ∧
+      ¬(∃ c : ℝ, ∀ r : ℝ, 1 ≤ r →
+        volume.real (((⋃ v ∈ V, Metric.ball v 1) ∩ Metric.ball 0 r : Set V3)) /
+          volume.real (Metric.ball (0 : V3) r) ≤ Real.pi / Real.sqrt 18 + c / r) := by
+    by_contra hex
+    refine hkc fun V hV => ?_
+    by_contra hc
+    exact hex ⟨V, hV.1, hV.2, hc⟩
+  -- RDWKARC.hl:196-215 — `lmfunInequality V` would give the density bound
+  -- via UPFZBZM + JGXZYGW_KY; contradiction.
+  have hnlm : ¬lmfunInequality V := by
+    intro hlm
+    obtain ⟨G, hG0, hGf⟩ := UPFZBZM_concl V hs hP (hcc V hP hs) hT hlm
+    exact hden (JGXZYGW_KY_p2 V hP hs ⟨G, hGf, hG0⟩)
+  -- RDWKARC.hl:217-222 — extract `u ∈ V` with edge lmfun-sum > 12.
+  obtain ⟨u, hu, hsum⟩ : ∃ u : V3, u ∈ V ∧
+      12 < setSum {v | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+        (fun v => lmfun (hl [u, v])) := by
+    by_contra hall
+    push_neg at hall
+    exact hnlm hall
+  have hPT : Packing {v : V3 | v + u ∈ V} := packingTrans_p2 V hP u
+  -- Membership of the witness in terms of distances (annulus ↔ edge set).
+  have hAann : ∀ v : V3, v ∈ {w : V3 | w + u ∈ V} ∩ ballAnnulus →
+      v + u ∈ V ∧ dist 0 v ≤ 2 * h0 ∧ 2 ≤ dist 0 v := by
+    intro v hv
+    rw [Set.mem_inter_iff] at hv
+    obtain ⟨hm, hann⟩ := hv
+    simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball] at hann
+    refine ⟨hm, ?_, ?_⟩
+    · rw [dist_comm]; exact hann.1
+    · rw [dist_comm]; exact le_of_not_gt hann.2
+  have hballmem : ∀ v : V3, dist 0 v ≤ 2 * h0 → 2 ≤ dist 0 v → v ∈ ballAnnulus := by
+    intro v hle h2
+    simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball]
+    refine ⟨?_, ?_⟩
+    · rw [dist_comm]; exact hle
+    · intro hb
+      rw [dist_comm] at hb
+      exact absurd hb (not_lt.2 h2)
+  have hAfin : ({v : V3 | v + u ∈ V} ∩ ballAnnulus).Finite := by
+    refine Set.Finite.subset (hPT.finite_inter_ball (2 * h0 + 1)) ?_
+    intro v hv
+    obtain ⟨hm, hle, -⟩ := hAann v hv
+    refine Set.mem_inter hm (Metric.mem_ball.2 ?_)
+    rw [dist_comm]
+    linarith
+  refine ⟨{v : V3 | v + u ∈ V} ∩ ballAnnulus, ?_, Set.inter_subset_right, ?_⟩
+  · -- packing of the witness: PACKING_TRANS then PACKING_SUBSET.
+    intro a ha b hb hlt
+    rw [Set.mem_inter_iff] at ha hb
+    exact hPT a ha.1 b hb.1 hlt
+  · -- RDWKARC.hl:226-314 — the annulus sum re-indexes to the V-edge sum.
+    intro hLAI
+    have hinj : Set.InjOn (fun a : V3 => a + u)
+        ({v : V3 | v + u ∈ V} ∩ ballAnnulus) := fun _ _ _ _ h => add_right_cancel h
+    have hTeq : {v : V3 | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0} =
+        (fun a : V3 => a + u) '' ({v : V3 | v + u ∈ V} ∩ ballAnnulus) := by
+      ext w
+      constructor
+      · rintro ⟨hwV, hwu, hdu⟩
+        have hdu2 : dist 0 (w - u) = dist u w := by
+          rw [dist_eq_norm, dist_eq_norm]; abel
+        have h2wu : 2 ≤ dist u w := Packing.dist_ge_two hP hu hwV (Ne.symm hwu)
+        have hVin : w - u + u = w := by abel
+        have hinV : (w - u) + u ∈ V := by rw [hVin]; exact hwV
+        have hle : dist 0 (w - u) ≤ 2 * h0 := by rw [hdu2]; exact hdu
+        have h2 : 2 ≤ dist 0 (w - u) := by rw [hdu2]; exact h2wu
+        refine ⟨w - u, Set.mem_inter hinV (hballmem _ hle h2), hVin⟩
+      · rintro ⟨a, ha, rfl⟩
+        show a + u ∈ {v : V3 | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+        obtain ⟨haV, hle, ha2⟩ := hAann a ha
+        have ha0 : a ≠ 0 := by
+          intro h0
+          rw [h0] at ha2
+          rw [dist_self] at ha2
+          linarith
+        refine ⟨haV, ?_, ?_⟩
+        · intro h
+          have h' : a + u = (0 : V3) + u := by rw [zero_add]; exact h
+          exact ha0 (add_right_cancel h')
+        · have hd : dist u (a + u) = dist 0 a := by
+            rw [dist_eq_norm, dist_eq_norm]; abel
+          rw [hd]; exact hle
+    have key : setSum ({v : V3 | v + u ∈ V} ∩ ballAnnulus)
+        (fun w => lmfun (hl [0, w])) =
+        setSum {v : V3 | v ∈ V ∧ v ≠ u ∧ dist u v ≤ 2 * h0}
+          (fun v => lmfun (hl [u, v])) := by
+      rw [hTeq, setSumImage_p2 (fun a : V3 => a + u) _ _ hinj hAfin]
+      refine setSumCongr_p2 fun a ha => ?_
+      obtain ⟨-, -, ha2⟩ := hAann a ha
+      have ha0 : a ≠ 0 := by
+        intro h0
+        rw [h0] at ha2
+        rw [dist_self] at ha2
+        linarith
+      show lmfun (hl [0, a]) = lmfun (hl [u, a + u])
+      rw [hlPairAdd_p2 ha0]
+    unfold localAnnulusInequality at hLAI
+    rw [key] at hLAI
+    linarith
 
 /-- HOL `GOTCJAH_concl` (pack_concl.hl:251-259): the fan solid-angle bound
 for polyhedron facets. The HOL fan argument `(vec 0, fan_of_polyhedron s)`
