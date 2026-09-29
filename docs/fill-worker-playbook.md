@@ -450,6 +450,20 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   **巨声明心跳**：KIZHLTL2 超 5M——文件级 `set_option maxHeartbeats` 后追加
   增量行（`set_option … in` 放 docstring 与 theorem 之间会触发解析错误，勿用）；
   `HDTFNFZ` 的 `{v}` 隐参陈述中不可合成——`@HDTFNFZ V ul i u X …` 显式喂。
+- **TameLp @MAP/REVERSE 后**（列表层已齐 @`559176d9`，14 公开件+5 私件全真证
+  零新增 sorry）：**下一波只剩 Hypermap 类型层桥**——`hypermapOfList L :
+  Hypermap (ℕ×ℕ)` 构造 + `IsHypermapOfList`（Assembly 桥，超列表层预算已原位
+  注记）；构造字段可直接引用 `la7_hypermapOfList_map/_reverse` 的三向交换与
+  dart 集等式，但 `edgeMap * nodeMap * faceMap = 1` 的 Perm 拼合需好链工程
+  （>50 行）。接口链：`la7_findFace_map`/`la7_mapGoodList` 的 injectivity
+  假设形状 = `∀ u ∈ L.flatten, ∀ v ∈ L.flatten, …`（= HOL elements_of_list），
+  fan 侧接线可直接用。**v4.32.2 新雷**：`rw` 对目标里 def-应用（`eList d`）
+  与 `Prod.mk` 模式不做实例级透明匹配（先 `show` 换形）；`congrArg decide
+  (propext h)` 不可用（decide 有实例隐参，用 `Bool.decide_congr h`）；
+  `simp only [← SomeDef]` 报 cannot refold（用 `rw [← SomeDef]`）；
+  `(fun x => by tac…)` 内带 `_` 的 lemma 应用 tactic 二跑失败（提为块内
+  `have` 显式类型）；`List.of_mem_zip` 对 def 包着的 zip 先显式换形且输出侧
+  对齐 expected-type；`find?_congr` 复合谓词先 `show` β-形。
 - **PA19 SUM_GAMMAX 波地图（KIZHLTL4 后最后一枚上游）**：
   `SUM_GAMMAX_LMFUN_ESTIMATE`(PA18:2538, bare sorry)——sum_gamma.hl 1400 行，
   需 `BOUND_GAMMA_X_lmfun`/`CARD_MCELL_CONTAINS_POINT_klemma`/
