@@ -293,6 +293,22 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   :1428 机械闭合 `exact TSKAJXY_034 ⟨GRKIBMP …, cell3_from_ineq_thm …, …⟩ …`。
   HOL 锚点：TSKAJXY3.hl:2251（capstone，0/3/4 臂 2255-2272）、TSKAJXY2.hl:61-92
   （特形件）、merge_ineq.hl:118-134（银行 def）。1/2-cell 臂已闭合（:1419/:1425）。
+- **PA6**（14 remaining；2026-09-29 MHFTTZN3 已闭合 + 新增 public `p6_affdep_of_dim`）：
+  链上剩余模于 `MHFTTZN_lemma`（Rogers.hl:4053，~290 行归纳）与
+  `MHFTTZN_lemma2`（:4340，~520 行归纳）两枚上游 sorry；`MHFTTZN_lemma` 的关键步
+  `VORONOI_LIST_INTER_BIS` 在 PA5:1410 本身是 sorry（跨文件，需专项），
+  另需 affDim(∩超平面)=affDim−1（Polytope.lean:203 `affDim_hyperplane` 可作原料）。
+  PA18 钥匙三件套（MHFTTZN1 + BARV_IMP_LENGTH_EQ_CARD[PA7,仍 sorry] +
+  p6_affdep_of_dim）可闭合 `BARV_AFFINE_INDEPENDENT`（PA7:374）。
+- **ContraFan**（2 remaining；2026-09-29 侦察结案，见 docs/contrafan-scout.md）：
+  两枚陈述与 HOL 逐字同义无弱编码。CF-3 = `LEMMA_3_POINTS_FINAL`（:400）走路线 B：
+  Mathlib `angle_eq_angle_add_add_angle_add_of_mem_span` + 纯有理数余弦界
+  （cos ≤ 2719/3969、cos ≥ 1031/7938，数值见证已手算）+ 现成 `annulus_ray_absurd`，
+  250-400 行中等档。CF-4 = `LEMMA_4_POINTS_FINAL`（:414）忠实移植 GIANT
+  2000-3000 行，建独立模块 ContraFanDeep.lean（import Geom.Aff+PackingAuto2，
+  无环，ContraFan 仅 2 行转发），切 CF-4a/4b/4c 三波，依赖 CF-3。
+  陷阱：PA21:131 `eta_y := sorry` 是 def-sorry 严禁依赖；V3 内积一律走
+  `inner ℝ` 泛型（避 ⬝ᵥ/ofLp 假绿）；`affGe` 闭锥是忠实移植，勿"修正"为 affGt。
 
 ## 6. 教训日志（编排者每波收工后追加；工人有观察也写报告里）
 
@@ -305,6 +321,14 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 - **侦察结案必须回流债务图**：GIANT 结案不是"白跑"——e2e-debt-map B 表加行 +
   playbook §5.4 加条，下一波就不会对同一目标重复侦察（B 表行同步给出收口路径，
   把"填不了"转成"差什么"）。
+- **工人禁碰 Assembly.*/Graphs 构建 + 单 lean 进程配额**（2026-09-29 CPU 事故）：
+  TameLp keystone lane 为探 GoodListDefs 命名跑了 `lake build Kepler.Assembly.GoodListDefs`，
+  其闭包含整个 CertShards 链（9000+ jobs），拉起 12 worker 吃满全机，且被杀后
+  无限重试。工程细则：①lane 的编译校验只允许 `lake env lean <自己的文件>`；
+  ②探命名一律 grep/Read 源码；③缺 olean 时报告缺件名而非构建依赖；④任意时刻
+  至多 1 个 lean 进程。编排者响应：先 SendMessage 叫停源（杀进程治标，
+  agent 会重试），再清孤儿（批量 kill 可能静默失败，逐个 kill -9 + 立即 ps 验证），
+  最后删除被并发写的可疑 olean 让喂片重建。
 
 ### 2026-09-28 · Wave 1（LA38：66→58，8 枚+17 辅助；PA25：155→144，11 枚+6 辅助；桥 lane：PA2+PA4）
 

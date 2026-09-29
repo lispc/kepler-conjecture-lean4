@@ -28,7 +28,7 @@
 |---|---|---|---|
 | ~~`PACKING_CHAPTER_MAIN_CONCLUSION`~~ | PA25 | textCapstone 直接消费 | **已真化 (wave3)**：装配步闭合，债务上移至 RDWKARC_concl(PA2)+TSKAJXY(PA21) 两枚树内 sorry |
 | `TSKAJXY` 0/3/4 臂（:1428） | PA21 | PA25:3704 `exact TSKAJXY …` 唯一消费 | **GIANT**（2026-09-29 侦察结案）：Merge_ineq 通道三重阻断（银行无结构 + GRKIBMP/cell3_from_ineq_thm 未移植 + eta_y body 缺），收口路径见 playbook §5.4 PA21 条 |
-| `LEMMA_3_POINTS_FINAL`/`LEMMA_4_POINTS_FINAL` | ContraFan | contraveningFan → CKQOWSA | 深几何双核，专项 |
+| `LEMMA_3_POINTS_FINAL`/`LEMMA_4_POINTS_FINAL` | ContraFan | contraveningFan → CKQOWSA | **侦察结案 (2026-09-29)**：CF-3 = L3F 走路线 B（内积角加法+有理余弦界，中等 250-400 行）可先行；CF-4 = L4F 忠实移植 GIANT 2000-3000 行三波（独立模块 ContraFanDeep.lean，依赖 CF-3）；见 docs/contrafan-scout.md |
 | LA38 `tau3_taum_d`/`tau3_taum_dfun` | LocalAuto38 | （经 main_nonlinear_terminal_v11 合取项间接）| 陈述级：缺 `2 ≤ dist` 下界，待对照 HOL 补陈（走 STATEMENT-FIX） |
 
 ## C. 接口填实的下游依赖（未来在账，先遣情报）
