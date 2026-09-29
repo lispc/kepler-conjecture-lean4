@@ -44,6 +44,17 @@ upstream); `grutoti_vor_cover` FILLED (assembled from `grutoti_3mem` +
 Auto12's `VORONOI_LIST_3_SINGLETON_EXPLICIT` shim + `CLOSEST_POINT_SING`);
 `grutoti_volD_pos` re-documented (frozen statement is FALSE for the
 degenerate `u1 = u0` — the empty conic cap; caller `GRUTOTI` has `hne`).
+
+2026-09-28 GT-2 pass: `PackingAuto15.FINITE_EDGE_X2` (Auto15:672) and
+`PackingAuto15.MCELL_SUBSET_BALL8_1` (Auto15:794) FILLED upstream (this
+lane's PA15 arm) — the two PA15 dependencies named in `grutoti_sum_volD`'s
+docstring are now real. The finite Pack2-measure bridge and the SUM_EQ
+assembly are banked here as proved privates (`p23_measure_setSum_biUnion`,
+`p23_setSum_congr`, `p23_setSum_of_zero`, `p23_dihX_of_nullSet`); the two
+giant sorries `grutoti_sum_volD` / `grutoti_pivot` remain frozen with
+detailed NEEDS notes (both need the region-block cover + §H per-cell
+non-nullness, shared with grutoti_region/grutoti_cell_vol); `grutoti_volD_pos`
+frozen-false premise now carries a STATEMENT-FIX proposal + patch (item 18).
 -/
 
 import Kepler.Text.PackingAuto2
@@ -169,6 +180,63 @@ private theorem grutoti_concl_arith (w S volD : ℝ) (hvol : 0 < volD)
     S = 2 * Real.pi :=
   grutoti_cancel S volD hvol (by rw [← hpivot]; exact hsum)
 
+/-! ## GT-2 lane private kit (proved 2026-09-28)
+
+The finite Pack2-measure bridge and SUM_EQ assembly lemmas feeding
+`grutoti_sum_volD` / `grutoti_pivot`. -/
+
+/-- HOL `SUM_EQ` finite form: on a finite index set, pointwise equal functions
+have equal `setSum`s. -/
+private theorem p23_setSum_congr {α : Type*} {s : Set α} {f g : α → ℝ}
+    (hs : s.Finite) (h : ∀ x ∈ s, f x = g x) : setSum s f = setSum s g := by
+  rw [setSum, dif_pos hs, setSum, dif_pos hs]
+  refine Finset.sum_congr rfl fun x hx => ?_
+  exact h x ((Set.Finite.mem_toFinset hs).mp hx)
+
+/-- HOL junk lemma: a function vanishing on a finite index set has zero
+`setSum`. -/
+private theorem p23_setSum_of_zero {α : Type*} {s : Set α} {f : α → ℝ}
+    (hs : s.Finite) (h : ∀ x ∈ s, f x = 0) : setSum s f = 0 := by
+  rw [setSum, dif_pos hs]
+  exact Finset.sum_eq_zero fun x hx => h x ((Set.Finite.mem_toFinset hs).mp hx)
+
+/-- HOL `dihX` junk branch: `dihX` vanishes on null cells (PA2 encoding, the
+`nullSet X → 0` first branch of `PackingAuto2.dihX`). -/
+private theorem p23_dihX_of_nullSet (V : Set V3) (X : Set V3) (p : V3 × V3)
+    (h : nullSet X) : dihX V X p = 0 := if_pos h
+
+/-- Finite `MEASURE_NEGLIGIBLE_UNIONS_IMAGE` (Pack2 bridge; grutoti-scout §2.2):
+over a finite family of measurable, individually finite-volume sets with
+pairwise-null intersections, the sum of the volumes equals the volume of the
+union of the images. -/
+private theorem p23_measure_setSum_biUnion {ι : Type*} {s : Set ι} {f : ι → Set V3}
+    (hs : s.Finite) (hmeas : ∀ i ∈ s, MeasurableSet (f i))
+    (hpair : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → volume (f i ∩ f j) = 0)
+    (hne : ∀ i ∈ s, volume (f i) ≠ ⊤) :
+    setSum s (fun i => volume.real (f i)) = volume.real (⋃₀ (f '' s)) := by
+  classical
+  have hbU : (⋃ a ∈ s, f a) = ⋃ a ∈ hs.toFinset, f a := by
+    ext x
+    constructor
+    · intro hx
+      obtain ⟨a, ha, hfx⟩ := Set.mem_iUnion₂.mp hx
+      exact Set.mem_iUnion₂.mpr ⟨a, (Set.Finite.mem_toFinset hs).mpr ha, hfx⟩
+    · intro hx
+      obtain ⟨a, ha, hfx⟩ := Set.mem_iUnion₂.mp hx
+      exact Set.mem_iUnion₂.mpr ⟨a, (Set.Finite.mem_toFinset hs).mp ha, hfx⟩
+  have hd : Set.Pairwise (↑hs.toFinset) (Function.onFun (AEDisjoint volume) f) := by
+    intro i hi j hj hij
+    show volume (f i ∩ f j) = 0
+    exact hpair i ((Set.Finite.mem_toFinset hs).mp hi) j
+      ((Set.Finite.mem_toFinset hs).mp hj) hij
+  have hm : ∀ b ∈ hs.toFinset, NullMeasurableSet (f b) volume := fun b hb =>
+    (hmeas b ((Set.Finite.mem_toFinset hs).mp hb)).nullMeasurableSet
+  rw [setSum, dif_pos hs, Set.sUnion_image, hbU]
+  show (∑ w ∈ hs.toFinset, (volume (f w)).toReal)
+      = (volume (⋃ a ∈ hs.toFinset, f a)).toReal
+  rw [MeasureTheory.measure_biUnion_finset₀ hd hm]
+  rw [ENNReal.toReal_sum fun i hi => hne i ((Set.Finite.mem_toFinset hs).mp hi)]
+
 /-! ## Giants (sorried, NEEDS-precision) -/
 
 /-- HL GRUTOTI.hl:86-160: the `k = 3` specialization of grutoti_3mem — the
@@ -279,6 +347,24 @@ private theorem grutoti_cell_vol (V : Set V3) (u0 u1 : V3) (r d : ℝ)
 /-- HL GRUTOTI.hl:7228-7400 (`sum s (\t. vol (t INTER D)) = vol D` via
 `MEASURE_NEGLIGIBLE_UNIONS_IMAGE` over the almost-disjoint cell family) plus
 index finiteness from `FINITE_MCELL_SET_LEMMA_2` (marchal3.hl:2620; Auto15:520,
+cells are bounded, e.g. `grutoti_cap_subset_ball`). NEEDS-precision.
+GT-2 lane note (2026-09-28): the PA15 dependencies are now REAL
+(`FINITE_EDGE_X2` Auto15:672 FILLED, `MCELL_SUBSET_BALL8_1` Auto15:794 FILLED)
+and the measure machinery is banked as `p23_measure_setSum_biUnion`. The frozen
+signature itself is still unprovable for two independent reasons, both needing
+the STATEMENT-FIX/编排者 channel rather than more filling:
+(1) finiteness of `grutotiEdgeCells V e` is FALSE for a general `V` — the
+statement carries no `Packing V`/`saturated V`; an adversarial `V`
+(`{u0,u1}` plus infinitely many generic far points) has infinitely many
+`barV V 3` lists whose `mcell 4` cells carry `e ∈ edgeX V X` (the true
+finiteness route is FINITE_EDGE_X2, which needs `hp, hs`), and
+(2) the vol identity holds only for the region-block `D`: `grutoti_region`
+(HL 161-2636) + TIWWFYQ/GLTVHUM/SLTSTLO1 give `D` ⊆ ⋃₀ of edge-cell traces up
+to a null set, and AJRIPQN (PA17:310, sorried) gives the pairwise-null
+intersections that `p23_measure_setSum_biUnion` consumes. Suggested unfrozen
+signature: add `hp hs`, the region cover hypothesis
+`volume.real (D \ ⋃₀ {X ∩ D | X ∈ grutotiEdgeCells V e}) = 0` (or take the
+cover as an explicit hypothesis), and `0 < r`/`d < 1`.
 cells are bounded, e.g. `grutoti_cap_subset_ball`). NEEDS-precision. -/
 private theorem grutoti_sum_volD (V : Set V3) (u0 u1 : V3) (e : Set V3) (r d : ℝ)
     (he : e = {u0, u1}) :
@@ -291,6 +377,22 @@ private theorem grutoti_sum_volD (V : Set V3) (u0 u1 : V3) (e : Set V3) (r d : �
 /-- HL GRUTOTI.hl:7962-7966: the wedge pivot — the vol-sum equals the
 `vol D · dihX / 2π` sum. Needs grutoti_cell_vol per edge cell (the
 ¬nullSet hypothesis is discharged inside by the k-case analysis) and
+grutoti_setSum_mul_div for the linear step. NEEDS-precision.
+GT-2 lane note (2026-09-28): the honest route (HL §G/§H, 7441-7958) is now
+mapped: (a) for EVERY edge cell X (u0,u1 ∈ VX V X) one first shows
+k := (cellParams V X).1 ≥ 2 — the counting arm `i - 1 = 0` of §H: VX V X is a
+set of ≤ k list points containing two distinct points; k ≤ 1 is impossible;
+(b) for k ≥ 2 one shows `¬nullSet (X ∩ D)` — HL §H derives `F` from
+`NULLSET (X ∩ D)` per k, using CONIC_CAP_INTER_CONVEX_HULL_4_GT_0
+(Auto15:828, still sorried) for k = 3/4 and the region data for k = 2 —
+this is the remaining blocker, shared with grutoti_cell_vol (GT-3);
+(c) then `p23_setSum_congr` assembles the frozen identity from
+`grutoti_cell_vol` pointwise. Junk safety: for k ≤ 1 / null cells the PA2
+encoding gives dihX = 0 (`p23_dihX_of_nullSet`), and k ≤ 1 cells cannot carry
+the edge at all, so no junk term enters the sum. CAVEAT for the future fill:
+`cellParamsD V X [u0,u1]` may be epsilon-junk for edge cells whose param list
+carries the edge REVERSED (`[u1;u0,…]` — its wedge is a genuinely different
+set); HL §H handles this inside the case analysis, and the Lean fill must too.
 grutoti_setSum_mul_div for the linear step. NEEDS-precision. -/
 private theorem grutoti_pivot (V : Set V3) (u0 u1 : V3) (e : Set V3) (r d : ℝ)
     (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1) (he : e = {u0, u1})
@@ -311,6 +413,14 @@ positive for `0 < d < 1`, `0 < r`). STILL `sorry`, with an honest note
 under `u0 ≠ u1` is elementary — `D` contains the open ball
 `ball (u0 + (r/2)·(u1-u0)/‖u1-u0‖, r·(1-d)/(4·(1+d)))` (cone/ball arithmetic
 + `volume` positivity of open balls) — port it together with the missing
+hypothesis at merge. STATEMENT-FIX filed (2026-09-28 GT-2 lane):
+`docs/statement-fix-proposals.md` item 18 + patch
+`docs/statement-fix-proposals-patches/18-grutoti_volD_pos.patch` — add
+`hne : u0 ≠ u1` (HOL: the goal lives under GRUTOTI1_concl's `~(u0 = u1)`,
+GRUTOTI.hl:48-58; the frozen formula route is GT-1's
+`ConicCapVolume.volumeConicCapPos`, which carries the same `hne`, and the
+degenerate capsule is provably empty — ConicCapVolume `ccv_conicCap_empty`),
+after which the fill is one line.
 hypothesis at merge. -/
 private theorem grutoti_volD_pos (u0 u1 : V3) (r d : ℝ) (hr : 0 < r) (hd : 0 < d)
     (hd1 : d < 1) : 0 < volume.real (grutotiConicCap u0 u1 r d) := by
