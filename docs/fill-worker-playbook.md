@@ -507,6 +507,18 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   rfl⟩, hzT⟩`，扁平模式报 "right✝ : … is not an inductive datatype"）；多余
   rcases 模式递归进最后分量；mvar 型 `{a}` 需类型注记；`Set.union_assoc` 需
   `←` 定向。
+- **PA21 @B2 后**（11 战术 @`b9bf1114`，SOL_RESTRICT 已收口=1060 行区块
+  整体上提零重复）：**B3 地图**——GAMMAX_MCELL2/TSKAJXY2 装配（:4578 区域，
+  消费 MCELL2_VOL/MCELL2_SOL/DIHV_EQ_DIH_Y/DIHV_RANGE/lmfun_h0cut）；
+  MCELL2_VOL（MCELL2_SPLIT + FRUSTT 系列）；MCELL2_VOL_SPLIT_EXPLICIT 需
+  VOLUME_FRUSTT_WEDGE 闭式（**GIANT，建议独立工位**）；LEFT_ACTION/
+  PERMUTE_01 等 PA14 left-action kit 清零后一行迁移。**B2 波雷区**：V3 的
+  `⬝ᵥ` 在 rw 下不对称（ofLp 推入和内 vs 整体包裹）——内积代数走 `inner ℝ`
+  + `inner_eq_dot` 桥更稳（dihV 引擎即此路线）；`Set.mem_symmDiff` 第二支
+  t-成员在前；rcases `rfl` 在等式双方皆局部变量时 subst "后引入者"（多点
+  共面用 `h1|h2|…` + `rw`）；`simpa` 对 insert 链析取顺序不稳（用
+  `simpa only` 或专用展开引理 `p21_mem_quad`）；`Set.Finite.mem_toFinset`
+  有限性参数显式；`lt_of_le_of_ne` 第二参数 `a ≠ b`。
 - **PA19 SUM_GAMMAX 波地图（KIZHLTL4 后最后一枚上游）**：
   `SUM_GAMMAX_LMFUN_ESTIMATE`(PA18:2538, bare sorry)——sum_gamma.hl 1400 行，
   需 `BOUND_GAMMA_X_lmfun`/`CARD_MCELL_CONTAINS_POINT_klemma`/
