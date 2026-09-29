@@ -2799,6 +2799,34 @@ theorem la7_prevEl_getD {l : List α} {x : α} (hx : x ∈ l) :
   · rename_i hne
     exact (getD_prev hilt hne x).symm
 
+/-- BEq-only 世界（无 [DecidableEq]）的 `nextEl_eq_getD` 独立形：`nextEl` 的
+def-body 只用外部 `s.idxOf`（同一 [BEq α] 实例），无实例迁移。 -/
+private theorem la7_nextEl_getD_form {α : Type*} [BEq α] [LawfulBEq α] {s : List α} {x : α}
+    (hx : x ∈ s) : nextEl s x = s.getD ((s.idxOf x + 1) % s.length) x := by
+  have hpos : 0 < s.length := List.length_pos_of_mem hx
+  have hilt : s.idxOf x < s.length := List.idxOf_lt_length_iff.mpr hx
+  unfold nextEl
+  by_cases he : s.idxOf x = s.length - 1
+  · have hz : (s.idxOf x + 1) % s.length = (s.length - 1 + 1) % s.length := by rw [he]
+    rw [if_pos he, hz, getD_wrap_next hpos, headD_eq_getD_zero]
+  · have hj1 : s.idxOf x + 1 < s.length := by omega
+    rw [if_neg he, getD_next hj1]
+
+/-- BEq-only 世界：`x ∉ s` 时 `nextEl` 退化为默认元 `x`（`s.idxOf x = s.length`，
+len = 0 走 headD 分支、len ≥ 1 走越界 getD 分支，两者均取 `x`）。 -/
+private theorem la7_nextEl_of_notMem {α : Type*} [BEq α] [LawfulBEq α] {s : List α} {x : α}
+    (hx : x ∉ s) : nextEl s x = x := by
+  unfold nextEl
+  by_cases h0 : s.length = 0
+  · have hs : s = [] := List.length_eq_zero_iff.mp h0
+    subst hs
+    simp
+  · have hidx : s.idxOf x = s.length := List.idxOf_eq_length_iff.mpr hx
+    have hne1 : ¬(s.idxOf x = s.length - 1) := by rw [hidx]; omega
+    rw [if_neg hne1, List.getD_eq_getElem?_getD,
+      List.getElem?_eq_none (by rw [hidx]; omega)]
+    simp
+
 /-- HOL `Seq2.next_el_rot_eq`（n = 1 情形，函数形式逐字）。 -/
 theorem la7_nextEl_rotOne {l : List α} (hn : l.Nodup) :
     ∀ x, nextEl (la7RotOne l) x = nextEl l x := by
@@ -2812,27 +2840,48 @@ theorem la7_nextEl_rotOne {l : List α} (hn : l.Nodup) :
     rw [nextEl_eq_getD hmem1, nextEl_eq_getD hx, la7_length_rotOne,
       la7_idxOf_rotOne_shift hn hx, getD_eq_getElem_of_lt hilt',
       la7_getElem_rotOne hilt, getD_eq_getElem_of_lt hb2]
-  · -- x ∉ l：两侧 getD 均越界取默认元 x（idxOf = len ≠ len - 1 对 len ≥ 1；len = 0 时 headD）
-    -- NEEDS: len = 0 / len ≥ 1 两分支的越界收尾（if_neg 链）
-    sorry
+  · -- x ∉ l：la7RotOne 保元素，两侧均退化为默认元 x
+    exact (la7_nextEl_of_notMem (fun hc => hx (la7_mem_rotOne.mp hc))).trans
+      (la7_nextEl_of_notMem hx).symm
 
-/-- HOL `Seq2.prev_el_rot_eq` 对偶件（n = 1，点态形式）。
-剩余：位置转移模恒等式 ((idx' + len - 1) % len + 1) % len = idx''（idx' 含
-rotOne.idxOf 的模项）的分情形算术 —— 需 i = 0 / i = 1 / i ≥ 2 三段 omega 链。 -/
+/-- HOL `Seq2.prev_el_rot_eq` 对偶件（n = 1，点态形式）。位置转移经
+`Nat.mod_add_mod` 一步折算：((idx' + len - 1) % len + 1) % len = (idx' + len) % len
+= (idx + len - 1) % len（idx = (idx'+1) % len）。 -/
 theorem la7_prevEl_rotOne {l : List α} (hn : l.Nodup) {x : α} (hx : x ∈ l) :
     prevEl (la7RotOne l) x = prevEl l x := by
   by_cases hx : x ∈ l
   · have hpos : 0 < l.length := List.length_pos_of_mem hx
     have hmem1 : x ∈ la7RotOne l := la7_mem_rotOne.mpr hx
     have hilt : l.idxOf x < l.length := List.idxOf_lt_length_iff.mpr hx
-    have hilt' : l.idxOf x < (la7RotOne l).length := by rw [la7_length_rotOne]; exact hilt
-    -- 位置转移：rotOne.idxOf x + 1 ≡ l.idxOf x (mod len)
     have hshift : ((la7RotOne l).idxOf x + 1) % l.length = l.idxOf x :=
       la7_idxOf_rotOne_shift hn hx
-    -- 剩余：prev 的 getD 下标 (rotOne.idxOf x + len - 1) % len 的模算术（NEEDS 下一波）
-    -- NEEDS: 位置转移模恒等式 ((idx' + len - 1) % len + 1) % len = idx'' 三分支 omega 链
-    sorry
-  · -- x ∉ l：两侧均取默认元 x（prevEl 的 junk 首分支）
+    rw [la7_prevEl_getD hmem1, la7_prevEl_getD hx, la7_length_rotOne]
+    have hj : ((la7RotOne l).idxOf x + l.length - 1) % l.length
+        < (la7RotOne l).length := by
+      rw [la7_length_rotOne]; exact Nat.mod_lt _ hpos
+    have hj2 : (l.idxOf x + l.length - 1) % l.length < l.length :=
+      Nat.mod_lt _ hpos
+    have hjl : ((la7RotOne l).idxOf x + l.length - 1) % l.length < l.length :=
+      Nat.mod_lt _ hpos
+    have hjl : ((la7RotOne l).idxOf x + l.length - 1) % l.length < l.length :=
+      Nat.mod_lt _ hpos
+    have hkey : (((la7RotOne l).idxOf x + l.length - 1) % l.length + 1) % l.length
+        = (l.idxOf x + l.length - 1) % l.length := by
+      have e0 : (la7RotOne l).idxOf x + l.length - 1 + 1
+          = (la7RotOne l).idxOf x + 1 + (l.length - 1) := by omega
+      have e1 : l.idxOf x + l.length - 1 = l.idxOf x + (l.length - 1) := by omega
+      calc (((la7RotOne l).idxOf x + l.length - 1) % l.length + 1) % l.length
+          = ((la7RotOne l).idxOf x + l.length - 1 + 1) % l.length :=
+            Nat.mod_add_mod _ _ _
+        _ = ((la7RotOne l).idxOf x + 1 + (l.length - 1)) % l.length := by rw [e0]
+        _ = (((la7RotOne l).idxOf x + 1) % l.length + (l.length - 1) % l.length) % l.length :=
+            Nat.add_mod _ _ _
+        _ = (l.idxOf x + (l.length - 1)) % l.length := by
+              rw [hshift, Nat.mod_eq_of_lt (show l.length - 1 < l.length from by omega)]
+        _ = (l.idxOf x + l.length - 1) % l.length := by rw [e1]
+    rw [getD_eq_getElem_of_lt hj x, getD_eq_getElem_of_lt hj2 x]
+    simp only [la7_getElem_rotOne hjl, hkey]
+  · -- x ∉ l：prevEl 的 junk 首分支，两侧均取默认元 x
     have hnx : x ∉ la7RotOne l := fun hc => hx (la7_mem_rotOne.mp hc)
     unfold prevEl
     rw [if_pos hnx, if_pos hx]
@@ -2865,14 +2914,69 @@ theorem la7_prevEl_map {β : Type*} [BEq β] [LawfulBEq β] [DecidableEq β] {f 
     rw [he, Nat.add_mod_right, hmod, getD_eq_getElem_of_lt hb1', List.getElem_map,
       getD_eq_getElem_of_lt (show l.idxOf d - 1 < l.length from hb0)]
 
-/-- HOL `next_el_MEM_map`（tame_list.hl:1011，on-集单射形式）。
-NEEDS: nextEl_eq_getD 的 S1 形携带 [DecidableEq] 上下文（li_idxOf_congr 依赖），
-β 一般世界需无 DecidableEq 的独立 unfold+cases 证明。 -/
+/-- HOL `next_el_MEM_map`（tame_list.hl:1011，on-集单射形式）。`nextEl` 的
+def-body 只用外部 `s.idxOf`（同一 [BEq β] 实例），故无需 prevEl 侧的
+`li_idxOf_congr` 双实例桥，直接 getElem_map 逐点搬运。 -/
 theorem la7_nextEl_map {β : Type*} [BEq β] [LawfulBEq β] {f : α → β}
     {l : List α} (hinj : ∀ u ∈ l, ∀ v ∈ l, f u = f v → u = v) {d : α} (hd : d ∈ l) :
     nextEl (l.map f) (f d) = f (nextEl l d) := by
-  -- NEEDS: S1 形 nextEl_eq_getD 携带 [DecidableEq α] 不可用于 BEq-only 世界，需去上下文化独立证明
-  sorry
+  have hpos : 0 < l.length := List.length_pos_of_mem hd
+  have hmem : f d ∈ l.map f := List.mem_map_of_mem hd
+  have hj : (l.idxOf d + 1) % l.length < l.length := Nat.mod_lt _ hpos
+  have hj' : (l.idxOf d + 1) % l.length < (l.map f).length := by
+    rw [List.length_map]; exact hj
+  rw [la7_nextEl_getD_form hmem, la7_idxOf_map hinj hd, List.length_map,
+    la7_nextEl_getD_form hd, getD_eq_getElem_of_lt hj' (f d), List.getElem_map,
+    getD_eq_getElem_of_lt hj d]
+
+/-! ### la7 REVERSE 主链 + MAP 运输主件（ELLLNYZ.hl:209-494 / tame_list.hl:3403-3520）
+
+序列件（rotOne / idxOf / nextEl·prevEl）已就位；以下为逐面 `listPairs` 层、
+GoodList 三合取的 reverse 交换律、findFace / faceMap / nodeMap 运输件、
+`hypermapOfList` 逐字段（edge/node/face）reverse 共轭恒等式，及 MAP 侧
+`map_good_list` / `find_face_map` / `hypermap_of_list_map`（Hypermap.Iso 形）。 -/
+
+/-- HOL `next_el_rev`（ELLLNYZ.hl:337）。 -/
+theorem la7_nextEl_reverse {l : List α} (hn : l.Nodup) {x : α} (hx : x ∈ l) :
+    nextEl l.reverse x = prevEl l x := by
+  have hpos : 0 < l.length := List.length_pos_of_mem hx
+  have hilt : l.idxOf x < l.length := List.idxOf_lt_length_iff.mpr hx
+  have hmemr : x ∈ l.reverse := List.mem_reverse.mpr hx
+  rw [la7_nextEl_getD_form hmemr, la7_idxOf_reverse hn hx, List.length_reverse,
+    la7_prevEl_getD hx]
+  rcases Nat.eq_zero_or_pos (l.idxOf x) with h0 | hp
+  · have e : l.length - (l.idxOf x + 1) + 1 = l.length := by rw [h0]; omega
+    rw [e, h0, getD_wrap_prev hpos, Nat.mod_self,
+      getD_eq_getElem_of_lt (show 0 < l.reverse.length from by
+        rw [List.length_reverse]; omega),
+      List.getElem_reverse,
+      getD_eq_getElem_of_lt (show l.length - 1 < l.length from by omega)]
+    congr 1
+  · have e : l.length - (l.idxOf x + 1) + 1 = l.length - l.idxOf x := by omega
+    have hmod : (l.length - l.idxOf x) % l.length = l.length - l.idxOf x :=
+      Nat.mod_eq_of_lt (show l.length - l.idxOf x < l.length from by omega)
+    rw [e, hmod, getD_prev hilt (by omega),
+      getD_eq_getElem_of_lt (show l.length - l.idxOf x < l.reverse.length from by
+        rw [List.length_reverse]; omega),
+      List.getElem_reverse,
+      getD_eq_getElem_of_lt (show l.idxOf x - 1 < l.length from by omega)]
+    congr 1
+    omega
+
+/-- HOL `prev_el_rev`（`next_el_rev` 对偶件，经 `l.reverse.reverse = l` 折算）。 -/
+theorem la7_prevEl_reverse {l : List α} (hn : l.Nodup) {x : α} (hx : x ∈ l) :
+    prevEl l.reverse x = nextEl l x := by
+  have hmemr : x ∈ l.reverse := List.mem_reverse.mpr hx
+  have hndr : l.reverse.Nodup := List.nodup_reverse.mpr hn
+  have h1r := la7_nextEl_reverse (l := l.reverse) hndr hmemr
+  rw [List.reverse_reverse] at h1r
+  exact h1r.symm
+
+theorem la7_length_listPairs {α : Type*} (l : List α) :
+    (listPairs l).length = l.length := by
+  unfold listPairs
+  rw [List.length_zip, List.length_append, List.length_drop, List.length_take]
+  omega
 
 end LA7ReverseMap
 end Kepler.Text.TameLp
