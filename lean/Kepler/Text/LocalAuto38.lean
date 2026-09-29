@@ -1334,8 +1334,16 @@ theorem DELTA_Y_POS_4POINTS (v0 v1 v2 v3 : V3) :
       (dist v1 v3) (dist v1 v2) :=
   p38_deltaY_pos_4 v0 v1 v2 v3
 
-/-- HOL `tau3_taum_d` (terminal.hl:548). -/
+/-- HOL `tau3_taum_d` (terminal.hl:549-567).  The six box-bound conjuncts
+`&2 <= a01 /\ &2 <= a12 /\ &2 <= a02 /\ b01 <= #3.62 /\ b12 <= #3.62 /\
+b02 <= #3.62` (terminal.hl:550) are part of the HOL antecedent; they force
+`2 ≤ dist ≤ 3.62` on all three edges, so the box-to-vector transfer rewrites
+via `tau3_taum`.  STATEMENT-FIX item 17 (2026-09-28): the r1 port dropped
+them, leaving `2 ≤ dist v_i v_j` underivable and the transfer blocked on
+degenerate parallel wedges (docs/statement-fix-proposals.md item 17). -/
 theorem tau3_taum_d (d a01 a12 a02 b01 b12 b02 : ℝ)
+    (h1 : 2 ≤ a01) (h2 : 2 ≤ a12) (h3 : 2 ≤ a02)
+    (h4 : b01 ≤ 3.62) (h5 : b12 ≤ 3.62) (h6 : b02 ≤ 3.62)
     (h : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
       2 ≤ y1 → y1 ≤ 2 * h0 → 2 ≤ y2 → y2 ≤ 2 * h0 → 2 ≤ y3 → y3 ≤ 2 * h0 →
       a01 ≤ y6 → y6 ≤ b01 → a12 ≤ y4 → y4 ≤ b12 → a02 ≤ y5 → y5 ≤ b02 →
@@ -1347,15 +1355,23 @@ theorem tau3_taum_d (d a01 a12 a02 b01 b12 b02 : ℝ)
     a12 ≤ dist v1 v2 → dist v1 v2 ≤ b12 → a02 ≤ dist v0 v2 →
     dist v0 v2 ≤ b02 → d ≤ tau3 v0 v1 v2 := by
   intro _ _ _ _ _ _ _ _ _ _ _ _
-  sorry -- NEEDS: the DIHV_EQ_DIH_Y bridge is DONE (p38_dihV_eq_dihY above),
-  -- but this statement's hypotheses do NOT force `2 ≤ dist v_i v_j`, so the
-  -- ups_x-factors of the bridge can vanish on parallel wedges (where
-  -- dihV = π/2-junk ≠ dihY ∈ {0,π,3π/2}).  Remaining work: a degenerate-case
-  -- analysis showing d ≤ tau3 from h's box-bound (statement-level question).
+  sorry -- NEEDS (item-17 statement fix landed): mechanical fill only — the
+  -- degenerate-wedge question is gone, h1-h6 + the edge bounds now force
+  -- `2 ≤ dist ≤ 3.62` on all three edges.  Route (mirrors the HOL proof
+  -- terminal.hl:570-578): `v_i ∈ ballAnnulus` from `2 ≤ ‖v_i‖ ≤ 2*h0`
+  -- (ballAnnulus = closedBall 0 (2*h0) \ ball 0 2), rewrite via
+  -- `tau3_taum v0 v1 v2` (DISCHARGED above), then apply `h` at
+  -- y = (‖v0‖, ‖v1‖, ‖v2‖, dist v1 v2, dist v0 v2, dist v0 v1); the
+  -- `0 ≤ deltaY` side condition is `p38_deltaY_pos_4 0 v0 v1 v2` under
+  -- `dist_zero_left`.
 
-/-- HOL `tau3_taum_dfun` (terminal.hl:583): tau3_taum_d with the
-edge-correction functional `f`. -/
+/-- HOL `tau3_taum_dfun` (terminal.hl:584-602): tau3_taum_d with the
+edge-correction functional `f`; same six box-bound conjuncts
+(terminal.hl:585).  STATEMENT-FIX item 17 (2026-09-28): statement alignment
+as tau3_taum_d above (docs/statement-fix-proposals.md item 17). -/
 theorem tau3_taum_dfun (d : ℝ) (a01 a12 a02 b01 b12 b02 : ℝ) (f : ℝ → ℝ → ℝ → ℝ)
+    (h1 : 2 ≤ a01) (h2 : 2 ≤ a12) (h3 : 2 ≤ a02)
+    (h4 : b01 ≤ 3.62) (h5 : b12 ≤ 3.62) (h6 : b02 ≤ 3.62)
     (h : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
       2 ≤ y1 → y1 ≤ 2 * h0 → 2 ≤ y2 → y2 ≤ 2 * h0 → 2 ≤ y3 → y3 ≤ 2 * h0 →
       a01 ≤ y6 → y6 ≤ b01 → a12 ≤ y4 → y4 ≤ b12 → a02 ≤ y5 → y5 ≤ b02 →
@@ -1367,8 +1383,8 @@ theorem tau3_taum_dfun (d : ℝ) (a01 a12 a02 b01 b12 b02 : ℝ) (f : ℝ → �
     a12 ≤ dist v1 v2 → dist v1 v2 ≤ b12 → a02 ≤ dist v0 v2 →
     dist v0 v2 ≤ b02 → d + f (dist v1 v2) (dist v0 v2) (dist v0 v1) ≤ tau3 v0 v1 v2 := by
   intro _ _ _ _ _ _ _ _ _ _ _ _
-  sorry -- NEEDS: as tau3_taum_d above (bridge done; degenerate parallel-wedge
-  -- case blocks the ups_x-positivity — statement-level question).
+  sorry -- NEEDS (item-17 statement fix landed): as tau3_taum_d above
+  -- (mechanical fill via `tau3_taum` + `p38_deltaY_pos_4`/`dist_zero_left`).
 
 /-- HOL `taustar_taum` (terminal.hl:618). -/
 theorem taustar_taum (d : ℝ) (a b : ℕ → ℕ → ℝ) (h1 : 2 ≤ a 0 1) (h2 : 2 ≤ a 1 2)

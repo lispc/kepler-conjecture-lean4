@@ -1,0 +1,83 @@
+# Item 17 — tau3_taum_d / tau3_taum_dfun — 分级 A′(前提补全型): 补 HOL 的
+#   6 个 box-bound 合取支 (&2 <= a01 /\ &2 <= a12 /\ &2 <= a02 /\ b01 <= #3.62
+#   /\ b12 <= #3.62 /\ b02 <= #3.62), 两名一个补丁。
+# 文件: lean/Kepler/Text/LocalAuto38.lean (LA38@HEAD; 起草时工作树对该文件干净)
+# (a) HOL 裁决: terminal.hl:549-567 (tau3_taum_d) / 584-602 (tau3_taum_dfun),
+#   六合取支在 terminal.hl:550 / 585, 是 h 之外对 box 参数的独立前提; HOL 证明
+#   第一步即 GMATCH_SIMP_TAC tau3_taum (terminal.hl:571 / 606) 消费其
+#   2 ≤ dist ≤ 3.62 前提 —— LA38 r1 移植丢掉六合取支, 陈述失真
+#   (提案官 lane 2026-09-28, 见 docs/statement-fix-proposals.md 项 17)。
+# (b) 诊断: 现陈述下 a01 可取 0, a01 ≤ dist ≤ b01 推不出 2 ≤ dist,
+#   p38_tau3_eq_taum/p38_dihV_eq_dihY 的 ups_x-正性前提 (2 ≤ dist < 4) 在
+#   平行楔形退化上失效 —— 原位 sorry 注记 (LA38:1350-1354) 如实记录。
+# (c) 补陈后 ≡ HOL 原文 (h1-h6 命名照本文件 taustar_taum:1374-1376 先例,
+#   语义 = HOL 合取支的 currying); 陈述补陈后证明转机械 (tau3_taum 已
+#   DISCHARGED + p38_deltaY_pos_4), 填证留给修复波过闸 ⑤; sorry 净变化 0。
+# (d) 消费面: 全库零直接消费点; 间接链 empty_3T2(LA38:2901) → taustar_taum/
+#   taustar_taum_dfun(LA38:1374/1409) → 本二名 (HOL terminal.hl:637/679)。
+# (e) 闸门: STATEMENT-FIX 模式验收。本 lane 只读纪律未跑 lake; 修复波
+#   apply 后须以 0 error 编译验收。
+# 验证: git -C <repo> apply --check docs/statement-fix-proposals-patches/17-tau3_taum_dist_bound.patch
+--- a/lean/Kepler/Text/LocalAuto38.lean
++++ b/lean/Kepler/Text/LocalAuto38.lean
+@@ -1334,8 +1334,16 @@
+       (dist v1 v3) (dist v1 v2) :=
+   p38_deltaY_pos_4 v0 v1 v2 v3
+ 
+-/-- HOL `tau3_taum_d` (terminal.hl:548). -/
++/-- HOL `tau3_taum_d` (terminal.hl:549-567).  The six box-bound conjuncts
++`&2 <= a01 /\ &2 <= a12 /\ &2 <= a02 /\ b01 <= #3.62 /\ b12 <= #3.62 /\
++b02 <= #3.62` (terminal.hl:550) are part of the HOL antecedent; they force
++`2 ≤ dist ≤ 3.62` on all three edges, so the box-to-vector transfer rewrites
++via `tau3_taum`.  STATEMENT-FIX item 17 (2026-09-28): the r1 port dropped
++them, leaving `2 ≤ dist v_i v_j` underivable and the transfer blocked on
++degenerate parallel wedges (docs/statement-fix-proposals.md item 17). -/
+ theorem tau3_taum_d (d a01 a12 a02 b01 b12 b02 : ℝ)
++    (h1 : 2 ≤ a01) (h2 : 2 ≤ a12) (h3 : 2 ≤ a02)
++    (h4 : b01 ≤ 3.62) (h5 : b12 ≤ 3.62) (h6 : b02 ≤ 3.62)
+     (h : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+       2 ≤ y1 → y1 ≤ 2 * h0 → 2 ≤ y2 → y2 ≤ 2 * h0 → 2 ≤ y3 → y3 ≤ 2 * h0 →
+       a01 ≤ y6 → y6 ≤ b01 → a12 ≤ y4 → y4 ≤ b12 → a02 ≤ y5 → y5 ≤ b02 →
+@@ -1347,15 +1355,23 @@
+     a12 ≤ dist v1 v2 → dist v1 v2 ≤ b12 → a02 ≤ dist v0 v2 →
+     dist v0 v2 ≤ b02 → d ≤ tau3 v0 v1 v2 := by
+   intro _ _ _ _ _ _ _ _ _ _ _ _
+-  sorry -- NEEDS: the DIHV_EQ_DIH_Y bridge is DONE (p38_dihV_eq_dihY above),
+-  -- but this statement's hypotheses do NOT force `2 ≤ dist v_i v_j`, so the
+-  -- ups_x-factors of the bridge can vanish on parallel wedges (where
+-  -- dihV = π/2-junk ≠ dihY ∈ {0,π,3π/2}).  Remaining work: a degenerate-case
+-  -- analysis showing d ≤ tau3 from h's box-bound (statement-level question).
+-
+-/-- HOL `tau3_taum_dfun` (terminal.hl:583): tau3_taum_d with the
+-edge-correction functional `f`. -/
++  sorry -- NEEDS (item-17 statement fix landed): mechanical fill only — the
++  -- degenerate-wedge question is gone, h1-h6 + the edge bounds now force
++  -- `2 ≤ dist ≤ 3.62` on all three edges.  Route (mirrors the HOL proof
++  -- terminal.hl:570-578): `v_i ∈ ballAnnulus` from `2 ≤ ‖v_i‖ ≤ 2*h0`
++  -- (ballAnnulus = closedBall 0 (2*h0) \ ball 0 2), rewrite via
++  -- `tau3_taum v0 v1 v2` (DISCHARGED above), then apply `h` at
++  -- y = (‖v0‖, ‖v1‖, ‖v2‖, dist v1 v2, dist v0 v2, dist v0 v1); the
++  -- `0 ≤ deltaY` side condition is `p38_deltaY_pos_4 0 v0 v1 v2` under
++  -- `dist_zero_left`.
++
++/-- HOL `tau3_taum_dfun` (terminal.hl:584-602): tau3_taum_d with the
++edge-correction functional `f`; same six box-bound conjuncts
++(terminal.hl:585).  STATEMENT-FIX item 17 (2026-09-28): statement alignment
++as tau3_taum_d above (docs/statement-fix-proposals.md item 17). -/
+ theorem tau3_taum_dfun (d : ℝ) (a01 a12 a02 b01 b12 b02 : ℝ) (f : ℝ → ℝ → ℝ → ℝ)
++    (h1 : 2 ≤ a01) (h2 : 2 ≤ a12) (h3 : 2 ≤ a02)
++    (h4 : b01 ≤ 3.62) (h5 : b12 ≤ 3.62) (h6 : b02 ≤ 3.62)
+     (h : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+       2 ≤ y1 → y1 ≤ 2 * h0 → 2 ≤ y2 → y2 ≤ 2 * h0 → 2 ≤ y3 → y3 ≤ 2 * h0 →
+       a01 ≤ y6 → y6 ≤ b01 → a12 ≤ y4 → y4 ≤ b12 → a02 ≤ y5 → y5 ≤ b02 →
+@@ -1367,8 +1383,8 @@
+     a12 ≤ dist v1 v2 → dist v1 v2 ≤ b12 → a02 ≤ dist v0 v2 →
+     dist v0 v2 ≤ b02 → d + f (dist v1 v2) (dist v0 v2) (dist v0 v1) ≤ tau3 v0 v1 v2 := by
+   intro _ _ _ _ _ _ _ _ _ _ _ _
+-  sorry -- NEEDS: as tau3_taum_d above (bridge done; degenerate parallel-wedge
+-  -- case blocks the ups_x-positivity — statement-level question).
++  sorry -- NEEDS (item-17 statement fix landed): as tau3_taum_d above
++  -- (mechanical fill via `tau3_taum` + `p38_deltaY_pos_4`/`dist_zero_left`).
+ 
+ /-- HOL `taustar_taum` (terminal.hl:618). -/
+ theorem taustar_taum (d : ℝ) (a b : ℕ → ℕ → ℝ) (h1 : 2 ≤ a 0 1) (h2 : 2 ≤ a 1 2)

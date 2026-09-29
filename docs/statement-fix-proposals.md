@@ -617,3 +617,133 @@ PA4:1370 等 9 处"缺件"注记与 PA17:275/304、PackingConcl:132 的孪生注
 5. **项 12、13a**（C）：等"planar 编码定义纠正"立项（facetOfC/polyhedronC/
    ℂ-affDim），立项前冻结黑名单；
 6. **项 16**（解除）：零动作；PA7 若吃 IVFICRK 证明，按 16-patch 注记重构 g。
+
+---
+
+# 第三轮提案（r3，2026-09-28 增补）
+
+> LA38 `tau3_taum` 陈述补陈（officer lane；立项依据 `docs/e2e-debt-map.md:31`
+> B 表行）。纪律同前：**零 .lean 改动**，交付 = 本文件增补 +
+> `docs/statement-fix-proposals-patches/17-tau3_taum_dist_bound.patch`（可贴性
+> `git apply --check` 已验；本 lane 只读纪律未跑 lake，编译验收留给修复波）。
+> 对照基准：`reference/flyspeck` @ `1ce0353`；`lean/scripts/local/terminal.hl`
+> 为孪生副本（548-615 行已核对与 flyspeck 侧逐字一致）。
+
+## 24'. 项 17 `tau3_taum_d`/`tau3_taum_dfun` — 分级 A′（前提补全型：补 6 个 box-bound 合取支）
+
+| # | 陈述 | Lean 位置 | HOL 原文 | 偏差性质 | 分级 |
+|---|---|---|---|---|---|
+| 17 | `tau3_taum_d` / `tau3_taum_dfun` | LocalAuto38.lean:1338 / 1358 | terminal.hl:549-567 / 584-602 | 前提缺失（缺 `2 ≤ a01 ∧ 2 ≤ a12 ∧ 2 ≤ a02 ∧ b01 ≤ 3.62 ∧ b12 ≤ 3.62 ∧ b02 ≤ 3.62` 六合取支 ⇒ `2 ≤ dist` 不可导） | **A′**（补陈后证明转机械；收口后升 A） |
+
+### (a) HOL 裁决
+
+`reference/flyspeck/text_formalization/local/terminal.hl:549-567`
+（`tau3_taum_d`；`tau3_taum_dfun` 同构在 584-602，f-修正版）：陈述为
+
+```
+!d a01 a12 a02 b01 b12 b02.
+  (&2 <= a01 /\ &2 <= a12 /\ &2 <= a02 /\ b01 <= #3.62 /\
+   b12 <= #3.62 /\ b02 <= #3.62 /\        (* ← terminal.hl:550（dfun :585）*)
+   (!y1..y6. &2 <= y1 /\ y1 <= &2*h0 /\ ... /\ &0 <= delta_y ...
+             ==> d <= taum y1..y6)) ==>
+  (!v0 v1 v2. &2 <= norm v0 /\ norm v0 <= &2*h0 /\ ... /\
+   a01 <= dist(v0,v1) /\ dist(v0,v1) <= b01 /\ ... ==> d <= tau3 v0 v1 v2)
+```
+
+六合取支是 **h 之外对 box 参数自身的独立前提**。B 表"缺 `2 ≤ dist` 下界"即其
+效果：只有经 `2 ≤ a01` + `a01 ≤ dist ≤ b01` + `b01 ≤ #3.62` 才导出
+`2 ≤ dist ≤ 3.62`。HOL 证明（terminal.hl:570-578；dfun 605-614）第一步
+`GMATCH_SIMP_TAC tau3_taum` 即消费 `tau3_taum` 的 `2 ≤ dist` ∧ `≤ #3.62` 前提
+（ball_annulus 成员经 `Fnjlbxs.in_ball_annulus` + REAL_ARITH 出自 norm 界），
+随后把 h 用于 y = (norm v0, norm v1, norm v2, dist(v1,v2), dist(v0,v2),
+dist(v0,v1))，deltaY ≥ 0 侧条件走 DELTA_Y_POS_4POINTS + DIST_L_ZERO——
+六合取支是该证明的承重墙。
+
+### (b) 误移植诊断
+
+Lean r1 移植（LA38:1338-1371）把 h 原样搬来，但**丢了六合取支**（弱化方向：
+假设侧）。后果链：现陈述下 a01 可取 0 ⇒ `2 ≤ dist v_i v_j` 不可导 ⇒ 已
+DISCHARGED 的 `tau3_taum`（LA38:1275）及其底座 `p38_tau3_eq_taum`/
+`p38_dihV_eq_dihY`（LA38:1244/1119；`2 ≤ dist < 4` 强制 ups_x > 0）对该定理
+全部不可用——平行楔形退化（如 v0 = v1 时 dihV 出 π/2-junk ≠ dihY 的 junk
+口径）卡死；原位 sorry 注记（LA38:1350-1354）如实记录为 statement-level
+question。**真伪**：未机器收口。纸面可见的为假风险：取 a01 = b01 = 0（钉死
+dist v0 v1 = 0）、‖v0‖ = 2、v2 = −v0，h 的 box 在 (2,2,2,4,4,0) 处
+delta_y = 0 ≥ 0 激活，迫使 d ≤ taum 2 2 2 4 4 0（dihY-junk 口径），而结论在
+退化点比对 tau3 的 dihV-junk 口径——两个 junk 口径无理由对齐，选合适的 d 即
+可能为假；机器化收口（及"可能只是不可证而非假"的排除）超出本 lane 预算，
+补陈后此问题自然消失（box 被六合取支钉进 [2,3.62]，退化点不可达）。
+
+### (c) 提案陈述全文（补丁 17 落地后）
+
+```lean
+/-- HOL `tau3_taum_d` (terminal.hl:549-567).  The six box-bound conjuncts
+`&2 <= a01 /\ &2 <= a12 /\ &2 <= a02 /\ b01 <= #3.62 /\ b12 <= #3.62 /\
+b02 <= #3.62` (terminal.hl:550) are part of the HOL antecedent; they force
+`2 ≤ dist ≤ 3.62` on all three edges, so the box-to-vector transfer rewrites
+via `tau3_taum`.  STATEMENT-FIX item 17 (2026-09-28): the r1 port dropped
+them, leaving `2 ≤ dist v_i v_j` underivable and the transfer blocked on
+degenerate parallel wedges (docs/statement-fix-proposals.md item 17). -/
+theorem tau3_taum_d (d a01 a12 a02 b01 b12 b02 : ℝ)
+    (h1 : 2 ≤ a01) (h2 : 2 ≤ a12) (h3 : 2 ≤ a02)
+    (h4 : b01 ≤ 3.62) (h5 : b12 ≤ 3.62) (h6 : b02 ≤ 3.62)
+    (h : ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+      2 ≤ y1 → y1 ≤ 2 * h0 → 2 ≤ y2 → y2 ≤ 2 * h0 → 2 ≤ y3 → y3 ≤ 2 * h0 →
+      a01 ≤ y6 → y6 ≤ b01 → a12 ≤ y4 → y4 ≤ b12 → a02 ≤ y5 → y5 ≤ b02 →
+      0 ≤ deltaY y1 y2 y3 y4 y5 y6 →
+      d ≤ taum y1 y2 y3 y4 y5 y6)
+    (v0 v1 v2 : V3) :
+    2 ≤ ‖v0‖ → ‖v0‖ ≤ 2 * h0 → 2 ≤ ‖v1‖ → ‖v1‖ ≤ 2 * h0 → 2 ≤ ‖v2‖ →
+    ‖v2‖ ≤ 2 * h0 → a01 ≤ dist v0 v1 → dist v0 v1 ≤ b01 →
+    a12 ≤ dist v1 v2 → dist v1 v2 ≤ b12 → a02 ≤ dist v0 v2 →
+    dist v0 v2 ≤ b02 → d ≤ tau3 v0 v1 v2 := by
+  intro _ _ _ _ _ _ _ _ _ _ _ _
+  sorry -- 填证路线见原位注记（tau3_taum + p38_deltaY_pos_4，机械题）
+
+theorem tau3_taum_dfun (d : ℝ) (a01 a12 a02 b01 b12 b02 : ℝ) (f : ℝ → ℝ → ℝ → ℝ)
+    (h1 : 2 ≤ a01) (h2 : 2 ≤ a12) (h3 : 2 ≤ a02)
+    (h4 : b01 ≤ 3.62) (h5 : b12 ≤ 3.62) (h6 : b02 ≤ 3.62)
+    (h : ∀ y1 y2 y3 y4 y5 y6 : ℝ, … d + f y4 y5 y6 ≤ taum y1 y2 y3 y4 y5 y6)
+    (v0 v1 v2 : V3) :
+    … → d + f (dist v1 v2) (dist v0 v2) (dist v0 v1) ≤ tau3 v0 v1 v2
+```
+
+（dfun 版 h 的 9 条箭头前提与结论逐字同 r1 现状，唯一改动 = 同样插入 h1-h6；
+补丁含全文。）命名注：h1-h6 六个命名前提 = HOL 六合取支的 currying（语义同
+合取），排版照本文件 `taustar_taum`/`taustar_taum_dfun`（LA38:1374-1376/
+1409-1411，同一 HOL 合取支块的既有移植）先例；`theorem` 冻结前缀
+`tau3_taum_d (d a01 a12 a02 b01 b12 b02 : ℝ)` 及 h/向量侧全部逐字不动。
+
+### (d) 消费面影响清单（全库 grep `tau3_taum_d`/`tau3_taum_dfun`，排除 .lake/.git/reference/certificates）
+
+1. **零直接消费点**：全库仅定义处（LA38:1338、1358）、文件头 LEDGER 提及
+   （LA38:78）、dfun NEEDS 注记回指（LA38:1370）、B 表立项行
+   （e2e-debt-map.md:31）。加参不破坏任何调用。
+2. 间接消费链（收益面，非破坏面）：
+   - `taustar_taum`（LA38:1374，sorry）：HOL 证明 terminal.hl:637
+     `MATCH_MP_TAC tau3_taum_d`——补陈后 Lean 同路线可把自身 h1-h6 传入；
+   - `taustar_taum_dfun`（LA38:1409，sorry）：HOL terminal.hl:679 同上；
+   - `empty_3T2`（LA38:2901，sorry，吃 `main_nonlinear_terminal_v11`）的
+     BLOCKED 注记（LA38:2904）"taustar_taum (tau3_taum hole)" 即经此链——
+     这就是 B 表"经 main_nonlinear_terminal_v11 合取项间接"的实指；
+   - LocalAuto23:39/308 的 `taustar_taum_dfun` bridge 注记（v39/BB 侧）不受
+     本补丁影响，无需改。
+3. 上游依赖不受影响：`tau3_taum`（LA38:1275）、`p38_dihV_eq_dihY`（1119）、
+   `p38_upsX_pos_box`（957）、`p38_deltaY_pos_4`（1052）、
+   `p38_tau3_eq_taum`（1244）均已 DISCHARGED，补丁不触碰。
+4. **B 表同步**：e2e-debt-map.md:31 由修复波落地后注记"已补陈（提案项 17）"。
+
+### (e) 风险
+
+1. 加参使定理变弱（HOL 忠实方向）：未来消费者须自供六合取支；在
+   main_nonlinear_terminal_v11/LP 合取项语境它们自带（`taustar_taum` 的
+   h1-h6 即同款），无实质风险。
+2. 陈述改动须走 STATEMENT-FIX 闸门（DECISIONS 2026-09-28 条）；`git apply
+   --check` 已过，编译验收（0 error）待修复波——本 lane 禁跑 lake。
+3. sorry 净变化 0（两陈述各保其 sorry；原位注记改为机械填证路线，填证与
+   HOL 证明 terminal.hl:570-578 同构，风险极低）。
+4. 若修复波在填证时发现意外（理论上为纯假设推演），回滚窗口 = 补丁仅动
+   1337-1371 两个陈述块，revert 即净。
+
+### (f) 状态：草案待审（2026-09-28 officer lane 产出；补丁可贴性已验，
+编译与闸门验收待修复波）。
