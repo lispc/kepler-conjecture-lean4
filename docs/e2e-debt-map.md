@@ -43,6 +43,14 @@
   编码族（KSOQKWL 等）——提案 r2 已出补丁（11/14/15/DUUNHOR），结构性立项
   "planar 编码定义纠正"待用户拍板。
 - **wave3 附带解锁**：PA7 `BARV_CIRCUMCENTER_EXISTS` 成真（PA18 cc 簇钥匙）。
+- **GRUTOTI 侦察结案 (2026-09-29，`docs/grutoti-scout.md`)**：非从零移植——PA23
+  骨架 + capstone 组装已在树（9 机械件已证 + 5 枚 giant sorry，全树零 importer）；
+  实际量级 Lean 2800–5000 行（region/cell_vol 双 GIANT）。三座共享银行：
+  锥帽体积套件（**源不在本仓**，与 REUHADY(PA24)/TSKAJXY3 三链共享，GT-1 先导波
+  建新模块 ConicCapVolume.lean）、Pack2.hl 测度桥（与 UPFZBZM wave-2/KIZHLTL1 共享）、
+  PA15 marchal3 套件 ≥9 枚。波次：GT-1 → GT-2(S/M 机械)/GT-3(cell_vol)/GT-4(region)
+  三线并行。⚠ `grutoti_volD_pos` 冻结陈述 u1=u0 时为假（须补 hne，STATEMENT-FIX
+  候选入 merge 裁决清单）。
 - **Phase 2 Graphs 链**：wave3 收官构建发现 `lake build Kepler.Assembly` 会自展
   式重建 Graphs CertShards（本机 30-2100s/片，9000+ jobs 量级）——后台跑完后
   脊柱探针解锁，DEBT.md"结构性不可用"注记作废。
