@@ -1,0 +1,30 @@
+--- Kepler/Text/PackingAuto23.lean
++++ Kepler/Text/PackingAuto23.lean
+@@ -58,6 +58,7 @@
+ -/
+ 
+ import Kepler.Text.PackingAuto2
++import Kepler.Text.ConicCapVolume
+ import Kepler.Text.PackingAuto6
+ import Kepler.Text.PackingAuto12
+ import Kepler.Text.PackingAuto15
+@@ -420,8 +421,8 @@
+ degenerate capsule is provably empty — ConicCapVolume `ccv_conicCap_empty`),
+ after which the fill is one line. -/
+ private theorem grutoti_volD_pos (u0 u1 : V3) (r d : ℝ) (hr : 0 < r) (hd : 0 < d)
+-    (hd1 : d < 1) : 0 < volume.real (grutotiConicCap u0 u1 r d) := by
+-  sorry
++    (hd1 : d < 1) (hne : u0 ≠ u1) : 0 < volume.real (grutotiConicCap u0 u1 r d) :=
++  volumeConicCapPos hr hd hd1 hne
+ 
+ /-! ## Capstone -/
+ 
+@@ -438,7 +439,7 @@
+   have hbar := grutoti_barV V u0 u1 hs hp hu0 hu1 hne hhl
+   obtain ⟨c, r, d, hc0, hc1, hr0, hr1, hd0, hd1, hdc, _hcover⟩ :=
+     grutoti_region V u0 u1 e hs hp hu0 hu1 hne hhl he
+-  have hvol := grutoti_volD_pos u0 u1 r d hr0 hd0 hd1
++  have hvol := grutoti_volD_pos u0 u1 r d hr0 hd0 hd1 hne
+   obtain ⟨hfin, hsum⟩ := grutoti_sum_volD V u0 u1 e r d he
+   have hpivot := grutoti_pivot V u0 u1 e r d hr0 hr1 hd0 hd1 he hfin
+   have hlin := grutoti_setSum_mul_div (grutotiEdgeCells V e)

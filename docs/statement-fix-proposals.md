@@ -845,3 +845,76 @@ unfold/rw 触及（§2.3 逐条论证；机器落点 = PA25:3704
 pack_nonlinear_non_ox3q1h 三枚 def-sorry 消失，pack_nonlinear_rest +
 GRKIBMP + cell3_from_ineq_thm 三枚新增，全带 `-- MERGE-INEQ:` 标签；
 PA21 声明级 sorry 37 → 37）；:1428 臂与六条冻结陈述零改动。
+
+## 18. `grutoti_volD_pos` — 分级 A′（前提补全型：补 `hne : u0 ≠ u1`）
+（2026-09-29 GT-2 填证 lane 产出；任务书授权走 STATEMENT-FIX 文档通道，
+**PA23 冻结陈述零改动**——应用需编排者凭用户裁决走 GATE_MODE=STATEMENT-FIX。）
+
+### (a) HOL 裁决
+
+GRUTOTI.hl 全文只有一条定理 `GRUTOTI1_concl`（:48-58），其前提显式带
+`~(u0 = u1)`；`grutoti_volD_pos` 对应内容是 `prove_by_refinement` 巨块
+（:60-8001，636 个 NEW_GOAL 无显式子引理）末段的子目标 `&0 < vol D`
+（:7983-8000，经 `VOLUME_CONIC_CAP` 消元），其证明上下文含
+`~(u0 = u1)`。故 HOL 侧该断言**从来是在 `u0 ≠ u1` 下陈述的**。
+`VOLUME_CONIC_CAP` 源在 flyspeck_multivariate.ml（本地 reference 树无源，
+grutoti-scout §5.1），无法逐字对照；但 Lean 侧 GT-1 已落地的
+`ConicCapVolume.volumeConicCapPos`（kernel 验证的帽体积公式正性件，
+:961）携带同样的 `hne : v0 ≠ v1` 前提，与退化情形一致：
+`ConicCapVolume.ccv_conicCap_empty`（:154，已证）机器见证
+`ccvConicCap v0 v0 r a = ∅`，故 `vol = 0`，冻结陈述在 `u1 = u0` 时
+**假**（PA23:307-314 诚实注记在案；反例 = 该 empty-lemma + `volume`
+对 ∅ 取 0，一句话反例，机器可核）。
+
+### (b) 诊断
+
+`grutoti_volD_pos` 是骨架作者重构出的 private 里程碑（非 HOL 逐字移植），
+签名漏抄了 `u0 ≠ u1`；调用点 `GRUTOTI`（PA23:334-339）上下文里有 `hne`
+（GRUTOTI 陈述自带），改签名后调用点只需补传一参。
+
+### (c) 修复补丁
+
+`docs/statement-fix-proposals-patches/18-grutoti_volD_pos.patch`。
+唯一实质改动三处：① 头部加 `import Kepler.Text.ConicCapVolume`
+（ConicCapVolume 只 import Geom + PA2，无环；与 PA23 现有 import 集零撞名，
+GT-2 lane 已实测）；② `grutoti_volD_pos` 补前提 `(hne : u0 ≠ u1)`，
+体由 `sorry` 换为一行 `volumeConicCapPos hr hd hd1 hne`
+（`grutotiConicCap` 与 `ccvConicCap` 同为
+`Metric.closedBall v0 r ∩ rconeGt v0 v1 a`，defeq 直取）；③ capstone 调用点
+补传 `hne`。**补丁可贴性已验**：patched 变体整文件
+`lake env lean` 0 error，`declaration uses 'sorry'` 5 → 4（volD_pos 的
+sorry 断流），capstone 其余四 giant 照旧挂账。新陈述全文：
+
+```lean
+private theorem grutoti_volD_pos (u0 u1 : V3) (r d : ℝ) (hr : 0 < r) (hd : 0 < d)
+    (hd1 : d < 1) (hne : u0 ≠ u1) : 0 < volume.real (grutotiConicCap u0 u1 r d) :=
+  volumeConicCapPos hr hd hd1 hne
+```
+
+### (d) 消费面
+
+全树 grep：`grutoti_volD_pos` 零外部消费者（PA23 零 importer，
+PackingConcl 不经 PA23 走线，grutoti-scout §0.2），唯一调用点是同文件
+capstone `GRUTOTI` 内一处（补丁 ③）。属 GT-2/GT-3/GT-4 收口时
+`GRUTOTI1_concl_discharged` 断流链的前置件。
+
+### (e) 风险
+
+1. patch ③ 处 `hne` 在 `GRUTOTI` 的 intro 序里已存在（PA23:330
+   `intro V u0 u1 e hs hp hu0 hu1 hne hhl he`），补传即可，无舍入风险。
+2. `import Kepler.Text.ConicCapVolume` 进 PA23 后，未来任何 lane 给 PA23
+   加 importer 时 ConicCapVolume 的传递闭包一并入链——其闭包
+   （Geom/WedgeVolume 等）全零 sorry，无新增透传债。
+
+### (f) 状态：草案待审（2026-09-29 GT-2 lane 产出；补丁可贴性已验，
+编译 0 error；应用待编排者 GATE_MODE=STATEMENT-FIX）。
+
+## 附：GT-2 lane 同批侦察发现（未立项，供编排者定夺）
+
+**`grutoti_sum_volD`（PA23:283-289）冻结签名缺 `Packing V`/`saturated V`**：
+第一合取支 `(grutotiEdgeCells V e).Finite` 对一般 `V` 为假——反例形状：
+`V = {u0,u1} ∪ 无穷多个互距 ≥ 2 的远处 generic 点`（不需 saturated），
+每四个点构成的 barV V 3 表的 `mcell 4` 胞都含 `e ∈ edgeX V X`，族无穷。
+修复 = 补 `hp hs` 前提（正路 = FINITE_EDGE_X2，已填）＋（第二合取支）
+region 覆盖假设——见 PA23:279-303 NEEDS 注记，属 GT-3/GT-4 协同件，
+非单陈述修复可收口，故未单独立项、只在此登记。
