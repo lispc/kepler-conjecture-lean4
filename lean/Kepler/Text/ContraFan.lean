@@ -389,6 +389,117 @@ theorem estd_non_collinear_lemma {v w : V3} (hv : v ∈ ballAnnulus) (hw : w ∈
 
 /-! ## 3. 深几何核（骨架：陈述移植，DISCHARGES 记欠） -/
 
+/-! ### 3.0 路线 B 数值件（LEMMA_3_POINTS_FINAL 专用，纯有理数 + 内积角）
+
+不用 HOL 的 IVT/旋转族：t1, t2 > 0 时 v3 在非负张成内，Mathlib 锥内角加法
+`InnerProductGeometry.angle_eq_angle_add_add_angle_add_of_mem_span` 给
+∠(v1,v2) = ∠(v1,v3) + ∠(v3,v2)；两侧角各受纯有理数余弦界
+（cos ∠(v1,v3) ≤ 2719/3969、cos ∠(v1,v2) ≥ 1031/7938 > 0），与
+2·arccos(2719/3969) > arccos(1031/7938)（cos 二倍角 + arccos 反单调）合拢。
+共线退化（v1 = v2 或系数为 0）由 `annulus_ray_absurd` 封死。 -/
+
+/-- 角点二次型引理：a, b ∈ [2, 2h0]（= [2, 63/25]）⟹
+a² + b² − (5438/3969)·a·b ≤ 4。恒等变形 x = 63/25 − a、y = 63/25 − b 后
+g = x² + y² − (5438/3969)xy − (100/63)(x+y)（常数项 2·(63/25)²·(1250/3969) = 4
+恰相消），由 x² ≤ (13/25)x、y² ≤ (13/25)y、13/25 < 100/63 收口；
+等号在角点 (63/25, 63/25)（即 r = 2h0、dist = 2）取到。 -/
+private theorem quad_corner (a b : ℝ) (ha1 : (2:ℝ) ≤ a) (ha2 : a ≤ 2 * h0)
+    (hb1 : (2:ℝ) ≤ b) (hb2 : b ≤ 2 * h0) :
+    a * a + b * b - (5438:ℝ) / 3969 * a * b ≤ 4 := by
+  rw [two_h0] at ha2 hb2
+  have hkey : a * a + b * b - (5438:ℝ) / 3969 * a * b - 4
+      = (63/25 - a) * (63/25 - a) + (63/25 - b) * (63/25 - b)
+        - (5438:ℝ) / 3969 * (63/25 - a) * (63/25 - b)
+        - (100:ℝ) / 63 * ((63/25 - a) + (63/25 - b)) := by
+    field_simp
+    ring
+  have hx1 : (0:ℝ) ≤ 63/25 - a := by linarith
+  have hx2 : 63/25 - a ≤ 13/25 := by linarith
+  have hy1 : (0:ℝ) ≤ 63/25 - b := by linarith
+  have hy2 : 63/25 - b ≤ 13/25 := by linarith
+  have hp1 : (63/25 - a) * (63/25 - a) ≤ (13/25) * (63/25 - a) := by nlinarith
+  have hp2 : (63/25 - b) * (63/25 - b) ≤ (13/25) * (63/25 - b) := by nlinarith
+  have hp3 : (0:ℝ) ≤ (63/25 - a) * (63/25 - b) := by nlinarith
+  have hp4 : (0:ℝ) ≤ (5438:ℝ) / 3969 * ((63/25 - a) * (63/25 - b)) :=
+    mul_nonneg (by norm_num) hp3
+  linarith [hkey, hp1, hp2, hp3, hp4]
+
+/-- 短边角的下界：annulus 中 dist v w ≤ 2h0 ⟹ cos ∠(v,w) ≥ 1031/7938。
+由余弦定理 inner = (‖v‖² + ‖w‖² − dist²)/2 ≥ (8 − (2h0)²)/2 与
+‖v‖·‖w‖ ≤ (2h0)²，且 (1031/7938)·(2h0)² = (8 − (2h0)²)/2（角点等式）。 -/
+private theorem cos_ge_1031 {v w : V3} (hv2 : (2:ℝ) ≤ ‖v‖) (hvup : ‖v‖ ≤ 2 * h0)
+    (hw2 : (2:ℝ) ≤ ‖w‖) (hwup : ‖w‖ ≤ 2 * h0) (hd : dist v w ≤ 2 * h0) :
+    (1031:ℝ) / 7938 ≤ Real.cos (InnerProductGeometry.angle v w) := by
+  rw [two_h0] at hvup hwup hd
+  have hvpos : (0:ℝ) < ‖v‖ := by linarith
+  have hwpos : (0:ℝ) < ‖w‖ := by linarith
+  have hv4 : (4:ℝ) ≤ ‖v‖ ^ 2 := by nlinarith
+  have hw4 : (4:ℝ) ≤ ‖w‖ ^ 2 := by nlinarith
+  have hsq : (2.52:ℝ) ^ 2 = 6.3504 := by norm_num
+  have e1 : (0:ℝ) ≤ (2.52 - ‖w‖) * ‖v‖ :=
+    mul_nonneg (sub_nonneg.2 hwup) hvpos.le
+  have e2 : (0:ℝ) ≤ (2.52 - ‖v‖) * 2.52 :=
+    mul_nonneg (sub_nonneg.2 hvup) (by norm_num)
+  have hab : ‖v‖ * ‖w‖ ≤ 2.52 * 2.52 := by linarith
+  have hd2 : dist v w ^ 2 ≤ 6.3504 := le_trans (pow_le_pow_left₀ dist_nonneg hd 2)
+    (le_of_eq hsq)
+  have hkey : ‖v - w‖ ^ 2 = ‖v‖ ^ 2 + ‖w‖ ^ 2 - 2 * inner ℝ v w := by
+    have h1 : ‖v - w‖ ^ 2 = inner ℝ (v - w) (v - w) := (real_inner_self_eq_norm_sq _).symm
+    rw [h1, inner_sub_left, inner_sub_right, inner_sub_right, real_inner_comm v w,
+      real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq]
+    ring
+  have hdist : dist v w = ‖v - w‖ := dist_eq_norm v w
+  have h2A : (8:ℝ) - 6.3504 ≤ 2 * inner ℝ v w := by
+    have h1 : ‖v - w‖ ^ 2 = dist v w ^ 2 := by rw [hdist]
+    linarith
+  rw [InnerProductGeometry.cos_angle, le_div_iff₀ (mul_pos hvpos hwpos)]
+  linarith
+
+/-- 长距离角的上界：annulus 中 2 ≤ dist v w ⟹ cos ∠(v,w) ≤ 2719/3969。
+由余弦定理 inner ≤ (‖v‖² + ‖w‖² − 4)/2 与 `quad_corner`
+‖v‖² + ‖w‖² − (5438/3969)·‖v‖·‖w‖ ≤ 4 合成。 -/
+private theorem cos_le_2719 {v w : V3} (hv2 : (2:ℝ) ≤ ‖v‖) (hvup : ‖v‖ ≤ 2 * h0)
+    (hw2 : (2:ℝ) ≤ ‖w‖) (hwup : ‖w‖ ≤ 2 * h0) (hd : (2:ℝ) ≤ dist v w) :
+    Real.cos (InnerProductGeometry.angle v w) ≤ (2719:ℝ) / 3969 := by
+  have hvpos : (0:ℝ) < ‖v‖ := by linarith
+  have hwpos : (0:ℝ) < ‖w‖ := by linarith
+  have hkey : ‖v - w‖ ^ 2 = ‖v‖ ^ 2 + ‖w‖ ^ 2 - 2 * inner ℝ v w := by
+    have h1 : ‖v - w‖ ^ 2 = inner ℝ (v - w) (v - w) := (real_inner_self_eq_norm_sq _).symm
+    rw [h1, inner_sub_left, inner_sub_right, inner_sub_right, real_inner_comm v w,
+      real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq]
+    ring
+  have hdist : dist v w = ‖v - w‖ := dist_eq_norm v w
+  have hd4 : (4:ℝ) ≤ dist v w ^ 2 := by nlinarith
+  have hqc := quad_corner ‖v‖ ‖w‖ hv2 hvup hw2 hwup
+  have h2A : 2 * inner ℝ v w ≤ (5438:ℝ) / 3969 * (‖v‖ * ‖w‖) := by
+    have h1 : ‖v - w‖ ^ 2 = dist v w ^ 2 := by rw [hdist]
+    linarith
+  rw [InnerProductGeometry.cos_angle, div_le_iff₀ (mul_pos hvpos hwpos)]
+  linarith
+
+/-- 纯有理数角隙：2·arccos(2719/3969) > arccos(1031/7938)。
+cos(2·arccos c₁) = 2c₁² − 1 = −967159/15753081 < 0 < 1031/7938，
+再由 `Real.arccos_lt_arccos` 与 `Real.arccos_cos`（2·arccos c₁ ∈ [0, π]）折返。 -/
+private theorem two_arccos_gt :
+    Real.arccos ((1031:ℝ) / 7938) < 2 * Real.arccos ((2719:ℝ) / 3969) := by
+  have hc1 : (2719:ℝ) / 3969 ≤ 1 := by norm_num
+  have hc1m : -1 ≤ (2719:ℝ) / 3969 := by norm_num
+  have hpos : (0:ℝ) ≤ 2719 / 3969 := by norm_num
+  have hle : 2 * Real.arccos ((2719:ℝ) / 3969) ≤ Real.pi := by
+    have h := Real.arccos_le_pi_div_two.2 hpos
+    linarith
+  have hge : (0:ℝ) ≤ 2 * Real.arccos ((2719:ℝ) / 3969) := by
+    have h := Real.arccos_nonneg ((2719:ℝ) / 3969)
+    linarith
+  have hcos : Real.cos (2 * Real.arccos ((2719:ℝ) / 3969))
+      = 2 * ((2719:ℝ) / 3969) ^ 2 - 1 := by
+    rw [Real.cos_two_mul, Real.cos_arccos hc1m hc1]
+  have hval : 2 * ((2719:ℝ) / 3969) ^ 2 - 1 < (1031:ℝ) / 7938 := by norm_num
+  have hkey := Real.arccos_lt_arccos (x := 2 * ((2719:ℝ) / 3969) ^ 2 - 1)
+    (y := (1031:ℝ) / 7938)
+    (by linarith [sq_nonneg ((2719:ℝ) / 3969)]) hval (by norm_num)
+  rwa [← hcos, Real.arccos_cos hge hle] at hkey
+
 /-- HOL `LEMMA_3_POINTS_FINAL`（CKQOWSA_3.hl:1350-1356）：annulus 中三点，
 第三点在锥内、两两距离约束 ⟹ 矛盾。
 DISCHARGES：骨架占位（sorry）。HOL 依赖链：`LEMMA_3_POINTS`（:1306）←
@@ -402,7 +513,82 @@ theorem LEMMA_3_POINTS_FINAL {v1 v2 v3 : V3}
     (hb1 : v1 ∈ ballAnnulus) (hb2 : v2 ∈ ballAnnulus) (hb3 : v3 ∈ ballAnnulus)
     (hd : dist v1 v2 ≤ 2 * h0) (hd13 : 2 ≤ dist v1 v3) (hd23 : 2 ≤ dist v2 v3) :
     False := by
-  sorry
+  obtain ⟨ha1, hau1⟩ := inBallAnnulus hb1
+  obtain ⟨ha2, hau2⟩ := inBallAnnulus hb2
+  obtain ⟨ha3, hau3⟩ := inBallAnnulus hb3
+  have hv1n : v1 ≠ 0 := by
+    intro h; rw [h, norm_zero] at ha1; norm_num at ha1
+  have hv2n : v2 ≠ 0 := by
+    intro h; rw [h, norm_zero] at ha2; norm_num at ha2
+  have hv3n : v3 ≠ 0 := by
+    intro h; rw [h, norm_zero] at ha3; norm_num at ha3
+  rcases eq_or_ne v1 v2 with hv12 | hv12
+  · -- v1 = v2：v3 落在射线 v1 上，1D 算术反证
+    subst hv12
+    rw [Set.pair_eq_singleton] at hcone
+    obtain ⟨t, ht0, hv3t⟩ := (affGe_0_1_char v1 v3).1 hcone
+    have htp : (0:ℝ) < t := by
+      rcases lt_or_eq_of_le ht0 with h | h
+      · exact h
+      · rw [← h, zero_smul] at hv3t
+        exact absurd hv3t hv3n
+    exact annulus_ray_absurd ha1 ha3 hd13 hau1 hau3 (le_of_lt (inv_pos.2 htp))
+      (by rw [hv3t, inv_smul_smul₀ htp.ne'])
+  · -- v1 ≠ v2：锥内二系数显式化
+    obtain ⟨t1, t2, ht1, ht2, hv3t⟩ := (affGe_0_2_char hv1n hv2n hv12 v3).1 hcone
+    rcases lt_or_eq_of_le ht1 with ht1p | ht10
+    · rcases lt_or_eq_of_le ht2 with ht2p | ht20
+      · -- 主分支：t1, t2 > 0，锥内角加法 + 纯有理数余弦界
+        have hmem : v3 ∈ Submodule.span NNReal ({v1, v2} : Set V3) := by
+          rw [Submodule.mem_span_pair]
+          refine ⟨⟨t1, ht1p.le⟩, ⟨t2, ht2p.le⟩, ?_⟩
+          show t1 • v1 + t2 • v2 = v3
+          exact hv3t.symm
+        have hsplit : InnerProductGeometry.angle v1 v2
+            = InnerProductGeometry.angle v1 v3 + InnerProductGeometry.angle v3 v2 :=
+          InnerProductGeometry.angle_eq_angle_add_add_angle_add_of_mem_span hv3n hmem
+        have hBge : Real.arccos ((2719:ℝ) / 3969)
+            ≤ InnerProductGeometry.angle v1 v3 := by
+          have h1 : Real.arccos ((2719:ℝ) / 3969)
+              ≤ Real.arccos (Real.cos (InnerProductGeometry.angle v1 v3)) :=
+            Real.antitone_arccos (cos_le_2719 ha1 hau1 ha3 hau3 hd13)
+          rwa [Real.arccos_cos (InnerProductGeometry.angle_nonneg v1 v3)
+            (InnerProductGeometry.angle_le_pi v1 v3)] at h1
+        have hCge : Real.arccos ((2719:ℝ) / 3969)
+            ≤ InnerProductGeometry.angle v3 v2 := by
+          have h1 : Real.arccos ((2719:ℝ) / 3969)
+              ≤ Real.arccos (Real.cos (InnerProductGeometry.angle v2 v3)) :=
+            Real.antitone_arccos (cos_le_2719 ha2 hau2 ha3 hau3 hd23)
+          rw [Real.arccos_cos (InnerProductGeometry.angle_nonneg v2 v3)
+            (InnerProductGeometry.angle_le_pi v2 v3), InnerProductGeometry.angle_comm
+            v2 v3] at h1
+          exact h1
+        have hAge : InnerProductGeometry.angle v1 v2
+            ≤ Real.arccos ((1031:ℝ) / 7938) := by
+          have h1 : Real.arccos (Real.cos (InnerProductGeometry.angle v1 v2))
+              ≤ Real.arccos ((1031:ℝ) / 7938) :=
+            Real.antitone_arccos (cos_ge_1031 ha1 hau1 ha2 hau2 hd)
+          rwa [Real.arccos_cos (InnerProductGeometry.angle_nonneg v1 v2)
+            (InnerProductGeometry.angle_le_pi v1 v2)] at h1
+        have hsum : 2 * Real.arccos ((2719:ℝ) / 3969)
+            ≤ InnerProductGeometry.angle v1 v3 + InnerProductGeometry.angle v3 v2 := by
+          linarith
+        linarith [hsum, hsplit, hAge, two_arccos_gt]
+      · -- t2 = 0：v3 在射线 v1 上
+        have ht20' : t2 = 0 := ht20.symm
+        simp only [ht20', zero_smul, add_zero] at hv3t
+        exact annulus_ray_absurd ha1 ha3 hd13 hau1 hau3 (le_of_lt (inv_pos.2 ht1p))
+          (by rw [hv3t, inv_smul_smul₀ ht1p.ne'])
+    · -- t1 = 0：v3 在射线 v2 上
+      have ht10' : t1 = 0 := ht10.symm
+      simp only [ht10', zero_smul, zero_add] at hv3t
+      have ht2p : (0:ℝ) < t2 := by
+        rcases lt_or_eq_of_le ht2 with h | h
+        · exact h
+        · rw [← h, zero_smul] at hv3t
+          exact absurd hv3t hv3n
+      exact annulus_ray_absurd ha2 ha3 hd23 hau2 hau3 (le_of_lt (inv_pos.2 ht2p))
+        (by rw [hv3t, inv_smul_smul₀ ht2p.ne'])
 
 /-- HOL `LEMMA_4_POINTS_FINAL`（CKQOWSA_4.hl:4093-4096）：annulus 中四点、
 两组对边距离 ≤ 2h0、六对距离 ≥ 2 ⟹ 两锥恰交于原点。
