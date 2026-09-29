@@ -161,6 +161,13 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 | `by omega` 作证明项 | 未定隐参位置会因 metavariable 失败（如 `Nat.sub_lt (by omega) …`）——显式 `(a := j)` 或 `show` 定形 |
 | `Metric.mem_ball` 匿名构造器 | 部分位置不吃 dist-defeq——一律显式 `Metric.mem_ball.2 (…dist 形式…)` 最稳 |
 | Complex arg / 杂项（PA22 w3） | `Complex.arg_eq_arg_iff`（ARG_EQ 正名，含 ‖‖-商形）、`arg_lt_pi_iff`/`arg_nonneg_iff`、`Metric.isBounded_iff_subset_closedBall`（`Metric` 名下）、`Set.fintypeCard_eq_ncard`、`Set.BijOn` 是三合取 def、`Finset.orderIsoOfFin (h : s.card = k)`（卡等式作参绕开 Fin 索引）、`Complex.real_smul` 定义性、`div_mul_cancel₀` 此处形状 `(a/b)*b = a`、`List.Sorted` 已废→`List.SortedLE/SortedLT`（= Monotone/StrictMono l.get）、`Complex.mul_conj` 存在（conj 旧名） |
+| `List.ext_get` 逐点形 | 目标是 `l.get ⟨i,h⟩` 形，与一切 GetElem 引理不匹配——先 `show l[i]'h = …` 显式换形（TameLp 实测） |
+| 管道投影 `X |>.length` | kabstract 完全失配（报"expected ℕ got List"）——用括号形 `(X.drop 1).length`；`|>.getD` 同理 |
+| `List.Perm` 中缀 `~` | scoped 记号（需 `open scoped List`，TameLp 未开）；前缀只能写 `List.Perm A B`，calc 步同理 |
+| List API 签名（v4.32.2，TameLp 实测） | `getElem_take/getElem_zip` 的 h **隐式**（rw 裸用），`getElem_reverse/rotate/append_left/right` 的 h **显式**；`drop_map/take_map`→`List.map_drop/map_take`；`find?_cons_pos/neg`、`nodup_map_on`、`flatten_map` 不存在——flatten 正确恒等式是 `List.flatten_reverse`，**`S.reverse.flatten = S.flatten.reverse` 是假命题**；`nodup_map_iff` 的 Injective 参数要 lambda；`reverse_perm' : l₁.reverse ~ l₂ ↔ l₁ ~ l₂` 现成 |
+| Eq 证明取字段 / getElem 下标 rw | Eq 的 Prod 字段用 `congrArg Prod.fst/snd h`（`h.1` 对 Eq 非法）；rw 改 `l[i]'h` 下标时位置证明 h 提及下标则 motive 崩——改写 getD 下标（无证明分量）或 `congr 1`+裸 Nat `have`+omega |
+| Set 成员头目标（PA22 eus1 实测） | `P ⊆ {x | …}` intro 后目标仍是 Membership 头——任何 `dot2` 模式 rw 必须先 `rw [Set.mem_setOf_eq]`，否则报"did not find occurrence"（极具误导性）；假设同头用 `have hle : dot2 a₀ x ≤ b₀ := hsub hx` defeq 展开直取；多段 rw-at 失败回滚不可依赖，先加 mem_setOf 一把到位 |
+| dot2 第一参 smul / 0<c 签名 | 第一参 smul 无公开件（`dot2_comm` 两次本地闭合）；`div_lt_iff₀`/`le_div_iff₀`/`inv_mul_cancel₀` 收 `0 < c`（非 ≠ 0）；后台编译验证别走 grep/head 管道（截掉级联错误），`> /tmp/x.log 2>&1` 全量落盘 |
 
 （发现新的改名陷阱：写报告第 5 项，编排者入表。**改名类错误只有 `lake build` 能稳定
 暴露**，env-lean 会放行旧名——见 §3。）
@@ -361,19 +368,30 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   `eq_circumcenter_of_dist_eq`，仅 span/range 换算）⑤aff_ge_inter_segments/
   continuous_intersection_point（初等代数/Cramer 连续性）⑥rotation_about_axis
   （CF-4c，⊥-分量经 family_special 平移）。
-- **PA22 wave-3 后**（43 remaining @`e4248c02`）：EXPLICIT ℂ kit 19 件就位
+- **PA22 wave-3 后**（43 remaining @`e4248c02`→**42 @`87a39f04`**）：EXPLICIT ℂ kit 19 件就位
   （模板对应表见交付报告，公开入口 `facetOfCPolyhedronExplicit`/
-  `p22_facetOfCPolyhedron`）。**eus1 收口 = 下一波首选（~40 行机械）**：
-  路线 = `p22_facetOfCPolyhedron` + 单位法向缩放（â=a/‖a‖、b̂=b/‖a‖）+
-  球点上确界（t•â ∈ 球 ⇒ t ≤ b̂）；**唯一阻塞是同文件序**——eus1(:293) 在
-  kit(:800+) 之前且被 facetRepPair/facet_rep_spec(:322-361) 消费，需把这组
-  一起下移到 kit 之后（编排者裁量，动序后全文件重 build 验证）。闭后
-  facet_rep_props→facet_rep_spec→eus1 继承的 9 枚全部脱 sorryAx。
+  `p22_facetOfCPolyhedron`）。**eus1 已收口（`87a39f04`）**：同文件序手术 +
+  65 行真证（â=‖a‖⁻¹•a 换元，ℂ 侧除法用 smul 形勿写 a/t；球点 mid-point
+  上确界反证）——facet_rep 全族零 sorry 闭合链形成。
   **pad2d3d_facet 波**：ℂ 侧 kit 已就位，还需 V3 侧同构 kit（§1 表逐段
   镜像，WithLp 噪声按 Polytope 原样）+ `FACET_OF_LINEAR_IMAGE` ℂ 版 +
   `BIJECTIONS_HAS_SIZE`。insert_v/bisector_point_exists/POLYSORT_BIJ2/
   EUSOTYP_simple 是 bisector/Arg 几何专项 GIANT 波（HOL
   :529/:825/:1964/:2112），勿当"只差 EXPLICIT kit"硬填。
+- **TameLp**（7 remaining @`74c1dd9e`，下一波 = MAP/REVERSE 运输块）：
+  **攻击顺序：先 `la7_listPairs_reverse`（唯一硬骨头）**——`ext_get`+`show
+  l[i]'h` 换形 + 两分支 dropTake 私件 + `simp only`（比 rw 耐 motive）+
+  congr-omega 收口；其余十余件全部顺流而下。已验证数学内容（逐面/逐点手算）：
+  `listPairs l.reverse = la7RotOne (((listPairs l).map (fun d => (d.2,
+  d.1))).reverse)`（tame_list.hl:1156）；REVERSE 共轭是 **faceMap L' (eList d)
+  = nList L d、nodeMap L' (eList d) = fList L d**（face/node 互换，勿写成
+  eList 共轭）、edgeMap L' (eList d) = d、两图 dart 集相等；MAP 侧
+  `listPairs (l.map phi) = (listPairs l).map (Prod.map phi phi)` +
+  hypermap_of_list_map 的 Iso（:3493）。Nodup 运输走逐面 Perm
+  （map_reverse/map_rotate/involutory + rotate_perm）+ flatten-Perm 提升 +
+  `List.Perm.nodup`；flatten 恒等式用 `List.flatten_reverse`（勿信
+  `S.reverse.flatten = S.flatten.reverse`，假命题）。完整 400 行证明脚本已
+  试写验证过逻辑（仅被上游点式引理拖累），10 条踩雷清单在 §5.3。
 
 ## 6. 教训日志（编排者每波收工后追加；工人有观察也写报告里）
 
