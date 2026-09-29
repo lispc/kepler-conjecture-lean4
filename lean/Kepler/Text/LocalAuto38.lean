@@ -1354,16 +1354,32 @@ theorem tau3_taum_d (d a01 a12 a02 b01 b12 b02 : ℝ)
     ‖v2‖ ≤ 2 * h0 → a01 ≤ dist v0 v1 → dist v0 v1 ≤ b01 →
     a12 ≤ dist v1 v2 → dist v1 v2 ≤ b12 → a02 ≤ dist v0 v2 →
     dist v0 v2 ≤ b02 → d ≤ tau3 v0 v1 v2 := by
-  intro _ _ _ _ _ _ _ _ _ _ _ _
-  sorry -- NEEDS (item-17 statement fix landed): mechanical fill only — the
-  -- degenerate-wedge question is gone, h1-h6 + the edge bounds now force
-  -- `2 ≤ dist ≤ 3.62` on all three edges.  Route (mirrors the HOL proof
-  -- terminal.hl:570-578): `v_i ∈ ballAnnulus` from `2 ≤ ‖v_i‖ ≤ 2*h0`
-  -- (ballAnnulus = closedBall 0 (2*h0) \ ball 0 2), rewrite via
-  -- `tau3_taum v0 v1 v2` (DISCHARGED above), then apply `h` at
-  -- y = (‖v0‖, ‖v1‖, ‖v2‖, dist v1 v2, dist v0 v2, dist v0 v1); the
-  -- `0 ≤ deltaY` side condition is `p38_deltaY_pos_4 0 v0 v1 v2` under
-  -- `dist_zero_left`.
+  intro n0 n0u n1 n1u n2 n2u e01l e01u e12l e12u e02l e02u
+  -- Filled 2026-09-28 (item 17): `2 ≤ ‖v_i‖ ≤ 2*h0` puts each `v_i` in
+  -- `ballAnnulus`, `tau3_taum v0 v1 v2` transfers the goal to `taum`, and `h`
+  -- applies at `y = (‖v0‖, ‖v1‖, ‖v2‖, dist v1 v2, dist v0 v2, dist v0 v1)`
+  -- with the Cayley–Menger side condition from `p38_deltaY_pos_4 0 v0 v1 v2`
+  -- under `dist_zero_left` (mirrors HOL terminal.hl:570-578).
+  have hA : v0 ∈ ballAnnulus := by
+    rw [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball,
+      dist_zero_right]
+    exact ⟨n0u, not_lt.mpr n0⟩
+  have hB : v1 ∈ ballAnnulus := by
+    rw [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball,
+      dist_zero_right]
+    exact ⟨n1u, not_lt.mpr n1⟩
+  have hC : v2 ∈ ballAnnulus := by
+    rw [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball,
+      dist_zero_right]
+    exact ⟨n2u, not_lt.mpr n2⟩
+  have hΔ : 0 ≤ deltaY ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2)
+      (dist v0 v1) := by
+    have hx := p38_deltaY_pos_4 0 v0 v1 v2
+    rwa [dist_zero_left, dist_zero_left, dist_zero_left] at hx
+  rw [tau3_taum v0 v1 v2 hA hB hC (le_trans h1 e01l) (le_trans h3 e02l)
+    (le_trans h2 e12l) (le_trans e01u h4) (le_trans e02u h6) (le_trans e12u h5)]
+  exact h ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1)
+    n0 n0u n1 n1u n2 n2u e01l e01u e12l e12u e02l e02u hΔ
 
 /-- HOL `tau3_taum_dfun` (terminal.hl:584-602): tau3_taum_d with the
 edge-correction functional `f`; same six box-bound conjuncts
@@ -1382,9 +1398,32 @@ theorem tau3_taum_dfun (d : ℝ) (a01 a12 a02 b01 b12 b02 : ℝ) (f : ℝ → �
     ‖v2‖ ≤ 2 * h0 → a01 ≤ dist v0 v1 → dist v0 v1 ≤ b01 →
     a12 ≤ dist v1 v2 → dist v1 v2 ≤ b12 → a02 ≤ dist v0 v2 →
     dist v0 v2 ≤ b02 → d + f (dist v1 v2) (dist v0 v2) (dist v0 v1) ≤ tau3 v0 v1 v2 := by
-  intro _ _ _ _ _ _ _ _ _ _ _ _
-  sorry -- NEEDS (item-17 statement fix landed): as tau3_taum_d above
-  -- (mechanical fill via `tau3_taum` + `p38_deltaY_pos_4`/`dist_zero_left`).
+  intro n0 n0u n1 n1u n2 n2u e01l e01u e12l e12u e02l e02u
+  -- Filled 2026-09-28 (item 17): as `tau3_taum_d` above — `ballAnnulus`
+  -- membership from the norm bounds, transfer via `tau3_taum v0 v1 v2`, then
+  -- `h` at `y = (‖v0‖, ‖v1‖, ‖v2‖, dist v1 v2, dist v0 v2, dist v0 v1)` with
+  -- the deltaY side condition from `p38_deltaY_pos_4 0 v0 v1 v2` under
+  -- `dist_zero_left` (mirrors HOL terminal.hl:605-613).
+  have hA : v0 ∈ ballAnnulus := by
+    rw [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball,
+      dist_zero_right]
+    exact ⟨n0u, not_lt.mpr n0⟩
+  have hB : v1 ∈ ballAnnulus := by
+    rw [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball,
+      dist_zero_right]
+    exact ⟨n1u, not_lt.mpr n1⟩
+  have hC : v2 ∈ ballAnnulus := by
+    rw [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball,
+      dist_zero_right]
+    exact ⟨n2u, not_lt.mpr n2⟩
+  have hΔ : 0 ≤ deltaY ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2)
+      (dist v0 v1) := by
+    have hx := p38_deltaY_pos_4 0 v0 v1 v2
+    rwa [dist_zero_left, dist_zero_left, dist_zero_left] at hx
+  rw [tau3_taum v0 v1 v2 hA hB hC (le_trans h1 e01l) (le_trans h3 e02l)
+    (le_trans h2 e12l) (le_trans e01u h4) (le_trans e02u h6) (le_trans e12u h5)]
+  exact h ‖v0‖ ‖v1‖ ‖v2‖ (dist v1 v2) (dist v0 v2) (dist v0 v1)
+    n0 n0u n1 n1u n2 n2u e01l e01u e12l e12u e02l e02u hΔ
 
 /-- HOL `taustar_taum` (terminal.hl:618). -/
 theorem taustar_taum (d : ℝ) (a b : ℕ → ℕ → ℝ) (h1 : 2 ≤ a 0 1) (h2 : 2 ≤ a 1 2)

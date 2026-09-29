@@ -231,6 +231,14 @@ hard=$(printf '%s\n' "$dels" \
   | grep -vE '^-$' \
   | grep -vE '^-[[:space:]]*(--|/-)' \
   | grep -vE '^.*-/[[:space:]]*$' || true)
+# anonymous-intro scaffolding (2026-09-29): a deleted `intro _ _ …` placeholder
+# carries no information (r1 tactic skeletons) — excused when the fill
+# re-introduces the hypotheses (an `intro` line exists among the adds); the
+# statement itself stays frozen and rules 3/4/5 still apply to the real content.
+if printf '%s\n' "$adds" | grep -qE '^[+][[:space:]]*intro\b'; then
+  hard=$(printf '%s\n' "$hard" \
+    | grep -vE '^-[[:space:]]*intro([[:space:]]+_[[:space:]]*)+$' || true)
+fi
 rest=""
 while IFS= read -r line; do
   [ -z "$line" ] && continue
