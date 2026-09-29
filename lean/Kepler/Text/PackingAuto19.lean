@@ -132,6 +132,7 @@ import Kepler.Text.PackingAuto12
 import Kepler.Text.PackingAuto15
 import Kepler.Text.PackingAuto16
 import Kepler.Text.PackingAuto18
+import Kepler.Text.PackingJGXZYGW
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -927,18 +928,19 @@ theorem UPFZBZM (V : Set V3) (hs : saturated V) (hp : Packing V)
 ported `JGXZYGW` (over `Space3` with its private `fcc_compatible`-style
 hypotheses), but its olean is not built in this checkout, so the statement is
 copied here against the PackingAuto2 encoding (`volume.real`,
-`fccCompatible`, `negligibleFunP`). Delete at merge in favor of
-PackingAuto1.JGXZYGW.
-
-NEEDS: pack1.hl JGXZYGW chain (measure_ineq_lm53_2, ineq_lm5_3_step3/4 —
-not on the Lean side). -/
+`fccCompatible`, `negligibleFunP`). NEEDS discharged (2026-09-29): the chain
+is now carried by the new leaf module `Kepler.Text.PackingJGXZYGW`
+(`jgxzygw_p`, axioms standard-three only); see docs/jgxzygw-scout.md §5. -/
 private theorem JGXZYGW_p19 (S : Set V3) (p : V3) (hV : Packing S)
     (hs : saturated S)
     (hA : ∃ A : V3 → ℝ, fccCompatible A S ∧ negligibleFunP A S p) :
     ∃ c : ℝ, ∀ r : ℝ, 1 ≤ r →
       volume.real ((⋃ v ∈ S, Metric.ball v 1) ∩ Metric.ball p r) /
         volume.real (Metric.ball p r) ≤ Real.pi / Real.sqrt 18 + c / r := by
-  sorry
+  obtain ⟨A, hfcc, hneg⟩ := hA
+  obtain ⟨C, hC0, hC⟩ := hneg
+  exact jgxzygw_p S p hV hs ⟨A, fun v hv => hfcc v hv, C, hC0,
+    fun r hr hfin => by simpa only [setSum, dif_pos hfin] using hC r hr⟩
 
 /-- HOL `JGXZYGW_KY` (RDWKARC.hl:76-91): `JGXZYGW` at the origin with the
 `negligible_fun_0` functional form. -/

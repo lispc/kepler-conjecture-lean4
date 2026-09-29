@@ -106,6 +106,7 @@ filled by the auto_loop harness).
 
 import Kepler.Text.Polytope
 import Kepler.Text.Fan
+import Kepler.Text.PackingJGXZYGW
 import Kepler.Statement
 import Mathlib
 
@@ -1083,18 +1084,22 @@ private theorem setSumImage_p2 (g : V3 → V3) (A : Set V3) (f : V3 → ℝ)
 origin in the `negligible_fun_0` functional form (`negligibleFun0` is by
 definition `negligibleFunP _ _ 0`, so this is literally `JGXZYGW` at `p = 0`).
 
-NEEDS: pack1.hl `JGXZYGW` 链（measure_ineq_lm53_2 / ineq_lm5_3_step3/4，Lean 侧
-未移植；PackingAuto1:1026 有同陈述 sorried `JGXZYGW`）。PA19 以 private
-`JGXZYGW_p19` + 已证桥 `JGXZYGW_KY` 携带同件；此处不可 import（PA19 imports
-PA2；PA1 受文件头 merge note 的 name-clash 政策阻断）。merge 时改为从
-`PackingAuto1.JGXZYGW`（p = 0）推出。 -/
+NEEDS (2026-09-29 已清偿): pack1.hl `JGXZYGW` 链现由新叶模块
+`Kepler.Text.PackingJGXZYGW` 全真证承载（`jgxzygw_p`，#print axioms 仅标准三；
+PA1:1026 骨架的债已被该模块替证）。PA19 侧同件经 private `JGXZYGW_p19` 同源
+桥接；PA1 因 `saturated` 公开重名仍不可 import（merge 期裁决见
+docs/jgxzygw-scout.md §5）。 -/
 private theorem JGXZYGW_KY_p2 (S : Set V3) (hV : Packing S) (hs : saturated S)
     (hA : ∃ A : V3 → ℝ, fccCompatible A S ∧ negligibleFun0 A S) :
     ∃ c : ℝ, ∀ r : ℝ, 1 ≤ r →
       volume.real ((⋃ v ∈ S, Metric.ball v 1) ∩ Metric.ball (0 : V3) r) /
         volume.real (Metric.ball (0 : V3) r) ≤ Real.pi / Real.sqrt 18 + c / r := by
-  -- NEEDS: PA1.JGXZYGW（p = 0），见上方 docstring
-  sorry
+  -- NEEDS discharged (2026-09-29): PackingJGXZYGW.jgxzygw_p（PA1.JGXZYGW 链
+  -- 全真证新叶模块，#print axioms 仅标准三），p = 0 特化 + setSum 桥。
+  obtain ⟨A, hfcc, hneg⟩ := hA
+  obtain ⟨C, hC0, hC⟩ := hneg
+  exact jgxzygw_p S 0 hV hs ⟨A, fun v hv => hfcc v hv, C, hC0,
+    fun r hr hfin => by simpa only [setSum, dif_pos hfin] using hC r hr⟩
 
 /-- HOL `RDWKARC_concl` (pack_concl.hl:247-249, modified Dec 31 2012).
 证明 = RDWKARC.hl:180-314（去 UPFZBZM/JGXZYGW 两座解析银行）：.unpack
