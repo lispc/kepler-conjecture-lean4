@@ -174,6 +174,7 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
 | ∃! / Sphere（CF-4b） | `∃! c, P c` 是 def 非结构体，含 λ 谓词时扁平元组失配——`refine ⟨w, ?_, ?_⟩` + `show`；`Sphere` 全限定 `EuclideanGeometry.Sphere`，`mk` 只收 center/radius；错误行新格式 `error(lean.unknownIdentifier):`（自查 grep 用 `grep -nE "error"` 兜底） |
 | Real.lt/le order 结构体（GT-1 实测） | `Set.mem_setOf_eq` 展开后 `a < b`/`a ≤ b` 产生 `Real.lt✝`/`Real.le✝` 结构体（非 LT/LE class 实例），linarith/rcases 匿名构造器/obtain 不直接消费——必须经 `sq_lt_sq₀`/`sq_le_sq₀`/`min_eq_right`/`Real.lt_sqrt` 显式转换 |
 | 杂项 API（GT-1） | `ENNReal.ofReal_mul` 单假设 `(hp : 0 ≤ p)`；`integral_pow` 在根命名空间（非 intervalIntegral.）；`RCLike.frontier_ball : frontier (ball x r) = sphere x r`（需 `.symm` 方向注意） |
+| CF-4c 杂项 13 条 | `absurd (h : ¬P) (hP : P)` 对 `hcol : P` 类型错——用 `(h hcol).elim`；`Real.sin_sq_add_cos_sq` 出 `^2` 形（喂 `s*s+c*c` 先 `rw [← pow_two, ← pow_two]`）；`pow_mul` 本 toolchain 展开成错误重载 pattern——`(k*‖v‖)²` 类收尾直接 `ring`；**`rcases h with rfl` 在 set-literal 成员上会消错变量**（改 `rcases h with h'|h'` + `rw`）；`inner_sub_left/right` 选向且须显式 args 钉实例（裸 lemma 会先展开 `inner (g-pw) (g-pw)`）；`inner_eq_norm_mul_iff_real` 取 `.1`；嵌套匿名构造器槽位数（∃f,∃a b,6-∧ 共 9 槽）少一个 `?_` 远处报错；`field_simp` 留残差接 `all_goals { ring }`；**`X / hG • v` 解析为 `X / (hG • v)`**——`((…) / hG) • v`；`linarith [hfn t ht]` 可能不取 ∀ 假设——先 `have h0 := hfn t ht` 物化；**affineSpan 刻画 kit（新沉淀可复用）**：`mem_affineSpan_iff_exists` + `vectorSpan_eq_span_vsub_set_left k hp`（p 取集合内一点），affineSpan{0,v1,v2}=span{v1,v2} 双向仅 ~30 行 |
 
 （发现新的改名陷阱：写报告第 5 项，编排者入表。**改名类错误只有 `lake build` 能稳定
 暴露**，env-lean 会放行旧名——见 §3。）
