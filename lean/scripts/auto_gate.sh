@@ -284,8 +284,21 @@ elif [ "${GATE_MODE:-}" = "STATEMENT-FIX" ]; then
   # (`def x … := sorry` deleted vs bare `sorry` lines added reads as +N).
   :
 else
-  [ "$nsorry_adds" -le "$nsorry_dels" ] \
-    || fail "new sorry lines added ($nsorry_adds > $nsorry_dels)"
+  # annotated-scaffold exception (2026-09-29, construction lanes): bare sorry
+  # lines may be added as explicit scaffolds up to $NEW_SORRY_ALLOW (default
+  # 0), each accounted by a `-- NEEDS` comment among the added lines; beyond
+  # the cap, or unaccounted, still fails.
+  bare_new=$(printf '%s\n' "$adds" | grep -cE '^[+][[:space:]]*sorry\b[[:space:]]*$' || true)
+  needs_docs=$(printf '%s\n' "$adds" | grep -cE -- '-- NEEDS' || true)
+  [ "$bare_new" -le "${NEW_SORRY_ALLOW:-0}" ] \
+    || fail "bare scaffold sorries added ($bare_new > NEW_SORRY_ALLOW=${NEW_SORRY_ALLOW:-0})"
+  if [ "$bare_new" -gt 0 ]; then
+    [ "$needs_docs" -ge "$bare_new" ] \
+      || fail "scaffold sorries lack -- NEEDS accounting ($needs_docs docs < $bare_new)"
+  fi
+  other_new=$((nsorry_adds - bare_new))
+  [ "$other_new" -le "$nsorry_dels" ] \
+    || fail "new sorry lines added ($other_new > $nsorry_dels)"
 fi
 printf '%s\n' "$adds" | grep -qE '\b(admit|native_decide)\b' \
   && fail "banned token in added lines"

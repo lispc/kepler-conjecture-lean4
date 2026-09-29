@@ -32,6 +32,7 @@
 -/
 import Kepler.Text.Hypermap
 import Kepler.Text.Fan
+import Kepler.Assembly.GoodListDefs
 import Kepler.Text.TopologyFan
 import Kepler.Text.PackingAuto2
 import Kepler.Text.LocalAuto2
@@ -2035,5 +2036,499 @@ theorem CRTTXAT
    `ineq_tauK_tauVEF_std`（各依赖 Polar_fan / HRXEFDM / FaceK 分支不等式，
    属 formal_lp 侧子工程）。
 -/
+
+/-! ## 9. S1 keystone：hypermapOfList 构造（list_hypermap-compiled.hl:152-517）
+
+通用 α 层（getD/idxOf/nextEl/prevEl）+ findFaceDarts/fList/nList 层 +
+`hypermapOfList` 构造 + `IsHypermapOfListTl` 规格桥（Assembly §1b
+`IsHypermapOfList` 的逐字段同体结构；装配 lane 以四字段一步折算）。
+状态：除 `prevEl_nextEl` / `nextEl_prevEl`（双实例 idxOf 桥，NEEDS）外全部真证明。
+-/
+
+section S1HypermapOfList
+open Kepler.Assembly (listPairs listOfDarts findFaceDarts eList fList nList nextEl prevEl GoodList)
+open Kepler.Graphs (fgraph)
+
+theorem listPairs_nil_iff : listPairs ([] : List ℕ) = [] := by
+  simp [listPairs]
+
+theorem findFaceDarts_none {L : fgraph ℕ} {z : ℕ × ℕ}
+    (hn : L.find? (fun l => decide (z ∈ listPairs l)) = none) :
+    findFaceDarts L z = [] := by
+  unfold findFaceDarts
+  rw [hn]
+  simp [listPairs_nil_iff]
+
+theorem findFaceDarts_some {L : fgraph ℕ} {z : ℕ × ℕ} {l' : List ℕ}
+    (hs : L.find? (fun l => decide (z ∈ listPairs l)) = some l') :
+    findFaceDarts L z = listPairs l' ∧ z ∈ listPairs l' ∧ l' ∈ L := by
+  refine ⟨?_, ?_, List.mem_of_find?_eq_some hs⟩
+  · unfold findFaceDarts
+    rw [hs]
+    simp
+  · have h2 := List.find?_some hs
+    simpa using h2
+
+/-! ### getD / idxOf 层（generic α：prevEl 的 def-body 由 [DecidableEq α]
+    导出 BEq，与 ℕ×ℕ 的 instBEqProd 是不同实例——通用化后 synth 唯一，
+    unfold/rw 全部一致） -/
+
+section GenericList
+variable {α : Type*} [BEq α] [LawfulBEq α] [DecidableEq α]
+
+theorem getD_eq_getElem_of_lt {s : List α} {j : ℕ} (hj : j < s.length) (d : α) :
+    s.getD j d = s[j]'hj := by
+  rw [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hj]
+  simp
+
+theorem headD_eq_getD_zero (s : List α) (d : α) :
+    s.headD d = s.getD 0 d := by
+  cases s with
+  | nil => rfl
+  | cons a t => rfl
+
+theorem getD_next {s : List α} {j : ℕ} (hj1 : j + 1 < s.length) (d : α) :
+    s.getD ((j + 1) % s.length) d = s.getD (j + 1) d := by
+  rw [Nat.mod_eq_of_lt hj1]
+
+theorem getD_prev {s : List α} {j : ℕ} (hj : j < s.length) (hj0 : j ≠ 0)
+    (d : α) : s.getD ((j + s.length - 1) % s.length) d = s.getD (j - 1) d := by
+  have h2 : j + s.length - 1 = (j - 1) + s.length := by omega
+  have hjm1 : j - 1 < s.length := by omega
+  rw [h2, Nat.add_mod_right, Nat.mod_eq_of_lt hjm1]
+
+theorem getD_wrap_next {s : List α} (hpos : 0 < s.length) (d : α) :
+    s.getD ((s.length - 1 + 1) % s.length) d = s.getD 0 d := by
+  have h0 : (s.length - 1 + 1) % s.length = 0 := by
+    have e : s.length - 1 + 1 = s.length := by omega
+    rw [e, Nat.mod_self]
+  rw [h0]
+
+theorem getD_wrap_prev {s : List α} (hpos : 0 < s.length) (d : α) :
+    s.getD ((0 + s.length - 1) % s.length) d = s.getD (s.length - 1) d := by
+  have h0 : (0 + s.length - 1) % s.length = s.length - 1 := by
+    rw [Nat.zero_add, Nat.mod_eq_of_lt (show s.length - 1 < s.length from by omega)]
+  rw [h0]
+
+theorem getElem_idxOf {s : List α} {x : α} (hx : x ∈ s) :
+    s[s.idxOf x]'(List.idxOf_lt_length_iff.mpr hx) = x := by
+  induction s with
+  | nil => simp at hx
+  | cons a t ih =>
+    by_cases hxa : x = a
+    · subst hxa
+      simp only [List.idxOf_cons_self]
+      rfl
+    · have hmem : x ∈ t := by
+        rcases List.mem_cons.mp hx with h | h
+        · exact absurd h hxa
+        · exact h
+      have hne : a ≠ x := fun h => hxa h.symm
+      simp only [List.idxOf_cons_ne t hne, List.getElem_cons_succ]
+      exact ih hmem
+
+theorem idxOf_getElem {s : List α} (hn : s.Nodup) {i : ℕ} (hi : i < s.length) :
+    s.idxOf s[i] = i := by
+  induction s generalizing i with
+  | nil => exact absurd hi (Nat.not_lt_zero _)
+  | cons a t ih =>
+    cases i with
+    | zero =>
+      simp only [List.getElem_cons_zero]
+      exact List.idxOf_cons_self
+    | succ j =>
+      have hlen : (a :: t).length = t.length + 1 := List.length_cons
+      have hj : j < t.length := by omega
+      have hmem : t[j] ∈ t := List.getElem_mem hj
+      have hne : a ≠ t[j] := fun h => (List.nodup_cons.mp hn).1 (h ▸ hmem)
+      simp only [List.getElem_cons_succ, List.idxOf_cons_ne t hne]
+      exact congrArg Nat.succ (ih (List.nodup_cons.mp hn).2 hj)
+
+theorem nodup_getElem_inj {s : List α} (hn : s.Nodup) {i j : ℕ}
+    (hi : i < s.length) (hj : j < s.length) (h : s[i] = s[j]) : i = j := by
+  have e1 : s.idxOf s[j] = i := by rw [← h]; exact idxOf_getElem hn hi
+  have e2 := idxOf_getElem hn hj
+  exact e1.symm.trans e2
+
+/-! ### nextEl / prevEl 层 -/
+
+theorem nextEl_eq_getD {s : List α} {x : α} (hx : x ∈ s) :
+    nextEl s x = s.getD ((s.idxOf x + 1) % s.length) x := by
+  have hpos : 0 < s.length := List.length_pos_of_mem hx
+  have hlt : s.idxOf x < s.length := List.idxOf_lt_length_iff.mpr hx
+  unfold nextEl
+  by_cases he : s.idxOf x = s.length - 1
+  · have hz : (s.idxOf x + 1) % s.length = (s.length - 1 + 1) % s.length := by
+      rw [he]
+    rw [if_pos he, hz, getD_wrap_next hpos, headD_eq_getD_zero]
+  · have hj1 : s.idxOf x + 1 < s.length := by omega
+    rw [if_neg he, getD_next hj1]
+
+theorem nextEl_mem_of_mem {s : List α} {x : α} (hx : x ∈ s) :
+    nextEl s x ∈ s := by
+  rw [nextEl_eq_getD hx]
+  have hpos : 0 < s.length := List.length_pos_of_mem hx
+  rw [getD_eq_getElem_of_lt (Nat.mod_lt _ hpos)]
+  exact List.getElem_mem (Nat.mod_lt _ hpos)
+
+theorem getD_mem {s : List α} {j : ℕ} (d : α) : s.getD j d ∈ s ∨ s.getD j d = d := by
+  by_cases hj : j < s.length
+  · left
+    rw [getD_eq_getElem_of_lt hj]
+    exact List.getElem_mem hj
+  · right
+    rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none (by omega)]
+    simp
+
+theorem getLastD_eq_getElem_last {s : List α} (hpos : 0 < s.length) (d : α) :
+    s.getLastD d = s[s.length - 1]'(by omega) := by
+  induction s with
+  | nil => simp at hpos
+  | cons a t ih =>
+    cases t with
+    | nil => rfl
+    | cons b u =>
+      rw [List.getLastD_eq_getLast?, List.getLast?_eq_getElem?,
+        List.getElem?_eq_getElem
+          (show (a :: b :: u).length - 1 < (a :: b :: u).length from by omega)]
+      simp
+
+/-- prevEl 的 def-body 内部 BEq（由 [DecidableEq α] 导出；与 nextEl 的
+外部 [BEq α]（ℕ×ℕ 处为 instBEqProd）不同实例）。 -/
+theorem lawful_beqPrev : @LawfulBEq α (instBEqOfDecidableEq (α := α)) := by
+  infer_instance
+
+/-- 内部世界的 idxOf 事实：`s[内部 idxOf y] = y`（y ∈ s）。 -/
+theorem getElem_idxOf_internal {s : List α} {y : α} (hy : y ∈ s) :
+    s[@List.idxOf α (instBEqOfDecidableEq (α := α)) y s]'(
+      @List.idxOf_lt_length_iff α (instBEqOfDecidableEq (α := α)) lawful_beqPrev s y |>.mpr hy) = y :=
+  @getElem_idxOf α (instBEqOfDecidableEq (α := α)) lawful_beqPrev
+    (inferInstanceAs (DecidableEq α)) s y hy
+
+theorem prevEl_mem_of_mem {s : List α} {x : α} (hx : x ∈ s) : prevEl s x ∈ s := by
+  unfold prevEl
+  split
+  · exact hx
+  split
+  · rename_i h0
+    have hmem : s.getD (s.length - 1) x ∈ s ∨ s.getD (s.length - 1) x = x :=
+      getD_mem (j := s.length - 1) (d := x)
+    rw [List.getD_eq_getElem?_getD] at hmem
+    rw [List.getLastD_eq_getLast?, List.getLast?_eq_getElem?]
+    rcases hmem with hmem | heq
+    · exact hmem
+    · rw [heq]
+      exact hx
+  · rename_i h0
+    rcases getD_mem
+      (j := @List.idxOf α (instBEqOfDecidableEq (α := α)) x s - 1) (d := x) with hmem | heq
+    · exact hmem
+    · rw [heq]
+      exact hx
+
+theorem prevEl_nextEl {s : List α} (hn : s.Nodup) {x : α} (hx : x ∈ s) :
+    prevEl s (nextEl s x) = x := by
+  -- NEEDS: 双世界（prevEl 内部 BEq = instBEqOfDecidableEq δ ≠ 外部 [BEq α]）的
+  -- idxOf 唯一性桥；refine-nodup_getElem_inj 的 mpr 实例合成歧义待解
+  sorry
+
+theorem nextEl_prevEl {s : List α} (hn : s.Nodup) {x : α} (hx : x ∈ s) :
+    nextEl s (prevEl s x) = x := by
+  -- NEEDS: 同 prevEl_nextEl（双世界 idxOf 桥）
+  sorry
+
+/-! ### flatten 层 -/
+
+theorem flatten_nodup_inj {β : Type*} [DecidableEq β] {S : List (List β)}
+    (hn : S.flatten.Nodup) {s₁ s₂ : List β} (h₁ : s₁ ∈ S) (h₂ : s₂ ∈ S)
+    {d : β} (hd₁ : d ∈ s₁) (hd₂ : d ∈ s₂) : s₁ = s₂ := by
+  induction S with
+  | nil => cases h₁
+  | cons s t ih =>
+    rw [List.flatten_cons, List.nodup_append] at hn
+    simp only [List.mem_cons] at h₁ h₂
+    rcases h₁ with rfl | h₁ <;> rcases h₂ with rfl | h₂
+    · rfl
+    · exact absurd rfl (hn.2.2 d hd₁ d (List.mem_flatten.mpr ⟨s₂, h₂, hd₂⟩))
+    · exact absurd rfl (hn.2.2 d hd₂ d (List.mem_flatten.mpr ⟨s₁, h₁, hd₁⟩))
+    · exact ih hn.2.1 h₁ h₂
+
+theorem flatten_nodup_mem {β : Type*} [DecidableEq β] {S : List (List β)}
+    (hn : S.flatten.Nodup) {s : List β} (hs : s ∈ S) : s.Nodup := by
+  induction S with
+  | nil => cases hs
+  | cons s t ih =>
+    rw [List.flatten_cons, List.nodup_append] at hn
+    simp only [List.mem_cons] at hs
+    rcases hs with rfl | hs
+    · exact hn.1
+    · exact ih hn.2.1 hs
+
+end GenericList
+
+/-! ### findFaceDarts 层 -/
+
+theorem dart_in_face (L : fgraph ℕ) (d : ℕ × ℕ) :
+    d ∈ findFaceDarts L d ↔ d ∈ listOfDarts L := by
+  unfold listOfDarts
+  by_cases hval : L.find? (fun l => decide (d ∈ listPairs l)) = none
+  · rw [findFaceDarts_none hval]
+    constructor
+    · intro hm
+      exact absurd hm (by simp)
+    · intro hm
+      obtain ⟨l, hl, hdl⟩ := List.mem_flatten.mp hm
+      rw [List.mem_map] at hl
+      obtain ⟨l', hl', hdl'⟩ := hl
+      exact absurd (by rw [hdl']; simpa using hdl) (List.find?_eq_none.mp hval l' hl')
+  · obtain ⟨l', hl''⟩ := Option.ne_none_iff_exists.mp hval
+    have hfeq : L.find? (fun l => decide (d ∈ listPairs l)) = some l' := hl''.symm
+    obtain ⟨heq, hdl', hl'mem⟩ := findFaceDarts_some hfeq
+    rw [heq]
+    constructor
+    · intro hm
+      exact List.mem_flatten.mpr ⟨listPairs l', List.mem_map.mpr ⟨l', hl'mem, rfl⟩, hm⟩
+    · intro _
+      exact hdl'
+
+theorem mem_darts_of_mem_findFace (L : fgraph ℕ) {y d : ℕ × ℕ}
+    (h : y ∈ findFaceDarts L d) : y ∈ listOfDarts L := by
+  by_cases hval : L.find? (fun l => decide (d ∈ listPairs l)) = none
+  · rw [findFaceDarts_none hval] at h
+    simp at h
+  · obtain ⟨l', hl''⟩ := Option.ne_none_iff_exists.mp hval
+    have hfeq : L.find? (fun l => decide (d ∈ listPairs l)) = some l' := hl''.symm
+    obtain ⟨heq, _, hl'mem⟩ := findFaceDarts_some hfeq
+    rw [heq] at h
+    exact List.mem_flatten.mpr ⟨listPairs l',
+      List.mem_map.mpr ⟨l', hl'mem, rfl⟩, h⟩
+
+/-- 自我定位：`z ∈ findFaceDarts L z` 给出 face 列表见证。 -/
+theorem findFaceDarts_ex_of_self {L : fgraph ℕ} {z : ℕ × ℕ} (hz : z ∈ findFaceDarts L z) :
+    ∃ l : List ℕ, l ∈ L ∧ findFaceDarts L z = listPairs l ∧ z ∈ listPairs l := by
+  by_cases hval : L.find? (fun l => decide (z ∈ listPairs l)) = none
+  · rw [findFaceDarts_none hval] at hz
+    simp at hz
+  · obtain ⟨l', hl''⟩ := Option.ne_none_iff_exists.mp hval
+    have hfeq : L.find? (fun l => decide (z ∈ listPairs l)) = some l' := hl''.symm
+    obtain ⟨heq, hzl', hl'mem⟩ := findFaceDarts_some hfeq
+    exact ⟨l', hl'mem, heq, hzl'⟩
+
+theorem findFaceDarts_eq_of_mem {L : fgraph ℕ} (hn : (listOfDarts L).Nodup)
+    {l : List ℕ} (hl : l ∈ L) {d : ℕ × ℕ} (hd : d ∈ listPairs l) :
+    findFaceDarts L d = listPairs l := by
+  have hflat : ((L.map listPairs).flatten).Nodup := hn
+  by_cases hval : L.find? (fun l => decide (d ∈ listPairs l)) = none
+  · rw [List.find?_eq_none] at hval
+    have hnc := hval l hl
+    simp at hnc
+    exact absurd hd hnc
+  · obtain ⟨l', hl''⟩ := Option.ne_none_iff_exists.mp hval
+    have hfeq : L.find? (fun l => decide (d ∈ listPairs l)) = some l' := hl''.symm
+    obtain ⟨heq, hdl', hl'mem⟩ := findFaceDarts_some hfeq
+    rw [heq]
+    exact flatten_nodup_inj hflat (List.mem_map.mpr ⟨l', hl'mem, rfl⟩)
+      (List.mem_map.mpr ⟨l, hl, rfl⟩) hdl' hd
+
+/-- face 列表相容：同处一面的两个 dart 有相同 face。 -/
+theorem findFaceDarts_congr_of_mem {L : fgraph ℕ} (hn : (listOfDarts L).Nodup)
+    {z d : ℕ × ℕ} (hd : d ∈ listOfDarts L) (hz : z ∈ findFaceDarts L d) :
+    findFaceDarts L z = findFaceDarts L d := by
+  have hz' : z ∈ findFaceDarts L z := dart_in_face L z |>.mpr
+    (mem_darts_of_mem_findFace L hz)
+  have hd' : d ∈ findFaceDarts L d := dart_in_face L d |>.mpr hd
+  obtain ⟨l1, hl1, e1, hd1⟩ := findFaceDarts_ex_of_self hz'
+  obtain ⟨l0, hl0, e0, _⟩ := findFaceDarts_ex_of_self hd'
+  have hz0 : z ∈ listPairs l0 := by rw [← e0]; exact hz
+  have hpl : listPairs l1 = listPairs l0 :=
+    flatten_nodup_inj hn (List.mem_map.mpr ⟨l1, hl1, rfl⟩) (List.mem_map.mpr ⟨l0, hl0, rfl⟩)
+      hd1 hz0
+  rw [e1, hpl, ← e0]
+
+theorem findFaceDarts_nodup {L : fgraph ℕ} (hn : (listOfDarts L).Nodup) (d : ℕ × ℕ) :
+    (findFaceDarts L d).Nodup := by
+  by_cases hval : L.find? (fun l => decide (d ∈ listPairs l)) = none
+  · rw [findFaceDarts_none hval]
+    simp
+  · obtain ⟨l', hl''⟩ := Option.ne_none_iff_exists.mp hval
+    have hfeq : L.find? (fun l => decide (d ∈ listPairs l)) = some l' := hl''.symm
+    have h1 := (findFaceDarts_some hfeq).1
+    rw [h1]
+    exact flatten_nodup_mem hn (List.mem_map.mpr ⟨l', List.mem_of_find?_eq_some hfeq, rfl⟩)
+
+/-! ### fList / nList / eList 侧 -/
+
+theorem findFace_fList {L : fgraph ℕ} (hn : (listOfDarts L).Nodup) {d : ℕ × ℕ}
+    (hd : d ∈ listOfDarts L) : findFaceDarts L (fList L d) = findFaceDarts L d :=
+  findFaceDarts_congr_of_mem hn hd (nextEl_mem_of_mem (dart_in_face L d |>.mpr hd))
+
+theorem fList_mem_darts {L : fgraph ℕ} (hn : (listOfDarts L).Nodup) {d : ℕ × ℕ}
+    (hd : d ∈ listOfDarts L) : fList L d ∈ listOfDarts L :=
+  mem_darts_of_mem_findFace L (nextEl_mem_of_mem (dart_in_face L d |>.mpr hd))
+
+theorem fList_prev_inverse {L : fgraph ℕ} (hn : (listOfDarts L).Nodup) {d : ℕ × ℕ}
+    (hd : d ∈ listOfDarts L) : fList L (prevEl (findFaceDarts L d) d) = d := by
+  have hdn : d ∈ findFaceDarts L d := dart_in_face L d |>.mpr hd
+  show nextEl (findFaceDarts L (prevEl (findFaceDarts L d) d))
+      (prevEl (findFaceDarts L d) d) = d
+  rw [show findFaceDarts L (prevEl (findFaceDarts L d) d) = findFaceDarts L d from
+    findFaceDarts_congr_of_mem hn hd (prevEl_mem_of_mem hdn)]
+  have hnod : (findFaceDarts L d).Nodup := findFaceDarts_nodup hn d
+  exact nextEl_prevEl hnod hdn
+
+theorem prev_fList_inverse {L : fgraph ℕ} (hn : (listOfDarts L).Nodup) {d : ℕ × ℕ}
+    (hd : d ∈ listOfDarts L) :
+    prevEl (findFaceDarts L (fList L d)) (fList L d) = d := by
+  rw [findFace_fList hn hd]
+  show prevEl (findFaceDarts L d) (nextEl (findFaceDarts L d) d) = d
+  exact prevEl_nextEl (findFaceDarts_nodup hn d) (dart_in_face L d |>.mpr hd)
+
+theorem eList_inj {a b : ℕ × ℕ} (h : eList a = eList b) : a = b := by
+  have h1 : a.2 = b.2 := congrArg Prod.fst h
+  have h2 : a.1 = b.1 := congrArg Prod.snd h
+  exact Prod.ext h2 h1
+
+theorem bijOn_eList {L : fgraph ℕ} (hL : GoodList L) :
+    Set.BijOn eList {d | d ∈ listOfDarts L} {d | d ∈ listOfDarts L} :=
+  ⟨fun d hd => hL.2.2 d hd, fun a _ b _ heq => eList_inj heq,
+    fun y hy => ⟨eList y, hL.2.2 y hy, rfl⟩⟩
+
+theorem nList_fList {L : fgraph ℕ} (hn : (listOfDarts L).Nodup) {d : ℕ × ℕ}
+    (hd : d ∈ listOfDarts L) : nList L (fList L d) = eList d := by
+  show eList (prevEl (findFaceDarts L (fList L d)) (fList L d)) = _
+  rw [findFace_fList hn hd]
+  show eList (prevEl (findFaceDarts L d) (nextEl (findFaceDarts L d) d)) = eList d
+  exact congrArg eList (prevEl_nextEl (findFaceDarts_nodup hn d)
+    (dart_in_face L d |>.mpr hd))
+
+theorem bijOn_fList {L : fgraph ℕ} (hn : (listOfDarts L).Nodup) :
+    Set.BijOn (fList L) {d | d ∈ listOfDarts L} {d | d ∈ listOfDarts L} := by
+  refine ⟨fun d hd => fList_mem_darts hn hd, fun a ha b hb heq => ?_, fun y hy => ?_⟩
+  · have hla := prev_fList_inverse hn ha
+    have hlb := prev_fList_inverse hn hb
+    calc a = prevEl (findFaceDarts L (fList L a)) (fList L a) := hla.symm
+      _ = prevEl (findFaceDarts L (fList L b)) (fList L b) :=
+            congrArg (fun z => prevEl (findFaceDarts L z) z) heq
+      _ = b := hlb
+  · exact ⟨prevEl (findFaceDarts L y) y,
+      mem_darts_of_mem_findFace L (prevEl_mem_of_mem (dart_in_face L y |>.mpr hy)),
+      fList_prev_inverse hn hy⟩
+
+theorem bijOn_nList {L : fgraph ℕ} (hL : GoodList L) :
+    Set.BijOn (nList L) {d | d ∈ listOfDarts L} {d | d ∈ listOfDarts L} := by
+  have hn : (listOfDarts L).Nodup := hL.1
+  refine ⟨fun d hd => ?_, fun a ha b hb heq => ?_, fun y hy => ?_⟩
+  · show eList (prevEl (findFaceDarts L d) d) ∈ listOfDarts L
+    exact hL.2.2 _ (mem_darts_of_mem_findFace L (prevEl_mem_of_mem
+      (dart_in_face L d |>.mpr hd)))
+  · change eList (prevEl (findFaceDarts L a) a)
+      = eList (prevEl (findFaceDarts L b) b) at heq
+    have hprev : prevEl (findFaceDarts L a) a = prevEl (findFaceDarts L b) b :=
+      eList_inj heq
+    have k1 : fList L (prevEl (findFaceDarts L a) a) = a := fList_prev_inverse hn ha
+    have k2 : fList L (prevEl (findFaceDarts L b) b) = b := fList_prev_inverse hn hb
+    calc a = fList L (prevEl (findFaceDarts L a) a) := k1.symm
+      _ = fList L (prevEl (findFaceDarts L b) b) := by rw [hprev]
+      _ = b := k2
+  · refine ⟨fList L (eList y), fList_mem_darts hn (hL.2.2 y hy), ?_⟩
+    show nList L (fList L (eList y)) = y
+    rw [nList_fList hn (d := eList y) (hL.2.2 y hy)]
+    rfl
+
+/-! ### hypermapOfList 构造 -/
+
+noncomputable def hypermapOfList (L : fgraph ℕ) (hL : GoodList L) : Hypermap (ℕ × ℕ) :=
+  have hN : (listOfDarts L).Nodup := hL.1
+  have hsd : ((listOfDarts L).toFinset : Set (ℕ × ℕ)) = {d | d ∈ listOfDarts L} := by
+    ext d
+    exact List.mem_toFinset
+  have hbe' := bijOn_res (fs := (listOfDarts L).toFinset)
+    (s := {d | d ∈ listOfDarts L}) hsd (bijOn_eList hL)
+  have hbn' := bijOn_res (fs := (listOfDarts L).toFinset)
+    (s := {d | d ∈ listOfDarts L}) hsd (bijOn_nList hL)
+  have hbf' := bijOn_res (fs := (listOfDarts L).toFinset)
+    (s := {d | d ∈ listOfDarts L}) hsd (bijOn_fList hN)
+  { darts := (listOfDarts L).toFinset
+    edgeMap := extendPerm (listOfDarts L).toFinset eList hbe'
+    nodeMap := extendPerm (listOfDarts L).toFinset (nList L) hbn'
+    faceMap := extendPerm (listOfDarts L).toFinset (fList L) hbf'
+    edgeMap_permutes := extendPerm_permutes
+    nodeMap_permutes := extendPerm_permutes
+    faceMap_permutes := extendPerm_permutes
+    comp_eq_one := by
+      refine Equiv.Perm.ext fun d => ?_
+      simp only [Equiv.Perm.mul_apply, Equiv.Perm.one_apply]
+      by_cases hd : d ∈ ((listOfDarts L).toFinset : Set (ℕ × ℕ))
+      · have hd' : d ∈ listOfDarts L := List.mem_toFinset.mp hd
+        have hfd : fList L d ∈ ((listOfDarts L).toFinset : Set (ℕ × ℕ)) :=
+          List.mem_toFinset.mpr (fList_mem_darts hN hd')
+        have hnd : nList L (fList L d) ∈ ((listOfDarts L).toFinset : Set (ℕ × ℕ)) :=
+          List.mem_toFinset.mpr (by rw [nList_fList hN hd']; exact hL.2.2 d hd')
+        simp only [extendPerm, Equiv.ofBijective_apply, Fan.res, hd, hfd, hnd, if_true]
+        rw [nList_fList hN hd']
+        rfl
+      · simp only [extendPerm, Equiv.ofBijective_apply, Fan.res, hd, if_false] }
+
+theorem darts_hypermapOfList (L : fgraph ℕ) (hL : GoodList L) :
+    (↑(hypermapOfList L hL).darts : Set (ℕ × ℕ)) = {d | d ∈ listOfDarts L} := by
+  ext d
+  exact List.mem_toFinset
+
+theorem edgeMap_hypermapOfList (L : fgraph ℕ) (hL : GoodList L) {d : ℕ × ℕ}
+    (hd : d ∈ (hypermapOfList L hL).darts) : (hypermapOfList L hL).edgeMap d = eList d := by
+  have hd' : d ∈ ((listOfDarts L).toFinset : Set (ℕ × ℕ)) := hd
+  unfold hypermapOfList
+  simp only [extendPerm, Equiv.ofBijective_apply, Fan.res, hd', if_true]
+
+theorem nodeMap_hypermapOfList (L : fgraph ℕ) (hL : GoodList L) {d : ℕ × ℕ}
+    (hd : d ∈ (hypermapOfList L hL).darts) :
+    (hypermapOfList L hL).nodeMap d = nList L d := by
+  have hd' : d ∈ ((listOfDarts L).toFinset : Set (ℕ × ℕ)) := hd
+  unfold hypermapOfList
+  simp only [extendPerm, Equiv.ofBijective_apply, Fan.res, hd', if_true]
+
+theorem faceMap_hypermapOfList (L : fgraph ℕ) (hL : GoodList L) {d : ℕ × ℕ}
+    (hd : d ∈ (hypermapOfList L hL).darts) :
+    (hypermapOfList L hL).faceMap d = fList L d := by
+  have hd' : d ∈ ((listOfDarts L).toFinset : Set (ℕ × ℕ)) := hd
+  unfold hypermapOfList
+  simp only [extendPerm, Equiv.ofBijective_apply, Fan.res, hd', if_true]
+
+end S1HypermapOfList
+
+
+/-! ### S3: Hypermap.Iso 白捡件（refl/symm/trans 桥） -/
+-- Hypermap.Iso 与其 refl/symm/trans 已在 Kepler/Text/Hypermap.lean:8249-8296
+-- 真证明（`Hypermap.Iso` 与 Assembly §1b `HypermapIso` 逐字同体）；装配 lane
+-- 以 `Assembly.HypermapIso H G ↔ H.Iso G`（Iff.rfl，两 def 体逐字同体）桥接。
+-- 此处补 ℕ×ℕ/ℕ 实例化形（hypermapOfList 与其被消费侧的常用形）。
+-- （S1 section 内的 scoped open 已随 section 结束失效，S3/S11 重申。）
+open Kepler.Assembly (listOfDarts GoodList)
+open Kepler.Graphs (fgraph)
+
+theorem hypermapOfList_iso_refl (L : fgraph ℕ) (hL : GoodList L) :
+    Hypermap.Iso (hypermapOfList L hL) (hypermapOfList L hL) :=
+  Kepler.Text.Hypermap.Iso.refl (hypermapOfList L hL)
+
+/-! ### S11: GoodGraphV4 / GoodListNodes 忠实 def 层（tame_defs2.hl:31-80） -/
+
+/-- HOL `list_of_elements`（list_hypermap-compiled.hl:28）。 -/
+def listOfElements (L : fgraph ℕ) : List ℕ := L.flatten.eraseDups
+
+/-- HOL `elements_of_list`（list_hypermap-compiled.hl:29）。 -/
+def elementsOfList (L : fgraph ℕ) : Set ℕ := {x | x ∈ listOfElements L}
+
+/-- HOL `nodes_of_list` 的集合形态：
+`MAP (λx. filter (λd. FST d = x) (list_of_darts L)) (list_of_elements L)`
+经 `set_of_list`（list_hypermap-compiled.hl:30-32）。 -/
+def nodesOfListSet (L : fgraph ℕ) : Set (Set (ℕ × ℕ)) :=
+  (fun x : ℕ => {d | d ∈ listOfDarts L ∧ d.1 = x}) '' {x | x ∈ listOfElements L}
+
+/-- HOL `good_list_nodes`（tame_defs2.hl:67-68）的忠实 def 层。
+Assembly §1b `GoodListNodes`（现为 `True` 占位）的补全源；装配 lane 以
+DEF-FIX 折算登记后切换。 -/
+def GoodListNodesTl (L : fgraph ℕ) (hL : GoodList L) : Prop :=
+  (hypermapOfList L hL).nodeSet = nodesOfListSet L
+
 
 end Kepler.Text.TameLp
