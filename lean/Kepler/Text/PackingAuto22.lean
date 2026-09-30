@@ -2768,19 +2768,275 @@ theorem pad_in (x : ℂ) (A : Set V3) (hA : ∀ u ∈ A, (u : Fin 3 → ℝ) 2 =
     rw [← hxu]
     rwa [pad2d3d_dropout u (hA u hu)]
 
+/-! ## `pad2d3d_facet` support kit: the linear-image facet transfer
+(V3-side mirror + `FACET_OF_LINEAR_IMAGE` ℂ-versions).  The plane `z = 0` is
+linearly isomorphic to `ℂ` via `pad2d3dP22`/`dropout3P22`; faces, facet
+dimensions and facet counts transport along it.  All items private, consumed
+by `pad2d3d_facet`. -/
+
+/-- Equality of `V3` points reduces to component equality. -/
+private theorem p22_v3_eq {a b : V3} (h : (a : Fin 3 → ℝ) = (b : Fin 3 → ℝ)) : a = b := by
+  rw [← WithLp.toLp_ofLp 2 a, ← WithLp.toLp_ofLp 2 b, h]
+
+/-- `pad2d3dP22` as a linear map `ℂ →ₗ[ℝ] V3`. -/
+private def padLin : ℂ →ₗ[ℝ] V3 where
+  toFun := pad2d3dP22
+  map_add' := by
+    intro z w
+    refine p22_v3_eq ?_
+    funext i
+    fin_cases i <;> simp [pad2d3dP22]
+  map_smul' := by
+    intro t z
+    refine p22_v3_eq ?_
+    funext i
+    fin_cases i <;> simp [pad2d3dP22, Complex.real_smul, Complex.mul_re]
+
+/-- `dropout3P22` as a linear map `V3 →ₗ[ℝ] ℂ`. -/
+private def dropLin : V3 →ₗ[ℝ] ℂ where
+  toFun := dropout3P22
+  map_add' := by
+    intro u v
+    refine Complex.ext ?_ ?_ <;> simp [dropout3P22]
+  map_smul' := by
+    intro t u
+    refine Complex.ext ?_ ?_ <;> simp [dropout3P22, Complex.real_smul, Complex.mul_re]
+
+private theorem padLin_apply (z : ℂ) : padLin z = pad2d3dP22 z := rfl
+
+private theorem dropLin_apply (v : V3) : dropLin v = dropout3P22 v := rfl
+
+/-- `pad2d3dP22` is injective (left inverse `dropout3P22`). -/
+private theorem padLin_inj : Function.Injective padLin := by
+  intro u v h
+  have h2 : dropout3P22 (padLin u) = dropout3P22 (padLin v) := congrArg dropout3P22 h
+  rw [padLin_apply, padLin_apply, dropout_pad2d3d, dropout_pad2d3d] at h2
+  exact h2
+
+/-- The `z = 0` plane as a submodule of `V3`. -/
+private def planeP22 : Submodule ℝ V3 where
+  carrier := {v : V3 | (v : Fin 3 → ℝ) 2 = 0}
+  add_mem' := by
+    intro u v hu hv
+    have h2 : ((u + v : V3) : Fin 3 → ℝ) 2 = (u : Fin 3 → ℝ) 2 + (v : Fin 3 → ℝ) 2 := rfl
+    show ((u + v : V3) : Fin 3 → ℝ) 2 = 0
+    rw [h2, Set.mem_setOf_eq.mp hu, Set.mem_setOf_eq.mp hv]
+    ring
+  zero_mem' := rfl
+  smul_mem' := by
+    intro t v hv
+    have h2 : ((t • v : V3) : Fin 3 → ℝ) 2 = t * ((v : Fin 3 → ℝ) 2) := rfl
+    show ((t • v : V3) : Fin 3 → ℝ) 2 = 0
+    rw [h2, Set.mem_setOf_eq.mp hv]
+    ring
+
+private theorem mem_planeP22 {v : V3} : v ∈ planeP22 ↔ (v : Fin 3 → ℝ) 2 = 0 := Iff.rfl
+
+private theorem planeP22_convex : Convex ℝ (planeP22 : Set V3) := Submodule.convex _
+
+/-- `dropout3P22` is injective on the `z = 0` plane. -/
+private theorem dropLin_injOn_plane :
+    ∀ u ∈ planeP22, ∀ v ∈ planeP22, dropLin u = dropLin v → u = v := by
+  intro u hu v hv h
+  have h1 : pad2d3dP22 (dropLin u) = pad2d3dP22 (dropLin v) := congrArg _ h
+  rw [dropLin_apply, dropLin_apply,
+    pad2d3d_dropout u (mem_planeP22.1 hu), pad2d3d_dropout v (mem_planeP22.1 hv)] at h1
+  exact h1
+
+/-- Segment images under a linear map. -/
+private theorem p22_image_openSegment {E F : Type*} [AddCommGroup E] [Module ℝ E]
+    [AddCommGroup F] [Module ℝ F] (g : E →ₗ[ℝ] F) (a b : E) :
+    g '' openSegment ℝ a b = openSegment ℝ (g a) (g b) := by
+  ext x
+  simp only [Set.mem_image, openSegment, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨y, ⟨c, d, hc, hd, hcd, rfl⟩, rfl⟩
+    exact ⟨c, d, hc, hd, hcd, by rw [map_add, map_smul, map_smul]⟩
+  · rintro ⟨c, d, hc, hd, hcd, rfl⟩
+    exact ⟨c • a + d • b, ⟨c, d, hc, hd, hcd, rfl⟩, by rw [map_add, map_smul, map_smul]⟩
+
+/-- Face-of bodies transport along a linear map injective on a convex superset. -/
+private theorem p22_faceBody_image {E F : Type*} [AddCommGroup E] [Module ℝ E]
+    [AddCommGroup F] [Module ℝ F] (g : E →ₗ[ℝ] F) (p : Submodule ℝ E) {s t : Set E}
+    (hsub : t ⊆ s) (hs : s ⊆ ↑p) (hinj : ∀ u ∈ p, ∀ v ∈ p, g u = g v → u = v)
+    (hconv : Convex ℝ t)
+    (hseg : ∀ a b x : E, a ∈ s → b ∈ s → x ∈ t → x ∈ openSegment ℝ a b → a ∈ t ∧ b ∈ t) :
+    g '' t ⊆ g '' s ∧ Convex ℝ (g '' t) ∧
+      ∀ a b x : F, a ∈ g '' s → b ∈ g '' s → x ∈ g '' t →
+        x ∈ openSegment ℝ a b → a ∈ g '' t ∧ b ∈ g '' t := by
+  have hinjp : Function.Injective (LinearMap.comp g p.subtype) := by
+    rintro ⟨u, hu⟩ ⟨v, hv⟩ huv
+    exact Subtype.ext (hinj u hu v hv huv)
+  refine ⟨Set.image_mono hsub, ?_, ?_⟩
+  · -- convexity of the image
+    rw [convex_iff_segment_subset] at hconv ⊢
+    intro a ha b hb
+    obtain ⟨a', ha', rfl⟩ := ha
+    obtain ⟨b', hb', rfl⟩ := hb
+    intro x hx
+    obtain ⟨c, d, hc, hd, hcd, rfl⟩ := hx
+    exact ⟨c • a' + d • b',
+      hconv ha' hb' ⟨c, d, hc, hd, hcd, rfl⟩,
+      by rw [map_add, map_smul, map_smul]⟩
+  · -- the segment condition
+    intro a b x ha hb hx hopen
+    obtain ⟨a', ha', rfl⟩ := ha
+    obtain ⟨b', hb', rfl⟩ := hb
+    obtain ⟨x', hx', rfl⟩ := hx
+    rw [← p22_image_openSegment] at hopen
+    obtain ⟨x'', hx''seg, hx''eq⟩ := hopen
+    -- place `x''` in `p` via convexity
+    have hx''p : (x'' : E) ∈ p := by
+      have h3 : (x'' : E) ∈ segment ℝ (a' : E) (b' : E) :=
+        (openSegment_subset_segment (𝕜 := ℝ) a' b') hx''seg
+      exact convex_iff_segment_subset.mp (Submodule.convex p) (hs ha') (hs hb') h3
+    have hx'p : (x' : E) ∈ p := hs (hsub hx')
+    have hxeq : x' = x'' := hinj x' hx'p x'' hx''p hx''eq.symm
+    obtain ⟨ha't, hb't⟩ :=
+      hseg a' b' x' ha' hb' hx' (by rw [hxeq]; exact hx''seg)
+    exact ⟨⟨a', ha't, rfl⟩, ⟨b', hb't, rfl⟩⟩
+
+/-- finrank of the vector span is preserved by a linear map injective on a
+superset submodule. -/
+private theorem p22_finrank_vectorSpan_image {E F : Type*} [AddCommGroup E] [Module ℝ E]
+    [AddCommGroup F] [Module ℝ F] (g : E →ₗ[ℝ] F) (p : Submodule ℝ E)
+    (hinj : ∀ u ∈ p, ∀ v ∈ p, g u = g v → u = v) {s : Set E} (hs : s ⊆ ↑p) :
+    Module.finrank ℝ (vectorSpan ℝ (g '' s)) = Module.finrank ℝ (vectorSpan ℝ s) := by
+  have hvseq : vectorSpan ℝ (g '' s) = Submodule.map g (vectorSpan ℝ s) := by
+    have h := AffineMap.map_vectorSpan (f := g.toAffineMap) (s := s)
+    simp only [LinearMap.coe_toAffineMap, LinearMap.toAffineMap_linear] at h
+    exact h.symm
+  have hvp : vectorSpan ℝ (p : Set E) ≤ p := by
+    rw [vectorSpan_def, Submodule.span_le]
+    intro d hd
+    obtain ⟨x, hx, y, hy, rfl⟩ := hd
+    exact p.sub_mem hx hy
+  have hqle : (vectorSpan ℝ s : Submodule ℝ E) ≤ p := (vectorSpan_mono ℝ hs).trans hvp
+  have hinjq : Function.Injective (LinearMap.comp g (vectorSpan ℝ s).subtype) := by
+    rintro ⟨u, hu⟩ ⟨v, hv⟩ huv
+    exact Subtype.ext (hinj u (hqle hu) v (hqle hv) huv)
+  have hrange : Submodule.map g (vectorSpan ℝ s)
+      = LinearMap.range (LinearMap.comp g (vectorSpan ℝ s).subtype) := by
+    ext x
+    simp only [Submodule.mem_map, LinearMap.mem_range, LinearMap.coe_comp,
+      Submodule.coe_subtype]
+    constructor
+    · rintro ⟨y, hy, rfl⟩; exact ⟨⟨y, hy⟩, rfl⟩
+    · rintro ⟨y, hy⟩; exact ⟨y, y.2, hy⟩
+  rw [hvseq, hrange, LinearMap.finrank_range_of_inj hinjq]
+
+/-- `affDim` is preserved by `pad2d3dP22`. -/
+private theorem p22_affDim_image_pad (s : Set ℂ) :
+    affDim (pad2d3dP22 '' s) = affDimC s := by
+  simp only [affDim, affDimC]
+  by_cases hse : s = ∅
+  · subst hse
+    simp
+  · have hne : pad2d3dP22 '' s ≠ ∅ := fun hc => hse (Set.image_eq_empty.mp hc)
+    simp only [if_neg hne, if_neg hse]
+    exact congrArg ((↑) : ℕ → ℤ) (p22_finrank_vectorSpan_image padLin ⊤
+      (fun u _hu v _hv h => padLin_inj h) (fun _u _ => Submodule.mem_top))
+
+/-- `affDimC` is preserved by `dropout3P22` on the plane. -/
+private theorem p22_affDim_image_drop {s : Set V3} (hs : ∀ u ∈ s, (u : Fin 3 → ℝ) 2 = 0) :
+    affDimC (dropout3P22 '' s) = affDim s := by
+  simp only [affDim, affDimC]
+  by_cases hse : s = ∅
+  · subst hse
+    simp
+  · have hne : dropout3P22 '' s ≠ ∅ := fun hc => hse (Set.image_eq_empty.mp hc)
+    simp only [if_neg hne, if_neg hse]
+    exact congrArg ((↑) : ℕ → ℤ) (p22_finrank_vectorSpan_image dropLin planeP22
+      dropLin_injOn_plane (fun u hu => mem_planeP22.2 (hs u hu)))
+
+/-- `pad2d3dP22 (dropout3P22 '' t) = t` for plane subsets. -/
+private theorem p22_pad_drop_image {t : Set V3} (ht : ∀ u ∈ t, (u : Fin 3 → ℝ) 2 = 0) :
+    pad2d3dP22 '' (dropout3P22 '' t) = t := by
+  ext u
+  simp only [Set.mem_image]
+  constructor
+  · rintro ⟨z, ⟨u', hu', rfl⟩, rfl⟩
+    rwa [pad2d3d_dropout u' (ht u' hu')]
+  · intro hu
+    exact ⟨dropout3P22 u, ⟨u, hu, rfl⟩, pad2d3d_dropout u (ht u hu)⟩
+
+/-- Forward transfer: a `V3` facet of `P` maps to a `ℂ` facet of the dropout
+image (`FACET_OF_LINEAR_IMAGE`, V3 → ℂ direction). -/
+private theorem p22_facetOfC_of_FacetOf {P c : Set V3}
+    (hz : ∀ u ∈ P, (u : Fin 3 → ℝ) 2 = 0) (hfc : FacetOf c P) :
+    facetOfC (dropout3P22 '' c) (dropout3P22 '' P) := by
+  have hcsub : c ⊆ P := hfc.1.1
+  obtain ⟨bsub, bconv, bseg⟩ :=
+    p22_faceBody_image dropLin planeP22 hcsub
+      (fun u hu => mem_planeP22.2 (hz u hu)) dropLin_injOn_plane hfc.1.2.1 hfc.1.2.2
+  refine ⟨⟨bsub, bconv, bseg⟩, ?_, ?_⟩
+  · intro hc0
+    exact hfc.2.1 (Set.image_eq_empty.mp hc0)
+  · rw [p22_affDim_image_drop (fun u hu => hz u (hcsub hu)), p22_affDim_image_drop hz]
+    exact hfc.2.2
+
+/-- Backward transfer: a `ℂ` facet of the dropout image lifts to a `V3` facet
+of `P` (`FACET_OF_LINEAR_IMAGE`, ℂ → V3 direction). -/
+private theorem p22_FacetOf_of_facetOfC {P : Set V3} (hz : ∀ u ∈ P, (u : Fin 3 → ℝ) 2 = 0)
+    {d : Set ℂ} (hdf : facetOfC d (dropout3P22 '' P)) :
+    FacetOf (pad2d3dP22 '' d) P := by
+  have hQpad : pad2d3dP22 '' (dropout3P22 '' P) = P := p22_pad_drop_image hz
+  have hdsub : d ⊆ dropout3P22 '' P := hdf.1.1
+  obtain ⟨bsub, bconv, bseg⟩ :=
+    p22_faceBody_image padLin ⊤ hdsub (fun _ _ => Submodule.mem_top)
+      (fun u _hu v _hv h => padLin_inj h) hdf.1.2.1 hdf.1.2.2
+  simp only [padLin_apply] at bsub bseg
+  rw [hQpad] at bsub bseg
+  refine ⟨⟨bsub, bconv, bseg⟩, ?_, ?_⟩
+  · have h1 : d.Nonempty := Set.nonempty_iff_ne_empty.mpr hdf.2.1
+    have h2 : (pad2d3dP22 '' d).Nonempty := Set.image_nonempty.mpr h1
+    exact Set.nonempty_iff_ne_empty.mp h2
+  · rw [p22_affDim_image_pad, ← hQpad, p22_affDim_image_pad]
+    exact hdf.2.2
+
 /-- HOL `pad2d3d_facet` (counting_spheres.hl:1737). GIANT. -/
 theorem pad2d3d_facet (P : Set V3) (n : ℕ) (hP : polyhedron P)
     (hz : ∀ u ∈ P, (u : Fin 3 → ℝ) 2 = 0)
     (hn : ({c : Set V3 | FacetOf c P}).Finite ∧ ({c : Set V3 | FacetOf c P}).ncard = n) :
     ({d : Set ℂ | facetOfC d (dropout3P22 '' P)}).Finite ∧
       ({d : Set ℂ | facetOfC d (dropout3P22 '' P)}).ncard = n := by
-  -- NEEDS: counting_spheres.hl:1737. GIANT. Route (planar-encoding-fix.md
-  -- §3c): `BIJECTIONS_HAS_SIZE` transports the facet-count through
-  -- `dropout3P22 '' P`; each facet maps to a facetOfC of the dropout image via
-  -- `FACET_OF_LINEAR_IMAGE` ℂ-version + the affine-isometry facts of
-  -- `pad2d3dP22`/`dropout3P22` (dropout_pad2d3d/pad2d3d_dropout landed), plus
-  -- the FACET_OF_POLYHEDRONC_EXPLICIT-style explicit facet kit on the V3 side.
-  sorry
+  -- The facet family transports along the linear plane-isomorphism
+  -- `pad2d3dP22 : ℂ ≃ (z = 0)` / `dropout3P22` (dropout_pad2d3d /
+  -- pad2d3d_dropout): the FACET_OF_LINEAR_IMAGE ℂ-versions
+  -- `p22_facetOfC_of_FacetOf` / `p22_FacetOf_of_facetOfC` above transfer facets
+  -- both ways, so `{d | facetOfC d (dropout3P22 '' P)}` is exactly the image of
+  -- the V3 facet family under `c ↦ dropout3P22 '' c` (`BIJECTIONS_HAS_SIZE`
+  -- route); injectivity of that map on the plane gives the ncard transport.
+  have hseteq : {d : Set ℂ | facetOfC d (dropout3P22 '' P)}
+      = (fun c => dropout3P22 '' c) '' {c : Set V3 | FacetOf c P} := by
+    ext d
+    simp only [Set.mem_setOf_eq, Set.mem_image]
+    constructor
+    · intro hd
+      refine ⟨pad2d3dP22 '' d, p22_FacetOf_of_facetOfC hz hd, ?_⟩
+      ext z
+      simp only [Set.mem_image]
+      constructor
+      · rintro ⟨w, ⟨w₀, hw₀, rfl⟩, rfl⟩
+        rw [dropout_pad2d3d]
+        exact hw₀
+      · intro hz'
+        exact ⟨pad2d3dP22 z, ⟨z, hz', rfl⟩, dropout_pad2d3d z⟩
+    · rintro ⟨c, hc, rfl⟩
+      exact p22_facetOfC_of_FacetOf hz hc
+  refine ⟨?_, ?_⟩
+  · rw [hseteq]
+    exact hn.1.image (fun c => dropout3P22 '' c)
+  · rw [hseteq]
+    refine (Set.InjOn.ncard_image ?_).trans hn.2
+    intro c1 hc1 c2 hc2 heq
+    have h1 : pad2d3dP22 '' (dropout3P22 '' c1) = c1 :=
+      p22_pad_drop_image (fun u hu => hz u (hc1.1.1 hu))
+    have h2 : pad2d3dP22 '' (dropout3P22 '' c2) = c2 :=
+      p22_pad_drop_image (fun u hu => hz u (hc2.1.1 hu))
+    calc c1 = pad2d3dP22 '' (dropout3P22 '' c1) := h1.symm
+      _ = pad2d3dP22 '' (dropout3P22 '' c2) := congrArg (fun S => pad2d3dP22 '' S) heq
+      _ = c2 := h2
 
 /-- HOL `complex_frac_cancel` (counting_spheres.hl:1767). -/
 theorem complex_frac_cancel (a b c : ℂ) (hb : b ≠ 0) :
