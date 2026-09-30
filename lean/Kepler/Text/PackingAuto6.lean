@@ -248,7 +248,222 @@ theorem HALFSPACE_EQ (a : V3) (b : ℝ) (c : V3) (d : ℝ) :
     {x : V3 | a ⬝ᵥ x ≤ b} = {x : V3 | c ⬝ᵥ x ≤ d} ↔
       (∃ t : ℝ, c = t • a ∧ d = t * b ∧ 0 < t) ∨
         (a = 0 ∧ c = 0 ∧ ((0 ≤ b ∧ 0 ≤ d) ∨ (b < 0 ∧ d < 0))) := by
-  sorry
+  -- V3 dot product is the `Fin 3 → ℝ` dot product after `ofLp`
+  have hpi : ∀ (y z : V3), y ⬝ᵥ z = ((y : Fin 3 → ℝ) ⬝ᵥ (z : Fin 3 → ℝ)) :=
+    fun y z => rfl
+  have haddV : ∀ (y z : V3), ((y + z : V3) : Fin 3 → ℝ)
+      = (y : Fin 3 → ℝ) + (z : Fin 3 → ℝ) := fun y z => rfl
+  have hsmulV : ∀ (r : ℝ) (y : V3), ((r • y : V3) : Fin 3 → ℝ)
+      = r • (y : Fin 3 → ℝ) := fun r y => rfl
+  have hzdot : ∀ x : V3, (0 : V3) ⬝ᵥ x = 0 := by
+    intro x
+    have h0 : ((0 : V3) : Fin 3 → ℝ) = 0 := rfl
+    rw [hpi, h0]
+    exact zero_dotProduct ((x : Fin 3 → ℝ))
+  have hdotself : ∀ y : V3, y ⬝ᵥ y = 0 → y = 0 := by
+    intro y h
+    apply WithLp.ofLp_injective
+    have h' : ((y : Fin 3 → ℝ)) ⬝ᵥ ((y : Fin 3 → ℝ)) = 0 := by
+      rw [← hpi y y]
+      exact h
+    simpa using dotProduct_self_eq_zero.mp h'
+  have hsmul : ∀ (r : ℝ) (y z : V3), y ⬝ᵥ (r • z) = r * (y ⬝ᵥ z) :=
+    fun r y z => dotProduct_smul r (y : Fin 3 → ℝ) (z : Fin 3 → ℝ)
+  have hsmulL : ∀ (r : ℝ) (y z : V3), (r • y) ⬝ᵥ z = r * (y ⬝ᵥ z) :=
+    fun r y z => smul_dotProduct r (y : Fin 3 → ℝ) (z : Fin 3 → ℝ)
+  have hadd : ∀ (y z w : V3), y ⬝ᵥ (z + w) = y ⬝ᵥ z + y ⬝ᵥ w :=
+    fun y z w => dotProduct_add (y : Fin 3 → ℝ) (z : Fin 3 → ℝ) (w : Fin 3 → ℝ)
+  have hcomm : ∀ (y z : V3), y ⬝ᵥ z = z ⬝ᵥ y :=
+    fun y z => dotProduct_comm (y : Fin 3 → ℝ) (z : Fin 3 → ℝ)
+  have hexp : ∀ (y z : V3) (r : ℝ),
+      (y - r • z) ⬝ᵥ (y - r • z) =
+        y ⬝ᵥ y - 2 * r * (y ⬝ᵥ z) + r * r * (z ⬝ᵥ z) := by
+    intro y z r
+    rw [hpi y y, hpi y z, hpi z z, hpi]
+    rw [show ((y - r • z : V3) : Fin 3 → ℝ) = (y : Fin 3 → ℝ) - r • (z : Fin 3 → ℝ) from rfl]
+    simp only [dotProduct_sub, dotProduct_smul, dotProduct_comm]
+    ring
+  constructor
+  · intro heq
+    have hiff : ∀ x : V3, (a ⬝ᵥ x ≤ b ↔ c ⬝ᵥ x ≤ d) := by
+      intro x
+      have h : x ∈ {x : V3 | a ⬝ᵥ x ≤ b} ↔ x ∈ {x : V3 | c ⬝ᵥ x ≤ d} := by
+        rw [heq]
+      simpa only [Set.mem_setOf_eq] using h
+    by_cases ha : a = 0
+    · subst ha
+      have hiff0 : ∀ x : V3, (0 ≤ b ↔ c ⬝ᵥ x ≤ d) := by
+        intro x
+        have h := hiff x
+        rw [hzdot x] at h
+        exact h
+      by_cases hc : c = 0
+      · subst hc
+        refine Or.inr ⟨rfl, rfl, ?_⟩
+        have hz : (0 ≤ b ↔ 0 ≤ d) := by
+          have h1 := hiff0 0
+          rw [hzdot (0 : V3)] at h1
+          exact h1
+        by_cases hb : 0 ≤ b
+        · exact Or.inl ⟨hb, hz.1 hb⟩
+        · have hd : ¬ 0 ≤ d := fun hd0 => hb (hz.2 hd0)
+          exact Or.inr ⟨lt_of_not_ge hb, lt_of_not_ge hd⟩
+      · exfalso
+        have hcc : c ⬝ᵥ c ≠ 0 := by
+          intro h0
+          exact hc (hdotself c h0)
+        by_cases hb : 0 ≤ b
+        · -- the left side is the whole space; then c · x ≤ d for all x,
+          -- contradicting x = ((d + 1) / (c ⬝ᵥ c)) • c
+          have hx : c ⬝ᵥ (((d + 1) / (c ⬝ᵥ c)) • c) = d + 1 := by
+            rw [hsmul]
+            field_simp [hcc]
+          have hxle : c ⬝ᵥ (((d + 1) / (c ⬝ᵥ c)) • c) ≤ d :=
+            (hiff0 (((d + 1) / (c ⬝ᵥ c)) • c)).1 hb
+          rw [hx] at hxle
+          linarith
+        · -- the left side is empty; but x = (d / (c ⬝ᵥ c)) • c lies in the right
+          have hb' : b < 0 := lt_of_not_ge hb
+          have hx : c ⬝ᵥ ((d / (c ⬝ᵥ c)) • c) = d := by
+            rw [hsmul]
+            field_simp [hcc]
+          have hxle : c ⬝ᵥ ((d / (c ⬝ᵥ c)) • c) ≤ d := by rw [hx]
+          exact absurd ((hiff0 ((d / (c ⬝ᵥ c)) • c)).2 hxle) (not_le.2 hb')
+    · -- a ≠ 0
+      have haa : a ⬝ᵥ a ≠ 0 := by
+        intro h0
+        exact ha (hdotself a h0)
+      have hge0 : 0 ≤ a ⬝ᵥ a := by
+        have h0 : a ⬝ᵥ a = ∑ i : Fin 3, (a : Fin 3 → ℝ) i * (a : Fin 3 → ℝ) i := rfl
+        rw [h0]
+        exact Finset.sum_nonneg fun i _ => mul_self_nonneg _
+      -- the key quadratic inequality (Rogers.hl:254, subgoal "A")
+      have key : ∀ u : ℝ, u * ((a ⬝ᵥ a) * (c ⬝ᵥ c) - (a ⬝ᵥ c) * (a ⬝ᵥ c))
+          ≤ d * (a ⬝ᵥ a) - b * (a ⬝ᵥ c) := by
+        intro u
+        set w := (b - u * (a ⬝ᵥ c)) / (a ⬝ᵥ a) with hwdef
+        have hwaa : w * (a ⬝ᵥ a) = b - u * (a ⬝ᵥ c) := by
+          rw [hwdef]
+          field_simp [haa]
+        have hax : a ⬝ᵥ (w • a + u • c) = b := by
+          rw [hadd, hsmul, hsmul, hwaa]
+          ring
+        have hcx : c ⬝ᵥ (w • a + u • c) ≤ d := by
+          have h := hiff (w • a + u • c)
+          rw [haddV, hsmulV, hsmulV] at h
+          rw [hax] at h
+          exact h.1 (le_refl b)
+        have hcxv : c ⬝ᵥ (w • a + u • c) = w * (a ⬝ᵥ c) + u * (c ⬝ᵥ c) := by
+          rw [hadd, hsmul, hsmul, hcomm]
+        have h3 := mul_le_mul_of_nonneg_right hcx hge0
+        rw [hcxv] at h3
+        have e1 : (w * (a ⬝ᵥ c)) * (a ⬝ᵥ a) = (b - u * (a ⬝ᵥ c)) * (a ⬝ᵥ c) := by
+          rw [← hwaa]
+          ring
+        nlinarith [e1, h3]
+      -- the equality case of Cauchy–Schwarz: c lies on the line spanned by a
+      have hCauchy : (a ⬝ᵥ a) * (c ⬝ᵥ c) = (a ⬝ᵥ c) * (a ⬝ᵥ c) := by
+        have h := REAL_LINE_BOUNDED ((a ⬝ᵥ a) * (c ⬝ᵥ c) - (a ⬝ᵥ c) * (a ⬝ᵥ c))
+          (d * (a ⬝ᵥ a) - b * (a ⬝ᵥ c)) key
+        linarith
+      set s : ℝ := (a ⬝ᵥ c) / (a ⬝ᵥ a) with hsdef
+      have hSab : s * (a ⬝ᵥ a) = a ⬝ᵥ c := by
+        rw [hsdef]
+        exact div_mul_cancel₀ _ haa
+      have h2 : s * (a ⬝ᵥ c) * (a ⬝ᵥ a) = (a ⬝ᵥ c) * (a ⬝ᵥ c) := by
+        rw [hsdef]
+        field_simp [haa]
+      have hcc' : c ⬝ᵥ c = s * (a ⬝ᵥ c) := by
+        have hprod : s * (a ⬝ᵥ c) * (a ⬝ᵥ a) = (c ⬝ᵥ c) * (a ⬝ᵥ a) := by
+          nlinarith [h2, hCauchy]
+        exact (mul_right_cancel₀ haa hprod).symm
+      have h3saa : s * s * (a ⬝ᵥ a) = s * (a ⬝ᵥ c) := by
+        rw [← hSab]
+        ring
+      have hceq : c = s • a := by
+        have hcoll : (c - s • a) ⬝ᵥ (c - s • a) = 0 := by
+          rw [hexp, hcc', h3saa, hcomm c a]
+          ring
+        exact sub_eq_zero.mp (hdotself _ hcoll)
+      -- s ≠ 0, otherwise the right side is degenerate while the left is not
+      have hs0 : s ≠ 0 := by
+        intro h0
+        rw [h0, zero_smul] at hceq
+        have hz : ∀ x : V3, (a ⬝ᵥ x ≤ b ↔ 0 ≤ d) := by
+          intro x
+          have h := hiff x
+          rw [hceq, hzdot x] at h
+          exact h
+        have hx2 : a ⬝ᵥ (((b + 1) / (a ⬝ᵥ a)) • a) = b + 1 := by
+          rw [hsmul]
+          field_simp [haa]
+        have hx3 : a ⬝ᵥ (((b - 1) / (a ⬝ᵥ a)) • a) = b - 1 := by
+          rw [hsmul]
+          field_simp [haa]
+        have hnot : ¬ 0 ≤ d := fun hd0 => by
+          have h9 := (hz (((b + 1) / (a ⬝ᵥ a)) • a)).2 hd0
+          rw [hsmulV, hx2] at h9
+          linarith
+        exact hnot ((hz (((b - 1) / (a ⬝ᵥ a)) • a)).1
+          (by rw [hsmulV, hx3]; linarith))
+      -- the two sample points pin `d = s * b` once `s > 0`
+      have hx1 : a ⬝ᵥ ((b / (a ⬝ᵥ a)) • a) = b := by
+        rw [hsmul]
+        field_simp [haa]
+      have h1 : s * b ≤ d := by
+        have hmem := (hiff ((b / (a ⬝ᵥ a)) • a)).1 (by rw [hsmulV, hx1])
+        have hc1 : c ⬝ᵥ ((b / (a ⬝ᵥ a)) • a) = s * b := by
+          rw [hceq, hsmulL, hx1]
+        rw [hsmulV, hc1] at hmem
+        exact hmem
+      have h4 : d / s ≤ b := by
+        have hx0 : c ⬝ᵥ (((d / s) / (a ⬝ᵥ a)) • a) = d := by
+          rw [hceq, hsmulL, hsmul]
+          field_simp [haa, hs0]
+        have h4a : a ⬝ᵥ (((d / s) / (a ⬝ᵥ a)) • a) = d / s := by
+          rw [hsmul]
+          field_simp [haa]
+        have hmem := (hiff (((d / s) / (a ⬝ᵥ a)) • a)).2 (by rw [hsmulV, hx0])
+        rw [hsmulV, h4a] at hmem
+        exact hmem
+      by_cases hsneg : s < 0
+      · -- s < 0 is incompatible with the equality of the two halfspaces
+        exfalso
+        have hx4 : a ⬝ᵥ (((b + 1) / (a ⬝ᵥ a)) • a) = b + 1 := by
+          rw [hsmul]
+          field_simp [haa]
+        have hx4' : c ⬝ᵥ (((b + 1) / (a ⬝ᵥ a)) • a) = s * (b + 1) := by
+          rw [hceq, hsmulL, hx4]
+        have hnotmem : ¬ (a ⬝ᵥ (((b + 1) / (a ⬝ᵥ a)) • a) ≤ b) := by
+          intro hcon
+          rw [hx4] at hcon
+          linarith
+        have hgt : ¬ (c ⬝ᵥ (((b + 1) / (a ⬝ᵥ a)) • a) ≤ d) :=
+          fun hcon => hnotmem ((hiff (((b + 1) / (a ⬝ᵥ a)) • a)).2 hcon)
+        rw [hx4'] at hgt
+        have hgt' : d < s * (b + 1) := not_le.mp hgt
+        have hexp4 : s * (b + 1) = s * b + s := by ring
+        rw [hexp4] at hgt'
+        linarith
+      · -- 0 < s
+        have hpos : 0 < s := lt_of_le_of_ne (le_of_not_gt hsneg) (Ne.symm hs0)
+        have hq : d / s * s = d := div_mul_cancel₀ d hs0
+        have h5 : d ≤ s * b := by
+          have h5a : d / s * s ≤ b * s := mul_le_mul_of_nonneg_right h4
+            (le_of_not_gt hsneg)
+          rw [hq, mul_comm] at h5a
+          exact h5a
+        exact Or.inl ⟨s, hceq, le_antisymm h5 h1, hpos⟩
+  · rintro (⟨t, rfl, rfl, ht⟩ | ⟨rfl, rfl, hsign⟩)
+    · ext x
+      simp only [Set.mem_setOf_eq, hsmulL]
+      exact (mul_le_mul_iff_of_pos_left ht).symm
+    · ext x
+      have hz : (0 : V3) ⬝ᵥ x = 0 := hzdot x
+      simp only [Set.mem_setOf_eq, hz]
+      rcases hsign with ⟨hb, hd⟩ | ⟨hb, hd⟩
+      · exact ⟨fun _ => hd, fun _ => hb⟩
+      · exact iff_of_false (not_le.2 hb) (not_le.2 hd)
 
 /-- Rogers.hl:397 `HALFSPACE_EQ_BIS_LE_IMP_HYPERPLANE_EQ_BIS`. -/
 theorem HALFSPACE_EQ_BIS_LE_IMP_HYPERPLANE_EQ_BIS (a v w : V3) (b : ℝ) (ha : a ≠ 0)
@@ -656,11 +871,36 @@ theorem NUMSEG_SUBSET_INDUCT (s : Set ℕ) (a b : ℕ) (ha : a ∈ s)
         exact hstep (n - 1) (by omega) (by omega) h5
   exact key m hm.1 hm.2
 
-/-- Rogers.hl:778 `BARV_EXISTS`: a `barV V k` list extends to `barV V (k+1)`. -/
+/-- Rogers.hl:778 `BARV_EXISTS`: a `barV V k` list extends to `barV V (k+1)`.
+The cell `voronoi_list V wl` is nonempty (dimension `3 - k > 0`, so not the
+empty set of dimension `-1`), hence the union decomposition of
+`VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS` (Rogers.hl:694) has a nonempty
+index family, which is exactly an extension `vl` with
+`barV V (k + 1) vl` and `truncateSimplex k vl = wl`. -/
+-- NEEDS: transitive upstream stubs in PackingAuto5 — POLYHEDRON_VORONOI_LIST
+-- (:1500) / POLYTOPE_VORONOI_LIST (:1503) consumed by the in-file
+-- VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS route; close them in PA5 to make
+-- this proof sorryAx-free end to end. AFF_DIM_VORONOI_LIST (PA5:1531) is
+-- already a real proof.
 theorem BARV_EXISTS (V : Set V3) (wl : List V3) (k : ℕ) (hP : Packing V)
     (hs : saturated V) (hk3 : k < 3) (hbar : barV V k wl) :
     ∃ vl : List V3, barV V (k + 1) vl ∧ truncateSimplex k vl = wl := by
-  sorry
+  have hdim : 0 < affDim (voronoiList V wl) := by
+    rw [AFF_DIM_VORONOI_LIST V wl k hbar]
+    omega
+  have hne : (voronoiList V wl).Nonempty := by
+    by_contra h0
+    rw [Set.not_nonempty_iff_eq_empty] at h0
+    rw [h0, affDim_empty] at hdim
+    omega
+  obtain ⟨p, hp⟩ := hne
+  have hpmem : p ∈ ⋃₀ {convexHull ℝ (insert p (voronoiList V vl)) |
+      vl ∈ {vl : List V3 | barV V (k + 1) vl ∧ truncateSimplex k vl = wl}} := by
+    rw [← VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS V wl k p hP hs hbar hk3 hp]
+    exact hp
+  obtain ⟨T, hT, -⟩ := Set.mem_sUnion.1 hpmem
+  obtain ⟨vl, hv, rfl⟩ := hT
+  exact ⟨vl, hv.1, hv.2⟩
 
 /-- Rogers.hl:803 `BARV_EXISTS_ALT`. -/
 theorem BARV_EXISTS_ALT (V : Set V3) (k : ℕ) (hP : Packing V) (hs : saturated V)
@@ -1239,7 +1479,74 @@ theorem AFF_DIM_LE_2_IMP_COPLANAR (s : Set V3) (h : affDim s ≤ 2) : Coplanar s
 theorem ROGERS_AFF_DIM_FULL (V : Set V3) (ul : List V3) (hbar : barV V 3 ul)
     (hdim : affDim (rogers V ul) = 3) :
     ∀ i j : ℕ, i < 4 → j < 4 → i ≠ j → omegaListN V ul i ≠ omegaListN V ul j := by
-  sorry
+  classical
+  have h4len : ul.length = 4 := by simp [hbar.1]
+  intro i j hi4 hj4 hij hcol
+  set u : V3 := omegaListN V ul i with hudef
+  -- the Rogers simplex is the hull of the (at most) four omega points
+  set S : Set V3 := omegaListN V ul '' {k : ℕ | k < 4} with hSdef
+  have hrogers : rogers V ul = convexHull ℝ S := by
+    rw [rogers, h4len]
+  have hSne : S.Nonempty := ⟨u, ⟨i, hi4, rfl⟩⟩
+  -- the two indices other than `i` and `j` span everything once omega i = omega j
+  set TT : Finset ℕ := ((Finset.range 4).erase i).erase j with hTTdef
+  have hTTcard : TT.card = 2 := by
+    rw [Finset.card_erase_of_mem
+      (Finset.mem_erase.2 ⟨fun h => hij h.symm, Finset.mem_range.2 hj4⟩),
+      Finset.card_erase_of_mem (Finset.mem_range.2 hi4)]
+    simp
+  have h2 : vectorSpan ℝ S ≤
+      Submodule.span ℝ ↑(TT.image (fun k : ℕ => omegaListN V ul k -ᵥ u)) := by
+    have huS : u ∈ S := ⟨i, hi4, rfl⟩
+    rw [vectorSpan_eq_span_vsub_set_right_ne ℝ huS]
+    refine Submodule.span_mono ?_
+    intro y hy
+    obtain ⟨x, hx, rfl⟩ := hy
+    obtain ⟨hxS, hxne⟩ := (Set.mem_sdiff x).mp hx
+    obtain ⟨m, hm4, rfl⟩ := hxS
+    have hmi : m ≠ i := by
+      intro hcon
+      apply hxne
+      rw [hcon]
+      exact Set.mem_singleton_iff.2 hudef.symm
+    have hmj : m ≠ j := by
+      intro hcon
+      apply hxne
+      rw [hcon]
+      exact Set.mem_singleton_iff.2 hcol.symm
+    refine Finset.mem_coe.2 (Finset.mem_image.2 ⟨m, ?_, rfl⟩)
+    exact Finset.mem_erase.2 ⟨hmj, Finset.mem_erase.2 ⟨hmi, Finset.mem_range.2 hm4⟩⟩
+  -- hence the vector span of the hull of S has dimension at most 2
+  have hmono : vectorSpan ℝ ↑(convexHull ℝ S) ≤ vectorSpan ℝ S := by
+    have hstep : vectorSpan ℝ ↑(convexHull ℝ S) ≤
+        vectorSpan ℝ ↑(affineSpan ℝ S) :=
+      vectorSpan_mono ℝ (convexHull_subset_affineSpan S)
+    rw [← AffineSubspace.direction_eq_vectorSpan (affineSpan ℝ S),
+      direction_affineSpan] at hstep
+    exact hstep
+  have h3 : Module.finrank ℝ (vectorSpan ℝ ↑(convexHull ℝ S)) ≤ 2 := by
+    refine le_trans (Submodule.finrank_mono hmono) ?_
+    set F : Finset V3 := TT.image (fun k : ℕ => omegaListN V ul k -ᵥ u) with hFdef
+    calc Module.finrank ℝ (vectorSpan ℝ S)
+        ≤ Module.finrank ℝ (Submodule.span ℝ (↑F : Set V3)) := Submodule.finrank_mono h2
+      _ ≤ F.card :=
+          le_trans (finrank_span_le_card (↑F : Set V3)) (by simp)
+      _ ≤ TT.card := Finset.card_image_le
+      _ = 2 := hTTcard
+  -- but the hull of S is the Rogers simplex of dimension 3
+  have hcne : (convexHull ℝ S) ≠ ∅ := by
+    intro hcon
+    obtain ⟨x, hx⟩ := hSne
+    have hx' : x ∈ convexHull ℝ S := subset_convexHull ℝ S hx
+    rw [hcon] at hx'
+    exact hx'
+  have hbound : affDim (convexHull ℝ S) ≤ 2 := by
+    rw [affDim, if_neg hcne]
+    exact Nat.cast_le.2 h3
+  have hdimhull : affDim (convexHull ℝ S) = 3 := by
+    rw [← hrogers]
+    exact hdim
+  linarith
 
 /-- Rogers.hl:1657 `AFF_DIM_FINITE_UNION_LE`. -/
 theorem AFF_DIM_FINITE_UNION_LE (s t : Set V3) (hs : s.Finite) :
