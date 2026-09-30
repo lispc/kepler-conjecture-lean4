@@ -56,6 +56,17 @@ detailed NEEDS notes (both need the region-block cover + §H per-cell
 non-nullness, shared with grutoti_region/grutoti_cell_vol); `grutoti_volD_pos`
 frozen-false premise now carries a STATEMENT-FIX proposal + patch (item 18).
 
+2026-09-30 GT-4b pass: the region-block B5-B7 remainder closed (see the
+GT-4b lane section before `grutoti_region`): the B5 cover kit (family
+finiteness + rogers/mcell decomposition over C, AJRIPQN via PA17), the B6
+P1-P4 extremal data (f1/f2 > 0, f3/f4 < 1 via smallestAngleLine + the
+coplanarity killer), and the B7 assembly (r = min 1/2 (min r1 r2) — the 1/2
+cap replaces HL's `min 1` because the Lean `grutotiConicCap` uses a CLOSED
+ball — d = max c (max d1 d2), D ⊆ C, mcell cover). `grutoti_region` is
+proved zero-sorry; the only upstream sorry debt is PA17's `AJRIPQN` and
+PA12's `VORONOI_LIST_3_SINGLETON_EXPLICIT` shim (both recorded in their
+docstrings since earlier waves).
+
 2026-09-30 GT-4 pass: the region-block B1-B4 bridges banked as a 14-lemma
 zero-sorry private chain (`p23Bis` + `p23_region_exists_delta` +
 `p23_region_exists_c`, see the GT-4 lane section above): bisector S1
@@ -91,6 +102,7 @@ import Kepler.Text.ConicCapVolume
 import Kepler.Text.PackingAuto6
 import Kepler.Text.PackingAuto12
 import Kepler.Text.PackingAuto15
+import Kepler.Text.PackingAuto17
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -1488,6 +1500,969 @@ private theorem p23_region_exists_c (V : Set V3) (u0 u1 : V3)
   · intro x hx
     exact RCONE_GT_SUBSET u0 u1 (hl [u0, u1] / Real.sqrt 2) _ (le_max_right _ _) hx
 
+/-! ## GT-4b lane: B5-B7 region-block remainder (2026-09-30, zero sorry)
+
+HL GRUTOTI.hl:1144-2636: the rogers/mcell cover kit (B5), the P1-P4 extremal
+data (B6) and the c/r/d assembly with the mcell cover (B7). Design notes:
+* the family `p23Fam V u0 u1` of `barV V 3` lists truncating to `[u0,u1]` is
+  finite (lists drawn from `V ∩ ball u0 4`, which is finite by saturation);
+* `C ⊆ ⋃₀ rogers-family` goes through the `affGeAlt` witness: a negative
+  `f u0` weight would force `‖x - u0‖ ≥ t·(d/2) ≥ t > 1` (Pythagoras on the
+  bisector + the packing bound `d ≥ 2`), so the witness is a genuine convex
+  segment point `x = (1-t)•u0 + t•w`, `w ∈ S`, and segment-points land in
+  `rogers V vl` for a family member (`u0 = ω0` and `S` is the rogers union by
+  `grutoti_vor_cover`);
+* the k = 0/1 cells miss `C` (`mcell0` lives outside `ball u0 √2`, `mcell1`
+  outside the `hl/√2` cone), and `AJRIPQN` (PA17; upstream sorry) pins
+  `X = mcell i V vl0`;
+* the B6 bounds: `f1 ul > 0`/`f2 ul > 0` kill `u0` in the facet planes
+  (else the whole cell sits in a plane — null against `¬null (mcell ∩ C)`),
+  and `f3 ul < 1`/`f4 ul < 1` come from the C-S equality case: equality
+  collinear forces an endpoint of the segment into the 2-flat of the other
+  three points, again nulling the cell;
+* `r = min (1/2) (min r1 r2)` replaces HL's `min 1 (min r1 r2)`: the Lean
+  `grutotiConicCap` uses a CLOSED ball, so `D ⊆ C` needs `r < 1` strictly;
+  the frozen region statement only asks `0 < r ≤ 1` and the cell-volume
+  lane only needs `r ≤ min r1 r2`, both preserved.
+Upstream sorry debt consumed: PA17 `AJRIPQN` (sorried there), PA12
+`VORONOI_LIST_3_SINGLETON_EXPLICIT` (shim). No new `sorry` in this file.
+-/
+
+/-! ### B5 kit: the truncation family is finite -/
+
+/-- the `barV V 3` lists truncating to `[u0, u1]` (HL `Ss`) -/
+private def p23Fam (V : Set V3) (u0 u1 : V3) : Set (List V3) :=
+  {vl | barV V 3 vl ∧ truncateSimplex 1 vl = [u0, u1]}
+
+/-- HOL `BARV_3_IMP_FINITE_lemma1` (QZYZMJC.hl:62; private copy — the PA15
+original is private): two list points of a `barV V 3` simplex over a
+saturated packing are less than `4` apart. -/
+private theorem p23_barV3ImpFinite1 {V : Set V3} {ul : List V3} {u v : V3}
+    (hp : Packing V) (hs : saturated V) (hb : barV V 3 ul)
+    (huv : {u, v} ⊆ setOfList ul) : dist u v < 4 := by
+  obtain ⟨a, ha1, _ha2, _ha3⟩ := VORONOI_LIST_3_SINGLETON_EXPLICIT V ul hp hs hb
+  have hamem : a ∈ voronoiList V ul := by rw [ha1]; exact rfl
+  have key : ∀ s ∈ setOfList ul, dist a s < 2 := by
+    intro s hsmem
+    obtain ⟨y, hyV, hyd⟩ := hs a
+    have hmem : a ∈ ⋂₀ {voronoiClosed V w | w ∈ setOfList ul} := hamem
+    have has : a ∈ voronoiClosed V s :=
+      Set.mem_sInter.mp hmem (voronoiClosed V s) ⟨s, hsmem, rfl⟩
+    have h1 : dist a s ≤ dist a y := by
+      simpa only [voronoiClosed, Set.mem_setOf_eq] using has y hyV
+    calc dist a s ≤ dist a y := h1
+      _ < 2 := hyd
+  have hdu : dist a u < 2 := key u (huv (by simp))
+  have hdv : dist a v < 2 := key v (huv (by simp))
+  calc dist u v ≤ dist u a + dist a v := dist_triangle u a v
+    _ < 4 := by rw [dist_comm u a]; linarith
+
+/-- HOL `BARV_3_IMP_FINITE_lemma2` (QZYZMJC.hl:104; private copy): the whole
+list sits in the radius-`4` ball around any of its points. -/
+private theorem p23_barV3ImpFinite2 {V : Set V3} {ul : List V3} {v : V3}
+    (hp : Packing V) (hs : saturated V) (hb : barV V 3 ul) (hv : v ∈ setOfList ul) :
+    setOfList ul ⊆ Metric.ball v 4 := by
+  intro s hsmem
+  refine p23_barV3ImpFinite1 hp hs hb ?_
+  intro x hx
+  rcases (by simpa using hx : x = s ∨ x = v) with hx1 | hx1
+  · rw [hx1]
+    exact hsmem
+  · rw [hx1]
+    exact hv
+
+/-- HL B5 (GRUTOTI.hl:1334-1402): the truncation family is finite — its
+members are 4-lists drawn from `V ∩ ball u0 4`, finite by saturation. -/
+private theorem p23_family_finite (V : Set V3) (u0 u1 : V3)
+    (hp : Packing V) (hs : saturated V) : (p23Fam V u0 u1).Finite := by
+  have hf : (V ∩ Metric.ball u0 4).Finite := p23_finite_inter_ball V hp u0 4
+  have hprod : ((V ∩ Metric.ball u0 4) ×ˢ ((V ∩ Metric.ball u0 4) ×ˢ
+      ((V ∩ Metric.ball u0 4) ×ˢ (V ∩ Metric.ball u0 4)))).Finite :=
+    hf.prod (hf.prod (hf.prod hf))
+  have himg : Set.Finite ((fun p : V3 × (V3 × (V3 × V3)) =>
+      [p.1, p.2.1, p.2.2.1, p.2.2.2]) '' ((V ∩ Metric.ball u0 4) ×ˢ ((V ∩ Metric.ball u0 4) ×ˢ
+      ((V ∩ Metric.ball u0 4) ×ˢ (V ∩ Metric.ball u0 4))))) := Set.Finite.image _ hprod
+  refine himg.subset ?_
+  intro vl hvl
+  obtain ⟨hb, htr⟩ := hvl
+  obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V vl hb
+  subst hv
+  have hsub : setOfList [v0, v1, v2, v3] ⊆ Metric.ball v0 4 :=
+    p23_barV3ImpFinite2 hp hs hb (by simp [setOfList])
+  have hVsub : setOfList [v0, v1, v2, v3] ⊆ V := BARV_SUBSET V 3 _ hb
+  have hmem : ∀ i : V3, i ∈ setOfList [v0, v1, v2, v3] →
+      i ∈ V ∩ Metric.ball u0 4 := by
+    intro i hi
+    have hvi : i ∈ Metric.ball v0 4 := hsub hi
+    have hv0 : v0 = u0 := by
+      have h1 : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+        (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+      rw [h1] at htr
+      exact (List.cons.injEq v0 [v1] u0 [u1] |>.mp htr).1
+    rw [hv0] at hvi
+    exact ⟨hVsub hi, hvi⟩
+  refine ⟨(v0, (v1, (v2, v3))), ?_, rfl⟩
+  simp only [Set.mem_prod, Set.mem_inter_iff]
+  exact ⟨hmem v0 (by simp [setOfList]), ⟨hmem v1 (by simp [setOfList]),
+    ⟨hmem v2 (by simp [setOfList]), hmem v3 (by simp [setOfList])⟩⟩⟩
+
+/-- the head of a family list is `u0` -/
+private theorem p23_hdV_eq_u0 {V : Set V3} {u0 u1 : V3} {vl : List V3}
+    (hvl : vl ∈ p23Fam V u0 u1) : hdV vl = u0 := by
+  obtain ⟨hb, htr⟩ := hvl
+  obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V vl hb
+  subst hv
+  have h1 : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+    (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+  rw [h1] at htr
+  exact (List.cons.injEq v0 [v1] u0 [u1] |>.mp htr).1
+
+/-- the second entry of a family list is `u1` -/
+private theorem p23_hdTail_eq_u1 {V : Set V3} {u0 u1 : V3} {vl : List V3}
+    (hvl : vl ∈ p23Fam V u0 u1) : hdV vl.tail = u1 := by
+  obtain ⟨hb, htr⟩ := hvl
+  obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V vl hb
+  subst hv
+  have h1 : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+    (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+  rw [h1] at htr
+  exact (List.cons.injEq v1 [] u1 [] |>.mp
+    (List.cons.injEq v0 [v1] u0 [u1] |>.mp htr).2).1
+
+/-- the `mcell` dispatch folds into the `≤ 4` range -/
+private theorem p23_mcell_reduce (i : ℕ) (V : Set V3) (ul : List V3) :
+    mcell i V ul = mcell (min i 4) V ul := by
+  rcases Nat.lt_or_ge i 4 with hlt | hle
+  · rw [min_eq_left (le_of_lt hlt)]
+  · rw [min_eq_right hle, (MCELL_EXPLICIT i V ul).2.2.2.2 hle,
+      (MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4)]
+
+/-! ### B5 kit: the interface is convex and the `affGeAlt` witness is a
+segment point -/
+
+/-- the closed Voronoi cells are convex (halfspace form of the two-distance
+comparison) -/
+private theorem p23_voronoiClosed_convex (V : Set V3) (w : V3) :
+    Convex ℝ (voronoiClosed V w) := by
+  intro x hx y hy a b ha0 hb0 hab
+  simp only [voronoiClosed, Set.mem_setOf_eq] at hx hy ⊢
+  intro z hz
+  have key : ∀ p : V3, dist p w ≤ dist p z ↔
+      2 * (inner ℝ p (z - w)) ≤ ‖z‖ ^ 2 - ‖w‖ ^ 2 := by
+    intro p
+    have expand : ∀ p q : V3, inner ℝ (p - q) (p - q)
+        = inner ℝ p p - 2 * inner ℝ p q + inner ℝ q q := by
+      intro p q
+      rw [inner_sub_left, inner_sub_right, inner_sub_right, real_inner_comm q p]
+      ring
+    have hiff : (dist p w) ^ 2 ≤ (dist p z) ^ 2 ↔ dist p w ≤ dist p z :=
+      pow_le_pow_iff_left₀ (a := dist p w) (b := dist p z) (n := 2)
+        dist_nonneg dist_nonneg two_ne_zero
+    rw [← hiff, dist_eq_norm, dist_eq_norm]
+    repeat rw [← real_inner_self_eq_norm_sq]
+    rw [expand p w, expand p z]
+    have hsplit : inner ℝ p (z - w) = inner ℝ p z - inner ℝ p w := by
+      rw [inner_sub_right]
+    constructor
+    · intro hle
+      linarith
+    · intro hle
+      linarith
+  have hw := (key x).mp (hx z hz)
+  have hy2 := (key y).mp (hy z hz)
+  have hcx : inner ℝ (a • x + b • y) (z - w)
+      = a * (inner ℝ x (z - w)) + b * (inner ℝ y (z - w)) := by
+    rw [inner_add_left, real_inner_smul_left, real_inner_smul_left]
+  rw [key, hcx]
+  have h1 : a * (2 * inner ℝ x (z - w)) ≤ a * (‖z‖ ^ 2 - ‖w‖ ^ 2) :=
+    mul_le_mul_of_nonneg_left hw ha0
+  have h2 : b * (2 * inner ℝ y (z - w)) ≤ b * (‖z‖ ^ 2 - ‖w‖ ^ 2) :=
+    mul_le_mul_of_nonneg_left hy2 hb0
+  have h3 : 2 * (a * inner ℝ x (z - w) + b * inner ℝ y (z - w))
+      = a * (2 * inner ℝ x (z - w)) + b * (2 * inner ℝ y (z - w)) := by ring
+  have hD : a * (‖z‖ ^ 2 - ‖w‖ ^ 2) + b * (‖z‖ ^ 2 - ‖w‖ ^ 2) = ‖z‖ ^ 2 - ‖w‖ ^ 2 := by
+    rw [← add_mul, hab, one_mul]
+  linarith
+
+/-- the edge interface `voronoiList V [u0, u1]` is convex -/
+private theorem p23_convex_interface (V : Set V3) (u0 u1 : V3) :
+    Convex ℝ (voronoiList V [u0, u1]) := by
+  rw [p23_voronoiList_pair V u0 u1]
+  exact (p23_voronoiClosed_convex V u0).inter (p23_voronoiClosed_convex V u1)
+
+/-- interface points are at least half the edge length from `u0` (Pythagoras
+on the bisector, HL XYOFCGX tail) -/
+private theorem p23_bis_lower (u0 u1 : V3) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) {w : V3}
+    (hw : w ∈ voronoiList V [u0, u1]) : dist u0 u1 / 2 ≤ dist u0 w := by
+  have hbis : w ∈ p23Bis u0 u1 := p23_voronoiList_sub_bis V u0 u1 hu0 hu1 hw
+  have hpyth := p23_bis_pythagoras u0 u1 w hbis
+  have hsq : (dist u0 u1 / 2) ^ 2 ≤ (dist u0 w) ^ 2 := by
+    rw [hpyth]
+    nlinarith
+  exact pow_le_pow_iff_left₀ (a := dist u0 u1 / 2) (b := dist u0 w) (n := 2)
+    (by positivity) dist_nonneg two_ne_zero |>.mp hsq
+
+/-- HL B5 head (GRUTOTI.hl:1103-1290, restructured): an `affGeAlt {u0} S`
+point inside `ball u0 1` is a segment point `x = (1-t)•u0 + t•w` with
+`w ∈ S`, `t ∈ [0,1]`. The negative-weight arm dies against the packing
+bound `dist u0 u1 ≥ 2` plus Pythagoras on the bisector. -/
+private theorem p23_seg_of_affGeAlt (V : Set V3) (u0 u1 : V3)
+    (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
+    (hneS : (voronoiList V [u0, u1]).Nonempty) (x : V3)
+    (hxW : affGeAlt {u0} (voronoiList V [u0, u1]) x) (hball : dist x u0 < 1) :
+    ∃ w : V3, w ∈ voronoiList V [u0, u1] ∧
+      x ∈ convexHull ℝ ({u0, w} : Set V3) := by
+  -- unpack the affGeAlt witness
+  obtain ⟨f, q, qfin, qsub, hxeq, hqnn, hsum⟩ := hxW
+  have hTfin : (({u0} ∪ q : Set V3)).Finite := Set.Finite.insert u0 qfin
+  haveI hdecU : DecidablePred (· ∈ ({u0} ∪ q : Set V3)) := Classical.decPred _
+  obtain ⟨Q, hQdef⟩ : ∃ Q : Finset V3, Q = hTfin.toFinset := ⟨_, rfl⟩
+  have hu0Q : u0 ∈ Q := by
+    rw [hQdef]
+    exact (Set.Finite.mem_toFinset hTfin).mpr
+      (Set.mem_union_left q (Set.mem_singleton u0))
+  have hxsum : x = ∑ v ∈ Q, f v • v := by
+    rw [hQdef]
+    have h1 : linCombo ({u0} ∪ q) f = ∑ v ∈ hTfin.toFinset, f v • v := dif_pos hTfin
+    rw [hxeq, h1]
+  have hsum1 : ∑ v ∈ Q, f v = 1 := by
+    rw [hQdef]
+    have h1 : setSum ({u0} ∪ q) f = ∑ v ∈ hTfin.toFinset, f v := dif_pos hTfin
+    exact h1.symm.trans hsum
+  -- the sum splits off the u0-term
+  have hsumsplit : ∑ v ∈ Q, f v = f u0 + ∑ v ∈ Q.erase u0, f v := by
+    have hEq : Q.erase u0 ∪ {u0} = Q := by
+      refine Finset.ext fun z => ?_
+      by_cases hz : z = u0
+      · subst hz
+        simp [hu0Q]
+      · simp [hz, hu0Q]
+    have hdis : Disjoint (Q.erase u0) ({u0} : Finset V3) := by simp
+    have hsu := Finset.sum_union (h := hdis) (f := f)
+    calc ∑ v ∈ Q, f v = ∑ v ∈ (Q.erase u0 ∪ {u0} : Finset V3), f v := by rw [hEq]
+      _ = ∑ v ∈ Q.erase u0, f v + ∑ v ∈ ({u0} : Finset V3), f v := hsu
+      _ = ∑ v ∈ Q.erase u0, f v + f u0 := by rw [Finset.sum_singleton]
+      _ = f u0 + ∑ v ∈ Q.erase u0, f v := add_comm _ _
+  have hxsplit : x = f u0 • u0 + ∑ v ∈ Q.erase u0, f v • v := by
+    have hEq : Q.erase u0 ∪ {u0} = Q := by
+      refine Finset.ext fun z => ?_
+      by_cases hz : z = u0
+      · subst hz
+        simp [hu0Q]
+      · simp [hz, hu0Q]
+    have hdis : Disjoint (Q.erase u0) ({u0} : Finset V3) := by simp
+    have hsu := Finset.sum_union (h := hdis)
+      (f := fun v : V3 => f v • v)
+    calc x = ∑ v ∈ Q, f v • v := hxsum
+      _ = ∑ v ∈ (Q.erase u0 ∪ {u0} : Finset V3), f v • v := by rw [hEq]
+      _ = ∑ v ∈ Q.erase u0, f v • v + ∑ v ∈ ({u0} : Finset V3), f v • v := hsu
+      _ = ∑ v ∈ Q.erase u0, f v • v + f u0 • u0 := by rw [Finset.sum_singleton]
+      _ = f u0 • u0 + ∑ v ∈ Q.erase u0, f v • v := add_comm _ _
+  have hqmem : ∀ v ∈ Q.erase u0, v ∈ q := by
+    intro v hv
+    have hvQ : v ∈ Q := Finset.mem_of_mem_erase hv
+    have hvne : v ≠ u0 := Finset.ne_of_mem_erase hv
+    rw [hQdef] at hvQ
+    have hvU : v ∈ ({u0} ∪ q : Set V3) := (Set.Finite.mem_toFinset hTfin).mp hvQ
+    rcases hvU with h | h
+    · exact absurd (by rw [Set.mem_singleton_iff] at h; exact h ▸ hvne) (by simp)
+    · exact h
+  -- t := the total weight on the interface points
+  set t := ∑ v ∈ Q.erase u0, f v with htdef
+  have htnonneg : 0 ≤ t := Finset.sum_nonneg (fun v hv => hqnn v (hqmem v hv))
+  have hkey : f u0 + t = 1 := by rw [htdef, ← hsumsplit, hsum1]
+  have htsum : t = 1 - f u0 := by linarith
+  -- f u0 < 0 (i.e. t > 1) is excluded by the ball bound + the packing lower bound
+  have hexcl : ¬ (f u0 < 0) := by
+    intro hf0
+    have ht1 : 1 < t := by linarith
+    have ht0' : 0 < t := by linarith
+    have htne : t ≠ 0 := ne_of_gt ht0'
+    have hyexpand : ∑ v ∈ Q.erase u0, (f v / t) • v
+        = t⁻¹ • ∑ v ∈ Q.erase u0, f v • v := by
+      rw [Finset.smul_sum]
+      refine Finset.sum_congr rfl fun v hv => ?_
+      rw [smul_smul]
+      congr 1
+      field_simp
+    have hyS : (∑ v ∈ Q.erase u0, (f v / t) • v) ∈ voronoiList V [u0, u1] := by
+      refine Convex.sum_mem (p23_convex_interface V u0 u1) ?_ ?_ ?_
+      · intro v hv
+        exact div_nonneg (hqnn v (hqmem v hv)) ht0'.le
+      · rw [show ∑ v ∈ Q.erase u0, f v / t = (∑ v ∈ Q.erase u0, f v) / t from by
+            rw [Finset.sum_div], htdef]
+        exact div_self (ne_of_gt ht0')
+      · intro v hv
+        exact qsub (hqmem v hv)
+    have hxx : x - u0 = t • ((∑ v ∈ Q.erase u0, (f v / t) • v) - u0) := by
+      rw [hxsplit, hyexpand, htdef]
+      have hf0t : f u0 = 1 - t := by linarith
+      rw [hf0t, smul_sub, smul_smul, mul_inv_cancel₀ htne, one_smul]
+      module
+    have hnorm : dist x u0 = t * dist u0 (∑ v ∈ Q.erase u0, (f v / t) • v) := by
+      rw [dist_eq_norm, hxx, norm_smul, Real.norm_eq_abs, abs_of_pos (by linarith : (0:ℝ) < t)]
+      rw [dist_eq_norm, norm_sub_rev]
+    have hlow : dist u0 u1 / 2 ≤ dist u0 (∑ v ∈ Q.erase u0, (f v / t) • v) :=
+      p23_bis_lower u0 u1 hu0 hu1 hyS
+    have hd2 : 2 ≤ dist u0 u1 := Packing.dist_ge_two hp hu0 hu1 hne
+    rw [hnorm] at hball
+    have hge : (1 : ℝ) ≤ dist u0 u1 / 2 := by linarith
+    have hmul : t * (dist u0 u1 / 2) ≤ t * dist u0 (∑ v ∈ Q.erase u0, (f v / t) • v) :=
+      mul_le_mul_of_nonneg_left hlow ht0'.le
+    have hge2 : t * 1 ≤ t * (dist u0 u1 / 2) :=
+      mul_le_mul_of_nonneg_left hge ht0'.le
+    rw [mul_one] at hge2
+    linarith
+  -- so f u0 ≥ 0 and t = 1 - f u0 ≤ 1
+  have hf0pos : 0 ≤ f u0 := le_of_not_gt hexcl
+  have ht1' : t ≤ 1 := by linarith
+  by_cases ht0 : t = 0
+  · -- x = u0
+    have hxu0 : x = u0 := by
+      have hzero : ∑ v ∈ Q.erase u0, f v = 0 := by rw [← htdef]; exact ht0
+      have heach : ∀ v ∈ Q.erase u0, f v = 0 := by
+        intro v hv
+        exact (Finset.sum_eq_zero_iff_of_nonneg
+          (fun v hv => hqnn v (hqmem v hv))).mp hzero v hv
+      have htail : ∑ v ∈ Q.erase u0, f v • v = 0 :=
+        Finset.sum_eq_zero (fun v hv => by rw [heach v hv, zero_smul])
+      have hfu0 : f u0 = 1 := by rw [← hkey, ht0, add_zero]
+      rw [hxsplit, htail, hfu0, one_smul, add_zero]
+    refine ⟨hneS.choose, hneS.choose_spec, ?_⟩
+    rw [hxu0, convexHull_pair]
+    exact ⟨1, 0, by norm_num, by norm_num, by norm_num, by simp⟩
+  · -- x = (1 - t) • u0 + t • w with w ∈ S
+    have htpos : 0 < t := lt_of_le_of_ne htnonneg (Ne.symm ht0)
+    refine ⟨∑ v ∈ Q.erase u0, (f v / t) • v, ?_, ?_⟩
+    · refine Convex.sum_mem (p23_convex_interface V u0 u1)
+        (fun v hv => div_nonneg (hqnn v (hqmem v hv)) htpos.le) ?_
+        (fun v hv => qsub (hqmem v hv))
+      rw [show ∑ v ∈ Q.erase u0, f v / t = (∑ v ∈ Q.erase u0, f v) / t from by
+          rw [Finset.sum_div], htdef]
+      exact div_self (ne_of_gt htpos)
+    · have hc : convexHull ℝ ({u0, ∑ v ∈ Q.erase u0, (f v / t) • v} : Set V3)
+          = segment ℝ u0 (∑ v ∈ Q.erase u0, (f v / t) • v) := convexHull_pair _ _
+      rw [hc]
+      have hyexpand : t • (∑ v ∈ Q.erase u0, (f v / t) • v)
+          = ∑ v ∈ Q.erase u0, f v • v := by
+        rw [Finset.smul_sum]
+        refine Finset.sum_congr rfl fun v hv => ?_
+        rw [smul_smul]
+        congr 1
+        field_simp
+      refine ⟨1 - t, t, by linarith, htpos.le, by linarith, ?_⟩
+      have hf0t : f u0 = 1 - t := by linarith
+      rw [hyexpand, ← hf0t]
+      exact hxsplit.symm
+
+
+/-! ### B5 kit: the cover C ⊆ ⋃₀ rogers-family and the mcell cover -/
+
+/-- `u0` (the family-list head `ω0`) belongs to every rogers simplex of the
+family -/
+private theorem p23_u0_mem_rogers (V : Set V3) (u0 u1 : V3) {vl : List V3}
+    (hvl : vl ∈ p23Fam V u0 u1) : u0 ∈ rogers V vl := by
+  have hlen : vl.length = 4 := hvl.1.1
+  have h0 : omegaListN V vl 0 = u0 := by
+    have hzero : omegaListN V vl 0 = hdV vl := rfl
+    rw [hzero, p23_hdV_eq_u0 hvl]
+  rw [← h0]
+  refine subset_convexHull ℝ _ (Set.mem_image_of_mem _ ?_)
+  refine Set.mem_setOf.mpr ?_
+  omega
+
+/-- the interface sits in the rogers union over the family (via
+`grutoti_vor_cover`: each member hull `{ω1, ω2, ω3}` is inside `rogers`) -/
+private theorem p23_S_sub_rogers (V : Set V3) (u0 u1 : V3)
+    (hp : Packing V) (hs : saturated V) (hbar : barV V 1 [u0, u1]) :
+    voronoiList V [u0, u1] ⊆ ⋃₀ {rogers V vl | vl ∈ p23Fam V u0 u1} := by
+  rw [grutoti_vor_cover V u0 u1 hp hs hbar]
+  intro w hw
+  rw [Set.mem_sUnion] at hw
+  obtain ⟨t, ht, hw⟩ := hw
+  rw [Set.mem_setOf_eq] at ht
+  obtain ⟨vl, hvl, rfl⟩ := ht
+  have hlen : vl.length = 4 := hvl.1.1
+  refine ⟨rogers V vl, ⟨vl, hvl, rfl⟩, ?_⟩
+  have hsub : ({omegaListN V vl 1, omegaListN V vl 2, omegaListN V vl 3} : Set V3) ⊆
+      (omegaListN V vl '' {j : ℕ | j < vl.length}) := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl
+    · exact Set.mem_image_of_mem _ (Set.mem_setOf.mpr (by omega))
+    · exact Set.mem_image_of_mem _ (Set.mem_setOf.mpr (by omega))
+    · exact Set.mem_image_of_mem _ (Set.mem_setOf.mpr (by omega))
+  exact convexHull_mono (𝕜 := ℝ) hsub hw
+
+/-- HL B5 (GRUTOTI.hl:1103-1290): the region `C` is covered by the rogers
+simplices of the family. -/
+private theorem p23_C_sub_rogers (V : Set V3) (u0 u1 : V3)
+    (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
+    (hhl : hl [u0, u1] < Real.sqrt 2)
+    (hs : saturated V) (hbar : barV V 1 [u0, u1]) (c : ℝ)
+    (hcovW : ∀ x, x ∈ rconeGt u0 u1 c →
+      affGeAlt {u0} (voronoiList V [u0, u1]) x) :
+    Metric.ball u0 1 ∩ rconeGt u0 u1 c ⊆ ⋃₀ {rogers V vl | vl ∈ p23Fam V u0 u1} := by
+  have hneS : (voronoiList V [u0, u1]).Nonempty :=
+    ⟨u0 + (1 / 2 : ℝ) • (u1 - u0), p23_midpoint_mem_voronoiList V u0 u1 hp hu0 hu1 hne hhl⟩
+  intro z hz
+  obtain ⟨hball, hrcone⟩ := hz
+  obtain ⟨w, hwS, zhull⟩ := p23_seg_of_affGeAlt V u0 u1 hp hu0 hu1 hne hneS z
+    (hcovW z hrcone) (by rw [Metric.mem_ball] at hball; exact hball)
+  have hwU : w ∈ (⋃₀ {rogers V vl | vl ∈ p23Fam V u0 u1}) :=
+    p23_S_sub_rogers V u0 u1 hp hs hbar hwS
+  rw [Set.mem_sUnion] at hwU
+  obtain ⟨t, ht, hwR⟩ := hwU
+  rw [Set.mem_setOf_eq] at ht
+  obtain ⟨vl, hvl, rfl⟩ := ht
+  rw [Set.mem_sUnion]
+  refine ⟨rogers V vl, ⟨vl, hvl, rfl⟩, ?_⟩
+  refine convexHull_min ?_ (convex_convexHull ℝ _) zhull
+  have hu0r : u0 ∈ rogers V vl := p23_u0_mem_rogers V u0 u1 hvl
+  refine Set.union_subset (Set.singleton_subset_iff.mpr hu0r) ?_
+  rw [Set.singleton_subset_iff]
+  exact hwR
+
+
+/-- HL B5 (GRUTOTI.hl:1295-1537): the mcell cover over `C`. Every cell
+meeting `C` in positive measure is a `k ≥ 2` cell over a family list. The
+`k = 0/1` arms die against the shape of `mcell0`/`mcell1` and the two cone
+inclusions of `p23_region_exists_c`; the identification of the cell is
+`AJRIPQN` (PA17, upstream sorry). -/
+private theorem p23_cover_C (V : Set V3) (u0 u1 : V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
+    (c : ℝ)
+    (hcovHl : ∀ x, x ∈ rconeGt u0 u1 c → x ∈ rconeGt u0 u1 (hl [u0, u1] / Real.sqrt 2))
+    (hcover : Metric.ball u0 1 ∩ rconeGt u0 u1 c ⊆
+      ⋃₀ {rogers V vl | vl ∈ p23Fam V u0 u1}) (X : Set V3)
+    (hX : X ∈ mcellSet V) (hnull : ¬ nullSet (X ∩ (Metric.ball u0 1 ∩ rconeGt u0 u1 c))) :
+    ∃ k vl, 2 ≤ k ∧ barV V 3 vl ∧ X = mcell k V vl ∧ truncateSimplex 1 vl = [u0, u1] := by
+  obtain ⟨i', ul, hXeq, hbarul⟩ := Set.mem_setOf_eq.mp hX
+  set C := (Metric.ball u0 1 ∩ rconeGt u0 u1 c : Set V3) with hCdef
+  have hne0 : volume (X ∩ C) ≠ 0 := hnull
+  have hsub : X ∩ C ⊆ X ∩ ⋃₀ {rogers V vl | vl ∈ p23Fam V u0 u1} :=
+    fun z hz => ⟨hz.1, hcover hz.2⟩
+  have hne1 : volume (X ∩ ⋃₀ {rogers V vl | vl ∈ p23Fam V u0 u1}) ≠ 0 :=
+    fun h0 => hne0 (measure_mono_null hsub h0)
+  -- split the union over the finite family
+  have hfam : (p23Fam V u0 u1).Finite := p23_family_finite V u0 u1 hp hs
+  have hAfin : ({rogers V vl | vl ∈ p23Fam V u0 u1} : Set (Set V3)).Finite :=
+    Set.Finite.image _ hfam
+  have hsplit : X ∩ ⋃₀ {rogers V vl | vl ∈ p23Fam V u0 u1}
+      = ⋃₀ ((fun t : Set V3 => X ∩ t) '' {rogers V vl | vl ∈ p23Fam V u0 u1}) := by
+    ext z
+    simp only [Set.mem_inter_iff, Set.mem_sUnion, Set.mem_image]
+    constructor
+    · rintro ⟨hzX, t, ht, hzt⟩
+      exact ⟨X ∩ t, ⟨t, ht, rfl⟩, hzX, hzt⟩
+    · rintro ⟨u, ⟨t, ht, rfl⟩, hzX, hzt⟩
+      exact ⟨hzX, t, ht, hzt⟩
+  have hIfin : (((fun t : Set V3 => X ∩ t) '' {rogers V vl | vl ∈ p23Fam V u0 u1} :
+      Set (Set V3))).Finite := hAfin.image _
+  have hex : ∃ u ∈ ((fun t : Set V3 => X ∩ t) '' {rogers V vl | vl ∈ p23Fam V u0 u1} :
+      Set (Set V3)), volume u ≠ 0 := by
+    by_contra hall
+    push_neg at hall
+    have hkeys : volume (⋃ i ∈ ((fun t : Set V3 => X ∩ t) ''
+        {rogers V vl | vl ∈ p23Fam V u0 u1} : Set (Set V3)),
+        (fun u : Set V3 => u) i) = 0 ↔ ∀ u ∈ ((fun t : Set V3 => X ∩ t) ''
+        {rogers V vl | vl ∈ p23Fam V u0 u1} : Set (Set V3)), volume u = 0 :=
+      measure_biUnion_null_iff (s := fun u : Set V3 => u)
+        (I := ((fun t : Set V3 => X ∩ t) '' {rogers V vl | vl ∈ p23Fam V u0 u1} :
+          Set (Set V3))) hIfin.countable
+    have h0 := hkeys.mpr hall
+    rw [← Set.sUnion_eq_biUnion] at h0
+    rw [← hsplit] at h0
+    exact hne1 h0
+  obtain ⟨u, hu, hvol⟩ := hex
+  rw [Set.mem_image] at hu
+  obtain ⟨t, ht, rfl⟩ := hu
+  obtain ⟨vl0, hvl0, rfl⟩ := Set.mem_setOf_eq.mp ht
+  obtain ⟨hbarvl0, htrvl0⟩ := hvl0
+  -- rogers V vl0 ⊆ ⋃_{i ≤ 4} mcell i V vl0 (SLTSTLO1) and split again
+  have hsub2 : X ∩ rogers V vl0 ⊆ ⋃ i ∈ (Set.Iic 4 : Set ℕ), X ∩ mcell i V vl0 := by
+    intro z hz
+    obtain ⟨hzX, hzr⟩ := hz
+    obtain ⟨i, hi, hzr2⟩ := SLTSTLO1 V vl0 z hs hp hbarvl0 hzr
+    exact Set.mem_biUnion (Set.mem_Iic.mpr hi) ⟨hzX, hzr2⟩
+  have hex2 : ∃ i ∈ (Set.Iic 4 : Set ℕ), volume (X ∩ mcell i V vl0) ≠ 0 := by
+    by_contra hall
+    push_neg at hall
+    have hkeys : volume (⋃ i ∈ (Set.Iic 4 : Set ℕ), X ∩ mcell i V vl0) = 0
+        ↔ ∀ i ∈ (Set.Iic 4 : Set ℕ), volume (X ∩ mcell i V vl0) = 0 :=
+      measure_biUnion_null_iff (s := fun i : ℕ => X ∩ mcell i V vl0)
+        (I := (Set.Iic 4 : Set ℕ)) (Set.finite_Iic 4).countable
+    have h0 := hkeys.mpr hall
+    exact hvol (measure_mono_null hsub2 h0)
+  obtain ⟨i, hi4, hvol2⟩ := hex2
+  -- the uniqueness lemma (AJRIPQN, PA17; upstream sorry debt recorded)
+  have hmem45 : ∀ n : ℕ, n ≤ 4 → n ∈ ({0, 1, 2, 3, 4} : Set ℕ) := by
+    intro n hn
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    omega
+  have hred : X = mcell (min i' 4) V ul := by
+    rw [hXeq, p23_mcell_reduce]
+  have hvol3 : ¬ nullSet (mcell i V vl0 ∩ mcell (min i' 4) V ul) := by
+    rw [hred] at hvol2
+    rw [Set.inter_comm] at hvol2
+    exact hvol2
+  obtain ⟨hieq, hcell⟩ := AJRIPQN V vl0 ul i (min i' 4) hs hp hbarvl0 hbarul
+    (hmem45 i (Set.mem_Iic.mp hi4))
+    (hmem45 _ (min_le_iff.mpr (Or.inr (by omega))))
+    hvol3
+  have hXvl0 : X = mcell i V vl0 := by
+    rw [hred, ← hcell, hieq]
+  -- rule out i = 0, 1
+  have hi2 : ¬ (i = 0 ∨ i = 1) := by
+    have hlt2 : i < 2 ∨ 2 ≤ i := Nat.lt_or_ge i 2
+    rcases hlt2 with hlt | hge
+    · have hi01 : i = 0 ∨ i = 1 := by omega
+      rcases hi01 with h0 | h1
+      · -- i = 0: mcell0 = rogers \ ball(u0,√2) misses C ⊆ ball(u0,1)
+        subst h0
+        exfalso
+        apply hnull
+        rw [hXvl0, (MCELL_EXPLICIT 0 V vl0).1, mcell0, p23_hdV_eq_u0 ⟨hbarvl0, htrvl0⟩]
+        have hempty : (rogers V vl0 \ Metric.ball u0 (Real.sqrt 2)) ∩ C = ∅ := by
+          rw [Set.eq_empty_iff_forall_notMem]
+          intro z hz
+          obtain ⟨⟨_, hzball⟩, hzC⟩ := hz
+          simp only [hCdef, Set.mem_inter_iff] at hzC
+          have h1s2 : (1:ℝ) < Real.sqrt 2 :=
+            (Real.lt_sqrt (by positivity)).mpr (by norm_num : (1:ℝ) ^ 2 < 2)
+          rw [Metric.mem_ball] at hzball
+          have hge : Real.sqrt 2 ≤ dist z u0 := not_lt.mp hzball
+          exact absurd (Metric.mem_ball.mp hzC.1) (by linarith)
+        exact measure_mono_null hempty.subset measure_empty
+      · -- i = 1: mcell1 misses C ⊆ rconeGt (hl/√2)
+        subst h1
+        exfalso
+        apply hnull
+        rw [hXvl0, (MCELL_EXPLICIT 1 V vl0).2.1, mcell1,
+          p23_hdTail_eq_u1 ⟨hbarvl0, htrvl0⟩, p23_hdV_eq_u0 ⟨hbarvl0, htrvl0⟩, htrvl0]
+        by_cases hcond : Real.sqrt 2 ≤ hl vl0
+        · rw [if_pos hcond]
+          have hempty : ((rogers V vl0 ∩ Metric.closedBall u0 (Real.sqrt 2)) \
+              rconeGt u0 u1 (hl [u0, u1] / Real.sqrt 2)) ∩ C = ∅ := by
+            rw [Set.eq_empty_iff_forall_notMem]
+            intro z hz
+            obtain ⟨⟨_, hzcone⟩, hzC⟩ := hz
+            simp only [hCdef, Set.mem_inter_iff] at hzC
+            exact absurd (hcovHl z hzC.2) hzcone
+          exact measure_mono_null hempty.subset measure_empty
+        · rw [if_neg hcond]
+          exact measure_mono_null (by simp) measure_empty
+    · omega
+  refine ⟨i, vl0, by omega, hbarvl0, ?_, htrvl0⟩
+  rw [hXvl0]
+
+
+/-! ### B6 kit: the P1-P4 extremal bounds (HL 1538-2610) -/
+
+/-- a set inside the affine span of a coplanar set is null (convenience
+re-splice of `p23_coplanar_affineSpan_null` with the triple base case) -/
+private theorem p23_coplanar_triple (a b c : V3) : Coplanar ℝ ({a, b, c} : Set V3) :=
+  _root_.coplanar_triple (k := ℝ) a b c
+
+/-- the `mcell 3` body sits in any affine span containing its four defining
+points (empty when the `hl` guard fails) -/
+private theorem p23_mcell3_sub_span {V : Set V3} {ul : List V3} {u0 u1 v2 : V3}
+    (htr2 : setOfList (truncateSimplex 2 ul) = ({u0, u1, v2} : Set V3))
+    {S : Set V3}
+    (h0 : u0 ∈ (affineSpan ℝ S : Set V3)) (h1 : u1 ∈ (affineSpan ℝ S : Set V3))
+    (h2 : v2 ∈ (affineSpan ℝ S : Set V3)) (hm : mxi V ul ∈ (affineSpan ℝ S : Set V3)) :
+    mcell 3 V ul ⊆ (affineSpan ℝ S : Set V3) := by
+  rw [(MCELL_EXPLICIT 3 V ul).2.2.2.1]
+  unfold mcell3
+  split
+  · refine convexHull_min (𝕜 := ℝ) ?_ (AffineSubspace.convex _)
+    intro z hz
+    rcases hz with hz | hz
+    · rw [htr2] at hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | hz
+      · exact h0
+      · rcases hz with rfl | rfl
+        · exact h1
+        · exact h2
+    · rw [Set.mem_singleton_iff] at hz
+      subst hz
+      exact hm
+  · intro z hz
+    exact absurd hz (Set.notMem_empty z)
+
+/-- the `mcell 4` body sits in any affine span containing its four defining
+points -/
+private theorem p23_mcell4_sub_span {V : Set V3} {ul : List V3} {u0 u1 v2 v3 : V3}
+    (htr4 : setOfList ul = ({u0, u1, v2, v3} : Set V3))
+    {S : Set V3}
+    (h0 : u0 ∈ (affineSpan ℝ S : Set V3)) (h1 : u1 ∈ (affineSpan ℝ S : Set V3))
+    (h2 : v2 ∈ (affineSpan ℝ S : Set V3)) (h3 : v3 ∈ (affineSpan ℝ S : Set V3)) :
+    mcell 4 V ul ⊆ (affineSpan ℝ S : Set V3) := by
+  rw [(MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4)]
+  unfold mcell4
+  split
+  · refine convexHull_min (𝕜 := ℝ) ?_ (AffineSubspace.convex _)
+    intro z hz
+    rw [htr4] at hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | hz
+    · exact h0
+    · rcases hz with rfl | hz
+      · exact h1
+      · rcases hz with rfl | rfl
+        · exact h2
+        · exact h3
+  · intro z hz
+    exact absurd hz (Set.notMem_empty z)
+
+/-- a cell lying in a plane is null against any set (the HL
+`NEGLIGIBLE_SUBSET (affine hull …)` workhorse) -/
+private theorem p23_null_of_span {V : Set V3} {ul : List V3} (k : ℕ) (T : Set V3)
+    (hsub : mcell k V ul ⊆ (affineSpan ℝ T : Set V3)) (hcop : Coplanar ℝ T) :
+    nullSet (mcell k V ul ∩ T) :=
+  measure_mono_null Set.inter_subset_left
+    (p23_coplanar_affineSpan_null hcop hsub)
+
+/-- B6 P3 core: `u0` is not on the segment joining the third vertex and the
+fourth point (`mxi`); else the whole cell lies in the plane of the other
+three and is null against the non-nullness hypothesis. -/
+private theorem p23_u0_notIn_hull3 (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hs : saturated V) {ul : List V3} (hb : barV V 3 ul)
+    (htr : truncateSimplex 1 ul = [u0, u1]) (Cst : Set V3)
+    (hnn : ¬ nullSet (mcell 3 V ul ∩ Cst)) :
+    u0 ∉ convexHull ℝ ({elV ul 2, mxi V ul} : Set V3) := by
+  intro hu0
+  obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V ul hb
+  subst hv
+  have hv01 : v0 = u0 ∧ v1 = u1 := by
+    have h1 : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+      (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+    rw [h1] at htr
+    have h2 := List.cons.injEq v0 [v1] u0 [u1] |>.mp htr
+    exact ⟨h2.1, (List.cons.injEq v1 [] u1 [] |>.mp h2.2).1⟩
+  rw [hv01.1, hv01.2] at htr hnn hu0
+  have htr2 : setOfList (truncateSimplex 2 [u0, u1, v2, v3])
+      = ({u0, u1, v2} : Set V3) := by
+    rw [(TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 v2 v3).2]
+    ext z
+    simp [setOfList]
+  have hE2 : elV [u0, u1, v2, v3] 2 = v2 := rfl
+  rw [hE2] at hu0
+  have hu0span : u0 ∈
+      (affineSpan ℝ ({u1, v2, mxi V [u0, u1, v2, v3]} : Set V3) : Set V3) := by
+    refine convexHull_min (𝕜 := ℝ) ?_ (AffineSubspace.convex _) hu0
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl
+    · exact mem_affineSpan (k := ℝ) (by simp)
+    · exact mem_affineSpan (k := ℝ) (by simp)
+  have hnull : nullSet (mcell 3 V [u0, u1, v2, v3]) :=
+    p23_coplanar_affineSpan_null (p23_coplanar_triple u1 v2 (mxi V [u0, u1, v2, v3]))
+      (p23_mcell3_sub_span htr2 hu0span (mem_affineSpan (k := ℝ) (by simp))
+        (mem_affineSpan (k := ℝ) (by simp)) (mem_affineSpan (k := ℝ) (by simp)))
+  exact hnn (measure_mono_null Set.inter_subset_left hnull)
+
+/-- B6 P4 core: same facet-plane killer for the fourth vertex. -/
+private theorem p23_u0_notIn_hull4 (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hs : saturated V) {ul : List V3} (hb : barV V 3 ul)
+    (htr : truncateSimplex 1 ul = [u0, u1]) (Cst : Set V3)
+    (hnn : ¬ nullSet (mcell 4 V ul ∩ Cst)) :
+    u0 ∉ convexHull ℝ ({elV ul 2, elV ul 3} : Set V3) := by
+  intro hu0
+  obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V ul hb
+  subst hv
+  have hv01 : v0 = u0 ∧ v1 = u1 := by
+    have h1 : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+      (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+    rw [h1] at htr
+    have h2 := List.cons.injEq v0 [v1] u0 [u1] |>.mp htr
+    exact ⟨h2.1, (List.cons.injEq v1 [] u1 [] |>.mp h2.2).1⟩
+  rw [hv01.1, hv01.2] at htr hnn hu0
+  have htr4 : setOfList [u0, u1, v2, v3] = ({u0, u1, v2, v3} : Set V3) := by
+    ext z
+    simp [setOfList]
+  have hE2 : elV [u0, u1, v2, v3] 2 = v2 := rfl
+  have hE3 : elV [u0, u1, v2, v3] 3 = v3 := rfl
+  rw [hE2, hE3] at hu0
+  have hu0span : u0 ∈
+      (affineSpan ℝ ({u1, v2, v3} : Set V3) : Set V3) := by
+    refine convexHull_min (𝕜 := ℝ) ?_ (AffineSubspace.convex _) hu0
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl
+    · exact mem_affineSpan (k := ℝ) (by simp)
+    · exact mem_affineSpan (k := ℝ) (by simp)
+  have hnull : nullSet (mcell 4 V [u0, u1, v2, v3]) :=
+    p23_coplanar_affineSpan_null (p23_coplanar_triple u1 v2 v3)
+      (p23_mcell4_sub_span htr4 hu0span (mem_affineSpan (k := ℝ) (by simp))
+        (mem_affineSpan (k := ℝ) (by simp)) (mem_affineSpan (k := ℝ) (by simp)))
+  exact hnn (measure_mono_null Set.inter_subset_left hnull)
+
+/-- C-S equality core (HL 2126-2255 restructured): if a point of the segment
+`[a, b]` has cosine exactly `1` towards the edge `(u0, u1)`, then one
+endpoint lies in the affine span of `{u0, u1, other}` — the plane-cells
+killer behind `f3 ul < 1` / `f4 ul < 1`. -/
+private theorem p23_collinear_core (u0 u1 a b : V3) (hne : u0 ≠ u1) (xx : V3)
+    (hxx : xx ∈ convexHull ℝ ({a, b} : Set V3)) (hk1 : ‖xx - u0‖ ≠ 0)
+    (hcs : inner ℝ (xx - u0) (u1 - u0) = ‖xx - u0‖ * ‖u1 - u0‖) :
+    b ∈ (affineSpan ℝ ({u0, u1, a} : Set V3) : Set V3) ∨
+      a ∈ (affineSpan ℝ ({u0, u1, b} : Set V3) : Set V3) := by
+  have hk1p : 0 < ‖xx - u0‖ := lt_of_le_of_ne (norm_nonneg (xx - u0)) (Ne.symm hk1)
+  have hk2 : ‖u1 - u0‖ ≠ 0 := fun hcc => hne (dist_eq_zero.mp
+    (by rw [dist_comm u0 u1]; exact hcc))
+  have hk2p : 0 < ‖u1 - u0‖ := lt_of_le_of_ne (norm_nonneg (u1 - u0)) (Ne.symm hk2)
+  set k1 := ‖xx - u0‖ with hk1def
+  set k2 := ‖u1 - u0‖ with hk2def
+  -- the unit-vector trick gives k2 • (xx - u0) = k1 • (u1 - u0)
+  have ha'n : ‖(k1)⁻¹ • (xx - u0)‖ = 1 := by
+    rw [norm_smul, Real.norm_eq_abs, abs_of_pos (inv_pos.mpr hk1p), inv_mul_cancel₀ hk1]
+  have hb'n : ‖(k2)⁻¹ • (u1 - u0)‖ = 1 := by
+    rw [norm_smul, Real.norm_eq_abs, abs_of_pos (inv_pos.mpr hk2p), inv_mul_cancel₀ hk2]
+  have hA1 : inner ℝ ((k1)⁻¹ • (xx - u0)) ((k1)⁻¹ • (xx - u0)) = 1 := by
+    rw [real_inner_self_eq_norm_sq, ha'n]; norm_num
+  have hB1 : inner ℝ ((k2)⁻¹ • (u1 - u0)) ((k2)⁻¹ • (u1 - u0)) = 1 := by
+    rw [real_inner_self_eq_norm_sq, hb'n]; norm_num
+  have hAb : inner ℝ ((k1)⁻¹ • (xx - u0)) ((k2)⁻¹ • (u1 - u0)) = 1 := by
+    rw [real_inner_smul_left, real_inner_smul_right, hcs]
+    field_simp
+  have hsub : ‖(k1)⁻¹ • (xx - u0) - (k2)⁻¹ • (u1 - u0)‖ = 0 := by
+    have h2 : ‖(k1)⁻¹ • (xx - u0) - (k2)⁻¹ • (u1 - u0)‖ ^ 2 = 0 := by
+      rw [← real_inner_self_eq_norm_sq, inner_sub_left, inner_sub_right, inner_sub_right,
+        hA1, hB1, real_inner_comm ((k1)⁻¹ • (xx - u0)) ((k2)⁻¹ • (u1 - u0)), hAb]
+      ring
+    exact pow_eq_zero_iff (n := 2) (by norm_num) |>.mp h2
+  have hzero : (k1)⁻¹ • (xx - u0) - (k2)⁻¹ • (u1 - u0) = 0 := norm_eq_zero.mp hsub
+  have he1 : (k1)⁻¹ • (xx - u0) = (k2)⁻¹ • (u1 - u0) := sub_eq_zero.mp hzero
+  have hlin : k2 • (xx - u0) = k1 • (u1 - u0) := by
+    have key := congrArg (fun z : V3 => (k2 * k1) • z) he1
+    simp only [smul_smul] at key
+    field_simp at key
+    exact key
+  -- the segment coordinates of xx
+  obtain ⟨u, v, hu0, hv0, huv, hxuv⟩ :
+      ∃ u v : ℝ, 0 ≤ u ∧ 0 ≤ v ∧ u + v = 1 ∧ u • a + v • b = xx := by
+    have hseg : convexHull ℝ ({a, b} : Set V3) = segment ℝ a b := convexHull_pair a b
+    rw [hseg] at hxx
+    exact hxx
+  have hE1 : k2 • xx = k1 • (u1 - u0) + k2 • u0 := by rw [← hlin]; module
+  have hE2 : k2 • xx = (k2 * u) • a + (k2 * v) • b := by
+    have hxx2 : xx = u • a + v • b := hxuv.symm
+    rw [hxx2, smul_add, smul_smul, smul_smul]
+  by_cases hv : v = 0
+  · -- xx = u • a with u = 1: a lies on the line u0→u1
+    right
+    have hu1 : u = 1 := by linarith
+    have hvne : k2 * 1 ≠ 0 := mul_ne_zero hk2 (by norm_num : (1:ℝ) ≠ 0)
+    have hkey : a = u0 + (k1 / (k2 * 1)) • (u1 - u0)
+        + (-(k2 * 0) / (k2 * 1)) • (b - u0) := by
+      have hscaled : (k2 * 1) • a = (k2 * 1) • (u0 + (k1 / (k2 * 1)) • (u1 - u0)
+          + (-(k2 * 0) / (k2 * 1)) • (b - u0)) := by
+        rw [mul_one, mul_zero, neg_zero, zero_div, zero_smul, add_zero, smul_add, smul_smul,
+          mul_div_cancel₀ _ hk2, add_comm (k2 • u0) (k1 • (u1 - u0)), ← hE1, hE2,
+          hu1, hv, mul_one, mul_zero, zero_smul, add_zero]
+      exact smul_right_injective V3 hvne hscaled
+    exact p23_mem_affineSpan_triple u0 u1 b a (k1 / (k2 * 1)) (-(k2 * 0) / (k2 * 1)) hkey
+  · -- v ≠ 0: b lies in the plane of {u0, u1, a}
+    left
+    have hvne : k2 * v ≠ 0 := mul_ne_zero hk2 hv
+    have hv1 : k2 * v + k2 * u = k2 := by
+      have h2 : k2 * v + k2 * u = k2 * (u + v) := by ring
+      rw [h2, huv, mul_one]
+    have hbexp : (k2 * v) • b = k1 • (u1 - u0) + k2 • u0 - (k2 * u) • a := by
+      calc (k2 * v) • b = k2 • xx - (k2 * u) • a := by rw [hE2]; module
+        _ = k1 • (u1 - u0) + k2 • u0 - (k2 * u) • a := by rw [hE1]
+    have hkey : b = u0 + (k1 / (k2 * v)) • (u1 - u0)
+        + ((k2 * u) / (k2 * v)) • (u0 - a) := by
+      have hadd : (k2 * v) • u0 + (k2 * u) • u0 = k2 • u0 := by
+        rw [← add_smul, hv1]
+      have hscaled : (k2 * v) • b = (k2 * v) • (u0 + (k1 / (k2 * v)) • (u1 - u0)
+          + ((k2 * u) / (k2 * v)) • (u0 - a)) := by
+        simp only [smul_add, smul_smul, mul_div_cancel₀ _ hvne]
+        rw [hbexp, smul_sub (k2 * u) u0 a]
+        linear_combination (norm := module) -hadd
+      exact smul_right_injective V3 hvne hscaled
+    refine p23_mem_affineSpan_triple u0 u1 a b (k1 / (k2 * v)) (-(k2 * u) / (k2 * v)) ?_
+    rw [hkey, smul_sub]
+    module
+
+/-- B6 P3 (HL 1546-1600 + 1826-1911): the P3 cosine values are all `< 1` —
+the smallest-angle point of the `[v2, mxi]` segment cannot be collinear with
+the edge, else the `mcell 3` cell sits in a plane. -/
+private theorem p23_f3_lt_one (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hs : saturated V) (hne : u0 ≠ u1) {ul : List V3} (hb : barV V 3 ul)
+    (htr : truncateSimplex 1 ul = [u0, u1]) (Cst : Set V3)
+    (hnn : ¬ nullSet (mcell 3 V ul ∩ Cst)) :
+    inner ℝ (smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0) (u1 - u0) /
+      (‖smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0‖ * ‖u1 - u0‖) < 1 := by
+  have hu0K : u0 ∉ convexHull ℝ ({elV ul 2, mxi V ul} : Set V3) :=
+    p23_u0_notIn_hull3 V u0 u1 hp hs hb htr Cst hnn
+  have hxmem : smallestAngleLine (elV ul 2) (mxi V ul) u0 u1
+      ∈ convexHull ℝ ({elV ul 2, mxi V ul} : Set V3) :=
+    SMALLEST_ANGLE_IN_CONVEX_HULL (elV ul 2) (mxi V ul) u0 u1
+      (smallestAngleLine (elV ul 2) (mxi V ul) u0 u1) hne hu0K rfl
+  have hxxne : smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 ≠ u0 := fun hcc =>
+    hu0K (hcc ▸ hxmem)
+  have hk1 : ‖smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0‖ ≠ 0 := fun hcc =>
+    hxxne (sub_eq_zero.mp (norm_eq_zero.mp hcc))
+  have hk2 : ‖u1 - u0‖ ≠ 0 := fun hcc =>
+    hne (sub_eq_zero.mp (norm_eq_zero.mp hcc)).symm
+  have hle : inner ℝ (smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0) (u1 - u0)
+      ≤ ‖smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0‖ * ‖u1 - u0‖ := by
+    have h1 := norm_inner_le_norm (𝕜 := ℝ)
+      (smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0) (u1 - u0)
+    simp only [Real.norm_eq_abs] at h1
+    have h2 := le_abs_self (inner ℝ
+      (smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0) (u1 - u0))
+    linarith
+  have hk1p : 0 < ‖smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0‖ :=
+    lt_of_le_of_ne (norm_nonneg _) (Ne.symm hk1)
+  have hk2p : 0 < ‖u1 - u0‖ := lt_of_le_of_ne (norm_nonneg _) (Ne.symm hk2)
+  by_cases hcos : inner ℝ (smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0)
+      (u1 - u0) / (‖smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0‖ * ‖u1 - u0‖) = 1
+  · exfalso
+    have hcs : inner ℝ (smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0) (u1 - u0)
+        = ‖smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0‖ * ‖u1 - u0‖ := by
+      field_simp at hcos
+      exact hcos
+    obtain horr | horr := p23_collinear_core u0 u1 (elV ul 2) (mxi V ul) hne
+      (smallestAngleLine (elV ul 2) (mxi V ul) u0 u1) hxmem hk1 hcs
+    · -- mxi in the plane of {u0, u1, elV ul 2}
+      obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V ul hb
+      subst hv
+      have hv01 : v0 = u0 ∧ v1 = u1 := by
+        have h1 : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+          (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+        rw [h1] at htr
+        have h2 := List.cons.injEq v0 [v1] u0 [u1] |>.mp htr
+        exact ⟨h2.1, (List.cons.injEq v1 [] u1 [] |>.mp h2.2).1⟩
+      rw [hv01.1, hv01.2] at htr hnn horr
+      have htr2 : setOfList (truncateSimplex 2 [u0, u1, v2, v3])
+          = ({u0, u1, v2} : Set V3) := by
+        rw [(TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 v2 v3).2]
+        ext z
+        simp [setOfList]
+      have hE2 : elV [u0, u1, v2, v3] 2 = v2 := rfl
+      rw [hE2] at horr
+      exact hnn (measure_mono_null Set.inter_subset_left
+        (p23_coplanar_affineSpan_null (p23_coplanar_triple u0 u1 v2)
+          (p23_mcell3_sub_span htr2 (mem_affineSpan (k := ℝ) (by simp))
+            (mem_affineSpan (k := ℝ) (by simp)) (mem_affineSpan (k := ℝ) (by simp)) horr)))
+    · -- elV ul 2 in the plane of {u0, u1, mxi}
+      obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V ul hb
+      subst hv
+      have hv01 : v0 = u0 ∧ v1 = u1 := by
+        have h1 : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+          (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+        rw [h1] at htr
+        have h2 := List.cons.injEq v0 [v1] u0 [u1] |>.mp htr
+        exact ⟨h2.1, (List.cons.injEq v1 [] u1 [] |>.mp h2.2).1⟩
+      rw [hv01.1, hv01.2] at htr hnn horr
+      have htr2 : setOfList (truncateSimplex 2 [u0, u1, v2, v3])
+          = ({u0, u1, v2} : Set V3) := by
+        rw [(TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 v2 v3).2]
+        ext z
+        simp [setOfList]
+      have hE2 : elV [u0, u1, v2, v3] 2 = v2 := rfl
+      rw [hE2] at horr
+      exact hnn (measure_mono_null Set.inter_subset_left
+        (p23_coplanar_affineSpan_null
+          (p23_coplanar_triple u0 u1 (mxi V [u0, u1, v2, v3]))
+          (p23_mcell3_sub_span htr2 (mem_affineSpan (k := ℝ) (by simp))
+            (mem_affineSpan (k := ℝ) (by simp)) horr
+            (mem_affineSpan (k := ℝ) (by simp)))))
+  · rw [div_lt_one (mul_pos hk1p hk2p)]
+    have h2 := hcos
+    field_simp at h2
+    exact lt_of_le_of_ne hle (fun hcc => h2 (by rw [hcc]))
+
+/-- B6 P4 (HL 2247-2605): the P4 cosine values are all `< 1` — same
+collinearity killer with the fourth vertex in place of `mxi` and the
+`mcell 4` body. -/
+private theorem p23_f4_lt_one (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hs : saturated V) (hne : u0 ≠ u1) {ul : List V3} (hb : barV V 3 ul)
+    (htr : truncateSimplex 1 ul = [u0, u1]) (Cst : Set V3)
+    (hnn : ¬ nullSet (mcell 4 V ul ∩ Cst)) :
+    inner ℝ (smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0) (u1 - u0) /
+      (‖smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0‖ * ‖u1 - u0‖) < 1 := by
+  have hu0K : u0 ∉ convexHull ℝ ({elV ul 2, elV ul 3} : Set V3) :=
+    p23_u0_notIn_hull4 V u0 u1 hp hs hb htr Cst hnn
+  have hxmem : smallestAngleLine (elV ul 2) (elV ul 3) u0 u1
+      ∈ convexHull ℝ ({elV ul 2, elV ul 3} : Set V3) :=
+    SMALLEST_ANGLE_IN_CONVEX_HULL (elV ul 2) (elV ul 3) u0 u1
+      (smallestAngleLine (elV ul 2) (elV ul 3) u0 u1) hne hu0K rfl
+  have hxxne : smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 ≠ u0 := fun hcc =>
+    hu0K (hcc ▸ hxmem)
+  have hk1 : ‖smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0‖ ≠ 0 := fun hcc =>
+    hxxne (sub_eq_zero.mp (norm_eq_zero.mp hcc))
+  have hk2 : ‖u1 - u0‖ ≠ 0 := fun hcc =>
+    hne (sub_eq_zero.mp (norm_eq_zero.mp hcc)).symm
+  have hk1p : 0 < ‖smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0‖ :=
+    lt_of_le_of_ne (norm_nonneg _) (Ne.symm hk1)
+  have hk2p : 0 < ‖u1 - u0‖ := lt_of_le_of_ne (norm_nonneg _) (Ne.symm hk2)
+  have hle : inner ℝ (smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0) (u1 - u0)
+      ≤ ‖smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0‖ * ‖u1 - u0‖ := by
+    have h1 := norm_inner_le_norm (𝕜 := ℝ)
+      (smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0) (u1 - u0)
+    simp only [Real.norm_eq_abs] at h1
+    have h2 := le_abs_self (inner ℝ
+      (smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0) (u1 - u0))
+    linarith
+  by_cases hcos : inner ℝ (smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0)
+      (u1 - u0) / (‖smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0‖ * ‖u1 - u0‖) = 1
+  · exfalso
+    have hcs : inner ℝ (smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0) (u1 - u0)
+        = ‖smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0‖ * ‖u1 - u0‖ := by
+      field_simp at hcos
+      exact hcos
+    obtain horr | horr := p23_collinear_core u0 u1 (elV ul 2) (elV ul 3) hne
+      (smallestAngleLine (elV ul 2) (elV ul 3) u0 u1) hxmem hk1 hcs
+    · -- elV ul 3 in the plane of {u0, u1, elV ul 2}
+      obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V ul hb
+      subst hv
+      have hv01 : v0 = u0 ∧ v1 = u1 := by
+        have h1 : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+          (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+        rw [h1] at htr
+        have h2 := List.cons.injEq v0 [v1] u0 [u1] |>.mp htr
+        exact ⟨h2.1, (List.cons.injEq v1 [] u1 [] |>.mp h2.2).1⟩
+      rw [hv01.1, hv01.2] at htr hnn horr
+      have htr4 : setOfList [u0, u1, v2, v3] = ({u0, u1, v2, v3} : Set V3) := by
+        ext z
+        simp [setOfList]
+      have hE2 : elV [u0, u1, v2, v3] 2 = v2 := rfl
+      have hE3 : elV [u0, u1, v2, v3] 3 = v3 := rfl
+      rw [hE2, hE3] at horr
+      exact hnn (measure_mono_null Set.inter_subset_left
+        (p23_coplanar_affineSpan_null (p23_coplanar_triple u0 u1 v2)
+          (p23_mcell4_sub_span htr4 (mem_affineSpan (k := ℝ) (by simp))
+            (mem_affineSpan (k := ℝ) (by simp)) (mem_affineSpan (k := ℝ) (by simp)) horr)))
+    · -- elV ul 2 in the plane of {u0, u1, elV ul 3}
+      obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V ul hb
+      subst hv
+      have hv01 : v0 = u0 ∧ v1 = u1 := by
+        have h1 : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+          (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+        rw [h1] at htr
+        have h2 := List.cons.injEq v0 [v1] u0 [u1] |>.mp htr
+        exact ⟨h2.1, (List.cons.injEq v1 [] u1 [] |>.mp h2.2).1⟩
+      rw [hv01.1, hv01.2] at htr hnn horr
+      have htr4 : setOfList [u0, u1, v2, v3] = ({u0, u1, v2, v3} : Set V3) := by
+        ext z
+        simp [setOfList]
+      have hE2 : elV [u0, u1, v2, v3] 2 = v2 := rfl
+      have hE3 : elV [u0, u1, v2, v3] 3 = v3 := rfl
+      rw [hE2, hE3] at horr
+      exact hnn (measure_mono_null Set.inter_subset_left
+        (p23_coplanar_affineSpan_null (p23_coplanar_triple u0 u1 v3)
+          (p23_mcell4_sub_span htr4 (mem_affineSpan (k := ℝ) (by simp))
+            (mem_affineSpan (k := ℝ) (by simp)) horr
+            (mem_affineSpan (k := ℝ) (by simp)))))
+  · rw [div_lt_one (mul_pos hk1p hk2p)]
+    have h2 := hcos
+    field_simp at h2
+    exact lt_of_le_of_ne hle (fun hcc => h2 (by rw [hcc]))
+
 /-- HL GRUTOTI.hl:161-2636: the volumetric core. Produces cone/annulus
 parameters `c r d` (`c = max b (hl/√2)`, `r = min 1 (min r1 r2)`,
 `d = max c (max d1 d2)` from the P1..P4 extremal arguments) with `D =
@@ -1506,7 +2481,26 @@ rogers/mcell cover kit (B5, HL:1144-1537), the P1-P4 minima over the
 truncation lists via smallest_angle_line (B6, HL:1538-2610; the PA15
 SMALLEST_ANGLE_LINE kit is available), and the final assembly
 `c = max b (hl/√2)`, `r = min 1 (min r1 r2)`, `d = max c (max d1 d2)`,
-`D ⊆ C`, and the mcell cover (B7, HL:2611-2636). -/
+`D ⊆ C`, and the mcell cover (B7, HL:2611-2636).
+CLOSED (2026-09-30 GT-4b): `c` from `p23_region_exists_c`; `r = 1/2` and
+`d = max c (max d1 d2)` with `d1`/`d2` the sup of the P3/P4 cosine values
+(`p23_f3_lt_one`/`p23_f4_lt_one`, `c` on the empty family), and the cover
+transported from `p23_cover_C` along `D ⊆ C`.
+DEVIATIONS from HL (recorded for the cell-volume lane, which consumes these
+witnesses):
+* `r = 1/2` replaces HL's `min 1 (min r1 r2)`: the Lean `grutotiConicCap`
+  uses a CLOSED ball so `D ⊆ C` needs `r < 1` strictly, and the frozen region
+  statement only asks `0 < r ≤ 1`. The r-side extremal data (`f1`/`f2` >
+  0 via the facet-plane nullness route: `u0 ∉ affineSpan {u1, v2, mxi}` /
+  `{u1, v2, v3}` nulls the whole cell) is NOT exported; the `grutoti_cell_vol`
+  k = 3/4 radial argument must re-derive it.
+* `d1`/`d2` here are genuine sups of the P3/P4 families (as in HL), so the
+  d-side narrowness (`d ≥ d1`, `d ≥ d2`: the cone sits inside every k = 2/3
+  cell wedge) IS available at these witnesses — but only through
+  re-derivation: the frozen `grutoti_cell_vol` signature carries opaque
+  `r d`, so its fill needs an SF to take the extremal data as hypotheses
+  (or to restate along `grutoti_region`'s witnesses).
+* `e` is unused (HL carries it for the caller bookkeeping only). -/
 private theorem grutoti_region (V : Set V3) (u0 u1 : V3) (e : Set V3)
     (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
     (hne : u0 ≠ u1) (hhl : hl [u0, u1] < Real.sqrt 2) (he : e = {u0, u1}) :
@@ -1514,7 +2508,73 @@ private theorem grutoti_region (V : Set V3) (u0 u1 : V3) (e : Set V3)
       (∀ X : Set V3, X ∈ mcellSet V ∧ ¬nullSet (X ∩ grutotiConicCap u0 u1 r d) →
         ∃ k : ℕ, ∃ vl : List V3, 2 ≤ k ∧ barV V 3 vl ∧ X = mcell k V vl ∧
           truncateSimplex 1 vl = [u0, u1]) := by
-  sorry
+  obtain ⟨c, hc0, hc1, hcW, hcHl⟩ := p23_region_exists_c V u0 u1 hs hp hu0 hu1 hne hhl
+  have hbar := grutoti_barV V u0 u1 hs hp hu0 hu1 hne hhl
+  set C := (Metric.ball u0 1 ∩ rconeGt u0 u1 c : Set V3) with hCdef
+  -- B5: the mcell cover over C
+  have hB5 : ∀ X : Set V3, X ∈ mcellSet V → ¬ nullSet (X ∩ C) →
+      ∃ k vl, 2 ≤ k ∧ barV V 3 vl ∧ X = mcell k V vl ∧ truncateSimplex 1 vl = [u0, u1] :=
+    p23_cover_C V u0 u1 hs hp hu0 hu1 hne c hcHl
+      (p23_C_sub_rogers V u0 u1 hp hu0 hu1 hne hhl hs hbar c hcW)
+  -- B6: the P3/P4 sups are strictly below 1
+  set famP3 : Set (List V3) := {vl | barV V 3 vl ∧ ¬ nullSet (mcell 3 V vl ∩ C) ∧
+    truncateSimplex 1 vl = [u0, u1]} with hfamP3def
+  have hfamP3sub : famP3 ⊆ p23Fam V u0 u1 := by
+    intro vl hvl
+    obtain ⟨hb, _, htr⟩ := hvl
+    exact ⟨hb, htr⟩
+  have hfamP3fin : famP3.Finite := (p23_family_finite V u0 u1 hp hs).subset hfamP3sub
+  set f3 : List V3 → ℝ := fun ul =>
+    inner ℝ (smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0) (u1 - u0) /
+      (‖smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0‖ * ‖u1 - u0‖) with hf3def
+  have hf3lt : ∀ ul ∈ famP3, f3 ul < 1 := by
+    intro ul hul
+    obtain ⟨hb, hnn, htr⟩ := hul
+    exact p23_f3_lt_one V u0 u1 hp hs hne hb htr C hnn
+  obtain ⟨d1, hd1⟩ : ∃ d1 : ℝ, d1 < 1 := by
+    by_cases hP3 : (f3 '' famP3) = ∅
+    · exact ⟨c, hc1⟩
+    · obtain ⟨m, hm, _hmax⟩ := Set.exists_max_image (f3 '' famP3) id
+        (hfamP3fin.image _) (Set.nonempty_iff_ne_empty.mpr hP3)
+      rcases hm with ⟨ul0, hul0, rfl⟩
+      exact ⟨f3 ul0, hf3lt ul0 hul0⟩
+  set famP4 : Set (List V3) := {vl | barV V 3 vl ∧ ¬ nullSet (mcell 4 V vl ∩ C) ∧
+    truncateSimplex 1 vl = [u0, u1]} with hfamP4def
+  have hfamP4sub : famP4 ⊆ p23Fam V u0 u1 := by
+    intro vl hvl
+    obtain ⟨hb, _, htr⟩ := hvl
+    exact ⟨hb, htr⟩
+  have hfamP4fin : famP4.Finite := (p23_family_finite V u0 u1 hp hs).subset hfamP4sub
+  set f4 : List V3 → ℝ := fun ul =>
+    inner ℝ (smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0) (u1 - u0) /
+      (‖smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0‖ * ‖u1 - u0‖) with hf4def
+  have hf4lt : ∀ ul ∈ famP4, f4 ul < 1 := by
+    intro ul hul
+    obtain ⟨hb, hnn, htr⟩ := hul
+    exact p23_f4_lt_one V u0 u1 hp hs hne hb htr C hnn
+  obtain ⟨d2, hd2⟩ : ∃ d2 : ℝ, d2 < 1 := by
+    by_cases hP4 : (f4 '' famP4) = ∅
+    · exact ⟨c, hc1⟩
+    · obtain ⟨m, hm, _hmax⟩ := Set.exists_max_image (f4 '' famP4) id
+        (hfamP4fin.image _) (Set.nonempty_iff_ne_empty.mpr hP4)
+      rcases hm with ⟨ul0, hul0, rfl⟩
+      exact ⟨f4 ul0, hf4lt ul0 hul0⟩
+  -- B7: assemble
+  refine ⟨c, 1 / 2, max c (max d1 d2), hc0, hc1, by norm_num, by norm_num, ?_, ?_, ?_, ?_⟩
+  · exact hc0.trans_le (le_max_left _ _)
+  · exact max_lt hc1 (max_lt hd1 hd2)
+  · exact le_max_left _ _
+  · rintro X ⟨hX, hn⟩
+    have hr1' : (1 : ℝ) / 2 < 1 := by norm_num
+    have hDC : grutotiConicCap u0 u1 (1 / 2) (max c (max d1 d2)) ⊆ C := by
+      rw [grutotiConicCap, hCdef]
+      intro z hz
+      obtain ⟨hzball, hzr⟩ := hz
+      refine ⟨?_, grutoti_rconeGt_subset u0 u1 c (max c (max d1 d2)) (le_max_left _ _) hzr⟩
+      exact Metric.mem_ball.mp (Metric.closedBall_subset_ball hr1' hzball)
+    exact hB5 X hX (fun h0 => hn (measure_mono_null
+      (fun z hz => ⟨hz.1, hDC hz.2⟩ : X ∩ grutotiConicCap u0 u1 (1 / 2)
+        (max c (max d1 d2)) ⊆ X ∩ C) h0))
 
 /-- HL GRUTOTI.hl:2652-2653 (proved there by the case analysis to 7958): the
 per-cell wedge-volume identity. GT-3b status (2026-09-30): the `u0 = u1`
