@@ -837,6 +837,7 @@ theorem CLOSED_MCELL (V : Set V3) (ul : List V3)
       rw [mcell2]
       split_ifs with hcond
       · sorry
+        -- NEEDS: IsClosed (affGe …), upstream Geom/Aff gap
       · exact isClosed_empty
     · -- k = 3: finite hull
       show IsClosed (mcell3 V ul)
@@ -875,6 +876,7 @@ theorem ROGERS_INTER_V_LEMMA (V : Set V3) (ul : List V3) (v : V3)
     (_hs : saturated V) (_hp : Packing V) (_hb : barV V 3 ul)
     (_hv : v ∈ V) (_hr : rogers V ul v) : v = hdV ul := by
   sorry
+  -- NEEDS: omega-points-within-2 geometry (cf. PackingAuto11 private copy)
 
 /-! ## marchal2.hl:669 CONVEX_HULL_4 -/
 
@@ -1047,6 +1049,7 @@ theorem U0_NOT_IN_CONVEX_HULL_FROM_ROGERS (V : Set V3) (ul : List V3)
     hdV ul ∉ convexHull ℝ {omegaListN V ul 1, omegaListN V ul 2,
       omegaListN V ul 3} := by
   sorry
+  -- NEEDS: omega points off the first vertex's spot (geometric giant)
 
 /-! ## marchal2.hl:1151 RADIAL_VS_RADIAL_NORM -/
 
@@ -1135,26 +1138,288 @@ theorem RCONE_GE_TRANS (a b : V3) (r : ℝ) (x : V3) (t : ℝ) (h0 : 0 ≤ t)
   rw [hdot, hdx2, hrs]
   exact e1
 
+/-! ### Private inner-algebra kit for the two rcone/voronoi giants
+
+The `⬝ᵥ` dot on `V3` coerces through `WithLp`, so rewriting inside dot
+arguments is shape-fragile; all algebra below is carried out in `inner ℝ`
+(native `V3` arguments) and bridged back with `inner_eq_dot`. -/
+
+/-- Pythagoras on the inner product. -/
+private theorem p12_pythI {u v : V3} (h : inner ℝ u v = 0) :
+    ‖u + v‖ ^ 2 = ‖u‖ ^ 2 + ‖v‖ ^ 2 := by
+  rw [norm_add_sq_real, h]
+  ring
+
+/-- Real-linearity of `inner ℝ` in the left argument. -/
+private theorem p12_hsmL (t : ℝ) (u v : V3) : inner ℝ (t • u) v = t * inner ℝ u v :=
+  (inner_smul_real_left u v t).trans (smul_eq_mul t (inner ℝ u v))
+
+/-- Real-linearity of `inner ℝ` in the right argument. -/
+private theorem p12_hsmR (t : ℝ) (u v : V3) : inner ℝ u (t • v) = t * inner ℝ u v :=
+  (inner_smul_real_right u v t).trans (smul_eq_mul t (inner ℝ u v))
+
 /-! ## marchal2.hl:1302 RCONE_GE_INTER_VORONOI_CLOSED_PROJECTION_KY_LEMMA -/
 
 /-- HOL `RCONE_GE_INTER_VORONOI_CLOSED_PROJECTION_KY_LEMMA` (marchal2.hl:1302).
-Sorried: geometric giant (140-line projection argument). -/
+CLOSED 2026-09-30 (PA12 lane): the foot of the perpendicular from `x` to the
+line `affineSpan {a, b}` is `a + t • (b - a)` with
+`t = ((x - a) ⬝ᵥ (b - a)) / ((b - a) ⬝ᵥ (b - a))`; `t < 0` contradicts the cone
+bound, `t > 1` contradicts the Voronoi cell (`‖x - a‖ ≤ ‖x - b‖` vs
+Pythagoras). -/
 theorem RCONE_GE_INTER_VORONOI_CLOSED_PROJECTION_KY_LEMMA (a b : V3) (r : ℝ)
     (x : V3) (V : Set V3) (hr : 0 < r) (hab : a ≠ b) (ha : a ∈ V) (hb : b ∈ V)
     (hx : x ∈ rconeGe a b r ∩ voronoiClosed V a) :
     ∃ s, s ∈ convexHull ℝ {a, b} ∧ (x - s) ⬝ᵥ (a - b) = 0 := by
-  sorry
+  obtain ⟨hcone0, hcell0⟩ := hx
+  have hcone : (x - a) ⬝ᵥ (b - a) ≥ dist x a * dist b a * r := hcone0
+  have hcell : ∀ w ∈ V, dist x a ≤ dist x w := hcell0
+  -- inner kit
+  have hconeI : inner ℝ (x - a) (b - a) ≥ dist x a * dist b a * r := by
+    rw [inner_eq_dot]; exact hcone
+  have hDposI : (0 : ℝ) < inner ℝ (b - a) (b - a) := by
+    have h := real_inner_self_eq_norm_sq (b - a)
+    rw [h]
+    have h2 : ((b - a : V3)) ≠ 0 := by
+      intro h0
+      exact hab (sub_eq_zero.mp h0).symm
+    exact pow_pos (norm_pos_iff.mpr h2) 2
+  have hnum : (0 : ℝ) ≤ inner ℝ (x - a) (b - a) :=
+    le_trans (by positivity) hconeI
+  set t : ℝ := inner ℝ (x - a) (b - a) / inner ℝ (b - a) (b - a) with htdef
+  have htkeyI : inner ℝ (x - a) (b - a) = t * inner ℝ (b - a) (b - a) := by
+    rw [htdef]
+    field_simp
+  have ht0 : (0 : ℝ) ≤ t := div_nonneg hnum hDposI.le
+  by_cases htn : t < 0
+  · -- t < 0 contradicts the cone bound
+    exfalso
+    have hneg : inner ℝ (x - a) (b - a) < 0 := by
+      rw [htkeyI]
+      exact mul_neg_of_neg_of_pos htn hDposI
+    linarith
+  by_cases htt : t < 1
+  · -- 0 ≤ t ≤ 1: the segment membership goes through
+    refine ⟨a + t • (b - a), ?_, ?_⟩
+    · rw [p12_hull_pair]
+      refine ⟨1 - t, t, by linarith, ht0, by ring, ?_⟩
+      module
+    · -- orthogonality
+      have horthI : inner ℝ (x - (a + t • (b - a))) (b - a) = 0 := by
+        have hdec : x - (a + t • (b - a)) = (x - a) - t • (b - a) := by abel
+        rw [hdec, inner_sub_left, p12_hsmL t, htkeyI]
+        ring
+      have hb := inner_eq_dot (x - (a + t • (b - a))) (a - b)
+      have hAB : inner ℝ (x - (a + t • (b - a))) (a - b) = 0 := by
+        rw [show (a - b : V3) = -(b - a) from (neg_sub b a).symm, inner_neg_right,
+          horthI, neg_zero]
+      exact hb.symm.trans hAB
+  · -- t ≥ 1: the Voronoi cell gives ‖x-a‖ ≤ ‖x-b‖, Pythagoras gives the opposite
+    exfalso
+    have hle : dist x a ≤ dist x b := hcell b hb
+    have hle2 : ‖x - a‖ ^ 2 ≤ ‖x - b‖ ^ 2 := by
+      have h3 := hle
+      rw [dist_eq_norm x a, dist_eq_norm x b] at h3
+      refine sq_le_sq.2 ?_
+      rw [abs_of_nonneg (norm_nonneg _), abs_of_nonneg (norm_nonneg _)]
+      exact h3
+    have hxsd : inner ℝ (x - (a + t • (b - a))) (b - a) = 0 := by
+      have hdec : x - (a + t • (b - a)) = (x - a) - t • (b - a) := by abel
+      rw [hdec, inner_sub_left, p12_hsmL t, htkeyI]
+      ring
+    have hsqA : ‖x - a‖ ^ 2
+        = ‖x - (a + t • (b - a))‖ ^ 2 + t ^ 2 * inner ℝ (b - a) (b - a) := by
+      have h1 := p12_pythI (u := x - (a + t • (b - a))) (v := t • (b - a))
+        (by rw [p12_hsmR t, hxsd, mul_zero])
+      have h2 : ‖t • (b - a)‖ ^ 2 = t ^ 2 * inner ℝ (b - a) (b - a) := by
+        rw [← real_inner_self_eq_norm_sq, p12_hsmR t, p12_hsmL t]
+        ring
+      rw [show x - a = (x - (a + t • (b - a))) + t • (b - a) from by abel]
+      rw [h1, h2]
+    have hsqB : ‖x - b‖ ^ 2
+        = ‖x - (a + t • (b - a))‖ ^ 2 + (1 - t) ^ 2 * inner ℝ (b - a) (b - a) := by
+      have h3 : ((a + t • (b - a)) - b : V3) = -((1 - t) • (b - a)) := by
+        simp only [sub_smul, one_smul]
+        abel
+      have hvec : x - b = (x - (a + t • (b - a))) + ((a + t • (b - a)) - b) := by abel
+      have hside : inner ℝ (x - (a + t • (b - a))) ((a + t • (b - a)) - b) = 0 := by
+        rw [h3, inner_neg_right, p12_hsmR (1 - t), hxsd, mul_zero, neg_zero]
+      have h1 := p12_pythI (u := x - (a + t • (b - a))) (v := (a + t • (b - a)) - b) hside
+      have h2 : ‖(a + t • (b - a)) - b‖ ^ 2
+          = (1 - t) ^ 2 * inner ℝ (b - a) (b - a) := by
+        rw [h3, norm_neg, ← real_inner_self_eq_norm_sq, p12_hsmR (1 - t),
+          p12_hsmL (1 - t)]
+        ring
+      rw [hvec, h1, h2]
+    have hsq : t ^ 2 * inner ℝ (b - a) (b - a)
+        ≤ (1 - t) ^ 2 * inner ℝ (b - a) (b - a) := by
+      rw [hsqA, hsqB] at hle2
+      linarith
+    nlinarith [mul_pos hDposI (show (0:ℝ) < 2 * t - 1 by linarith)]
 
 /-! ## marchal2.hl:1440 RCONEGE_INTER_VORONOI_CLOSED_IMP_RCONEGE -/
 
 /-- HOL `RCONEGE_INTER_VORONOI_CLOSED_IMP_RCONEGE` (marchal2.hl:1440).
-Sorried: geometric giant (250-line packing/saturation argument). -/
+CLOSED 2026-09-30 (PA12 lane): with the projection point `s` of the
+`RCONE_GE_INTER_VORONOI_CLOSED_PROJECTION_KY_LEMMA` written as
+`s = (1 - t) • a + t • b` (`t ∈ [0,1]`), the orthogonality `(x - s) ⬝ᵥ (a - b) = 0`
+gives `(x - a) ⬝ᵥ (b - a) = t ‖b - a‖²`, `(x - b) ⬝ᵥ (a - b) = (1 - t) ‖b - a‖²`
+and the Pythagorean splits `‖x - a‖² = ‖x - s‖² + t²‖b - a‖²`,
+`‖x - b‖² = ‖x - s‖² + (1 - t)²‖b - a‖²`; the Voronoi cell membership
+(`dist x a ≤ dist x b`, i.e. `t ≤ 1 - t`) then yields
+`t ‖x - b‖ ≤ (1 - t) ‖x - a‖`, and chaining with the `rconeGe a b r` bound
+finishes (degenerate cases `t = 0` forcing `x = a`, and `x = b` forcing
+`a = b`, handled separately). -/
 theorem RCONEGE_INTER_VORONOI_CLOSED_IMP_RCONEGE (V : Set V3) (a b : V3) (r : ℝ)
     (x : V3) (hp : Packing V) (hs : saturated V) (ha : a ∈ V) (hb : b ∈ V)
     (hab : a ≠ b) (hr : 0 < r) (hrle : r ≤ 1)
     (hx1 : x ∈ rconeGe a b r) (hx2 : x ∈ voronoiClosed V a) :
     x ∈ rconeGe b a r := by
-  sorry
+  suffices key : (x - b) ⬝ᵥ (a - b) ≥ dist x b * dist a b * r by
+    simpa only [rconeGe, Set.mem_setOf_eq] using key
+  obtain ⟨s, hs_seg, hs_orth0⟩ := RCONE_GE_INTER_VORONOI_CLOSED_PROJECTION_KY_LEMMA
+    a b r x V hr hab ha hb ⟨hx1, hx2⟩
+  rw [p12_hull_pair] at hs_seg
+  obtain ⟨u, t, hu, ht0, huw, hs_vec⟩ := hs_seg
+  have hu' : u = 1 - t := by linarith
+  have hcell : ∀ w ∈ V, dist x a ≤ dist x w := hx2
+  -- inner kit
+  have hsI : inner ℝ (x - s) (b - a) = 0 := by
+    have h1 : inner ℝ (x - s) (b - a) = -inner ℝ (x - s) (a - b) := by
+      rw [show (b - a : V3) = -(a - b) from (neg_sub a b).symm, inner_neg_right]
+    have h2 : inner ℝ (x - s) (a - b) = 0 :=
+      (inner_eq_dot (x - s) (a - b)).trans hs_orth0
+    rw [h1, h2, neg_zero]
+  have hconeI : inner ℝ (x - a) (b - a) ≥ dist x a * dist b a * r := by
+    rw [inner_eq_dot]; exact hx1
+  have hDposI : (0 : ℝ) < inner ℝ (b - a) (b - a) := by
+    have h := real_inner_self_eq_norm_sq (b - a)
+    rw [h]
+    have h2 : ((b - a : V3)) ≠ 0 := by
+      intro h0
+      exact hab (sub_eq_zero.mp h0).symm
+    exact pow_pos (norm_pos_iff.mpr h2) 2
+  have hsa : s - a = t • (b - a) := by
+    rw [← hs_vec, hu']
+    module
+  have hsb : s - b = -(u • (b - a)) := by
+    rw [← hs_vec, hu']
+    module
+  -- F1 : inner (x - a) (b - a) = t * inner (b - a) (b - a)
+  have hF1I : inner ℝ (x - a) (b - a) = t * inner ℝ (b - a) (b - a) := by
+    have hdec : x - a = (x - s) + (s - a) := by abel
+    rw [hdec, inner_add_left, hsI, hsa, p12_hsmL t]
+    ring
+  -- Pythagoras squares
+  have hpytA : ‖x - a‖ ^ 2 = ‖x - s‖ ^ 2 + t ^ 2 * inner ℝ (b - a) (b - a) := by
+    have hside : inner ℝ (x - s) (s - a) = 0 := by
+      rw [hsa, p12_hsmR t, hsI, mul_zero]
+    have h1 := p12_pythI (u := x - s) (v := s - a) hside
+    have h2 : ‖t • (b - a)‖ ^ 2 = t ^ 2 * inner ℝ (b - a) (b - a) := by
+      rw [← real_inner_self_eq_norm_sq, p12_hsmR t, p12_hsmL t]
+      ring
+    rw [show x - a = (x - s) + (s - a) from by abel]
+    rw [h1, hsa, h2]
+  have hpytB : ‖x - b‖ ^ 2 = ‖x - s‖ ^ 2 + u ^ 2 * inner ℝ (b - a) (b - a) := by
+    have hside : inner ℝ (x - s) (s - b) = 0 := by
+      rw [hsb, inner_neg_right, p12_hsmR u, hsI, mul_zero, neg_zero]
+    have h1 := p12_pythI (u := x - s) (v := s - b) hside
+    have h2 : ‖-(u • (b - a))‖ ^ 2 = u ^ 2 * inner ℝ (b - a) (b - a) := by
+      rw [norm_neg, ← real_inner_self_eq_norm_sq, p12_hsmR u, p12_hsmL u]
+      ring
+    rw [show x - b = (x - s) + (s - b) from by abel]
+    rw [h1, hsb, h2]
+  -- the cell gives t ≤ u
+  have htu : t ≤ u := by
+    have h3 := hcell b hb
+    rw [dist_eq_norm x a, dist_eq_norm x b] at h3
+    have h6 : ‖x - a‖ ^ 2 ≤ ‖x - b‖ ^ 2 := by
+      refine sq_le_sq.2 ?_
+      rw [abs_of_nonneg (norm_nonneg _), abs_of_nonneg (norm_nonneg _)]
+      exact h3
+    rw [hpytA, hpytB] at h6
+    by_contra hcon
+    push_neg at hcon
+    have h8 : u ^ 2 < t ^ 2 := sq_lt_sq' (by linarith [hu, ht0]) hcon
+    have h9 : u ^ 2 * inner ℝ (b - a) (b - a)
+        < t ^ 2 * inner ℝ (b - a) (b - a) :=
+      mul_lt_mul_of_pos_right h8 hDposI
+    linarith
+  -- eliminate x = b
+  have hxb : (x : V3) ≠ b := by
+    intro he
+    have h := hcell b hb
+    rw [he, dist_self] at h
+    exact hab (dist_eq_zero.mp (le_antisymm h dist_nonneg)).symm
+  rcases eq_or_ne t 0 with htz | htnz
+  · -- t = 0 → x = a; the key is then just r ≤ 1
+    have h1 : inner ℝ (x - a) (b - a) = 0 := by rw [hF1I, htz, zero_mul]
+    have hxa : x = a := by
+      have h2 : dist x a = 0 := by
+        by_contra hc
+        have h3 : (0:ℝ) < dist x a * dist b a * r := by
+          refine mul_pos (mul_pos (lt_of_le_of_ne dist_nonneg ?_)
+            (dist_pos.mpr (fun he => hab he.symm))) hr
+          intro he
+          exact hc he.symm
+        linarith
+      exact dist_eq_zero.mp h2
+    rw [hxa, dist_eq_norm a b]
+    -- goal: (a - b) ⬝ᵥ (a - b) ≥ ‖a - b‖ * ‖a - b‖ * r
+    have hfin : ‖a - b‖ * ‖a - b‖ * r ≤ inner ℝ (a - b) (a - b) := by
+      have hd : inner ℝ (a - b) (a - b) = ‖a - b‖ * ‖a - b‖ := by
+        rw [show (a - b : V3) = -(b - a) from (neg_sub b a).symm, inner_neg_right,
+          inner_neg_left, neg_neg, real_inner_self_eq_norm_sq, norm_neg,
+          norm_sub_rev b a, pow_two]
+      have h11 : ‖a - b‖ * ‖a - b‖ * r ≤ ‖a - b‖ * ‖a - b‖ := by
+        nlinarith [hrle, sq_nonneg ‖a - b‖]
+      exact le_trans h11 (le_of_eq hd.symm)
+    exact hfin.trans (inner_eq_dot (a - b) (a - b)).le
+  · -- main chain
+    have htp : (0 : ℝ) < t := lt_of_le_of_ne ht0 (Ne.symm htnz)
+    have hsq2 : (t * ‖x - b‖) ^ 2 ≤ (u * ‖x - a‖) ^ 2 := by
+      rw [mul_pow, mul_pow, hpytB, hpytA]
+      nlinarith [htu, sq_nonneg t, sq_nonneg u, sq_nonneg ‖x - s‖,
+        mul_nonneg (sub_nonneg.mpr htu) (add_nonneg hu ht0)]
+    have hkey2 : t * ‖x - b‖ ≤ u * ‖x - a‖ :=
+      le_of_sq_le_sq hsq2 (mul_nonneg hu (norm_nonneg _))
+    have hrpos : (0:ℝ) ≤ ‖b - a‖ * r := mul_nonneg (norm_nonneg _) hr.le
+    have h8I : ‖x - a‖ * ‖b - a‖ * r ≤ t * inner ℝ (b - a) (b - a) := by
+      have hd1 : dist x a = ‖x - a‖ := dist_eq_norm x a
+      have hd2 : dist b a = ‖b - a‖ := dist_eq_norm b a
+      have hc := hconeI.le
+      rw [hd1, hd2] at hc
+      exact hc.trans hF1I.le
+    have hstep1 : t * ‖x - b‖ * (‖b - a‖ * r) ≤ u * ‖x - a‖ * (‖b - a‖ * r) :=
+      mul_le_mul_of_nonneg_right hkey2 hrpos
+    have hstep2 : u * ‖x - a‖ * (‖b - a‖ * r) ≤ u * (t * inner ℝ (b - a) (b - a)) := by
+      have h2d : u * ‖x - a‖ * (‖b - a‖ * r)
+          = u * (‖x - a‖ * ‖b - a‖ * r) := by ring
+      rw [h2d]
+      exact mul_le_mul_of_nonneg_left h8I hu
+    have hstep3 : t * ‖x - b‖ * (‖b - a‖ * r) ≤ u * (t * inner ℝ (b - a) (b - a)) :=
+      le_trans hstep1 hstep2
+    have hgoalI : ‖x - b‖ * (‖b - a‖ * r) ≤ u * inner ℝ (b - a) (b - a) := by
+      nlinarith [hstep3, htp, hu, ht0]
+    have hgoalI' : dist x b * dist a b * r ≤ u * inner ℝ (b - a) (b - a) := by
+      rw [dist_eq_norm x b, dist_eq_norm a b, norm_sub_rev a b, mul_assoc]
+      exact hgoalI
+    have hsI2 : inner ℝ (x - s) (a - b) = 0 := by
+      rw [show (a - b : V3) = -(b - a) from (neg_sub b a).symm, inner_neg_right, hsI,
+        neg_zero]
+    have h1 : inner ℝ (x - b) (a - b) = u * inner ℝ (b - a) (b - a) := by
+      have hdec : x - b = (x - s) + (s - b) := by abel
+      rw [hdec, inner_add_left, hsI2, hsb, inner_neg_left, p12_hsmL u]
+      rw [show (a - b : V3) = -(b - a) from (neg_sub b a).symm, inner_neg_right]
+      ring
+    have hA : inner ℝ (x - b) (a - b) = u * inner ℝ (b - a) (b - a) := h1
+    have hKeyLHS : (x - b) ⬝ᵥ (a - b) = u * ((b - a) ⬝ᵥ (b - a)) :=
+      (inner_eq_dot (x - b) (a - b)).symm.trans
+        (hA.trans (congrArg (fun r => u * r) (inner_eq_dot (b - a) (b - a)).symm))
+    have hmid : dist x b * dist a b * r ≤ u * ((b - a) ⬝ᵥ (b - a)) :=
+      hgoalI'.trans (mul_le_mul_of_nonneg_left (inner_eq_dot (b - a) (b - a)).le hu)
+    have hgoalD : dist x b * dist a b * r ≤ (x - b) ⬝ᵥ (a - b) :=
+      hmid.trans hKeyLHS.symm.le
+    exact hgoalD
 
 /-! ## marchal2.hl:1693 OMEGA_LIST_1_EXPLICIT_NEW -/
 
@@ -1190,12 +1455,147 @@ theorem IN_SET_IMP_IN_CONVEX_HULL_SET (a : V3) (S : Set V3) (ha : a ∈ S) :
 
 /-! ## marchal2.hl:1737 CONVEX_HULL_BREAK_KY_LEMMA -/
 
-/-- HOL `CONVEX_HULL_BREAK_KY_LEMMA` (marchal2.hl:1737). Sorried: geometric
-giant (265-line hull-splitting argument). -/
+/-- HOL `CONVEX_HULL_BREAK_KY_LEMMA` (marchal2.hl:1737). CLOSED 2026-09-30
+(PA12 lane): coefficient algebra on `CONVEX_HULL_4`; the split parameters
+`(q, k)` of `x = q • a + k • b` come from `mem_segment_iff_div`. Honest copy
+of PackingAuto13's `p13_hull_break4`, which until now worked around this very
+sorry. -/
 theorem CONVEX_HULL_BREAK_KY_LEMMA (a b c d x : V3) (hx : x ∈ segment ℝ a b) :
     convexHull ℝ {a, b, c, d} =
       convexHull ℝ {a, x, c, d} ∪ convexHull ℝ {x, b, c, d} := by
-  sorry
+  classical
+  have hxco : ∃ q k : ℝ, 0 ≤ q ∧ 0 ≤ k ∧ q + k = 1 ∧ x = q • a + k • b := by
+    rw [mem_segment_iff_div] at hx
+    obtain ⟨α, β, hα, hβ, hsum, hse⟩ := hx
+    refine ⟨α / (α + β), β / (α + β), div_nonneg hα (le_of_lt hsum),
+      div_nonneg hβ (le_of_lt hsum), ?_, hse.symm⟩
+    rw [← add_div, div_self hsum.ne']
+  obtain ⟨q, k, hq, hk, hqk, hxL⟩ := hxco
+  have hxh : x ∈ convexHull ℝ ({a, b} : Set V3) := by
+    rw [hxL]
+    have hset4 : convexHull ℝ ({a, b} : Set V3) = convexHull ℝ {a, b, b, b} := by
+      congr 1
+      ext y
+      simp
+    rw [hset4, CONVEX_HULL_4]
+    refine ⟨q, k, 0, 0, hq, hk, by norm_num, by norm_num, by linarith, ?_⟩
+    simp
+  have hmono1 : convexHull ℝ {a, x, c, d} ⊆ convexHull ℝ {a, b, c, d} := by
+    refine convexHull_min ?_ (convex_convexHull ℝ _)
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with hz | hz | hz | hz
+    · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+    · rw [hz]; exact convexHull_mono (by
+        intro y hy
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy ⊢
+        tauto) hxh
+    · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+    · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+  have hmono2 : convexHull ℝ {x, b, c, d} ⊆ convexHull ℝ {a, b, c, d} := by
+    refine convexHull_min ?_ (convex_convexHull ℝ _)
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with hz | hz | hz | hz
+    · rw [hz]; exact convexHull_mono (by
+        intro y hy
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy ⊢
+        tauto) hxh
+    · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+    · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+    · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+  refine Set.Subset.antisymm ?_ ?_
+  · intro z hz
+    rw [CONVEX_HULL_4] at hz
+    obtain ⟨t1, t2, t3, t4, ht1, ht2, ht3, ht4, htsum, hzvec⟩ := hz
+    by_cases hk0 : k = 0
+    · -- x = a
+      have hxa : x = a := by
+        rw [hxL, hk0, zero_smul, add_zero]
+        have hq1 : q = 1 := by linarith
+        rw [hq1, one_smul]
+      refine Set.mem_union_right _ ?_
+      rw [CONVEX_HULL_4]
+      refine ⟨t1, t2, t3, t4, ht1, ht2, ht3, ht4, htsum, ?_⟩
+      rw [hzvec, hxa]
+    by_cases hq0 : q = 0
+    · -- x = b
+      have hxb : x = b := by
+        rw [hxL, hq0, zero_smul, zero_add]
+        have hk1 : k = 1 := by linarith
+        rw [hk1, one_smul]
+      refine Set.mem_union_left _ ?_
+      rw [CONVEX_HULL_4]
+      refine ⟨t1, t2, t3, t4, ht1, ht2, ht3, ht4, htsum, ?_⟩
+      rw [hzvec, hxb]
+    have hqnz : q ≠ 0 := hq0
+    have hknz : k ≠ 0 := hk0
+    have hqpos : 0 < q := lt_of_le_of_ne hq (Ne.symm hqnz)
+    have hkpos : 0 < k := lt_of_le_of_ne hk (Ne.symm hknz)
+    by_cases h2 : t2 = 0
+    · -- t2 = 0: zero weight on b
+      refine Set.mem_union_left _ ?_
+      rw [CONVEX_HULL_4]
+      refine ⟨t1, 0, t3, t4, ht1, by norm_num, ht3, ht4, ?_, ?_⟩
+      · linarith
+      · rw [hzvec, h2]
+        module
+    have ht2p : 0 < t2 := by
+      refine lt_of_le_of_ne ht2 ?_
+      intro hcon
+      exact h2 hcon.symm
+    set S := t1 + t2 with hSdef
+    have hSp : 0 < S := by rw [hSdef]; linarith
+    rcases le_or_gt (t2 / S) k with htle | hgt
+    · -- p ∈ hull {a, x, c, d}: split at k
+      refine Set.mem_union_left _ ?_
+      rw [CONVEX_HULL_4]
+      have hkey1 : t2 ≤ S * k := by
+        have h1 := (div_le_iff₀ hSp).mp htle
+        rw [mul_comm] at h1
+        exact h1
+      have hac2 : (t2 / k) * k = t2 := by field_simp
+      have hac1 : S - t2 / k + (t2 / k) * q = t1 := by
+        have h1 : (t2 / k) * (q + k) = (t2 / k) * q + (t2 / k) * k := mul_add _ _ _
+        rw [hqk, mul_one, hac2] at h1
+        linarith
+      have hvec : t1 • a + t2 • b + t3 • c + t4 • d
+          = (S - t2 / k) • a + (t2 / k) • x + t3 • c + t4 • d := by
+        rw [hxL, smul_add, smul_smul, smul_smul, ← add_assoc, ← add_smul, hac1, hac2]
+      refine ⟨S - t2 / k, t2 / k, t3, t4, sub_nonneg.mpr ((div_le_iff₀ hkpos).mpr hkey1),
+        div_nonneg ht2 hkpos.le, ht3, ht4, ?_, ?_⟩
+      · linarith
+      · rw [hzvec, hvec]
+    · -- p ∈ hull {x, b, c, d}: split at q
+      refine Set.mem_union_right _ ?_
+      rw [CONVEX_HULL_4]
+      have hkey2 : S * k ≤ t2 := by
+        have h1 : k * S < t2 := (lt_div_iff₀ hSp).mp hgt
+        rw [mul_comm]
+        exact le_of_lt h1
+      have hac1' : (t1 / q) * q = t1 := by field_simp
+      have key2 : (t1 / q) * k + (S - t1 / q) = t2 := by
+        have h1 : (t1 / q) * (k + q) = (t1 / q) * k + (t1 / q) * q := mul_add _ _ _
+        rw [add_comm k q, hqk, mul_one, hac1'] at h1
+        linarith
+      have hν2 : 0 ≤ S - t1 / q := by
+        rw [sub_nonneg, div_le_iff₀ hqpos]
+        have h4 : t1 = t1 * q + t1 * k := by rw [← mul_add, hqk, mul_one]
+        have h5 : S * q = t1 * q + t2 * q := by rw [hSdef, add_mul]
+        have hA : t1 * k + t2 * k = S * k := by rw [← add_mul, ← hSdef]
+        have hB : t2 * q + t2 * k = t2 := by rw [← mul_add, hqk, mul_one]
+        linarith
+      have hvec2 : t1 • a + t2 • b + t3 • c + t4 • d
+          = (t1 / q) • x + (S - t1 / q) • b + t3 • c + t4 • d := by
+        rw [hxL, smul_add, smul_smul, smul_smul, hac1']
+        rw [add_assoc (t1 • a) ((t1 / q * k) • b) ((S - t1 / q) • b), ← add_smul, key2]
+      refine ⟨t1 / q, S - t1 / q, t3, t4, div_nonneg ht1 hqpos.le, hν2, ht3, ht4, ?_, ?_⟩
+      · linarith
+      · rw [hzvec, hvec2]
+  · intro z hz
+    rcases hz with h | h
+    · exact hmono1 h
+    · exact hmono2 h
 
 /-! ## marchal2.hl:2002 CONVEX_HULL_4_SUBSET_AFF_GE_2_2 -/
 
@@ -1219,22 +1619,122 @@ theorem CONVEX_HULL_4_SUBSET_AFF_GE_2_2 (a b c d : V3) :
 
 /-! ## marchal2.hl:2117 AFF_INDEPENDENT_SET_OF_LIST_BARV -/
 
-/-- HOL `AFF_INDEPENDENT_SET_OF_LIST_BARV` (marchal2.hl:2117). Sorried:
-needs the affine-dimension bookkeeping of the voronoi_nondg clauses. -/
+/-- HOL `AFF_INDEPENDENT_SET_OF_LIST_BARV` (marchal2.hl:2117). CLOSED 2026-09-30
+(PA12 lane): `MHFTTZN1` (PackingAuto6) gives `affDim (setOfList ul) = 3` and the
+list bound `Nat.card (setOfList ul) ≤ 4` feeds PA6's `p6_affdep_of_dim`
+(Rogers `AFFINE_INDEPENDENT_IFF_CARD` content). -/
 theorem AFF_INDEPENDENT_SET_OF_LIST_BARV (V : Set V3) (ul : List V3)
     (_hp : Packing V) (_hs : saturated V) (_hb : barV V 3 ul) :
     ¬affineDependent (setOfList ul) := by
-  sorry
+  have hE : (setOfList ul : Set V3) = (ul.toFinset : Set V3) := by ext x; simp [setOfList]
+  have hfin : (setOfList ul).Finite := by rw [hE]; exact ul.toFinset.finite_toSet
+  have hcard : ((Nat.card (setOfList ul) : ℕ) : ℤ) ≤ 4 := by
+    have h2 : Nat.card (setOfList ul) = ul.toFinset.card := by
+      rw [hE, Nat.card_coe_set_eq, ncard_coe_finset]
+    have h3 : ul.toFinset.card ≤ ul.length := List.toFinset_card_le ul
+    have h4 : ul.length = 4 := _hb.1
+    omega
+  have hdim : affDim (setOfList ul) = 3 := MHFTTZN1 V ul 3 _hp _hb
+  exact p6_affdep_of_dim (setOfList ul) hfin (by omega)
+
+/-- HOL `AFF_DIM_EQ_0` (set theory): a set of affine dimension `0` is a
+singleton (`∅ ↦ -1` forces nonemptiness). -/
+private theorem p12_affDim_eq_zero (S : Set V3) (h : affDim S = 0) :
+    ∃ a : V3, S = {a} := by
+  have hne : S ≠ ∅ := by
+    intro he
+    rw [he, affDim_empty] at h
+    norm_num at h
+  obtain ⟨a, ha⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  refine ⟨a, ?_⟩
+  have hd : affDim S = ((Module.finrank ℝ (vectorSpan ℝ S) : ℕ) : ℤ) := if_neg hne
+  have hfr : (Module.finrank ℝ (vectorSpan ℝ S) : ℕ) = 0 := by omega
+  have hbot : vectorSpan ℝ S = ⊥ := (Submodule.finrank_eq_zero).mp hfr
+  ext b
+  simp only [Set.mem_singleton_iff]
+  constructor
+  · intro hb
+    have hdir : (b - a : V3) ∈ vectorSpan ℝ S := by
+      rw [vectorSpan_def]
+      exact Submodule.subset_span (Set.mem_vsub.2 ⟨b, hb, a, ha, rfl⟩)
+    rw [hbot] at hdir
+    have h0 : (b - a : V3) = 0 := Submodule.mem_bot ℝ |>.mp hdir
+    exact sub_eq_zero.mp h0
+  · intro hb
+    rw [hb]
+    exact ha
 
 /-! ## marchal2.hl:2231 VORONOI_LIST_3_SINGLETON_EXPLICIT -/
 
-/-- HOL `VORONOI_LIST_3_SINGLETON_EXPLICIT` (marchal2.hl:2231). Sorried:
-geometric giant (circumcenter/voronoi-singleton characterization). -/
+/-- HOL `VORONOI_LIST_3_SINGLETON_EXPLICIT` (marchal2.hl:2231). CLOSED
+2026-09-30 (PA12 lane), HL proof translated: `barV`'s `voronoi_nondg` clause on
+`ul` itself gives `affDim (voronoiList V ul) = 0`, whence the cell is a
+singleton `{a}` (`p12_affDim_eq_zero`); the cell membership plus
+`setOfList ul ⊆ V` makes `a` equidistant from the four vertices; `affDim
+(setOfList ul) = 3` (`MHFTTZN1`) turns the affine span into the whole space, so
+`OAPVION3` identifies `a` with the circumcenter, and `OAPVION2` reads off
+`hl ul`. -/
 theorem VORONOI_LIST_3_SINGLETON_EXPLICIT (V : Set V3) (ul : List V3)
     (_hp : Packing V) (_hs : saturated V) (_hb : barV V 3 ul) :
     ∃ a, voronoiList V ul = {a} ∧ a = circumcenter (setOfList ul) ∧
       hl ul = dist (hdV ul) a := by
-  sorry
+  obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul _hb
+  subst hul
+  have hinit : initialSublist [u0, u1, u2, u3] [u0, u1, u2, u3] :=
+    ⟨[], (List.append_nil _).symm⟩
+  have hvn : voronoiNondg V [u0, u1, u2, u3] := _hb.2 [u0, u1, u2, u3] ⟨hinit, by simp⟩
+  have hsubV : setOfList [u0, u1, u2, u3] ⊆ V := hvn.2.1
+  have hd0 : affDim (voronoiList V [u0, u1, u2, u3])
+      + ((([u0, u1, u2, u3] : List V3).length : ℕ) : ℤ) = 4 := hvn.2.2
+  have hdim0 : affDim (voronoiList V [u0, u1, u2, u3]) = 0 := by norm_num at hd0; omega
+  obtain ⟨a, ha⟩ := p12_affDim_eq_zero _ hdim0
+  have hamem : a ∈ voronoiList V [u0, u1, u2, u3] := ha ▸ rfl
+  have hcell : ∀ u ∈ setOfList [u0, u1, u2, u3], ∀ w ∈ V, dist a u ≤ dist a w := by
+    intro u hu w hw
+    have h1 : a ∈ ⋂₀ {voronoiClosed V v | v ∈ setOfList [u0, u1, u2, u3]} := by
+      rw [voronoiList, voronoiSet] at hamem
+      exact hamem
+    rw [Set.mem_sInter] at h1
+    exact h1 (voronoiClosed V u) ⟨u, hu, rfl⟩ w hw
+  have hu0 : u0 ∈ setOfList [u0, u1, u2, u3] := by simp [setOfList]
+  have hcell' : ∀ u ∈ setOfList [u0, u1, u2, u3], dist a u = dist a u0 := by
+    intro u hu
+    exact le_antisymm (hcell u hu u0 (hsubV hu0)) (hcell u0 hu0 u (hsubV hu))
+  have hdep : ¬affineDependent (setOfList [u0, u1, u2, u3]) :=
+    AFF_INDEPENDENT_SET_OF_LIST_BARV V [u0, u1, u2, u3] _hp _hs _hb
+  have hSne : (setOfList [u0, u1, u2, u3]).Nonempty := ⟨u0, hu0⟩
+  have hne : setOfList [u0, u1, u2, u3] ≠ ∅ := Set.nonempty_iff_ne_empty.mp hSne
+  have hdim3 : affDim (setOfList [u0, u1, u2, u3]) = 3 :=
+    MHFTTZN1 V [u0, u1, u2, u3] 3 _hp _hb
+  have hfr3 : Module.finrank ℝ (vectorSpan ℝ (setOfList [u0, u1, u2, u3]))
+      = Module.finrank ℝ V3 := by
+    have hkey : affDim (setOfList [u0, u1, u2, u3])
+        = ((Module.finrank ℝ (vectorSpan ℝ (setOfList [u0, u1, u2, u3])) : ℕ) : ℤ) := if_neg hne
+    rw [hdim3] at hkey
+    rw [finrank_euclideanSpace_fin]
+    omega
+  have hdir : vectorSpan ℝ (setOfList [u0, u1, u2, u3]) = ⊤ :=
+    Submodule.eq_top_of_finrank_eq hfr3
+  have hspanmem : ∀ p : V3, p ∈ (affineSpan ℝ (setOfList [u0, u1, u2, u3]) : Set V3) := by
+    intro p
+    have hq : u0 ∈ (affineSpan ℝ (setOfList [u0, u1, u2, u3]) : Set V3) :=
+      subset_affineSpan ℝ _ hu0
+    have hdir2 : (p - u0 : V3) ∈ (affineSpan ℝ (setOfList [u0, u1, u2, u3])).direction := by
+      rw [direction_affineSpan]
+      rw [hdir]
+      simp
+    have hpv : (p : V3) = (p - u0) +ᵥ u0 := by
+      rw [vadd_eq_add]
+      abel
+    rw [hpv]
+    exact AffineSubspace.vadd_mem_of_mem_direction hdir2 hq
+  have hac : a = circumcenter (setOfList [u0, u1, u2, u3]) :=
+    OAPVION3 (setOfList [u0, u1, u2, u3]) hdep a (hspanmem a) ⟨dist a u0, hcell'⟩
+  refine ⟨a, ha, hac, ?_⟩
+  have hO2 := OAPVION2 (setOfList [u0, u1, u2, u3]) hdep u0 hu0
+  show radV (setOfList [u0, u1, u2, u3]) = dist (hdV [u0, u1, u2, u3]) a
+  rw [hO2, ← hac, dist_comm]
+  rfl
 
 /-! ## marchal2.hl:2393 SIMPLEX_FURTHEST_LT_2 -/
 
