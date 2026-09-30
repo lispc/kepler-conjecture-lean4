@@ -56,6 +56,21 @@ detailed NEEDS notes (both need the region-block cover + §H per-cell
 non-nullness, shared with grutoti_region/grutoti_cell_vol); `grutoti_volD_pos`
 frozen-false premise now carries a STATEMENT-FIX proposal + patch (item 18).
 
+2026-09-30 GT-4 pass: the region-block B1-B4 bridges banked as a 14-lemma
+zero-sorry private chain (`p23Bis` + `p23_region_exists_delta` +
+`p23_region_exists_c`, see the GT-4 lane section above): bisector S1
+characterization/closedness/unboundedness, interface S closed/bounded
+(saturation route, no BOUNDED_VORONOI_LIST needed), midpoint XYOFCGX
+(strict + weak forms; Apollonius, no circumcenter API), critical radius δ
+via the relative neighbourhood S' = S1 ∩ ball(p,d₀) ⊆ S (HL B2's a'/d₀
+nearest-point selection — replaces HL's `S1 \ relative_interior S`, whose
+closedness needs the unported AFF_DIM_VORONOI_LIST, and avoids the
+intrinsicInterior bridge), and the cone threshold c ∈ (0,1) with
+`rconeGt u0 u1 c ⊆ affGeAlt {u0} S` + `⊆ rconeGt u0 u1 (hl/√2)` (B3's
+ray-hits-bisector argument + B4's max-assembly). `grutoti_region` itself
+still `sorry` (B5-B7: rogers/mcell cover kit + P1-P4 minima + assembly,
+HL:1144-2636) — see its updated NEEDS note.
+
 2026-09-30 GT-3b/c pass: the `grutoti_cell_vol` arm kit banked as proved
 privates — private copies of PA24's `coplanarAzimEq` +
 `p24_coplanar_measure_null` (PA23 does not import PA24; provenance notes
@@ -665,17 +680,833 @@ private theorem grutoti_vor_cover (V : Set V3) (u0 u1 : V3) (hp : Packing V)
       i ∈ Finset.Icc 1 (3 - 1)} ∪ voronoiList V vl), ?_, hX⟩
     exact ⟨vl, Set.mem_setOf.mpr ⟨hb, htr⟩, rfl⟩
 
+/-! ## GT-4 lane: B1-B4 region-block bridges (2026-09-30, zero sorry)
+
+HL GRUTOTI.hl:161-1143 (B1-B4): the bisector hyperplane S1, the interface
+S = voronoiList V [u0,u1], the midpoint bridge (Rogers.XYOFCGX), the critical
+radius δ and the cone threshold c. These feed the P1-P4 extremal arguments
+(B5-B7) that assemble grutoti_region below; p23_region_exists_c is the
+current milestone. NOTE: HL's S2 = S1 \ relative_interior S is replaced by
+the explicit relative neighbourhood S' = S1 ∩ ball(p,d₀) ⊆ S (HL B2's
+nearest-point selection); this avoids both the aff-dim equality
+aff hull S = S1 (whose Lean counterpart AFF_DIM_VORONOI_LIST is unported)
+and the intrinsicInterior bridge.
+-/
+
+/-! ## B1: the bisector hyperplane -/
+
+/-- The bisector hyperplane of the edge (HL `S1`, GRUTOTI.hl:252), in the
+ray-friendly form `(x - u0) · (u1 - u0) = d²/2`. -/
+private def p23Bis (u0 u1 : V3) : Set V3 :=
+  {x | inner ℝ (x - u0) (u1 - u0) = dist u0 u1 ^ 2 / 2}
+
+private theorem p23_inner_expand (a b c d : V3) :
+    inner ℝ (a - b) (c - d) = inner ℝ a c - inner ℝ a d - inner ℝ b c + inner ℝ b d := by
+  rw [inner_sub_left, inner_sub_right, inner_sub_right]
+  ring
+
+private theorem p23_dist_sq (x v : V3) :
+    dist x v ^ 2 = inner ℝ x x - 2 * inner ℝ x v + inner ℝ v v := by
+  rw [dist_eq_norm, ← real_inner_self_eq_norm_sq, inner_sub_left, inner_sub_right,
+    inner_sub_right, real_inner_comm v x]
+  ring
+
+/-- equidistance characterizes the bisector -/
+private theorem p23_dist_eq_bis (u0 u1 x : V3) :
+    dist x u0 = dist x u1 ↔ x ∈ p23Bis u0 u1 := by
+  have e0 := p23_dist_sq x u0
+  have e1 := p23_dist_sq x u1
+  have hd : dist u0 u1 ^ 2 = inner ℝ u1 u1 - 2 * inner ℝ u0 u1 + inner ℝ u0 u0 := by
+    rw [dist_comm u0 u1, dist_eq_norm, ← real_inner_self_eq_norm_sq]
+    rw [inner_sub_left, inner_sub_right, inner_sub_right, real_inner_comm u1 u0]
+    ring
+  have hx : inner ℝ (x - u0) (u1 - u0)
+      = inner ℝ x u1 - inner ℝ x u0 - inner ℝ u0 u1 + inner ℝ u0 u0 :=
+    p23_inner_expand x u0 u1 u0
+  constructor
+  · intro h
+    rw [← h] at e1
+    show inner ℝ (x - u0) (u1 - u0) = _
+    rw [hx]
+    linarith
+  · intro h
+    show dist x u0 = dist x u1
+    rw [p23Bis, Set.mem_setOf_eq] at h
+    have h2 : dist x u0 ^ 2 = dist x u1 ^ 2 := by rw [e0, e1]; linarith
+    have h3 := congrArg Real.sqrt h2
+    rw [Real.sqrt_sq dist_nonneg, Real.sqrt_sq dist_nonneg] at h3
+    exact h3
+
+/-- HL CLOSED_HYPERPLANE: the bisector is closed. -/
+private theorem p23_bis_closed (u0 u1 : V3) : IsClosed (p23Bis u0 u1) := by
+  set f : V3 → ℝ := fun x => inner ℝ (x - u0) (u1 - u0) with hf
+  have hcont : Continuous f := by
+    unfold f
+    exact (continuous_id.sub continuous_const).inner continuous_const
+  have h1 : IsClosed {x : V3 | f x ≤ dist u0 u1 ^ 2 / 2} :=
+    isClosed_le hcont continuous_const
+  have h2 : IsClosed {x : V3 | dist u0 u1 ^ 2 / 2 ≤ f x} :=
+    isClosed_le continuous_const hcont
+  have h3 : p23Bis u0 u1 = {x : V3 | f x ≤ dist u0 u1 ^ 2 / 2} ∩
+      {x : V3 | dist u0 u1 ^ 2 / 2 ≤ f x} := by
+    ext x
+    simp only [p23Bis, Set.mem_setOf_eq, Set.mem_inter_iff, hf]
+    constructor
+    · intro h; exact ⟨le_of_eq h, le_of_eq h.symm⟩
+    · intro h; exact le_antisymm h.1 h.2
+  rw [h3]
+  exact h1.inter h2
+
+/-- the Voronoi cell of a point is closed -/
+private theorem p23_voronoiClosed_closed (V : Set V3) (v : V3) :
+    IsClosed (voronoiClosed V v) := by
+  have h : voronoiClosed V v = ⋂ w : V, {x : V3 | dist x v ≤ dist x w} := by
+    ext x
+    rw [voronoiClosed, Set.mem_setOf_eq, Set.mem_iInter]
+    constructor
+    · exact fun hx i => hx i i.property
+    · exact fun hx w hw => hx ⟨w, hw⟩
+  rw [h]
+  refine isClosed_iInter fun w => ?_
+  exact isClosed_le (Continuous.dist continuous_id continuous_const)
+    (Continuous.dist continuous_id continuous_const)
+
+/-- `voronoi_list V [u0;u1]` = the intersection of the two cells -/
+private theorem p23_voronoiList_pair (V : Set V3) (u0 u1 : V3) :
+    voronoiList V [u0, u1] = voronoiClosed V u0 ∩ voronoiClosed V u1 := by
+  show ⋂₀ {voronoiClosed V v | v ∈ setOfList [u0, u1]} = _
+  ext x
+  constructor
+  · intro hx
+    have h0 := hx (voronoiClosed V u0)
+      (Set.mem_image_of_mem _ (by simp [setOfList]))
+    have h1 := hx (voronoiClosed V u1)
+      (Set.mem_image_of_mem _ (by simp [setOfList]))
+    exact ⟨h0, h1⟩
+  · intro hx t ht
+    obtain ⟨v, hv, rfl⟩ := ht
+    have hv' : v ∈ ({u0, u1} : Set V3) := by simpa [setOfList] using hv
+    rcases Set.mem_insert_iff.mp hv' with rfl | rfl
+    · exact hx.1
+    · exact hx.2
+
+/-- the interface is closed -/
+private theorem p23_voronoiList_closed (V : Set V3) (u0 u1 : V3) :
+    IsClosed (voronoiList V [u0, u1]) := by
+  rw [p23_voronoiList_pair V u0 u1]
+  exact (p23_voronoiClosed_closed V u0).inter (p23_voronoiClosed_closed V u1)
+
+/-- the interface is inside the bisector -/
+private theorem p23_voronoiList_sub_bis (V : Set V3) (u0 u1 : V3)
+    (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) :
+    voronoiList V [u0, u1] ⊆ p23Bis u0 u1 := by
+  intro x hx
+  rw [p23_voronoiList_pair V u0 u1] at hx
+  refine p23_dist_eq_bis u0 u1 x |>.mp ?_
+  refine le_antisymm ?_ ?_
+  · exact hx.1 u1 hu1
+  · exact hx.2 u0 hu0
+
+/-- saturation bounds every closed Voronoi cell (HL BOUNDED_VORONOI_LIST
+route, via the <2 saturation axiom) -/
+private theorem p23_voronoiClosed_bounded (V : Set V3) (hs : saturated V) (v : V3) :
+    Bornology.IsBounded (voronoiClosed V v) := by
+  refine Bornology.IsBounded.subset (Metric.isBounded_ball (x := v) (r := 2)) ?_
+  intro x hx
+  obtain ⟨y, hy, hdy⟩ := hs x
+  have hle : dist x v ≤ dist x y := hx y hy
+  rw [Metric.mem_ball]
+  linarith
+
+/-- nonzero vector orthogonal to the edge direction -/
+private theorem p23_exists_orthogonal (u0 u1 : V3) (hne : u0 ≠ u1) :
+    ∃ w : V3, w ≠ 0 ∧ inner ℝ w (u0 - u1) = 0 := by
+  have hnz : (u0 - u1 : V3) ≠ 0 := sub_ne_zero.mpr hne
+  set N : Submodule ℝ V3 := Submodule.span ℝ ({u0 - u1} : Set V3) with hN
+  have h3 : Module.finrank ℝ V3 = 3 := finrank_euclideanSpace_fin
+  have hrk : 0 < Module.finrank ℝ ↥Nᗮ := by
+    have hdim := Submodule.finrank_add_finrank_orthogonal (𝕜 := ℝ) (E := V3) N
+    have hrkN : Module.finrank ℝ ↥N = 1 := by
+      rw [hN]
+      exact finrank_span_singleton hnz
+    rw [h3] at hdim
+    linarith
+  obtain ⟨x, hx0⟩ := (Module.finrank_pos_iff_exists_ne_zero (R := ℝ) (M := ↥Nᗮ)).mp hrk
+  refine ⟨(x : V3), ?_, ?_⟩
+  · intro hwx
+    exact hx0 (Subtype.ext hwx)
+  · have hxm : (x : V3) ∈ Nᗮ := x.property
+    exact (Submodule.mem_orthogonal' N (x : V3)).mp hxm (u0 - u1)
+      (by rw [hN]; exact Submodule.mem_span_singleton_self _)
+
+/-- HL UNBOUNDED_HYPERPLANE: the bisector hyperplane is unbounded -/
+private theorem p23_bisector_unbounded (u0 u1 : V3) (hne : u0 ≠ u1) :
+    ¬ Bornology.IsBounded (p23Bis u0 u1) := by
+  intro hb
+  rw [Metric.isBounded_iff] at hb
+  obtain ⟨K, hK⟩ := hb
+  obtain ⟨w, hw0, hwdot⟩ := p23_exists_orthogonal u0 u1 hne
+  set p : V3 := u0 + (1 / 2 : ℝ) • (u1 - u0) with hpdef
+  have hpn : p - u0 = (1 / 2 : ℝ) • (u1 - u0) := by rw [hpdef]; module
+  have hpm : p ∈ p23Bis u0 u1 := by
+    show inner ℝ (p - u0) (u1 - u0) = _
+    rw [hpn, real_inner_smul_left, real_inner_self_eq_norm_sq]
+    rw [show dist u0 u1 = ‖u1 - u0‖ from by
+      rw [dist_comm u0 u1, dist_eq_norm, norm_sub_rev]]
+    ring
+  have hwne : ‖w‖ ≠ 0 := norm_ne_zero_iff.mpr hw0
+  have hwpos : (0:ℝ) < ‖w‖ := lt_of_le_of_ne (norm_nonneg w) (Ne.symm hwne)
+  have hwdot' : inner ℝ w (u1 - u0) = 0 := by
+    have : (u1 - u0 : V3) = (-1 : ℝ) • (u0 - u1) := by module
+    rw [this, real_inner_smul_right, hwdot]
+    ring
+  have hmem : ∀ t : ℝ, p + t • w ∈ p23Bis u0 u1 := by
+    intro t
+    show inner ℝ (p + t • w - u0) (u1 - u0) = _
+    have h1 : p + t • w - u0 = (p - u0) + t • w := by abel
+    rw [h1, inner_add_left, real_inner_smul_left, hpm, hwdot']
+    ring
+  have hy : p + (((|K| : ℝ) + 1) / ‖w‖) • w ∈ p23Bis u0 u1 := hmem _
+  have hdist : K < dist p (p + (((|K| : ℝ) + 1) / ‖w‖) • w) := by
+    have h1 : dist p (p + (((|K| : ℝ) + 1) / ‖w‖) • w)
+        = (((|K| : ℝ) + 1) / ‖w‖) * ‖w‖ := by
+      rw [dist_eq_norm]
+      have h2 : p - (p + (((|K| : ℝ) + 1) / ‖w‖) • w)
+          = (-(((|K| : ℝ) + 1) / ‖w‖)) • w := by
+        module
+      have h4 : 0 < ((|K| : ℝ) + 1) / ‖w‖ :=
+        div_pos (by linarith [abs_nonneg K]) hwpos
+      have h3 : -((((|K| : ℝ) + 1) / ‖w‖) : ℝ) < 0 := by linarith
+      rw [h2, norm_smul, Real.norm_eq_abs, abs_of_neg h3]
+      ring
+    rw [h1]
+    field_simp
+    linarith [le_abs_self K]
+  exact absurd (hK hpm hy) (not_le.mpr hdist)
+
+/-! ## B2: the midpoint bridge (HL Rogers.XYOFCGX, GRUTOTI.hl:561-575) -/
+
+/-- the edge's own endpoint is NOT in the interface -/
+private theorem p23_u0_notMem_voronoiList (V : Set V3) (u0 u1 : V3)
+    (hu0 : u0 ∈ V) (hd : dist u0 u1 ≠ 0) : u0 ∉ voronoiList V [u0, u1] := by
+  intro hx
+  rw [p23_voronoiList_pair V u0 u1] at hx
+  have h1 : dist u0 u1 ≤ dist u0 u0 := hx.2 u0 hu0
+  rw [dist_self] at h1
+  exact hd (le_antisymm h1 dist_nonneg)
+
+/-- HL Rogers.XYOFCGX (strict form): every packing point other than the two
+edge points is strictly farther from the edge midpoint than the half-length. -/
+private theorem p23_midpoint_dist_gt (V : Set V3) (u0 u1 : V3)
+    (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
+    (hhl : hl [u0, u1] < Real.sqrt 2) :
+    ∀ w ∈ V, w ≠ u0 → w ≠ u1 →
+      dist u0 u1 / 2 < dist (u0 + (1 / 2 : ℝ) • (u1 - u0)) w := by
+  intro w hw hw0 hw1
+  have hHL2 : hl [u0, u1] = dist u0 u1 / 2 := HL_2 u0 u1
+  set d := dist u0 u1 with hddef
+  set p : V3 := u0 + (1 / 2 : ℝ) • (u1 - u0) with hpdef
+  have hdpos : 0 ≤ d := dist_nonneg
+  have hd8 : d ^ 2 < 8 := by
+    rw [hHL2] at hhl
+    have h1 : d < 2 * Real.sqrt 2 := by nlinarith
+    have h2 : (2 * Real.sqrt 2) ^ 2 = 8 := by
+      rw [mul_pow, Real.sq_sqrt (le_of_lt (by norm_num : (0:ℝ) < 2))]
+      norm_num
+    nlinarith [hdpos, h1, h2]
+  have apol : 4 * dist p w ^ 2
+      = 2 * (dist w u0 ^ 2 + dist w u1 ^ 2) - d ^ 2 := by
+    have h1 : p - w = (1 / 2 : ℝ) • ((u0 - w) + (u1 - w)) := by rw [hpdef]; module
+    have h2 : dist p w = ‖(u0 - w) + (u1 - w)‖ / 2 := by
+      rw [dist_eq_norm, h1, norm_smul, Real.norm_eq_abs,
+        abs_of_pos (by norm_num : (0:ℝ) < 1 / 2)]
+      field_simp
+    have e1 : inner ℝ ((u0 - w) + (u1 - w)) ((u0 - w) + (u1 - w))
+        = inner ℝ (u0 - w) (u0 - w) + 2 * inner ℝ (u0 - w) (u1 - w)
+          + inner ℝ (u1 - w) (u1 - w) := by
+      rw [inner_add_left, inner_add_right, inner_add_right,
+        real_inner_comm (u1 - w) (u0 - w)]
+      ring
+    have e2 : d ^ 2 = inner ℝ (u0 - w) (u0 - w)
+        - 2 * inner ℝ (u0 - w) (u1 - w) + inner ℝ (u1 - w) (u1 - w) := by
+      have h3 : d = ‖(u0 - w) - (u1 - w)‖ := by
+        rw [hddef, dist_eq_norm]
+        congr 1
+        module
+      rw [h3, ← real_inner_self_eq_norm_sq]
+      simp only [inner_sub_left, inner_sub_right, real_inner_comm]
+      ring
+    have n1 : ‖u0 - w‖ = dist w u0 := by rw [dist_eq_norm, norm_sub_rev]
+    have n2 : ‖u1 - w‖ = dist w u1 := by rw [dist_eq_norm, norm_sub_rev]
+    have n3 : ‖(u0 - w) + (u1 - w)‖ ^ 2
+        = inner ℝ ((u0 - w) + (u1 - w)) ((u0 - w) + (u1 - w)) :=
+      (real_inner_self_eq_norm_sq _).symm
+    have h4 : dist p w ^ 2 = ‖(u0 - w) + (u1 - w)‖ ^ 2 / 4 := by
+      rw [h2]
+      field_simp
+      ring
+    rw [h4, n3, e1, e2]
+    rw [real_inner_self_eq_norm_sq (u0 - w), real_inner_self_eq_norm_sq (u1 - w), n1, n2]
+    field_simp
+    linarith
+  have hge0 : 2 ≤ dist w u0 := hp.dist_ge_two hw hu0 hw0
+  have hge1 : 2 ≤ dist w u1 := hp.dist_ge_two hw hu1 hw1
+  have hq0 : 4 ≤ dist w u0 ^ 2 := by nlinarith
+  have hq1 : 4 ≤ dist w u1 ^ 2 := by nlinarith
+  by_contra hcc
+  push_neg at hcc
+  have hdpw : (0:ℝ) ≤ dist p w := dist_nonneg
+  have hsum : 0 ≤ d / 2 + dist p w := by linarith
+  have hsq : (d / 2) ^ 2 = d ^ 2 / 4 := by ring
+  have hs : dist p w ^ 2 < (d / 2) ^ 2 := by nlinarith [hcc, hsum, hdpw]
+  linarith [apol, hq0, hq1, hd8, hs, hsq]
+
+/-- HL Rogers.XYOFCGX: the edge midpoint is weakly closer to u0/u1 than every
+other point of the packing (needs only `hl < √2` for the strictness). -/
+private theorem p23_midpoint_mem_voronoiList (V : Set V3) (u0 u1 : V3)
+    (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
+    (hhl : hl [u0, u1] < Real.sqrt 2) :
+    u0 + (1 / 2 : ℝ) • (u1 - u0) ∈ voronoiList V [u0, u1] := by
+  have hHL2 : hl [u0, u1] = dist u0 u1 / 2 := HL_2 u0 u1
+  set d := dist u0 u1 with hddef
+  set p : V3 := u0 + (1 / 2 : ℝ) • (u1 - u0) with hpdef
+  have hdpos : 0 ≤ d := dist_nonneg
+  have hd8 : d ^ 2 < 8 := by
+    rw [hHL2] at hhl
+    have h1 : d < 2 * Real.sqrt 2 := by nlinarith
+    have h2 : (2 * Real.sqrt 2) ^ 2 = 8 := by
+      rw [mul_pow, Real.sq_sqrt (le_of_lt (by norm_num : (0:ℝ) < 2))]
+      norm_num
+    nlinarith [hdpos, h1, h2]
+  have hpu0 : dist p u0 = d / 2 := by
+    rw [dist_eq_norm]
+    have h1 : p - u0 = (1 / 2 : ℝ) • (u1 - u0) := by rw [hpdef]; module
+    rw [h1, norm_smul, Real.norm_eq_abs, abs_of_pos (by norm_num : (0:ℝ) < 1 / 2)]
+    rw [dist_eq_norm] at hddef
+    rw [hddef, norm_sub_rev]
+    ring
+  have hpu1 : dist p u1 = d / 2 := by
+    rw [dist_eq_norm]
+    have h1 : p - u1 = (1 / 2 : ℝ) • (u0 - u1) := by rw [hpdef]; module
+    rw [h1, norm_smul, Real.norm_eq_abs, abs_of_pos (by norm_num : (0:ℝ) < 1 / 2)]
+    rw [dist_eq_norm] at hddef
+    rw [hddef, norm_sub_rev]
+    ring
+  have apol : ∀ w : V3, 4 * dist p w ^ 2
+      = 2 * (dist w u0 ^ 2 + dist w u1 ^ 2) - d ^ 2 := by
+    intro w
+    have h1 : p - w = (1 / 2 : ℝ) • ((u0 - w) + (u1 - w)) := by rw [hpdef]; module
+    have h2 : dist p w = ‖(u0 - w) + (u1 - w)‖ / 2 := by
+      rw [dist_eq_norm, h1, norm_smul, Real.norm_eq_abs,
+        abs_of_pos (by norm_num : (0:ℝ) < 1 / 2)]
+      field_simp
+    have e1 : inner ℝ ((u0 - w) + (u1 - w)) ((u0 - w) + (u1 - w))
+        = inner ℝ (u0 - w) (u0 - w) + 2 * inner ℝ (u0 - w) (u1 - w)
+          + inner ℝ (u1 - w) (u1 - w) := by
+      rw [inner_add_left, inner_add_right, inner_add_right,
+        real_inner_comm (u1 - w) (u0 - w)]
+      ring
+    have e2 : d ^ 2 = inner ℝ (u0 - w) (u0 - w)
+        - 2 * inner ℝ (u0 - w) (u1 - w) + inner ℝ (u1 - w) (u1 - w) := by
+      have h3 : d = ‖(u0 - w) - (u1 - w)‖ := by
+        rw [hddef, dist_eq_norm]
+        congr 1
+        module
+      rw [h3, ← real_inner_self_eq_norm_sq]
+      simp only [inner_sub_left, inner_sub_right, real_inner_comm]
+      ring
+    have n1 : ‖u0 - w‖ = dist w u0 := by rw [dist_eq_norm, norm_sub_rev]
+    have n2 : ‖u1 - w‖ = dist w u1 := by rw [dist_eq_norm, norm_sub_rev]
+    have n3 : ‖(u0 - w) + (u1 - w)‖ ^ 2
+        = inner ℝ ((u0 - w) + (u1 - w)) ((u0 - w) + (u1 - w)) :=
+      (real_inner_self_eq_norm_sq _).symm
+    have h4 : dist p w ^ 2 = ‖(u0 - w) + (u1 - w)‖ ^ 2 / 4 := by
+      rw [h2]
+      field_simp
+      ring
+    rw [h4, n3, e1, e2]
+    rw [real_inner_self_eq_norm_sq (u0 - w), real_inner_self_eq_norm_sq (u1 - w), n1, n2]
+    field_simp
+    linarith
+  have key : ∀ w ∈ V, w ≠ u0 → w ≠ u1 → d / 2 ≤ dist p w :=
+    fun w hw hw0 hw1 => le_of_lt (p23_midpoint_dist_gt V u0 u1 hp hu0 hu1 hne hhl w hw hw0 hw1)
+  rw [p23_voronoiList_pair V u0 u1]
+  constructor
+  · rw [voronoiClosed, Set.mem_setOf_eq]
+    intro w hw
+    by_cases hw0 : w = u0
+    · subst hw0
+      exact le_refl _
+    by_cases hw1 : w = u1
+    · subst hw1
+      rw [hpu0, hpu1]
+    · rw [hpu0]
+      exact key w hw hw0 hw1
+  · rw [voronoiClosed, Set.mem_setOf_eq]
+    intro w hw
+    by_cases hw0 : w = u0
+    · subst hw0
+      rw [hpu1, hpu0]
+    by_cases hw1 : w = u1
+    · subst hw1
+      exact le_refl _
+    · rw [hpu1]
+      exact key w hw hw0 hw1
+
+
+
+/-! ## B1 conclusion: the critical radius -/
+
+/-- Pythagoras on the bisector: `‖z - u0‖² = ‖z - p‖² + (d/2)²` for `z` on the
+bisector and `p` the edge midpoint. -/
+private theorem p23_bis_pythagoras (u0 u1 z : V3) (hz : z ∈ p23Bis u0 u1) :
+    dist u0 z ^ 2 = ‖z - (u0 + (1 / 2 : ℝ) • (u1 - u0))‖ ^ 2 + (dist u0 u1 / 2) ^ 2 := by
+  set p : V3 := u0 + (1 / 2 : ℝ) • (u1 - u0) with hpdef
+  have hpn : p - u0 = (1 / 2 : ℝ) • (u1 - u0) := by rw [hpdef]; module
+  have hbis : z ∈ p23Bis u0 u1 := hz
+  rw [p23Bis, Set.mem_setOf_eq] at hbis
+  have hzdot : inner ℝ (z - p) (u1 - u0) = 0 := by
+    have h1 : z - p = (z - u0) - (p - u0) := by abel
+    have h2 : inner ℝ (p - u0) (u1 - u0) = dist u0 u1 ^ 2 / 2 := by
+      rw [hpn, real_inner_smul_left, real_inner_self_eq_norm_sq]
+      rw [show dist u0 u1 = ‖u1 - u0‖ from by
+        rw [dist_comm u0 u1, dist_eq_norm, norm_sub_rev]]
+      ring
+    rw [h1, inner_sub_left, hbis, h2]
+    ring
+  have h1 : z - u0 = (z - p) + (p - u0) := by abel
+  have h2 : dist u0 z = ‖z - u0‖ := by rw [dist_eq_norm, norm_sub_rev]
+  have h3 : ‖p - u0‖ = dist u0 u1 / 2 := by
+    rw [hpn, norm_smul, Real.norm_eq_abs,
+      abs_of_pos (by norm_num : (0:ℝ) < 1 / 2)]
+    rw [show dist u0 u1 = ‖u1 - u0‖ from by
+      rw [dist_comm u0 u1, dist_eq_norm, norm_sub_rev]]
+    ring
+  have h4 : inner ℝ (z - p) (p - u0) = 0 := by
+    rw [hpn, real_inner_smul_right, hzdot]
+    ring
+  have h5 : dist u0 z ^ 2
+      = ‖z - p‖ ^ 2 + 2 * inner ℝ (z - p) (p - u0) + ‖p - u0‖ ^ 2 := by
+    have e0 : inner ℝ (z - u0) (z - u0)
+        = inner ℝ (z - p) (z - p) + 2 * inner ℝ (z - p) (p - u0)
+          + inner ℝ (p - u0) (p - u0) := by
+      have hz1 : z - u0 = (z - p) + (p - u0) := by abel
+      rw [hz1, inner_add_left, inner_add_right, inner_add_right,
+        real_inner_comm (p - u0) (z - p)]
+      ring
+    rw [h2, ← real_inner_self_eq_norm_sq, ← real_inner_self_eq_norm_sq,
+      ← real_inner_self_eq_norm_sq, e0, h4]
+  calc dist u0 z ^ 2
+      = ‖z - p‖ ^ 2 + 2 * inner ℝ (z - p) (p - u0) + ‖p - u0‖ ^ 2 := h5
+    _ = ‖z - p‖ ^ 2 + (dist u0 u1 / 2) ^ 2 := by rw [h4, h3]; ring
+
+/-- translated form of `Packing.finite_inter_ball` (Statement.lean, centered
+at 0) -/
+private theorem p23_finite_inter_ball (V : Set V3) (hp : Packing V) (v : V3) (r : ℝ) :
+    (V ∩ Metric.ball v r).Finite := by
+  have hp' : Packing ((fun x : V3 => x - v) '' V) := by
+    intro u hu w hw hlt
+    obtain ⟨u, huV, rfl⟩ := hu
+    obtain ⟨w, hwV, rfl⟩ := hw
+    refine congrArg (fun x => x - v) (hp u huV w hwV ?_)
+    rw [dist_eq_norm]
+    have hab : (u - v) - (w - v) = u - w := by abel
+    rw [← hab, ← dist_eq_norm]
+    exact hlt
+  have hfin : (((fun x : V3 => x - v) '' V) ∩ Metric.ball 0 r).Finite :=
+    Packing.finite_inter_ball hp' r
+  have hsub : V ∩ Metric.ball v r
+      ⊆ (fun x : V3 => v + x) '' (((fun x : V3 => x - v) '' V) ∩ Metric.ball 0 r) := by
+    rintro x ⟨hxV, hxb⟩
+    refine ⟨x - v, ⟨Set.mem_image_of_mem _ hxV, ?_⟩, by abel⟩
+    rw [Metric.mem_ball] at hxb ⊢
+    rw [dist_zero_right]
+    rw [dist_comm, dist_eq_norm, norm_sub_rev] at hxb
+    exact hxb
+  exact ((hfin.image (fun x : V3 => v + x))).subset hsub
+
+/-- B1 conclusion (HL GRUTOTI.hl:253-590): a critical radius `δ` strictly above
+the half-length such that every bisector point closer than `δ` to `u0` lies in
+the interface `S = voronoiList V [u0, u1]`.
+
+Instead of HL's `S2 = S1 \ relative_interior S` (whose closedness needs the
+aff-dim equality `aff hull S = S1`), we build the explicit relative
+neighbourhood `S' = S1 ∩ ball(p, d₀) ⊆ S` from HL's B2 nearest-point selection
+(`a'` in `V ∩ ball(p,8) \ {u0,u1}`, `d₀ = (dist(p,a') - d/2)/4`) and minimize
+over the closed set `S1 ∩ (ball(p,d₀))ᶜ`. -/
+private theorem p23_region_exists_delta (V : Set V3) (u0 u1 : V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (hhl : hl [u0, u1] < Real.sqrt 2) :
+    ∃ δ : ℝ, dist u0 u1 / 2 < δ ∧ ∀ y ∈ p23Bis u0 u1, dist u0 y < δ →
+      y ∈ voronoiList V [u0, u1] := by
+  set d := dist u0 u1 with hddef
+  set p : V3 := u0 + (1 / 2 : ℝ) • (u1 - u0) with hpdef
+  have hdpos : 0 < d := dist_pos.mpr (fun hcc => hne hcc)
+  have hdp2 : 0 < d / 2 := by linarith
+  have hdp8 : d / 2 < 2 := by
+    have h1 : hl [u0, u1] = d / 2 := HL_2 u0 u1
+    have h2 : hl [u0, u1] < Real.sqrt 2 := hhl
+    have h3 : Real.sqrt 2 < 2 := by
+      have h3a : (Real.sqrt 2) ^ 2 = 2 := Real.sq_sqrt (by norm_num)
+      have h3b : (0:ℝ) ≤ Real.sqrt 2 := Real.sqrt_nonneg 2
+      by_contra h4
+      push_neg at h4
+      nlinarith [h3a, h3b, h4]
+    rw [h1] at h2
+    linarith
+  -- the distances from p to the two edge points are d/2
+  have hu0p : dist p u0 = d / 2 := by
+    rw [dist_eq_norm]
+    have h1 : p - u0 = (1 / 2 : ℝ) • (u1 - u0) := by rw [hpdef]; module
+    rw [h1, norm_smul, Real.norm_eq_abs,
+      abs_of_pos (by norm_num : (0:ℝ) < 1 / 2)]
+    rw [show d = ‖u1 - u0‖ from by rw [hddef, dist_eq_norm, norm_sub_rev]]
+    ring
+  have hu1p : dist p u1 = d / 2 := by
+    rw [dist_eq_norm]
+    have h1 : p - u1 = (1 / 2 : ℝ) • (u0 - u1) := by rw [hpdef]; module
+    rw [h1, norm_smul, Real.norm_eq_abs,
+      abs_of_pos (by norm_num : (0:ℝ) < 1 / 2)]
+    rw [show d = ‖u0 - u1‖ from by rw [hddef, dist_eq_norm]]
+    ring
+  -- the strict nearest-point bound (XYOFCGX)
+  have hgt := p23_midpoint_dist_gt V u0 u1 hp hu0 hu1 hne hhl
+  -- B2: finite nonempty set of non-edge packing points inside ball(p,8)
+  set A : Set V3 := (V ∩ Metric.ball p 8) \ {u0, u1} with hAdef
+  have hAfin : A.Finite := (p23_finite_inter_ball V hp p 8).diff (t := {u0, u1})
+  have hAne : A.Nonempty := by
+    obtain ⟨y0, hy0⟩ : ∃ y0 : V3, dist p y0 = 4 :=
+      ⟨p + (4 / (dist p u0)) • (u0 - p), by
+        rw [dist_eq_norm]
+        have h1 : p - (p + (4 / (dist p u0)) • (u0 - p))
+            = -((4 / (dist p u0)) • (u0 - p)) := by abel
+        have hnup : ‖u0 - p‖ = dist p u0 := by
+          rw [← dist_eq_norm]
+          exact dist_comm u0 p
+        have hpu0pos : (0:ℝ) < dist p u0 := by rw [hu0p]; linarith
+        have hq4 : (0:ℝ) < 4 / dist p u0 := div_pos (by norm_num) hpu0pos
+        rw [h1, norm_neg, norm_smul, Real.norm_eq_abs,
+          abs_of_pos hq4, hnup, hu0p]
+        field_simp⟩
+    obtain ⟨z', hz'V, hz'd⟩ := hs y0
+    have hz'8 : dist p z' < 8 := by
+      have h1 : dist p z' ≤ dist p y0 + dist y0 z' := dist_triangle p y0 z'
+      rw [hy0] at h1
+      linarith
+    have hz'0 : z' ≠ u0 := by
+      intro hcc
+      have h1 : dist p y0 ≤ dist p u0 + dist u0 y0 := by
+        rw [← hcc]
+        exact dist_triangle p z' y0
+      rw [hy0, hu0p] at h1
+      have h2 : dist u0 y0 < 2 := by rw [← hcc, dist_comm]; exact hz'd
+      linarith [h2, hdp8]
+    have hz'1 : z' ≠ u1 := by
+      intro hcc
+      have h1 : dist p y0 ≤ dist p u1 + dist u1 y0 := by
+        rw [← hcc]
+        exact dist_triangle p z' y0
+      rw [hy0, hu1p] at h1
+      have h2 : dist u1 y0 < 2 := by rw [← hcc, dist_comm]; exact hz'd
+      linarith [h2, hdp8]
+    refine ⟨z', ⟨⟨hz'V, ?_⟩, by simp [hz'0, hz'1]⟩⟩
+    rw [Metric.mem_ball, dist_comm]
+    exact hz'8
+  -- a' := the nearest point of A
+  obtain ⟨a', ha'A, hamin⟩ :=
+    Set.exists_min_image A (fun w : V3 => dist p w) hAfin hAne
+  have ha'V : a' ∈ V := ha'A.1.1
+  have ha'ball : dist p a' < 8 := by
+    have h5 : dist a' p < 8 := Metric.mem_ball.mp ha'A.1.2
+    rw [dist_comm]
+    exact h5
+  have ha'0 : a' ≠ u0 := fun hcc => ha'A.2 (by simp [hcc])
+  have ha'1 : a' ≠ u1 := fun hcc => ha'A.2 (by simp [hcc])
+  have hapos : d / 2 < dist p a' := hgt a' ha'V ha'0 ha'1
+  set d0 := (dist p a' - d / 2) / 4 with hd0def
+  have hd00 : 0 < d0 := by linarith
+  have hapos4 : dist p a' = d / 2 + 4 * d0 := by rw [hd0def]; linarith
+  -- S' = p23Bis ∩ ball(p,d0) is inside the interface
+  have hS' : ∀ x ∈ p23Bis u0 u1, dist p x < d0 → x ∈ voronoiList V [u0, u1] := by
+    intro x hxb hxd
+    have hdist : dist x u0 = dist x u1 := (p23_dist_eq_bis u0 u1 x).mpr hxb
+    rw [p23_voronoiList_pair V u0 u1]
+    constructor
+    · rw [voronoiClosed, Set.mem_setOf_eq]
+      intro w hw
+      by_cases hw0 : w = u0
+      · subst hw0
+        exact le_refl _
+      by_cases hw1 : w = u1
+      · subst hw1
+        rw [hdist]
+      · have hchain1 : dist p w - dist p x ≤ dist x w := by
+          have := dist_triangle p x w
+          linarith
+        have hwge : dist p a' ≤ dist p w := by
+          by_cases hwb : w ∈ Metric.ball p 8
+          · have hwA : w ∈ A := by
+              rw [hAdef, Set.mem_sdiff]
+              exact ⟨⟨hw, hwb⟩, by simp [hw0, hw1]⟩
+            exact hamin w hwA
+          · have h1 : ¬ dist p w < 8 := fun hcc =>
+              hwb (by rw [Metric.mem_ball, dist_comm]; exact hcc)
+            have h2 : dist p w ≥ 8 := le_of_not_gt h1
+            linarith
+        have h2 : dist x u0 ≤ dist p x + d / 2 := by
+          have h5b : dist x u0 ≤ dist x p + dist p u0 := dist_triangle x p u0
+          rw [hu0p, dist_comm x p] at h5b
+          linarith
+        have h3 : dist x u0 < dist x w := by
+          have h4 : dist p a' - d0 = d / 2 + 3 * d0 := by rw [hapos4]; linarith
+          have h5 : dist p a' - dist p x > dist p a' - d0 := by linarith
+          have h6 : dist x u0 < d / 2 + d0 := by linarith
+          linarith
+        linarith
+    · rw [voronoiClosed, Set.mem_setOf_eq]
+      intro w hw
+      by_cases hw0 : w = u0
+      · subst hw0
+        rw [hdist]
+      by_cases hw1 : w = u1
+      · subst hw1
+        exact le_refl _
+      · have hchain1 : dist p w - dist p x ≤ dist x w := by
+          have := dist_triangle p x w
+          linarith
+        have hwge : dist p a' ≤ dist p w := by
+          by_cases hwb : w ∈ Metric.ball p 8
+          · have hwA : w ∈ A := by
+              rw [hAdef, Set.mem_sdiff]
+              exact ⟨⟨hw, hwb⟩, by simp [hw0, hw1]⟩
+            exact hamin w hwA
+          · have h1 : ¬ dist p w < 8 := fun hcc =>
+              hwb (by rw [Metric.mem_ball, dist_comm]; exact hcc)
+            have h2 : dist p w ≥ 8 := le_of_not_gt h1
+            linarith
+        have h2 : dist x u1 ≤ dist p x + d / 2 := by
+          have h5b : dist x u1 ≤ dist x p + dist p u1 := dist_triangle x p u1
+          rw [hu1p, dist_comm x p] at h5b
+          linarith
+        have h3 : dist x u1 < dist x w := by
+          have h4 : dist p a' - d0 = d / 2 + 3 * d0 := by rw [hapos4]; linarith
+          linarith
+        linarith
+  -- minimize dist u0 · over the closed set S2 = p23Bis ∩ ball(p,d0)ᶜ
+  have hS2cl : IsClosed (p23Bis u0 u1 ∩ (Metric.ball p d0)ᶜ) :=
+    (p23_bis_closed u0 u1).inter Metric.isOpen_ball.isClosed_compl
+  have hS2ne : (p23Bis u0 u1 ∩ (Metric.ball p d0)ᶜ).Nonempty := by
+    by_contra hcon
+    have hsub : p23Bis u0 u1 ⊆ Metric.ball p d0 := by
+      intro x hx
+      by_contra hx2
+      rw [Metric.mem_ball] at hx2
+      have hxmem : x ∈ p23Bis u0 u1 ∩ (Metric.ball p d0)ᶜ := ⟨hx, hx2⟩
+      exact hcon ⟨x, hxmem⟩
+    exact p23_bisector_unbounded u0 u1 hne
+      ((Metric.isBounded_ball (x := p) (r := d0)).subset hsub)
+  obtain ⟨z, hzS2, hdz⟩ := hS2cl.exists_infDist_eq_dist hS2ne u0
+  obtain ⟨hzbis, hzball⟩ := hzS2
+  rw [Set.mem_compl_iff, Metric.mem_ball] at hzball
+  push_neg at hzball
+  have hzp : z ≠ p := by
+    intro hcc
+    rw [hcc, dist_self] at hzball
+    linarith
+  have hpy := p23_bis_pythagoras u0 u1 z hzbis
+  have hd2 : (d / 2) ^ 2 < dist u0 z ^ 2 := by
+    rw [hpy]
+    have hnz : ‖z - p‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hzp)
+    have hpos : 0 < ‖z - p‖ := lt_of_le_of_ne (norm_nonneg _) (Ne.symm hnz)
+    nlinarith [hpos]
+  refine ⟨dist u0 z, ?_, ?_⟩
+  · by_contra hcon
+    push_neg at hcon
+    have hx0 : (0:ℝ) ≤ dist u0 z := dist_nonneg
+    have hs2 : 0 ≤ d / 2 + dist u0 z := by linarith
+    nlinarith [hd2, hcon, hs2, hx0]
+  · intro y hyb hlt
+    have hyin : y ∈ Metric.ball p d0 := by
+      by_contra hyball
+      have hy2 : y ∈ p23Bis u0 u1 ∩ (Metric.ball p d0)ᶜ := ⟨hyb, hyball⟩
+      have hle := Metric.infDist_le_dist_of_mem (s := p23Bis u0 u1 ∩ (Metric.ball p d0)ᶜ)
+        (x := u0) (y := y) hy2
+      rw [hdz] at hle
+      exact absurd hlt (not_lt.mpr hle)
+    have hlt2 : dist p y < d0 := by
+      have h5c : dist y p < d0 := Metric.mem_ball.mp hyin
+      rw [dist_comm] at h5c
+      exact h5c
+    exact hS' y hyb hlt2
+
+/-! ## B3+B4: the cone over the interface contains a small rcone
+(HL GRUTOTI.hl:590-1143) -/
+
+/-- B3+B4 (HL GRUTOTI.hl:590-1143): there is a cosine-threshold `c ∈ (0,1)`
+with `rconeGt u0 u1 c` inside the cone from `u0` over the interface `S`
+(`affGeAlt {u0} S`) and inside `rconeGt u0 u1 (hl/√2)`. -/
+private theorem p23_region_exists_c (V : Set V3) (u0 u1 : V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (hhl : hl [u0, u1] < Real.sqrt 2) :
+    ∃ c : ℝ, 0 < c ∧ c < 1 ∧
+      rconeGt u0 u1 c ⊆ affGeAlt {u0} (voronoiList V [u0, u1]) ∧
+      rconeGt u0 u1 c ⊆ rconeGt u0 u1 (hl [u0, u1] / Real.sqrt 2) := by
+  obtain ⟨δ, hδcrit, hcrit⟩ := p23_region_exists_delta V u0 u1 hs hp hu0 hu1 hne hhl
+  have hdpos : 0 < dist u0 u1 := dist_pos.mpr (fun hcc => hne hcc)
+  have hδ0 : 0 < δ := lt_of_le_of_lt (by positivity) hδcrit
+  -- the provisional threshold b = (d/2)/δ ∈ (0,1)
+  set b := dist u0 u1 / 2 / δ with hbdef
+  have hb0 : 0 < b := div_pos (by linarith) hδ0
+  have hbne : b ≠ 0 := ne_of_gt hb0
+  have hb1 : b < 1 := (div_lt_one hδ0).mpr hδcrit
+  have hbkey : dist u0 u1 ^ 2 / 2 = dist u0 u1 * b * δ := by
+    have hδne : δ ≠ 0 := ne_of_gt hδ0
+    have h1b : b * δ = dist u0 u1 / 2 := by
+      rw [hbdef]
+      exact div_mul_cancel₀ _ hδne
+    rw [mul_assoc, h1b]
+    ring
+  have hbincl : ∀ x, x ∈ rconeGt u0 u1 b →
+      affGeAlt {u0} (voronoiList V [u0, u1]) x := by
+    intro x hx
+    rw [rconeGt, Set.mem_setOf_eq] at hx
+    rw [dist_comm u1 u0] at hx
+    have hx2 : inner ℝ (x - u0) (u1 - u0) > dist x u0 * (dist u0 u1 * b) := by
+      rw [inner_eq_dot, ← mul_assoc]
+      exact hx
+    have hxn : x ≠ u0 := by
+      intro hcc
+      rw [hcc] at hx2
+      simp at hx2
+    have hD0 : 0 < dist u0 u1 := dist_pos.mpr (fun hcc => hne hcc)
+    have hDne : dist u0 u1 ≠ 0 := fun hcc => hne (dist_eq_zero.mp hcc)
+    have htne : dist x u0 ≠ 0 := fun hcc => hxn (dist_eq_zero.mp hcc)
+    have ht0 : 0 < dist x u0 := lt_of_le_of_ne dist_nonneg (Ne.symm htne)
+    have htp : 0 < (dist x u0)⁻¹ := inv_pos.mpr ht0
+    obtain ⟨ww, hwdef⟩ : ∃ ww : V3, ww = (dist x u0)⁻¹ • (x - u0) := ⟨_, rfl⟩
+    have hwn : ‖ww‖ = 1 := by
+      rw [hwdef, norm_smul, Real.norm_eq_abs, abs_of_pos htp]
+      rw [← dist_eq_norm, inv_mul_cancel₀ htne]
+    have hwx : x - u0 = dist x u0 • ww := by
+      rw [hwdef, smul_smul, mul_inv_cancel₀ htne, one_smul]
+    have h1 : inner ℝ (x - u0) (u1 - u0)
+        = dist x u0 * inner ℝ ww (u1 - u0) := by
+      rw [hwx, real_inner_smul_left]
+    have hwdot : dist u0 u1 * b < inner ℝ ww (u1 - u0) := by
+      have h3 : dist x u0 * (dist u0 u1 * b)
+          < dist x u0 * inner ℝ ww (u1 - u0) := by
+        rw [← h1]
+        exact hx2
+      exact lt_of_mul_lt_mul_left h3 (le_of_lt ht0)
+    have hq1 : 0 < dist u0 u1 * b := mul_pos hD0 hb0
+    have hqpos : 0 < inner ℝ ww (u1 - u0) := by linarith
+    have hqne : inner ℝ ww (u1 - u0) ≠ 0 := ne_of_gt hqpos
+    -- the hit point of the ray u0 → x with the bisector hyperplane
+    obtain ⟨s, hsdef⟩ : ∃ s : ℝ,
+        s = (dist u0 u1 ^ 2 / 2) / inner ℝ ww (u1 - u0) := ⟨_, rfl⟩
+    have hs0 : 0 < s := by
+      rw [hsdef]
+      exact div_pos (div_pos (sq_pos_of_ne_zero hDne) (by norm_num)) hqpos
+    obtain ⟨y, hydef⟩ : ∃ y : V3, y = u0 + s • ww := ⟨_, rfl⟩
+    have hywu : y - u0 = s • ww := by rw [hydef]; module
+    have hybis : y ∈ p23Bis u0 u1 := by
+      show inner ℝ (y - u0) (u1 - u0) = _
+      rw [hywu, real_inner_smul_left, hsdef]
+      field_simp
+    have hdy : dist u0 y = s := by
+      rw [dist_eq_norm, norm_sub_rev, hywu, norm_smul, Real.norm_eq_abs,
+        abs_of_pos hs0, hwn, mul_one]
+    have hyne : y ≠ u0 := by
+      intro hcc
+      rw [hcc, dist_self] at hdy
+      exact absurd hdy.symm (ne_of_gt hs0)
+    have hsδ : s < δ := by
+      have h8' : s * inner ℝ ww (u1 - u0) = dist u0 u1 * b * δ := by
+        rw [hsdef, div_mul_cancel₀ _ hqne]
+        exact hbkey
+      have h9 : dist u0 u1 * b * δ < inner ℝ ww (u1 - u0) * δ :=
+        mul_lt_mul_of_pos_right hwdot hδ0
+      have h10 : inner ℝ ww (u1 - u0) * s < inner ℝ ww (u1 - u0) * δ := by
+        rw [mul_comm (inner ℝ ww (u1 - u0)) s, h8']
+        linarith
+      exact lt_of_mul_lt_mul_left h10 hqpos.le
+    have hyS : y ∈ voronoiList V [u0, u1] := hcrit y hybis (by rw [hdy]; exact hsδ)
+    -- assemble the affGeAlt witness
+    have hsne : s ≠ 0 := ne_of_gt hs0
+    obtain ⟨hh, hhdef⟩ : ∃ hh : ℝ, hh = dist x u0 / s := ⟨_, rfl⟩
+    have hh0 : 0 < hh := by rw [hhdef]; exact div_pos ht0 hs0
+    have key : x - u0 = hh • (y - u0) := by
+      rw [hywu, hhdef, smul_smul, div_mul_cancel₀ _ hsne]
+      exact hwx
+    have hxeq : x = (1 - hh) • u0 + hh • y := by
+      have e1 : x = u0 + (x - u0) := (add_sub_cancel u0 x).symm
+      rw [e1, key]
+      module
+    refine ⟨fun v => if v = u0 then 1 - hh else if v = y then hh else 0, {y},
+      Set.finite_singleton y, ?_, ?_, ?_, ?_⟩
+    · intro z hz
+      rw [Set.mem_singleton_iff] at hz
+      subst hz
+      exact hyS
+    · have hfin : (({u0} ∪ {y} : Set V3)).Finite := by simp
+      have htofin : hfin.toFinset = ({u0, y} : Finset V3) := by
+        ext z
+        simp
+        tauto
+      rw [linCombo, dif_pos hfin, htofin,
+        Finset.sum_insert (by intro hcc; rw [Finset.mem_singleton] at hcc; exact hyne hcc.symm), Finset.sum_singleton]
+      have hfu0 : (if u0 = u0 then 1 - hh else if u0 = y then hh else 0) = 1 - hh := by
+        simp [hyne]
+      have hfy : (if y = u0 then 1 - hh else if y = y then hh else 0) = hh := by
+        simp [hyne]
+      rw [hfu0, hfy]
+      exact hxeq
+    · intro z hz
+      rw [Set.mem_singleton_iff] at hz
+      subst hz
+      simp [hyne, hh0.le]
+    · have hfin : (({u0} ∪ {y} : Set V3)).Finite := by simp
+      have htofin : hfin.toFinset = ({u0, y} : Finset V3) := by
+        ext z
+        simp
+        tauto
+      rw [setSum, dif_pos hfin, htofin,
+        Finset.sum_insert (by intro hcc; rw [Finset.mem_singleton] at hcc; exact hyne hcc.symm), Finset.sum_singleton]
+      have hfu0 : (if u0 = u0 then 1 - hh else if u0 = y then hh else 0) = 1 - hh := by
+        simp [hyne]
+      have hfy : (if y = u0 then 1 - hh else if y = y then hh else 0) = hh := by
+        simp [hyne]
+      rw [hfu0, hfy]
+      ring
+  -- B4: raise the threshold to c = max b (hl/√2)
+  have hhlpos : 0 < hl [u0, u1] := by rw [HL_2]; linarith
+  have hhl1 : hl [u0, u1] / Real.sqrt 2 < 1 :=
+    (div_lt_one (Real.sqrt_pos.mpr (by norm_num : (0:ℝ) < 2))).mpr hhl
+  refine ⟨max b (hl [u0, u1] / Real.sqrt 2), lt_max_of_lt_left hb0, max_lt hb1 hhl1, ?_, ?_⟩
+  · intro x hx
+    exact hbincl _ (RCONE_GT_SUBSET u0 u1 b _ (le_max_left _ _) hx)
+  · intro x hx
+    exact RCONE_GT_SUBSET u0 u1 (hl [u0, u1] / Real.sqrt 2) _ (le_max_right _ _) hx
+
 /-- HL GRUTOTI.hl:161-2636: the volumetric core. Produces cone/annulus
 parameters `c r d` (`c = max b (hl/√2)`, `r = min 1 (min r1 r2)`,
 `d = max c (max d1 d2)` from the P1..P4 extremal arguments) with `D =
 grutotiConicCap u0 u1 r d ⊆ C`, and the mcell cover (HL:2631-2636): every
 Marchal cell meeting `D` in positive measure is a `k ≥ 2` cell over a
 `barV V 3` list with `truncateSimplex 1 vl = [u0, u1]`.
-NEEDS-precision: relative-interior/affine-hull analysis of
-`S1 = {x | 2(u0-u1)·x = …}` vs `S = voronoiList V [u0,u1]` (HL:203-1125),
-finite `B = V ∩ ball p 8` selection of nearest point `a'` (HL:415-590),
-`rcone_gt`/ball inclusion kit (HL:1091-1143), P1/P2 minima over truncation
-lists (HL:1538-2283), `NEGLIGIBLE_AFFINE_HULL_3`/coplanarity sliver bounds. -/
+GT-4 status (2026-09-30): B1-B4 are BANKED as the zero-sorry private chain
+above (`p23_region_exists_delta` + `p23_region_exists_c`: HL:161-1143 —
+bisector S1, interface S, midpoint XYOFCGX, critical radius δ, cone threshold
+c ∈ (0,1) with `rconeGt u0 u1 c ⊆ affGeAlt {u0} S ∩ rconeGt u0 u1 (hl/√2)`).
+HL's `S2 = S1 \ relative_interior S` is replaced by the explicit relative
+neighbourhood `S' = S1 ∩ ball(p,d₀) ⊆ S` (B2's nearest-point selection);
+this avoids the unported `AFF_DIM_VORONOI_LIST` and the intrinsicInterior
+bridge entirely. REMAINING (the `sorry` below, HL:1144-2636): B5-B7 — the
+rogers/mcell cover kit (B5, HL:1144-1537), the P1-P4 minima over the
+truncation lists via smallest_angle_line (B6, HL:1538-2610; the PA15
+SMALLEST_ANGLE_LINE kit is available), and the final assembly
+`c = max b (hl/√2)`, `r = min 1 (min r1 r2)`, `d = max c (max d1 d2)`,
+`D ⊆ C`, and the mcell cover (B7, HL:2611-2636). -/
 private theorem grutoti_region (V : Set V3) (u0 u1 : V3) (e : Set V3)
     (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
     (hne : u0 ≠ u1) (hhl : hl [u0, u1] < Real.sqrt 2) (he : e = {u0, u1}) :
