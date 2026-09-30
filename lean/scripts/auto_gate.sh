@@ -258,6 +258,10 @@ if [ -n "$dels" ]; then
     body="${line#-}"
     printf '%s\n' "$cmt" | grep -qF -- "$body" && continue
     printf '%s\n' "$sorbody" | grep -qF -- "$body" && continue
+    # EVOLUTION 13 (2026-10-01): a deleted line re-added verbatim elsewhere in
+    # the same diff is a pure block move — lexically inert, still covered by
+    # rules 2/3/4 at its new location.
+    printf '%s\n' "$adds" | grep -qF -- "$body" && continue
     cosmetic+="$line"$'\n'
   done <<EOF12
 $dels
