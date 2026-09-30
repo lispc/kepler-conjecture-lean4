@@ -91,10 +91,22 @@ the giant leaf-cell/sum-gamma chains carry `sorry`.
 
 import Kepler.Text.PackingAuto13
 import Kepler.Text.PackingAuto17
+import Kepler.Text.PackingAuto15
+import Kepler.Text.PackingAuto4
 import Kepler.Text.SphereKit
 import Kepler.Text.Polytope
 import Kepler.Text.TopologyFan
 import Mathlib
+-- SUM_GAMMAX wave (2026-09-30): `PackingAuto15` (proved marchal3 counting kit:
+-- `MCELL_SUBSET_BALL8_2`, `DIHX_RANGE`/`DIHX_LE_PI`, `HL_2`, `lmfun_bounded`,
+-- `FINITE_VX`, `MEASURABLE_MCELL` via PA10, `gamma_y_lmfun_bound2` shape) and
+-- `PackingAuto4` (`BumpP4.BOUND_BETA_BUMP`/`BumpP4.SUM_BETA_BUMP_LEMMA`, both
+-- proved, about the closed-form `betaBump`) join the import set. Closure check:
+-- PA15 ← {PA2, PA5-8, PA10-13, Polytope, LuneVolume} and PA4 ← {PA2, PA3,
+-- PA11, Polytope, Statement} — neither reaches PA18/PA17/PA14 (acyclic);
+-- PA19/PA21/PA25/PackingConcl already co-import both files, so no consumer
+-- closure changes; public-name intersections PA15/PA4 vs PA13/PA17/PA18 are
+-- empty (checked 2026-09-30).
 
 set_option maxHeartbeats 5000000
 
@@ -2525,7 +2537,691 @@ theorem EWYBJUA {V : Set V3} {X : Set V3} {u0 u1 v1 v2 : V3}
     X ⊆ wedgeGe u0 u1 v1 v2 ∨ X ⊆ wedgeGe u0 u1 v2 v1 := by
   sorry
 
-/-! ## sum_gamma.hl: the UPFZBZM support estimate -/
+
+/-! ### setSum arithmetic kit (p16-shape copies; PA16's are private) -/
+
+private theorem p18_setSum_union {α : Type*} {s t : Set α} (hs : s.Finite) (ht : t.Finite)
+    (hdisj : Disjoint s t) (f : α → ℝ) : setSum (s ∪ t) f = setSum s f + setSum t f := by
+  unfold setSum
+  rw [dif_pos (hs.union ht), dif_pos hs, dif_pos ht, Set.Finite.toFinset_union hs ht]
+  exact Finset.sum_union (Finset.disjoint_left.mpr fun a ha hb =>
+    Set.disjoint_left.mp hdisj ((Set.Finite.mem_toFinset hs).mp ha)
+      ((Set.Finite.mem_toFinset ht).mp hb))
+
+private theorem p18_setSum_add {α : Type*} {s : Set α} (hs : s.Finite) (f g : α → ℝ) :
+    setSum s f + setSum s g = setSum s (fun x => f x + g x) := by
+  unfold setSum
+  rw [dif_pos hs, dif_pos hs, dif_pos hs]
+  rw [Finset.sum_add_distrib]
+
+private theorem p18_setSum_lmul {α : Type*} {s : Set α} (hs : s.Finite) (a : ℝ) (f : α → ℝ) :
+    setSum s (fun x => a * f x) = a * setSum s f := by
+  unfold setSum
+  rw [dif_pos hs, dif_pos hs]
+  rw [Finset.mul_sum]
+
+private theorem p18_setSum_eq_zero {α : Type*} {s : Set α} (hs : s.Finite) (f : α → ℝ)
+    (h : ∀ a ∈ s, f a = 0) : setSum s f = 0 := by
+  unfold setSum
+  rw [dif_pos hs, Finset.sum_eq_zero fun a ha => h a ((Set.Finite.mem_toFinset hs).mp ha)]
+
+private theorem p18_setSum_le_of_subset {α : Type*} {s t : Set α} (hs : s.Finite)
+    (ht : t.Finite) (hsub : s ⊆ t) (f : α → ℝ)
+    (hnn : ∀ a ∈ t, 0 ≤ f a) : setSum s f ≤ setSum t f := by
+  unfold setSum
+  rw [dif_pos hs, dif_pos ht]
+  have hss : hs.toFinset ⊆ ht.toFinset := fun a ha =>
+    (Set.Finite.mem_toFinset ht).mpr (hsub ((Set.Finite.mem_toFinset hs).mp ha))
+  have hsplit : ∑ x ∈ ht.toFinset \ hs.toFinset, f x + ∑ x ∈ hs.toFinset, f x
+      = ∑ x ∈ ht.toFinset, f x := Finset.sum_sdiff hss
+  have hdiffnn : 0 ≤ ∑ x ∈ ht.toFinset \ hs.toFinset, f x :=
+    Finset.sum_nonneg fun x hx => hnn x
+      ((Set.Finite.mem_toFinset ht).mp (Finset.mem_sdiff.mp hx).1)
+  linarith [hsplit, hdiffnn]
+
+private theorem p18_setSum_const {α : Type*} {s : Set α} (hs : s.Finite) (c : ℝ) :
+    setSum s (fun _ => c) = (Nat.card s : ℝ) * c := by
+  unfold setSum
+  rw [dif_pos hs, Finset.sum_const, nsmul_eq_mul]
+  simp [Nat.card_coe_set_eq, Set.ncard_eq_toFinset_card s hs]
+
+private theorem p18_setSum_fubini {α β : Type*} {B : Set α} {A : Set β}
+    (hB : B.Finite) (hA : A.Finite) (f : α → β → ℝ) :
+    setSum B (fun X => setSum A (fun u => f X u))
+      = setSum A (fun u => setSum B (fun X => f X u)) := by
+  simp only [setSum, dif_pos hB, dif_pos hA]
+  exact Finset.sum_comm
+
+private theorem p18_setSum_superset_eq {α : Type*} {s t : Set α} (hs : s.Finite)
+    (ht : t.Finite) (hsub : s ⊆ t) (f : α → ℝ)
+    (hz : ∀ a ∈ t, a ∉ s → f a = 0) : setSum s f = setSum t f := by
+  have hsd : ht.toFinset \ hs.toFinset ⊆ ht.toFinset := fun a ha =>
+    (Finset.mem_sdiff.mp ha).1
+  have hsplit : ∑ x ∈ ht.toFinset \ hs.toFinset, f x + ∑ x ∈ hs.toFinset, f x
+      = ∑ x ∈ ht.toFinset, f x := Finset.sum_sdiff
+      (fun a ha => (Set.Finite.mem_toFinset ht).mpr
+        (hsub ((Set.Finite.mem_toFinset hs).mp ha)))
+  have hzero : ∑ x ∈ ht.toFinset \ hs.toFinset, f x = 0 := by
+    refine Finset.sum_eq_zero fun x hx => ?_
+    have h1 : x ∈ t := (Set.Finite.mem_toFinset ht).mp (Finset.mem_sdiff.mp hx).1
+    have h2 : x ∉ s := by
+      intro hcon
+      exact (Finset.mem_sdiff.mp hx).2 ((Set.Finite.mem_toFinset hs).mpr hcon)
+    rw [hz x h1 h2]
+  unfold setSum
+  rw [dif_pos hs, dif_pos ht, ← hsplit, hzero]
+  linarith
+
+private theorem p18_setSum_filter {α : Type*} {A : Set α} (hA : A.Finite)
+    (P : α → Prop) [DecidablePred P] (f : α → ℝ) :
+    setSum {u | u ∈ A ∧ P u} f = setSum A (fun u => if P u then f u else 0) := by
+  have hfin : ({u | u ∈ A ∧ P u} : Set α).Finite := hA.subset fun u hu => hu.1
+  unfold setSum
+  rw [dif_pos hfin, dif_pos hA]
+  have heq : hfin.toFinset = hA.toFinset.filter P := by
+    ext u
+    simp [Set.Finite.mem_toFinset, Set.mem_setOf_eq, Finset.mem_filter,
+      Set.Finite.mem_toFinset]
+  rw [heq, Finset.sum_filter]
+
+/-! ### ordered/unordered pair halving (marchal3 `SUM_PAIR_2_SET`, closed here) -/
+
+private theorem p18_sum_pair_2_set (f : Set V3 → ℝ) (s : Set V3) (d : ℝ) (hs : s.Finite) :
+    setSum {p : V3 × V3 | p.1 ∈ s ∧ p.2 ∈ s ∧ p.1 ≠ p.2 ∧ dist p.1 p.2 ≤ d}
+        (fun p => f {p.1, p.2}) =
+      2 * setSum {e : Set V3 | ∃ m ∈ s, ∃ n ∈ s, m ≠ n ∧ dist m n ≤ d ∧ e = {m, n}} f := by
+  classical
+  set O : Set (V3 × V3) := {p : V3 × V3 | p.1 ∈ s ∧ p.2 ∈ s ∧ p.1 ≠ p.2 ∧ dist p.1 p.2 ≤ d}
+    with hOdef
+  set E : Set (Set V3) := {e : Set V3 | ∃ m ∈ s, ∃ n ∈ s, m ≠ n ∧ dist m n ≤ d ∧ e = {m, n}}
+    with hEdef
+  have hOsub : O ⊆ s ×ˢ s := fun p hp => ⟨hp.1, hp.2.1⟩
+  have hOfin : O.Finite := (hs.prod hs).subset hOsub
+  have hEeq : E = (fun p : V3 × V3 => ({p.1, p.2} : Set V3)) '' O := by
+    ext e
+    simp only [hEdef, hOdef, Set.mem_setOf_eq, Set.mem_image]
+    constructor
+    · rintro ⟨m, hm, n, hn, hne, hdle, rfl⟩
+      exact ⟨(m, n), ⟨hm, hn, hne, hdle⟩, rfl⟩
+    · rintro ⟨p, ⟨hm, hn, hne, hdle⟩, rfl⟩
+      exact ⟨p.1, hm, p.2, hn, hne, hdle, rfl⟩
+  have hEfin : E.Finite := by rw [hEeq]; exact hOfin.image _
+  have hEtf : hEfin.toFinset = hOfin.toFinset.image (fun p : V3 × V3 => ({p.1, p.2} : Set V3)) := by
+    ext e
+    rw [Set.Finite.mem_toFinset hEfin, hEeq, Set.mem_image, Finset.mem_image]
+    simp only [← Set.Finite.mem_toFinset hOfin]
+  have hfib : setSum O (fun p => f ({p.1, p.2} : Set V3))
+      = ∑ e ∈ hEfin.toFinset,
+        ∑ p ∈ hOfin.toFinset.filter
+          (fun p => ({p.1, p.2} : Set V3) = e), f ({p.1, p.2} : Set V3) := by
+    have himg : ∀ p ∈ O, ({p.1, p.2} : Set V3) ∈ E := fun p hp => by
+      rw [hEeq]; exact ⟨p, hp, rfl⟩
+    rw [setSum, dif_pos hOfin, hEtf]
+    exact (Finset.sum_fiberwise_of_maps_to
+      (t := hOfin.toFinset.image (fun p : V3 × V3 => ({p.1, p.2} : Set V3)))
+      (fun p hp => Finset.mem_image.mpr ⟨p, hp, rfl⟩)
+      (fun p => f ({p.1, p.2} : Set V3))).symm
+  have hinner : ∀ e ∈ E,
+      ∑ p ∈ hOfin.toFinset.filter (fun p => ({p.1, p.2} : Set V3) = e),
+        f ({p.1, p.2} : Set V3) = 2 * f e := by
+    intro e he
+    have him : e ∈ (fun p : V3 × V3 => ({p.1, p.2} : Set V3)) '' O := by
+      rw [← hEeq]; exact he
+    rw [Set.mem_image] at him
+    obtain ⟨p0, hp0, rfl⟩ := him
+    obtain ⟨hm, hn, hne, hdle⟩ := hp0
+    have hmO1 : (p0.1, p0.2) ∈ O := ⟨hm, hn, hne, hdle⟩
+    have hmO2 : (p0.2, p0.1) ∈ O :=
+      ⟨hn, hm, fun h => hne h.symm, by rw [dist_comm]; exact hdle⟩
+    have hcomm : ({p0.2, p0.1} : Set V3) = ({p0.1, p0.2} : Set V3) := by
+      ext x
+      simp
+      tauto
+    have hsub : hOfin.toFinset.filter
+        (fun p => ({p.1, p.2} : Set V3) = ({p0.1, p0.2} : Set V3)) ⊆
+        insert (p0.1, p0.2) ({(p0.2, p0.1)} : Finset (V3 × V3)) := by
+      intro p hp
+      have hpm : p ∈ O :=
+        (Set.Finite.mem_toFinset hOfin).mp (Finset.mem_filter.mp hp).1
+      have hpe : ({p.1, p.2} : Set V3) = ({p0.1, p0.2} : Set V3) :=
+        (Finset.mem_filter.mp hp).2
+      have hmemb2 : p.2 ∈ ({p0.1, p0.2} : Set V3) := by rw [← hpe]; simp
+      have hmemb1 : p.1 ∈ ({p0.1, p0.2} : Set V3) := by rw [← hpe]; simp
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmemb1 hmemb2
+      rcases hmemb2 with h21 | h22
+      · rcases hmemb1 with h11 | h12
+        · exact absurd (h11.trans h21.symm) hpm.2.2.1
+        · exact Finset.mem_insert.mpr
+            (Or.inr (Finset.mem_singleton.mpr (Prod.ext h12 h21)))
+      · exact Finset.mem_insert.mpr (Or.inl (Prod.ext (by
+          rcases hmemb1 with h11 | h12
+          · exact h11
+          · exact absurd (h12.trans h22.symm) hpm.2.2.1) h22))
+    have hsup : insert (p0.1, p0.2) ({(p0.2, p0.1)} : Finset (V3 × V3)) ⊆
+        hOfin.toFinset.filter
+          (fun p => ({p.1, p.2} : Set V3) = ({p0.1, p0.2} : Set V3)) := by
+      intro p hp
+      rcases Finset.mem_insert.mp hp with hp1 | hp2
+      · subst hp1
+        exact Finset.mem_filter.mpr
+          ⟨(Set.Finite.mem_toFinset hOfin).mpr hmO1, rfl⟩
+      · rw [Finset.mem_singleton] at hp2
+        subst hp2
+        exact Finset.mem_filter.mpr
+          ⟨(Set.Finite.mem_toFinset hOfin).mpr hmO2, hcomm⟩
+    have hne' : ((p0.1, p0.2) : V3 × V3) ∉ ({(p0.2, p0.1)} : Finset (V3 × V3)) := by
+      intro hcon
+      exact hne ((Prod.mk.injEq _ _ _ _).mp (Finset.mem_singleton.mp hcon)).1
+    have heqf : hOfin.toFinset.filter
+        (fun p => ({p.1, p.2} : Set V3) = ({p0.1, p0.2} : Set V3)) =
+        insert (p0.1, p0.2) ({(p0.2, p0.1)} : Finset (V3 × V3)) :=
+      Finset.ext fun p => ⟨fun hp => hsub hp, fun hp => hsup hp⟩
+    rw [heqf, Finset.sum_insert hne', Finset.sum_singleton, hcomm]
+    ring
+  rw [hfib]
+  have hstep : ∀ e ∈ hEfin.toFinset,
+      ∑ p ∈ hOfin.toFinset.filter (fun p => ({p.1, p.2} : Set V3) = e),
+        f ({p.1, p.2} : Set V3) = 2 * f e := fun e he =>
+    hinner e ((Set.Finite.mem_toFinset hEfin).mp he)
+  rw [Finset.sum_congr rfl hstep, ← Finset.mul_sum]
+  rw [setSum, dif_pos hEfin]
+
+/-! ### betaBump transfer (PA4 `betaBump` = PA2 `betaBumpV1`, same body) -/
+
+private theorem p18_betaBump_eq (V : Set V3) (e X : Set V3) :
+    betaBumpV1 V e X = betaBump V e X := rfl
+
+
+/-! ## sum_gamma.hl: the UPFZBZM support estimate
+
+The supporting kit below closes `BOUND_GAMMA_X_lmfun` (PA15:2086 is still
+`sorry` there; this lane may only write PA18, so the proof lives here as the
+private `p18_BOUND_GAMMA_X_lmfun` with the PA15 statement shape). Route
+(marchal3.hl:6671): split `gammaX` into the volume term (≤ `4/3·π·8³` by
+`MCELL_SUBSET_BALL8_2` + `MEASURABLE_MCELL` + ball volume), the `total_solid`
+term (`≥ 0`: `sol` is unconditionally nonnegative and `mm1 ≥ 0` via
+`sol0 ∈ [π/6, π/5)` ⇒ `tau0 > 0`), and the edge term (the pattern-lambda
+`p18_gammaE` bound `≤ π·(h0/(h0-1))` per edge — PA15's `gamma_y_lmfun_bound2`
+with the `Classical.epsilon` pair inlined, avoiding the private `pairOf` —
+times `CARD_EDGEX_LE_16`, closed here from `Nat.card (VX V X) ≤ 4` via the
+`truncateSimplex` length `≤ 4`). The certified `sol0`/`tau0`/`mm2` numerics are
+p16-shape copies (PA16's are private); `mm1 ≥ 0` needs only `0 ≤ sol0` and
+`tau0 > 0`.
+
+Also closed here (2026-09-30, SUM_GAMMAX wave 1): the marchal3
+`SUM_PAIR_2_SET` halving lemma (PA15:1916 is `sorry` there) as the private
+`p18_sum_pair_2_set` (fiber = the two orderings of the pair), plus the
+setSum arithmetic kit, `betaBumpV1 = betaBump` (PA4) transfer, per-edge
+critical-family counting (`p18_crit_family_card`, bound `c2n`) and the
+translated-finiteness / endpoint bridges. Continuation map for the
+`SUM_GAMMAX_LMFUN_ESTIMATE` assembly: /tmp/sum_gammax_handoff.md
+(draft skeleton /tmp/chunk4.lean).
+
+NEEDS (SUM_GAMMAX upstream, not closable from PA18 alone; consumed banked):
+-- PA15 `CARD_MCELL_CONTAINS_POINT_klemma` (:2009), `BOUNDS_VGEN_klemma`
+-- (:1997), `PACKING_BALL_BOUNDARY` (:495), `FINITE_MCELL_SET_LEMMA_2`
+-- (:1148); PA10 `HDTFNFZ` (:246) and `MEASURABLE_MCELL` (:517, via
+-- `measurableSet_affGe_wedge_p10` :509) — the two sorried leaves inside
+-- `MCELL_SUBSET_BALL8_2`/`MEASURABLE_MCELL` consumed by cc1's kit. -/
+
+private theorem p18_sol0_nonneg : 0 ≤ sol0 := by
+  have h1 : (1 / 3 : ℝ) ≤ 1 / 2 := by norm_num
+  have h2 : Real.arccos (1 / 2) ≤ Real.arccos (1 / 3) := Real.arccos_le_arccos h1
+  have h3 : Real.arccos (1 / 2) = Real.pi / 3 :=
+    Real.arccos_eq_of_eq_cos (by linarith [Real.pi_pos]) (by linarith [Real.pi_pos])
+      Real.cos_pi_div_three.symm
+  unfold sol0
+  linarith
+
+private theorem p18_sol0_lt_pi_div_five : sol0 < Real.pi / 5 := by
+  have hcos5 : Real.cos (Real.pi / 5) = (1 + Real.sqrt 5) / 4 := Real.cos_pi_div_five
+  have hcos2 : Real.cos (2 * Real.pi / 5) = 2 * Real.cos (Real.pi / 5) ^ 2 - 1 := by
+    have hshape : (2 : ℝ) * Real.pi / 5 = 2 * (Real.pi / 5) := by ring
+    rw [hshape]; exact Real.cos_two_mul _
+  have hsqrt5 : (Real.sqrt 5 : ℝ) < 7 / 3 := by
+    rw [Real.sqrt_lt (by norm_num) (by norm_num)]
+    norm_num
+  have hsq : ((1 + Real.sqrt 5) / 4) ^ 2 = (3 + Real.sqrt 5) / 8 := by
+    have hs25 : (1 + Real.sqrt 5) ^ 2 = 6 + 2 * Real.sqrt 5 := by
+      have h25 : (Real.sqrt 5) ^ 2 = 5 := Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 5)
+      nlinarith [h25]
+    rw [div_pow, hs25]
+    ring
+  have hval : Real.cos (2 * Real.pi / 5) = (Real.sqrt 5 - 1) / 4 := by
+    rw [hcos2, hcos5, hsq]
+    ring
+  have hlt : Real.cos (2 * Real.pi / 5) < 1 / 3 := by
+    rw [hval]; linarith [hsqrt5]
+  have hkey : Real.arccos (1 / 3) < 2 * Real.pi / 5 := by
+    calc Real.arccos (1 / 3)
+        < Real.arccos (Real.cos (2 * Real.pi / 5)) :=
+          Real.arccos_lt_arccos (Real.neg_one_le_cos _) hlt (by norm_num)
+      _ = 2 * Real.pi / 5 :=
+          Real.arccos_cos (by linarith [Real.pi_pos]) (by linarith [Real.pi_pos])
+  unfold sol0
+  linarith
+
+private theorem p18_tau0_pos : 0 < tau0 := by
+  have h := p18_sol0_lt_pi_div_five
+  unfold tau0
+  linarith [h, Real.pi_pos]
+
+private theorem p18_mm1_nonneg : 0 ≤ mm1 := by
+  unfold mm1
+  exact div_nonneg (mul_nonneg p18_sol0_nonneg (Real.sqrt_nonneg 8))
+    (le_of_lt p18_tau0_pos)
+
+private theorem p18_mm2_nonneg : 0 ≤ mm2 := by
+  have hpos : (0:ℝ) < Real.pi / 9 := by linarith [Real.pi_pos]
+  have hlt : Real.pi / 9 < Real.pi := by linarith [Real.pi_pos]
+  have hs0 : 0 ≤ Real.sin (Real.pi / 9) :=
+    le_of_lt (Real.sin_pos_of_pos_of_lt_pi hpos hlt)
+  have htri : Real.sin (Real.pi / 3)
+      = 3 * Real.sin (Real.pi / 9) - 4 * Real.sin (Real.pi / 9) ^ 3 := by
+    have hshape : Real.pi / 3 = 3 * (Real.pi / 9) := by ring
+    rw [hshape, Real.sin_three_mul]
+  have hval : Real.sqrt 3 / 2
+      = 3 * Real.sin (Real.pi / 9) - 4 * Real.sin (Real.pi / 9) ^ 3 := by
+    rw [← Real.sin_pi_div_three]; exact htri
+  have hsq3 : (23:ℝ) / 27 < Real.sqrt 3 / 2 := by
+    have h46sq : ((46:ℝ) / 27) ^ 2 < 3 := by norm_num
+    have h46 := Real.sqrt_lt_sqrt (by norm_num : (0:ℝ) ≤ ((46:ℝ) / 27) ^ 2) h46sq
+    rw [Real.sqrt_sq (by norm_num : (0:ℝ) ≤ (46:ℝ) / 27)] at h46
+    linarith
+  have hge : (1:ℝ) / 3 ≤ Real.sin (Real.pi / 9) := by
+    by_contra hcon
+    have hf1 : (0:ℝ) < 1 / 3 - Real.sin (Real.pi / 9) := by linarith
+    have hsq : Real.sin (Real.pi / 9) * Real.sin (Real.pi / 9) < 1 / 9 := by
+      have h1 : Real.sin (Real.pi / 9) * Real.sin (Real.pi / 9)
+          ≤ Real.sin (Real.pi / 9) * (1 / 3) :=
+        mul_le_mul_of_nonneg_left (le_of_not_ge hcon) hs0
+      have h2 : Real.sin (Real.pi / 9) * (1 / 3) < (1 / 3) * (1 / 3) :=
+        mul_lt_mul_of_pos_right (lt_of_not_ge hcon) (by norm_num)
+      linarith
+    have hfac : 23 / 27 - (3 * Real.sin (Real.pi / 9)
+          - 4 * Real.sin (Real.pi / 9) ^ 3)
+        = (1 / 3 - Real.sin (Real.pi / 9)) *
+            (3 - 4 * (Real.sin (Real.pi / 9) * Real.sin (Real.pi / 9)
+              + Real.sin (Real.pi / 9) / 3 + 1 / 9)) := by ring
+    have hprod : (0:ℝ) < (1 / 3 - Real.sin (Real.pi / 9)) *
+        (3 - 4 * (Real.sin (Real.pi / 9) * Real.sin (Real.pi / 9)
+          + Real.sin (Real.pi / 9) / 3 + 1 / 9)) := by
+      have h1 : (0:ℝ) < 1 / 3 - Real.sin (Real.pi / 9) := by linarith
+      have hT : Real.sin (Real.pi / 9) * Real.sin (Real.pi / 9)
+          + Real.sin (Real.pi / 9) / 3 + 1 / 9 < 1 / 3 := by linarith
+      have h2 : (0:ℝ) < 3 - 4 * (Real.sin (Real.pi / 9) * Real.sin (Real.pi / 9)
+          + Real.sin (Real.pi / 9) / 3 + 1 / 9) := by linarith [hT]
+      exact mul_pos h1 h2
+    have hlt23 : 3 * Real.sin (Real.pi / 9) - 4 * Real.sin (Real.pi / 9) ^ 3
+        < 23 / 27 := by linarith
+    linarith [hsq3, hval, hlt23]
+  have hshape : 7 * Real.pi / 18 = Real.pi / 2 - Real.pi / 9 := by ring
+  have hcos : (1:ℝ) / 3 ≤ Real.cos (7 * Real.pi / 18) := by
+    rw [hshape, Real.cos_pi_div_two_sub]
+    exact hge
+  have hkey : 7 * Real.pi / 18 ≤ Real.arccos (1 / 3) := by
+    have h1 := Real.arccos_le_arccos hcos
+    rw [Real.arccos_cos (by linarith [Real.pi_pos]) (by linarith [Real.pi_pos])] at h1
+    exact h1
+  have hkey' : (7:ℝ) * Real.pi / 6 ≤ 3 * Real.arccos (1 / 3) := by
+    have h1 : (7:ℝ) * Real.pi / 18 * 3 ≤ Real.arccos (1 / 3) * 3 :=
+      mul_le_mul_of_nonneg_right hkey (le_of_lt (by norm_num : (0:ℝ) < 3))
+    linarith
+  have hsol0 : Real.pi / 6 ≤ sol0 := by
+    unfold sol0
+    linarith
+  have htau : (0:ℝ) < 6 * tau0 := by linarith [p18_tau0_pos]
+  unfold mm2
+  refine div_nonneg (mul_nonneg ?_ (Real.sqrt_nonneg 2)) (le_of_lt htau)
+  linarith
+
+/-! ### setSum micro kit -/
+
+private theorem p18_setSum_nonneg {α : Type*} {s : Set α} (hs : s.Finite) (f : α → ℝ)
+    (h : ∀ a ∈ s, 0 ≤ f a) : 0 ≤ setSum s f := by
+  unfold setSum
+  rw [dif_pos hs]
+  exact Finset.sum_nonneg fun a ha =>
+    h a ((Set.Finite.mem_toFinset hs).mp ha)
+
+private theorem p18_setSum_le_card_mul {α : Type*} {s : Set α} (hs : s.Finite) (f : α → ℝ)
+    (d : ℝ) (h : ∀ a ∈ s, f a ≤ d) :
+    setSum s f ≤ (Nat.card s : ℝ) * d := by
+  unfold setSum
+  rw [dif_pos hs]
+  have h1 : ∀ a ∈ hs.toFinset, f a ≤ d := fun a ha =>
+    h a ((Set.Finite.mem_toFinset hs).mp ha)
+  have h2 := Finset.sum_le_card_nsmul hs.toFinset f d h1
+  rw [nsmul_eq_mul] at h2
+  rw [Nat.card_coe_set_eq, Set.ncard_eq_toFinset_card s hs]
+  exact h2
+
+private theorem p18_setSum_congr {α : Type*} {s : Set α} (hs : s.Finite) {f g : α → ℝ}
+    (h : ∀ a ∈ s, f a = g a) : setSum s f = setSum s g := by
+  unfold setSum
+  rw [dif_pos hs, dif_pos hs]
+  exact Finset.sum_congr rfl fun a ha =>
+    h a ((Set.Finite.mem_toFinset hs).mp ha)
+
+/-! ### sol positivity -/
+
+private theorem p18_sol_nonneg (x : V3) (C : Set V3) : 0 ≤ sol x C := by
+  unfold sol
+  split
+  · rename_i h
+    have h1 : 0 ≤ MeasureTheory.volume.real (C ∩ Metric.ball x (Classical.choose h)) :=
+      MeasureTheory.measureReal_nonneg
+    exact div_nonneg (mul_nonneg (by norm_num) h1)
+      (pow_nonneg (le_of_lt (Classical.choose_spec h).1) 3)
+  · exact le_refl 0
+
+private theorem p18_totalSolid_nonneg (V X : Set V3) (hp : Packing V) (hs : saturated V)
+    (hm : mcellSet V X) : 0 ≤ totalSolid V X := by
+  refine p18_setSum_nonneg (FINITE_VX V X hp hs hm) _ fun x hx => ?_
+  exact p18_sol_nonneg x X
+
+/-! ### gammaE (pattern-lambda) bound -/
+
+private noncomputable def p18_gammaE (V X : Set V3) (f : ℝ → ℝ) (e : Set V3) : ℝ :=
+  if e ∈ edgeX V X then
+    let q := Classical.epsilon fun r : V3 × V3 => e = {r.1, r.2}
+    dihX V X (q.1, q.2) * f (hl [q.1, q.2])
+  else 0
+
+private theorem p18_gammaE_le (V X : Set V3) (e : Set V3) :
+    p18_gammaE V X lmfun e ≤ Real.pi * (h0 / (h0 - 1)) := by
+  unfold p18_gammaE
+  split_ifs with he
+  · have h1 : dihX V X
+        ((Classical.epsilon fun r : V3 × V3 => e = {r.1, r.2}).1,
+        (Classical.epsilon fun r : V3 × V3 => e = {r.1, r.2}).2) ≤ Real.pi :=
+      DIHX_LE_PI V X _ _
+    have h2 : lmfun
+        (hl [(Classical.epsilon fun r : V3 × V3 => e = {r.1, r.2}).1,
+        (Classical.epsilon fun r : V3 × V3 => e = {r.1, r.2}).2])
+        ≤ h0 / (h0 - 1) := by
+      refine lmfun_bounded ?_
+      rw [HL_2]
+      positivity
+    exact mul_le_mul h1 h2 (lmfun_pos_le _) Real.pi_pos.le
+  · exact mul_nonneg Real.pi_pos.le (by norm_num [h0])
+
+/-! ### card edgeX ≤ 16 -/
+
+private theorem p18_cellParams_spec (V : Set V3) (X : Set V3) (hm : mcellSet V X) :
+    (cellParams V X).1 ≤ 4 ∧ barV V 3 (cellParams V X).2 ∧ X = mcell (cellParams V X).1 V
+      (cellParams V X).2 := by
+  obtain ⟨i, ul, rfl, hb⟩ := hm
+  have hwit : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧ mcell i V ul = mcell p.1 V p.2 := by
+    rcases le_or_gt i 4 with h4 | h4
+    · exact ⟨(i, ul), h4, hb, rfl⟩
+    · exact ⟨(4, ul), le_refl 4, hb, (MCELL_EXPLICIT i V ul).2.2.2.2 (le_of_lt h4)⟩
+  exact Classical.epsilon_spec (p := fun p : ℕ × List V3 =>
+    p.1 ≤ 4 ∧ barV V 3 p.2 ∧ mcell i V ul = mcell p.1 V p.2) hwit
+
+private theorem p18_vx_card_le4 (V : Set V3) (X : Set V3) (hm : mcellSet V X) :
+    Nat.card (VX V X) ≤ 4 := by
+  classical
+  by_cases hnull : nullSet X
+  · rw [VX, if_pos hnull]
+    simp
+  · obtain ⟨hk, hbarq, hXq⟩ := p18_cellParams_spec V X hm
+    by_cases hp0 : (cellParams V X).1 = 0
+    · have hvx : VX V X = ∅ := by rw [VX, if_neg hnull, if_pos hp0]
+      rw [hvx]
+      simp
+    · have hvx : VX V X = setOfList (truncateSimplex ((cellParams V X).1 - 1)
+        (cellParams V X).2) := by
+        rw [VX, if_neg hnull, if_neg hp0]
+      rw [hvx]
+      -- the truncation list has length k ≤ 4 (epsilon predicate satisfiable)
+      have htsat : (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2).length
+          = (cellParams V X).1 - 1 + 1 := by
+        have heps := @Classical.epsilon_spec _
+          (fun vl : List V3 => vl.length = (cellParams V X).1 - 1 + 1 ∧
+            initialSublist vl (cellParams V X).2)
+          ⟨(cellParams V X).2.take ((cellParams V X).1 - 1 + 1),
+            List.length_take_of_le (by rw [hbarq.1]; omega),
+            ⟨(cellParams V X).2.drop ((cellParams V X).1 - 1 + 1),
+              (List.take_append_drop _ _).symm⟩⟩
+        exact heps.1
+      have hL4 : (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2).length ≤ 4 := by
+        rw [htsat]; omega
+      have hfinL : (setOfList (truncateSimplex ((cellParams V X).1 - 1)
+          (cellParams V X).2)).Finite :=
+        Set.Finite.ofFinset
+          (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2).toFinset
+          (fun x => by simp [setOfList])
+      have heqf : hfinL.toFinset =
+          (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2).toFinset := by
+        ext x
+        simp [setOfList]
+      have hc : Nat.card ↥(setOfList (truncateSimplex ((cellParams V X).1 - 1)
+          (cellParams V X).2)) = hfinL.toFinset.card := by
+        rw [Nat.card_coe_set_eq, Set.ncard_eq_toFinset_card _ hfinL]
+      rw [hc, heqf]
+      exact (List.toFinset_card_le _).trans hL4
+
+private theorem p18_card_edgex_le16 (V : Set V3) (X : Set V3) (hm : mcellSet V X) :
+    Nat.card (edgeX V X) ≤ 16 := by
+  classical
+  have hfin : (VX V X).Finite := by
+    by_cases hnull : nullSet X
+    · rw [VX, if_pos hnull]
+      exact Set.finite_empty
+    · by_cases hp0 : (cellParams V X).1 = 0
+      · have hvx : VX V X = ∅ := by rw [VX, if_neg hnull, if_pos hp0]
+        rw [hvx]
+        exact Set.finite_empty
+      · have hvx : VX V X = setOfList (truncateSimplex ((cellParams V X).1 - 1)
+          (cellParams V X).2) := by
+          rw [VX, if_neg hnull, if_neg hp0]
+        rw [hvx]
+        refine Set.Finite.ofFinset
+          (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2).toFinset ?_
+        intro x
+        simp [setOfList]
+  have hn := p18_vx_card_le4 V X hm
+  have hsub : (edgeX V X : Set (Set V3)) ⊆
+      (fun p : V3 × V3 => ({p.1, p.2} : Set V3)) '' (VX V X ×ˢ VX V X) := by
+    rintro e ⟨u, v, rfl, hu, hv, -⟩
+    exact ⟨(u, v), ⟨hu, hv⟩, rfl⟩
+  have himg : ((fun p : V3 × V3 => ({p.1, p.2} : Set V3)) ''
+      (VX V X ×ˢ VX V X)).Finite := Set.Finite.image _ (hfin.prod hfin)
+  have he : (edgeX V X).Finite := himg.subset hsub
+  have h1 : Nat.card (edgeX V X) ≤
+      Nat.card ((fun p : V3 × V3 => ({p.1, p.2} : Set V3)) '' (VX V X ×ˢ VX V X)) :=
+    by
+      rw [Nat.card_coe_set_eq, Nat.card_coe_set_eq]
+      exact Set.ncard_le_ncard hsub himg
+  have h2 : Nat.card ((fun p : V3 × V3 => ({p.1, p.2} : Set V3)) '' (VX V X ×ˢ VX V X))
+      ≤ Nat.card (VX V X ×ˢ VX V X) := Nat.card_image_le (hfin.prod hfin)
+  have hprod : Nat.card (VX V X ×ˢ VX V X) = Nat.card (VX V X) * Nat.card (VX V X) := by
+    rw [Nat.card_congr (Equiv.Set.prod (VX V X) (VX V X)), Nat.card_prod]
+  calc Nat.card (edgeX V X)
+      ≤ Nat.card (VX V X) * Nat.card (VX V X) := h1.trans (h2.trans hprod.le)
+    _ ≤ 16 := by
+        have := Nat.mul_le_mul hn hn
+        simpa using this
+
+/-! ### main bound -/
+
+private theorem p18_edgex_finite (V : Set V3) (X : Set V3) : (edgeX V X).Finite := by
+  classical
+  have hfin : (VX V X).Finite := by
+    by_cases hnull : nullSet X
+    · rw [VX, if_pos hnull]
+      exact Set.finite_empty
+    · by_cases hp0 : (cellParams V X).1 = 0
+      · have hvx : VX V X = ∅ := by rw [VX, if_neg hnull, if_pos hp0]
+        rw [hvx]
+        exact Set.finite_empty
+      · have hvx : VX V X = setOfList (truncateSimplex ((cellParams V X).1 - 1)
+          (cellParams V X).2) := by
+          rw [VX, if_neg hnull, if_neg hp0]
+        rw [hvx]
+        refine Set.Finite.ofFinset
+          (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2).toFinset ?_
+        intro x
+        simp [setOfList]
+  have hsub : (edgeX V X : Set (Set V3)) ⊆
+      (fun p : V3 × V3 => ({p.1, p.2} : Set V3)) '' (VX V X ×ˢ VX V X) := by
+    rintro e ⟨u, v, rfl, hu, hv, -⟩
+    exact ⟨(u, v), ⟨hu, hv⟩, rfl⟩
+  have himg : ((fun p : V3 × V3 => ({p.1, p.2} : Set V3)) ''
+      (VX V X ×ˢ VX V X)).Finite := Set.Finite.image _ (hfin.prod hfin)
+  exact himg.subset hsub
+
+private theorem p18_BOUND_GAMMA_X_lmfun :
+    ∃ c : ℝ, ∀ (V : Set V3) (X : Set V3), Packing V → saturated V → mcellSet V X →
+      gammaX V X lmfun ≤ c := by
+  classical
+  refine ⟨4 / 3 * Real.pi * 8 ^ 3 + (8 * mm2 / Real.pi) *
+    (16 * (Real.pi * (h0 / (h0 - 1)))), ?_⟩
+  intro V X hp hs hm
+  rcases Set.eq_empty_or_nonempty X with hXe | hXne
+  · have hnull : nullSet X := by rw [nullSet, hXe]; simp
+    have hvx0 : VX V X = ∅ := by rw [VX, if_pos hnull]
+    have hts : totalSolid V X = 0 := by
+      rw [totalSolid, hvx0]
+      simp [setSum]
+    have hedg : edgeX V X = (∅ : Set (Set V3)) := by
+      ext e
+      simp [edgeX, hvx0]
+    have hvol : MeasureTheory.volume.real X = 0 := by
+      rw [MeasureTheory.Measure.real_def, hnull]
+      simp
+    have hzero : gammaX V X lmfun = 0 := by
+      rw [gammaX, hvol, hts, hedg]
+      simp [setSum]
+    rw [hzero]
+    have h1 : (0:ℝ) < h0 / (h0 - 1) := by norm_num [h0]
+    have hc0 : (0:ℝ) ≤ 8 * mm2 / Real.pi :=
+      div_nonneg (mul_nonneg (by norm_num) p18_mm2_nonneg) Real.pi_pos.le
+    have hc1 : (0:ℝ) ≤ 16 * (Real.pi * (h0 / (h0 - 1))) :=
+      mul_nonneg (by norm_num) (mul_nonneg Real.pi_pos.le h1.le)
+    exact add_nonneg (by positivity) (mul_nonneg hc0 hc1)
+  · obtain ⟨p, hpX⟩ := hXne
+    have h1 : (0:ℝ) < h0 / (h0 - 1) := by norm_num [h0]
+    have hm' : X ∈ mcellSet V := hm
+    simp only [mcellSet] at hm
+    obtain ⟨i, ul, hXul, hb⟩ := hm
+    have hmeas : MeasurableSet X := by rw [hXul]; exact MEASURABLE_MCELL V ul i hs hp hb
+    have hsub8 : X ⊆ Metric.ball p 8 := MCELL_SUBSET_BALL8_2 V X p hp hs hm' hpX
+    have hball : MeasureTheory.volume.real (Metric.ball p 8) = 4 / 3 * Real.pi * 8 ^ 3 := by
+      rw [MeasureTheory.Measure.real_def, EuclideanSpace.volume_ball_fin_three, ENNReal.toReal_mul,
+        ENNReal.toReal_pow, ENNReal.toReal_ofReal (by positivity),
+        ENNReal.toReal_ofReal (by positivity)]
+      ring
+    have hvol : MeasureTheory.volume.real X ≤ 4 / 3 * Real.pi * 8 ^ 3 := by
+      have hmono : MeasureTheory.volume.real X ≤ MeasureTheory.volume.real (Metric.ball p 8) :=
+        MeasureTheory.measureReal_mono hsub8 (by finiteness)
+      rw [hball] at hmono
+      exact hmono
+    have hfin : (edgeX V X).Finite := p18_edgex_finite V X
+    have hsum : setSum (edgeX V X) (p18_gammaE V X lmfun)
+        ≤ 16 * (Real.pi * (h0 / (h0 - 1))) := by
+      have hbound := p18_setSum_le_card_mul hfin (p18_gammaE V X lmfun)
+        (Real.pi * (h0 / (h0 - 1))) (fun e _ => p18_gammaE_le V X e)
+      have hcard := p18_card_edgex_le16 V X hm'
+      have h16 : ((Nat.card (edgeX V X) : ℕ) : ℝ) ≤ 16 := by exact_mod_cast hcard
+      have hd0 : (0:ℝ) ≤ Real.pi * (h0 / (h0 - 1)) :=
+        mul_nonneg Real.pi_pos.le h1.le
+      have hcd : ((Nat.card (edgeX V X) : ℕ) : ℝ) * (Real.pi * (h0 / (h0 - 1)))
+          ≤ 16 * (Real.pi * (h0 / (h0 - 1))) :=
+        mul_le_mul_of_nonneg_right h16 hd0
+      linarith
+    have hts : 0 ≤ totalSolid V X := p18_totalSolid_nonneg V X hp hs hm'
+    have hcoef2 : (0:ℝ) ≤ 2 * mm1 / Real.pi :=
+      div_nonneg (mul_nonneg (by norm_num) p18_mm1_nonneg) Real.pi_pos.le
+    have hcoef8 : (0:ℝ) ≤ 8 * mm2 / Real.pi :=
+      div_nonneg (mul_nonneg (by norm_num) p18_mm2_nonneg) Real.pi_pos.le
+    have hexp : gammaX V X lmfun = MeasureTheory.volume.real X - (2 * mm1 / Real.pi) * totalSolid V X
+        + (8 * mm2 / Real.pi) * setSum (edgeX V X) (p18_gammaE V X lmfun) := rfl
+    rw [hexp]
+    have hprod : (8 * mm2 / Real.pi) * setSum (edgeX V X) (p18_gammaE V X lmfun)
+        ≤ (8 * mm2 / Real.pi) * (16 * (Real.pi * (h0 / (h0 - 1)))) :=
+      mul_le_mul_of_nonneg_left hsum hcoef8
+    have hts2 : (0:ℝ) ≤ (2 * mm1 / Real.pi) * totalSolid V X :=
+      mul_nonneg hcoef2 hts
+    linarith
+
+
+/-! ### final kit pieces for the SUM_GAMMAX assembly -/
+
+private theorem p18_setSum_le {α : Type*} {s : Set α} (hs : s.Finite) (f g : α → ℝ)
+    (h : ∀ a ∈ s, f a ≤ g a) : setSum s f ≤ setSum s g := by
+  unfold setSum
+  rw [dif_pos hs, dif_pos hs]
+  exact Finset.sum_le_sum fun a ha =>
+    h a ((Set.Finite.mem_toFinset hs).mp ha)
+
+private theorem p18_criticalEdgeX_finite (V X : Set V3) : (criticalEdgeX V X).Finite :=
+  (p18_edgex_finite V X).subset fun e he => by
+    simp only [criticalEdgeX, Set.mem_setOf_eq] at he ⊢
+    obtain ⟨u, v, rfl, hex, -, -⟩ := he
+    exact hex
+
+/-- Banked on PA10 `HDTFNFZ` (still `sorry` there; PA15/PA16 already consume it). -/
+private theorem p18_vx_sub_cell (V X : Set V3) (u : V3) (hs : saturated V) (hp : Packing V)
+    (hm : mcellSet V X) (hu : u ∈ VX V X) : u ∈ X := by
+  obtain ⟨i, ul, rfl, hb⟩ := hm
+  by_cases hnull : nullSet (mcell i V ul)
+  · rw [VX, if_pos hnull] at hu
+    exact absurd hu (by simp)
+  · rw [HDTFNFZ (v := u) hs hp hb rfl hnull] at hu
+    exact hu.2
+
+private theorem p18_crit_edge_mem_vx (V X : Set V3) (u v : V3) (hm : mcellSet V X)
+    (he : criticalEdgeX V X ({u, v} : Set V3)) : u ∈ VX V X := by
+  simp only [criticalEdgeX, Set.mem_setOf_eq] at he
+  obtain ⟨u', v', hpe, hex, -, -⟩ := he
+  rw [edgeX, Set.mem_setOf_eq] at hex
+  obtain ⟨u0, v0, hpe2, hu0, hv0, -⟩ := hex
+  have hu : u ∈ ({u, v} : Set V3) := by simp
+  rw [hpe2] at hu
+  rcases Set.mem_insert_iff.mp hu with h | h
+  · exact h ▸ hu0
+  · exact Set.mem_singleton_iff.mp h ▸ hv0
+
+private theorem p18_crit_family_card (V : Set V3) (u v : V3) (hs : saturated V)
+    (hp : Packing V) (hu : u ∈ V) (c2n : ℕ)
+    (hc2 : ∀ (W : Set V3) (w : V3), saturated W → Packing W → w ∈ W →
+      Nat.card {Y : Set V3 | mcellSet W Y ∧ w ∈ VX W Y} ≤ c2n) :
+    Nat.card {X : Set V3 | mcellSet V X ∧ criticalEdgeX V X ({u, v} : Set V3)} ≤ c2n := by
+  classical
+  have hsub : {X : Set V3 | mcellSet V X ∧ criticalEdgeX V X ({u, v} : Set V3)} ⊆
+      {X : Set V3 | mcellSet V X ∧ u ∈ VX V X} := fun X hX =>
+    ⟨hX.1, p18_crit_edge_mem_vx V X u v hX.1 hX.2⟩
+  have hfin2 : ({X : Set V3 | mcellSet V X ∧ u ∈ VX V X} : Set (Set V3)).Finite := by
+    have hsub2 : {X : Set V3 | mcellSet V X ∧ u ∈ VX V X} ⊆
+        {X : Set V3 | X ⊆ Metric.ball u 8 ∧ mcellSet V X} := by
+      intro X hX
+      have huX : u ∈ X := p18_vx_sub_cell V X u hs hp hX.1 hX.2
+      exact ⟨MCELL_SUBSET_BALL8_2 V X u hp hs hX.1 huX, hX.1⟩
+    exact (FINITE_MCELL_SET_LEMMA_2 V 8 u hp hs).subset hsub2
+  have hmono : Nat.card {X : Set V3 | mcellSet V X ∧ criticalEdgeX V X ({u, v} : Set V3)} ≤
+      Nat.card {X : Set V3 | mcellSet V X ∧ u ∈ VX V X} := by
+    rw [Nat.card_coe_set_eq, Nat.card_coe_set_eq]
+    exact Set.ncard_le_ncard hsub hfin2
+  exact hmono.trans (hc2 V u hs hp hu)
+
+private theorem p18_vx_sub_V (V X : Set V3) (u : V3) (hm : mcellSet V X)
+    (hu : u ∈ VX V X) : u ∈ V := by
+  by_cases hnull : nullSet X
+  · rw [VX, if_pos hnull] at hu
+    exact absurd hu (by simp)
+  · obtain ⟨hk, hbarq, -⟩ := p18_cellParams_spec V X hm
+    by_cases hp0 : (cellParams V X).1 = 0
+    · rw [VX, if_neg hnull, if_pos hp0] at hu
+      exact absurd hu (by simp)
+    · rw [VX, if_neg hnull, if_neg hp0] at hu
+      have hsub : setOfList (truncateSimplex ((cellParams V X).1 - 1)
+          (cellParams V X).2) ⊆ setOfList (cellParams V X).2 :=
+        SET_OF_LIST_TRUNCATE_SIMPLEX_SUBSET _ _ (by rw [hbarq.1]; omega)
+      exact BARV_SUBSET V 3 (cellParams V X).2 hbarq (hsub hu)
+
+private theorem p18_two_hplus_lt_three : (2:ℝ) * hplus < 3 := by norm_num [hplus]
 
 /-- HOL `SUM_GAMMAX_LMFUN_ESTIMATE` (sum_gamma.hl:62-1465): the 1400-line
 lemma chain is `sorry` (uses `BOUND_GAMMA_X_lmfun`, `CARD_MCELL_CONTAINS_POINT_klemma`,
