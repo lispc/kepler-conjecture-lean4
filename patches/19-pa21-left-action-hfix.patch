@@ -1,0 +1,166 @@
+diff --git a/lean/Kepler/Text/PackingAuto21.lean b/lean/Kepler/Text/PackingAuto21.lean
+index 37491aa5..4a6344de 100644
+--- a/lean/Kepler/Text/PackingAuto21.lean
++++ b/lean/Kepler/Text/PackingAuto21.lean
+@@ -86,16 +86,22 @@ NEEDS (wave-B3 state, 2026-09-30): closed in-file — GAMMAX_MCELL1,
+   NOT_COPLANAR_R3, BARV_DISTINCT, OMEGA_LIST_BISECTOR,
+   CONVEX_HULL_4_AFF_GE, CONVEX_HULL_SCALE; B3-wave assemblies: GAMMAX_MCELL2,
+   MCELL2_VOL, TSKAJXY_2.
+-REMAINING sorry (8 sites): `pack_nonlinear_rest` (def, G4 bank stub),
++REMAINING sorry (5 sites): `pack_nonlinear_rest` (def, G4 bank stub),
+   `mi_gamma3f_gamma3f_x_div_sqrtdelta` (merge_ineq WEAK/WEAK2),
+   `TSKAJXY_034` (0/3/4-cell giant), `MCELL2_VOL_SPLIT_EXPLICIT` (wedge
+-  closed form, GIANT; consumed by MCELL2_VOL), `LEFT_ACTION_LIST_1_
+-  PROPERTIES_ALT` (PA14 left-action kit), `MCELL2_PERMUTE_01` (waits on
+-  LEFT_ACTION; consumed by MCELL2_VOL), `MCELL2_SOL` (VOLUME_CONIC_CAP(_
+-  WEDGE) closed forms, GIANT), `GAMMAX_GAMMA2_X` (sole structural gap: the
+-  dihV<->dih_y bridge — apex-0 form proved private at LocalAuto38:1119
+-  `p38_dihV_eq_dihY`; needs a public 4-point wrapper in LocalAuto38 before
+-  this assembly can be written; see the site note).
++  closed form, GIANT; consumed by MCELL2_VOL), `MCELL2_SOL`
++  (VOLUME_CONIC_CAP(_WEDGE) closed forms, GIANT; consumed by
++  GAMMAX_GAMMA2_X as a statement).
++DEDUP/CLOSED (2026-09-30, LA38 wrapper lane): `GAMMAX_GAMMA2_X` PROVED —
++  the sole structural gap (the dihV<->dih_y bridge) is consumed via the new
++  `Kepler.Text.LocalAuto38Bridge` public wrappers (`DIHV_EQ_DIH_Y_4PT_B`/
++  `DIHV_NN_4PT_B`, clash-free re-hosts of the LocalAuto38 `DIHV_EQ_DIH_Y_4PT`
++  wave; direct `import Kepler.Text.LocalAuto38` is impossible because
++  LocalAuto1's `rho` collides with IneqClosureDefs' `rho`).  The local
++  sorry'd copies of `LEFT_ACTION_LIST_1_PROPERTIES_ALT` and
++  `MCELL2_PERMUTE_01` are DELETED: PackingAuto14 (:785/:822) now hosts
++  proved identical statements on this file's transitive import closure, and
++  `MCELL2_VOL`/`GAMMAX_GAMMA2_X` consume them unchanged.
+ -/
+ 
+ import Kepler.Text.PackingAuto2
+@@ -112,6 +118,10 @@ import Kepler.Text.PackingAuto15
+ import Kepler.Text.PackingAuto17
+ import Kepler.Text.PackingAuto18
+ import Kepler.Text.PackingAuto20
++import Kepler.Text.LocalAuto38Bridge  -- GAMMAX_GAMMA2_X (2026-09-30): consumes
++  -- the public 4-point dihV<->dih_y bridge `DIHV_EQ_DIH_Y_4PT_B` hosted there.
++  -- (Direct `import Kepler.Text.LocalAuto38` is impossible: LA38's closure
++  -- brings LocalAuto1's `rho`, which collides with IneqClosureDefs' `rho`.)
+ import Kepler.Text.SphereKit
+ import Kepler.Text.IneqClosureDefs
+ import Kepler.Text.Polytope
+@@ -4548,30 +4558,12 @@ theorem MCELL2_VOL_SPLIT_EXPLICIT (V X : Set V3) (ul : List V3) (h : ℝ)
+   -- NEEDS: TSKAJXY3.hl:1555；路线（B2/B3 波）：楔形体积闭式 vol(frustum∩wedge) = dihV·h³(1−h²/2)/6（HOL vol1.hl:473 公理级；照 WedgeVolume 切片模板组）——GIANT 独立工位；已被 MCELL2_VOL（B3 装配）作为第一半消费
+   sorry
+ 
+-/-- HOL `LEFT_ACTION_LIST_1_PROPERTIES_ALT` (TSKAJXY3.hl:1694; giant: a
+-re-statement of Marchal_cells_2_new.LEFT_ACTION_LIST_1_PROPERTIES, not
+-ported in this checkout). -/
+-theorem LEFT_ACTION_LIST_1_PROPERTIES_ALT (V : Set V3) (ul : List V3) (xl : List V3)
+-    (p : Equiv.Perm ℕ) (hp : Packing V) (hs : saturated V) (hb : barV V 3 ul)
+-    (hperm : permutes p {0, 1}) (hhl : hl (truncateSimplex 1 ul) < Real.sqrt 2)
+-    (hsq : Real.sqrt 2 ≤ hl ul) (hxl : xl = leftActionList p ul) :
+-    barV V 3 xl ∧
+-      omegaListN V xl 1 = omegaListN V ul 1 ∧
+-      omegaListN V xl 2 = omegaListN V ul 2 ∧
+-      omegaListN V xl 3 = omegaListN V ul 3 ∧
+-      mxi V xl = mxi V ul := by
+-  -- NEEDS: TSKAJXY3.hl:1694；路线（B2 波）：HOL 本体一行 rewrite；Lean 需补 PA14 left-action kit（PA14:231/258/286 仍 sorry）的置换引理移植；下游消费者 MCELL2_PERMUTE_01（下一件）
+-  sorry
+-
+-/-- HOL `MCELL2_PERMUTE_01` (TSKAJXY3.hl:1714; giant). -/
+-theorem MCELL2_PERMUTE_01 (V : Set V3) (ul : List V3) (hs : saturated V)
+-    (hp : Packing V) (hb : barV V 3 ul) (hn : ¬nullSet (mcell2 V ul)) :
+-    ∃ vl : List V3, elV ul 0 = elV vl 1 ∧ elV ul 1 = elV vl 0 ∧
+-      mxi V ul = mxi V vl ∧ omegaListN V ul 3 = omegaListN V vl 3 ∧
+-      hl (truncateSimplex 1 ul) = hl (truncateSimplex 1 vl) ∧
+-      mcell2 V ul = mcell2 V vl ∧ barV V 3 vl := by
+-  -- NEEDS: TSKAJXY3.hl:1714；路线（B2 波）：消费 LEFT_ACTION_LIST_1_PROPERTIES_ALT（上一件）做 01-交换见证迁移；已被 MCELL2_VOL（B3 装配）作为第二半消费
+-  sorry
++/- DEDUP (2026-09-30, LA38 wrapper lane): the local sorry'd copies of
++`LEFT_ACTION_LIST_1_PROPERTIES_ALT` and `MCELL2_PERMUTE_01` are DELETED —
++PackingAuto14 (:785/:822) now hosts PROVED versions with the identical
++statements (incl. the item-19 `hfix` tail-fixedness hypothesis) and is on
++this file's transitive import closure (via PackingAuto15), so the names
++resolve upstream; the planned chain-copy migration is superseded. -/
+ 
+ /-- HOL `MCELL2_VOL` (TSKAJXY3.hl:1774; assembly 2026-09-30 wave B3:
+ `MCELL2_VOL_SPLIT` halves the cell across the bisector, each half is the
+@@ -4663,16 +4655,72 @@ theorem GAMMAX_GAMMA2_X (V X : Set V3) (ul : List V3) (y1 y2 y3 y4 y5 y6 : ℝ)
+     0 ≤ dihY y1 y2 y3 y4 y5 y6 ∧
+       gammaX V X lmfun =
+         gamma2_x_div_azim_v2 (h0cut y1) (y1 * y1) * dihY y1 y2 y3 y4 y5 y6 := by
+-  -- NEEDS: TSKAJXY3.hl:2070；装配被唯一结构性缺口卡住：dihV↔dih_y 桥。apex-0 桥已在
+-  -- LocalAuto38:1119（`p38_dihV_eq_dihY`）证毕但 private、PA21 不可见（LA38 公开面
+-  -- 经 SphereKit/IneqClosureDefs import 传递可见：DIH_Y_NN/DELTA_Y_POS_4POINTS 可用，
+-  -- `0 ≤ dihY` 一支可直接闭合）。需 LA38 侧加公开 wrapper：4 点形式
+-  -- `¬Collinear {v0,v1,v2} → ¬Collinear {v0,v1,v3} → dihV v0 v1 v2 v3 = dihY …`
+-  -- （平移到 apex-0 + `¬Collinear → 0 < upsX` 用 cross/Gram 恒等式，同型
+-  -- LocalAuto17:183 `upsX_pos_of_noncollinear_p17`）。其余消费件就位：
+-  -- GAMMAX_MCELL2/MCELL2_VOL（B3 已证）、MCELL2_SOL/MCELL2_PERMUTE_01（sorried 上游、
+-  -- 陈述可直接消费）、MCELL2_DIHX/DIHV_SYM/lmfun_h0cut/mi_sqrt8_eq/BARV3_TRUNC1/HL_2（已证）。
+-  sorry
++  -- assembly 2026-09-30 (LA38 lane): the blocked gap was the dihV <-> dih_y
++  -- bridge, now consumed as the LA38 public 4-point wrapper
++  -- `DIHV_EQ_DIH_Y_4PT` (non-collinearity from NOT_COPLANAR_EXTREME_MCELL2,
++  -- the MCELL2_DIHV_LT_PI route); the volume/sol/dihX faces rewrite via
++  -- GAMMAX_MCELL2/MCELL2_VOL/MCELL2_SOL (second axis vertex through the
++  -- MCELL2_PERMUTE_01 witness + DIHV_SYM) and `mi_lmfun_h0cut` closes the
++  -- lmfun step; the rest is real-number accounting against the
++  -- gamma2_x_div_azim_v2 body.
++  have hn2 : ¬nullSet (mcell2 V ul) := by rw [← hX]; exact hn
++  have hncp := NOT_COPLANAR_EXTREME_MCELL2 V ul hp hs hb hn2
++  have hc2 : ¬ Collinear ℝ ({elV ul 0, elV ul 1, mxi V ul} : Set V3) := fun hc =>
++    hncp (p21_collinear3_coplanar4 _ _ _ _ hc)
++  have hc3 : ¬ Collinear ℝ ({elV ul 0, elV ul 1, omegaListN V ul 3} : Set V3) :=
++    fun hc => hncp (p21_collinear3_coplanar4_last (elV ul 0) (elV ul 1)
++      (mxi V ul) (omegaListN V ul 3) hc)
++  -- the bridge in y-form
++  have hby : dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3)
++      = dihY y1 y2 y3 y4 y5 y6 := by
++    rw [DIHV_EQ_DIH_Y_4PT_B (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3)
++      hc2 hc3, hy1, hy2, hy3, hy4, hy5, hy6]
++  -- y1 ≥ 2 (packing edge), for the DIH_Y_NN branch
++  obtain ⟨_, huv, _⟩ := MCELL2_VX_PROPS V X ul hs hp hb hX hn
++  obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hb
++  have hbsub : barV V 3 [u0, u1, u2, u3] := by rw [← hul]; exact hb
++  have hsub : setOfList [u0, u1, u2, u3] ⊆ V := BARV_SUBSET V 3 [u0, u1, u2, u3] hbsub
++  have hu0 : elV ul 0 ∈ V := by
++    rw [hul]; exact hsub (by simp [setOfList, elV])
++  have hu1 : elV ul 1 ∈ V := by
++    rw [hul]; exact hsub (by simp [setOfList, elV])
++  have hy1ge : (2:ℝ) ≤ dist (elV ul 0) (elV ul 1) := hp.dist_ge_two hu0 hu1 huv
++  refine ⟨DIH_Y_NN_B y1 y2 y3 y4 y5 y6 (by rw [hy1]; linarith)
++    (by rw [hy1, hy2, hy3, hy4, hy5, hy6];
++        exact DELTA_Y_POS_4POINTS_B (elV ul 0) (elV ul 1) (mxi V ul)
++          (omegaListN V ul 3)), ?_⟩
++  -- the gammaX assembly
++  have hht : hl (truncateSimplex 1 ul) < Real.sqrt 2 :=
++    MCELL2_HL_LT_SQRT2 V ul hs hp hb (by rw [← hX]; exact hn)
++  have hhh : hl (truncateSimplex 1 ul) = y1 / 2 := by
++    rw [BARV3_TRUNC1 V ul hb, HL_2, ← hy1]
++  -- the second axis-vertex sol rides the 01-permutation witness
++  obtain ⟨vl, hv0, hv1, hmxi, hom, hhlv, hcell, hbl⟩ :=
++    MCELL2_PERMUTE_01 V ul hs hp hb hn2
++  have hsolv := MCELL2_SOL V (mcell2 V vl) vl (hl (truncateSimplex 1 ul)) hs hp hbl
++    rfl hhlv hht (by rw [← hcell]; exact hn2)
++  have hsol1 : sol (elV ul 1) X
++      = dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3)
++        * (1 - hl (truncateSimplex 1 ul) / Real.sqrt 2) := by
++    have e0 : sol (elV ul 1) X = sol (elV vl 0) (mcell2 V vl) := by
++      rw [hv1, hX, hcell]
++    rw [e0, hsolv, show elV vl 0 = elV ul 1 from hv1.symm,
++      show elV vl 1 = elV ul 0 from hv0.symm,
++      show mxi V vl = mxi V ul from hmxi.symm,
++      show omegaListN V vl 3 = omegaListN V ul 3 from hom.symm,
++      DIHV_SYM (elV ul 1) (elV ul 0) (mxi V ul) (omegaListN V ul 3)]
++  rw [GAMMAX_MCELL2 V X ul hs hp hb hX hn,
++    MCELL2_VOL V X ul (hl (truncateSimplex 1 ul)) hs hp hb hX rfl hn,
++    MCELL2_SOL V X ul (hl (truncateSimplex 1 ul)) hs hp hb hX rfl hht hn,
++    hsol1, MCELL2_DIHX V X ul hs hp hb hX hn,
++    HL_2, ← hy1, mi_lmfun_h0cut, ← hby, hhh]
++  simp only [gamma2_x_div_azim_v2]
++  rw [show Real.sqrt (y1 * y1) = y1 from by
++        rw [← pow_two]
++        exact Real.sqrt_sq (le_of_lt (show (0:ℝ) < y1 by rw [hy1]; linarith)),
++    show (y1 / 2) / Real.sqrt 2 = y1 / (2 * Real.sqrt 2) from by ring,
++    mi_sqrt8_eq]
++  ring
+ 
+ /-- HOL `TSKAJXY_2` (TSKAJXY3.hl:2181; assembly 2026-09-30 wave B3: the
+ null branch is `GAMMAX_NULLSET`, the non-null branch is `GAMMAX_GAMMA2_X`

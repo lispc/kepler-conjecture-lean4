@@ -921,7 +921,7 @@ region 覆盖假设——见 PA23:279-303 NEEDS 注记，属 GT-3/GT-4 协同件
 
 ## 19. PA21 `LEFT_ACTION_LIST_1_PROPERTIES_ALT` 缺 tail-fixedness 假设（为假）
 
-### (a) 缺陷
+### (a) HOL 出处：TSKAJXY3.hl:1694（HOL `LEFT_ACTION_LIST_1_PROPERTIES`，marchal3 本体；PA14:785 正本按 PA10 编码裁定带 tail-fixedness）。缺陷：
 
 PA21 冻结陈述 `LEFT_ACTION_LIST_1_PROPERTIES_ALT`（:1694 附近）缺
 `hfix : ∀ j ≥ 2, p j = j`（01-交换须固定 tail）。PA14 落地波
@@ -929,19 +929,23 @@ PA21 冻结陈述 `LEFT_ACTION_LIST_1_PROPERTIES_ALT`（:1694 附近）缺
 （PA14:785，sorry-free）：无 tail-fixedness 时 barV/mxi 保持性对 junk-slot
 反例为假。
 
-### (b) 修复
+### (b) 修复（执行版 = DEDUP，2026-09-30 LA38-wrapper lane 落地）
 
-PA21 陈述补 `hfix` 前提（对齐 PA14:785 逐字）；迁移即成一行
-`exact PackingAuto14.LEFT_ACTION_LIST_1_PROPERTIES_ALT hP … hfix`。
-下游 `MCELL2_PERMUTE_01`（PA21:1714 消费上一件）装配处补传 `hfix`
-（其 P 从 ul 派生，tail 恒等由 PA10 裁定的 truncate 编码给出）。
+执行方式较原案更强：PA14 正本（含 `hfix`，sorry-free）经 PA17→PA14 已入
+PA21 传递闭包，故**直接删除 PA21 的两枚同名 sorried 孪生**
+（`LEFT_ACTION_LIST_1_PROPERTIES_ALT`/`MCELL2_PERMUTE_01`，删除前 verified
+与 PA14 逐字同 statement——缺陷陈述不再存在，接口由 PA14 修正正本承担；
+`MCELL2_VOL` 消费点无感切换上游真证）。同波附带 `GAMMAX_GAMMA2_X`
+sorry→真证（普通填充，非陈述变更）。本 patch 为执行后实际 diff 的归档。
 
-### (c) 状态：草案待审（2026-09-30 PA14 波发现；应用待用户拍板 +
+### (c) 状态：**已应用（执行版 DEDUP，见 (b)）**（2026-09-30 用户批准；
+中途 LA38-wrapper lane 发现删除孪生强于补前提，编排者核 verified 同
+statement 后采纳；patch = 执行后实际 diff 归档；闸走
 GATE_MODE=STATEMENT-FIX）。
 
 ## 20. PA14 `QZKSYKG1` 弱 permutes 编码下为假（junk-slot 反例）
 
-### (a) 缺陷
+### (a) HOL 出处：QZKSYKG.hl（HL `QZKSYKG1`，k≤3 案；HOL-Light `permutes` 为 complement-fixing，`p permutes 0..(k-1)` 即 `∀ j ≥ k, p j = j`，PA10:183 已裁定）。缺陷：
 
 `QZKSYKG1`（PA14:900）k≤3 情形在按点弱 `permutes` 编码下**陈述为假**
 （junk-slot 反例；HL 本体隐含 tail-fixedness，PA10 已裁定为编码前提）。
@@ -951,6 +955,8 @@ GATE_MODE=STATEMENT-FIX）。
 冻结陈述补 tail-fixedness 前提（PA10 式 `∀ j ≥ k, p j = j` 或等价
 ENCODING-FIX 注记）；k=4 情形另需 YIFVQDV_1 巨人（与陈述修复正交）。
 
-### (c) 状态：草案待审（2026-09-30 PA14 波发现；k=2 已由
-MCELL2_PERMUTE_01 解锁，k=3 卡 LEFT_ACTION_LIST_PROPERTIES S₃ 巨人；
-应用待用户拍板）。
+### (c) 状态：**已应用**（2026-09-30 用户批准）。消费面补充：PA17 的
+forward shim `qzksykg1_p17`（:234，私有转发件，无真实调用点——唯一提及在
+sorry 掉的 AJRIPQN docstring）同步透传 `hfix`，随本项一并提交。
+教训：consumer 扫描输出被 head 截断导致首轮漏查 PA17 调用点，闸门链构建
+抓出（四连挂稳定复现）。

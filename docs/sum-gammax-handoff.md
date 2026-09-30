@@ -82,3 +82,47 @@
 - Lean 4.32.2，lake 项目根 /Users/zhangzhuo/repos/kepler-conjecture-lean4/lean。
 - 探针一律 ~/.elan/bin/lake env lean 单文件；PA18 源文件可直接 env-lean（olean 已存在）。
 - 下游 PA19/PA21/PA25/PackingConcl 需重建 PA18 olean 后自验（名冲突已排查为空）。
+
+## 已完成（第四次启动，2026-09-30 波 2 收尾）：SUM_GAMMAX_LMFUN_ESTIMATE 主装配闭合
+
+- **PA18 目标 sorry 已替换为真证**（`lake env lean Kepler/Text/PackingAuto18.lean` 0 error，
+  无新增 sorry——所有 `declaration uses sorry` 警告仍集中在 ≤2532 行的上游银行叶）。
+- 落盘内容（PA18:3226-3995，共 +758 行）：
+  1. `p18_setSum_prod`：setSum 对集合 DescProduct 的分解（Finset.sum_product 桥）。
+  2. `p18_sum_gammax_main (V hs hp) : ∃ c, ∀ r, saturated V → Packing V → 1 ≤ r →
+     cellClusterInequality V → TSKAJXY_statement → c * r^2 ≤ setSum {X | X ⊆ ball 0 r ∧
+     mcellSet V X} (fun X => gammaX V X lmfun)`——按 10 步配方完整闭合：
+     常数块（cc1/cc2/cc3 + PACKING_BALL_BOUNDARY V 0 0 8 hp / V 0 0 16 hp——注意
+     k1 k2 是两个显式参数，交接稿里 "V 0 0 hp" 漏了一个 0；dd1 的 r-8 与 hd1 的
+     (V∩ball r)\(V∩ball (r-8)) 正好对上）→ sat∧pack 反例支 absurd → B0/B1 拆分 →
+     hcritT2（波 1 草稿原样保留）→ 逐胞重加权（card*critW = 1）→ T2 fubini 桥 →
+     {X ∈ B1 ∧ e crit} = innr e（hkey+show+refine，绕开 set-def 方程不能 simp 的坑）→
+     逐 e cluster 不等式（hcluster，p18_setSum_union + ← p18_setSum_add）→
+     Q2 ≤ 32·c2·cc1·d1·r²（T4 机器：superset_eq + p18_sum_pair_2_set + 纤维 ≤
+     4³ via BOUNDS_VGEN_klemma；注意 ball m 3 的有限性用
+     hp.finite_inter_ball (r+3) 平移，finiteness 参数要 Nat.cast_le.mpr 包住 ncard）→
+     Q3 = Q3in(=0, BumpP4.SUM_BETA_BUMP_LEMMA + p18_betaBump_eq) + Q3out ≤
+     32·c2·cc3·d3·r²（ann8 对 T4' 同构）→ 收尾 witness
+     c := -((32:ℝ)*(c2*cc1*d1) + (32:ℝ)*(c2*cc3*d3))（一致常数，r 无关，可提入 ∃）。
+  3. 目标定理 `SUM_GAMMAX_LMFUN_ESTIMATE`：陈述冻结未动，证明体
+     `exact p18_sum_gammax_main V`（concl 的 ∃ c 在 saturated/packing 假设之前，
+     因此 main 的形状是 `saturated V → Packing V → ∃ c, ∀ r, ...`，与 concl 逐字同形）。
+- **踩坑补充（本轮新增）**：
+  * `set` 引入的局部定义（innr/outr 等）其方程（houtrdef 等）**不能用作 simp 引理**
+    （报 no progress）；改用 `obtain ⟨a, b⟩ := hX`（rcases 会 whnf 展开）或
+    `show`（zeta+delta 可判）+ 纯 tauto。全局部家 setOf 展开后的 ∧ 结合是**右结合**，
+    show 的模式必须按右结合写，投影 .1/.2 才对得上。
+  * rw 带高级模式的 kit 引理（fubini/filter）在**受限 binder 下**会失败；受 binder
+    约束的逐点改写用 `simp only [hstep]`，整体等式用 `have hfub := ...; exact hfub.trans ...`。
+  * p18_setSum_add : 分裂式 = 合并式（左边是 `setSum s f + setSum s g`）——要合并用
+    `rw [h]`，要拆分用 `rw [← h]`，方向容易反。
+  * `(div_le_one h).mpr` 需要 `1 ≤ ↑card`（不是 le_refl）；`div_mul_cancel₀` 的被除数
+    是显式参数：`div_mul_cancel₀ (1:ℝ) hcne`。
+  * `Set.mem_inter_iff`（非 Set.mem_inter）、`neg_mul`（非 mul_neg）、
+    `Set.nonempty_iff_ne_empty` 不吃参数、`Set.eq_empty_iff_forall_notMem`。
+  * 下游无需改名：本轮新增全是 private（p18_setSum_prod、p18_sum_gammax_main），
+    SUM_GAMMAX_LMFUN_ESTIMATE 公开名与陈述未变，公开名交集仍为空。
+- **待办（编排者/下游 lane）**：PA18.olean 现已过期（缺 SUM_GAMMAX 真证），
+  下游 PA19/PA21/PA25/PackingConcl 各自 gate 重建后自验即可（无预期失败）。
+- /tmp/sum_gammax_chunk4_draft.lean 与 /tmp/chunk4.lean 已作废（以
+  /tmp/sum_gammax_main_v2.lean 为准，已全部落盘）。
