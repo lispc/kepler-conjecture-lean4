@@ -282,14 +282,16 @@ theorem YIFVQDV_concl_discharged :
   fun V ul k p hP _ hbar hl2 hperm => YIFVQDV V ul k p hP hbar hl2 hperm
 
 /-- `PackingAuto2.KSOQKWL_concl` (Auto2:676), discharged by
-`PackingAuto7.KSOQKWL` (Rogers.hl:9588) — hypothesis reorder only. -/
+`PackingAuto7.KSOQKWL` (Rogers.hl:9588) — hypothesis reorder only.
+STATEMENT-FIX 项 25 (2026-09-30 用户批准): 接口同步补 `hpout`（SF15 同形），
+调用点加参穿透——PA7 补前提后本文件源重建曾坏，此处即修复。 -/
 theorem KSOQKWL_concl_discharged :
     ∀ (V : Set V3) (ul : List V3) (p : Equiv.Perm ℕ) (k : ℕ),
       saturated V → Packing V → barV V k ul → hl ul < Real.sqrt 2 →
-      permutes p (Set.Icc 0 k) →
+      permutes p (Set.Icc 0 k) → (∀ x : ℕ, k < x → p x = x) →
       rogers V ul = rogers V (leftActionList p ul) → p = Equiv.refl ℕ :=
-  fun V ul p k _ hP hbar hl2 hperm hrog =>
-    KSOQKWL V ul p k hP hbar hl2 hperm hrog
+  fun V ul p k _ hP hbar hl2 hperm hpout hrog =>
+    KSOQKWL V ul p k hP hbar hl2 hperm hpout hrog
 
 /-- `PackingAuto2.IVFICRK_concl` (Auto2:684).  TWIN MISMATCH:
 `PackingAuto7.IVFICRK` (Rogers.hl:9929) carries the same BijOn witness

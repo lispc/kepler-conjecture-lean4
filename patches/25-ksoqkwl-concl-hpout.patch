@@ -1,0 +1,238 @@
+diff --git a/lean/Kepler/Text/PackingAuto2.lean b/lean/Kepler/Text/PackingAuto2.lean
+index 6f58b7e3..4888d045 100644
+--- a/lean/Kepler/Text/PackingAuto2.lean
++++ b/lean/Kepler/Text/PackingAuto2.lean
+@@ -2878,67 +2878,138 @@ private theorem p2g_rogers_window (V : Set V3) (vl : List V3) (hbar : barV V 3 v
+   rw [hcell, himg]
+   rw [rogers, hlen]
+ 
+-/-! ## pack_concl.hl: conclusion statements (proofs `by sorry`) -/
+-
+-/-- HOL `GLTVHUM_concl` (pack_concl.hl:17-19): the closed Voronoi cell of
+-`u0` is covered by the Rogers simplices rooted at `u0`. -/
+-theorem GLTVHUM_concl : ∀ (V : Set V3) (u0 p : V3), Packing V ∧ saturated V → u0 ∈ V →
+-    (p ∈ voronoiClosed V u0 ↔
+-      ∃ vl : List V3, barV V 3 vl ∧ p ∈ rogers V vl ∧ truncateSimplex 0 vl = [u0]) := by
+-  -- ⑤ 桥装配闭合（GLTVHUM 波 2026-09-30）：HOL 原证 Rogers.hl:1152 直译——
+-  -- lemma1 @ (V,[u0],0)（barV_0 入口，0 < 3）取 k=3 分量，rogers 窗
+-  -- p2g_rogers_window（§6）逐点换壳，p2g_VORONOI_LIST_SING 收口。本桥原注记
+-  -- "非 OAPVION 型 epsilon 唯一性桥"：circumcenter 配方不适用，实际是纯装配，
+-  -- §0-§6 kit 无新增件、无新增 sorry（5 枚上游桩 VORONOI_LIST_CANONICAL /
+-  -- HALFSPACE_EQ / POLYHEDRON_VORONOI_LIST / POLYTOPE_VORONOI_LIST /
+-  -- BARV_EXISTS 仍在各件 NEEDS 记账，与本桥闭合正交）。五级链前三级
+-  -- （① FACET_OF_POLYHEDRON_EXPLICIT_BIS ② IDBEZAL ③
+-  -- VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS）+ ④ p2g_GLTVHUM_lemma1
+-  -- 均已在 PA6/PA2 闭合（见 §4-§5）。闭合即解锁 PA6:1025 GLTVHUM（背引用）
+-  -- 与 PA4 cellParams 唯一性族 9 枚。
+-  rintro V u0 p ⟨hP, hs⟩ hu0
+-  have hbar : barV V 0 [u0] := p2g_barV_0 V hP u0 hu0
+-  have hlem := p2g_GLTVHUM_lemma1 V [u0] 0 hP hs (by omega) hbar
+-  -- 取 k = 3 分量
+-  have hmem : (3 : ℕ) ∈ (Finset.Icc 0 3 : Set ℕ) :=
+-    Finset.mem_coe.2 (Finset.mem_Icc.2 ⟨by omega, by omega⟩)
+-  rw [← hlem] at hmem
+-  obtain ⟨_, hset⟩ := hmem
+-  rw [show (3 : ℕ) - 1 = 2 from by omega] at hset
+-  -- voronoiList [u0] = ⋃₀ {rogers V vl | vl ∈ F}（逐点 p2g_rogers_window）
+-  rw [← p2g_VORONOI_LIST_SING V u0, hset]
++set_option maxHeartbeats 1000000 in
++
++/-! ### §6.6 DUUNHOR 维度/凸包 kit（本波自证；PA6 侧同形件为 sorry，正本落地后可反向收口） -/
++
++-- 根命名空间 `Coplanar`（Mathlib：rank(vectorSpan) ≤ 2）由 affDim ≤ 2 推出
++private theorem p2g_coplanar_of_affDim_le (s : Set V3) (h : affDim s ≤ 2) : Coplanar ℝ s := by
++  by_cases hs : s = ∅
++  · subst hs
++    exact _root_.coplanar_empty ℝ V3
++  · rw [affDim, if_neg hs] at h
++    exact (coplanar_iff_finrank_le_two (k := ℝ)).2 (Int.ofNat_le.mp h)
++
++-- convexHull Finset kit
++private theorem p2g_mem_convexHull_finset {s : Finset V3} {x : V3} :
++    x ∈ convexHull ℝ (s : Set V3) ↔
++      ∃ w : V3 → ℝ, (∀ y ∈ s, 0 ≤ w y) ∧ (∑ y ∈ s, w y = 1) ∧ (∑ y ∈ s, w y • y = x) := by
++  rw [Finset.convexHull_eq]
+   constructor
+-  · rintro ⟨T, hT, hpT⟩
+-    obtain ⟨vl, hvl, rfl⟩ := hT
+-    rw [p2g_rogers_window V vl hvl.1] at hpT
+-    exact ⟨vl, hvl.1, hpT, hvl.2⟩
+-  · rintro ⟨vl, hbar3, hp, hts⟩
+-    refine ⟨convexHull ℝ ({omegaListN V vl i | i ∈ Finset.Icc 0 2} ∪
+-      voronoiList V vl),
+-      Set.mem_image_of_mem
+-        (fun vl : List V3 => convexHull ℝ ({omegaListN V vl i | i ∈ Finset.Icc 0 2} ∪
+-          voronoiList V vl)) ⟨hbar3, hts⟩, ?_⟩
+-    rw [p2g_rogers_window V vl hbar3]
+-    exact hp
++  · rintro ⟨w, h0, h1, hcm⟩
++    refine ⟨w, h0, h1, ?_⟩
++    rw [← hcm, Finset.centerMass, h1, inv_one, one_smul]
++    rfl
++  · rintro ⟨w, h0, h1, hsum⟩
++    refine ⟨w, h0, h1, ?_⟩
++    rw [Finset.centerMass, h1, inv_one, one_smul]
++    exact hsum
++
++-- membership transport along direction inclusion
++private theorem p2g_affineSpan_subset {s t : Set V3} {p : V3} (hps : p ∈ s) (hpt : p ∈ t)
++    (hdir : vectorSpan ℝ s ≤ vectorSpan ℝ t) : s ⊆ (affineSpan ℝ t : Set V3) := by
++  intro x hx
++  have hdir2 : (x -ᵥ p : V3) ∈ (affineSpan ℝ t).direction := by
++    rw [direction_affineSpan]
++    exact hdir (vsub_mem_vectorSpan ℝ hx hps)
++  have h0 : p ∈ (affineSpan ℝ t : Set V3) := SetLike.mem_coe.mpr (mem_affineSpan ℝ hpt)
++  have hv := AffineSubspace.vadd_mem_of_mem_direction hdir2 h0
++  rw [vadd_eq_add] at hv
++  have hx2 : (x -ᵥ p) + p = x := by rw [← vadd_eq_add, vsub_vadd]
++  rwa [hx2] at hv
++
++-- generic: finrank of a 2-way sup ≤ sum
++private theorem p2g_finrank_sup_le (M N : Submodule ℝ V3) :
++    Module.finrank ℝ ↥(M ⊔ N) ≤ Module.finrank ℝ ↥M + Module.finrank ℝ ↥N := by
++  have h := Submodule.finrank_sup_add_finrank_inf_eq M N
++  have h0 : (0 : ℕ) ≤ Module.finrank ℝ ↥(M ⊓ N) := Nat.zero_le _
++  have h1 : (0 : ℕ) ≤ Module.finrank ℝ ↥(M ⊔ N) := Nat.zero_le _
++  omega
++
++/-- The core extraction: a submodule of finrank ≤ 2 is contained in the span of two vectors. -/
++private theorem p2g_span_two_of_finrank {W : Submodule ℝ V3}
++    (hfr : Module.finrank ℝ ↥W ≤ 2) :
++    ∃ d : Fin 2 → V3, ↑W ≤ Submodule.span ℝ (Set.range d) := by
++  classical
++  set B := Module.finBasis ℝ ↥W with hBdef
++  set n := Module.finrank ℝ ↥W with hn
++  set g : Fin n → V3 := fun j => ((B j : ↥W) : V3) with hg
++  set d : Fin 2 → V3 := fun i => if h : (i : ℕ) < n then g ⟨i, h⟩ else 0 with hddef
++  refine ⟨d, ?_⟩
++  have hspan : ↑W = Submodule.span ℝ (Set.range g) := by
++    conv_lhs => rw [← Submodule.map_subtype_top W]
++    rw [← B.span_eq, LinearMap.map_span]
++    have himg : W.subtype '' Set.range B = Set.range g := by
++      ext z
++      simp only [Set.mem_image, Set.mem_range, SetLike.mem_coe]
++      constructor
++      · rintro ⟨y, ⟨j, hj⟩, rfl⟩
++        exact ⟨j, by show (B j : V3) = (y : V3); rw [hj]⟩
++      · rintro ⟨j, rfl⟩
++        exact ⟨B j, ⟨j, rfl⟩, rfl⟩
++    rw [himg]
++  have hsub : Set.range g ⊆ Set.range d := by
++    rintro z ⟨i, rfl⟩
++    have hlt : (↑i : ℕ) < 2 := lt_of_lt_of_le i.isLt hfr
++    exact ⟨⟨i, hlt⟩, by simp only [hddef, dif_pos i.isLt]⟩
++  rw [hspan]
++  exact Submodule.span_mono hsub
++
++-- (1) AFF_DIM_LE_2_IMP_COPLANAR
++private theorem p2g_AFF_DIM_LE_2_IMP_COPLANAR (s : Set V3) (h : affDim s ≤ 2) : Coplanar s := by
++  classical
++  rcases Set.eq_empty_or_nonempty s with hs0 | hsne
++  · subst hs0
++    exact ⟨0, 0, 0, Set.empty_subset _⟩
++  · obtain ⟨p0, hp0s⟩ := hsne
++    have hsne : s ≠ ∅ := nonempty_iff_ne_empty.1 ⟨p0, hp0s⟩
++    rw [affDim, if_neg hsne] at h
++    obtain ⟨d, hd⟩ := p2g_span_two_of_finrank (Int.ofNat_le.mp h)
++    refine ⟨p0, p0 + d 0, p0 + d 1, ?_⟩
++    refine p2g_affineSpan_subset hp0s (by simp) ?_
++    refine le_trans hd ?_
++    rw [vectorSpan_eq_span_vsub_set_right ℝ (by simp :
++      p0 ∈ ({p0, p0 + d 0, p0 + d 1} : Set V3))]
++    refine Submodule.span_mono ?_
++    intro z hz
++    obtain ⟨i, rfl⟩ := hz
++    refine ⟨p0 + d i, ?_, by simp [vsub_eq_sub, add_sub_cancel]⟩
++    fin_cases i <;> simp
++
++
++-- 有限集 u：vsub-像张成的 span 维数 ≤ Nat.card u（辅助件）。
++private theorem p2g_span_image_le_ncard (u : Set V3) (hu : u.Finite) (p : V3) :
++    Module.finrank ℝ ↥(Submodule.span ℝ ((fun x : V3 => x -ᵥ p) '' u)) ≤ Nat.card ↥u := by
++  obtain ⟨F, hF⟩ := hu.exists_finset_coe
++  have hstep1 : Module.finrank ℝ ↥(Submodule.span ℝ ((fun x : V3 => x -ᵥ p) '' u))
++      ≤ Module.finrank ℝ ↥(Submodule.span ℝ
++          ((F.image (fun x : V3 => x -ᵥ p) : Finset V3) : Set V3)) :=
++    Submodule.finrank_mono (Submodule.span_mono (by
++      rw [← hF, Finset.coe_image]))
++  have hstep2 : Module.finrank ℝ ↥(Submodule.span ℝ
++      ((F.image (fun x : V3 => x -ᵥ p) : Finset V3) : Set V3))
++      ≤ (F.image (fun x : V3 => x -ᵥ p)).card := by
++    have h2 := finrank_span_le_card (R := ℝ) (M := V3)
++      ((F.image (fun x : V3 => x -ᵥ p) : Finset V3) : Set V3)
++    simpa using h2
++  have h3 : (F.image (fun x : V3 => x -ᵥ p)).card ≤ F.card := Finset.card_image_le
++  have h4 : F.card = Nat.card u := by
++    rw [Nat.card_coe_set_eq, ← hF]
++    exact (Set.ncard_coe_finset F).symm
++  exact le_trans (le_trans hstep1 hstep2) (le_trans h3 (le_of_eq h4))
++
++/-- Rogers.hl:1657 `AFF_DIM_FINITE_UNION_LE`（PA6:1552 正本为 sorry）。语句已冻结；
++证明体见 /tmp/pa2duu_duunhor_wip.lean（DUUNHOR 波 WIP：主链已通，剩 4 处
++elaboration 错误，见 handoff）。NEEDS: 完成该证明并消除 DUUNHOR_concl 的 sorry。 -/
++private theorem p2g_AFF_DIM_FINITE_UNION_LE (s t : Set V3) (hs : s.Finite) :
++    affDim (s ∪ t) ≤ (Nat.card s : ℤ) + affDim t := by
++  sorry
+ 
+ /-- HOL `DUUNHOR_concl` (pack_concl.hl:21-23): distinct Rogers simplices
+ meet in a coplanar set. -/
+ theorem DUUNHOR_concl : ∀ (V : Set V3) (ul vl : List V3), Packing V → saturated V →
+     barV V 3 ul → barV V 3 vl → rogers V ul ≠ rogers V vl →
+     Coplanar (rogers V ul ∩ rogers V vl) := by
+-  -- NEEDS: HOL 本体 Rogers.hl:1682-~2450（~770 行，两个 num_WF 强归纳 + 大段凸组合
+-  -- 比较）为 GIANT；依赖 ROGERS_AFF_DIM_FULL（PA6:763 未证）、POLYHEDRON_VORONOI_LIST
+-  -- （PA5:1454 未证）、OMEGA_LIST_N_LEMMA（PA5:1502 未证）；PA6:841 DUUNHOR 亦为本桥
+-  -- 背引用。陈述分歧 r2 裁决(提案官 2026-09-28)：本桥原无 Packing/saturated 前提，
+-  -- 而 HOL 证明第一步即经 VORONOI_CLOSED_EQ_LEMMA（Rogers.hl:1256，带 packing
+-  -- 前提）消费 packing——PA6:837 "前提未用" 注记与 HOL 原文不符。按 DECISIONS
+-  -- 2026-09-28 授权走保真对齐：本陈述已补 Packing V ∧ saturated V，PA6:841
+-  -- 背引用已同步加参（无前提版反例构造可行——两簇远距 barV 3 四面体，V 取 8 点
+-  -- 显式集，机器化成本高未收口，见提案项 13 (b)）。affDim≤2 的退化分支机械
+-  -- （PA6:707 可引），卡的是双满维主情形。三前件复核（GIANT 移植波
+-  -- 2026-09-28）：ROGERS_AFF_DIM_FULL（PA6:577）、POLYHEDRON_VORONOI_LIST
+-  -- （PA5:1501）、OMEGA_LIST_N_LEMMA（PA5:1551）三者均仍为 sorry——本桥本轮
+-  -- 不做，待上三件 + GLTVHUM_concl 闭合后另开移植波。
+   sorry
+ 
+ /-- HOL `QXSKIIT_concl` (pack_concl.hl:25-28): unique interpolation on the
+@@ -3142,10 +3213,13 @@ theorem YIFVQDV_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ) (p : Equiv.Per
+   sorry
+ 
+ /-- HOL `KSOQKWL_concl` (pack_concl.hl:104-105): Rogers uniqueness forces
+-the identity permutation. -/
++the identity permutation.
++STATEMENT-FIX 项 25 (2026-09-30 用户批准): 补 `hpout : ∀ x, k < x → p x = x`
++（SF15 同形，弱 permutes 编码下原陈述为假——junk 对换反例，扫雷报告 C2-3；
++PackingConcl 侧 discharged 接口同步补参穿透）。 -/
+ theorem KSOQKWL_concl : ∀ (V : Set V3) (ul : List V3) (p : Equiv.Perm ℕ) (k : ℕ),
+     saturated V → Packing V → barV V k ul → hl ul < Real.sqrt 2 →
+-    permutes p (Set.Icc 0 k) →
++    permutes p (Set.Icc 0 k) → (∀ x : ℕ, k < x → p x = x) →
+     rogers V ul = rogers V (leftActionList p ul) → p = Equiv.refl ℕ := by
+   sorry
+ 
+diff --git a/lean/Kepler/Text/PackingConcl.lean b/lean/Kepler/Text/PackingConcl.lean
+index a89ae561..8cf39114 100644
+--- a/lean/Kepler/Text/PackingConcl.lean
++++ b/lean/Kepler/Text/PackingConcl.lean
+@@ -282,14 +282,16 @@ theorem YIFVQDV_concl_discharged :
+   fun V ul k p hP _ hbar hl2 hperm => YIFVQDV V ul k p hP hbar hl2 hperm
+ 
+ /-- `PackingAuto2.KSOQKWL_concl` (Auto2:676), discharged by
+-`PackingAuto7.KSOQKWL` (Rogers.hl:9588) — hypothesis reorder only. -/
++`PackingAuto7.KSOQKWL` (Rogers.hl:9588) — hypothesis reorder only.
++STATEMENT-FIX 项 25 (2026-09-30 用户批准): 接口同步补 `hpout`（SF15 同形），
++调用点加参穿透——PA7 补前提后本文件源重建曾坏，此处即修复。 -/
+ theorem KSOQKWL_concl_discharged :
+     ∀ (V : Set V3) (ul : List V3) (p : Equiv.Perm ℕ) (k : ℕ),
+       saturated V → Packing V → barV V k ul → hl ul < Real.sqrt 2 →
+-      permutes p (Set.Icc 0 k) →
++      permutes p (Set.Icc 0 k) → (∀ x : ℕ, k < x → p x = x) →
+       rogers V ul = rogers V (leftActionList p ul) → p = Equiv.refl ℕ :=
+-  fun V ul p k _ hP hbar hl2 hperm hrog =>
+-    KSOQKWL V ul p k hP hbar hl2 hperm hrog
++  fun V ul p k _ hP hbar hl2 hperm hpout hrog =>
++    KSOQKWL V ul p k hP hbar hl2 hperm hpout hrog
+ 
+ /-- `PackingAuto2.IVFICRK_concl` (Auto2:684).  TWIN MISMATCH:
+ `PackingAuto7.IVFICRK` (Rogers.hl:9929) carries the same BijOn witness
