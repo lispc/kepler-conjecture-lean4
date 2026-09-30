@@ -992,3 +992,66 @@ arg(h2/h1)=π−0.1 > −π/2=arg(h3/h1)，结论不成立。
 
 ### (c) 状态：**草案待审**（2026-09-30 PA22 独立清单波发现；应用待用户
 拍板 + GATE_MODE=STATEMENT-FIX）。
+
+## 23. PA7:995 `NOT_ID_IMP_LISTS_NOT_EQ` — 分级 A′（补 `hfix`，批 A）
+
+### (a) HOL 出处：flyspeck permutes（Library/perms.ml）为 complement-fixing，
+`p permutes Icc 0 k` 即 `∀ j > k, p j = j`；扫雷报告 C2-1（encoding-risk-sweep
+§2.1，探针 P1-P3 机器反例）。缺陷：弱编码下 junk 对换 `(k+1 k+2)` 满足全部
+前提而结论假（文件内注记自认 unprovable）。
+
+### (b) 修复
+
+补 `hfix : ∀ j : ℕ, k < j → p j = j`（与 SF15/19' 的 `hpout` 同形统一）。
+
+### (c) 状态：**已批准（2026-09-30 用户"SF 批准"），随批 A 应用。**
+
+## 24. PA7:1003 `NOT_ID_IMP_EXISTS_MAX_EQ_TRUNCATE_SIMPLEX` — 分级 A′（批 A）
+
+### (a) HOL 出处：同 23（扫雷报告 C2-2，同探针反例）。缺陷：同型弱编码。
+
+### (b) 修复
+
+同 23 补 `hfix`。
+
+### (c) 状态：**已批准，随批 A 应用。**
+
+## 25. PA2:3146 `KSOQKWL_concl`（+ PackingConcl:286 穿透）— 分级 A′（批 A，**延期**）
+
+### (a) HOL 出处：pack_concl.hl:104-105 注册表件（扫雷报告 C2-3，探针反例：
+junk 对换下 hrog 平凡真而 p ≠ refl）。缺陷：SF15 补丁只覆盖 PA7:1014 母件，
+此孪生漏覆盖。
+
+### (b) 修复
+
+补 `hpout : ∀ x, k < x → p x = x`（SF15 同形）；**消费点 PackingConcl.lean:286
+`KSOQKWL_concl_discharged` 同步加参穿透**（SF20 的 PA17-shim 教训：consumer
+扫描不截断）。
+
+### (c) 状态：**已批准；PA2 正被 DUUNHOR 阶段2 lane 编辑，文件空闲后自动应用。**
+
+## 26. PA5:132 `PERMUTES_TRIVIAL` — 冻结黑名单处置（批 A 同车，不阻塞）
+
+### (a) HOL 出处：pack3.hl:103 语义（permutes↔恒等识别仅在补集固定语义下
+为真）；扫雷报告 C2-4（探针 P4：`swap 1 2` 反例）。缺陷：不可加前提修——
+陈述本身是 permutes↔恒等的识别件，弱编码下形为假。
+
+### (b) 处置
+
+**冻结黑名单**：陈述不改，sorry 永久记账（"弱编码下不可证，待语义
+`permutesHL` 重述波"）；当前零真实消费者（仅 PA14:882 docstring 提及）。
+
+### (c) 状态：**已批准（黑名单选项）。**
+
+## 27. PA22 holArg 四件（`insert_v`:1910 / `poly_sort_fn`:1940 / `POLYSORT_BIJ2`:3196 / `EUSOTYP_simple`:3218）— 分级 M（批 B，**延期**）
+
+### (a) HOL 出处：Ysskqoy `Arg`（[0,2π)）；扫雷报告 §3（语义分叉坐实、反例
+待立）：与 SF22 ARG_ORDER 同病——主值域 (−π,π] ≠ 圆序 [0,2π)。
+
+### (b) 修复
+
+与 SF22 同车：统一改述 `holArg`；`poly_sort_fn` 是 def（M/L 档），其三个已证
+消费件需同步核查。
+
+### (c) 状态：**已批准；PA22 正被 sloc2/UKBRPFE lane 编辑，文件空闲后与
+SF22 同车应用。**
