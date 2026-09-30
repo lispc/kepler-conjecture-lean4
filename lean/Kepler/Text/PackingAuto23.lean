@@ -55,6 +55,20 @@ giant sorries `grutoti_sum_volD` / `grutoti_pivot` remain frozen with
 detailed NEEDS notes (both need the region-block cover + §H per-cell
 non-nullness, shared with grutoti_region/grutoti_cell_vol); `grutoti_volD_pos`
 frozen-false premise now carries a STATEMENT-FIX proposal + patch (item 18).
+
+2026-09-30 GT-3b/c pass: the `grutoti_cell_vol` arm kit banked as proved
+privates — private copies of PA24's `coplanarAzimEq` +
+`p24_coplanar_measure_null` (PA23 does not import PA24; provenance notes
+inline), the affine-hull null workhorse `p23_coplanar_affineSpan_null`
+(HL's 34× `NEGLIGIBLE_SUBSET (affine hull …) + COPLANAR_IMP_NEGLIGIBLE`
+pattern), the azimuth-sheet killer `p23_cap_inter_azimLevel_null`, the
+self-cone emptiness `p23_rconeGt_self_empty` (degenerate capsule), the §H
+counting arm `p23_edge_cell_k_ge_two` (k = 0,1 impossible for edge cells),
+and the junk-safety `p23_dihX_of_cellParamsD_ne`. `grutoti_cell_vol`'s
+`u0 = u1` degenerate arm discharged inline; its frozen `sorry` now covers
+only the non-degenerate wedge identities (k = 2,3 core + k = 4
+non-coplanar), which need the region-block data — see its docstring for the
+updated branch map and the missing edge-cell-hypothesis caveat.
 -/
 
 import Kepler.Text.PackingAuto2
@@ -238,6 +252,346 @@ private theorem p23_measure_setSum_biUnion {ι : Type*} {s : Set ι} {f : ι →
   rw [MeasureTheory.measure_biUnion_finset₀ hd hm]
   rw [ENNReal.toReal_sum fun i hi => hne i ((Set.Finite.mem_toFinset hs).mp hi)]
 
+/-! ## GT-3 lane private kit (2026-09-30)
+
+The `grutoti_cell_vol`/`grutoti_pivot` arm kit: private copies of PA24's
+`coplanarAzimEq` + `p24_coplanar_measure_null` (PA23 does not import PA24 —
+ccv_-convention private copies, provenance notes inline) plus the
+null-intersection/counting combos that close the `k = 0,1` arms and the
+degenerate branches of the per-cell analysis (HL §E/§H junk arms). -/
+
+/-! ### PA24 copies (bodies verbatim modulo the `p23_` renaming; all proved
+upstream in PackingAuto24.lean, 2026-09-19/30) -/
+
+
+/-! ### The azim witness/affine-span kit (2026-09-19 fill, proved) -/
+
+private theorem p23_exists_azim_point (v0 v1 w1 : V3) (a : ℝ)
+    (hv01 : v0 ≠ v1) (hcw : ¬ Collinear3 v0 v1 w1)
+    (ha0 : 0 < a) (ha2 : a < 2 * Real.pi) :
+    ∃ f : V3, ¬ Collinear3 v0 v1 f ∧ azim v0 v1 w1 f = a := by
+  have hwv : v1 ≠ v0 := Ne.symm hv01
+  obtain ⟨e1, e2, e3, hon, halign⟩ :=
+    exists_on3_eq_smul (v1 - v0) (sub_ne_zero.mpr hwv)
+  have hax : (v1 - v0 : V3) = dist v1 v0 • e3 := by rw [dist_eq_norm]; exact halign
+  obtain ⟨hp1, -⟩ := axis_perp hax hon
+  have hp1' : (e3 : V3) ⬝ᵥ e1 = 0 := by
+    rw [show ((e3 : V3)) ⬝ᵥ (e1 : V3) = (e1 : V3) ⬝ᵥ (e3 : V3) from dotProduct_comm _ _]
+    exact hon.2.2.2.2.1
+  have hw2nc : ¬ Collinear3 v0 v1 (v0 + e1) := by
+    intro hcol
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul hwv).mp hcol
+    have hsimp : ((v0 + e1 : V3) - v0) = e1 := by simp
+    rw [hsimp, hax, smul_smul] at hc
+    have hdot := congrArg (fun x : V3 => x ⬝ᵥ e1) hc
+    rw [show (((c * dist v1 v0 : ℝ)) • (e3 : V3)) ⬝ᵥ e1
+        = c * dist v1 v0 * ((e3 : V3) ⬝ᵥ e1) from by
+      rw [← inner_eq_dot, ← inner_eq_dot, real_inner_smul_left], hp1', mul_zero] at hdot
+    rw [hon.1] at hdot
+    exact absurd hdot (by norm_num)
+  obtain ⟨ψ, r1, r2, hr1, hr2, hzw1, -⟩ := azim_frame_spec hcw hw2nc hon hax hwv
+  set f : V3 := v0 + (r1 * Real.cos (ψ + a)) • e1 + (r1 * Real.sin (ψ + a)) • e2 with hf
+  have hsub : (f : V3) - v0
+      = (r1 * Real.cos (ψ + a)) • e1 + (r1 * Real.sin (ψ + a)) • e2 + (0:ℝ) • (v1 - v0) := by
+    rw [hf]; module
+  have hzF : zOf e1 e2 (f - v0) = (r1 : ℂ) * Complex.exp (((ψ + a : ℝ)) * Complex.I) :=
+    zOf_of_rep hon hax hsub
+  have hnz : zOf e1 e2 (f - v0) ≠ 0 := by
+    rw [hzF]
+    exact mul_ne_zero (by exact_mod_cast hr1.ne') (Complex.exp_ne_zero _)
+  have hfnc : ¬ Collinear3 v0 v1 f :=
+    (zOf_ne_zero_iff hon hax hwv f).mp hnz
+  refine ⟨f, hfnc, ?_⟩
+  have hspec : AzimSpec v0 v1 w1 f (azim v0 v1 w1 f) := by
+    unfold azim
+    rw [if_neg (by rintro (h | h); exacts [hcw h, hfnc h])]
+    exact Classical.epsilon_spec (azimSpec_exists hcw hfnc)
+  unfold AzimSpec at hspec
+  obtain ⟨-, -, h1', h2', hframes⟩ := hspec
+  obtain ⟨ψ', r1', r2', hrep1, hrep2, hr1', hr2'⟩ := hframes e1 e2 e3 hon hax hwv
+  have hz1 : zOf e1 e2 (w1 - v0) = (r1' : ℂ) * Complex.exp ((ψ' : ℝ) * Complex.I) :=
+    zOf_of_rep hon hax hrep1
+  have hz2 : zOf e1 e2 (f - v0) = (r2' : ℂ) * Complex.exp
+      (((ψ' + azim v0 v1 w1 f : ℝ)) * Complex.I) :=
+    zOf_of_rep hon hax hrep2
+  have hn1 : ‖zOf e1 e2 (w1 - v0)‖ = r1 := by
+    rw [hzw1, Complex.norm_mul, Complex.norm_real, Real.norm_eq_abs,
+      abs_of_pos hr1, exp_unit_norm, mul_one]
+  have hn1' : ‖zOf e1 e2 (w1 - v0)‖ = r1' := by
+    rw [hz1, Complex.norm_mul, Complex.norm_real, Real.norm_eq_abs,
+      abs_of_pos hr1', exp_unit_norm, mul_one]
+  have hn2 : ‖zOf e1 e2 (f - v0)‖ = r1 := by
+    rw [hzF, Complex.norm_mul, Complex.norm_real, Real.norm_eq_abs,
+      abs_of_pos hr1, exp_unit_norm, mul_one]
+  have hn2' : ‖zOf e1 e2 (f - v0)‖ = r2' := by
+    rw [hz2, Complex.norm_mul, Complex.norm_real, Real.norm_eq_abs,
+      abs_of_pos hr2', exp_unit_norm, mul_one]
+  have hr1eq : r1' = r1 := hn1'.symm.trans hn1
+  have hr2eq : r2' = r1 := hn2'.symm.trans hn2
+  rw [hr1eq] at hz1
+  rw [hr2eq] at hz2
+  have hu1 : Complex.exp ((ψ' : ℝ) * Complex.I) = Complex.exp ((ψ : ℝ) * Complex.I) := by
+    have hkey : (r1 : ℂ) * Complex.exp ((ψ' : ℝ) * Complex.I)
+        = (r1 : ℂ) * Complex.exp ((ψ : ℝ) * Complex.I) := hz1.symm.trans hzw1
+    exact mul_left_cancel₀ (by exact_mod_cast hr1.ne') hkey
+  have hunits : Complex.exp ((azim v0 v1 w1 f : ℝ) * Complex.I)
+      = Complex.exp ((a : ℝ) * Complex.I) := by
+    have hkey : (r1 : ℂ) * Complex.exp (((ψ' + azim v0 v1 w1 f : ℝ)) * Complex.I)
+        = (r1 : ℂ) * Complex.exp (((ψ + a : ℝ)) * Complex.I) := hz2.symm.trans hzF
+    rw [exp_add_I, exp_add_I, hu1] at hkey
+    have h1 := mul_left_cancel₀ (a := ((r1 : ℂ))) (by exact_mod_cast hr1.ne') hkey
+    exact mul_left_cancel₀ (a := Complex.exp ((ψ : ℝ) * Complex.I))
+      (Complex.exp_ne_zero _) h1
+  exact angle_eq_of_exp_eq (azim_nonneg v0 v1 w1 f) (azim_lt_two_pi v0 v1 w1 f)
+    ha0.le ha2 hunits
+
+
+private theorem p23_mem_affineSpan_triple (v0 v1 w z : V3) (c₂ c₃ : ℝ)
+    (hz : z = v0 + c₂ • (v1 - v0) + c₃ • (w - v0)) :
+    z ∈ (affineSpan ℝ ({v0, v1, w} : Set V3)) := by
+  have h0 : v0 ∈ (affineSpan ℝ ({v0, v1, w} : Set V3)) := mem_affineSpan (k := ℝ) (by simp)
+  have h1 : v1 ∈ (affineSpan ℝ ({v0, v1, w} : Set V3)) := mem_affineSpan (k := ℝ) (by simp)
+  have h2 : w ∈ (affineSpan ℝ ({v0, v1, w} : Set V3)) := mem_affineSpan (k := ℝ) (by simp)
+  have d1 : (v1 - v0 : V3) ∈ (affineSpan ℝ ({v0, v1, w} : Set V3)).direction :=
+    AffineSubspace.vsub_mem_direction h1 h0
+  have d2 : (w - v0 : V3) ∈ (affineSpan ℝ ({v0, v1, w} : Set V3)).direction :=
+    AffineSubspace.vsub_mem_direction h2 h0
+  have dsum : c₂ • (v1 - v0) + c₃ • (w - v0) ∈
+      (affineSpan ℝ ({v0, v1, w} : Set V3)).direction :=
+    Submodule.add_mem _ (Submodule.smul_mem _ _ d1) (Submodule.smul_mem _ _ d2)
+  have hv := AffineSubspace.vadd_mem_of_mem_direction dsum h0
+  rw [show ((c₂ • (v1 - v0) + c₃ • (w - v0)) +ᵥ v0)
+    = v0 + (c₂ • (v1 - v0) + c₃ • (w - v0))
+    from (vadd_eq_add _ _).trans (add_comm _ _)] at hv
+  rw [hz, add_assoc]
+  exact hv
+
+/-- COPLANAR_IMP_NEGLIGIBLE (HOL `COPLANAR_IMP_NEGLIGIBLE` content, in the
+root-`Coplanar` form `Module.rank ℝ (vectorSpan ℝ S) ≤ 2` that PA24's frozen
+`Coplanar ℝ _` statements elaborate to): anything inside a coplanar set is
+Lebesgue-null. The coplanar set lies in a proper affine subspace, null by
+Mathlib `Measure.addHaar_affineSubspace`; outer-measure monotonicity (`measure_mono_null`)
+needs no measurability of the inner set. -/
+private theorem p23_coplanar_measure_null {T S : Set V3} (hS : Coplanar ℝ S)
+    (hT : T ⊆ S) : volume T = 0 := by
+  have hfd : FiniteDimensional ℝ (vectorSpan ℝ S) := hS.finiteDimensional_vectorSpan
+  have hfin2 : Module.finrank ℝ (vectorSpan ℝ S) ≤ 2 :=
+    (coplanar_iff_finrank_le_two (k := ℝ)).mp hS
+  have hvs : (vectorSpan ℝ S : Submodule ℝ V3) ≠ ⊤ := by
+    intro htop
+    rw [htop, finrank_top] at hfin2
+    have h3 : Module.finrank ℝ V3 = 3 := finrank_euclideanSpace_fin
+    rw [h3] at hfin2
+    norm_num at hfin2
+  have htop_aff : (affineSpan ℝ S : AffineSubspace ℝ V3) ≠ ⊤ := fun hE =>
+    hvs (AffineSubspace.vectorSpan_eq_top_of_affineSpan_eq_top ℝ V3 V3 hE)
+  exact measure_mono_null (hT.trans (subset_affineSpan ℝ S))
+    (Measure.addHaar_affineSubspace volume _ htop_aff)
+
+/-- The affine span of a triple, as a set, is coplanar in the root-`Coplanar`
+sense (Mathlib `coplanar_triple` transported along `direction_affineSpan`). -/
+private theorem p23_coplanar_affineSpan_triple (u v w : V3) :
+    Coplanar ℝ ((affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) := by
+  have h := _root_.coplanar_triple (k := ℝ) u v w
+  show Module.rank ℝ ↥((affineSpan ℝ ({u, v, w} : Set V3)).direction) ≤ 2
+  rw [direction_affineSpan]
+  exact h
+
+/-- HOL `COPLANAR_AZIM_EQ` (REUHADY.hl:121). FILLED (2026-09-30): the two
+main ingredients proved above — `p23_exists_azim_point` (the frame/polar
+witness `f` off the axis with `azim v0 v1 w1 f = a`) and
+`p23_mem_affineSpan_triple` (affineSpan-triple membership) — splice into the
+documented case tree. (1) `a ∉ [0, 2π)` is vacuous via `azim_nonneg` /
+`azim_lt_two_pi`; (2) `a = 0` needs `¬Collinear3 v0 v1 w1` (from `h`), then
+the zero sheet lies in `affineSpan ℝ {v0,v1,w1}` (`collinear3_iff_smul` on the
+axis, `azim_eq_zero_iff_alt` + `affGt_pair_iff` off it); (3) `0 < a < 2π`:
+`p23_exists_azim_point` gives the witness `f`, and `azim_eq_azim_iff` +
+`affGt_pair_iff` put every `z` of the level set into `affineSpan ℝ {v0,v1,f}`;
+(4) coplanarity is read off via `p23_coplanar_affineSpan_triple` +
+`_root_.Coplanar.subset`. NOTE the Geom-vs-root `Coplanar` split: this frozen
+statement is Mathlib's root `Coplanar` (two explicit arguments, rank-of-
+vectorSpan ≤ 2), NOT `Kepler.Geom.Coplanar` (the affineSpan-triple
+existential, one argument) — resolution is by arity. -/
+private theorem p23_coplanarAzimEq (v0 v1 w1 : V3) (a : ℝ)
+    (h : Collinear3 v0 v1 w1 → ¬(a = 0)) :
+    Coplanar ℝ {z | azim v0 v1 w1 z = a} := by
+  by_cases han : a < 0
+  · -- a < 0: the level set is empty
+    refine _root_.Coplanar.subset (fun z hz => ?_)
+      (_root_.coplanar_empty (k := ℝ) (P := V3))
+    have h1 := azim_nonneg v0 v1 w1 z
+    rw [hz] at h1
+    exact absurd h1 (not_le.mpr han)
+  · by_cases ha2' : 2 * Real.pi ≤ a
+    · -- a ≥ 2π: the level set is empty
+      refine _root_.Coplanar.subset (fun z hz => ?_)
+        (_root_.coplanar_empty (k := ℝ) (P := V3))
+      have h1 := azim_lt_two_pi v0 v1 w1 z
+      rw [hz] at h1
+      exact absurd h1 (not_lt.mpr ha2')
+    · rcases eq_or_lt_of_le (le_of_not_gt han) with ha0 | hapos
+      · -- a = 0: the zero sheet lies in the plane affineSpan {v0, v1, w1}
+        rw [← ha0] at h ⊢
+        rcases eq_or_ne v0 v1 with hv | hv01
+        · exact absurd rfl (h (by rw [hv]; exact collinear3_of_eq rfl))
+        · have hnc1 : ¬ Collinear3 v0 v1 w1 := fun hc => (h hc) rfl
+          refine _root_.Coplanar.subset (fun z hz => ?_)
+            (p23_coplanar_affineSpan_triple v0 v1 w1)
+          by_cases hcz : Collinear3 v0 v1 z
+          · obtain ⟨cc, hczv⟩ := (collinear3_iff_smul (Ne.symm hv01)).mp hcz
+            exact p23_mem_affineSpan_triple v0 v1 w1 z cc 0 (by
+              rw [show z = v0 + (z - v0) from by abel, hczv]; module)
+          · obtain ⟨c, hcpos, t, hdec⟩ :=
+              (affGt_pair_iff (v0 := v0) (v1 := v1) (x := w1) (y := z) hv01
+                (fun he => hnc1 (collinear3_pair_left he))
+                (fun he => hnc1 (collinear3_pair_right he))).mp
+              ((azim_eq_zero_iff_alt hnc1 hcz).mp hz)
+            exact p23_mem_affineSpan_triple v0 v1 w1 z t c (by
+              rw [show z = v0 + (z - v0) from by abel, hdec]; module)
+      · -- 0 < a < 2π
+        rcases Classical.em (Collinear3 v0 v1 w1) with hc1 | hnc1
+        · -- w1 on the axis: every azimuth vanishes, the level set is empty
+          refine _root_.Coplanar.subset (fun z hz => ?_)
+            (_root_.coplanar_empty (k := ℝ) (P := V3))
+          have h0 : azim v0 v1 w1 z = 0 := by
+            rw [azim, if_pos (Or.inl hc1)]
+          simp only [Set.mem_setOf_eq] at hz
+          rw [h0] at hz
+          exact (h hc1) hz.symm
+        · rcases eq_or_ne v0 v1 with hv | hv01
+          · exact absurd (by rw [hv]; exact collinear3_of_eq rfl) hnc1
+          · obtain ⟨f, hfnc, hfaz⟩ := p23_exists_azim_point v0 v1 w1 a hv01 hnc1
+              hapos (lt_of_not_ge ha2')
+            refine _root_.Coplanar.subset (fun z hz => ?_)
+              (p23_coplanar_affineSpan_triple v0 v1 f)
+            by_cases hcz : Collinear3 v0 v1 z
+            · have h0 : azim v0 v1 w1 z = 0 := by
+                rw [azim, if_pos (Or.inr hcz)]
+              simp only [Set.mem_setOf_eq] at hz
+              rw [h0] at hz
+              exact absurd hz.symm (by linarith)
+            · have hmem := (azim_eq_azim_iff hnc1 hfnc hcz).mp (hfaz.trans hz.symm)
+              obtain ⟨c, hcpos, t, hdec⟩ :=
+                (affGt_pair_iff (v0 := v0) (v1 := v1) (x := f) (y := z) hv01
+                  (fun he => hfnc (collinear3_pair_left he))
+                  (fun he => hfnc (collinear3_pair_right he))).mp hmem
+              exact p23_mem_affineSpan_triple v0 v1 f z t c (by
+                rw [show z = v0 + (z - v0) from by abel, hdec]; module)
+
+/-! ### New combos: the `grutoti_cell_vol` arm-closers (2026-09-30) -/
+
+/-- COPLANAR_AFFINE_HULL_COPLANAR + NEGLIGIBLE_SUBSET in one piece: a set
+inside the affine hull of a coplanar set is Lebesgue-null (the HL §E/§H
+`NEGLIGIBLE_SUBSET (affine hull …) + COPLANAR_IMP_NEGLIGIBLE` workhorse,
+34 uses). Adapted from `p24_coplanar_measure_null`'s proof. -/
+private theorem p23_coplanar_affineSpan_null {T S : Set V3} (hS : Coplanar ℝ S)
+    (hT : T ⊆ (affineSpan ℝ S : Set V3)) : volume T = 0 := by
+  have hfd : FiniteDimensional ℝ (vectorSpan ℝ S) := hS.finiteDimensional_vectorSpan
+  have hfin2 : Module.finrank ℝ (vectorSpan ℝ S) ≤ 2 :=
+    (coplanar_iff_finrank_le_two (k := ℝ)).mp hS
+  have hvs : (vectorSpan ℝ S : Submodule ℝ V3) ≠ ⊤ := by
+    intro htop
+    rw [htop, finrank_top] at hfin2
+    have h3 : Module.finrank ℝ V3 = 3 := finrank_euclideanSpace_fin
+    rw [h3] at hfin2
+    norm_num at hfin2
+  have htop_aff : (affineSpan ℝ S : AffineSubspace ℝ V3) ≠ ⊤ := fun hE =>
+    hvs (AffineSubspace.vectorSpan_eq_top_of_affineSpan_eq_top ℝ V3 V3 hE)
+  exact measure_mono_null hT (Measure.addHaar_affineSubspace volume _ htop_aff)
+
+/-- The degenerate-branch killer combo: the cap's intersection with any
+azimuth level sheet is null (`p23_coplanarAzimEq` + `p23_coplanar_measure_null`;
+consumes the PA24 ammo in one line, as HL's COPLANAR_IMP_NEGLIGIBLE
+applications on `conic_cap ∩ {azim = …}` sheets do). -/
+private theorem p23_cap_inter_azimLevel_null (u0 u1 w : V3) (r a θ : ℝ)
+    (h : Collinear3 u0 u1 w → ¬(θ = 0)) :
+    volume (grutotiConicCap u0 u1 r a ∩ {z : V3 | azim u0 u1 w z = θ}) = 0 :=
+  p23_coplanar_measure_null (p23_coplanarAzimEq u0 u1 w θ h) Set.inter_subset_right
+
+/-- The self-cone is empty for ANY parameter (`rconeGt u u a = ∅`): the
+dot product with the zero vector vanishes, and so does `dist x u * dist u u * a`.
+Feeds the degenerate-capsule arm of `grutoti_cell_vol` (`u0 = u1` forces
+`D = ∅`). -/
+private theorem p23_rconeGt_self_empty (u : V3) (a : ℝ) :
+    rconeGt u u a = ∅ := by
+  ext x
+  simp only [rconeGt, Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
+  intro hx
+  rw [sub_self, dotProduct_zero, dist_self] at hx
+  simp at hx
+
+/-- The degenerate capsule (`u0 = u1`) is empty. -/
+private theorem p23_grutotiConicCap_self_empty (u : V3) (r a : ℝ) :
+    grutotiConicCap u u r a = ∅ := by
+  rw [grutotiConicCap, p23_rconeGt_self_empty u a, Set.inter_empty]
+
+/-- `truncateSimplex` ε-选取属性 (PA2 私件 `p2g_trunc_init_len` 的链复制:
+PA23 需要, PA2 未公开). -/
+private theorem p23_trunc_init_len (k : ℕ) (zl : List V3) (h : k + 1 ≤ zl.length) :
+    initialSublist (truncateSimplex k zl) zl ∧ (truncateSimplex k zl).length = k + 1 := by
+  have heps := @Classical.epsilon_spec _
+    (fun vl : List V3 => vl.length = k + 1 ∧ initialSublist vl zl)
+    ⟨zl.take (k + 1), List.length_take_of_le (by omega),
+      ⟨zl.drop (k + 1), (List.take_append_drop (k + 1) zl).symm⟩⟩
+  exact ⟨heps.2, heps.1⟩
+
+/-- HL §H arm (a) (GRUTOTI.hl:7536-7556): an edge cell carrying two DISTINCT
+edge points has `cellParams`-`k ≥ 2` — `k ≤ 1` gives `VX V X` of card ≤ 1
+(list truncation), too small for `{u0, u1}`. Kills the `k = 0,1` arms of
+`grutoti_cell_vol`/`grutoti_pivot` inside the edge-cell context. -/
+private theorem p23_edge_cell_k_ge_two (V : Set V3) (X : Set V3) (u0 u1 : V3)
+    (hm : X ∈ mcellSet V) (hu0 : u0 ∈ VX V X) (hu1 : u1 ∈ VX V X) (hne : u0 ≠ u1) :
+    2 ≤ (cellParams V X).1 := by
+  obtain ⟨i, ul, hX, hbar⟩ := Set.mem_setOf_eq.mp hm
+  have hX4 : X = mcell (min i 4) V ul := by
+    rcases Nat.lt_or_ge i 4 with hlt | hle
+    · rw [hX, min_eq_left (le_of_lt hlt)]
+    · rw [hX, min_eq_right hle, (MCELL_EXPLICIT i V ul).2.2.2.2 hle,
+        (MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4)]
+  have hwit : (cellParams V X).1 ≤ 4 ∧ barV V 3 (cellParams V X).2 ∧
+      X = mcell (cellParams V X).1 V (cellParams V X).2 :=
+    Classical.epsilon_spec
+      (p := fun q : ℕ × List V3 => q.1 ≤ 4 ∧ barV V 3 q.2 ∧ X = mcell q.1 V q.2)
+      ⟨(min i 4, ul), by omega, hbar, hX4⟩
+  have hnnull : ¬ nullSet X := by
+    intro hnull
+    unfold VX at hu0
+    rw [if_pos hnull] at hu0
+    simp at hu0
+  unfold VX at hu0 hu1
+  simp only [if_neg hnnull] at hu0 hu1
+  by_cases hk0 : (cellParams V X).1 = 0
+  · rw [if_pos hk0] at hu0
+    simp at hu0
+  · rw [if_neg hk0] at hu0 hu1
+    have h4 : (cellParams V X).2.length = 4 := hwit.2.1.1
+    have hlen : (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2).length
+        = (cellParams V X).1 := by
+      have h := p23_trunc_init_len ((cellParams V X).1 - 1) (cellParams V X).2
+        (by omega)
+      omega
+    set l := truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2 with hleq
+    simp only [setOfList, Set.mem_setOf_eq] at hu0 hu1
+    rcases l with _ | ⟨a, t⟩
+    · simp at hu0
+    · rcases t with _ | ⟨b, t2⟩
+      · simp only [List.mem_singleton] at hu0 hu1
+        exact absurd (hu0.trans hu1.symm) hne
+      · simp only [List.length_cons] at hlen
+        omega
+
+/-- Junk-safety for the future `grutoti_pivot` fill (PA2:410-417 encoding):
+`dihX` vanishes whenever the `cellParamsD` index is outside `{2,3,4}`
+(the `k ≤ 1` arm) — the null-cell arm is already banked as
+`p23_dihX_of_nullSet`. -/
+private theorem p23_dihX_of_cellParamsD_ne (V : Set V3) (X : Set V3) (p : V3 × V3)
+    (hnn : ¬ nullSet X)
+    (h2 : (cellParamsD V X [p.1, p.2]).1 ≠ 2)
+    (h3 : (cellParamsD V X [p.1, p.2]).1 ≠ 3)
+    (h4 : (cellParamsD V X [p.1, p.2]).1 ≠ 4) : dihX V X p = 0 := by
+  simp only [dihX, if_neg hnn, if_neg h2, if_neg h3, if_neg h4]
+
+
 /-! ## Giants (sorried, NEEDS-precision) -/
 
 /-- HL GRUTOTI.hl:86-160: the `k = 3` specialization of grutoti_3mem — the
@@ -332,17 +686,44 @@ private theorem grutoti_region (V : Set V3) (u0 u1 : V3) (e : Set V3)
   sorry
 
 /-- HL GRUTOTI.hl:2652-2653 (proved there by the case analysis to 7958): the
-per-cell wedge-volume identity. NEEDS-precision: `k = 2` cells are the
-hull/aff_ge `L = aff_ge {u0,u1} {mxi, ω₃}` wedge with `vol (X ∩ D) = vol (L ∩ D)`
-(HL:2673-2830); `k = 3` uses the azim-complement identity `AZIM_COMPL`
-(HL:7197-7223); `k = 0,1,4` and degenerate cases give null intersection via
-`COPLANAR_IMP_NEGLIGIBLE`/`NEGLIGIBLE_AFFINE_HULL_3` (HL:7521-7958);
-`dihX` dispatch via `MCELL_EXPLICIT` (Auto12:524). -/
+per-cell wedge-volume identity. GT-3b status (2026-09-30): the `u0 = u1`
+degenerate arm is discharged inline below (`p23_grutotiConicCap_self_empty`:
+the capsule is the empty self-cone); the k-arms over the `mcellSet` witness
+consume the GT-3 kit banked above — `k = 0,1`: impossible once the cell
+carries two distinct edge points (`p23_edge_cell_k_ge_two`, HL §H arm (a);
+junk-safety outside `k ∈ {2,3,4}`: `p23_dihX_of_cellParamsD_ne`; null cells:
+`p23_dihX_of_nullSet`); `k = 4`-degenerate and the k = 2/3 wedge-boundary
+sheets: coplanar-⇒-null via `p23_coplanar_measure_null` (private copy of
+PA24's COPLANAR_IMP_NEGLIGIBLE content), the affine-hull workhorse
+`p23_coplanar_affineSpan_null` (HL's 34× `NEGLIGIBLE_SUBSET (affine hull …)`
+pattern), and the azimuth level sheets `p23_cap_inter_azimLevel_null` (via
+the `p23_coplanarAzimEq` private copy of PA24's `COPLANAR_AZIM_EQ` fill).
+REMAINING GIANT (the `sorry` below): the non-degenerate wedge identities —
+k = 2 (HL §D: `mcell2` = double `rconeGe` ∩ the `affGe {u0,u1} {mxi, ω₃}`
+wedge `L`, `vol (X∩D) = vol (L∩D)`, closed by CCV `volumeConicCapWedge`),
+k = 3 (HL §F: hull + the AZIM_COMPL complement identity, `AZIM_COMPL_EXT`
+PA6:2107), k = 4 non-coplanar (HL §E: needs the region-block extremal data
+from `grutoti_region` to put `X ∩ D` into the coplanar sliver). CAVEAT
+(scout risk §3): the frozen signature carries no edge-cell hypothesis
+(`e ∈ edgeX V X`, i.e. `u0,u1 ∈ VX V X ∧ u0 ≠ u1`) — the k = 0,1 counting
+arm and the k = 4 degenerate closure are only consumable in that context,
+which the `grutoti_pivot` fill supplies; an SF proposal for the hypothesis
+should precede the core fill. -/
 private theorem grutoti_cell_vol (V : Set V3) (u0 u1 : V3) (r d : ℝ)
     (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1) (X : Set V3)
     (hm : X ∈ mcellSet V) (hn : ¬nullSet (X ∩ grutotiConicCap u0 u1 r d)) :
     volume.real (X ∩ grutotiConicCap u0 u1 r d) =
       volume.real (grutotiConicCap u0 u1 r d) * dihX V X (u0, u1) / (2 * Real.pi) := by
+  by_cases hne : u0 = u1
+  · rw [hne] at hn
+    have hnull : nullSet (X ∩ grutotiConicCap u1 u1 r d) := by
+      show volume (X ∩ grutotiConicCap u1 u1 r d) = 0
+      rw [p23_grutotiConicCap_self_empty u1 r d, Set.inter_empty]
+      exact measure_empty
+    exact absurd hnull hn
+  -- NEEDS: the non-degenerate k-arms (HL §D/§E/§F) — k = 2 wedge identity via
+  -- `volumeConicCapWedge` + the mcell2 shape; k = 3 via `AZIM_COMPL_EXT`;
+  -- k = 4 non-coplanar needs `grutoti_region`'s extremal data (see docstring).
   sorry
 
 /-- HL GRUTOTI.hl:7228-7400 (`sum s (\t. vol (t INTER D)) = vol D` via

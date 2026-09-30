@@ -960,3 +960,20 @@ forward shim `qzksykg1_p17`（:234，私有转发件，无真实调用点——�
 sorry 掉的 AJRIPQN docstring）同步透传 `hfix`，随本项一并提交。
 教训：consumer 扫描输出被 head 截断导致首轮漏查 PA17 调用点，闸门链构建
 抓出（四连挂稳定复现）。
+
+## 21. PA23 `grutoti_cell_vol` 冻结签名缺边胞前提（GT-3b/c 波立案）
+
+### (a) HOL 出处：TSKAJXY3.hl §D–§H（`grutoti_cell_vol` 全部四臂均在
+边胞语境 `e ∈ edgeX V X` 下运行）；缺陷：Lean 冻结签名缺该前提，
+k=0,1 计数臂（需 `p23_edge_cell_k_ge_two`）与 k=4 退化闭合无法消费。
+
+### (b) 修复
+
+签名补 `(he : e ∈ edgeX V X)` 型前提（与 ②sum_volD/③pivot 的
+Packing/saturated/region 前提同批走）；供给语境 = pivot 填充波。
+k=2 核走 `volumeConicCapWedge` + mcell2 形；k=3 走 `AZIM_COMPL_EXT`
+(PA6:2107)；k=4 需 grutoti_region 极值数据。
+
+### (c) 状态：**草案待审**（2026-09-30 GT-3b/c 波立案 `11 私件已落
+（公理全净），cell_vol 退化臂已内联闭合；应用建议与 ②③ 及 pivot 填充波
+同批，待用户拍板）。
