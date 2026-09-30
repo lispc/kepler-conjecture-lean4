@@ -2239,6 +2239,359 @@ theorem regular_spherical_polygon_area_797 (k : ℕ) (hk : 3 ≤ k) :
   unfold regularSphericalPolygonAreaP22
   congr 1
 
+/-! ## UKBRPFE numeric kit (PA22c wave): Taylor/asin bounds for the
+`regular_spherical_polygon_area` gap `2π - 2k·asn(cos 0.797·sin(π/k))`.
+STATUS: base case `k = 3` closed (`p22_ukb_base3`, `p22_ukb3`).  Remaining
+(NEEDS, see UKBRPFE_explicit below): `k ∈ {4..12}` individually by the same
+route, then `k ≥ 12` via the derivative bound
+`g' ≥ 0.0331 - 0.0334·y - 0.743·y³ > 0` at `y = π/x ≤ π/12`. -/
+
+private theorem p22_pi_lb : (3.14 : ℝ) < Real.pi := Real.pi_gt_d2
+
+private theorem p22_pi_ub : Real.pi < 3.15 := Real.pi_lt_d2
+
+/- ## sin high-order bound: alternating Taylor upper bound -/
+/-- `cos t ≤ 1 - t²/2 + t⁴/24` for `0 ≤ t ≤ 4`. -/
+private theorem p22_cos_le_taylor4 {t : ℝ} (ht : 0 ≤ t) (ht4 : t ≤ 4) :
+    Real.cos t ≤ 1 - t ^ 2 / 2 + t ^ 4 / 24 := by
+  rcases lt_or_eq_of_le ht with ht0 | rfl
+  · have h2 := Real.cos_two_mul_eq_one_sub (t / 2)
+    rw [show (2:ℝ) * (t / 2) = t from by ring] at h2
+    have h16 : t ^ 2 ≤ 16 := by nlinarith
+    have hage : 0 ≤ t / 2 - t ^ 3 / 48 := by
+      have h316 : t ^ 3 ≤ 16 * t := by nlinarith [h16, ht]
+      nlinarith
+    have hsin : t / 2 - t ^ 3 / 48 ≤ Real.sin (t / 2) := by
+      have h3 := Real.sin_gt_sub_cube (x := t / 2) (by linarith)
+      have hrw : (t / 2) ^ 3 / 6 = t ^ 3 / 48 := by ring
+      rw [hrw] at h3
+      linarith
+    have hspos : 0 ≤ Real.sin (t / 2) := by linarith
+    have hss : 0 ≤ Real.sin (t / 2) + (t / 2 - t ^ 3 / 48) := by linarith
+    have hsa : 0 ≤ Real.sin (t / 2) - (t / 2 - t ^ 3 / 48) := by linarith
+    have hsq : (t / 2 - t ^ 3 / 48) ^ 2 ≤ Real.sin (t / 2) ^ 2 := by
+      nlinarith [hss, hsa]
+    have hexpl : 2 * (t / 2 - t ^ 3 / 48) ^ 2
+        = t ^ 2 / 2 - t ^ 4 / 24 + t ^ 6 / 1152 := by ring
+    have ht6 : (0:ℝ) ≤ t ^ 6 := by positivity
+    have h2a : t ^ 2 / 2 - t ^ 4 / 24 ≤ 2 * (t / 2 - t ^ 3 / 48) ^ 2 := by
+      rw [hexpl]; linarith
+    rw [h2]
+    linarith [hsq, h2a]
+  · norm_num [Real.cos_zero]
+
+/-- `sin y ≤ y - y³/6 + y⁵/120` for `0 ≤ y ≤ 4` (alternating Taylor upper bound). -/
+private theorem p22_sin_le_taylor5 {y : ℝ} (hy : 0 ≤ y) (hy4 : y ≤ 4) :
+    Real.sin y ≤ y - y ^ 3 / 6 + y ^ 5 / 120 := by
+  set h : ℝ → ℝ := fun t => t - t ^ 3 / 6 + t ^ 5 / 120 - Real.sin t with hh
+  have hf : (fun r : ℝ => r - r ^ 3 / 6 + r ^ 5 / 120 - Real.sin r)
+      = fun r => (r + ((-1 / 6) * r ^ 3 + (1 / 120) * r ^ 5)) - Real.sin r := by
+    funext r; ring
+  have hd : ∀ t : ℝ, deriv h t = 1 - t ^ 2 / 2 + t ^ 4 / 24 - Real.cos t := by
+    intro t
+    rw [hh, hf]
+    have dF : DifferentiableAt ℝ
+        (fun r : ℝ => r + ((-1 / 6) * r ^ 3 + (1 / 120) * r ^ 5)) t := by
+      fun_prop
+    have hrest : deriv
+        (fun r : ℝ => (r + ((-1 / 6) * r ^ 3 + (1 / 120) * r ^ 5)) - Real.sin r) t
+        = deriv (fun r : ℝ => r + ((-1 / 6) * r ^ 3 + (1 / 120) * r ^ 5)) t
+          - deriv Real.sin t :=
+      deriv_fun_sub dF (Real.differentiable_sin t)
+    have hid1 : deriv (fun r : ℝ => r) t = 1 := by simp [deriv_id'']
+    have d1 : DifferentiableAt ℝ (fun r : ℝ => r) t := by fun_prop
+    have d23 : DifferentiableAt ℝ (fun r : ℝ => (-1 / 6) * r ^ 3 + (1 / 120) * r ^ 5) t := by
+      fun_prop
+    have d3 : DifferentiableAt ℝ (fun r : ℝ => (-1 / 6) * r ^ 3) t := by fun_prop
+    have d4 : DifferentiableAt ℝ (fun r : ℝ => (1 / 120) * r ^ 5) t := by fun_prop
+    have hadd1 : deriv (fun r : ℝ => r + ((-1 / 6) * r ^ 3 + (1 / 120) * r ^ 5)) t
+        = deriv (fun r : ℝ => r) t
+          + deriv (fun r : ℝ => (-1 / 6) * r ^ 3 + (1 / 120) * r ^ 5) t :=
+      deriv_fun_add d1 d23
+    have hadd2 : deriv (fun r : ℝ => (-1 / 6) * r ^ 3 + (1 / 120) * r ^ 5) t
+        = deriv (fun r : ℝ => (-1 / 6) * r ^ 3) t
+          + deriv (fun r : ℝ => (1 / 120) * r ^ 5) t :=
+      deriv_fun_add d3 d4
+    have hcm1 : deriv (fun r : ℝ => (-1 / 6) * r ^ 3) t
+        = (-1 / 6) * deriv (fun r : ℝ => r ^ 3) t :=
+      congrFun (deriv_const_mul_field' (-1 / 6)) t
+    have hcm2 : deriv (fun r : ℝ => (1 / 120) * r ^ 5) t
+        = (1 / 120) * deriv (fun r : ℝ => r ^ 5) t :=
+      congrFun (deriv_const_mul_field' (1 / 120)) t
+    have hp3 : deriv (fun r : ℝ => r ^ 3) t = 3 * t ^ 2 := deriv_pow_field (n := 3) (x := t)
+    have hp5 : deriv (fun r : ℝ => r ^ 5) t = 5 * t ^ 4 := deriv_pow_field (n := 5) (x := t)
+    have hsin1 : deriv Real.sin t = Real.cos t :=
+      (Real.hasDerivAt_sin t).deriv
+    rw [hrest, hadd1, hadd2, hid1, hcm1, hcm2, hp3, hp5, hsin1]
+    ring
+  have hdiff : Differentiable ℝ h := by fun_prop
+  have key : ∀ s : ℝ, 0 ≤ s → 0 ≤ 1 - s ^ 2 / 2 + s ^ 4 / 24 - Real.cos s := by
+    intro s hs
+    rcases le_or_gt s 4 with hle4 | hge4
+    · have hc := p22_cos_le_taylor4 hs hle4
+      linarith
+    · have hs2pos : (0:ℝ) ≤ s ^ 2 := by nlinarith
+      have hsub : 0 ≤ s ^ 2 - 12 := by nlinarith [hge4]
+      have hs4 : (0:ℝ) ≤ s ^ 4 / 24 - s ^ 2 / 2 := by
+        have he : s ^ 4 / 24 - s ^ 2 / 2 = s ^ 2 * (s ^ 2 - 12) / 24 := by ring
+        rw [he]
+        exact div_nonneg (mul_nonneg hs2pos hsub) (by norm_num)
+      linarith [Real.cos_le_one s, hs4]
+  have hge : ∀ t : ℝ, 0 ≤ deriv h t := by
+    intro t
+    rw [hd t]
+    rcases le_or_gt t 0 with hneg | hnonneg
+    · have h2 := hd (-t)
+      rw [show (-t:ℝ) ^ 2 = t ^ 2 from by ring, show (-t:ℝ) ^ 4 = t ^ 4 from by ring,
+        Real.cos_neg] at h2
+      have hk := key (-t) (by linarith)
+      rw [show (-t:ℝ) ^ 2 = t ^ 2 from by ring, show (-t:ℝ) ^ 4 = t ^ 4 from by ring,
+        Real.cos_neg] at hk
+      exact hk
+    · exact key t (le_of_lt hnonneg)
+  have hmono : Monotone h := monotone_of_deriv_nonneg hdiff hge
+  have h0 : h 0 = 0 := by
+    rw [hh]; norm_num [Real.sin_zero]
+  have hle : h 0 ≤ h y := hmono (by nlinarith)
+  rw [h0] at hle
+  have hle2 : 0 ≤ y - y ^ 3 / 6 + y ^ 5 / 120 - Real.sin y := hle
+  linarith
+
+/- ## cos 0.797 numeric window -/
+/-- `cos 0.797 ≤ 0.6991`, via half angle + `sin_gt_sub_cube`. -/
+private theorem p22_cc_le : Real.cos 0.797 ≤ 6991 / 10000 := by
+  have h := Real.cos_two_mul_eq_one_sub ((0.797:ℝ) / 2)
+  rw [show (2:ℝ) * (0.797 / 2) = 0.797 from by ring] at h
+  have hsin : (3879:ℝ) / 10000 < Real.sin (0.797 / 2) := by
+    have h3 := Real.sin_gt_sub_cube (x := (0.797 / 2)) (by norm_num)
+    norm_num at h3 ⊢
+    linarith
+  rw [h]
+  nlinarith
+
+/-- `0.65 ≤ cos 0.797`, via `one_sub_sq_div_two_le_cos`. -/
+private theorem p22_cc_lb : (65:ℝ) / 100 ≤ Real.cos 0.797 := by
+  have h := Real.one_sub_sq_div_two_le_cos (x := (0.797:ℝ))
+  norm_num at h ⊢
+  linarith
+
+/- ## arcsin upper bounds -/
+/-- `arcsin v ≤ v / √(1 - v²)` for `0 ≤ v < 1` (tan dominates arcsin). -/
+private theorem p22_asn_le_tan {v : ℝ} (hv : 0 ≤ v) (hv1 : v < 1) :
+    asn v ≤ v / Real.sqrt (1 - v ^ 2) := by
+  show Real.arcsin v ≤ v / Real.sqrt (1 - v ^ 2)
+  rcases eq_or_lt_of_le hv with rfl | hv0
+  · simp
+  · have ha1 : 0 < Real.arcsin v := Real.arcsin_pos.mpr hv0
+    have ha2 : Real.arcsin v < Real.pi / 2 := Real.arcsin_lt_pi_div_two.mpr hv1
+    have hlt := Real.lt_tan ha1 ha2
+    have htan : Real.tan (Real.arcsin v) = v / Real.sqrt (1 - v ^ 2) := by
+      rw [Real.tan_eq_sin_div_cos, Real.sin_arcsin (by linarith) (by linarith),
+        Real.cos_arcsin]
+    linarith
+
+/-- arcsin upper bound with cubic correction:
+`arcsin w ≤ w + (w³/3) · (√(1-w²)⁻¹ / (1 + √(1-w²)))` for `0 ≤ w < 1`
+(via `1/√(1-t²) - 1 = t²/(√(1-t²)(1+√(1-t²)))` on `[0,w]` and monotone integrals). -/
+private theorem p22_asn_le_add {w : ℝ} (hw : 0 ≤ w) (hw1 : w < 1) :
+    asn w ≤ w + (Real.sqrt (1 - w ^ 2))⁻¹ / (1 + Real.sqrt (1 - w ^ 2)) * (w ^ 3 / 3) := by
+  show Real.arcsin w ≤ _
+  set s := Real.sqrt (1 - w ^ 2) with hsdef
+  have hspos : 0 < s := Real.sqrt_pos.mpr (by nlinarith)
+  have hcpol : ContinuousOn (fun t : ℝ => 1 - t ^ 2) (Set.uIcc (0:ℝ) w) := by fun_prop
+  have hcon : ContinuousOn (fun t : ℝ => 1 / Real.sqrt (1 - t ^ 2))
+      (Set.uIcc (0:ℝ) w) :=
+    ContinuousOn.div continuousOn_const
+      (Real.continuous_sqrt.comp_continuousOn hcpol) (by
+        intro t ht
+        rw [Set.uIcc_of_le hw] at ht
+        obtain ⟨ht0, htw⟩ := ht
+        have hp : (0:ℝ) < 1 - t ^ 2 := by nlinarith
+        simpa using ne_of_gt (Real.sqrt_pos.mpr hp))
+  -- hint: arcsin as an integral of its derivative
+  have hint : ∫ t in (0:ℝ)..w, 1 / Real.sqrt (1 - t ^ 2) = asn w := by
+    have hderiv : ∀ t ∈ Set.uIcc (0:ℝ) w, HasDerivAt asn (1 / Real.sqrt (1 - t ^ 2)) t :=
+      fun t ht => by
+        rw [Set.uIcc_of_le hw] at ht
+        obtain ⟨ht0, htw⟩ := ht
+        exact Real.hasDerivAt_arcsin (x := t) (by nlinarith) (by nlinarith)
+    rw [intervalIntegral.integral_eq_sub_of_hasDerivAt hderiv hcon.intervalIntegrable]
+    simp [asn, Real.arcsin_zero]
+  -- integrand bound: 1/√(1-t²) ≤ 1 + (s⁻¹/(1+s))·t²  on [0,w]
+  have hdiff : ∀ t : ℝ, t ∈ Set.Icc (0:ℝ) w →
+      1 / Real.sqrt (1 - t ^ 2) ≤ 1 + (s⁻¹ / (1 + s)) * t ^ 2 := by
+    intro t ht
+    obtain ⟨ht0, htw⟩ := ht
+    have ht1 : t < 1 := lt_of_le_of_lt htw hw1
+    have hpos : 0 < 1 - t ^ 2 := by nlinarith
+    have hX : 0 < Real.sqrt (1 - t ^ 2) := Real.sqrt_pos.mpr hpos
+    have hge : s ≤ Real.sqrt (1 - t ^ 2) := by
+      apply Real.sqrt_le_sqrt
+      have htw1 : t * t ≤ t * w := mul_le_mul_of_nonneg_left htw ht0
+      have htw2 : t * w ≤ w * w := mul_le_mul_of_nonneg_right htw hw
+      linarith [htw1, htw2]
+    have hXsq : Real.sqrt (1 - t ^ 2) ^ 2 = 1 - t ^ 2 := Real.sq_sqrt (by nlinarith)
+    have hinv1 : (Real.sqrt (1 - t ^ 2))⁻¹ ≤ s⁻¹ :=
+      (inv_le_inv₀ hX hspos).mpr hge
+    have hp2 : (0:ℝ) < 1 + Real.sqrt (1 - t ^ 2) := by linarith [hpos]
+    have hsb : (0:ℝ) < 1 + s := by positivity
+    have hinv2 : ((1:ℝ) + Real.sqrt (1 - t ^ 2))⁻¹ ≤ (1 + s)⁻¹ :=
+      (inv_le_inv₀ hp2 hsb).mpr (by linarith [hge])
+    have hden : s * (1 + s) ≤ Real.sqrt (1 - t ^ 2) * (1 + Real.sqrt (1 - t ^ 2)) := by
+      calc s * (1 + s) ≤ Real.sqrt (1 - t ^ 2) * (1 + s) :=
+            mul_le_mul_of_nonneg_right hge (by linarith)
+        _ ≤ Real.sqrt (1 - t ^ 2) * (1 + Real.sqrt (1 - t ^ 2)) :=
+            mul_le_mul_of_nonneg_left (by linarith [hge]) (le_of_lt hX)
+    have hdenpos : (0:ℝ) < Real.sqrt (1 - t ^ 2) * (1 + Real.sqrt (1 - t ^ 2)) := by
+      positivity
+    have hstep : (1:ℝ) / (Real.sqrt (1 - t ^ 2) * (1 + Real.sqrt (1 - t ^ 2)))
+        ≤ s⁻¹ / (1 + s) := by
+      have hpp : (0:ℝ) < s * (1 + s) := mul_pos hspos (by linarith)
+      have h2 : (1:ℝ) / (Real.sqrt (1 - t ^ 2) * (1 + Real.sqrt (1 - t ^ 2)))
+          ≤ (1:ℝ) / (s * (1 + s)) := one_div_le_one_div_of_le hpp hden
+      have h3 : (1:ℝ) / (s * (1 + s)) = s⁻¹ / (1 + s) := by field_simp
+      rw [← h3]
+      exact h2
+    have hXne : Real.sqrt (1 - t ^ 2) ≠ 0 := ne_of_gt hX
+    have hsplit : 1 / Real.sqrt (1 - t ^ 2) - 1
+        = (1 - Real.sqrt (1 - t ^ 2)) / Real.sqrt (1 - t ^ 2) := by
+      rw [eq_div_iff hXne, sub_mul, div_mul_cancel₀ _ hXne]
+      ring
+    have hrat : (1:ℝ) - Real.sqrt (1 - t ^ 2)
+        = t ^ 2 / (1 + Real.sqrt (1 - t ^ 2)) := by
+      have hne : (1:ℝ) + Real.sqrt (1 - t ^ 2) ≠ 0 := by positivity
+      rw [eq_div_iff hne]
+      nlinarith [hXsq]
+    have hmain : 1 / Real.sqrt (1 - t ^ 2) - 1 ≤ (s⁻¹ / (1 + s)) * t ^ 2 := by
+      rw [hsplit, hrat]
+      have hd : t ^ 2 / (1 + Real.sqrt (1 - t ^ 2)) / Real.sqrt (1 - t ^ 2)
+          = t ^ 2 * (1 / (Real.sqrt (1 - t ^ 2) * (1 + Real.sqrt (1 - t ^ 2)))) := by
+        field_simp
+      rw [hd, mul_comm (s⁻¹ / (1 + s)) (t ^ 2)]
+      exact mul_le_mul_of_nonneg_left hstep (sq_nonneg t)
+    linarith [hmain]
+  -- integrate
+  have hI1 : IntervalIntegrable (fun t : ℝ => 1 / Real.sqrt (1 - t ^ 2)) MeasureTheory.volume (0:ℝ) w :=
+    hcon.intervalIntegrable
+  have hc1 : IntervalIntegrable (fun _ : ℝ => (1:ℝ)) MeasureTheory.volume (0:ℝ) w :=
+    ContinuousOn.intervalIntegrable (by
+      fun_prop : ContinuousOn (fun _ : ℝ => (1:ℝ)) (Set.uIcc (0:ℝ) w))
+  have hbase : IntervalIntegrable (fun t : ℝ => t ^ 2) MeasureTheory.volume (0:ℝ) w :=
+    ContinuousOn.intervalIntegrable (by
+      fun_prop : ContinuousOn (fun t : ℝ => t ^ 2) (Set.uIcc (0:ℝ) w))
+  have hI2 : IntervalIntegrable (fun t : ℝ => (s⁻¹ / (1 + s)) * t ^ 2) MeasureTheory.volume (0:ℝ) w :=
+    hbase.const_mul (s⁻¹ / (1 + s))
+  have hI12 : IntervalIntegrable (fun t : ℝ => 1 + (s⁻¹ / (1 + s)) * t ^ 2)
+      MeasureTheory.volume (0:ℝ) w := by simpa using hc1.add hI2
+  have hmono := intervalIntegral.integral_mono_on (by nlinarith) hI1 hI12 hdiff
+  have hpow : ∫ t in (0:ℝ)..w, 1 + (s⁻¹ / (1 + s)) * t ^ 2
+      = w + (s⁻¹ / (1 + s)) * (w ^ 3 / 3) := by
+    rw [intervalIntegral.integral_add hc1 hI2, intervalIntegral.integral_const,
+      intervalIntegral.integral_const_mul, integral_pow]
+    norm_num
+  rw [hint] at hmono
+  rw [hpow] at hmono
+  exact hmono
+
+/- ## UKBRPFE exemplar: the k = 3 base case -/
+/-- Numeric core of `UKBRPFE_explicit` at `k = 3`:
+`2.097 - 0.0331 * 3 ≤ 2π - 6 * asn (cos 0.797 * sin (π/3))`. -/
+private theorem p22_ukb_base3 : (2.097 - 0.0331 * 3 : ℝ)
+    ≤ 2 * Real.pi - 2 * 3 * asn (Real.cos 0.797 * Real.sin (Real.pi / 3)) := by
+  have hsin3 : Real.sin (Real.pi / 3) = Real.sqrt 3 / 2 := Real.sin_pi_div_three
+  have hsqrt3 : Real.sqrt 3 / 2 ≤ 7 / 8 := by
+    have h1 : Real.sqrt 3 ≤ 7 / 4 := by
+      rw [Real.sqrt_le_iff]
+      norm_num
+    linarith
+  set v := Real.cos 0.797 * Real.sin (Real.pi / 3) with hvdef
+  have ccle7 : Real.cos 0.797 ≤ 7 / 10 := le_trans p22_cc_le (by norm_num)
+  have hsinle : Real.sin (Real.pi / 3) ≤ 7 / 8 := by rw [hsin3]; linarith [hsqrt3]
+  have hpos1 : (0:ℝ) ≤ Real.cos 0.797 := by linarith [p22_cc_lb]
+  have hpos2 : (0:ℝ) ≤ Real.sin (Real.pi / 3) := by rw [hsin3]; positivity
+  have hstep : Real.cos 0.797 * Real.sin (Real.pi / 3) ≤ 49 / 80 := by
+    have h1 : Real.cos 0.797 * Real.sin (Real.pi / 3)
+        ≤ (7:ℝ) / 10 * Real.sin (Real.pi / 3) := mul_le_mul_of_nonneg_right ccle7 hpos2
+    have h2 : (7:ℝ) / 10 * Real.sin (Real.pi / 3) ≤ (7:ℝ) / 10 * (7 / 8) :=
+      mul_le_mul_of_nonneg_left hsinle (by positivity)
+    have h3 : (7:ℝ) / 10 * (7 / 8) = 49 / 80 := by norm_num
+    linarith [h1, h2, h3]
+  have hv80 : v ≤ 49 / 80 := by rw [hvdef]; exact hstep
+  have hv0 : 0 ≤ v := by rw [hvdef]; exact mul_nonneg hpos1 hpos2
+  have hv1 : v < 1 := by
+    have h1 : (49:ℝ) / 80 < 1 := by norm_num
+    linarith
+  have hv2m : v * v ≤ (49 / 80) * (49 / 80) := by
+    have ha : v * v ≤ v * (49 / 80) := mul_le_mul_of_nonneg_left hv80 hv0
+    have hb : v * (49 / 80) ≤ (49 / 80) * (49 / 80) :=
+      mul_le_mul_of_nonneg_right hv80 (by positivity)
+    nlinarith [ha, hb]
+  have h492' : ((49:ℝ) / 80) * ((49:ℝ) / 80) = 2401 / 6400 := by norm_num
+  have hv2le : (v:ℝ) * v ≤ 2401 / 6400 := by linarith [hv2m, h492']
+  have hs : (79:ℝ) / 100 ≤ Real.sqrt (1 - v ^ 2) := by
+    have h792 : ((79:ℝ)/100) ^ 2 = 6241 / 10000 := by norm_num
+    have h79eq : ((79:ℝ)/100) = Real.sqrt (((79:ℝ)/100) ^ 2) := by
+      rw [Real.sqrt_sq (show (0:ℝ) ≤ 79 / 100 by norm_num)]
+    rw [h79eq, show v ^ 2 = v * v from by ring]
+    exact Real.sqrt_le_sqrt (by linarith [h792, hv2m, h492'])
+  have hsinvp : (0:ℝ) < Real.sqrt (1 - v ^ 2) := Real.sqrt_pos.mpr (by nlinarith)
+  have hv3 : v * (v * v) ≤ (49 / 80) * ((49 / 80) * (49 / 80)) := by
+    have ha : v * (v * v) ≤ (49 / 80) * (v * v) :=
+      mul_le_mul_of_nonneg_right hv80 (mul_nonneg hv0 hv0)
+    have hb : (49 / 80) * (v * v) ≤ (49 / 80) * ((49 / 80) * (49 / 80)) :=
+      mul_le_mul_of_nonneg_left hv2m (by positivity)
+    exact le_trans ha hb
+  have hv3pos : (0:ℝ) ≤ v * (v * v) :=
+    mul_nonneg hv0 (mul_nonneg hv0 hv0)
+  have h493 : (49:ℝ) / 80 * (2401 / 6400) = 117649 / 512000 := by norm_num
+  have hK : (Real.sqrt (1 - v ^ 2))⁻¹ / (1 + Real.sqrt (1 - v ^ 2)) ≤ 5 / 7 := by
+    have hipos : (0:ℝ) < 1 + Real.sqrt (1 - v ^ 2) := by linarith
+    have h79s : (79:ℝ) / 100 ≤ Real.sqrt (1 - v ^ 2) := hs
+    have ha : (Real.sqrt (1 - v ^ 2))⁻¹ ≤ ((79:ℝ) / 100)⁻¹ :=
+      (inv_le_inv₀ hsinvp (by norm_num)).mpr h79s
+    have hb : (1 + Real.sqrt (1 - v ^ 2))⁻¹ ≤ ((179:ℝ) / 100)⁻¹ :=
+      (inv_le_inv₀ hipos (by norm_num)).mpr (by linarith)
+    calc (Real.sqrt (1 - v ^ 2))⁻¹ / (1 + Real.sqrt (1 - v ^ 2))
+        = (Real.sqrt (1 - v ^ 2))⁻¹ * (1 + Real.sqrt (1 - v ^ 2))⁻¹ := by ring
+      _ ≤ ((79:ℝ) / 100)⁻¹ * ((179:ℝ) / 100)⁻¹ := mul_le_mul ha hb (by positivity)
+          (by positivity)
+      _ ≤ 5 / 7 := by norm_num
+  have hub := p22_asn_le_add hv0 hv1
+  have hdiv : v * (v * v) / 3 ≤ (49 / 80) * ((49 / 80) * (49 / 80)) / 3 :=
+    mul_le_mul_of_nonneg_right hv3 (by positivity)
+  have hbound : v + (Real.sqrt (1 - v ^ 2))⁻¹ / (1 + Real.sqrt (1 - v ^ 2)) * (v ^ 3 / 3)
+      ≤ 49 / 80 + (5 / 7) * ((49 / 80) ^ 3 / 3) := by
+    have hprod : (Real.sqrt (1 - v ^ 2))⁻¹ / (1 + Real.sqrt (1 - v ^ 2)) * (v ^ 3 / 3)
+        ≤ (5 / 7) * ((49 / 80) ^ 3 / 3) := by
+      rw [show v ^ 3 = v * (v * v) from by ring]
+      refine le_trans (mul_le_mul_of_nonneg_right hK
+        (div_nonneg hv3pos (by norm_num))) ?_
+      rw [← show (49:ℝ) / 80 * ((49:ℝ) / 80 * ((49:ℝ) / 80)) = (49 / 80) ^ 3 from by ring]
+      exact mul_le_mul_of_nonneg_left hdiv (by norm_num)
+    exact add_le_add hv80 hprod
+  have hub3 : asn v ≤ 6700 / 10000 := by
+    have hnum : (49:ℝ) / 80 + (5 / 7) * ((49 / 80) ^ 3 / 3) ≤ 6700 / 10000 := by norm_num
+    linarith [hub, hbound, hnum]
+  have hpi : (3.14:ℝ) * 2 ≤ 2 * Real.pi := by
+    linarith [p22_pi_lb]
+  linarith [hub3, hpi]
+
+/-- The UKBRPFE base case at `k = 3`, in the shape of the theorem. -/
+private theorem p22_ukb3 : (0.591 - 0.0331 * 3 + 0.506 * lfun 1 + 1 : ℝ)
+    ≤ max 0 (regularSphericalPolygonAreaP22 (Real.cos 0.797) 3) := by
+  have hlf : (0.506 * lfun 1 : ℝ) = 0.506 := by
+    have h1 : lfun (1:ℝ) = 1 := by norm_num [lfun, h0]
+    rw [h1]
+    norm_num
+  have harea : regularSphericalPolygonAreaP22 (Real.cos 0.797) 3
+      = 2 * Real.pi - 2 * 3 * asn (Real.cos 0.797 * Real.sin (Real.pi / 3)) := rfl
+  have hub3 := p22_ukb_base3
+  have hgoal : (0.591:ℝ) - 0.0331 * 3 + 0.506 + 1 = 2.097 - 0.0331 * 3 := by norm_num
+  rw [hlf, hgoal, harea]
+  refine le_trans hub3 (le_max_right _ _)
+
+
+
 /-- HOL `BIEFJHU_explicit` (counting_spheres.hl:965). GIANT. -/
 theorem BIEFJHU_explicit (h : ℝ) (k : ℕ) (hpa : packIneqDefAP22)
     (hh : 1 ≤ h ∧ h ≤ h0) (hk : 3 ≤ k) :
@@ -2247,7 +2600,18 @@ theorem BIEFJHU_explicit (h : ℝ) (k : ℕ) (hpa : packIneqDefAP22)
         (h * sqrt3 / 4 + Real.sqrt (1 - (h / 2) ^ 2) / 2) k) := by
   sorry
 
-/-- HOL `UKBRPFE_explicit` (counting_spheres.hl:999). GIANT. -/
+/-- HOL `UKBRPFE_explicit` (counting_spheres.hl:999). GIANT.
+NEEDS: gap(3) is closed (`p22_ukb_base3`: margin ≈ 0.28).  The gap function
+`g x := 2π - 2x·asn(cos 0.797·sin(π/x)) - 2.097 + 0.0331x` is NOT monotone on
+`[3,∞)` (it dips until x ≈ 9.3; min gap ≈ 0.137 at k = 9) - the PA22b plan
+"k ≥ 7 monotone extension" is wrong.  Correct split: (a) `k ∈ {4..12}`
+individually, each by `p22_asn_le_add` + `p22_sin_le_taylor5` exactly as in
+`p22_ukb_base3` (margins ≥ 0.006 at k = 9, the tightest); (b) `k ≥ 12`:
+`g' ≥ 0.0331 - 0.0334·y - 0.743·y³ > 0` at `y = π/x ≤ π/12` (uses
+`asn v ≤ v + (v³/3)·(√(1-v²))⁻¹/(1+√(1-v²))` = `p22_asn_le_add`, `sin y ≤ y`,
+`cos y ≥ 1 - y²/2`, `cc ∈ [0.682, 0.6991]`), so `g` increasing on `[12,∞)`
+and `g 12 > 0` closes all `k ≥ 12` (`Real.monotone_of_deriv_nonneg` +
+`Real.hasDerivAt_arcsin` for `g'`; no interval integrals needed). -/
 theorem UKBRPFE_explicit (k : ℕ) (hpa : packIneqDefAP22) (hk : 3 ≤ k) :
     (0.591 - 0.0331 * k + 0.506 * lfun 1 + 1) ≤
       max 0 (regularSphericalPolygonAreaP22 (Real.cos 0.797) k) := by
@@ -2627,33 +2991,59 @@ theorem abs_1_prod (x y : ℝ) (hx : |x| ≤ 1) (hy : |y| ≤ 1) : |x * y| ≤ 1
   rw [abs_mul]
   exact le_trans (mul_le_mul hx hy (by norm_num) (by norm_num)) (by norm_num)
 
-/-- HOL `sloc2_ortho` (counting_spheres.hl:1306). GIANT.
-NEEDS: right-spherical-triangle identity `cos alp = sin bet * cos b`.  The
-proof is fully worked out and ~90% formalized in `/tmp/pa22b_sloc2_ortho_progress.lean`
-(this wave's probe; only the final sqrt-algebra assembly fails there):
-with `A := va⬝ᵥva`, `B := vb⬝ᵥvb`, `C := vc⬝ᵥvc`, `x := vb⬝ᵥvc`, `y := va⬝ᵥvc`,
+private theorem dlinP {p1 p2 q1 q2 : Fin 3 → ℝ} (a1 a2 b1 b2 : ℝ) :
+    (a1 • p1 - a2 • p2) ⬝ᵥ (b1 • q1 - b2 • q2)
+      = a1 * b1 * (p1 ⬝ᵥ q1) - a1 * b2 * (p1 ⬝ᵥ q2)
+        - a2 * b1 * (p2 ⬝ᵥ q1) + a2 * b2 * (p2 ⬝ᵥ q2) := by
+  simp only [sub_dotProduct, dotProduct_sub, smul_dotProduct, dotProduct_smul]
+  ring
+
+private theorem sqdist (w : V3) : (dist w 0) ^ 2 = w ⬝ᵥ w := by
+  rw [dist_eq_norm, norm_sq_eq_dot]
+  simp
+
+private theorem sqeq (w : V3) (t : ℝ) (ht : 0 ≤ t) (h : (dist w 0) ^ 2 = t ^ 2) :
+    dist w 0 = t := by
+  by_contra hne
+  have hdn : 0 ≤ dist w 0 := dist_nonneg
+  have h1 : (dist w 0 - t) * (dist w 0 + t) = 0 := by
+    have h2 : dist w 0 ^ 2 - t ^ 2 = 0 := by rw [h, sub_self]
+    nlinarith
+  rcases mul_eq_zero.mp h1 with h2 | h2
+  · exact hne (by linarith)
+  · have h3 : dist w 0 = 0 := by linarith
+    have h4 : t = 0 := by linarith
+    exact hne (h3.trans h4.symm)
+
+private theorem collinear3_132 {x y z : V3} (h : Collinear3 x y z) : Collinear3 x z y := by
+  simp only [Collinear3] at h ⊢
+  rw [show ({x, z, y} : Set V3) = ({x, y, z} : Set V3) from by
+    ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto]
+  exact h
+
+private theorem mem_line_of_col {v w : V3} (hv : v ≠ 0) (hcol : Collinear3 0 v w) :
+    w ∈ (affineSpan ℝ ({0, v} : Set V3) : Set V3) := by
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul (v := (0:V3)) (w := v) (w1 := w) hv).mp hcol
+  refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨c, ?_⟩
+  rw [AffineMap.lineMap_apply]
+  simp only [vadd_eq_add, vsub_eq_sub, sub_zero, add_zero]
+  simp only [sub_zero] at hc
+  rw [hc]
+
+/-- HOL `sloc2_ortho` (counting_spheres.hl:1306). GIANT. Filled: right
+spherical-triangle identity `cos alp = sin bet * t`.  With Gram scalars
+`A := va⬝ᵥva`, `B := vb⬝ᵥvb`, `C := vc⬝ᵥvc`, `x := vb⬝ᵥvc`, `y := va⬝ᵥvc`,
 `z := va⬝ᵥvb` and the projections onto axis-orthogonal complements
-(`X := A•vb − z•va` etc.), one derives
-(1) the right-angle constraint `C * z = x * y` (from `h`, via `dihV`/`arcV`
-    unfolding + `Real.cos_arccos`);
-(2) the dot/norm expansions `X⬝ᵥY = A²x − Ayz`, `‖X‖² = A²B − Az²`,
-    `‖Y‖² = A²C − Ay²`, `U⬝ᵥV = B²y − Bxz`, `‖U‖² = B²C − Bx²`,
-    `‖V‖² = B²A − Bz²` (two-line `dlin` two-point linearity helper);
-(3) positivity `0 < A*C − y²`, `0 < B*C − x²`, `0 < A*B*C² − x²y²` (each =
-    scaled norm-squared of a projection, nonzero by `¬ Collinear3 0 va ?vc`
-    extracted from `hcp` via `coplanar_triple`/`affineSpan_mono`);
-(4) the values `cos alp = x*√(A*C−y²)/√(A*B*C²−x²y²)`,
-    `sin bet = √(B*C*(A*C−y²))/√(A*B*C²−x²y²)` (via `Real.sin_arccos`),
-    `t = x/(√B*√C)`, whose product is the claim (all `_sq` = `Real.sq_sqrt`).
-The remaining gap is the last assembly `Real.cos alp = Real.sin bet * t`:
-the squared route `(cos alp)² = (1 − q_b²) * t²` (with
-`q_b := U⬝ᵥV/(dist U 0 * dist V 0)`, `1 − q_b² = B*C*(A*C−y²)/(A*B*C²−x²y²)`)
-plus the sign `0 ≤ cos alp * t` (both carry the sign of `x`, denominators
-positive) and `eqOfSq`-style cancellation is set up but `field_simp` on the
-sqrt-heavy assembly goal mis-clears denominators (produces a false subgoal);
-use explicit `div_mul_eq_mul_div`/`eq_div_iff (pow_ne_zero 2 …)`/`mul_sub`
-chains or `linear_combination` with the k-lemmas as certificates instead.
-Statements frozen; do not restate. -/
+(`X := A•vb - z•va` etc.), the right angle `dihV 0 vc va vb = π/2` gives
+`C*z = x*y`; the six dot/norm expansions and positivity of `A*C - y²`,
+`B*C - x²`, `A*B*C² - x²*y²` (scaled norms of nonzero projections,
+nonzeroness from `¬ Coplanar` via `coplanar_triple`/`collinear3_iff_smul`)
+yield the values of `cos alp`, `sin bet`, `t`; the endgame assembles through
+the squared route `(cos alp)² = x²*(A*C - y²)/(A*B*C² - x²*y²)
+= (1 - q_b²) * t²` with explicit `div_mul_div_comm` / cross-multiplication
+chains (`field_simp` on the sqrt-heavy assembly goals mis-clears
+denominators and is avoided) plus the sign `0 ≤ cos alp * (sin bet * t)`
+(both factors carry the sign of `x`).  Statements frozen; do not restate. -/
 theorem sloc2_ortho (va vb vc : V3)
     (hcp : ¬ Coplanar ({0, va, vb, vc} : Set V3))
     (h : dihV 0 vc va vb = Real.pi / 2) :
@@ -2661,7 +3051,424 @@ theorem sloc2_ortho (va vb vc : V3)
     let alp := dihV 0 va vb vc
     let t := Real.cos (arcV 0 vb vc)
     Real.cos alp = Real.sin bet * t := by
-  sorry
+  show Real.cos (dihV 0 va vb vc)
+      = Real.sin (dihV 0 vb vc va) * Real.cos (arcV 0 vb vc)
+  -- ## nondegeneracy
+  have hv0 : va ≠ 0 := by
+    intro he
+    apply hcp
+    rw [show ({0, va, vb, vc} : Set V3) = {0, vb, vc} from by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; rw [he]; tauto]
+    exact coplanar_triple 0 vb vc
+  have hw0 : vb ≠ 0 := by
+    intro he
+    apply hcp
+    rw [show ({0, va, vb, vc} : Set V3) = {0, va, vc} from by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; rw [he]; tauto]
+    exact coplanar_triple 0 va vc
+  have hu0 : vc ≠ 0 := by
+    intro he
+    apply hcp
+    rw [show ({0, va, vb, vc} : Set V3) = {0, va, vb} from by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; rw [he]; tauto]
+    exact coplanar_triple 0 va vb
+  have n1 : ¬ Collinear3 0 va vb := by
+    intro hcol
+    apply hcp
+    refine ⟨(0:V3), va, vc, ?_⟩
+    have hmem := mem_line_of_col hv0 hcol
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | rfl | rfl | rfl
+    · exact mem_affineSpan ℝ (by simp)
+    · exact mem_affineSpan ℝ (by simp)
+    · exact (affineSpan_mono ℝ (by
+        intro q hq; simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢; tauto)) hmem
+    · exact mem_affineSpan ℝ (by simp)
+  have n2 : ¬ Collinear3 0 va vc := by
+    intro hcol
+    apply hcp
+    refine ⟨(0:V3), va, vb, ?_⟩
+    have hmem := mem_line_of_col hv0 hcol
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | rfl | rfl | rfl
+    · exact mem_affineSpan ℝ (by simp)
+    · exact mem_affineSpan ℝ (by simp)
+    · exact mem_affineSpan ℝ (by simp)
+    · exact (affineSpan_mono ℝ (by
+        intro q hq; simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢; tauto)) hmem
+  have n1' : ¬ Collinear3 0 vb va := fun hcol => n1 (collinear3_132 hcol)
+  have n2' : ¬ Collinear3 0 vc va := fun hcol => n2 (collinear3_132 hcol)
+  have n3 : ¬ Collinear3 0 vb vc := by
+    intro hcol
+    apply hcp
+    refine ⟨(0:V3), va, vb, ?_⟩
+    have hmem := mem_line_of_col hw0 hcol
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | rfl | rfl | rfl
+    · exact mem_affineSpan ℝ (by simp)
+    · exact mem_affineSpan ℝ (by simp)
+    · exact mem_affineSpan ℝ (by simp)
+    · exact (affineSpan_mono ℝ (by
+        intro q hq; simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢; tauto)) hmem
+  have n3' : ¬ Collinear3 0 vc vb := fun hcol => n3 (collinear3_132 hcol)
+  -- ## Cauchy-Schwarz
+  have qbnd : ∀ u v : V3, u ≠ 0 → v ≠ 0 →
+      -1 ≤ (u ⬝ᵥ v) / (dist u 0 * dist v 0) ∧
+        (u ⬝ᵥ v) / (dist u 0 * dist v 0) ≤ 1 := by
+    intro u v hu hv
+    have hd1 : dist u 0 = ‖u‖ := by rw [dist_eq_norm, sub_zero]
+    have hd2 : dist v 0 = ‖v‖ := by rw [dist_eq_norm, sub_zero]
+    have hle : |u ⬝ᵥ v| ≤ ‖u‖ * ‖v‖ := by
+      rw [← Kepler.Geom.inner_eq_dot]
+      exact abs_real_inner_le_norm u v
+    have h1 : |(u ⬝ᵥ v) / (dist u 0 * dist v 0)| ≤ 1 := by
+      rw [abs_div, hd1, hd2, abs_mul, abs_of_nonneg (norm_nonneg u),
+        abs_of_nonneg (norm_nonneg v)]
+      exact div_le_one (by positivity) |>.mpr hle
+    exact abs_le.mp h1
+  -- ## dihedral unfolding
+  have keyd : ∀ w1 w2 w3 : V3, dihV 0 w1 w2 w3 =
+      Real.arccos ((((w1 ⬝ᵥ w1) • w2 - (w2 ⬝ᵥ w1) • w1 : V3) ⬝ᵥ
+          ((w1 ⬝ᵥ w1) • w3 - (w3 ⬝ᵥ w1) • w1 : V3)) /
+        (dist ((w1 ⬝ᵥ w1) • w2 - (w2 ⬝ᵥ w1) • w1) 0 *
+          dist ((w1 ⬝ᵥ w1) • w3 - (w3 ⬝ᵥ w1) • w1) 0)) := by
+    intro w1 w2 w3
+    simp only [dihV, arcV, sub_zero, WithLp.ofLp_zero]
+  -- ## Gram scalars
+  set A := va ⬝ᵥ va with hAdef
+  set B := vb ⬝ᵥ vb with hBdef
+  set C := vc ⬝ᵥ vc with hCdef
+  set x := vb ⬝ᵥ vc with hxdef
+  set y := va ⬝ᵥ vc with hydef
+  set z := va ⬝ᵥ vb with hzdef
+  have hApos : 0 < A := by
+    rw [hAdef]
+    have h1 : ‖va‖ ^ 2 = va ⬝ᵥ va := norm_sq_eq_dot va
+    have h3 : ‖va‖ ≠ 0 := norm_ne_zero_iff.mpr hv0
+    rw [← h1]; exact sq_pos_of_ne_zero h3
+  have hBpos : 0 < B := by
+    rw [hBdef]
+    have h1 : ‖vb‖ ^ 2 = vb ⬝ᵥ vb := norm_sq_eq_dot vb
+    have h3 : ‖vb‖ ≠ 0 := norm_ne_zero_iff.mpr hw0
+    rw [← h1]; exact sq_pos_of_ne_zero h3
+  have hCpos : 0 < C := by
+    rw [hCdef]
+    have h1 : ‖vc‖ ^ 2 = vc ⬝ᵥ vc := norm_sq_eq_dot vc
+    have h3 : ‖vc‖ ≠ 0 := norm_ne_zero_iff.mpr hu0
+    rw [← h1]; exact sq_pos_of_ne_zero h3
+  -- ## projections
+  set X := A • vb - z • va with hXdef
+  set Y := A • vc - y • va with hYdef
+  set U := B • vc - x • vb with hUdef
+  set V := B • va - z • vb with hVdef
+  have hXne : X ≠ 0 := by
+    intro hXz
+    apply n1
+    rw [hXdef, sub_eq_zero] at hXz
+    refine (collinear3_iff_smul (v := (0:V3)) (w := va) (w1 := vb) hv0).mpr ⟨z / A, ?_⟩
+    simp only [sub_zero]
+    rw [← inv_smul_smul₀ (a := A) hApos.ne' vb, hXz, smul_smul, inv_mul_eq_div]
+  have hYne : Y ≠ 0 := by
+    intro hYz
+    apply n2
+    rw [hYdef, sub_eq_zero] at hYz
+    refine (collinear3_iff_smul (v := (0:V3)) (w := va) (w1 := vc) hv0).mpr ⟨y / A, ?_⟩
+    simp only [sub_zero]
+    rw [← inv_smul_smul₀ (a := A) hApos.ne' vc, hYz, smul_smul, inv_mul_eq_div]
+  have hUne : U ≠ 0 := by
+    intro hUz
+    apply n3
+    rw [hUdef, sub_eq_zero] at hUz
+    refine (collinear3_iff_smul (v := (0:V3)) (w := vb) (w1 := vc) hw0).mpr ⟨x / B, ?_⟩
+    simp only [sub_zero]
+    rw [← inv_smul_smul₀ (a := B) hBpos.ne' vc, hUz, smul_smul, inv_mul_eq_div]
+  have hVne : V ≠ 0 := by
+    intro hVz
+    apply n1'
+    rw [hVdef, sub_eq_zero] at hVz
+    refine (collinear3_iff_smul (v := (0:V3)) (w := vb) (w1 := va) hw0).mpr ⟨z / B, ?_⟩
+    simp only [sub_zero]
+    rw [← inv_smul_smul₀ (a := B) hBpos.ne' va, hVz, smul_smul, inv_mul_eq_div]
+  -- ## dot/norm expansions
+  have eXY : X ⬝ᵥ Y = A ^ 2 * x - A * y * z := by
+    rw [hXdef, hYdef]
+    simp only [WithLp.ofLp_sub, WithLp.ofLp_smul]
+    rw [dlinP, ← hxdef, dotV_comm vb va, ← hzdef, ← hydef, ← hAdef]
+    ring
+  have eX2 : ‖X‖ ^ 2 = A ^ 2 * B - A * z ^ 2 := by
+    rw [norm_sq_eq_dot, hXdef]
+    simp only [WithLp.ofLp_sub, WithLp.ofLp_smul]
+    rw [dlinP, dotV_comm vb va, ← hzdef, ← hBdef, ← hAdef]
+    ring
+  have eY2 : ‖Y‖ ^ 2 = A ^ 2 * C - A * y ^ 2 := by
+    rw [norm_sq_eq_dot, hYdef]
+    simp only [WithLp.ofLp_sub, WithLp.ofLp_smul]
+    rw [dlinP, dotV_comm vc va, ← hydef, ← hCdef, ← hAdef]
+    ring
+  have eUV : U ⬝ᵥ V = B ^ 2 * y - B * x * z := by
+    rw [hUdef, hVdef]
+    simp only [WithLp.ofLp_sub, WithLp.ofLp_smul]
+    rw [dlinP, dotV_comm vc va, ← hydef, dotV_comm vc vb, ← hxdef, dotV_comm vb va,
+      ← hzdef, ← hBdef]
+    ring
+  have eU2 : ‖U‖ ^ 2 = B ^ 2 * C - B * x ^ 2 := by
+    rw [norm_sq_eq_dot, hUdef]
+    simp only [WithLp.ofLp_sub, WithLp.ofLp_smul]
+    rw [dlinP, dotV_comm vc vb, ← hxdef, ← hCdef, ← hBdef]
+    ring
+  have eV2 : ‖V‖ ^ 2 = B ^ 2 * A - B * z ^ 2 := by
+    rw [norm_sq_eq_dot, hVdef]
+    simp only [WithLp.ofLp_sub, WithLp.ofLp_smul]
+    rw [dlinP, ← hzdef, dotV_comm vb va, ← hzdef, ← hBdef, ← hAdef]
+    ring
+  -- ## right angle: C * z = x * y
+  have hR : C * z = x * y := by
+    have hvap : (C • va - y • vc : V3) ≠ 0 := by
+      intro hzero
+      apply n2'
+      refine (collinear3_iff_smul (v := (0:V3)) (w := vc) (w1 := va) hu0).mpr ⟨y / C, ?_⟩
+      have h1 : C • va = y • vc := sub_eq_zero.mp hzero
+      simp only [sub_zero]
+      rw [← inv_smul_smul₀ (a := C) hCpos.ne' va, h1, smul_smul, inv_mul_eq_div]
+    have hvbp : (C • vb - x • vc : V3) ≠ 0 := by
+      intro hzero
+      apply n3'
+      refine (collinear3_iff_smul (v := (0:V3)) (w := vc) (w1 := vb) hu0).mpr ⟨x / C, ?_⟩
+      have h1 : C • vb = x • vc := sub_eq_zero.mp hzero
+      simp only [sub_zero]
+      rw [← inv_smul_smul₀ (a := C) hCpos.ne' vb, h1, smul_smul, inv_mul_eq_div]
+    have hk := keyd vc va vb
+    rw [h, ← hCdef, ← hydef, ← hxdef] at hk
+    have hq := qbnd (C • va - y • vc) (C • vb - x • vc) hvap hvbp
+    have h1 := Real.cos_arccos hq.1 hq.2
+    rw [← hk, Real.cos_pi_div_two] at h1
+    -- h1 : 0 = quotient
+    have hdd : dist (C • va - y • vc) 0 * dist (C • vb - x • vc) 0 ≠ 0 := by
+      refine mul_ne_zero ?_ ?_
+      · exact dist_ne_zero.mpr hvap
+      · exact dist_ne_zero.mpr hvbp
+    have h2 : ((C • va - y • vc : V3) ⬝ᵥ (C • vb - x • vc : V3)) = 0 := by
+      have h2' := (div_eq_iff hdd).mp h1.symm
+      simpa using h2'
+    have h3 : ((C • va - y • vc : V3) ⬝ᵥ (C • vb - x • vc : V3))
+        = C ^ 2 * z - C * x * y := by
+      simp only [WithLp.ofLp_sub, WithLp.ofLp_smul]
+      rw [dlinP, dotV_comm vc vb, ← hxdef, ← hydef, ← hzdef, ← hCdef]
+      ring
+    rw [h3] at h2
+    simp only [pow_two] at h2
+    have h5 : C * (C * z - x * y) = 0 := by
+      rw [mul_sub, ← mul_assoc, ← mul_assoc]
+      exact h2
+    rcases mul_eq_zero.mp h5 with h0 | h0
+    · exact absurd h0 hCpos.ne'
+    · linarith
+  -- ## derived positivity
+  have hz' : z = x * y / C := (eq_div_iff hCpos.ne').mpr (by rw [mul_comm]; exact hR)
+  have hP0 : 0 < A * C - y ^ 2 := by
+    have h1 : ‖Y‖ ^ 2 = A * (A * C - y ^ 2) := by rw [eY2]; ring
+    have h3 : ‖Y‖ ≠ 0 := norm_ne_zero_iff.mpr hYne
+    have h2 : 0 < ‖Y‖ ^ 2 := sq_pos_of_ne_zero h3
+    rw [h1] at h2
+    by_contra hcon
+    push_neg at hcon
+    have h8 : A * (A * C - y ^ 2) ≤ 0 :=
+      calc A * (A * C - y ^ 2) ≤ A * 0 := mul_le_mul_of_nonneg_left hcon hApos.le
+        _ = 0 := by ring
+    linarith
+  have hQ0 : 0 < B * C - x ^ 2 := by
+    have h1 : ‖U‖ ^ 2 = B * (B * C - x ^ 2) := by rw [eU2]; ring
+    have h3 : ‖U‖ ≠ 0 := norm_ne_zero_iff.mpr hUne
+    have h2 : 0 < ‖U‖ ^ 2 := sq_pos_of_ne_zero h3
+    rw [h1] at h2
+    by_contra hcon
+    push_neg at hcon
+    have h8 : B * (B * C - x ^ 2) ≤ 0 :=
+      calc B * (B * C - x ^ 2) ≤ B * 0 := mul_le_mul_of_nonneg_left hcon hBpos.le
+        _ = 0 := by ring
+    linarith
+  have hD0 : 0 < A * B * C ^ 2 - x ^ 2 * y ^ 2 := by
+    have h1 : ‖V‖ ^ 2 = B * (A * B * C ^ 2 - x ^ 2 * y ^ 2) / C ^ 2 := by
+      rw [eV2, hz', div_pow, mul_pow]
+      field_simp
+    have h3 : ‖V‖ ≠ 0 := norm_ne_zero_iff.mpr hVne
+    have h2 : 0 < ‖V‖ ^ 2 := sq_pos_of_ne_zero h3
+    rw [h1] at h2
+    have h4 : (0:ℝ) < C ^ 2 := by positivity
+    have h5 : 0 < B * (A * B * C ^ 2 - x ^ 2 * y ^ 2) := by
+      have h6 := mul_pos h2 h4
+      rwa [div_mul_cancel₀ _ h4.ne'] at h6
+    by_contra hcon
+    push_neg at hcon
+    have h7 : B * (A * B * C ^ 2 - x ^ 2 * y ^ 2) ≤ 0 :=
+      calc B * (A * B * C ^ 2 - x ^ 2 * y ^ 2)
+          ≤ B * 0 := mul_le_mul_of_nonneg_left hcon hBpos.le
+        _ = 0 := by ring
+    linarith
+  -- ## endgame (explicit sqrt terms)
+  have hsqP : (Real.sqrt (A * C - y ^ 2)) ^ 2 = A * C - y ^ 2 := Real.sq_sqrt hP0.le
+  have hsqD : (Real.sqrt (A * B * C ^ 2 - x ^ 2 * y ^ 2)) ^ 2 =
+      A * B * C ^ 2 - x ^ 2 * y ^ 2 := Real.sq_sqrt hD0.le
+  have hsqQ : (Real.sqrt (B * C - x ^ 2)) ^ 2 = B * C - x ^ 2 := Real.sq_sqrt hQ0.le
+  -- key values
+  have k1 : X ⬝ᵥ Y = A * x * (A * C - y ^ 2) / C := by
+    rw [eXY, hz']; field_simp
+  have k2 : dist X 0 = Real.sqrt A * Real.sqrt (A * B * C ^ 2 - x ^ 2 * y ^ 2) / C := by
+    have hnn : 0 ≤ Real.sqrt A * Real.sqrt (A * B * C ^ 2 - x ^ 2 * y ^ 2) / C :=
+      div_nonneg (mul_nonneg (Real.sqrt_nonneg A)
+        (Real.sqrt_nonneg _)) hCpos.le
+    apply sqeq _ _ hnn
+    rw [sqdist X, ← norm_sq_eq_dot, eX2, hz']
+    simp only [div_pow, mul_pow, Real.sq_sqrt hApos.le, hsqD]
+    field_simp
+  have k3 : dist Y 0 = Real.sqrt A * Real.sqrt (A * C - y ^ 2) := by
+    have hnn : 0 ≤ Real.sqrt A * Real.sqrt (A * C - y ^ 2) :=
+      mul_nonneg (Real.sqrt_nonneg A) (Real.sqrt_nonneg _)
+    apply sqeq _ _ hnn
+    rw [sqdist Y, ← norm_sq_eq_dot, eY2]
+    simp only [mul_pow, Real.sq_sqrt hApos.le, hsqP]
+    ring
+  have k4 : U ⬝ᵥ V = B * y * (B * C - x ^ 2) / C := by
+    rw [eUV, hz']; field_simp
+  have k5 : dist U 0 = Real.sqrt B * Real.sqrt (B * C - x ^ 2) := by
+    have hnn : 0 ≤ Real.sqrt B * Real.sqrt (B * C - x ^ 2) :=
+      mul_nonneg (Real.sqrt_nonneg B) (Real.sqrt_nonneg _)
+    apply sqeq _ _ hnn
+    rw [sqdist U, ← norm_sq_eq_dot, eU2]
+    simp only [mul_pow, Real.sq_sqrt hBpos.le, hsqQ]
+    ring
+  have k6 : dist V 0 = Real.sqrt B * Real.sqrt (A * B * C ^ 2 - x ^ 2 * y ^ 2) / C := by
+    have hnn : 0 ≤ Real.sqrt B * Real.sqrt (A * B * C ^ 2 - x ^ 2 * y ^ 2) / C :=
+      div_nonneg (mul_nonneg (Real.sqrt_nonneg B) (Real.sqrt_nonneg _)) hCpos.le
+    apply sqeq _ _ hnn
+    rw [sqdist V, ← norm_sq_eq_dot, eV2, hz']
+    simp only [div_pow, mul_pow, Real.sq_sqrt hBpos.le, hsqD]
+    field_simp
+  have k7 : dist vb 0 = Real.sqrt B := by
+    have hnn : 0 ≤ Real.sqrt B := Real.sqrt_nonneg B
+    apply sqeq _ _ hnn
+    rw [sqdist vb, ← hBdef, Real.sq_sqrt hBpos.le]
+  have k8 : dist vc 0 = Real.sqrt C := by
+    have hnn : 0 ≤ Real.sqrt C := Real.sqrt_nonneg C
+    apply sqeq _ _ hnn
+    rw [sqdist vc, ← hCdef, Real.sq_sqrt hCpos.le]
+  -- the three angle values
+  have hca : Real.cos (dihV 0 va vb vc) = (X ⬝ᵥ Y)/(dist X 0 * dist Y 0) := by
+    rw [keyd va vb vc, ← hAdef, dotV_comm vb va, ← hzdef, dotV_comm vc va, ← hydef]
+    exact Real.cos_arccos (qbnd X Y hXne hYne).1 (qbnd X Y hXne hYne).2
+  have hcb : Real.sin (dihV 0 vb vc va) =
+      Real.sqrt (1 - ((U ⬝ᵥ V)/(dist U 0 * dist V 0)) ^ 2) := by
+    rw [keyd vb vc va, ← hBdef, dotV_comm vc vb, ← hxdef, ← hzdef]
+    exact Real.sin_arccos _
+  have hct : Real.cos (arcV 0 vb vc) = (vb ⬝ᵥ vc)/(dist vb 0 * dist vc 0) := by
+    simp only [arcV, sub_zero, WithLp.ofLp_zero]
+    exact Real.cos_arccos (qbnd vb vc hw0 hu0).1 (qbnd vb vc hw0 hu0).2
+  -- ## algebra: squared identity + sign
+  have hDne : 0 < B * C ^ 2 * A - y ^ 2 * x ^ 2 := by nlinarith [hD0]
+  have hDne' : (B * C ^ 2 * A - y ^ 2 * x ^ 2) ≠ 0 := hDne.ne'
+  have hqbr : ((U ⬝ᵥ V)/(dist U 0 * dist V 0)) ^ 2
+      = y ^ 2 * (B * C - x ^ 2) / (A * B * C ^ 2 - x ^ 2 * y ^ 2) := by
+    rw [k4, k5, k6]
+    have h2 : (Real.sqrt (A * B * C ^ 2 - x ^ 2 * y ^ 2)) ^ 2
+        = A * B * C ^ 2 - x ^ 2 * y ^ 2 := hsqD
+    have h3 : (Real.sqrt (B * C - x ^ 2)) ^ 2 = B * C - x ^ 2 := hsqQ
+    have hB4 : (Real.sqrt B) ^ 4 = B ^ 2 := by
+      rw [show (Real.sqrt B) ^ 4 = (Real.sqrt B) ^ (2 + 2) from by norm_num,
+        pow_add, Real.sq_sqrt hBpos.le]
+      ring
+    simp only [div_pow, mul_pow, h2, h3]
+    field_simp [hD0.ne']
+    rw [hB4]
+    ring
+  have htv : Real.cos (arcV 0 vb vc) = x / (Real.sqrt B * Real.sqrt C) := by
+    rw [hct, k7, k8, ← hxdef]
+  have hX : dist X 0 ^ 2 = A * (A * B * C ^ 2 - x ^ 2 * y ^ 2) / C ^ 2 := by
+    rw [sqdist X, ← norm_sq_eq_dot, eX2, hz', div_pow, mul_pow]
+    field_simp [hCpos.ne']
+  have hY : dist Y 0 ^ 2 = A * (A * C - y ^ 2) := by
+    rw [sqdist Y, ← norm_sq_eq_dot, eY2]
+    ring
+  have hdXY : (dist X 0 * dist Y 0) ^ 2
+      = (A * (A * B * C ^ 2 - x ^ 2 * y ^ 2) / C ^ 2) * (A * (A * C - y ^ 2)) := by
+    rw [mul_pow, hX, hY]
+  have hsg : 0 ≤ Real.cos (dihV 0 va vb vc) * (x / (Real.sqrt B * Real.sqrt C)) := by
+    have heq : Real.cos (dihV 0 va vb vc) * (x / (Real.sqrt B * Real.sqrt C))
+        = x * x * (A * (A * C - y ^ 2))
+          / (C * (dist X 0 * dist Y 0) * (Real.sqrt B * Real.sqrt C)) := by
+      rw [hca, k1, k2, k3]
+      field_simp [hsqD, hsqP]
+    rw [heq]
+    exact div_nonneg (mul_nonneg (mul_self_nonneg x)
+      (mul_nonneg hApos.le hP0.le)) (by positivity)
+  -- ## algebra: squared identity + sign (explicit division chains, no field_simp
+  -- on the assembly goals)
+  -- 1 − q_b² = B * C * (A * C − y²) / D
+  have hqbr2 : 1 - ((U ⬝ᵥ V)/(dist U 0 * dist V 0)) ^ 2
+      = B * C * (A * C - y ^ 2) / (A * B * C ^ 2 - x ^ 2 * y ^ 2) := by
+    rw [hqbr, one_sub_div hD0.ne']
+    ring
+  have hnneg : 0 ≤ 1 - ((U ⬝ᵥ V)/(dist U 0 * dist V 0)) ^ 2 := by
+    rw [hqbr2]
+    exact div_nonneg (mul_nonneg (mul_nonneg hBpos.le hCpos.le) hP0.le) hD0.le
+  have hsinSq : (Real.sin (dihV 0 vb vc va)) ^ 2
+      = 1 - ((U ⬝ᵥ V)/(dist U 0 * dist V 0)) ^ 2 := by
+    rw [hcb, Real.sq_sqrt hnneg]
+  have ht2 : (x / (Real.sqrt B * Real.sqrt C)) ^ 2 = x ^ 2 / (B * C) := by
+    rw [div_pow, mul_pow, Real.sq_sqrt hBpos.le, Real.sq_sqrt hCpos.le]
+  -- cross-multiplication for ℝ (the CommGroup `div_eq_div_iff_mul_eq_mul` does
+  -- not unify with ℝ's DivisionRing `Div` instance)
+  have divcross : ∀ {a b c d : ℝ}, b ≠ 0 → d ≠ 0 → a * d = c * b → a / b = c / d := by
+    intro a b c d hb hd h
+    refine mul_right_cancel₀ (mul_ne_zero hb hd) ?_
+    rw [div_mul_eq_mul_div, mul_comm b d, ← mul_assoc, mul_div_cancel_right₀ _ hb,
+      ← mul_assoc, div_mul_cancel₀ _ hd, h]
+  have hR2 : (1 - ((U ⬝ᵥ V)/(dist U 0 * dist V 0)) ^ 2)
+      * (x / (Real.sqrt B * Real.sqrt C)) ^ 2
+      = x ^ 2 * (A * C - y ^ 2) / (A * B * C ^ 2 - x ^ 2 * y ^ 2) := by
+    rw [hqbr2, ht2, div_mul_div_comm]
+    exact divcross (by positivity) hD0.ne' (by ring)
+  have hCcancel : ∀ w : ℝ, C ^ 2 * (w / C ^ 2) = w := by
+    intro w
+    rw [mul_comm]
+    exact div_mul_cancel₀ _ (pow_ne_zero 2 hCpos.ne')
+  have hcosval : (Real.cos (dihV 0 va vb vc)) ^ 2
+      = x ^ 2 * (A * C - y ^ 2) / (A * B * C ^ 2 - x ^ 2 * y ^ 2) := by
+    rw [hca, div_pow, k1, div_pow, hdXY, div_div, ← mul_assoc, hCcancel]
+    exact divcross (by positivity) hD0.ne' (by ring)
+  -- sign: sin ≥ 0, then squared equality + sign ⟹ equality
+  have hsinpos : 0 ≤ Real.sin (dihV 0 vb vc va) := by
+    rw [hcb]; exact Real.sqrt_nonneg _
+  have eqOfSq : ∀ a b : ℝ, 0 ≤ a * b → a ^ 2 = b ^ 2 → a = b := by
+    intro a b hprod hs
+    have h1 : (a - b) * (a + b) = 0 := by
+      have h2 : a ^ 2 - b ^ 2 = 0 := by rw [hs, sub_self]
+      nlinarith
+    rcases mul_eq_zero.mp h1 with h | h
+    · linarith
+    · have hab : a = -b := by linarith
+      have hab2 : a * b = -(a * a) := by rw [hab]; ring
+      have ha2 : 0 ≤ a * a := mul_self_nonneg a
+      have haa : a * a = 0 := by linarith
+      have ha0 : a = 0 := mul_self_eq_zero.mp haa
+      linarith
+  have hb : Real.sin (dihV 0 vb vc va) * Real.cos (arcV 0 vb vc)
+      = Real.sin (dihV 0 vb vc va) * (x / (Real.sqrt B * Real.sqrt C)) := by
+    rw [htv]
+  have hprod : 0 ≤ Real.cos (dihV 0 va vb vc)
+      * (Real.sin (dihV 0 vb vc va) * (x / (Real.sqrt B * Real.sqrt C))) := by
+    rw [mul_comm (Real.sin (dihV 0 vb vc va)), ← mul_assoc]
+    exact mul_nonneg hsg hsinpos
+  have hprod2 : 0 ≤ Real.cos (dihV 0 va vb vc)
+      * (Real.sin (dihV 0 vb vc va) * Real.cos (arcV 0 vb vc)) := by
+    rw [hb]
+    exact hprod
+  refine eqOfSq (Real.cos (dihV 0 va vb vc))
+    (Real.sin (dihV 0 vb vc va) * Real.cos (arcV 0 vb vc)) hprod2 ?_
+  rw [mul_pow, htv, hsinSq, hR2]
+  exact hcosval
 
 /-- HOL `vol_solid_triangle_ortho` (counting_spheres.hl:1335). GIANT. -/
 theorem vol_solid_triangle_ortho (u v w : V3)
