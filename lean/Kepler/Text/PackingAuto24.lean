@@ -48,14 +48,18 @@ SORRY INVENTORY (giants, with blockers)
   - `REUHADY1`: the 8100-line `prove_by_refinement` giant (HL lines
     239-8356); consumes Rogers/Marchal_cells_2_new/Packing3/Pack2
     voronoi machinery far beyond this lane's budget.
-  - `coplanarAzimEq`: docstring carries the full Lean-side construction
-    route (frame + `azim_eq_azim_iff` + coplanarity plumbing).
+  - `coplanarAzimEq`: FILLED (2026-09-30) from the documented route
+    (frame + `azim_eq_azim_iff` + coplanarity plumbing; ingredients
+    `p24_exists_azim_point` / `p24_mem_affineSpan_triple`).
   - `measurableConicCapWedgeGe`: Borel-ness of azimuth level sets /
     the open wedge; the ℂ-transport route through WedgeVolume's `ang`
     machinery is documented in its docstring.
-  - `volumeConicCapWedgeGeVsConicCap`: NEEDS `VOLUME_CONIC_CAP` /
-    `VOLUME_CONIC_CAP_WEDGE` (flyspeck_multivariate.ml measure content,
-    not yet ported in any lane) + `MEASURE_NEGLIGIBLE_SYMDIFF`.
+  - `volumeConicCapWedgeGeVsConicCap`: FILLED (2026-09-30) once CCV
+    (ConicCapVolume) delivered `volumeConicCap` / `volumeConicCapWedge`;
+    the closed-vs-open wedge gap is the two azimuth boundary level sets,
+    coplanar by `coplanarAzimEq` and null by `p24_coplanar_measure_null`
+    (the `MEASURE_NEGLIGIBLE_SYMDIFF` content, as an outer-measure
+    sandwich).
   - `REUHADY_p24` / `REUHADY_version2_p24`: need `REUHADY1` plus the
     leaf-cell wedge-disjointness extraction (`WEDGE_GE_ALMOST_DISJOINT`
     / `FCHKUGT` / `EWYBJUA`, OXLZLEZ3.hl) and barV/pair half-length
@@ -71,6 +75,7 @@ SORRY INVENTORY (giants, with blockers)
 import Kepler.Text.PackingAuto2
 import Kepler.Text.PackingAuto5
 import Kepler.Text.PackingAuto6
+import Kepler.Text.ConicCapVolume
 import Kepler.Text.Polytope
 import Kepler.Geom.Azim
 import Mathlib
@@ -383,28 +388,154 @@ private theorem p24_mem_affineSpan_triple (v0 v1 w z : V3) (c₂ c₃ : ℝ)
   rw [hz, add_assoc]
   exact hv
 
-/-- HOL `COPLANAR_AZIM_EQ` (REUHADY.hl:121). STILL `sorry` (2026-09-19):
-the proof architecture is assembled and its two main ingredients are PROVED
-above — `p24_exists_azim_point` (the frame/polar witness `f` off the axis
-with `azim v0 v1 w1 f = a`, via `exists_on3_eq_smul` + `azim_frame_spec` +
-`AzimSpec`-at-frame + `angle_eq_of_exp_eq`) and
-`p24_mem_affineSpan_triple` (affineSpan-triple membership from an
-`affGt`-combination). REMAINING (bookkeeping only): (1) in the `a ≠ 0`,
-`0 < a < 2π` branch, `azim_eq_azim_iff hcw hfnc hznc`.mp
-(hfaz.trans hz.symm) puts every `z` with `azim = a` into
-`affGt {v0,v1} {f}`, and `affGt_pair_iff` + `p24_mem_affineSpan_triple`
-give `z ∈ affineSpan ℝ {v0,v1,f}`; (2) in the `a = 0` branch, collinear `z`
-via `collinear3_mem_affineSpan_pair` + `affineSpan_mono`, non-collinear `z`
-via `azim_eq_zero_iff_alt` + the same affGt bridge; (3) the empty cases
-(`a < 0`, `a ≥ 2π`, degenerate `v0 = v1`) via `azim_nonneg`/`azim_lt_two_pi`;
-(4) the final `Coplanar` bookkeeping (Geom-vs-root resolution +
-`vectorSpan`-rank ≤ 2 of `S ⊆ affineSpan {v0,v1,f}` via `Submodule.rank_mono`
-+ `rank_span_finset_le` + card ≤ 2) — all steps individually verified in
-scratch; splice at the next pass. -/
+/-! ### The measure-side helpers for the closed-wedge bridge (2026-09-30 fill,
+PA25 `p25_affineSpan_three_ne_top` / `p25_finrank_span_pair_le_two` patterns) -/
+
+private theorem p24_finrank_span_pair_le_two (a b : V3) :
+    Module.finrank ℝ (Submodule.span ℝ ({a, b} : Set V3)) ≤ 2 := by
+  have h2 := finrank_span_finset_le_card (R := ℝ) ({a, b} : Finset V3)
+  unfold Set.finrank at h2
+  rw [show (({a, b} : Finset V3) : Set V3) = ({a, b} : Set V3) from by simp] at h2
+  refine h2.trans ?_
+  calc ({a, b} : Finset V3).card ≤ ({b} : Finset V3).card + 1 := Finset.card_insert_le a {b}
+    _ = 2 := by simp
+
+private theorem p24_affineSpan_triple_ne_top (x v u : V3) :
+    (affineSpan ℝ ({x, v, u} : Set V3)) ≠ ⊤ := by
+  intro h
+  have hdir : (affineSpan ℝ ({x, v, u} : Set V3)).direction = ⊤ := by
+    rw [h]; exact AffineSubspace.direction_top ℝ V3 V3
+  have hvs : vectorSpan ℝ ({x, v, u} : Set V3)
+      = Submodule.span ℝ ({v - x, u - x} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_right ℝ (show x ∈ ({x, v, u} : Set V3) from by simp)]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro p ⟨q, hq, rfl⟩
+      rcases hq with rfl | rfl | rfl
+      · simp
+      · exact Submodule.subset_span (by left; rfl)
+      · exact Submodule.subset_span (by right; rfl)
+    · rw [Submodule.span_le]
+      rintro p (rfl | rfl)
+      · exact Submodule.subset_span ⟨v, by simp, rfl⟩
+      · exact Submodule.subset_span ⟨u, by simp, rfl⟩
+  have hle : Module.finrank ℝ (affineSpan ℝ ({x, v, u} : Set V3)).direction ≤ 2 := by
+    rw [direction_affineSpan, hvs]
+    exact p24_finrank_span_pair_le_two (v - x) (u - x)
+  rw [hdir, finrank_top] at hle
+  exact absurd hle (by norm_num)
+
+/-- COPLANAR_IMP_NEGLIGIBLE (HOL `COPLANAR_IMP_NEGLIGIBLE` content, in the
+root-`Coplanar` form `Module.rank ℝ (vectorSpan ℝ S) ≤ 2` that PA24's frozen
+`Coplanar ℝ _` statements elaborate to): anything inside a coplanar set is
+Lebesgue-null. The coplanar set lies in a proper affine subspace, null by
+Mathlib `Measure.addHaar_affineSubspace`; outer-measure monotonicity (`measure_mono_null`)
+needs no measurability of the inner set. -/
+private theorem p24_coplanar_measure_null {T S : Set V3} (hS : Coplanar ℝ S)
+    (hT : T ⊆ S) : volume T = 0 := by
+  have hfd : FiniteDimensional ℝ (vectorSpan ℝ S) := hS.finiteDimensional_vectorSpan
+  have hfin2 : Module.finrank ℝ (vectorSpan ℝ S) ≤ 2 :=
+    (coplanar_iff_finrank_le_two (k := ℝ)).mp hS
+  have hvs : (vectorSpan ℝ S : Submodule ℝ V3) ≠ ⊤ := by
+    intro htop
+    rw [htop, finrank_top] at hfin2
+    have h3 : Module.finrank ℝ V3 = 3 := finrank_euclideanSpace_fin
+    rw [h3] at hfin2
+    norm_num at hfin2
+  have htop_aff : (affineSpan ℝ S : AffineSubspace ℝ V3) ≠ ⊤ := fun hE =>
+    hvs (AffineSubspace.vectorSpan_eq_top_of_affineSpan_eq_top ℝ V3 V3 hE)
+  exact measure_mono_null (hT.trans (subset_affineSpan ℝ S))
+    (Measure.addHaar_affineSubspace volume _ htop_aff)
+
+/-- The affine span of a triple, as a set, is coplanar in the root-`Coplanar`
+sense (Mathlib `coplanar_triple` transported along `direction_affineSpan`). -/
+private theorem p24_coplanar_affineSpan_triple (u v w : V3) :
+    Coplanar ℝ ((affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) := by
+  have h := _root_.coplanar_triple (k := ℝ) u v w
+  show Module.rank ℝ ↥((affineSpan ℝ ({u, v, w} : Set V3)).direction) ≤ 2
+  rw [direction_affineSpan]
+  exact h
+
+/-- HOL `COPLANAR_AZIM_EQ` (REUHADY.hl:121). FILLED (2026-09-30): the two
+main ingredients proved above — `p24_exists_azim_point` (the frame/polar
+witness `f` off the axis with `azim v0 v1 w1 f = a`) and
+`p24_mem_affineSpan_triple` (affineSpan-triple membership) — splice into the
+documented case tree. (1) `a ∉ [0, 2π)` is vacuous via `azim_nonneg` /
+`azim_lt_two_pi`; (2) `a = 0` needs `¬Collinear3 v0 v1 w1` (from `h`), then
+the zero sheet lies in `affineSpan ℝ {v0,v1,w1}` (`collinear3_iff_smul` on the
+axis, `azim_eq_zero_iff_alt` + `affGt_pair_iff` off it); (3) `0 < a < 2π`:
+`p24_exists_azim_point` gives the witness `f`, and `azim_eq_azim_iff` +
+`affGt_pair_iff` put every `z` of the level set into `affineSpan ℝ {v0,v1,f}`;
+(4) coplanarity is read off via `p24_coplanar_affineSpan_triple` +
+`_root_.Coplanar.subset`. NOTE the Geom-vs-root `Coplanar` split: this frozen
+statement is Mathlib's root `Coplanar` (two explicit arguments, rank-of-
+vectorSpan ≤ 2), NOT `Kepler.Geom.Coplanar` (the affineSpan-triple
+existential, one argument) — resolution is by arity. -/
 theorem coplanarAzimEq (v0 v1 w1 : V3) (a : ℝ)
     (h : Collinear3 v0 v1 w1 → ¬(a = 0)) :
     Coplanar ℝ {z | azim v0 v1 w1 z = a} := by
-  sorry
+  by_cases han : a < 0
+  · -- a < 0: the level set is empty
+    refine _root_.Coplanar.subset (fun z hz => ?_)
+      (_root_.coplanar_empty (k := ℝ) (P := V3))
+    have h1 := azim_nonneg v0 v1 w1 z
+    rw [hz] at h1
+    exact absurd h1 (not_le.mpr han)
+  · by_cases ha2' : 2 * Real.pi ≤ a
+    · -- a ≥ 2π: the level set is empty
+      refine _root_.Coplanar.subset (fun z hz => ?_)
+        (_root_.coplanar_empty (k := ℝ) (P := V3))
+      have h1 := azim_lt_two_pi v0 v1 w1 z
+      rw [hz] at h1
+      exact absurd h1 (not_lt.mpr ha2')
+    · rcases eq_or_lt_of_le (le_of_not_gt han) with ha0 | hapos
+      · -- a = 0: the zero sheet lies in the plane affineSpan {v0, v1, w1}
+        rw [← ha0] at h ⊢
+        rcases eq_or_ne v0 v1 with hv | hv01
+        · exact absurd rfl (h (by rw [hv]; exact collinear3_of_eq rfl))
+        · have hnc1 : ¬ Collinear3 v0 v1 w1 := fun hc => (h hc) rfl
+          refine _root_.Coplanar.subset (fun z hz => ?_)
+            (p24_coplanar_affineSpan_triple v0 v1 w1)
+          by_cases hcz : Collinear3 v0 v1 z
+          · obtain ⟨cc, hczv⟩ := (collinear3_iff_smul (Ne.symm hv01)).mp hcz
+            exact p24_mem_affineSpan_triple v0 v1 w1 z cc 0 (by
+              rw [show z = v0 + (z - v0) from by abel, hczv]; module)
+          · obtain ⟨c, hcpos, t, hdec⟩ :=
+              (affGt_pair_iff (v0 := v0) (v1 := v1) (x := w1) (y := z) hv01
+                (fun he => hnc1 (collinear3_pair_left he))
+                (fun he => hnc1 (collinear3_pair_right he))).mp
+              ((azim_eq_zero_iff_alt hnc1 hcz).mp hz)
+            exact p24_mem_affineSpan_triple v0 v1 w1 z t c (by
+              rw [show z = v0 + (z - v0) from by abel, hdec]; module)
+      · -- 0 < a < 2π
+        rcases Classical.em (Collinear3 v0 v1 w1) with hc1 | hnc1
+        · -- w1 on the axis: every azimuth vanishes, the level set is empty
+          refine _root_.Coplanar.subset (fun z hz => ?_)
+            (_root_.coplanar_empty (k := ℝ) (P := V3))
+          have h0 : azim v0 v1 w1 z = 0 := by
+            rw [azim, if_pos (Or.inl hc1)]
+          simp only [Set.mem_setOf_eq] at hz
+          rw [h0] at hz
+          exact (h hc1) hz.symm
+        · rcases eq_or_ne v0 v1 with hv | hv01
+          · exact absurd (by rw [hv]; exact collinear3_of_eq rfl) hnc1
+          · obtain ⟨f, hfnc, hfaz⟩ := p24_exists_azim_point v0 v1 w1 a hv01 hnc1
+              hapos (lt_of_not_ge ha2')
+            refine _root_.Coplanar.subset (fun z hz => ?_)
+              (p24_coplanar_affineSpan_triple v0 v1 f)
+            by_cases hcz : Collinear3 v0 v1 z
+            · have h0 : azim v0 v1 w1 z = 0 := by
+                rw [azim, if_pos (Or.inr hcz)]
+              simp only [Set.mem_setOf_eq] at hz
+              rw [h0] at hz
+              exact absurd hz.symm (by linarith)
+            · have hmem := (azim_eq_azim_iff hnc1 hfnc hcz).mp (hfaz.trans hz.symm)
+              obtain ⟨c, hcpos, t, hdec⟩ :=
+                (affGt_pair_iff (v0 := v0) (v1 := v1) (x := f) (y := z) hv01
+                  (fun he => hfnc (collinear3_pair_left he))
+                  (fun he => hfnc (collinear3_pair_right he))).mp hmem
+              exact p24_mem_affineSpan_triple v0 v1 f z t c (by
+                rw [show z = v0 + (z - v0) from by abel, hdec]; module)
 
 /-- HOL `MEASURABLE_CONIC_CAP_WEDGE_GE` (REUHADY.hl:162). GIANT —
 `sorry`. NEEDS: measurability of azimuth level sets and the open wedge
@@ -419,18 +550,75 @@ theorem measurableConicCapWedgeGe (v0 v1 w1 w2 : V3) (r a : ℝ) :
     MeasurableSet (conicCapP24 v0 v1 r a ∩ wedgeGe v0 v1 w1 w2) := by
   sorry
 
-/-- HOL `VOLUME_CONIC_CAP_WEDGE_GE_VS_CONIC_CAP` (REUHADY.hl:178).
-GIANT — `sorry`. NEEDS: `VOLUME_CONIC_CAP` /
-`VOLUME_CONIC_CAP_WEDGE` (flyspeck_multivariate.ml conic-cap volume
-formulas, not ported in any lane), `MEASURE_NEGLIGIBLE_SYMDIFF`
-symmetric-difference argument on the wedge boundary level sets (via
-`coplanarAzimEq`), and `azim < 2*pi` positivity arithmetic. -/
+/-- HOL `VOLUME_CONIC_CAP_WEDGE_GE_VS_CONIC_CAP` (REUHADY.hl:178). FILLED
+(2026-09-30) once CCV delivered `volumeConicCap` / `volumeConicCapWedge`
+(ConicCapVolume 3→0): the closed wedge is the open wedge plus the two
+azimuth level sets (`wedgeGeWedge`), both coplanar by `coplanarAzimEq` and
+hence null (`p24_coplanar_measure_null`, the `MEASURE_NEGLIGIBLE_SYMDIFF`
+content — carried out as an outer-measure sandwich rather than a literal
+symmetric-difference identity), so `volume.real (cap ∩ wedgeGe)` equals
+`volume.real (cap ∩ wedge)`, which CCV's `volumeConicCapWedge` evaluates to
+`volume.real (cap) * azim / (2 * π)` (`conicCapP24` is definitionally CCV's
+`ccvConicCap`). The collinear/degenerate wedge-empty branches are inside CCV's
+`ccv_wedge_empty_of_collinearW1` handling. -/
+private theorem p24_cap_eq_ccv (v0 v1 : V3) (r a : ℝ) :
+    conicCapP24 v0 v1 r a = ccvConicCap v0 v1 r a := rfl
+
 theorem volumeConicCapWedgeGeVsConicCap (v0 v1 w1 w2 : V3) (r a : ℝ)
     (ha1 : 0 < a) (ha2 : a < 1) (hr : 0 < r ∧ r ≤ 1)
     (h1 : ¬Collinear3 v0 v1 w1) (h2 : ¬Collinear3 v0 v1 w2) :
     volume.real (conicCapP24 v0 v1 r a ∩ wedgeGe v0 v1 w1 w2) =
       volume.real (conicCapP24 v0 v1 r a) * (azim v0 v1 w1 w2) / (2 * Real.pi) := by
-  sorry
+  have hwg : wedgeGe v0 v1 w1 w2 = wedge v0 v1 w1 w2 ∪
+      ({z : V3 | azim v0 v1 w1 z = 0} ∪
+        {z : V3 | azim v0 v1 w1 z = azim v0 v1 w1 w2}) := wedgeGeWedge v0 v1 w1 w2
+  -- the two boundary azimuth level sets are coplanar, hence null
+  have hcopA : Coplanar ℝ {z : V3 | azim v0 v1 w1 z = 0} :=
+    coplanarAzimEq v0 v1 w1 0 (fun hc => (h1 hc).elim)
+  have hcopB : Coplanar ℝ {z : V3 | azim v0 v1 w1 z = azim v0 v1 w1 w2} :=
+    coplanarAzimEq v0 v1 w1 (azim v0 v1 w1 w2) (fun hc => (h1 hc).elim)
+  have hnullA : volume (conicCapP24 v0 v1 r a ∩ {z : V3 | azim v0 v1 w1 z = 0}) = 0 :=
+    p24_coplanar_measure_null hcopA Set.inter_subset_right
+  have hnullB : volume (conicCapP24 v0 v1 r a ∩
+      {z : V3 | azim v0 v1 w1 z = azim v0 v1 w1 w2}) = 0 :=
+    p24_coplanar_measure_null hcopB Set.inter_subset_right
+  -- set decomposition of the closed-wedge intersection
+  have hdecomp : conicCapP24 v0 v1 r a ∩ wedgeGe v0 v1 w1 w2 =
+      (conicCapP24 v0 v1 r a ∩ wedge v0 v1 w1 w2) ∪
+      (conicCapP24 v0 v1 r a ∩ {z : V3 | azim v0 v1 w1 z = 0} ∪
+        conicCapP24 v0 v1 r a ∩ {z : V3 | azim v0 v1 w1 z = azim v0 v1 w1 w2}) := by
+    rw [hwg, Set.inter_union_distrib_left, Set.inter_union_distrib_left]
+  -- measure sandwich at the ENNReal level
+  have hge : volume (conicCapP24 v0 v1 r a ∩ wedge v0 v1 w1 w2) ≤
+      volume (conicCapP24 v0 v1 r a ∩ wedgeGe v0 v1 w1 w2) := by
+    refine measure_mono (fun x hx => ?_)
+    obtain ⟨hx1, hx2⟩ := hx
+    exact ⟨hx1, by rw [hwg]; exact Set.mem_union_left _ hx2⟩
+  have hle : volume (conicCapP24 v0 v1 r a ∩ wedgeGe v0 v1 w1 w2) ≤
+      volume (conicCapP24 v0 v1 r a ∩ wedge v0 v1 w1 w2) := by
+    rw [hdecomp]
+    calc volume (conicCapP24 v0 v1 r a ∩ wedge v0 v1 w1 w2 ∪
+          (conicCapP24 v0 v1 r a ∩ {z : V3 | azim v0 v1 w1 z = 0} ∪
+            conicCapP24 v0 v1 r a ∩ {z : V3 | azim v0 v1 w1 z = azim v0 v1 w1 w2}))
+        ≤ volume (conicCapP24 v0 v1 r a ∩ wedge v0 v1 w1 w2) +
+          volume (conicCapP24 v0 v1 r a ∩ {z : V3 | azim v0 v1 w1 z = 0} ∪
+            conicCapP24 v0 v1 r a ∩ {z : V3 | azim v0 v1 w1 z = azim v0 v1 w1 w2}) :=
+          measure_union_le _ _
+      _ ≤ volume (conicCapP24 v0 v1 r a ∩ wedge v0 v1 w1 w2) +
+          (volume (conicCapP24 v0 v1 r a ∩ {z : V3 | azim v0 v1 w1 z = 0}) +
+            volume (conicCapP24 v0 v1 r a ∩
+              {z : V3 | azim v0 v1 w1 z = azim v0 v1 w1 w2})) :=
+          add_le_add le_rfl (measure_union_le _ _)
+      _ = volume (conicCapP24 v0 v1 r a ∩ wedge v0 v1 w1 w2) := by
+          rw [hnullA, hnullB, add_zero, add_zero]
+  have hvol : volume (conicCapP24 v0 v1 r a ∩ wedgeGe v0 v1 w1 w2) =
+      volume (conicCapP24 v0 v1 r a ∩ wedge v0 v1 w1 w2) := le_antisymm hle hge
+  -- real-valued conclusion via the CCV open-wedge formula
+  have key : volume.real (conicCapP24 v0 v1 r a ∩ wedgeGe v0 v1 w1 w2) =
+      volume.real (conicCapP24 v0 v1 r a ∩ wedge v0 v1 w1 w2) := by
+    rw [Measure.real_def, Measure.real_def, hvol]
+  rw [key, p24_cap_eq_ccv]
+  exact volumeConicCapWedge v0 v1 w1 w2 r a ha1 h1 h2
 
 /-! ## Capstones: the pack_concl REUHADY conclusions -/
 
