@@ -1471,9 +1471,79 @@ theorem CARD_LE_3 {α : Type*} (s : Set α) (h1 : s ≠ ∅) (h2 : s.Finite)
 /-! ## Rogers.hl:1521-1681 — dimension/coplanarity; Rogers.hl:1682 DUUNHOR;
 Rogers.hl:3106-3851 — linear algebra and circumcenter kit -/
 
+/-! ### dimension/coplanarity kit（PA2 DUUNHOR 波链复制：PA2 侧 p2g_ 件为 private
+不可见，自 /tmp/pa2_duu_probe.lean 探针照抄证明体，探针全绿后落盘。）-/
+
+-- membership transport along direction inclusion
+private theorem p6b_affineSpan_subset {s t : Set V3} {p : V3} (hps : p ∈ s) (hpt : p ∈ t)
+    (hdir : vectorSpan ℝ s ≤ vectorSpan ℝ t) : s ⊆ (affineSpan ℝ t : Set V3) := by
+  intro x hx
+  have hdir2 : (x -ᵥ p : V3) ∈ (affineSpan ℝ t).direction := by
+    rw [direction_affineSpan]
+    exact hdir (vsub_mem_vectorSpan ℝ hx hps)
+  have h0 : p ∈ (affineSpan ℝ t : Set V3) := SetLike.mem_coe.mpr (mem_affineSpan ℝ hpt)
+  have hv := AffineSubspace.vadd_mem_of_mem_direction hdir2 h0
+  rw [vadd_eq_add] at hv
+  have hx2 : (x -ᵥ p) + p = x := by rw [← vadd_eq_add, vsub_vadd]
+  rwa [hx2] at hv
+
+-- generic: finrank of a 2-way sup ≤ sum
+private theorem p6b_finrank_sup_le (M N : Submodule ℝ V3) :
+    Module.finrank ℝ ↥(M ⊔ N) ≤ Module.finrank ℝ ↥M + Module.finrank ℝ ↥N := by
+  have h := Submodule.finrank_sup_add_finrank_inf_eq M N
+  have h0 : (0 : ℕ) ≤ Module.finrank ℝ ↥(M ⊓ N) := Nat.zero_le _
+  have h1 : (0 : ℕ) ≤ Module.finrank ℝ ↥(M ⊔ N) := Nat.zero_le _
+  omega
+
+/-- The core extraction: a submodule of finrank ≤ 2 is contained in the span of two vectors. -/
+private theorem p6b_span_two_of_finrank {W : Submodule ℝ V3}
+    (hfr : Module.finrank ℝ ↥W ≤ 2) :
+    ∃ d : Fin 2 → V3, ↑W ≤ Submodule.span ℝ (Set.range d) := by
+  classical
+  set B := Module.finBasis ℝ ↥W with hBdef
+  set n := Module.finrank ℝ ↥W with hn
+  set g : Fin n → V3 := fun j => ((B j : ↥W) : V3) with hg
+  set d : Fin 2 → V3 := fun i => if h : (i : ℕ) < n then g ⟨i, h⟩ else 0 with hddef
+  refine ⟨d, ?_⟩
+  have hspan : ↑W = Submodule.span ℝ (Set.range g) := by
+    conv_lhs => rw [← Submodule.map_subtype_top W]
+    rw [← B.span_eq, LinearMap.map_span]
+    have himg : W.subtype '' Set.range B = Set.range g := by
+      ext z
+      simp only [Set.mem_image, Set.mem_range]
+      constructor
+      · rintro ⟨y, ⟨j, hj⟩, rfl⟩
+        exact ⟨j, by show (B j : V3) = (y : V3); rw [hj]⟩
+      · rintro ⟨j, rfl⟩
+        exact ⟨B j, ⟨j, rfl⟩, rfl⟩
+    rw [himg]
+  have hsub : Set.range g ⊆ Set.range d := by
+    rintro z ⟨i, rfl⟩
+    have hlt : (↑i : ℕ) < 2 := lt_of_lt_of_le i.isLt hfr
+    exact ⟨⟨i, hlt⟩, by simp only [hddef, dif_pos i.isLt]⟩
+  rw [hspan]
+  exact Submodule.span_mono hsub
+
 /-- Rogers.hl:1521 `AFF_DIM_LE_2_IMP_COPLANAR`. -/
 theorem AFF_DIM_LE_2_IMP_COPLANAR (s : Set V3) (h : affDim s ≤ 2) : Coplanar s := by
-  sorry
+  classical
+  rcases Set.eq_empty_or_nonempty s with hs0 | hsne
+  · subst hs0
+    exact ⟨0, 0, 0, Set.empty_subset _⟩
+  · obtain ⟨p0, hp0s⟩ := hsne
+    have hsne : s ≠ ∅ := nonempty_iff_ne_empty.1 ⟨p0, hp0s⟩
+    rw [affDim, if_neg hsne] at h
+    obtain ⟨d, hd⟩ := p6b_span_two_of_finrank (Int.ofNat_le.mp h)
+    refine ⟨p0, p0 + d 0, p0 + d 1, ?_⟩
+    refine p6b_affineSpan_subset hp0s (by simp) ?_
+    refine le_trans hd ?_
+    rw [vectorSpan_eq_span_vsub_set_right ℝ (by simp :
+      p0 ∈ ({p0, p0 + d 0, p0 + d 1} : Set V3))]
+    refine Submodule.span_mono ?_
+    intro z hz
+    obtain ⟨i, rfl⟩ := hz
+    refine ⟨p0 + d i, ?_, by simp [vsub_eq_sub]⟩
+    fin_cases i <;> simp
 
 /-- Rogers.hl:1559 `ROGERS_AFF_DIM_FULL`. -/
 theorem ROGERS_AFF_DIM_FULL (V : Set V3) (ul : List V3) (hbar : barV V 3 ul)
@@ -1548,10 +1618,156 @@ theorem ROGERS_AFF_DIM_FULL (V : Set V3) (ul : List V3) (hbar : barV V 3 ul)
     exact hdim
   linarith
 
+set_option maxHeartbeats 1000000 in
 /-- Rogers.hl:1657 `AFF_DIM_FINITE_UNION_LE`. -/
 theorem AFF_DIM_FINITE_UNION_LE (s t : Set V3) (hs : s.Finite) :
     affDim (s ∪ t) ≤ (Nat.card s : ℤ) + affDim t := by
-  sorry
+  classical
+  rcases Set.eq_empty_or_nonempty s with hse | hsne
+  · rw [hse, Set.empty_union]
+    have h0 : (0 : ℤ) ≤ (Nat.card (↑(∅ : Set V3)) : ℤ) := by
+      have hz : Nat.card (↑(∅ : Set V3)) = 0 :=
+        Nat.card_eq_zero.mpr (Or.inl (⟨IsEmpty.false⟩ : IsEmpty (↑(∅ : Set V3))))
+      omega
+    exact le_add_of_nonneg_left h0
+  · obtain ⟨y0, hy0s⟩ := hsne
+    have hsne : s ≠ ∅ := nonempty_iff_ne_empty.1 ⟨y0, hy0s⟩
+    haveI := hs.fintype
+    set S : Finset V3 := hs.toFinset.erase y0 with hS
+    set A : Finset V3 := S.image (fun x : V3 => x -ᵥ y0) with hA
+    have hy0S : y0 ∈ hs.toFinset := (hs.mem_toFinset).mpr hy0s
+    have hcard : Nat.card s = hs.toFinset.card := by
+      rw [Nat.card_eq_fintype_card, hs.card_toFinset]
+    have hScard : S.card + 1 = Nat.card s := by
+      rw [hS, hcard, Finset.card_erase_add_one hy0S]
+    have hspanA : Submodule.span ℝ ((fun x : V3 => x -ᵥ y0) '' s) ≤
+        Submodule.span ℝ (↑A : Set V3) := by
+      rw [Submodule.span_le]
+      rintro z ⟨x, hx, rfl⟩
+      by_cases hxy : x = y0
+      · subst hxy; simp
+      · exact Submodule.subset_span (Finset.mem_coe.2 (Finset.mem_image.2 ⟨x,
+          (Finset.mem_erase.2 ⟨hxy, (hs.mem_toFinset).mpr hx⟩), rfl⟩))
+    have hAfr : Module.finrank ℝ (Submodule.span ℝ (↑A : Set V3)) ≤ A.card :=
+      finrank_span_finset_le_card A
+    have hAcard : (A.card : ℤ) ≤ (Nat.card s : ℤ) - 1 := by
+      have h2 : A.card ≤ S.card := Finset.card_image_le
+      rw [hcard]
+      have h3 : (S.card : ℤ) + 1 = ((hs.toFinset.card : ℕ) : ℤ) := by
+        exact_mod_cast hScard.trans hcard
+      linarith
+    rcases Set.eq_empty_or_nonempty t with hte | htne
+    · rw [hte, Set.union_empty, affDim_empty, affDim, if_neg hsne]
+      have hvs : vectorSpan ℝ s = Submodule.span ℝ ((fun x : V3 => x -ᵥ y0) '' s) :=
+        vectorSpan_eq_span_vsub_set_right ℝ hy0s
+      rw [hvs]
+      have hmono : Module.finrank ℝ (Submodule.span ℝ ((fun x : V3 => x -ᵥ y0) '' s)) ≤
+          Module.finrank ℝ (Submodule.span ℝ (↑A : Set V3)) := Submodule.finrank_mono hspanA
+      have h1 : (Module.finrank ℝ (Submodule.span ℝ ((fun x : V3 => x -ᵥ y0) '' s)) : ℤ)
+          ≤ (Nat.card s : ℤ) - 1 := by
+        have h3 := hmono
+        have h4 := hAfr
+        omega
+      linarith
+    · obtain ⟨x0, hx0⟩ := htne
+      have htne : t ≠ ∅ := nonempty_iff_ne_empty.1 ⟨x0, hx0⟩
+      set D : Set V3 := {(x0 -ᵥ y0 : V3)} with hD
+      set BIG : Set V3 := (↑A : Set V3) ∪ ((vectorSpan ℝ t : Set V3) ∪ D) with hBIG
+      have hAS : Submodule.span ℝ (↑A : Set V3) ≤ Submodule.span ℝ BIG := by
+        refine Submodule.span_mono ?_
+        intro z hz
+        exact Set.mem_union_left _ hz
+      have hTS : ∀ x ∈ vectorSpan ℝ t, (x : V3) ∈ Submodule.span ℝ BIG := by
+        intro x hx
+        refine Submodule.span_mono (fun w hw => Set.mem_union_right (↑A : Set V3)
+          (Set.mem_union_left D hw)) (Submodule.subset_span (by exact hx))
+      have hDS : Submodule.span ℝ D ≤ Submodule.span ℝ BIG := by
+        refine Submodule.span_mono ?_
+        intro z hz
+        exact Set.mem_union_right (↑A : Set V3)
+          (Set.mem_union_right (↑(vectorSpan ℝ t) : Set V3) hz)
+      have hneg : ∀ {K : Submodule ℝ V3} {x : V3}, x ∈ K → -x ∈ K := fun hx => by
+        simpa using Submodule.smul_mem _ (-1) hx
+      have hkey : vectorSpan ℝ (s ∪ t) ≤ Submodule.span ℝ BIG := by
+        rw [vectorSpan_def, Submodule.span_le]
+        rintro z ⟨p, hp, q, hq, rfl⟩
+        simp only [Set.mem_union] at hp hq
+        have hzero' : (0 : V3) ∈ (Submodule.span ℝ BIG : Submodule ℝ V3) :=
+          Submodule.zero_mem _
+        have hxy2' : (x0 -ᵥ y0 : V3) ∈ (D : Set V3) := by rw [hD]; simp
+        have hAdiff : ∀ x ∈ s, (x -ᵥ y0 : V3) ∈ Submodule.span ℝ (↑A : Set V3) := by
+          intro x hx
+          by_cases hxy : x = y0
+          · subst hxy; simp
+          · exact Submodule.subset_span (Finset.mem_coe.2 (Finset.mem_image.2 ⟨x,
+              (Finset.mem_erase.2 ⟨hxy, (hs.mem_toFinset).mpr hx⟩), rfl⟩))
+        have hxy2 : (x0 -ᵥ y0 : V3) ∈ Submodule.span ℝ {(x0 -ᵥ y0 : V3)} :=
+          Submodule.subset_span (by simp)
+        rcases hp with hp | hp <;> rcases hq with hq | hq
+        · show (p -ᵥ q : V3) ∈ Submodule.span ℝ BIG
+          have heq : (p -ᵥ q : V3) = (p -ᵥ y0) - (q -ᵥ y0) := by
+            simp only [vsub_eq_sub]
+            abel
+          rw [heq]
+          exact Submodule.sub_mem _ (hAS (hAdiff p hp)) (hAS (hAdiff q hq))
+        · show (p -ᵥ q : V3) ∈ Submodule.span ℝ BIG
+          have h1 : (p -ᵥ y0 : V3) ∈ Submodule.span ℝ BIG := hAS (hAdiff p hp)
+          have h2 : -(x0 -ᵥ y0 : V3) ∈ Submodule.span ℝ BIG :=
+            hDS (hneg (Submodule.subset_span hxy2'))
+          have h3 : -(q -ᵥ x0 : V3) ∈ Submodule.span ℝ BIG :=
+            hTS _ (hneg (vsub_mem_vectorSpan ℝ hq hx0))
+          have hdecomp : (p -ᵥ q : V3) = (p -ᵥ y0) + -(x0 -ᵥ y0) + -(q -ᵥ x0) := by
+            simp only [vsub_eq_sub]
+            abel
+          rw [hdecomp]
+          exact Submodule.add_mem _ (Submodule.add_mem _ h1 h2) h3
+        · show (p -ᵥ q : V3) ∈ Submodule.span ℝ BIG
+          have h1 : (p -ᵥ x0 : V3) ∈ Submodule.span ℝ BIG :=
+            hTS _ (vsub_mem_vectorSpan ℝ hp hx0)
+          have h2 : (x0 -ᵥ y0 : V3) ∈ Submodule.span ℝ BIG :=
+            hDS (Submodule.subset_span hxy2')
+          have h3 : -(q -ᵥ y0 : V3) ∈ Submodule.span ℝ BIG :=
+            hAS (hneg (hAdiff q hq))
+          have hdecomp : (p -ᵥ q : V3) = (p -ᵥ x0) + (x0 -ᵥ y0) + -(q -ᵥ y0) := by
+            simp only [vsub_eq_sub]
+            abel
+          rw [hdecomp]
+          exact Submodule.add_mem _ (Submodule.add_mem _ h1 h2) h3
+        · show (p -ᵥ q : V3) ∈ Submodule.span ℝ BIG
+          exact hTS _ (vsub_mem_vectorSpan ℝ hp hq)
+      -- assemble the finrank bound
+      have hunion : (s ∪ t).Nonempty := ⟨y0, Set.mem_union_left _ hy0s⟩
+      have hsup2 : Module.finrank ℝ (Submodule.span ℝ BIG) ≤
+          A.card + Module.finrank ℝ (vectorSpan ℝ t) + 1 := by
+        have hA : Module.finrank ℝ (Submodule.span ℝ (↑A : Set V3)) ≤ A.card :=
+          finrank_span_finset_le_card A
+        have h1 : Module.finrank ℝ (Submodule.span ℝ D) ≤ 1 := by
+          rw [hD]
+          by_cases hv0 : (x0 -ᵥ y0 : V3) = 0
+          · have hz : (ℝ ∙ (x0 -ᵥ y0 : V3)) = (⊥ : Submodule ℝ V3) := by
+              have hz0 : (x0 -ᵥ y0 : V3) = 0 := hv0
+              rw [hz0]
+              exact Submodule.span_singleton_eq_bot.mpr rfl
+            rw [hz]; simp
+          · exact le_of_eq (finrank_span_singleton hv0)
+        have hT : Module.finrank ℝ (Submodule.span ℝ (↑(vectorSpan ℝ t) : Set V3))
+            = Module.finrank ℝ (vectorSpan ℝ t) := by
+          rw [Submodule.span_eq (vectorSpan ℝ t)]
+        rw [hBIG, Submodule.span_union, Submodule.span_union]
+        have e1 := p6b_finrank_sup_le (Submodule.span ℝ (↑A : Set V3))
+          (Submodule.span ℝ ((↑(vectorSpan ℝ t) : Set V3) ∪ D))
+        rw [Submodule.span_union] at e1
+        have e2 := p6b_finrank_sup_le (Submodule.span ℝ (↑(vectorSpan ℝ t) : Set V3))
+          (Submodule.span ℝ D)
+        omega
+      have hstep : (affDim (s ∪ t) : ℤ) ≤ (A.card : ℤ) + affDim t + 1 := by
+        rw [affDim, if_neg (nonempty_iff_ne_empty.1 hunion)]
+        have hmono : Module.finrank ℝ (vectorSpan ℝ (s ∪ t)) ≤
+            Module.finrank ℝ (Submodule.span ℝ BIG) := Submodule.finrank_mono hkey
+        have h4 : Module.finrank ℝ (vectorSpan ℝ t) = affDim t := by
+          rw [affDim, if_neg htne]
+        omega
+      linarith
 
 /-- Rogers.hl:1682 `DUUNHOR`: distinct Rogers simplices meet in a coplanar
 set. (The `packing`/`saturated` hypotheses are consumed by
@@ -1589,7 +1805,30 @@ theorem ORTHOGONAL_TO_SPAN_EXISTS (s t : Set V3)
     (h2 : Module.finrank ℝ (Submodule.span ℝ s) <
       Module.finrank ℝ (Submodule.span ℝ t)) :
     ∃ v : V3, v ≠ 0 ∧ v ∈ Submodule.span ℝ t ∧ ∀ x ∈ s, x ⬝ᵥ v = 0 := by
-  sorry
+  have hUW : (Submodule.span ℝ s : Submodule ℝ V3) ≤ Submodule.span ℝ t :=
+    Submodule.span_le.2 h1
+  have hfd : Module.finrank ℝ (Submodule.span ℝ s) +
+      (Module.finrank ℝ (Submodule.span ℝ t) -
+        Module.finrank ℝ (Submodule.span ℝ s)) =
+      Module.finrank ℝ (Submodule.span ℝ t) := by omega
+  have hKfr : Module.finrank ℝ ↥((Submodule.span ℝ s)ᗮ ⊓ Submodule.span ℝ t) =
+      Module.finrank ℝ (Submodule.span ℝ t) -
+        Module.finrank ℝ (Submodule.span ℝ s) :=
+    Submodule.finrank_add_inf_finrank_orthogonal' hUW hfd
+  have hKne : ((Submodule.span ℝ s)ᗮ ⊓ Submodule.span ℝ t : Submodule ℝ V3) ≠ ⊥ := by
+    intro hcon
+    rw [hcon] at hKfr
+    have h0 : Module.finrank ℝ (Submodule.span ℝ t) -
+        Module.finrank ℝ (Submodule.span ℝ s) = 0 := by
+      rw [← hKfr]
+      exact finrank_bot ℝ V3
+    omega
+  obtain ⟨v, hvK, hv0⟩ := Submodule.exists_mem_ne_zero_of_ne_bot hKne
+  refine ⟨v, hv0, hvK.2, ?_⟩
+  intro x hx
+  have hxU : x ∈ (Submodule.span ℝ s : Submodule ℝ V3) := Submodule.subset_span hx
+  have horth := (Submodule.mem_orthogonal (Submodule.span ℝ s) v).1 hvK.1 x hxU
+  exact (inner_eq_dot x v).symm.trans horth
 
 /-- Rogers.hl:3286 `ORTHOGONAL_TO_ALL_IMP_ZERO`. -/
 theorem ORTHOGONAL_TO_ALL_IMP_ZERO (v : V3) (s : Set V3)
@@ -1629,14 +1868,188 @@ theorem INDEPENDENT_EXPLICIT_NUMSEG (v : ℕ → V3) (f : ℕ → ℝ) (n : ℕ)
 theorem UNIQUE_SOLUTION_lemma (S : Set V3) (b : V3 → ℝ)
     (hS : LinearIndependent ℝ (fun x : S => (x : V3))) :
     ∃! p : V3, p ∈ Submodule.span ℝ S ∧ ∀ x ∈ S, p ⬝ᵥ x = b x := by
-  sorry
+  classical
+  have hSfin : S.Finite := hS.setFinite
+  haveI : Fintype ↥S := hSfin.fintype
+  have hrange : Set.range (fun x : S => (x : V3)) = (↑S : Set V3) := by
+    ext z
+    constructor
+    · rintro ⟨x, rfl⟩
+      exact x.2
+    · intro hz
+      exact ⟨⟨z, hz⟩, rfl⟩
+  have hfrU : Module.finrank ℝ (Submodule.span ℝ (↑S : Set V3)) = Fintype.card ↥S := by
+    have h := finrank_span_eq_card hS
+    rwa [hrange] at h
+  -- the pairing linear map `p ↦ (⟪p, x⟫)_{x ∈ S}`
+  set g : (Submodule.span ℝ (↑S : Set V3)) →ₗ[ℝ] (S → ℝ) :=
+    { toFun := fun p x => inner ℝ (p : V3) (x : V3)
+      map_add' := by
+        intro p q
+        funext x
+        simp [Submodule.coe_add, inner_add_left]
+      map_smul' := by
+        intro r p
+        funext x
+        simp [real_inner_smul_left] } with hg
+  have hgApp : ∀ (p : Submodule.span ℝ (↑S : Set V3)) (x : S),
+      g p x = inner ℝ (p : V3) (x : V3) := fun p x => rfl
+  -- injectivity: a vector pairing trivially with all of S and lying in the span is 0
+  have hkinj : Function.Injective g := by
+    rw [← LinearMap.ker_eq_bot, Submodule.eq_bot_iff]
+    intro p hp
+    simp only [LinearMap.mem_ker] at hp
+    have hp0 : ∀ x ∈ S, inner ℝ (p : V3) (x : V3) = 0 := by
+      intro x hx
+      have h1 := congrFun hp ⟨x, hx⟩
+      rw [hgApp] at h1
+      simpa using h1
+    have hsub : Submodule.span ℝ (↑S : Set V3) ≤
+        LinearMap.ker (innerSL ℝ (p : V3)).toLinearMap := by
+      rw [Submodule.span_le]
+      rintro x hx
+      simp only [SetLike.mem_coe, LinearMap.mem_ker, ContinuousLinearMap.coe_coe,
+        innerSL_apply_apply]
+      exact hp0 x hx
+    have hpp : inner ℝ (p : V3) (p : V3) = 0 := by
+      have h1 := hsub p.2
+      simp only [LinearMap.mem_ker, ContinuousLinearMap.coe_coe, innerSL_apply_apply] at h1
+      exact h1
+    rw [inner_self_eq_zero] at hpp
+    exact Subtype.ext hpp
+  -- equal finranks upgrade injectivity to surjectivity
+  have hsurj : Function.Surjective g := by
+    have hdim : Module.finrank ℝ (Submodule.span ℝ (↑S : Set V3)) =
+        Module.finrank ℝ (S → ℝ) := by
+      rw [Module.finrank_pi ℝ, hfrU]
+    exact (LinearMap.injective_iff_surjective_of_finrank_eq_finrank hdim).1 hkinj
+  obtain ⟨p, hp⟩ := hsurj (fun x : ↥S => b (x : V3))
+  have hpPair : ∀ x ∈ S, (p : V3) ⬝ᵥ x = b x := by
+    intro x hx
+    have h1 := congrFun hp ⟨x, hx⟩
+    rw [hgApp] at h1
+    exact (inner_eq_dot (p : V3) x).symm.trans h1
+  refine ⟨(p : V3), ⟨p.2, hpPair⟩, ?_⟩
+  · rintro q ⟨hqU, hq⟩
+    have hd : q - (p : V3) ∈ Submodule.span ℝ (↑S : Set V3) :=
+      Submodule.sub_mem _ hqU p.2
+    have hd0 : ∀ x ∈ S, inner ℝ (q - (p : V3)) (x : V3) = 0 := by
+      intro x hx
+      have h1 := hq x hx
+      have h2 := hpPair x hx
+      rw [inner_sub_left, inner_eq_dot, inner_eq_dot, h1, h2, sub_self]
+    have hdker : Submodule.span ℝ (↑S : Set V3) ≤
+        LinearMap.ker (innerSL ℝ (q - (p : V3))).toLinearMap := by
+      rw [Submodule.span_le]
+      rintro x hx
+      simp only [SetLike.mem_coe, LinearMap.mem_ker, ContinuousLinearMap.coe_coe,
+        innerSL_apply_apply]
+      exact hd0 x hx
+    have hdd : inner ℝ (q - (p : V3)) (q - (p : V3)) = 0 := by
+      have h1 := hdker hd
+      simp only [LinearMap.mem_ker, ContinuousLinearMap.coe_coe, innerSL_apply_apply] at h1
+      exact h1
+    rw [inner_self_eq_zero] at hdd
+    exact sub_eq_zero.mp hdd
 
 /-- Rogers.hl:3609 `UNIQUE_SOLUTION_AFFINE_INDEPENDENT`. -/
 theorem UNIQUE_SOLUTION_AFFINE_INDEPENDENT (S : Set V3) (b : V3 → ℝ)
     (h1 : S ≠ ∅) (h2 : ¬affineDependent S) :
     ∃! p : V3, p ∈ (affineSpan ℝ S : Set V3) ∧
       ∀ x ∈ S, ∀ y ∈ S, p ⬝ᵥ (x - y) = b x - b y := by
-  sorry
+  classical
+  obtain ⟨s0, hs0⟩ := Set.nonempty_iff_ne_empty.mpr h1
+  -- linear independence of the `z ↦ z - s0` family on `S \ {s0}` (local lemma)
+  have hli := AFFINE_INDEPENDENT_IMP_INDEPENDENT S h2 s0 hs0
+  set T0 : Set V3 := (fun z : V3 => z - s0) '' (S \ {s0}) with hT0def
+  have hzinj : Function.Injective (fun z : V3 => z - s0) := fun z₁ z₂ hz => by
+    have h2' := congrArg (fun z : V3 => z + s0) hz
+    simpa using h2'
+  -- transport to the image set `T0` via the bijection `z ↦ z - s0`
+  have hT0li : LinearIndependent ℝ (fun w : T0 => (w : V3)) := by
+    have hcoee : ((fun v : ↥((fun z : V3 => z - s0) '' (S \ {s0})) => (v : V3)) ∘
+        Equiv.Set.image (fun z : V3 => z - s0) (S \ {s0}) hzinj) =
+        (fun y : (S \ {s0} : Set V3) => ((y : V3) - s0)) := by
+      funext y
+      simp [Equiv.Set.image_apply]
+    exact (linearIndependent_equiv'
+      (Equiv.Set.image (fun z : V3 => z - s0) (S \ {s0}) hzinj) hcoee).mp hli
+  -- `cb` prescribes the pairing values on `T0` (inner form throughout)
+  set cb : V3 → ℝ := fun w => b (w + s0) - b s0 - inner ℝ s0 w with hcb
+  obtain ⟨q, ⟨hqmem, hqpair⟩, hquniq⟩ := UNIQUE_SOLUTION_lemma T0 cb hT0li
+  have hspanT0 : Submodule.span ℝ T0 = vectorSpan ℝ S := by
+    rw [hT0def]
+    have hv := vectorSpan_eq_span_vsub_set_right ℝ hs0
+    rw [hv]
+    refine le_antisymm ?_ ?_
+    · refine Submodule.span_le.2 ?_
+      rintro w ⟨x, hxS, rfl⟩
+      obtain ⟨hxin, -⟩ := (Set.mem_sdiff x).mp hxS
+      exact Submodule.subset_span ⟨x, hxin, rfl⟩
+    · refine Submodule.span_le.2 ?_
+      rintro w ⟨x, hxin, rfl⟩
+      by_cases hxs : x = s0
+      · subst hxs
+        simp
+      · exact Submodule.subset_span ⟨x, ⟨hxin, hxs⟩, by simp [vsub_eq_sub]⟩
+  refine ⟨s0 + q, ⟨?_, ?_⟩, ?_⟩
+  · -- membership: s0 + q ∈ affineSpan S
+    have hs0in : s0 ∈ (affineSpan ℝ S : Set V3) :=
+      SetLike.mem_coe.mpr (mem_affineSpan ℝ hs0)
+    have hdir : (s0 + q -ᵥ s0 : V3) ∈ (affineSpan ℝ S).direction := by
+      rw [direction_affineSpan, ← hspanT0]
+      simpa [vsub_eq_sub, add_sub_cancel] using hqmem
+    have hv := AffineSubspace.vadd_mem_of_mem_direction hdir hs0in
+    rw [vadd_eq_add] at hv
+    have hx2 : (s0 + q -ᵥ s0) + s0 = s0 + q := by rw [← vadd_eq_add, vsub_vadd]
+    rwa [hx2] at hv
+  · -- the full pairing property
+    have hpairI : ∀ z ∈ S, inner ℝ (s0 + q) (z - s0) = b z - b s0 := by
+      intro z hz
+      by_cases hz0 : z = s0
+      · subst hz0
+        rw [sub_self, inner_zero_right]
+        ring
+      · have hzs : z ∈ S \ {s0} := ⟨hz, by simp [Set.mem_singleton_iff, hz0]⟩
+        have hzT0 : (z - s0 : V3) ∈ T0 := by
+          rw [hT0def]
+          exact ⟨z, hzs, rfl⟩
+        have hqp : inner ℝ q (z - s0) = cb (z - s0) := by
+          rw [inner_eq_dot]
+          exact hqpair (z - s0) hzT0
+        have hqp2 : inner ℝ q (z - s0) = b z - b s0 - inner ℝ s0 (z - s0) := by
+          rw [hqp]
+          show b ((z - s0) + s0) - b s0 - inner ℝ s0 (z - s0)
+              = b z - b s0 - inner ℝ s0 (z - s0)
+          rw [sub_add_cancel]
+        rw [inner_add_left, hqp2]
+        linarith
+    intro x hx y hy
+    have keyI : inner ℝ (s0 + q) (x - y) = b x - b y := by
+      rw [(show (x : V3) - y = (x - s0) - (y - s0) from by abel), inner_sub_right,
+        hpairI x hx, hpairI y hy]
+      ring
+    exact (inner_eq_dot (s0 + q) (x - y)).symm.trans keyI
+  · -- uniqueness
+    rintro p' ⟨hp'mem, hp'pair⟩
+    have hp'mem' : p' ∈ (affineSpan ℝ S : Set V3) := hp'mem
+    have hq'mem : p' -ᵥ s0 ∈ Submodule.span ℝ T0 := by
+      rw [hspanT0, ← direction_affineSpan]
+      exact AffineSubspace.vsub_mem_direction
+        (SetLike.mem_coe.mp hp'mem') (SetLike.mem_coe.mpr (mem_affineSpan ℝ hs0))
+    have hq'cb : ∀ w ∈ T0, (p' -ᵥ s0) ⬝ᵥ w = cb w := by
+      rintro w ⟨z, hzS, rfl⟩
+      have hzin : z ∈ S := hzS.1
+      have hkeyI : inner ℝ p' (z - s0) = b z - b s0 := by
+        rw [inner_eq_dot]
+        exact hp'pair z hzin s0 hs0
+      have hmain : inner ℝ (p' -ᵥ s0) (z - s0)
+          = b ((z - s0) + s0) - b s0 - inner ℝ s0 (z - s0) := by
+        rw [vsub_eq_sub, inner_sub_left, hkeyI, sub_add_cancel]
+      exact (inner_eq_dot (p' -ᵥ s0) (z - s0)).symm.trans hmain
+    have hfin := hquniq (p' -ᵥ s0) ⟨hq'mem, hq'cb⟩
+    rw [vsub_eq_sub, sub_eq_iff_eq_add] at hfin
+    rw [hfin, add_comm]
 
 /-- Rogers.hl:3732 `QXSKIIT`: unique interpolation on the affine hull. -/
 theorem QXSKIIT {A : Type} (vf : A → V3) (b : A → ℝ)
