@@ -1059,53 +1059,544 @@ private theorem ccv_preimage_capWedgeProj (r a θ : ℝ) (u : ℂ) (t : ℝ) :
 
 /-- ℂ 上闭圆盘扇形切片（t 固定）：锥帽楔切片体积。前提 `hYX`：球侧半径不小于
 锥侧（`min(r²−t², s·t²) = s·t²`，GLUTOTI/GLUKOTI 使用点均为该情形）。
-STILL `sorry`（2026-09-29）：证明骨架完整——锥侧集等价 `hkey2`（ccv_cone_sq_lt/'）
-+ `volume_sector_rot`（半径 `√(s·t²)`）——仅剩本 Mathlib 快照的 `Real.lt`/`Real.le`
-order 结构体（`a < b` 非 LT-class 实例）使 setOf 成员假设无法被 `linarith`/
-`rcases` 匿名构造器直接消费（帽切片 `ccv_volume_sliceCap` 同形已证可对照，
-其假设恰好避开了该结构体问题）。
-NEEDS: 按 `ccv_volume_sliceCap` 的方式补齐 `hkey2` 两向（`ccv_cone_sq_lt/'` 已备）、
-`volume_sector_rot` 处以 `Real.lt_sqrt`/`sq_lt_sq₀` 显式转换 order 结构体。 -/
+证法：锥侧集等价（`ccv_cone_sq_lt/'`）+ 闭球条件在 `hYX` 下冗余，集合即开扇形
+`{‖ζ‖ < √(s·t²) ∧ 角 ∈ (0, θ)}`，`volume_sector_rot` 收账（hkey 两向以
+`sq_lt_sq₀`/`Real.sq_sqrt` 显式转换 order 结构体）。 -/
 private theorem ccv_volume_sliceWedge (r a t θ : ℝ) {u : ℂ} (hu : u ≠ 0)
     (ha : 0 < a) (ha1 : a < 1) (hθ0 : 0 ≤ θ) (hθ2π : θ < 2 * Real.pi)
     (ht : 0 < t) (hYX : (1 - a ^ 2) / a ^ 2 * t ^ 2 ≤ r ^ 2 - t ^ 2) :
     volume {ζ : ℂ | t ^ 2 + ‖ζ‖ ^ 2 ≤ r ^ 2 ∧ a * Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2) < t ∧
         0 < ang (u⁻¹ * ζ) ∧ ang (u⁻¹ * ζ) < θ}
       = ENNReal.ofReal (((1 - a ^ 2) / a ^ 2 * t ^ 2) * θ / 2) := by
-  -- NEEDS: 按 `ccv_volume_sliceCap` 方式补齐 hkey2 两向（ccv_cone_sq_lt/' 已备），
-  -- `volume_sector_rot` 处以 Real.lt_sqrt/sq_lt_sq₀ 显式转换 Real.lt/Real.le order 结构体
-  sorry
+  have hsq1 : a ^ 2 < 1 := by nlinarith
+  have hsX : 0 ≤ (1 - a ^ 2) / a ^ 2 * t ^ 2 := by
+    have h1 : 0 ≤ (1 - a ^ 2) / a ^ 2 := by
+      refine div_nonneg (by linarith) (by positivity)
+    exact mul_nonneg h1 (sq_nonneg t)
+  have hkey : {ζ : ℂ | t ^ 2 + ‖ζ‖ ^ 2 ≤ r ^ 2 ∧ a * Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2) < t ∧
+      0 < ang (u⁻¹ * ζ) ∧ ang (u⁻¹ * ζ) < θ}
+      = {ζ : ℂ | ‖ζ‖ < Real.sqrt ((1 - a ^ 2) / a ^ 2 * t ^ 2) ∧
+          0 < ang (u⁻¹ * ζ) ∧ ang (u⁻¹ * ζ) < θ} := by
+    ext ζ
+    simp only [Set.mem_setOf_eq]
+    constructor
+    · rintro ⟨h1, h2, h3, h4⟩
+      have hz2 := ccv_cone_sq_lt ha ha1 ht h2
+      refine ⟨?_, h3, h4⟩
+      have h5 : ‖ζ‖ ^ 2 < (Real.sqrt ((1 - a ^ 2) / a ^ 2 * t ^ 2)) ^ 2 := by
+        rw [Real.sq_sqrt hsX]
+        exact hz2
+      exact (sq_lt_sq₀ (norm_nonneg ζ) (Real.sqrt_nonneg _)).mp h5
+    · rintro ⟨hnorm, h3, h4⟩
+      have h5 : ‖ζ‖ ^ 2 < (Real.sqrt ((1 - a ^ 2) / a ^ 2 * t ^ 2)) ^ 2 :=
+        (sq_lt_sq₀ (norm_nonneg ζ) (Real.sqrt_nonneg _)).mpr hnorm
+      have hz2 : ‖ζ‖ ^ 2 < (1 - a ^ 2) / a ^ 2 * t ^ 2 := by
+        rwa [Real.sq_sqrt hsX] at h5
+      refine ⟨?_, ccv_cone_sq_lt' ha ha1 ht hz2, h3, h4⟩
+      have h6 : ‖ζ‖ ^ 2 < r ^ 2 - t ^ 2 := lt_of_lt_of_le hz2 hYX
+      linarith
+  rw [hkey, volume_sector_rot hu (Real.sqrt_nonneg _) hθ0 hθ2π]
+  congr 1
+  rw [Real.sq_sqrt hsX]
+
+/-- 楔切片 min 版（任意 `0 < t`）：切片体积 = `min(r²−t², s·t²)·θ/2`。
+锥侧分支开扇形（`volume_sector_rot`）、球侧分支闭扇形
+（`ccv_volume_sectorClosed`，含 `r < t` 空集退化）。 -/
+private theorem ccv_volume_sliceWedgeMin (r a t θ : ℝ) {u : ℂ} (hu : u ≠ 0)
+    (ha : 0 < a) (ha1 : a < 1) (hθ0 : 0 ≤ θ) (hθ2π : θ < 2 * Real.pi) (ht : 0 < t) :
+    volume {ζ : ℂ | t ^ 2 + ‖ζ‖ ^ 2 ≤ r ^ 2 ∧ a * Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2) < t ∧
+        0 < ang (u⁻¹ * ζ) ∧ ang (u⁻¹ * ζ) < θ}
+      = ENNReal.ofReal (min (r ^ 2 - t ^ 2) ((1 - a ^ 2) / a ^ 2 * t ^ 2) * θ / 2) := by
+  have hsa : 0 ≤ (1 - a ^ 2) / a ^ 2 * t ^ 2 :=
+    mul_nonneg (div_nonneg (by nlinarith [sq_nonneg a, ha.le, ha1]) (by positivity))
+      (sq_nonneg t)
+  -- 圆片双条件等价（ccv_cone_sq_lt/' 两向）
+  have hkey : {ζ : ℂ | t ^ 2 + ‖ζ‖ ^ 2 ≤ r ^ 2 ∧ a * Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2) < t ∧
+      0 < ang (u⁻¹ * ζ) ∧ ang (u⁻¹ * ζ) < θ}
+      = {ζ : ℂ | ‖ζ‖ ^ 2 ≤ r ^ 2 - t ^ 2 ∧ ‖ζ‖ ^ 2 < (1 - a ^ 2) / a ^ 2 * t ^ 2 ∧
+          0 < ang (u⁻¹ * ζ) ∧ ang (u⁻¹ * ζ) < θ} := by
+    ext ζ
+    simp only [Set.mem_setOf_eq]
+    constructor
+    · rintro ⟨h1, h2, h3, h4⟩
+      refine ⟨?_, ccv_cone_sq_lt ha ha1 ht h2, h3, h4⟩
+      nlinarith [sq_nonneg ‖(ζ : ℂ)‖]
+    · rintro ⟨h1, h2, h3, h4⟩
+      refine ⟨?_, ccv_cone_sq_lt' ha ha1 ht h2, h3, h4⟩
+      nlinarith [sq_nonneg ‖(ζ : ℂ)‖]
+  rcases le_or_gt (r ^ 2 - t ^ 2) ((1 - a ^ 2) / a ^ 2 * t ^ 2) with hXY | hYX
+  · -- 球侧限半径：min = r²−t²，闭扇形
+    rw [hkey, min_eq_left hXY]
+    rcases lt_or_ge (r ^ 2 - t ^ 2) 0 with hneg | hX0
+    · -- r² < t²：切片为空（t² + ‖ζ‖² ≥ t² > r²）
+      have hempty : {ζ : ℂ | t ^ 2 + ‖ζ‖ ^ 2 ≤ r ^ 2 ∧
+          a * Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2) < t ∧
+          0 < ang (u⁻¹ * ζ) ∧ ang (u⁻¹ * ζ) < θ} = ∅ := by
+        ext ζ
+        simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
+        rintro ⟨h1, -, -, -⟩
+        nlinarith [sq_nonneg ‖(ζ : ℂ)‖, hneg]
+      rw [← hkey, hempty, measure_empty, eq_comm, ENNReal.ofReal_eq_zero]
+      nlinarith [mul_nonneg hθ0 (by linarith : (0:ℝ) ≤ -(r ^ 2 - t ^ 2))]
+    · -- 0 ≤ r²−t²：临界相等走开扇形、严格走闭扇形
+      rcases eq_or_lt_of_le hXY with heq | hlt
+      · -- 临界情形 r²−t² = s·t²：集合即开扇形
+        rw [heq]
+        have hset : {ζ : ℂ | ‖ζ‖ ^ 2 ≤ (1 - a ^ 2) / a ^ 2 * t ^ 2 ∧
+            ‖ζ‖ ^ 2 < (1 - a ^ 2) / a ^ 2 * t ^ 2 ∧
+            0 < ang (u⁻¹ * ζ) ∧ ang (u⁻¹ * ζ) < θ}
+            = {ζ : ℂ | ‖ζ‖ < Real.sqrt ((1 - a ^ 2) / a ^ 2 * t ^ 2) ∧
+                0 < ang (u⁻¹ * ζ) ∧ ang (u⁻¹ * ζ) < θ} := by
+          ext ζ
+          simp only [Set.mem_setOf_eq]
+          constructor
+          · rintro ⟨h1, h2, h3, h4⟩
+            refine ⟨?_, h3, h4⟩
+            have h5 : ‖ζ‖ ^ 2 < (Real.sqrt ((1 - a ^ 2) / a ^ 2 * t ^ 2)) ^ 2 := by
+              rw [Real.sq_sqrt hsa]
+              exact h2
+            exact (sq_lt_sq₀ (norm_nonneg ζ) (Real.sqrt_nonneg _)).mp h5
+          · rintro ⟨h1, h3, h4⟩
+            have h5 : ‖ζ‖ ^ 2 < (Real.sqrt ((1 - a ^ 2) / a ^ 2 * t ^ 2)) ^ 2 :=
+              (sq_lt_sq₀ (norm_nonneg ζ) (Real.sqrt_nonneg _)).mpr h1
+            rw [Real.sq_sqrt hsa] at h5
+            exact ⟨by linarith, h5, h3, h4⟩
+        rw [hset, volume_sector_rot hu (Real.sqrt_nonneg _) hθ0 hθ2π]
+        congr 1
+        rw [Real.sq_sqrt hsa]
+      · have hset : {ζ : ℂ | ‖ζ‖ ^ 2 ≤ r ^ 2 - t ^ 2 ∧
+              ‖ζ‖ ^ 2 < (1 - a ^ 2) / a ^ 2 * t ^ 2 ∧
+              0 < ang (u⁻¹ * ζ) ∧ ang (u⁻¹ * ζ) < θ}
+            = {ζ : ℂ | ‖ζ‖ ≤ Real.sqrt (r ^ 2 - t ^ 2) ∧
+                0 < ang (u⁻¹ * ζ) ∧ ang (u⁻¹ * ζ) < θ} := by
+          ext ζ
+          simp only [Set.mem_setOf_eq]
+          constructor
+          · rintro ⟨h1, h2, h3, h4⟩
+            refine ⟨?_, h3, h4⟩
+            have h5 : ‖ζ‖ ^ 2 ≤ (Real.sqrt (r ^ 2 - t ^ 2)) ^ 2 := by
+              rw [Real.sq_sqrt hX0]
+              exact h1
+            exact (sq_le_sq₀ (norm_nonneg ζ) (Real.sqrt_nonneg _)).mp h5
+          · rintro ⟨h1, h3, h4⟩
+            have h5 : ‖ζ‖ ^ 2 ≤ (Real.sqrt (r ^ 2 - t ^ 2)) ^ 2 :=
+              (sq_le_sq₀ (norm_nonneg ζ) (Real.sqrt_nonneg _)).mpr h1
+            rw [Real.sq_sqrt hX0] at h5
+            exact ⟨h5, lt_of_le_of_lt h5 hlt, h3, h4⟩
+        rw [hset, ccv_volume_sectorClosed hu (Real.sqrt (r ^ 2 - t ^ 2)) θ
+          (Real.sqrt_nonneg _) hθ0 hθ2π]
+        congr 1
+        rw [Real.sq_sqrt hX0]
+  · -- 锥侧限半径：min = s·t²，开扇形
+    rw [hkey, min_eq_right hYX.le]
+    have hset : {ζ : ℂ | ‖ζ‖ ^ 2 ≤ r ^ 2 - t ^ 2 ∧
+            ‖ζ‖ ^ 2 < (1 - a ^ 2) / a ^ 2 * t ^ 2 ∧
+            0 < ang (u⁻¹ * ζ) ∧ ang (u⁻¹ * ζ) < θ}
+        = {ζ : ℂ | ‖ζ‖ < Real.sqrt ((1 - a ^ 2) / a ^ 2 * t ^ 2) ∧
+            0 < ang (u⁻¹ * ζ) ∧ ang (u⁻¹ * ζ) < θ} := by
+      ext ζ
+      simp only [Set.mem_setOf_eq]
+      constructor
+      · rintro ⟨h1, h2, h3, h4⟩
+        refine ⟨?_, h3, h4⟩
+        have h5 : ‖ζ‖ ^ 2 < (Real.sqrt ((1 - a ^ 2) / a ^ 2 * t ^ 2)) ^ 2 := by
+          rw [Real.sq_sqrt hsa]
+          exact h2
+        exact (sq_lt_sq₀ (norm_nonneg ζ) (Real.sqrt_nonneg _)).mp h5
+      · rintro ⟨h1, h3, h4⟩
+        have h5 : ‖ζ‖ ^ 2 < (Real.sqrt ((1 - a ^ 2) / a ^ 2 * t ^ 2)) ^ 2 :=
+          (sq_lt_sq₀ (norm_nonneg ζ) (Real.sqrt_nonneg _)).mpr h1
+        rw [Real.sq_sqrt hsa] at h5
+        exact ⟨by linarith [h5, hYX], h5, h3, h4⟩
+    rw [hset, volume_sector_rot hu (Real.sqrt_nonneg _) hθ0 hθ2π]
+    congr 1
+    rw [Real.sq_sqrt hsa]
 
 /-- 楔形体积主 kernel（HOL `VOLUME_CONIC_CAP_WEDGE_WEAK` 的 Lean 体）。
-STILL `sorry`（2026-09-29）：依赖 `ccv_volume_sliceWedge`（上，NEEDS 中）与
-Fubini 包装（照抄 `ccv_volume_conicCap_zero` 的 hproj/hvol/hslice 结构，
-切片体积换成 `ccv_volume_sliceWedge`，核心积分用
-`ccv_lintegral_sq_Ioo/parabola_Ico` 以 `C := azim 0 w w1 w2 / 2`）。
-NEEDS: 按 `ccv_volume_conicCap_zero` 的已证骨架展开；
-GLUTOTI 使用点形状 `volumeConicCapWedgeFormula`/`volumeConicCapWedge`/
-`measurableConicCapWedge`（PA24:428 对接）随后一并落地。 -/
+证法：照 `ccv_volume_conicCap_zero` 的 Fubini 骨架（hproj/hvol/hslice），
+标架投影把楔形变成扇形切片，切片体积 = `min(r²−t², s·t²)·θ/2`
+（`ccv_volume_sliceWedgeMin`，θ = azim），核心积分 `ccv_lintegral_core`
+以 `C := azim 0 w w1 w2 / 2` 收账。 -/
 private theorem ccv_volume_conicCapWedge_zero {w w1 w2 : V3} (r a : ℝ) (ha : 0 < a)
     (ha1 : a < 1) (hr : 0 < r) (h1 : ¬ Collinear3 0 w w1) (h2 : ¬ Collinear3 0 w w2) :
     volume (ccvConicCap 0 w r a ∩ Kepler.Geom.wedge 0 w w1 w2)
       = ENNReal.ofReal (azim 0 w w1 w2 * ((1 - a) * r ^ 3) / 3) := by
-  -- NEEDS: 按 ccv_volume_conicCap_zero 已证骨架展开（切片换 ccv_volume_sliceWedge，
-  -- 核心积分 ccv_lintegral_sq_Ioo/parabola_Ico 以 C := azim 0 w w1 w2 / 2）
-  sorry
+  have hw : w ≠ 0 := by
+    rintro rfl
+    exact h1 (collinear3_of_eq rfl)
+  obtain ⟨e1, e2, e3, he, halign⟩ := exists_on3_eq_smul w hw
+  have hax : (w : V3) = dist w 0 • e3 := by
+    rw [dist_eq_norm, sub_zero]; exact halign
+  have hbw : 0 < dist w 0 := by
+    rw [dist_zero_right]
+    exact norm_pos_iff.mpr hw
+  have hproj := measurePreserving_proj e1 e2 e3 he
+  have hax2 : (w - 0 : V3) = dist w 0 • e3 := by
+    rw [sub_zero]; exact hax
+  have hw1u : zOf e1 e2 w1 ≠ 0 := by
+    rw [show zOf e1 e2 w1 = zOf e1 e2 (w1 - 0) from by rw [sub_zero]]
+    exact (zOf_ne_zero_iff he hax2 hw w1).mpr h1
+  have hθ0 : 0 ≤ azim 0 w w1 w2 := azim_nonneg 0 w w1 w2
+  have hθ2π : azim 0 w w1 w2 < 2 * Real.pi := azim_lt_two_pi 0 w w1 w2
+  have hpre : ccvConicCap 0 w r a ∩ Kepler.Geom.wedge 0 w w1 w2 =
+      (fun x : V3 => (x ⬝ᵥ e3, zOf e1 e2 x)) ⁻¹'
+        ccvWedgeProj r a (azim 0 w w1 w2) (zOf e1 e2 w1) := by
+    ext x
+    rw [Set.mem_preimage]
+    constructor
+    · intro hx
+      obtain ⟨hb, hc, ha1', ha2'⟩ :=
+        (ccv_mem_capWedgeProj_iff e1 e2 e3 he hbw hax hw h1 r a (le_of_lt hr) x).mp hx
+      rw [ccvWedgeProj, Set.mem_inter_iff, ccvCapProj, Set.mem_setOf_eq,
+        Set.mem_setOf_eq]
+      exact ⟨⟨hb, hc⟩, ha1', ha2'⟩
+    · intro hx
+      rw [ccvWedgeProj, Set.mem_inter_iff, ccvCapProj, Set.mem_setOf_eq,
+        Set.mem_setOf_eq] at hx
+      exact (ccv_mem_capWedgeProj_iff e1 e2 e3 he hbw hax hw h1 r a (le_of_lt hr) x).mpr
+        ⟨hx.1.1, hx.1.2, hx.2.1, hx.2.2⟩
+  have hvol : volume (ccvConicCap 0 w r a ∩ Kepler.Geom.wedge 0 w w1 w2)
+      = (volume.prod volume) (ccvWedgeProj r a (azim 0 w w1 w2) (zOf e1 e2 w1)) := by
+    rw [hpre]
+    exact hproj.measure_preimage (ccv_capWedgeProj_meas r a _ _).nullMeasurableSet
+  rw [hvol, Measure.prod_apply (ccv_capWedgeProj_meas r a _ _)]
+  have hslice : ∀ t : ℝ,
+      volume (Prod.mk t ⁻¹' ccvWedgeProj r a (azim 0 w w1 w2) (zOf e1 e2 w1)) =
+        (if 0 < t then
+          ENNReal.ofReal ((azim 0 w w1 w2 / 2) *
+            min (r ^ 2 - t ^ 2) ((1 - a ^ 2) / a ^ 2 * t ^ 2))
+        else 0) := by
+    intro t
+    rw [ccv_preimage_capWedgeProj]
+    by_cases ht : 0 < t
+    · rw [if_pos ht, ccv_volume_sliceWedgeMin r a t (azim 0 w w1 w2) hw1u ha ha1
+        hθ0 hθ2π ht]
+      congr 1
+      ring
+    · rw [if_neg ht]
+      have hempty : {ζ : ℂ | t ^ 2 + ‖ζ‖ ^ 2 ≤ r ^ 2 ∧
+          a * Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2) < t ∧
+          0 < ang ((zOf e1 e2 w1)⁻¹ * ζ) ∧
+          ang ((zOf e1 e2 w1)⁻¹ * ζ) < azim 0 w w1 w2} = ∅ := by
+        ext ζ
+        simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
+        rintro ⟨-, h2', -, -⟩
+        have h1' : 0 ≤ a * Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2) := by positivity
+        linarith
+      rw [hempty, measure_empty]
+  simp_rw [hslice]
+  rw [ccv_lintegral_core r a (azim 0 w w1 w2 / 2) hr ha ha1
+    (div_nonneg hθ0 (by norm_num : (0:ℝ) ≤ 2))]
+  congr 1
+  ring
+
+/-- 帽半径非正时为空（`r ≤ 0`：球点只剩 `v0`，被锥条件排除）。 -/
+private theorem ccv_conicCap_rle0 {v0 v1 : V3} (r a : ℝ) (hr : r ≤ 0) :
+    ccvConicCap v0 v1 r a = ∅ := by
+  ext x
+  simp only [ccvConicCap, Metric.mem_closedBall, ccv_mem_cone, Set.mem_inter_iff,
+    Set.mem_empty_iff_false, iff_false]
+  rintro ⟨hball, hcone⟩
+  have hd := dist_nonneg (x := x) (y := v0)
+  have h0 : dist x v0 = 0 := le_antisymm (by linarith) hd
+  have hx : x = v0 := dist_eq_zero.mp h0
+  rw [hx] at hcone
+  simp only [sub_self, WithLp.ofLp_zero, zero_dotProduct, dist_self, zero_mul] at hcone
+  linarith
+
+/-- w1 与轴共线时 `azim v0 v1 w1 · ≡ 0`，开楔为空（azim 定义 if 正分支）。 -/
+private theorem ccv_wedge_empty_of_collinearW1 {v0 v1 w1 w2 : V3}
+    (hc1 : Collinear3 v0 v1 w1) : Kepler.Geom.wedge v0 v1 w1 w2 = ∅ := by
+  ext y
+  simp only [Kepler.Geom.wedge, Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
+  rintro ⟨-, ha1, -⟩
+  have h0 : azim v0 v1 w1 y = 0 := by
+    rw [azim, if_pos (Or.inl hc1)]
+  rw [h0] at ha1
+  linarith
+
+/-- 楔可测（无需退化前提）：主情形经轴向标架把楔 transport 成连续映射
+`y ↦ zOf e1 e2 (y − v0)` 的原像（`zOf ≠ 0` 恰为离轴 + `azim_eq_ang_of_frame`
+桥接），像集为 Borel 扇形；w1 共线/轴退化时楔空。 -/
+private theorem ccv_measSet_wedge (v0 v1 w1 w2 : V3) :
+    MeasurableSet (Kepler.Geom.wedge v0 v1 w1 w2) := by
+  by_cases hv : v1 = v0
+  · rw [hv, ccv_wedge_empty_of_collinearW1 (by
+      exact collinear3_of_eq rfl : Collinear3 v0 v0 w1)]
+    exact MeasurableSet.empty
+  · by_cases hc1 : Collinear3 v0 v1 w1
+    · rw [ccv_wedge_empty_of_collinearW1 hc1]
+      exact MeasurableSet.empty
+    · obtain ⟨e1, e2, e3, he, halign⟩ :=
+        exists_on3_eq_smul (v1 - v0) (sub_ne_zero.mpr hv)
+      have hax : (v1 - v0 : V3) = dist (v1 - v0) 0 • e3 := by
+        rw [dist_eq_norm, sub_zero]; exact halign
+      have hax2 : (v1 - v0 : V3) = dist v1 v0 • e3 := by
+        rw [dist_eq_norm]; exact halign
+      have hcont : Continuous fun y : V3 => zOf e1 e2 (y - v0) := by
+        simp only [zOf]
+        fun_prop
+      have hset : Kepler.Geom.wedge v0 v1 w1 w2
+          = (fun y : V3 => zOf e1 e2 (y - v0)) ⁻¹'
+              {ζ : ℂ | ζ ≠ 0 ∧ 0 < ang ((zOf e1 e2 (w1 - v0))⁻¹ * ζ) ∧
+                ang ((zOf e1 e2 (w1 - v0))⁻¹ * ζ) < azim v0 v1 w1 w2} := by
+        ext y
+        simp only [Set.mem_preimage, Set.mem_setOf_eq, Kepler.Geom.wedge]
+        constructor
+        · rintro ⟨hnc, ha1, ha2⟩
+          have hframe := azim_eq_ang_of_frame e1 e2 e3 he hax (sub_ne_zero.mpr hv)
+            (ccv_collinear3_zero_sub.not.mp hc1)
+            (ccv_collinear3_zero_sub.not.mp hnc)
+          refine ⟨(zOf_ne_zero_iff he hax2 hv y).mpr hnc, ?_, ?_⟩
+          · rw [ccv_azim_sub_self v0 v1 w1 y, hframe] at ha1
+            exact ha1
+          · rw [ccv_azim_sub_self v0 v1 w1 y, hframe] at ha2
+            exact ha2
+        · rintro ⟨hne0, ha1, ha2⟩
+          have hframe := azim_eq_ang_of_frame e1 e2 e3 he hax (sub_ne_zero.mpr hv)
+            (ccv_collinear3_zero_sub.not.mp hc1)
+            (ccv_collinear3_zero_sub.not.mp
+              ((zOf_ne_zero_iff he hax2 hv y).mp hne0))
+          refine ⟨(zOf_ne_zero_iff he hax2 hv y).mp hne0, ?_, ?_⟩
+          · rw [← hframe] at ha1
+            rw [ccv_azim_sub_self v0 v1 w1 y]
+            exact ha1
+          · rw [← hframe] at ha2
+            rw [ccv_azim_sub_self v0 v1 w1 y]
+            exact ha2
+      rw [hset]
+      refine hcont.measurable
+        (((measurableSet_singleton (0:ℂ)).compl).inter ?_)
+      exact (measurableSet_lt measurable_const
+          (measurable_ang.comp (measurable_const.mul measurable_id))).inter
+        (measurableSet_lt (measurable_ang.comp (measurable_const.mul measurable_id))
+          measurable_const)
+
+/-- HOL `MEASURABLE_CONIC_CAP_WEDGE`（flyspeck_multivariate.ml:6365，
+GT-1 wedge 交付件之可测性）：锥帽楔交集 Borel，无退化前提。 -/
+theorem measurableConicCapWedge (v0 v1 w1 w2 : V3) (r a : ℝ) :
+    MeasurableSet (ccvConicCap v0 v1 r a ∩ Kepler.Geom.wedge v0 v1 w1 w2) :=
+  (measurableConicCap v0 v1 r a).inter (ccv_measSet_wedge v0 v1 w1 w2)
+
+/-- HOL `VOLUME_CONIC_CAP_WEDGE_WEAK`（flyspeck_multivariate.ml:6147，
+GT-1 wedge 交付件主形）：`0 < a` 双非共线下楔帽交集有界可测，
+体积 = `azim/3·(1−a)·r³`（`1 ≤ a` 或 `r < 0` 时为 0）。
+使用点：GRUTOTI §D/§F（HL:3208/3516/4767/5154/6544/6928）。 -/
+theorem volumeConicCapWedgeFormula (v0 v1 w1 w2 : V3) (r a : ℝ) (ha : 0 < a)
+    (h1 : ¬ Collinear3 v0 v1 w1) (h2 : ¬ Collinear3 v0 v1 w2) :
+    Bornology.IsBounded (ccvConicCap v0 v1 r a ∩ Kepler.Geom.wedge v0 v1 w1 w2) ∧
+      MeasurableSet (ccvConicCap v0 v1 r a ∩ Kepler.Geom.wedge v0 v1 w1 w2) ∧
+      volume.real (ccvConicCap v0 v1 r a ∩ Kepler.Geom.wedge v0 v1 w1 w2) =
+        if 1 ≤ a ∨ r < 0 then 0
+        else azim v0 v1 w1 w2 / 3 * (1 - a) * r ^ 3 := by
+  refine ⟨(boundedConicCap v0 v1 r a).subset Set.inter_subset_left,
+    measurableConicCapWedge v0 v1 w1 w2 r a, ?_⟩
+  rcases eq_or_ne v1 v0 with he | hne
+  · rw [he, ccv_conicCap_empty, Set.empty_inter, Measure.real_def, measure_empty,
+      ENNReal.toReal_zero]
+    split
+    · rfl
+    · rw [show azim v0 v0 w1 w2 = 0 by
+        rw [azim, if_pos (Or.inl (collinear3_of_eq rfl : Collinear3 v0 v0 w1))]]
+      ring
+  · rcases lt_or_ge r 0 with hrneg | hr0
+    · rw [ccv_conicCap_rle0 r a (le_of_lt hrneg), Set.empty_inter, Measure.real_def,
+        measure_empty, ENNReal.toReal_zero, if_pos (Or.inr hrneg)]
+    · rcases eq_or_lt_of_le hr0 with hreq | hrpos
+      · rw [ccv_conicCap_rle0 r a hreq.symm.le, Set.empty_inter, Measure.real_def,
+          measure_empty, ENNReal.toReal_zero]
+        split
+        · rfl
+        · rw [← hreq]
+          ring
+      · by_cases hge : 1 ≤ a
+        · -- 1 ≤ a：帽空
+          have hE : ccvConicCap v0 v1 r a = ∅ := by
+            rw [ccv_conicCap_add_left, show ccvConicCap 0 (v1 - v0) r a = ∅ from by
+              rw [ccvConicCap, ccv_cone_empty_of_ge 0 (v1 - v0) a hge, Set.inter_empty],
+              Set.image_empty]
+          rw [hE, Set.empty_inter, Measure.real_def, measure_empty,
+            ENNReal.toReal_zero, if_pos (Or.inl hge)]
+        · -- 主情形：0 < a < 1，0 < r，双非共线，平移 + kernel
+          have ha1 : a < 1 := lt_of_not_ge hge
+          have hage : ¬ (1 ≤ a ∨ r < 0) := by
+            rintro (h | h)
+            · exact hge h
+            · linarith
+          have hkey : volume.real
+                (ccvConicCap v0 v1 r a ∩ Kepler.Geom.wedge v0 v1 w1 w2)
+              = volume.real (ccvConicCap 0 (v1 - v0) r a
+                  ∩ Kepler.Geom.wedge 0 (v1 - v0) (w1 - v0) (w2 - v0)) := by
+            rw [ccv_conicCap_add_left, ccv_wedge_sub_self,
+              ← Set.image_inter (f := fun y : V3 => v0 + y)
+                (fun a' b' h => add_left_cancel h), volume_real_add_left]
+          rw [if_neg hage, hkey, Measure.real_def,
+            ccv_volume_conicCapWedge_zero r a ha ha1 hrpos
+              (ccv_collinear3_zero_sub.not.mp h1)
+              (ccv_collinear3_zero_sub.not.mp h2),
+            ENNReal.toReal_ofReal (div_nonneg
+              (mul_nonneg (azim_nonneg 0 (v1 - v0) (w1 - v0) (w2 - v0))
+                (mul_nonneg (sub_nonneg.mpr ha1.le) (pow_nonneg hrpos.le 3)))
+              (by norm_num)),
+            ← ccv_azim_sub_self]
+          ring
+
+/-- HOL `VOLUME_CONIC_CAP_WEDGE`-WEAK 的 vol·azim/2π 形（GRUTOTI §D/§F、
+PA24:428 `volumeConicCapWedgeGeVsConicCap` 对接形状）：楔帽体积 =
+锥帽体积 × `azim/2π`。 -/
+theorem volumeConicCapWedge (v0 v1 w1 w2 : V3) (r a : ℝ) (ha : 0 < a)
+    (h1 : ¬ Collinear3 v0 v1 w1) (h2 : ¬ Collinear3 v0 v1 w2) :
+    volume.real (ccvConicCap v0 v1 r a ∩ Kepler.Geom.wedge v0 v1 w1 w2)
+      = volume.real (ccvConicCap v0 v1 r a) * azim v0 v1 w1 w2 / (2 * Real.pi) := by
+  obtain ⟨-, -, hvol⟩ := volumeConicCapWedgeFormula v0 v1 w1 w2 r a ha h1 h2
+  obtain ⟨-, hcap⟩ := volumeConicCap v0 v1 r a ha
+  rw [hvol, hcap]
+  by_cases hc : 1 ≤ a ∨ r < 0
+  · rw [if_pos hc]
+    rcases hc with h | h
+    · rw [if_pos (Or.inr (Or.inl h))]; ring
+    · rw [if_pos (Or.inr (Or.inr h))]; ring
+  · rw [if_neg hc]
+    have hvne : ¬ (v1 = v0 ∨ 1 ≤ a ∨ r < 0) := by
+      rintro (h | h | h)
+      · exact h1 (by rw [h]; exact collinear3_of_eq rfl)
+      · exact hc (Or.inl h)
+      · exact hc (Or.inr h)
+    rw [if_neg hvne, eq_div_iff (mul_ne_zero two_ne_zero Real.pi_ne_zero)]
+    ring
+
+/-- 三元仿射组合入三点仿射包（LuneVolume `mem_affineSpan_triple_of_eq` 私拷）。 -/
+private theorem ccv_mem_affineSpan_triple {x p q y : V3} {c h : ℝ}
+    (hy : y = x + c • (p - x) + h • (q - x)) :
+    y ∈ (affineSpan ℝ ({x, p, q} : Set V3) : Set V3) := by
+  have hxS : x ∈ affineSpan ℝ ({x, p, q} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hpS : p ∈ affineSpan ℝ ({x, p, q} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hqS : q ∈ affineSpan ℝ ({x, p, q} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hd1 : c • (p - x) ∈ (affineSpan ℝ ({x, p, q} : Set V3)).direction :=
+    Submodule.smul_mem _ c (AffineSubspace.vsub_mem_direction hpS hxS)
+  have hd2 : h • (q - x) ∈ (affineSpan ℝ ({x, p, q} : Set V3)).direction :=
+    Submodule.smul_mem _ h (AffineSubspace.vsub_mem_direction hqS hxS)
+  have hd3 : c • (p - x) + h • (q - x) ∈ (affineSpan ℝ ({x, p, q} : Set V3)).direction :=
+    Submodule.add_mem _ hd1 hd2
+  have hval : y = (c • (p - x) + h • (q - x)) +ᵥ x := by
+    rw [vadd_eq_add, hy]
+    abel
+  rw [hval]
+  exact AffineSubspace.vadd_mem_of_mem_direction hd3 hxS
 
 /-- HOL `AZIM_EQ_0_PI_IMP_COPLANAR`（flyspeck_multivariate.ml:2771）：
-方位角为 0 或 π ⟹ 四点共面。STILL `sorry`（2026-09-29）：S 档（预估 20-40 行）。
-NEEDS: 退化情形（`Collinear3 v0 v1 w1/w2`）经 `coplanar_triple` + `Coplanar.subset`
-直接收；主情形 `azim = 0` 经 `azim_eq_zero_iff_alt`（AzimLemmas:307，w2 ∈ affGt
-{v0,v1} {w1} ⊆ affineSpan {v0,v1,w1}）；`azim = π` 需补 `azim_eq_pi_iff`
-（w2 ∈ aff_lt {v0,v1} {w1} ⊆ affineSpan {v0,v1,w1}，flyspeck.ml:2758 `AZIM_EQ_PI`
-的移植，经 `azim_frame_spec` 的 ψ+π 极角展开可证）；最后 `Coplanar` 展开
-（`∃ u v w, s ⊆ affineSpan {u,v,w}`）经 `affGt`/`aff_lt` 的 `affineSpan` 单调性收。 -/
+方位角为 0 或 π ⟹ 四点共面。
+证法：退化情形（`Collinear3 v0 v1 w1/w2`）经 `collinear3_iff_smul` +
+`coplanar_triple`+`Coplanar.subset` 直接收；主情形 azim = 0 经
+`azim_eq_zero_iff_alt`+`affGt_pair_iff` 的射线分解，azim = π 经
+`azim_frame_spec` 的 ψ+π 极角展开（`rep_of_zOf`+`Real.cos/sin_add_pi`）得
+`w2 − v0 = −(r2/r1)•(w1−v0) + t•(v1−v0)`；两向都以
+`ccv_mem_affineSpan_triple` 收进 `affineSpan {v0,w1,v1}`。 -/
 theorem AZIM_EQ_0_PI_IMP_COPLANAR (v0 v1 w1 w2 : V3)
     (h : azim v0 v1 w1 w2 = 0 ∨ azim v0 v1 w1 w2 = Real.pi) :
     Coplanar ({v0, v1, w1, w2} : Set V3) := by
-  -- NEEDS: 退化情形经 coplanar_triple+Coplanar.subset；azim=0 经 azim_eq_zero_iff_alt；
-  -- azim=π 需补 azim_eq_pi_iff（azim_frame_spec 的 ψ+π 展开）；最后 affineSpan 单调性收
-  sorry
+  by_cases hv01 : v0 = v1
+  · -- 退化一：v0 = v1，直接丢 v1
+    rw [← hv01]
+    refine ⟨v0, w1, w2, ?_⟩
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | hp
+    · exact mem_affineSpan ℝ (by simp)
+    · rcases hp with rfl | hp
+      · exact mem_affineSpan ℝ (by simp)
+      · rcases hp with rfl | rfl
+        · exact mem_affineSpan ℝ (by simp)
+        · exact mem_affineSpan ℝ (by simp)
+  have hv10 : v1 ≠ v0 := fun he => hv01 he.symm
+  by_cases hc1 : Collinear3 v0 v1 w1
+  · -- 退化二：w1 在 v0v1 线上，w1 ∈ affineSpan {v0,v1}
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul hv10).mp hc1
+    refine ⟨v0, v1, w2, ?_⟩
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | hp
+    · exact mem_affineSpan ℝ (by simp)
+    · rcases hp with rfl | hp
+      · exact mem_affineSpan ℝ (by simp)
+      · rcases hp with rfl | rfl
+        · exact ccv_mem_affineSpan_triple (c := c) (h := 0)
+            (by rw [zero_smul, add_zero, ← hc]; abel)
+        · exact mem_affineSpan ℝ (by simp)
+  by_cases hc2 : Collinear3 v0 v1 w2
+  · -- 退化三：w2 在 v0v1 线上
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul hv10).mp hc2
+    refine ⟨v0, v1, w1, ?_⟩
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | hp
+    · exact mem_affineSpan ℝ (by simp)
+    · rcases hp with rfl | hp
+      · exact mem_affineSpan ℝ (by simp)
+      · rcases hp with rfl | rfl
+        · exact mem_affineSpan ℝ (by simp)
+        · exact ccv_mem_affineSpan_triple (c := c) (h := 0)
+            (by rw [zero_smul, add_zero, ← hc]; abel)
+  -- 主情形
+  rcases h with h0 | hpi
+  · -- azim = 0：affGt 射线分解
+    have hw2gt : w2 ∈ affGt ({v0, v1} : Set V3) ({w1} : Set V3) :=
+      (azim_eq_zero_iff_alt hc1 hc2).mp h0
+    obtain ⟨c, hcpos, t, hdec⟩ :=
+      (affGt_pair_iff (v0 := v0) (v1 := v1) (x := w1) (y := w2)
+        hv01
+        (fun he => hc1 (collinear3_pair_left he))
+        (fun he => hc1 (collinear3_pair_right he))).mp hw2gt
+    refine ⟨v0, w1, v1, ?_⟩
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | hp
+    · exact mem_affineSpan ℝ (by simp)
+    · rcases hp with rfl | hp
+      · exact mem_affineSpan ℝ (by simp)
+      · rcases hp with rfl | rfl
+        · exact mem_affineSpan ℝ (by simp)
+        · exact ccv_mem_affineSpan_triple (c := c) (h := t)
+            (by rw [show p = v0 + (p - v0) from by abel, hdec]; abel)
+  · -- azim = π：标架极坐标，ψ+π 展开
+    obtain ⟨e1, e2, e3, he, halign⟩ := exists_on3_eq_smul (v1 - v0 : V3)
+      (sub_ne_zero.mpr hv10)
+    have hax : (v1 - v0 : V3) = dist v1 v0 • e3 := by
+      rw [dist_eq_norm]
+      exact halign
+    obtain ⟨ψ, r1, r2, hr1, hr2, hz1, hz2⟩ := azim_frame_spec hc1 hc2 he hax hv10
+    rw [hpi] at hz2
+    have href1 := rep_of_zOf he hax hv10 w1 ψ r1 hz1
+    have href2 := rep_of_zOf he hax hv10 w2 (ψ + Real.pi) r2 hz2
+    set t1 := ((w1 - v0 : V3) ⬝ᵥ e3) / dist v1 v0 with ht1def
+    set t2 := ((w2 - v0 : V3) ⬝ᵥ e3) / dist v1 v0 with ht2def
+    have hrc : (r1 * Real.cos ψ) • e1 + (r1 * Real.sin ψ) • e2
+        = (w1 - v0 : V3) - t1 • (v1 - v0) := by
+      rw [href1]
+      abel
+    have hr10 : r1 ≠ 0 := hr1.ne'
+    have hscal1 : (-(r2 / r1)) * (r1 * Real.cos ψ) = r2 * -(Real.cos ψ) := by
+      field_simp
+    have hscal2 : (-(r2 / r1)) * (r1 * Real.sin ψ) = r2 * -(Real.sin ψ) := by
+      field_simp
+    have hA2 : (r2 * Real.cos (ψ + Real.pi)) • e1 + (r2 * Real.sin (ψ + Real.pi)) • e2
+        = (-(r2 / r1)) • ((r1 * Real.cos ψ) • e1 + (r1 * Real.sin ψ) • e2) := by
+      rw [Real.cos_add_pi, Real.sin_add_pi, smul_add, smul_smul, smul_smul, hscal1, hscal2]
+    have hkey : (w2 - v0 : V3)
+        = (-(r2 / r1)) • (w1 - v0 : V3) + ((r2 / r1) * t1 + t2) • (v1 - v0) := by
+      rw [href2, hA2, hrc]
+      module
+    refine ⟨v0, w1, v1, ?_⟩
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | hp
+    · exact mem_affineSpan ℝ (by simp)
+    · rcases hp with rfl | hp
+      · exact mem_affineSpan ℝ (by simp)
+      · rcases hp with rfl | rfl
+        · exact mem_affineSpan ℝ (by simp)
+        · exact ccv_mem_affineSpan_triple (c := -(r2 / r1)) (h := (r2 / r1) * t1 + t2)
+            (by rw [show p = v0 + (p - v0) from by abel, hkey]; abel)
 
 end Kepler.Text
 /-! ## §7 公开件公理体检 -/
@@ -1114,3 +1605,6 @@ end Kepler.Text
 #print axioms Kepler.Text.volumeConicCapPos
 #print axioms Kepler.Text.measurableConicCap
 #print axioms Kepler.Text.boundedConicCap
+#print axioms Kepler.Text.measurableConicCapWedge
+#print axioms Kepler.Text.volumeConicCapWedgeFormula
+#print axioms Kepler.Text.volumeConicCapWedge
