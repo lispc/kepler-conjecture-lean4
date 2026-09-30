@@ -75,18 +75,27 @@ DISCHARGES
     (PackingAuto2.lean:845); `TSKAJXY_034` additionally needs
     `tsk_hyp_new`.  No `pack_concl` lemma is re-proved here.
 
-NEEDS (giant fill-in markers): GAMMAX_MCELL1, MCELL2_VX_PROPS,
-  GAMMAX_MCELL2, MCELL1_SOL_RESTRICT, MCELL1_RADIAL, MCELL1_VOL,
+NEEDS (wave-B3 state, 2026-09-30): closed in-file — GAMMAX_MCELL1,
+  MCELL2_VX_PROPS, MCELL1_SOL_RESTRICT, MCELL1_RADIAL, MCELL1_VOL,
   MCELL_CELL_PARAMETERS_D_EXIST, MCELL2_CELL_PARAMETERS_EXIST,
   MCELL_PARAM_D_UL, MCELL2_PARAM_D_UL, MCELL2_DIHX,
   MCELL2_INTER_BIS_LE_MEASURABLE, MCELL2_VOL_SPLIT, RCONE_PAIR,
   MCELL2_SPLIT, FRUSTT_RCONE_GE, FRUSTT_WEDGE_RCONE_GE,
   NOT_COPLANAR_EXTREME_MCELL2, MCELL2_DIHV_LT_PI, MCELL2_DIHV_AZIM,
-  MCELL2_VOL_SPLIT_EXPLICIT, MCELL2_PERMUTE_01, MCELL2_VOL, MCELL2_SOL,
-  GAMMAX_GAMMA2_X, TSKAJXY_1, TSKAJXY_2, TSKAJXY_034, TSKAJXY,
-  NOT_COPLANAR_OMEGA_LIST_N, NOT_COPLANAR_R3, BARV_DISTINCT,
-  OMEGA_LIST_BISECTOR, CONVEX_HULL_4_AFF_GE, CONVEX_HULL_SCALE,
-  LEFT_ACTION_LIST_1_PROPERTIES_ALT.
+  TSKAJXY_1, TSKAJXY (capstone, assumption-fed), NOT_COPLANAR_OMEGA_LIST_N,
+  NOT_COPLANAR_R3, BARV_DISTINCT, OMEGA_LIST_BISECTOR,
+  CONVEX_HULL_4_AFF_GE, CONVEX_HULL_SCALE; B3-wave assemblies: GAMMAX_MCELL2,
+  MCELL2_VOL, TSKAJXY_2.
+REMAINING sorry (8 sites): `pack_nonlinear_rest` (def, G4 bank stub),
+  `mi_gamma3f_gamma3f_x_div_sqrtdelta` (merge_ineq WEAK/WEAK2),
+  `TSKAJXY_034` (0/3/4-cell giant), `MCELL2_VOL_SPLIT_EXPLICIT` (wedge
+  closed form, GIANT; consumed by MCELL2_VOL), `LEFT_ACTION_LIST_1_
+  PROPERTIES_ALT` (PA14 left-action kit), `MCELL2_PERMUTE_01` (waits on
+  LEFT_ACTION; consumed by MCELL2_VOL), `MCELL2_SOL` (VOLUME_CONIC_CAP(_
+  WEDGE) closed forms, GIANT), `GAMMAX_GAMMA2_X` (sole structural gap: the
+  dihV<->dih_y bridge — apex-0 form proved private at LocalAuto38:1119
+  `p38_dihV_eq_dihY`; needs a public 4-point wrapper in LocalAuto38 before
+  this assembly can be written; see the site note).
 -/
 
 import Kepler.Text.PackingAuto2
@@ -1650,7 +1659,10 @@ theorem MCELL2_VX_PROPS (V X : Set V3) (ul : List V3) (_hs : saturated V)
         (hmem _).mpr (Or.inr rfl), huv⟩
   exact ⟨hvx, huv, hedg⟩
 
-/-- HOL `GAMMAX_MCELL2` (TSKAJXY3.hl:138; giant). -/
+/-- HOL `GAMMAX_MCELL2` (TSKAJXY3.hl:138; proved 2026-09-30 wave B3:
+`MCELL2_VX_PROPS` pins the two vertices and the single edge, `totalSolid`
+collapses to the two vertex sols, and the edge sum is the epsilon-beta pair
+evaluation closed by `DIHX_SYM`/`HL_2` on the swapped branch). -/
 theorem GAMMAX_MCELL2 (V X : Set V3) (ul : List V3) (_hs : saturated V)
     (_hp : Packing V) (_hb : barV V 3 ul) (_hX : X = mcell2 V ul)
     (_hn : ¬nullSet X) :
@@ -1658,8 +1670,54 @@ theorem GAMMAX_MCELL2 (V X : Set V3) (ul : List V3) (_hs : saturated V)
       volume.real X - (2 * mm1 / Real.pi) * (sol (elV ul 0) X + sol (elV ul 1) X) +
         (8 * mm2 / Real.pi) * lmfun (hl [elV ul 0, elV ul 1]) *
           dihX V X (elV ul 0, elV ul 1) := by
-  -- NEEDS: TSKAJXY3.hl:138；路线（B3 波）：HDTFNFZ_ALT（PA4:1240，需 import PA4）+ MCELL2_VOL/MCELL2_SOL/MCELL2_DIHX + MCELL2_VX_PROPS 装配
-  sorry
+  have hs : saturated V := _hs
+  have hp : Packing V := _hp
+  have hb : barV V 3 ul := _hb
+  have hX : X = mcell2 V ul := _hX
+  have hn : ¬nullSet X := _hn
+  obtain ⟨hvx, huv, hedg⟩ := MCELL2_VX_PROPS V X ul hs hp hb hX hn
+  -- the total solid over the two-vertex set
+  have hTS : totalSolid V X = sol (elV ul 0) X + sol (elV ul 1) X := by
+    rw [totalSolid, hvx, setSum]
+    have hfin : ({elV ul 0, elV ul 1} : Set V3).Finite := by simp
+    rw [dif_pos hfin]
+    have hts : hfin.toFinset = ({elV ul 0, elV ul 1} : Finset V3) := by
+      ext z
+      simp
+    rw [hts, Finset.sum_insert
+      (show elV ul 0 ∉ ({elV ul 1} : Finset V3) from
+        fun hc => huv (Finset.mem_singleton.mp hc)),
+      Finset.sum_singleton]
+  -- the single-edge sum: the epsilon picks the pair up to swap; the swapped
+  -- branch closes by DIHX_SYM (edge membership) and HL_2/dist_comm
+  have hms : mcellSet V X := ⟨2, ul, by rw [hX]; exact BumpP4.MCELL2 V ul, hb⟩
+  have hedg_in : ({elV ul 0, elV ul 1} : Set V3) ∈ edgeX V X := by rw [hedg]; simp
+  have heps := Classical.epsilon_spec
+    (p := fun r : V3 × V3 => ({elV ul 0, elV ul 1} : Set V3) = {r.1, r.2})
+    (⟨(elV ul 0, elV ul 1), rfl⟩ : ∃ y, ({elV ul 0, elV ul 1} : Set V3) = {y.1, y.2})
+  have hEdge : (setSum (edgeX V X) fun e =>
+      if e ∈ edgeX V X then
+        let q := Classical.epsilon fun r : V3 × V3 => e = {r.1, r.2}
+        dihX V X (q.1, q.2) * lmfun (hl [q.1, q.2])
+      else 0)
+      = dihX V X (elV ul 0, elV ul 1) * lmfun (hl [elV ul 0, elV ul 1]) := by
+    rw [setSum]
+    have hfin : (edgeX V X : Set (Set V3)).Finite := by rw [hedg]; simp
+    rw [dif_pos hfin]
+    have hts : hfin.toFinset = {{elV ul 0, elV ul 1}} := by
+      ext e
+      simp [hedg]
+    rw [hts]
+    simp only [Finset.sum_singleton]
+    split
+    · next hmem =>
+      rcases Set.pair_eq_pair_iff.mp heps with ⟨h1, h2⟩ | ⟨h1, h2⟩
+      · rw [← h1, ← h2]
+      · rw [← h1, ← h2, ← DIHX_SYM V X (elV ul 0) (elV ul 1) hp hs hms hedg_in,
+          HL_2, HL_2, dist_comm]
+    · next hnot => exact absurd hedg_in hnot
+  rw [gammaX, hTS, hEdge]
+  ring
 
 /-- HOL `BALL_DIFF_RCONE_GT` (TSKAJXY3.hl:176; proved: pure inner-product
 algebra on the definitions of `ball`/`rcone_gt`). -/
@@ -4487,7 +4545,7 @@ theorem MCELL2_VOL_SPLIT_EXPLICIT (V X : Set V3) (ul : List V3) (h : ℝ)
     volume.real (X ∩ bisLe (elV ul 0) (elV ul 1)) =
       dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) *
         (2 - h ^ 2) * h / 6 := by
-  -- NEEDS: TSKAJXY3.hl:1555；路线（B2/B3 波）：楔形体积闭式 vol(frustum∩wedge) = dihV·h³(1−h²/2)/6（HOL vol1.hl:473 公理级；照 WedgeVolume 切片模板组）
+  -- NEEDS: TSKAJXY3.hl:1555；路线（B2/B3 波）：楔形体积闭式 vol(frustum∩wedge) = dihV·h³(1−h²/2)/6（HOL vol1.hl:473 公理级；照 WedgeVolume 切片模板组）——GIANT 独立工位；已被 MCELL2_VOL（B3 装配）作为第一半消费
   sorry
 
 /-- HOL `LEFT_ACTION_LIST_1_PROPERTIES_ALT` (TSKAJXY3.hl:1694; giant: a
@@ -4502,7 +4560,7 @@ theorem LEFT_ACTION_LIST_1_PROPERTIES_ALT (V : Set V3) (ul : List V3) (xl : List
       omegaListN V xl 2 = omegaListN V ul 2 ∧
       omegaListN V xl 3 = omegaListN V ul 3 ∧
       mxi V xl = mxi V ul := by
-  -- NEEDS: TSKAJXY3.hl:1694；路线（B2 波）：HOL 本体一行 rewrite；Lean 需补 PA14 left-action kit（PA14:231/258/286 仍 sorry）的置换引理移植
+  -- NEEDS: TSKAJXY3.hl:1694；路线（B2 波）：HOL 本体一行 rewrite；Lean 需补 PA14 left-action kit（PA14:231/258/286 仍 sorry）的置换引理移植；下游消费者 MCELL2_PERMUTE_01（下一件）
   sorry
 
 /-- HOL `MCELL2_PERMUTE_01` (TSKAJXY3.hl:1714; giant). -/
@@ -4512,18 +4570,37 @@ theorem MCELL2_PERMUTE_01 (V : Set V3) (ul : List V3) (hs : saturated V)
       mxi V ul = mxi V vl ∧ omegaListN V ul 3 = omegaListN V vl 3 ∧
       hl (truncateSimplex 1 ul) = hl (truncateSimplex 1 vl) ∧
       mcell2 V ul = mcell2 V vl ∧ barV V 3 vl := by
-  -- NEEDS: TSKAJXY3.hl:1714；路线（B2 波）：消费 LEFT_ACTION_LIST_1_PROPERTIES_ALT（上一件）做 01-交换见证迁移
+  -- NEEDS: TSKAJXY3.hl:1714；路线（B2 波）：消费 LEFT_ACTION_LIST_1_PROPERTIES_ALT（上一件）做 01-交换见证迁移；已被 MCELL2_VOL（B3 装配）作为第二半消费
   sorry
 
-/-- HOL `MCELL2_VOL` (TSKAJXY3.hl:1774; giant). -/
+/-- HOL `MCELL2_VOL` (TSKAJXY3.hl:1774; assembly 2026-09-30 wave B3:
+`MCELL2_VOL_SPLIT` halves the cell across the bisector, each half is the
+`MCELL2_VOL_SPLIT_EXPLICIT` wedge volume, the second transported along the
+`MCELL2_PERMUTE_01` witness (`DIHV_SYM` closes the axis swap).  Residual:
+the two consumed upstream giants. -/
 theorem MCELL2_VOL (V X : Set V3) (ul : List V3) (h : ℝ) (hs : saturated V)
     (hp : Packing V) (hb : barV V 3 ul) (hX : X = mcell2 V ul)
     (hhl : h = hl (truncateSimplex 1 ul)) (hn : ¬nullSet X) :
     volume.real X =
       dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) *
         (2 - h ^ 2) * h / 3 := by
-  -- NEEDS: TSKAJXY3.hl:1774；路线（B3 波）：MCELL2_VOL_SPLIT + 2× MCELL2_VOL_SPLIT_EXPLICIT（经 MCELL2_PERMUTE_01）
-  sorry
+  have hlt : h < Real.sqrt 2 := by rw [hhl]; exact MCELL2_HL_LT_SQRT2 V ul hs hp hb (by rw [← hX]; exact hn)
+  rw [MCELL2_VOL_SPLIT V X ul hs hp hb hX hn,
+    MCELL2_VOL_SPLIT_EXPLICIT V X ul h hs hp hb hX hhl hlt hn]
+  -- second half: transport the explicit assembly along the 01-permutation
+  obtain ⟨vl, hv0, hv1, hmxi, hom, hhlv, hcell, hbl⟩ :=
+    MCELL2_PERMUTE_01 V ul hs hp hb (by rw [← hX]; exact hn)
+  have hhl' : h = hl (truncateSimplex 1 vl) := by rw [hhl, hhlv]
+  have h2 := MCELL2_VOL_SPLIT_EXPLICIT V X vl h hs hp hbl
+    (by rw [hX]; exact hcell) hhl' hlt hn
+  have e0 : bisLe (elV ul 1) (elV ul 0) = bisLe (elV vl 0) (elV vl 1) := by
+    rw [hv1, hv0]
+  have e1 : dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3)
+      = dihV (elV vl 0) (elV vl 1) (mxi V vl) (omegaListN V vl 3) := by
+    rw [hv0, hv1, hmxi, hom, DIHV_SYM (elV vl 1) (elV vl 0) (mxi V vl)
+      (omegaListN V vl 3)]
+  rw [e0, h2, ← e1]
+  ring
 
 /-- HOL `BALL_SUBSET_BIS_LE` (TSKAJXY3.hl:1817). -/
 theorem BALL_SUBSET_BIS_LE (u v : V3) (r : ℝ) (hr : 2 * r ≤ dist u v) :
@@ -4570,7 +4647,7 @@ theorem MCELL2_SOL (V X : Set V3) (ul : List V3) (h : ℝ) (hs : saturated V)
     sol (elV ul 0) X =
       dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) *
         (1 - h / Real.sqrt 2) := by
-  -- NEEDS: TSKAJXY3.hl:1859；路线（B3 波，臂内最大单件 HOL 205 行）：URRPHBZ2-k2 径向 + VOLUME_CONIC_CAP(_WEDGE) 闭式 + SDIFF 账
+  -- NEEDS: TSKAJXY3.hl:1859；路线（B3 波，臂内最大单件 HOL 205 行）：URRPHBZ2-k2 径向 + VOLUME_CONIC_CAP(_WEDGE) 闭式（=楔形体积闭式族，GIANT 独立工位）+ SDIFF 账；下游消费者 GAMMAX_GAMMA2_X
   sorry
 
 /-- HOL `GAMMAX_GAMMA2_X` (TSKAJXY3.hl:2070; giant: reduces `gammaX` of a
@@ -4586,16 +4663,53 @@ theorem GAMMAX_GAMMA2_X (V X : Set V3) (ul : List V3) (y1 y2 y3 y4 y5 y6 : ℝ)
     0 ≤ dihY y1 y2 y3 y4 y5 y6 ∧
       gammaX V X lmfun =
         gamma2_x_div_azim_v2 (h0cut y1) (y1 * y1) * dihY y1 y2 y3 y4 y5 y6 := by
-  -- NEEDS: TSKAJXY3.hl:2070；路线（B3 波）：GAMMAX_MCELL2 + MCELL2_VOL + MCELL2_SOL + PERMUTE_01 + MCELL2_DIHX + DIHV_EQ_DIH_Y/DIHV_RANGE + lmfun_h0cut + sqrt8_sqrt2
+  -- NEEDS: TSKAJXY3.hl:2070；装配被唯一结构性缺口卡住：dihV↔dih_y 桥。apex-0 桥已在
+  -- LocalAuto38:1119（`p38_dihV_eq_dihY`）证毕但 private、PA21 不可见（LA38 公开面
+  -- 经 SphereKit/IneqClosureDefs import 传递可见：DIH_Y_NN/DELTA_Y_POS_4POINTS 可用，
+  -- `0 ≤ dihY` 一支可直接闭合）。需 LA38 侧加公开 wrapper：4 点形式
+  -- `¬Collinear {v0,v1,v2} → ¬Collinear {v0,v1,v3} → dihV v0 v1 v2 v3 = dihY …`
+  -- （平移到 apex-0 + `¬Collinear → 0 < upsX` 用 cross/Gram 恒等式，同型
+  -- LocalAuto17:183 `upsX_pos_of_noncollinear_p17`）。其余消费件就位：
+  -- GAMMAX_MCELL2/MCELL2_VOL（B3 已证）、MCELL2_SOL/MCELL2_PERMUTE_01（sorried 上游、
+  -- 陈述可直接消费）、MCELL2_DIHX/DIHV_SYM/lmfun_h0cut/mi_sqrt8_eq/BARV3_TRUNC1/HL_2（已证）。
   sorry
 
-/-- HOL `TSKAJXY_2` (TSKAJXY3.hl:2181; giant: the 2-cell case, consuming
-GAMMAX_GAMMA2_X + the GRKIBMP bank). -/
+/-- HOL `TSKAJXY_2` (TSKAJXY3.hl:2181; assembly 2026-09-30 wave B3: the
+null branch is `GAMMAX_NULLSET`, the non-null branch is `GAMMAX_GAMMA2_X`
+with the analytic factor nonnegative on `2 ≤ y1 ≤ √8` (`GRKIBMP` on the
+`proj_grk_bank` slice, bounds from `Packing.dist_ge_two`/`MCELL2_HL_LT_SQRT2`
+via `BARV3_TRUNC1`+`HL_2`, `mi_sqrt8_eq` for the cap).  Residual: the
+consumed `GAMMAX_GAMMA2_X` giant upstream. -/
 theorem TSKAJXY_2 (V X : Set V3) (ul : List V3) (hnl : pack_nonlinear_non_ox3q1h)
     (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul)
     (hX : X = mcell2 V ul) : gammaX V X lmfun ≥ 0 := by
-  -- NEEDS: TSKAJXY3.hl:2181；路线（B3 波）：GAMMAX_GAMMA2_X + GRKIBMP（:465 已证）+ mi_y_bounds + 实数账
-  sorry
+  by_cases hn : nullSet X
+  · rw [GAMMAX_NULLSET V lmfun X ul 2 hs hp hb (by rw [hX]; exact BumpP4.MCELL2 V ul) hn]
+  · -- non-null: the analytic per-azimuth factor is ≥ 0 on the y1-box
+    obtain ⟨hy1n, hprod⟩ := GAMMAX_GAMMA2_X V X ul (dist (elV ul 0) (elV ul 1))
+      (dist (elV ul 0) (mxi V ul)) (dist (elV ul 0) (omegaListN V ul 3))
+      (dist (mxi V ul) (omegaListN V ul 3)) (dist (elV ul 1) (omegaListN V ul 3))
+      (dist (elV ul 1) (mxi V ul)) hs hp hb hX hn rfl rfl rfl rfl rfl rfl
+    obtain ⟨_, huv, _⟩ := MCELL2_VX_PROPS V X ul hs hp hb hX hn
+    obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hb
+    have hbsub : barV V 3 [u0, u1, u2, u3] := by rw [← hul]; exact hb
+    have hsub : setOfList [u0, u1, u2, u3] ⊆ V := BARV_SUBSET V 3 [u0, u1, u2, u3] hbsub
+    have hu0 : elV ul 0 ∈ V := by
+      rw [hul]; exact hsub (by simp [setOfList, elV])
+    have hu1 : elV ul 1 ∈ V := by
+      rw [hul]; exact hsub (by simp [setOfList, elV])
+    have hy2 : (2:ℝ) ≤ dist (elV ul 0) (elV ul 1) := hp.dist_ge_two hu0 hu1 huv
+    have hlt : hl (truncateSimplex 1 ul) < Real.sqrt 2 :=
+      MCELL2_HL_LT_SQRT2 V ul hs hp hb (by rw [← hX]; exact hn)
+    have hy8 : dist (elV ul 0) (elV ul 1) ≤ Real.sqrt 8 := by
+      have hlen : dist (elV ul 0) (elV ul 1) = 2 * hl (truncateSimplex 1 ul) := by
+        rw [BARV3_TRUNC1 V ul hb, HL_2]
+        ring
+      rw [hlen, mi_sqrt8_eq]
+      exact le_of_lt (mul_lt_mul_of_pos_left hlt (by norm_num : (0:ℝ) < 2))
+    have hfac := GRKIBMP (proj_grk_bank hnl) (dist (elV ul 0) (elV ul 1)) hy2 hy8
+    rw [hprod]
+    exact mul_nonneg hfac hy1n
 
 /-- HOL `tsk_required_ineq` (TSKAJXY3.hl:2240): the string keys of the
 Merge_ineq certified inequalities consumed by `TSKAJXY` (no mathematical
