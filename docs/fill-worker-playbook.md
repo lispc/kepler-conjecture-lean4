@@ -520,6 +520,18 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   共面用 `h1|h2|…` + `rw`）；`simpa` 对 insert 链析取顺序不稳（用
   `simpa only` 或专用展开引理 `p21_mem_quad`）；`Set.Finite.mem_toFinset`
   有限性参数显式；`lt_of_le_of_ne` 第二参数 `a ≠ b`。
+- **PA15 @GT-3a 后**（CONIC_CAP trio = `p15_box_pos` 一引理+三段短装配
+  @`883e02dc`）：affine-box 路线（19 kit 私件全真证：共面桥/`p15_li_of_ncopl`
+  线性无关/`p15_bisector_exists` 平分线标架极坐标+ℂ 虚部）；**Kit D 续图在
+  /tmp/gt3a_probeD.lean**（Geom-only 快编译探针，LinearMap+det≠0 全通，仅余
+  ~8 小错：nlinarith hint 与 affGt 四点互异 finset-和两处）——Kit D lane 先
+  恢复 /tmp 探针再落盘。`p15_copl_of_azim_zero` 可回灌 ConicCapVolume。
+  **雷区**：`mul_div_cancel` 本快照是 CommGroup 引理（ℝ 上 pattern 不匹配，
+  除法一律 div_le_iff₀ 族）；**by positivity 看不见变量符号**（含变量原子的
+  不等式全灭，须 mul_pos/div_pos/linarith 显式组装；set 引入的局部量是
+  不透明原子）；`set_option … in` 放文件头（import 后）才安全；`rw [div_lt_iff₀ h]
+  at hc` 的 by-项必须单行；`Set.Finite.toFinset_insert` 逐层；`Fin.sum_univ_three`
+  正向 simpa 勿加 .symm。
 - **PA19 SUM_GAMMAX 波地图（KIZHLTL4 后最后一枚上游）**：
   `SUM_GAMMAX_LMFUN_ESTIMATE`(PA18:2538, bare sorry)——sum_gamma.hl 1400 行，
   需 `BOUND_GAMMA_X_lmfun`/`CARD_MCELL_CONTAINS_POINT_klemma`/

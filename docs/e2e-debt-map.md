@@ -69,7 +69,12 @@
   `1137ad92`，patch 可贴性实测 0 error，**待用户裁决**）；②sum_volD 缺
   Packing/saturated 前提；③pivot 缺 region 覆盖假设——②③登记未立项，等
   grutoti_region 落地后补前提走同一流程。GT-3 剩余关键路径：CONIC_CAP trio
-  (PA15:818-828，GT-1 公式在手预估 100-200 行)/grutoti_region(giant)/AJRIPQN。
+  (PA15:818-828)/grutoti_region(giant)/AJRIPQN。**GT-3a 已落账 (2026-09-30，
+  `883e02dc`)**：路线升级——affine-box 替代楔体积（省 ~600 行、免 GT-1 依赖），
+  19 枚真证私件铺完（共面桥/线性无关/平分线 Kit）；CONIC_CAP 三件降格为
+  **`p15_box_pos` 一引理 + 三段短装配**（续图 /tmp/gt3a_probeD.lean，Kit D
+  探针仅余 ~8 小错）；`p15_copl_of_azim_zero`（azim=0 半件）可回灌
+  ConicCapVolume 的 AZIM_EQ_0_PI 桥。
 - **Phase 2 Graphs 链**：wave3 收官构建发现 `lake build Kepler.Assembly` 会自展
   式重建 Graphs CertShards（本机 30-2100s/片，9000+ jobs 量级）——后台跑完后
   脊柱探针解锁，DEBT.md"结构性不可用"注记作废。
