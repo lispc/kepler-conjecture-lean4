@@ -63,9 +63,14 @@ Encoding notes.
   `Convex.nullMeasurableSet` (`Convex.addHaar_frontier`), and no
   `Measure.IsComplete` instance for `volume` exists in Mathlib to upgrade it.
 - Proofs: mechanical lemmas are proved; the large geometry/counting proofs
-  (`MCELL_ID_*`, `CONIC_CAP_*`, `LEFT_ACTION_LIST_*`, `DIHX_SYM`,
-  the klemma bound kit, ...) are `sorry` skeletons faithful to the source
-  statements, for later lanes.
+  (`MCELL_ID_*`, `LEFT_ACTION_LIST_*`, `DIHX_SYM`, the klemma bound kit, ...)
+  are `sorry` skeletons faithful to the source statements, for later lanes.
+  The `CONIC_CAP_*` trio is PROVED (GT-3 Kit D lane, affine-box route):
+  `p15_box_pos` (Kit D: `p15_comboMap` endomorphism with `det != 0` from Kit B
+  linear independence, open good-parameter region, volume transport via
+  `Measure.addHaar_image_linearMap`) + `p15_coplML` (the chapter's
+  `Coplanar` implies Mathlib's `Coplanar ℝ`, via `vectorSpan` finrank ≤ 2)
+  + `wedge_eq_affGt`/`p15_bisector_exists` for the wedge form.
 
 DISCHARGES: none. None of the PackingAuto2 `*_concl` interfaces matches this
 chapter: `TIWWFYQ` is already proved in PackingAuto5 (pack3 lane);
@@ -1568,38 +1573,711 @@ private theorem p15_bisector_exists {v0 v1 w1 w2 : V3}
     · exact absurd h hdne
 
 
+/-! ### Kit D: affine-box positivity (p15_box_pos; rebuilt from the GT-3a
+continuation map, probe /tmp/gt3a_probeD.lean)
+
+The `¬coplanar` box route: with `LinearIndependent ℝ ![u1 - u0, w1 - u0, w2 - u0]`
+(Kit B) the parameter box `G = {v | coords > 0, C1, C2, ‖comboMap v‖ < r, sum < 1}`
+is an open neighborhood-invariant region; `p15_mem_of_good` sends every good
+parameter point into `conicCap ∩ affGt` and into `conicCap ∩ convexHull`, and the
+volume of the image is `|det comboMap| * volume (ball vstar ε) > 0` by
+`addHaar_image_linearMap` + `IsOpen.measure_pos` + translation invariance. -/
+
+private def p15_bvec (u0 u1 w1 w2 : V3) : Fin 3 → V3 := ![u1 - u0, w1 - u0, w2 - u0]
+
+private def p15_comboMap (u0 u1 w1 w2 : V3) : V3 →ₗ[ℝ] V3 where
+  toFun v := ∑ i : Fin 3, (WithLp.ofLp v) i • p15_bvec u0 u1 w1 w2 i
+  map_add' x y := by
+    simp only [WithLp.ofLp_add, Pi.add_apply, add_smul, Finset.sum_add_distrib]
+  map_smul' c x := by
+    simp only [WithLp.ofLp_smul, RingHom.id_apply]
+    rw [Finset.smul_sum]
+    exact Finset.sum_congr rfl fun i _ => by rw [smul_smul, Pi.smul_apply, smul_eq_mul]
+
+private theorem p15_comboMap_apply (u0 u1 w1 w2 : V3) (v : V3) :
+    p15_comboMap u0 u1 w1 w2 v = ∑ i : Fin 3, (WithLp.ofLp v) i • p15_bvec u0 u1 w1 w2 i :=
+  rfl
+
+private theorem p15_zero_toLp : (WithLp.toLp 2 (0 : Fin 3 → ℝ) : V3) = 0 := by
+  have h : (WithLp.toLp 2 (0 : Fin 3 → ℝ) : V3) = (0 : V3) := by
+    ext i
+    simp
+  exact h
+
+private theorem p15_comboMap_ker {u0 u1 w1 w2 : V3}
+    (hli : LinearIndependent ℝ (p15_bvec u0 u1 w1 w2)) :
+    LinearMap.ker (p15_comboMap u0 u1 w1 w2) = ⊥ := by
+  rw [LinearMap.ker_eq_bot]
+  intro x y hxy
+  have h1 : p15_comboMap u0 u1 w1 w2 (x - y) = 0 := by
+    rw [map_sub, hxy, sub_self]
+  rw [p15_comboMap_apply] at h1
+  have hg := (Fintype.linearIndependent_iff.mp hli) (fun i => (WithLp.ofLp (x - y)) i) h1
+  have h0 : (WithLp.ofLp (x - y)) = 0 := funext hg
+  have hv : x - y = WithLp.toLp 2 (WithLp.ofLp (x - y)) := (WithLp.toLp_ofLp 2 _).symm
+  exact sub_eq_zero.mp (by rw [hv, h0, p15_zero_toLp])
+
+private theorem p15_comboMap_inj {u0 u1 w1 w2 : V3}
+    (hli : LinearIndependent ℝ (p15_bvec u0 u1 w1 w2)) :
+    Function.Injective (p15_comboMap u0 u1 w1 w2) :=
+  LinearMap.ker_eq_bot.mp (p15_comboMap_ker hli)
+
+private theorem p15_comboMap_det {u0 u1 w1 w2 : V3}
+    (hli : LinearIndependent ℝ (p15_bvec u0 u1 w1 w2)) :
+    LinearMap.det (p15_comboMap u0 u1 w1 w2) ≠ 0 := by
+  have hinj := p15_comboMap_inj hli
+  have hsurj := LinearMap.injective_iff_surjective.mp hinj
+  have hbij : Function.Bijective (p15_comboMap u0 u1 w1 w2) := ⟨hinj, hsurj⟩
+  have he : IsUnit (LinearMap.det (p15_comboMap u0 u1 w1 w2)) :=
+    LinearEquiv.isUnit_det' (LinearEquiv.ofBijective (p15_comboMap u0 u1 w1 w2) hbij)
+  exact he.ne_zero
+
+/-! ## scalar prelude: κ, c, distinctness -/
+
+private theorem p15_kappa_exists {D E F a : ℝ} (hD : 0 < D) (hEF : 0 < E + F) (ha : a < 1) :
+    ∃ κ : ℝ, 0 < κ ∧ κ * D > E + F ∧ κ * D * (1 - a) > (1 + a) * (E + F) := by
+  by_cases h1a : 0 < 1 + a
+  · have hT : 0 < (1 - a) * D := by nlinarith
+    have hTne : (1 - a) * D ≠ 0 := ne_of_gt hT
+    have hnum : 0 < (2 * ((1 + a) * (E + F)) + (1 - a) * (D + 2 * (E + F))) := by
+      have hA : 0 < (1 + a) * (E + F) := by nlinarith
+      nlinarith
+    refine ⟨(2 * ((1 + a) * (E + F)) + (1 - a) * (D + 2 * (E + F))) / ((1 - a) * D),
+      div_pos hnum hT, ?_, ?_⟩
+    · have hkey : (E + F) * (1 - a)
+            < (2 * ((1 + a) * (E + F)) + (1 - a) * (D + 2 * (E + F)))
+              / ((1 - a) * D) * D * (1 - a) := by
+        rw [mul_assoc, mul_comm D (1 - a), div_mul_cancel₀ _ hTne]
+        nlinarith
+      exact lt_of_mul_lt_mul_right hkey (le_of_lt (by linarith))
+    · rw [mul_assoc, mul_comm D (1 - a), div_mul_cancel₀ _ hTne]
+      nlinarith
+  · have hDne : (D:ℝ) ≠ 0 := ne_of_gt hD
+    have hnum2 : 0 < D + E + F := by linarith
+    have hκD : (D + E + F) / D * D = D + E + F := div_mul_cancel₀ _ hDne
+    refine ⟨(D + E + F) / D, div_pos hnum2 hD, ?_, ?_⟩
+    · rw [hκD]
+      linarith
+    · rw [hκD]
+      have hn : (1 + a) * (E + F) ≤ 0 := by nlinarith
+      have hp : 0 < (D + E + F) * (1 - a) := by nlinarith
+      linarith
+
+private theorem p15_c_exists {P Q r : ℝ} (hP : 0 < P) (hQ : 0 < Q) (hr : 0 < r) :
+    ∃ c : ℝ, 0 < c ∧ c * P < 1 ∧ c * Q < r := by
+  refine ⟨min (1 / (2 * P)) (r / (2 * Q)), lt_min (div_pos (by nlinarith) (by nlinarith))
+    (div_pos (by nlinarith) (by nlinarith)), ?_, ?_⟩
+  · have hle : min (1 / (2 * P)) (r / (2 * Q)) ≤ 1 / (2 * P) := min_le_left _ _
+    have h1 : min (1 / (2 * P)) (r / (2 * Q)) * P ≤ (1 / (2 * P)) * P :=
+      mul_le_mul_of_nonneg_right hle (le_of_lt hP)
+    have h2 : (1 / (2 * P)) * P = 1 / 2 := by field_simp
+    rw [h2] at h1
+    linarith
+  · have hle : min (1 / (2 * P)) (r / (2 * Q)) ≤ r / (2 * Q) := min_le_right _ _
+    have h1 : min (1 / (2 * P)) (r / (2 * Q)) * Q ≤ (r / (2 * Q)) * Q :=
+      mul_le_mul_of_nonneg_right hle (le_of_lt hQ)
+    have h2 : (r / (2 * Q)) * Q = r / 2 := by field_simp
+    rw [h2] at h1
+    linarith
+
+private theorem p15_ne_of_li {u0 u1 w1 w2 : V3}
+    (hli : LinearIndependent ℝ (p15_bvec u0 u1 w1 w2)) :
+    u0 ≠ u1 ∧ w1 ≠ u0 ∧ w1 ≠ u1 ∧ w2 ≠ u0 ∧ w2 ≠ u1 ∧ w1 ≠ w2 := by
+  have hg := Fintype.linearIndependent_iff.mp hli
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  · intro he
+    have hz : ∑ j : Fin 3, (![1, 0, 0] : Fin 3 → ℝ) j • p15_bvec u0 u1 w1 w2 j = 0 := by
+      rw [Fin.sum_univ_three]
+      simp [p15_bvec, he]
+    exact absurd (hg ![1, 0, 0] hz 0) (by simp)
+  · intro he
+    have hz : ∑ j : Fin 3, (![0, 1, 0] : Fin 3 → ℝ) j • p15_bvec u0 u1 w1 w2 j = 0 := by
+      rw [Fin.sum_univ_three]
+      simp [p15_bvec, he]
+    exact absurd (hg ![0, 1, 0] hz 1) (by simp)
+  · intro he
+    have hz : ∑ j : Fin 3, (![1, -1, 0] : Fin 3 → ℝ) j • p15_bvec u0 u1 w1 w2 j = 0 := by
+      rw [Fin.sum_univ_three]
+      simp [p15_bvec, he]
+    exact absurd (hg ![1, -1, 0] hz 0) (by simp)
+  · intro he
+    have hz : ∑ j : Fin 3, (![0, 0, 1] : Fin 3 → ℝ) j • p15_bvec u0 u1 w1 w2 j = 0 := by
+      rw [Fin.sum_univ_three]
+      simp [p15_bvec, he]
+    exact absurd (hg ![0, 0, 1] hz 2) (by simp)
+  · intro he
+    have hz : ∑ j : Fin 3, (![1, 0, -1] : Fin 3 → ℝ) j • p15_bvec u0 u1 w1 w2 j = 0 := by
+      rw [Fin.sum_univ_three]
+      simp [p15_bvec, he]
+    exact absurd (hg ![1, 0, -1] hz 0) (by simp)
+  · intro he
+    have hz : ∑ j : Fin 3, (![0, 1, -1] : Fin 3 → ℝ) j • p15_bvec u0 u1 w1 w2 j = 0 := by
+      rw [Fin.sum_univ_three]
+      simp [p15_bvec, he]
+    exact absurd (hg ![0, 1, -1] hz 1) (by simp)
+
+/-! ## affGt membership by explicit f-sum -/
+
+private theorem p15_mem_affGt {u0 u1 w1 w2 : V3} {x y z : ℝ} (hy : 0 < y) (hz : 0 < z)
+    (h1 : u0 ≠ u1) (h2 : w1 ≠ u0) (h3 : w1 ≠ u1) (h4 : w2 ≠ u0) (h5 : w2 ≠ u1) (h6 : w1 ≠ w2) :
+    (1 - x - y - z) • u0 + x • u1 + y • w1 + z • w2 ∈
+      affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3) := by
+  have hfin : (({u0, u1} : Set V3) ∪ {w1, w2}).Finite :=
+    ((Set.finite_singleton u1).insert u0).union ((Set.finite_singleton w2).insert w1)
+  set f : V3 → ℝ := fun p => if p = u0 then 1 - x - y - z else if p = u1 then x
+    else if p = w1 then y else if p = w2 then z else 0 with hfdef
+  have hTF : hfin.toFinset = ({u0, u1, w1, w2} : Finset V3) := by
+    apply Finset.ext
+    intro p
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  have hU0 : u0 ∉ insert u1 (insert w1 ({w2} : Finset V3)) := by
+    simp [h1, Ne.symm h2, Ne.symm h4]
+  have hU1 : u1 ∉ insert w1 ({w2} : Finset V3) := by
+    simp [Ne.symm h3, Ne.symm h5]
+  have hU2 : w1 ∉ ({w2} : Finset V3) := by simp [h6]
+  have hifev : ∀ p : V3, f p = (if p = u0 then 1 - x - y - z else if p = u1 then x
+    else if p = w1 then y else if p = w2 then z else 0) := fun p => rfl
+  refine ⟨f, hfin, ?_, ?_, ?_⟩
+  · rw [hTF, Finset.sum_insert hU0, Finset.sum_insert hU1, Finset.sum_insert hU2,
+      Finset.sum_singleton]
+    simp only [hifev]
+    simp [h2, h3, h4, h5, Ne.symm h1, Ne.symm h6]
+    abel
+  · intro w hw
+    have hw1 : 0 < f w1 := by
+      rw [hifev]
+      simp only [h2, h3]
+      exact hy
+    have hw2 : 0 < f w2 := by
+      rw [hifev]
+      simp only [h4, h5, Ne.symm h6]
+      exact hz
+    rcases Set.mem_insert_iff.mp hw with he | he
+    · rw [he]; exact hw1
+    · rw [Set.mem_singleton_iff.mp he]; exact hw2
+  · rw [hTF, Finset.sum_insert hU0, Finset.sum_insert hU1, Finset.sum_insert hU2,
+      Finset.sum_singleton]
+    simp only [hifev]
+    simp [h1, h2, h3, h4, h5, h6, Ne.symm h1, Ne.symm h6]
+    ring
+
+/-! ## convex hull membership -/
+
+private theorem p15_mem_convexHull {u0 u1 w1 w2 : V3} {x y z : ℝ} (hx : 0 < x) (hy : 0 < y)
+    (hz : 0 < z) (hsum : x + y + z < 1) :
+    (1 - x - y - z) • u0 + x • u1 + y • w1 + z • w2 ∈
+      convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
+  have hσpos : 0 < y + z := by linarith
+  have hden : (1:ℝ) - (y + z) ≠ 0 := by linarith
+  have hA : ((1 - x - y - z) / (1 - (y + z))) • u0 + (x / (1 - (y + z))) • u1
+      ∈ segment ℝ u0 u1 := by
+    refine ⟨(1 - x - y - z) / (1 - (y + z)), x / (1 - (y + z)),
+      div_nonneg (by linarith) (by linarith), div_nonneg (by linarith) (by linarith),
+      ?_, rfl⟩
+    rw [← add_div, show (1 - x - y - z) + x = 1 - (y + z) from by ring, div_self hden]
+  have hB : (y / (y + z)) • w1 + (z / (y + z)) • w2 ∈ segment ℝ w1 w2 := by
+    refine ⟨y / (y + z), z / (y + z), div_nonneg (le_of_lt hy) hσpos.le,
+      div_nonneg (le_of_lt hz) hσpos.le, ?_, rfl⟩
+    rw [← add_div]
+    exact div_self (by linarith)
+  have hconv : Convex ℝ (convexHull ℝ ({u0, u1, w1, w2} : Set V3)) := convex_convexHull _ _
+  have hAin : ((1 - x - y - z) / (1 - (y + z))) • u0 + (x / (1 - (y + z))) • u1 ∈
+      convexHull ℝ ({u0, u1, w1, w2} : Set V3) :=
+    (segment_subset_convexHull (by simp) (by simp)) hA
+  have hBin : (y / (y + z)) • w1 + (z / (y + z)) • w2 ∈
+      convexHull ℝ ({u0, u1, w1, w2} : Set V3) :=
+    (segment_subset_convexHull (by simp) (by simp)) hB
+  have hq : (1 - x - y - z) • u0 + x • u1 + y • w1 + z • w2
+      = (1 - (y + z)) • (((1 - x - y - z) / (1 - (y + z))) • u0
+          + (x / (1 - (y + z))) • u1)
+        + (y + z) • ((y / (y + z)) • w1 + (z / (y + z)) • w2) := by
+    rw [smul_add, smul_smul, smul_smul, smul_add, smul_smul, smul_smul,
+      mul_comm (1 - (y + z)) ((1 - x - y - z) / (1 - (y + z))), div_mul_cancel₀ _ hden,
+      mul_comm (1 - (y + z)) (x / (1 - (y + z))), div_mul_cancel₀ _ hden,
+      mul_comm (y + z) (y / (y + z)), div_mul_cancel₀ _ hσpos.ne',
+      mul_comm (y + z) (z / (y + z)), div_mul_cancel₀ _ hσpos.ne']
+    abel
+  have hseg : (1 - x - y - z) • u0 + x • u1 + y • w1 + z • w2
+      ∈ segment ℝ (((1 - x - y - z) / (1 - (y + z))) • u0 + (x / (1 - (y + z))) • u1)
+          ((y / (y + z)) • w1 + (z / (y + z)) • w2) :=
+    ⟨1 - (y + z), y + z, by linarith, by linarith, by ring, hq.symm⟩
+  exact (hconv.segment_subset hAin hBin) hseg
+
+
+/-! ## membership of a good-coordinate point in cap/affGt/hull -/
+
+private theorem p15_mem_of_good {u0 u1 w1 w2 v : V3} {r a x y z : ℝ} (hr : 0 < r)
+    (h1 : u0 ≠ u1) (h2 : w1 ≠ u0) (h3 : w1 ≠ u1) (h4 : w2 ≠ u0) (h5 : w2 ≠ u1) (h6 : w1 ≠ w2)
+    (hx : (WithLp.ofLp v) 0 = x) (hy : (WithLp.ofLp v) 1 = y) (hz : (WithLp.ofLp v) 2 = z)
+    (hx0 : 0 < x) (hy0 : 0 < y) (hz0 : 0 < z)
+    (hC1 : x * dist u0 u1 > y * dist u0 w1 + z * dist u0 w2)
+    (hC2 : x * dist u0 u1 * (1 - a) > (1 + a) * (y * dist u0 w1 + z * dist u0 w2))
+    (hball : ‖p15_comboMap u0 u1 w1 w2 v‖ < r) (hsum : x + y + z < 1) :
+    u0 + p15_comboMap u0 u1 w1 w2 v ∈
+        conicCap u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3) ∧
+      u0 + p15_comboMap u0 u1 w1 w2 v ∈
+        conicCap u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
+  have hD : 0 < dist u0 u1 := dist_pos.mpr h1
+  have hE : 0 < dist u0 w1 := dist_pos.mpr (Ne.symm h2)
+  have hF : 0 < dist u0 w2 := dist_pos.mpr (Ne.symm h4)
+  have hδ1low : -(dist u0 w1 * dist u0 u1) ≤ (w1 - u0) ⬝ᵥ (u1 - u0) := by
+    have hcs : |(w1 - u0) ⬝ᵥ (u1 - u0)| ≤ dist u0 w1 * dist u0 u1 := by
+      have h2 : (w1 - u0) ⬝ᵥ (u1 - u0) = inner ℝ (w1 - u0) (u1 - u0) :=
+        (inner_eq_dot _ _).symm
+      calc |(w1 - u0) ⬝ᵥ (u1 - u0)|
+          = |inner ℝ (w1 - u0) (u1 - u0)| := by rw [h2]
+        _ ≤ ‖(w1 - u0 : V3)‖ * ‖(u1 - u0 : V3)‖ := abs_real_inner_le_norm _ _
+        _ = dist w1 u0 * dist u1 u0 := by rw [← dist_eq_norm, ← dist_eq_norm]
+        _ = dist u0 w1 * dist u0 u1 := by rw [dist_comm w1 u0, dist_comm u1 u0]
+    have hneg := neg_abs_le ((w1 - u0) ⬝ᵥ (u1 - u0))
+    linarith
+  have hδ2low : -(dist u0 w2 * dist u0 u1) ≤ (w2 - u0) ⬝ᵥ (u1 - u0) := by
+    have hcs : |(w2 - u0) ⬝ᵥ (u1 - u0)| ≤ dist u0 w2 * dist u0 u1 := by
+      have h2 : (w2 - u0) ⬝ᵥ (u1 - u0) = inner ℝ (w2 - u0) (u1 - u0) :=
+        (inner_eq_dot _ _).symm
+      calc |(w2 - u0) ⬝ᵥ (u1 - u0)|
+          = |inner ℝ (w2 - u0) (u1 - u0)| := by rw [h2]
+        _ ≤ ‖(w2 - u0 : V3)‖ * ‖(u1 - u0 : V3)‖ := abs_real_inner_le_norm _ _
+        _ = dist w2 u0 * dist u1 u0 := by rw [← dist_eq_norm, ← dist_eq_norm]
+        _ = dist u0 w2 * dist u0 u1 := by rw [dist_comm w2 u0, dist_comm u1 u0]
+    have hneg := neg_abs_le ((w2 - u0) ⬝ᵥ (u1 - u0))
+    linarith
+  have h11 : (u1 - u0) ⬝ᵥ (u1 - u0) = dist u0 u1 * dist u0 u1 := by
+    calc (u1 - u0) ⬝ᵥ (u1 - u0) = ‖(u1 - u0 : V3)‖ ^ 2 := (norm_sq_eq_dot _).symm
+      _ = ‖u1 - u0‖ * ‖u1 - u0‖ := pow_two _
+      _ = dist u1 u0 * dist u1 u0 := by rw [← dist_eq_norm]
+      _ = dist u0 u1 * dist u0 u1 := by rw [dist_comm]
+  have hcmb : p15_comboMap u0 u1 w1 w2 v = x • (u1 - u0) + y • (w1 - u0) + z • (w2 - u0) := by
+    rw [p15_comboMap_apply, Fin.sum_univ_three, hx, hy, hz]
+    simp [p15_bvec]
+  have hdoteq : (p15_comboMap u0 u1 w1 w2 v) ⬝ᵥ (u1 - u0)
+      = x * ((u1 - u0) ⬝ᵥ (u1 - u0)) + y * ((w1 - u0) ⬝ᵥ (u1 - u0))
+        + z * ((w2 - u0) ⬝ᵥ (u1 - u0)) := by
+    rw [hcmb, p15_add_dot, p15_add_dot, p15_smul_dot, p15_smul_dot, p15_smul_dot]
+  have hnormUB : ‖p15_comboMap u0 u1 w1 w2 v‖
+      ≤ x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2) := by
+    calc ‖p15_comboMap u0 u1 w1 w2 v‖
+        = ‖x • (u1 - u0) + (y • (w1 - u0) + z • (w2 - u0))‖ := by rw [hcmb, add_assoc]
+      _ ≤ ‖x • (u1 - u0)‖ + ‖y • (w1 - u0) + z • (w2 - u0)‖ := norm_add_le _ _
+      _ ≤ ‖x • (u1 - u0)‖ + (‖y • (w1 - u0)‖ + ‖z • (w2 - u0)‖) :=
+            add_le_add_right (norm_add_le _ _) _
+      _ = x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2) := by
+          rw [norm_smul, norm_smul, norm_smul, Real.norm_eq_abs, abs_of_pos hx0,
+            Real.norm_eq_abs, abs_of_pos hy0, Real.norm_eq_abs, abs_of_pos hz0,
+            ← dist_eq_norm, ← dist_eq_norm, ← dist_eq_norm, dist_comm u0 u1,
+            dist_comm u0 w1, dist_comm u0 w2]
+  -- hoisted shared facts
+  have hδ1ge : -(y * dist u0 w1 * dist u0 u1) ≤ y * ((w1 - u0) ⬝ᵥ (u1 - u0)) := by
+    have h := mul_le_mul_of_nonneg_left
+      (show -(dist u0 w1 * dist u0 u1) ≤ (w1 - u0) ⬝ᵥ (u1 - u0) from hδ1low)
+      (le_of_lt hy0)
+    rwa [mul_neg, ← mul_assoc] at h
+  have hδ2ge : -(z * dist u0 w2 * dist u0 u1) ≤ z * ((w2 - u0) ⬝ᵥ (u1 - u0)) := by
+    have h := mul_le_mul_of_nonneg_left
+      (show -(dist u0 w2 * dist u0 u1) ≤ (w2 - u0) ⬝ᵥ (u1 - u0) from hδ2low)
+      (le_of_lt hz0)
+    rwa [mul_neg, ← mul_assoc] at h
+  rw [h11] at hdoteq
+  -- cone membership
+  have hconemem : u0 + p15_comboMap u0 u1 w1 w2 v ∈ rconeGt u0 u1 a := by
+    have hdist : dist (u0 + p15_comboMap u0 u1 w1 w2 v) u0
+        = ‖p15_comboMap u0 u1 w1 w2 v‖ := by
+      rw [dist_eq_norm, add_sub_cancel_left]
+    have hsub : u0 + p15_comboMap u0 u1 w1 w2 v - u0 = p15_comboMap u0 u1 w1 w2 v := by
+      rw [add_sub_cancel_left]
+    show (u0 + p15_comboMap u0 u1 w1 w2 v - u0) ⬝ᵥ (u1 - u0)
+      > dist (u0 + p15_comboMap u0 u1 w1 w2 v) u0 * dist u1 u0 * a
+    rw [hsub, hdist, dist_comm u1 u0]
+    by_cases ha0 : 0 ≤ a
+    · have hR : ‖p15_comboMap u0 u1 w1 w2 v‖ * dist u0 u1 * a
+          ≤ (x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2)) * dist u0 u1 * a :=
+        mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right hnormUB (le_of_lt hD))
+          ha0
+      have hs : 0 < x * dist u0 u1 - y * dist u0 w1 - z * dist u0 w2
+          - a * (x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2)) := by linarith
+      have hkey := mul_pos hD hs
+      have hprod : x * (dist u0 u1 * dist u0 u1)
+          - y * dist u0 w1 * dist u0 u1 - z * dist u0 w2 * dist u0 u1
+          - (x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2)) * dist u0 u1 * a
+          = dist u0 u1 * (x * dist u0 u1 - y * dist u0 w1 - z * dist u0 w2
+            - a * (x * dist u0 u1 + (y * dist u0 w1 + z * dist u0 w2))) := by ring
+      linarith
+    · have ha0lt : a < 0 := lt_of_not_ge ha0
+      have hDa : dist u0 u1 * a < 0 := by nlinarith
+      have hR : ‖p15_comboMap u0 u1 w1 w2 v‖ * dist u0 u1 * a ≤ 0 := by
+        nlinarith [norm_nonneg (p15_comboMap u0 u1 w1 w2 v), hDa]
+      have hp : 0 < dist u0 u1 * (x * dist u0 u1 - y * dist u0 w1 - z * dist u0 w2) :=
+        by nlinarith
+      have hprod : x * (dist u0 u1 * dist u0 u1)
+          - y * dist u0 w1 * dist u0 u1 - z * dist u0 w2 * dist u0 u1
+          = dist u0 u1 * (x * dist u0 u1 - y * dist u0 w1 - z * dist u0 w2) := by ring
+      linarith
+  have hballmem : u0 + p15_comboMap u0 u1 w1 w2 v ∈ Metric.closedBall u0 r :=
+    Metric.mem_closedBall.mpr (le_of_lt (by
+      rw [dist_eq_norm, add_sub_cancel_left]
+      exact hball))
+  have hqform : u0 + p15_comboMap u0 u1 w1 w2 v
+      = (1 - x - y - z) • u0 + x • u1 + y • w1 + z • w2 := by
+    rw [hcmb]
+    module
+  have hcap : u0 + p15_comboMap u0 u1 w1 w2 v ∈ conicCap u0 u1 r a :=
+    Set.mem_inter hballmem hconemem
+  have haffmem : u0 + p15_comboMap u0 u1 w1 w2 v ∈
+      affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3) := by
+    rw [hqform]
+    exact p15_mem_affGt hy0 hz0 h1 h2 h3 h4 h5 h6
+  have hhullmem : u0 + p15_comboMap u0 u1 w1 w2 v ∈
+      convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
+    rw [hqform]
+    exact p15_mem_convexHull hx0 hy0 hz0 hsum
+  exact ⟨Set.mem_inter hcap haffmem, Set.mem_inter hcap hhullmem⟩
+
+
+/-! ## the box-positivity main lemma -/
+
+private theorem p15_norm_triple (b1 b2 b3 : V3) (x y z : ℝ) (hx : 0 < x) (hy : 0 < y)
+    (hz : 0 < z) :
+    ‖x • b1 + y • b2 + z • b3‖ ≤ x * ‖b1‖ + (y * ‖b2‖ + z * ‖b3‖) := by
+  calc ‖x • b1 + y • b2 + z • b3‖
+      = ‖x • b1 + (y • b2 + z • b3)‖ := by rw [add_assoc]
+    _ ≤ ‖x • b1‖ + ‖y • b2 + z • b3‖ := norm_add_le _ _
+    _ ≤ ‖x • b1‖ + (‖y • b2‖ + ‖z • b3‖) := add_le_add_right (norm_add_le _ _) _
+    _ = x * ‖b1‖ + (y * ‖b2‖ + z * ‖b3‖) := by
+        rw [norm_smul, norm_smul, norm_smul, Real.norm_eq_abs, abs_of_pos hx,
+          Real.norm_eq_abs, abs_of_pos hy, Real.norm_eq_abs, abs_of_pos hz]
+
+private theorem p15_box_pos {u0 u1 w1 w2 : V3} {r a : ℝ} (hr : 0 < r) (ha : a < 1)
+    (hli : LinearIndependent ℝ (p15_bvec u0 u1 w1 w2)) :
+    0 < volume.real (conicCap u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3)) ∧
+    0 < volume.real (conicCap u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3)) := by
+  -- distinctness
+  obtain ⟨hu0u1, hw1u0, hw1u1, hw2u0, hw2u1, hw1w2⟩ := p15_ne_of_li hli
+  have hD : 0 < dist u0 u1 := dist_pos.mpr hu0u1
+  have hE : 0 < dist u0 w1 := dist_pos.mpr (Ne.symm hw1u0)
+  have hF : 0 < dist u0 w2 := dist_pos.mpr (Ne.symm hw2u0)
+  -- scalar parameters
+  obtain ⟨κ, hκ0, hκ1, hκ2⟩ :=
+    p15_kappa_exists (D := dist u0 u1) (E := dist u0 w1) (F := dist u0 w2) hD
+      (by linarith) ha
+  obtain ⟨c, hc0, hc1, hc2⟩ :=
+    p15_c_exists (P := κ + 2) (Q := κ * dist u0 u1 + dist u0 w1 + dist u0 w2)
+      (by nlinarith) (by nlinarith) hr
+  -- witness coordinates
+  set vstar : V3 := WithLp.toLp 2 ![c * κ, c, c] with hvdef
+  have hv0 : (WithLp.ofLp vstar) 0 = c * κ := by rw [hvdef]; simp
+  have hv1 : (WithLp.ofLp vstar) 1 = c := by rw [hvdef]; simp
+  have hv2 : (WithLp.ofLp vstar) 2 = c := by rw [hvdef]; simp
+  -- the good region and its openness
+  have hcont : ∀ i : Fin 3, Continuous fun v : V3 => (WithLp.ofLp v) i := fun i =>
+    (continuous_apply i).comp (PiLp.continuous_ofLp 2 _)
+  have hc0c : Continuous fun v : V3 => (WithLp.ofLp v) 0 * dist u0 u1 :=
+    (hcont 0).mul continuous_const
+  have hc1c : Continuous fun v : V3 => (WithLp.ofLp v) 1 * dist u0 w1 :=
+    (hcont 1).mul continuous_const
+  have hc2c : Continuous fun v : V3 => (WithLp.ofLp v) 2 * dist u0 w2 :=
+    (hcont 2).mul continuous_const
+  set G : Set V3 := (fun v : V3 => (WithLp.ofLp v) 0) ⁻¹' Set.Ioi (0:ℝ) ∩
+    (fun v : V3 => (WithLp.ofLp v) 1) ⁻¹' Set.Ioi (0:ℝ) ∩
+    (fun v : V3 => (WithLp.ofLp v) 2) ⁻¹' Set.Ioi (0:ℝ) ∩
+    (fun v : V3 => (WithLp.ofLp v) 0 * dist u0 u1 -
+      ((WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2)) ⁻¹'
+      Set.Ioi (0:ℝ) ∩
+    (fun v : V3 => (WithLp.ofLp v) 0 * dist u0 u1 * (1 - a) -
+      (1 + a) * ((WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2)) ⁻¹'
+      Set.Ioi (0:ℝ) ∩
+    (fun v : V3 => (WithLp.ofLp v) 0 + (WithLp.ofLp v) 1 + (WithLp.ofLp v) 2) ⁻¹'
+      Set.Ioo (0:ℝ) (1:ℝ) ∩
+    (p15_comboMap u0 u1 w1 w2) ⁻¹' Metric.ball (0:V3) r with hGdef
+  have hGeq : ∀ v : V3, v ∈ G ↔ 0 < (WithLp.ofLp v) 0 ∧ 0 < (WithLp.ofLp v) 1 ∧
+      0 < (WithLp.ofLp v) 2 ∧
+      (WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2 <
+        (WithLp.ofLp v) 0 * dist u0 u1 ∧
+      (1 + a) * ((WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2) <
+        (WithLp.ofLp v) 0 * dist u0 u1 * (1 - a) ∧
+      0 < (WithLp.ofLp v) 0 + (WithLp.ofLp v) 1 + (WithLp.ofLp v) 2 ∧
+      (WithLp.ofLp v) 0 + (WithLp.ofLp v) 1 + (WithLp.ofLp v) 2 < 1 ∧
+      ‖p15_comboMap u0 u1 w1 w2 v‖ < r := by
+    intro v
+    simp only [hGdef, Set.mem_inter_iff, Set.mem_preimage, Set.mem_Ioi, Set.mem_Ioo,
+      sub_pos, Metric.mem_ball, dist_zero_right, sub_zero, and_assoc]
+  have hcmbv : p15_comboMap u0 u1 w1 w2 vstar
+      = (c * κ) • (u1 - u0) + c • (w1 - u0) + c • (w2 - u0) := by
+    rw [p15_comboMap_apply, Fin.sum_univ_three, hv0, hv1, hv2]
+    simp [p15_bvec]
+  have hnb : ‖p15_comboMap u0 u1 w1 w2 vstar‖
+      ≤ c * κ * dist u0 u1 + (c * dist u0 w1 + c * dist u0 w2) := by
+    have h := p15_norm_triple (u1 - u0) (w1 - u0) (w2 - u0) (c * κ) c c
+      (mul_pos hc0 hκ0) hc0 hc0
+    have hD1 : ‖(u1 - u0 : V3)‖ = dist u0 u1 := by rw [norm_sub_rev, dist_eq_norm]
+    have hE1 : ‖(w1 - u0 : V3)‖ = dist u0 w1 := by rw [norm_sub_rev, dist_eq_norm]
+    have hF1 : ‖(w2 - u0 : V3)‖ = dist u0 w2 := by rw [norm_sub_rev, dist_eq_norm]
+    rw [hD1, hE1, hF1] at h
+    rw [hcmbv]
+    exact h
+  have hGopen : IsOpen G := by
+    have p1 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 0) ⁻¹' Set.Ioi (0:ℝ)) :=
+      isOpen_Ioi.preimage (hcont 0)
+    have p2 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 1) ⁻¹' Set.Ioi (0:ℝ)) :=
+      isOpen_Ioi.preimage (hcont 1)
+    have p3 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 2) ⁻¹' Set.Ioi (0:ℝ)) :=
+      isOpen_Ioi.preimage (hcont 2)
+    have p4 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 0 * dist u0 u1 -
+        ((WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2)) ⁻¹'
+        Set.Ioi (0:ℝ)) :=
+      isOpen_Ioi.preimage (hc0c.sub (hc1c.add hc2c))
+    have p5 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 0 * dist u0 u1 * (1 - a) -
+        (1 + a) * ((WithLp.ofLp v) 1 * dist u0 w1 + (WithLp.ofLp v) 2 * dist u0 w2)) ⁻¹'
+        Set.Ioi (0:ℝ)) :=
+      isOpen_Ioi.preimage ((hc0c.mul (continuous_const (y := 1 - a))).sub
+        ((continuous_const (y := 1 + a)).mul (hc1c.add hc2c)))
+    have p6 : IsOpen ((fun v : V3 => (WithLp.ofLp v) 0 + (WithLp.ofLp v) 1 +
+        (WithLp.ofLp v) 2) ⁻¹' Set.Ioo (0:ℝ) (1:ℝ)) :=
+      isOpen_Ioo.preimage (((hcont 0).add (hcont 1)).add (hcont 2))
+    have p7 : IsOpen (p15_comboMap u0 u1 w1 w2 ⁻¹' Metric.ball (0:V3) r) :=
+      Metric.isOpen_ball.preimage (LinearMap.continuous_of_finiteDimensional
+        (p15_comboMap u0 u1 w1 w2))
+    exact IsOpen.inter (IsOpen.inter (IsOpen.inter (IsOpen.inter (IsOpen.inter
+      (IsOpen.inter p1 p2) p3) p4) p5) p6) p7
+  have hvG : vstar ∈ G := by
+    rw [hGeq vstar, hv0, hv1, hv2]
+    refine ⟨mul_pos hc0 hκ0, hc0, hc0, ?_, ?_, ?_, ?_, ?_⟩
+    · nlinarith [hκ1, hc0, hE, hF]
+    · nlinarith [hκ2, hc0, hE, hF]
+    · nlinarith [hc0, hκ0]
+    · have hre : c * κ + c + c = c * (κ + 2) := by ring
+      rw [hre]
+      linarith
+    · rw [hcmbv]
+      refine lt_of_le_of_lt (p15_norm_triple (u1 - u0) (w1 - u0) (w2 - u0) (c * κ) c c
+        (mul_pos hc0 hκ0) hc0 hc0) ?_
+      have hD1 : ‖(u1 - u0 : V3)‖ = dist u0 u1 := by rw [norm_sub_rev, dist_eq_norm]
+      have hE1 : ‖(w1 - u0 : V3)‖ = dist u0 w1 := by rw [norm_sub_rev, dist_eq_norm]
+      have hF1 : ‖(w2 - u0 : V3)‖ = dist u0 w2 := by rw [norm_sub_rev, dist_eq_norm]
+      have hre : c * κ * dist u0 u1 + (c * dist u0 w1 + c * dist u0 w2)
+          = c * (κ * dist u0 u1 + dist u0 w1 + dist u0 w2) := by ring
+      rw [hD1, hE1, hF1, hre]
+      linarith
+  -- the open box
+  obtain ⟨ε, hε0, hεsub⟩ := Metric.isOpen_iff.mp hGopen vstar hvG
+  have hposB : 0 < volume.real (Metric.ball vstar ε) := by
+    rw [Measure.real_def]
+    refine ENNReal.toReal_pos (ne_of_gt (IsOpen.measure_pos volume Metric.isOpen_ball
+      ⟨vstar, Metric.mem_ball_self hε0⟩)) ?_
+    exact ne_of_lt (measure_ball_lt_top (x := vstar) (r := ε))
+  have hdet : LinearMap.det (p15_comboMap u0 u1 w1 w2) ≠ 0 := p15_comboMap_det hli
+  have hvolB : volume.real (p15_comboMap u0 u1 w1 w2 '' Metric.ball vstar ε)
+      = |LinearMap.det (p15_comboMap u0 u1 w1 w2)| * volume.real (Metric.ball vstar ε) := by
+    rw [Measure.real_def, Measure.real_def, Measure.addHaar_image_linearMap,
+      ENNReal.toReal_mul, ENNReal.toReal_ofReal (abs_nonneg _)]
+  have himg : (fun v : V3 => u0 + p15_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε
+      = (fun p : V3 => u0 + p) ''
+        (p15_comboMap u0 u1 w1 w2 '' Metric.ball vstar ε) := by
+    rw [← Set.image_comp]
+    rfl
+  have hposI : 0 < volume.real
+      ((fun v : V3 => u0 + p15_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε) := by
+    rw [himg, volume_real_add_left u0, hvolB]
+    exact mul_pos (abs_pos.mpr hdet) hposB
+  -- containment of the image
+  have hsub1 : ∀ v ∈ Metric.ball vstar ε,
+      u0 + p15_comboMap u0 u1 w1 w2 v ∈
+        conicCap u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3) := by
+    intro v hv
+    have hvG : v ∈ G := hεsub hv
+    rw [hGeq v] at hvG
+    obtain ⟨hx0, hy0, hz0, hC1, hC2, hsum0, hsum, hball⟩ := hvG
+    exact (p15_mem_of_good hr hu0u1 hw1u0 hw1u1 hw2u0 hw2u1 hw1w2 rfl rfl rfl
+      hx0 hy0 hz0 hC1 hC2 hball hsum).1
+  have hsub2 : ∀ v ∈ Metric.ball vstar ε,
+      u0 + p15_comboMap u0 u1 w1 w2 v ∈
+        conicCap u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
+    intro v hv
+    have hvG : v ∈ G := hεsub hv
+    rw [hGeq v] at hvG
+    obtain ⟨hx0, hy0, hz0, hC1, hC2, hsum0, hsum, hball⟩ := hvG
+    exact (p15_mem_of_good hr hu0u1 hw1u0 hw1u1 hw2u0 hw2u1 hw1w2 rfl rfl rfl
+      hx0 hy0 hz0 hC1 hC2 hball hsum).2
+  -- volume transport
+  have hTfin : ∀ T : Set V3, T ⊆ Metric.closedBall u0 r → volume T ≠ ⊤ := by
+    intro T hT htop
+    have h1 : volume T ≤ volume (Metric.ball u0 (r + 1)) :=
+      measure_mono (fun p hp => Metric.mem_ball.mpr (by
+        have hd := Metric.mem_closedBall.mp (hT hp)
+        linarith))
+    exact absurd htop (ne_of_lt (h1.trans_lt measure_ball_lt_top))
+  have hmonofin : volume
+      ((fun v : V3 => u0 + p15_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε) ≠ ⊤ :=
+    hTfin _ (by
+      rintro p ⟨v, hv, rfl⟩
+      have hvG : v ∈ G := hεsub hv
+      rw [hGeq v] at hvG
+      obtain ⟨hx0, hy0, hz0, hC1, hC2, hsum0, hsum, hball⟩ := hvG
+      rw [Metric.mem_closedBall, dist_eq_norm, add_sub_cancel_left]
+      exact le_of_lt hball)
+  have hsubimg1 : (fun v : V3 => u0 + p15_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε ⊆
+      conicCap u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3) := by
+    rintro p ⟨v, hv, rfl⟩
+    exact hsub1 v hv
+  have hsubimg2 : (fun v : V3 => u0 + p15_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε ⊆
+      conicCap u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
+    rintro p ⟨v, hv, rfl⟩
+    exact hsub2 v hv
+  have hfin1 : volume (conicCap u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3))
+      ≠ ⊤ :=
+    hTfin _ ((Set.inter_subset_left (s := conicCap u0 u1 r a)
+      (t := affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3))).trans
+      (Set.inter_subset_left (s := Metric.closedBall u0 r) (t := rconeGt u0 u1 a)))
+  have hfin2 : volume
+      (conicCap u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3)) ≠ ⊤ :=
+    hTfin _ ((Set.inter_subset_left (s := conicCap u0 u1 r a)
+      (t := convexHull ℝ ({u0, u1, w1, w2} : Set V3))).trans
+      (Set.inter_subset_left (s := Metric.closedBall u0 r) (t := rconeGt u0 u1 a)))
+  have hmono1 : volume.real
+      ((fun v : V3 => u0 + p15_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε) ≤
+      volume.real (conicCap u0 u1 r a ∩ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3)) := by
+    rw [Measure.real_def, Measure.real_def]
+    exact (ENNReal.toReal_le_toReal hmonofin hfin1).mpr (measure_mono hsubimg1)
+  have hmono2 : volume.real
+      ((fun v : V3 => u0 + p15_comboMap u0 u1 w1 w2 v) '' Metric.ball vstar ε) ≤
+      volume.real (conicCap u0 u1 r a ∩ convexHull ℝ ({u0, u1, w1, w2} : Set V3)) := by
+    rw [Measure.real_def, Measure.real_def]
+    exact (ENNReal.toReal_le_toReal hmonofin hfin2).mpr (measure_mono hsubimg2)
+  exact ⟨lt_of_lt_of_le hposI hmono1, lt_of_lt_of_le hposI hmono2⟩
+
+/-- Mathlib's `Coplanar` (vectorSpan rank ≤ 2) is implied by the chapter's
+`Kepler.Geom.Coplanar` (`s ⊆ affineSpan {u, v, w}`): `vectorSpan s` is spanned by
+the differences of points of `s`, all of which lie in the direction of
+`affineSpan {u, v, w} = span {u - v, w - v}` (≤ 2-dim). -/
+private theorem p15_coplML {s : Set V3} (h : Coplanar s) : Coplanar ℝ s := by
+  obtain ⟨u, v, w, hsub⟩ := h
+  have hdir : vectorSpan ℝ s ≤ Submodule.span ℝ ({u - v, w - v} : Set V3) := by
+    have hstep : ∀ z ∈ s, z - v ∈ Submodule.span ℝ ({u - v, w - v} : Set V3) := by
+      intro z hz
+      refine affineSpan_induction (h := hsub hz) ?mem ?smul_vsub_vadd
+      · intro p hp
+        rcases Set.mem_insert_iff.mp hp with rfl | hp
+        · exact Submodule.subset_span (by simp)
+        · rcases Set.mem_insert_iff.mp hp with rfl | hp
+          · rw [sub_self]
+            exact Submodule.zero_mem _
+          · rcases Set.mem_singleton_iff.mp hp with rfl
+            exact Submodule.subset_span (by simp)
+      · intro c u' v' w' hu' hv' hw'
+        have h1' : c • (u' -ᵥ v') ∈ Submodule.span ℝ ({u - v, w - v} : Set V3) := by
+          have heq : u' -ᵥ v' = (u' -ᵥ v) - (v' -ᵥ v) := by
+            rw [vsub_eq_sub, vsub_eq_sub, vsub_eq_sub]
+            module
+          rw [heq, smul_sub]
+          exact Submodule.sub_mem _ (Submodule.smul_mem _ c hu')
+            (Submodule.smul_mem _ c hv')
+        rw [show (c • (u' -ᵥ v') +ᵥ w') - v
+            = c • (u' - v') + (w' - v) from by
+            rw [vadd_eq_add, vsub_eq_sub]
+            module]
+        exact Submodule.add_mem _ h1' hw'
+    rw [vectorSpan_def, Submodule.span_le]
+    rintro p hp
+    rw [Set.mem_vsub] at hp
+    obtain ⟨x, hx, y, hy, rfl⟩ := hp
+    have hxv := hstep x hx
+    have hyv := hstep y hy
+    have hab : x - y = (x - v) - (y - v) := by abel
+    rw [vsub_eq_sub, hab]
+    exact Submodule.sub_mem _ hxv hyv
+  have hmono : Module.finrank ℝ (vectorSpan ℝ s) ≤
+      Module.finrank ℝ (Submodule.span ℝ ({u - v, w - v} : Set V3)) :=
+    Submodule.finrank_mono hdir
+  have hspan2 : Module.finrank ℝ (Submodule.span ℝ ({u - v, w - v} : Set V3)) ≤ 2 := by
+    have h2 := finrank_span_finset_le_card (R := ℝ) ({u - v, w - v} : Finset V3)
+    unfold Set.finrank at h2
+    rcases eq_or_ne (u - v) (w - v) with he | he
+    · rw [he] at h2 ⊢
+      have hco : (({w - v, w - v} : Finset V3) : Set V3)
+          = ({w - v, w - v} : Set V3) := by simp
+      rw [hco] at h2
+      have hc : (({w - v, w - v} : Finset V3).card : ℕ) = 1 := by simp
+      rw [hc] at h2
+      exact le_trans h2 (by norm_num)
+    · have hnm : u - v ∉ ({w - v} : Finset V3) := by
+        intro hcon
+        exact he (by simpa using hcon)
+      rw [Finset.card_insert_of_notMem hnm] at h2
+      have hco : (({u - v, w - v} : Finset V3) : Set V3)
+          = ({u - v, w - v} : Set V3) := by simp
+      rw [hco] at h2
+      have hc : (({w - v} : Finset V3).card : ℕ) = 1 := by simp
+      rw [hc] at h2
+      omega
+  rw [coplanar_iff_finrank_le_two]
+  exact le_trans hmono hspan2
+
 /-! ## marchal3.hl:2623-3671: conic caps, measurability, pair calculus -/
 
 /-- marchal3.hl:2623 `CONIC_CAP_WEDGE_EQ_0`. -/
 theorem CONIC_CAP_WEDGE_EQ_0 (v0 v1 : V3) (a r : ℝ) (w1 w2 : V3) (ha : a < 1) (hr : 0 < r)
     (h : volume.real (conicCap v0 v1 r a ∩ wedge v0 v1 w1 w2) = 0) :
     Coplanar ℝ ({v0, v1, w1, w2} : Set V3) := by
-  -- NEEDS: 反证（¬Coplanar → 矛盾）。用上方 p15_ kit：p15_nc1/p15_nc2 得 ¬Coll3，
-  -- p15_copl_of_azim_zero 得 θ := azim v0 v1 w1 w2 > 0（azim_nonneg 封下界），
-  -- p15_bisector_exists 取平分线 b（azim w1→b = θ/2 ∧ ¬Coll3 v0 v1 b ∧ 差向量线性无关），
-  -- wedge_eq_affGt（Geom.LuneVolume，θ/2 ∈ (0,π)）把 wedge v0 v1 w1 b 变 affGt {v0,v1}{w1,b}，
-  -- 且 wedge v0 v1 w1 b ⊆ wedge v0 v1 w1 w2（θ/2 < θ，wedge 定义展开即得）；
-  -- 最后 p15_box_pos（Kit D，见 /tmp/gt3a_probeD.lean 续图）给出
-  -- 0 < vol(conicCap ∩ affGt {v0,v1}{w1,b}) = vol(conicCap ∩ wedge w1 b) ≤ vol(cap ∩ wedge w1 w2)。
-  sorry
+  by_contra hcop
+  have hcopG : ¬ Coplanar ({v0, v1, w1, w2} : Set V3) := fun hc => hcop (p15_coplML hc)
+  have h1 : ¬ Collinear3 v0 v1 w1 := p15_nc1 hcopG
+  have h2 : ¬ Collinear3 v0 v1 w2 := p15_nc2 hcopG
+  have hθ0 : 0 < azim v0 v1 w1 w2 :=
+    lt_of_le_of_ne (azim_nonneg v0 v1 w1 w2) (Ne.symm (p15_copl_of_azim_zero hcopG))
+  have hθlt : azim v0 v1 w1 w2 < 2 * Real.pi := azim_lt_two_pi v0 v1 w1 w2
+  obtain ⟨b, hbz, hbnc, hbli⟩ := p15_bisector_exists h1 h2 hθ0
+  have hθ2pos : 0 < azim v0 v1 w1 w2 / 2 := by linarith
+  have hθ2lt : azim v0 v1 w1 w2 / 2 < Real.pi := by linarith
+  have hbw : wedge v0 v1 w1 b = affGt ({v0, v1} : Set V3) ({w1, b} : Set V3) := by
+    refine wedge_eq_affGt h1 hbnc ?_ ?_
+    · rw [hbz]; exact hθ2pos
+    · rw [hbz]; exact hθ2lt
+  have hsub : wedge v0 v1 w1 b ⊆ wedge v0 v1 w1 w2 := by
+    intro y hy
+    obtain ⟨hnc, hpos, hlt⟩ := hy
+    rw [hbz] at hlt
+    exact ⟨hnc, hpos, by linarith⟩
+  have hbox := (p15_box_pos hr ha hbli).1
+  rw [← hbw] at hbox
+  have hBne : volume (conicCap v0 v1 r a ∩ wedge v0 v1 w1 w2) ≠ ⊤ := by
+    intro htop
+    have h1 : volume (conicCap v0 v1 r a ∩ wedge v0 v1 w1 w2) ≤
+        volume (Metric.ball v0 (r + 1)) :=
+      measure_mono (fun p hp => Metric.mem_ball.mpr (by
+        have hd := Metric.mem_closedBall.mp hp.1.1
+        linarith))
+    exact absurd htop (ne_of_lt (h1.trans_lt measure_ball_lt_top))
+  have hB0 : volume (conicCap v0 v1 r a ∩ wedge v0 v1 w1 w2) = 0 := by
+    by_contra hB0'
+    have hpos : 0 < (volume (conicCap v0 v1 r a ∩ wedge v0 v1 w1 w2)).toReal := by
+      refine ENNReal.toReal_pos (Ne.symm ?_) hBne
+      exact Ne.symm hB0'
+    exact absurd h hpos.ne'
+  have hle' : volume (conicCap v0 v1 r a ∩ wedge v0 v1 w1 b) ≤
+      volume (conicCap v0 v1 r a ∩ wedge v0 v1 w1 w2) :=
+    measure_mono (fun p hp => ⟨hp.1, hsub hp.2⟩)
+  rw [hB0] at hle'
+  have hA0 : volume (conicCap v0 v1 r a ∩ wedge v0 v1 w1 b) = 0 :=
+    le_antisymm hle' bot_le
+  exact absurd hbox (by rw [Measure.real_def, hA0]; simp)
 
 /-- marchal3.hl:2657 `CONIC_CAP_AFF_GT_EQ_0`. -/
 theorem CONIC_CAP_AFF_GT_EQ_0 (v0 v1 : V3) (a r : ℝ) (w1 w2 : V3) (ha : a < 1) (hr : 0 < r)
     (h : volume.real (conicCap v0 v1 r a ∩ affGt {v0, v1} {w1, w2}) = 0) :
     Coplanar ℝ ({v0, v1, w1, w2} : Set V3) := by
-  -- NEEDS: 反证。¬Coplanar →（p15_nc1/p15_nc2/p15_u0neu1）四点互异 + p15_li_of_ncopl
-  -- 线性无关 → p15_box_pos 直接给 0 < vol(conicCap ∩ affGt {v0,v1}{w1,w2})，与 h 矛盾。
-  -- （hσ1/hcr 块已到 Kit D 探针 /tmp/gt3a_probeD.lean；余下：盒成员性 + 体积搬运。）
-  sorry
+  by_contra hcop
+  have hcopG : ¬ Coplanar ({v0, v1, w1, w2} : Set V3) := fun hc => hcop (p15_coplML hc)
+  have hli := p15_li_of_ncopl hcopG
+  exact absurd (p15_box_pos hr ha hli).1 (by rw [h]; exact lt_irrefl 0)
 
 /-- marchal3.hl:2708 `CONIC_CAP_INTER_CONVEX_HULL_4_GT_0`. -/
 theorem CONIC_CAP_INTER_CONVEX_HULL_4_GT_0 (u0 u1 w1 w2 : V3) (r a : ℝ) (hr : 0 < r)
     (ha : a < 1) (ha0 : 0 ≤ a) (hcop : ¬Coplanar ℝ ({u0, u1, w1, w2} : Set V3)) :
     0 < volume.real (conicCap u0 u1 r a ∩ convexHull ℝ {u0, u1, w1, w2}) := by
-  -- NEEDS: 同 AFF_GT_EQ_0 的反证路线（p15_nc1/p15_nc2/p15_u0neu1/p15_li_of_ncopl +
-  -- p15_box_pos 第二合取：盒点 = (1−σ)u0 + x0·u1 + x1·w1 + x2·w2（全系数 ≥ 0）
-  -- 落凸包；体积搬运 Measure.addHaar_image_linearMap + volume_real_add_left）。
-  sorry
+  have hcopG : ¬ Coplanar ({u0, u1, w1, w2} : Set V3) := fun hc => hcop (p15_coplML hc)
+  have hli := p15_li_of_ncopl hcopG
+  exact (p15_box_pos hr ha hli).2
 
 /-- `affGe s t` is convex (this chapter needs it for `MEASURABLE_BALL_AFF_GE`;
 the PackingAuto12 copy `p12_convex_affGe` is private). -/
