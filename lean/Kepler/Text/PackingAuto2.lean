@@ -1271,15 +1271,319 @@ private theorem p2g_KHEJKCI_GEN (V : Set V3) (k r : ℕ) (ul vl : List V3)
       rintro T ⟨u, hu, rfl⟩
       exact (hstep u hu).2
 
-/-- pack3.hl:2260 `VORONOI_LIST_CANONICAL`。-- NEEDS: PA5:1492 正本落地后替换
-（PA2 侧不可 import，链复制桩）。 -/
+/-! ### §3.5 Voronoi 闭胞 bisector 链 + CANONICAL（PA5 正本 e8857fa6 链复制：
+PA2 不可 import PA5——成环；本段自 PA5 逐字复制改名 p2g_，合并波统一删除私件
+改 import。） -/
+
+/-- pack3.hl:306 `INTERS_UNIV`（PA5:206 正本链复制）。 -/
+private theorem p2g_INTERS_UNIV {α : Type*} (f : Set (Set α)) : ⋂₀ f = ⋂₀ (f \ {Set.univ}) := by
+  ext x
+  constructor
+  · exact fun h t ⟨ht, _⟩ => h t ht
+  · intro h t ht
+    by_cases htU : t = Set.univ
+    · simp [htU]
+    · exact h t ⟨ht, htU⟩
+
+/-- pack3.hl:312 `INTERS_INTER_INTERS`（PA5:216 正本链复制）。 -/
+private theorem p2g_INTERS_INTER_INTERS {α : Type*} (f g : Set (Set α)) :
+    ⋂₀ f ∩ ⋂₀ g = ⋂₀ (f ∪ g) :=
+  Set.sInter_union f g |>.symm
+
+/-- pack3.hl:428 `MID_POINT_EXISTS`（PA5:454 正本链复制）。 -/
+private theorem p2g_MID_POINT_EXISTS (v w : V3) (d : ℝ) (hd1 : 0 ≤ d) (hd2 : d ≤ dist v w) :
+    ∃ x : V3, dist v x + dist x w = dist v w ∧ dist v x = d := by
+  by_cases hvw : v = w
+  · subst hvw
+    have hd0 : d = 0 := by have h := dist_self v; linarith
+    refine ⟨v, ?_, ?_⟩ <;> simp [dist_self, hd0]
+  · have hD : 0 < dist v w := dist_pos.2 hvw
+    have hpos : 0 ≤ d / dist v w := div_nonneg hd1 hD.le
+    have hle1 : d / dist v w ≤ 1 := (div_le_one hD).2 hd2
+    have hnorm : ‖w - v‖ = dist v w := by rw [← dist_eq_norm, dist_comm]
+    have xeq : dist (v + (d / dist v w) • (w - v)) v = d := by
+      rw [dist_eq_norm, add_sub_cancel_left, norm_smul, Real.norm_eq_abs,
+        abs_of_nonneg hpos, hnorm]
+      field_simp
+    have xeq2 : dist (v + (d / dist v w) • (w - v)) w = dist v w - d := by
+      rw [dist_eq_norm]
+      have hex : (v + (d / dist v w) • (w - v)) - w =
+          ((d / dist v w) - 1) • (w - v) := by
+        rw [sub_smul, smul_sub, one_smul]
+        abel
+      rw [hex, norm_smul, Real.norm_eq_abs,
+        abs_of_nonpos (by linarith : (d / dist v w) - 1 ≤ 0), hnorm]
+      field_simp
+      ring
+    have xe1 : dist v (v + (d / dist v w) • (w - v)) = d := by
+      rw [dist_comm]
+      exact xeq
+    exact ⟨v + (d / dist v w) • (w - v), by rw [xe1, xeq2]; ring, xe1⟩
+
+/-- pack3.hl:541 `KIUMVTC`（PA5:584 正本链复制）。 -/
+private theorem p2g_KIUMVTC (p : V3) (r : ℝ) (V : Set V3) (hV : Packing V) :
+    (V ∩ Metric.ball p r).Finite := by
+  by_cases hr : r ≤ 0
+  · rw [Metric.ball_eq_empty.2 hr]
+    simp
+  · have hV' : Packing ((fun x : V3 => x - p) '' V) := by
+      intro u hu v hv hlt
+      obtain ⟨u, huV, rfl⟩ := hu
+      obtain ⟨v, hvV, rfl⟩ := hv
+      have hab : (u - p) - (v - p) = u - v := by abel
+      have h1 : dist u v < 2 := by
+        rw [dist_eq_norm, ← hab, ← dist_eq_norm]
+        exact hlt
+      exact congrArg (fun x => x - p) (hV u huV v hvV h1)
+    have hfin : (((fun x : V3 => x - p) '' V) ∩ Metric.ball 0 r).Finite :=
+      hV'.finite_inter_ball r
+    have hsub : V ∩ Metric.ball p r ⊆
+        (fun x : V3 => x + p) '' ((fun x : V3 => x - p) '' V ∩ Metric.ball 0 r) := by
+      rintro x ⟨hxV, hxb⟩
+      refine ⟨x - p, ⟨⟨x, hxV, rfl⟩, ?_⟩, by simp⟩
+      have h0 : dist 0 (x - p) = dist x p := by
+        rw [dist_eq_norm, dist_eq_norm, zero_sub, norm_neg]
+      exact Metric.mem_ball.2 (by rw [dist_comm, h0]; exact hxb)
+    have himg : ((fun x : V3 => x + p) ''
+        ((fun x : V3 => x - p) '' V ∩ Metric.ball 0 r)).Finite :=
+      Set.Finite.image (fun x : V3 => x + p) hfin
+    exact himg.subset hsub
+
+/-- pack3.hl:767 `VORONOI_BALL2`（PA5:690 正本链复制）。 -/
+private theorem p2g_VORONOI_BALL2 (V : Set V3) (v : V3) (hs : saturated V) :
+    voronoiClosed V v ⊆ Metric.ball v 2 := by
+  intro x hx
+  obtain ⟨y, hy, hxy⟩ := hs x
+  exact Metric.mem_ball.2 (lt_of_le_of_lt (hx y hy) hxy)
+
+/-- pack3.hl:823 `VORONOI_INTER_BIS_LE`（PA5:728 正本链复制）。 -/
+private theorem p2g_VORONOI_INTER_BIS_LE (V : Set V3) (v : V3) (hV : Packing V) (hs : saturated V)
+    (hv : v ∈ V) :
+    voronoiClosed V v =
+      ⋂₀ ((fun u : V3 => bisLe v u) '' {u : V3 | u ∈ V ∧ u ∈ Metric.ball v 4 ∧ u ≠ v}) := by
+  ext x
+  constructor
+  · intro hx T hT
+    obtain ⟨u, hu, rfl⟩ := hT
+    exact hx u hu.1
+  · intro hx w hw
+    by_cases hwb : w ∈ Metric.ball v 4
+    · by_cases hwv : w = v
+      · subst hwv; exact le_refl _
+      · exact hx (bisLe v w) ⟨w, ⟨hw, hwb, hwv⟩, rfl⟩
+    · simp only [Metric.mem_ball, not_lt] at hwb
+      have hx2 : dist x v ≤ 2 := by
+        by_contra hcon
+        push_neg at hcon
+        have hdist : dist v x = dist x v := dist_comm v x
+        obtain ⟨q, hqx, hqv⟩ := p2g_MID_POINT_EXISTS v x 2 (by norm_num : (0:ℝ) ≤ 2)
+          (by rw [hdist]; linarith)
+        obtain ⟨p, hpV, hpq⟩ := hs q
+        have hpb : dist p v < 4 := by
+          have h0 : dist p q = dist q p := dist_comm p q
+          have h1 : dist q v = 2 := by rw [dist_comm q v]; exact hqv
+          have h2 := dist_triangle p q v
+          rw [h0] at h2
+          linarith
+        have hpv : p ≠ v := by
+          intro h0
+          rw [h0] at hpq
+          have h3 : dist q v = 2 := by rw [dist_comm q v]; exact hqv
+          linarith
+        have hB : dist x v ≤ dist x p := hx (bisLe v p) ⟨p, ⟨hpV, Metric.mem_ball.2 hpb, hpv⟩, rfl⟩
+        have h1 : dist x v = 2 + dist x q := by
+          have e1 : dist q x = dist x q := dist_comm q x
+          have e2 : dist v x = dist x v := hdist
+          linarith
+        have h2 : dist x p ≤ dist x q + dist q p := dist_triangle x q p
+        linarith
+      have h3 : dist w v ≤ dist x v + dist x w := by
+        have h := dist_triangle w x v
+        have e1 : dist w x = dist x w := dist_comm w x
+        linarith
+      linarith
+
+/-- pack3.hl:886 `VORONOI_CLOSED_EQ_FINITE_INTERS_BIS_LE`（PA5:775 正本链复制）。 -/
+private theorem p2g_VORONOI_CLOSED_EQ_FINITE_INTERS_BIS_LE (V : Set V3) (v : V3) (hV : Packing V)
+    (hs : saturated V) (hv : v ∈ V) :
+    ∃ W : Set V3, W ⊆ V ∧ v ∉ W ∧ W.Finite ∧
+      voronoiClosed V v = ⋂₀ ((fun u : V3 => bisLe v u) '' W) := by
+  refine ⟨(V ∩ Metric.ball v 4) \ {v}, fun u hu => hu.1.1, ?_, ?_, ?_⟩
+  · intro hcon
+    exact hcon.2 rfl
+  · exact (p2g_KIUMVTC v 4 V hV).subset Set.diff_subset
+  · have hidx : {u : V3 | u ∈ V ∧ u ∈ Metric.ball v 4 ∧ u ≠ v} =
+        (V ∩ Metric.ball v 4) \ {v} := by
+      ext u
+      simp only [Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_diff, Set.mem_singleton_iff]
+      tauto
+    have hIB := p2g_VORONOI_INTER_BIS_LE V v hV hs hv
+    rwa [hidx] at hIB
+
+/-- `bisLe u v` 是（可能平凡真 = univ 的）半空间多面体（PA5:794
+`p5_polyhedron_bisLe` 正本链复制）。 -/
+private theorem p2g_polyhedron_bisLe (u v : V3) : polyhedron (bisLe u v) := by
+  by_cases huv : u = v
+  · rw [huv]
+    have huniv : bisLe v v = (Set.univ : Set V3) := by
+      ext y
+      simp [bisLe]
+    rw [huniv]
+    exact POLYHEDRON_UNIV
+  · rw [p2g_BIS_LE_EQ_HALFSPACE]
+    have hdadd : ∀ (a b z : V3), (a + b) ⬝ᵥ z = a ⬝ᵥ z + b ⬝ᵥ z := by
+      intro a b z
+      rw [← inner_eq_dot (a + b) z, inner_add_left, inner_eq_dot a z, inner_eq_dot b z]
+    have hset : {x : V3 | 2 * ((v - u) ⬝ᵥ x) ≤ v ⬝ᵥ v - u ⬝ᵥ u} =
+        {x : V3 | (v - u + (v - u)) ⬝ᵥ x ≤ v ⬝ᵥ v - u ⬝ᵥ u} := by
+      ext x
+      simp only [Set.mem_setOf_eq]
+      rw [hdadd]
+      constructor
+      · intro h
+        linarith
+      · intro h
+        linarith
+    rw [hset]
+    refine POLYHEDRON_HALFSPACE_LE ?_ (v ⬝ᵥ v - u ⬝ᵥ u)
+    intro h0
+    have h2 : (2:ℝ) • (v - u) = 0 := by rw [two_smul]; exact h0
+    exact huv (sub_eq_zero.1 ((smul_eq_zero.1 h2).resolve_left (by norm_num))).symm
+
+/-- pack3.hl:916 `VORONOI_POLYHEDRON`（PA5:823 正本链复制）。 -/
+private theorem p2g_VORONOI_POLYHEDRON (V : Set V3) (v : V3) (hV : Packing V) (hs : saturated V)
+    (hv : v ∈ V) : polyhedron (voronoiClosed V v) := by
+  obtain ⟨W, hWV, hvW, hWfin, hWeq⟩ :=
+    p2g_VORONOI_CLOSED_EQ_FINITE_INTERS_BIS_LE V v hV hs hv
+  rw [hWeq]
+  refine POLYHEDRON_INTERS (hWfin.image fun u : V3 => bisLe v u) ?_
+  rintro T ⟨u, hu, rfl⟩
+  exact p2g_polyhedron_bisLe v u
+
+/-- pack3.hl:2148 `INTER_AFFINE_HULL`（PA5:1578 正本链复制）。 -/
+private theorem p2g_INTER_AFFINE_HULL (s : Set V3) :
+    s = ((affineSpan ℝ s : Set V3) ∩ s) := by
+  exact (Set.inter_eq_self_of_subset_right (subset_affineSpan ℝ s)).symm
+
+/-- pack3.hl:2211/2235 `MINIMAL_INTERS_EXISTS`/`MINIMAL_INTER_INTERS_EXISTS`
+共同核心（PA5:1589 `p5_minimal_inters_aux` 正本链复制）。 -/
+private theorem p2g_minimal_inters_aux {α : Type*} (s t : Set α) (f : Set (Set α))
+    (hf : f.Finite) (hs : s = t ∩ ⋂₀ f) :
+    ∃ g ⊆ f, s = t ∩ ⋂₀ g ∧ ∀ g' ⊂ g, s ⊂ t ∩ ⋂₀ g' := by
+  classical
+  set A : Set (Set (Set α)) := {g : Set (Set α) | g ⊆ f ∧ s = t ∩ ⋂₀ g} with hAdef
+  have hAfin : A.Finite := hf.powerset.subset (fun g hg => hg.1)
+  have hAne : A.Nonempty := ⟨f, le_refl _, hs⟩
+  obtain ⟨g, hgA, hmin⟩ := Set.exists_min_image A (fun g => Nat.card ↥g) hAfin hAne
+  refine ⟨g, hgA.1, hgA.2, ?_⟩
+  intro g' hg'
+  have hsub : s ⊆ t ∩ ⋂₀ g' := by
+    rw [hgA.2]
+    rintro x ⟨hx1, hx2⟩
+    exact ⟨hx1, fun T hT => hx2 T (hg'.1 hT)⟩
+  refine Set.ssubset_iff_subset_ne.2 ⟨hsub, ?_⟩
+  intro heq
+  have hg'A : g' ∈ A := ⟨hg'.1.trans hgA.1, heq⟩
+  have hgfin : g.Finite := hf.subset hgA.1
+  have hlt : Nat.card ↥g' < Nat.card ↥g := hgfin.card_lt_card hg'
+  exact absurd (hmin g' hg'A) (not_le.2 hlt)
+
+/-- pack3.hl:2235 `MINIMAL_INTER_INTERS_EXISTS`（PA5:1628 正本链复制）。 -/
+private theorem p2g_MINIMAL_INTER_INTERS_EXISTS {α : Type*} (s t : Set α) (f : Set (Set α))
+    (hf : f.Finite) (hs : s = t ∩ ⋂₀ f) :
+    ∃ g ⊆ f, s = t ∩ ⋂₀ g ∧ ∀ g' ⊂ g, s ⊂ t ∩ ⋂₀ g' :=
+  p2g_minimal_inters_aux s t f hf hs
+
+/-- pack3.hl:2068 `LIST_SUBSET`（PA5:1469 正本链复制）。 -/
+private theorem p2g_LIST_SUBSET (V : Set V3) (ul : List V3) (h : V3) (t : List V3)
+    (hsub : setOfList ul ⊆ V) (hcons : ul = h :: t) : h ∈ V ∧ setOfList t ⊆ V := by
+  refine ⟨hsub ?_, fun u hu => hsub ?_⟩
+  · rw [hcons]
+    simp only [setOfList, List.mem_cons]
+    exact Or.inl rfl
+  · rw [hcons]
+    simp only [setOfList, List.mem_cons]
+    exact Or.inr hu
+
+/-- pack3.hl:2080 `VORONOI_LIST_BIS_LE`（PA5:1481 正本链复制）。 -/
+private theorem p2g_VORONOI_LIST_BIS_LE (V : Set V3) (ul : List V3) (h : V3) (t : List V3)
+    (hsub : setOfList ul ⊆ V) (hcons : ul = h :: t) :
+    voronoiList V ul = voronoiClosed V h ∩ ⋂₀ ((fun u : V3 => bisLe u h) '' setOfList t) := by
+  subst hcons
+  have hVh : h ∈ V := hsub (by simp [setOfList])
+  ext x
+  constructor
+  · intro hx
+    have h1 : x ∈ voronoiClosed V h :=
+      hx (voronoiClosed V h) ⟨h, by simp [setOfList], rfl⟩
+    have h2 : ∀ u ∈ setOfList t, dist x u ≤ dist x h := fun u hu =>
+      hx (voronoiClosed V u) ⟨u, by
+        simp only [setOfList, List.mem_cons]
+        exact Or.inr hu, rfl⟩ h hVh
+    exact ⟨h1, Set.mem_sInter.2 fun T hT => by
+      obtain ⟨u, hu, rfl⟩ := hT
+      exact h2 u hu⟩
+  · rintro ⟨hcell, hu⟩
+    have hu' : ∀ u ∈ setOfList t, x ∈ bisLe u h := fun u hmem =>
+      Set.mem_sInter.1 hu (bisLe u h) ⟨u, hmem, rfl⟩
+    intro T hT
+    obtain ⟨v, hv, rfl⟩ := hT
+    rcases List.mem_cons.1 hv with rfl | hv
+    · exact hcell
+    · intro w hw
+      have hv2 : dist x v ≤ dist x h := hu' v hv
+      have hc : dist x h ≤ dist x w := hcell w hw
+      exact le_trans hv2 hc
+
+/-- pack3.hl:2260 `VORONOI_LIST_CANONICAL`（PA5:1638 正本证明体链复制；
+PA5 正本 e8857fa6 已全绿公理净，本件陈述冻结、体替换）。 -/
 private theorem p2g_VORONOI_LIST_CANONICAL (V : Set V3) (ul : List V3) (h : V3) (t : List V3)
     (hV : Packing V) (hs : saturated V) (hsub : setOfList ul ⊆ V) (hcons : ul = h :: t) :
     ∃ K : Set (Set V3), K.Finite ∧
       voronoiList V ul = ((affineSpan ℝ (voronoiList V ul) : Set V3) ∩ ⋂₀ K) ∧
       (∀ a ∈ K, ∃ v ∈ V, v ≠ h ∧ (a = bisLe v h ∨ a = bisLe h v)) ∧
-      (∀ K' ⊂ K, voronoiList V ul ⊂ ((affineSpan ℝ (voronoiList V ul : Set V3) : Set V3) ∩ ⋂₀ K')) :=
-  sorry
+      (∀ K' ⊂ K, voronoiList V ul ⊂ ((affineSpan ℝ (voronoiList V ul : Set V3) : Set V3) ∩ ⋂₀ K')) := by
+  subst hcons
+  obtain ⟨hVh, hsubt⟩ := p2g_LIST_SUBSET V (h :: t) h t hsub rfl
+  obtain ⟨W, hWV, hvW, hWfin, hWeq⟩ :=
+    p2g_VORONOI_CLOSED_EQ_FINITE_INTERS_BIS_LE V h hV hs hVh
+  have huniv : ∀ z : V3, bisLe z z = (Set.univ : Set V3) := fun z => by ext y; simp [bisLe]
+  set K₀ : Set (Set V3) := (fun u : V3 => bisLe h u) '' W ∪ (fun u : V3 => bisLe u h) '' setOfList t
+    with hK₀def
+  have hK₀fin : K₀.Finite := (hWfin.image _).union ((List.finite_toSet t).image _)
+  have heq₀ : voronoiList V (h :: t) = ⋂₀ K₀ := by
+    rw [p2g_VORONOI_LIST_BIS_LE V (h :: t) h t hsub rfl, hWeq, ← p2g_INTERS_INTER_INTERS]
+  have hmem₀ : ∀ a ∈ K₀ \ {(Set.univ : Set V3)},
+      ∃ v ∈ V, v ≠ h ∧ (a = bisLe v h ∨ a = bisLe h v) := by
+    intro a ha
+    obtain ⟨haK, haU⟩ := ha
+    rcases haK with hmem | hmem
+    · obtain ⟨u, huW, rfl⟩ := hmem
+      refine ⟨u, hWV huW, ?_, Or.inr rfl⟩
+      intro h0
+      apply haU
+      show bisLe h u ∈ {(Set.univ : Set V3)}
+      rw [h0, huniv h]
+      exact rfl
+    · obtain ⟨u, hu, rfl⟩ := hmem
+      refine ⟨u, hsubt hu, ?_, Or.inl rfl⟩
+      intro h0
+      apply haU
+      show bisLe u h ∈ {(Set.univ : Set V3)}
+      rw [h0, huniv h]
+      exact rfl
+  have heqK : voronoiList V (h :: t) =
+      ((affineSpan ℝ (voronoiList V (h :: t)) : Set V3) ∩ ⋂₀ (K₀ \ {(Set.univ : Set V3)})) := by
+    have hstep : ⋂₀ (K₀ \ {(Set.univ : Set V3)}) = ⋂₀ K₀ := (p2g_INTERS_UNIV K₀).symm
+    rw [hstep, ← heq₀]
+    exact p2g_INTER_AFFINE_HULL _
+  have hKfin : (K₀ \ {(Set.univ : Set V3)}).Finite := hK₀fin.subset Set.diff_subset
+  obtain ⟨g, hg₀, hgeq, hgmin⟩ := p2g_MINIMAL_INTER_INTERS_EXISTS
+    (voronoiList V (h :: t)) ((affineSpan ℝ (voronoiList V (h :: t)) : Set V3))
+    (K₀ \ {(Set.univ : Set V3)}) hKfin heqK
+  refine ⟨g, hKfin.subset hg₀, hgeq, ?_, hgmin⟩
+  intro a ha
+  exact hmem₀ a (hg₀ ha)
 
 /-- Rogers.hl:172 `VORONOI_BARV_CANONICAL`（PA6 正本）。PA6 正本落地，本为链复制。 -/
 private theorem p2g_VORONOI_BARV_CANONICAL (V : Set V3) (k : ℕ) (ul : List V3)
@@ -1311,13 +1615,234 @@ private theorem p2g_initial_sublist_prefix {w u z : List V3}
     rw [ht0, List.append_nil] at hu
     exact ⟨[], by rw [hu, List.append_nil]⟩
 
-/-- Rogers.hl:212 `HALFSPACE_EQ`。-- NEEDS: PA6:247 正本落地后替换（PA2 侧不可
-import，链复制桩；PA6 本体亦为 sorry）。 -/
+/-- Rogers.hl:192 `REAL_LINE_BOUNDED`（PA6:232 正本链复制；`p2g_HALFSPACE_EQ` 依赖件）。 -/
+private theorem p2g_REAL_LINE_BOUNDED (a b : ℝ) (h : ∀ t : ℝ, t * a ≤ b) : a = 0 := by
+  by_contra hne
+  have h1 : (b + 1) / a * a = b + 1 := by field_simp
+  linarith [h ((b + 1) / a), h1]
+
+/-- Rogers.hl:212 `HALFSPACE_EQ`：线性半空间相等判据（PA6:247 正本 5aa56729 逐字
+链复制；PA2 侧不可 import PA6——成环）。PA6 正本已真证，本件体同步替换。 -/
 private theorem p2g_HALFSPACE_EQ (a : V3) (b : ℝ) (c : V3) (d : ℝ) :
     {x : V3 | a ⬝ᵥ x ≤ b} = {x : V3 | c ⬝ᵥ x ≤ d} ↔
       (∃ t : ℝ, c = t • a ∧ d = t * b ∧ 0 < t) ∨
-        (a = 0 ∧ c = 0 ∧ ((0 ≤ b ∧ 0 ≤ d) ∨ (b < 0 ∧ d < 0))) :=
-  sorry
+        (a = 0 ∧ c = 0 ∧ ((0 ≤ b ∧ 0 ≤ d) ∨ (b < 0 ∧ d < 0))) := by
+  -- V3 dot product is the `Fin 3 → ℝ` dot product after `ofLp`
+  have hpi : ∀ (y z : V3), y ⬝ᵥ z = ((y : Fin 3 → ℝ) ⬝ᵥ (z : Fin 3 → ℝ)) :=
+    fun y z => rfl
+  have haddV : ∀ (y z : V3), ((y + z : V3) : Fin 3 → ℝ)
+      = (y : Fin 3 → ℝ) + (z : Fin 3 → ℝ) := fun y z => rfl
+  have hsmulV : ∀ (r : ℝ) (y : V3), ((r • y : V3) : Fin 3 → ℝ)
+      = r • (y : Fin 3 → ℝ) := fun r y => rfl
+  have hzdot : ∀ x : V3, (0 : V3) ⬝ᵥ x = 0 := by
+    intro x
+    have h0 : ((0 : V3) : Fin 3 → ℝ) = 0 := rfl
+    rw [hpi, h0]
+    exact zero_dotProduct ((x : Fin 3 → ℝ))
+  have hdotself : ∀ y : V3, y ⬝ᵥ y = 0 → y = 0 := by
+    intro y h
+    apply WithLp.ofLp_injective
+    have h' : ((y : Fin 3 → ℝ)) ⬝ᵥ ((y : Fin 3 → ℝ)) = 0 := by
+      rw [← hpi y y]
+      exact h
+    simpa using dotProduct_self_eq_zero.mp h'
+  have hsmul : ∀ (r : ℝ) (y z : V3), y ⬝ᵥ (r • z) = r * (y ⬝ᵥ z) :=
+    fun r y z => dotProduct_smul r (y : Fin 3 → ℝ) (z : Fin 3 → ℝ)
+  have hsmulL : ∀ (r : ℝ) (y z : V3), (r • y) ⬝ᵥ z = r * (y ⬝ᵥ z) :=
+    fun r y z => smul_dotProduct r (y : Fin 3 → ℝ) (z : Fin 3 → ℝ)
+  have hadd : ∀ (y z w : V3), y ⬝ᵥ (z + w) = y ⬝ᵥ z + y ⬝ᵥ w :=
+    fun y z w => dotProduct_add (y : Fin 3 → ℝ) (z : Fin 3 → ℝ) (w : Fin 3 → ℝ)
+  have hcomm : ∀ (y z : V3), y ⬝ᵥ z = z ⬝ᵥ y :=
+    fun y z => dotProduct_comm (y : Fin 3 → ℝ) (z : Fin 3 → ℝ)
+  have hexp : ∀ (y z : V3) (r : ℝ),
+      (y - r • z) ⬝ᵥ (y - r • z) =
+        y ⬝ᵥ y - 2 * r * (y ⬝ᵥ z) + r * r * (z ⬝ᵥ z) := by
+    intro y z r
+    rw [hpi y y, hpi y z, hpi z z, hpi]
+    rw [show ((y - r • z : V3) : Fin 3 → ℝ) = (y : Fin 3 → ℝ) - r • (z : Fin 3 → ℝ) from rfl]
+    simp only [dotProduct_sub, dotProduct_smul, dotProduct_comm]
+    ring
+  constructor
+  · intro heq
+    have hiff : ∀ x : V3, (a ⬝ᵥ x ≤ b ↔ c ⬝ᵥ x ≤ d) := by
+      intro x
+      have h : x ∈ {x : V3 | a ⬝ᵥ x ≤ b} ↔ x ∈ {x : V3 | c ⬝ᵥ x ≤ d} := by
+        rw [heq]
+      simpa only [Set.mem_setOf_eq] using h
+    by_cases ha : a = 0
+    · subst ha
+      have hiff0 : ∀ x : V3, (0 ≤ b ↔ c ⬝ᵥ x ≤ d) := by
+        intro x
+        have h := hiff x
+        rw [hzdot x] at h
+        exact h
+      by_cases hc : c = 0
+      · subst hc
+        refine Or.inr ⟨rfl, rfl, ?_⟩
+        have hz : (0 ≤ b ↔ 0 ≤ d) := by
+          have h1 := hiff0 0
+          rw [hzdot (0 : V3)] at h1
+          exact h1
+        by_cases hb : 0 ≤ b
+        · exact Or.inl ⟨hb, hz.1 hb⟩
+        · have hd : ¬ 0 ≤ d := fun hd0 => hb (hz.2 hd0)
+          exact Or.inr ⟨lt_of_not_ge hb, lt_of_not_ge hd⟩
+      · exfalso
+        have hcc : c ⬝ᵥ c ≠ 0 := by
+          intro h0
+          exact hc (hdotself c h0)
+        by_cases hb : 0 ≤ b
+        · -- the left side is the whole space; then c · x ≤ d for all x,
+          -- contradicting x = ((d + 1) / (c ⬝ᵥ c)) • c
+          have hx : c ⬝ᵥ (((d + 1) / (c ⬝ᵥ c)) • c) = d + 1 := by
+            rw [hsmul]
+            field_simp [hcc]
+          have hxle : c ⬝ᵥ (((d + 1) / (c ⬝ᵥ c)) • c) ≤ d :=
+            (hiff0 (((d + 1) / (c ⬝ᵥ c)) • c)).1 hb
+          rw [hx] at hxle
+          linarith
+        · -- the left side is empty; but x = (d / (c ⬝ᵥ c)) • c lies in the right
+          have hb' : b < 0 := lt_of_not_ge hb
+          have hx : c ⬝ᵥ ((d / (c ⬝ᵥ c)) • c) = d := by
+            rw [hsmul]
+            field_simp [hcc]
+          have hxle : c ⬝ᵥ ((d / (c ⬝ᵥ c)) • c) ≤ d := by rw [hx]
+          exact absurd ((hiff0 ((d / (c ⬝ᵥ c)) • c)).2 hxle) (not_le.2 hb')
+    · -- a ≠ 0
+      have haa : a ⬝ᵥ a ≠ 0 := by
+        intro h0
+        exact ha (hdotself a h0)
+      have hge0 : 0 ≤ a ⬝ᵥ a := by
+        have h0 : a ⬝ᵥ a = ∑ i : Fin 3, (a : Fin 3 → ℝ) i * (a : Fin 3 → ℝ) i := rfl
+        rw [h0]
+        exact Finset.sum_nonneg fun i _ => mul_self_nonneg _
+      -- the key quadratic inequality (Rogers.hl:254, subgoal "A")
+      have key : ∀ u : ℝ, u * ((a ⬝ᵥ a) * (c ⬝ᵥ c) - (a ⬝ᵥ c) * (a ⬝ᵥ c))
+          ≤ d * (a ⬝ᵥ a) - b * (a ⬝ᵥ c) := by
+        intro u
+        set w := (b - u * (a ⬝ᵥ c)) / (a ⬝ᵥ a) with hwdef
+        have hwaa : w * (a ⬝ᵥ a) = b - u * (a ⬝ᵥ c) := by
+          rw [hwdef]
+          field_simp [haa]
+        have hax : a ⬝ᵥ (w • a + u • c) = b := by
+          rw [hadd, hsmul, hsmul, hwaa]
+          ring
+        have hcx : c ⬝ᵥ (w • a + u • c) ≤ d := by
+          have h := hiff (w • a + u • c)
+          rw [haddV, hsmulV, hsmulV] at h
+          rw [hax] at h
+          exact h.1 (le_refl b)
+        have hcxv : c ⬝ᵥ (w • a + u • c) = w * (a ⬝ᵥ c) + u * (c ⬝ᵥ c) := by
+          rw [hadd, hsmul, hsmul, hcomm]
+        have h3 := mul_le_mul_of_nonneg_right hcx hge0
+        rw [hcxv] at h3
+        have e1 : (w * (a ⬝ᵥ c)) * (a ⬝ᵥ a) = (b - u * (a ⬝ᵥ c)) * (a ⬝ᵥ c) := by
+          rw [← hwaa]
+          ring
+        nlinarith [e1, h3]
+      -- the equality case of Cauchy–Schwarz: c lies on the line spanned by a
+      have hCauchy : (a ⬝ᵥ a) * (c ⬝ᵥ c) = (a ⬝ᵥ c) * (a ⬝ᵥ c) := by
+        have h := p2g_REAL_LINE_BOUNDED ((a ⬝ᵥ a) * (c ⬝ᵥ c) - (a ⬝ᵥ c) * (a ⬝ᵥ c))
+          (d * (a ⬝ᵥ a) - b * (a ⬝ᵥ c)) key
+        linarith
+      set s : ℝ := (a ⬝ᵥ c) / (a ⬝ᵥ a) with hsdef
+      have hSab : s * (a ⬝ᵥ a) = a ⬝ᵥ c := by
+        rw [hsdef]
+        exact div_mul_cancel₀ _ haa
+      have h2 : s * (a ⬝ᵥ c) * (a ⬝ᵥ a) = (a ⬝ᵥ c) * (a ⬝ᵥ c) := by
+        rw [hsdef]
+        field_simp [haa]
+      have hcc' : c ⬝ᵥ c = s * (a ⬝ᵥ c) := by
+        have hprod : s * (a ⬝ᵥ c) * (a ⬝ᵥ a) = (c ⬝ᵥ c) * (a ⬝ᵥ a) := by
+          nlinarith [h2, hCauchy]
+        exact (mul_right_cancel₀ haa hprod).symm
+      have h3saa : s * s * (a ⬝ᵥ a) = s * (a ⬝ᵥ c) := by
+        rw [← hSab]
+        ring
+      have hceq : c = s • a := by
+        have hcoll : (c - s • a) ⬝ᵥ (c - s • a) = 0 := by
+          rw [hexp, hcc', h3saa, hcomm c a]
+          ring
+        exact sub_eq_zero.mp (hdotself _ hcoll)
+      -- s ≠ 0, otherwise the right side is degenerate while the left is not
+      have hs0 : s ≠ 0 := by
+        intro h0
+        rw [h0, zero_smul] at hceq
+        have hz : ∀ x : V3, (a ⬝ᵥ x ≤ b ↔ 0 ≤ d) := by
+          intro x
+          have h := hiff x
+          rw [hceq, hzdot x] at h
+          exact h
+        have hx2 : a ⬝ᵥ (((b + 1) / (a ⬝ᵥ a)) • a) = b + 1 := by
+          rw [hsmul]
+          field_simp [haa]
+        have hx3 : a ⬝ᵥ (((b - 1) / (a ⬝ᵥ a)) • a) = b - 1 := by
+          rw [hsmul]
+          field_simp [haa]
+        have hnot : ¬ 0 ≤ d := fun hd0 => by
+          have h9 := (hz (((b + 1) / (a ⬝ᵥ a)) • a)).2 hd0
+          rw [hsmulV, hx2] at h9
+          linarith
+        exact hnot ((hz (((b - 1) / (a ⬝ᵥ a)) • a)).1
+          (by rw [hsmulV, hx3]; linarith))
+      -- the two sample points pin `d = s * b` once `s > 0`
+      have hx1 : a ⬝ᵥ ((b / (a ⬝ᵥ a)) • a) = b := by
+        rw [hsmul]
+        field_simp [haa]
+      have h1 : s * b ≤ d := by
+        have hmem := (hiff ((b / (a ⬝ᵥ a)) • a)).1 (by rw [hsmulV, hx1])
+        have hc1 : c ⬝ᵥ ((b / (a ⬝ᵥ a)) • a) = s * b := by
+          rw [hceq, hsmulL, hx1]
+        rw [hsmulV, hc1] at hmem
+        exact hmem
+      have h4 : d / s ≤ b := by
+        have hx0 : c ⬝ᵥ (((d / s) / (a ⬝ᵥ a)) • a) = d := by
+          rw [hceq, hsmulL, hsmul]
+          field_simp [haa, hs0]
+        have h4a : a ⬝ᵥ (((d / s) / (a ⬝ᵥ a)) • a) = d / s := by
+          rw [hsmul]
+          field_simp [haa]
+        have hmem := (hiff (((d / s) / (a ⬝ᵥ a)) • a)).2 (by rw [hsmulV, hx0])
+        rw [hsmulV, h4a] at hmem
+        exact hmem
+      by_cases hsneg : s < 0
+      · -- s < 0 is incompatible with the equality of the two halfspaces
+        exfalso
+        have hx4 : a ⬝ᵥ (((b + 1) / (a ⬝ᵥ a)) • a) = b + 1 := by
+          rw [hsmul]
+          field_simp [haa]
+        have hx4' : c ⬝ᵥ (((b + 1) / (a ⬝ᵥ a)) • a) = s * (b + 1) := by
+          rw [hceq, hsmulL, hx4]
+        have hnotmem : ¬ (a ⬝ᵥ (((b + 1) / (a ⬝ᵥ a)) • a) ≤ b) := by
+          intro hcon
+          rw [hx4] at hcon
+          linarith
+        have hgt : ¬ (c ⬝ᵥ (((b + 1) / (a ⬝ᵥ a)) • a) ≤ d) :=
+          fun hcon => hnotmem ((hiff (((b + 1) / (a ⬝ᵥ a)) • a)).2 hcon)
+        rw [hx4'] at hgt
+        have hgt' : d < s * (b + 1) := not_le.mp hgt
+        have hexp4 : s * (b + 1) = s * b + s := by ring
+        rw [hexp4] at hgt'
+        linarith
+      · -- 0 < s
+        have hpos : 0 < s := lt_of_le_of_ne (le_of_not_gt hsneg) (Ne.symm hs0)
+        have hq : d / s * s = d := div_mul_cancel₀ d hs0
+        have h5 : d ≤ s * b := by
+          have h5a : d / s * s ≤ b * s := mul_le_mul_of_nonneg_right h4
+            (le_of_not_gt hsneg)
+          rw [hq, mul_comm] at h5a
+          exact h5a
+        exact Or.inl ⟨s, hceq, le_antisymm h5 h1, hpos⟩
+  · rintro (⟨t, rfl, rfl, ht⟩ | ⟨rfl, rfl, hsign⟩)
+    · ext x
+      simp only [Set.mem_setOf_eq, hsmulL]
+      exact (mul_le_mul_iff_of_pos_left ht).symm
+    · ext x
+      have hz : (0 : V3) ⬝ᵥ x = 0 := hzdot x
+      simp only [Set.mem_setOf_eq, hz]
+      rcases hsign with ⟨hb, hd⟩ | ⟨hb, hd⟩
+      · exact ⟨fun _ => hd, fun _ => hb⟩
+      · exact iff_of_false (not_le.2 hb) (not_le.2 hd)
 
 /-- Rogers.hl:397 `HALFSPACE_EQ_BIS_LE_IMP_HYPERPLANE_EQ_BIS`（PA6 正本）。
 PA6 正本落地，本为链复制。 -/
@@ -1472,27 +1997,32 @@ private theorem p2g_IDBEZAL (V : Set V3) (ul : List V3) (k : ℕ) (F : Set V3)
     · rw [p2g_AFF_DIM_VORONOI_LIST V vl (k + 1) hbarvl, p2g_AFF_DIM_VORONOI_LIST V ul k hbar]
       omega
 
-/-- pack3.hl:2297 `POLYHEDRON_VORONOI_LIST`。-- NEEDS: PA5:1500 正本落地后替换
-（PA2 侧不可 import，链复制桩）。 -/
+/-- pack3.hl:2297 `POLYHEDRON_VORONOI_LIST`（PA5:1689 正本证明体链复制）。 -/
 private theorem p2g_POLYHEDRON_VORONOI_LIST (V : Set V3) (ul : List V3) (hV : Packing V)
-    (hs : saturated V) (hsub : setOfList ul ⊆ V) : polyhedron (voronoiList V ul) :=
-  sorry
+    (hs : saturated V) (hsub : setOfList ul ⊆ V) : polyhedron (voronoiList V ul) := by
+  rcases ul with _ | ⟨h, t⟩
+  · have h0 : voronoiList V [] = (Set.univ : Set V3) := by
+      rw [voronoiList, voronoiSet]
+      have h1 : setOfList ([] : List V3) = (∅ : Set V3) := by ext x; simp [setOfList]
+      rw [h1]
+      simp
+    rw [h0]
+    exact POLYHEDRON_UNIV
+  · obtain ⟨hVh, hsubt⟩ := p2g_LIST_SUBSET V (h :: t) h t hsub rfl
+    rw [p2g_VORONOI_LIST_BIS_LE V (h :: t) h t hsub rfl]
+    refine POLYHEDRON_INTER (p2g_VORONOI_POLYHEDRON V h hV hs hVh) ?_
+    refine POLYHEDRON_INTERS ((List.finite_toSet t).image fun u : V3 => bisLe u h) ?_
+    rintro T ⟨u, hu, rfl⟩
+    exact p2g_polyhedron_bisLe u h
 
-/-- pack3.hl:2355 `POLYTOPE_VORONOI_LIST`。-- NEEDS: PA5:1501 正本落地后替换
-（PA2 侧不可 import，链复制桩）。 -/
-private theorem p2g_POLYTOPE_VORONOI_LIST (V : Set V3) (ul : List V3) (hV : Packing V)
-    (hs : saturated V) (hsub : setOfList ul ⊆ V) (hne : ul ≠ []) :
-    polytope (voronoiList V ul) :=
-  sorry
-
-/-- pack3.hl:2355 `POLYTOPE_VORONOI_LIST_BARV`（PA5 正本）。PA5 正本落地，本为链复制。 -/
-private theorem p2g_POLYTOPE_VORONOI_LIST_BARV (V : Set V3) (ul : List V3) (k : ℕ)
-    (hV : Packing V) (hs : saturated V) (hbar : barV V k ul) :
-    polytope (voronoiList V ul) := by
-  have hbl := hbar.1
-  exact p2g_POLYTOPE_VORONOI_LIST V ul hV hs (p2g_BARV_SUBSET V k ul hbar) (by
-    intro h0
-    simp [h0] at hbl)
+/-! ### §4.5 polytope kit：紧多面体 = 多胞形（PA5:1706-1995 正本链复制；
+PA2 不可 import PA5——成环。其中 `p2g_sSup_mem_closed` / `p2g_mem_hull_insert_facet` /
+`p2g_convexHull_union_hull` 三件自文件下方原位置上移（原为 PA6 私件链复制，
+使用方均在本件之后，上移无碍）。NEEDS（通用正本，同 PA5 记账）：仓库尚无
+`POLYTOPE_EQ_BOUNDED_POLYHEDRON`（HOL polytope.ml:531）；本波以
+`p2g_polytope_of_compact_polyhedron`（affDim 强归纳）补位；Polytope.lean 立通用件后
+kit 整体可替换。`p2g_isClosed_voronoiList` 与下方 `p2g_CLOSED_VORONOI_LIST` 逐字重复
+（顺序需要），合并波处理。 -/
 
 /-- 桥助（PA6 私件 `p6_sSup_mem_closed`）：非空有上界闭集的上确界属于该集。
 PA6 正本落地，本为链复制。 -/
@@ -1515,18 +2045,6 @@ private theorem p2g_sSup_mem_closed (I : Set ℝ) (hne : I.Nonempty) (hbdd : Bdd
     linarith
   have hsup := csSup_le hne hbound
   linarith
-
-/-- 桥助（PA6 私件 `p6_two_distinct_of_affDim_pos`）：正维紧凸集有两相异点。
-PA6 正本落地，本为链复制。 -/
-private theorem p2g_two_distinct_of_affDim_pos {s : Set V3} (hsne : s.Nonempty)
-    (hdim : 0 < affDim s) : ∃ x ∈ s, ∃ y ∈ s, x ≠ y := by
-  by_contra hall
-  push_neg at hall
-  obtain ⟨x₀, hx₀⟩ := hsne
-  have hseq : s = {x₀} :=
-    Set.eq_singleton_iff_unique_mem.2 ⟨hx₀, fun z hz => hall z hz x₀ hx₀⟩
-  rw [hseq, affDim_singleton] at hdim
-  omega
 
 /-- 边界点引理（PA6 私件 `p6_mem_hull_insert_facet`，HOL Rogers.hl:694 背后）：
 紧多面体的点在 `p0` 与某个面的壳的并里（或是 `p0` 本身）。PA6 正本落地，
@@ -1634,6 +2152,197 @@ private theorem p2g_mem_hull_insert_facet (s : Set V3) (p0 v : V3)
     · subst hz
       exact Set.mem_insert_of_mem _ hwf
 
+/-- `hull (A ∪ hull B) = hull (A ∪ B)`（PA6 私件 `p6_convexHull_union_hull`）。
+PA6 正本落地，本为链复制。 -/
+private theorem p2g_convexHull_union_hull (A B : Set V3) :
+    convexHull ℝ (A ∪ convexHull ℝ B) = convexHull ℝ (A ∪ B) := by
+  refine subset_antisymm ?_ ?_
+  · refine convexHull_min ?_ (convex_convexHull ℝ (A ∪ B))
+    intro z hz
+    simp only [Set.mem_union] at hz
+    rcases hz with hz | hz
+    · exact subset_convexHull ℝ (A ∪ B) (Set.mem_union_left _ hz)
+    · exact (convexHull_mono (Set.subset_union_right : B ⊆ A ∪ B)) hz
+  · refine convexHull_min ?_ (convex_convexHull ℝ (A ∪ convexHull ℝ B))
+    intro z hz
+    simp only [Set.mem_union] at hz
+    rcases hz with hz | hz
+    · exact subset_convexHull ℝ (A ∪ convexHull ℝ B) (Set.mem_union_left _ hz)
+    · exact subset_convexHull ℝ (A ∪ convexHull ℝ B)
+        (Set.mem_union_right _ (subset_convexHull ℝ B hz))
+
+/-- 非空集合的 `affDim ≥ 0`（`affDim = -1 ↔ s = ∅` 的另一半；PA5:1716 正本链复制）。 -/
+private theorem p2g_affDim_of_nonempty {s : Set V3} (hs : s ≠ ∅) : 0 ≤ affDim s := by
+  by_cases h0 : s = ∅
+  · exact absurd h0 hs
+  · rw [affDim, if_neg h0]
+    exact Nat.cast_nonneg _
+
+/-- 紧多面体是多胞形：对 `affDim` 的强归纳（PA5:1868 正本链复制）。基例为单点；
+归纳步用 `p2g_mem_hull_insert_facet` 把每个点压进 `p₀` 与某张面的壳，面是低一维的
+紧多面体（`FACE_OF_POLYHEDRON_POLYHEDRON` + 闭有界），面的壳由归纳有限。 -/
+private theorem p2g_polytope_of_compact_polyhedron_aux :
+    ∀ (d : ℕ) (s : Set V3), polyhedron s → _root_.IsCompact s → affDim s ≤ (d : ℤ) →
+      polytope s := by
+  intro d
+  induction d using Nat.strongRecOn with
+  | ind d ih =>
+    intro s hsp hcomp hle
+    classical
+    by_cases hs0 : s = ∅
+    · rw [hs0]
+      exact ⟨∅, Set.finite_empty, by rw [convexHull_empty]⟩
+    obtain ⟨p₀, hp₀s⟩ := Set.nonempty_iff_ne_empty.2 hs0
+    have hconv : Convex ℝ s := POLYHEDRON_IMP_CONVEX hsp
+    by_cases hsingle : ∀ v ∈ s, v = p₀
+    · refine ⟨{p₀}, Set.finite_singleton _, ?_⟩
+      rw [convexHull_singleton]
+      exact (Set.eq_singleton_iff_unique_mem.2 ⟨hp₀s, hsingle⟩).symm
+    · have hfacetsfin : {f : Set V3 | FacetOf f s}.Finite :=
+        Set.Finite.subset (FINITE_POLYHEDRON_FACES hsp) fun f hf => hf.1
+      have hfacpoly : ∀ f ∈ {f : Set V3 | FacetOf f s}, polytope f := by
+        intro f hf
+        have hfne : f ≠ ∅ := hf.2.1
+        have hfp : polyhedron f := FACE_OF_POLYHEDRON_POLYHEDRON hsp hf.1
+        have hfc : _root_.IsCompact f :=
+          Metric.isCompact_of_isClosed_isBounded (POLYHEDRON_IMP_CLOSED hfp)
+            (hcomp.isBounded.subset hf.1.1)
+        have hf0 : 0 ≤ affDim f := p2g_affDim_of_nonempty hfne
+        have hfd : affDim f = affDim s - 1 := hf.2.2
+        have hfl : affDim f ≤ ((d - 1 : ℕ) : ℤ) := by
+          have h3 : affDim s ≤ (d : ℤ) := hle
+          omega
+        exact ih (d - 1) (by omega) f hfp hfc hfl
+      obtain ⟨Gfam, hG1, hG2⟩ : ∃ Gfam : Set V3 → Set V3,
+          (∀ f : Set V3, f ∈ {f : Set V3 | FacetOf f s} → (Gfam f).Finite) ∧
+          (∀ f : Set V3, f ∈ {f : Set V3 | FacetOf f s} → convexHull ℝ (Gfam f) = f) := by
+        refine ⟨fun f => if hf : f ∈ {f : Set V3 | FacetOf f s} then (hfacpoly f hf).choose
+          else ∅, ?_, ?_⟩
+        · intro f hf
+          show (if hf : f ∈ {f : Set V3 | FacetOf f s} then (hfacpoly f hf).choose else ∅).Finite
+          rw [dif_pos hf]
+          exact (hfacpoly f hf).choose_spec.1
+        · intro f hf
+          show (convexHull ℝ (if hf : f ∈ {f : Set V3 | FacetOf f s} then (hfacpoly f hf).choose
+            else ∅) = f)
+          rw [dif_pos hf]
+          exact (hfacpoly f hf).choose_spec.2
+      set Fam : Set (Set V3) := Gfam '' {f : Set V3 | FacetOf f s} with hFamdef
+      have hFamfin : Fam.Finite := hfacetsfin.image Gfam
+      have hFamsubfin : ∀ T ∈ Fam, T.Finite := by
+        rintro T ⟨f, hf, rfl⟩
+        exact hG1 f hf
+      have hGfin : (insert p₀ (⋃₀ Fam)).Finite :=
+        Set.Finite.insert p₀ (hFamfin.sUnion hFamsubfin)
+      refine ⟨insert p₀ (⋃₀ Fam), hGfin, ?_⟩
+      refine subset_antisymm (convexHull_min ?_ hconv) ?_
+      · intro z hz
+        rcases Set.mem_insert_iff.1 hz with rfl | hz
+        · exact hp₀s
+        · obtain ⟨T, ⟨f, hf, rfl⟩, hzT⟩ := Set.mem_sUnion.1 hz
+          have hz2 : z ∈ convexHull ℝ (Gfam f) := subset_convexHull ℝ (Gfam f) hzT
+          rw [hG2 f hf] at hz2
+          exact hf.1.1 hz2
+      · intro v hv
+        by_cases hv0 : v = p₀
+        · rw [hv0]
+          exact subset_convexHull ℝ _ (Set.mem_insert p₀ _)
+        · obtain ⟨f, hf, hvf⟩ :=
+            (p2g_mem_hull_insert_facet s p₀ v hsp hcomp hp₀s hv).resolve_left hv0
+          have hfF : convexHull ℝ (insert p₀ f) =
+              convexHull ℝ (insert p₀ (Gfam f)) := by
+            conv_lhs => rw [← hG2 f hf]
+            rw [Set.insert_eq, p2g_convexHull_union_hull, ← Set.insert_eq]
+          refine convexHull_mono ?_ (hfF ▸ hvf)
+          intro z hz
+          rcases Set.mem_insert_iff.1 hz with rfl | hz
+          · exact Set.mem_insert _ _
+          · exact Set.mem_insert_of_mem _
+              (Set.mem_sUnion.2 ⟨Gfam f, ⟨f, hf, rfl⟩, hz⟩)
+
+/-- 紧多面体是多胞形（PA5:1948 正本链复制）。 -/
+private theorem p2g_polytope_of_compact_polyhedron {s : Set V3} (hsp : polyhedron s)
+    (hcomp : _root_.IsCompact s) : polytope s := by
+  by_cases hs0 : s = ∅
+  · rw [hs0]
+    exact ⟨∅, Set.finite_empty, by rw [convexHull_empty]⟩
+  · have hd0 : 0 ≤ affDim s := p2g_affDim_of_nonempty hs0
+    have hdm : affDim s = ((affDim s).toNat : ℤ) := (Int.toNat_of_nonneg hd0).symm
+    exact p2g_polytope_of_compact_polyhedron_aux (affDim s).toNat s hsp hcomp (le_of_eq hdm)
+
+/-- pack3.hl:1274 `HD_IN_SET_OF_LIST`（PA5:1028 正本链复制）。 -/
+private theorem p2g_HD_IN_SET_OF_LIST (ul : List V3) (h : 1 ≤ ul.length) :
+    hdV ul ∈ setOfList ul := by
+  cases ul with
+  | nil => simp at h
+  | cons a t => simp [setOfList, hdV]
+
+/-- `closed (voronoi_list V ul)` 的提前副本：PA5:1960 `p5_isClosed_voronoiList`
+正本链复制（`p2g_CLOSED_VORONOI_LIST` 在本文件更靠后，本件顺序需要）。
+NEEDS: 合并波删除本私件、把 `p2g_CLOSED_VORONOI_LIST` 相应上移。 -/
+private theorem p2g_isClosed_voronoiList (V : Set V3) (ul : List V3) :
+    IsClosed (voronoiList V ul) := by
+  rw [voronoiList, voronoiSet]
+  refine isClosed_sInter ?_
+  rintro t ⟨w, -, rfl⟩
+  exact p2g_CLOSED_VORONOI_CLOSED V w
+
+/-- `BOUNDED_VORONOI_LIST` 的无 `barV` 变体（PA5:1970 正本链复制；只需
+`1 ≤ LENGTH ul`）。NEEDS: 合并波可改为给 `p2g_BOUNDED_VORONOI_LIST` 上游加泛化私件。 -/
+private theorem p2g_bounded_voronoiList_of_len (V : Set V3) (ul : List V3) (hs : saturated V)
+    (hlen : 1 ≤ ul.length) : Bornology.IsBounded (voronoiList V ul) := by
+  refine (Metric.isBounded_ball (x := hdV ul) (r := (2 : ℕ))).subset fun x hx => ?_
+  have hmem := hx (voronoiClosed V (hdV ul)) ⟨hdV ul, p2g_HD_IN_SET_OF_LIST ul hlen, rfl⟩
+  exact Metric.mem_ball.2 (p2g_VORONOI_BALL2 V (hdV ul) hs hmem)
+
+/-- pack3.hl:80 `LENGTH_IMP_CONS`（PA5:110 正本链复制）。 -/
+private theorem p2g_LENGTH_IMP_CONS (l : List V3) (h : 1 ≤ l.length) :
+    ∃ (hd : V3) (tl : List V3), l = hd :: tl := by
+  cases l with
+  | nil => simp at h
+  | cons a t => exact ⟨a, t, rfl⟩
+
+/-- pack3.hl:2355 `POLYTOPE_VORONOI_LIST`（PA5:1979 正本证明体链复制；
+陈述冻结、体替换）。 -/
+private theorem p2g_POLYTOPE_VORONOI_LIST (V : Set V3) (ul : List V3) (hV : Packing V)
+    (hs : saturated V) (hsub : setOfList ul ⊆ V) (hne : ul ≠ []) :
+    polytope (voronoiList V ul) := by
+  obtain ⟨h, t, hcons⟩ := p2g_LENGTH_IMP_CONS ul (by
+    cases ul with
+    | nil => exact absurd rfl hne
+    | cons a t => simp)
+  subst hcons
+  have hVh : h ∈ V := hsub (by simp [setOfList])
+  have hsp : polyhedron (voronoiList V (h :: t)) :=
+    p2g_POLYHEDRON_VORONOI_LIST V (h :: t) hV hs hsub
+  have hcl : IsClosed (voronoiList V (h :: t)) := p2g_isClosed_voronoiList V (h :: t)
+  have hbdd : Bornology.IsBounded (voronoiList V (h :: t)) :=
+    p2g_bounded_voronoiList_of_len V (h :: t) hs (by simp)
+  have hcomp : _root_.IsCompact (voronoiList V (h :: t)) :=
+    Metric.isCompact_of_isClosed_isBounded hcl hbdd
+  exact p2g_polytope_of_compact_polyhedron hsp hcomp
+
+/-- pack3.hl:2355 `POLYTOPE_VORONOI_LIST_BARV`（PA5 正本）。PA5 正本落地，本为链复制。 -/
+private theorem p2g_POLYTOPE_VORONOI_LIST_BARV (V : Set V3) (ul : List V3) (k : ℕ)
+    (hV : Packing V) (hs : saturated V) (hbar : barV V k ul) :
+    polytope (voronoiList V ul) := by
+  have hbl := hbar.1
+  exact p2g_POLYTOPE_VORONOI_LIST V ul hV hs (p2g_BARV_SUBSET V k ul hbar) (by
+    intro h0
+    simp [h0] at hbl)
+
+/-- 桥助（PA6 私件 `p6_two_distinct_of_affDim_pos`）：正维紧凸集有两相异点。
+PA6 正本落地，本为链复制。 -/
+private theorem p2g_two_distinct_of_affDim_pos {s : Set V3} (hsne : s.Nonempty)
+    (hdim : 0 < affDim s) : ∃ x ∈ s, ∃ y ∈ s, x ≠ y := by
+  by_contra hall
+  push_neg at hall
+  obtain ⟨x₀, hx₀⟩ := hsne
+  have hseq : s = {x₀} :=
+    Set.eq_singleton_iff_unique_mem.2 ⟨hx₀, fun z hz => hall z hz x₀ hx₀⟩
+  rw [hseq, affDim_singleton] at hdim
+  omega
+
 /-- 紧多面体 = `p` 与各面壳的并（PA6 私件 `p6_union_convex_hull_facets`）。
 PA6 正本落地，本为链复制。 -/
 private theorem p2g_union_convex_hull_facets (s : Set V3) (p : V3) (hsp : polyhedron s)
@@ -1702,26 +2411,9 @@ private theorem p2g_VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS (V : Set V3) (ul : 
       exact ⟨voronoiList V vl, hf, by rw [hTeq]⟩
   rw [hmain, hfam]
 
-/-! ### §5 sUnion bookkeeping + GLTVHUM_lemma1（PA6 正本落地，本为链复制） -/
-
-/-- `hull (A ∪ hull B) = hull (A ∪ B)`（PA6 私件 `p6_convexHull_union_hull`）。
-PA6 正本落地，本为链复制。 -/
-private theorem p2g_convexHull_union_hull (A B : Set V3) :
-    convexHull ℝ (A ∪ convexHull ℝ B) = convexHull ℝ (A ∪ B) := by
-  refine subset_antisymm ?_ ?_
-  · refine convexHull_min ?_ (convex_convexHull ℝ (A ∪ B))
-    intro z hz
-    simp only [Set.mem_union] at hz
-    rcases hz with hz | hz
-    · exact subset_convexHull ℝ (A ∪ B) (Set.mem_union_left _ hz)
-    · exact (convexHull_mono (Set.subset_union_right : B ⊆ A ∪ B)) hz
-  · refine convexHull_min ?_ (convex_convexHull ℝ (A ∪ convexHull ℝ B))
-    intro z hz
-    simp only [Set.mem_union] at hz
-    rcases hz with hz | hz
-    · exact subset_convexHull ℝ (A ∪ convexHull ℝ B) (Set.mem_union_left _ hz)
-    · exact subset_convexHull ℝ (A ∪ convexHull ℝ B)
-        (Set.mem_union_right _ (subset_convexHull ℝ B hz))
+/-! ### §5 sUnion bookkeeping + GLTVHUM_lemma1（PA6 正本落地，本为链复制）
+（`p2g_convexHull_union_hull` 已上移至 §4.5 polytope kit 供 `POLYTOPE_VORONOI_LIST`
+先行使用；使用方在本节及之后，见 §4.5 说明。） -/
 
 /-- image-同构族并相等（PA6 私件 `p6_sUnion_image_congr`）。PA6 正本落地，
 本为链复制。 -/
@@ -1911,12 +2603,30 @@ private theorem p2g_NUMSEG_SUBSET_INDUCT (s : Set ℕ) (a b : ℕ) (ha : a ∈ s
         exact hstep (n - 1) (by omega) (by omega) h5
   exact key m hm.1 hm.2
 
-/-- Rogers.hl:778 `BARV_EXISTS`。-- NEEDS: PA6:660 正本落地后替换（PA2 侧不可
-import，链复制桩；PA6 本体亦为 sorry）。 -/
+/-- Rogers.hl:778 `BARV_EXISTS`（PA6:885 正本 5aa56729 证明体链复制；PA2 侧不可
+import PA6——成环）。路线：胞非空（`3 - k > 0` 维）+ `voronoi_list` 的面壳并分解
+（`p2g_VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS`）非空指标族即延拓 `vl`。
+上游 PA5 侧 POLYHEDRON/POLYTOPE_VORONOI_LIST 已随本波链复制闭合，全链无 sorry。 -/
 private theorem p2g_BARV_EXISTS (V : Set V3) (wl : List V3) (k : ℕ) (hP : Packing V)
     (hs : saturated V) (hk3 : k < 3) (hbar : barV V k wl) :
-    ∃ vl : List V3, barV V (k + 1) vl ∧ truncateSimplex k vl = wl :=
-  sorry
+    ∃ vl : List V3, barV V (k + 1) vl ∧ truncateSimplex k vl = wl := by
+  have hdim : 0 < affDim (voronoiList V wl) := by
+    rw [p2g_AFF_DIM_VORONOI_LIST V wl k hbar]
+    omega
+  have hne : (voronoiList V wl).Nonempty := by
+    by_contra h0
+    rw [Set.not_nonempty_iff_eq_empty] at h0
+    rw [h0, affDim_empty] at hdim
+    omega
+  obtain ⟨p, hp⟩ := hne
+  have hpmem : p ∈ ⋃₀ {convexHull ℝ (insert p (voronoiList V vl)) |
+      vl ∈ {vl : List V3 | barV V (k + 1) vl ∧ truncateSimplex k vl = wl}} := by
+    rw [← p2g_VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS V wl k p hP hs hbar hk3 hp]
+    exact hp
+  obtain ⟨T, hT, -⟩ := Set.mem_sUnion.1 hpmem
+  obtain ⟨vl, hv, rfl⟩ := hT
+  exact ⟨vl, hv.1, hv.2⟩
+
 
 /-- Rogers.hl:826 `GLTVHUM_lemma1`（PA6:869 正本真证，逐字链复制+改名）。
 PA6 正本落地，本为链复制。 -/
