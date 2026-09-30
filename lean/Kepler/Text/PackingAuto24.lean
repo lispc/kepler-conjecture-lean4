@@ -51,9 +51,12 @@ SORRY INVENTORY (giants, with blockers)
   - `coplanarAzimEq`: FILLED (2026-09-30) from the documented route
     (frame + `azim_eq_azim_iff` + coplanarity plumbing; ingredients
     `p24_exists_azim_point` / `p24_mem_affineSpan_triple`).
-  - `measurableConicCapWedgeGe`: Borel-ness of azimuth level sets /
-    the open wedge; the ℂ-transport route through WedgeVolume's `ang`
-    machinery is documented in its docstring.
+  - `measurableConicCapWedgeGe`: FILLED (2026-09-30) via the documented
+    ℂ-transport route (private `azim_sub_self` copy + `azim_eq_ang_of_frame`
+    + `measurable_ang`, CCV `ccv_measSet_wedge` template): the closed wedge
+    `wedgeGe` itself is the continuous preimage of a ℂ Borel fan whose
+    closed interval bounds absorb both boundary azimuth level sets, so
+    neither `coplanarAzimEq` nor coplanar-nullness is needed here.
   - `volumeConicCapWedgeGeVsConicCap`: FILLED (2026-09-30) once CCV
     (ConicCapVolume) delivered `volumeConicCap` / `volumeConicCapWedge`;
     the closed-vs-open wedge gap is the two azimuth boundary level sets,
@@ -201,7 +204,24 @@ def REUHADY_concl1_new : Prop :=
 
 /-- HOL `REUHADY1` (REUHADY.hl:239, refinement proof over lines
 239-8356). GIANT — `sorry`. NEEDS: the Rogers/Marchal-cells/Packing3
-voronoi machinery cited in the HL refinement tree. -/
+voronoi machinery cited in the HL refinement tree.
+PRE-SURVEY (2026-09-30, PA24 最小件波): the HL refinement skeleton is
+(a) `barV V 1 [u0;u1]` via `HL_LE_SQRT2_IMP_BARV_1`; (b) the
+k-decomposition set `{k | ... voronoi_list V [u0;u1] = UNIONS ...}` is
+pinned to `1..3` with `3 ∈` it via Rogers `GLTVHUM_lemma1` — Lean twin
+exists as PA2's PRIVATE `p2g_GLTVHUM_lemma1` (PackingAuto2:1923, chain
+copy of the PA6 genuine proof; needs a public re-export in PA2 or a chain
+copy here); (c) per-leaf-cell: `voronoi_list V vl = {circumcenter}` via
+Marchal_cells_2_new `VORONOI_LIST_3_SINGLETON_EXPLICIT` and
+`omega_list_n V vl 3 = circumcenter` via Packing3
+`OMEGA_LIST_IN_VORONOI_LIST` — NO Lean twins found in this checkout
+(grep 2026-09-30); (d) the dihedral-sum splitting over the mcells inside
+the closed wedge is the HL bulk (lines ~400-8356). Public Lean kit
+already in reach (PA6 imported here): `VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS`
+(PA6:824), `BARV_EXISTS` / `BARV_EXISTS_ALT` (PA6:885/:906) — but PA5/PA6
+upstream stubs (AFF_DIM_VORONOI_LIST, POLYHEDRON_VORONOI_LIST) still
+carry sorries. Statement (REUHADY_concl1_new) itself needs only PA2 defs,
+no voronoi. -/
 theorem REUHADY1 : REUHADY_concl1_new := by
   sorry
 
@@ -537,18 +557,133 @@ theorem coplanarAzimEq (v0 v1 w1 : V3) (a : ℝ)
               exact p24_mem_affineSpan_triple v0 v1 f z t c (by
                 rw [show z = v0 + (z - v0) from by abel, hdec]; module)
 
-/-- HOL `MEASURABLE_CONIC_CAP_WEDGE_GE` (REUHADY.hl:162). GIANT —
-`sorry`. NEEDS: measurability of azimuth level sets and the open wedge
-(route: translate to `0` via a private `azim_sub_self` copy
-(WedgeVolume.lean:50, private there), then
-`azim_eq_ang_of_frame` + `measurable_ang` + continuity of
-`zOf e1 e2 (· - v0)`, plus `conicCap` = closedBall ∩ rconeGt Borel
-(PackingAuto10:308-329 pattern, private there)); HL uses
-`MEASURABLE_CONIC_CAP_WEDGE` + `COPLANAR_IMP_NEGLIGIBLE` +
-`COPLANAR_AZIM_EQ`. -/
+/-! ## 闭楔 Borel（MEASURABLE_CONIC_CAP_WEDGE_GE 的楔半边） -/
+
+/-- 平移保持三点共线（WedgeVolume.lean:32 / Planarity.lean:2822 私拷）。 -/
+private theorem p24_collinear3_zero_sub {x a b : V3} :
+    Collinear3 x a b ↔ Collinear3 0 (a - x) (b - x) := by
+  by_cases h : a = x
+  · rw [h]
+    simp only [sub_self]
+    constructor <;> intro _ <;> exact collinear3_of_eq rfl
+  · have h' : a - x ≠ 0 := sub_ne_zero.mpr h
+    rw [collinear3_iff_smul h, collinear3_iff_smul h']
+    simp only [sub_zero]
+
+private theorem p24_azimSubSpec {x a b c : V3} {θ : ℝ} :
+    AzimSpec x a b c θ ↔ AzimSpec 0 (a - x) (b - x) (c - x) θ := by
+  unfold AzimSpec
+  simp only [sub_zero, sub_ne_zero]
+  have hd : dist a x = dist (a - x) 0 := by rw [dist_eq_norm, dist_eq_norm, sub_zero]
+  rw [hd]
+
+/-- azim 平移桥：顶点移到原点（WedgeVolume.lean:50 私拷，此处 `azim_sub_self`
+不可见）。 -/
+private theorem p24_azim_sub_self (x a b c : V3) :
+    azim x a b c = azim 0 (a - x) (b - x) (c - x) := by
+  unfold azim
+  rw [p24_collinear3_zero_sub (x := x) (a := a) (b := b),
+    p24_collinear3_zero_sub (x := x) (a := a) (b := c)]
+  have hpred : AzimSpec x a b c = AzimSpec 0 (a - x) (b - x) (c - x) :=
+    funext fun _ => propext p24_azimSubSpec
+  rw [hpred]
+
+/-- azim 在第三个点（射线母点）落轴时为零（`azim_eq_zero_of_collinearY` 的
+Or.inl 孪生：azim 定义 if 条件是两共线性的析取）。 -/
+private theorem p24_azim_eq_zero_of_collinearW (v0 v1 w y : V3)
+    (h : Collinear3 v0 v1 w) : azim v0 v1 w y = 0 := by
+  unfold azim
+  exact if_pos (Or.inl h)
+
+/-- 闭楔 `wedgeGe` Borel，无退化前提：轴向标架把闭楔 transport 成连续映射
+`y ↦ zOf e1 e2 (y − v0)` 的原像（ℂ 侧目标集 = {0} ∪ {ζ ≠ 0, 0 ≤ ang ≤ θ}，
+两支皆 Borel；两个边界方位角层集作为闭区间端点免费搭车，无需
+`coplanarAzimEq` + 零测论证）。w1 共线（含 v0 = v1）时 `azim ≡ 0`，闭楔为
+全空间。对照 ConicCapVolume 私件 `ccv_measSet_wedge`（开楔版本）。雷区
+（§5.3）：`azim_eq_ang_of_frame` 的 `hy` 必须传 0 心系形式
+`¬ Collinear3 0 (v1 - v0) (y - v0)`——误传 `y` 系会触发 5M heartbeat
+isDefEq 超时。 -/
+private theorem p24_measSet_wedgeGe (v0 v1 w1 w2 : V3) :
+    MeasurableSet (wedgeGe v0 v1 w1 w2) := by
+  by_cases hc1 : Collinear3 v0 v1 w1
+  · -- w1 落轴（覆盖 v0 = v1）：azim v0 v1 w1 · ≡ 0，闭楔为全空间
+    have huniv : wedgeGe v0 v1 w1 w2 = (Set.univ : Set V3) := by
+      ext z
+      have h1 : azim v0 v1 w1 z = 0 := p24_azim_eq_zero_of_collinearW v0 v1 w1 z hc1
+      have h2 : azim v0 v1 w1 w2 = 0 := p24_azim_eq_zero_of_collinearW v0 v1 w1 w2 hc1
+      show (0 ≤ azim v0 v1 w1 z ∧ azim v0 v1 w1 z ≤ azim v0 v1 w1 w2) ↔ True
+      rw [h1, h2]
+      exact ⟨fun _ => trivial, fun _ => ⟨le_refl _, le_refl _⟩⟩
+    rw [huniv]
+    exact MeasurableSet.univ
+  · rcases eq_or_ne v1 v0 with hv | hv01
+    · exact absurd (by rw [hv]; exact collinear3_of_eq rfl : Collinear3 v0 v1 w1) hc1
+    · -- 主情形：轴向标架 transport 到 ℂ
+      obtain ⟨e1, e2, e3, he, halign⟩ :=
+        exists_on3_eq_smul (v1 - v0) (sub_ne_zero.mpr hv01)
+      have hax : (v1 - v0 : V3) = dist (v1 - v0) 0 • e3 := by
+        rw [dist_eq_norm, sub_zero]; exact halign
+      have hax2 : (v1 - v0 : V3) = dist v1 v0 • e3 := by
+        rw [dist_eq_norm]; exact halign
+      have hcont : Continuous fun y : V3 => zOf e1 e2 (y - v0) := by
+        simp only [zOf]
+        fun_prop
+      have hset : wedgeGe v0 v1 w1 w2
+          = (fun y : V3 => zOf e1 e2 (y - v0)) ⁻¹'
+              {ζ : ℂ | ζ = 0 ∨ (ζ ≠ 0 ∧ 0 ≤ ang ((zOf e1 e2 (w1 - v0))⁻¹ * ζ) ∧
+                ang ((zOf e1 e2 (w1 - v0))⁻¹ * ζ) ≤ azim v0 v1 w1 w2)} := by
+        ext y
+        simp only [Set.mem_preimage, Set.mem_setOf_eq, wedgeGe, Set.mem_setOf_eq]
+        constructor
+        · rintro ⟨ha1, ha2⟩
+          by_cases hζ : zOf e1 e2 (y - v0) = 0
+          · exact Or.inl hζ
+          · have hnc : ¬ Collinear3 v0 v1 y :=
+              (zOf_ne_zero_iff he hax2 hv01 y).mp hζ
+            have ha1' := ha1
+            have ha2' := ha2
+            rw [p24_azim_sub_self v0 v1 w1 y, azim_eq_ang_of_frame e1 e2 e3 he hax
+              (sub_ne_zero.mpr hv01) (p24_collinear3_zero_sub.not.mp hc1)
+              (p24_collinear3_zero_sub.not.mp hnc)] at ha1' ha2'
+            exact Or.inr ⟨hζ, ha1', ha2'⟩
+        · rintro (hζ | ⟨hζne, ha1, ha2⟩)
+          · have hcol : Collinear3 v0 v1 y := by
+              by_contra hnc
+              exact ((zOf_ne_zero_iff he hax2 hv01 y).mpr hnc) hζ
+            have h0 : azim v0 v1 w1 y = 0 :=
+              azim_eq_zero_of_collinearY v0 v1 w1 y hcol
+            refine ⟨?_, ?_⟩
+            · rw [h0]
+            · rw [h0]
+              have hθ := azim_nonneg v0 v1 w1 w2
+              linarith
+          · have hnc : ¬ Collinear3 v0 v1 y :=
+              (zOf_ne_zero_iff he hax2 hv01 y).mp hζne
+            rw [p24_azim_sub_self v0 v1 w1 y, azim_eq_ang_of_frame e1 e2 e3 he hax
+              (sub_ne_zero.mpr hv01) (p24_collinear3_zero_sub.not.mp hc1)
+              (p24_collinear3_zero_sub.not.mp hnc)]
+            exact ⟨ha1, ha2⟩
+      rw [hset]
+      refine hcont.measurable
+        (((measurableSet_singleton (0:ℂ)).union ?_))
+      exact (((measurableSet_singleton (0:ℂ)).compl).inter
+        ((measurableSet_le measurable_const
+            (measurable_ang.comp (measurable_const.mul measurable_id))).inter
+          (measurableSet_le (measurable_ang.comp (measurable_const.mul measurable_id))
+            measurable_const)))
+
+/-- HOL `MEASURABLE_CONIC_CAP_WEDGE_GE` (REUHADY.hl:162). FILLED (2026-09-30):
+`conicCapP24` is definitionally CCV's `ccvConicCap` (Borel by
+`measurableConicCap`), and the closed wedge is Borel by `p24_measSet_wedgeGe`
+(the ℂ-transport of CCV's `ccv_measSet_wedge` template: axial frame +
+`azim_eq_ang_of_frame` + `measurable_ang`; the two boundary azimuth level
+sets ride along as the closed interval endpoints of the ℂ fan, so the
+docstring's original route — `wedgeGeWedge` union with `coplanarAzimEq` +
+nullness — is not needed here). HL uses `MEASURABLE_CONIC_CAP_WEDGE` +
+`COPLANAR_IMP_NEGLIGIBLE` + `COPLANAR_AZIM_EQ`. -/
 theorem measurableConicCapWedgeGe (v0 v1 w1 w2 : V3) (r a : ℝ) :
-    MeasurableSet (conicCapP24 v0 v1 r a ∩ wedgeGe v0 v1 w1 w2) := by
-  sorry
+    MeasurableSet (conicCapP24 v0 v1 r a ∩ wedgeGe v0 v1 w1 w2) :=
+  (measurableConicCap v0 v1 r a).inter (p24_measSet_wedgeGe v0 v1 w1 w2)
 
 /-- HOL `VOLUME_CONIC_CAP_WEDGE_GE_VS_CONIC_CAP` (REUHADY.hl:178). FILLED
 (2026-09-30) once CCV delivered `volumeConicCap` / `volumeConicCapWedge`
@@ -632,7 +767,15 @@ leaf-cell wedge-disjointness input (`Leaf_cell.WEDGE_GE_ALMOST_DISJOINT`
 `barV`/packing extraction; `hl [u0,u1] < sqrt 2` from
 `dist u0 u1 < sqrt 8` via the pair half-length (`HL_2`,
 PackingAuto15:257, olean absent in this checkout); `vl1 ≠ vl2` from
-`azim ≠ 0` + `azim_self`. -/
+`azim ≠ 0` + `azim_self`.
+PRE-SURVEY (2026-09-30, PA24 最小件波): the `HL_2` blocker is STALE —
+`HL_2` is PUBLIC at PackingAuto15:553 (`hl [u, v] = dist u v / 2`,
+genuinely proved, no sorry) and `PackingAuto15.olean` is built in this
+checkout. PA15 imports PA2 and defines no clashing `hl`/`barV`/`wedgeGe`
+copies, so `HL_2` applies to PA24's (PA2-origin) `hl` verbatim; the only
+cost of consuming it is the wider import fan-out (PA7-PA13,
+LuneVolume). Also PA2's `azim_self` twin should be checked before
+porting the `vl1 ≠ vl2` extraction. -/
 theorem REUHADY_p24 : ∀ (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3) (v1 v2 : V3)
     (e : Set V3) (w1 w2 : V3), saturated V → Packing V → dist u0 u1 < Real.sqrt 8 →
     e = {u0, u1} → ¬(azim u0 u1 w1 w2 = 0) →
@@ -655,7 +798,8 @@ candidate at merge). GIANT — `sorry`. Same gap profile as
 wedge-intersection hypothesis is PRESENT here, but `u0,u1 ∈ V`,
 `u0 ≠ u1`, `hl [u0,u1] < sqrt 2`, `vl1 ≠ vl2` still need the barV/pair
 extraction noted above (`azim ≠ 0` is not available to kill `vl1 = vl2`
-— that direction is WEDGE_GE_ALMOST_DISJOINT territory). -/
+— that direction is WEDGE_GE_ALMOST_DISJOINT territory). See the
+PRE-SURVEY note on `REUHADY_p24` for the updated `HL_2` status. -/
 theorem REUHADY_version2_p24 : ∀ (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
     (v1 v2 : V3) (e : Set V3), saturated V → Packing V → dist u0 u1 < Real.sqrt 8 →
     e = {u0, u1} →
