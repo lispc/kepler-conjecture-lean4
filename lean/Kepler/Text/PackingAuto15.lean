@@ -88,6 +88,7 @@ import Kepler.Text.PackingAuto11
 import Kepler.Text.PackingAuto12
 import Kepler.Text.PackingAuto13
 import Kepler.Text.Polytope
+import Kepler.Geom.LuneVolume
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -1146,22 +1147,459 @@ theorem MCELL_SUBSET_BALL8 (v : V3) (ul : List V3) (i : ℕ) (V : Set V3)
 theorem FINITE_MCELL_SET_LEMMA_2 (V : Set V3) (r : ℝ) (s : V3) (hp : Packing V)
     (hs : saturated V) : {X : Set V3 | X ⊆ Metric.ball s r ∧ mcellSet V X}.Finite := sorry
 
+/-! ## Kit A: 共线/共面桥 -/
+
+/-- 显式三元仿射组合入三点仿射包（LuneVolume 私件同形）。 -/
+private theorem p15_span_triple {x p q y : V3} {c h : ℝ}
+    (hy : y = x + c • (q - x) + h • (p - x)) :
+    y ∈ (affineSpan ℝ ({x, p, q} : Set V3) : Set V3) := by
+  have hxS : x ∈ affineSpan ℝ ({x, p, q} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hpS : p ∈ affineSpan ℝ ({x, p, q} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hqS : q ∈ affineSpan ℝ ({x, p, q} : Set V3) := mem_affineSpan ℝ (by simp)
+  have hd3 : c • (q - x) ∈ (affineSpan ℝ ({x, p, q} : Set V3)).direction :=
+    Submodule.smul_mem _ c (AffineSubspace.vsub_mem_direction hqS hxS)
+  have hd4 : h • (p - x) ∈ (affineSpan ℝ ({x, p, q} : Set V3)).direction :=
+    Submodule.smul_mem _ h (AffineSubspace.vsub_mem_direction hpS hxS)
+  have hd5 : c • (q - x) + h • (p - x) ∈ (affineSpan ℝ ({x, p, q} : Set V3)).direction :=
+    Submodule.add_mem _ hd3 hd4
+  have hval : y = h • (p - x) +ᵥ (c • (q - x) +ᵥ x) := by
+    rw [hy, vadd_eq_add, vadd_eq_add]
+    abel
+  rw [hval]
+  exact AffineSubspace.vadd_mem_of_mem_direction hd4
+    (AffineSubspace.vadd_mem_of_mem_direction hd3 hxS)
+
+/-- 两点互异时共线 ↔ 仿射包成员（LuneVolume 私件同形）。 -/
+private theorem p15_coll3_iff_span {v0 v1 y : V3} (hv0v1 : v0 ≠ v1) :
+    Collinear3 v0 v1 y ↔
+      y ∈ (affineSpan ℝ ({v0, v1} : Set V3) : Set V3) := by
+  constructor
+  · intro hc
+    by_cases hy0 : y = v0
+    · rw [hy0]; exact left_mem_affineSpan_pair _ _ _
+    by_cases hy1 : y = v1
+    · rw [hy1]; exact right_mem_affineSpan_pair _ _ _
+    obtain ⟨c, hsmul⟩ := (collinear3_iff_smul (w := v1) (v := v0) hv0v1.symm).mp hc
+    refine mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨c, ?_⟩
+    rw [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add]
+    exact (sub_eq_iff_eq_add.mp hsmul).symm
+  · intro hy
+    obtain ⟨r, hr⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp hy
+    by_cases hy1 : y = v1
+    · rw [hy1]; exact collinear3_pair_right (v0 := v0) (v1 := v1) rfl
+    have hsmul : y - v0 = r • (v1 - v0) := by
+      rw [← hr]
+      simp [AffineMap.lineMap_apply, vsub_eq_sub, vadd_eq_add]
+    exact (collinear3_iff_smul (w := v1) (v := v0) hv0v1.symm).mpr ⟨r, hsmul⟩
+
+/-- 首两点之一共线时四点共面。 -/
+private theorem p15_copl_of_collL {u0 u1 w1 w2 : V3} (hc : Collinear3 u0 u1 w1) :
+    Coplanar ({u0, u1, w1, w2} : Set V3) := by
+  by_cases h01 : u0 = u1
+  · subst h01
+    have hset : ({u0, u0, w1, w2} : Set V3) = {u0, w1, w2} := by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]
+    exact coplanar_triple u0 w1 w2
+  · refine ⟨u0, u1, w2, ?_⟩
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | rfl | rfl | rfl
+    · exact mem_affineSpan ℝ (by simp)
+    · exact mem_affineSpan ℝ (by simp)
+    · refine affineSpan_mono ℝ (fun q hq => ?_) ((p15_coll3_iff_span h01).mp hc)
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+      tauto
+    · exact mem_affineSpan ℝ (by simp)
+
+/-- 第二共线点情形（对称）。 -/
+private theorem p15_copl_of_collR {u0 u1 w1 w2 : V3} (hc : Collinear3 u0 u1 w2) :
+    Coplanar ({u0, u1, w1, w2} : Set V3) := by
+  by_cases h01 : u0 = u1
+  · subst h01
+    have hset : ({u0, u0, w1, w2} : Set V3) = {u0, w1, w2} := by
+      ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]
+    exact coplanar_triple u0 w1 w2
+  · refine ⟨u0, u1, w1, ?_⟩
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | rfl | rfl | rfl
+    · exact mem_affineSpan ℝ (by simp)
+    · exact mem_affineSpan ℝ (by simp)
+    · exact mem_affineSpan ℝ (by simp)
+    · refine affineSpan_mono ℝ (fun q hq => ?_) ((p15_coll3_iff_span h01).mp hc)
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+      tauto
+
+/-- `¬Coplanar {u0,u1,w1,w2} ⟹ ¬Collinear3 u0 u1 w1`。 -/
+private theorem p15_nc1 {u0 u1 w1 w2 : V3}
+    (hcop : ¬ Coplanar ({u0, u1, w1, w2} : Set V3)) : ¬ Collinear3 u0 u1 w1 :=
+  fun hc => hcop (p15_copl_of_collL hc)
+
+/-- `¬Coplanar {u0,u1,w1,w2} ⟹ ¬Collinear3 u0 u1 w2`。 -/
+private theorem p15_nc2 {u0 u1 w1 w2 : V3}
+    (hcop : ¬ Coplanar ({u0, u1, w1, w2} : Set V3)) : ¬ Collinear3 u0 u1 w2 :=
+  fun hc => hcop (p15_copl_of_collR hc)
+
+/-- `¬Coplanar ⟹ u0 ≠ u1`。 -/
+private theorem p15_u0neu1 {u0 u1 w1 w2 : V3}
+    (hcop : ¬ Coplanar ({u0, u1, w1, w2} : Set V3)) : u0 ≠ u1 := by
+  intro he
+  apply hcop
+  subst he
+  have hset : ({u0, u0, w1, w2} : Set V3) = {u0, w1, w2} := by
+    ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+  rw [hset]
+  exact coplanar_triple u0 w1 w2
+
+/-- `affGt {z,w}{w1} ⊆ affineSpan {z,w,w1}`（LuneVolume 私件同形）。 -/
+private theorem p15_affGtPair_subset_span {z w w1 : V3}
+    (h1 : ¬ Collinear3 z w w1) :
+    affGt ({z, w} : Set V3) {w1} ⊆ affineSpan ℝ ({z, w, w1} : Set V3) := by
+  have hzw : z ≠ w := fun he => h1 (collinear3_of_eq he.symm)
+  have hw1z : w1 ≠ z := fun he => h1 (collinear3_pair_left he)
+  have hw1w : w1 ≠ w := fun he => h1 (collinear3_pair_right he)
+  intro p hp
+  obtain ⟨c, hc, h, hpeq⟩ :=
+    (affGt_pair_iff (v0 := z) (v1 := w) (x := w1) (y := p) hzw hw1z hw1w).mp hp
+  refine p15_span_triple (x := z) (p := w) (q := w1) (c := c) (h := h) ?_
+  rw [show p = (p - z) + z by abel, hpeq]
+  abel
+
+/-- `w2 ∈ affGt {v0,v1}{w1}` 时四点共面。 -/
+private theorem p15_copl_of_affGt {v0 v1 w1 w2 : V3}
+    (h1 : ¬ Collinear3 v0 v1 w1) (hmem : w2 ∈ affGt ({v0, v1} : Set V3) {w1}) :
+    Coplanar ({v0, v1, w1, w2} : Set V3) := by
+  refine ⟨v0, v1, w1, ?_⟩
+  intro p hp
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+  rcases hp with rfl | rfl | rfl | rfl
+  · exact mem_affineSpan ℝ (by simp)
+  · exact mem_affineSpan ℝ (by simp)
+  · exact mem_affineSpan ℝ (by simp)
+  · exact p15_affGtPair_subset_span h1 hmem
+
+/-- `azim = 0` 时四点共面（经 affGt 零引理 + 平面包含）。 -/
+private theorem p15_copl_of_azim_zero {v0 v1 w1 w2 : V3}
+    (hcop : ¬ Coplanar ({v0, v1, w1, w2} : Set V3)) : azim v0 v1 w1 w2 ≠ 0 := by
+  intro h0
+  have h1 := p15_nc1 hcop
+  have h2 := p15_nc2 hcop
+  have hmem : w2 ∈ affGt ({v0, v1} : Set V3) {w1} :=
+    (azim_eq_zero_iff_alt h1 h2).mp h0
+  exact hcop (p15_copl_of_affGt h1 hmem)
+
+/-! ## Kit B: ¬coplanar → 线性无关 -/
+
+/-- ℝ 上非零纯量乘法在 V3 上单射。 -/
+private theorem p15_smulR_inj {c : ℝ} (hc : c ≠ 0) :
+    Function.Injective ((c • ·) : V3 → V3) := by
+  intro x y hxy
+  have h1 : (c:ℝ) • x = (c:ℝ) • y := hxy
+  have h2 : c⁻¹ • ((c:ℝ) • x) = c⁻¹ • ((c:ℝ) • y) := by rw [h1]
+  rw [inv_smul_smul₀ hc, inv_smul_smul₀ hc] at h2
+  exact h2
+
+/-- `¬Coplanar {u0,u1,w1,w2} ⟹ 差向量族线性无关。 -/
+private theorem p15_li_of_ncopl {u0 u1 w1 w2 : V3}
+    (hcop : ¬ Coplanar ({u0, u1, w1, w2} : Set V3)) :
+    LinearIndependent ℝ ![u1 - u0, w1 - u0, w2 - u0] := by
+  rw [Fintype.linearIndependent_iff]
+  intro g hg
+  have hsum : g 0 • (u1 - u0) + g 1 • (w1 - u0) + g 2 • (w2 - u0) = 0 := by
+    simpa [Fin.sum_univ_three] using hg
+  by_cases h0 : g 0 = 0
+  · by_cases h1 : g 1 = 0
+    · by_cases h2 : g 2 = 0
+      · intro i; fin_cases i <;> assumption
+      · -- w2 = u0，塌缩为三点
+        rw [h0, h1] at hsum
+        simp only [zero_smul, zero_add] at hsum
+        have hw2 : w2 = u0 := by
+          rcases smul_eq_zero.mp hsum with h | h
+          · exact absurd h h2
+          · exact sub_eq_zero.mp h
+        have hc1 : Coplanar ({u0, u1, w1, w2} : Set V3) := by
+          have hset : ({u0, u1, w1, w2} : Set V3) = {u0, u1, w1} := by
+            rw [hw2]
+            ext p; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+          rw [hset]
+          exact coplanar_triple u0 u1 w1
+        exact absurd hc1 hcop
+    · -- w1 = u0 + (−g2/g1)•(w2−u0) ∈ affineSpan {u0, u1, w2}
+      rw [h0, zero_smul, zero_add] at hsum
+      have hmove : g 1 • (w1 - u0) = -(g 2 • (w2 - u0)) :=
+        eq_neg_of_add_eq_zero_left hsum
+      have hne1 : (g 1 : ℝ) ≠ 0 := h1
+      have hrel : w1 - u0 = (-g 2 / g 1) • (w2 - u0) := by
+        have hsc : (g 1:ℝ) * (-g 2 / g 1) = -g 2 := by field_simp
+        have hstep : (g 1:ℝ) • (w1 - u0)
+            = (g 1:ℝ) • ((-g 2 / g 1) • (w2 - u0)) := by
+          rw [smul_smul, hsc, neg_smul]
+          exact hmove
+        exact p15_smulR_inj hne1 hstep
+      have hc1 : Coplanar ({u0, u1, w1, w2} : Set V3) := by
+        refine ⟨u0, u1, w2, fun p hp => ?_⟩
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+        rcases hp with rfl | rfl | rfl | rfl
+        · exact mem_affineSpan ℝ (by simp)
+        · exact mem_affineSpan ℝ (by simp)
+        · refine p15_span_triple (x := u0) (p := u1) (q := w2) (c := -g 2 / g 1)
+            (h := 0) ?_
+          rw [zero_smul, add_zero, ← hrel]
+          abel
+        · exact mem_affineSpan ℝ (by simp)
+      exact absurd hc1 hcop
+  · -- u1 = u0 + (−g1/g0)•(w1−u0) + (−g2/g0)•(w2−u0) ∈ affineSpan {u0, w1, w2}
+    have hmove : g 0 • (u1 - u0) = -(g 1 • (w1 - u0) + g 2 • (w2 - u0)) := by
+      have h2 : g 0 • (u1 - u0) + (g 1 • (w1 - u0) + g 2 • (w2 - u0)) = 0 := by
+        rw [← add_assoc]; exact hsum
+      exact eq_neg_of_add_eq_zero_left h2
+    have hne0 : (g 0 : ℝ) ≠ 0 := h0
+    have hrel : u1 - u0 = (-g 1 / g 0) • (w1 - u0) + (-g 2 / g 0) • (w2 - u0) := by
+      have hstep : (g 0:ℝ) • (u1 - u0)
+          = (g 0:ℝ) • ((-g 1 / g 0) • (w1 - u0) + (-g 2 / g 0) • (w2 - u0)) := by
+        have hsc1 : (g 0:ℝ) * (-g 1 / g 0) = -g 1 := by field_simp
+        have hsc2 : (g 0:ℝ) * (-g 2 / g 0) = -g 2 := by field_simp
+        rw [smul_add, smul_smul, smul_smul, hsc1, hsc2, neg_smul, neg_smul,
+          ← neg_add]
+        exact hmove
+      exact p15_smulR_inj hne0 hstep
+    have hc1 : Coplanar ({u0, u1, w1, w2} : Set V3) := by
+      refine ⟨u0, w1, w2, fun p hp => ?_⟩
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+      rcases hp with rfl | rfl | rfl | rfl
+      · exact mem_affineSpan ℝ (by simp)
+      · refine p15_span_triple (x := u0) (p := w1) (q := w2) (c := -g 2 / g 0)
+          (h := -g 1 / g 0) ?_
+        rw [add_assoc,
+          add_comm ((-g 2 / g 0) • (w2 - u0)) ((-g 1 / g 0) • (w1 - u0)), ← hrel]
+        abel
+      · exact mem_affineSpan ℝ (by simp)
+      · exact mem_affineSpan ℝ (by simp)
+    exact absurd hc1 hcop
+
+/-! ## Kit C: 平移桥 + 平分线点 -/
+
+private theorem p15_coll3_zero_sub {x a b : V3} :
+    Collinear3 x a b ↔ Collinear3 0 (a - x) (b - x) := by
+  by_cases h : a = x
+  · rw [h]
+    simp only [sub_self]
+    constructor <;> intro _ <;> exact collinear3_of_eq rfl
+  · have h' : a - x ≠ 0 := sub_ne_zero.mpr h
+    rw [collinear3_iff_smul h, collinear3_iff_smul h']
+    simp only [sub_zero]
+
+private theorem p15_azimSubSpec {x a b c : V3} {θ : ℝ} :
+    AzimSpec x a b c θ ↔ AzimSpec 0 (a - x) (b - x) (c - x) θ := by
+  unfold AzimSpec
+  simp only [sub_zero, sub_ne_zero]
+  have hd : dist a x = dist (a - x) 0 := by rw [dist_eq_norm, dist_eq_norm, sub_zero]
+  rw [hd]
+
+private theorem p15_azim_sub_self (x a b c : V3) :
+    azim x a b c = azim 0 (a - x) (b - x) (c - x) := by
+  unfold azim
+  rw [p15_coll3_zero_sub (x := x) (a := a) (b := b),
+    p15_coll3_zero_sub (x := x) (a := a) (b := c)]
+  have hpred : AzimSpec x a b c = AzimSpec 0 (a - x) (b - x) (c - x) :=
+    funext fun _ => propext p15_azimSubSpec
+  rw [hpred]
+
+private theorem p15_azim_zero_of_collY (v0 v1 w y : V3) (h : Collinear3 v0 v1 y) :
+    azim v0 v1 w y = 0 := by
+  unfold azim
+  exact if_pos (Or.inr h)
+
+private theorem p15_smul_dot (t : ℝ) (a b : V3) : (t • a) ⬝ᵥ b = t * (a ⬝ᵥ b) := by
+  rw [← inner_eq_dot, ← inner_eq_dot, real_inner_smul_left]
+
+private theorem p15_add_dot (a b c : V3) : (a + b) ⬝ᵥ c = a ⬝ᵥ c + b ⬝ᵥ c := by
+  rw [← inner_eq_dot, ← inner_eq_dot, ← inner_eq_dot, inner_add_left]
+
+private theorem p15_dot_comm (a b : V3) : a ⬝ᵥ b = b ⬝ᵥ a := by
+  rw [← inner_eq_dot, ← inner_eq_dot, real_inner_comm]
+
+/-- 平分线点：方位角 θ ∈ (0, 2π) 时存在 `b` 使 `azim v0 v1 w1 b = θ/2`、
+`¬Collinear3 v0 v1 b` 且三差向量线性无关。 -/
+private theorem p15_bisector_exists {v0 v1 w1 w2 : V3}
+    (h1 : ¬ Collinear3 v0 v1 w1) (h2 : ¬ Collinear3 v0 v1 w2)
+    (h0 : 0 < azim v0 v1 w1 w2) :
+    ∃ b : V3, azim v0 v1 w1 b = azim v0 v1 w1 w2 / 2 ∧
+      ¬ Collinear3 v0 v1 b ∧
+      LinearIndependent ℝ ![v1 - v0, w1 - v0, b - v0] := by
+  have hv0v1 : v0 ≠ v1 := fun he => h1 (collinear3_of_eq he.symm)
+  have hdne : v1 - v0 ≠ 0 := sub_ne_zero.mpr (Ne.symm hv0v1)
+  have hv1ne : (v1 : V3) ≠ v0 := Ne.symm hv0v1
+  obtain ⟨f1, f2, f3, hon, halign⟩ := exists_on3_eq_smul (v1 - v0) hdne
+  have hax : (v1 - v0 : V3) = dist v1 v0 • f3 := by
+    rw [dist_eq_norm]
+    exact halign
+  have hax0 : (v1 - v0 : V3) = dist (v1 - v0) 0 • f3 := by
+    rw [dist_eq_norm, sub_zero]
+    exact halign
+  obtain ⟨ψ, r1, r2, hr1, hr2, hz1, hz2⟩ := azim_frame_spec h1 h2 hon hax hv1ne
+  set b : V3 := v0 + (Real.cos (ψ + azim v0 v1 w1 w2 / 2)) • f1
+    + (Real.sin (ψ + azim v0 v1 w1 w2 / 2)) • f2 with hbdef
+  have hbv : b - v0 = (Real.cos (ψ + azim v0 v1 w1 w2 / 2)) • f1
+      + (Real.sin (ψ + azim v0 v1 w1 w2 / 2)) • f2 := by rw [hbdef]; abel
+  have hf11 : (f1 : V3) ⬝ᵥ f1 = 1 := hon.1
+  have hf22 : (f2 : V3) ⬝ᵥ f2 = 1 := hon.2.1
+  have hf12 : (f1 : V3) ⬝ᵥ f2 = 0 := hon.2.2.2.1
+  have hf21 : (f2 : V3) ⬝ᵥ f1 = 0 := by rw [p15_dot_comm]; exact hf12
+  have hdot1 : ((Real.cos (ψ + azim v0 v1 w1 w2 / 2)) • f1
+      + (Real.sin (ψ + azim v0 v1 w1 w2 / 2)) • f2 : V3) ⬝ᵥ f1
+      = Real.cos (ψ + azim v0 v1 w1 w2 / 2) := by
+    rw [p15_add_dot, p15_smul_dot, p15_smul_dot, hf11, hf21]
+    ring
+  have hdot2 : ((Real.cos (ψ + azim v0 v1 w1 w2 / 2)) • f1
+      + (Real.sin (ψ + azim v0 v1 w1 w2 / 2)) • f2 : V3) ⬝ᵥ f2
+      = Real.sin (ψ + azim v0 v1 w1 w2 / 2) := by
+    rw [p15_add_dot, p15_smul_dot, p15_smul_dot, hf12, hf22]
+    ring
+  have hzb : zOf f1 f2 (b - v0) = Complex.exp ((ψ + azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I) := by
+    rw [hbv]
+    show _ + _ * Complex.I = _
+    rw [hdot1, hdot2, Complex.exp_mul_I]
+    push_cast
+    ring
+  have hax0' : v1 - v0 - 0 = dist (v1 - v0) 0 • f3 := by rw [sub_zero]; exact hax0
+  have hbnc : ¬ Collinear3 0 (v1 - v0) (b - v0) := by
+    rw [← zOf_ne_zero_iff (e1 := f1) (e2 := f2) (e3 := f3) hon hax0' hdne,
+      show (b - v0) - 0 = b - v0 from by rw [sub_zero], hzb]
+    exact Complex.exp_ne_zero _
+  have haz : azim v0 v1 w1 b = azim v0 v1 w1 w2 / 2 := by
+    rw [p15_azim_sub_self v0 v1 w1 b, azim_eq_ang_of_frame f1 f2 f3 hon hax0 hdne
+      (fun hc => h1 (p15_coll3_zero_sub.mpr hc)) hbnc]
+    have hdiv : (zOf f1 f2 (w1 - v0))⁻¹
+        * Complex.exp ((ψ + azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I)
+        = ((r1 : ℝ)⁻¹ : ℂ) * Complex.exp ((azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I) := by
+      rw [hz1, exp_add_I]
+      have hr1c : ((r1 : ℝ) : ℂ) ≠ 0 := by exact_mod_cast hr1.ne'
+      have hE : Complex.exp ((ψ : ℝ) * Complex.I) ≠ 0 := Complex.exp_ne_zero _
+      field_simp
+    rw [hzb, hdiv, ← Complex.ofReal_inv, ang_ofReal_mul_of_pos (by positivity),
+      ang_exp_mul_I (by linarith [azim_nonneg v0 v1 w1 w2])
+        (by linarith [azim_lt_two_pi v0 v1 w1 w2])]
+  refine ⟨b, haz, ?_, ?_⟩
+  · intro hc
+    have hzz := haz
+    rw [p15_azim_zero_of_collY v0 v1 w1 b hc] at hzz
+    have hz2 : azim v0 v1 w1 w2 = 0 := by linarith
+    exact h0.ne' hz2
+  · rw [Fintype.linearIndependent_iff]
+    intro g hg
+    have hsum : g 0 • (v1 - v0) + g 1 • (w1 - v0) + g 2 • (b - v0) = 0 := by
+      simpa [Fin.sum_univ_three] using hg
+    have hzf : (v1 - v0 : V3) ⬝ᵥ f1 = 0 ∧ (v1 - v0 : V3) ⬝ᵥ f2 = 0 :=
+      axis_perp hax hon
+    have hzax : zOf f1 f2 (v1 - v0) = 0 := by
+      show (v1 - v0 : V3) ⬝ᵥ f1 + (v1 - v0 : V3) ⬝ᵥ f2 * Complex.I = 0
+      rw [hzf.1, hzf.2]
+      simp
+    have hz : ((g 1 : ℝ) : ℂ) * ((r1 : ℝ) : ℂ)
+        + ((g 2 : ℝ) : ℂ) * Complex.exp ((azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I) = 0 := by
+      have hunit : Complex.exp ((-(ψ:ℝ)) * Complex.I)
+          * Complex.exp ((ψ:ℝ) * Complex.I) = 1 := by
+        rw [← Complex.exp_add]
+        push_cast
+        simp
+      have harg : (-(ψ:ℝ)) * Complex.I
+          + ((ψ + azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I)
+          = (azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I := by
+        rw [Complex.ofReal_add]
+        push_cast
+        ring
+      have hsplit : Complex.exp ((-(ψ:ℝ)) * Complex.I)
+          * Complex.exp ((ψ + azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I)
+          = Complex.exp ((azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I) := by
+        rw [← Complex.exp_add, harg]
+      have hE' : Complex.exp ((-(ψ:ℝ)) * Complex.I) * zOf f1 f2 (w1 - v0)
+          = ((r1 : ℝ) : ℂ) := by
+        rw [hz1, mul_left_comm, hunit, mul_one]
+      have hz2' : Complex.exp ((-(ψ:ℝ)) * Complex.I)
+          * (((g 1 : ℝ) : ℂ) * zOf f1 f2 (w1 - v0)
+            + ((g 2 : ℝ) : ℂ) * Complex.exp ((ψ + azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I))
+          = ((g 1 : ℝ) : ℂ) * ((r1 : ℝ) : ℂ)
+            + ((g 2 : ℝ) : ℂ) * Complex.exp ((azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I) := by
+        rw [mul_add, mul_left_comm, hE', mul_left_comm, hsplit]
+      have h0' := congrArg (zOf f1 f2) hsum
+      rw [zOf_add, zOf_add, zOf_smul, zOf_smul, zOf_smul, hzax, hzb] at h0'
+      have hr0 : zOf f1 f2 0 = 0 := by simp [zOf]
+      rw [hr0, mul_zero, zero_add] at h0'
+      have h0'' := congrArg (fun z : ℂ => Complex.exp ((-(ψ:ℝ)) * Complex.I) * z) h0'
+      rw [mul_zero] at h0''
+      exact hz2'.symm.trans h0''
+    have him : (g 2 : ℝ) * Real.sin (azim v0 v1 w1 w2 / 2) = 0 := by
+      have hexp2 : Complex.exp ((azim v0 v1 w1 w2 / 2 : ℝ) * Complex.I)
+          = Complex.cos ((azim v0 v1 w1 w2 / 2 : ℝ) : ℂ)
+            + Complex.sin ((azim v0 v1 w1 w2 / 2 : ℝ) : ℂ) * Complex.I :=
+        Complex.exp_mul_I _
+      have h4 := congrArg Complex.im hz
+      rw [hexp2] at h4
+      simp only [Complex.add_im, Complex.mul_im, Complex.ofReal_im,
+        Complex.ofReal_re, Complex.cos_ofReal_im, Complex.cos_ofReal_re,
+        Complex.sin_ofReal_re, Complex.sin_ofReal_im, Complex.I_re,
+        Complex.I_im, zero_mul, zero_add, mul_zero, add_zero] at h4
+      simpa using h4
+    have hthpos : 0 < azim v0 v1 w1 w2 / 2 := by linarith
+    have hthlt : azim v0 v1 w1 w2 / 2 < Real.pi := by
+      have h2π := azim_lt_two_pi v0 v1 w1 w2
+      linarith
+    have hsin : Real.sin (azim v0 v1 w1 w2 / 2) ≠ 0 :=
+      ne_of_gt (Real.sin_pos_of_pos_of_lt_pi hthpos hthlt)
+    have hg2 : g 2 = 0 := by
+      rcases mul_eq_zero.mp him with h | h
+      · exact h
+      · exact absurd h hsin
+    have hre : (g 1 : ℝ) * r1 = 0 := by
+      have h're := congrArg Complex.re hz
+      rw [hg2] at h're
+      simpa [Complex.ofReal_zero, zero_mul, add_zero, Complex.I_re] using h're
+    have hg1 : g 1 = 0 := by
+      rcases mul_eq_zero.mp hre with h | h
+      · exact h
+      · exact absurd h hr1.ne'
+    rw [hg1, hg2, zero_smul, zero_smul, add_zero, add_zero] at hsum
+    rcases smul_eq_zero.mp hsum with h | h
+    · intro i; fin_cases i <;> simp [h, hg1, hg2]
+    · exact absurd h hdne
+
+
 /-! ## marchal3.hl:2623-3671: conic caps, measurability, pair calculus -/
 
 /-- marchal3.hl:2623 `CONIC_CAP_WEDGE_EQ_0`. -/
 theorem CONIC_CAP_WEDGE_EQ_0 (v0 v1 : V3) (a r : ℝ) (w1 w2 : V3) (ha : a < 1) (hr : 0 < r)
     (h : volume.real (conicCap v0 v1 r a ∩ wedge v0 v1 w1 w2) = 0) :
-    Coplanar ℝ ({v0, v1, w1, w2} : Set V3) := sorry
+    Coplanar ℝ ({v0, v1, w1, w2} : Set V3) := by
+  -- NEEDS: 反证（¬Coplanar → 矛盾）。用上方 p15_ kit：p15_nc1/p15_nc2 得 ¬Coll3，
+  -- p15_copl_of_azim_zero 得 θ := azim v0 v1 w1 w2 > 0（azim_nonneg 封下界），
+  -- p15_bisector_exists 取平分线 b（azim w1→b = θ/2 ∧ ¬Coll3 v0 v1 b ∧ 差向量线性无关），
+  -- wedge_eq_affGt（Geom.LuneVolume，θ/2 ∈ (0,π)）把 wedge v0 v1 w1 b 变 affGt {v0,v1}{w1,b}，
+  -- 且 wedge v0 v1 w1 b ⊆ wedge v0 v1 w1 w2（θ/2 < θ，wedge 定义展开即得）；
+  -- 最后 p15_box_pos（Kit D，见 /tmp/gt3a_probeD.lean 续图）给出
+  -- 0 < vol(conicCap ∩ affGt {v0,v1}{w1,b}) = vol(conicCap ∩ wedge w1 b) ≤ vol(cap ∩ wedge w1 w2)。
+  sorry
 
 /-- marchal3.hl:2657 `CONIC_CAP_AFF_GT_EQ_0`. -/
 theorem CONIC_CAP_AFF_GT_EQ_0 (v0 v1 : V3) (a r : ℝ) (w1 w2 : V3) (ha : a < 1) (hr : 0 < r)
     (h : volume.real (conicCap v0 v1 r a ∩ affGt {v0, v1} {w1, w2}) = 0) :
-    Coplanar ℝ ({v0, v1, w1, w2} : Set V3) := sorry
+    Coplanar ℝ ({v0, v1, w1, w2} : Set V3) := by
+  -- NEEDS: 反证。¬Coplanar →（p15_nc1/p15_nc2/p15_u0neu1）四点互异 + p15_li_of_ncopl
+  -- 线性无关 → p15_box_pos 直接给 0 < vol(conicCap ∩ affGt {v0,v1}{w1,w2})，与 h 矛盾。
+  -- （hσ1/hcr 块已到 Kit D 探针 /tmp/gt3a_probeD.lean；余下：盒成员性 + 体积搬运。）
+  sorry
 
 /-- marchal3.hl:2708 `CONIC_CAP_INTER_CONVEX_HULL_4_GT_0`. -/
 theorem CONIC_CAP_INTER_CONVEX_HULL_4_GT_0 (u0 u1 w1 w2 : V3) (r a : ℝ) (hr : 0 < r)
     (ha : a < 1) (ha0 : 0 ≤ a) (hcop : ¬Coplanar ℝ ({u0, u1, w1, w2} : Set V3)) :
-    0 < volume.real (conicCap u0 u1 r a ∩ convexHull ℝ {u0, u1, w1, w2}) := sorry
+    0 < volume.real (conicCap u0 u1 r a ∩ convexHull ℝ {u0, u1, w1, w2}) := by
+  -- NEEDS: 同 AFF_GT_EQ_0 的反证路线（p15_nc1/p15_nc2/p15_u0neu1/p15_li_of_ncopl +
+  -- p15_box_pos 第二合取：盒点 = (1−σ)u0 + x0·u1 + x1·w1 + x2·w2（全系数 ≥ 0）
+  -- 落凸包；体积搬运 Measure.addHaar_image_linearMap + volume_real_add_left）。
+  sorry
 
 /-- `affGe s t` is convex (this chapter needs it for `MEASURABLE_BALL_AFF_GE`;
 the PackingAuto12 copy `p12_convex_affGe` is private). -/
