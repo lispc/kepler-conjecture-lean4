@@ -2175,24 +2175,41 @@ private theorem p2g_rogers_window (V : Set V3) (vl : List V3) (hbar : barV V 3 v
 theorem GLTVHUM_concl : ∀ (V : Set V3) (u0 p : V3), Packing V ∧ saturated V → u0 ∈ V →
     (p ∈ voronoiClosed V u0 ↔
       ∃ vl : List V3, barV V 3 vl ∧ p ∈ rogers V vl ∧ truncateSimplex 0 vl = [u0]) := by
-  -- NEEDS: 非 OAPVION 型 epsilon 唯一性桥，circumcenter 配方不适用（HOL 原证
-  -- Rogers.hl:1152 经 Rogers.hl:826 GLTVHUM_lemma1 的 k-归纳 + Voronoi facet 分解）。
-  -- 状态（GIANT 移植波 2026-09-28）：五级链下三级已在 PA6 闭合——①
-  -- FACET_OF_POLYHEDRON_EXPLICIT_BIS（PA6:286，经 Polytope.FACET_OF_POLYHEDRON_
-  -- EXPLICIT + HALFSPACE_EQ_BIS_LE 半空间化）、② IDBEZAL（PA6:349，经
-  -- VORONOI_BARV_CANONICAL + VORONOI_LIST_INTER_BIS + KHEJKCI_GEN 双向）、③
-  -- VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS（PA6:424，经边界点引理
-  -- p6_mem_hull_insert_facet：polyhedron 的 RELATIVE_INTERIOR_OF_POLYHEDRON +
-  -- 紧集射线-sup 参数替代 POLYTOPE_UNION_CONVEX_HULL_FACETS 的移植）。
-  -- 剩余：④ GLTVHUM_lemma1 已闭合（PA6:869 真证），PA2 侧链复制副本
-  -- p2g_GLTVHUM_lemma1 已随 GLTVHUM ⑤ 装配波（2026-09-30）修复闭合（本文件
-  -- §5；配套 §0-§6 kit 一并链复制，5 枚上游 sorry 桩见各件 NEEDS 记账：
-  -- VORONOI_LIST_CANONICAL / HALFSPACE_EQ / POLYHEDRON_VORONOI_LIST /
-  -- POLYTOPE_VORONOI_LIST / BARV_EXISTS）。
-  -- 仍剩：⑤ 本桥装配——非 OAPVION 型 epsilon 唯一性桥，circumcenter 配方
-  -- 不适用；⑤ 闭合即解锁 PA6:690 GLTVHUM（背引用本桥）与 PA4 cellParams
-  -- 唯一性族 9 枚。
-  sorry
+  -- ⑤ 桥装配闭合（GLTVHUM 波 2026-09-30）：HOL 原证 Rogers.hl:1152 直译——
+  -- lemma1 @ (V,[u0],0)（barV_0 入口，0 < 3）取 k=3 分量，rogers 窗
+  -- p2g_rogers_window（§6）逐点换壳，p2g_VORONOI_LIST_SING 收口。本桥原注记
+  -- "非 OAPVION 型 epsilon 唯一性桥"：circumcenter 配方不适用，实际是纯装配，
+  -- §0-§6 kit 无新增件、无新增 sorry（5 枚上游桩 VORONOI_LIST_CANONICAL /
+  -- HALFSPACE_EQ / POLYHEDRON_VORONOI_LIST / POLYTOPE_VORONOI_LIST /
+  -- BARV_EXISTS 仍在各件 NEEDS 记账，与本桥闭合正交）。五级链前三级
+  -- （① FACET_OF_POLYHEDRON_EXPLICIT_BIS ② IDBEZAL ③
+  -- VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS）+ ④ p2g_GLTVHUM_lemma1
+  -- 均已在 PA6/PA2 闭合（见 §4-§5）。闭合即解锁 PA6:1025 GLTVHUM（背引用）
+  -- 与 PA4 cellParams 唯一性族 9 枚。
+  rintro V u0 p ⟨hP, hs⟩ hu0
+  have hbar : barV V 0 [u0] := p2g_barV_0 V hP u0 hu0
+  have hlem := p2g_GLTVHUM_lemma1 V [u0] 0 hP hs (by omega) hbar
+  -- 取 k = 3 分量
+  have hmem : (3 : ℕ) ∈ (Finset.Icc 0 3 : Set ℕ) :=
+    Finset.mem_coe.2 (Finset.mem_Icc.2 ⟨by omega, by omega⟩)
+  rw [← hlem] at hmem
+  obtain ⟨_, hset⟩ := hmem
+  rw [show (3 : ℕ) - 1 = 2 from by omega] at hset
+  -- voronoiList [u0] = ⋃₀ {rogers V vl | vl ∈ F}（逐点 p2g_rogers_window）
+  rw [← p2g_VORONOI_LIST_SING V u0, hset]
+  constructor
+  · rintro ⟨T, hT, hpT⟩
+    obtain ⟨vl, hvl, rfl⟩ := hT
+    rw [p2g_rogers_window V vl hvl.1] at hpT
+    exact ⟨vl, hvl.1, hpT, hvl.2⟩
+  · rintro ⟨vl, hbar3, hp, hts⟩
+    refine ⟨convexHull ℝ ({omegaListN V vl i | i ∈ Finset.Icc 0 2} ∪
+      voronoiList V vl),
+      Set.mem_image_of_mem
+        (fun vl : List V3 => convexHull ℝ ({omegaListN V vl i | i ∈ Finset.Icc 0 2} ∪
+          voronoiList V vl)) ⟨hbar3, hts⟩, ?_⟩
+    rw [p2g_rogers_window V vl hbar3]
+    exact hp
 
 /-- HOL `DUUNHOR_concl` (pack_concl.hl:21-23): distinct Rogers simplices
 meet in a coplanar set. -/
