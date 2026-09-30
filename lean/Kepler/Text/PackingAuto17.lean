@@ -230,13 +230,16 @@ SHIM (2026-09-19): the parallel-owned PackingAuto14 olean HAS landed in this
 checkout, so the verbatim `_p17` copy discharges to
 `Kepler.Text.PackingAuto14.QZKSYKG1` (still `sorry`ed upstream there — a
 documented transitive shim, deleting the statement duplication; delete the
-copy at merge when Auto14's giants land). -/
+copy at merge when Auto14's giants land).
+STATEMENT-FIX 项 20 (2026-09-30): 上游 `QZKSYKG1` 补 tail-fixedness `hfix`
+前提（弱 permutes 编码下原陈述为假），本 shim 同步透传。 -/
 private theorem qzksykg1_p17 {V : Set V3} {ul vl : List V3} {k : ℕ} {p : Equiv.Perm ℕ}
     (hsat : saturated V) (hpack : Packing V) (hbar : barV V 3 ul)
     (hk : k ∈ ({0, 1, 2, 3, 4} : Set ℕ)) (hne : mcell k V ul ≠ ∅)
-    (hperm : permutes p (Set.Icc 0 (k - 1))) (hvl : vl = leftActionList p ul) :
+    (hperm : permutes p (Set.Icc 0 (k - 1))) (hfix : ∀ j : ℕ, k ≤ j → p j = j)
+    (hvl : vl = leftActionList p ul) :
     barV V 3 vl :=
-  QZKSYKG1 hsat hpack hbar hk hne hperm hvl
+  QZKSYKG1 hsat hpack hbar hk hne hperm hfix hvl
 
 /-- HOL `QZKSYKG2` (QZKSYKG.hl:255-262): `mcell k V ul` is covered by the
 union of the Rogers simplices of all left-action permutations of `ul` over

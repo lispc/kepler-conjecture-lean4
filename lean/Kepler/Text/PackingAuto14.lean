@@ -895,14 +895,14 @@ marchal3/KIZHLTL downstream). -/
 theorem QZKSYKG1 {V : Set V3} {ul vl : List V3} {k : ℕ} {p : Equiv.Perm ℕ}
     (hsat : saturated V) (hpack : Packing V) (hbar : barV V 3 ul)
     (hk : k ∈ ({0, 1, 2, 3, 4} : Set ℕ)) (hne : mcell k V ul ≠ ∅)
-    (hperm : permutes p (Set.Icc 0 (k - 1))) (hvl : vl = leftActionList p ul) :
+    (hperm : permutes p (Set.Icc 0 (k - 1)))
+    (hfix : ∀ j : ℕ, k ≤ j → p j = j) (hvl : vl = leftActionList p ul) :
     barV V 3 vl := by
-  -- NEEDS: (a) k ≤ 3 — the statement is false under the weak pointwise
-  -- `permutes` encoding (p may throw `getD`-default junk into tail slots:
-  -- k = 1, p 1 ↦ 7 gives leftActionList p ul = [u0, default, u2, u3] whose
-  -- point set leaves V); the faithful encoding needs the PA10-style
-  -- tail-fixedness side condition `∀ j ≥ k, p j = j` added to the frozen
-  -- statement. (b) k = 4 — the `YIFVQDV_1` giant (barV-invariance under the
+  -- NEEDS: (a) k ≤ 3 — STATEMENT-FIX 项 20 已应用（补 PA10 式 tail-fixedness
+  -- `∀ j ≥ k, p j = j`：弱 permutes 编码下 p 可把 getD-default junk 甩进 tail
+  -- slot，k=1 p 1↦7 时点集跑出 V，陈述为假）；余下是 S₃ 巨案
+  -- （LEFT_ACTION_LIST_PROPERTIES, marchal2.hl:4460 的 facet 维数几何）。
+  -- (b) k = 4 — the `YIFVQDV_1` giant (barV-invariance under the
   -- full rearrangement of 0..3: voronoiNondg for all pair/triple facets).
   sorry
 
