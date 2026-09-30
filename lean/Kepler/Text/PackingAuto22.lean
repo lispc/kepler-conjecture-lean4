@@ -37,6 +37,12 @@ ENCODING NOTES
     `dot2 a b = (a * conj b).re` (= the standard real inner product under
     re/im coordinates); planar `polyhedron/facet_of` are faithful copies of
     polytope1.ml facet_of/polyhedron (H-representation, aff_dim form).
+  - HOL `Arg` (Ysskqoy kit, range `[0, 2π)`) <-> `holArg` (the `[0, 2π)` lift
+    of `Complex.arg`, defined in the encoding layer below).  SF22/SF27
+    statement-fix batch (minesweep report §3): `ARG_ORDER`, `insert_v`,
+    `poly_sort_fn`, `POLYSORT_BIJ2`, `EUSOTYP_simple` are stated over
+    `holArg`, the faithful HOL `Arg` (same defect class as the ARG_INV_ALT
+    port note at its block).
   - `facet_rep_a/b` and `bisector_point` are `new_specification`s: ported via
     `Classical.choose` from their existence theorems (faithful and
     choice-free-in-statements).
@@ -102,6 +108,55 @@ open Kepler.Geom Set Classical
 
 /-- Planar dot product on `ℂ` standing in for HOL `dot` on `real^2`. -/
 def dot2 (x y : ℂ) : ℝ := (x * star y).re
+
+/-- HOL `Arg` for nonzero arguments (Ysskqoy `ARG` kit, range `[0, 2π)`),
+rebuilt from `Complex.arg` (range `(-π, π]`) by lifting negative arguments to
+`arg + 2π`.  The original port of `ARG_INV_ALT` used `Complex.arg` directly,
+which makes the identity false (HOL `Arg(x/y) = 2*pi - Arg(y/x)` relies on
+`Arg` taking values in `[0, 2π)`).  SF22/SF27 statement-fix batch (minesweep
+report §3): the same defect class hit `ARG_ORDER`, `insert_v`, `poly_sort_fn`,
+`POLYSORT_BIJ2` and `EUSOTYP_simple`; all five are restated over `holArg`.
+Defined here in the encoding layer (moved up verbatim from the ARG_INV_ALT
+block mid-file) so the earlier poly-sort kit can use it. -/
+noncomputable def holArg (z : ℂ) : ℝ :=
+  if 0 ≤ Complex.arg z then Complex.arg z else Complex.arg z + 2 * Real.pi
+
+/-- SF22/SF27 linkage kit: `holArg` is an injective lift of `Complex.arg`
+(the two branches map `(-π, 0)` and `[0, π]` to the disjoint intervals
+`(π, 2π)` and `[0, π]`), so equal `holArg`s have equal principal arguments.
+Used to re-port `poly_sort_antisym` off `Complex.arg`. -/
+private theorem p22_holArg_eq_iff (z1 z2 : ℂ) :
+    holArg z1 = holArg z2 ↔ Complex.arg z1 = Complex.arg z2 := by
+  have hun : ∀ z : ℂ, holArg z =
+      if 0 ≤ Complex.arg z then Complex.arg z else Complex.arg z + 2 * Real.pi :=
+    fun z => rfl
+  rw [hun z1, hun z2]
+  by_cases h1 : 0 ≤ Complex.arg z1 <;> by_cases h2 : 0 ≤ Complex.arg z2
+  · rw [if_pos h1, if_pos h2]
+  · rw [if_pos h1, if_neg h2]
+    constructor
+    · intro heq
+      have hb1 := Complex.arg_le_pi z1
+      have hb2 := Complex.neg_pi_lt_arg z2
+      linarith
+    · intro harg
+      rw [harg] at h1
+      have h2n : Complex.arg z2 < 0 := not_le.mp h2
+      linarith
+  · rw [if_neg h1, if_pos h2]
+    constructor
+    · intro heq
+      have hb1 := Complex.neg_pi_lt_arg z1
+      have hb2 := Complex.arg_le_pi z2
+      linarith
+    · intro harg
+      rw [← harg] at h2
+      have h1n : Complex.arg z1 < 0 := not_le.mp h1
+      linarith
+  · rw [if_neg h1, if_neg h2]
+    constructor
+    · intro heq; linarith
+    · intro harg; linarith
 
 /-- HOL `asn` (arcsin). -/
 noncomputable def asn (x : ℝ) : ℝ := Real.arcsin x
@@ -1906,15 +1961,22 @@ theorem eus_cos (phi psi : ℝ) (h1 : 0 ≤ psi) (h2 : psi ≤ phi)
     · rw [heq, h6]
 
 /-- HOL `insert_v` (counting_spheres.hl:529): the bisector insertion point
-lies in the polyhedron. GIANT. -/
+lies in the polyhedron. GIANT.
+SF27 statement-fix (minesweep report §3): the three `Complex.arg` hypotheses
+are lifted to `holArg` (range `[0, 2π)`, the faithful HOL `Arg`).  Over the
+principal range `(-π, π]` the `h5` antecedent
+`Complex.arg (â'' / â) < 2 * psi` is met by every lower-half-plane facet, so
+`h5` no longer says "c is the nearest facet in cyclic order" and the HOL
+proof (insert_v, counting_spheres.hl:529) cannot be ported; the statement was
+frozen, so it is restated over `holArg`. -/
 theorem insert_v (P c c' : Set ℂ) (r : ℝ) (v : ℂ) (psi : ℝ)
     (hP : polyhedronC P) (hc : facetOfC c P) (hc' : facetOfC c' P)
     (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
-    (h1 : Complex.arg (v / facet_rep_a P c) = psi) (h2 : 0 < psi)
+    (h1 : holArg (v / facet_rep_a P c) = psi) (h2 : 0 < psi)
     (h3 : psi < Real.pi / 2)
-    (h4 : Complex.arg (facet_rep_a P c' / facet_rep_a P c) = 2 * psi)
+    (h4 : holArg (facet_rep_a P c' / facet_rep_a P c) = 2 * psi)
     (h5 : ∀ c'' : Set ℂ, facetOfC c'' P →
-      Complex.arg (facet_rep_a P c'' / facet_rep_a P c) < 2 * psi → c'' = c)
+      holArg (facet_rep_a P c'' / facet_rep_a P c) < 2 * psi → c'' = c)
     (h6 : ‖v‖ = r / Real.cos psi) : v ∈ P := by
   sorry -- DEF-FIX: refill per counting_spheres.hl:529 §3a
 
@@ -1936,20 +1998,31 @@ theorem facet_rep_a_uniq (P c1 c2 : Set ℂ) (r : ℝ) (hP : polyhedronC P)
   exact facet_rep_uniq_c P c1 c2 hP h1 h2 hseq
 
 /-- HOL `poly_sort_fn` (counting_spheres.hl:678, the chapter's single
-`new_definition`). -/
+`new_definition`).
+SF27 statement-fix (minesweep report §3): the comparison is lifted from
+`Complex.arg` (range `(-π, π]`) to `holArg` (range `[0, 2π)`, the faithful
+HOL `Arg`) — the principal-value order is not the cyclic order (it sorts the
+lower half plane after the upper one), so the HOL sorted-facet predicate is
+not expressible over `Complex.arg`.  Proven consumers re-ported accordingly:
+`poly_sort_antisym` (holArg hop via `p22_holArg_eq_iff`), `poly_sort_trans`
+(no change, `le_trans` is generic), `POLY_SORT_LEMMA` (sort key lifted to
+`holArg`), `POLY_SORT`/`POLY_SORT_BIJ` (Complex.arg-ordered; re-derived via
+`p22_facet_arg_injOn`). -/
 def poly_sort_fn (P : Set ℂ) (u : ℂ) (c1 c2 : Set ℂ) : Prop :=
   facetOfC c1 P ∧ facetOfC c2 P ∧
-    Complex.arg (facet_rep_a P c1 / u) ≤ Complex.arg (facet_rep_a P c2 / u)
+    holArg (facet_rep_a P c1 / u) ≤ holArg (facet_rep_a P c2 / u)
 
 /-- HOL `poly_sort_antisym` (counting_spheres.hl:682). Filled: the two
 `poly_sort_fn` hypotheses give equal arguments; `Complex.arg_eq_arg_iff` makes
-the normals positive-real multiples and `facet_rep_a_uniq` concludes. -/
+the normals positive-real multiples and `facet_rep_a_uniq` concludes.
+SF27 linkage: equal `holArg`s are converted to equal `Complex.arg`s by
+`p22_holArg_eq_iff`; the rest of the proof is unchanged. -/
 theorem poly_sort_antisym (P : Set ℂ) (u : ℂ) (c1 c2 : Set ℂ) (r : ℝ)
     (hP : polyhedronC P) (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
     (h12 : poly_sort_fn P u c1 c2) (h21 : poly_sort_fn P u c2 c1) (hu : u ≠ 0) :
     c1 = c2 := by
   have harg : Complex.arg (facet_rep_a P c1 / u) = Complex.arg (facet_rep_a P c2 / u) :=
-    le_antisymm h12.2.2 h21.2.2
+    (p22_holArg_eq_iff _ _).mp (le_antisymm h12.2.2 h21.2.2)
   have ha1 : facet_rep_a P c1 ≠ 0 := by
     intro h0
     have h1 : ‖facet_rep_a P c1‖ = 1 := (facet_rep_props P c1 hP h12.1).1
@@ -1990,6 +2063,61 @@ theorem poly_sort_trans (P : Set ℂ) (u : ℂ) (c1 c2 c3 : Set ℂ) (r : ℝ)
     (hP : polyhedronC P) (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
     (hu : u ≠ 0) (h12 : poly_sort_fn P u c1 c2) (h23 : poly_sort_fn P u c2 c3) :
     poly_sort_fn P u c1 c3 := ⟨h12.1, h23.2.1, le_trans h12.2.2 h23.2.2⟩
+
+/-- SF22/SF27 linkage kit: the principal-argument map is still injective on
+the facet set of a polyhedron (equal `Complex.arg`s make the facet normals
+positive-real multiples by `Complex.arg_eq_arg_iff`; both are unit vectors,
+so the multiplier is 1; then `facet_rep_uniq_c`).  Extracted from the
+pre-SF27 `POLY_SORT_LEMMA` proof so the `Complex.arg`-ordered `POLY_SORT`/
+`POLY_SORT_BIJ` keep standing proofs beside the `holArg`-cyclic
+`poly_sort_fn` kit. -/
+private theorem p22_facet_arg_injOn (P : Set ℂ) (u : ℂ) (s : Set (Set ℂ))
+    (hs : s = {c : Set ℂ | facetOfC c P}) (hP : polyhedronC P) (hu : u ≠ 0) :
+    Set.InjOn (fun c : Set ℂ => Complex.arg (facet_rep_a P c / u)) s := by
+  intro c1 hc1 c2 hc2 harg
+  have hf1 : facetOfC c1 P := by
+    have h1 : c1 ∈ s := hc1
+    rw [hs] at h1
+    exact h1
+  have hf2 : facetOfC c2 P := by
+    have h1 : c2 ∈ s := hc2
+    rw [hs] at h1
+    exact h1
+  have hn1 : ‖facet_rep_a P c1‖ = 1 := (facet_rep_props P c1 hP hf1).1
+  have hn2 : ‖facet_rep_a P c2‖ = 1 := (facet_rep_props P c2 hP hf2).1
+  have ha1 : facet_rep_a P c1 ≠ 0 := by
+    intro h0
+    rw [h0] at hn1
+    exact absurd hn1 (by simp)
+  have ha2 : facet_rep_a P c2 ≠ 0 := by
+    intro h0
+    rw [h0] at hn2
+    exact absurd hn2 (by simp)
+  have hd1 : facet_rep_a P c1 / u ≠ 0 := div_ne_zero ha1 hu
+  have hd2 : facet_rep_a P c2 / u ≠ 0 := div_ne_zero ha2 hu
+  have hkey : ((‖facet_rep_a P c2 / u‖ / ‖facet_rep_a P c1 / u‖ : ℝ) : ℂ)
+      * (facet_rep_a P c1 / u) = facet_rep_a P c2 / u := by
+    exact_mod_cast (Complex.arg_eq_arg_iff hd1 hd2).mp harg
+  have hcancel : ((‖facet_rep_a P c2 / u‖ / ‖facet_rep_a P c1 / u‖ : ℝ) : ℂ)
+      * facet_rep_a P c1 = facet_rep_a P c2 := by
+    calc ((‖facet_rep_a P c2 / u‖ / ‖facet_rep_a P c1 / u‖ : ℝ) : ℂ)
+        * facet_rep_a P c1 = ((‖facet_rep_a P c2 / u‖ / ‖facet_rep_a P c1 / u‖ : ℝ) : ℂ)
+            * (facet_rep_a P c1 / u) * u := by
+          rw [mul_assoc, div_mul_cancel₀ _ hu]
+      _ = (facet_rep_a P c2 / u) * u := by rw [hkey]
+      _ = facet_rep_a P c2 := by
+          rw [div_mul_cancel₀ _ hu]
+  set k : ℝ := ‖facet_rep_a P c2 / u‖ / ‖facet_rep_a P c1 / u‖ with hkdef
+  have hkpos : 0 < k := div_pos (norm_pos_iff.mpr hd2) (norm_pos_iff.mpr hd1)
+  -- unit norms force the positive multiplier to be 1
+  have hnorm : ‖facet_rep_a P c2‖ = ‖((k : ℝ) : ℂ)‖ * ‖facet_rep_a P c1‖ := by
+    rw [← hcancel, norm_mul]
+  rw [hn2, hn1, mul_one, Complex.norm_real, Real.norm_eq_abs] at hnorm
+  have hk : k = 1 := by
+    rw [← abs_of_pos hkpos]
+    exact hnorm.symm
+  rw [hk, Complex.ofReal_one, one_mul] at hcancel
+  exact facet_rep_uniq_c P c1 c2 hP hf1 hf2 hcancel
 
 /-! ## TOPOLOGICAL_SORT ℂ 版：有限集上单射实值函数的严格递增枚举 -/
 
@@ -2102,14 +2230,17 @@ private theorem p22_enum_sorted {α : Type*} [Nonempty α] {g : α → ℝ} {s :
 
 /-- HOL `POLY_SORT_LEMMA` (counting_spheres.hl:729). Filled (EXPLICIT kit
 wave): the argument map is injective on the facet set (`poly_sort_antisym`);
-`p22_enum_sorted` (TOPOLOGICAL_SORT) produces the increasing enumeration. -/
+`p22_enum_sorted` (TOPOLOGICAL_SORT) produces the increasing enumeration.
+SF27 linkage: with `poly_sort_fn` stated over `holArg` the enumeration is
+built over the `holArg` map (injective on facets by `poly_sort_antisym`), so
+the conclusion is the holArg-cyclic order statement. -/
 theorem POLY_SORT_LEMMA (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u : ℂ)
     (hs : s = {c : Set ℂ | facetOfC c P}) (hP : polyhedronC P) (hr : 0 < r)
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) (hu : u ≠ 0)
     (hsize : s.Finite ∧ s.ncard = n) :
     ∃ f : ℕ → Set ℂ, s = f '' Set.Icc 1 n ∧ ∀ j k : ℕ, j ∈ Set.Icc 1 n →
       k ∈ Set.Icc 1 n → j < k → ¬ poly_sort_fn P u (f k) (f j) := by
-  have hinj : Set.InjOn (fun c : Set ℂ => Complex.arg (facet_rep_a P c / u)) s := by
+  have hinj : Set.InjOn (fun c : Set ℂ => holArg (facet_rep_a P c / u)) s := by
     intro c1 hc1 c2 hc2 harg
     have hf1 : facetOfC c1 P := by
       have h1 : c1 ∈ s := hc1
@@ -2126,7 +2257,12 @@ theorem POLY_SORT_LEMMA (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u
   intro j k hj hk hjk hcon
   exact absurd hcon.2.2 (not_le.2 (hfmono j k hj hk hjk))
 
-/-- HOL `POLY_SORT` (counting_spheres.hl:746). Filled (EXPLICIT kit wave). -/
+/-- HOL `POLY_SORT` (counting_spheres.hl:746). Filled (EXPLICIT kit wave).
+SF27 linkage: `poly_sort_fn` is now stated over `holArg` (the `[0, 2π)`
+cyclic order), which orders facets differently from the principal-value
+`Complex.arg` order of THIS conclusion, so `POLY_SORT_LEMMA` (holArg twin)
+can no longer feed it; instead the enumeration is built directly over the
+`Complex.arg` map, injective on facets by `p22_facet_arg_injOn`. -/
 theorem POLY_SORT (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u : ℂ)
     (hs : s = {c : Set ℂ | facetOfC c P}) (hP : polyhedronC P) (hr : 0 < r)
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) (hu : u ≠ 0)
@@ -2135,24 +2271,13 @@ theorem POLY_SORT (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u : ℂ
       k ∈ Set.Icc 1 n → j < k →
       Complex.arg (facet_rep_a P (f j) / u) <
         Complex.arg (facet_rep_a P (f k) / u) := by
-  obtain ⟨f, hfim, hfnot⟩ := POLY_SORT_LEMMA P n s r u hs hP hr hrad hu hsize
-  refine ⟨f, hfim, ?_⟩
-  intro j k hj hk hjk
-  by_contra hcon
-  push_neg at hcon
-  have hfk : facetOfC (f k) P := by
-    have h1 : f k ∈ f '' Set.Icc 1 n := ⟨k, hk, rfl⟩
-    rw [← hfim] at h1
-    rw [hs] at h1
-    exact h1
-  have hfj : facetOfC (f j) P := by
-    have h1 : f j ∈ f '' Set.Icc 1 n := ⟨j, hj, rfl⟩
-    rw [← hfim] at h1
-    rw [hs] at h1
-    exact h1
-  exact hfnot j k hj hk hjk ⟨hfk, hfj, hcon⟩
+  have hinj := p22_facet_arg_injOn P u s hs hP hu
+  obtain ⟨f, hfim, hfmono⟩ := p22_enum_sorted (α := Set ℂ) hsize.1 hsize.2 hinj
+  exact ⟨f, hfim, hfmono⟩
 
-/-- HOL `POLY_SORT_BIJ` (counting_spheres.hl:795). Filled (EXPLICIT kit wave). -/
+/-- HOL `POLY_SORT_BIJ` (counting_spheres.hl:795). Filled (EXPLICIT kit wave).
+SF27 linkage check: consumes only `POLY_SORT`'s (unchanged, still proved)
+statement; proof unchanged. -/
 theorem POLY_SORT_BIJ (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u : ℂ)
     (hs : s = {c : Set ℂ | facetOfC c P}) (hP : polyhedronC P) (hr : 0 < r)
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) (hu : u ≠ 0)
@@ -3921,14 +4046,6 @@ theorem REAL_CX0 (z : ℂ) (h1 : Complex.im z = 0) (h2 : Complex.re z = 0) :
     z = 0 := by
   exact Complex.ext (by simpa using h2) (by simpa using h1)
 
-/-- HOL `Arg` for nonzero arguments (Ysskqoy `ARG` kit, range `[0, 2π)`),
-rebuilt from `Complex.arg` (range `(-π, π]`) by lifting negative arguments to
-`arg + 2π`.  The original port of `ARG_INV_ALT` used `Complex.arg` directly,
-which makes the identity false (HOL `Arg(x/y) = 2*pi - Arg(y/x)` relies on
-`Arg` taking values in `[0, 2π)`). -/
-noncomputable def holArg (z : ℂ) : ℝ :=
-  if 0 ≤ Complex.arg z then Complex.arg z else Complex.arg z + 2 * Real.pi
-
 /-- HOL `ARG_INV_ALT` (counting_spheres.hl:1791), restated over `holArg`
 (the faithful HOL `Arg`): for nonzero `u x y` with distinct `holArg (x/u)`,
 `holArg (y/u)`, the angle from `y` to `x` complements the angle from `x` to
@@ -3976,44 +4093,46 @@ theorem ARG_INV_ALT (u x y : ℂ) (hu : u ≠ 0) (hx : x ≠ 0) (hy : y ≠ 0)
       ring
 
 /-- HOL `ARG_ORDER` (counting_spheres.hl:1822). GIANT.
-NEEDS: FALSE as stated — the flyspeck proof runs on the Ysskqoy `Arg` kit
-(range `[0, 2π)`, cf. `holArg` above), while this frozen statement uses
-`Complex.arg` (range `(-π, π]`), and over that range the conclusion fails.
-Counterexample: `u := 1`, `n := 3`, `h 1 := exp(-I*π/2)`, `h 2 :=
-exp(I*(π/2-0.1))`, `h 3 := -1`, `h k := h 1` for `k ≥ 4`.  All hypotheses
-hold (`arg h1 = -π/2 < arg h2 = π/2 - 0.1 < arg h3 = π`; `h 4 = h 1`), yet
-for `(i, j) := (1, 3)`:
+SF22 statement-fix (minesweep report §3): the `Complex.arg`s (range
+`(-π, π]`) are lifted to `holArg` (range `[0, 2π)`, the Ysskqoy `Arg` kit,
+cf. the definition at the top of this file).  The previous `Complex.arg`
+version was FALSE — counterexample: `u := 1`, `n := 3`, `h 1 := exp(-I*π/2)`,
+`h 2 := exp(I*(π/2-0.1))`, `h 3 := -1`, `h k := h 1` for `k ≥ 4`.  All
+hypotheses hold (`arg h1 = -π/2 < arg h2 = π/2 - 0.1 < arg h3 = π`;
+`h 4 = h 1`), yet for `(i, j) := (1, 3)`:
 `arg (h 2 / h 1) = arg (exp (I*(π-0.1))) = π - 0.1 ≈ 3.0416 >
--π/2 ≈ -1.5708 = arg (exp (I*3π/2)) = arg (h 3 / h 1)`.
-The holArg restatement (HOL-faithful) is true and easy (flyspeck uses
-ARG_LE_DIV_SUM: `Arg(z2/z1) = Arg z2 - Arg z1` for `0 ≤ Arg z1 < Arg z2`);
-a fix requires lifting this statement to `holArg` — statement frozen, so
-flagged for the statement owner (same defect class as ARG_INV_ALT's port
-note above). -/
+-π/2 ≈ -1.5708 = arg (exp (I*3π/2)) = arg (h 3 / h 1)`.  Over `holArg` the
+hypotheses express the HOL cyclic order and the flyspeck proof applies
+(ARG_LE_DIV_SUM: `Arg(z2/z1) = Arg z2 - Arg z1` for `0 ≤ Arg z1 < Arg z2`). -/
 theorem ARG_ORDER (u : ℂ) (h : ℕ → ℂ) (n : ℕ) (hu : u ≠ 0)
     (h1 : ∀ i : ℕ, i ∈ Finset.Icc 1 n → h i ≠ 0)
     (h2 : ∀ i j : ℕ, i ∈ Finset.Icc 1 n → j ∈ Finset.Icc 1 n → i < j →
-      Complex.arg (h i / u) < Complex.arg (h j / u))
+      holArg (h i / u) < holArg (h j / u))
     (h3 : h (n + 1) = h 1) :
     ∀ i j : ℕ, i ∈ Finset.Icc 1 n → j ∈ Finset.Icc 1 n → i ≠ j →
-      Complex.arg (h (i + 1) / h i) ≤ Complex.arg (h j / h i) := by
+      holArg (h (i + 1) / h i) ≤ holArg (h j / h i) := by
   sorry
 
-/-- HOL `POLYSORT_BIJ2` (counting_spheres.hl:1964). GIANT. -/
+/-- HOL `POLYSORT_BIJ2` (counting_spheres.hl:1964). GIANT.
+SF27 statement-fix (minesweep report §3): the three `Complex.arg` comparisons
+are lifted to `holArg` (range `[0, 2π)`, the faithful HOL `Arg`) — same
+defect class as `poly_sort_fn` above: the principal-value order is not the
+cyclic order, so the flyspeck sorted-bijection conclusion cannot be phrased
+over `Complex.arg`. -/
 theorem POLYSORT_BIJ2 (P : Set ℂ) (n : ℕ) (s : Set (Set ℂ)) (r : ℝ) (u : ℂ)
     (hs : s = {c : Set ℂ | facetOfC c P}) (hb : Bornology.IsBounded P) (hP : polyhedronC P)
     (hr : 0 < r) (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P) (hu : u ≠ 0)
     (hsize : s.Finite ∧ s.ncard = n) :
     ∃ f : ℕ → Set ℂ, s = f '' Set.Icc 1 n ∧ Set.BijOn f (Set.Icc 1 n) s ∧
       (∀ i k : ℕ, i ∈ Set.Icc 1 n → k ∈ Set.Icc 1 n → i ≠ k →
-        Complex.arg (facet_rep_a P (f (i + 1)) / facet_rep_a P (f i)) ≤
-          Complex.arg (facet_rep_a P (f k) / facet_rep_a P (f i))) ∧
+        holArg (facet_rep_a P (f (i + 1)) / facet_rep_a P (f i)) ≤
+          holArg (facet_rep_a P (f k) / facet_rep_a P (f i))) ∧
       (∀ i : ℕ, i ∈ Set.Icc 1 n →
-        Complex.arg (facet_rep_a P (f (i + 1)) / facet_rep_a P (f i)) < Real.pi) ∧
+        holArg (facet_rep_a P (f (i + 1)) / facet_rep_a P (f i)) < Real.pi) ∧
       f (n + 1) = f 1 ∧
       (∀ j k : ℕ, j ∈ Set.Icc 1 n → k ∈ Set.Icc 1 n → j < k →
-        Complex.arg (facet_rep_a P (f j) / u) <
-          Complex.arg (facet_rep_a P (f k) / u)) := by
+        holArg (facet_rep_a P (f j) / u) <
+          holArg (facet_rep_a P (f k) / u)) := by
   sorry -- DEF-FIX: refill per counting_spheres.hl:1964 §3a
 
 /-- HOL `EMPTY_NOT_EXISTS_IN` (counting_spheres.hl:2104). -/
@@ -4021,7 +4140,12 @@ theorem EMPTY_NOT_EXISTS_IN {α : Type*} (a : Set α) :
     a = ∅ ↔ ¬ ∃ x : α, x ∈ a := by
   simp [Set.eq_empty_iff_forall_notMem]
 
-/-- HOL `EUSOTYP_simple` (counting_spheres.hl:2112). GIANT. -/
+/-- HOL `EUSOTYP_simple` (counting_spheres.hl:2112). GIANT.
+SF27 statement-fix (minesweep report §3): all `Complex.arg`s are lifted to
+`holArg` (range `[0, 2π)`, the faithful HOL `Arg`) — the sorted `g`-walk and
+the half-angle hypotheses around the facet cycle need the cyclic `[0, 2π)`
+order (`Real.cos` of a half principal arg would not match the HOL `Arg`
+values, and the `g`-sort over `(-π, π]` is not the walk order). -/
 theorem EUSOTYP_simple (P : Set ℂ) (s : Set (Set ℂ)) (r n : ℕ) (u2 : ℂ)
     (hP : polyhedronC P) (hb : Bornology.IsBounded P) (hs : s = {c : Set ℂ | facetOfC c P})
     (hsize : s.Finite ∧ s.ncard = n) (hr : 0 < r) (hu : u2 ≠ 0)
@@ -4030,18 +4154,18 @@ theorem EUSOTYP_simple (P : Set ℂ) (s : Set (Set ℂ)) (r n : ℕ) (u2 : ℂ)
       (∀ i : ℕ, i ∈ Finset.Icc 1 n → g i ∈ P ∧ ‖g i‖ = r) ∧
       g (n + 1) = g 1 ∧
       (∀ j k : ℕ, j ∈ Finset.Icc 1 n → k ∈ Finset.Icc 1 n → j < k →
-        Complex.arg (g j / u2) < Complex.arg (g k / u2)) ∧
+        holArg (g j / u2) < holArg (g k / u2)) ∧
       (∀ i : ℕ, i ∈ Finset.Icc 1 n → h i ∈ P ∧
-        ‖h i‖ = r / Real.cos (Complex.arg (g (i + 1) / g i) / 2)) ∧
+        ‖h i‖ = r / Real.cos (holArg (g (i + 1) / g i) / 2)) ∧
       (∀ i : ℕ, i ∈ Finset.Icc 1 n →
-        Complex.arg (h i / g i) = Complex.arg (g (i + 1) / g i) / 2 ∧
-        Complex.arg (g (i + 1) / h i) = Complex.arg (g (i + 1) / g i) / 2) ∧
+        holArg (h i / g i) = holArg (g (i + 1) / g i) / 2 ∧
+        holArg (g (i + 1) / h i) = holArg (g (i + 1) / g i) / 2) ∧
       (∀ i : ℕ, i ∈ Finset.Icc 1 n →
         dot2 (g i) (h i - g i) = 0 ∧ dot2 (g (i + 1)) (h i - g (i + 1)) = 0) ∧
       1 < n ∧
       (∀ i : ℕ, i ∈ Finset.Icc 1 n → g i ≠ 0) ∧
       (∀ i : ℕ, i ∈ Finset.Icc 1 n → h i ≠ 0) ∧
-      (∀ i : ℕ, i ∈ Finset.Icc 1 n → Complex.arg (g (i + 1) / g i) < Real.pi) := by
+      (∀ i : ℕ, i ∈ Finset.Icc 1 n → holArg (g (i + 1) / g i) < Real.pi) := by
   sorry -- DEF-FIX: refill per counting_spheres.hl:2112 §3a
 
 /-- HOL `pad2d3d_SUB` (counting_spheres.hl:2325). -/

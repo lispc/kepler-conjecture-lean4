@@ -1087,3 +1087,18 @@ frozen-false 角**。
 签名加 `truncateSimplex 1 (cellParams V X).2 = [u0, u1]` 型前提封角。
 
 ### (c) 状态：**草案待审**（cell_vol 波立案）。
+
+## 30. PA22 bisector 家族 holArg 同缺陷（SF22+27 应用波发现）— 分级 M
+
+### (a) HOL 出处：Ysskqoy `Arg` [0,2π)（同 SF22/27）；holArg 批应用波
+实测：`bisector_point_exists`（:2319 附近，sorry）的 spec 为
+new_specification 且基于 `Complex.arg`，**波及 `bisector_point` 全部下游**。
+
+### (b) 修复
+
+与 SF22/27 同车改述 `holArg`；注意 holArg 对 Complex.arg **无单调性**
+（(−π,0)↦(π,2π) 分支反序，仅单射）——refill 时凡"arg 序⟹holArg 序"的
+推理不成立（批应用波已录）。
+
+### (c) 状态：**草案待审**（2026-10-01 holArg 批立案；建议与 bisector
+refill 波同车）。
