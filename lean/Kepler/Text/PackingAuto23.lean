@@ -95,7 +95,26 @@ and the junk-safety `p23_dihX_of_cellParamsD_ne`. `grutoti_cell_vol`'s
 only the non-degenerate wedge identities (k = 2,3 core + k = 4
 non-coplanar), which need the region-block data — see its docstring for the
 updated branch map and the missing edge-cell-hypothesis caveat.
--/
+
+2026-09-30 GT-3d pass (cell_vol lane, post-SF-21): `grutoti_cell_vol`'s
+branch map restructured with two more arms CLOSED inline — (A) null cells
+(vacuous under `hn` by measure-mono into the null cell; `p23_dihX_of_nullSet`
+stays banked for the pivot's junk terms) and (B) the §H junk arm with a valid `cellParamsD`-witness of
+index 0 (`mcell0` lives outside `ball u0 √2`, the cap inside
+`closedBall u0 r ⊆ ball u0 √2` by `r ≤ 1 < √2`, so `X ∩ D = ∅` contradicts
+`hn`); junk-safety `p23_dihX_of_cellParamsD_ne` is banked there.
+**SF-21 BUG (must-fix at next SF)**: `he` is INERT — the frozen binder order
+puts `(he : {u0,u1} ∈ edgeX V X)` BEFORE `(X : Set V3)`, so with autoImplicit
+the X inside `he`'s type is a fresh auto-bound implicit (X✝), not the binder:
+`he` constrains a dead variable and `p23_edge_cell_k_ge_two` is NOT
+consumable; fix = move `(X : Set V3)` ahead of `he`. Residual: THREE
+`sorry`s with per-branch NEEDS notes in the docstring — (1) cellParamsD-index
+1 (`mcell1`, needs the d-narrowness d ≥ hl [u0,u1]/√2), (2) index ∈ {2,3,4}
+(the wedge identities: need d/r-narrowness `d ≥ d1/d2`, `r ≤ r1` that only
+exists at `grutoti_region`'s witnesses — an SF adding narrowness hypotheses
+or restating along those witnesses is the blocker), (3) the ε-junk case (no
+valid witness: edge reversed in the param list — potential frozen-false
+corner; SF proposal recorded). -/
 
 import Kepler.Text.PackingAuto2
 import Kepler.Text.ConicCapVolume
@@ -2595,13 +2614,46 @@ wedge `L`, `vol (X∩D) = vol (L∩D)`, closed by CCV `volumeConicCapWedge`),
 k = 3 (HL §F: hull + the AZIM_COMPL complement identity, `AZIM_COMPL_EXT`
 PA6:2107), k = 4 non-coplanar (HL §E: needs the region-block extremal data
 from `grutoti_region` to put `X ∩ D` into the coplanar sliver). RESOLVED
-(STATEMENT-FIX 项 21, 2026-09-30 用户批准): the edge-cell hypothesis
-`(he : {u0, u1} ∈ edgeX V X)` (i.e. `u0,u1 ∈ VX V X ∧ u0 ≠ u1`) is now part
-of the signature — the k = 0,1 counting arm and the k = 4 degenerate closure
-are consumable in that context, which the `grutoti_pivot` fill supplies. -/
+(STATEMENT-FIX 项 21, 2026-09-30 用户批准; binder 序修正同日——`he` 须在
+`(X : Set V3)` 之后, 否则 autoImplicit 把类型里的 `X` 炼成哑变量): the
+edge-cell hypothesis `(he : {u0, u1} ∈ edgeX V X)` (i.e.
+`u0,u1 ∈ VX V X ∧ u0 ≠ u1`) is part of the signature — the k = 0,1 counting arm and the k = 4 degenerate closure
+are consumable in that context, which the `grutoti_pivot` fill supplies.
+GT-3d pass (2026-09-30): arm A (null cells: VACUOUS under `hn` —
+measure-mono into the null `X` nulls `X ∩ D`; the identity's junk-safety
+content there stays banked as `p23_dihX_of_nullSet` for the pivot sum) and
+arm B (the §H junk arm with a VALID `cellParamsD`-witness of
+index 0: `mcell0` lives outside `ball u0 √2`, the cap inside `closedBall u0 r ⊆
+ball u0 √2`, so `X ∩ D = ∅` contradicts `hn`) are CLOSED; junk-safety
+`p23_dihX_of_cellParamsD_ne` is banked in the non-null branch.
+SF-21 BUG FOUND (2026-09-30, GT-3d): the `he` hypothesis is INERT as stated —
+the binder order of the frozen signature puts `(he : {u0, u1} ∈ edgeX V X)`
+BEFORE `(X : Set V3)`, and with this project's `autoImplicit` on, the `X`
+inside `he`'s type elaborates to a fresh AUTO-BOUND implicit (displayed
+`X✝`), NOT the explicit binder `X`. So `he` constrains a dead variable,
+`u0,u1 ∈ VX V X` is NOT derivable, and the counting arm
+`p23_edge_cell_k_ge_two` is NOT consumable in this signature. Next SF (with
+the narrowness below): move `(X : Set V3)` ahead of `he` (or re-type `he`).
+REMAINING (three `sorry`s, with the branch they sit in):
+1. index 1 (`mcell1`): needs d ≥ hl [u0,u1]/√2; the ∅-branch
+   (`hl ul < √2 → X = ∅`) is available inline but left folded here.
+2. index ∈ {2,3,4}: the wedge identities proper — k = 2 needs the mcell2 shape
+   + `volumeConicCapWedge`, k = 3 the `AZIM_COMPL_EXT` complement identity,
+   k = 4 the r-side extremal data; ALL THREE need the d/r-narrowness
+   (`d ≥ d₁/d₂`, `r ≤ r₁`) that HL takes from the region block and that the
+   frozen signature (opaque `r d`) does not carry — see the DEVIATIONS note in
+   `grutoti_region`'s docstring: a further SF (add narrowness hypotheses, or
+   restate along `grutoti_region`'s witnesses `r = 1/2`,
+   `d = max c (max d1 d2)`) is the blocker, not filling.
+3. no valid `cellParamsD`-witness (ε-junk, e.g. a genuine cell whose param
+   list carries the edge REVERSED `[u1,u0,…]`): `dihX` reads junk `dihu₂/₃/₄`
+   (or 0, with `nullSet (X ∩ D)` still needed) — potential frozen-false corner;
+   an SF adding `truncateSimplex 1 (cellParams V X).2 = [u0, u1]` (which HL's
+   per-cell analysis has, since its sum cells are built from lists truncating
+   to `[u0;u1]`) is the clean fix. -/
 private theorem grutoti_cell_vol (V : Set V3) (u0 u1 : V3) (r d : ℝ)
-    (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1)
-    (he : {u0, u1} ∈ edgeX V X) (X : Set V3)
+    (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1) (X : Set V3)
+    (he : {u0, u1} ∈ edgeX V X)
     (hm : X ∈ mcellSet V) (hn : ¬nullSet (X ∩ grutotiConicCap u0 u1 r d)) :
     volume.real (X ∩ grutotiConicCap u0 u1 r d) =
       volume.real (grutotiConicCap u0 u1 r d) * dihX V X (u0, u1) / (2 * Real.pi) := by
@@ -2612,10 +2664,70 @@ private theorem grutoti_cell_vol (V : Set V3) (u0 u1 : V3) (r d : ℝ)
       rw [p23_grutotiConicCap_self_empty u1 r d, Set.inter_empty]
       exact measure_empty
     exact absurd hnull hn
-  -- NEEDS: the non-degenerate k-arms (HL §D/§E/§F) — k = 2 wedge identity via
-  -- `volumeConicCapWedge` + the mcell2 shape; k = 3 via `AZIM_COMPL_EXT`;
-  -- k = 4 non-coplanar needs `grutoti_region`'s extremal data (see docstring).
-  sorry
+  by_cases hns : nullSet X
+  · -- GT-3d (2026-09-30) arm A (CLOSED): null cells — vacuous under `hn`
+    -- (`measure_mono_null` into the null `X` nulls `X ∩ D`); the identity's
+    -- junk-safety content for null cells stays banked as
+    -- `p23_dihX_of_nullSet` (consumed by the pivot sum, which carries no `hn`).
+    exact absurd (measure_mono_null Set.inter_subset_left hns :
+      nullSet (X ∩ grutotiConicCap u0 u1 r d)) hn
+  · -- GT-3d (2026-09-30) arm B (CLOSED below): the §H junk arm with a VALID
+    -- `cellParamsD`-witness of index 0 — an `mcell0` cell lives outside
+    -- `ball (hdV ul) √2` while the cap sits in `closedBall u0 r ⊆ ball u0 √2`,
+    -- so `X ∩ D = ∅`, contradicting `hn`. NOTE: this arm does not need `he` —
+    -- just as well, because (autoImplicit) the `X` inside `he`'s type is an
+    -- AUTO-BOUND implicit, not the explicit binder `X` (binder order in the
+    -- frozen signature: `he` precedes `(X : Set V3)`), so `he` constrains a
+    -- dead variable and `p23_edge_cell_k_ge_two` is NOT consumable here; the
+    -- next SF must move `(X : Set V3)` ahead of `he`. The remaining k-arms
+    -- funnel into the three documented `sorry`s (NEEDS map in the docstring).
+    -- the dihX junk-safety in this context (closes the `q.1 ∉ {2,3,4}` half of
+    -- the junk case once `nullSet (X ∩ D)` is derivable):
+    have _hdihJunk := p23_dihX_of_cellParamsD_ne V X (u0, u1) hns
+    by_cases hwit : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧
+      X = mcell p.1 V p.2 ∧ initialSublist [u0, u1] p.2
+    · obtain ⟨_hn4, _hbar, hXm, hinit⟩ := Classical.epsilon_spec
+        (p := fun p : ℕ × List V3 => p.1 ≤ 4 ∧ barV V 3 p.2 ∧
+          X = mcell p.1 V p.2 ∧ initialSublist [u0, u1] p.2) hwit
+      rcases Nat.lt_or_ge (cellParamsD V X [u0, u1]).1 2 with hq12 | hqge
+      · rcases Nat.eq_zero_or_pos (cellParamsD V X [u0, u1]).1 with hq0 | _hq1
+        · -- arm B: index 0, `X = mcell0 V (cellParamsD …).2` with
+          -- `hdV (cellParamsD …).2 = u0` — disjointness from the cap.
+          have hXm' : X = mcell (cellParamsD V X [u0, u1]).1 V
+              (cellParamsD V X [u0, u1]).2 := hXm
+          rw [show (cellParamsD V X [u0, u1]).1 = 0 from hq0] at hXm'
+          obtain ⟨yl, hyl⟩ := hinit
+          have hhd : hdV (cellParamsD V X [u0, u1]).2 = u0 :=
+            by rw [show (cellParamsD V X [u0, u1]).2 = [u0, u1] ++ yl from hyl]; simp [hdV]
+          have hXeq : X ∩ grutotiConicCap u0 u1 r d = ∅ := by
+            apply Set.eq_empty_iff_forall_notMem.mpr
+            intro z hz
+            obtain ⟨hzX, hzD⟩ := hz
+            rw [hXm'] at hzX
+            have hzm : z ∈ rogers V (cellParamsD V X [u0, u1]).2 \
+                Metric.ball (hdV (cellParamsD V X [u0, u1]).2) (Real.sqrt 2) := hzX
+            rw [hhd] at hzm
+            have h1 : √(1:ℝ) < Real.sqrt 2 :=
+              Real.sqrt_lt_sqrt (by norm_num : (0:ℝ) ≤ 1) (by norm_num : (1:ℝ) < 2)
+            rw [Real.sqrt_one] at h1
+            exact hzm.2 (Metric.mem_ball.mpr (lt_of_le_of_lt
+              (Metric.mem_closedBall.mp (Set.inter_subset_left hzD)) (lt_of_le_of_lt hr1 h1)))
+          exact absurd (show nullSet (X ∩ grutotiConicCap u0 u1 r d) from by
+            show volume (X ∩ grutotiConicCap u0 u1 r d) = 0
+            rw [hXeq]
+            exact measure_empty) hn
+        · -- index 1 (`mcell1`): the non-∅ branch needs d ≥ hl [u0,u1]/√2 — the
+          -- d-side narrowness; the ∅-branch (`hl ul < √2 → X = ∅`) is available
+          -- but subsumed by the NEEDS below. NEEDS (see docstring).
+          sorry
+      · -- index ∈ {2,3,4}: the k-arms (HL §D/§E/§F). NEEDS (see docstring).
+        sorry
+    · -- no valid `cellParamsD` witness (ε-junk): a genuine cell whose param
+      -- list does not carry the edge in order (reversed `[u1,u0,…]` etc.) —
+      -- `dihX` reads junk `dihu₂/₃/₄` for index ∈ {2,3,4} and 0 otherwise
+      -- (the latter half still needs `nullSet (X ∩ D)`). Potential
+      -- frozen-false corner: an SF is needed either way. NEEDS (see docstring).
+      sorry
 
 /-- HL GRUTOTI.hl:7228-7400 (`sum s (\t. vol (t INTER D)) = vol D` via
 `MEASURE_NEGLIGIBLE_UNIONS_IMAGE` over the almost-disjoint cell family) plus

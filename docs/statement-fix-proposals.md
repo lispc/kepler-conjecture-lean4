@@ -1058,3 +1058,32 @@ KSOQKWL_concl_discharged 陈述同步补参（自身也要 SF）**+ 调用点加
 
 ### (c) 状态：**已批准；PA22 正被 sloc2/UKBRPFE lane 编辑，文件空闲后与
 SF22 同车应用。**
+
+## 28. PA23 `grutoti_cell_vol` 缺窄性前提（k=2/3/4 臂解锁条件）— 分级 A′
+
+### (a) HOL 出处：GRUTOTI.hl §D/§F/§E（per-cell 分析在 region witness
+`r = 1/2, d = max c (max d1 d2)` 下运行）；cell_vol 波实测（2026-10-01）：
+k=2 对不透明 d 可构造反例形态（a = hl[trunc1]/√2 > d 时 rconeGe 截割正
+测度）——"盲填"不可行。
+
+### (b) 修复
+
+二选一：(i) 签名补窄性前提（`d ≥ d1`/`d ≥ d2`/`r ≤ r1` 型，随 region
+witness 供给）；(ii) 沿 `grutoti_region` 的 witness 重述（region 已闭合，
+同文件私有可直用）。配套：region docstring DEVIATIONS 注记的极值数据
+（f1/f2>0）需随此项导出。
+
+### (c) 状态：**草案待审**（cell_vol 波立案；k=0,1 计数臂与退化/null 臂
+已闭，仅 k∈{2,3,4} wedge 恒等式本体卡此项）。
+
+## 29. PA23 `grutoti_cell_vol` ε-junk 角（cellParams 逆序表）— 分级 A′
+
+### (a) HOL 出处：HL per-cell 分析天然携带 per-cell 前提；cell_vol 波发现：
+无效 witness（如参数表逆序 [u1;u0,…]）时 `dihX` 读 junk 值——**潜在
+frozen-false 角**。
+
+### (b) 修复
+
+签名加 `truncateSimplex 1 (cellParams V X).2 = [u0, u1]` 型前提封角。
+
+### (c) 状态：**草案待审**（cell_vol 波立案）。
