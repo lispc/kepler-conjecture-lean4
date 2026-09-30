@@ -128,7 +128,10 @@ theorem LENGTH_1_LEMMA (ul : List V3) (h : ul.length = 1) : ul = [hdV ul] := by
 /-- pack3.hl:103 `PERMUTES_TRIVIAL`. Unprovable as encoded: `PackingAuto2.permutes`
 is the weak membership biconditional (see header), under which e.g. the
 transposition `1 ↔ 2` permutes `{0}` without being the identity. The HOL
-statement needs HOL Light's complement-fixing `permutes`. -/
+statement needs HOL Light's complement-fixing `permutes`.
+STATEMENT-FIX 项 26 处置（2026-09-30 用户批准）：**冻结黑名单**——弱编码下
+不可证（`swap 1↔2` 反例，扫雷探针 P4），待语义 `permutesHL` 重述波；零真实
+消费者（仅 PA14:882 docstring 提及）。此 sorry 为永久记账，不入任何修复波。 -/
 theorem PERMUTES_TRIVIAL (p : Equiv.Perm ℕ) : permutes p {0} ↔ p = Equiv.refl ℕ := sorry
 
 /-- pack3.hl:131 `CONTAINS_BALL_AFFINE_HULL`. A set containing an open ball
