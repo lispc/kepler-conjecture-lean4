@@ -31,7 +31,13 @@
 | ~~`UPFZBZM_concl` 架构半边~~ | PA19 | PackingConcl:510 discharge 已接线 | **波 1 已真化 (2026-09-29，`abfd2fcb`)**：`NEGLIGIBLE_FUNC` 忠实架构（侦察 f8c207a7 规格书；零新增 sorry）；capstone/FCC 半边/数值链原已全真证。余上游四巨物（KIZHLTL1/2/4 + SUM_GAMMAX，HL ~2400 行，均已预接线）= 波 2/3；Pack2.hl 测度桥四件套是波 2 唯一未知量，见 `docs/upfzbzm-scout.md`。**波 2A 已真化 (2026-09-29，`dfa60295`)**：PA15 有限性包三件——`HD_IN_MCELL` 真证全净（四 case 路线入 playbook §5.4）、`FINITE_MCELL_SET_lemma1`/`FINITE_MCELL_SET_LEMMA` 真证（唯一染色 = PA12 `VORONOI_LIST_3_SINGLETON_EXPLICIT`，GIANT 落地即自动转净；net −3：26→23）；新私件 `p15_omega_dist_hd` 是 MCELL_SUBSET_BALL_4 的 i∈{0,1} 支钥匙（i=2 唯一卡点，地图入 playbook §5.4）。**波 2B/2C 已真化 (2026-09-30，`9bc5b5bd`)**：PA16 `KIZHLTL1`/`KIZHLTL2` 双闭合（sorry 9→4 零新增），`PackingConcl.KIZHLTL1/2_concl_discharged` 自动真化。**波 3 已真化 (2026-09-30，`c41bccd9`)**：`KIZHLTL4` 闭合（4→3，HL 五步直译，2π 步经 PA2 `GRUTOTI1_concl` 设计接口，PA23 落地时 `exact` 自动放电）；**PA19 上游四巨物实化其三，仅剩 `SUM_GAMMAX_LMFUN_ESTIMATE`(PA18:2538, bare sorry, sum_gamma.hl 1400 行链)**；PA16 余 3（KIZHLTL3 无 HL 证明冻结桩等裁决、QZYZMJC/MCELL_SET_NOT_EMPTY 既有 GIANT） |
 | `MHFTTZN_lemma2` | PA6 | MHFTTZN1/2/3/4 + BARV_AFFINE_INDEPENDENT 链 | **已真化 (2026-09-29，`eafa4874`)**：MHFTTZN 全链（lemma/lemma2/1/2/3/4）`#print axioms` 仅标准三零 sorryAx |
 | `facet_rep_in_facet` | PA22 | planar 面-表示链 | **已真化 (2026-09-29，`3538883a`)**。**wave-3 已落账 (2026-09-29，`e4248c02`)**：EXPLICIT ℂ kit 19 件（Polytope.lean 模板逐段镜像，公开 `facetOfCPolyhedronExplicit`/`p22_facetOfCPolyhedron` 公理全净）+ 连清 9 枚（`POLYHEDRON_MEMBER`/`facet_rep_refl`/`facet_rep_in_poly`/`facet_rep_a_uniq`/`facet_arg_lt_pi`/`poly_sort_antisym`/`POLY_SORT_LEMMA`/`POLY_SORT`/`POLY_SORT_BIJ`）——sorry 52→43 零新增。**eus1 已收口 (2026-09-29，`87a39f04`)**：同文件序手术（facet_rep 块移至 kit 后）+ 65 行真证（â=‖a‖⁻¹•a 换元 + 球点 mid-point 上确界）——**facet_rep 全族零 sorry 闭合链形成**（`p22_facetOfCPolyhedron`→`eus1`→`facetRepPair`/`spec`/`a`/`b`/`props`/`uniq_c`→`in_facet`/`refl`→`POLYHEDRON_MEMBER`→`facet_rep_in_poly`，:1499→:1794），9 枚继承件全部脱 sorryAx。余 42 枚全在 :2000 行后 GIANT 区（insert_v/bisector_point_exists/POLYSORT_BIJ2/EUSOTYP_simple、GOTCJAH、POLYHEDRON_FACET_SUM_4Pi、XULJEPR；面族计数 4744-5630 是大头）、pad2d3d_facet（ℂ 侧 kit 已就位，还需 V3 侧镜像 kit + FACET_OF_LINEAR_IMAGE ℂ 版） |
-| `TSKAJXY` 0/3/4 臂（现 :2550） | PA21 | PA25:3704 `exact TSKAJXY …` 唯一消费 | **四波全落账 (2026-09-29)**：波 0 银行（`2f2c431c`）+ 波 1 GRKIBMP（`1591e1c1`）+ 波 2a kit（`3f162f06`）+ 波 2b cell3_from_ineq_thm（`eedb36b6`）+ 波 3 臂收口（`ba88d11e`，编排者三行机械）——**capstone `TSKAJXY` 装配已真**。**A1+B1 已全清 (2026-09-30，`af3f31fc`)**：A1 几何 5 件 + B1 记账 9 件（含补缺 MCELL2_HL_LT_SQRT2 移植、FRUSTT_RCONE_GE 锥面测度零经保测投影+addHaar_sphere）。**A2 已落账 (2026-09-30，`52a01dfd`)**：5/6 闭合——`OMEGA_LIST_BISECTOR`（塔点等距 kit 绕开 PA5/PA6 sorry 污染）+ `MCELL1_RADIAL`/`MCELL1_VOL`/`GAMMAX_MCELL1`/`TSKAJXY_1`（capstone：gammaX = sol·(√2³/3−2mm1/π)，括号正由 PA20 种子 `HJKDESR1a_1cell`）。**SOL_RESTRICT+B2 已落账 (2026-09-30，`b9bf1114`)**：文件序收口（1060 行区块整体上提，零重复）+ B2 四枚闭合（FRUSTT_WEDGE_RCONE_GE 消费 PA18 正本/NOT_COPLANAR_EXTREME_MCELL2/MCELL2_DIHV_AZIM/MCELL2_DIHV_LT_PI——dihV=π⇒Gram −1⇒反平行 ~160 行代数——四枚公理全净）。余 11 战术 sorry：B3 四枚（GAMMAX_MCELL2/TSKAJXY2 装配、MCELL2_VOL、MCELL2_SOL）+ MCELL2_VOL_SPLIT_EXPLICIT（VOLUME_FRUSTT_WEDGE 闭式 GIANT，建议独立工位）+ LEFT_ACTION/PERMUTE_01（卡 PA14:231/258/286 具名桥）+ 界外 TSKAJXY_034（G 轨）/mi_gamma3f（merge-ineq 2b）/`pack_nonlinear_rest`（G4 挂账） |
+| `TSKAJXY` 0/3/4 臂（现 :2550） | PA21 | PA25:3704 `exact TSKAJXY …` 唯一消费 | **四波全落账 (2026-09-29)**：波 0 银行（`2f2c431c`）+ 波 1 GRKIBMP（`1591e1c1`）+ 波 2a kit（`3f162f06`）+ 波 2b cell3_from_ineq_thm（`eedb36b6`）+ 波 3 臂收口（`ba88d11e`，编排者三行机械）——**capstone `TSKAJXY` 装配已真**。**A1+B1 已全清 (2026-09-30，`af3f31fc`)**：A1 几何 5 件 + B1 记账 9 件（含补缺 MCELL2_HL_LT_SQRT2 移植、FRUSTT_RCONE_GE 锥面测度零经保测投影+addHaar_sphere）。**A2 已落账 (2026-09-30，`52a01dfd`)**：5/6 闭合——`OMEGA_LIST_BISECTOR`（塔点等距 kit 绕开 PA5/PA6 sorry 污染）+ `MCELL1_RADIAL`/`MCELL1_VOL`/`GAMMAX_MCELL1`/`TSKAJXY_1`（capstone：gammaX = sol·(√2³/3−2mm1/π)，括号正由 PA20 种子 `HJKDESR1a_1cell`）。**SOL_RESTRICT+B2 已落账 (2026-09-30，`b9bf1114`)**：文件序收口（1060 行区块整体上提，零重复）+ B2 四枚闭合（FRUSTT_WEDGE_RCONE_GE 消费 PA18 正本/NOT_COPLANAR_EXTREME_MCELL2/MCELL2_DIHV_AZIM/MCELL2_DIHV_LT_PI——dihV=π⇒Gram −1⇒反平行 ~160 行代数——四枚公理全净）。**B3 已落账 (2026-09-30，`9a6d1198`)**：三枚真证装配——
+GAMMAX_MCELL2（VX_PROPS 钉死+epsilon 对求值+PA15.DIHX_SYM swap 支）/
+MCELL2_VOL（SPLIT 双半+DIHV_SYM 翻轴）/TSKAJXY_2（null 支 GAMMAX_NULLSET+
+dist_ge_two 账），sorry 11→8 零新增。余 8 战术：**唯一结构性缺口**
+GAMMAX_GAMMA2_X（卡 LA38:1119 dihV↔dih_y 桥 private，需公开 4 点 wrapper）+
+SPLIT_EXPLICIT/MCELL2_SOL（楔形闭式 GIANT 工位）+ LEFT_ACTION/PERMUTE_01
+（卡 PA14 具名桥，在飞）+ TSKAJXY_034/mi_gamma3f/pack_nonlinear_rest（界外挂账） |
 | `LEMMA_3_POINTS_FINAL`/`LEMMA_4_POINTS_FINAL` | ContraFan | contraveningFan → CKQOWSA | **CF-3 已真化（路线 B，前波）；CF-4a 已落账 (2026-09-29，`f25bcc49`)**：新模块 `ContraFanDeep.lean` 1070 行（不 import ContraFan——接线方向相反，twin 自拷前奏含 CF-3 L3F 孪生）；件 1 `cf4_cone_inter_imp_segment_conv` + 件 2 **分离平面四点件** `cf4_separation_plane_4_points`（±(v2×₃v4) 平面 + Cramer 符号四分，辅助链 ~350 行零 sorry）真证；9 枚带账 NEEDS（rotation 三件/连续性大件 665 行/circumcenter 两枚/段交两枚）全附 HOL 锚点。**CF-4b 已落账 (2026-09-29，`dd20ae50`)**：5 件闭合（rotation_dist_decrease/circumcenter 两枚/aff_ge_inter_segments/rotation_lemma，公理全净），sorry 9→4。**CF-4c 已落账 (2026-09-30，`d544b010`)**：再三件闭合（family_special——夹逼延拓统一锥表示/continuous_intersection_point——Cramer+Gram 行列式/rotation_about_axis——正交分解平移）。**CF-4d 已落账 (2026-09-30，`1355f2bc`)——主石完整闭合，ContraFanDeep 全模块 sorry 归零（2602 行零 sorry）**：665 行连续性大件按 HOL 逐段落地（w·n 三分类 + IVT 首穿双件 `cf4_ivt_first_hit/dec`（sInf+IsClosed.isLeast_csInf）+ Cramer 穿锥判别两件），6 私件全净、主石陈述 byte-identical。**ContraFan 链移植完成**（CF-3 路线 B + CF-4a/b/c/d 四波）；IVT/滤波类 Mathlib 替代路径沉淀入 playbook §5.3 |
 | LA38 `tau3_taum_d`/`tau3_taum_dfun` | LocalAuto38 | （经 main_nonlinear_terminal_v11 合取项间接）| 陈述级：缺 `2 ≤ dist` 下界，待对照 HOL 补陈（走 STATEMENT-FIX） |
 
@@ -58,10 +64,14 @@
   锥帽体积套件（**源不在本仓**，与 REUHADY(PA24)/TSKAJXY3 三链共享，GT-1 先导波
   建新模块 ConicCapVolume.lean）、Pack2.hl 测度桥（与 UPFZBZM wave-2/KIZHLTL1 共享，
   **已实化**：KIZHLTL1/2 `9bc5b5bd`）、PA15 marchal3 套件 ≥9 枚。
-  **GT-1 已落账 (2026-09-30，`0d3243c0`)**：`ConicCapVolume.lean` 1110 行——
-  `volumeConicCap`（2/3·π·(1−a)·r³ 完整推导）+Pos/Measurable/Bounded 四公开件
-  公理全净，纯 Geom.* 零 sorry 依赖；余 3 sorry 带账（sliceWedge 仅剩 Real.lt/le
-  order 结构体对接、wedge kernel、AZIM_EQ_0_PI 桥）。
+  **GT-1 已落账 (2026-09-30，`0d3243c0`) + 收口 (2026-09-30，`107e0a04`)**：
+  `ConicCapVolume.lean` 1610 行——`volumeConicCap`（2/3·π·(1−a)·r³ 完整推导）
+  +Pos/Measurable/Bounded 四公开件公理全净，纯 Geom.* 零 sorry 依赖；
+  **本模块 sorry 3→0 全绿**（sliceWedge 任意 t 版+临界半径分支/楔体积核/
+  AZIM_EQ_0_PI 桥全真）；stretch=PA24:428 REUHADY 对接三公开件
+  （measurable/volumeFormula/volumeConicCapWedge）——PA24 wedgeGe shim 只差
+  闭开楔零测差集一步；余 GT-1 尾巴（HOL :6511 全量 a<0 反射+STRONG convex
+  分量）文件头记账。
   **GT-2 前段已落账 (2026-09-30，`dfd748ed`+`d67e5fcf`)**：PA15 ★×2 转真
   （FINITE_EDGE_X2/MCELL_SUBSET_BALL8_1——**i=2 深坑正面攻下**：mutual-rconeGe
   代数相加，23→21）；PA23 p23_ kit ×4（Pack2 测度桥有限版银行化）。

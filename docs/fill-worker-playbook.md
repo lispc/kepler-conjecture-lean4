@@ -204,6 +204,18 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
 （ofReal 在幂内层）；`Real.sqrt_mul {x} (hx : 0 ≤ x) (y)` 首因子由 hx 固定；
 `div_le_iff₀ (hc : 0 < c) : b / c ≤ a ↔ b ≤ a * c`（mp 需要 `≤ a*c` 形状）。
 
+**B3/CCV/⑤ 三波实测新增（2026-09-30）**：`setSum`+def 内 `let` 的 have 陈述
+必须整体加括号（`else 0 = RHS` 会被吞进 else 支）；`rw [定理]` 自动 rfl 闭合
+后再加 `ring` 报 no goals；`{a,b} : Finset V3` 是 `insert a {b}`（sum_insert
+非成员条件按此序）；`azim_eq_ang_of_frame` 的 hy 必须用 **0 心系形式**（误传
+v0 系导致 5M heartbeat isDefEq 超时）；`zOf_ne_zero_iff` 需 `v1 ≠ v0` 原件；
+`lt_or_le` 本快照是 `lt_or_ge`；`ciInf` 边界用 Mathlib Projection 文件同款
+"约束变元 ∀ 形状"惯用法（对构造项 `⟨z,hz⟩` 直接 `ciInf_le` 会 isDefEq 死循
+环）；`Module.finrank_eq_zero` 本版已无→`Module.finrank_zero_iff` +
+`Submodule.eq_bot_iff` + `congrArg Subtype.val`；`Submodule.mem_bot` 本版为
+Iff 且 R 显式→`(Submodule.mem_bot ℝ).1`；vectorSpan 成员匿名构造走
+`vectorSpan_eq_span_vsub_set_right` + `subset_span ⟨z, hz, rfl⟩`。
+
 ### 5.4 各 lane 已知卡点速查（收工后追加）
 
 - **LA38**（52 remaining @二轮后：38 tactic sorry + 14 def 桩）：二轮闭合 6 枚
@@ -507,13 +519,22 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   匿名构造器/rcases 不自动裂解 setOf 成员里的 And（显式嵌套 `⟨T, ⟨vl, ⟨hb, ht⟩,
   rfl⟩, hzT⟩`，扁平模式报 "right✝ : … is not an inductive datatype"）；多余
   rcases 模式递归进最后分量；mvar 型 `{a}` 需类型注记；`Set.union_assoc` 需
-  `←` 定向。
-- **PA21 @B2 后**（11 战术 @`b9bf1114`，SOL_RESTRICT 已收口=1060 行区块
-  整体上提零重复）：**B3 地图**——GAMMAX_MCELL2/TSKAJXY2 装配（:4578 区域，
-  消费 MCELL2_VOL/MCELL2_SOL/DIHV_EQ_DIH_Y/DIHV_RANGE/lmfun_h0cut）；
-  MCELL2_VOL（MCELL2_SPLIT + FRUSTT 系列）；MCELL2_VOL_SPLIT_EXPLICIT 需
-  VOLUME_FRUSTT_WEDGE 闭式（**GIANT，建议独立工位**）；LEFT_ACTION/
-  PERMUTE_01 等 PA14 left-action kit 清零后一行迁移。**B2 波雷区**：V3 的
+  `←` 定向。**⑤ 已落账 (2026-09-30，`bf501eea`)**：链复制 kit + 主件
+  `p2g_GLTVHUM_lemma1`（PA6:869 链复制）全绿，+1632/−3；5 桩独立行 NEEDS
+  （待 PA5:1492/1500/1501 + PA6:247/660 正本落地后机械替换=替换波）；
+  **⑤ 桥（GLTVHUM_concl 的 epsilon 唯一性桥）仍开**——闭合即解锁
+  PA6:690 `GLTVHUM`（背引用）与 PA4 cellParams 唯一性族 9 枚=⑤桥波；
+  DUUNHOR 三前件中 POLYHEDRON_VORONOI_LIST/OMEGA_LIST_N_LEMMA 两件 PA2 侧
+  已有诚实链复制真证可作参考实现。
+- **PA21 @B3 后**（8 战术 @`9a6d1198`）：GAMMAX_MCELL2/MCELL2_VOL/TSKAJXY_2
+  三装配真证（epsilon 对求值 + PA15.DIHX_SYM swap 支；SPLIT 双半 + DIHV_SYM
+  翻轴；null 支 GAMMAX_NULLSET + dist_ge_two 账）。**下波地图**：① LA38
+  公开 `DIHV_EQ_DIH_Y` 4 点 wrapper（`p38_dihV_eq_dihY` 已在 LA38:1119 但
+  private；缺 ¬Collinear→`0 < upsX` 的 cross/Gram 恒等式，同型 LA17:183
+  private）→ GAMMAX_GAMMA2_X 装配（**唯一结构性缺口**）；② PA14 left-action
+  kit 清零 → LEFT_ACTION/PERMUTE_01 一行迁移 → MCELL2_VOL 转真；③ 楔形体积
+  闭式工位（FRUSTT_WEDGE/CONIC_CAP_WEDGE 闭式族 **GIANT，独立工位**）→
+  SPLIT_EXPLICIT + MCELL2_SOL。**B2 波雷区**（仍适用）：V3 的
   `⬝ᵥ` 在 rw 下不对称（ofLp 推入和内 vs 整体包裹）——内积代数走 `inner ℝ`
   + `inner_eq_dot` 桥更稳（dihV 引擎即此路线）；`Set.mem_symmDiff` 第二支
   t-成员在前；rcases `rfl` 在等式双方皆局部变量时 subst "后引入者"（多点
@@ -522,10 +543,14 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   有限性参数显式；`lt_of_le_of_ne` 第二参数 `a ≠ b`。
 - **PA15 @GT-3a 后**（CONIC_CAP trio = `p15_box_pos` 一引理+三段短装配
   @`883e02dc`）：affine-box 路线（19 kit 私件全真证：共面桥/`p15_li_of_ncopl`
-  线性无关/`p15_bisector_exists` 平分线标架极坐标+ℂ 虚部）；**Kit D 续图在
-  /tmp/gt3a_probeD.lean**（Geom-only 快编译探针，LinearMap+det≠0 全通，仅余
-  ~8 小错：nlinarith hint 与 affGt 四点互异 finset-和两处）——Kit D lane 先
-  恢复 /tmp 探针再落盘。`p15_copl_of_azim_zero` 可回灌 ConicCapVolume。
+  线性无关/`p15_bisector_exists` 平分线标架极坐标+ℂ 虚部）；**Kit D 续图
+  /tmp/gt3a_probeD.lean 已随重启丢失**——按 `git show 883e02dc` 报告重建
+  （comboMap/ker + 标量 prelude 曾 ~8 小错；余下待写=盒点四成员性（cone/ball
+  估计 `c(D²−κ(δ1+δ2)) > ((1+τ)cD+κc(E+F))·D·a` 由 hkey 消 c）/affGt 显式
+  f-和/凸包嵌套 segment/体积搬运（addHaar_image_linearMap +
+  volume_real_add_left + IsOpen.measure_pos））。
+  `p15_copl_of_azim_zero` 可回灌 ConicCapVolume（其 AZIM_EQ_0_PI 桥已收口，
+  回灌改为互证/参考实现）。
   **雷区**：`mul_div_cancel` 本快照是 CommGroup 引理（ℝ 上 pattern 不匹配，
   除法一律 div_le_iff₀ 族）；**by positivity 看不见变量符号**（含变量原子的
   不等式全灭，须 mul_pos/div_pos/linarith 显式组装；set 引入的局部量是
@@ -546,17 +571,19 @@ env-lean 与 build 的 subst 方向相反（env 替换 var、build 替换定理�
   (eps).2)` 与 guard-form 同形绕开 Prod.eta 泥潭；`Set.mem_setOf_eq` 展开后的
   `Real.le✝`-struct 分量不可嵌套解构（先 `.mp` 再投影链）；docstring 后紧跟
   `/-!` 段落报 "expected 'lemma'"（私有 kit 段放目标 docstring 之前）。
-- **ConicCapVolume @GT-1 后**（3 remaining @`0d3243c0`）：帽侧全链已证
-  （`volumeConicCap`/`Pos`/`Measurable`/`Bounded` 公理全净；ccvConicCap 私拷
-  与 PA15:109 正本同体，消费 lane 一行 `rfl` 转移）。**剩余三件的顺序**：
-  ①`ccv_volume_sliceWedge`（骨架全备，仅剩 Real.lt/le order 结构体对接，
-  对照已证同形 `ccv_volume_sliceCap`）→ ②`ccv_volume_conicCapWedge_zero`
-  （照 `ccv_volume_conicCap_zero` 骨架 + Fubini 包装）→ ③
-  `AZIM_EQ_0_PI_IMP_COPLANAR`（S 档，azim=0 经 `azim_eq_zero_iff_alt`；
-  azim=π 需移植 `azim_eq_pi_iff`）。**下游接线即开**：PA24:428
-  `volumeConicCapWedgeGeVsConicCap` shim（帽侧直用 + wedgeGe vs wedge 小桥，
-  等②）；PA23 `grutoti_volD_pos`（GT-2 的第一件，`volumeConicCapPos` 直取 +
-  补 `hne`——注意 volD_pos 冻结陈述缺陷在 STATEMENT-FIX 裁决清单）。
+- **ConicCapVolume @收口后**（**3→0 全绿 @`107e0a04`**）：三 sorry 全闭
+  （sliceWedge 任意 t 版 `ccv_volume_sliceWedgeMin` 含临界半径闭扇形分支/
+  楔核 `ccv_volume_conicCapWedge_zero` 照 zero 骨架 + Fubini/
+  AZIM_EQ_0_PI_IMP_COPLANAR 全真）。**stretch 已落**：PA24:428 REUHADY 对接
+  三公开件 `measurableConicCapWedge`/`volumeConicCapWedgeFormula`/
+  `volumeConicCapWedge`。**下游接线**：PA24 `volumeConicCapWedgeGeVsConicCap`
+  还差闭楔 wedgeGe vs 开楔的 `MEASURE_NEGLIGIBLE_SYMDIFF` 差集论证（经
+  `coplanarAzimEq` + `COPLANAR_IMP_NEGLIGIBLE`）；GRUTOTI §D/§F 六使用点
+  同理；GT-1 尾巴=HOL :6511 全量版（a<0 经 VOLUME_CONIC_CAP_COMPL 反射）与
+  STRONG 版 convex 分量（文件头已记账）。merge 时按 §5.3 以 PA15:109 正本
+  改名收敛删 `ccvConicCap` 私拷。**雷区**：`azim_eq_ang_of_frame` 必须
+  0 心系形式（§5.3 已录）。PA23 `grutoti_volD_pos` 已用（STATEMENT-FIX 项
+  18 已应用 `54fe4ee2`）。
 
 ## 6. 教训日志（编排者每波收工后追加；工人有观察也写报告里）
 
