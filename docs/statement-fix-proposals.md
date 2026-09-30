@@ -977,3 +977,18 @@ k=2 核走 `volumeConicCapWedge` + mcell2 形；k=3 走 `AZIM_COMPL_EXT`
 ### (c) 状态：**草案待审**（2026-09-30 GT-3b/c 波立案 `11 私件已落
 （公理全净），cell_vol 退化臂已内联闭合；应用建议与 ②③ 及 pivot 填充波
 同批，待用户拍板）。
+
+## 22. PA22 `ARG_ORDER` 用 `Complex.arg`（值域 (−π,π]）而 flyspeck 依赖 [0,2π) 的 `Arg`——为假
+
+### (a) HOL 出处：Ysskqoy `Arg`（[0,2π)）；缺陷：冻结陈述用 `Complex.arg`
+（主值域 (−π,π]），序关系被 2π 折叠破坏。反例（lane 实测）：u=1、n=3、
+h1=e^{−iπ/2}、h2=e^{i(π/2−0.1)}、h3=−1 满足全部假设，但
+arg(h2/h1)=π−0.1 > −π/2=arg(h3/h1)，结论不成立。
+
+### (b) 修复
+
+陈述的 `Complex.arg` 抬升为 [0,2π) 值域的 `holArg`（与文件头 ARG_INV_ALT
+注记同缺陷类）；下游消费者需同步核查。完整反例已录 PA22 文件内注释。
+
+### (c) 状态：**草案待审**（2026-09-30 PA22 独立清单波发现；应用待用户
+拍板 + GATE_MODE=STATEMENT-FIX）。

@@ -2627,7 +2627,33 @@ theorem abs_1_prod (x y : ℝ) (hx : |x| ≤ 1) (hy : |y| ≤ 1) : |x * y| ≤ 1
   rw [abs_mul]
   exact le_trans (mul_le_mul hx hy (by norm_num) (by norm_num)) (by norm_num)
 
-/-- HOL `sloc2_ortho` (counting_spheres.hl:1306). GIANT. -/
+/-- HOL `sloc2_ortho` (counting_spheres.hl:1306). GIANT.
+NEEDS: right-spherical-triangle identity `cos alp = sin bet * cos b`.  The
+proof is fully worked out and ~90% formalized in `/tmp/pa22b_sloc2_ortho_progress.lean`
+(this wave's probe; only the final sqrt-algebra assembly fails there):
+with `A := va⬝ᵥva`, `B := vb⬝ᵥvb`, `C := vc⬝ᵥvc`, `x := vb⬝ᵥvc`, `y := va⬝ᵥvc`,
+`z := va⬝ᵥvb` and the projections onto axis-orthogonal complements
+(`X := A•vb − z•va` etc.), one derives
+(1) the right-angle constraint `C * z = x * y` (from `h`, via `dihV`/`arcV`
+    unfolding + `Real.cos_arccos`);
+(2) the dot/norm expansions `X⬝ᵥY = A²x − Ayz`, `‖X‖² = A²B − Az²`,
+    `‖Y‖² = A²C − Ay²`, `U⬝ᵥV = B²y − Bxz`, `‖U‖² = B²C − Bx²`,
+    `‖V‖² = B²A − Bz²` (two-line `dlin` two-point linearity helper);
+(3) positivity `0 < A*C − y²`, `0 < B*C − x²`, `0 < A*B*C² − x²y²` (each =
+    scaled norm-squared of a projection, nonzero by `¬ Collinear3 0 va ?vc`
+    extracted from `hcp` via `coplanar_triple`/`affineSpan_mono`);
+(4) the values `cos alp = x*√(A*C−y²)/√(A*B*C²−x²y²)`,
+    `sin bet = √(B*C*(A*C−y²))/√(A*B*C²−x²y²)` (via `Real.sin_arccos`),
+    `t = x/(√B*√C)`, whose product is the claim (all `_sq` = `Real.sq_sqrt`).
+The remaining gap is the last assembly `Real.cos alp = Real.sin bet * t`:
+the squared route `(cos alp)² = (1 − q_b²) * t²` (with
+`q_b := U⬝ᵥV/(dist U 0 * dist V 0)`, `1 − q_b² = B*C*(A*C−y²)/(A*B*C²−x²y²)`)
+plus the sign `0 ≤ cos alp * t` (both carry the sign of `x`, denominators
+positive) and `eqOfSq`-style cancellation is set up but `field_simp` on the
+sqrt-heavy assembly goal mis-clears denominators (produces a false subgoal);
+use explicit `div_mul_eq_mul_div`/`eq_div_iff (pow_ne_zero 2 …)`/`mul_sub`
+chains or `linear_combination` with the k-lemmas as certificates instead.
+Statements frozen; do not restate. -/
 theorem sloc2_ortho (va vb vc : V3)
     (hcp : ¬ Coplanar ({0, va, vb, vc} : Set V3))
     (h : dihV 0 vc va vb = Real.pi / 2) :
@@ -2660,37 +2686,75 @@ theorem INJ_CARD {α β : Type*} [DecidableEq α] [DecidableEq β] {a : Set α}
     rw [← Set.InjOn.ncard_image h.1]
     exact Set.ncard_le_ncard h.2 hb⟩
 
-/-- HOL `card_packing_ball` (counting_spheres.hl:1418). GIANT.
-NEEDS (approach fully worked out; blocked on the `Set.Finite.toFinset`-era
-renames under `lake build`): take `n := Nat.ceil ((r + 1) ^ 3)`; finiteness
-is `Packing.finite_inter_ball`; for the bound, volume-count the unit balls
-`Metric.ball v 1` over the finset `Set.Finite.toFinset hfin` (hfin := the
-finiteness witness): they are pairwise disjoint (`Packing.dist_ge_two` +
-triangle inequality) and all inside `Metric.ball 0 (r + 1)`, so
-`MeasureTheory.measure_biUnion_finset` + `EuclideanSpace.volume_ball_fin_three`
-give `ncard S * (4π/3) ≤ (r+1)³ * (4π/3)`.
-Gotchas hit this round (all under `lake build`, invisible to `lake env lean`):
-(a) the dot-chained `hfin.toFinset` / `hfin.mem_toFinset` do NOT resolve — use
-`Set.Finite.toFinset hfin` / `Finite.mem_toFinset hfin` (mem_toFinset moved to
-the root `Finite` namespace, x explicit); (b) `measure_biUnion_finset` is now
-`MeasureTheory.measure_biUnion_finset` and `volume` is `MeasureTheory.volume`;
-(c) the final `S.ncard = toFinset.card` bridge needs a `Fintype ↥S` instance
-(`Fintype.ofFinite hfin`) — the plain `Set.ncard_eq_toFinset_card'` rewrite
-leaves a mismatch; (d) `le_or_gt` disjuncts have no `.le/.gt` projections
-usable here — feed them straight into `le_trans`. -/
+/-- HOL `card_packing_ball` (counting_spheres.hl:1418). Filled: take
+`n := Nat.ceil ((r + 1) ^ 3)`; finiteness is `Packing.finite_inter_ball` and
+the bound volume-counts the unit balls `Metric.ball v 1` over a finset `T`
+with `↑T = S` (`Set.Finite.exists_finset_coe`): they are pairwise disjoint
+(`Packing.dist_ge_two` + triangle inequality) and all inside
+`Metric.ball 0 (r + 1)`, so `MeasureTheory.measure_biUnion_finset` +
+`EuclideanSpace.volume_ball_fin_three` give `T.card * (4π/3) ≤ (r+1)³ * (4π/3)`,
+and `S.ncard = T.card` (`Set.ncard_coe_finset`). -/
 theorem card_packing_ball (r : ℝ) (hr : 0 ≤ r) :
     ∃ n : ℕ, ∀ S : Set V3, Packing S → S ⊆ Metric.ball 0 r →
       S.Finite ∧ S.ncard ≤ n := by
-  sorry
+  refine ⟨Nat.ceil ((r + 1) ^ 3), fun S hP hsub => ?_⟩
+  have hfin : S.Finite := (hP.finite_inter_ball r).subset (fun v hv => ⟨hv, hsub hv⟩)
+  refine ⟨hfin, ?_⟩
+  obtain ⟨T, hT⟩ := hfin.exists_finset_coe
+  have hmem : ∀ v ∈ T, dist v 0 < r := by
+    intro v hv
+    have hvS : v ∈ S := by rw [← hT]; exact hv
+    exact Metric.mem_ball.mp (hsub hvS)
+  have hdisj : (T : Set V3).PairwiseDisjoint (fun v => Metric.ball v 1) := by
+    intro u hu v hv hne
+    have hdist := hP.dist_ge_two (by rw [← hT]; exact hu) (by rw [← hT]; exact hv) hne
+    simp only [Function.onFun]
+    rw [disjoint_iff_inter_eq_empty]
+    by_contra hne'
+    obtain ⟨w, hwu, hwv⟩ := Set.nonempty_iff_ne_empty.mpr hne'
+    have : dist u v ≤ dist u w + dist w v := dist_triangle u w v
+    rw [Metric.mem_ball] at hwu hwv
+    linarith [dist_comm u w ▸ hwu]
+  have hsub : (⋃ v ∈ T, Metric.ball v 1) ⊆ Metric.ball 0 (r + 1) := by
+    intro w hw
+    simp only [mem_iUnion, exists_prop] at hw
+    obtain ⟨v, hvT, hwv⟩ := hw
+    have hvr := hmem v hvT
+    rw [Metric.mem_ball] at hwv ⊢
+    calc dist w 0 ≤ dist w v + dist v 0 := dist_triangle w v 0
+      _ < 1 + r := by linarith
+      _ = r + 1 := by ring
+  have hmeas : ∀ v ∈ T, MeasurableSet (Metric.ball v 1) :=
+    fun v _ => measurableSet_ball
+  have hsum := MeasureTheory.measure_biUnion_finset hdisj hmeas (μ := MeasureTheory.volume)
+  have hle := MeasureTheory.measure_mono hsub (μ := MeasureTheory.volume)
+  rw [hsum] at hle
+  simp only [EuclideanSpace.volume_ball_fin_three] at hle
+  simp only [ENNReal.ofReal_one, one_pow, one_mul] at hle
+  rw [Finset.sum_const, nsmul_eq_mul] at hle
+  have hr1 : (0 : ℝ) ≤ r + 1 := by linarith
+  rw [← ENNReal.ofReal_pow hr1, ← ENNReal.ofReal_natCast,
+      ← ENNReal.ofReal_mul (by positivity), ← ENNReal.ofReal_mul (by positivity),
+      ENNReal.ofReal_le_ofReal_iff (by positivity)] at hle
+  have hcard : (T.card : ℝ) ≤ (r + 1) ^ 3 := by nlinarith [Real.pi_pos]
+  have hncard : S.ncard = T.card := by
+    rw [← hT]
+    exact Set.ncard_coe_finset T
+  rw [hncard]
+  have h2 : (T.card : ℝ) ≤ (Nat.ceil ((r + 1) ^ 3) : ℝ) := le_trans hcard (Nat.le_ceil _)
+  exact_mod_cast h2
 
-/-- HOL `card_packing_annulus` (counting_spheres.hl:1454). GIANT.
-NEEDS: immediate corollary of `card_packing_ball` once that lands
+/-- HOL `card_packing_annulus` (counting_spheres.hl:1454). Filled: immediate
+corollary of `card_packing_ball` at radius `2*h0 + 1`
 (`ballAnnulus = closedBall 0 (2*h0) \ ball 0 2 ⊆ Metric.ball 0 (2*h0+1)`,
-`h0 = 1.26` by rfl). -/
+`h0 = 1.26`). -/
 theorem card_packing_annulus :
     ∃ n : ℕ, ∀ S : Set V3, Packing S → S ⊆ ballAnnulus →
       S.Finite ∧ S.ncard ≤ n := by
-  sorry
+  obtain ⟨n, hn⟩ := card_packing_ball (2 * h0 + 1) (by norm_num [h0])
+  refine ⟨n, fun S hP hsub => hn S hP ?_⟩
+  intro v hv
+  exact Metric.closedBall_subset_ball (by linarith) (Metric.mem_closedBall.mpr (hsub hv).1)
 
 /-- HOL `FINITE_MAX_EXISTS` (counting_spheres.hl:1479). -/
 theorem FINITE_MAX_EXISTS (s : Set ℕ) (hne : s ≠ ∅) (hf : s.Finite) :
@@ -3104,7 +3168,21 @@ theorem ARG_INV_ALT (u x y : ℂ) (hu : u ≠ 0) (hx : x ≠ 0) (hy : y ≠ 0)
       rw [if_pos (by linarith : (0:ℝ) ≤ -Complex.arg (y / x)), if_neg hge]
       ring
 
-/-- HOL `ARG_ORDER` (counting_spheres.hl:1822). GIANT. -/
+/-- HOL `ARG_ORDER` (counting_spheres.hl:1822). GIANT.
+NEEDS: FALSE as stated — the flyspeck proof runs on the Ysskqoy `Arg` kit
+(range `[0, 2π)`, cf. `holArg` above), while this frozen statement uses
+`Complex.arg` (range `(-π, π]`), and over that range the conclusion fails.
+Counterexample: `u := 1`, `n := 3`, `h 1 := exp(-I*π/2)`, `h 2 :=
+exp(I*(π/2-0.1))`, `h 3 := -1`, `h k := h 1` for `k ≥ 4`.  All hypotheses
+hold (`arg h1 = -π/2 < arg h2 = π/2 - 0.1 < arg h3 = π`; `h 4 = h 1`), yet
+for `(i, j) := (1, 3)`:
+`arg (h 2 / h 1) = arg (exp (I*(π-0.1))) = π - 0.1 ≈ 3.0416 >
+-π/2 ≈ -1.5708 = arg (exp (I*3π/2)) = arg (h 3 / h 1)`.
+The holArg restatement (HOL-faithful) is true and easy (flyspeck uses
+ARG_LE_DIV_SUM: `Arg(z2/z1) = Arg z2 - Arg z1` for `0 ≤ Arg z1 < Arg z2`);
+a fix requires lifting this statement to `holArg` — statement frozen, so
+flagged for the statement owner (same defect class as ARG_INV_ALT's port
+note above). -/
 theorem ARG_ORDER (u : ℂ) (h : ℕ → ℂ) (n : ℕ) (hu : u ≠ 0)
     (h1 : ∀ i : ℕ, i ∈ Finset.Icc 1 n → h i ≠ 0)
     (h2 : ∀ i j : ℕ, i ∈ Finset.Icc 1 n → j ∈ Finset.Icc 1 n → i < j →
@@ -4400,25 +4478,166 @@ theorem CONE0_FCHANGED (p f : Set V3) (u0 u1 u2 : V3) (hp : polyhedron p)
     cone0P22 0 {u0, u1, u2} ⊆ fchanged f := by
   sorry
 
-/-- HOL `collinear_translate_axis` (counting_spheres.hl:3332). GIANT
-(axis-translation characterizations of `Collinear3`/`azim`; case-split on
-`u1 - t•u1 = 0` plus scalar-fraction module bookkeeping — deferred). -/
+/-! ### Azim axis bridge (private helpers for `collinear_translate_axis`/`azim_axis`)
+
+The azimuth `azim v w w1 w2` is stable along its axis line: translating the
+base to the origin (`p22_azim_trans`, flyspeck AZIM_TRANSLATION) and shifting
+the measured points by a multiple of the axis vector (`p22_azim_axis_shift`)
+both preserve it, the latter because the `AzimSpec` witnesses only change by
+adding the shift to the axis components `h1`/`h2`. -/
+
+/-- flyspeck `AZIM_TRANSLATION` (azim is translation invariant), rebuilt from
+`Kepler.Geom.WedgeVolume`'s private route. -/
+private theorem p22_azim_trans (x a b c : V3) :
+    azim x a b c = azim 0 (a - x) (b - x) (c - x) := by
+  have hcol : ∀ y z : V3, Collinear3 x a y ↔ Collinear3 0 (a - x) (y - x) := by
+    intro y z
+    by_cases h : a = x
+    · rw [h]
+      simp only [sub_self]
+      constructor <;> intro _ <;> exact collinear3_of_eq rfl
+    · have h' : a - x ≠ 0 := sub_ne_zero.mpr h
+      rw [collinear3_iff_smul h, collinear3_iff_smul h']
+      simp only [sub_zero]
+  unfold azim
+  rw [hcol b c, hcol c c]
+  have hpred : AzimSpec x a b c = AzimSpec 0 (a - x) (b - x) (c - x) :=
+    funext fun _ => by
+      unfold AzimSpec
+      simp only [sub_zero, sub_ne_zero]
+      have hd : dist a x = dist (a - x) 0 := by rw [dist_eq_norm, dist_eq_norm, sub_zero]
+      rw [hd]
+  rw [hpred]
+
+/-- `Collinear3 0 a p` is stable under shifting `p` along the axis `a`. -/
+private theorem p22_collinear3_axis_shift {a p : V3} (s : ℝ) :
+    Collinear3 0 a p ↔ Collinear3 0 a (p + s • a) := by
+  by_cases ha : a = 0
+  · subst ha
+    constructor <;> intro _ <;> exact collinear3_of_eq rfl
+  · rw [collinear3_iff_smul ha, collinear3_iff_smul ha]
+    simp only [sub_zero]
+    constructor
+    · rintro ⟨c, hc⟩
+      exact ⟨c + s, by rw [hc]; module⟩
+    · rintro ⟨c, hc⟩
+      exact ⟨c - s, by rw [sub_smul, ← hc]; module⟩
+
+/-- The `AzimSpec` witnesses only change their axis components under an
+axis-parallel shift of the measured points. -/
+private theorem p22_azimSpec_axis_shift {a p q : V3} {θ : ℝ} (s : ℝ) :
+    AzimSpec 0 a p q θ ↔ AzimSpec 0 a (p + s • a) (q + s • a) θ := by
+  unfold AzimSpec
+  constructor
+  · rintro ⟨hle, hlt, h1, h2, hframe⟩
+    refine ⟨hle, hlt, h1 + s, h2 + s, ?_⟩
+    intro e1 e2 e3 hon hax hw
+    obtain ⟨psi, r1, r2, hrep1, hrep2, hr1, hr2⟩ := hframe e1 e2 e3 hon hax hw
+    have rep1 : (p + s • a) - 0 =
+        (r1 * Real.cos psi) • e1 + (r1 * Real.sin psi) • e2 + (h1 + s) • (a - 0) := by
+      rw [sub_zero, sub_zero] at hrep1
+      rw [sub_zero, sub_zero, hrep1, add_assoc, ← add_smul]
+    have rep2 : (q + s • a) - 0 =
+        (r2 * Real.cos (psi + θ)) • e1 + (r2 * Real.sin (psi + θ)) • e2 + (h2 + s) • (a - 0) := by
+      rw [sub_zero, sub_zero] at hrep2
+      rw [sub_zero, sub_zero, hrep2, add_assoc, ← add_smul]
+    exact ⟨psi, r1, r2, rep1, rep2, hr1, hr2⟩
+  · rintro ⟨hle, hlt, h1, h2, hframe⟩
+    refine ⟨hle, hlt, h1 - s, h2 - s, ?_⟩
+    intro e1 e2 e3 hon hax hw
+    obtain ⟨psi, r1, r2, hrep1, hrep2, hr1, hr2⟩ := hframe e1 e2 e3 hon hax hw
+    have rep1 : p - 0 =
+        (r1 * Real.cos psi) • e1 + (r1 * Real.sin psi) • e2 + (h1 - s) • (a - 0) := by
+      rw [sub_zero, sub_zero] at hrep1
+      rw [sub_zero, sub_zero, sub_smul, ← add_sub_assoc, ← hrep1, add_sub_cancel_right]
+    have rep2 : q - 0 =
+        (r2 * Real.cos (psi + θ)) • e1 + (r2 * Real.sin (psi + θ)) • e2 + (h2 - s) • (a - 0) := by
+      rw [sub_zero, sub_zero] at hrep2
+      rw [sub_zero, sub_zero, sub_smul, ← add_sub_assoc, ← hrep2, add_sub_cancel_right]
+    exact ⟨psi, r1, r2, rep1, rep2, hr1, hr2⟩
+
+/-- `azim 0 a p q` is invariant under shifting the measured points along the
+axis `a` (degenerate and nondegenerate branches agree). -/
+private theorem p22_azim_axis_shift (a p q : V3) (s : ℝ) :
+    azim 0 a p q = azim 0 a (p + s • a) (q + s • a) := by
+  have hc : (Collinear3 0 a p ∨ Collinear3 0 a q) ↔
+      (Collinear3 0 a (p + s • a) ∨ Collinear3 0 a (q + s • a)) :=
+    or_congr (p22_collinear3_axis_shift s) (p22_collinear3_axis_shift s)
+  have hpred : AzimSpec 0 a p q = AzimSpec 0 a (p + s • a) (q + s • a) :=
+    funext fun _ => propext (p22_azimSpec_axis_shift s)
+  by_cases hdeg : Collinear3 0 a p ∨ Collinear3 0 a q
+  · unfold azim
+    rw [if_pos hdeg, if_pos (hc.mp hdeg)]
+  · unfold azim
+    rw [if_neg hdeg, if_neg (hc.not.mp hdeg), hpred]
+
+/-- HOL `collinear_translate_axis` (counting_spheres.hl:3332). Filled: both
+sides reduce, via `collinear3_iff_smul`, to `u2 ∈ span ℝ (u1 - t•u1)`; the
+degenerate case `u1 = t•u1` is trivial and the scalar-fraction bookkeeping
+`t•u1 = (t/(1-t)) • (u1 - t•u1)` is done once as `haxis`. -/
 theorem collinear_translate_axis (t : ℝ) (u1 u2 : V3) :
     Collinear3 (t • u1) u1 u2 ↔ Collinear3 0 (u1 - t • u1) u2 := by
-  -- NEEDS: both sides reduce, via `collinear3_iff_smul`, to `u2 ∈ span ℝ u1`
-  -- (t ≠ 1, u1 ≠ 0 case; degenerate cases are trivial).  The elementary
-  -- direction (→) works; the (←) direction needs `u2 = c • (u1 - t•u1)` →
-  -- `u2 = c' • u1` with c' = (c - t/(1-t)), i.e. a division by `1 - t` on
-  -- V3-scalars.  Deferred: the isDefEq timeout on `WithLp` scalar smul must
-  -- be solved first (wrap the scalar identity in `smul_smul` + explicit
-  -- `mul_div_cancel₀` terms instead of deep `rw` chains).
-  sorry
+  by_cases ha : u1 - t • u1 = 0
+  · constructor
+    · intro _
+      exact collinear3_of_eq ha
+    · intro _
+      exact collinear3_of_eq (sub_eq_zero.mp ha)
+  · have hne : u1 ≠ t • u1 := fun he => ha (by rw [← he]; exact sub_self u1)
+    rw [collinear3_iff_smul hne, collinear3_iff_smul ha]
+    simp only [sub_zero]
+    have h1v : u1 - t • u1 = (1 - t) • u1 := by module
+    have ht : (1:ℝ) - t ≠ 0 := by
+      intro hcon
+      rw [h1v, hcon, zero_smul] at ha
+      exact ha rfl
+    have haxis : t • u1 = (t / (1 - t)) • (u1 - t • u1) := by
+      rw [h1v, smul_smul]
+      congr 1
+      field_simp
+    have haxis' : (t / (1 - t)) • (u1 - t • u1) = t • u1 := haxis.symm
+    constructor
+    · rintro ⟨c, hc⟩
+      refine ⟨c + t / (1 - t), ?_⟩
+      rw [add_smul, haxis', ← hc, sub_add_cancel]
+    · rintro ⟨c, hc⟩
+      refine ⟨c - t / (1 - t), ?_⟩
+      rw [sub_smul, haxis', hc]
 
-/-- HOL `azim_axis` (counting_spheres.hl:3347). GIANT. -/
+/-- HOL `azim_axis` (counting_spheres.hl:3347). Filled: translate the base
+`t•u1` to the origin (`p22_azim_trans`), then shift the measured points `u`,
+`w` back along the axis `u1 - t•u1` by `-t/(1-t)` (`p22_azim_axis_shift`),
+using `t•u1 = (t/(1-t)) • (u1 - t•u1)`.  The non-collinearity hypotheses
+guarantee only nondegeneracy; the identity itself is unconditional. -/
 theorem azim_axis (t : ℝ) (u1 u w : V3)
     (h1 : ¬ Collinear3 (t • u1) u1 u) (h2 : ¬ Collinear3 (t • u1) u1 w) :
     azim (t • u1) u1 u w = azim 0 (u1 - t • u1) u w := by
-  sorry
+  have hne : u1 - t • u1 ≠ 0 := by
+    intro he
+    apply h1
+    rw [← sub_eq_zero.mp he]
+    exact collinear3_of_eq rfl
+  have h1v : u1 - t • u1 = (1 - t) • u1 := by module
+  have ht : (1:ℝ) - t ≠ 0 := by
+    intro hcon
+    rw [h1v, hcon, zero_smul] at hne
+    exact hne rfl
+  have haxis : t • u1 = (t / (1 - t)) • (u1 - t • u1) := by
+    rw [h1v, smul_smul]
+    congr 1
+    field_simp
+  have haxis' : (t / (1 - t)) • (u1 - t • u1) = t • u1 := haxis.symm
+  have e1 : u - t • u1 = u + (-(t / (1 - t))) • (u1 - t • u1) := by
+    rw [neg_smul, haxis']; abel
+  have e2 : w - t • u1 = w + (-(t / (1 - t))) • (u1 - t • u1) := by
+    rw [neg_smul, haxis']; abel
+  calc azim (t • u1) u1 u w
+      = azim 0 (u1 - t • u1) (u - t • u1) (w - t • u1) := p22_azim_trans _ _ _ _
+    _ = azim 0 (u1 - t • u1)
+          (u + (-(t / (1 - t))) • (u1 - t • u1))
+          (w + (-(t / (1 - t))) • (u1 - t • u1)) := by rw [e1, e2]
+    _ = azim 0 (u1 - t • u1) u w :=
+          (p22_azim_axis_shift (u1 - t • u1) u w (-(t / (1 - t)))).symm
 
 /-- HOL `EUSOTYP2_general` (counting_spheres.hl:3411). GIANT. -/
 theorem EUSOTYP2_general (P : Set V3) (c3 : Set V3) (A : Set V3) (n : ℕ) (t : ℝ)
