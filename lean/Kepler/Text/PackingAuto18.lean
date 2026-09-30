@@ -3223,16 +3223,774 @@ private theorem p18_vx_sub_V (V X : Set V3) (u : V3) (hm : mcellSet V X)
 
 private theorem p18_two_hplus_lt_three : (2:ℝ) * hplus < 3 := by norm_num [hplus]
 
-/-- HOL `SUM_GAMMAX_LMFUN_ESTIMATE` (sum_gamma.hl:62-1465): the 1400-line
-lemma chain is `sorry` (uses `BOUND_GAMMA_X_lmfun`, `CARD_MCELL_CONTAINS_POINT_klemma`,
-`Bump.BOUND_BETA_BUMP`, the cluster-sum split `T1/T2/T3`, etc.). Note the
-DISCHARGE convention vs PackingAuto2 concl theorems: this is only a *support
-lemma* for UPFZBZM — it matches neither `UPFZBZM_concl`, `RDWKARC_concl`,
-`GOTCJAH_concl` nor `TIWWFYQ_concl`, which therefore remain `sorry` in
-PackingAuto2. `TSKAJXY_statement` itself is byte-identical to PackingAuto2's
-encoding and is reused, not redefined. -/
+/-! ### product-decomposition helper for the ordered-pair sums -/
+
+private theorem p18_setSum_prod {α β : Type*} {A : Set α} {B : Set β} (ha : A.Finite)
+    (hb : B.Finite) (f : α × β → ℝ) :
+    setSum (A ×ˢ B) f = setSum A (fun a => setSum B (fun b => f (a, b))) := by
+  have hprodfin : (A ×ˢ B).Finite := ha.prod hb
+  have hprod : hprodfin.toFinset = ha.toFinset ×ˢ hb.toFinset := by
+    ext p
+    simp only [Set.Finite.mem_toFinset, Set.mem_prod, Finset.mem_product]
+  have hlhs : setSum (A ×ˢ B) f = hprodfin.toFinset.sum f := by
+    unfold setSum
+    exact dif_pos hprodfin
+  have hrhs : setSum A (fun a => setSum B (fun b => f (a, b)))
+      = ha.toFinset.sum (fun a => hb.toFinset.sum fun b => f (a, b)) := by
+    unfold setSum
+    refine Eq.trans (dif_pos ha) (Finset.sum_congr rfl fun a _ => ?_)
+    exact dif_pos hb
+  rw [hlhs, hrhs, hprod]
+  exact Finset.sum_product ha.toFinset hb.toFinset f
+
+/-! ### SUM_GAMMAX_LMFUN_ESTIMATE: the cluster-sum main assembly (sum_gamma.hl:62-1462) -/
+
+private theorem p18_sum_gammax_main (V : Set V3) :
+    saturated V → Packing V →
+    ∃ c : ℝ, ∀ r : ℝ, saturated V → Packing V → 1 ≤ r → cellClusterInequality V →
+      TSKAJXY_statement →
+      c * r ^ 2 ≤ setSum {X | X ⊆ Metric.ball 0 r ∧ mcellSet V X}
+        (fun X => gammaX V X lmfun) := by
+  intro hs hp
+  classical
+  by_cases hsp : saturated V ∧ Packing V
+  · -- constants (independent of r)
+    obtain ⟨c1, hc1⟩ := p18_BOUND_GAMMA_X_lmfun
+    obtain ⟨c2n, hc2⟩ := CARD_MCELL_CONTAINS_POINT_klemma
+    obtain ⟨c3, hc3⟩ := BumpP4.BOUND_BETA_BUMP
+    obtain ⟨d1, hd1⟩ := PACKING_BALL_BOUNDARY V 0 0 8 hp
+    obtain ⟨d3, hd3⟩ := PACKING_BALL_BOUNDARY V 0 0 16 hp
+    simp only [add_zero] at hd1 hd3
+    set c2 : ℝ := ((c2n : ℕ) : ℝ) with hc2def
+    set cc1 : ℝ := max c1 1 with hcc1def
+    set cc3 : ℝ := max c3 1 with hcc3def
+    have hc2pos : 0 ≤ c2 := Nat.cast_nonneg _
+    have hcc1pos : 0 ≤ cc1 := le_trans (by norm_num : (0:ℝ) ≤ 1) (le_max_right c1 1)
+    have hcc3pos : 0 ≤ cc3 := le_trans (by norm_num : (0:ℝ) ≤ 1) (le_max_right c3 1)
+    have hcc1ge : ∀ W : Set V3, Packing W → saturated W → ∀ Z ∈ mcellSet W,
+        gammaX W Z lmfun ≤ cc1 := fun W hW hW2 Z hZ =>
+      le_trans (hc1 W Z hW hW2 hZ) (le_max_left _ _)
+    have hcc3ge : ∀ (Z e : Set V3), Z ∈ mcellSet V → e ∈ criticalEdgeX V Z →
+        betaBumpV1 V e Z ≤ cc3 := by
+      intro Z e hmZ he
+      show betaBump V e Z ≤ cc3
+      exact le_trans (hc3 V Z e hs hp hmZ he) (le_max_left _ _)
+    have hXpos : (0:ℝ) ≤ c2 * cc1 := mul_nonneg hc2pos hcc1pos
+    have hXpos3 : (0:ℝ) ≤ c2 * cc3 := mul_nonneg hc2pos hcc3pos
+    refine ⟨-((32:ℝ) * (c2 * cc1 * d1) + (32:ℝ) * (c2 * cc3 * d3)), ?_⟩
+    intro r hsat hpack hr1 hcc hts
+    -- the point sets T1/T3/T3' and the boundary counts
+    set T1 : Set V3 := V ∩ Metric.ball 0 r with hT1def
+    set T3 : Set V3 := {u : V3 | u ∈ V ∧ u ∈ Metric.ball 0 r ∧ u ∉ Metric.ball 0 (r - 8)}
+      with hT3def
+    set T3' : Set V3 := {u : V3 | u ∈ V ∧ u ∈ Metric.ball 0 r ∧ u ∉ Metric.ball 0 (r - 16)}
+      with hT3'def
+    have hT1fin : T1.Finite := hp.finite_inter_ball r
+    have hT3fin : T3.Finite := hT1fin.subset fun u hu => by
+      simp only [hT3def, Set.mem_setOf_eq] at hu
+      exact ⟨hu.1, hu.2.1⟩
+    have hT3'fin : T3'.Finite := hT1fin.subset fun u hu => by
+      simp only [hT3'def, Set.mem_setOf_eq] at hu
+      exact ⟨hu.1, hu.2.1⟩
+    have hT3seteq : T3 = (V ∩ Metric.ball 0 r) \ (V ∩ Metric.ball 0 (r - 8)) := by
+      ext u
+      simp only [hT3def, Set.mem_setOf_eq, Set.mem_diff, Set.mem_inter_iff]
+      tauto
+    have hT3'seteq : T3' = (V ∩ Metric.ball 0 r) \ (V ∩ Metric.ball 0 (r - 16)) := by
+      ext u
+      simp only [hT3'def, Set.mem_setOf_eq, Set.mem_diff, Set.mem_inter_iff]
+      tauto
+    have hT3card : Nat.card T3 = Nat.card ↥((V ∩ Metric.ball 0 r) \
+        (V ∩ Metric.ball 0 (r - 8))) := by rw [hT3seteq]
+    have hT3'card : Nat.card T3' = Nat.card ↥((V ∩ Metric.ball 0 r) \
+        (V ∩ Metric.ball 0 (r - 16))) := by rw [hT3'seteq]
+    have hd1r : ((Nat.card T3 : ℕ) : ℝ) ≤ d1 * r ^ 2 := by rw [hT3card]; exact hd1 r hr1
+    have hd3r : ((Nat.card T3' : ℕ) : ℝ) ≤ d3 * r ^ 2 := by rw [hT3'card]; exact hd3 r hr1
+    -- the cell families B/B0/B1
+    set B : Set (Set V3) := {X | X ⊆ Metric.ball 0 r ∧ mcellSet V X} with hBdef
+    set B0 : Set (Set V3) := {X | X ∈ B ∧ criticalEdgeX V X = ∅} with hB0def
+    set B1 : Set (Set V3) := {X | X ∈ B ∧ criticalEdgeX V X ≠ ∅} with hB1def
+    have hBfin : B.Finite := FINITE_MCELL_SET_LEMMA V r hp hs
+    have hB0fin : B0.Finite := hBfin.subset fun X hX => hX.1
+    have hB1fin : B1.Finite := hBfin.subset fun X hX => hX.1
+    have hB0pos : 0 ≤ setSum B0 (fun X => gammaX V X lmfun) :=
+      p18_setSum_nonneg hB0fin _ fun X hX => hts V X hsat hpack hX.1.2 hX.2
+    have hBsplit : B = B0 ∪ B1 := by
+      ext X
+      simp only [hBdef, hB0def, hB1def, Set.mem_setOf_eq, Set.mem_union]
+      tauto
+    have hB0B1disj : Disjoint B0 B1 := by
+      rw [Set.disjoint_left]
+      intro X h1 h2
+      simp only [hB0def, hB1def, Set.mem_setOf_eq] at h1 h2
+      exact h2.2 h1.2
+    -- the edge pair sets T2/T4/T4'
+    set T2 : Set (Set V3) := {y | ∃ u, u ∈ T1 ∧ ∃ v, v ∈ T1 ∧ u ≠ v ∧
+      y = ({u, v} : Set V3) ∧ hl [u, v] ≤ hplus} with hT2def
+    set T4 : Set (Set V3) := {e | ∃ m ∈ T3, ∃ n ∈ T3, m ≠ n ∧
+      dist m n ≤ 2 * hplus ∧ e = ({m, n} : Set V3)} with hT4def
+    set T4' : Set (Set V3) := {e | ∃ m ∈ T3', ∃ n ∈ T3', m ≠ n ∧
+      dist m n ≤ 2 * hplus ∧ e = ({m, n} : Set V3)} with hT4'def
+    have hT2fin : T2.Finite := by
+      refine ((hT1fin.prod hT1fin).image
+        (fun p : V3 × V3 => ({p.1, p.2} : Set V3))).subset ?_
+      intro e he
+      simp only [hT2def, Set.mem_setOf_eq] at he
+      obtain ⟨u, hu, v, hv, hne, rfl, hle⟩ := he
+      exact ⟨(u, v), ⟨hu, hv⟩, rfl⟩
+    have hT4fin : T4.Finite := by
+      refine ((hT3fin.prod hT3fin).image
+        (fun p : V3 × V3 => ({p.1, p.2} : Set V3))).subset ?_
+      intro e he
+      simp only [hT4def, Set.mem_setOf_eq] at he
+      obtain ⟨m, hm, n, hn, hne, hdle, rfl⟩ := he
+      exact ⟨(m, n), ⟨hm, hn⟩, rfl⟩
+    have hT4'fin : T4'.Finite := by
+      refine ((hT3'fin.prod hT3'fin).image
+        (fun p : V3 × V3 => ({p.1, p.2} : Set V3))).subset ?_
+      intro e he
+      simp only [hT4'def, Set.mem_setOf_eq] at he
+      obtain ⟨m, hm, n, hn, hne, hdle, rfl⟩ := he
+      exact ⟨(m, n), ⟨hm, hn⟩, rfl⟩
+    have hT4sub : T4 ⊆ T2 := by
+      intro e he
+      simp only [hT4def, Set.mem_setOf_eq] at he
+      obtain ⟨m, hm, n, hn, hne, hdle, rfl⟩ := he
+      simp only [hT3def, Set.mem_setOf_eq] at hm hn
+      simp only [hT2def, Set.mem_setOf_eq]
+      refine ⟨m, ⟨hm.1, hm.2.1⟩, n, ⟨hn.1, hn.2.1⟩, hne, rfl, ?_⟩
+      rw [HL_2]
+      linarith
+    have hT4'sub : T4' ⊆ T2 := by
+      intro e he
+      simp only [hT4'def, Set.mem_setOf_eq] at he
+      obtain ⟨m, hm, n, hn, hne, hdle, rfl⟩ := he
+      simp only [hT3'def, Set.mem_setOf_eq] at hm hn
+      simp only [hT2def, Set.mem_setOf_eq]
+      refine ⟨m, ⟨hm.1, hm.2.1⟩, n, ⟨hn.1, hn.2.1⟩, hne, rfl, ?_⟩
+      rw [HL_2]
+      linarith
+    -- critical edges of cells in B are T2 pairs
+    have hcritT2 : ∀ X ∈ B, ∀ e ∈ criticalEdgeX V X, e ∈ T2 := by
+      intro X hX e he
+      rw [criticalEdgeX, Set.mem_setOf_eq] at he
+      obtain ⟨u, v, rfl, hex, -, hhi⟩ := he
+      rw [edgeX, Set.mem_setOf_eq] at hex
+      obtain ⟨u0, v0, hpe, hu0, hv0, hne⟩ := hex
+      have huVX : u ∈ VX V X ∨ u ∈ VX V X := by
+        have h1 : u ∈ ({u, v} : Set V3) := by simp
+        rw [hpe] at h1
+        rcases Set.mem_insert_iff.mp h1 with h | h
+        · exact Or.inl (h ▸ hu0)
+        · exact Or.inr (Set.mem_singleton_iff.mp h ▸ hv0)
+      have hvVX : v ∈ VX V X ∨ v ∈ VX V X := by
+        have h1 : v ∈ ({u, v} : Set V3) := by simp
+        rw [hpe] at h1
+        rcases Set.mem_insert_iff.mp h1 with h | h
+        · exact Or.inl (h ▸ hu0)
+        · exact Or.inr (Set.mem_singleton_iff.mp h ▸ hv0)
+      have huV : u ∈ V ∧ u ∈ X := by
+        rcases huVX with h | h
+        · exact ⟨p18_vx_sub_V V X u hX.2 h, p18_vx_sub_cell V X u hs hp hX.2 h⟩
+        · exact ⟨p18_vx_sub_V V X u hX.2 h, p18_vx_sub_cell V X u hs hp hX.2 h⟩
+      have hvV : v ∈ V ∧ v ∈ X := by
+        rcases hvVX with h | h
+        · exact ⟨p18_vx_sub_V V X v hX.2 h, p18_vx_sub_cell V X v hs hp hX.2 h⟩
+        · exact ⟨p18_vx_sub_V V X v hX.2 h, p18_vx_sub_cell V X v hs hp hX.2 h⟩
+      have huv : u ≠ v := by
+        by_contra hcon
+        have h1 : v0 ∈ ({u0, v0} : Set V3) := by simp
+        have h2 : u0 ∈ ({u0, v0} : Set V3) := by simp
+        rw [← hpe, ← hcon] at h1 h2
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h1 h2
+        rcases h2 with h2 | h2 <;> rcases h1 with h1 | h1
+        · exact hne (h2.trans h1.symm)
+        · exact hne (h2.trans h1.symm)
+        · exact hne (h2.trans h1.symm)
+        · exact hne (h2.trans h1.symm)
+      simp only [hT2def, Set.mem_setOf_eq, hT1def, Set.mem_inter_iff]
+      exact ⟨u, ⟨huV.1, Metric.mem_ball.mpr (hX.1 huV.2)⟩, v,
+        ⟨hvV.1, Metric.mem_ball.mpr (hX.1 hvV.2)⟩, huv, rfl, hhi⟩
+    have hcritXset : ∀ X ∈ B,
+        criticalEdgeX V X = {e : Set V3 | e ∈ T2 ∧ e ∈ criticalEdgeX V X} := by
+      intro X hX
+      ext e
+      simp only [Set.mem_setOf_eq]
+      constructor
+      · intro he
+        exact ⟨hcritT2 X hX e he, he⟩
+      · intro he
+        exact he.2
+    -- criticalWeight bounds
+    have hcritWle : ∀ X : Set V3, criticalWeight V X ≤ 1 := by
+      intro X
+      by_cases h0 : Nat.card (criticalEdgeX V X) = 0
+      · unfold criticalWeight
+        rw [h0]
+        norm_num
+      · have hposr : (0:ℝ) < ((Nat.card (criticalEdgeX V X) : ℕ) : ℝ) :=
+          Nat.cast_pos.mpr (Nat.pos_of_ne_zero h0)
+        have h1le : (1:ℝ) ≤ ((Nat.card (criticalEdgeX V X) : ℕ) : ℝ) := by
+          exact_mod_cast Nat.pos_of_ne_zero h0
+        unfold criticalWeight
+        exact (div_le_one hposr).mpr h1le
+    have hcritWnn : ∀ X : Set V3, 0 ≤ criticalWeight V X := by
+      intro X
+      unfold criticalWeight
+      exact div_nonneg (by norm_num) (Nat.cast_nonneg _)
+    have hcardpos : ∀ X : Set V3, criticalEdgeX V X ≠ ∅ →
+        1 ≤ (Nat.card (criticalEdgeX V X) : ℕ) := by
+      intro X hne
+      have hfin := p18_criticalEdgeX_finite V X
+      have hnp : (criticalEdgeX V X).Nonempty := (Set.nonempty_iff_ne_empty).mpr hne
+      obtain ⟨e, he⟩ := hnp
+      rw [Nat.card_coe_set_eq, Set.ncard_eq_toFinset_card _ hfin]
+      exact Finset.card_pos.mpr ⟨e, (Set.Finite.mem_toFinset hfin).mpr he⟩
+    -- endpoint data and cluster-family finiteness/cardinality for T2 edges
+    have hT2pts : ∀ e ∈ T2, ∃ u : V3, ∃ v : V3, e = ({u, v} : Set V3) ∧ u ≠ v ∧
+        u ∈ V ∧ u ∈ Metric.ball 0 r ∧ v ∈ V ∧ v ∈ Metric.ball 0 r ∧
+        hl [u, v] ≤ hplus ∧ dist u v ≤ 2 * hplus := by
+      intro e he
+      simp only [hT2def, Set.mem_setOf_eq] at he
+      obtain ⟨u, hu, v, hv, hne, rfl, hle⟩ := he
+      simp only [hT1def, Set.mem_inter_iff] at hu hv
+      refine ⟨u, v, rfl, hne, hu.1, hu.2, hv.1, hv.2, hle, ?_⟩
+      rw [HL_2] at hle
+      linarith
+    have hfamfin : ∀ e ∈ T2, (cellCluster V e).Finite := by
+      intro e he
+      obtain ⟨u, v, rfl, hne, huV, huB, hvV, hvB, hle, hdle⟩ := hT2pts e he
+      have huX : ∀ X ∈ cellCluster V ({u, v} : Set V3), u ∈ X := by
+        intro X hX
+        simp only [cellCluster, Set.mem_setOf_eq] at hX
+        have hsub := CRITICAL_EDGEX_SUBSET_MCELL V X ({u, v} : Set V3) hp hs hX.2 hX.1
+        exact hsub (by simp)
+      exact (FINITE_MCELL_SET_LEMMA_2 V 8 u hp hs).subset fun X hX =>
+        ⟨MCELL_SUBSET_BALL8_2 V X u hp hs hX.2 (huX X hX), hX.2⟩
+    have hfameq : ∀ (u v : V3), cellCluster V ({u, v} : Set V3) =
+        {X : Set V3 | mcellSet V X ∧ criticalEdgeX V X ({u, v} : Set V3)} := by
+      intro u v
+      ext X
+      simp only [cellCluster, Set.mem_setOf_eq]
+      tauto
+    have hfamcard : ∀ e ∈ T2, ((Nat.card (cellCluster V e) : ℕ) : ℝ) ≤ c2 := by
+      intro e he
+      obtain ⟨u, v, rfl, hne, huV, huB, hvV, hvB, hle, hdle⟩ := hT2pts e he
+      rw [hfameq u v]
+      exact Nat.cast_le.mpr (p18_crit_family_card V u v hs hp huV c2n hc2)
+    -- inner/outer families of a cluster (w.r.t. ball 0 r and ball 0 (r-8))
+    set innr : Set V3 → Set (Set V3) :=
+      fun e => {X | X ∈ cellCluster V e ∧ X ⊆ Metric.ball 0 r} with hinnrdef
+    set outr : Set V3 → Set (Set V3) :=
+      fun e => {X | X ∈ cellCluster V e ∧ ¬(X ⊆ Metric.ball 0 r)} with houtrdef
+    set inn8 : Set V3 → Set (Set V3) :=
+      fun e => {X | X ∈ cellCluster V e ∧ X ⊆ Metric.ball 0 (r - 8)} with hinn8def
+    set ann8 : Set V3 → Set (Set V3) :=
+      fun e => {X | X ∈ cellCluster V e ∧ ¬(X ⊆ Metric.ball 0 (r - 8))} with hann8def
+    have hinnrfin : ∀ e ∈ T2, (innr e).Finite := fun e he =>
+      ((hfamfin e he).subset fun X hX => by obtain ⟨h1, -⟩ := hX; exact h1)
+    have houtrfin : ∀ e ∈ T2, (outr e).Finite := fun e he =>
+      ((hfamfin e he).subset fun X hX => by obtain ⟨h1, -⟩ := hX; exact h1)
+    have hinn8fin : ∀ e ∈ T2, (inn8 e).Finite := fun e he =>
+      ((hfamfin e he).subset fun X hX => by obtain ⟨h1, -⟩ := hX; exact h1)
+    have hann8fin : ∀ e ∈ T2, (ann8 e).Finite := fun e he =>
+      ((hfamfin e he).subset fun X hX => by obtain ⟨h1, -⟩ := hX; exact h1)
+    have hfamunion : ∀ e : Set V3, cellCluster V e = innr e ∪ outr e := by
+      intro e
+      ext X
+      show (e ∈ criticalEdgeX V X ∧ X ∈ mcellSet V) ↔
+        (X ∈ {q : Set V3 | q ∈ cellCluster V e ∧ q ⊆ Metric.ball 0 r} ∨
+         X ∈ {q : Set V3 | q ∈ cellCluster V e ∧ ¬(q ⊆ Metric.ball 0 r)})
+      simp only [cellCluster, Set.mem_setOf_eq, Set.mem_union]
+      tauto
+    have hdisj : ∀ e : Set V3, Disjoint (innr e) (outr e) := by
+      intro e
+      rw [Set.disjoint_left]
+      intro X h1 h2
+      obtain ⟨-, h1'⟩ := h1
+      obtain ⟨-, h2''⟩ := h2
+      exact h2'' h1'
+    have hfamunion8 : ∀ e : Set V3, cellCluster V e = inn8 e ∪ ann8 e := by
+      intro e
+      ext X
+      show (e ∈ criticalEdgeX V X ∧ X ∈ mcellSet V) ↔
+        (X ∈ {q : Set V3 | q ∈ cellCluster V e ∧ q ⊆ Metric.ball 0 (r - 8)} ∨
+         X ∈ {q : Set V3 | q ∈ cellCluster V e ∧ ¬(q ⊆ Metric.ball 0 (r - 8))})
+      simp only [cellCluster, Set.mem_setOf_eq, Set.mem_union]
+      tauto
+    have hdisj8 : ∀ e : Set V3, Disjoint (inn8 e) (ann8 e) := by
+      intro e
+      rw [Set.disjoint_left]
+      intro X h1 h2
+      obtain ⟨-, h1'⟩ := h1
+      obtain ⟨-, h2''⟩ := h2
+      exact h2'' h1'
+    -- per-edge cluster inequality (from cellClusterInequality)
+    have hcluster : ∀ e ∈ T2,
+        setSum (innr e) (fun X => gammaX V X lmfun * criticalWeight V X)
+          + setSum (outr e) (fun X => gammaX V X lmfun * criticalWeight V X)
+          + setSum (cellCluster V e) (fun X => betaBumpV1 V e X) ≥ 0 := by
+      intro e he
+      obtain ⟨u, v, rfl, hne, huV, huB, hvV, hvB, hle, hdle⟩ := hT2pts e he
+      have h0 : 0 ≤ setSum (cellCluster V ({u, v} : Set V3))
+          (fun X => gammaX V X lmfun * criticalWeight V X
+            + betaBumpV1 V ({u, v} : Set V3) X) := by
+        simpa only [clusterGamma] using hcc ({u, v} : Set V3)
+      rw [hfamunion ({u, v} : Set V3), p18_setSum_union (hinnrfin _ he) (houtrfin _ he)
+        (hdisj ({u, v} : Set V3)) (fun X => gammaX V X lmfun * criticalWeight V X
+          + betaBumpV1 V ({u, v} : Set V3) X),
+        ← p18_setSum_add (hinnrfin _ he) (fun X => gammaX V X lmfun * criticalWeight V X)
+          (fun X => betaBumpV1 V ({u, v} : Set V3) X),
+        ← p18_setSum_add (houtrfin _ he) (fun X => gammaX V X lmfun * criticalWeight V X)
+          (fun X => betaBumpV1 V ({u, v} : Set V3) X)] at h0
+      have hβ : setSum (cellCluster V ({u, v} : Set V3))
+          (fun X => betaBumpV1 V ({u, v} : Set V3) X)
+          = setSum (innr ({u, v} : Set V3)) (fun X => betaBumpV1 V ({u, v} : Set V3) X)
+            + setSum (outr ({u, v} : Set V3)) (fun X => betaBumpV1 V ({u, v} : Set V3) X) := by
+        rw [hfamunion ({u, v} : Set V3), p18_setSum_union (hinnrfin _ he) (houtrfin _ he)
+          (hdisj ({u, v} : Set V3)) (fun X => betaBumpV1 V ({u, v} : Set V3) X)]
+      linarith
+    -- per-edge bounds for the two remainder sums
+    have hQ2le : ∀ e ∈ T2,
+        setSum (outr e) (fun X => gammaX V X lmfun * criticalWeight V X) ≤ c2 * cc1 := by
+      intro e he
+      obtain ⟨u, v, rfl, hne, huV, huB, hvV, hvB, hle, hdle⟩ := hT2pts e he
+      have hcardmono : ((Nat.card (outr ({u, v} : Set V3)) : ℕ) : ℝ)
+          ≤ ((Nat.card (cellCluster V ({u, v} : Set V3)) : ℕ) : ℝ) := by
+        refine Nat.cast_le.mpr ?_
+        rw [Nat.card_coe_set_eq, Nat.card_coe_set_eq]
+        refine Set.ncard_le_ncard (fun X hX => ?_) (hfamfin ({u, v} : Set V3) he)
+        obtain ⟨h1, -⟩ := hX
+        exact h1
+      calc setSum (outr ({u, v} : Set V3)) (fun X => gammaX V X lmfun * criticalWeight V X)
+          ≤ setSum (outr ({u, v} : Set V3)) (fun _ => cc1) := by
+            refine p18_setSum_le (houtrfin ({u, v} : Set V3) he) _ _ fun X hX => ?_
+            obtain ⟨hfam, -⟩ := hX
+            simp only [cellCluster, Set.mem_setOf_eq] at hfam
+            have hgm : gammaX V X lmfun ≤ cc1 := hcc1ge V hp hs X hfam.2
+            calc gammaX V X lmfun * criticalWeight V X
+                ≤ cc1 * criticalWeight V X := mul_le_mul_of_nonneg_right hgm (hcritWnn X)
+              _ ≤ cc1 * 1 := mul_le_mul_of_nonneg_left (hcritWle X) hcc1pos
+              _ = cc1 := by ring
+        _ = ((Nat.card (outr ({u, v} : Set V3)) : ℕ) : ℝ) * cc1 :=
+            p18_setSum_const (houtrfin ({u, v} : Set V3) he) cc1
+        _ ≤ ((Nat.card (cellCluster V ({u, v} : Set V3)) : ℕ) : ℝ) * cc1 :=
+            mul_le_mul_of_nonneg_right hcardmono hcc1pos
+        _ ≤ c2 * cc1 := mul_le_mul_of_nonneg_right (hfamcard ({u, v} : Set V3) he) hcc1pos
+    have hQ3outle : ∀ e ∈ T2,
+        setSum (ann8 e) (fun X => betaBumpV1 V e X) ≤ c2 * cc3 := by
+      intro e he
+      obtain ⟨u, v, rfl, hne, huV, huB, hvV, hvB, hle, hdle⟩ := hT2pts e he
+      have hcardmono : ((Nat.card (ann8 ({u, v} : Set V3)) : ℕ) : ℝ)
+          ≤ ((Nat.card (cellCluster V ({u, v} : Set V3)) : ℕ) : ℝ) := by
+        refine Nat.cast_le.mpr ?_
+        rw [Nat.card_coe_set_eq, Nat.card_coe_set_eq]
+        refine Set.ncard_le_ncard (fun X hX => ?_) (hfamfin ({u, v} : Set V3) he)
+        obtain ⟨h1, -⟩ := hX
+        exact h1
+      calc setSum (ann8 ({u, v} : Set V3)) (fun X => betaBumpV1 V ({u, v} : Set V3) X)
+          ≤ setSum (ann8 ({u, v} : Set V3)) (fun _ => cc3) := by
+            refine p18_setSum_le (hann8fin ({u, v} : Set V3) he) _ _ fun X hX => ?_
+            obtain ⟨hfam, -⟩ := hX
+            simp only [cellCluster, Set.mem_setOf_eq] at hfam
+            exact hcc3ge X ({u, v} : Set V3) hfam.2 hfam.1
+        _ = ((Nat.card (ann8 ({u, v} : Set V3)) : ℕ) : ℝ) * cc3 :=
+            p18_setSum_const (hann8fin ({u, v} : Set V3) he) cc3
+        _ ≤ ((Nat.card (cellCluster V ({u, v} : Set V3)) : ℕ) : ℝ) * cc3 :=
+            mul_le_mul_of_nonneg_right hcardmono hcc3pos
+        _ ≤ c2 * cc3 := mul_le_mul_of_nonneg_right (hfamcard ({u, v} : Set V3) he) hcc3pos
+    have hbeta3le : ∀ e ∈ T2,
+        setSum (cellCluster V e) (fun X => betaBumpV1 V e X) ≤ c2 * cc3 := by
+      intro e he
+      obtain ⟨u, v, rfl, hne, huV, huB, hvV, hvB, hle, hdle⟩ := hT2pts e he
+      calc setSum (cellCluster V ({u, v} : Set V3)) (fun X => betaBumpV1 V ({u, v} : Set V3) X)
+          ≤ setSum (cellCluster V ({u, v} : Set V3)) (fun _ => cc3) := by
+            refine p18_setSum_le (hfamfin ({u, v} : Set V3) he) _ _ fun X hX => ?_
+            simp only [cellCluster, Set.mem_setOf_eq] at hX
+            exact hcc3ge X ({u, v} : Set V3) hX.2 hX.1
+        _ = ((Nat.card (cellCluster V ({u, v} : Set V3)) : ℕ) : ℝ) * cc3 :=
+            p18_setSum_const (hfamfin ({u, v} : Set V3) he) cc3
+        _ ≤ c2 * cc3 := mul_le_mul_of_nonneg_right (hfamcard ({u, v} : Set V3) he) hcc3pos
+    -- outside families are empty off T4/T4'
+    have houtempty : ∀ e ∈ T2, e ∉ T4 → outr e = (∅ : Set (Set V3)) := by
+      intro e he hne4
+      obtain ⟨u, v, rfl, hne, huV, huB, hvV, hvB, hle, hdle⟩ := hT2pts e he
+      refine Set.eq_empty_iff_forall_notMem.mpr fun X hX => ?_
+      obtain ⟨hfam, hnotsub⟩ := hX
+      simp only [cellCluster, Set.mem_setOf_eq] at hfam
+      rw [Set.not_subset] at hnotsub
+      obtain ⟨p, hpX, hpball⟩ := hnotsub
+      have hmX : mcellSet V X := hfam.2
+      have hsubX := CRITICAL_EDGEX_SUBSET_MCELL V X ({u, v} : Set V3) hp hs hmX hfam.1
+      have huX2 : u ∈ X := hsubX (by simp)
+      have hvX2 : v ∈ X := hsubX (by simp)
+      have hpu : dist p u < 8 := MCELL_SUBSET_BALL8_2 V X u hp hs hmX huX2 hpX
+      have hpv : dist p v < 8 := MCELL_SUBSET_BALL8_2 V X v hp hs hmX hvX2 hpX
+      have hp0 : r ≤ dist p 0 := not_lt.mp (fun hc => hpball (Metric.mem_ball.mpr hc))
+      have hu0 : r - 8 < dist u 0 := by
+        have htri : dist p 0 ≤ dist p u + dist u 0 := dist_triangle p u 0
+        linarith
+      have hv0 : r - 8 < dist v 0 := by
+        have htri : dist p 0 ≤ dist p v + dist v 0 := dist_triangle p v 0
+        linarith
+      exact hne4 ⟨u, ⟨huV, huB, fun hcon => by
+        have := Metric.mem_ball.mp hcon; linarith⟩,
+        v, ⟨hvV, hvB, fun hcon => by
+        have := Metric.mem_ball.mp hcon; linarith⟩, hne,
+        by rw [HL_2] at hle; linarith, rfl⟩
+    have hann8empty : ∀ e ∈ T2, e ∉ T4' → ann8 e = (∅ : Set (Set V3)) := by
+      intro e he hne4
+      obtain ⟨u, v, rfl, hne, huV, huB, hvV, hvB, hle, hdle⟩ := hT2pts e he
+      refine Set.eq_empty_iff_forall_notMem.mpr fun X hX => ?_
+      obtain ⟨hfam, hnotsub⟩ := hX
+      simp only [cellCluster, Set.mem_setOf_eq] at hfam
+      rw [Set.not_subset] at hnotsub
+      obtain ⟨p, hpX, hpball⟩ := hnotsub
+      have hmX : mcellSet V X := hfam.2
+      have hsubX := CRITICAL_EDGEX_SUBSET_MCELL V X ({u, v} : Set V3) hp hs hmX hfam.1
+      have huX2 : u ∈ X := hsubX (by simp)
+      have hvX2 : v ∈ X := hsubX (by simp)
+      have hpu : dist p u < 8 := MCELL_SUBSET_BALL8_2 V X u hp hs hmX huX2 hpX
+      have hpv : dist p v < 8 := MCELL_SUBSET_BALL8_2 V X v hp hs hmX hvX2 hpX
+      have hp08 : r - 8 ≤ dist p 0 := not_lt.mp (fun hc => hpball (Metric.mem_ball.mpr hc))
+      have hu0 : r - 16 < dist u 0 := by
+        have htri : dist p 0 ≤ dist p u + dist u 0 := dist_triangle p u 0
+        linarith
+      have hv0 : r - 16 < dist v 0 := by
+        have htri : dist p 0 ≤ dist p v + dist v 0 := dist_triangle p v 0
+        linarith
+      exact hne4 ⟨u, ⟨huV, huB, fun hcon => by
+        have := Metric.mem_ball.mp hcon; linarith⟩,
+        v, ⟨hvV, hvB, fun hcon => by
+        have := Metric.mem_ball.mp hcon; linarith⟩, hne,
+        by rw [HL_2] at hle; linarith, rfl⟩
+    -- the reweighting on B1: gammaX = gammaX * (card * weight) = sum over critical edges
+    have hreweight : setSum B1 (fun X => gammaX V X lmfun)
+        = setSum T2 (fun e => setSum B1 (fun X => if e ∈ criticalEdgeX V X
+            then gammaX V X lmfun * criticalWeight V X else 0)) := by
+      have hstepA : ∀ X ∈ B1, gammaX V X lmfun
+          = setSum (criticalEdgeX V X)
+              (fun _ => gammaX V X lmfun * criticalWeight V X) := by
+        intro X hX
+        simp only [hB1def, Set.mem_setOf_eq] at hX
+        obtain ⟨hXB, hne⟩ := hX
+        have hposr : (0:ℝ) < ((Nat.card (criticalEdgeX V X) : ℕ) : ℝ) :=
+          Nat.cast_pos.mpr (lt_of_lt_of_le zero_lt_one (hcardpos X hne))
+        have hcne : ((Nat.card (criticalEdgeX V X) : ℕ) : ℝ) ≠ 0 := ne_of_gt hposr
+        have hcard1 : ((Nat.card (criticalEdgeX V X) : ℕ) : ℝ) * criticalWeight V X = 1 := by
+          unfold criticalWeight
+          rw [mul_comm]
+          exact div_mul_cancel₀ (1:ℝ) hcne
+        have h1 : setSum (criticalEdgeX V X)
+            (fun _ => gammaX V X lmfun * criticalWeight V X)
+            = gammaX V X lmfun
+              * (((Nat.card (criticalEdgeX V X) : ℕ) : ℝ) * criticalWeight V X) := by
+          rw [p18_setSum_lmul (p18_criticalEdgeX_finite V X) (gammaX V X lmfun)
+            (fun _ => criticalWeight V X), p18_setSum_const
+            (p18_criticalEdgeX_finite V X) (criticalWeight V X)]
+        rw [h1, hcard1, mul_one]
+      have hstepB : ∀ X ∈ B1, setSum (criticalEdgeX V X)
+          (fun _ => gammaX V X lmfun * criticalWeight V X)
+          = setSum T2 (fun e => if e ∈ criticalEdgeX V X
+              then gammaX V X lmfun * criticalWeight V X else 0) := by
+        intro X hX
+        have hXB : X ∈ B := by
+          simp only [hB1def, Set.mem_setOf_eq] at hX
+          exact hX.1
+        calc setSum (criticalEdgeX V X) (fun _ => gammaX V X lmfun * criticalWeight V X)
+            = setSum {e : Set V3 | e ∈ T2 ∧ e ∈ criticalEdgeX V X}
+                (fun _ => gammaX V X lmfun * criticalWeight V X) := by
+              conv_lhs => rw [hcritXset X hXB]
+          _ = setSum T2 (fun e => if e ∈ criticalEdgeX V X
+                then gammaX V X lmfun * criticalWeight V X else 0) :=
+              p18_setSum_filter hT2fin (fun e => e ∈ criticalEdgeX V X)
+                (fun _ => gammaX V X lmfun * criticalWeight V X)
+      rw [p18_setSum_congr hB1fin hstepA, p18_setSum_congr hB1fin hstepB,
+        p18_setSum_fubini hB1fin hT2fin (fun (X e : Set V3) => if e ∈ criticalEdgeX V X
+          then gammaX V X lmfun * criticalWeight V X else 0)]
+    -- the B1 sum dominates the two remainder sums over T2
+    have hQ1 : setSum T2 (fun e => setSum B1 (fun X => if e ∈ criticalEdgeX V X
+          then gammaX V X lmfun * criticalWeight V X else 0))
+        + setSum T2 (fun e => setSum (outr e)
+            (fun X => gammaX V X lmfun * criticalWeight V X))
+        + setSum T2 (fun e => setSum (cellCluster V e) (fun X => betaBumpV1 V e X)) ≥ 0 := by
+      have hsplit : 0 ≤ setSum T2 (fun e => setSum B1 (fun X => if e ∈ criticalEdgeX V X
+            then gammaX V X lmfun * criticalWeight V X else 0)
+          + setSum (outr e) (fun X => gammaX V X lmfun * criticalWeight V X)
+          + setSum (cellCluster V e) (fun X => betaBumpV1 V e X)) := by
+        refine p18_setSum_nonneg hT2fin _ fun e he => ?_
+        have hB1e : setSum B1 (fun X => if e ∈ criticalEdgeX V X
+            then gammaX V X lmfun * criticalWeight V X else 0)
+            = setSum (innr e) (fun X => gammaX V X lmfun * criticalWeight V X) := by
+          have hkey : ∀ Y : Set V3, e ∈ criticalEdgeX V Y → criticalEdgeX V Y ≠ ∅ :=
+            fun Y hh hcon => by rw [hcon] at hh; exact hh
+          have hseteq3 : {X : Set V3 | X ∈ B1 ∧ e ∈ criticalEdgeX V X} = innr e := by
+            ext Y
+            show (((Y ⊆ Metric.ball 0 r ∧ mcellSet V Y) ∧ criticalEdgeX V Y ≠ ∅) ∧
+                e ∈ criticalEdgeX V Y) ↔
+              ((e ∈ criticalEdgeX V Y ∧ Y ∈ mcellSet V) ∧ Y ⊆ Metric.ball 0 r)
+            refine ⟨fun h => ⟨⟨h.2, h.1.1.2⟩, h.1.1.1⟩,
+              fun h => ⟨⟨⟨h.2, h.1.2⟩, hkey Y h.1.1⟩, h.1.1⟩⟩
+          rw [← p18_setSum_filter hB1fin (fun X => e ∈ criticalEdgeX V X)
+            (fun X => gammaX V X lmfun * criticalWeight V X), hseteq3]
+        rw [hB1e]
+        exact hcluster e he
+      have h2a := p18_setSum_add hT2fin
+        (fun e => setSum B1 (fun X => if e ∈ criticalEdgeX V X
+          then gammaX V X lmfun * criticalWeight V X else 0))
+        (fun e => setSum (outr e) (fun X => gammaX V X lmfun * criticalWeight V X))
+      have h2 := p18_setSum_add hT2fin
+        (fun e => setSum B1 (fun X => if e ∈ criticalEdgeX V X
+          then gammaX V X lmfun * criticalWeight V X else 0)
+          + setSum (outr e) (fun X => gammaX V X lmfun * criticalWeight V X))
+        (fun e => setSum (cellCluster V e) (fun X => betaBumpV1 V e X))
+      rw [h2a, h2]
+      exact hsplit
+    have hQ3split : setSum T2 (fun e => setSum (cellCluster V e)
+          (fun X => betaBumpV1 V e X))
+        = setSum T2 (fun e => setSum (inn8 e) (fun X => betaBumpV1 V e X))
+          + setSum T2 (fun e => setSum (ann8 e) (fun X => betaBumpV1 V e X)) := by
+      refine Eq.trans ?_ (p18_setSum_add hT2fin
+        (fun e => setSum (inn8 e) (fun X => betaBumpV1 V e X))
+        (fun e => setSum (ann8 e) (fun X => betaBumpV1 V e X))).symm
+      refine p18_setSum_congr hT2fin (fun e he => ?_)
+      rw [hfamunion8 e, p18_setSum_union (hinn8fin e he) (hann8fin e he) (hdisj8 e)
+        (fun X => betaBumpV1 V e X)]
+    -- the inner (ball r-8) beta-bump sum vanishes (BumpP4.SUM_BETA_BUMP_LEMMA)
+    have hQ3in : setSum T2 (fun e => setSum (inn8 e) (fun X => betaBumpV1 V e X)) = 0 := by
+      have htfin : ({X : Set V3 | X ⊆ Metric.ball 0 (r - 8) ∧ mcellSet V X} :
+          Set (Set V3)).Finite := FINITE_MCELL_SET_LEMMA_2 V (r - 8) 0 hp hs
+      have hstep : ∀ e : Set V3, setSum (inn8 e) (fun X => betaBumpV1 V e X)
+          = setSum {X : Set V3 | X ⊆ Metric.ball 0 (r - 8) ∧ mcellSet V X}
+              (fun X => if e ∈ criticalEdgeX V X then betaBumpV1 V e X else 0) := by
+        intro e
+        have hseteq2 : (inn8 e : Set (Set V3))
+            = {X : Set V3 | X ∈ {X : Set V3 | X ⊆ Metric.ball 0 (r - 8) ∧ mcellSet V X}
+                ∧ e ∈ criticalEdgeX V X} := by
+          ext X
+          show ((e ∈ criticalEdgeX V X ∧ X ∈ mcellSet V) ∧
+              X ⊆ Metric.ball 0 (r - 8)) ↔
+            ((X ⊆ Metric.ball 0 (r - 8) ∧ mcellSet V X) ∧ e ∈ criticalEdgeX V X)
+          tauto
+        rw [hseteq2, p18_setSum_filter htfin (fun X => e ∈ criticalEdgeX V X)
+          (fun X => betaBumpV1 V e X)]
+      have hzero : ∀ X ∈ {X : Set V3 | X ⊆ Metric.ball 0 (r - 8) ∧ mcellSet V X},
+          setSum T2 (fun e => if e ∈ criticalEdgeX V X then betaBumpV1 V e X else 0) = 0 := by
+        intro X hX
+        obtain ⟨hsubt, hmX⟩ := hX
+        have hXB : X ∈ B :=
+          ⟨Set.Subset.trans hsubt (Metric.ball_subset_ball (by linarith)), hmX⟩
+        calc setSum T2 (fun e => if e ∈ criticalEdgeX V X then betaBumpV1 V e X else 0)
+            = setSum {e : Set V3 | e ∈ T2 ∧ e ∈ criticalEdgeX V X}
+                (fun e => betaBumpV1 V e X) :=
+              (p18_setSum_filter hT2fin (fun e => e ∈ criticalEdgeX V X)
+                (fun e => betaBumpV1 V e X)).symm
+          _ = setSum (criticalEdgeX V X) (fun e => betaBumpV1 V e X) := by
+              conv_rhs => rw [hcritXset X hXB]
+          _ = setSum (criticalEdgeX V X) (fun e => betaBump V e X) :=
+              p18_setSum_congr (p18_criticalEdgeX_finite V X)
+                (fun e _ => p18_betaBump_eq V e X)
+          _ = 0 := BumpP4.SUM_BETA_BUMP_LEMMA V X hs hp hmX
+      have hfub := p18_setSum_fubini hT2fin htfin (fun (e X : Set V3) =>
+        if e ∈ criticalEdgeX V X then betaBumpV1 V e X else 0)
+      simp only [hstep]
+      exact hfub.trans (p18_setSum_eq_zero htfin _ hzero)
+    -- ordered-pair halving bounds (p18_sum_pair_2_set + fiber count 4^3)
+    have hpair' : setSum {p : V3 × V3 | p.1 ∈ T3 ∧ p.2 ∈ T3 ∧ p.1 ≠ p.2 ∧
+        dist p.1 p.2 ≤ 2 * hplus} (fun _ => c2 * cc1)
+        = 2 * setSum T4 (fun _ => c2 * cc1) := by
+      have hp2 := p18_sum_pair_2_set (fun _ => c2 * cc1) T3 (2 * hplus) hT3fin
+      simpa using hp2
+    have hO4bound : setSum {p : V3 × V3 | p.1 ∈ T3 ∧ p.2 ∈ T3 ∧ p.1 ≠ p.2 ∧
+        dist p.1 p.2 ≤ 2 * hplus} (fun _ => c2 * cc1)
+        ≤ (64:ℝ) * (d1 * r ^ 2 * (c2 * cc1)) := by
+      have hseteq : {p : V3 × V3 | p.1 ∈ T3 ∧ p.2 ∈ T3 ∧ p.1 ≠ p.2 ∧
+          dist p.1 p.2 ≤ 2 * hplus}
+          = {p : V3 × V3 | p ∈ T3 ×ˢ T3 ∧ (p.1 ≠ p.2 ∧ dist p.1 p.2 ≤ 2 * hplus)} := by
+        ext p
+        simp only [Set.mem_setOf_eq, Set.mem_prod]
+        tauto
+      rw [hseteq, p18_setSum_filter (hT3fin.prod hT3fin)
+        (fun p : V3 × V3 => p.1 ≠ p.2 ∧ dist p.1 p.2 ≤ 2 * hplus) (fun _ => c2 * cc1),
+        p18_setSum_prod hT3fin hT3fin (fun p : V3 × V3 =>
+          if p.1 ≠ p.2 ∧ dist p.1 p.2 ≤ 2 * hplus then (c2 * cc1 : ℝ) else 0)]
+      have hinner : ∀ m ∈ T3,
+          setSum T3 (fun n : V3 => if m ≠ n ∧ dist m n ≤ 2 * hplus
+            then (c2 * cc1 : ℝ) else 0)
+          ≤ (4:ℝ) ^ 3 * (c2 * cc1) := by
+        intro m hm
+        simp only [hT3def, Set.mem_setOf_eq] at hm
+        have hfin3 : (V ∩ Metric.ball m 3).Finite :=
+          (hp.finite_inter_ball (r + 3)).subset fun a ha => by
+            refine ⟨ha.1, Metric.mem_ball.mpr ?_⟩
+            have ha2 : dist a m < 3 := Metric.mem_ball.mp ha.2
+            have hm2 : dist m 0 < r := Metric.mem_ball.mp hm.2.1
+            have htri : dist a 0 ≤ dist a m + dist m 0 := dist_triangle a m 0
+            linarith
+        have hfin : ({n : V3 | n ∈ T3 ∧ (m ≠ n ∧ dist m n ≤ 2 * hplus)} : Set V3).Finite :=
+          hT3fin.subset fun n hn => hn.1
+        have hfil : setSum T3 (fun n : V3 => if m ≠ n ∧ dist m n ≤ 2 * hplus
+            then (c2 * cc1 : ℝ) else 0)
+            = setSum {n : V3 | n ∈ T3 ∧ (m ≠ n ∧ dist m n ≤ 2 * hplus)}
+                (fun _ => c2 * cc1) :=
+          (p18_setSum_filter hT3fin (fun n : V3 => m ≠ n ∧ dist m n ≤ 2 * hplus)
+            (fun _ => c2 * cc1)).symm
+        rw [hfil, p18_setSum_const hfin (c2 * cc1)]
+        have hsub : ({n : V3 | n ∈ T3 ∧ (m ≠ n ∧ dist m n ≤ 2 * hplus)} : Set V3) ⊆
+            V ∩ Metric.ball m 3 := by
+          rintro n ⟨hn, -, hdle⟩
+          exact ⟨hn.1, Metric.mem_ball.mpr
+            (by rw [dist_comm]; exact lt_of_le_of_lt hdle p18_two_hplus_lt_three)⟩
+        have hcardle : ((Nat.card {n : V3 | n ∈ T3 ∧ (m ≠ n ∧ dist m n ≤ 2 * hplus)} : ℕ) : ℝ)
+            ≤ ((Nat.card ↥(V ∩ Metric.ball m 3) : ℕ) : ℝ) := by
+          refine Nat.cast_le.mpr ?_
+          rw [Nat.card_coe_set_eq, Nat.card_coe_set_eq]
+          exact Set.ncard_le_ncard hsub hfin3
+        have h64 := BOUNDS_VGEN_klemma m V 3 (by norm_num) hp
+        calc ((Nat.card {n : V3 | n ∈ T3 ∧ (m ≠ n ∧ dist m n ≤ 2 * hplus)} : ℕ) : ℝ)
+              * (c2 * cc1)
+            ≤ ((Nat.card ↥(V ∩ Metric.ball m 3) : ℕ) : ℝ) * (c2 * cc1) :=
+              mul_le_mul_of_nonneg_right hcardle hXpos
+          _ ≤ ((3:ℝ) + 1) ^ 3 * (c2 * cc1) := mul_le_mul_of_nonneg_right h64 hXpos
+          _ ≤ (4:ℝ) ^ 3 * (c2 * cc1) := by norm_num
+      have hXpos64 : (0:ℝ) ≤ (4:ℝ) ^ 3 * (c2 * cc1) := mul_nonneg (by norm_num) hXpos
+      refine le_trans (p18_setSum_le hT3fin _ _ hinner) ?_
+      rw [p18_setSum_const hT3fin ((4:ℝ) ^ 3 * (c2 * cc1))]
+      refine le_trans (mul_le_mul_of_nonneg_right hd1r hXpos64) (le_of_eq ?_)
+      ring
+    have hpair'' : setSum {p : V3 × V3 | p.1 ∈ T3' ∧ p.2 ∈ T3' ∧ p.1 ≠ p.2 ∧
+        dist p.1 p.2 ≤ 2 * hplus} (fun _ => c2 * cc3)
+        = 2 * setSum T4' (fun _ => c2 * cc3) := by
+      have hp2 := p18_sum_pair_2_set (fun _ => c2 * cc3) T3' (2 * hplus) hT3'fin
+      simpa using hp2
+    have hO4'bound : setSum {p : V3 × V3 | p.1 ∈ T3' ∧ p.2 ∈ T3' ∧ p.1 ≠ p.2 ∧
+        dist p.1 p.2 ≤ 2 * hplus} (fun _ => c2 * cc3)
+        ≤ (64:ℝ) * (d3 * r ^ 2 * (c2 * cc3)) := by
+      have hseteq : {p : V3 × V3 | p.1 ∈ T3' ∧ p.2 ∈ T3' ∧ p.1 ≠ p.2 ∧
+          dist p.1 p.2 ≤ 2 * hplus}
+          = {p : V3 × V3 | p ∈ T3' ×ˢ T3' ∧ (p.1 ≠ p.2 ∧ dist p.1 p.2 ≤ 2 * hplus)} := by
+        ext p
+        simp only [Set.mem_setOf_eq, Set.mem_prod]
+        tauto
+      rw [hseteq, p18_setSum_filter (hT3'fin.prod hT3'fin)
+        (fun p : V3 × V3 => p.1 ≠ p.2 ∧ dist p.1 p.2 ≤ 2 * hplus) (fun _ => c2 * cc3),
+        p18_setSum_prod hT3'fin hT3'fin (fun p : V3 × V3 =>
+          if p.1 ≠ p.2 ∧ dist p.1 p.2 ≤ 2 * hplus then (c2 * cc3 : ℝ) else 0)]
+      have hinner : ∀ m ∈ T3',
+          setSum T3' (fun n : V3 => if m ≠ n ∧ dist m n ≤ 2 * hplus
+            then (c2 * cc3 : ℝ) else 0)
+          ≤ (4:ℝ) ^ 3 * (c2 * cc3) := by
+        intro m hm
+        simp only [hT3'def, Set.mem_setOf_eq] at hm
+        have hfin3 : (V ∩ Metric.ball m 3).Finite :=
+          (hp.finite_inter_ball (r + 3)).subset fun a ha => by
+            refine ⟨ha.1, Metric.mem_ball.mpr ?_⟩
+            have ha2 : dist a m < 3 := Metric.mem_ball.mp ha.2
+            have hm2 : dist m 0 < r := Metric.mem_ball.mp hm.2.1
+            have htri : dist a 0 ≤ dist a m + dist m 0 := dist_triangle a m 0
+            linarith
+        have hfin : ({n : V3 | n ∈ T3' ∧ (m ≠ n ∧ dist m n ≤ 2 * hplus)} : Set V3).Finite :=
+          hT3'fin.subset fun n hn => hn.1
+        have hfil : setSum T3' (fun n : V3 => if m ≠ n ∧ dist m n ≤ 2 * hplus
+            then (c2 * cc3 : ℝ) else 0)
+            = setSum {n : V3 | n ∈ T3' ∧ (m ≠ n ∧ dist m n ≤ 2 * hplus)}
+                (fun _ => c2 * cc3) :=
+          (p18_setSum_filter hT3'fin (fun n : V3 => m ≠ n ∧ dist m n ≤ 2 * hplus)
+            (fun _ => c2 * cc3)).symm
+        rw [hfil, p18_setSum_const hfin (c2 * cc3)]
+        have hsub : ({n : V3 | n ∈ T3' ∧ (m ≠ n ∧ dist m n ≤ 2 * hplus)} : Set V3) ⊆
+            V ∩ Metric.ball m 3 := by
+          rintro n ⟨hn, -, hdle⟩
+          exact ⟨hn.1, Metric.mem_ball.mpr
+            (by rw [dist_comm]; exact lt_of_le_of_lt hdle p18_two_hplus_lt_three)⟩
+        have hcardle : ((Nat.card {n : V3 | n ∈ T3' ∧ (m ≠ n ∧ dist m n ≤ 2 * hplus)} : ℕ) : ℝ)
+            ≤ ((Nat.card ↥(V ∩ Metric.ball m 3) : ℕ) : ℝ) := by
+          refine Nat.cast_le.mpr ?_
+          rw [Nat.card_coe_set_eq, Nat.card_coe_set_eq]
+          exact Set.ncard_le_ncard hsub hfin3
+        have h64 := BOUNDS_VGEN_klemma m V 3 (by norm_num) hp
+        calc ((Nat.card {n : V3 | n ∈ T3' ∧ (m ≠ n ∧ dist m n ≤ 2 * hplus)} : ℕ) : ℝ)
+              * (c2 * cc3)
+            ≤ ((Nat.card ↥(V ∩ Metric.ball m 3) : ℕ) : ℝ) * (c2 * cc3) :=
+              mul_le_mul_of_nonneg_right hcardle hXpos3
+          _ ≤ ((3:ℝ) + 1) ^ 3 * (c2 * cc3) := mul_le_mul_of_nonneg_right h64 hXpos3
+          _ ≤ (4:ℝ) ^ 3 * (c2 * cc3) := by norm_num
+      have hXpos64 : (0:ℝ) ≤ (4:ℝ) ^ 3 * (c2 * cc3) := mul_nonneg (by norm_num) hXpos3
+      refine le_trans (p18_setSum_le hT3'fin _ _ hinner) ?_
+      rw [p18_setSum_const hT3'fin ((4:ℝ) ^ 3 * (c2 * cc3))]
+      refine le_trans (mul_le_mul_of_nonneg_right hd3r hXpos64) (le_of_eq ?_)
+      ring
+    -- the two T2-level bounds
+    have hT2Q2 : setSum T2 (fun e => setSum (outr e)
+        (fun X => gammaX V X lmfun * criticalWeight V X))
+        ≤ (32:ℝ) * (c2 * cc1 * d1) * r ^ 2 := by
+      have hstep := p18_setSum_superset_eq hT4fin hT2fin hT4sub
+        (fun e => setSum (outr e) (fun X => gammaX V X lmfun * criticalWeight V X))
+        (fun e he hne4 => by
+          rw [houtempty e he hne4]
+          exact p18_setSum_eq_zero Set.finite_empty _
+            (fun a ha => absurd ha (by simp)))
+      rw [← hstep]
+      refine le_trans (p18_setSum_le hT4fin _ _
+        (fun e he => hQ2le e (hT4sub he))) ?_
+      rw [p18_setSum_const hT4fin (c2 * cc1)]
+      have hrw : (32:ℝ) * (c2 * cc1 * d1) * r ^ 2
+          = 32 * (d1 * r ^ 2 * (c2 * cc1)) := by ring
+      rw [hrw]
+      have hA : ((Nat.card T4 : ℕ) : ℝ) * (c2 * cc1) = setSum T4 (fun _ => c2 * cc1) :=
+        (p18_setSum_const hT4fin (c2 * cc1)).symm
+      linarith [hA, hpair', hO4bound]
+    have hT2Q3 : setSum T2 (fun e => setSum (cellCluster V e)
+        (fun X => betaBumpV1 V e X)) ≤ (32:ℝ) * (c2 * cc3 * d3) * r ^ 2 := by
+      rw [hQ3split, hQ3in, zero_add]
+      have hstep := p18_setSum_superset_eq hT4'fin hT2fin hT4'sub
+        (fun e => setSum (ann8 e) (fun X => betaBumpV1 V e X))
+        (fun e he hne4 => by
+          rw [hann8empty e he hne4]
+          exact p18_setSum_eq_zero Set.finite_empty _
+            (fun a ha => absurd ha (by simp)))
+      rw [← hstep]
+      refine le_trans (p18_setSum_le hT4'fin _ _
+        (fun e he => hQ3outle e (hT4'sub he))) ?_
+      rw [p18_setSum_const hT4'fin (c2 * cc3)]
+      have hrw : (32:ℝ) * (c2 * cc3 * d3) * r ^ 2
+          = 32 * (d3 * r ^ 2 * (c2 * cc3)) := by ring
+      rw [hrw]
+      have hA : ((Nat.card T4' : ℕ) : ℝ) * (c2 * cc3) = setSum T4' (fun _ => c2 * cc3) :=
+        (p18_setSum_const hT4'fin (c2 * cc3)).symm
+      linarith [hA, hpair'', hO4'bound]
+    -- assembly
+    have hring : ((32:ℝ) * (c2 * cc1 * d1) + (32:ℝ) * (c2 * cc3 * d3)) * r ^ 2
+        = (32:ℝ) * (c2 * cc1 * d1) * r ^ 2 + (32:ℝ) * (c2 * cc3 * d3) * r ^ 2 := by ring
+    rw [neg_mul, hring, hBsplit, p18_setSum_union hB0fin hB1fin hB0B1disj
+      (fun X => gammaX V X lmfun)]
+    have hsplit2 : setSum T2 (fun e => setSum B1 (fun X => if e ∈ criticalEdgeX V X
+        then gammaX V X lmfun * criticalWeight V X else 0))
+        ≥ -(32:ℝ) * (c2 * cc1 * d1) * r ^ 2
+          - (32:ℝ) * (c2 * cc3 * d3) * r ^ 2 := by linarith
+    linarith
+  · exact absurd ⟨hs, hp⟩ hsp
+
+/-- HOL `SUM_GAMMAX_LMFUN_ESTIMATE` (sum_gamma.hl:62-1465): proved via the
+private `p18_sum_gammax_main` cluster-sum assembly. Note the DISCHARGE
+convention vs PackingAuto2 concl theorems: this is only a *support lemma* for
+UPFZBZM — it matches neither `UPFZBZM_concl`, `RDWKARC_concl`, `GOTCJAH_concl`
+nor `TIWWFYQ_concl`, which therefore remain `sorry` in PackingAuto2.
+`TSKAJXY_statement` itself is byte-identical to PackingAuto2's encoding and is
+reused, not redefined. -/
 theorem SUM_GAMMAX_LMFUN_ESTIMATE : SUM_GAMMAX_LMFUN_ESTIMATE_concl := by
-  sorry
+  intro V
+  have hkey : ∃ c : ℝ, saturated V → Packing V → ∀ r : ℝ, saturated V → Packing V →
+      1 ≤ r → cellClusterInequality V → TSKAJXY_statement →
+      c * r ^ 2 ≤ setSum {X | X ⊆ Metric.ball 0 r ∧ mcellSet V X}
+        (fun X => gammaX V X lmfun) := by
+    by_cases hsp : saturated V ∧ Packing V
+    · obtain ⟨c, hc⟩ := p18_sum_gammax_main V hsp.1 hsp.2
+      exact ⟨c, fun _ _ r hsat' hpack' hr1 hcc hts =>
+        hc r hsat' hpack' hr1 hcc hts⟩
+    · exact ⟨0, fun hsat hpack _ _ hpack' _ _ _ => absurd ⟨hsat, hpack'⟩ hsp⟩
+  obtain ⟨c, hc⟩ := hkey
+  exact ⟨c, fun r hsat hpack hr1 hcc hts => hc hsat hpack r hsat hpack hr1 hcc hts⟩
 
 end
 end Kepler.Text
