@@ -22,7 +22,10 @@ FILE MAP (how this feeds the final Kepler count)
   discharged from `REUHADY1` only with the extra leaf-cell wedge
   disjointness input (HL `Leaf_cell.WEDGE_GE_ALMOST_DISJOINT`), so the
   capstones here are stated statement-identically to PackingAuto2 for
-  merge-time discharge and remain `sorry` pending that input.
+  merge-time discharge; since 2026-09-30 they are WIRED to `REUHADY1`
+  with every other hypothesis synthesized genuinely in this file
+  (wedge disjointness included), so their remaining content is exactly
+  `REUHADY1` + the `p24_REUHADY_nondeg` shim.
 
 ENCODING NOTES
   - HOL `real^3` <-> `V3` (Kepler.Geom); `packing` <-> `Packing`;
@@ -63,10 +66,21 @@ SORRY INVENTORY (giants, with blockers)
     coplanar by `coplanarAzimEq` and null by `p24_coplanar_measure_null`
     (the `MEASURE_NEGLIGIBLE_SYMDIFF` content, as an outer-measure
     sandwich).
-  - `REUHADY_p24` / `REUHADY_version2_p24`: need `REUHADY1` plus the
-    leaf-cell wedge-disjointness extraction (`WEDGE_GE_ALMOST_DISJOINT`
-    / `FCHKUGT` / `EWYBJUA`, OXLZLEZ3.hl) and barV/pair half-length
-    (`HL_2`) extraction to synthesize `REUHADY1`'s stronger hypotheses.
+  - `REUHADY_p24` / `REUHADY_version2_p24`: RESTRUCTURED (2026-09-30,
+    最小件波) — no longer standalone `sorry`s; both now apply `REUHADY1`
+    with every other hypothesis synthesized genuinely in this file:
+    `WEDGE_GE_ALMOST_DISJOINT_p24` (genuine, gives `REUHADY1`'s closed
+    wedge-intersection hypothesis), `p24_REUHADY_extract` (barV/pair
+    extraction: `u0,u1 ∈ V` + `¬Collinear3`), `p24_hl_pair_lt_sqrt2`
+    (pair half-length, `HL_2` local copy). REMAINING sorryAx inputs:
+    `REUHADY1` itself + the `p24_REUHADY_nondeg` NEEDS shim (the
+    OXLZLEZ3 `FCHKUGT`/`EWYBJUA` degenerate-branch exclusion;
+    PA18:2159/:2532 hold sorried twins).
+  - `WEDGE_GE_ALMOST_DISJOINT_p24`: FILLED (2026-09-30) genuinely — the
+    leaf_cell.hl:154-208 closed-wedge disjointness over
+    `p24_exp_azim_mul` (azim exp-additivity via `azim_eq_ang_of_frame` +
+    `ang_mul_exp`) and `azim_compl`. PA18:906's same-name twin remains a
+    `ported sorry`; pick one at merge.
   - `GRUTOTI1_concl_p24`: SHIMMED (2026-09-19) to the statement-identical
     `PackingAuto2.GRUTOTI1_concl` interface (still `sorry`ed there; the
     Auto23 lane owns the real proof). Delete the `_p24` copy at merge.
@@ -90,9 +104,11 @@ namespace Kepler.Text
 
 open Kepler.Geom Set Classical MeasureTheory
 
-/-! ## `_p24` definition copies (Kepler.Text.PackingAuto15 has no built
-olean in this checkout, so the chapter keeps a private copy; delete at
-merge into the PackingAuto15 lane) -/
+/-! ## `_p24` definition copies (`PackingAuto15.olean` now builds in this
+checkout, but PA15 defines `Kepler.Text.wedge`, which would shadow this
+file's open-wedge (`Kepler.Geom.wedge`) usage on import — so the chapter
+keeps private copies instead of importing PA15; delete at merge into the
+PackingAuto15 lane) -/
 
 /-- HOL `conic_cap` (flyspeck_multivariate.ml:4832; PackingAuto15:109
 copy): `conic_cap v0 v1 r a = normball v0 r INTER rcone_gt v0 v1 a`.
@@ -208,20 +224,25 @@ voronoi machinery cited in the HL refinement tree.
 PRE-SURVEY (2026-09-30, PA24 最小件波): the HL refinement skeleton is
 (a) `barV V 1 [u0;u1]` via `HL_LE_SQRT2_IMP_BARV_1`; (b) the
 k-decomposition set `{k | ... voronoi_list V [u0;u1] = UNIONS ...}` is
-pinned to `1..3` with `3 ∈` it via Rogers `GLTVHUM_lemma1` — Lean twin
-exists as PA2's PRIVATE `p2g_GLTVHUM_lemma1` (PackingAuto2:1923, chain
-copy of the PA6 genuine proof; needs a public re-export in PA2 or a chain
-copy here); (c) per-leaf-cell: `voronoi_list V vl = {circumcenter}` via
-Marchal_cells_2_new `VORONOI_LIST_3_SINGLETON_EXPLICIT` and
-`omega_list_n V vl 3 = circumcenter` via Packing3
-`OMEGA_LIST_IN_VORONOI_LIST` — NO Lean twins found in this checkout
-(grep 2026-09-30); (d) the dihedral-sum splitting over the mcells inside
+pinned to `1..3` with `3 ∈` it via Rogers `GLTVHUM_lemma1` — public
+GENUINE copy at PackingAuto6:1108 (PA6 imported here; do NOT touch PA2's
+private `p2g_GLTVHUM_lemma1`, another lane owns that file); (c) per-leaf-cell:
+`voronoi_list V vl = {circumcenter}` via Marchal_cells_2_new
+`VORONOI_LIST_3_SINGLETON_EXPLICIT` and `omega_list_n V vl 3 = circumcenter`
+via Packing3 `OMEGA_LIST_IN_VORONOI_LIST` — sorried Lean twins exist
+(PackingAuto12:1233 and PackingAuto5:2063, both `ported sorry`), genuine
+proofs still open; (d) the dihedral-sum splitting over the mcells inside
 the closed wedge is the HL bulk (lines ~400-8356). Public Lean kit
 already in reach (PA6 imported here): `VORONOI_LIST_EQ_UNION_CONVEX_HULL_FACETS`
 (PA6:824), `BARV_EXISTS` / `BARV_EXISTS_ALT` (PA6:885/:906) — but PA5/PA6
 upstream stubs (AFF_DIM_VORONOI_LIST, POLYHEDRON_VORONOI_LIST) still
-carry sorries. Statement (REUHADY_concl1_new) itself needs only PA2 defs,
-no voronoi. -/
+carry sorries.
+DOWNSTREAM (2026-09-30): the two capstones `REUHADY_p24` /
+`REUHADY_version2_p24` (below) are now wired to this theorem with every
+hypothesis synthesized genuinely (see the kit before the capstone
+section); their remaining content is exactly `REUHADY1` + the
+`p24_REUHADY_nondeg` NEEDS shim. Statement (REUHADY_concl1_new) itself
+needs only PA2 defs, no voronoi. -/
 theorem REUHADY1 : REUHADY_concl1_new := by
   sorry
 
@@ -755,27 +776,393 @@ theorem volumeConicCapWedgeGeVsConicCap (v0 v1 w1 w2 : V3) (r a : ℝ)
   rw [key, p24_cap_eq_ccv]
   exact volumeConicCapWedge v0 v1 w1 w2 r a ha1 h1 h2
 
+/-! ## 闭楔不交与假设合成 kit（2026-09-30 fill，capstone 消费的私件群） -/
+
+/-- `aff_gt ⊆ aff_ge`（同底同向：`0 <` 见证即 `0 ≤` 见证）。 -/
+private theorem p24_affGt_subset_affGe (s t : Set V3) : affGt s t ⊆ affGe s t := by
+  intro z hz
+  rcases hz with ⟨f, hf, hv, hpos, hsum⟩
+  exact ⟨f, hf, hv, fun w hw => le_of_lt (hpos w hw), hsum⟩
+
+/-- 射线换向：`x` 落在过 `y` 的射线锥内蕴含 `y` 落在过 `x` 的射线锥内
+（`affGt_pair_iff` 显式系数换算：`y - v0 = c⁻¹ • (x - v0) + (-h/c) • (v1 - v0)`）。 -/
+private theorem p24_affGt_swap {v0 v1 x y : V3} (hv0v1 : v0 ≠ v1)
+    (hx0 : x ≠ v0) (hx1 : x ≠ v1) (hy0 : y ≠ v0) (hy1 : y ≠ v1)
+    (hmem : x ∈ affGt ({v0, v1} : Set V3) ({y} : Set V3)) :
+    y ∈ affGt ({v0, v1} : Set V3) ({x} : Set V3) := by
+  obtain ⟨c, hc, h, hrep⟩ :=
+    (affGt_pair_iff (v0 := v0) (v1 := v1) (x := y) (y := x) hv0v1 hy0 hy1).mp hmem
+  have hc0 : c ≠ 0 := ne_of_gt hc
+  refine (affGt_pair_iff (v0 := v0) (v1 := v1) (x := x) (y := y) hv0v1 hx0 hx1).mpr
+    ⟨c⁻¹, inv_pos.mpr hc, -h / c, ?_⟩
+  rw [hrep, smul_add, smul_smul, smul_smul, inv_mul_cancel₀ hc0, neg_div]
+  module
+
+/-- 轴上点落在射线的闭锥内（`w` 系数取 0 的显式 Affsign 见证）。 -/
+private theorem p24_collinear3_mem_affGe {v0 v1 w x : V3} (hwv : v0 ≠ v1)
+    (hw : ¬ Collinear3 v0 v1 w) (hcol : Collinear3 v0 v1 x) :
+    x ∈ affGe ({v0, v1} : Set V3) ({w} : Set V3) := by
+  have hw1 : v1 ≠ v0 := Ne.symm hwv
+  have hw0 : w ≠ v0 := fun he => hw (collinear3_pair_left he)
+  have hw1' : w ≠ v1 := fun he => hw (collinear3_pair_right he)
+  have hvw : v1 ≠ w := fun he => hw1' he.symm
+  have hv0w : v0 ≠ w := fun he => hw0 he.symm
+  obtain ⟨t, htx⟩ := (collinear3_iff_smul hw1).mp hcol
+  have hrep : x = (1 - t) • v0 + t • v1 + (0 : ℝ) • w := by
+    linear_combination (norm := module) htx
+  have hfin : (({v0} : Set V3) ∪ {v1, w} : Set V3).Finite :=
+    (Set.finite_singleton v0).union ((Set.finite_singleton w).insert v1)
+  have hseteq : (({v0, v1} ∪ {w} : Set V3) : Set V3) = (({v0} : Set V3) ∪ {v1, w}) := by
+    ext y
+    simp
+    tauto
+  rw [affGe, Set.mem_setOf_eq, Affsign, hseteq]
+  refine ⟨fun y => if y = w then 0 else if y = v1 then t else 1 - t, hfin, ?_, ?_, ?_⟩
+  · rw [sum_insert_pair_v (f := fun y => if y = w then 0 else if y = v1 then t else 1 - t)
+      hfin hwv hv0w hvw,
+      if_neg hv0w, if_neg hwv, if_neg hvw, if_pos (rfl : v1 = v1),
+      if_pos (rfl : w = w)]
+    exact hrep
+  · intro y hy
+    simp only [Set.mem_singleton_iff] at hy
+    subst hy
+    simp
+  · rw [sum_insert_pair_s (f := fun y => if y = w then 0 else if y = v1 then t else 1 - t)
+      hfin hwv hv0w hvw,
+      if_neg hv0w, if_neg hwv, if_neg hvw, if_pos (rfl : v1 = v1),
+      if_pos (rfl : w = w)]
+    ring
+
+/-- azim 零层集 ⊆ 闭半平面：`azim v0 v1 w x = 0 → x ∈ aff_ge {v0,v1} {w}`
+（PA18:310 `pa18_azim_zero_affGe` 的公开孪生，此处私拷）。 -/
+private theorem p24_azim_zero_affGe {v0 v1 w x : V3} (hw : ¬ Collinear3 v0 v1 w)
+    (h0 : azim v0 v1 w x = 0) : x ∈ affGe ({v0, v1} : Set V3) ({w} : Set V3) := by
+  by_cases hcolx : Collinear3 v0 v1 x
+  · have hwv : v0 ≠ v1 := fun he => hw (collinear3_of_eq he.symm)
+    exact p24_collinear3_mem_affGe hwv hw hcolx
+  · have hwv : v0 ≠ v1 := fun he => hw (collinear3_of_eq he.symm)
+    have hx0 : x ≠ v0 := fun he => hcolx (collinear3_pair_left he)
+    have hx1 : x ≠ v1 := fun he => hcolx (collinear3_pair_right he)
+    have hw0 : w ≠ v0 := fun he => hw (collinear3_pair_left he)
+    have hw1' : w ≠ v1 := fun he => hw (collinear3_pair_right he)
+    have hgt : w ∈ affGt ({v0, v1} : Set V3) ({x} : Set V3) :=
+      (azim_eq_zero_iff hw hcolx).mp h0
+    exact p24_affGt_subset_affGe _ _ (p24_affGt_swap hwv hw0 hw1' hx0 hx1 hgt)
+
+/-- azim 的复指数加法性（相位差乘法）：三点均离轴时
+`exp(i·azim a c) = exp(i·azim a b) * exp(i·azim b c)`。轴向标架 +
+`azim_eq_ang_of_frame` + `ang_mul_exp` 极形 + ℂ 域代数。 -/
+private theorem p24_exp_azim_mul {v0 v1 a b c : V3}
+    (ha : ¬ Collinear3 v0 v1 a) (hb : ¬ Collinear3 v0 v1 b) (hc : ¬ Collinear3 v0 v1 c) :
+    Complex.exp ((azim v0 v1 a c : ℝ) * Complex.I)
+      = Complex.exp ((azim v0 v1 a b : ℝ) * Complex.I)
+        * Complex.exp ((azim v0 v1 b c : ℝ) * Complex.I) := by
+  have hwv : v1 ≠ v0 := fun he => ha (collinear3_of_eq he)
+  obtain ⟨e1, e2, e3, hon, halign⟩ := exists_on3_eq_smul (v1 - v0) (sub_ne_zero.mpr hwv)
+  have hax2 : (v1 - v0 : V3) = dist v1 v0 • e3 := by rw [dist_eq_norm]; exact halign
+  have hax : (v1 - v0 : V3) = dist (v1 - v0) 0 • e3 := by
+    rw [dist_eq_norm, sub_zero]; exact halign
+  have hzOfne : ∀ y : V3, ¬ Collinear3 v0 v1 y → zOf e1 e2 (y - v0) ≠ 0 :=
+    fun y hy => (zOf_ne_zero_iff hon hax2 hwv y).mpr hy
+  have key : ∀ x y : V3, ¬ Collinear3 v0 v1 x → ¬ Collinear3 v0 v1 y →
+      azim v0 v1 x y = ang ((zOf e1 e2 (x - v0))⁻¹ * zOf e1 e2 (y - v0)) := by
+    intro x y hx hy
+    rw [p24_azim_sub_self v0 v1 x y]
+    exact azim_eq_ang_of_frame e1 e2 e3 hon hax (sub_ne_zero.mpr hwv)
+      (p24_collinear3_zero_sub.not.mp hx) (p24_collinear3_zero_sub.not.mp hy)
+  have polar : ∀ t : ℂ, t ≠ 0 →
+      Complex.exp (ang t * Complex.I) = t * ((‖t‖ : ℝ) : ℂ)⁻¹ := by
+    intro t ht
+    have h2 : ((‖t‖ : ℝ) : ℂ) ≠ 0 := by exact_mod_cast norm_ne_zero_iff.mpr ht
+    have h1 := ang_mul_exp t
+    have h3 := congrArg (fun x : ℂ => ((‖t‖ : ℝ) : ℂ)⁻¹ * x) h1
+    rw [inv_mul_cancel_left₀ h2] at h3
+    exact ((mul_comm t ((‖t‖ : ℝ) : ℂ)⁻¹).trans h3).symm
+  have ha0 : zOf e1 e2 (a - v0) ≠ 0 := hzOfne a ha
+  have hb0 : zOf e1 e2 (b - v0) ≠ 0 := hzOfne b hb
+  have hc0 : zOf e1 e2 (c - v0) ≠ 0 := hzOfne c hc
+  have hzab : (zOf e1 e2 (a - v0))⁻¹ * zOf e1 e2 (b - v0) ≠ 0 :=
+    mul_ne_zero (inv_ne_zero ha0) hb0
+  have hzbc : (zOf e1 e2 (b - v0))⁻¹ * zOf e1 e2 (c - v0) ≠ 0 :=
+    mul_ne_zero (inv_ne_zero hb0) hc0
+  have hzac : (zOf e1 e2 (a - v0))⁻¹ * zOf e1 e2 (c - v0) ≠ 0 :=
+    mul_ne_zero (inv_ne_zero ha0) hc0
+  have hnorm : ∀ t s : ℂ, t ≠ 0 → ‖t⁻¹ * s‖ = ‖s‖ / ‖t‖ := by
+    intro t s ht
+    rw [norm_mul, norm_inv, div_eq_inv_mul]
+  rw [key a c ha hc, key a b ha hb, key b c hb hc, polar _ hzac, polar _ hzab,
+    polar _ hzbc, hnorm _ _ ha0, hnorm _ _ ha0, hnorm _ _ hb0]
+  have hna : ((‖zOf e1 e2 (a - v0)‖ : ℝ) : ℂ) ≠ 0 := by
+    exact_mod_cast norm_ne_zero_iff.mpr ha0
+  have hnb : ((‖zOf e1 e2 (b - v0)‖ : ℝ) : ℂ) ≠ 0 := by
+    exact_mod_cast norm_ne_zero_iff.mpr hb0
+  have hnc : ((‖zOf e1 e2 (c - v0)‖ : ℝ) : ℂ) ≠ 0 := by
+    exact_mod_cast norm_ne_zero_iff.mpr hc0
+  field_simp
+  push_cast
+  field_simp
+
+/-- HOL `WEDGE_GE_ALMOST_DISJOINT` (leaf_cell.hl:154-208)。FILLED
+(2026-09-30)：凸角度论证——设 `θ = azim u0 u1 v1 v2`，(i) `z` 落轴或
+`θ = 0` 或 `azim u0 u1 v1 z = 0` 时 `z` 在 `v1` 闭半平面锥；(ii)
+`azim u0 u1 v1 z = θ` 时经 `azim_eq_azim_iff_alt` 落 `v2` 锥；(iii)
+`0 < azim u0 u1 v1 z < θ` 时由 `p24_exp_azim_mul` + `azim_compl` 的
+`azim u0 u1 v2 z ≤ 2π - θ` 界推出矛盾（`θ + ψ ∈ (0, 2π]` 的两支分别与
+`ψ ≥ 0`、`φ > 0` 抵触）。PA18:906 的同名公开件仍为 `ported sorry`；
+合并时两者取一（PA18 侧可改引本件）。 -/
+theorem WEDGE_GE_ALMOST_DISJOINT_p24 (u0 u1 v1 v2 : V3)
+    (h1 : ¬ Collinear3 u0 u1 v1) (h2 : ¬ Collinear3 u0 u1 v2) :
+    wedgeGe u0 u1 v1 v2 ∩ wedgeGe u0 u1 v2 v1 ⊆
+      affGe ({u0, u1} : Set V3) ({v1} : Set V3) ∪
+        affGe ({u0, u1} : Set V3) ({v2} : Set V3) := by
+  intro z hz
+  obtain ⟨ha1, ha2⟩ := hz
+  simp only [wedgeGe, Set.mem_setOf_eq] at ha1 ha2
+  by_cases hzcol : Collinear3 u0 u1 z
+  · refine Set.mem_union_left _ (p24_azim_zero_affGe h1 ?_)
+    rw [azim, if_pos (Or.inr hzcol)]
+  · by_cases hθ : azim u0 u1 v1 v2 = 0
+    · refine Set.mem_union_left _ (p24_azim_zero_affGe h1 ?_)
+      have hle : azim u0 u1 v1 z ≤ 0 := by
+        have hle' := ha1.2
+        rw [hθ] at hle'
+        exact hle'
+      have hφ0 : azim u0 u1 v1 z = 0 := le_antisymm hle (azim_nonneg u0 u1 v1 z)
+      rw [hφ0]
+    · by_cases hφ0 : azim u0 u1 v1 z = 0
+      · exact Set.mem_union_left _ (p24_azim_zero_affGe h1 hφ0)
+      · rcases eq_or_lt_of_le ha1.2 with hφθ | hφlt
+        · exact Set.mem_union_right _ (p24_affGt_subset_affGe _ _
+            ((azim_eq_azim_iff_alt h1 hzcol h2).mp hφθ))
+        · exfalso
+          have hθpos : 0 < azim u0 u1 v1 v2 :=
+            lt_of_le_of_ne (azim_nonneg u0 u1 v1 v2) (Ne.symm hθ)
+          have hφpos : 0 < azim u0 u1 v1 z :=
+            lt_of_le_of_ne (azim_nonneg u0 u1 v1 z) (Ne.symm hφ0)
+          have hψle : azim u0 u1 v2 z ≤ 2 * Real.pi - azim u0 u1 v1 v2 := by
+            have h' := ha2.2
+            rw [azim_compl h1 h2, if_neg hθ] at h'
+            exact h'
+          have hexp := p24_exp_azim_mul h1 h2 hzcol
+          have hηle : azim u0 u1 v1 v2 + azim u0 u1 v2 z ≤ 2 * Real.pi := by
+            linarith
+          have hηpos : (0:ℝ) < azim u0 u1 v1 v2 + azim u0 u1 v2 z := by
+            linarith
+          rcases lt_or_eq_of_le hηle with hη | hη
+          · have heq := angle_eq_of_exp_eq (azim_nonneg u0 u1 v1 z)
+              (azim_lt_two_pi u0 u1 v1 z) hηpos.le hη ?_
+            · linarith
+            · have hexp2 : Complex.exp ((azim u0 u1 v1 z : ℝ) * Complex.I)
+                = Complex.exp
+                    (((azim u0 u1 v1 v2 + azim u0 u1 v2 z : ℝ)) * Complex.I) := by
+                rw [hexp, ← Complex.exp_add]
+                congr 1
+                push_cast
+                ring
+              exact hexp2
+          · have hpi : (((2 * Real.pi : ℝ) : ℂ) * Complex.I)
+              = ((Real.pi : ℝ) : ℂ) * Complex.I
+                + ((Real.pi : ℝ) : ℂ) * Complex.I := by
+              push_cast
+              ring
+            have base : ((azim u0 u1 v1 v2 + azim u0 u1 v2 z : ℝ) : ℂ) * Complex.I
+                = (azim u0 u1 v1 v2 : ℝ) * Complex.I
+                  + (azim u0 u1 v2 z : ℝ) * Complex.I := by
+              push_cast
+              ring
+            have hexp3 : Complex.exp ((azim u0 u1 v1 z : ℝ) * Complex.I)
+                = Complex.exp (((0:ℝ) : ℂ) * Complex.I) := by
+              rw [hexp, ← Complex.exp_add, ← base, hη, hpi, Complex.exp_add,
+                Complex.exp_pi_mul_I]
+              simp
+            exact hφ0 (angle_eq_of_exp_eq (azim_nonneg u0 u1 v1 z)
+              (azim_lt_two_pi u0 u1 v1 z) (le_refl 0) (by positivity) hexp3)
+
+/-- `elV ul i ∈ ul`（下标在界内；HOL `EL` 的 junk 约定下界内成立）。 -/
+private theorem p24_elV_mem : ∀ {ul : List V3} {i : ℕ}, i < ul.length → elV ul i ∈ ul
+  | [], i, h => absurd h (by simp)
+  | _ :: _, 0, _ => by simp [elV]
+  | _ :: tl, j + 1, h => List.mem_cons_of_mem _ (p24_elV_mem (by simpa using h))
+
+/-- 长度 3 列表的成员枚举（`barV V 2` 三元组的坐标穷举用）。 -/
+private theorem p24_mem_cases_len3 {vl : List V3} {x : V3} (h3 : vl.length = 3)
+    (hx : x ∈ vl) : x = elV vl 0 ∨ x = elV vl 1 ∨ x = elV vl 2 := by
+  cases vl with
+  | nil => simp at h3
+  | cons a tl =>
+    cases tl with
+    | nil =>
+      rcases List.mem_cons.mp hx with rfl | hmem'
+      · exact Or.inl (by simp [elV])
+      · exact absurd hmem' (by simp)
+    | cons b tl2 =>
+      cases tl2 with
+      | nil =>
+        rcases List.mem_cons.mp hx with rfl | hmem'
+        · exact Or.inl (by simp [elV])
+        · rcases List.mem_cons.mp hmem' with rfl | hmem'
+          · exact Or.inr (Or.inl (by simp [elV]))
+          · exact absurd hmem' (by simp)
+      | cons c tl3 =>
+        have h0 : tl3 = [] := by
+          have h4 := h3
+          simp at h4
+          exact h4
+        subst h0
+        rcases List.mem_cons.mp hx with rfl | hmem'
+        · exact Or.inl (by simp [elV])
+        · rcases List.mem_cons.mp hmem' with rfl | hmem'
+          · exact Or.inr (Or.inl (by simp [elV]))
+          · rcases List.mem_cons.mp hmem' with rfl | hmem'
+            · exact Or.inr (Or.inr (by simp [elV]))
+            · exact absurd hmem' (by simp)
+
+/-- PA15:553 `HL_2`（`hl [u,v] = dist u v / 2`）的本文件私拷：PA15 的
+`Kepler.Text.wedge` 拷会与本文件 `wedge` 撞名，故不 import PA15；合并时
+两者取一（证照 PackingAuto15.lean:552 逐字，`CIRCUMCENTER_2` 为 PA6:2975
+公开真证）。 -/
+private theorem p24_hl_pair (u v : V3) : hl [u, v] = dist u v / 2 := by
+  have hset : setOfList [u, v] = ({u, v} : Set V3) := by
+    ext x
+    simp [setOfList]
+  have hcc : circumcenter ({u, v} : Set V3) = midpoint ℝ u v := CIRCUMCENTER_2 u v
+  have hexi : ∃ c : ℝ, ∀ w ∈ ({u, v} : Set V3),
+      c = dist (circumcenter ({u, v} : Set V3)) w := by
+    refine ⟨dist (midpoint ℝ u v) u, ?_⟩
+    rw [hcc]
+    intro w hw
+    rcases Set.mem_insert_iff.mp hw with rfl | hw'
+    · rfl
+    · rcases Set.mem_singleton_iff.mp hw' with rfl
+      simp
+  have key : radV ({u, v} : Set V3) = dist (circumcenter ({u, v} : Set V3)) u :=
+    (Classical.epsilon_spec (p := fun c : ℝ => ∀ w ∈ ({u, v} : Set V3),
+      c = dist (circumcenter ({u, v} : Set V3)) w) hexi) u (Set.mem_insert u {v})
+  have hhl : hl [u, v] = dist (circumcenter ({u, v} : Set V3)) u := by
+    show radV (setOfList [u, v]) = _
+    rw [hset, key]
+  rw [hhl, hcc]
+  simp
+  ring
+
+/-- HOL pack_concl 的配对半长：`dist u0 u1 < sqrt 8 → hl [u0,u1] < sqrt 2`
+（`HL_2` + `sqrt 8 / 2 = sqrt 2`）。 -/
+private theorem p24_hl_pair_lt_sqrt2 {u0 u1 : V3} (hd : dist u0 u1 < Real.sqrt 8) :
+    hl [u0, u1] < Real.sqrt 2 := by
+  have h82 : (Real.sqrt 8 : ℝ) / 2 = Real.sqrt 2 := by
+    have h8 : (Real.sqrt 8 : ℝ) = 2 * Real.sqrt 2 := by
+      rw [show (8:ℝ) = 4 * 2 from by norm_num, Real.sqrt_mul (by norm_num)]
+      norm_num
+    rw [h8]
+    field_simp
+  rw [p24_hl_pair]
+  linarith [hd, h82]
+
+/-- `barV V 2 vl` + 截断像 `{u0,u1}` + 第三点 `v` ⇒ `u0,u1 ∈ V` 且三点不共线
+（`MHFTTZN1` 仿射维数 + `barV2_imp_not_collinear_setOfList`；PA18 `GBEWYFX`
+的 `barV V 2` 直接形式）。 -/
+private theorem p24_REUHADY_extract {V : Set V3} {u0 u1 v : V3} {vl : List V3}
+    (hp : Packing V) (hbar : barV V 2 vl)
+    (htr : setOfList (truncateSimplex 1 vl) = ({u0, u1} : Set V3))
+    (hv : v = elV vl 2) :
+    u0 ∈ V ∧ u1 ∈ V ∧ ¬ Collinear3 u0 u1 v := by
+  have h2 : 2 ≤ vl.length := by rw [hbar.1]; omega
+  have htr' : ({elV vl 0, elV vl 1} : Set V3) = {u0, u1} := by
+    rw [← htr, truncateSimplex1_pair vl h2]
+    ext x
+    simp [setOfList]
+  have hm0 : elV vl 0 ∈ vl := p24_elV_mem (by have := hbar.1; omega)
+  have hm1 : elV vl 1 ∈ vl := p24_elV_mem (by have := hbar.1; omega)
+  have hm2 : elV vl 2 ∈ vl := p24_elV_mem (by have := hbar.1; omega)
+  have hini : initialSublist vl vl := by
+    show ∃ yl, vl = vl ++ yl
+    exact ⟨[], by rw [List.append_nil]⟩
+  have hvn : voronoiNondg V vl := hbar.2 vl ⟨hini, by have := hbar.1; omega⟩
+  have hV : setOfList vl ⊆ V := hvn.2.1
+  have h0eq : elV vl 0 = u0 ∨ elV vl 0 = u1 := by
+    have hm : (elV vl 0 : V3) ∈ ({elV vl 0, elV vl 1} : Set V3) := by simp
+    rw [htr'] at hm
+    rcases Set.mem_insert_iff.mp hm with he | he
+    · exact Or.inl he
+    · exact Or.inr he
+  have h1eq : elV vl 1 = u0 ∨ elV vl 1 = u1 := by
+    have hm : (elV vl 1 : V3) ∈ ({elV vl 0, elV vl 1} : Set V3) := by simp
+    rw [htr'] at hm
+    rcases Set.mem_insert_iff.mp hm with he | he
+    · exact Or.inl he
+    · exact Or.inr he
+  have hu0 : u0 ∈ vl := by
+    have hm : u0 ∈ ({elV vl 0, elV vl 1} : Set V3) := by rw [htr']; simp
+    rcases Set.mem_insert_iff.mp hm with hc | hc
+    · rw [hc]; exact hm0
+    · rw [hc]; exact hm1
+  have hu1 : u1 ∈ vl := by
+    have hm : u1 ∈ ({elV vl 0, elV vl 1} : Set V3) := by rw [htr']; simp
+    rcases Set.mem_insert_iff.mp hm with hc | hc
+    · rw [hc]; exact hm0
+    · rw [hc]; exact hm1
+  refine ⟨hV hu0, hV hu1, ?_⟩
+  intro hc
+  have hc' : Collinear ℝ ({u0, u1, v} : Set V3) := hc
+  have hbig := barV2_imp_not_collinear_setOfList V vl hp hbar
+  refine hbig (Collinear.subset ?_ hc')
+  intro x hx
+  have hx' : x ∈ vl := hx
+  rcases p24_mem_cases_len3 hbar.1 hx' with rfl | rfl | rfl
+  · rcases h0eq with he | he
+    · rw [he]; exact Set.mem_insert u0 {u1, v}
+    · rw [he]; exact Set.mem_insert_of_mem u0 (Set.mem_insert u1 {v})
+  · rcases h1eq with he | he
+    · rw [he]; exact Set.mem_insert u0 {u1, v}
+    · rw [he]; exact Set.mem_insert_of_mem u0 (Set.mem_insert u1 {v})
+  · rw [hv]
+    simp
+
+/-- NEEDS (OXLZLEZ3.hl 的 `FCHKUGT`/`EWYBJUA` 叶胞链；PA18:2159/:2532 有
+同名 `ported sorry` 孪生): capstone 退化支排除。在 capstone 假设组下
+`azim u0 u1 v1 v2 ≠ 0 ∧ vl1 ≠ vl2` 成立——`azim = 0`（v1、v2 同侧）或
+`vl1 = vl2`（则 `v1 = v2`、`wedge_ge ... v1 v1` 退化为平坦半平面）时，
+mcell 析取假设把棱 `e` 上全部胞压进一张平坦半平面，与饱和填充下短棱处
+三维胞的存在性/正二面角矛盾。REUHADY1 落地后本件是两枚 capstone 的
+唯一残余缺口。 -/
+private theorem p24_REUHADY_nondeg (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
+    (v1 v2 : V3) (e : Set V3) (hs : saturated V) (hp : Packing V)
+    (hdist : dist u0 u1 < Real.sqrt 8) (he : e = {u0, u1})
+    (hhl1 : hl vl1 < Real.sqrt 2) (hhl2 : hl vl2 < Real.sqrt 2)
+    (hbar1 : barV V 2 vl1) (hbar2 : barV V 2 vl2)
+    (htr1 : setOfList (truncateSimplex 1 vl1) = e)
+    (htr2 : setOfList (truncateSimplex 1 vl2) = e)
+    (hv1 : v1 = elV vl1 2) (hv2 : v2 = elV vl2 2)
+    (heX : ∀ X : Set V3, X ∈ mcellSet V ∧ e ∈ edgeX V X →
+      X ⊆ wedgeGe u0 u1 v1 v2 ∨ X ⊆ wedgeGe u0 u1 v2 v1) :
+    azim u0 u1 v1 v2 ≠ 0 ∧ vl1 ≠ vl2 := by
+  -- NEEDS: OXLZLEZ3.hl FCHKUGT/EWYBJUA 叶胞链（退化支排除：azim = 0 时
+  -- 闭楔退化为平坦半平面，mcell 析取假设与短棱处三维胞矛盾）；PA18:2159/:2532
+  -- 有 `ported sorry` 孪生，真证落地后本文件两枚 capstone 即闭合。
+  sorry
+
 /-! ## Capstones: the pack_concl REUHADY conclusions -/
 
 /-- HOL `REUHADY_concl` (pack_concl.hl:306-321), statement-identical to
-`PackingAuto2.REUHADY_concl` (DISCHARGE candidate at merge). GIANT —
-`sorry`. NEEDS: `REUHADY1` plus synthesis of its stronger hypotheses
-from this one's: the closed-wedge intersection subset
-(`wedgeGe u0 u1 v1 v2 ∩ wedgeGe u0 u1 v2 v1 ⊆ affGe ...`) requires the
-leaf-cell wedge-disjointness input (`Leaf_cell.WEDGE_GE_ALMOST_DISJOINT`
-/ `FCHKUGT`, OXLZLEZ3.hl:867-875); `u0,u1 ∈ V`, `u0 ≠ u1` come from
-`barV`/packing extraction; `hl [u0,u1] < sqrt 2` from
-`dist u0 u1 < sqrt 8` via the pair half-length (`HL_2`,
-PackingAuto15:257, olean absent in this checkout); `vl1 ≠ vl2` from
-`azim ≠ 0` + `azim_self`.
-PRE-SURVEY (2026-09-30, PA24 最小件波): the `HL_2` blocker is STALE —
-`HL_2` is PUBLIC at PackingAuto15:553 (`hl [u, v] = dist u v / 2`,
-genuinely proved, no sorry) and `PackingAuto15.olean` is built in this
-checkout. PA15 imports PA2 and defines no clashing `hl`/`barV`/`wedgeGe`
-copies, so `HL_2` applies to PA24's (PA2-origin) `hl` verbatim; the only
-cost of consuming it is the wider import fan-out (PA7-PA13,
-LuneVolume). Also PA2's `azim_self` twin should be checked before
-porting the `vl1 ≠ vl2` extraction. -/
+`PackingAuto2.REUHADY_concl` (DISCHARGE candidate at merge).
+RESTRUCTURED (2026-09-30, 最小件波): no longer a standalone `sorry` — the
+proof applies `REUHADY1` (upstream giant) with every hypothesis
+synthesized genuinely in this file:
+  • `u0, u1 ∈ V` + `¬Collinear3 u0 u1 v1/v2` — `p24_REUHADY_extract`
+    (barV/mhfttzn/affDim route, PA18 `GBEWYFX`'s barV V 2 direct form);
+  • `u0 ≠ u1` — from `azim ≠ 0` via `azim_eq_zero_of_collinearY`;
+  • `hl [u0,u1] < sqrt 2` — `p24_hl_pair_lt_sqrt2` (`HL_2` local copy +
+    `sqrt 8 / 2 = sqrt 2`; PA15's olean builds but its `Kepler.Text.wedge`
+    copy would clash, so no import);
+  • the closed-wedge-intersection hypothesis of `REUHADY1` —
+    `WEDGE_GE_ALMOST_DISJOINT_p24` (genuine, this file; PA18:906 twin is
+    still a `ported sorry`);
+  • `azim u0 u1 v1 v2 ≠ 0` + `vl1 ≠ vl2` — `p24_REUHADY_nondeg` NEEDS
+    shim (OXLZLEZ3 `FCHKUGT`/`EWYBJUA` leaf-cell chain; note this
+    statement's `azim ≠ 0` hypothesis is about FREE points `w1 w2`, so it
+    yields `u0 ≠ u1` only).
+REMAINING `sorryAx` inputs: `REUHADY1` (giant) + `p24_REUHADY_nondeg`
+(shim). When both land, this capstone closes with zero further edits. -/
 theorem REUHADY_p24 : ∀ (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3) (v1 v2 : V3)
     (e : Set V3) (w1 w2 : V3), saturated V → Packing V → dist u0 u1 < Real.sqrt 8 →
     e = {u0, u1} → ¬(azim u0 u1 w1 w2 = 0) →
@@ -789,17 +1176,42 @@ theorem REUHADY_p24 : ∀ (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3) (v1 v2 :
     setSum {X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X ∧
         X ⊆ wedgeGe u0 u1 v1 v2} (fun t => dihX V t (u0, u1)) =
       azim u0 u1 v1 v2 := by
-  sorry
+  intro V u0 u1 vl1 vl2 v1 v2 e w1 w2 hs hp hdist he haz hhl hbar htr
+  obtain ⟨hhl1, hhl2⟩ := hhl
+  obtain ⟨hbar1, hbar2⟩ := hbar
+  obtain ⟨htr1, htr2, hv1, hv2, heX⟩ := htr
+  have htr1' : setOfList (truncateSimplex 1 vl1) = ({u0, u1} : Set V3) := by
+    rw [htr1, he]
+  have htr2' : setOfList (truncateSimplex 1 vl2) = ({u0, u1} : Set V3) := by
+    rw [htr2, he]
+  obtain ⟨hu0V, hu1V, hnc1⟩ := p24_REUHADY_extract hp hbar1 htr1' hv1
+  have hnc2 := (p24_REUHADY_extract hp hbar2 htr2' hv2).2.2
+  have hu01 : u0 ≠ u1 := by
+    intro hsub
+    rw [hsub] at haz
+    exact haz (azim_eq_zero_of_collinearY u1 u1 w1 w2 (collinear3_of_eq rfl))
+  have hhlpair := p24_hl_pair_lt_sqrt2 hdist
+  have hwedge := WEDGE_GE_ALMOST_DISJOINT_p24 u0 u1 v1 v2 hnc1 hnc2
+  obtain ⟨hazv1, hvlne⟩ := p24_REUHADY_nondeg V u0 u1 vl1 vl2 v1 v2 e hs hp
+    hdist he hhl1 hhl2 hbar1 hbar2 htr1 htr2 hv1 hv2 heX
+  exact REUHADY1 V u0 u1 vl1 vl2 v1 v2 e hs hp hu0V hu1V hu01 hhlpair he
+    hwedge hazv1 hvlne hhl1 hhl2 hbar1 hbar2 htr1 htr2 hv1 hv2 heX
 
 /-- HOL `REUHADY_concl_version2` (pack_concl.hl:325-340),
 statement-identical to `PackingAuto2.REUHADY_concl_version2` (DISCHARGE
-candidate at merge). GIANT — `sorry`. Same gap profile as
-`REUHADY_p24` minus the azimuth non-degeneracy branch: the
-wedge-intersection hypothesis is PRESENT here, but `u0,u1 ∈ V`,
-`u0 ≠ u1`, `hl [u0,u1] < sqrt 2`, `vl1 ≠ vl2` still need the barV/pair
-extraction noted above (`azim ≠ 0` is not available to kill `vl1 = vl2`
-— that direction is WEDGE_GE_ALMOST_DISJOINT territory). See the
-PRE-SURVEY note on `REUHADY_p24` for the updated `HL_2` status. -/
+candidate at merge). RESTRUCTURED (2026-09-30): same wiring as
+`REUHADY_p24` minus the free-point azimuth branch — the closed-wedge
+intersection hypothesis is PRESENT here and passed to `REUHADY1`
+verbatim; `u0,u1 ∈ V`, `u0 ≠ u1`, `hl [u0,u1] < sqrt 2` are synthesized
+genuinely (`p24_REUHADY_extract` / `p24_hl_pair_lt_sqrt2`; `u0 ≠ u1` via
+the shim's `azim ≠ 0` + `azim_eq_zero_of_collinearY`), and `azim ≠ 0` /
+`vl1 ≠ vl2` come from the `p24_REUHADY_nondeg` NEEDS shim (the `azim ≠ 0`
+is NOT derivable from the visible hypotheses: at `azim = 0` the
+wedge-intersection hypothesis degenerates to a trivial half-plane
+inclusion — the exclusion is the OXLZLEZ3 `FCHKUGT`/`EWYBJUA`
+leaf-cell chain).
+REMAINING `sorryAx` inputs: `REUHADY1` (giant) + `p24_REUHADY_nondeg`
+(shim). When both land, this capstone closes with zero further edits. -/
 theorem REUHADY_version2_p24 : ∀ (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
     (v1 v2 : V3) (e : Set V3), saturated V → Packing V → dist u0 u1 < Real.sqrt 8 →
     e = {u0, u1} →
@@ -815,7 +1227,25 @@ theorem REUHADY_version2_p24 : ∀ (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
     setSum {X : Set V3 | mcellSet V X ∧ e ∈ edgeX V X ∧
         X ⊆ wedgeGe u0 u1 v1 v2} (fun t => dihX V t (u0, u1)) =
       azim u0 u1 v1 v2 := by
-  sorry
+  intro V u0 u1 vl1 vl2 v1 v2 e hs hp hdist he hwedge hhl hbar htr
+  obtain ⟨hhl1, hhl2⟩ := hhl
+  obtain ⟨hbar1, hbar2⟩ := hbar
+  obtain ⟨htr1, htr2, hv1, hv2, heX⟩ := htr
+  have htr1' : setOfList (truncateSimplex 1 vl1) = ({u0, u1} : Set V3) := by
+    rw [htr1, he]
+  have htr2' : setOfList (truncateSimplex 1 vl2) = ({u0, u1} : Set V3) := by
+    rw [htr2, he]
+  obtain ⟨hu0V, hu1V, hnc1⟩ := p24_REUHADY_extract hp hbar1 htr1' hv1
+  have hnc2 := (p24_REUHADY_extract hp hbar2 htr2' hv2).2.2
+  have hhlpair := p24_hl_pair_lt_sqrt2 hdist
+  obtain ⟨hazv1, hvlne⟩ := p24_REUHADY_nondeg V u0 u1 vl1 vl2 v1 v2 e hs hp
+    hdist he hhl1 hhl2 hbar1 hbar2 htr1 htr2 hv1 hv2 heX
+  have hu01 : u0 ≠ u1 := by
+    intro hsub
+    rw [hsub] at hazv1
+    exact hazv1 (azim_eq_zero_of_collinearY u1 u1 v1 v2 (collinear3_of_eq rfl))
+  exact REUHADY1 V u0 u1 vl1 vl2 v1 v2 e hs hp hu0V hu1V hu01 hhlpair he
+    hwedge hazv1 hvlne hhl1 hhl2 hbar1 hbar2 htr1 htr2 hv1 hv2 heX
 
 /-! ## GRUTOTI statement copy (parallel-owned Auto23) -/
 
