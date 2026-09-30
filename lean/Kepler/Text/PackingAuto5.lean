@@ -437,17 +437,63 @@ private theorem p5_dot_sub_right (u x y : V3) : u ⬝ᵥ (x - y) = u ⬝ᵥ x - 
   dotProduct_sub (u : Fin 3 → ℝ) (x : Fin 3 → ℝ) (y : Fin 3 → ℝ)
 
 /-- pack3.hl:415 `AFFINE_BIS`. The bisector is the carrier of the affine
-subspace through the midpoint `2⁻¹ • (a + b)` with direction
-`ker (x ↦ (b - a) ⬝ᵥ x)` (membership algebra via `bis_mem_eq`). -/
+subspace through the midpoint `2⁻¹ • (a + b)` with direction the kernel of
+`x ↦ inner (b - a) x` (membership algebra on the distance-equality squares). -/
 theorem AFFINE_BIS (a b : V3) : ∃ K : AffineSubspace ℝ V3, (K : Set V3) = bis a b := by
-  sorry
+  refine ⟨AffineSubspace.mk' ((2⁻¹ : ℝ) • (a + b))
+    (LinearMap.ker (innerSL ℝ (b - a) : V3 →ₗ[ℝ] ℝ)), ?_⟩
+  ext x
+  rw [SetLike.mem_coe, AffineSubspace.mem_mk', LinearMap.mem_ker]
+  show inner ℝ (b - a) (x - (2⁻¹ : ℝ) • (a + b)) = 0 ↔ dist x a = dist x b
+  have hsqinj : ‖x - a‖ = ‖x - b‖ ↔ ‖x - a‖ ^ 2 = ‖x - b‖ ^ 2 := by
+    constructor
+    · intro hh; rw [hh]
+    · intro hh
+      have hA : 0 ≤ ‖x - a‖ := norm_nonneg _
+      have hB : 0 ≤ ‖x - b‖ := norm_nonneg _
+      have hmul : (‖x - a‖ + ‖x - b‖) * (‖x - a‖ - ‖x - b‖) = 0 := by
+        have key : ‖x - a‖ * ‖x - a‖ - ‖x - b‖ * ‖x - b‖ = 0 := by
+          rw [← pow_two, ← pow_two, hh, sub_self]
+        nlinarith [key]
+      rcases mul_eq_zero.1 hmul with h | h
+      · linarith
+      · linarith
+  rw [inner_sub_right, real_inner_smul_right, dist_eq_norm, dist_eq_norm, hsqinj,
+    norm_sub_sq_real x a, norm_sub_sq_real x b]
+  have hL : inner ℝ (b - a) x = inner ℝ b x - inner ℝ a x := inner_sub_left b a x
+  have hE : inner ℝ (b - a) (a + b) = ‖b‖ ^ 2 - ‖a‖ ^ 2 := by
+    rw [inner_add_right, inner_sub_left, inner_sub_left, real_inner_comm b a,
+      real_inner_self_eq_norm_sq a, real_inner_self_eq_norm_sq b]
+    ring
+  rw [hL, hE]
+  constructor <;> intro h
+  · linarith [real_inner_comm x a, real_inner_comm x b]
+  · linarith [real_inner_comm x a, real_inner_comm x b]
 
 /-- pack3.hl:419 `AFFINE_HULL_INTERS_BIS`. An intersection of bisectors
 (affine sets, by `AFFINE_BIS`) is its own affine hull: take the infimum of the
 bisector subspaces in `AffineSubspace ℝ V3` and use `affineSpan_coe`. -/
 theorem AFFINE_HULL_INTERS_BIS (p : V3) (s : Set V3) :
     affineSpan ℝ (⋂₀ {bis p u | u ∈ s}) = ⋂₀ {bis p u | u ∈ s} := by
-  sorry
+  classical
+  have hex : ∀ u : s, ∃ K : AffineSubspace ℝ V3, (K : Set V3) = bis p (u : V3) :=
+    fun u => AFFINE_BIS p u
+  choose Kf hKf using hex
+  set K : AffineSubspace ℝ V3 := sInf (Set.range Kf) with hKdef
+  have hcarrier : ⋂₀ {bis p u | u ∈ s} = (K : Set V3) := by
+    ext x
+    rw [Set.mem_sInter, SetLike.mem_coe, AffineSubspace.mem_sInf_iff]
+    constructor
+    · intro hx K' hK'
+      obtain ⟨u, rfl⟩ := Set.mem_range.1 hK'
+      rw [← SetLike.mem_coe, hKf u]
+      exact hx _ ⟨u.1, u.2, rfl⟩
+    · intro hx T hT
+      obtain ⟨u, hu, rfl⟩ := hT
+      have he : x ∈ Kf ⟨u, hu⟩ := hx _ ⟨⟨u, hu⟩, rfl⟩
+      rw [← SetLike.mem_coe, hKf ⟨u, hu⟩] at he
+      exact he
+  rw [hcarrier, AffineSubspace.affineSpan_coe]
 
 /-- pack3.hl:428 `MID_POINT_EXISTS` (`between x (v,w)` encoded as
 `dist v x + dist x w = dist v w`). -/
@@ -1194,7 +1240,33 @@ theorem LENGTH_DROP (i : ℕ) (ul : List V3) (h : i < ul.length) :
 theorem EL_DROP (i : ℕ) (ul : List V3) (j : ℕ) (h : i < ul.length)
     (hj : j < ul.length - 1) :
     elV (dropIth ul i) j = if j < i then elV ul j else elV ul (j + 1) := by
-  sorry
+  induction i generalizing ul j with
+  | zero =>
+    cases ul with
+    | nil => exact absurd h (by simp)
+    | cons a t =>
+      simp only [dropIth, List.tail_cons]
+      rw [if_neg (Nat.not_lt_zero j)]
+      rfl
+  | succ i ih =>
+    cases ul with
+    | nil => exact absurd h (by simp)
+    | cons a t =>
+      have hlen : (a :: t).length = t.length + 1 := rfl
+      have hi : i < t.length := by simpa [hlen] using h
+      simp only [dropIth, List.headD_cons, List.tail_cons]
+      cases j with
+      | zero =>
+        rw [if_pos (by omega : 0 < i + 1)]
+        rfl
+      | succ j' =>
+        rw [show elV (a :: dropIth t i) (j' + 1) = elV (dropIth t i) j' from rfl,
+          ih t j' hi (by omega)]
+        by_cases hjc : j' < i
+        · rw [if_pos hjc, if_pos (by omega : j' + 1 < i + 1)]
+          rfl
+        · rw [if_neg hjc, if_neg (by omega : ¬ (j' + 1 < i + 1))]
+          rfl
 
 /-! ## barV and the truncation calculus (pack3.hl:1686-1960) -/
 
@@ -1235,7 +1307,34 @@ private theorem vlist_sing (V : Set V3) (u : V3) : voronoiList V [u] = voronoiCl
 initial-sublist clause is `AFF_DIM_VORONOI_CLOSED` (full cell) or the empty
 list (full space), both of dimension 3. -/
 theorem BARV_0 (V : Set V3) (v : V3) (hV : Packing V) (hv : v ∈ V) : barV V 0 [v] := by
-  sorry
+  refine ⟨by simp, ?_⟩
+  rintro wl ⟨⟨yl, heq⟩, hpos⟩
+  have hlen : wl.length + yl.length = 1 := by
+    rw [← List.length_append, ← heq]; simp
+  have hylen : yl.length = 0 := by omega
+  have hyl : yl = [] := List.length_eq_zero_iff.mp hylen
+  rw [hyl, List.append_nil] at heq
+  subst heq
+  refine ⟨by simp, ?_, ?_⟩
+  · intro z hz
+    have hz' : z = v := by simpa [setOfList] using hz
+    rw [hz']
+    exact hv
+  · have hvl : voronoiList V [v] = voronoiClosed V v := by
+      rw [voronoiList, voronoiSet]
+      ext x
+      constructor
+      · intro hx
+        exact hx (voronoiClosed V v) ⟨v, (by simp [setOfList] : v ∈ setOfList [v]), rfl⟩
+      · intro hx T hT
+        obtain ⟨w, hw, rfl⟩ := hT
+        have hwv : w = v := by simpa [setOfList] using hw
+        rw [hwv]
+        exact hx
+    rw [hvl]
+    have hd3 := AFF_DIM_VORONOI_CLOSED V v hV
+    simp only [List.length_cons, List.length_nil]
+    omega
 
 /-- pack3.hl:1740 `BARV_IMP_K_LE_3`. -/
 theorem BARV_IMP_K_LE_3 (V : Set V3) (ul : List V3) (k : ℕ) (hbar : barV V k ul) :
@@ -1364,12 +1463,6 @@ theorem LIST_EQ_TRUNCATE_SIMPLEX_APPEND_LAST (ul : List V3) (h : 2 ≤ ul.length
       simp only [elV, List.getD_eq_getElem _ _ hlen, List.getLast_eq_getElem]
   rw [TRUNCATE_SIMPLEX_EQ_BUTLAST ul h, hlast, List.dropLast_append_getLast hne]
 
-/-- pack3.hl:1883 `TRUNCATE_SIMPLEX_ADD1`. -/
-theorem TRUNCATE_SIMPLEX_ADD1 (ul : List V3) (k : ℕ) (h : k + 2 ≤ ul.length) :
-    truncateSimplex (k + 1) ul =
-      truncateSimplex k ul ++ [elV (truncateSimplex (k + 1) ul) (k + 1)] := by
-  sorry
-
 /-- pack3.hl:1913 `EL_TRUNCATE_SIMPLEX`. -/
 theorem EL_TRUNCATE_SIMPLEX (ul : List V3) (k j : ℕ) (h : k + 1 ≤ ul.length)
     (hj : j ≤ k) : elV (truncateSimplex k ul) j = elV ul j := by
@@ -1387,6 +1480,42 @@ theorem EL_TRUNCATE_SIMPLEX (ul : List V3) (k j : ℕ) (h : k + 1 ≤ ul.length)
   have h2 : elV ul j = elV (truncateSimplex k ul ++ yl) j :=
     congrArg (fun w => elV w j) hyl
   rw [h2, hget]
+
+/-- pack3.hl:1883 `TRUNCATE_SIMPLEX_ADD1`. -/
+theorem TRUNCATE_SIMPLEX_ADD1 (ul : List V3) (k : ℕ) (h : k + 2 ≤ ul.length) :
+    truncateSimplex (k + 1) ul =
+      truncateSimplex k ul ++ [elV (truncateSimplex (k + 1) ul) (k + 1)] := by
+  have hA1 : initialSublist (truncateSimplex k ul) ul :=
+    ((TRUNCATE_SIMPLEX_INITIAL_SUBLIST k (truncateSimplex k ul) ul).1 ⟨rfl, by omega⟩).1
+  have hA2 : (truncateSimplex k ul).length = k + 1 := LENGTH_TRUNCATE_SIMPLEX k ul (by omega)
+  have hB1 : initialSublist (truncateSimplex (k + 1) ul) ul :=
+    ((TRUNCATE_SIMPLEX_INITIAL_SUBLIST (k + 1) (truncateSimplex (k + 1) ul) ul).1
+      ⟨rfl, by omega⟩).1
+  have hB2 : (truncateSimplex (k + 1) ul).length = k + 2 :=
+    LENGTH_TRUNCATE_SIMPLEX (k + 1) ul (by omega)
+  obtain ⟨yl, hyl⟩ := hA1
+  have hylen : ul.length = k + 1 + yl.length := by
+    rw [hyl, List.length_append, hA2]
+  have hy1 : 0 < yl.length := by omega
+  rw [EL_TRUNCATE_SIMPLEX ul (k + 1) (k + 1) (by omega) (le_refl _)]
+  rcases yl with _ | ⟨c, yl'⟩
+  · have hL1 : ul.length = (truncateSimplex k ul).length := by
+      conv => lhs; rw [hyl]
+      rw [List.append_nil]
+    have hle := INITIAL_SUBLIST_LENGTH_LE hB1
+    rw [hL1, hA2] at hle
+    omega
+  · have hc : elV ul (k + 1) = c := by
+      rw [hyl]
+      simp only [elV, List.getD_append_right _ _ _ _ (le_of_eq hA2), hA2, Nat.sub_self,
+        List.getD_cons_zero]
+    have hR : initialSublist (truncateSimplex k ul ++ [elV ul (k + 1)]) ul := by
+      rw [hc]
+      refine ⟨yl', ?_⟩
+      rw [List.append_assoc, List.cons_append, List.nil_append]
+      exact hyl
+    exact INITIAL_SUBLIST_UNIQUE hB1 hR hB2
+      (by rw [List.length_append, List.length_singleton, hA2])
 
 /-- pack3.hl:1928 `TRUNCATE_SIMPLEX_ADD1_ALT`. -/
 theorem TRUNCATE_SIMPLEX_ADD1_ALT (ul : List V3) (k : ℕ) (h : k + 2 ≤ ul.length) :
@@ -1463,7 +1592,49 @@ points (all in `V` by `hsub`). -/
 theorem VORONOI_LIST_BIS (V : Set V3) (ul : List V3) (h : V3) (t : List V3)
     (hsub : setOfList ul ⊆ V) (hcons : ul = h :: t) :
     voronoiList V ul = voronoiClosed V h ∩ ⋂₀ ((fun u : V3 => bis h u) '' setOfList t) := by
-  sorry
+  subst hcons
+  have hhV : h ∈ V := hsub (by simp [setOfList])
+  have hset : setOfList (h :: t) = insert h (setOfList t) := by
+    ext x; simp [setOfList]
+  have h1 : voronoiList V (h :: t)
+      = ⋂₀ {voronoiClosed V v | v ∈ insert h (setOfList t)} := by
+    rw [voronoiList, voronoiSet, hset]
+  have h2 : {voronoiClosed V v | v ∈ insert h (setOfList t)}
+      = insert (voronoiClosed V h) {voronoiClosed V v | v ∈ setOfList t} := by
+    congr 1
+    ext T
+    simp only [Set.mem_insert_iff]
+    constructor
+    · rintro ⟨v, hv | hv, rfl⟩
+      · rw [hv]
+        exact Or.inl rfl
+      · exact Or.inr ⟨v, hv, rfl⟩
+    · rintro (rfl | ⟨v, hv, rfl⟩)
+      · exact ⟨h, Set.mem_insert h (setOfList t), rfl⟩
+      · exact ⟨v, Set.mem_insert_of_mem h hv, rfl⟩
+  rw [h1, h2, Set.sInter_insert]
+  ext x
+  constructor
+  · rintro ⟨hx1, hx2⟩
+    have hx' : ∀ w ∈ setOfList t, ∀ w' ∈ V, dist x w ≤ dist x w' := by
+      intro w hw w' hw'
+      have hzw : x ∈ voronoiClosed V w := hx2 _ ⟨w, hw, rfl⟩
+      exact hzw w' hw'
+    refine ⟨hx1, ?_⟩
+    rw [Set.mem_sInter]
+    intro T hT
+    obtain ⟨u, hu, rfl⟩ := by simpa using hT
+    exact le_antisymm (hx1 u (hsub (List.mem_cons_of_mem _ hu)))
+      (hx' u hu h hhV)
+  · rintro ⟨hx1, hx2⟩
+    refine ⟨hx1, ?_⟩
+    rw [Set.mem_sInter]
+    intro T hT
+    obtain ⟨w, hw, rfl⟩ := by simpa using hT
+    have hbw : x ∈ bis h w := hx2 (bis h w) ⟨w, hw, rfl⟩
+    intro w' hw'
+    rw [← hbw]
+    exact hx1 w' hw'
 
 /-- pack3.hl:2068 `LIST_SUBSET`. -/
 theorem LIST_SUBSET (V : Set V3) (ul : List V3) (h : V3) (t : List V3)
@@ -2037,17 +2208,39 @@ theorem VORONOI_LIST_SUBSET_VORONOI_CLOSED (V : Set V3) (vl : List V3) (h : 1 �
 theorem OMEGA_LIST_N_LEMMA (V : Set V3) (ul : List V3) (k i : ℕ)
     (h : k + i + 1 ≤ ul.length) :
     omegaListN V ul k = omegaListN V (truncateSimplex (k + i) ul) k := by
-  sorry
+  induction k generalizing i with
+  | zero =>
+    simp only [Nat.zero_add]
+    exact (HD_TRUNCATE_SIMPLEX ul i (by omega)).symm
+  | succ k ih =>
+    have h' : k + (i + 1) + 1 ≤ ul.length := by omega
+    have h2 := ih (i + 1) h'
+    have hshift : k + (i + 1) = k + 1 + i := by omega
+    rw [hshift] at h2
+    have htt := TRUNCATE_TRUNCATE_SIMPLEX ul (k + 1) (k + 1 + i) (by omega) (by omega)
+    show closestPoint (voronoiList V (truncateSimplex (k + 1) ul)) (omegaListN V ul k) =
+      closestPoint (voronoiList V (truncateSimplex (k + 1) (truncateSimplex (k + 1 + i) ul)))
+        (omegaListN V (truncateSimplex (k + 1 + i) ul) k)
+    rw [htt, h2]
 /-- pack3.hl:2441 `OMEGA_LIST_LEMMA`. -/
 theorem OMEGA_LIST_LEMMA (V : Set V3) (ul : List V3) (k : ℕ) (h : k + 1 ≤ ul.length) :
     omegaList V (truncateSimplex k ul) = omegaListN V ul k := by
-  sorry
+  have hlen : (truncateSimplex k ul).length = k + 1 := LENGTH_TRUNCATE_SIMPLEX k ul h
+  have h1 : omegaList V (truncateSimplex k ul)
+      = omegaListN V (truncateSimplex k ul) ((truncateSimplex k ul).length - 1) := rfl
+  rw [h1, hlen]
+  have h2 := OMEGA_LIST_N_LEMMA V ul k 0 (by omega)
+  simpa using h2.symm
 /-- pack3.hl:2451 `BARV_IMP_VORONOI_LIST_NOT_EMPTY`. The `voronoi_nondg`
 clause of `barV` gives `affDim (voronoi_list) = 3 - k ≥ 0`; the empty set has
 dimension `-1`, so the list cell is nonempty. -/
 theorem BARV_IMP_VORONOI_LIST_NOT_EMPTY (V : Set V3) (ul : List V3) (k : ℕ)
     (hbar : barV V k ul) : voronoiList V ul ≠ ∅ := by
-  sorry
+  intro hc
+  have hdim := AFF_DIM_VORONOI_LIST V ul k hbar
+  rw [hc, affDim_empty] at hdim
+  have hkle := BARV_IMP_K_LE_3 V ul k hbar
+  omega
 /-- pack3.hl:2472 `OMEGA_LIST_N_IN_VORONOI_LIST`. The successive
 closest-point projections stay in the truncated cells: level 0 is the head
 (`CENTER_IN_VORONOI_CELL`); the step uses the Hilbert-projection existence
@@ -2057,10 +2250,53 @@ convex cell (`BARV_IMP_VORONOI_LIST_NOT_EMPTY`, `CLOSED_VORONOI_LIST`,
 theorem OMEGA_LIST_N_IN_VORONOI_LIST (V : Set V3) (ul : List V3) (k i : ℕ)
     (hbar : barV V k ul) (hi : i ≤ k) :
     omegaListN V ul i ∈ voronoiList V (truncateSimplex i ul) := by
-  sorry
+  have hbl : ul.length = k + 1 := hbar.1
+  have hne : ∀ j : ℕ, j ≤ k → (voronoiList V (truncateSimplex j ul)).Nonempty := by
+    intro j hj
+    exact Set.nonempty_iff_ne_empty.mpr
+      (BARV_IMP_VORONOI_LIST_NOT_EMPTY V (truncateSimplex j ul) j
+        (TRUNCATE_SIMPLEX_BARV V j k ul hbar hj))
+  induction i with
+  | zero =>
+    rw [show omegaListN V ul 0 = hdV ul from rfl, TRUNCATE_0_EQ_HEAD ul (by omega),
+      VORONOI_LIST_SING]
+    exact (CENTER_IN_VORONOI_CELL V (hdV ul)).1
+  | succ n ih =>
+    show closestPoint (voronoiList V (truncateSimplex (n + 1) ul))
+      (omegaListN V ul n) ∈ voronoiList V (truncateSimplex (n + 1) ul)
+    have hKne := hne (n + 1) (by omega)
+    have hKconv : Convex ℝ (voronoiList V (truncateSimplex (n + 1) ul)) :=
+      CONVEX_VORONOI_LIST V (truncateSimplex (n + 1) ul)
+    have hKcomp : IsComplete (voronoiList V (truncateSimplex (n + 1) ul)) :=
+      (CLOSED_VORONOI_LIST V (truncateSimplex (n + 1) ul)).isComplete
+    obtain ⟨y, hyK, hynorm⟩ := exists_norm_eq_iInf_of_complete_convex hKne hKcomp hKconv
+      (omegaListN V ul n)
+    -- bound-variable 形状调 ciInf_le（Mathlib Projection 文件 δ_le 同法；对
+    -- 构造项 `⟨z, hz⟩` 直接展开会触发 isDefEq 死循环）
+    have hstep : ∀ w : ↥(voronoiList V (truncateSimplex (n + 1) ul)),
+        ‖omegaListN V ul n - y‖ ≤ ‖omegaListN V ul n - ↑w‖ := by
+      intro w
+      rw [hynorm]
+      exact ciInf_le ⟨0, Set.forall_mem_range.2 fun v => norm_nonneg _⟩ w
+    have hmin : ∀ z ∈ voronoiList V (truncateSimplex (n + 1) ul),
+        dist (omegaListN V ul n) y ≤ dist (omegaListN V ul n) z := by
+      intro z hz
+      rw [dist_eq_norm, dist_eq_norm]
+      exact hstep ⟨z, hz⟩
+    exact (Classical.epsilon_spec
+      (p := fun y : V3 => y ∈ voronoiList V (truncateSimplex (n + 1) ul) ∧
+        ∀ z ∈ voronoiList V (truncateSimplex (n + 1) ul),
+          dist (omegaListN V ul n) y ≤ dist (omegaListN V ul n) z)
+      ⟨y, hyK, hmin⟩).1
 /-- pack3.hl:2507 `OMEGA_LIST_IN_VORONOI_LIST`. The top omega point is the
 `k`-th tower point, and `truncateSimplex k ul = ul` for a `barV V k` list. -/
 theorem OMEGA_LIST_IN_VORONOI_LIST (V : Set V3) (ul : List V3) (k : ℕ)
     (hbar : barV V k ul) : omegaList V ul ∈ voronoiList V ul := by
-  sorry
+  have hbl : ul.length = k + 1 := hbar.1
+  have hw : omegaList V ul = omegaListN V ul k := by
+    simp only [omegaList, hbl]
+    simp
+  rw [hw]
+  have h1 := OMEGA_LIST_N_IN_VORONOI_LIST V ul k k hbar (le_refl k)
+  rwa [TRUNCATE_SIMPLEX_REFL k ul hbl] at h1
 end Kepler.Text
