@@ -918,3 +918,39 @@ capstone `GRUTOTI` 内一处（补丁 ③）。属 GT-2/GT-3/GT-4 收口时
 修复 = 补 `hp hs` 前提（正路 = FINITE_EDGE_X2，已填）＋（第二合取支）
 region 覆盖假设——见 PA23:279-303 NEEDS 注记，属 GT-3/GT-4 协同件，
 非单陈述修复可收口，故未单独立项、只在此登记。
+
+## 19. PA21 `LEFT_ACTION_LIST_1_PROPERTIES_ALT` 缺 tail-fixedness 假设（为假）
+
+### (a) 缺陷
+
+PA21 冻结陈述 `LEFT_ACTION_LIST_1_PROPERTIES_ALT`（:1694 附近）缺
+`hfix : ∀ j ≥ 2, p j = j`（01-交换须固定 tail）。PA14 落地波
+（2026-09-30，`9c792954`）在 PA10 编码裁定下证得**带此假设**的版本
+（PA14:785，sorry-free）：无 tail-fixedness 时 barV/mxi 保持性对 junk-slot
+反例为假。
+
+### (b) 修复
+
+PA21 陈述补 `hfix` 前提（对齐 PA14:785 逐字）；迁移即成一行
+`exact PackingAuto14.LEFT_ACTION_LIST_1_PROPERTIES_ALT hP … hfix`。
+下游 `MCELL2_PERMUTE_01`（PA21:1714 消费上一件）装配处补传 `hfix`
+（其 P 从 ul 派生，tail 恒等由 PA10 裁定的 truncate 编码给出）。
+
+### (c) 状态：草案待审（2026-09-30 PA14 波发现；应用待用户拍板 +
+GATE_MODE=STATEMENT-FIX）。
+
+## 20. PA14 `QZKSYKG1` 弱 permutes 编码下为假（junk-slot 反例）
+
+### (a) 缺陷
+
+`QZKSYKG1`（PA14:900）k≤3 情形在按点弱 `permutes` 编码下**陈述为假**
+（junk-slot 反例；HL 本体隐含 tail-fixedness，PA10 已裁定为编码前提）。
+
+### (b) 修复
+
+冻结陈述补 tail-fixedness 前提（PA10 式 `∀ j ≥ k, p j = j` 或等价
+ENCODING-FIX 注记）；k=4 情形另需 YIFVQDV_1 巨人（与陈述修复正交）。
+
+### (c) 状态：草案待审（2026-09-30 PA14 波发现；k=2 已由
+MCELL2_PERMUTE_01 解锁，k=3 卡 LEFT_ACTION_LIST_PROPERTIES S₃ 巨人；
+应用待用户拍板）。

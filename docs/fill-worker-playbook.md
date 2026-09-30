@@ -534,7 +534,13 @@ Iff 且 R 显式→`(Submodule.mem_bot ℝ).1`；vectorSpan 成员匿名构造�
   private）→ GAMMAX_GAMMA2_X 装配（**唯一结构性缺口**）；② PA14 left-action
   kit 清零 → LEFT_ACTION/PERMUTE_01 一行迁移 → MCELL2_VOL 转真；③ 楔形体积
   闭式工位（FRUSTT_WEDGE/CONIC_CAP_WEDGE 闭式族 **GIANT，独立工位**）→
-  SPLIT_EXPLICIT + MCELL2_SOL。**B2 波雷区**（仍适用）：V3 的
+  SPLIT_EXPLICIT + MCELL2_SOL。**② 已落 (2026-09-30，`9c792954`)**：PA14
+  两桥 sorry-free（MCELL2_PERMUTE_01 逐字可迁移；**ALT 带 ENCODING-FIX
+  假设 `hfix`，PA21 同名陈述缺它=为假，STATEMENT-FIX 项 19 立案待拍板**
+  ——迁移须等项 19 应用）。**PA14 波雷区**：紧集最近点归属走极小化论证；
+  voronoi 单元 affDim=3 用单位基向量差分张量+球内位移；voronoiNondg [u]
+  单点非退化独立成件；陈述冻结区内 i=3 内联 sorry 允许（独立 NEEDS 行，
+  NEW_SORRY_ALLOW=1 有账）。**B2 波雷区**（仍适用）：V3 的
   `⬝ᵥ` 在 rw 下不对称（ofLp 推入和内 vs 整体包裹）——内积代数走 `inner ℝ`
   + `inner_eq_dot` 桥更稳（dihV 引擎即此路线）；`Set.mem_symmDiff` 第二支
   t-成员在前；rcases `rfl` 在等式双方皆局部变量时 subst "后引入者"（多点
