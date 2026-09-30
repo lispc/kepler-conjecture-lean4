@@ -728,17 +728,105 @@ theorem VORONOI_CLOSED_EQ_INTERS_BIS_LE_ALT (S : Set V3) (v : V3) :
 theorem VORONOI_INTER_BIS_LE (V : Set V3) (v : V3) (hV : Packing V) (hs : saturated V)
     (hv : v ∈ V) :
     voronoiClosed V v =
-      ⋂₀ ((fun u : V3 => bisLe v u) '' {u : V3 | u ∈ V ∧ u ∈ Metric.ball v 4 ∧ u ≠ v}) := sorry
+      ⋂₀ ((fun u : V3 => bisLe v u) '' {u : V3 | u ∈ V ∧ u ∈ Metric.ball v 4 ∧ u ≠ v}) := by
+  ext x
+  constructor
+  · intro hx T hT
+    obtain ⟨u, hu, rfl⟩ := hT
+    exact hx u hu.1
+  · intro hx w hw
+    by_cases hwb : w ∈ Metric.ball v 4
+    · by_cases hwv : w = v
+      · subst hwv; exact le_refl _
+      · exact hx (bisLe v w) ⟨w, ⟨hw, hwb, hwv⟩, rfl⟩
+    · simp only [Metric.mem_ball, not_lt] at hwb
+      have hx2 : dist x v ≤ 2 := by
+        by_contra hcon
+        push_neg at hcon
+        have hdist : dist v x = dist x v := dist_comm v x
+        obtain ⟨q, hqx, hqv⟩ := MID_POINT_EXISTS v x 2 (by norm_num : (0:ℝ) ≤ 2)
+          (by rw [hdist]; linarith)
+        obtain ⟨p, hpV, hpq⟩ := hs q
+        have hpb : dist p v < 4 := by
+          have h0 : dist p q = dist q p := dist_comm p q
+          have h1 : dist q v = 2 := by rw [dist_comm q v]; exact hqv
+          have h2 := dist_triangle p q v
+          rw [h0] at h2
+          linarith
+        have hpv : p ≠ v := by
+          intro h0
+          rw [h0] at hpq
+          have h3 : dist q v = 2 := by rw [dist_comm q v]; exact hqv
+          linarith
+        have hB : dist x v ≤ dist x p := hx (bisLe v p) ⟨p, ⟨hpV, Metric.mem_ball.2 hpb, hpv⟩, rfl⟩
+        have h1 : dist x v = 2 + dist x q := by
+          have e1 : dist q x = dist x q := dist_comm q x
+          have e2 : dist v x = dist x v := hdist
+          linarith
+        have h2 : dist x p ≤ dist x q + dist q p := dist_triangle x q p
+        linarith
+      have h3 : dist w v ≤ dist x v + dist x w := by
+        have h := dist_triangle w x v
+        have e1 : dist w x = dist x w := dist_comm w x
+        linarith
+      linarith
 
 /-- pack3.hl:886 `VORONOI_CLOSED_EQ_FINITE_INTERS_BIS_LE`. -/
 theorem VORONOI_CLOSED_EQ_FINITE_INTERS_BIS_LE (V : Set V3) (v : V3) (hV : Packing V)
     (hs : saturated V) (hv : v ∈ V) :
     ∃ W : Set V3, W ⊆ V ∧ v ∉ W ∧ W.Finite ∧
-      voronoiClosed V v = ⋂₀ ((fun u : V3 => bisLe v u) '' W) := sorry
+      voronoiClosed V v = ⋂₀ ((fun u : V3 => bisLe v u) '' W) := by
+  refine ⟨(V ∩ Metric.ball v 4) \ {v}, fun u hu => hu.1.1, ?_, ?_, ?_⟩
+  · intro hcon
+    exact hcon.2 rfl
+  · exact (KIUMVTC v 4 V hV).subset Set.diff_subset
+  · have hidx : {u : V3 | u ∈ V ∧ u ∈ Metric.ball v 4 ∧ u ≠ v} =
+        (V ∩ Metric.ball v 4) \ {v} := by
+      ext u
+      simp only [Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_diff, Set.mem_singleton_iff]
+      tauto
+    have hIB := VORONOI_INTER_BIS_LE V v hV hs hv
+    rwa [hidx] at hIB
+
+/-- `bisLe u v` is a (possibly trivial) polyhedron; the trivial `u = v` slot
+gives `univ`. Used by `VORONOI_POLYHEDRON` (the witness `u ∉ W` there makes
+the halfspace genuine, so the private form never sees `u = v`). -/
+private theorem p5_polyhedron_bisLe (u v : V3) : polyhedron (bisLe u v) := by
+  by_cases huv : u = v
+  · rw [huv]
+    have huniv : bisLe v v = (Set.univ : Set V3) := by
+      ext y
+      simp [bisLe]
+    rw [huniv]
+    exact POLYHEDRON_UNIV
+  · rw [BIS_LE_EQ_HALFSPACE]
+    have hdadd : ∀ (a b z : V3), (a + b) ⬝ᵥ z = a ⬝ᵥ z + b ⬝ᵥ z := by
+      intro a b z
+      rw [← inner_eq_dot (a + b) z, inner_add_left, inner_eq_dot a z, inner_eq_dot b z]
+    have hset : {x : V3 | 2 * ((v - u) ⬝ᵥ x) ≤ v ⬝ᵥ v - u ⬝ᵥ u} =
+        {x : V3 | (v - u + (v - u)) ⬝ᵥ x ≤ v ⬝ᵥ v - u ⬝ᵥ u} := by
+      ext x
+      simp only [Set.mem_setOf_eq]
+      rw [hdadd]
+      constructor
+      · intro h
+        linarith
+      · intro h
+        linarith
+    rw [hset]
+    refine POLYHEDRON_HALFSPACE_LE ?_ (v ⬝ᵥ v - u ⬝ᵥ u)
+    intro h0
+    have h2 : (2:ℝ) • (v - u) = 0 := by rw [two_smul]; exact h0
+    exact huv (sub_eq_zero.1 ((smul_eq_zero.1 h2).resolve_left (by norm_num))).symm
 
 /-- pack3.hl:916 `VORONOI_POLYHEDRON`. -/
 theorem VORONOI_POLYHEDRON (V : Set V3) (v : V3) (hV : Packing V) (hs : saturated V)
-    (hv : v ∈ V) : polyhedron (voronoiClosed V v) := sorry
+    (hv : v ∈ V) : polyhedron (voronoiClosed V v) := by
+  obtain ⟨W, hWV, hvW, hWfin, hWeq⟩ := VORONOI_CLOSED_EQ_FINITE_INTERS_BIS_LE V v hV hs hv
+  rw [hWeq]
+  refine POLYHEDRON_INTERS (hWfin.image fun u : V3 => bisLe v u) ?_
+  rintro T ⟨u, hu, rfl⟩
+  exact p5_polyhedron_bisLe v u
 
 /-- pack3.hl:940 `CONVEX_VORONOI_CLOSED`. -/
 theorem CONVEX_VORONOI_CLOSED (S : Set V3) (v : V3) : Convex ℝ (voronoiClosed S v) := by
@@ -1393,7 +1481,31 @@ half-spaces `bisLe u h`. -/
 theorem VORONOI_LIST_BIS_LE (V : Set V3) (ul : List V3) (h : V3) (t : List V3)
     (hsub : setOfList ul ⊆ V) (hcons : ul = h :: t) :
     voronoiList V ul = voronoiClosed V h ∩ ⋂₀ ((fun u : V3 => bisLe u h) '' setOfList t) := by
-  sorry
+  subst hcons
+  have hVh : h ∈ V := hsub (by simp [setOfList])
+  ext x
+  constructor
+  · intro hx
+    have h1 : x ∈ voronoiClosed V h :=
+      hx (voronoiClosed V h) ⟨h, by simp [setOfList], rfl⟩
+    have h2 : ∀ u ∈ setOfList t, dist x u ≤ dist x h := fun u hu =>
+      hx (voronoiClosed V u) ⟨u, by
+        simp only [setOfList, List.mem_cons]
+        exact Or.inr hu, rfl⟩ h hVh
+    exact ⟨h1, Set.mem_sInter.2 fun T hT => by
+      obtain ⟨u, hu, rfl⟩ := hT
+      exact h2 u hu⟩
+  · rintro ⟨hcell, hu⟩
+    have hu' : ∀ u ∈ setOfList t, x ∈ bisLe u h := fun u hmem =>
+      Set.mem_sInter.1 hu (bisLe u h) ⟨u, hmem, rfl⟩
+    intro T hT
+    obtain ⟨v, hv, rfl⟩ := hT
+    rcases List.mem_cons.1 hv with rfl | hv
+    · exact hcell
+    · intro w hw
+      have hv2 : dist x v ≤ dist x h := hu' v hv
+      have hc : dist x h ≤ dist x w := hcell w hw
+      exact le_trans hv2 hc
 
 /-- pack3.hl:2099 `BOUNDED_VORONOI_LIST`. -/
 theorem BOUNDED_VORONOI_LIST (V : Set V3) (k : ℕ) (ul : List V3) (hs : saturated V)
@@ -1469,6 +1581,32 @@ theorem INTER_AFFINE_HULL (s : Set V3) :
 
 /-! ## Canonical forms, polytope results (pack3.hl:2156-2420) -/
 
+/-- Common core of `MINIMAL_INTERS_EXISTS` / `MINIMAL_INTER_INTERS_EXISTS`
+(pack3.hl:2211/2235): among the admissible subfamilies `g ⊆ f` (nonempty
+since `f` itself qualifies) pick one of minimal cardinality (`Nat.card`);
+any proper subfamily then strictly grows `t ∩ ⋂₀ g`, else it would be an
+even smaller admissible family. -/
+private theorem p5_minimal_inters_aux {α : Type*} (s t : Set α) (f : Set (Set α))
+    (hf : f.Finite) (hs : s = t ∩ ⋂₀ f) :
+    ∃ g ⊆ f, s = t ∩ ⋂₀ g ∧ ∀ g' ⊂ g, s ⊂ t ∩ ⋂₀ g' := by
+  classical
+  set A : Set (Set (Set α)) := {g : Set (Set α) | g ⊆ f ∧ s = t ∩ ⋂₀ g} with hAdef
+  have hAfin : A.Finite := hf.powerset.subset (fun g hg => hg.1)
+  have hAne : A.Nonempty := ⟨f, le_refl _, hs⟩
+  obtain ⟨g, hgA, hmin⟩ := Set.exists_min_image A (fun g => Nat.card ↥g) hAfin hAne
+  refine ⟨g, hgA.1, hgA.2, ?_⟩
+  intro g' hg'
+  have hsub : s ⊆ t ∩ ⋂₀ g' := by
+    rw [hgA.2]
+    rintro x ⟨hx1, hx2⟩
+    exact ⟨hx1, fun T hT => hx2 T (hg'.1 hT)⟩
+  refine Set.ssubset_iff_subset_ne.2 ⟨hsub, ?_⟩
+  intro heq
+  have hg'A : g' ∈ A := ⟨hg'.1.trans hgA.1, heq⟩
+  have hgfin : g.Finite := hf.subset hgA.1
+  have hlt : Nat.card ↥g' < Nat.card ↥g := hgfin.card_lt_card hg'
+  exact absurd (hmin g' hg'A) (not_le.2 hlt)
+
 /-- pack3.hl:2207 `lemma1` (`HAS_SIZE n` encoded as `Finite ∧ Nat.card = n`). -/
 theorem lemma1 {α : Type*} {f : Set α} (P : Set α → Prop) (hf : f.Finite) (hP : P f) :
     ∃ (n : ℕ) (g : Set α), g ⊆ f ∧ g.Finite ∧ Nat.card ↥g = n ∧ P g :=
@@ -1479,31 +1617,382 @@ minimal cardinality; any proper subfamily then strictly grows the
 intersection (else it would contradict minimality). -/
 theorem MINIMAL_INTERS_EXISTS {α : Type*} (s : Set α) (f : Set (Set α)) (hf : f.Finite)
     (hs : s = ⋂₀ f) : ∃ g ⊆ f, s = ⋂₀ g ∧ ∀ g' ⊂ g, s ⊂ ⋂₀ g' := by
-  sorry
+  obtain ⟨g, hg1, hg2, hg3⟩ := p5_minimal_inters_aux s univ f hf (by rw [Set.univ_inter]; exact hs)
+  refine ⟨g, hg1, by rwa [Set.univ_inter] at hg2, ?_⟩
+  intro g' hg'
+  have := hg3 g' hg'
+  rwa [Set.univ_inter] at this
 
 /-- pack3.hl:2235 `MINIMAL_INTER_INTERS_EXISTS`. Same extremal-subfamily
 argument for `t ∩ ⋂₀ f` presentations. -/
 theorem MINIMAL_INTER_INTERS_EXISTS {α : Type*} (s t : Set α) (f : Set (Set α))
     (hf : f.Finite) (hs : s = t ∩ ⋂₀ f) :
-    ∃ g ⊆ f, s = t ∩ ⋂₀ g ∧ ∀ g' ⊂ g, s ⊂ t ∩ ⋂₀ g' := by
-  sorry
+    ∃ g ⊆ f, s = t ∩ ⋂₀ g ∧ ∀ g' ⊂ g, s ⊂ t ∩ ⋂₀ g' :=
+  p5_minimal_inters_aux s t f hf hs
 
-/-- pack3.hl:2260 `VORONOI_LIST_CANONICAL`. -/
+/-- pack3.hl:2260 `VORONOI_LIST_CANONICAL`. The `univ`-deleted almost-canonical
+family (`VORONOI_LIST_BIS_LE` + the finite bisector representation
+`VORONOI_CLOSED_EQ_FINITE_INTERS_BIS_LE`, with `INTERS_UNIV` folding the
+`affineSpan` factor in via `INTER_AFFINE_HULL`), then minimized by
+`MINIMAL_INTER_INTERS_EXISTS`. -/
 theorem VORONOI_LIST_CANONICAL (V : Set V3) (ul : List V3) (h : V3) (t : List V3)
     (hV : Packing V) (hs : saturated V) (hsub : setOfList ul ⊆ V) (hcons : ul = h :: t) :
     ∃ K : Set (Set V3), K.Finite ∧
       voronoiList V ul = ((affineSpan ℝ (voronoiList V ul) : Set V3) ∩ ⋂₀ K) ∧
       (∀ a ∈ K, ∃ v ∈ V, v ≠ h ∧ (a = bisLe v h ∨ a = bisLe h v)) ∧
-      (∀ K' ⊂ K, voronoiList V ul ⊂ ((affineSpan ℝ (voronoiList V ul) : Set V3) ∩ ⋂₀ K')) := sorry
+      (∀ K' ⊂ K, voronoiList V ul ⊂ ((affineSpan ℝ (voronoiList V ul) : Set V3) ∩ ⋂₀ K')) := by
+  subst hcons
+  obtain ⟨hVh, hsubt⟩ := LIST_SUBSET V (h :: t) h t hsub rfl
+  obtain ⟨W, hWV, hvW, hWfin, hWeq⟩ :=
+    VORONOI_CLOSED_EQ_FINITE_INTERS_BIS_LE V h hV hs hVh
+  have huniv : ∀ z : V3, bisLe z z = (Set.univ : Set V3) := fun z => by ext y; simp [bisLe]
+  set K₀ : Set (Set V3) := (fun u : V3 => bisLe h u) '' W ∪ (fun u : V3 => bisLe u h) '' setOfList t
+    with hK₀def
+  have hK₀fin : K₀.Finite := (hWfin.image _).union ((List.finite_toSet t).image _)
+  have heq₀ : voronoiList V (h :: t) = ⋂₀ K₀ := by
+    rw [VORONOI_LIST_BIS_LE V (h :: t) h t hsub rfl, hWeq, ← INTERS_INTER_INTERS]
+  have hmem₀ : ∀ a ∈ K₀ \ {(Set.univ : Set V3)},
+      ∃ v ∈ V, v ≠ h ∧ (a = bisLe v h ∨ a = bisLe h v) := by
+    intro a ha
+    obtain ⟨haK, haU⟩ := ha
+    rcases haK with hmem | hmem
+    · obtain ⟨u, huW, rfl⟩ := hmem
+      refine ⟨u, hWV huW, ?_, Or.inr rfl⟩
+      intro h0
+      apply haU
+      show bisLe h u ∈ {(Set.univ : Set V3)}
+      rw [h0, huniv h]
+      exact rfl
+    · obtain ⟨u, hu, rfl⟩ := hmem
+      refine ⟨u, hsubt hu, ?_, Or.inl rfl⟩
+      intro h0
+      apply haU
+      show bisLe u h ∈ {(Set.univ : Set V3)}
+      rw [h0, huniv h]
+      exact rfl
+  have heqK : voronoiList V (h :: t) =
+      ((affineSpan ℝ (voronoiList V (h :: t)) : Set V3) ∩ ⋂₀ (K₀ \ {(Set.univ : Set V3)})) := by
+    have hstep : ⋂₀ (K₀ \ {(Set.univ : Set V3)}) = ⋂₀ K₀ := (INTERS_UNIV K₀).symm
+    rw [hstep, ← heq₀]
+    exact INTER_AFFINE_HULL _
+  have hKfin : (K₀ \ {(Set.univ : Set V3)}).Finite := hK₀fin.subset Set.diff_subset
+  obtain ⟨g, hg₀, hgeq, hgmin⟩ := MINIMAL_INTER_INTERS_EXISTS
+    (voronoiList V (h :: t)) ((affineSpan ℝ (voronoiList V (h :: t)) : Set V3))
+    (K₀ \ {(Set.univ : Set V3)}) hKfin heqK
+  refine ⟨g, hKfin.subset hg₀, hgeq, ?_, hgmin⟩
+  intro a ha
+  exact hmem₀ a (hg₀ ha)
 
-/-- pack3.hl:2297 `POLYHEDRON_VORONOI_LIST`. -/
+/-- pack3.hl:2297 `POLYHEDRON_VORONOI_LIST`. Empty list: `voronoi_list` of
+`[]` is `⋂₀ ∅ = univ. Cons list: the head cell (a polyhedron by
+`VORONOI_POLYHEDRON`) cut by finitely many `bisLe` half-spaces. -/
 theorem POLYHEDRON_VORONOI_LIST (V : Set V3) (ul : List V3) (hV : Packing V)
-    (hs : saturated V) (hsub : setOfList ul ⊆ V) : polyhedron (voronoiList V ul) := sorry
+    (hs : saturated V) (hsub : setOfList ul ⊆ V) : polyhedron (voronoiList V ul) := by
+  rcases ul with _ | ⟨h, t⟩
+  · have h0 : voronoiList V [] = (Set.univ : Set V3) := by
+      rw [voronoiList, voronoiSet]
+      have h1 : setOfList ([] : List V3) = (∅ : Set V3) := by ext x; simp [setOfList]
+      rw [h1]
+      simp
+    rw [h0]
+    exact POLYHEDRON_UNIV
+  · obtain ⟨hVh, hsubt⟩ := LIST_SUBSET V (h :: t) h t hsub rfl
+    rw [VORONOI_LIST_BIS_LE V (h :: t) h t hsub rfl]
+    refine POLYHEDRON_INTER (VORONOI_POLYHEDRON V h hV hs hVh) ?_
+    refine POLYHEDRON_INTERS ((List.finite_toSet t).image fun u : V3 => bisLe u h) ?_
+    rintro T ⟨u, hu, rfl⟩
+    exact p5_polyhedron_bisLe u h
 
-/-- pack3.hl:2341 `POLYTOPE_VORONOI_LIST`. -/
+/-! ### polytope kit: compact polyhedra are polytopes (pack3.hl:2341背后的通用件)
+
+NEEDS (通用正本): 仓库尚无 `POLYTOPE_EQ_BOUNDED_POLYHEDRON`（bounded 多面体 =
+polytope；HOL polytope.ml:531，经 Krein–Milman / 极点有限性）。本波以私件
+`p5_polytope_of_compact_polyhedron`（对 `affDim` 的强归纳 + 面/棱维数递降 +
+`p5_mem_hull_insert_facet` 射线极大点）补位；Polytope.lean 立通用件后整体替换。
+`p5_sSup_mem_closed` / `p5_mem_hull_insert_facet` 为 PA6 私件链复制（同 PA2
+p2g kit），PA6 正本落地后同样机械替换。 -/
+
+/-- 非空集合的 `affDim ≥ 0`（`affDim = -1 ↔ s = ∅` 的另一半）。 -/
+private theorem p5_affDim_of_nonempty {s : Set V3} (hs : s ≠ ∅) : 0 ≤ affDim s := by
+  by_cases h0 : s = ∅
+  · exact absurd h0 hs
+  · rw [affDim, if_neg h0]
+    exact Nat.cast_nonneg _
+
+/-- 非空有上界闭集的上确界属于该集（PA6 私件 `p6_sSup_mem_closed` 链复制）。 -/
+private theorem p5_sSup_mem_closed (I : Set ℝ) (hne : I.Nonempty) (hbdd : BddAbove I)
+    (hcl : IsClosed I) : sSup I ∈ I := by
+  by_contra hnot
+  obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.1 hcl.isOpen_compl (sSup I) (by
+    simpa using hnot)
+  have hbound : ∀ x ∈ I, x ≤ sSup I - ε := by
+    intro x hx
+    have hxle : x ≤ sSup I := le_csSup hbdd hx
+    have hlt : x < sSup I := by
+      rcases eq_or_lt_of_le hxle with he | hl
+      · exact absurd (he ▸ hx) hnot
+      · exact hl
+    have hballmem : x ∉ Metric.ball (sSup I) ε := fun hm => hball hm hx
+    have hdist : ε ≤ dist x (sSup I) :=
+      le_of_not_gt fun hlt' => hballmem (Metric.mem_ball.2 hlt')
+    rw [Real.dist_eq, abs_of_neg (by linarith)] at hdist
+    linarith
+  have hsup := csSup_le hne hbound
+  linarith
+
+/-- 边界点引理（PA6 私件 `p6_mem_hull_insert_facet`，HOL Rogers.hl:694 背后）：
+紧多面体的点在 `p0` 与某个面的壳的并里（或是 `p0` 本身）。 -/
+private theorem p5_mem_hull_insert_facet (s : Set V3) (p0 v : V3)
+    (hsp : polyhedron s) (hcomp : _root_.IsCompact s) (hp0 : p0 ∈ s) (hv : v ∈ s) :
+    v = p0 ∨ ∃ f : Set V3, FacetOf f s ∧ v ∈ convexHull ℝ (insert p0 f) := by
+  classical
+  by_cases hv0 : v = p0
+  · exact Or.inl hv0
+  · right
+    have hdnz : v - p0 ≠ 0 := sub_ne_zero.2 hv0
+    have hnormpos : (0 : ℝ) < ‖v - p0‖ := norm_pos_iff.2 hdnz
+    have hcont : Continuous fun t : ℝ => p0 + t • (v - p0) := by fun_prop
+    have hIcl : IsClosed {t : ℝ | p0 + t • (v - p0) ∈ s} :=
+      (IsCompact.isClosed hcomp).preimage hcont
+    have hone : (1 : ℝ) ∈ {t : ℝ | p0 + t • (v - p0) ∈ s} := by
+      simp only [Set.mem_setOf_eq, one_smul, add_sub_cancel]
+      exact hv
+    have hzero : (0 : ℝ) ∈ {t : ℝ | p0 + t • (v - p0) ∈ s} := by
+      simp only [Set.mem_setOf_eq, zero_smul, add_zero]
+      exact hp0
+    have hbdd : BddAbove {t : ℝ | p0 + t • (v - p0) ∈ s} := by
+      obtain ⟨C, hC⟩ := IsCompact.exists_isMaxOn hcomp ⟨p0, hp0⟩
+        (f := fun x : V3 => ‖x‖) (by fun_prop)
+      refine ⟨(2 * ‖C‖) / ‖v - p0‖, ?_⟩
+      intro t ht
+      have hC0 : ‖p0‖ ≤ ‖C‖ := hC.2 hp0
+      have h1 : ‖t • (v - p0)‖ ≤ ‖C‖ + ‖p0‖ := by
+        have h2 : ‖t • (v - p0)‖ = ‖(p0 + t • (v - p0)) - p0‖ := by
+          rw [add_sub_cancel_left]
+        rw [h2]
+        calc ‖(p0 + t • (v - p0)) - p0‖ ≤ ‖p0 + t • (v - p0)‖ + ‖p0‖ := norm_sub_le _ _
+          _ ≤ ‖C‖ + ‖p0‖ := by
+              exact add_le_add (hC.2 ht) (le_refl _)
+      have h3 : |t| * ‖v - p0‖ ≤ ‖C‖ + ‖p0‖ := by
+        rw [norm_smul, Real.norm_eq_abs] at h1
+        exact h1
+      have h4 : t * ‖v - p0‖ ≤ ‖C‖ + ‖p0‖ := by
+        rcases abs_choice t with hc | hc
+        · rw [← hc]
+          exact h3
+        · have ht0 : t ≤ 0 := by
+            have habs : 0 ≤ |t| := abs_nonneg t
+            linarith
+          have hd0 : 0 ≤ ‖v - p0‖ := norm_nonneg _
+          have hS0 : 0 ≤ ‖C‖ + ‖p0‖ := by
+            have h1' : 0 ≤ ‖C‖ := norm_nonneg _
+            have h2' : 0 ≤ ‖p0‖ := norm_nonneg _
+            linarith
+          nlinarith
+      exact (le_div_iff₀ hnormpos).2 (by linarith)
+    set T := sSup {t : ℝ | p0 + t • (v - p0) ∈ s} with hTdef
+    have hTmem : p0 + T • (v - p0) ∈ s :=
+      hTdef ▸ p5_sSup_mem_closed _ ⟨0, hzero⟩ hbdd hIcl
+    have hT1 : (1 : ℝ) ≤ T := le_csSup hbdd hone
+    -- the farthest point of the polytope on the ray is not in the relative interior
+    have haff : ∀ r : ℝ, p0 + r • (v - p0) ∈ (affineSpan ℝ s : Set V3) := by
+      intro r
+      have hA0 : p0 ∈ (affineSpan ℝ s : Set V3) := subset_affineSpan ℝ s hp0
+      have hdir : (v - p0 : V3) ∈ (affineSpan ℝ s).direction := by
+        rw [direction_affineSpan]
+        exact vsub_mem_vectorSpan ℝ hv hp0
+      have hv2 := AffineSubspace.vadd_mem_of_mem_direction
+        (Submodule.smul_mem _ r hdir) hA0
+      rw [vadd_eq_add, add_comm] at hv2
+      exact hv2
+    have hwint : p0 + T • (v - p0) ∉ intrinsicInterior ℝ s := by
+      intro hm
+      obtain ⟨-, ε, hε, hball⟩ := mem_rint_iff.1 hm
+      have hpos : 0 < ε / (2 * ‖v - p0‖) := by
+        apply div_pos hε
+        linarith
+      have hd : dist (p0 + (T + ε / (2 * ‖v - p0‖)) • (v - p0))
+          (p0 + T • (v - p0)) < ε := by
+        rw [dist_eq_norm, add_sub_add_left_eq_sub, ← sub_smul, add_sub_cancel_left,
+          norm_smul, Real.norm_eq_abs, abs_of_pos hpos]
+        field_simp
+        linarith
+      have hmem : (T + ε / (2 * ‖v - p0‖)) ∈
+          {t : ℝ | p0 + t • (v - p0) ∈ s} :=
+        Set.mem_setOf.2 (hball ⟨hd, haff _⟩)
+      have hle := le_csSup hbdd hmem
+      linarith
+    rw [RELATIVE_INTERIOR_OF_POLYHEDRON hsp] at hwint
+    have hU : p0 + T • (v - p0) ∈ ⋃₀ {f : Set V3 | FacetOf f s} := by
+      by_contra hcon
+      exact hwint ((Set.mem_sdiff _).2 ⟨hTmem, hcon⟩)
+    obtain ⟨f, hf, hwf⟩ := Set.mem_sUnion.1 hU
+    refine ⟨f, hf, ?_⟩
+    have hTpos : (0 : ℝ) < T := by linarith
+    have hseg : v ∈ convexHull ℝ {p0, p0 + T • (v - p0)} := by
+      rw [convexHull_pair, segment_eq_image' ℝ p0 (p0 + T • (v - p0))]
+      have hθ1 : (0:ℝ) ≤ 1 / T := div_nonneg (by norm_num) hTpos.le
+      have hθ2 : 1 / T ≤ 1 := (div_le_one hTpos).2 hT1
+      refine ⟨1 / T, ⟨hθ1, hθ2⟩, ?_⟩
+      show p0 + (1 / T) • ((p0 + T • (v - p0)) - p0) = v
+      rw [add_sub_cancel_left, smul_smul, one_div, inv_mul_cancel₀ (ne_of_gt hTpos),
+        one_smul, add_sub_cancel]
+    refine convexHull_mono ?_ hseg
+    intro z hz
+    rcases Set.mem_insert_iff.1 hz with hz | hz
+    · subst hz
+      exact Set.mem_insert z f
+    · subst hz
+      exact Set.mem_insert_of_mem _ hwf
+
+/-- `hull (A ∪ hull B) = hull (A ∪ B)`（PA6 私件 `p6_convexHull_union_hull` 链复制）。 -/
+private theorem p5_convexHull_union_hull (A B : Set V3) :
+    convexHull ℝ (A ∪ convexHull ℝ B) = convexHull ℝ (A ∪ B) := by
+  refine subset_antisymm ?_ ?_
+  · refine convexHull_min ?_ (convex_convexHull ℝ (A ∪ B))
+    intro x hx
+    rcases hx with hx | hx
+    · exact subset_convexHull ℝ (A ∪ B) (Set.mem_union_left _ hx)
+    · exact convexHull_min
+        (fun y hy => subset_convexHull ℝ (A ∪ B) (Set.mem_union_right _ hy))
+        (convex_convexHull ℝ (A ∪ B)) hx
+  · refine convexHull_mono ?_
+    intro y hy
+    rcases hy with hy | hy
+    · exact Set.mem_union_left _ hy
+    · exact Set.mem_union_right _ (subset_convexHull ℝ B hy)
+
+/-- 紧多面体是多胞形：对 `affDim` 的强归纳。基例为单点；归纳步用
+`p5_mem_hull_insert_facet` 把每个点压进 `p₀` 与某张面的壳，面是低一维的
+紧多面体（`FACE_OF_POLYHEDRON_POLYHEDRON` + 闭有界），面的壳由归纳有限。 -/
+private theorem p5_polytope_of_compact_polyhedron_aux :
+    ∀ (d : ℕ) (s : Set V3), polyhedron s → _root_.IsCompact s → affDim s ≤ (d : ℤ) →
+      polytope s := by
+  intro d
+  induction d using Nat.strongRecOn with
+  | ind d ih =>
+    intro s hsp hcomp hle
+    classical
+    by_cases hs0 : s = ∅
+    · rw [hs0]
+      exact ⟨∅, Set.finite_empty, by rw [convexHull_empty]⟩
+    obtain ⟨p₀, hp₀s⟩ := Set.nonempty_iff_ne_empty.2 hs0
+    have hconv : Convex ℝ s := POLYHEDRON_IMP_CONVEX hsp
+    by_cases hsingle : ∀ v ∈ s, v = p₀
+    · refine ⟨{p₀}, Set.finite_singleton _, ?_⟩
+      rw [convexHull_singleton]
+      exact (Set.eq_singleton_iff_unique_mem.2 ⟨hp₀s, hsingle⟩).symm
+    · have hfacetsfin : {f : Set V3 | FacetOf f s}.Finite :=
+        Set.Finite.subset (FINITE_POLYHEDRON_FACES hsp) fun f hf => hf.1
+      have hfacpoly : ∀ f ∈ {f : Set V3 | FacetOf f s}, polytope f := by
+        intro f hf
+        have hfne : f ≠ ∅ := hf.2.1
+        have hfp : polyhedron f := FACE_OF_POLYHEDRON_POLYHEDRON hsp hf.1
+        have hfc : _root_.IsCompact f :=
+          Metric.isCompact_of_isClosed_isBounded (POLYHEDRON_IMP_CLOSED hfp)
+            (hcomp.isBounded.subset hf.1.1)
+        have hf0 : 0 ≤ affDim f := p5_affDim_of_nonempty hfne
+        have hfd : affDim f = affDim s - 1 := hf.2.2
+        have hfl : affDim f ≤ ((d - 1 : ℕ) : ℤ) := by
+          have h3 : affDim s ≤ (d : ℤ) := hle
+          omega
+        exact ih (d - 1) (by omega) f hfp hfc hfl
+      obtain ⟨Gfam, hG1, hG2⟩ : ∃ Gfam : Set V3 → Set V3,
+          (∀ f : Set V3, f ∈ {f : Set V3 | FacetOf f s} → (Gfam f).Finite) ∧
+          (∀ f : Set V3, f ∈ {f : Set V3 | FacetOf f s} → convexHull ℝ (Gfam f) = f) := by
+        refine ⟨fun f => if hf : f ∈ {f : Set V3 | FacetOf f s} then (hfacpoly f hf).choose
+          else ∅, ?_, ?_⟩
+        · intro f hf
+          show (if hf : f ∈ {f : Set V3 | FacetOf f s} then (hfacpoly f hf).choose else ∅).Finite
+          rw [dif_pos hf]
+          exact (hfacpoly f hf).choose_spec.1
+        · intro f hf
+          show (convexHull ℝ (if hf : f ∈ {f : Set V3 | FacetOf f s} then (hfacpoly f hf).choose
+            else ∅) = f)
+          rw [dif_pos hf]
+          exact (hfacpoly f hf).choose_spec.2
+      set Fam : Set (Set V3) := Gfam '' {f : Set V3 | FacetOf f s} with hFamdef
+      have hFamfin : Fam.Finite := hfacetsfin.image Gfam
+      have hFamsubfin : ∀ T ∈ Fam, T.Finite := by
+        rintro T ⟨f, hf, rfl⟩
+        exact hG1 f hf
+      have hGfin : (insert p₀ (⋃₀ Fam)).Finite :=
+        Set.Finite.insert p₀ (hFamfin.sUnion hFamsubfin)
+      refine ⟨insert p₀ (⋃₀ Fam), hGfin, ?_⟩
+      refine subset_antisymm (convexHull_min ?_ hconv) ?_
+      · intro z hz
+        rcases Set.mem_insert_iff.1 hz with rfl | hz
+        · exact hp₀s
+        · obtain ⟨T, ⟨f, hf, rfl⟩, hzT⟩ := Set.mem_sUnion.1 hz
+          have hz2 : z ∈ convexHull ℝ (Gfam f) := subset_convexHull ℝ (Gfam f) hzT
+          rw [hG2 f hf] at hz2
+          exact hf.1.1 hz2
+      · intro v hv
+        by_cases hv0 : v = p₀
+        · rw [hv0]
+          exact subset_convexHull ℝ _ (Set.mem_insert p₀ _)
+        · obtain ⟨f, hf, hvf⟩ :=
+            (p5_mem_hull_insert_facet s p₀ v hsp hcomp hp₀s hv).resolve_left hv0
+          have hfF : convexHull ℝ (insert p₀ f) =
+              convexHull ℝ (insert p₀ (Gfam f)) := by
+            conv_lhs => rw [← hG2 f hf]
+            rw [Set.insert_eq, p5_convexHull_union_hull, ← Set.insert_eq]
+          refine convexHull_mono ?_ (hfF ▸ hvf)
+          intro z hz
+          rcases Set.mem_insert_iff.1 hz with rfl | hz
+          · exact Set.mem_insert _ _
+          · exact Set.mem_insert_of_mem _
+              (Set.mem_sUnion.2 ⟨Gfam f, ⟨f, hf, rfl⟩, hz⟩)
+
+/-- 紧多面体是多胞形。 -/
+private theorem p5_polytope_of_compact_polyhedron {s : Set V3} (hsp : polyhedron s)
+    (hcomp : _root_.IsCompact s) : polytope s := by
+  by_cases hs0 : s = ∅
+  · rw [hs0]
+    exact ⟨∅, Set.finite_empty, by rw [convexHull_empty]⟩
+  · have hd0 : 0 ≤ affDim s := p5_affDim_of_nonempty hs0
+    have hdm : affDim s = ((affDim s).toNat : ℤ) := (Int.toNat_of_nonneg hd0).symm
+    exact p5_polytope_of_compact_polyhedron_aux (affDim s).toNat s hsp hcomp (le_of_eq hdm)
+
+/-- `closed (voronoi_list V ul)` 的提前副本：`CLOSED_VORONOI_LIST` 在本文件
+更靠后（pack3.hl:2370），`POLYTOPE_VORONOI_LIST` 需要先行使用。
+NEEDS: 合并波删除本私件、把 `CLOSED_VORONOI_LIST` 上移。 -/
+private theorem p5_isClosed_voronoiList (V : Set V3) (ul : List V3) :
+    IsClosed (voronoiList V ul) := by
+  rw [voronoiList, voronoiSet]
+  refine isClosed_sInter ?_
+  rintro t ⟨w, -, rfl⟩
+  exact CLOSED_VORONOI_CLOSED V w
+
+/-- `BOUNDED_VORONOI_LIST` 的无 `barV` 变体（只需 `1 ≤ LENGTH ul`；
+`BOUNDED_VORONOI_LIST` 上方已冻结为 `barV` 形状，不能改假设）。
+NEEDS: 合并波可改为给 `BOUNDED_VORONOI_LIST` 加泛化私件。 -/
+private theorem p5_bounded_voronoiList_of_len (V : Set V3) (ul : List V3) (hs : saturated V)
+    (hlen : 1 ≤ ul.length) : Bornology.IsBounded (voronoiList V ul) := by
+  refine (Metric.isBounded_ball (x := hdV ul) (r := (2 : ℕ))).subset fun x hx => ?_
+  have hmem := hx (voronoiClosed V (hdV ul)) ⟨hdV ul, HD_IN_SET_OF_LIST ul hlen, rfl⟩
+  exact Metric.mem_ball.2 (VORONOI_BALL2 V (hdV ul) hs hmem)
+
+/-- pack3.hl:2341 `POLYTOPE_VORONOI_LIST`. Bounded (cell inside the head's
+compact Voronoi ball) + polyhedron (`POLYHEDRON_VORONOI_LIST`) gives a
+polytope. -/
 theorem POLYTOPE_VORONOI_LIST (V : Set V3) (ul : List V3) (hV : Packing V)
     (hs : saturated V) (hsub : setOfList ul ⊆ V) (hne : ul ≠ []) :
-    polytope (voronoiList V ul) := sorry
+    polytope (voronoiList V ul) := by
+  obtain ⟨h, t, hcons⟩ := LENGTH_IMP_CONS ul (by
+    cases ul with
+    | nil => exact absurd rfl hne
+    | cons a t => simp)
+  subst hcons
+  have hVh : h ∈ V := hsub (by simp [setOfList])
+  have hsp : polyhedron (voronoiList V (h :: t)) :=
+    POLYHEDRON_VORONOI_LIST V (h :: t) hV hs hsub
+  have hcl : IsClosed (voronoiList V (h :: t)) := p5_isClosed_voronoiList V (h :: t)
+  have hbdd : Bornology.IsBounded (voronoiList V (h :: t)) :=
+    p5_bounded_voronoiList_of_len V (h :: t) hs (by simp)
+  have hcomp : _root_.IsCompact (voronoiList V (h :: t)) :=
+    Metric.isCompact_of_isClosed_isBounded hcl hbdd
+  exact p5_polytope_of_compact_polyhedron hsp hcomp
 
 /-- pack3.hl:2355 `POLYTOPE_VORONOI_LIST_BARV`. -/
 theorem POLYTOPE_VORONOI_LIST_BARV (V : Set V3) (ul : List V3) (k : ℕ) (hV : Packing V)
