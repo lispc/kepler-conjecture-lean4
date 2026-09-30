@@ -39,6 +39,16 @@ HOL sources (Flyspeck `scripts/packing/`, module authors VU KHAC KY):
   not yet on disk). Their contents (`TEZFFSK`, `NJIUTIU`, `URRPHBZ1`,
   `RVFXZBU`, `LEPJBDJ`) are referenced by NAME in docstrings only; add
   `import Kepler.Text.PackingAuto9/10/11` when the oleans land.
+- UPDATE 2026-09-30 (SLTSTLO1 lane): `import Kepler.Text.PackingAuto12`
+  added — Auto12's proved public marchal2 kit (`MCELL_EXPLICIT`,
+  `ROGERS_EXPLICIT`, `MXI_EXPLICIT_OLD`, `OMEGA_LIST_1_EXPLICIT_NEW`,
+  `CONVEX_HULL_4`/`CONVEX_HULL_4_IMP_2_2`/`CONVEX_HULL_4_SUBSET_AFF_GE_2_2`,
+  `RCONE_GT_SUBSET_RCONE_GE`, `BARV_IMP_HL_1_POS_LT`,
+  `RCONEGE_INTER_VORONOI_CLOSED_IMP_RCONEGE`) is importable, acyclic
+  (Auto12 imports Auto2/5-8/10/11, not Auto13; no name collisions with any
+  declaration in this repo). Auto7's sorry-backed `XNHPWAB2` /
+  `OMEGA_LIST_N_IN_CONVEX_HULL` are consumed with NEEDS markers at the
+  `SLTSTLO1` use sites.
 - DISCHARGES convention: `URRPHBZ2` / `SLTSTLO1` / `SLTSTLO2` match the
   `sorry`-bodied interfaces `Kepler.Text.PackingAuto2.URRPHBZ2_concl` /
   `SLTSTLO1_concl` / `SLTSTLO2_concl` verbatim; at merge time the interface
@@ -46,9 +56,16 @@ HOL sources (Flyspeck `scripts/packing/`, module authors VU KHAC KY):
   (its statement is fresh; it consumes Auto9's `TEZFFSK`/`NJIUTIU` in HL).
 - Proved honestly here: `EVENTUALLY_RADIAL_RCONE_GE_ABC_A/B`,
   `OPEN_RCONE_GT`, `EVENTUALLY_RADIAL_AFF_GE`, `NULLSET_SPHERE` (via
-  Mathlib `MeasureTheory.addHaar_sphere`), `RCONE_GT_EQ_EMPTY_LEMMA`.
+  Mathlib `MeasureTheory.addHaar_sphere`), `RCONE_GT_EQ_EMPTY_LEMMA`,
+  and the two private `SLTSTLO1` helpers (`p13_barV_hd_ne`,
+  `p13_hull_break4`).
+- CLOSED 2026-09-30: `SLTSTLO1` (real proof body; NEEDS five sorry-backed
+  upstream lemmas, all named in its docstring: Auto7 `XNHPWAB2` /
+  `OMEGA_LIST_N_IN_CONVEX_HULL`, Auto12 `OMEGA_LIST_1_EXPLICIT_NEW` →
+  `XNHPWAB1_concl`, Auto12 `MXI_EXPLICIT_OLD` → `MXI_EXISTS_concl`,
+  Auto12 `RCONEGE_INTER_VORONOI_CLOSED_IMP_RCONEGE`).
   Sorried (faithful statements + HL line references): `FUN_AFFINE_KLEMMA`,
-  `URRPHBZ2`, `SLTSTLO1`, `SLTSTLO2`, `DDZUPHJ`.
+  `URRPHBZ2`, `SLTSTLO2`, `DDZUPHJ`.
 -/
 
 import Kepler.Text.PackingAuto2
@@ -56,6 +73,7 @@ import Kepler.Text.PackingAuto5
 import Kepler.Text.PackingAuto6
 import Kepler.Text.PackingAuto7
 import Kepler.Text.PackingAuto8
+import Kepler.Text.PackingAuto12
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -381,28 +399,400 @@ theorem RCONE_GT_EQ_EMPTY_LEMMA (a b : V3) (r : ℝ) (hr : 1 ≤ r) :
 
 /-! ## SLTSTLO.hl: the two covering giants -/
 
+/-- `u0 ≠ u1` for a `barV V 3` list `[u0; u1; u2; u3]`: the pair sublist
+forces `affDim (voronoiList V [u0, u0]) = 2` while the singleton sublist
+forces `affDim (voronoiList V [u0]) = 3` if `u0 = u1` (same point set).
+Replicates the inline argument of PackingAuto12's `BARV_IMP_HL_1_POS_LT`. -/
+private theorem p13_barV_hd_ne (V : Set V3) (u0 u1 u2 u3 : V3)
+    (hb : barV V 3 [u0, u1, u2, u3]) : u0 ≠ u1 := by
+  intro he
+  subst he
+  have hv1 : voronoiNondg V [u0, u0] := hb.2 [u0, u0] ⟨⟨[u2, u3], rfl⟩, by simp⟩
+  have hv0 : voronoiNondg V [u0] := hb.2 [u0] ⟨⟨[u0, u2, u3], rfl⟩, by simp⟩
+  have hset : setOfList [u0, u0] = setOfList [u0] := by simp [setOfList]
+  have h1 : affDim (voronoiList V [u0, u0]) + 2 = 4 := hv1.2.2
+  have h0 : affDim (voronoiList V [u0]) + 1 = 4 := hv0.2.2
+  simp only [voronoiList] at h1 h0
+  rw [hset] at h1
+  omega
+
+/-- Honest re-derivation of marchal2.hl:1737 `CONVEX_HULL_BREAK_KY_LEMMA`
+(sorry'd in PackingAuto12:1195): a segment point `x` of `[a, b]` splits the
+4-point hull, `convexHull {a, b, c, d} = convexHull {a, x, c, d} ∪
+convexHull {x, b, c, d}`. Coefficient algebra on Auto12's proved
+`CONVEX_HULL_4`; the split parameters `(q, k)` of `x = q • a + k • b` come
+from `mem_segment_iff_div`. -/
+private theorem p13_hull_break4 (a b c d x : V3) (hx : x ∈ segment ℝ a b) :
+    convexHull ℝ {a, b, c, d} =
+      convexHull ℝ {a, x, c, d} ∪ convexHull ℝ {x, b, c, d} := by
+  classical
+  have hxco : ∃ q k : ℝ, 0 ≤ q ∧ 0 ≤ k ∧ q + k = 1 ∧ x = q • a + k • b := by
+    rw [mem_segment_iff_div] at hx
+    obtain ⟨α, β, hα, hβ, hsum, hse⟩ := hx
+    refine ⟨α / (α + β), β / (α + β), div_nonneg hα (le_of_lt hsum),
+      div_nonneg hβ (le_of_lt hsum), ?_, hse.symm⟩
+    rw [← add_div, div_self hsum.ne']
+  obtain ⟨q, k, hq, hk, hqk, hxL⟩ := hxco
+  have hxh : x ∈ convexHull ℝ ({a, b} : Set V3) := by
+    rw [hxL]
+    have hset4 : convexHull ℝ ({a, b} : Set V3) = convexHull ℝ {a, b, b, b} := by
+      congr 1
+      ext y
+      simp
+    rw [hset4, CONVEX_HULL_4]
+    refine ⟨q, k, 0, 0, hq, hk, by norm_num, by norm_num, by linarith, ?_⟩
+    simp
+  have hmono1 : convexHull ℝ {a, x, c, d} ⊆ convexHull ℝ {a, b, c, d} := by
+    refine convexHull_min ?_ (convex_convexHull ℝ _)
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with hz | hz | hz | hz
+    · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+    · rw [hz]; exact convexHull_mono (by
+        intro y hy
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy ⊢
+        tauto) hxh
+    · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+    · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+  have hmono2 : convexHull ℝ {x, b, c, d} ⊆ convexHull ℝ {a, b, c, d} := by
+    refine convexHull_min ?_ (convex_convexHull ℝ _)
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with hz | hz | hz | hz
+    · rw [hz]; exact convexHull_mono (by
+        intro y hy
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy ⊢
+        tauto) hxh
+    · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+    · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+    · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+  refine Set.Subset.antisymm ?_ ?_
+  · intro z hz
+    rw [CONVEX_HULL_4] at hz
+    obtain ⟨t1, t2, t3, t4, ht1, ht2, ht3, ht4, htsum, hzvec⟩ := hz
+    by_cases hk0 : k = 0
+    · -- x = a
+      have hxa : x = a := by
+        rw [hxL, hk0, zero_smul, add_zero]
+        have hq1 : q = 1 := by linarith
+        rw [hq1, one_smul]
+      refine Set.mem_union_right _ ?_
+      rw [CONVEX_HULL_4]
+      refine ⟨t1, t2, t3, t4, ht1, ht2, ht3, ht4, htsum, ?_⟩
+      rw [hzvec, hxa]
+    by_cases hq0 : q = 0
+    · -- x = b
+      have hxb : x = b := by
+        rw [hxL, hq0, zero_smul, zero_add]
+        have hk1 : k = 1 := by linarith
+        rw [hk1, one_smul]
+      refine Set.mem_union_left _ ?_
+      rw [CONVEX_HULL_4]
+      refine ⟨t1, t2, t3, t4, ht1, ht2, ht3, ht4, htsum, ?_⟩
+      rw [hzvec, hxb]
+    have hqnz : q ≠ 0 := hq0
+    have hknz : k ≠ 0 := hk0
+    have hqpos : 0 < q := lt_of_le_of_ne hq (Ne.symm hqnz)
+    have hkpos : 0 < k := lt_of_le_of_ne hk (Ne.symm hknz)
+    by_cases h2 : t2 = 0
+    · -- t2 = 0: zero weight on b
+      refine Set.mem_union_left _ ?_
+      rw [CONVEX_HULL_4]
+      refine ⟨t1, 0, t3, t4, ht1, by norm_num, ht3, ht4, ?_, ?_⟩
+      · linarith
+      · rw [hzvec, h2]
+        module
+    have ht2p : 0 < t2 := by
+      refine lt_of_le_of_ne ht2 ?_
+      intro hcon
+      exact h2 hcon.symm
+    set S := t1 + t2 with hSdef
+    have hSp : 0 < S := by rw [hSdef]; linarith
+    rcases le_or_gt (t2 / S) k with htle | hgt
+    · -- p ∈ hull {a, x, c, d}: split at k
+      refine Set.mem_union_left _ ?_
+      rw [CONVEX_HULL_4]
+      have hkey1 : t2 ≤ S * k := by
+        have h1 := (div_le_iff₀ hSp).mp htle
+        rw [mul_comm] at h1
+        exact h1
+      have hac2 : (t2 / k) * k = t2 := by field_simp
+      have hac1 : S - t2 / k + (t2 / k) * q = t1 := by
+        have h1 : (t2 / k) * (q + k) = (t2 / k) * q + (t2 / k) * k := mul_add _ _ _
+        rw [hqk, mul_one, hac2] at h1
+        linarith
+      have hvec : t1 • a + t2 • b + t3 • c + t4 • d
+          = (S - t2 / k) • a + (t2 / k) • x + t3 • c + t4 • d := by
+        rw [hxL, smul_add, smul_smul, smul_smul, ← add_assoc, ← add_smul, hac1, hac2]
+      refine ⟨S - t2 / k, t2 / k, t3, t4, sub_nonneg.mpr ((div_le_iff₀ hkpos).mpr hkey1),
+        div_nonneg ht2 hkpos.le, ht3, ht4, ?_, ?_⟩
+      · linarith
+      · rw [hzvec, hvec]
+    · -- p ∈ hull {x, b, c, d}: split at q
+      refine Set.mem_union_right _ ?_
+      rw [CONVEX_HULL_4]
+      have hkey2 : S * k ≤ t2 := by
+        have h1 : k * S < t2 := (lt_div_iff₀ hSp).mp hgt
+        rw [mul_comm]
+        exact le_of_lt h1
+      have hac1' : (t1 / q) * q = t1 := by field_simp
+      have key2 : (t1 / q) * k + (S - t1 / q) = t2 := by
+        have h1 : (t1 / q) * (k + q) = (t1 / q) * k + (t1 / q) * q := mul_add _ _ _
+        rw [add_comm k q, hqk, mul_one, hac1'] at h1
+        linarith
+      have hν2 : 0 ≤ S - t1 / q := by
+        rw [sub_nonneg, div_le_iff₀ hqpos]
+        have h4 : t1 = t1 * q + t1 * k := by rw [← mul_add, hqk, mul_one]
+        have h5 : S * q = t1 * q + t2 * q := by rw [hSdef, add_mul]
+        have hA : t1 * k + t2 * k = S * k := by rw [← add_mul, ← hSdef]
+        have hB : t2 * q + t2 * k = t2 := by rw [← mul_add, hqk, mul_one]
+        linarith
+      have hvec2 : t1 • a + t2 • b + t3 • c + t4 • d
+          = (t1 / q) • x + (S - t1 / q) • b + t3 • c + t4 • d := by
+        rw [hxL, smul_add, smul_smul, smul_smul, hac1']
+        rw [add_assoc (t1 • a) ((t1 / q * k) • b) ((S - t1 / q) • b), ← add_smul, key2]
+      refine ⟨t1 / q, S - t1 / q, t3, t4, div_nonneg ht1 hqpos.le, hν2, ht3, ht4, ?_, ?_⟩
+      · linarith
+      · rw [hzvec, hvec2]
+  · intro z hz
+    rcases hz with h | h
+    · exact hmono1 h
+    · exact hmono2 h
+
 /-- GIANT — HOL `SLTSTLO1` (SLTSTLO.hl:43-580; concl `pack_concl.hl:135`):
 the Rogers simplex is covered by the Marchal cells `mcell 0..4`.
 
 DISCHARGES: PackingAuto2.SLTSTLO1_concl (PackingAuto2.lean:729).
 
-Proof architecture (HL, a single refinement script with NEW_GOAL chains,
-no named sub-lemmas). Case `hl ul < sqrt 2`: `mcell 4 = convex hull
-(set_of_list ul)`, expanded via NEEDS `WQPRRDY` (the hull is the union of
-the six `rogers V (left_action_list p ul)` over `p permutes 0..3`), so
-`p ∈ rogers V ul` lands in `mcell 4`. Case `sqrt 2 <= hl ul`: split
-`dist (u0, p)` against `sqrt 2` — far points land in `mcell 0` (the
-annular sliver); near points are graded by NEEDS `XNHPWAB1/3/4` and
-NEEDS `IN_AFFINE_KY_LEMMA1` (the `aff_ge`/`rcone` membership algebra),
-NEEDS `MHFTTZN4`/`ROGERS_EXPLICIT` (face structure), NEEDS
-`SIMPLEX_FURTHEST_LE` + NEEDS `MXI_EXPLICIT_OLD` (the `mxi` exclusions)
-into `mcell 1` / `mcell 2` / `mcell 3`, with `PYTHAGORAS` /
-`PARALLEL_PROJECTION` / `BETWEEN_TRANS` for the edge-geometry steps and
-`MCELL_EXPLICIT` (Auto11 private) dispatch. -/
+CLOSED 2026-09-30 (SLTSTLO1 lane, PA13:402): the full HL case tree is
+rebuilt on Auto12's proved marchal2 kit. Case `hl ul < sqrt 2`: witness 4,
+all four omega points lie in `hull (setOfList ul)`. Case `sqrt 2 <= hl ul`:
+far points → witness 0 (`mcell0`); near points off the head cone → witness 1
+(`mcell1`); points in `rconeGt u0 u1 (hl [u0;u1]/sqrt 2)` (the cone
+parameter is forced `< 1` by `RCONE_GT_EQ_EMPTY_LEMMA` above) split on the
+`affGe {u0,u1} {mxi, w3}` wedge: inside → witness 2 (`mcell2`; second
+mutual cone via `RCONEGE_INTER_VORONOI_CLOSED_IMP_RCONEGE` with
+`p ∈ voronoiClosed V u0` from the CLOSED `GLTVHUM_concl`); outside → either
+`hl [u0;u1;u2] >= sqrt 2` (then `mxi = w2` by the `mxi` if-branch and the
+wedge membership holds after all via `CONVEX_HULL_4_SUBSET_AFF_GE_2_2` —
+contradiction) or witness 3 (`mcell3`, hull break at `mxi` via the private
+`p13_hull_break4` above, which honestly replaces the sorry'd Auto12
+`CONVEX_HULL_BREAK_KY_LEMMA` for this argument).
+
+NEEDS (upstream, sorry-backed; each named at its use site):
+- `OMEGA_LIST_N_IN_CONVEX_HULL` (Auto7:556; XNHPWAB-family) — Case 1.
+- `XNHPWAB2` (Auto7:542) — `w2 ∈ hull {u0,u1,u2}` in the `mcell3` branch.
+- `OMEGA_LIST_1_EXPLICIT_NEW` (Auto12:1166, via `XNHPWAB1_concl`
+  Auto2:3097) — `w1 = midpoint u0 u1` in both `4b` branches.
+- `RCONEGE_INTER_VORONOI_CLOSED_IMP_RCONEGE` (Auto12:1152, sorry) — the
+  second mutual cone in the `mcell2` branch.
+- `MXI_EXPLICIT_OLD` (Auto12:1508, via `MXI_EXISTS_concl` Auto2) — the
+  `mcell3` branch. Proved-honest inputs consumed: `BARV_3_EXPLICIT`
+  (Auto8), `TRUNCATE_SIMPLEX_EXPLICIT_0/1/2`, `OMEGA_LIST_TRUNCATE_2`
+  (Auto8), `BARV_SUBSET`, `HD_IN_SET_OF_LIST`, `TRUNCATE_SIMPLEX_BARV`
+  (Auto5), `CIRCUMCENTER_2` (Auto6), `GLTVHUM_concl` (Auto2, CLOSED),
+  `RCONE_GT_EQ_EMPTY_LEMMA` (this file, above). -/
 theorem SLTSTLO1 (V : Set V3) (ul : List V3) (p : V3) (hs : saturated V)
     (hp : Packing V) (hb : barV V 3 ul) (hpr : p ∈ rogers V ul) :
     ∃ i : ℕ, i ≤ 4 ∧ p ∈ mcell i V ul := by
-  sorry
+  obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hb
+  subst hul
+  -- basic data
+  have hVsub : setOfList [u0, u1, u2, u3] ⊆ V := BARV_SUBSET V 3 _ hb
+  have hu0V : u0 ∈ V := hVsub (by simp [setOfList])
+  have hu1V : u1 ∈ V := hVsub (by simp [setOfList])
+  have hu01 : u0 ≠ u1 := p13_barV_hd_ne V u0 u1 u2 u3 hb
+  have hTR1 : truncateSimplex 1 [u0, u1, u2, u3] = [u0, u1] :=
+    (TRUNCATE_SIMPLEX_EXPLICIT_1 u0 u1 u2 u3).2.2
+  have hTR2 : truncateSimplex 2 [u0, u1, u2, u3] = [u0, u1, u2] :=
+    (TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 u2 u3).2
+  have hTS0 : truncateSimplex 0 [u0, u1, u2, u3] = [u0] :=
+    (TRUNCATE_SIMPLEX_EXPLICIT_0 u0 u1 u2 u3).2.2.2
+  have e0 : hdV [u0, u1, u2, u3] = u0 := rfl
+  have e1 : hdV [u0, u1, u2, u3].tail = u1 := rfl
+  have h2pos : 0 < Real.sqrt 2 := Real.sqrt_pos.mpr (by norm_num)
+  have hRog2 : p ∈ convexHull ℝ {hdV [u0, u1, u2, u3], omegaListN V [u0, u1, u2, u3] 1,
+      omegaListN V [u0, u1, u2, u3] 2, omegaListN V [u0, u1, u2, u3] 3} := by
+    have h2c := hpr
+    rw [ROGERS_EXPLICIT V [u0, u1, u2, u3] hs hp hb] at h2c
+    exact h2c
+  rcases lt_or_ge (hl [u0, u1, u2, u3]) (Real.sqrt 2) with hH | hH
+  · -- =================== Case 1: witness 4 ===================
+    refine ⟨4, by omega, ?_⟩
+    rw [(MCELL_EXPLICIT 4 V [u0, u1, u2, u3]).2.2.2.2 (le_refl 4), mcell4, if_pos hH]
+    have m0 : hdV [u0, u1, u2, u3] ∈ convexHull ℝ (setOfList [u0, u1, u2, u3]) :=
+      subset_convexHull ℝ _ (HD_IN_SET_OF_LIST _ (by simp))
+    have m1 : omegaListN V [u0, u1, u2, u3] 1 ∈
+        convexHull ℝ (setOfList [u0, u1, u2, u3]) :=
+      OMEGA_LIST_N_IN_CONVEX_HULL V [u0, u1, u2, u3] 3 1 hp hb (by omega) hH
+    have m2 : omegaListN V [u0, u1, u2, u3] 2 ∈
+        convexHull ℝ (setOfList [u0, u1, u2, u3]) :=
+      OMEGA_LIST_N_IN_CONVEX_HULL V [u0, u1, u2, u3] 3 2 hp hb (by omega) hH
+    have m3 : omegaListN V [u0, u1, u2, u3] 3 ∈
+        convexHull ℝ (setOfList [u0, u1, u2, u3]) :=
+      OMEGA_LIST_N_IN_CONVEX_HULL V [u0, u1, u2, u3] 3 3 hp hb (by omega) hH
+    refine convexHull_min ?_ (convex_convexHull ℝ _) hRog2
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with hz | hz | hz | hz
+    · rw [hz]; exact m0
+    · rw [hz]; exact m1
+    · rw [hz]; exact m2
+    · rw [hz]; exact m3
+  · -- √2 ≤ hl ul for the rest
+    rcases le_or_gt (Real.sqrt 2) (dist p u0) with hfar | hnear
+    · -- =================== Case 2: witness 0 ===================
+      refine ⟨0, by omega, ?_⟩
+      rw [(MCELL_EXPLICIT 0 V [u0, u1, u2, u3]).1, mcell0]
+      refine ⟨hpr, ?_⟩
+      simp only [Metric.mem_ball, e0]
+      exact not_lt.mpr hfar
+    · -- =================== Case 3 / 4 ===================
+      by_cases hpcone : p ∈ rconeGt (hdV [u0, u1, u2, u3]) (hdV [u0, u1, u2, u3].tail)
+          (hl (truncateSimplex 1 [u0, u1, u2, u3]) / Real.sqrt 2)
+      · -- =================== Case 4: in the strict cone ===================
+        have hpc : p ∈ rconeGt u0 u1
+            (hl (truncateSimplex 1 [u0, u1, u2, u3]) / Real.sqrt 2) := by
+          simpa only [e0, e1] using hpcone
+        -- Step A: the cone parameter is < 1 (else the cone is empty)
+        have hA1 : hl (truncateSimplex 1 [u0, u1, u2, u3]) < Real.sqrt 2 := by
+          by_contra hcon
+          have hcon' : Real.sqrt 2 ≤ hl (truncateSimplex 1 [u0, u1, u2, u3]) :=
+            not_lt.mp hcon
+          have hempty : rconeGt u0 u1
+              (hl (truncateSimplex 1 [u0, u1, u2, u3]) / Real.sqrt 2) = ∅ := by
+            refine RCONE_GT_EQ_EMPTY_LEMMA u0 u1 _ ?_
+            exact (le_div_iff₀ h2pos).mpr (by linarith)
+          rw [hempty] at hpc
+          exact absurd hpc (Set.notMem_empty p)
+        have hA2 : 0 < hl (truncateSimplex 1 [u0, u1, u2, u3]) / Real.sqrt 2 :=
+          div_pos (BARV_IMP_HL_1_POS_LT V [u0, u1, u2, u3] hs hp hb) h2pos
+        have hA3 : hl (truncateSimplex 1 [u0, u1, u2, u3]) / Real.sqrt 2 ≤ 1 :=
+          (div_le_iff₀ h2pos).mpr (by rw [one_mul]; linarith)
+        by_cases hpaff : p ∈ affGe {hdV [u0, u1, u2, u3], hdV [u0, u1, u2, u3].tail}
+            {mxi V [u0, u1, u2, u3], omegaListN V [u0, u1, u2, u3] 3}
+        · -- =================== Case 4a: witness 2 ===================
+          simp only [e0, e1] at hpaff
+          refine ⟨2, by omega, ?_⟩
+          rw [(MCELL_EXPLICIT 2 V [u0, u1, u2, u3]).2.2.1, mcell2, if_pos ⟨hA1, hH⟩]
+          simp only []
+          simp only [e0, e1]
+          refine ⟨⟨RCONE_GT_SUBSET_RCONE_GE u0 u1 _ hpc, ?_⟩, hpaff⟩
+          have hvoro : p ∈ voronoiClosed V u0 := by
+            rw [GLTVHUM_concl V u0 p ⟨hp, hs⟩ hu0V]
+            exact ⟨[u0, u1, u2, u3], hb, hpr, hTS0⟩
+          exact RCONEGE_INTER_VORONOI_CLOSED_IMP_RCONEGE V u0 u1 _ p hp hs hu0V hu1V
+            hu01 hA2 hA3 (RCONE_GT_SUBSET_RCONE_GE u0 u1 _ hpc) hvoro
+        · -- =================== Case 4b ===================
+          simp only [e0, e1] at hpaff
+          have hw1 : omegaListN V [u0, u1, u2, u3] 1 = midpoint ℝ u0 u1 := by
+            have hh : hl [u0, u1] < Real.sqrt 2 := by rw [← hTR1]; exact hA1
+            rw [OMEGA_LIST_1_EXPLICIT_NEW u0 u1 u2 u3 V [u0, u1, u2, u3] hs hp hb rfl hh,
+              CIRCUMCENTER_2]
+          have hpR : p ∈ convexHull ℝ {u0, midpoint ℝ u0 u1,
+              omegaListN V [u0, u1, u2, u3] 2, omegaListN V [u0, u1, u2, u3] 3} := by
+            have h5 : p ∈ convexHull ℝ {u0, omegaListN V [u0, u1, u2, u3] 1,
+                omegaListN V [u0, u1, u2, u3] 2, omegaListN V [u0, u1, u2, u3] 3} := by
+              simpa only [e0] using hRog2
+            rwa [hw1] at h5
+          rcases le_or_gt (Real.sqrt 2) (hl (truncateSimplex 2 [u0, u1, u2, u3])) with
+            hGE2 | hLT2
+          · -- -------- Case 4b-i: the affGe membership holds after all --------
+            have hmxi : mxi V [u0, u1, u2, u3] = omegaListN V [u0, u1, u2, u3] 2 := by
+              rw [mxi, if_pos hGE2]
+            exfalso
+            apply hpaff
+            refine (CONVEX_HULL_4_SUBSET_AFF_GE_2_2 u0 u1 (mxi V [u0, u1, u2, u3])
+              (omegaListN V [u0, u1, u2, u3] 3)) ?_
+            refine convexHull_min ?_ (convex_convexHull ℝ
+              ({u0, u1, mxi V [u0, u1, u2, u3], omegaListN V [u0, u1, u2, u3] 3} : Set V3)) hpR
+            intro z hz
+            simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+            rw [← hmxi] at hz
+            rcases hz with hz | hz | hz | hz
+            · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+            · rw [hz]; exact convexHull_mono (by
+                intro y hy
+                simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy ⊢
+                tauto) (Convex.midpoint_mem
+                (convex_convexHull ℝ ({u0, u1} : Set V3))
+                (subset_convexHull ℝ _ (by simp)) (subset_convexHull ℝ _ (by simp)))
+            · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+            · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+          · -- -------- Case 4b-ii: witness 3 --------
+            refine ⟨3, by omega, ?_⟩
+            rw [(MCELL_EXPLICIT 3 V [u0, u1, u2, u3]).2.2.2.1, mcell3, if_pos ⟨hLT2, hH⟩,
+              hTR2]
+            obtain ⟨s, hsSeg, hsDist, hsEq⟩ :=
+              MXI_EXPLICIT_OLD V [u0, u1, u2, u3] u0 u1 u2 u3 hs hp hb rfl hLT2 hH
+            rw [← hsEq]
+            have hbar2 : barV V 2 [u0, u1, u2] := by
+              rw [← hTR2]
+              exact TRUNCATE_SIMPLEX_BARV V 2 3 [u0, u1, u2, u3] hb (by omega)
+            have hw2 : omegaListN V [u0, u1, u2, u3] 2 ∈
+                convexHull ℝ (setOfList [u0, u1, u2]) := by
+              have hwx := XNHPWAB2 V [u0, u1, u2] 2 hp hbar2 (by rw [← hTR2]; exact hLT2)
+              rw [← OMEGA_LIST_TRUNCATE_2 V u0 u1 u2 u3] at hwx
+              exact hwx
+            have hR3 : p ∈ convexHull ℝ {u0, u1, omegaListN V [u0, u1, u2, u3] 2,
+                omegaListN V [u0, u1, u2, u3] 3} := by
+              refine convexHull_min ?_ (convex_convexHull ℝ _) hpR
+              intro z hz
+              simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+              rcases hz with hz | hz | hz | hz
+              · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+              · rw [hz]; exact convexHull_mono (by
+                  intro y hy
+                  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy ⊢
+                  tauto) (Convex.midpoint_mem
+                  (convex_convexHull ℝ ({u0, u1} : Set V3))
+                  (subset_convexHull ℝ _ (by simp)) (subset_convexHull ℝ _ (by simp)))
+              · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+              · rw [hz]; exact subset_convexHull ℝ _ (by simp)
+            have hEqSet : convexHull ℝ {u0, u1, omegaListN V [u0, u1, u2, u3] 2,
+                omegaListN V [u0, u1, u2, u3] 3}
+                = convexHull ℝ {omegaListN V [u0, u1, u2, u3] 2,
+                  omegaListN V [u0, u1, u2, u3] 3, u0, u1} := by
+              congr 1
+              ext z
+              simp
+              tauto
+            rw [hEqSet] at hR3
+            rw [p13_hull_break4 (omegaListN V [u0, u1, u2, u3] 2)
+              (omegaListN V [u0, u1, u2, u3] 3) u0 u1 s hsSeg] at hR3
+            rcases hR3 with hR3 | hR3
+            · refine convexHull_min ?_ (convex_convexHull ℝ
+                (setOfList [u0, u1, u2] ∪ {s})) hR3
+              intro z hz
+              simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+              rcases hz with hz | hz | hz | hz
+              · rw [hz]
+                exact convexHull_mono Set.subset_union_left hw2
+              · rw [hz]; exact subset_convexHull ℝ _ (by simp [setOfList])
+              · rw [hz]; exact subset_convexHull ℝ _ (by simp [setOfList])
+              · rw [hz]; exact subset_convexHull ℝ _ (by simp [setOfList])
+            · exfalso
+              apply hpaff
+              have hre : convexHull ℝ {s, omegaListN V [u0, u1, u2, u3] 3, u0, u1} ⊆
+                  affGe {u0, u1} {mxi V [u0, u1, u2, u3],
+                    omegaListN V [u0, u1, u2, u3] 3} := by
+                have h1 : convexHull ℝ {s, omegaListN V [u0, u1, u2, u3] 3, u0, u1}
+                    = convexHull ℝ {u0, u1, mxi V [u0, u1, u2, u3],
+                      omegaListN V [u0, u1, u2, u3] 3} := by
+                  rw [← hsEq]
+                  congr 1
+                  ext z
+                  simp
+                  tauto
+                rw [h1]
+                exact CONVEX_HULL_4_SUBSET_AFF_GE_2_2 u0 u1 _ _
+              exact hre hR3
+      · -- =================== Case 3: witness 1 ===================
+        refine ⟨1, by omega, ?_⟩
+        rw [(MCELL_EXPLICIT 1 V [u0, u1, u2, u3]).2.1, mcell1, if_pos hH]
+        refine ⟨⟨hpr, ?_⟩, hpcone⟩
+        simp only [Metric.mem_closedBall, e0]
+        exact le_of_lt hnear
 
 /-- GIANT — HOL `SLTSTLO2` (SLTSTLO.hl:582-3692; concl
 `pack_concl.hl:138`): away from an explicit null set `Z` the covering of
