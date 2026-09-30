@@ -1334,6 +1334,143 @@ theorem DELTA_Y_POS_4POINTS (v0 v1 v2 v3 : V3) :
       (dist v1 v3) (dist v1 v2) :=
   p38_deltaY_pos_4 v0 v1 v2 v3
 
+/-! ### The public 4-point `DIHV_EQ_DIH_Y` bridge (fill wave 2026-09-30)
+
+The apex-0 engine `p38_dihV_eq_dihY` is private; the PA21 lane
+(`PackingAuto21.GAMMAX_GAMMA2_X`, the TSKAJXY3.hl:2070 assembly) consumes the
+bridge in general position.  The two `¬Collinear` premises feed the matching
+`0 < ups_x` factors of the engine through the Gram/Lagrange identity — the
+`LocalAuto17.lean:183 upsX_pos_of_noncollinear_p17` route (`cross3`-free
+re-derivation: the Gram bracket `‖v1‖²‖v2‖² − (v1·v2)²` vanishes exactly in
+the Cauchy–Schwarz equality case, i.e. collinearity). -/
+
+/-- Helper (2026-09-30, the LocalAuto17:183 `upsX_pos_of_noncollinear_p17`
+twin re-mirrored on this import lane): the Gram determinant `ups_x` of an
+origin-apex pair is positive as soon as the pair is non-collinear at the
+origin — `ups_x = 4·(‖v1‖²‖v2‖² − (v1·v2)²)` (`p38_cos_law` + `p38_upsX_gram`),
+and the bracket is forced positive by the Cauchy–Schwarz equality case. -/
+private theorem p38_upsX_pos_noncollinear {v1 v2 : V3}
+    (hnc : ¬ Collinear ℝ ({(0:V3), v1, v2} : Set V3)) :
+    0 < upsX (‖v1‖ * ‖v1‖) (‖v2‖ * ‖v2‖) (dist v1 v2 * dist v1 v2) := by
+  have hv1 : v1 ≠ 0 := by
+    intro h; subst h
+    exact hnc (by simpa using collinear_pair ℝ (0:V3) v2)
+  have hgram : 0 < (‖v1‖ * ‖v1‖) * (‖v2‖ * ‖v2‖) - (v1 ⬝ᵥ v2) * (v1 ⬝ᵥ v2) := by
+    by_contra hle
+    have hAB : (‖v1‖ * ‖v1‖) * (‖v2‖ * ‖v2‖) ≤ (v1 ⬝ᵥ v2) * (v1 ⬝ᵥ v2) :=
+      by linarith [not_lt.mp hle]
+    have hcs : |v1 ⬝ᵥ v2| ≤ ‖v1‖ * ‖v2‖ := by
+      rw [← inner_eq_dot]
+      exact abs_real_inner_le_norm (x := v1) (y := v2)
+    have hBA : (v1 ⬝ᵥ v2) * (v1 ⬝ᵥ v2) ≤ (‖v1‖ * ‖v1‖) * (‖v2‖ * ‖v2‖) := by
+      calc (v1 ⬝ᵥ v2) * (v1 ⬝ᵥ v2)
+          = |v1 ⬝ᵥ v2| * |v1 ⬝ᵥ v2| := (abs_mul_abs_self _).symm
+        _ ≤ (‖v1‖ * ‖v2‖) * (‖v1‖ * ‖v2‖) := by
+            nlinarith [hcs, abs_nonneg (v1 ⬝ᵥ v2),
+              mul_nonneg (norm_nonneg v1) (norm_nonneg v2)]
+        _ = (‖v1‖ * ‖v1‖) * (‖v2‖ * ‖v2‖) := by ring
+    have hsqm : (‖v1‖ * ‖v2‖) * (‖v1‖ * ‖v2‖)
+        = (‖v1‖ * ‖v1‖) * (‖v2‖ * ‖v2‖) := by ring
+    have habs : |v1 ⬝ᵥ v2| = ‖v1‖ * ‖v2‖ := by
+      refine (mul_self_inj_of_nonneg (abs_nonneg _)
+        (mul_nonneg (norm_nonneg _) (norm_nonneg _))).mp ?_
+      rw [abs_mul_abs_self, hsqm]
+      linarith
+    have hinner : ‖inner ℝ v1 v2‖ = ‖v1‖ * ‖v2‖ := by
+      rw [inner_eq_dot, Real.norm_eq_abs]; exact habs
+    rcases ((norm_inner_eq_norm_tfae ℝ v1 v2).out 0 2).mp hinner with h0 | ⟨c, hc⟩
+    · exact hv1 h0
+    · exact hnc (collinear3_iff_smul (v := (0:V3)) (w := v1) (w1 := v2) hv1 |>.mpr
+        ⟨c, by simpa using hc⟩)
+  rw [p38_upsX_gram (‖v1‖ * ‖v1‖) (‖v2‖ * ‖v2‖) (dist v1 v2 * dist v1 v2)
+    (v1 ⬝ᵥ v2) (p38_cos_law v1 v2)]
+  linarith
+
+/-- Helper (2026-09-30): `dihV` is translation invariant — the general
+tetrahedron reduces to the apex-0 form of `p38_dihV_eq_dihY`. -/
+private theorem p38_dihV_sub (v0 v1 v2 v3 : V3) :
+    dihV v0 v1 v2 v3 = dihV 0 (v1 - v0) (v2 - v0) (v3 - v0) := by
+  unfold dihV
+  dsimp only
+  simp only [sub_zero]
+
+/-- Helper (2026-09-30): collinearity survives translation — the direction
+the 4-point bridge needs (apex-0 triple back to general position). -/
+private theorem p38_collinear_sub {v0 v1 v2 : V3}
+    (h : Collinear ℝ ({(0:V3), v1 - v0, v2 - v0} : Set V3)) :
+    Collinear ℝ ({v0, v1, v2} : Set V3) := by
+  rw [collinear_iff_of_mem
+    (show (v1 - v0 : V3) ∈ ({(0:V3), v1 - v0, v2 - v0} : Set V3) from by simp)] at h
+  obtain ⟨v, hv⟩ := h
+  rw [collinear_iff_of_mem (show v1 ∈ ({v0, v1, v2} : Set V3) from by simp)]
+  refine ⟨v, fun p hp => ?_⟩
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+  rcases hp with hp | hp | hp
+  · obtain ⟨r, hr⟩ := hv (0:V3) (by simp)
+    refine ⟨r, ?_⟩
+    rw [hp]
+    show v0 = r • v + v1
+    have hr' : (0:V3) = r • v + (v1 - v0) := hr
+    linear_combination (norm := module) hr'
+  · exact ⟨0, by rw [hp]; simp⟩
+  · obtain ⟨r, hr⟩ := hv (v2 - v0) (by simp)
+    refine ⟨r, ?_⟩
+    rw [hp]
+    show v2 = r • v + v1
+    have hr' : (v2 - v0 : V3) = r • v + (v1 - v0) := hr
+    linear_combination (norm := module) hr'
+
+/-- HOL `DIHV_EQ_DIH_Y` bridge, public 4-point form (2026-09-30; consumer:
+PackingAuto21 `GAMMAX_GAMMA2_X`, TSKAJXY3.hl:2070).  At a tetrahedron the
+geometric dihedral `dihV v0 v1 v2 v3` equals the analytic `dih_y` of the
+squared-length box — both angles have cosine
+`deltaX4 x / √(4·x1·deltaX x + deltaX4 x²)`; each `¬Collinear` premise feeds
+the matching `0 < ups_x` factor through `p38_upsX_pos_noncollinear`. -/
+theorem DIHV_EQ_DIH_Y_4PT (v0 v1 v2 v3 : V3)
+    (h2 : ¬ Collinear ℝ ({v0, v1, v2} : Set V3))
+    (h3 : ¬ Collinear ℝ ({v0, v1, v3} : Set V3)) :
+    dihV v0 v1 v2 v3 =
+      dihY (dist v0 v1) (dist v0 v2) (dist v0 v3) (dist v2 v3)
+        (dist v1 v3) (dist v1 v2) := by
+  have hnc2 : ¬ Collinear ℝ ({(0:V3), v1 - v0, v2 - v0} : Set V3) :=
+    fun hc => h2 (p38_collinear_sub hc)
+  have hnc3 : ¬ Collinear ℝ ({(0:V3), v1 - v0, v3 - v0} : Set V3) :=
+    fun hc => h3 (p38_collinear_sub hc)
+  have hw1 : 0 < ‖v1 - v0‖ := by
+    refine norm_pos_iff.mpr fun h0 => h2 ?_
+    rw [show v1 = v0 from sub_eq_zero.mp h0]
+    exact (by simpa using collinear_pair ℝ v0 v2 :
+      Collinear ℝ ({v0, v0, v2} : Set V3))
+  rw [p38_dihV_sub v0 v1 v2 v3,
+    p38_dihV_eq_dihY (v1 - v0) (v2 - v0) (v3 - v0) hw1
+      (by
+        have h := p38_deltaY_pos_4 (0:V3) (v1 - v0) (v2 - v0) (v3 - v0)
+        rwa [dist_zero_left, dist_zero_left, dist_zero_left] at h)
+      (p38_upsX_pos_noncollinear hnc2) (p38_upsX_pos_noncollinear hnc3)]
+  rw [show ‖v1 - v0‖ = dist v0 v1 from by rw [dist_eq_norm, norm_sub_rev],
+    show ‖v2 - v0‖ = dist v0 v2 from by rw [dist_eq_norm, norm_sub_rev],
+    show ‖v3 - v0‖ = dist v0 v3 from by rw [dist_eq_norm, norm_sub_rev],
+    show dist (v2 - v0) (v3 - v0) = dist v2 v3 from by
+      rw [dist_eq_norm, dist_eq_norm, sub_sub_sub_cancel_right],
+    show dist (v1 - v0) (v3 - v0) = dist v1 v3 from by
+      rw [dist_eq_norm, dist_eq_norm, sub_sub_sub_cancel_right],
+    show dist (v1 - v0) (v2 - v0) = dist v1 v2 from by
+      rw [dist_eq_norm, dist_eq_norm, sub_sub_sub_cancel_right]]
+
+/-- The 4-point nonnegativity companion (2026-09-30): the geometric `dihV`
+is nonnegative at a proper tetrahedron — the bridge `DIHV_EQ_DIH_Y_4PT`
+plus `DIH_Y_NN` over the Cayley–Menger `DELTA_Y_POS_4POINTS`. -/
+theorem DIHV_NN_4PT (v0 v1 v2 v3 : V3)
+    (h2 : ¬ Collinear ℝ ({v0, v1, v2} : Set V3))
+    (h3 : ¬ Collinear ℝ ({v0, v1, v3} : Set V3)) :
+    0 ≤ dihV v0 v1 v2 v3 := by
+  rw [DIHV_EQ_DIH_Y_4PT v0 v1 v2 v3 h2 h3]
+  refine DIH_Y_NN _ _ _ _ _ _ (dist_pos.mpr fun h0 => h2 ?_)
+    (DELTA_Y_POS_4POINTS v0 v1 v2 v3)
+  rw [show v0 = v1 from h0]
+  exact (by simpa using collinear_pair ℝ v1 v2 :
+    Collinear ℝ ({v1, v1, v2} : Set V3))
+
 /-- HOL `tau3_taum_d` (terminal.hl:549-567).  The six box-bound conjuncts
 `&2 <= a01 /\ &2 <= a12 /\ &2 <= a02 /\ b01 <= #3.62 /\ b12 <= #3.62 /\
 b02 <= #3.62` (terminal.hl:550) are part of the HOL antecedent; they force
