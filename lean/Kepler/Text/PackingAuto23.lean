@@ -2594,14 +2594,14 @@ k = 2 (HL §D: `mcell2` = double `rconeGe` ∩ the `affGe {u0,u1} {mxi, ω₃}`
 wedge `L`, `vol (X∩D) = vol (L∩D)`, closed by CCV `volumeConicCapWedge`),
 k = 3 (HL §F: hull + the AZIM_COMPL complement identity, `AZIM_COMPL_EXT`
 PA6:2107), k = 4 non-coplanar (HL §E: needs the region-block extremal data
-from `grutoti_region` to put `X ∩ D` into the coplanar sliver). CAVEAT
-(scout risk §3): the frozen signature carries no edge-cell hypothesis
-(`e ∈ edgeX V X`, i.e. `u0,u1 ∈ VX V X ∧ u0 ≠ u1`) — the k = 0,1 counting
-arm and the k = 4 degenerate closure are only consumable in that context,
-which the `grutoti_pivot` fill supplies; an SF proposal for the hypothesis
-should precede the core fill. -/
+from `grutoti_region` to put `X ∩ D` into the coplanar sliver). RESOLVED
+(STATEMENT-FIX 项 21, 2026-09-30 用户批准): the edge-cell hypothesis
+`(he : {u0, u1} ∈ edgeX V X)` (i.e. `u0,u1 ∈ VX V X ∧ u0 ≠ u1`) is now part
+of the signature — the k = 0,1 counting arm and the k = 4 degenerate closure
+are consumable in that context, which the `grutoti_pivot` fill supplies. -/
 private theorem grutoti_cell_vol (V : Set V3) (u0 u1 : V3) (r d : ℝ)
-    (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1) (X : Set V3)
+    (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1)
+    (he : {u0, u1} ∈ edgeX V X) (X : Set V3)
     (hm : X ∈ mcellSet V) (hn : ¬nullSet (X ∩ grutotiConicCap u0 u1 r d)) :
     volume.real (X ∩ grutotiConicCap u0 u1 r d) =
       volume.real (grutotiConicCap u0 u1 r d) * dihX V X (u0, u1) / (2 * Real.pi) := by
