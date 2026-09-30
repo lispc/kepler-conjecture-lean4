@@ -1024,9 +1024,12 @@ junk 对换下 hrog 平凡真而 p ≠ refl）。缺陷：SF15 补丁只覆盖 P
 
 ### (b) 修复
 
-补 `hpout : ∀ x, k < x → p x = x`（SF15 同形）；**消费点 PackingConcl.lean:286
-`KSOQKWL_concl_discharged` 同步加参穿透**（SF20 的 PA17-shim 教训：consumer
-扫描不截断）。
+补 `hpout : ∀ x, k < x → p x = x`（SF15 同形）；**消费点穿透扩围（批 A PA7
+应用波实测，2026-09-30）**：PackingConcl.lean:292 真实调用
+`KSOQKWL V ul p k hP hbar hl2 hperm hrog`，且该 consumer 自身是冻结接口
+陈述（无 hpout）——故本项 = PA2:3146 补前提 + **PackingConcl 的
+KSOQKWL_concl_discharged 陈述同步补参（自身也要 SF）**+ 调用点加参，三处
+同一 patch/同车提交（SF20 的 PA17-shim 教训：consumer 扫描不截断）。
 
 ### (c) 状态：**已批准；PA2 正被 DUUNHOR 阶段2 lane 编辑，文件空闲后自动应用。**
 

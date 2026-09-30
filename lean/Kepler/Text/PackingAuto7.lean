@@ -32,8 +32,13 @@ Encoding notes (following PackingAuto2/5 conventions).
   `x pow 2` ↔ `^ 2`; `&2` ↔ `(2:ℝ)`; `pi` ↔ `Real.pi`; `CARD` ↔ `Nat.card`.
 - HL `p permutes (0..k)` ↔ `PackingAuto2.permutes p (Set.Icc 0 k)` (weak,
   pointwise-on-set encoding — see PackingAuto5 encoding note: HL's
-  complement-fixing `permutes` is strictly stronger, so the two
-  `NOT_ID_IMP_*` statements below are sorry'd as encoded).
+  complement-fixing `permutes` is strictly stronger). ENCODING-FIX
+  (2026-09-30, user-approved batch A): the two `NOT_ID_IMP_*` statements
+  below and `KSOQKWL` now carry the missing complement-fixing premise
+  (`hfix`/`hpout : ∀ j, k < j → p j = j`), restoring HOL fidelity; their
+  proof bodies remain `sorry` (GIANT). Linkage: the
+  `PackingConcl.KSOQKWL_concl_discharged` call site predates `KSOQKWL`'s
+  extra argument (to be re-threaded with SF item 25).
 - HL `{f j | j IN 0..k}` ↔ `{f j | j ∈ Finset.Icc 0 k}`;
   `INTERS`/`UNIONS` ↔ `⋂₀`/`⋃₀`; `FAN`/`dart1_of_fan`/`set_of_edge` ↔
   `Kepler.Text.Fan.*`. HL `hypermap_of_fan` has no Lean counterpart yet
@@ -986,34 +991,52 @@ theorem NUM_FINITE_IMP_MAX_EXISTS (K : Set ℕ) (hK : K.Finite) (hne : K ≠ ∅
   obtain ⟨m, hm, hmax⟩ := Set.exists_max_image K id hK hne'
   exact ⟨m, hm, fun j hj => by simpa using hmax j hj⟩
 
-/-- HL `NOT_ID_IMP_LISTS_NOT_EQ` (Rogers.hl:9450). NOTE: unprovable as
-encoded — `PackingAuto2.permutes` is the weak pointwise-on-set relation,
-while HL's `permutes` additionally fixes the complement (see the
-`PERMUTES_TRIVIAL` encoding note in PackingAuto5): a permutation fixing
-`0..k` pointwise but moving outside points satisfies the hypotheses with
-`ul = left_action_list p ul`. -/
+/-- HL `NOT_ID_IMP_LISTS_NOT_EQ` (Rogers.hl:9450). ENCODING-FIX (SF item 23,
+2026-09-30, user-approved batch A): the former "unprovable as encoded" note is
+resolved by adding `hfix` — the complement-fixing conjunct of HL's `permutes`
+(Library/permutations.ml:9) that the weak pointwise-on-set
+`PackingAuto2.permutes` lacks (see the `PERMUTES_TRIVIAL` encoding note in
+PackingAuto5; sweep report docs/encoding-risk-sweep.md §2.1 C2-1, probe
+P1-P3). With `hfix` the statement matches the HOL original; the proof body
+stays `sorry` (GIANT, later wave). -/
 theorem NOT_ID_IMP_LISTS_NOT_EQ (ul : List V3) (p : Equiv.Perm ℕ) (k : ℕ)
     (hlen : ul.length = k + 1) (hcard : Nat.card (setOfList ul) = k + 1)
-    (hperm : permutes p (Set.Icc 0 k)) (hpid : ¬ (p = Equiv.refl ℕ)) :
+    (hperm : permutes p (Set.Icc 0 k))
+    (hfix : ∀ j : ℕ, k < j → p j = j) (hpid : ¬ (p = Equiv.refl ℕ)) :
     ¬ (ul = leftActionList p ul) := by
   sorry
 
-/-- HL `NOT_ID_IMP_EXISTS_MAX_EQ_TRUNCATE_SIMPLEX` (Rogers.hl:9490). Same
-encoding caveat as `NOT_ID_IMP_LISTS_NOT_EQ`. -/
+/-- HL `NOT_ID_IMP_EXISTS_MAX_EQ_TRUNCATE_SIMPLEX` (Rogers.hl:9490).
+ENCODING-FIX (SF item 24, 2026-09-30, user-approved batch A): same shape as
+`NOT_ID_IMP_LISTS_NOT_EQ` — complement-fixing `hfix` added (sweep report
+docs/encoding-risk-sweep.md §2.1 C2-2, same probe P1-P3 counterexample
+engine); with `hfix` the statement matches the HOL original; proof body
+`sorry` (GIANT, later wave). -/
 theorem NOT_ID_IMP_EXISTS_MAX_EQ_TRUNCATE_SIMPLEX (ul : List V3)
     (p : Equiv.Perm ℕ) (k : ℕ) (hlen : ul.length = k + 1)
     (hcard : Nat.card (setOfList ul) = k + 1)
-    (hperm : permutes p (Set.Icc 0 k)) (hpid : ¬ (p = Equiv.refl ℕ)) :
+    (hperm : permutes p (Set.Icc 0 k))
+    (hfix : ∀ j : ℕ, k < j → p j = j) (hpid : ¬ (p = Equiv.refl ℕ)) :
     ¬ (hdV ul = hdV (leftActionList p ul)) ∨
       ∃ j : ℕ, j < k ∧
         truncateSimplex j ul = truncateSimplex j (leftActionList p ul) ∧
         ¬ ((ul.getD (j + 1) default) = ((leftActionList p ul).getD (j + 1) default)) := by
   sorry
 
-/-- HL `KSOQKWL` (Rogers.hl:9588): Rogers uniqueness forces the identity. -/
+/-- HL `KSOQKWL` (Rogers.hl:9588): Rogers uniqueness forces the identity.
+ENCODING-FIX (SF15 / proposal 19', 2026-09-30, user-approved batch A):
+`hpout` added — the complement-fixing conjunct of HL's `permutes`
+(Library/permutations.ml:9); with it the statement matches the HOL original
+(per docs/statement-fix-proposals-patches/15-KSOQKWL.patch). Proof body
+stays `sorry` (GIANT Rogers uniqueness chain). Consumer linkage: the call
+`KSOQKWL V ul p k hP hbar hl2 hperm hrog` in
+`PackingConcl.KSOQKWL_concl_discharged` predates the extra argument and is
+to be re-threaded together with SF item 25 (the
+`PackingAuto2.KSOQKWL_concl` twin). -/
 theorem KSOQKWL (V : Set V3) (ul : List V3) (p : Equiv.Perm ℕ) (k : ℕ)
     (hV : Packing V) (hb : barV V k ul) (hl2 : hl ul < Real.sqrt 2)
     (hperm : permutes p (Set.Icc 0 k))
+    (hpout : ∀ x : ℕ, k < x → p x = x)
     (hrog : rogers V ul = rogers V (leftActionList p ul)) :
     p = Equiv.refl ℕ := by
   sorry
