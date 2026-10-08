@@ -478,14 +478,41 @@ theorem SET_STAB_4M7_p32 :
   -- NEEDS: STAB_MOD + DIAG_MOD (both discharged by `stabDiag_mod_p32`
   -- and the hexagons `DIAG_MOD` twin).
 
-/-- HOL `EXPAND_STAB_DIAG_4M7` (MIQMCSN.hl:1124). -/
+/-- HOL `EXPAND_STAB_DIAG_4M7` (MIQMCSN.hl:1124). Residue enumeration
+`i % 4 ∈ {0,1,2,3}` collapsing to the two records `(0,2)`/`(1,3)` (the
+`(2,0)`/`(3,1)` pairs re-orient by `STAB_SYM`); over the PROVED local
+`stabDiag_mod_p32`. -/
 theorem EXPAND_STAB_DIAG_4M7_p32 :
     {s | ∃ i j, j % 4 = (i % 4 + 2) % 4 ∧
       s = scsStabDiagV39 scs4M7 (i % 4) (j % 4)} =
     {s | ∃ i, i < 4 ∧ s = scsStabDiagV39 scs4M7 (i + 2) i} := by
-  sorry
-  -- NEEDS: EXPAND_STAB_DIAG_4 (hexagons) — residue enumeration
-  -- i%4 ∈ {0,1,2,3} collapsing to the two records (0,2)/(1,3).
+  have h4 : (4:ℕ) ≠ 0 := by omega
+  have hk4 : scs4M7.k = 4 := rfl
+  have hmod := fun i j => stabDiag_mod_p32 scs4M7 h4 i j
+  rw [hk4] at hmod
+  ext x
+  constructor
+  · rintro ⟨i, j, hj, rfl⟩
+    have hzi : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hzj : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4
+    · have hj2 : j % 4 = 2 := by omega
+      refine ⟨2, by omega, ?_⟩
+      rw [hj2, hmod 4 2]
+    · have hj2 : j % 4 = 3 := by omega
+      refine ⟨1, by omega, ?_⟩
+      rw [hj2]
+      exact STAB_SYM scs4M7 1 3
+    · have hj2 : j % 4 = 0 := by omega
+      refine ⟨0, by omega, ?_⟩
+      rw [hj2]
+    · have hj2 : j % 4 = 1 := by omega
+      refine ⟨1, by omega, ?_⟩
+      rw [hj2]
+  · rintro ⟨i, hi, rfl⟩
+    refine ⟨i + 2, i, ?_, ?_⟩
+    · omega
+    · exact hmod (i + 2) i
 
 /-- HOL `SET_EQ_DIAG_STAB_4M7` (MIQMCSN.hl:1131). -/
 theorem SET_EQ_DIAG_STAB_4M7_p32 :
@@ -572,14 +599,39 @@ theorem SET_STAB_4M8_p32 :
   · rintro ⟨i, j, hd, rfl⟩
     exact ⟨i % 4, j % 4, hd, rfl⟩
 
-/-- HOL `EXPAND_STAB_DIAG_4M8` (MIQMCSN.hl:1543). -/
+/-- HOL `EXPAND_STAB_DIAG_4M8` (MIQMCSN.hl:1543). As `EXPAND_STAB_DIAG_4M7_p32`
+on `scs_4M8`. -/
 theorem EXPAND_STAB_DIAG_4M8_p32 :
     {s | ∃ i j, j % 4 = (i % 4 + 2) % 4 ∧
       s = scsStabDiagV39 scs4M8 (i % 4) (j % 4)} =
     {s | ∃ i, i < 4 ∧ s = scsStabDiagV39 scs4M8 (i + 2) i} := by
-  sorry
-  -- NEEDS: EXPAND_STAB_DIAG_4 (hexagons) — residue enumeration
-  -- i%4 ∈ {0,1,2,3} collapsing to the two records (0,2)/(1,3).
+  have h4 : (4:ℕ) ≠ 0 := by omega
+  have hk4 : scs4M8.k = 4 := rfl
+  have hmod := fun i j => stabDiag_mod_p32 scs4M8 h4 i j
+  rw [hk4] at hmod
+  ext x
+  constructor
+  · rintro ⟨i, j, hj, rfl⟩
+    have hzi : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have hzj : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4
+    · have hj2 : j % 4 = 2 := by omega
+      refine ⟨2, by omega, ?_⟩
+      rw [hj2, hmod 4 2]
+    · have hj2 : j % 4 = 3 := by omega
+      refine ⟨1, by omega, ?_⟩
+      rw [hj2]
+      exact STAB_SYM scs4M8 1 3
+    · have hj2 : j % 4 = 0 := by omega
+      refine ⟨0, by omega, ?_⟩
+      rw [hj2]
+    · have hj2 : j % 4 = 1 := by omega
+      refine ⟨1, by omega, ?_⟩
+      rw [hj2]
+  · rintro ⟨i, hi, rfl⟩
+    refine ⟨i + 2, i, ?_, ?_⟩
+    · omega
+    · exact hmod (i + 2) i
 
 /-- HOL `SET_EQ_DIAG_STAB_4M8` (MIQMCSN.hl:1550). -/
 theorem SET_EQ_DIAG_STAB_4M8_p32 :
@@ -588,13 +640,27 @@ theorem SET_EQ_DIAG_STAB_4M8_p32 :
   sorry
   -- NEEDS: EXPAND_STAB_DIAG_4M8_p32 + EXPAND_DIAG_4V + FZIOTEF_UNION.
 
-/-- HOL `PROP_OPP_DIAG_4M8_13` (MIQMCSN.hl:1603). -/
+/-- HOL `PROP_OPP_DIAG_4M8_13` (MIQMCSN.hl:1603). Both records re-oriented by
+`STAB_SYM` to the literal-index classes `(1,3)`/`(2,0)`; the reflection
+`j ↦ 4 - ((2+j)%4+1)` (the `propEqu 2` after `peropp2`) preserves the 4M8
+`a`-table and swaps the cstab-classes `(1,3) ↔ (0,2)` (16-cell residue sweeps;
+psort/peropp2 mod-4 case work of the NEEDS marker). -/
 theorem PROP_OPP_DIAG_4M8_13_p32 :
     scsStabDiagV39 scs4M8 1 3 =
       scsPropEquV39 (scsOppV39 (scsStabDiagV39 scs4M8 0 2)) 2 := by
+  -- the two records re-oriented to (3,1) resp. (2,0) so that the maps are
+  -- literal-index funlist lookups
   sorry
-  -- NEEDS: scs_inj on the two records + psort/peropp2 mod-4 case work
-  -- (PSORT_MOD, MOD_ADD_MOD, FUNLIST_EXPLICIT).
+  -- NEEDS: 攻而未克回滚（编排者修波）。侦察已定：本 Mathlib `psort` 签名为
+  -- `ℕ → ℕ × ℕ → ℕ × ℕ`（查表形态），`psort 4 x y` 双参应用非法，必须
+  -- `psort 4 (x, y)`；证明骨架 = `rw [STAB_SYM scs4M8 1 3, STAB_SYM scs4M8 0 2]`
+  -- 后 `ScsV39.mk.injEq.mpr ⟨rfl, rfl, funext ha, funext ha, funext hb, funext hb,
+  -- rfl, rfl, rfl, rfl, rfl⟩`，其中 ha（a-表反射不变性 j ↦ 4 - ((2+j)%4+1)）与
+  -- hb（b-表类 (1,3)↔(0,2) 反射搬运）各为 16 格残差扫描
+  -- （`interval_cases j % 4 <;> interval_cases j' % 4 <;> simp only [scs4M8,
+  -- mkUnadornedV39, funlistV39, psort, assocdV39] <;> simp [Nat.add_mod] <;> omega`
+  -- 骨架成立但 16 格中 omega 报 "No usable constraints"——须查 funlist 展开后
+  -- 的 if-链 decide 化）。反射把 (1,3) 类映到 (0,2) 类已按 4 格抽样核实为真。
 
 /-- HOL `STAB_4M8_02_ARROW_4M8_13` (MIQMCSN.hl:1637). -/
 theorem STAB_4M8_02_ARROW_4M8_13_p32 :
