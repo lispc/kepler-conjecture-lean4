@@ -1073,9 +1073,12 @@ witness 供给）；(ii) 沿 `grutoti_region` 的 witness 重述（region 已闭
 同文件私有可直用）。配套：region docstring DEVIATIONS 注记的极值数据
 （f1/f2>0）需随此项导出。
 
-### (c) 状态：**已批准（2026-10-01 用户"同意。按你的想法来吧。"，三连批
-28/29/30 之一）**（cell_vol 波立案；k=0,1 计数臂与退化/null 臂已闭，仅
-k∈{2,3,4} wedge 恒等式本体卡此项；随 SF28+29+cell_vol 波应用）。
+### (c) 状态：**已应用（2026-10-08 GT-3e 波；2026-10-01 三连批 28/29/30）**。
+前提落地：`hp : Packing V`（k=2 反锥 packing 距离）、`hw1 : hl [u0,u1]/√2 ≤ d`
+（k=1/2 楔窄性）、`hw3/hw4`（k=3/4 far-face 距离 + 锥-扇形不交，带
+¬nullSet (mcell k V vl ∩ D) 门，族 = barV V 3 vl ∧ truncateSimplex 1 vl =
+[u0;u1]）。k=0/1 计数臂与退化/null 臂已闭；k∈{2,3,4} 楔恒等式本体为结构化
+sorry（消费端 kit 全部 banked 零错，见 PA23 GT-3e lane）。
 
 ## 29. PA23 `grutoti_cell_vol` ε-junk 角（cellParams 逆序表）— 分级 A′
 
@@ -1087,8 +1090,10 @@ frozen-false 角**。
 
 签名加 `truncateSimplex 1 (cellParams V X).2 = [u0, u1]` 型前提封角。
 
-### (c) 状态：**已批准（2026-10-01 用户三连批 28/29/30 之一）**（cell_vol
-波立案；随 SF28+29+cell_vol 波应用）。
+### (c) 状态：**已应用（2026-10-08 GT-3e 波；2026-10-01 三连批 28/29/30）**。
+`hjunk : truncateSimplex 1 (cellParams V X).2 = [u0, u1]` 落地；ε-junk 逆序表
+角整支消失（cellParams-witness 经 `p23_trunc1_of_init` 兼为 cellParamsD-
+witness，`initialSublist` 桥接）。
 
 ## 30. PA22 bisector 家族 holArg 同缺陷（SF22+27 应用波发现）— 分级 M
 
