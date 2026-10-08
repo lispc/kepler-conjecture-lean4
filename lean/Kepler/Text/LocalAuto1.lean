@@ -446,6 +446,84 @@ def psort (k : ℕ) (u : ℕ × ℕ) : ℕ × ℕ :=
   let j := u.2 % k
   if i ≤ j then (i, j) else (j, i)
 
+/- Private psort/Periodic2 toolkit for this file's `*_concl` discharges
+(scsStabDiagV39/restriction bookkeeping). -/
+private theorem la1psort_cases {k i j x y : ℕ} (heq : psort k (i, j) = psort k (x, y)) :
+    (i % k = x % k ∧ j % k = y % k) ∨ (i % k = y % k ∧ j % k = x % k) := by
+  simp only [psort] at heq
+  split at heq <;> split at heq <;>
+    simp only [Prod.mk.injEq] at heq
+  · exact Or.inl heq
+  · exact Or.inr heq
+  · exact Or.inr ⟨heq.2, heq.1⟩
+  · exact Or.inl ⟨heq.2, heq.1⟩
+
+private theorem la1psort_symm (k i j : ℕ) : psort k (i, j) = psort k (j, i) := by
+  simp only [psort]
+  by_cases h : i % k ≤ j % k
+  · by_cases h2 : j % k ≤ i % k
+    · rw [Nat.le_antisymm h h2]
+    · simp [h, h2]
+  · have h2 : j % k ≤ i % k := Nat.le_of_lt (by omega)
+    simp [h, h2]
+
+private theorem la1psort_add_left (k : ℕ) (i j : ℕ) :
+    psort k (i + k, j) = psort k (i, j) := by
+  have h : (i + k) % k = i % k := by
+    rw [Nat.add_comm]
+    exact Nat.add_mod_left k i
+  simp only [psort, h]
+
+private theorem la1periodic2_mod {α : Sort u} {f : ℕ → ℕ → α} {k : ℕ}
+    (h : Periodic2 f k) (i j : ℕ) : f i j = f (i % k) (j % k) := by
+  have step1 : ∀ (n : ℕ) (x : ℕ), f (x + n * k) j = f x j := by
+    intro n
+    induction n with
+    | zero => intro x; simp
+    | succ m ih =>
+        intro x
+        have he : x + (m + 1) * k = (x + m * k) + k := by rw [Nat.succ_mul, Nat.add_assoc]
+        rw [he, (h (x + m * k) j).1]
+        exact ih x
+  have step2 : ∀ (n : ℕ) (x y : ℕ), f x (y + n * k) = f x y := by
+    intro n
+    induction n with
+    | zero => intro x y; simp
+    | succ m ih =>
+        intro x y
+        have he : y + (m + 1) * k = (y + m * k) + k := by rw [Nat.succ_mul, Nat.add_assoc]
+        rw [he, (h x (y + m * k)).2]
+        exact ih x y
+  have main1 : ∀ x : ℕ, f x j = f (x % k) j := by
+    intro x
+    have hx := step1 (x / k) (x % k)
+    rw [Nat.mul_comm, Nat.mod_add_div] at hx
+    exact hx
+  have main2 : ∀ (x y : ℕ), f x y = f x (y % k) := by
+    intro x y
+    have hy := step2 (y / k) x (y % k)
+    rw [Nat.mul_comm, Nat.mod_add_div] at hy
+    exact hy
+  rw [main1 i, main2]
+
+private theorem la1periodic_mul {α : Sort u} {f : ℕ → α} {k : ℕ} (h : Periodic f k) :
+    ∀ n x, f (x + n * k) = f x := by
+  intro n
+  induction n with
+  | zero => intro x; simp
+  | succ m ih =>
+      intro x
+      have he : x + (m + 1) * k = (x + m * k) + k := by rw [Nat.succ_mul, Nat.add_assoc]
+      rw [he, h]
+      exact ih x
+
+private theorem la1periodic_mod {α : Sort u} {f : ℕ → α} {k : ℕ} (h : Periodic f k)
+    (x : ℕ) : f x = f (x % k) := by
+  have hx := la1periodic_mul h (x / k) (x % k)
+  have he : x % k + x / k * k = x := by rw [Nat.mul_comm]; exact Nat.mod_add_div x k
+  rw [he] at hx
+  exact hx
+
 /-- HOL `ASSOCD_v39` (appendix.hl:465; list recursion). Data-typed (`Type`):
 the Prop-valued `J` list uses (appendix.hl:641/650 term-lets) are skipped. -/
 noncomputable def assocdV39 {β : Type u} (a : ℕ × ℕ) : List ((ℕ × ℕ) × β) → β → β
@@ -579,6 +657,14 @@ theorem ZITHLQN_concl :
 noncomputable def minNum (S : Set ℕ) : ℕ :=
   Classical.epsilon (fun n => n ∈ S ∧ ∀ m ∈ S, n ≤ m)
 
+/-- `minNum` spec: on a nonempty set the choice lands on an attained minimum
+(well-ordering). -/
+private theorem la1minNum_spec (S : Set ℕ) (hne : S.Nonempty) :
+    minNum S ∈ S ∧ ∀ m ∈ S, minNum S ≤ m := by
+  have hex : ∃ n : ℕ, n ∈ S ∧ ∀ m ∈ S, n ≤ m :=
+    ⟨sInf S, Nat.sInf_mem hne, fun m hm => Nat.sInf_le hm⟩
+  exact Classical.epsilon_spec hex
+
 /-- HOL `BBprime_v39` (appendix.hl:656). -/
 def BBprimeV39 (s : ScsV39) : Set (ℕ → V3) :=
   {vv | BBsV39 s vv ∧ (∀ ww, BBsV39 s ww → taustarV39 s vv ≤ taustarV39 s ww) ∧
@@ -605,10 +691,51 @@ def MMsV39 (s : ScsV39) : Set (ℕ → V3) :=
     (∀ i j, s.am i j ≤ dist (vv i) (vv j)) ∧
     (∀ i j, dist (vv i) (vv j) ≤ s.bm i j)}
 
-/-- HOL `unadorned_MMs_concl` (appendix.hl:676). Proof pending. -/
+/-- `BBindex_min` is dominated by every `BBprime` index. -/
+private theorem la1bbindexMin_le (s : ScsV39) {v : ℕ → V3} (hv : v ∈ BBprimeV39 s) :
+    BBindexMinV39 s ≤ BBindexV39 s v := by
+  have himg : (BBindexV39 s '' BBprimeV39 s).Nonempty := ⟨BBindexV39 s v, v, hv, rfl⟩
+  exact (la1minNum_spec _ himg).2 _ ⟨v, hv, rfl⟩
+
+/-- `BBindex_min` is attained (at a `BBprime` member). -/
+private theorem la1bbindexMin_attained (s : ScsV39) (z : ℕ → V3)
+    (hz : z ∈ BBprimeV39 s) : ∃ w, w ∈ BBprimeV39 s ∧ BBindexV39 s w = BBindexMinV39 s := by
+  have himg : (BBindexV39 s '' BBprimeV39 s).Nonempty := ⟨BBindexV39 s z, z, hz, rfl⟩
+  obtain ⟨hmin, -⟩ := la1minNum_spec _ himg
+  obtain ⟨w, hw, hwval⟩ := hmin
+  exact ⟨w, hw, hwval⟩
+
+/-- Two `BBprime` members have equal `taustar` (mutual domination). -/
+private theorem la1bbprime_taustar_eq {s : ScsV39} {v w : ℕ → V3}
+    (hv : v ∈ BBprimeV39 s) (hw : w ∈ BBprimeV39 s) : taustarV39 s v = taustarV39 s w :=
+  le_antisymm (hv.2.1 w hw.1) (hw.2.1 v hv.1)
+
+/-- HOL `unadorned_MMs_concl` (appendix.hl:676). Discharged 2026-09-30
+(LocalAuto1 lane): unadorned kills the str/lo/hi clauses and identifies the
+am/bm clauses with the BBs bounds. -/
 theorem unadorned_MMs_concl :
     ∀ s : ScsV39, unadornedV39 s → MMsV39 s = BBprime2V39 s := by
-  sorry
+  intro s ⟨hlo, hhi, hstr, ham, hbm⟩
+  ext vv
+  simp only [MMsV39, BBprime2V39, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨hb2, -, -, -, -, -⟩
+    exact hb2
+  · rintro ⟨⟨hBB, hmin, hneg⟩, hidx⟩
+    refine ⟨⟨⟨hBB, hmin, hneg⟩, hidx⟩, ?_, ?_, ?_, ?_, ?_⟩
+    · intro i hi
+      rw [hstr] at hi
+      exact hi.elim
+    · intro i hi
+      rw [hlo] at hi
+      exact hi.elim
+    · intro i hi
+      rw [hhi] at hi
+      exact hi.elim
+    · intro i j
+      exact ham ▸ (hBB.2.2.1 i j).1
+    · intro i j
+      exact hbm ▸ (hBB.2.2.1 i j).2
 
 /-- HOL `XWITCCN_concl` (appendix.hl:679). Proof pending. -/
 theorem XWITCCN_concl : ∀ (s : ScsV39) (vv : ℕ → V3), s ∈ sInitListV39 →
@@ -677,6 +804,39 @@ def scsArrowV39 (S1 S2 : Set ScsV39) : Prop :=
 /-- HOL `scs_diag` (appendix.hl:769). -/
 def scsDiag (k i j : ℕ) : Prop :=
   ¬(i % k = j % k) ∧ ¬((i + 1) % k = j % k) ∧ ¬(i % k = (j + 1) % k)
+
+/-- A diagonal pair never lands in the psort-class of an adjacent pair
+(`x, x+1`); key step for the neighbour-preservation of `scsStabDiagV39`. -/
+private theorem la1psort_diag (k : ℕ) {i j x : ℕ} (hd : scsDiag k i j)
+    (heq : psort k (i, j) = psort k (x, x + 1)) : False := by
+  obtain hc | hc := la1psort_cases heq
+  · refine hd.2.1 ?_
+    rw [← Nat.mod_add_mod i k 1, hc.1, hc.2]
+    exact Nat.mod_add_mod x k 1
+  · refine hd.2.2 ?_
+    rw [← Nat.mod_add_mod j k 1, hc.1, hc.2]
+    exact (Nat.mod_add_mod x k 1).symm
+
+/-- `csAdj 6 a1 a2` is constant on a `psort`-class of a diagonal pair
+(`scsDiag`): the class never lands on the 0/adjacent slots, so the value is
+the far constant `a2` throughout the class. -/
+private theorem la1csAdj_diag6 {a1 a2 : ℝ} {i j x y : ℕ}
+    (hxy : (x % 6 = i % 6 ∧ y % 6 = j % 6) ∨ (x % 6 = j % 6 ∧ y % 6 = i % 6))
+    (hd : scsDiag 6 i j) : csAdj 6 a1 a2 x y = a2 := by
+  obtain ⟨hd1, hd2, hd3⟩ := hd
+  rcases hxy with ⟨h1, h2⟩ | ⟨h1, h2⟩
+  · simp only [csAdj, h1, h2]
+    split
+    · exfalso; omega
+    split
+    · exfalso; omega
+    · rfl
+  · simp only [csAdj, h1, h2]
+    split
+    · exfalso; omega
+    split
+    · exfalso; omega
+    · rfl
 
 /-- HOL `scs_stab_diag_v39` (appendix.hl:828). -/
 noncomputable def scsStabDiagV39 (s : ScsV39) (i j : ℕ) : ScsV39 :=
@@ -929,19 +1089,282 @@ theorem VPWSHTO_concl : ∀ v x u w w1 : V3,
       dist v1 u1 ≤ 1 + Real.sqrt 5 ∧ dist v1 w2 ≤ 1 + Real.sqrt 5 := by
   sorry
 
-/-- HOL `EQTTNZI1_concl` (appendix.hl:1110). Proof pending. -/
+/-- HOL `EQTTNZI1_concl` (appendix.hl:1110). Discharged 2026-09-30
+(LocalAuto1 lane): the b:=bm restriction preserves `is_scs_v39` (monotone card
+sub-count) and every `MMs_v39` realization transports (`is_ear` fails on both
+sides since J-values force the 3-face to be empty-or-full). -/
 theorem EQTTNZI1_concl : ∀ s : ScsV39, isScsV39 s →
     (∀ i j, s.J i j → s.b i j = s.bm i j) →
     (s.J = fun _ _ => False ∨ 3 < s.k) →
     scsArrowV39 {s} {restrictionTyp1V39 s} := by
-  sorry
+  intro s his hJe hJcase
+  obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12, h13, h14, h15, h16, h17, h18,
+    h19, h20, h21⟩ := his
+  -- as written (statement frozen), the hypothesis says s.J i j = (3 < s.k)
+  have hJval : ∀ i j, s.J i j = (3 < s.k) := by
+    intro i j
+    rw [hJcase]
+    simp
+  -- is_scs for the restriction (b-slot := bm)
+  have hisT : isScsV39 (restrictionTyp1V39 s) := by
+    refine ⟨h1, h2, h3, h4, h5, h7, h7, h8, h9, h10, h10, h12,
+      fun i j => ⟨(h13 i j).1, (h13 i j).2.1, (h13 i j).2.2.1, (h13 i j).2.2.1,
+        (h13 i j).2.2.2.2⟩,
+      fun i j => ⟨(h14 i j).1, (h14 i j).2.1, le_refl _⟩,
+      h15, h16,
+      fun i hk3 => ((h14 i (i + 1)).2.2).trans_lt (h17 i hk3),
+      fun i hk3 => ((h14 i (i + 1)).2.2).trans (h18 i hk3),
+      fun i j hj => h19 i j hj,
+      fun i j hj => ⟨(h20 i j hj).1, (hJe i j hj).symm.trans (h20 i j hj).2⟩,
+      ?_⟩
+    have hsub : {i : ℕ | i < s.k ∧ (2 * h0 < s.bm i (i + 1) ∨ 2 < s.a i (i + 1))} ⊆
+        {i : ℕ | i < s.k ∧ (2 * h0 < s.b i (i + 1) ∨ 2 < s.a i (i + 1))} := by
+      rintro i ⟨hlt, hval⟩
+      rcases hval with hv | hv
+      · exact ⟨hlt, Or.inl (lt_of_lt_of_le hv ((h14 i (i + 1)).2.2))⟩
+      · exact ⟨hlt, Or.inr hv⟩
+    have hfin : {i : ℕ | i < s.k ∧ (2 * h0 < s.b i (i + 1) ∨ 2 < s.a i (i + 1))}.Finite :=
+      Set.Finite.subset (Set.finite_Iio s.k) (fun i hi => hi.1)
+    have hle := Set.ncard_le_ncard hsub hfin
+    exact (Nat.add_le_add_right hle s.k).trans h21
+  refine ⟨fun x hx => ?_, ?_⟩
+  · rw [Set.mem_singleton_iff] at hx
+    rw [hx]
+    exact hisT
+  · by_cases hMMe : MMsV39 s = ∅
+    · refine Or.inl ?_
+      intro x hx
+      rw [Set.mem_singleton_iff] at hx
+      rw [hx]
+      exact hMMe
+    · refine Or.inr ⟨restrictionTyp1V39 s, Set.mem_singleton _, ?_⟩
+      obtain ⟨v, hv⟩ := Set.nonempty_iff_ne_empty.mpr hMMe
+      simp only [MMsV39, BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at hv
+      obtain ⟨⟨⟨hBBs, hmin, hneg⟩, hidx⟩, hstrc, hloc, hhic, hamc, hbmc⟩ := hv
+      -- neither system is an ear: J-values forbid the singleton-3 face
+      have hJTval : ∀ i j, (restrictionTyp1V39 s).J i j = (3 < s.k) := hJval
+      have hnoearS : ¬isEarV39 s := by
+        intro hex
+        obtain ⟨i, hi, -, -, -⟩ := hex.2.2.2.2.2
+        have h0 : (0:ℕ) ∈ {j | j < 3 ∧ s.J j (j + 1)} ↔ (3 < s.k) := by
+          constructor
+          · intro hm; exact Eq.mp (hJval 0 1) (Set.mem_setOf.mp hm).right
+          · intro h3lt; exact Set.mem_setOf.mpr ⟨by omega, Eq.mp (hJval 0 1).symm h3lt⟩
+        have h1 : (1:ℕ) ∈ {j | j < 3 ∧ s.J j (j + 1)} ↔ (3 < s.k) := by
+          constructor
+          · intro hm; exact Eq.mp (hJval 1 2) (Set.mem_setOf.mp hm).right
+          · intro h3lt; exact Set.mem_setOf.mpr ⟨by omega, Eq.mp (hJval 1 2).symm h3lt⟩
+        by_cases hk3lt : 3 < s.k
+        · have m0 := h0.2 hk3lt
+          rw [hi] at m0
+          simp at m0
+          have m1 := h1.2 hk3lt
+          rw [hi] at m1
+          simp at m1
+          omega
+        · have hne : {j | j < 3 ∧ s.J j (j + 1)} = ∅ := by
+            ext j
+            simp [hJval j (j + 1), hk3lt]
+          exact absurd (Set.mem_singleton i) (by rw [← hi]; rw [hne]; simp)
+      have hJTval : ∀ i j, (restrictionTyp1V39 s).J i j = (3 < s.k) := hJval
+      have hnoearT : ¬isEarV39 (restrictionTyp1V39 s) := by
+        intro hex
+        obtain ⟨i, hi, -, -, -⟩ := hex.2.2.2.2.2
+        have h0 : (0:ℕ) ∈ {j | j < 3 ∧ (restrictionTyp1V39 s).J j (j + 1)} ↔ (3 < s.k) := by
+          constructor
+          · intro hm; exact Eq.mp (hJTval 0 1) (Set.mem_setOf.mp hm).right
+          · intro h3lt; exact Set.mem_setOf.mpr ⟨by omega, Eq.mp (hJTval 0 1).symm h3lt⟩
+        have h1 : (1:ℕ) ∈ {j | j < 3 ∧ (restrictionTyp1V39 s).J j (j + 1)} ↔ (3 < s.k) := by
+          constructor
+          · intro hm; exact Eq.mp (hJTval 1 2) (Set.mem_setOf.mp hm).right
+          · intro h3lt; exact Set.mem_setOf.mpr ⟨by omega, Eq.mp (hJTval 1 2).symm h3lt⟩
+        by_cases hk3lt : 3 < s.k
+        · have m0 := h0.2 hk3lt
+          rw [hi] at m0
+          simp at m0
+          have m1 := h1.2 hk3lt
+          rw [hi] at m1
+          simp at m1
+          omega
+        · have hne : {j | j < 3 ∧ (restrictionTyp1V39 s).J j (j + 1)} = ∅ := by
+            ext j
+            simp [hJTval j (j + 1), hk3lt]
+          exact absurd (Set.mem_singleton i) (by rw [← hi]; rw [hne]; simp)
+      -- taustar transport
+      -- taustar transport
+      -- taustar transport (dsv is literally shared)
+      have hdsvT : ∀ x : ℕ → V3, dsvV39 (restrictionTyp1V39 s) x = dsvV39 s x := by
+        intro x
+        unfold dsvV39
+        rw [if_neg hnoearT, if_neg hnoearS]
+        rfl
+      have htauT : ∀ x : ℕ → V3, taustarV39 (restrictionTyp1V39 s) x = taustarV39 s x := by
+        intro x
+        unfold taustarV39
+        rw [hdsvT x]
+        rfl
+      have hBBsub : ∀ x, BBsV39 (restrictionTyp1V39 s) x → BBsV39 s x := by
+        intro x hx
+        refine ⟨hx.1, hx.2.1, ?_, hx.2.2.2⟩
+        intro i j
+        exact ⟨(hx.2.2.1 i j).1, (hx.2.2.1 i j).2.trans (h14 i j).2.2⟩
+      have hBBsT : BBsV39 (restrictionTyp1V39 s) v := by
+        refine ⟨hBBs.1, hBBs.2.1, ?_, hBBs.2.2.2⟩
+        intro i j
+        exact ⟨(hBBs.2.2.1 i j).1, hbmc i j⟩
+      have hminT : ∀ y, BBsV39 (restrictionTyp1V39 s) y →
+          taustarV39 (restrictionTyp1V39 s) v ≤ taustarV39 (restrictionTyp1V39 s) y := by
+        intro y hy
+        rw [htauT v, htauT y]
+        exact hmin y (hBBsub y hy)
+      have hnegT : taustarV39 (restrictionTyp1V39 s) v < 0 := by
+        rw [htauT v]
+        exact hneg
+      have hv'T : v ∈ BBprimeV39 (restrictionTyp1V39 s) := ⟨hBBsT, hminT, hnegT⟩
+      -- the BBindex minimum is attained and shared
+      have himgT : (BBindexV39 (restrictionTyp1V39 s) ''
+          BBprimeV39 (restrictionTyp1V39 s)).Nonempty :=
+        ⟨BBindexV39 (restrictionTyp1V39 s) v, v, hv'T, rfl⟩
+      obtain ⟨hmin0, hminle⟩ := la1minNum_spec _ himgT
+      obtain ⟨w, hw, hwval⟩ := hmin0
+      obtain ⟨hBBw, hminw, hnegw⟩ := hw
+      have htw : taustarV39 s w = taustarV39 s v := by
+        have q1 : taustarV39 (restrictionTyp1V39 s) w ≤
+            taustarV39 (restrictionTyp1V39 s) v := hminw v hBBsT
+        have q2 : taustarV39 s v ≤ taustarV39 s w := hmin w (hBBsub w hBBw)
+        rw [htauT w, htauT v] at q1
+        linarith [q1, q2]
+      have hwS : w ∈ BBprimeV39 s := by
+        refine ⟨hBBsub w hBBw, ?_, ?_⟩
+        · intro y hy
+          rw [htw]
+          exact hmin y hy
+        · rw [htw]
+          exact hneg
+      have himgS : (BBindexV39 s '' BBprimeV39 s).Nonempty :=
+        ⟨BBindexV39 s v, v, ⟨hBBs, hmin, hneg⟩, rfl⟩
+      have hspecS := la1minNum_spec _ himgS
+      have hle : BBindexMinV39 (restrictionTyp1V39 s) ≤
+          BBindexV39 (restrictionTyp1V39 s) v := hminle _ ⟨v, hv'T, rfl⟩
+      have hBBI : ∀ x, BBindexV39 (restrictionTyp1V39 s) x = BBindexV39 s x := fun _ => rfl
+      have h5 : BBindexMinV39 s ≤ BBindexV39 s w := hspecS.2 _ ⟨w, hwS, rfl⟩
+      have h3 : BBindexV39 (restrictionTyp1V39 s) v ≤
+          BBindexMinV39 (restrictionTyp1V39 s) := by
+        rw [hBBI v, hidx]
+        show BBindexMinV39 s ≤
+          minNum (BBindexV39 (restrictionTyp1V39 s) '' BBprimeV39 (restrictionTyp1V39 s))
+        exact h5.trans (le_of_eq ((hBBI w).symm.trans hwval))
+      have hidxT : BBindexV39 (restrictionTyp1V39 s) v =
+          BBindexMinV39 (restrictionTyp1V39 s) := le_antisymm h3 hle
+      exact Set.nonempty_iff_ne_empty.mp
+        ⟨v, ⟨⟨⟨hBBsT, hminT, hnegT⟩, hidxT⟩, fun i hi => hstrc i hi,
+          fun i hi => hloc i hi, fun i hi => hhic i hi, fun i j => hamc i j,
+          fun i j => hbmc i j⟩⟩
 
-/-- HOL `EQTTNZI2_concl` (appendix.hl:1115). Proof pending. -/
+/-- HOL `EQTTNZI2_concl` (appendix.hl:1115). Discharged 2026-10-08
+(LocalAuto1 lane): `¬J` empties both `dsv` sums (equal `taustar` on `s` and
+the typ2 restriction), and the `MMs` am/bm-clauses plus `am = bm` force every
+`MMs s` realization to realize `s.am` exactly, which is precisely the `BBs`
+bound pair of the typ2 restriction (all four bound functions are `s.am`). -/
 theorem EQTTNZI2_concl : ∀ (s t : ScsV39), isScsV39 s → s.am = s.bm →
     t = restrictionTyp2V39 s → (∀ i j, ¬s.J i j) → (∀ i, s.am i i = 0) →
     {i | i < t.k ∧ (2 * h0 < t.b i (i + 1) ∨ 2 < t.a i (i + 1))}.ncard + t.k ≤ 6 →
     scsArrowV39 {s} {t} := by
-  sorry
+  intro s t his hambm ht hnoJ ham0 hcard
+  subst ht
+  obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12, h13, h14, h15, h16, h17,
+    h18, h19, h20, h21⟩ := his
+  have hisT : isScsV39 (restrictionTyp2V39 s) :=
+    ⟨h1, h2, h3, h4, h5, h6, h7, h9, h9, h9, h9, h12,
+      fun i j => ⟨(h13 i j).2.1, (h13 i j).2.1, (h13 i j).2.1, (h13 i j).2.1,
+        (h13 i j).2.2.2.2⟩,
+      fun i j => ⟨le_refl _, le_refl _, le_refl _⟩, ham0,
+      fun i j hij => (h16 i j hij).trans (h14 i j).1,
+      fun i hk3 => ((h14 i (i + 1)).2.1.trans ((h14 i (i + 1)).2.2)).trans_lt (h17 i hk3),
+      fun i hk3 => (h14 i (i + 1)).2.1.trans ((h14 i (i + 1)).2.2.trans (h18 i hk3)),
+      fun i j hj => absurd hj (hnoJ i j), fun i j hj => absurd hj (hnoJ i j), hcard⟩
+  refine ⟨fun x hx => ?_, ?_⟩
+  · rw [Set.mem_singleton_iff] at hx
+    rw [hx]
+    exact hisT
+  · by_cases hMMe : MMsV39 s = ∅
+    · refine Or.inl ?_
+      intro x hx
+      rw [Set.mem_singleton_iff] at hx
+      rw [hx]
+      exact hMMe
+    · obtain ⟨v, hv⟩ := Set.nonempty_iff_ne_empty.mpr hMMe
+      simp only [MMsV39, BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at hv
+      have hBBs := hv.1.1.1
+      have hmin := hv.1.1.2.1
+      have hneg := hv.1.1.2.2
+      have hidx := hv.1.2
+      have hstrc := hv.2.1
+      have hloc := hv.2.2.1
+      have hhic := hv.2.2.2.1
+      have hamc := hv.2.2.2.2.1
+      have hbmc := hv.2.2.2.2.2
+      obtain ⟨hBBr, hBBp, hBBb, hBBf⟩ := hBBs
+      -- both J-sums of `dsv` are empty, so taustar agrees on s and its typ2 restriction
+      have hJset : {i : ℕ | i < s.k ∧ s.J i (i + 1)} = ∅ := by
+        ext i
+        simp [hnoJ]
+      have htauT : ∀ w : ℕ → V3,
+          taustarV39 (restrictionTyp2V39 s) w = taustarV39 s w := by
+        intro w
+        have hdT : dsvV39 (restrictionTyp2V39 s) w = s.d := by
+          simp only [dsvV39, restrictionTyp2V39, hJset]
+          simp [setSum]
+        have hdS : dsvV39 s w = s.d := by
+          simp only [dsvV39, hJset]
+          simp [setSum]
+        unfold taustarV39
+        rw [hdT, hdS]
+        rfl
+      have hBBsT : BBsV39 (restrictionTyp2V39 s) v :=
+        ⟨hBBr, hBBp, fun i j => ⟨hamc i j, by
+          show dist (v i) (v j) ≤ s.am i j
+          rw [hambm]
+          exact hbmc i j⟩, hBBf⟩
+      have hBBw : ∀ w, BBsV39 (restrictionTyp2V39 s) w → BBsV39 s w := by
+        intro w hw
+        refine ⟨hw.1, hw.2.1, ?_, hw.2.2.2⟩
+        intro i j
+        obtain ⟨hlo1, hhi1⟩ := hw.2.2.1 i j
+        exact ⟨(h14 i j).1.trans hlo1,
+          hhi1.trans ((h14 i j).2.1.trans (h14 i j).2.2)⟩
+      have hvBT : v ∈ BBprimeV39 (restrictionTyp2V39 s) :=
+        ⟨hBBsT, by
+          intro w hw
+          rw [htauT v, htauT w]
+          exact hmin w (hBBw w hw),
+          by rw [htauT v]; exact hneg⟩
+      -- every BBs-realization of the restriction has full index s.k
+      have hidxfull : ∀ w, BBsV39 (restrictionTyp2V39 s) w →
+          BBindexV39 (restrictionTyp2V39 s) w = s.k := by
+        intro w hw
+        have seteq : {i : ℕ | i < (restrictionTyp2V39 s).k ∧
+            (restrictionTyp2V39 s).a i (i + 1) = dist (w i) (w (i + 1))}
+            = Set.Iio s.k := by
+          ext i
+          simp only [Set.mem_setOf_eq, Set.mem_Iio, restrictionTyp2V39]
+          refine ⟨fun h => h.1, fun hlt => ⟨hlt, le_antisymm ?_ ?_⟩⟩
+          · exact (hw.2.2.1 i (i + 1)).1
+          · exact (hw.2.2.1 i (i + 1)).2
+        rw [BBindexV39, seteq, Set.ncard_Iio_nat]
+      obtain ⟨z, hzBB, hzval⟩ := la1bbindexMin_attained _ v hvBT
+      have hidxT : BBindexV39 (restrictionTyp2V39 s) v = BBindexMinV39 (restrictionTyp2V39 s) := by
+        rw [hidxfull v hBBsT, ← hzval, hidxfull z hzBB.1]
+      have hvT : v ∈ MMsV39 (restrictionTyp2V39 s) := by
+        have hvB2 : v ∈ BBprime2V39 (restrictionTyp2V39 s) := ⟨hvBT, hidxT⟩
+        simp only [MMsV39, BBprime2V39, BBprimeV39, Set.mem_setOf_eq]
+        exact ⟨hvB2, hstrc, hloc, hhic, hamc,
+          fun i j => by
+            show dist (v i) (v j) ≤ s.am i j
+            rw [hambm]
+            exact hbmc i j⟩
+      exact Or.inr ⟨restrictionTyp2V39 s, Set.mem_singleton _,
+        Set.nonempty_iff_ne_empty.mp ⟨v, hvT⟩⟩
 
 /-- HOL `UAGHHBM_concl` (appendix.hl:1122). Proof pending. -/
 theorem UAGHHBM_concl : ∀ (s : ScsV39) (i j : ℕ) (c : ℝ),
@@ -963,6 +1386,299 @@ theorem YXIONXL2_concl : ∀ s : ScsV39, isScsV39 s →
     scsArrowV39 {s} {scsOppV39 s} := by
   sorry
 
+/-! ### Residue-shift toolkit for `YXIONXL3` (`scs_prop_equ_v39`)
+
+The shift `j ↦ (i + j) % k` is a bijection of `{j | j < k}` with inverse
+`m ↦ (m + k - i % k) % k`; every `scs` component of `scsPropEquV39 s i`
+transports along it. -/
+
+private theorem la1shift_inj {k i : ℕ} :
+    Set.InjOn (fun j => (i + j) % k) {j | j < k} := by
+  intro j₁ hj₁ j₂ hj₂ heq
+  have hme : Nat.ModEq k (i + j₁) (i + j₂) := heq
+  have hcan : j₁ % k = j₂ % k := Nat.ModEq.add_left_cancel' i hme
+  rw [Nat.mod_eq_of_lt hj₁, Nat.mod_eq_of_lt hj₂] at hcan
+  exact hcan
+
+private theorem la1shift_rho {k i : ℕ} (hk : 0 < k) (m : ℕ) :
+    (i + (m + k - i % k) % k) % k = m % k := by
+  have hip : i % k < k := Nat.mod_lt i hk
+  have h0 : Nat.ModEq k i (i % k) := (Nat.mod_mod i k).symm
+  have h1 : Nat.ModEq k (i + (m + k - i % k) % k) (i % k + (m + k - i % k) % k) :=
+    Nat.ModEq.add_right _ h0
+  have h2 : Nat.ModEq k (i % k + (m + k - i % k) % k) (i % k + (m + k - i % k)) :=
+    Nat.ModEq.add_left _ (Nat.mod_mod (m + k - i % k) k)
+  have h3 : Nat.ModEq k (i % k + (m + k - i % k)) m := by
+    have he : i % k + (m + k - i % k) = m + k := by omega
+    show (i % k + (m + k - i % k)) % k = m % k
+    rw [he, Nat.add_mod, Nat.mod_self, Nat.add_zero, Nat.mod_mod]
+  exact (h1.trans h2).trans h3
+
+private theorem la1shift_surj {k i : ℕ} (hk : 0 < k) (m : ℕ) (hm : m < k) :
+    ∃ j, j < k ∧ (i + j) % k = m := by
+  refine ⟨(m + k - i % k) % k, Nat.mod_lt _ hk, ?_⟩
+  rw [la1shift_rho hk, Nat.mod_eq_of_lt hm]
+
+private theorem la1shift_back {k i : ℕ} (hk : 0 < k) (j : ℕ) :
+    ((i + j) % k + (k - i % k)) % k = j % k := by
+  have hip : i % k ≤ k := Nat.le_of_lt (Nat.mod_lt i hk)
+  have h1 : Nat.ModEq k ((i + j) % k) (i + j) := Nat.mod_mod (i + j) k
+  have h2 : Nat.ModEq k ((i + j) % k + (k - i % k)) (i + j + (k - i % k)) :=
+    Nat.ModEq.add_right (k - i % k) h1
+  have h0 : Nat.ModEq k i (i % k) := (Nat.mod_mod i k).symm
+  have h3 : Nat.ModEq k (i + j + (k - i % k)) (i % k + j + (k - i % k)) :=
+    Nat.ModEq.add_right _ (Nat.ModEq.add_right j h0)
+  have h4 : Nat.ModEq k (i % k + j + (k - i % k)) (j + k) := by
+    have he : i % k + j + (k - i % k) = j + k := by omega
+    rw [he]
+  have h5 : ((i + j) % k + (k - i % k)) % k = (j + k) % k := h2.trans (h3.trans h4)
+  rw [h5, Nat.add_mod, Nat.mod_self, Nat.add_zero, Nat.mod_mod]
+
+private theorem la1setSum_image {α : Type} {B : Set α} (hB : B.Finite)
+    {f : α → α} (hinj : Set.InjOn f B) (g : α → ℝ) :
+    setSum (f '' B) g = setSum B (fun x => g (f x)) := by
+  have hfin : (f '' B).Finite := Set.Finite.image f hB
+  haveI := Classical.decEq α
+  unfold setSum
+  rw [dif_pos hfin, dif_pos hB, Set.Finite.toFinset_image f hB hfin]
+  exact Finset.sum_image fun a ha b hb hab =>
+    hinj (Set.Finite.mem_toFinset hB |>.mp ha) (Set.Finite.mem_toFinset hB |>.mp hb) hab
+
+private theorem la1setSum_congr {α : Type} {S : Set α} (hS : S.Finite) {f g : α → ℝ}
+    (h : ∀ x ∈ S, f x = g x) : setSum S f = setSum S g := by
+  unfold setSum
+  rw [dif_pos hS, dif_pos hS]
+  exact Finset.sum_congr rfl fun x hx => h x (Set.Finite.mem_toFinset hS |>.mp hx)
+
+private theorem la1setSum_shift {Q P : ℕ → Prop} {k i : ℕ} (hk : 0 < k) (f g : ℕ → ℝ)
+    (hiff : ∀ j, j < k → (Q j ↔ P ((i + j) % k)))
+    (hfg : ∀ j, j < k → f j = g ((i + j) % k)) :
+    setSum {j | j < k ∧ Q j} f = setSum {m | m < k ∧ P m} g := by
+  have hB : {j | j < k ∧ Q j}.Finite :=
+    Set.Finite.subset (Set.finite_Iio k) fun j hj => hj.1
+  have himg : {m | m < k ∧ P m} = (fun j => (i + j) % k) '' {j | j < k ∧ Q j} := by
+    ext m
+    simp only [Set.mem_setOf_eq, Set.mem_image]
+    constructor
+    · rintro ⟨hm, hP⟩
+      obtain ⟨j, hj, hjm⟩ := la1shift_surj hk m hm
+      have hQj : Q j := (hiff j hj).mpr (by rw [hjm]; exact hP)
+      exact ⟨j, ⟨hj, hQj⟩, hjm⟩
+    · rintro ⟨j, ⟨hj, hQ⟩, hjm⟩
+      have hm' : m < k := by rw [← hjm]; exact Nat.mod_lt _ hk
+      have hPm : P m := by rw [← hjm]; exact (hiff j hj).mp hQ
+      exact ⟨hm', hPm⟩
+  rw [himg, la1setSum_image hB
+    ((la1shift_inj (k := k) (i := i)).mono fun j hj => hj.1) g]
+  exact la1setSum_congr hB fun x hx => hfg x hx.1
+
+private theorem la1tau3_cyc (a b c : V3) : tau3 a b c = tau3 b c a := by
+  unfold tau3
+  ring
+
+private theorem la1tau3_cyc2 (a b c : V3) : tau3 a b c = tau3 c a b := by
+  unfold tau3
+  ring
+
+private theorem la1periodic2_mul {α : Sort u} {f : ℕ → ℕ → α} {k : ℕ} (h : Periodic2 f k) :
+    ∀ n x y, f (x + n * k) (y + n * k) = f x y := by
+  intro n x y
+  calc f (x + n * k) (y + n * k)
+      = f (x + n * k) y :=
+        la1periodic_mul (f := fun m => f (x + n * k) m) (k := k)
+          (fun m => (h (x + n * k) m).2) n y
+    _ = f x y :=
+        la1periodic_mul (f := fun m => f m y) (k := k) (fun m => (h m y).1) n x
+
+private theorem la1range_shift {x : ℕ → V3} {k i : ℕ} (hk : 0 < k)
+    (hxper : Periodic x k) :
+    Set.range (fun m => x (i + m)) = Set.range x := by
+  ext y
+  constructor
+  · rintro ⟨m, rfl⟩
+    exact ⟨i + m, rfl⟩
+  · rintro ⟨m, rfl⟩
+    refine ⟨(m + k - i % k) % k, ?_⟩
+    show x (i + ((m + k - i % k) % k)) = x m
+    have hrho : (i + ((m + k - i % k) % k)) % k = m % k := la1shift_rho hk m
+    have h1 : x (i + ((m + k - i % k) % k)) = x ((i + ((m + k - i % k) % k)) % k) :=
+      la1periodic_mod hxper _
+    rw [h1, hrho, la1periodic_mod hxper m]
+
+private theorem la1shift_ncard {Q P : ℕ → Prop} {k i : ℕ} (hk : 0 < k)
+    (hiff : ∀ j, j < k → (Q j ↔ P ((i + j) % k))) :
+    {j | j < k ∧ Q j}.ncard = {m | m < k ∧ P m}.ncard := by
+  have himg : {m | m < k ∧ P m} = (fun j => (i + j) % k) '' {j | j < k ∧ Q j} := by
+    ext m
+    simp only [Set.mem_setOf_eq, Set.mem_image]
+    constructor
+    · rintro ⟨hm, hP⟩
+      obtain ⟨j, hj, hjm⟩ := la1shift_surj hk m hm
+      have hQj : Q j := (hiff j hj).mpr (by rw [hjm]; exact hP)
+      exact ⟨j, ⟨hj, hQj⟩, hjm⟩
+    · rintro ⟨j, ⟨hj, hQ⟩, hjm⟩
+      have hm' : m < k := by rw [← hjm]; exact Nat.mod_lt _ hk
+      have hPm : P m := by rw [← hjm]; exact (hiff j hj).mp hQ
+      exact ⟨hm', hPm⟩
+  rw [himg, Set.InjOn.ncard_image ((la1shift_inj (k := k) (i := i)).mono fun j hj => hj.1)]
+
+private theorem la1isScs_propEqu (s : ScsV39) (i : ℕ) (his : isScsV39 s) :
+    isScsV39 (scsPropEquV39 s i) := by
+  obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12, h13, h14, h15, h16, h17, h18,
+    h19, h20, h21⟩ := his
+  have hk : 0 < s.k := by omega
+  refine ⟨h1, h2, h3,
+    fun m => by
+      show s.lo (i + (m + s.k)) = s.lo (i + m)
+      rw [← Nat.add_assoc]
+      exact h4 (i + m),
+    fun m => by
+      show s.hi (i + (m + s.k)) = s.hi (i + m)
+      rw [← Nat.add_assoc]
+      exact h5 (i + m),
+    fun m => by
+      show s.str (i + (m + s.k)) = s.str (i + m)
+      rw [← Nat.add_assoc]
+      exact h6 (i + m),
+    fun m => by
+      show s.str (i + (m + s.k)) = s.str (i + m)
+      rw [← Nat.add_assoc]
+      exact h7 (i + m),
+    fun m m' => by
+      show s.a (i + (m + s.k)) (i + m') = s.a (i + m) (i + m') ∧
+        s.a (i + m) (i + (m' + s.k)) = s.a (i + m) (i + m')
+      rw [← Nat.add_assoc, ← Nat.add_assoc]
+      exact h8 (i + m) (i + m'),
+    fun m m' => by
+      show s.am (i + (m + s.k)) (i + m') = s.am (i + m) (i + m') ∧
+        s.am (i + m) (i + (m' + s.k)) = s.am (i + m) (i + m')
+      rw [← Nat.add_assoc, ← Nat.add_assoc]
+      exact h9 (i + m) (i + m'),
+    fun m m' => by
+      show s.bm (i + (m + s.k)) (i + m') = s.bm (i + m) (i + m') ∧
+        s.bm (i + m) (i + (m' + s.k)) = s.bm (i + m) (i + m')
+      rw [← Nat.add_assoc, ← Nat.add_assoc]
+      exact h10 (i + m) (i + m'),
+    fun m m' => by
+      show s.b (i + (m + s.k)) (i + m') = s.b (i + m) (i + m') ∧
+        s.b (i + m) (i + (m' + s.k)) = s.b (i + m) (i + m')
+      rw [← Nat.add_assoc, ← Nat.add_assoc]
+      exact h11 (i + m) (i + m'),
+    fun m m' => by
+      show s.J (i + (m + s.k)) (i + m') = s.J (i + m) (i + m') ∧
+        s.J (i + m) (i + (m' + s.k)) = s.J (i + m) (i + m')
+      rw [← Nat.add_assoc, ← Nat.add_assoc]
+      exact h12 (i + m) (i + m'),
+    fun j j' => ⟨(h13 (i + j) (i + j')).1, (h13 (i + j) (i + j')).2.1,
+      (h13 (i + j) (i + j')).2.2.1, (h13 (i + j) (i + j')).2.2.2.1,
+      (h13 (i + j) (i + j')).2.2.2.2⟩,
+    fun j j' => ⟨(h14 (i + j) (i + j')).1, (h14 (i + j) (i + j')).2.1,
+      (h14 (i + j) (i + j')).2.2⟩,
+    fun j => h15 (i + j),
+    ?_, fun j hj => h17 (i + j) hj, fun j hj => h18 (i + j) hj,
+    fun j j' hj => by
+      rcases h19 (i + j) (i + j') hj with h | h
+      · refine Or.inl ?_
+        have hme : Nat.ModEq s.k (i + j') (i + (j + 1)) := by
+          rw [← Nat.add_assoc]
+          exact h
+        exact Nat.ModEq.add_left_cancel' i hme
+      · refine Or.inr ?_
+        have hme : Nat.ModEq s.k (i + j) (i + (j' + 1)) := by
+          rw [← Nat.add_assoc]
+          exact h
+        exact Nat.ModEq.add_left_cancel' i hme,
+    fun j j' hj => by
+      rw [show (scsPropEquV39 s i).a j j' = s.a (i + j) (i + j') from rfl,
+        show (scsPropEquV39 s i).b j j' = s.b (i + j) (i + j') from rfl]
+      exact h20 (i + j) (i + j') hj,
+    ?_⟩
+  · -- 2 ≤ a for distinct slots
+    intro j j' hj
+    rw [show (scsPropEquV39 s i).a j j' = s.a (i + j) (i + j') from rfl,
+      la1periodic2_mod h8 (i + j) (i + j')]
+    exact h16 ((i + j) % s.k) ((i + j') % s.k)
+      ⟨Nat.mod_lt _ hk, Nat.mod_lt _ hk, fun heq => hj.2.2 (by
+        have hj1 : j < s.k := hj.1
+        have hj2 : j' < s.k := hj.2.1
+        have hme : j % s.k = j' % s.k := Nat.ModEq.add_left_cancel' i heq
+        rw [Nat.mod_eq_of_lt hj1, Nat.mod_eq_of_lt hj2] at hme
+        exact hme)⟩
+  · -- card bound: the M-set transports along the shift bijection
+    have hsplit : ∀ j : ℕ, i + j = (i + j) % s.k + (i + j) / s.k * s.k := by
+      intro j
+      rw [Nat.mul_comm ((i + j) / s.k) s.k,
+        Nat.add_comm ((i + j) % s.k) (s.k * ((i + j) / s.k))]
+      exact (Nat.div_add_mod (i + j) s.k).symm
+    have hsplit2 : ∀ j : ℕ, i + j + 1 = ((i + j) % s.k + 1) + (i + j) / s.k * s.k := by
+      intro j
+      linarith [hsplit j]
+    have hsb : ∀ j : ℕ, s.b (i + j) (i + j + 1) =
+        s.b ((i + j) % s.k) (((i + j) % s.k) + 1) := by
+      intro j
+      have hA : s.b (i + j) (i + j + 1)
+          = s.b ((i + j) % s.k + (i + j) / s.k * s.k) (i + j + 1) := by
+        nth_rewrite 1 [hsplit j]
+        rfl
+      have hB : s.b ((i + j) % s.k + (i + j) / s.k * s.k) (i + j + 1)
+          = s.b ((i + j) % s.k) (i + j + 1) :=
+        la1periodic_mul (f := fun m => s.b m (i + j + 1)) (k := s.k)
+          (fun m => (h11 m (i + j + 1)).1) ((i + j) / s.k) ((i + j) % s.k)
+      have hC : s.b ((i + j) % s.k) (i + j + 1)
+          = s.b ((i + j) % s.k) (((i + j) % s.k + 1) + (i + j) / s.k * s.k) := by
+        nth_rewrite 1 [hsplit2 j]
+        rfl
+      have hD : s.b ((i + j) % s.k) (((i + j) % s.k + 1) + (i + j) / s.k * s.k)
+          = s.b ((i + j) % s.k) (((i + j) % s.k) + 1) :=
+        la1periodic_mul (f := fun m => s.b ((i + j) % s.k) m) (k := s.k)
+          (fun m => (h11 ((i + j) % s.k) m).2) ((i + j) / s.k) (((i + j) % s.k) + 1)
+      rw [hA, hB, hC, hD]
+    have hsa : ∀ j : ℕ, s.a (i + j) (i + j + 1) =
+        s.a ((i + j) % s.k) (((i + j) % s.k) + 1) := by
+      intro j
+      have hA : s.a (i + j) (i + j + 1)
+          = s.a ((i + j) % s.k + (i + j) / s.k * s.k) (i + j + 1) := by
+        nth_rewrite 1 [hsplit j]
+        rfl
+      have hB : s.a ((i + j) % s.k + (i + j) / s.k * s.k) (i + j + 1)
+          = s.a ((i + j) % s.k) (i + j + 1) :=
+        la1periodic_mul (f := fun m => s.a m (i + j + 1)) (k := s.k)
+          (fun m => (h8 m (i + j + 1)).1) ((i + j) / s.k) ((i + j) % s.k)
+      have hC : s.a ((i + j) % s.k) (i + j + 1)
+          = s.a ((i + j) % s.k) (((i + j) % s.k + 1) + (i + j) / s.k * s.k) := by
+        nth_rewrite 1 [hsplit2 j]
+        rfl
+      have hD : s.a ((i + j) % s.k) (((i + j) % s.k + 1) + (i + j) / s.k * s.k)
+          = s.a ((i + j) % s.k) (((i + j) % s.k) + 1) :=
+        la1periodic_mul (f := fun m => s.a ((i + j) % s.k) m) (k := s.k)
+          (fun m => (h8 ((i + j) % s.k) m).2) ((i + j) / s.k) (((i + j) % s.k) + 1)
+      rw [hA, hB, hC, hD]
+    show {j : ℕ | j < (scsPropEquV39 s i).k ∧
+        (2 * h0 < (scsPropEquV39 s i).b j (j + 1) ∨ 2 < (scsPropEquV39 s i).a j (j + 1))}.ncard
+          + s.k ≤ 6
+    have hset2 : {j : ℕ | j < (scsPropEquV39 s i).k ∧
+        (2 * h0 < (scsPropEquV39 s i).b j (j + 1) ∨ 2 < (scsPropEquV39 s i).a j (j + 1))}
+        = {j : ℕ | j < s.k ∧ (2 * h0 < s.b (i + j) (i + j + 1) ∨
+          2 < s.a (i + j) (i + j + 1))} := by
+      ext j
+      have hbb : (scsPropEquV39 s i).b j (j + 1) = s.b (i + j) (i + j + 1) := by
+        show s.b (i + j) (i + (j + 1)) = s.b (i + j) (i + j + 1)
+        rw [Nat.add_assoc]
+      have haa : (scsPropEquV39 s i).a j (j + 1) = s.a (i + j) (i + j + 1) := by
+        show s.a (i + j) (i + (j + 1)) = s.a (i + j) (i + j + 1)
+        rw [Nat.add_assoc]
+      simp only [Set.mem_setOf_eq, hbb, haa,
+        show (scsPropEquV39 s i).k = s.k from rfl]
+    have hiff : ∀ j : ℕ, j < s.k →
+        ((2 * h0 < s.b (i + j) (i + j + 1) ∨ 2 < s.a (i + j) (i + j + 1)) ↔
+          (2 * h0 < s.b ((i + j) % s.k) (((i + j) % s.k) + 1) ∨
+            2 < s.a ((i + j) % s.k) (((i + j) % s.k) + 1))) := by
+      intro j _
+      rw [hsb j, hsa j]
+    rw [hset2, la1shift_ncard (k := s.k) (i := i)
+      (P := fun m => 2 * h0 < s.b m (m + 1) ∨ 2 < s.a m (m + 1)) hk hiff]
+    exact h21
+
 /-- HOL `YXIONXL3_concl` (appendix.hl:1141). Proof pending. -/
 theorem YXIONXL3_concl : ∀ (s : ScsV39) (i : ℕ), isScsV39 s →
     scsArrowV39 {s} {scsPropEquV39 s i} := by
@@ -974,11 +1690,32 @@ theorem LKGRQUI_concl : ∀ (s s' s'' : ScsV39) (p q : ℕ) (d' d'' : ℝ) (mkj 
     scsArrowV39 {s} {s', s''} := by
   sorry
 
-/-- HOL `HXHYTIJ_concl` (appendix.hl:1147). Proof pending. -/
+/-- HOL `HXHYTIJ_concl` (appendix.hl:1147). Discharged 2026-09-30
+(LocalAuto1 lane): pure bookkeeping — equal-taustar membership in `BBprime`
+plus attainment of the `BBindex` minimum. -/
 theorem HXHYTIJ_concl : ∀ (s : ScsV39) (vv ww : ℕ → V3), isScsV39 s →
     vv ∈ BBprime2V39 s → BBsV39 s ww →
     taustarV39 s vv < taustarV39 s ww ∨ BBindexV39 s vv ≤ BBindexV39 s ww := by
-  sorry
+  intro s vv ww _ hv _
+  simp only [BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at hv
+  obtain ⟨⟨hBBv, hminv, hnegv⟩, hidxv⟩ := hv
+  by_cases hlt : taustarV39 s vv < taustarV39 s ww
+  · exact Or.inl hlt
+  · right
+    have h1 : taustarV39 s vv ≤ taustarV39 s ww := hminv ww ‹BBsV39 s ww›
+    have heq : taustarV39 s ww = taustarV39 s vv := by linarith
+    have hwprime : ww ∈ BBprimeV39 s := by
+      refine ⟨‹BBsV39 s ww›, ?_, ?_⟩
+      · intro w hw
+        rw [heq]
+        exact hminv w hw
+      · rw [heq]
+        exact hnegv
+    have himg : BBindexV39 s ww ∈ BBindexV39 s '' BBprimeV39 s :=
+      ⟨ww, hwprime, rfl⟩
+    have hspec := la1minNum_spec _ ⟨_, himg⟩
+    rw [hidxv]
+    exact hspec.2 _ himg
 
 /-- HOL `ODXLSTCv2_concl` (appendix.hl:1154). Proof pending. -/
 theorem ODXLSTCv2_concl : ∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l : ℕ),
@@ -1028,12 +1765,41 @@ theorem NUXCOEAv2_concl : ∀ (s : ScsV39) (k : ℕ) (w : ℕ → V3) (l j : ℕ
 /-! ## Conclusions, part 3 (appendix.hl:1212-1319) -/
 
 /-- HOL `DRNDRDV_concl` (appendix.hl:1212); header note updated: `f'` is the
-slope value `8*y6/(y1*y2)` at `y6`. Proof pending. -/
+slope value `8*y6/(y1*y2)` at `y6`. Discharged 2026-09-30 (LocalAuto1 lane):
+direct differentiation of `xrr` in the third argument. -/
 theorem DRNDRDV_concl : ∀ y1 y2 y6 : ℝ,
     derivedForm (0 < y1 ∧ 0 < y2) (fun q => xrr y1 y2 q) (8 * y6 / (y1 * y2)) y6
       (Set.univ : Set ℝ) := by
-  sorry
+  intro y1 y2 y6 hy
+  have h1 : HasDerivAt (fun q : ℝ => q * q) (2 * y6) y6 := by
+    have h := (hasDerivAt_id y6).mul (hasDerivAt_id y6)
+    rwa [show (id y6 = y6) from rfl,
+      show ((1 * y6 + y6 * 1 : ℝ) = 2 * y6) from by ring,
+      show ((id * id : ℝ → ℝ) = fun q : ℝ => q * q) from rfl] at h
+  have h2 : HasDerivAt (fun q : ℝ => (y1 * y1 + y2 * y2 - q * q) / (2 * y1 * y2))
+      (-(2 * y6) / (2 * y1 * y2)) y6 := by
+    simpa using (h1.const_sub (y1 * y1 + y2 * y2)).div_const (2 * y1 * y2)
+  have h3 : HasDerivAt (fun q : ℝ => 1 - (y1 * y1 + y2 * y2 - q * q) / (2 * y1 * y2))
+      (2 * y6 / (2 * y1 * y2)) y6 := by
+    have h := h2.const_sub 1
+    rwa [show ((-(-(2 * y6) / (2 * y1 * y2)) : ℝ) = 2 * y6 / (2 * y1 * y2)) from by ring] at h
+  have h4 : HasDerivAt (fun q : ℝ => 8 * (1 - (y1 * y1 + y2 * y2 - q * q) / (2 * y1 * y2)))
+      (8 * y6 / (y1 * y2)) y6 := by
+    have h := h3.const_mul 8
+    rwa [show ((8:ℝ) * (2 * y6 / (2 * y1 * y2)) = 8 * y6 / (y1 * y2)) from by ring] at h
+  exact h4.hasDerivWithinAt
 
+-- NEEDS (LocalAuto1 lane, 2026-09-30): TBRMXRZ1_concl is FALSE as stated
+-- (statement frozen; left as `sorry` for the statement-fix lane).  Explicit
+-- counterexample: f = id, f' = 1, g = fun z => -z, h' = -1, x = y = 0.  Both
+-- derivedForm True hypotheses hold (HasDerivWithinAt id 1 univ 0 resp.
+-- HasDerivWithinAt (fun z => -z) (-1) univ 0) and g x = y holds, but
+-- reEqvl 1 (-1) = ∃ t > 0, 1 = t * (-1) is false (no positive t).  The HOL
+-- source statement (appendix.hl:1216 over calc_derivative.hl:402,
+-- `derived_form p f f' x s = (p ==> (f has_real_derivative f') atreal x
+-- within s)`) admits the same counterexample, so the flyspeck item itself
+-- needs an extra slope-proportionality hypothesis (e.g. 0 < g' x) before it
+-- can be discharged.
 /-- HOL `TBRMXRZ1_concl` (appendix.hl:1216); `re_eqvl` at the slope values
 via `reEqvl` (PackingAuto18:79). Proof pending. -/
 theorem TBRMXRZ1_concl : ∀ (f : ℝ → ℝ) (f' : ℝ) (g : ℝ → ℝ) (h' x y : ℝ),
@@ -1122,7 +1888,91 @@ theorem MXQTIED_concl : ∀ (s s' : ScsV39) (v : ℕ → V3), isScsV39 s → isS
     v ∈ MMsV39 s → BBsV39 s' v → s.d = s'.d →
     (∀ i, s'.a i (i + 1) = s.a i (i + 1)) →
     (∀ i j, s.a i j ≤ s'.a i j ∧ s'.b i j ≤ s.b i j) → v ∈ MMsV39 s' := by
-  sorry
+  intro s s' v _ _ hb hb' _ hkk hv hvs' hdd hnb hmono
+  obtain hu' := hb'.1
+  rw [unadorned_MMs_concl s' hu']
+  simp only [MMsV39, BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at hv
+  obtain ⟨⟨⟨hBBs, hmin, hneg⟩, hidx⟩, -, -, -, -, -⟩ := hv
+  -- dsv and taustar agree pointwise on s vs s' (J-side sums are empty)
+  have hJs : ∀ i j, s.J i j = False := hb.2
+  have hJs' : ∀ i j, s'.J i j = False := hb'.2
+  have hsetS : {i : ℕ | i < s.k ∧ s.J i (i + 1)} = ∅ := by
+    ext i; simp [hJs]
+  have hsetS' : {i : ℕ | i < s'.k ∧ s'.J i (i + 1)} = ∅ := by
+    ext i; simp [hJs']
+  have hdsv : ∀ x, dsvV39 s x = dsvV39 s' x := by
+    intro x
+    simp only [dsvV39, hsetS, hsetS']
+    simp [hdd, setSum]
+  have htau : ∀ x, taustarV39 s x = taustarV39 s' x := by
+    intro x
+    simp only [taustarV39]
+    rw [hkk, hdsv x]
+  -- BBs s' ⊆ BBs s (monotone bounds)
+  have hBBsub : ∀ x, BBsV39 s' x → BBsV39 s x := by
+    intro x hx
+    refine ⟨hx.1, ?_, ?_, ?_⟩
+    · rw [hkk]
+      exact hx.2.1
+    · intro i j
+      exact ⟨(hmono i j).1.trans (hx.2.2.1 i j).1, (hx.2.2.1 i j).2.trans (hmono i j).2⟩
+    · rw [hkk]
+      exact hx.2.2.2
+  -- v is taustar-minimal for s' as well
+  have hv' : v ∈ BBprimeV39 s' := by
+    refine ⟨hvs', ?_, ?_⟩
+    · intro y hy
+      rw [← htau v, ← htau y]
+      exact hmin y (hBBsub y hy)
+    · rw [← htau]
+      exact hneg
+  -- BBindex transport (neighbour values agree)
+  have hBI : ∀ x, BBindexV39 s' x = BBindexV39 s x := by
+    intro x
+    have seteq : {i : ℕ | i < s'.k ∧ s'.a i (i + 1) = dist (x i) (x (i + 1))} =
+        {i : ℕ | i < s.k ∧ s.a i (i + 1) = dist (x i) (x (i + 1))} := by
+      ext i
+      simp only [Set.mem_setOf_eq]
+      constructor
+      · rintro ⟨hlt, hval⟩
+        exact ⟨by rw [hkk]; exact hlt, by rw [← hnb i]; exact hval⟩
+      · rintro ⟨hlt, hval⟩
+        exact ⟨by rw [← hkk]; exact hlt, by rw [hnb i]; exact hval⟩
+    simp only [BBindexV39]
+    rw [seteq]
+  refine And.intro hv' ?_
+  -- index bookkeeping: the min of s' is attained at some w, which is then
+  -- taustar-equal to v, hence also index-minimal for s
+  have himg : (BBindexV39 s' '' BBprimeV39 s').Nonempty := ⟨BBindexV39 s' v, v, hv', rfl⟩
+  obtain ⟨hmin0, hminle⟩ := la1minNum_spec _ himg
+  obtain ⟨w, ⟨hw, hwval⟩⟩ := hmin0
+  obtain ⟨hBBw, hminw, hnegw⟩ := hw
+  have htw : taustarV39 s w = taustarV39 s v := by
+    have h1 : taustarV39 s' w ≤ taustarV39 s' v := hminw v hvs'
+    have h2 : taustarV39 s v ≤ taustarV39 s w := hmin w (hBBsub w hBBw)
+    rw [← htau w, ← htau v] at h1
+    linarith [h1, h2]
+  have hw'S : v ∈ BBprimeV39 s := ⟨hBBs, hmin, hneg⟩
+  have hwS : w ∈ BBprimeV39 s := by
+    refine ⟨hBBsub w hBBw, ?_, ?_⟩
+    · intro y hy
+      rw [htw]
+      exact hmin y hy
+    · rw [htw]
+      exact hneg
+  have himgS : (BBindexV39 s '' BBprimeV39 s).Nonempty := ⟨BBindexV39 s v, v, hw'S, rfl⟩
+  have hspecS := la1minNum_spec _ himgS
+  rw [hBI]
+  have hle : BBindexMinV39 s' ≤ BBindexV39 s v := by
+    rw [← hBI]
+    exact hminle _ ⟨v, hv', rfl⟩
+  have h3 : BBindexV39 s v ≤ BBindexMinV39 s' := by
+    rw [hidx]
+    have h5 : BBindexMinV39 s ≤ BBindexV39 s w := hspecS.2 _ ⟨w, hwS, rfl⟩
+    unfold BBindexMinV39
+    rw [← hwval, hBI]
+    exact h5
+  exact Nat.le_antisymm h3 hle
 
 /-- HOL `SYNQIWN_concl` (appendix.hl:1296). Proof pending. -/
 theorem SYNQIWN_concl : ∀ (s : ScsV39) (v : ℕ → V3) (i : ℕ), isScsV39 s →
@@ -1409,16 +2259,208 @@ theorem WKEIDFT_concl : ∀ (s : ScsV39) (a b a' b' : ℝ) (p q p' q' : ℕ),
     scsArrowV39 {scsStabDiagV39 s p q} {scsStabDiagV39 s p' q'} := by
   sorry
 
-/-- HOL `PEDSLGV1_concl` (appendix.hl:1379). Proof pending. -/
+/-- HOL `PEDSLGV1_concl` (appendix.hl:1379). Discharged 2026-10-08
+(LocalAuto1 lane): the `cstab` diagonal override only shrinks the `b`-bound
+on the class of `(i, j)` (far constant `6` there), so every `BBs`-realization
+of the stab is one of `scs_6I1`, the `J`-empty `dsv`s agree (`taustar`
+pointwise equal), and the diagonal class transports the required
+`dist (v i) (v j) ≤ cstab`. -/
 theorem PEDSLGV1_concl : ∀ (v : ℕ → V3) (i j : ℕ), v ∈ MMsV39 scs6I1 →
     scsDiag 6 i j → dist (v i) (v j) ≤ cstab →
     v ∈ MMsV39 (scsStabDiagV39 scs6I1 i j) := by
-  sorry
+  intro v i j hv hdg hcl
+  have hunad : unadornedV39 scs6I1 := ⟨rfl, rfl, rfl, rfl, rfl⟩
+  rw [unadorned_MMs_concl scs6I1 hunad] at hv
+  simp only [BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at hv
+  obtain ⟨⟨hBBs, hmin, hneg⟩, hidx⟩ := hv
+  obtain ⟨hBBr, hBBp, hBBb, hBBf⟩ := hBBs
+  have hper : Periodic v 6 := hBBp
+  set b' : ℕ → ℕ → ℝ := fun x y =>
+    if psort 6 (i, j) = psort 6 (x, y) then cstab else csAdj 6 (2 * h0) 6 x y with hb'def
+  have hS : scsStabDiagV39 scs6I1 i j =
+      mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) b' := by
+    simp only [scsStabDiagV39, scs6I1, mkUnadornedV39, hb'def]
+  have hunadS : unadornedV39 (scsStabDiagV39 scs6I1 i j) := by rw [hS]; exact ⟨rfl, rfl, rfl, rfl, rfl⟩
+  rw [unadorned_MMs_concl _ hunadS, hS]
+  -- class transport of the required diagonal bound
+  have hclsdist : ∀ x y, psort 6 (i, j) = psort 6 (x, y) →
+      dist (v x) (v y) ≤ cstab := by
+    intro x y hcls
+    obtain hc | hc := la1psort_cases hcls
+    · rw [la1periodic_mod hper x, la1periodic_mod hper y, ← hc.1, ← hc.2,
+        ← la1periodic_mod hper i, ← la1periodic_mod hper j]
+      exact hcl
+    · rw [la1periodic_mod hper x, la1periodic_mod hper y, ← hc.2, ← hc.1,
+        ← la1periodic_mod hper j, ← la1periodic_mod hper i, dist_comm]
+      exact hcl
+  have hdistle : ∀ x y, dist (v x) (v y) ≤ b' x y := by
+    intro x y
+    by_cases hcls : psort 6 (i, j) = psort 6 (x, y)
+    · simp only [hb'def, if_pos hcls]
+      exact hclsdist x y hcls
+    · simp only [hb'def, if_neg hcls]
+      exact (hBBb x y).2
+  have hup : ∀ x y, b' x y ≤ csAdj 6 (2 * h0) 6 x y := by
+    intro x y
+    by_cases hcls : psort 6 (i, j) = psort 6 (x, y)
+    · simp only [hb'def, if_pos hcls]
+      obtain hc | hc := la1psort_cases hcls
+      · rw [la1csAdj_diag6 (Or.inl ⟨hc.1.symm, hc.2.symm⟩) hdg]
+        norm_num [cstab]
+      · rw [la1csAdj_diag6 (Or.inr ⟨hc.2.symm, hc.1.symm⟩) hdg]
+        norm_num [cstab]
+    · simp only [hb'def, if_neg hcls]
+      exact le_refl _
+  -- taustar pointwise equality (J-free dsv on both sides)
+  have htau : ∀ w : ℕ → V3,
+      taustarV39 (mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) b') w
+        = taustarV39 scs6I1 w := by
+    intro w
+    simp only [taustarV39]
+    rw [dsv_J_empty _ _ rfl, dsv_J_empty _ _ rfl]
+    rfl
+  have hBBsS : BBsV39 (mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) b') v :=
+    ⟨hBBr, hper, fun x y => ⟨(hBBb x y).1, hdistle x y⟩, hBBf⟩
+  have hBBw : ∀ w, BBsV39 (mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) b') w →
+      BBsV39 scs6I1 w := by
+    intro w hw
+    refine ⟨hw.1, hw.2.1, fun x y => ⟨(hw.2.2.1 x y).1, le_trans (hw.2.2.1 x y).2 (hup x y)⟩,
+      hw.2.2.2⟩
+  have hvBS : v ∈ BBprimeV39 (mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) b') :=
+    ⟨hBBsS, by
+      intro w hw
+      rw [htau v, htau w]
+      exact hmin w (hBBw w hw),
+      by rw [htau v]; exact hneg⟩
+  have hle1 := la1bbindexMin_le _ hvBS
+  obtain ⟨z, hz, hzval⟩ := la1bbindexMin_attained _ v hvBS
+  have hzS : BBsV39 scs6I1 z := hBBw z hz.1
+  have htaueq : taustarV39 scs6I1 z = taustarV39 scs6I1 v := by
+    have h1 : taustarV39 scs6I1 v ≤ taustarV39 scs6I1 z := hmin z hzS
+    have h2 : taustarV39 scs6I1 z ≤ taustarV39 scs6I1 v := by
+      rw [← htau z, ← htau v]
+      exact hz.2.1 v hBBsS
+    exact le_antisymm h2 h1
+  have hzprime : z ∈ BBprimeV39 scs6I1 := by
+    refine ⟨hzS, ?_, ?_⟩
+    · intro w hw
+      rw [htaueq]
+      exact hmin w hw
+    · rw [htaueq]
+      exact hneg
+  have hidxT : BBindexV39 (mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) b') v
+      = BBindexMinV39 (mkUnadornedV39 6 (dTame 6) (csAdj 6 2 (2 * h0)) b') := by
+    refine le_antisymm ?_ hle1
+    have h1 : BBindexMinV39 scs6I1 ≤ BBindexV39 scs6I1 z :=
+      la1bbindexMin_le scs6I1 hzprime
+    rw [← hzval]
+    show BBindexV39 scs6I1 v ≤ BBindexV39 scs6I1 z
+    rw [hidx]
+    exact h1
+  exact ⟨hvBS, hidxT⟩
 
-/-- HOL `PEDSLGV2_concl` (appendix.hl:1385). Proof pending. -/
+/-- HOL `PEDSLGV2_concl` (appendix.hl:1385). Discharged 2026-10-08
+(LocalAuto1 lane): `scs_6M1` differs from `scs_6I1` only by raising the
+non-adjacent lower bounds `2*h0` to `cstab` — exactly the `scsDiag` slots of
+the hypothesis — while `d`, `b` and the adjacent slots are unchanged; `dsv` is
+`J`-free on both sides, so `taustar` agrees pointwise and the whole `MMs`
+membership transports. -/
 theorem PEDSLGV2_concl : ∀ v : ℕ → V3, v ∈ MMsV39 scs6I1 →
     (∀ i j, scsDiag 6 i j → cstab ≤ dist (v i) (v j)) → v ∈ MMsV39 scs6M1 := by
-  sorry
+  intro v hv hd
+  have hunad : unadornedV39 scs6I1 := ⟨rfl, rfl, rfl, rfl, rfl⟩
+  rw [unadorned_MMs_concl scs6I1 hunad] at hv
+  simp only [BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at hv
+  obtain ⟨⟨hBBs, hmin, hneg⟩, hidx⟩ := hv
+  obtain ⟨hBBr, hBBp, hBBb, hBBf⟩ := hBBs
+  have hlowerM : ∀ x y, csAdj 6 2 cstab x y ≤ dist (v x) (v y) := by
+    intro x y
+    by_cases hd0 : x % 6 = y % 6
+    · have hb := (hBBb x y).1
+      simp only [scs6I1, mkUnadornedV39, csAdj, if_pos hd0] at hb ⊢
+      exact hb
+    · by_cases ha : y % 6 = (x + 1) % 6 ∨ (y + 1) % 6 = x % 6
+      · have hb := (hBBb x y).1
+        simp only [scs6I1, mkUnadornedV39, csAdj, if_neg hd0, if_pos ha] at hb ⊢
+        exact hb
+      · have hdiag : scsDiag 6 x y :=
+          ⟨hd0, fun hc => ha (Or.inl hc.symm), fun hc => ha (Or.inr hc.symm)⟩
+        simp only [csAdj, if_neg hd0, if_neg ha]
+        exact hd x y hdiag
+  have htau : ∀ w : ℕ → V3, taustarV39 scs6M1 w = taustarV39 scs6I1 w := by
+    intro w
+    simp only [taustarV39]
+    rw [dsv_J_empty _ _ rfl, dsv_J_empty _ _ rfl]
+    rfl
+  have hBBw : ∀ w, BBsV39 scs6M1 w → BBsV39 scs6I1 w := by
+    intro w hw
+    refine ⟨hw.1, hw.2.1, ?_, hw.2.2.2⟩
+    intro x y
+    have h1 := (hw.2.2.1 x y).1
+    have h2 := (hw.2.2.1 x y).2
+    simp only [scs6M1, scs6I1, mkUnadornedV39, csAdj] at h1 h2 ⊢
+    by_cases hd0 : x % 6 = y % 6
+    · simp only [if_pos hd0] at h1 h2 ⊢
+      exact ⟨h1, h2⟩
+    · by_cases ha : y % 6 = (x + 1) % 6 ∨ (y + 1) % 6 = x % 6
+      · simp only [if_neg hd0, if_pos ha] at h1 h2 ⊢
+        exact ⟨h1, h2⟩
+      · simp only [if_neg hd0, if_neg ha] at h1 h2 ⊢
+        exact ⟨le_trans (by norm_num [h0, cstab]) h1, h2⟩
+  have hBIeq : ∀ w : ℕ → V3, BBindexV39 scs6M1 w = BBindexV39 scs6I1 w := by
+    intro w
+    have hval : ∀ i : ℕ, csAdj 6 2 cstab i (i + 1) = csAdj 6 2 (2 * h0) i (i + 1) := by
+      intro i
+      have hnd : ¬ (i % 6 = (i + 1) % 6) := by omega
+      show (if i % 6 = (i + 1) % 6 then (0:ℝ)
+            else if (i + 1) % 6 = (i + 1) % 6 ∨ (i + 2) % 6 = i % 6 then 2 else cstab) =
+          (if i % 6 = (i + 1) % 6 then (0:ℝ)
+            else if (i + 1) % 6 = (i + 1) % 6 ∨ (i + 2) % 6 = i % 6 then 2 else 2 * h0)
+      rw [if_neg hnd, if_neg hnd]
+      simp
+    have seteq : {i : ℕ | i < scs6M1.k ∧ scs6M1.a i (i + 1) = dist (w i) (w (i + 1))} =
+        {i : ℕ | i < scs6I1.k ∧ scs6I1.a i (i + 1) = dist (w i) (w (i + 1))} := by
+      ext i
+      show (i < scs6M1.k ∧ csAdj 6 2 cstab i (i + 1) = dist (w i) (w (i + 1))) ↔
+          (i < scs6I1.k ∧ csAdj 6 2 (2 * h0) i (i + 1) = dist (w i) (w (i + 1)))
+      rw [hval i]
+      exact Iff.rfl
+    simp only [BBindexV39]
+    rw [seteq]
+  have hBBsM : BBsV39 scs6M1 v :=
+    ⟨hBBr, hBBp, fun x y => ⟨hlowerM x y, (hBBb x y).2⟩, hBBf⟩
+  have hvBM : v ∈ BBprimeV39 scs6M1 :=
+    ⟨hBBsM, by
+      intro w hw
+      rw [htau v, htau w]
+      exact hmin w (hBBw w hw),
+      by rw [htau v]; exact hneg⟩
+  have hle1 := la1bbindexMin_le scs6M1 hvBM
+  obtain ⟨z, hz, hzval⟩ := la1bbindexMin_attained scs6M1 v hvBM
+  have hzI : BBsV39 scs6I1 z := hBBw z hz.1
+  have htaueq : taustarV39 scs6I1 z = taustarV39 scs6I1 v := by
+    have h2 : taustarV39 scs6M1 z ≤ taustarV39 scs6M1 v := hz.2.1 v hBBsM
+    have h1 : taustarV39 scs6M1 v ≤ taustarV39 scs6M1 z := by
+      rw [htau v, htau z]
+      exact hmin z (hBBw z hz.1)
+    rw [← htau z, ← htau v]
+    exact le_antisymm h2 h1
+  have hzprime : z ∈ BBprimeV39 scs6I1 := by
+    refine ⟨hzI, ?_, ?_⟩
+    · intro w hw
+      rw [htaueq]
+      exact hmin w hw
+    · rw [htaueq]
+      exact hneg
+  have hidxT : BBindexV39 scs6M1 v = BBindexMinV39 scs6M1 := by
+    refine le_antisymm ?_ hle1
+    have h1 : BBindexMinV39 scs6I1 ≤ BBindexV39 scs6I1 z :=
+      la1bbindexMin_le scs6I1 hzprime
+    rw [← hzval, hBIeq v, hBIeq z, hidx]
+    exact h1
+  have hunadM : unadornedV39 scs6M1 := ⟨rfl, rfl, rfl, rfl, rfl⟩
+  rw [unadorned_MMs_concl scs6M1 hunadM]
+  exact ⟨hvBM, hidxT⟩
 
 /-- HOL `AQICLXA_concl` (appendix.hl:1390). Proof pending. -/
 theorem AQICLXA_concl :
@@ -1670,11 +2712,73 @@ theorem CJBDXXN_concl : main_nonlinear_terminal_v11 →
       dist (v p1) (v (p1 + k - 1)) = 2 := by
   sorry
 
-/-- HOL `YRTAFYH_concl` (appendix.hl:1554). Proof pending. -/
+/-- HOL `YRTAFYH_concl` (appendix.hl:1554). Discharged 2026-09-30 (LocalAuto1
+lane): pure override bookkeeping over `psort` — the diagonal slot of `b` is
+replaced by `cstab`, all is_scs constraints transport through the psort toolkit
+above. -/
 theorem YRTAFYH_concl : ∀ (s : ScsV39) (i j : ℕ), isScsV39 s → scsBasicV39 s →
     3 < s.k → scsDiag s.k i j → s.a i j ≤ cstab →
     isScsV39 (scsStabDiagV39 s i j) ∧ scsBasicV39 (scsStabDiagV39 s i j) := by
-  sorry
+  intro s i j his hbasic hk hdg hac
+  obtain ⟨h1, h2, h3, -, -, -, -, h8, h9, h10, h11, h12, h13, h14, h15, h16, h17, h18, -, -,
+    h21⟩ := his
+  set b' : ℕ → ℕ → ℝ :=
+    fun x y => if psort s.k (i, j) = psort s.k (x, y) then cstab else s.b x y with hb'def
+  have hts : scsStabDiagV39 s i j = mkUnadornedV39 s.k s.d s.a b' := by
+    simp only [scsStabDiagV39, hb'def]
+  have hb'periodic : Periodic2 b' s.k := by
+    intro x y
+    constructor
+    · show b' (x + s.k) y = b' x y
+      simp only [hb'def, la1psort_add_left, (h11 x y).1]
+    · have hps : psort s.k (x, y + s.k) = psort s.k (x, y) := by
+        rw [la1psort_symm, la1psort_add_left, la1psort_symm]
+      show b' x (y + s.k) = b' x y
+      simp only [hb'def, hps, (h11 x y).2]
+  have hb'symm : ∀ x y, b' x y = b' y x := by
+    intro x y
+    by_cases hpxy : psort s.k (i, j) = psort s.k (x, y)
+    · have hpyx : psort s.k (i, j) = psort s.k (y, x) := by rw [hpxy, la1psort_symm]
+      simp only [hb'def, if_pos hpxy, if_pos hpyx]
+    · have hyx : psort s.k (i, j) ≠ psort s.k (y, x) := by
+        intro h
+        exact hpxy (by rw [h, la1psort_symm])
+      simp only [hb'def, if_neg hpxy, if_neg hyx]
+      exact (h13 x y).2.2.2.1
+  have hb'ge : ∀ x y, s.a x y ≤ b' x y := by
+    intro x y
+    by_cases hpxy : psort s.k (i, j) = psort s.k (x, y)
+    · have hxy : s.a x y = s.a i j := by
+        obtain hc | hc := la1psort_cases hpxy
+        · rw [la1periodic2_mod h8 x y, hc.1.symm, hc.2.symm, ← la1periodic2_mod h8 i j]
+        · rw [la1periodic2_mod h8 x y, hc.2.symm, hc.1.symm, ← la1periodic2_mod h8 j i,
+            (h13 i j).1]
+      have hbxy : b' x y = cstab := by simp only [hb'def, if_pos hpxy]
+      rw [hbxy, hxy]
+      exact hac
+    · have hbxy : b' x y = s.b x y := by simp only [hb'def, if_neg hpxy]
+      rw [hbxy]
+      exact (h14 x y).1.trans ((h14 x y).2.1.trans (h14 x y).2.2)
+  have hb'adj : ∀ x, psort s.k (i, j) ≠ psort s.k (x, x + 1) :=
+    fun x heq => la1psort_diag s.k hdg heq
+  have hb'nb : ∀ x, b' x (x + 1) = s.b x (x + 1) := fun x => if_neg (hb'adj x)
+  rw [hts]
+  refine ⟨⟨h1, h2, h3, fun _ => rfl, fun _ => rfl, fun _ => rfl, fun _ => rfl, h8, h8,
+    hb'periodic, hb'periodic, fun _ _ => ⟨rfl, rfl⟩,
+    fun x y => ⟨(h13 x y).1, (h13 x y).1, hb'symm x y, hb'symm x y, rfl⟩,
+    fun x y => ⟨le_refl _, hb'ge x y, le_refl _⟩,
+    h15, h16, fun x h3' => absurd h3'.symm hk.ne,
+    fun x _ => by show b' x (x + 1) ≤ cstab; rw [hb'nb x]; exact h18 x hk,
+    fun x y hj => hj.elim, fun x y hj => hj.elim, ?_⟩,
+    ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩⟩
+  show {x : ℕ | x < s.k ∧ (2 * h0 < b' x (x + 1) ∨ 2 < s.a x (x + 1))}.ncard + s.k ≤ 6
+  have seteq : {x : ℕ | x < s.k ∧ (2 * h0 < b' x (x + 1) ∨ 2 < s.a x (x + 1))} =
+      {x : ℕ | x < s.k ∧ (2 * h0 < s.b x (x + 1) ∨ 2 < s.a x (x + 1))} := by
+    ext x
+    simp only [Set.mem_setOf_eq, hb'nb x]
+  rw [seteq]
+  exact h21
+
 
 /-- HOL `BKOSSGE_concl` (appendix.hl:1564). Proof pending. -/
 theorem BKOSSGE_concl : scsArrowV39 {scs3M1} {scs3T1, scs3T5} := by
