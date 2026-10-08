@@ -61,6 +61,7 @@ import Kepler.Text.PackingAuto5
 import Kepler.Text.PackingAuto6
 import Kepler.Text.PackingAuto7
 import Kepler.Text.PackingAuto8
+import Kepler.Text.PackingAuto11
 import Kepler.Text.Polytope
 import Mathlib
 
@@ -218,8 +219,13 @@ theorem RVFXZBU {V : Set V3} {ul : List V3} {i : ℕ} {p : Equiv.Perm ℕ}
     rw [leftActionList_refl_p10]
   · -- i = 2: needs LEFT_ACTION_LIST_1_PROPERTIES (marchal2.hl:5848)
     sorry
+    -- NEEDS: mcell2 invariance under the {0, 1}-swap (RVFXZBU.hl core):
+    -- mxi/omegaListN invariance under LEFT_ACTION_LIST_1_PROPERTIES
+    -- (marchal2.hl:5848), then mcell2-def dispatch. Not ported.
   · -- i = 3: needs LEFT_ACTION_LIST_PROPERTIES (marchal2.hl:4460)
     sorry
+    -- NEEDS: mcell3/mcell4 dispatch invariance under the S3-action
+    -- (LEFT_ACTION_LIST_PROPERTIES, marchal2.hl:4460). Not ported.
   · -- i = 4: mcell4 depends only on setOfList and hl
     have h4 : ul.length = 3 + 1 := hbar.1
     have hlen : ul.length = 4 := by omega
@@ -239,15 +245,62 @@ theorem RVFXZBU {V : Set V3} {ul : List V3} {i : ℕ} {p : Equiv.Perm ℕ}
 `VX V X = V ∩ X`.
 DISCHARGES: PackingAuto2.HDTFNFZ_concl.
 
-NEEDS: `LEPJBDJ`/`LEPJBDJ_0` (owned by the PackingAuto11 worker) to
-identify `V ∩ mcell k V ul` with the truncated list point set; the HL
-proof unfolds `VX` through `cell_params` and applies them at
-`(if k ≤ 3 then k else 4, ul)`. -/
+FULLY PROVED (2026-09-30) by consuming the PackingAuto11 `LEPJBDJ` /
+`LEPJBDJ_0` interfaces (audit-upgrade; the k = 2, 3 geometry bites
+`k2Case`/`k3Subset` remain `sorry`ed upstream in Auto11). The HL proof
+unfolds `VX` through `cell_params` and applies them at
+`(if k ≤ 3 then k else 4, ul)`; here the epsilon selection
+`cellParams V X = (m, wl)` is read through `Classical.epsilon_spec` (the
+predicate is satisfiable at `(min k 4, ul)` via the `mcell` dispatch),
+`¬nullSet X` gives `X ≠ ∅`, and `LEPJBDJ`/`LEPJBDJ_0` at `(m, wl)` identify
+`V ∩ X` with the truncated list point set — exactly the `VX` body. -/
 theorem HDTFNFZ {V : Set V3} {ul : List V3} {k : ℕ} {v : V3} {X : Set V3}
     (hsat : saturated V) (hpack : Packing V) (hbar : barV V 3 ul)
     (hX : X = mcell k V ul) (hnull : ¬nullSet X) :
     VX V X = V ∩ X := by
-  sorry
+  classical
+  -- the cell-parameters selection is satisfiable: (min k 4, ul) works
+  have hwit : (min k 4 : ℕ) ≤ 4 ∧ barV V 3 ul ∧ X = mcell (min k 4) V ul := by
+    refine ⟨by omega, hbar, ?_⟩
+    rcases le_or_gt k 4 with hle | hgt
+    · rw [min_eq_left hle]; exact hX
+    · rw [min_eq_right (by omega : (4:ℕ) ≤ k), hX, mcell,
+        if_neg (show k ≠ 0 by omega), if_neg (show k ≠ 1 by omega),
+        if_neg (show k ≠ 2 by omega), if_neg (show k ≠ 3 by omega),
+        mcell, if_neg (show (4:ℕ) ≠ 0 by omega), if_neg (show (4:ℕ) ≠ 1 by omega),
+        if_neg (show (4:ℕ) ≠ 2 by omega), if_neg (show (4:ℕ) ≠ 3 by omega)]
+  -- the selected parameters satisfy the same predicate
+  set pp := cellParams V X with hpc
+  have hsel : pp.1 ≤ 4 ∧ barV V 3 pp.2 ∧ X = mcell pp.1 V pp.2 :=
+    Classical.epsilon_spec
+      (p := fun p : ℕ × List V3 => p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2)
+      ⟨(min k 4, ul), hwit⟩
+  -- X is nonempty (positive volume)
+  have hXne : X ≠ ∅ := by
+    intro he
+    exact hnull (by rw [nullSet, he]; exact MeasureTheory.measure_empty)
+  -- dispatch on the selected level
+  by_cases hm0 : pp.1 = 0
+  · -- VX V X = ∅ and V ∩ X = ∅ (LEPJBDJ_0)
+    have hvx : VX V X = ∅ := by
+      rw [VX, if_neg hnull]
+      show (if pp.1 = 0 then ∅ else setOfList (truncateSimplex (pp.1 - 1) pp.2)) = ∅
+      rw [hm0]
+      simp
+    rw [hvx, hsel.2.2, hm0]
+    exact (LEPJBDJ_0 V pp.2 hsat hpack hsel.2.1).symm
+  · -- VX V X = setOfList (truncateSimplex (pp.1 - 1) pp.2) and V ∩ X via LEPJBDJ
+    have hm1 : 1 ≤ pp.1 := by omega
+    have hvx : VX V X = setOfList (truncateSimplex (pp.1 - 1) pp.2) := by
+      rw [VX, if_neg hnull]
+      show (if pp.1 = 0 then ∅ else setOfList (truncateSimplex (pp.1 - 1) pp.2))
+        = setOfList (truncateSimplex (pp.1 - 1) pp.2)
+      rw [if_neg hm0]
+    have hmX' : X = mcell pp.1 V pp.2 := hsel.2.2
+    have hne : mcell pp.1 V pp.2 ≠ ∅ := by
+      rw [← hmX']; exact hXne
+    rw [hvx, hmX']
+    exact (LEPJBDJ V pp.2 pp.1 hsat hpack hsel.2.1 hm1 hsel.1 hne).symm
 
 /-! ## YNHYJIT (YNHYJIT.hl:33-103): left-action invariance of omega points -/
 
@@ -287,8 +340,12 @@ theorem YNHYJIT {V : Set V3} {ul vl : List V3} {i : ℕ} {p : Equiv.Perm ℕ}
   rcases hi with rfl | rfl | rfl
   · -- i = 2: needs LEFT_ACTION_LIST_1_PROPERTIES (marchal2.hl:5848)
     sorry
+    -- NEEDS: barV persistence of the swapped list + omegaListN invariance
+    -- under the {0, 1}-swap (LEFT_ACTION_LIST_1_PROPERTIES). Not ported.
   · -- i = 3: needs LEFT_ACTION_LIST_PROPERTIES (marchal2.hl:4460)
     sorry
+    -- NEEDS: barV persistence + omegaListN invariance under the S3-action
+    -- (LEFT_ACTION_LIST_PROPERTIES, marchal2.hl:4460). Not ported.
   · -- i = 4: hypotheses are contradictory
     exfalso
     obtain ⟨u0, u1, u2, u3, hul⟩ := BARV_3_EXPLICIT V ul hbar
@@ -374,6 +431,9 @@ theorem INTER_RCONE_GE_LE_lemma {a b p s : V3} {r : ℝ}
     (hmem : p ∈ rconeGe a b r ∩ rconeGe b a r) :
     dist s p ≤ dist s a := by
   sorry
+  -- NEEDS: the 300-line HL rhombus comparison (URRPHBZ1.hl:70-363, via
+  -- SIMPLEX_FURTHEST_LE). Out of budget; the squeezed-projection setup
+  -- (INTER_RCONE_GE_IMP_BETWEEN_PROJ_POINT, proved above) is the input.
 
 /-- HOL `MCELL_2_PROPERTIES_lemma1` (URRPHBZ1.hl:366-589): every point of the
 edge cell `mcell2` is within `hl (truncate_simplex 1 ul)` of the midpoint of
@@ -383,6 +443,8 @@ theorem MCELL_2_PROPERTIES_lemma1 {V : Set V3} {ul : List V3} {p : V3}
     (hp : p ∈ mcell2 V ul) :
     dist (midpoint ℝ (hdV ul) (hdV ul.tail)) p ≤ hl (truncateSimplex 1 ul) := by
   sorry
+  -- NEEDS: URRPHBZ1.hl:366-589 (the edge-cell capped estimate via
+  -- INTER_RCONE_GE_LE_lemma + the packing distance bound). Not ported.
 
 /-! ### The Rogers simplex: finiteness, boundedness, measurability -/
 
@@ -507,6 +569,12 @@ lands (Auto9/Auto11 merge). -/
 private theorem measurableSet_affGe_wedge_p10 (u0 u1 p q : V3) :
     MeasurableSet (affGe {u0, u1} {p, q}) := by
   sorry
+  -- NEEDS: cone-parametrization route (mapped 2026-09-30, see
+  -- /tmp/weisou_handoff.md): from the Affsign definition,
+  -- affGe {u0, u1} {p, q} = u0 + cone(u1 - u0, p - u0, q - u0); a
+  -- finitely-generated cone is the countable union of compact linear
+  -- images of the cubes [0, n]^3 (measurable), bridged through the
+  -- Affsign finset-sum membership (~100 lines). Not filled.
 
 /-- HOL `MEASURABLE_MCELL` (URRPHBZ1.hl:673-682): every Marchal cell is
 measurable. HL reaches this via `MEASURABLE_COMPACT` (`CLOSED_MCELL` +
