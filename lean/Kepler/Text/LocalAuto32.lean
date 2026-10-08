@@ -64,8 +64,9 @@ FILE MAP
     `SCS_4M7_SLICE_02_p32`, `SCS_4M7_SLICE_02_ARROW_3T3_3M1_p32`,
     `STAB_SCS_4M7_ARROW_3T3_3M1_3T4_p32` (sorry).
   Section 5 (4M8 slices): `SET_STAB_4M8_p32` (proved),
-    `EXPAND_STAB_DIAG_4M8_p32`, `SET_EQ_DIAG_STAB_4M8_p32`,
-    `PROP_OPP_DIAG_4M8_13_p32`, `STAB_4M8_02_ARROW_4M8_13_p32`,
+    `EXPAND_STAB_DIAG_4M8_p32` (proved), `PROP_OPP_DIAG_4M8_13_p32`
+    (proved, 16-cell reflection sweeps),
+    `SET_EQ_DIAG_STAB_4M8_p32`, `STAB_4M8_02_ARROW_4M8_13_p32`,
     `SCS_4M8_SLICE_13_p32`, `SCS_4M8_SLICE_13_ARROW_3T4_p32`,
     `SCS_4M8_SLICE_02_ARROW_3T4_p32`, `SET_STAB_4M8_ARROW_3T4_p32`
     (sorry).
@@ -78,7 +79,8 @@ FILE MAP
     `SCS_4M7_STAND_OR_PRO_p32` (proved), `SCS_4M7_STAND_p32`
     (proved), `MIN_NOT_STAND_4M7_p32` .. `SCS_4M7_ARROW_STAB_4M7_4M6_p32`
     (sorry), `K_SCS_OPP_4M6_p32` (proved),
-    `SCS_4M6_OPP_IS_SCS_p32`, `YOBIMPP_p32` (sorry).
+    `SCS_4M6_OPP_IS_SCS_p32` (proved, 21-conjunct peropp2 sweep),
+    `YOBIMPP_p32` (sorry).
   Section 8 (4M8): `h0_LT_B_SCS_4M8_p32` (proved),
     `SCS_4M8_STAND_OR_PRO_p32` (proved), `SCS_4M8_STAND_p32`
     (proved), `MIN_NOT_STAND_4M8_p32` .. `SCS_4M8_ARROW_STEP_ONE_p32`
@@ -229,6 +231,12 @@ theorem funlist_step_mod_p32 (data : List ((ℕ × ℕ) × ℝ)) (d : ℝ) (k i 
     (Nat.ModEq.add (Nat.mod_modEq i k) (Nat.ModEq.refl 1)).symm,
     (PSORT_MOD k (i % k) (i % k + 1) hk).symm,
     Nat.mod_mod i k]
+
+/-- `peropp2` tables are `Periodic2` (hexagons `OPP_IS_SCS` kit piece). -/
+private theorem la32periodic2_peropp2 {α : Sort u} (f : ℕ → ℕ → α) (k : ℕ) :
+    Periodic2 (peropp2 f k) k := by
+  intro i j
+  simp [peropp2, Nat.add_mod_right]
 
 /-! ## Section 2: `is_scs_v39` verifications (MIQMCSN.hl:213-840) -/
 
@@ -640,27 +648,59 @@ theorem SET_EQ_DIAG_STAB_4M8_p32 :
   sorry
   -- NEEDS: EXPAND_STAB_DIAG_4M8_p32 + EXPAND_DIAG_4V + FZIOTEF_UNION.
 
-/-- HOL `PROP_OPP_DIAG_4M8_13` (MIQMCSN.hl:1603). Both records re-oriented by
-`STAB_SYM` to the literal-index classes `(1,3)`/`(2,0)`; the reflection
-`j ↦ 4 - ((2+j)%4+1)` (the `propEqu 2` after `peropp2`) preserves the 4M8
-`a`-table and swaps the cstab-classes `(1,3) ↔ (0,2)` (16-cell residue sweeps;
-psort/peropp2 mod-4 case work of the NEEDS marker). -/
+/-- HOL `PROP_OPP_DIAG_4M8_13` (MIQMCSN.hl:1603). Discharged: both records
+re-oriented by `STAB_SYM` to the literal-index classes `(3,1)`/`(2,0)`, then
+componentwise `ScsV39.mk.injEq`; the four table components are 16-cell residue
+sweeps over the reflection `j ↦ 4 - ((2+j)%4+1)` (the `propEqu 2` after
+`peropp2`), which preserves the 4M8 `a`-table and swaps the cstab-classes
+`(1,3) ↔ (0,2)`. Minefield: `(2+j)%4` must be `Nat.add_mod`-normalised into
+`j % 4`-carrying form BEFORE `interval_cases` (the funlist/psort arguments
+`(j, j')` must likewise be pre-normalised via `funlist_mod_p20`/`PSORT_MOD`),
+and the cell tactic must not carry `Nat.add_mod` (it re-introduces `j % 4`
+after the substitution). -/
 theorem PROP_OPP_DIAG_4M8_13_p32 :
     scsStabDiagV39 scs4M8 1 3 =
       scsPropEquV39 (scsOppV39 (scsStabDiagV39 scs4M8 0 2)) 2 := by
   -- the two records re-oriented to (3,1) resp. (2,0) so that the maps are
   -- literal-index funlist lookups
-  sorry
-  -- NEEDS: 攻而未克回滚（编排者修波）。侦察已定：本 Mathlib `psort` 签名为
-  -- `ℕ → ℕ × ℕ → ℕ × ℕ`（查表形态），`psort 4 x y` 双参应用非法，必须
-  -- `psort 4 (x, y)`；证明骨架 = `rw [STAB_SYM scs4M8 1 3, STAB_SYM scs4M8 0 2]`
-  -- 后 `ScsV39.mk.injEq.mpr ⟨rfl, rfl, funext ha, funext ha, funext hb, funext hb,
-  -- rfl, rfl, rfl, rfl, rfl⟩`，其中 ha（a-表反射不变性 j ↦ 4 - ((2+j)%4+1)）与
-  -- hb（b-表类 (1,3)↔(0,2) 反射搬运）各为 16 格残差扫描
-  -- （`interval_cases j % 4 <;> interval_cases j' % 4 <;> simp only [scs4M8,
-  -- mkUnadornedV39, funlistV39, psort, assocdV39] <;> simp [Nat.add_mod] <;> omega`
-  -- 骨架成立但 16 格中 omega 报 "No usable constraints"——须查 funlist 展开后
-  -- 的 if-链 decide 化）。反射把 (1,3) 类映到 (0,2) 类已按 4 格抽样核实为真。
+  rw [STAB_SYM scs4M8 1 3, STAB_SYM scs4M8 0 2]
+  simp only [scsStabDiagV39, scs4M8, mkUnadornedV39, scsPropEquV39, scsOppV39, peropp2]
+  rw [ScsV39.mk.injEq]
+  refine ⟨rfl, rfl, ?_, ?_, ?_, ?_, rfl, rfl, rfl, rfl⟩
+  · funext j j'
+    have h1 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have h2 : j' % 4 < 4 := Nat.mod_lt j' (by omega)
+    rw [← funlist_mod_p20
+      [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4
+      j j' (by omega), Nat.add_mod 2 j 4, Nat.add_mod 2 j' 4]
+    interval_cases j % 4 <;> interval_cases j' % 4 <;>
+      simp [funlistV39, psort, assocdV39] <;> norm_num
+  · funext j j'
+    have h1 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have h2 : j' % 4 < 4 := Nat.mod_lt j' (by omega)
+    rw [← funlist_mod_p20
+      [((0, 1), 2 * h0), ((2, 3), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)] 2 4
+      j j' (by omega), Nat.add_mod 2 j 4, Nat.add_mod 2 j' 4]
+    interval_cases j % 4 <;> interval_cases j' % 4 <;>
+      simp [funlistV39, psort, assocdV39] <;> norm_num
+  · funext j j'
+    have h1 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have h2 : j' % 4 < 4 := Nat.mod_lt j' (by omega)
+    rw [← PSORT_MOD 4 j j' (by omega),
+      ← funlist_mod_p20
+      [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6), ((1, 3), 6)]
+      (2 * h0) 4 j j' (by omega), Nat.add_mod 2 j 4, Nat.add_mod 2 j' 4]
+    interval_cases j % 4 <;> interval_cases j' % 4 <;>
+      simp [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab]
+  · funext j j'
+    have h1 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    have h2 : j' % 4 < 4 := Nat.mod_lt j' (by omega)
+    rw [← PSORT_MOD 4 j j' (by omega),
+      ← funlist_mod_p20
+      [((0, 1), cstab), ((2, 3), cstab), ((0, 2), 6), ((1, 3), 6), ((1, 3), 6)]
+      (2 * h0) 4 j j' (by omega), Nat.add_mod 2 j 4, Nat.add_mod 2 j' 4]
+    interval_cases j % 4 <;> interval_cases j' % 4 <;>
+      simp [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab]
 
 /-- HOL `STAB_4M8_02_ARROW_4M8_13` (MIQMCSN.hl:1637). -/
 theorem STAB_4M8_02_ARROW_4M8_13_p32 :
@@ -969,11 +1009,71 @@ theorem SCS_4M7_ARROW_STAB_4M7_4M6_p32 :
 /-- HOL `K_SCS_OPP_4M6` (MIQMCSN.hl:2443). -/
 theorem K_SCS_OPP_4M6_p32 : (scsOppV39 scs4M6').k = 4 := rfl
 
-/-- HOL `SCS_4M6_OPP_IS_SCS` (MIQMCSN.hl:2447). -/
+/-- HOL `SCS_4M6_OPP_IS_SCS` (MIQMCSN.hl:2447). Discharged: direct
+21-conjunct `is_scs_v39` verification of the `peropp2`-transported tables —
+`peropp_periodic`/`la32periodic2_peropp2` for the periodicity pieces, 16-cell
+residue sweeps for symmetry/dominance/lower bounds, the edge bound by the
+`2*h0 ≤ cstab` window, and the card bound `{2}` (`1 + 4 ≤ 6`) from the
+peropp2-reflected edge table. -/
 theorem SCS_4M6_OPP_IS_SCS_p32 : isScsV39 (scsOppV39 scs4M6') := by
-  sorry
-  -- NEEDS: hexagons OPP_IS_SCS kit (peropp/peropp2 mod-4 periodicity +
-  -- symmetry + ordering + card bound for scs_4M6').
+  unfold isScsV39 scsOppV39 scs4M6' mkUnadornedV39
+  dsimp only
+  have pa : Periodic2 (peropp2 (funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab),
+      ((1, 3), cstab)] 2 4) 4) 4 :=
+    la32periodic2_peropp2 _ _
+  have pb : Periodic2 (peropp2 (funlistV39 [((0, 1), cstab), ((0, 2), 6),
+      ((1, 3), 6)] (2 * h0) 4) 4) 4 :=
+    la32periodic2_peropp2 _ _
+  refine ⟨by norm_num, by norm_num, by norm_num, peropp_periodic _ _, peropp_periodic _ _,
+    peropp_periodic _ _, peropp_periodic _ _, pa, pa, pb, pb, fun _ _ => ⟨rfl, rfl⟩,
+    ?_, ?_, ?_, ?_, ?_, ?_, fun _ _ hj => False.elim hj, fun _ _ hj => False.elim hj, ?_⟩
+  · intro i j
+    simp only [peropp2]
+    have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab]
+  · intro i j
+    simp only [peropp2]
+    refine ⟨le_refl _, ?_, le_refl _⟩
+    have h1 : i % 4 < 4 := Nat.mod_lt i (by omega)
+    have h2 : j % 4 < 4 := Nat.mod_lt j (by omega)
+    interval_cases i % 4 <;> interval_cases j % 4 <;>
+      simp [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab]
+  · intro i; simp [peropp2, funlistV39]
+  · rintro i j ⟨hik, hjk, hne⟩
+    interval_cases i <;> interval_cases j <;>
+      simp_all [peropp2, funlistV39, psort, assocdV39] <;> norm_num [h0, cstab]
+  · intro i hk3
+    omega
+  · intro i hk4
+    simp only [peropp2]
+    rw [← Nat.mod_add_mod i 4 1]
+    have hz : i % 4 < 4 := Nat.mod_lt i (by omega)
+    interval_cases i % 4 <;> simp [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab]
+  · have key : ∀ r : ℕ, r < 4 →
+        ((2 * h0 < peropp2 (funlistV39 [((0, 1), cstab), ((0, 2), 6), ((1, 3), 6)]
+              (2 * h0) 4) 4 r ((r + 1) % 4) ∨
+            2 < peropp2 (funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)]
+              2 4) 4 r ((r + 1) % 4)) ↔ r = 2) := by
+      intro r hr
+      interval_cases r <;>
+        simp [peropp2, funlistV39, psort, assocdV39] <;> norm_num [h0, cstab]
+    have p2mod : ∀ (f : ℕ → ℕ → ℝ) (i j : ℕ),
+        peropp2 f 4 i j = peropp2 f 4 (i % 4) (j % 4) := by
+      intro f i j
+      simp only [peropp2, Nat.mod_mod]
+    have hS : {i | i < 4 ∧ (2 * h0 < peropp2 (funlistV39 [((0, 1), cstab), ((0, 2), 6),
+                ((1, 3), 6)] (2 * h0) 4) 4 i (i + 1) ∨
+              2 < peropp2 (funlistV39 [((0, 1), 2 * h0), ((0, 2), cstab), ((1, 3), cstab)]
+                2 4) 4 i (i + 1))} = {2} := by
+      ext i
+      simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+      rw [p2mod _ i (i + 1), p2mod _ i (i + 1), ← Nat.mod_add_mod i 4 1]
+      rw [key (i % 4) (Nat.mod_lt i (by omega))]
+      omega
+    rw [hS]
+    simp
 
 /-- HOL `YOBIMPP` (MIQMCSN.hl:2453). -/
 theorem YOBIMPP_p32 :
