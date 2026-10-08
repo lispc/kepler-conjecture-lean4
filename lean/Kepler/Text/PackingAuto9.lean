@@ -20,10 +20,16 @@ Proof status.
   `hl (truncate_simplex i ul) <= hl ul < sqrt 2` from `HD ul`
   (BALL_CONVEX_HULL_LEMMA). Backward: for `sqrt 2 <= hl ul` the omega point
   lies in `rogers \ ball(HD ul, sqrt 2)` (WAUFCHE1), so `mcell0 != {}`.
-- `CLOSEST_POINT_SUBSET_lemma`, `AFF_DEPENDENT_AFF_DIM_4` (NJIUTIU supports),
-  `NJIUTIU`, `TEZFFSK`: stated faithfully, proofs skeletoned with the
-  tractable reductions discharged and the geometric core `sorry`'d (see the
-  per-theorem notes).
+- `CLOSEST_POINT_SUBSET_lemma`, `AFF_DEPENDENT_AFF_DIM_4` (NJIUTIU supports):
+  FULLY PROVED (no `sorry`). The former by metric-projection existence on the
+  closed set (compactness) plus uniqueness on the convex subset via the
+  strict-convexity midpoint argument (`norm_midpoint_lt_iff`); the latter via
+  Mathlib's `finrank_vectorSpan_le_iff_not_affineIndependent` bridge on the
+  coerced 4-point family (card ≤ 4 splits).
+- `NJIUTIU`, `TEZFFSK`: stated faithfully, the tractable reductions
+  discharged (omega points pairwise distinct via `ROGERS_AFF_DIM_FULL`;
+  TEZFFSK's `hl`-monotone propagation via `HL_DECREASE`) and the geometric
+  cores `sorry`'d (see the per-theorem NEEDS notes).
 
 Encoding notes (following PackingAuto2/8 conventions).
 - HOL `real^3` ↔ `V3 = EuclideanSpace ℝ (Fin 3)` (Kepler.Geom);
@@ -209,29 +215,112 @@ theorem EMNWUUS2 (V : Set V3) (ul : List V3) (hs : saturated V) (hP : Packing V)
 `S` from `x` already lies in the closed convex subset `P` of `S`, then it is
 also the closest point of `P`.
 
-PROOF STATUS: skeleton. The `closestPoint` epsilon only unfolds to
-`(y IN P /\ !z. z IN P ==> dist(x,y) <= dist(x,z))`; equating the two
-projections needs uniqueness of the metric projection, i.e. HOL
-`CLOSEST_POINT_LT` (strict convexity of the squared norm on the convex
-set `P`), whose Rogers/Multivariate machinery is not yet ported. -/
+FULLY PROVED. The selected `closestPoint` only carries its defining
+property when the target predicate is satisfiable; closedness of `S`
+(compactness argument, as in the Rogers ports) provides a genuine minimizer
+`y`, so `ε` lands on `a` and `a` minimizes over `S`. Then `a` and
+`closestPoint P x` both minimize over the convex set `P`; were they distinct,
+the midpoint would sit strictly closer by strict convexity of the norm
+(`norm_midpoint_lt_iff`, via the inner-product `UniformConvexSpace`
+instance) — contradiction. -/
 theorem CLOSEST_POINT_SUBSET_lemma (a x : V3) (S P : Set V3)
     (_ha : a = closestPoint S x) (_haP : a ∈ P) (_hsub : P ⊆ S)
     (_hc : Convex ℝ P) (_hPc : IsClosed P) (_hSc : IsClosed S) (_hne : P ≠ ∅) :
     a = closestPoint P x := by
-  sorry
+  have hSne : S.Nonempty := ⟨a, _hsub _haP⟩
+  obtain ⟨y, hy, hmin⟩ : ∃ y ∈ S, ∀ z ∈ S, dist x y ≤ dist x z := by
+    obtain ⟨s0, hs0⟩ := hSne
+    have hcomp : IsCompact (S ∩ Metric.closedBall x (dist s0 x)) :=
+      IsCompact.inter_left (isCompact_closedBall x (dist s0 x)) _hSc
+    have hne2 : (S ∩ Metric.closedBall x (dist s0 x)).Nonempty :=
+      ⟨s0, hs0, Metric.mem_closedBall.2 le_rfl⟩
+    obtain ⟨y, hy, hmin⟩ := hcomp.exists_isMinOn hne2
+      (Continuous.continuousOn (Continuous.dist continuous_const continuous_id))
+    simp only [IsMinOn, IsMinFilter, Filter.eventually_principal] at hmin
+    refine ⟨y, hy.1, fun z hz => ?_⟩
+    by_cases hz' : z ∈ Metric.closedBall x (dist s0 x)
+    · exact hmin z ⟨hz, hz'⟩
+    · have hy' : dist x y ≤ dist x s0 := by
+        simpa using hmin s0 ⟨hs0, Metric.mem_closedBall.2 le_rfl⟩
+      rw [Metric.mem_closedBall, not_le, dist_comm s0 x, dist_comm z x] at hz'
+      exact hy'.trans (le_of_lt hz')
+  have h' : closestPoint S x ∈ S ∧ ∀ z ∈ S, dist x (closestPoint S x) ≤ dist x z :=
+    Classical.epsilon_spec (p := fun y : V3 => y ∈ S ∧ ∀ z ∈ S, dist x y ≤ dist x z)
+      ⟨y, hy, hmin⟩
+  rw [← _ha] at h'
+  have hq : a ∈ P ∧ ∀ z ∈ P, dist x a ≤ dist x z :=
+    ⟨_haP, fun z hz => h'.2 z (_hsub hz)⟩
+  have hcspec : closestPoint P x ∈ P ∧ ∀ z ∈ P, dist x (closestPoint P x) ≤ dist x z :=
+    Classical.epsilon_spec (p := fun y : V3 => y ∈ P ∧ ∀ z ∈ P, dist x y ≤ dist x z) ⟨a, hq⟩
+  by_contra hne'
+  have hab : dist x a = dist x (closestPoint P x) :=
+    le_antisymm (hq.2 _ hcspec.1) (hcspec.2 a _haP)
+  rw [dist_eq_norm, dist_eq_norm] at hab
+  have hmid : midpoint ℝ a (closestPoint P x) ∈ P := Convex.midpoint_mem _hc _haP hcspec.1
+  have hkey : dist x a ≤ dist x (midpoint ℝ a (closestPoint P x)) := hq.2 _ hmid
+  rw [dist_eq_norm, dist_eq_norm] at hkey
+  have hhalf : (⅟2 : ℝ) = 1 / 2 := by norm_num
+  have hsplit : x - midpoint ℝ a (closestPoint P x)
+      = (1 / 2 : ℝ) • ((x - a) + (x - closestPoint P x)) := by
+    show (x : V3) -ᵥ midpoint ℝ a (closestPoint P x)
+        = (1 / 2 : ℝ) • ((x : V3) -ᵥ a + ((x : V3) -ᵥ closestPoint P x))
+    rw [vsub_midpoint, ← smul_add, ← hhalf]
+  have hstrict : dist x (midpoint ℝ a (closestPoint P x)) < dist x a := by
+    rw [dist_eq_norm, dist_eq_norm, hsplit, norm_midpoint_lt_iff hab]
+    exact fun hcon => hne' (sub_right_injective (b := x) hcon)
+  exact absurd hstrict (not_lt.2 hkey)
 
 -- DISCHARGES: (NJIUTIU.hl:64 supporting lemma; no pack_concl interface)
 
 /-- HOL `AFF_DEPENDENT_AFF_DIM_4` (NJIUTIU.hl:64): an affinely dependent
 4-point set spans dimension at most 2.
 
-PROOF STATUS: skeleton. HL splits on which of `a b c d` is the dependent
-point and applies `AFF_DIM_INSERT` + `AFF_DIM_LE_CARD`; the Mathlib-side
-exchange (`AffineIndependent` family on `↥S` vs `vectorSpan` finrank, i.e.
-`affDim (insert x s) = affDim s` when `x ∈ affineSpan s`) is not yet wired. -/
+FULLY PROVED. The coerced family `fun x : ↥{a,b,c,d} => (x : V3)` has
+`Fintype.card` between 1 and 4. For card ≤ 2 (resp. = 3),
+`finrank_vectorSpan_range_le` alone bounds the dimension by 1 (resp. 2); for
+card = 4 Mathlib's `finrank_vectorSpan_le_iff_not_affineIndependent` (n = 2)
+converts the affine dependence into the dimension bound directly. -/
 theorem AFF_DEPENDENT_AFF_DIM_4 (a b c d : V3) (h : affineDependent {a, b, c, d}) :
     affDim {a, b, c, d} ≤ 2 := by
-  sorry
+  have hne : ({a, b, c, d} : Set V3).Nonempty := ⟨a, by simp⟩
+  rw [affDim, if_neg (nonempty_iff_ne_empty.1 hne)]
+  haveI : Finite ({a, b, c, d} : Set V3) := Set.toFinite _ |>.to_subtype
+  haveI hfintype : Fintype ({a, b, c, d} : Set V3) := Fintype.ofFinite _
+  haveI hcpos : 0 < Fintype.card ({a, b, c, d} : Set V3) := Fintype.card_pos
+  have hc4 : Fintype.card ({a, b, c, d} : Set V3) ≤ 4 := by
+    rw [Set.fintypeCard_eq_ncard]
+    have hle1 := Set.ncard_insert_le a (insert b (insert c {d} : Set V3))
+    have hle2 := Set.ncard_insert_le b (insert c {d} : Set V3)
+    have hle3 := Set.ncard_insert_le c ({d} : Set V3)
+    have h1 := Set.ncard_singleton (α := V3) d
+    omega
+  have hrange : Set.range (fun x : ({a, b, c, d} : Set V3) => (x : V3)) = {a, b, c, d} := by
+    ext y
+    constructor
+    · rintro ⟨⟨z, hz⟩, rfl⟩
+      exact hz
+    · rintro (rfl | rfl | rfl | rfl)
+      · exact ⟨⟨y, by simp⟩, rfl⟩
+      · exact ⟨⟨y, by simp⟩, rfl⟩
+      · exact ⟨⟨y, by simp⟩, rfl⟩
+      · exact ⟨⟨y, by simp⟩, rfl⟩
+  by_cases hc2 : Fintype.card ({a, b, c, d} : Set V3) ≤ 2
+  · have hle := finrank_vectorSpan_range_le (k := ℝ) (V := V3) (P := V3)
+      (fun x : ({a, b, c, d} : Set V3) => (x : V3))
+      (n := Fintype.card ({a, b, c, d} : Set V3) - 1) (by omega)
+    rw [hrange] at hle
+    omega
+  · by_cases hc3 : Fintype.card ({a, b, c, d} : Set V3) = 3
+    · have hle := finrank_vectorSpan_range_le (k := ℝ) (V := V3) (P := V3)
+        (fun x : ({a, b, c, d} : Set V3) => (x : V3)) (n := 2) hc3
+      rw [hrange] at hle
+      exact_mod_cast hle
+    · have hc3' : Fintype.card ({a, b, c, d} : Set V3) = 4 := by omega
+      have hkey := finrank_vectorSpan_le_iff_not_affineIndependent
+        (k := ℝ) (V := V3) (P := V3) (fun x : ({a, b, c, d} : Set V3) => (x : V3)) (n := 2) hc3'
+      have hnot : ¬ AffineIndependent ℝ (fun x : ({a, b, c, d} : Set V3) => (x : V3)) := h
+      rw [hrange] at hkey
+      exact_mod_cast (hkey.2 hnot)
 
 -- DISCHARGES: (NJIUTIU.hl:149; concl NJIUTIU.hl:27-33 — no pack_concl interface)
 
@@ -259,6 +348,14 @@ theorem NJIUTIU (V : Set V3) (ul vl : List V3) (hs : saturated V) (hP : Packing 
   have hdistv := ROGERS_AFF_DIM_FULL V vl hvl hdimv
   -- NJIUTIU core (HL:278-577): closest-point descent through the shared hull.
   sorry
+-- NEEDS: NJIUTIU geometric core (HL:278-577). Remaining: port the HL
+-- `CONVEX_HULL_EQ_EQ_SET_EQ` step (two 4-point sets with equal convex hulls
+-- and equal affDim 3 have equal vertex sets, forcing `hdV ul = hdV vl`), then
+-- the closest-point descent recovering each `ω_{i+1}` as the projection of
+-- `ω_i` onto the shared Voronoi face via `CLOSEST_POINT_SUBSET_lemma` +
+-- `CONVEX_VORONOI_LIST` + `CLOSED_VORONOI_LIST` (PA6/PA12/PA14 ports).
+-- Independently: the file's own NJIUTIU supports above are proved, and the
+-- downstream pack_concl consumers do not depend on NJIUTIU/TEZFFSK bodies.
 
 /-! ## TEZFFSK (TEZFFSK.hl) -/
 
@@ -289,5 +386,12 @@ theorem TEZFFSK (V : Set V3) (ul vl : List V3) (k : ℕ) (hs : saturated V)
     linarith
   -- TEZFFSK core (HL:120-581): NJIUTIU + WAUFCHE2 + XYOFCGX force u_i = v_i.
   sorry
+-- NEEDS: TEZFFSK geometric core (HL:120-581). Assuming the omega-chain
+-- agreement (`NJIUTIU` above), remains: combine `WAUFCHE2`/`XYOFCGX`-style
+-- uniqueness ports to force each vertex `u_i = v_i` of the truncation. The
+-- reductions inside the proof (chain agreement via NJIUTIU; monotone
+-- sqrt-2-smallness of truncations via `HL_DECREASE` + `TRUNCATE_TRUNCATE_
+-- SIMPLEX`) are fully discharged; only the final vertex-identification
+-- `sorry` remains. Depends on the NJIUTIU NEEDS above at merge time.
 
 end Kepler.Text
