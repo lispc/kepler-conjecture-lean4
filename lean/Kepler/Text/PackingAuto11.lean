@@ -48,16 +48,21 @@ Encoding notes.
   below (HOL `MCELL_EXPLICIT`, marchal2.hl:262).
 
 Private-lemma accounting (the supporting chain of LEPJBDJ.hl). Proved here
-(modulo the giants): `mcellExplicit` (marchal2.hl:262 `MCELL_EXPLICIT`),
+(in full): `mcellExplicit` (marchal2.hl:262 `MCELL_EXPLICIT`),
 `hlPair` (LEPJBDJ.hl:131-142: `hl` of a pair, via Rogers `HL_EQ_DIST0` +
 `CIRCUMCENTER_2`), `k1Case` (HL:66-123), `mcell4Nonempty` (HL:713-722),
-`k4Sup` (HL:668-669), `k4Subset` (HL:674-712, modulo `simplexFurthestLt2`),
-`mcell3Nonempty` + `k3Sup` (HL:728-738) and the `k3Case` assembly. Giants
-with faithful statements, `sorry`-ed: `rogersInterVLemma` (marchal2.hl:626
-`ROGERS_INTER_V_LEMMA`), `simplexFurthestLt2` (marchal2.hl:2393
-`SIMPLEX_FURTHEST_LT_2`), `mxiExplicit` (marchal2.hl:2516 `MXI_EXPLICIT`),
-`k2Case` (LEPJBDJ.hl:126-656: the projection/Pythagoras wedge argument) and
-`k3Subset` (LEPJBDJ.hl:740-906: the `mxi`-Voronoi exclusion argument).
+`k4Sup` (HL:668-669), `k4Subset` (HL:674-712, incl. `simplexFurthestLt2`),
+`mcell3Nonempty` + `k3Sup` (HL:728-738) and the `k3Case` assembly. The
+giant `simplexFurthestLt2` (marchal2.hl:2393 `SIMPLEX_FURTHEST_LT_2`) is
+also FULLY PROVED here (strict convexity of closed balls + finset induction
+on the hull), and `mxiExplicit` (marchal2.hl:2516 `MXI_EXPLICIT`) is fully
+assembled via the pack_concl bank leaf `MXI_EXISTS_concl` (PackingAuto2;
+identical to PackingAuto12.MXI_EXPLICIT). Giants with faithful statements,
+still `sorry`-ed:
+`rogersInterVLemma` (marchal2.hl:626 `ROGERS_INTER_V_LEMMA`),
+`k2Case` (LEPJBDJ.hl:126-656: the
+projection/Pythagoras wedge argument) and `k3Subset` (LEPJBDJ.hl:740-906:
+the `mxi`-Voronoi exclusion argument) — see the per-theorem NEEDS notes.
 Both main theorems are assembled honestly from these pieces.
 -/
 
@@ -156,13 +161,98 @@ private theorem k1Case (V : Set V3) (u0 u1 u2 u3 : V3) (hp : Packing V)
 
 /-- GIANT (marchal2.hl:2393 `SIMPLEX_FURTHEST_LT_2`): for a finite set, any
 hull point outside the set is strictly closer to `a` than some set point.
-(True: `x ↦ ‖x - a‖` is convex, so `‖x - a‖ ≤ max_{y ∈ s} ‖y - a‖`; equality
-forces all active vertices on one ray of `a`, hence all equal to `x`,
-contradicting `x ∉ s`.) -/
+
+FULLY PROVED. Let `y0 ∈ s` maximize `‖· - a‖`. By finset induction on the
+hull (`convexHull_insert` = `convexJoin` with a singleton), every hull point
+`p` satisfies `p ∈ s` or `‖p - a‖ < ‖y0 - a‖`: the two-point step uses the
+segment weight decomposition and, for an interior point of a nontrivial
+segment, the strict convexity of closed balls
+(`strictConvex_closedBall` via the inner-product `UniformConvexSpace`
+instance) to move strictly inside the `y0`-ball. Since `x ∉ s`, the strict
+bound holds with witness `y0`. -/
 private theorem simplexFurthestLt2 (a : V3) (s : Set V3) (hfin : s.Finite)
     (x : V3) (hx : x ∈ convexHull ℝ s) (hxs : x ∉ s) :
     ∃ y ∈ s, ‖x - a‖ < ‖y - a‖ := by
-  sorry
+  classical
+  have hne : s.Nonempty := by
+    by_contra hc
+    rw [Set.not_nonempty_iff_eq_empty.mp hc, convexHull_empty] at hx
+    exact hx
+  have htne : hfin.toFinset.Nonempty := by
+    rw [← Finset.coe_nonempty, hfin.coe_toFinset]
+    exact hne
+  obtain ⟨y0, hy0, hmax⟩ := Finset.exists_max_image hfin.toFinset (fun y => ‖y - a‖) htne
+  have key : ∀ t' : Finset V3, (∀ z ∈ t', z ∈ hfin.toFinset) →
+      ∀ p ∈ convexHull ℝ ((t' : Set V3)), p ∈ s ∨ ‖p - a‖ < ‖y0 - a‖ := by
+    intro t'
+    induction t' using Finset.induction_on with
+    | empty =>
+      intro _ p hp
+      rw [Finset.coe_empty, convexHull_empty] at hp
+      exact hp.elim
+    | @insert u t' hnu ih =>
+      intro hsub p hp
+      have hu : u ∈ s := by
+        rw [← hfin.coe_toFinset]
+        exact hsub _ (Finset.mem_insert_self u t')
+      have huM : ‖u - a‖ ≤ ‖y0 - a‖ := hmax u (hsub _ (Finset.mem_insert_self u t'))
+      have hsub' : ∀ z ∈ t', z ∈ hfin.toFinset := fun z hz => hsub z (Finset.mem_insert_of_mem hz)
+      rw [Finset.coe_insert] at hp
+      by_cases hte : (t' : Set V3).Nonempty
+      · rw [convexHull_insert hte, mem_convexJoin] at hp
+        obtain ⟨u', hu'1, q, hq2, hpq⟩ := hp
+        have hu'eq : u' = u := by simpa using hu'1
+        rw [hu'eq] at hpq
+        obtain hq' : q ∈ s ∨ ‖q - a‖ < ‖y0 - a‖ := ih hsub' q hq2
+        have hqM : ‖q - a‖ ≤ ‖y0 - a‖ := by
+          rcases hq' with h | h
+          · exact hmax q (Finset.mem_coe.mp (by rw [hfin.coe_toFinset]; exact h))
+          · exact h.le
+        obtain ⟨c, d, hc0, hd0, hcd, hpeq⟩ := hpq
+        by_cases huq : u = q
+        · rw [huq, ← add_smul, hcd, one_smul] at hpeq
+          exact Or.inl (by rw [← hpeq, ← huq]; exact hu)
+        by_cases hp'u : p = u
+        · exact Or.inl (hp'u ▸ hu)
+        by_cases hp'q : p = q
+        · rcases hq' with h | h
+          · exact Or.inl (by rw [hp'q]; exact h)
+          · exact Or.inr (by rw [hp'q]; exact h)
+        · have hcpos : 0 < c := by
+            rcases lt_or_eq_of_le hc0 with e | e
+            · exact e
+            · exact absurd (by
+                have d1 : d = 1 := by linarith
+                rw [← hpeq, ← e, zero_smul, zero_add, d1, one_smul]) hp'q
+          have hdpos : 0 < d := by
+            rcases lt_or_eq_of_le hd0 with e | e
+            · exact e
+            · exact absurd (by
+                have c1 : c = 1 := by linarith
+                rw [← hpeq, ← e, zero_smul, add_zero, c1, one_smul]) hp'u
+          have hpopen : p ∈ openSegment ℝ u q := ⟨c, d, hcpos, hdpos, hcd, hpeq⟩
+          have hmemU : u ∈ Metric.closedBall a ‖y0 - a‖ := by
+            rw [Metric.mem_closedBall, dist_eq_norm]
+            exact huM
+          have hmemQ : q ∈ Metric.closedBall a ‖y0 - a‖ := by
+            rw [Metric.mem_closedBall, dist_eq_norm]
+            exact hqM
+          have hsub2 := (strictConvex_closedBall (𝕜 := ℝ) a ‖y0 - a‖).openSegment_subset
+            hmemU hmemQ huq hpopen
+          rw [interior_closedBall', Metric.mem_ball, dist_eq_norm] at hsub2
+          exact Or.inr hsub2
+      · have htempty : (t' : Set V3) = ∅ := by
+          simpa using hte
+        rw [htempty] at hp
+        rw [show ((insert u (∅ : Set V3)) : Set V3) = {u} from by simp,
+          convexHull_singleton] at hp
+        exact Or.inl (hp ▸ hu)
+  have hx' : x ∈ convexHull ℝ ((hfin.toFinset : Set V3)) := by
+    rw [hfin.coe_toFinset]
+    exact hx
+  rcases key hfin.toFinset (fun _ hz => hz) x hx' with h | h
+  · exact absurd h hxs
+  · exact ⟨y0, by rw [← hfin.coe_toFinset]; exact hy0, h⟩
 
 /-- The `mcell 4` nonemptiness bridge (LEPJBDJ.hl:713-722): a nonempty
 `mcell 4` forces `hl ul < sqrt 2` (otherwise `mcell4` is definitionally
@@ -273,6 +363,11 @@ private theorem k3Subset (V : Set V3) (u0 u1 u2 u3 : V3) (hp : Packing V)
     (hc2 : Real.sqrt 2 ≤ hl [u0, u1, u2, u3]) :
     V ∩ mcell 3 V [u0, u1, u2, u3] ⊆ setOfList [u0, u1, u2] := by
   sorry
+-- NEEDS: k3Subset geometric core (HL:740-906). Remaining after mxiExplicit:
+-- the mxi-not-in-V exclusion via Voronoi-list membership of the omega points
+-- and convexity of `voronoiList V (truncateSimplex 2 ul)`, then the
+-- `simplexFurthestLt2` contradiction on `S = {u0,u1,u2,m}` (now proved above).
+-- Consumed only by `k3Case`, itself consumed by `LEPJBDJ` (k = 3 branch).
 
 /-- Assembly of the `k = 3` case from the nonemptiness bridge and the two
 inclusions (LEPJBDJ.hl:728-906). -/
@@ -304,6 +399,14 @@ private theorem k2Case (V : Set V3) (u0 u1 u2 u3 : V3) (hp : Packing V)
     (hne : mcell 2 V [u0, u1, u2, u3] ≠ ∅) :
     V ∩ mcell 2 V [u0, u1, u2, u3] = setOfList (truncateSimplex 1 [u0, u1, u2, u3]) := by
   sorry
+-- NEEDS: k2Case geometric core (HL:126-656, ~530 HL lines). Remaining: the
+-- orthogonal-projection `v = proj_point (u1 - u0) (x - u0)` Pythagoras wedge:
+-- collinearity + `rcone_ge` exclusions give `between (v + u0) (u0, u1)`,
+-- two Pythagoras splits and the `sqrt 2 ≤ dist (v+u0, u_i)` bounds forcing
+-- `dist (u0,u1) ≥ 2 * hl [u0;u1]`, contradicting `hl [u0;u1] < sqrt 2`; plus
+-- the reverse inclusion via the indicator witness (`SUM_UNION_LZERO`,
+-- `SUM_DIS2`). Needs an affine projection + wedge-kit port. Consumed only by
+-- `LEPJBDJ` (k = 2 branch).
 
 /-! ## GIANT: the Rogers-simplex / packing intersection (marchal2.hl) -/
 
@@ -313,12 +416,37 @@ private theorem rogersInterVLemma (V : Set V3) (ul : List V3) (v : V3)
     (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul) (hv : v ∈ V)
     (hr : v ∈ rogers V ul) : v = hdV ul := by
   sorry
+-- NEEDS: rogersInterVLemma geometric core (HL:626-667). Requires the
+-- GLTVHUM characterization of `voronoi_closed V u0` by Rogers simplices with
+-- truncation vertex u0 plus the omega-points-within-2 geometry. Cannot
+-- delegate: PackingAuto12.ROGERS_INTER_V_LEMMA is the parallel sorry'd copy
+-- and PA12 imports this file (circularity). Consumed by LEPJBDJ_0 and (in
+-- PA12) by the shared interface copy.
+
+/-- Two-point hull = segment (verbatim = PackingAuto12 `p12_hull_pair`). -/
+private theorem p11_hull_pair (a b : V3) :
+    convexHull ℝ ({a, b} : Set V3) = segment ℝ a b := by
+  refine Set.ext fun z => ⟨fun hz => ?_, fun hz => ?_⟩
+  · refine convexHull_min (fun w hw => ?_) (convex_segment (𝕜 := ℝ) a b) hz
+    rcases hw with rfl | hw'
+    · exact left_mem_segment ℝ _ _
+    · rw [hw']
+      exact right_mem_segment ℝ _ _
+  · rcases hz with ⟨u, w, hu, hw, huw, rfl⟩
+    have hconv := convex_convexHull (𝕜 := ℝ) (s := ({a, b} : Set V3))
+    exact hconv (subset_convexHull ℝ _ (by simp)) (subset_convexHull ℝ _ (by simp))
+      hu hw huw
 
 /-- GIANT (marchal2.hl:2516 `MXI_EXPLICIT`): under the `mcell3` regime the
 `mxi` point is realized on the segment from `omega_list_n V ul 2` to
-`omega_list_n V ul 3` at distance `sqrt 2` from `u0` (existence of such a
-point: `SEGMENT_INTER_CBALL_LEMMA`; identification with `mxi` via its
-`@`-definition). -/
+`omega_list_n V ul 3` at distance `sqrt 2` from `u0`.
+
+FULLY ASSEMBLED (2026-10-08) by consuming the pack_concl bank leaf
+`MXI_EXISTS_concl` (PackingAuto2, the DISCHARGES-convention interface; the
+identical assembly is PackingAuto12.MXI_EXPLICIT): the existence half
+(HL SEGMENT_INTER_CBALL_LEMMA) and the `mxi` identification live behind that
+interface; here only the two-point hull = segment reading and the
+`hdV`/`dist`-comm bookkeeping are discharged. -/
 private theorem mxiExplicit (V : Set V3) (u0 u1 u2 u3 : V3)
     (hp : Packing V) (hs : saturated V) (hb : barV V 3 [u0, u1, u2, u3])
     (hc1 : hl (truncateSimplex 2 [u0, u1, u2, u3]) < Real.sqrt 2)
@@ -326,7 +454,13 @@ private theorem mxiExplicit (V : Set V3) (u0 u1 u2 u3 : V3)
     ∃ s : V3, s ∈ segment ℝ (omegaListN V [u0, u1, u2, u3] 2)
         (omegaListN V [u0, u1, u2, u3] 3) ∧
       dist u0 s = Real.sqrt 2 ∧ mxi V [u0, u1, u2, u3] = s := by
-  sorry
+  have hm := MXI_EXISTS_concl V [u0, u1, u2, u3] hs hp hb hc2
+  rw [show hdV [u0, u1, u2, u3] = u0 from rfl] at hm
+  refine ⟨mxi V [u0, u1, u2, u3], ?_, ?_, rfl⟩
+  · rw [← p11_hull_pair]
+    exact hm.1
+  · rw [dist_comm]
+    exact hm.2
 
 /-! ## The two LEPJBDJ conclusions -/
 
