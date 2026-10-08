@@ -1073,8 +1073,9 @@ witness 供给）；(ii) 沿 `grutoti_region` 的 witness 重述（region 已闭
 同文件私有可直用）。配套：region docstring DEVIATIONS 注记的极值数据
 （f1/f2>0）需随此项导出。
 
-### (c) 状态：**草案待审**（cell_vol 波立案；k=0,1 计数臂与退化/null 臂
-已闭，仅 k∈{2,3,4} wedge 恒等式本体卡此项）。
+### (c) 状态：**已批准（2026-10-01 用户"同意。按你的想法来吧。"，三连批
+28/29/30 之一）**（cell_vol 波立案；k=0,1 计数臂与退化/null 臂已闭，仅
+k∈{2,3,4} wedge 恒等式本体卡此项；随 SF28+29+cell_vol 波应用）。
 
 ## 29. PA23 `grutoti_cell_vol` ε-junk 角（cellParams 逆序表）— 分级 A′
 
@@ -1086,7 +1087,8 @@ frozen-false 角**。
 
 签名加 `truncateSimplex 1 (cellParams V X).2 = [u0, u1]` 型前提封角。
 
-### (c) 状态：**草案待审**（cell_vol 波立案）。
+### (c) 状态：**已批准（2026-10-01 用户三连批 28/29/30 之一）**（cell_vol
+波立案；随 SF28+29+cell_vol 波应用）。
 
 ## 30. PA22 bisector 家族 holArg 同缺陷（SF22+27 应用波发现）— 分级 M
 
@@ -1100,5 +1102,5 @@ new_specification 且基于 `Complex.arg`，**波及 `bisector_point` 全部下�
 （(−π,0)↦(π,2π) 分支反序，仅单射）——refill 时凡"arg 序⟹holArg 序"的
 推理不成立（批应用波已录）。
 
-### (c) 状态：**草案待审**（2026-10-01 holArg 批立案；建议与 bisector
-refill 波同车）。
+### (c) 状态：**已批准（2026-10-01 用户三连批 28/29/30 之一）**（2026-10-01
+holArg 批立案；随 bisector refill 波同车应用）。

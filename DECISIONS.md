@@ -3,6 +3,17 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-10-01 — SF 28/29/30 三连批准（用户"同意。按你的想法来吧。"）
+
+- **项 28**（PA23 `grutoti_cell_vol` 缺窄性前提，A′）：签名补窄性前提或沿
+  `grutoti_region` witness 重述，随 SF28+29+cell_vol 波应用；
+- **项 29**（PA23 `grutoti_cell_vol` ε-junk 角，A′）：签名加
+  `truncateSimplex 1 (cellParams V X).2 = [u0, u1]` 型前提封角，同车；
+- **项 30**（PA22 bisector 家族 holArg 同缺陷，M）：与 SF22/27 同车改述
+  `holArg`，随 bisector refill 波应用（注意 holArg 对 Complex.arg 无单调性，
+  仅单射——refill 推理不得用"arg 序⟹holArg 序"）。
+- 状态翻转台账于同日补录（周休眠打断所致迟账）。
+
 ## 2026-09-29 — "planar 编码定义纠正"单独立项（用户拍板：同意）
 
 **背景**：提案官两轮裁决实证 PA22 的 `facetOfC`（弱化为"真面"）与 `polyhedronC`
