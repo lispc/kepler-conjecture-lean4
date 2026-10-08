@@ -3031,7 +3031,30 @@ private theorem p22_ukb_base11 : (2.097 - 0.0331 * 11 : ℝ)
 /-- HOL `BIEFJHU_explicit` (counting_spheres.hl:965). GIANT.
 Scout note (PA22d, 不强攻): the UKBRPFE chain above does NOT lift to the
 `h ∈ [1, h0]` radius here - the `asn` window `s` degrades with `h` and the
-`max 0` clipping needs its own treatment.  Next wave keeps this `sorry`. -/
+`max 0` clipping needs its own treatment.  Next wave keeps this `sorry`.
+Scout upgrade (PA22e, 预研产出, NEEDS route design for the owning wave):
+(a) `h`-reduction kills the degradation concern: `th h = h*sqrt3/4 +
+    sqrt(1-(h/2)^2)/2` is increasing on `[1, h0]` (`th' h = sqrt3/4 -
+    h/(4*sqrt(1-(h/2)^2)) >= 0 iff h^2 <= 12/7`; `h0^2 = 1.5876 < 12/7`),
+    while `0.591 - 0.0331*k + 0.506*lfun h` is largest at `h = 1`
+    (`lfun h <= 1` there).  So it suffices to prove the one-parameter window
+    `1.097 - 0.0331*k <= max 0 (2π - 2k*asn(√3/2 * sin(π/k)))` for `k ≥ 3`.
+    The `max 0` clip never binds: the area decreases to its k→∞ limit
+    `2π(1 - √3/2) ≈ 0.8418 > 0` (min over `k ≥ 3` at `h = 1`).
+(b) True-gap margins at `h = 1` (float scout): k=3 0.1971, k=4 0.0461,
+    k=5 0.0110 (worst), k=6 0.0108, k=7 0.0249, then growing; `k ≥ 34` is
+    trivial since the LHS `0.591 - 0.0331*k + 0.506*lfun h < 0`.
+(c) Window choice per k (asn-unit budgets `margin/(2k·√(1-w²))`):
+    the `p22_asn_le_add` cubic chord window works at k = 3 (overshoot
+    0.0299 <= budget 0.0497) and k = 6 (0.00097 <= 0.000998) but FAILS at
+    k = 4 (0.00739 > 0.00729) and k = 5 (0.00242 > 0.00110).  Prescription:
+    for k >= 5 use the quadratic majorant `asn w <= w + w^3/6 + w^5/10`,
+    valid while `3u + u^2 + u^3 <= 1` for `u = w^2` (window `u <= 17/64`
+    covers `w <= 0.5091`; certificate `(1+u/2+u^2/2)^2*(1-u)-1 =
+    u^2*(1-3u-u^2-u^3)/4 >= 0`, exact `11/4096` at `u = 1/4`); overshoot
+    0.00037 <= budget at k = 5.  For k = 4 split the chord interval at `w/2`
+    (overshoot drops ~4x) or use the alternating `arcsin` series (term ratio
+    `w^2*(2n+1)/(2n+2) < 1`, decreasing terms on the whole window).  -/
 theorem BIEFJHU_explicit (h : ℝ) (k : ℕ) (hpa : packIneqDefAP22)
     (hh : 1 ≤ h ∧ h ≤ h0) (hk : 3 ≤ k) :
     (0.591 - 0.0331 * k + 0.506 * lfun h) ≤
@@ -3121,7 +3144,14 @@ theorem UKBRPFE_explicit (k : ℕ) (hpa : packIneqDefAP22) (hk : 3 ≤ k) :
     exact le_trans (p22_ukb_hi k hge) (le_max_right _ _)
 
 
-/-- HOL `DLWCHEM_sum` (counting_spheres.hl:1020). GIANT. -/
+/-- HOL `DLWCHEM_sum` (counting_spheres.hl:1020). Filled (PA22e wave).
+Per-term `BIEFJHU_explicit` + `Finset.sum_le_sum`, linear decomposition
+`∑ (0.591 - 0.0331·k i + 0.506·lfun (h i)) = 0.591·n - 0.0331·∑k + 0.506·∑lfun`,
+then the counting window `0.3924·n + 6.4692 ≤ 4π` fails at `n ≥ 16` (exact
+rational margin `453/2500 = 0.1812` over `4·3.1416`; `Real.pi_lt_d4`).
+NEEDS: the proof consumes `BIEFJHU_explicit`, which is still `sorry` - the
+`sorryAx` dependency is upstream (per-item numerical wave), not in this sum
+layer; closing BIEFJHU closes this theorem for free. -/
 theorem DLWCHEM_sum (h : ℕ → ℝ) (k : ℕ → ℕ) (n : ℕ) (hpa : packIneqDefAP22)
     (hn : 12 < n)
     (hik : ∀ i : ℕ, i < n → 3 ≤ k i ∧ 1 ≤ h i ∧ h i ≤ h0)
@@ -3130,9 +3160,51 @@ theorem DLWCHEM_sum (h : ℕ → ℝ) (k : ℕ → ℕ) (n : ℕ) (hpa : packIne
         max 0 (regularSphericalPolygonAreaP22
           (h i * sqrt3 / 4 + Real.sqrt (1 - (h i / 2) ^ 2) / 2) (k i)) ≤ 4 * Real.pi)
     (hlsum : 12 < ∑ i ∈ Finset.range n, lfun (h i)) : n < 16 := by
-  sorry
+  by_contra hge
+  have hn16 : 16 ≤ n := by omega
+  have hnc : ((16:ℝ)) ≤ (n : ℝ) := by exact_mod_cast hn16
+  -- per-term BIEFJHU
+  have hterm : ∀ i ∈ Finset.range n, (0.591 - 0.0331 * (k i : ℝ) + 0.506 * lfun (h i)) ≤
+      max 0 (regularSphericalPolygonAreaP22
+        (h i * sqrt3 / 4 + Real.sqrt (1 - (h i / 2) ^ 2) / 2) (k i)) := by
+    intro i hi
+    have hin : i < n := Finset.mem_range.mp hi
+    exact BIEFJHU_explicit (h i) (k i) hpa ⟨(hik i hin).2.1, (hik i hin).2.2⟩ (hik i hin).1
+  have hsumle := Finset.sum_le_sum hterm
+  -- decompose the linear-in-(k, lfun) sum
+  have hsplit : ∑ i ∈ Finset.range n, (0.591 - 0.0331 * (k i : ℝ) + 0.506 * lfun (h i))
+      = (0.591:ℝ) * n - 0.0331 * ((∑ i ∈ Finset.range n, k i : ℕ) : ℝ)
+        + 0.506 * (∑ i ∈ Finset.range n, lfun (h i)) := by
+    rw [Finset.sum_add_distrib, Finset.sum_sub_distrib,
+      ← Finset.mul_sum (s := Finset.range n) (f := fun i => (k i : ℝ)) (a := (0.0331:ℝ)),
+      ← Finset.mul_sum (s := Finset.range n) (f := fun i => lfun (h i)) (a := (0.506:ℝ)),
+      Finset.sum_const, Finset.card_range, nsmul_eq_mul, ← Nat.cast_sum]
+    ring
+  have hka : ((∑ i ∈ Finset.range n, k i : ℕ) : ℝ) ≤ (6:ℝ) * n - 12 := by
+    have h12 : (12:ℕ) ≤ 6 * n := by omega
+    have h2 : ((∑ i ∈ Finset.range n, k i : ℕ) : ℝ) ≤ ((6 * n - 12 : ℕ) : ℝ) := by
+      exact_mod_cast hksum
+    rw [Nat.cast_sub h12, Nat.cast_mul] at h2
+    simpa only [Nat.cast_ofNat] using h2
+  have hkey : (0.591:ℝ) * n - 0.0331 * (6 * n - 12) + 0.506 * 12 ≤ 4 * Real.pi := by
+    linarith
+  have hmono : (0.591:ℝ) * 16 - 0.0331 * (6 * 16 - 12)
+      ≤ 0.591 * n - 0.0331 * (6 * n - 12) := by linarith
+  have hnum : (0.591:ℝ) * 16 - 0.0331 * (6 * 16 - 12) + 0.506 * 12 = 12.7476 := by norm_num
+  have hpi : (4:ℝ) * Real.pi < 12.5664 := by
+    have h := Real.pi_lt_d4
+    linarith
+  linarith
 
-/-- HOL `XULJEPR_sum` (counting_spheres.hl:1052). GIANT. -/
+/-- HOL `XULJEPR_sum` (counting_spheres.hl:1052). Filled (PA22e wave).  Same
+route as `DLWCHEM_sum` with the range split `range n = {0} ∪ Icc 1 (n-1)`
+(`Finset.sum_range_add` + `Finset.sum_Ico_eq_sum_range`), `UKBRPFE_explicit`
+at `i = 0` (the `+1` flat-sphere credit) and `BIEFJHU_explicit` on
+`[1, n-1]`; the counting window `1 + 0.3924·n + 6.4692 ≤ 4π` already fails at
+`n ≥ 13` (exact rational margin `1/250 = 0.004` over `4·3.1416`).
+NEEDS: `sorryAx` dependency is the upstream `BIEFJHU_explicit` only
+(`UKBRPFE_explicit` is closed); closing BIEFJHU closes this theorem for
+free. -/
 theorem XULJEPR_sum (h : ℕ → ℝ) (k : ℕ → ℕ) (n : ℕ) (hpa : packIneqDefAP22)
     (hn : 12 < n) (h0eq : h 0 = 1)
     (hik : ∀ i : ℕ, i < n → 3 ≤ k i ∧ 1 ≤ h i ∧ h i ≤ h0)
@@ -3143,7 +3215,65 @@ theorem XULJEPR_sum (h : ℕ → ℝ) (k : ℕ → ℕ) (n : ℕ) (hpa : packIne
             (h i * sqrt3 / 4 + Real.sqrt (1 - (h i / 2) ^ 2) / 2) (k i)) ≤
         4 * Real.pi)
     (hlsum : 12 < ∑ i ∈ Finset.range n, lfun (h i)) : False := by
-  sorry
+  have hn0 : 0 < n := by omega
+  -- (a) the linear decomposition of the range-n sum (same as DLWCHEM)
+  have hsplit : ∑ i ∈ Finset.range n, (0.591 - 0.0331 * (k i : ℝ) + 0.506 * lfun (h i))
+      = (0.591:ℝ) * n - 0.0331 * ((∑ i ∈ Finset.range n, k i : ℕ) : ℝ)
+        + 0.506 * (∑ i ∈ Finset.range n, lfun (h i)) := by
+    rw [Finset.sum_add_distrib, Finset.sum_sub_distrib,
+      ← Finset.mul_sum (s := Finset.range n) (f := fun i => (k i : ℝ)) (a := (0.0331:ℝ)),
+      ← Finset.mul_sum (s := Finset.range n) (f := fun i => lfun (h i)) (a := (0.506:ℝ)),
+      Finset.sum_const, Finset.card_range, nsmul_eq_mul, ← Nat.cast_sum]
+    ring
+  -- (b) split the range-n sum at 0: {0} ∪ [1, n-1]
+  have hsplit2 : ∑ i ∈ Finset.range n, (0.591 - 0.0331 * (k i : ℝ) + 0.506 * lfun (h i))
+      = (0.591 - 0.0331 * (k 0 : ℝ) + 0.506 * lfun (h 0)) +
+        ∑ i ∈ Finset.Icc 1 (n - 1), (0.591 - 0.0331 * (k i : ℝ) + 0.506 * lfun (h i)) := by
+    have hIcc : Finset.Icc 1 (n - 1) = Finset.Ico 1 n := by
+      ext i; simp only [Finset.mem_Icc, Finset.mem_Ico]; omega
+    have hrw : Finset.range n = Finset.range (1 + (n - 1)) := by congr 1; omega
+    rw [hrw, Finset.sum_range_add, Finset.sum_range_one,
+      ← Finset.sum_Ico_eq_sum_range
+        (f := fun i => (0.591 - 0.0331 * (k i : ℝ) + 0.506 * lfun (h i))) 1 n, hIcc]
+  -- (c) i = 0 term via UKBRPFE (flat radius, + 1 credit)
+  have hk0 : 3 ≤ k 0 := (hik 0 hn0).1
+  have hgt0 : (1:ℝ) + (0.591 - 0.0331 * (k 0 : ℝ) + 0.506 * lfun (h 0))
+      ≤ max 0 (regularSphericalPolygonAreaP22 (Real.cos 0.797) (k 0)) := by
+    rw [h0eq]; linarith [UKBRPFE_explicit (k 0) hpa hk0]
+  -- (d) i in [1, n-1] terms via BIEFJHU
+  have htermI : ∀ i ∈ Finset.Icc 1 (n - 1), (0.591 - 0.0331 * (k i : ℝ) + 0.506 * lfun (h i))
+      ≤ max 0 (regularSphericalPolygonAreaP22
+        (h i * sqrt3 / 4 + Real.sqrt (1 - (h i / 2) ^ 2) / 2) (k i)) := by
+    intro i hi
+    obtain ⟨_, hi2⟩ := Finset.mem_Icc.mp hi
+    have hin : i < n := by omega
+    exact BIEFJHU_explicit (h i) (k i) hpa ⟨(hik i hin).2.1, (hik i hin).2.2⟩ (hik i hin).1
+  have hsumI := Finset.sum_le_sum htermI
+  -- (e) combine
+  have hcomb : (1:ℝ) + ∑ i ∈ Finset.range n, (0.591 - 0.0331 * (k i : ℝ) + 0.506 * lfun (h i))
+      ≤ max 0 (regularSphericalPolygonAreaP22 (Real.cos 0.797) (k 0))
+        + ∑ i ∈ Finset.Icc 1 (n - 1), max 0 (regularSphericalPolygonAreaP22
+          (h i * sqrt3 / 4 + Real.sqrt (1 - (h i / 2) ^ 2) / 2) (k i)) := by
+    rw [hsplit2]; linarith
+  -- (f) counting arithmetic: n >= 13 forces 1 + 0.3924n + 6.4692 <= 4pi, false
+  have hka : ((∑ i ∈ Finset.range n, k i : ℕ) : ℝ) ≤ (6:ℝ) * n - 12 := by
+    have h12 : (12:ℕ) ≤ 6 * n := by omega
+    have h2 : ((∑ i ∈ Finset.range n, k i : ℕ) : ℝ) ≤ ((6 * n - 12 : ℕ) : ℝ) := by
+      exact_mod_cast hksum
+    rw [Nat.cast_sub h12, Nat.cast_mul] at h2
+    simpa only [Nat.cast_ofNat] using h2
+  have hkey : (1:ℝ) + 0.591 * n - 0.0331 * (6 * n - 12) + 0.506 * 12 ≤ 4 * Real.pi := by
+    linarith
+  have hn13 : ((13:ℝ)) ≤ (n : ℝ) := by
+    exact_mod_cast (show ((13:ℕ)) ≤ n by omega)
+  have hmono : (0.591:ℝ) * 13 - 0.0331 * (6 * 13 - 12)
+      ≤ 0.591 * n - 0.0331 * (6 * n - 12) := by linarith
+  have hnum : (1:ℝ) + 0.591 * 13 - 0.0331 * (6 * 13 - 12) + 0.506 * 12 = 12.5704 := by
+    norm_num
+  have hpi : (4:ℝ) * Real.pi < 12.5664 := by
+    have h := Real.pi_lt_d4
+    linarith
+  linarith
 
 /-- HOL `REAL_CONVEX_ON_SECOND_SECANT` (counting_spheres.hl:1099). Filled via
 Lagrange MVT twice: `f'' ≥ 0` makes `f'` monotone on the interval (MVT on
