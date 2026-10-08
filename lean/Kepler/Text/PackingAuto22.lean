@@ -2366,10 +2366,10 @@ theorem regular_spherical_polygon_area_797 (k : ℕ) (hk : 3 ≤ k) :
 
 /-! ## UKBRPFE numeric kit (PA22c wave): Taylor/asin bounds for the
 `regular_spherical_polygon_area` gap `2π - 2k·asn(cos 0.797·sin(π/k))`.
-STATUS: base case `k = 3` closed (`p22_ukb_base3`, `p22_ukb3`).  Remaining
-(NEEDS, see UKBRPFE_explicit below): `k ∈ {4..12}` individually by the same
-route, then `k ≥ 12` via the derivative bound
-`g' ≥ 0.0331 - 0.0334·y - 0.743·y³ > 0` at `y = π/x ≤ π/12`. -/
+STATUS: fully consumed (PA22d wave): base `k = 3` (`p22_ukb_base3` /
+`p22_ukb3`), `k ∈ {4..11}` finite cases (`p22_ukb_base4..11`) and `k ≥ 12`
+directly (`p22_ukb_hi`, no derivative machinery needed); `UKBRPFE_explicit`
+closed - no NEEDS left in this chain. -/
 
 private theorem p22_pi_lb : (3.14 : ℝ) < Real.pi := Real.pi_gt_d2
 
@@ -2715,9 +2715,323 @@ private theorem p22_ukb3 : (0.591 - 0.0331 * 3 + 0.506 * lfun 1 + 1 : ℝ)
   rw [hlf, hgoal, harea]
   refine le_trans hub3 (le_max_right _ _)
 
+/-! ## UKBRPFE fill-in wave (PA22d).  Erratum-aware route (see NEEDS at
+`UKBRPFE_explicit`): (a) `k ∈ {4..11}` finite cases by the base3 template
+(`p22_asn_le_add` + `p22_sin_le_taylor5`, per-`k` rational windows, margins
+≥ 0.079 at k = 6); (b) `k ≥ 12` a direct bound from `sin y ≤ y` + the same
+`asn` window with `v ≤ 2.205/k` (margin ≈ 0.145 at k = 12) - no derivative
+machinery needed after all.  Numeric windows machine-checked against exact
+rational arithmetic at fill time; true-gap margins: k = 6 worst finite case
+≈ 0.079, hi-case ≈ 0.145 at k = 12. -/
+
+/-- `a / c ≤ b / c` for `0 < c` (pinned helper; the bundled name varies
+across Mathlib versions). -/
+private theorem p22_div_le_div_right {a b c : ℝ} (hc : 0 < c) (hab : a ≤ b) :
+    a / c ≤ b / c := by
+  rw [div_eq_inv_mul, div_eq_inv_mul]
+  exact mul_le_mul_of_nonneg_left hab (inv_nonneg.mpr hc.le)
+
+/-- `a / c ≤ b / c` for a natural divisor `c > 0`. -/
+private theorem p22_div_le_div_nat_right {a b : ℝ} {c : ℕ} (hc : (0:ℝ) < c) (hab : a ≤ b) :
+    a / c ≤ b / c := by
+  have e1 : a / c = (c:ℝ)⁻¹ * a := by field_simp
+  have e2 : b / c = (c:ℝ)⁻¹ * b := by field_simp
+  rw [e1, e2]
+  exact mul_le_mul_of_nonneg_left hab (inv_nonneg.mpr hc.le)
+
+/-- `a / d ≤ a / c` for naturals `0 < c ≤ d` (larger divisor, smaller
+quotient). -/
+private theorem p22_div_le_div_nat_left {a : ℝ} {c d : ℕ} (ha : 0 ≤ a) (hc : (0:ℝ) < (c:ℝ))
+    (hcd : c ≤ d) : a / d ≤ a / c := by
+  have hd : (0:ℝ) < (d:ℝ) := lt_of_lt_of_le hc (by exact_mod_cast hcd)
+  have hinv : (d:ℝ)⁻¹ ≤ (c:ℝ)⁻¹ := (inv_le_inv₀ hd hc).mpr (by exact_mod_cast hcd)
+  rw [div_eq_inv_mul, div_eq_inv_mul]
+  exact mul_le_mul_of_nonneg_right hinv ha
+
+/-- `a / d ≤ a / c` for reals `0 < c ≤ d`. -/
+private theorem p22_div_le_div_real_left {a c d : ℝ} (ha : 0 ≤ a) (hc : 0 < c)
+    (hcd : c ≤ d) : a / d ≤ a / c := by
+  have hd : 0 < d := lt_of_lt_of_le hc hcd
+  have hinv : d⁻¹ ≤ c⁻¹ := (inv_le_inv₀ hd hc).mpr hcd
+  rw [div_eq_inv_mul, div_eq_inv_mul]
+  exact mul_le_mul_of_nonneg_right hinv ha
+
+/-- Shared assembly for the UKBRPFE gap: given `v ≤ Vt`, `0 < s ≤ √(1 - v²)`
+and the rational window check
+`2k·(Vt + s⁻¹/(1+s)·Vt³/3) ≤ 4.183 + 0.0331k`, close
+`2.097 - 0.0331k ≤ 2π - 2k·asn v` (the `UKBRPFE_explicit` shape before the
+`max 0` / `lfun 1` decoration). -/
+private theorem p22_ukb_gen (k : ℕ) (v Vt s : ℝ)
+    (hv : v = Real.cos 0.797 * Real.sin (Real.pi / k))
+    (hvV : v ≤ Vt) (hv0 : 0 ≤ v) (hV0 : 0 ≤ Vt) (hV1 : Vt < 1)
+    (hs : s ≤ Real.sqrt (1 - v ^ 2)) (hs0 : 0 < s)
+    (hnum : (2:ℝ) * k * (Vt + s⁻¹ / (1 + s) * (Vt ^ 3 / 3)) ≤ 4.183 + 0.0331 * k) :
+    (2.097 - 0.0331 * k : ℝ) ≤ 2 * Real.pi - 2 * k * asn v := by
+  have hv1 : v < 1 := lt_of_le_of_lt hvV hV1
+  have hub := p22_asn_le_add hv0 hv1
+  have hv2lt : v ^ 2 < 1 := by
+    have h : v * v ≤ v * 1 := mul_le_mul_of_nonneg_left hv1.le hv0
+    calc v ^ 2 = v * v := by ring
+      _ ≤ v * 1 := h
+      _ = v := by ring
+      _ < 1 := hv1
+  have hRpos : 0 < Real.sqrt (1 - v ^ 2) := Real.sqrt_pos.mpr (by linarith [hv2lt])
+  have hR : (Real.sqrt (1 - v ^ 2))⁻¹ / (1 + Real.sqrt (1 - v ^ 2)) ≤ s⁻¹ / (1 + s) := by
+    have h1 : (Real.sqrt (1 - v ^ 2))⁻¹ ≤ s⁻¹ := (inv_le_inv₀ hRpos hs0).mpr hs
+    have h2 : (1 + Real.sqrt (1 - v ^ 2))⁻¹ ≤ (1 + s)⁻¹ :=
+      (inv_le_inv₀ (by linarith [hRpos]) (by linarith [hs0])).mpr (by linarith)
+    calc (Real.sqrt (1 - v ^ 2))⁻¹ / (1 + Real.sqrt (1 - v ^ 2))
+        = (Real.sqrt (1 - v ^ 2))⁻¹ * (1 + Real.sqrt (1 - v ^ 2))⁻¹ := by ring
+      _ ≤ s⁻¹ * (1 + s)⁻¹ :=
+          mul_le_mul h1 h2 (inv_nonneg.mpr (by linarith [hRpos]))
+            (inv_nonneg.mpr (by linarith [hs0]))
+      _ = s⁻¹ / (1 + s) := by ring
+  have hv3 : v ^ 3 ≤ Vt ^ 3 := pow_le_pow_left₀ hv0 hvV 3
+  have hcpos : 0 ≤ s⁻¹ / (1 + s) := div_nonneg (inv_nonneg.mpr hs0.le) (by linarith)
+  have hv3ge : (0:ℝ) ≤ v ^ 3 := by
+    calc (0:ℝ) ≤ v * (v * v) := mul_nonneg hv0 (mul_nonneg hv0 hv0)
+      _ = v ^ 3 := by ring
+  have hv3pos : 0 ≤ v ^ 3 / 3 := div_nonneg hv3ge (by norm_num)
+  have hbound : v + (Real.sqrt (1 - v ^ 2))⁻¹ / (1 + Real.sqrt (1 - v ^ 2)) * (v ^ 3 / 3)
+      ≤ Vt + s⁻¹ / (1 + s) * (Vt ^ 3 / 3) := by
+    refine add_le_add hvV ?_
+    calc (Real.sqrt (1 - v ^ 2))⁻¹ / (1 + Real.sqrt (1 - v ^ 2)) * (v ^ 3 / 3)
+        ≤ s⁻¹ / (1 + s) * (v ^ 3 / 3) := mul_le_mul_of_nonneg_right hR hv3pos
+      _ ≤ s⁻¹ / (1 + s) * (Vt ^ 3 / 3) :=
+          mul_le_mul_of_nonneg_left (p22_div_le_div_right (by norm_num) hv3) hcpos
+  have hkpos : 0 ≤ (k:ℝ) := Nat.cast_nonneg k
+  have hmul : 0 ≤ (2:ℝ) * k := mul_nonneg (by norm_num) hkpos
+  have h1 : (2:ℝ) * k * asn v ≤ 4.183 + 0.0331 * k := by
+    calc (2:ℝ) * k * asn v
+        ≤ (2:ℝ) * k
+            * (v + (Real.sqrt (1 - v ^ 2))⁻¹ / (1 + Real.sqrt (1 - v ^ 2)) * (v ^ 3 / 3)) :=
+          mul_le_mul_of_nonneg_left hub hmul
+      _ ≤ (2:ℝ) * k * (Vt + s⁻¹ / (1 + s) * (Vt ^ 3 / 3)) :=
+          mul_le_mul_of_nonneg_left hbound hmul
+      _ ≤ 4.183 + 0.0331 * k := hnum
+  have hpi : (6.28:ℝ) ≤ 2 * Real.pi := by linarith [p22_pi_lb]
+  linarith
+
+/-- Finite-`k` preparation: with `s` a rational lower bound for `√(1 - Vt²)`,
+`Vt := 0.6991·T(π/k)`, `T y = y - y³/6 + y⁵/120` the Taylor-5/rational window
+of `v = cos 0.797·sin(π/k)` (using `π ∈ (3.14, 3.15)` termwise), produce
+`v ≤ Vt`, `0 ≤ v` and `s ≤ √(1 - v²)`. -/
+private theorem p22_ukb_pre (k : ℕ) (s : ℝ) (hk4 : 4 ≤ k) (hs0 : 0 < s)
+    (hsle : s ^ 2 ≤ 1 - ((6991:ℝ) / 10000 * ((3.15:ℝ) / k
+      - ((3.14:ℝ) / k) ^ 3 / 6 + ((3.15:ℝ) / k) ^ 5 / 120)) ^ 2) :
+    Real.cos 0.797 * Real.sin (Real.pi / k)
+      ≤ (6991:ℝ) / 10000 * ((3.15:ℝ) / k
+          - ((3.14:ℝ) / k) ^ 3 / 6 + ((3.15:ℝ) / k) ^ 5 / 120)
+      ∧ 0 ≤ Real.cos 0.797 * Real.sin (Real.pi / k)
+      ∧ s ≤ Real.sqrt (1 - (Real.cos 0.797 * Real.sin (Real.pi / k)) ^ 2) := by
+  have hkpos : (0:ℝ) < k := by exact_mod_cast lt_of_lt_of_le (by norm_num : (0:ℕ) < 4) hk4
+  have hy0 : 0 ≤ Real.pi / k := div_nonneg Real.pi_pos.le hkpos.le
+  have hyU : Real.pi / k ≤ (3.15:ℝ) / k :=
+    p22_div_le_div_nat_right hkpos (le_of_lt p22_pi_ub)
+  have hyL : (3.14:ℝ) / k ≤ Real.pi / k :=
+    p22_div_le_div_nat_right hkpos (le_of_lt p22_pi_lb)
+  have hy4 : Real.pi / k ≤ 4 := by
+    have h1 : (3.15:ℝ) / k ≤ (3.15:ℝ) / 4 :=
+      p22_div_le_div_nat_left (by norm_num : (0:ℝ) ≤ 3.15) (by norm_num : (0:ℝ) < 4) hk4
+    linarith
+  have hsin : Real.sin (Real.pi / k)
+      ≤ Real.pi / k - (Real.pi / k) ^ 3 / 6 + (Real.pi / k) ^ 5 / 120 :=
+    p22_sin_le_taylor5 hy0 hy4
+  have h30 : 0 ≤ (3.14:ℝ) / k := div_nonneg (by norm_num) hkpos.le
+  have hy3L : ((3.14:ℝ) / k) ^ 3 ≤ (Real.pi / k) ^ 3 := pow_le_pow_left₀ h30 hyL 3
+  have hy5U : (Real.pi / k) ^ 5 ≤ ((3.15:ℝ) / k) ^ 5 := pow_le_pow_left₀ hy0 hyU 5
+  have hT : Real.pi / k - (Real.pi / k) ^ 3 / 6 + (Real.pi / k) ^ 5 / 120
+      ≤ (3.15:ℝ) / k - ((3.14:ℝ) / k) ^ 3 / 6 + ((3.15:ℝ) / k) ^ 5 / 120 := by
+    linarith
+  have hsin0 : 0 ≤ Real.sin (Real.pi / k) := by
+    refine Real.sin_nonneg_of_nonneg_of_le_pi hy0 ?_
+    have h3 : Real.pi / k ≤ (3.15:ℝ) / 4 :=
+      le_trans hyU (p22_div_le_div_nat_left (by norm_num : (0:ℝ) ≤ 3.15)
+        (by norm_num : (0:ℝ) < 4) hk4)
+    exact le_trans h3 (by linarith [p22_pi_lb])
+  have hV : Real.cos 0.797 * Real.sin (Real.pi / k)
+      ≤ (6991:ℝ) / 10000 * ((3.15:ℝ) / k
+          - ((3.14:ℝ) / k) ^ 3 / 6 + ((3.15:ℝ) / k) ^ 5 / 120) := by
+    calc Real.cos 0.797 * Real.sin (Real.pi / k)
+        ≤ (6991:ℝ) / 10000 * Real.sin (Real.pi / k) :=
+          mul_le_mul_of_nonneg_right p22_cc_le hsin0
+      _ ≤ (6991:ℝ) / 10000
+            * (Real.pi / k - (Real.pi / k) ^ 3 / 6 + (Real.pi / k) ^ 5 / 120) :=
+          mul_le_mul_of_nonneg_left hsin (by norm_num)
+      _ ≤ (6991:ℝ) / 10000
+            * ((3.15:ℝ) / k - ((3.14:ℝ) / k) ^ 3 / 6 + ((3.15:ℝ) / k) ^ 5 / 120) :=
+          mul_le_mul_of_nonneg_left hT (by norm_num)
+  have hv0 : 0 ≤ Real.cos 0.797 * Real.sin (Real.pi / k) :=
+    mul_nonneg (by linarith [p22_cc_lb]) hsin0
+  refine ⟨hV, hv0, ?_⟩
+  have hv2 : (Real.cos 0.797 * Real.sin (Real.pi / k)) ^ 2
+      ≤ ((6991:ℝ) / 10000 * ((3.15:ℝ) / k
+          - ((3.14:ℝ) / k) ^ 3 / 6 + ((3.15:ℝ) / k) ^ 5 / 120)) ^ 2 :=
+    pow_le_pow_left₀ hv0 hV 2
+  have hss : s ^ 2 ≤ 1 - (Real.cos 0.797 * Real.sin (Real.pi / k)) ^ 2 := by
+    linarith [hsle, hv2]
+  calc s = Real.sqrt (s ^ 2) := (Real.sqrt_sq hs0.le).symm
+    _ ≤ Real.sqrt (1 - (Real.cos 0.797 * Real.sin (Real.pi / k)) ^ 2) :=
+        Real.sqrt_le_sqrt hss
+
+/-- `k ≥ 12` case: `sin y ≤ y` suffices (no Taylor), `v ≤ 2.205/k ≤ 2.205/12`,
+uniform window `s = 0.98`; margin ≈ 0.145 at `k = 12`, growing in `k`. -/
+private theorem p22_ukb_hi (k : ℕ) (hk : 12 ≤ k) :
+    (2.097 - 0.0331 * k : ℝ) ≤
+      2 * Real.pi - 2 * k * asn (Real.cos 0.797 * Real.sin (Real.pi / k)) := by
+  have hkpos : (0:ℝ) < k := by exact_mod_cast lt_of_lt_of_le (by norm_num : (0:ℕ) < 12) hk
+  have hk12 : (12:ℝ) ≤ k := by exact_mod_cast hk
+  have hy0 : 0 ≤ Real.pi / k := div_nonneg Real.pi_pos.le hkpos.le
+  have hyU : Real.pi / k ≤ (3.15:ℝ) / k :=
+    p22_div_le_div_nat_right hkpos (le_of_lt p22_pi_ub)
+  have hy4 : Real.pi / k ≤ 4 := by
+    have h1 : Real.pi / k ≤ (3.15:ℝ) / 12 := le_trans hyU
+      (p22_div_le_div_nat_left (by norm_num : (0:ℝ) ≤ 3.15) (by norm_num : (0:ℝ) < 12) hk)
+    linarith
+  have hsinle : Real.sin (Real.pi / k) ≤ Real.pi / k := by
+    have hT := p22_sin_le_taylor5 hy0 hy4
+    have hy2 : (Real.pi / k) ^ 2 ≤ 16 := by nlinarith [hy4, hy0]
+    have hy3 : (0:ℝ) ≤ (Real.pi / k) ^ 3 := by nlinarith [hy0]
+    have hy5 : (Real.pi / k) ^ 5 ≤ 16 * (Real.pi / k) ^ 3 := by
+      calc (Real.pi / k) ^ 5 = (Real.pi / k) ^ 3 * (Real.pi / k) ^ 2 := by ring
+        _ ≤ (Real.pi / k) ^ 3 * 16 := mul_le_mul_of_nonneg_left hy2 hy3
+        _ = 16 * (Real.pi / k) ^ 3 := by ring
+    linarith
+  have hsin0 : 0 ≤ Real.sin (Real.pi / k) := by
+    refine Real.sin_nonneg_of_nonneg_of_le_pi hy0 ?_
+    have h3 : Real.pi / k ≤ (3.15:ℝ) / 12 := le_trans hyU
+      (p22_div_le_div_nat_left (by norm_num : (0:ℝ) ≤ 3.15) (by norm_num : (0:ℝ) < 12) hk)
+    exact le_trans h3 (by linarith [p22_pi_lb])
+  have hv0 : 0 ≤ Real.cos 0.797 * Real.sin (Real.pi / k) :=
+    mul_nonneg (by linarith [p22_cc_lb]) hsin0
+  have hvA : Real.cos 0.797 * Real.sin (Real.pi / k) ≤ (7:ℝ) / 10 * 3.15 / k := by
+    have hcc : Real.cos 0.797 ≤ 7 / 10 := le_trans p22_cc_le (by norm_num)
+    calc Real.cos 0.797 * Real.sin (Real.pi / k)
+        ≤ (7:ℝ) / 10 * Real.sin (Real.pi / k) :=
+          mul_le_mul_of_nonneg_right hcc hsin0
+      _ ≤ (7:ℝ) / 10 * (Real.pi / k) :=
+          mul_le_mul_of_nonneg_left hsinle (by norm_num)
+      _ ≤ (7:ℝ) / 10 * ((3.15:ℝ) / k) :=
+          mul_le_mul_of_nonneg_left hyU (by norm_num)
+      _ = (7:ℝ) / 10 * 3.15 / k := by ring
+  have hv2 : (Real.cos 0.797 * Real.sin (Real.pi / k)) ^ 2
+      ≤ ((7:ℝ) / 10 * 3.15 / 12) ^ 2 := by
+    refine pow_le_pow_left₀ hv0 ?_ 2
+    exact le_trans hvA
+      (p22_div_le_div_nat_left (by norm_num : (0:ℝ) ≤ (7:ℝ) / 10 * 3.15)
+        (by norm_num : (0:ℝ) < 12) hk)
+  have hsq : ((49:ℝ) / 50) ^ 2
+      ≤ 1 - (Real.cos 0.797 * Real.sin (Real.pi / k)) ^ 2 := by
+    have hnum : ((49:ℝ) / 50) ^ 2 ≤ 1 - ((7:ℝ) / 10 * 3.15 / 12) ^ 2 := by norm_num
+    linarith [hnum, hv2]
+  have hsQ : (49:ℝ) / 50 ≤
+      Real.sqrt (1 - (Real.cos 0.797 * Real.sin (Real.pi / k)) ^ 2) := by
+    calc (49:ℝ) / 50 = Real.sqrt (((49:ℝ) / 50) ^ 2) := (Real.sqrt_sq (by norm_num)).symm
+      _ ≤ Real.sqrt (1 - (Real.cos 0.797 * Real.sin (Real.pi / k)) ^ 2) :=
+          Real.sqrt_le_sqrt hsq
+  have hV0 : 0 ≤ (7:ℝ) / 10 * 3.15 / k := div_nonneg (by norm_num) hkpos.le
+  have hV1 : (7:ℝ) / 10 * 3.15 / k < 1 :=
+    (div_lt_one hkpos).mpr
+      (lt_of_lt_of_le (by norm_num : (7:ℝ) / 10 * 3.15 < 12) hk12)
+  refine p22_ukb_gen k (Real.cos 0.797 * Real.sin (Real.pi / k))
+    ((7:ℝ) / 10 * 3.15 / k) (49 / 50) rfl hvA hv0 hV0 hV1 hsQ (by norm_num) ?_
+  · have hkne : (k:ℝ) ≠ 0 := ne_of_gt hkpos
+    have hsplit : (2:ℝ) * k * ((7:ℝ) / 10 * 3.15 / k
+        + (49 / 50)⁻¹ / (1 + 49 / 50) * (((7:ℝ) / 10 * 3.15 / k) ^ 3 / 3))
+        = 2 * ((7:ℝ) / 10 * 3.15)
+          + (49 / 50)⁻¹ / (1 + 49 / 50)
+            * (2 * ((7:ℝ) / 10 * 3.15) ^ 3 / (3 * (k:ℝ) ^ 2)) := by
+      field_simp
+    have hk2 : (144:ℝ) ≤ (k:ℝ) ^ 2 := by
+      have h := pow_le_pow_left₀ (by norm_num : (0:ℝ) ≤ 12) hk12 2
+      norm_num at h
+      linarith
+    have hbound2 : (49 / 50)⁻¹ / (1 + 49 / 50)
+            * (2 * ((7:ℝ) / 10 * 3.15) ^ 3 / (3 * (k:ℝ) ^ 2))
+        ≤ (49 / 50)⁻¹ / (1 + 49 / 50)
+            * (2 * ((7:ℝ) / 10 * 3.15) ^ 3 / (3 * 144)) := by
+      refine mul_le_mul_of_nonneg_left ?_ (by positivity)
+      exact p22_div_le_div_real_left (by positivity) (by positivity)
+        (by linarith [hk2] : (3:ℝ) * 144 ≤ 3 * (k:ℝ) ^ 2)
+    rw [hsplit]
+    have hfin : (2:ℝ) * ((7:ℝ) / 10 * 3.15)
+        + (49 / 50)⁻¹ / (1 + 49 / 50) * (2 * ((7:ℝ) / 10 * 3.15) ^ 3 / (3 * 144))
+        ≤ 4.183 + 0.0331 * 12 := by norm_num
+    have hlin : ((0.0331:ℝ) * ((12:ℕ):ℝ) ≤ (0.0331:ℝ) * (k:ℝ)) := by
+      linarith [hk12]
+    linarith
+
+/-! ## finite cases `k = 4, ..., 11` (base3 template, per-k windows) -/
+
+private theorem p22_ukb_base4 : (2.097 - 0.0331 * 4 : ℝ)
+    ≤ 2 * Real.pi - 2 * 4 * asn (Real.cos 0.797 * Real.sin (Real.pi / 4)) := by
+  have hpre := p22_ukb_pre 4 ((43:ℝ) / 50) (by norm_num) (by norm_num) (by norm_num)
+  refine p22_ukb_gen 4 (Real.cos 0.797 * Real.sin (Real.pi / 4))
+    ((6991:ℝ) / 10000 * ((3.15:ℝ) / 4 - ((3.14:ℝ) / 4) ^ 3 / 6 + ((3.15:ℝ) / 4) ^ 5 / 120))
+    ((43:ℝ) / 50) rfl hpre.1 hpre.2.1 (by norm_num) (by norm_num) hpre.2.2 (by norm_num) ?_
+  norm_num
+
+private theorem p22_ukb_base5 : (2.097 - 0.0331 * 5 : ℝ)
+    ≤ 2 * Real.pi - 2 * 5 * asn (Real.cos 0.797 * Real.sin (Real.pi / 5)) := by
+  have hpre := p22_ukb_pre 5 ((91:ℝ) / 100) (by norm_num) (by norm_num) (by norm_num)
+  refine p22_ukb_gen 5 (Real.cos 0.797 * Real.sin (Real.pi / 5))
+    ((6991:ℝ) / 10000 * ((3.15:ℝ) / 5 - ((3.14:ℝ) / 5) ^ 3 / 6 + ((3.15:ℝ) / 5) ^ 5 / 120))
+    ((91:ℝ) / 100) rfl hpre.1 hpre.2.1 (by norm_num) (by norm_num) hpre.2.2 (by norm_num) ?_
+  norm_num
+
+private theorem p22_ukb_base6 : (2.097 - 0.0331 * 6 : ℝ)
+    ≤ 2 * Real.pi - 2 * 6 * asn (Real.cos 0.797 * Real.sin (Real.pi / 6)) := by
+  have hpre := p22_ukb_pre 6 ((93:ℝ) / 100) (by norm_num) (by norm_num) (by norm_num)
+  refine p22_ukb_gen 6 (Real.cos 0.797 * Real.sin (Real.pi / 6))
+    ((6991:ℝ) / 10000 * ((3.15:ℝ) / 6 - ((3.14:ℝ) / 6) ^ 3 / 6 + ((3.15:ℝ) / 6) ^ 5 / 120))
+    ((93:ℝ) / 100) rfl hpre.1 hpre.2.1 (by norm_num) (by norm_num) hpre.2.2 (by norm_num) ?_
+  norm_num
+
+private theorem p22_ukb_base7 : (2.097 - 0.0331 * 7 : ℝ)
+    ≤ 2 * Real.pi - 2 * 7 * asn (Real.cos 0.797 * Real.sin (Real.pi / 7)) := by
+  have hpre := p22_ukb_pre 7 ((19:ℝ) / 20) (by norm_num) (by norm_num) (by norm_num)
+  refine p22_ukb_gen 7 (Real.cos 0.797 * Real.sin (Real.pi / 7))
+    ((6991:ℝ) / 10000 * ((3.15:ℝ) / 7 - ((3.14:ℝ) / 7) ^ 3 / 6 + ((3.15:ℝ) / 7) ^ 5 / 120))
+    ((19:ℝ) / 20) rfl hpre.1 hpre.2.1 (by norm_num) (by norm_num) hpre.2.2 (by norm_num) ?_
+  norm_num
+
+private theorem p22_ukb_base8 : (2.097 - 0.0331 * 8 : ℝ)
+    ≤ 2 * Real.pi - 2 * 8 * asn (Real.cos 0.797 * Real.sin (Real.pi / 8)) := by
+  have hpre := p22_ukb_pre 8 ((24:ℝ) / 25) (by norm_num) (by norm_num) (by norm_num)
+  refine p22_ukb_gen 8 (Real.cos 0.797 * Real.sin (Real.pi / 8))
+    ((6991:ℝ) / 10000 * ((3.15:ℝ) / 8 - ((3.14:ℝ) / 8) ^ 3 / 6 + ((3.15:ℝ) / 8) ^ 5 / 120))
+    ((24:ℝ) / 25) rfl hpre.1 hpre.2.1 (by norm_num) (by norm_num) hpre.2.2 (by norm_num) ?_
+  norm_num
+
+private theorem p22_ukb_base9 : (2.097 - 0.0331 * 9 : ℝ)
+    ≤ 2 * Real.pi - 2 * 9 * asn (Real.cos 0.797 * Real.sin (Real.pi / 9)) := by
+  have hpre := p22_ukb_pre 9 ((97:ℝ) / 100) (by norm_num) (by norm_num) (by norm_num)
+  refine p22_ukb_gen 9 (Real.cos 0.797 * Real.sin (Real.pi / 9))
+    ((6991:ℝ) / 10000 * ((3.15:ℝ) / 9 - ((3.14:ℝ) / 9) ^ 3 / 6 + ((3.15:ℝ) / 9) ^ 5 / 120))
+    ((97:ℝ) / 100) rfl hpre.1 hpre.2.1 (by norm_num) (by norm_num) hpre.2.2 (by norm_num) ?_
+  norm_num
+
+private theorem p22_ukb_base10 : (2.097 - 0.0331 * 10 : ℝ)
+    ≤ 2 * Real.pi - 2 * 10 * asn (Real.cos 0.797 * Real.sin (Real.pi / 10)) := by
+  have hpre := p22_ukb_pre 10 ((97:ℝ) / 100) (by norm_num) (by norm_num) (by norm_num)
+  refine p22_ukb_gen 10 (Real.cos 0.797 * Real.sin (Real.pi / 10))
+    ((6991:ℝ) / 10000 * ((3.15:ℝ) / 10 - ((3.14:ℝ) / 10) ^ 3 / 6 + ((3.15:ℝ) / 10) ^ 5 / 120))
+    ((97:ℝ) / 100) rfl hpre.1 hpre.2.1 (by norm_num) (by norm_num) hpre.2.2 (by norm_num) ?_
+  norm_num
+
+private theorem p22_ukb_base11 : (2.097 - 0.0331 * 11 : ℝ)
+    ≤ 2 * Real.pi - 2 * 11 * asn (Real.cos 0.797 * Real.sin (Real.pi / 11)) := by
+  have hpre := p22_ukb_pre 11 ((49:ℝ) / 50) (by norm_num) (by norm_num) (by norm_num)
+  refine p22_ukb_gen 11 (Real.cos 0.797 * Real.sin (Real.pi / 11))
+    ((6991:ℝ) / 10000 * ((3.15:ℝ) / 11 - ((3.14:ℝ) / 11) ^ 3 / 6 + ((3.15:ℝ) / 11) ^ 5 / 120))
+    ((49:ℝ) / 50) rfl hpre.1 hpre.2.1 (by norm_num) (by norm_num) hpre.2.2 (by norm_num) ?_
+  norm_num
 
 
-/-- HOL `BIEFJHU_explicit` (counting_spheres.hl:965). GIANT. -/
+/-- HOL `BIEFJHU_explicit` (counting_spheres.hl:965). GIANT.
+Scout note (PA22d, 不强攻): the UKBRPFE chain above does NOT lift to the
+`h ∈ [1, h0]` radius here - the `asn` window `s` degrades with `h` and the
+`max 0` clipping needs its own treatment.  Next wave keeps this `sorry`. -/
 theorem BIEFJHU_explicit (h : ℝ) (k : ℕ) (hpa : packIneqDefAP22)
     (hh : 1 ≤ h ∧ h ≤ h0) (hk : 3 ≤ k) :
     (0.591 - 0.0331 * k + 0.506 * lfun h) ≤
@@ -2725,22 +3039,87 @@ theorem BIEFJHU_explicit (h : ℝ) (k : ℕ) (hpa : packIneqDefAP22)
         (h * sqrt3 / 4 + Real.sqrt (1 - (h / 2) ^ 2) / 2) k) := by
   sorry
 
-/-- HOL `UKBRPFE_explicit` (counting_spheres.hl:999). GIANT.
-NEEDS: gap(3) is closed (`p22_ukb_base3`: margin ≈ 0.28).  The gap function
+/-- HOL `UKBRPFE_explicit` (counting_spheres.hl:999). Filled (PA22d wave).
+Erratum record (kept for the log): the gap function
 `g x := 2π - 2x·asn(cos 0.797·sin(π/x)) - 2.097 + 0.0331x` is NOT monotone on
 `[3,∞)` (it dips until x ≈ 9.3; min gap ≈ 0.137 at k = 9) - the PA22b plan
-"k ≥ 7 monotone extension" is wrong.  Correct split: (a) `k ∈ {4..12}`
-individually, each by `p22_asn_le_add` + `p22_sin_le_taylor5` exactly as in
-`p22_ukb_base3` (margins ≥ 0.006 at k = 9, the tightest); (b) `k ≥ 12`:
-`g' ≥ 0.0331 - 0.0334·y - 0.743·y³ > 0` at `y = π/x ≤ π/12` (uses
-`asn v ≤ v + (v³/3)·(√(1-v²))⁻¹/(1+√(1-v²))` = `p22_asn_le_add`, `sin y ≤ y`,
-`cos y ≥ 1 - y²/2`, `cc ∈ [0.682, 0.6991]`), so `g` increasing on `[12,∞)`
-and `g 12 > 0` closes all `k ≥ 12` (`Real.monotone_of_deriv_nonneg` +
-`Real.hasDerivAt_arcsin` for `g'`; no interval integrals needed). -/
+"k ≥ 7 monotone extension" was wrong.  Route taken: (a) `k ∈ {4..11}` finite
+cases by the base3 template, one rational window per `k`
+(`p22_ukb_base4..p22_ukb_base11`); (b) `k ≥ 12` closed directly without the
+planned derivative machinery: `sin y ≤ y` + `p22_asn_le_add` with
+`v ≤ 2.205/k ≤ 2.205/12` and window `s = 0.98` (`p22_ukb_hi`; margin ≈ 0.145
+at k = 12, growing in `k`). -/
 theorem UKBRPFE_explicit (k : ℕ) (hpa : packIneqDefAP22) (hk : 3 ≤ k) :
     (0.591 - 0.0331 * k + 0.506 * lfun 1 + 1) ≤
       max 0 (regularSphericalPolygonAreaP22 (Real.cos 0.797) k) := by
-  sorry
+  have hlf : (0.506 * lfun 1 : ℝ) = 0.506 := by
+    have h1 : lfun (1:ℝ) = 1 := by norm_num [lfun, h0]
+    rw [h1]; norm_num
+  rcases Nat.lt_or_ge k 12 with h12 | hge
+  · interval_cases k
+    · exact p22_ukb3
+    · rw [hlf,
+        show regularSphericalPolygonAreaP22 (Real.cos 0.797) 4
+          = 2 * Real.pi - 2 * 4 * asn (Real.cos 0.797 * Real.sin (Real.pi / 4)) from rfl]
+      have hnum : (0.591:ℝ) - 0.0331 * ((4:ℕ):ℝ) + 0.506 + 1 = 2.097 - 0.0331 * 4 := by
+        norm_num
+      rw [hnum]
+      exact le_trans p22_ukb_base4 (le_max_right _ _)
+    · rw [hlf,
+        show regularSphericalPolygonAreaP22 (Real.cos 0.797) 5
+          = 2 * Real.pi - 2 * 5 * asn (Real.cos 0.797 * Real.sin (Real.pi / 5)) from rfl]
+      have hnum : (0.591:ℝ) - 0.0331 * ((5:ℕ):ℝ) + 0.506 + 1 = 2.097 - 0.0331 * 5 := by
+        norm_num
+      rw [hnum]
+      exact le_trans p22_ukb_base5 (le_max_right _ _)
+    · rw [hlf,
+        show regularSphericalPolygonAreaP22 (Real.cos 0.797) 6
+          = 2 * Real.pi - 2 * 6 * asn (Real.cos 0.797 * Real.sin (Real.pi / 6)) from rfl]
+      have hnum : (0.591:ℝ) - 0.0331 * ((6:ℕ):ℝ) + 0.506 + 1 = 2.097 - 0.0331 * 6 := by
+        norm_num
+      rw [hnum]
+      exact le_trans p22_ukb_base6 (le_max_right _ _)
+    · rw [hlf,
+        show regularSphericalPolygonAreaP22 (Real.cos 0.797) 7
+          = 2 * Real.pi - 2 * 7 * asn (Real.cos 0.797 * Real.sin (Real.pi / 7)) from rfl]
+      have hnum : (0.591:ℝ) - 0.0331 * ((7:ℕ):ℝ) + 0.506 + 1 = 2.097 - 0.0331 * 7 := by
+        norm_num
+      rw [hnum]
+      exact le_trans p22_ukb_base7 (le_max_right _ _)
+    · rw [hlf,
+        show regularSphericalPolygonAreaP22 (Real.cos 0.797) 8
+          = 2 * Real.pi - 2 * 8 * asn (Real.cos 0.797 * Real.sin (Real.pi / 8)) from rfl]
+      have hnum : (0.591:ℝ) - 0.0331 * ((8:ℕ):ℝ) + 0.506 + 1 = 2.097 - 0.0331 * 8 := by
+        norm_num
+      rw [hnum]
+      exact le_trans p22_ukb_base8 (le_max_right _ _)
+    · rw [hlf,
+        show regularSphericalPolygonAreaP22 (Real.cos 0.797) 9
+          = 2 * Real.pi - 2 * 9 * asn (Real.cos 0.797 * Real.sin (Real.pi / 9)) from rfl]
+      have hnum : (0.591:ℝ) - 0.0331 * ((9:ℕ):ℝ) + 0.506 + 1 = 2.097 - 0.0331 * 9 := by
+        norm_num
+      rw [hnum]
+      exact le_trans p22_ukb_base9 (le_max_right _ _)
+    · rw [hlf,
+        show regularSphericalPolygonAreaP22 (Real.cos 0.797) 10
+          = 2 * Real.pi - 2 * 10 * asn (Real.cos 0.797 * Real.sin (Real.pi / 10)) from rfl]
+      have hnum : (0.591:ℝ) - 0.0331 * ((10:ℕ):ℝ) + 0.506 + 1 = 2.097 - 0.0331 * 10 := by
+        norm_num
+      rw [hnum]
+      exact le_trans p22_ukb_base10 (le_max_right _ _)
+    · rw [hlf,
+        show regularSphericalPolygonAreaP22 (Real.cos 0.797) 11
+          = 2 * Real.pi - 2 * 11 * asn (Real.cos 0.797 * Real.sin (Real.pi / 11)) from rfl]
+      have hnum : (0.591:ℝ) - 0.0331 * ((11:ℕ):ℝ) + 0.506 + 1 = 2.097 - 0.0331 * 11 := by
+        norm_num
+      rw [hnum]
+      exact le_trans p22_ukb_base11 (le_max_right _ _)
+  · rw [hlf,
+      show (0.591:ℝ) - 0.0331 * k + 0.506 + 1 = 2.097 - 0.0331 * k from by linarith,
+      show regularSphericalPolygonAreaP22 (Real.cos 0.797) k
+        = 2 * Real.pi - 2 * k * asn (Real.cos 0.797 * Real.sin (Real.pi / k)) from rfl]
+    exact le_trans (p22_ukb_hi k hge) (le_max_right _ _)
+
 
 /-- HOL `DLWCHEM_sum` (counting_spheres.hl:1020). GIANT. -/
 theorem DLWCHEM_sum (h : ℕ → ℝ) (k : ℕ → ℕ) (n : ℕ) (hpa : packIneqDefAP22)
