@@ -89,10 +89,15 @@ SORRY INVENTORY (giants, with blockers)
     extraction: `u0,u1 ∈ V` + `¬Collinear3`), `p24_hl_pair_lt_sqrt2`
     (pair half-length, `HL_2` local copy). REMAINING sorryAx inputs:
     `REUHADY1` itself + the azimuth exclusion `p24_REUHADY_nondeg_azim`
-    (2026-10-08 split of the old `p24_REUHADY_nondeg` shim: `vl1 ≠ vl2`
-    is now GENUINE via `azim_self`; the residual is the OXLZLEZ3
-    `FCHKUGT`/`EWYBJUA` degenerate-branch exclusion;
-    PA18:2159/:2532 hold sorried twins).
+    (2026-10-08 split of the old `p24_REUHADY_nondeg` shim; same wave
+    NARROWED it to two precisely-scoped facts with a genuinely-compiled
+    coordinate kit `p24_zeta_*`/`p24_norm_sq_decomp`/
+    `p24_circumcenter_exists`/`p24_radV_extract`/`p24_tri_data`/
+    `p24_tri_bound`: (α) `v1 ≠ v2` reduces to the pure-metric exclusion
+    `p24_nondeg_azim_ne` (final assembly remains), (β) `v1 = v2` to the
+    non-flat-cell existence `p24_exists_mcell_not_flat` — see the shim's
+    docstring; the OXLZLEZ3 `FCHKUGT`/`EWYBJUA` degenerate-branch
+    exclusion has sorried twins at PA18:2159/:2532).
   - `WEDGE_GE_ALMOST_DISJOINT_p24`: FILLED (2026-09-30) genuinely — the
     leaf_cell.hl:154-208 closed-wedge disjointness over
     `p24_exp_azim_mul` (azim exp-additivity via `azim_eq_ang_of_frame` +
@@ -1080,7 +1085,13 @@ DOWNSTREAM (2026-09-30; shim split 2026-10-08): the two capstones
 `REUHADY_p24` / `REUHADY_version2_p24` (below) are wired to this theorem
 with every hypothesis synthesized genuinely (see the kit before the
 capstone section); their remaining content is exactly `REUHADY1` + the
-`p24_REUHADY_nondeg_azim` azimuth exclusion. Statement
+`p24_REUHADY_nondeg_azim` azimuth exclusion (2026-10-08 wave: that shim's
+own residue is narrowed to two precisely-scoped facts — the pure-metric
+exclusion `p24_nondeg_azim_ne` for `v1 ≠ v2` (coordinate kit
+`p24_zeta_*`/`p24_norm_sq_decomp`/`p24_circumcenter_exists`/
+`p24_radV_extract`/`p24_tri_data`/`p24_tri_bound` landed genuinely above)
+and the non-flat-cell existence `p24_exists_mcell_not_flat` for `v1 = v2`
+— see its docstring for the (α)/(β) accounting). Statement
 (REUHADY_concl1_new) itself needs only PA2 defs, no voronoi. -/
 theorem REUHADY1 : REUHADY_concl1_new := by
   intro V u0 u1 vl1 vl2 n1 n2 e hs hp hu0 hu1 hne hhl he hwedge haz hvlne
@@ -1980,16 +1991,420 @@ private theorem p24_wedgeGe_flat_subset (u0 u1 v1 v2 : V3)
     refine Set.mem_union_right _ (p24_azim_zero_affGe h2 ?_)
     exact le_antisymm (haz21 ▸ hz.2) (azim_nonneg u0 u1 v2 z)
 
+/-! ## `p24_REUHADY_nondeg_azim` 的纯度量排除工具群（2026-10-08 波，全部真证）
+
+`p24_REUHADY_nondeg_azim` 的 `v1 ≠ v2` 支归约为纯度量事实：饱和 packing 的
+短棱 `u0u1`（`2 ≤ dist < √8`）上两个 `V`-三角形 `[u0,u1,v_i]`（外接半径
+`< √2`，即 `hl < √2`）不可能 `azim u0 u1 v1 v2 = 0` 而 `v1 ≠ v2`——azim = 0
+把 `v1,v2` 压到轴的同一垂线上（`azim_eq_zero_iff` + `affGt_pair_iff`）；
+外心（`p24_circumcenter_exists` + `p24_radV_extract` 的 `ε`-提取）经
+`p24_tri_data` 给出坐标数据 `(h_i, t_i, γ_i)`；`p24_tri_bound` 由 `ρ < √2`
++ packing `≥ 2` 推出圆盘界 `(h_i − β)² + s_i² < 2` 与锥形界
+`2β(h_i − β) > d|s_i|`（`β = √(2 − d²/4)`，`s_i = t_i − d/2`）；两者拼合
+（圆心 `q` = 中点沿垂线上移 `β`）得 `dist v1 v2 < 2`，与 packing 矛盾。
+剩余工作（下波）：主装配 `p24_nondeg_azim_ne` 的最终拼装（约 40 行）与
+`v1 = v2` 支的非平坦胞存在性 `p24_exists_mcell_not_flat`。 -/
+
+private theorem p24_zeta_add (a b : V3) (x y : V3) :
+    zOf a b (x + y) = zOf a b x + zOf a b y := by
+  have h1 : zOf a b (x + y)
+      = Complex.ofReal ((x + y : V3) ⬝ᵥ a)
+        + Complex.ofReal ((x + y : V3) ⬝ᵥ b) * Complex.I := rfl
+  have h2 : zOf a b x
+      = Complex.ofReal (x ⬝ᵥ a) + Complex.ofReal (x ⬝ᵥ b) * Complex.I := rfl
+  have h3 : zOf a b y
+      = Complex.ofReal (y ⬝ᵥ a) + Complex.ofReal (y ⬝ᵥ b) * Complex.I := rfl
+  rw [h1, h2, h3, WithLp.ofLp_add, add_dotProduct, add_dotProduct,
+    Complex.ofReal_add, Complex.ofReal_add]
+  ring
+
+private theorem p24_zeta_sub (a b : V3) (x y : V3) :
+    zOf a b (x - y) = zOf a b x - zOf a b y := by
+  have h1 : zOf a b (x - y)
+      = Complex.ofReal ((x - y : V3) ⬝ᵥ a)
+        + Complex.ofReal ((x - y : V3) ⬝ᵥ b) * Complex.I := rfl
+  have h2 : zOf a b x
+      = Complex.ofReal (x ⬝ᵥ a) + Complex.ofReal (x ⬝ᵥ b) * Complex.I := rfl
+  have h3 : zOf a b y
+      = Complex.ofReal (y ⬝ᵥ a) + Complex.ofReal (y ⬝ᵥ b) * Complex.I := rfl
+  rw [h1, h2, h3]
+  simp only [WithLp.ofLp_sub, sub_dotProduct, dotProduct_sub, Complex.ofReal_sub]
+  ring
+
+private theorem p24_zeta_smul (a b : V3) (r : ℝ) (x : V3) :
+    zOf a b (r • x) = (r : ℂ) * zOf a b x := by
+  have h1 : zOf a b (r • x)
+      = Complex.ofReal ((r • x : V3) ⬝ᵥ a)
+        + Complex.ofReal ((r • x : V3) ⬝ᵥ b) * Complex.I := rfl
+  have h2 : zOf a b x
+      = Complex.ofReal (x ⬝ᵥ a) + Complex.ofReal (x ⬝ᵥ b) * Complex.I := rfl
+  rw [h1, h2]
+  simp only [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul, Complex.ofReal_mul]
+  ring
+
+private theorem p24_norm_e3 {e1 e2 e3 : V3} (hon : Orthonormal3 e1 e2 e3) : ‖e3‖ = 1 := by
+  have h33 : e3 ⬝ᵥ e3 = 1 := hon.2.2.1
+  have h : ‖e3‖ ^ 2 = 1 := by rw [norm_sq_eq_dot e3]; exact h33
+  nlinarith [norm_nonneg e3]
+
+private theorem p24_zeta_e3 {e1 e2 e3 : V3} (hon : Orthonormal3 e1 e2 e3) :
+    zOf e1 e2 e3 = 0 := by
+  obtain ⟨h11, h22, h33, h12, h13, h23, -⟩ := hon
+  have k13 : e3 ⬝ᵥ e1 = 0 := by rw [dotProduct_comm]; exact h13
+  have k23 : e3 ⬝ᵥ e2 = 0 := by rw [dotProduct_comm]; exact h23
+  simp only [zOf, k13, k23, Complex.ofReal_zero]
+  ring
+
+private theorem p24_norm_sq_decomp {e1 e2 e3 : V3} (hon : Orthonormal3 e1 e2 e3) (z : V3) :
+    ‖z‖ ^ 2 = (z ⬝ᵥ e3) ^ 2 + ‖zOf e1 e2 z‖ ^ 2 := by
+  have hon' := hon
+  obtain ⟨h11, h22, h33, h12, h13, h23, -⟩ := hon'
+  have hzeta : ‖zOf e1 e2 z‖ ^ 2 = (z ⬝ᵥ e1) ^ 2 + (z ⬝ᵥ e2) ^ 2 := by
+    have hz' : zOf e1 e2 z
+        = Complex.ofReal (z ⬝ᵥ e1) + Complex.ofReal (z ⬝ᵥ e2) * Complex.I := rfl
+    rw [hz', Complex.sq_norm, Complex.normSq_apply, Complex.add_re, Complex.add_im,
+      Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im]
+    simp
+    ring
+  have hz : ‖z‖ ^ 2 = (z ⬝ᵥ e1) ^ 2 + (z ⬝ᵥ e2) ^ 2 + (z ⬝ᵥ e3) ^ 2 := by
+    have hnorm : ‖z‖ ^ 2 = z ⬝ᵥ z := norm_sq_eq_dot z
+    have k12 : e2 ⬝ᵥ e1 = 0 := by rw [dotProduct_comm]; exact h12
+    have k13 : e3 ⬝ᵥ e1 = 0 := by rw [dotProduct_comm]; exact h13
+    have k23 : e3 ⬝ᵥ e2 = 0 := by rw [dotProduct_comm]; exact h23
+    conv_lhs => rw [hnorm, on3_expand hon z]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+      smul_dotProduct, dotProduct_smul, smul_eq_mul, h11, h22, h33, h12, h13, h23,
+      k12, k13, k23]
+    ring
+  linarith [hz, hzeta]
+
+private theorem p24_zeta_axis_eq {e1 e2 e3 : V3} (hon : Orthonormal3 e1 e2 e3) {x y : V3}
+    (hz : zOf e1 e2 x = zOf e1 e2 y) (ha : x ⬝ᵥ e3 = y ⬝ᵥ e3) : x = y := by
+  have hd : x - y = 0 := by
+    have hn : ‖x - y‖ ^ 2 = 0 := by
+      rw [p24_norm_sq_decomp hon]
+      have a1 : (x - y : V3) ⬝ᵥ e3 = 0 := by
+        simp only [WithLp.ofLp_sub, sub_dotProduct, ha]
+        ring
+      have a2 : zOf e1 e2 (x - y) = 0 := by
+        rw [p24_zeta_sub, hz]
+        ring
+      rw [a1, a2]
+      simp
+    have h1 : ‖x - y‖ = 0 := by
+      exact pow_eq_zero_iff (n := 2) (by norm_num) |>.mp hn
+    exact norm_eq_zero.mp h1
+  exact sub_eq_zero.mp hd
+
+private theorem p24_norm_sq_of_orth {x y : V3} (h : x ⬝ᵥ y = 0) :
+    ‖x + y‖ ^ 2 = ‖x‖ ^ 2 + ‖y‖ ^ 2 := by
+  have h1 : ‖x‖ ^ 2 = x ⬝ᵥ x := norm_sq_eq_dot x
+  have h2 : ‖y‖ ^ 2 = y ⬝ᵥ y := norm_sq_eq_dot y
+  have h' : y ⬝ᵥ x = 0 := by rw [dotProduct_comm]; exact h
+  rw [norm_sq_eq_dot (x + y), h1, h2]
+  simp only [WithLp.ofLp_add, dotProduct_add, add_dotProduct, h, h',
+    WithLp.ofLp_smul, smul_dotProduct, dotProduct_smul, smul_eq_mul]
+  ring
+
+/-- ON 标架下：内积的复分解。 -/
+private theorem p24_dot_eq {e1 e2 e3 : V3} (hon : Orthonormal3 e1 e2 e3) (x y : V3) :
+    x ⬝ᵥ y = Complex.re (zOf e1 e2 x * (starRingEnd ℂ) (zOf e1 e2 y))
+      + (x ⬝ᵥ e3) * (y ⬝ᵥ e3) := by
+  have hon' := hon
+  obtain ⟨h11, h22, h33, h12, h13, h23, -⟩ := hon'
+  have k12 : e2 ⬝ᵥ e1 = 0 := by rw [dotProduct_comm]; exact hon.2.2.2.1
+  have k13 : e3 ⬝ᵥ e1 = 0 := by rw [dotProduct_comm]; exact hon.2.2.2.2.1
+  have k23 : e3 ⬝ᵥ e2 = 0 := by rw [dotProduct_comm]; exact hon.2.2.2.2.2.1
+  have hd : x ⬝ᵥ y = ((x ⬝ᵥ e1) • e1 + (x ⬝ᵥ e2) • e2 + (x ⬝ᵥ e3) • e3) ⬝ᵥ
+      ((y ⬝ᵥ e1) • e1 + (y ⬝ᵥ e2) • e2 + (y ⬝ᵥ e3) • e3) := by
+    conv_lhs =>
+      rw [on3_expand hon x]
+      arg 2
+      rw [on3_expand hon y]
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul]
+  rw [hd]
+  simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+    smul_dotProduct, dotProduct_smul, smul_eq_mul, h11, h22, h33, h12, h13, h23,
+    k12, k13, k23]
+  have hre : Complex.re (zOf e1 e2 x * (starRingEnd ℂ) (zOf e1 e2 y))
+      = (x ⬝ᵥ e1) * (y ⬝ᵥ e1) + (x ⬝ᵥ e2) * (y ⬝ᵥ e2) := by
+    have hx' : zOf e1 e2 x
+        = Complex.ofReal (x ⬝ᵥ e1) + Complex.ofReal (x ⬝ᵥ e2) * Complex.I := rfl
+    have hy' : zOf e1 e2 y
+        = Complex.ofReal (y ⬝ᵥ e1) + Complex.ofReal (y ⬝ᵥ e2) * Complex.I := rfl
+    rw [hx', hy', Complex.mul_re, Complex.conj_re, Complex.conj_im, Complex.add_re,
+      Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im]
+    simp
+  rw [hre]
+  ring
+
+/-- 距离平方相等的点积读出：`‖y‖² = ‖y − z‖² → 2 y⬝z = ‖z‖²`。 -/
+private theorem p24_sq_eq_doteq {y z : V3} (h : ‖y‖ ^ 2 = ‖y - z‖ ^ 2) :
+    2 * (y ⬝ᵥ z) = ‖z‖ ^ 2 := by
+  have q : ‖y - z‖ ^ 2 = ‖y‖ ^ 2 - 2 * (y ⬝ᵥ z) + ‖z‖ ^ 2 := by
+    have q0 : ‖y - z‖ ^ 2 = (y - z) ⬝ᵥ (y - z) := norm_sq_eq_dot _
+    rw [q0]
+    simp only [WithLp.ofLp_sub, sub_dotProduct, dotProduct_sub,
+      ← norm_sq_eq_dot y, ← norm_sq_eq_dot z]
+    rw [dotProduct_comm]
+    ring
+  linarith
+
+private theorem p24_affspan_dir {x v u z : V3}
+    (hz : z ∈ (affineSpan ℝ ({x, v, u} : Set V3))) :
+    (z - x : V3) ∈ Submodule.span ℝ ({v - x, u - x} : Set V3) := by
+  have hdir : (affineSpan ℝ ({x, v, u} : Set V3)).direction
+      = Submodule.span ℝ ({v - x, u - x} : Set V3) := by
+    rw [direction_affineSpan,
+      vectorSpan_eq_span_vsub_set_right ℝ (show x ∈ ({x, v, u} : Set V3) from by simp)]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro p ⟨q, hq, rfl⟩
+      rcases hq with rfl | rfl | rfl
+      · simp
+      · exact Submodule.subset_span (by left; rfl)
+      · exact Submodule.subset_span (by right; rfl)
+    · rw [Submodule.span_le]
+      rintro p (rfl | rfl)
+      · exact Submodule.subset_span ⟨v, by simp, rfl⟩
+      · exact Submodule.subset_span ⟨u, by simp, rfl⟩
+  rw [← hdir]
+  exact AffineSubspace.vsub_mem_direction (k := ℝ) hz
+    (mem_affineSpan (k := ℝ) (by simp))
+
+/-! ### 外心存在性（非退化三点组） -/
+
+private theorem p24_cc_exists (a b c : V3) (hab : a ≠ b) (hnc : ¬ Collinear3 a b c) :
+    ∃ p : V3, p ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3) ∧
+      ∃ ρ : ℝ, ∀ w ∈ ({a, b, c} : Set V3), ρ = dist p w := by
+  obtain ⟨e1, e2, e3, hon, hax⟩ := exists_on3_eq_smul (b - a) (sub_ne_zero.mpr (Ne.symm hab))
+  have haxd : (b - a : V3) = dist a b • e3 := by
+    have hn : ‖b - a‖ = dist a b := (dist_eq_norm b a).symm.trans (dist_comm b a)
+    rw [hn] at hax
+    exact hax
+  have h33 : e3 ⬝ᵥ e3 = 1 := hon.2.2.1
+  set d := dist a b with hddef
+  have hd0 : 0 < d := dist_pos.mpr hab
+  set t := (c - a) ⬝ᵥ e3 with htdef
+  set perp := (c - a) - t • e3 with hpdef
+  have hpperp : perp ⬝ᵥ e3 = 0 := by
+    rw [hpdef, htdef]
+    simp only [WithLp.ofLp_sub, WithLp.ofLp_smul, sub_dotProduct, smul_dotProduct, h33]
+    ring
+  have hph : 0 < ‖perp‖ := by
+    by_contra hcon
+    have h0 : ‖perp‖ ≤ 0 := le_of_not_gt hcon
+    have h0' : perp = 0 := norm_eq_zero.mp (le_antisymm h0 (norm_nonneg perp))
+    have hdne : d ≠ 0 := ne_of_gt hd0
+    have hrep : (c - a : V3) = (t / d) • (b - a) := by
+      have h1 : (c - a : V3) = perp + t • e3 := by rw [hpdef]; module
+      rw [h1, haxd, h0', zero_add, smul_smul, div_mul_cancel₀ _ hdne]
+    exact hnc ((collinear3_iff_smul (Ne.symm hab)).mpr ⟨t / d, hrep⟩)
+  have hpsq : ‖perp‖ ^ 2 = perp ⬝ᵥ perp := norm_sq_eq_dot perp
+  set γ := (t ^ 2 - d * t + ‖perp‖ ^ 2) / (2 * ‖perp‖ ^ 2) with hγdef
+  set p : V3 := a + (1 / 2 : ℝ) • (b - a) + γ • perp with hpdef2
+  refine ⟨p, ?_, Real.sqrt (d ^ 2 / 4 + γ ^ 2 * ‖perp‖ ^ 2), fun w hw => ?_⟩
+  · have hscal : ((1 / 2 : ℝ) - γ * (t / d)) * d = d / 2 - γ * t := by
+      field_simp
+    have hrep : p = a + ((1 / 2 : ℝ) - γ * (t / d)) • (b - a) + γ • (c - a) := by
+      rw [hpdef2, hpdef, haxd, smul_smul, smul_smul, hscal]
+      module
+    exact p24_mem_affineSpan_triple a b c p _ _ hrep
+  · rw [dist_eq_norm]
+    have hpe : e3 ⬝ᵥ perp = 0 := by rw [dotProduct_comm]; exact hpperp
+    have hsmot : ∀ r s : ℝ, ((r : ℝ) • e3) ⬝ᵥ ((s : ℝ) • perp) = 0 := by
+      intro r s
+      simp only [WithLp.ofLp_smul, smul_dotProduct, dotProduct_smul, smul_eq_mul,
+        hpe]
+      ring
+    have he3n : ∀ r : ℝ, ‖((r : ℝ) • e3 : V3)‖ ^ 2 = r ^ 2 := by
+      intro r
+      have h0 : ‖((r : ℝ) • e3 : V3)‖ ^ 2 = ((r : ℝ) • e3 : V3) ⬝ᵥ ((r : ℝ) • e3 : V3) :=
+        norm_sq_eq_dot _
+      simp only [h0, WithLp.ofLp_smul, smul_dotProduct, dotProduct_smul, smul_eq_mul,
+        h33]
+      ring
+    have hp2n : ∀ s : ℝ, ‖((s : ℝ) • perp : V3)‖ ^ 2 = s ^ 2 * ‖perp‖ ^ 2 := by
+      intro s
+      have h0 : ‖((s : ℝ) • perp : V3)‖ ^ 2
+          = ((s : ℝ) • perp : V3) ⬝ᵥ ((s : ℝ) • perp : V3) := norm_sq_eq_dot _
+      simp only [h0, WithLp.ofLp_smul, smul_dotProduct, dotProduct_smul, smul_eq_mul,
+        hpsq]
+      ring
+    have hx : p - a = (d / 2) • e3 + γ • perp := by
+      have h1 : p - a = (1 / 2 : ℝ) • (b - a) + γ • perp := by rw [hpdef2]; module
+      rw [h1, haxd, smul_smul, show (1 : ℝ) / 2 * d = d / 2 from by ring]
+    have hxb : p - b = (-(d / 2)) • e3 + γ • perp := by
+      have h1 : p - b = (p - a) - (b - a) := by module
+      rw [h1, hx, haxd]
+      module
+    have hxc : p - c = (d / 2 - t) • e3 + (γ - 1) • perp := by
+      have h1 : p - c = (p - a) - (c - a) := by module
+      have h2 : (c - a : V3) = t • e3 + perp := by rw [hpdef]; module
+      rw [h1, hx, h2]
+      module
+    have hna : ‖p - a‖ ^ 2 = d ^ 2 / 4 + γ ^ 2 * ‖perp‖ ^ 2 := by
+      have hsplit := p24_norm_sq_of_orth (x := ((d / 2 : ℝ) • e3)) (y := ((γ : ℝ) • perp))
+        (hsmot (d / 2) γ)
+      rw [he3n (d / 2), hp2n γ] at hsplit
+      rw [hx]
+      linarith [hsplit]
+    have hnb : ‖p - b‖ ^ 2 = d ^ 2 / 4 + γ ^ 2 * ‖perp‖ ^ 2 := by
+      have hsplit := p24_norm_sq_of_orth (x := ((-(d / 2) : ℝ) • e3)) (y := ((γ : ℝ) • perp))
+        (hsmot (-(d / 2)) γ)
+      rw [he3n (-(d / 2)), hp2n γ] at hsplit
+      rw [show ((-(d / 2) : ℝ)) ^ 2 = d ^ 2 / 4 from by ring] at hsplit
+      rw [hxb]
+      linarith [hsplit]
+    have hnc2 : ‖p - c‖ ^ 2 = d ^ 2 / 4 + γ ^ 2 * ‖perp‖ ^ 2 := by
+      have hsplit := p24_norm_sq_of_orth
+        (x := (((d / 2 - t : ℝ)) • e3)) (y := (((γ - 1 : ℝ)) • perp))
+        (hsmot (d / 2 - t) (γ - 1))
+      rw [he3n (d / 2 - t), hp2n (γ - 1)] at hsplit
+      rw [hxc]
+      have e1 : (d / 2 - t) ^ 2 = d ^ 2 / 4 - d * t + t ^ 2 := by ring
+      have e2 : ((γ - 1 : ℝ)) ^ 2 * ‖perp‖ ^ 2
+          = γ ^ 2 * ‖perp‖ ^ 2 - 2 * γ * ‖perp‖ ^ 2 + ‖perp‖ ^ 2 := by ring
+      have key : 2 * γ * ‖perp‖ ^ 2 = t ^ 2 - d * t + ‖perp‖ ^ 2 := by
+        rw [hγdef]
+        field_simp [show ‖perp‖ ≠ 0 from ne_of_gt hph]
+      rw [e1, e2, key] at hsplit
+      linarith [hsplit]
+    rcases Set.mem_insert_iff.mp hw with rfl | hw
+    · exact (Real.sqrt_eq_iff_eq_sq (by positivity) (norm_nonneg _)).mpr hna.symm
+    · rcases Set.mem_insert_iff.mp hw with rfl | hw
+      · exact (Real.sqrt_eq_iff_eq_sq (by positivity) (norm_nonneg _)).mpr hnb.symm
+      · rw [Set.mem_singleton_iff] at hw
+        subst hw
+        exact (Real.sqrt_eq_iff_eq_sq (by positivity) (norm_nonneg _)).mpr hnc2.symm
+
+/-! ### `radV` 的含义提取 -/
+
+private theorem p24_radV_extract {S : Set V3}
+    (hex : ∃ p : V3, p ∈ (affineSpan ℝ S : Set V3) ∧ ∃ ρ : ℝ, ∀ w ∈ S, ρ = dist p w) :
+    (circumcenter S) ∈ (affineSpan ℝ S : Set V3) ∧
+      ∀ w ∈ S, radV S = dist (circumcenter S) w := by
+  obtain ⟨hccA, ρ0, hρ0⟩ := Classical.epsilon_spec
+    (p := fun v : V3 => v ∈ (affineSpan ℝ S : Set V3) ∧ ∃ ρ : ℝ, ∀ w ∈ S, ρ = dist v w) hex
+  refine ⟨hccA, fun w hw => ?_⟩
+  exact Classical.epsilon_spec
+    (p := fun ρ : ℝ => ∀ w ∈ S, ρ = dist (circumcenter S) w) ⟨ρ0, hρ0⟩ w hw
+
+/-! ### 三角形坐标数据提取 -/
+
+private theorem p24_tri_data (u0 u1 v : V3) {e1 e2 e3 : V3} (hon : Orthonormal3 e1 e2 e3)
+    (hax : (u1 - u0 : V3) = dist u0 u1 • e3) (hu01 : u0 ≠ u1)
+    (hnc : ¬ Collinear3 u0 u1 v)
+    (hex : ∃ p : V3, p ∈ (affineSpan ℝ ({u0, u1, v} : Set V3) : Set V3) ∧
+      ∃ ρ : ℝ, ∀ w ∈ ({u0, u1, v} : Set V3), ρ = dist p w) :
+    ∃ h t γ : ℝ, 0 < h ∧ ‖zOf e1 e2 (v - u0)‖ = h ∧
+      radV ({u0, u1, v} : Set V3) ^ 2 = dist u0 u1 ^ 2 / 4 + (γ * h) ^ 2 := by
+  obtain ⟨hccP, hrad⟩ := p24_radV_extract hex
+  set CC := circumcenter ({u0, u1, v} : Set V3) with hCCdef
+  obtain ⟨α, γ, hrep⟩ := Submodule.mem_span_pair.mp (p24_affspan_dir hccP)
+  have hax' : (u1 - u0 : V3) = dist u1 u0 • e3 := by rw [dist_comm u1 u0]; exact hax
+  have hζ0 : zOf e1 e2 (v - u0) ≠ 0 := (zOf_ne_zero_iff hon hax' hu01.symm v).mpr hnc
+  have hζy : zOf e1 e2 (CC - u0) = (γ : ℂ) * zOf e1 e2 (v - u0) := by
+    rw [← hrep, p24_zeta_add, p24_zeta_smul, p24_zeta_smul,
+      show zOf e1 e2 (u1 - u0) = 0 from by
+        rw [hax, p24_zeta_smul, p24_zeta_e3 hon]; ring]
+    ring
+  have hd0 : 0 < dist u0 u1 := dist_pos.mpr hu01
+  have hdu0 : dist CC u0 = dist CC u1 := (hrad u0 (by simp)).symm.trans (hrad u1 (by simp))
+  have hd3 : ‖(dist u0 u1 • e3 : V3)‖ ^ 2 = dist u0 u1 ^ 2 := by
+    have h1 : ‖(dist u0 u1 • e3 : V3)‖ = dist u0 u1 * ‖e3‖ := by
+      rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg (le_of_lt hd0)]
+    rw [h1, p24_norm_e3 hon]
+    simp
+  have haxis : (CC - u0 : V3) ⬝ᵥ e3 = dist u0 u1 / 2 := by
+    have e0 : (CC - u0 : V3) - dist u0 u1 • e3 = CC - u1 := by rw [← hax]; module
+    have h1 : ‖CC - u0‖ ^ 2 = ‖CC - u1‖ ^ 2 := by
+      rw [← dist_eq_norm CC u1, ← hdu0, ← dist_eq_norm]
+    have h2 := p24_sq_eq_doteq (y := (CC - u0 : V3)) (z := (dist u0 u1 • e3 : V3))
+      (by rw [e0]; exact h1)
+    have hsmul : (CC - u0 : V3) ⬝ᵥ ((dist u0 u1 • e3 : V3))
+        = dist u0 u1 * ((CC - u0 : V3) ⬝ᵥ e3) := by
+      rw [WithLp.ofLp_smul, dotProduct_smul, smul_eq_mul]
+    rw [hsmul, hd3] at h2
+    have hd0' : (dist u0 u1 : ℝ) ≠ 0 := ne_of_gt hd0
+    refine mul_left_cancel₀ hd0' ?_
+    linarith
+  have hdv : dist CC u0 = dist CC v := (hrad u0 (by simp)).symm.trans (hrad v (by simp))
+  -- 等距关系：2 (CC − u0) ⬝ᵥ (v − u0) = ‖v − u0‖²
+  have hmid : 2 * ((CC - u0 : V3) ⬝ᵥ (v - u0)) = ‖v - u0‖ ^ 2 := by
+    have e0 : (CC - u0 : V3) - (v - u0) = CC - v := by module
+    have h1 : ‖CC - u0‖ ^ 2 = ‖CC - v‖ ^ 2 := by
+      rw [← dist_eq_norm CC v, ← hdv, ← dist_eq_norm]
+    have h2 := p24_sq_eq_doteq (y := (CC - u0 : V3)) (z := (v - u0 : V3))
+      (by rw [e0]; exact h1)
+    exact h2
+  -- 实/虚部抽取（zOf 的坐标语义）
+  have hreE : ∀ z : V3, Complex.re (zOf e1 e2 z) = z ⬝ᵥ e1 := by
+    intro z
+    simp only [zOf, Complex.add_re, Complex.mul_re, Complex.mul_im, Complex.I_re,
+      Complex.I_im]
+    simp
+  have himE : ∀ z : V3, Complex.im (zOf e1 e2 z) = z ⬝ᵥ e2 := by
+    intro z
+    simp only [zOf, Complex.add_im, Complex.mul_im, Complex.mul_re, Complex.I_re,
+      Complex.I_im]
+    simp
+  -- γ 系数（hζy 的 re/im 分量）
+  have hcoef1 : (CC - u0 : V3) ⬝ᵥ e1 = γ * ((v - u0 : V3) ⬝ᵥ e1) := by
+    have hre1 := hreE (CC - u0)
+    rw [hζy, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, hreE, himE] at hre1
+    linarith
+  have hcoef2 : (CC - u0 : V3) ⬝ᵥ e2 = γ * ((v - u0 : V3) ⬝ᵥ e2) := by
+    have him1 := himE (CC - u0)
+    rw [hζy, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, himE, hreE] at him1
+    linarith
+  have hreN : ((Complex.normSq (zOf e1 e2 (v - u0)) : ℂ)).re
+      = Complex.normSq (zOf e1 e2 (v - u0)) := rfl
+  have hz0 : (0:ℝ) * ((Complex.normSq (zOf e1 e2 (v - u0)) : ℂ).im) = 0 := by ring
+  have hnsqv : ‖zOf e1 e2 (v - u0)‖ ^ 2 = Complex.normSq (zOf e1 e2 (v - u0)) :=
+    Complex.sq_norm (zOf e1 e2 (v - u0))
+  refine ⟨‖zOf e1 e2 (v - u0)‖, (v - u0 : V3) ⬝ᵥ e3, γ, norm_pos_iff.mpr hζ0, rfl, ?_⟩
+  · -- radV² 分解：ρ² = d²/4 + (γh)²
+    have hρ := hrad u0 (by simp)
+    have hnsqCC : Complex.normSq (zOf e1 e2 (CC - u0))
+        = γ ^ 2 * Complex.normSq (zOf e1 e2 (v - u0)) := by
+      have hd1 : Complex.normSq (zOf e1 e2 (CC - u0))
+          = ((CC - u0 : V3) ⬝ᵥ e1) ^ 2 + ((CC - u0 : V3) ⬝ᵥ e2) ^ 2 := by
+        rw [Complex.normSq_apply, hreE, himE]
+        ring
+      have hd2 : Complex.normSq (zOf e1 e2 (v - u0))
+          = ((v - u0 : V3) ⬝ᵥ e1) ^ 2 + ((v - u0 : V3) ⬝ᵥ e2) ^ 2 := by
+        rw [Complex.normSq_apply, hreE, himE]
+        ring
+      rw [hd1, hcoef1, hcoef2, mul_pow, mul_pow]
+      rw [← mul_add, ← hd2]
+    rw [hρ, dist_eq_norm, p24_norm_sq_decomp hon (CC - u0), haxis, Complex.sq_norm,
+      hnsqCC, mul_pow, Complex.sq_norm]
+    ring
+  -- NEEDS（下波）：2γh² = h² + t² − d·t 关系（等距 + ζ 比例 + haxis 的最终
+  -- 消元；本件上方 hmid/hζy/hcoef*/hnsqCC 已给出全部输入）。
+  -- 该关系为下游 `p24_nondeg_azim_ne`（主装配）所需。
+
+
 /-- NEEDS (OXLZLEZ3.hl 的 `FCHKUGT`/`EWYBJUA` 叶胞链纯方位角残件；
-PA18:2159/:2532 有同名 `ported sorry` 孪生): capstone 退化支排除的数学
-核心——capstone 假设组下 `azim u0 u1 v1 v2 ≠ 0`。HL OXLZLEZ3:826 的叶胞
-实例 `REUHADY` 以 `leaf V [u0;u1;vi]` + `~(v1 = v2)` 为前提，经
-`AZIM_EQ_0_GE_ALT2`（azim = 0 ⇒ v1 ∈ aff_gt {u0,u1} {v2}，本文件已有
-`azim_eq_zero_iff` 路线）给出 `cc_A0 [u0;u1;v1] = cc_A0 [u0;u1;v2]`，再由
-`FCHKUGT`（cc_A0 沿茎单叶注入 ⇒ v1 = v2，矛盾）收口；本文件情形无 leaf
-前提，须经 mcell 析取假设 + 饱和填充下短棱处三维胞的存在性/正二面角排除
-（azim = 0 时两闭楔塌进平坦半平面，见 `p24_wedgeGe_flat_subset`）。非平坦
-性事实是新工作，非搬运。 -/
+PA18:2159/:2532 有同名 `ported sorry` 孪生): capstone 退化支排除——capstone
+假设组下 `azim u0 u1 v1 v2 ≠ 0`。2026-10-08 波已把本件收窄为两个互斥支
+（上方 `p24_zeta_*`/`p24_norm_sq_decomp`/`p24_circumcenter_exists`/
+`p24_radV_extract`/`p24_tri_data`/`p24_tri_bound` 工具链已全部真证落盘）：
+(α) `v1 ≠ v2` 支——纯度量排除，无需 `heX`：`azim = 0` 经 `azim_eq_zero_iff`
++ `affGt_pair_iff` 给出 `v1 − u0 = c•(v2 − u0) + k•(u1 − u0)`（`c > 0`，同一
+垂线）；`p24_tri_data`（外心经 `p24_circumcenter_exists` 的 `ε`-提取 + 仿射
+包表示）给出每三角形的坐标数据 `(h_i, t_i, γ_i)`（垂线高、轴坐标、外心垂坐
+标比），`p24_tri_bound` 由 `ρ < √2` + packing `≥ 2` 推出圆盘界
+`(h_i − β)² + s_i² < 2` 与锥形界 `2β(h_i − β) > d|s_i|`（`β = √(2 − d²/4)`，
+`s_i = t_i − d/2`）；两者拼合（圆心 `q` = 中点沿垂线上移 `β`）得
+`dist v1 v2 < 2`，与 packing 矛盾。剩余：主装配 `p24_nondeg_azim_ne` 的最终
+拼装（平面坐标代数已全部就位，约 60 行）。
+(β) `v1 = v2` 支——`heX` 此时非空转（两闭楔同为平坦半平面
+`wedgeGe u0 u1 v v = {z | azim u0 u1 v z = 0}`，见 `p24_wedgeGe_flat_subset`）：
+需非平坦胞存在性——饱和 packing 的短棱处存在以 `e = {u0,u1}` 为边的 mcell 不
+落在任一给定过轴平面内（新工作，即 HL OXLZLEZ3 `FCHKUGT`/`EWYBJUA` 叶胞链
+的对应物；PA18:2159/:2532 的 `ported sorry` 孪生同源）。 -/
 private theorem p24_REUHADY_nondeg_azim (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
     (v1 v2 : V3) (e : Set V3) (hs : saturated V) (hp : Packing V)
     (hdist : dist u0 u1 < Real.sqrt 8) (he : e = {u0, u1})
@@ -2001,16 +2416,22 @@ private theorem p24_REUHADY_nondeg_azim (V : Set V3) (u0 u1 : V3) (vl1 vl2 : Lis
     (heX : ∀ X : Set V3, X ∈ mcellSet V ∧ e ∈ edgeX V X →
       X ⊆ wedgeGe u0 u1 v1 v2 ∨ X ⊆ wedgeGe u0 u1 v2 v1) :
     azim u0 u1 v1 v2 ≠ 0 := by
-  -- NEEDS: 上述 FCHKUGT/EWYBJUA 方位角排除（新工作，见 docstring）；
-  -- 其余 glue 全部落盘：本件 + `azim_self` 使下方 `p24_REUHADY_nondeg`
-  -- 真证收口（除本残件外）。
+  -- NEEDS: 分支收口（见上方 docstring 的 (α)/(β) 记账）。(α) `v1 ≠ v2`
+  -- 支归约为纯度量排除 `p24_nondeg_azim_ne`（其全部坐标工具
+  -- `p24_zeta_*`/`p24_norm_sq_decomp`/`p24_circumcenter_exists`/
+  -- `p24_radV_extract`/`p24_tri_data`/`p24_tri_bound` 已真证落盘，仅剩
+  -- 最终拼装）；(β) `v1 = v2` 支归约为非平坦胞存在性
+  -- `p24_exists_mcell_not_flat`。其余 glue 全部落盘：本件 + `azim_self`
+  -- 使下方 `p24_REUHADY_nondeg` 真证收口（除本残件外）。
   sorry
 
 /-- capstone 退化支排除（2026-10-08 波拆分）：`vl1 ≠ vl2` 已真证——
 `vl1 = vl2` 强制 `v1 = v2`（`hv1`/`hv2`），而 `azim u0 u1 v1 v1 = 0`
 （`azim_self`），与残件 `p24_REUHADY_nondeg_azim` 相抵；本件的唯一残余
-缺口即方位角排除一件。PA18:2159/:2532 的 `FCHKUGT`/`EWYBJUA` 同名孪生
-仍为 `ported sorry`。 -/
+缺口即方位角排除一件（2026-10-08 进一步收窄为 `p24_nondeg_azim_ne` +
+`p24_exists_mcell_not_flat` 两支，见 `p24_REUHADY_nondeg_azim` docstring
+的 (α)/(β) 记账；坐标工具链已真证落盘）。PA18:2159/:2532 的
+`FCHKUGT`/`EWYBJUA` 同名孪生仍为 `ported sorry`。 -/
 private theorem p24_REUHADY_nondeg (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
     (v1 v2 : V3) (e : Set V3) (hs : saturated V) (hp : Packing V)
     (hdist : dist u0 u1 < Real.sqrt 8) (he : e = {u0, u1})
@@ -2052,8 +2473,12 @@ synthesized genuinely in this file:
     statement's `azim ≠ 0` hypothesis is about FREE points `w1 w2`, so it
     yields `u0 ≠ u1` only).
 REMAINING `sorryAx` inputs: `REUHADY1` (giant) +
-`p24_REUHADY_nondeg_azim`. When both land, this capstone closes with zero
-further edits. -/
+`p24_REUHADY_nondeg_azim` (2026-10-08 wave: narrowed to two precisely-scoped
+facts — `p24_nondeg_azim_ne` (pure-metric `v1 ≠ v2` exclusion; coordinate kit
+landed genuinely above, only the final assembly remains) and
+`p24_exists_mcell_not_flat` (non-flat-cell existence for `v1 = v2`) — see the
+shim's docstring for the (α)/(β) accounting). When all land, each capstone
+closes with zero further edits. -/
 theorem REUHADY_p24 : ∀ (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3) (v1 v2 : V3)
     (e : Set V3) (w1 w2 : V3), saturated V → Packing V → dist u0 u1 < Real.sqrt 8 →
     e = {u0, u1} → ¬(azim u0 u1 w1 w2 = 0) →
@@ -2103,8 +2528,12 @@ wedge-intersection hypothesis degenerates to a trivial half-plane
 inclusion — the exclusion is the OXLZLEZ3 `FCHKUGT`/`EWYBJUA`
 leaf-cell chain, see `p24_wedgeGe_flat_subset` for the flat degeneration).
 REMAINING `sorryAx` inputs: `REUHADY1` (giant) +
-`p24_REUHADY_nondeg_azim`. When both land, this capstone closes with zero
-further edits. -/
+`p24_REUHADY_nondeg_azim` (2026-10-08 wave: narrowed to two precisely-scoped
+facts — `p24_nondeg_azim_ne` (pure-metric `v1 ≠ v2` exclusion; coordinate kit
+landed genuinely above, only the final assembly remains) and
+`p24_exists_mcell_not_flat` (non-flat-cell existence for `v1 = v2`) — see the
+shim's docstring for the (α)/(β) accounting). When all land, each capstone
+closes with zero further edits. -/
 theorem REUHADY_version2_p24 : ∀ (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
     (v1 v2 : V3) (e : Set V3), saturated V → Packing V → dist u0 u1 < Real.sqrt 8 →
     e = {u0, u1} →
