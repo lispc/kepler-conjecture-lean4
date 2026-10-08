@@ -96,6 +96,20 @@ only the non-degenerate wedge identities (k = 2,3 core + k = 4
 non-coplanar), which need the region-block data — see its docstring for the
 updated branch map and the missing edge-cell-hypothesis caveat.
 
+2026-10-08 GT-3f pass (k = 2/3/4 三支组装收口, cell_vol 本体 sorry 清零): 三支
+全部闭合——k = 2 双 rconeGe ∩ affGe 楠:`p23_cap_sub_rconeGe2`(hp 距离 + hw1
+窄性)闭 D ⊆ 双锥,X ∩ D = L ∩ D 集合等式,wedge helper 闭体积式;dihX 分派
+(cellParamsD ε-见证 .1 = 2 + elV 0/1 = u0/u1) 对接 `dihV`。k = 3/4 hull 支:
+新私件 `p23_fan_cap_sub_hull4`(affGe 楠 ∩ cap ⊆ 四点 hull;t-系数两情形——
+u0-系数负走远面平面径向排除、u1-系数负走 Cauchy–Schwarz 锥单调
+`p23_angleMono`)+ `p23_hull_arm_eq` 组合器(hull ⊆ 楠
+CONVEX_HULL_4_SUBSET_AFF_GE_2_2 + 楠∩D ⊆ hull + quartet 非退化 +
+`p23_vol_D_inter_affGe`)一步给体积式;hw3/hw4 面/锥窄性按 SF 28 前提形状
+消费。辅助件:`p23_affGe_mem_affineSpan2`(楠 ⊆ 四点仿射包)、
+`p23_quartet_nondeg`(非零测 ⇒ 四点非共面 ⇒ 三条非退化)、`p23_elV0/1`。
+region 侧供给缺口不变:GRUTOTI capstone 需 `grutoti_region` 导出
+r/r1/r2/d/d1/d2 极端数据(B4/B6 段),见 docstring 尾注。
+
 2026-10-08 GT-3e pass (SF 项 28+29 应用 + 核填充, 用户批准): `grutoti_cell_vol`
 签名补窄性/封角前提(SF 28:hp + hw1 + hw3 + hw4;SF 29:hjunk,陈述其余一字
 未动),k = 0/1 计数臂与 ε-junk 逆序表角整支闭合(cellParams-witness 兼为
@@ -3137,6 +3151,461 @@ private theorem p23_vol_D_inter_affGe (u0 u1 w1 w2 : V3) (r d : ℝ)
       linarith
     exact hvolL
 
+/-! ## GT-3f lane: the k = 2/3/4 arm-closing kit (2026-10-08) -/
+
+/-- GT-3f: the two-tip fan sits in the four-point affine span (the `affGe ⊆
+affine hull` pattern for `mcell2`'s cut, feeding the coplanarity chase). -/
+private theorem p23_affGe_mem_affineSpan2 {u0 u1 w1 w2 v : V3}
+    (hv : v ∈ affGe {u0, u1} {w1, w2}) :
+    v ∈ (affineSpan ℝ ({u0, u1, w1, w2} : Set V3)) := by
+  obtain ⟨f, hfin, hsum, -, hone⟩ := hv
+  have hS : ∀ z ∈ hfin.toFinset, z ∈ ({u0, u1, w1, w2} : Set V3) := by
+    intro z hz
+    rcases hfin.mem_toFinset.mp hz with hz' | hz'
+    · rcases (Set.mem_insert_iff).mp hz' with h1 | h1
+      · simp only [Set.mem_insert_iff]; exact Or.inl h1
+      · simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; exact Or.inr (Or.inl h1)
+    · rcases (Set.mem_insert_iff).mp hz' with h1 | h1
+      · simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; exact Or.inr (Or.inr (Or.inl h1))
+      · simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; exact Or.inr (Or.inr (Or.inr h1))
+  have h0 : u0 ∈ (affineSpan ℝ ({u0, u1, w1, w2} : Set V3)) := mem_affineSpan (k := ℝ) (by simp)
+  have hd : ∀ z ∈ ({u0, u1, w1, w2} : Set V3), (z - u0 : V3) ∈
+      (affineSpan ℝ ({u0, u1, w1, w2} : Set V3)).direction :=
+    fun z hz => AffineSubspace.vsub_mem_direction (mem_affineSpan (k := ℝ) hz) h0
+  have key : v - u0 = ∑ z ∈ hfin.toFinset, f z • (z - u0) := by
+    calc v - u0 = (∑ z ∈ hfin.toFinset, f z • z) - (∑ z ∈ hfin.toFinset, f z) • u0 := by
+          rw [← hsum, hone, one_smul]
+        _ = ∑ z ∈ hfin.toFinset, (f z • z - f z • u0) := by
+          rw [Finset.sum_smul, ← Finset.sum_sub_distrib]
+        _ = ∑ z ∈ hfin.toFinset, f z • (z - u0) := by
+          exact Finset.sum_congr rfl fun z _ => (smul_sub (f z) z u0).symm
+  have hv2 : ((∑ z ∈ hfin.toFinset, f z • (z - u0)) +ᵥ u0) ∈
+      (affineSpan ℝ ({u0, u1, w1, w2} : Set V3)) :=
+    AffineSubspace.vadd_mem_of_mem_direction
+      (Submodule.sum_mem _ fun z hz => Submodule.smul_mem _ _ (hd z (hS z hz))) h0
+  rw [show ((∑ z ∈ hfin.toFinset, f z • (z - u0)) +ᵥ u0) = v from by
+    rw [vadd_eq_add, add_comm, ← key]; simp] at hv2
+  exact hv2
+
+/-- GT-3f: non-nullness of a set inside the four-point hull forces the
+quartet's non-degeneracy facts consumed by the wedge helper — the three
+coplanar collapses (w1 on the axis, w2 on the axis, w2 in the w1-plane) all
+trap the hull in a three-point affine span, hence null. -/
+private theorem p23_quartet_nondeg {u0 u1 w1 w2 : V3} {T : Set V3} (hu01 : u0 ≠ u1)
+    (hT : T ⊆ (affineSpan ℝ ({u0, u1, w1, w2} : Set V3))) (hne : volume T ≠ 0) :
+    ¬Collinear3 u0 u1 w1 ∧ ¬Collinear3 u0 u1 w2 ∧ w1 ≠ w2 ∧
+      w2 ∉ (affineSpan ℝ ({u0, u1, w1} : Set V3)) := by
+  have hcop : ¬ Coplanar ℝ ({u0, u1, w1, w2} : Set V3) := fun hcp =>
+    hne (p23_coplanar_affineSpan_null hcp hT)
+  have hsubW2 : Collinear3 u0 u1 w1 → ({u0, u1, w1, w2} : Set V3) ⊆
+      ((affineSpan ℝ ({u0, u1, w2} : Set V3) : Set V3)) := by
+    intro hcl z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with rfl | rfl | rfl | rfl
+    · exact mem_affineSpan (k := ℝ) (by simp)
+    · exact mem_affineSpan (k := ℝ) (by simp)
+    · obtain ⟨c, hc⟩ := (collinear3_iff_smul (Ne.symm hu01)).mp hcl
+      exact p23_mem_affineSpan_triple u0 u1 w2 z c 0 (by
+        rw [show z = u0 + (z - u0) from by abel, hc]; module)
+    · exact mem_affineSpan (k := ℝ) (by simp)
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · intro hcl
+    exact hcop (Coplanar.subset (hsubW2 hcl) (p23_coplanar_affineSpan_triple u0 u1 w2))
+  · intro hcl
+    have hsub : ({u0, u1, w1, w2} : Set V3) ⊆
+        ((affineSpan ℝ ({u0, u1, w1} : Set V3) : Set V3)) := by
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl | rfl
+      · exact mem_affineSpan (k := ℝ) (by simp)
+      · exact mem_affineSpan (k := ℝ) (by simp)
+      · exact mem_affineSpan (k := ℝ) (by simp)
+      · obtain ⟨c, hc⟩ := (collinear3_iff_smul (Ne.symm hu01)).mp hcl
+        exact p23_mem_affineSpan_triple u0 u1 w1 z c 0 (by
+          rw [show z = u0 + (z - u0) from by abel, hc]; module)
+    exact hcop (Coplanar.subset hsub (p23_coplanar_affineSpan_triple u0 u1 w1))
+  · intro hww
+    have hsub : ({u0, u1, w1, w2} : Set V3) ⊆
+        ((affineSpan ℝ ({u0, u1, w1} : Set V3) : Set V3)) := by
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl | rfl
+      · exact mem_affineSpan (k := ℝ) (by simp)
+      · exact mem_affineSpan (k := ℝ) (by simp)
+      · exact mem_affineSpan (k := ℝ) (by simp)
+      · rw [hww]; exact mem_affineSpan (k := ℝ) (by simp)
+    exact hcop (Coplanar.subset hsub (p23_coplanar_affineSpan_triple u0 u1 w1))
+  · intro hmem
+    have hsub : ({u0, u1, w1, w2} : Set V3) ⊆
+        ((affineSpan ℝ ({u0, u1, w1} : Set V3) : Set V3)) := by
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl | rfl
+      · exact mem_affineSpan (k := ℝ) (by simp)
+      · exact mem_affineSpan (k := ℝ) (by simp)
+      · exact mem_affineSpan (k := ℝ) (by simp)
+      · exact hmem
+    exact hcop (Coplanar.subset hsub (p23_coplanar_affineSpan_triple u0 u1 w1))
+
+/-- GT-3f: the angle monotonicity behind HL §E/§F's cone case — for `t ≤ 0`
+(the negative `u1`-coefficient of a fan point), `t • e + v` makes a wider
+angle with the axis `e` than `v` itself: the normalized projection
+`(w · e)/‖w‖` can only drop. The identity
+`(v·e)²‖t e + v‖² − (v·e + t(e·e))²‖v‖² = (−t)(2v·e + t(e·e))((e·e)‖v‖² − (v·e)²)`
+(Cauchy–Schwarz on the last factor) does the work. -/
+private theorem p23_angleMono {e v : V3} {t : ℝ} (hve : 0 < inner ℝ v e)
+    (hu : t • e + v ≠ 0) (ht : t ≤ 0) :
+    inner ℝ (t • e + v) e / ‖t • e + v‖ ≤ inner ℝ v e / ‖v‖ := by
+  have hv0 : v ≠ 0 := by
+    intro h0
+    rw [h0] at hve
+    simp at hve
+  have hvp : (0:ℝ) < ‖v‖ := norm_pos_iff.mpr hv0
+  have hup : (0:ℝ) < ‖t • e + v‖ := norm_pos_iff.mpr hu
+  have hB0 : 0 ≤ inner ℝ e e := real_inner_self_nonneg
+  have hue : inner ℝ (t • e + v) e = inner ℝ v e + t * inner ℝ e e := by
+    rw [inner_add_left, real_inner_smul_left]; ring
+  have hDu : inner ℝ (t • e + v) (t • e + v)
+      = inner ℝ v v + 2 * t * inner ℝ v e + t * t * inner ℝ e e := by
+    rw [inner_add_left, inner_add_right, inner_add_right, real_inner_smul_left,
+      real_inner_smul_left, real_inner_smul_right, real_inner_smul_right,
+      real_inner_comm e v]
+    ring
+  by_cases huepos : 0 < inner ℝ (t • e + v) e
+  · -- cross-multiply route
+    have hcs : 0 ≤ inner ℝ e e * (‖v‖ * ‖v‖) - inner ℝ v e * inner ℝ v e := by
+      have h1 := norm_inner_le_norm (𝕜 := ℝ) v e
+      obtain ⟨h1a, h1b⟩ := abs_le.mp h1
+      have hee : inner ℝ e e = ‖e‖ * ‖e‖ := real_inner_self_eq_norm_mul_norm e
+      have hsq2 : inner ℝ v e * inner ℝ v e ≤ (‖v‖ * ‖e‖) * (‖v‖ * ‖e‖) := by
+        nlinarith [h1a, h1b]
+      rw [hee]
+      nlinarith [hsq2, norm_nonneg v, norm_nonneg e]
+    have h2p : (0:ℝ) < 2 * inner ℝ v e + t * inner ℝ e e := by
+      rw [hue] at huepos; linarith
+    have hrhs : (0:ℝ) ≤ (-t) * (2 * inner ℝ v e + t * inner ℝ e e)
+        * (inner ℝ e e * (‖v‖ * ‖v‖) - inner ℝ v e * inner ℝ v e) :=
+      mul_nonneg (mul_nonneg (neg_nonneg.mpr ht) (le_of_lt h2p)) hcs
+    have hkey : (inner ℝ v e * inner ℝ v e) * (‖t • e + v‖ * ‖t • e + v‖)
+        - (inner ℝ v e + t * inner ℝ e e) * (inner ℝ v e + t * inner ℝ e e) * (‖v‖ * ‖v‖)
+        = (-t) * (2 * inner ℝ v e + t * inner ℝ e e)
+          * (inner ℝ e e * (‖v‖ * ‖v‖) - inner ℝ v e * inner ℝ v e) := by
+      nlinarith [hDu, real_inner_self_eq_norm_mul_norm (t • e + v),
+        real_inner_self_eq_norm_mul_norm v, hue]
+    have hs2 : (inner ℝ v e + t * inner ℝ e e) * (inner ℝ v e + t * inner ℝ e e)
+        * (‖v‖ * ‖v‖) ≤ (inner ℝ v e * inner ℝ v e) * (‖t • e + v‖ * ‖t • e + v‖) := by
+      linarith [hkey, hrhs]
+    have hfinal : (inner ℝ v e + t * inner ℝ e e) * ‖v‖
+        ≤ inner ℝ v e * ‖t • e + v‖ := by
+      by_contra hcon
+      have hlt2 : inner ℝ v e * ‖t • e + v‖
+          < (inner ℝ v e + t * inner ℝ e e) * ‖v‖ := lt_of_not_ge hcon
+      have hp1 : 0 ≤ inner ℝ v e * ‖t • e + v‖ :=
+        mul_nonneg hve.le (norm_nonneg _)
+      have hp2 : 0 < (inner ℝ v e + t * inner ℝ e e) * ‖v‖ := by
+        have := huepos; rw [hue] at this; exact mul_pos this hvp
+      have hsq := sq_lt_sq' (by linarith) hlt2
+      rw [sq, sq] at hsq
+      have e1 : (inner ℝ v e * ‖t • e + v‖) * (inner ℝ v e * ‖t • e + v‖)
+          = (inner ℝ v e * inner ℝ v e) * (‖t • e + v‖ * ‖t • e + v‖) := by ring
+      have e2 : ((inner ℝ v e + t * inner ℝ e e) * ‖v‖)
+          * ((inner ℝ v e + t * inner ℝ e e) * ‖v‖)
+          = ((inner ℝ v e + t * inner ℝ e e) * (inner ℝ v e + t * inner ℝ e e))
+            * (‖v‖ * ‖v‖) := by ring
+      rw [e1, e2] at hsq
+      linarith [hkey, hrhs, hsq]
+    rw [hue]
+    refine (div_le_iff₀ hup).mpr ?_
+    rw [div_mul_eq_mul_div, le_div_iff₀ hvp]
+    exact hfinal
+  · -- the killed branch: the projection is nonpositive, the target positive
+    refine le_trans ?_ (le_of_lt (div_pos hve hvp))
+    rw [div_le_iff₀ hup]
+    linarith [hue]
+
+/-- GT-3f (HL §E/§F fan∩cap ⊆ hull): a point of the `affGe {u0,u1} {w1,w2}`
+fan that lies in the cap `D` lies in the hull of the four points, given the
+SF-28 narrowness pair — the far-face plane `{u1,w1,w2}` stays at distance
+≥ r from `u0` (face-距离径向排除), and the cut segment `conv {w1,w2}` sits
+outside the strict cone `rconeGt u0 u1 d` (Cauchy–Schwarz 锥单调 via
+`p23_angleMono`). The Affsign coefficients split on the signs of the two
+base coefficients: nonnegative both — a convex combination outright;
+negative `u0`-coefficient — the rescaled point lands on the far-face plane
+so the cap's `dist ≤ r` dies; negative `u1`-coefficient — the angle chain
+`g(x) ≤ g(scaled tip) = g(tip) ≤ d` dies against the cap's `g(x) > d`. -/
+private theorem p23_fan_cap_sub_hull4 {u0 u1 w1 w2 : V3} {r d : ℝ}
+    (hr : 0 < r) (hd : 0 < d)
+    (hc1 : ¬ Collinear3 u0 u1 w1) (hc2 : ¬ Collinear3 u0 u1 w2) (hw12 : w1 ≠ w2)
+    (hface : ∀ z ∈ (affineSpan ℝ ({u1, w1, w2} : Set V3)), r ≤ dist u0 z)
+    (hcone : ∀ z ∈ convexHull ℝ ({w1, w2} : Set V3), z ∉ rconeGt u0 u1 d)
+    {x : V3} (hxfan : x ∈ affGe {u0, u1} {w1, w2})
+    (hxcap : x ∈ grutotiConicCap u0 u1 r d) :
+    x ∈ convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
+  have hu01 : u0 ≠ u1 := fun h => hc1 (by rw [h]; exact collinear3_of_eq rfl)
+  have hplane : u0 ∉ (affineSpan ℝ ({u1, w1, w2} : Set V3)) := by
+    intro hm
+    have h0 := hface u0 hm
+    rw [dist_self] at h0
+    exact absurd h0 (not_le.mpr hr)
+  have hu0w1 : u0 ≠ w1 := fun h =>
+    hplane (by rw [h]; exact mem_affineSpan (k := ℝ) (by simp))
+  have hu0w2 : u0 ≠ w2 := fun h =>
+    hplane (by rw [h]; exact mem_affineSpan (k := ℝ) (by simp))
+  have hu1w1 : u1 ≠ w1 := by
+    intro h
+    refine hc1 ?_
+    rw [h]
+    exact (collinear3_iff_smul (v := u0) (w := w1) (w1 := w1)
+      (Ne.symm hu0w1)).mpr ⟨1, (one_smul ℝ (w1 - u0)).symm⟩
+  have hu1w2 : u1 ≠ w2 := by
+    intro h
+    refine hc2 ?_
+    rw [h]
+    exact (collinear3_iff_smul (v := u0) (w := w2) (w1 := w2)
+      (Ne.symm hu0w2)).mpr ⟨1, (one_smul ℝ (w2 - u0)).symm⟩
+  obtain ⟨f, hfin, hsum, hfpos, hone⟩ := hxfan
+  have hFeq : hfin.toFinset = ({u0, u1, w1, w2} : Finset V3) := by
+    refine Finset.ext fun z => ?_
+    rw [Set.Finite.mem_toFinset]
+    simp only [Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff,
+      Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  rw [hFeq] at hsum hone
+  have hxv : x = f u0 • u0 + f u1 • u1 + f w1 • w1 + f w2 • w2 := by
+    rw [hsum, show ({u0, u1, w1, w2} : Finset V3)
+      = insert u0 (insert u1 (insert w1 ({w2} : Finset V3))) from rfl,
+      Finset.sum_insert (by simp [hu01, hu0w1, hu0w2]),
+      Finset.sum_insert (by simp [hu1w1, hu1w2]),
+      Finset.sum_insert (by simp [hw12]), Finset.sum_singleton]
+    abel
+  have hone4 : f u0 + f u1 + f w1 + f w2 = 1 := by
+    rw [← hone, show ({u0, u1, w1, w2} : Finset V3)
+      = insert u0 (insert u1 (insert w1 ({w2} : Finset V3))) from rfl,
+      Finset.sum_insert (by simp [hu01, hu0w1, hu0w2]),
+      Finset.sum_insert (by simp [hu1w1, hu1w2]),
+      Finset.sum_insert (by simp [hw12]), Finset.sum_singleton]
+    ring
+  have hs2p : 0 ≤ f w1 := hfpos w1 (by simp)
+  have hs3p : 0 ≤ f w2 := hfpos w2 (by simp)
+  by_cases ht0 : 0 ≤ f u0
+  · by_cases ht1 : 0 ≤ f u1
+    · -- both base coefficients nonnegative: outright convex combination
+      have hxc : f u0 • u0 + f u1 • u1 + f w1 • w1 + f w2 • w2
+          ∈ convexHull ℝ ({u0, u1, w1, w2} : Set V3) := by
+        rw [CONVEX_HULL_4 u0 u1 w1 w2]
+        simp only [Set.mem_setOf_eq]
+        exact ⟨f u0, f u1, f w1, f w2, ht0, ht1, hs2p, hs3p, hone4, rfl⟩
+      rwa [← hxv] at hxc
+    · -- u1-coefficient negative: the cone-monotonicity case
+      have hxball : dist x u0 ≤ r := by
+        simp only [grutotiConicCap, Set.mem_inter_iff, Metric.mem_closedBall,
+          rconeGt, Set.mem_setOf_eq] at hxcap
+        exact hxcap.1
+      have hcgt : dist x u0 * dist u1 u0 * d < inner ℝ (x - u0) (u1 - u0) := by
+        simp only [grutotiConicCap, Set.mem_inter_iff, Metric.mem_closedBall,
+          rconeGt, Set.mem_setOf_eq] at hxcap
+        rw [← inner_eq_dot] at hxcap
+        exact hxcap.2
+      have hdotpos : (0:ℝ) < inner ℝ (x - u0) (u1 - u0) :=
+        lt_of_le_of_lt (mul_nonneg (mul_nonneg dist_nonneg dist_nonneg) hd.le) hcgt
+      have hxu0ne : x - u0 ≠ 0 := by
+        intro h0
+        rw [h0] at hdotpos
+        simp at hdotpos
+      have hsub : x - u0
+          = f u1 • (u1 - u0) + f w1 • (w1 - u0) + f w2 • (w2 - u0) := by
+        rw [hxv, show f u0 = 1 - (f u1 + f w1 + f w2) from by linarith]
+        module
+      by_cases hl0 : f w1 + f w2 = 0
+      · -- both tips zero: x sits behind u0 on the axis, cone condition dies
+        have hs2z : f w1 = 0 := by have := hs2p; linarith
+        have hs3z : f w2 = 0 := by have := hs3p; linarith
+        have hsub0 : x - u0 = f u1 • (u1 - u0) := by rw [hsub, hs2z, hs3z]; simp
+        have hB0 : 0 ≤ inner ℝ (u1 - u0) (u1 - u0) := real_inner_self_nonneg
+        have hnB : (0:ℝ) ≤ -(f u1) * inner ℝ (u1 - u0) (u1 - u0) := by
+          nlinarith [hB0, lt_of_not_ge ht1]
+        have h1 : inner ℝ (x - u0) (u1 - u0)
+            = f u1 * inner ℝ (u1 - u0) (u1 - u0) := by
+          rw [hsub0, real_inner_smul_left]
+        have hcontra : (0:ℝ) < 0 := by linarith [h1, hdotpos, hnB]
+        exact absurd hcontra (by norm_num)
+      · have hlam : (0:ℝ) < f w1 + f w2 := lt_of_le_of_ne
+          (add_nonneg hs2p hs3p) (Ne.symm hl0)
+        obtain ⟨lam, hlamdef⟩ : ∃ lam : ℝ, lam = f w1 + f w2 := ⟨_, rfl⟩
+        have hlampos : (0:ℝ) < lam := hlamdef ▸ hlam
+        have hl0' : lam ≠ 0 := ne_of_gt hlampos
+        set z : V3 := (f w1 / lam) • w1 + (f w2 / lam) • w2 with hzdef
+        -- z on the cut segment
+        have hab : f w1 / lam + f w2 / lam = 1 := by
+          have hl2 : f w1 + f w2 ≠ 0 := by rw [← hlamdef]; exact hl0'
+          rw [hlamdef]
+          field_simp [hl2]
+        have hpt : (f w1 / lam) • w1 + (f w2 / lam) • w2 = z := by
+          rw [hzdef]
+        have hzconv : z ∈ convexHull ℝ ({w1, w2} : Set V3) := by
+          rw [convexHull_pair]
+          exact ⟨f w1 / lam, f w2 / lam, div_nonneg hs2p (le_of_lt hlampos),
+            div_nonneg hs3p (le_of_lt hlampos), hab, hpt⟩
+        -- x - u0 = f u1 • e + lam • (z - u0)
+        have hR : lam • (z - u0) = f w1 • (w1 - u0) + f w2 • (w2 - u0) := by
+          rw [hzdef, smul_sub, smul_add, smul_smul, smul_smul,
+            mul_div_cancel₀ (f w1) hl0', mul_div_cancel₀ (f w2) hl0', hlamdef]
+          module
+        have hsubz : x - u0 = f u1 • (u1 - u0) + lam • (z - u0) := by
+          rw [hsub, hR]
+          abel
+        -- the angle chain
+        have h2 : inner ℝ (lam • (z - u0)) (u1 - u0)
+            = inner ℝ (x - u0) (u1 - u0)
+              - f u1 * inner ℝ (u1 - u0) (u1 - u0) := by
+          simp only [hsubz, real_inner_smul_left, inner_add_left]
+          ring
+        have hB0 : 0 ≤ inner ℝ (u1 - u0) (u1 - u0) := real_inner_self_nonneg
+        have hnB : (0:ℝ) ≤ -(f u1) * inner ℝ (u1 - u0) (u1 - u0) := by
+          nlinarith [hB0, lt_of_not_ge ht1]
+        have hvdot : (0:ℝ) < inner ℝ (lam • (z - u0)) (u1 - u0) := by
+          rw [h2]; linarith
+        have hvne : f u1 • (u1 - u0) + lam • (z - u0) ≠ 0 := by
+          intro h0
+          rw [← hsubz] at h0
+          exact hxu0ne h0
+        have hmono := p23_angleMono (e := u1 - u0) (v := lam • (z - u0))
+          (t := f u1) hvdot hvne (le_of_lt (lt_of_not_ge ht1))
+        -- scale invariance: g(scaled tip direction) = g(tip direction)
+        have hscale : inner ℝ (lam • (z - u0)) (u1 - u0) / ‖lam • (z - u0)‖
+            = inner ℝ (z - u0) (u1 - u0) / ‖z - u0‖ := by
+          rw [norm_smul, Real.norm_eq_abs, abs_of_pos hlampos,
+            real_inner_smul_left, mul_div_mul_left _ _ hl0']
+        -- the cap's strict cone condition, divided by ‖x - u0‖
+        have hxu0p : (0:ℝ) < ‖x - u0‖ := norm_pos_iff.mpr hxu0ne
+        have hcapdiv : dist u1 u0 * d
+            < inner ℝ (x - u0) (u1 - u0) / ‖x - u0‖ := by
+          have hdx : dist x u0 = ‖x - u0‖ := dist_eq_norm x u0
+          have hdu : dist u1 u0 = ‖u1 - u0‖ := dist_eq_norm u1 u0
+          rw [hdx, hdu] at hcgt
+          rw [lt_div_iff₀ hxu0p, hdu]
+          nlinarith [hcgt, norm_nonneg (x - u0)]
+        -- the cut segment sits outside the strict cone
+        have hznd : z ∉ rconeGt u0 u1 d := hcone z hzconv
+        by_cases hz0 : ‖z - u0‖ = 0
+        · -- z = u0: x on the axis behind u0 again
+          have hz0' : z - u0 = 0 := norm_eq_zero.mp hz0
+          have hsub0 : x - u0 = f u1 • (u1 - u0) := by rw [hsubz, hz0']; simp
+          have h1 : inner ℝ (x - u0) (u1 - u0)
+              = f u1 * inner ℝ (u1 - u0) (u1 - u0) := by
+            rw [hsub0, real_inner_smul_left]
+          have hcontra : (0:ℝ) < 0 := by linarith [h1, hdotpos, hnB]
+          exact absurd hcontra (by norm_num)
+        · have hzup : (0:ℝ) < ‖z - u0‖ :=
+            lt_of_le_of_ne (norm_nonneg _) (Ne.symm hz0)
+          have hzconed : (z - u0) ⬝ᵥ (u1 - u0) ≤ dist z u0 * dist u1 u0 * d := by
+            simp only [rconeGt, Set.mem_setOf_eq] at hznd
+            exact le_of_not_gt hznd
+          have hzdiv : inner ℝ (z - u0) (u1 - u0) / ‖z - u0‖ ≤ dist u1 u0 * d := by
+            have hdz : dist z u0 = ‖z - u0‖ := dist_eq_norm z u0
+            rw [inner_eq_dot, div_le_iff₀ hzup]
+            rw [hdz, mul_assoc] at hzconed
+            calc (z - u0) ⬝ᵥ (u1 - u0) ≤ ‖z - u0‖ * (dist u1 u0 * d) := hzconed
+              _ = (dist u1 u0 * d) * ‖z - u0‖ := by ring
+          rw [← hsubz, hscale] at hmono
+          linarith
+  · -- u0-coefficient negative: the far-face case
+    have hs : (0:ℝ) < 1 - f u0 := by linarith
+    have hs2' : (1:ℝ) < 1 - f u0 := by linarith
+    obtain ⟨s, hsdef⟩ : ∃ s : ℝ, s = 1 - f u0 := ⟨_, rfl⟩
+    have hspos : (0:ℝ) < s := hsdef ▸ hs
+    set y : V3 := (f u1 / s) • u1 + (f w1 / s) • w1 + (f w2 / s) • w2 with hydef
+    have hcoef2 : (1:ℝ) - f w1 / s - f w2 / s = f u1 / s := by
+      have hsum' : f u1 + f w1 + f w2 = s := by linarith
+      have hs0 : s ≠ 0 := ne_of_gt hspos
+      field_simp [hsdef]
+      linarith
+    have hy3 : y = u1 + (f w1 / s) • (w1 - u1) + (f w2 / s) • (w2 - u1) := by
+      rw [hydef]
+      have hsplit : u1 + (f w1 / s) • (w1 - u1) + (f w2 / s) • (w2 - u1)
+          = (f u1 / s) • u1 + (f w1 / s) • w1 + (f w2 / s) • w2 := by
+        have hcoef3 : (1:ℝ) - f w1 / s - f w2 / s = f u1 / s := hcoef2
+        have hsplit2 : u1 + (f w1 / s) • (w1 - u1) + (f w2 / s) • (w2 - u1)
+            = (1 - f w1 / s - f w2 / s) • u1 + (f w1 / s) • w1
+              + (f w2 / s) • w2 := by
+          module
+        rw [hsplit2, hcoef3]
+      rw [hsplit]
+    have hyspan : y ∈ (affineSpan ℝ ({u1, w1, w2} : Set V3)) :=
+      p23_mem_affineSpan_triple u1 w1 w2 y (f w1 / s) (f w2 / s) hy3
+    have hydist : r ≤ dist u0 y := hface y hyspan
+    have hsne : s ≠ 0 := ne_of_gt hspos
+    have hsmul : s • ((f u1 / s) • u1 + (f w1 / s) • w1 + (f w2 / s) • w2 - u0)
+        = f u1 • u1 + f w1 • w1 + f w2 • w2 - s • u0 := by
+      simp only [smul_sub, smul_add, smul_smul, mul_div_cancel₀ _ hsne]
+    have hyx : x - u0 = s • (y - u0) := by
+      have hfu0 : f u0 = 1 - s := by rw [hsdef]; ring
+      rw [hydef, hxv, hfu0, hsmul]
+      module
+    have hdistxy : dist x u0 = s * dist u0 y := by
+      have h1 : dist x u0 = ‖x - u0‖ := dist_eq_norm x u0
+      have h2 : dist u0 y = ‖y - u0‖ :=
+        (dist_eq_norm u0 y).trans (norm_sub_rev y u0).symm
+      rw [h1, hyx, norm_smul, Real.norm_eq_abs, abs_of_pos hspos, h2]
+    have hball : dist x u0 ≤ r := by
+      simp only [grutotiConicCap, Set.mem_inter_iff, Metric.mem_closedBall,
+        rconeGt, Set.mem_setOf_eq] at hxcap
+      exact hxcap.1
+    have hyr : (0:ℝ) < dist u0 y := lt_of_lt_of_le hr hydist
+    nlinarith [hball, hdistxy, hydist, hyr, hs2']
+
+/-- GT-3f: the k = 3/4 hull-arm combiner — from `T = hull {u0,u1,w1,w2}`,
+non-nullness of `T ∩ D` and the SF-28 narrowness pair it yields the wedge
+volume identity with `dihV` (hull ⊆ fan by CONVEX_HULL_4_SUBSET_AFF_GE_2_2,
+fan∩D ⊆ hull by `p23_fan_cap_sub_hull4`, non-degeneracy by
+`p23_quartet_nondeg`, volume by `p23_vol_D_inter_affGe`). -/
+private theorem p23_hull_arm_eq {u0 u1 w1 w2 : V3} {r d : ℝ} {T : Set V3}
+    (hr : 0 < r) (hd : 0 < d) (hd1 : d < 1) (hu01 : u0 ≠ u1)
+    (hT : T = convexHull ℝ ({u0, u1, w1, w2} : Set V3))
+    (hTnn : ¬ nullSet (T ∩ grutotiConicCap u0 u1 r d))
+    (hface : ∀ z ∈ (affineSpan ℝ ({u1, w1, w2} : Set V3)), r ≤ dist u0 z)
+    (hcone : ∀ z ∈ convexHull ℝ ({w1, w2} : Set V3), z ∉ rconeGt u0 u1 d) :
+    volume.real (T ∩ grutotiConicCap u0 u1 r d)
+      = volume.real (grutotiConicCap u0 u1 r d) * dihV u0 u1 w1 w2 / (2 * Real.pi) := by
+  have hvolT : volume T ≠ 0 := fun h0 =>
+    hTnn (measure_mono_null Set.inter_subset_left h0)
+  have hsub : T ⊆ (affineSpan ℝ ({u0, u1, w1, w2} : Set V3)) := by
+    rw [hT]; exact convexHull_min (subset_affineSpan ℝ _) (AffineSubspace.convex _)
+  obtain ⟨hc1, hc2, hw12, hpl⟩ := p23_quartet_nondeg hu01 hsub hvolT
+  have hsubL : T ∩ grutotiConicCap u0 u1 r d
+      ⊆ (affGe {u0, u1} {w1, w2} : Set V3) ∩ grutotiConicCap u0 u1 r d :=
+    Set.inter_subset_inter (by rw [hT]; exact CONVEX_HULL_4_SUBSET_AFF_GE_2_2 u0 u1 w1 w2)
+      (subset_refl _)
+  have hsubR : (affGe {u0, u1} {w1, w2} : Set V3) ∩ grutotiConicCap u0 u1 r d
+      ⊆ T ∩ grutotiConicCap u0 u1 r d := by
+    rintro z ⟨hzL, hzD⟩
+    refine ⟨?_, hzD⟩
+    rw [hT]
+    exact p23_fan_cap_sub_hull4 hr hd hc1 hc2 hw12 hface hcone hzL hzD
+  have heq : T ∩ grutotiConicCap u0 u1 r d
+      = (affGe {u0, u1} {w1, w2} : Set V3) ∩ grutotiConicCap u0 u1 r d :=
+    le_antisymm hsubL hsubR
+  rw [heq, p23_vol_D_inter_affGe u0 u1 w1 w2 r d hr hd hd1 hc1 hc2 hpl]
+
+/-- GT-3f: the `elV` reads of a family list — the first two entries are the
+edge (`dihX`'s `dihu2/3/4` dispatch consumes these). -/
+private theorem p23_elV0 {V : Set V3} {u0 u1 : V3} {vl : List V3}
+    (hvl : vl ∈ p23Fam V u0 u1) : elV vl 0 = u0 := by
+  have h := p23_hdV_eq_u0 hvl
+  cases vl with
+  | nil => simpa [hdV, elV, List.headD] using h
+  | cons a t => simpa [hdV, elV, List.headD] using h
+
+private theorem p23_elV1 {V : Set V3} {u0 u1 : V3} {vl : List V3}
+    (hvl : vl ∈ p23Fam V u0 u1) : elV vl 1 = u1 := by
+  have h := p23_hdTail_eq_u1 hvl
+  cases vl with
+  | nil => simpa [hdV, elV, List.tail, List.headD] using h
+  | cons a t =>
+    cases t with
+    | nil => simpa [hdV, elV, List.tail, List.headD] using h
+    | cons b t' => simpa [hdV, elV, List.tail, List.headD] using h
+
 /-- HL GRUTOTI.hl:2652-2653 (proved there by the case analysis to 7958): the
 per-cell wedge-volume identity. GT-3b status (2026-09-30): the `u0 = u1`
 degenerate arm is discharged inline below (`p23_grutotiConicCap_self_empty`:
@@ -3206,17 +3675,24 @@ GT-3e 已 banked 的消费端 kit(全部零错):`p23_trunc1_of_init`、
 `p23_affGt_sub_affGe`、`p23_affGe_split`、`p23_affGt_pair_symm`、
 `p23_cap_sub_rconeGe2`(HL §D 投影/勾股反锥论证)、`p23_vol_D_inter_affGe`
 (楔体积合并式,两 azim 段 + 面零测外测三明治)。
-REMAINING (three `sorry`s, 全部纯组装):
-1. k = 2:witness 正规化(k<2 臂同款 defeq-桥)+ mcell2 形展开(∅-支反 hn)
-   + hXspan ⇒ ¬coplanar ⇒ 三条非退化(hn 消费)+
-   `p23_cap_sub_rconeGe2` 闭 X∩D = L∩D + `p23_vol_D_inter_affGe`
-   + dihX↔dihu2↔dihV 对接。
-2. k = 3:mcell3 形(∅-支)+ 非退化 + hw3 两条窄性闭 L∩D ⊆ mcell3
-   (t-系数两情形:面-距离径向 / Cauchy-Schwarz 锥单调)+ wedge helper。
-3. k = 4:同 2,hw4 + CONVEX_HULL_4_SUBSET_AFF_GE_2_2。
-region 侧供给(capstone 波):hw1/hw3/hw4/hp 全部由 `grutoti_region` 的
+GT-3f CLOSED (2026-10-08, 三支全闭, cell_vol 本体 sorry 清零):
+1. k = 2:witness 正规化(ε-见证 .1 = 2)+ mcell2 形展开(∅-支反 hn)+
+   `p23_quartet_nondeg`(hXspan 经 `p23_affGe_mem_affineSpan2` ⇒ ¬coplanar ⇒
+   三条非退化)+ `p23_cap_sub_rconeGe2`(hp 距离 + hw1 窄性)闭
+   X∩D = L∩D + `p23_vol_D_inter_affGe` + dihX↔dihu2↔dihV 对接
+   (`p23_elV0/1`)。
+2. k = 3:mcell3 形(∅-支)+ hw3 两条窄性经 `p23_hull_arm_eq` 一步闭
+   (hull ⊆ 楠 CONVEX_HULL_4_SUBSET_AFF_GE_2_2;楠∩D ⊆ hull 由
+   `p23_fan_cap_sub_hull4`:u0-系数负走远面径向排除、u1-系数负走
+   `p23_angleMono` 锥单调;非退化由 `p23_quartet_nondeg`)+ wedge helper +
+   dihX↔dihu3↔dihV 对接。
+3. k = 4:同 2,hw4 + `p23_elV1`/htr 链(BARV_3_EXPLICIT +
+   TRUNCATE_SIMPLEX_EXPLICIT_1/2)+ dihX↔dihu4↔dihV 对接。
+region 侧供给(capstone 波,未变):hw1/hw3/hw4/hp 全部由 `grutoti_region` 的
 witness 在其 B4/B6 段一步给出(hp 由饱和/packing 定义;P1/P2 面距离按
-`p23_u0_notIn_hull3/4` 重推;P3/P4 经 SMALLEST_ANGLE_LINE_PROPERTY)。 -/
+`p23_u0_notIn_hull3/4` 重推;P3/P4 经 SMALLEST_ANGLE_LINE_PROPERTY)。
+GRUTOTI capstone 联动缺口因此缩小为:region 块的 r/r1/r2/d/d1/d2 极端数据
+导出 + AJRIPQN/measure-union 侧(giant),per-cell 恒等式本体不再欠账。 -/
 private theorem grutoti_cell_vol (V : Set V3) (u0 u1 : V3) (r d : ℝ)
     (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1) (X : Set V3)
     (he : {u0, u1} ∈ edgeX V X)
@@ -3279,7 +3755,7 @@ private theorem grutoti_cell_vol (V : Set V3) (u0 u1 : V3) (r d : ℝ)
       have htr := (p23_trunc_init_len 1 (cellParams V X).2 (by omega)).1
       rw [hjunk] at htr
       exact htr
-    obtain ⟨_q4, hqbar, hXm, hinit⟩ := Classical.epsilon_spec
+    obtain ⟨hq4le, hqbar, hXm, hinit⟩ := Classical.epsilon_spec
       (p := fun p : ℕ × List V3 => p.1 ≤ 4 ∧ barV V 3 p.2 ∧
         X = mcell p.1 V p.2 ∧ initialSublist [u0, u1] p.2)
       ⟨((cellParams V X).1, (cellParams V X).2), hcp.1, hcp.2.1, hcp.2.2, hcpinit⟩
@@ -3342,22 +3818,213 @@ private theorem grutoti_cell_vol (V : Set V3) (u0 u1 : V3) (r d : ℝ)
     · -- index ∈ {2,3,4}: the k-arms (HL §D/§E/§F).
       rcases Nat.lt_or_ge (cellParamsD V X [u0, u1]).1 4 with hlt4 | hge4
       · rcases Nat.lt_or_ge (cellParamsD V X [u0, u1]).1 3 with hlt3 | hge3
-        · -- k = 2 (HL §D, GRUTOTI.hl:2669-3208). NEEDS (see docstring GT-3e map):
-          -- 残件 = 纯组装,辅助件全部 banked 且零错:
-          -- (a) witness 正规化(k<2 臂同款 hXm'/hinit' defeq-桥) + mcell2 形展开
-          --     (if_pos/if_neg hcond;∅-支 X∩D=∅ 反 hn,k<2 臂同款);
-          -- (b) hXspan : X ⊆ affineSpan{u0,u1,m,s3} (p23_mem_affineSpan_of_affGe
-          --     + affineSpan_mono) ⇒ ¬coplanar(反 hn) ⇒ ¬Collinear3 u0 u1 m/s3
-          --     与 s3 ∉ affineSpan{u0,u1,m}(coplanar_insert_iff 路线);
-          -- (c) p23_cap_sub_rconeGe2 (hp 距离 + hw1 窄性) 闭 X ∩ D = L ∩ D;
-          -- (d) p23_vol_D_inter_affGe + dihX↔dihu2↔dihV 对接(elV ul 0/1 = u0/u1)。
-          sorry
-        · -- k = 3 (HL §F). NEEDS: hw3 面/锥窄性 + AZIM_COMPL 恒等式
-          -- (wedge helper 已 banked)。
-          sorry
-      · -- k = 4 (HL §E). NEEDS: hw4 面/锥窄性 + 非共面
-        -- (wedge helper 已 banked)。
-        sorry
+        · -- k = 2 (HL §D, GRUTOTI.hl:2669-3208). CLOSED (GT-3f, 2026-10-08):
+          -- witness 正规化 + mcell2 形展开(∅-支反 hn)+ quartet 非退化 +
+          -- p23_cap_sub_rconeGe2 闭 X∩D = L∩D + wedge helper +
+          -- dihX↔dihu2↔dihV 对接(p23_elV0/1)。
+          have hq2 : (cellParamsD V X [u0, u1]).1 = 2 := by omega
+          obtain ⟨ul, huldef⟩ : ∃ ul : List V3, ul = (cellParamsD V X [u0, u1]).2 :=
+            ⟨_, rfl⟩
+          have hXm' : X = mcell (cellParamsD V X [u0, u1]).1 V ul := by
+            rw [huldef]; exact hXm
+          have hqbar' : barV V 3 ul := by rw [huldef]; exact hqbar
+          have hinit' : initialSublist [u0, u1] ul := by rw [huldef]; exact hinit
+          rw [hq2] at hXm'
+          have hfam : ul ∈ p23Fam V u0 u1 := ⟨hqbar', p23_trunc1_of_init hinit'⟩
+          have htr1 : truncateSimplex 1 ul = [u0, u1] := p23_trunc1_of_init hinit'
+          have hd0 : hdV ul = u0 := p23_hdV_eq_u0 hfam
+          have hd1v : hdV ul.tail = u1 := p23_hdTail_eq_u1 hfam
+          by_cases hcond : hl (truncateSimplex 1 ul) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ul
+          · -- 楠点 m/s3 的非退化(hn 消费:X ⊆ 四点仿射包,共面 ⇒ 零测;
+            --   mcell2 形展开走成员级 rw,免 ite-可判定求值)
+            have hXspan : X ⊆
+                (affineSpan ℝ ({u0, u1, mxi V ul, omegaListN V ul 3} : Set V3)) := by
+              intro z hz
+              rw [hXm', (MCELL_EXPLICIT 2 V ul).2.2.1] at hz
+              rw [mcell2, if_pos hcond, htr1, hd0, hd1v] at hz
+              exact p23_affGe_mem_affineSpan2 hz.2
+            obtain ⟨hc1, hc2, -, hpl⟩ := p23_quartet_nondeg hne hXspan hns
+            -- hp 的 packing 距离(u0, u1 ∈ V 由 barV + initialSublist)
+            obtain ⟨yl, hyl⟩ := hinit'
+            have hu0V : u0 ∈ V :=
+              BARV_SUBSET V 3 ul hqbar' (by rw [hyl]; simp [setOfList])
+            have hu1V : u1 ∈ V :=
+              BARV_SUBSET V 3 ul hqbar' (by rw [hyl]; simp [setOfList])
+            have h2d : 2 ≤ dist u0 u1 := Packing.dist_ge_two hp hu0V hu1V hne
+            have ha0 : 0 ≤ hl [u0, u1] / Real.sqrt 2 := by
+              rw [HL_2]; positivity
+            have ha1 : hl [u0, u1] / Real.sqrt 2 < 1 := lt_of_le_of_lt hw1 hd1
+            have hcapcone : grutotiConicCap u0 u1 r d
+                ⊆ rconeGe u0 u1 (hl [u0, u1] / Real.sqrt 2)
+                  ∩ rconeGe u1 u0 (hl [u0, u1] / Real.sqrt 2) :=
+              p23_cap_sub_rconeGe2 h2d hr1 hd hw1 ha0 ha1
+            -- X ∩ D = L ∩ D(双锥由 p23_cap_sub_rconeGe2 消去)
+            have heq : X ∩ grutotiConicCap u0 u1 r d
+                = (affGe {u0, u1} {mxi V ul, omegaListN V ul 3} : Set V3)
+                  ∩ grutotiConicCap u0 u1 r d := by
+              have hsubL : X ∩ grutotiConicCap u0 u1 r d
+                  ⊆ (affGe {u0, u1} {mxi V ul, omegaListN V ul 3} : Set V3)
+                    ∩ grutotiConicCap u0 u1 r d := by
+                rintro z ⟨hzX, hzD⟩
+                rw [hXm', (MCELL_EXPLICIT 2 V ul).2.2.1] at hzX
+                rw [mcell2, if_pos hcond, htr1, hd0, hd1v] at hzX
+                exact ⟨hzX.2, hzD⟩
+              have hsubR : (affGe {u0, u1} {mxi V ul, omegaListN V ul 3} : Set V3)
+                    ∩ grutotiConicCap u0 u1 r d
+                  ⊆ X ∩ grutotiConicCap u0 u1 r d := by
+                rintro z ⟨hzL, hzD⟩
+                refine ⟨?_, hzD⟩
+                rw [hXm', (MCELL_EXPLICIT 2 V ul).2.2.1]
+                rw [mcell2, if_pos hcond, htr1, hd0, hd1v]
+                exact And.intro (And.intro (hcapcone hzD).1 (hcapcone hzD).2) hzL
+              exact le_antisymm hsubL hsubR
+            have hdihX : dihX V X (u0, u1)
+                = dihV u0 u1 (mxi V ul) (omegaListN V ul 3) := by
+              have hE0 : elV ul 0 = u0 := p23_elV0 hfam
+              have hE1 : elV ul 1 = u1 := p23_elV1 hfam
+              simp only [dihX, if_neg hns, hq2, if_pos]
+              rw [← huldef, dihu2, hE0, hE1]
+            rw [heq,
+              p23_vol_D_inter_affGe u0 u1 (mxi V ul) (omegaListN V ul 3) r d hr hd hd1
+                hc1 hc2 hpl, hdihX]
+          · -- ∅-支:X ∩ D = ∅ 反 hn(k<2 臂同款;成员级展开)
+            have hXeq : X ∩ grutotiConicCap u0 u1 r d = ∅ := by
+              apply Set.eq_empty_iff_forall_notMem.mpr
+              intro z hz
+              obtain ⟨hzX, -⟩ := hz
+              rw [hXm'] at hzX
+              rw [(MCELL_EXPLICIT 2 V ul).2.2.1, mcell2, if_neg hcond] at hzX
+              simp at hzX
+            exact absurd (show nullSet (X ∩ grutotiConicCap u0 u1 r d) from by
+              show volume (X ∩ grutotiConicCap u0 u1 r d) = 0
+              rw [hXeq]
+              exact measure_empty) hn
+        · -- k = 3 (HL §F). CLOSED (GT-3f, 2026-10-08): mcell3 形(∅-支反 hn)
+          -- + hw3 面/锥窄性经 p23_hull_arm_eq(hull ⊆ 楠
+          -- CONVEX_HULL_4_SUBSET_AFF_GE_2_2 + 楠∩D ⊆ hull by
+          -- p23_fan_cap_sub_hull4:面-距离径向 / p23_angleMono 锥单调)+
+          -- wedge helper + dihX↔dihu3↔dihV 对接。
+          have hq3 : (cellParamsD V X [u0, u1]).1 = 3 := by omega
+          obtain ⟨ul, huldef⟩ : ∃ ul : List V3, ul = (cellParamsD V X [u0, u1]).2 :=
+            ⟨_, rfl⟩
+          have hXm' : X = mcell (cellParamsD V X [u0, u1]).1 V ul := by
+            rw [huldef]; exact hXm
+          have hqbar' : barV V 3 ul := by rw [huldef]; exact hqbar
+          have hinit' : initialSublist [u0, u1] ul := by rw [huldef]; exact hinit
+          rw [hq3] at hXm'
+          have hfam : ul ∈ p23Fam V u0 u1 := ⟨hqbar', p23_trunc1_of_init hinit'⟩
+          have htr1 : truncateSimplex 1 ul = [u0, u1] := p23_trunc1_of_init hinit'
+          have htr2 : truncateSimplex 2 ul = [u0, u1, elV ul 2] := by
+            obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V ul hqbar'
+            have h1 : truncateSimplex 1 ul = [v0, v1] := by
+              rw [hvul]; exact (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+            have h2t : truncateSimplex 2 ul = [v0, v1, v2] := by
+              rw [hvul]; exact (TRUNCATE_SIMPLEX_EXPLICIT_2 v0 v1 v2 v3).2
+            injection (htr1.symm.trans h1).symm with ha hb
+            injection hb with hc _
+            have hv2 : v2 = elV ul 2 := by rw [hvul]; simp [elV]
+            rw [h2t, ha, hc, hv2]
+          by_cases hcond : hl (truncateSimplex 2 ul) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ul
+          · -- X = hull {u0, u1, elV ul 2, mxi V ul}(成员级 ext 展形)
+            have hXhull : X
+                = convexHull ℝ ({u0, u1, elV ul 2, mxi V ul} : Set V3) := by
+              ext z
+              rw [hXm', (MCELL_EXPLICIT 3 V ul).2.2.2.1]
+              rw [mcell3, if_pos hcond, htr2]
+              have hsets : setOfList [u0, u1, elV ul 2] ∪ {mxi V ul}
+                  = ({u0, u1, elV ul 2, mxi V ul} : Set V3) := by
+                ext w
+                simp only [setOfList, Set.mem_setOf_eq, List.mem_cons,
+                  List.not_mem_nil, Set.mem_union, Set.mem_insert_iff,
+                  Set.mem_singleton_iff]
+                tauto
+              rw [hsets]
+            -- hw3 消费(门条件由 hn 一步供给)
+            have hdoor : ¬ nullSet (mcell 3 V ul ∩ grutotiConicCap u0 u1 r d) := by
+              rw [← hXm']
+              exact hn
+            obtain ⟨hface3, hcone3⟩ := hw3 ul hqbar' htr1 hdoor
+            have hdihX : dihX V X (u0, u1)
+                = dihV u0 u1 (elV ul 2) (mxi V ul) := by
+              have hE0 : elV ul 0 = u0 := p23_elV0 hfam
+              have hE1 : elV ul 1 = u1 := p23_elV1 hfam
+              simp only [dihX, if_neg hns]
+              rw [hq3, if_neg (by decide : ¬ (3:ℕ) = 2), if_pos (rfl : (3:ℕ) = 3)]
+              rw [← huldef, dihu3, hE0, hE1]
+            rw [p23_hull_arm_eq hr hd hd1 hne hXhull hn hface3 hcone3, hdihX]
+          · -- ∅-支
+            have hXeq : X ∩ grutotiConicCap u0 u1 r d = ∅ := by
+              apply Set.eq_empty_iff_forall_notMem.mpr
+              intro z hz
+              obtain ⟨hzX, -⟩ := hz
+              rw [hXm'] at hzX
+              rw [(MCELL_EXPLICIT 3 V ul).2.2.2.1, mcell3, if_neg hcond] at hzX
+              simp at hzX
+            exact absurd (show nullSet (X ∩ grutotiConicCap u0 u1 r d) from by
+              show volume (X ∩ grutotiConicCap u0 u1 r d) = 0
+              rw [hXeq]
+              exact measure_empty) hn
+      · -- k = 4 (HL §E). CLOSED (GT-3f, 2026-10-08): 同 k = 3,hw4 +
+        -- CONVEX_HULL_4_SUBSET_AFF_GE_2_2 + p23_fan_cap_sub_hull4 +
+        -- wedge helper + dihX↔dihu4↔dihV 对接。
+        have hq4le' : (cellParamsD V X [u0, u1]).1 ≤ 4 := hq4le
+        have hq4 : (cellParamsD V X [u0, u1]).1 = 4 := by omega
+        obtain ⟨ul, huldef⟩ : ∃ ul : List V3, ul = (cellParamsD V X [u0, u1]).2 :=
+          ⟨_, rfl⟩
+        have hXm' : X = mcell (cellParamsD V X [u0, u1]).1 V ul := by
+          rw [huldef]; exact hXm
+        have hqbar' : barV V 3 ul := by rw [huldef]; exact hqbar
+        have hinit' : initialSublist [u0, u1] ul := by rw [huldef]; exact hinit
+        rw [hq4] at hXm'
+        have hfam : ul ∈ p23Fam V u0 u1 := ⟨hqbar', p23_trunc1_of_init hinit'⟩
+        have htr1 : truncateSimplex 1 ul = [u0, u1] := p23_trunc1_of_init hinit'
+        have hseteq : setOfList ul = ({u0, u1, elV ul 2, elV ul 3} : Set V3) := by
+          obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V ul hqbar'
+          have h1 : truncateSimplex 1 ul = [v0, v1] := by
+            rw [hvul]; exact (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+          injection (htr1.symm.trans h1).symm with ha hb
+          injection hb with hc _
+          have hv2 : v2 = elV ul 2 := by rw [hvul]; simp [elV]
+          have hv3 : v3 = elV ul 3 := by rw [hvul]; simp [elV]
+          ext w
+          have hw : w ∈ setOfList ul ↔ w ∈ [v0, v1, v2, v3] := by
+            rw [hvul, setOfList, Set.mem_setOf_eq]
+          rw [hw, ha, hc, hv2, hv3]
+          simp
+        by_cases hcond : hl ul < Real.sqrt 2
+        · -- X = hull {u0, u1, elV ul 2, elV ul 3}(成员级 ext 展形)
+          have hXhull : X
+              = convexHull ℝ ({u0, u1, elV ul 2, elV ul 3} : Set V3) := by
+            ext z
+            rw [hXm', (MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4)]
+            rw [mcell4, if_pos hcond, hseteq]
+          -- hw4 消费(门条件由 hn 一步供给)
+          have hdoor : ¬ nullSet (mcell 4 V ul ∩ grutotiConicCap u0 u1 r d) := by
+            rw [← hXm']
+            exact hn
+          obtain ⟨hface4, hcone4⟩ := hw4 ul hqbar' htr1 hdoor
+          have hdihX : dihX V X (u0, u1)
+              = dihV u0 u1 (elV ul 2) (elV ul 3) := by
+            have hE0 : elV ul 0 = u0 := p23_elV0 hfam
+            have hE1 : elV ul 1 = u1 := p23_elV1 hfam
+            simp only [dihX, if_neg hns]
+            rw [hq4, if_neg (by decide : ¬ (4:ℕ) = 2),
+              if_neg (by decide : ¬ (4:ℕ) = 3), if_pos (rfl : (4:ℕ) = 4)]
+            rw [← huldef, dihu4, hE0, hE1]
+          rw [p23_hull_arm_eq hr hd hd1 hne hXhull hn hface4 hcone4, hdihX]
+        · -- ∅-支
+          have hXeq : X ∩ grutotiConicCap u0 u1 r d = ∅ := by
+            apply Set.eq_empty_iff_forall_notMem.mpr
+            intro z hz
+            obtain ⟨hzX, -⟩ := hz
+            rw [hXm'] at hzX
+            rw [(MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4), mcell4,
+              if_neg hcond] at hzX
+            simp at hzX
+          exact absurd (show nullSet (X ∩ grutotiConicCap u0 u1 r d) from by
+            show volume (X ∩ grutotiConicCap u0 u1 r d) = 0
+            rw [hXeq]
+            exact measure_empty) hn
 
 /-- HL GRUTOTI.hl:7228-7400 (`sum s (\t. vol (t INTER D)) = vol D` via
 `MEASURE_NEGLIGIBLE_UNIONS_IMAGE` over the almost-disjoint cell family) plus
