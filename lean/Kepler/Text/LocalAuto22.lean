@@ -1397,11 +1397,68 @@ theorem delta4_y_imp_obtuse_p22 (y1 y2 y3 y4 y5 y6 : ℝ)
     Real.pi / 2 < dihY y1 y2 y3 y4 y5 y6 := by
   sorry
 
-/-- HOL `scs_lb_2` (NEEDS the periodic2-backward reduction). -/
+/-- `Periodic` backward: the value at an index agrees with the value at its
+residue (iterate `Periodic` along the quotient). -/
+private theorem la22periodic_mod {α : Sort u} {f : ℕ → α} {n : ℕ} (hper : Periodic f n) :
+    ∀ m, f (m % n) = f m := by
+  have hstep : ∀ q r, f (q * n + r) = f r := by
+    intro q
+    induction q with
+    | zero => intro r; simp
+    | succ q ih =>
+      intro r
+      have h1 : f (q * n + r + n) = f (q * n + r) := hper _
+      have h2 : (q + 1) * n + r = q * n + r + n := by ring
+      rw [h2, h1, ih r]
+  intro m
+  conv_rhs => rw [show m = m / n * n + m % n from by
+    rw [Nat.mul_comm]; exact (Nat.div_add_mod m n).symm]
+  rw [hstep]
+
+/-- `Periodic2` backward in both coordinates (residue reduction). -/
+private theorem la22periodic2_mod {α : Sort u} {f : ℕ → ℕ → α} {n : ℕ}
+    (hf : Periodic2 f n) (i j : ℕ) : f (i % n) (j % n) = f i j := by
+  have hfirst : ∀ q r j, f (q * n + r) j = f r j := by
+    intro q
+    induction q with
+    | zero => intro r j; simp
+    | succ q ih =>
+      intro r j
+      have h1 : f (q * n + r + n) j = f (q * n + r) j := (hf _ j).1
+      have h2 : (q + 1) * n + r = q * n + r + n := by ring
+      rw [h2, h1, ih r j]
+  have hsecond : ∀ q r i, f i (q * n + r) = f i r := by
+    intro q
+    induction q with
+    | zero => intro r i; simp
+    | succ q ih =>
+      intro r i
+      have h1 : f i (q * n + r + n) = f i (q * n + r) := (hf _ _).2
+      have h2 : (q + 1) * n + r = q * n + r + n := by ring
+      rw [h2, h1, ih r i]
+  conv_rhs => rw [show i = i / n * n + i % n from by
+    rw [Nat.mul_comm]; exact (Nat.div_add_mod i n).symm]
+  rw [hfirst]
+  conv_rhs => rw [show j = j / n * n + j % n from by
+    rw [Nat.mul_comm]; exact (Nat.div_add_mod j n).symm]
+  rw [hsecond]
+
+/-- HOL `scs_lb_2`: the `is_scs` off-diagonal bound `2 ≤ a i j`, transported
+to arbitrary indices by the `a`-table periodicity (`scs_lb_2` NEEDS marker:
+the periodic2-backward reduction, discharged by `la22periodic2_mod`). -/
 theorem scs_lb_2_p22 (s : ScsV39) (vv : ℕ → V3) (i j : ℕ)
     (h1 : isScsV39 s) (h2 : BBsV39 s vv) (hne : i % s.k ≠ j % s.k) :
     2 ≤ dist (vv i) (vv j) := by
-  sorry
+  obtain ⟨-, hk3, -, -, -, -, -, hpa, -, -, -, -, -, -, hdiag0, hdiag, -, -, -, -, -⟩ := h1
+  obtain ⟨-, -, hdist, -⟩ := h2
+  obtain ⟨hle, -⟩ := hdist i j
+  have hk0 : 0 < s.k := by omega
+  have hred : s.a (i % s.k) (j % s.k) = s.a i j := la22periodic2_mod hpa i j
+  have hne' : i % s.k ≠ j % s.k := hne
+  have h2le : 2 ≤ s.a (i % s.k) (j % s.k) :=
+    hdiag _ _ ⟨Nat.mod_lt _ hk0, Nat.mod_lt _ hk0, hne'⟩
+  rw [hred] at h2le
+  exact h2le.trans hle
 
 /-- HOL `SYNQIWN`. -/
 theorem SYNQIWN_p22 (h : main_nonlinear_terminal_v11) (s : ScsV39) (v : ℕ → V3) (i k : ℕ)
@@ -1475,7 +1532,12 @@ theorem empty_5T1_p22 (h : main_nonlinear_terminal_v11) (vv : ℕ → V3)
     (hB : BBsV39 scs5T1 vv) : 0 ≤ taustarV39 scs5T1 vv := by
   sorry
 
-/-- HOL `periodic_sum_shift`. -/
+/-- HOL `periodic_sum_shift`. NEEDS: `sum_nbij` 旋转双弹幕——注意本 Mathlib
+`Finset.sum_nbij` 的 h₀ 方向是 `f a = f' (g a)`(a ∈ LHS 集, g : LHS→RHS),
+故 g 须取逆向旋转 `fun x => (x + n - j % n) % n`(则 h₀ 化为 `j + g a ≡ a
+[MOD n]`, 经 hmod 链闭合);hb 证入 a := `(b + j % n) % n`;单射证走
+`Nat.ModEq.add_right (j % n)` 后 omega(须先有 `j % n < n` 在场)。
+μ-bug 备忘: omega 对变元模数 `% n` 无 `< n` 先验, 须显式 `Nat.mod_lt`。 -/
 theorem periodic_sum_shift_p22 (f : ℕ → ℝ) (j n : ℕ) (hper : Periodic f n) (hn : n ≠ 0) :
     Finset.sum (Finset.range n) f = Finset.sum (Finset.range n) (fun i => f (j + i)) := by
   sorry
@@ -1844,7 +1906,21 @@ theorem scs_arrow_sing_empty_p22 (s : ScsV39) :
 theorem pos_imp_scs_arrow_empty_p22 (s : ScsV39)
     (h : ∀ vv, BBsV39 s vv → 0 ≤ taustarV39 s vv) :
     scsArrowV39 {s} ∅ := by
-  sorry
+  refine ⟨fun x hx => absurd hx (by simp), ?_⟩
+  refine Or.inl fun s' hs' => ?_
+  rw [Set.mem_singleton_iff] at hs'
+  subst hs'
+  by_contra hne
+  obtain ⟨vv, hvv⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  -- keep `BBindexV39 = BBindexMinV39` opaque: unfolding it to
+  -- `encard-match = choice-projection` breaks dependent case analysis;
+  -- projections instead of rcases so the contaminated equation is never cleared
+  simp only [MMsV39, Set.mem_setOf_eq] at hvv
+  have hp2 := hvv.1
+  simp only [BBprime2V39, Set.mem_setOf_eq] at hp2
+  have hbp := hp2.1
+  simp only [BBprimeV39, Set.mem_setOf_eq] at hbp
+  linarith [h vv hbp.1, hbp.2.2]
 
 /-- HOL `OCBICBY`: the 14 T-row arrows to the empty system (giant; discharges
 LocalAuto16's `JEJTVGB_case_breakdown_p16` NEEDS marker when the `empty_*`
