@@ -383,35 +383,325 @@ theorem MM_5M1_IMP_MM_5M2 (v : ℕ → V3) (h : v ∈ MMsV39 scs5M1)
 
 /-! ### B2. Diag-stabilisation of the pentagons keeps `MMs` (OTMTOTJ.hl:553-696) -/
 
-/-- HOL `SCS_5I1_STAB_DIAG` (OTMTOTJ.hl:553). -/
+/- `_p24` private kit for the B2/B5 discharges: the periodic-reduction and
+`BBindex` bookkeeping (LocalAuto1 private twins, re-cloned for this file),
+plus the generic `isScs`-of-stab verification (the concrete-system residue
+route around the sorried `YRTAFYH`). -/
+
+private theorem la24periodic_mul {α : Sort u} {f : ℕ → α} {k : ℕ} (h : Periodic f k) :
+    ∀ n x, f (x + n * k) = f x := by
+  intro n
+  induction n with
+  | zero => intro x; simp
+  | succ m ih =>
+      intro x
+      have he : x + (m + 1) * k = (x + m * k) + k := by rw [Nat.succ_mul, Nat.add_assoc]
+      rw [he, h]
+      exact ih x
+
+private theorem la24periodic_mod {α : Sort u} {f : ℕ → α} {k : ℕ} (h : Periodic f k)
+    (x : ℕ) : f x = f (x % k) := by
+  have hx := la24periodic_mul h (x / k) (x % k)
+  have he : x % k + x / k * k = x := by rw [Nat.mul_comm]; exact Nat.mod_add_div x k
+  rw [he] at hx
+  exact hx
+
+private theorem la24minNum_spec (S : Set ℕ) (hne : S.Nonempty) :
+    minNum S ∈ S ∧ ∀ m ∈ S, minNum S ≤ m := by
+  have hex : ∃ n : ℕ, n ∈ S ∧ ∀ m ∈ S, n ≤ m :=
+    ⟨sInf S, Nat.sInf_mem hne, fun m hm => Nat.sInf_le hm⟩
+  exact Classical.epsilon_spec hex
+
+private theorem la24bbindexMin_le (s : ScsV39) {v : ℕ → V3} (hv : v ∈ BBprimeV39 s) :
+    BBindexMinV39 s ≤ BBindexV39 s v := by
+  have himg : (BBindexV39 s '' BBprimeV39 s).Nonempty := ⟨BBindexV39 s v, v, hv, rfl⟩
+  exact (la24minNum_spec _ himg).2 _ ⟨v, hv, rfl⟩
+
+private theorem la24bbindexMin_attained (s : ScsV39) (z : ℕ → V3)
+    (hz : z ∈ BBprimeV39 s) : ∃ w, w ∈ BBprimeV39 s ∧ BBindexV39 s w = BBindexMinV39 s := by
+  have himg : (BBindexV39 s '' BBprimeV39 s).Nonempty := ⟨BBindexV39 s z, z, hz, rfl⟩
+  obtain ⟨hmin, -⟩ := la24minNum_spec _ himg
+  obtain ⟨w, hw, hwval⟩ := hmin
+  exact ⟨w, hw, hwval⟩
+
+/-- `funlist_v39` tables are symmetric (psort-swap form, k = 5 shape). -/
+private theorem la24funlist_symm5 (data : List ((ℕ × ℕ) × ℝ)) (dd : ℝ) (p q : ℕ) :
+    funlistV39 data dd 5 p q = funlistV39 data dd 5 q p := by
+  unfold funlistV39
+  rw [psort_swap_p20 5 p q]
+  by_cases h : p % 5 = q % 5
+  · rw [if_pos h, if_pos h.symm]
+  · rw [if_neg h, if_neg (Ne.symm h)]
+
+/-- `csAdj 5 a1 a2` is constant `a2` on the psort-class of a diagonal pair
+(both orientations; the hypothesis shape is `psort_eq_cases_p20`'s). -/
+private theorem la24csAdj_far {a1 a2 : ℝ} {i j x y : ℕ} (hd : scsDiag 5 i j)
+    (hxy : (i % 5 = x % 5 ∧ j % 5 = y % 5) ∨ (i % 5 = y % 5 ∧ j % 5 = x % 5)) :
+    csAdj 5 a1 a2 x y = a2 := by
+  obtain ⟨hd1, hd2, hd3⟩ := hd
+  rcases hxy with ⟨h1, h2⟩ | ⟨h1, h2⟩
+  · simp only [csAdj, ← h1, ← h2]
+    split
+    · exfalso; omega
+    split
+    · exfalso; omega
+    · rfl
+  · simp only [csAdj, ← h1, ← h2]
+    split
+    · exfalso; omega
+    split
+    · exfalso; omega
+    · rfl
+
+/-- Generic `isScs_v39` of a diagonal stabilisation: everything except the
+`a ≤ cstab` bound on the stabilised class is bookkeeping on the `isScsV39 s`
+conjuncts (the edge slots of the override are untouched by
+`diag_not_edge_psort_p20`, so the `scsM` card bound is literally unchanged) —
+the concrete residue content is supplied per system by `hdom`. -/
+private theorem la24isScs_stab (s : ScsV39) (i j : ℕ) (hd : scsDiag s.k i j)
+    (hs : isScsV39 s)
+    (hdom : ∀ u v, psort s.k (i, j) = psort s.k (u, v) → s.a u v ≤ cstab) :
+    isScsV39 (scsStabDiagV39 s i j) := by
+  have hk0 : s.k ≠ 0 := by have := hs.2.1; omega
+  have hk2 : 1 < s.k := by have := hs.2.1; omega
+  obtain ⟨hdd, hk1, hk6, -, -, -, -, hpa, -, -, hpb, -, hsym, hch, hdiag0, h2a, hb3,
+    hbc, -, -, hcard⟩ := hs
+  have hpb1 : ∀ u v, s.b (u + s.k) v = s.b u v := fun u v => (hpb u v).1
+  have hpb2 : ∀ u v, s.b u (v + s.k) = s.b u v := fun u v => (hpb u v).2
+  set b' : ℕ → ℕ → ℝ := fun x y =>
+    if psort s.k (i, j) = psort s.k (x, y) then cstab else s.b x y with hb'def
+  rw [show scsStabDiagV39 s i j = mkUnadornedV39 s.k s.d s.a b' from by
+    simp only [scsStabDiagV39, mkUnadornedV39, hb'def]]
+  simp only [isScsV39, mkUnadornedV39]
+  have psort_add1 : ∀ u v : ℕ, psort s.k (u + s.k, v) = psort s.k (u, v) := by
+    intro u v
+    rw [(PSORT_MOD s.k (u + s.k) v hk0).symm, Nat.add_mod_right, PSORT_MOD s.k u v hk0]
+  have psort_add2 : ∀ u v : ℕ, psort s.k (u, v + s.k) = psort s.k (u, v) := by
+    intro u v
+    rw [(PSORT_MOD s.k u (v + s.k) hk0).symm, Nat.add_mod_right, PSORT_MOD s.k u v hk0]
+  have hb'edge : ∀ u, b' u (u + 1) = s.b u (u + 1) := by
+    intro u
+    simp only [hb'def]
+    rw [if_neg (diag_not_edge_psort_p20 u hk2 hd)]
+  have hsymB' : ∀ u v, b' u v = b' v u := by
+    intro u v
+    simp only [hb'def]
+    by_cases hcls : psort s.k (i, j) = psort s.k (u, v)
+    · rw [if_pos hcls, psort_swap_p20 s.k v u, if_pos hcls]
+    · rw [if_neg hcls, psort_swap_p20 s.k v u, if_neg hcls]
+      exact (hsym u v).2.2.2.1
+  have hpb' : Periodic2 b' s.k := by
+    intro u v
+    refine ⟨?_, ?_⟩
+    · show b' (u + s.k) v = b' u v
+      simp only [hb'def]
+      rw [psort_add1, hpb1 u v]
+    · show b' u (v + s.k) = b' u v
+      simp only [hb'def]
+      rw [psort_add2, hpb2 u v]
+  have hdomcase : ∀ u v, s.a u v ≤ b' u v := by
+    intro u v
+    by_cases hcls : psort s.k (i, j) = psort s.k (u, v)
+    · simp only [hb'def, if_pos hcls]
+      exact hdom u v hcls
+    · simp only [hb'def, if_neg hcls]
+      exact (hch u v).1.trans ((hch u v).2.1.trans (hch u v).2.2)
+  refine ⟨hdd, hk1, hk6, periodic_empty s.k, periodic_empty s.k, periodic_empty s.k,
+    periodic_empty s.k, hpa, hpa, hpb', hpb', fun _ _ => ⟨rfl, rfl⟩,
+    fun u v => ⟨(hsym u v).1, (hsym u v).1, hsymB' u v, hsymB' u v, trivial⟩,
+    fun u v => ⟨le_refl _, hdomcase u v, le_refl _⟩, hdiag0, h2a,
+    fun u h3 => by rw [hb'edge u]; exact hb3 u h3,
+    fun u h3 => by rw [hb'edge u]; exact hbc u h3,
+    fun _ _ hj => False.elim hj, fun _ _ hj => False.elim hj, ?_⟩
+  simp only [hb'edge]
+  exact hcard
+
+/-- The `MMs` transport along a diagonal stabilisation (LocalAuto1
+`PEDSLGV1_concl` ported to the k = 5 mk-form systems): the `cstab` override
+only shrinks the `b`-bound on the stabilised class (far constant `6` there),
+the `J`-empty `dsv`s agree, and the class transports the required
+`dist (v i) (v j) ≤ cstab`. -/
+private theorem la24stab_mm (d : ℝ) (a b : ℕ → ℕ → ℝ)
+    (v : ℕ → V3) (i j : ℕ) (hd : scsDiag 5 i j) (hle : dist (v i) (v j) ≤ cstab)
+    (hv : v ∈ MMsV39 (mkUnadornedV39 5 d a b))
+    (hfar : ∀ x y, psort 5 (i, j) = psort 5 (x, y) → b x y = 6) :
+    v ∈ MMsV39 (scsStabDiagV39 (mkUnadornedV39 5 d a b) i j) := by
+  have hunad : unadornedV39 (mkUnadornedV39 5 d a b) := ⟨rfl, rfl, rfl, rfl, rfl⟩
+  rw [unadorned_MMs_concl _ hunad] at hv
+  simp only [BBprime2V39, BBprimeV39, Set.mem_setOf_eq] at hv
+  obtain ⟨⟨hBBs, hmin, hneg⟩, hidx⟩ := hv
+  obtain ⟨hBBr, hper0, hBBb, hBBf⟩ := hBBs
+  have hper : Periodic v 5 := hper0
+  set b' : ℕ → ℕ → ℝ := fun x y =>
+    if psort 5 (i, j) = psort 5 (x, y) then cstab else b x y with hb'def
+  have hS : scsStabDiagV39 (mkUnadornedV39 5 d a b) i j = mkUnadornedV39 5 d a b' := by
+    simp only [scsStabDiagV39, mkUnadornedV39, hb'def]
+  have hunadS : unadornedV39 (scsStabDiagV39 (mkUnadornedV39 5 d a b) i j) := by
+    rw [hS]; exact ⟨rfl, rfl, rfl, rfl, rfl⟩
+  rw [unadorned_MMs_concl _ hunadS, hS]
+  have hclsdist : ∀ x y, psort 5 (i, j) = psort 5 (x, y) →
+      dist (v x) (v y) ≤ cstab := by
+    intro x y hcls
+    obtain hc | hc := psort_eq_cases_p20 hcls
+    · rw [la24periodic_mod hper x, la24periodic_mod hper y, ← hc.1, ← hc.2,
+        ← la24periodic_mod hper i, ← la24periodic_mod hper j]
+      exact hle
+    · rw [la24periodic_mod hper x, la24periodic_mod hper y, ← hc.2, ← hc.1,
+        ← la24periodic_mod hper j, ← la24periodic_mod hper i, dist_comm]
+      exact hle
+  have hdistle : ∀ x y, dist (v x) (v y) ≤ b' x y := by
+    intro x y
+    by_cases hcls : psort 5 (i, j) = psort 5 (x, y)
+    · simp only [hb'def, if_pos hcls]
+      exact hclsdist x y hcls
+    · simp only [hb'def, if_neg hcls]
+      exact (hBBb x y).2
+  have hup : ∀ x y, b' x y ≤ b x y := by
+    intro x y
+    by_cases hcls : psort 5 (i, j) = psort 5 (x, y)
+    · simp only [hb'def, if_pos hcls]
+      rw [hfar x y hcls]
+      norm_num [cstab]
+    · simp only [hb'def, if_neg hcls]
+      exact le_refl _
+  have htau : ∀ w : ℕ → V3, taustarV39 (mkUnadornedV39 5 d a b') w
+      = taustarV39 (mkUnadornedV39 5 d a b) w := by
+    intro w
+    simp only [taustarV39]
+    rw [dsv_J_empty _ _ rfl, dsv_J_empty _ _ rfl]
+    rfl
+  have hBBsS : BBsV39 (mkUnadornedV39 5 d a b') v :=
+    ⟨hBBr, hper, fun x y => ⟨(hBBb x y).1, hdistle x y⟩, hBBf⟩
+  have hBBw : ∀ w, BBsV39 (mkUnadornedV39 5 d a b') w → BBsV39 (mkUnadornedV39 5 d a b) w := by
+    intro w hw
+    refine ⟨hw.1, hw.2.1,
+      fun x y => ⟨(hw.2.2.1 x y).1, le_trans (hw.2.2.1 x y).2 (hup x y)⟩, hw.2.2.2⟩
+  have hvBS : v ∈ BBprimeV39 (mkUnadornedV39 5 d a b') :=
+    ⟨hBBsS, by
+      intro w hw
+      rw [htau v, htau w]
+      exact hmin w (hBBw w hw),
+      by rw [htau v]; exact hneg⟩
+  have hle1 := la24bbindexMin_le _ hvBS
+  obtain ⟨z, hz, hzval⟩ := la24bbindexMin_attained _ v hvBS
+  have hzS : BBsV39 (mkUnadornedV39 5 d a b) z := hBBw z hz.1
+  have htaueq : taustarV39 (mkUnadornedV39 5 d a b) z
+      = taustarV39 (mkUnadornedV39 5 d a b) v := by
+    have h1 : taustarV39 (mkUnadornedV39 5 d a b) v ≤ taustarV39 (mkUnadornedV39 5 d a b) z :=
+      hmin z hzS
+    have h2 : taustarV39 (mkUnadornedV39 5 d a b) z ≤ taustarV39 (mkUnadornedV39 5 d a b) v := by
+      rw [← htau z, ← htau v]
+      exact hz.2.1 v hBBsS
+    exact le_antisymm h2 h1
+  have hzprime : z ∈ BBprimeV39 (mkUnadornedV39 5 d a b) := by
+    refine ⟨hzS, ?_, ?_⟩
+    · intro w hw
+      rw [htaueq]
+      exact hmin w hw
+    · rw [htaueq]
+      exact hneg
+  have hidxT : BBindexV39 (mkUnadornedV39 5 d a b') v
+      = BBindexMinV39 (mkUnadornedV39 5 d a b') := by
+    refine le_antisymm ?_ hle1
+    have h1 : BBindexMinV39 (mkUnadornedV39 5 d a b) ≤ BBindexV39 (mkUnadornedV39 5 d a b) z :=
+      la24bbindexMin_le _ hzprime
+    rw [← hzval]
+    show BBindexV39 (mkUnadornedV39 5 d a b) v ≤ BBindexV39 (mkUnadornedV39 5 d a b) z
+    rw [hidx]
+    exact h1
+  exact ⟨hvBS, hidxT⟩
+
+/-- HOL `SCS_5I1_STAB_DIAG` (OTMTOTJ.hl:553). Discharged: `la24stab_mm` on the
+`scs_5I1` mk-form tables (`la24csAdj_far` for the far constant `6`). -/
 theorem SCS_5I1_STAB_DIAG (v : ℕ → V3) (i j : ℕ) (h : v ∈ MMsV39 scs5I1)
     (hd : scsDiag 5 i j) (hle : dist (v i) (v j) ≤ cstab) :
     v ∈ MMsV39 (scsStabDiagV39 scs5I1 i j) := by
-  sorry
-  -- DISCHARGES: Nuxcoea.MMS_IMP_BBS, DIST_LE_IMP_A_LE, YRTAFYH,
-  -- Ppbtydq.MXQTIED, STAB_BB, SCS_K_D_A_STAB_EQ, DIAG_SCS_M_EQ,
-  -- DIAD_PSORT_IMP_DIAD, DIAG_5_EQU_PSORT.
+  refine la24stab_mm (dTame 5) (csAdj 5 2 (2 * h0)) (csAdj 5 (2 * h0) 6) v i j hd hle h ?_
+  intro x y hcls
+  show csAdj 5 (2 * h0) 6 x y = 6
+  exact la24csAdj_far hd (psort_eq_cases_p20 hcls)
 
-/-- HOL `SCS_5I2_STAB_DIAG` (OTMTOTJ.hl:587). -/
+/-- HOL `SCS_5I2_STAB_DIAG` (OTMTOTJ.hl:587). Discharged: as
+`SCS_5I1_STAB_DIAG` on `scs_5I2` (same b-table). -/
 theorem SCS_5I2_STAB_DIAG (v : ℕ → V3) (i j : ℕ) (h : v ∈ MMsV39 scs5I2)
     (hd : scsDiag 5 i j) (hle : dist (v i) (v j) ≤ cstab) :
     v ∈ MMsV39 (scsStabDiagV39 scs5I2 i j) := by
-  sorry
-  -- DISCHARGES: as `SCS_5I1_STAB_DIAG` on `scs_5I2`.
+  refine la24stab_mm 0.616 (csAdj 5 2 (Real.sqrt 8)) (csAdj 5 (2 * h0) 6) v i j hd hle h ?_
+  intro x y hcls
+  show csAdj 5 (2 * h0) 6 x y = 6
+  exact la24csAdj_far hd (psort_eq_cases_p20 hcls)
 
-/-- HOL `SCS_5I3_STAB_DIAG` (OTMTOTJ.hl:622). -/
+/-- HOL `SCS_5I3_STAB_DIAG` (OTMTOTJ.hl:622). Discharged: `la24stab_mm` on the
+`scs_5I3` funlist tables (diagonal slots all `6`; 25-cell residue sweep). -/
 theorem SCS_5I3_STAB_DIAG (v : ℕ → V3) (i j : ℕ) (h : v ∈ MMsV39 scs5I3)
     (hd : scsDiag 5 i j) (hle : dist (v i) (v j) ≤ cstab) :
     v ∈ MMsV39 (scsStabDiagV39 scs5I3 i j) := by
-  sorry
-  -- DISCHARGES: as `SCS_5I1_STAB_DIAG` on `scs_5I3`.
+  refine la24stab_mm 0.616
+    (funlistV39 [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0),
+      ((1, 3), 2 * h0), ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5)
+    (funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+      ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5) v i j hd hle h ?_
+  have h6 : ∀ x y, psort 5 (i, j) = psort 5 (x, y) →
+      funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+        ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 x y = 6 := by
+    intro x y hcls
+    have huv : funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+        ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 x y =
+        funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+        ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 (x % 5) (y % 5) :=
+      (funlist_mod_p20 _ _ _ _ _ (by omega)).symm
+    rw [huv]
+    have core : funlistV39 [((0, 1), Real.sqrt 8), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+        ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 (i % 5) (j % 5) = 6 := by
+      obtain ⟨hd1, hd2, hd3⟩ := hd
+      rw [← Nat.mod_add_mod i 5 1] at hd2
+      rw [← Nat.mod_add_mod j 5 1] at hd3
+      have hzi : i % 5 < 5 := Nat.mod_lt i (by omega)
+      have hzj : j % 5 < 5 := Nat.mod_lt j (by omega)
+      interval_cases i % 5 <;> interval_cases j % 5 <;>
+        simp_all [funlistV39, psort, assocdV39] <;> norm_num
+    rcases psort_eq_cases_p20 hcls with ⟨e1, e2⟩ | ⟨e1, e2⟩
+    · rw [← e1, ← e2]
+      exact core
+    · rw [← e2, ← e1, la24funlist_symm5]
+      exact core
+  exact h6
 
-/-- HOL `SCS_5M1_STAB_DIAG` (OTMTOTJ.hl:659). -/
+/-- HOL `SCS_5M1_STAB_DIAG` (OTMTOTJ.hl:659). Discharged: as
+`SCS_5I3_STAB_DIAG` on `scs_5M1`. -/
 theorem SCS_5M1_STAB_DIAG (v : ℕ → V3) (i j : ℕ) (h : v ∈ MMsV39 scs5M1)
     (hd : scsDiag 5 i j) (hle : dist (v i) (v j) ≤ cstab) :
     v ∈ MMsV39 (scsStabDiagV39 scs5M1 i j) := by
-  sorry
-  -- DISCHARGES: as `SCS_5I1_STAB_DIAG` on `scs_5M1`.
+  refine la24stab_mm 0.616
+    (funlistV39 [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0),
+      ((1, 3), 2 * h0), ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5)
+    (funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+      ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5) v i j hd hle h ?_
+  have h6 : ∀ x y, psort 5 (i, j) = psort 5 (x, y) →
+      funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+        ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 x y = 6 := by
+    intro x y hcls
+    have huv : funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+        ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 x y =
+        funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+        ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 (x % 5) (y % 5) :=
+      (funlist_mod_p20 _ _ _ _ _ (by omega)).symm
+    rw [huv]
+    have core : funlistV39 [((0, 1), cstab), ((0, 2), 6), ((0, 3), 6), ((1, 3), 6),
+        ((1, 4), 6), ((2, 4), 6)] (2 * h0) 5 (i % 5) (j % 5) = 6 := by
+      obtain ⟨hd1, hd2, hd3⟩ := hd
+      rw [← Nat.mod_add_mod i 5 1] at hd2
+      rw [← Nat.mod_add_mod j 5 1] at hd3
+      have hzi : i % 5 < 5 := Nat.mod_lt i (by omega)
+      have hzj : j % 5 < 5 := Nat.mod_lt j (by omega)
+      interval_cases i % 5 <;> interval_cases j % 5 <;>
+        simp_all [funlistV39, psort, assocdV39] <;> norm_num
+    rcases psort_eq_cases_p20 hcls with ⟨e1, e2⟩ | ⟨e1, e2⟩
+    · rw [← e1, ← e2]
+      exact core
+    · rw [← e2, ← e1, la24funlist_symm5]
+      exact core
+  exact h6
 
 /-! ### B3. The `BERAK` arrows (OTMTOTJ.hl:699-954) -/
 
@@ -621,26 +911,78 @@ theorem BB_5I3_IS_BB_5M1 : ∀ v : ℕ → V3,
   --   v IN BBs_v39 (scs_stab_diag_v39 scs_5M1 2 4)` (statement fixed at
   -- the `(2,4)` diag, per the SCS_TAC expansion in the source).
 
-/-- HOL `STAB_5I3_SCS` (OTMTOTJ.hl:1199). -/
+/-- HOL `STAB_5I3_SCS` (OTMTOTJ.hl:1199). Discharged: `la24isScs_stab` on the
+proved `SCS_5I3_IS_SCS` (the stabilised class is a diagonal class, `a`-value
+`2*h0 ≤ cstab` by the 25-cell sweep) + `scsBasicV39` of the mk-form stab. -/
 theorem STAB_5I3_SCS (i j : ℕ) (hd : scsDiag (scs5I3.k) i j) :
     isScsV39 (scsStabDiagV39 scs5I3 i j) ∧ scsBasicV39 (scsStabDiagV39 scs5I3 i j) := by
-  sorry
-  -- DISCHARGES: Yrtafyh.YRTAFYH + SCS_K_D_A_STAB_EQ + SCS_5I3_IS_SCS +
-  -- SCS_5I3_BASIC + K_SCS_5I3.
+  refine ⟨la24isScs_stab scs5I3 i j hd SCS_5I3_IS_SCS ?_,
+    ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩⟩
+  intro u v hcls
+  rw [show scs5I3.k = 5 from rfl] at hcls
+  simp only [scs5I3, mkUnadornedV39]
+  have key : ∀ p q : ℕ, funlistV39 [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0),
+      ((1, 3), 2 * h0), ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5 p q ≤ cstab := by
+    intro p q
+    have h1 : p % 5 < 5 := Nat.mod_lt p (by omega)
+    have h2 : q % 5 < 5 := Nat.mod_lt q (by omega)
+    rw [← funlist_mod_p20
+      [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0),
+        ((1, 3), 2 * h0), ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5 p q (by omega)]
+    interval_cases p % 5 <;> interval_cases q % 5 <;>
+      simp [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab]
+  have huv : funlistV39 [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0),
+      ((1, 3), 2 * h0), ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5 u v =
+    funlistV39 [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0),
+      ((1, 3), 2 * h0), ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5 (u % 5) (v % 5) :=
+    (funlist_mod_p20 _ _ _ _ _ (by omega)).symm
+  rcases psort_eq_cases_p20 hcls with ⟨e1, e2⟩ | ⟨e1, e2⟩
+  · rw [huv, ← e1, ← e2]
+    exact key (i % 5) (j % 5)
+  · rw [huv, ← e2, ← e1]
+    exact key (j % 5) (i % 5)
 
-/-- HOL `STAB_5I2_SCS` (OTMTOTJ.hl:1210). -/
+/-- HOL `STAB_5I2_SCS` (OTMTOTJ.hl:1210). Discharged: `la24isScs_stab` +
+`la24csAdj_far` (the diagonal `csAdj`-slot of `scs_5I2` is `sqrt 8 ≤ cstab`). -/
 theorem STAB_5I2_SCS (i j : ℕ) (hd : scsDiag (scs5I2.k) i j) :
     isScsV39 (scsStabDiagV39 scs5I2 i j) ∧ scsBasicV39 (scsStabDiagV39 scs5I2 i j) := by
-  sorry
-  -- DISCHARGES: Yrtafyh.YRTAFYH + SCS_K_D_A_STAB_EQ + SCS_5I2_IS_SCS +
-  -- SCS_5I2_BASIC + K_SCS_5I2 + sqrt8_LE_CSTAB.
+  refine ⟨la24isScs_stab scs5I2 i j hd SCS_5I2_IS_SCS ?_,
+    ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩⟩
+  intro u v hcls
+  rw [show scs5I2.k = 5 from rfl] at hcls
+  show csAdj 5 2 (Real.sqrt 8) u v ≤ cstab
+  rw [la24csAdj_far hd (psort_eq_cases_p20 hcls)]
+  exact sqrt8_LE_CSTAB
 
-/-- HOL `STAB_5M1_SCS` (OTMTOTJ.hl:1223). -/
+/-- HOL `STAB_5M1_SCS` (OTMTOTJ.hl:1223). Discharged: as `STAB_5I3_SCS` on
+`scs_5M1`. -/
 theorem STAB_5M1_SCS (i j : ℕ) (hd : scsDiag (scs5M1.k) i j) :
     isScsV39 (scsStabDiagV39 scs5M1 i j) ∧ scsBasicV39 (scsStabDiagV39 scs5M1 i j) := by
-  sorry
-  -- DISCHARGES: Yrtafyh.YRTAFYH + SCS_K_D_A_STAB_EQ + SCS_5M1_IS_SCS +
-  -- SCS_5M1_BASIC + K_SCS_5M1.
+  refine ⟨la24isScs_stab scs5M1 i j hd SCS_5M1_IS_SCS ?_,
+    ⟨⟨rfl, rfl, rfl, rfl, rfl⟩, fun _ _ => rfl⟩⟩
+  intro u v hcls
+  rw [show scs5M1.k = 5 from rfl] at hcls
+  simp only [scs5M1, mkUnadornedV39]
+  have key : ∀ p q : ℕ, funlistV39 [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0),
+      ((1, 3), 2 * h0), ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5 p q ≤ cstab := by
+    intro p q
+    have h1 : p % 5 < 5 := Nat.mod_lt p (by omega)
+    have h2 : q % 5 < 5 := Nat.mod_lt q (by omega)
+    rw [← funlist_mod_p20
+      [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0),
+        ((1, 3), 2 * h0), ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5 p q (by omega)]
+    interval_cases p % 5 <;> interval_cases q % 5 <;>
+      simp [funlistV39, psort, assocdV39] <;> norm_num [h0, cstab]
+  have huv : funlistV39 [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0),
+      ((1, 3), 2 * h0), ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5 u v =
+    funlistV39 [((0, 1), 2 * h0), ((0, 2), 2 * h0), ((0, 3), 2 * h0),
+      ((1, 3), 2 * h0), ((1, 4), 2 * h0), ((2, 4), 2 * h0)] 2 5 (u % 5) (v % 5) :=
+    (funlist_mod_p20 _ _ _ _ _ (by omega)).symm
+  rcases psort_eq_cases_p20 hcls with ⟨e1, e2⟩ | ⟨e1, e2⟩
+  · rw [huv, ← e1, ← e2]
+    exact key (i % 5) (j % 5)
+  · rw [huv, ← e2, ← e1]
+    exact key (j % 5) (i % 5)
 
 /-- HOL `MM_5I3_IMP_MM_5M1` (OTMTOTJ.hl:1238). -/
 theorem MM_5I3_IMP_MM_5M1 (v : ℕ → V3) (i j : ℕ) (hd : scsDiag 5 i j)
