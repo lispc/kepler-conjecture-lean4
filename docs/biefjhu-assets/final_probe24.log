@@ -1,0 +1,263 @@
+Kepler/Text/PackingAuto22.lean:455:4: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+Kepler/Text/PackingAuto22.lean:615:10: warning: 'exact finrank_self' tactic does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+Kepler/Text/PackingAuto22.lean:616:10: warning: 'norm_num' tactic does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+Kepler/Text/PackingAuto22.lean:615:10: warning: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+Kepler/Text/PackingAuto22.lean:616:10: warning: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+Kepler/Text/PackingAuto22.lean:1011:4: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+Kepler/Text/PackingAuto22.lean:1026:6: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+Kepler/Text/PackingAuto22.lean:1185:4: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+Kepler/Text/PackingAuto22.lean:1475:8: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+Kepler/Text/PackingAuto22.lean:1605:4: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+Kepler/Text/PackingAuto22.lean:1857:4: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+Kepler/Text/PackingAuto22.lean:1900:6: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+Kepler/Text/PackingAuto22.lean:1953:8: warning: try 'simp' instead of 'simpa'
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+Kepler/Text/PackingAuto22.lean:1972:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:2321:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:2353:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:2610:41: warning: try 'simp' instead of 'simpa'
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+Kepler/Text/PackingAuto22.lean:3146:75: error(lean.unknownIdentifier): Unknown identifier `h1`
+Kepler/Text/PackingAuto22.lean:3147:44: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  (1 + 1 / 2 * t ^ 2 + 1 / 2 * t ^ 4) * √(1 - t ^ 2)
+in the target expression
+  1 ≤ (1 + (1 / 2 * t ^ 2 + 1 / 2 * t ^ 4)) * √(1 - t ^ 2)
+
+w : ℝ
+hw : 0 ≤ w
+hwu : w ^ 2 ≤ 17 / 64
+t : ℝ
+ht0 : 0 ≤ t
+htw : t ≤ w
+hu : t ^ 2 ≤ 17 / 64
+hu0 : 0 ≤ t ^ 2
+hQ : 0 < 1 - t ^ 2
+hu2 : t ^ 4 ≤ (17 / 64) ^ 2
+hu3 : t ^ 6 ≤ (17 / 64) ^ 3
+hcert : 1 - 3 * t ^ 2 - t ^ 4 - t ^ 6 ≥ 0
+hkey : (1 + 1 / 2 * t ^ 2 + 1 / 2 * t ^ 4) ^ 2 * (1 - t ^ 2) ≥ 1
+hPpos : 0 < 1 + 1 / 2 * t ^ 2 + 1 / 2 * t ^ 4
+hPQ0 : 0 ≤ (1 + 1 / 2 * t ^ 2 + 1 / 2 * t ^ 4) ^ 2 * (1 - t ^ 2)
+hpsq : √((1 + 1 / 2 * t ^ 2 + 1 / 2 * t ^ 4) ^ 2 * (1 - t ^ 2)) = (1 + 1 / 2 * t ^ 2 + 1 / 2 * t ^ 4) * √(1 - t ^ 2)
+h2 : 1 ≤ √((1 + 1 / 2 * t ^ 2 + 1 / 2 * t ^ 4) ^ 2 * (1 - t ^ 2))
+⊢ 1 ≤ (1 + (1 / 2 * t ^ 2 + 1 / 2 * t ^ 4)) * √(1 - t ^ 2)
+Kepler/Text/PackingAuto22.lean:3197:26: error: private declaration `Kepler.Text.p22_bjf_T` has already been declared
+Kepler/Text/PackingAuto22.lean:3200:16: error: private declaration `Kepler.Text.p22_bjf_T1` has already been declared
+Kepler/Text/PackingAuto22.lean:3206:16: error: private declaration `Kepler.Text.p22_bjf_Tdiff` has already been declared
+Kepler/Text/PackingAuto22.lean:3214:16: error: private declaration `Kepler.Text.p22_bjf_Tcos` has already been declared
+Kepler/Text/PackingAuto22.lean:3222:16: error: private declaration `Kepler.Text.p22_bjf_Tmono` has already been declared
+Kepler/Text/PackingAuto22.lean:3274:16: error: private declaration `Kepler.Text.p22_bjf_sqrtAB` has already been declared
+Kepler/Text/PackingAuto22.lean:3283:16: error: private declaration `Kepler.Text.p22_bjf_asn_quad` has already been declared
+Kepler/Text/PackingAuto22.lean:3376:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:4229:4: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+Kepler/Text/PackingAuto22.lean:4240:4: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+Kepler/Text/PackingAuto22.lean:4257:4: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+Kepler/Text/PackingAuto22.lean:4426:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:4934:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:4949:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:4976:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:5009:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:5590:54: warning: This simp argument is unused:
+  add_dotProduct
+
+Hint: Omit it from the simp argument list.
+  simp only [WithLp.ofLp_add, dotProduct_add, a̵d̵d̵_̵d̵o̵t̵P̵r̵o̵d̵u̵c̵t̵,̵WithLp.ofLp_sub, dotProduct_sub,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲ ̲ ̲ ̲ ̲sub_dotProduct, dotProduct_smul, smul_dotProduct, dotProduct_comm]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+Kepler/Text/PackingAuto22.lean:5591:45: warning: This simp argument is unused:
+  sub_dotProduct
+
+Hint: Omit it from the simp argument list.
+  simp only [WithLp.ofLp_add, dotProduct_add, add_dotProduct, WithLp.ofLp_sub,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲ ̲ ̲ ̲ ̲dotProduct_sub, s̵u̵b̵_̵d̵o̵t̵P̵r̵o̵d̵u̵c̵t̵,̵dotProduct_smul, smul_dotProduct, dotProduct_comm]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+Kepler/Text/PackingAuto22.lean:5592:12: warning: This simp argument is unused:
+  dotProduct_smul
+
+Hint: Omit it from the simp argument list.
+  simp only [WithLp.ofLp_add, dotProduct_add, add_dotProduct, WithLp.ofLp_sub,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲ ̲ ̲ ̲ ̲dotProduct_sub, sub_dotProduct, d̵o̵t̵P̵r̵o̵d̵u̵c̵t̵_̵s̵m̵u̵l̵,̵ ̵smul_dotProduct, dotProduct_comm]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+Kepler/Text/PackingAuto22.lean:5592:29: warning: This simp argument is unused:
+  smul_dotProduct
+
+Hint: Omit it from the simp argument list.
+  simp only [WithLp.ofLp_add, dotProduct_add, add_dotProduct, WithLp.ofLp_sub,
+  ̲  ̲ ̲ ̲ ̲ ̲ ̲ ̲ ̲ ̲ ̲ ̲dotProduct_sub, sub_dotProduct, dotProduct_smul, s̵m̵u̵l̵_̵d̵o̵t̵P̵r̵o̵d̵u̵c̵t̵,̵ ̵dotProduct_comm]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+Kepler/Text/PackingAuto22.lean:5618:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:5782:2: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+Kepler/Text/PackingAuto22.lean:5804:10: warning: This simp argument is unused:
+  Set.mem_insert_iff
+
+Hint: Omit it from the simp argument list.
+  simp [̵S̵e̵t̵.̵m̵e̵m̵_̵i̵n̵s̵e̵r̵t̵_̵i̵f̵f̵,̵ ̵S̵e̵t̵.̵m̵e̵m̵_̵s̵i̵n̵g̵l̵e̵t̵o̵n̵_̵i̵f̵f̵,̵[̲S̲e̲t̲.̲m̲e̲m̲_̲s̲i̲n̲g̲l̲e̲t̲o̲n̲_̲i̲f̲f̲,̲ hxy]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+Kepler/Text/PackingAuto22.lean:6113:2: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+Kepler/Text/PackingAuto22.lean:6133:8: warning: 'rw [← direction_affineSpan ℝ p, hap, direction_top]' tactic does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+Kepler/Text/PackingAuto22.lean:6134:8: warning: 'rw [← AffineSubspace.direction_affineSpan ℝ p, hap, AffineSubspace.direction_top]' tactic does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+Kepler/Text/PackingAuto22.lean:6133:8: warning: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+Kepler/Text/PackingAuto22.lean:6134:8: warning: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+Kepler/Text/PackingAuto22.lean:6233:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:6401:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:6429:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:6593:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:6613:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:6658:4: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+Kepler/Text/PackingAuto22.lean:6688:10: warning: This simp argument is unused:
+  WithLp.ofLp_sub
+
+Hint: Omit it from the simp argument list.
+  simp [WithLp.ofLp_su̵b̵,̵ ̵W̵i̵t̵h̵L̵p̵.̵o̵f̵L̵p̵_̵s̵mul, PiLp.single_apply, hji]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+Kepler/Text/PackingAuto22.lean:6688:27: warning: This simp argument is unused:
+  WithLp.ofLp_smul
+
+Hint: Omit it from the simp argument list.
+  simp [WithLp.ofLp_sub, W̵i̵t̵h̵L̵p̵.̵o̵f̵L̵p̵_̵s̵m̵u̵l̵,̵ ̵PiLp.single_apply, hji]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+Kepler/Text/PackingAuto22.lean:6688:45: warning: This simp argument is unused:
+  PiLp.single_apply
+
+Hint: Omit it from the simp argument list.
+  simp [WithLp.ofLp_sub, WithLp.ofLp_smul, P̵i̵L̵p̵.̵s̵i̵n̵g̵l̵e̵_̵a̵p̵p̵l̵y̵,̵ ̵hji]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+Kepler/Text/PackingAuto22.lean:6998:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7085:2: warning: `push_neg` has been deprecated. Prefer using `push Not` instead.
+If you'd rather continue using `push_neg` in your project, you can implement it as follows:
+```
+open Lean.Parser.Tactic in
+macro "push_neg" cfg:optConfig loc:(location)? : tactic =>
+  `(tactic| push $cfg:optConfig Not $[$loc]?)
+```
+Kepler/Text/PackingAuto22.lean:7225:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7233:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7272:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7344:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7359:6: warning: Try `simp at hdim` instead of `simpa using hdim`
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+Kepler/Text/PackingAuto22.lean:7377:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7383:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7391:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7416:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7425:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7457:17: warning: `Set.diff_subset` has been deprecated: Use `Set.sdiff_subset` instead
+Kepler/Text/PackingAuto22.lean:7529:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7541:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7615:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7621:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7627:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7638:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7645:8: warning: declaration uses `sorry`
+Kepler/Text/PackingAuto22.lean:7652:8: warning: declaration uses `sorry`
