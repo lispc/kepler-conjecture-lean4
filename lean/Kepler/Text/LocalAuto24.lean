@@ -446,45 +446,66 @@ theorem SCS_5M1_BERAK_BY_CSTAB :
 
 /-! ### B4. Diag-set identities over k = 5 (OTMTOTJ.hl:971-1153) -/
 
-/-- HOL `EXPAND_STAB_DIAG_5` (OTMTOTJ.hl:971). -/
+/-- `_p24` substrate: `scs_stab_diag_v39` index reduction, first coordinate
+only, second already reduced mod 5 (STAB_MOD + the `k = 5` rewrite). -/
+private theorem la24stab_mod_lt (s : ScsV39) (hs : isScsV39 s) (hk : s.k = 5) (a b : ℕ)
+    (hb : b % 5 = b) : scsStabDiagV39 s (a % 5) b = scsStabDiagV39 s a b := by
+  have h := STAB_MOD s a b hs
+  rw [hk] at h
+  rwa [hb] at h
+
+/-- HOL `EXPAND_STAB_DIAG_5` (OTMTOTJ.hl:971). The five residue classes
+`(i % 5 = (j % 5 + 2) % 5 ∨ j % 5 = (i % 5 + 2) % 5)` collapse onto the five
+records `(i + 2, i)`, `i < 5` (port of LocalAuto20's `EXPAND_STAB_DIAG`,
+k = 6 shape, over the PROVED `STAB_MOD`/`STAB_SYM` of LocalAuto20). -/
 theorem EXPAND_STAB_DIAG_5 (s : ScsV39) (hs : isScsV39 s) (hk : s.k = 5) :
     {x | ∃ i j, (i % 5 = (j % 5 + 2) % 5 ∨ j % 5 = (i % 5 + 2) % 5) ∧
       x = scsStabDiagV39 s (i % 5) (j % 5)} =
     {x | ∃ i, i < 5 ∧ x = scsStabDiagV39 s (i + 2) i} := by
-  sorry
-  -- DISCHARGES: STAB_MOD, STAB_SYM, MOD_REFL, DIVISION, MOD_LT.
+  ext x
+  constructor
+  · rintro ⟨i, j, hd, rfl⟩
+    have hzi : i % 5 < 5 := Nat.mod_lt i (by omega)
+    have hzj : j % 5 < 5 := Nat.mod_lt j (by omega)
+    rcases hd with h | h
+    · refine ⟨j % 5, hzj, ?_⟩
+      rw [h, la24stab_mod_lt s hs hk (j % 5 + 2) (j % 5) (Nat.mod_mod j 5)]
+    · refine ⟨i % 5, hzi, ?_⟩
+      rw [h, STAB_SYM, la24stab_mod_lt s hs hk (i % 5 + 2) (i % 5) (Nat.mod_mod i 5)]
+  · rintro ⟨i, hi, rfl⟩
+    refine ⟨i + 2, i, Or.inl ?_, ?_⟩
+    · rw [Nat.mod_eq_of_lt hi]
+    · have hSM := STAB_MOD s (i + 2) i hs
+      rw [hk] at hSM
+      exact hSM.symm
 
 /-- HOL `EXPAND_STAB_DIAG_5I1` (OTMTOTJ.hl:997). -/
 theorem EXPAND_STAB_DIAG_5I1 :
     {x | ∃ i j, (i % 5 = (j % 5 + 2) % 5 ∨ j % 5 = (i % 5 + 2) % 5) ∧
       x = scsStabDiagV39 scs5I1 (i % 5) (j % 5)} =
-    {x | ∃ i, i < 5 ∧ x = scsStabDiagV39 scs5I1 (i + 2) i} := by
-  sorry
-  -- DISCHARGES: EXPAND_STAB_DIAG_5 + SCS_5I1_IS_SCS + K_SCS_5I1.
+    {x | ∃ i, i < 5 ∧ x = scsStabDiagV39 scs5I1 (i + 2) i} :=
+  EXPAND_STAB_DIAG_5 scs5I1 SCS_5I1_IS_SCS rfl
 
 /-- HOL `EXPAND_STAB_DIAG_5I2` (OTMTOTJ.hl:1005). -/
 theorem EXPAND_STAB_DIAG_5I2 :
     {x | ∃ i j, (i % 5 = (j % 5 + 2) % 5 ∨ j % 5 = (i % 5 + 2) % 5) ∧
       x = scsStabDiagV39 scs5I2 (i % 5) (j % 5)} =
-    {x | ∃ i, i < 5 ∧ x = scsStabDiagV39 scs5I2 (i + 2) i} := by
-  sorry
-  -- DISCHARGES: EXPAND_STAB_DIAG_5 + SCS_5I2_IS_SCS + K_SCS_5I2.
+    {x | ∃ i, i < 5 ∧ x = scsStabDiagV39 scs5I2 (i + 2) i} :=
+  EXPAND_STAB_DIAG_5 scs5I2 SCS_5I2_IS_SCS rfl
 
 /-- HOL `EXPAND_STAB_DIAG_5I3` (OTMTOTJ.hl:1014). -/
 theorem EXPAND_STAB_DIAG_5I3 :
     {x | ∃ i j, (i % 5 = (j % 5 + 2) % 5 ∨ j % 5 = (i % 5 + 2) % 5) ∧
       x = scsStabDiagV39 scs5I3 (i % 5) (j % 5)} =
-    {x | ∃ i, i < 5 ∧ x = scsStabDiagV39 scs5I3 (i + 2) i} := by
-  sorry
-  -- DISCHARGES: EXPAND_STAB_DIAG_5 + SCS_5I3_IS_SCS + K_SCS_5I3.
+    {x | ∃ i, i < 5 ∧ x = scsStabDiagV39 scs5I3 (i + 2) i} :=
+  EXPAND_STAB_DIAG_5 scs5I3 SCS_5I3_IS_SCS rfl
 
 /-- HOL `EXPAND_STAB_DIAG_5M1` (OTMTOTJ.hl:1022). -/
 theorem EXPAND_STAB_DIAG_5M1 :
     {x | ∃ i j, (i % 5 = (j % 5 + 2) % 5 ∨ j % 5 = (i % 5 + 2) % 5) ∧
       x = scsStabDiagV39 scs5M1 (i % 5) (j % 5)} =
-    {x | ∃ i, i < 5 ∧ x = scsStabDiagV39 scs5M1 (i + 2) i} := by
-  sorry
-  -- DISCHARGES: EXPAND_STAB_DIAG_5 + SCS_5M1_IS_SCS + K_SCS_5M1.
+    {x | ∃ i, i < 5 ∧ x = scsStabDiagV39 scs5M1 (i + 2) i} :=
+  EXPAND_STAB_DIAG_5 scs5M1 SCS_5M1_IS_SCS rfl
 
 /-- HOL `EQ_DIAG_STAB_5I1_02` (OTMTOTJ.hl:1034). -/
 theorem EQ_DIAG_STAB_5I1_02 (i : ℕ) :
