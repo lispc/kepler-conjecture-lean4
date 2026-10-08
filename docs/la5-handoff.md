@@ -133,3 +133,74 @@
 - `Set.Finite.mem_toFinset` 作为 rw-step 在 metavar 位置会炸；
   用 term 级 `.mpr/.not.mpr`（本轮已用）。`by simp` 作为 rewrite-rule 参数
   会拿到未实例化的目标——一律带类型体注或用确定性 term。
+
+---
+
+# 续作交接（2026-10-08 第三轮结束）
+
+## 状态
+- `lean/Kepler/Text/LocalAuto5.lean`：本轮闭合 5（按文件序）：
+  1. `IN_CONV_LINE_SEPERATABLE` a=b 退化分支（NEEDS 处方兑现：`show` 全展开
+     Affsign 的 ∃ 五元组形态后 `refine ⟨fun _ => 1, …⟩` 通过；正向见证
+     fun _ => (1:ℝ)，toFinset = {x} 收口；负向五元组析构 + sum_singleton）。
+  2. `FAN_IMP_NOT_IN_AFF_GE`（fan7 分配律 e1={v}, e2={w} + `{v}∩{w}=∅` +
+     affGe {x} ∅ 收成 {x}；v ∈ affGe {x} {v} 用 CONDS_IN_HAFL_LINE (t:=1)）。
+  3. `IN_AFF_LT_IMP_IN_CONV`（la5_affLt_extract + 系数回填 x = (1/(1-b0))•a +
+     (-b0/(1-b0))•b，IN_CONV0 消费；无需 hdis 之外的输入，Disjoint 假设仅在
+     签名上）。
+  4. `FAN_SUB_NOT_EQ_COLL_IN_CONV0`（collinear_triple_iff 旋转 + lineMap 系数
+     t 分情：t ≥ 0 走 CONDS_IN_HAFL_LINE 与 FAN_IMP_NOT_IN_AFF_GE 矛盾；
+     t < 0 走新私件 la5_affLt2_intro + IN_AFF_LT_IMP_IN_CONV）。
+  5. `LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI`（**条件闭合**：证明体完整写就——第一
+     合取支 = FAN_SUB_NOT_EQ_COLL_IN_CONV0；∀u 部分把 OZQVSFF 实例化为
+     (u':=v, v':=u, w':=w, P := affineSpan {u,v,w})，两条 side condition
+     {v,w} ∩ aff{0,u} = ∅ 与 ¬collinear {u,v,w} 用 IN_CONV_LINE_SEPERATABLE +
+     FAN_IMP_NOT_IN_AFF_GE + AFF2_DET_BY_TWO_POINTS +
+     AFF2_ITR_CONV0_IMP_SAME_ENDS 推出。**OZQVSFF 本体仍为占位体，本定理经其
+     传递依赖占位公理**；AxiomAudit 计数不变，OZQVSFF 落地时本定理自动转真闭合。
+     docstring 内有完整配方）。
+- 探针：`lake env lean /tmp/la5_r4/LocalAuto5.lean`（= 落盘本体字节级副本，
+  diff 验证一致）**exit code 0，全文件 0 error**（含 `error(...)` 标签形扫描
+  `grep -icE 'error'` = 0）。`declaration uses sorry` 警告 76 处（= 76 个直接
+  sorried 声明；本轮前该文件实测 81 个直接 sorried 声明 + 1 头注释 = 82 处文本，
+  上轮 handoff 的 81/80 计数少记 1）。
+
+## 新增私有 helper
+- `la5_affLt2_intro`（两点 affLt 见证构造，p ≠ q；镜像 la5_affGe2_intro；
+  插在 FAN_IMP_NOT_IN_AFF_GE 之前——该区域此前无私件，注意私件声明点必须在
+  全部使用点之前的文件序约束）。
+
+## 新雷区（本轮实测，务必阅读）
+- **`grep -E ': error:'` 有盲区**：Lean 4.32 的 elaboration 错误有标签形
+  `error(lean.synthInstanceFailed): …`，不匹配 `: error:`。终扫必须加
+  `grep -icE 'error'`（本轮就靠它抓到一条 synthInstanceFailed）。
+- **`•`(73) 比 `/`(70) 结合更紧**：`(1:ℝ)/(1 - b0) • a` 解析为
+  `(1:ℝ) / ((1-b0) • a)` → HDiv ℝ V3 实例失败。标量除法后接 smul 必须整体
+  加括号 `((1:ℝ)/(1 - b0)) • a`。
+- `Set.mem_diff` 已弃用 → `Set.mem_sdiff`（且它是 Iff.rfl、点参数显式；
+  `u ∈ V \ {v,w}` 直接 `obtain ⟨huV, hnv⟩ := hu` 即可）。
+- `AffineSubspace.mem_affineSpan_singleton` 是 Iff `p₁ ∈ affineSpan k {p₂} ↔
+  p₁ = p₂`，(k P) 显式：`(AffineSubspace.mem_affineSpan_singleton ℝ V3).mpr rfl`。
+- `tauto` 解不了 `z = v ∧ z = w ↔ False`（原子与 `v ≠ w` 不连通）：用显式
+  `⟨fun hz => hvw2 (hz.1.symm.trans hz.2), fun hz => hz.elim⟩`。
+- 具名参数挂 tactic 块（`LEMA (u := v) … (hsub := by …)`）会在被改名的上下文
+  里 elaboration，`v`/`w` 变 unknown identifier：先把参数写成独立 `have`
+  （hOZsub/hOZP/hOZsub2/hdisj/hne）再位置传入。
+- `rcases hz with rfl | …` 在两边都是 fvar 时替换方向不可控，分支体内若要
+  文本引用外层变量（如 `memIns v …`）会断；改具名 `rcases hz with hz0 | hzv`
+  + `rw [hz0]`。
+- memIns 类引理的 `by simp` 成员证明若 S 是 metavar 会 "no progress"：
+  S 位置传显式集合 `memIns v ({v, w} : Set V3) (by simp)`。
+- rw 链教训：把等式 rewrite 进外层 smul 项内部后再 `← add_smul` 会因兄弟项
+  分层而失配——引理直接以最终形态陈述（x = A + B），合并前先 `add_assoc`。
+
+## 下批建议（按性价比）
+1. **OZQVSFF（hl:2056）本体**：LUNAR 已按其签名写好全部 side condition 的
+   推导，OZQVSFF 落地即连带闭合 LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI。
+   依赖链：LOCAL_FAN_RHO_NODE_PROS2(占位)/LOFA_CARD_EE_V_1(占位)/
+   RHO_NODE_INVERSE_POINT(占位)/LOFA_IMP_BIJ_VV(占位)/MOST_EXPAND_IN_WEDGE_GE(占位)/
+   LOCAL_FAN_CHARACTER_OF_RHO_NODE(占位) + LDURDPN + AZIM_EQ_0_ALT/
+   AZIM_CYCLE_TWO_POINT_SET/THREE_NOT_COLL_DETER_PLANE(已证)。
+2. `FAN_IMP_V_DIFF`（x ∉ V 已在多处现场推导 fan2；可固化为引理复用）。
+3. 上轮遗留不变：CONV0_AFF_GT_EQ 已闭；AFF_GT_NOT_INTERSECTION 族、
+   rho-orbit 巨人（orbitF_p2 hl:1003 占位）照旧。
