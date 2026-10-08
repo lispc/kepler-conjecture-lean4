@@ -25,7 +25,9 @@ FILE MAP (how this feeds the final Kepler count)
   merge-time discharge; since 2026-09-30 they are WIRED to `REUHADY1`
   with every other hypothesis synthesized genuinely in this file
   (wedge disjointness included), so their remaining content is exactly
-  `REUHADY1` + the `p24_REUHADY_nondeg` shim.
+  `REUHADY1` + the `p24_REUHADY_nondeg_azim` azimuth exclusion (2026-10-08
+  split of the `p24_REUHADY_nondeg` shim; its `vl1 ≠ vl2` half is
+  genuinely closed via `azim_self`).
 
 ENCODING NOTES
   - HOL `real^3` <-> `V3` (Kepler.Geom); `packing` <-> `Packing`;
@@ -59,7 +61,11 @@ SORRY INVENTORY (giants, with blockers)
     GENUINE (private chain before the theorem). The single residual
     `sorry` is exactly (d), the dihedral-splitting bulk (HL ~400-8356:
     mcell4 leaf-cell realization over the fan + conic-cap/azimuth measure
-    sandwich); full map in the REUHADY1 docstring.
+    sandwich); full map in the REUHADY1 docstring. 2026-10-08 wave: the
+    (d) azim-additivity + setSum final-assembly kit landed genuinely
+    (`p24_azim_base_shift`, `p24_wedge_ge_split`, `p24_setSum_congr`/
+    `_superset_eq`/`_union`; new imports `TopologyFan`/`LuneVolume`),
+    shrinking the open work to the mcell4 realization + measure sandwich.
   - `coplanarAzimEq`: FILLED (2026-09-30) from the documented route
     (frame + `azim_eq_azim_iff` + coplanarity plumbing; ingredients
     `p24_exists_azim_point` / `p24_mem_affineSpan_triple`).
@@ -82,8 +88,10 @@ SORRY INVENTORY (giants, with blockers)
     wedge-intersection hypothesis), `p24_REUHADY_extract` (barV/pair
     extraction: `u0,u1 ∈ V` + `¬Collinear3`), `p24_hl_pair_lt_sqrt2`
     (pair half-length, `HL_2` local copy). REMAINING sorryAx inputs:
-    `REUHADY1` itself + the `p24_REUHADY_nondeg` NEEDS shim (the
-    OXLZLEZ3 `FCHKUGT`/`EWYBJUA` degenerate-branch exclusion;
+    `REUHADY1` itself + the azimuth exclusion `p24_REUHADY_nondeg_azim`
+    (2026-10-08 split of the old `p24_REUHADY_nondeg` shim: `vl1 ≠ vl2`
+    is now GENUINE via `azim_self`; the residual is the OXLZLEZ3
+    `FCHKUGT`/`EWYBJUA` degenerate-branch exclusion;
     PA18:2159/:2532 hold sorried twins).
   - `WEDGE_GE_ALMOST_DISJOINT_p24`: FILLED (2026-09-30) genuinely — the
     leaf_cell.hl:154-208 closed-wedge disjointness over
@@ -104,7 +112,9 @@ import Kepler.Text.PackingAuto6
 import Kepler.Text.PackingAuto12
 import Kepler.Text.ConicCapVolume
 import Kepler.Text.Polytope
+import Kepler.Text.TopologyFan
 import Kepler.Geom.Azim
+import Kepler.Geom.LuneVolume
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -838,6 +848,186 @@ private theorem p24_voronoi_pair_split (V : Set V3) (u0 u1 : V3) (hs : saturated
   · obtain ⟨vl, hvl, heq⟩ := hT'
     exact ⟨T', ⟨vl, hvl, (hleaf vl hvl).trans heq⟩, hTT'⟩
 
+/-! ## (d) 段 kit：azim 可加性 / 闭楔分裂 / setSum 装配件（2026-10-08 波，全部真证）
+
+REUHADY1 残件 (d)（HL REUHADY.hl ~400-8356）的方位角-可加性前置件：
+- `p24_azim_base_shift`：换基差等式（PA18:3532 `AZIM_BASE_SHIFT_LE` 的真证
+  孪生，`sum4_azim_fan` 两次应用；合并时两者取一）；
+- `p24_wedge_ge_split`：内射线把闭楔分成两枚闭楔之并（PA18:3566
+  `WEDGE_GE_SPLIT` 的真证孪生；(d) 的 fan 逐叶求和按方位角切分的工具）；
+- `p24_setSum_congr` / `p24_setSum_superset_eq` / `p24_setSum_union`：
+  HOL `SUM_EQ` / `SUM_SUPERSET` / `SUM_UNION` 的 `setSum` 装配件（(d) 终段
+  HL ~8200-8356 的 SUM 装配消费）；
+- `p24_cellParamsD_spec` / `p24_dihX_of_k3` / `p24_dihX_of_k4`：(d)(i)
+  叶胞实现的 `cell_params_d` 前置件（epsilon 满足谓词 + `dihX` 在
+  `k = 3/4` 臂的读出式；PA21 wave-B1 前半的免 import 私拷——PA21 引入
+  PA15/PA18 不可 import，`k'` 与给定 `k` 的同一性需 PA17 `AJRIPQN`
+  刚性件，仍开放）。
+新 import：`Kepler.Text.TopologyFan`（`sum4_azim_fan`；其闭包无 PA15 的
+`Kepler.Text.wedge` 撞名）与 `Kepler.Geom.LuneVolume`（`azim_dihv_same` /
+`azim_dihv_compl`：叶胞 `dihV` 项到方位角的换算件，(d) 测度三明治残件
+消费）。 -/
+
+/-- HOL `AZIM_BASE_SHIFT_LE` (leaf_cell.hl:3529-3547), via two applications of
+fan.hl:1698 `sum4_azim_fan` (the three-point azimuth addition) and linear
+arithmetic. Genuine twin of PA18:3532; pick one at merge. -/
+private theorem p24_azim_base_shift (x y b1 b2 w1 w2 : V3)
+    (h1 : ¬Collinear3 x y b1) (h2 : ¬Collinear3 x y b2) (h3 : ¬Collinear3 x y w1)
+    (h4 : ¬Collinear3 x y w2)
+    (h5 : azim x y b1 b2 ≤ azim x y b1 w1) (h6 : azim x y b1 b2 ≤ azim x y b1 w2) :
+    azim x y b1 w2 - azim x y b1 w1 = azim x y b2 w2 - azim x y b2 w1 := by
+  have hyx : y ≠ x := fun he => h1 (collinear3_of_eq he)
+  have e1 := sum4_azim_fan hyx h1 h2 h4 h6
+  have e2 := sum4_azim_fan hyx h1 h2 h3 h5
+  linarith
+
+/-- HOL `WEDGE_GE_SPLIT` (leaf_cell.hl:3548-3611): inserting an interior ray
+splits the closed wedge into two closed wedges (`p24_azim_base_shift`).
+Genuine twin of PA18:3566; pick one at merge. -/
+private theorem p24_wedge_ge_split (u0 u1 u2 u3 w : V3)
+    (h2 : ¬Collinear3 u0 u1 u2) (h3 : ¬Collinear3 u0 u1 u3)
+    (hw : w ∈ wedge u0 u1 u2 u3) :
+    ¬Collinear3 u0 u1 w ∧
+      wedgeGe u0 u1 u2 u3 = wedgeGe u0 u1 u2 w ∪ wedgeGe u0 u1 w u3 := by
+  rw [wedge, Set.mem_setOf_eq] at hw
+  refine ⟨hw.1, ?_⟩
+  refine Set.ext fun x => ?_
+  by_cases hcol : Collinear3 u0 u1 x
+  · have hx0 : azim u0 u1 u2 x = 0 := by rw [azim, if_pos (Or.inr hcol)]
+    constructor
+    · intro hx
+      refine Set.mem_union_left _ ?_
+      rw [wedgeGe, Set.mem_setOf_eq] at hx ⊢
+      refine ⟨azim_nonneg u0 u1 u2 x, ?_⟩
+      rw [hx0]
+      exact le_of_lt hw.2.1
+    · intro hx
+      rw [Set.mem_union] at hx
+      rw [wedgeGe, Set.mem_setOf_eq] at hx ⊢
+      rcases hx with hx | hx
+      · rw [hx0]
+        exact ⟨le_refl 0, azim_nonneg u0 u1 u2 u3⟩
+      · rw [hx0]
+        exact ⟨le_refl 0, azim_nonneg u0 u1 u2 u3⟩
+  · rcases le_or_gt (azim u0 u1 u2 x) (azim u0 u1 u2 w) with hle | hgt
+    · constructor
+      · intro hx
+        refine Set.mem_union_left _ ?_
+        rw [wedgeGe, Set.mem_setOf_eq] at hx ⊢
+        exact ⟨azim_nonneg u0 u1 u2 x, hle⟩
+      · intro hx
+        rw [Set.mem_union] at hx
+        rw [wedgeGe, Set.mem_setOf_eq] at hx ⊢
+        rcases hx with hx | hx
+        · exact ⟨hx.1, le_trans hx.2 (le_of_lt hw.right.right)⟩
+        · exact ⟨azim_nonneg u0 u1 u2 x, le_trans hle (le_of_lt hw.right.right)⟩
+    · have hshift := p24_azim_base_shift u0 u1 u2 w x u3 h2 hw.1 hcol h3 (le_of_lt hgt)
+        (le_of_lt hw.2.2)
+      constructor
+      · intro hx
+        refine Set.mem_union_right _ ?_
+        rw [wedgeGe, Set.mem_setOf_eq] at hx ⊢
+        refine ⟨azim_nonneg u0 u1 w x, ?_⟩
+        linarith
+      · intro hx
+        rw [Set.mem_union] at hx
+        rw [wedgeGe, Set.mem_setOf_eq] at hx ⊢
+        rcases hx with hx | hx
+        · exact ⟨hx.1, le_trans hx.2 (le_of_lt hw.right.right)⟩
+        · rcases le_or_gt (azim u0 u1 u2 x) (azim u0 u1 u2 w) with hle'' | hgt''
+          · exact ⟨azim_nonneg u0 u1 u2 x, le_trans hle'' (le_of_lt hw.2.2)⟩
+          · have hshift' := p24_azim_base_shift u0 u1 u2 w x u3 h2 hw.1 hcol h3
+              (le_of_lt hgt'') (le_of_lt hw.2.2)
+            rw [wedgeGe, Set.mem_setOf_eq] at hx
+            refine ⟨azim_nonneg u0 u1 u2 x, ?_⟩
+            linarith
+
+/-- HOL `SUM_EQ` content: `setSum` agrees on pointwise-equal functions
+(junk convention: both sides `0` on infinite sets). (d) final-assembly kit
+(HL REUHADY.hl ~8200-8356). -/
+private theorem p24_setSum_congr {α : Type*} {s : Set α} {f g : α → ℝ}
+    (h : ∀ a ∈ s, f a = g a) : setSum s f = setSum s g := by
+  unfold setSum
+  by_cases hs : Set.Finite s
+  · rw [dif_pos hs, dif_pos hs]
+    exact Finset.sum_congr rfl fun a ha => h a (hs.mem_toFinset.mp ha)
+  · rw [dif_neg hs, dif_neg hs]
+
+/-- HOL `SUM_SUPERSET` content: extending the family by zero-valued members
+keeps the `setSum`. (d) final-assembly kit. -/
+private theorem p24_setSum_superset_eq {α : Type*} {s t : Set α} (hs : s.Finite)
+    (ht : t.Finite) (hsub : s ⊆ t) (f : α → ℝ)
+    (hz : ∀ a ∈ t, a ∉ s → f a = 0) : setSum s f = setSum t f := by
+  unfold setSum
+  rw [dif_pos hs, dif_pos ht]
+  have hsd : ht.toFinset \ hs.toFinset ⊆ ht.toFinset := fun a ha =>
+    (Finset.mem_sdiff.mp ha).1
+  have hsplit : ∑ x ∈ ht.toFinset \ hs.toFinset, f x + ∑ x ∈ hs.toFinset, f x
+      = ∑ x ∈ ht.toFinset, f x := Finset.sum_sdiff
+      (fun a ha => (Set.Finite.mem_toFinset ht).mpr
+        (hsub ((Set.Finite.mem_toFinset hs).mp ha)))
+  have hzero : ∑ x ∈ ht.toFinset \ hs.toFinset, f x = 0 := by
+    refine Finset.sum_eq_zero fun x hx => ?_
+    have h1 : x ∈ t := (Set.Finite.mem_toFinset ht).mp (Finset.mem_sdiff.mp hx).1
+    have h2 : x ∉ s := fun hcon =>
+      (Finset.mem_sdiff.mp hx).2 ((Set.Finite.mem_toFinset hs).mpr hcon)
+    rw [hz x h1 h2]
+  linarith [hsplit, hzero]
+
+/-- HOL `SUM_UNION` content (disjoint finite families). (d) final-assembly
+kit: the fan cells split side-wise along the interior ray. -/
+private theorem p24_setSum_union {α : Type*} {s t : Set α} (hs : s.Finite) (ht : t.Finite)
+    (hdisj : Disjoint s t) (f : α → ℝ) : setSum (s ∪ t) f = setSum s f + setSum t f := by
+  unfold setSum
+  rw [dif_pos (hs.union ht), dif_pos hs, dif_pos ht, Set.Finite.toFinset_union hs ht]
+  exact Finset.sum_union (Finset.disjoint_left.mpr fun a ha hb =>
+    Set.disjoint_left.mp hdisj ((Set.Finite.mem_toFinset hs).mp ha)
+      ((Set.Finite.mem_toFinset ht).mp hb))
+
+/-- The `cellParamsD` epsilon satisfies its predicate whenever a witness
+exists (PA21 wave-B1 first half, import-free private copy; the `k'`
+identification with a given `k` needs the PA17 `AJRIPQN` rigidity and is
+NOT included). (d)(i) leaf-cell realization kit. -/
+private theorem p24_cellParamsD_spec (V : Set V3) (X : Set V3) (vl : List V3)
+    (h : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧
+      initialSublist vl p.2) :
+    (cellParamsD V X vl).1 ≤ 4 ∧ barV V 3 (cellParamsD V X vl).2 ∧
+      X = mcell (cellParamsD V X vl).1 V (cellParamsD V X vl).2 ∧
+      initialSublist vl (cellParamsD V X vl).2 :=
+  Classical.epsilon_spec (p := fun p : ℕ × List V3 =>
+    p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧ initialSublist vl p.2) h
+
+/-- (d)(i) read-off kit, `k = 4` arm: for a non-null cell whose
+`cellParamsD` witness at the edge `[u0,u1]` has first component `4`,
+`dihX` is the plain tetrahedral dihedral `dihu4`. -/
+private theorem p24_dihX_of_k4 (V X : Set V3) (u0 u1 : V3)
+    (hn : ¬ nullSet X)
+    (h2 : (cellParamsD V X [u0, u1]).1 ≠ 2) (h3 : (cellParamsD V X [u0, u1]).1 ≠ 3)
+    (h4 : (cellParamsD V X [u0, u1]).1 = 4) :
+    dihX V X (u0, u1) = dihu4 (cellParamsD V X [u0, u1]).2 := by
+  have hd : dihX V X (u0, u1) =
+      if nullSet X then 0
+      else if (cellParamsD V X [u0, u1]).1 = 2 then dihu2 V (cellParamsD V X [u0, u1]).2
+      else if (cellParamsD V X [u0, u1]).1 = 3 then dihu3 V (cellParamsD V X [u0, u1]).2
+      else if (cellParamsD V X [u0, u1]).1 = 4 then dihu4 (cellParamsD V X [u0, u1]).2
+      else 0 := by unfold dihX; rfl
+  rw [hd, if_neg hn, if_neg h2, if_neg h3, if_pos h4]
+
+/-- (d)(i) read-off kit, `k = 3` arm: for a non-null cell whose
+`cellParamsD` witness at the edge `[u0,u1]` has first component `3`,
+`dihX` is the `mxi`-dihedral `dihu3` (the HL leaf-cell arm). -/
+private theorem p24_dihX_of_k3 (V X : Set V3) (u0 u1 : V3)
+    (hn : ¬ nullSet X)
+    (h2 : (cellParamsD V X [u0, u1]).1 ≠ 2) (h3 : (cellParamsD V X [u0, u1]).1 = 3) :
+    dihX V X (u0, u1) = dihu3 V (cellParamsD V X [u0, u1]).2 := by
+  have hd : dihX V X (u0, u1) =
+      if nullSet X then 0
+      else if (cellParamsD V X [u0, u1]).1 = 2 then dihu2 V (cellParamsD V X [u0, u1]).2
+      else if (cellParamsD V X [u0, u1]).1 = 3 then dihu3 V (cellParamsD V X [u0, u1]).2
+      else if (cellParamsD V X [u0, u1]).1 = 4 then dihu4 (cellParamsD V X [u0, u1]).2
+      else 0 := by unfold dihX; rfl
+  rw [hd, if_neg hn, if_neg h2, if_pos h3]
+
 /-- HOL `REUHADY1` (REUHADY.hl:239, refinement proof over lines
 239-8356). GIANT — the dihedral-splitting bulk (d) is the single
 remaining `sorry`; the preamble (a)-(c) landed genuinely in the
@@ -863,21 +1053,35 @@ REFINEMENT SKELETON vs. this file:
     structure in hand, split `setSum` over the mcells inside the closed
     wedge: (i) mcell4 leaf-cell realization `X = mcell 4 V [u0;u1;u2;u3]`
     over the leaf triples of the fan (cell_params_d/china kit; the HL
-    does this via MCELL_EXPLICIT + SET_TAC plumbing); (ii) the
-    conic-cap/annulus measure argument around the edge — `vol (t ∩ E)`
-    sums over the fan partitioning the azimuth wedge, `dihu4 = azim`
-    additivity along the azimuth, and the finite fan sum
+    does this via MCELL_EXPLICIT + SET_TAC plumbing; PA21's genuine
+    `MCELL_CELL_PARAMETERS_D_EXIST` kit shows the route but PA21 imports
+    PA15/PA18, so it is NOT importable here — re-derive privately);
+    (ii) the conic-cap/annulus measure argument around the edge —
+    `vol (t ∩ E)` sums over the fan partitioning the azimuth wedge,
+    `dihV = azim` conversion (`azim_dihv_same`/`azim_dihv_compl`,
+    now imported from `Kepler.Geom.LuneVolume`), and the finite fan sum
     `∑ leaf dihX = azim u0 u1 n1 n2` (HL ~7000-8356: SUM_EQ +
-    SUM_SUPERSET + measure sandwich); upstream sorried twins to consume
-    first: PA18 `FCHKUGT`/`EWYBJUA` (PA18:2159/:2532, ported sorry),
-    PA7 `YIFVQDV_lemma_aff_dim` (PA7:854, ported sorry), PA15
+    SUM_SUPERSET + measure sandwich). LANDED 2026-10-08 (all genuine,
+    section above): the azim-additivity kit `p24_azim_base_shift` +
+    `p24_wedge_ge_split` (PA18:3532/:3566 genuine twins, re-ported here
+    since PA18 is not importable), the `setSum` final-assembly kit
+    `p24_setSum_congr`/`p24_setSum_superset_eq`/`p24_setSum_union`
+    (SUM_EQ/SUM_SUPERSET/SUM_UNION), and the (d)(i) `cell_params_d`
+    front half `p24_cellParamsD_spec` + `dihX` read-offs
+    `p24_dihX_of_k3`/`p24_dihX_of_k4` (PA21 wave-B1 first half,
+    import-free). STILL OPEN: (i) the mcell4 realization (the `k'`
+    identification with a given `k` — PA17 `AJRIPQN` rigidity, and the
+    fan-triple cells' non-nullness) and (ii) the measure sandwich that
+    identifies `∑ leaf dihX` with the azimuth split of `wedgeGe` (consume
+    `p24_wedge_ge_split` + `p24_setSum_*` there); upstream sorried
+    twins: PA7 `YIFVQDV_lemma_aff_dim` (PA7:854, ported sorry), PA15
     `HL_LE_SQRT2_IMP_BARV_1` (PA15:578, ported sorry — superseded here).
-DOWNSTREAM (2026-09-30): the two capstones `REUHADY_p24` /
-`REUHADY_version2_p24` (below) are wired to this theorem with every
-hypothesis synthesized genuinely (see the kit before the capstone
-section); their remaining content is exactly `REUHADY1` + the
-`p24_REUHADY_nondeg` NEEDS shim. Statement (REUHADY_concl1_new) itself
-needs only PA2 defs, no voronoi. -/
+DOWNSTREAM (2026-09-30; shim split 2026-10-08): the two capstones
+`REUHADY_p24` / `REUHADY_version2_p24` (below) are wired to this theorem
+with every hypothesis synthesized genuinely (see the kit before the
+capstone section); their remaining content is exactly `REUHADY1` + the
+`p24_REUHADY_nondeg_azim` azimuth exclusion. Statement
+(REUHADY_concl1_new) itself needs only PA2 defs, no voronoi. -/
 theorem REUHADY1 : REUHADY_concl1_new := by
   intro V u0 u1 vl1 vl2 n1 n2 e hs hp hu0 hu1 hne hhl he hwedge haz hvlne
     hhl1 hhl2 hbar1 hbar2 htr1 htr2 hn1 hn2 heX
@@ -886,10 +1090,20 @@ theorem REUHADY1 : REUHADY_concl1_new := by
   -- (b)+(c) genuine: the pair voronoi list splits over the leaf triples
   have hfan := p24_voronoi_pair_split V u0 u1 hs hp hu0 hu1 hne hhl
   -- NEEDS (d): the dihedral-splitting bulk (HL REUHADY.hl ~400-8356, new
-  -- work): mcell4 leaf-cell realization over the fan triples + the
-  -- conic-cap/azimuth measure sandwich ∑ leaf dihX = azim u0 u1 n1 n2
-  -- (see the docstring above for the full (d) map and upstream sorried
-  -- twins to consume first). Segments (a)-(c) are genuinely closed above.
+  -- work), two open pieces after the 2026-10-08 wave:
+  -- (i) mcell4 leaf-cell realization over the fan triples: the
+  --     `cell_params_d` front half is landed (`p24_cellParamsD_spec`,
+  --     `p24_dihX_of_k3`/`p24_dihX_of_k4`); open = the `k'`-vs-`k`
+  --     identification (PA17 `AJRIPQN` rigidity; PA21's genuine
+  --     MCELL_CELL_PARAMETERS_D_EXIST route is NOT importable here —
+  --     PA21 pulls PA15/PA18) and the fan-triple cells' non-nullness;
+  -- (ii) the conic-cap/azimuth measure sandwich ∑ leaf dihX =
+  --     azim u0 u1 n1 n2, consuming the landed azim-additivity kit
+  --     (`p24_azim_base_shift` + `p24_wedge_ge_split`), the setSum
+  --     assembly kit (`p24_setSum_congr`/`_superset_eq`/`_union`), and
+  --     the dihV→azim conversion via `azim_dihv_same`/`azim_dihv_compl`
+  --     (Kepler.Geom.LuneVolume, now imported).
+  -- Segments (a)-(c) are genuinely closed above.
   sorry
 
 /-! ## Harrison's `Arg` halfline lemmas (REUHADY.hl:88, :110)
@@ -1736,13 +1950,67 @@ private theorem p24_REUHADY_extract {V : Set V3} {u0 u1 v : V3} {vl : List V3}
   · rw [hv]
     simp
 
-/-- NEEDS (OXLZLEZ3.hl 的 `FCHKUGT`/`EWYBJUA` 叶胞链；PA18:2159/:2532 有
-同名 `ported sorry` 孪生): capstone 退化支排除。在 capstone 假设组下
-`azim u0 u1 v1 v2 ≠ 0 ∧ vl1 ≠ vl2` 成立——`azim = 0`（v1、v2 同侧）或
-`vl1 = vl2`（则 `v1 = v2`、`wedge_ge ... v1 v1` 退化为平坦半平面）时，
-mcell 析取假设把棱 `e` 上全部胞压进一张平坦半平面，与饱和填充下短棱处
-三维胞的存在性/正二面角矛盾。REUHADY1 落地后本件是两枚 capstone 的
-唯一残余缺口。 -/
+/-- azim-零退化形态（2026-10-08 波，真证）：`azim u0 u1 v1 v2 = 0` 且
+v1、v2 均离轴时，v1、v2 同侧同射线（`azim_eq_zero_iff` + `p24_affGt_swap`
+换向），两枚闭楔同时塌进边界闭半平面之并 `aff_ge {u0,u1} {v1} ∪
+aff_ge {u0,u1} {v2}`（`p24_azim_zero_affGe`）。nondeg 排除的对照面：此时
+mcell 析取假设把棱 `e` 上全部胞压进一张平坦半平面。 -/
+private theorem p24_wedgeGe_flat_subset (u0 u1 v1 v2 : V3)
+    (h1 : ¬ Collinear3 u0 u1 v1) (h2 : ¬ Collinear3 u0 u1 v2)
+    (h0 : azim u0 u1 v1 v2 = 0) :
+    wedgeGe u0 u1 v1 v2 ⊆ affGe ({u0, u1} : Set V3) ({v1} : Set V3) ∪
+      affGe ({u0, u1} : Set V3) ({v2} : Set V3) ∧
+    wedgeGe u0 u1 v2 v1 ⊆ affGe ({u0, u1} : Set V3) ({v1} : Set V3) ∪
+      affGe ({u0, u1} : Set V3) ({v2} : Set V3) := by
+  have hv1u0 : v1 ≠ u0 := fun he => h1 (collinear3_pair_left he)
+  have hv1u1 : v1 ≠ u1 := fun he => h1 (collinear3_pair_right he)
+  have hv2u0 : v2 ≠ u0 := fun he => h2 (collinear3_pair_left he)
+  have hv2u1 : v2 ≠ u1 := fun he => h2 (collinear3_pair_right he)
+  have hpair : u0 ≠ u1 := fun he => h1 (collinear3_of_eq he.symm)
+  have hv12 : v1 ∈ affGt ({u0, u1} : Set V3) ({v2} : Set V3) :=
+    (azim_eq_zero_iff h1 h2).mp h0
+  have hv21 : v2 ∈ affGt ({u0, u1} : Set V3) ({v1} : Set V3) :=
+    p24_affGt_swap (v0 := u0) (v1 := u1) hpair hv1u0 hv1u1 hv2u0 hv2u1 hv12
+  have haz21 : azim u0 u1 v2 v1 = 0 := (azim_eq_zero_iff h2 h1).mpr hv21
+  refine ⟨fun z hz => ?_, fun z hz => ?_⟩
+  · rw [wedgeGe, Set.mem_setOf_eq] at hz
+    refine Set.mem_union_left _ (p24_azim_zero_affGe h1 ?_)
+    exact le_antisymm (h0 ▸ hz.2) (azim_nonneg u0 u1 v1 z)
+  · rw [wedgeGe, Set.mem_setOf_eq] at hz
+    refine Set.mem_union_right _ (p24_azim_zero_affGe h2 ?_)
+    exact le_antisymm (haz21 ▸ hz.2) (azim_nonneg u0 u1 v2 z)
+
+/-- NEEDS (OXLZLEZ3.hl 的 `FCHKUGT`/`EWYBJUA` 叶胞链纯方位角残件；
+PA18:2159/:2532 有同名 `ported sorry` 孪生): capstone 退化支排除的数学
+核心——capstone 假设组下 `azim u0 u1 v1 v2 ≠ 0`。HL OXLZLEZ3:826 的叶胞
+实例 `REUHADY` 以 `leaf V [u0;u1;vi]` + `~(v1 = v2)` 为前提，经
+`AZIM_EQ_0_GE_ALT2`（azim = 0 ⇒ v1 ∈ aff_gt {u0,u1} {v2}，本文件已有
+`azim_eq_zero_iff` 路线）给出 `cc_A0 [u0;u1;v1] = cc_A0 [u0;u1;v2]`，再由
+`FCHKUGT`（cc_A0 沿茎单叶注入 ⇒ v1 = v2，矛盾）收口；本文件情形无 leaf
+前提，须经 mcell 析取假设 + 饱和填充下短棱处三维胞的存在性/正二面角排除
+（azim = 0 时两闭楔塌进平坦半平面，见 `p24_wedgeGe_flat_subset`）。非平坦
+性事实是新工作，非搬运。 -/
+private theorem p24_REUHADY_nondeg_azim (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
+    (v1 v2 : V3) (e : Set V3) (hs : saturated V) (hp : Packing V)
+    (hdist : dist u0 u1 < Real.sqrt 8) (he : e = {u0, u1})
+    (hhl1 : hl vl1 < Real.sqrt 2) (hhl2 : hl vl2 < Real.sqrt 2)
+    (hbar1 : barV V 2 vl1) (hbar2 : barV V 2 vl2)
+    (htr1 : setOfList (truncateSimplex 1 vl1) = e)
+    (htr2 : setOfList (truncateSimplex 1 vl2) = e)
+    (hv1 : v1 = elV vl1 2) (hv2 : v2 = elV vl2 2)
+    (heX : ∀ X : Set V3, X ∈ mcellSet V ∧ e ∈ edgeX V X →
+      X ⊆ wedgeGe u0 u1 v1 v2 ∨ X ⊆ wedgeGe u0 u1 v2 v1) :
+    azim u0 u1 v1 v2 ≠ 0 := by
+  -- NEEDS: 上述 FCHKUGT/EWYBJUA 方位角排除（新工作，见 docstring）；
+  -- 其余 glue 全部落盘：本件 + `azim_self` 使下方 `p24_REUHADY_nondeg`
+  -- 真证收口（除本残件外）。
+  sorry
+
+/-- capstone 退化支排除（2026-10-08 波拆分）：`vl1 ≠ vl2` 已真证——
+`vl1 = vl2` 强制 `v1 = v2`（`hv1`/`hv2`），而 `azim u0 u1 v1 v1 = 0`
+（`azim_self`），与残件 `p24_REUHADY_nondeg_azim` 相抵；本件的唯一残余
+缺口即方位角排除一件。PA18:2159/:2532 的 `FCHKUGT`/`EWYBJUA` 同名孪生
+仍为 `ported sorry`。 -/
 private theorem p24_REUHADY_nondeg (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
     (v1 v2 : V3) (e : Set V3) (hs : saturated V) (hp : Packing V)
     (hdist : dist u0 u1 < Real.sqrt 8) (he : e = {u0, u1})
@@ -1754,10 +2022,12 @@ private theorem p24_REUHADY_nondeg (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
     (heX : ∀ X : Set V3, X ∈ mcellSet V ∧ e ∈ edgeX V X →
       X ⊆ wedgeGe u0 u1 v1 v2 ∨ X ⊆ wedgeGe u0 u1 v2 v1) :
     azim u0 u1 v1 v2 ≠ 0 ∧ vl1 ≠ vl2 := by
-  -- NEEDS: OXLZLEZ3.hl FCHKUGT/EWYBJUA 叶胞链（退化支排除：azim = 0 时
-  -- 闭楔退化为平坦半平面，mcell 析取假设与短棱处三维胞矛盾）；PA18:2159/:2532
-  -- 有 `ported sorry` 孪生，真证落地后本文件两枚 capstone 即闭合。
-  sorry
+  have haz := p24_REUHADY_nondeg_azim V u0 u1 vl1 vl2 v1 v2 e hs hp hdist he
+    hhl1 hhl2 hbar1 hbar2 htr1 htr2 hv1 hv2 heX
+  refine ⟨haz, fun hcon => ?_⟩
+  have hvv : v2 = v1 := by rw [hv2, hv1, hcon]
+  rw [hvv] at haz
+  exact haz (azim_self u0 u1 v1)
 
 /-! ## Capstones: the pack_concl REUHADY conclusions -/
 
@@ -1775,12 +2045,15 @@ synthesized genuinely in this file:
   • the closed-wedge-intersection hypothesis of `REUHADY1` —
     `WEDGE_GE_ALMOST_DISJOINT_p24` (genuine, this file; PA18:906 twin is
     still a `ported sorry`);
-  • `azim u0 u1 v1 v2 ≠ 0` + `vl1 ≠ vl2` — `p24_REUHADY_nondeg` NEEDS
-    shim (OXLZLEZ3 `FCHKUGT`/`EWYBJUA` leaf-cell chain; note this
+  • `azim u0 u1 v1 v2 ≠ 0` + `vl1 ≠ vl2` — `p24_REUHADY_nondeg`
+    (2026-10-08 split: `vl1 ≠ vl2` is GENUINE via `azim_self`; the
+    residual is the pure azimuth exclusion `p24_REUHADY_nondeg_azim`,
+    the OXLZLEZ3 `FCHKUGT`/`EWYBJUA` leaf-cell chain; note this
     statement's `azim ≠ 0` hypothesis is about FREE points `w1 w2`, so it
     yields `u0 ≠ u1` only).
-REMAINING `sorryAx` inputs: `REUHADY1` (giant) + `p24_REUHADY_nondeg`
-(shim). When both land, this capstone closes with zero further edits. -/
+REMAINING `sorryAx` inputs: `REUHADY1` (giant) +
+`p24_REUHADY_nondeg_azim`. When both land, this capstone closes with zero
+further edits. -/
 theorem REUHADY_p24 : ∀ (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3) (v1 v2 : V3)
     (e : Set V3) (w1 w2 : V3), saturated V → Packing V → dist u0 u1 < Real.sqrt 8 →
     e = {u0, u1} → ¬(azim u0 u1 w1 w2 = 0) →
@@ -1823,13 +2096,15 @@ intersection hypothesis is PRESENT here and passed to `REUHADY1`
 verbatim; `u0,u1 ∈ V`, `u0 ≠ u1`, `hl [u0,u1] < sqrt 2` are synthesized
 genuinely (`p24_REUHADY_extract` / `p24_hl_pair_lt_sqrt2`; `u0 ≠ u1` via
 the shim's `azim ≠ 0` + `azim_eq_zero_of_collinearY`), and `azim ≠ 0` /
-`vl1 ≠ vl2` come from the `p24_REUHADY_nondeg` NEEDS shim (the `azim ≠ 0`
+`vl1 ≠ vl2` come from `p24_REUHADY_nondeg` (2026-10-08 split: `vl1 ≠ vl2`
+genuine via `azim_self`; the `azim ≠ 0` residual `p24_REUHADY_nondeg_azim`
 is NOT derivable from the visible hypotheses: at `azim = 0` the
 wedge-intersection hypothesis degenerates to a trivial half-plane
 inclusion — the exclusion is the OXLZLEZ3 `FCHKUGT`/`EWYBJUA`
-leaf-cell chain).
-REMAINING `sorryAx` inputs: `REUHADY1` (giant) + `p24_REUHADY_nondeg`
-(shim). When both land, this capstone closes with zero further edits. -/
+leaf-cell chain, see `p24_wedgeGe_flat_subset` for the flat degeneration).
+REMAINING `sorryAx` inputs: `REUHADY1` (giant) +
+`p24_REUHADY_nondeg_azim`. When both land, this capstone closes with zero
+further edits. -/
 theorem REUHADY_version2_p24 : ∀ (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
     (v1 v2 : V3) (e : Set V3), saturated V → Packing V → dist u0 u1 < Real.sqrt 8 →
     e = {u0, u1} →
