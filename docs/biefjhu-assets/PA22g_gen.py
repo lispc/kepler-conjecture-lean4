@@ -46,7 +46,7 @@ private theorem p22_bjf_sq_sub_pos {x : ℝ} (hx : x < 1) (hx0 : 0 ≤ x) :
   rcases lt_or_eq_of_le hx0 with hpos | h0eq
   · have hsq : x ^ 2 < x := by
       have e : x ^ 2 = x * x := by ring
-      rw [e]; exact mul_lt_mul_of_pos_right hx hpos
+      rw [e]; linarith [mul_lt_mul_of_pos_right hx hpos]
     linarith
   · subst h0eq; norm_num
 
@@ -184,48 +184,30 @@ private theorem p22_bjf_chord {a b : ℝ} (ha : 1 ≤ a) (hab : a ≤ b) (hb : b
     have hW2 : (Real.sqrt (1 - (a / 2) ^ 2) - Real.sqrt (1 - (b / 2) ^ 2)) / 2
         = ((b:ℝ) ^ 2 - a ^ 2) / (8 * (Real.sqrt (1 - (a / 2) ^ 2)
           + Real.sqrt (1 - (b / 2) ^ 2))) := by
-      rw [hWsub, eq_div_iff (by exact ne_of_gt hpos)]
+      have hSne : (8:ℝ) * (Real.sqrt (1 - (a / 2) ^ 2)
+          + Real.sqrt (1 - (b / 2) ^ 2)) ≠ 0 := by positivity
+      rw [hWsub]
+      field_simp
       ring
     have e1 : (b:ℝ) ^ 2 - a ^ 2 = (b - a) * (a + b) := by ring
-    have hstep1 : (b - a) * (8 * (Real.sqrt (1 - (a / 2) ^ 2)
-        + Real.sqrt (1 - (b / 2) ^ 2))) ≤ (b - a) * (8 * Real.sqrt 3) :=
-      mul_le_mul_of_nonneg_left (by linarith) hab0
-    have h4ab : (8:ℝ) ≤ (a + b) * 4 := by linarith
-    rw [hW2, ge_iff_le, div_le_iff₀ (by linarith [hpos])]
-    rw [div_mul_eq_mul_div, eq_div_iff (by exact ne_of_gt (by
-      exact lt_of_le_of_lt (by norm_num : (0:ℝ) ≤ 4) (le_of_lt hs3p)))]
     have h2le : (2:ℝ) ≤ a + b := by linarith
-    have hprod' : (2:ℝ) * (Real.sqrt (1 - (a / 2) ^ 2)
-        + Real.sqrt (1 - (b / 2) ^ 2)) ≤ Real.sqrt 3 * (a + b) := by
-      refine mul_le_mul_of_nonneg_right (by linarith [hsum]) (by nlinarith)
-    calc ((b:ℝ) ^ 2 - a ^ 2) * (4 * Real.sqrt 3)
-        = (b - a) * ((a + b) * (4 * Real.sqrt 3)) := by rw [e1]; ring
-      _ ≤ (b - a) * (8 * (Real.sqrt (1 - (a / 2) ^ 2)
-            + Real.sqrt (1 - (b / 2) ^ 2))) := by
-          refine mul_le_mul_of_nonneg_left ?_ hab0
-          linarith [hprod', h2le]
-    have hc : (0:ℝ) < (8 * (Real.sqrt (1 - (a / 2) ^ 2)
-        + Real.sqrt (1 - (b / 2) ^ 2))) * (4 * Real.sqrt 3) := by positivity
-    have hx : ((b:ℝ) ^ 2 - a ^ 2) / (8 * (Real.sqrt (1 - (a / 2) ^ 2)
-        + Real.sqrt (1 - (b / 2) ^ 2)))
-        = ((b:ℝ) ^ 2 - a ^ 2) * (4 * Real.sqrt 3)
-          / ((8 * (Real.sqrt (1 - (a / 2) ^ 2) + Real.sqrt (1 - (b / 2) ^ 2)))
-            * (4 * Real.sqrt 3)) := by ring
-    have hy : (b - a) / (4 * Real.sqrt 3)
-        = (b - a) * (8 * (Real.sqrt (1 - (a / 2) ^ 2) + Real.sqrt (1 - (b / 2) ^ 2)))
-          / ((8 * (Real.sqrt (1 - (a / 2) ^ 2) + Real.sqrt (1 - (b / 2) ^ 2)))
-            * (4 * Real.sqrt 3)) := by ring
+    have h43 : (0:ℝ) < 4 * Real.sqrt 3 := by positivity
+    have h8S : (0:ℝ) < 8 * (Real.sqrt (1 - (a / 2) ^ 2)
+        + Real.sqrt (1 - (b / 2) ^ 2)) := by positivity
+    rw [ge_iff_le, hW2, le_div_iff₀ h8S, div_mul_eq_mul_div, div_le_iff₀ h43, e1,
+      mul_assoc]
+    refine mul_le_mul_of_nonneg_left ?_ hab0
+    have hp43 : (0:ℝ) ≤ 4 * Real.sqrt 3 := by positivity
+    nlinarith [hsum, h2le, hp43]
   -- conclude: (b-a)*√3/4 - W ≤ (b-a)/(2√3) ≤ (b-a)*2887/10000
   have hident : (b - a) * (sqrt3 / 4) - (b - a) / (4 * Real.sqrt 3)
       = (b - a) / (2 * Real.sqrt 3) := by
     have hs : sqrt3 = Real.sqrt 3 := rfl
-    rw [hs]
     have hsq : Real.sqrt 3 * Real.sqrt 3 = 3 := Real.mul_self_sqrt (by norm_num)
-    have h2p : (0:ℝ) < 2 * Real.sqrt 3 := by positivity
-    rw [eq_div_iff (by exact ne_of_gt h2p), sub_mul, div_mul_eq_mul_div, div_mul_eq_mul_div,
-      show Real.sqrt 3 * (2 * Real.sqrt 3) = 2 * (Real.sqrt 3 * Real.sqrt 3) from by ring,
-      hsq]
-    norm_num
+    rw [hs]
+    field_simp
+    rw [show Real.sqrt 3 ^ 2 = 3 from by rw [pow_two]; exact hsq]
+    ring
   have hrec : (1:ℝ) / (2 * Real.sqrt 3) ≤ 125 / 433 := by
     rw [div_le_iff₀ (by positivity : (0:ℝ) < 2 * Real.sqrt 3)]
     have h : (433:ℝ)/250 ≤ Real.sqrt 3 := p22_bjf_sqrt3_le
@@ -242,8 +224,7 @@ private theorem p22_bjf_chord {a b : ℝ} (ha : 1 ≤ a) (hab : a ≤ b) (hb : b
     have h5' : ((b:ℝ) - a) * (2887 / 10000) = ((b:ℝ) - a) * 2887 / 10000 := by ring
     have h4' : ((b:ℝ) - a) * (125 / 433) ≤ ((b:ℝ) - a) * (2887 / 10000) :=
       mul_le_mul_of_nonneg_left h2' hab0
-    rw [h5']
-    exact le_trans h3' h4'
+    linarith [h3', h4', h5']
   have hstep : ((b:ℝ) - a) * (sqrt3 / 4) - (Real.sqrt (1 - (a / 2) ^ 2)
       - Real.sqrt (1 - (b / 2) ^ 2)) / 2
       ≤ ((b:ℝ) - a) * (1 / (2 * Real.sqrt 3)) := by linarith [hWge, h1, h3]
@@ -259,12 +240,13 @@ private theorem p22_bjf_chord_b {a b r kappa : ℝ} (ha1 : 1 ≤ a) (hab : a ≤
     (hb0 : b ≤ h0) (hr : Real.sqrt (1 - (a / 2) ^ 2) ≤ r) (hr0 : 0 < r)
     (hcle : sqrt3 / 4 - a / (8 * r) ≤ kappa) :
     p22_bjf_T b - p22_bjf_T a ≤ (b - a) * kappa := by
+  have h126 : (h0:ℝ) = 126 / 100 := by norm_num [h0]
+  have h2lt : (h0:ℝ) < 2 := by norm_num [h0]
   have ha0 : (0:ℝ) ≤ a := le_trans (by norm_num) ha1
   have hab0 : (0:ℝ) ≤ b - a := sub_nonneg.mpr hab
   have hTdiff := p22_bjf_Tdiff ha0 (le_trans ha0 hab)
   have hA0 : (0:ℝ) ≤ 1 - (a / 2) ^ 2 := by nlinarith
   have hB0 : (0:ℝ) ≤ 1 - (b / 2) ^ 2 := by nlinarith
-  have h2lt : (h0:ℝ) < 2 := by norm_num [h0]
   have hA0s : (0:ℝ) < 1 - (a / 2) ^ 2 :=
     p22_bjf_sq_sub_pos (by linarith : (a:ℝ) / 2 < 1) (by linarith : (0:ℝ) ≤ a / 2)
   have hB0s : (0:ℝ) < 1 - (b / 2) ^ 2 :=
@@ -287,7 +269,10 @@ private theorem p22_bjf_chord_b {a b r kappa : ℝ} (ha1 : 1 ≤ a) (hab : a ≤
     have hW2 : (Real.sqrt (1 - (a / 2) ^ 2) - Real.sqrt (1 - (b / 2) ^ 2)) / 2
         = ((b:ℝ) ^ 2 - a ^ 2) / (8 * (Real.sqrt (1 - (a / 2) ^ 2)
           + Real.sqrt (1 - (b / 2) ^ 2))) := by
-      rw [hWsub, eq_div_iff (by exact mul_ne_zero (by norm_num) (ne_of_gt hpos))]
+      have hSne : (8:ℝ) * (Real.sqrt (1 - (a / 2) ^ 2)
+          + Real.sqrt (1 - (b / 2) ^ 2)) ≠ 0 := by positivity
+      rw [hWsub]
+      field_simp
       ring
     have hstep1 : (b - a) * a * (8 * (Real.sqrt (1 - (a / 2) ^ 2)
         + Real.sqrt (1 - (b / 2) ^ 2))) ≤ (b - a) * a * (8 * (2 * r)) :=
@@ -304,26 +289,31 @@ private theorem p22_bjf_chord_b {a b r kappa : ℝ} (ha1 : 1 ≤ a) (hab : a ≤
         rw [e2, e3]
         have hbr : (a:ℝ) * r ≤ b * r := mul_le_mul_of_nonneg_right hab hr0'
         linarith
-      rw [mul_assoc]
+      rw [mul_assoc, mul_assoc]
       exact mul_le_mul_of_nonneg_left hcore hab0
-    rw [hW2, ge_iff_le, div_le_iff₀ (by linarith [hpos])]
-    rw [div_mul_eq_mul_div, eq_div_iff (by exact ne_of_gt (by
-      exact lt_of_le_of_lt (by norm_num : (0:ℝ) ≤ 8) (le_of_lt hr0)))]
-    have hab' : (a:ℝ) ≤ a + b := by linarith
-    have hge2 : ((b:ℝ) ^ 2 - a ^ 2) * (8 * r)
-        ≥ (b - a) * a * (8 * r) := by
-      have hpp : ((b:ℝ) ^ 2 - a ^ 2) = (b - a) * (a + b) := by rw [e1]; ring
-      rw [hpp]
-      refine mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_left (le_refl _)
-        (by linarith)) (by nlinarith)
-    exact le_of_lt (by
-      have h1 : (b - a) * a * (8 * r) ≤ ((b:ℝ) ^ 2 - a ^ 2) * (8 * r) := hge2
-      linarith)
+    have h8S : (0:ℝ) < 8 * (Real.sqrt (1 - (a / 2) ^ 2)
+        + Real.sqrt (1 - (b / 2) ^ 2)) := by positivity
+    have h8rp : (0:ℝ) < 8 * r := by positivity
+    have hcore : (a:ℝ) * (8 * (Real.sqrt (1 - (a / 2) ^ 2)
+        + Real.sqrt (1 - (b / 2) ^ 2))) ≤ (a + b) * (8 * r) := by
+      have hr0' : (0:ℝ) ≤ r := le_of_lt hr0
+      have hsum' : (a + b) * (8 * r) = (a:ℝ) * (8 * r) + (b:ℝ) * (8 * r) := by ring
+      rw [hsum']
+      have habr : (a:ℝ) * (8 * r) ≤ (b:ℝ) * (8 * r) :=
+        mul_le_mul_of_nonneg_right hab (by positivity)
+      have hS8 : (a:ℝ) * (8 * (Real.sqrt (1 - (a / 2) ^ 2)
+          + Real.sqrt (1 - (b / 2) ^ 2))) ≤ (a:ℝ) * (8 * (2 * r)) :=
+        mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_left hS (by norm_num)) ha0
+      have h16 : (a:ℝ) * (8 * (2 * r)) = (a:ℝ) * (8 * r) + (a:ℝ) * (8 * r) := by ring
+      linarith [hS8, h16, habr]
+    rw [ge_iff_le, hW2, le_div_iff₀ h8S, div_mul_eq_mul_div, div_le_iff₀ h8rp, e1,
+      mul_assoc, mul_assoc]
+    exact mul_le_mul_of_nonneg_left hcore hab0
   have h1 : p22_bjf_T b - p22_bjf_T a
-      ≤ (b - a) * (sqrt3 / 4) - (b - a) * (a / (8 * r)) := by
+      ≤ (b - a) * (sqrt3 / 4) - (b - a) * a / (8 * r) := by
     linarith [hTdiff, hWge]
-  have h2 : (b - a) * (sqrt3 / 4) - (b - a) * (a / (8 * r)) ≤ (b - a) * kappa := by
-    have e2 : (b - a) * (sqrt3 / 4) - (b - a) * (a / (8 * r))
+  have h2 : (b - a) * (sqrt3 / 4) - (b - a) * a / (8 * r) ≤ (b - a) * kappa := by
+    have e2 : (b - a) * (sqrt3 / 4) - (b - a) * a / (8 * r)
         = (b - a) * (sqrt3 / 4 - a / (8 * r)) := by ring
     rw [e2]
     exact mul_le_mul_of_nonneg_left hcle hab0
@@ -360,11 +350,15 @@ private theorem p22_bjf_asn_inc {x y : ℝ} (hx : 0 ≤ x) (hxy : x ≤ y) (hy1 
     rw [intervalIntegral.integral_eq_sub_of_hasDerivAt hderiv hcon.intervalIntegrable]
   have hcon2 : ContinuousOn (fun _ : ℝ => 1 / Real.sqrt (1 - y ^ 2)) (Set.uIcc x y) := by
     fun_prop
-  have hmono := intervalIntegral.integral_mono_on (by nlinarith) hcon.intervalIntegrable
-    hcon2.intervalIntegrable hle
+  have hi1 : IntervalIntegrable (fun t : ℝ => 1 / Real.sqrt (1 - t ^ 2))
+      MeasureTheory.volume x y := hcon.intervalIntegrable
+  have hi2 : IntervalIntegrable (fun _ : ℝ => 1 / Real.sqrt (1 - y ^ 2))
+      MeasureTheory.volume x y := hcon2.intervalIntegrable
+  have hmono := intervalIntegral.integral_mono_on (by nlinarith) hi1 hi2 hle
   have hconst : ∫ t in x..y, (1:ℝ) / Real.sqrt (1 - y ^ 2)
       = (y - x) / Real.sqrt (1 - y ^ 2) := by
-    rw [intervalIntegral.integral_const, intervalIntegral.integral_const, smul_eq_mul]
+    rw [intervalIntegral.integral_const, smul_eq_mul]
+    ring
   rw [hint, hconst] at hmono
   exact hmono
 
@@ -413,6 +407,7 @@ private theorem p22_bjf_incle {k : ℕ} {h x y sig tau phi S : ℝ}
       ≤ 2 * (k:ℝ) * ((y - x) / Real.sqrt (1 - y ^ 2)) :=
         mul_le_mul_of_nonneg_left hinc (by positivity)
     _ ≤ 2 * (k:ℝ) * (S * phi) := mul_le_mul_of_nonneg_left hstep (by positivity)
+    _ = 2 * (k:ℝ) * S * phi := by ring
 
 /-- quadratic majorant: `asn w ≤ w+w³/6+w⁵/10` for `w² ≤ 17/64`. -/
 private theorem p22_bjf_asn_quad {w : ℝ} (hw : 0 ≤ w) (hwu : w ^ 2 ≤ 17 / 64) :
@@ -432,7 +427,7 @@ private theorem p22_bjf_asn_quad {w : ℝ} (hw : 0 ≤ w) (hwu : w ^ 2 ≤ 17 / 
       have e : t ^ 4 = t ^ 2 * t ^ 2 := by ring
       rw [e]; exact mul_le_mul_of_nonneg_right hu hu0
     have hu3 : t ^ 6 ≤ (17:ℝ)/64 * t ^ 4 := by
-      have e : t ^ 6 = t ^ 4 * t ^ 2 := by ring
+      have e : t ^ 6 = t ^ 2 * t ^ 4 := by ring
       rw [e]; exact mul_le_mul_of_nonneg_right hu hu2p
     have hcert : 1 - 3 * t ^ 2 - t ^ 4 - t ^ 6 ≥ 0 := by linarith
     have hkey : (1 + (1:ℝ)/2 * t ^ 2 + (1:ℝ)/2 * t ^ 4) ^ 2 * (1 - t ^ 2) ≥ 1 := by
@@ -544,10 +539,10 @@ private theorem p22_bjf_asn_sept {w : ℝ} (hw : 0 ≤ w) (hwu : w ^ 2 ≤ 7 / 1
         * (1 - t ^ 2) ≥ 1 := by
       have hex : (1 + (1:ℝ)/2 * t ^ 2 + ((1:ℝ)/2 * t ^ 4 + (3:ℝ)/4 * t ^ 6)) ^ 2
           * (1 - t ^ 2)
-          = 1 + t ^ 2 * ((1:ℝ)/4 + 3 * t ^ 2 / 4 - t ^ 4 - t ^ 6 / 4 - 3 * t ^ 8 / 16
+          = 1 + t ^ 4 * ((1:ℝ)/4 + 3 * t ^ 2 / 4 - t ^ 4 - t ^ 6 / 4 - 3 * t ^ 8 / 16
             - 9 * t ^ 10 / 16) := by ring
       rw [hex]
-      exact le_add_of_nonneg_right (mul_nonneg hu0 hcert)
+      exact le_add_of_nonneg_right (mul_nonneg hp2 hcert)
     have hP : (0:ℝ) < 1 + (1:ℝ)/2 * t ^ 2 + ((1:ℝ)/2 * t ^ 4 + (3:ℝ)/4 * t ^ 6) := by
       nlinarith
     have hge : (0:ℝ) ≤ 1 + (1:ℝ)/2 * t ^ 2 + ((1:ℝ)/2 * t ^ 4 + (3:ℝ)/4 * t ^ 6) :=
@@ -803,8 +798,8 @@ private theorem p22_bjf_hTbound {h : ℝ} (hh1 : 1 ≤ h) (hh0 : h ≤ h0) :
 /-- Phi-window certificate for the tail (`k ≥ 12`): monotone reduction to the
 `k = 12` worst case + exact rational check. -/
 private theorem p22_bjf_tail_phi (k : ℕ) (hk : 12 ≤ k) :
-    (1 - ((235273 / 250000) * (31416 / 10000 / k)) ^ 2)
-      * (270126977 / 1000000000) ^ 2 ≥ (31416 / 10000 / k) ^ 2 := by
+    ((1:ℝ) - ((235273:ℝ) / 250000 * ((31416:ℝ) / 10000 / k)) ^ 2)
+      * ((270126977:ℝ) / 1000000000) ^ 2 ≥ ((31416:ℝ) / 10000 / k) ^ 2 := by
   have hk1 : ((k:ℝ)) ≥ 12 := by exact_mod_cast hk
   have hsp : (0:ℝ) ≤ (31416:ℝ)/10000/k :=
     div_nonneg (by norm_num) (le_of_lt (by exact_mod_cast lt_of_lt_of_le (by norm_num) hk))
@@ -820,44 +815,44 @@ private theorem p22_bjf_tail_phi (k : ℕ) (hk : 12 ≤ k) :
       - ((270126977:ℝ)/1000000000)^2 * (((235273:ℝ)/250000)*((31416:ℝ)/10000/12))^2
       ≥ ((31416:ℝ)/10000/12)^2 := by norm_num
   have hφp : (0:ℝ) ≤ ((270126977:ℝ)/1000000000) ^ 2 := by positivity
-  have hQ0 : (0:ℝ) ≤ 1 - ((235273:ℝ)/250000*(31416/10000/k))^2 := by nlinarith [hτ]
-  nlinarith [hs2, hτ, hkey, hφp, hQ0]
+  have hsub' : (1:ℝ) - ((235273:ℝ)/250000*(31416/10000/12))^2
+      ≤ (1:ℝ) - ((235273:ℝ)/250000*(31416/10000/k))^2 := by linarith [hτ]
+  have hstep := mul_le_mul_of_nonneg_right hsub' hφp
+  have hkey2 : (1 - ((235273:ℝ)/250000*(31416/10000/12))^2)
+      * ((270126977:ℝ)/1000000000) ^ 2 ≥ ((31416:ℝ)/10000/12)^2 := by
+    have he : ((270126977:ℝ)/1000000000)^2
+          - ((270126977:ℝ)/1000000000)^2 * (((235273:ℝ)/250000)*((31416:ℝ)/10000/12))^2
+        = (1 - ((235273:ℝ)/250000*(31416/10000/12))^2)
+          * ((270126977:ℝ)/1000000000) ^ 2 := by
+      ring
+    have hk := hkey
+    rw [he] at hk
+    exact hk
+  calc (1 - ((235273:ℝ)/250000*(31416/10000/k))^2)
+      * ((270126977:ℝ)/1000000000) ^ 2
+      ≥ (1 - ((235273:ℝ)/250000*(31416/10000/12))^2)
+        * ((270126977:ℝ)/1000000000) ^ 2 := by rw [ge_iff_le]; exact hstep
+    _ ≥ ((31416:ℝ)/10000/12)^2 := by rw [ge_iff_le]; exact hkey2
+    _ ≥ ((31416:ℝ)/10000/k)^2 := by rw [ge_iff_le]; exact hs2
 
-/-- tail slide-budget (k-cancellation): `0.26*2k*C*phi ≤ 0.26*2*C*(31416/10^4)
-= 0.4716 ≤ 2*pi - 5.777`. -/
+/-- tail slide-budget (k-cancellation): with the tail Phi `phi0*12/k` the
+budget is `0.26*24*C*phi0 = 0.4867 <= 2*pi - 5.777` (exact check). -/
 private theorem p22_bjf_tail_mono (k : ℕ) (hk : 12 ≤ k) :
-    ((26:ℝ)/100) * (2 * (k:ℝ) * (2887 / 10000) * (270126977 / 1000000000))
+    ((126:ℝ)/100 - 1) * (2 * (k:ℝ) * (2887 / 10000)
+        * ((270126977:ℝ)/1000000000 * 12 / (k:ℝ)))
       ≤ 2 * Real.pi - 5777 / 1000 := by
+  have hk0 : ((k:ℝ)) ≠ 0 := by positivity
+  have hcancel : ((126:ℝ)/100 - 1) * (2 * (k:ℝ) * (2887 / 10000)
+      * ((270126977:ℝ)/1000000000 * 12 / (k:ℝ)))
+      = ((126:ℝ)/100 - 1) * (24 * (2887 / 10000)
+        * ((270126977:ℝ)/1000000000)) := by
+    field_simp <;> norm_num
+  have hnum : ((126:ℝ)/100 - 1) * (24 * (2887 / 10000)
+      * ((270126977:ℝ)/1000000000)) ≤ 506 / 1000 := by norm_num
   have hπ : (2:ℝ) * Real.pi ≥ 6283 / 1000 := by
     have := Real.pi_gt_d4
     linarith
-  have hk1 : ((k:ℝ)) ≥ 12 := by exact_mod_cast hk
-  have hτc : (235273:ℝ) / 250000 * (31416 / 10000) ≤ 149 / 50 := by norm_num
-  have hτk : ((235273:ℝ)/250000*(31416/10000/k))^2
-      ≤ ((235273:ℝ)/250000*(31416/10000/12))^2 := by
-    have hsp : (0:ℝ) ≤ (235273:ℝ)/250000*(31416/10000/k) := by positivity
-    refine pow_le_pow_left₀ hsp ?_ 2
-    exact mul_le_mul_of_nonneg_left
-      (p22_div_le_div_real_left (by norm_num) (by norm_num) hk1) (by positivity)
-  have hQ0p : (0:ℝ) < 1 - ((235273:ℝ)/250000*(31416/10000/k))^2 := by nlinarith [hτk]
-  have hφk : (270126977:ℝ) / 1000000000
-      ≤ (31416:ℝ) / 10000 / k / Real.sqrt
-          (1 - ((235273:ℝ) / 250000 * (31416 / 10000 / k)) ^ 2) := by
-    refine (Real.le_sqrt (by norm_num) hQ0p).mpr ?_
-    rw [div_pow, div_pow, div_div_eq_mul_div, div_div_eq_mul_div]
-    rw [div_le_iff₀ (by positivity : (0:ℝ) < (k:ℝ)^2 * (k:ℝ)^2)]
-    nlinarith [hk1, hτc, hτk]
-  have hcancel : ((26:ℝ)/100) * (2 * (k:ℝ) * (2887 / 10000) * (270126977 / 1000000000))
-      ≤ (26:ℝ)/100 * ((2:ℝ) * (2887 / 10000) * (31416 / 10000)) := by
-    have h1 : ((2:ℝ) * k * (2887 / 10000)) * ((270126977:ℝ)/1000000000)
-        ≤ ((2:ℝ) * k * (2887 / 10000)) * ((31416:ℝ)/10000/k) := by
-      refine mul_le_mul_of_nonneg_right ?_ (by positivity)
-      linarith [hφk]
-    have h2 : ((2:ℝ) * (k:ℝ) * (2887 / 10000)) * ((31416:ℝ)/10000/(k:ℝ))
-        = (2:ℝ) * (2887 / 10000) * (31416 / 10000) := by field_simp
-    rw [h2] at h1
-    exact mul_le_mul_of_nonneg_left h1 (by norm_num)
-  linarith [hπ, hcancel]
+  linarith [hcancel, hnum, hπ]
 
 /-- single-piece slide route (`k ≥ 7`): case split `2k*C*phi ≤ LF`; the
 LF-dominated case telescopes to 0.506, the other uses the h0-budget `hmono`. -/
@@ -866,7 +861,8 @@ private theorem p22_bjf_route1 {k : ℕ} {h sig phi : ℝ} (hh1 : 1 ≤ h) (hh0 
     (hsin0 : 0 ≤ Real.sin (Real.pi / k)) (hsig : Real.sin (Real.pi / k) ≤ sig)
     (hTb : p22_bjf_T h ≤ 235273 / 250000) (hT0 : 0 ≤ p22_bjf_T h)
     (hQ1 : (235273:ℝ)/250000 * sig < 1)
-    (hphi : (1 - (235273 / 250000 * sig) ^ 2) * phi ^ 2 ≥ sig ^ 2) (hphi0 : 0 ≤ phi)
+    (hQ0p : 0 < 1 - (235273 / 250000 * sig) ^ 2)
+    (hphi : (1 - (235273 / 250000 * sig) ^ 2) * phi ^ 2 ≥ sig ^ 2) (hphiP : 0 < phi)
     (hmono : ((126:ℝ)/100 - 1) * (2 * k * (2887 / 10000) * phi) ≤ 2 * Real.pi - 5777 / 1000) :
     (0.591 - 0.0331 * k + 0.506 * lfun h)
       ≤ 2 * Real.pi - 2 * (k:ℝ) * asn (p22_bjf_T h * Real.sin (Real.pi / k)) := by
@@ -877,9 +873,9 @@ private theorem p22_bjf_route1 {k : ℕ} {h sig phi : ℝ} (hh1 : 1 ≤ h) (hh0 
     have h2 : (h0:ℝ) - 1 = 26 / 100 := by rw [h126]; norm_num
     rw [h1, h2, h126]
     field_simp
-    norm_num
+    ring
   have hv1 : 0 ≤ (sqrt3:ℝ)/2 * Real.sin (Real.pi/k) :=
-    mul_nonneg (le_trans (by norm_num) p22_bjf_sqrt3_le) hsin0
+    mul_nonneg (by unfold sqrt3; positivity) hsin0
   have hxy0 := p22_bjf_Tmono (a := 1) (b := h) (le_refl 1) hh1 hh0
   rw [p22_bjf_T1] at hxy0
   have hxy : (sqrt3:ℝ)/2 * Real.sin (Real.pi/k)
@@ -887,29 +883,30 @@ private theorem p22_bjf_route1 {k : ℕ} {h sig phi : ℝ} (hh1 : 1 ≤ h) (hh0 
     mul_le_mul_of_nonneg_right hxy0 hsin0
   have hy1 : p22_bjf_T h * Real.sin (Real.pi/k) < 1 := by
     have h1 : p22_bjf_T h * Real.sin (Real.pi/k) ≤ (235273:ℝ)/250000 * sig :=
-      mul_le_mul hTb hsig (by positivity) hT0
+      mul_le_mul hTb hsig hsin0 (by positivity)
     linarith
-  have hch1 := p22_bjf_chord hh1 (le_refl h) hh0
+  have hch1 := p22_bjf_chord (a := 1) (b := h) (le_refl 1) hh1 hh0
   have hS0 : (0:ℝ) ≤ (h - 1) * 2887 / 10000 := by
-    have h2 : (0:ℝ) ≤ h - 1 := sub_nonneg.mpr hh1
-    exact mul_nonneg h2 (by norm_num)
+    linarith [sub_nonneg.mpr hh1]
   have hsub1 : p22_bjf_T h * Real.sin (Real.pi / k)
       - (sqrt3:ℝ)/2 * Real.sin (Real.pi / k)
       ≤ ((h:ℝ) - 1) * 2887 / 10000 * sig := by
     have e0 : p22_bjf_T h * Real.sin (Real.pi / k)
         - (sqrt3:ℝ)/2 * Real.sin (Real.pi / k)
-        = (p22_bjf_T h - p22_bjf_T 1) * Real.sin (Real.pi / k) := by ring
-    have h1 : (0:ℝ) ≤ p22_bjf_T h - p22_bjf_T 1 := by linarith
+        = (p22_bjf_T h - p22_bjf_T 1) * Real.sin (Real.pi / k) := by
+      rw [p22_bjf_T1]; ring
+    rw [e0]
     calc (p22_bjf_T h - p22_bjf_T 1) * Real.sin (Real.pi / k)
         ≤ ((h:ℝ) - 1) * 2887 / 10000 * Real.sin (Real.pi / k) :=
-          mul_le_mul_of_nonneg_right (by linarith [hch1]) h1
-      _ ≤ ((h:ℝ) - 1) * 2887 / 10000 * sig :=
-          mul_le_mul_of_nonneg_left hsig (by linarith)
+          mul_le_mul_of_nonneg_right (by linarith [hch1]) hsin0
+      _ ≤ ((h:ℝ) - 1) * 2887 / 10000 * sig := by
+          refine mul_le_mul_of_nonneg_left hsig ?_
+          linarith [sub_nonneg.mpr hh1]
   have hinc := p22_bjf_incle (k := k) (h := h) (x := (sqrt3:ℝ)/2 * Real.sin (Real.pi/k))
     (y := p22_bjf_T h * Real.sin (Real.pi / k)) (sig := sig) (tau := 235273 / 250000)
     (phi := phi) (S := (h - 1) * 2887 / 10000)
     hv1 hxy rfl hT0 hy1 hTb (by norm_num) hsub1 hS0 hsin0 hsig
-    (by norm_num) (by norm_num) hphi
+    hphiP hQ0p hphi
   have hπ : (2:ℝ) * Real.pi ≥ 6283 / 1000 := by
     have := Real.pi_gt_d4
     linarith
@@ -920,7 +917,7 @@ private theorem p22_bjf_route1 {k : ℕ} {h sig phi : ℝ} (hh1 : 1 ≤ h) (hh0 
         + (2 * (k:ℝ) * (asn (p22_bjf_T h * Real.sin (Real.pi / k))
           - asn ((sqrt3 / 2) * Real.sin (Real.pi / k)))) := by ring
   rw [hlf]
-  rcases le_or_lt (2 * k * (2887 / 10000) * phi) (253 / 130) with hc | hc
+  rcases le_or_gt (2 * k * (2887 / 10000) * phi) (253 / 130) with hc | hc
   · have h5 : (h - 1) * (2 * k * (2887 / 10000) * phi) ≤ (h - 1) * (253 / 130) :=
       mul_le_mul_of_nonneg_left hc (by linarith)
     have e1 : ((h:ℝ) - 1) * (253 / 130) = (253 / 130) * h - 253 / 130 := by ring
@@ -929,7 +926,7 @@ private theorem p22_bjf_route1 {k : ℕ} {h sig phi : ℝ} (hh1 : 1 ≤ h) (hh0 
     have htot : (0.591:ℝ) - 0.0331 * k + (253 / 130) * (126 / 100 - h)
         + (2:ℝ) * k * asn (p22_bjf_T h * Real.sin (Real.pi / k)) ≤ 6283 / 1000 := by
       linarith [hsplit, hwin, hinc, eM, h5, e1, e2]
-    exact le_trans htot (by linarith)
+    linarith [htot, hπ]
   · have hLFM : (253:ℝ) / 130 * (126 / 100 - h)
         ≤ (126 / 100 - h) * (2 * k * (2887 / 10000) * phi) := by
       nlinarith [hc, hpos126]
@@ -940,8 +937,9 @@ private theorem p22_bjf_route1 {k : ℕ} {h sig phi : ℝ} (hh1 : 1 ≤ h) (hh0 
         + (2:ℝ) * k * asn (p22_bjf_T h * Real.sin (Real.pi / k))
         ≤ (2:ℝ) * Real.pi := by
       linarith [hsplit, hwin, hinc, eM, hLFM, e1, hmono, hπ]
-    exact htot
+    linarith [htot]
 
+set_option maxHeartbeats 800000 in
 /-- two-piece slide route (`k ∈ {3,4,5,6}`): split `[1,h0]` at `b`; piece 1 on
 the global chord with window `ta/phiA`, piece 2 on the `b`-chord with window
 `tb/phiB`; endpoint budgets `hX1/hX2`, total budgets `hB/hB506`. -/
@@ -949,11 +947,14 @@ private theorem p22_bjf_route2 {k : ℕ} {h b sig ta tb kappa phiA phiB A B : �
     (hh1 : 1 ≤ h) (hh0 : h ≤ h0) (hb1 : 1 ≤ b) (hbb : b ≤ h0)
     (hwin : (2:ℝ) * k * asn ((sqrt3/2) * Real.sin (Real.pi/k)) ≤ A)
     (hsin0 : 0 ≤ Real.sin (Real.pi / k)) (hsig : Real.sin (Real.pi / k) ≤ sig)
+    (htaP : (0:ℝ) ≤ ta) (htbP : (0:ℝ) ≤ tb)
     (hT0 : 0 ≤ p22_bjf_T h) (hT0b : 0 ≤ p22_bjf_T b)
     (hTa : ∀ x : ℝ, 1 ≤ x → x ≤ b → p22_bjf_T x ≤ ta) (hQa : ta * sig < 1)
-    (hphiA : (1 - (ta * sig) ^ 2) * phiA ^ 2 ≥ sig ^ 2) (hphiA0 : 0 ≤ phiA)
+    (hQaP : 0 < 1 - (ta * sig) ^ 2)
+    (hphiA : (1 - (ta * sig) ^ 2) * phiA ^ 2 ≥ sig ^ 2) (hphiAP : 0 < phiA)
     (hTb : ∀ x : ℝ, 1 ≤ x → x ≤ h0 → p22_bjf_T x ≤ tb) (hQb : tb * sig < 1)
-    (hphiB : (1 - (tb * sig) ^ 2) * phiB ^ 2 ≥ sig ^ 2) (hphiB0 : 0 ≤ phiB)
+    (hQbP : 0 < 1 - (tb * sig) ^ 2)
+    (hphiB : (1 - (tb * sig) ^ 2) * phiB ^ 2 ≥ sig ^ 2) (hphiBP : 0 < phiB)
     (hkappa0 : 0 ≤ kappa)
     (hchorda : ∀ x : ℝ, b ≤ x → x ≤ h0 → p22_bjf_T x - p22_bjf_T b ≤ (x - b) * kappa)
     (hX1 : (253:ℝ)/130*(126/100-b) + (b-1)*(2*k*(2887/10000)*phiA) ≤ B)
@@ -963,6 +964,9 @@ private theorem p22_bjf_route2 {k : ℕ} {h b sig ta tb kappa phiA phiB A B : �
     (0.591 - 0.0331 * k + 0.506 * lfun h)
       ≤ 2 * Real.pi - 2 * (k:ℝ) * asn (p22_bjf_T h * Real.sin (Real.pi / k)) := by
   have h126 : (h0:ℝ) = 126 / 100 := by norm_num [h0]
+  have hπ : (2:ℝ) * Real.pi ≥ 6283 / 1000 := by
+    have := Real.pi_gt_d4
+    linarith
   have hpos126 : (0:ℝ) ≤ 126 / 100 - h := by linarith [h126, hh0]
   have hposb : (0:ℝ) ≤ 126 / 100 - b := by linarith [h126, hbb]
   have hlf : (0.506:ℝ) * lfun h = (253 / 130) * (126 / 100 - h) := by
@@ -970,9 +974,9 @@ private theorem p22_bjf_route2 {k : ℕ} {h b sig ta tb kappa phiA phiB A B : �
     have h2 : (h0:ℝ) - 1 = 26 / 100 := by rw [h126]; norm_num
     rw [h1, h2, h126]
     field_simp
-    norm_num
+    ring
   have hv1 : 0 ≤ (sqrt3:ℝ)/2 * Real.sin (Real.pi/k) :=
-    mul_nonneg (le_trans (by norm_num) p22_bjf_sqrt3_le) hsin0
+    mul_nonneg (by unfold sqrt3; positivity) hsin0
   have hsplit : (2:ℝ) * k * asn (p22_bjf_T h * Real.sin (Real.pi / k))
       = 2 * k * asn ((sqrt3 / 2) * Real.sin (Real.pi / k))
         + (2 * (k:ℝ) * (asn (p22_bjf_T b * Real.sin (Real.pi / k))
@@ -980,9 +984,9 @@ private theorem p22_bjf_route2 {k : ℕ} {h b sig ta tb kappa phiA phiB A B : �
         + (2 * (k:ℝ) * (asn (p22_bjf_T h * Real.sin (Real.pi / k))
           - asn (p22_bjf_T b * Real.sin (Real.pi / k)))) := by ring
   rw [hlf]
-  rcases le_or_lt h b with hcase | hcase
+  rcases le_or_gt h b with hcase | hcase
   · -- piece 1: h ∈ [1, b]
-    have hTa' : p22_bjf_T h ≤ ta := hTa h hh1 (le_of_lt hcase)
+    have hTa' : p22_bjf_T h ≤ ta := hTa h hh1 hcase
     have hxy0 := p22_bjf_Tmono (a := 1) (b := h) (le_refl 1) hh1 hh0
     rw [p22_bjf_T1] at hxy0
     have hxy : (sqrt3:ℝ)/2 * Real.sin (Real.pi/k)
@@ -990,51 +994,52 @@ private theorem p22_bjf_route2 {k : ℕ} {h b sig ta tb kappa phiA phiB A B : �
       mul_le_mul_of_nonneg_right hxy0 hsin0
     have hy1 : p22_bjf_T h * Real.sin (Real.pi/k) < 1 := by
       have h1 : p22_bjf_T h * Real.sin (Real.pi/k) ≤ ta * sig :=
-        mul_le_mul hTa' hsig (by positivity) hT0
+        mul_le_mul hTa' hsig hsin0 htaP
       linarith
-    have hch1 := p22_bjf_chord hh1 (le_refl h) hh0
+    have hch1 := p22_bjf_chord (a := 1) (b := h) (le_refl 1) hh1 hh0
     have hS0 : (0:ℝ) ≤ (h - 1) * 2887 / 10000 := by
-      have h2 : (0:ℝ) ≤ h - 1 := sub_nonneg.mpr hh1
-      exact mul_nonneg h2 (by norm_num)
+      linarith [sub_nonneg.mpr hh1]
     have hsub1 : p22_bjf_T h * Real.sin (Real.pi / k)
         - (sqrt3:ℝ)/2 * Real.sin (Real.pi / k)
         ≤ ((h:ℝ) - 1) * 2887 / 10000 * sig := by
       have e0 : p22_bjf_T h * Real.sin (Real.pi / k)
           - (sqrt3:ℝ)/2 * Real.sin (Real.pi / k)
-          = (p22_bjf_T h - p22_bjf_T 1) * Real.sin (Real.pi / k) := by ring
-      have h1 : (0:ℝ) ≤ p22_bjf_T h - p22_bjf_T 1 := by linarith
+          = (p22_bjf_T h - p22_bjf_T 1) * Real.sin (Real.pi / k) := by
+        rw [p22_bjf_T1]; ring
+      rw [e0]
       calc (p22_bjf_T h - p22_bjf_T 1) * Real.sin (Real.pi / k)
           ≤ ((h:ℝ) - 1) * 2887 / 10000 * Real.sin (Real.pi / k) :=
-            mul_le_mul_of_nonneg_right (by linarith [hch1]) h1
-        _ ≤ ((h:ℝ) - 1) * 2887 / 10000 * sig :=
-            mul_le_mul_of_nonneg_left hsig (mul_nonneg (by linarith) (by norm_num))
+            mul_le_mul_of_nonneg_right (by linarith [hch1]) hsin0
+        _ ≤ ((h:ℝ) - 1) * 2887 / 10000 * sig := by
+            refine mul_le_mul_of_nonneg_left hsig ?_
+            linarith [sub_nonneg.mpr hh1]
     have hinc := p22_bjf_incle (k := k) (h := h)
       (x := (sqrt3:ℝ)/2 * Real.sin (Real.pi/k))
       (y := p22_bjf_T h * Real.sin (Real.pi / k)) (sig := sig) (tau := ta)
       (phi := phiA) (S := (h - 1) * 2887 / 10000)
-      hv1 hxy rfl hT0 hy1 hTa' (by norm_num) hsub1 hS0 hsin0 hsig
-      (by norm_num) (by norm_num) hphiA
+      hv1 hxy rfl hT0 hy1 hTa' htaP hsub1 hS0 hsin0 hsig
+      hphiAP hQaP hphiA
     have eM : (2:ℝ) * (k:ℝ) * ((h - 1) * 2887 / 10000) * phiA
         = (h - 1) * (2 * k * (2887 / 10000) * phiA) := by ring
-    rcases le_or_lt (2 * k * (2887 / 10000) * phiA) (253 / 130) with hcm | hcm
+    rcases le_or_gt (2 * k * (2887 / 10000) * phiA) (253 / 130) with hcm | hcm
     · have hL1 : (253:ℝ)/130*(126/100-h) ≤ ((126:ℝ)/100-h)*(253/130) := by
         nlinarith [hpos126]
       have hL2 : (h - 1) * (2 * k * (2887 / 10000) * phiA) ≤ (h - 1) * (253 / 130) :=
         mul_le_mul_of_nonneg_left hcm (by linarith)
       have e2 : ((126:ℝ)/100-h)*(253/130) + ((h:ℝ)-1)*(253/130)
           = ((126:ℝ)/100-1)*(253/130) := by ring
-      have h506 : ((126:ℝ)/100-1)*(253/130) = 506/1000 := by rw [h126]; norm_num
+      have h506 : ((126:ℝ)/100-1)*(253/130) = 506/1000 := by norm_num
       have htot : (0.591:ℝ) - 0.0331 * k + (253 / 130) * (126 / 100 - h)
           + (2:ℝ) * k * asn (p22_bjf_T h * Real.sin (Real.pi / k)) ≤ 6283 / 1000 := by
         linarith [hsplit, hwin, hinc, eM, hL1, hL2, e2, h506, hB506]
-      exact htot
+      linarith [htot, hπ]
     · have hL2 : (h - 1) * (2 * k * (2887 / 10000) * phiA)
         ≤ (b - 1) * (2 * k * (2887 / 10000) * phiA) :=
         mul_le_mul_of_nonneg_right (by linarith) (by linarith)
       have htot : (0.591:ℝ) - 0.0331 * k + (253 / 130) * (126 / 100 - h)
           + (2:ℝ) * k * asn (p22_bjf_T h * Real.sin (Real.pi / k)) ≤ 6283 / 1000 := by
-        linarith [hsplit, hwin, hinc, eM, hL2, hX1, hB]
-      exact htot
+        nlinarith [hsplit, hwin, hinc, eM, hL2, hcm, hcase, hX1, hB]
+      linarith [htot, hπ]
   · -- piece 2: h ∈ [b, h0]
     have hbh : (b:ℝ) ≤ h := le_of_lt hcase
     have hTmono' : p22_bjf_T b ≤ p22_bjf_T h := p22_bjf_Tmono hb1 hbh hh0
@@ -1048,30 +1053,31 @@ private theorem p22_bjf_route2 {k : ℕ} {h b sig ta tb kappa phiA phiB A B : �
       mul_le_mul_of_nonneg_right hTmono' hsin0
     have hTb' : p22_bjf_T b ≤ ta := hTa b hb1 (le_refl _)
     have hTh' : p22_bjf_T h ≤ tb := hTb h hh1 hh0
-    have hchorda'' := p22_bjf_chord hb1 (le_refl b) hbb
+    have hchorda'' := p22_bjf_chord (a := 1) (b := b) (le_refl 1) hb1 hbb
     have hya : p22_bjf_T b * Real.sin (Real.pi/k) < 1 := by
       have h1 : p22_bjf_T b * Real.sin (Real.pi/k) ≤ ta * sig :=
-        mul_le_mul hTb' hsig (by positivity) hT0b
+        mul_le_mul hTb' hsig hsin0 htaP
       linarith
     have hyb : p22_bjf_T h * Real.sin (Real.pi/k) < 1 := by
       have h1 : p22_bjf_T h * Real.sin (Real.pi/k) ≤ tb * sig :=
-        mul_le_mul hTh' hsig (by positivity) hT0
+        mul_le_mul hTh' hsig hsin0 htbP
       linarith
     have hS0b : (0:ℝ) ≤ (b - 1) * 2887 / 10000 := by
-      have h2 : (0:ℝ) ≤ b - 1 := sub_nonneg.mpr hb1
-      exact mul_nonneg h2 (by norm_num)
+      linarith [sub_nonneg.mpr hb1]
     have hsub1b : p22_bjf_T b * Real.sin (Real.pi / k)
         - (sqrt3:ℝ)/2 * Real.sin (Real.pi / k)
         ≤ ((b:ℝ) - 1) * 2887 / 10000 * sig := by
       have e0 : p22_bjf_T b * Real.sin (Real.pi / k)
           - (sqrt3:ℝ)/2 * Real.sin (Real.pi / k)
-          = (p22_bjf_T b - p22_bjf_T 1) * Real.sin (Real.pi / k) := by ring
-      have h1 : (0:ℝ) ≤ p22_bjf_T b - p22_bjf_T 1 := by linarith
+          = (p22_bjf_T b - p22_bjf_T 1) * Real.sin (Real.pi / k) := by
+        rw [p22_bjf_T1]; ring
+      rw [e0]
       calc (p22_bjf_T b - p22_bjf_T 1) * Real.sin (Real.pi / k)
           ≤ ((b:ℝ) - 1) * 2887 / 10000 * Real.sin (Real.pi / k) :=
-            mul_le_mul_of_nonneg_right (by linarith [hchorda'']) h1
-        _ ≤ ((b:ℝ) - 1) * 2887 / 10000 * sig :=
-            mul_le_mul_of_nonneg_left hsig (mul_nonneg (by linarith) (by norm_num))
+            mul_le_mul_of_nonneg_right (by linarith [hchorda'']) hsin0
+        _ ≤ ((b:ℝ) - 1) * 2887 / 10000 * sig := by
+            refine mul_le_mul_of_nonneg_left hsig ?_
+            linarith [sub_nonneg.mpr hb1]
     have hS2 : (0:ℝ) ≤ (h - b) * kappa :=
       mul_nonneg (by linarith) hkappa0
     have hsub2 : p22_bjf_T h * Real.sin (Real.pi / k)
@@ -1083,35 +1089,38 @@ private theorem p22_bjf_route2 {k : ℕ} {h b sig ta tb kappa phiA phiB A B : �
       have h1 : (0:ℝ) ≤ p22_bjf_T h - p22_bjf_T b := by linarith
       calc (p22_bjf_T h - p22_bjf_T b) * Real.sin (Real.pi / k)
           ≤ ((h:ℝ) - b) * kappa * Real.sin (Real.pi / k) :=
-            mul_le_mul_of_nonneg_right (hchorda h hbh hh0) h1
+            mul_le_mul_of_nonneg_right (hchorda h hbh hh0) hsin0
         _ ≤ ((h:ℝ) - b) * kappa * sig :=
             mul_le_mul_of_nonneg_left hsig (mul_nonneg (by linarith) hkappa0)
     have hinc1 := p22_bjf_incle (k := k) (h := b)
       (x := (sqrt3:ℝ)/2 * Real.sin (Real.pi/k))
       (y := p22_bjf_T b * Real.sin (Real.pi / k)) (sig := sig) (tau := ta)
       (phi := phiA) (S := (b - 1) * 2887 / 10000)
-      hv1 hxya rfl hT0b hya hTb' (by norm_num) hsub1b hS0b hsin0 hsig
-      (by norm_num) (by norm_num) hphiA
+      hv1 hxya rfl hT0b hya hTb' htaP hsub1b hS0b hsin0 hsig
+      hphiAP hQaP hphiA
     have hinc2 := p22_bjf_incle (k := k) (h := h)
       (x := p22_bjf_T b * Real.sin (Real.pi / k))
       (y := p22_bjf_T h * Real.sin (Real.pi / k)) (sig := sig) (tau := tb)
       (phi := phiB) (S := (h - b) * kappa)
-      (by linarith) hxyb rfl hT0 hyb hTh' (by norm_num) hsub2 hS2
-      hsin0 hsig (by norm_num) (by norm_num) (by norm_num) hphiB
+      (by linarith) hxyb rfl hT0 hyb hTh' htbP hsub2 hS2
+      hsin0 hsig hphiBP hQbP hphiB
     have eMb : (2:ℝ) * (k:ℝ) * ((b - 1) * 2887 / 10000) * phiA
         = (b - 1) * (2 * k * (2887 / 10000) * phiA) := by ring
-    rcases le_or_lt (2 * k * kappa * phiB) (253 / 130) with hc2 | hc2
-    · have hL1 : (253:ℝ)/130*(126/100-h) ≤ ((126:ℝ)/100-h)*(2*k*kappa*phiB) := by
-        nlinarith [hc2, hpos126]
-      have e3 : ((126:ℝ)/100-h)*(2*k*kappa*phiB) + ((h:ℝ)-b)*(2*k*kappa*phiB)
-          = ((126:ℝ)/100-b)*(2*k*kappa*phiB) := by ring
+    rcases le_or_gt (2 * k * kappa * phiB) (253 / 130) with hc2 | hc2
+    · have hL1 : (253:ℝ)/130*(126/100-h) + ((h:ℝ)-b)*(2*k*kappa*phiB)
+        ≤ (253:ℝ)/130*(126/100-b) := by
+        have hw2 : ((h:ℝ)-b)*(2*k*kappa*phiB) ≤ ((h:ℝ)-b)*(253/130) :=
+          mul_le_mul_of_nonneg_left hc2 (by linarith [hbh])
+        have e : (253:ℝ)/130*(126/100-h) + ((h:ℝ)-b)*(253/130)
+            = (253:ℝ)/130*(126/100-b) := by ring
+        linarith
       have h1 : (2:ℝ) * k * asn (p22_bjf_T b * Real.sin (Real.pi / k))
           - 2 * k * asn ((sqrt3:ℝ)/2 * Real.sin (Real.pi/k))
           ≤ (b - 1) * (2 * k * (2887 / 10000) * phiA) := by linarith [hinc1, eMb]
       have htot : (0.591:ℝ) - 0.0331 * k + (253 / 130) * (126 / 100 - h)
           + (2:ℝ) * k * asn (p22_bjf_T h * Real.sin (Real.pi / k)) ≤ 6283 / 1000 := by
-        linarith [hsplit, hwin, hinc2, h1, hL1, e3, hX1, hB]
-      exact htot
+        linarith [hsplit, hwin, hinc2, h1, hL1, hX1, hB]
+      linarith [htot, hπ]
     · have hL1 : (253:ℝ)/130*(126/100-h) ≤ ((126:ℝ)/100-h)*(2*k*kappa*phiB) := by
         nlinarith [hc2, hpos126]
       have h1 : (2:ℝ) * k * asn (p22_bjf_T b * Real.sin (Real.pi / k))
@@ -1120,7 +1129,7 @@ private theorem p22_bjf_route2 {k : ℕ} {h b sig ta tb kappa phiA phiB A B : �
       have htot : (0.591:ℝ) - 0.0331 * k + (253 / 130) * (126 / 100 - h)
           + (2:ℝ) * k * asn (p22_bjf_T h * Real.sin (Real.pi / k)) ≤ 6283 / 1000 := by
         linarith [hsplit, hwin, hinc2, h1, hL1, hX2, hB]
-      exact htot
+      linarith [htot, hπ]
 '''
 
 print("REST written (route2 piece2 to be completed)")
@@ -1266,15 +1275,12 @@ private theorem p22_bjf_w{n} :
     calc (sqrt3:ℝ)/2*Real.sin (Real.pi/{n})
         ≤ (sqrt3:ℝ)/2*((31416:ℝ)/10000/{n}) := mul_le_mul_of_nonneg_left hB hsqrt0
       _ ≤ (8661:ℝ)/10000*((31416:ℝ)/10000/{n}) := hB2
-  have hgd : (0:ℝ) ≤ (8661:ℝ)/10000*((31416:ℝ)/10000/{n}) := by positivity
-  have hk1 : (({n}:ℝ)) ≥ 5 := by norm_num
   have hwu : ((sqrt3:ℝ)/2*Real.sin (Real.pi/{n}))^2 ≤ 17/64 := by
     have h1 : ((sqrt3:ℝ)/2*Real.sin (Real.pi/{n}))^2
-        ≤ ((8661:ℝ)/10000*((31416:ℝ)/10000/{n}))^2 := pow_le_pow_left₀ hw0 h2l 2
-    have h2 : ((8661:ℝ)/10000*((31416:ℝ)/10000/{n}))^2
-        ≤ ((8661:ℝ)/10000*((31416:ℝ)/10000/5))^2 :=
-      pow_le_pow_left₀ hgd (p22_div_le_div_real_left (by positivity) (by norm_num) hk1) 2
-    have h3' : ((8661:ℝ)/10000*((31416:ℝ)/10000/5))^2 ≤ 17/64 := by norm_num
+        ≤ ((8661:ℝ)/10000*((31416:ℝ)/10000/{n} - (((31415:ℝ)/10000/{n}) ^ 3) / 6
+          + (((31416:ℝ)/10000/{n}) ^ 5) / 120))^2 := pow_le_pow_left₀ hw0 hv 2
+    have h3' : ((8661:ℝ)/10000*((31416:ℝ)/10000/{n} - (((31415:ℝ)/10000/{n}) ^ 3) / 6
+          + (((31416:ℝ)/10000/{n}) ^ 5) / 120))^2 ≤ 17/64 := by norm_num
     linarith
   have hle := p22_bjf_asn_quad hw0 hwu
   have h3 : ((sqrt3:ℝ)/2*Real.sin (Real.pi/{n}))^3
@@ -1298,100 +1304,107 @@ private theorem p22_bjf_wtail {k : ℕ} (hk : 12 ≤ k) :
   have hw0 : (0:ℝ) ≤ (sqrt3:ℝ)/2*Real.sin (Real.pi/k) :=
     mul_nonneg hsqrt0 (p22_bjf_sinpos
       (by exact_mod_cast lt_of_lt_of_le (by norm_num) hk))
-  have hv : (sqrt3:ℝ)/2*Real.sin (Real.pi/k) ≤ (8661:ℝ)/10000*((31416:ℝ)/10000/k) := by
-    have hstep1 : (sqrt3:ℝ)/2*Real.sin (Real.pi/k)
-        ≤ (sqrt3:ℝ)/2*((31416:ℝ)/10000/k) :=
-      mul_le_mul_of_nonneg_left
-        (p22_div_le_div_nat_right (by exact_mod_cast lt_of_lt_of_le (by norm_num) hk)
-          (le_trans Real.sin_le_one (by norm_num) : (0:ℝ) < (31416:ℝ)/10000)
-          ) hsqrt0
-    have hstep2 : (sqrt3:ℝ)/2*((31416:ℝ)/10000/k)
-        ≤ (8661:ℝ)/10000*((31416:ℝ)/10000/k) :=
-      mul_le_mul_of_nonneg_right p22_bjf_sqrt3_half2 (by positivity)
-    exact le_trans hstep1 hstep2
+  have hk0 : ((k:ℝ)) ≠ 0 := by positivity
   have hk1 : ((k:ℝ)) ≥ 12 := by exact_mod_cast hk
   have hk2 : ((k:ℝ))^2 ≥ 144 := by nlinarith [hk1]
+  have hk4 : ((k:ℝ))^4 ≥ 20736 := by nlinarith [hk2]
+  have hsig : Real.sin (Real.pi/k) ≤ (31416:ℝ)/10000/k := by
+    have hslt : Real.sin (Real.pi / k) < Real.pi / (k:ℝ) := Real.sin_lt (by positivity)
+    have hpi : Real.pi / (k:ℝ) ≤ (31416:ℝ)/10000/k :=
+      p22_div_le_div_nat_right (by positivity) (by linarith [Real.pi_lt_d4])
+    linarith
   have hgd : (0:ℝ) ≤ (8661:ℝ)/10000*((31416:ℝ)/10000/k) := by positivity
+  have hv : (sqrt3:ℝ)/2*Real.sin (Real.pi/k) ≤ (8661:ℝ)/10000*((31416:ℝ)/10000/k) :=
+    le_trans (mul_le_mul_of_nonneg_left hsig hsqrt0)
+      (mul_le_mul_of_nonneg_right p22_bjf_sqrt3_half2 (by positivity))
   have hwu : ((sqrt3:ℝ)/2*Real.sin (Real.pi/k))^2 ≤ 17/64 := by
     have h1 : ((sqrt3:ℝ)/2*Real.sin (Real.pi/k))^2
         ≤ ((8661:ℝ)/10000*((31416:ℝ)/10000/k))^2 := pow_le_pow_left₀ hw0 hv 2
     have h2 : ((8661:ℝ)/10000*((31416:ℝ)/10000/k))^2
-        ≤ ((8661:ℝ)/10000*(31416:ℝ)/10000/12)^2 :=
-      pow_le_pow_left₀ hgd (p22_div_le_div_real_left (by positivity) (by norm_num) hk1) 2
-    have h3' : ((8661:ℝ)/10000*(31416:ℝ)/10000/12)^2 ≤ 17/64 := by norm_num
+        ≤ ((8661:ℝ)/10000*((31416:ℝ)/10000/12))^2 :=
+      pow_le_pow_left₀ hgd (mul_le_mul_of_nonneg_left
+        (p22_div_le_div_real_left (by norm_num) (by norm_num) hk1)
+        (by norm_num)) 2
+    have h3' : ((8661:ℝ)/10000*((31416:ℝ)/10000/12))^2 ≤ 17/64 := by norm_num
     linarith
   have hle := p22_bjf_asn_quad hw0 hwu
   have h3 : ((sqrt3:ℝ)/2*Real.sin (Real.pi/k))^3
       ≤ ((8661:ℝ)/10000*((31416:ℝ)/10000/k))^3 := pow_le_pow_left₀ hw0 hv 3
   have h5 : ((sqrt3:ℝ)/2*Real.sin (Real.pi/k))^5
       ≤ ((8661:ℝ)/10000*((31416:ℝ)/10000/k))^5 := pow_le_pow_left₀ hw0 hv 5
-  have hv1 : (2:ℝ)*k*((sqrt3:ℝ)/2*Real.sin (Real.pi/k))
-      ≤ (8661:ℝ)/10000*(31416:ℝ)/10000*2 := by
-    have h := mul_le_mul_of_nonneg_left hv (by positivity)
-    calc (2:ℝ)*k*((sqrt3:ℝ)/2*Real.sin (Real.pi/k))
-        ≤ (2:ℝ)*k*((8661:ℝ)/10000*((31416:ℝ)/10000/k)) := h
-      _ = (8661:ℝ)/10000*(31416:ℝ)/10000*2 := by ring
-  have hterm3 : (2:ℝ)*k*(((sqrt3:ℝ)/2*Real.sin (Real.pi/k))^3/6)
+  -- k-cancelled window bounds (maximized at k = 12)
+  have hkV1 : (2:ℝ)*k*((8661:ℝ)/10000*((31416:ℝ)/10000/k))
+      = (8661:ℝ)/10000*(31416:ℝ)/10000*2 := by
+    field_simp
+  have hV3 : (2:ℝ)*k*(((8661:ℝ)/10000*((31416:ℝ)/10000/k))^3/6)
       ≤ (8661:ℝ)/10000*(31416:ℝ)/10000*(8661:ℝ)/10000*(31416:ℝ)/10000
         *(8661:ℝ)/10000*(31416:ℝ)/10000/3/144 := by
-    have hstep : (2:ℝ)*k*(((sqrt3:ℝ)/2*Real.sin (Real.pi/k))^3/6)
-        ≤ (2:ℝ)*k*(((8661:ℝ)/10000*((31416:ℝ)/10000/k))^3/6) :=
-      mul_le_mul_of_nonneg_left (p22_div_le_div_right (by norm_num) h3) (by positivity)
-    have hp : (2:ℝ)*k*(((8661:ℝ)/10000*((31416:ℝ)/10000/k))^3/6)
-        = (8661:ℝ)/10000*(31416:ℝ)/10000*(8661:ℝ)/10000*(31416:ℝ)/10000
-          *(8661:ℝ)/10000*(31416:ℝ)/10000/3/((k:ℝ)^2) := by ring
-    calc (2:ℝ)*k*(((8661:ℝ)/10000*((31416:ℝ)/10000/k))^3/6)
-        = (8661:ℝ)/10000*(31416:ℝ)/10000*(8661:ℝ)/10000*(31416:ℝ)/10000
-          *(8661:ℝ)/10000*(31416:ℝ)/10000/3/((k:ℝ)^2) := hp
-      _ ≤ (8661:ℝ)/10000*(31416:ℝ)/10000*(8661:ℝ)/10000*(31416:ℝ)/10000
-            *(8661:ℝ)/10000*(31416:ℝ)/10000/3/144 := by
-          refine p22_div_le_div_real_left (by positivity) (by positivity) hk2
-  have hk4 : ((k:ℝ))^4 ≥ 20736 := by nlinarith [hk2]
-  have hterm5 : (2:ℝ)*k*(((sqrt3:ℝ)/2*Real.sin (Real.pi/k))^5/10)
+    have hk0 : ((k:ℝ)) ≠ 0 := by positivity
+    have hVk : ((8661:ℝ)/10000*((31416:ℝ)/10000/k)) * (k:ℝ)
+        = (8661:ℝ)/10000*(31416:ℝ)/10000 := by
+      rw [mul_assoc, div_mul_cancel₀ ((31416:ℝ)/10000) hk0]
+      ring
+    have hVk3 : ((8661:ℝ)/10000*((31416:ℝ)/10000/k))^3 * ((k:ℝ))^3
+        = ((8661:ℝ)/10000*(31416:ℝ)/10000)^3 := by
+      rw [← mul_pow, hVk]
+    have hV3k : ((8661:ℝ)/10000*((31416:ℝ)/10000/k))^3 * (k:ℝ)
+        = ((8661:ℝ)/10000*(31416:ℝ)/10000)^3 / ((k:ℝ)^2) := by
+      rw [eq_div_iff (by positivity : (k:ℝ)^2 ≠ 0), mul_assoc, ← pow_succ', hVk3]
+    rw [le_div_iff₀ (by norm_num : (0:ℝ) < 144)]
+    have hY : (2:ℝ)*k*(((8661:ℝ)/10000*((31416:ℝ)/10000/k))^3/6)*144
+        = 48*(((8661:ℝ)/10000*((31416:ℝ)/10000/k))^3*(k:ℝ)) := by ring
+    rw [hY, hV3k]
+    refine le_trans (mul_le_mul_of_nonneg_left
+      (p22_div_le_div_real_left (by positivity) (by norm_num) hk2) (by norm_num)) ?_
+    norm_num
+  have hV5 : (2:ℝ)*k*(((8661:ℝ)/10000*((31416:ℝ)/10000/k))^5/10)
       ≤ (8661:ℝ)/10000*(31416:ℝ)/10000*(8661:ℝ)/10000*(31416:ℝ)/10000
-        *((8661:ℝ)/10000*(31416:ℝ)/10000)*(8661:ℝ)/10000*(31416:ℝ)/10000*(1/5)/20736 := by
-    have hstep : (2:ℝ)*k*(((sqrt3:ℝ)/2*Real.sin (Real.pi/k))^5/10)
-        ≤ (2:ℝ)*k*(((8661:ℝ)/10000*((31416:ℝ)/10000/k))^5/10) :=
-      mul_le_mul_of_nonneg_left (p22_div_le_div_right (by norm_num) h5) (by positivity)
-    have hp : (2:ℝ)*k*(((8661:ℝ)/10000*((31416:ℝ)/10000/k))^5/10)
-        = (8661:ℝ)/10000*(31416:ℝ)/10000*(8661:ℝ)/10000*(31416:ℝ)/10000
-          *((8661:ℝ)/10000*(31416:ℝ)/10000)*(8661:ℝ)/10000*(31416:ℝ)/10000
-          *(1/5)/((k:ℝ)^4) := by ring
-    calc (2:ℝ)*k*(((8661:ℝ)/10000*((31416:ℝ)/10000/k))^5/10)
-        = (8661:ℝ)/10000*(31416:ℝ)/10000*(8661:ℝ)/10000*(31416:ℝ)/10000
-          *((8661:ℝ)/10000*(31416:ℝ)/10000)*(8661:ℝ)/10000*(31416:ℝ)/10000
-          *(1/5)/((k:ℝ)^4) := hp
-      _ ≤ (8661:ℝ)/10000*(31416:ℝ)/10000*(8661:ℝ)/10000*(31416:ℝ)/10000
-            *((8661:ℝ)/10000*(31416:ℝ)/10000)*(8661:ℝ)/10000*(31416:ℝ)/10000
-            *(1/5)/20736 := by
-          refine p22_div_le_div_real_left (by positivity) (by positivity) hk4
+        *((8661:ℝ)/10000*(31416:ℝ)/10000)*(8661:ℝ)/10000*(31416:ℝ)/10000
+        *((8661:ℝ)/10000*(31416:ℝ)/10000)*(8661:ℝ)/10000*(31416:ℝ)/10000
+        *(1/5)/20736 := by
+    have hk0 : ((k:ℝ)) ≠ 0 := by positivity
+    have hVk : ((8661:ℝ)/10000*((31416:ℝ)/10000/k)) * (k:ℝ)
+        = (8661:ℝ)/10000*(31416:ℝ)/10000 := by
+      rw [mul_assoc, div_mul_cancel₀ ((31416:ℝ)/10000) hk0]
+      ring
+    have hVk5 : ((8661:ℝ)/10000*((31416:ℝ)/10000/k))^5 * ((k:ℝ))^5
+        = ((8661:ℝ)/10000*(31416:ℝ)/10000)^5 := by
+      rw [← mul_pow, hVk]
+    have hV5k : ((8661:ℝ)/10000*((31416:ℝ)/10000/k))^5 * (k:ℝ)
+        = ((8661:ℝ)/10000*(31416:ℝ)/10000)^5 / ((k:ℝ)^4) := by
+      rw [eq_div_iff (by positivity : (k:ℝ)^4 ≠ 0), mul_assoc, ← pow_succ', hVk5]
+    rw [le_div_iff₀ (by norm_num : (0:ℝ) < 20736)]
+    have hY : (2:ℝ)*k*(((8661:ℝ)/10000*((31416:ℝ)/10000/k))^5/10)*20736
+        = (20736/5)*(((8661:ℝ)/10000*((31416:ℝ)/10000/k))^5*(k:ℝ)) := by ring
+    rw [hY, hV5k]
+    refine le_trans (mul_le_mul_of_nonneg_left
+      (p22_div_le_div_real_left (by positivity) (by norm_num) hk4) (by norm_num)) ?_
+    norm_num
   refine le_trans (mul_le_mul_of_nonneg_left (le_trans hle
-    (add_le_add hv (add_le_add (p22_div_le_div_right (by norm_num) h3)
-      (p22_div_le_div_right (by norm_num) h5)))) (by positivity)) ?_
-  linarith [hv1, hterm3, hterm5]
+    (add_le_add (add_le_add hv (p22_div_le_div_right (by norm_num : (0:ℝ) < 6) h3))
+      (p22_div_le_div_right (by norm_num : (0:ℝ) < 10) h5)))
+    (by norm_num : (0:ℝ) ≤ 2*(k:ℝ))) ?_
+  linarith [hkV1, hV3, hV5]
 
 '''
 
 def pack2gen(K, b, sig, ta, phiA, kap, tb, phiB, B, r):
     A = A_VAL[K]
     if K == 3:
-        hsig = r'''  have hsq3 : Real.sqrt 3 * Real.sqrt 3 = 3 := Real.mul_self_sqrt (by norm_num)
-  have hsig : Real.sin (Real.pi/3) ≤ (8661:ℝ)/10000 := by
+        hsig = r'''  have hsig : Real.sin (Real.pi/3) ≤ (8661:ℝ)/10000 := by
     rw [Real.sin_pi_div_three]
-    refine (Real.le_sqrt (by positivity) (by norm_num)).mpr ?_
-    have he : (Real.sqrt 3 / 2)^2 = 3/4 := by
-      have e1 : (Real.sqrt 3 / 2)^2 = Real.sqrt 3 * Real.sqrt 3 / 4 := by ring
-      rw [e1, hsq3]; norm_num
-    rw [he]; norm_num'''
+    exact p22_bjf_sqrt3_half2'''
     elif K == 4:
         hsig = r'''  have hsq2 : Real.sqrt 2 * Real.sqrt 2 = 2 := Real.mul_self_sqrt (by norm_num)
   have hsig : Real.sin (Real.pi/4) ≤ (7072:ℝ)/10000 := by
     rw [Real.sin_pi_div_four]
-    refine (Real.le_sqrt (by positivity) (by norm_num)).mpr ?_
-    have he : (Real.sqrt 2 / 2)^2 = 1/2 := by
-      have e1 : (Real.sqrt 2 / 2)^2 = Real.sqrt 2 * Real.sqrt 2 / 4 := by ring
-      rw [e1, hsq2]; norm_num
-    rw [he]; norm_num'''
+    refine le_trans (Real.le_sqrt_of_sq_le
+      (show (Real.sqrt 2 / 2)^2 ≤ ((7072:ℝ)/10000)^2 by
+        have he : (Real.sqrt 2 / 2)^2 = 1/2 := by
+          have e1 : (Real.sqrt 2 / 2)^2 = Real.sqrt 2 * Real.sqrt 2 / 4 := by ring
+          rw [e1, hsq2]; norm_num
+        rw [he]; norm_num)) ?_
+    rw [Real.sqrt_sq (by norm_num : (0:ℝ) ≤ (7072:ℝ)/10000)]'''
     elif K == 5:
         hsig = r'''  have hsig : Real.sin (Real.pi/5)
       ≤ (31416:ℝ)/10000/5 - (((31415:ℝ)/10000/5) ^ 3) / 6
@@ -1399,16 +1412,17 @@ def pack2gen(K, b, sig, ta, phiA, kap, tb, phiB, B, r):
     p22_bjf_wtaylor (by norm_num)'''
     else:
         hsig = r'''  have hsig : Real.sin (Real.pi/6) ≤ (1:ℝ)/2 := by
-    rw [Real.sin_pi_div_six]; norm_num'''
+    rw [Real.sin_pi_div_six]'''
     return f'''/-- k={K} pack: route2 with split `b = {b}`; sigma, Phi-windows and slide
 budgets are the exact-rational-verified certificates. -/
 private theorem p22_bjf_pack{K} (h : ℝ) (hh1 : 1 ≤ h) (hh0 : h ≤ h0) :
     (0.591 - 0.0331 * {K} + 0.506 * lfun h)
       ≤ 2 * Real.pi - 2 * ({K}:ℝ) * asn (p22_bjf_T h * Real.sin (Real.pi / {K})) := by
   have hs4 : (sqrt3:ℝ)/4 ≤ 4331 / 10000 := p22_bjf_sqrt3_quarter
-  have hrc : Real.sqrt (1 - (({b}:ℝ) / 2) ^ 2) ≤ {r} :=
-    (Real.le_sqrt (by norm_num) (by norm_num)).mpr (by norm_num)
-  have hcle : sqrt3 / 4 - ({b}:ℝ) / (8 * {r}) ≤ {kap} := by
+  have hrc : Real.sqrt (1 - (({b}:ℝ) / 2) ^ 2) ≤ {r} := by
+    rw [← Real.sqrt_sq (by norm_num : (0:ℝ) ≤ ({r}:ℝ))]
+    exact Real.sqrt_le_sqrt (by norm_num)
+  have hcle : sqrt3 / 4 - ({b}:ℝ) / (8 * ({r}:ℝ)) ≤ {kap} := by
     have hnum : (4331:ℝ)/10000 - ({b}:ℝ)/(8*{r}) ≤ {kap} := by norm_num
     linarith [hs4, hnum]
   have hwin : (2:ℝ) * {K} * asn ((sqrt3/2)*Real.sin (Real.pi/{K})) ≤ {A} := by
@@ -1418,36 +1432,52 @@ private theorem p22_bjf_pack{K} (h : ℝ) (hh1 : 1 ≤ h) (hh0 : h ≤ h0) :
   have hT0bnn : 0 ≤ p22_bjf_T ({b}:ℝ) := by unfold p22_bjf_T sqrt3; positivity
   have hTa : ∀ x : ℝ, 1 ≤ x → x ≤ ({b}:ℝ) → p22_bjf_T x ≤ {ta} := by
     intro x hx1 hxb
-    have hch := p22_bjf_chord hx1 (le_trans hx1 hxb) hxb
+    have hch := p22_bjf_chord (a := 1) (b := x) (le_refl 1) hx1
+      (le_trans hxb (by norm_num [h0] : ({b}:ℝ) ≤ h0))
     have hT1 : p22_bjf_T 1 = sqrt3 / 2 := p22_bjf_T1
     have hs := p22_bjf_sqrt3_half
-    have hxC : ((x:ℝ) - 1) * 2887 / 10000 ≤ (({b}:ℝ) - 1) * 2887 / 10000 :=
-      mul_le_mul_of_nonneg_left (by linarith) (by linarith)
+    have hxC : ((x:ℝ) - 1) * 2887 / 10000 ≤ (({b}:ℝ) - 1) * 2887 / 10000 := by
+      linarith
     calc p22_bjf_T x ≤ sqrt3 / 2 + ((x:ℝ) - 1) * 2887 / 10000 := by linarith [hch, hT1]
       _ ≤ 86603 / 100000 + (({b}:ℝ) - 1) * 2887 / 10000 := by linarith [hs, hxC]
       _ ≤ {ta} := by norm_num
   have hTb : ∀ x : ℝ, 1 ≤ x → x ≤ h0 → p22_bjf_T x ≤ {tb} := by
     intro x hx1 hx2
-    rcases le_or_lt x ({b}:ℝ) with hxb | hxb
+    rcases le_or_gt x ({b}:ℝ) with hxb | hxb
     · have hxa := hTa x hx1 hxb
       linarith
-    · have hchb := p22_bjf_chord_b (a := ({b}:ℝ)) (b := x) (r := {r}) (kappa := {kap})
-        hx1 hxb hx2 hrc (by norm_num) hcle
-      have hTbu := hTa ({b}:ℝ) (by norm_num) (le_refl _)
-      have hxC : ((x:ℝ) - {b}) * {kap} ≤ ((h0:ℝ) - {b}) * {kap} :=
-        mul_le_mul_of_nonneg_left (by linarith) (by linarith)
-      calc p22_bjf_T x ≤ p22_bjf_T ({b}:ℝ) + ((x:ℝ) - {b}) * {kap} := by linarith [hchb]
-        _ ≤ {tb} := by linarith [hTbu, hxC]
+    · have hha1 : (1:ℝ) ≤ ({b}:ℝ) := by norm_num
+      have hhr0 : (0:ℝ) < ({r}:ℝ) := by norm_num
+      have hchb := p22_bjf_chord_b (a := ({b}:ℝ)) (b := x) (r := ({r}:ℝ))
+        (kappa := ({kap}:ℝ)) hha1 (le_of_lt hxb) hx2 hrc hhr0 hcle
+      have hTbub : p22_bjf_T ({b}:ℝ) ≤ ({b}:ℝ) * 4331 / 10000 + {r} / 2 := by
+        unfold p22_bjf_T
+        have h1 : (sqrt3:ℝ)/4 ≤ 4331 / 10000 := hs4
+        have h2 : Real.sqrt (1 - (({b}:ℝ) / 2) ^ 2) / 2 ≤ {r} / 2 :=
+          p22_div_le_div_right (by norm_num) hrc
+        linarith [h1, h2]
+      have hTbnum : ({b}:ℝ) * 4331 / 10000 + {r} / 2 + ((h0:ℝ) - {b}) * {kap} ≤ {tb} := by
+        norm_num [h0]
+      have hxC : ((x:ℝ) - {b}) * {kap} ≤ ((h0:ℝ) - {b}) * {kap} := by
+        linarith
+      have hst1 : p22_bjf_T x ≤ p22_bjf_T ({b}:ℝ) + ((x:ℝ) - {b}) * ({kap}:ℝ) := by
+        linarith [hchb]
+      have hst2 : p22_bjf_T ({b}:ℝ) + ((x:ℝ) - {b}) * ({kap}:ℝ) ≤ {tb} := by
+        linarith [hTbub, hTbnum, hxC]
+      linarith [hst1, hst2]
   have hchorda : ∀ x : ℝ, ({b}:ℝ) ≤ x → x ≤ h0 →
-      p22_bjf_T x - p22_bjf_T ({b}:ℝ) ≤ (x - ({b}:ℝ)) * {kap} := by
+      p22_bjf_T x - p22_bjf_T ({b}:ℝ) ≤ (x - ({b}:ℝ)) * ({kap}:ℝ) := by
     intro x hxb hx2
-    exact p22_bjf_chord_b (a := ({b}:ℝ)) (b := x) (r := {r}) (kappa := {kap})
-      hxb hxb hx2 hrc (by norm_num) hcle
+    have hha1 : (1:ℝ) ≤ ({b}:ℝ) := by norm_num
+    have hhr0 : (0:ℝ) < ({r}:ℝ) := by norm_num
+    exact p22_bjf_chord_b (a := ({b}:ℝ)) (b := x) (r := ({r}:ℝ))
+      (kappa := ({kap}:ℝ)) hha1 hxb hx2 hrc hhr0 hcle
 {hsig}
   exact p22_bjf_route2 (k := {K}) (h := h) (b := ({b}:ℝ)) (sig := {sig})
     (ta := ({ta}:ℝ)) (tb := ({tb}:ℝ)) (kappa := ({kap}:ℝ)) (phiA := ({phiA}:ℝ))
     (phiB := ({phiB}:ℝ)) (A := {A}) (B := {B})
-    hh1 hh0 (by norm_num) hh0 hwin (p22_bjf_sinpos (by norm_num)) hsig
+    hh1 hh0 (by norm_num) (by norm_num [h0] : ({b}:ℝ) ≤ h0) hwin
+      (p22_bjf_sinpos (by norm_num)) hsig (by norm_num) (by norm_num)
     hT0nn hT0bnn hTa (by norm_num) (by norm_num) (by norm_num) (by norm_num)
     hTb (by norm_num) (by norm_num) (by norm_num) (by norm_num) (by norm_num)
     hchorda (by norm_num) (by norm_num) (by norm_num) (by norm_num)
@@ -1468,7 +1498,7 @@ private theorem p22_bjf_pack{K} (h : ℝ) (hh1 : 1 ≤ h) (hh0 : h ≤ h0) :
     - (((31415:ℝ)/10000/{K}) ^ 3) / 6 + (((31416:ℝ)/10000/{K}) ^ 5) / 120)
     (phi := {phi}) hh1 hh0 ?_ (p22_bjf_sinpos (by norm_num)) hsig
     (p22_bjf_hTbound hh1 hh0) (by unfold p22_bjf_T sqrt3; positivity)
-    (by norm_num) (by norm_num) (by norm_num) ?_
+    (by norm_num) (by norm_num) (by norm_num) (by norm_num) ?_
   · refine le_trans (p22_bjf_w{K}) ?_
     norm_num
   · have h1 : ((126:ℝ)/100 - 1) * (2 * ({K}:ℝ) * (2887 / 10000) * {phi}) ≤ 506 / 1000 := by
@@ -1491,41 +1521,103 @@ theorem BIEFJHU_explicit (h : ℝ) (k : ℕ) (hpa : packIneqDefAP22)
       max 0 (2 * Real.pi - 2 * (k:ℝ) * asn (p22_bjf_T h * Real.sin (Real.pi / k)))
   rcases Nat.lt_or_ge k 7 with hk7 | hk7
   · interval_cases k
-    · exact le_trans (p22_bjf_pack3 h hh.1 hh.2) (le_max_left _ _)
-    · exact le_trans (p22_bjf_pack4 h hh.1 hh.2) (le_max_left _ _)
-    · exact le_trans (p22_bjf_pack5 h hh.1 hh.2) (le_max_left _ _)
-    · exact le_trans (p22_bjf_pack6 h hh.1 hh.2) (le_max_left _ _)
+    · exact le_trans (p22_bjf_pack3 h hh.1 hh.2) (le_max_right _ _)
+    · exact le_trans (p22_bjf_pack4 h hh.1 hh.2) (le_max_right _ _)
+    · exact le_trans (p22_bjf_pack5 h hh.1 hh.2) (le_max_right _ _)
+    · exact le_trans (p22_bjf_pack6 h hh.1 hh.2) (le_max_right _ _)
   · rcases Nat.lt_or_ge k 12 with hk11 | hk12
     · interval_cases k
-      · exact le_trans (p22_bjf_pack7 h hh.1 hh.2) (le_max_left _ _)
-      · exact le_trans (p22_bjf_pack8 h hh.1 hh.2) (le_max_left _ _)
-      · exact le_trans (p22_bjf_pack9 h hh.1 hh.2) (le_max_left _ _)
-      · exact le_trans (p22_bjf_pack10 h hh.1 hh.2) (le_max_left _ _)
-      · exact le_trans (p22_bjf_pack11 h hh.1 hh.2) (le_max_left _ _)
-    · refine le_trans ?_ (le_max_left _ _)
+      · exact le_trans (p22_bjf_pack7 h hh.1 hh.2) (le_max_right _ _)
+      · exact le_trans (p22_bjf_pack8 h hh.1 hh.2) (le_max_right _ _)
+      · exact le_trans (p22_bjf_pack9 h hh.1 hh.2) (le_max_right _ _)
+      · exact le_trans (p22_bjf_pack10 h hh.1 hh.2) (le_max_right _ _)
+      · exact le_trans (p22_bjf_pack11 h hh.1 hh.2) (le_max_right _ _)
+    · refine le_trans ?_ (le_max_right _ _)
       have hsig : Real.sin (Real.pi / k)
           ≤ (31416:ℝ)/10000/k := by
-        have hw := p22_bjf_wtaylor (k := k) (by norm_num)
-        have hb : (0:ℝ) ≤ (((31415:ℝ)/10000/k) ^ 3) := by positivity
-        have hc : (0:ℝ) ≤ (((31416:ℝ)/10000/k) ^ 5) := by positivity
+        have hslt : Real.sin (Real.pi / k) < Real.pi / (k:ℝ) :=
+          Real.sin_lt (by positivity)
+        have hpi : Real.pi / (k:ℝ) ≤ (31416:ℝ)/10000/k :=
+          p22_div_le_div_nat_right (by positivity) (by linarith [Real.pi_lt_d4])
         linarith
       refine p22_bjf_route1 (k := k) (h := h) (sig := (31416:ℝ)/10000/k)
-        (phi := (270126977:ℝ)/1000000000) hh.1 hh.2 ?_
-        (p22_bjf_sinpos (by exact_mod_cast hk12)) hsig
-        (p22_bjf_hTbound hh.1 hh.2) (by unfold p22_bjf_T sqrt3; positivity) ?_ ?_
-        (by norm_num) (p22_bjf_tail_mono k hk12)
+        (phi := (270126977:ℝ)/1000000000 * 12 / (k:ℝ))
+        (hh1 := hh.1) (hh0 := hh.2) (hwin := ?hwin)
+        (hsin0 := p22_bjf_sinpos (by omega)) (hsig := hsig)
+        (hTb := p22_bjf_hTbound hh.1 hh.2) (hT0 := ?hT0)
+        (hQ1 := ?hQ1) (hQ0p := ?hQ0p) (hphi := ?hphi)
+        (hphiP := ?hphiP) (hmono := p22_bjf_tail_mono k hk12)
       · -- hwin (loose form, from the tail window)
         have hk1 : ((k:ℝ)) ≥ 12 := by exact_mod_cast hk12
         have h536 : (5.5367:ℝ) ≤ 5.186 + 0.0331 * 12 := by norm_num
+        have hmul : (0.0331:ℝ) * 12 ≤ 0.0331 * (k:ℝ) :=
+          mul_le_mul_of_nonneg_left hk1 (by norm_num)
         exact le_trans (p22_bjf_wtail hk12) (by linarith)
-      · -- hQ1
+      · -- hT0 : 0 ≤ T h (positivity cannot use `1 ≤ h`; do it by parts)
+        unfold p22_bjf_T
+        refine add_nonneg ?_ ?_
+        · exact div_nonneg
+            (mul_nonneg (by linarith : (0:ℝ) ≤ h) (by unfold sqrt3; positivity))
+            (by positivity)
+        · exact div_nonneg (Real.sqrt_nonneg _) (by positivity)
+      · -- hQ1 : 235273/250000 * sig < 1
         have hk1 : ((k:ℝ)) ≥ 12 := by exact_mod_cast hk12
         have h1 : (235273:ℝ)/250000*(31416/10000/k)
             ≤ (235273:ℝ)/250000*(31416/10000/12) := by
-          refine mul_le_mul_of_nonneg_left ?_ (by positivity)
-          exact p22_div_le_div_real_left (by positivity) (by positivity) hk1
+          refine mul_le_mul_of_nonneg_left ?_ (by norm_num)
+          exact p22_div_le_div_real_left
+            (by norm_num : (0:ℝ) ≤ (31416:ℝ)/10000) (by norm_num : (0:ℝ) < 12) hk1
         linarith [h1]
-      · exact p22_bjf_tail_phi k hk12
+      · -- hQ0p : 0 < 1 - (235273/250000 * sig)^2, from 0 ≤ x < 1
+        have hk1 : ((k:ℝ)) ≥ 12 := by exact_mod_cast hk12
+        have h1 : (235273:ℝ)/250000*(31416/10000/k)
+            ≤ (235273:ℝ)/250000*(31416/10000/12) := by
+          refine mul_le_mul_of_nonneg_left ?_ (by norm_num)
+          exact p22_div_le_div_real_left
+            (by norm_num : (0:ℝ) ≤ (31416:ℝ)/10000) (by norm_num : (0:ℝ) < 12) hk1
+        have h2 : (235273:ℝ)/250000*(31416/10000/k) < 1 :=
+          lt_of_le_of_lt h1 (by norm_num)
+        have h3 : (0:ℝ) ≤ (235273:ℝ)/250000*(31416/10000/k) := by positivity
+        nlinarith [h2, h3]
+      · -- hphi: the k-cancelled Phi window, reduced to `tail_phi` at `k = 12`
+        have hk1 : ((k:ℝ)) ≥ 12 := by exact_mod_cast hk12
+        have hτk : ((235273:ℝ)/250000*(31416/10000/k))^2
+            ≤ ((235273:ℝ)/250000*(31416/10000/12))^2 := by
+          refine pow_le_pow_left₀ (by positivity) ?_ 2
+          exact mul_le_mul_of_nonneg_left
+            (p22_div_le_div_real_left
+              (by norm_num : (0:ℝ) ≤ (31416:ℝ)/10000)
+              (by norm_num : (0:ℝ) < 12) hk1)
+            (by norm_num)
+        have htp := p22_bjf_tail_phi 12 (by norm_num)
+        have hPhi : ((270126977:ℝ)/1000000000 * 12 / (k:ℝ))^2
+            = ((270126977:ℝ)/1000000000)^2 * (((12:ℝ)/(k:ℝ))^2) := by
+          rw [div_pow, div_pow]; ring
+        have hSeq : ((31416:ℝ)/10000/k)^2
+            = ((31416:ℝ)/10000/12)^2 * (((12:ℝ)/(k:ℝ))^2) := by
+          rw [div_pow, div_pow, div_pow]; ring
+        rw [hPhi, hSeq, ge_iff_le]
+        have hP2 : (0:ℝ) ≤ ((12:ℝ)/(k:ℝ))^2 := by positivity
+        have h1 : ((31416:ℝ)/10000/12)^2 * (((12:ℝ)/(k:ℝ))^2)
+            ≤ (1 - ((235273:ℝ)/250000*(31416/10000/12))^2)
+              * (((270126977:ℝ)/1000000000)^2 * (((12:ℝ)/(k:ℝ))^2)) := by
+          have hstep := mul_le_mul_of_nonneg_right htp hP2
+          have hassoc : (1 - ((235273:ℝ)/250000*(31416/10000/12))^2)
+              * (((270126977:ℝ)/1000000000)^2 * (((12:ℝ)/(k:ℝ))^2))
+              = (1 - ((235273:ℝ)/250000*(31416/10000/12))^2)
+                * ((270126977:ℝ)/1000000000)^2 * (((12:ℝ)/(k:ℝ))^2) := by ring
+          rw [hassoc]; exact hstep
+        have h2 : (1 - ((235273:ℝ)/250000*(31416/10000/12))^2)
+            * (((270126977:ℝ)/1000000000)^2 * (((12:ℝ)/(k:ℝ))^2))
+            ≤ (1 - ((235273:ℝ)/250000*(31416/10000/k))^2)
+              * (((270126977:ℝ)/1000000000)^2 * (((12:ℝ)/(k:ℝ))^2)) := by
+          refine mul_le_mul_of_nonneg_right ?_ (by positivity)
+          linarith [hτk]
+        linarith [h1, h2]
+      · -- hphiP : 0 < phi
+        have hk1 : (0:ℝ) < (k:ℝ) := Nat.cast_pos.2 (by omega)
+        have hA : (0:ℝ) < (270126977:ℝ)/1000000000 * 12 := by norm_num
+        exact div_pos hA hk1
 
 '''
 

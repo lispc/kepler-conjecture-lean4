@@ -1,47 +1,44 @@
-# BIEFJHU_explicit 执行波 — 交接（2026-10-09，诚实收窄：未闭合）
+# BIEFJHU_explicit 执行波 — 交接（2026-10-10，已闭合）
 
-> 状态：**证书层全部收敛（Fraction 精确验证），Lean 体未收敛（58 处 tactic 级机械错，无数学错误）**。
-> PA22 基线零触碰（37 sorry 原样），BIEFJHU_explicit 未闭合，DLWCHEM_sum/XULJEPR_sum 仍在 sorryAx 上。
+> 状态：**BIEFJHU_explicit 已闭合落盘**（真路径探针 EXIT=0、error 扫描 0；裸 sorry 29→28，仅闭 BIEFJHU 一处）。
+> 证书层全部精确验证（Fraction）。DLWCHEM_sum/XULJEPR_sum 仍按基线原样在 sorryAx 上（其消费的 BIEFJHU 已是真定理，后续波闭合它们是纯增量工作）。
+
+## 落盘记录（2026-10-10）
+
+- `lean/Kepler/Text/PackingAuto22.lean`：基线 1–3030 行 + `PA22g_block.lean`（kit 2235 行 + 已闭合定理）+ 基线 3064–7545 行，共 9747 行。
+- 三段 cmp 字节级验证：前段/后段与基线恒同，中段=块；唯一删除 = 基线 3031–3063（旧 docstring+sorry 定理）。陈述冻结，签名逐字未动。
+- 探针链：`/tmp/bjf_probe4.lean`（改名块探针）EXIT=0 → `/tmp/PA22_new.lean`（全文件）EXIT=0 → 真路径 `lake env lean lean/Kepler/Text/PackingAuto22.lean` EXIT=0、`grep -icE 'error'`=0。
+- sorry 账目：裸 sorry 29→28；含 sorry 行 37→35（减的 2 行都在被替换段）；"declaration uses sorry" 33→32。
+- `.lake` olean 未重建（10-08 陈旧 olean 仍在）。探针一律 `lake env lean` 直读源码，不受影响；谁跑全项目 build 谁负责（本波按红线未跑）。
+
+## 本波新雷区（关键，务必读）
+
+1. **重名声明会让 Lean 跳过证明体 elaboration**：探针头 import 基线（含同名 `BIEFJHU_explicit`），块内同名定理在声明头即报 "already been declared"，**证明体从未被检查**。上波 58 错全在 kit；末定理体 14 错是落盘时全文件探针首测才暴露的。探针验证末定理体必须先在 /tmp 副本上改名：
+   ```
+   sed 's/^theorem BIEFJHU_explicit /theorem BIEFJHU_explicit_gPROBE /' PA22g_block.lean > /tmp/bjf_block_renamed.lean
+   ```
+2. **`PA22g_gen.py` 只写 `/tmp/bjf_block.lean`，不拷 assets**。改完 gen 必须手动 `cp /tmp/bjf_block.lean docs/biefjhu-assets/PA22g_block.lean` 再探针，否则喂的是陈旧块（本波踩过：asset 停在 10-09 18:25 旧版）。
+3. **基线 olean（10-08 13:22）早于源码（10-08 23:17 restored）**，import 探针环境是陈旧 olean。kit 在两环境等价（已双重验证），但最终裁决以全文件源码探针为准。
+4. goal 是 `max 0 X` 形时收尾用 `le_max_right`（`le_max_left` 只在 `?_` 延迟统一时侥幸）。
+5. 多槽 `refine` 全部改命名参数 + `?name` 槽（位置法错位一次浪费一整轮；本波 hphi/hQ0p/hphiP/hmono 四槽曾整体错位）。
+6. `mul_pos` 结论是 `?a * ?b`，对除法形态目标（如 `0 < A·12/↑k`）会造成 by 块拿到 metavar 目标而失败；用 `div_pos`（结论头匹配）+ `have` 显式类型。`positivity` 不读上下文：`0 ≤ T h` 这类含自由变量的目标须结构化拆（add_nonneg/div_nonneg/sqrt_nonneg）。
 
 ## 单一生成源工作流（下波入口）
 
-- 改一处即重出块：`python3 docs/biefjhu-assets/PA22g_gen.py` → 重出 `PA22g_block.lean`
-- 探针命令：
+- 改一处即重出块：`python3 docs/biefjhu-assets/PA22g_gen.py` → `cp /tmp/bjf_block.lean docs/biefjhu-assets/PA22g_block.lean` → 探针（末定理体用上面的改名法）。
+- 块内容探针命令（kit 层）：
   ```
-  cd lean && cat ../docs/biefjhu-assets/PA22g_probe_head.lean ../docs/biefjhu-assets/PA22g_block.lean > /tmp/bjf_probe.lean && printf '\nend Kepler.Text\n' >> /tmp/bjf_probe.lean && ~/.elan/bin/lake env lean /tmp/bjf_probe.lean
+  cat docs/biefjhu-assets/PA22g_probe_head.lean docs/biefjhu-assets/PA22g_block.lean > /tmp/bjf_probe.lean && printf '\nend Kepler.Text\n' >> /tmp/bjf_probe.lean && (cd lean && ~/.elan/bin/lake env lean /tmp/bjf_probe.lean)
   ```
-- 上轮终点：`PA22g_probe20.log`，100+ 错 → **58 错**。剩余全为 tactic 级机械错，预估 3–5 轮收敛后按落盘条款全文件探针落盘。
+- 全文件探针（真环境裁决）：`(cd lean && ~/.elan/bin/lake env lean /tmp/PA22_new.lean)`，组装式见落盘记录。
 
-## 逐件状态
+## 历史状态（闭合前存档）
 
-| 件 | 状态 |
-|---|---|
-| ① blockA 修复银行（asn_inc/incle/sept/quad/ser4/双 chord/Tmono） | 证书全过；Lean 体未收敛（kit 约 10 处错） |
-| ② route1/route2 银行 | 结构重写完成（修正 v1 的 3 处证明错误），未收敛（约 6 处） |
-| ③ w3–w11/wtail 窗口 | 结构完成；w3/w4 主体可闭，w5–w11 两类机械错，未收敛 |
-| ④ BIEFJHU_explicit 装配 | 已写（k∈{3,4,5,6}→route2，k∈{7..11}→route1，k≥12→route1+tail），依赖①–③ |
-| ⑤ 证书免重算查表 | **完成**（全 Fraction 精确验证，`PA22g_final_certs.py` 可复跑） |
+- PA22g_probe20.log：100+ 错 → 58 错（全 kit 层，已全收敛）。
+- 证书层结论（全精确）：σ₃=8661/10000；sept 窗 7/10；k=4 用 ser4 级数主控；w4 窗用 sept；k=4→route2(b=11/10)、k=6→route2(b=6/5)；裕度 k=3 0.0239、k=4 0.0154、k=5 0.0029、k=6 0.0059、k∈{7..11} ≥0.0223、tail 0.0474。
+- 数学层零改动：所有 route/window/certificate 结论与本波落盘证明一致。
 
-## 证书层结论（全部精确验证）
-
-- σ₃ = **8661/10000**（修正 final2.py 的 433/500 方向违例）
-- sept 窗 **7/10**（19/25 处 hex 恒等式为负不可用；9/16=0.5625 处 bracket=+0.2605，7/10 处 +0.0597）
-- k=4 弃用 final2.py 的 P4（w⁷/16 系数在 w²=3/8 处 Q²(1−u)<1 不通过）→ 新造 **ser4 级数主控**（w+w³/6+3w⁵/40+5w⁷/112+7w⁹/144，窗 3/8，尾界 d₄u⁴/(1−u)），LP 可行性精确验证，8·poly(6124/10⁴)=5.272745
-- w4 窗口改用 sept（同为 √6/4 点），hwin=5.2734
-- 路线修正：k=4 双片拆分 hX2b=0.5357 超预算 → route2 但 b=11/10；**k=6 route1 数学不可行**（hmono 上界 0.9007·φ > 0.506）→ route2(b=6/5)
-- 最终裕度（全精确）：k=3 **0.0239**、k=4 **0.0154**、k=5 **0.0029**、k=6 **0.0059**、k∈{7..11} ≥0.0223、tail 0.0474
-
-## 剩余 58 错误清单（按块，行号指 probe 文件）
-
-- **chord/chord_b hW2/hWge 尾段（约 10 处，行 316–456）**：`eq_div_iff` 槽位需 `ne_of_gt (lt_of_lt_of_le (by norm_num : 0 < 4) (le_of_lt hs3p))` 形式（`le_of_lt hs3p : 0 ≤ √3` 不能直接喂 `lt_of_le_of_lt` 的严格位）；`div_le_div_iff` 两分母 `0 <` 槽已就位，剩 `nlinarith [hS ≤ 2r 链]` 收尾
-- **quad hsq（564）**：`hu2p` 未定义（have 需插在 hu3 之前）
-- **quad/sept/ser4 hsq 的 `rw [← h3]`（582/692/840）**：h3 是等式，rw 后 `exact h2` 应可，需实测
-- **tail_phi（946）**：`nlinarith` 的 hint b0 槽 `by positivity` 待试；备选 `mul_le_mul hτ (le_refl _) hφp (by positivity)` 已就位
-- **tail_mono（970/978）**：`mul_nonneg` 链形式待试；h2 的 `by field_simp` 已替换 `by ring`
-- **wgen/packs（1374–1869，约 30 处）**：hB2/hsub 的 3 类重复机械错（hB2 括号已修，剩余为 hsub-calc 的 `mul_nonneg` 槽位与 pack hrc 的 `le_sqrt_of_sq_le (by norm_num)` 形式）
-- **2121**：probe 特有（import 了含同名公开定理的基线），实块落盘后消失
-
-## 本波新雷区（已修，供复用）
+## 本波已修机械错（供复用）
 
 - `Real.sq_sqrt` 在本 Mathlib 是 `(√x)² = x` 形式（√(x²) 需用 `Real.sqrt_sq`）
 - `eq_div_iff` 要 `≠ 0`、`div_le_iff₀` 要 `0 <`（不能混用 lt/ne 证明）
