@@ -57,10 +57,18 @@ Encoding notes.
   localization/dih2k kit (`azimCycle_p2`, `EE_p2`, `rhoNode1_p2`, …,
   `dih2k_p2`) STAYS here: `SphereKit` defers it until a rendering bridge
   exists (plan §6).
+- WRGCVDR_BIJ wave (2026-10-08): `WRGCVDR_BIJ` (localization.hl:356) is
+  closed by direct construction — the proved `LocalAuto3` bij kit mirrored
+  as the private `p2_*` block before the giants section (same-`fst` ⟹ same
+  node orbit ⟹ same face orbit ⟹ `Simple`); this adds the acyclic import
+  `Kepler.Text.TopologyFan` (`orbit_eq_setOfEdge`; depends only on `Fan`,
+  downstream interfaces unchanged) and fills `AZIM_CYCLE_EQ_SIGMA_FAN_ALT`
+  via `p2_AZIM_CYCLE_EQ_SIGMA_FAN` + `EE_elim`.
 -/
 
 import Kepler.Text.Polytope
 import Kepler.Text.Fan
+import Kepler.Text.TopologyFan
 import Kepler.Text.PackingAuto2
 import Kepler.Text.PackingAuto3
 import Kepler.Text.PackingAuto5
@@ -498,14 +506,538 @@ theorem aff_ge_INTER_aff_lt {y : V3} (hy : y ≠ 0) :
       linarith)
   · exact absurd hy0 hy
 
+/-! ## The `WRGCVDR_BIJ` kit (mirror of LocalAuto3's proved bij block,
+`_p2` vocabulary; wave LA2-p2 2026-10). Hypermap-combinatorics core: same-fst
+darts share the node orbit (`EE_p2` is a single azim cycle), the `dih2k_p2`
+hypermap is `Simple`, and `fst` maps faces bijectively to `V`. The
+single-cyclicity input is the importable `orbit_eq_setOfEdge`
+(`Kepler.Text.TopologyFan`, new import this wave — depends only on `Fan`). -/
+
+/-- Mirror of `LocalAuto3.EE_SUBSET_UNIONS_E` (WRGCVDR.hl:1264). -/
+private theorem p2_EE_SUBSET_UNIONS_E {α : Type*} (v : α) (E : Set (Set α)) :
+    EE_p2 v E ⊆ ⋃₀ E := fun w hw => Set.mem_sUnion.mpr ⟨{v, w}, hw, by simp⟩
+
+/-- Mirror of `LocalAuto3.UNI_E_IMP_EE_EQ_SET_OF_EDGE` (WRGCVDR.hl:275). -/
+private theorem p2_UNI_E_IMP_EE_EQ_SET_OF_EDGE {E : Set (Set V3)} {V : Set V3}
+    (h : ⋃₀ E ⊆ V) (v : V3) : EE_p2 v E = setOfEdge v V E := by
+  ext w
+  constructor
+  · intro hw
+    have hwV : w ∈ ⋃₀ E := Set.mem_sUnion.mpr ⟨{v, w}, hw, by simp⟩
+    exact ⟨hw, h hwV⟩
+  · rintro ⟨hw, -⟩
+    exact hw
+
+/-- Mirror of `LocalAuto3.FAN_IMP_FINITE_EE` (WRGCVDR.hl:1276). -/
+private theorem p2_FAN_IMP_FINITE_EE {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (v : V3) : (EE_p2 v E).Finite :=
+  hfan.2.2.1.1.subset (Set.Subset.trans (p2_EE_SUBSET_UNIONS_E v E) hfan.1)
+
+/-- Mirror of `LocalAuto3.IN_DARTS_HYP_IMP_FST_SND_IN_V` (WRGCVDR.hl:245;
+HOL `PAIRS_IN_UNIONS` inlined). -/
+private theorem p2_IN_DARTS_HYP_IMP_FST_SND_IN_V {E : Set (Set V3)} {V : Set V3}
+    (hsub : ⋃₀ E ⊆ V) {y : V3 × V3} (hy : y ∈ dartsOfHyp_p2 E V) :
+    y.1 ∈ V ∧ y.2 ∈ V := by
+  rcases (Set.mem_union _ _ _).mp hy with h | h
+  · exact ⟨hsub (show y.1 ∈ ⋃₀ E from ⟨{y.1, y.2}, h, Set.mem_insert y.1 {y.2}⟩),
+      hsub (show y.2 ∈ ⋃₀ E from
+        ⟨{y.1, y.2}, h, Set.mem_insert_of_mem y.1 (Set.mem_singleton y.2)⟩)⟩
+  · exact ⟨h.2.1, by rw [← h.1]; exact h.2.1⟩
+
+/-- Mirror of `LocalAuto3.IN_V_OF_FAN_EXISTS_DART` (WRGCVDR.hl:203). -/
+private theorem p2_IN_V_OF_FAN_EXISTS_DART {E : Set (Set V3)} {V : Set V3}
+    (hsub : ⋃₀ E ⊆ V) {u : V3} (hu : u ∈ V) : ∃ v ∈ V, (u, v) ∈ dartsOfHyp_p2 E V := by
+  by_cases hex : ∃ w, {u, w} ∈ E
+  · obtain ⟨w, hw⟩ := hex
+    have hwV : w ∈ ⋃₀ E := Set.mem_sUnion.mpr ⟨{u, w}, hw, by simp⟩
+    exact ⟨w, hsub hwV, Set.mem_union_left _ hw⟩
+  · have hE : EE_p2 u E = ∅ := by
+      rw [EE_p2]
+      exact Set.eq_empty_iff_forall_notMem.mpr fun w hw => hex ⟨w, hw⟩
+    exact ⟨u, hu, Set.mem_union_right _ ⟨rfl, hu, hE⟩⟩
+
+/-- HOL `choose_nd_point` (WRGCVDR.hl:341, Skolemization; mirror of
+`LocalAuto3.chooseNdPoint_p3`). -/
+private noncomputable def chooseNdPoint_p2 (u : V3) (E : Set (Set V3)) (V : Set V3) : V3 :=
+  if h : ⋃₀ E ⊆ V ∧ u ∈ V then Classical.choose (p2_IN_V_OF_FAN_EXISTS_DART h.1 h.2) else u
+
+/-- HOL `choose_nd_point` specification (mirror of `LocalAuto3.choose_nd_point`). -/
+private theorem p2_choose_nd_point (u : V3) (E : Set (Set V3)) (V : Set V3) (h1 : ⋃₀ E ⊆ V)
+    (h2 : u ∈ V) :
+    chooseNdPoint_p2 u E V ∈ V ∧ (u, chooseNdPoint_p2 u E V) ∈ dartsOfHyp_p2 E V := by
+  have hexp : chooseNdPoint_p2 u E V = Classical.choose (p2_IN_V_OF_FAN_EXISTS_DART h1 h2) :=
+    dif_pos ⟨h1, h2⟩
+  rw [hexp]
+  exact Classical.choose_spec (p2_IN_V_OF_FAN_EXISTS_DART h1 h2)
+
+/-- Mirror of `LocalAuto3.HAS_ORDERS_IMP_ORBIT_MAP_FIRST_ROW` (WRGCVDR.hl:357). -/
+private theorem p2_HAS_ORDERS_IMP_ORBIT_MAP_FIRST_ROW {α : Type*} {f : α → α} {k : ℕ}
+    (hf : hasOrders_p2 f k) (hk : k ≠ 0) (x : α) :
+    orbitF_p2 f x = {y | ∃ n < k, f^[n] x = y} := by
+  have hid := hf.2
+  have key : ∀ n : ℕ, f^[n] x = f^[n % k] x := by
+    intro n
+    have hnm : n = k * (n / k) + n % k := (Nat.div_add_mod n k).symm
+    conv => lhs; rw [hnm]
+    rw [Function.iterate_add, Function.iterate_mul, hid]
+    simp
+  ext y
+  constructor
+  · rintro ⟨n, rfl⟩
+    exact ⟨n % k, Nat.mod_lt n (Nat.pos_of_ne_zero hk), (key n).symm⟩
+  · rintro ⟨n, -, rfl⟩
+    exact ⟨n, rfl⟩
+
+/-- Mirror of `LocalAuto3.HAVING_ORDERS_K_IMP_CARD_ORBIT_LE_K` (WRGCVDR.hl:408). -/
+private theorem p2_HAVING_ORDERS_K_IMP_CARD_ORBIT_LE_K {α : Type*} {f : α → α} {k : ℕ}
+    (hf : hasOrders_p2 f k) (hk : k ≠ 0) (x : α) : (orbitF_p2 f x).ncard ≤ k := by
+  have hEq : {y : α | ∃ n < k, f^[n] x = y} = (fun n => f^[n] x) '' (Finset.range k : Set ℕ) := by
+    ext y
+    simp [Finset.mem_range]
+  rw [p2_HAS_ORDERS_IMP_ORBIT_MAP_FIRST_ROW hf hk x, hEq]
+  calc Set.ncard ((fun n => f^[n] x) '' (Finset.range k : Set ℕ))
+      ≤ Set.ncard (Finset.range k : Set ℕ) := Set.ncard_image_le
+    _ = k := by rw [Set.ncard_coe_finset, Finset.card_range]
+
+/-- Mirror of `LocalAuto3.CARD_UNION_NOT_DISTJ_LT` (WRGCVDR.hl:546). -/
+private theorem p2_CARD_UNION_NOT_DISTJ_LT {α : Type*} {s t : Set α} (hs : s.Finite)
+    (ht : t.Finite) (h : s ∩ t ≠ ∅) : (s ∪ t).ncard < s.ncard + t.ncard :=
+  Set.ncard_union_lt hs ht fun hd => h (by rwa [Set.disjoint_iff_inter_eq_empty] at hd)
+
+/-- Mirror of `LocalAuto3.HAS_ORDK_IN_ORBIT_IMP_SAME_ORBIT` (WRGCVDR.hl:683). -/
+private theorem p2_HAS_ORDK_IN_ORBIT_IMP_SAME_ORBIT {α : Type*} {f : α → α} {k : ℕ}
+    (hf : hasOrders_p2 f k) (hk : k ≠ 0) {x y : α} (h : x ∈ orbitF_p2 f y) :
+    orbitF_p2 f x = orbitF_p2 f y := by
+  obtain ⟨n, rfl⟩ := h
+  have key : ∀ m : ℕ, f^[m] y = f^[m % k] y := by
+    intro m
+    have hnm : m = k * (m / k) + m % k := (Nat.div_add_mod m k).symm
+    conv => lhs; rw [hnm]
+    rw [Function.iterate_add, Function.iterate_mul, hf.2]
+    simp
+  have main : ∀ q < k, orbitF_p2 f (f^[q] y) = orbitF_p2 f y := by
+    intro q hq
+    ext z
+    constructor
+    · rintro ⟨m, rfl⟩
+      exact ⟨m + q, Function.iterate_add_apply f m q y⟩
+    · rintro ⟨m, rfl⟩
+      have hEq2 : k - q + q = k := by omega
+      have hy : f^[k - q] (f^[q] y) = y := by
+        rw [← Function.iterate_add_apply, hEq2, hf.2]
+        simp
+      exact ⟨m + (k - q), by rw [Function.iterate_add_apply, hy]⟩
+  have hnx : orbitF_p2 f (f^[n] y) = orbitF_p2 f (f^[n % k] y) := by congr 1; exact key n
+  rw [hnx, main (n % k) (Nat.mod_lt n (Nat.pos_of_ne_zero hk))]
+
+/-- Mirror of `LocalAuto3.W_SUBSET_SINGLETON_IMP_IDE` (WRGCVDR.hl:1102). -/
+private theorem p2_W_SUBSET_SINGLETON_IMP_IDE {W : Set V3} {p : V3} (h : W ⊆ {p}) (v w : V3) :
+    azimCycle_p2 W v w p = p := by
+  simp only [azimCycle_p2, if_pos h]
+
+/-- Mirror of the proved `LocalAuto3.EXIS_SMALLEST_WITH_AZIM_ORD`
+(WRGCVDR.hl:1009; lexicographic minimizer of (azim, ‖projection‖)). -/
+private theorem p2_EXIS_SMALLEST_WITH_AZIM_ORD {W : Set V3} {v w p : V3}
+    (h1 : ¬(W ⊆ {p})) (hfin : W.Finite) :
+    ∃ u : V3, u ≠ p ∧ u ∈ W ∧ ∀ q ∈ W, q ≠ p →
+      azim v w p u < azim v w p q ∨
+        azim v w p u = azim v w p q ∧
+          ‖projection (u - v) (w - v)‖ ≤ ‖projection (q - v) (w - v)‖ := by
+  have hne : {u : V3 | u ∈ W ∧ u ≠ p}.Nonempty := by
+    by_contra hc
+    apply h1
+    intro x hx
+    by_contra hxp
+    exact hc ⟨x, hx, hxp⟩
+  have hf : {u : V3 | u ∈ W ∧ u ≠ p}.Finite := hfin.subset fun x hx => hx.1
+  obtain ⟨q, hqin, hqmin⟩ := Set.exists_min_image
+    {u : V3 | u ∈ W ∧ u ≠ p}
+    (fun x => toLex (azim v w p x, ‖projection (x - v) (w - v)‖)) hf hne
+  refine ⟨q, hqin.2, hqin.1, fun r hr hpr => ?_⟩
+  have h := hqmin r ⟨hr, hpr⟩
+  rw [Prod.Lex.toLex_le_toLex] at h
+  exact h
+
+/-- Mirror of `LocalAuto3.AZIM_CYCLE_PROPERTIES` (WRGCVDR.hl:1086). -/
+private theorem p2_AZIM_CYCLE_PROPERTIES {W : Set V3} {p : V3} (hsub : ¬(W ⊆ {p}))
+    (hfin : W.Finite) (v w : V3) :
+    azimCycle_p2 W v w p ≠ p ∧ azimCycle_p2 W v w p ∈ W ∧
+      ∀ q ∈ W, q ≠ p →
+        azim v w p (azimCycle_p2 W v w p) < azim v w p q ∨
+          azim v w p (azimCycle_p2 W v w p) = azim v w p q ∧
+            ‖projection (azimCycle_p2 W v w p - v) (w - v)‖ ≤
+              ‖projection (q - v) (w - v)‖ := by
+  obtain ⟨u, hu1, hu2, hu3⟩ := p2_EXIS_SMALLEST_WITH_AZIM_ORD hsub hfin
+  have hex : ∃ z : V3, z ≠ p ∧ z ∈ W ∧ ∀ q ∈ W, q ≠ p →
+      azim v w p z < azim v w p q ∨
+        azim v w p z = azim v w p q ∧
+          ‖projection (z - v) (w - v)‖ ≤ ‖projection (q - v) (w - v)‖ :=
+    ⟨u, hu1, hu2, hu3⟩
+  rw [azimCycle_p2, if_neg hsub]
+  exact Classical.epsilon_spec hex
+
+/-- Mirror of the proved `LocalAuto3.AZIM_CYCLE_EQ_SIGMA_FAN`
+(WRGCVDR.hl:1111): the chosen cyclic successor is the fan's `sigmaFan`. -/
+private theorem p2_AZIM_CYCLE_EQ_SIGMA_FAN {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {v u : V3} (hu : u ∈ setOfEdge v V E) :
+    azimCycle_p2 (EE_p2 v E) x v u = sigmaFan x V E v u := by
+  have hEE : EE_p2 v E = setOfEdge v V E := p2_UNI_E_IMP_EE_EQ_SET_OF_EDGE hfan.1 v
+  have hfinEE : (EE_p2 v E).Finite :=
+    hfan.2.2.1.1.subset (Set.Subset.trans (p2_EE_SUBSET_UNIONS_E v E) hfan.1)
+  by_cases hne : setOfEdge v V E = {u}
+  · have hsub : EE_p2 v E ⊆ {u} := by rw [hEE]; exact hne.subset
+    rw [p2_W_SUBSET_SINGLETON_IMP_IDE hsub x v, sigmaFan, if_pos hne]
+  · have hneE : ¬(EE_p2 v E ⊆ {u}) := by
+      intro hc
+      refine hne (Set.eq_singleton_iff_unique_mem.mpr ⟨hu, fun w hw => ?_⟩)
+      exact hc (by rw [← hEE] at hw; exact hw)
+    obtain ⟨hz1, hz2, hz3⟩ :=
+      p2_AZIM_CYCLE_PROPERTIES (W := EE_p2 v E) (p := u) hneE hfinEE x v
+    obtain ⟨hs1, hs2, hs3⟩ := SIGMA_FAN hne hfan hu
+    have hEu : {v, u} ∈ E := (properties_of_setOfEdge_fan x V E v u hfan).mpr hu
+    have hEz : {v, azimCycle_p2 (EE_p2 v E) x v u} ∈ E :=
+      (properties_of_setOfEdge_fan x V E v _ hfan).mpr (by rw [← hEE]; exact hz2)
+    have hEs : {v, sigmaFan x V E v u} ∈ E :=
+      (properties_of_setOfEdge_fan x V E v _ hfan).mpr hs1
+    have hminz : azim x v u (azimCycle_p2 (EE_p2 v E) x v u)
+        ≤ azim x v u (sigmaFan x V E v u) := by
+      rcases hz3 (sigmaFan x V E v u) (by rw [hEE]; exact hs1) hs2 with h | h
+      · exact le_of_lt h
+      · exact le_of_eq h.1
+    have hmins : azim x v u (sigmaFan x V E v u)
+        ≤ azim x v u (azimCycle_p2 (EE_p2 v E) x v u) :=
+      hs3 _ (by rw [← hEE]; exact hz2) hz1
+    exact unique_azim_point_fan hfan hEu hEz hEs (le_antisymm hminz hmins)
+
+/-- Mirror of `LocalAuto3.nnOfHyp_dart` (WRGCVDR.hl:1302). -/
+private theorem p2_nnOfHyp_dart {x : V3} {V : Set V3} {E : Set (Set V3)} {u w : V3}
+    (hw : (u, w) ∈ dartsOfHyp_p2 E V) :
+    nnOfHyp_p2 x V E (u, w) = (u, azimCycle_p2 (EE_p2 u E) x u w) := by
+  have hd : (u, w) ∈ dartsOfHyp_p2 E V := hw
+  rw [show nnOfHyp_p2 x V E (u, w) =
+    if (u, w) ∈ dartsOfHyp_p2 E V
+    then ((u, w).1, azimCycle_p2 (EE_p2 (u, w).1 E) x (u, w).1 (u, w).2) else (u, w)
+    from rfl, if_pos hd]
+
+/-- Mirror of `LocalAuto3.FAN_darts_dichotomy`. -/
+private theorem p2_FAN_darts_dichotomy {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (_hfan : FAN x V E) {y : V3 × V3} (hy : y ∈ dartsOfHyp_p2 E V) :
+    y ∈ dart1OfFan V E ∨ (y.1 = y.2 ∧ y.1 ∈ V ∧ EE_p2 y.1 E = ∅) := by
+  rcases (Set.mem_union _ _ _).mp hy with h | h
+  · exact Or.inl h
+  · exact Or.inr ⟨h.1, h.2.1, h.2.2⟩
+
+/-- Mirror of `LocalAuto3.nnOfHyp_isolated`. -/
+private theorem p2_nnOfHyp_isolated {x : V3} {V : Set V3} {E : Set (Set V3)}
+    {y : V3 × V3} (hy : y.1 = y.2 ∧ y.1 ∈ V ∧ EE_p2 y.1 E = ∅) :
+    nnOfHyp_p2 x V E y = y := by
+  have hd : y ∈ dartsOfHyp_p2 E V := Or.inr (show y ∈ selfPairs_p2 E V from hy)
+  rw [show nnOfHyp_p2 x V E y =
+    if y ∈ dartsOfHyp_p2 E V then (y.1, azimCycle_p2 (EE_p2 y.1 E) x y.1 y.2) else y from rfl,
+    if_pos hd,
+    p2_W_SUBSET_SINGLETON_IMP_IDE (W := EE_p2 y.1 E) (p := y.2) (v := x) (w := y.1)
+      (fun w hw => by rw [hy.2.2] at hw; exact absurd hw (by simp))]
+
+/-- Mirror of `LocalAuto3.nnOfHyp_eq_nFanPair`. -/
+private theorem p2_nnOfHyp_eq_nFanPair {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {y : V3 × V3} (hy : y ∈ dart1OfFan V E) :
+    nnOfHyp_p2 x V E y = nFanPair x V E y := by
+  have hy2 : y.2 ∈ setOfEdge y.1 V E :=
+    (properties_of_setOfEdge_fan x V E y.1 y.2 hfan).mp hy
+  have hd : y ∈ dartsOfHyp_p2 E V := Or.inl (show y ∈ ordPairs_p2 E from hy)
+  rw [show nnOfHyp_p2 x V E y =
+    if y ∈ dartsOfHyp_p2 E V then (y.1, azimCycle_p2 (EE_p2 y.1 E) x y.1 y.2) else y
+    from rfl,
+    if_pos hd, p2_AZIM_CYCLE_EQ_SIGMA_FAN hfan hy2]
+  rfl
+
+/-- Mirror of `LocalAuto3.N_HYP_TO_AZIM_CYCLE_LEM` (WRGCVDR.hl:1995). -/
+private theorem p2_N_HYP_TO_AZIM_CYCLE_LEM {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (_hfan : FAN x V E) {u v : V3} (_huv : (u, v) ∈ dartsOfHyp_p2 E V) (n : ℕ) :
+    (nnOfHyp_p2 x V E)^[n] (u, v) = (u, (azimCycle_p2 (EE_p2 u E) x u)^[n] v) := by
+  induction n generalizing v with
+  | zero => rfl
+  | succ k ih =>
+    rw [Function.iterate_succ_apply', Function.iterate_succ_apply', ih _huv]
+    have hwD : (u, (azimCycle_p2 (EE_p2 u E) x u)^[k] v) ∈ dartsOfHyp_p2 E V := by
+      rcases p2_FAN_darts_dichotomy _hfan _huv with h1 | h2
+      · have hEE : EE_p2 u E = setOfEdge u V E :=
+          p2_UNI_E_IMP_EE_EQ_SET_OF_EDGE _hfan.1 u
+        have hvE : v ∈ EE_p2 u E := by
+          rw [hEE]
+          exact (properties_of_setOfEdge_fan x V E u v _hfan).mp h1
+        have hstep : ∀ m : ℕ, ∀ z : V3, z ∈ EE_p2 u E →
+            (azimCycle_p2 (EE_p2 u E) x u)^[m] z ∈ EE_p2 u E := by
+          intro m
+          induction m with
+          | zero => intro z hz; exact hz
+          | succ j jh =>
+            intro z hz
+            rw [Function.iterate_succ_apply']
+            have hq : (azimCycle_p2 (EE_p2 u E) x u)^[j] z ∈ EE_p2 u E := jh z hz
+            by_cases hsub : EE_p2 u E ⊆ {(azimCycle_p2 (EE_p2 u E) x u)^[j] z}
+            · rw [p2_W_SUBSET_SINGLETON_IMP_IDE (W := EE_p2 u E)
+                (p := (azimCycle_p2 (EE_p2 u E) x u)^[j] z) (v := x) (w := u) hsub]
+              exact hq
+            · exact (p2_AZIM_CYCLE_PROPERTIES (W := EE_p2 u E)
+                (p := (azimCycle_p2 (EE_p2 u E) x u)^[j] z) hsub
+                (p2_FAN_IMP_FINITE_EE _hfan u) x u).2.1
+        have hwE : (azimCycle_p2 (EE_p2 u E) x u)^[k] v ∈ EE_p2 u E := hstep k v hvE
+        have hE2 : {u, (azimCycle_p2 (EE_p2 u E) x u)^[k] v} ∈ E :=
+          (properties_of_setOfEdge_fan x V E u _ _hfan).mpr
+            (by rw [hEE] at hwE ⊢; exact hwE)
+        exact Set.mem_union_left (b := selfPairs_p2 E V) hE2
+      · have hE : EE_p2 u E = ∅ := h2.2.2
+        have huv2 : u = v := h2.1
+        rw [← huv2, hE]
+        have hfix : ∀ m : ℕ, (azimCycle_p2 (∅ : Set V3) x u)^[m] u = u := by
+          intro m
+          induction m with
+          | zero => rfl
+          | succ j jh =>
+            rw [Function.iterate_succ_apply',
+              p2_W_SUBSET_SINGLETON_IMP_IDE (W := (∅ : Set V3))
+                (p := (azimCycle_p2 (∅ : Set V3) x u)^[j] u) (v := x) (w := u)
+                (by simp), jh]
+        rw [hfix]
+        exact Set.mem_union_right (a := ordPairs_p2 E)
+          ⟨rfl, h2.2.1, h2.2.2⟩
+    rw [p2_nnOfHyp_dart hwD]
+
+/-- Mirror of `LocalAuto3.ITER_AZIM_CYCLE_EQ_ITER_SIGMA` (WRGCVDR.hl:2044). -/
+private theorem p2_ITER_AZIM_CYCLE_EQ_ITER_SIGMA {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (_hfan : FAN x V E) {v u : V3} (_hv : {v, u} ∈ E) (a : V3) (_ha : a ∈ EE_p2 v E)
+    (n : ℕ) :
+    (azimCycle_p2 (EE_p2 v E) x v)^[n] a = (sigmaFan x V E v)^[n] a := by
+  have haE : a ∈ setOfEdge v V E := by
+    rw [← p2_UNI_E_IMP_EE_EQ_SET_OF_EDGE _hfan.1 v]
+    exact _ha
+  have hmem : ∀ m : ℕ, (sigmaFan x V E v)^[m] a ∈ setOfEdge v V E := by
+    intro m
+    induction m with
+    | zero => exact haE
+    | succ j jh =>
+      rw [Function.iterate_succ_apply']
+      exact sigma_fan_in_setOfEdge _hfan jh
+  induction n with
+  | zero => rfl
+  | succ k ih =>
+    rw [Function.iterate_succ_apply', Function.iterate_succ_apply', ih]
+    exact p2_AZIM_CYCLE_EQ_SIGMA_FAN _hfan (hmem k)
+
+/-- Mirror of `LocalAuto3.CYCLIC_SET_IMP_STABLE_SET2` (WRGCVDR.hl:2080); the
+single-cyclicity input is the importable `orbit_eq_setOfEdge`. -/
+private theorem p2_CYCLIC_SET_IMP_STABLE_SET2 {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (_hfan : FAN x V E) {v u : V3} (_hv : {v, u} ∈ E) (a : V3) (_ha : a ∈ EE_p2 v E) :
+    EE_p2 v E = {y | ∃ n : ℕ, y = (azimCycle_p2 (EE_p2 v E) x v)^[n] a} := by
+  have hfan : FAN x V E := ‹FAN x V E›
+  have hv : {v, u} ∈ E := ‹{v, u} ∈ E›
+  have ha : a ∈ EE_p2 v E := ‹a ∈ EE_p2 v E›
+  have hEE : EE_p2 v E = setOfEdge v V E := p2_UNI_E_IMP_EE_EQ_SET_OF_EDGE hfan.1 v
+  have hae : {v, a} ∈ E :=
+    (properties_of_setOfEdge_fan x V E v a hfan).mpr (by rw [← hEE]; exact ha)
+  have hconv : ∀ n : ℕ, (azimCycle_p2 (EE_p2 v E) x v)^[n] a = (sigmaFan x V E v)^[n] a :=
+    fun n => p2_ITER_AZIM_CYCLE_EQ_ITER_SIGMA hfan hv a ha n
+  ext y
+  constructor
+  · intro hy
+    have hyE : y ∈ setOfEdge v V E := hEE ▸ hy
+    have hyn : y ∈ setOfOrbitsPointsFan x V E v a :=
+      orbit_eq_setOfEdge hfan hae ▸ hyE
+    simp only [setOfOrbitsPointsFan, Set.mem_setOf_eq] at hyn
+    obtain ⟨n, hn⟩ := hyn
+    exact ⟨n, hn.symm.trans (hconv n).symm⟩
+  · rintro ⟨n, hn⟩
+    have hyE : y ∈ setOfEdge v V E := by
+      rw [← orbit_eq_setOfEdge hfan hae]
+      simp only [setOfOrbitsPointsFan, Set.mem_setOf_eq]
+      exact ⟨n, (hconv n).symm.trans hn.symm⟩
+    rw [hEE]
+    exact hyE
+
+/-! ### Private aux kit for `WRGCVDR_BIJ` (mirror of LocalAuto3's `p3_*`
+block; HOL source WRGCVDR.hl:589–744, 2519, 2548 with the
+`hypermap (HYP …)` tuple absorbed by the proof-carrying `Hypermap`). -/
+
+/-- Faces are orbits of the face map (mirror of `LocalAuto3.p3_faceEqOrbit`). -/
+private theorem p2_faceEqOrbit {α : Type*} [DecidableEq α] (H : Hypermap α) (d : α) :
+    H.face d = orbitF_p2 (H.faceMap : α → α) d := by
+  rw [Hypermap.face, orbitMap]
+  ext y
+  simp only [Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨n, hnn⟩
+    exact ⟨n, by rwa [Equiv.Perm.coe_pow] at hnn⟩
+  · rintro ⟨n, hnn⟩
+    exact ⟨n, by rw [Equiv.Perm.coe_pow]; exact hnn⟩
+
+/-- Node orbits read through the `HYP` component `nn_of_hyp`
+(mirror of `LocalAuto3.p3_nodeMem_iterate`). -/
+private theorem p2_nodeMem_iterate {x : V3} {V : Set V3} {E : Set (Set V3)}
+    {H : Hypermap (V3 × V3)}
+    (hn : (H.nodeMap : V3 × V3 → V3 × V3) = nnOfHyp_p2 x V E) (d w : V3 × V3) :
+    w ∈ H.node d ↔ ∃ n : ℕ, (nnOfHyp_p2 x V E)^[n] d = w := by
+  rw [Hypermap.node, orbitMap]
+  simp only [Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨n, hnn⟩
+    exact ⟨n, by rwa [Equiv.Perm.coe_pow, hn] at hnn⟩
+  · rintro ⟨n, hnn⟩
+    exact ⟨n, by rw [Equiv.Perm.coe_pow, hn]; exact hnn⟩
+
+/-- `nn_of_hyp` preserves the first component, hence so do its iterates
+(mirror of `LocalAuto3.p3_fst_iterate`). -/
+private theorem p2_fst_iterate (x : V3) (V : Set V3) (E : Set (Set V3)) :
+    ∀ (m : ℕ) (d : V3 × V3), ((nnOfHyp_p2 x V E)^[m] d).1 = d.1 := by
+  have hFST : ∀ d : V3 × V3, (nnOfHyp_p2 x V E d).1 = d.1 := by
+    intro d
+    by_cases hdd : d ∈ dartsOfHyp_p2 E V
+    · rw [show nnOfHyp_p2 x V E d =
+        if d ∈ dartsOfHyp_p2 E V then (d.1, azimCycle_p2 (EE_p2 d.1 E) x d.1 d.2) else d
+        from rfl, if_pos hdd]
+    · rw [show nnOfHyp_p2 x V E d =
+        if d ∈ dartsOfHyp_p2 E V then (d.1, azimCycle_p2 (EE_p2 d.1 E) x d.1 d.2) else d
+        from rfl, if_neg hdd]
+  intro m
+  induction m with
+  | zero => intro d; rfl
+  | succ k ih =>
+    intro d
+    rw [Function.iterate_succ_apply', hFST]
+    exact ih d
+
+/-- HOL `DIH2K_IMP_PRE_SIMPLE_HYP` (WRGCVDR.hl:589; mirror of
+`LocalAuto3.p3_preSimple`). -/
+private theorem p2_preSimple {α : Type*} [DecidableEq α] {H : Hypermap α} {k : ℕ}
+    (hd : dih2k_p2 H k) (hk : k ≠ 0) :
+    ∀ z ∈ H.darts, (H.nodeMap : α → α) z ∉ H.face z := by
+  intro z hz hmem
+  have hxS : z ∈ H.face z := H.mem_face_self z
+  have hsub : H.face z ⊆ (↑H.darts : Set α) := H.face_subset_darts hz
+  have hfinS : (H.face z).Finite := (H.darts.finite_toSet).subset hsub
+  have hfinImg : ((H.nodeMap : α → α) '' H.face z).Finite :=
+    Set.Finite.image (H.nodeMap : α → α) hfinS
+  have hSle : (H.face z).ncard ≤ k := by
+    rw [p2_faceEqOrbit]
+    exact p2_HAVING_ORDERS_K_IMP_CARD_ORBIT_LE_K (f := (H.faceMap : α → α)) hd.2.2.1 hk z
+  have hmemI : (H.nodeMap : α → α) z ∈ H.face z ∩ ((H.nodeMap : α → α) '' H.face z) :=
+    ⟨hmem, z, hxS, rfl⟩
+  have hinter : (H.face z ∩ ((H.nodeMap : α → α) '' H.face z)) ≠ ∅ := by
+    intro hc
+    rw [hc] at hmemI
+    simp at hmemI
+  have hcard := p2_CARD_UNION_NOT_DISTJ_LT hfinS hfinImg hinter
+  have himg : ((H.nodeMap : α → α) '' H.face z).ncard ≤ (H.face z).ncard :=
+    Set.ncard_image_le (hs := hfinS)
+  have hcover := hd.2.1 z hz
+  have hstep1 : (↑H.darts : Set α).ncard <
+      (H.face z).ncard + ((H.nodeMap : α → α) '' H.face z).ncard := by
+    rw [hcover]; exact hcard
+  have hstep2 : (H.face z).ncard + ((H.nodeMap : α → α) '' H.face z).ncard
+      ≤ (H.face z).ncard + (H.face z).ncard := add_le_add (le_refl _) himg
+  have h9 : (↑H.darts : Set α).ncard = 2 * k := by
+    rw [Set.ncard_coe_finset, hd.1]
+  omega
+
+/-- HOL `DIH2K_IMP_SIMPLE_HYPERMAP` (WRGCVDR.hl:641; mirror of
+`LocalAuto3.p3_simple`). -/
+private theorem p2_simple {α : Type*} [DecidableEq α] {H : Hypermap α} {k : ℕ}
+    (hd : dih2k_p2 H k) (hk : k ≠ 0) : H.Simple := by
+  have hpre := p2_preSimple hd hk
+  intro z hz
+  have horders2 : hasOrders_p2 (H.nodeMap : α → α) 2 := hd.2.2.2.2
+  have hnodeOrbit : H.node z = orbitF_p2 (H.nodeMap : α → α) z := by
+    simp only [Hypermap.node, orbitMap, orbitF_p2, Equiv.Perm.coe_pow]
+  have hnode : H.node z = {z, (H.nodeMap : α → α) z} := by
+    rw [hnodeOrbit, p2_HAS_ORDERS_IMP_ORBIT_MAP_FIRST_ROW horders2 two_ne_zero z]
+    ext y
+    simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+    constructor
+    · rintro ⟨n, hnlt, hn⟩
+      have hn2 : n = 0 ∨ n = 1 := by omega
+      rcases hn2 with rfl | rfl
+      · subst hn; simp
+      · subst hn; simp
+    · rintro (hy | hy)
+      · exact ⟨0, by norm_num, hy.symm⟩
+      · refine ⟨1, by norm_num, ?_⟩
+        rw [hy, Function.iterate_one]
+  ext w
+  constructor
+  · rintro ⟨hn', hf'⟩
+    rw [hnode] at hn'
+    rcases Set.mem_insert_iff.mp hn' with hw | hw
+    · exact hw
+    · exact absurd (hw ▸ hf') (hpre z hz)
+  · intro hw
+    rw [hw]
+    exact ⟨H.mem_node_self z, H.mem_face_self z⟩
+
+/-- HOL `DIH_IMP_EVERY_NODE_INTER_FACE` (WRGCVDR.hl:717; mirror of
+`LocalAuto3.p3_everyNode`). -/
+private theorem p2_everyNode {α : Type*} [DecidableEq α] {H : Hypermap α} {k : ℕ}
+    (hd : dih2k_p2 H k) {a b : α} (ha : a ∈ H.darts) (hb : b ∈ H.darts) :
+    ∃ d, d ∈ H.node a ∧ d ∈ H.face b := by
+  have horders2 : hasOrders_p2 (H.nodeMap : α → α) 2 := hd.2.2.2.2
+  have hinv : ∀ z : α, (H.nodeMap : α → α) ((H.nodeMap : α → α) z) = z := by
+    intro z
+    have h2 : (H.nodeMap : α → α)^[2] z = z := by rw [horders2.2]; rfl
+    simpa [Function.iterate_succ_apply', Function.iterate_one] using h2
+  have hcover := hd.2.1 b hb
+  have hamem : a ∈ ((H.face b : Set α) ∪ (H.nodeMap : α → α) '' H.face b) := hcover ▸ ha
+  rcases Set.mem_or_mem_of_mem_union hamem with h1 | h2
+  · exact ⟨a, H.mem_node_self a, h1⟩
+  · obtain ⟨z, hzF, hza⟩ := h2
+    refine ⟨z, ?_, hzF⟩
+    rw [Hypermap.node, orbitMap]
+    simp only [Set.mem_setOf_eq]
+    refine ⟨1, ?_⟩
+    rw [Equiv.Perm.coe_pow, Function.iterate_one]
+    exact ((hinv z).symm.trans (congrArg (H.nodeMap : α → α) hza)).symm
+
+/-- The combinatorial core of `WRGCVDR_BIJ`: two darts with the same first
+component lie in the same node orbit (`EE_p2` is a single azim cycle:
+`p2_CYCLIC_SET_IMP_STABLE_SET2` + `p2_N_HYP_TO_AZIM_CYCLE_LEM`; mirror of
+`LocalAuto3.p3_same_fst_node`). -/
+private theorem p2_same_fst_node {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {d1 d2 : V3 × V3} (hd1 : d1 ∈ dartsOfHyp_p2 E V)
+    (hd2 : d2 ∈ dartsOfHyp_p2 E V) (h12 : d1.1 = d2.1) :
+    d2 ∈ orbitF_p2 (nnOfHyp_p2 x V E) d1 := by
+  rcases Set.mem_or_mem_of_mem_union hd1 with ho1 | hs1
+  · have hvE1 : d1.2 ∈ EE_p2 d1.1 E := ho1
+    rcases Set.mem_or_mem_of_mem_union hd2 with ho2 | hs2
+    · have hvE2 : d2.2 ∈ EE_p2 d1.1 E := by
+        have h' : d2.2 ∈ EE_p2 d2.1 E := ho2
+        rw [← h12] at h'
+        exact h'
+      have hE1 : {d1.1, d1.2} ∈ E := ho1
+      obtain ⟨m, hm⟩ :=
+        (p2_CYCLIC_SET_IMP_STABLE_SET2 (x := x) hfan (v := d1.1) (u := d1.2) hE1 d1.2 hvE1) ▸ hvE2
+      exact ⟨m, by rw [p2_N_HYP_TO_AZIM_CYCLE_LEM hfan hd1 m]; exact Prod.ext h12 hm.symm⟩
+    · exfalso
+      have hz2 : EE_p2 d1.1 E = ∅ := by rw [h12]; exact hs2.2.2
+      exact absurd hvE1 (by rw [hz2]; exact fun hc => hc)
+  · rcases Set.mem_or_mem_of_mem_union hd2 with ho2 | hs2
+    · exfalso
+      have hz1 : EE_p2 d1.1 E = ∅ := hs1.2.2
+      have hvE2 : d2.2 ∈ EE_p2 d1.1 E := by
+        have h' : d2.2 ∈ EE_p2 d2.1 E := ho2
+        rw [← h12] at h'
+        exact h'
+      exact absurd hvE2 (by rw [hz1]; exact fun hc => hc)
+    · have he2 : d1.2 = d2.2 := hs1.1.symm.trans (h12.trans hs2.1)
+      exact ⟨0, by rw [Function.iterate_zero_apply]; exact Prod.ext h12 he2⟩
+
 /-! ## Remaining localization.hl theorems (giants; statements verbatim,
 proofs deferred) -/
 
-/-- HOL `AZIM_CYCLE_EQ_SIGMA_FAN_ALT` (localization.hl:234). NEEDS the
-azim-cycle/sigma-fan compatibility theorem of the Wrgcvdr block. -/
+/-- HOL `AZIM_CYCLE_EQ_SIGMA_FAN_ALT` (localization.hl:234) — filled via the
+kit's `p2_AZIM_CYCLE_EQ_SIGMA_FAN` and the proved `EE_elim`. -/
 theorem AZIM_CYCLE_EQ_SIGMA_FAN_ALT (hfan : FAN 0 V E) {u v : V3}
     (hu : u ∈ setOfEdge v V E) :
-    azimCycle_p2 (setOfEdge v V E) 0 v u = sigmaFan 0 V E v u := sorry
+    azimCycle_p2 (setOfEdge v V E) 0 v u = sigmaFan 0 V E v u := by
+  rw [← EE_elim hfan v]
+  exact p2_AZIM_CYCLE_EQ_SIGMA_FAN hfan hu
 
 /-- HOL `nn_of_hyp_elim` (localization.hl:245). -/
 theorem nn_of_hyp_elim (hfan : FAN 0 V E) :
@@ -541,8 +1073,65 @@ theorem local_fan2 (hV : V) (hE : E) (hFF : FF) :
       FAN 0 V E ∧ ∃ HS : Hypermap (V3 × V3), IsHyp_p2 0 V E HS ∧
         FF ∈ HS.faceSet ∧ dih2k_p2 HS FF.ncard := sorry
 
-/-- HOL `WRGCVDR_BIJ` (localization.hl:356). -/
-theorem WRGCVDR_BIJ (h : localFan_p2 V E FF) : Set.BijOn Prod.fst FF V := sorry
+/-- HOL `WRGCVDR_BIJ` (localization.hl:356) — direct construction (mirror of
+the proved `LocalAuto3.BIJ_BETWEEN_FF_AND_V`): MapsTo from `FF ⊆ darts`;
+SurjOn from `p2_everyNode` + `p2_choose_nd_point`; InjOn because darts of one
+face sharing `FST` share the node orbit (`p2_same_fst_node`), lie in the same
+face orbit (`p2_HAS_ORDK_IN_ORBIT_IMP_SAME_ORBIT`), and the hypermap is
+`Simple` (`p2_simple`). -/
+theorem WRGCVDR_BIJ (h : localFan_p2 V E FF) : Set.BijOn Prod.fst FF V := by
+  show Set.BijOn (fun d : V3 × V3 => d.1) FF V
+  obtain ⟨H, hd, -, hn, -, hfan, ⟨z, hzd, hFF⟩, hdih⟩ := h
+  have hzF : z ∈ FF := by rw [hFF]; exact H.mem_face_self z
+  have hdartOf : ∀ d ∈ FF, d ∈ dartsOfHyp_p2 E V := by
+    intro d hdF
+    have hsub := H.face_subset_darts hzd (hFF ▸ hdF)
+    rw [hd] at hsub
+    exact hsub
+  have hfinFF : FF.Finite :=
+    (H.darts.finite_toSet).subset fun d hdF => hd ▸ hdartOf d hdF
+  have hk : FF.ncard ≠ 0 := by
+    intro h0
+    have hFE : FF = ∅ := (Set.ncard_eq_zero hfinFF).mp h0
+    rw [hFE] at hzF
+    simp at hzF
+  have hfaceOrbit : ∀ d ∈ FF, H.face d = FF := by
+    intro d hdF
+    have hbr : FF = orbitF_p2 (H.faceMap : V3 × V3 → V3 × V3) z := by
+      rw [hFF, p2_faceEqOrbit]
+    rw [hbr]
+    exact p2_HAS_ORDK_IN_ORBIT_IMP_SAME_ORBIT
+      (f := (H.faceMap : V3 × V3 → V3 × V3)) hdih.2.2.1 hk
+      ((p2_faceEqOrbit H z) ▸ (hFF ▸ hdF))
+  refine ⟨?_, ?_, ?_⟩
+  · -- MapsTo
+    intro d hdF
+    exact (p2_IN_DARTS_HYP_IMP_FST_SND_IN_V hfan.1 (hdartOf d hdF)).1
+  · -- InjOn
+    intro d1 hd1 d2 hd2 h12
+    have hsame : d2 ∈ orbitF_p2 (nnOfHyp_p2 0 V E) d1 :=
+      p2_same_fst_node hfan (hdartOf d1 hd1) (hdartOf d2 hd2) h12
+    have hnode2 : d2 ∈ H.node d1 := by
+      rw [p2_nodeMem_iterate hn d1 d2]
+      exact hsame
+    have hsimple : H.node d1 ∩ H.face d1 = {d1} :=
+      p2_simple hdih hk d1 (H.face_subset_darts hzd (hFF ▸ hd1))
+    have hboth : d2 ∈ H.node d1 ∩ H.face d1 :=
+      ⟨hnode2, by rw [hfaceOrbit d1 hd1]; exact hd2⟩
+    rw [hsimple] at hboth
+    exact hboth.symm
+  · -- SurjOn
+    intro v hv
+    have hcp := p2_choose_nd_point v E V hfan.1 hv
+    have hdart : ((v, chooseNdPoint_p2 v E V) : V3 × V3) ∈ (↑H.darts : Set (V3 × V3)) := by
+      rw [hd]; exact hcp.2
+    obtain ⟨d, hdN, hdF⟩ := p2_everyNode hdih hdart hzd
+    refine ⟨d, ?_, ?_⟩
+    · rw [hFF]; exact hdF
+    rw [p2_nodeMem_iterate hn (v, chooseNdPoint_p2 v E V) d] at hdN
+    obtain ⟨n, hnn⟩ := hdN
+    rw [← hnn]
+    exact p2_fst_iterate 0 V E n (v, chooseNdPoint_p2 v E V)
 
 /-- HOL `WRGCVDR_ORBIT` (localization.hl:365). -/
 theorem WRGCVDR_ORBIT (h : localFan_p2 V E FF) :
