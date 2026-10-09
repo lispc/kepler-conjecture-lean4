@@ -1109,3 +1109,35 @@ new_specification 且基于 `Complex.arg`，**波及 `bisector_point` 全部下�
 
 ### (c) 状态：**已批准（2026-10-01 用户三连批 28/29/30 之一）**（2026-10-01
 holArg 批立案；随 bisector refill 波同车应用）。
+
+## 31. PA23 `grutoti_sum_volD` 前提面不足——冻结陈述可反驳 — 分级 M（STATEMENT 修正）
+
+### (a) HOL 出处：GRUTOTI.hl:7962-7966
+
+HOL 原文在全称语境携带装填/饱和/edge 门（packing、saturated、u0 ≠ u1、hl
+下界、e 具体化 {u0,u1}、region 见证参数）；Lean 冻结版只留
+`he : e = {u0, u1}` 一条，V/u0/u1/r/d 全自由——移植时前提丢失，非"难证"。
+
+### (b) 反例（机器验证，docs/grutoti-assets/probe_sum_volD_falsity.lean）
+
+V := ∅（任取 u0 ≠ u1，r := 1，d := 1/2）：`barV ∅ 3 ul` 恒假 ⇒
+`mcellSet ∅ = ∅` ⇒ `grutotiEdgeCells ∅ e = ∅` ⇒ setSum = 0；而
+`volume.real (grutotiConicCap u0 u1 1 (1/2)) > 0`
+（volumeConicCapPos，ConicCapVolume.lean:961）。强形式：对每对 u0 ≠ u1 即假，
+无需任何前提；探针含冻结陈述逐字 → False 封闭推论（:4418-4423 全量词形式）。
+
+### (c) 修复（二选一，供批）
+
+(a1) 最小门 = p23_region_data 同款（hs hp hu0 hu1 hne hhl he）+ `0 < r ∧ d < 1`
++ 显式测度覆盖/两两零测前提 ⇒ 主体变 FINITE_EDGE_X2（PA15:775 真证，一行，
+有限性支已机验）+ p23_measure_setSum_biUnion 纯装配；
+(a2) ∃-式沿 grutoti_region 见证重述（region_data 的 r d 见证内化）。
+两条均需 GRUTOTI capstone 调用点（PA23:4484-4494，六条前提全在 scope）同一
+SF 打包联动。测度覆盖的数学缺口（TIWWFYQ/GLTVHUM/SLTSTLO1 + PA17 AJRIPQN）
+是独立巨型，不在本 SF 范围——本 SF 只把债显式化到前提面。
+
+### (d) 状态：**DRAFT（2026-10-09 立案，待批）**
+
+附带修正建议：GT-2 lane note"mcell 4 cells carry e"反例 sketch 不成立
+（远点族 hl ≥ √2 ⇒ mcell4 = ∅）；无穷性支路应走远点 Delaunay 族的
+mcell0/2/3。随本 SF 落档。
