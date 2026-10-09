@@ -76,6 +76,7 @@ ENCODING NOTES
 
 import Kepler.Text.LocalAuto2
 import Kepler.Text.LocalAuto3
+import Kepler.Text.TopologyFan
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -1578,7 +1579,12 @@ theorem IN_WEDGE_IMP_AZIM_LE {v0 v1 w1 w2 x y : V3} (hy : y ∈ wedgeGe_p2 v0 v1
     (hx : ¬ Collinear ℝ ({v0, v1, x} : Set V3))
     (hy2 : ¬ Collinear ℝ ({v0, v1, y} : Set V3))
     (hw1 : ¬ Collinear ℝ ({v0, v1, w1} : Set V3)) :
-    azim v0 v1 x y ≤ azim v0 v1 w1 w2 := sorry
+    azim v0 v1 x y ≤ azim v0 v1 w1 w2 := by
+  have hv10 : (v1:V3) ≠ v0 := fun h => hw1 (collinear3_of_eq h)
+  have e1 := sum4_azim_fan hv10 hw1 hx hy2 hxy
+  have hn : 0 ≤ azim v0 v1 w1 x := azim_nonneg v0 v1 w1 x
+  calc azim v0 v1 x y ≤ azim v0 v1 w1 y := by linarith
+    _ ≤ azim v0 v1 w1 w2 := hy.2
 
 /-- HOL `LOFA_IMAGE_RHO_NODE_IDE` (local_lemmas.hl:1762). -/
 theorem LOFA_IMAGE_RHO_NODE_IDE (h : localFan_p2 V E FF) :
@@ -1815,7 +1821,13 @@ theorem MOST_EXPAND_IN_WEDGE_GE {v0 v1 w1 w2 x y : V3}
     (hyw : y ∈ wedgeGe_p2 v0 v1 w1 w2)
     (hxy : azim v0 v1 w1 x ≤ azim v0 v1 w1 y)
     (heq : azim v0 v1 x y = azim v0 v1 w1 w2) :
-    azim v0 v1 w1 x = 0 ∧ azim v0 v1 y w2 = 0 := sorry
+    azim v0 v1 w1 x = 0 ∧ azim v0 v1 y w2 = 0 := by
+  have hv10 : (v1:V3) ≠ v0 := fun h => hw1 (collinear3_of_eq h)
+  have e1 := sum4_azim_fan hv10 hw1 hx hy hxy
+  have e2 := sum4_azim_fan hv10 hw1 hy hw2 hyw.2
+  have hn1 : 0 ≤ azim v0 v1 w1 x := azim_nonneg v0 v1 w1 x
+  have hn2 : 0 ≤ azim v0 v1 y w2 := azim_nonneg v0 v1 y w2
+  exact ⟨by linarith, by linarith⟩
 
 /-- HOL `OZQVSFF` (local_lemmas.hl:2056). -/
 theorem OZQVSFF (h : convexLocalFan_p2 V E FF) {u v w : V3} {P : Set V3}
