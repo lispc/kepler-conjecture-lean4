@@ -86,12 +86,12 @@ NEEDS (wave-B3 state, 2026-09-30): closed in-file — GAMMAX_MCELL1,
   NOT_COPLANAR_R3, BARV_DISTINCT, OMEGA_LIST_BISECTOR,
   CONVEX_HULL_4_AFF_GE, CONVEX_HULL_SCALE; B3-wave assemblies: GAMMAX_MCELL2,
   MCELL2_VOL, TSKAJXY_2.
-REMAINING sorry (5 sites): `pack_nonlinear_rest` (def, G4 bank stub),
+CLOSED (2026-09-30 wedge GIANT lane): `MCELL2_VOL_SPLIT_EXPLICIT` and
+  `MCELL2_SOL` are PROVED (wedge closed forms section: slicing closed form
+  `VOLUME_FRUSTT_WEDGE` port + `WEDGE_GE_EQ_AFF_GE` port + radial kit).
+REMAINING sorry (3 sites): `pack_nonlinear_rest` (def, G4 bank stub),
   `mi_gamma3f_gamma3f_x_div_sqrtdelta` (merge_ineq WEAK/WEAK2),
-  `TSKAJXY_034` (0/3/4-cell giant), `MCELL2_VOL_SPLIT_EXPLICIT` (wedge
-  closed form, GIANT; consumed by MCELL2_VOL), `MCELL2_SOL`
-  (VOLUME_CONIC_CAP(_WEDGE) closed forms, GIANT; consumed by
-  GAMMAX_GAMMA2_X as a statement).
+  `TSKAJXY_034` (0/3/4-cell giant).
 DEDUP/CLOSED (2026-09-30, LA38 wrapper lane): `GAMMAX_GAMMA2_X` PROVED —
   the sole structural gap (the dihV<->dih_y bridge) is consumed via the new
   `Kepler.Text.LocalAuto38Bridge` public wrappers (`DIHV_EQ_DIH_Y_4PT_B`/
@@ -125,6 +125,7 @@ import Kepler.Text.LocalAuto38Bridge  -- GAMMAX_GAMMA2_X (2026-09-30): consumes
 import Kepler.Text.SphereKit
 import Kepler.Text.IneqClosureDefs
 import Kepler.Text.Polytope
+import Kepler.Text.ConicCapVolume
 import Kepler.Geom.WedgeVolume
 import Kepler.Geom.LuneVolume
 import Mathlib
@@ -4548,15 +4549,1641 @@ theorem SDIFF_SYM (X Y : Set V3) : symmDiff X Y = symmDiff Y X := by
   simp only [Set.mem_symmDiff]
   tauto
 
-/-- HOL `MCELL2_VOL_SPLIT_EXPLICIT` (TSKAJXY3.hl:1555; giant). -/
+
+/-! ## Wave-B4 wedge closed forms (2026-09-30 wedge GIANT lane): the
+`MCELL2_VOL_SPLIT_EXPLICIT`/`MCELL2_SOL` pair.  Kit: the closed-sector area
+(`p21w_closedSector`, via the null angular rays `p21w_ray_null`), the
+frustum-slab-wedge closed form `p21w_volume_rcone_slab_wedgeGe` (the
+`VOLUME_FRUSTT_WEDGE` port, `azim · (1 - a ^ 2) / a ^ 2 * h ^ 3 / 6`, by the
+ConicCapVolume slicing template: frame projection `measurePreserving_proj`,
+cone-to-`‖ζ‖ ≤ √((1 - a ^ 2) / a ^ 2) * t ^ 2` slice reduction
+(`p21w_cone_slice_sq`), closed-sector slices, and the single-piece
+`∫ C * t ^ 2` core), the `wedgeGe = affGe` bridge `p21w_wedgeGe_eq_affGe`
+(the `WEDGE_GE_EQ_AFF_GE` port, via the 2D sector-cone equivalence
+`p21w_cone_to_band`/`p21w_band_to_cone`), and the radial kit
+(`CONVEX_RCONE_GE` (PackingAuto12) for cone convexity, `pA_radial_of_mcell2`
+— the `URRPHBZ2` port: mcell2 is
+an apex-containing convex intersection, radially closed at the apex through
+`RCONE_PAIR` and the wedge weight characterisation). -/
+
+section WedgeClosedForms
+open Complex
+open scoped Pointwise
+
+
+private theorem p21w_mcell2_hl_ul_ge (V : Set V3) (ul : List V3) (hs : saturated V)
+    (hp : Packing V) (hb : barV V 3 ul) (hn : ¬nullSet (mcell2 V ul)) :
+    Real.sqrt 2 ≤ hl ul := by
+  by_contra hge
+  refine hn ?_
+  rw [mcell2, if_neg (fun hc => hge hc.2)]
+  exact measure_empty
+
+
+private theorem p21w_span_singleton_ne_top (b : ℂ) (hb : b ≠ 0) :
+    (Submodule.span ℝ {b} : Submodule ℝ ℂ) ≠ ⊤ := by
+  intro htop
+  have h1 : (1 : ℂ) ∈ (Submodule.span ℝ {b} : Submodule ℝ ℂ) := htop ▸ Submodule.mem_top
+  have hI : (I : ℂ) ∈ (Submodule.span ℝ {b} : Submodule ℝ ℂ) := htop ▸ Submodule.mem_top
+  obtain ⟨c1, hc1⟩ := Submodule.mem_span_singleton.mp h1
+  obtain ⟨c2, hc2⟩ := Submodule.mem_span_singleton.mp hI
+  have e1 : (↑c1 : ℂ) * b = 1 := by simpa using hc1
+  have e2 : (↑c2 : ℂ) * b = I := by simpa using hc2
+  have hre : (b.re : ℝ) ≠ 0 := by
+    intro h0
+    have h1r : ((↑c1 : ℂ) * b).re = (1 : ℂ).re := congrArg Complex.re e1
+    simp only [Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, zero_mul,
+      h0, mul_zero, Complex.one_re] at h1r
+    exact absurd h1r (by norm_num)
+  have hzero : (c2 : ℝ) = 0 := by
+    have h2r : ((↑c2 : ℂ) * b).re = (I : ℂ).re := congrArg Complex.re e2
+    simp only [Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, zero_mul,
+      Complex.I_re] at h2r
+    simp only [sub_zero] at h2r
+    exact (mul_eq_zero.mp h2r).resolve_right hre
+  have him : (1 : ℝ) = 0 := by
+    have h2i : ((↑c2 : ℂ) * b).im = (I : ℂ).im := congrArg Complex.im e2
+    simp only [Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re, hzero,
+      zero_mul, Complex.I_im] at h2i
+    exact absurd h2i (by norm_num)
+  exact absurd him (by norm_num)
+
+private theorem p21w_ray_null (a : ℂ) (ha : a ≠ 0) (θ : ℝ) :
+    volume {z : ℂ | ang (a⁻¹ * z) = θ} = 0 := by
+  classical
+  have hb : a * Complex.exp (θ * I) ≠ 0 := mul_ne_zero ha (Complex.exp_ne_zero _)
+  have hsub : {z : ℂ | ang (a⁻¹ * z) = θ}
+      ⊆ ((Submodule.span ℝ {a * Complex.exp (θ * I)} : Submodule ℝ ℂ) : Set ℂ) := by
+    intro z hz
+    have hw : (a⁻¹ * z : ℂ) = (‖a⁻¹ * z‖ : ℂ) * Complex.exp (θ * I) := by
+      rw [← hz]
+      exact ang_mul_exp _
+    refine Submodule.mem_span_singleton.mpr ⟨(‖a⁻¹ * z‖ : ℝ), ?_⟩
+    show ((‖a⁻¹ * z‖ : ℝ) : ℂ) * (a * Complex.exp (θ * I)) = z
+    have hstep : ((‖a⁻¹ * z‖ : ℝ) : ℂ) * (a * Complex.exp (θ * I))
+        = (a : ℂ) * ((‖a⁻¹ * z‖ : ℂ) * Complex.exp (θ * I)) :=
+      mul_left_comm _ _ _
+    rw [hstep, ← hw, mul_inv_cancel_left₀ ha z]
+  have hspan : volume ((Submodule.span ℝ {a * Complex.exp (θ * I)} : Submodule ℝ ℂ) : Set ℂ) = 0 :=
+    Measure.addHaar_submodule (E := ℂ) volume _ (p21w_span_singleton_ne_top _ hb)
+  have hle : volume {z : ℂ | ang (a⁻¹ * z) = θ}
+      ≤ volume ((Submodule.span ℝ {a * Complex.exp (θ * I)} : Submodule ℝ ℂ) : Set ℂ) :=
+    measure_mono hsub
+  rw [hspan] at hle
+  exact le_antisymm hle (by simp)
+
+/-- closed disc sector: `‖ζ‖ ≤ R`, angle in the closed band `[0, θ]`. -/
+private theorem p21w_closedSector (a : ℂ) (ha : a ≠ 0) (R θ : ℝ) (hR : 0 ≤ R)
+    (hθ0 : 0 ≤ θ) (hθ2π : θ < 2 * Real.pi) :
+    volume {z : ℂ | ‖z‖ ≤ R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ}
+      = ENNReal.ofReal (R ^ 2 * θ / 2) := by
+  classical
+  have hA : volume {z : ℂ | ‖z‖ < R ∧ 0 < ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) < θ}
+      = ENNReal.ofReal (R ^ 2 * θ / 2) := volume_sector_rot ha hR hθ0 hθ2π
+  have hray := p21w_ray_null a ha 0
+  have hrayθ := p21w_ray_null a ha θ
+  have hAD : {z : ℂ | ‖z‖ < R ∧ 0 < ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) < θ}
+      ⊆ {z : ℂ | ‖z‖ < R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ} := by
+    intro z hz
+    exact ⟨hz.1, le_of_lt hz.2.1, le_of_lt hz.2.2⟩
+  have hDC : {z : ℂ | ‖z‖ < R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ}
+      ⊆ {z : ℂ | ‖z‖ ≤ R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ} := by
+    intro z hz
+    exact ⟨le_of_lt hz.1, hz.2.1, hz.2.2⟩
+  have hsubDA : {z : ℂ | ‖z‖ < R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ} \
+      {z : ℂ | ‖z‖ < R ∧ 0 < ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) < θ}
+      ⊆ {z : ℂ | ang (a⁻¹ * z) = 0} ∪ {z : ℂ | ang (a⁻¹ * z) = θ} := by
+    intro z hz
+    have hDz : ‖z‖ < R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ := hz.1
+    have hAz : ¬ (‖z‖ < R ∧ 0 < ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) < θ) := hz.2
+    by_cases hpos : 0 < ang (a⁻¹ * z)
+    · rcases lt_or_eq_of_le hDz.2.2 with hlt | heq
+      · exact absurd ⟨hDz.1, hpos, hlt⟩ hAz
+      · exact Or.inr heq
+    · exact Or.inl (le_antisymm (le_of_not_gt hpos) hDz.2.1)
+  have hrayunion : volume ({z : ℂ | ang (a⁻¹ * z) = 0} ∪ {z : ℂ | ang (a⁻¹ * z) = θ}) = 0 := by
+    have h : volume ({z : ℂ | ang (a⁻¹ * z) = 0} ∪ {z : ℂ | ang (a⁻¹ * z) = θ})
+        ≤ volume {z : ℂ | ang (a⁻¹ * z) = 0} + volume {z : ℂ | ang (a⁻¹ * z) = θ} :=
+      measure_union_le (F := Measure ℂ) (μ := volume) _ _
+    rw [hray, hrayθ] at h
+    simpa using h
+  have hDle : volume {z : ℂ | ‖z‖ < R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ}
+      ≤ volume {z : ℂ | ‖z‖ < R ∧ 0 < ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) < θ} := by
+    have hstep : volume {z : ℂ | ‖z‖ < R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ}
+        ≤ volume {z : ℂ | ‖z‖ < R ∧ 0 < ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) < θ}
+          + volume ({z : ℂ | ang (a⁻¹ * z) = 0} ∪ {z : ℂ | ang (a⁻¹ * z) = θ}) := by
+      have hsub : {z : ℂ | ‖z‖ < R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ}
+          ⊆ {z : ℂ | ‖z‖ < R ∧ 0 < ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) < θ}
+            ∪ ({z : ℂ | ang (a⁻¹ * z) = 0} ∪ {z : ℂ | ang (a⁻¹ * z) = θ}) := by
+        intro z hz
+        by_cases hm : z ∈ {z : ℂ | ‖z‖ < R ∧ 0 < ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) < θ}
+        · exact Or.inl hm
+        · exact Or.inr (hsubDA ⟨hz, hm⟩)
+      exact (measure_mono hsub).trans
+        (measure_union_le (F := Measure ℂ) (μ := volume) _ _)
+    rw [hrayunion] at hstep
+    simpa using hstep
+  have hD : volume {z : ℂ | ‖z‖ < R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ}
+      = volume {z : ℂ | ‖z‖ < R ∧ 0 < ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) < θ} :=
+    le_antisymm hDle (measure_mono hAD)
+  have hCDle : volume {z : ℂ | ‖z‖ ≤ R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ}
+      ≤ volume {z : ℂ | ‖z‖ < R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ} := by
+    have hstep : volume {z : ℂ | ‖z‖ ≤ R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ}
+        ≤ volume {z : ℂ | ‖z‖ < R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ}
+          + volume (Metric.sphere (0 : ℂ) R) := by
+      have hsub : {z : ℂ | ‖z‖ ≤ R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ}
+          ⊆ {z : ℂ | ‖z‖ < R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ}
+            ∪ Metric.sphere (0 : ℂ) R := by
+        intro z hz
+        by_cases hm : z ∈ {z : ℂ | ‖z‖ < R ∧ 0 ≤ ang (a⁻¹ * z) ∧ ang (a⁻¹ * z) ≤ θ}
+        · exact Or.inl hm
+        · refine Or.inr ?_
+          rw [Metric.mem_sphere, dist_zero_right]
+          have hnotlt : ¬ (‖z‖ < R) := fun hlt => hm ⟨hlt, hz.2.1, hz.2.2⟩
+          exact le_antisymm hz.1 (not_lt.mp hnotlt)
+      exact (measure_mono hsub).trans
+        (measure_union_le (F := Measure ℂ) (μ := volume) _ _)
+    have hsphere : volume (Metric.sphere (0 : ℂ) R) = 0 :=
+      Measure.addHaar_sphere volume 0 R
+    rw [hsphere] at hstep
+    simpa using hstep
+  rw [← hA]
+  exact le_antisymm (hCDle.trans hDle) (hD ▸ measure_mono hDC)
+
+
+/-! ## translation kit (copies of WedgeVolume privates) -/
+
+private theorem p21w_collinear3_zero_sub {x a b : V3} :
+    Collinear3 x a b ↔ Collinear3 0 (a - x) (b - x) := by
+  by_cases h : a = x
+  · rw [h]
+    simp only [sub_self]
+    constructor <;> intro _ <;> exact collinear3_of_eq rfl
+  · have h' : a - x ≠ 0 := sub_ne_zero.mpr h
+    rw [collinear3_iff_smul h, collinear3_iff_smul h']
+    simp only [sub_zero]
+
+private theorem p21w_azimSpec_zero_sub {x a b c : V3} {θ : ℝ} :
+    AzimSpec x a b c θ ↔ AzimSpec 0 (a - x) (b - x) (c - x) θ := by
+  unfold AzimSpec
+  simp only [sub_zero, sub_ne_zero]
+  have hd : dist a x = dist (a - x) 0 := by rw [dist_eq_norm, dist_eq_norm, sub_zero]
+  rw [hd]
+
+private theorem p21w_azim_sub_self (x a b c : V3) :
+    azim x a b c = azim 0 (a - x) (b - x) (c - x) := by
+  unfold azim
+  rw [p21w_collinear3_zero_sub (x := x) (a := a) (b := b),
+    p21w_collinear3_zero_sub (x := x) (a := a) (b := c)]
+  have hpred : AzimSpec x a b c = AzimSpec 0 (a - x) (b - x) (c - x) :=
+    funext fun _ => propext p21w_azimSpec_zero_sub
+  rw [hpred]
+
+private theorem p21w_on3_norm_sq (e1 e2 e3 : V3) (he : Orthonormal3 e1 e2 e3) (x : V3) :
+    ‖x‖ ^ 2 = (x ⬝ᵥ e1) ^ 2 + (x ⬝ᵥ e2) ^ 2 + (x ⬝ᵥ e3) ^ 2 := by
+  have h12 : e1 ⬝ᵥ e2 = 0 := he.2.2.2.1
+  have h21 : e2 ⬝ᵥ e1 = 0 := by rw [dotProduct_comm]; exact he.2.2.2.1
+  have h13 : e1 ⬝ᵥ e3 = 0 := he.2.2.2.2.1
+  have h31 : e3 ⬝ᵥ e1 = 0 := by rw [dotProduct_comm]; exact he.2.2.2.2.1
+  have h23 : e2 ⬝ᵥ e3 = 0 := he.2.2.2.2.2.1
+  have h32 : e3 ⬝ᵥ e2 = 0 := by rw [dotProduct_comm]; exact he.2.2.2.2.2.1
+  rw [norm_sq_eq_dot, on3_expand he x]
+  simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+    smul_dotProduct, dotProduct_smul, smul_eq_mul]
+  rw [he.1, he.2.1, he.2.2.1, h12, h21, h13, h31, h23, h32]
+  ring
+
+private theorem p21w_zOf_norm_sq (e1 e2 : V3) (x : V3) :
+    ‖zOf e1 e2 x‖ ^ 2 = (x ⬝ᵥ e1) ^ 2 + (x ⬝ᵥ e2) ^ 2 := by
+  rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+  simp only [zOf, Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im,
+    Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, mul_zero,
+    add_zero, zero_add, mul_one, sub_self]
+  ring
+
+private theorem p21w_axis_zOf (e1 e2 e3 : V3) (he : Orthonormal3 e1 e2 e3) (b : ℝ) :
+    zOf e1 e2 (b • (e3 : V3)) = 0 := by
+  have e31 : (e3 : V3) ⬝ᵥ e1 = 0 := by
+    rw [dotProduct_comm]
+    exact he.2.2.2.2.1
+  have e32 : (e3 : V3) ⬝ᵥ e2 = 0 := by
+    rw [dotProduct_comm]
+    exact he.2.2.2.2.2.1
+  unfold zOf
+  rw [WithLp.ofLp_smul, smul_dotProduct, smul_dotProduct, e31, e32]
+  simp
+
+/-! ## the frustum-slab-wedge model in frame coordinates -/
+
+private def p21w_frustProj (a h θ : ℝ) (u : ℂ) : Set (ℝ × ℂ) :=
+  {p : ℝ × ℂ | a * Real.sqrt (p.1 ^ 2 + ‖p.2‖ ^ 2) ≤ p.1 ∧ p.1 ≤ h ∧
+    0 ≤ ang (u⁻¹ * p.2) ∧ ang (u⁻¹ * p.2) ≤ θ}
+
+private theorem p21w_frustProj_measurable (a h θ : ℝ) (u : ℂ) :
+    MeasurableSet (p21w_frustProj a h θ u) := by
+  have hnorm : Measurable fun p : ℝ × ℂ => ‖p.2‖ :=
+    (measurable_snd : Measurable fun p : ℝ × ℂ => p.2).norm
+  have hfc : Continuous fun p : ℝ × ℂ => a * Real.sqrt (p.1 ^ 2 + ‖p.2‖ ^ 2) := by
+    fun_prop
+  have hf : Measurable fun p : ℝ × ℂ => a * Real.sqrt (p.1 ^ 2 + ‖p.2‖ ^ 2) := hfc.measurable
+  have hm : Measurable fun p : ℝ × ℂ => ang (u⁻¹ * p.2) :=
+    measurable_ang.comp (measurable_const.mul measurable_snd)
+  unfold p21w_frustProj
+  exact (measurableSet_le hf measurable_fst).inter
+    ((measurableSet_le measurable_fst measurable_const).inter
+      ((measurableSet_le measurable_const hm).inter
+        (measurableSet_le hm measurable_const)))
+
+private theorem p21w_cone_slice_sq {a t ρ : ℝ} (ha : 0 < a) (ha1 : a < 1) (ht : 0 < t) :
+    a * Real.sqrt (t ^ 2 + ρ ^ 2) ≤ t ↔ ρ ^ 2 ≤ (1 - a ^ 2) / a ^ 2 * t ^ 2 := by
+  have ha2 : 0 < a ^ 2 := by positivity
+  have hsa : 0 ≤ (1 - a ^ 2) / a ^ 2 := by
+    refine div_nonneg ?_ (by positivity)
+    nlinarith [sq_nonneg a, ha.le, ha1]
+  have hconv : ∀ q : ℝ, a ^ 2 * ((1 - a ^ 2) / a ^ 2 * t ^ 2) = (1 - a ^ 2) * t ^ 2 := by
+    intro q
+    field_simp
+  constructor
+  · intro hle
+    have hnn : 0 ≤ a * Real.sqrt (t ^ 2 + ρ ^ 2) :=
+      mul_nonneg ha.le (Real.sqrt_nonneg _)
+    have hsq : (a * Real.sqrt (t ^ 2 + ρ ^ 2)) ^ 2 ≤ t ^ 2 :=
+      (sq_le_sq₀ hnn ht.le).mpr hle
+    rw [mul_pow, Real.sq_sqrt (by positivity)] at hsq
+    have hkey : ρ ^ 2 * a ^ 2 ≤ (1 - a ^ 2) * t ^ 2 := by
+      have h2 : a ^ 2 * t ^ 2 + a ^ 2 * ρ ^ 2 ≤ t ^ 2 := by
+        have : a ^ 2 * (t ^ 2 + ρ ^ 2) = a ^ 2 * t ^ 2 + a ^ 2 * ρ ^ 2 := by ring
+        rwa [this] at hsq
+      linarith
+    have h4 : ρ ^ 2 * a ^ 2 ≤ ((1 - a ^ 2) * t ^ 2 / a ^ 2) * a ^ 2 := by
+      have h5 : ((1 - a ^ 2) * t ^ 2 / a ^ 2) * a ^ 2 = (1 - a ^ 2) * t ^ 2 := by
+        field_simp
+      rw [h5]
+      exact hkey
+    have h6 := (mul_le_mul_iff_of_pos_right ha2).mp h4
+    have h7 : (1 - a ^ 2) * t ^ 2 / a ^ 2 = (1 - a ^ 2) / a ^ 2 * t ^ 2 := by
+      field_simp
+    rw [h7] at h6
+    exact h6
+  · intro hle
+    have m1 : a ^ 2 * ρ ^ 2 ≤ (1 - a ^ 2) * t ^ 2 := by
+      have h0 : a ^ 2 * ρ ^ 2 ≤ a ^ 2 * ((1 - a ^ 2) / a ^ 2 * t ^ 2) :=
+        mul_le_mul_of_nonneg_left hle ha2.le
+      have hc := hconv ρ
+      linarith
+    have h1 : a ^ 2 * (t ^ 2 + ρ ^ 2) ≤ t ^ 2 := by
+      have h2 : a ^ 2 * (t ^ 2 + ρ ^ 2) = a ^ 2 * t ^ 2 + a ^ 2 * ρ ^ 2 := by ring
+      have h3 : a ^ 2 * t ^ 2 + (1 - a ^ 2) * t ^ 2 = t ^ 2 := by ring
+      rw [h2]
+      linarith
+    have hsq : (a * Real.sqrt (t ^ 2 + ρ ^ 2)) ^ 2 ≤ t ^ 2 := by
+      rw [mul_pow, Real.sq_sqrt (by positivity)]
+      exact h1
+    exact (sq_le_sq₀ (mul_nonneg ha.le (Real.sqrt_nonneg _)) ht.le).mp hsq
+
+
+private theorem p21w_slice_vol (a h θ t : ℝ) (u : ℂ) (hu : u ≠ 0) (ha : 0 < a) (ha1 : a < 1)
+    (hθ0 : 0 ≤ θ) (hθ2π : θ < 2 * Real.pi) :
+    volume (Prod.mk t ⁻¹' p21w_frustProj a h θ u)
+      = if 0 < t ∧ t ≤ h then ENNReal.ofReal ((1 - a ^ 2) / a ^ 2 * t ^ 2 * θ / 2) else 0 := by
+  classical
+  have hpre : Prod.mk t ⁻¹' p21w_frustProj a h θ u
+      = {ζ : ℂ | a * Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2) ≤ t ∧ t ≤ h ∧
+          0 ≤ ang (u⁻¹ * ζ) ∧ ang (u⁻¹ * ζ) ≤ θ} := by
+    ext ζ
+    simp only [Set.mem_preimage, p21w_frustProj, Set.mem_setOf_eq]
+  by_cases ht0 : 0 < t
+  · by_cases hth : t ≤ h
+    · rw [if_pos ⟨ht0, hth⟩]
+      have hsa : 0 ≤ (1 - a ^ 2) / a ^ 2 := by
+        refine div_nonneg ?_ (by positivity)
+        nlinarith [sq_nonneg a, ha.le, ha1]
+      have hsq : (Real.sqrt ((1 - a ^ 2) / a ^ 2 * t ^ 2)) ^ 2
+          = (1 - a ^ 2) / a ^ 2 * t ^ 2 := Real.sq_sqrt (by positivity)
+      have hkey : Prod.mk t ⁻¹' p21w_frustProj a h θ u
+          = {ζ : ℂ | ‖ζ‖ ≤ Real.sqrt ((1 - a ^ 2) / a ^ 2 * t ^ 2) ∧
+              0 ≤ ang (u⁻¹ * ζ) ∧ ang (u⁻¹ * ζ) ≤ θ} := by
+        ext ζ
+        simp only [Set.mem_preimage, p21w_frustProj, Set.mem_setOf_eq]
+        constructor
+        · rintro ⟨h1, -, h3, h4⟩
+          refine ⟨?_, h3, h4⟩
+          have h2 : ‖ζ‖ ^ 2 ≤ (1 - a ^ 2) / a ^ 2 * t ^ 2 :=
+            (p21w_cone_slice_sq ha ha1 ht0).mp h1
+          have h5 : ‖ζ‖ ^ 2 ≤ (Real.sqrt ((1 - a ^ 2) / a ^ 2 * t ^ 2)) ^ 2 :=
+            h2.trans hsq.symm.le
+          exact (sq_le_sq₀ (norm_nonneg ζ) (Real.sqrt_nonneg _)).mp h5
+        · rintro ⟨h1, h3, h4⟩
+          refine ⟨(p21w_cone_slice_sq ha ha1 ht0).mpr ?_, hth, h3, h4⟩
+          rw [← hsq]
+          exact (sq_le_sq₀ (norm_nonneg ζ) (Real.sqrt_nonneg _)).mpr h1
+      rw [hkey]
+      have hsec := p21w_closedSector u hu (Real.sqrt ((1 - a ^ 2) / a ^ 2 * t ^ 2)) θ
+        (Real.sqrt_nonneg _) hθ0 hθ2π
+      rwa [hsq] at hsec
+    · rw [if_neg (fun hc => hth hc.2)]
+      have hempty : Prod.mk t ⁻¹' p21w_frustProj a h θ u = ∅ := by
+        ext ζ
+        simp only [Set.mem_preimage, p21w_frustProj, Set.mem_setOf_eq,
+          Set.mem_empty_iff_false]
+        exact ⟨fun hmem => hth hmem.2.1, fun h => absurd h (by simp)⟩
+      rw [hempty, measure_empty]
+  · rw [if_neg (fun hc => absurd hc.1 ht0)]
+    have hsub : Prod.mk t ⁻¹' p21w_frustProj a h θ u ⊆ ({(0 : ℂ)} : Set ℂ) := by
+      intro ζ hζ
+      simp only [Set.mem_preimage, p21w_frustProj, Set.mem_setOf_eq] at hζ
+      have h1 := hζ.1
+      have h2 : a * Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2) ≤ 0 := by linarith
+      have hz : Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2) = 0 := by
+        have hnn : 0 ≤ a * Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2) :=
+          mul_nonneg ha.le (Real.sqrt_nonneg _)
+        have h0 : a * Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2) = 0 := le_antisymm h2 hnn
+        have h3 : Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2) = 0 := by
+          apply mul_left_cancel₀ ha.ne'
+          rw [h0]
+          simp
+        exact h3
+      have h3 : t ^ 2 + ‖ζ‖ ^ 2 = 0 := by
+        have hsq3 : (Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2)) ^ 2 = 0 := by rw [hz]; norm_num
+        calc t ^ 2 + ‖ζ‖ ^ 2
+            = (Real.sqrt (t ^ 2 + ‖ζ‖ ^ 2)) ^ 2 := (Real.sq_sqrt (by positivity)).symm
+          _ = 0 := hsq3
+      have h5 : ‖ζ‖ = 0 := by
+        have h4 : ‖ζ‖ ^ 2 = 0 := by
+          have ht2 : 0 ≤ t ^ 2 := by positivity
+          nlinarith
+        exact pow_eq_zero_iff (by norm_num : (2:ℕ) ≠ 0) |>.mp h4
+      exact norm_eq_zero.mp h5
+    have hnull : volume (({(0 : ℂ)} : Set ℂ)) = 0 := by
+      have hb : ({(0 : ℂ)} : Set ℂ) = ((⊥ : Submodule ℝ ℂ) : Set ℂ) := by
+        ext z
+        simp [Submodule.mem_bot]
+      rw [hb]
+      exact Measure.addHaar_submodule volume _ (by
+        intro htop
+        have h1 : (1 : ℂ) ∈ (⊥ : Submodule ℝ ℂ) := htop ▸ Submodule.mem_top
+        have h2 : (1 : ℂ) = 0 := by simpa using h1
+        norm_num at h2)
+    have hle : volume (Prod.mk t ⁻¹' p21w_frustProj a h θ u)
+        ≤ volume (({(0 : ℂ)} : Set ℂ)) := measure_mono hsub
+    rw [hnull] at hle
+    exact le_antisymm hle (by simp)
+
+
+private theorem p21w_lintegral_frust (a h θ : ℝ) (u : ℂ) (hu : u ≠ 0) (ha : 0 < a)
+    (ha1 : a < 1) (hθ0 : 0 ≤ θ) (hθ2π : θ < 2 * Real.pi) (hh : 0 ≤ h) :
+    ∫⁻ t : ℝ, volume (Prod.mk t ⁻¹' p21w_frustProj a h θ u)
+      = ENNReal.ofReal ((1 - a ^ 2) / a ^ 2 * h ^ 3 * θ / 6) := by
+  have hfun : ∀ t : ℝ, volume (Prod.mk t ⁻¹' p21w_frustProj a h θ u)
+      = if 0 < t ∧ t ≤ h then ENNReal.ofReal ((1 - a ^ 2) / a ^ 2 * t ^ 2 * θ / 2) else 0 :=
+    fun t => p21w_slice_vol a h θ t u hu ha ha1 hθ0 hθ2π
+  simp_rw [hfun]
+  have hC0 : 0 ≤ (1 - a ^ 2) / a ^ 2 * θ / 2 := by
+    have h1 : 0 ≤ (1 - a ^ 2) / a ^ 2 := by
+      refine div_nonneg ?_ (by positivity)
+      nlinarith [sq_nonneg a, ha.le, ha1]
+    exact div_nonneg (mul_nonneg h1 hθ0) (by norm_num)
+  have hmul : ∀ t : ℝ, ((1 - a ^ 2) / a ^ 2 * t ^ 2 * θ / 2 : ℝ)
+      = (1 - a ^ 2) / a ^ 2 * θ / 2 * t ^ 2 := fun t => by ring
+  have hcompl : ∫⁻ t : ℝ in (Set.Ioc 0 h)ᶜ,
+      (if 0 < t ∧ t ≤ h then ENNReal.ofReal ((1 - a ^ 2) / a ^ 2 * t ^ 2 * θ / 2) else 0) = 0 := by
+    refine setLIntegral_eq_zero (measurableSet_Ioc (a := 0) (b := h)).compl ?_
+    intro t ht
+    simp only [Set.mem_compl_iff, Set.mem_Ioc, not_and_or, not_lt, not_and] at ht
+    rcases ht with (ht0 | hth)
+    · exact if_neg (fun hc => absurd hc.1 (not_lt.mpr ht0))
+    · exact if_neg (fun hc => hth hc.2)
+  have hsplit := lintegral_add_compl
+    (f := fun t : ℝ => if 0 < t ∧ t ≤ h then ENNReal.ofReal ((1 - a ^ 2) / a ^ 2 * t ^ 2 * θ / 2) else 0)
+    (μ := volume) (A := Set.Ioc 0 h) measurableSet_Ioc
+  rw [hcompl] at hsplit
+  rw [add_zero] at hsplit
+  rw [← hsplit]
+  have hcongr : ∫⁻ t : ℝ in Set.Ioc 0 h,
+      (if 0 < t ∧ t ≤ h then ENNReal.ofReal ((1 - a ^ 2) / a ^ 2 * t ^ 2 * θ / 2) else 0)
+      = ∫⁻ t : ℝ in Set.Ioc 0 h, ENNReal.ofReal ((1 - a ^ 2) / a ^ 2 * θ / 2 * t ^ 2) := by
+    refine setLIntegral_congr_fun measurableSet_Ioc ?_
+    intro t ht
+    simp only []
+    have ht0 : 0 < t := ht.1
+    have hth : t ≤ h := ht.2
+    rw [if_pos ⟨ht0, hth⟩, hmul t]
+  rw [hcongr]
+  have hcont : Continuous fun t : ℝ => (1 - a ^ 2) / a ^ 2 * θ / 2 * t ^ 2 := by
+    fun_prop
+  have hint : IntegrableOn (fun t : ℝ => (1 - a ^ 2) / a ^ 2 * θ / 2 * t ^ 2) (Set.Ioc 0 h) :=
+    (intervalIntegrable_iff_integrableOn_Ioc_of_le hh).mp
+      (hcont.intervalIntegrable 0 h)
+  have hnn : 0 ≤ᵐ[volume.restrict (Set.Ioc 0 h)]
+      (fun t : ℝ => (1 - a ^ 2) / a ^ 2 * θ / 2 * t ^ 2) := by
+    filter_upwards [self_mem_ae_restrict measurableSet_Ioc] with t _
+    exact mul_nonneg hC0 (sq_nonneg t)
+  rw [← ofReal_integral_eq_lintegral_ofReal hint hnn,
+    ← intervalIntegral.integral_of_le hh, intervalIntegral.integral_const_mul,
+    integral_pow]
+  congr 1
+  field_simp
+  ring
+
+
+private theorem p21w_norm_split (e1 e2 e3 : V3) (he : Orthonormal3 e1 e2 e3) (x : V3) :
+    ‖x‖ ^ 2 = (x ⬝ᵥ e3) ^ 2 + ‖zOf e1 e2 x‖ ^ 2 := by
+  rw [p21w_on3_norm_sq e1 e2 e3 he x, p21w_zOf_norm_sq e1 e2 x]
+  ring
+
+set_option maxHeartbeats 20000000 in
+/-- closed wedge membership = closed angular band in the frame coordinates. -/
+private theorem p21w_wedge_band (u v w1 w2 y : V3) (e1 e2 e3 : V3)
+    (he : Orthonormal3 e1 e2 e3) (hax : (v - u : V3) = dist v u • e3)
+    (hw : v ≠ u) (hc1 : ¬ Collinear3 u v w1) (hθ0 : 0 ≤ azim u v w1 w2) :
+    (y ∈ wedgeGe u v w1 w2 ↔
+      0 ≤ ang ((zOf e1 e2 (w1 - u))⁻¹ * zOf e1 e2 (y - u)) ∧
+        ang ((zOf e1 e2 (w1 - u))⁻¹ * zOf e1 e2 (y - u)) ≤ azim u v w1 w2) := by
+  classical
+  have hne : (v - u : V3) ≠ 0 := sub_ne_zero.mpr hw
+  have hDpos : 0 < dist v u := dist_pos.mpr hw
+  have hax' : (v - u : V3) = dist (v - u) 0 • e3 := by
+    have hd : dist v u = dist (v - u) 0 := by
+      rw [dist_eq_norm, dist_zero_right]
+    rw [← hd]
+    exact hax
+  have hnc1 : ¬ Collinear3 0 (v - u) (w1 - u) := fun h =>
+    hc1 (p21w_collinear3_zero_sub.mpr h)
+  have hzero : Collinear3 0 (v - u) (y - u) → zOf e1 e2 (y - u) = 0 := by
+    intro hcol
+    obtain ⟨c, hc⟩ := (collinear3_iff_smul hne).mp hcol
+    simp only [sub_zero] at hc
+    rw [hc, hax, smul_smul]
+    exact p21w_axis_zOf e1 e2 e3 he (c * dist v u)
+  have hang0 : Collinear3 0 (v - u) (y - u) →
+      ang ((zOf e1 e2 (w1 - u))⁻¹ * zOf e1 e2 (y - u)) = 0 := by
+    intro hcol
+    rw [hzero hcol, mul_zero]
+    simp [ang, angArg]
+  have hazim0 : Collinear3 0 (v - u) (y - u) →
+      azim 0 (v - u) (w1 - u) (y - u) = 0 := by
+    intro hcol
+    rw [azim, if_pos (Or.inr hcol)]
+  have hEq : ∀ z : V3, ¬ Collinear3 0 (v - u) (z - u) →
+      azim 0 (v - u) (w1 - u) (z - u)
+        = ang ((zOf e1 e2 (w1 - u))⁻¹ * zOf e1 e2 (z - u)) :=
+    fun z hz => azim_eq_ang_of_frame e1 e2 e3 he hax' hne hnc1 hz
+  have hkey : azim u v w1 y = ang ((zOf e1 e2 (w1 - u))⁻¹ * zOf e1 e2 (y - u)) := by
+    rw [p21w_azim_sub_self]
+    by_cases hcol : Collinear3 0 (v - u) (y - u)
+    · rw [hazim0 hcol, hang0 hcol]
+    · exact hEq y hcol
+  -- expose the azim conjunction via the equation lemma; raw `rintro` on the
+  -- `wedgeGe` membership would whnf-unfold `azim`/`Collinear3` and grind.
+  simp only [wedgeGe, Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨h1, h2⟩
+    rw [← hkey]
+    exact ⟨h1, h2⟩
+  · rintro ⟨h1, h2⟩
+    by_cases hcol : Collinear3 0 (v - u) (y - u)
+    · rw [hkey, hang0 hcol]
+      rw [hang0 hcol] at h1 h2
+      exact ⟨h1, h2⟩
+    · rw [hkey]
+      exact ⟨h1, h2⟩
+
+
+private theorem p21w_dot_smul (x : V3) (c : ℝ) (w : V3) :
+    (x ⬝ᵥ (c • w) : ℝ) = c * (x ⬝ᵥ w) := by
+  rw [dotProduct_smul]
+  simp
+
+set_option maxHeartbeats 20000000 in
+private theorem p21w_volume_rcone_slab_wedgeGe (u v w1 w2 : V3) (h a : ℝ)
+    (ha : 0 < a) (ha1 : a < 1) (huv : u ≠ v) (hc1 : ¬ Collinear3 u v w1)
+    (hc2 : ¬ Collinear3 u v w2) (hθ0 : 0 < azim u v w1 w2)
+    (hθπ : azim u v w1 w2 < Real.pi) (hh : 0 ≤ h) :
+    volume.real (rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖}
+        ∩ wedgeGe u v w1 w2)
+      = azim u v w1 w2 * (1 - a ^ 2) / a ^ 2 * h ^ 3 / 6 := by
+  classical
+  have hvu : v ≠ u := Ne.symm huv
+  obtain ⟨e1, e2, e3, he, hax⟩ := exists_on3_eq_smul (v - u) (sub_ne_zero.mpr hvu)
+  have hDpos : 0 < dist v u := dist_pos.mpr hvu
+  have hne : (v - u : V3) ≠ 0 := sub_ne_zero.mpr hvu
+  have hax' : (v - u : V3) = dist (v - u) 0 • e3 := by
+    have hd : dist v u = dist (v - u) 0 := by
+      rw [dist_eq_norm, dist_zero_right]
+    rw [← hd]
+    exact hax
+  have hnc1 : ¬ Collinear3 0 (v - u) (w1 - u) := fun hc =>
+    hc1 (p21w_collinear3_zero_sub.mpr hc)
+  have hθnonneg : 0 ≤ azim u v w1 w2 := azim_nonneg u v w1 w2
+  have hζ₁0 : zOf e1 e2 (w1 - u) ≠ 0 :=
+    (zOf_ne_zero_iff he hax hvu w1).mpr hc1
+  have hlam : ∀ p : V3, p ⬝ᵥ (v - u) = dist v u * (p ⬝ᵥ e3) := by
+    intro p
+    have hvu2 : v.ofLp - u.ofLp = dist v u • (e3.ofLp : Fin 3 → ℝ) := by
+      rw [← WithLp.ofLp_smul, ← WithLp.ofLp_sub]
+      exact congrArg WithLp.ofLp (by rw [dist_eq_norm]; exact hax)
+    rw [hvu2, dotProduct_smul, smul_eq_mul]
+  have hlam2 : ∀ p : V3, p.ofLp ⬝ᵥ (v.ofLp - u.ofLp) = dist v u * (p.ofLp ⬝ᵥ e3.ofLp) := by
+    intro p
+    have hvu2 : v.ofLp - u.ofLp = dist v u • (e3.ofLp : Fin 3 → ℝ) := by
+      rw [← WithLp.ofLp_smul, ← WithLp.ofLp_sub]
+      exact congrArg WithLp.ofLp (by rw [dist_eq_norm]; exact hax)
+    rw [hvu2, dotProduct_smul, smul_eq_mul]
+  set S : Set V3 := rconeGe u v a ∩ {y : V3 | (y - u) ⬝ᵥ (v - u) ≤ h * ‖v - u‖}
+      ∩ wedgeGe u v w1 w2 with hSdef
+  have htrans : volume.real ((fun y : V3 => y - u) '' S) = volume.real S := by
+    have himg : (fun y : V3 => y - u) '' S = (fun y : V3 => -u + y) '' S := by
+      ext z
+      simp only [Set.mem_image]
+      refine ⟨fun ⟨y, hy, hx⟩ => ⟨y, hy, by abel_nf at hx ⊢; exact hx⟩,
+        fun ⟨y, hy, hx⟩ => ⟨y, hy, by abel_nf at hx ⊢; exact hx⟩⟩
+    rw [himg, volume_real_add_left]
+  -- the model-set equality
+  have hset : (fun y : V3 => y - u) '' S
+      = (fun x : V3 => (x ⬝ᵥ e3, zOf e1 e2 x)) ⁻¹'
+          p21w_frustProj a h (azim u v w1 w2) (zOf e1 e2 (w1 - u)) := by
+    ext x
+    rw [Set.mem_image, Set.mem_preimage, p21w_frustProj, Set.mem_setOf_eq]
+    constructor
+    · rintro ⟨y, ⟨⟨hconeM, hslabM⟩, hwedge⟩, hx⟩
+      have hyx : y = u + x := by rw [← hx]; abel
+      subst hyx
+      have hcone := Set.mem_setOf_eq.mp hconeM
+      rw [add_sub_cancel_left, dist_eq_norm, add_sub_cancel_left, hlam x] at hcone
+      have h1 : a * ‖x‖ ≤ x ⬝ᵥ e3 := by
+        nlinarith [hcone, hDpos]
+      -- hcone (whnf): (e3.ofLp ⬝ᵥ x.ofLp) * dist v u ≤ (‖x‖ * a) * dist v u
+      have hslab := Set.mem_setOf_eq.mp hslabM
+      rw [WithLp.ofLp_sub, WithLp.ofLp_add, add_sub_cancel_left, hlam2 x,
+        mul_comm (dist v u) (x.ofLp ⬝ᵥ e3.ofLp), ← dist_eq_norm v u] at hslab
+      -- hslab : dist v u * (x.ofLp ⬝ᵥ e3.ofLp) ≤ h * dist v u
+      have h2 : x.ofLp ⬝ᵥ e3.ofLp ≤ h := le_of_mul_le_mul_right hslab hDpos
+      have hwb :=
+        (p21w_wedge_band u v w1 w2 (u + x) e1 e2 e3 he hax hvu hc1
+          hθnonneg).mp hwedge
+      simp only [add_sub_cancel_left] at hwb
+      obtain ⟨hb1, hb2⟩ := hwb
+      have hnorm2 : Real.sqrt ((x ⬝ᵥ e3) ^ 2 + ‖zOf e1 e2 x‖ ^ 2) = ‖x‖ := by
+        have hns := p21w_norm_split e1 e2 e3 he x
+        rw [← hns, Real.sqrt_sq_eq_abs, abs_of_nonneg (norm_nonneg x)]
+      refine ⟨?_, h2, hb1, hb2⟩
+      rw [hnorm2]
+      exact h1
+    · intro hx
+      obtain ⟨hc1c, h2, hb1, hb2⟩ := hx
+      have hnorm2 : Real.sqrt ((x ⬝ᵥ e3) ^ 2 + ‖zOf e1 e2 x‖ ^ 2) = ‖x‖ := by
+        have hns := p21w_norm_split e1 e2 e3 he x
+        rw [← hns, Real.sqrt_sq_eq_abs, abs_of_nonneg (norm_nonneg x)]
+      rw [hnorm2] at hc1c
+      have hge : a * ‖x‖ ≤ x ⬝ᵥ e3 := hc1c
+      have hxeq : (u + x - u : V3) = x := add_sub_cancel_left u x
+      rw [← hxeq] at hb1 hb2
+      have hxdot : (x ⬝ᵥ ((v - u : V3)) : ℝ) = dist v u * (x ⬝ᵥ e3) := hlam x
+      have hkey : ‖x‖ * dist v u * a ≤ x.ofLp ⬝ᵥ (v.ofLp - u.ofLp) := by
+        rw [hlam x]
+        calc ‖x‖ * dist v u * a = dist v u * (a * ‖x‖) := by ring
+          _ ≤ dist v u * (x.ofLp ⬝ᵥ e3.ofLp) :=
+                mul_le_mul_of_nonneg_left hge (le_of_lt hDpos)
+      refine ⟨u + x, ⟨⟨Set.mem_setOf_eq.mpr ?_, Set.mem_setOf_eq.mpr ?_⟩,
+        p21w_wedge_band u v w1 w2 (u + x) e1 e2 e3 he hax hvu hc1 hθnonneg
+          |>.mpr ⟨hb1, hb2⟩⟩, ?_⟩
+      · rw [add_sub_cancel_left, dist_eq_norm, add_sub_cancel_left]
+        exact hkey
+      · rw [add_sub_cancel_left, hlam x, mul_comm (dist v u) (x.ofLp ⬝ᵥ e3.ofLp),
+          ← dist_eq_norm v u]
+        exact mul_le_mul_of_nonneg_right h2 hDpos.le
+      · show (u + x - u : V3) = x
+        rw [add_sub_cancel_left]
+  -- volume transfer
+  have hproj := measurePreserving_proj e1 e2 e3 he
+  have h1 : volume ((fun x : V3 => (x ⬝ᵥ e3, zOf e1 e2 x)) ⁻¹'
+      p21w_frustProj a h (azim u v w1 w2) (zOf e1 e2 (w1 - u)))
+      = (volume.prod volume) (p21w_frustProj a h (azim u v w1 w2) (zOf e1 e2 (w1 - u))) :=
+    hproj.measure_preimage (p21w_frustProj_measurable a h (azim u v w1 w2)
+      (zOf e1 e2 (w1 - u))).nullMeasurableSet
+  have hvoleq : volume.real S
+      = ENNReal.toReal ((volume.prod volume)
+          (p21w_frustProj a h (azim u v w1 w2) (zOf e1 e2 (w1 - u)))) := by
+    rw [← htrans, Measure.real_def, hset, h1]
+  have hsliceeq : (volume.prod volume)
+      (p21w_frustProj a h (azim u v w1 w2) (zOf e1 e2 (w1 - u)))
+      = ∫⁻ t : ℝ, volume (Prod.mk t ⁻¹'
+          p21w_frustProj a h (azim u v w1 w2) (zOf e1 e2 (w1 - u))) :=
+    Measure.prod_apply (p21w_frustProj_measurable a h (azim u v w1 w2)
+      (zOf e1 e2 (w1 - u)))
+  have hval0 : 0 ≤ (1 - a ^ 2) / a ^ 2 * h ^ 3 * (azim u v w1 w2) / 6 := by
+    have hP : 0 ≤ (1 - a ^ 2) / a ^ 2 := by
+      refine div_nonneg ?_ (by positivity)
+      nlinarith [sq_nonneg a, ha.le, ha1]
+    exact div_nonneg (mul_nonneg (mul_nonneg hP (pow_nonneg hh 3))
+      hθnonneg) (by norm_num)
+  rw [hvoleq, hsliceeq,
+    p21w_lintegral_frust a h (azim u v w1 w2) (zOf e1 e2 (w1 - u)) hζ₁0 ha ha1
+      hθ0.le (by linarith [hθπ, Real.pi_pos]) hh, ENNReal.toReal_ofReal hval0]
+  ring
+
+
+/-! ## the 2D sector-cone equivalence (W1 core) -/
+
+private theorem p21w_ang_re (z : ℂ) (hz : z ≠ 0) : z.re = ‖z‖ * Real.cos (ang z) := by
+  have hexp := ang_mul_exp z
+  have hre : (Complex.exp (ang z * I)).re = Real.cos (ang z) := by
+    simp [Complex.exp_re]
+  have h1 : z.re = (↑‖z‖ * Complex.exp (ang z * I)).re := congrArg Complex.re hexp
+  rw [h1, Complex.mul_re]
+  simp [hre]
+
+private theorem p21w_ang_im (z : ℂ) (hz : z ≠ 0) : z.im = ‖z‖ * Real.sin (ang z) := by
+  have hexp := ang_mul_exp z
+  have him : (Complex.exp (ang z * I)).im = Real.sin (ang z) := by
+    simp [Complex.exp_im]
+  have h1 : z.im = (↑‖z‖ * Complex.exp (ang z * I)).im := congrArg Complex.im hexp
+  rw [h1, Complex.mul_im]
+  simp [him]
+
+private theorem p21w_ang_lt_pi_of_im_pos {g : ℂ} (hg : g ≠ 0) (hIM : 0 < g.im) :
+    0 < ang g ∧ ang g < Real.pi := by
+  have hsin : 0 < Real.sin (ang g) := by
+    have h2 := p21w_ang_im g hg
+    nlinarith [norm_pos_iff.mpr hg]
+  have h0 : 0 ≤ ang g := ang_nonneg g
+  have h2pi : ang g < 2 * Real.pi := ang_lt_two_pi g
+  refine ⟨lt_of_le_of_ne h0 fun hzz => ?_, ?_⟩
+  · rw [← hzz] at hsin
+    simp at hsin
+  · by_contra hgt
+    push_neg at hgt
+    have hne : ang g ≠ Real.pi := by
+      intro he
+      rw [he] at hsin
+      simp at hsin
+    have hx : ang g - 2 * Real.pi < 0 := by linarith
+    have hx2 : -Real.pi < ang g - 2 * Real.pi := by
+      rcases eq_or_lt_of_le hgt with heq | hlt
+      · exact absurd heq.symm hne
+      · linarith
+    have hper : Real.sin (ang g) = Real.sin (ang g - 2 * Real.pi) := by
+      have hp := Real.sin_periodic (ang g - 2 * Real.pi)
+      rwa [show ang g - 2 * Real.pi + 2 * Real.pi = ang g from by ring] at hp
+    rw [hper] at hsin
+    have hneg := Real.sin_neg_of_neg_of_neg_pi_lt hx hx2
+    linarith
+
+private theorem p21w_cross_lin {f1 f2 : ℝ} {g w : ℂ} (hg : g = f1 + f2 * w) :
+    g.re * w.im - g.im * w.re = f1 * w.im := by
+  have h1 := congrArg Complex.re hg
+  have h2 := congrArg Complex.im hg
+  simp at h1 h2
+  simp [h1, h2]
+  ring
+
+private theorem p21w_cross_sin {g w : ℂ} (hg : g ≠ 0) (hw : w ≠ 0) :
+    g.re * w.im - g.im * w.re = ‖g‖ * ‖w‖ * Real.sin (ang w - ang g) := by
+  rw [p21w_ang_re g hg, p21w_ang_im g hg, p21w_ang_re w hw, p21w_ang_im w hw]
+  rw [Real.sin_sub]
+  field_simp
+
+/-- cone ⊆ band: nonnegative combinations stay in the closed angular band `[0, θ]`. -/
+private theorem p21w_cone_to_band {ζ1 ζ2 : ℂ} (h1 : ζ1 ≠ 0) (h2z : ζ2 ≠ 0)
+    (hθ0 : 0 < ang (ζ1⁻¹ * ζ2)) (hθπ : ang (ζ1⁻¹ * ζ2) < Real.pi)
+    (f1 f2 : ℝ) (hf1 : 0 ≤ f1) (hf2 : 0 ≤ f2) :
+    0 ≤ ang (ζ1⁻¹ * (ζ1 * f1 + ζ2 * f2)) ∧
+      ang (ζ1⁻¹ * (ζ1 * f1 + ζ2 * f2)) ≤ ang (ζ1⁻¹ * ζ2) := by
+  classical
+  have hw0 : (ζ1⁻¹ * ζ2 : ℂ) ≠ 0 := mul_ne_zero (inv_ne_zero h1) h2z
+  have hwim : 0 < (ζ1⁻¹ * ζ2 : ℂ).im := by
+    have h2 := p21w_ang_im _ hw0
+    have hsin := Real.sin_pos_of_pos_of_lt_pi hθ0 hθπ
+    have hnormpos : (0:ℝ) < ‖(ζ1⁻¹ * ζ2 : ℂ)‖ := norm_pos_iff.mpr hw0
+    nlinarith
+  by_cases hg0 : f1 + f2 * (ζ1⁻¹ * ζ2) = 0
+  · have hz : (ζ1⁻¹ * (ζ1 * f1 + ζ2 * f2) : ℂ) = 0 := by
+      have heq : (ζ1⁻¹ * (ζ1 * f1 + ζ2 * f2) : ℂ) = f1 + f2 * (ζ1⁻¹ * ζ2) := by
+        field_simp
+      rw [heq, hg0]
+    rw [hz]
+    refine ⟨ang_nonneg 0, ?_⟩
+    simpa [ang, angArg] using hθ0.le
+  · set g : ℂ := ζ1⁻¹ * (ζ1 * f1 + ζ2 * f2) with hgdef
+    have hgeq : g = f1 + f2 * (ζ1⁻¹ * ζ2) := by
+      rw [hgdef]
+      field_simp
+    have hgne : g ≠ 0 := by
+      rw [hgeq]
+      exact hg0
+    have hgim : g.im = f2 * (ζ1⁻¹ * ζ2).im := by
+      rw [hgeq]
+      simp [Complex.mul_im]
+    by_cases hf2z : f2 = 0
+    · have hgre : g.re = f1 := by
+        have h1 := congrArg Complex.re hgeq
+        simp [hf2z] at h1
+        linarith
+      have hgz : g.im = 0 := by rw [hgim, hf2z, zero_mul]
+      have hzero : g.arg = 0 :=
+        Complex.arg_eq_zero_iff.mpr ⟨by rw [hgre]; exact hf1, hgz⟩
+      have harg : ang g = 0 := by
+        by_cases hh : g.arg < 0
+        · exfalso
+          have hcon := ang_eq_arg_add_of_neg hh
+          rw [hzero] at hcon
+          simp at hcon
+          linarith
+        · exact (ang_eq_arg_of_nonneg (not_lt.mp hh)).trans hzero
+      rw [harg]
+      exact ⟨le_refl 0, le_of_lt hθ0⟩
+    · have hf2p : 0 < f2 := lt_of_le_of_ne hf2 (Ne.symm hf2z)
+      have hpsi := p21w_ang_lt_pi_of_im_pos hgne (by rw [hgim]; exact mul_pos hf2p hwim)
+      have hcw := p21w_cross_lin hgeq
+      have hcs := p21w_cross_sin hgne hw0
+      have hwnormpos : (0:ℝ) < ‖(ζ1⁻¹ * ζ2 : ℂ)‖ := norm_pos_iff.mpr hw0
+      have hgnormpos : (0:ℝ) < ‖g‖ := norm_pos_iff.mpr hgne
+      have hsin0 : 0 ≤ Real.sin (ang (ζ1⁻¹ * ζ2) - ang g) := by
+        have h1 : 0 ≤ f1 * (ζ1⁻¹ * ζ2).im := mul_nonneg hf1 hwim.le
+        rw [← hcw, hcs] at h1
+        nlinarith [mul_pos hgnormpos hwnormpos]
+      by_cases hpos : 0 ≤ (ang (ζ1⁻¹ * ζ2)) - ang g
+      · exact ⟨ang_nonneg g, le_of_sub_nonneg hpos⟩
+      · exfalso
+        have hpsub : 0 < ang g - (ang (ζ1⁻¹ * ζ2)) := by linarith
+        have hlt : ang g - (ang (ζ1⁻¹ * ζ2)) < Real.pi := by linarith [hpsi.2]
+        have hs1 := Real.sin_pos_of_pos_of_lt_pi hpsub hlt
+        have hsneg : Real.sin ((ang (ζ1⁻¹ * ζ2)) - ang g)
+            = -(Real.sin (ang g - (ang (ζ1⁻¹ * ζ2)))) := by
+          rw [show (ang (ζ1⁻¹ * ζ2)) - ang g = -(ang g - (ang (ζ1⁻¹ * ζ2))) from by ring,
+            Real.sin_neg]
+        rw [hsneg] at hsin0
+        linarith
+
+/-- band ⊆ cone: points in the closed angular band `[0, θ]` are nonnegative
+combinations. -/
+private theorem p21w_band_to_cone {ζ1 ζ2 : ℂ} (h1 : ζ1 ≠ 0) (h2z : ζ2 ≠ 0)
+    (hθ0 : 0 < ang (ζ1⁻¹ * ζ2)) (hθπ : ang (ζ1⁻¹ * ζ2) < Real.pi)
+    {g : ℂ} (hg1 : 0 ≤ ang g) (hg2 : ang g ≤ ang (ζ1⁻¹ * ζ2)) :
+    ∃ f1 f2 : ℝ, 0 ≤ f1 ∧ 0 ≤ f2 ∧ ζ1 * f1 + ζ2 * f2 = ζ1 * g := by
+  classical
+  have hw0 : (ζ1⁻¹ * ζ2 : ℂ) ≠ 0 := mul_ne_zero (inv_ne_zero h1) h2z
+  have hwim : 0 < (ζ1⁻¹ * ζ2 : ℂ).im := by
+    have h2 := p21w_ang_im _ hw0
+    have hsin := Real.sin_pos_of_pos_of_lt_pi hθ0 hθπ
+    have hnormpos : (0:ℝ) < ‖(ζ1⁻¹ * ζ2 : ℂ)‖ := norm_pos_iff.mpr hw0
+    nlinarith
+  by_cases hg0 : g = 0
+  · refine ⟨0, 0, le_refl 0, le_refl 0, ?_⟩
+    simp [hg0]
+  · have harg : ang g = g.arg := by
+      by_cases hh : g.arg < 0
+      · exfalso
+        have hcon := ang_eq_arg_add_of_neg hh
+        linarith [Complex.neg_pi_lt_arg g, hθπ, hg2, hcon]
+      · exact ang_eq_arg_of_nonneg (not_lt.mp hh)
+    have hgre := p21w_ang_re g hg0
+    have hgim := p21w_ang_im g hg0
+    have hwre := p21w_ang_re _ hw0
+    have hwim2 := p21w_ang_im _ hw0
+    have hsinψ : 0 ≤ Real.sin (ang g) :=
+      Real.sin_nonneg_of_nonneg_of_le_pi hg1 (hg2.trans (le_of_lt hθπ))
+    have hf1 : 0 ≤ (g.re * (ζ1⁻¹ * ζ2).im - g.im * (ζ1⁻¹ * ζ2).re)
+        / (ζ1⁻¹ * ζ2).im := by
+      refine div_nonneg ?_ hwim.le
+      have hcs := p21w_cross_sin hg0 hw0
+      have hsin0 : 0 ≤ Real.sin (ang (ζ1⁻¹ * ζ2) - ang g) :=
+        Real.sin_nonneg_of_nonneg_of_le_pi (sub_nonneg.mpr hg2) (by linarith)
+      have hwnormpos : (0:ℝ) < ‖(ζ1⁻¹ * ζ2 : ℂ)‖ := norm_pos_iff.mpr hw0
+      have hgnormpos : (0:ℝ) < ‖g‖ := norm_pos_iff.mpr hg0
+      rw [hcs]
+      exact mul_nonneg (mul_nonneg hgnormpos.le hwnormpos.le) hsin0
+    have hf2 : 0 ≤ g.im / (ζ1⁻¹ * ζ2).im := by
+      refine div_nonneg ?_ hwim.le
+      have hnormpos : (0:ℝ) < ‖g‖ := norm_pos_iff.mpr hg0
+      rw [hgim]
+      exact mul_nonneg hnormpos.le hsinψ
+    refine ⟨(g.re * (ζ1⁻¹ * ζ2).im - g.im * (ζ1⁻¹ * ζ2).re) / (ζ1⁻¹ * ζ2).im,
+      g.im / (ζ1⁻¹ * ζ2).im, hf1, hf2, ?_⟩
+    have hw0' : (ζ1⁻¹ * ζ2 : ℂ).im ≠ 0 := ne_of_gt hwim
+    have hsplit : g = (↑((g.re * (ζ1⁻¹ * ζ2).im - g.im * (ζ1⁻¹ * ζ2).re)
+          / (ζ1⁻¹ * ζ2).im) : ℂ)
+        + (↑(g.im / (ζ1⁻¹ * ζ2).im) : ℂ) * (ζ1⁻¹ * ζ2) := by
+      set w : ℂ := ζ1⁻¹ * ζ2 with hwdef
+      have hwi : w.im ≠ 0 := hw0'
+      rw [Complex.ext_iff]
+      constructor
+      · simp only [Complex.add_re, Complex.mul_re, Complex.ofReal_re,
+          Complex.ofReal_im, mul_zero, zero_mul, sub_zero]
+        field_simp
+        ring
+      · simp only [Complex.add_im, Complex.mul_im, Complex.ofReal_im,
+          Complex.ofReal_re, mul_zero, zero_mul, add_zero, sub_zero]
+        field_simp
+        ring
+    conv_rhs => rw [hsplit]
+    field_simp
+
+
+private theorem p21w_zOf_add (e1 e2 x y : V3) :
+    zOf e1 e2 (x + y) = zOf e1 e2 x + zOf e1 e2 y := by
+  unfold zOf
+  simp only [WithLp.ofLp_add, add_dotProduct, Complex.ofReal_add]
+  ring
+
+private theorem p21w_zOf_smul (e1 e2 : V3) (c : ℝ) (x : V3) :
+    zOf e1 e2 (c • x) = c * zOf e1 e2 x := by
+  unfold zOf
+  simp only [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul, Complex.ofReal_mul]
+  ring
+
+private theorem p21w_zOf_sub (e1 e2 x y : V3) :
+    zOf e1 e2 (x - y) = zOf e1 e2 x - zOf e1 e2 y := by
+  have h := p21w_zOf_add e1 e2 (x - y) y
+  simp only [sub_add_cancel] at h
+  exact eq_sub_of_add_eq h.symm
+
+private theorem p21w_mem_axis_of_zOf {e1 e2 e3 : V3} (he : Orthonormal3 e1 e2 e3)
+    {x : V3} (h : zOf e1 e2 x = 0) : x = (x ⬝ᵥ e3) • e3 := by
+  have hz : (x ⬝ᵥ e1) = 0 ∧ (x ⬝ᵥ e2) = 0 := by
+    have h2 := Complex.ext_iff.mp h
+    constructor
+    · have h3 := h2.1
+      simp only [zOf, Complex.add_re, Complex.mul_re, Complex.ofReal_re,
+        Complex.ofReal_im, Complex.I_re, Complex.I_im, Complex.zero_re,
+        mul_zero, zero_mul, sub_zero, add_zero] at h3
+      exact h3
+    · have h3 := h2.2
+      simp only [zOf, Complex.add_im, Complex.mul_im, Complex.ofReal_im,
+        Complex.ofReal_re, Complex.I_im, Complex.I_re, Complex.zero_im,
+        mul_one, zero_mul, mul_zero, add_zero, zero_add] at h3
+      exact h3
+  have he31 : (e3 ⬝ᵥ e1) = 0 := by rw [dotProduct_comm]; exact he.2.2.2.2.1
+  have he32 : (e3 ⬝ᵥ e2) = 0 := by rw [dotProduct_comm]; exact he.2.2.2.2.2.1
+  have hd1 : ((x - (x ⬝ᵥ e3) • e3 : V3) ⬝ᵥ e1) = 0 := by
+    rw [WithLp.ofLp_sub, WithLp.ofLp_smul, sub_dotProduct, smul_dotProduct]
+    rw [hz.1, he31]
+    simp
+  have hd2 : ((x - (x ⬝ᵥ e3) • e3 : V3) ⬝ᵥ e2) = 0 := by
+    rw [WithLp.ofLp_sub, WithLp.ofLp_smul, sub_dotProduct, smul_dotProduct]
+    rw [hz.2, he32]
+    simp
+  have hd3 : ((x - (x ⬝ᵥ e3) • e3 : V3) ⬝ᵥ e3) = 0 := by
+    rw [WithLp.ofLp_sub, WithLp.ofLp_smul, sub_dotProduct, smul_dotProduct]
+    rw [show e3 ⬝ᵥ e3 = (1:ℝ) from he.2.2.1]
+    simp
+  have hsq : ‖x - (x ⬝ᵥ e3) • e3‖ ^ 2 = 0 := by
+    have hns := p21w_on3_norm_sq e1 e2 e3 he (x - (x ⬝ᵥ e3) • e3)
+    rw [hns, hd1, hd2, hd3]
+    norm_num
+  have hzero : ‖x - (x ⬝ᵥ e3) • e3‖ = 0 := sq_eq_zero_iff.mp hsq
+  exact sub_eq_zero.mp (norm_eq_zero.mp hzero)
+
+private theorem p21w_affGe_2_2_char {u v w1 w2 : V3}
+    (hd : u ≠ v ∧ u ≠ w1 ∧ u ≠ w2 ∧ v ≠ w1 ∧ v ≠ w2 ∧ w1 ≠ w2) (y : V3) :
+    y ∈ affGe ({u, v} : Set V3) ({w1, w2} : Set V3) ↔
+      ∃ c d e : ℝ, 0 ≤ c ∧ 0 ≤ d ∧
+        y = c • w1 + d • w2 + e • v + (1 - c - d - e) • u := by
+  have hfin : ((({u, v} : Set V3) ∪ {w1, w2}) : Set V3).Finite := by simp
+  have hF : hfin.toFinset = insert u (insert v (insert w1 {w2})) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  have hp' : u ∉ (insert v (insert w1 {w2}) : Finset V3) := by
+    simp [hd.1, hd.2.1, hd.2.2.1]
+  have hv' : v ∉ (insert w1 {w2} : Finset V3) := by
+    simp [hd.2.2.2.1, hd.2.2.2.2.1]
+  have hw' : w1 ∉ ({w2} : Finset V3) := by simp [hd.2.2.2.2.2]
+  constructor
+  · rintro ⟨f, _, hy, hpos, hsum⟩
+    have hy' : y = f u • u + f v • v + f w1 • w1 + f w2 • w2 := by
+      have h2 := hy
+      rw [hF, Finset.sum_insert hp', Finset.sum_insert hv', Finset.sum_insert hw',
+        Finset.sum_singleton] at h2
+      have h3 : f u • u + (f v • v + (f w1 • w1 + f w2 • w2))
+          = f u • u + f v • v + f w1 • w1 + f w2 • w2 := by module
+      rw [← h3]
+      exact h2
+    have hsum' : f u + f v + f w1 + f w2 = 1 := by
+      have h2 := hsum
+      rw [hF, Finset.sum_insert hp', Finset.sum_insert hv', Finset.sum_insert hw',
+        Finset.sum_singleton] at h2
+      linarith
+    refine ⟨f w1, f w2, f v, hpos w1 (by simp), hpos w2 (by simp), ?_⟩
+    have hx : y = f w1 • w1 + f w2 • w2 + f v • v + (1 - f w1 - f w2 - f v) • u := by
+      rw [hy']
+      rw [show (1 - f w1 - f w2 - f v) • u = f u • u from
+        by rw [show 1 - f w1 - f w2 - f v = f u from by linarith]]
+      abel
+    exact hx
+  · rintro ⟨c, d, e, hc, hd2, hty⟩
+    refine ⟨fun w => if w = u then 1 - c - d - e else if w = v then e else if w = w1 then c
+      else d, hfin, ?_, ?_, ?_⟩
+    · rw [hF, Finset.sum_insert hp', Finset.sum_insert hv', Finset.sum_insert hw',
+        Finset.sum_singleton]
+      simp only [hd.1, hd.2.1, hd.2.2.1, hd.2.2.2.1, hd.2.2.2.2.1, Ne.symm hd.1,
+        Ne.symm hd.2.1, Ne.symm hd.2.2.1, Ne.symm hd.2.2.2.1,
+        Ne.symm hd.2.2.2.2.1, Ne.symm hd.2.2.2.2.2, if_true, eq_self_iff_true,
+        if_false]
+      rw [hty]
+      abel
+    · intro w hw
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+      rcases hw with rfl | rfl
+      · simp [Ne.symm hd.2.1, Ne.symm hd.2.2.2.1, hc]
+      · simp [Ne.symm hd.2.2.1, Ne.symm hd.2.2.2.2.1, Ne.symm hd.2.2.2.2.2, hd2]
+    · rw [hF, Finset.sum_insert hp', Finset.sum_insert hv', Finset.sum_insert hw',
+        Finset.sum_singleton]
+      simp only [hd.1, hd.2.1, hd.2.2.1, hd.2.2.2.1, hd.2.2.2.2.1, Ne.symm hd.1,
+        Ne.symm hd.2.1, Ne.symm hd.2.2.1, Ne.symm hd.2.2.2.1,
+        Ne.symm hd.2.2.2.2.1, Ne.symm hd.2.2.2.2.2, if_true, eq_self_iff_true,
+        if_false]
+      ring
+
+set_option maxHeartbeats 20000000 in
+private theorem p21w_wedgeGe_eq_affGe {u v w1 w2 : V3}
+    (hd : u ≠ v ∧ u ≠ w1 ∧ u ≠ w2 ∧ v ≠ w1 ∧ v ≠ w2 ∧ w1 ≠ w2)
+    (hθ0 : 0 < azim u v w1 w2) (hθπ : azim u v w1 w2 < Real.pi) :
+    wedgeGe u v w1 w2 = affGe ({u, v} : Set V3) ({w1, w2} : Set V3) := by
+  classical
+  obtain ⟨e1, e2, e3, he, hax⟩ :=
+    exists_on3_eq_smul (v - u) (sub_ne_zero.mpr (Ne.symm hd.1))
+  have hvu : v ≠ u := Ne.symm hd.1
+  have hDpos : 0 < dist v u := dist_pos.mpr (Ne.symm hd.1)
+  have hne : (v - u : V3) ≠ 0 := sub_ne_zero.mpr (Ne.symm hd.1)
+  have hax' : (v - u : V3) = dist (v - u) 0 • e3 := by
+    have hd2 : dist v u = dist (v - u) 0 := by
+      rw [dist_eq_norm, dist_zero_right]
+    rw [← hd2]
+    exact hax
+  -- `0 < azim` rules out degeneracy: `azim` collapses to 0 on collinear fans.
+  have hnc : ¬(Collinear3 u v w1 ∨ Collinear3 u v w2) := by
+    intro hcol
+    rw [azim, if_pos hcol] at hθ0
+    norm_num at hθ0
+  have hc1 : ¬ Collinear3 u v w1 := fun hc => hnc (Or.inl hc)
+  have hc2 : ¬ Collinear3 u v w2 := fun hc => hnc (Or.inr hc)
+  have hnc1 : ¬ Collinear3 0 (v - u) (w1 - u) := fun hc =>
+    hc1 (p21w_collinear3_zero_sub.mpr hc)
+  have hnc2 : ¬ Collinear3 0 (v - u) (w2 - u) := fun hc =>
+    hc2 (p21w_collinear3_zero_sub.mpr hc)
+  have hζ1 : zOf e1 e2 (w1 - u) ≠ 0 :=
+    (zOf_ne_zero_iff he hax hvu w1).mpr hc1
+  have hζ2 : zOf e1 e2 (w2 - u) ≠ 0 :=
+    (zOf_ne_zero_iff he hax hvu w2).mpr hc2
+  have hθnonneg : 0 ≤ azim u v w1 w2 := azim_nonneg u v w1 w2
+  have hθeq : ang ((zOf e1 e2 (w1 - u))⁻¹ * zOf e1 e2 (w2 - u)) = azim u v w1 w2 := by
+    have h1 := azim_eq_ang_of_frame e1 e2 e3 he hax' hne hnc1 hnc2
+    rw [p21w_azim_sub_self, h1]
+  have hband : ∀ y : V3,
+      (y ∈ wedgeGe u v w1 w2 ↔
+        0 ≤ ang ((zOf e1 e2 (w1 - u))⁻¹ * zOf e1 e2 (y - u)) ∧
+          ang ((zOf e1 e2 (w1 - u))⁻¹ * zOf e1 e2 (y - u)) ≤ azim u v w1 w2) :=
+    fun y => p21w_wedge_band u v w1 w2 y e1 e2 e3 he hax hvu hc1 hθnonneg
+  ext y
+  have hθang : 0 < ang ((zOf e1 e2 (w1 - u))⁻¹ * zOf e1 e2 (w2 - u)) := by
+    rw [hθeq]
+    exact hθ0
+  have hθπang : ang ((zOf e1 e2 (w1 - u))⁻¹ * zOf e1 e2 (w2 - u)) < Real.pi := by
+    rw [hθeq]
+    exact hθπ
+  constructor
+  · rintro hy
+    rw [p21w_affGe_2_2_char hd y]
+    obtain ⟨hb1, hb2⟩ := (hband y).mp hy
+    set g : ℂ := zOf e1 e2 (y - u) with hgdef
+    -- the angular band of the relative coordinate `ζ1⁻¹ * g` is a cone in
+    -- quotient coordinates; `band_to_cone` turns it into the direct linear
+    -- combination `ζ1 * f1 + ζ2 * f2 = g`.
+    have hb2' : ang ((zOf e1 e2 (w1 - u))⁻¹ * g)
+        ≤ ang ((zOf e1 e2 (w1 - u))⁻¹ * zOf e1 e2 (w2 - u)) := by
+      rw [hθeq]
+      exact hb2
+    obtain ⟨f1, f2, hf1, hf2, hvec⟩ :=
+      p21w_band_to_cone hζ1 hζ2 hθang hθπang hb1 hb2'
+    rw [mul_inv_cancel_left₀ hζ1] at hvec
+    have hxzero : zOf e1 e2 (y - u - f1 • (w1 - u) - f2 • (w2 - u)) = 0 := by
+      have h1 : zOf e1 e2 (y - u - f1 • (w1 - u) - f2 • (w2 - u))
+          = zOf e1 e2 (y - u) - ↑f1 * zOf e1 e2 (w1 - u)
+              - ↑f2 * zOf e1 e2 (w2 - u) := by
+        rw [p21w_zOf_sub, p21w_zOf_sub, p21w_zOf_sub, p21w_zOf_smul, p21w_zOf_smul]
+      rw [h1, ← hgdef, ← hvec]
+      ring
+    have haxis := p21w_mem_axis_of_zOf he hxzero
+    set s : ℝ := (y - u - f1 • (w1 - u) - f2 • (w2 - u)) ⬝ᵥ e3 / dist v u with hsdef
+    have hxeq' : (y - u) - f1 • (w1 - u) - f2 • (w2 - u) = s • (v - u) := by
+      rw [haxis, hax, smul_smul]
+      congr 1
+      rw [hsdef, dist_eq_norm v u]
+      have hd0 : ‖(v - u : V3)‖ ≠ 0 := by simpa using hne
+      exact (div_mul_cancel₀ _ hd0).symm
+    refine ⟨f1, f2, s, hf1, hf2, ?_⟩
+    have hrhs : y = f1 • w1 + f2 • w2 + s • v + (1 - f1 - f2 - s) • u := by
+      have h2 : f1 • w1 + f2 • w2 + s • v + (1 - f1 - f2 - s) • u
+          = u + (f1 • (w1 - u) + f2 • (w2 - u) + s • (v - u)) := by
+        simp only [smul_sub, sub_smul, one_smul]
+        abel
+      have hkey : y - u = f1 • (w1 - u) + f2 • (w2 - u) + s • (v - u) := by
+        rw [sub_eq_iff_eq_add] at hxeq'
+        rw [sub_eq_iff_eq_add] at hxeq'
+        rw [hxeq']
+        abel
+      have hyu : y = u + (y - u) := by abel
+      rw [hyu, hkey]
+      exact h2.symm
+    rw [hrhs]
+  · rintro hy
+    obtain ⟨c, d, e, hc, hd2, hty⟩ := (p21w_affGe_2_2_char hd y).mp hy
+    have hvec : y - u = c • (w1 - u) + d • (w2 - u) + e • (v - u) := by
+      rw [hty]
+      module
+    have hzof : zOf e1 e2 (y - u)
+        = c * zOf e1 e2 (w1 - u) + d * zOf e1 e2 (w2 - u) := by
+      rw [hvec, p21w_zOf_add, p21w_zOf_add, p21w_zOf_smul, p21w_zOf_smul,
+        p21w_zOf_smul, hax]
+      rw [p21w_axis_zOf e1 e2 e3 he]
+      simp
+    obtain ⟨hb1, hb2⟩ := p21w_cone_to_band hζ1 hζ2 hθang hθπang c d hc hd2
+    rw [mul_comm (zOf e1 e2 (w1 - u)) c, mul_comm (zOf e1 e2 (w2 - u)) d] at hb1 hb2
+    rw [← hzof] at hb1 hb2
+    rw [hθeq] at hb2
+    exact (hband y).mpr ⟨hb1, hb2⟩
+
+
+theorem pA_coll_of_ne {a b : V3} (h : a = b) : Collinear3 a b b :=
+  h ▸ collinear3_of_eq rfl
+
+theorem pA_uv_ne (V : Set V3) (ul : List V3) (hX : X = mcell2 V ul)
+    (hn : ¬nullSet X) : elV ul 0 ≠ elV ul 1 := fun heq =>
+  hn (by rw [hX]; exact p21_mcell2_uv_null V ul heq)
+
+theorem pA_sdiff_inter {X Y Z : Set V3} (h : nullSet (symmDiff X Y)) :
+    nullSet (symmDiff (X ∩ Z) (Y ∩ Z)) := by
+  have hsub : symmDiff (X ∩ Z) (Y ∩ Z) ⊆ symmDiff X Y := by
+    intro x hx
+    simp only [Set.mem_symmDiff, Set.mem_inter_iff] at hx ⊢
+    tauto
+  exact le_antisymm (le_trans (measure_mono hsub) h.le) zero_le
+
+theorem pA_vol_sdiff {X Y : Set V3} (h : nullSet (symmDiff X Y)) :
+    volume.real X = volume.real Y := by
+  have hsub : X ⊆ Y ∪ symmDiff X Y := fun z hz => by
+    by_cases hzY : z ∈ Y
+    · exact Or.inl hzY
+    · exact Or.inr (Or.inl ⟨hz, hzY⟩)
+  have hsub2 : Y ⊆ X ∪ symmDiff X Y := fun z hz => by
+    by_cases hzX : z ∈ X
+    · exact Or.inl hzX
+    · exact Or.inr (Or.inr ⟨hz, hzX⟩)
+  have h1 : volume X ≤ volume Y := by
+    calc volume X ≤ volume (Y ∪ symmDiff X Y) := measure_mono hsub
+      _ ≤ volume Y + volume (symmDiff X Y) := measure_union_le _ _
+      _ = volume Y := by rw [h]; simp
+  have h2 : volume Y ≤ volume X := by
+    calc volume Y ≤ volume (X ∪ symmDiff X Y) := measure_mono hsub2
+      _ ≤ volume X + volume (symmDiff X Y) := measure_union_le _ _
+      _ = volume X := by rw [h]; simp
+  exact congrArg ENNReal.toReal (le_antisymm h1 h2)
+
+theorem pA_ball_subset_bis_le (u v : V3) (r : ℝ) (hr : 2 * r ≤ dist u v) :
+    Metric.ball u r ⊆ bisLe u v := by
+  intro x hx
+  have hxu : dist x u < r := hx
+  have hduv : dist u v ≤ dist x u + dist x v := by
+    have ht := dist_triangle u x v
+    rwa [dist_comm u x] at ht
+  have h1 : dist x u ≤ dist x v := by linarith
+  exact h1
+
+theorem pA_ball_subset_bis_lt (u v : V3) (r : ℝ) (hr : 2 * r ≤ dist u v) :
+    Metric.ball u r ⊆ {y : V3 | dist y u < dist y v} := by
+  intro x hx
+  have hxu : dist x u < r := hx
+  have hduv : dist u v ≤ dist x u + dist x v := by
+    have ht := dist_triangle u x v
+    rwa [dist_comm u x] at ht
+  simp only [Set.mem_setOf_eq]
+  linarith
+
+theorem pA_sphere_null (x : V3) (r : ℝ) : volume (Metric.sphere x r) = 0 :=
+  Measure.addHaar_sphere volume x r
+
+theorem pA_convex_affGe {s t : Set V3} (hfin : (s ∪ t).Finite) :
+    Convex ℝ (affGe s t) := by
+  intro x hx y hy a b ha hb hab
+  simp only [affGe, Affsign, Set.mem_setOf_eq] at hx hy
+  obtain ⟨f1, _, hx1, hx2, hx3⟩ := hx
+  obtain ⟨f2, _, hy1, hy2, hy3⟩ := hy
+  refine ⟨fun p => a * f1 p + b * f2 p, hfin, ?_, ?_, ?_⟩
+  · have key : ∀ (g : V3 → ℝ) (c : ℝ), ∑ q ∈ hfin.toFinset, (c * g q) • q
+        = c • ∑ q ∈ hfin.toFinset, g q • q := by
+      intro g c
+      rw [Finset.smul_sum]
+      exact Finset.sum_congr rfl fun q _ => by rw [smul_smul]
+    have hsum1 : ∑ q ∈ hfin.toFinset, (a * f1 q + b * f2 q) • q
+        = ∑ q ∈ hfin.toFinset, ((a * f1 q) • q + (b * f2 q) • q) := by
+      exact Finset.sum_congr rfl fun q _ => by rw [add_smul]
+    rw [hsum1, Finset.sum_add_distrib, key, key, hx1, hy1]
+  · intro p hp
+    have h1 : 0 ≤ f1 p := hx2 p hp
+    have h2 : 0 ≤ f2 p := hy2 p hp
+    show 0 ≤ a * f1 p + b * f2 p
+    exact add_nonneg (mul_nonneg ha h1) (mul_nonneg hb h2)
+  · show (∑ q ∈ hfin.toFinset, (a * f1 q + b * f2 q)) = 1
+    have h3' : ∑ q ∈ hfin.toFinset, (a * f1 q + b * f2 q)
+        = a * ∑ q ∈ hfin.toFinset, f1 q + b * ∑ q ∈ hfin.toFinset, f2 q := by
+      rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
+    rw [h3', hx3, hy3]
+    simp only [mul_one]
+    exact hab
+
+theorem pA_mem_affGe_vertex {s t : Set V3} (hfin : (s ∪ t).Finite) {v : V3}
+    (hv : v ∈ s) : v ∈ affGe s t := by
+  refine ⟨fun w => if w = v then 1 else 0, hfin, ?_, ?_, ?_⟩
+  · rw [Finset.sum_eq_single v]
+    · simp
+    · intro b _ hbb
+      simp [hbb]
+    · intro h
+      exact absurd (hfin.mem_toFinset.mpr (Set.mem_union_left _ hv)) h
+  · intro p hp
+    by_cases hpv : p = v
+    · simp [hpv]
+    · simp [hpv]
+  · rw [Finset.sum_eq_single v]
+    · simp
+    · intro b _ hbb
+      simp [hbb]
+    · intro h
+      exact absurd (hfin.mem_toFinset.mpr (Set.mem_union_left _ hv)) h
+
+set_option maxHeartbeats 20000000 in
+theorem pA_radial_of_mcell2 (V : Set V3) (ul : List V3) (hs : saturated V)
+    (hp : Packing V) (hb : barV V 3 ul) (hX : X = mcell2 V ul) (hn : ¬nullSet X) :
+    radialNorm (hl (truncateSimplex 1 ul)) (elV ul 0)
+      (mcell2 V ul ∩ Metric.ball (elV ul 0) (hl (truncateSimplex 1 ul))) := by
+  classical
+  have huv : elV ul 0 ≠ elV ul 1 := pA_uv_ne V ul hX hn
+  have hlt := MCELL2_HL_LT_SQRT2 V ul hs hp hb (by rw [hX] at hn; exact hn)
+  have hpos : 0 < hl (truncateSimplex 1 ul) := BARV_IMP_HL_1_POS_LT V ul hs hp hb
+  have hsq2 : Real.sqrt 2 ≤ hl ul :=
+    p21w_mcell2_hl_ul_ge V ul hs hp hb (by rw [hX] at hn; exact hn)
+  have hcond : hl (truncateSimplex 1 ul) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ul := ⟨hlt, hsq2⟩
+  have hcent : hdV ul = elV ul 0 ∧ hdV ul.tail = elV ul 1 := by
+    cases ul with
+    | nil => exact absurd hb.1 (by simp)
+    | cons a t =>
+      cases t with
+      | nil => exact absurd hb.1 (by simp)
+      | cons b t => exact ⟨rfl, rfl⟩
+  set h : ℝ := hl (truncateSimplex 1 ul) with hh
+  have hapos : 0 < h / Real.sqrt 2 := div_pos hpos (Real.sqrt_pos.mpr (by norm_num))
+  have hale : h / Real.sqrt 2 ≤ 1 := by
+    refine (div_le_one (Real.sqrt_pos.mpr (by norm_num))).mpr ?_
+    linarith
+  have hXm : mcell2 V ul
+      = (rconeGe (elV ul 0) (elV ul 1) (h / Real.sqrt 2)
+          ∩ rconeGe (elV ul 1) (elV ul 0) (h / Real.sqrt 2))
+        ∩ affGe {elV ul 0, elV ul 1} {mxi V ul, omegaListN V ul 3} := by
+    rw [mcell2, if_pos hcond, hcent.1, hcent.2]
+  have hcone1 : Convex ℝ (rconeGe (elV ul 0) (elV ul 1) (h / Real.sqrt 2)) :=
+    CONVEX_RCONE_GE _ _ _ hapos.le
+  have hwedge : Convex ℝ (affGe {elV ul 0, elV ul 1}
+      {mxi V ul, omegaListN V ul 3}) := pA_convex_affGe (by simp)
+  have huin : elV ul 0 ∈ mcell2 V ul := by
+    rw [hXm]
+    refine ⟨⟨?_, ?_⟩, pA_mem_affGe_vertex (by simp) (Set.mem_insert _ _)⟩
+    · unfold rconeGe
+      simp
+    · show ((elV ul 0 - elV ul 1 : V3) ⬝ᵥ (elV ul 0 - elV ul 1 : V3) : ℝ)
+        ≥ dist (elV ul 0) (elV ul 1) * dist (elV ul 0) (elV ul 1) * (h / Real.sqrt 2)
+      rw [← norm_sq_eq_dot (elV ul 0 - elV ul 1), dist_eq_norm (elV ul 0) (elV ul 1)]
+      nlinarith [sq_nonneg (‖(elV ul 0 - elV ul 1 : V3)‖), hale]
+  have hncp := NOT_COPLANAR_EXTREME_MCELL2 V ul hp hs hb (by rw [hX] at hn; exact hn)
+  have hw1 : ¬ Collinear3 (elV ul 0) (elV ul 1) (mxi V ul) := fun hc =>
+    hncp (p21_collinear3_coplanar4 _ _ _ _ hc)
+  have hw2 : ¬ Collinear3 (elV ul 0) (elV ul 1) (omegaListN V ul 3) := fun hc =>
+    hncp (p21_collinear3_coplanar4_last _ _ _ _ hc)
+  have hd4 : elV ul 0 ≠ elV ul 1 ∧ elV ul 0 ≠ mxi V ul ∧ elV ul 0 ≠ omegaListN V ul 3 ∧
+      elV ul 1 ≠ mxi V ul ∧ elV ul 1 ≠ omegaListN V ul 3 ∧
+      mxi V ul ≠ omegaListN V ul 3 := by
+    refine ⟨huv, fun hcc => hw1 ?_, fun hcc => hw2 ?_, fun hcc => hw1 ?_,
+      fun hcc => hw2 ?_, fun hcc => hncp ⟨elV ul 0, elV ul 1, mxi V ul, fun z hz => ?_⟩⟩
+    · rw [collinear3_iff_smul (Ne.symm huv)]
+      refine ⟨0, ?_⟩
+      rw [hcc, sub_self, zero_smul]
+    · rw [collinear3_iff_smul (Ne.symm huv)]
+      refine ⟨0, ?_⟩
+      rw [hcc, sub_self, zero_smul]
+    · rw [collinear3_iff_smul (Ne.symm huv)]
+      refine ⟨1, ?_⟩
+      rw [hcc, one_smul]
+    · rw [collinear3_iff_smul (Ne.symm huv)]
+      refine ⟨1, ?_⟩
+      rw [hcc, one_smul]
+    · simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl | rfl
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact subset_affineSpan ℝ _ (by simp)
+      · rw [← hcc]
+        exact subset_affineSpan ℝ _ (by simp)
+  refine ⟨fun z hz => hz.2, ?_⟩
+  intro p hp t ht htn
+  have hupC : elV ul 0 + p ∈ mcell2 V ul := hp.1
+  have hup' : elV ul 0 + p ∈ (rconeGe (elV ul 0) (elV ul 1) (h / Real.sqrt 2)
+      ∩ rconeGe (elV ul 1) (elV ul 0) (h / Real.sqrt 2))
+    ∩ affGe {elV ul 0, elV ul 1} {mxi V ul, omegaListN V ul 3} := hXm ▸ hupC
+  obtain ⟨⟨hup1, hup2⟩, hup3⟩ := hup'
+  -- cone at the apex is homogeneous
+  have hc1 : elV ul 0 + t • p ∈ rconeGe (elV ul 0) (elV ul 1) (h / Real.sqrt 2) := by
+    unfold rconeGe at hup1 ⊢
+    simp only [Set.mem_setOf_eq] at hup1 ⊢
+    have hsub : elV ul 0 + t • p - elV ul 0 = t • p := by abel
+    have hsub2 : elV ul 0 + p - elV ul 0 = p := by abel
+    have hdn : dist (elV ul 0 + t • p) (elV ul 0) = t * ‖p‖ := by
+      rw [dist_eq_norm, hsub, norm_smul, Real.norm_eq_abs, abs_of_nonneg ht.le]
+    have hdp : dist (elV ul 0 + p) (elV ul 0) = ‖p‖ := by
+      rw [dist_eq_norm, hsub2]
+    rw [hsub2, hdp] at hup1
+    rw [hsub, hdn, WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul]
+    have hassoc : (t * ‖p‖) * dist (elV ul 1) (elV ul 0) * (h / Real.sqrt 2)
+        = t * (‖p‖ * dist (elV ul 1) (elV ul 0) * (h / Real.sqrt 2)) := by ring
+    rw [hassoc]
+    exact mul_le_mul_of_nonneg_left hup1 ht.le
+  -- the second cone via the bisector bridge
+  have hball : elV ul 0 + t • p ∈ Metric.ball (elV ul 0) h := by
+    rw [Metric.mem_ball]
+    have hsub : elV ul 0 + t • p - elV ul 0 = t • p := by abel
+    have hdp : dist (elV ul 0 + t • p) (elV ul 0) = t * ‖p‖ := by
+      rw [dist_eq_norm, hsub, norm_smul, Real.norm_eq_abs, abs_of_nonneg ht.le]
+    rw [hdp]
+    exact htn
+  have hbis : elV ul 0 + t • p ∈ bisLe (elV ul 0) (elV ul 1) := by
+    have hhl2 : hl [elV ul 0, elV ul 1] = h := by
+      rw [← BARV3_TRUNC1 V ul hb, ← hh]
+    have h4 : h = dist (elV ul 0) (elV ul 1) / 2 := by
+      rw [← hhl2]
+      exact HL_2 (elV ul 0) (elV ul 1)
+    refine pA_ball_subset_bis_le (elV ul 0) (elV ul 1) h ?_ hball
+    linarith
+  have hc2 : elV ul 0 + t • p ∈ rconeGe (elV ul 1) (elV ul 0) (h / Real.sqrt 2) :=
+    RCONE_PAIR (elV ul 0) (elV ul 1) (h / Real.sqrt 2) huv hapos hale ⟨hc1, hbis⟩
+  -- the wedge is radially closed from the apex by the weight characterisation
+  have hc3 : elV ul 0 + t • p ∈ affGe {elV ul 0, elV ul 1}
+      {mxi V ul, omegaListN V ul 3} := by
+    obtain ⟨c, d, e, hcc, hdd, hty⟩ := (p21w_affGe_2_2_char hd4 _).mp hup3
+    have hpvec : p = c • (mxi V ul - elV ul 0) + d • (omegaListN V ul 3 - elV ul 0)
+        + e • (elV ul 1 - elV ul 0) := by
+      have h2 : elV ul 0 + p = elV ul 0 + (c • (mxi V ul - elV ul 0)
+          + d • (omegaListN V ul 3 - elV ul 0) + e • (elV ul 1 - elV ul 0)) := by
+        rw [hty]
+        simp only [sub_smul, one_smul, smul_sub]
+        abel
+      have h3 := congrArg (fun z : V3 => -elV ul 0 + z) h2
+      simpa using h3
+    have hty2 : elV ul 0 + t • p = (t * c) • (mxi V ul) + (t * d) • (omegaListN V ul 3)
+        + (t * e) • (elV ul 1) + (1 - t * c - t * d - t * e) • (elV ul 0) := by
+      rw [hpvec]
+      simp only [smul_add, smul_smul, smul_sub, sub_smul, one_smul]
+      abel
+    exact (p21w_affGe_2_2_char hd4 _).mpr ⟨t * c, t * d, t * e,
+      mul_nonneg ht.le hcc, mul_nonneg ht.le hdd, hty2⟩
+  have hmem : elV ul 0 + t • p ∈ mcell2 V ul := by
+    rw [hXm]
+    exact Set.mem_inter (Set.mem_inter hc1 hc2) hc3
+  exact Set.mem_inter hmem hball
+
+/-! ## W3: MCELL2_VOL_SPLIT_EXPLICIT -/
+
+theorem pA_wedge_pair_rw {V : Set V3} {ul : List V3} {P : Set V3 → Prop}
+    {w1 w2 : V3} (hpair : {w1, w2} = ({mxi V ul, omegaListN V ul 3} : Set V3))
+    (hP : P ({elV ul 0, elV ul 1, w1, w2} : Set V3)) :
+    P ({elV ul 0, elV ul 1, mxi V ul, omegaListN V ul 3} : Set V3) := by
+  rw [show ({elV ul 0, elV ul 1, mxi V ul, omegaListN V ul 3} : Set V3)
+      = {elV ul 0, elV ul 1, w1, w2} from by rw [hpair]]
+  exact hP
+
+
+
+set_option maxHeartbeats 20000000 in
+/-- HOL `MCELL2_VOL_SPLIT_EXPLICIT` (TSKAJXY3.hl:1555; giant; closed
+2026-09-30 wedge lane: `MCELL2_SPLIT` regionalises the bisector half, the
+`p21w_wedgeGe_eq_affGe` bridge (wedgeGe = affGe, the WEDGE_GE_EQ_AFF_GE
+port) and the slicing closed form `p21w_volume_rcone_slab_wedgeGe`
+(the `VOLUME_FRUSTT_WEDGE` port: cone-truncated wedge sector,
+`azim · (1 - a ^ 2) / a ^ 2 * h ^ 3 / 6`) close it; `BIS_LE_NORM` +
+`BARV3_TRUNC1`/`HL_2` identify `bisLe` with the slab at `h = ‖v - u‖ / 2`).
+Residual: none. -/
 theorem MCELL2_VOL_SPLIT_EXPLICIT (V X : Set V3) (ul : List V3) (h : ℝ)
     (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul) (hX : X = mcell2 V ul)
     (hhl : h = hl (truncateSimplex 1 ul)) (hht : h < Real.sqrt 2) (hn : ¬nullSet X) :
     volume.real (X ∩ bisLe (elV ul 0) (elV ul 1)) =
       dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) *
         (2 - h ^ 2) * h / 6 := by
-  -- NEEDS: TSKAJXY3.hl:1555；路线（B2/B3 波）：楔形体积闭式 vol(frustum∩wedge) = dihV·h³(1−h²/2)/6（HOL vol1.hl:473 公理级；照 WedgeVolume 切片模板组）——GIANT 独立工位；已被 MCELL2_VOL（B3 装配）作为第一半消费
-  sorry
+  classical
+  have huv : elV ul 0 ≠ elV ul 1 := pA_uv_ne V ul hX hn
+  have hpos : 0 < h := by rw [hhl]; exact BARV_IMP_HL_1_POS_LT V ul hs hp hb
+  have hncp := NOT_COPLANAR_EXTREME_MCELL2 V ul hp hs hb (by rw [hX] at hn; exact hn)
+  have hw1 : ¬ Collinear3 (elV ul 0) (elV ul 1) (mxi V ul) := fun hc =>
+    hncp (p21_collinear3_coplanar4 _ _ _ _ hc)
+  have hw2 : ¬ Collinear3 (elV ul 0) (elV ul 1) (omegaListN V ul 3) := fun hc =>
+    hncp (p21_collinear3_coplanar4_last _ _ _ _ hc)
+  obtain ⟨w1, w2, hpair, hdihv⟩ := MCELL2_DIHV_AZIM V X ul hp hs hb hX hn
+  have hw1' : ¬ Collinear3 (elV ul 0) (elV ul 1) w1 := by
+    intro hcc
+    have hmem : w1 ∈ ({mxi V ul, omegaListN V ul 3} : Set V3) := by
+      have hz : w1 ∈ ({w1, w2} : Set V3) := Set.mem_insert _ _
+      rw [hpair] at hz
+      exact hz
+    rcases Set.mem_insert_iff.mp hmem with hz | hz
+    · exact hw1 (hz ▸ hcc)
+    · exact hw2 (hz ▸ hcc)
+  have hw2' : ¬ Collinear3 (elV ul 0) (elV ul 1) w2 := by
+    intro hcc
+    have hmem : w2 ∈ ({mxi V ul, omegaListN V ul 3} : Set V3) := by
+      have hz : w2 ∈ ({w1, w2} : Set V3) := Set.mem_insert_of_mem _ (Set.mem_singleton w2)
+      rw [hpair] at hz
+      exact hz
+    rcases Set.mem_insert_iff.mp hmem with hz | hz
+    · exact hw1 (hz ▸ hcc)
+    · exact hw2 (hz ▸ hcc)
+  have hθ0 : 0 < azim (elV ul 0) (elV ul 1) w1 w2 := by
+    by_contra hz
+    push_neg at hz
+    have hz0 : azim (elV ul 0) (elV ul 1) w1 w2 = 0 :=
+      le_antisymm hz (azim_nonneg _ _ _ _)
+    exact hncp (pA_wedge_pair_rw hpair
+      (AZIM_EQ_0_PI_IMP_COPLANAR (elV ul 0) (elV ul 1) w1 w2 (Or.inl hz0)))
+  have hθπ : azim (elV ul 0) (elV ul 1) w1 w2 < Real.pi := by
+    have h1 := MCELL2_DIHV_LT_PI V X ul hp hs hb hX hn
+    rw [← hdihv]
+    exact h1
+  have hd4 : elV ul 0 ≠ elV ul 1 ∧ elV ul 0 ≠ w1 ∧ elV ul 0 ≠ w2 ∧
+      elV ul 1 ≠ w1 ∧ elV ul 1 ≠ w2 ∧ w1 ≠ w2 := by
+    refine ⟨huv, fun hcc => hw1' ?_, fun hcc => hw2' ?_, fun hcc => hw1' ?_,
+      fun hcc => hw2' ?_, fun hcc => hncp (pA_wedge_pair_rw hpair ?_)⟩
+    · rw [collinear3_iff_smul (Ne.symm huv)]
+      refine ⟨0, ?_⟩
+      rw [hcc, sub_self, zero_smul]
+    · rw [collinear3_iff_smul (Ne.symm huv)]
+      refine ⟨0, ?_⟩
+      rw [hcc, sub_self, zero_smul]
+    · rw [collinear3_iff_smul (Ne.symm huv)]
+      refine ⟨1, ?_⟩
+      rw [hcc, one_smul]
+    · rw [collinear3_iff_smul (Ne.symm huv)]
+      refine ⟨1, ?_⟩
+      rw [hcc, one_smul]
+    · refine ⟨elV ul 0, elV ul 1, w1, fun z hz => ?_⟩
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl | rfl
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact subset_affineSpan ℝ _ (by simp)
+      · rw [← hcc]
+        exact subset_affineSpan ℝ _ (by simp)
+  have hhl2 : hl [elV ul 0, elV ul 1] = h := by
+    rw [← BARV3_TRUNC1 V ul hb, ← hhl]
+  have hdist0 : ‖elV ul 1 - elV ul 0‖ = 2 * h := by
+    have h3 := HL_2 (elV ul 0) (elV ul 1)
+    rw [hhl2] at h3
+    rw [← dist_eq_norm (elV ul 1) (elV ul 0), dist_comm (elV ul 1) (elV ul 0)]
+    linarith
+  have hsqrt2 : (0:ℝ) < Real.sqrt 2 := Real.sqrt_pos.mpr (by norm_num)
+  have hapos : 0 < h / Real.sqrt 2 := div_pos hpos hsqrt2
+  have hale : h / Real.sqrt 2 ≤ 1 :=
+    (div_le_one hsqrt2).mpr (le_of_lt hht)
+  have ha1 : h / Real.sqrt 2 < 1 := (div_lt_one hsqrt2).mpr hht
+  rw [MCELL2_SPLIT V X ul hs hp hb hX hn, ← hhl]
+  have hslab : {y : V3 | (y - elV ul 0) ⬝ᵥ (elV ul 1 - elV ul 0)
+        ≤ ‖elV ul 1 - elV ul 0‖ ^ 2 / 2}
+      = {y : V3 | (y - elV ul 0) ⬝ᵥ (elV ul 1 - elV ul 0) ≤ h * ‖elV ul 1 - elV ul 0‖} := by
+    rw [hdist0]
+    ext y
+    simp only [Set.mem_setOf_eq]
+    ring
+  have hwedge : wedgeGe (elV ul 0) (elV ul 1) w1 w2
+      = affGe {elV ul 0, elV ul 1} {mxi V ul, omegaListN V ul 3} := by
+    rw [p21w_wedgeGe_eq_affGe hd4 hθ0 hθπ, hpair]
+  have hset : rconeGe (elV ul 0) (elV ul 1) (h / Real.sqrt 2)
+        ∩ affGe {elV ul 0, elV ul 1} {mxi V ul, omegaListN V ul 3}
+        ∩ bisLe (elV ul 0) (elV ul 1)
+      = rconeGe (elV ul 0) (elV ul 1) (h / Real.sqrt 2)
+        ∩ {y : V3 | (y - elV ul 0) ⬝ᵥ (elV ul 1 - elV ul 0)
+            ≤ h * ‖elV ul 1 - elV ul 0‖}
+        ∩ wedgeGe (elV ul 0) (elV ul 1) w1 w2 := by
+    rw [BIS_LE_NORM, hslab, ← hwedge, Set.inter_assoc, Set.inter_comm (wedgeGe (elV ul 0) (elV ul 1) w1 w2)
+        {y : V3 | (y - elV ul 0) ⬝ᵥ (elV ul 1 - elV ul 0)
+            ≤ h * ‖elV ul 1 - elV ul 0‖}, Set.inter_assoc]
+  rw [hset]
+  rw [p21w_volume_rcone_slab_wedgeGe (elV ul 0) (elV ul 1) w1 w2 h (h / Real.sqrt 2)
+    hapos ha1 huv hw1' hw2' hθ0 hθπ (by linarith)]
+  rw [← hdihv]
+  have hne0 : (h / Real.sqrt 2) ^ 2 ≠ 0 := by
+    have h1 : h / Real.sqrt 2 ≠ 0 := div_ne_zero hpos.ne'
+      (ne_of_gt (Real.sqrt_pos.mpr (by norm_num)))
+    exact pow_ne_zero 2 h1
+  field_simp [hdist0, hne0]
+  rw [Real.sq_sqrt (by norm_num : (0:ℝ) ≤ 2)]
+
+
+theorem MCELL2_SOL (V X : Set V3) (ul : List V3) (h : ℝ) (hs : saturated V)
+    (hp : Packing V) (hb : barV V 3 ul) (hX : X = mcell2 V ul)
+    (hhl : h = hl (truncateSimplex 1 ul)) (hht : h < Real.sqrt 2)
+    (hn : ¬nullSet X) :
+    sol (elV ul 0) X =
+      dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) *
+        (1 - h / Real.sqrt 2) := by
+  classical
+  have huv : elV ul 0 ≠ elV ul 1 := pA_uv_ne V ul hX hn
+  have hpos : 0 < h := by rw [hhl]; exact BARV_IMP_HL_1_POS_LT V ul hs hp hb
+  have hncp := NOT_COPLANAR_EXTREME_MCELL2 V ul hp hs hb (by rw [hX] at hn; exact hn)
+  have hw1 : ¬ Collinear3 (elV ul 0) (elV ul 1) (mxi V ul) := fun hc =>
+    hncp (p21_collinear3_coplanar4 _ _ _ _ hc)
+  have hw2 : ¬ Collinear3 (elV ul 0) (elV ul 1) (omegaListN V ul 3) := fun hc =>
+    hncp (p21_collinear3_coplanar4_last _ _ _ _ hc)
+  obtain ⟨w1, w2, hpair, hdihv⟩ := MCELL2_DIHV_AZIM V X ul hp hs hb hX hn
+  have hw1' : ¬ Collinear3 (elV ul 0) (elV ul 1) w1 := by
+    intro hcc
+    have hmem : w1 ∈ ({mxi V ul, omegaListN V ul 3} : Set V3) := by
+      have hz : w1 ∈ ({w1, w2} : Set V3) := Set.mem_insert _ _
+      rw [hpair] at hz
+      exact hz
+    rcases Set.mem_insert_iff.mp hmem with hz | hz
+    · exact hw1 (hz ▸ hcc)
+    · exact hw2 (hz ▸ hcc)
+  have hw2' : ¬ Collinear3 (elV ul 0) (elV ul 1) w2 := by
+    intro hcc
+    have hmem : w2 ∈ ({mxi V ul, omegaListN V ul 3} : Set V3) := by
+      have hz : w2 ∈ ({w1, w2} : Set V3) := Set.mem_insert_of_mem _ (Set.mem_singleton w2)
+      rw [hpair] at hz
+      exact hz
+    rcases Set.mem_insert_iff.mp hmem with hz | hz
+    · exact hw1 (hz ▸ hcc)
+    · exact hw2 (hz ▸ hcc)
+  have hθ0 : 0 < azim (elV ul 0) (elV ul 1) w1 w2 := by
+    by_contra hz
+    push_neg at hz
+    have hz0 : azim (elV ul 0) (elV ul 1) w1 w2 = 0 :=
+      le_antisymm hz (azim_nonneg _ _ _ _)
+    exact hncp (pA_wedge_pair_rw hpair
+      (AZIM_EQ_0_PI_IMP_COPLANAR (elV ul 0) (elV ul 1) w1 w2 (Or.inl hz0)))
+  have hθπ : azim (elV ul 0) (elV ul 1) w1 w2 < Real.pi := by
+    have h1 := MCELL2_DIHV_LT_PI V X ul hp hs hb hX hn
+    rw [← hdihv]
+    exact h1
+  have hsqrt2 : (0:ℝ) < Real.sqrt 2 := Real.sqrt_pos.mpr (by norm_num)
+  have hapos : 0 < h / Real.sqrt 2 := div_pos hpos hsqrt2
+  have hale : h / Real.sqrt 2 ≤ 1 :=
+    (div_le_one (Real.sqrt_pos.mpr (by norm_num))).mpr (le_of_lt hht)
+  have hhl2 : hl [elV ul 0, elV ul 1] = h := by
+    rw [← BARV3_TRUNC1 V ul hb, ← hhl]
+  have hdist0 : dist (elV ul 0) (elV ul 1) = 2 * h := by
+    have h3 := HL_2 (elV ul 0) (elV ul 1)
+    rw [hhl2] at h3
+    linarith
+  have hmeas : MeasurableSet (X ∩ Metric.ball (elV ul 0) h) := by
+    rw [hX]
+    exact (MEASURABLE_MCELL V ul 2 hs hp hb).inter Metric.isOpen_ball.measurableSet
+  have hrad := pA_radial_of_mcell2 V ul hs hp hb hX hn
+  rw [sol_spec (x := elV ul 0) (C := X) (r := h) hpos hmeas
+    (by rw [hhl, hX]; exact hrad)]
+  have hbisub : Metric.ball (elV ul 0) h ⊆ bisLe (elV ul 0) (elV ul 1) :=
+    pA_ball_subset_bis_le (elV ul 0) (elV ul 1) h (by rw [hdist0])
+  have eA : X ∩ Metric.ball (elV ul 0) h
+      = (X ∩ bisLe (elV ul 0) (elV ul 1)) ∩ Metric.ball (elV ul 0) h := by
+    ext z
+    simp only [Set.mem_inter_iff]
+    constructor
+    · rintro ⟨h1, h2⟩
+      exact ⟨⟨h1, hbisub h2⟩, h2⟩
+    · rintro ⟨⟨h1, -⟩, h2⟩
+      exact ⟨h1, h2⟩
+  rw [eA, MCELL2_SPLIT V X ul hs hp hb hX hn, ← hhl]
+  have hslab : {y : V3 | (y - elV ul 0) ⬝ᵥ (elV ul 1 - elV ul 0)
+        ≤ ‖elV ul 1 - elV ul 0‖ ^ 2 / 2}
+      = {y : V3 | (y - elV ul 0) ⬝ᵥ (elV ul 1 - elV ul 0) ≤ h * ‖elV ul 1 - elV ul 0‖} := by
+    rw [show ‖elV ul 1 - elV ul 0‖ = dist (elV ul 0) (elV ul 1) from
+      (dist_eq_norm (elV ul 1) (elV ul 0)).symm.trans (dist_comm _ _), hdist0]
+    ext y
+    simp only [Set.mem_setOf_eq]
+    ring
+  have hd4 : elV ul 0 ≠ elV ul 1 ∧ elV ul 0 ≠ w1 ∧ elV ul 0 ≠ w2 ∧
+      elV ul 1 ≠ w1 ∧ elV ul 1 ≠ w2 ∧ w1 ≠ w2 := by
+    refine ⟨huv, fun hcc => hw1' ?_, fun hcc => hw2' ?_, fun hcc => hw1' ?_,
+      fun hcc => hw2' ?_, fun hcc => hncp (pA_wedge_pair_rw hpair ?_)⟩
+    · rw [collinear3_iff_smul (Ne.symm huv)]
+      refine ⟨0, ?_⟩
+      rw [hcc, sub_self, zero_smul]
+    · rw [collinear3_iff_smul (Ne.symm huv)]
+      refine ⟨0, ?_⟩
+      rw [hcc, sub_self, zero_smul]
+    · rw [collinear3_iff_smul (Ne.symm huv)]
+      refine ⟨1, ?_⟩
+      rw [hcc, one_smul]
+    · rw [collinear3_iff_smul (Ne.symm huv)]
+      refine ⟨1, ?_⟩
+      rw [hcc, one_smul]
+    · refine ⟨elV ul 0, elV ul 1, w1, fun z hz => ?_⟩
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl | rfl
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact subset_affineSpan ℝ _ (by simp)
+      · exact subset_affineSpan ℝ _ (by simp)
+      · rw [← hcc]
+        exact subset_affineSpan ℝ _ (by simp)
+  have hwedge : wedgeGe (elV ul 0) (elV ul 1) w1 w2
+      = affGe {elV ul 0, elV ul 1} {mxi V ul, omegaListN V ul 3} := by
+    rw [p21w_wedgeGe_eq_affGe hd4 hθ0 hθπ, hpair]
+  have hset : rconeGe (elV ul 0) (elV ul 1) (h / Real.sqrt 2)
+        ∩ affGe {elV ul 0, elV ul 1} {mxi V ul, omegaListN V ul 3}
+        ∩ bisLe (elV ul 0) (elV ul 1)
+      = rconeGe (elV ul 0) (elV ul 1) (h / Real.sqrt 2)
+        ∩ {y : V3 | (y - elV ul 0) ⬝ᵥ (elV ul 1 - elV ul 0)
+            ≤ h * ‖elV ul 1 - elV ul 0‖}
+        ∩ wedgeGe (elV ul 0) (elV ul 1) w1 w2 := by
+    rw [BIS_LE_NORM, hslab, ← hwedge, Set.inter_assoc, Set.inter_comm (wedgeGe (elV ul 0) (elV ul 1) w1 w2)
+        {y : V3 | (y - elV ul 0) ⬝ᵥ (elV ul 1 - elV ul 0)
+            ≤ h * ‖elV ul 1 - elV ul 0‖}, Set.inter_assoc]
+  rw [hset]
+  have hsd := FRUSTT_WEDGE_RCONE_GE (elV ul 0) (elV ul 1) w1 w2 h (h / Real.sqrt 2)
+    hapos huv hale (by linarith) hw1' hw2'
+  have hvol1 : volume.real
+      (((frustt (elV ul 0) (elV ul 1) h (h / Real.sqrt 2)
+          ∩ Kepler.Geom.wedge (elV ul 0) (elV ul 1) w1 w2)
+        ∩ Metric.ball (elV ul 0) h))
+      = volume.real
+      (((rconeGe (elV ul 0) (elV ul 1) (h / Real.sqrt 2)
+        ∩ {y : V3 | (y - elV ul 0) ⬝ᵥ (elV ul 1 - elV ul 0)
+            ≤ h * ‖elV ul 1 - elV ul 0‖}
+        ∩ wedgeGe (elV ul 0) (elV ul 1) w1 w2)
+      ∩ Metric.ball (elV ul 0) h)) := by
+    exact pA_vol_sdiff (pA_sdiff_inter (Z := Metric.ball (elV ul 0) h) hsd)
+  rw [← hvol1]
+  have hset2 : (frustt (elV ul 0) (elV ul 1) h (h / Real.sqrt 2)
+        ∩ Kepler.Geom.wedge (elV ul 0) (elV ul 1) w1 w2)
+      ∩ Metric.ball (elV ul 0) h
+      = (Metric.ball (elV ul 0) h
+          ∩ rconeGt (elV ul 0) (elV ul 1) (h / Real.sqrt 2))
+        ∩ Kepler.Geom.wedge (elV ul 0) (elV ul 1) w1 w2 := by
+    ext z
+    simp only [frustt, frustum, Set.mem_inter_iff, Set.mem_setOf_eq, rconeGt]
+    constructor
+    · rintro ⟨⟨⟨⟨hd1, hd2⟩, hgt⟩, hw⟩, hball⟩
+      exact ⟨⟨hball, hgt⟩, hw⟩
+    · rintro ⟨⟨hball, hgt⟩, hw⟩
+      have hnormlt : ‖z - elV ul 0‖ < h := Metric.mem_ball.mp hball
+      have habs : |((z - elV ul 0 : V3) ⬝ᵥ (elV ul 1 - elV ul 0))|
+          ≤ ‖z - elV ul 0‖ * ‖elV ul 1 - elV ul 0‖ := by
+        rw [← inner_eq_dot]
+        exact abs_real_inner_le_norm (z - elV ul 0) (elV ul 1 - elV ul 0)
+      have h1 : ((z - elV ul 0 : V3) ⬝ᵥ (elV ul 1 - elV ul 0))
+          ≤ |((z - elV ul 0 : V3) ⬝ᵥ (elV ul 1 - elV ul 0))| := le_abs_self _
+      have hle : ‖z - elV ul 0‖ * ‖elV ul 1 - elV ul 0‖ ≤ h * ‖elV ul 1 - elV ul 0‖ :=
+        mul_le_mul_of_nonneg_right hnormlt.le (norm_nonneg _)
+      have hge : (0:ℝ) ≤ dist z (elV ul 0) * dist (elV ul 1) (elV ul 0)
+          * (h / Real.sqrt 2) :=
+        mul_nonneg (mul_nonneg dist_nonneg dist_nonneg) (div_nonneg hpos.le hsqrt2.le)
+      refine ⟨⟨⟨⟨?_, ?_⟩, hgt⟩, hw⟩, hball⟩
+      · linarith
+      · linarith
+  rw [hset2]
+  have hsd3 : symmDiff ((Metric.ball (elV ul 0) h
+          ∩ rconeGt (elV ul 0) (elV ul 1) (h / Real.sqrt 2))
+        ∩ Kepler.Geom.wedge (elV ul 0) (elV ul 1) w1 w2)
+      (ccvConicCap (elV ul 0) (elV ul 1) h (h / Real.sqrt 2)
+        ∩ Kepler.Geom.wedge (elV ul 0) (elV ul 1) w1 w2)
+      ⊆ Metric.sphere (elV ul 0) h := by
+    intro z hz
+    simp only [Set.mem_symmDiff, Set.mem_inter_iff, ccvConicCap, Metric.mem_closedBall,
+      Metric.mem_ball, Set.mem_setOf_eq] at hz
+    rcases hz with ⟨⟨⟨hball, hcone⟩, hw⟩, hnot⟩ | ⟨⟨⟨hball2, hcone⟩, hw⟩, hnot⟩
+    · exact (hnot ⟨⟨le_of_lt hball, hcone⟩, hw⟩).elim
+    · refine Metric.mem_sphere.mpr ?_
+      refine le_antisymm hball2 (le_of_not_gt ?_)
+      intro hlt
+      exact hnot ⟨⟨hlt, hcone⟩, hw⟩
+  have hvol2 : volume.real ((Metric.ball (elV ul 0) h
+          ∩ rconeGt (elV ul 0) (elV ul 1) (h / Real.sqrt 2))
+        ∩ Kepler.Geom.wedge (elV ul 0) (elV ul 1) w1 w2)
+      = volume.real (ccvConicCap (elV ul 0) (elV ul 1) h (h / Real.sqrt 2)
+        ∩ Kepler.Geom.wedge (elV ul 0) (elV ul 1) w1 w2) :=
+    pA_vol_sdiff (by
+      have hs := (measure_mono hsd3).trans_eq (Measure.addHaar_sphere volume (elV ul 0) h)
+      exact le_antisymm hs (zero_le))
+  rw [hvol2]
+  have hcc := volumeConicCapWedge (elV ul 0) (elV ul 1) w1 w2 h (h / Real.sqrt 2) hapos
+    hw1' hw2'
+  have hcc2 := volumeConicCap (elV ul 0) (elV ul 1) h (h / Real.sqrt 2) hapos
+  have ha1 : h / Real.sqrt 2 < 1 := (div_lt_one hsqrt2).mpr hht
+  have hcond : ¬ (elV ul 1 = elV ul 0 ∨ 1 ≤ h / Real.sqrt 2 ∨ h < 0) := by
+    rintro (h | h | h)
+    · exact huv h.symm
+    · exact absurd h (by linarith)
+    · linarith
+  rw [hcc, hcc2.2, if_neg hcond]
+  rw [← hdihv]
+  field_simp
+
+/- HOL `MCELL2_VOL_SPLIT_EXPLICIT` (TSKAJXY3.hl:1555; giant): CLOSED above
+(wedge closed forms section). -/
 
 /- DEDUP (2026-09-30, LA38 wrapper lane): the local sorry'd copies of
 `LEFT_ACTION_LIST_1_PROPERTIES_ALT` and `MCELL2_PERMUTE_01` are DELETED —
@@ -4568,8 +6195,8 @@ resolve upstream; the planned chain-copy migration is superseded. -/
 /-- HOL `MCELL2_VOL` (TSKAJXY3.hl:1774; assembly 2026-09-30 wave B3:
 `MCELL2_VOL_SPLIT` halves the cell across the bisector, each half is the
 `MCELL2_VOL_SPLIT_EXPLICIT` wedge volume, the second transported along the
-`MCELL2_PERMUTE_01` witness (`DIHV_SYM` closes the axis swap).  Residual:
-the two consumed upstream giants. -/
+`MCELL2_PERMUTE_01` witness (`DIHV_SYM` closes the axis swap).  Both
+consumed upstream giants are CLOSED (wedge closed forms section above). -/
 theorem MCELL2_VOL (V X : Set V3) (ul : List V3) (h : ℝ) (hs : saturated V)
     (hp : Packing V) (hb : barV V 3 ul) (hX : X = mcell2 V ul)
     (hhl : h = hl (truncateSimplex 1 ul)) (hn : ¬nullSet X) :
@@ -4631,16 +6258,8 @@ theorem RADIAL_LE (r r' : ℝ) (x : V3) (C : Set V3) (hr : r' ≤ r) (hpos : 0 <
     Real.norm_eq_abs, abs_of_pos ht]
   exact htn
 
-/-- HOL `MCELL2_SOL` (TSKAJXY3.hl:1859; giant). -/
-theorem MCELL2_SOL (V X : Set V3) (ul : List V3) (h : ℝ) (hs : saturated V)
-    (hp : Packing V) (hb : barV V 3 ul) (hX : X = mcell2 V ul)
-    (hhl : h = hl (truncateSimplex 1 ul)) (hht : h < Real.sqrt 2)
-    (hn : ¬nullSet X) :
-    sol (elV ul 0) X =
-      dihV (elV ul 0) (elV ul 1) (mxi V ul) (omegaListN V ul 3) *
-        (1 - h / Real.sqrt 2) := by
-  -- NEEDS: TSKAJXY3.hl:1859；路线（B3 波，臂内最大单件 HOL 205 行）：URRPHBZ2-k2 径向 + VOLUME_CONIC_CAP(_WEDGE) 闭式（=楔形体积闭式族，GIANT 独立工位）+ SDIFF 账；下游消费者 GAMMAX_GAMMA2_X
-  sorry
+/- HOL `MCELL2_SOL` (TSKAJXY3.hl:1859; giant): CLOSED above (wedge closed
+forms section). -/
 
 /-- HOL `GAMMAX_GAMMA2_X` (TSKAJXY3.hl:2070; giant: reduces `gammaX` of a
 2-cell to the analytic `gamma2_x_div_azim_v2` per unit azimuth). -/
@@ -4803,5 +6422,7 @@ theorem TSKAJXY (V X : Set V3) (hnl : pack_nonlinear_non_ox3q1h)
     have hgrk : GRKIBMP_concl := GRKIBMP (proj_grk_bank hnl)
     have hc3 : cell3_from_ineq := cell3_from_ineq_thm (proj_cell3_bank hnl)
     exact TSKAJXY_034 ⟨hgrk, hc3, proj_tsk_bank hnl⟩ V X hs hp hm hcase hcrit
+
+end WedgeClosedForms
 
 end Kepler.Text
