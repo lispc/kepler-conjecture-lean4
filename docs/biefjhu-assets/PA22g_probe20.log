@@ -1,0 +1,944 @@
+/tmp/bjf_probe.lean:34:57: warning: Variable name `hy4` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/tmp/bjf_probe.lean:181:14: error: Type mismatch
+  mul_lt_mul_of_pos_right hx hpos
+has type
+  x * x < 1 * x
+but is expected to have type
+  x * x < x
+/tmp/bjf_probe.lean:195:41: warning: Variable name `ha` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/tmp/bjf_probe.lean:195:54: warning: Variable name `hb` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+/tmp/bjf_probe.lean:319:47: error: Application type mismatch: The argument
+  hpos
+has type
+  0 < √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)
+but is expected to have type
+  0 < 8 * (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2))
+in the application
+  ne_of_gt hpos
+Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+/tmp/bjf_probe.lean:318:45: error: unsolved goals
+a b : ℝ
+ha : 1 ≤ a
+hab : a ≤ b
+hb : b ≤ h0
+h126 : h0 = 126 / 100
+ha0 : 0 ≤ a
+hab0 : 0 ≤ b - a
+hTdiff : p22_bjf_T b - p22_bjf_T a = (b - a) * (sqrt3 / 4) - (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2
+hA0 : 0 ≤ 1 - (a / 2) ^ 2
+hB0 : 0 ≤ 1 - (b / 2) ^ 2
+hA0s : 0 < 1 - (a / 2) ^ 2
+hB0s : 0 < 1 - (b / 2) ^ 2
+hpos : 0 < √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)
+hWsub : √(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2) = (b ^ 2 - a ^ 2) / 4 / (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2))
+hb1 : 1 ≤ b
+hsqb : 1 ≤ b * b
+hb2 : 1 ≤ b ^ 2
+hBle : √(1 - (b / 2) ^ 2) ≤ √3 / 2
+hsqa : 1 ≤ a * a
+ha2 : 1 ≤ a ^ 2
+hAle : √(1 - (a / 2) ^ 2) ≤ √3 / 2
+hsum : √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2) ≤ √3
+hs3p : 0 < √3
+hS : √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2) > 0
+⊢ b ^ 2 * √(1 + a ^ 2 * (-1 / 4)) * (√(1 + a ^ 2 * (-1 / 4)) + √(1 + b ^ 2 * (-1 / 4)))⁻¹ +
+          b ^ 2 * √(1 + b ^ 2 * (-1 / 4)) * (√(1 + a ^ 2 * (-1 / 4)) + √(1 + b ^ 2 * (-1 / 4)))⁻¹ -
+        a ^ 2 * √(1 + a ^ 2 * (-1 / 4)) * (√(1 + a ^ 2 * (-1 / 4)) + √(1 + b ^ 2 * (-1 / 4)))⁻¹ -
+      a ^ 2 * √(1 + b ^ 2 * (-1 / 4)) * (√(1 + a ^ 2 * (-1 / 4)) + √(1 + b ^ 2 * (-1 / 4)))⁻¹ =
+    b ^ 2 - a ^ 2
+/tmp/bjf_probe.lean:327:28: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  ?m.2350 = ?m.2348 / ?m.2349
+in the target expression
+  b - a ≤ (b ^ 2 - a ^ 2) * (4 * √3) / (8 * (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)))
+
+a b : ℝ
+ha : 1 ≤ a
+hab : a ≤ b
+hb : b ≤ h0
+h126 : h0 = 126 / 100
+ha0 : 0 ≤ a
+hab0 : 0 ≤ b - a
+hTdiff : p22_bjf_T b - p22_bjf_T a = (b - a) * (sqrt3 / 4) - (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2
+hA0 : 0 ≤ 1 - (a / 2) ^ 2
+hB0 : 0 ≤ 1 - (b / 2) ^ 2
+hA0s : 0 < 1 - (a / 2) ^ 2
+hB0s : 0 < 1 - (b / 2) ^ 2
+hpos : 0 < √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)
+hWsub : √(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2) = (b ^ 2 - a ^ 2) / 4 / (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2))
+hb1 : 1 ≤ b
+hsqb : 1 ≤ b * b
+hb2 : 1 ≤ b ^ 2
+hBle : √(1 - (b / 2) ^ 2) ≤ √3 / 2
+hsqa : 1 ≤ a * a
+ha2 : 1 ≤ a ^ 2
+hAle : √(1 - (a / 2) ^ 2) ≤ √3 / 2
+hsum : √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2) ≤ √3
+hs3p : 0 < √3
+hS : √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2) > 0
+hW2 : (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2 = (b ^ 2 - a ^ 2) / (8 * (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)))
+e1 : b ^ 2 - a ^ 2 = (b - a) * (a + b)
+hstep1 : (b - a) * (8 * (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2))) ≤ (b - a) * (8 * √3)
+h4ab : 8 ≤ (a + b) * 4
+⊢ b - a ≤ (b ^ 2 - a ^ 2) * (4 * √3) / (8 * (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)))
+/tmp/bjf_probe.lean:328:53: error: Application type mismatch: The argument
+  le_of_lt hs3p
+has type
+  0 ≤ √3
+but is expected to have type
+  4 < ?m.2415
+in the application
+  lt_of_le_of_lt
+    (Mathlib.Meta.NormNum.isNat_le_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+      (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 4)) (Eq.refl true))
+    (le_of_lt hs3p)
+/tmp/bjf_probe.lean:327:40: error: unsolved goals
+a b : ℝ
+ha : 1 ≤ a
+hab : a ≤ b
+hb : b ≤ h0
+h126 : h0 = 126 / 100
+ha0 : 0 ≤ a
+hab0 : 0 ≤ b - a
+hTdiff : p22_bjf_T b - p22_bjf_T a = (b - a) * (sqrt3 / 4) - (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2
+hA0 : 0 ≤ 1 - (a / 2) ^ 2
+hB0 : 0 ≤ 1 - (b / 2) ^ 2
+hA0s : 0 < 1 - (a / 2) ^ 2
+hB0s : 0 < 1 - (b / 2) ^ 2
+hpos : 0 < √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)
+hWsub : √(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2) = (b ^ 2 - a ^ 2) / 4 / (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2))
+hb1 : 1 ≤ b
+hsqb : 1 ≤ b * b
+hb2 : 1 ≤ b ^ 2
+hBle : √(1 - (b / 2) ^ 2) ≤ √3 / 2
+hsqa : 1 ≤ a * a
+ha2 : 1 ≤ a ^ 2
+hAle : √(1 - (a / 2) ^ 2) ≤ √3 / 2
+hsum : √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2) ≤ √3
+hs3p : 0 < √3
+hS : √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2) > 0
+hW2 : (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2 = (b ^ 2 - a ^ 2) / (8 * (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)))
+e1 : b ^ 2 - a ^ 2 = (b - a) * (a + b)
+hstep1 : (b - a) * (8 * (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2))) ≤ (b - a) * (8 * √3)
+h4ab : 8 ≤ (a + b) * 4
+⊢ ?m.2415 ≠ 0
+/tmp/bjf_probe.lean:357:73: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  ?a / ?b * ?c
+in the target expression
+  (b - a) * (√3 / 4) * (2 * √3) - (b - a) * (2 * √3) / (4 * √3) = b - a
+
+a b : ℝ
+ha : 1 ≤ a
+hab : a ≤ b
+hb : b ≤ h0
+h126 : h0 = 126 / 100
+ha0 : 0 ≤ a
+hab0 : 0 ≤ b - a
+hTdiff : p22_bjf_T b - p22_bjf_T a = (b - a) * (sqrt3 / 4) - (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2
+hA0 : 0 ≤ 1 - (a / 2) ^ 2
+hB0 : 0 ≤ 1 - (b / 2) ^ 2
+hA0s : 0 < 1 - (a / 2) ^ 2
+hB0s : 0 < 1 - (b / 2) ^ 2
+hpos : 0 < √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)
+hWsub : √(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2) = (b ^ 2 - a ^ 2) / 4 / (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2))
+hb1 : 1 ≤ b
+hsqb : 1 ≤ b * b
+hb2 : 1 ≤ b ^ 2
+hBle : √(1 - (b / 2) ^ 2) ≤ √3 / 2
+hsqa : 1 ≤ a * a
+ha2 : 1 ≤ a ^ 2
+hAle : √(1 - (a / 2) ^ 2) ≤ √3 / 2
+hsum : √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2) ≤ √3
+hs3p : 0 < √3
+hS : √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2) > 0
+hWge : (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2 ≥ (b - a) / (4 * √3)
+hs : sqrt3 = √3
+hsq : √3 * √3 = 3
+h2p : 0 < 2 * √3
+⊢ (b - a) * (√3 / 4) * (2 * √3) - (b - a) * (2 * √3) / (4 * √3) = b - a
+/tmp/bjf_probe.lean:377:8: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  (b - a) * (2887 / 10000)
+in the target expression
+  (b - a) * (1 / (2 * √3)) ≤ (b - a) * 2887 / 10000
+
+a b : ℝ
+ha : 1 ≤ a
+hab : a ≤ b
+hb : b ≤ h0
+h126 : h0 = 126 / 100
+ha0 : 0 ≤ a
+hab0 : 0 ≤ b - a
+hTdiff : p22_bjf_T b - p22_bjf_T a = (b - a) * (sqrt3 / 4) - (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2
+hA0 : 0 ≤ 1 - (a / 2) ^ 2
+hB0 : 0 ≤ 1 - (b / 2) ^ 2
+hA0s : 0 < 1 - (a / 2) ^ 2
+hB0s : 0 < 1 - (b / 2) ^ 2
+hpos : 0 < √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)
+hWsub : √(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2) = (b ^ 2 - a ^ 2) / 4 / (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2))
+hb1 : 1 ≤ b
+hsqb : 1 ≤ b * b
+hb2 : 1 ≤ b ^ 2
+hBle : √(1 - (b / 2) ^ 2) ≤ √3 / 2
+hsqa : 1 ≤ a * a
+ha2 : 1 ≤ a ^ 2
+hAle : √(1 - (a / 2) ^ 2) ≤ √3 / 2
+hsum : √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2) ≤ √3
+hs3p : 0 < √3
+hS : √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2) > 0
+hWge : (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2 ≥ (b - a) / (4 * √3)
+hident : (b - a) * (sqrt3 / 4) - (b - a) / (4 * √3) = (b - a) / (2 * √3)
+hrec : 1 / (2 * √3) ≤ 125 / 433
+h1 : (b - a) * (sqrt3 / 4) - (b - a) / (4 * √3) ≤ (b - a) / (2 * √3)
+h3 : (b - a) / (2 * √3) = (b - a) * (1 / (2 * √3))
+hpos2 : 0 ≤ b - a
+h2' : 125 / 433 ≤ 2887 / 10000
+h3' : (b - a) * (1 / (2 * √3)) ≤ (b - a) * (125 / 433)
+h5' : (b - a) * (2887 / 10000) = (b - a) * 2887 / 10000
+h4' : (b - a) * (125 / 433) ≤ (b - a) * (2887 / 10000)
+⊢ (b - a) * (1 / (2 * √3)) ≤ (b - a) * 2887 / 10000
+/tmp/bjf_probe.lean:397:43: error: linarith failed to find a contradiction
+a b r kappa : ℝ
+ha1 : 1 ≤ a
+hab : a ≤ b
+hb0 : b ≤ h0
+hr : √(1 - (a / 2) ^ 2) ≤ r
+hr0 : 0 < r
+hcle : sqrt3 / 4 - a / (8 * r) ≤ kappa
+ha0 : 0 ≤ a
+hab0 : 0 ≤ b - a
+hTdiff : p22_bjf_T b - p22_bjf_T a = (b - a) * (sqrt3 / 4) - (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2
+a✝ : 1 - (a / 2) ^ 2 < 0
+⊢ False
+failed
+/tmp/bjf_probe.lean:398:43: error: linarith failed to find a contradiction
+a b r kappa : ℝ
+ha1 : 1 ≤ a
+hab : a ≤ b
+hb0 : b ≤ h0
+hr : √(1 - (a / 2) ^ 2) ≤ r
+hr0 : 0 < r
+hcle : sqrt3 / 4 - a / (8 * r) ≤ kappa
+ha0 : 0 ≤ a
+hab0 : 0 ≤ b - a
+hTdiff : p22_bjf_T b - p22_bjf_T a = (b - a) * (sqrt3 / 4) - (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2
+hA0 : 0 ≤ 1 - (a / 2) ^ 2
+a✝ : 1 - (b / 2) ^ 2 < 0
+⊢ False
+failed
+Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+/tmp/bjf_probe.lean:421:45: error: unsolved goals
+a b r kappa : ℝ
+ha1 : 1 ≤ a
+hab : a ≤ b
+hb0 : b ≤ h0
+hr : √(1 - (a / 2) ^ 2) ≤ r
+hr0 : 0 < r
+hcle : sqrt3 / 4 - a / (8 * r) ≤ kappa
+ha0 : 0 ≤ a
+hab0 : 0 ≤ b - a
+hTdiff : p22_bjf_T b - p22_bjf_T a = (b - a) * (sqrt3 / 4) - (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2
+hA0 : 0 ≤ 1 - (a / 2) ^ 2
+hB0 : 0 ≤ 1 - (b / 2) ^ 2
+h2lt : h0 < 2
+hA0s : 0 < 1 - (a / 2) ^ 2
+hB0s : 0 < 1 - (b / 2) ^ 2
+hpos : 0 < √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)
+hWsub : √(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2) = (b ^ 2 - a ^ 2) / 4 / (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2))
+hS : √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2) ≤ 2 * r
+⊢ b ^ 2 * √(1 + a ^ 2 * (-1 / 4)) * (√(1 + a ^ 2 * (-1 / 4)) + √(1 + b ^ 2 * (-1 / 4)))⁻¹ +
+          b ^ 2 * √(1 + b ^ 2 * (-1 / 4)) * (√(1 + a ^ 2 * (-1 / 4)) + √(1 + b ^ 2 * (-1 / 4)))⁻¹ -
+        a ^ 2 * √(1 + a ^ 2 * (-1 / 4)) * (√(1 + a ^ 2 * (-1 / 4)) + √(1 + b ^ 2 * (-1 / 4)))⁻¹ -
+      a ^ 2 * √(1 + b ^ 2 * (-1 / 4)) * (√(1 + a ^ 2 * (-1 / 4)) + √(1 + b ^ 2 * (-1 / 4)))⁻¹ =
+    b ^ 2 - a ^ 2
+/tmp/bjf_probe.lean:440:6: error: Type mismatch
+  mul_le_mul_of_nonneg_left hcore hab0
+has type
+  (b - a) * (a * (8 * (2 * r))) ≤ (b - a) * ((a + b) * (8 * r))
+but is expected to have type
+  (b - a) * (a * (8 * (2 * r))) ≤ (b - a) * (a + b) * (8 * r)
+/tmp/bjf_probe.lean:442:28: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  ?m.1905 = ?m.1903 / ?m.1904
+in the target expression
+  (b - a) * a ≤ (b ^ 2 - a ^ 2) * (8 * r) / (8 * (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)))
+
+a b r kappa : ℝ
+ha1 : 1 ≤ a
+hab : a ≤ b
+hb0 : b ≤ h0
+hr : √(1 - (a / 2) ^ 2) ≤ r
+hr0 : 0 < r
+hcle : sqrt3 / 4 - a / (8 * r) ≤ kappa
+ha0 : 0 ≤ a
+hab0 : 0 ≤ b - a
+hTdiff : p22_bjf_T b - p22_bjf_T a = (b - a) * (sqrt3 / 4) - (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2
+hA0 : 0 ≤ 1 - (a / 2) ^ 2
+hB0 : 0 ≤ 1 - (b / 2) ^ 2
+h2lt : h0 < 2
+hA0s : 0 < 1 - (a / 2) ^ 2
+hB0s : 0 < 1 - (b / 2) ^ 2
+hpos : 0 < √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)
+hWsub : √(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2) = (b ^ 2 - a ^ 2) / 4 / (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2))
+hS : √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2) ≤ 2 * r
+hW2 : (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2 = (b ^ 2 - a ^ 2) / (8 * (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)))
+hstep1 : (b - a) * a * (8 * (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2))) ≤ (b - a) * a * (8 * (2 * r))
+e1 : b ^ 2 - a ^ 2 = (b - a) * (a + b)
+hstep2 : (b - a) * a * (8 * (2 * r)) ≤ (b ^ 2 - a ^ 2) * (8 * r)
+⊢ (b - a) * a ≤ (b ^ 2 - a ^ 2) * (8 * r) / (8 * (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)))
+/tmp/bjf_probe.lean:443:53: error: Application type mismatch: The argument
+  le_of_lt hr0
+has type
+  0 ≤ r
+but is expected to have type
+  8 < ?m.1961
+in the application
+  lt_of_le_of_lt
+    (Mathlib.Meta.NormNum.isNat_le_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+      (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 8)) (Eq.refl true))
+    (le_of_lt hr0)
+/tmp/bjf_probe.lean:442:40: error: unsolved goals
+a b r kappa : ℝ
+ha1 : 1 ≤ a
+hab : a ≤ b
+hb0 : b ≤ h0
+hr : √(1 - (a / 2) ^ 2) ≤ r
+hr0 : 0 < r
+hcle : sqrt3 / 4 - a / (8 * r) ≤ kappa
+ha0 : 0 ≤ a
+hab0 : 0 ≤ b - a
+hTdiff : p22_bjf_T b - p22_bjf_T a = (b - a) * (sqrt3 / 4) - (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2
+hA0 : 0 ≤ 1 - (a / 2) ^ 2
+hB0 : 0 ≤ 1 - (b / 2) ^ 2
+h2lt : h0 < 2
+hA0s : 0 < 1 - (a / 2) ^ 2
+hB0s : 0 < 1 - (b / 2) ^ 2
+hpos : 0 < √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)
+hWsub : √(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2) = (b ^ 2 - a ^ 2) / 4 / (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2))
+hS : √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2) ≤ 2 * r
+hW2 : (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2 = (b ^ 2 - a ^ 2) / (8 * (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)))
+hstep1 : (b - a) * a * (8 * (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2))) ≤ (b - a) * a * (8 * (2 * r))
+e1 : b ^ 2 - a ^ 2 = (b - a) * (a + b)
+hstep2 : (b - a) * a * (8 * (2 * r)) ≤ (b ^ 2 - a ^ 2) * (8 * r)
+⊢ ?m.1961 ≠ 0
+/tmp/bjf_probe.lean:456:4: error: linarith failed to find a contradiction
+a b r kappa : ℝ
+ha1 : 1 ≤ a
+hab : a ≤ b
+hb0 : b ≤ h0
+hr : √(1 - (a / 2) ^ 2) ≤ r
+hr0 : 0 < r
+hcle : sqrt3 / 4 - a / (8 * r) ≤ kappa
+ha0 : 0 ≤ a
+hab0 : 0 ≤ b - a
+hTdiff : p22_bjf_T b - p22_bjf_T a = (b - a) * (sqrt3 / 4) - (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2
+hA0 : 0 ≤ 1 - (a / 2) ^ 2
+hB0 : 0 ≤ 1 - (b / 2) ^ 2
+h2lt : h0 < 2
+hA0s : 0 < 1 - (a / 2) ^ 2
+hB0s : 0 < 1 - (b / 2) ^ 2
+hpos : 0 < √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2)
+hWsub : √(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2) = (b ^ 2 - a ^ 2) / 4 / (√(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2))
+hS : √(1 - (a / 2) ^ 2) + √(1 - (b / 2) ^ 2) ≤ 2 * r
+hWge : (√(1 - (a / 2) ^ 2) - √(1 - (b / 2) ^ 2)) / 2 ≥ (b - a) * a / (8 * r)
+a✝ : (b - a) * (sqrt3 / 4) - (b - a) * (a / (8 * r)) < p22_bjf_T b - p22_bjf_T a
+⊢ False
+failed
+/tmp/bjf_probe.lean:495:65: error: typeclass instance problem is stuck
+  MeasureTheory.IsLocallyFiniteMeasure ?m.688
+
+Note: Lean will not try to resolve this typeclass instance problem because the fourth type argument to `MeasureTheory.IsLocallyFiniteMeasure` is a metavariable. This argument must be fully determined before Lean will try to resolve the typeclass.
+
+Hint: Adding type annotations and supplying implicit arguments to functions can give Lean more information for typeclass resolution. For example, if you have a variable `x` that you intend to be a `Nat`, but Lean reports it as having an unresolved type like `?m`, replacing `x` with `(x : Nat)` can get typeclass resolution un-stuck.
+/tmp/bjf_probe.lean:512:57: error: unsolved goals
+case calc.step
+k : ℕ
+h x y sig tau phi S : ℝ
+hx0 : 0 ≤ x
+hxy : x ≤ y
+hy : y = p22_bjf_T h * Real.sin (Real.pi / ↑k)
+hT0 : 0 ≤ p22_bjf_T h
+hy1 : y < 1
+hTtau : p22_bjf_T h ≤ tau
+htau0 : 0 ≤ tau
+hsub : y - x ≤ S * sig
+hS0 : 0 ≤ S
+hsin0 : 0 ≤ Real.sin (Real.pi / ↑k)
+hsig : Real.sin (Real.pi / ↑k) ≤ sig
+hphiP : 0 < phi
+hQ0p : 0 < 1 - (tau * sig) ^ 2
+hphi : (1 - (tau * sig) ^ 2) * phi ^ 2 ≥ sig ^ 2
+hy0 : 0 ≤ y
+hinc : asn y - asn x ≤ (y - x) / √(1 - y ^ 2)
+hy2 : y ^ 2 ≤ (tau * sig) ^ 2
+hQ : 0 < 1 - y ^ 2
+hsqrt1 : √(1 - y ^ 2) ≥ √(1 - (tau * sig) ^ 2)
+hsq1 : (sig / phi) ^ 2 ≤ 1 - (tau * sig) ^ 2
+hsig0 : 0 ≤ sig
+hsq2 : sig / phi ≤ √(1 - (tau * sig) ^ 2)
+hsigle : sig ≤ phi * √(1 - y ^ 2)
+hstep : (y - x) / √(1 - y ^ 2) ≤ S * phi
+⊢ 2 * ↑k * (S * phi) ≤ 2 * ↑k * S * phi
+/tmp/bjf_probe.lean:568:14: error: Type mismatch
+  mul_le_mul_of_nonneg_right hu hu2p
+has type
+  t ^ 2 * t ^ 4 ≤ 17 / 64 * t ^ 4
+but is expected to have type
+  t ^ 4 * t ^ 2 ≤ 17 / 64 * t ^ 4
+Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+/tmp/bjf_probe.lean:678:34: error: unsolved goals
+w : ℝ
+hw : 0 ≤ w
+hwu : w ^ 2 ≤ 7 / 10
+t : ℝ
+ht0 : 0 ≤ t
+htw : t ≤ w
+hu0 : 0 ≤ t ^ 2
+hu : t ^ 2 ≤ 7 / 10
+hQ : 0 < 1 - t ^ 2
+hp2 : 0 ≤ t ^ 4
+hp3 : 0 ≤ t ^ 6
+hp4 : 0 ≤ t ^ 8
+hp5 : 0 ≤ t ^ 10
+h2 : t ^ 4 ≤ 7 / 10 * t ^ 2
+h3 : t ^ 6 ≤ 7 / 10 * t ^ 4
+h4 : t ^ 8 ≤ 7 / 10 * t ^ 6
+h5 : t ^ 10 ≤ 7 / 10 * t ^ 8
+hcert : 1 / 4 + 3 * t ^ 2 / 4 - t ^ 4 - t ^ 6 / 4 - 3 * t ^ 8 / 16 - 9 * t ^ 10 / 16 ≥ 0
+⊢ 1 + t ^ 4 * (1 / 4) + t ^ 6 * (3 / 4) - t ^ 8 + t ^ 10 * (-1 / 4) + t ^ 12 * (-3 / 16) + t ^ 14 * (-9 / 16) =
+    1 + t ^ 2 * (1 / 4) + t ^ 4 * (3 / 4) - t ^ 6 + t ^ 8 * (-1 / 4) + t ^ 10 * (-3 / 16) + t ^ 12 * (-9 / 16)
+/tmp/bjf_probe.lean:952:2: error: linarith failed to find a contradiction
+k : ℕ
+hk : 12 ≤ k
+hk1 : ↑k ≥ 12
+hsp : 0 ≤ 31416 / 10000 / ↑k
+hs : 31416 / 10000 / ↑k ≤ 31416 / 10000 / 12
+hs2 : (31416 / 10000 / ↑k) ^ 2 ≤ (31416 / 10000 / 12) ^ 2
+hτp : 0 ≤ 235273 / 250000 * (31416 / 10000 / ↑k)
+hτ : (235273 / 250000 * (31416 / 10000 / ↑k)) ^ 2 ≤ (235273 / 250000 * (31416 / 10000 / 12)) ^ 2
+hkey :
+  (270126977 / 1000000000) ^ 2 - (270126977 / 1000000000) ^ 2 * (235273 / 250000 * (31416 / 10000 / 12)) ^ 2 ≥
+    (31416 / 10000 / 12) ^ 2
+hφp : 0 ≤ (270126977 / 1000000000) ^ 2
+hQ0 : 0 ≤ 1 - (235273 / 250000 * (31416 / 10000 / ↑k)) ^ 2
+a✝ : (1 - (235273 / 250000 * (31416 / 10000 / k)) ^ 2) * (270126977 / 1000000000) ^ 2 < (31416 / 10000 / k) ^ 2
+⊢ False
+failed
+/tmp/bjf_probe.lean:974:26: error: unsolved goals
+k : ℕ
+hk : 12 ≤ k
+hπ : 2 * Real.pi ≥ 6283 / 1000
+hk1 : ↑k ≥ 12
+hτc : 235273 / 250000 * (31416 / 10000) ≤ 149 / 50
+hτk : (235273 / 250000 * (31416 / 10000 / ↑k)) ^ 2 ≤ (235273 / 250000 * (31416 / 10000 / 12)) ^ 2
+hQ0p : 0 < 1 - (235273 / 250000 * (31416 / 10000 / ↑k)) ^ 2
+⊢ 0 ≤ ?m.446
+/tmp/bjf_probe.lean:982:47: error: failed to synthesize
+  Zero ?m.607
+
+Hint: Additional diagnostic information may be available using the `set_option diagnostics true` command.
+/tmp/bjf_probe.lean:1003:67: error: unsolved goals
+k : ℕ
+h sig phi : ℝ
+hh1 : 1 ≤ h
+hh0 : h ≤ h0
+hwin : 2 * ↑k * asn (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ≤ 5.186 + 331e-4 * ↑k
+hsin0 : 0 ≤ Real.sin (Real.pi / ↑k)
+hsig : Real.sin (Real.pi / ↑k) ≤ sig
+hTb : p22_bjf_T h ≤ 235273 / 250000
+hT0 : 0 ≤ p22_bjf_T h
+hQ1 : 235273 / 250000 * sig < 1
+hphi : (1 - (235273 / 250000 * sig) ^ 2) * phi ^ 2 ≥ sig ^ 2
+hphi0 : 0 ≤ phi
+hmono : (126 / 100 - 1) * (2 * ↑k * (2887 / 10000) * phi) ≤ 2 * Real.pi - 5777 / 1000
+h126 : h0 = 126 / 100
+hpos126 : 0 ≤ 126 / 100 - h
+h1 : lfun h = (h0 - h) / (h0 - 1)
+h2 : h0 - 1 = 26 / 100
+⊢ 253 / 5 * (126 - 100 * h) * 130 = (126 - 100 * h) * 26 * 253
+/tmp/bjf_probe.lean:1010:26: error: unsolved goals
+k : ℕ
+h sig phi : ℝ
+hh1 : 1 ≤ h
+hh0 : h ≤ h0
+hwin : 2 * ↑k * asn (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ≤ 5.186 + 331e-4 * ↑k
+hsin0 : 0 ≤ Real.sin (Real.pi / ↑k)
+hsig : Real.sin (Real.pi / ↑k) ≤ sig
+hTb : p22_bjf_T h ≤ 235273 / 250000
+hT0 : 0 ≤ p22_bjf_T h
+hQ1 : 235273 / 250000 * sig < 1
+hphi : (1 - (235273 / 250000 * sig) ^ 2) * phi ^ 2 ≥ sig ^ 2
+hphi0 : 0 ≤ phi
+hmono : (126 / 100 - 1) * (2 * ↑k * (2887 / 10000) * phi) ≤ 2 * Real.pi - 5777 / 1000
+h126 : h0 = 126 / 100
+hpos126 : 0 ≤ 126 / 100 - h
+hlf : 0.506 * lfun h = 253 / 130 * (126 / 100 - h)
+⊢ 0 ≤ ?m.471
+/tmp/bjf_probe.lean:1096:67: error: unsolved goals
+k : ℕ
+h b sig ta tb kappa phiA phiB A B : ℝ
+hh1 : 1 ≤ h
+hh0 : h ≤ h0
+hb1 : 1 ≤ b
+hbb : b ≤ h0
+hwin : 2 * ↑k * asn (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ≤ A
+hsin0 : 0 ≤ Real.sin (Real.pi / ↑k)
+hsig : Real.sin (Real.pi / ↑k) ≤ sig
+hT0 : 0 ≤ p22_bjf_T h
+hT0b : 0 ≤ p22_bjf_T b
+hTa : ∀ (x : ℝ), 1 ≤ x → x ≤ b → p22_bjf_T x ≤ ta
+hQa : ta * sig < 1
+hphiA : (1 - (ta * sig) ^ 2) * phiA ^ 2 ≥ sig ^ 2
+hphiA0 : 0 ≤ phiA
+hTb : ∀ (x : ℝ), 1 ≤ x → x ≤ h0 → p22_bjf_T x ≤ tb
+hQb : tb * sig < 1
+hphiB : (1 - (tb * sig) ^ 2) * phiB ^ 2 ≥ sig ^ 2
+hphiB0 : 0 ≤ phiB
+hkappa0 : 0 ≤ kappa
+hchorda : ∀ (x : ℝ), b ≤ x → x ≤ h0 → p22_bjf_T x - p22_bjf_T b ≤ (x - b) * kappa
+hX1 : 253 / 130 * (126 / 100 - b) + (b - 1) * (2 * ↑k * (2887 / 10000) * phiA) ≤ B
+hX2 : (b - 1) * (2 * ↑k * (2887 / 10000) * phiA) + (126 / 100 - b) * (2 * ↑k * kappa * phiB) ≤ B
+hB : 0.591 - 331e-4 * ↑k + A + B ≤ 6283 / 1000
+hB506 : 0.591 - 331e-4 * ↑k + A + 506 / 1000 ≤ 6283 / 1000
+h126 : h0 = 126 / 100
+hpos126 : 0 ≤ 126 / 100 - h
+hposb : 0 ≤ 126 / 100 - b
+h1 : lfun h = (h0 - h) / (h0 - 1)
+h2 : h0 - 1 = 26 / 100
+⊢ 253 / 5 * (126 - 100 * h) * 130 = (126 - 100 * h) * 26 * 253
+/tmp/bjf_probe.lean:1103:26: error: unsolved goals
+k : ℕ
+h b sig ta tb kappa phiA phiB A B : ℝ
+hh1 : 1 ≤ h
+hh0 : h ≤ h0
+hb1 : 1 ≤ b
+hbb : b ≤ h0
+hwin : 2 * ↑k * asn (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ≤ A
+hsin0 : 0 ≤ Real.sin (Real.pi / ↑k)
+hsig : Real.sin (Real.pi / ↑k) ≤ sig
+hT0 : 0 ≤ p22_bjf_T h
+hT0b : 0 ≤ p22_bjf_T b
+hTa : ∀ (x : ℝ), 1 ≤ x → x ≤ b → p22_bjf_T x ≤ ta
+hQa : ta * sig < 1
+hphiA : (1 - (ta * sig) ^ 2) * phiA ^ 2 ≥ sig ^ 2
+hphiA0 : 0 ≤ phiA
+hTb : ∀ (x : ℝ), 1 ≤ x → x ≤ h0 → p22_bjf_T x ≤ tb
+hQb : tb * sig < 1
+hphiB : (1 - (tb * sig) ^ 2) * phiB ^ 2 ≥ sig ^ 2
+hphiB0 : 0 ≤ phiB
+hkappa0 : 0 ≤ kappa
+hchorda : ∀ (x : ℝ), b ≤ x → x ≤ h0 → p22_bjf_T x - p22_bjf_T b ≤ (x - b) * kappa
+hX1 : 253 / 130 * (126 / 100 - b) + (b - 1) * (2 * ↑k * (2887 / 10000) * phiA) ≤ B
+hX2 : (b - 1) * (2 * ↑k * (2887 / 10000) * phiA) + (126 / 100 - b) * (2 * ↑k * kappa * phiB) ≤ B
+hB : 0.591 - 331e-4 * ↑k + A + B ≤ 6283 / 1000
+hB506 : 0.591 - 331e-4 * ↑k + A + 506 / 1000 ≤ 6283 / 1000
+h126 : h0 = 126 / 100
+hpos126 : 0 ≤ 126 / 100 - h
+hposb : 0 ≤ 126 / 100 - b
+hlf : 0.506 * lfun h = 253 / 130 * (126 / 100 - h)
+⊢ 0 ≤ ?m.797
+/tmp/bjf_probe.lean:1397:27: error: Application type mismatch: The argument
+  p22_div_le_div_real_left hsig0
+    (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+      (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 5)) (Eq.refl false))
+    hk1
+has type
+  (31416 / 10000 / 5 - (31415 / 10000 / 5) ^ 3 / 6 + (31416 / 10000 / 5) ^ 5 / 120) / 5 ≤
+    (31416 / 10000 / 5 - (31415 / 10000 / 5) ^ 3 / 6 + (31416 / 10000 / 5) ^ 5 / 120) / 5
+but is expected to have type
+  8661 / 10000 * (31416 / 10000 / 5) ≤ 8661 / 10000 * (31416 / 10000 / 5)
+in the application
+  pow_le_pow_left₀ hgd
+    (p22_div_le_div_real_left hsig0
+      (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+        (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 5)) (Eq.refl false))
+      hk1)
+/tmp/bjf_probe.lean:1459:27: error: Application type mismatch: The argument
+  p22_div_le_div_real_left hsig0
+    (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+      (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 5)) (Eq.refl false))
+    hk1
+has type
+  (31416 / 10000 / 6 - (31415 / 10000 / 6) ^ 3 / 6 + (31416 / 10000 / 6) ^ 5 / 120) / 6 ≤
+    (31416 / 10000 / 6 - (31415 / 10000 / 6) ^ 3 / 6 + (31416 / 10000 / 6) ^ 5 / 120) / 5
+but is expected to have type
+  8661 / 10000 * (31416 / 10000 / 6) ≤ 8661 / 10000 * (31416 / 10000 / 5)
+in the application
+  pow_le_pow_left₀ hgd
+    (p22_div_le_div_real_left hsig0
+      (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+        (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 5)) (Eq.refl false))
+      hk1)
+/tmp/bjf_probe.lean:1521:27: error: Application type mismatch: The argument
+  p22_div_le_div_real_left hsig0
+    (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+      (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 5)) (Eq.refl false))
+    hk1
+has type
+  (31416 / 10000 / 7 - (31415 / 10000 / 7) ^ 3 / 6 + (31416 / 10000 / 7) ^ 5 / 120) / 7 ≤
+    (31416 / 10000 / 7 - (31415 / 10000 / 7) ^ 3 / 6 + (31416 / 10000 / 7) ^ 5 / 120) / 5
+but is expected to have type
+  8661 / 10000 * (31416 / 10000 / 7) ≤ 8661 / 10000 * (31416 / 10000 / 5)
+in the application
+  pow_le_pow_left₀ hgd
+    (p22_div_le_div_real_left hsig0
+      (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+        (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 5)) (Eq.refl false))
+      hk1)
+/tmp/bjf_probe.lean:1583:27: error: Application type mismatch: The argument
+  p22_div_le_div_real_left hsig0
+    (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+      (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 5)) (Eq.refl false))
+    hk1
+has type
+  (31416 / 10000 / 8 - (31415 / 10000 / 8) ^ 3 / 6 + (31416 / 10000 / 8) ^ 5 / 120) / 8 ≤
+    (31416 / 10000 / 8 - (31415 / 10000 / 8) ^ 3 / 6 + (31416 / 10000 / 8) ^ 5 / 120) / 5
+but is expected to have type
+  8661 / 10000 * (31416 / 10000 / 8) ≤ 8661 / 10000 * (31416 / 10000 / 5)
+in the application
+  pow_le_pow_left₀ hgd
+    (p22_div_le_div_real_left hsig0
+      (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+        (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 5)) (Eq.refl false))
+      hk1)
+/tmp/bjf_probe.lean:1645:27: error: Application type mismatch: The argument
+  p22_div_le_div_real_left hsig0
+    (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+      (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 5)) (Eq.refl false))
+    hk1
+has type
+  (31416 / 10000 / 9 - (31415 / 10000 / 9) ^ 3 / 6 + (31416 / 10000 / 9) ^ 5 / 120) / 9 ≤
+    (31416 / 10000 / 9 - (31415 / 10000 / 9) ^ 3 / 6 + (31416 / 10000 / 9) ^ 5 / 120) / 5
+but is expected to have type
+  8661 / 10000 * (31416 / 10000 / 9) ≤ 8661 / 10000 * (31416 / 10000 / 5)
+in the application
+  pow_le_pow_left₀ hgd
+    (p22_div_le_div_real_left hsig0
+      (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+        (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 5)) (Eq.refl false))
+      hk1)
+/tmp/bjf_probe.lean:1707:27: error: Application type mismatch: The argument
+  p22_div_le_div_real_left hsig0
+    (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+      (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 5)) (Eq.refl false))
+    hk1
+has type
+  (31416 / 10000 / 10 - (31415 / 10000 / 10) ^ 3 / 6 + (31416 / 10000 / 10) ^ 5 / 120) / 10 ≤
+    (31416 / 10000 / 10 - (31415 / 10000 / 10) ^ 3 / 6 + (31416 / 10000 / 10) ^ 5 / 120) / 5
+but is expected to have type
+  8661 / 10000 * (31416 / 10000 / 10) ≤ 8661 / 10000 * (31416 / 10000 / 5)
+in the application
+  pow_le_pow_left₀ hgd
+    (p22_div_le_div_real_left hsig0
+      (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+        (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 5)) (Eq.refl false))
+      hk1)
+/tmp/bjf_probe.lean:1769:27: error: Application type mismatch: The argument
+  p22_div_le_div_real_left hsig0
+    (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+      (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 5)) (Eq.refl false))
+    hk1
+has type
+  (31416 / 10000 / 11 - (31415 / 10000 / 11) ^ 3 / 6 + (31416 / 10000 / 11) ^ 5 / 120) / 11 ≤
+    (31416 / 10000 / 11 - (31415 / 10000 / 11) ^ 3 / 6 + (31416 / 10000 / 11) ^ 5 / 120) / 5
+but is expected to have type
+  8661 / 10000 * (31416 / 10000 / 11) ≤ 8661 / 10000 * (31416 / 10000 / 5)
+in the application
+  pow_le_pow_left₀ hgd
+    (p22_div_le_div_real_left hsig0
+      (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+        (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 5)) (Eq.refl false))
+      hk1)
+/tmp/bjf_probe.lean:1798:37: error: unsolved goals
+k : ℕ
+hk : 12 ≤ k
+hsqrt0 : 0 ≤ sqrt3 / 2
+hw0 : 0 ≤ sqrt3 / 2 * Real.sin (Real.pi / ↑k)
+⊢ ?m.192 ≤ ?m.193
+/tmp/bjf_probe.lean:1797:8: error: Application type mismatch: The argument
+  p22_div_le_div_nat_right
+    (cast (Eq.symm (Eq.trans (congrFun' (congrArg LT.lt (Eq.symm Nat.cast_zero)) ↑k) Nat.cast_lt._simp_1))
+      (lt_of_lt_of_le
+        (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℕ (Eq.refl 0))
+          (Mathlib.Meta.NormNum.isNat_ofNat ℕ (Eq.refl 12)) (Eq.refl false))
+        hk))
+    ?m.197
+has type
+  ?m.173 / ↑k ≤ ?m.174 / ↑k
+but is expected to have type
+  Real.sin (Real.pi / ↑k) ≤ 31416 / 10000 / ↑k
+in the application
+  mul_le_mul_of_nonneg_left
+    (p22_div_le_div_nat_right
+      (cast (Eq.symm (Eq.trans (congrFun' (congrArg LT.lt (Eq.symm Nat.cast_zero)) ↑k) Nat.cast_lt._simp_1))
+        (lt_of_lt_of_le
+          (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℕ (Eq.refl 0))
+            (Mathlib.Meta.NormNum.isNat_ofNat ℕ (Eq.refl 12)) (Eq.refl false))
+          hk))
+      ?m.197)
+/tmp/bjf_probe.lean:1812:27: error: Application type mismatch: The argument
+  p22_div_le_div_real_left hsqrt0
+    (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+      (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 12)) (Eq.refl false))
+    hk1
+has type
+  sqrt3 / 2 / ↑k ≤ sqrt3 / 2 / 12
+but is expected to have type
+  8661 / 10000 * (31416 / 10000 / ↑k) ≤ 8661 / 10000 * 31416 / 10000 / 12
+in the application
+  pow_le_pow_left₀ hgd
+    (p22_div_le_div_real_left hsqrt0
+      (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℝ Nat.cast_zero)
+        (Mathlib.Meta.NormNum.isNat_ofNat ℝ (Eq.refl 12)) (Eq.refl false))
+      hk1)
+/tmp/bjf_probe.lean:1824:58: error: Type mismatch
+  h
+has type
+  sqrt3 / 2 * (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ≤ sqrt3 / 2 * (8661 / 10000 * (31416 / 10000 / ↑k))
+but is expected to have type
+  2 * ↑k * (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ≤ 2 * ↑k * (8661 / 10000 * (31416 / 10000 / ↑k))
+Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+/tmp/bjf_probe.lean:1825:46: error: unsolved goals
+k : ℕ
+hk : 12 ≤ k
+hsqrt0 : 0 ≤ sqrt3 / 2
+hw0 : 0 ≤ sqrt3 / 2 * Real.sin (Real.pi / ↑k)
+hv : sqrt3 / 2 * Real.sin (Real.pi / ↑k) ≤ 8661 / 10000 * (31416 / 10000 / ↑k)
+hk1 : ↑k ≥ 12
+hk2 : ↑k ^ 2 ≥ 144
+hgd : 0 ≤ 8661 / 10000 * (31416 / 10000 / ↑k)
+hwu : (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 2 ≤ 17 / 64
+hle :
+  asn (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ≤
+    sqrt3 / 2 * Real.sin (Real.pi / ↑k) + (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 3 / 6 +
+      (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 5 / 10
+h3 : (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 3 ≤ (8661 / 10000 * (31416 / 10000 / ↑k)) ^ 3
+h5 : (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 5 ≤ (8661 / 10000 * (31416 / 10000 / ↑k)) ^ 5
+h : sqrt3 / 2 * (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ≤ sqrt3 / 2 * (8661 / 10000 * (31416 / 10000 / ↑k))
+⊢ ↑k * (↑k)⁻¹ * (34011747 / 6250000) = 34011747 / 6250000
+Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+/tmp/bjf_probe.lean:1834:57: error: unsolved goals
+k : ℕ
+hk : 12 ≤ k
+hsqrt0 : 0 ≤ sqrt3 / 2
+hw0 : 0 ≤ sqrt3 / 2 * Real.sin (Real.pi / ↑k)
+hv : sqrt3 / 2 * Real.sin (Real.pi / ↑k) ≤ 8661 / 10000 * (31416 / 10000 / ↑k)
+hk1 : ↑k ≥ 12
+hk2 : ↑k ^ 2 ≥ 144
+hgd : 0 ≤ 8661 / 10000 * (31416 / 10000 / ↑k)
+hwu : (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 2 ≤ 17 / 64
+hle :
+  asn (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ≤
+    sqrt3 / 2 * Real.sin (Real.pi / ↑k) + (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 3 / 6 +
+      (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 5 / 10
+h3 : (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 3 ≤ (8661 / 10000 * (31416 / 10000 / ↑k)) ^ 3
+h5 : (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 5 ≤ (8661 / 10000 * (31416 / 10000 / ↑k)) ^ 5
+hv1 : 2 * ↑k * (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ≤ 8661 / 10000 * 31416 / 10000 * 2
+hstep :
+  2 * ↑k * ((sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 3 / 6) ≤ 2 * ↑k * ((8661 / 10000 * (31416 / 10000 / ↑k)) ^ 3 / 6)
+⊢ ↑k * (↑k)⁻¹ ^ 3 * (13114917557601970043241 / 1953125000000000000000) =
+    (↑k)⁻¹ ^ 2 * (13114917557601970043241 / 1953125000000000000000)
+/tmp/bjf_probe.lean:1835:9: error: invalid 'calc' step, left-hand side is
+  2 * ↑k * ((8661 / 10000 * (31416 / 10000 / ↑k)) ^ 3 / 6) : ℝ
+but is expected to be
+  2 * ↑k * ((sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 3 / 6) : ℝ
+Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+/tmp/bjf_probe.lean:1851:30: error: unsolved goals
+k : ℕ
+hk : 12 ≤ k
+hsqrt0 : 0 ≤ sqrt3 / 2
+hw0 : 0 ≤ sqrt3 / 2 * Real.sin (Real.pi / ↑k)
+hv : sqrt3 / 2 * Real.sin (Real.pi / ↑k) ≤ 8661 / 10000 * (31416 / 10000 / ↑k)
+hk1 : ↑k ≥ 12
+hk2 : ↑k ^ 2 ≥ 144
+hgd : 0 ≤ 8661 / 10000 * (31416 / 10000 / ↑k)
+hwu : (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 2 ≤ 17 / 64
+hle :
+  asn (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ≤
+    sqrt3 / 2 * Real.sin (Real.pi / ↑k) + (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 3 / 6 +
+      (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 5 / 10
+h3 : (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 3 ≤ (8661 / 10000 * (31416 / 10000 / ↑k)) ^ 3
+h5 : (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 5 ≤ (8661 / 10000 * (31416 / 10000 / ↑k)) ^ 5
+hv1 : 2 * ↑k * (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ≤ 8661 / 10000 * 31416 / 10000 * 2
+hterm3 :
+  2 * ↑k * ((sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 3 / 6) ≤
+    8661 / 10000 * 31416 / 10000 * 8661 / 10000 * 31416 / 10000 * 8661 / 10000 * 31416 / 10000 / 3 / 144
+hk4 : ↑k ^ 4 ≥ 20736
+hstep :
+  2 * ↑k * ((sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 5 / 10) ≤ 2 * ↑k * ((8661 / 10000 * (31416 / 10000 / ↑k)) ^ 5 / 10)
+⊢ ↑k * (↑k)⁻¹ ^ 5 * (45513967950081123708354976087435383507 / 1525878906250000000000000000000000000) =
+    (↑k)⁻¹ ^ 4 * (1338183773685048395436875856081 / 122070312500000000000000000000)
+/tmp/bjf_probe.lean:1852:9: error: invalid 'calc' step, left-hand side is
+  2 * ↑k * ((8661 / 10000 * (31416 / 10000 / ↑k)) ^ 5 / 10) : ℝ
+but is expected to be
+  2 * ↑k * ((sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 5 / 10) : ℝ
+/tmp/bjf_probe.lean:1861:54: error: unsolved goals
+k : ℕ
+hk : 12 ≤ k
+hsqrt0 : 0 ≤ sqrt3 / 2
+hw0 : 0 ≤ sqrt3 / 2 * Real.sin (Real.pi / ↑k)
+hv : sqrt3 / 2 * Real.sin (Real.pi / ↑k) ≤ 8661 / 10000 * (31416 / 10000 / ↑k)
+hk1 : ↑k ≥ 12
+hk2 : ↑k ^ 2 ≥ 144
+hgd : 0 ≤ 8661 / 10000 * (31416 / 10000 / ↑k)
+hwu : (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 2 ≤ 17 / 64
+hle :
+  asn (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ≤
+    sqrt3 / 2 * Real.sin (Real.pi / ↑k) + (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 3 / 6 +
+      (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 5 / 10
+h3 : (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 3 ≤ (8661 / 10000 * (31416 / 10000 / ↑k)) ^ 3
+h5 : (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 5 ≤ (8661 / 10000 * (31416 / 10000 / ↑k)) ^ 5
+hv1 : 2 * ↑k * (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ≤ 8661 / 10000 * 31416 / 10000 * 2
+hterm3 :
+  2 * ↑k * ((sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 3 / 6) ≤
+    8661 / 10000 * 31416 / 10000 * 8661 / 10000 * 31416 / 10000 * 8661 / 10000 * 31416 / 10000 / 3 / 144
+hk4 : ↑k ^ 4 ≥ 20736
+hterm5 :
+  2 * ↑k * ((sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 5 / 10) ≤
+    8661 / 10000 * 31416 / 10000 * 8661 / 10000 * 31416 / 10000 * (8661 / 10000 * 31416 / 10000) * 8661 / 10000 *
+            31416 /
+          10000 *
+        (1 / 5) /
+      20736
+⊢ 0 < ?m.2289
+/tmp/bjf_probe.lean:1862:29: error: unsolved goals
+k : ℕ
+hk : 12 ≤ k
+hsqrt0 : 0 ≤ sqrt3 / 2
+hw0 : 0 ≤ sqrt3 / 2 * Real.sin (Real.pi / ↑k)
+hv : sqrt3 / 2 * Real.sin (Real.pi / ↑k) ≤ 8661 / 10000 * (31416 / 10000 / ↑k)
+hk1 : ↑k ≥ 12
+hk2 : ↑k ^ 2 ≥ 144
+hgd : 0 ≤ 8661 / 10000 * (31416 / 10000 / ↑k)
+hwu : (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 2 ≤ 17 / 64
+hle :
+  asn (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ≤
+    sqrt3 / 2 * Real.sin (Real.pi / ↑k) + (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 3 / 6 +
+      (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 5 / 10
+h3 : (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 3 ≤ (8661 / 10000 * (31416 / 10000 / ↑k)) ^ 3
+h5 : (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 5 ≤ (8661 / 10000 * (31416 / 10000 / ↑k)) ^ 5
+hv1 : 2 * ↑k * (sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ≤ 8661 / 10000 * 31416 / 10000 * 2
+hterm3 :
+  2 * ↑k * ((sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 3 / 6) ≤
+    8661 / 10000 * 31416 / 10000 * 8661 / 10000 * 31416 / 10000 * 8661 / 10000 * 31416 / 10000 / 3 / 144
+hk4 : ↑k ^ 4 ≥ 20736
+hterm5 :
+  2 * ↑k * ((sqrt3 / 2 * Real.sin (Real.pi / ↑k)) ^ 5 / 10) ≤
+    8661 / 10000 * 31416 / 10000 * 8661 / 10000 * 31416 / 10000 * (8661 / 10000 * 31416 / 10000) * 8661 / 10000 *
+            31416 /
+          10000 *
+        (1 / 5) /
+      20736
+⊢ 0 < ?m.2293
+/tmp/bjf_probe.lean:1873:19: error: unsolved goals
+h : ℝ
+hh1 : 1 ≤ h
+hh0 : h ≤ h0
+hs4 : sqrt3 / 4 ≤ 4331 / 10000
+⊢ 0 ≤ ?m.125
+/tmp/bjf_probe.lean:1873:33: error: unsolved goals
+h : ℝ
+hh1 : 1 ≤ h
+hh0 : h ≤ h0
+hs4 : sqrt3 / 4 ≤ 4331 / 10000
+⊢ 0 ≤ ?m.126
+/tmp/bjf_probe.lean:1873:52: error: unsolved goals
+h : ℝ
+hh1 : 1 ≤ h
+hh0 : h ≤ h0
+hs4 : sqrt3 / 4 ≤ 4331 / 10000
+⊢ ?m.125 ^ 2 ≤ ?m.126
+/tmp/bjf_probe.lean:1933:19: error: unsolved goals
+h : ℝ
+hh1 : 1 ≤ h
+hh0 : h ≤ h0
+hs4 : sqrt3 / 4 ≤ 4331 / 10000
+⊢ 0 ≤ ?m.125
+/tmp/bjf_probe.lean:1933:33: error: unsolved goals
+h : ℝ
+hh1 : 1 ≤ h
+hh0 : h ≤ h0
+hs4 : sqrt3 / 4 ≤ 4331 / 10000
+⊢ 0 ≤ ?m.126
+/tmp/bjf_probe.lean:1933:52: error: unsolved goals
+h : ℝ
+hh1 : 1 ≤ h
+hh0 : h ≤ h0
+hs4 : sqrt3 / 4 ≤ 4331 / 10000
+⊢ ?m.125 ^ 2 ≤ ?m.126
+/tmp/bjf_probe.lean:1993:19: error: unsolved goals
+h : ℝ
+hh1 : 1 ≤ h
+hh0 : h ≤ h0
+hs4 : sqrt3 / 4 ≤ 4331 / 10000
+⊢ 0 ≤ ?m.125
+/tmp/bjf_probe.lean:1993:33: error: unsolved goals
+h : ℝ
+hh1 : 1 ≤ h
+hh0 : h ≤ h0
+hs4 : sqrt3 / 4 ≤ 4331 / 10000
+⊢ 0 ≤ ?m.126
+/tmp/bjf_probe.lean:1993:52: error: unsolved goals
+h : ℝ
+hh1 : 1 ≤ h
+hh0 : h ≤ h0
+hs4 : sqrt3 / 4 ≤ 4331 / 10000
+⊢ ?m.125 ^ 2 ≤ ?m.126
+/tmp/bjf_probe.lean:2049:19: error: unsolved goals
+h : ℝ
+hh1 : 1 ≤ h
+hh0 : h ≤ h0
+hs4 : sqrt3 / 4 ≤ 4331 / 10000
+⊢ 0 ≤ ?m.125
+/tmp/bjf_probe.lean:2049:33: error: unsolved goals
+h : ℝ
+hh1 : 1 ≤ h
+hh0 : h ≤ h0
+hs4 : sqrt3 / 4 ≤ 4331 / 10000
+⊢ 0 ≤ ?m.126
+/tmp/bjf_probe.lean:2049:52: error: unsolved goals
+h : ℝ
+hh1 : 1 ≤ h
+hh0 : h ≤ h0
+hs4 : sqrt3 / 4 ≤ 4331 / 10000
+⊢ ?m.125 ^ 2 ≤ ?m.126
+/tmp/bjf_probe.lean:2206:8: error: `Kepler.Text.BIEFJHU_explicit` has already been declared
