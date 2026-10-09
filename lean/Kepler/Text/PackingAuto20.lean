@@ -53,6 +53,7 @@ import Kepler.Text.PackingAuto10
 import Kepler.Text.PackingAuto11
 import Kepler.Text.PackingAuto12
 import Kepler.Text.PackingAuto13
+import Kepler.Text.PackingAuto17
 import Kepler.Text.SphereKit
 import Kepler.Text.Polytope
 import Kepler.Text.PlanarityAuto12
@@ -905,3 +906,50 @@ private theorem p20_quad_subset (V : Set V3) (u0 u1 u2 u3 : V3) :
     · exact h3
   · intro h
     exact ⟨h (by simp), h (by simp), h (by simp), h (by simp)⟩
+
+/-! ## cell_params_d uniqueness kit (moved from PackingAuto21) -/
+
+/-- HOL `MCELL_CELL_PARAMETERS_D_EXIST` (TSKAJXY3.hl:841; proved 2026-09-29
+wave B1: the `cellParamsD` epsilon satisfies its predicate (`epsilon_spec`
+with the witness `(k, ul)`), and `AJRIPQN` (PA17, sorry-tainted upstream)
+identifies its first component with `k`). -/
+theorem MCELL_CELL_PARAMETERS_D_EXIST (V : Set V3) (ul vl : List V3) (k : ℕ) (X : Set V3)
+    (hk : k ≤ 4) (hp : Packing V) (hs : saturated V) (hX : X = mcell k V ul)
+    (hb : barV V 3 ul) (his : initialSublist vl ul) (hn : ¬nullSet X) :
+    (cellParamsD V X vl).1 = k := by
+  have hex : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧
+      initialSublist vl p.2 := ⟨(k, ul), hk, hb, hX, his⟩
+  have heps := Classical.epsilon_spec (p := fun p : ℕ × List V3 =>
+    p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧ initialSublist vl p.2) hex
+  have hb1 : barV V 3 (cellParamsD V X vl).2 := heps.2.1
+  have hi1 : (cellParamsD V X vl).1 ≤ 4 := heps.1
+  have hXw : X = mcell (cellParamsD V X vl).1 V (cellParamsD V X vl).2 := heps.2.2.1
+  have hAj := AJRIPQN V (cellParamsD V X vl).2 ul (cellParamsD V X vl).1 k hs hp hb1 hb
+    (by simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; omega)
+    (by simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; omega)
+    (by rw [← hXw, ← hX, Set.inter_self]; exact hn)
+  exact hAj.1
+
+/-- HOL `MCELL_PARAM_D_UL` (TSKAJXY3.hl:897; proved 2026-09-29 wave B1:
+`cellParamsD V X ul'`'s epsilon satisfies its predicate, and `AJRIPQN`
+(PA17, sorry-tainted upstream) transfers the parameters). -/
+theorem MCELL_PARAM_D_UL (V : Set V3) (ul ul' vl : List V3) (X : Set V3) (k : ℕ)
+    (hk : k ≤ 4) (hp : Packing V) (hs : saturated V) (hX : X = mcell k V ul)
+    (hb : barV V 3 ul) (hn : ¬nullSet X) (his : initialSublist ul' ul)
+    (hvl : vl = (cellParamsD V X ul').2) :
+    X = mcell k V vl ∧ barV V 3 vl ∧ initialSublist ul' vl := by
+  have hex : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧
+      initialSublist ul' p.2 := ⟨(k, ul), hk, hb, hX, his⟩
+  have heps := Classical.epsilon_spec (p := fun p : ℕ × List V3 =>
+    p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧ initialSublist ul' p.2) hex
+  have hb1 : barV V 3 (cellParamsD V X ul').2 := heps.2.1
+  have hi1 : (cellParamsD V X ul').1 ≤ 4 := heps.1
+  have hXw : X = mcell (cellParamsD V X ul').1 V (cellParamsD V X ul').2 := heps.2.2.1
+  have hvl' : vl = (cellParamsD V X ul').2 := hvl
+  subst hvl'
+  have hAj := AJRIPQN V ul (cellParamsD V X ul').2 k (cellParamsD V X ul').1 hs hp hb hb1
+    (by simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; omega)
+    (by simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; omega)
+    (by rw [← hXw, ← hX, Set.inter_self]; exact hn)
+  rw [hvl, hAj.1, ← hAj.2, ← hX]
+  refine ⟨rfl, hb1, heps.2.2.2⟩

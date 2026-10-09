@@ -3032,26 +3032,7 @@ theorem TSKAJXY_1 (V : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V
     rw [ge_iff_le, hv, hv1, ← hkey]
     exact mul_nonneg hsolnn hdiff.le
 
-/-- HOL `MCELL_CELL_PARAMETERS_D_EXIST` (TSKAJXY3.hl:841; proved 2026-09-29
-wave B1: the `cellParamsD` epsilon satisfies its predicate (`epsilon_spec`
-with the witness `(k, ul)`), and `AJRIPQN` (PA17, sorry-tainted upstream)
-identifies its first component with `k`). -/
-theorem MCELL_CELL_PARAMETERS_D_EXIST (V : Set V3) (ul vl : List V3) (k : ℕ) (X : Set V3)
-    (hk : k ≤ 4) (hp : Packing V) (hs : saturated V) (hX : X = mcell k V ul)
-    (hb : barV V 3 ul) (his : initialSublist vl ul) (hn : ¬nullSet X) :
-    (cellParamsD V X vl).1 = k := by
-  have hex : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧
-      initialSublist vl p.2 := ⟨(k, ul), hk, hb, hX, his⟩
-  have heps := Classical.epsilon_spec (p := fun p : ℕ × List V3 =>
-    p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧ initialSublist vl p.2) hex
-  have hb1 : barV V 3 (cellParamsD V X vl).2 := heps.2.1
-  have hi1 : (cellParamsD V X vl).1 ≤ 4 := heps.1
-  have hXw : X = mcell (cellParamsD V X vl).1 V (cellParamsD V X vl).2 := heps.2.2.1
-  have hAj := AJRIPQN V (cellParamsD V X vl).2 ul (cellParamsD V X vl).1 k hs hp hb1 hb
-    (by simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; omega)
-    (by simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; omega)
-    (by rw [← hXw, ← hX, Set.inter_self]; exact hn)
-  exact hAj.1
+/-! ## cell_params_d uniqueness kit → moved to PackingAuto20 (suite-move A′, 2026-10-09) -/
 
 /-- HOL `INITIAL_SUBLIST_2` (TSKAJXY3.hl:868). -/
 theorem INITIAL_SUBLIST_2 (ul : List V3) (h : ul.length = 4) :
@@ -3075,30 +3056,6 @@ theorem MCELL2_CELL_PARAMETERS_EXIST (V : Set V3) (ul : List V3) (X : Set V3)
   refine MCELL_CELL_PARAMETERS_D_EXIST V ul [elV ul 0, elV ul 1] 2 X (by norm_num) hp hs
     ?_ hb (INITIAL_SUBLIST_2 ul (by simpa using hb.1)) hn
   rw [hX, BumpP4.MCELL2]
-
-/-- HOL `MCELL_PARAM_D_UL` (TSKAJXY3.hl:897; proved 2026-09-29 wave B1:
-`cellParamsD V X ul'`'s epsilon satisfies its predicate, and `AJRIPQN`
-(PA17, sorry-tainted upstream) transfers the parameters). -/
-theorem MCELL_PARAM_D_UL (V : Set V3) (ul ul' vl : List V3) (X : Set V3) (k : ℕ)
-    (hk : k ≤ 4) (hp : Packing V) (hs : saturated V) (hX : X = mcell k V ul)
-    (hb : barV V 3 ul) (hn : ¬nullSet X) (his : initialSublist ul' ul)
-    (hvl : vl = (cellParamsD V X ul').2) :
-    X = mcell k V vl ∧ barV V 3 vl ∧ initialSublist ul' vl := by
-  have hex : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧
-      initialSublist ul' p.2 := ⟨(k, ul), hk, hb, hX, his⟩
-  have heps := Classical.epsilon_spec (p := fun p : ℕ × List V3 =>
-    p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧ initialSublist ul' p.2) hex
-  have hb1 : barV V 3 (cellParamsD V X ul').2 := heps.2.1
-  have hi1 : (cellParamsD V X ul').1 ≤ 4 := heps.1
-  have hXw : X = mcell (cellParamsD V X ul').1 V (cellParamsD V X ul').2 := heps.2.2.1
-  have hvl' : vl = (cellParamsD V X ul').2 := hvl
-  subst hvl'
-  have hAj := AJRIPQN V ul (cellParamsD V X ul').2 k (cellParamsD V X ul').1 hs hp hb hb1
-    (by simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; omega)
-    (by simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; omega)
-    (by rw [← hXw, ← hX, Set.inter_self]; exact hn)
-  rw [hvl, hAj.1, ← hAj.2, ← hX]
-  refine ⟨rfl, hb1, heps.2.2.2⟩
 
 /-- HOL `MCELL2_PARAM_D_UL` (TSKAJXY3.hl:923; proved 2026-09-29 wave B1:
 `MCELL_PARAM_D_UL` at `k = 2`). -/
