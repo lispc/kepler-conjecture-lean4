@@ -110,6 +110,20 @@ CONVEX_HULL_4_SUBSET_AFF_GE_2_2 + 楠∩D ⊆ hull + quartet 非退化 +
 region 侧供给缺口不变:GRUTOTI capstone 需 `grutoti_region` 导出
 r/r1/r2/d/d1/d2 极端数据(B4/B6 段),见 docstring 尾注。
 
+2026-10-08 GT-4 export pass (region B5-B7 极端数据导出波, cell_vol 消费端
+SF 28 前提补齐): 新增零错私件 `p23_rconeGt_cos_lt`(rconeGt 成员读作严格
+余弦下界)、`p23_u0_notIn_plane3/4`(P1/P2 面-平面 killer, 按
+p23_u0_notIn_hull3/4 模式)、`p23_plane_dist_pos3/4`(远面平面距离 ε-下界;
+平面闭性 = 有限维方向子模 + `isClosed_direction_iff`)、
+`p23_smallestAngle_cos`(SMALLEST_ANGLE_LINE_PROPERTY 桥到 inner ℝ 形)与
+伴随定理 `p23_region_data`(`grutoti_region` 同前提、强结论: 冻结界 +
+mcell cover + hw1 `hl/√2 ≤ d` + hw3/hw4 面/锥窄性——P1/P2 经 r3/r4 面距离
+族极小, P3/P4 经 f3/f4 极大, 冻结证明体用 ∃-见证即弃的极值在此保留)。
+DEVIATION(均在冻结陈述 slack 内, D ⊆ C 与 cover 不变): `d = max c
+(max (hl/√2) (max d1 d2))`(免 B4 包含反演)、`r = min (1/2) (min r3 r4)`
+(面窄性须配所导出的 r)。GRUTOTI capstone 联动缺口随之缩小为:
+AJRIPQN/measure-union 侧(sum_volD/pivot 两冻结 giant)。
+
 2026-10-08 GT-3e pass (SF 项 28+29 应用 + 核填充, 用户批准): `grutoti_cell_vol`
 签名补窄性/封角前提(SF 28:hp + hw1 + hw3 + hw4;SF 29:hjunk,陈述其余一字
 未动),k = 0/1 计数臂与 ε-junk 逆序表角整支闭合(cellParams-witness 兼为
@@ -2538,7 +2552,9 @@ witnesses):
   statement only asks `0 < r ≤ 1`. The r-side extremal data (`f1`/`f2` >
   0 via the facet-plane nullness route: `u0 ∉ affineSpan {u1, v2, mxi}` /
   `{u1, v2, v3}` nulls the whole cell) is NOT exported; the `grutoti_cell_vol`
-  k = 3/4 radial argument must re-derive it.
+  k = 3/4 radial argument must re-derive it. (GT-4 export wave 2026-10-08:
+  now EXPORTED by the companion `p23_region_data` below, which re-runs this
+  proof skeleton keeping the sups/minima the frozen `∃`-witnesses discard.)
 * `d1`/`d2` here are genuine sups of the P3/P4 families (as in HL), so the
   d-side narrowness (`d ≥ d1`, `d ≥ d2`: the cone sits inside every k = 2/3
   cell wedge) IS available at these witnesses — but only through
@@ -2621,6 +2637,352 @@ private theorem grutoti_region (V : Set V3) (u0 u1 : V3) (e : Set V3)
       (fun z hz => ⟨hz.1, hDC hz.2⟩ : X ∩ grutotiConicCap u0 u1 (1 / 2)
         (max c (max d1 d2)) ⊆ X ∩ C) h0))
 
+/-! ## GT-4 wave: the `grutoti_region` B5-B7 extreme-data export kit
+(2026-10-08; feeds the SF 项 28 premises of `grutoti_cell_vol`) -/
+
+/-- GT-4 (P3/P4 cone route): `rconeGt` membership read as a strict cosine
+bound — the HL `rcone_gt` definition unfolded, `dist` rewritten to `norm`
+and `⬝ᵥ` bridged to `inner ℝ` via `inner_eq_dot`. -/
+private theorem p23_rconeGt_cos_lt {u0 u1 z : V3} {d : ℝ} (hne : u0 ≠ u1)
+    (hmem : z ∈ rconeGt u0 u1 d) :
+    d < inner ℝ (z - u0) (u1 - u0) / (‖z - u0‖ * ‖u1 - u0‖) := by
+  simp only [rconeGt, Set.mem_setOf_eq] at hmem
+  rw [← inner_eq_dot] at hmem
+  have hdx : dist z u0 = ‖z - u0‖ := dist_eq_norm z u0
+  have hdu : dist u1 u0 = ‖u1 - u0‖ := dist_eq_norm u1 u0
+  rw [hdx, hdu] at hmem
+  have hz0 : z ≠ u0 := by
+    intro hcc
+    rw [hcc] at hmem
+    simp at hmem
+  have hza : (0 : ℝ) < ‖z - u0‖ :=
+    norm_pos_iff.mpr (fun hcc => hz0 (sub_eq_zero.mp hcc))
+  have hdb : (0 : ℝ) < ‖u1 - u0‖ :=
+    norm_pos_iff.mpr (fun hcc => hne (sub_eq_zero.mp hcc).symm)
+  refine (lt_div_iff₀ (mul_pos hza hdb)).mpr ?_
+  calc d * (‖z - u0‖ * ‖u1 - u0‖) = ‖z - u0‖ * ‖u1 - u0‖ * d := by ring
+    _ < inner ℝ (z - u0) (u1 - u0) := hmem
+
+/-- GT-4 (B6 P1 core, facet-plane route): `u0` is not in the far-face plane
+`{u1, elV ul 2, mxi V ul}` of a `k = 3` cell meeting the gauge set in
+positive measure — else the whole cell sits in that plane and is null (same
+killer as `p23_u0_notIn_hull3`, with the plane membership taken directly). -/
+private theorem p23_u0_notIn_plane3 (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hs : saturated V) {ul : List V3} (hb : barV V 3 ul)
+    (htr : truncateSimplex 1 ul = [u0, u1]) (Cst : Set V3)
+    (hnn : ¬ nullSet (mcell 3 V ul ∩ Cst)) :
+    u0 ∉ (affineSpan ℝ ({u1, elV ul 2, mxi V ul} : Set V3)) := by
+  intro hu0
+  obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V ul hb
+  subst hv
+  have hv01 : v0 = u0 ∧ v1 = u1 := by
+    have h1 : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+      (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+    rw [h1] at htr
+    have h2 := List.cons.injEq v0 [v1] u0 [u1] |>.mp htr
+    exact ⟨h2.1, (List.cons.injEq v1 [] u1 [] |>.mp h2.2).1⟩
+  rw [hv01.1, hv01.2] at htr hnn hu0
+  have htr2 : setOfList (truncateSimplex 2 [u0, u1, v2, v3])
+      = ({u0, u1, v2} : Set V3) := by
+    rw [(TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 v2 v3).2]
+    ext z
+    simp [setOfList]
+  have hE2 : elV [u0, u1, v2, v3] 2 = v2 := rfl
+  rw [hE2] at hu0
+  have hnull : nullSet (mcell 3 V [u0, u1, v2, v3]) :=
+    p23_coplanar_affineSpan_null (p23_coplanar_triple u1 v2 (mxi V [u0, u1, v2, v3]))
+      (p23_mcell3_sub_span htr2 hu0 (mem_affineSpan (k := ℝ) (by simp))
+        (mem_affineSpan (k := ℝ) (by simp)) (mem_affineSpan (k := ℝ) (by simp)))
+  exact hnn (measure_mono_null Set.inter_subset_left hnull)
+
+/-- GT-4 (B6 P2 core, facet-plane route): same killer for the fourth vertex. -/
+private theorem p23_u0_notIn_plane4 (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hs : saturated V) {ul : List V3} (hb : barV V 3 ul)
+    (htr : truncateSimplex 1 ul = [u0, u1]) (Cst : Set V3)
+    (hnn : ¬ nullSet (mcell 4 V ul ∩ Cst)) :
+    u0 ∉ (affineSpan ℝ ({u1, elV ul 2, elV ul 3} : Set V3)) := by
+  intro hu0
+  obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V ul hb
+  subst hv
+  have hv01 : v0 = u0 ∧ v1 = u1 := by
+    have h1 : truncateSimplex 1 [v0, v1, v2, v3] = [v0, v1] :=
+      (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+    rw [h1] at htr
+    have h2 := List.cons.injEq v0 [v1] u0 [u1] |>.mp htr
+    exact ⟨h2.1, (List.cons.injEq v1 [] u1 [] |>.mp h2.2).1⟩
+  rw [hv01.1, hv01.2] at htr hnn hu0
+  have htr4 : setOfList [u0, u1, v2, v3] = ({u0, u1, v2, v3} : Set V3) := by
+    ext z
+    simp [setOfList]
+  have hE2 : elV [u0, u1, v2, v3] 2 = v2 := rfl
+  have hE3 : elV [u0, u1, v2, v3] 3 = v3 := rfl
+  rw [hE2, hE3] at hu0
+  have hnull : nullSet (mcell 4 V [u0, u1, v2, v3]) :=
+    p23_coplanar_affineSpan_null (p23_coplanar_triple u1 v2 v3)
+      (p23_mcell4_sub_span htr4 hu0 (mem_affineSpan (k := ℝ) (by simp))
+        (mem_affineSpan (k := ℝ) (by simp)) (mem_affineSpan (k := ℝ) (by simp)))
+  exact hnn (measure_mono_null Set.inter_subset_left hnull)
+
+/-- GT-4 (B6 P1 ε-data): the far-face plane of a non-null `k = 3` cell keeps
+a strictly positive distance from `u0` — the plane is closed (its direction
+is a finite-dimensional, hence closed, submodule) and misses `u0`
+(`p23_u0_notIn_plane3`). -/
+private theorem p23_plane_dist_pos3 (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hs : saturated V) {ul : List V3} (hb : barV V 3 ul)
+    (htr : truncateSimplex 1 ul = [u0, u1]) (Cst : Set V3)
+    (hnn : ¬ nullSet (mcell 3 V ul ∩ Cst)) :
+    ∃ ε : ℝ, 0 < ε ∧ ∀ z ∈ (affineSpan ℝ ({u1, elV ul 2, mxi V ul} : Set V3)),
+      ε ≤ dist u0 z := by
+  have hclosed : IsClosed (affineSpan ℝ ({u1, elV ul 2, mxi V ul} : Set V3) : Set V3) := by
+    refine (AffineSubspace.isClosed_direction_iff
+      (affineSpan ℝ ({u1, elV ul 2, mxi V ul} : Set V3))).mp ?_
+    exact Submodule.closed_of_finiteDimensional (𝕜 := ℝ) _
+  have hnotin := p23_u0_notIn_plane3 V u0 u1 hp hs hb htr Cst hnn
+  by_contra h0
+  push_neg at h0
+  have hmem : u0 ∈ closure (affineSpan ℝ ({u1, elV ul 2, mxi V ul} : Set V3)) :=
+    Metric.mem_closure_iff.mpr h0
+  rw [hclosed.closure_eq] at hmem
+  exact hnotin hmem
+
+/-- GT-4 (B6 P2 ε-data): same for the `k = 4` far-face plane. -/
+private theorem p23_plane_dist_pos4 (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hs : saturated V) {ul : List V3} (hb : barV V 3 ul)
+    (htr : truncateSimplex 1 ul = [u0, u1]) (Cst : Set V3)
+    (hnn : ¬ nullSet (mcell 4 V ul ∩ Cst)) :
+    ∃ ε : ℝ, 0 < ε ∧ ∀ z ∈ (affineSpan ℝ ({u1, elV ul 2, elV ul 3} : Set V3)),
+      ε ≤ dist u0 z := by
+  have hclosed : IsClosed (affineSpan ℝ ({u1, elV ul 2, elV ul 3} : Set V3) : Set V3) := by
+    refine (AffineSubspace.isClosed_direction_iff
+      (affineSpan ℝ ({u1, elV ul 2, elV ul 3} : Set V3))).mp ?_
+    exact Submodule.closed_of_finiteDimensional (𝕜 := ℝ) _
+  have hnotin := p23_u0_notIn_plane4 V u0 u1 hp hs hb htr Cst hnn
+  by_contra h0
+  push_neg at h0
+  have hmem : u0 ∈ closure (affineSpan ℝ ({u1, elV ul 2, elV ul 3} : Set V3)) :=
+    Metric.mem_closure_iff.mpr h0
+  rw [hclosed.closure_eq] at hmem
+  exact hnotin hmem
+
+/-- GT-4 (B6 P3/P4 cone core): a point of the cut-segment hull keeps a cosine
+bounded by the smallest-angle cosine (`SMALLEST_ANGLE_LINE_PROPERTY`, bridged
+from the `⬝ᵥ`/`norm` form to the `inner ℝ`/`‖·‖` form via `inner_eq_dot`). -/
+private theorem p23_smallestAngle_cos {u0 u1 a b z : V3} (hne : u0 ≠ u1)
+    (hu0K : u0 ∉ convexHull ℝ ({a, b} : Set V3))
+    (hzmem : z ∈ convexHull ℝ ({a, b} : Set V3)) :
+    inner ℝ (z - u0) (u1 - u0) / (‖z - u0‖ * ‖u1 - u0‖) ≤
+      inner ℝ (smallestAngleLine a b u0 u1 - u0) (u1 - u0) /
+        (‖smallestAngleLine a b u0 u1 - u0‖ * ‖u1 - u0‖) := by
+  have hprop := SMALLEST_ANGLE_LINE_PROPERTY a b u0 u1
+    (smallestAngleLine a b u0 u1) z hne hu0K rfl hzmem
+  rw [inner_eq_dot, inner_eq_dot]
+  exact hprop
+
+/-- GT-4 (GRUTOTI capstone 波): the B5-B7 extreme-data export companion of
+`grutoti_region` — same hypotheses, strengthened conclusion. Besides the
+frozen region bounds and the mcell cover, the parameters `c r d` carry the
+SF 项 28 premise shapes consumed by `grutoti_cell_vol`: `hw1 :
+hl [u0,u1]/√2 ≤ d` (the B4 cone inclusion folded into `d`'s maximum, so no
+inversion of `p23_region_exists_c`'s inclusion is needed), the P1/P2 face
+data `r ≤ dist u0 z` on the far-face planes (per-family minima of the
+`p23_plane_dist_pos3/4` distances; the consumer's D-gate transports to the
+C-gated families along `D ⊆ C`), and the P3/P4 cone data (cut-segment hulls
+avoid `rconeGt u0 u1 d` — the `f3`/`f4` suprema that the frozen proof
+discards with its `∃`-witnesses are kept here, chained through
+`SMALLEST_ANGLE_LINE_PROPERTY` via `p23_smallestAngle_cos` and
+`p23_rconeGt_cos_lt`). `hp : Packing V` is a caller premise of
+`grutoti_cell_vol` carried here already. DEVIATIONS from the frozen
+`grutoti_region` proof body (all inside the frozen statement's slack):
+`d = max c (max (hl/√2) (max d1 d2))` and `r = min (1/2) (min r3 r4)` —
+both keep every frozen bound (`0 < r ≤ 1`, `0 < d < 1`, `c ≤ d`, `D ⊆ C`,
+mcell cover). -/
+private theorem p23_region_data (V : Set V3) (u0 u1 : V3) (e : Set V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (hhl : hl [u0, u1] < Real.sqrt 2) (he : e = {u0, u1}) :
+    ∃ c r d : ℝ, 0 < c ∧ c < 1 ∧ 0 < r ∧ r ≤ 1 ∧ 0 < d ∧ d < 1 ∧ c ≤ d ∧
+      (∀ X : Set V3, X ∈ mcellSet V ∧ ¬nullSet (X ∩ grutotiConicCap u0 u1 r d) →
+        ∃ k : ℕ, ∃ vl : List V3, 2 ≤ k ∧ barV V 3 vl ∧ X = mcell k V vl ∧
+          truncateSimplex 1 vl = [u0, u1]) ∧
+      hl [u0, u1] / Real.sqrt 2 ≤ d ∧
+      (∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+        ¬nullSet (mcell 3 V vl ∩ grutotiConicCap u0 u1 r d) →
+        (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, mxi V vl} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, mxi V vl} : Set V3), z ∉ rconeGt u0 u1 d) ∧
+      (∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+        ¬nullSet (mcell 4 V vl ∩ grutotiConicCap u0 u1 r d) →
+        (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, elV vl 3} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, elV vl 3} : Set V3), z ∉ rconeGt u0 u1 d) := by
+  obtain ⟨c, hc0, hc1, hcW, hcHl⟩ := p23_region_exists_c V u0 u1 hs hp hu0 hu1 hne hhl
+  have hbar := grutoti_barV V u0 u1 hs hp hu0 hu1 hne hhl
+  set C := (Metric.ball u0 1 ∩ rconeGt u0 u1 c : Set V3) with hCdef
+  -- B5: the mcell cover over C (verbatim from grutoti_region)
+  have hB5 : ∀ X : Set V3, X ∈ mcellSet V → ¬ nullSet (X ∩ C) →
+      ∃ k vl, 2 ≤ k ∧ barV V 3 vl ∧ X = mcell k V vl ∧ truncateSimplex 1 vl = [u0, u1] :=
+    p23_cover_C V u0 u1 hs hp hu0 hu1 hne c hcHl
+      (p23_C_sub_rogers V u0 u1 hp hu0 hu1 hne hhl hs hbar c hcW)
+  -- B6: the C-gated P3/P4 families; the suprema are KEPT (the frozen proof
+  -- discards them with its ∃-witnesses)
+  set famP3 : Set (List V3) := {vl | barV V 3 vl ∧ ¬ nullSet (mcell 3 V vl ∩ C) ∧
+    truncateSimplex 1 vl = [u0, u1]} with hfamP3def
+  have hfamP3sub : famP3 ⊆ p23Fam V u0 u1 := by
+    intro vl hvl
+    obtain ⟨hb, _, htr⟩ := hvl
+    exact ⟨hb, htr⟩
+  have hfamP3fin : famP3.Finite := (p23_family_finite V u0 u1 hp hs).subset hfamP3sub
+  set f3 : List V3 → ℝ := fun ul =>
+    inner ℝ (smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0) (u1 - u0) /
+      (‖smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0‖ * ‖u1 - u0‖) with hf3def
+  have hf3lt : ∀ ul ∈ famP3, f3 ul < 1 := by
+    intro ul hul
+    obtain ⟨hb, hnn, htr⟩ := hul
+    exact p23_f3_lt_one V u0 u1 hp hs hne hb htr C hnn
+  obtain ⟨d1, hd1lt, hd1ub⟩ : ∃ d1 : ℝ, d1 < 1 ∧ ∀ ul ∈ famP3, f3 ul ≤ d1 := by
+    by_cases hP3 : (f3 '' famP3) = ∅
+    · refine ⟨c, hc1, ?_⟩
+      rintro ul hul
+      exact absurd (Set.mem_image_of_mem f3 hul) (by rw [hP3]; simp)
+    · obtain ⟨m, hm, hmax⟩ := Set.exists_max_image (f3 '' famP3) id
+        (hfamP3fin.image _) (Set.nonempty_iff_ne_empty.mpr hP3)
+      rcases hm with ⟨ul0, hul0, rfl⟩
+      exact ⟨f3 ul0, hf3lt ul0 hul0,
+        fun ul hul => hmax (f3 ul) (Set.mem_image_of_mem f3 hul)⟩
+  set famP4 : Set (List V3) := {vl | barV V 3 vl ∧ ¬ nullSet (mcell 4 V vl ∩ C) ∧
+    truncateSimplex 1 vl = [u0, u1]} with hfamP4def
+  have hfamP4sub : famP4 ⊆ p23Fam V u0 u1 := by
+    intro vl hvl
+    obtain ⟨hb, _, htr⟩ := hvl
+    exact ⟨hb, htr⟩
+  have hfamP4fin : famP4.Finite := (p23_family_finite V u0 u1 hp hs).subset hfamP4sub
+  set f4 : List V3 → ℝ := fun ul =>
+    inner ℝ (smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0) (u1 - u0) /
+      (‖smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0‖ * ‖u1 - u0‖) with hf4def
+  have hf4lt : ∀ ul ∈ famP4, f4 ul < 1 := by
+    intro ul hul
+    obtain ⟨hb, hnn, htr⟩ := hul
+    exact p23_f4_lt_one V u0 u1 hp hs hne hb htr C hnn
+  obtain ⟨d2, hd2lt, hd2ub⟩ : ∃ d2 : ℝ, d2 < 1 ∧ ∀ ul ∈ famP4, f4 ul ≤ d2 := by
+    by_cases hP4 : (f4 '' famP4) = ∅
+    · refine ⟨c, hc1, ?_⟩
+      rintro ul hul
+      exact absurd (Set.mem_image_of_mem f4 hul) (by rw [hP4]; simp)
+    · obtain ⟨m, hm, hmax⟩ := Set.exists_max_image (f4 '' famP4) id
+        (hfamP4fin.image _) (Set.nonempty_iff_ne_empty.mpr hP4)
+      rcases hm with ⟨ul0, hul0, rfl⟩
+      exact ⟨f4 ul0, hf4lt ul0 hul0,
+        fun ul hul => hmax (f4 ul) (Set.mem_image_of_mem f4 hul)⟩
+  -- B6 P1/P2: the per-family plane-distance minima
+  have hfamP3eps : ∀ ul : List V3, ∃ ε : ℝ, ul ∈ famP3 →
+      0 < ε ∧ ∀ z ∈ (affineSpan ℝ ({u1, elV ul 2, mxi V ul} : Set V3)), ε ≤ dist u0 z := by
+    intro ul
+    by_cases hmem : ul ∈ famP3
+    · obtain ⟨hb, hnn, htr⟩ := hmem
+      obtain ⟨ε, hε0, hεle⟩ := p23_plane_dist_pos3 V u0 u1 hp hs hb htr C hnn
+      exact ⟨ε, fun _ => ⟨hε0, hεle⟩⟩
+    · exact ⟨1 / 2, fun hmem' => absurd hmem' hmem⟩
+  obtain ⟨r3, hr3pos, hr3le⟩ : ∃ r3 : ℝ, 0 < r3 ∧
+      ∀ ul ∈ famP3, ∀ z ∈ (affineSpan ℝ ({u1, elV ul 2, mxi V ul} : Set V3)),
+        r3 ≤ dist u0 z := by
+    by_cases hne3 : famP3 = ∅
+    · refine ⟨1 / 2, by norm_num, ?_⟩
+      intro ul hul z hz
+      exact absurd hul (by rw [hne3]; simp)
+    · choose ε hε using hfamP3eps
+      obtain ⟨ul0, hul0⟩ := Set.nonempty_iff_ne_empty.mpr hne3
+      obtain ⟨m, hm, hmin⟩ := Set.exists_min_image (ε '' famP3) id
+        (hfamP3fin.image _) ⟨ε ul0, ul0, hul0, rfl⟩
+      rcases hm with ⟨ul1, hul1, rfl⟩
+      exact ⟨ε ul1, (hε ul1 hul1).1, fun ul hul z hz =>
+        le_trans (hmin (ε ul) (Set.mem_image_of_mem ε hul)) ((hε ul hul).2 z hz)⟩
+  have hfamP4eps : ∀ ul : List V3, ∃ ε : ℝ, ul ∈ famP4 →
+      0 < ε ∧ ∀ z ∈ (affineSpan ℝ ({u1, elV ul 2, elV ul 3} : Set V3)), ε ≤ dist u0 z := by
+    intro ul
+    by_cases hmem : ul ∈ famP4
+    · obtain ⟨hb, hnn, htr⟩ := hmem
+      obtain ⟨ε, hε0, hεle⟩ := p23_plane_dist_pos4 V u0 u1 hp hs hb htr C hnn
+      exact ⟨ε, fun _ => ⟨hε0, hεle⟩⟩
+    · exact ⟨1 / 2, fun hmem' => absurd hmem' hmem⟩
+  obtain ⟨r4, hr4pos, hr4le⟩ : ∃ r4 : ℝ, 0 < r4 ∧
+      ∀ ul ∈ famP4, ∀ z ∈ (affineSpan ℝ ({u1, elV ul 2, elV ul 3} : Set V3)),
+        r4 ≤ dist u0 z := by
+    by_cases hne4 : famP4 = ∅
+    · refine ⟨1 / 2, by norm_num, ?_⟩
+      intro ul hul z hz
+      exact absurd hul (by rw [hne4]; simp)
+    · choose ε hε using hfamP4eps
+      obtain ⟨ul0, hul0⟩ := Set.nonempty_iff_ne_empty.mpr hne4
+      obtain ⟨m, hm, hmin⟩ := Set.exists_min_image (ε '' famP4) id
+        (hfamP4fin.image _) ⟨ε ul0, ul0, hul0, rfl⟩
+      rcases hm with ⟨ul1, hul1, rfl⟩
+      exact ⟨ε ul1, (hε ul1 hul1).1, fun ul hul z hz =>
+        le_trans (hmin (ε ul) (Set.mem_image_of_mem ε hul)) ((hε ul hul).2 z hz)⟩
+  -- B7: assemble (DEVIATIONS: d folds in hl/√2; r is the (1/2, r3, r4) minimum)
+  set d := max c (max (hl [u0, u1] / Real.sqrt 2) (max d1 d2)) with hddef
+  have hdd1 : d1 ≤ d :=
+    le_trans (le_max_left d1 d2) (le_trans (le_max_right (hl [u0, u1] / Real.sqrt 2)
+      (max d1 d2)) (le_max_right c (max (hl [u0, u1] / Real.sqrt 2) (max d1 d2))))
+  have hdd2 : d2 ≤ d :=
+    le_trans (le_max_right d1 d2) (le_trans (le_max_right (hl [u0, u1] / Real.sqrt 2)
+      (max d1 d2)) (le_max_right c (max (hl [u0, u1] / Real.sqrt 2) (max d1 d2))))
+  have hhl1 : hl [u0, u1] / Real.sqrt 2 < 1 :=
+    (div_lt_one (Real.sqrt_pos.mpr (by norm_num : (0 : ℝ) < 2))).mpr hhl
+  have hdlt1 : d < 1 := max_lt hc1 (max_lt hhl1 (max_lt hd1lt hd2lt))
+  have hrLt1 : min (1 / 2) (min r3 r4) < 1 :=
+    lt_of_le_of_lt (min_le_left _ _) (by norm_num)
+  have hDC : grutotiConicCap u0 u1 (min (1 / 2) (min r3 r4)) d ⊆ C := by
+    rw [grutotiConicCap, hCdef]
+    intro z hz
+    obtain ⟨hzball, hzr⟩ := hz
+    refine ⟨?_, grutoti_rconeGt_subset u0 u1 c d (le_max_left _ _) hzr⟩
+    exact Metric.mem_ball.mp (Metric.closedBall_subset_ball hrLt1 hzball)
+  have hgateC : ∀ (k : ℕ) (vl : List V3),
+      ¬ nullSet (mcell k V vl ∩ grutotiConicCap u0 u1 (min (1 / 2) (min r3 r4)) d) →
+      ¬ nullSet (mcell k V vl ∩ C) := by
+    intro k vl hnnD h0
+    exact hnnD (measure_mono_null
+      (show mcell k V vl ∩ grutotiConicCap u0 u1 (min (1 / 2) (min r3 r4)) d ⊆
+        mcell k V vl ∩ C from fun z hz => ⟨hz.1, hDC hz.2⟩) h0)
+  refine ⟨c, min (1 / 2) (min r3 r4), d, hc0, hc1,
+    lt_min (by norm_num : (0 : ℝ) < 1 / 2) (lt_min hr3pos hr4pos),
+    le_trans (min_le_left _ _) (by norm_num : (1 : ℝ) / 2 ≤ 1),
+    hc0.trans_le (le_max_left _ _), hdlt1, le_max_left _ _, ?_, ?_, ?_, ?_⟩
+  · -- the mcell cover, transported along D ⊆ C (verbatim from grutoti_region)
+    rintro X ⟨hX, hn⟩
+    exact hB5 X hX (fun h0 => hn (measure_mono_null
+      (fun z hz => ⟨hz.1, hDC hz.2⟩ : X ∩ grutotiConicCap u0 u1
+        (min (1 / 2) (min r3 r4)) d ⊆ X ∩ C) h0))
+  · -- hw1 (SF 项 28): hl/√2 enters d's maximum
+    exact le_trans (le_max_left _ _) (le_max_right _ _)
+  · -- hw3 (SF 项 28): face data from the r3-minimum, cone data from the
+    -- f3-supremum + SMALLEST_ANGLE_LINE_PROPERTY
+    intro vl hb htr hnnD
+    refine ⟨fun z hz => le_trans (min_le_right (1 / 2) (min r3 r4))
+      (le_trans (min_le_left r3 r4)
+        (hr3le vl ⟨hb, hgateC 3 vl hnnD, htr⟩ z hz)), ?_⟩
+    intro z hzhull hzrcone
+    have hu0K : u0 ∉ convexHull ℝ ({elV vl 2, mxi V vl} : Set V3) :=
+      p23_u0_notIn_hull3 V u0 u1 hp hs hb htr
+        (grutotiConicCap u0 u1 (min (1 / 2) (min r3 r4)) d) hnnD
+    have hprop := p23_smallestAngle_cos hne hu0K hzhull
+    have hcos := p23_rconeGt_cos_lt hne hzrcone
+    have hf3le : inner ℝ (smallestAngleLine (elV vl 2) (mxi V vl) u0 u1 - u0)
+        (u1 - u0) / (‖smallestAngleLine (elV vl 2) (mxi V vl) u0 u1 - u0‖
+          * ‖u1 - u0‖) ≤ d := le_trans (hd1ub vl ⟨hb, hgateC 3 vl hnnD, htr⟩) hdd1
+    exact absurd (le_trans hprop hf3le) (not_le.mpr hcos)
+  · -- hw4 (SF 项 28): same with the k = 4 family
+    intro vl hb htr hnnD
+    refine ⟨fun z hz => le_trans (min_le_right (1 / 2) (min r3 r4))
+      (le_trans (min_le_right r3 r4)
+        (hr4le vl ⟨hb, hgateC 4 vl hnnD, htr⟩ z hz)), ?_⟩
+    intro z hzhull hzrcone
+    have hu0K : u0 ∉ convexHull ℝ ({elV vl 2, elV vl 3} : Set V3) :=
+      p23_u0_notIn_hull4 V u0 u1 hp hs hb htr
+        (grutotiConicCap u0 u1 (min (1 / 2) (min r3 r4)) d) hnnD
+    have hprop := p23_smallestAngle_cos hne hu0K hzhull
+    have hcos := p23_rconeGt_cos_lt hne hzrcone
+    have hf4le : inner ℝ (smallestAngleLine (elV vl 2) (elV vl 3) u0 u1 - u0)
+        (u1 - u0) / (‖smallestAngleLine (elV vl 2) (elV vl 3) u0 u1 - u0‖
+          * ‖u1 - u0‖) ≤ d := le_trans (hd2ub vl ⟨hb, hgateC 4 vl hnnD, htr⟩) hdd2
+    exact absurd (le_trans hprop hf4le) (not_le.mpr hcos)
 /-! ## GT-3e lane: SF 项 28/29 arm kit (2026-10-08) -/
 
 /-- SF 项 28/29 (GT-3e): `truncateSimplex 1` of a list that begins with the
@@ -3692,7 +4054,12 @@ region 侧供给(capstone 波,未变):hw1/hw3/hw4/hp 全部由 `grutoti_region` 
 witness 在其 B4/B6 段一步给出(hp 由饱和/packing 定义;P1/P2 面距离按
 `p23_u0_notIn_hull3/4` 重推;P3/P4 经 SMALLEST_ANGLE_LINE_PROPERTY)。
 GRUTOTI capstone 联动缺口因此缩小为:region 块的 r/r1/r2/d/d1/d2 极端数据
-导出 + AJRIPQN/measure-union 侧(giant),per-cell 恒等式本体不再欠账。 -/
+导出 + AJRIPQN/measure-union 侧(giant),per-cell 恒等式本体不再欠账。
+GT-4 export pass (2026-10-08): 数据导出 BANKED — the companion
+`p23_region_data` (same hypotheses as `grutoti_region`, strengthened
+conclusion) supplies hw1 + hw3 + hw4 + hp + the region bounds/cover in one
+destruct; capstone distance is now only the AJRIPQN/measure-union side
+(`grutoti_sum_volD`/`grutoti_pivot` frozen giants). -/
 private theorem grutoti_cell_vol (V : Set V3) (u0 u1 : V3) (r d : ℝ)
     (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1) (X : Set V3)
     (he : {u0, u1} ∈ edgeX V X)
