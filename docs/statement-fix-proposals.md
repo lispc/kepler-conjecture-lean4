@@ -1136,7 +1136,23 @@ V := ∅（任取 u0 ≠ u1，r := 1，d := 1/2）：`barV ∅ 3 ul` 恒假 ⇒
 SF 打包联动。测度覆盖的数学缺口（TIWWFYQ/GLTVHUM/SLTSTLO1 + PA17 AJRIPQN）
 是独立巨型，不在本 SF 范围——本 SF 只把债显式化到前提面。
 
-### (d) 状态：**DRAFT（2026-10-09 立案，待批）**
+### (d) 状态：**已批准（2026-10-09 用户拍板"31 批，方案 a1"）；已应用（2026-10-09）**
+
+执行版补丁 `docs/statement-fix-proposals-patches/31-pa23-sum-volD.patch`
+（自工作区 diff 生成，闸门多重集比对按构造全等；+64/−21）。应用内容三件：
+1. `grutoti_sum_volD` 签名按 (a1) 扩展——门族七条逐字（hs hp hu0 hu1 hne
+   hhl he）+ `hr : 0 < r` + `hd : d < 1` + 四条测度前提（hmeas 可测性 /
+   hpair 两两零测 / hvol 体积有限 / hcov 覆盖恒等式 `volume.real (⋃₀ 迹) =
+   volume.real D`），结论不变；主体真证零 sorry：`FINITE_EDGE_X2`（有限性支，
+   PA15:775，∈-体已机验）+ `p23_measure_setSum_biUnion`（rw 改写 + hcov
+   收尾）。
+2. 新增债务桥私件 `p23_grutoti_sum_volD_measure_facts`（sorry 1 处，NEEDS
+   定点：hcov = TIWWFYQ/GLTVHUM/SLTSTLO1 覆盖巨型；hpair = PA17 AJRIPQN
+   逐边实例；hmeas/hvol = mcell 可测性+闭球有限体积可证支待拆）。
+3. `GRUTOTI` capstone 调用点重接线（陈述冻结未动，证明体仍真，改经债务桥
+   obtain 四条测度事实后传入新签名）。
+附带：GT-2 lane note 反例 sketch 修正（mcell4 路线不成立，远点族走
+mcell0/2/3）已随新 docstring 落档。
 
 附带修正建议：GT-2 lane note"mcell 4 cells carry e"反例 sketch 不成立
 （远点族 hl ≥ √2 ⇒ mcell4 = ∅）；无穷性支路应走远点 Delaunay 族的

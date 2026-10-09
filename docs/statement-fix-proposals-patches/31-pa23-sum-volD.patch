@@ -1,0 +1,109 @@
+diff --git a/lean/Kepler/Text/PackingAuto23.lean b/lean/Kepler/Text/PackingAuto23.lean
+index f4c9bb6b..5a8374be 100644
+--- a/lean/Kepler/Text/PackingAuto23.lean
++++ b/lean/Kepler/Text/PackingAuto23.lean
+@@ -4396,31 +4396,71 @@ private theorem grutoti_cell_vol (V : Set V3) (u0 u1 : V3) (r d : ℝ)
+ /-- HL GRUTOTI.hl:7228-7400 (`sum s (\t. vol (t INTER D)) = vol D` via
+ `MEASURE_NEGLIGIBLE_UNIONS_IMAGE` over the almost-disjoint cell family) plus
+ index finiteness from `FINITE_MCELL_SET_LEMMA_2` (marchal3.hl:2620; Auto15:520,
+-cells are bounded, e.g. `grutoti_cap_subset_ball`). NEEDS-precision.
+-GT-2 lane note (2026-09-28): the PA15 dependencies are now REAL
+-(`FINITE_EDGE_X2` Auto15:672 FILLED, `MCELL_SUBSET_BALL8_1` Auto15:794 FILLED)
+-and the measure machinery is banked as `p23_measure_setSum_biUnion`. The frozen
+-signature itself is still unprovable for two independent reasons, both needing
+-the STATEMENT-FIX/编排者 channel rather than more filling:
+-(1) finiteness of `grutotiEdgeCells V e` is FALSE for a general `V` — the
+-statement carries no `Packing V`/`saturated V`; an adversarial `V`
+-(`{u0,u1}` plus infinitely many generic far points) has infinitely many
+-`barV V 3` lists whose `mcell 4` cells carry `e ∈ edgeX V X` (the true
+-finiteness route is FINITE_EDGE_X2, which needs `hp, hs`), and
+-(2) the vol identity holds only for the region-block `D`: `grutoti_region`
+-(HL 161-2636) + TIWWFYQ/GLTVHUM/SLTSTLO1 give `D` ⊆ ⋃₀ of edge-cell traces up
+-to a null set, and AJRIPQN (PA17:310, sorried) gives the pairwise-null
+-intersections that `p23_measure_setSum_biUnion` consumes. Suggested unfrozen
+-signature: add `hp hs`, the region cover hypothesis
+-`volume.real (D \ ⋃₀ {X ∩ D | X ∈ grutotiEdgeCells V e}) = 0` (or take the
+-cover as an explicit hypothesis), and `0 < r`/`d < 1`.
+-cells are bounded, e.g. `grutoti_cap_subset_ball`). NEEDS-precision. -/
++cells are bounded, e.g. `grutoti_cap_subset_ball`).
++STATEMENT-FIX item 31 (2026-10-09, 方案 a1, user-approved): the frozen
++signature was REFUTABLE — its premise face was only `he : e = {u0, u1}` with
++`V u0 u1 r d` completely free, and `V := ∅` zeroes the LHS (`mcellSet ∅ = ∅`)
++while `volumeConicCapPos` keeps the RHS positive (machine-verified
++counterexample: docs/grutoti-assets/probe_sum_volD_falsity.lean). The
++signature now carries the `p23_region_data` gate family verbatim
++(hs hp hu0 hu1 hne hhl he), the region-block shape `0 < r` / `d < 1`, and the
++measure-cover debt explicitly: trace measurability, pairwise-null
++intersections, finite trace volumes, and the cover identity
++`volume.real (⋃₀ traces) = volume.real D`. The body is a pure two-piece
++assembly: finiteness = `FINITE_EDGE_X2` (PA15:775, real; ∈-same body as
++`grutotiEdgeCells`, machine-verified), the sum identity =
++`p23_measure_setSum_biUnion` (banked bridge). The remaining math debt — the
++cover itself (TIWWFYQ/GLTVHUM/SLTSTLO1 + PA17 AJRIPQN pairwise-null) — lives
++in the hypotheses and is the capstone's obligation at `GRUTOTI` (:4484, all
++gates in scope). Note superseding the old GT-2 route note (1): the far-point
++infinity arm runs over mcell0/2/3 cells (`mcell4` is empty on the far-point
++family, `hl ≥ √2` ⇒ nullSet), not mcell4. -/
+ private theorem grutoti_sum_volD (V : Set V3) (u0 u1 : V3) (e : Set V3) (r d : ℝ)
+-    (he : e = {u0, u1}) :
++    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
++    (hne : u0 ≠ u1) (hhl : hl [u0, u1] < Real.sqrt 2) (he : e = {u0, u1})
++    (hr : 0 < r) (hd : d < 1)
++    (hmeas : ∀ X ∈ grutotiEdgeCells V e,
++      MeasurableSet (X ∩ grutotiConicCap u0 u1 r d))
++    (hpair : ∀ X ∈ grutotiEdgeCells V e, ∀ Y ∈ grutotiEdgeCells V e, X ≠ Y →
++      volume ((X ∩ grutotiConicCap u0 u1 r d) ∩
++        (Y ∩ grutotiConicCap u0 u1 r d)) = 0)
++    (hvol : ∀ X ∈ grutotiEdgeCells V e,
++      volume (X ∩ grutotiConicCap u0 u1 r d) ≠ ⊤)
++    (hcov : volume.real
++        (⋃₀ ((fun X => X ∩ grutotiConicCap u0 u1 r d) '' grutotiEdgeCells V e)) =
++      volume.real (grutotiConicCap u0 u1 r d)) :
+     (grutotiEdgeCells V e).Finite ∧
+       setSum (grutotiEdgeCells V e)
+         (fun X => volume.real (X ∩ grutotiConicCap u0 u1 r d)) =
+         volume.real (grutotiConicCap u0 u1 r d) := by
++  have hfin : (grutotiEdgeCells V e).Finite := FINITE_EDGE_X2 V e u0 u1 hp hs he
++  refine ⟨hfin, ?_⟩
++  rw [p23_measure_setSum_biUnion hfin hmeas hpair hvol]
++  exact hcov
++
++/-- STATEMENT-FIX item 31 联动件（2026-10-09 方案 a1）：`grutoti_sum_volD`
++新前提面的 capstone 供给桥——把四条测度前提打包，`GRUTOTI` 调用点一次
++obtain。债务显式定点于此，NEEDS: (i) `hcov` = TIWWFYQ/GLTVHUM/SLTSTLO1
++测度覆盖巨型（`p23_region_data` 供给的是 mcell 分类覆盖，不解测度渴）；
++(ii) `hpair` = PA17 AJRIPQN（PA17:310, sorried）的逐边实例；(iii) `hmeas`/
++`hvol` 走 mcell 可测性 + 闭球有限体积（`MCELL_SUBSET_BALL8_1` PA15:794 +
++`r ≤ 1` 见证界），可证支，下波拆分。无穷支路注记（修正 GT-2 lane note）：
++远点族上 `hl ≥ √2 ⇒ mcell4 = ∅`，走 mcell0/2/3。 -/
++private theorem p23_grutoti_sum_volD_measure_facts (V : Set V3) (u0 u1 : V3)
++    (e : Set V3) (r d : ℝ)
++    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
++    (hne : u0 ≠ u1) (hhl : hl [u0, u1] < Real.sqrt 2) (he : e = {u0, u1})
++    (hr0 : 0 < r) (hr1 : r ≤ 1) (hd0 : 0 < d) (hd1 : d < 1) :
++    (∀ X ∈ grutotiEdgeCells V e,
++        MeasurableSet (X ∩ grutotiConicCap u0 u1 r d)) ∧
++      (∀ X ∈ grutotiEdgeCells V e, ∀ Y ∈ grutotiEdgeCells V e, X ≠ Y →
++        volume ((X ∩ grutotiConicCap u0 u1 r d) ∩
++          (Y ∩ grutotiConicCap u0 u1 r d)) = 0) ∧
++      (∀ X ∈ grutotiEdgeCells V e,
++        volume (X ∩ grutotiConicCap u0 u1 r d) ≠ ⊤) ∧
++      volume.real
++          (⋃₀ ((fun X => X ∩ grutotiConicCap u0 u1 r d) '' grutotiEdgeCells V e)) =
++        volume.real (grutotiConicCap u0 u1 r d) := by
+   sorry
+ 
+ /-- HL GRUTOTI.hl:7962-7966: the wedge pivot — the vol-sum equals the
+@@ -4491,7 +4531,11 @@ theorem GRUTOTI : ∀ (V : Set V3) (u0 u1 : V3) (e : Set V3), saturated V →
+   obtain ⟨c, r, d, hc0, hc1, hr0, hr1, hd0, hd1, hdc, _hcover⟩ :=
+     grutoti_region V u0 u1 e hs hp hu0 hu1 hne hhl he
+   have hvol := grutoti_volD_pos u0 u1 r d hr0 hd0 hd1 hne
+-  obtain ⟨hfin, hsum⟩ := grutoti_sum_volD V u0 u1 e r d he
++  obtain ⟨hmeasF, hpairF, hvolF, hcovF⟩ :=
++    p23_grutoti_sum_volD_measure_facts V u0 u1 e r d hs hp hu0 hu1 hne hhl he
++      hr0 hr1 hd0 hd1
++  obtain ⟨hfin, hsum⟩ := grutoti_sum_volD V u0 u1 e r d hs hp hu0 hu1 hne hhl he
++    hr0 hd1 hmeasF hpairF hvolF hcovF
+   have hpivot := grutoti_pivot V u0 u1 e r d hr0 hr1 hd0 hd1 he hfin
+   have hlin := grutoti_setSum_mul_div (grutotiEdgeCells V e)
+     (volume.real (grutotiConicCap u0 u1 r d)) (fun X => dihX V X (u0, u1)) hfin

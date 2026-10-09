@@ -3,6 +3,18 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-10-09 — SF 31 批准（用户"31 批，方案 a1"）
+
+- **项 31**（PA23 `grutoti_sum_volD` 前提面不足——冻结陈述可反驳，M）：方案
+  (a1) 签名扩至 region_data 门族逐字 + `0 < r ∧ d < 1` + 四条显式测度前提
+  （可测性/两两零测/体积有限/覆盖恒等式），主体变 `FINITE_EDGE_X2` +
+  `p23_measure_setSum_biUnion` 两件纯装配；GRUTOTI capstone 调用点同车重接线
+  （陈述不动），测度债打包进新债务桥私件 `p23_grutoti_sum_volD_measure_facts`
+  （NEEDS 定点：hcov=TIWWFYQ 族/hpair=AJRIPQN 实例/hmeas+hvol=可证支）。
+  执行版补丁 `docs/statement-fix-proposals-patches/31-pa23-sum-volD.patch`。
+  背景：冻结版仅 `he : e = {u0,u1}` 一条前提，`V := ∅` 即机器验证反例
+  （docs/grutoti-assets/）。
+
 ## 2026-10-01 — SF 28/29/30 三连批准（用户"同意。按你的想法来吧。"）
 
 - **项 28**（PA23 `grutoti_cell_vol` 缺窄性前提，A′）：签名补窄性前提或沿
