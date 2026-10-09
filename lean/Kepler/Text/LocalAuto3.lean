@@ -47,13 +47,15 @@ Encoding notes (per Kepler/Text/Polytope.lean conventions):
   dependence is taken — consumers may discharge such goals by shape-matching
   either file.
 - FILL LEDGER (proof-fill worker, this wave): 12 of the 30 sorried
-  declarations were discharged; 18 giants remain (IDENTIFY_AZIM_CYCLE,
-  FIRST_AAUHTVE, HYP_LEMMA, ELMS_OF_HYPERMAP_HYP, CYCLIC_SET_IMP_STABLE_SET2,
-  FAN_IMP_BIJ_V_NODE_OF_HYP, LOCAL_FAN_IMP_BIJ_FF_NODES,
-  IN_NODE_IMP_FIRST_EQ, BIJ_BETWEEN_FF_AND_V, WRGCVDR,
-  IMP_FAN_V_PRIME_E_PRIME, DIH2K_IMP_PRE_SIMPLE_HYP,
+  declarations were discharged; then the bij wave discharged 7 more
+  (CYCLIC_SET_IMP_STABLE_SET2 via TopologyFan.orbit_eq_setOfEdge;
+  IN_NODE_IMP_FIRST_EQ; BIJ_BETWEEN_FF_AND_V; DIH2K_IMP_PRE_SIMPLE_HYP,
   DIH2K_IMP_SIMPLE_HYPERMAP, DIH_IMP_EVERY_NODE_INTER_FACE,
-  DIH2K_IMP_NODE_MAP_X_DIFF_X, AFF_GE_TO_AFF_GT2_GE1,
+  DIH2K_IMP_NODE_MAP_X_DIFF_X — private working copies live in the aux kit
+  `p3_*` before CYCLIC_SET_IMP_STABLE_SET2); 11 giants remain
+  (IDENTIFY_AZIM_CYCLE, FIRST_AAUHTVE, HYP_LEMMA, ELMS_OF_HYPERMAP_HYP,
+  FAN_IMP_BIJ_V_NODE_OF_HYP, LOCAL_FAN_IMP_BIJ_FF_NODES, WRGCVDR,
+  IMP_FAN_V_PRIME_E_PRIME, AFF_GE_TO_AFF_GT2_GE1,
   AFF_GE_INTER_AFF_LT_IMP_NOT_EQ_COL, CIZMRRH).
   Filled: EXIS_SMALLEST_WITH_AZIM_ORD (lex-min port of the proved
   LocalAuto7.AZIM_CYCLE_BASIC_PROPERTIES technique); AZIM_CYCLE_EQ_SIGMA_FAN,
@@ -77,6 +79,7 @@ Encoding notes (per Kepler/Text/Polytope.lean conventions):
 
 import Kepler.Text.Polytope
 import Kepler.Text.Fan
+import Kepler.Text.TopologyFan
 import Kepler.Text.PackingAuto5
 import Mathlib
 
@@ -1396,10 +1399,177 @@ theorem pmp_to_iter (f : V3 → Set V3 → Set (Set V3) → V3 → V3 → V3) (x
     (E : Set (Set V3)) (v w : V3) (n : ℕ) :
     powerMapPoints_p3 f x V E v w n = (f x V E v)^[n] w := rfl
 
+/-! ### Private aux kit for the bij block (fills of CYCLIC_SET_IMP_STABLE_SET2,
+IN_NODE_IMP_FIRST_EQ, BIJ_BETWEEN_FF_AND_V and the DIH2K trio; the HOL source
+is WRGCVDR.hl:589–744, 2519, 2548 with the `hypermap (HYP …)` tuple absorbed
+by the proof-carrying `Hypermap` rendering) -/
+
+/-- Node orbits read through the `HYP` component `nn_of_hyp` (plain-function
+iterate form of `H.node`; the bridge is `Equiv.Perm.coe_pow`). -/
+private theorem p3_nodeMem_iterate {x : V3} {V : Set V3} {E : Set (Set V3)}
+    {H : Hypermap (V3 × V3)}
+    (hn : (H.nodeMap : V3 × V3 → V3 × V3) = nnOfHyp_p3 x V E) (d w : V3 × V3) :
+    w ∈ H.node d ↔ ∃ n : ℕ, (nnOfHyp_p3 x V E)^[n] d = w := by
+  rw [Hypermap.node, orbitMap]
+  simp only [Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨n, hnn⟩
+    exact ⟨n, by rwa [Equiv.Perm.coe_pow, hn] at hnn⟩
+  · rintro ⟨n, hnn⟩
+    exact ⟨n, by rw [Equiv.Perm.coe_pow, hn]; exact hnn⟩
+
+/-- Faces are orbits of the face map (bridge, generic form). -/
+private theorem p3_faceEqOrbit {α : Type*} [DecidableEq α] (H : Hypermap α) (d : α) :
+    H.face d = orbitF_p3 (H.faceMap : α → α) d := by
+  rw [Hypermap.face, orbitMap]
+  ext y
+  simp only [Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨n, hnn⟩
+    exact ⟨n, by rwa [Equiv.Perm.coe_pow] at hnn⟩
+  · rintro ⟨n, hnn⟩
+    exact ⟨n, by rw [Equiv.Perm.coe_pow]; exact hnn⟩
+
+/-- `nn_of_hyp` preserves the first component, hence so do its iterates. -/
+private theorem p3_fst_iterate (x : V3) (V : Set V3) (E : Set (Set V3)) :
+    ∀ (m : ℕ) (d : V3 × V3), ((nnOfHyp_p3 x V E)^[m] d).1 = d.1 := by
+  have hFST : ∀ d : V3 × V3, (nnOfHyp_p3 x V E d).1 = d.1 := by
+    intro d
+    by_cases hdd : d ∈ dartsOfHyp_p3 E V
+    · rw [show nnOfHyp_p3 x V E d =
+        if d ∈ dartsOfHyp_p3 E V then (d.1, azimCycle_p3 (EE_p3 d.1 E) x d.1 d.2) else d
+        from rfl, if_pos hdd]
+    · rw [show nnOfHyp_p3 x V E d =
+        if d ∈ dartsOfHyp_p3 E V then (d.1, azimCycle_p3 (EE_p3 d.1 E) x d.1 d.2) else d
+        from rfl, if_neg hdd]
+  intro m
+  induction m with
+  | zero => intro d; rfl
+  | succ k ih =>
+    intro d
+    rw [Function.iterate_succ_apply', hFST]
+    exact ih d
+
+/-- WRGCVDR.hl:589 `DIH2K_IMP_PRE_SIMPLE_HYP` (abstract; private working copy
+for the bij block). -/
+private theorem p3_preSimple {α : Type*} [DecidableEq α] {H : Hypermap α} {k : ℕ}
+    (hd : dih2k_p3 H k) (hk : k ≠ 0) :
+    ∀ z ∈ H.darts, (H.nodeMap : α → α) z ∉ H.face z := by
+  intro z hz hmem
+  have hxS : z ∈ H.face z := H.mem_face_self z
+  have hsub : H.face z ⊆ (↑H.darts : Set α) := H.face_subset_darts hz
+  have hfinS : (H.face z).Finite := (H.darts.finite_toSet).subset hsub
+  have hfinImg : ((H.nodeMap : α → α) '' H.face z).Finite :=
+    Set.Finite.image (H.nodeMap : α → α) hfinS
+  have hSle : (H.face z).ncard ≤ k := by
+    rw [p3_faceEqOrbit]
+    exact HAVING_ORDERS_K_IMP_CARD_ORBIT_LE_K (f := (H.faceMap : α → α)) hd.2.2.1 hk z
+  have hmemI : (H.nodeMap : α → α) z ∈ H.face z ∩ ((H.nodeMap : α → α) '' H.face z) :=
+    ⟨hmem, z, hxS, rfl⟩
+  have hinter : (H.face z ∩ ((H.nodeMap : α → α) '' H.face z)) ≠ ∅ := by
+    intro hc
+    rw [hc] at hmemI
+    simp at hmemI
+  have hcard := CARD_UNION_NOT_DISTJ_LT hfinS hfinImg hinter
+  have himg : ((H.nodeMap : α → α) '' H.face z).ncard ≤ (H.face z).ncard :=
+    Set.ncard_image_le (hs := hfinS)
+  have hcover := hd.2.1 z hz
+  have hstep1 : (↑H.darts : Set α).ncard <
+      (H.face z).ncard + ((H.nodeMap : α → α) '' H.face z).ncard := by
+    rw [hcover]; exact hcard
+  have hstep2 : (H.face z).ncard + ((H.nodeMap : α → α) '' H.face z).ncard
+      ≤ (H.face z).ncard + (H.face z).ncard := add_le_add (le_refl _) himg
+  have h9 : (↑H.darts : Set α).ncard = 2 * k := by
+    rw [Set.ncard_coe_finset, hd.1]
+  omega
+
+/-- WRGCVDR.hl:641 `DIH2K_IMP_SIMPLE_HYPERMAP` (abstract; private working
+copy). -/
+private theorem p3_simple {α : Type*} [DecidableEq α] {H : Hypermap α} {k : ℕ}
+    (hd : dih2k_p3 H k) (hk : k ≠ 0) : H.Simple := by
+  have hpre := p3_preSimple hd hk
+  intro z hz
+  have horders2 : hasOrders_p3 (H.nodeMap : α → α) 2 := hd.2.2.2.2
+  have hnodeOrbit : H.node z = orbitF_p3 (H.nodeMap : α → α) z := by
+    simp only [Hypermap.node, orbitMap, orbitF_p3, Equiv.Perm.coe_pow]
+  have hnode : H.node z = {z, (H.nodeMap : α → α) z} := by
+    rw [hnodeOrbit, HAS_ORDERS_IMP_ORBIT_MAP_FIRST_ROW horders2 two_ne_zero z]
+    ext y
+    simp only [Set.mem_setOf_eq, Set.mem_insert_iff, Set.mem_singleton_iff]
+    constructor
+    · rintro ⟨n, hnlt, hn⟩
+      have hn2 : n = 0 ∨ n = 1 := by omega
+      rcases hn2 with rfl | rfl
+      · subst hn; simp
+      · subst hn; simp
+    · rintro (hy | hy)
+      · exact ⟨0, by norm_num, hy.symm⟩
+      · refine ⟨1, by norm_num, ?_⟩
+        rw [hy, Function.iterate_one]
+  ext w
+  constructor
+  · rintro ⟨hn', hf'⟩
+    rw [hnode] at hn'
+    rcases Set.mem_insert_iff.mp hn' with hw | hw
+    · exact hw
+    · exact absurd (hw ▸ hf') (hpre z hz)
+  · intro hw
+    rw [hw]
+    exact ⟨H.mem_node_self z, H.mem_face_self z⟩
+
+/-- WRGCVDR.hl:717 `DIH_IMP_EVERY_NODE_INTER_FACE` (abstract; private working
+copy). -/
+private theorem p3_everyNode {α : Type*} [DecidableEq α] {H : Hypermap α} {k : ℕ}
+    (hd : dih2k_p3 H k) {a b : α} (ha : a ∈ H.darts) (hb : b ∈ H.darts) :
+    ∃ d, d ∈ H.node a ∧ d ∈ H.face b := by
+  have horders2 : hasOrders_p3 (H.nodeMap : α → α) 2 := hd.2.2.2.2
+  have hinv : ∀ z : α, (H.nodeMap : α → α) ((H.nodeMap : α → α) z) = z := by
+    intro z
+    have h2 : (H.nodeMap : α → α)^[2] z = z := by rw [horders2.2]; rfl
+    simpa [Function.iterate_succ_apply', Function.iterate_one] using h2
+  have hcover := hd.2.1 b hb
+  have hamem : a ∈ ((H.face b : Set α) ∪ (H.nodeMap : α → α) '' H.face b) := hcover ▸ ha
+  rcases Set.mem_or_mem_of_mem_union hamem with h1 | h2
+  · exact ⟨a, H.mem_node_self a, h1⟩
+  · obtain ⟨z, hzF, hza⟩ := h2
+    refine ⟨z, ?_, hzF⟩
+    rw [Hypermap.node, orbitMap]
+    simp only [Set.mem_setOf_eq]
+    refine ⟨1, ?_⟩
+    rw [Equiv.Perm.coe_pow, Function.iterate_one]
+    exact ((hinv z).symm.trans (congrArg (H.nodeMap : α → α) hza)).symm
+
 /-- WRGCVDR.hl:2080 `CYCLIC_SET_IMP_STABLE_SET2`. -/
 theorem CYCLIC_SET_IMP_STABLE_SET2 {x : V3} {V : Set V3} {E : Set (Set V3)}
     (_hfan : FAN x V E) {v u : V3} (_hv : {v, u} ∈ E) (a : V3) (_ha : a ∈ EE_p3 v E) :
-    EE_p3 v E = {y | ∃ n : ℕ, y = (azimCycle_p3 (EE_p3 v E) x v)^[n] a} := sorry
+    EE_p3 v E = {y | ∃ n : ℕ, y = (azimCycle_p3 (EE_p3 v E) x v)^[n] a} := by
+  -- WRGCVDR.hl:2080. Single-cyclicity `orbit_eq_setOfEdge` (TopologyFan) makes
+  -- every `a ∈ EE v E` a generator of the full neighbor set; the σ/azim_cycle
+  -- iterate bridge is `ITER_AZIM_CYCLE_EQ_ITER_SIGMA`.
+  have hfan : FAN x V E := ‹FAN x V E›
+  have hv : {v, u} ∈ E := ‹{v, u} ∈ E›
+  have ha : a ∈ EE_p3 v E := ‹a ∈ EE_p3 v E›
+  have hEE : EE_p3 v E = setOfEdge v V E := UNI_E_IMP_EE_EQ_SET_OF_EDGE hfan.1 v
+  have hae : {v, a} ∈ E :=
+    (properties_of_setOfEdge_fan x V E v a hfan).mpr (by rw [← hEE]; exact ha)
+  have hconv : ∀ n : ℕ, (azimCycle_p3 (EE_p3 v E) x v)^[n] a = (sigmaFan x V E v)^[n] a :=
+    fun n => ITER_AZIM_CYCLE_EQ_ITER_SIGMA hfan hv a ha n
+  ext y
+  constructor
+  · intro hy
+    have hyE : y ∈ setOfEdge v V E := hEE ▸ hy
+    have hyn : y ∈ setOfOrbitsPointsFan x V E v a :=
+      orbit_eq_setOfEdge hfan hae ▸ hyE
+    simp only [setOfOrbitsPointsFan, Set.mem_setOf_eq] at hyn
+    obtain ⟨n, hn⟩ := hyn
+    exact ⟨n, hn.symm.trans (hconv n).symm⟩
+  · rintro ⟨n, hn⟩
+    have hyE : y ∈ setOfEdge v V E := by
+      rw [← orbit_eq_setOfEdge hfan hae]
+      simp only [setOfOrbitsPointsFan, Set.mem_setOf_eq]
+      exact ⟨n, (hconv n).symm.trans hn.symm⟩
+    rw [hEE]
+    exact hyE
 
 /-- WRGCVDR.hl:2106 `FAN_IMP_BIJ_V_NODE_OF_HYP` (`∃`-rendering; the HOL
 `f` is the stated pointwise function). -/
@@ -1465,6 +1635,38 @@ theorem NOT_IN_DARTS_NN_OF_HYP_POWER_IDE (x : V3) (V : Set V3) (E : Set (Set V3)
       if y ∈ dartsOfHyp_p3 E V then (y.1, azimCycle_p3 (EE_p3 y.1 E) x y.1 y.2) else y from rfl,
       if_neg h]
 
+/-- The combinatorial core of `BIJ_BETWEEN_FF_AND_V`: two darts with the same
+first component lie in the same node orbit (`EE` is a single azim cycle:
+`CYCLIC_SET_IMP_STABLE_SET2` + `N_HYP_TO_AZIM_CYCLE_LEM`). -/
+private theorem p3_same_fst_node {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {d1 d2 : V3 × V3} (hd1 : d1 ∈ dartsOfHyp_p3 E V)
+    (hd2 : d2 ∈ dartsOfHyp_p3 E V) (h12 : d1.1 = d2.1) :
+    d2 ∈ orbitF_p3 (nnOfHyp_p3 x V E) d1 := by
+  rcases Set.mem_or_mem_of_mem_union hd1 with ho1 | hs1
+  · have hvE1 : d1.2 ∈ EE_p3 d1.1 E := ho1
+    rcases Set.mem_or_mem_of_mem_union hd2 with ho2 | hs2
+    · have hvE2 : d2.2 ∈ EE_p3 d1.1 E := by
+        have h' : d2.2 ∈ EE_p3 d2.1 E := ho2
+        rw [← h12] at h'
+        exact h'
+      have hE1 : {d1.1, d1.2} ∈ E := ho1
+      obtain ⟨m, hm⟩ :=
+        (CYCLIC_SET_IMP_STABLE_SET2 (x := x) hfan (v := d1.1) (u := d1.2) hE1 d1.2 hvE1) ▸ hvE2
+      exact ⟨m, by rw [N_HYP_TO_AZIM_CYCLE_LEM hfan hd1 m]; exact Prod.ext h12 hm.symm⟩
+    · exfalso
+      have hz2 : EE_p3 d1.1 E = ∅ := by rw [h12]; exact hs2.2.2
+      exact absurd hvE1 (by rw [hz2]; exact fun hc => hc)
+  · rcases Set.mem_or_mem_of_mem_union hd2 with ho2 | hs2
+    · exfalso
+      have hz1 : EE_p3 d1.1 E = ∅ := hs1.2.2
+      have hvE2 : d2.2 ∈ EE_p3 d1.1 E := by
+        have h' : d2.2 ∈ EE_p3 d2.1 E := ho2
+        rw [← h12] at h'
+        exact h'
+      exact absurd hvE2 (by rw [hz1]; exact fun hc => hc)
+    · have he2 : d1.2 = d2.2 := hs1.1.symm.trans (h12.trans hs2.1)
+      exact ⟨0, by rw [Function.iterate_zero_apply]; exact Prod.ext h12 he2⟩
+
 /-- WRGCVDR.hl:2519 `IN_NODE_IMP_FIRST_EQ` (given the fan hypermap). -/
 theorem IN_NODE_IMP_FIRST_EQ {x : V3} {V : Set V3} {E : Set (Set V3)} (_hfan : FAN x V E)
     {H : Hypermap (V3 × V3)}
@@ -1472,12 +1674,77 @@ theorem IN_NODE_IMP_FIRST_EQ {x : V3} {V : Set V3} {E : Set (Set V3)} (_hfan : F
     (_he : (H.edgeMap : V3 × V3 → V3 × V3) = eeOfHyp_p3 x V E)
     (_hn : (H.nodeMap : V3 × V3 → V3 × V3) = nnOfHyp_p3 x V E)
     (_hf : (H.faceMap : V3 × V3 → V3 × V3) = ffOfHyp_p3 x V E)
-    {a b : V3 × V3} (_ha : a ∈ H.node b) : a.1 = b.1 := sorry
+    {a b : V3 × V3} (_ha : a ∈ H.node b) : a.1 = b.1 := by
+  -- WRGCVDR.hl:2519. `nn_of_hyp` preserves the first component in both
+  -- branches of its defining conditional, so node orbits never change `FST`.
+  have ha : a ∈ H.node b := ‹a ∈ H.node b›
+  have hn : (H.nodeMap : V3 × V3 → V3 × V3) = nnOfHyp_p3 x V E :=
+    ‹(H.nodeMap : V3 × V3 → V3 × V3) = nnOfHyp_p3 x V E›
+  rw [p3_nodeMem_iterate hn b a] at ha
+  obtain ⟨n, hnn⟩ := ha
+  rw [← hnn]
+  exact p3_fst_iterate x V E n b
 
 /-- WRGCVDR.hl:2548 `BIJ_BETWEEN_FF_AND_V` (fst maps faces bijectively to
 vertices). -/
 theorem BIJ_BETWEEN_FF_AND_V {V : Set V3} {E : Set (Set V3)} {FF : Set (V3 × V3)}
-    (_h : localFan_p3 V E FF) : Set.BijOn (fun d : V3 × V3 => d.1) FF V := sorry
+    (_h : localFan_p3 V E FF) : Set.BijOn (fun d : V3 × V3 => d.1) FF V := by
+  -- WRGCVDR.hl:2548. Direct route (avoiding the HOL TOW_BIJS assembly):
+  -- MapsTo from `FF ⊆ darts`; SurjOn from `DIH_IMP_EVERY_NODE_INTER_FACE` +
+  -- `choose_nd_point`; InjOn because darts of one face sharing `FST` share the
+  -- node orbit (`p3_same_fst_node`), lie in the same face orbit
+  -- (`HAS_ORDK_IN_ORBIT_IMP_SAME_ORBIT`), and the hypermap is simple
+  -- (`DIH2K_IMP_SIMPLE_HYPERMAP`).
+  obtain ⟨H, hd, he, hn, hf, hfan, ⟨z, hzd, hFF⟩, hdih⟩ := ‹localFan_p3 V E FF›
+  have hzF : z ∈ FF := by rw [hFF]; exact H.mem_face_self z
+  have hfinFF : FF.Finite := LOCAL_FAN_FINITE_FF ‹localFan_p3 V E FF›
+  have hk : FF.ncard ≠ 0 := by
+    intro h0
+    have hFE : FF = ∅ := (Set.ncard_eq_zero hfinFF).mp h0
+    rw [hFE] at hzF
+    simp at hzF
+  have hfaceOrbit : ∀ d ∈ FF, H.face d = FF := by
+    intro d hdF
+    have hbr : FF = orbitF_p3 (H.faceMap : V3 × V3 → V3 × V3) z := by
+      rw [hFF, p3_faceEqOrbit]
+    rw [hbr]
+    exact HAS_ORDK_IN_ORBIT_IMP_SAME_ORBIT
+      (f := (H.faceMap : V3 × V3 → V3 × V3)) hdih.2.2.1 hk
+      ((p3_faceEqOrbit H z) ▸ (hFF ▸ hdF))
+  have hdartOf : ∀ d ∈ FF, d ∈ dartsOfHyp_p3 E V := by
+    intro d hdF
+    have hsub := H.face_subset_darts hzd (hFF ▸ hdF)
+    rw [hd] at hsub
+    exact hsub
+  refine ⟨?_, ?_, ?_⟩
+  · -- MapsTo
+    intro d hdF
+    exact (IN_DARTS_HYP_IMP_FST_SND_IN_V hfan.1 (hdartOf d hdF)).1
+  · -- InjOn
+    intro d1 hd1 d2 hd2 h12
+    have hsame : d2 ∈ orbitF_p3 (nnOfHyp_p3 0 V E) d1 :=
+      p3_same_fst_node hfan (hdartOf d1 hd1) (hdartOf d2 hd2) h12
+    have hnode2 : d2 ∈ H.node d1 := by
+      rw [p3_nodeMem_iterate hn d1 d2]
+      exact hsame
+    have hsimple : H.node d1 ∩ H.face d1 = {d1} :=
+      p3_simple hdih hk d1 (H.face_subset_darts hzd (hFF ▸ hd1))
+    have hboth : d2 ∈ H.node d1 ∩ H.face d1 :=
+      ⟨hnode2, by rw [hfaceOrbit d1 hd1]; exact hd2⟩
+    rw [hsimple] at hboth
+    exact hboth.symm
+  · -- SurjOn
+    intro v hv
+    have hcp := choose_nd_point v E V hfan.1 hv
+    have hdart : ((v, chooseNdPoint_p3 v E V) : V3 × V3) ∈ (↑H.darts : Set (V3 × V3)) := by
+      rw [hd]; exact hcp.2
+    obtain ⟨d, hdN, hdF⟩ := p3_everyNode hdih hdart hzd
+    refine ⟨d, ?_, ?_⟩
+    · rw [hFF]; exact hdF
+    rw [p3_nodeMem_iterate hn (v, chooseNdPoint_p3 v E V) d] at hdN
+    obtain ⟨n, hnn⟩ := hdN
+    rw [← hnn]
+    exact p3_fst_iterate 0 V E n (v, chooseNdPoint_p3 v E V)
 
 /-! ## WRGCVDR main theorem; localization defs; Definition 7.8 trichotomy
 (WRGCVDR.hl:2622–2725, 2780–2863, 2868–2888, 2920–3328) -/
@@ -1533,21 +1800,29 @@ theorem CYCLIC_MAP_IMP_CIRCLE_ITSELF {α : Type*} {f : α → α} {W : Set α}
 /-- WRGCVDR.hl:589 `DIH2K_IMP_PRE_SIMPLE_HYP`. -/
 theorem DIH2K_IMP_PRE_SIMPLE_HYP {α : Type*} [DecidableEq α] {H : Hypermap α} {k : ℕ}
     (_hd : dih2k_p3 H k) (_hk : k ≠ 0) :
-    ∀ x ∈ H.darts, (H.nodeMap : α → α) x ∉ H.face x := sorry
+    ∀ x ∈ H.darts, (H.nodeMap : α → α) x ∉ H.face x :=
+  p3_preSimple ‹dih2k_p3 H k› ‹k ≠ 0›
 
 /-- WRGCVDR.hl:641 `DIH2K_IMP_SIMPLE_HYPERMAP`. -/
 theorem DIH2K_IMP_SIMPLE_HYPERMAP {α : Type*} [DecidableEq α] {H : Hypermap α} {k : ℕ}
-    (_hd : dih2k_p3 H k) (_hk : k ≠ 0) : H.Simple := sorry
+    (_hd : dih2k_p3 H k) (_hk : k ≠ 0) : H.Simple :=
+  p3_simple ‹dih2k_p3 H k› ‹k ≠ 0›
 
 /-- WRGCVDR.hl:717 `DIH_IMP_EVERY_NODE_INTER_FACE`. -/
 theorem DIH_IMP_EVERY_NODE_INTER_FACE {α : Type*} [DecidableEq α] {H : Hypermap α} {k : ℕ}
     (_hd : dih2k_p3 H k) :
-    ∀ x ∈ H.darts, ∀ y ∈ H.darts, ∃ d, d ∈ H.node x ∧ d ∈ H.face y := sorry
+    ∀ x ∈ H.darts, ∀ y ∈ H.darts, ∃ d, d ∈ H.node x ∧ d ∈ H.face y := by
+  intro x hx y hy
+  exact p3_everyNode ‹dih2k_p3 H k› hx hy
 
 /-- WRGCVDR.hl:2920 `DIH2K_IMP_NODE_MAP_X_DIFF_X`. -/
 theorem DIH2K_IMP_NODE_MAP_X_DIFF_X {α : Type*} [DecidableEq α] {H : Hypermap α} {k : ℕ}
     (_hd : dih2k_p3 H k) (_hk : k ≠ 0) :
-    ∀ x ∈ H.darts, (H.nodeMap : α → α) x ≠ x := sorry
+    ∀ x ∈ H.darts, (H.nodeMap : α → α) x ≠ x := by
+  intro x hx h0
+  refine p3_preSimple ‹dih2k_p3 H k› ‹k ≠ 0› x hx ?_
+  rw [h0]
+  exact H.mem_face_self x
 
 /-- WRGCVDR.hl:2938 `FAN7_SIMPLE`. -/
 theorem FAN7_SIMPLE {V : Set V3} {E : Set (Set V3)} {x : V3} (h : fan7 x V E)
