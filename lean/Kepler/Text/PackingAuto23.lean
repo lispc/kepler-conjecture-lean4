@@ -4438,14 +4438,138 @@ private theorem grutoti_sum_volD (V : Set V3) (u0 u1 : V3) (e : Set V3) (r d : �
   rw [p23_measure_setSum_biUnion hfin hmeas hpair hvol]
   exact hcov
 
-/-- STATEMENT-FIX item 31 联动件（2026-10-09 方案 a1）：`grutoti_sum_volD`
-新前提面的 capstone 供给桥——把四条测度前提打包，`GRUTOTI` 调用点一次
-obtain。债务显式定点于此，NEEDS: (i) `hcov` = TIWWFYQ/GLTVHUM/SLTSTLO1
-测度覆盖巨型（`p23_region_data` 供给的是 mcell 分类覆盖，不解测度渴）；
-(ii) `hpair` = PA17 AJRIPQN（PA17:310, sorried）的逐边实例；(iii) `hmeas`/
-`hvol` 走 mcell 可测性 + 闭球有限体积（`MCELL_SUBSET_BALL8_1` PA15:794 +
-`r ≤ 1` 见证界），可证支，下波拆分。无穷支路注记（修正 GT-2 lane note）：
-远点族上 `hl ≥ √2 ⇒ mcell4 = ∅`，走 mcell0/2/3。 -/
+/-! ### SF32 拆分波（2026-10-08）：桥件 `p23_grutoti_sum_volD_measure_facts`
+的 4-合取 sorry 拆为三支真证私件 + 一支 hcov 精确定点 sorried 私件。桥本体
+瘦身为纯组合（零 sorry）；hcov 单点覆盖债定点于 `p23_grutoti_cap_measure_cover`。
+PA23 桥位 sorry 数不增（1 个 4-合取包 → 1 个单点覆盖目标）。 -/
+
+/-- `rconeGt` 可测性（PA10:554-561 `measurableSet_rconeGt_p10` 的私拷——上游
+private，PA23 不可 import；连续性件 `continuous_dot`/`continuous_rcone` 同款
+逐字，proof 路线：开半空间原像）。 -/
+private theorem p23_grutoti_rconeGt_measurable (v w : V3) (a : ℝ) :
+    MeasurableSet (rconeGt v w a) := by
+  have hcdot : Continuous fun x : V3 => (x - v) ⬝ᵥ (w - v) := by
+    have h : Continuous fun x : V3 => inner ℝ (x - v) (w - v) :=
+      (continuous_id.sub continuous_const).inner continuous_const
+    have heq : (fun x : V3 => inner ℝ (x - v) (w - v)) =
+        fun x : V3 => (x - v) ⬝ᵥ (w - v) := by
+      funext x
+      exact inner_eq_dot (x - v) (w - v)
+    rw [← heq]
+    exact h
+  have hcont : Continuous fun x : V3 =>
+      (x - v) ⬝ᵥ (w - v) - (dist x v * dist w v * a) :=
+    hcdot.sub (by fun_prop)
+  have hset : rconeGt v w a =
+      (fun x : V3 => (x - v) ⬝ᵥ (w - v) - (dist x v * dist w v * a)) ⁻¹' (Set.Ioi 0) := by
+    ext x
+    simp only [rconeGt, Set.mem_setOf_eq, Set.mem_preimage, Set.mem_Ioi, sub_pos]
+  rw [hset]
+  exact ((isOpen_Ioi).preimage hcont).measurableSet
+
+/-- `grutotiConicCap = closedBall ∩ rconeGt` 可测：闭球 Borel（PA10:600 同款
+`isClosed_closedBall`）交锥可测（`p23_grutoti_rconeGt_measurable`）。 -/
+private theorem p23_grutotiConicCap_measurable (v0 v1 : V3) (r a : ℝ) :
+    MeasurableSet (grutotiConicCap v0 v1 r a) :=
+  (Metric.isClosed_closedBall).measurableSet.inter (p23_grutoti_rconeGt_measurable v0 v1 a)
+
+/-- SF32 拆分波 hmeas 支（真证）：每条边胞与 cap 的交可测。路线：`X ∈
+mcellSet V` 解出 witness `X = mcell i V ul ∧ barV V 3 ul`，`MEASURABLE_MCELL`
+（PA10:585，公共件，全 k 无 ≤ 4 限制）交 `p23_grutotiConicCap_measurable`。
+上游锚点：HL `MEASURABLE_MCELL`（URRPHBZ1.hl:673-682）。 -/
+private theorem p23_grutoti_edge_cap_measurable (V : Set V3) (u0 u1 : V3) (e : Set V3)
+    (r d : ℝ) (hs : saturated V) (hp : Packing V) :
+    ∀ X ∈ grutotiEdgeCells V e, MeasurableSet (X ∩ grutotiConicCap u0 u1 r d) := by
+  intro X hX
+  obtain ⟨hXm, -⟩ := Set.mem_setOf_eq.mp hX
+  obtain ⟨i, ul, hXeq, hbarul⟩ := Set.mem_setOf_eq.mp hXm
+  rw [hXeq]
+  exact (MEASURABLE_MCELL V ul i hs hp hbarul).inter
+    (p23_grutotiConicCap_measurable u0 u1 r d)
+
+/-- SF32 拆分波 hpair 支（真证；AJRIPQN 实例）：边胞族两两（cap 迹）零测。
+路线：witness 归约（`p23_mcell_reduce` 把 `mcell i` 收进 `min i 4 ≤ 4`）后
+二分 `volume (X ∩ Y)`——零测支走 `measure_mono_null`（cap 迹 ⊆ 胞交，外测度
+单调，无需可测性）；正测度支则 `¬nullSet (胞交)` 喂 AJRIPQN（PA17:313，
+上游 sorry 债自上游流动，桥内零新增 sorry）迫 `X = Y`，与 `X ≠ Y` 矛盾。
+上游锚点：HL AJRIPQN（leaf_cell.hl:2132，PA17 装载）。 -/
+private theorem p23_grutoti_edge_pairwise_null (V : Set V3) (u0 u1 : V3) (e : Set V3)
+    (r d : ℝ) (hs : saturated V) (hp : Packing V) :
+    ∀ X ∈ grutotiEdgeCells V e, ∀ Y ∈ grutotiEdgeCells V e, X ≠ Y →
+      volume ((X ∩ grutotiConicCap u0 u1 r d) ∩
+        (Y ∩ grutotiConicCap u0 u1 r d)) = 0 := by
+  intro X hX Y hY hXY
+  obtain ⟨hXm, -⟩ := Set.mem_setOf_eq.mp hX
+  obtain ⟨hYm, -⟩ := Set.mem_setOf_eq.mp hY
+  obtain ⟨i, ul, hXeq, hbarul⟩ := Set.mem_setOf_eq.mp hXm
+  obtain ⟨j, vl, hYeq, hbarvl⟩ := Set.mem_setOf_eq.mp hYm
+  have hredX : X = mcell (min i 4) V ul := by rw [hXeq, p23_mcell_reduce]
+  have hredY : Y = mcell (min j 4) V vl := by rw [hYeq, p23_mcell_reduce]
+  by_cases h0 : volume (X ∩ Y) = 0
+  · -- 零测支：cap 迹 ⊆ 胞交，外测度单调
+    exact measure_mono_null (fun z hz => Set.mem_inter hz.1.1 hz.2.1) h0
+  · -- 正测度支：AJRIPQN 迫胞相等，与 X ≠ Y 矛盾
+    have hne : ¬ nullSet (X ∩ Y) := h0
+    have hmem45 : ∀ n : ℕ, n ≤ 4 → n ∈ ({0, 1, 2, 3, 4} : Set ℕ) := by
+      intro n hn
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      omega
+    have hpos : ¬ nullSet (mcell (min i 4) V ul ∩ mcell (min j 4) V vl) := by
+      rw [← hredX, ← hredY]
+      exact hne
+    obtain ⟨-, hcell⟩ := AJRIPQN V ul vl (min i 4) (min j 4) hs hp hbarul hbarvl
+      (hmem45 _ (Nat.min_le_right i 4)) (hmem45 _ (Nat.min_le_right j 4)) hpos
+    exact absurd (show X = Y from by rw [hredX, hredY, hcell]) hXY
+
+/-- SF32 拆分波 hvol 支（真证；零 V-前提）：边胞与 cap 的交体积有限。路线：
+cap ⊆ closedBall u0 r（`grutoti_cap_subset_closedBall`）⊆ closedBall u0 1
+（`hr1`），外测度 `measure_mono` 单调 + `measure_closedBall_lt_top`
+（PA23 region 块 :3395 同款用法）。-/
+private theorem p23_grutoti_edge_vol_ne_top (V : Set V3) (u0 u1 : V3) (e : Set V3)
+    (r d : ℝ) (hr1 : r ≤ 1) :
+    ∀ X ∈ grutotiEdgeCells V e, volume (X ∩ grutotiConicCap u0 u1 r d) ≠ ⊤ := by
+  intro X hX
+  have hlt : volume (X ∩ grutotiConicCap u0 u1 r d) < ⊤ :=
+    lt_of_le_of_lt (measure_mono fun z hz =>
+      Metric.closedBall_subset_closedBall hr1
+        (grutoti_cap_subset_closedBall u0 u1 r d hz.2)) measure_closedBall_lt_top
+  exact ne_of_lt hlt
+
+/-- SF32 拆分波 hcov 支（2026-10-08，精确定点——桥件四支中唯一不可证支，
+唯一 sorry 定点于此）：cap 的边胞迹测度覆盖恒等式。NEEDS（HL GRUTOTI.hl
+测度覆盖链，TIWWFYQ/GLTVHUM/SLTSTLO1 巨型）逐点路线：(i) `grutoti_3mem`
+（PA23:229 banked，GLTVHUM_lemma1 的 k = 3 特化）给 Voronoi 覆盖，而
+`D ⊆ ball u0 1 ∩ rconeGt u0 u1 (hl/√2)` 落入覆盖域；(ii) `SLTSTLO1`
+（PA15，banked，`p23_cover_C` :2045 同款用法）把每点归约到某
+`mcell k V vl`（k ≤ 4，`barV V 3 vl`）；(iii) 逐点 `AJRIPQN`（PA17:313，
+上游 sorry 债）把胞鉴定到携边族 `grutotiEdgeCells V e` 的成员
+（`truncateSimplex 1 vl = [u0, u1]` 给出 `e ∈ edgeX`）；(iv) 于是
+`D ⊆ ⋃₀ (迹)` 至一个零测余集，配 `p23_grutoti_edge_cap_measurable` 的
+可测性与 measure_mono 收口。注记：`p23_region_data` 供给的是 mcell 分类
+覆盖（B5），不解测度渴（见 `grutoti_sum_volD` docstring）；远点族上
+`hl ≥ √2 ⇒ mcell4 = ∅`，走 mcell0/2/3（修正 GT-2 lane note）。 -/
+private theorem p23_grutoti_cap_measure_cover (V : Set V3) (u0 u1 : V3) (e : Set V3)
+    (r d : ℝ)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (hhl : hl [u0, u1] < Real.sqrt 2) (he : e = {u0, u1})
+    (hr0 : 0 < r) (hr1 : r ≤ 1) (hd0 : 0 < d) (hd1 : d < 1) :
+    volume.real
+        (⋃₀ ((fun X => X ∩ grutotiConicCap u0 u1 r d) '' grutotiEdgeCells V e)) =
+      volume.real (grutotiConicCap u0 u1 r d) := by
+  -- NEEDS: TIWWFYQ/GLTVHUM/SLTSTLO1 测度覆盖巨型（路线见上 docstring；
+  -- 唯一新 sorry 定点，PA23 桥位 sorry 数不增）。
+  sorry
+
+/-- STATEMENT-FIX item 31 联动件（2026-10-09 方案 a1；SF32 拆分波瘦身
+2026-10-08）：`grutoti_sum_volD` 新前提面的 capstone 供给桥——四条测度
+前提打包，`GRUTOTI` 调用点一次 obtain。签名冻结不变；本体瘦身为纯组合：
+hmeas 支 = `p23_grutoti_edge_cap_measurable`（MEASURABLE_MCELL 实例）、
+hpair 支 = `p23_grutoti_edge_pairwise_null`（AJRIPQN 实例，上游债流动）、
+hvol 支 = `p23_grutoti_edge_vol_ne_top`（cap ⊆ closedBall u0 1 有限界），
+三支真证零 sorry；hcov 支 = `p23_grutoti_cap_measure_cover`——TIWWFYQ/
+GLTVHUM/SLTSTLO1 测度覆盖巨型，唯一新 sorry 精确定点于彼（PA23 桥位
+其 sorry 数不增）。无穷支路注记（修正 GT-2 lane note）：远点族上
+`hl ≥ √2 ⇒ mcell4 = ∅`，走 mcell0/2/3。 -/
 private theorem p23_grutoti_sum_volD_measure_facts (V : Set V3) (u0 u1 : V3)
     (e : Set V3) (r d : ℝ)
     (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
@@ -4461,7 +4585,12 @@ private theorem p23_grutoti_sum_volD_measure_facts (V : Set V3) (u0 u1 : V3)
       volume.real
           (⋃₀ ((fun X => X ∩ grutotiConicCap u0 u1 r d) '' grutotiEdgeCells V e)) =
         volume.real (grutotiConicCap u0 u1 r d) := by
-  sorry
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · exact p23_grutoti_edge_cap_measurable V u0 u1 e r d hs hp
+  · exact p23_grutoti_edge_pairwise_null V u0 u1 e r d hs hp
+  · exact p23_grutoti_edge_vol_ne_top V u0 u1 e r d hr1
+  · exact p23_grutoti_cap_measure_cover V u0 u1 e r d hs hp hu0 hu1 hne hhl he
+      hr0 hr1 hd0 hd1
 
 /-- HL GRUTOTI.hl:7962-7966: the wedge pivot — the vol-sum equals the
 `vol D · dihX / 2π` sum. Needs grutoti_cell_vol per edge cell (the
