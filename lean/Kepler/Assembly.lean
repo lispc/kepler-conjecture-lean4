@@ -976,13 +976,33 @@ Lean 镜像同构：唯一新接口 = 逐图证书总库（Phase 3 持久化填�
 桥章 formal_lp/hypermap 的 KCBLRQC/BDJYFFB/CRTTXAT 群为填实依赖）；
 `linear_programming_results` 本体降级为纯逻辑真推导。 -/
 
-/-- 接口占位：逐图 LP 证书总库（HOL `Verify_all` 的 Lean 形——每张 archive 图
-的 `tame_linear_result` 实例；前提 `LpIneqs`/`lp_main_estimate` 对应 HOL 证书
-定理的 DISCH 假设）。 -/
-theorem lpArchiveCertificates (hlpineq : LpIneqs) (hmain : lp_main_estimate) :
+/-- 中层骨架（**T2 展开波 2026-10-08**）：`lpArchiveCertificates` 的具名债点，
+签名 = 冻结接口逐字。资产状态：deferred-compute（LP 重跑，等强机器）+
+语义桥缺口。旁挂骨架层 = `Kepler.Text.LP.*`（Assembly 零 import 纯旁挂，
+无循环）：记录清单数据 `LPIds`（43,078 条终端记录 = root 19,237 + easy
+4,403 + hard 19,438，盘点与 STATUS 43,078 口径逐项吻合；infeasible 189）
++ per-record 独立具名叶 43,078 枚（`LPLeaf*`，open sorry，NEEDS 逐叶
+deferred-compute）+ 内核真证量化装配 `LPAll`（`lpTerminalBoundAll`
+42,889 bound 形 + `lpAllInfeas` 189 infeasible 形，master 清单分治覆盖）。
+-- NEEDS: ①42,889 bound 叶逐条以重跑产物（`socert.py --col-major` 形，
+PilotCM204880136538 样板）转发闭合 + 189 不可行证书通道定形；
+②覆盖桥 = HOL formal_lp（verify_all/lp_certificate 链）的 Lean 移植：
+per-record 总量 → 本骨架语句（每图终端树在 Contravening V + iso L
+语境下的分支覆盖）。 -/
+theorem lpArchiveCertificatesDebt (hlpineq : LpIneqs) (hmain : lp_main_estimate) :
     ∀ (V : Set V3) (hfan : FAN 0 V (ESTD V)) (L : fgraph ℕ),
       L ∈ tameArchiveLists → FanHypermapIsoList V hfan L → ¬Contravening V := by
   sorry
+
+/-- 接口占位：逐图 LP 证书总库（HOL `Verify_all` 的 Lean 形——每张 archive 图
+的 `tame_linear_result` 实例；前提 `LpIneqs`/`lp_main_estimate` 对应 HOL 证书
+定理的 DISCH 假设）。**T2 展开波（2026-10-08）**：冻结签名一字未动，
+证明体由匿名 `sorry` 重接线为具名债点 `lpArchiveCertificatesDebt`
+（债务记账粒度自接口级下沉至 per-record 级，见 §3''）。 -/
+theorem lpArchiveCertificates (hlpineq : LpIneqs) (hmain : lp_main_estimate) :
+    ∀ (V : Set V3) (hfan : FAN 0 V (ESTD V)) (L : fgraph ℕ),
+      L ∈ tameArchiveLists → FanHypermapIsoList V hfan L → ¬Contravening V :=
+  lpArchiveCertificatesDebt hlpineq hmain
 
 /-- HOL `tame_result_lemma` + `linear_programming_results_th` 最终装配
 （纯逻辑部分真证明；债务集中于 `lpArchiveCertificates`）。 -/
@@ -1102,6 +1122,44 @@ cc_real_data ✅ / cc_bool_data ✅ / cc_real_dat_def ✅ 五枚在库真件自 
 切片层进入 e2e 依赖闭包（此前为孤儿真件）；PK25 债务图自本波起 = W1/W2 +
 pkrmAzim/Quarter/Qu/Qx/Qy 五切片 + 29 枚 bank 叶 + LEAF_RANK 既有叶
 （全具名，见 PA25 T4 两节注记）。 -/
+
+/-! ### 3''. T2 LP 分支 per-record 骨架层（2026-10-08；纯记账段，
+冻结接口零扰动——`lpArchiveCertificates` 证明体重接线至 §2d'
+`lpArchiveCertificatesDebt`，骨架层全部住 `Kepler/Text/LP/` 旁挂模块）
+
+LP 分支拓扑（T2 侦察）：接口 2 的唯一上游 sorry 根 =
+`lpArchiveCertificates`（:984†，†=T2 波前行号）；`linearProgrammingResultsOf`
+本体为真推导，`linearProgrammingResults` 消费
+`nonlinear_imp_lp_main_estimate_p16`（真链）。展开形 = P6-C goodListArchive
+先例（数据层 + 分片叶 + 内核组合器）× T1 SF36 先例（ID 清单 + 注册表
+量化命题），全库确定性重导：
+
+```
+lpArchiveCertificates（§2d'，冻结签名）
+└─ lpArchiveCertificatesDebt（§2d'，具名债点，同签名 ⬜）
+   ├─ 覆盖桥（⬜ 真缺口）：HOL formal_lp verify_all/lp_certificate 链
+   │    未移植——per-record 总量 ⟹ ¬Contravening V
+   ├─ lpTerminalBoundAll（Kepler.Text.LP.LPAll ✅内核真证装配）
+   │  └─ 42,889 枚 bound 形 per-record 叶（LPLeaf{Root,Easy,Hard}*.lean，
+   │     root 19,237 / easy 4,362 / hard 19,290；逐叶 ⬜ deferred-compute：
+   │     LP 重跑 = SoPlex 精确主批 + glpsol 精确对偶尾部）
+   └─ lpAllInfeas（✅内核真证装配）
+      └─ 189 枚 infeasible 形叶（LPLeafInfeas00；PLACEHOLDER(LP-infeas)
+         语义，不可行性证书通道 ⬜ 待定形）
+
+记录清单口径（PLAN §5 T2 的 6,925 对账）：6,925 = 2026-09-24 旧持久化波的
+dedup 任务队列数（主批 6,866 + glpsol 尾部 59；results.jsonl 随旧服务器
+丢失，不可重建）——那是运行工件粒度；本层按**终端记录粒度**展开全库可
+导出的 43,078 条（root 19,237 + easy 4,403 + hard 19,438，19,715 图全覆盖，
+与 STATUS「43,078 个终端 LP 内核验证」逐项吻合；盘点器 =
+lean/scripts/gen_lp_skeleton.py，--check 基线校验，退出码 2 = 清单漂移
+须人工裁决）。旧波 6,925 任务中的每条记录均在本层 43,078 全集内
+（dedup 不产生新记录），零编造、零遗漏。
+
+退化防线（对齐 §2a else-True 警告文化）：`LpTerminalCertified` 的见证
+存在性对 id 不敏感（LPCert 保真缺口在案）——叶闭合只准走该记录自己的
+重跑产物模块转发，不准跨记录借用见证；接线波落「记录 ↔ 产物模块」
+恒等钉定后收敛。infeasible 形 189 条不得经 `:= True` 占位计为已证。 -/
 
 /-- HOL `Good_list_archive.good_list_archive`（HOL 侧由计算求得 archive 每张图
 满足 `good_list`）。**已闭合（P6-C，2026-09-19）**：19715 张图（Tri 9 / Quad 1253 /
