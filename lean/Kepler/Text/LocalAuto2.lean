@@ -683,6 +683,175 @@ private theorem p2_AZIM_CYCLE_PROPERTIES {W : Set V3} {p : V3} (hsub : ¬(W ⊆ 
   rw [azimCycle_p2, if_neg hsub]
   exact Classical.epsilon_spec hex
 
+/-- Public interface to `p2_AZIM_CYCLE_PROPERTIES`: the `azim_cycle` choice is
+never `p`, lies in `W`, and realizes the (azim, projection-norm) minimum. -/
+theorem AZIM_CYCLE_PROPERTIES_p2 {W : Set V3} {p : V3} (hsub : ¬(W ⊆ {p}))
+    (hfin : W.Finite) (v w : V3) :
+    azimCycle_p2 W v w p ≠ p ∧ azimCycle_p2 W v w p ∈ W ∧
+      ∀ q ∈ W, q ≠ p →
+        azim v w p (azimCycle_p2 W v w p) < azim v w p q ∨
+          azim v w p (azimCycle_p2 W v w p) = azim v w p q ∧
+            ‖projection (azimCycle_p2 W v w p - v) (w - v)‖ ≤
+              ‖projection (q - v) (w - v)‖ :=
+  p2_AZIM_CYCLE_PROPERTIES hsub hfin v w
+
+/-- Direction half of HOL `COLLINEAR_LEMMA` (via Mathlib's smul-vadd
+characterization): a collinear triple has its third point on the line
+through the first two. -/
+private theorem p2_collinear_triple_mem {x y z : V3}
+    (hcol : Collinear ℝ ({x, y, z} : Set V3)) :
+    z ∈ affineSpan ℝ ({x, y} : Set V3) ∨ x = y := by
+  obtain ⟨p₀, r, hr⟩ := (collinear_iff_exists_forall_eq_smul_vadd _).mp hcol
+  obtain ⟨a, ha⟩ := hr x (by simp)
+  obtain ⟨b, hb⟩ := hr y (by simp)
+  obtain ⟨c, hc⟩ := hr z (by simp)
+  simp only [vadd_eq_add] at ha hb hc
+  rcases eq_or_ne x y with hx | hx
+  · exact Or.inr hx
+  · have hba : b - a ≠ 0 := by
+      intro h0
+      apply hx
+      have h2 : x - y = 0 := by
+        rw [ha, hb, sub_eq_zero.mp h0]
+        abel
+      exact sub_eq_zero.mp h2
+    refine Or.inl (mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨(c - a) / (b - a), ?_⟩)
+    have hsub : y - x = (b - a) • r := by rw [hb, ha]; module
+    rw [AffineMap.lineMap_apply]
+    simp only [vsub_eq_sub, vadd_eq_add]
+    rw [hsub, smul_smul, div_mul_cancel₀ _ hba, ha, hc]
+    module
+
+/-- Projection-algebra support for `IDENTIFY_AZIM_CYCLE_p2` (repo convention
+`projection vector direction`, linear in the first argument): additivity,
+homogeneity, and the vanishing of the projection of the axis itself. -/
+private theorem p2_projection_add {d x y : V3} :
+    projection (x + y) d = projection x d + projection y d := by
+  rw [projection, projection, projection, WithLp.ofLp_add 2, add_dotProduct, add_div,
+    add_smul]
+  module
+
+private theorem p2_projection_smul (t : ℝ) (x d : V3) :
+    projection (t • x) d = t • projection x d := by
+  rw [projection, projection, WithLp.ofLp_smul 2, smul_dotProduct, smul_eq_mul]
+  module
+
+private theorem p2_projection_self (d : V3)
+    (hd : ((d : V3) : Fin 3 → ℝ) ⬝ᵥ ((d : V3) : Fin 3 → ℝ) ≠ 0) :
+    projection d d = 0 := by
+  rw [projection, div_self hd, one_smul, sub_self]
+
+/-- HOL `IDENTIFY_AZIM_CYCLE` (WRGCVDR.hl:832): the ε-characterization — any
+point `u ∈ W`, `u ≠ p` realizing the `azim_cycle` minimality (azim first,
+then the ‖projection‖ tiebreak) IS the `azim_cycle` choice. The four leading
+hypotheses are the conjuncts of `cyclic_set` (sphere.hl:406; PolyAuto1
+`cyclicSet` / LA3 `cyclicSet_p3`) inlined: `v ≠ w`, `W` finite, no two points
+of `W` differ by a multiple of `v - w`, and `W ∩ aff {v, w} = ∅`. -/
+theorem IDENTIFY_AZIM_CYCLE_p2 {W : Set V3} {v w p u : V3}
+    (hvw : v ≠ w) (hWfin : W.Finite)
+    (hline : ∀ a ∈ W, ∀ b ∈ W, ∀ h : ℝ, a - b = h • (v - w) → a = b)
+    (hinter : W ∩ affineSpan ℝ ({v, w} : Set V3) = ∅)
+    (hsub : ¬(W ⊆ {p})) (hcoll : ¬ Collinear ℝ ({p, v, w} : Set V3))
+    (hu : u ≠ p) (huW : u ∈ W)
+    (hmin : ∀ q ∈ W, q ≠ p →
+      azim v w p u < azim v w p q ∨
+        azim v w p u = azim v w p q ∧
+          ‖projection (u - v) (w - v)‖ ≤ ‖projection (q - v) (w - v)‖) :
+    azimCycle_p2 W v w p = u := by
+  obtain ⟨huu1, huu2, huu3⟩ := p2_AZIM_CYCLE_PROPERTIES hsub hWfin v w
+  -- both u and the ε-choice realize the minimum: the lex order is antisymmetric
+  have hkey : azim v w p u = azim v w p (azimCycle_p2 W v w p) ∧
+      ‖projection (u - v) (w - v)‖ ≤ ‖projection (azimCycle_p2 W v w p - v) (w - v)‖ ∧
+      ‖projection (azimCycle_p2 W v w p - v) (w - v)‖ ≤ ‖projection (u - v) (w - v)‖ := by
+    rcases hmin (azimCycle_p2 W v w p) huu2 huu1 with h1 | ⟨h1, h1'⟩
+    · rcases huu3 u huW hu with h2 | ⟨h2, -⟩
+      · linarith
+      · exact absurd h2.symm h1.ne
+    · rcases huu3 u huW hu with h2 | ⟨h2, h2'⟩
+      · exact absurd h1.symm h2.ne
+      · exact ⟨h1, h1', h2'⟩
+  -- cyclic_set's exclusion conditions, read off for u and the ε-choice
+  have hmemAFF : ∀ z : V3, z ∈ W → z ∉ affineSpan ℝ ({v, w} : Set V3) := by
+    intro z hz hz2
+    exact (Set.eq_empty_iff_forall_notMem.mp hinter) z (Set.mem_inter hz hz2)
+  have hcoll2 : ¬ Collinear ℝ ({v, w, p} : Set V3) := by
+    intro hc
+    apply hcoll
+    refine Collinear.subset (s₁ := ({p, v, w} : Set V3)) (s₂ := ({v, w, p} : Set V3)) ?_ hc
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx ⊢
+    tauto
+  have huv : u ≠ v := by
+    intro he
+    refine hmemAFF u huW ?_
+    rw [he]
+    exact mem_affineSpan ℝ (by simp)
+  have huw : u ≠ w := by
+    intro he
+    refine hmemAFF u huW ?_
+    rw [he]
+    exact mem_affineSpan ℝ (by simp)
+  have huucoll : ¬ Collinear ℝ ({v, w, u} : Set V3) := by
+    intro hcol
+    rcases p2_collinear_triple_mem hcol with h | h
+    · exact hmemAFF u huW h
+    · exact hvw h
+  have huucoll2 : ¬ Collinear ℝ ({v, w, azimCycle_p2 W v w p} : Set V3) := by
+    intro hcol
+    rcases p2_collinear_triple_mem hcol with h | h
+    · exact hmemAFF _ huu2 h
+    · exact hvw h
+  -- equal azimuths put the ε-choice on the affGt ray through u
+  have haffgt : azimCycle_p2 W v w p ∈ affGt ({v, w} : Set V3) ({u} : Set V3) :=
+    (azim_eq_azim_iff hcoll2 huucoll huucoll2).mp hkey.1
+  obtain ⟨c, hc, h, hray⟩ := (affGt_pair_iff hvw huv huw).mp haffgt
+  -- projection algebra along the ray
+  have hse2 : ((w - v : V3) : Fin 3 → ℝ) ⬝ᵥ ((w - v : V3) : Fin 3 → ℝ) ≠ 0 := by
+    intro hz
+    exact hvw (sub_eq_zero.mp
+      (WithLp.ofLp_injective 2 (dotProduct_self_eq_zero.mp hz))).symm
+  have hproj0 : projection (w - v) (w - v) = 0 := p2_projection_self (w - v) hse2
+  have hprojray : projection (azimCycle_p2 W v w p - v) (w - v)
+      = c • projection (u - v) (w - v) := by
+    rw [hray, p2_projection_add, p2_projection_smul, p2_projection_smul, hproj0,
+      smul_zero, add_zero]
+  have hnormeq : ‖projection (azimCycle_p2 W v w p - v) (w - v)‖
+      = c * ‖projection (u - v) (w - v)‖ := by
+    rw [hprojray, norm_smul, Real.norm_eq_abs, abs_of_pos hc]
+  have hAc : c * ‖projection (u - v) (w - v)‖ = ‖projection (u - v) (w - v)‖ := by
+    have h1 := hkey.2.1
+    have h2 := hkey.2.2
+    rw [hnormeq] at h1 h2
+    exact le_antisymm h2 h1
+  have hprod : ‖projection (u - v) (w - v)‖ * (c - 1) = 0 := by
+    have hA := hAc
+    linarith
+  rcases mul_eq_zero.mp hprod with hA0 | hc1
+  · -- ‖proj (u - v)‖ = 0 would put u on the line aff {v, w}
+    exfalso
+    apply hmemAFF u huW
+    have hp0 : projection (u - v) (w - v) = 0 := norm_eq_zero.mp hA0
+    rw [projection] at hp0
+    set t : ℝ := ((u - v : V3) : Fin 3 → ℝ) ⬝ᵥ ((w - v : V3) : Fin 3 → ℝ) /
+      (((w - v : V3) : Fin 3 → ℝ) ⬝ᵥ ((w - v : V3) : Fin 3 → ℝ)) with htdef
+    have huv2 : u - v = t • (w - v) := sub_eq_zero.mp hp0
+    rw [mem_affineSpan_pair_iff_exists_lineMap_eq]
+    refine ⟨t, ?_⟩
+    rw [AffineMap.lineMap_apply]
+    simp only [vsub_eq_sub, vadd_eq_add]
+    rw [← huv2]
+    abel
+  · -- c = 1: the ε-choice and u differ by a multiple of v - w — excluded
+    rw [sub_eq_zero.mp hc1, one_smul] at hray
+    have huu_eq : u = azimCycle_p2 W v w p := by
+      have hkey2 : u - azimCycle_p2 W v w p = h • (v - w) := by
+        have hsplit : u - azimCycle_p2 W v w p
+            = (u - v) - (azimCycle_p2 W v w p - v) := by abel
+        rw [hsplit, hray]
+        module
+      exact hline u huW _ huu2 h hkey2
+    exact huu_eq.symm
+
 /-- Mirror of the proved `LocalAuto3.AZIM_CYCLE_EQ_SIGMA_FAN`
 (WRGCVDR.hl:1111): the chosen cyclic successor is the fan's `sigmaFan`. -/
 private theorem p2_AZIM_CYCLE_EQ_SIGMA_FAN {x : V3} {V : Set V3} {E : Set (Set V3)}

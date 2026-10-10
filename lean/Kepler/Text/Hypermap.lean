@@ -12318,5 +12318,22 @@ theorem normal_family_transform (H : Hypermap α) {NF : Set (Loop α)}
             H.mem_loop2Transform_of_pow_invNode hmark hLnot (by omega) (by omega)
               hc1 hcnc hwc⟩
 
+/-- face 轨道在 `faceMap.symm` 下封闭：`faceMap.symm z` 的 `faceMap.symm`-轨道
+即 `z` 的轨道（`orbitMap_eq_of_mem`），再经 `PermutesOn.orbitMap_symm` 换回
+`faceMap`-轨道（即 `H.face z = H.face x`，`face_eq_of_mem`）。
+HOL Light 侧该对称性由 `has_orders`/迭代逆元承担（如 local_lemmas 的
+EE-二邻居链）；在 `Equiv.Perm` 编码下无需任何额外条件。
+（EE-二邻居链专波 LA5→Hypermap 泛型件，2026-10-08。） -/
+theorem face_symm_mem {α : Type*} [DecidableEq α] {x z : α}
+    (H : Hypermap α) (hz : z ∈ H.face x) : H.faceMap.symm z ∈ H.face x := by
+  have h1 : H.faceMap.symm z ∈ orbitMap H.faceMap.symm (H.faceMap.symm z) :=
+    mem_orbitMap_self _ _
+  have h2 := orbitMap_eq_of_mem H.faceMap_permutes.symm
+    (pow_apply_mem_orbitMap H.faceMap.symm 1 z)
+  rw [pow_one] at h2
+  rw [h2, PermutesOn.orbitMap_symm H.faceMap_permutes z] at h1
+  rw [H.face_eq_of_mem hz]
+  exact h1
+
 end Hypermap
 end Kepler.Text

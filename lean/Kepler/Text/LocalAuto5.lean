@@ -1062,14 +1062,112 @@ theorem FAN_IMP_V_DIFF {x : V3} (hfan : FAN x V E) : ∀ v ∈ V, v ≠ x := by
   intro v hv he
   exact hfan.2.2.2.1 (he ▸ hv)
 
-/-- HOL `LOCAL_FAN_IMP_CYCLIC_SET` (local_lemmas.hl:534). -/
+/-- HOL `LOCAL_FAN_IMP_CYCLIC_SET` (local_lemmas.hl:534) — filled (azim-cycle
+wave 2026-10-08): `ORTHONORMAL_CYCLIC` consumes the orthonormality side
+(every `u ∈ U` satisfies `u ⬝ e = 0` — for `l = 0` by `dot_self_cross`, else
+by `COPLANAR_IFF_CROSS_DOT` on `{0, v, ρ v, u} ⊆ P`); finiteness is the
+`Iic l` image, and `U ∩ aff {0, e} = ∅` follows since a point `t • e ∈ U`
+forces `t = 0` against `fan2`. -/
 theorem LOCAL_FAN_IMP_CYCLIC_SET (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V)
     {l : ℕ} {U : Set V3}
     (hU : {(rhoNode1_p2 FF)^[n] v | n ≤ l} = U) {P : Set V3} (hP : plane_p2 P)
     (h0 : (0:V3) ∈ P) (hsub : U ⊆ P) {e : V3}
     (he : (WithLp.toLp 2 (crossProduct ((v : V3) : Fin 3 → ℝ)
       ((rhoNode1_p2 FF v : V3) : Fin 3 → ℝ)) : V3) = e) :
-    cyclicSet_p3 U 0 e := sorry
+    cyclicSet_p3 U 0 e := by
+  have hchar := LOCAL_FAN_CHARACTER_OF_RHO_NODE h hv
+  have horbit : orbitF_p2 (rhoNode1_p2 FF) v = V := LOCAL_FAN_ORBIT_MAP_V h hv
+  obtain ⟨-, -, -, -, -, hfan, -, -⟩ := h
+  have he0 : e ≠ 0 := by
+    intro hz
+    apply hchar.2.2
+    have h2 : (WithLp.toLp 2 (crossProduct ((v : V3) : Fin 3 → ℝ)
+      ((rhoNode1_p2 FF v : V3) : Fin 3 → ℝ)) : V3) = 0 := by rw [he, hz]
+    exact COLLINEAR_CROSS_0.mpr (by simpa [sub_zero] using h2)
+  have hfin : U.Finite := by
+    rw [← hU]
+    exact (Set.finite_Iic l).image (fun n : ℕ => (rhoNode1_p2 FF)^[n] v)
+  have hmemV : ∀ u : V3, u ∈ U → u ∈ V := by
+    intro u hu
+    rw [← hU] at hu
+    obtain ⟨n, -, hnu⟩ := hu
+    rw [← horbit]
+    exact ⟨n, hnu⟩
+  have hdot : ∀ u ∈ U, ((u : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0 := by
+    by_cases hl : l = 0
+    · have hU0 : U = {v} := by
+        rw [← hU]
+        ext y
+        simp only [Set.mem_singleton_iff]
+        constructor
+        · rintro ⟨n, hn, hny⟩
+          have hn0 : n = 0 := by omega
+          subst hn0
+          simpa using hny.symm
+        · intro hy
+          exact ⟨0, by omega, hy.symm⟩
+      intro u hu
+      rw [hU0, Set.mem_singleton_iff] at hu
+      subst hu
+      rw [← he]
+      exact dot_self_cross _ _
+    · intro u hu
+      have hrho1 : rhoNode1_p2 FF v ∈ U := by
+        rw [← hU]
+        exact ⟨1, by omega, rfl⟩
+      have huP : u ∈ P := hsub hu
+      have hvP : v ∈ P := hsub (by rw [← hU]; exact ⟨0, by omega, rfl⟩)
+      have hrP : rhoNode1_p2 FF v ∈ P := hsub hrho1
+      obtain ⟨a, b, c, -, hPdef⟩ := hP
+      have hcop : Coplanar ({(0:V3), v, rhoNode1_p2 FF v, u} : Set V3) :=
+        ⟨a, b, c, by
+          rw [← hPdef]
+          intro y hy
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy
+          rcases hy with rfl | rfl | rfl | rfl
+          · exact h0
+          · exact hvP
+          · exact hrP
+          · exact huP⟩
+      have hcop2 := (COPLANAR_IFF_CROSS_DOT (x := (0:V3)) (y := v)
+        (z := rhoNode1_p2 FF v) (t := u)).mp hcop
+      rw [← he]
+      simpa [sub_zero, dotProduct_comm] using hcop2
+  have hse : ((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) ≠ 0 := by
+    intro hz
+    exact he0 (WithLp.ofLp_injective 2 (dotProduct_self_eq_zero.mp hz))
+  refine ⟨fun hcon => he0 hcon.symm, hfin, ?_, ?_⟩
+  · intro p hp q hq h hh
+    have hpe := hdot p hp
+    have hqe := hdot q hq
+    have h4 : ((p - q : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ) = 0 := by
+      rw [WithLp.ofLp_sub 2, sub_dotProduct, hpe, hqe]
+      simp
+    rw [hh] at h4
+    have hkey : h * (((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)) = 0 := by
+      simpa [dotProduct_smul, WithLp.ofLp_smul 2, dotProduct_sub, dotProduct_zero,
+        sub_zero, WithLp.ofLp_zero 2] using h4
+    rcases mul_eq_zero.mp hkey with h1 | h1
+    · rw [h1, zero_smul] at hh
+      exact sub_eq_zero.mp hh
+    · exact absurd h1 hse
+  · rw [Set.eq_empty_iff_forall_notMem]
+    rintro y ⟨hyU, hyA⟩
+    have hyV : y ∈ V := hmemV y hyU
+    have hyne : y ≠ 0 := by
+      intro hz
+      subst hz
+      exact hfan.2.2.2.1 hyV
+    obtain ⟨t, ht⟩ := mem_affineSpan_pair_iff_exists_lineMap_eq.mp hyA
+    have hye : y = t • e := by rw [← ht, AffineMap.lineMap_apply]; simp
+    have h0' : t * (((e : V3) : Fin 3 → ℝ) ⬝ᵥ ((e : V3) : Fin 3 → ℝ)) = 0 := by
+      have h5 := hdot y hyU
+      rw [hye] at h5
+      simpa [dotProduct_smul, WithLp.ofLp_smul 2] using h5
+    rcases mul_eq_zero.mp h0' with h1 | h1
+    · rw [h1, zero_smul] at hye
+      exact hyne hye
+    · exact absurd h1 hse
 
 /-- HOL `LOCAL_FAN_ITER_RHO_NODE_IN_V` (local_lemmas.hl:652) — filled (orbit
 wave 2026-10-08): the orbit closure `LOCAL_FAN_ORBIT_MAP_V` contains every
@@ -1108,9 +1206,21 @@ theorem ORD2_ORBIT_MAP {α : Type*} {f : α → α} {x : α} (h : f (f x) = x) :
     · exact ⟨0, h.symm⟩
     · exact ⟨1, h.symm⟩
 
-/-- HOL `LOCAL_FAN_IMP_NOT_SEMI_IDE` (local_lemmas.hl:671). -/
+/-- HOL `LOCAL_FAN_IMP_NOT_SEMI_IDE` (local_lemmas.hl:671) — filled (EE-chain
+wave 2026-10-08): if `ρ²v = v` then `ORD2_ORBIT_MAP` collapses the rho-orbit
+to `{v, ρ v}`, which `LOCAL_FAN_ORBIT_MAP_V` makes all of `V`, while
+`(v, ρ v) ∈ FF` (LOCAL_FAN_RHO_NODE_PROS) puts `{v, ρ v} ∈ E` — contradicting
+`LOCAL_FAN_NOT_TWO_V_IN_E` (the two-dart face would force `FF.ncard = 1`
+against `dih2k`'s `2 * k` count). -/
 theorem LOCAL_FAN_IMP_NOT_SEMI_IDE (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) :
-    rhoNode1_p2 FF (rhoNode1_p2 FF v) ≠ v := sorry
+    rhoNode1_p2 FF (rhoNode1_p2 FF v) ≠ v := by
+  intro hcon
+  have hV := LOCAL_FAN_ORBIT_MAP_V h hv
+  rw [ORD2_ORBIT_MAP hcon] at hV
+  have hdart : (v, rhoNode1_p2 FF v) ∈ FF := (LOCAL_FAN_RHO_NODE_PROS h).1 v hv
+  have he : ({v, rhoNode1_p2 FF v} : Set V3) ∈ E :=
+    LOCAL_FAN_IN_FF_IN_ORD_PAIRS h hdart
+  exact LOCAL_FAN_NOT_TWO_V_IN_E h ⟨v, rhoNode1_p2 FF v, hV.symm, he⟩
 
 /-- HOL `RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT` (local_lemmas.hl:689). -/
 theorem RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT (h : localFan_p2 V E FF) {v : V3}
@@ -1139,13 +1249,37 @@ theorem PI_TO_TWO_PI_NEG_SIN : ∀ x : ℝ, Real.pi < x → x < 2 * Real.pi →
     rw [Real.sin_sub]; simp [Real.cos_pi, Real.sin_pi]]
   linarith
 
-/-- HOL `MIXED_PROD_POS_IMP_RANGE_AZIM` (local_lemmas.hl:937). -/
+/-- HOL `MIXED_PROD_POS_IMP_RANGE_AZIM` (local_lemmas.hl:937) — filled
+(azim-cycle wave 2026-10-08): `JBDNJJB` (Planarity) writes `sin ∘ azim` as a
+positive multiple of the mixed product, so the sine is positive; on
+`[0, 2π)` (`AZIM_RANGE`) the sine vanishes only at `0` and `π`, and
+`PI_TO_TWO_PI_NEG_SIN` kills the `(π, 2π)` half. -/
 theorem MIXED_PROD_POS_IMP_RANGE_AZIM {u v w : V3}
     (h1 : ¬ Collinear ℝ ({0, u, v} : Set V3))
     (h2 : ¬ Collinear ℝ ({0, u, w} : Set V3))
     (h3 : 0 < (WithLp.toLp 2 (crossProduct ((u : V3) : Fin 3 → ℝ)
       ((v : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ (w : V3)) :
-    0 < azim 0 u v w ∧ azim 0 u v w < Real.pi := sorry
+    0 < azim 0 u v w ∧ azim 0 u v w < Real.pi := by
+  obtain ⟨t, ht, hsin⟩ := JBDNJJB (u := u) (v := v) (w := w) h1 h2
+  have h4 : (crossProduct ((u : V3) : Fin 3 → ℝ) ((v : V3) : Fin 3 → ℝ))
+      ⬝ᵥ ((w : V3) : Fin 3 → ℝ) > 0 := h3
+  have hpos : 0 < Real.sin (azim 0 u v w) := by
+    rw [hsin]
+    exact mul_pos ht h4
+  have hr := AZIM_RANGE 0 u v w
+  have hne0 : azim 0 u v w ≠ 0 := by
+    intro h0
+    rw [h0, Real.sin_zero] at hpos
+    exact lt_irrefl 0 hpos
+  have hnepi : azim 0 u v w ≠ Real.pi := by
+    intro h0
+    rw [h0, Real.sin_pi] at hpos
+    exact lt_irrefl 0 hpos
+  by_cases hle : Real.pi ≤ azim 0 u v w
+  · have hlt : Real.pi < azim 0 u v w := lt_of_le_of_ne hle (Ne.symm hnepi)
+    have hneg := PI_TO_TWO_PI_NEG_SIN (azim 0 u v w) hlt hr.2
+    linarith
+  · exact ⟨lt_of_le_of_ne hr.1 (Ne.symm hne0), lt_of_not_ge hle⟩
 
 /-- HOL `COLLINEAR_ONCE_VEC_0` (local_lemmas.hl:973). -/
 theorem COLLINEAR_ONCE_VEC_0 {x : V3} (hx : x ≠ 0) (y : V3) :
@@ -1704,9 +1838,81 @@ theorem HYP_MAPS_INVERABLE {α : Type*} [DecidableEq α] (H : Hypermap α) :
   · ext z
     simp
 
-/-- HOL `LOFA_DARTS_FF_UNION_SWITCH_FF` (local_lemmas.hl:1795). -/
+/-- HOL `LOFA_DARTS_FF_UNION_SWITCH_FF` (local_lemmas.hl:1795) — filled
+(EE-chain wave 2026-10-08): `dih2k` gives `dart = face x ∪ nodeMap '' face x`
+at the face generator, and the `Equiv.Perm` identities do the rest:
+`nodeMap * faceMap = edgeMap⁻¹` (Hypermap) reads `nodeMap` on `FF` as
+`swap ∘ faceMap.symm` (`faceMap.symm u` stays in the face orbit by the new
+generic `Hypermap.face_symm_mem`), and `edgeMap`/`edgeMap.symm` read the
+swap on darts (`eeOfHyp_p2` on `dartsOfHyp_p2`, HOL `ELMS_OF_HYPERMAP_HYP`).
+Hence `nodeMap '' FF = {p | swap p ∈ FF}` and the union is the dart set. -/
 theorem LOFA_DARTS_FF_UNION_SWITCH_FF (h : localFan_p2 V E FF) :
-    dartsOfHyp_p2 E V = FF ∪ {p : V3 × V3 | (p.2, p.1) ∈ FF} := sorry
+    dartsOfHyp_p2 E V = FF ∪ {p : V3 × V3 | (p.2, p.1) ∈ FF} := by
+  have hkeep := h
+  obtain ⟨HS, hd, hE, hN, hF, hfan, ⟨x, hx, hFx⟩, hdih⟩ := h
+  obtain ⟨-, hunion, -, -, -⟩ := hdih
+  -- `edgeMap` reads the swap on darts (HOL `ELMS_OF_HYPERMAP_HYP` core)
+  have hswap : ∀ d ∈ (↑HS.darts : Set (V3 × V3)),
+      (HS.edgeMap : V3 × V3 → V3 × V3) d = (d.2, d.1) := by
+    intro d hdD
+    have hd2 : d ∈ dartsOfHyp_p2 E V := by rw [← hd]; exact hdD
+    rw [hE]
+    simp only [eeOfHyp_p2, if_pos hd2]
+  -- so does `edgeMap.symm`
+  have hswapSymm : ∀ d ∈ (↑HS.darts : Set (V3 × V3)),
+      (HS.edgeMap.symm : V3 × V3 → V3 × V3) d = (d.2, d.1) := by
+    intro d hdD
+    have he : (HS.edgeMap.symm : V3 × V3 → V3 × V3) d ∈ (↑HS.darts : Set (V3 × V3)) :=
+      Finset.mem_coe.mpr (HS.edgeMap_symm_apply_mem (Finset.mem_coe.mp hdD))
+    have h1 : (HS.edgeMap : V3 × V3 → V3 × V3) ((HS.edgeMap.symm : V3 × V3 → V3 × V3) d)
+        = (((HS.edgeMap.symm : V3 × V3 → V3 × V3) d).2,
+           ((HS.edgeMap.symm : V3 × V3 → V3 × V3) d).1) := hswap _ he
+    rw [Equiv.apply_symm_apply] at h1
+    have hf : d.1 = ((HS.edgeMap.symm : V3 × V3 → V3 × V3) d).2 := congrArg Prod.fst h1
+    have hg : d.2 = ((HS.edgeMap.symm : V3 × V3 → V3 × V3) d).1 := congrArg Prod.snd h1
+    exact Prod.ext hg.symm hf.symm
+  -- `nodeMap` reads `swap ∘ faceMap.symm` on the face
+  have hnode : ∀ u ∈ FF, (HS.nodeMap : V3 × V3 → V3 × V3) u
+      = (((HS.faceMap.symm : V3 × V3 → V3 × V3) u).2,
+         ((HS.faceMap.symm : V3 × V3 → V3 × V3) u).1) := by
+    intro u huF
+    have huFx : u ∈ HS.face x := by rw [← hFx]; exact huF
+    have hsymmD : (HS.faceMap.symm : V3 × V3 → V3 × V3) u ∈ dartsOfHyp_p2 E V := by
+      refine la5_FF_subset_darts hkeep ?_
+      rw [hFx]
+      exact HS.face_symm_mem huFx
+    have hNF : (HS.nodeMap : V3 × V3 → V3 × V3) u
+        = (HS.edgeMap.symm : V3 × V3 → V3 × V3) ((HS.faceMap.symm : V3 × V3 → V3 × V3) u) := by
+      have h0 := congrArg (fun (p : Equiv.Perm (V3 × V3)) =>
+        (p : V3 × V3 → V3 × V3) ((HS.faceMap.symm : V3 × V3 → V3 × V3) u))
+        HS.nodeMap_mul_faceMap
+      rw [Equiv.Perm.mul_apply, Equiv.apply_symm_apply] at h0
+      exact h0
+    rw [hNF, hswapSymm _ (by rw [hd]; exact hsymmD)]
+  ext d
+  constructor
+  · intro dmem
+    rw [← hd] at dmem
+    rw [hunion x hx, ← hFx] at dmem
+    rcases Set.mem_or_mem_of_mem_union dmem with h1 | ⟨u, huF, hdu⟩
+    · exact Set.mem_union_left _ h1
+    · refine Set.mem_union_right _ ?_
+      show (d.2, d.1) ∈ FF
+      have hnu := hnode u huF
+      have hde : (d.2, d.1) = (HS.faceMap.symm : V3 × V3 → V3 × V3) u := by
+        rw [← hdu, hnu]
+      rw [hde, hFx]
+      exact HS.face_symm_mem (by rw [← hFx]; exact huF)
+  · intro dmem
+    rcases Set.mem_or_mem_of_mem_union dmem with h1 | h2
+    · exact la5_FF_subset_darts hkeep h1
+    · have hsd : (d.2, d.1) ∈ (↑HS.darts : Set (V3 × V3)) := by
+        rw [hd]
+        exact la5_FF_subset_darts hkeep h2
+      have hed : (HS.edgeMap : V3 × V3 → V3 × V3) (d.2, d.1) = d := by
+        rw [hswap (d.2, d.1) hsd]
+      rw [← hed, ← hd]
+      exact Finset.mem_coe.mpr (HS.edgeMap_apply_mem (Finset.mem_coe.mp hsd))
 
 /-- Lane support (LA5 r2): every point of a self-cyclic set is periodic. -/
 private theorem la5_orbit_period {α : Type*} (f : α → α) {S : Set α}
@@ -1843,13 +2049,56 @@ private theorem la5_min_period_inj {α : Type*} (f : α → α) {x : α} {p : �
   · exact h
   · exact absurd hcon.symm (key j i h hi)
 
-/-- HOL `LOFA_IN_E_IMP_IN_FF` (local_lemmas.hl:1887). -/
+/-- HOL `LOFA_IN_E_IMP_IN_FF` (local_lemmas.hl:1887) — filled (EE-chain wave
+2026-10-08): `{a, b} ∈ E` puts the dart `(a, b)` into `ordPairs_p2 E`, hence
+into `dartsOfHyp_p2 E V`, and `LOFA_DARTS_FF_UNION_SWITCH_FF` splits the dart
+set into `FF` and its swap. -/
 theorem LOFA_IN_E_IMP_IN_FF (h : localFan_p2 V E FF) {a b : V3}
-    (he : ({a, b} : Set V3) ∈ E) : (a, b) ∈ FF ∨ (b, a) ∈ FF := sorry
+    (he : ({a, b} : Set V3) ∈ E) : (a, b) ∈ FF ∨ (b, a) ∈ FF := by
+  have h1 : (a, b) ∈ dartsOfHyp_p2 E V := by
+    refine Set.mem_union_left _ ?_
+    exact he
+  rw [LOFA_DARTS_FF_UNION_SWITCH_FF h] at h1
+  rcases Set.mem_or_mem_of_mem_union h1 with hF | hS
+  · exact Or.inl hF
+  · exact Or.inr hS
 
-/-- HOL `LOFA_IMP_EE_TWO_ELMS` (local_lemmas.hl:1899). -/
+/-- HOL `LOFA_IMP_EE_TWO_ELMS` (local_lemmas.hl:1899) — filled (EE-chain wave
+2026-10-08). (⊆) `{v, w} ∈ E` splits via `LOFA_IN_E_IMP_IN_FF`: the `v`-dart
+reads `w = ρ v` (LOCAL_FAN_RHO_NODE_PROS.2), the `w`-dart gives `v = ρ w`
+with `w ∈ V`, so `w = vv` by rho-injectivity on `V` — `SELF_CYCLIC_IMP_BIJ`
+on the orbit identity `LOCAL_FAN_ORBIT_MAP_V` (the HOL route). (⊇) both
+`(v, ρ v)` and `(vv, ρ vv) = (vv, v)` lie in `FF`, so `LOCAL_FAN_IN_FF_
+IN_ORD_PAIRS` + `Set.pair_comm` give the two memberships. -/
 theorem LOFA_IMP_EE_TWO_ELMS (h : localFan_p2 V E FF) {vv v : V3} (hvv : vv ∈ V)
-    (hr : rhoNode1_p2 FF vv = v) : EE_p2 v E = {rhoNode1_p2 FF v, vv} := sorry
+    (hr : rhoNode1_p2 FF vv = v) : EE_p2 v E = {rhoNode1_p2 FF v, vv} := by
+  have hvV : v ∈ V := by rw [← hr]; exact LOFA_IN_V_SO_DO_RHO_NODE_V h hvv
+  have hpro := LOCAL_FAN_RHO_NODE_PROS h
+  have hinj : Set.InjOn (rhoNode1_p2 FF) V :=
+    (SELF_CYCLIC_IMP_BIJ (rhoNode1_p2 FF) V
+      (fun x hx => (LOCAL_FAN_ORBIT_MAP_V h hx).symm)).2.1
+  ext w
+  simp only [EE_p2, Set.mem_setOf_eq, Set.mem_insert_iff]
+  constructor
+  · intro hw
+    rcases LOFA_IN_E_IMP_IN_FF h hw with hF | hF
+    · left
+      have hd : (v, w) = ((v, w).1, rhoNode1_p2 FF (v, w).1) := hpro.2 (v, w) hF
+      exact congrArg Prod.snd hd
+    · right
+      have hwV : w ∈ V := (LOCAL_FAN_IMP_IN_V h hF hF).1
+      have hrw : v = rhoNode1_p2 FF w := by
+        have hd : (w, v) = ((w, v).1, rhoNode1_p2 FF (w, v).1) := hpro.2 (w, v) hF
+        exact congrArg Prod.snd hd
+      exact hinj hwV hvv (by rw [hr, hrw])
+  · intro hw
+    rcases hw with hc | hc2
+    · rw [hc]
+      exact LOCAL_FAN_IN_FF_IN_ORD_PAIRS h (hpro.1 v hvV)
+    · rw [hc2]
+      have h2 : ({vv, rhoNode1_p2 FF vv} : Set V3) ∈ E :=
+        LOCAL_FAN_IN_FF_IN_ORD_PAIRS h (hpro.1 vv hvv)
+      rwa [hr, Set.pair_comm] at h2
 
 /-- HOL `LOFA_CARD_EE_V_2` (local_lemmas.hl:1959). -/
 theorem LOFA_CARD_EE_V_2 (h : localFan_p2 V E FF) {vv v : V3} (hvv : vv ∈ V)
@@ -1863,9 +2112,13 @@ theorem LOFA_CARD_EE_V_2 (h : localFan_p2 V E FF) {vv v : V3} (hvv : vv ∈ V)
   rw [h2, Set.ncard_insert_of_notMem (by simp [hne])]
   simp
 
-/-- HOL `LOFA_CARD_EE_V_1` (local_lemmas.hl:1967). -/
+/-- HOL `LOFA_CARD_EE_V_1` (local_lemmas.hl:1967) — filled (EE-chain wave
+2026-10-08): the HOL route `EXISTS_INVERSE_OF_V` + `LOFA_CARD_EE_V_2`
+(the rho-predecessor `vv` exists in `V` by the cycle argument). -/
 theorem LOFA_CARD_EE_V_1 (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) :
-    (EE_p2 v E).ncard = 2 := sorry
+    (EE_p2 v E).ncard = 2 := by
+  obtain ⟨vv, hvv, hrv⟩ := EXISTS_INVERSE_OF_V h hv
+  exact LOFA_CARD_EE_V_2 h hvv hrv
 
 /-- HOL `RHO_NODE_INVERSE_POINT` (local_lemmas.hl:1976). -/
 theorem RHO_NODE_INVERSE_POINT {w v : V3} (hw : (w, v) ∈ FF)
@@ -4147,13 +4400,22 @@ theorem LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT (h : convexLocalFan_p2 V E FF)
     ∃ i : ℕ, i < V.ncard ∧ w = (rhoNode1_p2 FF)^[i] v ∧
       ((fun l => (rhoNode1_p2 FF)^[l] v) '' {l : ℕ | 0 < l ∧ l < i}) ⊆
         affGt ({0, v} : Set V3) ({rhoNode1_p2 FF v} : Set V3) := by
-  -- NEEDS (LA5 downstream wave 2026-10-08): the cyclicSet/azimCycle kit.
-  -- (1) `FIRST_AZIM_CYCLE_EQ_RHO_NODE` (HOL local_lemmas.hl:1204) needs
-  --     `Wrgcvdr_cizmrrh.IDENTIFY_AZIM_CYCLE` (epsilon-characterization of
-  --     azim_cycle — unported) plus still-sorried `LOCAL_FAN_IMP_CYCLIC_SET`,
-  --     `RHO_NODE_IS_SUCCESEOR_AZIM`, `RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT`.
+  -- NEEDS (LA5 downstream wave 2026-10-08; azim-cycle wave update
+  -- 2026-10-10): of the cyclicSet/azimCycle kit, now REAL:
+  --     `IDENTIFY_AZIM_CYCLE_p2` (the ε-characterization, WRGCVDR.hl:832;
+  --     ported to LocalAuto2 with the cyclic_set conjuncts inlined) and
+  --     `LOCAL_FAN_IMP_CYCLIC_SET` (this file) and
+  --     `MIXED_PROD_POS_IMP_RANGE_AZIM` (this file, via JBDNJJB).
+  -- (1) `FIRST_AZIM_CYCLE_EQ_RHO_NODE` (HOL local_lemmas.hl:1204) now waits
+  --     only on `RHO_NODE_IS_SUCCESEOR_AZIM` (HOL 1034) itself blocked by
+  --     `RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT` (HOL 689): with those, it is
+  --     a short IDENTIFY_AZIM_CYCLE_p2 application (HOL 1204 shape:
+  --     ¬(U ⊆ {x}) from ρ x ∈ U, ρ x ≠ x; ¬collinear {x, 0, e} from the
+  --     positive mixed product; min-property from RHO_NODE_IS_SUCCESEOR_AZIM
+  --     with the q = ρ x disjunct by le_refl).
   -- (2) `RHO_NODE1_MONO_WITH_AZIM` (HOL 4557) needs the same kit through
-  --     `SEQUENCE_OF_RHO_NODE_IS_SUC` + `LOFA_IMP_AZIM_RHO_NODE_ST`.
+  --     `SEQUENCE_OF_RHO_NODE_IS_SUC` (HOL 1270, same upstream) +
+  --     `LOFA_IMP_AZIM_RHO_NODE_ST` (HOL 4517).
   -- With both: pick i via LOOP_SET_DETER_FIRTS_ELMS (real); HALF_CIRCULAR
   -- (real) puts the arc in P = aff {0,v,ρ v}; RHO_NODE1_MONO + e = v × ρ v
   -- give 0 < azim 0 e v (ρ^[l] v) < azim 0 e v w = π (IN_CONV0_IMP_AZIM_PI,
@@ -5080,16 +5342,16 @@ theorem HALP_CIRCLE_IS_INTERSECTION (h : convexLocalFan_p2 V E FF)
 /-- HOL `CONVEX_LOFA_IMP_INANGLE_LE_PI` (local_lemmas.hl:5818). -/
 theorem CONVEX_LOFA_IMP_INANGLE_LE_PI (h : convexLocalFan_p2 V E FF) {v : V3}
     (hv : v ∈ V) : interiorAngle1_p2 0 FF v ≤ Real.pi := by
-  -- NEEDS (LA5 downstream wave 2026-10-08): the two-neighbor fact
-  -- `(EE_p2 v E).ncard = 2`. Its chain is still sorried:
-  -- LOFA_CARD_EE_V_1 ← LOFA_CARD_EE_V_2 ← LOFA_IMP_EE_TWO_ELMS (HOL 1899)
-  -- ← LOFA_IN_E_IMP_IN_FF ← LOFA_DARTS_FF_UNION_SWITCH_FF (HOL 1786;
-  -- dartsOfHyp_p2 E V = FF ∪ swapped — hypermap-side, still sorry) +
-  -- LOCAL_FAN_IMP_NOT_SEMI_IDE (ρ²v ≠ v; needs |FF| ≥ 3, i.e. face-card ≥ 2
-  -- content beyond la5_not_face_card_one). With it: azimInFan_p2 (v,ρ v) E ≤ π
-  -- (the convex-fan hypothesis) forces the 1 < ncard branch (else 2π ≤ π),
-  -- AZIM_CYCLE_TWO_POINT_SET (real) + epsilonFixed identify the cycle point
-  -- as ivs v, and interiorAngle1_p2 (definitional) gives the claim.
+  -- NEEDS (updated EE-chain wave 2026-10-08): the two-neighbor fact
+  -- `(EE_p2 v E).ncard = 2` is NOW REAL — its full chain discharged this
+  -- wave: LOFA_CARD_EE_V_1 ← LOFA_CARD_EE_V_2 ← LOFA_IMP_EE_TWO_ELMS
+  -- (HOL 1899) ← LOFA_IN_E_IMP_IN_FF ← LOFA_DARTS_FF_UNION_SWITCH_FF
+  -- (HOL 1795; dartsOfHyp_p2 E V = FF ∪ swapped, via Hypermap.face_symm_mem)
+  -- + LOCAL_FAN_IMP_NOT_SEMI_IDE (ρ²v ≠ v). Remaining for this item:
+  -- azimInFan_p2 (v,ρ v) E ≤ π (the convex-fan hypothesis) forces the
+  -- 1 < ncard branch (else 2π ≤ π), AZIM_CYCLE_TWO_POINT_SET (real) +
+  -- epsilonFixed identify the cycle point as ivs v, and interiorAngle1_p2
+  -- (definitional) gives the claim.
   sorry
 
 /-- HOL `X_IN_AFF_GT_X` (local_lemmas.hl:5860). Deviation note: `hS` is
@@ -5216,7 +5478,8 @@ theorem DIHV_NOT_CHANGE {x y v w : V3} {a b c : ℝ} (hc : 0 < c) (hsum : a + b 
 real — `AZIM_LE_PI_EQ_DIHV` (LuneVolume azim_dihv_same/azim_dihv_compl)
 and `LOFA_IMP_NOT_COLL_IVS` (cycle predecessor + IVS_RHO_IDD). Remaining:
 `IVS_RNODE_IN_AFF_V` (← AFF_IVS_RHO_NODE_EQQ ← GT100, cyclicSet kit) and
-`CONVEX_LOFA_IMP_INANGLE_LE_PI` (← EE-card chain) — see the `-- NEEDS`
+`CONVEX_LOFA_IMP_INANGLE_LE_PI` (its EE-card prerequisite chain went real in
+the EE-chain wave 2026-10-08) — see the `-- NEEDS`
 lines at those items. Already real: `NOT_COLL_RHONODE_SND_POINT` (B5
 wave), `LUNAR_COMM`, `LOCAL_FAN_CHARACTER_OF_RHO_NODE2` (purified),
 `DIHV_NOT_CHANGE`, `FOR_AFF_GT_NOT_INTERSECTION2`, `sum4_azim_fan`. -/
