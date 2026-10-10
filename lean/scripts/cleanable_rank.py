@@ -17,11 +17,23 @@ TOP_N = int(sys.argv[2]) if len(sys.argv) > 2 else 30
 deps = defaultdict(set)   # node -> set(direct kepler deps)
 tainted = set()
 nodes = set()
+cur_mod = None
+
+def fix(n, mod):
+    """块内 _stdin 私有名重写回真实模块名(_private._stdin.0.X → _private.<mod>.0.X)"""
+    if mod and n.startswith("_private._stdin.0."):
+        return "_private." + mod + ".0." + n[len("_private._stdin.0."):]
+    return n
+
 for line in open(EDGE_FILE, encoding="utf-8"):
+    if line.startswith("SCAN_MODULE "):
+        cur_mod = line.split(None, 1)[1].strip()
+        continue
     if not line.startswith("DEP\t"):
         continue
     _, name, t, d = line.rstrip("\n").split("\t")
-    ds = set(x for x in d.split(";") if x)
+    name = fix(name, cur_mod)
+    ds = set(fix(x, cur_mod) for x in d.split(";") if x)
     deps[name] = ds
     nodes.add(name)
     if t == "1":

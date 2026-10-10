@@ -22,6 +22,10 @@ for f in "$@"; do
     $1=="end" { if (n > 0) n--; next }
     END { if (n > 0) print stack[n] }' "$f")
   if [ -n "$ns" ]; then printf '\nend %s\n' "$ns" >> "$tmp"; else printf '\n' >> "$tmp"; fi
+  # 块标记: ranker 据此把本块内 _private._stdin.0.* 名重写回真实模块名
+  # (扫描副本按主文件 _stdin elaboration, 本模块私有名的 Mangling 模块段失真)
+  scanmod=$(echo "${f%.lean}" | tr '/' '.')
+  echo "SCAN_MODULE $scanmod" >> "$OUT"
   cat scripts/dep_scan_snippet.lean >> "$tmp"
   if lake env lean "$tmp" >> "$OUT" 2>>/tmp/dep_sweep_err.log; then
     echo "[$i/$#] OK $mod" >&2
