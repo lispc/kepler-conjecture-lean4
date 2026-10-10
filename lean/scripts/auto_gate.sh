@@ -402,7 +402,15 @@ else
   # lines may be added as explicit scaffolds up to $NEW_SORRY_ALLOW (default
   # 0), each accounted by a `-- NEEDS` comment among the added lines; beyond
   # the cap, or unaccounted, still fails.
-  bare_new=$(printf '%s\n' "$adds" | grep -cE '^[+][[:space:]]*sorry\b[[:space:]]*$' || true)
+  # EVOLUTION 19 (2026-10-08): the scaffold count is NET — a restructured block
+  # re-adds its existing bare sorry verbatim (the line text is always just
+  # "sorry"), and the absolute count misread such block moves as new scaffolds
+  # (live case: LA5 leaf-clearing wave +10/−18 → net −8). Netting applies the
+  # 2026-09-28 net-count philosophy to the scaffold channel; net-new scaffolds
+  # still require NEEDS accounting below.
+  bare_adds=$(printf '%s\n' "$adds" | grep -cE '^[+][[:space:]]*sorry\b[[:space:]]*$' || true)
+  bare_dels=$(printf '%s\n' "$dels" | grep -cE '^-[[:space:]]*sorry\b[[:space:]]*$' || true)
+  bare_new=$(( bare_adds > bare_dels ? bare_adds - bare_dels : 0 ))
   needs_docs=$(printf '%s\n' "$adds" | grep -cE -- '-- NEEDS' || true)
   [ "$bare_new" -le "${NEW_SORRY_ALLOW:-0}" ] \
     || fail "bare scaffold sorries added ($bare_new > NEW_SORRY_ALLOW=${NEW_SORRY_ALLOW:-0})"
