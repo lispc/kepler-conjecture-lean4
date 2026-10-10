@@ -266,6 +266,22 @@ ZTGIJCF0/4 生成族/GCKBQEA/RQWUDDU/6096597438/1965189142 等）。
 -- NEEDS: PA21 rest 叶拆单条时同步展开本骨架；在库两案补粘合引理入查表。 -/
 theorem nliPackNonlinearRest : pack_nonlinear_rest := sorry
 
+/-! **A11 车道记账（2026-10-08，纯注释块，骨架代码逐字零改动）**：上游 PA21
+的 GIANT 已诚实收窄——`pack_nonlinear_rest` 的 def 体从 unknown-Prop
+（`:= sorry`，语句本身未定形）换成 62 条显式盒式 `bank_*` 合取（PA21
+"bank rest" 节；字面 40 条直录 ineq.hl，行号经 ineqs.json 交叉验证；生成
+22 条按 make_F4 / add_QITNPEA1 循环模板参数化；QITNPEA1 模板残段
+`// + &m *beta_bump_lb` 按 ineq.hl:855 doc 注记「Removed beta_bump_lb」
+转录并登记 registered reconciliation）。效果链（`#print axioms` 实证）：
+PA21 侧 `pack_nonlinear_rest` / `pack_nonlinear_non_ox3q1h` / 三枚
+`proj_*_bank` / `tsk_hyp` = 标准三公理零 sorryAx；本节 1a-1d 四骨架件的
+陈述自此全部 pin 死在显式盒式上。
+-- NEEDS（重记账）: ①81 条逐条证书债务不变（1a 七条 + 1b 十条 + 1c 两条
++ 1d 六十二条；GRKIBMP B V2 属 16 条真残余清单）；②在库两案粘合接线：
+`bank_QITNPEA3725403817`（内核闭合 2026-09-18）与 `bank_1965189142x34`
+（Cases.C1965189142x34）→ §2a 查表（量产波）；③`nliPackNonlinearNonOx3q1h`
+（骨架 1）的 sorryAx 仍来自四骨架件的 sorry 体——证书灌装波按件转真。 -/
+
 /-- 中层骨架 1：HOL `pack_nonlinear_non_ox3q1h`（merge_ineq.hl:118-122）分量
 本体 = 四切片组骨架件的显式装配（**真推导**，无独立债务；对照 PA21:403-405
 def 的四个合取项）。 -/

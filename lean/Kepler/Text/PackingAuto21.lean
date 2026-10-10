@@ -89,8 +89,10 @@ NEEDS (wave-B3 state, 2026-09-30): closed in-file — GAMMAX_MCELL1,
 CLOSED (2026-09-30 wedge GIANT lane): `MCELL2_VOL_SPLIT_EXPLICIT` and
   `MCELL2_SOL` are PROVED (wedge closed forms section: slicing closed form
   `VOLUME_FRUSTT_WEDGE` port + `WEDGE_GE_EQ_AFF_GE` port + radial kit).
-REMAINING sorry (3 sites): `pack_nonlinear_rest` (def, G4 bank stub),
-  `mi_gamma3f_gamma3f_x_div_sqrtdelta` (merge_ineq WEAK/WEAK2),
+REMAINING sorry (2 sites; A11 lane 2026-10-08: `pack_nonlinear_rest` def
+  body honestly narrowed from unknown-Prop stub to the explicit 62-entry
+  `bank_*` conjunction — see "bank rest" section, `#print axioms` = standard
+  three): `mi_gamma3f_gamma3f_x_div_sqrtdelta` (merge_ineq WEAK/WEAK2),
   `TSKAJXY_034` (0/3/4-cell giant).
 DEDUP/CLOSED (2026-09-30, LA38 wrapper lane): `GAMMAX_GAMMA2_X` PROVED —
   the sole structural gap (the dihV<->dih_y bridge) is consumed via the new
@@ -388,13 +390,560 @@ def tsk_bank : Prop :=
 (`add_hyp` order, merge_ineq.hl:3795). -/
 def grk_bank : Prop := bank_GRKIBMPAV2 ∧ bank_GRKIBMPBV2
 
-/-- HOL bank remainder: the other 62 entries of the 81-entry registry
-`packNonlinearNonOx3q1hIds` (IdLists.lean:43-126) — JSPEVYT, IXPOTPA,
-TXQTPVC, TEWNSCJ, the QITNPEA family, the ZTGIJCF0/4 generated families,
-GCKBQEA, RQWUDDU, 6096597438, 1965189142, ....  PLACEHOLDER(G4): to be
-split into single-entry leaves when `CertifiedIneqHolds` lands. -/
-def pack_nonlinear_rest : Prop := sorry
-  -- MERGE-INEQ: 62-entry remainder leaf — NEEDS: G4 主案（Merge_ineq 章程 §2.2/附则1）
+/-! ## bank rest: the other 62 entries of the 81-entry registry
+`packNonlinearNonOx3q1hIds` (IdLists.lean:43-126) — A11 车道 2026-10-08
+GIANT 诚实收窄（MERGE-INEQ wave 0 后继）。
+
+原形是单叶 `def pack_nonlinear_rest : Prop := sorry`——语句本身未定形的
+unknown-Prop（比 sorried 定理更不诚实：消费方免费获得 62 条未知不等式）。
+本波按 19 条消费切片同款 arrow 形逐条显式定形（HOL `Sphere.ineq` 盒子
+展开，章程 §6.2）：字面 40 条直录 ineq.hl（行号经 ineqs.json g4e 独立
+解析交叉验证），生成 22 条（ZTGIJCF4 ×16、QITNPEA1 ×6）按 make_F4 /
+add_QITNPEA1 循环的模板参数化转录。命名 `bank_` + idv 挤压；合取顺序 =
+IdLists 注册序（去 19 条消费切片；章程 §4.3 item 8 的既有重排注记继续
+有效）。**证明债逐条落在各 `bank_*` 陈述上**：证书不在库（deferred-
+compute，G4 主案章程 §2.2/附则1；在库两案 `QITNPEA 3725403817`（内核
+闭合 2026-09-18）与 `1965189142 34`（Cases.C1965189142x34）的粘合入
+§2a 查表 = 量产接线波，本波不动）。 -/
+
+/-- HOL ineq entry `6096597438 b` (ineq.hl:1661).  Box [3,64]×[1,1]⁵. -/
+def bank_6096597438b : Prop :=
+  ∀ x1 x2 x3 x4 x5 x6 : ℝ, 3 ≤ x1 → x1 ≤ 64 → 1 ≤ x2 → x2 ≤ 1 → 1 ≤ x3 → x3 ≤ 1 →
+    1 ≤ x4 → x4 ≤ 1 → 1 ≤ x5 → x5 ≤ 1 → 1 ≤ x6 → x6 ≤ 1 →
+    2 * Real.pi - 2 * asn797k x1 x2 x3 x4 x5 x6 >
+      0.591 - 0.0331 * x1 + 0.506 * lfun 1 + 1
+
+/-- HOL ineq entry `6096597438 a` (ineq.hl:1650).  Box [1,1]（单变量 `h`）. -/
+def bank_6096597438a : Prop :=
+  ∀ h : ℝ, 1 ≤ h → h ≤ 1 → 0.591 - 0.0331 * 64 + 0.506 * lfun 1 + 1 < 0
+
+/-- HOL ineq entry `1965189142 a` (ineq.hl:1598).  Box
+[1.0,1.26]×[3,34]×[1,1]⁴. -/
+def bank_1965189142a : Prop :=
+  ∀ x1 x2 x3 x4 x5 x6 : ℝ, 1 ≤ x1 → x1 ≤ 1.26 → 3 ≤ x2 → x2 ≤ 34 →
+    1 ≤ x3 → x3 ≤ 1 → 1 ≤ x4 → x4 ≤ 1 → 1 ≤ x5 → x5 ≤ 1 → 1 ≤ x6 → x6 ≤ 1 →
+    2 * Real.pi - 2 * asnFnhk x1 x2 x3 x4 x5 x6 >
+      0.591 - 0.0331 * x2 + 0.506 * lfunY1 x1 x2 x3 x4 x5 x6
+
+/-- HOL ineq entry `1965189142 34` (ineq.hl:1587).  Box [1.0,1.26]×[1,1]⁵.
+G4 证书在库（`Kepler.Interval.Cases.C1965189142x34`），粘合待量产接线波. -/
+def bank_1965189142x34 : Prop :=
+  ∀ x1 x2 x3 x4 x5 x6 : ℝ, 1 ≤ x1 → x1 ≤ 1.26 → 1 ≤ x2 → x2 ≤ 1 →
+    1 ≤ x3 → x3 ≤ 1 → 1 ≤ x4 → x4 ≤ 1 → 1 ≤ x5 → x5 ≤ 1 → 1 ≤ x6 → x6 ≤ 1 →
+    0.591 - 0.0331 * 34 + 0.506 * lfunY1 x1 x2 x3 x4 x5 x6 < 0
+
+/-- HOL ineq entry `JSPEVYT` (ineq.hl:1495).  Box
+[1,1]³×[2hmin,√8]²×[2,√8]. -/
+def bank_JSPEVYT : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 1 ≤ y1 → y1 ≤ 1 → 1 ≤ y2 → y2 ≤ 1 → 1 ≤ y3 → y3 ≤ 1 →
+    2 * hminus ≤ y4 → y4 ≤ Real.sqrt 8 → 2 * hminus ≤ y5 → y5 ≤ Real.sqrt 8 →
+    2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    eta_y y4 y5 y6 ^ 2 > 1.34 ^ 2
+
+/-- HOL ineq entry `QITNPEA 4003532128 a` (ineq.hl:1290).  Box
+[2hmin,2hplus]×[2,√8]×[√2,√2]³×[2,√8]. -/
+def bank_QITNPEA4003532128a : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ Real.sqrt 8 → Real.sqrt 2 ≤ y3 → y3 ≤ Real.sqrt 2 →
+    Real.sqrt 2 ≤ y4 → y4 ≤ Real.sqrt 2 → Real.sqrt 2 ≤ y5 → y5 ≤ Real.sqrt 2 →
+    2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    delta4Y y1 y2 y3 y4 y5 y6 > 25 ∨
+      deltaY y1 y2 y3 y4 y5 y6 > 0.14 ∨ deltaY y1 y2 y3 y4 y5 y6 < 0
+
+/-- HOL ineq entry `IXPOTPA` (ineq.hl:1265).  Box
+[2hmin,2hplus]×[2,2hmin]²×[√8,4hmin]×[2,2hmin]². -/
+def bank_IXPOTPA : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    Real.sqrt 8 ≤ y4 → y4 ≤ 4 * hminus → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    deltaY y1 y2 y3 y4 y5 y6 < 0 ∨ delta4Y y1 y2 y3 y4 y5 y6 > 0 ∨
+      4 * yOfX x1DeltaX y1 y2 y3 y4 y5 y6 <
+        3.07 * yOfX delta4SquaredX y1 y2 y3 y4 y5 y6 ∨
+      4 * yOfX x1DeltaX y1 y2 y3 y4 y5 y6 >
+        6.45 * yOfX delta4SquaredX y1 y2 y3 y4 y5 y6 ∨
+      eta_y y1 y2 y6 ^ 2 > 1.34 ^ 2 ∨ eta_y y1 y3 y5 ^ 2 > 1.34 ^ 2 ∨
+      yOfX (gamma23Full8X (h0cut y1)) y1 y2 y3 y4 y5 y6 > 3 * 0.0057
+
+/-- HOL ineq entry `TXQTPVC` (ineq.hl:1241).  Box
+[2hmin,2hplus]×[2,2hmin]²×[2,√8]×[2,2hmin]². -/
+def bank_TXQTPVC : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    yOfX (gamma23Full8X (h0cut y1)) y1 y2 y3 y4 y5 y6 > 3 * 0.0057 ∨
+      yOfX rad2X y1 y2 y3 y4 y5 y6 < 2 ∨ dihY y1 y2 y3 y4 y5 y6 > 2.089 ∨
+      dihY y1 y2 y3 y4 y5 y6 < 1.946 ∨
+      eta_y y1 y2 y6 ^ 2 > 1.34 ^ 2 ∨ eta_y y1 y3 y5 ^ 2 > 1.34 ^ 2
+
+/-- HOL ineq entry `QITNPEA 3725403817` (ineq.hl:1221).  Box
+[2hmin,2hplus]×[2,2hmin]³×[2,2.1]×[2,2hmin]².
+G4 证书内核闭合（964,984 叶，2026-09-18，公理标准三），粘合待量产接线波. -/
+def bank_QITNPEA3725403817 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 ≤ y4 → y4 ≤ 2.1 → 2 ≤ y5 → y5 ≤ 2 * hminus → 2 ≤ y6 → y6 ≤ 2 * hminus →
+    dihY y1 y2 y3 y4 y5 y6 < 1.56
+
+/-- HOL ineq entry `QITNPEAv2 4003532128` (ineq.hl:1193).  Box
+[2hmin,2hplus]×[2,2hmin]³×[2,√8]×[2,2hmin]². -/
+def bank_QITNPEAv24003532128 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    eta_y y1 y2 y6 ^ 2 > 1.34 ^ 2 ∨ eta_y y1 y3 y5 ^ 2 > 1.34 ^ 2 ∨
+      yOfX rad2X y1 y2 y3 y4 y5 y6 < 2 ∨ y2 < y3 ∨ y2 < y5 ∨ y2 < y6 ∨
+      yOfX (gamma23Full8X (h0cut y1)) y1 y2 y3 y4 y5 y6 -
+          0.00457511 - 0.00609451 * dihY y1 y2 y3 y4 y5 y6 > 0
+
+/-- HOL ineq entry `PEMKWKU` (ineq.hl:1169).  Box
+[2hmin,2hplus]×[2,√8]×[2,2hmin]×[2,√8]×[2,2hmin]×[2,√8]. -/
+def bank_PEMKWU : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ Real.sqrt 8 → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    yOfX (gamma23Keep135X (h0cut y1)) y1 y2 y3 y4 y5 y6 >
+        aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6 ∨
+      yOfX rad2X y1 y2 y3 y4 y5 y6 < 2 ∨ dihY y1 y2 y3 y4 y5 y6 > 1.074 ∨
+      eta_y y1 y2 y6 ^ 2 > 2 ∨ eta_y y1 y2 y6 ^ 2 < 1.34 ^ 2 ∨
+      eta_y y1 y3 y5 ^ 2 > 1.34 ^ 2
+
+/-- HOL ineq entry `TEWNSCJ` (ineq.hl:1146).  Box
+[2hmin,2hplus]×[2,2hmin]³×[2,√8]×[2,2hmin]². -/
+def bank_TEWNSCJ : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    yOfX (gamma23Full8X (h0cut y1)) y1 y2 y3 y4 y5 y6 >
+        aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6 ∨
+      yOfX rad2X y1 y2 y3 y4 y5 y6 < 2 ∨
+      eta_y y1 y2 y6 ^ 2 > 1.34 ^ 2 ∨ eta_y y1 y3 y5 ^ 2 > 1.34 ^ 2
+
+/-- HOL ineq entry `QITNPEA  5400790175 b` (ineq.hl:1121).  Box
+[2hmin,2hplus]×[2,2hmin]³×[2hmin,√8]×[2,2hmin]². -/
+def bank_QITNPEA5400790175b : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 * hminus ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + betaBumpLb +
+        gamma3f y1 y2 y6 (Real.sqrt 2) lmfun > 0.0057 ∨
+      yOfX rad2X y1 y2 y3 y4 y5 y6 > 2 ∨ eta_y y1 y2 y6 ^ 2 > 1.34 ^ 2
+
+/-- HOL ineq entry `QITNPEA  5400790175 a` (ineq.hl:1103).  Box 同上. -/
+def bank_QITNPEA5400790175a : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 * hminus ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + betaBumpLb > 0.0057 ∨
+      yOfX rad2X y1 y2 y3 y4 y5 y6 > 2 ∨ eta_y y1 y2 y6 ^ 2 < 1.34 ^ 2
+
+/-- HOL ineq entry `QITNPEA 3848804089` (ineq.hl:1059).  Box
+[2hmin,2hplus]×[2,2hmin]⁵（y4 限 [2,2hmin]）. -/
+def bank_QITNPEA3848804089 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 ≤ y4 → y4 ≤ 2 * hminus → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun - 0.161517 +
+      0.119482 * dihY y1 y2 y3 y4 y5 y6 > 0
+
+/-- HOL ineq entry `QITNPEA 5814748276` (ineq.hl:1041).  Box 同上. -/
+def bank_QITNPEA5814748276 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 ≤ y4 → y4 ≤ 2 * hminus → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun - 0.00127562 +
+      0.00522841 * dihY y1 y2 y3 y4 y5 y6 > 0
+
+/-- HOL ineq entry `QITNPEA 6206775865` (ineq.hl:1023).  Box 同上. -/
+def bank_QITNPEA6206775865 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 ≤ y4 → y4 ≤ 2 * hminus → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun + 0.0142852 -
+      0.00609451 * dihY y1 y2 y3 y4 y5 y6 > 0
+
+/-- HOL ineq entry `QITNPEA 5653753305` (ineq.hl:1004).  Box
+[2hmin,2hplus]×[2,2hmin]⁵. -/
+def bank_QITNPEA5653753305 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 ≤ y4 → y4 ≤ 2 * hminus → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun + 0.0659 -
+      0.042 * dihY y1 y2 y3 y4 y5 y6 > 0
+
+/-- HOL ineq entry `BIXPCGW 9455898160` (ineq.hl:985).  Box
+[2hmin,2hplus]×[2,2hmin]⁵.  HOL 字面 `-- #0.00569`（双重负号 = 0.00569）. -/
+def bank_BIXPCGW9455898160 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 ≤ y4 → y4 ≤ 2 * hminus → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > 0.00569
+
+/-- HOL ineq entry `FWGKMBZ` (ineq.hl:967).  Box
+[2hmin,2hplus]×[2,√8]⁵. -/
+def bank_FWGKMBZ : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ Real.sqrt 8 → 2 ≤ y3 → y3 ≤ Real.sqrt 8 →
+    2 ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ Real.sqrt 8 →
+    2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    yOfX deltaX y1 y2 y3 y4 y5 y6 > 0
+
+/-- HOL ineq entry `FHBVYXZ b` (ineq.hl:942).  Box
+[2hmin,2hplus]×[2,2hmin]⁵. -/
+def bank_FHBVYXZb : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 ≤ y4 → y4 ≤ 2 * hminus → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun +
+        gamma3f y1 y2 y6 (Real.sqrt 2) lmfun > 0 ∨
+      yOfX rad2X y1 y2 y3 y4 y5 y6 > 2 ∨ eta_y y1 y2 y6 ^ 2 > 1.34 ^ 2
+
+/-- HOL ineq entry `FHBVYXZ a` (ineq.hl:914).  Box 同上. -/
+def bank_FHBVYXZa : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 ≤ y4 → y4 ≤ 2 * hminus → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > 0 ∨
+      yOfX rad2X y1 y2 y3 y4 y5 y6 > 2 ∨ eta_y y1 y2 y6 ^ 2 < 1.34 ^ 2
+
+/-- HOL ineq entry `FHBVYXZv2 a` (ineq.hl:888).  Box 同上. -/
+def bank_FHBVYXZv2a : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 ≤ y4 → y4 ≤ 2 * hminus → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > 0.0057 ∨
+      yOfX rad2X y1 y2 y3 y4 y5 y6 > 2 ∨ eta_y y1 y3 y5 ^ 2 < 1.34 ^ 2
+
+/-- HOL ineq entry `QITNPEA 2134082733` (ineq.hl:864).  Box
+[2hmin,2hplus]×[2,2hmin]³×[2hmin,√8]×[2,2hmin]². -/
+def bank_QITNPEA2134082733 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 * hminus ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + betaBumpLb - 0.213849 +
+        0.119482 * dihY y1 y2 y3 y4 y5 y6 > 0 ∨
+      yOfX rad2X y1 y2 y3 y4 y5 y6 > 2
+
+/-! ### QITNPEA1 生成族（6 条；ineq.hl:827-845 `mk_QITNPEA1` 模板 +
+:845-862 `add_QITNPEA1` 循环 i3∈{1,2}, i4∈{0,1,2}）
+
+边界 x i = nth [2; 2*hmin; 2*hplus; √8] i，X i = x (i+1)：
+(x 0, X 0) = (2, 2*hmin)，(x 1, X 1) = (2*hmin, 2*hplus)，
+(x 2, X 2) = (2*hplus, √8)；w = 1 + 子临界计数（i=1 记 1）。
+转录注记（registered reconciliation, 章程 §4.3）：源文模板体 ineq.hl:835
+在 `lmfun / &w` 后有残段 `// + &m *beta_bump_lb`（其中 `m` 的 let 绑定在该
+模板内被注释；2012-12-01 doc 注记「Removed beta_bump_lb」），本形按删除
+断言转录（γ/w 项）；beta 项的衔接见 merge_ineq.hl:2037-2056
+`ineq_approxA_ztg4`（`&m * beta_bump_lb ≤ beta_bumpA_y` 桥）。 -/
+
+/-- QITNPEA1 模板下界：i=0 ↦ 2，i=1 ↦ 2*hmin，i=2 ↦ 2*hplus. -/
+noncomputable def bank_QITNPEA1lo : ℕ → ℝ :=
+  fun i => if i = 0 then 2 else if i = 1 then 2 * hminus else 2 * hplus
+
+/-- QITNPEA1 模板上界：i=0 ↦ 2*hmin，i=1 ↦ 2*hplus，i=2 ↦ √8. -/
+noncomputable def bank_QITNPEA1hi : ℕ → ℝ :=
+  fun i => if i = 0 then 2 * hminus else if i = 1 then 2 * hplus else Real.sqrt 8
+
+/-- 子临界指示（i=1 ↦ 1，其余 ↦ 0；两生成族共用）. -/
+def bankGenMid : ℕ → ℝ := fun i => if i = 1 then 1 else 0
+
+/-- QITNPEA1 参数化模板（ineq.hl:829-838 引文逐句）. -/
+def bank_QITNPEA1tmpl (i3 i4 : ℕ) : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    2 * hminus ≤ y1 → y1 ≤ 2 * hplus → 2 ≤ y2 → y2 ≤ 2 * hminus →
+    bank_QITNPEA1lo i3 ≤ y3 → y3 ≤ bank_QITNPEA1hi i3 →
+    bank_QITNPEA1lo i4 ≤ y4 → y4 ≤ bank_QITNPEA1hi i4 →
+    2 ≤ y5 → y5 ≤ 2 * hminus → 2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun /
+        (1 + bankGenMid i3 + bankGenMid i4) > 0.0057 ∨
+      yOfX rad2X y1 y2 y3 y4 y5 y6 > 2
+
+/-- HOL idv `QITNPEA1 2 2 9063653052 A` (ineq.hl:845-862 循环). -/
+def bank_QITNPEA1_2_2 : Prop := bank_QITNPEA1tmpl 2 2
+/-- HOL idv `QITNPEA1 2 1 9063653052 A`. -/
+def bank_QITNPEA1_2_1 : Prop := bank_QITNPEA1tmpl 2 1
+/-- HOL idv `QITNPEA1 2 0 9063653052 A`. -/
+def bank_QITNPEA1_2_0 : Prop := bank_QITNPEA1tmpl 2 0
+/-- HOL idv `QITNPEA1 1 2 9063653052 A`. -/
+def bank_QITNPEA1_1_2 : Prop := bank_QITNPEA1tmpl 1 2
+/-- HOL idv `QITNPEA1 1 1 9063653052 A`. -/
+def bank_QITNPEA1_1_1 : Prop := bank_QITNPEA1tmpl 1 1
+/-- HOL idv `QITNPEA1 1 0 9063653052 A`. -/
+def bank_QITNPEA1_1_0 : Prop := bank_QITNPEA1tmpl 1 0
+
+/-- 模板实例化抽查：i3=2 ↦ (2*hplus, √8)；实例 (2,1) 的 w 项 = 1+0+1 = 2. -/
+example : bank_QITNPEA1lo 2 = 2 * hplus ∧ bank_QITNPEA1hi 2 = Real.sqrt 8 ∧
+    1 + bankGenMid 2 + bankGenMid 1 = 2 := by
+  norm_num [bank_QITNPEA1lo, bank_QITNPEA1hi, bankGenMid]
+
+/-- HOL ineq entry `QITNPEA 9939613598` (ineq.hl:798).  Box
+[2hmin,2hplus]×[2,2hmin]³×[2hplus,√8]×[2,2hmin]². -/
+def bank_QITNPEA9939613598 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 * hplus ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun - 0.00457511 -
+        0.00609451 * dihY y1 y2 y3 y4 y5 y6 > 0 ∨
+      yOfX rad2X y1 y2 y3 y4 y5 y6 > 2
+
+/-- HOL ineq entry `BIXPCGW 7274157868 a` (ineq.hl:776).  Box
+[2hmin,2hplus]×[2,2hmin]³×[2hplus,√8]×[2,2hmin]². -/
+def bank_BIXPCGW7274157868a : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 * hplus ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > 0.0057 ∨
+      dihY y1 y2 y3 y4 y5 y6 < 2.3
+
+/-- HOL ineq entry `BIXPCGW b` (ineq.hl:758).  Box
+[2hmin,2hplus]×[2,√8]²×[2,2hplus]×[2,√8]². -/
+def bank_BIXPCGWb : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ Real.sqrt 8 → 2 ≤ y3 → y3 ≤ Real.sqrt 8 →
+    2 ≤ y4 → y4 ≤ 2 * hplus → 2 ≤ y5 → y5 ≤ Real.sqrt 8 →
+    2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    delta4Y y1 y2 y3 y4 y5 y6 > 0 ∨
+      deltaY y1 y2 y3 y4 y5 y6 > 60 ∨ deltaY y1 y2 y3 y4 y5 y6 < 0
+
+/-- HOL ineq entry `BIXPCGW 1738910218 a2` (ineq.hl:739).  Box 同 `BIXPCGW b`. -/
+def bank_BIXPCGW1738910218a2 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ Real.sqrt 8 → 2 ≤ y3 → y3 ≤ Real.sqrt 8 →
+    2 ≤ y4 → y4 ≤ 2 * hplus → 2 ≤ y5 → y5 ≤ Real.sqrt 8 →
+    2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    dihY y1 y2 y3 y4 y5 y6 < 2.3
+
+/-- HOL ineq entry `BIXPCGW 7080972881 a2` (ineq.hl:721).  Box
+[2hmin,2hplus]×[2hmin,√8]×[2,√8]⁴. -/
+def bank_BIXPCGW7080972881a2 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 * hminus ≤ y2 → y2 ≤ Real.sqrt 8 → 2 ≤ y3 → y3 ≤ Real.sqrt 8 →
+    2 ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ Real.sqrt 8 →
+    2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    dihY y1 y2 y3 y4 y5 y6 < 2.3
+
+/-- HOL ineq entry `BIXPCGW 6652007036 a2` (ineq.hl:701).  Box
+[2hmin,2hplus]×[2,√8]⁵. -/
+def bank_BIXPCGW6652007036a2 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ Real.sqrt 8 → 2 ≤ y3 → y3 ≤ Real.sqrt 8 →
+    2 ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ Real.sqrt 8 →
+    2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    dihY y1 y2 y3 y4 y5 y6 < 2.8
+
+/-- HOL ineq entry `GLFVCVK4 2477216213 y4subcrit` (ineq.hl:675).  Box
+[2hmin,2hplus]×[2hmin,√8]×[2,2hmin]⁴. -/
+def bank_GLFVCVK4y4subcrit : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 * hminus ≤ y2 → y2 ≤ Real.sqrt 8 → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 ≤ y4 → y4 ≤ 2 * hminus → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 > 0.0057 ∨
+      eta_y y1 y2 y6 ^ 2 < 1.34 ^ 2 ∨ yOfX rad2X y1 y2 y3 y4 y5 y6 > 2
+
+/-- HOL ineq entry `GLFVCVK4 2477216213 y4supercrit` (ineq.hl:649).  Box
+[2hmin,2hplus]×[2,2h0]×[2,2hmin]×[2hplus,√8]×[2,2hmin]². -/
+def bank_GLFVCVK4y4supercrit : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * h0 → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 * hplus ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 > 0.0057 ∨
+      eta_y y1 y2 y6 ^ 2 < 1.34 ^ 2 ∨ yOfX rad2X y1 y2 y3 y4 y5 y6 > 2
+
+/-- HOL ineq entry `GLFVCVK4 2477216213 y4crit` (ineq.hl:623).  Box
+[2hmin,2hplus]×[2hmin,2hplus]×[2,2hmin]×[2hmin,2hplus]×[2,2hmin]². -/
+def bank_GLFVCVK4y4crit : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 * hminus ≤ y2 → y2 ≤ 2 * hplus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 * hminus ≤ y4 → y4 ≤ 2 * hplus → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 3 > 0.0057 ∨
+      eta_y y1 y2 y6 ^ 2 < 1.34 ^ 2 ∨ yOfX rad2X y1 y2 y3 y4 y5 y6 > 2
+
+/-- HOL ineq entry `GLFVCVK4a 8328676778` (ineq.hl:586).  Box
+[2hmin,2hplus]×[2,2hmin]²×[2hmin,2hplus]×[2,2hmin]². -/
+def bank_GLFVCVK4a8328676778 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ 2 * hminus → 2 ≤ y3 → y3 ≤ 2 * hminus →
+    2 * hminus ≤ y4 → y4 ≤ 2 * hplus → 2 ≤ y5 → y5 ≤ 2 * hminus →
+    2 ≤ y6 → y6 ≤ 2 * hminus →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun / 2 + betaBumpForceY y1 y2 y3 y4 y5 y6 >
+      0 ∨ yOfX rad2X y1 y2 y3 y4 y5 y6 > 2
+
+/-- HOL ineq entry `GLFVCVK4 2477216213` (ineq.hl:559).  Box
+[2hmin,2hplus]×[2,√8]⁵. -/
+def bank_GLFVCVK4 : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ Real.sqrt 8 → 2 ≤ y3 → y3 ≤ Real.sqrt 8 →
+    2 ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ Real.sqrt 8 →
+    2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun > 0 ∨
+      norm2hh y1 y2 y3 y4 y5 y6 < (hplus - hminus) ^ 2 ∨
+      yOfX rad2X y1 y2 y3 y4 y5 y6 > 2
+
+/-- HOL ineq entry `MKFKQWU halfwt` (ineq.hl:523).  Box
+[2hmin,2hplus]×[2hplus,√8]×[2,√8]×[2hmin,√8]×[2,√8]². -/
+def bank_MKFKQWUhalfwt : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 * hplus ≤ y2 → y2 ≤ Real.sqrt 8 → 2 ≤ y3 → y3 ≤ Real.sqrt 8 →
+    2 * hminus ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ Real.sqrt 8 →
+    2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    yOfX rad2X y1 y2 y3 y4 y5 y6 > 2
+
+/-- HOL ineq entry `MKFKQWU` (ineq.hl:502).  Box
+[2hmin,2hplus]×[2hmin,√8]²×[2,√8]×[2hmin,√8]². -/
+def bank_MKFKQWU : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 * hminus ≤ y2 → y2 ≤ Real.sqrt 8 → 2 * hminus ≤ y3 → y3 ≤ Real.sqrt 8 →
+    2 ≤ y4 → y4 ≤ Real.sqrt 8 → 2 * hminus ≤ y5 → y5 ≤ Real.sqrt 8 →
+    2 * hminus ≤ y6 → y6 ≤ Real.sqrt 8 →
+    yOfX rad2X y1 y2 y3 y4 y5 y6 > 2
+
+/-! ### ZTGIJCF4 生成族（16 条；ineq.hl:456-466 `template_F4` 模板 +
+:468-476 `mk_ineq_F4` + :486-499 `make_F4` 循环 i3,i4,i5,i6∈{0,1}）
+
+边界 x i = nth [2; 2*hmin; √8] i（i∈{0,1}），X i = x (i+1)：
+(x 0, X 0) = (2, 2*hmin)，(x 1, X 1) = (2*hmin, √8)；
+w = 1 + 子临界计数；m = 1 当且仅当恰一子临界且其在 y4（HOL
+`if (w = 2) && (i4 = 1) then 1 else 0`）. -/
+
+/-- ZTGIJCF4 模板下界：i=0 ↦ 2，i=1 ↦ 2*hmin. -/
+noncomputable def bank_ZTGIJCF4lo : ℕ → ℝ := fun i => if i = 0 then 2 else 2 * hminus
+
+/-- ZTGIJCF4 模板上界：i=0 ↦ 2*hmin，i=1 ↦ √8. -/
+noncomputable def bank_ZTGIJCF4hi : ℕ → ℝ := fun i => if i = 0 then 2 * hminus else Real.sqrt 8
+
+/-- ZTGIJCF4 参数化模板（template_F4 引文逐句；w/m 按 `mk_ineq_F4` 展开）. -/
+def bank_ZTGIJCF4tmpl (i3 i4 i5 i6 : ℕ) : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ,
+    2 * hminus ≤ y1 → y1 ≤ 2 * hplus → 2 ≤ y2 → y2 ≤ 2 * hminus →
+    bank_ZTGIJCF4lo i3 ≤ y3 → y3 ≤ bank_ZTGIJCF4hi i3 →
+    bank_ZTGIJCF4lo i4 ≤ y4 → y4 ≤ bank_ZTGIJCF4hi i4 →
+    bank_ZTGIJCF4lo i5 ≤ y5 → y5 ≤ bank_ZTGIJCF4hi i5 →
+    bank_ZTGIJCF4lo i6 ≤ y6 → y6 ≤ bank_ZTGIJCF4hi i6 →
+    gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun /
+        (1 + bankGenMid i3 + bankGenMid i4 + bankGenMid i5 + bankGenMid i6) +
+      (if 1 + bankGenMid i3 + bankGenMid i4 + bankGenMid i5 + bankGenMid i6 = 2 ∧
+          i4 = 1 then 1 else 0 : ℝ) * betaBumpLb >
+      aSpine5 + bSpine5 * dihY y1 y2 y3 y4 y5 y6 ∨
+    yOfX rad2X y1 y2 y3 y4 y5 y6 > 2
+
+/-- HOL idv `ZTGIJCF4 1 1 1 1 1821661595` (ineq.hl:486-499 循环). -/
+def bank_ZTGIJCF4_1_1_1_1 : Prop := bank_ZTGIJCF4tmpl 1 1 1 1
+/-- HOL idv `ZTGIJCF4 1 1 1 0 1821661595`. -/
+def bank_ZTGIJCF4_1_1_1_0 : Prop := bank_ZTGIJCF4tmpl 1 1 1 0
+/-- HOL idv `ZTGIJCF4 1 1 0 1 1821661595`. -/
+def bank_ZTGIJCF4_1_1_0_1 : Prop := bank_ZTGIJCF4tmpl 1 1 0 1
+/-- HOL idv `ZTGIJCF4 1 1 0 0 1821661595`. -/
+def bank_ZTGIJCF4_1_1_0_0 : Prop := bank_ZTGIJCF4tmpl 1 1 0 0
+/-- HOL idv `ZTGIJCF4 1 0 1 1 1821661595`. -/
+def bank_ZTGIJCF4_1_0_1_1 : Prop := bank_ZTGIJCF4tmpl 1 0 1 1
+/-- HOL idv `ZTGIJCF4 1 0 1 0 1821661595`. -/
+def bank_ZTGIJCF4_1_0_1_0 : Prop := bank_ZTGIJCF4tmpl 1 0 1 0
+/-- HOL idv `ZTGIJCF4 1 0 0 1 1821661595`. -/
+def bank_ZTGIJCF4_1_0_0_1 : Prop := bank_ZTGIJCF4tmpl 1 0 0 1
+/-- HOL idv `ZTGIJCF4 1 0 0 0 1821661595`. -/
+def bank_ZTGIJCF4_1_0_0_0 : Prop := bank_ZTGIJCF4tmpl 1 0 0 0
+/-- HOL idv `ZTGIJCF4 0 1 1 1 1821661595`. -/
+def bank_ZTGIJCF4_0_1_1_1 : Prop := bank_ZTGIJCF4tmpl 0 1 1 1
+/-- HOL idv `ZTGIJCF4 0 1 1 0 1821661595`. -/
+def bank_ZTGIJCF4_0_1_1_0 : Prop := bank_ZTGIJCF4tmpl 0 1 1 0
+/-- HOL idv `ZTGIJCF4 0 1 0 1 1821661595`. -/
+def bank_ZTGIJCF4_0_1_0_1 : Prop := bank_ZTGIJCF4tmpl 0 1 0 1
+/-- HOL idv `ZTGIJCF4 0 1 0 0 1821661595`. -/
+def bank_ZTGIJCF4_0_1_0_0 : Prop := bank_ZTGIJCF4tmpl 0 1 0 0
+/-- HOL idv `ZTGIJCF4 0 0 1 1 1821661595`. -/
+def bank_ZTGIJCF4_0_0_1_1 : Prop := bank_ZTGIJCF4tmpl 0 0 1 1
+/-- HOL idv `ZTGIJCF4 0 0 1 0 1821661595`. -/
+def bank_ZTGIJCF4_0_0_1_0 : Prop := bank_ZTGIJCF4tmpl 0 0 1 0
+/-- HOL idv `ZTGIJCF4 0 0 0 1 1821661595`. -/
+def bank_ZTGIJCF4_0_0_0_1 : Prop := bank_ZTGIJCF4tmpl 0 0 0 1
+/-- HOL idv `ZTGIJCF4 0 0 0 0 1821661595`. -/
+def bank_ZTGIJCF4_0_0_0_0 : Prop := bank_ZTGIJCF4tmpl 0 0 0 0
+
+/-- 模板实例化抽查：边界 x/X 归约；(0,1,0,0) 恰 y4 critical ↦ w=2, m=1；
+(1,1,1,1) 全 critical ↦ w=5, m=0. -/
+example : bank_ZTGIJCF4lo 0 = 2 ∧ bank_ZTGIJCF4hi 0 = 2 * hminus ∧
+    bank_ZTGIJCF4lo 1 = 2 * hminus ∧ bank_ZTGIJCF4hi 1 = Real.sqrt 8 ∧
+    1 + bankGenMid 0 + bankGenMid 0 + bankGenMid 0 + bankGenMid 0 = 1 ∧
+    (if 1 + bankGenMid 0 + bankGenMid 1 + bankGenMid 0 + bankGenMid 0 = 2 ∧
+        (1 : ℕ) = 1 then 1 else 0 : ℝ) = 1 ∧
+    (if 1 + bankGenMid 1 + bankGenMid 1 + bankGenMid 1 + bankGenMid 1 = 2 ∧
+        (1 : ℕ) = 1 then 1 else 0 : ℝ) = 0 := by
+  norm_num [bank_ZTGIJCF4lo, bank_ZTGIJCF4hi, bankGenMid]
+
+/-- 生成族实例为纯模板应用（语句级忠实性机器锚：16+6 实例逐一 `rfl`
+化简到显式盒式）. -/
+example : bank_ZTGIJCF4_0_1_0_0 = bank_ZTGIJCF4tmpl 0 1 0 0 := rfl
+example : bank_QITNPEA1_2_0 = bank_QITNPEA1tmpl 2 0 := rfl
+
+/-- HOL ineq entry `ZTGIJCF0` (ineq.hl:446).  Box [1,1]（单变量 `dummy`）：
+5-叶以上聚簇常数核算 `5a + b·2π > 0`. -/
+def bank_ZTGIJCF0 : Prop :=
+  ∀ _dummy : ℝ, 1 ≤ _dummy → _dummy ≤ 1 →
+    5 * aSpine5 + bSpine5 * 2 * Real.pi > 0
+
+/-- HOL ineq entry `GCKBQEA` (ineq.hl:1352).  Box [2hmin,2hplus]×[2,√8]⁵. -/
+def bank_GCKBQEA : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ Real.sqrt 8 → 2 ≤ y3 → y3 ≤ Real.sqrt 8 →
+    2 ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ Real.sqrt 8 →
+    2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    dihY y1 y2 y3 y4 y5 y6 > 0.606
+
+/-- HOL ineq entry `RQWUDDU` (ineq.hl:1332).  Box 同上. -/
+def bank_RQWUDDU : Prop :=
+  ∀ y1 y2 y3 y4 y5 y6 : ℝ, 2 * hminus ≤ y1 → y1 ≤ 2 * hplus →
+    2 ≤ y2 → y2 ≤ Real.sqrt 8 → 2 ≤ y3 → y3 ≤ Real.sqrt 8 →
+    2 ≤ y4 → y4 ≤ Real.sqrt 8 → 2 ≤ y5 → y5 ≤ Real.sqrt 8 →
+    2 ≤ y6 → y6 ≤ Real.sqrt 8 →
+    dihY y1 y2 y3 y4 y5 y6 > 0.76 ∨ eta_y y1 y2 y6 ^ 2 > 2 ∨
+      eta_y y1 y3 y5 ^ 2 > 2
+
+/-- HOL bank remainder `pack_nonlinear_rest`（merge_ineq.hl:118-134 过滤的
+81 条中除 19 条消费切片外的 62 条）：显式盒式逐条合取，顺序 =
+IdLists.lean `packNonlinearNonOx3q1hIds` 注册序.  证明债逐条落在各
+`bank_*` 陈述上（deferred-compute；在库两案的粘合注记见各 docstring）。 -/
+def pack_nonlinear_rest : Prop :=
+  bank_6096597438b ∧ bank_6096597438a ∧ bank_1965189142a ∧ bank_1965189142x34 ∧
+    bank_JSPEVYT ∧ bank_QITNPEA4003532128a ∧ bank_IXPOTPA ∧ bank_TXQTPVC ∧
+    bank_QITNPEA3725403817 ∧ bank_QITNPEAv24003532128 ∧ bank_PEMKWU ∧
+    bank_TEWNSCJ ∧ bank_QITNPEA5400790175b ∧ bank_QITNPEA5400790175a ∧
+    bank_QITNPEA3848804089 ∧ bank_QITNPEA5814748276 ∧ bank_QITNPEA6206775865 ∧
+    bank_QITNPEA5653753305 ∧ bank_BIXPCGW9455898160 ∧ bank_FWGKMBZ ∧
+    bank_FHBVYXZb ∧ bank_FHBVYXZa ∧ bank_FHBVYXZv2a ∧ bank_QITNPEA2134082733 ∧
+    bank_QITNPEA1_2_2 ∧ bank_QITNPEA1_2_1 ∧ bank_QITNPEA1_2_0 ∧
+    bank_QITNPEA1_1_2 ∧ bank_QITNPEA1_1_1 ∧ bank_QITNPEA1_1_0 ∧
+    bank_QITNPEA9939613598 ∧ bank_BIXPCGW7274157868a ∧ bank_BIXPCGWb ∧
+    bank_BIXPCGW1738910218a2 ∧ bank_BIXPCGW7080972881a2 ∧
+    bank_BIXPCGW6652007036a2 ∧ bank_GLFVCVK4y4subcrit ∧
+    bank_GLFVCVK4y4supercrit ∧ bank_GLFVCVK4y4crit ∧
+    bank_GLFVCVK4a8328676778 ∧ bank_GLFVCVK4 ∧ bank_MKFKQWUhalfwt ∧
+    bank_MKFKQWU ∧ bank_ZTGIJCF4_1_1_1_1 ∧ bank_ZTGIJCF4_1_1_1_0 ∧
+    bank_ZTGIJCF4_1_1_0_1 ∧ bank_ZTGIJCF4_1_1_0_0 ∧ bank_ZTGIJCF4_1_0_1_1 ∧
+    bank_ZTGIJCF4_1_0_1_0 ∧ bank_ZTGIJCF4_1_0_0_1 ∧ bank_ZTGIJCF4_1_0_0_0 ∧
+    bank_ZTGIJCF4_0_1_1_1 ∧ bank_ZTGIJCF4_0_1_1_0 ∧ bank_ZTGIJCF4_0_1_0_1 ∧
+    bank_ZTGIJCF4_0_1_0_0 ∧ bank_ZTGIJCF4_0_0_1_1 ∧ bank_ZTGIJCF4_0_0_1_0 ∧
+    bank_ZTGIJCF4_0_0_0_1 ∧ bank_ZTGIJCF4_0_0_0_0 ∧ bank_ZTGIJCF0 ∧
+    bank_GCKBQEA ∧ bank_RQWUDDU
 
 /-- HOL `pack_nonlinear_non_ox3q1h` (merge_ineq.hl:118-122).  Structured
 form (MERGE-INEQ wave 0, route A'): the 19 TSKAJXY consumption slices
