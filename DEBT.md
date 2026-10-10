@@ -1,12 +1,13 @@
 # DEBT.md — sorry 债务账本
 
-> 由 `lean/scripts/debt_ledger.py` 生成；勿手改。总计 **1719** 个 sorry。
+> 由 `lean/scripts/debt_ledger.py` 生成；勿手改。总计 **1713** 个 sorry。
 
 | 区域 | sorry 数 | 涉及文件数 |
 |---|---|---|
-| Text | 1708 | 67 |
-| (root) | 11 | 2 |
-| **合计** | **1719** | **69** |
+| Text | 1687 | 67 |
+| (root) | 24 | 2 |
+| Geom | 2 | 1 |
+| **合计** | **1713** | **70** |
 
 <details><summary>逐文件明细</summary>
 
@@ -23,7 +24,6 @@
 | Text/LocalAuto6.lean | 60 |
 | Text/LocalAuto24.lean | 53 |
 | Text/LocalAuto38.lean | 47 |
-| Text/PackingAuto2.lean | 46 |
 | Text/LocalAuto23.lean | 42 |
 | Text/LocalAuto13.lean | 40 |
 | Text/LocalAuto14.lean | 40 |
@@ -41,7 +41,9 @@
 | Text/PackingAuto1.lean | 30 |
 | Text/LocalAuto29.lean | 28 |
 | Text/LocalAuto37.lean | 27 |
+| Text/PackingAuto2.lean | 27 |
 | Text/LocalAuto33.lean | 25 |
+| Assembly.lean | 23 |
 | Text/LocalAuto35.lean | 22 |
 | Text/LocalAuto18.lean | 20 |
 | Text/PackingAuto15.lean | 18 |
@@ -52,10 +54,9 @@
 | Text/LocalAuto8.lean | 13 |
 | Text/LocalAuto15.lean | 12 |
 | Text/LocalAuto3.lean | 11 |
-| Assembly.lean | 10 |
 | Text/LocalAuto26.lean | 10 |
-| Text/PackingConcl.lean | 10 |
 | Text/PackingAuto3.lean | 9 |
+| Text/PackingConcl.lean | 9 |
 | Text/LocalAuto17.lean | 8 |
 | Text/LocalAuto27.lean | 8 |
 | Text/LocalAuto20.lean | 7 |
@@ -70,8 +71,8 @@
 | Text/PackingAuto16.lean | 3 |
 | Text/PackingAuto21.lean | 3 |
 | Text/PackingAuto5.lean | 3 |
+| Geom/SimplexVolume.lean | 2 |
 | Text/PackingAuto20.lean | 2 |
-| Text/PackingAuto23.lean | 2 |
 | Text/PackingAuto24.lean | 2 |
 | Text/PackingAuto9.lean | 2 |
 | Statement.lean | 1 |
@@ -81,26 +82,6 @@
 | Text/LocalBridge.lean | 1 |
 | Text/PackingAuto17.lean | 1 |
 | Text/PackingAuto19.lean | 1 |
+| Text/PackingAuto23.lean | 1 |
 
 </details>
-
-## 主定理可达债务（脊柱公理探针）
-
-> **✅ 端到端对象已立（2026-10-10，Phase 6 终装配）**：`Kepler/Final.lean` 的
-> `Kepler.the_kepler_conjecture_e2e` —— 主定理以自身形态自脊柱四接口导出，
-> `lake build Kepler.Final` 全项目源码闭合（9368 jobs）。axiom 审计实录：
-> `docs/final-e2e-axioms-2026-10-10.log`（sorryAx(3 接口) + 624 特许 shard +
-> 标准三）。**填证战线自此按本对象的 sorryAx 递减排序**（M5′）。
-
-> `Kepler.Assembly.the_kepler_conjecture_from_interfaces` 的 `#print axioms`，探针运行时间 2026-10-10 10:07 +0800（main @ b0247094，全闭包自主源编译）。
-> 与上面的 token 计数不同：这里只统计**装配后主定理实际依赖**的公理。
-
-| 类别 | 公理 |
-|---|---|
-| sorry 占位（接口债务） | sorryAx |
-| 特许 native_decide（DECISIONS.md 2026-08-10 scoped exception） | 624 个 shard 公理 / ofReduceBool 族 |
-| 标准三公理 | Classical.choice, Quot.sound, propext |
-| 其它（**异常，需排查**） | 无 |
-
-`sorryAx` 当前来源 = Assembly.lean 的冻结接口占位（剩余 `nonlinearInequalities` / `linearProgrammingResults` / `textCapstone` 三个；`goodListArchive` 已于 2026-09-19 由 P6-C 闭合，见 docs/phase6-spine.md §1）；每闭合一个接口，此处可达债务随之消减。
-
