@@ -3169,6 +3169,402 @@ private theorem p24_leaf_exists (V : Set V3) (u0 u1 : V3) (hs : saturated V)
   rcases hvl with ⟨hb3, htr⟩
   exact ⟨vl, hb3, htr⟩
 
+/-! ## (β) 支独立存在性引理第二波：ω₁ 识别 + 叶三点外接半径上界
+（2026-10-10 波，真证，插在第一波三件之后、本体之前；供后续波装配）
+
+- `p24_pgram_mid`：中点平行四边形恒等式（无假设恒成立）；
+- `p24_mid_margin_sq`：margin 的平方形态 `4 − (d/2)² ≤ dist(p,w)²`
+  （packing 两两距离 ≥ 2 + 恒等式；无 d 假设，比第一波 `p24_mid_margin`
+  更强且免 sqrt）；
+- `p24_mid_eq_of_dist`：到棱两端均为 `d/2` 的点必为中点（恒等式零化 +
+  `dist_eq_zero`；`dist(u0,·)` 在中点取唯一最小值的初等核心）；
+- `p24_mid_mem_voronoiList_sqrt8`：中点 ∈ 配对 voronoi list（`d < √8` 形态；
+  第一波冻结件 `p24_mid_mem_voronoiList`（`d < √2` 形态）的泛化私拷，
+  合并时二取一）；
+- `p24_omega1_eq_mid`：ω₁ = 棱中点——配对胞 S 内 `dist(u0,·)` 在中点处取
+  唯一最小值 `d/2`（S ⊆ bis(u0,u1) 等距 + 三角不等式下界 + 件 3 唯一性），
+  `closestPoint` 的 ε-选取被唯一性锁定为中点；
+- `p24_hl_trunc2_lt_two`：叶四元组 `vl`（`truncateSimplex 1 vl = [u0,u1]`）的
+  mate 三点 `{u0,u1,v}` 外接半径严格 < 2（B2 杀死链的可证内核：`p24_tri_gamma`
+  给 `r₃² = d²/4 + w²`，三重点非空任取 `x*`，其三点等距把 `x*` 钉在外轴线上
+  `ζ⬝P = w·h`，饱和球界 `‖x* − u0‖ < 2` 经正交分解给 `‖ζ‖² + d²/4 < 4`，
+  Cauchy–Schwarz `|w·h| ≤ ‖ζ‖·h` 合成 `r₃² < 4`）。路线图原定 `r₃ < √2` 目标
+  不可达（近正则 Delaunay 四面体反例，见波报告），情形分叉时 `r₃ ≥ √2` 的
+  叶走 mcell 2 支。 -/
+
+/-- 中点平行四边形恒等式：`4·dist(p,w)² = 2(dist(w,u0)² + dist(w,u1)²) −
+dist(u0,u1)²`（p = 中点；对一切 u0 u1 w 成立；第一波 `p24_mid_margin` 的
+恒等式核，无假设形态）。 -/
+private theorem p24_pgram_mid (u0 u1 w : V3) :
+    4 * dist (u0 + (1 / 2 : ℝ) • (u1 - u0)) w ^ 2
+      = 2 * (dist w u0 ^ 2 + dist w u1 ^ 2) - dist u0 u1 ^ 2 := by
+  set p : V3 := u0 + (1 / 2 : ℝ) • (u1 - u0) with hpdef
+  have h1 : p - w = (1 / 2 : ℝ) • ((u0 - w) + (u1 - w)) := by rw [hpdef]; module
+  have h2 : dist p w = ‖(u0 - w) + (u1 - w)‖ / 2 := by
+    rw [dist_eq_norm, h1, norm_smul, Real.norm_eq_abs,
+      abs_of_pos (by norm_num : (0:ℝ) < 1 / 2)]
+    field_simp
+  have e1 : inner ℝ ((u0 - w) + (u1 - w)) ((u0 - w) + (u1 - w))
+      = inner ℝ (u0 - w) (u0 - w) + 2 * inner ℝ (u0 - w) (u1 - w)
+        + inner ℝ (u1 - w) (u1 - w) := by
+    rw [inner_add_left, inner_add_right, inner_add_right,
+      real_inner_comm (u1 - w) (u0 - w)]
+    ring
+  have e2 : dist u0 u1 ^ 2 = inner ℝ (u0 - w) (u0 - w)
+      - 2 * inner ℝ (u0 - w) (u1 - w) + inner ℝ (u1 - w) (u1 - w) := by
+    have h3 : dist u0 u1 = ‖(u0 - w) - (u1 - w)‖ := by
+      rw [dist_eq_norm]; congr 1; module
+    rw [h3, ← real_inner_self_eq_norm_sq]
+    simp only [inner_sub_left, inner_sub_right, real_inner_comm]
+    ring
+  have n1 : ‖u0 - w‖ = dist w u0 := by rw [dist_eq_norm, norm_sub_rev]
+  have n2 : ‖u1 - w‖ = dist w u1 := by rw [dist_eq_norm, norm_sub_rev]
+  have n3 : ‖(u0 - w) + (u1 - w)‖ ^ 2
+      = inner ℝ ((u0 - w) + (u1 - w)) ((u0 - w) + (u1 - w)) :=
+    (real_inner_self_eq_norm_sq _).symm
+  have h4 : dist p w ^ 2 = ‖(u0 - w) + (u1 - w)‖ ^ 2 / 4 := by
+    rw [h2]; field_simp; ring
+  rw [h4, n3, e1, e2]
+  rw [real_inner_self_eq_norm_sq (u0 - w), real_inner_self_eq_norm_sq (u1 - w), n1, n2]
+  field_simp
+  linarith
+
+/-- margin 的平方形态（无 d 假设）：`4 − (d/2)² ≤ dist(p,w)²`
+（packing 两两距离 ≥ 2 + `p24_pgram_mid`）。 -/
+private theorem p24_mid_margin_sq (V : Set V3) (u0 u1 w : V3) (hp : Packing V)
+    (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hw : w ∈ V) (hw0 : w ≠ u0) (hw1 : w ≠ u1) :
+    4 - (dist u0 u1 / 2) ^ 2 ≤ dist (u0 + (1 / 2 : ℝ) • (u1 - u0)) w ^ 2 := by
+  have apol := p24_pgram_mid u0 u1 w
+  have hge0 : 2 ≤ dist w u0 := hp.dist_ge_two hw hu0 hw0
+  have hge1 : 2 ≤ dist w u1 := hp.dist_ge_two hw hu1 hw1
+  have hq0 : 4 ≤ dist w u0 ^ 2 := by nlinarith
+  have hq1 : 4 ≤ dist w u1 ^ 2 := by nlinarith
+  have hsq2 : (dist u0 u1 / 2) ^ 2 = dist u0 u1 ^ 2 / 4 := by ring
+  linarith
+
+/-- 到棱两端均为 `dist u0 u1 / 2` 的点必为中点
+（`p24_pgram_mid` 右端零化 + `dist_eq_zero`）。 -/
+private theorem p24_mid_eq_of_dist {u0 u1 y : V3}
+    (h0 : dist y u0 = dist u0 u1 / 2) (h1 : dist y u1 = dist u0 u1 / 2) :
+    y = u0 + (1 / 2 : ℝ) • (u1 - u0) := by
+  have apol := p24_pgram_mid u0 u1 y
+  rw [h0, h1] at apol
+  have hsq2 : (dist u0 u1 / 2) ^ 2 = dist u0 u1 ^ 2 / 4 := by ring
+  rw [hsq2] at apol
+  have h4 : dist (u0 + (1 / 2 : ℝ) • (u1 - u0)) y ^ 2 = 0 := by linarith
+  have hzero : dist (u0 + (1 / 2 : ℝ) • (u1 - u0)) y = 0 :=
+    pow_eq_zero_iff (n := 2) (by norm_num) |>.mp h4
+  exact (dist_eq_zero.mp hzero).symm
+
+/-- 中点落在配对 voronoi list 内（`d < √8` 形态；第一波冻结件
+`p24_mid_mem_voronoiList`（`d < √2` 形态）的泛化私拷，合并时二取一）：
+margin 平方形态 + `d/2 < √(4 − (d/2)²)` 严格链 + 两闭胞分情况。 -/
+private theorem p24_mid_mem_voronoiList_sqrt8 (V : Set V3) (u0 u1 : V3)
+    (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
+    (hd8 : dist u0 u1 < Real.sqrt 8) :
+    u0 + (1 / 2 : ℝ) • (u1 - u0) ∈ voronoiList V [u0, u1] := by
+  set p : V3 := u0 + (1 / 2 : ℝ) • (u1 - u0) with hpdef
+  have hpu0 : dist p u0 = dist u0 u1 / 2 := by
+    rw [dist_eq_norm]
+    have h1 : p - u0 = (1 / 2 : ℝ) • (u1 - u0) := by rw [hpdef]; module
+    rw [h1, norm_smul, Real.norm_eq_abs, abs_of_pos (by norm_num : (0:ℝ) < 1 / 2)]
+    rw [show dist u0 u1 = ‖u1 - u0‖ from by rw [dist_eq_norm, norm_sub_rev]]
+    ring
+  have hpu1 : dist p u1 = dist u0 u1 / 2 := by
+    rw [dist_eq_norm]
+    have h1 : p - u1 = (1 / 2 : ℝ) • (u0 - u1) := by rw [hpdef]; module
+    rw [h1, norm_smul, Real.norm_eq_abs, abs_of_pos (by norm_num : (0:ℝ) < 1 / 2)]
+    rw [show dist u0 u1 = ‖u0 - u1‖ from by rw [dist_eq_norm]]
+    ring
+  have hdpos : (0:ℝ) ≤ dist u0 u1 := dist_nonneg
+  have hd2 : dist u0 u1 ^ 2 < 8 := by
+    have hs8 : Real.sqrt 8 ^ 2 = 8 := Real.sq_sqrt (by norm_num)
+    nlinarith [hd8, hs8, hdpos]
+  have hsq2 : (dist u0 u1 / 2) ^ 2 = dist u0 u1 ^ 2 / 4 := by ring
+  have hhalf : (dist u0 u1 / 2) ^ 2 < 4 - (dist u0 u1 / 2) ^ 2 := by
+    rw [hsq2]; linarith
+  have hstrict : dist u0 u1 / 2 < Real.sqrt (4 - (dist u0 u1 / 2) ^ 2) := by
+    have hdpos2 : (0:ℝ) ≤ dist u0 u1 / 2 := by linarith
+    have e1 : Real.sqrt ((dist u0 u1 / 2) ^ 2) < Real.sqrt (4 - (dist u0 u1 / 2) ^ 2) :=
+      Real.sqrt_lt_sqrt (sq_nonneg (dist u0 u1 / 2)) hhalf
+    have e2 : Real.sqrt ((dist u0 u1 / 2) ^ 2) = dist u0 u1 / 2 := by
+      rw [Real.sqrt_sq_eq_abs (dist u0 u1 / 2), abs_of_nonneg hdpos2]
+    linarith
+  -- margin（平方形态的 sqrt 包装；对棱外任一 packing 点）
+  have hmargin : ∀ w : V3, w ∈ V → w ≠ u0 → w ≠ u1 →
+      Real.sqrt (4 - (dist u0 u1 / 2) ^ 2) ≤ dist p w := by
+    intro w hw hw0 hw1
+    have hm := p24_mid_margin_sq V u0 u1 w hp hu0 hu1 hw hw0 hw1
+    have hnpos : (0:ℝ) ≤ dist p w := dist_nonneg
+    have hsqrtle : Real.sqrt (4 - (dist u0 u1 / 2) ^ 2) ≤ Real.sqrt (dist p w ^ 2) :=
+      Real.sqrt_le_sqrt hm
+    rw [Real.sqrt_sq_eq_abs (dist p w), abs_of_nonneg hnpos] at hsqrtle
+    exact hsqrtle
+  rw [p24_voronoiList_pair V u0 u1]
+  constructor
+  · rw [voronoiClosed, Set.mem_setOf_eq]
+    intro w hw
+    by_cases hw0 : w = u0
+    · subst hw0
+      exact le_refl _
+    by_cases hw1 : w = u1
+    · subst hw1
+      rw [hpu0, hpu1]
+    · rw [hpu0]
+      exact le_trans (le_of_lt hstrict) (hmargin w hw hw0 hw1)
+  · rw [voronoiClosed, Set.mem_setOf_eq]
+    intro w hw
+    by_cases hw0 : w = u0
+    · subst hw0
+      rw [hpu1, hpu0]
+    by_cases hw1 : w = u1
+    · subst hw1
+      exact le_refl _
+    · rw [hpu1]
+      exact le_trans (le_of_lt hstrict) (hmargin w hw hw0 hw1)
+
+/-- ω₁ = 棱中点：`omegaListN V [u0, u1] 1 = u0 + (1/2)•(u1 − u0)`。
+配对胞 S（两闭 Voronoi 胞之交）内任一点与 u0、u1 等距，三角不等式给
+`dist(u0,·) ≥ d/2`；中点 ∈ S 取值恰 `d/2`；最小值点由
+`p24_mid_eq_of_dist` 唯一，故 `closestPoint S u0` 的 ε-选取必为中点。
+（叶三元组形态经 `OMEGA_LIST_N_LEMMA` 传输：`omegaListN V vl 1 =
+omegaListN V (truncateSimplex 1 vl) 1`。） -/
+private theorem p24_omega1_eq_mid (V : Set V3) (u0 u1 : V3) (hs : saturated V)
+    (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1)
+    (hd8 : dist u0 u1 < Real.sqrt 8) :
+    omegaListN V [u0, u1] 1 = u0 + (1 / 2 : ℝ) • (u1 - u0) := by
+  set p : V3 := u0 + (1 / 2 : ℝ) • (u1 - u0) with hpdef
+  have htr : truncateSimplex 1 [u0, u1] = [u0, u1] := by
+    rw [truncateSimplex1_pair [u0, u1] (by simp)]
+    simp [elV]
+  have hhd : hdV [u0, u1] = u0 := rfl
+  -- 胞上等距 + 下界
+  have hS : ∀ z ∈ voronoiList V [u0, u1],
+      dist z u0 = dist z u1 ∧ dist u0 u1 / 2 ≤ dist u0 z := by
+    intro z hz
+    rw [p24_voronoiList_pair V u0 u1] at hz
+    obtain ⟨hz0, hz1⟩ := hz
+    rw [voronoiClosed, Set.mem_setOf_eq] at hz0 hz1
+    have heq : dist z u0 = dist z u1 := le_antisymm (hz0 u1 hu1) (hz1 u0 hu0)
+    have htri : dist u0 u1 ≤ dist u0 z + dist z u1 := dist_triangle u0 z u1
+    rw [← heq, dist_comm z u0] at htri
+    exact ⟨heq, by linarith⟩
+  have hpmem : p ∈ voronoiList V [u0, u1] :=
+    p24_mid_mem_voronoiList_sqrt8 V u0 u1 hp hu0 hu1 hne hd8
+  have hpu0 : dist u0 p = dist u0 u1 / 2 := by
+    rw [dist_comm u0 p, dist_eq_norm]
+    have h1 : p - u0 = (1 / 2 : ℝ) • (u1 - u0) := by rw [hpdef]; module
+    rw [h1, norm_smul, Real.norm_eq_abs, abs_of_pos (by norm_num : (0:ℝ) < 1 / 2)]
+    rw [show dist u0 u1 = ‖u1 - u0‖ from by rw [dist_eq_norm, norm_sub_rev]]
+    ring
+  have hpmin : ∀ z ∈ voronoiList V [u0, u1], dist u0 p ≤ dist u0 z := by
+    intro z hz
+    linarith [(hS z hz).2, hpu0]
+  -- 唯一性
+  have key : ∀ y : V3, (y ∈ voronoiList V [u0, u1] ∧
+      ∀ z ∈ voronoiList V [u0, u1], dist u0 y ≤ dist u0 z) → y = p := by
+    intro y hy
+    obtain ⟨hyS, hymin⟩ := hy
+    obtain ⟨hyeq, hylow⟩ := hS y hyS
+    have hy2 : dist u0 y ≤ dist u0 u1 / 2 := by
+      have h1 : dist u0 y ≤ dist u0 p := hymin p hpmem
+      rw [hpu0] at h1
+      exact h1
+    have hye : dist y u0 = dist u0 u1 / 2 := by
+      rw [dist_comm y u0]; linarith
+    have hye1 : dist y u1 = dist u0 u1 / 2 := by
+      rw [← hyeq, dist_comm y u0]; linarith
+    exact p24_mid_eq_of_dist hye hye1
+  show closestPoint (voronoiList V (truncateSimplex 1 [u0, u1])) (hdV [u0, u1]) = p
+  rw [htr, hhd]
+  show (Classical.epsilon fun y : V3 => y ∈ voronoiList V [u0, u1] ∧
+      ∀ z ∈ voronoiList V [u0, u1], dist u0 y ≤ dist u0 z) = p
+  exact key _ (Classical.epsilon_spec
+    (p := fun y : V3 => y ∈ voronoiList V [u0, u1] ∧
+      ∀ z ∈ voronoiList V [u0, u1], dist u0 y ≤ dist u0 z)
+    ⟨p, hpmem, hpmin⟩)
+
+/-- B2 杀死（可证内核）：叶四元组 `vl`（`barV V 3 vl ∧ truncateSimplex 1 vl =
+[u0, u1]`）的 mate 三点 `{u0, u1, elV vl 2}` 外接半径严格 < 2。
+链（全初等）：`p24_tri_gamma` 给 `r₃² = d²/4 + w²`（w = 外心垂坐标·垂距，
+P = v 的垂分量，h = ‖P‖ > 0）；三重点 `voronoiList V [u0,u1,v] ≠ ∅`
+（`BARV_IMP_VORONOI_LIST_NOT_EMPTY` + `TRUNCATE_SIMPLEX_BARV`）任取 `x*`，
+三点等距把 `x*` 钉在 `{u0,u1,v}` 的外轴线上：`ζ⬝P = w·h`（ζ = x* − 中点）；
+饱和球界 `‖x* − u0‖ < 2` 经正交分解（`ζ ⊥ e3`）给 `‖ζ‖² + d²/4 < 4`；
+Cauchy–Schwarz `|w·h| ≤ ‖ζ‖·h` 合成 `w² ≤ ‖ζ‖²`，故 `r₃² ≤ d²/4 + ‖ζ‖² < 4`。
+（路线图原定目标 `r₃ < √2` 不可达：近正则 Delaunay 四面体——棱距
+d ∈ [2, 2√2)、四点外接半径 < 2——的第三点外接半径可达 ~1.58 > √2；见波
+报告。情形分叉时 `r₃ ≥ √2` 的叶走 mcell 2 支，本件给出该支的半径上界。） -/
+private theorem p24_hl_trunc2_lt_two (V : Set V3) (u0 u1 : V3) (vl : List V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (hbar3 : barV V 3 vl) (htr : truncateSimplex 1 vl = [u0, u1]) :
+    hl (truncateSimplex 2 vl) < 2 := by
+  have hvlen : vl.length = 4 := hbar3.1
+  have hu01 : u0 ≠ u1 := hne
+  -- mate 三点列表 ul := truncateSimplex 2 vl
+  set ul := truncateSimplex 2 vl with huldef
+  have hbar2 : barV V 2 ul := TRUNCATE_SIMPLEX_BARV V 2 3 vl hbar3 (by omega)
+  have htr1 : setOfList (truncateSimplex 1 ul) = ({u0, u1} : Set V3) := by
+    rw [huldef, TRUNCATE_TRUNCATE_SIMPLEX vl 1 2 (by omega) (by omega), htr]
+    ext x
+    simp [setOfList]
+  obtain ⟨-, -, hnc⟩ := p24_REUHADY_extract hp hbar2 htr1 rfl
+  have hv0 : elV ul 2 ≠ u0 := fun hc => hnc (collinear3_pair_left hc)
+  have hv1 : elV ul 2 ≠ u1 := fun hc => hnc (collinear3_pair_right hc)
+  have hsetul : setOfList ul = ({u0, u1, elV ul 2} : Set V3) :=
+    p24_setOfList_pair2 hbar2 htr1 rfl
+  -- 外接半径形态
+  have hrad3 : hl ul = radV ({u0, u1, elV ul 2} : Set V3) := by
+    rw [show hl ul = radV (setOfList ul) from rfl, hsetul]
+  -- 标架
+  have hu0u1n : (u1 - u0 : V3) ≠ 0 := sub_ne_zero.mpr (Ne.symm hu01)
+  obtain ⟨e1, e2, e3, hon, hax0⟩ := exists_on3_eq_smul (u1 - u0) hu0u1n
+  have haxd : (u1 - u0 : V3) = dist u0 u1 • e3 := by
+    have hn : ‖u1 - u0‖ = dist u0 u1 := (dist_eq_norm u1 u0).symm.trans (dist_comm u1 u0)
+    rw [hn] at hax0
+    exact hax0
+  have h33 : e3 ⬝ᵥ e3 = 1 := hon.2.2.1
+  have he3n : ∀ r : ℝ, ‖((r : ℝ) • e3 : V3)‖ ^ 2 = r ^ 2 := by
+    intro r
+    have h0 : ‖((r : ℝ) • e3 : V3)‖ ^ 2 = ((r : ℝ) • e3 : V3) ⬝ᵥ ((r : ℝ) • e3 : V3) :=
+      norm_sq_eq_dot _
+    simp only [h0, WithLp.ofLp_smul, smul_dotProduct, dotProduct_smul, smul_eq_mul, h33]
+    ring
+  -- tri_gamma 坐标数据
+  obtain ⟨h, t, w, hhpos, hteq, hPn, hrad, hgam, hnn⟩ :=
+    p24_tri_gamma u0 u1 (elV ul 2) hon haxd hu01 hnc
+      (p24_cc_exists u0 u1 (elV ul 2) hu01 hnc)
+  rw [hteq] at hPn
+  set P : V3 := (elV ul 2 - u0 : V3) - t • e3 with hPdef
+  have hPe3 : P ⬝ᵥ e3 = 0 := by
+    rw [hPdef, WithLp.ofLp_sub, WithLp.ofLp_smul, sub_dotProduct, smul_dotProduct,
+      smul_eq_mul, hteq, h33]
+    ring
+  have he3P : e3 ⬝ᵥ P = 0 := by rw [dotProduct_comm]; exact hPe3
+  have hPnorm : ‖P‖ = h := by rw [hPdef]; exact hPn
+  -- 三重点非空，取 x*
+  have hTne : voronoiList V ul ≠ ∅ := BARV_IMP_VORONOI_LIST_NOT_EMPTY V ul 2 hbar2
+  obtain ⟨x, hxT⟩ := Set.nonempty_iff_ne_empty.mpr hTne
+  have hxT' : x ∈ ⋂₀ {voronoiClosed V z | z ∈ setOfList ul} := hxT
+  -- u0、u1 ∈ setOfList ul（经 htr 与 EL_TRUNCATE_SIMPLEX 的坐标读出）
+  have hpair01 : [u0, u1] = [elV vl 0, elV vl 1] := by
+    rw [← htr, truncateSimplex1_pair vl (by omega)]
+  injection hpair01 with h01 hrest
+  injection hrest with h11
+  have he0ul : elV ul 0 = elV vl 0 := EL_TRUNCATE_SIMPLEX vl 2 0 (by omega) (by omega)
+  have he1ul : elV ul 1 = elV vl 1 := EL_TRUNCATE_SIMPLEX vl 2 1 (by omega) (by omega)
+  have hu0ul : u0 ∈ setOfList ul := by
+    rw [h01, ← he0ul]
+    exact p24_elV_mem (by have := hbar2.1; omega)
+  have hu1ul : u1 ∈ setOfList ul := by
+    rw [h11, ← he1ul]
+    exact p24_elV_mem (by have := hbar2.1; omega)
+  have hx0 : x ∈ voronoiClosed V u0 :=
+    hxT' (voronoiClosed V u0) (Set.mem_image_of_mem _ hu0ul)
+  have hx1 : x ∈ voronoiClosed V u1 :=
+    hxT' (voronoiClosed V u1) (Set.mem_image_of_mem _ hu1ul)
+  have hxv : x ∈ voronoiClosed V (elV ul 2) :=
+    hxT' (voronoiClosed V (elV ul 2))
+      (Set.mem_image_of_mem _ (p24_elV_mem (by have := hbar2.1; omega)))
+  -- x* 的成员性与三点等距
+  have hvnul : voronoiNondg V ul :=
+    hbar2.2 ul ⟨⟨[], by rw [List.append_nil]⟩, by have := hbar2.1; omega⟩
+  have hvV : elV ul 2 ∈ V := hvnul.2.1 (p24_elV_mem (by have := hbar2.1; omega))
+  have hxu0v : dist x u0 = dist x (elV ul 2) := le_antisymm (hx0 _ hvV) (hxv _ hu0)
+  have hxu01 : dist x u0 = dist x u1 := le_antisymm (hx0 _ hu1) (hx1 _ hu0)
+  -- ζ := x* − 中点 的坐标代数
+  set zeta : V3 := x - (u0 + (1 / 2 : ℝ) • (u1 - u0)) with hzdef
+  -- (a) zeta ⊥ 轴：与 u0、u1 等距
+  have hsq01 : ‖(x - u0 : V3)‖ ^ 2 = ‖(x - u1 : V3)‖ ^ 2 := by
+    rw [← dist_eq_norm x u0, ← dist_eq_norm x u1, hxu01]
+  have k1 := p24_sq_eq_doteq (y := (x - u0 : V3)) (z := (u1 - u0 : V3)) (by
+    rw [show ((x - u0 : V3) - (u1 - u0 : V3)) = (x - u1 : V3) from by module]
+    exact hsq01)
+  have k1' : (x - u0 : V3) ⬝ᵥ (u1 - u0 : V3) = ‖u1 - u0‖ ^ 2 / 2 := by linarith
+  have k2 : ((1 / 2 : ℝ) • (u1 - u0 : V3)) ⬝ᵥ (u1 - u0 : V3) = ‖u1 - u0‖ ^ 2 / 2 := by
+    rw [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul, norm_sq_eq_dot]
+    ring
+  have kz : zeta ⬝ᵥ (u1 - u0 : V3) = 0 := by
+    have hzo : (zeta : V3) + (1 / 2 : ℝ) • (u1 - u0 : V3) = (x - u0 : V3) := by
+      rw [hzdef]; module
+    have e0 : zeta ⬝ᵥ (u1 - u0 : V3)
+        + ((1 / 2 : ℝ) • (u1 - u0 : V3)) ⬝ᵥ (u1 - u0 : V3)
+        = (x - u0 : V3) ⬝ᵥ (u1 - u0 : V3) := by
+      rw [← hzo, WithLp.ofLp_add, add_dotProduct]
+    rw [k1'] at e0
+    rw [k2] at e0
+    linarith
+  have hzetae3 : zeta ⬝ᵥ e3 = 0 := by
+    have h1 : zeta ⬝ᵥ (u1 - u0 : V3) = dist u0 u1 * (zeta ⬝ᵥ e3) := by
+      rw [haxd, WithLp.ofLp_smul, dotProduct_smul, smul_eq_mul]
+    rw [h1] at kz
+    have hd0 : (dist u0 u1 : ℝ) ≠ 0 :=
+      ne_of_gt (lt_of_lt_of_le (by norm_num : (0:ℝ) < 2) (hp.dist_ge_two hu0 hu1 hne))
+    exact (mul_eq_zero.mp kz).resolve_left hd0
+  -- (b) zeta ⬝ P = w * h：与 v 等距
+  have hsq0v : ‖(x - u0 : V3)‖ ^ 2 = ‖(x - (elV ul 2 : V3))‖ ^ 2 := by
+    rw [← dist_eq_norm x u0, ← dist_eq_norm x (elV ul 2), hxu0v]
+  have k3 := p24_sq_eq_doteq (y := (x - u0 : V3)) (z := (elV ul 2 - u0 : V3)) (by
+    rw [show ((x - u0 : V3) - (elV ul 2 - u0 : V3)) = (x - (elV ul 2 : V3)) from by module]
+    exact hsq0v)
+  have hvu0P : (elV ul 2 - u0 : V3) = P + t • e3 := by rw [hPdef]; module
+  have hxu0z : (x - u0 : V3) = zeta + (dist u0 u1 / 2) • e3 := by
+    have e0 : (x - u0 : V3) = zeta + (1 / 2 : ℝ) • (u1 - u0 : V3) := by rw [hzdef]; module
+    rw [e0, haxd, smul_smul, show (1:ℝ) / 2 * dist u0 u1 = dist u0 u1 / 2 from by ring]
+  have kvnorm : ‖(elV ul 2 - u0 : V3)‖ ^ 2 = h ^ 2 + t ^ 2 := by
+    rw [hvu0P]
+    rw [p24_norm_sq_of_orth (x := P) (y := ((t : ℝ) • e3)) (by
+      rw [WithLp.ofLp_smul, dotProduct_smul, smul_eq_mul, hPe3, mul_zero])]
+    rw [he3n t, hPnorm]
+  have k4 : zeta ⬝ᵥ P = w * h := by
+    have e1 : (x - u0 : V3) ⬝ᵥ (elV ul 2 - u0 : V3) = zeta ⬝ᵥ P + (dist u0 u1 / 2) * t := by
+      rw [hxu0z, hvu0P]
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+        smul_dotProduct, dotProduct_smul, smul_eq_mul, hzetae3, he3P, h33]
+      ring
+    rw [e1, kvnorm] at k3
+    have hdt : (dist u0 u1 / 2) * t = dist u0 u1 * t / 2 := by ring
+    rw [hdt] at k3
+    linarith
+  -- (c) 正交分解 + 饱和球界：‖zeta‖² + (d/2)² < 4
+  have hdecomp : ‖(x - u0 : V3)‖ ^ 2 = ‖zeta‖ ^ 2 + (dist u0 u1 / 2) ^ 2 := by
+    rw [hxu0z, p24_norm_sq_of_orth (x := zeta)
+      (y := ((dist u0 u1 / 2) • e3 : V3)) (by
+      rw [WithLp.ofLp_smul, dotProduct_smul, smul_eq_mul, hzetae3, mul_zero]),
+      he3n (dist u0 u1 / 2)]
+  obtain ⟨y, hyV, hyd⟩ := hs x
+  have hball : ‖zeta‖ ^ 2 + (dist u0 u1 / 2) ^ 2 < 4 := by
+    have h2 : dist x u0 < 2 := lt_of_le_of_lt (hx0 y hyV) hyd
+    have hsqx : ‖(x - u0 : V3)‖ ^ 2 < 4 := by
+      have h3 : ‖(x - u0 : V3)‖ = dist x u0 := dist_eq_norm x u0
+      have h4 : (0:ℝ) ≤ dist x u0 := dist_nonneg
+      rw [h3]
+      nlinarith [h2, h4]
+    rw [← hdecomp]
+    exact hsqx
+  -- (d) Cauchy–Schwarz：|w·h| ≤ ‖zeta‖·h
+  have hwbound : w ^ 2 ≤ ‖zeta‖ ^ 2 := by
+    have hcs : |w * h| ≤ ‖zeta‖ * ‖P‖ := by
+      have h0 := abs_real_inner_le_norm (x := zeta) (y := P)
+      rwa [inner_eq_dot, k4] at h0
+    rw [hPnorm] at hcs
+    have h0 : |w * h| = |w| * h := by rw [abs_mul, abs_of_pos hhpos]
+    have h1 : |w| * h ≤ ‖zeta‖ * h := by rw [← h0]; exact hcs
+    have h2 : |w| ≤ ‖zeta‖ := le_of_mul_le_mul_right h1 hhpos
+    have h3 : |w| ^ 2 = w ^ 2 := by
+      rcases le_or_gt 0 w with hn | hpw
+      · rw [abs_of_nonneg hn]
+      · rw [abs_of_nonpos (le_of_lt hpw)]; ring
+    rw [← h3]
+    nlinarith [h2, abs_nonneg w, norm_nonneg zeta]
+  -- (e) 结论：r₃² < 4
+  have hsq4 : (dist u0 u1 / 2) ^ 2 = dist u0 u1 ^ 2 / 4 := by ring
+  have hrad4 : radV ({u0, u1, elV ul 2} : Set V3) ^ 2 < 4 := by
+    rw [hrad]
+    nlinarith [hball, hwbound, hsq4]
+  rw [hrad3]
+  nlinarith [hrad4, hnn]
+
 /-- NEEDS（(β) 支独立存在性引理，2026-10-08/09 波落盘为 precisely-scoped
 残件；HL OXLZLEZ3 `FCHKUGT`/`EWYBJUA` 叶胞链的对应物，PA18:2159/:2532 的
 `ported sorry` 孪生同源）：饱和 packing 的短棱 `u0u1`（`d < 2√2`）处存在以
