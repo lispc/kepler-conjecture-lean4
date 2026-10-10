@@ -178,10 +178,12 @@ e2e ＝ nonlinearInequalities ⊕ lpArchiveCertificates ⊕ textCapstone
 
 ```
 kepler-conjecture-lean4/
+├── README.md / README.zh.md  # 项目门面（英文 / 中文等价版）
 ├── PLAN.md                 # 本文档（计划 + 当前战略）
 ├── STATUS.md               # 实时进度看板（每批次刷新）
 ├── DEBT.md                 # sorry 债务账本（debt_ledger.py 生成）
 ├── DECISIONS.md            # 决策日志
+├── HANDOFF.md              # 已退役墓碑（内容已并入 PLAN/STATUS，指针用）
 ├── lean/
 │   ├── Kepler/Statement.lean     # Phase 1（占位待终版退役）
 │   ├── Kepler/Final.lean         # Phase 6 终装配（e2e 承载）
