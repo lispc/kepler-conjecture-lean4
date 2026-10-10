@@ -1215,3 +1215,37 @@ k=2 走 MCELL2_PERMUTE_01 镜像（~100-150 行），k=3/4 反向（dihX 定向 
 语义）为真缺口 G3 另案。GRUTOTI 调用点同步联动。
 
 ### (d) 状态：**DRAFT（2026-10-10 立案，待批）**
+
+## 34. PA22 `BIJ_SUM` 跨模块公共撞名（LocalBridge 不可构建）— 分级 A（名字空间修复）
+
+### (a) HOL 出处：counting_spheres.hl:6308（PA22 侧；PA3:470 侧为 OXLZLEZ1.hl:307-315）
+
+两侧是不同 HOL 源、不同陈述的同名公共定理（PA22 侧 Set 版 / PA3 侧 Finset 版）。
+LocalBridge（PA22 唯一导入方）同时导入 PA3 ⇒ import 级撞名，`lake build
+Kepler.Text.LocalBridge` 在 HEAD 即败（存量缺陷，近期闸门以根覆盖绕过未暴露，
+2026-10-10 BIEFJHU 闸首次踩上）。
+
+### (c) 修复
+
+PA22 侧 `theorem BIJ_SUM` → `private theorem BIJ_SUM`（一行可见性修正；全仓
+外部消费者为零——PA4 引用的是 PA3 侧，已核）。陈述文本一字不动。
+
+### (d) 状态：**DRAFT（2026-10-10 立案，待批）**
+
+## 35. IneqClosureDefs `rho` 与 LocalAuto1 `rho` 跨模块公共撞名（Assembly 不可构建）— 分级 A（名字空间修复）
+
+### (a) HOL 出处：IneqClosureDefs.lean:752（`rho` = 1 + const1 − const1·ly y，
+ineq.hl ρ 函数闭包侧）；LocalAuto1.lean:180（`rho` = 1 + (y−2)·(sol0/π)/(2h0−2)，
+localization 侧）——同名不同定义。
+
+Assembly（:20 导 LA1；IneqClosureDefs 经 PA21 传递）同时见到两者 ⇒ `lake build
+Kepler.Assembly` 在 HEAD 即败（存量缺陷）。LA1 侧消费者家族庞大
+（LocalConcl/AzimBridge/LA2/5/12/14/17/18/23/29/33/34/36/38…）不可动；
+IneqClosureDefs 侧外部消费者仅 PA21（2 处 bare 使用）。
+
+### (c) 修复
+
+循 arcLength→arcLengthICD 先例（2f2c431c 编排者核定同款）：IneqClosureDefs
+`rho` → `rhoICD`（8 处文件内 + PA21 的 2 处使用同步改写）。定义体与陈述零改动。
+
+### (d) 状态：**DRAFT（2026-10-10 立案，待批）**
