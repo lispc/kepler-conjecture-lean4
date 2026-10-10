@@ -185,7 +185,23 @@ theorem LOCAL_FAN_IMP_IN_V (h : localFan_p2 V E FF) {d1 d2 : V3 × V3}
 `V` onto successor darts, and every dart is `(FST x, rho_node1 FF (FST x))`. -/
 theorem LOCAL_FAN_RHO_NODE_PROS (h : localFan_p2 V E FF) :
     (∀ x ∈ V, (x, rhoNode1_p2 FF x) ∈ FF) ∧
-      ∀ x ∈ FF, x = (x.1, rhoNode1_p2 FF x.1) := sorry
+      ∀ x ∈ FF, x = (x.1, rhoNode1_p2 FF x.1) := by
+  -- B5 free-cascade wave (2026-10-10): WRGCVDR_BIJ (LocalAuto2) went real in
+  -- the LA2 p2-mirror wave (`454b9479`); this 15-line derivation was queued in
+  -- docs/la3-wrgcvdr-handoff.md ("LOCAL_FAN_RHO_NODE_PROS 仅 15 行可导").
+  obtain ⟨hmap, hinj, hsurj⟩ := WRGCVDR_BIJ h
+  have hleft : ∀ x ∈ V, (x, rhoNode1_p2 FF x) ∈ FF := by
+    intro x hx
+    obtain ⟨d, hd, hfd⟩ := hsurj hx
+    have hdeq : (x, d.2) = d := Prod.ext hfd.symm rfl
+    have hmemFF : (x, d.2) ∈ FF := by
+      rw [hdeq]
+      exact hd
+    exact Classical.epsilon_spec (p := fun w => (x, w) ∈ FF) ⟨d.2, hmemFF⟩
+  refine ⟨hleft, ?_⟩
+  intro d hd
+  have hsucc : (d.1, rhoNode1_p2 FF d.1) ∈ FF := hleft d.1 (hmap hd)
+  exact (hinj hsucc hd rfl).symm
 
 /-- HOL `ORTHONORMAL_CYCLIC` (local_lemmas.hl:106): a finite set lying in
 the hyperplane through 0 perpendicular to `x - y`, disjoint from
@@ -859,7 +875,23 @@ theorem LOCAL_FAN_IN_FF_NOT_COLLINEAR (h : localFan_p2 V E FF) {d : V3 × V3}
 theorem LOCAL_FAN_CHARACTER_OF_RHO_NODE (h : localFan_p2 V E FF) {v : V3}
     (hv : v ∈ V) :
     rhoNode1_p2 FF v ≠ v ∧ (v, rhoNode1_p2 FF v) ∈ ordPairs_p2 E ∧
-      ¬ Collinear ℝ ({0, v, rhoNode1_p2 FF v} : Set V3) := sorry
+      ¬ Collinear ℝ ({0, v, rhoNode1_p2 FF v} : Set V3) := by
+  -- B5 free-cascade wave: HOL route (local_lemmas.hl:377) — the dart
+  -- `(v, rho v)` comes from LOCAL_FAN_RHO_NODE_PROS (now real, WRGCVDR_BIJ
+  -- cascade), then the three proven IN_FF lemmas read off the conjuncts.
+  -- (conjunct-by-conjunct `intro` avoids unifying projections against the
+  -- epsilon-shaped goal type: 54cb5660's whnf-heartbeat mine.)
+  have hdart : (v, rhoNode1_p2 FF v) ∈ FF := (LOCAL_FAN_RHO_NODE_PROS h).1 v hv
+  refine ⟨?_, ?_, ?_⟩
+  · intro hcon
+    exact LOCAL_FAN_IN_FF_DISTINCT h hdart hcon.symm
+  · exact LOCAL_FAN_IN_FF_IN_ORD_PAIRS h hdart
+  · -- t3b-form (probe r4): the direct `exact LOCAL_FAN_IN_FF_NOT_COLLINEAR h hdart`
+    -- hangs in the postponed-unification isDefEq path (300k-cap whnf timeout);
+    -- ascribing the projection-shaped type first, then exacting, is instant.
+    have hnc : ¬ Collinear ℝ ({0, (v, rhoNode1_p2 FF v).1, (v, rhoNode1_p2 FF v).2} : Set V3) :=
+      LOCAL_FAN_IN_FF_NOT_COLLINEAR h hdart
+    exact hnc
 
 /-- HOL `graph2` (local_lemmas.hl:393). -/
 theorem graph2 (E : Set (Set V3)) :
@@ -3780,7 +3812,13 @@ theorem FIRST_IN_AFF (a : V3) (S : Set V3) :
     a ∈ (affineSpan ℝ (insert a S) : Set V3) :=
   subset_affineSpan ℝ (insert a S) (Set.mem_insert a S)
 
-/-- HOL `HALF_CIRCULAR_IN_PLANE` (local_lemmas.hl:4431). -/
+/-- HOL `HALF_CIRCULAR_IN_PLANE` (local_lemmas.hl:4431).  NEEDS (B5 audit
+2026-10-10): proof = induction on `l ≤ n` consuming
+`LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI` (real since `54cb5660`). Residual gap =
+the two non-revisit facts `rho^[l] v ≠ v` (0 < l ≤ n < CARD V) and
+`rho^[l] v ≠ rho^[n] v` (l < n), i.e. `LOFA_IMP_DIS_ELMS` ←
+`LOCAL_FAN_ORBIT_MAP_V` ← the generic-WRGCVDR orbit half (WRGCVDR.hl:2622
+second conjunct; face_map/ff_of_hyp hypermap lift, unported). -/
 theorem HALF_CIRCULAR_IN_PLANE (h : convexLocalFan_p2 V E FF) (hl : lunar_p2 v w V E)
     (hn : n < V.ncard) (hw : w = (rhoNode1_p2 FF)^[n] v) :
     {(rhoNode1_p2 FF)^[l] v | l ≤ n} ⊆ affineSpan ℝ ({0, v, rhoNode1_p2 FF v} : Set V3) := sorry
@@ -3931,7 +3969,11 @@ theorem LOCAL_FAN_CHARACTER_OF_RHO_NODE2 (h : localFan_p2 V E FF) {v : V3} (hv :
     ¬ Collinear ℝ ({0, v, rhoNode1_p2 FF v} : Set V3) :=
   (LOCAL_FAN_CHARACTER_OF_RHO_NODE h hv).2.2
 
-/-- HOL `LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT` (local_lemmas.hl:4726). -/
+/-- HOL `LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT` (local_lemmas.hl:4726).
+NEEDS (B5 audit 2026-10-10): blockers = orbit side (`LOCAL_FAN_ORBIT_MAP_V`,
+`FIRST_AZIM_CYCLE_EQ_RHO_NODE`, `RHO_NODE1_MONO_WITH_AZIM`, all sorry) +
+`HALF_CIRCULAR_IN_PLANE` (see its NEEDS). Already real: the LUNAR premise
+(`54cb5660`) and `LOCAL_FAN_CHARACTER_OF_RHO_NODE` (B5 wave). -/
 theorem LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT (h : convexLocalFan_p2 V E FF)
     (hl : lunar_p2 v w V E) :
     ∃ i : ℕ, i < V.ncard ∧ w = (rhoNode1_p2 FF)^[i] v ∧
@@ -4233,7 +4275,10 @@ theorem SIN_AZIM_NEG_PI_LT (x y u v : V3) :
       simp [Real.cos_pi, Real.sin_pi]
     linarith
 
-/-- HOL `NEXT_OPOSITE_POINT_IS_NOT_IN_AFF_GT` (local_lemmas.hl:5105). -/
+/-- HOL `NEXT_OPOSITE_POINT_IS_NOT_IN_AFF_GT` (local_lemmas.hl:5105).
+NEEDS (B5 audit 2026-10-10): `LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT` +
+`LOFA_IMP_ITER_RHO_NODE_ID` (both orbit side);
+`LOCAL_FAN_CHARACTER_OF_RHO_NODE2` was purified by the B5 wave. -/
 theorem NEXT_OPOSITE_POINT_IS_NOT_IN_AFF_GT (h : convexLocalFan_p2 V E FF)
     (hl : lunar_p2 v w V E) :
     ∃ i : ℕ, w = (rhoNode1_p2 FF)^[i] v ∧ i + 1 < V.ncard ∧
@@ -4256,9 +4301,49 @@ theorem FOR_AFF_GT_NOT_INTERSECTION {x y u v : V3} {a1 b1 a2 b2 t tt : ℝ}
 
 /-- HOL `NOT_COLL_RHONODE_SND_POINT` (local_lemmas.hl:5265). -/
 theorem NOT_COLL_RHONODE_SND_POINT (h : convexLocalFan_p2 V E FF)
-    (hl : lunar_p2 v w V E) : ¬ Collinear ℝ ({0, v, rhoNode1_p2 FF w} : Set V3) := sorry
+    (hl : lunar_p2 v w V E) : ¬ Collinear ℝ ({0, v, rhoNode1_p2 FF w} : Set V3) := by
+  -- B5 free-cascade wave: the HOL route (local_lemmas.hl:5265, first tactic
+  -- `NHANH LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI`) — blocked only by LUNAR's
+  -- placeholder era; all inputs are real since `54cb5660` (LUNAR) and the
+  -- B5 fill of LOCAL_FAN_CHARACTER_OF_RHO_NODE.
+  have h0c : (0:V3) ∈ conv0_p2 ({v, w} : Set V3) := (LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI h hl).1
+  obtain ⟨-, hvw, hvw2, -⟩ := hl
+  obtain ⟨hlo, hFAN0⟩ := CVLF_LF_F h
+  have h0V : (0:V3) ∉ V := hFAN0.2.2.2.1
+  have hvV : v ∈ V := hvw (by simp)
+  have hwV : w ∈ V := hvw (by simp)
+  have h0cwv : (0:V3) ∈ conv0_p2 ({w, v} : Set V3) := by
+    rw [show ({w, v} : Set V3) = {v, w} by ext z; simp; tauto]
+    exact h0c
+  have s1 : ({0, v} : Set V3) = {v, 0} := by ext z; simp; tauto
+  have s3 : ({v, w} : Set V3) = {w, v} := by ext z; simp; tauto
+  have s5 : ({w, 0} : Set V3) = {0, w} := by ext z; simp; tauto
+  have e1 : (affineSpan ℝ ({0, v} : Set V3) : Set V3)
+      = (affineSpan ℝ ({v, 0} : Set V3) : Set V3) := by rw [s1]
+  have e2 : (affineSpan ℝ ({v, 0} : Set V3) : Set V3)
+      = (affineSpan ℝ ({v, w} : Set V3) : Set V3) := (IN_CONV0_IMP_AFF_EQ h0c).symm
+  have e3 : (affineSpan ℝ ({v, w} : Set V3) : Set V3)
+      = (affineSpan ℝ ({w, v} : Set V3) : Set V3) := by rw [s3]
+  have e4 : (affineSpan ℝ ({w, v} : Set V3) : Set V3)
+      = (affineSpan ℝ ({w, 0} : Set V3) : Set V3) := IN_CONV0_IMP_AFF_EQ h0cwv
+  have e5 : (affineSpan ℝ ({w, 0} : Set V3) : Set V3)
+      = (affineSpan ℝ ({0, w} : Set V3) : Set V3) := by rw [s5]
+  have hEq : (affineSpan ℝ ({0, v} : Set V3) : Set V3)
+      = (affineSpan ℝ ({0, w} : Set V3) : Set V3) :=
+    e1.trans (e2.trans (e3.trans (e4.trans e5)))
+  rw [collinear_fan22]
+  intro hcon
+  rcases hcon with hrin | h0v
+  · exact LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hlo hwV
+      ((collinear_fan22 0 w (rhoNode1_p2 FF w)).mpr
+        (Or.inl (by rw [← hEq]; exact hrin)))
+  · exact h0V (by rw [h0v]; exact hvV)
 
-/-- HOL `NOT_INTERSECTION_BWT_AFF_GTS` (local_lemmas.hl:5295). -/
+/-- HOL `NOT_INTERSECTION_BWT_AFF_GTS` (local_lemmas.hl:5295).  NEEDS
+(B5 audit 2026-10-10): `NEXT_OPOSITE_POINT_IS_NOT_IN_AFF_GT` (orbit side);
+`NOT_COLL_RHONODE_SND_POINT` (closed by the B5 wave),
+`LOCAL_FAN_CHARACTER_OF_RHO_NODE2` (purified), HOL `Fan.th3a`
+(≈ `sum4_azim_fan` kit, available). -/
 theorem NOT_INTERSECTION_BWT_AFF_GTS (h : convexLocalFan_p2 V E FF)
     (hl : lunar_p2 v w V E) :
     affGt ({0, v} : Set V3) ({rhoNode1_p2 FF w} : Set V3) ∩
@@ -4429,7 +4514,37 @@ theorem CONV0_AFF_GT_EQ {a b x v : V3} (hx : x ∈ conv0_p2 ({a, b} : Set V3))
 /-- HOL `AFF_GT_SAME_WITH_ENDS` (local_lemmas.hl:5375). -/
 theorem AFF_GT_SAME_WITH_ENDS (h : convexLocalFan_p2 V E FF) (hl : lunar_p2 v w V E) :
     affGt ({0, v} : Set V3) ({rhoNode1_p2 FF w} : Set V3) =
-      affGt ({0, w} : Set V3) ({rhoNode1_p2 FF w} : Set V3) := sorry
+      affGt ({0, w} : Set V3) ({rhoNode1_p2 FF w} : Set V3) := by
+  -- B5 free-cascade wave: HOL route = LUNAR + NOT_COLL_RHONODE_SND_POINT
+  -- (both sides of the 0 ∈ conv0 {v,w} coin, closed this wave) +
+  -- LOCAL_FAN_CHARACTER_OF_RHO_NODE2 (purified this wave) + the proven
+  -- CONV0_AFF_GT_EQ; only set-literal swaps remain.
+  have h0c : (0:V3) ∈ conv0_p2 ({v, w} : Set V3) := (LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI h hl).1
+  have h0cwv : (0:V3) ∈ conv0_p2 ({w, v} : Set V3) := by
+    rw [show ({w, v} : Set V3) = {v, w} by ext z; simp; tauto]
+    exact h0c
+  obtain ⟨hlo, -⟩ := CVLF_LF_F h
+  have hnc1 : ¬ Collinear ℝ ({v, (0:V3), rhoNode1_p2 FF w} : Set V3) := by
+    rw [show ({v, (0:V3), rhoNode1_p2 FF w} : Set V3) = {0, v, rhoNode1_p2 FF w} by
+      ext z; simp; tauto]
+    exact NOT_COLL_RHONODE_SND_POINT h hl
+  obtain ⟨-, hvw, -, -⟩ := hl
+  have hwV : w ∈ V := hvw (by simp)
+  have hnc2 : ¬ Collinear ℝ ({w, (0:V3), rhoNode1_p2 FF w} : Set V3) := by
+    rw [show ({w, (0:V3), rhoNode1_p2 FF w} : Set V3) = {0, w, rhoNode1_p2 FF w} by
+      ext z; simp; tauto]
+    exact LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hlo hwV
+  have e_a : affGt ({(0:V3), v} : Set V3) ({rhoNode1_p2 FF w} : Set V3)
+      = affGt ({(0:V3), v, w} : Set V3) ({rhoNode1_p2 FF w} : Set V3) :=
+    CONV0_AFF_GT_EQ h0c hnc1
+  have e_b : affGt ({(0:V3), w} : Set V3) ({rhoNode1_p2 FF w} : Set V3)
+      = affGt ({(0:V3), w, v} : Set V3) ({rhoNode1_p2 FF w} : Set V3) :=
+    CONV0_AFF_GT_EQ h0cwv hnc2
+  have e_mid : affGt ({(0:V3), v, w} : Set V3) ({rhoNode1_p2 FF w} : Set V3)
+      = affGt ({(0:V3), w, v} : Set V3) ({rhoNode1_p2 FF w} : Set V3) := by
+    rw [show ({(0:V3), v, w} : Set V3) = ({0, w, v} : Set V3) by
+      ext z; simp; tauto]
+  exact e_a.trans (e_mid.trans e_b.symm)
 
 /-- Lane support (LA5): an affine combination of three points of an affine
 subspace stays in the subspace. -/
@@ -4685,13 +4800,18 @@ theorem COLL_IN_AFF_GT_AFF_GT_EQ {x y z a : V3} (hcol : ¬ Collinear ℝ ({x, y,
       (COLL_IN_AFF_GT_TOO hcol ha) (INVS_IN_AFF_GT hcol ha))
     (AFF_GT_IN_IMP_SUBSET hcol ha)
 
-/-- HOL `NEXT_OPOSITE_POINT_IS_NOT_IN_AFF_GT2` (local_lemmas.hl:5502). -/
+/-- HOL `NEXT_OPOSITE_POINT_IS_NOT_IN_AFF_GT2` (local_lemmas.hl:5502).
+NEEDS (B5 audit 2026-10-10): same orbit-side chain as
+`NEXT_OPOSITE_POINT_IS_NOT_IN_AFF_GT` plus `i ≠ 1` (ITER12-style). -/
 theorem NEXT_OPOSITE_POINT_IS_NOT_IN_AFF_GT2 (h : convexLocalFan_p2 V E FF)
     (hl : lunar_p2 v w V E) :
     ∃ i : ℕ, w = (rhoNode1_p2 FF)^[i] v ∧ i + 1 < V.ncard ∧ ¬(i = 0) ∧ ¬(i = 1) ∧
       ¬((rhoNode1_p2 FF)^[i + 1] v ∈ affGt ({0, v} : Set V3) ({rhoNode1_p2 FF v} : Set V3)) := sorry
 
-/-- HOL `LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT100` (local_lemmas.hl:5534). -/
+/-- HOL `LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT100` (local_lemmas.hl:5534).
+NEEDS (B5 audit 2026-10-10): `LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT` (orbit
+side) + the `i ≠ 1` refinement (HOL: ITER12 +
+`LOCAL_FAN_CHARACTER_OF_RHO_NODE2`, purified by the B5 wave). -/
 theorem LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT100 (h : convexLocalFan_p2 V E FF)
     (hl : lunar_p2 v w V E) :
     ∃ i : ℕ, i < V.ncard ∧ ¬(i = 0) ∧ ¬(i = 1) ∧ w = (rhoNode1_p2 FF)^[i] v ∧
@@ -4794,7 +4914,11 @@ theorem DIHV_NOT_CHANGE {x y v w : V3} {a b c : ℝ} (hc : 0 < c) (hsum : a + b 
     = arcV 0 VA VBP
   rw [hvap, hscale]
 
-/-- HOL `LUNAR_IMP_INTERIOR_ANGLE_EQQ` (local_lemmas.hl:5915). -/
+/-- HOL `LUNAR_IMP_INTERIOR_ANGLE_EQQ` (local_lemmas.hl:5915).  NEEDS
+(B5 audit 2026-10-10): `IVS_RNODE_IN_AFF_V`, `CONVEX_LOFA_IMP_INANGLE_LE_PI`,
+`AZIM_LE_PI_EQ_DIHV`, `LOFA_IMP_NOT_COLL_IVS` (all sorry, non-orbit real
+gaps). Already real: `NOT_COLL_RHONODE_SND_POINT` (B5 wave), `LUNAR_COMM`,
+`LOCAL_FAN_CHARACTER_OF_RHO_NODE2` (purified). -/
 theorem LUNAR_IMP_INTERIOR_ANGLE_EQQ (h : convexLocalFan_p2 V E FF)
     (hl : lunar_p2 v w V E) : interiorAngle1_p2 0 FF v = interiorAngle1_p2 0 FF w := sorry
 
