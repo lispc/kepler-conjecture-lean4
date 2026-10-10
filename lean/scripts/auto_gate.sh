@@ -220,10 +220,15 @@ END {
 # opener-less in the diff and the dels-based scan finds nothing (also: strip
 # the diff `-` prefix so the consumer's `${line#-}` comparison can match).
 # Safety rail kept: a code keyword ends the comment state.
+# EVOLUTION 17 (2026-10-08): drop the code-keyword rail below. $cmt is
+# collected from HEAD content, where every `/-`-block is well-formed (HEAD is
+# rule-4-green), so the `-/` close test alone is exact; the rail only
+# truncated legitimate docstrings whose interior lines happen to start with a
+# keyword (live case: PA23 "lemma. Route: split on ..." inside the
+# grutoti_pivot docstring → G3 docstring deletions misclassified as code).
 cmt=$(git show HEAD:"./$FILE" | awk '
   !incmt && /^\/(-!)?/ { incmt = 1; next }
   incmt {
-    if ($0 ~ /^(theorem|def|lemma|example|instance|abbrev|namespace|end|open|import|set_option|macro|syntax|notation)([^[:alnum:]_]|$)/) { incmt = 0; next }
     print
     if ($0 ~ /-\//) incmt = 0
     next
