@@ -1191,7 +1191,7 @@ d 充分小时 `rconeGt u0 u1 d` 严格大于 `rconeGt u0 u1 (hl/√2)`，差锥
 measure_mono 纯装配（~150-250 行）。GRUTOTI 调用点与
 `p23_grutoti_sum_volD_measure_facts` 同步联动。
 
-### (d) 状态：**DRAFT（2026-10-10 立案，待批）**
+### (d) 状态：**已批准（2026-10-10 用户四件合并批）；执行波在飞**
 
 ## 33. PA23 `grutoti_pivot` 缺 region 门与 hw* 窄性（楔形 pivot 恒等式）— 分级 A（STATEMENT 修正）
 
@@ -1214,7 +1214,7 @@ HOL 语境携带 packing/饱和/hl 下界与 hw1-hw4 窄性数据；Lean 冻结�
 k=2 走 MCELL2_PERMUTE_01 镜像（~100-150 行），k=3/4 反向（dihX 定向 junk
 语义）为真缺口 G3 另案。GRUTOTI 调用点同步联动。
 
-### (d) 状态：**DRAFT（2026-10-10 立案，待批）**
+### (d) 状态：**已批准（2026-10-10 用户四件合并批）；执行波在飞**
 
 ## 34. PA22 `BIJ_SUM` 跨模块公共撞名（LocalBridge 不可构建）— 分级 A（名字空间修复）
 
