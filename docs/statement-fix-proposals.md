@@ -1254,3 +1254,20 @@ IneqClosureDefs 侧外部消费者仅 PA21（2 处 bare 使用）。
 执行版补丁 `docs/statement-fix-proposals-patches/35-ineqclosuredefs-rho.patch`
 （单文件 8 处 rho→rhoICD 含 docstring；PA21 两处为注释提及零代码改动，核验
 后未触碰）。
+
+## 36. Assembly `CertifiedIneqHolds` 占位语义落实（T1 展开波随件）— 分级 A（def 语义修正）
+
+### (a) HOL 出处：ineq.hl 各记录 ID（CertifiedIneqHolds 的查表语义）；Assembly 头部
+docstring 既定消除顺序原文："先填六个 ID 清单与 `CertifiedIneqHolds` 语义，再逐条
+闭合证书"。
+
+### (b) 不可证性（占位判定）
+
+原 def `CertifiedIneqHolds (_id : String) : Prop := True` —— 恒真占位使任何
+基于它的陈述平凡可证，接口语义为空。T1 批（用户 2026-10-10 第一批批准，含
+"CertifiedIneqHolds 语义填实"）将其落为诚实最小形：查表体 =
+`certifiedIneqHolds_pilot`（键 "3397113841" → ineq.hl 字面量化不等式，G4 证书
+1504 叶 + 粘合引理支撑；表外回落 True——回落分支的平凡性由 IdLists.lean:699
+else-True 警告注记明确防线：不得经回落/空清单平凡闭合）。
+
+### (c) 状态：**已批准（2026-10-10 用户第一批）；执行版补丁随 T1 工作区 diff 生成**
