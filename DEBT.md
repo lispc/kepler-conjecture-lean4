@@ -86,6 +86,12 @@
 
 ## 主定理可达债务（脊柱公理探针）
 
+> **✅ 端到端对象已立（2026-10-10，Phase 6 终装配）**：`Kepler/Final.lean` 的
+> `Kepler.the_kepler_conjecture_e2e` —— 主定理以自身形态自脊柱四接口导出，
+> `lake build Kepler.Final` 全项目源码闭合（9368 jobs）。axiom 审计实录：
+> `docs/final-e2e-axioms-2026-10-10.log`（sorryAx(3 接口) + 624 特许 shard +
+> 标准三）。**填证战线自此按本对象的 sorryAx 递减排序**（M5′）。
+
 > `Kepler.Assembly.the_kepler_conjecture_from_interfaces` 的 `#print axioms`，探针运行时间 2026-10-10 10:07 +0800（main @ b0247094，全闭包自主源编译）。
 > 与上面的 token 计数不同：这里只统计**装配后主定理实际依赖**的公理。
 
