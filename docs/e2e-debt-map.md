@@ -5,6 +5,38 @@
 > 里程碑定义与四步路线：`docs/phase6-spine.md` §6。**度量 = 下表"在账"数，
 > lane 排序依据 = 本图**；每波收工后编排者更新。
 
+## 2026-10-08 增量（滚动 sub-agent 稳态制首日；编排者账）
+
+运行方式切为恒定 5-6 线在飞（用户令），落地节奏从"批次"变"流水"。当日八笔
+全部推远端，对下表的影响：
+
+- **B 类 `GRUTOTI` 系树内债文件级闭合**（`09ad7a10`）：G3（反向 k=3/4）以
+  覆盖反证清零（路线翻案：HL GRUTOTI.hl:2620-2650 覆盖引理证该分支真空，
+  非 S₃ 置换/junk 钉定——该死路结论已入档），PA23 证明 sorry 归零。NEGLIGIBLE_FUNC
+  全链的 GRUTOTI 系自此只欠跨文件上游（GRHIDFA 簇等），文件内无字面债。
+- **p24 情形 A 收口**（`8b5bd3d3`）：`p24_exists_mcell_not_flat` 残余缺口 =
+  情形 B（r₄≥√2 支）+ mcell4 测度三明治（`docs/projects/pa24-nonflat-roadmap.md`
+  第 5-6 档；注意 B2 已按 d=2.4 反例翻案为 r₃<2）。
+- **A11（nonlinearInequalities）T1 展开**（`9fcec148`）：接口单根 → 16 具名
+  中层骨架 + 会师真叶 certifiedIneqHoldsPilotCase（零 sorryAx）；SF36 语义
+  落地。993 证书/G4 线仍需重型机。
+- **packing 前提树 T4 展开**（`60191e40`）：拓扑结论 = packing 不独占上游
+  Assembly 级 sorry 根；SF31 debt-bridge 形展开住 PA25（7 具名骨架 + 6 真桥件，
+  冻结签名六处逐字节 IDENTICAL）。PA18 def-taint（ccUh→ccKe 语句闭包）是
+  pkrmPeriodic 面上 sorryAx 的真实来源，清净需 PA18 leaf-cell 链（YBZFUPO/
+  NWVRFMF，新波待立）。
+- **A12（lpArchiveCertificates）T2 桥工程启动**：P6-D 形 per-record 骨架
+  试点中（数据重跑仍 deferred-compute）。
+- **PA2 桩收割波 1+2**（`94c04276`）：DUUNHOR r2 消费侧升形（SF 项 13(c′)，
+  公理面零 sorryAx）+ A 类 20 根删除；PA2 独立 sorry 46→27。
+- **tame 章（A7/A8/A9 前置）**：W0 keystone（`b733f870`，S1 规格桥 + 验收锚
+  `isHypermapOfList_hypermapOfList`——A7/A9 证人机器入 Assembly 谓词层；
+  S11 五 flip 源备好待 DEF-FIX 拍板）+ B1 批 1（`d9f1085e`，TameList1 647 行
+  30 件全真证）。
+- **census 口径注记**：sorryAx-tainted 638 → 633（收割）→ 641（T4/T1 展开期
+  按设计上升——单根拆 N 骨架）；**M5″ 递减指标是清叶期指标**，展开期看骨架
+  吸附与 bank 叶流动。
+
 ## A. 脊柱接口占位（Assembly.lean §2c/§2d，12 枚，全部在账）
 
 | # | 接口 | 性质/一次性成本 | 分级 | 需重型机 |
