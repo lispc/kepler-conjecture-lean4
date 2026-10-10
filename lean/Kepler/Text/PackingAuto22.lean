@@ -9820,7 +9820,7 @@ theorem FACET_FINITE (p f : Set V3) (hp : polyhedron p) (hf : FacetOf f p) :
 /-- HOL `BIJ_SUM` (counting_spheres.hl:6308). Filled: the image of `A`'s
 finset under the `BijOn` map is `B`'s finset (`Finset.sum_image` needs the
 `InjOn` in finset form). -/
-theorem BIJ_SUM {a i : Type*} [DecidableEq a] [DecidableEq i] {A : Set a} {B : Set i}
+private theorem BIJ_SUM {a i : Type*} [DecidableEq a] [DecidableEq i] {A : Set a} {B : Set i}
     [DecidablePred (· ∈ A)] [DecidablePred (· ∈ B)]
     (f : i → ℝ) (ab : a → i) (h : Set.BijOn ab A B) (hA : A.Finite) (hB : B.Finite) :
     (∑ x ∈ hA.toFinset, f (ab x)) = (∑ y ∈ hB.toFinset, f y) := by

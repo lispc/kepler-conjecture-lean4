@@ -1230,7 +1230,9 @@ Kepler.Text.LocalBridge` 在 HEAD 即败（存量缺陷，近期闸门以根覆�
 PA22 侧 `theorem BIJ_SUM` → `private theorem BIJ_SUM`（一行可见性修正；全仓
 外部消费者为零——PA4 引用的是 PA3 侧，已核）。陈述文本一字不动。
 
-### (d) 状态：**DRAFT（2026-10-10 立案，待批）**
+### (d) 状态：**已批准（2026-10-10 用户四件合并批）；已应用（2026-10-10）**——
+执行版补丁 `docs/statement-fix-proposals-patches/34-pa22-bij-sum.patch`（一行
+可见性修正，闸 BIEFJHU_explicit 过，SF 模式多重集全等；LocalBridge 撞名解除）。
 
 ## 35. IneqClosureDefs `rho` 与 LocalAuto1 `rho` 跨模块公共撞名（Assembly 不可构建）— 分级 A（名字空间修复）
 
