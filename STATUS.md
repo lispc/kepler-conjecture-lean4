@@ -1,4 +1,4 @@
-# 项目总进度（Status）— 2026-09-29
+# 项目总进度（Status）— 2026-10-10
 
 > **⚠️ 环境变更（2026-09-28）：旧生产服务器（128 核/503G）报废**，磁盘不可恢复。
 > 仅存本机外部存储的产物丢失（cert549_tight.json / LP 43,078 持久化产物 / bb_arb 重跑
@@ -13,6 +13,42 @@
 > 当前 main @ 见本 commit；最近验收：各批次根构建绿（wip/auto-packing 批次提交信息 "38-way root clean"，`aa4baf6b`；HANDOFF 记录 `make check` 绿 `c425db2`，2026-09-14）。
 > 注意：2026-09-13 起接班 agent 改为 main 直推模式，允许在制骨架 sorry 短暂存在；
 > 历史 sanctioned 占位仍为 `Statement.lean` 主定理（见 Phase 1）。
+> **2026-10-08/10 双日班（滚动 sub-agent 批次制首两周，~35 commits）**：用户令
+> "每批清空即开下一批 3-5 线连续滚动"，ZCode sub agents 全职工人化。五大里程碑：
+> ①**LUNAR 链转真（闸门 axiom 实录认证）**：LA3 WRGCVDR 波（`0ad09801`，
+> BIJ_BETWEEN_FF_AND_V 直构+6 连带，18→11）→ LA2 p2 镜像（`454b9479`，
+> WRGCVDR_BIJ+级联验证 LOFA 两件转真）→ **OZQVSFF 填空（`54cb5660`，+557）**——
+> `LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI` axiom 面 = `[propext, Classical.choice,
+> Quot.sound]`，sorryAx 清零。
+> ②**GRUTOTI 全章收口在望**：GT-4 region 全清（`p23_region_data`，`eb726964`）→
+> **SF31：`grutoti_sum_volD` 冻结陈述被 V:=∅ 机验反例判定为假（`f6622814`）→
+> 方案 a1 重建前提面后真证零 sorry（`9851f2af`）**→ B1 VX-前向桥（`4ca2e550`，
+> HDTFNFZ 整体吞掉 ε-分案零 AJRIPQN 依赖）→ SF32/33 region 门执行波在飞；
+> capstone 本体已是纯组装真证，余债 = hcov（填证波在飞）+ pivot 反向 k=3/4
+> （全场最后一块真数学缺口，~200-400 行）。
+> ③**BIEFJHU GIANT 真闭**（`98de523a`，9747 行装配，asm 裕度全精确
+> k=3..6=0.0239/0.0154/0.0029/0.0059）——揭露**探针同名失明假象**（探针头
+> import 同名 sorry 版致 Lean 静默跳过证明体 elaboration，上轮"58→0"只对 kit
+> 成立），改名探针法入纪律。
+> ④**聚合根全部复活**：SF34（PA22 BIJ_SUM→private，`778f4f5e`）+SF35
+> （IneqClosureDefs rho→rhoICD，`a11a7222`，循 arcLengthICD 先例）双撞名修复 →
+> LocalBridge/Assembly 从长期不可构建到全绿 → **脊柱波落地（`4aad0387`，
+> +219/−2，两笔骨架真闭，`Kepler.Assembly` 全聚合构建绿）**。
+> ⑤**feeder 收官**：585 片全建成（两只 K000 怪物 PentR3.K000/K004 数小时级攻
+> 克）；五片孤儿（非 wire 引用、覆盖已被 300M/400M 逐根片内核级取代）经用户批
+> 准删除（`beafaba3`）→ `lake build Kepler` glob 收敛 G2 已验证态；wire 588 片
+> olean 零缺失。**DEBT 账本 1951→1719（净 −232）**；**脊柱公理探针首次本机全闭
+> 包跑通**（Graphs olean 就位后 mac 移植生效；主定理 axiom 面 = sorryAx(3 冻结
+> 接口)+624 shard+标准三，异常项无）。
+> 其余：套件下移 A′（cell_params_d kit PA21→PA20 逐字迁移，`960576f2`；闸走
+> PA20 零删除侧新范式）→ PA20 四巨人三真闭（DIHX/SOL/HJKDESR1a 免 Taylor 初
+> 等路线，`0d4ace7b`）；REUHADY1 两支收口（shim sorry 消除，(α) 230 行真证
+> d≥2 关键补强，`74bcf7a0`）；p24 非平坦胞路线图五档已进两档（ω₁=p 识别+B2
+> 纠错 r₃<2 真形态——原 √2 目标被 d=2.4 反例证伪；一阶段 √2 签名 vacuous 缺陷
+> 入档待装配波修正）；SF28-35 全流程闭环（提案→批准→补丁→应用→闸）；
+> 楔形 GIANT 恢复波 MCELL2_VOL/SOL 双巨人真闭（`bb6cefeb`）；侦察六份入库
+> （dedup/TIWWFYQ/gammaX 体积桥翻案 C→B/PA2 桩地图 46 桩 A 类 20 根可收割/
+> p24 路线图/会话收官）。
 > **2026-09-29 日班（M5′ 填证，18 commits）**：四线并进——
 > ①**Merge_ineq 通道开张即收割**：章程入库（`ccc003a4`，81 条银行/19 切片逐字锚点）→
 > 波 0 银行结构化 + eta_y 重指向（`2f2c431c`）→ 波 1 **GRKIBMP 闭合**（`1591e1c1`）；
@@ -126,10 +162,10 @@
 - [x] 19,715 张 tame 平面图全量枚举 + 内核验证（585 个 CertShards 分片）
 - [x] 公理审计通过（`make check`；601 个限定范围 native_decide 信任公理，零 sorryAx）
 - [x] 新机器全量重建验证过
-- ⚠️ **换机后 CertShards 分片重建进行中（2026-09-29）**：旧机 olean 随磁盘丢失，
-  M3 Pro 上 2-worker 顺序 feeder 重建（585 片余 343，尾部 18 枚 15-23h 超重根，
-  预估 5-7 天，用户拍板不扩容）；**Text 侧已解耦**——GoodListDefs import 收窄
-  （`9cb0cf9f`）后，填证 lane / 闸门不再被 Graphs 尾部构建阻塞
+- [x] ⚠️→✅ **换机后 CertShards 分片重建收官（2026-10-10）**：585 片全建成
+  （两只 K000 级怪物 PentR3.K000/K004 数小时级攻克）；五片孤儿（非 wire 引用、
+  覆盖已被 300M/400M 逐根片内核级取代）经用户批准删除（`beafaba3`），
+  `lake build Kepler` glob 收敛 G2 已验证态；wire 588 片 olean 零缺失
 - ⚠️ 红线：绝不 `rm -rf lean/.lake`，分片重建需 ~7 天
 
 ## Phase 3 — 线性规划 ✅ 100%（2026-09-07 全闭合）
@@ -288,6 +324,6 @@ P1-P5 分段流水攻克）。**polyhedron.hl 100% 达成（71/71 定理零 sorr
 
 ## 验证纪律
 
-1. main 分支：`lake build Kepler` 全绿；**2026-09-17 政策变更（DECISIONS.md）：main 允许携带 sorry 债务，债务刻度 = `DEBT.md`（`lean/scripts/debt_ledger.py --with-spine` 生成，基线 2400，2026-09-29 账本现值 **1951**（07:45 再生，DEF-FIX +15 显式入账后；日内填证净 −8，重生成待静默窗口），含主定理可达债务探针节）**；终验标准不变只是推迟——项目终点要求主定理证明本体零 sorry 可达 + `#print axioms` 仅 `[propext, Classical.choice, Quot.sound]`（+ Phase 2 限定 native_decide）；陈述保真审查（`docs/statement-fidelity.md`）是唯一质量阀门，不随本政策放宽；
+1. main 分支：`lake build Kepler` 全绿；**2026-09-17 政策变更（DECISIONS.md）：main 允许携带 sorry 债务，债务刻度 = `DEBT.md`（`lean/scripts/debt_ledger.py --with-spine` 生成，基线 2400，**2026-10-10 账本现值 1719**（09-29 账面 1951 → 净 −232；脊柱公理探针首次本机全闭包跑通：主定理 axiom 面 = sorryAx(3 冻结接口)+624 shard+标准三，异常项无））**；终验标准不变只是推迟——项目终点要求主定理证明本体零 sorry 可达 + `#print axioms` 仅 `[propext, Classical.choice, Quot.sound]`（+ Phase 2 限定 native_decide）；陈述保真审查（`docs/statement-fidelity.md`）是唯一质量阀门，不随本政策放宽；
 2. 批次闭合标准：该批全部定理零 sorry + 根模块构建绿 + 陈述保真抽查；
 3. 自动化 harness 的提交由机械闸背书 + 主 agent 审计兜底；人工派工的提交由主 agent 逐块验收。
