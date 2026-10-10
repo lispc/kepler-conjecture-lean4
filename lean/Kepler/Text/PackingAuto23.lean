@@ -168,7 +168,18 @@ c-锥数据——hcov 门需 `c ≤ d` 与锥数据同一见证，冻结原件�
 ∃-调用不可组合，见其 docstring）一步供给全部新前提。净 sorry 面：hcov −1、
 pivot 持平 1——PA23 桥位 proof-sorry 2 → 1。冻结签名（grutoti_sum_volD/
 grutoti_region/p23_region_data/grutoti_cell_vol/B1 三件/GRUTOTI 结论）一字
-未动。执行版补丁
+未动。2026-10-10 GT-5 pivot wave（GRUTOTI 终章第一段）：`grutoti_pivot` 的
+¬nullSet X 支按「前向 cellParamsD 见证」二分填体——存在：A
+`p23_pivot_cell_nn`（边中点 ∈ X 灭 q.1 = 0/1；q.1 ∈ {2,3,4} 四点张成 +
+CONIC_CAP_INTER_CONVEX_HULL_4_GT_0，k = 2 楠经 hw1 窄性闭 X∩D = L∩D）+ B
+`p23_pivot_cell_eq`（grutoti_cell_vol 以 cellParamsD ε-见证为锚的复制体，
+覆盖首向表与反向 k = 2——后者经 MCELL2_PERMUTE_01 制造前向见证，旧 CAVEAT
+的 k = 2 角闭合）；不存在：k = 2 不可能（同 PERMUTE 反证）、k ∈ {3,4} 为
+G3——拆独立引理 `p23_grutoti_pivot_rev_k34`（唯一结构化 proof-sorry，
+NEEDS 全注记）。kit：边中点工具组 + `p23_pivot_perm_pack` +
+`p23_pivot_trunc2_form`/`p23_pivot_setOfList4_form`。净 sorry 面：pivot
+1 → 1（精确化为 G3 单点）。grutoti_pivot 冻结签名一字未动。
+执行版补丁
 `docs/statement-fix-proposals-patches/32-33-pa23-grutoti-region-gates.patch`
 （+423/−38，自工作区 diff 生成）。-/
 
@@ -4610,6 +4621,815 @@ private theorem grutoti_cell_vol (V : Set V3) (u0 u1 : V3) (r d : ℝ)
             rw [hXeq]
             exact measure_empty) hn
 
+
+/-! ## GRUTOTI pivot-wave kit (GT-5, 2026-10-10): the `grutoti_pivot`
+¬nullSet-X arm — per-cell non-nullness (`p23_pivot_cell_nn`), the pointwise
+identity from a forward `cellParamsD` witness (`p23_pivot_cell_eq`), the
+PERMUTE-witness packager, and the precise G3 bookkeeping lemma. -/
+
+/-- Edge-midpoint facts (toolkit for `p23_pivot_cell_nn`). -/
+private theorem p23_pivot_mid_sub_left (a b : V3) :
+    a + (1 / 2 : ℝ) • (b - a) - a = (1 / 2 : ℝ) • (b - a) := by
+  rw [add_sub_cancel_left]
+
+private theorem p23_pivot_mid_sub_right (a b : V3) :
+    a + (1 / 2 : ℝ) • (b - a) - b = (1 / 2 : ℝ) • (a - b) := by
+  module
+
+private theorem p23_pivot_mid_dist (a b : V3) :
+    dist (a + (1 / 2 : ℝ) • (b - a)) a = hl [a, b] := by
+  rw [dist_eq_norm, p23_pivot_mid_sub_left, norm_smul, Real.norm_eq_abs,
+    abs_of_pos (by norm_num : (0 : ℝ) < 1 / 2), HL_2, dist_eq_norm, norm_sub_rev]
+  ring
+
+private theorem p23_pivot_mid_dist' (a b : V3) :
+    dist (a + (1 / 2 : ℝ) • (b - a)) b = hl [a, b] := by
+  rw [dist_eq_norm, p23_pivot_mid_sub_right, norm_smul, Real.norm_eq_abs,
+    abs_of_pos (by norm_num : (0 : ℝ) < 1 / 2), HL_2, dist_eq_norm]
+  ring
+
+private theorem p23_pivot_mid_dot_fwd (a b : V3) :
+    (a + (1 / 2 : ℝ) • (b - a) - a) ⬝ᵥ (b - a) = dist a b * dist a b / 2 := by
+  have h1 : inner ℝ (a + (1 / 2 : ℝ) • (b - a) - a) (b - a)
+      = dist a b * dist a b / 2 := by
+    rw [p23_pivot_mid_sub_left, real_inner_smul_left,
+      real_inner_self_eq_norm_mul_norm]
+    rw [show ((1 : ℝ) / 2) * (‖b - a‖ * ‖b - a‖) = dist a b * dist a b / 2 from by
+      rw [dist_eq_norm, norm_sub_rev]; ring]
+  rw [← inner_eq_dot]; exact h1
+
+private theorem p23_pivot_mid_dot_rev (a b : V3) :
+    (a + (1 / 2 : ℝ) • (b - a) - b) ⬝ᵥ (a - b) = dist a b * dist a b / 2 := by
+  have h1 : inner ℝ (a + (1 / 2 : ℝ) • (b - a) - b) (a - b)
+      = dist a b * dist a b / 2 := by
+    rw [p23_pivot_mid_sub_right, real_inner_smul_left,
+      real_inner_self_eq_norm_mul_norm]
+    rw [show ((1 : ℝ) / 2) * (‖a - b‖ * ‖a - b‖) = dist a b * dist a b / 2 from by
+      rw [dist_eq_norm]; ring]
+  rw [← inner_eq_dot]; exact h1
+
+/-- The edge midpoint lies in the strict forward cone (parameter `t < 1`). -/
+private theorem p23_pivot_mid_rconeGt (a b : V3) {t : ℝ} (hab : a ≠ b) (ht1 : t < 1) :
+    a + (1 / 2 : ℝ) • (b - a) ∈ rconeGt a b t := by
+  simp only [rconeGt, Set.mem_setOf_eq]
+  have hL : (0 : ℝ) < dist a b := dist_pos.mpr hab
+  have hdc : dist b a = dist a b := dist_comm b a
+  rw [p23_pivot_mid_dot_fwd, p23_pivot_mid_dist, HL_2, hdc]
+  calc dist a b / 2 * dist a b * t < dist a b / 2 * dist a b * 1 :=
+        mul_lt_mul_of_pos_left ht1 (mul_pos (by linarith : (0:ℝ) < dist a b / 2) hL)
+    _ = dist a b * dist a b / 2 := by ring
+
+/-- The edge midpoint lies in the two-point hull. -/
+private theorem p23_pivot_mid_hull2 (a b : V3) :
+    a + (1 / 2 : ℝ) • (b - a) ∈ convexHull ℝ ({a, b} : Set V3) := by
+  rw [convexHull_pair, mem_segment_iff_div]
+  refine ⟨1, 1, zero_le_one, zero_le_one, by norm_num, ?_⟩
+  field_simp
+  module
+
+/-- The edge midpoint in the `mcell2` shape (double `rconeGe` ∩ any `affGe`
+wedge on the pair) with abstract apexes `x y` — both param-list orientations
+of a `k = 2` edge cell feed this. -/
+private theorem p23_pivot_mid_mem_mcell2shape {x y c1 c2 : V3} {t : ℝ}
+    (hxy : x ≠ y) (ht1 : t ≤ 1) :
+    x + (1 / 2 : ℝ) • (y - x) ∈
+      (rconeGe x y t ∩ rconeGe y x t ∩ affGe {x, y} {c1, c2} : Set V3) := by
+  refine ⟨⟨?_, ?_⟩, ?_⟩
+  · simp only [rconeGe, Set.mem_setOf_eq]
+    have hdc : dist y x = dist x y := dist_comm y x
+    rw [p23_pivot_mid_dot_fwd, p23_pivot_mid_dist, HL_2, hdc]
+    calc dist x y / 2 * dist x y * t ≤ dist x y / 2 * dist x y := by
+          simpa using mul_le_mul_of_nonneg_left ht1 (by positivity)
+      _ = dist x y * dist x y / 2 := by ring
+  · simp only [rconeGe, Set.mem_setOf_eq]
+    rw [p23_pivot_mid_dot_rev, p23_pivot_mid_dist', HL_2]
+    calc dist x y / 2 * dist x y * t ≤ dist x y / 2 * dist x y := by
+          simpa using mul_le_mul_of_nonneg_left ht1 (by positivity)
+      _ = dist x y * dist x y / 2 := by ring
+  · have hgen : ({x, y} : Set V3) ⊆ ({x, y, c1, c2} : Set V3) := by
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+      tauto
+    exact CONVEX_HULL_4_SUBSET_AFF_GE_2_2 x y c1 c2
+      ((convexHull_mono hgen) (p23_pivot_mid_hull2 x y))
+
+/-- PERMUTE-witness packager: a `barV V 3` list whose truncation is `[a, b]`
+has `[a, b]` as an initial sublist and carries `a, b` at entries `0, 1`. -/
+private theorem p23_pivot_perm_pack {V : Set V3} {a b : V3} {vl : List V3}
+    (hb : barV V 3 vl) (htr : truncateSimplex 1 vl = [a, b]) :
+    initialSublist [a, b] vl ∧ elV vl 0 = a ∧ elV vl 1 = b := by
+  have h4 : vl.length = 4 := hb.1
+  obtain ⟨hinit, -⟩ := p23_trunc_init_len 1 vl (by omega)
+  rw [htr] at hinit
+  obtain ⟨v0, v1, v2, v3, hv⟩ := BARV_3_EXPLICIT V vl hb
+  have h1 : truncateSimplex 1 vl = [v0, v1] := by
+    rw [hv]; exact (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+  injection (htr.symm.trans h1).symm with ha hb'
+  injection hb' with hb2
+  have hE0 : v0 = elV vl 0 := by rw [hv]; simp [elV]
+  have hE1 : v1 = elV vl 1 := by rw [hv]; simp [elV]
+  exact ⟨hinit, by rw [← hE0]; exact ha, by rw [← hE1]; exact hb2⟩
+
+/-- the `k = 2` truncation of a family list is `[u0, u1, elV 2]` -/
+private theorem p23_pivot_trunc2_form {V : Set V3} {u0 u1 : V3} {ul : List V3}
+    (hb : barV V 3 ul) (htr1 : truncateSimplex 1 ul = [u0, u1]) :
+    truncateSimplex 2 ul = [u0, u1, elV ul 2] := by
+  obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V ul hb
+  have h1 : truncateSimplex 1 ul = [v0, v1] := by
+    rw [hvul]; exact (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+  have h2t : truncateSimplex 2 ul = [v0, v1, v2] := by
+    rw [hvul]; exact (TRUNCATE_SIMPLEX_EXPLICIT_2 v0 v1 v2 v3).2
+  injection (htr1.symm.trans h1).symm with ha hb
+  injection hb with hc _
+  have hv2 : v2 = elV ul 2 := by rw [hvul]; simp [elV]
+  rw [h2t, ha, hc, hv2]
+
+/-- the point set of a family list is the four-entry set -/
+private theorem p23_pivot_setOfList4_form {V : Set V3} {u0 u1 : V3} {ul : List V3}
+    (hb : barV V 3 ul) (htr1 : truncateSimplex 1 ul = [u0, u1]) :
+    setOfList ul = ({u0, u1, elV ul 2, elV ul 3} : Set V3) := by
+  obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V ul hb
+  have h1 : truncateSimplex 1 ul = [v0, v1] := by
+    rw [hvul]; exact (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+  injection (htr1.symm.trans h1).symm with ha hb
+  injection hb with hc _
+  have hv2 : v2 = elV ul 2 := by rw [hvul]; simp [elV]
+  have hv3 : v3 = elV ul 3 := by rw [hvul]; simp [elV]
+  ext w
+  have hw : w ∈ setOfList ul ↔ w ∈ [v0, v1, v2, v3] := by
+    rw [hvul, setOfList, Set.mem_setOf_eq]
+  rw [hw, ha, hc, hv2, hv3]
+  simp
+
+/-- GRUTOTI pivot-wave lemma A (GT-5, 2026-10-10): per-cell non-nullness of
+the trace. An edge cell `X` admitting a forward `cellParamsD` witness (some
+`barV V 3` list describing `X` as an `mcell ≤ 4` with `[u0,u1]` an initial
+sublist) has `¬nullSet (X ∩ D)`. Route (HL §H 7441-7958): the edge midpoint
+lies in `X` for every `cellParams`-shape (k = 2: both param-list orientations
+put the edge at the head, apexes consumed abstractly via
+`p23_pivot_mid_mem_mcell2shape`; k = 3/4: hull of the vertex set), which
+refutes the q.1 = 0/1 arms outright; for q.1 ∈ {2,3,4} the cell spans its
+quartet (non-null ⇒ ¬Coplanar) and CONIC_CAP_INTER_CONVEX_HULL_4_GT_0
+(PA15:2275, real) puts a positive-volume piece of D inside X — for q.1 = 2
+via CONVEX_HULL_4_SUBSET_AFF_GE_2_2 into the wedge after
+`p23_cap_sub_rconeGe2` (the SF-28 hw1 narrowness) narrowed D into the double
+`rconeGe`, so `X ∩ D = L ∩ D`. -/
+private theorem p23_pivot_cell_nn (V : Set V3) (u0 u1 : V3) (r d : ℝ) (X : Set V3)
+    (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1)
+    (hne : u0 ≠ u1) (hhl : hl [u0, u1] < Real.sqrt 2) (hnnX : ¬ nullSet X)
+    (hp : Packing V) (hw1 : hl [u0, u1] / Real.sqrt 2 ≤ d)
+    (hm : X ∈ mcellSet V) (hu0 : u0 ∈ VX V X) (hu1 : u1 ∈ VX V X)
+    (hwit : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧
+      initialSublist [u0, u1] p.2) :
+    ¬ nullSet (X ∩ grutotiConicCap u0 u1 r d) := by
+  classical
+  -- the edge midpoint and its ball membership
+  obtain ⟨m, hmdef⟩ : ∃ m : V3, m = u0 + (1 / 2 : ℝ) • (u1 - u0) := ⟨_, rfl⟩
+  have hmball : m ∈ Metric.ball u0 (Real.sqrt 2) := by
+    rw [hmdef, Metric.mem_ball, p23_pivot_mid_dist]
+    exact hhl
+  -- the cellParams witness and the counting arm (§H (a))
+  have hkge2 : 2 ≤ (cellParams V X).1 :=
+    p23_edge_cell_k_ge_two V X u0 u1 hm hu0 hu1 hne
+  have hXwit : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧
+      X = mcell p.1 V p.2 := by
+    obtain ⟨j, wl, hXw, hbarw⟩ := Set.mem_setOf_eq.mp hm
+    refine ⟨(min j 4, wl), by omega, hbarw, ?_⟩
+    rw [hXw, p23_mcell_reduce]
+  obtain ⟨hcple, hcpbar, hcpX⟩ := Classical.epsilon_spec
+    (p := fun p : ℕ × List V3 => p.1 ≤ 4 ∧ barV V 3 p.2 ∧
+      X = mcell p.1 V p.2) hXwit
+  have hcple' : (cellParams V X).1 ≤ 4 := hcple
+  have hcpX' : X = mcell (cellParams V X).1 V (cellParams V X).2 := hcpX
+  -- the first `k` param-list points (VX for non-null X)
+  have hu0L : u0 ∈ setOfList
+      (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2) := by
+    unfold VX at hu0
+    simp only [if_neg hnnX] at hu0
+    rw [if_neg (show (cellParams V X).1 ≠ 0 by omega)] at hu0
+    exact hu0
+  have hu1L : u1 ∈ setOfList
+      (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2) := by
+    unfold VX at hu1
+    simp only [if_neg hnnX] at hu1
+    rw [if_neg (show (cellParams V X).1 ≠ 0 by omega)] at hu1
+    exact hu1
+  have hmhull : m ∈ convexHull ℝ ({u0, u1} : Set V3) := by
+    rw [hmdef]; exact p23_pivot_mid_hull2 u0 u1
+  -- the midpoint lies in X, per cellParams-index ∈ {2,3,4}
+  have hmX : m ∈ X := by
+    rcases Nat.lt_or_ge (cellParams V X).1 3 with hcp2' | hcp34
+    · -- k = 2: the edge sits at the head of the param list, either orientation
+      have hcp2 : (cellParams V X).1 = 2 := by omega
+      rw [hcp2] at hu0L hu1L
+      obtain ⟨w0, w1, w2, w3, hwv⟩ := BARV_3_EXPLICIT V (cellParams V X).2 hcpbar
+      have htr1f : truncateSimplex 1 (cellParams V X).2 = [w0, w1] := by
+        rw [hwv]; exact (TRUNCATE_SIMPLEX_EXPLICIT_1 w0 w1 w2 w3).2.2
+      have hhd0 : hdV (cellParams V X).2 = w0 := by rw [hwv]; simp [hdV]
+      have hhd1 : hdV (cellParams V X).2.tail = w1 := by rw [hwv]; simp [hdV]
+      have hsu : u0 ∈ ({w0, w1} : Set V3) := by
+        have h2 : u0 ∈ setOfList (truncateSimplex 1 (cellParams V X).2) := hu0L
+        rw [htr1f] at h2
+        simpa [setOfList] using h2
+      have hsu1 : u1 ∈ ({w0, w1} : Set V3) := by
+        have h2 : u1 ∈ setOfList (truncateSimplex 1 (cellParams V X).2) := hu1L
+        rw [htr1f] at h2
+        simpa [setOfList] using h2
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hsu hsu1
+      by_cases hcond : hl (truncateSimplex 1 (cellParams V X).2) < Real.sqrt 2 ∧
+        Real.sqrt 2 ≤ hl (cellParams V X).2
+      · -- the cone parameter is < 1 straight from the mcell2 condition
+        have ht1' : hl (truncateSimplex 1 (cellParams V X).2) / Real.sqrt 2 < 1 :=
+          (div_lt_iff₀ (by positivity)).mpr (by simpa using hcond.1)
+        rcases hsu with hsu' | hsu'
+        · rcases hsu1 with hsu1' | hsu1'
+          · -- (u0 = w0, u1 = w0): would force u0 = u1
+            exact absurd (hsu1'.trans hsu'.symm).symm hne
+          · -- forward orientation: apexes (u0, u1)
+            rw [hcpX', hcp2, (MCELL_EXPLICIT 2 V (cellParams V X).2).2.2.1]
+            rw [mcell2, if_pos hcond, hhd0, hhd1, ← hsu', ← hsu1', hmdef]
+            exact p23_pivot_mid_mem_mcell2shape hne (le_of_lt ht1')
+        · rcases hsu1 with hsu1' | hsu1'
+          · -- reversed orientation: apexes (u1, u0), same midpoint
+            have hmm : u1 + (1 / 2 : ℝ) • (u0 - u1) = m := by
+              rw [hmdef]; module
+            rw [hcpX', hcp2, (MCELL_EXPLICIT 2 V (cellParams V X).2).2.2.1]
+            rw [mcell2, if_pos hcond, hhd0, hhd1, ← hsu1', ← hsu', ← hmm]
+            exact p23_pivot_mid_mem_mcell2shape (Ne.symm hne) (le_of_lt ht1')
+          · -- (u0 = w1, u1 = w1): would force u0 = u1
+            exact absurd (hsu'.trans hsu1'.symm) hne
+      · -- ∅-branch of mcell2: contradicts ¬nullSet X
+        exfalso
+        have hempty : X = ∅ := by
+          rw [hcpX', hcp2, (MCELL_EXPLICIT 2 V (cellParams V X).2).2.2.1, mcell2,
+            if_neg hcond]
+        exact absurd (by rw [hempty]; exact measure_empty) hnnX
+    · rcases Nat.lt_or_ge (cellParams V X).1 4 with hcp3' | hcp4'
+      · -- k = 3: hull of the first three param-list points ∪ {mxi}
+        have hcp3 : (cellParams V X).1 = 3 := by omega
+        rw [hcp3] at hu0L hu1L
+        by_cases hcond : hl (truncateSimplex 2 (cellParams V X).2) < Real.sqrt 2 ∧
+          Real.sqrt 2 ≤ hl (cellParams V X).2
+        · rw [hcpX', hcp3, (MCELL_EXPLICIT 3 V (cellParams V X).2).2.2.2.1]
+          rw [mcell3, if_pos hcond]
+          refine convexHull_mono (fun z hz => Set.mem_union_left _ ?_) hmhull
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+          rcases hz with hz | hz
+          · rw [hz]; exact hu0L
+          · rw [hz]; exact hu1L
+        · exfalso
+          have hempty : X = ∅ := by
+            rw [hcpX', hcp3, (MCELL_EXPLICIT 3 V (cellParams V X).2).2.2.2.1,
+              mcell3, if_neg hcond]
+          exact absurd (by rw [hempty]; exact measure_empty) hnnX
+      · -- k = 4: hull of the whole param list
+        have hcp4 : (cellParams V X).1 = 4 := by omega
+        rw [hcp4] at hu0L hu1L
+        by_cases hcond : hl (cellParams V X).2 < Real.sqrt 2
+        · rw [hcpX', hcp4, (MCELL_EXPLICIT 4 V (cellParams V X).2).2.2.2.2
+            (Nat.le_refl 4)]
+          rw [mcell4, if_pos hcond]
+          refine convexHull_mono (fun z hz => ?_) hmhull
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+          obtain ⟨hinit4, -⟩ := p23_trunc_init_len 3 (cellParams V X).2
+            (by have h4 : (cellParams V X).2.length = 4 := hcpbar.1; omega)
+          obtain ⟨tl4, htl4⟩ := hinit4
+          rcases hz with hz | hz
+          · rw [hz]
+            simp only [setOfList, Set.mem_setOf_eq] at hu0L ⊢
+            rw [htl4]
+            exact List.mem_append.mpr (Or.inl hu0L)
+          · rw [hz]
+            simp only [setOfList, Set.mem_setOf_eq] at hu1L ⊢
+            rw [htl4]
+            exact List.mem_append.mpr (Or.inl hu1L)
+        · exfalso
+          have hempty : X = ∅ := by
+            rw [hcpX', hcp4, (MCELL_EXPLICIT 4 V (cellParams V X).2).2.2.2.2
+              (Nat.le_refl 4), mcell4, if_neg hcond]
+          exact absurd (by rw [hempty]; exact measure_empty) hnnX
+  -- the forward cellParamsD witness (consumed from here on)
+  obtain ⟨hq4le, hqbar, hqXm, hqinit⟩ := Classical.epsilon_spec
+    (p := fun p : ℕ × List V3 => p.1 ≤ 4 ∧ barV V 3 p.2 ∧
+      X = mcell p.1 V p.2 ∧ initialSublist [u0, u1] p.2) hwit
+  have hq4le' : (cellParamsD V X [u0, u1]).1 ≤ 4 := hq4le
+  have hnotnull : ∀ S : Set V3, 0 < volume.real S → ¬ nullSet S := by
+    intro S hpos hn
+    rw [Measure.real_def, show volume S = 0 from hn] at hpos
+    simpa using hpos
+  rcases Nat.lt_or_ge (cellParamsD V X [u0, u1]).1 2 with hq01 | hqge
+  · -- q.1 ∈ {0,1}: refuted outright by the midpoint membership in X
+    rcases Nat.eq_zero_or_pos (cellParamsD V X [u0, u1]).1 with hq0 | hq1
+    · -- index 0: X would live outside ball u0 √2
+      have hXm' : X = mcell (cellParamsD V X [u0, u1]).1 V
+          (cellParamsD V X [u0, u1]).2 := hqXm
+      rw [show (cellParamsD V X [u0, u1]).1 = 0 from hq0] at hXm'
+      have hminX : m ∈ X := hmX
+      rw [hXm', (MCELL_EXPLICIT 0 V (cellParamsD V X [u0, u1]).2).1,
+        mcell0] at hminX
+      obtain ⟨-, hmballout⟩ := hminX
+      have hhd : hdV (cellParamsD V X [u0, u1]).2 = u0 := by
+        obtain ⟨yl, hyl⟩ := hqinit
+        rw [show (cellParamsD V X [u0, u1]).2 = [u0, u1] ++ yl from hyl]
+        simp [hdV]
+      rw [hhd] at hmballout
+      exact absurd hmball hmballout
+    · -- index 1: X would avoid the strict edge cone
+      have hq1' : (cellParamsD V X [u0, u1]).1 = 1 := by omega
+      have hXm' : X = mcell (cellParamsD V X [u0, u1]).1 V
+          (cellParamsD V X [u0, u1]).2 := hqXm
+      rw [show (cellParamsD V X [u0, u1]).1 = 1 from hq1'] at hXm'
+      have hminX : m ∈ X := hmX
+      rw [hXm', (MCELL_EXPLICIT 1 V (cellParamsD V X [u0, u1]).2).2.1] at hminX
+      rw [mcell1] at hminX
+      by_cases hcond1 : Real.sqrt 2 ≤ hl (cellParamsD V X [u0, u1]).2
+      · rw [if_pos hcond1] at hminX
+        obtain ⟨-, hmincone⟩ := hminX
+        have hhd0 : hdV (cellParamsD V X [u0, u1]).2 = u0 := by
+          obtain ⟨yl, hyl⟩ := hqinit
+          rw [show (cellParamsD V X [u0, u1]).2 = [u0, u1] ++ yl from hyl]
+          simp [hdV]
+        have hhd1 : hdV (cellParamsD V X [u0, u1]).2.tail = u1 := by
+          obtain ⟨yl, hyl⟩ := hqinit
+          rw [show (cellParamsD V X [u0, u1]).2 = [u0, u1] ++ yl from hyl]
+          simp [hdV]
+        have htr1q : truncateSimplex 1 (cellParamsD V X [u0, u1]).2 = [u0, u1] :=
+          p23_trunc1_of_init hqinit
+        rw [hhd0, hhd1, htr1q] at hmincone
+        have hmc : u0 + (1 / 2 : ℝ) • (u1 - u0)
+            ∈ rconeGt u0 u1 (hl [u0, u1] / Real.sqrt 2) :=
+          p23_pivot_mid_rconeGt u0 u1 hne (lt_of_le_of_lt hw1 hd1)
+        exact absurd (by rw [hmdef]; exact hmc) hmincone
+      · rw [if_neg hcond1] at hminX
+        simp at hminX
+  · -- q.1 ∈ {2,3,4}: the quartet of the forward witness spans, and a
+    -- positive-volume piece of D sits inside X
+    rcases Nat.lt_or_ge (cellParamsD V X [u0, u1]).1 4 with hlt4 | hge4
+    · rcases Nat.lt_or_ge (cellParamsD V X [u0, u1]).1 3 with hlt3 | hge3
+      · -- q.1 = 2: D sits in the double rconeGe (hw1), so X ∩ D = L ∩ D and
+        -- the quartet hull inside L carries positive volume
+        have hq2 : (cellParamsD V X [u0, u1]).1 = 2 := by omega
+        obtain ⟨ul, huldef⟩ : ∃ ul : List V3, ul = (cellParamsD V X [u0, u1]).2 :=
+          ⟨_, rfl⟩
+        have hXm' : X = mcell (cellParamsD V X [u0, u1]).1 V ul := by
+          rw [huldef]; exact hqXm
+        have hqbar' : barV V 3 ul := by rw [huldef]; exact hqbar
+        have hinit' : initialSublist [u0, u1] ul := by rw [huldef]; exact hqinit
+        rw [hq2] at hXm'
+        have hfam' : ul ∈ p23Fam V u0 u1 := ⟨hqbar', p23_trunc1_of_init hinit'⟩
+        have htr1' : truncateSimplex 1 ul = [u0, u1] := p23_trunc1_of_init hinit'
+        have hd0 : hdV ul = u0 := p23_hdV_eq_u0 hfam'
+        have hd1v : hdV ul.tail = u1 := p23_hdTail_eq_u1 hfam'
+        by_cases hcond : hl (truncateSimplex 1 ul) < Real.sqrt 2 ∧
+          Real.sqrt 2 ≤ hl ul
+        · have hXspan : X ⊆
+              (affineSpan ℝ ({u0, u1, mxi V ul, omegaListN V ul 3} : Set V3)) := by
+            intro z hz
+            rw [hXm', (MCELL_EXPLICIT 2 V ul).2.2.1] at hz
+            rw [mcell2, if_pos hcond, htr1', hd0, hd1v] at hz
+            exact p23_affGe_mem_affineSpan2 hz.2
+          have hcop : ¬ Coplanar ℝ
+              ({u0, u1, mxi V ul, omegaListN V ul 3} : Set V3) :=
+            fun hcp' => hnnX (p23_coplanar_affineSpan_null hcp' hXspan)
+          have hu0V : u0 ∈ V := by
+            obtain ⟨yl, hyl⟩ := hinit'
+            exact BARV_SUBSET V 3 ul hqbar' (by rw [hyl]; simp [setOfList])
+          have hu1V : u1 ∈ V := by
+            obtain ⟨yl, hyl⟩ := hinit'
+            exact BARV_SUBSET V 3 ul hqbar' (by rw [hyl]; simp [setOfList])
+          have h2d : 2 ≤ dist u0 u1 := Packing.dist_ge_two hp hu0V hu1V hne
+          have ha0 : 0 ≤ hl [u0, u1] / Real.sqrt 2 := by
+            rw [HL_2]; positivity
+          have ha1 : hl [u0, u1] / Real.sqrt 2 < 1 := lt_of_le_of_lt hw1 hd1
+          have hcapcone : grutotiConicCap u0 u1 r d
+              ⊆ rconeGe u0 u1 (hl [u0, u1] / Real.sqrt 2)
+                ∩ rconeGe u1 u0 (hl [u0, u1] / Real.sqrt 2) :=
+            p23_cap_sub_rconeGe2 h2d hr1 hd hw1 ha0 ha1
+          have heq : X ∩ grutotiConicCap u0 u1 r d
+              = (affGe {u0, u1} {mxi V ul, omegaListN V ul 3} : Set V3)
+                ∩ grutotiConicCap u0 u1 r d := by
+            have hsubL : X ∩ grutotiConicCap u0 u1 r d
+                ⊆ (affGe {u0, u1} {mxi V ul, omegaListN V ul 3} : Set V3)
+                  ∩ grutotiConicCap u0 u1 r d := by
+              rintro z ⟨hzX, hzD⟩
+              rw [hXm', (MCELL_EXPLICIT 2 V ul).2.2.1] at hzX
+              rw [mcell2, if_pos hcond, htr1', hd0, hd1v] at hzX
+              exact ⟨hzX.2, hzD⟩
+            have hsubR : (affGe {u0, u1} {mxi V ul, omegaListN V ul 3} : Set V3)
+                  ∩ grutotiConicCap u0 u1 r d
+                ⊆ X ∩ grutotiConicCap u0 u1 r d := by
+              rintro z ⟨hzL, hzD⟩
+              refine ⟨?_, hzD⟩
+              rw [hXm', (MCELL_EXPLICIT 2 V ul).2.2.1]
+              rw [mcell2, if_pos hcond, htr1', hd0, hd1v]
+              exact And.intro (And.intro (hcapcone hzD).1 (hcapcone hzD).2) hzL
+            exact le_antisymm hsubL hsubR
+          have hpos := CONIC_CAP_INTER_CONVEX_HULL_4_GT_0 u0 u1 (mxi V ul)
+            (omegaListN V ul 3) r d hr hd1 (le_of_lt hd) hcop
+          have hsub : grutotiConicCap u0 u1 r d ∩
+              convexHull ℝ ({u0, u1, mxi V ul, omegaListN V ul 3} : Set V3) ⊆
+              X ∩ grutotiConicCap u0 u1 r d := by
+            rintro z ⟨hzD, hzh⟩
+            rw [heq]
+            exact ⟨CONVEX_HULL_4_SUBSET_AFF_GE_2_2 u0 u1 (mxi V ul)
+              (omegaListN V ul 3) hzh, hzD⟩
+          exact fun hnull => hnotnull _ hpos (measure_mono_null hsub hnull)
+        · exfalso
+          have hempty : X = ∅ := by
+            rw [hXm', (MCELL_EXPLICIT 2 V ul).2.2.1, mcell2, if_neg hcond]
+          exact absurd (by rw [hempty]; exact measure_empty) hnnX
+      · -- q.1 = 3: X is the quartet hull itself
+        have hq3 : (cellParamsD V X [u0, u1]).1 = 3 := by omega
+        obtain ⟨ul, huldef⟩ : ∃ ul : List V3, ul = (cellParamsD V X [u0, u1]).2 :=
+          ⟨_, rfl⟩
+        have hXm' : X = mcell (cellParamsD V X [u0, u1]).1 V ul := by
+          rw [huldef]; exact hqXm
+        have hqbar' : barV V 3 ul := by rw [huldef]; exact hqbar
+        have hinit' : initialSublist [u0, u1] ul := by rw [huldef]; exact hqinit
+        rw [hq3] at hXm'
+        have htr1' : truncateSimplex 1 ul = [u0, u1] := p23_trunc1_of_init hinit'
+        by_cases hcond : hl (truncateSimplex 2 ul) < Real.sqrt 2 ∧
+          Real.sqrt 2 ≤ hl ul
+        · have hXhull : X
+              = convexHull ℝ ({u0, u1, elV ul 2, mxi V ul} : Set V3) := by
+            ext z
+            rw [hXm', (MCELL_EXPLICIT 3 V ul).2.2.2.1]
+            rw [mcell3, if_pos hcond, p23_pivot_trunc2_form hqbar' htr1']
+            have hsets : setOfList [u0, u1, elV ul 2] ∪ {mxi V ul}
+                = ({u0, u1, elV ul 2, mxi V ul} : Set V3) := by
+              ext w
+              simp only [setOfList, Set.mem_setOf_eq, List.mem_cons,
+                List.not_mem_nil, Set.mem_union, Set.mem_insert_iff,
+                Set.mem_singleton_iff]
+              tauto
+            rw [hsets]
+          have hsub : X ⊆
+              (affineSpan ℝ ({u0, u1, elV ul 2, mxi V ul} : Set V3)) := by
+            rw [hXhull]
+            exact convexHull_min (subset_affineSpan ℝ _)
+              (AffineSubspace.convex _)
+          have hcop : ¬ Coplanar ℝ ({u0, u1, elV ul 2, mxi V ul} : Set V3) :=
+            fun hcp' => hnnX (p23_coplanar_affineSpan_null hcp' hsub)
+          have hpos := CONIC_CAP_INTER_CONVEX_HULL_4_GT_0 u0 u1 (elV ul 2)
+            (mxi V ul) r d hr hd1 (le_of_lt hd) hcop
+          rw [← hXhull, Set.inter_comm] at hpos
+          exact hnotnull _ hpos
+        · exfalso
+          have hempty : X = ∅ := by
+            rw [hXm', (MCELL_EXPLICIT 3 V ul).2.2.2.1, mcell3, if_neg hcond]
+          exact absurd (by rw [hempty]; exact measure_empty) hnnX
+    · -- q.1 = 4: X is the quartet hull itself
+      have hq4 : (cellParamsD V X [u0, u1]).1 = 4 := by omega
+      obtain ⟨ul, huldef⟩ : ∃ ul : List V3, ul = (cellParamsD V X [u0, u1]).2 :=
+        ⟨_, rfl⟩
+      have hXm' : X = mcell (cellParamsD V X [u0, u1]).1 V ul := by
+        rw [huldef]; exact hqXm
+      have hqbar' : barV V 3 ul := by rw [huldef]; exact hqbar
+      have hinit' : initialSublist [u0, u1] ul := by rw [huldef]; exact hqinit
+      rw [hq4] at hXm'
+      have htr1' : truncateSimplex 1 ul = [u0, u1] := p23_trunc1_of_init hinit'
+      by_cases hcond : hl ul < Real.sqrt 2
+      · have hXhull : X
+            = convexHull ℝ ({u0, u1, elV ul 2, elV ul 3} : Set V3) := by
+          ext z
+          rw [hXm', (MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4)]
+          rw [mcell4, if_pos hcond, p23_pivot_setOfList4_form hqbar' htr1']
+        have hsub : X ⊆
+            (affineSpan ℝ ({u0, u1, elV ul 2, elV ul 3} : Set V3)) := by
+          rw [hXhull]
+          exact convexHull_min (subset_affineSpan ℝ _) (AffineSubspace.convex _)
+        have hcop : ¬ Coplanar ℝ ({u0, u1, elV ul 2, elV ul 3} : Set V3) :=
+          fun hcp' => hnnX (p23_coplanar_affineSpan_null hcp' hsub)
+        have hpos := CONIC_CAP_INTER_CONVEX_HULL_4_GT_0 u0 u1 (elV ul 2)
+          (elV ul 3) r d hr hd1 (le_of_lt hd) hcop
+        rw [← hXhull, Set.inter_comm] at hpos
+        exact hnotnull _ hpos
+      · exfalso
+        have hempty : X = ∅ := by
+          rw [hXm', (MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4), mcell4,
+            if_neg hcond]
+        exact absurd (by rw [hempty]; exact measure_empty) hnnX
+
+
+/-- GRUTOTI pivot-wave lemma B (GT-5, 2026-10-10): the per-cell wedge-volume
+identity from a FORWARD `cellParamsD` witness. This is `grutoti_cell_vol`
+re-anchored on the `cellParamsD` ε-witness itself (the ∃-forward-witness
+hypothesis `hwit` replaces the `hjunk : truncateSimplex 1 (cellParams V X).2
+= [u0, u1]` bridge, which constrains the canonical `cellParams` ε and is NOT
+derivable when the param list carries the edge reversed — the pivot consumes B
+uniformly on the forward-witness path, covering both the forward-cp and the
+PERMUTE-mirrored reversed-k = 2 cells). Body verbatim from `grutoti_cell_vol`
+(GT-3d/3e/3f passes): k = 0 cap-ball disjointness, k = 1 hw1-narrowness, and
+the k = 2/3/4 wedge arms (HL §D/§F/§E). -/
+private theorem p23_pivot_cell_eq (V : Set V3) (u0 u1 : V3) (r d : ℝ) (X : Set V3)
+    (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1)
+    (hne : u0 ≠ u1) (hnnX : ¬ nullSet X)
+    (hn : ¬ nullSet (X ∩ grutotiConicCap u0 u1 r d))
+    (hp : Packing V)
+    (hw1 : hl [u0, u1] / Real.sqrt 2 ≤ d)
+    (hw3 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      ¬nullSet (mcell 3 V vl ∩ grutotiConicCap u0 u1 r d) →
+      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, mxi V vl} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, mxi V vl} : Set V3), z ∉ rconeGt u0 u1 d)
+    (hw4 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      ¬nullSet (mcell 4 V vl ∩ grutotiConicCap u0 u1 r d) →
+      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, elV vl 3} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, elV vl 3} : Set V3), z ∉ rconeGt u0 u1 d)
+    (hwit : ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2 ∧
+      initialSublist [u0, u1] p.2) :
+    volume.real (X ∩ grutotiConicCap u0 u1 r d) =
+      volume.real (grutotiConicCap u0 u1 r d) * dihX V X (u0, u1) / (2 * Real.pi) := by
+  obtain ⟨hq4le, hqbar, hXm, hinit⟩ := Classical.epsilon_spec
+    (p := fun p : ℕ × List V3 => p.1 ≤ 4 ∧ barV V 3 p.2 ∧
+      X = mcell p.1 V p.2 ∧ initialSublist [u0, u1] p.2) hwit
+  rcases Nat.lt_or_ge (cellParamsD V X [u0, u1]).1 2 with hq12 | hqge
+  · rcases Nat.eq_zero_or_pos (cellParamsD V X [u0, u1]).1 with hq0 | _hq1
+    · -- k = 0 (GT-3d arm B): index 0, `X = mcell0 V (cellParamsD …).2` with
+      -- `hdV (cellParamsD …).2 = u0` — disjointness from the cap.
+      have hXm' : X = mcell (cellParamsD V X [u0, u1]).1 V
+          (cellParamsD V X [u0, u1]).2 := hXm
+      rw [show (cellParamsD V X [u0, u1]).1 = 0 from hq0] at hXm'
+      obtain ⟨yl, hyl⟩ := hinit
+      have hhd : hdV (cellParamsD V X [u0, u1]).2 = u0 :=
+        by rw [show (cellParamsD V X [u0, u1]).2 = [u0, u1] ++ yl from hyl]; simp [hdV]
+      have hXeq : X ∩ grutotiConicCap u0 u1 r d = ∅ := by
+        apply Set.eq_empty_iff_forall_notMem.mpr
+        intro z hz
+        obtain ⟨hzX, hzD⟩ := hz
+        rw [hXm'] at hzX
+        have hzm : z ∈ rogers V (cellParamsD V X [u0, u1]).2 \
+            Metric.ball (hdV (cellParamsD V X [u0, u1]).2) (Real.sqrt 2) := hzX
+        rw [hhd] at hzm
+        have h1 : √(1:ℝ) < Real.sqrt 2 :=
+          Real.sqrt_lt_sqrt (by norm_num : (0:ℝ) ≤ 1) (by norm_num : (1:ℝ) < 2)
+        rw [Real.sqrt_one] at h1
+        exact hzm.2 (Metric.mem_ball.mpr (lt_of_le_of_lt
+          (Metric.mem_closedBall.mp (Set.inter_subset_left hzD)) (lt_of_le_of_lt hr1 h1)))
+      exact absurd (show nullSet (X ∩ grutotiConicCap u0 u1 r d) from by
+        show volume (X ∩ grutotiConicCap u0 u1 r d) = 0
+        rw [hXeq]
+        exact measure_empty) hn
+
+    · -- k = 1 (SF 项 28 hw1 消费端, GT-3e): mcell1 的径向截锥
+      -- 参数 a = hl (truncateSimplex 1 ul)/√2 = hl [u0,u1]/√2 ≤ d (hw1),
+      -- D ⊆ rconeGt u0 u1 d ⊆ rconeGt u0 u1 a,而 mcell1 在截锥补集中
+      -- (∅-支直接 X = ∅)——X ∩ D = ∅,与 hn 矛盾。
+      have hq1 : (cellParamsD V X [u0, u1]).1 = 1 := by omega
+      have hXm' : X = mcell (cellParamsD V X [u0, u1]).1 V
+          (cellParamsD V X [u0, u1]).2 := hXm
+      have hinit' : initialSublist [u0, u1] (cellParamsD V X [u0, u1]).2 := hinit
+      rw [hq1] at hXm'
+      have hfam : (cellParamsD V X [u0, u1]).2 ∈ p23Fam V u0 u1 :=
+        ⟨hqbar, p23_trunc1_of_init hinit'⟩
+      have hd0 : hdV (cellParamsD V X [u0, u1]).2 = u0 := p23_hdV_eq_u0 hfam
+      have hd1v : hdV (cellParamsD V X [u0, u1]).2.tail = u1 := p23_hdTail_eq_u1 hfam
+      have hXeq : X ∩ grutotiConicCap u0 u1 r d = ∅ := by
+        rw [hXm', (MCELL_EXPLICIT 1 V (cellParamsD V X [u0, u1]).2).2.1]
+        simp only [mcell1]
+        by_cases hhl2 : Real.sqrt 2 ≤ hl (cellParamsD V X [u0, u1]).2
+        · rw [if_pos hhl2, hd0, hd1v, p23_trunc1_of_init hinit']
+          apply Set.eq_empty_iff_forall_notMem.mpr
+          intro z hz
+          obtain ⟨⟨_, hz2⟩, hzD⟩ := hz
+          exact hz2 (grutoti_cap_rcone_mono u0 u1 r
+            (hl [u0, u1] / Real.sqrt 2) d hw1 hzD)
+        · rw [if_neg hhl2, Set.empty_inter]
+      exact absurd (show nullSet (X ∩ grutotiConicCap u0 u1 r d) from by
+        show volume (X ∩ grutotiConicCap u0 u1 r d) = 0
+        rw [hXeq]
+        exact measure_empty) hn
+  · -- k ∈ {2,3,4}: the k-arms (HL §D/§F/§E).
+    rcases Nat.lt_or_ge (cellParamsD V X [u0, u1]).1 4 with hlt4 | hge4
+    · rcases Nat.lt_or_ge (cellParamsD V X [u0, u1]).1 3 with hlt3 | hge3
+      · -- k = 2 (HL §D, GRUTOTI.hl:2669-3208; GT-3f): witness 正规化 + mcell2
+        -- 形展开(∅-支反 hn)+ quartet 非退化 + p23_cap_sub_rconeGe2 闭
+        -- X∩D = L∩D + wedge helper + dihX↔dihu2↔dihV 对接(p23_elV0/1)。
+        have hq2 : (cellParamsD V X [u0, u1]).1 = 2 := by omega
+        obtain ⟨ul, huldef⟩ : ∃ ul : List V3, ul = (cellParamsD V X [u0, u1]).2 :=
+          ⟨_, rfl⟩
+        have hXm' : X = mcell (cellParamsD V X [u0, u1]).1 V ul := by
+          rw [huldef]; exact hXm
+        have hqbar' : barV V 3 ul := by rw [huldef]; exact hqbar
+        have hinit' : initialSublist [u0, u1] ul := by rw [huldef]; exact hinit
+        rw [hq2] at hXm'
+        have hfam : ul ∈ p23Fam V u0 u1 := ⟨hqbar', p23_trunc1_of_init hinit'⟩
+        have htr1 : truncateSimplex 1 ul = [u0, u1] := p23_trunc1_of_init hinit'
+        have hd0 : hdV ul = u0 := p23_hdV_eq_u0 hfam
+        have hd1v : hdV ul.tail = u1 := p23_hdTail_eq_u1 hfam
+        by_cases hcond : hl (truncateSimplex 1 ul) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ul
+        · -- 楠点 m/s3 的非退化(hnnX 消费:X ⊆ 四点仿射包,共面 ⇒ 零测;
+          --   mcell2 形展开走成员级 rw,免 ite-可判定求值)
+          have hXspan : X ⊆
+              (affineSpan ℝ ({u0, u1, mxi V ul, omegaListN V ul 3} : Set V3)) := by
+            intro z hz
+            rw [hXm', (MCELL_EXPLICIT 2 V ul).2.2.1] at hz
+            rw [mcell2, if_pos hcond, htr1, hd0, hd1v] at hz
+            exact p23_affGe_mem_affineSpan2 hz.2
+          obtain ⟨hc1, hc2, -, hpl⟩ := p23_quartet_nondeg hne hXspan hnnX
+          -- hp 的 packing 距离(u0, u1 ∈ V 由 barV + initialSublist)
+          obtain ⟨yl, hyl⟩ := hinit'
+          have hu0V : u0 ∈ V :=
+            BARV_SUBSET V 3 ul hqbar' (by rw [hyl]; simp [setOfList])
+          have hu1V : u1 ∈ V :=
+            BARV_SUBSET V 3 ul hqbar' (by rw [hyl]; simp [setOfList])
+          have h2d : 2 ≤ dist u0 u1 := Packing.dist_ge_two hp hu0V hu1V hne
+          have ha0 : 0 ≤ hl [u0, u1] / Real.sqrt 2 := by
+            rw [HL_2]; positivity
+          have ha1 : hl [u0, u1] / Real.sqrt 2 < 1 := lt_of_le_of_lt hw1 hd1
+          have hcapcone : grutotiConicCap u0 u1 r d
+              ⊆ rconeGe u0 u1 (hl [u0, u1] / Real.sqrt 2)
+                ∩ rconeGe u1 u0 (hl [u0, u1] / Real.sqrt 2) :=
+            p23_cap_sub_rconeGe2 h2d hr1 hd hw1 ha0 ha1
+          -- X ∩ D = L ∩ D(双锥由 p23_cap_sub_rconeGe2 消去)
+          have heq : X ∩ grutotiConicCap u0 u1 r d
+              = (affGe {u0, u1} {mxi V ul, omegaListN V ul 3} : Set V3)
+                ∩ grutotiConicCap u0 u1 r d := by
+            have hsubL : X ∩ grutotiConicCap u0 u1 r d
+                ⊆ (affGe {u0, u1} {mxi V ul, omegaListN V ul 3} : Set V3)
+                  ∩ grutotiConicCap u0 u1 r d := by
+              rintro z ⟨hzX, hzD⟩
+              rw [hXm', (MCELL_EXPLICIT 2 V ul).2.2.1] at hzX
+              rw [mcell2, if_pos hcond, htr1, hd0, hd1v] at hzX
+              exact ⟨hzX.2, hzD⟩
+            have hsubR : (affGe {u0, u1} {mxi V ul, omegaListN V ul 3} : Set V3)
+                  ∩ grutotiConicCap u0 u1 r d
+                ⊆ X ∩ grutotiConicCap u0 u1 r d := by
+              rintro z ⟨hzL, hzD⟩
+              refine ⟨?_, hzD⟩
+              rw [hXm', (MCELL_EXPLICIT 2 V ul).2.2.1]
+              rw [mcell2, if_pos hcond, htr1, hd0, hd1v]
+              exact And.intro (And.intro (hcapcone hzD).1 (hcapcone hzD).2) hzL
+            exact le_antisymm hsubL hsubR
+          have hdihX : dihX V X (u0, u1)
+              = dihV u0 u1 (mxi V ul) (omegaListN V ul 3) := by
+            have hE0 : elV ul 0 = u0 := p23_elV0 hfam
+            have hE1 : elV ul 1 = u1 := p23_elV1 hfam
+            simp only [dihX, if_neg hnnX, hq2, if_pos]
+            rw [← huldef, dihu2, hE0, hE1]
+          rw [heq,
+            p23_vol_D_inter_affGe u0 u1 (mxi V ul) (omegaListN V ul 3) r d hr hd hd1
+              hc1 hc2 hpl, hdihX]
+        · -- ∅-支:X ∩ D = ∅ 反 hn(k<2 臂同款;成员级展开)
+          have hXeq : X ∩ grutotiConicCap u0 u1 r d = ∅ := by
+            apply Set.eq_empty_iff_forall_notMem.mpr
+            intro z hz
+            obtain ⟨hzX, -⟩ := hz
+            rw [hXm'] at hzX
+            rw [(MCELL_EXPLICIT 2 V ul).2.2.1, mcell2, if_neg hcond] at hzX
+            simp at hzX
+          exact absurd (show nullSet (X ∩ grutotiConicCap u0 u1 r d) from by
+            show volume (X ∩ grutotiConicCap u0 u1 r d) = 0
+            rw [hXeq]
+            exact measure_empty) hn
+      · -- k = 3 (HL §F; GT-3f): mcell3 形(∅-支反 hn)+ hw3 面/锥窄性经
+        -- p23_hull_arm_eq + wedge helper + dihX↔dihu3↔dihV 对接。
+        have hq3 : (cellParamsD V X [u0, u1]).1 = 3 := by omega
+        obtain ⟨ul, huldef⟩ : ∃ ul : List V3, ul = (cellParamsD V X [u0, u1]).2 :=
+          ⟨_, rfl⟩
+        have hXm' : X = mcell (cellParamsD V X [u0, u1]).1 V ul := by
+          rw [huldef]; exact hXm
+        have hqbar' : barV V 3 ul := by rw [huldef]; exact hqbar
+        have hinit' : initialSublist [u0, u1] ul := by rw [huldef]; exact hinit
+        rw [hq3] at hXm'
+        have hfam : ul ∈ p23Fam V u0 u1 := ⟨hqbar', p23_trunc1_of_init hinit'⟩
+        have htr1 : truncateSimplex 1 ul = [u0, u1] := p23_trunc1_of_init hinit'
+        have htr2 : truncateSimplex 2 ul = [u0, u1, elV ul 2] :=
+          p23_pivot_trunc2_form hqbar' htr1
+        by_cases hcond : hl (truncateSimplex 2 ul) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ul
+        · -- X = hull {u0, u1, elV ul 2, mxi V ul}(成员级 ext 展形)
+          have hXhull : X
+              = convexHull ℝ ({u0, u1, elV ul 2, mxi V ul} : Set V3) := by
+            ext z
+            rw [hXm', (MCELL_EXPLICIT 3 V ul).2.2.2.1]
+            rw [mcell3, if_pos hcond, htr2]
+            have hsets : setOfList [u0, u1, elV ul 2] ∪ {mxi V ul}
+                = ({u0, u1, elV ul 2, mxi V ul} : Set V3) := by
+              ext w
+              simp only [setOfList, Set.mem_setOf_eq, List.mem_cons,
+                List.not_mem_nil, Set.mem_union, Set.mem_insert_iff,
+                Set.mem_singleton_iff]
+              tauto
+            rw [hsets]
+          -- hw3 消费(门条件由 hn 一步供给)
+          have hdoor : ¬ nullSet (mcell 3 V ul ∩ grutotiConicCap u0 u1 r d) := by
+            rw [← hXm']
+            exact hn
+          obtain ⟨hface3, hcone3⟩ := hw3 ul hqbar' htr1 hdoor
+          have hdihX : dihX V X (u0, u1)
+              = dihV u0 u1 (elV ul 2) (mxi V ul) := by
+            have hE0 : elV ul 0 = u0 := p23_elV0 hfam
+            have hE1 : elV ul 1 = u1 := p23_elV1 hfam
+            simp only [dihX, if_neg hnnX]
+            rw [hq3, if_neg (by decide : ¬ (3:ℕ) = 2), if_pos (rfl : (3:ℕ) = 3)]
+            rw [← huldef, dihu3, hE0, hE1]
+          rw [p23_hull_arm_eq hr hd hd1 hne hXhull hn hface3 hcone3, hdihX]
+        · -- ∅-支
+          have hXeq : X ∩ grutotiConicCap u0 u1 r d = ∅ := by
+            apply Set.eq_empty_iff_forall_notMem.mpr
+            intro z hz
+            obtain ⟨hzX, -⟩ := hz
+            rw [hXm'] at hzX
+            rw [(MCELL_EXPLICIT 3 V ul).2.2.2.1, mcell3, if_neg hcond] at hzX
+            simp at hzX
+          exact absurd (show nullSet (X ∩ grutotiConicCap u0 u1 r d) from by
+            show volume (X ∩ grutotiConicCap u0 u1 r d) = 0
+            rw [hXeq]
+            exact measure_empty) hn
+    · -- k = 4 (HL §E; GT-3f): 同 k = 3,hw4 + dihX↔dihu4↔dihV 对接。
+      have hq4le' : (cellParamsD V X [u0, u1]).1 ≤ 4 := hq4le
+      have hq4 : (cellParamsD V X [u0, u1]).1 = 4 := by omega
+      obtain ⟨ul, huldef⟩ : ∃ ul : List V3, ul = (cellParamsD V X [u0, u1]).2 :=
+        ⟨_, rfl⟩
+      have hXm' : X = mcell (cellParamsD V X [u0, u1]).1 V ul := by
+        rw [huldef]; exact hXm
+      have hqbar' : barV V 3 ul := by rw [huldef]; exact hqbar
+      have hinit' : initialSublist [u0, u1] ul := by rw [huldef]; exact hinit
+      rw [hq4] at hXm'
+      have hfam : ul ∈ p23Fam V u0 u1 := ⟨hqbar', p23_trunc1_of_init hinit'⟩
+      have htr1 : truncateSimplex 1 ul = [u0, u1] := p23_trunc1_of_init hinit'
+      have hseteq : setOfList ul = ({u0, u1, elV ul 2, elV ul 3} : Set V3) :=
+        p23_pivot_setOfList4_form hqbar' htr1
+      by_cases hcond : hl ul < Real.sqrt 2
+      · -- X = hull {u0, u1, elV ul 2, elV ul 3}(成员级 ext 展形)
+        have hXhull : X
+            = convexHull ℝ ({u0, u1, elV ul 2, elV ul 3} : Set V3) := by
+          ext z
+          rw [hXm', (MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4)]
+          rw [mcell4, if_pos hcond, hseteq]
+        -- hw4 消费(门条件由 hn 一步供给)
+        have hdoor : ¬ nullSet (mcell 4 V ul ∩ grutotiConicCap u0 u1 r d) := by
+          rw [← hXm']
+          exact hn
+        obtain ⟨hface4, hcone4⟩ := hw4 ul hqbar' htr1 hdoor
+        have hdihX : dihX V X (u0, u1)
+            = dihV u0 u1 (elV ul 2) (elV ul 3) := by
+          have hE0 : elV ul 0 = u0 := p23_elV0 hfam
+          have hE1 : elV ul 1 = u1 := p23_elV1 hfam
+          simp only [dihX, if_neg hnnX]
+          rw [hq4, if_neg (by decide : ¬ (4:ℕ) = 2),
+            if_neg (by decide : ¬ (4:ℕ) = 3), if_pos (rfl : (4:ℕ) = 4)]
+          rw [← huldef, dihu4, hE0, hE1]
+        rw [p23_hull_arm_eq hr hd hd1 hne hXhull hn hface4 hcone4, hdihX]
+      · -- ∅-支
+        have hXeq : X ∩ grutotiConicCap u0 u1 r d = ∅ := by
+          apply Set.eq_empty_iff_forall_notMem.mpr
+          intro z hz
+          obtain ⟨hzX, -⟩ := hz
+          rw [hXm'] at hzX
+          rw [(MCELL_EXPLICIT 4 V ul).2.2.2.2 (Nat.le_refl 4), mcell4,
+            if_neg hcond] at hzX
+          simp at hzX
+        exact absurd (show nullSet (X ∩ grutotiConicCap u0 u1 r d) from by
+          show volume (X ∩ grutotiConicCap u0 u1 r d) = 0
+          rw [hXeq]
+          exact measure_empty) hn
+
+
+/-- GRUTOTI pivot-wave G3 (GT-5, 2026-10-10 wave, 精确记账): the reversed
+k = 3/4 corner — the LAST genuine gap of the GRUTOTI chain. Hypothesis
+profile: X is a non-null edge cell whose `cellParams` index is 3 or 4 while
+NO forward `cellParamsD` witness exists (no `barV V 3` list describing X as
+an `mcell ≤ 4` carries `[u0,u1]` as an initial sublist — in particular the
+canonical param list carries the edge reversed or off-head, so the cellParamsD
+ε may pick a junk/differently-directed witness and `dihX`'s PA2 encoding is
+not pinned by X alone).
+NEEDS (the two mathematical ingredients of the gap, HL §H 7441-7958):
+(1) the S₃ permutation invariance of the Marchal-cell descriptions — X, being
+a k = 3/4 hull cell, has permuted list descriptions; one must show some
+permuted description satisfies the mcell3/mcell4 shape conditions with
+`[u0,u1]` at the head (or else pin the ε value of `cellParamsD V X [u0,u1]`
+and read `dihX` off it) — this is the directed-witness junk-semantics work;
+(2) on that permuted description, the k = 3/4 wedge identity closes as in
+`grutoti_cell_vol`'s arms via `p23_hull_arm_eq` + the hw3/hw4 narrowness
+(these transfer across permutations by the radV/setOfList invariance).
+Estimate 200-400 lines. Until then the pivot keeps exactly one structured
+proof-sorry, precisely THIS lemma. -/
+private theorem p23_grutoti_pivot_rev_k34 (V : Set V3) (u0 u1 : V3) (r d : ℝ)
+    (X : Set V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1)
+    (hne : u0 ≠ u1) (hhl : hl [u0, u1] < Real.sqrt 2)
+    (hw1 : hl [u0, u1] / Real.sqrt 2 ≤ d)
+    (hw3 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      ¬nullSet (mcell 3 V vl ∩ grutotiConicCap u0 u1 r d) →
+      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, mxi V vl} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, mxi V vl} : Set V3), z ∉ rconeGt u0 u1 d)
+    (hw4 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      ¬nullSet (mcell 4 V vl ∩ grutotiConicCap u0 u1 r d) →
+      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, elV vl 3} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, elV vl 3} : Set V3), z ∉ rconeGt u0 u1 d)
+    (hm : X ∈ mcellSet V) (hu0v : u0 ∈ VX V X) (hu1v : u1 ∈ VX V X)
+    (hnnX : ¬ nullSet X)
+    (hk34 : (cellParams V X).1 = 3 ∨ (cellParams V X).1 = 4)
+    (hwit : ¬ ∃ p : ℕ × List V3, p.1 ≤ 4 ∧ barV V 3 p.2 ∧
+      X = mcell p.1 V p.2 ∧ initialSublist [u0, u1] p.2) :
+    volume.real (X ∩ grutotiConicCap u0 u1 r d) =
+      volume.real (grutotiConicCap u0 u1 r d) * dihX V X (u0, u1) / (2 * Real.pi) := by
+  -- NEEDS (G3): the S₃-permutation/directed-junk-semantics gap — see the
+  -- docstring above; kept as the single precisely-bounded bookkeeping sorry
+  -- of the whole GRUTOTI chain (region✓/cell_vol✓/sum_volD✓/hcov✓).
+  sorry
+
 /-- HL GRUTOTI.hl:7228-7400 (`sum s (\t. vol (t INTER D)) = vol D` via
 `MEASURE_NEGLIGIBLE_UNIONS_IMAGE` over the almost-disjoint cell family) plus
 index finiteness from `FINITE_MCELL_SET_LEMMA_2` (marchal3.hl:2620; Auto15:520,
@@ -5020,24 +5840,41 @@ k := (cellParams V X).1 ≥ 2 — the counting arm `i - 1 = 0` of §H: VX V X is
 set of ≤ k list points containing two distinct points; k ≤ 1 is impossible;
 (b) for k ≥ 2 one shows `¬nullSet (X ∩ D)` — HL §H derives `F` from
 `NULLSET (X ∩ D)` per k, using CONIC_CAP_INTER_CONVEX_HULL_4_GT_0
-(Auto15:2275, **已真证**——本条旧注 "Auto15:828 still sorried" 过期) for
-k = 3/4 and the region data for k = 2;
+(Auto15:2275, real) for k = 3/4 and the region data for k = 2;
 (c) then `p23_setSum_congr` assembles the frozen identity from
 `grutoti_cell_vol` pointwise. Junk safety: for k ≤ 1 / null cells the PA2
 encoding gives dihX = 0 (`p23_dihX_of_nullSet`), and k ≤ 1 cells cannot carry
-the edge at all, so no junk term enters the sum. CAVEAT for the future fill:
-`cellParamsD V X [u0,u1]` may be epsilon-junk for edge cells whose param list
-carries the edge REVERSED (`[u1;u0,…]` — its wedge is a genuinely different
-set); HL §H handles this inside the case analysis, and the Lean fill must too.
+the edge at all, so no junk term enters the sum.
 STATEMENT-FIX 项 33 (c) 应用（2026-10-10 用户四件合并批）——签名扩为
 `(hs hp hu0 hu1 hne hhl) + hw1 hw3 hw4`（恰为 `grutoti_cell_vol` 消费形，
-`p23_region_data_full` 逐字供给；冻结前提 `hr hr1 hd hd1 he hfin` 不动）：
-加门前其体是 sorry（扩签名走 SF 模式），加门后 body 现状——null 支（X 整体
-零测：两侧同时为零，`p23_setSum_congr` + `p23_dihX_of_nullSet` + 测度单调）
-**本波已填**；¬nullSet X 支仍 `sorry`（下波：§H 非零性 k ≥ 2 计数
-`p23_edge_cell_k_ge_two` + 逐 k 窄性 hw1/hw3/hw4 后逐点套 `grutoti_cell_vol`；
-反向支 k = 2 走 MCELL2_PERMUTE_01 镜像、k = 3/4 为真缺口 G3）。净 sorry 面
-持平（pivot 保持 1 处结构化 sorry）。 -/
+`p23_region_data_full` 逐字供给；冻结前提 `hr hr1 hd hd1 he hfin` 不动）。
+GT-5 pass (2026-10-10, 本波): the null arm was closed at SF32; the
+¬nullSet-X arm is NOW FILLED except one precisely-bounded bookkeeping
+lemma. Route: split on the forward-witness predicate `∃ w, w.1 ≤ 4 ∧
+barV V 3 w.2 ∧ X = mcell w.1 V w.2 ∧ initialSublist [u0,u1] w.2` (the
+cellParamsD ε inhabited-ness).
+* forward-witness path (covers BOTH the forward-cp cells AND the
+  reversed-k = 2 cells): A `p23_pivot_cell_nn` supplies `¬nullSet (X ∩ D)`
+  pointwise — the edge midpoint lies in X for every cellParams-shape (k = 2:
+  both param-list orientations, apexes abstract; k = 3/4: vertex hull),
+  which kills the q.1 = 0/1 arms outright; for q.1 ∈ {2,3,4} the quartet
+  spans (non-null ⇒ ¬Coplanar) and CONIC_CAP_INTER_CONVEX_HULL_4_GT_0 puts
+  a positive-volume piece of D inside X, with the k = 2 wedge first reduced
+  to `X ∩ D = L ∩ D` by `p23_cap_sub_rconeGe2` (the hw1 narrowness). Then
+  B `p23_pivot_cell_eq` — `grutoti_cell_vol` re-anchored on the cellParamsD
+  ε-witness (`hwit` replaces the `hjunk` bridge) — gives the identity.
+* no-forward-witness path: k = 2 is impossible — MCELL2_PERMUTE_01
+  manufactures a forward witness from the reversed list (the historical
+  CAVEAT below is CLOSED for k = 2); k ∈ {3,4} is G3, frozen as the
+  standalone bookkeeping lemma `p23_grutoti_pivot_rev_k34` (the single
+  structured proof-sorry of this file, NEEDS-annotated: HL §H 7441-7958
+  S₃ permutation invariance + the cellParamsD directed-junk semantics).
+CAVEAT (historical; k = 2 closed by the PERMUTE path above, k = 3/4 residue
+= G3): `cellParamsD V X [u0,u1]` may be epsilon-junk for edge cells whose
+param list carries the edge REVERSED (`[u1;u0,…]` — its wedge is a
+genuinely different set); HL §H handles this inside the case analysis, and
+the Lean fill now does too via the forward-witness case split.
+净 sorry 面：pivot 1 → 1（精确化为 G3 单点，陈述级拆出独立引理）。 -/
 private theorem grutoti_pivot (V : Set V3) (u0 u1 : V3) (e : Set V3) (r d : ℝ)
     (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1) (he : e = {u0, u1})
     (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
@@ -5066,10 +5903,123 @@ private theorem grutoti_pivot (V : Set V3) (u0 u1 : V3) (e : Set V3) (r d : ℝ)
     rw [p23_dihX_of_nullSet V X (u0, u1) hnullX]
     rw [Measure.real_def, hvXY, Measure.real_def, mul_zero, zero_div]
     exact ENNReal.toReal_zero
-  · -- REMAINING（下波填）：¬nullSet X 支——HL §H 逐边胞非零性
-    -- （k ≥ 2 计数 + hw1/hw3/hw4 窄性）后逐点套 grutoti_cell_vol；
-    -- 反向支 k = 2 镜像 / k = 3/4 真缺口 G3 另案。
-    sorry
+  · -- ¬nullSet X 支（GT-5 本波填，2026-10-10）：按「是否存在前向
+    -- cellParamsD 见证」二分——存在则 A 供逐点非零 + B 供逐点恒等式
+    --（覆盖首向 cellParams 表与反向 k = 2 的 PERMUTE 镜像）；不存在则
+    -- k = 2 经 MCELL2_PERMUTE_01 制造前向见证（矛盾），k ∈ {3,4} 为
+    -- 精确记账的 G3（p23_grutoti_pivot_rev_k34，独立引理单点 sorry）。
+    obtain ⟨hmv, hed⟩ := hX
+    rw [he] at hed
+    obtain ⟨p, q, hpq, hpVX, hqVX, hpqne⟩ := Set.mem_setOf_eq.mp hed
+    have hu0VX : u0 ∈ VX V X := by
+      have h1 : u0 ∈ ({u0, u1} : Set V3) := by simp
+      rw [hpq] at h1
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h1
+      rcases h1 with h1 | h1
+      · exact h1 ▸ hpVX
+      · exact h1 ▸ hqVX
+    have hu1VX : u1 ∈ VX V X := by
+      have h1 : u1 ∈ ({u0, u1} : Set V3) := by simp
+      rw [hpq] at h1
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h1
+      rcases h1 with h1 | h1
+      · exact h1 ▸ hpVX
+      · exact h1 ▸ hqVX
+    by_cases hwit : ∃ w : ℕ × List V3, w.1 ≤ 4 ∧ barV V 3 w.2 ∧
+        X = mcell w.1 V w.2 ∧ initialSublist [u0, u1] w.2
+    · -- 前向见证存在：A + B 两步闭合（首向表与反向 k = 2 皆走此路）
+      have hnX := p23_pivot_cell_nn V u0 u1 r d X hr hr1 hd hd1 hne hhl hnullX
+        hp hw1 hmv hu0VX hu1VX hwit
+      exact p23_pivot_cell_eq V u0 u1 r d X hr hr1 hd hd1 hne hnullX hnX hp
+        hw1 hw3 hw4 hwit
+    · -- 无前向见证
+      obtain ⟨j, wl, hXw, hbarw⟩ := Set.mem_setOf_eq.mp hmv
+      have hXwit : ∃ w : ℕ × List V3, w.1 ≤ 4 ∧ barV V 3 w.2 ∧
+          X = mcell w.1 V w.2 :=
+        ⟨(min j 4, wl), by omega, hbarw, by rw [hXw, p23_mcell_reduce]⟩
+      have hcp := Classical.epsilon_spec
+        (p := fun w : ℕ × List V3 => w.1 ≤ 4 ∧ barV V 3 w.2 ∧
+          X = mcell w.1 V w.2) hXwit
+      have hkge2 := p23_edge_cell_k_ge_two V X u0 u1 hmv hu0VX hu1VX hne
+      rcases Nat.lt_or_ge (cellParams V X).1 3 with hk2 | hk34
+      · -- k = 2：表反向 ⇒ MCELL2_PERMUTE_01 制造前向见证 ⇒ 与 hwit 矛盾
+        have hkcp2 : (cellParams V X).1 = 2 := by omega
+        have hbarcp : barV V 3 (cellParams V X).2 := hcp.2.1
+        have hu0L : u0 ∈ setOfList (truncateSimplex 1 (cellParams V X).2) := by
+          unfold VX at hu0VX
+          simp only [if_neg hnullX] at hu0VX
+          rw [if_neg (show (cellParams V X).1 ≠ 0 by omega)] at hu0VX
+          rw [show (cellParams V X).1 - 1 = 1 from by omega] at hu0VX
+          exact hu0VX
+        have hu1L : u1 ∈ setOfList (truncateSimplex 1 (cellParams V X).2) := by
+          unfold VX at hu1VX
+          simp only [if_neg hnullX] at hu1VX
+          rw [if_neg (show (cellParams V X).1 ≠ 0 by omega)] at hu1VX
+          rw [show (cellParams V X).1 - 1 = 1 from by omega] at hu1VX
+          exact hu1VX
+        obtain ⟨w0, w1, w2, w3, hwv⟩ := BARV_3_EXPLICIT V (cellParams V X).2 hbarcp
+        have htr1f : truncateSimplex 1 (cellParams V X).2 = [w0, w1] := by
+          rw [hwv]; exact (TRUNCATE_SIMPLEX_EXPLICIT_1 w0 w1 w2 w3).2.2
+        have hsu : u0 ∈ ({w0, w1} : Set V3) := by
+          rw [htr1f] at hu0L; simpa [setOfList] using hu0L
+        have hsu1 : u1 ∈ ({w0, w1} : Set V3) := by
+          rw [htr1f] at hu1L; simpa [setOfList] using hu1L
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hsu hsu1
+        rcases hsu with hsu' | hsu'
+        · rcases hsu1 with hsu1' | hsu1'
+          · -- (u0 = w0, u1 = w0)：u0 = u1 矛盾
+            exact absurd (hsu1'.trans hsu'.symm).symm hne
+          · -- 首向 (u0 = w0, u1 = w1)：cp 自身即前向见证 ⇒ 与 hwit 矛盾
+            have htr : truncateSimplex 1 (cellParams V X).2 = [u0, u1] := by
+              rw [htr1f, hsu', hsu1']
+            obtain ⟨hinit1, -⟩ := p23_trunc_init_len 1 (cellParams V X).2
+              (by have h4 := hbarcp.1; omega)
+            rw [htr] at hinit1
+            have hX2 : X = mcell 2 V (cellParams V X).2 := by
+              conv_lhs => rw [hcp.2.2]
+              show mcell (cellParams V X).1 V (cellParams V X).2
+                = mcell 2 V (cellParams V X).2
+              rw [hkcp2, (MCELL_EXPLICIT 2 V (cellParams V X).2).2.2.1]
+            exact absurd ⟨(2, (cellParams V X).2), by norm_num, hbarcp, hX2,
+              hinit1⟩ hwit
+        · rcases hsu1 with hsu1' | hsu1'
+          · -- 反向 (u0 = w1, u1 = w0)：MCELL2_PERMUTE_01 镜像出前向见证
+            have hE0 : w0 = elV (cellParams V X).2 0 := by rw [hwv]; simp [elV]
+            have hE1 : w1 = elV (cellParams V X).2 1 := by rw [hwv]; simp [elV]
+            have hcp2m : mcell2 V (cellParams V X).2 = X := by
+              conv_rhs => rw [hcp.2.2]
+              show mcell2 V (cellParams V X).2
+                = mcell (cellParams V X).1 V (cellParams V X).2
+              rw [hkcp2, (MCELL_EXPLICIT 2 V (cellParams V X).2).2.2.1]
+            obtain ⟨vl, hv01, hv10, -, -, -, hm2eq, hbarv⟩ :=
+              MCELL2_PERMUTE_01 V (cellParams V X).2 hs hp hbarcp
+                (by rw [hcp2m]; exact hnullX)
+            -- 镜像表 vl 的头两个分量恰为 (u0, u1)
+            have hvl0 : elV vl 0 = u0 :=
+              hv10.symm.trans (hE1.symm.trans hsu'.symm)
+            have hvl1 : elV vl 1 = u1 :=
+              hv01.symm.trans (hE0.symm.trans hsu1'.symm)
+            have htrv : truncateSimplex 1 vl = [u0, u1] := by
+              obtain ⟨v0, v1, v2, v3, hvv⟩ := BARV_3_EXPLICIT V vl hbarv
+              have h1 : truncateSimplex 1 vl = [v0, v1] := by
+                rw [hvv]; exact (TRUNCATE_SIMPLEX_EXPLICIT_1 v0 v1 v2 v3).2.2
+              have hE0v : v0 = elV vl 0 := by rw [hvv]; simp [elV]
+              have hE1v : v1 = elV vl 1 := by rw [hvv]; simp [elV]
+              rw [h1, hE0v, hE1v, hvl0, hvl1]
+            have hX2v : X = mcell 2 V vl := by
+              show X = mcell2 V vl
+              rw [← hm2eq]
+              exact hcp2m.symm
+            exact absurd ⟨(2, vl), by norm_num, hbarv, hX2v,
+              (p23_pivot_perm_pack hbarv htrv).1⟩ hwit
+          · -- (u0 = w1, u1 = w1)：u0 = u1 矛盾
+            exact absurd (hsu'.trans hsu1'.symm) hne
+      · -- k ∈ {3,4}：G3（精确记账的结构化 sorry，独立引理）
+        have hk34' : (cellParams V X).1 = 3 ∨ (cellParams V X).1 = 4 := by
+          have h4le : (cellParams V X).1 ≤ 4 := hcp.1
+          omega
+        exact p23_grutoti_pivot_rev_k34 V u0 u1 r d X hs hp hu0 hu1 hr hr1 hd hd1
+          hne hhl hw1 hw3 hw4 hmv hu0VX hu1VX hnullX hk34' hwit
 
 /-- HL GRUTOTI.hl:7983-8000: `0 < vol D` from `VOLUME_CONIC_CAP`
 (marchal3; `vol (conic_cap u0 u1 r d) = 2/3 · π · r³ · (1-d)² …`-type formula,
