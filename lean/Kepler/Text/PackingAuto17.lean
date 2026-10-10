@@ -273,10 +273,13 @@ The supporting chain proved in this file: `measurePosIff_p17`
 Missing pieces (all statements importable; internal `sorry` upstream):
 - `TIWWFYQ` (PackingAuto5:581, sorry): every point lies in a closed Voronoi
   cell — stage 1 covering.
-- `GLTVHUM_concl` (PackingAuto2:550, sorry): closed Voronoi cell = union of
-  Rogers simplices rooted at `u0` — stage 2 covering.
-- `DUUNHOR_concl` (PackingAuto2:557, sorry) + a `Coplanar`-implies-null
-  bridge: distinct Rogers simplices meet in a null set — stage 3 trimming
+- CLOSED (2026-10-08): `GLTVHUM_concl` is term-proved in place
+  (PackingAuto2:3458; twin `PackingAuto6.GLTVHUM`): closed Voronoi cell =
+  union of Rogers simplices rooted at `u0` — stage 2 covering.
+- CLOSED (2026-10-08): `DUUNHOR_concl` is term-proved in place
+  (PackingAuto2:3500 r2 form; twin `PackingAuto6.DUUNHOR`); the
+  `Coplanar`-implies-null bridge remains open — distinct Rogers simplices
+  meet in a null set — stage 3 trimming
   (with `MEASURE_NEGLIGIBLE_SYMDIFF`, HL:646-732).
 - `SLTSTLO1` (PackingAuto13:307, sorry): Rogers simplex covered by
   `mcell 0..4 V wl` — stage 4 covering.

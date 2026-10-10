@@ -1367,9 +1367,10 @@ theorem MCELL0 (V : Set V3) (ul : List V3) : mcell0 V ul = mcell 0 V ul := by
 
   -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
   -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
-  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
-  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
-  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
+  -- 缺件：SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- GLTVHUM_concl(PA2:3458)/DUUNHOR_concl(PA2:3500)/SLTSTLO1(PA13) 均已证
+  -- （2026-10-08 收割波核实）；TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。
+  -- PA17:310 已备忠实陈述+全套已证辅助 kit。
 
 /-- bump.hl:488. -/
 theorem MCELL_CELL_PARAMETERS_EXIST (V : Set V3) (ul : List V3) (k : ℕ) (X : Set V3)
@@ -1379,9 +1380,10 @@ theorem MCELL_CELL_PARAMETERS_EXIST (V : Set V3) (ul : List V3) (k : ℕ) (X : S
 
   -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
   -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
-  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
-  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
-  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
+  -- 缺件：SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- GLTVHUM_concl(PA2:3458)/DUUNHOR_concl(PA2:3500)/SLTSTLO1(PA13) 均已证
+  -- （2026-10-08 收割波核实）；TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。
+  -- PA17:310 已备忠实陈述+全套已证辅助 kit。
 
 /-- bump.hl:513. -/
 theorem MCELL4_CELL_PARAMETERS_EXIST (V : Set V3) (ul : List V3) (X : Set V3)
@@ -1391,9 +1393,10 @@ theorem MCELL4_CELL_PARAMETERS_EXIST (V : Set V3) (ul : List V3) (X : Set V3)
 
   -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
   -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
-  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
-  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
-  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
+  -- 缺件：SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- GLTVHUM_concl(PA2:3458)/DUUNHOR_concl(PA2:3500)/SLTSTLO1(PA13) 均已证
+  -- （2026-10-08 收割波核实）；TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。
+  -- PA17:310 已备忠实陈述+全套已证辅助 kit。
 
 /-- bump.hl:523. -/
 theorem MCELL3_CELL_PARAMETERS_EXIST (V : Set V3) (ul : List V3) (X : Set V3)
@@ -1403,9 +1406,10 @@ theorem MCELL3_CELL_PARAMETERS_EXIST (V : Set V3) (ul : List V3) (X : Set V3)
 
   -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
   -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
-  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
-  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
-  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
+  -- 缺件：SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- GLTVHUM_concl(PA2:3458)/DUUNHOR_concl(PA2:3500)/SLTSTLO1(PA13) 均已证
+  -- （2026-10-08 收割波核实）；TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。
+  -- PA17:310 已备忠实陈述+全套已证辅助 kit。
 
 /-- bump.hl:533. -/
 theorem MCELL2_CELL_PARAMETERS_EXIST (V : Set V3) (ul : List V3) (X : Set V3)
@@ -1415,9 +1419,10 @@ theorem MCELL2_CELL_PARAMETERS_EXIST (V : Set V3) (ul : List V3) (X : Set V3)
 
   -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
   -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
-  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
-  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
-  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
+  -- 缺件：SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- GLTVHUM_concl(PA2:3458)/DUUNHOR_concl(PA2:3500)/SLTSTLO1(PA13) 均已证
+  -- （2026-10-08 收割波核实）；TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。
+  -- PA17:310 已备忠实陈述+全套已证辅助 kit。
 
 /-- bump.hl:543. -/
 theorem MCELL_PARAM_UL (V : Set V3) (ul vl : List V3) (X : Set V3) (k : ℕ)
@@ -1427,9 +1432,10 @@ theorem MCELL_PARAM_UL (V : Set V3) (ul vl : List V3) (X : Set V3) (k : ℕ)
 
   -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
   -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
-  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
-  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
-  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
+  -- 缺件：SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- GLTVHUM_concl(PA2:3458)/DUUNHOR_concl(PA2:3500)/SLTSTLO1(PA13) 均已证
+  -- （2026-10-08 收割波核实）；TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。
+  -- PA17:310 已备忠实陈述+全套已证辅助 kit。
 
 /-- bump.hl:568. -/
 theorem MCELL4_PARAM_UL (V : Set V3) (ul vl : List V3) (X : Set V3)
@@ -1439,9 +1445,10 @@ theorem MCELL4_PARAM_UL (V : Set V3) (ul vl : List V3) (X : Set V3)
 
   -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
   -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
-  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
-  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
-  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
+  -- 缺件：SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- GLTVHUM_concl(PA2:3458)/DUUNHOR_concl(PA2:3500)/SLTSTLO1(PA13) 均已证
+  -- （2026-10-08 收割波核实）；TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。
+  -- PA17:310 已备忠实陈述+全套已证辅助 kit。
 
 /-- bump.hl:580. -/
 theorem MCELL3_PARAM_UL (V : Set V3) (ul vl : List V3) (X : Set V3)
@@ -1451,9 +1458,10 @@ theorem MCELL3_PARAM_UL (V : Set V3) (ul vl : List V3) (X : Set V3)
 
   -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
   -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
-  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
-  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
-  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
+  -- 缺件：SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- GLTVHUM_concl(PA2:3458)/DUUNHOR_concl(PA2:3500)/SLTSTLO1(PA13) 均已证
+  -- （2026-10-08 收割波核实）；TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。
+  -- PA17:310 已备忠实陈述+全套已证辅助 kit。
 
 /-- bump.hl:592. -/
 theorem MCELL2_PARAM_UL (V : Set V3) (ul vl : List V3) (X : Set V3)
@@ -1484,9 +1492,10 @@ theorem MCELL4_VX (V : Set V3) (ul : List V3) (X : Set V3) (_hp : Packing V)
 /-- bump.hl:629. -/
   -- NEEDS (AJRIPQN-port): 唯一缺口 = Ajripqn.AJRIPQN 的「i = j」半支
   -- (cellParams 唯一性)。HOL 原文 Ajripqn.hl:89-1048，消费点 bump.hl:488。
-  -- 缺件：GLTVHUM_concl(PA2:550)/DUUNHOR_concl(PA2:557)/SLTSTLO1(PA13:402)/
-  -- SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
-  -- TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。PA17:310 已备忠实陈述+全套已证辅助 kit。
+  -- 缺件：SLTSTLO2(PA13:428 GIANT)/DDZUPHJ(PA13:457)/QZKSYKG1-2(PA14 GIANT) 仍未证；
+  -- GLTVHUM_concl(PA2:3458)/DUUNHOR_concl(PA2:3500)/SLTSTLO1(PA13) 均已证
+  -- （2026-10-08 收割波核实）；TIWWFYQ(PA5)/RVFXZBU(PA10) 已证。
+  -- PA17:310 已备忠实陈述+全套已证辅助 kit。
 
 theorem MCELL3_VX (V : Set V3) (ul : List V3) (X : Set V3) (_hp : Packing V)
     (_hs : saturated V) (_hX : X = mcell3 V ul) (_hb : barV V 3 ul) :

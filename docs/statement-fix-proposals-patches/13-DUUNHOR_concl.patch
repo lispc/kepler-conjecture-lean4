@@ -70,3 +70,93 @@ index f96ac9e..f0a86fe 100644
  
  /-- Rogers.hl:3106 `AFFINE_INDEPENDENT_IMP_INDEPENDENT`. -/
  theorem AFFINE_INDEPENDENT_IMP_INDEPENDENT (S : Set V3) (hS : ¬affineDependent S) :
+# ---- 消费侧连带节（2026-10-08 增补，编排者依项 13 授权链归档）----
+# PA2/PA6 侧(88951853)落地后，PackingConcl 的弱形镜像 DUUNHOR_concl_discharged
+# (barV-only, sorry)成为孤儿——其 BLOCKED(b) 案由即 "twin 多 Packing/saturated 两前提"。
+# 消费侧随上游同步升形 r2(shape-verbatim 于 PackingAuto6.DUUNHOR)；弱形全仓零消费者
+# (grep 复核 2026-10-08)。本节由落地 diff 反向归档(先代码后存档，闸门多重集从此接管)。
+diff --git a/lean/Kepler/Text/PackingConcl.lean b/lean/Kepler/Text/PackingConcl.lean
+index 8cf39114..e6abb936 100644
+--- a/lean/Kepler/Text/PackingConcl.lean
++++ b/lean/Kepler/Text/PackingConcl.lean
+@@ -22,20 +22,24 @@ MODE (2026-09-21, end-to-end assembly turn)
+ 
+ LEDGER (honest accounting; ground truth = `#print axioms`, not prose)
+   Sorried `*_concl` interfaces found .................... 62
+-    PackingAuto2 (pack_concl.hl family) .................. 52
+-      (the 53rd, `RHWVGNP_concl`, is term-proved in place from
+-      `VORONOI_POLYHEDRON_concl`)
++    PackingAuto2 (pack_concl.hl family) .................. 46
++      (recount 2026-10-08: 7 of the 53 `*_concl` interfaces are now
++      term-proved in place upstream — `GLTVHUM_concl`, `DUUNHOR_concl`,
++      `OAPVION1-3_concl`, `RDWKARC_concl`, and `RHWVGNP_concl`
++      (from `VORONOI_POLYHEDRON_concl`) — leaving 46 sorried)
+     PackingAuto3 (OXLZLEZ1.hl family) ..................... 9
+     PackingAuto24 (`GRUTOTI1_concl_p24`) .................. 1
+       (private statement-copy of Auto2's `GRUTOTI1_concl`, re-exported
+       publicly as `GRUTOTI1_concl_p24_pub`; accounted by the GRUTOTI1
+       entry below — 61 explicit entries + this 1 accounted copy = 62)
+   WIRED here (`exact twin ...`, sorryAx flows through where the twin or
+-  a bank antecedent is sorried) ........................ 53
+-    verbatim twin (term-level `:= twin` / eta) ........... 47
+-      (the 9 Auto3 OXLZLEZ1-family rows went verbatim in the
+-      CC4P4-exposure wave: PA4 now states public `*_v11` twins over
+-      PA3's `CcV11`, so the parallel-private-encoding block is gone)
++  a bank antecedent is sorried) ........................ 54
++    verbatim twin (term-level `:= twin` / eta) ........... 49
++      (DUUNHOR joined in the 2026-10-08 r2 wave; recount also fixes the
++      former 47+5≠53 arithmetic — 49 + 5 = 54.  The 9 Auto3
++      OXLZLEZ1-family rows went verbatim in the CC4P4-exposure wave: PA4
++      now states public `*_v11` twins over PA3's `CcV11`, so the
++      parallel-private-encoding block is gone)
+     shim/bridge ........................................... 5
+       VORONOI_BALL2  <- PackingAuto5.VORONOI_BALL2 (discard unused
+         `Packing V` / `v ∈ V`)
+@@ -51,16 +55,14 @@ LEDGER (honest accounting; ground truth = `#print axioms`, not prose)
+         here, so the twin's REAL by_contra kernel
+         (CELL_CLUSTER_ESTIMATE_PROPS + GRHIDFA_concl) is on the
+         reachable path)
+-  BLOCKED ............................................... 9, reasons:
++  BLOCKED ............................................... 8, reasons:
+ 
+   (a) Twin does not exist: 2
+       RVFXZBU1_concl, RVFXZBU2_concl (Auto2:743,750; no twin anywhere
+       in Auto3-25).
+ 
+   (b) Twin exists but is NOT statement-compatible (shape mismatch,
+-      documented at the entry): 6
+-      DUUNHOR (twin carries extra `Packing V`/`saturated V` the
+-        interface does not);
++      documented at the entry): 5
+       XYOFCGX (twin needs `Packing V`, interface has none);
+       IVFICRK (twin's second conjunct has two extra antecedents
+         `i ∈ Icc 0 (k+1)`, `permutes σ (Icc 0 k)`);
+@@ -129,15 +131,20 @@ theorem GLTVHUM_concl_discharged :
+       ∃ vl : List V3, barV V 3 vl ∧ p ∈ rogers V vl ∧ truncateSimplex 0 vl = [u0]) :=
+   fun V u0 p h hu0 => GLTVHUM V u0 p h hu0
+ 
+-/-- `PackingAuto2.DUUNHOR_concl` (Auto2:555).  TWIN MISMATCH:
+-`PackingAuto6.DUUNHOR` (Rogers.hl:1682) carries `Packing V` and
+-`saturated V` antecedents that the interface does not carry (its own
+-docstring calls them unused) — the twin is inapplicable to a bare
+-`barV`-only `V`. -/
++/-- `PackingAuto2.DUUNHOR_concl` (Auto2:3500), discharged by
++`PackingAuto6.DUUNHOR` (Rogers.hl:1682).  R2 STATEMENT-FIX (item 13;
++harvest wave 1, 2026-10-08): the interface formerly mirrored the bare
++`barV`-only pack_concl.hl shape, which left the twin — whose Auto2 kernel
++(`DUUNHOR_concl`, really proved over the §6.5/§6.6 p2g kit) carries the
++widened `Packing V`/`saturated V` antecedents — inapplicable and this
++entry sorried.  The weak shape had no consumers repo-wide, so both the
++Auto2 interface (already widened upstream) and this entry now carry the
++r2 form: shape-verbatim, sorry-free discharge. -/
+ theorem DUUNHOR_concl_discharged :
+-    ∀ (V : Set V3) (ul vl : List V3), barV V 3 ul → barV V 3 vl →
+-      rogers V ul ≠ rogers V vl → Coplanar (rogers V ul ∩ rogers V vl) := by
+-  sorry
++    ∀ (V : Set V3) (ul vl : List V3), Packing V → saturated V →
++      barV V 3 ul → barV V 3 vl →
++      rogers V ul ≠ rogers V vl → Coplanar (rogers V ul ∩ rogers V vl) :=
++  fun V ul vl hP hs hul hvl hne => DUUNHOR V ul vl hP hs hul hvl hne
+ 
+ /-- `PackingAuto2.QXSKIIT_concl` (Auto2:561), discharged by
+ `PackingAuto6.QXSKIIT` (Rogers.hl:3732).  Shape-verbatim. -/

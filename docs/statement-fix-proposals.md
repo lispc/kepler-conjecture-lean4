@@ -379,6 +379,14 @@ PA22 暂不可 import——ScratchStmtCheck2 因此改为仅依赖健康模块 +
 **(c) 修复方向**：前提补全型——补 `Packing V ∧ saturated V` 与 HOL 对齐；
 **连带**：PA6:841 `DUUNHOR` 背引用同步加参（零内容背引用，加参后仍自动变绿）。
 
+**(c′) 消费侧连带（2026-10-08 增补，编排者依本项授权链归档）**：PA2/PA6 侧
+（88951853 落地）使 PackingConcl 的弱形镜像 `DUUNHOR_concl_discharged`
+（barV-only, sorry）成为孤儿——其 BLOCKED(b) 案由即 "twin 多
+`Packing V`/`saturated V` 两前提"。消费侧随上游同步升形为 r2（shape-verbatim
+于 `PackingAuto6.DUUNHOR`），弱形全仓零消费者（grep 复核 2026-10-08）；
+补丁的 PackingConcl 节由落地 diff 反向归档（先代码后存档，闸门多重集从此
+接管），PackingConcl 台账重算 52→46 / 54 / 49 / BLOCKED 9→8 随件。
+
 **(d) 落地路线**：依赖 ROGERS_AFF_DIM_FULL（PA6:763 未证）、POLYHEDRON_VORONOI_LIST
 （PA5:1454 未证）、OMEGA_LIST_N_LEMMA（PA5:1502 未证）——详见 PA2:557 原位
 NEEDS 注记（commit 8d8d898f）。affDim≤2 退化分支机械（PA6:707 可引），

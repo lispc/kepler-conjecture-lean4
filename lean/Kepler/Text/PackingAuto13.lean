@@ -49,10 +49,12 @@ HOL sources (Flyspeck `scripts/packing/`, module authors VU KHAC KY):
   declaration in this repo). Auto7's sorry-backed `XNHPWAB2` /
   `OMEGA_LIST_N_IN_CONVEX_HULL` are consumed with NEEDS markers at the
   `SLTSTLO1` use sites.
-- DISCHARGES convention: `URRPHBZ2` / `SLTSTLO1` / `SLTSTLO2` match the
-  `sorry`-bodied interfaces `Kepler.Text.PackingAuto2.URRPHBZ2_concl` /
-  `SLTSTLO1_concl` / `SLTSTLO2_concl` verbatim; at merge time the interface
-  bodies become `exact URRPHBZ2` etc. `DDZUPHJ` has NO pack_concl interface
+- DISCHARGES convention: `URRPHBZ2` / `SLTSTLO2` match the `sorry`-bodied
+  interfaces `Kepler.Text.PackingAuto2.URRPHBZ2_concl` / `SLTSTLO2_concl`
+  verbatim; at merge time the interface bodies become `exact URRPHBZ2` etc.
+  (`SLTSTLO1_concl` was harvested from PA2 in the 2026-10-08 A-wave —
+  `SLTSTLO1` here discharges `PackingConcl.SLTSTLO1_concl_discharged`
+  directly.) `DDZUPHJ` has NO pack_concl interface
   (its statement is fresh; it consumes Auto9's `TEZFFSK`/`NJIUTIU` in HL).
 - Proved honestly here: `EVENTUALLY_RADIAL_RCONE_GE_ABC_A/B`,
   `OPEN_RCONE_GT`, `EVENTUALLY_RADIAL_AFF_GE`, `NULLSET_SPHERE` (via

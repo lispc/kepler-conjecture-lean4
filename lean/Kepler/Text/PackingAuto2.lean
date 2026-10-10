@@ -94,8 +94,10 @@ filled by the auto_loop harness).
   closed in HOL): `REUHADY_concl`/`REUHADY_concl_version2` use `w1 w2`, and
   `IVFICRK_concl` uses `i σ` inside its second conjunct; both are bound
   explicitly in Lean (noted in the respective docstrings).
-- `vor_list` (used only by KHEJKCI_concl) is NOT defined in any local HL
-  source (book sphere.hl has `voronoi_nondg` instead); ported as the
+- `vor_list` (its only pack_concl consumer, `KHEJKCI_concl`, was harvested
+  in the 2026-10-08 A-wave; the name now survives only in
+  `PackingConcl.KHEJKCI_concl_discharged`'s statement) is NOT defined in any
+  local HL source (book sphere.hl has `voronoi_nondg` instead); ported as the
   documented reconstruction `vorList V k ul := barV V k ul /\ hl ul < sqrt 2`,
   to be reconciled against core Flyspeck `Sphere.vor_list` at fill-in time.
 - NOT ported: the pack_concl.hl cross-references `Sphere.BARV`,
@@ -273,8 +275,10 @@ def wedgeGe (v0 v1 w1 w2 : V3) : Set V3 :=
 pairs, circumradius for simplices. -/
 def hl (ul : List V3) : ℝ := radV (setOfList ul)
 
-/-- Reconstruction of core-Flyspeck `vor_list` (used only by KHEJKCI_concl;
-absent from all local HL sources). Hypothesis strength to be reconciled at
+/-- Reconstruction of core-Flyspeck `vor_list` (absent from all local HL
+sources; its only pack_concl consumer `KHEJKCI_concl` was harvested in the
+2026-10-08 A-wave, leaving `PackingConcl.KHEJKCI_concl_discharged`'s
+statement as the sole consumer). Hypothesis strength to be reconciled at
 fill-in time. -/
 def vorList (V : Set V3) (k : ℕ) (ul : List V3) : Prop :=
   barV V k ul ∧ hl ul < Real.sqrt 2
@@ -4776,29 +4780,6 @@ theorem OAPVION3_concl : ∀ S : Set V3, ¬affineDependent S →
     obtain ⟨q, hccp, -, -, hu⟩ := circumcenterRadVUnique_p2 S ⟨w, hw⟩ h2
     exact (hu p hspan ⟨c, hc⟩).trans hccp.symm
 
-/-- HOL `MHFTTZN1_concl` (pack_concl.hl:44-45): the points of a `barV V k`
-list span dimension exactly `k`. -/
-theorem MHFTTZN1_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ), k ≤ 3 → saturated V →
-    Packing V → barV V k ul → affDim (setOfList ul) = (k : ℤ) := by
-  sorry
-
-/-- HOL `MHFTTZN2_concl` (pack_concl.hl:47-48): the affine hull of the
-Voronoi face dual to `ul` is the intersection of the bisectors through
-`HD ul`. -/
-theorem MHFTTZN2_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ), k ≤ 3 → saturated V →
-    Packing V → barV V k ul →
-    ∀ p : V3, p ∈ (affineSpan ℝ (voronoiList V ul) : Set V3) ↔
-      ∀ u ∈ setOfList ul, p ∈ bis (hdV ul) u := by
-  sorry
-
-/-- HOL `MHFTTZN3_concl` (pack_concl.hl:50-52). -/
-theorem MHFTTZN3_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ), k ≤ 3 → saturated V →
-    Packing V → barV V k ul →
-    ((affineSpan ℝ (voronoiList V ul) : Set V3) ∩
-        (affineSpan ℝ (setOfList ul) : Set V3)) =
-      {circumcenter (setOfList ul)} := by
-  sorry
-
 /-- HOL `MHFTTZN4_concl` (pack_concl.hl:54-56): the circumcenter sees the
 two affine hulls orthogonally. -/
 theorem MHFTTZN4_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ) (u v q : V3), k ≤ 3 →
@@ -4843,11 +4824,6 @@ theorem XNHPWAB4_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ), saturated V 
       hl (truncateSimplex i ul) < hl (truncateSimplex j ul) := by
   sorry
 
-/-- HOL `WAUFCHE1_concl` (pack_concl.hl:89-91). -/
-theorem WAUFCHE1_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ), saturated V →
-    Packing V → barV V k ul → hl ul ≤ dist (omegaList V ul) (hdV ul) := by
-  sorry
-
 /-- HOL `WAUFCHE2_concl` (pack_concl.hl:93-95). -/
 theorem WAUFCHE2_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ), saturated V →
     Packing V → barV V k ul → hl ul < Real.sqrt 2 →
@@ -4889,39 +4865,11 @@ theorem IVFICRK_concl : ∀ {A : Type} [Inhabited A] (k : ℕ),
           (leftActionList σ (dropIth ul i)).getD j default := by
   sorry
 
-/-- HOL `WQPRRDY_concl` (pack_concl.hl:115-117): the hull of the simplex is
-the union of the Rogers simplices over all orderings. -/
-theorem WQPRRDY_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ), saturated V →
-    Packing V → barV V k ul → hl ul < Real.sqrt 2 →
-    convexHull ℝ (setOfList ul) =
-      ⋃₀ ((fun p : Equiv.Perm ℕ => rogers V (leftActionList p ul)) ''
-        {p : Equiv.Perm ℕ | permutes p (Set.Icc 0 k)}) := by
-  sorry
-
 /-- HOL `MXI_EXISTS_concl` (pack_concl.hl:120-123). -/
 theorem MXI_EXISTS_concl : ∀ (V : Set V3) (ul : List V3), saturated V → Packing V →
     barV V 3 ul → Real.sqrt 2 ≤ hl ul →
     mxi V ul ∈ convexHull ℝ {omegaListN V ul 2, omegaListN V ul 3} ∧
       dist (mxi V ul) (hdV ul) = Real.sqrt 2 := by
-  sorry
-
-/-- HOL `EMNWUUS1_concl` (pack_concl.hl:128-129). -/
-theorem EMNWUUS1_concl : ∀ (V : Set V3) (ul : List V3), saturated V → Packing V →
-    barV V 3 ul → (hl ul < Real.sqrt 2 ↔ mcell4 V ul ≠ ∅) := by
-  sorry
-
-/-- HOL `EMNWUUS2_concl` (pack_concl.hl:131-133). -/
-theorem EMNWUUS2_concl : ∀ (V : Set V3) (ul : List V3), saturated V → Packing V →
-    barV V 3 ul →
-    (hl ul < Real.sqrt 2 ↔
-      mcell0 V ul = ∅ ∧ mcell1 V ul = ∅ ∧ mcell2 V ul = ∅ ∧ mcell3 V ul = ∅) := by
-  sorry
-
-/-- HOL `SLTSTLO1_concl` (pack_concl.hl:135-136): the Rogers simplex is
-covered by the cells `mcell 0..4`. -/
-theorem SLTSTLO1_concl : ∀ (V : Set V3) (ul : List V3) (p : V3), saturated V →
-    Packing V → barV V 3 ul → p ∈ rogers V ul →
-    ∃ i : ℕ, i ≤ 4 ∧ p ∈ mcell i V ul := by
   sorry
 
 /-- HOL `SLTSTLO2_concl` (pack_concl.hl:138-139): away from a null set the
@@ -4969,18 +4917,6 @@ theorem LEPJBDJ_0_concl : ∀ (V : Set V3) (ul : List V3), saturated V → Packi
     barV V 3 ul → V ∩ mcell 0 V ul = ∅ := by
   sorry
 
-/-- HOL `HDTFNFZ_concl` (pack_concl.hl:164-170): for non-null cells,
-`VX` is the intersection with the packing. -/
-theorem HDTFNFZ_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ) (v : V3) (X : Set V3),
-    saturated V → Packing V → barV V 3 ul → X = mcell k V ul → ¬nullSet X →
-    VX V X = V ∩ X := by
-  sorry
-
-/-- HOL `URRPHBZ1_concl` (pack_concl.hl:172-174): cells are measurable. -/
-theorem URRPHBZ1_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ), saturated V →
-    Packing V → barV V 3 ul → MeasurableSet (mcell k V ul) := by
-  sorry
-
 /-- HOL `URRPHBZ2_concl` (pack_concl.hl:176-178): cells are eventually
 radial at packing points. -/
 theorem URRPHBZ2_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ) (v : V3),
@@ -4988,34 +4924,10 @@ theorem URRPHBZ2_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ) (v : V3),
     EventuallyRadial v (mcell k V ul) := by
   sorry
 
-/-- HOL `URRPHBZ3_concl` (pack_concl.hl:180-183): away from the packing
-vertices, a non-null cell has positive clearance. -/
-theorem URRPHBZ3_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ) (v : V3),
-    saturated V → Packing V → barV V 3 ul → ¬nullSet (mcell k V ul) →
-    v ∈ V \ VX V (mcell k V ul) →
-    ∃ t : ℝ, t > 0 ∧ ∀ p ∈ mcell k V ul, t < dist p v := by
-  sorry
-
 /-- HOL `QZYZMJC_concl` (pack_concl.hl:185-187): the solid angles around a
 packing point sum to `4π`. -/
 theorem QZYZMJC_concl : ∀ (V : Set V3) (v : V3), saturated V → Packing V → v ∈ V →
     setSum {X | mcellSet V X ∧ v ∈ VX V X} (fun t => sol v t) = 4 * Real.pi := by
-  sorry
-
-/-- HOL `KIZHLTL1_concl` (pack_concl.hl:201-203). -/
-theorem KIZHLTL1_concl : ∀ V : Set V3, ∃ c : ℝ, ∀ r : ℝ, saturated V → Packing V →
-    1 ≤ r →
-    setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X} volume.real +
-        c * r ^ 2 ≤
-      setSum (V ∩ Metric.ball 0 r) (fun u => volume.real (voronoiOpen V u)) := by
-  sorry
-
-/-- HOL `KIZHLTL2_concl` (pack_concl.hl:205-208). -/
-theorem KIZHLTL2_concl : ∀ V : Set V3, ∃ c : ℝ, ∀ r : ℝ, saturated V → Packing V →
-    1 ≤ r →
-    ((Nat.card ((V ∩ Metric.ball 0 r : Set V3)) : ℕ) : ℝ) * 8 * mm1 + c * r ^ 2 ≤
-      (2 * mm1 / Real.pi) *
-        setSum {X : Set V3 | X ⊆ Metric.ball 0 r ∧ mcellSet V X} (totalSolid V) := by
   sorry
 
 /-- HOL `KIZHLTL3_concl` (pack_concl.hl:210-220). -/
@@ -5319,48 +5231,6 @@ theorem GOTCJAH_concl : ∀ (s : Set V3) (f : Set V3) (v : V3) (b : ℝ) (WF : S
     k = Nat.card {u : V3 | u ∈ Set.extremePoints ℝ f} →
     2 * Real.pi - 2 * (k : ℝ) * Real.arcsin (h * Real.sin (Real.pi / k)) ≤
       sol 0 WF := by
-  sorry
-
-/-- HOL `TIWWFYQ_concl` (pack_concl.hl:263). -/
-theorem TIWWFYQ_concl : ∀ (V : Set V3) (p : V3), Packing V → saturated V →
-    ∃ v : V3, v ∈ V ∧ p ∈ voronoiClosed V v := by
-  sorry
-
-/-- HOL `VORONOI_BALL2_concl` (pack_concl.hl:266). -/
-theorem VORONOI_BALL2_concl : ∀ (V : Set V3) (v : V3), Packing V → saturated V →
-    v ∈ V → voronoiClosed V v ⊆ Metric.ball v 2 := by
-  sorry
-
-/-- HOL `VORONOI_INTER_BIS_LE_concl` (pack_concl.hl:268-269). -/
-theorem VORONOI_INTER_BIS_LE_concl : ∀ (V : Set V3) (v : V3), Packing V → saturated V →
-    v ∈ V →
-    voronoiClosed V v =
-      ⋂₀ ((fun u : V3 => bisLe v u) ''
-        {u : V3 | u ∈ V ∧ u ∈ Metric.ball v 4 ∧ u ≠ v}) := by
-  sorry
-
-/-- HOL `VORONOI_POLYHEDRON_concl` (pack_concl.hl:271-272). -/
-theorem VORONOI_POLYHEDRON_concl : ∀ (V : Set V3) (v : V3), Packing V → saturated V →
-    v ∈ V → polyhedron (voronoiClosed V v) := by
-  sorry
-
-/-- HOL `RHWVGNP_concl` (pack_concl.hl:274): re-export of
-`VORONOI_POLYHEDRON_concl`. -/
-theorem RHWVGNP_concl : ∀ (V : Set V3) (v : V3), Packing V → saturated V →
-    v ∈ V → polyhedron (voronoiClosed V v) :=
-  VORONOI_POLYHEDRON_concl
-
-/-- HOL `DRUQUFE_concl` (pack_concl.hl:276-277). -/
-theorem DRUQUFE_concl : ∀ (V : Set V3) (v : V3), Packing V → saturated V →
-    IsCompact (voronoiClosed V v) ∧ Convex ℝ (voronoiClosed V v) ∧
-      MeasurableSet (voronoiClosed V v) := by
-  sorry
-
-/-- HOL `KHEJKCI_concl` (pack_concl.hl:287-288). (Hypothesis `vor_list` is
-the reconstruction `vorList`; see the file header.) -/
-theorem KHEJKCI_concl : ∀ (V : Set V3) (k : ℕ) (ul : List V3), saturated V →
-    Packing V → vorList V k ul →
-    FaceOf (voronoiList V ul) (voronoiClosed V (hdV ul)) := by
   sorry
 
 /-- HOL `GRUTOTI1_concl` (pack_concl.hl:294-304): the dihedral angles of all
