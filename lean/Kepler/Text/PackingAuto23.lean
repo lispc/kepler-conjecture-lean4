@@ -4535,6 +4535,77 @@ private theorem p23_grutoti_edge_vol_ne_top (V : Set V3) (u0 u1 : V3) (e : Set V
         (grutoti_cap_subset_closedBall u0 u1 r d hz.2)) measure_closedBall_lt_top
   exact ne_of_lt hlt
 
+/-! ## B1 VX-forward bridge (tiwwfyq-coverage-scout §2; hcov 支 (iii)/(v) 弹药) -/
+
+/-- B1 VX-前向桥（tiwwfyq-coverage-scout §2；hcov 支 (iii)/(v) 的 VX 半边）：
+`X = mcell k V vl`（`2 ≤ k ≤ 4`）非零测且 `truncateSimplex 1 vl = [u0, u1]` 时，
+`VX V X` 同时含 `u0` 与 `u1`。纯组装：`HDTFNFZ`（PA10:257，真证）给
+`VX V X = V ∩ X`（cellParams ε-分案已在该件内完成——p.1 = 0 走
+`LEPJBDJ_0`、p.1 ≥ 1 走 `LEPJBDJ`，即侦察配方第 1-3 步的整体；配方第 1 步
+`HD_IN_MCELL` 在此路线不需要）；`LEPJBDJ`（PA11:472）给
+`V ∩ X = setOfList (truncateSimplex (k-1) vl)`；截断复合
+`TRUNCATE_TRUNCATE_SIMPLEX`（PA5:1440）+ ε-选取 `p23_trunc_init_len` 给
+k-截断仍以 `[u0, u1]` 开头（k = 2 时即恒等，配方第 4 步的 `elV vl 1 = u1`
+路线由列表前缀事实替代）。前提面注记：`¬nullSet X` 是 HDTFNFZ 的门，一步
+给 `X ≠ ∅`；反向（X ≠ ∅ ⇒ 非零测）对 k ≥ 2 胞不是组装件，消费端须自带
+`¬nullSet`（hcov/pivot 侧均有）。上游债（不新增）：`LEPJBDJ` 的 k = 2/3
+内部分支经 PA11 `k2Case`/`k3Subset`（均 sorry），自上游流动。 -/
+private theorem p23_vx_forward_bridge (V : Set V3) (vl : List V3) (k : ℕ) (X : Set V3)
+    (u0 u1 : V3)
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 vl)
+    (hk : 2 ≤ k) (hk4 : k ≤ 4) (hX : X = mcell k V vl) (hnull : ¬ nullSet X)
+    (htr : truncateSimplex 1 vl = [u0, u1]) :
+    u0 ∈ VX V X ∧ u1 ∈ VX V X := by
+  have hvlen : vl.length = 4 := hb.1
+  have hXne : X ≠ ∅ := by
+    intro he
+    exact hnull (by rw [nullSet, he]; exact MeasureTheory.measure_empty)
+  -- VX V X = V ∩ X = setOfList (truncateSimplex (k-1) vl)
+  have hvx : VX V X = V ∩ X := HDTFNFZ (v := 0) hs hp hb hX hnull
+  have hint : V ∩ X = setOfList (truncateSimplex (k - 1) vl) := by
+    rw [hX]
+    exact LEPJBDJ V vl k hs hp hb (by omega) hk4 (fun h0 => hXne (hX.trans h0))
+  rw [hvx, hint]
+  -- the k-truncation of vl still begins with [u0, u1]
+  have htrw : truncateSimplex 1 (truncateSimplex (k - 1) vl) = [u0, u1] := by
+    rw [TRUNCATE_TRUNCATE_SIMPLEX vl 1 (k - 1) (by omega) (by omega)]
+    exact htr
+  have h12 : 1 + 1 ≤ (truncateSimplex (k - 1) vl).length := by
+    have := (p23_trunc_init_len (k - 1) vl (by omega)).2
+    omega
+  obtain ⟨t, ht⟩ := (p23_trunc_init_len 1 (truncateSimplex (k - 1) vl) h12).1
+  rw [htrw] at ht
+  refine ⟨?_, ?_⟩
+  · show u0 ∈ truncateSimplex (k - 1) vl
+    rw [ht]; simp
+  · show u1 ∈ truncateSimplex (k - 1) vl
+    rw [ht]; simp
+
+/-- B1 桥的 `edgeX` 形：加 `u0 ≠ u1` 即得携边（PA2:381 `edgeX` 的定义就只有
+`e = {u,v}` + 双端 ∈ VX + 异性三个合取支——无 mcellSet 合取支、无定向；
+侦察附记的「edgeX 另一半」实为 `grutotiEdgeCells` 的 mcellSet 合取支，由
+下一件一步补齐）。 -/
+private theorem p23_vx_forward_bridge_edgeX (V : Set V3) (vl : List V3) (k : ℕ)
+    (X : Set V3) (u0 u1 : V3)
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 vl)
+    (hk : 2 ≤ k) (hk4 : k ≤ 4) (hX : X = mcell k V vl) (hnull : ¬ nullSet X)
+    (hne : u0 ≠ u1) (htr : truncateSimplex 1 vl = [u0, u1]) :
+    {u0, u1} ∈ edgeX V X := by
+  obtain ⟨h0, h1⟩ :=
+    p23_vx_forward_bridge V vl k X u0 u1 hs hp hb hk hk4 hX hnull htr
+  exact ⟨u0, u1, rfl, h0, h1, hne⟩
+
+/-- B1 桥的整件形（hcov 支 (v) 的直接形状）：`X ∈ grutotiEdgeCells V {u0, u1}`
+= `mcellSet V X`（由 `hX`/`hb` 定义展开）+ `edgeX` 半边（上一件）。 -/
+private theorem p23_vx_forward_bridge_cell (V : Set V3) (vl : List V3) (k : ℕ)
+    (X : Set V3) (u0 u1 : V3)
+    (hs : saturated V) (hp : Packing V) (hb : barV V 3 vl)
+    (hk : 2 ≤ k) (hk4 : k ≤ 4) (hX : X = mcell k V vl) (hnull : ¬ nullSet X)
+    (hne : u0 ≠ u1) (htr : truncateSimplex 1 vl = [u0, u1]) :
+    X ∈ grutotiEdgeCells V {u0, u1} :=
+  ⟨⟨k, vl, hX, hb⟩,
+    p23_vx_forward_bridge_edgeX V vl k X u0 u1 hs hp hb hk hk4 hX hnull hne htr⟩
+
 /-- SF32 拆分波 hcov 支（2026-10-08，精确定点——桥件四支中唯一不可证支，
 唯一 sorry 定点于此）：cap 的边胞迹测度覆盖恒等式。NEEDS（HL GRUTOTI.hl
 测度覆盖链，TIWWFYQ/GLTVHUM/SLTSTLO1 巨型）逐点路线：(i) `grutoti_3mem`
