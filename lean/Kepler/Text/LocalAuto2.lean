@@ -64,6 +64,13 @@ Encoding notes.
   `Kepler.Text.TopologyFan` (`orbit_eq_setOfEdge`; depends only on `Fan`,
   downstream interfaces unchanged) and fills `AZIM_CYCLE_EQ_SIGMA_FAN_ALT`
   via `p2_AZIM_CYCLE_EQ_SIGMA_FAN` + `EE_elim`.
+- WRGCVDR orbit wave (2026-10-08): `WRGCVDR_ORBIT` (localization.hl:365, the
+  orbit half of HOL `WRGCVDR` WRGCVDR.hl:2622) is closed on top of
+  `WRGCVDR_BIJ` — `lemma_face_identity` ↦ `orbitMap_eq_of_mem` gives the
+  common face orbit, `ff_of_hyp` on darts + FST-determinacy gives the
+  `face_map ↔ hro POWER n` correspondence, and both set inclusions read off
+  darts (`p2_IN_DARTS_HYP_IMP_FST_SND_IN_V`); unlocks the LA5
+  `LOCAL_FAN_ORBIT_MAP_V` blocking chain.
 -/
 
 import Kepler.Text.Polytope
@@ -1133,9 +1140,113 @@ theorem WRGCVDR_BIJ (h : localFan_p2 V E FF) : Set.BijOn Prod.fst FF V := by
     rw [← hnn]
     exact p2_fst_iterate 0 V E n (v, chooseNdPoint_p2 v E V)
 
-/-- HOL `WRGCVDR_ORBIT` (localization.hl:365). -/
+/-- HOL `WRGCVDR_ORBIT` (localization.hl:365) — the orbit half of HOL
+`WRGCVDR` (WRGCVDR.hl:2622): `rho_node1` generates `V` off any vertex.
+Proof (mirror of the HOL second conjunct): every dart of `FF` sees the same
+face orbit (`orbitMap_eq_of_mem` = HOL `lemma_face_identity`), the face map
+preserves `FF`, so `ff_of_hyp` on darts plus the `FST`-determinacy of darts
+(`LOCAL_FAN_RHO_NODE_PROS` argument, re-derived here from `WRGCVDR_BIJ`)
+give the `face_map ↔ hro POWER n` correspondence
+`(faceMap^[n] (v, rho v)) = (rho^[n] v, rho^[n+1] v)`; both inclusions of
+`orbitF_p2 (rhoNode1_p2 FF) v = V` then read off darts. -/
 theorem WRGCVDR_ORBIT (h : localFan_p2 V E FF) :
-    ∀ v ∈ V, orbitF_p2 (rhoNode1_p2 FF) v = V := sorry
+    ∀ v ∈ V, orbitF_p2 (rhoNode1_p2 FF) v = V := by
+  intro v hv
+  obtain ⟨hmap, hinj, hsurj⟩ := WRGCVDR_BIJ h
+  obtain ⟨H, hd, -, -, hface, hfan, ⟨z, hzd, hFF⟩, -⟩ := h
+  have hdartOf : ∀ d ∈ FF, d ∈ dartsOfHyp_p2 E V := by
+    intro d hdF
+    have hsub := H.face_subset_darts hzd (hFF ▸ hdF)
+    rw [hd] at hsub
+    exact hsub
+  have hleft : ∀ x ∈ V, (x, rhoNode1_p2 FF x) ∈ FF := by
+    intro x hx
+    obtain ⟨d, hdF, hfd⟩ := hsurj hx
+    have hdeq : (x, d.2) = d := Prod.ext hfd.symm rfl
+    have hmemFF : (x, d.2) ∈ FF := by
+      rw [hdeq]
+      exact hdF
+    exact Classical.epsilon_spec (p := fun w => (x, w) ∈ FF) ⟨d.2, hmemFF⟩
+  have hdet : ∀ d ∈ FF, d = (d.1, rhoNode1_p2 FF d.1) := by
+    intro d hdF
+    have hsucc : (d.1, rhoNode1_p2 FF d.1) ∈ FF := hleft d.1 (hmap hdF)
+    exact (hinj hsucc hdF rfl).symm
+  have hvFF : (v, rhoNode1_p2 FF v) ∈ FF := hleft v hv
+  have hmemF : (v, rhoNode1_p2 FF v) ∈ H.face z := hFF ▸ hvFF
+  have hfaceV : FF = H.face (v, rhoNode1_p2 FF v) :=
+    hFF.trans (orbitMap_eq_of_mem H.faceMap_permutes hmemF).symm
+  have hFF2 : ∀ d ∈ FF, (H.faceMap : V3 × V3 → V3 × V3) d ∈ FF := by
+    intro d hdF
+    have h1 : (H.faceMap : V3 × V3 → V3 × V3) d ∈ H.face d := by
+      have hpow := pow_apply_mem_orbitMap H.faceMap 1 d
+      rw [pow_one] at hpow
+      exact hpow
+    have hd' : d ∈ H.face (v, rhoNode1_p2 FF v) := by rw [← hfaceV]; exact hdF
+    have h2 : H.face d = H.face (v, rhoNode1_p2 FF v) :=
+      orbitMap_eq_of_mem H.faceMap_permutes hd'
+    rwa [h2, ← hfaceV] at h1
+  have hstep : ∀ a b : V3, (a, b) ∈ FF →
+      (H.faceMap : V3 × V3 → V3 × V3) (a, b) = (b, rhoNode1_p2 FF b) := by
+    intro a b hab
+    have hres : (H.faceMap : V3 × V3 → V3 × V3) (a, b) ∈ FF := hFF2 (a, b) hab
+    have hproj : ((H.faceMap : V3 × V3 → V3 × V3) (a, b)).1 = b := by
+      have hco : (H.faceMap : V3 × V3 → V3 × V3) (a, b) = ffOfHyp_p2 0 V E (a, b) := by
+        rw [hface]
+      rw [hco, show ffOfHyp_p2 0 V E (a, b) =
+        if (a, b) ∈ dartsOfHyp_p2 E V then
+          ((a, b).2, ivsAzimCycle_p2 (EE_p2 (a, b).2 E) 0 (a, b).2 (a, b).1)
+        else (a, b)
+        from rfl, if_pos (hdartOf (a, b) hab)]
+    have hpair : (H.faceMap : V3 × V3 → V3 × V3) (a, b)
+        = (((H.faceMap : V3 × V3 → V3 × V3) (a, b)).1,
+          rhoNode1_p2 FF ((H.faceMap : V3 × V3 → V3 × V3) (a, b)).1) :=
+      hdet _ hres
+    refine hpair.trans ?_
+    rw [hproj]
+  have hmemIter : ∀ n : ℕ,
+      (H.faceMap : V3 × V3 → V3 × V3)^[n] (v, rhoNode1_p2 FF v) ∈ FF := by
+    intro n
+    have hit : (H.faceMap : V3 × V3 → V3 × V3)^[n] (v, rhoNode1_p2 FF v)
+        ∈ H.face (v, rhoNode1_p2 FF v) := by
+      rw [p2_faceEqOrbit H (v, rhoNode1_p2 FF v)]
+      exact ⟨n, rfl⟩
+    rw [← hfaceV] at hit
+    exact hit
+  have hkey : ∀ n : ℕ, (H.faceMap : V3 × V3 → V3 × V3)^[n] (v, rhoNode1_p2 FF v)
+      = ((rhoNode1_p2 FF)^[n] v, (rhoNode1_p2 FF)^[n + 1] v) := by
+    intro n
+    induction n with
+    | zero => rfl
+    | succ k ih =>
+      have hmem : ((rhoNode1_p2 FF)^[k] v, (rhoNode1_p2 FF)^[k + 1] v) ∈ FF := by
+        rw [← ih]
+        exact hmemIter k
+      have hp : (rhoNode1_p2 FF)^[k + 1 + 1] v
+          = rhoNode1_p2 FF ((rhoNode1_p2 FF)^[k + 1] v) :=
+        Function.iterate_succ_apply' _ _ _
+      rw [Function.iterate_succ_apply', ih,
+        hstep ((rhoNode1_p2 FF)^[k] v) ((rhoNode1_p2 FF)^[k + 1] v) hmem, hp]
+  rw [orbitF_p2]
+  ext w
+  simp only [Set.mem_setOf_eq]
+  constructor
+  · rintro ⟨n, hn⟩
+    have hdart : ((rhoNode1_p2 FF)^[n] v, (rhoNode1_p2 FF)^[n + 1] v) ∈ FF := by
+      rw [← hkey n]
+      exact hmemIter n
+    have hV := p2_IN_DARTS_HYP_IMP_FST_SND_IN_V hfan.1 (hdartOf _ hdart)
+    rw [← hn]
+    exact hV.1
+  · intro hw
+    obtain ⟨d, hdF, hfd⟩ := hsurj hw
+    have hd' : d ∈ H.face (v, rhoNode1_p2 FF v) := by rw [← hfaceV]; exact hdF
+    rw [p2_faceEqOrbit H (v, rhoNode1_p2 FF v)] at hd'
+    obtain ⟨m, hm⟩ := hd'
+    rw [hkey m] at hm
+    have hd1 : d.1 = (rhoNode1_p2 FF)^[m] v := by rw [← hm]
+    refine ⟨m, ?_⟩
+    rw [← hd1]
+    exact hfd
 
 /-- HOL `ALL_TO_THE_NONPARALLEL_PART_ALT` (localization.hl:374); HOL `graph`
 ↦ `Kepler.Text.Fan.Graph`. -/
