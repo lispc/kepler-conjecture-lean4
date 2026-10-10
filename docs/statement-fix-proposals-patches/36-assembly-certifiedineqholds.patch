@@ -1,0 +1,247 @@
+diff --git a/lean/Kepler/Assembly.lean b/lean/Kepler/Assembly.lean
+index 3a4f8cba..5a95be41 100644
+--- a/lean/Kepler/Assembly.lean
++++ b/lean/Kepler/Assembly.lean
+@@ -13,9 +13,13 @@
+ 
+   接口冻结 2026-09-19，2026-09-21 方向 A 深挖：`textCapstone` 已从 sorry
+   占位展开为真证明（§2b TameSpine 骨架 + §2c 接口占位承接其债务）；
+-  `nonlinearInequalities` / `linearProgrammingResults` 两个占位定理仍在；
++  `linearProgrammingResults` 占位定理仍在；
+   第四占位 `goodListArchive` 已由 P6-C 闭合为真证明；
+   `assembly` 本体是真证明（对照 HOL tactic 脚本逐行翻译）。
++  2026-10-08 T1 自上而下第一波：接口 1 `nonlinearInequalities` 的单根 sorry
++  展开为 §2a' 六分量具名骨架件的显式装配（15 枚：14 开放骨架 + 1 真装配）；
++  `CertifiedIneqHolds` 语义按 §2a 处方落诚实最小形（试点查表，键
++  `"3397113841"` 端到端闭合 = 会师点）。
+ -/
+ import Kepler.Statement
+ import Kepler.Graphs
+@@ -29,6 +33,10 @@ import Kepler.Text.ContraFan
+ import Kepler.Text.LocalAuto16
+ import Kepler.Assembly.GoodListDefs
+ import Kepler.Assembly.GoodListAll
++-- T1 自上而下第一波（2026-10-08）：六 ID 清单数据（P6-E 生成件，零依赖）+
++-- `CertifiedIneqHolds` 查表的试点链（G4 证书 C3397113841 + 粘合 + 语义命题）。
++import Kepler.Assembly.IdLists
++import Kepler.Assembly.IneqPilot
+ 
+ open Classical Metric Set
+ open Kepler.Geom Kepler.Text Kepler.Text.Fan Kepler.Graphs
+@@ -165,9 +173,17 @@ HOL `the_nonlinear_inequalities`（the_main_statement.hl:55-59）是六件**生
+ 清单填入前本接口的量化部分无内容。仓库中无现成注册表形态
+ （`get_main_nonlinear` 仅见于 HOL 脚本与 LocalAuto16/19 的 NEEDS 注释），故按批准新造。 -/
+ 
+-/-- 单条证书不等式成立的语义。**PLACEHOLDER(G4)**：填实时按 `id` 查表展开为
+-对应的字面量化不等式（`!y1..y6. box ==> ineq` 形），并由 G4 内核证书定理闭合。 -/
+-def CertifiedIneqHolds (_id : String) : Prop := True
++/-- 单条证书不等式成立的语义。**T1 骨架波（2026-10-08）按上方处方落地的诚实
++最小形**：查表体 = `certifiedIneqHolds_pilot`（IneqPilot.lean 的量产样板表）——
++表内键按 `id` 展开为 ineq.hl 字面量化不等式命题（`!y1..y6. box ==> ineq` 形；
++现含唯一端到端键 `"3397113841"`：G4 证书 `C3397113841_pos`（1504 叶）+ 粘合
++`C3397113841_evalReal` + 语义命题 `ineqProp_3397113841`，`#print axioms` =
++标准三公理，IneqPilot.lean:96-97 实证），表外键回落 `True`（原占位语义）。
++回落分支不可达性由量产波「ID 清单 = 查表定义域」不变量钉死（IdLists.lean
++`certLookupDomain`；其 :699 else-True 静默退化警告在案：表未覆盖定义域前，
++§2a' 的注册表侧骨架**不得**经回落分支平凡闭合）。签名（`String → Prop`，
++2026-09-19 冻结）一字未动，仅按处方替换函数体。 -/
++def CertifiedIneqHolds (_id : String) : Prop := certifiedIneqHolds_pilot _id
+ 
+ /-- 注册表量化：清单中每条 ID 对应的不等式成立。 -/
+ def AllCertified (ids : List String) : Prop := ∀ id ∈ ids, CertifiedIneqHolds id
+@@ -198,6 +214,165 @@ def TheNonlinearInequalities : Prop :=
+   pack_nonlinear_non_ox3q1h ∧ ox3q1hP25 ∧ main_nonlinear_terminal_v11 ∧ LpIneqs ∧
+     PackIneqDefA ∧ KcblrqcIneqDef
+ 
++/-! ### 2a'. T1 中层骨架 —— 单根接口 sorry 的六分量展开（2026-10-08，
++自上而下第一波）
++
++`nonlinearInequalities`（§3）的证明体从单根 `sorry` 换成对下方具名骨架件的
++显式装配；sorryAx 债务从「一个黑箱接口」分解为**按分量、按清单结构记账**的
++骨架节点（主定理可达债务图 T 线第一层：15 枚具名骨架件 = 14 枚开放骨架 +
++1 枚真装配，另有 §2a 查表上的会师点真叶 1 枚）。骨架形一律
++`theorem nliX : <分量> := sorry`（内联形），每件带 HOL/ineq.hl 出处 +
++底层资产状态（已闭合可证 / deferred-compute / 真缺口）+ `-- NEEDS:` 记账。
++
++底层资产口径（STATUS.md Phase 4，诚实标记用）：非线性求解层 **68/176 y 空间
++闭合**（bb_arb 证书多数不在库——旧机丢失）、**G4 内核端到端 8 案**、92 prep
++家族证据链降级**待重做**、**16 条真残余**；155 定义闭包 **B=112/124 就位**
++（余批赖 LA38 未移植 lane）。自下而上会师点 = `CertifiedIneqHolds` 查表
++（§2a，现含试点键）+ `Kepler.Interval.Cases.*` 在库证书
++（C3397113841 / C1965189142x34 / C3253650737 / C4717061266 /
++C2570626711p200 / C549*）。 -/
++
++/-! #### 分量 1/6 `pack_nonlinear_non_ox3q1h`（81 条；PA21 MERGE-INEQ wave 0
++route A' 结构化：19 条消费切片 = cell3 7 + TSKAJXY 10 + GRKIBMP 2，加 62 条
++rest 叶） -/
++
++/-- 中层骨架 1a：cell3 切片组（HOL `cell3_hyp` merge_ineq.hl:3490-3495；
++PackingAuto21.lean:376 显式盒式 `∀ y…` 七条：QZECFIC wt0/wt0corner/wt0sqrt8/
++wt1/wt2A + CIHTIUM + CJFZZDW）。
++资产状态：deferred-compute——语句已在 PA21 显式成形，证书不在库（68 例
++旧机丢失口径）。
++-- NEEDS: 七条逐条 G4 证书 + 粘合入 §2a 查表（对接 IneqPilot 样板链）。 -/
++theorem nliCell3Bank : cell3_bank := sorry
++
++/-- 中层骨架 1b：TSKAJXY 切片组（merge_ineq.hl:1370-1377 string 序；
++PackingAuto21.lean:381 十条显式盒式不等式）。
++资产状态：deferred-compute（同 1a）。
++-- NEEDS: 十条逐条 G4 证书 + 粘合入查表。 -/
++theorem nliTskBank : tsk_bank := sorry
++
++/-- 中层骨架 1c：GRKIBMP 切片组（merge_ineq.hl:3795 add_hyp 序；
++PackingAuto21.lean:389，`GRKIBMP A V2` + `GRKIBMP B V2`，ineq.hl:1520/1537）。
++资产状态：**真缺口**——`GRKIBMP B V2` 属 16 条真残余清单（尖锐边界组：
++有真反例叶，需 ε 余量或弱编码，STATUS.md Phase 4）。
++-- NEEDS: A V2 出证书；B V2 定策略（ε 余量/弱编码/域剖分）后重解。 -/
++theorem nliGrkBank : grk_bank := sorry
++
++/-- 中层骨架 1d：81 条清单的其余 62 条 rest 叶（PackingAuto21.lean:395
++`PLACEHOLDER(G4)`；JSPEVYT/IXPOTPA/TXQTPVC/TEWNSCJ/QITNPEA 家族/
++ZTGIJCF0/4 生成族/GCKBQEA/RQWUDDU/6096597438/1965189142 等）。
++资产状态：混合——`QITNPEA 3725403817` 已内核闭合（964,984 叶，2026-09-18，
++公理标准三）；`1965189142 34` 证书在库（Interval/Cases/C1965189142x34）；
++其余 deferred-compute（92 prep 家族重做口径覆盖其中多数）。
++-- NEEDS: PA21 rest 叶拆单条时同步展开本骨架；在库两案补粘合引理入查表。 -/
++theorem nliPackNonlinearRest : pack_nonlinear_rest := sorry
++
++/-- 中层骨架 1：HOL `pack_nonlinear_non_ox3q1h`（merge_ineq.hl:118-122）分量
++本体 = 四切片组骨架件的显式装配（**真推导**，无独立债务；对照 PA21:403-405
++def 的四个合取项）。 -/
++theorem nliPackNonlinearNonOx3q1h : pack_nonlinear_non_ox3q1h :=
++  ⟨nliCell3Bank, nliTskBank, nliGrkBank, nliPackNonlinearRest⟩
++
++/-! #### 分量 2/6 `ox3q1hP25`（230 条 = ineqdata3q1h.hl 46 record × 5 支） -/
++
++/-- 中层骨架 2：HOL `ox3q1h`（Oxl_def.hl；cc_v11 模型 4-基数 quarter case 的
++证书不等式库）接口分量本体。
++资产状态：**真缺口（语句级）**——Lean 对应物 `ox3q1hP25`（PackingAuto25.lean:89）
++本体即 `sorry` 型 opaque def（原注 `NEEDS: exact Oxl_def.hl body`）。
++-- NEEDS: ①Oxl_def.hl 本体移植（P6-B 保真审补录）；②与注册表侧骨架
++`nliOx3q1hIds` 的定义级桥（清单常量代入 + 查表语义，量产接线波）。 -/
++theorem nliOx3q1h : ox3q1hP25 := sorry
++
++/-- 中层骨架 2'：ox3q1h 注册表侧（merge_ineq.hl:78-92 清单，n 主 i 次序
++230 条，IdLists.lean:131-361）。
++资产状态：deferred-compute（230 条逐条证书）+ **退化防线**——§2a 查表
++表外回落 `True`，本骨架**不得**经回落分支平凡闭合（IdLists.lean:699
++else-True 静默退化警告），须逐条接线后闭合。
++-- NEEDS: 230 条逐条 ineq.hl 字面展开 + G4 证书 + 查表扩表。 -/
++theorem nliOx3q1hIds : AllCertified ox3q1hIds := sorry
++
++/-! #### 分量 3/6 `main_nonlinear_terminal_v11`（109 条 Main_estimate 标签；
++993 条主体） -/
++
++/-- 中层骨架 3：HOL `main_nonlinear_terminal_v11`（terminal.hl:24-44；
++LocalAuto1.lean:975 `sorry` 型 opaque def）接口分量本体。
++可见盒形锚 = `LocalAnchors.MainNonlinearTerminalV11`（`2 ≤ y1..y3 ≤ 2*h0 ∧
++cstab ≤ y4 ≤ 3.915 ∧ y5 = y6 = 2`）；消费链 `JEJTVGB_p16` →
++`lp_main_estimate`（LocalAuto16.lean:180-195）已就位。
++资产状态：**真缺口（语句级）** + deferred-compute（证书级）——155 定义
++闭包 B=112/124 为展开式资产。
++-- NEEDS: ①terminal.hl 本体按 109 条清单展开（取代 LA1 opaque def）；
++②109 条逐条证书（`4717061266` 在库 Cases.C4717061266，补粘合）。 -/
++theorem nliMainNonlinearTerminalV11 : main_nonlinear_terminal_v11 := sorry
++
++/-- 中层骨架 3'：Main_estimate 注册表侧（terminal.hl:24-44 清单，109 条，
++IdLists.lean:368-477；含 4680581274 delta 族、7550003505 全 5³ 族、
++9563139965 d/e/f）。
++资产状态：deferred-compute + 退化防线（同 2'：不得经回落分支平凡闭合）。
++-- NEEDS: 109 条逐条接线 + 证书；在库 `4717061266` 优先粘合。 -/
++theorem nliMainNonlinearTerminalV11Ids : AllCertified mainNonlinearTerminalV11Ids := sorry
++
++/-! #### 分量 4/6 `LpIneqs`（127 条；the_main_statement.hl:29-45） -/
++
++/-- 中层骨架 4：HOL `lp_ineqs` 接口分量的当前形态 `AllCertified idsLpIneqs`
++（`idsLpIneqs = []`，§2a 占位清单）。资产状态：**占位空洞**——清单为空使
++本件当前空洞地成立；真化 = 把 IdLists.lean `lpIneqsIds`（127 条）代入
++`idsLpIneqs` 后由骨架 4' 承接。
++退化防线：**不得**利用 `idsLpIneqs = []` 或查表回落分支平凡闭合（两者皆是
++IdLists.lean:699 else-True 静默退化的变体；接线落地方可闭合）。
++-- NEEDS: `idsLpIneqs := lpIneqsIds` 接线（随查表量产波）。 -/
++theorem nliLpIneqs : LpIneqs := sorry
++
++/-- 中层骨架 4'：lp_ineqs 注册表侧（Lp/Tablelp/Lp_aux 标签 + `"6170936724"`
++特例、剔除 deprecated_quads，127 条，IdLists.lean:484-611）。
++资产状态：混合——在库 G4 证书 `3253650737` / `2570626711` / `5490182221`；
++试点案 `3397113841`（IneqPilot，端到端闭合、已入 §2a 查表）的**分量归属
++待对账**（IneqPilot 注记其 HOL 标签 Xconvert/Lp_aux/Tablelp 属 lp_ineqs，
++但该 10 位键不在生成清单 `lpIneqsIds` 中——gen_idlists.py 口径 vs 试点
++注记的分歧）。
++-- NEEDS: 127 条逐条接线 + 证书；3397113841 归属对账；清单内多数条目归
++92 prep 家族重做口径。 -/
++theorem nliLpIneqsIds : AllCertified lpIneqsIds := sorry
++
++/-! #### 分量 5/6 `PackIneqDefA`（5 条；YSSKQOY.hl:24-28） -/
++
++/-- 中层骨架 5：HOL `pack_ineq_def_a` 接口分量的当前形态（§2a `:= True`
++占位；`fcdjdot`/`textCapstone` 的前提件）。真化 = `packIneqDefAIds` 代入 +
++查表接线（同分量 4 形）。
++退化防线：**不得**经占位 `True` 平凡闭合。
++-- NEEDS: 语义真化（`PLACEHOLDER(P6-E)` → 注册表折算）。 -/
++theorem nliPackIneqDefA : PackIneqDefA := sorry
++
++/-- 中层骨架 5'：pack_ineq_def_a 注册表侧（YSSKQOY.hl:24-28，Flypaper ∩
++{UKBRPFE,WAZLDCD,BIEFJHU} ≠ ∅，5 条，IdLists.lean:618-623）。
++资产状态：混合——`1965189142 34` 证书在库（Cases.C1965189142x34），其余
++deferred-compute。
++-- NEEDS: 5 条逐条接线 + 证书；C1965189142x34 补粘合引理。 -/
++theorem nliPackIneqDefAIds : AllCertified packIneqDefAIds := sorry
++
++/-! #### 分量 6/6 `KcblrqcIneqDef`（28 条；tame_lemmas-compiled.hl:34-46） -/
++
++/-- 中层骨架 6：HOL `kcblrqc_ineq_def` 接口分量的当前形态（§2a `:= True`
++占位；`mqmsmab`/`textCapstone` 的前提件）。真化同分量 5。
++退化防线：**不得**经占位 `True` 平凡闭合。
++-- NEEDS: 语义真化（无既有 Lean 对应物，新造注册表折算）。 -/
++theorem nliKcblrqcIneqDef : KcblrqcIneqDef := sorry
++
++/-- 中层骨架 6'：kcblrqc_ineq_def 注册表侧（tame_lemmas-compiled.hl:34-46，
++Flypaper ∩ {KCBLRQC} ∪ extra_ids、剔除 deprecated_quads，28 条，
++IdLists.lean:630-658）。
++资产状态：混合——`3253650737` / `5490182221` / `2570626711` 三条证书在库，
++其余 deferred-compute/残余清单。
++-- NEEDS: 28 条逐条接线 + 证书；KCBLRQC 消费链（`mqmsmab` 填实）所需最小
++闭合集待定级。 -/
++theorem nliKcblrqcIneqDefIds : AllCertified kcblrqcIneqDefIds := sorry
++
++/-- **会师点（自上而下 ↔ 自下而上第一例）**：§2a 查表键 `"3397113841"` 的
++非空洞闭合——接口语义自此含一个由 G4 内核证书（`C3397113841_pos`，1504 叶
++bb_arb）+ 粘合引理支撑的真条目（`#print axioms` = 标准三公理）。后续
++自下而上波逐键扩表后，本形即量产样板。 -/
++theorem certifiedIneqHoldsPilotCase : CertifiedIneqHolds "3397113841" :=
++  certifiedIneqHolds_pilot_holds "3397113841"
++
+ /-- **接口 2**：HOL `linear_programming_results`（the_kepler_conjecture.hl:21-26）
+ 逐句镜像，archive 清单参数化（HOL 内嵌 `tame_archive_lists`；参数化是为了与
+ `good_linear_programming_results`（the_main_statement.hl:47-53）共享同一形状）：
+@@ -817,13 +992,22 @@ theorem linearProgrammingResultsOf (hnl : TheNonlinearInequalities)
+     LinearProgrammingResults :=
+   fun V hfan ⟨_, _, ⟨L, hLa, hiso⟩⟩ => hcert V hfan L hLa hiso
+ 
+-/-! ## 3. 接口 sorry 占位（原三接口冻结 2026-09-19；§2b/2c 的骨架占位为
+-2026-09-21 方向 A 深挖新增，均计入主定理可达债务图） -/
+-
+-/-- 接口占位（冻结 2026-09-19）。债务归属：Phase 4 / G4 粘合（P6-E）。
+-消除顺序：先填六个 ID 清单与 `CertifiedIneqHolds` 语义，再逐条闭合证书。 -/
+-theorem nonlinearInequalities : TheNonlinearInequalities := by
+-  sorry
++/-! ## 3. 接口装配层（原三接口冻结 2026-09-19；§2b/2c 的骨架占位为
++2026-09-21 方向 A 深挖新增，均计入主定理可达债务图）。
++2026-10-08 T1 自上而下第一波：接口 1 `nonlinearInequalities` 已展开为
++§2a' 具名骨架件的显式装配（冻结签名不变，单根 sorry 分解为按分量记账的
++骨架节点）。 -/
++
++/-- **接口 1 → T1 显式装配（2026-10-08；冻结签名 2026-09-19 一字未动）**。
++证明体 = 六分量骨架件（§2a'）逐个引用的显式构造；原单根 `sorry` 由此分解：
++sorryAx 仅自 14 枚开放骨架节点流入（1a-1d 切片组、2/2'、3/3'、4/4'、5/5'、
++6/6'），分量 1 本体与 §2a 查表会师点为真推导/真叶。
++债务归属（原冻结注记，继续有效）：Phase 4 / G4 粘合（P6-E）。消除顺序：
++先填六个 ID 清单与 `CertifiedIneqHolds` 语义（语义已按处方落最小形——§2a），
++再逐条闭合证书（自下而上波经 §2a 查表对接）。 -/
++theorem nonlinearInequalities : TheNonlinearInequalities :=
++  ⟨nliPackNonlinearNonOx3q1h, nliOx3q1h, nliMainNonlinearTerminalV11, nliLpIneqs,
++    nliPackIneqDefA, nliKcblrqcIneqDef⟩
+ 
+ /-- 接口 2 → 真推导（2026-09-21 方向 D）：`linear_programming_results` 从
+ 非线性接口的 `LpIneqs` 分量与 `main_nonlinear_terminal_v11`→`lp_main_estimate`
