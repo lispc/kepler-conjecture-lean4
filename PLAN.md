@@ -194,7 +194,12 @@ kepler-conjecture-lean4/
 │   └── scripts/                  # auto_gate.sh / debt_ledger.py / 生成器
 ├── pipeline/               # 不受信任的生成器/求解器封装
 ├── reference/              # flyspeck 只读克隆 + LOCK.md
-└── docs/                   # 侦察报告/章程/交接/架构文档
+└── docs/                   # 常住参考（架构/保真/模块图/spine/hard-cases/playbook 等）
+    ├── scouts/             # 侦察报告（写完即归档，结论应吸收进 PLAN/STATUS）
+    ├── handoffs/           # lane 交接与班次日志（日期性记录）
+    ├── projects/           # 专项设计与路线图（一 lane 一册，收官后归档）
+    ├── assets/             # 产物/草稿/探针日志
+    └── statement-fix-proposals-patches/  # SF 通道执行版补丁存档（活跃）
 ```
 
 ## 7. 执行规程（执行 agent 必须遵守）
@@ -217,6 +222,11 @@ kepler-conjecture-lean4/
    `tr '\n' ' '`；后台命令的 cd 不改持久 cwd；BSD grep `\+` 静默空（用 `[+]`）；
    docstring 折行以 sorry 开头会被规则③误计；探针头同名 import 致证明体静默跳
    过（改名探针法）；`set` ε-类定义可卡死 whnf（改 obtain/E-结构）。
+9. **文档落位**（2026-10-10 重组起）：新文档按生命周期归位——侦察报告 →
+   `docs/scouts/`；交接/班次日志 → `docs/handoffs/`；专项设计/路线图 →
+   `docs/projects/`；产物/草稿/探针日志 → `docs/assets/`；仅被 PLAN/STATUS
+   长期引用的常住参考留 `docs/` 根层并在 `docs/README.md` 登记。批次收官时
+   由编排者归位；日期性记录内部的旧路径不回溯修复。
 
 ## 8. 里程碑
 
