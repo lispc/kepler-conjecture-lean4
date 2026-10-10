@@ -212,7 +212,7 @@ kepler-conjecture-lean4/
    §2 决策 → 停止并向人类汇报。
 7. **滚动批次**（2026-10-10 用户令）：每批 sub agents 清空即开下一批 3-5 线；
    编排者闸/提交/推送全部 lane 产物；lane 禁 git/build/gate。
-8. **已知坑精选**（全量见 git 历史与 docs/session-*-wrap.md）：验收构建必须自然
+8. **已知坑精选**（全量见 git 历史与 docs/handoffs/session-*-wrap.md）：验收构建必须自然
    退出（掐死时 error 未 flush 是假绿）；`#print axioms` 长输出折行须
    `tr '\n' ' '`；后台命令的 cd 不改持久 cwd；BSD grep `\+` 静默空（用 `[+]`）；
    docstring 折行以 sorry 开头会被规则③误计；探针头同名 import 致证明体静默跳

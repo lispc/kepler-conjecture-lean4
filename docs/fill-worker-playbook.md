@@ -746,7 +746,7 @@ Iff 且 R 显式→`(Submodule.mem_bot ℝ).1`；vectorSpan 成员匿名构造�
 
 - **SUM_GAMMAX 全链闭合**（波1 `78abe340` + 主装配 `b419ddd3`）：PA19
   NEGLIGIBLE_FUNC 上游四巨物全实化，仅剩 GRUTOTI 系。施工图
-  `docs/sum-gammax-handoff.md`（含勘误：PACKING_BALL_BOUNDARY 5 参；
+  `docs/handoffs/sum-gammax-handoff.md`（含勘误：PACKING_BALL_BOUNDARY 5 参；
   set 局部定义方程不作 simp 引理；`p18_setSum_prod` DescProduct 桥）。
 - **⑤ 桥**（`30dbe14f`）：PA2 GLTVHUM_concl 真证（53→52），PA6:1025
   背引用+PackingConcl discharge 路由 olean 重建即转真；PA4 cellParams

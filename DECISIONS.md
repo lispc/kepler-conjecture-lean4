@@ -143,7 +143,7 @@ axioms**（1 条/shard；确切 shard 数以全量重演实际发射为准，str
   批准时定案）；
 - 审计口径：propext + Quot.sound + N 条 `..._native.native_decide.ax_1_1`；
   出现 sorryAx / Classical.choice / 任何非预期公理即 fail；
-- native axiom 计数随轮次入 `docs/549-lane-log.md` 阶段位置节（可度量、
+- native axiom 计数随轮次入 `docs/handoffs/549-lane-log.md` 阶段位置节（可度量、
   可对账）。
 
 **结构配套**：发射器默认产 50 叶合取 shard（模块叶数上限沿用管线缺口单的
