@@ -85,6 +85,32 @@ giants stay `sorry`: the leaf-cell chain (`YBZFUPO`, `NWVRFMF`, `CFFONNL`,
 (`arc_derivative*`, `YSSKQOY`) and `SUM_GAMMAX_LMFUN_ESTIMATE` (PA19 shim
 target; needs the full 1400-line HL lemma chain).
 
+STATUS (2026-10-10 cc-chain wave, PA18 lane): 17 further sorries proved,
+unbundling the ccPe1/ccUh/ccKe/ccCell closure to a single GIANT root.
+Now derived: `CC_PE_FACET_OF` (moved above `cc_uh_exists`) and
+`cc_uh_exists` = NWVRFMF (proved) at p := cc_pe1 -- the Skolem taint
+flows only through `cc_pe_exists`; `COPLANAR_INSERT` via a re-spliced
+`pa18_affDim_insert` (PA6's private p6_affDim_insert); `MXI_IN_VORONOI_LIST`
+(MXI_EXPLICIT + OMEGA_LIST_N_IN_VORONOI_LIST_GEN + CONVEX_VORONOI_LIST);
+`NOT_COL_IMP_RADV` via the new bridge `pa18_ncol3_affDep`
+(not-collinear -> not affineDependent, affineIndependent_iff_le_finrank_vectorSpan)
+and OAPVION2_concl; `MCELL3_NONPLANAR` (HOL 1698-1794: mxi off the stem span
+via OAPVION3 + NOT_COL_IMP_RADV radius sqrt 2 vs hl < sqrt 2, then the
+AFF_DIM_INSERT +1 dimension jump); `K4_CHI_MSB_EQVL`/`K4_CHI_MSB_POS`
+(XNHPWAB2 + CONVEX_HULL_4 + chi_msb_additive_d); `MXI_BETWEEN`
+(MXI_EXPLICIT); `CELL3_NONDEG` (omega_list_n 2 = circumcenter via
+OMEGA_LIST_N_LEMMA + XNHPWAB1, JDHAWAY_1, affine_invert); `CELL_NN`
+(CHI_MSB_CONVEX + CC_CELL34); `CC_CELL_IN_MCELL_SET`; and the nonplanarity
+cascade `CC_CELL_NOT_COPLANAR` (new `pa18_mcell4_nonplanar` +
+MCELL3_NONPLANAR), `CC_CELL_NOT_COPLANAR_EXTREME`, `CC_CELL_EXTREME_CARD`
+(pa18_card4_of_distinct / pa18_coplanar4_of_card_ne4),
+`CC_CELL_INDEPENDENT` (affineIndependent_iff_not_finrank_vectorSpan_le),
+`CC_CELL_CONVEX_HULL_INJ` (CONVEX_HULL_EQ_EQ_SET_EQ).
+Still sorry (see the per-site `-- NEEDS` notes): the root `cc_pe_exists`
+(single blocking input FUZBZGI_1 -> XYOFCGX@PA7), YBZFUPO,
+FUZBZGI_0/1, the chi_msb-coplanarity pair + JDHAWAY_0/JDWAWAY, ZWVCBMN ->
+CC_CELL_NOT_NULLSET -> FUEIMOV_K, CFFONNL, the FUEIMOV/EXTREME/V-block and
+the MCELL*_EDGE_FIRST/STEM_EDGEX/FCHKUGT rigidity kit.
 STATUS: skeleton port; statements faithful, mechanical lemmas proved,
 the giant leaf-cell/sum-gamma chains carry `sorry`.
 -/
@@ -149,6 +175,13 @@ theorem cc_pe_exists (V : Set V3) (ul : List V3) :
     ∃ p1 p2 : V3, Packing V → saturated V → leaf V ul →
       voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3) ∧ p1 ≠ p2 ∧
         0 < chiMsb ul p1 := by
+-- NEEDS (GIANT root, 2026-10-10 wave): the whole ccPe1/ccUh/ccKe/ccCell
+-- taint closure (280 downstream) now flows through THIS sorry alone.
+-- HOL proof (leaf_cell.hl:1052-1084) = FUZBZGI_1 + JDWAWAY sign-split;
+-- FUZBZGI_1 consumes PA7's still-sorry XYOFCGX (outside this file) and
+-- YBZFUPO needs a 1-dim polytope = segment classification (no repo/Mathlib
+-- lemma; cf. PolyAuto7's note on EXPAND_EDGE_POLYTOPE). Everything else in
+-- the PA18 cc-chain is now derived.
   sorry
 
 /-- HOL `cc_pe1` (leaf_cell.hl:1082, `new_specification` via `SKOLEM_THM`). -/
@@ -159,11 +192,53 @@ noncomputable def ccPe1 (V : Set V3) (ul : List V3) : V3 :=
 noncomputable def ccPe2 (V : Set V3) (ul : List V3) : V3 :=
   Classical.choose (Classical.choose_spec (cc_pe_exists V ul))
 
-/-- HOL `cc_uh_exists` (leaf_cell.hl:1120-1132), from `NWVRFMF`. -/
+/-- HOL `FACET_OF_SEGMENT` (leaf_cell.hl:1085-1104): the endpoints are the
+1-dimensional faces of the closed segment (via the extreme-point kit of
+Polytope and `affDim_segment`). -/
+theorem FACET_OF_SEGMENT (a b : V3) (h : a ≠ b) :
+    FacetOf {a} (segment ℝ a b) := by
+  refine ⟨faceOf_sing.2 ((EXTREME_POINT_OF_SEGMENT a b a).2 (Or.inl rfl)), by simp, ?_⟩
+  rw [affDim_singleton, (affDim_segment a b).2 h]
+  norm_num
+
+/-- HOL `CC_PE_FACET_OF` (leaf_cell.hl:1105-1119): the `cc_pe1` endpoint is a
+facet of the leaf's Voronoi segment (needs only the `cc_pe_exists` hull
+equation plus `FACET_OF_SEGMENT`). -/
+theorem CC_PE_FACET_OF {V : Set V3} {ul : List V3} (hp : Packing V)
+    (hs : saturated V) (hl' : leaf V ul) :
+    FacetOf {ccPe1 V ul} (voronoiList V ul) := by
+  have hq := Classical.choose_spec (Classical.choose_spec (cc_pe_exists V ul)) hp hs hl'
+  obtain ⟨hhull, hne, -⟩ := hq
+  rw [hhull, convexHull_pair]
+  exact FACET_OF_SEGMENT _ _ hne
+
+/-- HOL `NWVRFMF` (leaf_cell.hl:342-359), a direct port over the Rogers
+`IDBEZAL` facet characterization and `OMEGA_LIST_IN_VORONOI_LIST`. -/
+theorem NWVRFMF {V : Set V3} {ul : List V3} {p : V3} (hp : Packing V)
+    (hs : saturated V) (hl' : leaf V ul)
+    (hf : FacetOf {p} (voronoiList V ul)) :
+    ∃ vl, barV V 3 vl ∧ truncateSimplex 2 vl = ul ∧ omegaList V vl = p := by
+  have hbar : barV V 2 ul := hl'.1
+  obtain ⟨vl, hF, hbar3, htr⟩ :=
+    (IDBEZAL V ul 2 {p} hs hp hbar (by norm_num)).1 hf
+  refine ⟨vl, hbar3, htr, ?_⟩
+  have hom : omegaList V vl ∈ voronoiList V vl := OMEGA_LIST_IN_VORONOI_LIST V vl 3 hbar3
+  rw [← hF] at hom
+  exact Set.mem_singleton_iff.1 hom
+
+/-- HOL `cc_uh_exists` (leaf_cell.hl:1120-1132), from `NWVRFMF` (proved)
+applied at `p := ccPe1 V ul` via `CC_PE_FACET_OF`; the taint now flows
+solely through the `cc_pe_exists` root. -/
 theorem cc_uh_exists (V : Set V3) (ul : List V3) :
     ∃ vl : List V3, Packing V → saturated V → leaf V ul →
       barV V 3 vl ∧ truncateSimplex 2 vl = ul ∧ omegaList V vl = ccPe1 V ul := by
-  sorry
+  by_cases hx : Packing V ∧ saturated V ∧ leaf V ul
+  · obtain ⟨hp, hs, hl'⟩ := hx
+    obtain ⟨vl, hbar, htr, hom⟩ := NWVRFMF (V := V) (ul := ul) (p := ccPe1 V ul) hp hs hl'
+      (CC_PE_FACET_OF hp hs hl')
+    exact ⟨vl, fun _ _ _ => ⟨hbar, htr, hom⟩⟩
+  · refine ⟨[0, 0, 0, 0], fun hp hs hl' => ?_⟩
+    exact absurd ⟨hp, hs, hl'⟩ hx
 
 /-- HOL `cc_uh` (leaf_cell.hl:1133, `new_specification` via `SKOLEM_THM`):
 the four-point list whose Marchal cell is `cc_cell`. -/
@@ -835,10 +910,125 @@ theorem NOT_COLLINEAR_AFF_DIM2 (a b c : V3) (h : ¬Collinear3 a b c) :
     by exact_mod_cast h2
   omega
 
-/-- HOL `COPLANAR_INSERT` (leaf_cell.hl:227-240). -/
+/-- Re-splice of PackingAuto6's private `p6_affDim_insert` (HOL
+`AFF_DIM_INSERT` content): inserting a point outside the affine span raises
+the affine dimension by one. -/
+private theorem pa18_affDim_insert (S : Set V3) (y : V3) (hne : S.Nonempty)
+    (hy : y ∉ (affineSpan ℝ S : Set V3)) :
+    affDim (insert y S) = affDim S + 1 := by
+  obtain ⟨y0, hy0⟩ := hne
+  have hy0S : y0 ∈ (affineSpan ℝ S : Set V3) := subset_affineSpan ℝ S hy0
+  set D := vectorSpan ℝ S with hD
+  have mD : ∀ a ∈ S, ∀ b ∈ S, (a - b) ∈ D := by
+    intro a ha b hb
+    rw [hD, vectorSpan_def]
+    exact Submodule.subset_span (Set.mem_vsub.2 ⟨a, ha, b, hb, rfl⟩)
+  have hvec : vectorSpan ℝ (insert y S) = D ⊔ Submodule.span ℝ {y - y0} := by
+    have hgen : (y - y0) ∈ vectorSpan ℝ (insert y S) := by
+      rw [vectorSpan_def]
+      exact Submodule.subset_span (Set.mem_vsub.2 ⟨y, Set.mem_insert _ _,
+        y0, Set.mem_insert_of_mem _ hy0, rfl⟩)
+    have hmono : vectorSpan ℝ S ≤ vectorSpan ℝ (insert y S) :=
+      vectorSpan_mono (k := ℝ) (Set.subset_insert y S)
+    have hsb : ∀ r ∈ Submodule.span ℝ {y - y0}, r ∈ vectorSpan ℝ (insert y S) := by
+      intro r hm
+      rw [Submodule.mem_span_singleton] at hm
+      obtain ⟨s, rfl⟩ := hm
+      exact Submodule.smul_mem _ s hgen
+    refine le_antisymm ?_ ?_
+    · rw [vectorSpan_def, Submodule.span_le]
+      intro g hg
+      obtain ⟨x, hx, x', hx', rfl⟩ := Set.mem_vsub.1 hg
+      rw [SetLike.mem_coe]
+      rcases Set.mem_insert_iff.1 hx with hxe | hx
+      · rcases Set.mem_insert_iff.1 hx' with hxe' | hx'
+        · rw [hxe, hxe', vsub_self]
+          exact Submodule.zero_mem _
+        · rw [hxe, vsub_eq_sub]
+          have hv : (y - x' : V3) = (y - y0) + -(x' - y0) := by abel
+          have hA : (x' - y0 : V3) ∈ D ⊔ Submodule.span ℝ {y - y0} :=
+            Submodule.mem_sup_left (mD x' hx' y0 hy0)
+          have hC : (y - y0 : V3) ∈ D ⊔ Submodule.span ℝ {y - y0} :=
+            Submodule.mem_sup_right (Submodule.subset_span
+              (Set.mem_singleton (y - y0)))
+          rw [hv]
+          exact Submodule.add_mem (D ⊔ Submodule.span ℝ {y - y0}) hC
+            (Submodule.neg_mem (D ⊔ Submodule.span ℝ {y - y0}) hA)
+      · rcases Set.mem_insert_iff.1 hx' with hxe' | hx'
+        · rw [hxe', vsub_eq_sub]
+          have hv : (x - y : V3) = (x - y0) + -(y - y0) := by abel
+          have hA : (x - y0 : V3) ∈ D ⊔ Submodule.span ℝ {y - y0} :=
+            Submodule.mem_sup_left (mD x hx y0 hy0)
+          have hC : (y - y0 : V3) ∈ D ⊔ Submodule.span ℝ {y - y0} :=
+            Submodule.mem_sup_right (Submodule.subset_span
+              (Set.mem_singleton (y - y0)))
+          rw [hv]
+          exact Submodule.add_mem (D ⊔ Submodule.span ℝ {y - y0}) hA
+            (Submodule.neg_mem (D ⊔ Submodule.span ℝ {y - y0}) hC)
+        · exact Submodule.mem_sup_left (mD x hx x' hx')
+    · intro w hw
+      rcases Submodule.mem_sup.1 hw with ⟨a, ha, b, hb, hab⟩
+      have haD : a ∈ vectorSpan ℝ (insert y S) := hmono ha
+      have hbD : b ∈ vectorSpan ℝ (insert y S) := hsb b hb
+      rw [← hab]
+      exact add_mem haD hbD
+  have hvD : y - y0 ∉ D := by
+    intro h
+    apply hy
+    have hmem : (y - y0) +ᵥ y0 ∈ (affineSpan ℝ S : Set V3) :=
+      AffineSubspace.vadd_mem_of_mem_direction
+        (by rw [direction_affineSpan]; exact h) hy0S
+    have h2 : (y - y0 : V3) +ᵥ y0 = y := by rw [vadd_eq_add]; abel
+    rw [h2] at hmem
+    exact hmem
+  have hinf : D ⊓ Submodule.span ℝ {y - y0} = ⊥ := by
+    rw [Submodule.eq_bot_iff]
+    intro w hw
+    have hwK : w ∈ D := (Submodule.mem_inf.1 hw).1
+    have hwS := (Submodule.mem_inf.1 hw).2
+    obtain ⟨s, rfl⟩ := Submodule.mem_span_singleton.1 hwS
+    have hs0 : s = 0 := by
+      by_contra hs0
+      have hinv : s⁻¹ * s = 1 := inv_mul_cancel₀ hs0
+      have h2 : (s⁻¹ • (s • (y - y0)) : V3) ∈ D := Submodule.smul_mem _ _ hwK
+      rw [smul_smul, hinv, one_smul] at h2
+      exact hvD h2
+    rw [hs0, zero_smul]
+  have hvyne : (y - y0 : V3) ≠ 0 := by
+    intro h0
+    rw [h0] at hvD
+    exact hvD (Submodule.zero_mem D)
+  have hfr : Module.finrank ℝ (vectorSpan ℝ (insert y S))
+      = Module.finrank ℝ (vectorSpan ℝ S) + 1 := by
+    have h2 := Submodule.finrank_sup_add_finrank_inf_eq D (Submodule.span ℝ {y - y0})
+    rw [hinf, finrank_bot] at h2
+    have h3 : Module.finrank ℝ (Submodule.span ℝ {y - y0}) = 1 :=
+      finrank_span_singleton hvyne
+    rw [h3] at h2
+    rw [hvec]
+    omega
+  have hneI : (insert y S).Nonempty := ⟨y0, Set.mem_insert_of_mem _ hy0⟩
+  have hneI' : insert y S ≠ ∅ := Set.nonempty_iff_ne_empty.mp hneI
+  simp only [affDim, if_neg hneI', if_neg (Set.nonempty_iff_ne_empty.mp ⟨y0, hy0⟩)]
+  rw [hfr]
+  omega
+
+/-- HOL `COPLANAR_INSERT` (leaf_cell.hl:227-240): a point whose insertion
+stays coplanar already sits in the affine span (contrapositive of the
+`+1` dimension jump of `pa18_affDim_insert`). -/
 theorem COPLANAR_INSERT {s : Set V3} (p : V3) (h : affDim s = 2)
     (hc : Coplanar (insert p s)) : p ∈ affineSpan ℝ s := by
-  sorry
+  by_contra hcon
+  have hne : s.Nonempty := by
+    by_contra h0
+    by_cases h0' : s = ∅
+    · rw [affDim, h0'] at h
+      norm_num at h
+    · exact absurd (Set.nonempty_iff_ne_empty.2 h0') h0
+  have hins := pa18_affDim_insert s p hne hcon
+  have hle := COPLANAR_IMP_AFF_DIM hc
+  rw [hins, h] at hle
+  norm_num at hle
 
 /-- HOL `COPLANAR_UNION` (leaf_cell.hl:241-303). -/
 theorem COPLANAR_UNION {P Q : Set V3} {a b : V3} (hP : P ≠ ∅) (hQ : Q ≠ ∅)
@@ -945,25 +1135,15 @@ theorem GBEWYFX {V : Set V3} {ul : List V3} (hp : Packing V) (hs : saturated V)
     (collinear_iff_finrank_le_one (s := ({a, b, c} : Set V3))).1 hcol
   omega
 
-/-- HOL `NWVRFMF` (leaf_cell.hl:342-359), a direct port over the Rogers
-`IDBEZAL` facet characterization and `OMEGA_LIST_IN_VORONOI_LIST`. -/
-theorem NWVRFMF {V : Set V3} {ul : List V3} {p : V3} (hp : Packing V)
-    (hs : saturated V) (hl' : leaf V ul)
-    (hf : FacetOf {p} (voronoiList V ul)) :
-    ∃ vl, barV V 3 vl ∧ truncateSimplex 2 vl = ul ∧ omegaList V vl = p := by
-  have hbar : barV V 2 ul := hl'.1
-  obtain ⟨vl, hF, hbar3, htr⟩ :=
-    (IDBEZAL V ul 2 {p} hs hp hbar (by norm_num)).1 hf
-  refine ⟨vl, hbar3, htr, ?_⟩
-  have hom : omegaList V vl ∈ voronoiList V vl := OMEGA_LIST_IN_VORONOI_LIST V vl 3 hbar3
-  rw [← hF] at hom
-  exact Set.mem_singleton_iff.1 hom
-
 /-- HOL `YBZFUPO` (leaf_cell.hl:360-423). -/
 theorem YBZFUPO {V : Set V3} {ul : List V3} (hp : Packing V) (hs : saturated V)
     (hl' : leaf V ul) :
     ∃ p1 p2 : V3, voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3) ∧ p1 ≠ p2 ∧
       ∀ f, FacetOf f (voronoiList V ul) → f = {p1} ∨ f = {p2} := by
+-- NEEDS (GIANT): voronoi_list of a leaf is a segment. HOL (leaf_cell.hl:360-423)
+-- = AFF_DIM_VORONOI_LIST (PA5, proved) + a 1-dim polytope = segment
+-- classification (EXPAND_EDGE_POLYTOPE analogue, absent from repo/Mathlib)
+-- + segment facet kit (FACET_OF_SEGMENT here, proved).
   sorry
 
 /-- HOL `permutes` (HOL Light sets.ml): `p` maps the set into itself, fixes
@@ -1140,6 +1320,9 @@ theorem FUZBZGI_0 {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
     (hc : circumcenter (setOfList ul) = t1 • p1 + t2 • p2) (hts : t1 + t2 = 1)
     (hfac : ∀ f, FacetOf f (voronoiList V ul) → f = {p1} ∨ f = {p2}) :
     0 < t2 := by
+-- NEEDS (GIANT): the positive-coefficient half. HOL (leaf_cell.hl:588-731)
+-- consumes Rogers.XYOFCGX, which is still sorry in PackingAuto7 (out of
+-- PA18 scope); DIST_LT/eq_HALF_PLANE are proved here.
   sorry
 
 /-- HOL `FUZBZGI_1` (leaf_cell.hl:781-835). -/
@@ -1148,6 +1331,8 @@ theorem FUZBZGI_1 {V : Set V3} {ul : List V3} (hp : Packing V)
     ∃ p1 p2 : V3, ∃ t1 t2 : ℝ, voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3) ∧
       p1 ≠ p2 ∧ circumcenter (setOfList ul) = t1 • p1 + t2 • p2 ∧ t1 + t2 = 1 ∧
       0 < t1 ∧ 0 < t2 := by
+-- NEEDS (GIANT): waits on FUZBZGI_0 (XYOFCGX@PA7); the YBZFUPO half plus
+-- the MHFTTZN3 circumcenter-affinity are mechanical once that lands.
   sorry
 
 /-- HOL `chi_msb_swap_01` (leaf_cell.hl:803-835). -/
@@ -1273,11 +1458,15 @@ theorem AFFINE_IMP_CHI_MSB_0 (ul : List V3) (p : V3) (hlen : ul.length = 3)
 /-- HOL `CHI_MSB_IMP_COPLANAR` (leaf_cell.hl:935-942). -/
 theorem CHI_MSB_IMP_COPLANAR (ul : List V3) (p : V3) (h : chiMsb ul p = 0) :
     Coplanar ({ul.getD 0 0, ul.getD 1 0, ul.getD 2 0, p} : Set V3) := by
+-- NEEDS: coplanar <-> chi_msb = 0 needs the cross-dot equivalence
+-- (local_lemmas.hl:203; LocalAuto5 has a lane-local copy built on its
+-- private kit); unlocks JDHAWAY_0/JDWAWAY and CFFONNL.
   sorry
 
 /-- HOL `CHI_MSB_COPLANAR` (leaf_cell.hl:943-1011). -/
 theorem CHI_MSB_COPLANAR (a b c d : V3) :
     Coplanar ({a, b, c, d} : Set V3) ↔ chiMsb [a, b, c] d = 0 := by
+-- NEEDS: same cross-dot equivalence as CHI_MSB_IMP_COPLANAR.
   sorry
 
 /-- HOL `JDHAWAY_0` (leaf_cell.hl:1012-1051). -/
@@ -1286,6 +1475,9 @@ theorem JDHAWAY_0 {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
     (hv : voronoiList V ul = convexHull ℝ ({p1, p2} : Set V3)) (hne : p1 ≠ p2)
     (hc : circumcenter (setOfList ul) = t1 • p1 + t2 • p2) (hts : t1 + t2 = 1)
     (hpos : 0 < t1 ∧ 0 < t2) : chiMsb ul p1 ≠ 0 := by
+-- NEEDS: waits on CHI_MSB_IMP_COPLANAR + CHI_MSB_ADDITIVE; the remaining
+-- half (COPLANAR_INSERT now proved + MHFTTZN1/MHFTTZN3 +
+-- BARV_CIRCUMCENTER_EXISTS) is mechanical.
   sorry
 
 /-- HOL `JDHAWAY_1` (leaf_cell.hl:1012-1051): the circumcenter of the stem
@@ -1305,21 +1497,8 @@ theorem JDWAWAY {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
     (hc : circumcenter (setOfList ul) = t1 • p1 + t2 • p2) (hts : t1 + t2 = 1)
     (hpos : 0 < t1 ∧ 0 < t2) :
     chiMsb ul p1 ≠ 0 ∧ chiMsb ul p2 ≠ 0 ∧ (chiMsb ul p1 < 0 ↔ 0 < chiMsb ul p2) := by
-  sorry
-
-/-- HOL `FACET_OF_SEGMENT` (leaf_cell.hl:1085-1104): the endpoints are the
-1-dimensional faces of the closed segment (via the extreme-point kit of
-Polytope and `affDim_segment`). -/
-theorem FACET_OF_SEGMENT (a b : V3) (h : a ≠ b) :
-    FacetOf {a} (segment ℝ a b) := by
-  refine ⟨faceOf_sing.2 ((EXTREME_POINT_OF_SEGMENT a b a).2 (Or.inl rfl)), by simp, ?_⟩
-  rw [affDim_singleton, (affDim_segment a b).2 h]
-  norm_num
-
-/-- HOL `CC_PE_FACET_OF` (leaf_cell.hl:1105-1119). -/
-theorem CC_PE_FACET_OF {V : Set V3} {ul : List V3} (hp : Packing V)
-    (hs : saturated V) (hl' : leaf V ul) :
-    FacetOf {ccPe1 V ul} (voronoiList V ul) := by
+-- NEEDS: waits on JDHAWAY_0; the sign flip is JDHAWAY_1 +
+-- CHI_MSB_ADDITIVE arithmetic (both proved).
   sorry
 
 /-- HOL `CC_CELL4` (leaf_cell.hl:1143-?): the 4-case Marchal cell is the
@@ -1488,6 +1667,7 @@ theorem MCELL_EDGE_FIRST {V : Set V3} {ul : List V3} {k : ℕ} {u v : V3}
     (he : {u, v} ∈ edgeX V (mcell k V ul)) :
     ∃ vl, barV V 3 vl ∧ mcell k V vl = mcell k V ul ∧ u = vl.getD 0 0 ∧
       v = vl.getD 1 0 := by
+-- NEEDS: leaf_cell.hl:3338-3374 family (see MCELL2/3/4_EDGE_FIRST).
   sorry
 
 private theorem list4_eq (ul : List V3) (h : ul.length = 4) :
@@ -1613,26 +1793,104 @@ theorem AFF_GE_MONO_TRANS {X Y S : Set V3} (h : S ⊆ X) :
   have honeG : ∑ w ∈ hfinXY.toFinset, g w = 1 := h2.symm.trans honeE
   exact ⟨g, hfinXY, hsumV, hsgnY, honeG⟩
 
-/-- HOL `K4_CHI_MSB_EQVL` (leaf_cell.hl:1391-?). -/
+/-- HOL `LIST_OF_CC_UH` (leaf_cell.hl:2750-2764). -/
+theorem LIST_OF_CC_UH {V : Set V3} {ul : List V3} (hs : saturated V)
+    (hp : Packing V) (hl' : leaf V ul) :
+    ccUh V ul = [(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0, (ccUh V ul).getD 2 0,
+      (ccUh V ul).getD 3 0] := by
+  have hb := (Classical.choose_spec (cc_uh_exists V ul)) hp hs hl'
+  exact list4_eq _ hb.1.1
+
+/-- HOL `SET_OF_LIST_CC_UH` (leaf_cell.hl:2765-2792). -/
+theorem SET_OF_LIST_CC_UH {V : Set V3} {ul : List V3} (hs : saturated V)
+    (hp : Packing V) (hl' : leaf V ul) :
+    setOfList (ccUh V ul) = {(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0,
+      (ccUh V ul).getD 2 0, (ccUh V ul).getD 3 0} := by
+  rw [LIST_OF_CC_UH hs hp hl']
+  ext t
+  simp [setOfList]
+  all_goals tauto
+
+/-- HOL `K4_CHI_MSB_EQVL` (leaf_cell.hl:1391-?): the fourth `cc_uh` point is
+a positive-scaled image of `cc_pe1` under the row-`d` linearity of
+`chi_msb` (via `XNHPWAB2` on the `cc_uh` list). -/
 theorem K4_CHI_MSB_EQVL {V : Set V3} {ul : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) (h4 : ccKe V ul = 4) :
     reEqvl (chiMsb ul ((ccUh V ul).getD 3 0)) (chiMsb ul (ccPe1 V ul)) := by
-  sorry
+  have hbar := (Classical.choose_spec (cc_uh_exists V ul)) hp hs hl'
+  have hQ := Classical.choose_spec (Classical.choose_spec (cc_pe_exists V ul)) hp hs hl'
+  obtain ⟨e0, e1, e2⟩ := EL_CC_UH hp hs hl'
+  have hhl4 : hl (ccUh V ul) < Real.sqrt 2 := by
+    unfold ccKe at h4
+    by_contra hcon
+    rw [if_neg hcon] at h4
+    norm_num at h4
+  have hb : barV V 3 (ccUh V ul) := hbar.1
+  have hom : omegaList V (ccUh V ul) = ccPe1 V ul := hbar.2.2
+  have hmem : omegaList V (ccUh V ul) ∈ convexHull ℝ (setOfList (ccUh V ul)) :=
+    XNHPWAB2 V (ccUh V ul) 3 hp hb hhl4
+  rw [SET_OF_LIST_CC_UH hs hp hl', hom] at hmem
+  rw [CONVEX_HULL_4] at hmem
+  simp only [Set.mem_setOf_eq] at hmem
+  obtain ⟨t1, t2, t3, t4, ht1, ht2, ht3, ht4, hsum, hccPe⟩ := hmem
+  have hul3 : ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] := list3_eq ul hl'.1.1
+  have key : chiMsb ul (ccPe1 V ul) = t4 * chiMsb ul ((ccUh V ul).getD 3 0) := by
+    have hstep : ∀ q : V3, chiMsb ul q
+        = chiMsb [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] q := by
+      intro q
+      conv_lhs => rw [hul3]
+    rw [hstep (ccPe1 V ul), hstep ((ccUh V ul).getD 3 0), ← e0, ← e1, ← e2, hccPe,
+      chi_msb_additive_d _ _ _ _ _ _ _ _ hsum]
+  have ht4ne : t4 ≠ 0 := by
+    intro h0
+    rw [h0] at key
+    simp at key
+    exact absurd key (ne_of_gt hQ.2.2)
+  have ht4pos : 0 < t4 := lt_of_le_of_ne ht4 (Ne.symm ht4ne)
+  refine ⟨t4⁻¹, inv_pos.2 ht4pos, ?_⟩
+  rw [key]
+  field_simp
 
-/-- HOL `K4_CHI_MSB_POS` (leaf_cell.hl:1391-?). -/
+/-- HOL `K4_CHI_MSB_POS` (leaf_cell.hl:1391-?): the fourth point has strictly
+positive `chi_msb` because `cc_pe1` does (`cc_pe_exists`). -/
 theorem K4_CHI_MSB_POS {V : Set V3} {ul : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) (h4 : ccKe V ul = 4) :
     0 < chiMsb ul ((ccUh V ul).getD 3 0) := by
-  sorry
+  have hQ := Classical.choose_spec (Classical.choose_spec (cc_pe_exists V ul)) hp hs hl'
+  obtain ⟨t, ht0, heq⟩ := K4_CHI_MSB_EQVL hp hs hl' h4
+  rw [heq]
+  exact mul_pos ht0 hQ.2.2
 
-/-- HOL `MXI_BETWEEN` (leaf_cell.hl:1391-1421). -/
+/-- HOL `MXI_BETWEEN` (leaf_cell.hl:1391-1421): `MXI_EXPLICIT` on the
+`cc_uh` list reads off both the betweenness and the `sqrt 2` distance. -/
 theorem MXI_BETWEEN {V : Set V3} {ul vl : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) (h3 : ccKe V ul = 3)
     (hv : ccUh V ul = vl) :
     (∃ t : ℝ, 0 ≤ t ∧ t ≤ 1 ∧
       mxi V vl = (1 - t) • omegaListN V vl 2 + t • omegaListN V vl 3) ∧
       dist (vl.getD 0 0) (mxi V vl) = Real.sqrt 2 := by
-  sorry
+  subst hv
+  have hbar := (Classical.choose_spec (cc_uh_exists V ul)) hp hs hl'
+  have hb : barV V 3 (ccUh V ul) := hbar.1
+  have hle : Real.sqrt 2 ≤ hl (ccUh V ul) := by
+    unfold ccKe at h3
+    by_contra hcon
+    rw [if_pos (lt_of_not_ge hcon)] at h3
+    norm_num at h3
+  have hul3 : ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] := list3_eq ul hl'.1.1
+  obtain ⟨e0, e1, e2⟩ := EL_CC_UH hp hs hl'
+  have h2 : hl (truncateSimplex 2 (ccUh V ul)) < Real.sqrt 2 := by
+    rw [BARV3_TRUNC2 hb, e0, e1, e2, ← hul3]
+    exact hl'.2
+  obtain ⟨s, hseg, hdist, hmxi⟩ :=
+    MXI_EXPLICIT V (ccUh V ul) _ _ _ _ hs hp hb (LIST_OF_CC_UH hs hp hl') h2 hle
+  obtain ⟨u, w, hu, hw, hsum, hpt⟩ := hseg
+  have hw' : 1 - w = u := by linarith [hsum]
+  refine ⟨⟨w, hw, by linarith [hsum], ?_⟩, ?_⟩
+  · rw [hw', ← hmxi, ← hpt]
+  · rw [← hmxi, show (ccUh V ul).getD 0 0 = hdV (ccUh V ul) from by
+      cases ccUh V ul <;> simp [hdV]]
+    exact hdist
 
 set_option maxHeartbeats 12000000 in
 /-- HOL `affine_invert` (leaf_cell.hl:1422-1528). -/
@@ -1661,18 +1919,102 @@ theorem affine_invert {u : ℝ} {p q : V3} {s : Set V3} (hu : u ≠ 0)
 
 /-! ## leaf_cell.hl: the cc_cell block -/
 
-/-- HOL `CELL3_NONDEG` (leaf_cell.hl:1529-1575). -/
+/-- HOL `CELL3_NONDEG` (leaf_cell.hl:1529-1575): the `k = 3` apex `mxi` sits
+on the `o2–o3` segment with `o2` the stem circumcenter (`chi_msb` zero
+there) and `o3 = cc_pe1` (`chi_msb` positive), with a positive weight. -/
 theorem CELL3_NONDEG {V : Set V3} {ul : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) (h3 : ccKe V ul = 3) :
     (mxi V (ccUh V ul)) ∉ affineSpan ℝ (setOfList ul) ∧
       0 < chiMsb ul (mxi V (ccUh V ul)) := by
-  sorry
+  have hbar := (Classical.choose_spec (cc_uh_exists V ul)) hp hs hl'
+  have hQ := Classical.choose_spec (Classical.choose_spec (cc_pe_exists V ul)) hp hs hl'
+  have hlen4 : (ccUh V ul).length = 4 := hbar.1.1
+  have htr : truncateSimplex 2 (ccUh V ul) = ul := hbar.2.1
+  have ho3 : omegaListN V (ccUh V ul) 3 = ccPe1 V ul := by
+    have h1 : omegaList V (ccUh V ul) = omegaListN V (ccUh V ul) 3 := by
+      simp only [omegaList, hlen4]
+    rw [← h1]
+    exact hbar.2.2
+  have ho2 : omegaListN V (ccUh V ul) 2 = circumcenter (setOfList ul) := by
+    have hstab : omegaListN V (ccUh V ul) 2
+        = omegaListN V (truncateSimplex 2 (ccUh V ul)) 2 :=
+      OMEGA_LIST_N_LEMMA V (ccUh V ul) 2 0 (by rw [hlen4]; omega)
+    have hstab2 : omegaListN V ul 2 = omegaList V ul := by
+      simp only [omegaList, hl'.1.1]
+    rw [hstab, htr, hstab2, XNHPWAB1 V ul 2 hp hl'.1 hl'.2]
+  obtain ⟨⟨t, ht0, ht1, hmxi⟩, hdist⟩ := MXI_BETWEEN hp hs hl' h3 rfl
+  have hchi : chiMsb ul (mxi V (ccUh V ul))
+      = t * chiMsb ul (ccPe1 V ul) := by
+    rw [hmxi, CHI_MSB_ADDITIVE ul _ _ (1 - t) t (by ring), ho2, ho3,
+      JDHAWAY_1 hp hs hl', mul_zero, zero_add]
+  have htpos : 0 < t := by
+    by_contra hcon
+    push_neg at hcon
+    have htz : t = 0 := le_antisymm hcon ht0
+    have hmx0 : mxi V (ccUh V ul) = circumcenter (setOfList ul) := by
+      simp [hmxi, htz, ho2, ho3, one_smul, zero_smul, add_zero]
+    have hd : dist ((ccUh V ul).getD 0 0) (circumcenter (setOfList ul))
+        = Real.sqrt 2 := by rw [← hmx0]; exact hdist
+    obtain ⟨e0, e1, e2⟩ := EL_CC_UH hp hs hl'
+    have hd0 : (ccUh V ul).getD 0 0 = hdV ul := by
+      rw [e0]
+      show ul.getD 0 0 = List.headD ul 0
+      cases ul <;> rfl
+    have hHL : hl ul = dist (circumcenter (setOfList ul)) (hdV ul) :=
+      HL_EQ_DIST0 V 2 ul hp hl'.1
+    rw [dist_comm] at hd
+    rw [hd0, ← hHL] at hd
+    linarith [hd, hl'.2]
+  refine ⟨fun hmem => ?_, by rw [hchi]; exact mul_pos htpos hQ.2.2⟩
+  exact absurd (AFFINE_IMP_CHI_MSB_0 ul _ hl'.1.1 hmem) (ne_of_gt
+    (by rw [hchi]; exact mul_pos htpos hQ.2.2))
 
-/-- HOL `CELL_NN` (leaf_cell.hl:1529-1575). -/
+/-- HOL `CELL_NN` (leaf_cell.hl:1529-1575): `chi_msb` is convex, the stem
+triple lies in its own affine span (value zero), and the apex is positive
+(`CELL3_NONDEG` / `K4_CHI_MSB_POS`), so the whole `cc_cell` hull is in the
+nonnegative half-space. -/
 theorem CELL_NN {V : Set V3} {ul : List V3} {p : V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) (hp' : p ∈ ccCell V ul) :
     0 ≤ chiMsb ul p := by
-  sorry
+  have h34 := CC_CELL34 (V := V) (ul := ul)
+    (pp := if ccKe V ul = 3 then mxi V (ccUh V ul) else (ccUh V ul).getD 3 0)
+    hp hs hl' rfl
+  have hconv := CHI_MSB_CONVEX ul
+  have h3l : ul.length = 3 := hl'.1.1
+  have hul3 : ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] := list3_eq ul h3l
+  have hmem0 : ul.getD 0 0 ∈ setOfList ul := by rw [hul3]; simp [setOfList]
+  have hmem1 : ul.getD 1 0 ∈ setOfList ul := by rw [hul3]; simp [setOfList]
+  have hmem2 : ul.getD 2 0 ∈ setOfList ul := by rw [hul3]; simp [setOfList]
+  have hmem0' : ul.getD 0 0 ∈ affineSpan ℝ (setOfList ul) := mem_affineSpan ℝ hmem0
+  have hmem1' : ul.getD 1 0 ∈ affineSpan ℝ (setOfList ul) := mem_affineSpan ℝ hmem1
+  have hmem2' : ul.getD 2 0 ∈ affineSpan ℝ (setOfList ul) := mem_affineSpan ℝ hmem2
+  have hsub : ({(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0, (ccUh V ul).getD 2 0,
+      (if ccKe V ul = 3 then mxi V (ccUh V ul) else (ccUh V ul).getD 3 0)} : Set V3) ⊆
+      {q | 0 ≤ chiMsb ul q} := by
+    intro q hq
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, Set.mem_setOf_eq] at hq
+    obtain ⟨f0, f1, f2⟩ := EL_CC_UH hp hs hl'
+    rcases hq with rfl | rfl | rfl | rfl
+    · rw [f0]
+      show 0 ≤ chiMsb ul (ul.getD 0 0)
+      rw [AFFINE_IMP_CHI_MSB_0 ul _ h3l hmem0']
+    · rw [f1]
+      show 0 ≤ chiMsb ul (ul.getD 1 0)
+      rw [AFFINE_IMP_CHI_MSB_0 ul _ h3l hmem1']
+    · rw [f2]
+      show 0 ≤ chiMsb ul (ul.getD 2 0)
+      rw [AFFINE_IMP_CHI_MSB_0 ul _ h3l hmem2']
+    · by_cases h3 : ccKe V ul = 3
+      · rw [if_pos h3]
+        exact le_of_lt (CELL3_NONDEG hp hs hl' h3).2
+      · have h4 : ccKe V ul = 4 := by
+          rcases CC_KE_34 V ul with hh | hh
+          · exact absurd hh h3
+          · exact hh
+        rw [if_neg h3]
+        exact le_of_lt (K4_CHI_MSB_POS hp hs hl' h4)
+  rw [h34] at hp'
+  exact convexHull_min hsub hconv hp'
 
 /-- HOL `delta_delta_x` (leaf_cell.hl:1576-1584): the two Cayley–Menger
 encodings agree. -/
@@ -1684,15 +2026,79 @@ theorem delta_delta_x (x1 x2 x3 x4 x5 x6 : ℝ) :
 /-- HOL `ZWVCBMN` (leaf_cell.hl:1585-1629). -/
 theorem ZWVCBMN (a b c d : V3) (h : ¬Coplanar ({a, b, c, d} : Set V3)) :
     0 < MeasureTheory.volume (convexHull ℝ ({a, b, c, d} : Set V3)) := by
+-- NEEDS: positive volume of a non-coplanar tetrahedron hull. HOL route
+-- (VOLUME_OF_CLOSED_TETRAHEDRON + POLFLZY + DELTA_POS_4POINTS) has no
+-- repo/Mathlib counterpart; blocks CC_CELL_NOT_NULLSET/FUEIMOV_K.
   sorry
 
-/-- HOL `MXI_IN_VORONOI_LIST` (leaf_cell.hl:1630-1665). -/
+/-- `¬Collinear3` for a triple keeps the triple-set affinely independent
+(the bridge `OAPVION2_concl` needs; direction finrank 2 on both sides). -/
+private theorem pa18_ncol3_affDep {a b c : V3} (h : ¬Collinear3 a b c) :
+    ¬affineDependent ({a, b, c} : Set V3) := by
+  have hdim := NOT_COLLINEAR_AFF_DIM2 a b c h
+  have hne : ({a, b, c} : Set V3) ≠ ∅ := by
+    intro hc
+    rw [affDim, hc] at hdim
+    norm_num at hdim
+  have hfin : Module.finrank ℝ (vectorSpan ℝ ({a, b, c} : Set V3)) = 2 := by
+    rw [affDim, if_neg hne] at hdim
+    exact_mod_cast hdim
+  have hne12 : a ≠ b := ne₁₂_of_not_collinear h
+  have hne13 : a ≠ c := ne₁₃_of_not_collinear h
+  have hne23 : b ≠ c := ne₂₃_of_not_collinear h
+  have hcard : Nat.card ({a, b, c} : Set V3) = 3 := by
+    have h1 : ({a, b, c} : Set V3).ncard = ({b, c} : Set V3).ncard + 1 :=
+      Set.ncard_insert_of_notMem (by simp [hne12, hne13])
+    have h2 : ({b, c} : Set V3).ncard = ({c} : Set V3).ncard + 1 :=
+      Set.ncard_insert_of_notMem (by simp [hne23])
+    have h3 : ({c} : Set V3).ncard = 1 := Set.ncard_singleton c
+    have he : Nat.card ({a, b, c} : Set V3) = ({a, b, c} : Set V3).ncard := rfl
+    omega
+  have hcardfi : Fintype.card ↥({a, b, c} : Set V3) = 3 := by
+    rwa [Nat.card_eq_fintype_card] at hcard
+  have hrange : Set.range (fun x : ↥({a, b, c} : Set V3) => (x : V3))
+      = ({a, b, c} : Set V3) := by
+    ext y
+    constructor
+    · rintro ⟨x, rfl⟩; exact x.2
+    · intro hy; exact ⟨⟨y, hy⟩, rfl⟩
+  intro hdep
+  rw [affineDependent] at hdep
+  refine hdep ?_
+  rw [affineIndependent_iff_le_finrank_vectorSpan ℝ
+    (fun x : ↥({a, b, c} : Set V3) => (x : V3)) (n := 2) hcardfi, hrange]
+  exact hfin.ge
+
+/-- HOL `MXI_IN_VORONOI_LIST` (leaf_cell.hl:1630-1665): `mxi` sits on the
+`omega_list_n` 2–3 segment, so it lands in the stem's Voronoi face at
+distance `sqrt 2`. -/
 theorem MXI_IN_VORONOI_LIST {V : Set V3} {vl : List V3} (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 vl) (h1 : Real.sqrt 2 ≤ hl vl)
     (h2 : hl (truncateSimplex 2 vl) < Real.sqrt 2) :
     mxi V vl ∈ voronoiList V (truncateSimplex 2 vl) ∧
       dist (vl.getD 0 0) (mxi V vl) = Real.sqrt 2 := by
-  sorry
+  have ho2 : omegaListN V vl 2 ∈ voronoiList V (truncateSimplex 2 vl) :=
+    OMEGA_LIST_N_IN_VORONOI_LIST_GEN V vl 3 2 2 hp hs hb (le_refl 2) (by omega)
+  have ho3 : omegaListN V vl 3 ∈ voronoiList V (truncateSimplex 2 vl) :=
+    OMEGA_LIST_N_IN_VORONOI_LIST_GEN V vl 3 2 3 hp hs hb (by omega) (by omega)
+  have hconv := CONVEX_VORONOI_LIST V (truncateSimplex 2 vl)
+  have hsub2 : convexHull ℝ ({omegaListN V vl 2, omegaListN V vl 3} : Set V3) ⊆
+      voronoiList V (truncateSimplex 2 vl) := by
+    refine convexHull_min ?_ hconv
+    intro q hq
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq
+    rcases hq with rfl | rfl
+    · exact ho2
+    · exact ho3
+  obtain ⟨s, hseg, hdist, hmxi⟩ :=
+    MXI_EXPLICIT V vl (vl.getD 0 0) (vl.getD 1 0) (vl.getD 2 0) (vl.getD 3 0) hs hp hb
+      (list4_eq vl hb.1) h2 h1
+  have hseg' : mxi V vl ∈ segment ℝ (omegaListN V vl 2) (omegaListN V vl 3) := by
+    rw [← hmxi]; exact hseg
+  have hdist' : dist (vl.getD 0 0) (mxi V vl) = Real.sqrt 2 := by
+    rw [show vl.getD 0 0 = hdV vl from by cases vl <;> simp [hdV], ← hmxi]
+    exact hdist
+  exact ⟨hsub2 (by rw [convexHull_pair]; exact hseg'), hdist'⟩
 
 /-- HOL `VORONOI_LIST_EQ` (leaf_cell.hl:1666-1687): every point of a Voronoi
 list cell is equidistant from the list points (the pairwise `voronoi_closed`
@@ -1715,18 +2121,79 @@ theorem VORONOI_LIST_EQ {V : Set V3} {ul : List V3} {p : V3} {k : ℕ}
   have h2 : dist p (hdV ul) ≤ dist p q := hle (hdV ul) (HD_IN_SET_OF_LIST ul hh) q (hsub hq)
   exact le_antisymm h1 h2
 
-/-- HOL `NOT_COL_IMP_RADV` (leaf_cell.hl:1688-1869). -/
+/-- HOL `NOT_COL_IMP_RADV` (leaf_cell.hl:1688-1869): immediate from
+`OAPVION2_concl` via the `pa18_ncol3_affDep` bridge. -/
 theorem NOT_COL_IMP_RADV (va vb vc : V3) (h : ¬Collinear3 va vb vc) :
     ∀ w ∈ ({va, vb, vc} : Set V3),
-      radV ({va, vb, vc} : Set V3) = dist (circumcenter ({va, vb, vc} : Set V3)) w := by
-  sorry
+      radV ({va, vb, vc} : Set V3) = dist (circumcenter ({va, vb, vc} : Set V3)) w :=
+  OAPVION2_concl ({va, vb, vc} : Set V3) (pa18_ncol3_affDep h)
 
-/-- HOL `MCELL3_NONPLANAR` (leaf_cell.hl:1870-?). -/
+/-- HOL `MCELL3_NONPLANAR` (leaf_cell.hl:1698-1794): the `mcell3` hull
+contains a non-collinear stem triple plus `mxi`, which provably stays off
+the stem's affine span (else it would be the stem circumcenter at radius
+`sqrt 2 > hl`); coplanarity would force `affDim` past 2. -/
 theorem MCELL3_NONPLANAR {V : Set V3} {vl : List V3} (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 vl) (h1 : Real.sqrt 2 ≤ hl vl)
     (h2 : hl (truncateSimplex 2 vl) < Real.sqrt 2) :
     ¬Coplanar (mcell3 V vl) := by
-  sorry
+  have e0 : truncateSimplex 2 vl = [vl.getD 0 0, vl.getD 1 0, vl.getD 2 0] :=
+    BARV3_TRUNC2 hb
+  have hb2 : barV V 2 (truncateSimplex 2 vl) := TRUNCATE_SIMPLEX_BARV V 2 3 vl hb (by omega)
+  have hleaf : leaf V (truncateSimplex 2 vl) := ⟨hb2, h2⟩
+  have hT : setOfList (truncateSimplex 2 vl)
+      = ({vl.getD 0 0, vl.getD 1 0, vl.getD 2 0} : Set V3) := by
+    rw [e0]
+    ext t
+    simp [setOfList]
+  have hncol : ¬Collinear3 (vl.getD 0 0) (vl.getD 1 0) (vl.getD 2 0) := by
+    rw [show vl.getD 0 0 = (truncateSimplex 2 vl)[0]! from by rw [e0]; simp,
+      show vl.getD 1 0 = (truncateSimplex 2 vl)[1]! from by rw [e0]; simp,
+      show vl.getD 2 0 = (truncateSimplex 2 vl)[2]! from by rw [e0]; simp]
+    exact GBEWYFX hp hs hleaf
+  have hmxi := MXI_IN_VORONOI_LIST hp hs hb h1 h2
+  -- mxi is NOT in the stem's affine span (else it is the circumcenter at radius sqrt 2)
+  have hnotin : mxi V vl ∉ (affineSpan ℝ (setOfList (truncateSimplex 2 vl)) : Set V3) := by
+    intro hmem
+    obtain ⟨r, hr⟩ := VORONOI_LIST_EQ hmxi.1 hb2
+    have hd0 : dist (mxi V vl) (vl.getD 0 0) = Real.sqrt 2 := by
+      rw [dist_comm]; exact hmxi.2
+    have hr0 : dist (mxi V vl) (vl.getD 0 0) = r := hr _ (by rw [hT]; simp)
+    have heqall : ∃ c : ℝ, ∀ w ∈ setOfList (truncateSimplex 2 vl), dist (mxi V vl) w = c :=
+      ⟨Real.sqrt 2, fun w hw => by rw [hr w hw, ← hr0, hd0]⟩
+    have hcirc : mxi V vl = circumcenter (setOfList (truncateSimplex 2 vl)) :=
+      OAPVION3 (setOfList (truncateSimplex 2 vl)) (by rw [hT]; exact pa18_ncol3_affDep hncol)
+        (mxi V vl) hmem heqall
+    have hhlbad : hl (truncateSimplex 2 vl) = Real.sqrt 2 := by
+      show radV (setOfList (truncateSimplex 2 vl)) = Real.sqrt 2
+      rw [hT] at hcirc
+      rw [hT, NOT_COL_IMP_RADV (vl.getD 0 0) (vl.getD 1 0) (vl.getD 2 0) hncol
+        (vl.getD 0 0) (by simp), ← hcirc]
+      exact hd0
+    rw [hhlbad] at h2
+    exact absurd h2 (by norm_num)
+  -- coplanarity of the cell contradicts the dimension jump (HOL 1b/1c)
+  intro hcFalse
+  obtain ⟨u, v, w, hcsub⟩ := hcFalse
+  have hm3 : mcell3 V vl = convexHull ℝ (setOfList (truncateSimplex 2 vl) ∪ {mxi V vl}) := by
+    rw [mcell3, if_pos ⟨h2, h1⟩]
+  have hnotin2 : mxi V vl ∉ (affineSpan ℝ ({vl.getD 0 0, vl.getD 1 0, vl.getD 2 0} : Set V3)) := by
+    rw [hT] at hnotin
+    exact hnotin
+  have hcopU : Coplanar (({vl.getD 0 0, vl.getD 1 0, vl.getD 2 0} : Set V3) ∪ {mxi V vl}) := by
+    refine ⟨u, v, w, fun q hq => hcsub (by
+      rw [hm3]; exact subset_convexHull ℝ _ (by rw [hT]; exact hq))⟩
+  have hdimU : affDim (({vl.getD 0 0, vl.getD 1 0, vl.getD 2 0} : Set V3) ∪ {mxi V vl}) ≤ 2 :=
+    COPLANAR_IMP_AFF_DIM hcopU
+  have hUnion : (({vl.getD 0 0, vl.getD 1 0, vl.getD 2 0} : Set V3) ∪ {mxi V vl})
+      = insert (mxi V vl) ({vl.getD 0 0, vl.getD 1 0, vl.getD 2 0} : Set V3) := by
+    ext q
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff, Set.mem_union]
+    tauto
+  have hdimT : affDim ({vl.getD 0 0, vl.getD 1 0, vl.getD 2 0} : Set V3) = 2 :=
+    NOT_COLLINEAR_AFF_DIM2 (vl.getD 0 0) (vl.getD 1 0) (vl.getD 2 0) hncol
+  rw [hUnion, pa18_affDim_insert ({vl.getD 0 0, vl.getD 1 0, vl.getD 2 0} : Set V3) (mxi V vl)
+    ⟨vl.getD 0 0, by simp⟩ hnotin2, hdimT] at hdimU
+  norm_num at hdimU
 
 /-- HOL `MCELL2_SUBSET_AFF_GE` (leaf_cell.hl:1870-?). -/
 theorem MCELL2_SUBSET_AFF_GE (V : Set V3) (ul : List V3) :
@@ -1827,12 +2294,16 @@ theorem CFFONNL {V : Set V3} {ul : List V3} {X : Set V3} (hp : Packing V)
     (he : {(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0} ∈ edgeX V X)
     (hA : X ∩ ccA0 ul ≠ ∅) (hne : X ≠ ccCell V ul) :
     X = ccCell V [(ccUh V ul).getD 1 0, (ccUh V ul).getD 0 0, (ccUh V ul).getD 2 0] := by
+-- NEEDS (GIANT): leaf_cell.hl:2178-2400ish, mcell dispatch +
+-- CHI_MSB_COPLANAR + EDGEX_SUBSET_MCELL kit.
   sorry
 
 /-- HOL `CC_CELL_IN_MCELL_SET` (leaf_cell.hl:2515-2584). -/
 theorem CC_CELL_IN_MCELL_SET {V : Set V3} {ul : List V3} (hs : saturated V)
     (hp : Packing V) (hl' : leaf V ul) : ccCell V ul ∈ mcellSet V := by
-  sorry
+  rw [ccCell, mcellSet]
+  exact ⟨ccKe V ul, ccUh V ul, rfl,
+    ((Classical.choose_spec (cc_uh_exists V ul)) hp hs hl').1⟩
 
 /-- HOL `CARD4_ALL_DISTINCT` (leaf_cell.hl:2585-?). -/
 theorem CARD4_ALL_DISTINCT {a b c d : V3} (h4 : Nat.card ({a, b, c, d} : Set V3) = 4) :
@@ -1944,30 +2415,122 @@ theorem LENGTH4_SET2_SWAP01 {a b c d e f : V3}
   simp [setOfList]
   all_goals tauto
 
-/-- HOL `CC_CELL_NOT_COPLANAR` (leaf_cell.hl:2622-2640). -/
+/-- HOL `MCELL4_NONPLANAR` (leaf_cell.hl:1608-1629): the `k = 4` cell is the
+Delaunay tetrahedron hull, whose vertex set has affine dimension 3
+(`MHFTTZN1`), so it cannot be coplanar. -/
+private theorem pa18_mcell4_nonplanar {V : Set V3} {vl : List V3} (hp : Packing V)
+    (hs : saturated V) (hb : barV V 3 vl) (hhl : hl vl < Real.sqrt 2) :
+    ¬Coplanar (mcell4 V vl) := by
+  rw [mcell4, if_pos hhl]
+  intro hcop
+  obtain ⟨x, hplane, hsub⟩ := coplanar_eq_coplanar_alt.1 hcop
+  have hc2 : Coplanar (setOfList vl) :=
+    coplanar_eq_coplanar_alt.2 ⟨x, hplane, fun q hq => hsub (subset_convexHull ℝ _ hq)⟩
+  have h1 : affDim (setOfList vl) ≤ 2 := COPLANAR_IMP_AFF_DIM hc2
+  have h2 := MHFTTZN1 V vl 3 hp hb
+  omega
+
+/-- HOL `CC_CELL_NOT_COPLANAR` (leaf_cell.hl:2585-2621): dispatch on
+`cc_ke` to `MCELL3_NONPLANAR` / `pa18_mcell4_nonplanar`. -/
 theorem CC_CELL_NOT_COPLANAR {V : Set V3} {ul : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) : ¬Coplanar (ccCell V ul) := by
-  sorry
+  have hbar := (Classical.choose_spec (cc_uh_exists V ul)) hp hs hl'
+  have hb : barV V 3 (ccUh V ul) := hbar.1
+  obtain ⟨e0, e1, e2⟩ := EL_CC_UH hp hs hl'
+  have hul3 : ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] := list3_eq ul hl'.1.1
+  rcases CC_KE_34 V ul with h3 | h4
+  · rw [ccCell, h3, (MCELL_EXPLICIT 3 V (ccUh V ul)).2.2.2.1]
+    refine MCELL3_NONPLANAR hp hs hb ?_ ?_
+    · unfold ccKe at h3
+      by_contra hcon
+      rw [if_pos (lt_of_not_ge hcon)] at h3
+      norm_num at h3
+    · rw [BARV3_TRUNC2 hb, e0, e1, e2, ← hul3]
+      exact hl'.2
+  · rw [ccCell, h4, (MCELL_EXPLICIT 4 V (ccUh V ul)).2.2.2.2 (Nat.le_refl 4)]
+    refine pa18_mcell4_nonplanar hp hs hb ?_
+    unfold ccKe at h4
+    by_contra hcon
+    rw [if_neg hcon] at h4
+    norm_num at h4
 
 /-- HOL `CC_CELL_NOT_COPLANAR_EXTREME` (leaf_cell.hl:2622-2640). -/
 theorem CC_CELL_NOT_COPLANAR_EXTREME {V : Set V3} {ul : List V3} {pp : V3}
     (hp : Packing V) (hs : saturated V) (hl' : leaf V ul)
     (hpp : pp = if ccKe V ul = 3 then mxi V (ccUh V ul) else (ccUh V ul).getD 3 0) :
     ¬Coplanar ({(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0, (ccUh V ul).getD 2 0, pp} : Set V3) := by
-  sorry
+  intro hcop
+  obtain ⟨u2, v2, w2, hcpsub⟩ := hcop
+  refine CC_CELL_NOT_COPLANAR hp hs hl' ⟨u2, v2, w2, ?_⟩
+  rw [CC_CELL34 (V := V) (ul := ul) (pp := pp) hp hs hl' hpp]
+  refine convexHull_min ?_ (AffineSubspace.convex _)
+  exact hcpsub
 
 /-- HOL `CC_CELL_NOT_NULLSET` (leaf_cell.hl:2641-2661). -/
 theorem CC_CELL_NOT_NULLSET {V : Set V3} {ul : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) : ¬nullSet (ccCell V ul) := by
+-- NEEDS: waits on ZWVCBMN; the rest is CC_CELL34 +
+-- CC_CELL_NOT_COPLANAR_EXTREME (both proved).
   sorry
 
-/-- HOL `CC_CELL_EXTREME_CARD` (leaf_cell.hl:2662-2678). -/
+/-- Four pairwise-distinct points give a 4-element set. -/
+private theorem pa18_card4_of_distinct {a b c d : V3} (h1 : a ≠ b) (h2 : a ≠ c)
+    (h3 : a ≠ d) (h4 : b ≠ c) (h5 : b ≠ d) (h6 : c ≠ d) :
+    Nat.card ({a, b, c, d} : Set V3) = 4 := by
+  have e1 : ({a, b, c, d} : Set V3).ncard = ({b, c, d} : Set V3).ncard + 1 :=
+    Set.ncard_insert_of_notMem (by simp; tauto)
+  have e2 : ({b, c, d} : Set V3).ncard = ({c, d} : Set V3).ncard + 1 :=
+    Set.ncard_insert_of_notMem (by simp; tauto)
+  have e3 : ({c, d} : Set V3).ncard = ({d} : Set V3).ncard + 1 :=
+    Set.ncard_insert_of_notMem (by simp; tauto)
+  have e4 : ({d} : Set V3).ncard = 1 := Set.ncard_singleton d
+  have he : Nat.card ({a, b, c, d} : Set V3) = ({a, b, c, d} : Set V3).ncard := rfl
+  omega
+
+private theorem pa18_mem_affspan3 {q x y z : V3} (h : q ∈ ({x, y, z} : Set V3)) :
+    q ∈ (affineSpan ℝ ({x, y, z} : Set V3) : Set V3) :=
+  mem_affineSpan ℝ h
+
+/-- A 4-point set with fewer than 4 elements is coplanar (any collision
+drops it to a triple). -/
+private theorem pa18_coplanar4_of_card_ne4 {a b c d : V3}
+    (hcard : Nat.card ({a, b, c, d} : Set V3) ≠ 4) :
+    Coplanar ({a, b, c, d} : Set V3) := by
+  rcases eq_or_ne a b with heq | hab
+  · subst heq
+    exact ⟨a, c, d, fun q hq => pa18_mem_affspan3 (by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢; tauto)⟩
+  rcases eq_or_ne a c with heq | hac
+  · subst heq
+    exact ⟨a, b, d, fun q hq => pa18_mem_affspan3 (by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢; tauto)⟩
+  rcases eq_or_ne a d with heq | had
+  · subst heq
+    exact ⟨a, b, c, fun q hq => pa18_mem_affspan3 (by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢; tauto)⟩
+  rcases eq_or_ne b c with heq | hbc
+  · subst heq
+    exact ⟨a, b, d, fun q hq => pa18_mem_affspan3 (by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢; tauto)⟩
+  rcases eq_or_ne b d with heq | hbd
+  · subst heq
+    exact ⟨a, b, c, fun q hq => pa18_mem_affspan3 (by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢; tauto)⟩
+  rcases eq_or_ne c d with heq | hcd
+  · subst heq
+    exact ⟨a, b, c, fun q hq => pa18_mem_affspan3 (by
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢; tauto)⟩
+  exact absurd (pa18_card4_of_distinct hab hac had hbc hbd hcd) hcard
+
+/-- HOL `CC_CELL_EXTREME_CARD` (leaf_cell.hl:2662-2678): the four extreme
+points are pairwise distinct because the tetrahedron is non-coplanar. -/
 theorem CC_CELL_EXTREME_CARD {V : Set V3} {ul : List V3} {pp : V3}
     (hp : Packing V) (hs : saturated V) (hl' : leaf V ul)
     (hpp : pp = if ccKe V ul = 3 then mxi V (ccUh V ul) else (ccUh V ul).getD 3 0) :
     Nat.card ({(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0, (ccUh V ul).getD 2 0, pp} : Set V3)
       = 4 := by
-  sorry
+  by_contra hcon
+  exact CC_CELL_NOT_COPLANAR_EXTREME hp hs hl' hpp (pa18_coplanar4_of_card_ne4 hcon)
 
 /-- HOL `CC_CELL_INDEPENDENT` (leaf_cell.hl:2679-2708). -/
 theorem CC_CELL_INDEPENDENT {V : Set V3} {ul : List V3} {pp : V3}
@@ -1975,7 +2538,32 @@ theorem CC_CELL_INDEPENDENT {V : Set V3} {ul : List V3} {pp : V3}
     (hpp : pp = if ccKe V ul = 3 then mxi V (ccUh V ul) else (ccUh V ul).getD 3 0) :
     AffineIndependent ℝ (fun x : ({(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0,
       (ccUh V ul).getD 2 0, pp} : Set V3) => (x : V3)) := by
-  sorry
+  set S : Set V3 := {(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0, (ccUh V ul).getD 2 0, pp} with hS
+  have hcard := CC_CELL_EXTREME_CARD hp hs hl' hpp
+  have hne : S ≠ ∅ := by
+    intro hc
+    have hmem : (ccUh V ul).getD 0 0 ∈ S := by rw [hS]; simp
+    rw [hc] at hmem
+    simp at hmem
+  have hfin : S.Finite := by
+    rw [hS]
+    refine Set.Finite.insert _ (Set.Finite.insert _ (Set.Finite.insert _
+      (Set.finite_singleton pp)))
+  haveI : Fintype ↥S := hfin.fintype
+  have hcardfi : Fintype.card ↥S = 4 := by
+    rwa [Nat.card_eq_fintype_card] at hcard
+  have hrange : Set.range (fun x : ↥S => (x : V3)) = S := by
+    ext y
+    constructor
+    · rintro ⟨x, rfl⟩; exact x.2
+    · intro hy; exact ⟨⟨y, hy⟩, rfl⟩
+  rw [affineIndependent_iff_not_finrank_vectorSpan_le ℝ (fun x : ↥S => (x : V3)) (n := 2)
+    hcardfi, hrange]
+  intro hle
+  have hdim : affDim S ≤ 2 := by
+    rw [affDim, if_neg hne]
+    exact_mod_cast hle
+  exact CC_CELL_NOT_COPLANAR_EXTREME hp hs hl' hpp (AFF_DIM_LE_2_IMP_COPLANAR S hdim)
 
 /-- HOL `CC_CELL_CONVEX_HULL_INJ` (leaf_cell.hl:2709-2731). -/
 theorem CC_CELL_CONVEX_HULL_INJ {V : Set V3} {ul vl : List V3} {pu pv : V3}
@@ -1985,37 +2573,36 @@ theorem CC_CELL_CONVEX_HULL_INJ {V : Set V3} {ul vl : List V3} {pu pv : V3}
     (heq : ccCell V ul = ccCell V vl) :
     ({(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0, (ccUh V ul).getD 2 0, pu} : Set V3)
       = {(ccUh V vl).getD 0 0, (ccUh V vl).getD 1 0, (ccUh V vl).getD 2 0, pv} := by
-  sorry
+  have hdep1 := CC_CELL_INDEPENDENT hp hs hl1 hpu
+  have hdep2 := CC_CELL_INDEPENDENT hp hs hl2 hpv
+  have hul := CC_CELL34 (V := V) (ul := ul) (pp := pu) hp hs hl1 hpu
+  have hvl := CC_CELL34 (V := V) (ul := vl) (pp := pv) hp hs hl2 hpv
+  have hhull : convexHull ℝ ({(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0,
+      (ccUh V ul).getD 2 0, pu} : Set V3)
+      = convexHull ℝ ({(ccUh V vl).getD 0 0, (ccUh V vl).getD 1 0,
+      (ccUh V vl).getD 2 0, pv} : Set V3) := by
+    rw [← hul, ← hvl]; exact heq
+  exact (CONVEX_HULL_EQ_EQ_SET_EQ _ _
+    (show ¬affineDependent ({(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0,
+      (ccUh V ul).getD 2 0, pu} : Set V3) from fun hdep => hdep hdep1)
+    (show ¬affineDependent ({(ccUh V vl).getD 0 0, (ccUh V vl).getD 1 0,
+      (ccUh V vl).getD 2 0, pv} : Set V3) from fun hdep => hdep hdep2)).1 hhull
 
 /-- HOL `FUEIMOV_K` (leaf_cell.hl:2732-2749). -/
 theorem FUEIMOV_K {V : Set V3} {ul vl : List V3} (hs : saturated V) (hp : Packing V)
     (hl1 : leaf V ul) (hl2 : leaf V vl) (heq : ccCell V ul = ccCell V vl) :
     ccKe V ul = ccKe V vl := by
+-- NEEDS: waits on CC_CELL_NOT_NULLSET; the other half is PA17.AJRIPQN
+-- (still sorry in PackingAuto17, out of PA18 scope).
   sorry
-
-/-- HOL `LIST_OF_CC_UH` (leaf_cell.hl:2750-2764). -/
-theorem LIST_OF_CC_UH {V : Set V3} {ul : List V3} (hs : saturated V)
-    (hp : Packing V) (hl' : leaf V ul) :
-    ccUh V ul = [(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0, (ccUh V ul).getD 2 0,
-      (ccUh V ul).getD 3 0] := by
-  have hb := (Classical.choose_spec (cc_uh_exists V ul)) hp hs hl'
-  exact list4_eq _ hb.1.1
-
-/-- HOL `SET_OF_LIST_CC_UH` (leaf_cell.hl:2765-2792). -/
-theorem SET_OF_LIST_CC_UH {V : Set V3} {ul : List V3} (hs : saturated V)
-    (hp : Packing V) (hl' : leaf V ul) :
-    setOfList (ccUh V ul) = {(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0,
-      (ccUh V ul).getD 2 0, (ccUh V ul).getD 3 0} := by
-  rw [LIST_OF_CC_UH hs hp hl']
-  ext t
-  simp [setOfList]
-  all_goals tauto
 
 /-- HOL `MCELL4_EXTREME_POINT` (leaf_cell.hl:2793-?). -/
 theorem MCELL4_EXTREME_POINT {V : Set V3} {ul vl : List V3} (hs : saturated V)
     (hp : Packing V) (hl1 : leaf V ul) (hl2 : leaf V vl)
     (heq : ccCell V ul = ccCell V vl) (h4 : ccKe V ul = 4) :
     setOfList (ccUh V ul) = setOfList (ccUh V vl) := by
+-- NEEDS: leaf_cell.hl:2779-2810; needs the EDGE_FIRST-style rigidity kit
+-- plus CC_CELL_CONVEX_HULL_INJ (proved).
   sorry
 
 
@@ -2037,11 +2624,14 @@ theorem FUEIMOV_4 {V : Set V3} {ul vl : List V3} (hs : saturated V) (hp : Packin
     (hst : stem ul = stem vl) (h4 : ccKe V ul = 4) (hne : ul ≠ vl) :
     ccUh V vl = [(ccUh V ul).getD 1 0, (ccUh V ul).getD 0 0, (ccUh V ul).getD 3 0,
       (ccUh V ul).getD 2 0] := by
+-- NEEDS (GIANT): leaf_cell.hl:2810-2894 stem-swap rigidity.
   sorry
 
 /-- HOL `MXI_NOT_IN_V` (leaf_cell.hl:2894-2948). -/
 theorem MXI_NOT_IN_V {V : Set V3} {ul : List V3} (hs : saturated V) (hp : Packing V)
     (hl' : leaf V ul) (h3 : ccKe V ul = 3) : mxi V (ccUh V ul) ∉ V := by
+-- NEEDS: leaf_cell.hl:2894-2948; needs the mxi sqrt-2 distance vs the
+-- packing-ball separation kit.
   sorry
 
 /-- HOL `MCELL_V_INTER_EXTREME` (leaf_cell.hl:2949-2976). -/
@@ -2049,6 +2639,7 @@ theorem MCELL_V_INTER_EXTREME {V : Set V3} {ul : List V3} (hs : saturated V)
     (hp : Packing V) (hl' : leaf V ul) (h3 : ccKe V ul = 3) :
     V ∩ {(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0, (ccUh V ul).getD 2 0,
         mxi V (ccUh V ul)} = setOfList ul := by
+-- NEEDS: leaf_cell.hl:2949-2976; waits on MXI_NOT_IN_V.
   sorry
 
 /-- HOL `MCELL_EXTREME_DIFF_V` (leaf_cell.hl:2977-3337). -/
@@ -2056,6 +2647,7 @@ theorem MCELL_EXTREME_DIFF_V {V : Set V3} {ul : List V3} (hs : saturated V)
     (hp : Packing V) (hl' : leaf V ul) (h3 : ccKe V ul = 3) :
     ({(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0, (ccUh V ul).getD 2 0,
         mxi V (ccUh V ul)} : Set V3) \ V = {mxi V (ccUh V ul)} := by
+-- NEEDS: leaf_cell.hl:2977-3000; waits on MXI_NOT_IN_V.
   sorry
 
 /-- HOL `FUEIMOV_3` (leaf_cell.hl:2977-3337). -/
@@ -2064,6 +2656,7 @@ theorem FUEIMOV_3 {V : Set V3} {ul vl : List V3} (hs : saturated V) (hp : Packin
     (hst : ({(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0} : Set V3)
         = {(ccUh V vl).getD 0 0, (ccUh V vl).getD 1 0})
     (heq : ccCell V ul = ccCell V vl) : ul = vl := by
+-- NEEDS (GIANT): leaf_cell.hl:3000-3114.
   sorry
 
 /-- HOL `MCELL2_EDGE_FIRST` (leaf_cell.hl:3338-3374). -/
@@ -2071,6 +2664,7 @@ theorem MCELL2_EDGE_FIRST {V : Set V3} {ul : List V3} {u v : V3} (hs : saturated
     (hp : Packing V) (hb : barV V 3 ul)
     (he : {u, v} ∈ edgeX V (mcell2 V ul)) :
     ∃ vl, barV V 3 vl ∧ u = vl.getD 0 0 ∧ v = vl.getD 1 0 ∧ mcell2 V ul = mcell2 V vl := by
+-- NEEDS (GIANT): leaf_cell.hl:3114-3374 mcell edge-rigidity kit.
   sorry
 
 /-- HOL `FINITE_CARD1_IMP_SINGLETON` (leaf_cell.hl:3338-3374). -/
@@ -2110,6 +2704,7 @@ theorem MCELL3_EDGE_FIRST {V : Set V3} {ul : List V3} {u v : V3} (hs : saturated
     (hp : Packing V) (hb : barV V 3 ul)
     (he : {u, v} ∈ edgeX V (mcell3 V ul)) :
     ∃ vl, barV V 3 vl ∧ u = vl.getD 0 0 ∧ v = vl.getD 1 0 ∧ mcell3 V ul = mcell3 V vl := by
+-- NEEDS (GIANT): leaf_cell.hl:3197-3281 mcell edge-rigidity kit.
   sorry
 
 /-- HOL `SET2_INSERT2` (leaf_cell.hl:3375-?). -/
@@ -2147,18 +2742,22 @@ theorem MCELL4_EDGE_FIRST {V : Set V3} {ul : List V3} {u v : V3} (hs : saturated
     (hp : Packing V) (hb : barV V 3 ul)
     (he : {u, v} ∈ edgeX V (mcell4 V ul)) :
     ∃ vl, barV V 3 vl ∧ u = vl.getD 0 0 ∧ v = vl.getD 1 0 ∧ mcell4 V ul = mcell4 V vl := by
+-- NEEDS (GIANT): leaf_cell.hl:3281-3374 mcell edge-rigidity kit.
   sorry
 
 /-- HOL `STEM_EDGEX` (leaf_cell.hl:3375-?). -/
 theorem STEM_EDGEX {V : Set V3} {ul : List V3} (hp : Packing V) (hs : saturated V)
     (hl' : leaf V ul) :
     {(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0} ∈ edgeX V (ccCell V ul) := by
+-- NEEDS: leaf_cell.hl:3375-3432; stem edge in edgeX of cc_cell, waits on
+-- the EDGE_FIRST kit.
   sorry
 
 /-- HOL `FCHKUGT` (leaf_cell.hl:3432-3528). -/
 theorem FCHKUGT {V : Set V3} {u0 u1 u2 u2' : V3} (hs : saturated V) (hp : Packing V)
     (hA : ccA0 [u0, u1, u2] = ccA0 [u0, u1, u2'])
     (hl1 : leaf V [u0, u1, u2]) (hl2 : leaf V [u0, u1, u2']) : u2 = u2' := by
+-- NEEDS (GIANT): leaf_cell.hl:3432-3528 cc_A0 injectivity.
   sorry
 
 /-- HOL `AZIM_BASE_SHIFT_LE` (leaf_cell.hl:3529-3547), via two applications of
