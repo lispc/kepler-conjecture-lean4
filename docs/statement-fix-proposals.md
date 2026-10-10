@@ -1107,8 +1107,17 @@ new_specification 且基于 `Complex.arg`，**波及 `bisector_point` 全部下�
 （(−π,0)↦(π,2π) 分支反序，仅单射）——refill 时凡"arg 序⟹holArg 序"的
 推理不成立（批应用波已录）。
 
-### (c) 状态：**已批准（2026-10-01 用户三连批 28/29/30 之一）**（2026-10-01
-holArg 批立案；随 bisector refill 波同车应用）。
+### (c) 状态：**已批准（2026-10-01 用户三连批 28/29/30 之一）；已应用（2026-10-10）**
+
+补丁 `docs/statement-fix-proposals-patches/30-pa22-bisector.patch`（开发波
+4f6171af 产出，探针空间 7 轮收敛 EXIT=0、往返字节一致）于 2026-10-10 应用到
+PA22（BIEFJHU 清场后窗口；`git apply --check` 干跑过，两 hunk 锚 :43/:2317
+未受 +2230 行增量影响）。改述内容：`bisector_point_exists` spec 的
+`Complex.arg`→`holArg` 共 8 处（4 exists + 4 props），refill 经
+`p22_holArg_cos_sin` 精确极坐标表示绕开 holArg 非单调（全程无 arg 序⟹holArg
+序转移），`bisector_point`/`bisector_point_props` 随上游自动闭合，PA22 sorry
+−1。同批应用注记：本条应用与存量 PA3↔PA22 `BIJ_SUM` 公共撞名修复（待批）
+无关；闸门走 SF 模式 + 自根通道（LocalBridge 被存量撞名挡，偏差记录在案）。
 
 ## 31. PA23 `grutoti_sum_volD` 前提面不足——冻结陈述可反驳 — 分级 M（STATEMENT 修正）
 

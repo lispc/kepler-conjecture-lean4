@@ -1,8 +1,8 @@
 diff --git a/lean/Kepler/Text/PackingAuto22.lean b/lean/Kepler/Text/PackingAuto22.lean
-index eb22a427..d5f44952 100644
+index 7bc1a3b8..355b3af3 100644
 --- a/lean/Kepler/Text/PackingAuto22.lean
 +++ b/lean/Kepler/Text/PackingAuto22.lean
-@@ -43,6 +43,14 @@
+@@ -43,6 +43,14 @@ ENCODING NOTES
      `poly_sort_fn`, `POLYSORT_BIJ2`, `EUSOTYP_simple` are stated over
      `holArg`, the faithful HOL `Arg` (same defect class as the ARG_INV_ALT
      port note at its block).
@@ -17,7 +17,7 @@ index eb22a427..d5f44952 100644
    - `facet_rep_a/b` and `bisector_point` are `new_specification`s: ported via
      `Classical.choose` from their existence theorems (faithful and
      choice-free-in-statements).
-@@ -2317,34 +2325,385 @@
+@@ -2317,34 +2325,385 @@ theorem facet_rep_nz (P c : Set ℂ) (hP : polyhedronC P) (hc : facetOfC c P) :
    rw [h0] at h
    exact absurd h.1 (by simp)
  
@@ -163,6 +163,8 @@ index eb22a427..d5f44952 100644
 -      Complex.arg (v / facet_rep_a P c) = psi ∧
 -      Complex.arg (facet_rep_a P c' / v) = psi := by
 -  sorry -- DEF-FIX: refill per counting_spheres.hl:825 §3a
+-
+-/-- HOL `bisector_point` (new_specification, counting_spheres.hl:943). -/
 +      holArg (v / facet_rep_a P c) = psi ∧
 +      holArg (facet_rep_a P c' / v) = psi := by
 +  set a : ℂ := facet_rep_a P c with hac
@@ -385,8 +387,7 @@ index eb22a427..d5f44952 100644
 +        (by linarith [p22_holArg_lt_two_pi z])) (le_of_lt ht0)) ?_
 +    rw [htdef, div_mul_cancel₀ r (ne_of_gt hcos)]
 +    exact hb2
- 
--/-- HOL `bisector_point` (new_specification, counting_spheres.hl:943). -/
++
 +/-- HOL `bisector_point` (new_specification, counting_spheres.hl:943).
 +SF30 linkage: the underlying existence theorem is now stated over `holArg`
 +(range `[0, 2π)`, the faithful HOL `Arg`); the chosen point is unchanged in

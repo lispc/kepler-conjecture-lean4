@@ -43,6 +43,14 @@ ENCODING NOTES
     `poly_sort_fn`, `POLYSORT_BIJ2`, `EUSOTYP_simple` are stated over
     `holArg`, the faithful HOL `Arg` (same defect class as the ARG_INV_ALT
     port note at its block).
+  - SF30 (bisector refill wave): the `bisector_point` family joins the
+    `holArg` list — `bisector_point_exists`/`bisector_point_props` are
+    restated over `holArg` (the frozen spec was `Complex.arg`-based, same
+    defect class as the SF22/SF27 batch above); the refill consumes `hmin`
+    directly as a `holArg` inequality and only uses the exact polar
+    representation `p22_holArg_cos_sin` — never an `arg`-order to
+    `holArg`-order transfer (`holArg` is injective but NOT monotone in
+    `Complex.arg`).
   - `facet_rep_a/b` and `bisector_point` are `new_specification`s: ported via
     `Classical.choose` from their existence theorems (faithful and
     choice-free-in-statements).
@@ -2317,34 +2325,385 @@ theorem facet_rep_nz (P c : Set ℂ) (hP : polyhedronC P) (hc : facetOfC c P) :
   rw [h0] at h
   exact absurd h.1 (by simp)
 
-/-- HOL `bisector_point_exists` (counting_spheres.hl:825). GIANT. -/
+
+/-! ## SF30 bisector refill kit (branch-safe `holArg` linkage, 2026-10-08)
+
+`bisector_point_exists` is refilled WITHOUT any `arg`-order to `holArg`-order
+transfer: `holArg` is not monotone in `Complex.arg` (the `(-π, 0)` branch maps
+reversely onto `(π, 2π)`, so only injectivity holds).  Instead, the refill
+consumes the minimality hypothesis directly as a `holArg` inequality and only
+touches `holArg` through the exact polar representation `p22_holArg_cos_sin`
+(valid on both branches), with angle uniqueness from `p22_cos_sin_eq`. -/
+
+/-- SF30 kit: real part of the unit ray `cos ψ + I * sin ψ`. -/
+private theorem p22_cosI_sin_re (ψ : ℝ) :
+    (Real.cos ψ + Complex.I * Real.sin ψ).re = Real.cos ψ := by
+  rw [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+    Complex.ofReal_re, Complex.ofReal_im, zero_mul, mul_zero, sub_zero, add_zero]
+
+/-- SF30 kit: imaginary part of the unit ray `cos ψ + I * sin ψ`. -/
+private theorem p22_cosI_sin_im (ψ : ℝ) :
+    (Real.cos ψ + Complex.I * Real.sin ψ).im = Real.sin ψ := by
+  rw [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+    Complex.ofReal_im, zero_mul, Complex.ofReal_re, one_mul, zero_add, zero_add]
+
+/-- SF30 kit: real part of the unit ray times a vector. -/
+private theorem p22_cosI_sin_mul_re (ψ : ℝ) (w : ℂ) :
+    ((Real.cos ψ + Complex.I * Real.sin ψ) * w).re
+      = Real.cos ψ * w.re - Real.sin ψ * w.im := by
+  rw [Complex.mul_re, p22_cosI_sin_re, p22_cosI_sin_im]
+
+/-- SF30 kit: imaginary part of the unit ray times a vector. -/
+private theorem p22_cosI_sin_mul_im (ψ : ℝ) (w : ℂ) :
+    ((Real.cos ψ + Complex.I * Real.sin ψ) * w).im
+      = Real.cos ψ * w.im + Real.sin ψ * w.re := by
+  rw [Complex.mul_im, p22_cosI_sin_re, p22_cosI_sin_im]
+
+/-- SF30 kit: `holArg` is nonnegative. -/
+private theorem p22_holArg_nonneg (z : ℂ) : 0 ≤ holArg z := by
+  rw [show holArg z =
+      if 0 ≤ Complex.arg z then Complex.arg z else Complex.arg z + 2 * Real.pi from rfl]
+  split
+  · assumption
+  · rename_i h
+    have h1 : Complex.arg z < 0 := not_le.mp h
+    have h2 := Complex.neg_pi_lt_arg z
+    linarith
+
+/-- SF30 kit: `holArg` is below `2π`. -/
+private theorem p22_holArg_lt_two_pi (z : ℂ) : holArg z < 2 * Real.pi := by
+  rw [show holArg z =
+      if 0 ≤ Complex.arg z then Complex.arg z else Complex.arg z + 2 * Real.pi from rfl]
+  split
+  · have h1 := Complex.arg_le_pi z
+    have h2 : (0 : ℝ) < Real.pi := Real.pi_pos
+    linarith
+  · rename_i h
+    have h1 : Complex.arg z < 0 := not_le.mp h
+    linarith
+
+/-- SF30 kit: an angle in `[0, 2π)` is determined by its `cos` and `sin`. -/
+private theorem p22_cos_sin_eq (θ θ' : ℝ) (h1 : 0 ≤ θ) (h2 : θ < 2 * Real.pi)
+    (h1' : 0 ≤ θ') (h2' : θ' < 2 * Real.pi)
+    (hc : Real.cos θ = Real.cos θ') (hs : Real.sin θ = Real.sin θ') : θ = θ' := by
+  have hpy : Real.cos θ' * Real.cos θ' + Real.sin θ' * Real.sin θ' = 1 := by
+    have h := Real.sin_sq_add_cos_sq θ'
+    rw [pow_two, pow_two] at h
+    linarith
+  have hc1 : Real.cos (θ - θ') = 1 := by
+    rw [Real.cos_sub, hc, hs]
+    exact hpy
+  have hb1 : -(2 * Real.pi) < θ - θ' := by linarith [h1, h2', Real.pi_pos]
+  have hb2 : θ - θ' < 2 * Real.pi := by linarith [h2, h1', Real.pi_pos]
+  have h0 := (Real.cos_eq_one_iff_of_lt_of_lt hb1 hb2).mp hc1
+  linarith
+
+/-- SF30 kit: the exact polar representation behind `holArg`, valid on both
+branches of the lift — this is what makes every refill computation
+branch-safe. -/
+private theorem p22_holArg_cos_sin (z : ℂ) (hz : z ≠ 0) :
+    ‖z‖ • (Real.cos (holArg z) + Complex.I * Real.sin (holArg z)) = z := by
+  have hnorm : ‖z‖ ≠ 0 := norm_ne_zero_iff.mpr hz
+  have hkey : ∀ α : ℝ, α = Complex.arg z ∨ α = Complex.arg z + 2 * Real.pi →
+      ‖z‖ * Real.cos α = z.re ∧ ‖z‖ * Real.sin α = z.im := by
+    intro α hor
+    rcases hor with hα | hα
+    · constructor
+      · rw [hα, Complex.cos_arg hz]
+        field_simp
+      · rw [hα, Complex.sin_arg z]
+        field_simp
+    · constructor
+      · rw [hα, show Real.cos (Complex.arg z + 2 * Real.pi)
+            = Real.cos (Complex.arg z) from Real.cos_periodic _, Complex.cos_arg hz]
+        field_simp
+      · rw [hα, show Real.sin (Complex.arg z + 2 * Real.pi)
+            = Real.sin (Complex.arg z) from Real.sin_periodic _, Complex.sin_arg z]
+        field_simp
+  rcases le_or_gt 0 (Complex.arg z) with h | h
+  · have h1 := hkey (holArg z) (Or.inl (if_pos h))
+    refine Complex.ext ?_ ?_
+    · rw [Complex.real_smul, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+        zero_mul, sub_zero, p22_cosI_sin_re]
+      exact h1.1
+    · rw [Complex.real_smul, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+        zero_mul, add_zero, p22_cosI_sin_im]
+      exact h1.2
+  · have h1 := hkey (holArg z) (Or.inr (if_neg (not_le.mpr h)))
+    refine Complex.ext ?_ ?_
+    · rw [Complex.real_smul, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+        zero_mul, sub_zero, p22_cosI_sin_re]
+      exact h1.1
+    · rw [Complex.real_smul, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+        zero_mul, add_zero, p22_cosI_sin_im]
+      exact h1.2
+
+/-- HOL `bisector_point_exists` (counting_spheres.hl:825). GIANT.
+SF30 statement-fix (same defect class as SF22/SF27, minesweep report §3): the
+four `Complex.arg`s of the specification are lifted to `holArg` (range
+`[0, 2π)`, the faithful HOL `Arg`).  Over the principal range `(-π, π]` the
+`hpsi`/`hmin` data express a different facet configuration (the `(-π, 0) ↦
+(π, 2π)` branch reversal), so the HOL proof is not portable to the frozen
+statement; the statement is restated over `holArg`.
+Refill (holArg non-monotonicity discipline): no step transfers an `arg` order
+into a `holArg` order — `hmin` is consumed directly as a `holArg` inequality,
+and `holArg` enters only through the exact representation
+`z = ‖z‖ • (cos (holArg z) + I * sin (holArg z))` (`p22_holArg_cos_sin`,
+branch-safe) with uniqueness `p22_cos_sin_eq`.  The `P v` arm applies
+`POLYHEDRON_MEMBER` directly; the HOL proof routes it through `insert_v`,
+whose core is exactly the per-facet `dot2` bound inlined here (so this refill
+does not depend on the still-open `insert_v`). -/
 theorem bisector_point_exists (P c c' : Set ℂ) (r : ℝ) :
     ∃ v : ℂ, ∀ psi : ℝ, polyhedronC P → facetOfC c P → facetOfC c' P → 0 < r →
       (∀ p : ℂ, ‖p‖ < r → p ∈ P) →
-      psi = Complex.arg (facet_rep_a P c' / facet_rep_a P c) / 2 →
+      psi = holArg (facet_rep_a P c' / facet_rep_a P c) / 2 →
       (∀ c'' : Set ℂ, facetOfC c'' P →
-        Complex.arg (facet_rep_a P c'' / facet_rep_a P c) < 2 * psi → c'' = c) →
+        holArg (facet_rep_a P c'' / facet_rep_a P c) < 2 * psi → c'' = c) →
       psi < Real.pi / 2 → c' ≠ c →
       v ∈ P ∧ ‖v‖ = r / Real.cos psi ∧
-      Complex.arg (v / facet_rep_a P c) = psi ∧
-      Complex.arg (facet_rep_a P c' / v) = psi := by
-  sorry -- DEF-FIX: refill per counting_spheres.hl:825 §3a
+      holArg (v / facet_rep_a P c) = psi ∧
+      holArg (facet_rep_a P c' / v) = psi := by
+  set a : ℂ := facet_rep_a P c with hac
+  set a' : ℂ := facet_rep_a P c' with hac'
+  refine ⟨(r / Real.cos (holArg (a' / a) / 2)) •
+      ((Real.cos (holArg (a' / a) / 2) + Complex.I * Real.sin (holArg (a' / a) / 2)) * a),
+    ?_⟩
+  intro psi hP hc hc' hr hrad hpsi hmin hlt hne
+  obtain rfl : psi = holArg (a' / a) / 2 := hpsi
+  set psi : ℝ := holArg (a' / a) / 2 with hpsidef
+  -- facet representation facts
+  have hprc := facet_rep_props P c hP hc
+  have hprc' := facet_rep_props P c' hP hc'
+  have hn1 : ‖a‖ = 1 := hprc.1
+  have hn1' : ‖a'‖ = 1 := hprc'.1
+  have hac0 : a ≠ 0 := by
+    intro h0
+    rw [h0] at hn1
+    exact absurd hn1 (by simp)
+  have hac0' : a' ≠ 0 := by
+    intro h0
+    rw [h0] at hn1'
+    exact absurd hn1' (by simp)
+  -- angle bookkeeping
+  have hnn : 0 ≤ psi := div_nonneg (p22_holArg_nonneg _) (by norm_num)
+  have hlt2pi : psi < 2 * Real.pi := by linarith [hlt, Real.pi_pos]
+  have hcos : 0 < Real.cos psi :=
+    Real.cos_pos_of_mem_Ioo ⟨by linarith [hnn, Real.pi_pos], hlt⟩
+  set t : ℝ := r / Real.cos psi with htdef
+  set u : ℂ := Real.cos psi + Complex.I * Real.sin psi with hudef
+  have ht0 : 0 < t := div_pos hr hcos
+  have htnz : t ≠ 0 := ne_of_gt ht0
+  have htc : (t : ℂ) ≠ 0 := by simpa using htnz
+  have hu1 : ‖u‖ = 1 := by
+    have hsq : ‖u‖ ^ 2 = 1 := by
+      rw [Complex.sq_norm, Complex.normSq_apply, hudef, p22_cosI_sin_re, p22_cosI_sin_im]
+      have h := Real.sin_sq_add_cos_sq psi
+      rw [pow_two, pow_two] at h
+      linarith
+    have hnn2 : 0 ≤ ‖u‖ := norm_nonneg _
+    rcases sq_eq_one_iff.mp hsq with h1 | h1
+    · exact h1
+    · exact absurd h1 (by linarith)
+  have hu0 : u ≠ 0 := norm_ne_zero_iff.mp (by rw [hu1]; norm_num)
+  -- the witness point and its norm
+  set v : ℂ := t • (u * a) with hvdef
+  have hvt : ‖v‖ = t := by
+    rw [hvdef, norm_smul, Real.norm_eq_abs, abs_of_pos ht0, norm_mul, hu1, hn1]
+    norm_num
+  have hv0 : v ≠ 0 := by
+    intro h0
+    rw [h0, norm_zero] at hvt
+    exact absurd hvt.symm (ne_of_gt ht0)
+  -- polar form of a'/a and the double-angle square
+  have hzu : ‖a' / a‖ = 1 := by
+    rw [norm_div, hn1', hn1]
+    norm_num
+  have hzne : a' / a ≠ 0 := div_ne_zero hac0' hac0
+  have hzrep := p22_holArg_cos_sin (a' / a) hzne
+  rw [hzu, one_smul] at hzrep
+  have h2psi : holArg (a' / a) = 2 * psi := by rw [hpsidef]; ring
+  rw [h2psi] at hzrep
+  have hu2 : u * u = Real.cos (2 * psi) + Complex.I * Real.sin (2 * psi) := by
+    refine Complex.ext ?_ ?_
+    · rw [p22_cosI_sin_re, hudef, Complex.mul_re, p22_cosI_sin_re, p22_cosI_sin_im,
+        Real.cos_two_mul']
+      ring
+    · rw [p22_cosI_sin_im, hudef, Complex.mul_im, p22_cosI_sin_re, p22_cosI_sin_im,
+        Real.sin_two_mul]
+      ring
+  have hzsq : a' / a = u * u := by rw [hu2]; exact hzrep.symm
+  -- (1) `holArg (v / a) = psi`: v / a lies on the positive psi ray
+  have hva : v / a = t • u := by
+    rw [hvdef, Complex.real_smul, mul_div_assoc, mul_comm u a,
+      mul_div_cancel_left₀ u hac0, ← Complex.real_smul]
+  have hvna : ‖v / a‖ = t := by
+    rw [hva, norm_smul, Real.norm_eq_abs, abs_of_pos ht0, hu1]
+    norm_num
+  have hre1 : (v / a).re = t * Real.cos psi := by
+    have h1 := congrArg Complex.re hva
+    rw [Complex.real_smul, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+      zero_mul, sub_zero, hudef, p22_cosI_sin_re] at h1
+    exact h1
+  have him1 : (v / a).im = t * Real.sin psi := by
+    have h1 := congrArg Complex.im hva
+    rw [Complex.real_smul, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+      zero_mul, add_zero, hudef, p22_cosI_sin_im] at h1
+    exact h1
+  have hArg1 : holArg (v / a) = psi := by
+    have hdva : v / a ≠ 0 := div_ne_zero hv0 hac0
+    have hrep := p22_holArg_cos_sin (v / a) hdva
+    have hr1 := congrArg Complex.re hrep
+    have hi1 := congrArg Complex.im hrep
+    rw [hvna, Complex.real_smul, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+      zero_mul, sub_zero, hre1] at hr1
+    rw [hvna, Complex.real_smul, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+      zero_mul, add_zero, him1] at hi1
+    have hc1 : Real.cos (holArg (v / a)) = Real.cos psi := by
+      have h := mul_left_cancel₀ htnz hr1
+      rw [p22_cosI_sin_re] at h
+      exact h
+    have hs1 : Real.sin (holArg (v / a)) = Real.sin psi := by
+      have h := mul_left_cancel₀ htnz hi1
+      rw [p22_cosI_sin_im] at h
+      exact h
+    exact p22_cos_sin_eq _ _ (p22_holArg_nonneg _) (p22_holArg_lt_two_pi _) hnn hlt2pi hc1 hs1
+  -- (2) `holArg (a' / v) = psi`: a' / v is the reciprocal-scaled psi ray
+  have hmul : (t : ℂ) * (a' / v) = u := by
+    have hv' : v = (t : ℂ) * (u * a) := by rw [hvdef, Complex.real_smul]
+    rw [hv', mul_div_assoc' _ _ _, mul_div_mul_left _ _ htc]
+    rw [show a' / (u * a) = (a' / a) / u from by field_simp]
+    rw [hzsq, mul_div_cancel_left₀ u hu0]
+  have hvna' : ‖a' / v‖ * t = 1 := by
+    have h1 := congrArg norm hmul
+    rw [norm_mul, hu1, Complex.norm_real, Real.norm_eq_abs, abs_of_pos ht0] at h1
+    calc ‖a' / v‖ * t = t * ‖a' / v‖ := mul_comm _ _
+      _ = 1 := h1
+  have hre2 : (a' / v).re * t = Real.cos psi := by
+    have h1 := congrArg Complex.re hmul
+    rw [Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, zero_mul, sub_zero,
+      hudef, p22_cosI_sin_re, mul_comm t (a' / v).re] at h1
+    exact h1
+  have him2 : (a' / v).im * t = Real.sin psi := by
+    have h1 := congrArg Complex.im hmul
+    rw [Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, zero_mul, add_zero,
+      hudef, p22_cosI_sin_im, mul_comm t (a' / v).im] at h1
+    exact h1
+  have hArg2 : holArg (a' / v) = psi := by
+    have hdv : a' / v ≠ 0 := div_ne_zero hac0' hv0
+    have hrep := p22_holArg_cos_sin (a' / v) hdv
+    have hr2 := congrArg Complex.re hrep
+    rw [Complex.real_smul, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+      zero_mul, sub_zero] at hr2
+    have hi2 := congrArg Complex.im hrep
+    rw [Complex.real_smul, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+      zero_mul, add_zero] at hi2
+    -- hr2 : ‖a'/v‖ * Real.cos (holArg (a'/v)) = (a'/v).re
+    have hr3 : Real.cos (holArg (a' / v)) = Real.cos psi := by
+      have h3 := congrArg (fun r : ℝ => r * t) hr2
+      rw [mul_right_comm, hvna', one_mul, hre2, p22_cosI_sin_re] at h3
+      exact h3
+    have hi3 : Real.sin (holArg (a' / v)) = Real.sin psi := by
+      have h3 := congrArg (fun r : ℝ => r * t) hi2
+      rw [mul_right_comm, hvna', one_mul, him2, p22_cosI_sin_im] at h3
+      exact h3
+    exact p22_cos_sin_eq _ _ (p22_holArg_nonneg _) (p22_holArg_lt_two_pi _) hnn hlt2pi hr3 hi3
+  refine ⟨?_, hvt.trans htdef, hArg1, hArg2⟩
+  -- (3) `v ∈ P`: POLYHEDRON_MEMBER with the per-facet dot2 bound
+  -- (the core of HOL `insert_v`, inlined here)
+  refine POLYHEDRON_MEMBER P r v hP hr hrad fun c'' hc'' => ?_
+  have hpr2 := facet_rep_props P c'' hP hc''
+  have hb2 : r ≤ facet_rep_b P c'' := hpr2.2.1 r hr hrad
+  set a2 : ℂ := facet_rep_a P c'' with ha2def
+  have hn2 : ‖a2‖ = 1 := hpr2.1
+  have ha20 : a2 ≠ 0 := by
+    intro h0
+    rw [h0] at hn2
+    exact absurd hn2 (by simp)
+  set z : ℂ := a2 / a with hzdef
+  have hz1 : ‖z‖ = 1 := by
+    rw [hzdef, norm_div, hn2, hn1]
+    norm_num
+  have hz0 : z ≠ 0 := div_ne_zero ha20 hac0
+  have hzrep := p22_holArg_cos_sin z hz0
+  rw [hz1, one_smul] at hzrep
+  have hzre : z.re = Real.cos (holArg z) := by
+    have h := congrArg Complex.re hzrep
+    rw [p22_cosI_sin_re] at h
+    exact h.symm
+  have hzim : z.im = Real.sin (holArg z) := by
+    have h := congrArg Complex.im hzrep
+    rw [p22_cosI_sin_im] at h
+    exact h.symm
+  have hns1 : Complex.normSq a = 1 := by rw [← Complex.sq_norm, hn1]; norm_num
+  have hdiv_re : z.re = a2.re * a.re + a2.im * a.im := by
+    rw [hzdef, Complex.div_re, hns1]
+    simp
+  have hdiv_im : z.im = a2.im * a.re - a2.re * a.im := by
+    rw [hzdef, Complex.div_im, hns1]
+    simp
+  have hure : (u * a).re = Real.cos psi * a.re - Real.sin psi * a.im :=
+    p22_cosI_sin_mul_re psi a
+  have huim : (u * a).im = Real.cos psi * a.im + Real.sin psi * a.re :=
+    p22_cosI_sin_mul_im psi a
+  have hdot : dot2 a2 v = t * Real.cos (holArg z - psi) := by
+    calc dot2 a2 v
+        = t * dot2 a2 (u * a) := by rw [hvdef]; exact p22_dot2_smul_right _ _ _
+      _ = t * (a2.re * (u * a).re + a2.im * (u * a).im) := by rw [dot2_expand]
+      _ = t * (Real.cos psi * (a2.re * a.re + a2.im * a.im)
+            + Real.sin psi * (a2.im * a.re - a2.re * a.im)) := by
+          rw [hure, huim]
+          ring
+      _ = t * Real.cos (holArg z - psi) := by
+          rw [← hdiv_re, ← hdiv_im, hzre, hzim, Real.cos_sub]
+          ring
+  rcases eq_or_ne c'' c with heq2 | hne2
+  · -- the reference facet: z = a / a = 1, angle 0
+    have ha2a : a2 = a := by
+      rw [ha2def, heq2]
+    have hz1' : z = 1 := by
+      rw [hzdef, ha2a, div_self hac0]
+    have hhol1 : holArg z = 0 := by
+      rw [hz1']
+      rw [show holArg (1 : ℂ) =
+          if 0 ≤ Complex.arg (1 : ℂ) then Complex.arg (1 : ℂ)
+            else Complex.arg (1 : ℂ) + 2 * Real.pi from rfl]
+      rw [Complex.arg_one]
+      simp
+    rw [hdot, hhol1, show (0 : ℝ) - psi = -psi from by ring, Real.cos_neg, htdef,
+      div_mul_cancel₀ r (ne_of_gt hcos)]
+    exact hb2
+  · -- c'' ≠ c: the minimality hypothesis pins holArg z ≥ 2ψ, then eus_cos
+    have hge : 2 * psi ≤ holArg z := by
+      rcases lt_or_ge (holArg z) (2 * psi) with h | h
+      · exact absurd (hmin c'' hc'' h) hne2
+      · exact h
+    rw [hdot]
+    refine le_trans (mul_le_mul_of_nonneg_left
+      (eus_cos (holArg z - psi) psi hnn (by linarith)
+        (by linarith [p22_holArg_lt_two_pi z])) (le_of_lt ht0)) ?_
+    rw [htdef, div_mul_cancel₀ r (ne_of_gt hcos)]
+    exact hb2
 
-/-- HOL `bisector_point` (new_specification, counting_spheres.hl:943). -/
+/-- HOL `bisector_point` (new_specification, counting_spheres.hl:943).
+SF30 linkage: the underlying existence theorem is now stated over `holArg`
+(range `[0, 2π)`, the faithful HOL `Arg`); the chosen point is unchanged in
+kind. -/
 noncomputable def bisector_point (P c c' : Set ℂ) (r : ℝ) : ℂ :=
   Classical.choose (bisector_point_exists P c c' r)
 
-/-- Unfolding of the `bisector_point` specification. -/
+/-- Unfolding of the `bisector_point` specification.
+SF30 linkage: the `Complex.arg`s are lifted to `holArg` along with
+`bisector_point_exists`. -/
 theorem bisector_point_props (P c c' : Set ℂ) (r : ℝ) (psi : ℝ)
     (hP : polyhedronC P) (hc : facetOfC c P) (hc' : facetOfC c' P) (hr : 0 < r)
     (hrad : ∀ p : ℂ, ‖p‖ < r → p ∈ P)
-    (hpsi : psi = Complex.arg (facet_rep_a P c' / facet_rep_a P c) / 2)
+    (hpsi : psi = holArg (facet_rep_a P c' / facet_rep_a P c) / 2)
     (hmin : ∀ c'' : Set ℂ, facetOfC c'' P →
-      Complex.arg (facet_rep_a P c'' / facet_rep_a P c) < 2 * psi → c'' = c)
+      holArg (facet_rep_a P c'' / facet_rep_a P c) < 2 * psi → c'' = c)
     (hlt : psi < Real.pi / 2) (hne : c' ≠ c) :
     bisector_point P c c' r ∈ P ∧ ‖bisector_point P c c' r‖ = r / Real.cos psi ∧
-      Complex.arg (bisector_point P c c' r / facet_rep_a P c) = psi ∧
-      Complex.arg (facet_rep_a P c' / bisector_point P c c' r) = psi :=
+      holArg (bisector_point P c c' r / facet_rep_a P c) = psi ∧
+      holArg (facet_rep_a P c' / bisector_point P c c' r) = psi :=
   Classical.choose_spec (bisector_point_exists P c c' r)
     psi hP hc hc' hr hrad hpsi hmin hlt hne
 
