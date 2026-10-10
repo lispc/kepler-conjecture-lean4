@@ -344,7 +344,7 @@ Iff 且 R 显式→`(Submodule.mem_bot ℝ).1`；vectorSpan 成员匿名构造�
   另需 affDim(∩超平面)=affDim−1（Polytope.lean:203 `affDim_hyperplane` 可作原料）。
   PA18 钥匙三件套（MHFTTZN1 + BARV_IMP_LENGTH_EQ_CARD[PA7,仍 sorry] +
   p6_affdep_of_dim）可闭合 `BARV_AFFINE_INDEPENDENT`（PA7:374）。
-- **ContraFan**（2 remaining；2026-09-29 侦察结案，见 docs/contrafan-scout.md）：
+- **ContraFan**（2 remaining；2026-09-29 侦察结案，见 docs/scouts/contrafan-scout.md）：
   两枚陈述与 HOL 逐字同义无弱编码。CF-3 = `LEMMA_3_POINTS_FINAL`（:400）走路线 B：
   Mathlib `angle_eq_angle_add_add_angle_add_of_mem_span` + 纯有理数余弦界
   （cos ≤ 2719/3969、cos ≥ 1031/7938，数值见证已手算）+ 现成 `annulus_ray_absurd`，

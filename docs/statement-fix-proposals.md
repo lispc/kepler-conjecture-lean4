@@ -866,7 +866,7 @@ GRUTOTI.hl 全文只有一条定理 `GRUTOTI1_concl`（:48-58），其前提显�
 （:7983-8000，经 `VOLUME_CONIC_CAP` 消元），其证明上下文含
 `~(u0 = u1)`。故 HOL 侧该断言**从来是在 `u0 ≠ u1` 下陈述的**。
 `VOLUME_CONIC_CAP` 源在 flyspeck_multivariate.ml（本地 reference 树无源，
-grutoti-scout §5.1），无法逐字对照；但 Lean 侧 GT-1 已落地的
+docs/scouts/grutoti-scout.md §5.1），无法逐字对照；但 Lean 侧 GT-1 已落地的
 `ConicCapVolume.volumeConicCapPos`（kernel 验证的帽体积公式正性件，
 :961）携带同样的 `hne : v0 ≠ v1` 前提，与退化情形一致：
 `ConicCapVolume.ccv_conicCap_empty`（:154，已证）机器见证
@@ -902,7 +902,7 @@ private theorem grutoti_volD_pos (u0 u1 : V3) (r d : ℝ) (hr : 0 < r) (hd : 0 <
 ### (d) 消费面
 
 全树 grep：`grutoti_volD_pos` 零外部消费者（PA23 零 importer，
-PackingConcl 不经 PA23 走线，grutoti-scout §0.2），唯一调用点是同文件
+PackingConcl 不经 PA23 走线，docs/scouts/grutoti-scout.md §0.2），唯一调用点是同文件
 capstone `GRUTOTI` 内一处（补丁 ③）。属 GT-2/GT-3/GT-4 收口时
 `GRUTOTI1_concl_discharged` 断流链的前置件。
 
@@ -1004,7 +1004,7 @@ arg(h2/h1)=π−0.1 > −π/2=arg(h3/h1)，结论不成立。
 ## 23. PA7:995 `NOT_ID_IMP_LISTS_NOT_EQ` — 分级 A′（补 `hfix`，批 A）
 
 ### (a) HOL 出处：flyspeck permutes（Library/perms.ml）为 complement-fixing，
-`p permutes Icc 0 k` 即 `∀ j > k, p j = j`；扫雷报告 C2-1（encoding-risk-sweep
+`p permutes Icc 0 k` 即 `∀ j > k, p j = j`；扫雷报告 C2-1（docs/scouts/encoding-risk-sweep.md
 §2.1，探针 P1-P3 机器反例）。缺陷：弱编码下 junk 对换 `(k+1 k+2)` 满足全部
 前提而结论假（文件内注记自认 unprovable）。
 
@@ -1188,7 +1188,7 @@ HOL 原文在全称语境携带 region 见证（`c ≤ d`、`hl/√2 ≤ d`、`c
 
 d 充分小时 `rconeGt u0 u1 d` 严格大于 `rconeGt u0 u1 (hl/√2)`，差锥区含非携
 边胞的正测度迹，`⋃₀ 迹 = D` 不成立。精确反例可沿 SF31 的 ∅-思路变体构造，
-立案阶段以侦察地图（docs/tiwwfyq-coverage-scout.md §2 缺口 G1）为准。
+立案阶段以侦察地图（docs/scouts/tiwwfyq-coverage-scout.md §2 缺口 G1）为准。
 
 ### (c) 修复方案
 
