@@ -39,43 +39,59 @@ for line in open(EDGE_FILE, encoding="utf-8"):
     if t == "1":
         tainted.add(name)
 
-# 自验证: 从字面 taint 沿边做闭包, 应与 collectAxioms 的 taint 标志一致
-closure = set(x for x in nodes if x in tainted and not deps[x])
+# taint 子图内边（模拟只在 tainted 节点集上跑）
+tdeps = {m: (deps[m] & tainted) for m in tainted}
+# 两类 tainted: 字面 sorry 叶(tdeps 空, sorryAx 直接在体内, 不产生常量依赖边)
+# vs 依赖型 tainted(taint 来自被消费的 tainted 常量)。只有后者可被传播清除;
+# 字面叶是永久债, 除非它自己就是被填的 L。
+leaves = set(x for x in tainted if not tdeps[x])
+dep_tainted = tainted - leaves
+
+# 自验证: 从全部字面叶沿依赖边传播, 应覆盖全部 tainted
+closure = set(leaves)
 changed = True
 while changed:
     changed = False
-    for m in nodes:
-        if m in closure:
-            continue
-        if deps[m] & closure:
+    for m in dep_tainted:
+        if m not in closure and (tdeps[m] & closure):
             closure.add(m)
             changed = True
-reported_taint = set(x for x in nodes if x in tainted)
-mismatch_c = len(reported_taint - closure)   # collectAxioms 报 tainted 但闭包推不出 → 缺边(跨模块漏扫)
-print(f"nodes={len(nodes)} tainted(collectAxioms)={len(reported_taint)} "
-      f"closure-from-leaves={len(closure)} missing_edges={mismatch_c}")
+missing = len(tainted - closure)
+print(f"nodes={len(nodes)} tainted={len(tainted)} literal-leaves={len(leaves)} "
+      f"dep-tainted={len(dep_tainted)} closure={len(closure)} missing_edges={missing}")
 
-def cleanable(leaf, tainted):
-    T = tainted - {leaf}
-    removed = 1  # leaf 本身
-    changed = True
-    while changed:
-        changed = False
-        for m in list(T):
-            if not (tdeps[m] & T):
-                T.discard(m)
+def cleanable(leaf):
+    """假设 leaf 证毕(变净), 依赖型 tainted 按『全部 tainted 依赖已净』传播清除
+    (工作表+反向边+计数器, 只触可达); 其它字面叶保持 tainted。含 leaf 本身。"""
+    cnt = {m: len(tdeps[m] & dep_tainted) for m in dep_tainted}
+    leafdep = {m: bool(tdeps[m] & leaves) for m in dep_tainted}
+    from collections import deque
+    q = deque([leaf])
+    removed = 1
+    while q:
+        x = q.popleft()
+        for m in rdeps.get(x, ()):  # 消费者
+            if m == leaf or m not in dep_tainted:
+                continue
+            cnt[m] -= 1
+            if cnt[m] == 0 and not leafdep[m]:
                 removed += 1
-                changed = True
+                q.append(m)
     return removed
 
-# taint 子图内边（模拟只在 tainted 节点集上跑）
-tdeps = {m: (deps[m] & tainted) for m in tainted}
-# 候选 = taint 子图真叶（无 tainted 直接依赖的 tainted 节点）
-cands = sorted(x for x in tainted if not tdeps[x])
+# 反向边(仅 dep_tainted 消费者)
+rdeps = defaultdict(set)
+for m in dep_tainted:
+    for d in tdeps[m]:
+        rdeps[d].add(m)
+
+# 候选 = 全部 tainted(字面叶可直接填; 依赖型 tainted 的"填证"= 直接证它,
+# 绕过其上游——同样合法的派工对象)
+cands = sorted(tainted)
 print(f"candidates(taint-leaves)={len(cands)}")
 rows = []
 for i, L in enumerate(cands):
-    rows.append((cleanable(L, tainted), L))
+    rows.append((cleanable(L), L))
     if (i + 1) % 50 == 0:
         print(f"  ...ranked {i+1}/{len(cands)}", file=sys.stderr)
 rows.sort(reverse=True)
