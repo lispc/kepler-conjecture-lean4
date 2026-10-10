@@ -154,7 +154,23 @@ consumable; fix = move `(X : Set V3)` ahead of `he`. Residual: THREE
 exists at `grutoti_region`'s witnesses — an SF adding narrowness hypotheses
 or restating along those witnesses is the blocker), (3) the ε-junk case (no
 valid witness: edge reversed in the param list — potential frozen-false
-corner; SF proposal recorded). -/
+corner; SF proposal recorded).
+
+2026-10-10 SF32+33 应用波（用户四件合并批；GRUTOTI 清账第一段）：
+`p23_grutoti_cap_measure_cover` 加 region 门 `hcovW`（条目 32 (c) 方案一：
+∃ c, c ≤ d + 两支锥数据）并**全额填证**（sorry 清零——C_sub_rogers 实例 +
+SLTSTLO1 逐点 + k=0/1 逐点排除 + B1 VX-桥 + 球面零测差 + 双 mono 夹逼）；
+`grutoti_pivot` 加 `(hs hp hu0 hu1 hne hhl) + hw1 hw3 hw4`（条目 33 (c)，
+grutoti_cell_vol 消费形）且 null 支已填（¬nullSet X 支仍 1 处结构化 sorry，
+下波）；`p23_grutoti_sum_volD_measure_facts` 同步加门透传；`GRUTOTI` 调用点
+改由新装配私件 `p23_region_data_full`（`p23_region_data` 同证明体加宽导出
+c-锥数据——hcov 门需 `c ≤ d` 与锥数据同一见证，冻结原件不导出、两次独立
+∃-调用不可组合，见其 docstring）一步供给全部新前提。净 sorry 面：hcov −1、
+pivot 持平 1——PA23 桥位 proof-sorry 2 → 1。冻结签名（grutoti_sum_volD/
+grutoti_region/p23_region_data/grutoti_cell_vol/B1 三件/GRUTOTI 结论）一字
+未动。执行版补丁
+`docs/statement-fix-proposals-patches/32-33-pa23-grutoti-region-gates.patch`
+（+423/−38，自工作区 diff 生成）。-/
 
 import Kepler.Text.PackingAuto2
 import Kepler.Text.ConicCapVolume
@@ -2983,6 +2999,207 @@ private theorem p23_region_data (V : Set V3) (u0 u1 : V3) (e : Set V3)
         (u1 - u0) / (‖smallestAngleLine (elV vl 2) (elV vl 3) u0 u1 - u0‖
           * ‖u1 - u0‖) ≤ d := le_trans (hd2ub vl ⟨hb, hgateC 4 vl hnnD, htr⟩) hdd2
     exact absurd (le_trans hprop hf4le) (not_le.mpr hcos)
+/-- SF32/33 执行波（2026-10-10 用户四件合并批）装配私件：`p23_region_data`
+的强化导出版——证明体逐字复制 `p23_region_data`（同一构造，c 与 d 保持相关），
+结论在 `hl/√2 ≤ d` 之后多导出 region 见证 `c` 的两条锥数据（`rconeGt u0 u1 c ⊆
+affGeAlt {u0} (voronoiList V [u0,u1])` 与 `rconeGt u0 u1 c ⊆ rconeGt u0 u1
+(hl/√2)`，即 `p23_region_exists_c` 的后两支）。必要性：hcov 的 region 门
+（SF32 (c) 方案一：`∃ c, c ≤ d ∧ 锥数据`）要求 `c ≤ d` 与锥数据**同一见证**；
+`p23_region_data` 的冻结结论不导出其内部见证的锥数据，而 `p23_region_exists_c`
+与 `p23_region_data` 两次独立 ∃-调用的见证互不相关（`c₀ ≤ d₁` 不可证），GRUTOTI
+调用点无法由二者组合出该门——唯一单源是本件。不改动任何冻结签名
+（`p23_region_data`/`grutoti_region` 原样保留；下波可考虑上游合并时去重）。 -/
+private theorem p23_region_data_full (V : Set V3) (u0 u1 : V3) (e : Set V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (hhl : hl [u0, u1] < Real.sqrt 2) (he : e = {u0, u1}) :
+    ∃ c r d : ℝ, 0 < c ∧ c < 1 ∧ 0 < r ∧ r ≤ 1 ∧ 0 < d ∧ d < 1 ∧ c ≤ d ∧
+      (∀ X : Set V3, X ∈ mcellSet V ∧ ¬nullSet (X ∩ grutotiConicCap u0 u1 r d) →
+        ∃ k : ℕ, ∃ vl : List V3, 2 ≤ k ∧ barV V 3 vl ∧ X = mcell k V vl ∧
+          truncateSimplex 1 vl = [u0, u1]) ∧
+      hl [u0, u1] / Real.sqrt 2 ≤ d ∧
+      (∀ x : V3, x ∈ rconeGt u0 u1 c → affGeAlt {u0} (voronoiList V [u0, u1]) x) ∧
+      (∀ x : V3, x ∈ rconeGt u0 u1 c →
+        x ∈ rconeGt u0 u1 (hl [u0, u1] / Real.sqrt 2)) ∧
+      (∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+        ¬nullSet (mcell 3 V vl ∩ grutotiConicCap u0 u1 r d) →
+        (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, mxi V vl} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, mxi V vl} : Set V3), z ∉ rconeGt u0 u1 d) ∧
+      (∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+        ¬nullSet (mcell 4 V vl ∩ grutotiConicCap u0 u1 r d) →
+        (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, elV vl 3} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, elV vl 3} : Set V3), z ∉ rconeGt u0 u1 d) := by
+  obtain ⟨c, hc0, hc1, hcW, hcHl⟩ := p23_region_exists_c V u0 u1 hs hp hu0 hu1 hne hhl
+  have hbar := grutoti_barV V u0 u1 hs hp hu0 hu1 hne hhl
+  set C := (Metric.ball u0 1 ∩ rconeGt u0 u1 c : Set V3) with hCdef
+  -- B5: the mcell cover over C (verbatim from grutoti_region)
+  have hB5 : ∀ X : Set V3, X ∈ mcellSet V → ¬ nullSet (X ∩ C) →
+      ∃ k vl, 2 ≤ k ∧ barV V 3 vl ∧ X = mcell k V vl ∧ truncateSimplex 1 vl = [u0, u1] :=
+    p23_cover_C V u0 u1 hs hp hu0 hu1 hne c hcHl
+      (p23_C_sub_rogers V u0 u1 hp hu0 hu1 hne hhl hs hbar c hcW)
+  -- B6: the C-gated P3/P4 families; the suprema are KEPT (the frozen proof
+  -- discards them with its ∃-witnesses)
+  set famP3 : Set (List V3) := {vl | barV V 3 vl ∧ ¬ nullSet (mcell 3 V vl ∩ C) ∧
+    truncateSimplex 1 vl = [u0, u1]} with hfamP3def
+  have hfamP3sub : famP3 ⊆ p23Fam V u0 u1 := by
+    intro vl hvl
+    obtain ⟨hb, _, htr⟩ := hvl
+    exact ⟨hb, htr⟩
+  have hfamP3fin : famP3.Finite := (p23_family_finite V u0 u1 hp hs).subset hfamP3sub
+  set f3 : List V3 → ℝ := fun ul =>
+    inner ℝ (smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0) (u1 - u0) /
+      (‖smallestAngleLine (elV ul 2) (mxi V ul) u0 u1 - u0‖ * ‖u1 - u0‖) with hf3def
+  have hf3lt : ∀ ul ∈ famP3, f3 ul < 1 := by
+    intro ul hul
+    obtain ⟨hb, hnn, htr⟩ := hul
+    exact p23_f3_lt_one V u0 u1 hp hs hne hb htr C hnn
+  obtain ⟨d1, hd1lt, hd1ub⟩ : ∃ d1 : ℝ, d1 < 1 ∧ ∀ ul ∈ famP3, f3 ul ≤ d1 := by
+    by_cases hP3 : (f3 '' famP3) = ∅
+    · refine ⟨c, hc1, ?_⟩
+      rintro ul hul
+      exact absurd (Set.mem_image_of_mem f3 hul) (by rw [hP3]; simp)
+    · obtain ⟨m, hm, hmax⟩ := Set.exists_max_image (f3 '' famP3) id
+        (hfamP3fin.image _) (Set.nonempty_iff_ne_empty.mpr hP3)
+      rcases hm with ⟨ul0, hul0, rfl⟩
+      exact ⟨f3 ul0, hf3lt ul0 hul0,
+        fun ul hul => hmax (f3 ul) (Set.mem_image_of_mem f3 hul)⟩
+  set famP4 : Set (List V3) := {vl | barV V 3 vl ∧ ¬ nullSet (mcell 4 V vl ∩ C) ∧
+    truncateSimplex 1 vl = [u0, u1]} with hfamP4def
+  have hfamP4sub : famP4 ⊆ p23Fam V u0 u1 := by
+    intro vl hvl
+    obtain ⟨hb, _, htr⟩ := hvl
+    exact ⟨hb, htr⟩
+  have hfamP4fin : famP4.Finite := (p23_family_finite V u0 u1 hp hs).subset hfamP4sub
+  set f4 : List V3 → ℝ := fun ul =>
+    inner ℝ (smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0) (u1 - u0) /
+      (‖smallestAngleLine (elV ul 2) (elV ul 3) u0 u1 - u0‖ * ‖u1 - u0‖) with hf4def
+  have hf4lt : ∀ ul ∈ famP4, f4 ul < 1 := by
+    intro ul hul
+    obtain ⟨hb, hnn, htr⟩ := hul
+    exact p23_f4_lt_one V u0 u1 hp hs hne hb htr C hnn
+  obtain ⟨d2, hd2lt, hd2ub⟩ : ∃ d2 : ℝ, d2 < 1 ∧ ∀ ul ∈ famP4, f4 ul ≤ d2 := by
+    by_cases hP4 : (f4 '' famP4) = ∅
+    · refine ⟨c, hc1, ?_⟩
+      rintro ul hul
+      exact absurd (Set.mem_image_of_mem f4 hul) (by rw [hP4]; simp)
+    · obtain ⟨m, hm, hmax⟩ := Set.exists_max_image (f4 '' famP4) id
+        (hfamP4fin.image _) (Set.nonempty_iff_ne_empty.mpr hP4)
+      rcases hm with ⟨ul0, hul0, rfl⟩
+      exact ⟨f4 ul0, hf4lt ul0 hul0,
+        fun ul hul => hmax (f4 ul) (Set.mem_image_of_mem f4 hul)⟩
+  -- B6 P1/P2: the per-family plane-distance minima
+  have hfamP3eps : ∀ ul : List V3, ∃ ε : ℝ, ul ∈ famP3 →
+      0 < ε ∧ ∀ z ∈ (affineSpan ℝ ({u1, elV ul 2, mxi V ul} : Set V3)), ε ≤ dist u0 z := by
+    intro ul
+    by_cases hmem : ul ∈ famP3
+    · obtain ⟨hb, hnn, htr⟩ := hmem
+      obtain ⟨ε, hε0, hεle⟩ := p23_plane_dist_pos3 V u0 u1 hp hs hb htr C hnn
+      exact ⟨ε, fun _ => ⟨hε0, hεle⟩⟩
+    · exact ⟨1 / 2, fun hmem' => absurd hmem' hmem⟩
+  obtain ⟨r3, hr3pos, hr3le⟩ : ∃ r3 : ℝ, 0 < r3 ∧
+      ∀ ul ∈ famP3, ∀ z ∈ (affineSpan ℝ ({u1, elV ul 2, mxi V ul} : Set V3)),
+        r3 ≤ dist u0 z := by
+    by_cases hne3 : famP3 = ∅
+    · refine ⟨1 / 2, by norm_num, ?_⟩
+      intro ul hul z hz
+      exact absurd hul (by rw [hne3]; simp)
+    · choose ε hε using hfamP3eps
+      obtain ⟨ul0, hul0⟩ := Set.nonempty_iff_ne_empty.mpr hne3
+      obtain ⟨m, hm, hmin⟩ := Set.exists_min_image (ε '' famP3) id
+        (hfamP3fin.image _) ⟨ε ul0, ul0, hul0, rfl⟩
+      rcases hm with ⟨ul1, hul1, rfl⟩
+      exact ⟨ε ul1, (hε ul1 hul1).1, fun ul hul z hz =>
+        le_trans (hmin (ε ul) (Set.mem_image_of_mem ε hul)) ((hε ul hul).2 z hz)⟩
+  have hfamP4eps : ∀ ul : List V3, ∃ ε : ℝ, ul ∈ famP4 →
+      0 < ε ∧ ∀ z ∈ (affineSpan ℝ ({u1, elV ul 2, elV ul 3} : Set V3)), ε ≤ dist u0 z := by
+    intro ul
+    by_cases hmem : ul ∈ famP4
+    · obtain ⟨hb, hnn, htr⟩ := hmem
+      obtain ⟨ε, hε0, hεle⟩ := p23_plane_dist_pos4 V u0 u1 hp hs hb htr C hnn
+      exact ⟨ε, fun _ => ⟨hε0, hεle⟩⟩
+    · exact ⟨1 / 2, fun hmem' => absurd hmem' hmem⟩
+  obtain ⟨r4, hr4pos, hr4le⟩ : ∃ r4 : ℝ, 0 < r4 ∧
+      ∀ ul ∈ famP4, ∀ z ∈ (affineSpan ℝ ({u1, elV ul 2, elV ul 3} : Set V3)),
+        r4 ≤ dist u0 z := by
+    by_cases hne4 : famP4 = ∅
+    · refine ⟨1 / 2, by norm_num, ?_⟩
+      intro ul hul z hz
+      exact absurd hul (by rw [hne4]; simp)
+    · choose ε hε using hfamP4eps
+      obtain ⟨ul0, hul0⟩ := Set.nonempty_iff_ne_empty.mpr hne4
+      obtain ⟨m, hm, hmin⟩ := Set.exists_min_image (ε '' famP4) id
+        (hfamP4fin.image _) ⟨ε ul0, ul0, hul0, rfl⟩
+      rcases hm with ⟨ul1, hul1, rfl⟩
+      exact ⟨ε ul1, (hε ul1 hul1).1, fun ul hul z hz =>
+        le_trans (hmin (ε ul) (Set.mem_image_of_mem ε hul)) ((hε ul hul).2 z hz)⟩
+  -- B7: assemble (DEVIATIONS: d folds in hl/√2; r is the (1/2, r3, r4) minimum)
+  set d := max c (max (hl [u0, u1] / Real.sqrt 2) (max d1 d2)) with hddef
+  have hdd1 : d1 ≤ d :=
+    le_trans (le_max_left d1 d2) (le_trans (le_max_right (hl [u0, u1] / Real.sqrt 2)
+      (max d1 d2)) (le_max_right c (max (hl [u0, u1] / Real.sqrt 2) (max d1 d2))))
+  have hdd2 : d2 ≤ d :=
+    le_trans (le_max_right d1 d2) (le_trans (le_max_right (hl [u0, u1] / Real.sqrt 2)
+      (max d1 d2)) (le_max_right c (max (hl [u0, u1] / Real.sqrt 2) (max d1 d2))))
+  have hhl1 : hl [u0, u1] / Real.sqrt 2 < 1 :=
+    (div_lt_one (Real.sqrt_pos.mpr (by norm_num : (0 : ℝ) < 2))).mpr hhl
+  have hdlt1 : d < 1 := max_lt hc1 (max_lt hhl1 (max_lt hd1lt hd2lt))
+  have hrLt1 : min (1 / 2) (min r3 r4) < 1 :=
+    lt_of_le_of_lt (min_le_left _ _) (by norm_num)
+  have hDC : grutotiConicCap u0 u1 (min (1 / 2) (min r3 r4)) d ⊆ C := by
+    rw [grutotiConicCap, hCdef]
+    intro z hz
+    obtain ⟨hzball, hzr⟩ := hz
+    refine ⟨?_, grutoti_rconeGt_subset u0 u1 c d (le_max_left _ _) hzr⟩
+    exact Metric.mem_ball.mp (Metric.closedBall_subset_ball hrLt1 hzball)
+  have hgateC : ∀ (k : ℕ) (vl : List V3),
+      ¬ nullSet (mcell k V vl ∩ grutotiConicCap u0 u1 (min (1 / 2) (min r3 r4)) d) →
+      ¬ nullSet (mcell k V vl ∩ C) := by
+    intro k vl hnnD h0
+    exact hnnD (measure_mono_null
+      (show mcell k V vl ∩ grutotiConicCap u0 u1 (min (1 / 2) (min r3 r4)) d ⊆
+        mcell k V vl ∩ C from fun z hz => ⟨hz.1, hDC hz.2⟩) h0)
+  refine ⟨c, min (1 / 2) (min r3 r4), d, hc0, hc1,
+    lt_min (by norm_num : (0 : ℝ) < 1 / 2) (lt_min hr3pos hr4pos),
+    le_trans (min_le_left _ _) (by norm_num : (1 : ℝ) / 2 ≤ 1),
+    hc0.trans_le (le_max_left _ _), hdlt1, le_max_left _ _, ?_, ?_, hcW, hcHl, ?_, ?_⟩
+  · -- the mcell cover, transported along D ⊆ C (verbatim from grutoti_region)
+    rintro X ⟨hX, hn⟩
+    exact hB5 X hX (fun h0 => hn (measure_mono_null
+      (fun z hz => ⟨hz.1, hDC hz.2⟩ : X ∩ grutotiConicCap u0 u1
+        (min (1 / 2) (min r3 r4)) d ⊆ X ∩ C) h0))
+  · -- hw1 (SF 项 28): hl/√2 enters d's maximum
+    exact le_trans (le_max_left _ _) (le_max_right _ _)
+  · -- hw3 (SF 项 28): face data from the r3-minimum, cone data from the
+    -- f3-supremum + SMALLEST_ANGLE_LINE_PROPERTY
+    intro vl hb htr hnnD
+    refine ⟨fun z hz => le_trans (min_le_right (1 / 2) (min r3 r4))
+      (le_trans (min_le_left r3 r4)
+        (hr3le vl ⟨hb, hgateC 3 vl hnnD, htr⟩ z hz)), ?_⟩
+    intro z hzhull hzrcone
+    have hu0K : u0 ∉ convexHull ℝ ({elV vl 2, mxi V vl} : Set V3) :=
+      p23_u0_notIn_hull3 V u0 u1 hp hs hb htr
+        (grutotiConicCap u0 u1 (min (1 / 2) (min r3 r4)) d) hnnD
+    have hprop := p23_smallestAngle_cos hne hu0K hzhull
+    have hcos := p23_rconeGt_cos_lt hne hzrcone
+    have hf3le : inner ℝ (smallestAngleLine (elV vl 2) (mxi V vl) u0 u1 - u0)
+        (u1 - u0) / (‖smallestAngleLine (elV vl 2) (mxi V vl) u0 u1 - u0‖
+          * ‖u1 - u0‖) ≤ d := le_trans (hd1ub vl ⟨hb, hgateC 3 vl hnnD, htr⟩) hdd1
+    exact absurd (le_trans hprop hf3le) (not_le.mpr hcos)
+  · -- hw4 (SF 项 28): same with the k = 4 family
+    intro vl hb htr hnnD
+    refine ⟨fun z hz => le_trans (min_le_right (1 / 2) (min r3 r4))
+      (le_trans (min_le_right r3 r4)
+        (hr4le vl ⟨hb, hgateC 4 vl hnnD, htr⟩ z hz)), ?_⟩
+    intro z hzhull hzrcone
+    have hu0K : u0 ∉ convexHull ℝ ({elV vl 2, elV vl 3} : Set V3) :=
+      p23_u0_notIn_hull4 V u0 u1 hp hs hb htr
+        (grutotiConicCap u0 u1 (min (1 / 2) (min r3 r4)) d) hnnD
+    have hprop := p23_smallestAngle_cos hne hu0K hzhull
+    have hcos := p23_rconeGt_cos_lt hne hzrcone
+    have hf4le : inner ℝ (smallestAngleLine (elV vl 2) (elV vl 3) u0 u1 - u0)
+        (u1 - u0) / (‖smallestAngleLine (elV vl 2) (elV vl 3) u0 u1 - u0‖
+          * ‖u1 - u0‖) ≤ d := le_trans (hd2ub vl ⟨hb, hgateC 4 vl hnnD, htr⟩) hdd2
+    exact absurd (le_trans hprop hf4le) (not_le.mpr hcos)
+
 /-! ## GT-3e lane: SF 项 28/29 arm kit (2026-10-08) -/
 
 /-- SF 项 28/29 (GT-3e): `truncateSimplex 1` of a list that begins with the
@@ -4606,46 +4823,176 @@ private theorem p23_vx_forward_bridge_cell (V : Set V3) (vl : List V3) (k : ℕ)
   ⟨⟨k, vl, hX, hb⟩,
     p23_vx_forward_bridge_edgeX V vl k X u0 u1 hs hp hb hk hk4 hX hnull hne htr⟩
 
-/-- SF32 拆分波 hcov 支（2026-10-08，精确定点——桥件四支中唯一不可证支，
-唯一 sorry 定点于此）：cap 的边胞迹测度覆盖恒等式。NEEDS（HL GRUTOTI.hl
-测度覆盖链，TIWWFYQ/GLTVHUM/SLTSTLO1 巨型）逐点路线：(i) `grutoti_3mem`
-（PA23:229 banked，GLTVHUM_lemma1 的 k = 3 特化）给 Voronoi 覆盖，而
-`D ⊆ ball u0 1 ∩ rconeGt u0 u1 (hl/√2)` 落入覆盖域；(ii) `SLTSTLO1`
-（PA15，banked，`p23_cover_C` :2045 同款用法）把每点归约到某
-`mcell k V vl`（k ≤ 4，`barV V 3 vl`）；(iii) 逐点 `AJRIPQN`（PA17:313，
-上游 sorry 债）把胞鉴定到携边族 `grutotiEdgeCells V e` 的成员
-（`truncateSimplex 1 vl = [u0, u1]` 给出 `e ∈ edgeX`）；(iv) 于是
-`D ⊆ ⋃₀ (迹)` 至一个零测余集，配 `p23_grutoti_edge_cap_measurable` 的
-可测性与 measure_mono 收口。注记：`p23_region_data` 供给的是 mcell 分类
-覆盖（B5），不解测度渴（见 `grutoti_sum_volD` docstring）；远点族上
-`hl ≥ √2 ⇒ mcell4 = ∅`，走 mcell0/2/3（修正 GT-2 lane note）。 -/
+/-- SF32 拆分波 hcov 支（2026-10-08 定点；**2026-10-10 SF32 应用波全额填证，
+唯一 sorry 清零**）：cap 的边胞迹测度覆盖恒等式。STATEMENT-FIX 项 32 (c)
+方案一（2026-10-10 用户批准）——region 门 `hcovW : ∃ c, c ≤ d ∧ (rcone c ⊆
+affGeAlt {u0} voronoiList [u0,u1]) ∧ (rcone c ⊆ rcone (hl/√2))`：与 SF31 同类，
+冻结前提面 `0 < r ≤ 1 ∧ 0 < d < 1` 无 region 关系时恒等式可反驳（d 伸进非携
+边胞的正测度迹）；门由装配私件 `p23_region_data_full`（c ≤ d 与锥数据同一
+见证，GRUTOTI 调用点一步 obtain）供给。主体纯装配（tiwwfyq-coverage-scout
+§2 配方逐步）：(i) 上界：迹 ⊆ D，`measure_mono` + `ENNReal.toReal_le_toReal`
+（D ⊆ closedBall u0 1 给 volume D < ⊤）；(ii) 逐点下界：z ∈ D 时锥向走
+`grutoti_cap_rcone_mono`（c ≤ d）落进 `ball u0 1 ∩ rcone c`——r ≤ 1 的闭球出
+开球余集是单位球面（`closedBall_sdiff_ball` + `addHaar_sphere` 零测）；覆盖域
+经 `p23_C_sub_rogers` 实例（:1958 真证，hcovW 逐字喂 hcovW 形）进 rogers 族，
+`SLTSTLO1`（PA13:595 真证）归约到 `mcell i V vl0`（i ≤ 4，vl0 ∈ p23Fam）；
+i = 0/1 按 `p23_cover_C` 的两臂**逐点**排除（mcell0 活在 ball u0 √2 外、
+mcell1 活在 rcone (hl/√2) 外——后者由 hcovW 锥支 + c ≤ d 一步给出，无需单独
+hl/√2 ≤ d 门）；i ∈ {2,3,4} 时置 X := mcell i V vl0：X∩D 零测则 z 落入零测迹
+族（族有限：p23_family_finite 的像，`measure_biUnion_null_iff` 收口）；否则
+`measure_mono_null` 升格 ¬nullSet X 喂 B1 VX-前向桥
+`p23_vx_forward_bridge_cell`（:4600 真证）得 X ∈ grutotiEdgeCells V e；
+(iii) 双 mono 收口：D ⊆ 迹并 ∪ 零测迹并 ∪ 球面差，`measure_mono` +
+`measure_union_le` + 两个零测件与 (i) 夹逼。上游债（不新增，自上游流动）：
+SLTSTLO1 ← XNHPWAB1_concl/OMEGA_LIST_N_IN_CONVEX_HULL/XNHPWAB2/
+MXI_EXISTS_concl（PA2/7/13 各自 sorry）；B1 桥 ← LEPJBDJ 的 k = 2/3 内部支
+（PA11 sorry）；hl/√2-barV ← HL_LE_SQRT2_IMP_BARV_1（PA15 sorry）。注记：
+远点族上 `hl ≥ √2 ⇒ mcell4 = ∅`，走 mcell0/2/3（修正 GT-2 lane note）。 -/
 private theorem p23_grutoti_cap_measure_cover (V : Set V3) (u0 u1 : V3) (e : Set V3)
     (r d : ℝ)
     (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
     (hne : u0 ≠ u1) (hhl : hl [u0, u1] < Real.sqrt 2) (he : e = {u0, u1})
-    (hr0 : 0 < r) (hr1 : r ≤ 1) (hd0 : 0 < d) (hd1 : d < 1) :
+    (hr0 : 0 < r) (hr1 : r ≤ 1) (hd0 : 0 < d) (hd1 : d < 1)
+    (hcovW : ∃ c : ℝ, c ≤ d ∧
+      (∀ x : V3, x ∈ rconeGt u0 u1 c → affGeAlt {u0} (voronoiList V [u0, u1]) x) ∧
+      (∀ x : V3, x ∈ rconeGt u0 u1 c →
+        x ∈ rconeGt u0 u1 (hl [u0, u1] / Real.sqrt 2))) :
     volume.real
         (⋃₀ ((fun X => X ∩ grutotiConicCap u0 u1 r d) '' grutotiEdgeCells V e)) =
       volume.real (grutotiConicCap u0 u1 r d) := by
-  -- NEEDS: TIWWFYQ/GLTVHUM/SLTSTLO1 测度覆盖巨型（路线见上 docstring；
-  -- 唯一新 sorry 定点，PA23 桥位 sorry 数不增）。
-  sorry
+  classical
+  obtain ⟨c, hcd, hcW, hcHl⟩ := hcovW
+  have hbar := grutoti_barV V u0 u1 hs hp hu0 hu1 hne hhl
+  set D := grutotiConicCap u0 u1 r d
+  set T := ⋃₀ ((fun X => X ∩ D) '' grutotiEdgeCells V e)
+  -- 迹并 ⊆ D；D 的体积有限（closedBall u0 1 界）
+  have hTD : T ⊆ D := by
+    intro z hz
+    obtain ⟨Y, ⟨X, hX, rfl⟩, hzY⟩ := Set.mem_sUnion.mp hz
+    exact hzY.2
+  have hDball : D ⊆ Metric.closedBall u0 1 := fun z hz =>
+    Metric.closedBall_subset_closedBall hr1 (grutoti_cap_subset_closedBall u0 u1 r d hz)
+  have hDtop : volume D ≠ ⊤ :=
+    ne_of_lt (lt_of_le_of_lt (measure_mono hDball) measure_closedBall_lt_top)
+  have hTtop : volume T ≠ ⊤ :=
+    ne_of_lt (lt_of_le_of_lt (measure_mono hTD)
+      (lt_of_le_of_lt (measure_mono hDball) measure_closedBall_lt_top))
+  -- region 锥数据：D 的锥压到 c（c ≤ d 单调），C_region := ball 1 ∩ rcone c
+  have hDconeC : D ⊆ rconeGt u0 u1 c := grutoti_cap_rcone_mono u0 u1 r c d hcd
+  have hrogers : Metric.ball u0 1 ∩ rconeGt u0 u1 c ⊆
+      ⋃₀ {rogers V vl | vl ∈ p23Fam V u0 u1} :=
+    p23_C_sub_rogers V u0 u1 hp hu0 hu1 hne hhl hs hbar c hcW
+  -- 覆盖胞族（i ≤ 4，vl ∈ p23Fam）与零测迹子族
+  set F := ⋃ i ∈ (Set.Iic 4 : Set ℕ), (fun vl : List V3 => mcell i V vl) '' p23Fam V u0 u1
+  have hFfin : F.Finite :=
+    Set.Finite.biUnion (Set.finite_Iic 4)
+      (fun i _ => Set.Finite.image _ (p23_family_finite V u0 u1 hp hs))
+  set Fnull := {X : Set V3 | X ∈ F ∧ nullSet (X ∩ D)}
+  have hFnullfin : Fnull.Finite := hFfin.subset (fun X hX => hX.1)
+  have hUnull : volume (⋃₀ ((fun X => X ∩ D) '' Fnull)) = 0 := by
+    rw [Set.sUnion_image]
+    exact (measure_biUnion_null_iff (s := fun X : Set V3 => X ∩ D) (I := Fnull)
+      hFnullfin.countable).mpr (fun X hX => hX.2)
+  -- r ≤ 1：闭球出开球的余集 = 单位球面，零测
+  have hsph : volume (Metric.closedBall u0 1 \ Metric.ball u0 1) = 0 := by
+    rw [Metric.closedBall_sdiff_ball]
+    exact MeasureTheory.Measure.addHaar_sphere volume u0 1
+  -- 逐点：D ⊆ 迹并 ∪ 零测迹并 ∪ 球面零测差
+  have hpoint : ∀ z ∈ D, z ∈ T ∪ ⋃₀ ((fun X => X ∩ D) '' Fnull) ∪
+      (Metric.closedBall u0 1 \ Metric.ball u0 1) := by
+    intro z hz
+    by_cases hball : z ∈ Metric.ball u0 1
+    · -- z ∈ C_region：rogers 族 → SLTSTLO1 → mcell i V vl0（i ≤ 4）
+      obtain ⟨t, ht, hzr⟩ := hrogers ⟨hball, hDconeC hz⟩
+      obtain ⟨vl0, hvl0, rfl⟩ := Set.mem_setOf_eq.mp ht
+      have hbarvl0 : barV V 3 vl0 := hvl0.1
+      have htrvl0 : truncateSimplex 1 vl0 = [u0, u1] := hvl0.2
+      obtain ⟨i, hi4, hzi⟩ := SLTSTLO1 V vl0 z hs hp hbarvl0 hzr
+      rcases Nat.lt_or_ge i 2 with hlt | hge
+      · -- k = 0/1 排除（p23_cover_C 两臂的逐点版）
+        rcases Nat.eq_zero_or_pos i with h0 | h0pos
+        · -- i = 0：mcell0 = rogers \ ball u0 √2，而 z ∈ ball u0 1 ⊂ ball u0 √2
+          subst h0
+          exfalso
+          rw [(MCELL_EXPLICIT 0 V vl0).1, mcell0, p23_hdV_eq_u0 ⟨hbarvl0, htrvl0⟩] at hzi
+          obtain ⟨-, hzout⟩ := hzi
+          have h1s2 : (1:ℝ) < Real.sqrt 2 :=
+            (Real.lt_sqrt (by positivity)).mpr (by norm_num : (1:ℝ) ^ 2 < 2)
+          exact hzout (Metric.mem_ball.mpr (lt_trans (Metric.mem_ball.mp hball) h1s2))
+        · -- i = 1：mcell1 活在 rcone (hl/√2) 外，而 D ⊆ rcone c ⊆ rcone (hl/√2)
+          have hi1 : i = 1 := by omega
+          subst hi1
+          exfalso
+          rw [(MCELL_EXPLICIT 1 V vl0).2.1, mcell1,
+            p23_hdTail_eq_u1 ⟨hbarvl0, htrvl0⟩, p23_hdV_eq_u0 ⟨hbarvl0, htrvl0⟩,
+            htrvl0] at hzi
+          by_cases hcond : Real.sqrt 2 ≤ hl vl0
+          · rw [if_pos hcond] at hzi
+            obtain ⟨-, hzcone⟩ := hzi
+            exact hzcone (hcHl z (hDconeC hz))
+          · rw [if_neg hcond] at hzi
+            simp at hzi
+      · -- 2 ≤ i ≤ 4：X = mcell i V vl0 携边（B1 VX-前向桥）或迹零测
+        by_cases hnull : nullSet (mcell i V vl0 ∩ D)
+        · -- 零测迹支：z 落入零测族的一条迹
+          refine Set.mem_union_left _ (Set.mem_union_right _ ?_)
+          refine Set.mem_sUnion.mpr ⟨mcell i V vl0 ∩ D,
+            ⟨mcell i V vl0, ⟨Set.mem_iUnion₂.mpr ⟨i, Set.mem_Iic.mpr hi4,
+              ⟨vl0, hvl0, rfl⟩⟩, hnull⟩, rfl⟩, Set.mem_inter hzi hz⟩
+        · -- 非零测支：¬nullSet X（mono 升格）+ B1 桥 ⇒ X ∈ 携边族
+          have hnullX : ¬ nullSet (mcell i V vl0) := fun h0 =>
+            hnull (measure_mono_null Set.inter_subset_left h0)
+          have hXE : mcell i V vl0 ∈ grutotiEdgeCells V e := by
+            rw [he]
+            exact p23_vx_forward_bridge_cell V vl0 i (mcell i V vl0) u0 u1 hs hp
+              hbarvl0 hge hi4 rfl hnullX hne htrvl0
+          exact Set.mem_union_left _ (Set.mem_union_left _ (Set.mem_sUnion.mpr
+            ⟨mcell i V vl0 ∩ D, ⟨mcell i V vl0, hXE, rfl⟩,
+              Set.mem_inter hzi hz⟩))
+    · -- 出开球：落在闭球余集（球面）里
+      exact Set.mem_union_right _ (Set.mem_sdiff_of_mem (hDball hz) hball)
+  -- 下界收口：volume D ≤ volume 迹并
+  have hDT : volume D ≤ volume T := by
+    have h1 : volume D ≤ volume (T ∪ ⋃₀ ((fun X => X ∩ D) '' Fnull) ∪
+        (Metric.closedBall u0 1 \ Metric.ball u0 1)) := measure_mono hpoint
+    have h2 : volume ((T ∪ ⋃₀ ((fun X => X ∩ D) '' Fnull)) ∪
+        (Metric.closedBall u0 1 \ Metric.ball u0 1)) ≤
+        volume (T ∪ ⋃₀ ((fun X => X ∩ D) '' Fnull)) +
+          volume (Metric.closedBall u0 1 \ Metric.ball u0 1) := measure_union_le _ _
+    have h3 : volume (T ∪ ⋃₀ ((fun X => X ∩ D) '' Fnull)) ≤
+        volume T + volume (⋃₀ ((fun X => X ∩ D) '' Fnull)) := measure_union_le _ _
+    rw [hsph] at h2
+    rw [hUnull] at h3
+    refine h1.trans (h2.trans ?_)
+    rw [add_zero]
+    refine h3.trans ?_
+    rw [add_zero]
+  -- 双 mono 夹逼
+  refine le_antisymm ?_ ?_
+  · show (volume T).toReal ≤ (volume D).toReal
+    exact (ENNReal.toReal_le_toReal hTtop hDtop).mpr (measure_mono hTD)
+  · show (volume D).toReal ≤ (volume T).toReal
+    exact (ENNReal.toReal_le_toReal hDtop hTtop).mpr hDT
 
 /-- STATEMENT-FIX item 31 联动件（2026-10-09 方案 a1；SF32 拆分波瘦身
-2026-10-08）：`grutoti_sum_volD` 新前提面的 capstone 供给桥——四条测度
-前提打包，`GRUTOTI` 调用点一次 obtain。签名冻结不变；本体瘦身为纯组合：
-hmeas 支 = `p23_grutoti_edge_cap_measurable`（MEASURABLE_MCELL 实例）、
-hpair 支 = `p23_grutoti_edge_pairwise_null`（AJRIPQN 实例，上游债流动）、
-hvol 支 = `p23_grutoti_edge_vol_ne_top`（cap ⊆ closedBall u0 1 有限界），
-三支真证零 sorry；hcov 支 = `p23_grutoti_cap_measure_cover`——TIWWFYQ/
-GLTVHUM/SLTSTLO1 测度覆盖巨型，唯一新 sorry 精确定点于彼（PA23 桥位
-其 sorry 数不增）。无穷支路注记（修正 GT-2 lane note）：远点族上
+2026-10-08；**SF32 应用波 2026-10-10 加 region 门**）：`grutoti_sum_volD`
+新前提面的 capstone 供给桥——四条测度前提打包，`GRUTOTI` 调用点一次 obtain。
+本体纯组合：hmeas 支 = `p23_grutoti_edge_cap_measurable`（MEASURABLE_MCELL
+实例）、hpair 支 = `p23_grutoti_edge_pairwise_null`（AJRIPQN 实例，上游债
+流动）、hvol 支 = `p23_grutoti_edge_vol_ne_top`（cap ⊆ closedBall u0 1 有限
+界），三支真证零 sorry；hcov 支 = `p23_grutoti_cap_measure_cover`（已全额
+填证，region 门 `hcovW` 逐字透传——由 `p23_region_data_full` 在 GRUTOTI
+调用点一步供给）。无穷支路注记（修正 GT-2 lane note）：远点族上
 `hl ≥ √2 ⇒ mcell4 = ∅`，走 mcell0/2/3。 -/
 private theorem p23_grutoti_sum_volD_measure_facts (V : Set V3) (u0 u1 : V3)
     (e : Set V3) (r d : ℝ)
     (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
     (hne : u0 ≠ u1) (hhl : hl [u0, u1] < Real.sqrt 2) (he : e = {u0, u1})
-    (hr0 : 0 < r) (hr1 : r ≤ 1) (hd0 : 0 < d) (hd1 : d < 1) :
+    (hr0 : 0 < r) (hr1 : r ≤ 1) (hd0 : 0 < d) (hd1 : d < 1)
+    (hcovW : ∃ c : ℝ, c ≤ d ∧
+      (∀ x : V3, x ∈ rconeGt u0 u1 c → affGeAlt {u0} (voronoiList V [u0, u1]) x) ∧
+      (∀ x : V3, x ∈ rconeGt u0 u1 c →
+        x ∈ rconeGt u0 u1 (hl [u0, u1] / Real.sqrt 2))) :
     (∀ X ∈ grutotiEdgeCells V e,
         MeasurableSet (X ∩ grutotiConicCap u0 u1 r d)) ∧
       (∀ X ∈ grutotiEdgeCells V e, ∀ Y ∈ grutotiEdgeCells V e, X ≠ Y →
@@ -4661,20 +5008,20 @@ private theorem p23_grutoti_sum_volD_measure_facts (V : Set V3) (u0 u1 : V3)
   · exact p23_grutoti_edge_pairwise_null V u0 u1 e r d hs hp
   · exact p23_grutoti_edge_vol_ne_top V u0 u1 e r d hr1
   · exact p23_grutoti_cap_measure_cover V u0 u1 e r d hs hp hu0 hu1 hne hhl he
-      hr0 hr1 hd0 hd1
+      hr0 hr1 hd0 hd1 hcovW
 
 /-- HL GRUTOTI.hl:7962-7966: the wedge pivot — the vol-sum equals the
 `vol D · dihX / 2π` sum. Needs grutoti_cell_vol per edge cell (the
 ¬nullSet hypothesis is discharged inside by the k-case analysis) and
-grutoti_setSum_mul_div for the linear step. NEEDS-precision.
+grutoti_setSum_mul_div for the linear step.
 GT-2 lane note (2026-09-28): the honest route (HL §G/§H, 7441-7958) is now
 mapped: (a) for EVERY edge cell X (u0,u1 ∈ VX V X) one first shows
 k := (cellParams V X).1 ≥ 2 — the counting arm `i - 1 = 0` of §H: VX V X is a
 set of ≤ k list points containing two distinct points; k ≤ 1 is impossible;
 (b) for k ≥ 2 one shows `¬nullSet (X ∩ D)` — HL §H derives `F` from
 `NULLSET (X ∩ D)` per k, using CONIC_CAP_INTER_CONVEX_HULL_4_GT_0
-(Auto15:828, still sorried) for k = 3/4 and the region data for k = 2 —
-this is the remaining blocker, shared with grutoti_cell_vol (GT-3);
+(Auto15:2275, **已真证**——本条旧注 "Auto15:828 still sorried" 过期) for
+k = 3/4 and the region data for k = 2;
 (c) then `p23_setSum_congr` assembles the frozen identity from
 `grutoti_cell_vol` pointwise. Junk safety: for k ≤ 1 / null cells the PA2
 encoding gives dihX = 0 (`p23_dihX_of_nullSet`), and k ≤ 1 cells cannot carry
@@ -4682,16 +5029,47 @@ the edge at all, so no junk term enters the sum. CAVEAT for the future fill:
 `cellParamsD V X [u0,u1]` may be epsilon-junk for edge cells whose param list
 carries the edge REVERSED (`[u1;u0,…]` — its wedge is a genuinely different
 set); HL §H handles this inside the case analysis, and the Lean fill must too.
-grutoti_setSum_mul_div for the linear step. NEEDS-precision. -/
+STATEMENT-FIX 项 33 (c) 应用（2026-10-10 用户四件合并批）——签名扩为
+`(hs hp hu0 hu1 hne hhl) + hw1 hw3 hw4`（恰为 `grutoti_cell_vol` 消费形，
+`p23_region_data_full` 逐字供给；冻结前提 `hr hr1 hd hd1 he hfin` 不动）：
+加门前其体是 sorry（扩签名走 SF 模式），加门后 body 现状——null 支（X 整体
+零测：两侧同时为零，`p23_setSum_congr` + `p23_dihX_of_nullSet` + 测度单调）
+**本波已填**；¬nullSet X 支仍 `sorry`（下波：§H 非零性 k ≥ 2 计数
+`p23_edge_cell_k_ge_two` + 逐 k 窄性 hw1/hw3/hw4 后逐点套 `grutoti_cell_vol`；
+反向支 k = 2 走 MCELL2_PERMUTE_01 镜像、k = 3/4 为真缺口 G3）。净 sorry 面
+持平（pivot 保持 1 处结构化 sorry）。 -/
 private theorem grutoti_pivot (V : Set V3) (u0 u1 : V3) (e : Set V3) (r d : ℝ)
     (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1) (he : e = {u0, u1})
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (hhl : hl [u0, u1] < Real.sqrt 2)
+    (hw1 : hl [u0, u1] / Real.sqrt 2 ≤ d)
+    (hw3 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      ¬nullSet (mcell 3 V vl ∩ grutotiConicCap u0 u1 r d) →
+      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, mxi V vl} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, mxi V vl} : Set V3), z ∉ rconeGt u0 u1 d)
+    (hw4 : ∀ vl : List V3, barV V 3 vl → truncateSimplex 1 vl = [u0, u1] →
+      ¬nullSet (mcell 4 V vl ∩ grutotiConicCap u0 u1 r d) →
+      (∀ z ∈ (affineSpan ℝ {u1, elV vl 2, elV vl 3} : Set V3), r ≤ dist u0 z) ∧
+        ∀ z ∈ convexHull ℝ ({elV vl 2, elV vl 3} : Set V3), z ∉ rconeGt u0 u1 d)
     (hfin : (grutotiEdgeCells V e).Finite) :
     setSum (grutotiEdgeCells V e)
         (fun X => volume.real (X ∩ grutotiConicCap u0 u1 r d)) =
       setSum (grutotiEdgeCells V e)
         (fun X => volume.real (grutotiConicCap u0 u1 r d) *
           dihX V X (u0, u1) / (2 * Real.pi)) := by
-  sorry
+  refine p23_setSum_congr hfin fun X hX => ?_
+  by_cases hnullX : nullSet X
+  · -- null 支（本波填）：两侧同时为零——vol(X∩D) ≤ vol X = 0，
+    -- dihX 的 junk 分支（nullSet X → 0）
+    have hvXY : volume (X ∩ grutotiConicCap u0 u1 r d) = 0 :=
+      measure_mono_null Set.inter_subset_left hnullX
+    rw [p23_dihX_of_nullSet V X (u0, u1) hnullX]
+    rw [Measure.real_def, hvXY, Measure.real_def, mul_zero, zero_div]
+    exact ENNReal.toReal_zero
+  · -- REMAINING（下波填）：¬nullSet X 支——HL §H 逐边胞非零性
+    -- （k ≥ 2 计数 + hw1/hw3/hw4 窄性）后逐点套 grutoti_cell_vol；
+    -- 反向支 k = 2 镜像 / k = 3/4 真缺口 G3 另案。
+    sorry
 
 /-- HL GRUTOTI.hl:7983-8000: `0 < vol D` from `VOLUME_CONIC_CAP`
 (marchal3; `vol (conic_cap u0 u1 r d) = 2/3 · π · r³ · (1-d)² …`-type formula,
@@ -4727,16 +5105,23 @@ theorem GRUTOTI : ∀ (V : Set V3) (u0 u1 : V3) (e : Set V3), saturated V →
     setSum {X | mcellSet V X ∧ e ∈ edgeX V X} (fun t => dihX V t (u0, u1)) =
       2 * Real.pi := by
   intro V u0 u1 e hs hp hu0 hu1 hne hhl he
-  have hbar := grutoti_barV V u0 u1 hs hp hu0 hu1 hne hhl
-  obtain ⟨c, r, d, hc0, hc1, hr0, hr1, hd0, hd1, hdc, _hcover⟩ :=
-    grutoti_region V u0 u1 e hs hp hu0 hu1 hne hhl he
+  -- SF32/33 应用波（2026-10-10）重接线：region 数据由 `p23_region_data_full`
+  -- 一步供给（r d 界 + mcell 覆盖 + hw1/hw3/hw4 + hcovW 的锥数据，c ≤ d 同一
+  -- 见证）；`grutoti_region`/`p23_region_data` 原件保留未动。
+  obtain ⟨c, r, d, _hc0, _hc1, hr0, hr1, hd0, hd1, hcd, _hcover, hhw1, hcWc,
+    hcHlc, hhw3, hhw4⟩ := p23_region_data_full V u0 u1 e hs hp hu0 hu1 hne hhl he
   have hvol := grutoti_volD_pos u0 u1 r d hr0 hd0 hd1 hne
+  have hcovW : ∃ c' : ℝ, c' ≤ d ∧
+      (∀ x : V3, x ∈ rconeGt u0 u1 c' → affGeAlt {u0} (voronoiList V [u0, u1]) x) ∧
+      (∀ x : V3, x ∈ rconeGt u0 u1 c' →
+        x ∈ rconeGt u0 u1 (hl [u0, u1] / Real.sqrt 2)) := ⟨c, hcd, hcWc, hcHlc⟩
   obtain ⟨hmeasF, hpairF, hvolF, hcovF⟩ :=
     p23_grutoti_sum_volD_measure_facts V u0 u1 e r d hs hp hu0 hu1 hne hhl he
-      hr0 hr1 hd0 hd1
+      hr0 hr1 hd0 hd1 hcovW
   obtain ⟨hfin, hsum⟩ := grutoti_sum_volD V u0 u1 e r d hs hp hu0 hu1 hne hhl he
     hr0 hd1 hmeasF hpairF hvolF hcovF
-  have hpivot := grutoti_pivot V u0 u1 e r d hr0 hr1 hd0 hd1 he hfin
+  have hpivot := grutoti_pivot V u0 u1 e r d hr0 hr1 hd0 hd1 he hs hp hu0 hu1 hne
+    hhl hhw1 hhw3 hhw4 hfin
   have hlin := grutoti_setSum_mul_div (grutotiEdgeCells V e)
     (volume.real (grutotiConicCap u0 u1 r d)) (fun X => dihX V X (u0, u1)) hfin
   exact grutoti_concl_arith _ _ _ hvol hsum (hpivot.trans hlin)
