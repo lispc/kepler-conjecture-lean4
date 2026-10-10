@@ -1065,6 +1065,44 @@ theorem textCapstone : TextCapstone := by
     exact hLPR _ hfanN ⟨hlpineq, hmain, ⟨y, hyA, ⟨Hy, hHyIs,
       hypermapIsoTrans (hypermapIsoTrans hfn hop) hbr2⟩⟩⟩ hnegV
 
+/-! ### 3'. T4 packing 分支前提树（2026-10-08；SF31 debt-bridge 形——
+本节为**纯记账段**，冻结接口零扰动）
+
+拓扑结论（T4 侦察）：packing 分支的债务在上游冻结接口中**不独占任何一根
+Assembly 级 sorry**——`textCapstone` 证明体本身是真推导（与 tame 分支共用
+同一真推导脊柱），packing 子树唯一的模块级入口是 PA25 导出锚
+`PackingAuto25.PACKING_CHAPTER_MAIN_CONCLUSION`（:1033 处被冻结体逐字消费，
+其签名随 textCapstone 冻结；`PackingAuto25.OXLZLEZ` 另被 PackingConcl
+OXLZLEZ_concl 桥消费，签名同冻结）。故本波展开全部住在 PA25 模块内
+（SF31 形：冻结签名不动、体经具名骨架重接线），本节只落拓扑与对账
+（† = T1 波时行号，PA25 行位自 T4 波起漂移，以 grep 为准）：
+
+```
+textCapstone（§3，真推导，冻结）
+├─ PACKING_CHAPTER_MAIN_CONCLUSION（PA25:3692†，真装配；HOL Oxlzlez 装配）
+│  ├─ RDWKARC 臂（PA2:5199 ✅真证）：余债 = UPFZBZM_concl（PA2:5048 ⬜桩；
+│  │    PA19.UPFZBZM ✅孪生已在 PackingConcl 桥接线，PA2 桩删除属 B4 波）
+│  ├─ OXLZLEZ 臂（PA25:3674†，真装配）＝ CELL_CLUSTER_ESTIMATE_PROPS
+│  │    （PA25 ⬜；T4 已展开：LEAF_RANK_PROPS 见证层 + cc_real_model_data
+│  │     六切片 + 基数真叶）→ GRHIDFA_concl（PA3:711 ⬜，cc_v11 组合引擎，
+│  │    1000-3000 行，材料单 §4 需新波 5）
+│  └─ TSKAJXY 臂（PA21 ✅真装配）：余债 = TSKAJXY_034（PA21:1335 ⬜）
+│       ← PA20 gammaX 双巨（B3 在飞）+ mi_gamma3f（PA21:973 ⬜）
+├─ ox3q1hP25 / pack_nonlinear_non_ox3q1h（两枚 bank 前提）：
+│    已由 §2a' T1 骨架 nliOx3q1h / nliPackNonlinearNonOx3q1h 具名承接；
+│    PA25 侧消费位 = pkrmQuarter ← real_model_ox3q1h_merge（同根对账）
+├─ fcdjdot（§2c，⬜）：FNJLBXS 章（FCDJDOT section :1543-1806，
+│    not_surrounded_ECTC + perturbation_lemma）未移植；忠实重述需 setOfEdge
+│    镜像（同 hypermapOfFanNeg 的 NEEDS 工具链），本波不动其体
+└─ kcImpTheKc（§2c，⬜）：共用根（处方已备：FLYSPECK_DEVOLUTION + CPNKNXN
+     + KIUMVTC），非 packing 拓扑独占，不动
+
+B→T 会师对账（PA25 侧，本波接线）：real_periodic_data ✅ / cc_card_data ✅ /
+cc_real_data ✅ / cc_bool_data ✅ / cc_real_dat_def ✅ 五枚在库真件自 T4
+切片层进入 e2e 依赖闭包（此前为孤儿真件）；PK25 债务图自本波起 = W1/W2 +
+pkrmAzim/Quarter/Qu/Qx/Qy 五切片 + 29 枚 bank 叶 + LEAF_RANK 既有叶
+（全具名，见 PA25 T4 两节注记）。 -/
+
 /-- HOL `Good_list_archive.good_list_archive`（HOL 侧由计算求得 archive 每张图
 满足 `good_list`）。**已闭合（P6-C，2026-09-19）**：19715 张图（Tri 9 / Quad 1253 /
 Pent 16080 / Hex 2373）逐片 `native_decide`（`Kepler/Assembly/GoodListShard*.lean`，

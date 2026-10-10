@@ -2295,22 +2295,6 @@ private theorem p25_setSum_congr {α : Type*} {s t : Set α} {g : α → ℝ} (h
   unfold setSum
   rw [h]
 
-/-- HOL `LEAF_RANK_PROPS`: the full leaf-rank extraction from a failing
-cell-cluster inequality (the case-analysis engine). -/
-theorem LEAF_RANK_PROPS (V : Set V3) (hp : Packing V) (hs : saturated V)
-    (hcc : ¬ cellClusterInequality V) (hnl : pack_nonlinear_non_ox3q1h) :
-    ∃ u0 u1 n w0 f : _, 1 < n ∧ HasSizeP25 (s_leaf V [u0, u1]) n ∧ u0 ≠ u1 ∧
-      hminus ≤ hl [u0, u1] ∧ hl [u0, u1] ≤ hplus ∧
-      ¬ Collinear3 u0 u1 w0 ∧ leaf_rank V [u0, u1] w0 n f ∧
-      u0 ∈ V ∧ u1 ∈ V ∧ periodic f n ∧
-      (∀ j, leaf V [u0, u1, f j]) ∧ criticalEdgeY (dist u0 u1) ∧
-      ∑ i ∈ Finset.Icc 0 (n - 1), gg_mcell V f u0 u1 i < 0 ∧
-      ∑ i ∈ Finset.Icc 0 (n - 1), azim_mcell V f u0 u1 i = 2 * Real.pi ∧
-      (∀ i, azim_mcell V f u0 u1 i = azim u0 u1 (f i) (f (i + 1))) ∧
-      cc_bool_model_v11 (cc_data_v8 V f u0 u1) ∧
-      cc_bool_prep_v11 (cc_data_v8 V f u0 u1) := by
-  sorry
-
 /-- HOL `cc_real_dat_def`: the cc_qx/qy/qu/hassmall classes of
 `cc_data_v8` in terms of `cc_4` and distances (definitional). -/
 theorem cc_real_dat_def (V : Set V3) (f : ℕ → V3) (u0 u1 : V3) :
@@ -2910,6 +2894,90 @@ theorem real_model_sum_azim (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → 
     (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f) :
     ∑ i ∈ Finset.Icc 0 (n - 1), azim_mcell V f u0 u1 i = 2 * Real.pi := by
   sorry
+
+/-! ### T4 展开波（2026-10-08）：leaf_rank 见证层 —— `LEAF_RANK_PROPS` 前提树
+显式化（T 线 T4，PLAN.md §5；对齐 Assembly §2a' T1 先例与 SF31 debt-bridge 形：
+冻结陈述签名不动，单根黑箱 sorry 分解为具名骨架节点 + 在库叶的显式装配）
+
+  LEAF_RANK_PROPS（本件，真装配，冻结签名 2026-09-2x 一字未动）
+  ├─ pkLeafRankCriticalEdge   ⬜ 临界边见证 + 负 gg 和（HOL Oxl_real.hl；
+  │     子债：CELL_CLUSTER_ESTIMATE_REDUCE :2127 ⬜ + CELL_CLUSTER_N_LE_1
+  │     :2200 ⬜ + LEAF_RANKING_LEMMA :1208 ⬜；叶界 S_LEAF_BOUNDED/FINITE
+  │     :1277/:1322 ✅、s_leaf_collinear :1138 ✅、S_LEAF_SYM :1460 ✅）
+  ├─ real_model_sum_azim      ⬜（本文件 :2890 在库 bank 叶——直接消费，
+  │     B→T 会师位；G4/Flyspeck_constants.calc 认证口径）
+  ├─ pkLeafRankAzimPointwise  ⬜ 楔形塌缩 azim_mcell = azim（新具名骨架；
+  │     子债：MCELL_WEDGE_UNIQUE :1512 ⬜ + CC_3_PROPS :2853 ⬜（其结论含
+  │     同款恒等式）+ c_4_azim_mcell_dih_y :2484 ⬜）
+  ├─ cc_bool_model_data       ⬜（本文件 :2170 已具名叶——直接消费，会师位）
+  └─ cc_prep_model_data       ⬜（本文件 :2179 已具名叶——直接消费，会师位）
+
+债从 1 根黑箱变为 2 具名骨架 + 3 具名在库叶；三枚在库叶由纯 term 装配接入
+（LEAF_RANK_PROPS 的前提面恰好覆盖它们的前提面）。 -/
+
+/-- T4 骨架 W1 `pkLeafRankCriticalEdge`：失败 cell-cluster 不等式的临界边
+见证与 `leaf_rank` 参数化（含负 gg 和）。HOL Oxl_real.hl（CELL_CLUSTER_ESTIMATE
+段的逐边化 + 临界茎选取）。
+资产状态：**真缺口（装配级）**——逐边化（`CELL_CLUSTER_ESTIMATE_REDUCE`
+:2127 ⬜）、退化茎非负和（`CELL_CLUSTER_N_LE_1` :2200 ⬜）、azim 环序
+参数化（`LEAF_RANKING_LEMMA` :1208 ⬜）三件上游落证后本件即纯装配。
+-- NEEDS: :2127 / :2200 / :1208 按 HOL Oxl_real.hl 装配波展开（三件均在
+本文件内、语义已成形）。 -/
+theorem pkLeafRankCriticalEdge (V : Set V3) (hp : Packing V) (hs : saturated V)
+    (hcc : ¬ cellClusterInequality V) (hnl : pack_nonlinear_non_ox3q1h) :
+    ∃ u0 u1 n w0 f : _, 1 < n ∧ HasSizeP25 (s_leaf V [u0, u1]) n ∧ u0 ≠ u1 ∧
+      hminus ≤ hl [u0, u1] ∧ hl [u0, u1] ≤ hplus ∧
+      ¬ Collinear3 u0 u1 w0 ∧ leaf_rank V [u0, u1] w0 n f ∧
+      u0 ∈ V ∧ u1 ∈ V ∧ periodic f n ∧
+      (∀ j, leaf V [u0, u1, f j]) ∧ criticalEdgeY (dist u0 u1) ∧
+      ∑ i ∈ Finset.Icc 0 (n - 1), gg_mcell V f u0 u1 i < 0 := by
+  sorry
+
+/-- T4 骨架 W2 `pkLeafRankAzimPointwise`：楔形二面角塌缩——wedge 内 Marchal
+胞的 dihedral 和等于张角 `azim u0 u1 (f i) (f (i+1))`。HOL Oxl_real.hl。
+资产状态：**真缺口**——`cc_4` 情形经 `c_4_azim_mcell_dih_y`(:2484 ⬜，
+dih_y = 张角)，`¬cc_4` 情形 `CC_3_PROPS`(:2853 ⬜) 的结论已含本恒等式，
+公共前提 `MCELL_WEDGE_UNIQUE`(:1512 ⬜)。
+-- NEEDS: 上述三件 wedge 结构件落证后本件为分案装配（~60-100 行）。 -/
+theorem pkLeafRankAzimPointwise (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
+    (hn : 1 < n) (hp : Packing V) (hs : saturated V)
+    (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V) (h1 : u1 ∈ V)
+    (hper : periodic f n) (hnc : ¬ Collinear3 u0 u1 w0)
+    (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f) :
+    ∀ i, azim_mcell V f u0 u1 i = azim u0 u1 (f i) (f (i + 1)) := by
+  sorry
+
+/-- HOL `LEAF_RANK_PROPS`: the full leaf-rank extraction from a failing
+cell-cluster inequality (the case-analysis engine).
+T4 展开波（2026-10-08）：证明体由单根 `sorry` 换为上方具名骨架件与在库叶的
+显式装配（冻结陈述签名不变）；债 = W1/W2 两具名骨架 + real_model_sum_azim /
+cc_bool_model_data / cc_prep_model_data 三在库叶（会师位，见上层注记）。 -/
+theorem LEAF_RANK_PROPS (V : Set V3) (hp : Packing V) (hs : saturated V)
+    (hcc : ¬ cellClusterInequality V) (hnl : pack_nonlinear_non_ox3q1h) :
+    ∃ u0 u1 n w0 f : _, 1 < n ∧ HasSizeP25 (s_leaf V [u0, u1]) n ∧ u0 ≠ u1 ∧
+      hminus ≤ hl [u0, u1] ∧ hl [u0, u1] ≤ hplus ∧
+      ¬ Collinear3 u0 u1 w0 ∧ leaf_rank V [u0, u1] w0 n f ∧
+      u0 ∈ V ∧ u1 ∈ V ∧ periodic f n ∧
+      (∀ j, leaf V [u0, u1, f j]) ∧ criticalEdgeY (dist u0 u1) ∧
+      ∑ i ∈ Finset.Icc 0 (n - 1), gg_mcell V f u0 u1 i < 0 ∧
+      ∑ i ∈ Finset.Icc 0 (n - 1), azim_mcell V f u0 u1 i = 2 * Real.pi ∧
+      (∀ i, azim_mcell V f u0 u1 i = azim u0 u1 (f i) (f (i + 1))) ∧
+      cc_bool_model_v11 (cc_data_v8 V f u0 u1) ∧
+      cc_bool_prep_v11 (cc_data_v8 V f u0 u1) := by
+  obtain ⟨u0, u1, n, w0, f, hn, hsize, hu0ne, hlo, hhi, hnc, hr, h0, h1, hper,
+    hleaf, hcey, hneg⟩ := pkLeafRankCriticalEdge V hp hs hcc hnl
+  refine ⟨u0, u1, n, w0, f, hn, hsize, hu0ne, hlo, hhi, hnc, hr, h0, h1, hper,
+    hleaf, hcey, hneg, ?_, ?_, ?_, ?_⟩
+  · -- 楔形二面角和 = 2π：在库 bank 叶 `real_model_sum_azim`（:2890）直接消费
+    exact real_model_sum_azim V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc
+      hcey hr
+  · -- 楔形塌缩恒等式：T4 骨架 W2
+    exact pkLeafRankAzimPointwise V u0 u1 w0 n f hn hp hs hsize h0 h1 hper hnc
+      hcey hr
+  · -- cc_v11 布尔模型：在库数据叶 `cc_bool_model_data`（:2170）直接消费
+    exact cc_bool_model_data V f w0 n u0 u1 hnl hn hp hs hsize h0 h1 hnc hcey hr
+  · -- cc_v11 prep 模型：在库数据叶 `cc_prep_model_data`（:2179）直接消费
+    exact cc_prep_model_data V f w0 n u0 u1 hn hp hs hnc hr
 
 /-- HOL `real_model_ox3q1h_merge`: the ox3q1h certified 4-quarter bound. -/
 theorem real_model_ox3q1h_merge (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -3642,18 +3710,464 @@ theorem real_model_tew (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
       a_spine5 + b_spine5 * azim_mcell V f u0 u1 i ≤ gg_mcell V f u0 u1 i := by
   sorry
 
+/-! ### T4 展开波（2026-10-08）：real-model 切片层 —— `cc_real_model_data`
+前提树显式化
+
+`cc_real_model_v11`（PackingAuto3.lean:150-198）的 33 合取项逐一对应本文件
+`real_model_*` bank 的具名条目；原 `cc_real_model_data` 为单根黑箱 sorry
+（与 bank 零消费关系），现展开为六具名切片 + 周期性真推导的显式装配
+（冻结陈述签名不变）：
+
+  cc_real_model_data（真装配）
+  ├─ pkrmPeriodic  ✅真推导（real_periodic_data :2355 ✅ + cc_card_data
+  │                 :2135 ✅ 投影）——零 sorryAx 会师真叶
+  ├─ pkrmAzim      ⬜（合取 5-7 ← real_model_gckb :2897 / real_model_azim_c4
+  │                 :2713 / real_model_sum_azim :2890，三枚认证锚）
+  ├─ pkrmQuarter   ⬜（合取 8 ← real_model_ox3q1h_merge :2983，消费
+  │                 ox3q1hP25——Oxl_def.hl 外部锚，Assembly 侧 T1 骨架
+  │                 nliOx3q1h 同根）
+  ├─ pkrmQu        ⬜（合取 9-17 ← gamma_qu :2795 / fhbv2_sym :2839 /
+  │                 fhbv2 :2825 / quqy :3025 / quqy_sym :3041 / ztg4 :3058 /
+  │                 azim1 :3068 / gaz4 :3081 / gaz6 :3094）
+  ├─ pkrmQx        ⬜（合取 18-25 ← gamma_qx :3107 / g_qxd :3120 /
+  │                 gamma10 :3150 / gamma11 :3170 / gamma8 :3262 /
+  │                 gamma8b :3278 / gaz9 :3294 / azim2 :3310）
+  └─ pkrmQy        ⬜（合取 26-33 ← cell23 :3430 / 3a :3485 / 3b :3496 /
+                    gr :3507 / pema :3524 / pemb :3536 / tew :3635 /
+                    txq :3623）
+
+分类词桥件（真推导，零 sorryAx）：`cc_qu/qx/qy/hassmall` 在 `cc_data_v8`
+上的逐点几何展开（`cc_real_dat_def` :2316 ✅ 的函数等式形式）；其余布尔/
+实域场在 `cc_data_v8` 上与几何谓词定义等价（`cc_bool_data`/`cc_real_data`
+全 rfl），故各切片的 bank 派发是纯 term 装配。债 = 29 枚 bank 叶（外部
+认证锚，G4 / Flyspeck_constants.calc 口径）+ ox3q1hP25。 -/
+
+/-- T4 桥件（真推导）：`cc_card_v11 (cc_data_v8 …) = n`——`cc_card_data`
+(:2135 ✅ rfl 投影) + `HasSizeP25` 的基数分量。 -/
+private theorem pk_card_eq (V : Set V3) (f : ℕ → V3) (u0 u1 : V3) (n : ℕ)
+    (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) :
+    cc_card_v11 (cc_data_v8 V f u0 u1) = n := by
+  rw [cc_card_data]
+  exact hsize.2
+
+/-- T4 桥件（真推导）：`cc_qu_v11` 在 `cc_data_v8` 上的逐点几何展开
+（`cc_real_dat_def` :2316 ✅ 第三合取项）。 -/
+private theorem pk_qu_geometric (V : Set V3) (f : ℕ → V3) (u0 u1 : V3) (i : ℕ) :
+    cc_qu_v11 (cc_data_v8 V f u0 u1) i ↔
+      cc_4 V u0 u1 f i ∧ (dist u0 (f i) < 2 * hminus ∧ dist u1 (f i) < 2 * hminus) ∧
+        dist u0 (f (i + 1)) < 2 * hminus ∧ dist u1 (f (i + 1)) < 2 * hminus ∧
+        dist (f i) (f (i + 1)) < 2 * hminus := by
+  rw [(cc_real_dat_def V f u0 u1).2.2.1]
+
+/-- T4 桥件（真推导）：`cc_qx_v11` 的逐点几何展开（`cc_real_dat_def` 第一
+合取项）。 -/
+private theorem pk_qx_geometric (V : Set V3) (f : ℕ → V3) (u0 u1 : V3) (i : ℕ) :
+    cc_qx_v11 (cc_data_v8 V f u0 u1) i ↔
+      cc_4 V u0 u1 f i ∧
+        ¬ (dist u0 (f i) < 2 * hminus ∧ dist u1 (f i) < 2 * hminus ∧
+          dist u0 (f (i + 1)) < 2 * hminus ∧ dist u1 (f (i + 1)) < 2 * hminus ∧
+          dist (f i) (f (i + 1)) < 2 * hminus) := by
+  rw [(cc_real_dat_def V f u0 u1).1]
+
+/-- T4 桥件（真推导）：`cc_qy_v11` 的逐点几何展开（`cc_real_dat_def` 第二
+合取项）。 -/
+private theorem pk_qy_geometric (V : Set V3) (f : ℕ → V3) (u0 u1 : V3) (i : ℕ) :
+    cc_qy_v11 (cc_data_v8 V f u0 u1) i ↔ ¬ cc_4 V u0 u1 f i := by
+  rw [(cc_real_dat_def V f u0 u1).2.1]
+
+/-- T4 桥件（真推导）：`cc_hassmall_v11` 的逐点几何展开（`cc_real_dat_def`
+第四合取项）。 -/
+private theorem pk_hassmall_geometric (V : Set V3) (f : ℕ → V3) (u0 u1 : V3)
+    (i : ℕ) :
+    cc_hassmall_v11 (cc_data_v8 V f u0 u1) i ↔
+      (dist u0 (f i) < 2 * hminus ∧ dist u1 (f i) < 2 * hminus) ∧
+        dist u0 (f (i + 1)) < 2 * hminus ∧ dist u1 (f (i + 1)) < 2 * hminus := by
+  rw [(cc_real_dat_def V f u0 u1).2.2.2]
+
+/-- T4 桥件（真推导）：`3 * cc_eps` 与 bank 字面常数 `3.0 * 0.0057` 的
+数值恒等（`cc_eps = 0.0057`，PackingAuto3.lean:46；数值实例仅命题等价，
+非定义等价，故以 norm_num 桥接）。 -/
+private theorem pk_three_eps : (3 : ℝ) * cc_eps = 3.0 * 0.0057 := by
+  norm_num [cc_eps]
+
+/-- T4 切片 R1（`cc_real_model_v11` 合取 1-4）：四个实域场的 n-周期性。
+**真推导（零 sorryAx 会师真叶）**：`real_periodic_data`（:2355 ✅，wedge 和的
+周期性）+ `cc_real_data`/`cc_card_data` 投影（rfl）。 -/
+theorem pkrmPeriodic (V : Set V3) (f : ℕ → V3) (u0 u1 : V3) (n : ℕ)
+    (hper : periodic f n) (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) :
+    periodic (cc_azim_v11 (cc_data_v8 V f u0 u1))
+        (cc_card_v11 (cc_data_v8 V f u0 u1)) ∧
+      periodic (cc_gg_v11 (cc_data_v8 V f u0 u1))
+        (cc_card_v11 (cc_data_v8 V f u0 u1)) ∧
+      periodic (cc_gg3a_v11 (cc_data_v8 V f u0 u1))
+        (cc_card_v11 (cc_data_v8 V f u0 u1)) ∧
+      periodic (cc_gg3b_v11 (cc_data_v8 V f u0 u1))
+        (cc_card_v11 (cc_data_v8 V f u0 u1)) := by
+  have hcard := pk_card_eq V f u0 u1 n hsize
+  have hp := real_periodic_data V u0 u1 f n hper
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · intro i; rw [hcard]; exact hp.1 i
+  · intro i; rw [hcard]; exact hp.2.1 i
+  · intro i; rw [hcard]; exact hp.2.2.2.2.1 i
+  · intro i; rw [hcard]; exact hp.2.2.2.2.2 i
+
+/-- T4 切片 R2（合取 5-7）：azim 锚——下界 0.606、4-cell 楔 < 2.8、和 = 2π。
+资产状态：**deferred-compute（外部认证锚）**——三枚 bank 叶全 ⬜。
+-- NEEDS: real_model_gckb / real_model_azim_c4 / real_model_sum_azim 落证
+（G4 证书粘合，同 §2a 查表口径）。 -/
+theorem pkrmAzim (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
+    (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V)
+    (hs : saturated V) (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V)
+    (h1 : u1 ∈ V) (hper : periodic f n) (hnc : ¬ Collinear3 u0 u1 w0)
+    (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f) :
+    (∀ i, (0.606 : ℝ) ≤ cc_azim_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_4cell_v11 (cc_data_v8 V f u0 u1) i →
+        cc_azim_v11 (cc_data_v8 V f u0 u1) i < 2.8) ∧
+      (∑ i ∈ Finset.Icc 0 (cc_card_v11 (cc_data_v8 V f u0 u1) - 1),
+        cc_azim_v11 (cc_data_v8 V f u0 u1) i = 2 * Real.pi) := by
+  have hcard := pk_card_eq V f u0 u1 n hsize
+  refine ⟨?_, ?_, ?_⟩
+  · -- 合取 5 ← real_model_gckb（:2897）
+    intro i
+    exact real_model_gckb V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey
+      hr i
+  · -- 合取 6 ← real_model_azim_c4（:2713；cc_4cell_v11 在 cc_data_v8 上
+    -- 定义等价 cc_4）
+    intro i h4
+    exact real_model_azim_c4 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc
+      hcey hr i h4
+  · -- 合取 7 ← real_model_sum_azim（:2890）
+    rw [hcard]
+    exact real_model_sum_azim V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc
+      hcey hr
+
+/-- T4 切片 R3（合取 8）：n = 4 象限案的认证下和。
+资产状态：**bank 叶**——`real_model_ox3q1h_merge`(:2983 ⬜) 消费
+`ox3q1hP25`（Oxl_def.hl 外部锚；Assembly 侧 T1 骨架 `nliOx3q1h` 同根，
+G4 证书侧）。
+-- NEEDS: ox3q1hP25 本体回填（Oxl_def.hl）+ ox3q1h_merge 装配波。 -/
+theorem pkrmQuarter (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
+    (hnl : pack_nonlinear_non_ox3q1h) (hox : ox3q1hP25) (hn : 1 < n)
+    (hp : Packing V) (hs : saturated V)
+    (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V) (h1 : u1 ∈ V)
+    (hper : periodic f n) (hnc : ¬ Collinear3 u0 u1 w0)
+    (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f) :
+    (cc_card_v11 (cc_data_v8 V f u0 u1) = 4 ∧ ∃ i,
+        cc_4cell_v11 (cc_data_v8 V f u0 u1) i ∧
+        cc_crit_v11 (cc_data_v8 V f u0 u1) i ∧
+        cc_qu_v11 (cc_data_v8 V f u0 u1) (i + 1) ∧
+        cc_qu_v11 (cc_data_v8 V f u0 u1) (i + 2) ∧
+        cc_qu_v11 (cc_data_v8 V f u0 u1) (i + 3)) →
+      (0 : ℝ) ≤ ∑ i ∈ Finset.Icc 0 (cc_card_v11 (cc_data_v8 V f u0 u1) - 1),
+        cc_gg_v11 (cc_data_v8 V f u0 u1) i := by
+  intro h4
+  obtain ⟨h4n, i, hi4, hcrit, hq1, hq2, hq3⟩ := h4
+  rw [pk_card_eq V f u0 u1 n hsize]
+  -- cc_qu_v11 = hassmall ∧ (4cell ∧ subcrit) 的合取序与 bank 5-fold 不同，
+  -- 逐分量重排（真推导，几何字段定义等价）
+  refine real_model_ox3q1h_merge V u0 u1 w0 n f hnl hox hn hp hs hsize h0 h1 hper
+    hnc hcey hr ⟨h4n, i, hi4, hcrit.1, hcrit.2,
+      hq1.2.1, hq1.1.1, hq1.1.2.1, hq1.1.2.2, hq1.2.2,
+      hq2.2.1, hq2.1.1, hq2.1.2.1, hq2.1.2.2, hq2.2.2,
+      hq3.2.1, hq3.1.1, hq3.1.2.1, hq3.1.2.2, hq3.2.2⟩
+
+/-- T4 切片 R4（合取 9-17）：qu 族——下和 −cc_eps / cc_eps 上下文三件、
+与相邻 qy 胞的配对和两件、spine5 界、三条 azim 线性族。
+资产状态：**deferred-compute（外部认证锚）**——九枚 bank 叶全 ⬜。
+-- NEEDS: gamma_qu/fhbv2(_sym)/quqy(_sym)/ztg4/azim1/gaz4/gaz6 逐条证书。 -/
+theorem pkrmQu (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
+    (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V)
+    (hs : saturated V) (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V)
+    (h1 : u1 ∈ V) (hper : periodic f n) (hnc : ¬ Collinear3 u0 u1 w0)
+    (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f) :
+    (∀ i, cc_qu_v11 (cc_data_v8 V f u0 u1) i →
+        -cc_eps ≤ cc_gg_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qu_v11 (cc_data_v8 V f u0 u1) i ∧
+          ¬cc_small_eta_v11 (cc_data_v8 V f u0 u1) i →
+        cc_eps ≤ cc_gg_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qu_v11 (cc_data_v8 V f u0 u1) i ∧
+          ¬cc_small_eta_v11 (cc_data_v8 V f u0 u1) (i + 1) →
+        cc_eps ≤ cc_gg_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qu_v11 (cc_data_v8 V f u0 u1) i ∧
+          cc_qy_v11 (cc_data_v8 V f u0 u1) (i + 1) →
+        (0 : ℝ) ≤ cc_gg_v11 (cc_data_v8 V f u0 u1) i +
+          cc_gg3a_v11 (cc_data_v8 V f u0 u1) (i + 1)) ∧
+      (∀ i, cc_qu_v11 (cc_data_v8 V f u0 u1) (i + 1) ∧
+          cc_qy_v11 (cc_data_v8 V f u0 u1) i →
+        (0 : ℝ) ≤ cc_gg3b_v11 (cc_data_v8 V f u0 u1) i +
+          cc_gg_v11 (cc_data_v8 V f u0 u1) (i + 1)) ∧
+      (∀ i, cc_4cell_v11 (cc_data_v8 V f u0 u1) i →
+        a_spine5 + b_spine5 * cc_azim_v11 (cc_data_v8 V f u0 u1) i ≤
+          cc_gg_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qu_v11 (cc_data_v8 V f u0 u1) i →
+        (-0.0659 : ℝ) + 0.042 * cc_azim_v11 (cc_data_v8 V f u0 u1) i ≤
+          cc_gg_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qu_v11 (cc_data_v8 V f u0 u1) i →
+        (-0.0142852 : ℝ) + 0.00609451 * cc_azim_v11 (cc_data_v8 V f u0 u1) i ≤
+          cc_gg_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qu_v11 (cc_data_v8 V f u0 u1) i →
+        (0.161517 : ℝ) - 0.119482 * cc_azim_v11 (cc_data_v8 V f u0 u1) i ≤
+          cc_gg_v11 (cc_data_v8 V f u0 u1) i) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · -- 合取 9 ← real_model_gamma_qu（:2795）
+    intro i hq
+    obtain ⟨h4, hp1, hp2, hp3, hp4⟩ := (pk_qu_geometric V f u0 u1 i).mp hq
+    exact real_model_gamma_qu V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc
+      hcey hr i h4 ⟨hp1, hp2, hp3, hp4⟩
+  · -- 合取 10 ← real_model_fhbv2_sym（:2839；注意 bank 的 ¬small_eta 在 i 侧）
+    intro i h
+    obtain ⟨hq, hse⟩ := h
+    obtain ⟨h4, hp1, hp2, hp3, hp4⟩ := (pk_qu_geometric V f u0 u1 i).mp hq
+    exact real_model_fhbv2_sym V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc
+      hcey hr i ⟨⟨h4, hp1, hp2, hp3, hp4⟩, hse⟩
+  · -- 合取 11 ← real_model_fhbv2（:2825）
+    intro i h
+    obtain ⟨hq, hse⟩ := h
+    obtain ⟨h4, hp1, hp2, hp3, hp4⟩ := (pk_qu_geometric V f u0 u1 i).mp hq
+    exact real_model_fhbv2 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc
+      hcey hr i ⟨⟨h4, hp1, hp2, hp3, hp4⟩, hse⟩
+  · -- 合取 12 ← real_model_quqy（:3025）
+    intro i h
+    obtain ⟨hq, hqy⟩ := h
+    obtain ⟨h4, hp1, hp2, hp3, hp4⟩ := (pk_qu_geometric V f u0 u1 i).mp hq
+    exact real_model_quqy V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey
+      hr i ⟨⟨h4, hp1, hp2, hp3, hp4⟩, (pk_qy_geometric V f u0 u1 (i + 1)).mp hqy⟩
+  · -- 合取 13 ← real_model_quqy_sym（:3041）
+    intro i h
+    obtain ⟨hq, hqy⟩ := h
+    obtain ⟨h4, hp1, hp2, hp3, hp4⟩ := (pk_qu_geometric V f u0 u1 (i + 1)).mp hq
+    exact real_model_quqy_sym V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc
+      hcey hr i ⟨⟨h4, hp1, hp2, hp3, hp4⟩, (pk_qy_geometric V f u0 u1 i).mp hqy⟩
+  · -- 合取 14 ← real_model_ztg4（:3058）
+    intro i h4
+    exact real_model_ztg4 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey
+      hr i h4
+  · -- 合取 15 ← real_model_azim1（:3068）
+    intro i hq
+    obtain ⟨h4, hp1, hp2, hp3, hp4⟩ := (pk_qu_geometric V f u0 u1 i).mp hq
+    exact real_model_azim1 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey
+      hr i h4 ⟨hp1, hp2, hp3, hp4⟩
+  · -- 合取 16 ← real_model_gaz4（:3081）
+    intro i hq
+    obtain ⟨h4, hp1, hp2, hp3, hp4⟩ := (pk_qu_geometric V f u0 u1 i).mp hq
+    exact real_model_gaz4 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey
+      hr i h4 ⟨hp1, hp2, hp3, hp4⟩
+  · -- 合取 17 ← real_model_gaz6（:3094）
+    intro i hq
+    obtain ⟨h4, hp1, hp2, hp3, hp4⟩ := (pk_qu_geometric V f u0 u1 i).mp hq
+    exact real_model_gaz6 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey
+      hr i h4 ⟨hp1, hp2, hp3, hp4⟩
+
+/-- T4 切片 R5（合取 18-25）：qx 族——非 qu 的 4-cell 楔：下和 0 / 2.3 张角
+加强 / 与相邻 qy 胞配和两件 / 半 small 两件 / hassmall 线性 + supercrit。
+资产状态：**deferred-compute（外部认证锚）**——八枚 bank 叶全 ⬜。
+-- NEEDS: gamma_qx/g_qxd/gamma10/gamma11/gamma8/gamma8b/gaz9/azim2 逐条证书。 -/
+theorem pkrmQx (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
+    (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V)
+    (hs : saturated V) (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V)
+    (h1 : u1 ∈ V) (hper : periodic f n) (hnc : ¬ Collinear3 u0 u1 w0)
+    (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f) :
+    (∀ i, cc_qx_v11 (cc_data_v8 V f u0 u1) i →
+        (0 : ℝ) ≤ cc_gg_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qx_v11 (cc_data_v8 V f u0 u1) i ∧
+          2.3 < cc_azim_v11 (cc_data_v8 V f u0 u1) i →
+        cc_eps ≤ cc_gg_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qx_v11 (cc_data_v8 V f u0 u1) i ∧
+          cc_hassmall_v11 (cc_data_v8 V f u0 u1) i ∧
+          cc_qy_v11 (cc_data_v8 V f u0 u1) (i + 1) →
+        cc_eps ≤ cc_gg_v11 (cc_data_v8 V f u0 u1) i +
+          cc_gg3a_v11 (cc_data_v8 V f u0 u1) (i + 1)) ∧
+      (∀ i, cc_qx_v11 (cc_data_v8 V f u0 u1) (i + 1) ∧
+          cc_hassmall_v11 (cc_data_v8 V f u0 u1) (i + 1) ∧
+          cc_qy_v11 (cc_data_v8 V f u0 u1) i →
+        cc_eps ≤ cc_gg3b_v11 (cc_data_v8 V f u0 u1) i +
+          cc_gg_v11 (cc_data_v8 V f u0 u1) (i + 1)) ∧
+      (∀ i, cc_qx_v11 (cc_data_v8 V f u0 u1) i ∧
+          cc_small_v11 (cc_data_v8 V f u0 u1) i ∧
+          ¬cc_small_v11 (cc_data_v8 V f u0 u1) (i + 1) →
+        cc_eps ≤ cc_gg_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qx_v11 (cc_data_v8 V f u0 u1) i ∧
+          cc_small_v11 (cc_data_v8 V f u0 u1) (i + 1) ∧
+          ¬cc_small_v11 (cc_data_v8 V f u0 u1) i →
+        cc_eps ≤ cc_gg_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qx_v11 (cc_data_v8 V f u0 u1) i ∧
+          cc_hassmall_v11 (cc_data_v8 V f u0 u1) i →
+        (0.213849 : ℝ) - 0.119482 * cc_azim_v11 (cc_data_v8 V f u0 u1) i ≤
+          cc_gg_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qx_v11 (cc_data_v8 V f u0 u1) i ∧
+          cc_hassmall_v11 (cc_data_v8 V f u0 u1) i ∧
+          cc_supercrit_v11 (cc_data_v8 V f u0 u1) i →
+        (0.00457511 : ℝ) + 0.00609451 * cc_azim_v11 (cc_data_v8 V f u0 u1) i ≤
+          cc_gg_v11 (cc_data_v8 V f u0 u1) i) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · -- 合取 18 ← real_model_gamma_qx（:3107）
+    intro i hx
+    obtain ⟨h4, hn5⟩ := (pk_qx_geometric V f u0 u1 i).mp hx
+    exact real_model_gamma_qx V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc
+      hcey hr i h4 hn5
+  · -- 合取 19 ← real_model_g_qxd（:3120）
+    intro i h
+    obtain ⟨hx, haz⟩ := h
+    obtain ⟨h4, hn5⟩ := (pk_qx_geometric V f u0 u1 i).mp hx
+    exact real_model_g_qxd V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey
+      hr i ⟨h4, hn5⟩ haz
+  · -- 合取 20 ← real_model_gamma10（:3150）
+    intro i h
+    obtain ⟨hx, hsm, hqy⟩ := h
+    obtain ⟨h4, hn5⟩ := (pk_qx_geometric V f u0 u1 i).mp hx
+    exact real_model_gamma10 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc
+      hcey hr i ⟨⟨h4, hn5⟩, (pk_hassmall_geometric V f u0 u1 i).mp hsm,
+        (pk_qy_geometric V f u0 u1 (i + 1)).mp hqy⟩
+  · -- 合取 21 ← real_model_gamma11（:3170）
+    intro i h
+    obtain ⟨hx, hsm, hqy⟩ := h
+    obtain ⟨h4, hn5⟩ := (pk_qx_geometric V f u0 u1 (i + 1)).mp hx
+    exact real_model_gamma11 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc
+      hcey hr i ⟨⟨h4, hn5⟩, (pk_hassmall_geometric V f u0 u1 (i + 1)).mp hsm,
+        (pk_qy_geometric V f u0 u1 i).mp hqy⟩
+  · -- 合取 22 ← real_model_gamma8（:3262）
+    intro i h
+    obtain ⟨hx, hsm1, hsm2⟩ := h
+    obtain ⟨h4, hn5⟩ := (pk_qx_geometric V f u0 u1 i).mp hx
+    exact real_model_gamma8 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc
+      hcey hr i ⟨⟨h4, hn5⟩, hsm1, hsm2⟩
+  · -- 合取 23 ← real_model_gamma8b（:3278）
+    intro i h
+    obtain ⟨hx, hsm1, hsm2⟩ := h
+    obtain ⟨h4, hn5⟩ := (pk_qx_geometric V f u0 u1 i).mp hx
+    exact real_model_gamma8b V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc
+      hcey hr i ⟨⟨h4, hn5⟩, hsm1, hsm2⟩
+  · -- 合取 24 ← real_model_gaz9（:3294）
+    intro i h
+    obtain ⟨hx, hsm⟩ := h
+    obtain ⟨h4, hn5⟩ := (pk_qx_geometric V f u0 u1 i).mp hx
+    exact real_model_gaz9 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey
+      hr i ⟨⟨h4, hn5⟩, (pk_hassmall_geometric V f u0 u1 i).mp hsm⟩
+  · -- 合取 25 ← real_model_azim2（:3310；supercrit 定义等价 2*hplus < dist）
+    intro i h
+    obtain ⟨hx, hsm, hsc⟩ := h
+    obtain ⟨h4, hn5⟩ := (pk_qx_geometric V f u0 u1 i).mp hx
+    exact real_model_azim2 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey
+      hr i ⟨⟨h4, hn5⟩, (pk_hassmall_geometric V f u0 u1 i).mp hsm, hsc⟩
+
+/-- T4 切片 R6（合取 26-33）：qy 族——3-cell 配对和与两个 3a/3b 非负、
+0.008·azim 下界、small_eta 混合 spine5 三件、txq 窗口 3·cc_eps。
+资产状态：**deferred-compute（外部认证锚）**——八枚 bank 叶全 ⬜。
+-- NEEDS: cell23/3a/3b/gr/pema/pemb/tew/txq 逐条证书。 -/
+theorem pkrmQy (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
+    (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V)
+    (hs : saturated V) (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V)
+    (h1 : u1 ∈ V) (hper : periodic f n) (hnc : ¬ Collinear3 u0 u1 w0)
+    (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f) :
+    (∀ i, cc_qy_v11 (cc_data_v8 V f u0 u1) i →
+        cc_gg3a_v11 (cc_data_v8 V f u0 u1) i + cc_gg3b_v11 (cc_data_v8 V f u0 u1) i ≤
+          cc_gg_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qy_v11 (cc_data_v8 V f u0 u1) i →
+        (0 : ℝ) ≤ cc_gg3a_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qy_v11 (cc_data_v8 V f u0 u1) i →
+        (0 : ℝ) ≤ cc_gg3b_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qy_v11 (cc_data_v8 V f u0 u1) i →
+        (0.008 : ℝ) * cc_azim_v11 (cc_data_v8 V f u0 u1) i ≤
+          cc_gg_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qy_v11 (cc_data_v8 V f u0 u1) i ∧
+          cc_small_eta_v11 (cc_data_v8 V f u0 u1) i ∧
+          ¬cc_small_eta_v11 (cc_data_v8 V f u0 u1) (i + 1) ∧
+          cc_azim_v11 (cc_data_v8 V f u0 u1) i < 1.074 →
+        a_spine5 + b_spine5 * cc_azim_v11 (cc_data_v8 V f u0 u1) i ≤
+          cc_gg_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qy_v11 (cc_data_v8 V f u0 u1) i ∧
+          ¬cc_small_eta_v11 (cc_data_v8 V f u0 u1) i ∧
+          cc_small_eta_v11 (cc_data_v8 V f u0 u1) (i + 1) ∧
+          cc_azim_v11 (cc_data_v8 V f u0 u1) i < 1.074 →
+        a_spine5 + b_spine5 * cc_azim_v11 (cc_data_v8 V f u0 u1) i ≤
+          cc_gg_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qy_v11 (cc_data_v8 V f u0 u1) i ∧
+          cc_small_eta_v11 (cc_data_v8 V f u0 u1) i ∧
+          cc_small_eta_v11 (cc_data_v8 V f u0 u1) (i + 1) →
+        a_spine5 + b_spine5 * cc_azim_v11 (cc_data_v8 V f u0 u1) i ≤
+          cc_gg_v11 (cc_data_v8 V f u0 u1) i) ∧
+      (∀ i, cc_qy_v11 (cc_data_v8 V f u0 u1) i ∧
+          cc_small_eta_v11 (cc_data_v8 V f u0 u1) i ∧
+          cc_small_eta_v11 (cc_data_v8 V f u0 u1) (i + 1) ∧
+          (1.946 : ℝ) ≤ cc_azim_v11 (cc_data_v8 V f u0 u1) i ∧
+          cc_azim_v11 (cc_data_v8 V f u0 u1) i ≤ 2.089 →
+        (3 : ℝ) * cc_eps ≤ cc_gg_v11 (cc_data_v8 V f u0 u1) i) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · -- 合取 26 ← real_model_cell23（:3430）
+    intro i hqy
+    exact real_model_cell23 V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc
+      hcey hr i ((pk_qy_geometric V f u0 u1 i).mp hqy)
+  · -- 合取 27 ← real_model_3a（:3485）
+    intro i hqy
+    exact real_model_3a V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey
+      hr i ((pk_qy_geometric V f u0 u1 i).mp hqy)
+  · -- 合取 28 ← real_model_3b（:3496）
+    intro i hqy
+    exact real_model_3b V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey
+      hr i ((pk_qy_geometric V f u0 u1 i).mp hqy)
+  · -- 合取 29 ← real_model_gr（:3507）
+    intro i hqy
+    exact real_model_gr V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey
+      hr i ((pk_qy_geometric V f u0 u1 i).mp hqy)
+  · -- 合取 30 ← real_model_pema（:3524）
+    intro i h
+    obtain ⟨hqy, hse1, hse2, haz⟩ := h
+    exact real_model_pema V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey
+      hr i ⟨(pk_qy_geometric V f u0 u1 i).mp hqy, hse1, hse2, haz⟩
+  · -- 合取 31 ← real_model_pemb（:3536）
+    intro i h
+    obtain ⟨hqy, hse1, hse2, haz⟩ := h
+    exact real_model_pemb V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey
+      hr i ⟨(pk_qy_geometric V f u0 u1 i).mp hqy, hse1, hse2, haz⟩
+  · -- 合取 32 ← real_model_tew（:3635）
+    intro i h
+    obtain ⟨hqy, hse1, hse2⟩ := h
+    exact real_model_tew V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey
+      hr i ⟨(pk_qy_geometric V f u0 u1 i).mp hqy, hse1, hse2⟩
+  · -- 合取 33 ← real_model_txq（:3623）
+    intro i h
+    obtain ⟨hqy, hse1, hse2, haz1, haz2⟩ := h
+    rw [pk_three_eps]
+    exact real_model_txq V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey
+      hr i ⟨(pk_qy_geometric V f u0 u1 i).mp hqy, hse1, hse2, haz1, haz2⟩
+
 /-- HOL `cc_real_model_data`: the geometric wedge data satisfies the full
-cc_v11 real model (consumes all the `real_model_*` bank entries above). -/
+cc_v11 real model (consumes all the `real_model_*` bank entries above).
+T4 展开波（2026-10-08）：证明体由单根 `sorry` 换为六具名切片（上方 R1-R6）的
+显式装配——冻结陈述签名不变；R1 为零 sorryAx 真推导，R2-R6 的债 = 29 枚
+具名 bank 叶（见切片注记）。 -/
 theorem cc_real_model_data (V : Set V3) (f : ℕ → V3) (w0 : V3) (n : ℕ) (u0 u1 : V3)
     (hnl : pack_nonlinear_non_ox3q1h) (hox : ox3q1hP25) (hn : 1 < n) (hp : Packing V)
     (hs : saturated V) (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V)
     (h1 : u1 ∈ V) (hper : periodic f n) (hnc : ¬ Collinear3 u0 u1 w0)
     (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f) :
-    cc_real_model_v11 (cc_data_v8 V f u0 u1) := by
-  sorry
+    cc_real_model_v11 (cc_data_v8 V f u0 u1) :=
+  -- cc_real_model_v11 为 33 合取项右结合链：六切片按逐合取项投影装配
+  have hpp := pkrmPeriodic V f u0 u1 n hper hsize
+  have ha := pkrmAzim V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey hr
+  have hq := pkrmQuarter V u0 u1 w0 n f hnl hox hn hp hs hsize h0 h1 hper hnc
+    hcey hr
+  have hqu := pkrmQu V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey hr
+  have hqx := pkrmQx V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey hr
+  have hqy := pkrmQy V u0 u1 w0 n f hnl hn hp hs hsize h0 h1 hper hnc hcey hr
+  ⟨hpp.1, hpp.2.1, hpp.2.2.1, hpp.2.2.2,
+    ha.1, ha.2.1, ha.2.2,
+    hq,
+    hqu.1, hqu.2.1, hqu.2.2.1, hqu.2.2.2.1, hqu.2.2.2.2.1, hqu.2.2.2.2.2.1,
+      hqu.2.2.2.2.2.2.1, hqu.2.2.2.2.2.2.2.1, hqu.2.2.2.2.2.2.2.2,
+    hqx.1, hqx.2.1, hqx.2.2.1, hqx.2.2.2.1, hqx.2.2.2.2.1, hqx.2.2.2.2.2.1,
+      hqx.2.2.2.2.2.2.1, hqx.2.2.2.2.2.2.2,
+    hqy.1, hqy.2.1, hqy.2.2.1, hqy.2.2.2.1, hqy.2.2.2.2.1, hqy.2.2.2.2.2.1,
+      hqy.2.2.2.2.2.2.1, hqy.2.2.2.2.2.2.2⟩
 
 /-- HOL `CELL_CLUSTER_ESTIMATE_PROPS`: a failing cell-cluster inequality
-yields the compressed-model witness. -/
+yields the compressed-model witness.
+T4 展开波（2026-10-08）：证明体由单根 `sorry` 换为 `LEAF_RANK_PROPS`（见证
+层骨架，:2955 同文件）+ 基数步真推导 + `cc_real_model_data`（real-model 切片
+层，:4139 同文件）的显式装配——冻结陈述签名不变。债 = LEAF_RANK_PROPS
+（W1/W2 + 三在库叶）+ cc_real_model_data（六切片）；基数合取项
+`n = cc_card_v11 (cc_data_v8 …)` 为零 sorryAx 真叶（`cc_card_data` rfl +
+`HasSizeP25`）。 -/
 theorem CELL_CLUSTER_ESTIMATE_PROPS (V : Set V3) (hp : Packing V) (hs : saturated V)
     (hcc : ¬ cellClusterInequality V) (hnl : pack_nonlinear_non_ox3q1h)
     (hox : ox3q1hP25) :
@@ -3663,7 +4177,14 @@ theorem CELL_CLUSTER_ESTIMATE_PROPS (V : Set V3) (hp : Packing V) (hs : saturate
       cc_bool_model_v11 (cc_data_v8 V f u0 u1) ∧
       cc_bool_prep_v11 (cc_data_v8 V f u0 u1) ∧
       cc_real_model_v11 (cc_data_v8 V f u0 u1) := by
-  sorry
+  obtain ⟨u0, u1, n, w0, f, hn, hsize, hu0ne, hlo, hhi, hnc, hr, h0, h1, hper,
+    hleaf, hcey, hneg, -, -, hbm, hbp⟩ := LEAF_RANK_PROPS V hp hs hcc hnl
+  refine ⟨u0, u1, n, f, hn, hneg, ?_, hbm, hbp, ?_⟩
+  · -- 基数步（真叶）：cc_card_data（rfl 投影）+ HasSizeP25
+    rw [cc_card_data]
+    exact hsize.2.symm
+  · exact cc_real_model_data V f w0 n u0 u1 hnl hox hn hp hs hsize h0 h1 hper
+      hnc hcey hr
 
 /-- HOL `OXLZLEZ`: THE CAPSTONE — the cell-cluster inequality, conditional
 on the two certified Merge_ineq/Oxl_def banks.  Proof: a failure yields
