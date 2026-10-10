@@ -181,7 +181,25 @@ NEEDS 全注记）。kit：边中点工具组 + `p23_pivot_perm_pack` +
 1 → 1（精确化为 G3 单点）。grutoti_pivot 冻结签名一字未动。
 执行版补丁
 `docs/statement-fix-proposals-patches/32-33-pa23-grutoti-region-gates.patch`
-（+423/−38，自工作区 diff 生成）。-/
+（+423/−38，自工作区 diff 生成）。2026-10-10 GT-6 pivot wave（GRUTOTI
+终章收口，G3 填证，pivot sorry 归零 = 全章闭合）：
+`p23_grutoti_pivot_rev_k34` 全额填证（零 sorry）——路线不是 GT-5 NEEDS
+注记预判的 S₃-置换/ε-junk 钉定，而是 HL 的覆盖路线
+（GRUTOTI.hl:2620-2650）：分支真空——hwit 被制造的前向见证反驳。
+三步：(1) 迹正性：k ∈ {3,4} 时 canonical cellParams 给 X 的 SET-级
+hull 形（k = 3：tunc-2 点集 ∪ {mxi}；k = 4：整表点集），新私件
+`p23_rev34_hull_form`（仿 HL §H 7583-7755 的 SET-级论证 + CARD
+枚举，退化支由 `p23_coplanar_affineSpan_null` 炬死）重表为
+X = hull{u0,u1,v,w} 且 ¬Coplanar，`CONIC_CAP_INTER_CONVEX_HULL_4_GT_0`
+在 (r, d) := (1, c)（B3+B4 阈 c 由 `p23_region_exists_c`，冻结签名
+无需新门）给 `0 < volume (X ∩ (ball u0 1 ∩ rcone c))`（闭球-开球
+差零测 addHaar_sphere）；(2) `p23_cover_C`（B5 覆盖，GT-4b 波
+已 banked 零 sorry）+ `p23_C_sub_rogers` + 测度鸽笼 + AJRIPQN 把正测迹
+迹变成 X = mcell k V vl、vl 在前向族 p23Fam；(3) `(min k 4, vl)` 即
+前向 cellParamsD 见证（`p23_mcell_reduce` + `p23_pivot_perm_pack`），
+反驳 hwit。冻结签名一字未动；hr/hr1/hd/hd1/hw1/hw3/hw4 在本分支
+性懒（覆盖在 (1, c) 跑）。PA23 proof-sorry 归零：GRUTOTI 全章
+（region✓/cell_vol✓/sum_volD✓/hcov✓/pivot✓）本文件级闭合。-/
 
 import Kepler.Text.PackingAuto2
 import Kepler.Text.ConicCapVolume
@@ -5385,25 +5403,212 @@ private theorem p23_pivot_cell_eq (V : Set V3) (u0 u1 : V3) (r d : ℝ) (X : Set
           exact measure_empty) hn
 
 
-/-- GRUTOTI pivot-wave G3 (GT-5, 2026-10-10 wave, 精确记账): the reversed
-k = 3/4 corner — the LAST genuine gap of the GRUTOTI chain. Hypothesis
-profile: X is a non-null edge cell whose `cellParams` index is 3 or 4 while
-NO forward `cellParamsD` witness exists (no `barV V 3` list describing X as
-an `mcell ≤ 4` carries `[u0,u1]` as an initial sublist — in particular the
-canonical param list carries the edge reversed or off-head, so the cellParamsD
-ε may pick a junk/differently-directed witness and `dihX`'s PA2 encoding is
-not pinned by X alone).
-NEEDS (the two mathematical ingredients of the gap, HL §H 7441-7958):
-(1) the S₃ permutation invariance of the Marchal-cell descriptions — X, being
-a k = 3/4 hull cell, has permuted list descriptions; one must show some
-permuted description satisfies the mcell3/mcell4 shape conditions with
-`[u0,u1]` at the head (or else pin the ε value of `cellParamsD V X [u0,u1]`
-and read `dihX` off it) — this is the directed-witness junk-semantics work;
-(2) on that permuted description, the k = 3/4 wedge identity closes as in
-`grutoti_cell_vol`'s arms via `p23_hull_arm_eq` + the hw3/hw4 narrowness
-(these transfer across permutations by the radV/setOfList invariance).
-Estimate 200-400 lines. Until then the pivot keeps exactly one structured
-proof-sorry, precisely THIS lemma. -/
+/-- an explicit 4-point set is finite with Finset-card ≤ 4 -/
+private theorem p23_rev34_card4 {a b c d : V3} (h : ({a, b, c, d} : Set V3).Finite) :
+    h.toFinset.card ≤ 4 := by
+  have hE : h.toFinset = ({a, b, c, d} : Finset V3) := by ext z; simp
+  rw [hE]
+  exact Finset.card_le_four
+
+/-- G3 fill helper (the SET-level content of HL §H's k = 3/4 arms,
+GRUTOTI.hl:7583-7755): a point set inside an explicit 4-point set, containing
+two distinct points, whose hull is non-null, is the hull of a 4-point set
+beginning with those two points, with the quartet non-coplanar. The v/w
+enumeration is Finset-cardinality bookkeeping (pad v/w in the degenerate
+≤ 3-point cases, which die against `p23_coplanar_affineSpan_null`);
+¬Coplanar is the non-nullness of X read against its own affine span. -/
+private theorem p23_rev34_hull_form {X S : Set V3} {u0 u1 : V3} (hu01 : u0 ≠ u1)
+    (hXeq : X = convexHull ℝ S) (hSfin : S.Finite)
+    {T : Set V3} (hTfin : T.Finite) (hT4 : hTfin.toFinset.card ≤ 4) (hsub : S ⊆ T)
+    (hu0 : u0 ∈ S) (hu1 : u1 ∈ S) (hnnX : ¬ nullSet X) :
+    ∃ v w : V3, X = convexHull ℝ ({u0, u1, v, w} : Set V3) ∧
+      ¬ Coplanar ℝ ({u0, u1, v, w} : Set V3) := by
+  classical
+  -- the Finset of S and its card bound
+  have hu0W : u0 ∈ hSfin.toFinset := hSfin.mem_toFinset.mpr hu0
+  have hu1W : u1 ∈ hSfin.toFinset := hSfin.mem_toFinset.mpr hu1
+  have hW4 : hSfin.toFinset.card ≤ 4 :=
+    le_trans (Finset.card_le_card (Set.Finite.toFinset_subset_toFinset.mpr hsub)) hT4
+  -- S-membership ↔ Finset-membership shorthands
+  have hSfin' : ∀ z : V3, z ∈ S → z ∈ hSfin.toFinset := fun z hz =>
+    hSfin.mem_toFinset.mpr hz
+  have hWmem : ∀ z : V3, z ∈ hSfin.toFinset → z ∈ S := fun z hz =>
+    hSfin.mem_toFinset.mp hz
+  -- the two-point Finset card
+  have hcard2 : ({u0, u1} : Finset V3).card = 2 := by
+    rw [Finset.card_insert_of_notMem (by simp [hu01])]
+    simp
+  -- the remainder Finset
+  have hinter : ({u0, u1} : Finset V3) ∩ hSfin.toFinset = {u0, u1} := by
+    ext z
+    simp
+    rintro (h | h) <;> simp [h, hu0, hu1]
+  have hrem : (hSfin.toFinset \ {u0, u1} : Finset V3).card ≤ 2 := by
+    have h1 := Finset.card_sdiff (t := hSfin.toFinset) (s := {u0, u1})
+    rw [hinter] at h1
+    omega
+  -- the null-killer for degenerate S (hull inside a 3-point affine span)
+  have hnull3 : ∀ a b c : V3, X = convexHull ℝ ({a, b, c} : Set V3) → False := by
+    intro a b c hXc
+    refine hnnX ?_
+    rw [hXc]
+    show volume (convexHull ℝ ({a, b, c} : Set V3)) = 0
+    exact p23_coplanar_affineSpan_null (p23_coplanar_triple a b c)
+      (convexHull_min (subset_affineSpan ℝ _) (AffineSubspace.convex _))
+  by_cases hT0 : (hSfin.toFinset \ {u0, u1} : Finset V3).card = 0
+  · -- the remainder is empty: S = {u0, u1}; pad with u0, u1
+    have hremE : (hSfin.toFinset \ {u0, u1} : Finset V3) = ∅ :=
+      Finset.card_eq_zero.mp hT0
+    have hS : S = ({u0, u1} : Set V3) := by
+      ext z
+      constructor
+      · intro hz
+        have hzW : z ∈ hSfin.toFinset := hSfin' z hz
+        by_cases hz01 : z = u0 ∨ z = u1
+        · rcases hz01 with h | h <;> simp [h]
+        · exact absurd (Finset.mem_sdiff.mpr ⟨hzW, by simp [hz01]⟩ : z ∈
+              (hSfin.toFinset \ {u0, u1} : Finset V3)) (by rw [hremE]; simp)
+      · rintro (rfl | rfl)
+        · exact hu0
+        · exact hu1
+    have hheq : ({u0, u1, u0, u1} : Set V3) = ({u0, u1} : Set V3) := by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    have hheq3 : ({u0, u1, u0} : Set V3) = ({u0, u1} : Set V3) := by
+      ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    have hncp : ¬ Coplanar ℝ ({u0, u1, u0, u1} : Set V3) := fun hcop =>
+      hnull3 u0 u1 u0 (by rw [hXeq, hS]; exact congrArg (convexHull ℝ) hheq3.symm)
+    refine ⟨u0, u1, ?_, hncp⟩
+    rw [hXeq, hS]
+    exact congrArg (convexHull ℝ) hheq.symm
+  · -- the remainder is nonempty: pick v
+    have hvne : (hSfin.toFinset \ {u0, u1} : Finset V3).Nonempty := by
+      apply Finset.nonempty_iff_ne_empty.mpr
+      intro hcc
+      rw [hcc] at hT0
+      exact hT0 Finset.card_empty
+    obtain ⟨v, hv⟩ := hvne
+    have hvW : v ∈ hSfin.toFinset := (Finset.mem_sdiff.mp hv).1
+    have hvS : v ∈ S := hWmem v hvW
+    by_cases hT1 : ((hSfin.toFinset \ {u0, u1}) \ {v} : Finset V3).card = 0
+    · -- the v-remainder is empty: S = {u0, u1, v}; pad with v
+      have hrem1E : ((hSfin.toFinset \ {u0, u1}) \ {v} : Finset V3) = ∅ :=
+        Finset.card_eq_zero.mp hT1
+      have hS : S = ({u0, u1, v} : Set V3) := by
+        ext z
+        constructor
+        · intro hz
+          have hzW : z ∈ hSfin.toFinset := hSfin' z hz
+          by_cases h1 : z = u0
+          · simp [h1]
+          by_cases h2 : z = u1
+          · simp [h2]
+          by_cases h3 : z = v
+          · simp [h3]
+          exfalso
+          have hzr : z ∈ (hSfin.toFinset \ {u0, u1} : Finset V3) :=
+            Finset.mem_sdiff.mpr ⟨hzW, by simp [h1, h2]⟩
+          have hzr2 : z ∈ ((hSfin.toFinset \ {u0, u1}) \ {v} : Finset V3) :=
+            Finset.mem_sdiff.mpr ⟨hzr, by simp [h3]⟩
+          rw [hrem1E] at hzr2
+          simp at hzr2
+        · rintro (rfl | rfl | rfl)
+          · exact hu0
+          · exact hu1
+          · exact hvS
+      have hheq : ({u0, u1, v, v} : Set V3) = ({u0, u1, v} : Set V3) := by
+        ext z; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      have hncp : ¬ Coplanar ℝ ({u0, u1, v, v} : Set V3) := fun hcop =>
+        hnull3 u0 u1 v (by rw [hXeq, hS])
+      refine ⟨v, v, ?_, hncp⟩
+      rw [hXeq, hS]
+      exact congrArg (convexHull ℝ) hheq.symm
+    · -- the v-remainder is nonempty: pick w; S = {u0, u1, v, w}
+      have hwne : ((hSfin.toFinset \ {u0, u1}) \ {v} : Finset V3).Nonempty := by
+        apply Finset.nonempty_iff_ne_empty.mpr
+        intro hcc
+        rw [hcc] at hT1
+        exact hT1 Finset.card_empty
+      obtain ⟨w, hw⟩ := hwne
+      have hrem1 : ((hSfin.toFinset \ {u0, u1}) \ {v} : Finset V3).card = 1 := by
+        have h1 := Finset.card_sdiff (t := (hSfin.toFinset \ {u0, u1} : Finset V3))
+          (s := {v})
+        have hvin : (({v} : Finset V3) ∩
+            (hSfin.toFinset \ {u0, u1} : Finset V3)) = {v} := by
+          ext z
+          simp only [Finset.mem_inter, Finset.mem_singleton]
+          refine ⟨fun h => h.1, fun h => ⟨h, ?_⟩⟩
+          rw [h]
+          exact hv
+        rw [hvin] at h1
+        rw [Finset.card_singleton] at h1
+        omega
+      obtain ⟨w', hw'⟩ := Finset.card_eq_one.mp hrem1
+      have hwS' : w' ∈ S := by
+        apply hWmem
+        have hz1 : w' ∈ ((hSfin.toFinset \ {u0, u1}) \ {v} : Finset V3) := by
+          rw [hw']
+          exact Finset.mem_singleton_self w'
+        exact (Finset.mem_sdiff.mp (Finset.mem_sdiff.mp hz1).1).1
+      have hS : S = ({u0, u1, v, w'} : Set V3) := by
+        ext z
+        constructor
+        · intro hz
+          have hzW : z ∈ hSfin.toFinset := hSfin' z hz
+          by_cases h1 : z = u0
+          · simp [h1]
+          by_cases h2 : z = u1
+          · simp [h2]
+          by_cases h3 : z = v
+          · simp [h3]
+          by_cases h4 : z = w'
+          · simp [h4]
+          exfalso
+          have hzr : z ∈ (hSfin.toFinset \ {u0, u1} : Finset V3) :=
+            Finset.mem_sdiff.mpr ⟨hzW, by simp [h1, h2]⟩
+          have hzr2 : z ∈ ((hSfin.toFinset \ {u0, u1}) \ {v} : Finset V3) :=
+            Finset.mem_sdiff.mpr ⟨hzr, by simp [h3]⟩
+          rw [hw'] at hzr2
+          exact absurd hzr2 (by simp [h4])
+        · rintro (rfl | rfl | rfl | rfl)
+          · exact hu0
+          · exact hu1
+          · exact hvS
+          · exact hwS'
+      refine ⟨v, w', ?_, ?_⟩
+      · rw [hXeq, hS]
+      · intro hcop
+        refine hnnX ?_
+        rw [hXeq, hS]
+        show volume (convexHull ℝ ({u0, u1, v, w'} : Set V3)) = 0
+        exact p23_coplanar_affineSpan_null hcop
+          (convexHull_min (subset_affineSpan ℝ _) (AffineSubspace.convex _))
+
+/-- GRUTOTI pivot-wave G3 (GT-5, 2026-10-10 wave; **CLOSED 2026-10-10 GT-6
+wave**, zero-sorry): the reversed k = 3/4 corner — the last genuine gap of
+the GRUTOTI chain, now filled. Hypothesis profile: X is a non-null edge cell
+whose `cellParams` index is 3 or 4 while NO forward `cellParamsD` witness
+exists. FILL ROUTE (the HL cover route, GRUTOTI.hl:2620-2650, NOT the
+permutation route the GT-5 NEEDS note anticipated): the branch is VACUOUS
+— `hwit` is refuted by manufacturing a forward witness.
+(1) trace positivity at the region threshold: with k ∈ {3,4} the canonical
+`cellParams` list gives X the SET-level hull shape (k = 3: hull of the
+trunc-2 point set ∪ {mxi}; k = 4: hull of the whole list point set), and
+`p23_rev34_hull_form` re-expresses it as X = hull{u0,u1,v,w} with
+¬Coplanar (hull ⊆ affineSpan + non-nullness), so
+`CONIC_CAP_INTER_CONVEX_HULL_4_GT_0` at (r, d) := (1, c) — the B3+B4 cone
+threshold from `p23_region_exists_c`, c ∈ (0,1) — gives
+`0 < volume (X ∩ (ball u0 1 ∩ rconeGt u0 u1 c))` (the closed-ball piece
+splits into the open-ball piece plus the sphere piece, null by
+`addHaar_sphere`);
+(2) `p23_cover_C` (the B5 cover, banked zero-sorry in the GT-4b wave) turns
+the positive trace into `X = mcell k V vl` with `vl` in the FORWARD family
+`p23Fam` (k ≤ 4, `truncateSimplex 1 vl = [u0,u1]`), via
+`p23_C_sub_rogers` + the measure pigeonhole + AJRIPQN;
+(3) `(min k 4, vl)` is then a forward `cellParamsD` witness (k ≤ 4 by
+`p23_mcell_reduce`, `initialSublist [u0,u1] vl` by `p23_pivot_perm_pack`),
+contradicting `hwit`. The frozen signature is untouched; hr/hr1/hd/hd1/hw1/
+hw3/hw4 are inert here (the cover runs at (1, c)). This zeroes the last
+proof-sorry of the file: GRUTOTI is chapter-closed on this file's level. -/
 private theorem p23_grutoti_pivot_rev_k34 (V : Set V3) (u0 u1 : V3) (r d : ℝ)
     (X : Set V3)
     (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
@@ -5425,10 +5630,146 @@ private theorem p23_grutoti_pivot_rev_k34 (V : Set V3) (u0 u1 : V3) (r d : ℝ)
       X = mcell p.1 V p.2 ∧ initialSublist [u0, u1] p.2) :
     volume.real (X ∩ grutotiConicCap u0 u1 r d) =
       volume.real (grutotiConicCap u0 u1 r d) * dihX V X (u0, u1) / (2 * Real.pi) := by
-  -- NEEDS (G3): the S₃-permutation/directed-junk-semantics gap — see the
-  -- docstring above; kept as the single precisely-bounded bookkeeping sorry
-  -- of the whole GRUTOTI chain (region✓/cell_vol✓/sum_volD✓/hcov✓).
-  sorry
+  classical
+  -- the canonical cellParams witness
+  obtain ⟨i, ul, hXw, hbarw⟩ := Set.mem_setOf_eq.mp hm
+  have hcp : (cellParams V X).1 ≤ 4 ∧ barV V 3 (cellParams V X).2 ∧
+      X = mcell (cellParams V X).1 V (cellParams V X).2 :=
+    Classical.epsilon_spec
+      (p := fun p : ℕ × List V3 => p.1 ≤ 4 ∧ barV V 3 p.2 ∧ X = mcell p.1 V p.2)
+      ⟨(min i 4, ul), by omega, hbarw, by rw [hXw, p23_mcell_reduce]⟩
+  have hXne : X ≠ ∅ := by
+    intro hcc
+    exact hnnX (by rw [hcc]; exact measure_empty)
+  -- VX-membership of the canonical list (the VX definition on a non-null cell)
+  have hu0L : u0 ∈ setOfList
+      (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2) := by
+    unfold VX at hu0v
+    simp only [if_neg hnnX] at hu0v
+    rw [if_neg (show (cellParams V X).1 ≠ 0 by omega)] at hu0v
+    exact hu0v
+  have hu1L : u1 ∈ setOfList
+      (truncateSimplex ((cellParams V X).1 - 1) (cellParams V X).2) := by
+    unfold VX at hu1v
+    simp only [if_neg hnnX] at hu1v
+    rw [if_neg (show (cellParams V X).1 ≠ 0 by omega)] at hu1v
+    exact hu1v
+  -- the k-dispatch on the canonical index (hk34); the list is abstracted as
+  -- ulc up front so that no goal mentions X inside `cellParams V X`
+  obtain ⟨ulc, huldef⟩ : ∃ ulc : List V3, ulc = (cellParams V X).2 := ⟨_, rfl⟩
+  have hcp' : X = mcell (cellParams V X).1 V ulc := by rw [huldef]; exact hcp.2.2
+  have hbarul : barV V 3 ulc := by rw [huldef]; exact hcp.2.1
+  have hlen4 : ulc.length = 4 := by rw [huldef]; exact hcp.2.1.1
+  rw [← huldef] at hu0L hu1L
+  -- the region cone threshold (B3+B4)
+  obtain ⟨c, hc0, hc1, hcW, hcHl⟩ := p23_region_exists_c V u0 u1 hs hp hu0 hu1 hne hhl
+  -- the forward-witness manufacturer: positive trace at (1, c) + cover + AJRIPQN
+  have hfinish : ∀ v w : V3, X = convexHull ℝ ({u0, u1, v, w} : Set V3) →
+      ¬ Coplanar ℝ ({u0, u1, v, w} : Set V3) → False := by
+    intro v w hXhull hcop
+    have hpos := CONIC_CAP_INTER_CONVEX_HULL_4_GT_0 u0 u1 v w 1 c (by norm_num) hc1
+      (le_of_lt hc0) hcop
+    rw [conicCap, ← hXhull] at hpos
+    -- 0 < volume.real ((closedBall u0 1 ∩ rconeGt u0 u1 c) ∩ X)
+    have hsph : volume (Metric.sphere u0 1) = 0 := by
+      exact MeasureTheory.Measure.addHaar_sphere (volume : Measure V3) u0 1
+    have hun : (Metric.closedBall u0 1 ∩ rconeGt u0 u1 c : Set V3) ∩ X
+        = (X ∩ (Metric.ball u0 1 ∩ rconeGt u0 u1 c)) ∪
+          (X ∩ (Metric.sphere u0 1 ∩ rconeGt u0 u1 c)) := by
+      rw [← Metric.ball_union_sphere]
+      ext z
+      simp only [Set.mem_inter_iff, Set.mem_union]
+      tauto
+    rw [hun] at hpos
+    have hBnull : volume (X ∩ (Metric.sphere u0 1 ∩ rconeGt u0 u1 c)) = 0 :=
+      measure_mono_null (F := Measure V3) (fun z hz => hz.2.1) hsph
+    have hApos : 0 < volume (X ∩ (Metric.ball u0 1 ∩ rconeGt u0 u1 c)) := by
+      have hsum : volume ((X ∩ (Metric.ball u0 1 ∩ rconeGt u0 u1 c)) ∪
+          (X ∩ (Metric.sphere u0 1 ∩ rconeGt u0 u1 c))) ≤
+          volume (X ∩ (Metric.ball u0 1 ∩ rconeGt u0 u1 c)) +
+            volume (X ∩ (Metric.sphere u0 1 ∩ rconeGt u0 u1 c)) :=
+        measure_union_le _ _
+      rw [hBnull, add_zero] at hsum
+      have hABne : volume ((X ∩ (Metric.ball u0 1 ∩ rconeGt u0 u1 c)) ∪
+          (X ∩ (Metric.sphere u0 1 ∩ rconeGt u0 u1 c))) ≠ 0 := by
+        intro h0
+        rw [Measure.real_def, h0] at hpos
+        simp at hpos
+      exact lt_of_lt_of_le (zero_lt_iff.mpr hABne) hsum
+    have hcover := p23_C_sub_rogers V u0 u1 hp hu0 hu1 hne hhl hs
+      (grutoti_barV V u0 u1 hs hp hu0 hu1 hne hhl) c hcW
+    have hA' : ¬ nullSet (X ∩ (Metric.ball u0 1 ∩ rconeGt u0 u1 c)) := fun h0 =>
+      ne_of_gt hApos (by show volume _ = 0; exact h0)
+    obtain ⟨k, vl, -, hbarvl, hXkvl, htrvl⟩ := p23_cover_C V u0 u1 hs hp hu0 hu1 hne c
+      hcHl hcover X hm hA'
+    exact hwit ⟨(min k 4, vl), by omega, hbarvl,
+      (by rw [hXkvl, p23_mcell_reduce]), (p23_pivot_perm_pack hbarvl htrvl).1⟩
+  rcases hk34 with hk3 | hk4
+  · -- k = 3: X = hull (setOfList (trunc 2 ulc) ∪ {mxi V ulc})
+    rw [show (cellParams V X).1 - 1 = 2 from by omega] at hu0L hu1L
+    obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V ulc hbarul
+    have hE0 : elV [v0, v1, v2, v3] 0 = v0 := rfl
+    have hE1 : elV [v0, v1, v2, v3] 1 = v1 := rfl
+    have hE2 : elV [v0, v1, v2, v3] 2 = v2 := rfl
+    have htr2f : truncateSimplex 2 ulc = [elV ulc 0, elV ulc 1, elV ulc 2] := by
+      rw [hvul, (TRUNCATE_SIMPLEX_EXPLICIT_2 v0 v1 v2 v3).2]
+      simp [hE0, hE1, hE2]
+    have hcond : hl (truncateSimplex 2 ulc) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ulc := by
+      by_contra hcc
+      have hempty : X = ∅ := by
+        rw [hcp', hk3, (MCELL_EXPLICIT 3 V ulc).2.2.2.1, mcell3, if_neg hcc]
+      exact hXne hempty
+    have hS3 : (setOfList (truncateSimplex 2 ulc) ∪ {mxi V ulc} : Set V3) ⊆
+        ({elV ulc 0, elV ulc 1, elV ulc 2, mxi V ulc} : Set V3) := by
+      intro z hz
+      rw [htr2f] at hz
+      simp only [setOfList, Set.mem_setOf_eq, List.mem_cons, List.not_mem_nil,
+        Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff] at hz ⊢
+      tauto
+    have hTfin : ({elV ulc 0, elV ulc 1, elV ulc 2, mxi V ulc} : Set V3).Finite := by simp
+    have hXeq : X = convexHull ℝ ((setOfList (truncateSimplex 2 ulc) ∪
+        {mxi V ulc} : Set V3)) := by
+      rw [hcp', hk3, (MCELL_EXPLICIT 3 V ulc).2.2.2.1, mcell3, if_pos hcond]
+    obtain ⟨v, w, hXhull, hcop⟩ := p23_rev34_hull_form hne hXeq
+      (hTfin.subset hS3) hTfin (p23_rev34_card4 hTfin) hS3
+      (Set.mem_union_left _ hu0L) (Set.mem_union_left _ hu1L) hnnX
+    exact False.elim (hfinish v w hXhull hcop)
+  · -- k = 4: X = hull (setOfList ulc)
+    rw [show (cellParams V X).1 - 1 = 3 from by omega] at hu0L hu1L
+    have htr3 : truncateSimplex 3 ulc = ulc := by
+      obtain ⟨hinit, hlen3⟩ := p23_trunc_init_len 3 ulc (by omega)
+      obtain ⟨yl, hy⟩ := hinit
+      rw [hy, List.length_append, hlen3] at hlen4
+      have hy0 : yl.length = 0 := by omega
+      rw [List.length_eq_zero_iff.mp hy0, List.append_nil] at hy
+      exact hy.symm
+    have hlist : ulc = [elV ulc 0, elV ulc 1, elV ulc 2, elV ulc 3] := by
+      obtain ⟨v0, v1, v2, v3, hvul⟩ := BARV_3_EXPLICIT V ulc hbarul
+      have hE0 : elV [v0, v1, v2, v3] 0 = v0 := rfl
+      have hE1 : elV [v0, v1, v2, v3] 1 = v1 := rfl
+      have hE2 : elV [v0, v1, v2, v3] 2 = v2 := rfl
+      have hE3 : elV [v0, v1, v2, v3] 3 = v3 := rfl
+      rw [hvul]
+      simp [hE0, hE1, hE2, hE3]
+    have hcond : hl ulc < Real.sqrt 2 := by
+      by_contra hcc
+      have hempty : X = ∅ := by
+        rw [hcp', hk4, (MCELL_EXPLICIT 4 V ulc).2.2.2.2 (Nat.le_refl 4), mcell4,
+          if_neg hcc]
+      exact hXne hempty
+    have hS4 : (setOfList ulc : Set V3) ⊆
+        ({elV ulc 0, elV ulc 1, elV ulc 2, elV ulc 3} : Set V3) := by
+      intro z hz
+      rw [hlist] at hz
+      simpa [setOfList] using hz
+    have hTfin : ({elV ulc 0, elV ulc 1, elV ulc 2, elV ulc 3} : Set V3).Finite := by simp
+    have hXeq : X = convexHull ℝ (setOfList ulc) := by
+      rw [hcp', hk4, (MCELL_EXPLICIT 4 V ulc).2.2.2.2 (Nat.le_refl 4), mcell4,
+        if_pos hcond]
+    obtain ⟨v, w, hXhull, hcop⟩ := p23_rev34_hull_form hne hXeq
+      (hTfin.subset hS4) hTfin (p23_rev34_card4 hTfin) hS4
+      (by rw [← htr3]; exact hu0L) (by rw [← htr3]; exact hu1L) hnnX
+    exact False.elim (hfinish v w hXhull hcop)
 
 /-- HL GRUTOTI.hl:7228-7400 (`sum s (\t. vol (t INTER D)) = vol D` via
 `MEASURE_NEGLIGIBLE_UNIONS_IMAGE` over the almost-disjoint cell family) plus
@@ -5865,16 +6206,18 @@ cellParamsD ε inhabited-ness).
   ε-witness (`hwit` replaces the `hjunk` bridge) — gives the identity.
 * no-forward-witness path: k = 2 is impossible — MCELL2_PERMUTE_01
   manufactures a forward witness from the reversed list (the historical
-  CAVEAT below is CLOSED for k = 2); k ∈ {3,4} is G3, frozen as the
-  standalone bookkeeping lemma `p23_grutoti_pivot_rev_k34` (the single
-  structured proof-sorry of this file, NEEDS-annotated: HL §H 7441-7958
-  S₃ permutation invariance + the cellParamsD directed-junk semantics).
+  CAVEAT below is CLOSED for k = 2); k ∈ {3,4} was G3, CLOSED 2026-10-10
+  GT-6 by `p23_grutoti_pivot_rev_k34` (zero-sorry; the HL cover route
+  GRUTOTI.hl:2620: the region cone threshold c (p23_region_exists_c) +
+  trace positivity at (1, c) (CONIC_CAP_INTER_CONVEX_HULL_4_GT_0 on the
+  SET-level hull of `p23_rev34_hull_form`) + p23_cover_C/AJRIPQN
+  manufacture a forward witness, contradicting hwit).
 CAVEAT (historical; k = 2 closed by the PERMUTE path above, k = 3/4 residue
 = G3): `cellParamsD V X [u0,u1]` may be epsilon-junk for edge cells whose
 param list carries the edge REVERSED (`[u1;u0,…]` — its wedge is a
 genuinely different set); HL §H handles this inside the case analysis, and
 the Lean fill now does too via the forward-witness case split.
-净 sorry 面：pivot 1 → 1（精确化为 G3 单点，陈述级拆出独立引理）。 -/
+净 sorry 面：pivot 1 → 1（精确化为 G3 单点）→ 0（GT-6 波 G3 填证，本文件 proof-sorry 归零）。 -/
 private theorem grutoti_pivot (V : Set V3) (u0 u1 : V3) (e : Set V3) (r d : ℝ)
     (hr : 0 < r) (hr1 : r ≤ 1) (hd : 0 < d) (hd1 : d < 1) (he : e = {u0, u1})
     (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
@@ -6014,7 +6357,8 @@ private theorem grutoti_pivot (V : Set V3) (u0 u1 : V3) (e : Set V3) (r d : ℝ)
               (p23_pivot_perm_pack hbarv htrv).1⟩ hwit
           · -- (u0 = w1, u1 = w1)：u0 = u1 矛盾
             exact absurd (hsu'.trans hsu1'.symm) hne
-      · -- k ∈ {3,4}：G3（精确记账的结构化 sorry，独立引理）
+      · -- k ∈ {3,4}：G3（GT-6 已闭：p23_grutoti_pivot_rev_k34 零 sorry，
+        -- 覆盖路线反驳 hwit）
         have hk34' : (cellParams V X).1 = 3 ∨ (cellParams V X).1 = 4 := by
           have h4le : (cellParams V X).1 ≤ 4 := hcp.1
           omega
