@@ -4797,8 +4797,611 @@ theorem XYOFCGX_concl : ∀ (V S : Set V3) (p : V3), S ⊆ V → ¬affineDepende
     ∀ u v : V3, u ∈ S → v ∈ V \ S → dist v p > dist u p := by
   sorry
 
+/-! ### 波 3a XNHPWAB1/4 杠杆件收窄件 (2026-10-08)：真证前置件 p3a_*（PA2 不可 import PA5/6/7，成环；链复制纪律同 p2g_）。
+gap_pair/tri_span/affInd_of_card/cc_pair 等均为真证；gap_tri 为骨架欠件（NEEDS 见其 docstring）。 -/
+
+/-! ### §0 dot/distance helpers -/
+
+/-- Squared distance expansion (inner bridge). -/
+private theorem p3a_dist_sq (p v : V3) :
+    dist p v ^ 2 = p ⬝ᵥ p - 2 * (p ⬝ᵥ v) + v ⬝ᵥ v := by
+  have h : inner ℝ (p - v) (p - v) = p ⬝ᵥ p - 2 * (p ⬝ᵥ v) + v ⬝ᵥ v := by
+    simp only [inner_sub_left, inner_sub_right]
+    rw [Kepler.Geom.inner_eq_dot, Kepler.Geom.inner_eq_dot, Kepler.Geom.inner_eq_dot,
+      Kepler.Geom.inner_eq_dot, dotProduct_comm v p]
+    ring
+  rw [dist_eq_norm, ← real_inner_self_eq_norm_sq, h]
+
+/-- Equidistance at `p` in dot form. -/
+private theorem p3a_equid_dot (p v w : V3) (h : dist p v = dist p w) :
+    2 * ((v - w) ⬝ᵥ p) = v ⬝ᵥ v - w ⬝ᵥ w := by
+  have e1 : dist p v ^ 2 = dist p w ^ 2 := by rw [h]
+  rw [p3a_dist_sq, p3a_dist_sq] at e1
+  have hk : inner ℝ (v - w) p = (v - w) ⬝ᵥ p := Kepler.Geom.inner_eq_dot (v - w) p
+  rw [inner_sub_left, Kepler.Geom.inner_eq_dot v p, Kepler.Geom.inner_eq_dot w p] at hk
+  rw [dotProduct_comm v p, dotProduct_comm w p] at hk
+  linarith
+
+/-- dot 交换（PA6 私件 `p6_dot_comm` 链复制）。 -/
+private theorem p3a_dot_comm (a b : V3) : a ⬝ᵥ b = b ⬝ᵥ a :=
+  dotProduct_comm a.ofLp b.ofLp
+/-- dot 对左减的线性。 -/
+private theorem p3a_dot_sub_left (x y z : V3) : (x - y) ⬝ᵥ z = x ⬝ᵥ z - y ⬝ᵥ z := by
+  rw [← Kepler.Geom.inner_eq_dot (x - y) z, inner_sub_left, Kepler.Geom.inner_eq_dot x z,
+    Kepler.Geom.inner_eq_dot y z]
+
+/-- dot 对右减的线性。 -/
+private theorem p3a_dot_sub_right (x y z : V3) : x ⬝ᵥ (y - z) = x ⬝ᵥ y - x ⬝ᵥ z := by
+  rw [dotProduct_sub]
+
+
+/-- 差向量自点积 = 距离平方。 -/
+private theorem p3a_norm_sq_diff (x y : V3) : (x - y) ⬝ᵥ (x - y) = dist x y ^ 2 := by
+  rw [p3a_dot_sub_left, p3a_dot_sub_right, p3a_dot_sub_right, p3a_dot_comm y x]
+  linarith [p3a_dist_sq x y]
+
+/-- 两点差与第三点的点积展开（距离平方差形式）。 -/
+private theorem p3a_dot_diff (x y z : V3) :
+    (x - z) ⬝ᵥ (y - z) = (dist x z ^ 2 + dist y z ^ 2 - dist x y ^ 2) / 2 := by
+  have h1 := p3a_dist_sq x z
+  have h2 := p3a_dist_sq y z
+  have h3 := p3a_dist_sq x y
+  rw [p3a_dot_sub_left, p3a_dot_sub_right, p3a_dot_sub_right, p3a_dot_comm x y,
+    p3a_dot_comm z y]
+  linarith [h1, h2, h3, p3a_dot_comm x z, p3a_dot_comm y z, p3a_dot_comm x y]
+
+/-- A vector orthogonal to all pairwise differences is orthogonal to the whole
+vector span. -/
+private theorem p3a_dot_ker (S : Set V3) (n u0 : V3) (hu0 : u0 ∈ S)
+    (h : ∀ v ∈ S, ∀ w ∈ S, (v - w) ⬝ᵥ n = 0) :
+    ∀ z ∈ vectorSpan ℝ S, z ⬝ᵥ n = 0 := by
+  have hspan : vectorSpan ℝ S = Submodule.span ℝ ((fun x => x -ᵥ u0) '' (S \ {u0}) : Set V3) :=
+    vectorSpan_eq_span_vsub_set_right_ne ℝ hu0
+  set Lm : V3 →ₗ[ℝ] ℝ :=
+    { toFun := fun z => z ⬝ᵥ n
+      map_add' := fun a b => by rw [WithLp.ofLp_add, add_dotProduct]
+      map_smul' := fun c a => by rw [WithLp.ofLp_smul, smul_dotProduct, RingHom.id_apply,
+        smul_eq_mul] }
+  have hle : ((fun x => x -ᵥ u0) '' (S \ {u0}) : Set V3) ⊆
+      SetLike.coe (LinearMap.ker Lm) := by
+    rintro y ⟨x, hxd, rfl⟩
+    obtain ⟨hxS, hxne⟩ := (Set.mem_sdiff x).mp hxd
+    simp only [SetLike.mem_coe, LinearMap.mem_ker]
+    exact h x hxS u0 hu0
+  intro z hz
+  rw [hspan, Submodule.mem_span] at hz
+  have hker : z ∈ LinearMap.ker Lm := hz _ hle
+  simp only [LinearMap.mem_ker] at hker
+  exact hker
+
+/-! ### §1 list/truncate kit (chain copies of the PA2/PA5 private originals) -/
+
+private theorem p3a_INIT_APPEND (xl vl : List V3) : initialSublist xl (xl ++ vl) := ⟨vl, rfl⟩
+
+private theorem p3a_INIT_REFL (xl : List V3) : initialSublist xl xl := ⟨[], by simp⟩
+
+private theorem p3a_INIT_TRANS {xl yl zl : List V3} (a : initialSublist xl yl)
+    (b : initialSublist yl zl) : initialSublist xl zl := by
+  obtain ⟨y1, hy1⟩ := a
+  obtain ⟨y2, hy2⟩ := b
+  exact ⟨y1 ++ y2, by rw [hy2, hy1, List.append_assoc]⟩
+
+private theorem p3a_INIT_UNIQUE {xl zl : List V3} (h1 : initialSublist xl zl)
+    (h2 : xl.length = zl.length) : xl = zl := by
+  obtain ⟨yl, hy⟩ := h1
+  have h3 : zl.length = xl.length + yl.length := by rw [hy, List.length_append]
+  have h4 : yl = [] := List.length_eq_zero_iff.mp (by omega)
+  rw [hy, h4, List.append_nil]
+
+private theorem p3a_INIT_UNIQUE2 {xl zl ul : List V3} (h1 : initialSublist xl ul)
+    (h2 : initialSublist zl ul) (h3 : xl.length = zl.length) : xl = zl := by
+  obtain ⟨y1, hy1⟩ := h1
+  obtain ⟨y2, hy2⟩ := h2
+  have e1 : xl = (xl ++ y1).take xl.length := by
+    rw [List.take_append_of_le_length (by omega), List.take_length]
+  have e2 : zl = (zl ++ y2).take zl.length := by
+    rw [List.take_append_of_le_length (by omega), List.take_length]
+  rw [e1, e2, ← hy1, ← hy2, h3]
+
+private theorem p3a_TRUNC_WIT (j : ℕ) (ul : List V3) (h : j + 1 ≤ ul.length) :
+    (ul.take (j + 1)).length = j + 1 ∧ initialSublist (ul.take (j + 1)) ul := by
+  refine ⟨by rw [List.length_take]; omega, ?_⟩
+  have key : initialSublist (ul.take (j + 1))
+      (ul.take (j + 1) ++ ul.drop (j + 1)) := p3a_INIT_APPEND _ _
+  rwa [List.take_append_drop (j + 1) ul] at key
+
+private theorem p3a_TRUNC_LEN (j : ℕ) (ul : List V3) (h : j + 1 ≤ ul.length) :
+    (truncateSimplex j ul).length = j + 1 :=
+  (Classical.epsilon_spec
+    (p := fun vl : List V3 => vl.length = j + 1 ∧ initialSublist vl ul)
+    ⟨ul.take (j + 1), p3a_TRUNC_WIT j ul h⟩).1
+
+private theorem p3a_TRUNC_INIT (j : ℕ) (ul : List V3) (h : j + 1 ≤ ul.length) :
+    initialSublist (truncateSimplex j ul) ul :=
+  (Classical.epsilon_spec
+    (p := fun vl : List V3 => vl.length = j + 1 ∧ initialSublist vl ul)
+    ⟨ul.take (j + 1), p3a_TRUNC_WIT j ul h⟩).2
+
+private theorem p3a_TRUNC_REFL (k : ℕ) (ul : List V3) (h : ul.length = k + 1) :
+    truncateSimplex k ul = ul :=
+  p3a_INIT_UNIQUE (p3a_TRUNC_INIT k ul (by omega)) (by rw [p3a_TRUNC_LEN k ul (by omega), h])
+
+private theorem p3a_TRUNC_0 (ul : List V3) (h : 1 ≤ ul.length) :
+    truncateSimplex 0 ul = [hdV ul] := by
+  rcases ul with _ | ⟨a, t⟩
+  · simp at h
+  · have hEq : truncateSimplex 0 (a :: t) = [a] :=
+      p3a_INIT_UNIQUE2 (p3a_TRUNC_INIT 0 (a :: t) (by simp)) ⟨t, rfl⟩
+        (by rw [p3a_TRUNC_LEN 0 (a :: t) (by simp)]; rfl)
+    rw [hEq]
+    simp [hdV]
+
+private theorem p3a_TRUNC_TRUNC (ul : List V3) (i j : ℕ) (hij : i ≤ j)
+    (hj : j + 1 ≤ ul.length) :
+    truncateSimplex i (truncateSimplex j ul) = truncateSimplex i ul := by
+  have h1 : (truncateSimplex i (truncateSimplex j ul)).length = i + 1 :=
+    p3a_TRUNC_LEN i _ (by rw [p3a_TRUNC_LEN j ul hj]; omega)
+  have h2 : initialSublist (truncateSimplex i (truncateSimplex j ul)) (truncateSimplex j ul) :=
+    p3a_TRUNC_INIT i _ (by rw [p3a_TRUNC_LEN j ul hj]; omega)
+  have h3 : initialSublist (truncateSimplex i (truncateSimplex j ul)) ul :=
+    p3a_INIT_TRANS h2 (p3a_TRUNC_INIT j ul hj)
+  exact p3a_INIT_UNIQUE2 h3 (p3a_TRUNC_INIT i ul (by omega))
+    (by rw [h1, p3a_TRUNC_LEN i ul (by omega)])
+
+private theorem p3a_HD_TRUNC (ul : List V3) (j : ℕ) (h : j + 1 ≤ ul.length) :
+    hdV (truncateSimplex j ul) = hdV ul := by
+  obtain ⟨yl, hyl⟩ := p3a_TRUNC_INIT j ul h
+  have hl1 : (truncateSimplex j ul).length = j + 1 := p3a_TRUNC_LEN j ul h
+  cases hl : truncateSimplex j ul with
+  | nil => rw [hl] at hl1; simp at hl1
+  | cons h1 t1 =>
+    rw [hl] at hyl
+    show hdV (h1 :: t1) = hdV ul
+    rw [hyl]
+    simp [hdV]
+
+private theorem p3a_SOLT_SUBSET {xl zl : List V3} (h : initialSublist xl zl) :
+    setOfList xl ⊆ setOfList zl := by
+  obtain ⟨yl, hy⟩ := h
+  intro x hx
+  have hx' : x ∈ xl := by simpa [setOfList] using hx
+  rw [hy]
+  exact List.mem_append.mpr (Or.inl hx')
+
+private theorem p3a_SOLT_TRUNC_SUBSET (ul : List V3) (k : ℕ) (h : k + 1 ≤ ul.length) :
+    setOfList (truncateSimplex k ul) ⊆ setOfList ul :=
+  p3a_SOLT_SUBSET (p3a_TRUNC_INIT k ul h)
+
+private theorem p3a_TRUNC_BARV (V : Set V3) (j k : ℕ) (ul : List V3) (hbar : barV V k ul)
+    (hjk : j ≤ k) : barV V j (truncateSimplex j ul) := by
+  have hlen : ul.length = k + 1 := hbar.1
+  refine ⟨by rw [p3a_TRUNC_LEN j ul (by omega)], ?_⟩
+  intro w hw
+  exact hbar.2 w ⟨p3a_INIT_TRANS hw.1 (p3a_TRUNC_INIT j ul (by omega)), hw.2⟩
+
+private theorem p3a_BARV_SUBSET (V : Set V3) (k : ℕ) (ul : List V3) (hbar : barV V k ul) :
+    setOfList ul ⊆ V :=
+  (hbar.2 ul ⟨p3a_INIT_REFL ul, by rw [hbar.1]; omega⟩).2.1
+
+private theorem p3a_BARV_DIM_VL (V : Set V3) (k : ℕ) (ul : List V3) (hbar : barV V k ul) :
+    affDim (voronoiList V ul) = 3 - k := by
+  obtain ⟨h5, hsub, hdim⟩ := hbar.2 ul ⟨p3a_INIT_REFL ul, by rw [hbar.1]; omega⟩
+  have hlen : (ul.length : ℤ) = (k : ℤ) + 1 := by rw [hbar.1]; push_cast; ring
+  have hnn : (0:ℤ) ≤ affDim (voronoiList V ul) := by linarith [hdim]
+  have hdim2 : affDim (voronoiList V ul) = 4 - (ul.length : ℤ) := by linarith
+  push_cast
+  linarith
+
+private theorem p3a_OMEGA_LIST_N_LEMMA (V : Set V3) (ul : List V3) (k i : ℕ)
+    (h : k + i + 1 ≤ ul.length) :
+    omegaListN V ul k = omegaListN V (truncateSimplex (k + i) ul) k := by
+  induction k generalizing i with
+  | zero =>
+    simp only [Nat.zero_add]
+    exact (p3a_HD_TRUNC ul i (by omega)).symm
+  | succ k ih =>
+    have h' : k + (i + 1) + 1 ≤ ul.length := by omega
+    have h2 := ih (i + 1) h'
+    have hshift : k + (i + 1) = k + 1 + i := by omega
+    rw [hshift] at h2
+    have htt := p3a_TRUNC_TRUNC ul (k + 1) (k + 1 + i) (by omega) (by omega)
+    show closestPoint (voronoiList V (truncateSimplex (k + 1) ul)) (omegaListN V ul k) =
+      closestPoint (voronoiList V (truncateSimplex (k + 1) (truncateSimplex (k + 1 + i) ul)))
+        (omegaListN V (truncateSimplex (k + 1 + i) ul) k)
+    rw [htt, h2]
+
+/-! ### §2 circumcenter small kit -/
+
+private theorem p3a_CC_SING (x : V3) : circumcenter {x} = x := by
+  have hspec := Classical.epsilon_spec
+    (p := fun v : V3 => v ∈ (affineSpan ℝ ({x} : Set V3) : Set V3) ∧
+      ∃ c : ℝ, ∀ w ∈ ({x} : Set V3), c = dist v w)
+    ⟨x, (AffineSubspace.mem_affineSpan_singleton ℝ V3).2 rfl, 0, by simp⟩
+  exact (AffineSubspace.mem_affineSpan_singleton ℝ V3).mp
+    (SetLike.mem_coe.mpr hspec.1)
+
+/-- port of PA2 private `radVPair_p2`. -/
+private theorem p3a_radV_pair (u v : V3) (huv : u ≠ v) :
+    radV {u, v} = dist u v / 2 := by
+  have hmem : AffineMap.lineMap (k := ℝ) u v (1 / 2) ∈ (affineSpan ℝ {u, v} : Set V3) :=
+    AffineMap.lineMap_mem_affineSpan_pair (1 / 2) u v
+  have hmd1 : dist u v / 2 = dist (AffineMap.lineMap (k := ℝ) u v (1 / 2)) u := by
+    rw [dist_lineMap_left]
+    norm_num
+    ring
+  have hmd2 : dist u v / 2 = dist (AffineMap.lineMap (k := ℝ) u v (1 / 2)) v := by
+    rw [dist_lineMap_right]
+    norm_num
+    ring
+  have hwit : ∃ y : V3, y ∈ (affineSpan ℝ {u, v} : Set V3) ∧
+      ∃ c : ℝ, ∀ w ∈ ({u, v} : Set V3), c = dist y w := by
+    refine ⟨AffineMap.lineMap (k := ℝ) u v (1 / 2), hmem, dist u v / 2, fun w hw => ?_⟩
+    rcases Set.mem_insert_iff.mp hw with rfl | rfl
+    · exact hmd1
+    · exact hmd2
+  have hcc : (fun v0 : V3 => v0 ∈ (affineSpan ℝ {u, v} : Set V3) ∧
+      ∃ c : ℝ, ∀ w ∈ ({u, v} : Set V3), c = dist v0 w) (circumcenter {u, v}) :=
+    Classical.epsilon_spec hwit
+  obtain ⟨hccmem, c₀, hc₀⟩ := hcc
+  have hu : u ∈ (affineSpan ℝ {u, v} : Set V3) := mem_affineSpan (k := ℝ) (by simp)
+  have hdir : circumcenter {u, v} - u ∈ vectorSpan ℝ {u, v} := by
+    have h5 : circumcenter {u, v} -ᵥ u ∈ (affineSpan ℝ {u, v}).direction :=
+      AffineSubspace.vsub_mem_direction hccmem hu
+    rwa [direction_affineSpan] at h5
+  rw [vectorSpan_pair (k := ℝ) u v] at hdir
+  obtain ⟨t, ht⟩ := Submodule.mem_span_singleton.mp hdir
+  have ht' : t • (u - v) = circumcenter {u, v} - u := ht
+  have hduv : dist u v ≠ 0 := fun hzz => huv (dist_eq_zero.mp hzz)
+  have h1 : |t| * dist u v = dist (circumcenter {u, v}) u := by
+    rw [dist_eq_norm, dist_eq_norm, ← ht', norm_smul, Real.norm_eq_abs]
+  have hv2 : circumcenter {u, v} - v = (t + 1) • (u - v) := by
+    rw [show (t + 1) • (u - v) = t • (u - v) + (u - v) from by rw [add_smul, one_smul], ht']
+    abel
+  have h2 : |t + 1| * dist u v = dist (circumcenter {u, v}) v := by
+    rw [dist_eq_norm, dist_eq_norm, hv2, norm_smul, Real.norm_eq_abs]
+  have habs : |t| = |t + 1| := by
+    have h3 : |t| * dist u v = |t + 1| * dist u v := by
+      rw [h1, h2, ← hc₀ _ (Set.mem_insert u {v}),
+        ← hc₀ _ (Set.mem_insert_of_mem _ (by simp))]
+    exact mul_right_cancel₀ hduv h3
+  have hhalf : t = -(1 / 2) := by
+    rcases abs_eq_abs.mp habs with h | h
+    · linarith
+    · linarith
+  have hfin : dist (circumcenter {u, v}) u = dist u v / 2 := by
+    rw [← h1, hhalf, abs_of_neg (show (0 : ℝ) > -(1 / 2) from by norm_num)]
+    ring
+  have hQ : (fun c : ℝ => ∀ w ∈ ({u, v} : Set V3),
+      c = dist (circumcenter {u, v}) w) (radV {u, v}) :=
+    Classical.epsilon_spec
+      (p := fun c : ℝ => ∀ w ∈ ({u, v} : Set V3), c = dist (circumcenter {u, v}) w)
+      ⟨c₀, hc₀⟩
+  rw [hQ u (Set.mem_insert u {v})]
+  exact hfin
+
+private theorem p3a_SOLT_PAIR (u v : V3) : setOfList [u, v] = ({u, v} : Set V3) := by
+  ext b
+  simp [setOfList]
+
+private theorem p3a_hl_pair (u v : V3) (huv : u ≠ v) : hl [u, v] = dist u v / 2 := by
+  show radV (setOfList [u, v]) = dist u v / 2
+  rw [p3a_SOLT_PAIR]
+  exact p3a_radV_pair u v huv
+
+/-! ### §3 voronoi-list equidistance -/
+
+private theorem p3a_VL_EQDIST (V : Set V3) (ul : List V3) (y : V3)
+    (hsub : setOfList ul ⊆ V) (h1 : 1 ≤ ul.length) (hy : y ∈ voronoiList V ul) :
+    ∀ u ∈ setOfList ul, dist y (hdV ul) = dist y u := by
+  have hhd : hdV ul ∈ setOfList ul := by
+    rcases ul with _ | ⟨a, t⟩
+    · simp at h1
+    · simp [setOfList, hdV]
+  have hx2 : y ∈ ⋂₀ {voronoiClosed V v | v ∈ setOfList ul} := hy
+  have hx' : ∀ w ∈ setOfList ul, ∀ w' ∈ V, dist y w ≤ dist y w' := by
+    intro w hw w' hw'
+    have hzw : y ∈ voronoiClosed V w := hx2 _ (by simpa using ⟨w, hw, rfl⟩)
+    exact hzw w' hw'
+  intro u hu
+  exact le_antisymm (hx' (hdV ul) hhd u (hsub hu)) (hx' u hu (hdV ul) (hsub hhd))
+
+/-! ### §4 Pythagoras / circumradius monotonicity -/
+
+private theorem p3a_PYTH (S T : Set V3) (hTS : T ⊆ S) (hneT : T.Nonempty)
+    (hindS : ¬affineDependent S) (hindT : ¬affineDependent T) :
+    radV S ^ 2 = radV T ^ 2 + dist (circumcenter T) (circumcenter S) ^ 2 ∧
+      0 ≤ radV S ∧ 0 ≤ radV T := by
+  obtain ⟨u0, hu0T⟩ := id hneT
+  have hu0S : u0 ∈ S := hTS hu0T
+  have hS : ∀ w ∈ S, radV S = dist (circumcenter S) w := OAPVION2_concl S hindS
+  have hT : ∀ w ∈ T, radV T = dist (circumcenter T) w := OAPVION2_concl T hindT
+  have horth : ∀ v ∈ T, ∀ w ∈ T,
+      (v - w) ⬝ᵥ (circumcenter S - circumcenter T) = 0 := by
+    intro v hv w hw
+    have e1 : dist (circumcenter S) v = dist (circumcenter S) w := by
+      rw [← hS v (hTS hv), ← hS w (hTS hw)]
+    have e2 : dist (circumcenter T) v = dist (circumcenter T) w := by
+      rw [← hT v hv, ← hT w hw]
+    have q1 : 2 * ((v - w) ⬝ᵥ circumcenter S) = v ⬝ᵥ v - w ⬝ᵥ w := p3a_equid_dot _ _ _ e1
+    have q2 : 2 * ((v - w) ⬝ᵥ circumcenter T) = v ⬝ᵥ v - w ⬝ᵥ w := p3a_equid_dot _ _ _ e2
+    show (v - w) ⬝ᵥ (circumcenter S - circumcenter T) = 0
+    have hk : inner ℝ (v - w) (circumcenter S - circumcenter T)
+        = (v - w) ⬝ᵥ (circumcenter S - circumcenter T) :=
+      Kepler.Geom.inner_eq_dot _ _
+    rw [inner_sub_right] at hk
+    rw [Kepler.Geom.inner_eq_dot (v - w) (circumcenter S),
+      Kepler.Geom.inner_eq_dot (v - w) (circumcenter T)] at hk
+    linarith
+  have hspanT : circumcenter T - u0 ∈ vectorSpan ℝ T := by
+    have hccT : circumcenter T ∈ (affineSpan ℝ T : Set V3) :=
+      OAPVION1_concl T (Set.nonempty_iff_ne_empty.mp hneT) hindT
+    have : circumcenter T -ᵥ u0 ∈ (affineSpan ℝ T).direction :=
+      AffineSubspace.vsub_mem_direction hccT (mem_affineSpan (k := ℝ) hu0T)
+    rwa [direction_affineSpan] at this
+  have hdot0 : (circumcenter T - u0) ⬝ᵥ (circumcenter S - circumcenter T) = 0 :=
+    p3a_dot_ker T _ u0 hu0T horth _ hspanT
+  have hexp : radV S ^ 2 = radV T ^ 2 + dist (circumcenter T) (circumcenter S) ^ 2 := by
+    have h1 : radV S = dist (circumcenter S) u0 := hS u0 hu0S
+    have h2 : radV T = dist (circumcenter T) u0 := hT u0 hu0T
+    rw [h1, h2]
+    have hsplit : circumcenter S - u0
+        = (circumcenter S - circumcenter T) + (circumcenter T - u0) := by simp
+    have hnsq : dist (circumcenter S) u0 ^ 2 =
+        dist (circumcenter T) u0 ^ 2 + dist (circumcenter T) (circumcenter S) ^ 2 := by
+      rw [dist_eq_norm, dist_eq_norm, dist_eq_norm, hsplit, norm_add_sq_real]
+      rw [real_inner_comm (circumcenter T - u0) (circumcenter S - circumcenter T)]
+      rw [show inner ℝ (circumcenter T - u0) (circumcenter S - circumcenter T)
+          = ((circumcenter T - u0) ⬝ᵥ (circumcenter S - circumcenter T) : ℝ) from
+        Kepler.Geom.inner_eq_dot _ _]
+      rw [hdot0]
+      rw [norm_sub_rev (circumcenter S) (circumcenter T)]
+      ring
+    rw [hnsq]
+  have h0S : 0 ≤ radV S := by rw [hS u0 hu0S]; exact dist_nonneg
+  have h0T : 0 ≤ radV T := by rw [hT u0 hu0T]; exact dist_nonneg
+  exact ⟨hexp, h0S, h0T⟩
+
+private theorem p3a_RADV_MONO (S T : Set V3) (hTS : T ⊆ S) (hneT : T.Nonempty)
+    (hindS : ¬affineDependent S) (hindT : ¬affineDependent T) : radV T ≤ radV S := by
+  have h := p3a_PYTH S T hTS hneT hindS hindT
+  have h1 : radV T ^ 2 ≤ radV S ^ 2 := by
+    rw [h.1]; linarith [sq_nonneg (dist (circumcenter T) (circumcenter S))]
+  have h2 : 0 ≤ radV T := h.2.2
+  have h3 : 0 ≤ radV S := h.2.1
+  nlinarith
+
+/-! ### §5 XYOFCGX gap pieces (packing circumcenter-gap for |S| ≤ 3) -/
+
+/-- pack3.hl:33 `PACKING_GE`（Statement.Packing.dist_ge_two 复述形）。 -/
+private theorem p3a_packing_ge (V : Set V3) (hV : Packing V) (x y : V3)
+    (hx : x ∈ V) (hy : y ∈ V) (hne : x ≠ y) : 2 ≤ dist x y :=
+  hV.dist_ge_two hx hy hne
+
+/-- card = k+1 + affDim = k + 有限 ⟹ 仿射无关（桥的三用形：pair/tri/tet）。 -/
+private theorem p3a_affInd_of_card (S : Set V3) (hne : S.Nonempty) (hfin : S.Finite)
+    (k : ℕ) (hcard : Nat.card S = k + 1) (hdim : affDim S = (k : ℤ)) :
+    ¬affineDependent S := by
+  intro hdep
+  haveI : Finite ↥S := hfin.to_subtype
+  haveI : FiniteDimensional ℝ V3 := inferInstance
+  haveI : Fintype ↥S := Fintype.ofFinite ↥S
+  have hco : Set.range (fun x : S => (x : V3)) = S := by
+    ext z
+    constructor
+    · rintro ⟨x, rfl⟩
+      exact x.2
+    · intro hz
+      exact ⟨⟨z, hz⟩, rfl⟩
+  have hne' : S ≠ ∅ := Set.nonempty_iff_ne_empty.mp hne
+  have heq : affDim S = (Module.finrank ℝ (vectorSpan ℝ S) : ℤ) := by
+    rw [affDim, if_neg hne']
+  have hfr' : (k : ℤ) = (Module.finrank ℝ
+      (vectorSpan ℝ (Set.range fun x : S => (x : V3))) : ℤ) := by
+    rw [← hdim, heq, hco]
+  have hcardF : Fintype.card ↥S = k + 1 := by
+    rw [← Nat.card_eq_fintype_card]
+    exact hcard
+  exact hdep ((affineIndependent_iff_finrank_vectorSpan_eq ℝ (fun x : S => (x : V3))
+    hcardF).mpr (Int.ofNat.inj hfr').symm)
+
+/-- pair 情形：circumcenter 是中点，且 radV = 半距。 -/
+private theorem p3a_cc_pair (a b : V3) (hab : a ≠ b) :
+    circumcenter ({a, b} : Set V3) = a + (1 / 2 : ℝ) • (b - a) ∧
+      radV {a, b} = dist a b / 2 := by
+  have hmem : AffineMap.lineMap (k := ℝ) a b (1 / 2) ∈ (affineSpan ℝ {a, b} : Set V3) :=
+    AffineMap.lineMap_mem_affineSpan_pair (1 / 2) a b
+  have hmd1 : dist a b / 2 = dist (AffineMap.lineMap (k := ℝ) a b (1 / 2)) a := by
+    rw [dist_lineMap_left]
+    norm_num
+    ring
+  have hmd2 : dist a b / 2 = dist (AffineMap.lineMap (k := ℝ) a b (1 / 2)) b := by
+    rw [dist_lineMap_right]
+    norm_num
+    ring
+  have hwit : ∃ y : V3, y ∈ (affineSpan ℝ {a, b} : Set V3) ∧
+      ∃ c : ℝ, ∀ w ∈ ({a, b} : Set V3), c = dist y w :=
+    ⟨AffineMap.lineMap (k := ℝ) a b (1 / 2), hmem, dist a b / 2, fun w hw => by
+      rcases Set.mem_insert_iff.mp hw with rfl | rfl
+      · exact hmd1
+      · exact hmd2⟩
+  have hcc : (fun v0 : V3 => v0 ∈ (affineSpan ℝ {a, b} : Set V3) ∧
+      ∃ c : ℝ, ∀ w ∈ ({a, b} : Set V3), c = dist v0 w) (circumcenter {a, b}) :=
+    Classical.epsilon_spec hwit
+  obtain ⟨hccmem, c₀, hc₀⟩ := hcc
+  have hu : a ∈ (affineSpan ℝ {a, b} : Set V3) := mem_affineSpan (k := ℝ) (by simp)
+  have hdir : circumcenter {a, b} - a ∈ vectorSpan ℝ {a, b} := by
+    have h5 : circumcenter {a, b} -ᵥ a ∈ (affineSpan ℝ {a, b}).direction :=
+      AffineSubspace.vsub_mem_direction hccmem hu
+    rwa [direction_affineSpan] at h5
+  rw [vectorSpan_pair (k := ℝ) a b] at hdir
+  obtain ⟨t, ht⟩ := Submodule.mem_span_singleton.mp hdir
+  have ht' : t • (a - b) = circumcenter {a, b} - a := ht
+  have hduv : dist a b ≠ 0 := fun hzz => hab (dist_eq_zero.mp hzz)
+  have h1 : |t| * dist a b = dist (circumcenter {a, b}) a := by
+    rw [dist_eq_norm, dist_eq_norm, ← ht', norm_smul, Real.norm_eq_abs]
+  have hv2 : circumcenter {a, b} - b = (t + 1) • (a - b) := by
+    rw [show (t + 1) • (a - b) = t • (a - b) + (a - b) from by rw [add_smul, one_smul], ht']
+    abel
+  have h2 : |t + 1| * dist a b = dist (circumcenter {a, b}) b := by
+    rw [dist_eq_norm, dist_eq_norm, hv2, norm_smul, Real.norm_eq_abs]
+  have habs : |t| = |t + 1| := by
+    have h3 : |t| * dist a b = |t + 1| * dist a b := by
+      rw [h1, h2, ← hc₀ _ (Set.mem_insert a {b}),
+        ← hc₀ _ (Set.mem_insert_of_mem _ (by simp))]
+    exact mul_right_cancel₀ hduv h3
+  have hhalf : t = -(1 / 2) := by
+    rcases abs_eq_abs.mp habs with h | h
+    · linarith
+    · linarith
+  refine ⟨?_, ?_⟩
+  · have hccpos : circumcenter {a, b} = a + t • (a - b) := by
+      rw [show circumcenter {a, b} = (circumcenter {a, b} - a) + a from by abel, ht', add_comm]
+    rw [hccpos, hhalf]
+    simp [← smul_neg, neg_sub]
+  · have hQ : (fun c : ℝ => ∀ w ∈ ({a, b} : Set V3),
+        c = dist (circumcenter {a, b}) w) (radV {a, b}) :=
+      Classical.epsilon_spec
+        (p := fun c : ℝ => ∀ w ∈ ({a, b} : Set V3), c = dist (circumcenter {a, b}) w)
+        ⟨c₀, hc₀⟩
+    rw [hQ a (Set.mem_insert a {b}), ← h1, hhalf,
+      abs_of_neg (show (0 : ℝ) > -(1 / 2) from by norm_num)]
+    ring
+
+/-- pair 情形 gap（Apollonius：2 点版 XYOFCGX）。 -/
+private theorem p3a_gap_pair (V : Set V3) (a b p w : V3) (hV : Packing V)
+    (ha : a ∈ V) (hb : b ∈ V) (hab : a ≠ b) (hccp : circumcenter ({a, b} : Set V3) = p)
+    (hind : ¬affineDependent ({a, b} : Set V3)) (hr : radV {a, b} < Real.sqrt 2)
+    (hw : w ∈ V) (hwa : w ≠ a) (hwb : w ≠ b) :
+    ∀ u ∈ ({a, b} : Set V3), dist w p > dist u p := by
+  have hcc := (p3a_cc_pair a b hab).2
+  have hmid : p = a + (1 / 2 : ℝ) • (b - a) := by rw [← hccp]; exact (p3a_cc_pair a b hab).1
+  have hO2 : ∀ z ∈ ({a, b} : Set V3), dist p z = radV {a, b} := by
+    intro z hz
+    rw [← hccp]
+    exact (OAPVION2_concl _ hind z hz).symm
+  have h2w : (2 : ℝ) • (w - p) = (w - a) + (w - b) := by
+    have hstep : ∀ z : V3, (2 : ℝ) • (z - p) = (z - a) + (z - b) := by
+      intro z
+      rw [hmid, smul_sub, smul_add, smul_smul,
+        show ((2:ℝ) * (1 / 2:ℝ)) = 1 from by norm_num, one_smul]
+      simp only [two_smul]
+      abel
+    exact hstep w
+  have hsplit : w - p = (1 / 2 : ℝ) • ((w - a) + (w - b)) := by
+    rw [← h2w, smul_smul, show ((1:ℝ) / 2 * 2) = 1 from by norm_num, one_smul]
+  have hia : inner ℝ (w - a) (w - b) = w ⬝ᵥ w - w ⬝ᵥ a - w ⬝ᵥ b + a ⬝ᵥ b := by
+    simp only [inner_sub_left, inner_sub_right]
+    rw [Kepler.Geom.inner_eq_dot, Kepler.Geom.inner_eq_dot, Kepler.Geom.inner_eq_dot,
+      Kepler.Geom.inner_eq_dot, p3a_dot_comm a w]
+    ring
+  have hva : 2 ≤ dist w a := p3a_packing_ge V hV w a hw ha hwa
+  have hvb : 2 ≤ dist w b := p3a_packing_ge V hV w b hw hb hwb
+  have hwa2 : 4 ≤ dist w a ^ 2 := by nlinarith
+  have hwb2 : 4 ≤ dist w b ^ 2 := by nlinarith
+  have t1 : (w ⬝ᵥ w - 2 * (w ⬝ᵥ a) + a ⬝ᵥ a) = dist w a ^ 2 := (p3a_dist_sq w a).symm
+  have t2 : (w ⬝ᵥ w - 2 * (w ⬝ᵥ b) + b ⬝ᵥ b) = dist w b ^ 2 := (p3a_dist_sq w b).symm
+  have t3 : (a ⬝ᵥ a - 2 * (a ⬝ᵥ b) + b ⬝ᵥ b) = dist a b ^ 2 := (p3a_dist_sq a b).symm
+  have hnsq : dist w p ^ 2 =
+      (dist w a ^ 2 + dist w b ^ 2) / 2 - dist a b ^ 2 / 4 := by
+    rw [dist_eq_norm, hsplit, norm_smul, Real.norm_eq_abs,
+      abs_of_pos (show (0 : ℝ) < 1 / 2 from by norm_num), mul_pow, norm_add_sq_real, hia,
+      (dist_eq_norm w a).symm, (dist_eq_norm w b).symm]
+    linarith [t1, t2, t3]
+  have hR : 0 ≤ radV {a, b} := by rw [hcc]; exact div_nonneg dist_nonneg (by norm_num)
+  have hab2 : dist a b ^ 2 = 4 * (radV {a, b}) ^ 2 := by
+    have h2r : dist a b = 2 * radV {a, b} := by linarith
+    rw [h2r]
+    ring
+  have hr2 : (radV {a, b}) ^ 2 < 2 := by
+    by_contra hcon
+    push_neg at hcon
+    have h2 : (Real.sqrt 2) ^ 2 ≤ (radV {a, b}) ^ 2 := by
+      rw [Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)]
+      exact hcon
+    have hkey : (Real.sqrt 2) ^ 2 = 2 := Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)
+    nlinarith [hr, hR, hkey]
+  have hwp2 : 2 < dist w p ^ 2 := by rw [hnsq]; nlinarith
+  have hp0 : 0 ≤ dist w p := dist_nonneg
+  intro u hu
+  rcases Set.mem_insert_iff.mp hu with heq | hua
+  · have hu1 : u = a := heq
+    have hup : dist u p = radV {a, b} := by
+      rw [hu1, dist_comm]
+      exact hO2 a (Set.mem_insert a {b})
+    have hna : 0 ≤ dist u p := dist_nonneg
+    have hu2 : dist u p ^ 2 < 2 := by rw [hup]; exact hr2
+    by_contra hcon
+    push_neg at hcon
+    have h2 : dist w p ^ 2 ≤ dist u p ^ 2 := by nlinarith [hcon, hp0, hna]
+    linarith [h2, hwp2, hu2]
+  · have hu1 : u = b := Set.mem_singleton_iff.mp hua
+    have hup : dist u p = radV {a, b} := by
+      rw [hu1, dist_comm]
+      exact hO2 b (Set.mem_insert_of_mem _ (Set.mem_singleton_iff.mpr rfl))
+    have hna : 0 ≤ dist u p := dist_nonneg
+    have hu2 : dist u p ^ 2 < 2 := by rw [hup]; exact hr2
+    by_contra hcon
+    push_neg at hcon
+    have h2 : dist w p ^ 2 ≤ dist u p ^ 2 := by nlinarith [hcon, hp0, hna]
+    linarith [h2, hwp2, hu2]
+
+/-- 三点集的仿射基（p - c 的两系数分解）。 -/
+private theorem p3a_tri_span (a b c p : V3)
+    (hp : p ∈ (affineSpan ℝ ({a, b, c} : Set V3) : Set V3)) :
+    ∃ α β : ℝ, p - c = α • (a - c) + β • (b - c) := by
+  have hdir : p - c ∈ vectorSpan ℝ ({a, b, c} : Set V3) := by
+    have h5 : p -ᵥ c ∈ (affineSpan ℝ {a, b, c}).direction :=
+      AffineSubspace.vsub_mem_direction hp (mem_affineSpan (k := ℝ)
+        (Set.mem_insert_of_mem _ (Set.mem_insert_of_mem _ (by simp))))
+    rwa [direction_affineSpan] at h5
+  have hcmem : c ∈ ({a, b, c} : Set V3) := by simp
+  rw [vectorSpan_eq_span_vsub_set_right_ne ℝ hcmem] at hdir
+  have himg : ((fun x => x -ᵥ c) '' (({a, b, c} : Set V3) \ {c}) : Set V3) ⊆ {a - c, b - c} := by
+    rintro y ⟨x, hx, rfl⟩
+    have hx2 : (x = a ∨ x = b ∨ x = c) ∧ x ≠ c := by
+      simp only [Set.mem_sdiff, Set.mem_insert_iff] at hx
+      exact hx
+    rcases hx2.1 with rfl | rfl | rfl
+    · exact Or.inl rfl
+    · exact Or.inr rfl
+    · exact absurd rfl hx2.2
+  obtain ⟨α, β, hαβ⟩ := Submodule.mem_span_pair.mp (Submodule.span_mono himg hdir)
+  exact ⟨α, β, hαβ.symm⟩
+
+/-- 三角形 circumcenter-gap（3 点版 XYOFCGX：当前为骨架欠件，NEEDS 见下方注记）。
+
+本体证法骨架（下一波按此收口，全部前置引理均已在本文件真证）：
+1. p 分解 p - c = α•(a-c) + β•(b-c)（p ∈ affineSpan，OAPVION1_concl）；
+2. 等距方程 f1/f2：2*((p-c) ⬝ᵥ (a-c)) = |a-c|²等（|p-a| = |p-c| 展开）；
+3. 代入得 α*det = B(A-Cx)/2、β*det = A(B-Cx)/2、(1-α-β)*det = Cx*|ab|²/2（det = AB - Cx² > 0 由 Cauchy-Schwarz 严格版）；
+4. 三角全锐（A - Cx、B - Cx、Cx > 0）：反例则对边≥ √8 > 2*radV，与弦 ≤ 直径 2*radV 矛盾；
+5. 故 α,β,γ > 0；重心恒等式 α(a-p)+β(b-p)+γ(c-p) = 0 与 packing 点距离
+   ⟨w-p, aᵢ-p⟩ ≤ (ρ²+ρ²-4)/2 < 0 逐项矛盾。 -/
+private theorem p3a_gap_tri (V : Set V3) (a b c p w : V3) (hV : Packing V)
+    (ha : a ∈ V) (hb : b ∈ V) (hcm : c ∈ V)
+    (hab : a ≠ b) (hbc : b ≠ c) (hca : c ≠ a)
+    (hind : ¬affineDependent ({a, b, c} : Set V3))
+    (hpcc : circumcenter ({a, b, c} : Set V3) = p)
+    (hr : radV ({a, b, c} : Set V3) < Real.sqrt 2)
+    (hw : w ∈ V) (hwa : w ≠ a) (hwb : w ≠ b) (hwc : w ≠ c) :
+    ∀ u ∈ ({a, b, c} : Set V3), dist w p > dist u p := by
+  -- NEEDS: 三点 gap 本体（=PA7 XYOFCGX_3_0 同源解析核），证明五步路线见
+  -- 上方 docstring：barycentric 分解→等距方程→Cauchy-Schwarz 严格 det→
+  -- 三内角全锐弦直径矛盾→重心恒等式×packing 逐项负
+  sorry
+
+
 /-- HOL `XNHPWAB1_concl` (pack_concl.hl:66-68): below `sqrt 2` the omega
-point is the circumcenter. -/
+point is the circumcenter.
+波 3a (2026-10-08) 侦察+收窄：本体 = Rogers.hl:7194 `XNHPWAB1`（对 k 归纳 +
+closest-point 分析），GIANT。PA2 不可 import PA5/6/7（成环），已按链复制纪律
+真证前置件 p3a_*（truncate/omegaListN 桥、cc_pair 中点件、PYTH/RADV_MONO、
+tri_span、gap_pair、affInd_of_card；见上节）。剩余缺口（NEEDS 记账）：
+(i) BARV→affDim 桥（=MHFTTZN1 本体，PA6 `MHFTTZN_lemma2` 链，GIANT port）；
+(ii) 三点 gap 本体（=PA7 `XYOFCGX_3_0` 同源解析核，PA7 亦 sorry；骨架已按
+p3a_gap_tri docstring 五步记账）；(iii) 核心 k-归纳装配（单点/对/顶点案
+已在探针验证，模 (i)(ii) 即闭）。下游：PA8 OMEGA_LIST_{1,2,3}_EXPLICIT、
+PA12 MXI_EXISTS。 -/
 theorem XNHPWAB1_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ), saturated V →
     Packing V → k ≤ 3 → barV V k ul → hl ul < Real.sqrt 2 →
     omegaList V ul = circumcenter (setOfList ul) := by
@@ -4817,7 +5420,13 @@ theorem XNHPWAB3_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ), saturated V 
   sorry
 
 /-- HOL `XNHPWAB4_concl` (pack_concl.hl:84-86): the truncated circumradii
-increase strictly. -/
+increase strictly.
+波 3a (2026-10-08) 侦察+收窄：本体 = Rogers.hl:7691 `XNHPWAB4`（Pythagoras
++ 严格性经 XYOFCGX），GIANT。同 XNHPWAB1_concl 记账：前置件 p3a_* 已真证
+（含 p3a_PYTH/p3a_RADV_MONO 与 |S|≤3 gap 的 pair 案）；剩余缺口 (i) BARV→
+affDim 桥（PA6 `MHFTTZN_lemma2` 链）；(ii) 三点 gap 本体（p3a_gap_tri 骨架，
+PA7 `XYOFCGX_3_0` 同源）。i<j≤k≤3 时仅用到 |S|≤3 的 gap。下游：PA8
+OMEGA_LIST_1/2_EXPLICIT。 -/
 theorem XNHPWAB4_concl : ∀ (V : Set V3) (ul : List V3) (k : ℕ), saturated V →
     Packing V → k ≤ 3 → barV V k ul → hl ul < Real.sqrt 2 →
     ∀ i j : ℕ, i < j → j ≤ k →
