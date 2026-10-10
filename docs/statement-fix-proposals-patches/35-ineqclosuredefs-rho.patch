@@ -1,0 +1,45 @@
+diff --git a/lean/Kepler/Text/IneqClosureDefs.lean b/lean/Kepler/Text/IneqClosureDefs.lean
+index bdfa8c82..bcae4fb9 100644
+--- a/lean/Kepler/Text/IneqClosureDefs.lean
++++ b/lean/Kepler/Text/IneqClosureDefs.lean
+@@ -644,7 +644,7 @@ The LA38 lane carried these as `sorry` stubs (`solXP38`/`cayleyRP38`/
+ decision the real bodies are ported here straight from the HOL sources,
+ bypassing LA38 (definitions only — its theorem proofs stay untouched; when
+ that lane gets filled in it should align with these canonical names).
+-Enablers `arcLengthICD`/`abcOfQuadratic`/`rho`/`sqrt3`/`cayleyR`/`muR` are
++Enablers `arcLengthICD`/`abcOfQuadratic`/`rhoICD`/`sqrt3`/`cayleyR`/`muR` are
+ canonical re-ports: their twins sit in PackingAuto18 / LocalAuto19 /
+ LocalAuto38 / PackingAuto22 — either not co-importable with SphereKit (the
+ `atn2` FQN clash, SphereKit.lean:10-11) or sorry-tainted (`cayleyRP38` is a
+@@ -748,20 +748,24 @@ def node2Y (f : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ) (y1 y2 y3 y
+ example : node2Y f y1 y2 y3 y4 y5 y6 = f y2 y3 y1 y5 y6 y4 := rfl
+ 
+ /-- HOL `rho` (sphere.hl:201). Canonical name; twin `rho_p2`
+-(LocalAuto2.lean:336). -/
+-noncomputable def rho (y : ℝ) : ℝ := 1 + const1 - const1 * ly y
++(LocalAuto2.lean:336).  Renamed `rhoICD` (SF35, user-authorized 2026-10-10):
++PackingAuto21 imports this module (so does PackingAuto25 co-imported with
++LocalAuto1), and LocalAuto1's plain `rho` collided in `Kepler.Text`, breaking
++`lake build Kepler.Assembly`.  External churn: PackingAuto21's two mentions
++are docstring-only. -/
++noncomputable def rhoICD (y : ℝ) : ℝ := 1 + const1 - const1 * ly y
+ 
+-/-- Numeric: `ly 2 = 1`, so `rho 2 = 1`. -/
+-example : rho 2 = 1 := by unfold rho; norm_num [ly]
++/-- Numeric: `ly 2 = 1`, so `rhoICD 2 = 1`. -/
++example : rhoICD 2 = 1 := by unfold rhoICD; norm_num [ly]
+ 
+ /-- HOL `rhazim` (sphere.hl:211). Canonical real body for the LA38 stub
+ `rhazimP38`. -/
+ noncomputable def rhazim (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+-  rho y1 * dihY y1 y2 y3 y4 y5 y6
++  rhoICD y1 * dihY y1 y2 y3 y4 y5 y6
+ 
+-/-- Numeric: at the edge-2 point the rho factor is 1. -/
++/-- Numeric: at the edge-2 point the rhoICD factor is 1. -/
+ example : rhazim 2 2 2 2 2 2 = dihY 2 2 2 2 2 2 := by
+-  unfold rhazim; norm_num [rho, ly]
++  unfold rhazim; norm_num [rhoICD, ly]
+ 
+ /-- HOL `rhazim2` (sphere.hl:226): `node2_y rhazim`. -/
+ noncomputable def rhazim2 : ℝ → ℝ → ℝ → ℝ → ℝ → ℝ → ℝ := node2Y rhazim
