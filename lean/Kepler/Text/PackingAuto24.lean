@@ -3565,6 +3565,153 @@ private theorem p24_hl_trunc2_lt_two (V : Set V3) (u0 u1 : V3) (vl : List V3)
   rw [hrad3]
   nlinarith [hrad4, hnn]
 
+/-- W-楔代数辅助件 1：等距方程的锥系数 S-等式（正号版）。
+`ξ = (x,y)`（圆心坐标）的斜基负系数 `α = (x−k)/(2k)+y/d`、`β =
+(x−k)/(2k)−y/d` 满足 `ρ²α+qβ = (x²+(y+d/2)²)/2 − ρ²`（`hC` 为共圆等距
+方程；两步证明：分母清空恒等式 + `hC` 差恰为二分之一）。 -/
+private theorem p24_wedge_S_pos (d k x y a b : ℝ) (hd0 : d ≠ 0) (hk : k ≠ 0)
+    (ha : a = (x - k) / (2 * k) + y / d) (hb : b = (x - k) / (2 * k) - y / d)
+    (hC : 2 * k * x = x ^ 2 + y ^ 2 - d ^ 2 / 4) :
+    (k ^ 2 + d ^ 2 / 4) * a + (k ^ 2 - d ^ 2 / 4) * b
+      = (x ^ 2 + (y + d / 2) ^ 2) / 2 - (k ^ 2 + d ^ 2 / 4) := by
+  subst ha; subst hb
+  have L : (k ^ 2 + d ^ 2 / 4) * ((x - k) / (2 * k) + y / d)
+        + (k ^ 2 - d ^ 2 / 4) * ((x - k) / (2 * k) - y / d)
+      = k * (x - k) + (d / 2) * y := by
+    field_simp; ring
+  rw [L]
+  linear_combination hC / 2
+
+private theorem p24_wedge_S_neg (d k x y a b : ℝ) (hd0 : d ≠ 0) (hk : k ≠ 0)
+    (ha : a = (x - k) / (2 * k) + y / d) (hb : b = (x - k) / (2 * k) - y / d)
+    (hC : 2 * k * x = x ^ 2 + y ^ 2 - d ^ 2 / 4) :
+    (k ^ 2 + d ^ 2 / 4) * b + (k ^ 2 - d ^ 2 / 4) * a
+      = (x ^ 2 + (y - d / 2) ^ 2) / 2 - (k ^ 2 + d ^ 2 / 4) := by
+  subst ha; subst hb
+  have L : (k ^ 2 + d ^ 2 / 4) * ((x - k) / (2 * k) - y / d)
+        + (k ^ 2 - d ^ 2 / 4) * ((x - k) / (2 * k) + y / d)
+      = k * (x - k) - (d / 2) * y := by
+    field_simp; ring
+  rw [L]
+  linear_combination hC / 2
+
+private theorem p24_wedge_coef_pos (ρ2 q z w : ℝ) (hr2 : 0 < ρ2) (hq : q < 0)
+    (hXpos : 0 < ρ2 ^ 2 - q ^ 2) (hz : 0 < ρ2 * z + q * w) (hw : 0 < ρ2 * w + q * z)
+    (hX0 : ρ2 ^ 2 - q ^ 2 ≠ 0) : 0 < z ∧ 0 < w := by
+  have E1 : (ρ2 ^ 2 - q ^ 2) * z = ρ2 * (ρ2 * z + q * w) + (-q) * (ρ2 * w + q * z) := by
+    ring
+  have E2 : (ρ2 ^ 2 - q ^ 2) * w = ρ2 * (ρ2 * w + q * z) + (-q) * (ρ2 * z + q * w) := by
+    ring
+  have hqpos : 0 < -q := by linarith
+  have tz : 0 < (ρ2 ^ 2 - q ^ 2) * z := by
+    rw [E1]; linarith [mul_pos hr2 hz, mul_pos hqpos hw]
+  have tw : 0 < (ρ2 ^ 2 - q ^ 2) * w := by
+    rw [E2]; linarith [mul_pos hr2 hw, mul_pos hqpos hz]
+  refine ⟨?_, ?_⟩
+  · have hz' : z = (ρ2 ^ 2 - q ^ 2) * z / (ρ2 ^ 2 - q ^ 2) := by
+      field_simp
+    rw [hz']; exact div_pos tz hXpos
+  · have hw' : w = (ρ2 ^ 2 - q ^ 2) * w / (ρ2 ^ 2 - q ^ 2) := by
+      field_simp
+    rw [hw']; exact div_pos tw hXpos
+
+/-- **情形 A · W-楔代数（纯实数核）**。坐标形态（以圆心为原点的 (S,t)-坐标，
+S 轴 = 棱的垂直方向、t 轴 = 棱轴方向）：`u0=(0,−d/2)`、`u1=(0,d/2)`、
+`v=(n,tv)`、`w=(μn,tw)`、圆心 `(k,0)`、半径² `= k²+d²/4 < 2`。
+`hC2/hC3` 是 `v`、`w` 与 `u0` 的共圆等距方程（圆心在弦 `u0u1` 的垂直平分线
+`t=0` 上，故只此两条）；五个 `≥ 4` 是四点到 `u0,u1` 的弦与 `dist(v,w)` 的弦
+（packing 两两距离 ≥ 2 的平方形态）。
+结论 `False`：`ξ₁ = u0−c`、`ξ₂ = u1−c`、`ξ₃ = v−c`、`ξ₄ = w−c` 两两内积
+`≤ ρ²−2 < 0`，故 `ξ₃,ξ₄` 同落 `ξ₁,ξ₂` 的严格负锥；斜基坐标解出
+`α = x/(2k)+y/d` 型负系数后，w 的锥系数全正（Rankin 判别式）给
+`ξ₃·ξ₄ = α₄·S₃ + β₄·S₄ > 0`，于是 `dist(v,w)² = 2ρ² − 2ξ₃·ξ₄ < 2ρ² < 4`，
+与弦 `h34` 矛盾（半径 < √2 的圆上四点不可能两两弦 ≥ 2）。 -/
+private theorem p24_wedge_quad_kill (d k n μ tv tw : ℝ)
+    (hd2 : 2 ≤ d) (hk : k ≠ 0)
+    (hrho : k ^ 2 + d ^ 2 / 4 < 2)
+    (hC2 : 2 * k * n = n ^ 2 + tv ^ 2 - d ^ 2 / 4)
+    (hC3 : 2 * k * (μ * n) = (μ * n) ^ 2 + tw ^ 2 - d ^ 2 / 4)
+    (h03 : 4 ≤ n ^ 2 + (tv + d / 2) ^ 2) (h13 : 4 ≤ n ^ 2 + (tv - d / 2) ^ 2)
+    (h04 : 4 ≤ (μ * n) ^ 2 + (tw + d / 2) ^ 2)
+    (h14 : 4 ≤ (μ * n) ^ 2 + (tw - d / 2) ^ 2)
+    (h34 : 4 ≤ (μ * n - n) ^ 2 + (tw - tv) ^ 2) : False := by
+  have hd0 : (0:ℝ) < d := by nlinarith
+  have hd0ne : (d:ℝ) ≠ 0 := ne_of_gt hd0
+  have hd2pos : 0 < d ^ 2 := by nlinarith
+  have hq : k ^ 2 - d ^ 2 / 4 < 0 := by
+    have hd4 : 4 ≤ d ^ 2 := by nlinarith
+    linarith
+  have hr2pos : 0 < k ^ 2 + d ^ 2 / 4 := by
+    have h2 : 0 < k ^ 2 := sq_pos_of_ne_zero hk
+    exact add_pos h2 (div_pos hd2pos (by norm_num))
+  have hXpos : 0 < (k ^ 2 + d ^ 2 / 4) ^ 2 - (k ^ 2 - d ^ 2 / 4) ^ 2 := by
+    have e : (k ^ 2 + d ^ 2 / 4) ^ 2 - (k ^ 2 - d ^ 2 / 4) ^ 2 = k ^ 2 * d ^ 2 := by ring
+    rw [e]; exact mul_pos (sq_pos_of_ne_zero hk) hd2pos
+  -- 锥系数（helper 展开）与正性（弦 + ρ² < 2）
+  -- 负锥坐标（斜基 (ξ₁,ξ₂) 下 ξ₃, ξ₄ 的系数）
+  set a3 := (n - k) / (2 * k) + tv / d with ha3
+  set b3 := (n - k) / (2 * k) - tv / d with hb3
+  set a4 := (μ * n - k) / (2 * k) + tw / d with ha4
+  set b4 := (μ * n - k) / (2 * k) - tw / d with hb4
+  -- S-等式（helper 展开）与正性（弦 + ρ² < 2）
+  have S3 := p24_wedge_S_pos d k n tv a3 b3 hd0ne hk ha3 hb3 hC2
+  have S4 := p24_wedge_S_neg d k n tv a3 b3 hd0ne hk ha3 hb3 hC2
+  have S5 := p24_wedge_S_pos d k (μ * n) tw a4 b4 hd0ne hk ha4 hb4 hC3
+  have S6 := p24_wedge_S_neg d k (μ * n) tw a4 b4 hd0ne hk ha4 hb4 hC3
+  have S3pos : 0 < (k ^ 2 + d ^ 2 / 4) * a3 + (k ^ 2 - d ^ 2 / 4) * b3 := by
+    linarith [S3, h03, hrho]
+  have S4pos : 0 < (k ^ 2 + d ^ 2 / 4) * b3 + (k ^ 2 - d ^ 2 / 4) * a3 := by
+    linarith [S4, h13, hrho]
+  have S5pos : 0 < (k ^ 2 + d ^ 2 / 4) * a4 + (k ^ 2 - d ^ 2 / 4) * b4 := by
+    linarith [S5, h04, hrho]
+  have S6pos : 0 < (k ^ 2 + d ^ 2 / 4) * b4 + (k ^ 2 - d ^ 2 / 4) * a4 := by
+    linarith [S6, h14, hrho]
+  -- w 的锥坐标全正（Rankin 判别式）
+  have hX0 : (k ^ 2 + d ^ 2 / 4) ^ 2 - (k ^ 2 - d ^ 2 / 4) ^ 2 ≠ 0 := ne_of_gt hXpos
+  obtain ⟨ha4pos, hb4pos⟩ := p24_wedge_coef_pos (k ^ 2 + d ^ 2 / 4) (k ^ 2 - d ^ 2 / 4)
+    a4 b4 hr2pos hq hXpos S5pos S6pos hX0
+  -- 共圆读出：‖ξ₃‖² = ‖ξ₄‖² = ρ²（hC2/hC3）
+  have n3 : (n - k) ^ 2 + tv ^ 2 = k ^ 2 + d ^ 2 / 4 := by
+    have key : (n - k) ^ 2 + tv ^ 2 - (k ^ 2 + d ^ 2 / 4) = 0 := by
+      have e : (n - k) ^ 2 + tv ^ 2 - (k ^ 2 + d ^ 2 / 4)
+          = -(2 * k * n - (n ^ 2 + tv ^ 2 - d ^ 2 / 4)) := by ring
+      rw [e, neg_eq_zero]; linarith [hC2]
+    linarith [key]
+  have n4 : (μ * n - k) ^ 2 + tw ^ 2 = k ^ 2 + d ^ 2 / 4 := by
+    have key : (μ * n - k) ^ 2 + tw ^ 2 - (k ^ 2 + d ^ 2 / 4) = 0 := by
+      have e : (μ * n - k) ^ 2 + tw ^ 2 - (k ^ 2 + d ^ 2 / 4)
+          = -(2 * k * (μ * n) - ((μ * n) ^ 2 + tw ^ 2 - d ^ 2 / 4)) := by ring
+      rw [e, neg_eq_zero]; linarith [hC3]
+    linarith [key]
+  -- 点积正性：ξ₃·ξ₄ = α₄·S3 + β₄·S4 > 0
+  have c3x : n - k = k * (a3 + b3) := by rw [ha3, hb3]; field_simp; ring
+  have c3y : tv = (d / 2) * (a3 - b3) := by rw [ha3, hb3]; field_simp; ring
+  have c4x : μ * n - k = k * (a4 + b4) := by rw [ha4, hb4]; field_simp; ring
+  have c4y : tw = (d / 2) * (a4 - b4) := by rw [ha4, hb4]; field_simp; ring
+  have dotE : (n - k) * (μ * n - k) + tv * tw
+      = (k ^ 2 + d ^ 2 / 4) * (a3 * a4 + b3 * b4)
+        + (k ^ 2 - d ^ 2 / 4) * (a3 * b4 + b3 * a4) := by
+    rw [c3x, c3y, c4x, c4y]; ring
+  have dotF : (k ^ 2 + d ^ 2 / 4) * (a3 * a4 + b3 * b4)
+        + (k ^ 2 - d ^ 2 / 4) * (a3 * b4 + b3 * a4)
+      = a4 * ((k ^ 2 + d ^ 2 / 4) * a3 + (k ^ 2 - d ^ 2 / 4) * b3)
+        + b4 * ((k ^ 2 + d ^ 2 / 4) * b3 + (k ^ 2 - d ^ 2 / 4) * a3) := by
+    ring
+  have dotpos : 0 < (n - k) * (μ * n - k) + tv * tw := by
+    rw [dotE, dotF]; linarith [mul_pos ha4pos S3pos, mul_pos hb4pos S4pos]
+  -- 终局：dist(v,w)² = 2ρ² − 2ξ₃·ξ₄ < 2ρ² < 4，与 h34 矛盾
+  have flat : (μ * n - n) ^ 2 + (tw - tv) ^ 2
+      = 2 * (k ^ 2 + d ^ 2 / 4) - 2 * ((n - k) * (μ * n - k) + tv * tw) := by
+    have key : (μ * n - n) ^ 2 + (tw - tv) ^ 2
+        - (2 * (k ^ 2 + d ^ 2 / 4) - 2 * ((n - k) * (μ * n - k) + tv * tw)) = 0 := by
+      have e : (μ * n - n) ^ 2 + (tw - tv) ^ 2
+          - (2 * (k ^ 2 + d ^ 2 / 4) - 2 * ((n - k) * (μ * n - k) + tv * tw))
+        = ((n - k) ^ 2 + tv ^ 2 - (k ^ 2 + d ^ 2 / 4))
+          + ((μ * n - k) ^ 2 + tw ^ 2 - (k ^ 2 + d ^ 2 / 4)) := by ring
+      rw [e, n3, n4]; ring
+    linarith [key]
+  linarith [flat, dotpos, hrho, h34]
+
 /-- NEEDS（(β) 支独立存在性引理，2026-10-08/09 波落盘为 precisely-scoped
 残件；HL OXLZLEZ3 `FCHKUGT`/`EWYBJUA` 叶胞链的对应物，PA18:2159/:2532 的
 `ported sorry` 孪生同源）：饱和 packing 的短棱 `u0u1`（`d < 2√2`）处存在以
