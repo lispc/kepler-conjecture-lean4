@@ -110,6 +110,17 @@ Encoding (house conventions, cf. LocalAuto1/19/36):
   FALSE as stated under the 0-on-infinite convention (annotated); and the
   `main_nonlinear_terminal_v11` + LP registry bank. Compile state:
   0 errors.
+- AXIOM-FACE RECONCILIATION (bridge lane 2026-10-08, `#print axioms`
+  measured): of the 2026-09-28 ledger items above, the Cayley–Menger
+  positivity and the dihV↔dih_y bridge are discharged and clean —
+  `DIH_Y_NN`, `DELTA_Y_POS_4POINTS`, `DIHV_EQ_DIH_Y_4PT`, `DIHV_NN_4PT`
+  all measure `[propext, Classical.choice, Quot.sound]` (sorryAx-free),
+  and the `LocalAuto38Bridge` twins (`DIH_Y_NN_B`/`DELTA_Y_POS_4POINTS_B`/
+  `DIHV_EQ_DIH_Y_4PT_B`/`DIHV_NN_4PT_B`) measure the same; 33 literal
+  `sorry` sites remain (stub/anchor/certificate debt as led above).  For
+  the PA21 consumer: `GAMMAX_GAMMA2_X`'s measured `sorryAx` taint does NOT
+  route through this module or the Bridge — see the Bridge header
+  RECONCILIATION (it enters via PA21's own `MCELL2_*` consumers).
 -/
 
 import Kepler.Text.PackingAuto2

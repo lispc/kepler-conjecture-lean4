@@ -21,6 +21,26 @@ kit and the 2026-09-30 public wrappers, renamed with the `_B` suffix:
 - `DELTA_Y_POS_4POINTS_B` = LocalAuto38 `DELTA_Y_POS_4POINTS` (terminal.hl:537).
 MERGE NOTE: delete this module and repoint PA21 at LocalAuto38 when the
 LocalAuto1/IneqClosureDefs `rho` homograph is resolved tree-wide.
+
+AXIOM-FACE (reconciliation lane 2026-10-08, `#print axioms` measured): the
+four public `_B` theorems depend only on
+`[propext, Classical.choice, Quot.sound]` — sorryAx-free, the same face as
+the LocalAuto38 originals (`DIH_Y_NN`/`DELTA_Y_POS_4POINTS`/
+`DIHV_EQ_DIH_Y_4PT`/`DIHV_NN_4PT` all measure the standard three).  This
+module adds no axiom debt to PA21's closure.
+
+RECONCILIATION (commit b24014d0 flags a "LA38Bridge 'PROVED' 注记与实测不符"
+item): the "PROVED" wording is NOT carried by this file — it lives in
+PackingAuto21's header note (:89-106, DEDUP/CLOSED 2026-09-30) and describes
+the PA21 consumer `GAMMAX_GAMMA2_X`.  Measured: `GAMMAX_GAMMA2_X` is
+statement-level proved (no literal `sorry` in its body) but axiom-face
+tainted (`sorryAx`) via its PA21/PA14-side consumers — `MCELL2_SOL`/
+`MCELL2_VOL`/`MCELL2_VOL_SPLIT_EXPLICIT`/`GAMMAX_MCELL2`/`MCELL2_DIHX`
+(PA21) and `MCELL2_PERMUTE_01` (PA14:822): real proof bodies carrying
+transitive taint; PA14's own header names the literal leaves
+(`ynhyjit_p14` i=3, the `LEFT_ACTION_LIST_PROPERTIES` S₃ giant;
+`QZKSYKG1`/`QZKSYKG2`).  The taint does NOT route through the `_B`
+wrappers; softening the PA21 note is the PA21 lane's edit.
 -/
 
 import Kepler.Geom.LuneVolume
