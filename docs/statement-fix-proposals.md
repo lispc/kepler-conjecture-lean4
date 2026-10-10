@@ -486,7 +486,7 @@ aff_dim P − 1 + P 全维 ⇒ 同 hull），本质消费 aff_dim 内容；前�
 **(e) 分级：C**（零补丁；`12-affine_facet_hyper.patch` 为裁决存档）。
 
 **(f) DEF-FIX 状态（2026-09-29）：解冻前置已就绪** —— planar 编码定义纠正
-（`docs/planar-encoding-fix.md` §2 补丁）已落地：新 `facetOfC` 自带 ≠∅ + `affDimC`
+（`docs/projects/planar-encoding-fix.md` §2 补丁）已落地：新 `facetOfC` 自带 ≠∅ + `affDimC`
 条件、新 `polyhedronC` 为 HOL 镜像，本项陈述在新定义下即真（HOL 镜像）。
 仍按 (d) 冻结至重填 kit（affDimC 超平面 kit → §2.3 表）落地后入重填队列
 （章程 §3c：中等档，kit 后）。
@@ -518,7 +518,7 @@ aff_dim P − 1 + P 全维 ⇒ 同 hull），本质消费 aff_dim 内容；前�
 **(e) 分级：C**（`13-pad2d3d_facet.patch` 为裁决存档；编号 13 双占见 14' 注）。
 
 **(f) DEF-FIX 状态（2026-09-29）：解冻前置已就绪** —— planar 编码定义纠正
-（`docs/planar-encoding-fix.md` §2 补丁）已落地：结论侧 `facetOfC` 已含 ≠∅ +
+（`docs/projects/planar-encoding-fix.md` §2 补丁）已落地：结论侧 `facetOfC` 已含 ≠∅ +
 `affDimC` 条件，前提/结论计数口径统一（HOL 镜像），(b) 的 ∅ 混入反例不再成立。
 仍按 (d) 冻结至重填 kit（`FACET_OF_LINEAR_IMAGE` ℂ 版，§2.3 表）落地后入重填
 队列（章程 §3c：GIANT 档）。
@@ -768,7 +768,7 @@ theorem tau3_taum_dfun (d : ℝ) (a01 a12 a02 b01 b12 b02 : ℝ) (f : ℝ → �
 
 ## merge-ineq-bank. 波 0 ——银行结构化 + eta_y 重指向（Merge_ineq 通道章程 §2）
 
-> 立项与章程：`docs/merge-ineq-channel.md`（编排者审定通过，见章程末
+> 立项与章程：`docs/projects/merge-ineq-channel.md`（编排者审定通过，见章程末
 > "附：编排者审定意见"）。本条目为波 0（陈述级）的**执行存档**：补丁已于
 > 2026-09-29 落地 `lean/Kepler/Text/PackingAuto21.lean`（下称 PA21），构建
 > 与台账验收实测见 (f)。补丁正文不再重复誊写，以章程 §2.1/§2.2 为准。
@@ -1135,7 +1135,7 @@ HOL 原文在全称语境携带装填/饱和/edge 门（packing、saturated、u0
 下界、e 具体化 {u0,u1}、region 见证参数）；Lean 冻结版只留
 `he : e = {u0, u1}` 一条，V/u0/u1/r/d 全自由——移植时前提丢失，非"难证"。
 
-### (b) 反例（机器验证，docs/grutoti-assets/probe_sum_volD_falsity.lean）
+### (b) 反例（机器验证，docs/assets/grutoti/probe_sum_volD_falsity.lean）
 
 V := ∅（任取 u0 ≠ u1，r := 1，d := 1/2）：`barV ∅ 3 ul` 恒假 ⇒
 `mcellSet ∅ = ∅` ⇒ `grutotiEdgeCells ∅ e = ∅` ⇒ setSum = 0；而

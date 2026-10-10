@@ -10,7 +10,7 @@
 - 债务刻度与主定理可达债务 → `DEBT.md`
 - 长期决策与演化记录 → `DECISIONS.md`
 - 端到端对象 → `lean/Kepler/Final.lean`（`the_kepler_conjecture_e2e`）
-- 本会话战报与交接细节 → `docs/session-2026-10-08-wrap.md` 及 `docs/` 各侦察
+- 本会话战报与交接细节 → `docs/handoffs/session-2026-10-08-wrap.md` 及 `docs/` 各侦察
   报告（tiwwfyq-coverage / pa2-stub-map / gamax-bridge / pa24-nonflat-roadmap）
 
 历史版本：`git show 4ca2e550:HANDOFF.md`。

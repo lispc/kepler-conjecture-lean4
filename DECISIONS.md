@@ -13,7 +13,7 @@
   （NEEDS 定点：hcov=TIWWFYQ 族/hpair=AJRIPQN 实例/hmeas+hvol=可证支）。
   执行版补丁 `docs/statement-fix-proposals-patches/31-pa23-sum-volD.patch`。
   背景：冻结版仅 `he : e = {u0,u1}` 一条前提，`V := ∅` 即机器验证反例
-  （docs/grutoti-assets/）。
+  （docs/assets/grutoti/）。
 
 ## 2026-10-01 — SF 28/29/30 三连批准（用户"同意。按你的想法来吧。"）
 

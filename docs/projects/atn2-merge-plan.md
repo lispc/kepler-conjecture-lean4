@@ -95,7 +95,7 @@ verbatim from the cited line):
 Kepler.Text.SphereKit — single home of the sphere.hl numeric kit and the
 localization.hl fan kit, deduplicated from the PackingAuto18/20/21 hub split
 and the `_pNN` verbatim twins.  Bodies are the verified variants; see
-docs/atn2-merge-plan.md.  Do NOT import PackingAuto18/20/21 here.
+docs/projects/atn2-merge-plan.md.  Do NOT import PackingAuto18/20/21 here.
 -/
 import Kepler.Geom.Azim          -- V3, azim, projection
 import Kepler.Text.Fan           -- sigmaFan (azimInFan)

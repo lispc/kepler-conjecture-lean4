@@ -1,8 +1,8 @@
 # atn2 复合规则(div 越零 @227)设计与侦察报告
 
 > 车道:Kimi 线(worktree `kepler-atn2`,分支 `wip/atn2-chop`,off main `61c8f9c0`)。
-> 对应主仓接口:`docs/549-kimi-sync-2026-09-25.md` §2(K2 裁决)、
-> `docs/549-lane-log.md` 十五更(div 6,565→5,928,@227 的 5,706"包络层数学不可救")。
+> 对应主仓接口:`docs/handoffs/549-kimi-sync-2026-09-25.md` §2(K2 裁决)、
+> `docs/handoffs/549-lane-log.md` 十五更(div 6,565→5,928,@227 的 5,706"包络层数学不可救")。
 > 落地:`lean/Kepler/Interval/CertTM.lean` 尾部新增一节(纯追加 559 行,
 > 既有定义/定理**零改动**)。
 

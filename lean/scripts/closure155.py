@@ -27,8 +27,8 @@ Lean status tiers:
   D = absent
 
 Writes:
-  docs/ineq-closure-155.md    human work-order table (one line per symbol)
-  docs/ineq-closure-155.json  machine-readable version
+  docs/projects/ineq-closure-155.md    human work-order table (one line per symbol)
+  docs/projects/ineq-closure-155.json  machine-readable version
 
 Usage:  python3 lean/scripts/closure155.py [p6e_root]
         G4E=/path/to/kepler-g4e python3 lean/scripts/closure155.py
@@ -115,7 +115,7 @@ BATCH6 = {
 }
 
 # Evidence note shared by the define_dart domain predicates (exempt from
-# porting; see docs/ineq-closure-155.md 备注 column).
+# porting; see docs/projects/ineq-closure-155.md 备注 column).
 _DART_NOTE = ("define_dart 盒域谓词：emit_rpn.py:832 dart_constraint_ast 把它"
               "展开成 (lo,var,hi) 数值盒（别名链递归，实测三元组 6/9 条），"
               "domain_raw 只进盒约束不进 prog（translate_record:947），"
@@ -357,8 +357,8 @@ def main():
         drift.append("resolved %d != meta %d" % (n_res,
                                                  meta["closure_resolved"]))
 
-    out_json = os.path.join(ROOT, "docs", "ineq-closure-155.json")
-    out_md = os.path.join(ROOT, "docs", "ineq-closure-155.md")
+    out_json = os.path.join(ROOT, "docs", "projects", "ineq-closure-155.json")
+    out_md = os.path.join(ROOT, "docs", "projects", "ineq-closure-155.md")
     with open(out_json, "w") as f:
         json.dump({"meta": {"roots": len(roots), "closure": len(seen),
                             "resolved": n_res,

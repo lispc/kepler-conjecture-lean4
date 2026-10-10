@@ -1,5 +1,5 @@
 /-
-FQN conflict governance regression probe (docs/fqn-conflicts.md, 2026-09-20,
+FQN conflict governance regression probe (docs/projects/fqn-conflicts.md, 2026-09-20,
 branch wip/pa-conflict-fix).
 
 Before the governance, this import set failed at import time:

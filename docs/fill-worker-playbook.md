@@ -108,7 +108,7 @@ lake env lean Kepler/Text/<你的文件>.lean 2>&1 | grep -cE '(^|[ :])error:'
   `p22_face_of_affine_rint` 逐字填证通过——免豁免、无需加前提，修复波第 1 顺位）、
   `BIJ_DART_POLYEDGE`、`PACK_INEQ_DEF_A_797`（卡 arclength 落地）。
 - **PA22 r2 新增疑似假 4 枚（2026-09-28 立项）——【2026-09-29：DEF-FIX 定义纠正
-  已落地，`docs/planar-encoding-fix.md` §2 补丁已应用】**：`facetOfC` 补 ≠∅+affDimC、
+  已落地，`docs/projects/planar-encoding-fix.md` §2 补丁已应用】**：`facetOfC` 补 ≠∅+affDimC、
   `polyhedronC` 改 H-表示、`cone0P22` 改严格 `affGt`。据此：
   项 12 `affine_facet_hyper` 与项 13a `pad2d3d_facet` **定义纠正已落地**（陈述即
   HOL 镜像，解冻前置就绪；仍冻结待 §2.3 kit：affDimC kit / FACET_OF_POLYHEDRONC
@@ -257,7 +257,7 @@ Iff 且 R 显式→`(Submodule.mem_bot ℝ).1`；vectorSpan 成员匿名构造�
   AZIM_EQ_0_GE_ALT2 的证明版）、`pa18_affGe_affGt_of_ncol`、
   `pa18_collinear3_line_affGe`。cc 簇最短解锁路径：**MHFTTZN3（PA6:848）可由
   MHFTTZN4+BARV_CIRCUMCENTER_EXISTS+XYOFCGX(PA7:343) 自证**（⚠ 时效：PA7 r2 已
-  整体回退，BARV_CIRCUMCENTER_EXISTS 等待按 `docs/pa7-proofdump.md` 落盘，
+  整体回退，BARV_CIRCUMCENTER_EXISTS 等待按 `docs/projects/pa7-proofdump.md` 落盘，
   见 PA6+PA7 条）→ JDHAWAY_0 →
   cc_pe_exists → PA25 全通；FUZBZGI_0 链另需 PA12 VORONOI_LIST_3_SINGLETON_EXPLICIT。
   azim 工具箱全在 `Geom/AzimLemmas.lean`（azim_eq_azim_iff(_alt)/azim_compl/
@@ -298,7 +298,7 @@ Iff 且 R 显式→`(Submodule.mem_bot ℝ).1`；vectorSpan 成员匿名构造�
 - **PA6+PA7**（wave2-r2 零净填充，两文件 pristine 双绿 = 干净起跑线）：r2 写好
   env-0-error 的 PA7 19 枚 + PA6 多枚，被 lake build ~50 系统性偏差打回
   （**env-lean 假绿最大实证**，见 §6）。证明全文 + 逐错误诊断落盘于
-  `docs/pa7-proofdump.md`（下一轮按图施工）。下一轮优先级：① PA7 逐枚落盘
+  `docs/projects/pa7-proofdump.md`（下一轮按图施工）。下一轮优先级：① PA7 逐枚落盘
   （HL_DECREASE/投影簇/TRUNCATE kit 等，多为小错）② PA6 MHFTTZN3 +
   p6_affdep_of_dim（PA18 钥匙；**BARV_AFFINE_INDEPENDENT 解锁链**：
   MHFTTZN_lemma2.1 → `List.toFinset_card_le` →
@@ -727,7 +727,7 @@ Iff 且 R 显式→`(Submodule.mem_bot ℝ).1`；vectorSpan 成员匿名构造�
 - **PA6+PA7 回退事件（2026-09-28）**：env-lean 0-error / lake ~50 error 的**最大规模
   假绿实证**——偏差模式（`⬝ᵥ` 的 WithLp.ofLp 包裹形状、`mpr ⟨w⟩` 方向、beta-redex
   上的匿名构造器）固化进 §5.4 PA6+PA7 条，分量法为唯一稳定解；预算耗尽前整体
-  回退 pristine 保住双绿基线，证明文本落盘 `docs/pa7-proofdump.md`——"宁可零填充
+  回退 pristine 保住双绿基线，证明文本落盘 `docs/projects/pa7-proofdump.md`——"宁可零填充
   不留半成品"是正确止损。同日 `.lake/packages/mathlib` 波内第二次中途消失
   （`lake exe cache get` 11 秒恢复）——共享包目录稳定性存疑，波收尾排查根因。
 - **Wave 2/2r 收官（2026-09-28 深夜）**：五 lane 过闸（PA18/PA4/LA38/PA22/LA5）+

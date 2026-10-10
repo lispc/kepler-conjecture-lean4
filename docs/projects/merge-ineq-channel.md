@@ -532,7 +532,7 @@ TSKAJXY3.hl:2263-2273。）
 换成与 HOL Ineq 数据库逐条对账的真形。对象分别是 packing 侧
 `pack_nonlinear_non_ox3q1h`（本章，PA21 def 重打型 + 分发器移植）与 tame 侧
 `kcblrqc_ineq_def`（mqmsmab，Assembly.lean:**189** `KcblrqcIneqDef := True`
-占位 → TameLp.lean:**510** 四切片真形重指向；见 docs/mqmsmab-scout.md §6.1
+占位 → TameLp.lean:**510** 四切片真形重指向；见 docs/scouts/mqmsmab-scout.md §6.1
 Step 0）。
 
 **机制差异**（合流成本的核心）：
