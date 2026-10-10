@@ -3712,6 +3712,503 @@ private theorem p24_wedge_quad_kill (d k n μ tv tw : ℝ)
     linarith [key]
   linarith [flat, dotpos, hrho, h34]
 
+/-! ## 新件 1：p24_caseA_concyclic（共圆件） -/
+
+/-- **情形 A · 共圆件**（2026-10-11 波，探针零错后落盘）：叶四元组
+（`barV V 3 vl` + `truncateSimplex 1 vl = [u0, u1]`）+ 四点共面
+（`Coplanar ℝ (setOfList vl)`）+ 情形 A 判别 `hl vl < √2` ⇒
+`p24_wedge_quad_kill` 的输入形（标量坐标包 `∃ d k n μ tv tw`）。
+路线（全初等，上波处方逐条落地）：
+(1) PA12:1677 `VORONOI_LIST_3_SINGLETON_EXPLICIT` 直接给胞单点 `a`
+（`hl vl = dist u0 a`，无需 p24_mid_*/p24_voronoiList_pair），胞成员对 V
+两两夹逼给四点等距 `dist a z = hl vl`；
+(2) 四点两两异走 barV 初始子列链：MHFTTZN1 给 `affDim (setOfList vl) = 3`，
+任两点重合使 `setOfList vl ⊆ {p,q,r}` ⇒ vectorSpan finrank ≤ 2（共面），矛盾
+（不走 packing 循环论证）；
+(3) ON 标架 (e1,e2,e3)（e3 = 棱轴）：`A' = a − mid ⊥ e3`（等距读出，复刻
+`p24_hl_trunc2_lt_two` 的 kz/hzetae3 模式）；`v` 的垂分量 `P`（`‖P‖ = n`，
+`P = 0` 退化支经 `tv² = (d/2)² ⇒ v ∈ {u0,u1}` 矛盾）；
+(4) 共面塌缩：`vectorSpan (setOfList vl) = span{u1−u0, v−u0}`（span 侧
+`barV V 2 [u0,u1,v]` 经 MHFTTZN1 给 finrank = 2，⊥ 侧 coplanar finrank ≤ 2），
+`w − u0 ∈ span{u1−u0, v−u0}` 读出 `w − mid = tw•e3 + μ•P`；
+(5) 圆心 `c = mid + (k/n)•P`（`k = A'⬝P/n`；无需 `a` 的 affineSpan 成员——
+`a − c ⊥ e3` 且 `⊥ P` 直接验证），Pythagoras 把
+`r₄² = ‖a−u0‖² = ‖a−v‖² = ‖a−w‖²` 读成 hC2/hC3；`hrho` 经
+`k² + d²/4 = ‖c−u0‖² ≤ r₄² < 2`；`k ≠ 0` 经 h03+h13 相加 ⊕ hrho 的
+`d² < 8`。弦组 h03/h13/h04/h14/h34 = packing 两两距离 ≥ 2 的平方形态。 -/
+private theorem p24_caseA_concyclic (V : Set V3) (u0 u1 : V3) (vl : List V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (hbar : barV V 3 vl) (htr : truncateSimplex 1 vl = [u0, u1])
+    (hhl : hl vl < Real.sqrt 2) (hcp : Coplanar ℝ (setOfList vl)) :
+    ∃ d k n μ tv tw : ℝ, 2 ≤ d ∧ k ≠ 0 ∧ k ^ 2 + d ^ 2 / 4 < 2 ∧
+      2 * k * n = n ^ 2 + tv ^ 2 - d ^ 2 / 4 ∧
+      2 * k * (μ * n) = (μ * n) ^ 2 + tw ^ 2 - d ^ 2 / 4 ∧
+      4 ≤ n ^ 2 + (tv + d / 2) ^ 2 ∧ 4 ≤ n ^ 2 + (tv - d / 2) ^ 2 ∧
+      4 ≤ (μ * n) ^ 2 + (tw + d / 2) ^ 2 ∧
+      4 ≤ (μ * n) ^ 2 + (tw - d / 2) ^ 2 ∧
+      4 ≤ (μ * n - n) ^ 2 + (tw - tv) ^ 2 := by
+  -- 0. 四元组显式化 + u0/u1 识别
+  obtain ⟨q0, q1, q2, q3, hvll⟩ := BARV_3_EXPLICIT V vl hbar
+  subst hvll
+  have htrq : truncateSimplex 1 [q0, q1, q2, q3] = [q0, q1] := by
+    rw [truncateSimplex1_pair [q0, q1, q2, q3] (by norm_num)]
+    simp [elV]
+  have hpair01 : [u0, u1] = [q0, q1] := htr.symm.trans htrq
+  injection hpair01 with e0 e1l
+  injection e1l with e1 e1nil
+  subst e0
+  subst e1
+  set v : V3 := q2 with hvdef
+  set w : V3 := q3 with hwdef
+  have hset : setOfList [u0, u1, v, w] = ({u0, u1, v, w} : Set V3) := by
+    ext y
+    simp [setOfList]
+  have hu0s : u0 ∈ setOfList [u0, u1, v, w] := by simp [setOfList]
+  have hu1s : u1 ∈ setOfList [u0, u1, v, w] := by simp [setOfList]
+  have hvs : v ∈ setOfList [u0, u1, v, w] := by simp [setOfList]
+  have hws : w ∈ setOfList [u0, u1, v, w] := by simp [setOfList]
+  have hvn : voronoiNondg V [u0, u1, v, w] :=
+    hbar.2 [u0, u1, v, w] ⟨⟨[], by rw [List.append_nil]⟩, by simp⟩
+  have hsubV : setOfList [u0, u1, v, w] ⊆ V := hvn.2.1
+  have hvV : v ∈ V := hsubV hvs
+  have hwV : w ∈ V := hsubV hws
+  -- 1. 四点两两异（MHFTTZN1 affDim = 3 vs 共面 vectorSpan ≤ 2 的维数矛盾）
+  have hneS : (setOfList [u0, u1, v, w] : Set V3) ≠ ∅ :=
+    Set.nonempty_iff_ne_empty.mp ⟨u0, hu0s⟩
+  have hd3 : affDim (setOfList [u0, u1, v, w]) = (3 : ℤ) :=
+    MHFTTZN1 V [u0, u1, v, w] 3 hp hbar
+  have hkey : ∀ p q r : V3, setOfList [u0, u1, v, w] ⊆ ({p, q, r} : Set V3) → False := by
+    intro p q r hsub
+    have hle : vectorSpan ℝ (setOfList [u0, u1, v, w])
+        ≤ Submodule.span ℝ ({q - p, r - p} : Set V3) := by
+      refine le_trans (vectorSpan_mono ℝ hsub) ?_
+      rw [vectorSpan_eq_span_vsub_set_right ℝ (show p ∈ ({p, q, r} : Set V3) from by simp)]
+      rw [Submodule.span_le]
+      rintro z ⟨y, hy, rfl⟩
+      rcases Set.mem_insert_iff.mp hy with hcy | hy
+      · rw [hcy]; simp
+      · rcases hy with hcy | hcy
+        · rw [hcy]; exact Submodule.subset_span (by simp)
+        · rw [hcy]; exact Submodule.subset_span (by simp)
+    exfalso
+    have hd3' := hd3
+    rw [affDim, if_neg hneS] at hd3'
+    norm_cast at hd3'
+    have hfr : Module.finrank ℝ (vectorSpan ℝ (setOfList [u0, u1, v, w])) ≤ 2 := by
+      refine le_trans (Submodule.finrank_mono hle) ?_
+      exact p24_finrank_span_pair_le_two (q - p) (r - p)
+    omega
+  have hv0 : v ≠ u0 := by
+    intro hc
+    refine hkey u0 u1 w ?_
+    rw [hset]
+    intro y hy
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy ⊢
+    rw [hc] at hy
+    tauto
+  have hv1 : v ≠ u1 := by
+    intro hc
+    refine hkey u0 u1 w ?_
+    rw [hset]
+    intro y hy
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy ⊢
+    rw [hc] at hy
+    tauto
+  have hw0 : w ≠ u0 := by
+    intro hc
+    refine hkey u0 u1 v ?_
+    rw [hset]
+    intro y hy
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy ⊢
+    rw [hc] at hy
+    tauto
+  have hw1 : w ≠ u1 := by
+    intro hc
+    refine hkey u0 u1 v ?_
+    rw [hset]
+    intro y hy
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy ⊢
+    rw [hc] at hy
+    tauto
+  have hvw : v ≠ w := by
+    intro hc
+    refine hkey u0 u1 w ?_
+    rw [hset]
+    intro y hy
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy ⊢
+    rw [hc] at hy
+    tauto
+  -- 2. Voronoi 胞单点 a + 四点等距
+  obtain ⟨a, ha1, ha2, ha3⟩ := VORONOI_LIST_3_SINGLETON_EXPLICIT V [u0, u1, v, w] hp hs hbar
+  have hhdu : hdV [u0, u1, v, w] = u0 := rfl
+  rw [hhdu] at ha3
+  have hamem : a ∈ voronoiList V [u0, u1, v, w] := by rw [ha1]; simp
+  have hxa : ∀ z ∈ setOfList [u0, u1, v, w], a ∈ voronoiClosed V z := by
+    intro z hz
+    have h0 : a ∈ ⋂₀ {voronoiClosed V q | q ∈ setOfList [u0, u1, v, w]} := hamem
+    exact h0 (voronoiClosed V z) ⟨z, hz, rfl⟩
+  have hEq : ∀ z ∈ setOfList [u0, u1, v, w], dist a z = hl [u0, u1, v, w] := by
+    intro z hz
+    have h0 : dist a z ≤ dist a u0 := hxa z hz u0 (hsubV hu0s)
+    have h1 : dist a u0 ≤ dist a z := hxa u0 hu0s z (hsubV hz)
+    rw [le_antisymm h0 h1, dist_comm a u0, ha3]
+  -- 3. 标架（e3 = 棱轴）+ 中点端点读出
+  have hdgt : 2 ≤ dist u0 u1 := hp.dist_ge_two hu0 hu1 hne
+  have hu0u1n : (u1 - u0 : V3) ≠ 0 := sub_ne_zero.mpr (Ne.symm hne)
+  obtain ⟨e1, e2, e3, hon, hax0⟩ := exists_on3_eq_smul (u1 - u0) hu0u1n
+  have haxd : (u1 - u0 : V3) = dist u0 u1 • e3 := by
+    have hn : ‖u1 - u0‖ = dist u0 u1 := (dist_eq_norm u1 u0).symm.trans (dist_comm u1 u0)
+    rw [hn] at hax0
+    exact hax0
+  have h33 : e3 ⬝ᵥ e3 = 1 := hon.2.2.1
+  have he3n : ∀ r : ℝ, ‖((r : ℝ) • e3 : V3)‖ ^ 2 = r ^ 2 := by
+    intro r
+    have h0 : ‖((r : ℝ) • e3 : V3)‖ ^ 2 = ((r : ℝ) • e3 : V3) ⬝ᵥ ((r : ℝ) • e3 : V3) :=
+      norm_sq_eq_dot _
+    simp only [h0, WithLp.ofLp_smul, smul_dotProduct, dotProduct_smul, smul_eq_mul, h33]
+    ring
+  -- 4. A' = a − mid 与轴垂直（等距读出）
+  set mid : V3 := u0 + (1 / 2 : ℝ) • (u1 - u0) with hmiddef
+  have hu1eq : (u1 : V3) = u0 + dist u0 u1 • e3 := by
+    rw [← haxd]
+    module
+  have hmidu1 : mid + (dist u0 u1 / 2) • e3 = u1 := by
+    rw [hmiddef, haxd, smul_smul]
+    conv_rhs => rw [hu1eq]
+    module
+  have hmidu0 : mid + (-(dist u0 u1 / 2)) • e3 = u0 := by
+    rw [hmiddef, haxd, smul_smul]
+    module
+  set A' : V3 := a - mid with hAdef
+  have hsq01 : ‖(a - u0 : V3)‖ ^ 2 = ‖(a - u1 : V3)‖ ^ 2 := by
+    rw [← dist_eq_norm a u0, ← dist_eq_norm a u1, hEq u0 hu0s, hEq u1 hu1s]
+  have k1 := p24_sq_eq_doteq (y := (a - u0 : V3)) (z := (u1 - u0 : V3)) (by
+    rw [show ((a - u0 : V3) - (u1 - u0 : V3)) = (a - u1 : V3) from by module]
+    exact hsq01)
+  have k1' : (a - u0 : V3) ⬝ᵥ (u1 - u0 : V3) = ‖u1 - u0‖ ^ 2 / 2 := by linarith
+  have k2 : ((1 / 2 : ℝ) • (u1 - u0 : V3)) ⬝ᵥ (u1 - u0 : V3) = ‖u1 - u0‖ ^ 2 / 2 := by
+    rw [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul, norm_sq_eq_dot]
+    ring
+  have hzo : (A' : V3) + (1 / 2 : ℝ) • (u1 - u0 : V3) = (a - u0 : V3) := by
+    rw [hAdef, hmiddef]
+    module
+  have e0 : A' ⬝ᵥ (u1 - u0 : V3)
+      + ((1 / 2 : ℝ) • (u1 - u0 : V3)) ⬝ᵥ (u1 - u0 : V3)
+      = (a - u0 : V3) ⬝ᵥ (u1 - u0 : V3) := by
+    rw [← hzo, WithLp.ofLp_add, add_dotProduct]
+  rw [k1', k2] at e0
+  have hAax : A' ⬝ᵥ (u1 - u0 : V3) = 0 := by linarith
+  have hAax' : (u1 - u0 : V3) ⬝ᵥ A' = 0 := by rw [dotProduct_comm]; exact hAax
+  have hdne : (dist u0 u1 : ℝ) ≠ 0 :=
+    ne_of_gt (lt_of_lt_of_le (by norm_num : (0:ℝ) < 2) hdgt)
+  have hAe3 : A' ⬝ᵥ e3 = 0 := by
+    have h1 : A' ⬝ᵥ (u1 - u0 : V3) = dist u0 u1 * (A' ⬝ᵥ e3) := by
+      rw [haxd, WithLp.ofLp_smul, dotProduct_smul, smul_eq_mul]
+    rw [h1] at hAax
+    exact (mul_eq_zero.mp hAax).resolve_left hdne
+  have hAe3' : e3 ⬝ᵥ A' = 0 := by rw [dotProduct_comm]; exact hAe3
+  -- 5. v 的坐标（垂分量 P，长度 n）与 P ≠ 0（退化支：tv² = (d/2)² ⇒ v ∈ {u0,u1}）
+  set Pv : V3 := v - mid with hPvdef
+  set tv : ℝ := Pv ⬝ᵥ e3 with htvdef
+  set P : V3 := Pv - tv • e3 with hPdef
+  have hPve : Pv = P + tv • e3 := by rw [hPdef]; module
+  have hPe3 : P ⬝ᵥ e3 = 0 := by
+    rw [hPdef, htvdef]
+    simp only [WithLp.ofLp_sub, WithLp.ofLp_smul, sub_dotProduct, smul_dotProduct,
+      smul_eq_mul, h33]
+    ring
+  have hPe3' : e3 ⬝ᵥ P = 0 := by rw [dotProduct_comm]; exact hPe3
+  set n : ℝ := ‖P‖ with hnndef
+  have hPnsq : P ⬝ᵥ P = n ^ 2 := by rw [← norm_sq_eq_dot P]
+  have hPne : P ≠ 0 := by
+    intro hP0
+    have hvvm : v = mid + tv • e3 := by
+      have h1 : v - mid = tv • e3 := by rw [← hPvdef, hPve, hP0, zero_add]
+      have h2 := (sub_eq_iff_eq_add (a := v) (b := mid) (c := (tv • e3 : V3))).mp h1
+      rw [add_comm] at h2
+      exact h2
+    have hsqv : ‖(a - v : V3)‖ ^ 2 = ‖A'‖ ^ 2 + tv ^ 2 := by
+      have hv' : (a - v : V3) = A' + (-(tv : ℝ)) • e3 := by
+        rw [hAdef, hvvm, hmiddef]; module
+      have hd0 : A' ⬝ᵥ ((-(tv : ℝ)) • e3) = 0 := by
+        rw [dotProduct_smul, smul_eq_mul, hAe3, neg_mul, mul_zero, neg_zero]
+      rw [hv', p24_norm_sq_of_orth (x := A') (y := ((-(tv : ℝ)) • e3 : V3)) hd0,
+        he3n (-(tv : ℝ))]
+      ring
+    have hsq0 : ‖(a - u0 : V3)‖ ^ 2 = ‖A'‖ ^ 2 + (dist u0 u1 / 2) ^ 2 := by
+      have hu' : (a - u0 : V3) = A' + (1 / 2 : ℝ) • (u1 - u0) := by
+        rw [hAdef, hmiddef]; module
+      have hd0 : A' ⬝ᵥ ((1 / 2 : ℝ) • (u1 - u0 : V3)) = 0 := by
+        rw [dotProduct_smul, smul_eq_mul, hAax, mul_zero]
+      have hwn : ‖(u1 - u0 : V3)‖ = dist u0 u1 := by
+        rw [← dist_eq_norm u1 u0, dist_comm u1 u0]
+      have hyn : ‖((1 / 2 : ℝ) • (u1 - u0 : V3) : V3)‖ ^ 2 = (dist u0 u1 / 2) ^ 2 := by
+        rw [norm_smul, Real.norm_eq_abs, mul_pow, sq_abs, hwn]
+        ring
+      rw [hu', p24_norm_sq_of_orth (x := A')
+        (y := ((1 / 2 : ℝ) • (u1 - u0 : V3))) hd0, hyn]
+    have hEqv : ‖(a - v : V3)‖ ^ 2 = ‖(a - u0 : V3)‖ ^ 2 := by
+      rw [← dist_eq_norm a v, ← dist_eq_norm a u0, hEq v hvs, hEq u0 hu0s]
+    have htv2 : tv ^ 2 = (dist u0 u1 / 2) ^ 2 := by linarith
+    have hzero : (tv - dist u0 u1 / 2) * (tv + dist u0 u1 / 2) = 0 := by
+      linear_combination htv2
+    rcases mul_eq_zero.mp hzero with hcase | hcase
+    · exfalso
+      refine hv1 ?_
+      have hvtv : tv = dist u0 u1 / 2 := by linarith
+      rw [hvvm, hvtv, hmidu1]
+    · exfalso
+      refine hv0 ?_
+      have hvtv : tv = -(dist u0 u1 / 2) := by linarith
+      rw [hvvm, hvtv, hmidu0]
+  have hnpos : 0 < n := norm_pos_iff.mpr hPne
+  -- 6. 共面塌缩：vectorSpan (setOfList vl) = span{u1−u0, v−u0}，w 的坐标分解
+  have hbar2v : barV V 2 [u0, u1, v] := by
+    refine ⟨by norm_num, ?_⟩
+    rintro zl ⟨⟨yl, hyll⟩, hpos⟩
+    exact hbar.2 zl ⟨⟨yl ++ [w], by rw [← List.append_assoc, ← hyll]; rfl⟩, hpos⟩
+  have hneS2 : (setOfList [u0, u1, v] : Set V3) ≠ ∅ :=
+    Set.nonempty_iff_ne_empty.mp ⟨u0, by simp [setOfList]⟩
+  have hfr2 : Module.finrank ℝ (vectorSpan ℝ (setOfList [u0, u1, v])) = 2 := by
+    have h := MHFTTZN1 V [u0, u1, v] 2 hp hbar2v
+    rw [affDim, if_neg hneS2] at h
+    exact_mod_cast h
+  have hvs3 : vectorSpan ℝ (setOfList [u0, u1, v])
+      = Submodule.span ℝ ({u1 - u0, v - u0} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_right ℝ
+      (show u0 ∈ (setOfList [u0, u1, v] : Set V3) from by simp [setOfList])]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro z ⟨y, hy, rfl⟩
+      simp only [setOfList, List.mem_cons, List.not_mem_nil, or_false] at hy
+      rcases hy with hcy | hcy | hcy
+      · rw [hcy]; simp
+      · rw [hcy]; exact Submodule.subset_span (by simp)
+      · rw [hcy]; exact Submodule.subset_span (by simp)
+    · rw [Submodule.span_le]
+      rintro z (rfl | rfl)
+      · exact Submodule.subset_span ⟨u1, by simp [setOfList], rfl⟩
+      · exact Submodule.subset_span ⟨v, by simp [setOfList], rfl⟩
+  have hcp2 : Module.finrank ℝ (vectorSpan ℝ (setOfList [u0, u1, v, w])) ≤ 2 :=
+    ((coplanar_iff_finrank_le_two (k := ℝ) (s := setOfList [u0, u1, v, w])).mp hcp)
+  have hspanW : Submodule.span ℝ ({u1 - u0, v - u0} : Set V3)
+      ≤ vectorSpan ℝ (setOfList [u0, u1, v, w]) := by
+    rw [Submodule.span_le]
+    rintro z (rfl | rfl)
+    · exact Submodule.subset_span ⟨u1, hu1s, u0, hu0s, rfl⟩
+    · exact Submodule.subset_span ⟨v, hvs, u0, hu0s, rfl⟩
+  have hWeq : vectorSpan ℝ (setOfList [u0, u1, v, w])
+      = Submodule.span ℝ ({u1 - u0, v - u0} : Set V3) := by
+    haveI := hcp.finiteDimensional_vectorSpan
+    refine (Submodule.eq_of_le_of_finrank_le hspanW ?_).symm
+    rw [← hvs3]
+    exact le_trans hcp2 hfr2.ge
+  have hwsW : (w - u0 : V3) ∈ Submodule.span ℝ ({u1 - u0, v - u0} : Set V3) := by
+    have h0 : (w - u0 : V3) ∈ vectorSpan ℝ (setOfList [u0, u1, v, w]) :=
+      Submodule.subset_span ⟨w, hws, u0, hu0s, rfl⟩
+    rw [hWeq] at h0
+    exact h0
+  obtain ⟨α, β, hwu0⟩ := Submodule.mem_span_pair.mp hwsW
+  have hvu0P : (v - u0 : V3) = (tv + dist u0 u1 / 2) • e3 + (1:ℝ) • P := by
+    calc (v - u0 : V3) = Pv + (1 / 2 : ℝ) • (u1 - u0) := by rw [hPvdef, hmiddef]; module
+      _ = (P + tv • e3) + (1 / 2 : ℝ) • (u1 - u0) := by rw [hPve]
+      _ = (tv + dist u0 u1 / 2) • e3 + (1:ℝ) • P := by rw [haxd]; module
+  obtain ⟨γ, μ, hwm⟩ : ∃ γ μ : ℝ, (w - mid : V3) = γ • e3 + μ • P := by
+    refine ⟨(α - 1 / 2) * dist u0 u1 + β * (tv + dist u0 u1 / 2), β, ?_⟩
+    calc (w - mid : V3)
+        = (α • (u1 - u0 : V3) + β • (v - u0 : V3)) - (1 / 2 : ℝ) • (u1 - u0) := by
+          rw [hwu0, hmiddef]; module
+      _ = ((α - 1 / 2) * dist u0 u1 + β * (tv + dist u0 u1 / 2)) • e3 + β • P := by
+          rw [haxd, hvu0P]; module
+  set tw : ℝ := (w - mid) ⬝ᵥ e3 with htwdef
+  have hγtw : γ = tw := by
+    rw [htwdef, hwm]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+      smul_dotProduct, dotProduct_smul, smul_eq_mul, hPe3, h33, mul_zero, zero_add,
+      mul_one]
+    ring
+  have hwdecomp : (w - mid : V3) = tw • e3 + μ • P := by
+    rw [← hγtw]
+    exact hwm
+  -- 7. 圆心 c = mid + (k/n)•P 与 a − c 的双重垂直
+  set k : ℝ := A' ⬝ᵥ P / n with hkdef
+  have hkn : A' ⬝ᵥ P = k * n := by rw [hkdef]; field_simp
+  set c : V3 := mid + (k / n) • P with hcdef
+  have hac : (a - c : V3) = A' - (k / n) • P := by rw [hcdef, hAdef]; module
+  have hqcE3 : (a - c : V3) ⬝ᵥ e3 = 0 := by
+    rw [hac]
+    simp only [WithLp.ofLp_sub, WithLp.ofLp_smul, sub_dotProduct, smul_dotProduct,
+      dotProduct_smul, smul_eq_mul, hAe3, hPe3]
+    ring
+  have hqcP : (a - c : V3) ⬝ᵥ P = 0 := by
+    rw [hac]
+    simp only [WithLp.ofLp_sub, WithLp.ofLp_smul, sub_dotProduct, smul_dotProduct,
+      dotProduct_smul, smul_eq_mul]
+    rw [hkn, hPnsq]
+    field_simp
+    ring
+  have hnormSP : ∀ s t : ℝ, ‖((s : ℝ) • e3 + (t : ℝ) • P : V3)‖ ^ 2 = s ^ 2 + t ^ 2 * n ^ 2 := by
+    intro s t
+    have h0 := p24_norm_sq_of_orth (x := ((s : ℝ) • e3 : V3)) (y := ((t : ℝ) • P : V3))
+      (show ((s : ℝ) • e3 : V3) ⬝ᵥ ((t : ℝ) • P : V3) = 0 by
+        simp only [WithLp.ofLp_smul, smul_dotProduct, dotProduct_smul, smul_eq_mul, hPe3',
+          mul_zero])
+    rw [h0, he3n s, norm_smul, Real.norm_eq_abs, mul_pow, sq_abs, hnndef]
+  have hpyth : ∀ s t : ℝ, ‖(a - c : V3) + ((s : ℝ) • e3 + (t : ℝ) • P)‖ ^ 2
+      = ‖(a - c : V3)‖ ^ 2 + s ^ 2 + t ^ 2 * n ^ 2 := by
+    intro s t
+    have hy0 : (a - c : V3) ⬝ᵥ ((s : ℝ) • e3 + (t : ℝ) • P) = 0 := by
+      simp only [dotProduct_add, dotProduct_smul, smul_eq_mul, hqcE3,
+        hqcP, mul_zero, zero_add]
+    rw [p24_norm_sq_of_orth (x := (a - c : V3))
+      (y := ((s : ℝ) • e3 + (t : ℝ) • P)) hy0, hnormSP s t]
+    ring
+  -- 8. c − 端点表示 + 距离方程
+  have hvVm : (v : V3) = mid + Pv := by rw [hPvdef]; module
+  have hwWm : (w : V3) = mid + (w - mid) := by module
+  have hcu0 : (c - u0 : V3) = (dist u0 u1 / 2) • e3 + (k / n) • P := by
+    rw [hcdef, hmiddef, haxd]; module
+  have hcv : (c - v : V3) = (-(tv : ℝ)) • e3 + (k / n - 1) • P := by
+    have step : (c - v : V3) = (k / n) • P - Pv := by rw [hcdef, hvVm]; module
+    rw [step, hPve]; module
+  have hcw : (c - w : V3) = (-(tw : ℝ)) • e3 + (k / n - μ) • P := by
+    have step : (c - w : V3) = (k / n) • P - (w - mid) := by rw [hcdef, hwWm]; module
+    rw [step, hwdecomp]; module
+  have hncu0 : ‖(c - u0 : V3)‖ ^ 2 = k ^ 2 + dist u0 u1 ^ 2 / 4 := by
+    rw [hcu0, hnormSP (dist u0 u1 / 2) (k / n)]
+    have h1 : (k / n) ^ 2 * n ^ 2 = k ^ 2 := by field_simp
+    rw [h1]
+    ring
+  have hncv : ‖(c - v : V3)‖ ^ 2 = (k - n) ^ 2 + tv ^ 2 := by
+    rw [hcv, hnormSP (-(tv : ℝ)) (k / n - 1)]
+    have h1 : (k / n - 1) ^ 2 * n ^ 2 = (k - n) ^ 2 := by field_simp
+    rw [h1]
+    ring
+  have hncw : ‖(c - w : V3)‖ ^ 2 = (k - μ * n) ^ 2 + tw ^ 2 := by
+    rw [hcw, hnormSP (-(tw : ℝ)) (k / n - μ)]
+    have h1 : (k / n - μ) ^ 2 * n ^ 2 = (k - μ * n) ^ 2 := by field_simp
+    rw [h1]
+    ring
+  have hau0v : (a - u0 : V3) = (a - c : V3) + (c - u0 : V3) := by module
+  have havv : (a - v : V3) = (a - c : V3) + (c - v : V3) := by module
+  have haww : (a - w : V3) = (a - c : V3) + (c - w : V3) := by module
+  have hdu0 : ‖(a - u0 : V3)‖ ^ 2
+      = ‖(a - c : V3)‖ ^ 2 + (k ^ 2 + dist u0 u1 ^ 2 / 4) := by
+    rw [hau0v, hcu0, hpyth (dist u0 u1 / 2) (k / n)]
+    have h1 : (k / n) ^ 2 * n ^ 2 = k ^ 2 := by field_simp
+    rw [h1]
+    ring
+  have hdv : ‖(a - v : V3)‖ ^ 2
+      = ‖(a - c : V3)‖ ^ 2 + ((k - n) ^ 2 + tv ^ 2) := by
+    rw [havv, hcv, hpyth (-(tv : ℝ)) (k / n - 1)]
+    have h1 : (k / n - 1) ^ 2 * n ^ 2 = (k - n) ^ 2 := by field_simp
+    rw [h1]
+    ring
+  have hdw : ‖(a - w : V3)‖ ^ 2
+      = ‖(a - c : V3)‖ ^ 2 + ((k - μ * n) ^ 2 + tw ^ 2) := by
+    rw [haww, hcw, hpyth (-(tw : ℝ)) (k / n - μ)]
+    have h1 : (k / n - μ) ^ 2 * n ^ 2 = (k - μ * n) ^ 2 := by field_simp
+    rw [h1]
+    ring
+  have hEu0 : ‖(a - u0 : V3)‖ ^ 2 = hl [u0, u1, v, w] ^ 2 := by
+    rw [← dist_eq_norm a u0, hEq u0 hu0s]
+  have hEv : ‖(a - v : V3)‖ ^ 2 = hl [u0, u1, v, w] ^ 2 := by
+    rw [← dist_eq_norm a v, hEq v hvs]
+  have hEw : ‖(a - w : V3)‖ ^ 2 = hl [u0, u1, v, w] ^ 2 := by
+    rw [← dist_eq_norm a w, hEq w hws]
+  -- 9. hC2 / hC3 / hrho
+  have ek : (k - n) ^ 2 = k ^ 2 - 2 * k * n + n ^ 2 := by ring
+  have ekμ : (k - μ * n) ^ 2 = k ^ 2 - 2 * k * (μ * n) + (μ * n) ^ 2 := by ring
+  have hC2 : 2 * k * n = n ^ 2 + tv ^ 2 - dist u0 u1 ^ 2 / 4 := by
+    linarith [hEu0, hdu0, hEv, hdv, ek]
+  have hC3 : 2 * k * (μ * n) = (μ * n) ^ 2 + tw ^ 2 - dist u0 u1 ^ 2 / 4 := by
+    linarith [hEu0, hdu0, hEw, hdw, ekμ]
+  have hhlpos : (0:ℝ) ≤ hl [u0, u1, v, w] := by rw [ha3]; exact dist_nonneg
+  have hhl2 : hl [u0, u1, v, w] ^ 2 < 2 := by
+    have hs2 : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (le_of_lt (by norm_num : (0:ℝ) < 2))
+    nlinarith [hhl, hhlpos, hs2]
+  have hqnpos : (0:ℝ) ≤ ‖(a - c : V3)‖ ^ 2 := sq_nonneg _
+  have hrho : k ^ 2 + dist u0 u1 ^ 2 / 4 < 2 := by
+    linarith [hEu0, hdu0, hqnpos, hhl2]
+  -- 10. 弦组（packing 两两距离 ≥ 2 的平方形态）
+  have hsq2 : ∀ x y : V3, x ∈ V → y ∈ V → x ≠ y → (4:ℝ) ≤ dist x y ^ 2 := by
+    intro x y hx hy hxy
+    have h1 : 2 ≤ dist x y := hp.dist_ge_two hx hy hxy
+    have hdn : (0:ℝ) ≤ dist x y := dist_nonneg
+    nlinarith [h1, hdn]
+  have hvu1P : (v - u1 : V3) = (tv - dist u0 u1 / 2) • e3 + (1:ℝ) • P := by
+    calc (v - u1 : V3) = Pv - (1 / 2 : ℝ) • (u1 - u0) := by rw [hPvdef, hmiddef]; module
+      _ = (P + tv • e3) - (1 / 2 : ℝ) • (u1 - u0) := by rw [hPve]
+      _ = (tv - dist u0 u1 / 2) • e3 + (1:ℝ) • P := by rw [haxd]; module
+  have hwu0P : (w - u0 : V3) = (tw + dist u0 u1 / 2) • e3 + μ • P := by
+    have step : (w - u0 : V3) = (w - mid) + (1 / 2 : ℝ) • (u1 - u0) := by
+      rw [hmiddef]; module
+    rw [step, hwdecomp, haxd]; module
+  have hwu1P : (w - u1 : V3) = (tw - dist u0 u1 / 2) • e3 + μ • P := by
+    have step : (w - u1 : V3) = (w - mid) - (1 / 2 : ℝ) • (u1 - u0) := by
+      rw [hmiddef]; module
+    rw [step, hwdecomp, haxd]; module
+  have hwvP : (w - v : V3) = (tw - tv) • e3 + (μ - 1) • P := by
+    have step : (w - v : V3) = (w - mid) - Pv := by rw [hPvdef]; module
+    rw [step, hwdecomp, hPve]; module
+  have h03 : 4 ≤ n ^ 2 + (tv + dist u0 u1 / 2) ^ 2 := by
+    have h1 : 4 ≤ dist u0 v ^ 2 := hsq2 u0 v hu0 hvV hv0.symm
+    have h2 : dist u0 v ^ 2 = n ^ 2 + (tv + dist u0 u1 / 2) ^ 2 := by
+      rw [dist_comm u0 v, dist_eq_norm v u0, hvu0P, hnormSP (tv + dist u0 u1 / 2) 1]
+      ring
+    rw [← h2]; linarith
+  have h13 : 4 ≤ n ^ 2 + (tv - dist u0 u1 / 2) ^ 2 := by
+    have h1 : 4 ≤ dist u1 v ^ 2 := hsq2 u1 v hu1 hvV hv1.symm
+    have h2 : dist u1 v ^ 2 = n ^ 2 + (tv - dist u0 u1 / 2) ^ 2 := by
+      rw [dist_comm u1 v, dist_eq_norm v u1, hvu1P, hnormSP (tv - dist u0 u1 / 2) 1]
+      ring
+    rw [← h2]; linarith
+  have h04 : 4 ≤ (μ * n) ^ 2 + (tw + dist u0 u1 / 2) ^ 2 := by
+    have h1 : 4 ≤ dist u0 w ^ 2 := hsq2 u0 w hu0 hwV hw0.symm
+    have h2 : dist u0 w ^ 2 = (μ * n) ^ 2 + (tw + dist u0 u1 / 2) ^ 2 := by
+      rw [dist_comm u0 w, dist_eq_norm w u0, hwu0P, hnormSP (tw + dist u0 u1 / 2) μ]
+      ring
+    rw [← h2]; linarith
+  have h14 : 4 ≤ (μ * n) ^ 2 + (tw - dist u0 u1 / 2) ^ 2 := by
+    have h1 : 4 ≤ dist u1 w ^ 2 := hsq2 u1 w hu1 hwV hw1.symm
+    have h2 : dist u1 w ^ 2 = (μ * n) ^ 2 + (tw - dist u0 u1 / 2) ^ 2 := by
+      rw [dist_comm u1 w, dist_eq_norm w u1, hwu1P, hnormSP (tw - dist u0 u1 / 2) μ]
+      ring
+    rw [← h2]; linarith
+  have h34 : 4 ≤ (μ * n - n) ^ 2 + (tw - tv) ^ 2 := by
+    have h1 : 4 ≤ dist v w ^ 2 := hsq2 v w hvV hwV hvw
+    have h2 : dist v w ^ 2 = (μ * n - n) ^ 2 + (tw - tv) ^ 2 := by
+      rw [dist_comm v w, dist_eq_norm w v, hwvP, hnormSP (tw - tv) (μ - 1)]
+      ring
+    rw [← h2]; linarith
+  -- 11. k ≠ 0（h03 + h13 相加 + hrho 的 d² < 8）与组装
+  have hk0 : k ≠ 0 := by
+    intro hk0
+    have hsum : n ^ 2 + tv ^ 2 = dist u0 u1 ^ 2 / 4 := by rw [hk0] at hC2; linarith
+    have ex1 : (tv + dist u0 u1 / 2) ^ 2
+        = tv ^ 2 + tv * dist u0 u1 + dist u0 u1 ^ 2 / 4 := by ring
+    have ex2 : (tv - dist u0 u1 / 2) ^ 2
+        = tv ^ 2 - tv * dist u0 u1 + dist u0 u1 ^ 2 / 4 := by ring
+    have hdd : dist u0 u1 ^ 2 < 8 := by rw [hk0] at hrho; nlinarith
+    linarith [hC2, h03, h13, hsum, ex1, ex2, hdd]
+  exact ⟨dist u0 u1, k, n, μ, tv, tw, hdgt, hk0, hrho, hC2, hC3, h03, h13, h04, h14, h34⟩
+
+/-! ## 新件 2：p24_caseA_coplanar_false（合成件） -/
+
+/-- **情形 A 完结件**（2026-10-11 波）：`p24_caseA_concyclic`（共圆件，
+上件）产出 `p24_wedge_quad_kill`（上波真证落地的 W-楔代数核心）的精确输入形，
+本件逐参转发 ⇒ 情形 A（`hl vl < √2`，路线图第 4 条）下四点共面不可能——
+即「四点共面 ⇒ 仿射独立」的反证收口，供后续波装配进
+`p24_exists_mcell_not_flat` 的非平坦胞论证（情形 B `r₄ ≥ √2` 分支不在本件
+范围）。 -/
+private theorem p24_caseA_coplanar_false (V : Set V3) (u0 u1 : V3) (vl : List V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (hbar : barV V 3 vl) (htr : truncateSimplex 1 vl = [u0, u1])
+    (hhl : hl vl < Real.sqrt 2) (hcp : Coplanar ℝ (setOfList vl)) : False := by
+  obtain ⟨d, k, n, μ, tv, tw, hd2, hk, hrho, hC2, hC3, h03, h13, h04, h14, h34⟩ :=
+    p24_caseA_concyclic V u0 u1 vl hs hp hu0 hu1 hne hbar htr hhl hcp
+  exact p24_wedge_quad_kill d k n μ tv tw hd2 hk hrho hC2 hC3 h03 h13 h04 h14 h34
+
 /-- NEEDS（(β) 支独立存在性引理，2026-10-08/09 波落盘为 precisely-scoped
 残件；HL OXLZLEZ3 `FCHKUGT`/`EWYBJUA` 叶胞链的对应物，PA18:2159/:2532 的
 `ported sorry` 孪生同源）：饱和 packing 的短棱 `u0u1`（`d < 2√2`）处存在以
