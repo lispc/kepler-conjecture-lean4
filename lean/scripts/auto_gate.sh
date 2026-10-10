@@ -451,8 +451,32 @@ cat > "/tmp/AxCheck_$THM.lean" <<EOF
 import $MODULE
 #print axioms $NS.$THM
 EOF
-timeout 600 lake env lean "/tmp/AxCheck_$THM.lean" > /tmp/AxCheck_$THM.out 2>&1 \
-  || fail "axioms check crashed, see /tmp/AxCheck_$THM.out"
+# EVOLUTION 18 (2026-10-08): private declarations are invisible under their
+# public name (lean mangles them to
+# _private.<module>.0.<full.namespaced.name>). The first probe's nonzero exit
+# on unknown-constant is RETRYABLE, not a crash — only crash on other
+# failures. Retry with a suffix-match discovery probe printing in the SAME
+# output format so the whitelist parser below is unchanged.
+timeout 600 lake env lean "/tmp/AxCheck_$THM.lean" > /tmp/AxCheck_$THM.out 2>&1
+if [ $? -ne 0 ] && ! grep -qi "unknown constant" /tmp/AxCheck_$THM.out; then
+  fail "axioms check crashed, see /tmp/AxCheck_$THM.out"
+fi
+if grep -qi "unknown constant" /tmp/AxCheck_$THM.out; then
+  cat > "/tmp/AxCheck_$THM.lean" <<EOF2
+import $MODULE
+open Lean in
+#eval show CoreM Unit from do
+  let env ← getEnv
+  for (n, _) in env.constants.toList do
+    if (\`$THM).isSuffixOf n then
+      let axs ← Lean.collectAxioms n
+      IO.println s!"'{n}' depends on axioms: {axs.toList}"
+EOF2
+  timeout 600 lake env lean "/tmp/AxCheck_$THM.lean" > /tmp/AxCheck_$THM.out 2>&1 \
+    || fail "axioms private-retry crashed, see /tmp/AxCheck_$THM.out"
+  grep -q "depends on axioms" /tmp/AxCheck_$THM.out \
+    || fail "no declaration named $THM (public or private) in $MODULE"
+fi
 # NB: lean wraps long output across lines — flatten before matching
 # sorryAx PERMITTED (2026-09-28): Text fills may consume other in-tree
 # sorries — that debt is tracked by debt_ledger, not by this gate. What this
