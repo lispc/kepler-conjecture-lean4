@@ -1166,3 +1166,52 @@ mcell0/2/3）已随新 docstring 落档。
 附带修正建议：GT-2 lane note"mcell 4 cells carry e"反例 sketch 不成立
 （远点族 hl ≥ √2 ⇒ mcell4 = ∅）；无穷性支路应走远点 Delaunay 族的
 mcell0/2/3。随本 SF 落档。
+
+## 32. PA23 `p23_grutoti_cap_measure_cover` 缺 region 门（hcov 覆盖恒等式）— 分级 A（STATEMENT 修正）
+
+### (a) HOL 出处：GRUTOTI.hl:7228-7400（同 SF31 源，§G 测度覆盖段）
+
+HOL 原文在全称语境携带 region 见证（`c ≤ d`、`hl/√2 ≤ d`、`c`-锥 Rogers
+覆盖）。Lean 版（SF32 拆分波定点）只有 region-block 形 `0 < r ≤ 1 ∧ 0 < d < 1`
+——d < hl/√2 时恒等式很可能为假（D 伸进非携边胞、正测度），与 SF31 同类的
+移植前提丢失。
+
+### (b) 反例方向（定性）
+
+d 充分小时 `rconeGt u0 u1 d` 严格大于 `rconeGt u0 u1 (hl/√2)`，差锥区含非携
+边胞的正测度迹，`⋃₀ 迹 = D` 不成立。精确反例可沿 SF31 的 ∅-思路变体构造，
+立案阶段以侦察地图（docs/tiwwfyq-coverage-scout.md §2 缺口 G1）为准。
+
+### (c) 修复方案
+
+前提面加 region 门：`(hcovW : ∃ c, c ≤ d ∧ ball u0 1 ∩ rconeGt u0 u1 c ⊆
+⋃₀ (rogers V '' p23Fam) ∧ ...)`——或直接收 `p23_region_data` 的输出形状
+（c ≤ d ∧ hl/√2 ≤ d ∧ mcell 覆盖），与 SF31 的 (a1) 精神一致：债显式化到
+前提面，主体变 `p23_C_sub_rogers` 实例 + SLTSTLO1 逐点 + B1 VX-桥 + 双
+measure_mono 纯装配（~150-250 行）。GRUTOTI 调用点与
+`p23_grutoti_sum_volD_measure_facts` 同步联动。
+
+### (d) 状态：**DRAFT（2026-10-10 立案，待批）**
+
+## 33. PA23 `grutoti_pivot` 缺 region 门与 hw* 窄性（楔形 pivot 恒等式）— 分级 A（STATEMENT 修正）
+
+### (a) HOL 出处：GRUTOTI.hl:7962-7966（§G/§H 7441-7958）
+
+HOL 语境携带 packing/饱和/hl 下界与 hw1-hw4 窄性数据；Lean 冻结版只有
+`hr hr1 hd hd1 he hfin` 六条。
+
+### (b) 不可证性（定性）
+
+¬nullSet(X∩D) 支需要 k≥2 计数（`p23_edge_cell_k_ge_two` 真证）+ 逐 k 窄性
+（k=3/4 走 CONIC_CAP_INTER_CONVEX_HULL_4_GT_0——PA15:2275 已真证，旧注
+"still sorried" 过期；k=2 走 hw1），全部需要 region 数据；冻结签名收不进来。
+
+### (c) 修复方案
+
+前提面加 `(hs hp hu0 hu1 hne hhl) + hw1 hw3 hw4`（恰为 `grutoti_cell_vol`
+消费形，`p23_region_data` 逐字供给）；主体 null 支 + u0-首向支变
+`p23_setSum_congr` + `grutoti_cell_vol` 逐点纯装配（~100-200 行）；反向支
+k=2 走 MCELL2_PERMUTE_01 镜像（~100-150 行），k=3/4 反向（dihX 定向 junk
+语义）为真缺口 G3 另案。GRUTOTI 调用点同步联动。
+
+### (d) 状态：**DRAFT（2026-10-10 立案，待批）**
