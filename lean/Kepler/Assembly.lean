@@ -522,6 +522,19 @@ theorem elllnyz (x y : fgraph ℕ) (hx : GoodList x) (hy : GoodList y)
       (HypermapIso Hx Hy ∨ HypermapIso (oppositeHypermap Hx) Hy) := by
   sorry
 
+/-! NEEDS(hypermapOfFanNeg，2026-09-28 脊柱 lane)：HOL ASFUTBF.hl:1007
+`hypermap_of_fan_neg` 的结论是 `iso (hypermap_of_fan (IMAGE -- …)) (opposite_hypermap …)`
+——负号 fan 是镜像（V ↦ -V 定向反转），Lean 侧需整套 negation-equivariance 工具链：
+①`azim_mirror`（azim (−v) (−w) (−w1) (−w2) = 2π − azim v w w1 w2，零情形单独；
+经 Geom/Azim.lean 的 AzimSpec + azim_eq_of_spec，frame 取 e_i ↦ −e_i 时右手性翻转，
+ψ ↦ −ψ）；②`sigmaFan` 镜像/逆（sigmaFan(−V)(−E)(−v)(−w) = −σ⁻¹(V)(v,w)，需
+azim_mirror + argmin 最小值传递，即 HOL Localization 的 ivs_azim_cycle 群）；
+③setOfEdge/dartOfFan 像集引理（机械）；④hypermapOfFan 构造层（dartsetLeadsInto
+三个 permutes 字段的像集搬运）。HOL 全套在 ASFUTBF.hl:182-699（scriptL_negative/
+CARD_NEGATIVE/ESTD_NEG/ECTC_NEG/set_of_edge_neg/dart_of_fan_neg/azim_fan_neg/
+azim_dart_neg）；数据合取项的 Lean 私件已备（见 `contraveningNegative` 上方
+`negInjOn`—`scriptLMaxNegative` 块），镜像链三件（①②④）仍缺。 -/
+
 /-- 接口占位：HOL `Asfutbf.hypermap_of_fan_neg`（ASFUTBF.hl）。 -/
 theorem hypermapOfFanNeg (V : Set V3) (hc : Contravening V) (hfan : FAN 0 V (ESTD V))
     (hfan' : FAN 0 ((fun v => -v) '' V) (ESTD ((fun v => -v) '' V))) :
@@ -530,11 +543,182 @@ theorem hypermapOfFanNeg (V : Set V3) (hc : Contravening V) (hfan : FAN 0 V (EST
       (oppositeHypermap (hypermapOfFan 0 V (ESTD V) hfan)) := by
   sorry
 
+/-- 私件：`oppositeHypermap` 对合（HOL `Tame_opposite.opposite_opposite_hypermap_eq_hypermap`）。
+数据字段：`edgeMap = faceMap.symm * nodeMap.symm` 由 `comp_eq_one`（E·N·F = 1 ⇒
+E = (N·F)⁻¹ = F⁻¹·N⁻¹）给出；四个证明字段由命题的证明无关性 `rfl` 消去。 -/
+private theorem oppositeHypermapOpposite {α : Type*} [DecidableEq α] (H : Hypermap α) :
+    oppositeHypermap (oppositeHypermap H) = H := by
+  have hE : H.edgeMap = H.faceMap.symm * H.nodeMap.symm := by
+    have h1 : H.edgeMap * (H.nodeMap * H.faceMap) = 1 := by
+      rw [← mul_assoc]; exact H.comp_eq_one
+    calc H.edgeMap = (H.edgeMap⁻¹)⁻¹ := (inv_inv H.edgeMap).symm
+      _ = (H.nodeMap * H.faceMap)⁻¹ := by rw [eq_inv_of_mul_eq_one_right h1]
+      _ = H.faceMap⁻¹ * H.nodeMap⁻¹ := mul_inv_rev _ _
+      _ = H.faceMap.symm * H.nodeMap.symm := by simp [Equiv.Perm.inv_def]
+  simp only [oppositeHypermap]
+  congr 1
+  exact hE.symm
+
+/-- 私件：同构经 `oppositeHypermap` 保持（同一 dart 双射 `f`，三映射交换式对
+opp 的 E=F·N / N=N⁻¹ / F=F⁻¹ 逐条改写；N⁻¹/F⁻¹ 情形经
+`Equiv.symm_apply_eq` + dart 集闭包 `PermutesOn.symm_apply_mem`）。 -/
+private theorem hypermapIsoOpposite {α β : Type*} [DecidableEq α] [DecidableEq β]
+    {H : Hypermap α} {H' : Hypermap β} (h : HypermapIso H H') :
+    HypermapIso (oppositeHypermap H) (oppositeHypermap H') := by
+  obtain ⟨f, hf, hfc⟩ := h
+  refine ⟨f, hf, ?_⟩
+  intro x hx
+  obtain ⟨he, hn, hfa⟩ := hfc x hx
+  have hxN : H.nodeMap x ∈ H.darts := H.nodeMap_permutes.apply_mem hx
+  obtain ⟨_, _, hfaN⟩ := hfc (H.nodeMap x) hxN
+  have hx' : H.nodeMap.symm x ∈ H.darts := H.nodeMap_permutes.symm_apply_mem hx
+  have hx'' : H.faceMap.symm x ∈ H.darts := H.faceMap_permutes.symm_apply_mem hx
+  obtain ⟨_, hn2, _⟩ := hfc (H.nodeMap.symm x) hx'
+  obtain ⟨_, _, hfa2⟩ := hfc (H.faceMap.symm x) hx''
+  refine ⟨?_, ?_, ?_⟩
+  · show (H'.faceMap * H'.nodeMap) (f x) = f ((H.faceMap * H.nodeMap) x)
+    rw [Equiv.Perm.mul_apply, Equiv.Perm.mul_apply, hn, hfaN]
+  · show H'.nodeMap.symm (f x) = f (H.nodeMap.symm x)
+    have h1 : f x = H'.nodeMap (f (H.nodeMap.symm x)) := by
+      rw [hn2]; simp
+    exact (Equiv.symm_apply_eq H'.nodeMap).mpr h1
+  · show H'.faceMap.symm (f x) = f (H.faceMap.symm x)
+    have h1 : f x = H'.faceMap (f (H.faceMap.symm x)) := by
+      rw [hfa2]; simp
+    exact (Equiv.symm_apply_eq H'.faceMap).mpr h1
+
 /-- 接口占位：HOL `Asfutbf.iso_opposite_eq`（ASFUTBF.hl）。 -/
 theorem isoOppositeEq {α β : Type*} [DecidableEq α] [DecidableEq β]
     (H : Hypermap α) (H' : Hypermap β) :
     HypermapIso H H' ↔ HypermapIso (oppositeHypermap H) (oppositeHypermap H') := by
-  sorry
+  constructor
+  · exact hypermapIsoOpposite
+  · intro h
+    have h2 : HypermapIso (oppositeHypermap (oppositeHypermap H))
+        (oppositeHypermap (oppositeHypermap H')) := hypermapIsoOpposite h
+    rw [oppositeHypermapOpposite, oppositeHypermapOpposite] at h2
+    exact h2
+
+/-! ### 2c.5 `contravening_negative` 数据合取项私件（2026-09-28 脊柱 lane）
+
+对照 HOL ASFUTBF.hl:182-298（`scriptL_negative` / `CARD_NEGATIVE` / `ESTD_NEG` /
+`ECTC_NEG` / `packing_negative` / `ball_annulus_negative`，六件全真证明镜像）。
+`contravening V` 的前五个数据合取项（packing / ball_annulus / scriptL / max /
+card）由它们直接装配；**剩余卡点** = 第 6/7 合取项 `surroundedNode`：负号 fan 是
+镜像（定向反转），需要 `azim (−v) (−w) (−w1) (−w2) = 2π − azim`（非平凡不变式，
+经 AzimSpec frame 取反）+ `sigmaFan` 镜像逆（HOL Localization ivs_azim_cycle 群）
+——该工具链全树未移植，见 `hypermapOfFanNeg` 上方 NEEDS 注记。 -/
+
+private theorem negInjOn (V : Set V3) : Set.InjOn (fun v : V3 => -v) V :=
+  fun _ _ _ _ h => by simpa using congrArg Neg.neg h
+
+private theorem negInjPre (V : Set V3) :
+    Set.InjOn (fun v : V3 => -v) ((fun v : V3 => -v) ⁻¹' ((fun v : V3 => -v) '' V)) :=
+  fun _ _ _ _ h => by simpa using congrArg Neg.neg h
+
+/-- HOL `packing_negative`（ASFUTBF.hl:127）。 -/
+private theorem packingNegative {V : Set V3} (h : Packing V) :
+    Packing ((fun v => -v) '' V) := by
+  intro u hu v hv hlt
+  obtain ⟨u', hu', rfl⟩ := hu
+  obtain ⟨v', hv', rfl⟩ := hv
+  rw [h v' hv' u' hu' (by simpa [dist_comm] using hlt)]
+
+/-- HOL `ball_annulus_negative`（ASFUTBF.hl:139）：`ballAnnulus` 的 membership
+只依赖范数，`‖-v‖ = ‖v‖`。 -/
+private theorem ballAnnulusNegative {V : Set V3} (h : V ⊆ ballAnnulus) :
+    ((fun v => -v) '' V) ⊆ ballAnnulus := by
+  intro w hw
+  obtain ⟨v, hv, rfl⟩ := hw
+  have key : ∀ z : V3, z ∈ ballAnnulus ↔ -z ∈ ballAnnulus := by
+    intro z
+    simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball,
+      dist_zero_right, norm_neg]
+  exact (key v).mp (h hv)
+
+/-- HOL `CARD_NEGATIVE`（ASFUTBF.hl:204；`InjOn.ncard_image` 一步）。 -/
+private theorem cardNegative (V : Set V3) :
+    ((fun v => -v) '' V).ncard = V.ncard :=
+  (negInjOn V).ncard_image
+
+/-- HOL `ESTD_NEG`（ASFUTBF.hl:210）：`ESTD` 的边条件 `dist ≤ 2*h0` 在
+`dist (-u) (-w) = dist u w` 下不变。 -/
+private theorem estdNegative (V : Set V3) :
+    ESTD ((fun v => -v) '' V) = (fun e => Set.image (fun v : V3 => -v) e) '' (ESTD V) := by
+  ext e
+  constructor
+  · rintro ⟨u, w, rfl, hu, hw, hne, hdist⟩
+    obtain ⟨u', hu', rfl⟩ := hu
+    obtain ⟨w', hw', rfl⟩ := hw
+    refine ⟨{u', w'}, ⟨u', w', rfl, hu', hw', ?_, ?_⟩, ?_⟩
+    · simpa using hne
+    · simpa using hdist
+    · simp
+  · rintro ⟨e', he', rfl⟩
+    obtain ⟨v, w, rfl, hv, hw, hne, hdist⟩ := he'
+    refine ⟨-v, -w, by simp, ?_, ?_, ?_, ?_⟩
+    · exact ⟨v, hv, rfl⟩
+    · exact ⟨w, hw, rfl⟩
+    · rintro hh
+      exact hne (by simpa using hh)
+    · simpa using hdist
+
+/-- HOL `ECTC_NEG`（ASFUTBF.hl:240，同 `estdNegative`，边条件 `dist = 2`）。 -/
+private theorem ectrNegative (V : Set V3) :
+    ECTC ((fun v => -v) '' V) = (fun e => Set.image (fun v : V3 => -v) e) '' (ECTC V) := by
+  ext e
+  constructor
+  · rintro ⟨u, w, rfl, hu, hw, hne, hdist⟩
+    obtain ⟨u', hu', rfl⟩ := hu
+    obtain ⟨w', hw', rfl⟩ := hw
+    refine ⟨{u', w'}, ⟨u', w', rfl, hu', hw', ?_, ?_⟩, ?_⟩
+    · simpa using hne
+    · simpa using hdist
+    · simp
+  · rintro ⟨e', he', rfl⟩
+    obtain ⟨v, w, rfl, hv, hw, hne, hdist⟩ := he'
+    refine ⟨-v, -w, by simp, ?_, ?_, ?_, ?_⟩
+    · exact ⟨v, hv, rfl⟩
+    · exact ⟨w, hw, rfl⟩
+    · rintro hh
+      exact hne (by simpa using hh)
+    · simpa using hdist
+
+/-- HOL `scriptL_negative`（ASFUTBF.hl:182）：求和经 `Finset.sum_image` 沿
+`v ↦ -v` 换元（`‖-v‖ = ‖v‖`；无限集分支两侧同为约定 0）。 -/
+private theorem scriptLNegative (V : Set V3) :
+    scriptL ((fun v => -v) '' V) = scriptL V := by
+  by_cases hV : V.Finite
+  · have him : ((fun v => -v) '' V).Finite := hV.image (fun v : V3 => -v)
+    have hinj' : Set.InjOn (fun v : V3 => -v) (↑hV.toFinset : Set V3) := by
+      rw [Set.Finite.coe_toFinset hV]
+      exact negInjOn V
+    rw [scriptL, dif_pos him, Set.Finite.toFinset_image (fun v : V3 => -v) hV him,
+      Finset.sum_image (f := fun v : V3 => lmfun (‖v‖ / 2)) hinj']
+    rw [scriptL, dif_pos hV]
+    exact Finset.sum_congr rfl fun v _ => by simp only [norm_neg]
+  · have hnot : ¬((fun v => -v) '' V).Finite := by
+      rintro him
+      exact hV (Set.Finite.subset (him.preimage (negInjPre V)) (Set.subset_preimage_image _ V))
+    rw [scriptL, dif_neg hnot, scriptL, dif_neg hV]
+
+/-- `contravening` 第 4 合取项（max 条件）的负号版，由 `scriptLNegative` 传递。 -/
+private theorem scriptLMaxNegative (V : Set V3)
+    (hmax : ∀ W : Set V3, Packing W → W ⊆ ballAnnulus → scriptL W ≤ scriptL V) :
+    ∀ W : Set V3, Packing W → W ⊆ ballAnnulus → scriptL W ≤ scriptL ((fun v => -v) '' V) :=
+  fun W hW hsub => by
+    rw [scriptLNegative V]
+    exact hmax W hW hsub
+
+/-! NEEDS（2026-09-28 脊柱 lane）：前五数据合取项已由上方私件装配齐
+（`contraveningNegative` 证明体只剩
+`refine ⟨packingNegative hc.1, ballAnnulusNegative hc.2.1, scriptLNegative V ▸ hc.2.2.1,
+  scriptLMaxNegative V hc.2.2.1, cardNegative V ▸ hc.2.2.2.2.1, ?_, ?_⟩`），
+第 6/7 合取项 `surroundedNode (neg''V) (ESTD/ECTC (neg''V)) v` 卡**镜像链**：
+V ↦ -V 定向反转，azim 非不变而是 `azim(−) = 2π − azim`，需 `azim_mirror`
+（AzimSpec frame 取反版）+ `sigmaFan` 镜像逆（HOL Localization.ivs_azim_cycle 群，
+全树未移植）+ setOfEdge/dartOfFan 像集 + AZIM_LT_PI_IMP_CARD_GT_1 对应物
+（HOL ASFUTBF.hl:182-699，~500 行）。工具链落地后本占位即机械装配。 -/
 
 /-- 接口占位：HOL `Asfutbf.contravening_negative`（ASFUTBF.hl；
 `contravening_negative_concl`）。 -/
@@ -545,7 +729,27 @@ theorem contraveningNegative (V : Set V3) (hc : Contravening V) :
 /-- 接口占位：HOL `Fnjlbxs.local_annulus_inequality_scriptL`（FNJLBXS-compiled.hl）。 -/
 theorem localAnnulusInequalityScriptL (V : Set V3) :
     localAnnulusInequality V ↔ scriptL V ≤ 12 := by
-  sorry
+  -- HOL FNJLBXS-compiled.hl:1758 的证明是定义性恒等：`hl [vec 0; v] = norm v / &2`
+  -- （hl2 = radV_2，经 OAPVION2/CIRCUMCENTER_2；此处对应物 `RADV2`，PackingAuto25）
+  -- + 求和约定（两侧同一 Finite 分支）。
+  have hhl : ∀ v : V3, hl [0, v] = ‖v‖ / 2 := by
+    intro v
+    have hso : setOfList [0, v] = ({0, v} : Set V3) := by
+      ext x; simp [setOfList]
+    show radV (setOfList [0, v]) = ‖v‖ / 2
+    rw [hso, RADV2 0 v, dist_zero_left]
+    ring
+  by_cases hV : V.Finite
+  · have e1 : setSum V (fun v => lmfun (hl [0, v]))
+        = Finset.sum hV.toFinset (fun v => lmfun (‖v‖ / 2)) := by
+      simp only [setSum]
+      rw [dif_pos hV]
+      exact Finset.sum_congr rfl fun v _ => by rw [hhl]
+    have e2 : scriptL V = Finset.sum hV.toFinset (fun v => lmfun (‖v‖ / 2)) := by
+      rw [scriptL, dif_pos hV]
+    simp only [localAnnulusInequality]
+    rw [e1, e2]
+  · simp only [localAnnulusInequality, setSum, scriptL, dif_neg hV]
 
 /-- 接口占位：HOL `Fnjlbxs.FCDJDOT`（FNJLBXS-compiled.hl；前提
 `pack_ineq_def_a` 显式化）。 -/
@@ -553,6 +757,19 @@ theorem fcdjdot (hpa : PackIneqDefA)
     (h : ∃ W : Set V3, Packing W ∧ W ⊆ ballAnnulus ∧ scriptL W > 12) :
     ∃ V : Set V3, Contravening V := by
   sorry
+
+/-! NEEDS（2026-09-28 脊柱 lane 定级确认「中等」，三件套）：
+①`FLYSPECK_DEVOLUTION`（flyspeck_devol.hl:25）——体积形界 ⟹ 计数形界：对
+saturated V，V∩ball(0,r) 中每点的单位球互斥且含于 ball(0,r+1)，故
+`CARD(V∩ball(0,r)) * vol(ball 1) ≤ vol(⋃ unit balls ∩ ball(0,r+1))`，再由体积界
+在 r+1 处折算（c ↦ π/√18·7 + |c|·4）；Lean 侧需测度论侧条件
+（MEASURE_SUBSET/MEASURABLE_UNIONS + FINITE_PACK_LEMMA 的有限性——
+PackingAuto19 的 `Finite` 套件或 PA2 `Upfzbzm` 支撑引理群）。
+②`CPNKNXN`（flyspeck_devol.hl:135）——packing ⟹ saturated 超集（Zorn：
+ZL_SUBSETS_UNIONS_NONEMPTY，链并的 packing 论证），Mathlib Zorn 可移植。
+③`KIUMVTC`（Pack2）——V ⊆ V' ⟹ CARD(V∩ball) ≤ CARD(V'∩ball)（机械：
+Set.inter_subset_inter + ncard mono）。HOL 证明体 the_main_statement.hl:84-110
+为 ~25 行装配（ENOUGH_TO_SHOW + REAL_ARITH）。 -/
 
 /-- 接口占位：HOL `kc_imp_the_kc`（the_main_statement.hl:82）——
 Pack_defs `kepler_conjecture`（体积形）⟹ 密度计数形。 -/
