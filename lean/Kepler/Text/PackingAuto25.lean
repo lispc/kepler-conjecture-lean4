@@ -821,7 +821,9 @@ theorem coplanar_delta_y (u0 u1 u2 u3 : V3) :
         (dist u1 u3) (dist u1 u2) := by
   sorry
 
-/-- HOL `RADV_ETAY`. -/
+/-- HOL `RADV_ETAY`.
+-- NEEDS: sphere.hl 本体（`radV {三点} = eta_y`，Cartan/行列式桥；本波
+LEAF_DOMAIN :2350 ✅ 已装配到本件）。 -/
 theorem RADV_ETAY (u0 u1 u2 : V3) (hnc : ¬ Collinear3 u0 u1 u2) :
     radV {u0, u1, u2} = eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2) := by
   sorry
@@ -1203,8 +1205,74 @@ theorem s_leaf_collinear (V : Set V3) (ul : List V3) (x : V3) (hp : Packing V)
     · exact hax he.symm
     · exact hbx he.symm
 
+/-- leaf-rank 波 helper（真证）：`COLL_IN_AFF_GT_AFF_GT_EQ`
+（local_lemmas.hl:5488）的移植——非退化顶点锥的成员给出锥相等。
+Proof: 两个方向都经 `affGt_pair_iff` 的射线表示重组（`module` 系数吸收）。 -/
+private theorem p25_affGt_eq_of_mem {v0 v1 z a : V3}
+    (hv0v1 : v0 ≠ v1) (hz0 : z ≠ v0) (hz1 : z ≠ v1) (ha0 : a ≠ v0) (ha1 : a ≠ v1)
+    (ha : a ∈ affGt {v0, v1} {z}) :
+    affGt {v0, v1} {z} = affGt {v0, v1} {a} := by
+  obtain ⟨c, hc, h, hray⟩ := (affGt_pair_iff hv0v1 hz0 hz1).mp ha
+  have hiffz : ∀ q : V3, q ∈ affGt {v0, v1} {z} ↔
+      ∃ c : ℝ, 0 < c ∧ ∃ h : ℝ, q - v0 = c • (z - v0) + h • (v1 - v0) :=
+    fun q => affGt_pair_iff hv0v1 hz0 hz1
+  have hiffa : ∀ q : V3, q ∈ affGt {v0, v1} {a} ↔
+      ∃ c : ℝ, 0 < c ∧ ∃ h : ℝ, q - v0 = c • (a - v0) + h • (v1 - v0) :=
+    fun q => affGt_pair_iff hv0v1 ha0 ha1
+  -- 射线反解：z 在 a 的射线表示下的坐标
+  have hray' : c • (z - v0) = (a - v0) - h • (v1 - v0) := by
+    rw [hray]; module
+  have key : (z - v0 : V3) = (1 / c) • ((a - v0) - h • (v1 - v0)) := by
+    have h1 : (z - v0 : V3) = (1 / c) • (c • (z - v0)) := by
+      rw [smul_smul, show ((1 : ℝ) / c) * c = 1 from by field_simp, one_smul]
+    rw [h1, hray']
+  ext q
+  constructor
+  · intro hq
+    obtain ⟨c2, hc2, h2, hq2⟩ := (hiffz q).mp hq
+    refine (hiffa q).mpr ⟨c2 / c, by positivity, h2 - c2 * h / c, ?_⟩
+    rw [hq2, key]
+    module
+  · intro hq
+    obtain ⟨c3, hc3, h3, hq3⟩ := (hiffa q).mp hq
+    refine (hiffz q).mpr ⟨c3 * c, by positivity, c3 * h + h3, ?_⟩
+    rw [hq3, hray]
+    module
+
+/-- leaf-rank 波收窄件（GIANT 收窄的**唯一**残余债）：同一茎上两叶的 `w0`-方位角
+相等 ⇒ 点相等。HOL OXLZLEZ3.hl:931-942（`LEAF_RANKING_LEMMA` 内联段）：
+`azim w0 x = azim w0 y` 经 `AZIM_EQ_ALT` 得 `x ∈ aff_gt {u0,u1} {y}`，经
+`COLL_IN_AFF_GT_AFF_GT_EQ` 得 `cc_A0` 两锥相等，最终由 `Leaf_cell.FCHKUGT`
+（leaf_cell.hl:3432）收尾。
+-- NEEDS: 仅欠 `FCHKUGT`（PA18 :2159 ⬜，leaf-cell 链 GIANT，PA18 车道
+在攻）——落证后本件即刻全真，无其他缺口。 -/
+private theorem p25_leaf_azim_inj (V : Set V3) (ul : List V3) (w0 x y : V3)
+    (hp : Packing V) (hs : saturated V) (hnc : ¬ Collinear3 (elV ul 0) (elV ul 1) w0)
+    (hx : x ∈ s_leaf V ul) (hy : y ∈ s_leaf V ul)
+    (haz : azim (elV ul 0) (elV ul 1) w0 x = azim (elV ul 0) (elV ul 1) w0 y) :
+    x = y := by
+  have hcolx : ¬ Collinear3 (elV ul 0) (elV ul 1) x := s_leaf_collinear V ul x hp hs hx
+  have hcoly : ¬ Collinear3 (elV ul 0) (elV ul 1) y := s_leaf_collinear V ul y hp hs hy
+  have hxy : x ∈ affGt {elV ul 0, elV ul 1} {y} :=
+    (azim_eq_azim_iff_alt hnc hcolx hcoly).mp haz
+  have hv0v1 : (elV ul 0 : V3) ≠ elV ul 1 := fun he =>
+    hcoly (collinear3_of_eq he.symm)
+  have hy0 : (y : V3) ≠ elV ul 0 := fun he => hcoly (collinear3_pair_left he)
+  have hy1 : (y : V3) ≠ elV ul 1 := fun he => hcoly (collinear3_pair_right he)
+  have hx0 : (x : V3) ≠ elV ul 0 := fun he => hcolx (collinear3_pair_left he)
+  have hx1 : (x : V3) ≠ elV ul 1 := fun he => hcolx (collinear3_pair_right he)
+  have hcone : affGt {elV ul 0, elV ul 1} {y} = affGt {elV ul 0, elV ul 1} {x} :=
+    p25_affGt_eq_of_mem hv0v1 hy0 hy1 hx0 hx1 hxy
+  exact FCHKUGT hs hp (show ccA0 [elV ul 0, elV ul 1, x] = ccA0 [elV ul 0, elV ul 1, y] from
+    hcone.symm) hx.1 hy.1
+
 /-- HOL `LEAF_RANKING_LEMMA`: existence of the azim-ordered cyclic
-parametrization of `s_leaf`. -/
+parametrization of `s_leaf`.
+leaf-rank 波（2026-10-08）转真：引擎 `STRICT_SORT_FINITE`（本文件 :539，
+以 `w0`-方位角 `≤` 为序，反对称性由 `p25_leaf_azim_inj` 收窄件供给）给出
+`1..n` 的 azim-单射枚举，再以 `i ↦ g (i % n + 1)` 做模 `n` 环参数化
+（`p25_f_mod`/`Nat.mod_eq_of_lt` 记账）。债面 = `p25_leaf_azim_inj`
+（上游 `FCHKUGT`，PA18 车道）。 -/
 theorem LEAF_RANKING_LEMMA (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ)
     (hn : 0 < n) (hp : Packing V) (hs : saturated V)
     (hsize : HasSizeP25 (s_leaf V ul) n) (hnc : ¬ Collinear3 (elV ul 0) (elV ul 1) w0) :
@@ -1212,7 +1280,46 @@ theorem LEAF_RANKING_LEMMA (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ)
       (∀ i, f (i + n) = f i) ∧
       (∀ i j, i < n → j < n → i < j →
         azim (elV ul 0) (elV ul 1) w0 (f i) < azim (elV ul 0) (elV ul 1) w0 (f j)) := by
-  sorry
+  classical
+  obtain ⟨g, himg, hmono⟩ := STRICT_SORT_FINITE (α := V3)
+    (lt := fun v w => azim (elV ul 0) (elV ul 1) w0 v ≤ azim (elV ul 0) (elV ul 1) w0 w)
+    (s_leaf V ul) n
+    (fun x y hx hy h1 h2 =>
+      p25_leaf_azim_inj V ul w0 x y hp hs hnc hx hy (le_antisymm h1 h2))
+    (fun _ _ _ _ _ _ h1 h2 => le_trans h1 h2)
+    hsize
+  refine ⟨fun i => g (i % n + 1), ?_, ?_, ?_⟩
+  · ext q
+    constructor
+    · rintro ⟨i, -, rfl⟩
+      have h1 : i % n + 1 ∈ Set.Icc 1 n :=
+        ⟨by omega, by have := Nat.mod_lt i hn; omega⟩
+      have hmem : g (i % n + 1) ∈ g '' Set.Icc 1 n := ⟨i % n + 1, h1, rfl⟩
+      rw [himg]
+      exact hmem
+    · intro hq
+      rw [himg] at hq
+      obtain ⟨k, hk, rfl⟩ := hq
+      obtain ⟨hk1, hk2⟩ := Set.mem_Icc.mp hk
+      refine ⟨k - 1, Set.mem_univ _, ?_⟩
+      have hklt : k - 1 < n := by omega
+      show g ((k - 1) % n + 1) = g k
+      rw [show ((k - 1 : ℕ) % n) = k - 1 from Nat.mod_eq_of_lt hklt,
+        show k - 1 + 1 = k from by omega]
+  · intro i
+    have hmod : (i + n) % n = i % n := Nat.add_mod_right i n
+    show g ((i + n) % n + 1) = g (i % n + 1)
+    rw [hmod]
+  · intro i j hi hj hij
+    have hmi : i % n = i := Nat.mod_eq_of_lt hi
+    have hmj : j % n = j := Nat.mod_eq_of_lt hj
+    have hm1 : i + 1 ∈ Set.Icc 1 n := ⟨by omega, by omega⟩
+    have hm2 : j + 1 ∈ Set.Icc 1 n := ⟨by omega, by omega⟩
+    have hle := hmono (i + 1) (j + 1) hm1 hm2 (by omega)
+    show azim (elV ul 0) (elV ul 1) w0 (g (i % n + 1)) <
+      azim (elV ul 0) (elV ul 1) w0 (g (j % n + 1))
+    rw [hmi, hmj]
+    exact not_le.mp hle
 
 /-- HOL `S_LEAF_SET` (definitional). -/
 theorem S_LEAF_SET (V : Set V3) (ul : List V3) :
@@ -1790,7 +1897,11 @@ theorem TSKAJXY_3 (V : Set V3) (X : Set V3) (ul : List V3)
     gammaX V X lmfun ≥ 0 := by
   sorry
 
-/-- HOL `MCELL4_LEAF2`. -/
+/-- HOL `MCELL4_LEAF2`.
+-- NEEDS: barV V 2 面（`hl [EL 0;EL 1;EL 2] < sqrt 2` 经 `RADV_MONO` 自
+`MCELL4_CONVEX_HULL`/4 点集，voronoi 条款经 `barV V 3` 初始子表闭包；
+HOL leaf_cell.hl:1881）。leaf-rank 波的 S_LEAF_CARD2 / LEAF_RANK_ONTO /
+LEAF_IN_WEDGE_GE 已装配到本件。 -/
 theorem MCELL4_LEAF2 (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturated V)
     (hb : barV V 3 ul) (hn : ¬ nullSet (mcell4 V ul)) :
     leaf V [elV ul 0, elV ul 1, elV ul 2] := by
@@ -1829,35 +1940,95 @@ theorem MCELL4_CARD4 (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturate
   · exact measure_mono_null (convexHull_mono hsub) (p25_null_conv3 _ _ _)
   · exact measure_mono_null (convexHull_mono hsub) (p25_null_conv3 _ _ _)
 
-/-- HOL `MCELL4_LEAF3`. -/
+/-- HOL `MCELL4_LEAF3`.
+-- NEEDS: 同 `MCELL4_LEAF2`（把 `EL 2` 换成 `EL 3`；HOL leaf_cell.hl:1934，
+经 `MCELL4_LEAF2` + 列表置换）。 -/
 theorem MCELL4_LEAF3 (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturated V)
     (hb : barV V 3 ul) (hn : ¬ nullSet (mcell4 V ul)) :
     leaf V [elV ul 0, elV ul 1, elV ul 3] := by
   sorry
 
-/-- HOL `MCELL4_LEAF_S_LEAF`. -/
+/-- HOL `MCELL4_LEAF_S_LEAF`.
+-- NEEDS: `ccKe` 分派（`CC_KE_34` PA18 ✅）后逐案 `AJRIPQN`（PA18 ⬜ 链）/
+`ZASUVOR`（PA18 ⬜）；锥相离半边经 `CFFONNL`（PA18 ⬜，CFFONNL 本体）+
+`MCELL4_CONVEX_HULL`/`MCELL4_CARD4` ✅（HOL OXLZLEZ3.hl:1980）。上游三件
+全在 PA18 leaf-cell 链。 -/
 theorem MCELL4_LEAF_S_LEAF (V : Set V3) (ul : List V3) (u : V3) (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 ul) (hn : ¬ nullSet (mcell4 V ul))
     (hl' : leaf V [elV ul 0, elV ul 1, u]) (hu : u ∈ ({elV ul 2, elV ul 3} : Set V3)) :
     u ∈ s_leaf V [elV ul 0, elV ul 1] := by
   sorry
 
-/-- HOL `S_LEAF_CARD2`. -/
+/-- HOL `S_LEAF_CARD2`.
+leaf-rank 波（2026-10-08）转真（装配级）：`{EL 2, EL 3}` 两点互异（`MCELL4_CARD4`
+✅ 的 4 点互异性）且都是茎叶（`MCELL4_LEAF2/3/LEAF_S_LEAF`），故
+`2 = ncard {EL 2, EL 3} ≤ ncard (s_leaf ...)`（`S_LEAF_FINITE` ✅）。
+-- NEEDS: 仅欠 MCELL4_LEAF2/LEAF3/LEAF_S_LEAF 三件在库具名叶（leaf-cell 链，
+PA18 车道债的延伸）。 -/
 theorem S_LEAF_CARD2 (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturated V)
     (hb : barV V 3 ul) (hn : ¬ nullSet (mcell4 V ul)) :
     2 ≤ Set.ncard (s_leaf V [elV ul 0, elV ul 1]) := by
-  sorry
+  have h4 := MCELL4_CARD4 V ul hp hs hb hn
+  have h23 : (elV ul 2 : V3) ≠ elV ul 3 := by
+    intro he
+    rw [show ({elV ul 0, elV ul 1, elV ul 2, elV ul 3} : Set V3)
+          = ({elV ul 0, elV ul 1, elV ul 2} : Set V3) from by
+      ext q
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      rw [he]
+      tauto] at h4
+    have hle : Set.ncard ({elV ul 0, elV ul 1, elV ul 2} : Set V3) ≤ 3 := by
+      have e1 := Set.ncard_insert_le (elV ul 0) ({elV ul 1, elV ul 2} : Set V3)
+      have e2 := Set.ncard_insert_le (elV ul 1) ({elV ul 2} : Set V3)
+      have e3 : Set.ncard ({elV ul 2} : Set V3) = 1 := Set.ncard_singleton _
+      omega
+    omega
+  have hsub : ({elV ul 2, elV ul 3} : Set V3) ⊆ s_leaf V [elV ul 0, elV ul 1] := by
+    intro x hx
+    rcases Set.mem_insert_iff.mp hx with hx' | hx'
+    · subst hx'
+      exact MCELL4_LEAF_S_LEAF V ul (elV ul 2) hp hs hb hn (MCELL4_LEAF2 V ul hp hs hb hn)
+        (by simp)
+    · rw [Set.mem_singleton_iff] at hx'
+      subst hx'
+      exact MCELL4_LEAF_S_LEAF V ul (elV ul 3) hp hs hb hn (MCELL4_LEAF3 V ul hp hs hb hn)
+        (by simp)
+  refine le_trans ?_ (Set.ncard_le_ncard hsub (S_LEAF_FINITE V [elV ul 0, elV ul 1] hp hs))
+  rw [Set.ncard_pair h23]
 
 /-- HOL `LEAF_RANK_ONTO`: the leaf-rank parametrization hits both vertices
-of the 4-cell. -/
+of the 4-cell.
+leaf-rank 波（2026-10-08）转真（装配级）：4-cell 顶点是茎叶
+（`MCELL4_LEAF2/3` + `MCELL4_LEAF_S_LEAF`），落进 `leaf_rank` 的满射像
+（`hr.1`），再经周期性折回 `j % n < n`（`p25_f_mod`）。
+-- NEEDS: 同 `S_LEAF_CARD2`——仅欠 MCELL4_LEAF2/LEAF3/LEAF_S_LEAF 三件在库
+具名叶（leaf-cell 链，PA18 车道债的延伸）。 -/
 theorem LEAF_RANK_ONTO (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
     (u : V3) (hp : Packing V) (hs : saturated V) (hb : barV V 3 ul)
     (hr : leaf_rank V [elV ul 0, elV ul 1] w0 n f) (hn : n ≠ 0)
     (hnn : ¬ nullSet (mcell4 V ul)) (hu : u ∈ ({elV ul 2, elV ul 3} : Set V3)) :
     ∃ i, i < n ∧ u = f i := by
-  sorry
+  have hleaf : leaf V [elV ul 0, elV ul 1, u] := by
+    rcases Set.mem_insert_iff.mp hu with hx | hx
+    · subst hx
+      exact MCELL4_LEAF2 V ul hp hs hb hnn
+    · rw [Set.mem_singleton_iff] at hx
+      subst hx
+      exact MCELL4_LEAF3 V ul hp hs hb hnn
+  have hmem : u ∈ s_leaf V [elV ul 0, elV ul 1] :=
+    MCELL4_LEAF_S_LEAF V ul u hp hs hb hnn hleaf hu
+  rw [← hr.1] at hmem
+  obtain ⟨j, -, rfl⟩ := hmem
+  exact ⟨j % n, Nat.mod_lt j (by omega), (p25_f_mod (LEAF_RANK_PERIODIC _ _ _ _ _ hr) j).symm⟩
 
-/-- HOL `S_LEAF_IN_WEDGE_GE`. -/
+/-- HOL `S_LEAF_IN_WEDGE_GE`.
+-- NEEDS: azim 链算术（真证位，非结构缺口）。HOL OXLZLEZ3.hl:2279：分
+`i = n-1`（经 `WEDGE_COMPLEMENT` PA18 :2526 ⬜ + 周期回卷）与 `i < n-1`
+（经 `wedgeGe` 的 azim 区间展开 = `wedgeSimple`/`wedgeGeWedge`（PA24
+:156/:172 ✅，不在本件 import 闭包，需入网）+ `sum4_azim_fan`
+（TopologyFan :1105 ✅，PA18 `AZIM_BASE_SHIFT_LE` :2167 ✅ 可替代）+
+`hr.2.2` 严格环序的 0 / 中段 / n-1 三案实数算术）。本波
+LEAF_IN_WEDGE_GE（:2039 ✅）已装配到本件。 -/
 theorem S_LEAF_IN_WEDGE_GE (V : Set V3) (ul : List V3) (u w0 : V3) (n : ℕ)
     (f : ℕ → V3) (j i' : ℕ) (hp : Packing V) (hs : saturated V)
     (hr : leaf_rank V [elV ul 0, elV ul 1] w0 n f)
@@ -1868,7 +2039,12 @@ theorem S_LEAF_IN_WEDGE_GE (V : Set V3) (ul : List V3) (u w0 : V3) (n : ℕ)
     u = f j ∨ u = f (j + 1) := by
   sorry
 
-/-- HOL `LEAF_IN_WEDGE_GE`. -/
+/-- HOL `LEAF_IN_WEDGE_GE`.
+leaf-rank 波（2026-10-08）转真（装配级）：4-cell 顶点先被参数化命中
+（`LEAF_RANK_ONTO`，本波已转真），再由 `S_LEAF_IN_WEDGE_GE` 的楔形边界二择
+收尾。
+-- NEEDS: 仅欠 `S_LEAF_IN_WEDGE_GE`（⬜ azim 链算术，见该件 NEEDS 注记）；
+其余件均在库/本波已转真。 -/
 theorem LEAF_IN_WEDGE_GE (V : Set V3) (ul : List V3) (u w0 : V3) (n : ℕ)
     (f : ℕ → V3) (i : ℕ) (hp : Packing V) (hs : saturated V)
     (hr : leaf_rank V [elV ul 0, elV ul 1] w0 n f)
@@ -1877,7 +2053,9 @@ theorem LEAF_IN_WEDGE_GE (V : Set V3) (ul : List V3) (u w0 : V3) (n : ℕ)
     (hnn : ¬ nullSet (mcell4 V ul)) (hu : u ∈ ({elV ul 2, elV ul 3} : Set V3))
     (hw : u ∈ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))) :
     u = f i ∨ u = f (i + 1) := by
-  sorry
+  obtain ⟨i', hi', rfl⟩ :=
+    LEAF_RANK_ONTO V ul w0 n f u hp hs hb hr (by omega) hnn hu
+  exact S_LEAF_IN_WEDGE_GE V ul (f i') w0 n f i i' hp hs hr hl' hnc hn rfl hi' hw
 
 /-- HOL `MCELL4_FI_EL`. -/
 theorem MCELL4_FI_EL (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -2182,7 +2360,12 @@ theorem cc_prep_model_data (V : Set V3) (f : ℕ → V3) (w0 : V3) (n : ℕ) (u0
     cc_bool_prep_v11 (cc_data_v8 V f u0 u1) := by
   sorry
 
-/-- HOL `LEAF_DOMAIN`. -/
+/-- HOL `LEAF_DOMAIN`.
+leaf-rank 波（2026-10-08）转真（装配级）：叶面非退化由 `GBEWYFX`（PA18 ✅），
+三组弦长 `dist < 2 * radV < 2 * sqrt 2` 由外心桥 `OAPVION2_concl`（PA2 ✅）+
+三角不等式（`S_LEAF_BOUNDED` 同款套路），下界由 packing 分离
+（`BARV_SUBSET` PA5 ✅ + `Packing.dist_ge_two`），`eta_y` 界由 `RADV_ETAY`。
+-- NEEDS: 仅欠在库具名叶 `RADV_ETAY`（本文件 :825 ⬜，sphere.hl 债）。 -/
 theorem LEAF_DOMAIN (V : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V)
     (hl' : leaf V ul) :
     ¬ Collinear3 (elV ul 0) (elV ul 1) (elV ul 2) ∧
@@ -2193,7 +2376,92 @@ theorem LEAF_DOMAIN (V : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing
       dist (elV ul 0) (elV ul 1) < 2 * Real.sqrt 2 ∧
       eta_y (dist (elV ul 0) (elV ul 1)) (dist (elV ul 0) (elV ul 2))
           (dist (elV ul 1) (elV ul 2)) < Real.sqrt 2 := by
-  sorry
+  have h3 : ul.length = 3 := hl'.1.1
+  rcases ul with _ | ⟨a, t⟩
+  · simp at h3
+  rcases t with _ | ⟨b, t⟩
+  · simp at h3
+  rcases t with _ | ⟨c, t⟩
+  · simp at h3
+  cases t with
+  | nil =>
+    -- 字面表归约（GBEWYFX 同款 get!/getD 消解）
+    have hget : [a, b, c][0]! = a ∧ [a, b, c][1]! = b ∧ [a, b, c][2]! = c := by simp
+    obtain ⟨e0, e1, e2⟩ := hget
+    have hgetD : elV [a, b, c] 0 = a ∧ elV [a, b, c] 1 = b ∧ elV [a, b, c] 2 = c := by
+      simp [elV]
+    obtain ⟨d0, d1, d2⟩ := hgetD
+    rw [d0, d1, d2]
+    have hnc : ¬ Collinear3 a b c := fun hcol =>
+      GBEWYFX hp hs hl' (by rw [e0, e1, e2]; exact hcol)
+    have hset : setOfList [a, b, c] = ({a, b, c} : Set V3) := by
+      ext q; simp [setOfList]
+    have hrad : radV ({a, b, c} : Set V3) < Real.sqrt 2 := by
+      have h2 : hl [a, b, c] < Real.sqrt 2 := hl'.2
+      rw [hl, hset] at h2
+      exact h2
+    -- 三点互异（非退化三点式的手工消解，S_LEAF_BOUNDED 同款）
+    have hab : a ≠ b := by
+      intro he
+      refine hnc (show Collinear ℝ ({a, b, c} : Set V3) from ?_)
+      have hset' : ({a, b, c} : Set V3) = ({b, c} : Set V3) := by
+        rw [he]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rw [hset']; exact collinear_pair _ b c
+    have hac : a ≠ c := by
+      intro he
+      refine hnc (show Collinear ℝ ({a, b, c} : Set V3) from ?_)
+      have hset' : ({a, b, c} : Set V3) = ({b, c} : Set V3) := by
+        rw [he]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rw [hset']; exact collinear_pair _ b c
+    have hbc : b ≠ c := by
+      intro he
+      refine hnc (show Collinear ℝ ({a, b, c} : Set V3) from ?_)
+      have hset' : ({a, b, c} : Set V3) = ({a, c} : Set V3) := by
+        rw [he]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+      rw [hset']; exact collinear_pair _ a c
+    -- 弦长上界：外心桥 + 三角不等式（radV = dist p circumcenter）
+    have haff : ¬ affineDependent ({a, b, c} : Set V3) := p25_not_affdep3 hab hac hbc hnc
+    have dp0 := OAPVION2_concl ({a, b, c} : Set V3) haff a (by simp)
+    have dp1 := OAPVION2_concl ({a, b, c} : Set V3) haff b (by simp)
+    have dp2 := OAPVION2_concl ({a, b, c} : Set V3) haff c (by simp)
+    have f0 : dist a (circumcenter ({a, b, c} : Set V3)) = radV ({a, b, c} : Set V3) := by
+      rw [dist_comm a (circumcenter ({a, b, c} : Set V3))]; exact dp0.symm
+    have f1 : dist b (circumcenter ({a, b, c} : Set V3)) = radV ({a, b, c} : Set V3) := by
+      rw [dist_comm b (circumcenter ({a, b, c} : Set V3))]; exact dp1.symm
+    have g1 : dist (circumcenter ({a, b, c} : Set V3)) b = radV ({a, b, c} : Set V3) :=
+      dp1.symm
+    have g2 : dist (circumcenter ({a, b, c} : Set V3)) c = radV ({a, b, c} : Set V3) :=
+      dp2.symm
+    have tbc : dist b c ≤ dist b (circumcenter ({a, b, c} : Set V3)) +
+        dist (circumcenter ({a, b, c} : Set V3)) c :=
+      dist_triangle b (circumcenter ({a, b, c} : Set V3)) c
+    have tac : dist a c ≤ dist a (circumcenter ({a, b, c} : Set V3)) +
+        dist (circumcenter ({a, b, c} : Set V3)) c :=
+      dist_triangle a (circumcenter ({a, b, c} : Set V3)) c
+    have tab : dist a b ≤ dist a (circumcenter ({a, b, c} : Set V3)) +
+        dist (circumcenter ({a, b, c} : Set V3)) b :=
+      dist_triangle a (circumcenter ({a, b, c} : Set V3)) b
+    rw [f1, g2] at tbc
+    rw [f0, g2] at tac
+    rw [f0, g1] at tab
+    have bc : dist b c < 2 * Real.sqrt 2 := by linarith
+    have ac : dist a c < 2 * Real.sqrt 2 := by linarith
+    have ab : dist a b < 2 * Real.sqrt 2 := by linarith
+    -- packing 分离下界
+    have hsub : setOfList [a, b, c] ⊆ V := BARV_SUBSET V 2 [a, b, c] hl'.1
+    have hmemV : ∀ p ∈ ({a, b, c} : Set V3), p ∈ V := by
+      intro p hp'
+      rw [← hset] at hp'
+      exact hsub hp'
+    refine ⟨hnc, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · exact hp.dist_ge_two (hmemV b (by simp)) (hmemV c (by simp)) hbc
+    · exact hp.dist_ge_two (hmemV a (by simp)) (hmemV c (by simp)) hac
+    · exact hp.dist_ge_two (hmemV a (by simp)) (hmemV b (by simp)) hab
+    · exact bc
+    · exact ac
+    · exact ab
+    · rw [← RADV_ETAY a b c hnc]; exact hrad
+  | cons d t' => simp at h3
 
 /-- HOL `CELL_CLUSTER_N_LE_1`: a critical stem with at most one leaf has a
 nonnegative weight sum. -/
@@ -2901,28 +3169,37 @@ theorem real_model_sum_azim (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → 
 
   LEAF_RANK_PROPS（本件，真装配，冻结签名 2026-09-2x 一字未动）
   ├─ pkLeafRankCriticalEdge   ⬜ 临界边见证 + 负 gg 和（HOL Oxl_real.hl；
-  │     子债：CELL_CLUSTER_ESTIMATE_REDUCE :2127 ⬜ + CELL_CLUSTER_N_LE_1
-  │     :2200 ⬜ + LEAF_RANKING_LEMMA :1208 ⬜；叶界 S_LEAF_BOUNDED/FINITE
-  │     :1277/:1322 ✅、s_leaf_collinear :1138 ✅、S_LEAF_SYM :1460 ✅）
-  ├─ real_model_sum_azim      ⬜（本文件 :2890 在库 bank 叶——直接消费，
+  │     子债：CELL_CLUSTER_ESTIMATE_REDUCE :2286 ⬜ + CELL_CLUSTER_N_LE_1
+  │     :2449 ⬜ + LEAF_RANKING_LEMMA :1274 ✅（leaf-rank 波 2026-10-08 转真，
+  │     债面收窄至 p25_leaf_azim_inj :1247 → PA18 FCHKUGT）；叶界
+  │     S_LEAF_BOUNDED/FINITE :1382/:1429 ✅、s_leaf_collinear :1138 ✅、
+  │     S_LEAF_SYM :1565 ✅）
+  ├─ real_model_sum_azim      ⬜（本文件 :3139 在库 bank 叶——直接消费，
   │     B→T 会师位；G4/Flyspeck_constants.calc 认证口径）
   ├─ pkLeafRankAzimPointwise  ⬜ 楔形塌缩 azim_mcell = azim（新具名骨架；
-  │     子债：MCELL_WEDGE_UNIQUE :1512 ⬜ + CC_3_PROPS :2853 ⬜（其结论含
-  │     同款恒等式）+ c_4_azim_mcell_dih_y :2484 ⬜）
-  ├─ cc_bool_model_data       ⬜（本文件 :2170 已具名叶——直接消费，会师位）
-  └─ cc_prep_model_data       ⬜（本文件 :2179 已具名叶——直接消费，会师位）
+  │     子债：MCELL_WEDGE_UNIQUE :1617 ⬜ + CC_3_PROPS :3086 ⬜（其结论含
+  │     同款恒等式）+ c_4_azim_mcell_dih_y :2717 ⬜）
+  ├─ cc_bool_model_data       ⬜（本文件 :2329 已具名叶——直接消费，会师位）
+  └─ cc_prep_model_data       ⬜（本文件 :2338 已具名叶——直接消费，会师位）
 
 债从 1 根黑箱变为 2 具名骨架 + 3 具名在库叶；三枚在库叶由纯 term 装配接入
-（LEAF_RANK_PROPS 的前提面恰好覆盖它们的前提面）。 -/
+（LEAF_RANK_PROPS 的前提面恰好覆盖它们的前提面）。
+leaf-rank 波（2026-10-08，PA25 #4/#5 榜）：LEAF_RANKING_LEMMA 转真（引擎
+STRICT_SORT_FINITE :539 ✅ + 模 n 环参数化），另转真装配级四件 S_LEAF_CARD2
+:1951 ✅、LEAF_RANK_ONTO :1964 ✅、LEAF_IN_WEDGE_GE :1978 ✅、LEAF_DOMAIN
+:2350 ✅；新残余债面 = p25_leaf_azim_inj（→FCHKUGT，PA18 车道）+
+MCELL4_LEAF2/LEAF3/LEAF_S_LEAF（leaf-cell 链）+ S_LEAF_IN_WEDGE_GE（azim 链
+算术，HOL OXLZLEZ3.hl:2279）+ RADV_ETAY（sphere.hl）。 -/
 
 /-- T4 骨架 W1 `pkLeafRankCriticalEdge`：失败 cell-cluster 不等式的临界边
 见证与 `leaf_rank` 参数化（含负 gg 和）。HOL Oxl_real.hl（CELL_CLUSTER_ESTIMATE
 段的逐边化 + 临界茎选取）。
 资产状态：**真缺口（装配级）**——逐边化（`CELL_CLUSTER_ESTIMATE_REDUCE`
-:2127 ⬜）、退化茎非负和（`CELL_CLUSTER_N_LE_1` :2200 ⬜）、azim 环序
-参数化（`LEAF_RANKING_LEMMA` :1208 ⬜）三件上游落证后本件即纯装配。
--- NEEDS: :2127 / :2200 / :1208 按 HOL Oxl_real.hl 装配波展开（三件均在
-本文件内、语义已成形）。 -/
+:2286 ⬜）、退化茎非负和（`CELL_CLUSTER_N_LE_1` :2449 ⬜）两件上游落证后，
+azim 环序参数化取 `LEAF_RANKING_LEMMA` :1274（leaf-rank 波已转真，其债面 =
+`p25_leaf_azim_inj` :1247 → PA18 `FCHKUGT`）。
+-- NEEDS: :2286 / :2449 按 HOL Oxl_real.hl 装配波展开（两件均在本文件内、
+语义已成形）；:1208 位已由 leaf-rank 波清偿为 ✅（见 :1274）。 -/
 theorem pkLeafRankCriticalEdge (V : Set V3) (hp : Packing V) (hs : saturated V)
     (hcc : ¬ cellClusterInequality V) (hnl : pack_nonlinear_non_ox3q1h) :
     ∃ u0 u1 n w0 f : _, 1 < n ∧ HasSizeP25 (s_leaf V [u0, u1]) n ∧ u0 ≠ u1 ∧
