@@ -118,10 +118,32 @@ Wave V/E/M（侦察翻案 C→B）。
 （9368 jobs）。`#print axioms` 即主定理实时债务图。剩余：三接口清债（§5 会师
 战略的主战场）+ Statement 占位去重 + 全量公理审计终验 + 复现文档。
 
-## 5. 当前战略（2026-10-10 用户批准）：从上到下 — 从下往上 — 会师
+## 5. 当前战略（2026-10-10 用户批准；2026-10-08 修订为贪心触达制）：自上而下贪心复用已证质量
 
-**模型**：端到端对象已立；中部层（接口与叶子之间的结构）尚未显式化。战略 =
-三线并进直至"会师"，然后按 BFS/DFS 清叶。
+**修订（用户 2026-10-08 拍板）**：不再按"线性移植 → 上下会师"排队，而是
+**每一步扩展/填证都优先选能最大化接触既有已证质量的节点**——从 root 看，
+始终优化"可触达已证定理数"的增长。原三线模型保留为背景结构，调度准则改为
+贪心：
+
+```
+排名器 = cleanable(L)：假设叶子 L 证毕，不动点传播
+         （M 变净 ⟺ 全部 tainted 直接依赖已净），数连带变净的 tainted 常量数。
+派工准则 = 按 cleanable/预估成本 降序派工（天然偏爱瓶颈 GIANT，
+           但被成本权重压制不至饿死小件流）。
+排除项 = deferred-compute 数据叶（A11 993 证书/A12 43k LP/92 prep/Phase 4
+         重放）不入 cleanable——等强机器灌数据，Mac 排名无意义。
+头条指标 = meeting-ready 数：e2e 闭包内 taint 路径全部终结于
+           deferred-compute 叶的 tainted 常量数；会师 = meeting-ready = 全量。
+```
+
+工具链（`lean/scripts/`）：`dep_scan_snippet.lean` + `dep_sweep.sh`（逐模块
+直接依赖边扫描；import 擦 value 故走源码副本重 elaboration）→
+`cleanable_rank.py`（不动点排名）→ top-10 给编排者派工。T3 移植线改为
+**A7/A8/A9 前提树驱动的需求批**（批次表退化为优先队列，防孤儿移植浪费——
+feeder 孤儿删除为先例）。
+
+**模型（历史，2026-10-10 批准）**：端到端对象已立；中部层（接口与叶子之间的
+结构）尚未显式化。战略 = 三线并进直至"会师"，然后按 BFS/DFS 清叶。
 
 ```
 e2e ＝ nonlinearInequalities ⊕ lpArchiveCertificates ⊕ textCapstone
