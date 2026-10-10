@@ -14,7 +14,13 @@ for f in "$@"; do
   mod=$(basename "$f" .lean)
   tmp="/tmp/dep_scan_work.lean"
   cp "$f" "$tmp"
-  ns=$(grep '^namespace' "$f" | tail -1 | awk '{print $2}')
+  # EOF 时仍打开的作用域名: namespace/section 压栈, end 就近配对弹出(裸 end 弹一层)
+  ns=$(awk '
+    $1=="namespace" && $2 != "" { stack[++n] = $2; next }
+    $1=="section"  && $2 != "" { stack[++n] = $2; next }
+    $1=="end" && $2 != "" { for (j = n; j >= 1; j--) if (stack[j] == $2) { n = j - 1; break }; next }
+    $1=="end" { if (n > 0) n--; next }
+    END { if (n > 0) print stack[n] }' "$f")
   if [ -n "$ns" ]; then printf '\nend %s\n' "$ns" >> "$tmp"; else printf '\n' >> "$tmp"; fi
   cat scripts/dep_scan_snippet.lean >> "$tmp"
   if lake env lean "$tmp" >> "$OUT" 2>>/tmp/dep_sweep_err.log; then
