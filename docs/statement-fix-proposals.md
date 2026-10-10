@@ -1250,4 +1250,7 @@ IneqClosureDefs 侧外部消费者仅 PA21（2 处 bare 使用）。
 循 arcLength→arcLengthICD 先例（2f2c431c 编排者核定同款）：IneqClosureDefs
 `rho` → `rhoICD`（8 处文件内 + PA21 的 2 处使用同步改写）。定义体与陈述零改动。
 
-### (d) 状态：**DRAFT（2026-10-10 立案，待批）**
+### (d) 状态：**已批准（2026-10-10 用户四件合并批）；已应用（2026-10-10）**——
+执行版补丁 `docs/statement-fix-proposals-patches/35-ineqclosuredefs-rho.patch`
+（单文件 8 处 rho→rhoICD 含 docstring；PA21 两处为注释提及零代码改动，核验
+后未触碰）。

@@ -22,7 +22,20 @@
 1. **margin**：`∀ w ∈ V∖{u0,u1}, ‖w−p‖ ≥ s` → `p ∈ S` → fan 抽叶列表。
 2. **ω₁ 型事实**：`S ⊆ bis(u0,u1)` 平面内 `dist(u0,·)` 在 p 唯一最小 ⇒
    `omegaListN V vl 1 = p`。
-3. **`r₃ ≥ √2` 不可能（B2 杀死，~130 行全初等）**：反设后用 kit
+> **⚠️ B2 纠错（2026-10-10 第二阶段波实测，覆盖本条）：`r₃ < √2` 目标为假**——
+> 反例：棱 d=2.4∈[2,2√2) 上的近正则 Delaunay 四面体（v=(0,2.04,0)、
+> w′=(0,1.02,2.17)，六棱 ≥2、四点外接半径 ≈1.52、可饱和扩张）是合法 barV 叶，
+> 其 mate 三点外接半径 ≈1.575 > √2。真形态 = **r₃ < 2**（`p24_hl_trunc2_lt_two`
+> 已证，无距离假设）；w<0 支被 margin 直接杀死（2wh = ‖v−p‖²−d²/4 ≥ s²−d²/4
+> > 0 矛盾），w>0 支的正确强度是 w ≤ ‖ζ*‖ < s。情形分叉保持两支
+> （"mcell 2 或 mcell 3"），r₃<2 正是 mcell-2 支的上界。
+>
+> **⚠️ 第一阶段签名缺陷（同波发现）**：`p24_mid_margin`/`p24_mid_mem_voronoiList`/
+> `p24_leaf_exists` 的 `hd : dist u0 u1 < √2` 与 `Packing V + u0 ≠ u1`（packing
+> 强制 d ≥ 2）联立不可满足——三件现形态vacuous。装配波需统一 √2→√8 陈述修正
+> 扫描（`p24_mid_mem_voronoiList_sqrt8` 泛化私拷已备，合并时二取一）。
+
+3. **（原条目，已被上述纠错覆盖）`r₃ ≥ √2` 不可能（B2 杀死，~130 行全初等）**：反设后用 kit
    `p24_cc_exists`/`p24_radV_extract`/`p24_tri_gamma` 得 `r₃² = d2² + w²`；
    三重点 `T ≠ ∅`（`BARV_IMP_VORONOI_LIST_NOT_EMPTY` + `TRUNCATE_SIMPLEX_BARV`），
    取 `x* ∈ T`：`w > 0` 支 `ξ*·v⊥ ≥ s|v⊥|` 与 Cauchy–Schwarz + `|ξ*| < s` 矛盾；
