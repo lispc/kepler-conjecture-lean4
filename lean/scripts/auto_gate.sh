@@ -223,7 +223,7 @@ END {
 cmt=$(git show HEAD:"./$FILE" | awk '
   !incmt && /^\/(-!)?/ { incmt = 1; next }
   incmt {
-    if ($0 ~ /^(theorem|def|lemma|example|instance|abbrev|namespace|end|open|import|set_option|macro|syntax|notation)\b/) { incmt = 0; next }
+    if ($0 ~ /^(theorem|def|lemma|example|instance|abbrev|namespace|end|open|import|set_option|macro|syntax|notation)([^[:alnum:]_]|$)/) { incmt = 0; next }
     print
     if ($0 ~ /-\//) incmt = 0
     next
@@ -233,13 +233,19 @@ cmt=$(git show HEAD:"./$FILE" | awk '
 # frozen and rules 3/4/5 still verify the result). Collect the full text of
 # every HEAD declaration whose body contains a sorry; rest-loop deletions
 # matching it verbatim are excused.
+# EVOLUTION 14 (2026-10-08): portability fix — the `\b` word-boundary in these
+# three awk regexes is a GNU-ism that BSD awk (macOS, since the 2026-09-28
+# hardware migration) does not support, silently emptying $sorbody (and
+# deadening the $cmt code-keyword rail) so any deletion inside a sorried
+# declaration failed rule 2 with "non-sorry lines deleted". Replace with the
+# POSIX-portable ([^[:alnum:]_]|$).
 sorbody=$(git show HEAD:"./$FILE" | awk '
-  /^[[:space:]]*((private|protected|noncomputable|unsafe|partial)[[:space:]]+)*(theorem|lemma|def|abbrev|instance|example)\b/ {
+  /^[[:space:]]*((private|protected|noncomputable|unsafe|partial)[[:space:]]+)*(theorem|lemma|def|abbrev|instance|example)([^[:alnum:]_]|$)/ {
     if (insor) printf "%s", buf
     indecl = 1; insor = 0; buf = $0 "\n"; next
   }
   indecl {
-    if ($0 ~ /^[[:space:]]*sorry\b/ || $0 ~ /:=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$/) insor = 1
+    if ($0 ~ /^[[:space:]]*sorry([^[:alnum:]_]|$)/ || $0 ~ /:=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$/) insor = 1
     buf = buf $0 "\n"
   }
   END { if (insor) printf "%s", buf }' | sort -u)
