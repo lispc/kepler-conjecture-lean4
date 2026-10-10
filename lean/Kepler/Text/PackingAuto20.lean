@@ -59,6 +59,7 @@ import Kepler.Text.LocalAuto38Bridge
 import Kepler.Text.SphereKit
 import Kepler.Text.Polytope
 import Kepler.Text.PlanarityAuto12
+import Kepler.Geom.SimplexVolume
 import Mathlib
 
 set_option maxHeartbeats 5000000
@@ -160,9 +161,11 @@ theorem NEGLIGIBLE_MEASURE_UNION_klema {s t : Set V3} (_hs : MeasurableSet s)
 `SOL_SOLID_TRIANGLE`, `DIHX_DIH_Y_lemma`, `SOL_SOL_Y_EXPLICIT` and
 `HJKDESR1a_1cell` are FULLY PROVED below (2026-10-08, the kit-下移波:
 the `cell_params_d` uniqueness kit moved up from the file tail unlocked
-the four mcell-reduction giants). The two `gammaX` giants remain `sorry`:
-their precise remaining gap (tetra-volume bridge + edgeX sum) is
-documented at their docstrings. -/
+the four mcell-reduction giants). `gammaX_gamm4fgcy` is PROVED too
+(2026-10-08, SimplexVolume 消费波: the tetra-volume bridge via
+`volume_real_convexHull_tetra` + the edgeX six-pair epsilon kit closed
+both halves); `gammaX_gamma3f` remains `sorry` (the k = 3 apex-form
+dispatch) — see their docstrings. -/
 
 /- HOL `AFF_GE_1_3` (TSKAJXY1.hl:75, proof `AFF_TAC`): explicit cone
 formula for `aff_ge` of a point-triple disjoint from the apex.
@@ -978,6 +981,139 @@ private theorem p20k_dihX_m4 (V X : Set V3) (u0 u1 u2 u3 : V3)
 
 
 
+/-! ### gammaX-side kit: pair algebra, dihX pair-swap, edge-term collapse -/
+
+/-- two-point sets with distinct first pair: unordered-pair equality case
+split. -/
+private theorem p20k_pair_eq_pair {u v w z : V3} (huv : u ≠ v)
+    (h : ({u, v} : Set V3) = {w, z}) :
+    (u = w ∧ v = z) ∨ (u = z ∧ v = w) := by
+  have hwz : w ≠ z := by
+    intro h0
+    rw [h0] at h
+    have h1 : u ∈ ({u, v} : Set V3) := Set.mem_insert _ _
+    have h2 : v ∈ ({u, v} : Set V3) := Set.mem_insert_of_mem _ (Set.mem_singleton _)
+    rw [h] at h1 h2
+    simp at h1 h2
+    rw [h1, h2] at huv
+    exact huv rfl
+  have hu : u ∈ ({w, z} : Set V3) := by rw [← h]; simp
+  have hv : v ∈ ({w, z} : Set V3) := by rw [← h]; simp
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hu hv
+  rcases hu with hu | hu
+  · rcases hv with hv | hv
+    · exact absurd (hu.trans hv.symm) huv
+    · exact Or.inl ⟨hu, hv⟩
+  · rcases hv with hv | hv
+    · exact Or.inr ⟨hu, hv⟩
+    · exact absurd (hu.trans hv.symm) huv
+
+/-- shared-first-point two-point sets differ. -/
+private theorem p20k_pair_ne_sh1 {u v w : V3} (huv : u ≠ v) (huw : u ≠ w) (h : v ≠ w) :
+    ({u, v} : Set V3) ≠ ({u, w} : Set V3) := by
+  intro hEq
+  rcases p20k_pair_eq_pair huv hEq with ⟨_, e⟩ | ⟨e, _⟩
+  · exact h e
+  · exact huw e
+
+/-- generic two-point sets differ (first component of each case kills). -/
+private theorem p20k_pair_ne_gen {u v w z : V3} (huv : u ≠ v) (h1 : u ≠ w) (h2 : u ≠ z) :
+    ({u, v} : Set V3) ≠ ({w, z} : Set V3) := by
+  intro hEq
+  rcases p20k_pair_eq_pair huv hEq with ⟨e, _⟩ | ⟨e, _⟩
+  · exact h1 e
+  · exact h2 e
+
+/-- generic two-point sets differ (second component of each case kills). -/
+private theorem p20k_pair_ne_gen2 {u v w z : V3} (huv : u ≠ v) (h3 : v ≠ w) (h4 : v ≠ z) :
+    ({u, v} : Set V3) ≠ ({w, z} : Set V3) := by
+  intro hEq
+  rcases p20k_pair_eq_pair huv hEq with ⟨_, e⟩ | ⟨_, e⟩
+  · exact h4 e
+  · exact h3 e
+
+/-- `dihX` across an edge is independent of the edge orientation. -/
+private theorem p20k_dihX_swap (V X : Set V3) (a b c d : V3)
+    (hp : Packing V) (hs : saturated V) (hn : ¬ nullSet X)
+    (hb : barV V 3 [a, b, c, d]) (hX : X = mcell 4 V [a, b, c, d]) :
+    dihX V X (b, a) = dihX V X (a, b) := by
+  have hne : mcell 4 V [a, b, c, d] ≠ ∅ := by
+    intro h0
+    apply hn
+    rw [hX, h0]
+    exact measure_empty
+  have hset4 : setOfList [a, b, c, d] = ({a, b, c, d} : Set V3) := by
+    ext z; simp only [setOfList, List.mem_cons, Set.mem_setOf_eq, Set.mem_insert_iff,
+      Set.mem_singleton_iff]; tauto
+  have hnull : ¬ nullSet (mcell 4 V [a, b, c, d]) := by
+    rw [← hX]
+    exact hn
+  have hVX : VX V X = {a, b, c, d} := by
+    have g1 := p20k_VX_m4 V [a, b, c, d] hp hs hb hnull
+    rw [hX, g1, hset4]
+  have hfw := p20k_dihX_m4 V X a b c d hp hs hn hb hX hVX a b c d hb hX.symm
+  obtain ⟨hbarR, hmR⟩ := p20k_perm_wit V a b c d hs hp hb hne b a c d
+    (Equiv.symm (Equiv.swap 0 1))
+    (show Equiv.symm (Equiv.swap 0 1) 0 = 1 by decide)
+    (show Equiv.symm (Equiv.swap 0 1) 1 = 0 by decide)
+    (show Equiv.symm (Equiv.swap 0 1) 2 = 2 by decide)
+    (show Equiv.symm (Equiv.swap 0 1) 3 = 3 by decide)
+    (by norm_num)
+    (by
+      intro j hj
+      rw [Equiv.symm_apply_eq]
+      exact (Equiv.swap_apply_of_ne_of_ne (show j ≠ 0 by omega) (show j ≠ 1 by omega)).symm)
+    (by
+      rw [leftActionList, Equiv.symm_symm]
+      simp [List.range_succ, Equiv.swap_apply_left, Equiv.swap_apply_right,
+        Equiv.swap_apply_of_ne_of_ne])
+  have hrev := p20k_dihX_m4 V X a b c d hp hs hn hb hX hVX b a c d hbarR
+    (by rw [hmR]; exact hX.symm)
+  rw [hrev, hfw, DIHV_SYM a b c d]
+
+/-- one edge term of the `gammaX` inner sum collapses to the canonical
+orientation (epsilon pair after zeta/beta). -/
+private theorem p20k_edge_term_eps {V X : Set V3} {u v : V3} (huv : u ≠ v) (f : ℝ → ℝ)
+    (hsym : dihX V X (v, u) = dihX V X (u, v)) :
+    dihX V X
+        ((Classical.epsilon fun r : V3 × V3 => ({u, v} : Set V3) = {r.1, r.2}).1,
+          (Classical.epsilon fun r : V3 × V3 => ({u, v} : Set V3) = {r.1, r.2}).2) *
+      f (hl [(Classical.epsilon fun r : V3 × V3 => ({u, v} : Set V3) = {r.1, r.2}).1,
+        (Classical.epsilon fun r : V3 × V3 => ({u, v} : Set V3) = {r.1, r.2}).2]) =
+    dihX V X (u, v) * f (hl [u, v]) := by
+  have hspec := Classical.epsilon_spec
+    (p := fun r : V3 × V3 => ({u, v} : Set V3) = {r.1, r.2}) ⟨(u, v), rfl⟩
+  have key : ∀ a b : V3, ({u, v} : Set V3) = {a, b} →
+      dihX V X (a, b) * f (hl [a, b]) = dihX V X (u, v) * f (hl [u, v]) := by
+    intro a b hab
+    rcases p20k_pair_eq_pair huv hab with ⟨e1, e2⟩ | ⟨e1, e2⟩
+    · rw [e1, e2]
+    · rw [← e1, ← e2, hsym, HL_2, HL_2, dist_comm v u]
+  exact key _ _ hspec
+
+private theorem p20k_setSum_quad {α : Type*} {a b c d : α} (f : α → ℝ)
+    (hab : a ≠ b) (hac : a ≠ c) (had : a ≠ d) (hbc : b ≠ c) (hbd : b ≠ d) (hcd : c ≠ d) :
+    setSum {a, b, c, d} f = f a + f b + f c + f d := by
+  unfold setSum
+  rw [dif_pos (Set.toFinite ({a, b, c, d} : Set α))]
+  simp only [Set.Finite.toFinset_insert, Set.Finite.toFinset_singleton]
+  simp [hab, hac, had, hbc, hbd, hcd, Finset.sum_insert]
+  ring
+
+private theorem p20k_setSum_sext {α : Type*} {a b c d e g : α} {f : α → ℝ}
+    (hab : a ≠ b) (hac : a ≠ c) (had : a ≠ d) (hae : a ≠ e) (hag : a ≠ g)
+    (hbc : b ≠ c) (hbd : b ≠ d) (hbe : b ≠ e) (hbg : b ≠ g)
+    (hcd : c ≠ d) (hce : c ≠ e) (hcg : c ≠ g)
+    (hde : d ≠ e) (hdg : d ≠ g) (heg : e ≠ g) :
+    setSum {a, b, c, d, e, g} f
+      = f a + f b + f c + f d + f e + f g := by
+  unfold setSum
+  rw [dif_pos (Set.toFinite ({a, b, c, d, e, g} : Set α))]
+  simp only [Set.Finite.toFinset_insert, Set.Finite.toFinset_singleton]
+  simp [hab, hac, had, hae, hag, hbc, hbd, hbe, hbg, hcd, hce, hcg, hde, hdg, heg,
+    Finset.sum_insert]
+  ring
+
 /-! ### DIHX_DIH_Y_lemma -/
 
 open Module in
@@ -1459,14 +1595,18 @@ theorem SOL_SOL_Y_EXPLICIT (V X : Set V3) (ul : List V3) (u0 u1 u2 u3 : V3) (i :
 /-- HOL `gammaX_gamm4fgcy` (TSKAJXY1.hl:3508): volume and `gammaX` of a
 4-cell are the analytic `vol_y` / `gamma4fgcy` of the edge six-tuple.
 
-STILL SORRY (2026-10-08 收窄): the k = 4 vertex/sol/dihX core of this
-session (see DIHX/SOL above) provides every ingredient EXCEPT two, the
-precise remaining gap: (a) the tetra-volume bridge `volume.real
-(convexHull {u0,u1,u2,u3}) = volY y1..y6` (Cayley-Menger; this Mathlib
-checkout has no simplex-volume infrastructure and the det/Gram expansion
-is a fresh sub-project); (b) the `edgeX` six-pair sum under gammaX's
-`Classical.epsilon` pattern-pair rendering (needs a DIHX_SYM-style order
--independence plus the SUM_PAIR_2_SET reindexing, unported). -/
+PROVED (2026-10-08, SimplexVolume 消费波): the volume half via the
+SimplexVolume bridge `volume_real_convexHull_tetra` (X reduces to
+`mcell 4` = `convexHull ℝ {u0,u1,u2,u3}` through `p20k_mcell4_hull`, then
+`hy1..hy6` slot in verbatim); the gammaX half via SOL_SOL_Y_EXPLICIT
+(four vertex sols = the four `sol_y` slots of `vol4f`),
+DIHX_DIH_Y_lemma (six `dihX` values = the six `dih_y` slots), and the
+new gammaX-side kit: `p20k_dihX_swap` (edge orientation independence,
+via one generic position-swap perm + DIHV_SYM) and `p20k_edge_term_eps`
+(the `Classical.epsilon` pattern-pair term collapses to the canonical
+orientation, HL SUM_PAIR_2_SET rendered as the explicit six-pair setSum
+expansion). sorryAx taint inherited from the PA5/PA6 omega-tower base
+(HDTFNFZ/LEPJBDJ/QZKSYKG1/RVFXZBU), same as the DIHX/SOL giants above. -/
 theorem gammaX_gamm4fgcy (V X : Set V3) (ul : List V3) (u0 u1 u2 u3 : V3) (i : ℕ)
     (y1 y2 y3 y4 y5 y6 : ℝ) (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul)
     (hi : 4 ≤ i) (hX : X = mcell i V ul) (hn : ¬ nullSet X)
@@ -1475,22 +1615,252 @@ theorem gammaX_gamm4fgcy (V X : Set V3) (ul : List V3) (u0 u1 u2 u3 : V3) (i : �
     (hy6 : dist u1 u2 = y6) :
     volume.real X = volY y1 y2 y3 y4 y5 y6 ∧
       gammaX V X lmfun = gamma4fgcy y1 y2 y3 y4 y5 y6 lmfun := by
-  sorry
-  -- NEEDS: `cell_params_d` uniqueness (as above) to unfold gammaX's VX /
-  -- edgeX bank through the explicit 4-cell vertices, then the volume and
-  -- gamma definitions rewrite via volY/gamma4fgcy. Blocked by the PA21
-  -- cycle for the kit.
+  subst hul
+  have hd := p20k_barV_distinct hb
+  have t10 : dist u1 u0 = y1 := by rw [dist_comm]; exact hy1
+  have t20 : dist u2 u0 = y2 := by rw [dist_comm]; exact hy2
+  have t30 : dist u3 u0 = y3 := by rw [dist_comm]; exact hy3
+  have t32 : dist u3 u2 = y4 := by rw [dist_comm]; exact hy4
+  have t31 : dist u3 u1 = y5 := by rw [dist_comm]; exact hy5
+  have t21 : dist u2 u1 = y6 := by rw [dist_comm]; exact hy6
+  have hX4 : X = mcell 4 V [u0, u1, u2, u3] := by rw [hX, p20k_mcell_ge4 hi]
+  have hne4 : mcell 4 V [u0, u1, u2, u3] ≠ ∅ := by
+    intro h0
+    rw [← hX4] at h0
+    exact p20k_ne_empty hn h0
+  have hVX : VX V X = {u0, u1, u2, u3} := by
+    have g1 := p20k_VX_m4 V [u0, u1, u2, u3] hp hs hb
+      (fun h0 => by rw [← hX4] at h0; exact hn h0)
+    rw [hX4, g1]
+    ext z
+    simp only [setOfList, List.mem_cons, Set.mem_setOf_eq, Set.mem_insert_iff,
+      Set.mem_singleton_iff]
+    tauto
+  have hset4 : setOfList [u0, u1, u2, u3] = ({u0, u1, u2, u3} : Set V3) := by
+    ext z
+    simp only [setOfList, List.mem_cons, Set.mem_setOf_eq, Set.mem_insert_iff,
+      Set.mem_singleton_iff]
+    tauto
+  -- (a) volume half: the SimplexVolume bridge
+  have hvol : volume.real X = volY y1 y2 y3 y4 y5 y6 := by
+    rw [hX4, p20k_mcell4_hull hne4, hset4, volume_real_convexHull_tetra,
+      hy1, hy2, hy3, hy4, hy5, hy6]
+    unfold volY volXf
+    simp only [pow_two]
+  -- (b) sol side: the four vertex solid angles
+  obtain ⟨hs0, hs1, hs2, hs3⟩ := SOL_SOL_Y_EXPLICIT V X [u0, u1, u2, u3] u0 u1 u2 u3 i
+    y1 y2 y3 y4 y5 y6 hs hp hb hi hX hn rfl hy1 hy2 hy3 hy4 hy5 hy6
+  have hts : totalSolid V X = sol u0 X + sol u1 X + sol u2 X + sol u3 X := by
+    unfold totalSolid
+    rw [hVX]
+    exact p20k_setSum_quad _ hd.1 hd.2.1 hd.2.2.1 hd.2.2.2.1 hd.2.2.2.2.1 hd.2.2.2.2.2
+  -- (c) the six dihedral slots + the pair-swap equalities
+  obtain ⟨hd01, hd02, hd03, hd23, hd13, hd12⟩ :=
+    DIHX_DIH_Y_lemma V X [u0, u1, u2, u3] u0 u1 u2 u3 i y1 y2 y3 y4 y5 y6 hs hp hb hi hX
+      hn rfl hy1 hy2 hy3 hy4 hy5 hy6
+  have sw01 := p20k_dihX_swap V X u0 u1 u2 u3 hp hs hn hb hX4
+  -- reordered witnesses (barV + mcell) for the five other swap bases
+  obtain ⟨hb02, hm02⟩ := p20k_perm_wit V u0 u1 u2 u3 hs hp hb hne4 u0 u2 u1 u3
+    (Equiv.symm (Equiv.swap 1 2))
+    (show Equiv.symm (Equiv.swap 1 2) 0 = 0 by decide)
+    (show Equiv.symm (Equiv.swap 1 2) 1 = 2 by decide)
+    (show Equiv.symm (Equiv.swap 1 2) 2 = 1 by decide)
+    (show Equiv.symm (Equiv.swap 1 2) 3 = 3 by decide)
+    (by norm_num)
+    (by
+      intro j hj
+      rw [Equiv.symm_apply_eq]
+      exact (Equiv.swap_apply_of_ne_of_ne (show j ≠ 1 by omega) (show j ≠ 2 by omega)).symm)
+    (by
+      rw [leftActionList, Equiv.symm_symm]
+      simp [List.range_succ, Equiv.swap_apply_left, Equiv.swap_apply_right,
+        Equiv.swap_apply_of_ne_of_ne])
+  have sw02 := p20k_dihX_swap V X u0 u2 u1 u3 hp hs hn hb02 (by rw [hm02]; exact hX4)
+  obtain ⟨hb03, hm03⟩ := p20k_perm_wit V u0 u1 u2 u3 hs hp hb hne4 u0 u3 u1 u2
+    (Equiv.symm ((Equiv.swap 2 3).trans (Equiv.swap 1 3)))
+    (show Equiv.symm ((Equiv.swap 2 3).trans (Equiv.swap 1 3)) 0 = 0 by decide)
+    (show Equiv.symm ((Equiv.swap 2 3).trans (Equiv.swap 1 3)) 1 = 2 by decide)
+    (show Equiv.symm ((Equiv.swap 2 3).trans (Equiv.swap 1 3)) 2 = 3 by decide)
+    (show Equiv.symm ((Equiv.swap 2 3).trans (Equiv.swap 1 3)) 3 = 1 by decide)
+    (by norm_num)
+    (by
+      intro j hj
+      rw [Equiv.symm_apply_eq, Equiv.trans_apply]
+      show j = (Equiv.swap 1 3) ((Equiv.swap 2 3) j)
+      rw [Equiv.swap_apply_of_ne_of_ne (show j ≠ 2 by omega) (show j ≠ 3 by omega),
+        Equiv.swap_apply_of_ne_of_ne (show j ≠ 1 by omega) (show j ≠ 3 by omega)])
+    (by
+      rw [leftActionList, Equiv.symm_symm]
+      simp [List.range_succ, Equiv.trans_apply, Equiv.swap_apply_left,
+        Equiv.swap_apply_right, Equiv.swap_apply_of_ne_of_ne])
+  have sw03 := p20k_dihX_swap V X u0 u3 u1 u2 hp hs hn hb03 (by rw [hm03]; exact hX4)
+  obtain ⟨hb23, hm23⟩ := p20k_perm_wit V u0 u1 u2 u3 hs hp hb hne4 u2 u3 u0 u1
+    (Equiv.symm ((Equiv.swap 1 3).trans (Equiv.swap 0 2)))
+    (show Equiv.symm ((Equiv.swap 1 3).trans (Equiv.swap 0 2)) 0 = 2 by decide)
+    (show Equiv.symm ((Equiv.swap 1 3).trans (Equiv.swap 0 2)) 1 = 3 by decide)
+    (show Equiv.symm ((Equiv.swap 1 3).trans (Equiv.swap 0 2)) 2 = 0 by decide)
+    (show Equiv.symm ((Equiv.swap 1 3).trans (Equiv.swap 0 2)) 3 = 1 by decide)
+    (by norm_num)
+    (by
+      intro j hj
+      rw [Equiv.symm_apply_eq, Equiv.trans_apply]
+      show j = (Equiv.swap 0 2) ((Equiv.swap 1 3) j)
+      rw [Equiv.swap_apply_of_ne_of_ne (show j ≠ 1 by omega) (show j ≠ 3 by omega),
+        Equiv.swap_apply_of_ne_of_ne (show j ≠ 0 by omega) (show j ≠ 2 by omega)])
+    (by
+      rw [leftActionList, Equiv.symm_symm]
+      simp [List.range_succ, Equiv.trans_apply, Equiv.swap_apply_left,
+        Equiv.swap_apply_right, Equiv.swap_apply_of_ne_of_ne])
+  have sw23 := p20k_dihX_swap V X u2 u3 u0 u1 hp hs hn hb23 (by rw [hm23]; exact hX4)
+  obtain ⟨hb13, hm13⟩ := p20k_perm_wit V u0 u1 u2 u3 hs hp hb hne4 u1 u3 u0 u2
+    (Equiv.symm ((Equiv.swap 0 2).trans ((Equiv.swap 1 3).trans (Equiv.swap 1 2))))
+    (show Equiv.symm ((Equiv.swap 0 2).trans ((Equiv.swap 1 3).trans (Equiv.swap 1 2))) 0 = 2 by decide)
+    (show Equiv.symm ((Equiv.swap 0 2).trans ((Equiv.swap 1 3).trans (Equiv.swap 1 2))) 1 = 0 by decide)
+    (show Equiv.symm ((Equiv.swap 0 2).trans ((Equiv.swap 1 3).trans (Equiv.swap 1 2))) 2 = 3 by decide)
+    (show Equiv.symm ((Equiv.swap 0 2).trans ((Equiv.swap 1 3).trans (Equiv.swap 1 2))) 3 = 1 by decide)
+    (by norm_num)
+    (by
+      intro j hj
+      rw [Equiv.symm_apply_eq]
+      simp only [Equiv.trans_apply]
+      show j = (Equiv.swap 1 2) ((Equiv.swap 1 3) ((Equiv.swap 0 2) j))
+      rw [Equiv.swap_apply_of_ne_of_ne (show j ≠ 0 by omega) (show j ≠ 2 by omega),
+        Equiv.swap_apply_of_ne_of_ne (show j ≠ 1 by omega) (show j ≠ 3 by omega),
+        Equiv.swap_apply_of_ne_of_ne (show j ≠ 1 by omega) (show j ≠ 2 by omega)])
+    (by
+      rw [leftActionList, Equiv.symm_symm]
+      simp [List.range_succ, Equiv.trans_apply, Equiv.swap_apply_left,
+        Equiv.swap_apply_right, Equiv.swap_apply_of_ne_of_ne])
+  have sw13 := p20k_dihX_swap V X u1 u3 u0 u2 hp hs hn hb13 (by rw [hm13]; exact hX4)
+  obtain ⟨hb12, hm12⟩ := p20k_perm_wit V u0 u1 u2 u3 hs hp hb hne4 u1 u2 u0 u3
+    (Equiv.symm ((Equiv.swap 1 2).trans (Equiv.swap 0 1)))
+    (show Equiv.symm ((Equiv.swap 1 2).trans (Equiv.swap 0 1)) 0 = 2 by decide)
+    (show Equiv.symm ((Equiv.swap 1 2).trans (Equiv.swap 0 1)) 1 = 0 by decide)
+    (show Equiv.symm ((Equiv.swap 1 2).trans (Equiv.swap 0 1)) 2 = 1 by decide)
+    (show Equiv.symm ((Equiv.swap 1 2).trans (Equiv.swap 0 1)) 3 = 3 by decide)
+    (by norm_num)
+    (by
+      intro j hj
+      rw [Equiv.symm_apply_eq, Equiv.trans_apply]
+      show j = (Equiv.swap 0 1) ((Equiv.swap 1 2) j)
+      rw [Equiv.swap_apply_of_ne_of_ne (show j ≠ 1 by omega) (show j ≠ 2 by omega),
+        Equiv.swap_apply_of_ne_of_ne (show j ≠ 0 by omega) (show j ≠ 1 by omega)])
+    (by
+      rw [leftActionList, Equiv.symm_symm]
+      simp [List.range_succ, Equiv.trans_apply, Equiv.swap_apply_left,
+        Equiv.swap_apply_right, Equiv.swap_apply_of_ne_of_ne])
+  have sw12 := p20k_dihX_swap V X u1 u2 u0 u3 hp hs hn hb12 (by rw [hm12]; exact hX4)
+  -- (d) edgeX is the six-pair set (vol4f slot order)
+  have pEq : ∀ (p q : V3), ({p, q} : Set V3) = {q, p} := by
+    intro p q
+    ext z
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  have hedges : edgeX V X =
+      insert ({u0, u1} : Set V3) (insert ({u0, u2} : Set V3) (insert ({u0, u3} : Set V3)
+        (insert ({u2, u3} : Set V3) (insert ({u1, u3} : Set V3)
+          (insert ({u1, u2} : Set V3) (∅ : Set (Set V3))))))) := by
+    ext e
+    simp only [edgeX, Set.mem_setOf_eq]
+    constructor
+    · rintro ⟨a, b, rfl, ha, hbv, hab⟩
+      have ha4 : a ∈ ({u0, u1, u2, u3} : Set V3) := by
+        have h1 : a ∈ VX V X := ha
+        rw [hVX] at h1
+        exact h1
+      have hb4 : b ∈ ({u0, u1, u2, u3} : Set V3) := by
+        have h1 : b ∈ VX V X := hbv
+        rw [hVX] at h1
+        exact h1
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ha4 hb4
+      rcases ha4 with ha4 | ha4 | ha4 | ha4 <;>
+        rcases hb4 with hb4 | hb4 | hb4 | hb4
+      · exact absurd (ha4.trans hb4.symm) hab
+      · exact Or.inl (by rw [ha4, hb4])
+      · exact Or.inr (Or.inl (by rw [ha4, hb4]))
+      · exact Or.inr (Or.inr (Or.inl (by rw [ha4, hb4])))
+      · exact Or.inl (by rw [ha4, hb4]; exact (pEq u0 u1).symm)
+      · exact absurd (ha4.trans hb4.symm) hab
+      · rw [ha4, hb4]
+        exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr (Set.mem_insert _ _)))))
+      · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (by rw [ha4, hb4])))))
+      · exact Or.inr (Or.inl (by rw [ha4, hb4]; exact (pEq u0 u2).symm))
+      · rw [ha4, hb4]
+        refine Or.inr (Or.inr (Or.inr (Or.inr (Or.inr ?_))))
+        exact Set.mem_insert_iff.mpr (Or.inl (pEq u2 u1))
+      · exact absurd (ha4.trans hb4.symm) hab
+      · exact Or.inr (Or.inr (Or.inr (Or.inl (by rw [ha4, hb4]))))
+      · exact Or.inr (Or.inr (Or.inl (by rw [ha4, hb4]; exact (pEq u0 u3).symm)))
+      · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (by rw [ha4, hb4]; exact (pEq u1 u3).symm)))))
+      · exact Or.inr (Or.inr (Or.inr (Or.inl (by rw [ha4, hb4]; exact (pEq u2 u3).symm))))
+      · exact absurd (ha4.trans hb4.symm) hab
+    · rintro (rfl | rfl | rfl | rfl | rfl | h6)
+      · exact ⟨u0, u1, rfl, by rw [hVX]; simp, by rw [hVX]; simp, hd.1⟩
+      · exact ⟨u0, u2, rfl, by rw [hVX]; simp, by rw [hVX]; simp, hd.2.1⟩
+      · exact ⟨u0, u3, rfl, by rw [hVX]; simp, by rw [hVX]; simp, hd.2.2.1⟩
+      · exact ⟨u2, u3, rfl, by rw [hVX]; simp, by rw [hVX]; simp, hd.2.2.2.2.2⟩
+      · exact ⟨u1, u3, rfl, by rw [hVX]; simp, by rw [hVX]; simp, hd.2.2.2.2.1⟩
+      · rw [Set.mem_insert_iff] at h6
+        rcases h6 with h6 | h6
+        · subst h6
+          exact ⟨u1, u2, rfl, by rw [hVX]; simp, by rw [hVX]; simp, hd.2.2.2.1⟩
+        · exact absurd h6 (by simp)
+  -- the 15 pair distinctness facts for the sum expansion
+  have d1 : ({u0, u1} : Set V3) ≠ {u0, u2} := p20k_pair_ne_sh1 hd.1 hd.2.1 hd.2.2.2.1
+  have d2 : ({u0, u1} : Set V3) ≠ {u0, u3} := p20k_pair_ne_sh1 hd.1 hd.2.2.1 hd.2.2.2.2.1
+  have d3 : ({u0, u1} : Set V3) ≠ {u2, u3} := p20k_pair_ne_gen hd.1 hd.2.1 hd.2.2.1
+  have d4 : ({u0, u1} : Set V3) ≠ {u1, u3} := p20k_pair_ne_gen hd.1 hd.1 hd.2.2.1
+  have d5 : ({u0, u1} : Set V3) ≠ {u1, u2} := p20k_pair_ne_gen hd.1 hd.1 hd.2.1
+  have d6 : ({u0, u2} : Set V3) ≠ {u0, u3} := p20k_pair_ne_sh1 hd.2.1 hd.2.2.1 hd.2.2.2.2.2
+  have d7 : ({u0, u2} : Set V3) ≠ {u2, u3} := p20k_pair_ne_gen hd.2.1 hd.2.1 hd.2.2.1
+  have d8 : ({u0, u2} : Set V3) ≠ {u1, u3} := p20k_pair_ne_gen hd.2.1 hd.1 hd.2.2.1
+  have d9 : ({u0, u2} : Set V3) ≠ {u1, u2} := p20k_pair_ne_gen hd.2.1 hd.1 hd.2.1
+  have d10 : ({u0, u3} : Set V3) ≠ {u2, u3} := p20k_pair_ne_gen hd.2.2.1 hd.2.1 hd.2.2.1
+  have d11 : ({u0, u3} : Set V3) ≠ {u1, u3} := p20k_pair_ne_gen hd.2.2.1 hd.1 hd.2.2.1
+  have d12 : ({u0, u3} : Set V3) ≠ {u1, u2} := p20k_pair_ne_gen hd.2.2.1 hd.1 hd.2.1
+  have d13 : ({u2, u3} : Set V3) ≠ {u1, u3} :=
+    p20k_pair_ne_gen hd.2.2.2.2.2 (Ne.symm hd.2.2.2.1) hd.2.2.2.2.2
+  have d14 : ({u2, u3} : Set V3) ≠ {u1, u2} :=
+    p20k_pair_ne_gen2 hd.2.2.2.2.2 (Ne.symm hd.2.2.2.2.1) (Ne.symm hd.2.2.2.2.2)
+  have d15 : ({u1, u3} : Set V3) ≠ {u1, u2} :=
+    p20k_pair_ne_sh1 hd.2.2.2.2.1 hd.2.2.2.1 (Ne.symm hd.2.2.2.2.2)
+  refine ⟨hvol, ?_⟩
+  unfold gammaX gamma4fgcy vol4f
+  rw [hvol, hts, hs0, hs1, hs2, hs3, hedges]
+  unfold setSum
+  rw [dif_pos (Set.toFinite (insert ({u0, u1} : Set V3) (insert ({u0, u2} : Set V3)
+    (insert ({u0, u3} : Set V3) (insert ({u2, u3} : Set V3) (insert ({u1, u3} : Set V3)
+      (insert ({u1, u2} : Set V3) (∅ : Set (Set V3)))))))))]
+  simp only [Set.Finite.toFinset_insert, Set.Finite.toFinset_singleton]
+  simp [d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15,
+    Set.mem_insert_iff, Set.mem_singleton_iff, Finset.sum_insert]
+  rw [p20k_edge_term_eps hd.1 lmfun sw01,
+    p20k_edge_term_eps hd.2.1 lmfun sw02,
+    p20k_edge_term_eps hd.2.2.1 lmfun sw03,
+    p20k_edge_term_eps hd.2.2.2.2.2 lmfun sw23,
+    p20k_edge_term_eps hd.2.2.2.2.1 lmfun sw13,
+    p20k_edge_term_eps hd.2.2.2.1 lmfun sw12]
+  rw [hd01, hd02, hd03, hd23, hd13, hd12]
+  simp only [HL_2]
+  rw [hy1, hy2, hy3, hy4, hy5, hy6]
+  ring
+
 
 /-- HOL `gammaX_gamma3f` (TSKAJXY1.hl:4178): same for a 3-cell: all
 `sqrt2`-legs `y1 y2 y3` collapsed to `sqrt2`.
 
-STILL SORRY (2026-10-08 收窄): needs (a) the same tetra-volume bridge as
-gammaX_gamm4fgcy, applied to the apex form X = convexHull {s, u0, u1,
-u2} with s = `mxi V ul` at distance √2 from u0/u1/u2 (the voronoi
--sandwich of MXI_EXPLICIT + voronoiClosed, per the HL proof); (b) the
-same edgeX sum. The sol/dihX slots reduce to the permuted distances
-(√2,√2,√2,y4,y5,y6) once VX V X = {u0,u1,u2} (LEPJBDJ at k = 3) and the
-mxi distances are in place. -/
+STILL SORRY (2026-10-08 收窄更新): the two gaps of the k = 4 sibling
+gammaX_gamm4fgcy are now CLOSED — (a) the tetra-volume bridge exists
+(Kepler.Geom.SimplexVolume.volume_real_convexHull_tetra, consumed by the
+sibling) and (b) the edgeX six-pair epsilon sum is kitted
+(p20k_dihX_swap + p20k_edge_term_eps, consumed by the sibling). What
+remains here is the k = 3 apex-form dispatch: pin X = mcell 3 V ul as
+convexHull {mxi V ul, u0, u1, u2} with the √2 distances of the apex (the
+voronoi-sandwich of MXI_EXPLICIT + voronoiClosed, per the HL proof) and
+VX V X = {u0, u1, u2} (LEPJBDJ at k = 3); after that the volume rewrites
+via volume_real_convexHull_tetra, the sol/dihX slots reduce to the
+permuted distances (√2,√2,√2,y4,y5,y6) through the same kit, and the
+gammaX sum collapses exactly as in the sibling. -/
 theorem gammaX_gamma3f (V X : Set V3) (ul : List V3) (u0 u1 u2 u3 : V3)
     (y4 y5 y6 : ℝ) (hs : saturated V) (hp : Packing V) (hb : barV V 3 ul)
     (hX : X = mcell 3 V ul) (hn : ¬ nullSet X) (hul : ul = [u0, u1, u2, u3])
