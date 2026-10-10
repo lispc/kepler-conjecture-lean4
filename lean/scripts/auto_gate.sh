@@ -239,16 +239,67 @@ cmt=$(git show HEAD:"./$FILE" | awk '
 # deadening the $cmt code-keyword rail) so any deletion inside a sorried
 # declaration failed rule 2 with "non-sorry lines deleted". Replace with the
 # POSIX-portable ([^[:alnum:]_]|$).
+# EVOLUTION 15 (2026-10-08): pure term-forwarder of unfalsified content — a
+# declaration whose proof body is a names-only identifier application (no
+# `by`, no tactic structure, no parens/operators) that mentions a
+# sorry-bearing-at-HEAD declaration shares the target's epistemic status
+# (its proof term IS a term over unfalsified content), so its full text
+# joins $sorbody. Resolved after collection, 3 rounds deep (forwarder of
+# forwarder). The names-only restriction keeps real proved content (any
+# paren, `fun`, `=>`, tactic or `by`) out of the excusal.
 sorbody=$(git show HEAD:"./$FILE" | awk '
   /^[[:space:]]*((private|protected|noncomputable|unsafe|partial)[[:space:]]+)*(theorem|lemma|def|abbrev|instance|example)([^[:alnum:]_]|$)/ {
-    if (insor) printf "%s", buf
+    if (indecl) { nm2[++k] = nm; tx[k] = buf; sr[k] = insor }
+    l = $0
+    sub(/^[[:space:]]*((private|protected|noncomputable|unsafe|partial)[[:space:]]+)*(theorem|lemma|def|abbrev|instance|example)[[:space:]]+/, "", l)
+    nm = l
+    for (j = 1; j <= length(nm); j++) {
+      if (!identc(substr(nm, j, 1))) { nm = substr(nm, 1, j - 1); break }
+    }
     indecl = 1; insor = 0; buf = $0 "\n"; next
   }
   indecl {
     if ($0 ~ /^[[:space:]]*sorry([^[:alnum:]_]|$)/ || $0 ~ /:=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$/) insor = 1
     buf = buf $0 "\n"
   }
-  END { if (insor) printf "%s", buf }' | sort -u)
+  END {
+    if (indecl) { nm2[++k] = nm; tx[k] = buf; sr[k] = insor }
+    for (i = 1; i <= k; i++) if (sr[i]) sorried[nm2[i]] = 1
+    for (rep = 1; rep <= 3; rep++)
+      for (i = 1; i <= k; i++) {
+        if (sr[i] || fwd[i]) continue
+        n = split(tx[i], L, "\n")
+        seen = 0; body = ""
+        for (j = 1; j <= n; j++) {
+          if (!seen) { if (L[j] ~ /:=/) { seen = 1; r = L[j]; sub(/.*:=/, "", r); body = r "\n" } ; continue }
+          if (L[j] ~ /^[[:space:]]*\/(-!)?/ || L[j] ~ /^[[:space:]]*(namespace|end|open|import|set_option)([^[:alnum:]_]|$)/) break
+          body = body L[j] "\n"
+        }
+        if (!seen) continue
+        flat = body; gsub(/\n/, " ", flat)
+        if (flat !~ /^[A-Za-z0-9_. \t]+$/) continue
+        if (flat ~ /(^|[^A-Za-z0-9_.])by([^A-Za-z0-9_.]|$)/) continue
+        hit = 0
+        for (s in sorried) if (wordin(flat, s)) { hit = 1; break }
+        if (hit) fwd[i] = 1
+      }
+    for (i = 1; i <= k; i++) if (sr[i] || fwd[i]) printf "%s", tx[i]
+  }
+  function identc(c) { return index(IDC, c) > 0 }
+  function wordin(s, w,   idx, b, c, a) {
+    idx = index(s, w)
+    while (idx > 0) {
+      b = idx + length(w)
+      c = (idx == 1) ? " " : substr(s, idx - 1, 1)
+      a = (b > length(s)) ? " " : substr(s, b, 1)
+      if (!identc(c) && !identc(a)) return 1
+      s = substr(s, idx + 1)
+      idx = index(s, w)
+    }
+    return 0
+  }
+  BEGIN { IDC = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_." ; IDC = IDC sprintf("%c", 39) }
+' | sort -u)
 if [ -n "$dels" ]; then
   # EVOLUTION 12 (2026-09-30): a purely cosmetic diff (all deletions are
   # comment/docstring-interior/blank — nothing in `hard`, no sorry deleted)
