@@ -8,8 +8,9 @@
 > 与轻量 Lean 任务（LLM 工人 = ZCode sub agents，opencode CLI 退役）。
 > 遗留风险：~~本机 GitHub key 无 push 权限~~（2026-09-28 已解决，main 全天正常 push）。
 >
-> 一页看板：各 Phase 完成度、已完成什么、还差什么。每 24h 由主 agent 例行刷新（cron 自动 push）。
-> 详细交接信息见 `HANDOFF.md`，阶段定义见 `PLAN.md`，长期决策见 `DECISIONS.md`。
+> 一页看板：各 Phase 完成度、已完成什么、还差什么。每批次由主 agent 例行刷新。
+> 计划与当前战略（会师模型）见 `PLAN.md`（2026-10-10 合并 HANDOFF 后的权威版），
+> 长期决策见 `DECISIONS.md`。
 > 当前 main @ 见本 commit；最近验收：各批次根构建绿（wip/auto-packing 批次提交信息 "38-way root clean"，`aa4baf6b`；HANDOFF 记录 `make check` 绿 `c425db2`，2026-09-14）。
 > 注意：2026-09-13 起接班 agent 改为 main 直推模式，允许在制骨架 sorry 短暂存在；
 > 历史 sanctioned 占位仍为 `Statement.lean` 主定理（见 Phase 1）。
