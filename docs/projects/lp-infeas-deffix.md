@@ -25,6 +25,25 @@
 
 ## 3. 改动范围（三文件，净 sorry 0）
 
+### 2.1 改动围栏（LPCert.lean 全部 ± 行；闸 DEF-FIX 逐行验收，charter ⊆ tree）
+
+```diff
++import Kepler.Text.LP.LPFarkas
++2026-10-12 DEF-FIX 真语义化（章程 lp-infeas-deffix.md）：体已换
++`∃ c : LpFarkasCore, farkasCheck c = true`（内核下沉件
++Kepler.Text.LP.LPFarkas），闸 DEF-FIX。
+-def LpTerminalInfeasibleCertified (_id : String) : Prop := True
++def LpTerminalInfeasibleCertified (_id : String) : Prop := ∃ c : LpFarkasCore, farkasCheck c = true
+```
+
+### 2.2 白名单与范围外
+
+- `$DF_NAMES = LpTerminalInfeasibleCertified`；`$DF_SORRY_NET = 0`；
+- LPFarkas.lean 为新建文件（闸 rule① git add 后可见），LPSchemaFarkas.lean 的
+  防孪生重构由构建与公理审计验收（DEF-FIX 围栏机制只覆盖冻结文件 LPCert）；
+- LPLeafInfeas\* 叶文件零触碰（190 处 deferred-compute 骨架照旧等 C3 数据波）。
+
+
 1. **新建 `lean/Kepler/Text/LP/LPFarkas.lean`**（仅依赖 Mathlib 基础）：
    从 LPSchemaFarkas §1-§2 **逐字搬入**内核五件
    `LpFarkasCore`/`coreColSum`/`coreRhsSum`/`coreShape`/`farkasCheck`

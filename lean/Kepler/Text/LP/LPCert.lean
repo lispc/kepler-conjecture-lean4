@@ -37,6 +37,7 @@
   `bound`/`bound_lt` 转发。
 -/
 import Kepler.LP.ColMajor
+import Kepler.Text.LP.LPFarkas
 
 namespace Kepler.Text.LP
 
@@ -69,8 +70,11 @@ def LpTerminalCertified (_id : String) : Prop :=
 非平凡语义而不新造机制——与 §2a `PackIneqDefA := True` 同款占位，
 退化防线在案：**不得**经占位平凡闭合为「已证」口径（量产不可行性
 证书波落形后逐条真化）。
+2026-10-12 DEF-FIX 真语义化（章程 lp-infeas-deffix.md）：体已换
+`∃ c : LpFarkasCore, farkasCheck c = true`（内核下沉件
+Kepler.Text.LP.LPFarkas），闸 DEF-FIX。
 -- NEEDS: 不可行性证书通道（Farkas/对偶不可行形，重跑波定形）。 -/
-def LpTerminalInfeasibleCertified (_id : String) : Prop := True
+def LpTerminalInfeasibleCertified (_id : String) : Prop := ∃ c : LpFarkasCore, farkasCheck c = true
 
 /-- 注册表量化：清单中每条记录的 bound 形证书成立（清单 = 定义域，
 T1 折算；退化防线同上——不得借 `LpTerminalCertified` 的 id 无关性
