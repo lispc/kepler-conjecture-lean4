@@ -5019,9 +5019,10 @@ X := `mcell 2 V vl` = (两对称 `rconeGe`，`a = hl (truncateSimplex 1 vl)/√2
 
 本波真证：`p24_mem_affGe_base`、`p24_mem_rconeGe_apex`/
 `p24_mem_rconeGe_cross`、`p24_rconeGe_convex`、`p24_caseB2_mxi_eq`、
-`p24_caseB2_mcellSet`、`p24_caseB2_ends_mem`；支级装配
-`p24_caseB2_branch` 为 precisely-scoped 残件（capstone 随之接线，
-sorry 计数不增）。
+`p24_caseB2_mcellSet`、`p24_caseB2_ends_mem`；第五波（2026-10-12）续作：
+换叶件群 `p24_pair_patch_mem`/`p24_packing_finite_inter_ball_at`/
+`p24_escape_direction` + 换叶主件 `p24_nondeg_leaf_exists`（本波真证），
+支级装配 `p24_caseB2_branch` 全两支闭合（capstone 随之接线）。
 -/
 
 /-- affGe 基点成员：`x ∈ {a,b}` ⇒ `x ∈ affGe {a,b} t`（t 有限；Affsign
@@ -6475,22 +6476,270 @@ private theorem p24_escape_direction {D : Submodule ℝ V3}
     have hτ1 : τstar = sSup (rep '' F) + 1 := rfl
     linarith [hsup]
 
-/-- **情形 B2 全支**（capstone 的 `r₄ ≥ √2 ∧ r₃ ≥ √2` 分支，capstone 形）：
-X := `mcell 2 V vl`。
-**precisely-scoped 残余缺口（本件 `sorry`，2026-10-12 第四波记账）**：
-泛具子情形（ω₂ ≠ ω₃）与退化子情形（ω₂ = ω₃ 换叶）的完整装配——修正后
-路线与已真证结构件见上方第四波 docstring。要点：
-(1) mcellSet 成员 = `p24_caseB2_mcellSet`（本波真证）；
-(2) 分支条件：`hl (truncateSimplex 1 vl) = hl [u0,u1] = d/2 < √2`
-  （`p24_hl_pair_lt_sqrt2`）∧ `√2 ≤ hl vl = hr4`（本波形态）；
-(3) edgeX：两端点成员 `p24_caseB2_ends_mem`（本波真证）+ 非 nullSet
-  （泛具子情形的四点凸包正体积——`p24_caseB2_general` 真证 /
-  退化子情形（ω₂ = ω₃）换叶——**残缺**）+ HDTFNFZ；
-(4) 非平坦：泛具子情形的扇形方位角分离——`p24_caseB2_general` 真证 /
-  退化子情形换叶——**残缺**；
-(5) `mxi = ω₂` 读出 = `p24_caseB2_mxi_eq`（本波真证）。
-泛具支（ω₂ ≠ ω₃）经 `p24_caseB2_general` 全真证收口；残件收窄至
-退化子情形（ω₂ = ω₃，需支撑面引理换叶）。 -/
+/-- 轴正交件：`z, w` 各自与 `u0, u1` 等距 ⟹ 轴向量 `u1 − u0` 与差向量
+`z − w` 正交（两点平方恒等式 `norm_sub_sq_real` 相减；bisector 平面方向子模
+成员判定的初等核）。 -/
+private theorem p24_eqdist_axis_dot {u0 u1 z w : V3} (hz : dist z u0 = dist z u1)
+    (hw : dist w u0 = dist w u1) : (u1 - u0 : V3) ⬝ᵥ (z - w) = 0 := by
+  have hzn : ‖z - u0‖ = ‖z - u1‖ := by
+    rw [← dist_eq_norm, ← dist_eq_norm]; exact hz
+  have hwn : ‖w - u0‖ = ‖w - u1‖ := by
+    rw [← dist_eq_norm, ← dist_eq_norm]; exact hw
+  have ez0 : ‖z - u0‖ ^ 2 = ‖z‖ ^ 2 - 2 * inner ℝ z u0 + ‖u0‖ ^ 2 := norm_sub_sq_real z u0
+  have ez1 : ‖z - u1‖ ^ 2 = ‖z‖ ^ 2 - 2 * inner ℝ z u1 + ‖u1‖ ^ 2 := norm_sub_sq_real z u1
+  have ew0 : ‖w - u0‖ ^ 2 = ‖w‖ ^ 2 - 2 * inner ℝ w u0 + ‖u0‖ ^ 2 := norm_sub_sq_real w u0
+  have ew1 : ‖w - u1‖ ^ 2 = ‖w‖ ^ 2 - 2 * inner ℝ w u1 + ‖u1‖ ^ 2 := norm_sub_sq_real w u1
+  have hzsq : ‖z - u0‖ ^ 2 = ‖z - u1‖ ^ 2 := by rw [hzn]
+  have hwsq : ‖w - u0‖ ^ 2 = ‖w - u1‖ ^ 2 := by rw [hwn]
+  have key1 : 2 * inner ℝ z u1 - 2 * inner ℝ z u0 = ‖u1‖ ^ 2 - ‖u0‖ ^ 2 := by
+    linarith [ez0, ez1, hzsq]
+  have key2 : 2 * inner ℝ w u1 - 2 * inner ℝ w u0 = ‖u1‖ ^ 2 - ‖u0‖ ^ 2 := by
+    linarith [ew0, ew1, hwsq]
+  have hzwi : inner ℝ (u1 - u0) (z - w) = 0 := by
+    rw [real_inner_comm (z - w) (u1 - u0), inner_sub_left z w (u1 - u0),
+      inner_sub_right z u1 u0, inner_sub_right w u1 u0]
+    linarith
+  rw [← inner_eq_dot]
+  exact hzwi
+
+/-- 叶四元组显式化：`barV V 3 vl` 的叶（长度 4）若截断到 `j=1` 是
+`[u0, u1]`，则 `vl` 逐位为 `[u0, u1, v, w]`（`BARV_3_EXPLICIT` + 前两位
+注入相等；`p24_caseB2_general` 开头同款）。 -/
+private theorem p24_leaf_quad_of_trunc (V : Set V3) (u0 u1 : V3) {vl : List V3}
+    (hbar : barV V 3 vl) (htr : truncateSimplex 1 vl = [u0, u1]) :
+    ∃ v w : V3, vl = [u0, u1, v, w] := by
+  obtain ⟨q0, q1, q2, q3, hvll⟩ := BARV_3_EXPLICIT V vl hbar
+  subst hvll
+  have htrq : truncateSimplex 1 [q0, q1, q2, q3] = [q0, q1] := by
+    rw [truncateSimplex1_pair [q0, q1, q2, q3] (by norm_num)]
+    simp [elV]
+  have hpair01 : [u0, u1] = [q0, q1] := htr.symm.trans htrq
+  injection hpair01 with e0 e1l
+  injection e1l with e1 e1nil
+  subst e0
+  subst e1
+  exact ⟨q2, q3, rfl⟩
+
+/-- **换叶主件**（退化支的支撑面引理等效路线，第五波件群的装配收口）：
+饱和 packing 的短棱（`d < √8`）处必存在**非退化叶**——`barV V 3 vl ∧
+truncateSimplex 1 vl = [u0, u1] ∧ omegaListN V vl 2 ≠ omegaListN V vl 3`。
+反证：设每叶皆退化（`ω₂ = ω₃`），则
+(1) fan 分解 `p24_voronoi_pair_split` + 叶胞单点 `p24_leaf_singleton` +
+`p24_omega1_eq_mid`（ω₁ = 棱中点 p）把配对胞 S 写成过 p 的线段并
+S = ∪_叶 [p, e vl]（e vl = 叶胞单点 = ω₂ = ω₃）；
+(2) 叶集有限：每叶四顶点等距于 e vl（闭胞交成员），饱和 packing 给外接
+半径 < 2，顶点全落进 p 的固定球 `V ∩ ball p (4 + √8)`，经
+`p24_packing_finite_inter_ball_at` + 四元组显式化截断；
+(3) 方向集 {e vl − p} ⊆ bisector 平面方向子模 D（`p24_eqdist_axis_dot`，
+两端等距）有限非零，`p24_escape_direction` 给 D 内小球逃逸向量 u；
+(4) `p24_pair_patch_mem`（中点 margin 严格圆盘 patch）把 p + u 抬进 S；
+fan 分解迫使 p + u 落在某叶线段 [p, e vl₀] 上，即 u = t₂•(e vl₀ − p)、
+t₂ > 0——与逃逸方向（对一切叶方向非平行）矛盾。 -/
+private theorem p24_nondeg_leaf_exists (V : Set V3) (u0 u1 : V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (hd8 : dist u0 u1 < Real.sqrt 8) :
+    ∃ vl : List V3, barV V 3 vl ∧ truncateSimplex 1 vl = [u0, u1] ∧
+      omegaListN V vl 2 ≠ omegaListN V vl 3 := by
+  classical
+  by_contra hcon
+  push_neg at hcon
+  set p : V3 := u0 + (1 / 2 : ℝ) • (u1 - u0) with hpdef
+  have hhl : hl [u0, u1] < Real.sqrt 2 := p24_hl_pair_lt_sqrt2 hd8
+  have hu0u1n : (u1 - u0 : V3) ≠ 0 := sub_ne_zero.mpr (Ne.symm hne)
+  have hD2 : Module.finrank ℝ (LinearMap.ker (p24_dotR (u1 - u0))) = 2 :=
+    p24_finrank_ker_dot (a := u1 - u0) hu0u1n
+  -- 中点距离数据
+  have hpu0 : dist p u0 = dist u0 u1 / 2 := by
+    rw [dist_eq_norm]
+    have h1 : (p - u0 : V3) = (1 / 2 : ℝ) • (u1 - u0) := by
+      rw [hpdef]; module
+    rw [h1, norm_smul, Real.norm_eq_abs, abs_of_pos (show (0:ℝ) < 1 / 2 by norm_num)]
+    rw [show dist u0 u1 = ‖u1 - u0‖ from by rw [dist_eq_norm, norm_sub_rev]]
+    ring
+  have hpu1 : dist p u1 = dist u0 u1 / 2 := by
+    rw [dist_eq_norm]
+    have h1 : (p - u1 : V3) = (1 / 2 : ℝ) • (u0 - u1) := by
+      rw [hpdef]; module
+    rw [h1, norm_smul, Real.norm_eq_abs, abs_of_pos (show (0:ℝ) < 1 / 2 by norm_num)]
+    rw [show dist u0 u1 = ‖u1 - u0‖ from by rw [dist_eq_norm, norm_sub_rev]]
+    rw [norm_sub_rev]
+    ring
+  -- patch 半径刻度
+  have hdpos : (0:ℝ) ≤ dist u0 u1 := dist_nonneg
+  have hsqd : dist u0 u1 ^ 2 < 8 := by
+    have hs8 : Real.sqrt 8 ^ 2 = 8 := Real.sq_sqrt (by norm_num)
+    nlinarith [hd8, hs8, hdpos]
+  have hd2lt : (dist u0 u1 / 2) ^ 2 < 4 - (dist u0 u1 / 2) ^ 2 := by
+    have hsq2 : (dist u0 u1 / 2) ^ 2 = dist u0 u1 ^ 2 / 4 := by ring
+    rw [hsq2]; linarith
+  have hsd2 : dist u0 u1 / 2 < Real.sqrt (4 - (dist u0 u1 / 2) ^ 2) := by
+    have hd2pos : (0:ℝ) ≤ dist u0 u1 / 2 := by linarith
+    have e1 : Real.sqrt ((dist u0 u1 / 2) ^ 2) < Real.sqrt (4 - (dist u0 u1 / 2) ^ 2) :=
+      Real.sqrt_lt_sqrt (sq_nonneg (dist u0 u1 / 2)) hd2lt
+    have e2 : Real.sqrt ((dist u0 u1 / 2) ^ 2) = dist u0 u1 / 2 := by
+      rw [Real.sqrt_sq_eq_abs (dist u0 u1 / 2), abs_of_nonneg hd2pos]
+    linarith
+  set s : ℝ := Real.sqrt (4 - (dist u0 u1 / 2) ^ 2) with hsdef
+  set R : ℝ := (s - dist u0 u1 / 2) / 8 with hRdef
+  have hRpos : 0 < R := by
+    rw [hRdef]
+    exact div_pos (sub_pos.mpr hsd2) (by norm_num)
+  -- 1. 叶集有限：顶点全落进 p 的固定球
+  set Vb : Set V3 := V ∩ Metric.ball p (4 + Real.sqrt 8) with hVbdef
+  have hVbfin : Vb.Finite := p24_packing_finite_inter_ball_at hp p (4 + Real.sqrt 8)
+  have hLsub : {vl : List V3 | barV V 3 vl ∧ truncateSimplex 1 vl = [u0, u1]} ⊆
+      (fun q : V3 × V3 => [u0, u1, q.1, q.2]) '' (Vb ×ˢ Vb) := by
+    rintro vl ⟨hbar, htr⟩
+    obtain ⟨v, w, hvw⟩ := p24_leaf_quad_of_trunc V u0 u1 hbar htr
+    rw [hvw] at hbar
+    have hvn4 : voronoiNondg V [u0, u1, v, w] :=
+      hbar.2 [u0, u1, v, w] ⟨⟨[], by rw [List.append_nil]⟩, by simp⟩
+    have hsubV : setOfList [u0, u1, v, w] ⊆ V := hvn4.2.1
+    have hvv : v ∈ V := hsubV (by simp [setOfList])
+    have hwv : w ∈ V := hsubV (by simp [setOfList])
+    -- 叶胞单点 a 与四点等距
+    obtain ⟨a, ha1, -, -⟩ := p24_leaf_singleton V [u0, u1, v, w] hs hp hbar
+    have hmemA : a ∈ voronoiList V [u0, u1, v, w] := by rw [ha1]; rfl
+    have hcl : ∀ y ∈ (setOfList [u0, u1, v, w] : Set V3), a ∈ voronoiClosed V y := by
+      intro y hy
+      exact Set.mem_sInter.mp hmemA (voronoiClosed V y) ⟨y, hy, rfl⟩
+    have hu0L : u0 ∈ (setOfList [u0, u1, v, w] : Set V3) := by simp [setOfList]
+    have hu1L : u1 ∈ (setOfList [u0, u1, v, w] : Set V3) := by simp [setOfList]
+    have hvL : v ∈ (setOfList [u0, u1, v, w] : Set V3) := by simp [setOfList]
+    have hwL : w ∈ (setOfList [u0, u1, v, w] : Set V3) := by simp [setOfList]
+    have heq0 : ∀ y ∈ (setOfList [u0, u1, v, w] : Set V3),
+        dist a y = dist a u0 := by
+      intro y hy
+      exact le_antisymm (Set.mem_setOf.mp (hcl y hy) u0 hu0)
+        (Set.mem_setOf.mp (hcl u0 hu0L) y (hsubV hy))
+    -- 饱和给外接半径 < 2（a 在 u0 的闭胞内）
+    obtain ⟨y0, hy0V, hy0d⟩ := hs a
+    have hr2 : dist a u0 < 2 :=
+      lt_of_le_of_lt (Set.mem_setOf.mp (hcl u0 hu0L) y0 hy0V) hy0d
+    -- 顶点球界：dist(y, p) ≤ 2·r + d/2 < 4 + √8
+    have hballb : ∀ y : V3, y ∈ (setOfList [u0, u1, v, w] : Set V3) →
+        dist y p < 4 + Real.sqrt 8 := by
+      intro y hy
+      have h1 : dist y u0 ≤ dist y a + dist a u0 := dist_triangle y a u0
+      have h2 : dist y a = dist a y := dist_comm y a
+      have h4 : dist y p ≤ dist y u0 + dist u0 p := dist_triangle y u0 p
+      have h5 : dist u0 p = dist p u0 := dist_comm u0 p
+      rw [h2, heq0 y hy] at h1
+      rw [h5, hpu0] at h4
+      linarith
+    refine ⟨(v, w), ⟨⟨hvv, Metric.mem_ball.mpr (hballb v hvL)⟩,
+      ⟨hwv, Metric.mem_ball.mpr (hballb w hwL)⟩⟩, hvw.symm⟩
+  have hLfin : ({vl : List V3 | barV V 3 vl ∧ truncateSimplex 1 vl = [u0, u1]} :
+      Set (List V3)).Finite :=
+    Set.Finite.subset ((hVbfin.prod hVbfin).image
+      (fun q : V3 × V3 => [u0, u1, q.1, q.2])) hLsub
+  -- 2. 方向集（退化叶单点 − 中点）：有限、非零、落 bisector 方向子模
+  have hsin2 : ∀ vl ∈ {vl : List V3 | barV V 3 vl ∧ truncateSimplex 1 vl = [u0, u1]},
+      ∃ a : V3, voronoiList V vl = {a} := by
+    rintro vl ⟨hbar, -⟩
+    obtain ⟨a, ha1, -, -⟩ := p24_leaf_singleton V vl hs hp hbar
+    exact ⟨a, ha1⟩
+  choose! e heVl using hsin2
+  set F : Set V3 := (fun vl : List V3 => e vl - p) ''
+    {vl : List V3 | (barV V 3 vl ∧ truncateSimplex 1 vl = [u0, u1]) ∧ e vl ≠ p}
+    with hFdef
+  have hFfin : F.Finite :=
+    (Set.Finite.subset hLfin (fun _ hvl => ⟨hvl.1.1, hvl.1.2⟩)).image
+      (fun vl : List V3 => e vl - p)
+  have hFD : ∀ z ∈ F, z ∈ LinearMap.ker (p24_dotR (u1 - u0)) := by
+    intro z hz
+    rw [hFdef] at hz
+    obtain ⟨vl, ⟨⟨hbar, htr⟩, -⟩, hze⟩ := (Set.mem_image _ _ _).mp hz
+    obtain ⟨v2, w2, hvw⟩ := p24_leaf_quad_of_trunc V u0 u1 hbar htr
+    rw [hvw] at hbar htr hze
+    have hmemA : e [u0, u1, v2, w2] ∈ voronoiList V [u0, u1, v2, w2] := by
+      rw [heVl [u0, u1, v2, w2] ⟨hbar, htr⟩]; rfl
+    have hcl0 : e [u0, u1, v2, w2] ∈ voronoiClosed V u0 :=
+      Set.mem_sInter.mp hmemA (voronoiClosed V u0) ⟨u0, by simp [setOfList], rfl⟩
+    have hcl1 : e [u0, u1, v2, w2] ∈ voronoiClosed V u1 :=
+      Set.mem_sInter.mp hmemA (voronoiClosed V u1) ⟨u1, by simp [setOfList], rfl⟩
+    have hd01 : dist (e [u0, u1, v2, w2]) u0 = dist (e [u0, u1, v2, w2]) u1 :=
+      le_antisymm (Set.mem_setOf.mp hcl0 u1 hu1) (Set.mem_setOf.mp hcl1 u0 hu0)
+    rw [← hze]
+    exact p24_eqdist_axis_dot hd01 (hpu0.trans hpu1.symm)
+  have hFne : ∀ z ∈ F, z ≠ 0 := by
+    intro z hz
+    rw [hFdef] at hz
+    obtain ⟨vl, ⟨-, hene⟩, hze⟩ := (Set.mem_image _ _ _).mp hz
+    intro h0
+    rw [h0] at hze
+    exact hene (sub_eq_zero.mp hze)
+  -- 3. 逃逸方向（D 内小球向量，对一切叶方向非平行）
+  obtain ⟨u, huD, hune, hnle, hesc⟩ := p24_escape_direction hD2 F hFfin id hFD hFne
+    (2 * R) (mul_pos (by norm_num) hRpos)
+  -- 4. patch 圆盘把 p + u 抬进配对胞
+  have hxS : p + u ∈ voronoiList V [u0, u1] := by
+    have hraw := p24_pair_patch_mem V u0 u1 hp hu0 hu1 hne hd8 s hsdef R hRdef u huD hnle
+    rwa [← hpdef] at hraw
+  -- 5. fan 分解 + 线段背逼出矛盾
+  have hfan := p24_voronoi_pair_split V u0 u1 hs hp hu0 hu1 hne hhl
+  rw [hfan] at hxS
+  obtain ⟨T, hT, hTm⟩ := Set.mem_sUnion.mp hxS
+  obtain ⟨vl0, hvl0, hTeq⟩ := hT
+  rcases hvl0 with ⟨hb0, htr0⟩
+  obtain ⟨v, w, hvw⟩ := p24_leaf_quad_of_trunc V u0 u1 hb0 htr0
+  rw [hvw] at hb0 htr0 hTeq
+  rw [← hTeq] at hTm
+  have hom1 : omegaListN V [u0, u1, v, w] 1 = p := by
+    have hkey := p24_omega1_eq_mid V u0 u1 hs hp hu0 hu1 hne hd8
+    rw [show omegaListN V [u0, u1] 1 = closestPoint
+        (voronoiList V (truncateSimplex 1 [u0, u1])) (hdV [u0, u1]) from rfl] at hkey
+    rw [truncateSimplex1_pair [u0, u1] (by simp)] at hkey
+    simp only [elV, hdV] at hkey
+    rw [← hpdef] at hkey
+    show closestPoint (voronoiList V (truncateSimplex 1 [u0, u1, v, w]))
+      (hdV [u0, u1, v, w]) = p
+    rw [htr0, show hdV [u0, u1, v, w] = u0 from by simp [hdV]]
+    exact hkey
+  obtain ⟨a, ha1, ha2, ha3⟩ := p24_leaf_singleton V [u0, u1, v, w] hs hp hb0
+  have hmemA : e [u0, u1, v, w] ∈ voronoiList V [u0, u1, v, w] := by
+    rw [heVl [u0, u1, v, w] ⟨hb0, htr0⟩]; rfl
+  have hea : e [u0, u1, v, w] = a := by
+    rw [ha1] at hmemA
+    exact Set.mem_singleton_iff.mp hmemA
+  have hom3 : omegaListN V [u0, u1, v, w] 3 = e [u0, u1, v, w] := ha3.trans hea.symm
+  have hom2 : omegaListN V [u0, u1, v, w] 2 = e [u0, u1, v, w] :=
+    (hcon [u0, u1, v, w] hb0 htr0).trans hom3
+  have hset3 : ({omegaListN V [u0, u1, v, w] 1, omegaListN V [u0, u1, v, w] 2,
+      circumcenter (setOfList [u0, u1, v, w])} : Set V3) = {p, e [u0, u1, v, w]} := by
+    rw [hom1, hom2, ← ha2, hea]
+    ext x
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  rw [hset3, convexHull_pair] at hTm
+  obtain ⟨t1, t2, ht1, ht2, hsum, hxe⟩ := hTm
+  have hup : u = t2 • (e [u0, u1, v, w] - p) := by
+    have ht1e : t1 = 1 - t2 := by linarith
+    have hxe1 : t1 • p + t2 • e [u0, u1, v, w] = p + u := hxe
+    rw [ht1e] at hxe1
+    have hxe2 : (((1 - t2 : ℝ)) • p + t2 • e [u0, u1, v, w] : V3)
+        = p + t2 • (e [u0, u1, v, w] - p) := by module
+    rw [hxe2] at hxe1
+    exact (add_left_cancel_iff.mp hxe1).symm
+  have ht2pos : 0 < t2 := by
+    rcases eq_or_lt_of_le ht2 with h | h
+    · rw [show t2 = 0 from h.symm, zero_smul] at hup
+      exact absurd hup hune
+    · exact h
+  rcases eq_or_ne (e [u0, u1, v, w]) p with hcc | hcc
+  · rw [hcc, sub_self, smul_zero] at hup
+    exact absurd hup hune
+  · exact hesc (e [u0, u1, v, w] - p)
+      ⟨[u0, u1, v, w], ⟨⟨hb0, htr0⟩, hcc⟩, rfl⟩ t2 ht2pos hup
+
+/-- **情形 B2 全支**（capstone 的 `r₄ ≥ √2 ∧ r₃ ≥ √2` 分支，capstone 形，
+2026-10-12 第五波收口——支级装配零缺口）：
+(1) 泛具子情形（ω₂ ≠ ω₃）：X := `mcell 2 V vl`，`p24_caseB2_general` 全真证；
+(2) 退化子情形（ω₂ = ω₃）：本叶平坦，**换叶**——`p24_nondeg_leaf_exists`
+  （本波真证，支撑面引理的等效路线）给出非退化新叶 `vl'`，按 `hl vl'` 与
+  `hl (truncateSimplex 2 vl')` 三分装配：A 支 `p24_caseA_branch`、
+  B3′ 支 `p24_caseB3_branch`、B2′ 支 `p24_caseB2_general`（新叶非退化），
+  三支全部真证。两子情形的 mcellSet/edgeX/非平坦细节见各分支件 docstring。 -/
 
 private theorem p24_caseB2_branch (V : Set V3) (u0 u1 : V3) (vl : List V3)
     (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
@@ -6502,13 +6751,23 @@ private theorem p24_caseB2_branch (V : Set V3) (u0 u1 : V3) (vl : List V3)
       ∀ q : V3, ¬ Collinear3 u0 u1 q →
         ¬ ((X : Set V3) ⊆ {z : V3 | azim u0 u1 q z = 0}) := by
   by_cases hw23 : omegaListN V vl 2 = omegaListN V vl 3
-  · sorry
+  · -- 退化支：换叶（饱和 packing 短棱处必存在非退化叶），按新叶三分支装配
+    obtain ⟨vl', hbar', htr', hne23⟩ :=
+      p24_nondeg_leaf_exists V u0 u1 hs hp hu0 hu1 hne hd8
+    by_cases hr4' : hl vl' < Real.sqrt 2
+    · exact p24_caseA_branch V u0 u1 vl' hs hp hu0 hu1 hne hbar' htr' hr4'
+    · rw [not_lt] at hr4'
+      by_cases hr3' : hl (truncateSimplex 2 vl') < Real.sqrt 2
+      · exact p24_caseB3_branch V u0 u1 vl' hs hp hu0 hu1 hne hbar' htr' hd8 hr4' hr3'
+      · rw [not_lt] at hr3'
+        exact p24_caseB2_general V u0 u1 vl' hs hp hu0 hu1 hne hbar' htr' hd8 hr4' hr3'
+          hne23
   · exact p24_caseB2_general V u0 u1 vl hs hp hu0 hu1 hne hbar htr hd8 hr4 hr3 hw23
 
 
-/-- NEEDS（(β) 支独立存在性引理——**残余缺口已收窄至情形 B2 单支**，
-2026-10-12 波；HL OXLZLEZ3 `FCHKUGT`/`EWYBJUA` 叶胞链的对应物，
-PA18:2159/:2532 的 `ported sorry` 孪生同源）：
+/-- （(β) 支独立存在性引理——**本件已全真证**，2026-10-12 第五波随 B2 支
+收口；HL OXLZLEZ3 `FCHKUGT`/`EWYBJUA` 叶胞链的对应物，
+PA18:2159/:2532 有同名孪生（ported 残件形态）——下游合并时二取一）：
 饱和 packing 的短棱 `u0u1`（`d < 2√2`）处存在以 `e = {u0,u1}` 为边的
 mcell，且它不落在任一过轴平坦半平面 `{z | azim u0 u1 q z = 0}`（`q` 过轴
 外任一点）内。
@@ -6531,10 +6790,11 @@ mcell，且它不落在任一过轴平坦半平面 `{z | azim u0 u1 q z = 0}`（
   B3 支定理，欠 `r₃ < √2` 假设；B2 中 `mxi = ω₂` 且
   `dist(u0,ω₂)² = r₃² + ‖ω₂−cc‖²` 一般 > 2）；修正路线（泛具子情形 ω₂ ≠
   ω₃ 的近轴双楔四点凸包 + 退化子情形 ω₂ = ω₃ 的支撑面换叶）与真证
-  结构件记档于第四波 docstring。装配经 `p24_caseB2_branch`——
-  **precisely-scoped 残余缺口**（支级单 `sorry`，sorry 计数不增）。
-本件闭合后，`p24_REUHADY_nondeg_azim` 随之零编辑闭合（(α) 支已由
-`p24_nondeg_azim_ne` 真证收口）。 -/
+  结构件记档于第四波 docstring。装配经 `p24_caseB2_branch`——第五波
+  （2026-10-12）已两支闭合（退化支经换叶主件 `p24_nondeg_leaf_exists`，
+  真证）。
+本件本体随 B2 支收口而全真证；`p24_REUHADY_nondeg_azim` 随之零编辑
+闭合（(α) 支已由 `p24_nondeg_azim_ne` 真证收口）。 -/
 private theorem p24_exists_mcell_not_flat (V : Set V3) (u0 u1 : V3)
     (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
     (hne : u0 ≠ u1) (hd8 : dist u0 u1 < Real.sqrt 8) :
