@@ -375,6 +375,58 @@ while IFS= read -r line; do
 done <<EOF2
 $hard
 EOF2
+# EVOLUTION 20 (2026-10-12): duplicate-provision excuse. A hard-deleted
+# declaration block is excused when $FILE's clean direct imports provide the
+# same-named declaration with a whitespace-normalized-equal statement prefix —
+# the duplicate-provision refactor (private _pN copies promoted to the shared
+# module they were staged against). Proof bodies need not match: proofs are
+# not frozen, and rule 4 rebuilds the import closure while rule 5 audits it.
+# Fails safe: dirty providers don't count (uncommitted baseline), and any
+# hard line outside such a block still trips.
+if [ -n "$rest" ]; then
+  corpus=""
+  for imp in $(grep -E '^import Kepler' "$FILE"); do
+    prov=$(printf '%s' "$imp" | sed 's/^import[[:space:]]*//; s/\./\//g; s/$/.lean/')
+    [ -f "$prov" ] || continue
+    printf '%s\n' "$changed" | grep -qF -- "$prov" && continue
+    corpus+="$(cat "$prov")"$'\n'
+  done
+  if [ -n "$corpus" ]; then
+    ncorpus=$(printf '%s' "$corpus" | tr -s '[:space:]' ' ')
+    rest_new=""
+    blk=""
+    prefix=""
+    inblk=0
+    flush_block(){
+      if [ "$inblk" -eq 1 ]; then
+        nprefix=$(printf '%s' "$prefix" | tr -s '[:space:]' ' ')
+        if [ -n "$nprefix" ] && printf '%s' "$ncorpus" | grep -qF -- "$nprefix"; then
+          : # duplicate-provision: statement provided by a clean import
+        else
+          rest_new+="$blk"
+        fi
+      fi
+      blk=""; prefix=""; inblk=0
+    }
+    while IFS= read -r line; do
+      if printf '%s' "$line" | grep -qE '^-(private[[:space:]]+)?(theorem|lemma|def|instance|abbrev)[[:space:]]'; then
+        flush_block
+        inblk=1
+        blk="$line"$'\n'
+        prefix="${line#-}"
+      elif [ "$inblk" -eq 1 ]; then
+        blk+="$line"$'\n'
+        case "$prefix" in *':='*) ;; *) prefix+=" ${line#-}" ;; esac
+      else
+        rest_new+="$line"$'\n'
+      fi
+    done <<EOF20
+$rest
+EOF20
+    flush_block
+    rest="$rest_new"
+  fi
+fi
 [ -z "$rest" ] || fail "non-sorry lines deleted: $(printf '%s' "$rest" | head -3)"
 fi # STATEMENT-FIX else
 
