@@ -4631,13 +4631,122 @@ theorem LOCAL_FAN_ORBIT_MAP_VITER (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ 
     (n : ℕ) : (rhoNode1_p2 FF)^[n] v ∈ V :=
   LOCAL_FAN_ITER_RHO_NODE_IN_V h hv n
 
-/-- HOL `AFF_GT_AFF_LT_INTERPRET` (local_lemmas.hl:2821). -/
+/-- Lane support (LA5 mechanical wave 2026-10-12): GT witness constructor for
+the 1+2 form `affGt {x} {v, w}` (`x` off the GT set; `v = w` handled by a
+merged coefficient). Mirror of `la5_affGt212_intro`. -/
+private theorem la5_affGt_intro12 {x v w y : V3} {b c : ℝ} (hxv : x ≠ v) (hxw : x ≠ w)
+    (hb : 0 < b) (hc : 0 < c) (hy : y - x = b • (v - x) + c • (w - x)) :
+    y ∈ affGt ({x} : Set V3) ({v, w} : Set V3) := by
+  have hy2 : y = (1 - b - c) • x + (b • v + c • w) := by
+    have hy3 : y = x + (y - x) := by module
+    rw [hy3, hy]
+    module
+  have hfin : ({x} ∪ {v, w} : Set V3).Finite := by simp
+  by_cases hvw : v = w
+  · have hEq : hfin.toFinset = ({x, v} : Finset V3) := by
+      ext z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+        Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+      subst hvw
+      tauto
+    refine ⟨fun z => if z = v then b + c else 1 - b - c, hfin, ?_, ?_, ?_⟩
+    · rw [hEq, Finset.sum_insert (by simp [hxv] : ¬(x ∈ ({v} : Finset V3))),
+        Finset.sum_singleton]
+      simp only [if_neg hxv, if_pos (rfl : v = v), reduceIte]
+      rw [hy2, hvw]
+      module
+    · intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with hz | hz
+      · simp only [hz, reduceIte]
+        exact add_pos hb hc
+      · simp only [hz, hvw, reduceIte]
+        exact add_pos hb hc
+    · rw [hEq, Finset.sum_insert (by simp [hxv] : ¬(x ∈ ({v} : Finset V3))),
+        Finset.sum_singleton]
+      simp only [if_neg hxv, if_pos (rfl : v = v), reduceIte]
+      linarith
+  · have hEq : hfin.toFinset = ({x, v, w} : Finset V3) := by
+      ext z
+      simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+        Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    refine ⟨fun z => if z = v then b else if z = w then c else 1 - b - c, hfin, ?_, ?_, ?_⟩
+    · rw [hEq, Finset.sum_insert (by simp [hxv, hxw] : ¬(x ∈ ({v, w} : Finset V3))),
+        Finset.sum_insert (by simp [hvw] : ¬(v ∈ ({w} : Finset V3))), Finset.sum_singleton]
+      simp only [if_neg hxv, if_neg hxw, if_pos (rfl : v = v),
+        if_neg (Ne.symm hvw), if_pos (rfl : w = w), reduceIte]
+      exact hy2
+    · intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with hz | hz
+      · simp only [hz, reduceIte]
+        exact hb
+      · simp only [hz, Ne.symm hvw, reduceIte]
+        exact hc
+    · rw [hEq, Finset.sum_insert (by simp [hxv, hxw] : ¬(x ∈ ({v, w} : Finset V3))),
+        Finset.sum_insert (by simp [hvw] : ¬(v ∈ ({w} : Finset V3))), Finset.sum_singleton]
+      simp only [if_neg hxv, if_neg hxw, if_pos (rfl : v = v),
+        if_neg (Ne.symm hvw), if_pos (rfl : w = w), reduceIte]
+      linarith
+
+/-- Lane support (LA5 mechanical wave 2026-10-12): LT witness constructor for
+the 1+1 form `affLt {x} {u}` (`x ≠ u` necessary). Mirror of
+`la5_affLt2_intro`. -/
+private theorem la5_affLt_intro11 {x u y : V3} {b : ℝ} (hxu : x ≠ u) (hb : b < 0)
+    (hy : y - x = b • (u - x)) : y ∈ affLt ({x} : Set V3) ({u} : Set V3) := by
+  have hy2 : y = (1 - b) • x + b • u := by
+    have hy3 : y = x + (y - x) := by module
+    rw [hy3, hy]
+    module
+  have hfin : ({x} ∪ {u} : Set V3).Finite := by simp
+  have hEq : hfin.toFinset = ({x, u} : Finset V3) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+  refine ⟨fun z => if z = u then b else 1 - b, hfin, ?_, ?_, ?_⟩
+  · rw [hEq, Finset.sum_insert (by simp [hxu] : ¬(x ∈ ({u} : Finset V3))),
+      Finset.sum_singleton]
+    simp only [if_neg hxu, if_pos (rfl : u = u), reduceIte]
+    exact hy2
+  · intro z hz
+    simp only [Set.mem_singleton_iff] at hz
+    simp only [hz, reduceIte]
+    exact hb
+  · rw [hEq, Finset.sum_insert (by simp [hxu] : ¬(x ∈ ({u} : Finset V3))),
+      Finset.sum_singleton]
+    simp only [if_neg hxu, if_pos (rfl : u = u), reduceIte]
+    linarith
+
+/-- HOL `AFF_GT_AFF_LT_INTERPRET` (local_lemmas.hl:2821) — filled (LA5
+mechanical wave 2026-10-12): the coefficients read off
+`la5_affGt_extract`/`la5_affLt_extract` are exactly the witness; conversely
+`x + aa•(u−x)` is placed by the intro pair `la5_affGt_intro12`/
+`la5_affLt_intro11` (the disjointness keeps the base off the signed sets). -/
 theorem AFF_GT_AFF_LT_INTERPRET {x u v w : V3} (hdis1 : Disjoint ({x} : Set V3) ({v, w} : Set V3))
     (hdis2 : Disjoint ({x} : Set V3) ({u} : Set V3)) :
     (∃ aa bb c : ℝ, aa < 0 ∧ 0 < bb ∧ 0 < c ∧
       aa • (u - x) = bb • (v - x) + c • (w - x)) ↔
       ∃ tt : V3, tt ∈ affGt ({x} : Set V3) ({v, w} : Set V3) ∩
-        affLt ({x} : Set V3) ({u} : Set V3) := sorry
+        affLt ({x} : Set V3) ({u} : Set V3) := by
+  have hx1 : x ∉ ({v, w} : Set V3) := fun hmem =>
+    Set.disjoint_left.mp hdis1 (Set.mem_singleton x) hmem
+  have hx2 : x ∉ ({u} : Set V3) := fun hmem =>
+    Set.disjoint_left.mp hdis2 (Set.mem_singleton x) hmem
+  have hxv : x ≠ v := fun h => hx1 (by simp [h])
+  have hxw : x ≠ w := fun h => hx1 (by simp [h])
+  have hxu : x ≠ u := fun h => hx2 (by simp [h])
+  constructor
+  · rintro ⟨aa, bb, c, haa, hbb, hc, heq⟩
+    refine ⟨x + aa • (u - x), la5_affGt_intro12 hxv hxw hbb hc ?_,
+      la5_affLt_intro11 hxu haa ?_⟩
+    · show x + aa • (u - x) - x = bb • (v - x) + c • (w - x)
+      rw [add_sub_cancel_left, heq]
+    · show x + aa • (u - x) - x = aa • (u - x)
+      rw [add_sub_cancel_left]
+  · rintro ⟨tt, hgt, hlt⟩
+    obtain ⟨b, c, hb, hc, hvw⟩ := la5_affGt_extract hgt
+    obtain ⟨t, ht, hux⟩ := la5_affLt_extract hlt
+    exact ⟨t, b, c, ht, hb, hc, by rw [← hvw, ← hux]⟩
 
 /-- HOL `AFF_GT_AFF_LT_INTERPRET2` (local_lemmas.hl:2872): the
 DISJOINT-union re-render of `AFF_GT_AFF_LT_INTERPRET`. -/
@@ -4662,13 +4771,45 @@ theorem AFF_GT_AFF_LT_INTERPRET2 {x u v w : V3}
 theorem EXISTS_IN {α : Type*} (a : Set α) : a ≠ ∅ ↔ ∃ x, x ∈ a :=
   Set.nonempty_iff_ne_empty.symm
 
-/-- HOL `AFF_GT_LT_INTER_SYM` (local_lemmas.hl:2877). -/
+/-- HOL `AFF_GT_LT_INTER_SYM` (local_lemmas.hl:2877) — filled (LA5 mechanical
+wave 2026-10-12): from a point `tt = x + b•(v−x) + c•(w−x) = x + t•(u−x)`
+(`b, c > 0`, `t < 0`) the reflected witness `x − (w − x)` lands in
+`affGt {x} {u, v} ∩ affLt {x} {w}` with coefficients `−t/c, b/c > 0`. -/
 theorem AFF_GT_LT_INTER_SYM {x u v w : V3}
     (hdis : Disjoint ({x} : Set V3) ({u, v, w} : Set V3))
     (hne : ¬ (affGt ({x} : Set V3) ({v, w} : Set V3) ∩
       affLt ({x} : Set V3) ({u} : Set V3) = ∅)) :
     ¬ (affGt ({x} : Set V3) ({u, v} : Set V3) ∩
-      affLt ({x} : Set V3) ({w} : Set V3) = ∅) := sorry
+      affLt ({x} : Set V3) ({w} : Set V3) = ∅) := by
+  have hx1 : x ∉ ({u, v, w} : Set V3) := fun hmem =>
+    Set.disjoint_left.mp hdis (Set.mem_singleton x) hmem
+  have hxu : x ≠ u := fun h => hx1 (by simp [h])
+  have hxv : x ≠ v := fun h => hx1 (by simp [h])
+  have hxw : x ≠ w := fun h => hx1 (by simp [h])
+  intro hcon
+  obtain ⟨tt, hgt, hlt⟩ := Set.nonempty_iff_ne_empty.mpr hne
+  obtain ⟨b, c, hb, hc, hvw⟩ := la5_affGt_extract hgt
+  obtain ⟨t, ht, hux⟩ := la5_affLt_extract hlt
+  have hkey : t • (u - x) = b • (v - x) + c • (w - x) := by rw [← hvw, ← hux]
+  have hc0 : c ≠ 0 := ne_of_gt hc
+  have hwx : -(w - x) = ((-t) / c) • (u - x) + (b / c) • (v - x) := by
+    apply smul_right_injective V3 hc0
+    show c • (-(w - x))
+        = c • (((-t) / c) • (u - x) + (b / c) • (v - x))
+    have h1 : c • ((b / c) • (v - x)) = b • (v - x) := by
+      rw [smul_smul, mul_comm c (b / c), div_mul_cancel₀ b hc0]
+    have h2 : c • (((-t) / c) • (u - x)) = -t • (u - x) := by
+      rw [smul_smul, mul_comm c ((-t) / c), div_mul_cancel₀ (-t) hc0]
+    rw [smul_add, h2, h1, smul_neg]
+    linear_combination (norm := module) hkey
+  have hsimp : x - (w - x) - x = -(w - x) := by abel
+  have hb' : 0 < (-t) / c := div_pos (by linarith) hc
+  have hc' : 0 < b / c := div_pos hb hc
+  refine absurd hcon (Set.nonempty_iff_ne_empty.mp ⟨x - (w - x), ?_, ?_⟩)
+  · refine la5_affGt_intro12 (b := -t / c) (c := b / c) hxu hxv hb' hc' ?_
+    rw [hsimp, hwx]
+  · refine la5_affLt_intro11 (b := -1) hxw (neg_lt_zero.mpr zero_lt_one) ?_
+    rw [hsimp, neg_one_smul ℝ (w - x)]
 
 /-- HOL `EXISTS_INTERSECTION_PROPERPLY` (local_lemmas.hl:2897). -/
 theorem EXISTS_INTERSECTION_PROPERPLY {x z u v w : V3} (hxz : z ≠ x)
@@ -4698,11 +4839,54 @@ theorem DETER_RHO_NODE (h : localFan_p2 V E FF) {v w : V3} (hw : (v, w) ∈ FF) 
     exact (congrArg Prod.snd ((WRGCVDR_BIJ h).2.1 hw hy rfl)).symm
   exact epsilonFixed hw huniq
 
-/-- HOL `CARD_RECUSIVE_EQ` (local_lemmas.hl:3101). -/
+/-- HOL `CARD_RECUSIVE_EQ` (local_lemmas.hl:3101) — filled (LA5 mechanical
+wave 2026-10-12): split the orbit segment at the last iterate
+(`insert (f^[k-1] x)`), and run the `ncard` insert bookkeeping
+(`Set.ncard_insert_of_notMem`); the image bound
+`Set.ncard_image_le + Set.ncard_Iio_nat` kills the degenerate branch. -/
 theorem CARD_RECUSIVE_EQ {α : Type*} (f : α → α) (x : α) {k : ℕ} (hk : 0 < k) :
     ({f^[n] x | n < k} : Set α).ncard = k ↔
       ({f^[n] x | n < k - 1} : Set α).ncard = k - 1 ∧
-        ∀ i : ℕ, i < k - 1 → f^[i] x ≠ f^[k - 1] x := sorry
+        ∀ i : ℕ, i < k - 1 → f^[i] x ≠ f^[k - 1] x := by
+  have hsplit : ({f^[n] x | n < k} : Set α)
+      = insert (f^[k - 1] x) ({f^[n] x | n < k - 1} : Set α) := by
+    ext y
+    simp only [Set.mem_setOf_eq, Set.mem_insert_iff]
+    constructor
+    · rintro ⟨n, hn, rfl⟩
+      rcases Nat.lt_or_ge n (k - 1) with h | h
+      · exact Or.inr ⟨n, h, rfl⟩
+      · refine Or.inl ?_
+        have hne : n = k - 1 := by omega
+        rw [hne]
+    · rintro (rfl | ⟨n, hn, rfl⟩)
+      · exact ⟨k - 1, by omega, rfl⟩
+      · exact ⟨n, by omega, rfl⟩
+  have hfin2 : ({f^[n] x | n < k - 1} : Set α).Finite := FINTE_OF_N_FIRST_ELMS2 f x (k - 1)
+  have hbound : ({f^[n] x | n < k - 1} : Set α).ncard ≤ k - 1 := by
+    have him : ({f^[n] x | n < k - 1} : Set α) = (fun n : ℕ => f^[n] x) '' Set.Iio (k - 1) := rfl
+    rw [him]
+    calc Set.ncard ((fun n : ℕ => f^[n] x) '' Set.Iio (k - 1))
+        ≤ Set.ncard (Set.Iio (k - 1)) := Set.ncard_image_le
+      _ = k - 1 := Set.ncard_Iio_nat (k - 1)
+  constructor
+  · intro hcard
+    have hnew : f^[k - 1] x ∉ ({f^[n] x | n < k - 1} : Set α) := by
+      intro hmem2
+      rw [hsplit, Set.insert_eq_of_mem hmem2] at hcard
+      omega
+    refine ⟨?_, ?_⟩
+    · rw [hsplit, Set.ncard_insert_of_notMem hnew hfin2] at hcard
+      omega
+    · intro i hi hcon
+      exact hnew ⟨i, hi, hcon⟩
+  · rintro ⟨hsmall, hnew⟩
+    have hnew2 : f^[k - 1] x ∉ ({f^[n] x | n < k - 1} : Set α) := by
+      intro hmem2
+      obtain ⟨i, hi, hcon⟩ := hmem2
+      exact hnew i hi hcon
+    rw [hsplit, Set.ncard_insert_of_notMem hnew2 hfin2]
+    omega
 
 /-- HOL `LE_CARDV_IMP_CARD_DETERED` (local_lemmas.hl:3129). -/
 theorem LE_CARDV_IMP_CARD_DETERED {α : Type*} {f : α → α} {V : Set α}
@@ -4788,15 +4972,109 @@ theorem AZIM_PI_WEDGE_GE_SIN {u v w ww : V3} (h : azim u v w ww = Real.pi) :
     exact absurd hsin (not_le.mpr
       (PI_TO_TWO_PI_NEG_SIN (azim u v w z) (not_le.mp hcon) (hrange z)))
 
-/-- HOL `AZIM_PI_WEDGE_GE_CROSS_DOT` (local_lemmas.hl:3702). -/
+/-- Lane support (LA5 mechanical wave 2026-10-12): the mixed-product
+sin↔dot bridge (copy of Planarity's private `collinear3_zero_sub`). -/
+private theorem la5_collinear3_zero_sub {x a b : V3} :
+    Collinear3 x a b ↔ Collinear3 0 (a - x) (b - x) := by
+  by_cases ha : a = x
+  · subst ha
+    rw [sub_self]
+    constructor <;> · intro hcon; exact collinear3_of_eq rfl
+  · rw [collinear3_iff_smul ha, collinear3_iff_smul (sub_ne_zero.mpr ha)]
+    simp only [sub_zero]
+
+/-- HOL `AZIM_PI_WEDGE_GE_CROSS_DOT` (local_lemmas.hl:3702) — filled (LA5
+mechanical wave 2026-10-12): half-space form via `AZIM_PI_WEDGE_GE_SIN`
+plus the pointwise sign bridge `sin (azim u v w x) = t • mixed` (`t > 0`,
+`JBDNJJB` at the origin after `azim_sub_self`); axis-collinear `x` give
+zero on both sides (`azim` degenerate branch + `dot_self_cross`). -/
 theorem AZIM_PI_WEDGE_GE_CROSS_DOT {u v w ww : V3} (h : azim u v w ww = Real.pi) :
     wedgeGe_p2 u v w ww = {x : V3 |
       0 ≤ ((WithLp.toLp 2 (crossProduct ((v - u : V3) : Fin 3 → ℝ)
-        ((w - u : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ (x - u))} := sorry
+        ((w - u : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ (x - u))} := by
+  have hnc : ¬ Collinear3 u v w := by
+    intro hcon
+    rw [azim, if_pos (Or.inl hcon)] at h
+    exact Real.pi_ne_zero h.symm
+  have huv : u ≠ v := fun hcon => hnc (by rw [hcon]; exact collinear3_of_eq rfl)
+  set N : V3 := WithLp.toLp 2 (crossProduct ((v - u : V3) : Fin 3 → ℝ)
+    ((w - u : V3) : Fin 3 → ℝ)) with hNdef
+  have hNcoe : ((N : V3) : Fin 3 → ℝ) = crossProduct ((v - u : V3) : Fin 3 → ℝ)
+      ((w - u : V3) : Fin 3 → ℝ) := by rw [hNdef]
+  have hzero : ∀ y : V3, Collinear3 u v y → (N : V3) ⬝ᵥ (y - u) = 0 := by
+    intro y hcol
+    obtain ⟨s, hs⟩ := (collinear3_iff_smul (Ne.symm huv)).mp hcol
+    have key : ((y - u : V3) : Fin 3 → ℝ) = s • ((v - u : V3) : Fin 3 → ℝ) :=
+      congrArg (fun z : V3 => ((z : V3) : Fin 3 → ℝ)) hs
+    have hp : (crossProduct ((v - u : V3) : Fin 3 → ℝ) ((w - u : V3) : Fin 3 → ℝ))
+        ⬝ᵥ ((v - u : V3) : Fin 3 → ℝ) = 0 :=
+      (dotProduct_comm ((crossProduct ((v - u : V3) : Fin 3 → ℝ)
+        ((w - u : V3) : Fin 3 → ℝ))) ((v - u : V3) : Fin 3 → ℝ)).trans
+        (dot_self_cross ((v - u : V3) : Fin 3 → ℝ) ((w - u : V3) : Fin 3 → ℝ))
+    calc (N : V3) ⬝ᵥ (y - u)
+        = dotProduct ((N : V3) : Fin 3 → ℝ) ((y - u : V3) : Fin 3 → ℝ) := rfl
+      _ = s * dotProduct ((N : V3) : Fin 3 → ℝ) ((v - u : V3) : Fin 3 → ℝ) := by
+          rw [key, dotProduct_smul, smul_eq_mul]
+      _ = s * dotProduct (crossProduct ((v - u : V3) : Fin 3 → ℝ)
+            ((w - u : V3) : Fin 3 → ℝ)) ((v - u : V3) : Fin 3 → ℝ) := by rw [hNcoe]
+      _ = 0 := by rw [hp, mul_zero]
+  rw [AZIM_PI_WEDGE_GE_SIN h]
+  ext x
+  simp only [Set.mem_setOf_eq]
+  by_cases hcol : Collinear3 u v x
+  · have haz : azim u v w x = 0 := by
+      rw [azim]
+      exact if_pos (Or.inr hcol)
+    rw [haz, Real.sin_zero, hzero x hcol]
+  · have hncw : ¬ Collinear3 0 (v - u) (w - u) := fun hc => hnc (la5_collinear3_zero_sub.mpr hc)
+    have hncx : ¬ Collinear3 0 (v - u) (x - u) := fun hc => hcol (la5_collinear3_zero_sub.mpr hc)
+    obtain ⟨t, ht, hsin⟩ := JBDNJJB (u := (v - u : V3)) (v := (w - u : V3))
+      (w := (x - u : V3)) hncw hncx
+    rw [azim_sub_self, hsin]
+    show (0:ℝ) ≤ t * ((N : V3) ⬝ᵥ (x - u)) ↔ 0 ≤ (N : V3) ⬝ᵥ (x - u)
+    constructor
+    · intro hs
+      by_contra hcon
+      push_neg at hcon
+      exact absurd hs (not_le.mpr (mul_neg_of_pos_of_neg ht hcon))
+    · intro hm
+      exact mul_nonneg ht.le hm
 
-/-- HOL `AZIM_PI_CONVEX_WEDGE` (local_lemmas.hl:3717). -/
+/-- Lane support (LA5 mechanical wave 2026-10-12): a mixed-product
+half-space in `V3` is convex (`convex_halfSpace_ge` on the linear
+functional `x ↦ n ⬝ᵥ x`, transported through `dotProduct_sub`). -/
+private theorem la5_convex_halfspace_dot (n u : V3) :
+    Convex ℝ {x : V3 | 0 ≤ (n ⬝ᵥ (x - u))} := by
+  have hlin : IsLinearMap ℝ (fun x : V3 => (n : Fin 3 → ℝ) ⬝ᵥ (x : Fin 3 → ℝ)) :=
+    ⟨fun x y => dotProduct_add (n : Fin 3 → ℝ) (x : Fin 3 → ℝ) (y : Fin 3 → ℝ),
+      fun c x => dotProduct_smul c (n : Fin 3 → ℝ) (x : Fin 3 → ℝ)⟩
+  have h := convex_halfSpace_ge hlin ((n : Fin 3 → ℝ) ⬝ᵥ (u : Fin 3 → ℝ))
+  rwa [show {w : V3 | (n : Fin 3 → ℝ) ⬝ᵥ (u : Fin 3 → ℝ)
+        ≤ (n : Fin 3 → ℝ) ⬝ᵥ (w : Fin 3 → ℝ)}
+      = {x : V3 | 0 ≤ (n ⬝ᵥ (x - u))} from by
+    ext x
+    simp only [Set.mem_setOf_eq]
+    have hd : (n : Fin 3 → ℝ) ⬝ᵥ (((x : V3) : Fin 3 → ℝ) - ((u : V3) : Fin 3 → ℝ))
+        = (n : Fin 3 → ℝ) ⬝ᵥ ((x : V3) : Fin 3 → ℝ)
+          - (n : Fin 3 → ℝ) ⬝ᵥ ((u : V3) : Fin 3 → ℝ) :=
+      dotProduct_sub _ _ _
+    constructor
+    · intro hm
+      rw [hd]
+      linarith
+    · intro hm
+      rw [hd] at hm
+      linarith] at h
+
+/-- HOL `AZIM_PI_CONVEX_WEDGE` (local_lemmas.hl:3717) — filled (LA5
+mechanical wave 2026-10-12): the π-wedge is the mixed-product half-space
+(`AZIM_PI_WEDGE_GE_CROSS_DOT`), and half-spaces are convex
+(`la5_convex_halfspace_dot`). -/
 theorem AZIM_PI_CONVEX_WEDGE {u v w ww : V3} (h : azim u v w ww = Real.pi) :
-    Convex ℝ (wedgeGe_p2 u v w ww) := sorry
+    Convex ℝ (wedgeGe_p2 u v w ww) := by
+  rw [AZIM_PI_WEDGE_GE_CROSS_DOT h]
+  exact la5_convex_halfspace_dot (WithLp.toLp 2 (crossProduct ((v - u : V3) : Fin 3 → ℝ)
+    ((w - u : V3) : Fin 3 → ℝ))) u
 
 /-- HOL `CONVEX_WEDGE_LE_PI` (local_lemmas.hl:3735). -/
 theorem CONVEX_WEDGE_LE_PI {v0 v1 w1 w2 : V3} (h : azim v0 v1 w1 w2 ≤ Real.pi)
@@ -7047,17 +7325,42 @@ theorem IVS_RHO_IDD (h : localFan_p2 V E FF) {v : V3} (hv : v ∈ V) :
     exact hbij.2.1 hwv.1 hv hrho
   exact RHO_NODE_INVERSE_POINT hw hun
 
-/-- HOL `AFF_IVS_RHO_NODE_EQQ` (local_lemmas.hl:5578). -/
+/-- HOL `AFF_IVS_RHO_NODE_EQQ` (local_lemmas.hl:5578) — filled (LA5
+mechanical wave 2026-10-12): `LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT100` on the
+swapped lunar `(w, v)` gives `v = ρ^[i] w` with `i ≥ 2`, so the orbit point
+`ρ^[i-1] w` lies in the image arc ⊆ `affGt {0,w} {ρ w}` and `IVS_RHO_IDD`
+identifies it as `ivs v`; `AFF_GT_SAME_WITH_ENDS` swaps the `{0,w}/{0,v}`
+ends and `COLL_IN_AFF_GT_AFF_GT_EQ` swaps the GT point `ρ w ↔ ivs v`
+(non-collinearity from `NOT_COLL_RHONODE_SND_POINT`). -/
 theorem AFF_IVS_RHO_NODE_EQQ (h : convexLocalFan_p2 V E FF) (hl : lunar_p2 v w V E) :
     affGt ({0, w} : Set V3) ({rhoNode1_p2 FF w} : Set V3) =
       affGt ({0, v} : Set V3) ({ivsRhoNode1_p2 FF v} : Set V3) := by
-  -- NEEDS (LA5 downstream wave 2026-10-08): `LUNAR_IMP_HALF_CIRCLE_SUBSET_
-  -- AFF_GT100` on lunar (w, v) (cyclicSet kit — see its -- NEEDS). Rest of
-  -- the HOL route (5578) is real: v = ρ^[i] w with i ≥ 2 gives
-  -- ivs v = ρ^[i-1] w (IVS_RHO_IDD shift) in the image set ⊆ affGt {0,w}{ρ w};
-  -- COLL_IN_AFF_GT_AFF_GT_EQ (real) then swaps the GT point, and the {0,w}↦{0,v}
-  -- ends swap is AFF_GT_SAME_WITH_ENDS (B5 wave).
-  sorry
+  obtain ⟨hlo, -⟩ := CVLF_LF_F h
+  have hlkeep := hl
+  obtain ⟨-, hvw, -, -⟩ := hl
+  have hwV : w ∈ V := hvw (Set.mem_insert_of_mem v (Set.mem_singleton w))
+  obtain ⟨i, -, hi0, hi1, hiw, harc⟩ :=
+    LUNAR_IMP_HALF_CIRCLE_SUBSET_AFF_GT100 h (LUNAR_COMM v w V E |>.mp hlkeep)
+  have hyV : (rhoNode1_p2 FF)^[i - 1] w ∈ V := LOCAL_FAN_ORBIT_MAP_VITER hlo hwV (i - 1)
+  have hshift : (rhoNode1_p2 FF)^[i - 1 + 1] w
+      = rhoNode1_p2 FF ((rhoNode1_p2 FF)^[i - 1] w) :=
+    Function.iterate_succ_apply' _ _ _
+  have hi1' : i - 1 + 1 = i := by omega
+  have hrho : rhoNode1_p2 FF ((rhoNode1_p2 FF)^[i - 1] w) = v := by
+    rw [← hshift, hi1']
+    exact hiw.symm
+  have hivs : ivsRhoNode1_p2 FF v = (rhoNode1_p2 FF)^[i - 1] w := by
+    have h4 := IVS_RHO_IDD hlo hyV
+    rwa [hrho] at h4
+  have hmem : ivsRhoNode1_p2 FF v ∈ affGt ({0, w} : Set V3) ({rhoNode1_p2 FF w} : Set V3) := by
+    rw [hivs]
+    have hS : i - 1 ∈ ({l : ℕ | 0 < l ∧ l < i} : Set ℕ) := by
+      rw [Set.mem_setOf_eq]
+      omega
+    exact harc (Set.mem_image_of_mem _ hS)
+  rw [← AFF_GT_SAME_WITH_ENDS h hlkeep]
+  exact COLL_IN_AFF_GT_AFF_GT_EQ (NOT_COLL_RHONODE_SND_POINT h hlkeep)
+    (by rw [AFF_GT_SAME_WITH_ENDS h hlkeep]; exact hmem)
 
 /-- HOL `LOFA_IMP_LT_CARD_SET_V` (local_lemmas.hl:5627; cf. the
 `LOFA_IMP_LT_CARD_SET_V_ALT` re-render in LocalAuto2) — filled (LA5
