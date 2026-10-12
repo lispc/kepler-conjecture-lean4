@@ -1051,11 +1051,74 @@ theorem FINTE_OF_N_FIRST_ELMS2 {α : Type*} (f : α → α) (x : α) (i : ℕ) :
     ({f^[n] x | n < i} : Set α).Finite :=
   Set.Finite.image (fun n => f^[n] x) (Set.finite_Iio i)
 
-/-- HOL `PLANE_AFFINE_HUL_INTER_P` (local_lemmas.hl:497). -/
+/-- LA5 support: a lineMap parametrization of an affineSpan-pair member gives
+the direction-vector decomposition `q - a = r • (b - a)`. -/
+private theorem la5_lineMap_sub {a b q : V3} {r : ℝ}
+    (hr : AffineMap.lineMap a b r = q) : q - a = r • (b - a) := by
+  rw [← hr, AffineMap.lineMap_apply]
+  simp only [vsub_eq_sub, vadd_eq_add]
+  rw [add_sub_cancel_right]
+
+/-- HOL `PLANE_AFFINE_HUL_INTER_P` (local_lemmas.hl:497) — filled (LA5 wave
+2026-10-12): every `q` in the intersection satisfies `q - x = r • u` with
+`u = (y - x) cross (z - x)` (lineMap parametrization of the 2-point span),
+while `q ∈ P` makes `{x, y, z, q}` coplanar inside the spanning triple, so
+`COPLANAR_IFF_CROSS_DOT` gives `u ⬝ᵥ (q - x) = 0`, i.e. `r * (u ⬝ᵥ u) = 0`:
+either `r = 0` or `u ⬝ᵥ u = 0` (whence `u = 0`), and both force `q = x`.
+(The plane's non-collinearity is not needed — the coplanarity only uses
+`{x, y, z, q} ⊆ P = affineSpan {u₀, v₀, w₀}`.) -/
 theorem PLANE_AFFINE_HUL_INTER_P {P : Set V3} {x y z : V3} (hP : plane_p2 P)
     (hsub : ({x, y, z} : Set V3) ⊆ P) :
     ((affineSpan ℝ ({x, (WithLp.toLp 2 (crossProduct ((y - x : V3) : Fin 3 → ℝ)
-      ((z - x : V3) : Fin 3 → ℝ)) : V3) + x} : Set V3) : Set V3) ∩ P) = {x} := sorry
+      ((z - x : V3) : Fin 3 → ℝ)) : V3) + x} : Set V3) : Set V3) ∩ P) = {x} := by
+  obtain ⟨u0, v0, w0, -, hPdef⟩ := hP
+  ext q
+  simp only [Set.mem_inter_iff, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨haff, hqP⟩
+    obtain ⟨r, hr⟩ :=
+      mem_affineSpan_pair_iff_exists_lineMap_eq.mp (SetLike.mem_coe.mp haff)
+    have hu : (q - x : V3) = r • ((WithLp.toLp 2 (crossProduct ((y - x : V3) : Fin 3 → ℝ)
+        ((z - x : V3) : Fin 3 → ℝ)) : V3) + x - x) := la5_lineMap_sub hr
+    rw [add_sub_cancel_right] at hu
+    have hcop : Coplanar ({x, y, z, q} : Set V3) := by
+      refine ⟨u0, v0, w0, ?_⟩
+      intro a ha
+      refine hPdef.subset ?_
+      rcases Set.mem_insert_iff.mp ha with h | h
+      · subst h
+        exact hsub (by simp)
+      rcases Set.mem_insert_iff.mp h with h2 | h2
+      · subst h2
+        exact hsub (by simp)
+      rcases Set.mem_insert_iff.mp h2 with h3 | h3
+      · subst h3
+        exact hsub (by simp)
+      · subst h3
+        exact hqP
+    have hd0 : (WithLp.toLp 2 (crossProduct ((y - x : V3) : Fin 3 → ℝ)
+        ((z - x : V3) : Fin 3 → ℝ)) : V3) ⬝ᵥ (q - x) = 0 :=
+      COPLANAR_IFF_CROSS_DOT.mp hcop
+    have huPi : ((q : V3) : Fin 3 → ℝ) - ((x : V3) : Fin 3 → ℝ)
+        = r • ((WithLp.toLp 2 (crossProduct ((y - x : V3) : Fin 3 → ℝ)
+          ((z - x : V3) : Fin 3 → ℝ)) : Fin 3 → ℝ)) :=
+      congrArg (fun w : V3 => (w : Fin 3 → ℝ)) hu
+    rw [huPi, dotProduct_smul, smul_eq_mul] at hd0
+    by_cases hcu : (WithLp.toLp 2 (crossProduct ((y - x : V3) : Fin 3 → ℝ)
+        ((z - x : V3) : Fin 3 → ℝ)) : V3) = 0
+    · have hzx : (q - x : V3) = 0 := by rw [hu, hcu, smul_zero]
+      rw [sub_eq_zero.mp hzx]
+    · rcases mul_eq_zero.mp hd0 with hr0 | hz2
+      · have hzx : (q - x : V3) = 0 := by rw [hu, hr0, zero_smul]
+        rw [sub_eq_zero.mp hzx]
+      · refine absurd hz2 ?_
+        intro h0
+        exact hcu (inner_self_eq_zero.mp (by rw [inner_eq_dot]; exact h0))
+  · rintro rfl
+    refine ⟨SetLike.mem_coe.mpr (mem_affineSpan_pair_iff_exists_lineMap_eq.mpr ⟨0, ?_⟩),
+      hsub (by simp)⟩
+    rw [AffineMap.lineMap_apply]
+    simp only [vsub_eq_sub, vadd_eq_add, zero_smul, zero_add]
 
 /-- HOL `FAN_IMP_V_DIFF` (local_lemmas.hl:526). -/
 theorem FAN_IMP_V_DIFF {x : V3} (hfan : FAN x V E) : ∀ v ∈ V, v ≠ x := by
@@ -5180,22 +5243,161 @@ theorem CONDS_IN_CONV2 {v w : V3} {t2 t3 : ℝ} (ht2 : 0 ≤ t2) (ht3 : 0 ≤ t3
   refine ⟨t2 / (t2 + t3), t3 / (t2 + t3),
     div_nonneg ht2 hco, div_nonneg ht3 hco, by rw [hsum1], rfl⟩
 
-/-- HOL `PGSQVBL` (local_lemmas.hl:3815). -/
+/-- LA5 support (HOL `Topology.th1` special case, topology.hl:1080): the azim
+ray-scaling bridge `azim 0 a b (t • p) = azim 0 a b p` for `0 < t`. The
+degenerate branches are definitional; the main branch transports an
+`AzimSpec 0 a b p θ` to `AzimSpec 0 a b (t • p) θ` by rescaling the `w2`
+radial coefficient (`r2 ↦ t * r2`, `h2 ↦ t * h2v`) — the frame representation
+of `t • p` follows from `p`'s by `smul_add`/`smul_smul`. -/
+private theorem la5_azim_ray_scale {a b p : V3} {t : ℝ} (ht : 0 < t) :
+    azim (0:V3) a b (t • p) = azim (0:V3) a b p := by
+  by_cases hcol1 : Collinear3 (0:V3) a b
+  · unfold azim
+    rw [if_pos (Or.inl hcol1), if_pos (Or.inl hcol1)]
+  · have ha0 : a ≠ 0 := fun he => hcol1 (collinear3_of_eq he)
+    by_cases hcolp : Collinear3 (0:V3) a p
+    · have hcolt : Collinear3 (0:V3) a (t • p) := by
+        obtain ⟨c, hc⟩ := (collinear3_iff_smul ha0).mp hcolp
+        refine (collinear3_iff_smul ha0).mpr ⟨t * c, ?_⟩
+        simp only [sub_zero] at hc ⊢
+        rw [hc, smul_smul]
+      unfold azim
+      rw [if_pos (Or.inr hcolt), if_pos (Or.inr hcolp)]
+    · have hcolt : ¬ Collinear3 (0:V3) a (t • p) := by
+        intro hc
+        obtain ⟨c, hc2⟩ := (collinear3_iff_smul ha0).mp hc
+        refine hcolp ((collinear3_iff_smul ha0).mpr ⟨c / t, ?_⟩)
+        simp only [sub_zero] at hc2 ⊢
+        have htz : t ≠ 0 := ne_of_gt ht
+        have hsc : t * (c / t) = c := by field_simp
+        have h5 : t • p = t • ((c / t) • a) := by
+          rw [smul_smul, hsc]
+          exact hc2
+        exact (smul_right_injective V3 htz) h5
+      obtain ⟨θ, hspec⟩ := azimSpec_exists hcol1 hcolp
+      obtain ⟨hθ0, hθ1, h1v, h2v, hframes⟩ := hspec
+      have hpθ : azim (0:V3) a b p = θ :=
+        azim_eq_of_spec hcol1 hcolp ⟨hθ0, hθ1, h1v, h2v, hframes⟩
+      rw [hpθ]
+      apply azim_eq_of_spec hcol1 hcolt
+      refine ⟨hθ0, hθ1, h1v, t * h2v, ?_⟩
+      intro e1 e2 e3 hon hax hwv
+      obtain ⟨ψ, r1, r2, hrep1, hrep2, hr1, hr2⟩ := hframes e1 e2 e3 hon hax hwv
+      refine ⟨ψ, r1, t * r2, hrep1, ?_, hr1, mul_pos ht hr2⟩
+      simp only [sub_zero]
+      have hrep2' : p = (r2 * Real.cos (ψ + θ)) • e1
+          + (r2 * Real.sin (ψ + θ)) • e2 + h2v • a := by
+        simpa using hrep2
+      rw [hrep2']
+      simp only [smul_add, smul_smul]
+      rw [show (t * r2) * Real.cos (ψ + θ) = t * (r2 * Real.cos (ψ + θ)) from by ring,
+          show (t * r2) * Real.sin (ψ + θ) = t * (r2 * Real.sin (ψ + θ)) from by ring]
+
+/-- LA5 support: a member of `affGe {0} {v, w}` is a non-negative combination
+`t2 • v + t3 • w` (no `v ≠ w` needed: the origin sits in the base set, so its
+coefficient is unconstrained; absorbed pointwise by the origin term). -/
+private theorem la5_affGe0_decomp {v w z : V3}
+    (hz : z ∈ affGe ({0} : Set V3) ({v, w} : Set V3)) :
+    ∃ t2 t3 : ℝ, 0 ≤ t2 ∧ 0 ≤ t3 ∧ z = t2 • v + t3 • w := by
+  obtain ⟨f, hfin, hsum, hpos, hone⟩ := hz
+  have hFsub : ∀ q ∈ hfin.toFinset, q = 0 ∨ q = v ∨ q = w := by
+    intro q hq
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff] at hq
+    tauto
+  have main : ∀ (F : Finset V3), (∀ q ∈ F, q = 0 ∨ q = v ∨ q = w) →
+      ∃ t2 t3 : ℝ, 0 ≤ t2 ∧ 0 ≤ t3 ∧ ∑ q ∈ F, f q • q = t2 • v + t3 • w := by
+    intro F
+    induction F using Finset.induction_on with
+    | empty => intro _; exact ⟨0, 0, by norm_num, by norm_num, by simp⟩
+    | @insert a F haF ih =>
+      intro hFa
+      obtain ⟨t2, t3, ht2, ht3, hsumF⟩ :=
+        ih (fun q hq => hFa q (Finset.mem_insert_of_mem hq))
+      rcases hFa a (Finset.mem_insert_self a F) with h0 | hv | hw
+      · refine ⟨t2, t3, ht2, ht3, ?_⟩
+        rw [Finset.sum_insert haF, hsumF, h0]
+        simp
+      · have hfap : 0 ≤ f a := by rw [hv]; exact hpos v (by simp)
+        refine ⟨t2 + f a, t3, by linarith, ht3, ?_⟩
+        rw [Finset.sum_insert haF, hsumF, hv]
+        module
+      · have hfap : 0 ≤ f a := by rw [hw]; exact hpos w (by simp)
+        refine ⟨t2, t3 + f a, ht2, by linarith, ?_⟩
+        rw [Finset.sum_insert haF, hsumF, hw]
+        module
+  obtain ⟨t2, t3, ht2, ht3, hs⟩ := main hfin.toFinset hFsub
+  refine ⟨t2, t3, ht2, ht3, ?_⟩
+  exact hsum.trans hs
+
+/-- HOL `PGSQVBL` (local_lemmas.hl:3815) — filled (LA5 wave 2026-10-12): the
+azim ray-scaling bridge `la5_azim_ray_scale` (HOL `Topology.th1` special case)
+plus the fan-kit route of HOL 3815: the wedge `wedgeGe_p2 0 x.1 x.2 vv` is
+convex by `CONVEX_WEDGE_LE_PI` (azim ≤ π from the convex-local-fan hypothesis,
+non-collinearity from the two darts `x` and the rho-inverse dart `(vv, x.1)`);
+it contains `conv {v, w}` and the origin, and every point of
+`affGe {0} {v, w}` is a positive rescaling of a point of `conv {v, w}`
+(`CONDS_IN_CONV2`) — the scaling drops out by the bridge. -/
 theorem PGSQVBL (h : convexLocalFan_p2 V E FF) {v w : V3} (hvw : {v, w} ⊆ V)
     (hx : x ∈ FF) :
-    affGe ({0} : Set V3) ({v, w} : Set V3) ⊆ wedgeInFanGe_p2 x E := sorry
-  -- NEEDS (LA5 recon 2026-10-12): fan-kit side is fully real after this
-  -- wave — wedge_in_fan_ge2/azim_in_fan2, DETER_RHO_NODE, LOFA_CARD_EE_V_1,
-  -- EXISTS_INVERSE_OF_V, LOFA_IMP_EE_TWO_ELMS, AZIM_CYCLE_TWO_POINT_SET
-  -- (azimCycle_p2 {a,b} v w a = b), LOCAL_FAN_IN_FF_NOT_COLLINEAR,
-  -- CONDS_IN_CONV2, AZIM_SPEC_DEGENERATE, LOFA_IMP_NOT_INCLUDE_VEC0 and
-  -- CONVEX_WEDGE_LE_PI (landed this wave). Sole remaining blocker = the HOL
-  -- `Topology.th1` azim ray-scaling bridge: azim 0 a b (t • p) = azim 0 a b p
-  -- for 0 < t (v0 = 0 suffices here). Absent from the tree; a port needs the
-  -- AzimSpec frame machinery (Geom/Azim.lean azimSpec_exists/azimSpec_unique
-  -- on the rescaled point) — an independent ~60-100 line azim-machinery
-  -- piece, recommended as its own work item before the PGSQVBL assembly
-  -- (whose remaining skeleton follows HOL 3815 verbatim).
+    affGe ({0} : Set V3) ({v, w} : Set V3) ⊆ wedgeInFanGe_p2 x E := by
+  obtain ⟨hl, hconv⟩ := h
+  have hxx := LOCAL_FAN_IMP_IN_V hl hx hx
+  have hcard : (EE_p2 x.1 E).ncard = 2 := LOFA_CARD_EE_V_1 hl hxx.1
+  obtain ⟨hazim0, hsub0⟩ := hconv x hx
+  have h1lt : 1 < (EE_p2 x.1 E).ncard := by rw [hcard]; norm_num
+  rw [azim_in_fan2, if_pos h1lt] at hazim0
+  rw [wedge_in_fan_ge2, if_pos h1lt] at hsub0
+  have hrho : rhoNode1_p2 FF x.1 = x.2 := DETER_RHO_NODE hl hx
+  obtain ⟨vv, hvv, hrv⟩ := EXISTS_INVERSE_OF_V hl hxx.1
+  have hdart : (vv, x.1) ∈ FF := by
+    rw [← hrv]
+    exact (LOCAL_FAN_RHO_NODE_PROS hl).1 vv hvv
+  have hEE : (EE_p2 x.1 E) = ({x.2, vv} : Set V3) := by
+    rw [LOFA_IMP_EE_TWO_ELMS hl hvv hrv, hrho]
+  have hcyc : azimCycle_p2 (EE_p2 x.1 E) (0:V3) x.1 x.2 = vv := by
+    rw [hEE]
+    exact AZIM_CYCLE_TWO_POINT_SET x.2 vv (0:V3) x.1
+  rw [hcyc] at hazim0 hsub0
+  have hcol1 : ¬ Collinear ℝ ({0, x.1, x.2} : Set V3) :=
+    LOCAL_FAN_IN_FF_NOT_COLLINEAR hl hx
+  have hcol2 : ¬ Collinear ℝ ({0, x.1, vv} : Set V3) := by
+    intro hc
+    rw [show ({0, x.1, vv} : Set V3) = {0, vv, x.1} from by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto] at hc
+    exact LOCAL_FAN_IN_FF_NOT_COLLINEAR hl hdart hc
+  have hwedge : Convex ℝ (wedgeGe_p2 (0:V3) x.1 x.2 vv) :=
+    CONVEX_WEDGE_LE_PI hazim0 hcol1 hcol2
+  have hconvV : convexHull ℝ ({v, w} : Set V3) ⊆ wedgeGe_p2 (0:V3) x.1 x.2 vv :=
+    convexHull_min (Set.Subset.trans hvw hsub0) hwedge
+  intro z hz
+  rw [wedge_in_fan_ge2, if_pos h1lt, hcyc, wedgeGe_p2, Set.mem_setOf_eq]
+  refine ⟨azim_nonneg _ _ _ _, ?_⟩
+  obtain ⟨t2, t3, ht2, ht3, hzcoef⟩ := la5_affGe0_decomp hz
+  by_cases hz0 : t2 + t3 = 0
+  · have ht2z : t2 = 0 := by linarith
+    have ht3z : t3 = 0 := by linarith
+    have hzz : z = (0:V3) := by rw [hzcoef, ht2z, ht3z, zero_smul, zero_smul, zero_add]
+    rw [hzz, (AZIM_SPEC_DEGENERATE (0:V3) x.1 x.2).1]
+    exact azim_nonneg _ _ _ _
+  · have hle : (0:ℝ) ≤ t2 + t3 := by linarith
+    have htp : 0 < t2 + t3 := by
+      rcases eq_or_lt_of_le hle with heq | hlt
+      · exact absurd heq.symm hz0
+      · exact hlt
+    have hsc : ∀ c : ℝ, (t2 + t3) * (c / (t2 + t3)) = c := by
+      intro c
+      field_simp
+    have hkey : ∀ (c : ℝ) (q : V3), (t2 + t3) • ((c / (t2 + t3)) • q) = c • q := by
+      intro c q
+      rw [smul_smul, hsc c]
+    have hscale : z = (t2 + t3) • ((t2 / (t2 + t3)) • v + (t3 / (t2 + t3)) • w) := by
+      rw [hzcoef, smul_add, hkey t2 v, hkey t3 w]
+    have hpwedge : (t2 / (t2 + t3)) • v + (t3 / (t2 + t3)) • w
+        ∈ wedgeGe_p2 (0:V3) x.1 x.2 vv :=
+      hconvV (CONDS_IN_CONV2 ht2 ht3 (fun hc => hz0 (by rw [hc.1, hc.2, add_zero])))
+    rw [hscale, la5_azim_ray_scale htp]
+    exact hpwedge.2
 
 
 /-- HOL `FST_EQ_IF_SAME_SND` (local_lemmas.hl:3939). -/
