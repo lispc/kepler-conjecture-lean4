@@ -792,6 +792,57 @@ private theorem p17_ajripqn_of_pieces {V : Set V3} {ul vl : List V3} {i j : ℕ}
   refine ⟨hik.trans hjk.symm, ?_⟩
   rw [hcelli, hcellj, hik, hjk]
 
+/-- The capstone step, isolated: the frozen `AJRIPQN` interface (the `≤ 4` /
+measure conversions) reduces to the five-stage assembly plus the frozen
+PA13/PA10/PA14 statements and exactly one assumption — the tail-fixed
+coverage `hQ2`, i.e. PA14 `QZKSYKG2` with the HOL-faithful comprehension.
+Flyspeck `permutes` (azure/hol-light-nat/Library/permutations.ml:9) is a
+complement-fixing bijection (`!x. ~(x IN s) ==> p x = x` conjunct;
+`PERMUTES_TRIVIAL`: `p permutes 0..0 <=> p = I`), so the frozen weak
+comprehension of PA14 `QZKSYKG2` does not suffice: junk-tail lists enter the
+union, and neither `QZKSYKG1` nor `RVFXZBU` can consume them. This is a
+STATEMENT-FIX candidate mirroring SF-20: once the comprehension conjunct
+`∧ ∀ n, k ≤ n → p n = n` lands in PA14 `QZKSYKG2` (statement-only change;
+its body stays open upstream, sharing the two marchal2 blockers
+LEFT_ACTION_LIST_1_PROPERTIES marchal2.hl:5848 and
+LEFT_ACTION_LIST_PROPERTIES marchal2.hl:4460 with `RVFXZBU`'s i = 2/3
+cases and `QZKSYKG1`'s k ≤ 3 case), the capstone `AJRIPQN` below closes by
+`exact p17_ajripqn_of_tailfix … (QZKSYKG2-with-fixed-comprehension …)` —
+consuming the open-body PA13/PA10/PA14 statements as in-tree debt (the
+SF-20 shim precedent; verify with `lake build`, not env-lean).
+
+Upstream status corrected 2026-10-12 (supersedes the stale bullets in the
+capstone docstring below): `TIWWFYQ` (PA5:663) and `SLTSTLO1` (PA13:597)
+are proved and already consumed by stages 1/4; `RVFXZBU` (PA10:197)
+carries the tail-fixedness hypothesis itself (PA10:183 complement-fixing
+ruling); `SLTSTLO2` (PA13:820) takes only `(V w)` — saturated/packing/barV
+sit inside the ∃ body. -/
+private theorem p17_ajripqn_of_tailfix (V : Set V3) (ul vl : List V3) (i j : ℕ)
+    (hs : saturated V) (hp : Packing V) (hb1 : barV V 3 ul) (hb2 : barV V 3 vl)
+    (hi : i ∈ ({0, 1, 2, 3, 4} : Set ℕ)) (hj : j ∈ ({0, 1, 2, 3, 4} : Set ℕ))
+    (hvol : ¬nullSet (mcell i V ul ∩ mcell j V vl))
+    (hQ2 : ∀ (w : List V3) (k : ℕ), barV V 3 w → k ≤ 4 →
+      mcell k V w ⊆ ⋃₀ ((fun p => rogers V (leftActionList p w)) ''
+        {p : Equiv.Perm ℕ | permutes p (Set.Icc 0 (k - 1)) ∧
+          ∀ n : ℕ, k ≤ n → p n = n})) :
+    i = j ∧ mcell i V ul = mcell j V vl := by
+  refine p17_ajripqn_of_pieces hs hp hb1 hb2 ((upTo4KyLemma_p17 i).2 hi)
+    ((upTo4KyLemma_p17 j).2 hj)
+    ((measurePosIff_p17 ((MEASURABLE_MCELL V ul i hs hp hb1).inter
+      (MEASURABLE_MCELL V vl j hs hp hb2))).2 hvol)
+    (fun w hbw => by
+      obtain ⟨Z, hZ⟩ := SLTSTLO2 V w
+      have key : ∀ q : V3, q ∈ rogers V w \ Z → ∃! h : ℕ, h ≤ 4 ∧ q ∈ mcell h V w :=
+        fun q hq => (hZ q hs hp hbw).2 hq
+      exact ⟨Z, (hZ (0 : V3) hs hp hbw).1, key⟩)
+    (fun w k p hbw hk4 hne hperm hfix =>
+      QZKSYKG1 hs hp hbw ((upTo4KyLemma_p17 k).1 hk4) hne hperm hfix rfl)
+    hQ2
+    (fun w k p hbw hk4 hperm hfix =>
+      RVFXZBU ((upTo4KyLemma_p17 k).1 hk4) hs hp hbw hperm hfix)
+    (fun w t k hk4 hbw hbt hreq hdim hne =>
+      DDZUPHJ V w t k hs hp hk4 hbw hbt hreq hdim hne)
+
 /-! ## AJRIPQN.hl: main theorem -/
 
 /- UPDATE 2026-10-12 (AJRIPQN wave). The five-stage covering assembly is now
