@@ -94,3 +94,13 @@ BIXPCGW 主攻 + HOL 对表协议）。
   PA21 pack_nonlinear_rest 62 bank、PA23 系）全部 pin 死在 Phase 4 证书上
   ——①b 直接闸掉可比债一大块的释放；GRKIBMB"尖锐边界组"与此的耦合程度
   由在飞侦察裁决（若 GRKIBMB 锐性需 Phase 4 数据，其"真数学"成色要重估）。
+
+
+## 附：root 区预灌装 runner 运行态（2026-10-13 启动，选项 4 兑现）
+
+- **进程**：PID 50866（nohup 脱离，/Users/zhangzhuo/lprun/driver.pid），driver.py --workers 2，SoPlex 钉 8.1.0。**不依赖任何 agent 存活**。
+- **任务**：19,237 条 root 记录（与 LPIds lpRootIds00..76 集合相等对账过），hlen 升序，~138 条/时，**ETA ≈ 5.7 天**（滚动重估：/Users/zhangzhuo/lprun/progress.json 的 rate_per_hour）。
+- **首段验证**：18/18 PASS 零 fail；试点 A 重发射 Data.lean sha256 与 results.jsonl 账本逐字节一致；与 LPPilot.lean 已落库形 113 行数据载荷逐字节一致（唯一差异=doc 注释文件名，非数据）。
+- **监控**：/Users/zhangzhuo/lprun/MONITOR.md（进度命令/账本判读/D_bits 漂移报警/FAIL 处理/断点续跑——results.jsonl exit=0 自动跳过）。
+- **边界**：runner 只产账本与产物（/Users/zhangzhuo/lprun/，repo 零改动）；**落库/叶闭合（gen_lp_skeleton --emit-closure，PRODDIR=repo lean/Kepler/LP）在批末作为独立审查波执行**；solver 并发恒 ≤2（用户核数配额）；SoPlex 升级须整批重跑。
+- **后续**：批末收口波（--emit-closure → LPAll 终验 → 分审查批 commit）预计再 1-2 车道；G5 族解析（189 infeasible）与 G6 已由 C1.5 覆盖。
