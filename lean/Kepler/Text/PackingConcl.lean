@@ -606,11 +606,16 @@ theorem KHEJKCI_concl_discharged :
       FaceOf (voronoiList V ul) (voronoiClosed V (hdV ul)) :=
   fun V k ul hs hp hv => KHEJKCI V k ul hs hp hv.1
 
-/-- `PackingAuto2.GRUTOTI1_concl` (Auto2:926), discharged by the
-PA24 statement-copy — formerly `private` (unreachable), now re-exported
-publicly as `PackingAuto24.GRUTOTI1_concl_p24_pub` (same statement,
-verbatim; itself `exact GRUTOTI1_concl …` over Auto2, so the upstream
-sorry taint flows). -/
+/-- `PackingAuto2.GRUTOTI1_concl` (Auto2:926), discharged by
+`PackingAuto23.GRUTOTI` (GRUTOTI.hl:60-8001; proved in the GT-5/GT-6
+waves, 2026-10-10) — shape-verbatim over this interface, so the wiring
+is a direct rename. The PA24 statement-copy
+(`GRUTOTI1_concl_p24_pub`) is off the discharge path since 2026-10-12;
+it stays in PA24 because the EV20 duplicate-provision conditions do not
+hold (PA23's provider is named `GRUTOTI`, and the twin's set-builder
+carries an explicit `: Set V3` binder ascription). Residual taint in
+the axiom footprint is PA23's own upstream chain (AJRIPQN et al.), no
+longer the Auto2 interface. -/
 theorem GRUTOTI1_concl_discharged :
     ∀ (V : Set V3) (u0 u1 : V3) (e : Set V3), saturated V →
       Packing V → u0 ∈ V → u1 ∈ V → u0 ≠ u1 → hl [u0, u1] < Real.sqrt 2 →

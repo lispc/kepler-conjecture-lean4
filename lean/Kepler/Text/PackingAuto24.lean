@@ -7059,11 +7059,15 @@ private theorem GRUTOTI1_concl_p24 : ∀ (V : Set V3) (u0 u1 : V3) (e : Set V3),
   exact GRUTOTI1_concl V u0 u1 e hs hp hu0 hu1 hne hhl he
 
 /-- Public re-export of the private `GRUTOTI1_concl_p24` above — same
-statement, verbatim. PackingConcl discharges Auto2's `GRUTOTI1_concl`
-interface through this name (the `private` modifier hides the original
-from every other module); the upstream `sorry` in
-`PackingAuto2.GRUTOTI1_concl` flows along the proof term. Delete
-together with the `_p24` copy at merge into Auto23's results. -/
+statement, verbatim. Formerly the PackingConcl discharge path
+(`GRUTOTI1_concl_discharged` routed through this name, since the
+`private` modifier hides the original from every other module); since
+2026-10-12 PackingConcl discharges via `PackingAuto23.GRUTOTI` instead,
+so this twin is consumer-free. Kept in place because the EV20
+duplicate-provision precondition does not hold (PA23's provider is named
+`GRUTOTI`, and the set-builder binder here carries an explicit
+`: Set V3` ascription) — delete at merge into Auto23's results once the
+name/binder mismatch is ruled on. -/
 theorem GRUTOTI1_concl_p24_pub : ∀ (V : Set V3) (u0 u1 : V3) (e : Set V3),
     saturated V → Packing V → u0 ∈ V → u1 ∈ V → u0 ≠ u1 →
     hl [u0, u1] < Real.sqrt 2 → e = {u0, u1} →
