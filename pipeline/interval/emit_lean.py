@@ -273,12 +273,33 @@ class RPN:
     typically give them a fixed high N — the alternating arctan series
     converges only like `1/(2N+1)` at boundary points such as `arctan 1`,
     so a constant `atan(1)` node wants `N` in the hundreds while
-    var-containing nodes stay on the rung ladder."""
+    var-containing nodes stay on the rung ladder.
 
-    def __init__(self, div_out=-64, sqrt_slot=None, trans=None):
+    `trans_unclose_sqrt`: W2 fix for the hull/TM route.  A var-free
+    `trans` argument takes `evalTMHullFill2`'s closed fast path
+    (`(IExpr.trans k e N out).eval box`), which evaluates the argument
+    with the PLAIN `IExpr.eval` — and a plain `.sqrt` node reads its
+    mantissa certificates from the AST slots.  The hull route emits
+    dummy `(0, 0)` slots there, and `Dyadic.sqrtI d 0 = none` for EVERY
+    nonzero radicand (the certificate check is `m·2^(e%2) < 1` on the
+    mantissa, impossible for `m ≥ 1`), so any closed trans over a
+    sqrt-containing constant argument (e.g. `atan(√(2/3)·3/4)` closed
+    forms) killed the whole leaf — the BIX stage-A replay 0/20 root
+    cause (all 66 such nodes in `prep-BIXPCGW 7274157868 a split(0/2)`).
+    Fix: wrap exactly those arguments as
+    `(.add arg (.mul (.var 0) (.const ⟨0, 0⟩)))` — extensionally equal
+    (`e + x₀·0 = e`, exact dyadic arithmetic), but no longer `closed`,
+    so the sound atan TM rule runs instead (its model over the constant
+    submodel has `W = 0`, i.e. the same exact quality; the rule cannot
+    fail — `1/(1+f²)` reciprocals are always away from 0).  Plain-atan
+    closed args keep the fast path."""
+
+    def __init__(self, div_out=-64, sqrt_slot=None, trans=None,
+                 trans_unclose_sqrt=False):
         self.div_out = div_out
         self.sqrt_slot = sqrt_slot
         self.trans = trans
+        self.trans_unclose_sqrt = trans_unclose_sqrt
         self.sqrt_count = 0
 
     def const(self, c):
@@ -338,7 +359,16 @@ class RPN:
                     die(f"op {op}: not supported without --fill (see module docstring)")
                 a = st.pop()
                 N, out = self.trans(op, a[1])
-                st.append((f"(.trans .{TRANS_KIND[op]} {a[0]} {N} {out})", a[1]))
+                text, closed = a[0], a[1]
+                if (self.trans_unclose_sqrt and closed
+                        and "(.sqrt " in text):
+                    # See `trans_unclose_sqrt` in the class docstring: keep
+                    # sqrt-carrying constant args off the plain-eval closed
+                    # fast path (dead dummy sqrt certificates there).
+                    text = (f"(.add {text} (.mul (.var 0) (.const ⟨0, 0⟩)))")
+                    closed = False
+                st.append((f"(.trans .{TRANS_KIND[op]} {text} {N} {out})",
+                           closed))
             else:
                 die(f"unknown op {op}")
         if len(st) != 1:
@@ -1057,10 +1087,13 @@ def hull_expr(case, rung_n, rung_out):
     Identical text in stage A and stage B.  Node counts are taken from the
     EMITTED text, not the RPN op list: non-dyadic `push_const` entries
     expand to an extra `.div` node (const numerator / denominator), and the
-    hull route consumes one invCert per emitted div."""
+    hull route consumes one invCert per emitted div.  Closed trans args
+    carrying sqrt nodes are unclosed (`trans_unclose_sqrt`) — the closed
+    fast path would evaluate them with the dead dummy certificates."""
     rpn = RPN(sqrt_slot=lambda i: ("0", "0"),
               trans=lambda op, closed: ("2048", "(-64)") if closed
-              else (str(rung_n), f"({rung_out})"))
+              else (str(rung_n), f"({rung_out})"),
+              trans_unclose_sqrt=True)
     expr = rpn.emit(case["prog"])
     return (expr, expr.count("(.sqrt "), expr.count("(.div "),
             expr.count("(.trans "))
