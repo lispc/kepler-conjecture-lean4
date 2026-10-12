@@ -76,7 +76,11 @@ elif [ "${GATE_MODE:-}" = "DEF-FIX" ]; then
   [ -n "${DF_PATCH:-}" ] || fail "DEF-FIX: DF_PATCH (charter path) not set"
   case "$DF_PATCH" in /*) ;; *) DF_PATCH="$REPO_ROOT/$DF_PATCH" ;; esac
   [ -f "$DF_PATCH" ] || fail "DEF-FIX: charter $DF_PATCH missing"
-  for anchor in polytope1.ml:1506 polytope1.ml:2546 sphere.hl:290; do
+  # EVOLUTION 22 (2026-10-12): anchor list env-overridable (DF_ANCHORS, space-
+  # separated); default preserves the planar-encoding charter anchors so old
+  # charters gate identically. Each charter must cite its own HOL anchors.
+  DF_ANCHORS="${DF_ANCHORS:-polytope1.ml:1506 polytope1.ml:2546 sphere.hl:290}"
+  for anchor in $DF_ANCHORS; do
     grep -qF "$anchor" "$DF_PATCH" \
       || fail "DEF-FIX: charter lacks HOL anchor $anchor"
   done
@@ -462,7 +466,10 @@ filter_not_in(){ # usage: lines | filter_not_in <cmtset> — pass through lines
     printf '%s\n' "$line"
   done
 }
-nsorry_dels=$(printf '%s\n' "$dels" | grep -E '^-[[:space:]]*sorry\b' | filter_not_in "$cmt" | grep -c . || true)
+# EVOLUTION 23 (2026-10-12): the DEF-FIX branch bypasses the normal-rule path
+# where $cmt (HEAD-side comment set) is defined; default it empty here so the
+# netting rule degrades gracefully (empty set filters nothing) on that path.
+nsorry_dels=$(printf '%s\n' "$dels" | grep -E '^-[[:space:]]*sorry\b' | filter_not_in "${cmt:-}" | grep -c . || true)
 nsorry_adds=$(printf '%s\n' "$adds" | grep -E '^[+][[:space:]]*sorry\b' | filter_not_in "$wcmt" | grep -c . || true)
 if [ "${GATE_MODE:-}" = "DEF-FIX" ]; then
   # DEF-FIX: the net refill debt is charter-specified (§3a/§3b), not forbidden
