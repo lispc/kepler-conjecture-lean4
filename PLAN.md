@@ -9,7 +9,8 @@
 > 实时进度看板 = `STATUS.md`（每批次刷新）；债务刻度 = `DEBT.md`；长期决策 =
 > `DECISIONS.md`；端到端对象 = `lean/Kepler/Final.lean` 的
 > `the_kepler_conjecture_e2e`（2026-10-10 立）。
-> 原 `HANDOFF.md`（2026-09-18 交接文档）已并入本文件后退役，历史版本见 git。
+> `HANDOFF.md` 为接手入口交接文档（2026-10-10 曾退役，2026-10-12 用户令恢复；
+> 原始版本见 `git show 4ca2e550:HANDOFF.md`）。
 
 ---
 
@@ -205,7 +206,7 @@ kepler-conjecture-lean4/
 ├── STATUS.md               # 实时进度看板（每批次刷新）
 ├── DEBT.md                 # sorry 债务账本（debt_ledger.py 生成）
 ├── DECISIONS.md            # 决策日志
-├── HANDOFF.md              # 已退役墓碑（内容已并入 PLAN/STATUS，指针用）
+├── HANDOFF.md              # 交接入口（接手 agent 从这读起；2026-10-12 复活）
 ├── lean/
 │   ├── Kepler/Statement.lean     # Phase 1（占位待终版退役）
 │   ├── Kepler/Final.lean         # Phase 6 终装配（e2e 承载）
