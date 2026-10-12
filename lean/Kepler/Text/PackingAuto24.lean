@@ -6065,6 +6065,416 @@ private theorem p24_caseB2_general (V : Set V3) (u0 u1 : V3) (vl : List V3)
       hne haxd h33 hmiddef (lt_of_lt_of_le (by norm_num) hdgt) hq hx2off hx3off
       ha2x2 ha2x3 heps2 heps3 hζ1x hζ3x hindep'
 
+/-! ## (β) 支第五波：换叶主件群（2026-10-12 波，支撑面引理的换叶等效路线，
+全部真证零 sorry）
+
+**数学骨架**（退化子情形 ω₂ = ω₃ 换叶的存在性内核）：饱和 packing 短棱
+（`d < √8`）处必存在叶三元组 `vl`（`barV V 3 vl ∧ truncateSimplex 1 vl =
+[u0,u1]`）使 `omegaListN V vl 2 ≠ omegaListN V vl 3`。反证：设每叶皆退化，
+则 fan 分解（`p24_voronoi_pair_split`）+ `p24_leaf_singleton`（叶胞 = {外心}，
+ω₃ = 外心）+ `p24_omega1_eq_mid`（ω₁ = 棱中点 p）把配对胞 S 写成过 p 的线段并
+S = ∪_v [p, ω₂(v)]（ω₂(v) = `omegaListN V [u0,u1,v] 2`）；而
+`p24_pair_patch_mem`（中点 margin 严格的圆盘 patch——affDim 波 patch 三点件
+的全量化，路线图 §剩余风险"affDim(S∩H_v) = 1 + relint 内球论证"的等效件）
+给出 S ⊇ p 处 2 维圆盘；叶指标局部有限（`p24_packing_finite_inter_ball_at`，
+体积计数 packing 局部有限的平移形式）+ `p24_escape_direction`（有限条过 p
+射线盖不住 2 维圆盘：逃逸方向 = 斜率 sup+1 构造）——圆盘点 x* ∈ S 不落在
+任何线段上，矛盾。此即路线图"退化叶 fan 三角 conv{p, ω₂, cc} 在 p 处尖角
+⟹ relint 圆盘余部强制另一叶"的形式化（尖角逼叶 = 圆盘 vs 有限射线覆盖）。 -/
+
+/-- **换叶件 1 · patch 圆盘**（affDim 波 `p24_affDim_voronoiList2` 内部
+`hmem` 件的全量提取，`d < √8` 形态）：中点 `p = u0 + (1/2)•(u1−u0)` 处，
+bisector 平面方向 `D = ker (p24_dotR (u1−u0))` 内 `‖v‖ ≤ 2R`
+（`R = (s − d/2)/8`，`s = √(4−(d/2)²)`）的 `p + v` 全部落进配对胞
+`voronoiList V [u0,u1]`。数学：margin（packing 两两 ≥ 2 + 平行四边形恒等式
+给 `‖w − p‖ ≥ s > d/2`）+ 三角不等式 `d/2 + ‖v‖ ≤ s − 2R ≤ s − ‖v‖`。 -/
+private theorem p24_pair_patch_mem (V : Set V3) (u0 u1 : V3) (hp : Packing V)
+    (hu0 : u0 ∈ V) (hu1 : u1 ∈ V) (hne : u0 ≠ u1) (hd8 : dist u0 u1 < Real.sqrt 8)
+    (s : ℝ) (hsdef : s = Real.sqrt (4 - (dist u0 u1 / 2) ^ 2))
+    (R : ℝ) (hRdef : R = (s - dist u0 u1 / 2) / 8)
+    (v : V3) (hvD : v ∈ LinearMap.ker (p24_dotR (u1 - u0)))
+    (hvn : ‖v‖ ≤ 2 * R) :
+    u0 + (1 / 2 : ℝ) • (u1 - u0) + v ∈ voronoiList V [u0, u1] := by
+  set p : V3 := u0 + (1 / 2 : ℝ) • (u1 - u0) with hpdef
+  set d : ℝ := dist u0 u1 with hddef
+  have hdpos : (0:ℝ) ≤ d := dist_nonneg
+  have hmid0 : p - u0 = (1 / 2 : ℝ) • (u1 - u0) := by rw [hpdef]; module
+  have hmid1 : p - u1 = -((1 / 2 : ℝ) • (u1 - u0)) := by rw [hpdef]; module
+  have hpu0 : ‖p - u0‖ = d / 2 := by
+    rw [hmid0, norm_smul, Real.norm_eq_abs,
+      abs_of_pos (show (0:ℝ) < (1 / 2 : ℝ) by norm_num), ← dist_eq_norm,
+      dist_comm u1 u0, hddef]
+    ring
+  have hpu1 : ‖p - u1‖ = d / 2 := by
+    rw [hmid1, norm_neg, norm_smul, Real.norm_eq_abs,
+      abs_of_pos (show (0:ℝ) < (1 / 2 : ℝ) by norm_num), ← dist_eq_norm,
+      dist_comm u1 u0, hddef]
+    ring
+  -- bisector 平面方向子模与维数
+  set D : Submodule ℝ V3 := LinearMap.ker (p24_dotR (u1 - u0)) with hDdef
+  have hDax : ∀ z ∈ D, (u1 - u0) ⬝ᵥ z = 0 := fun z hz => LinearMap.mem_ker.mp hz
+  have hDmid0 : ∀ z ∈ D, inner ℝ (p - u0) z = 0 := by
+    intro z hz
+    rw [hmid0, p24_hsmL, inner_eq_dot, hDax z hz]
+    ring
+  have hDmid1 : ∀ z ∈ D, inner ℝ (p - u1) z = 0 := by
+    intro z hz
+    rw [hmid1, inner_neg_left, p24_hsmL, inner_eq_dot, hDax z hz]
+    ring
+  -- margin 刻度与 patch 半径
+  set d2 : ℝ := d / 2 with hd2def
+  have hd2pos : (0:ℝ) ≤ d2 := by positivity
+  have hsqd : d ^ 2 < 8 := by
+    have h1 : (0:ℝ) ≤ Real.sqrt 8 := Real.sqrt_nonneg 8
+    have hsq1 : d ^ 2 < (Real.sqrt 8) ^ 2 := by nlinarith
+    rwa [Real.sq_sqrt (by norm_num : (0:ℝ) ≤ 8)] at hsq1
+  have hd2sq : d2 ^ 2 < 2 := by nlinarith
+  have hsnn : (0:ℝ) ≤ s := by rw [hsdef]; exact Real.sqrt_nonneg _
+  have h4pos : (0:ℝ) ≤ 4 - d2 ^ 2 := by linarith
+  have hsd2 : d2 < s := by
+    have h1 : d2 ^ 2 < s ^ 2 := by
+      rw [hsdef, Real.sq_sqrt h4pos]
+      nlinarith
+    by_contra hcon
+    have h2 : s ^ 2 ≤ d2 ^ 2 := by nlinarith [hsnn, hd2pos, hcon]
+    linarith
+  have hRpos : 0 < R := by rw [hRdef]; positivity
+  have hRkey : d2 + 2 * R ≤ s - 2 * R := by
+    have h1 : 4 * R ≤ s - d2 := by rw [hRdef]; field_simp; linarith
+    linarith
+  have hvn' : ‖v‖ ≤ 2 * R := hvn
+  -- margin：其余 packing 点在 p 为心半径 s 球外
+  have hmargin : ∀ w ∈ V, w ≠ u0 → w ≠ u1 → s ≤ ‖w - p‖ := by
+    intro w hw hw0 hw1
+    have hsep0 : (2:ℝ) ≤ ‖w - u0‖ := by
+      have h := hp.dist_ge_two hw hu0 hw0
+      rwa [dist_eq_norm] at h
+    have hsep1 : (2:ℝ) ≤ ‖w - u1‖ := by
+      have h := hp.dist_ge_two hw hu1 hw1
+      rwa [dist_eq_norm] at h
+    have hsplit0 : ‖w - u0‖ ^ 2 = ‖w - p‖ ^ 2 + 2 * inner ℝ (w - p) (p - u0)
+        + ‖p - u0‖ ^ 2 := by
+      rw [show (w - u0 : V3) = (w - p) + (p - u0) from by abel, norm_add_sq_real]
+    have hsplit1 : ‖w - u1‖ ^ 2 = ‖w - p‖ ^ 2 + 2 * inner ℝ (w - p) (p - u1)
+        + ‖p - u1‖ ^ 2 := by
+      rw [show (w - u1 : V3) = (w - p) + (p - u1) from by abel, norm_add_sq_real]
+    have hcross : inner ℝ (w - p) (p - u0) + inner ℝ (w - p) (p - u1) = 0 := by
+      have hsum : (p - u0) + (p - u1) = 0 := by rw [hmid0, hmid1]; abel
+      have hadd : inner ℝ (w - p) ((p - u0) + (p - u1))
+          = inner ℝ (w - p) (p - u0) + inner ℝ (w - p) (p - u1) :=
+        inner_add_right _ _ _
+      rw [hsum] at hadd
+      have hz : inner ℝ (w - p) (0:V3) = 0 := inner_zero_right _
+      rw [hz] at hadd
+      linarith
+    rw [hpu0] at hsplit0
+    rw [hpu1] at hsplit1
+    have h4u0 : (4:ℝ) ≤ ‖w - u0‖ ^ 2 := by
+      nlinarith [sq_nonneg (‖w - u0‖ - 2)]
+    have h4u1 : (4:ℝ) ≤ ‖w - u1‖ ^ 2 := by
+      nlinarith [sq_nonneg (‖w - u1‖ - 2)]
+    have hpara : ‖w - u0‖ ^ 2 + ‖w - u1‖ ^ 2 = 2 * ‖w - p‖ ^ 2 + 2 * d2 ^ 2 := by
+      rw [hsplit0, hsplit1]
+      nlinarith
+    have hsq : s ^ 2 ≤ ‖w - p‖ ^ 2 := by
+      rw [hsdef, Real.sq_sqrt h4pos]
+      nlinarith
+    have h1 := Real.sqrt_le_sqrt hsq
+    rw [Real.sqrt_sq_eq_abs, abs_of_nonneg hsnn, Real.sqrt_sq_eq_abs,
+      abs_of_nonneg (norm_nonneg _)] at h1
+    exact h1
+  -- 配对胞的两闭胞交形式
+  have hpair : voronoiList V [u0, u1] = voronoiClosed V u1 ∩ voronoiClosed V u0 := by
+    rw [show (voronoiList V [u0, u1] : Set V3) = voronoiSet V (setOfList [u0, u1]) from rfl,
+      show (setOfList [u0, u1] : Set V3) = {u0, u1} from by ext x; simp [setOfList],
+      VORONOI_SET_2]
+  -- patch 点到两端的距离
+  have hdu1 : ∀ z ∈ D, ‖(p + z) - u1‖ ≤ d2 + ‖z‖ := by
+    intro z hz
+    rw [show ((p + z) - u1 : V3) = (p - u1) + z from by abel]
+    exact le_trans (norm_add_le _ _) (by rw [hpu1])
+  have hdu0 : ∀ z ∈ D, ‖(p + z) - u0‖ ≤ d2 + ‖z‖ := by
+    intro z hz
+    rw [show ((p + z) - u0 : V3) = (p - u0) + z from by abel]
+    exact le_trans (norm_add_le _ _) (by rw [hpu0])
+  have hdeq : ∀ z ∈ D, ‖(p + z) - u0‖ = ‖(p + z) - u1‖ := by
+    intro z hz
+    have hq0 : ‖(p + z) - u0‖ ^ 2 = d2 ^ 2 + ‖z‖ ^ 2 := by
+      rw [show ((p + z) - u0 : V3) = (p - u0) + z from by abel,
+        p24_pythI (hDmid0 z hz), hpu0]
+    have hq1 : ‖(p + z) - u1‖ ^ 2 = d2 ^ 2 + ‖z‖ ^ 2 := by
+      rw [show ((p + z) - u1 : V3) = (p - u1) + z from by abel,
+        p24_pythI (hDmid1 z hz), hpu1]
+    have hsqeq : ‖(p + z) - u0‖ ^ 2 = ‖(p + z) - u1‖ ^ 2 := by rw [hq0, hq1]
+    have h1 : Real.sqrt (‖(p + z) - u0‖ ^ 2) = Real.sqrt (‖(p + z) - u1‖ ^ 2) := by
+      rw [hsqeq]
+    rwa [Real.sqrt_sq_eq_abs, Real.sqrt_sq_eq_abs, abs_of_nonneg (norm_nonneg _),
+      abs_of_nonneg (norm_nonneg _)] at h1
+  -- patch 点 ∈ 配对胞
+  rw [hpair]
+  refine ⟨fun w hw => ?_, fun w hw => ?_⟩
+  · show dist (p + v) u1 ≤ dist (p + v) w
+    rcases eq_or_ne w u1 with rfl | hw1
+    · exact le_refl _
+    rcases eq_or_ne w u0 with rfl | hw0
+    · have he := hdeq v hvD
+      rw [← dist_eq_norm, ← dist_eq_norm] at he
+      rw [he]
+    · have h1 := hdu1 v hvD
+      have h3 := dist_triangle w (p + v) p
+      have h4 : dist (p + v) p = ‖v‖ := by
+        rw [dist_eq_norm]; congr 1; abel
+      have h5 : dist w p = ‖w - p‖ := dist_eq_norm w p
+      rw [h4, h5] at h3
+      have h6 := hmargin w hw hw0 hw1
+      have h7 : dist w (p + v) = ‖(p + v) - w‖ := by
+        rw [dist_comm, dist_eq_norm]
+      rw [h7] at h3
+      rw [dist_eq_norm, dist_eq_norm]
+      linarith
+  · show dist (p + v) u0 ≤ dist (p + v) w
+    rcases eq_or_ne w u1 with rfl | hw1
+    · have he := hdeq v hvD
+      rw [← dist_eq_norm, ← dist_eq_norm] at he
+      rw [he]
+    rcases eq_or_ne w u0 with rfl | hw0
+    · exact le_refl _
+    · have h1 := hdu0 v hvD
+      have h3 := dist_triangle w (p + v) p
+      have h4 : dist (p + v) p = ‖v‖ := by
+        rw [dist_eq_norm]; congr 1; abel
+      have h5 : dist w p = ‖w - p‖ := dist_eq_norm w p
+      rw [h4, h5] at h3
+      have h6 := hmargin w hw hw0 hw1
+      have h7 : dist w (p + v) = ‖(p + v) - w‖ := by
+        rw [dist_comm, dist_eq_norm]
+      rw [h7] at h3
+      rw [dist_eq_norm, dist_eq_norm]
+      linarith
+
+/-- **换叶件 2 · packing 局部有限**（`Packing.finite_inter_ball` 的平移形式：
+球心任意）。证明：平移 `x ↦ x − c` 保持 packing，归约到 0 心版本 +
+单射原像有限。 -/
+private theorem p24_packing_finite_inter_ball_at {V : Set V3} (hp : Packing V)
+    (c : V3) (r : ℝ) : (V ∩ Metric.ball c r).Finite := by
+  classical
+  have hpT : Packing ((fun x : V3 => x - c) '' V) := by
+    intro u hu v hv hlt
+    simp only [Set.mem_image] at hu hv
+    obtain ⟨x, hxV, rfl⟩ := hu
+    obtain ⟨y, hyV, rfl⟩ := hv
+    have hd : dist x y < 2 := by
+      have h1 : dist (x - c) (y - c) < 2 := hlt
+      have h2 : dist (x - c) (y - c) = dist x y := by
+        rw [dist_eq_norm, dist_eq_norm]; congr 1; module
+      rwa [h2] at h1
+    exact congrArg (fun z : V3 => z - c) (hp x hxV y hyV hd)
+  have hfin0 : (((fun x : V3 => x - c) '' V) ∩ Metric.ball 0 r).Finite :=
+    hpT.finite_inter_ball r
+  have hf_inj : Function.Injective (fun x : V3 => x - c) := by
+    intro x y hxy
+    have hxy' : x - c = y - c := hxy
+    have h2 : x - c + c = y - c + c := by rw [hxy']
+    simpa using h2
+  set S' : Set V3 := ((fun x : V3 => x - c) '' V) ∩ Metric.ball 0 r with hS'
+  have hinj : Set.InjOn (fun x : V3 => x - c) ((fun x : V3 => x - c) ⁻¹' S') :=
+    fun x _ y _ h => hf_inj h
+  have hpre : ((fun x : V3 => x - c) ⁻¹' S').Finite := Set.Finite.preimage hinj hfin0
+  have hkey : V ∩ Metric.ball c r ⊆ (fun x : V3 => x - c) ⁻¹' S' := by
+    intro x hx
+    obtain ⟨hxV, hball⟩ := hx
+    refine ⟨⟨x, hxV, rfl⟩, ?_⟩
+    show dist (x - c) 0 < r
+    have h3 : dist (x - c) 0 = dist x c := by
+      rw [dist_eq_norm, dist_eq_norm]; congr 1; module
+    rwa [h3]
+  exact Set.Finite.subset hpre hkey
+
+/-- **换叶件 3 · 方向逃逸**：2 维子空间内有限条过原点射线盖不满任意小球。
+有限方向集 {w v}（皆非零、皆在 D 内）构造逃逸向量 u ∈ D：取独立
+a, b ∈ D，斜率参数 τ ↦ a + τ•b 的"坏 τ"每 v 至多一个（两解 ⟹ D = span{w v}
+与维数 1 矛盾），取 sup + 1 逃出全部；正数缩放进指定球（缩放保持不平行）。 -/
+private theorem p24_escape_direction {D : Submodule ℝ V3}
+    (hD2 : Module.finrank ℝ D = 2) (F : Set V3) (hFin : F.Finite) (w : V3 → V3)
+    (hwD : ∀ v ∈ F, w v ∈ D) (hwne : ∀ v ∈ F, w v ≠ 0) (eps : ℝ) (hε : 0 < eps) :
+    ∃ u ∈ D, u ≠ 0 ∧ ‖u‖ ≤ eps ∧ ∀ v ∈ F, ∀ t : ℝ, 0 < t → u ≠ t • w v := by
+  classical
+  -- 1. 取 D 内独立向量 a, b
+  have hDne : D ≠ ⊥ := by
+    intro h
+    rw [h] at hD2
+    simp at hD2
+  obtain ⟨a, haD, hane⟩ : ∃ a ∈ D, a ≠ 0 := by
+    by_contra hcon
+    refine hDne (Submodule.ext fun x => ?_)
+    constructor
+    · intro hx
+      have hx0 : x = 0 := by
+        by_contra hh
+        exact hcon ⟨x, hx, hh⟩
+      rw [hx0]
+      exact (Submodule.mem_bot (R := ℝ)).2 rfl
+    · intro hx
+      rw [Submodule.mem_bot] at hx
+      exact hx.symm ▸ Submodule.zero_mem D
+  have hfr1 : Module.finrank ℝ (Submodule.span ℝ {a}) = 1 := finrank_span_singleton hane
+  have hDne1 : D ≠ (Submodule.span ℝ {a}) := by
+    intro h
+    rw [h, hfr1] at hD2
+    simp at hD2
+  obtain ⟨b, hbD, hbs⟩ : ∃ b ∈ D, b ∉ (Submodule.span ℝ {a}) := by
+    by_contra hcon
+    push_neg at hcon
+    refine hDne1 (Submodule.ext fun x => ?_)
+    exact ⟨fun hx => hcon x hx, fun hx =>
+      (Submodule.span_le.mpr (Set.singleton_subset_iff.mpr haD) : _ ≤ D) hx⟩
+  have hbne : b ≠ 0 := by
+    intro h
+    apply hbs
+    rw [h]
+    exact Submodule.mem_span_singleton.2 ⟨0, by simp⟩
+  -- 2. ![a, b] 线性无关 ⟹ span = D（finrank = 2）
+  have hli : LinearIndependent ℝ ![a, b] := by
+    rw [Fintype.linearIndependent_iff]
+    intro g hg i
+    simp only [Fin.sum_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one] at hg
+    fin_cases i
+    · by_contra hg0
+      rcases eq_or_ne (g 1) 0 with hg1 | hg1
+      · simp only [hg1, zero_smul, add_zero] at hg
+        exact hg0 ((smul_eq_zero.mp hg).resolve_right hane)
+      · apply hbs
+        refine Submodule.mem_span_singleton.2 ⟨-g 0 / g 1, ?_⟩
+        have hkey : g 1 • ((-g 0 / g 1) • a) = g 1 • b := by
+          rw [smul_smul]
+          have hrat : g 1 * (-g 0 / g 1) = -g 0 := by field_simp
+          rw [hrat, neg_smul, neg_eq_iff_add_eq_zero]
+          exact hg
+        exact smul_right_injective V3 hg1 hkey
+    · by_contra hg1'
+      have hg1 : g 1 ≠ 0 := fun hh => hg1' hh
+      apply hbs
+      refine Submodule.mem_span_singleton.2 ⟨-g 0 / g 1, ?_⟩
+      have hkey : g 1 • ((-g 0 / g 1) • a) = g 1 • b := by
+        rw [smul_smul]
+        have hrat : g 1 * (-g 0 / g 1) = -g 0 := by field_simp
+        rw [hrat, neg_smul, neg_eq_iff_add_eq_zero]
+        exact hg
+      exact smul_right_injective V3 hg1 hkey
+  have hspD : Submodule.span ℝ (Set.range ![a, b]) = D := by
+    have hle : Submodule.span ℝ (Set.range ![a, b]) ≤ D := by
+      rw [Submodule.span_le]
+      rintro y ⟨i, rfl⟩
+      fin_cases i
+      · exact haD
+      · exact hbD
+    have hfr : Module.finrank ℝ (Submodule.span ℝ (Set.range ![a, b])) = 2 := by
+      rw [finrank_span_eq_card hli]
+      simp
+    exact Submodule.eq_of_le_of_finrank_eq hle (hfr.trans hD2.symm)
+  -- 3. 每 v 的直线参数至多一个（两解 ⟹ D ≤ span{w v} ⟹ finrank 矛盾）
+  set T : V3 → Set ℝ := fun v => {τ : ℝ | ∃ r : ℝ, a + τ • b = r • w v} with hTdef
+  have hTsub : ∀ v ∈ F, ∀ τ₁ ∈ T v, ∀ τ₂ ∈ T v, τ₁ = τ₂ := by
+    intro v hv τ₁ hτ₁ τ₂ hτ₂
+    obtain ⟨r₁, hr₁⟩ := hτ₁
+    obtain ⟨r₂, hr₂⟩ := hτ₂
+    by_contra hne
+    have hτne : (τ₁ - τ₂ : ℝ) ≠ 0 := sub_ne_zero.mpr hne
+    have hsub1 : (τ₁ - τ₂ : ℝ) • b = (r₁ - r₂) • w v := by
+      have heq : (a + τ₁ • b) - (a + τ₂ • b) = r₁ • w v - r₂ • w v := by rw [hr₁, hr₂]
+      have he1 : (a + τ₁ • b) - (a + τ₂ • b) = (τ₁ - τ₂ : ℝ) • b := by
+        simp only [add_sub_add_left_eq_sub]
+        module
+      have he2 : r₁ • w v - r₂ • w v = (r₁ - r₂) • w v := (sub_smul r₁ r₂ (w v)).symm
+      rw [he1, he2] at heq
+      exact heq
+    have hb' : b = ((r₁ - r₂) / (τ₁ - τ₂ : ℝ)) • w v := by
+      apply smul_right_injective V3 hτne
+      show (τ₁ - τ₂ : ℝ) • b = (τ₁ - τ₂ : ℝ) • (((r₁ - r₂) / (τ₁ - τ₂ : ℝ)) • w v)
+      rw [smul_smul]
+      have hrat : (τ₁ - τ₂ : ℝ) * ((r₁ - r₂) / (τ₁ - τ₂ : ℝ)) = r₁ - r₂ := by
+        field_simp
+      rw [hrat]
+      exact hsub1
+    have hain : a ∈ Submodule.span ℝ {w v} := by
+      have e1 : a = r₁ • w v - τ₁ • b := by
+        rw [eq_comm, sub_eq_iff_eq_add]
+        exact hr₁.symm
+      have h3 : a = (r₁ - τ₁ * ((r₁ - r₂) / (τ₁ - τ₂ : ℝ))) • w v := by
+        rw [e1, hb', smul_smul, ← sub_smul]
+      exact Submodule.mem_span_singleton.2 ⟨_, h3.symm⟩
+    have hbin : b ∈ Submodule.span ℝ {w v} :=
+      Submodule.mem_span_singleton.2 ⟨_, hb'.symm⟩
+    have hle1 : D ≤ Submodule.span ℝ {w v} := by
+      rw [← hspD, Submodule.span_le]
+      rintro y ⟨i, rfl⟩
+      fin_cases i
+      · exact hain
+      · exact hbin
+    have hle2 : Submodule.span ℝ {w v} ≤ D :=
+      Submodule.span_le.mpr (Set.singleton_subset_iff.mpr (hwD v hv))
+    have h1 : Module.finrank ℝ (Submodule.span ℝ {w v}) = 1 :=
+      finrank_span_singleton (hwne v hv)
+    have heq : Submodule.span ℝ {w v} = D := le_antisymm hle2 hle1
+    rw [heq] at h1
+    omega
+  -- 4. 逃逸参数 τ* = sup + 1 与逃逸向量
+  set rep : V3 → ℝ := fun v =>
+    if h : (T v).Nonempty then Classical.choose h else 0 with hrepdef
+  set τstar : ℝ := sSup (rep '' F) + 1 with hτdef
+  set ustar : V3 := a + τstar • b with hustardef
+  have huDstar : ustar ∈ D := Submodule.add_mem _ haD (Submodule.smul_mem _ _ hbD)
+  have hune : ustar ≠ 0 := by
+    intro hu0
+    rcases eq_or_ne τstar 0 with hτ0 | hτ0
+    · rw [hustardef, hτ0, zero_smul, add_zero] at hu0
+      exact hane hu0
+    · apply hbs
+      refine Submodule.mem_span_singleton.2 ⟨-1 / τstar, ?_⟩
+      have h2 : τstar • b = -a := eq_neg_of_add_eq_zero_right hu0
+      refine smul_right_injective V3 hτ0 ?_
+      show τstar • ((-1 / τstar) • a) = τstar • b
+      rw [smul_smul]
+      have hrat : (τstar : ℝ) * (-1 / τstar) = -1 := by field_simp
+      rw [hrat, neg_one_smul, h2]
+  -- 5. 正数缩放进指定球
+  have hunepos : 0 < ‖ustar‖ := norm_pos_iff.mpr hune
+  set c : ℝ := min 1 (eps / ‖ustar‖) with hcdef
+  have hcpos : 0 < c := by
+    rw [hcdef]
+    exact lt_min (by norm_num) (div_pos hε hunepos)
+  refine ⟨c • ustar, Submodule.smul_mem _ _ huDstar, ?_, ?_, ?_⟩
+  · intro h
+    have hz : ustar = 0 := smul_right_injective V3 (ne_of_gt hcpos)
+      (show c • ustar = c • (0 : V3) from by rw [h]; simp)
+    exact hune hz
+  · have h1 : ‖c • ustar‖ = c * ‖ustar‖ := by
+      rw [norm_smul, Real.norm_eq_abs, abs_of_pos hcpos]
+    have h2 : c ≤ eps / ‖ustar‖ := min_le_right _ _
+    rw [h1]
+    have h3 : c * ‖ustar‖ ≤ (eps / ‖ustar‖) * ‖ustar‖ := by
+      apply mul_le_mul_of_nonneg_right h2 (norm_nonneg _)
+    calc c * ‖ustar‖ ≤ (eps / ‖ustar‖) * ‖ustar‖ := h3
+      _ = eps := by field_simp
+  · intro v hv t ht hcon
+    have hct : ustar = (t / c) • w v := by
+      apply smul_right_injective V3 (ne_of_gt hcpos)
+      show c • ustar = c • ((t / c) • w v)
+      rw [hcon, smul_smul]
+      have hrat : c * (t / c) = t := by field_simp
+      rw [hrat]
+    have hτin : τstar ∈ T v := ⟨t / c, hct⟩
+    have hne : (T v).Nonempty := ⟨τstar, hτin⟩
+    have hrepin : Classical.choose hne ∈ T v := Classical.choose_spec hne
+    have hτeq : τstar = Classical.choose hne := hTsub v hv τstar hτin _ hrepin
+    have himg : rep v ∈ rep '' F := ⟨v, hv, rfl⟩
+    have hbd : BddAbove (rep '' F) := Set.Finite.bddAbove (Set.Finite.image rep hFin)
+    have hsup : rep v ≤ sSup (rep '' F) := le_csSup hbd himg
+    have hrv : rep v = Classical.choose hne := dif_pos hne
+    rw [hrv, ← hτeq] at hsup
+    have hτ1 : τstar = sSup (rep '' F) + 1 := rfl
+    linarith [hsup]
+
 /-- **情形 B2 全支**（capstone 的 `r₄ ≥ √2 ∧ r₃ ≥ √2` 分支，capstone 形）：
 X := `mcell 2 V vl`。
 **precisely-scoped 残余缺口（本件 `sorry`，2026-10-12 第四波记账）**：
