@@ -192,8 +192,8 @@ EOF3
     incmt { if ($0 ~ /^[+]-</ || $0 ~ /-\/[[:space:]]*$/) incmt = 0; next }
     { print }')
   [ -z "$rest" ] || fail "DEF-FIX: addition outside charter+refill markers: $(printf '%s' "$rest" | head -3)"
-  [ "$(( $(printf '%s\n' "$adds" | grep -cE '^[+][[:space:]]*sorry\b') - \
-          $(printf '%s\n' "$dels" | grep -cE '^-[[:space:]]*sorry\b') ))" \
+  [ "$(( $(printf '%s\n' "$adds" | grep -cE '^[+][[:space:]]*(·[[:space:]]+|\.[[:space:]]+)?sorry\b') - \
+          $(printf '%s\n' "$dels" | grep -cE '^-[[:space:]]*(·[[:space:]]+|\.[[:space:]]+)?sorry\b') ))" \
       -eq "${DF_SORRY_NET:-15}" ] \
     || fail "DEF-FIX: net new sorry != ${DF_SORRY_NET:-15}"
 else
@@ -319,7 +319,10 @@ if [ -n "$dels" ]; then
   cosmetic=""
   while IFS= read -r line; do
     [ -z "$line" ] && continue
-    case "$line" in '-'[[:space:]]*'sorry'*) continue ;; esac
+    # EVOLUTION 24 (2026-10-12): bullet-prefixed sorries (`· sorry`) are one
+    # consumed sorry each — optional tactic-bullet prefix recognized here and in
+    # the net/count patterns below (live case: PA24 B2 degenerate branch fill).
+    case "$line" in '-'[[:space:]]*'sorry'*|'-'[[:space:]]*'·'[[:space:]]*'sorry'*|'-'[[:space:]]*'.'[[:space:]]*'sorry'*) continue ;; esac
     case "$line" in '-'[[:space:]]*'--'*|'-'[[:space:]]*'/-'*|*'-'/) continue ;; esac
     body="${line#-}"
     printf '%s\n' "$cmt" | grep -qF -- "$body" && continue
@@ -335,12 +338,12 @@ EOF12
   if [ -z "$cosmetic" ]; then
     : # comments-only lane (NOTES-LANE generalization): waive
   else
-    printf '%s\n' "$dels" | grep -qE '^-[[:space:]]*sorry\b|:=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$' \
+    printf '%s\n' "$dels" | grep -qE '^-[[:space:]]*(·[[:space:]]+|\.[[:space:]]+)?sorry\b|:=[[:space:]]*(by[[:space:]]+)?sorry[[:space:]]*$' \
       || fail "no sorry consumed (theorem untouched?)"
   fi
 fi
 hard=$(printf '%s\n' "$dels" \
-  | grep -vE '^-[[:space:]]*sorry\b' \
+  | grep -vE '^-[[:space:]]*(·[[:space:]]+|\.[[:space:]]+)?sorry\b' \
   | grep -vE '^-$' \
   | grep -vE '^-[[:space:]]*(--|/-)' \
   | grep -vE '^-[[:space:]]*·[[:space:]]*--' \
@@ -469,8 +472,8 @@ filter_not_in(){ # usage: lines | filter_not_in <cmtset> — pass through lines
 # EVOLUTION 23 (2026-10-12): the DEF-FIX branch bypasses the normal-rule path
 # where $cmt (HEAD-side comment set) is defined; default it empty here so the
 # netting rule degrades gracefully (empty set filters nothing) on that path.
-nsorry_dels=$(printf '%s\n' "$dels" | grep -E '^-[[:space:]]*sorry\b' | filter_not_in "${cmt:-}" | grep -c . || true)
-nsorry_adds=$(printf '%s\n' "$adds" | grep -E '^[+][[:space:]]*sorry\b' | filter_not_in "$wcmt" | grep -c . || true)
+nsorry_dels=$(printf '%s\n' "$dels" | grep -E '^-[[:space:]]*(·[[:space:]]+|\.[[:space:]]+)?sorry\b' | filter_not_in "${cmt:-}" | grep -c . || true)
+nsorry_adds=$(printf '%s\n' "$adds" | grep -E '^[+][[:space:]]*(·[[:space:]]+|\.[[:space:]]+)?sorry\b' | filter_not_in "$wcmt" | grep -c . || true)
 if [ "${GATE_MODE:-}" = "DEF-FIX" ]; then
   # DEF-FIX: the net refill debt is charter-specified (§3a/§3b), not forbidden
   [ "$((nsorry_adds - nsorry_dels))" -eq "${DF_SORRY_NET:-15}" ] \
@@ -492,8 +495,8 @@ else
   # (live case: LA5 leaf-clearing wave +10/−18 → net −8). Netting applies the
   # 2026-09-28 net-count philosophy to the scaffold channel; net-new scaffolds
   # still require NEEDS accounting below.
-  bare_adds=$(printf '%s\n' "$adds" | grep -cE '^[+][[:space:]]*sorry\b[[:space:]]*$' || true)
-  bare_dels=$(printf '%s\n' "$dels" | grep -cE '^-[[:space:]]*sorry\b[[:space:]]*$' || true)
+  bare_adds=$(printf '%s\n' "$adds" | grep -cE '^[+][[:space:]]*(·[[:space:]]+|\.[[:space:]]+)?sorry\b[[:space:]]*$' || true)
+  bare_dels=$(printf '%s\n' "$dels" | grep -cE '^-[[:space:]]*(·[[:space:]]+|\.[[:space:]]+)?sorry\b[[:space:]]*$' || true)
   bare_new=$(( bare_adds > bare_dels ? bare_adds - bare_dels : 0 ))
   needs_docs=$(printf '%s\n' "$adds" | grep -cE -- '-- NEEDS' || true)
   [ "$bare_new" -le "${NEW_SORRY_ALLOW:-0}" ] \
