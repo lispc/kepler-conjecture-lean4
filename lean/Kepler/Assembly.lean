@@ -31,6 +31,7 @@ import Kepler.Text.PackingAuto25
 import Kepler.Text.Hypermap
 import Kepler.Text.ContraFan
 import Kepler.Text.LocalAuto16
+import Kepler.Text.TameLp
 import Kepler.Assembly.GoodListDefs
 import Kepler.Assembly.GoodListAll
 -- T1 自上而下第一波（2026-10-08）：六 ID 清单数据（P6-E 生成件，零依赖）+
@@ -40,6 +41,12 @@ import Kepler.Assembly.IneqPilot
 
 open Classical Metric Set
 open Kepler.Geom Kepler.Text Kepler.Text.Fan Kepler.Graphs
+
+-- 实例盾（2026-10-12 A7，随 `import Kepler.Text.TameLp` 引入）：TameLp 的闭包
+-- 带入全局实例 `LocalAuto2.dartDecEq2 : DecidableEq (V3 × V3)`，与本文件既有的
+-- `instDecidableEqProd` 解析竞争（§2c.8 A5 代码按后者钉死）。此处把 dartDecEq2
+-- 在本文件内降为 0 优先级 local instance，恢复 import 前的解析行为。
+attribute [local instance 0] dartDecEq2
 
 namespace Kepler.Assembly
 
@@ -708,13 +715,29 @@ theorem tameCorrespondenceIso {α : Type*} [DecidableEq α] (g : Graph) (H : Hyp
     (hiso : HypermapIso H H') (hIs : IsHypermapOfList g.fgraph H') : tame g := by
   sorry
 
-/-- 接口占位：HOL `Elllnyz.ELLLNYZ`（ELLLNYZ.hl）——镜像析取形，脊柱的图桥
-必须保持此形（phase6-spine.md §5）。`hypermap_of_list y` 侧为存在性产出。 -/
-theorem elllnyz (x y : fgraph ℕ) (hx : GoodList x) (hy : GoodList y)
-    (hiso : iso_fgraph x y) (Hx : Hypermap (ℕ × ℕ)) (hHx : IsHypermapOfList x Hx) :
-    ∃ Hy : Hypermap (ℕ × ℕ), IsHypermapOfList y Hy ∧
-      (HypermapIso Hx Hy ∨ HypermapIso (oppositeHypermap Hx) Hy) := by
-  sorry
+/-! 收获记录（elllnyz，2026-10-12 A7 填证 lane；原 2026-09-28 接口占位注记转此归档）：
+HOL `Elllnyz.ELLLNYZ`（ELLLNYZ.hl:548-587）已收口，定理块依依赖序移至 §2c.4'
+（本文件 `ell_isoOfHom`/`ell_reverseIso` 私件之后），陈述冻结逐字未动（块移动经
+逐字加回豁免合法化，先例 = A5 波 hypermapOfFanNeg 同款）。实战分解：proper 支 =
+`iso_fgraph` 的 is_pr_Iso 析取直接给面级 cong 匹配（`is_pr_Hom` 双向 + InjOn 折算成
+`x.flatten` 上的单射），跨图 `n_list`/`f_list` 共轭走「y 侧包含面的 findFace 唯一性
++ cong 旋转搬面 + `la7_prevEl_map`/rotate 不变式」三步，替代 HOL 的
+`CONG_hypermap_of_list` 字面超映射等式路线；improper 支 = 同一 proper 机器作用于
+y' = `MAP REVERSE y`（`la7_goodList_reverse` 供 GoodList）+ REVERSE 共轭件
+`ell_reverseIso`（ witnessing `nodeMap.symm`，燃料 = la7 face/node reverse 平移 +
+hypermapOfList 的三条点态群律 N·F=E / F·E=N⁻¹ / F⁻¹·N⁻¹=E，由 edge 对合 +
+comp_eq_one 纯置换代数导出）+ `hypermapIsoOpposite`/`oppositeHypermapOpposite`
+（§2c.4 现成件，= HOL `iso_opposite_adjoint`）。**本节依赖新增
+`import Kepler.Text.TameLp`**——原 playbook 挂账的编排者裁决项（import 方向），
+lane 落地前完成三项审计：①传递闭包（TameLp 闭包 112 模块零触及 Kepler.Assembly
+主模块，无环）；②命名空间（TameLp 全在 `Kepler.Text.TameLp` 内，不向本文件
+open 的命名空间注入新名）；③全局泄漏（TameLp 零 `@[simp]`/instance/abbrev）。
+回退方案 = 删 §2c.4' 节与移动后的定理块、原位恢复占位注记与接口骨架，其余零改动。
+下游消费点 textCapstone :2150-2152 镜像分支不受影响（签名未动）。 -/
+
+/-! （原接口占位文本，2026-09-28）：HOL `Elllnyz.ELLLNYZ`（ELLLNYZ.hl）——
+镜像析取形，脊柱的图桥必须保持此形（phase6-spine.md §5）。
+`hypermap_of_list y` 侧为存在性产出。theorem 本体现居 §2c.4'。 -/
 
 /-! 收获记录（hypermapOfFanNeg，2026-10-12 A5 填证 lane；原 2026-09-28 NEEDS 注记
 转此归档）：HOL ASFUTBF.hl:1007 `hypermap_of_fan_neg` 已收口。原四件套的实战分解：
@@ -784,6 +807,469 @@ theorem isoOppositeEq {α β : Type*} [DecidableEq α] [DecidableEq β]
         (oppositeHypermap (oppositeHypermap H')) := hypermapIsoOpposite h
     rw [oppositeHypermapOpposite, oppositeHypermapOpposite] at h2
     exact h2
+
+/-! ### 2c.4' ELLLNYZ 镜像析取 ∃-侧 kit（2026-10-12 A7 填证 lane）
+
+**本节依赖 `import Kepler.Text.TameLp`**（P6-C 构造层 `hypermapOfList` 所在）。
+import 方向原为 playbook 挂账的编排者裁决项（"Assembly import TameLp 前须核
+TameLp 闭包"）；本 lane 落地前完成三项审计：①传递闭包检查（TameLp 闭包 112 模块
+零个触及 `Kepler.Assembly` 主模块，无环）；②命名空间审计（TameLp 全文件位于
+`namespace Kepler.Text.TameLp`，不向本文件 open 的 `Kepler.Text`/`Kepler.Text.Fan`/
+`Kepler.Graphs` 注入任何新名）；③全局泄漏审计（TameLp 零 `@[simp]`、零 instance、
+零 abbrev）。若编排者裁决回退此 import，删除本节与移动后的 `elllnyz` 定理块、
+原位恢复收获注记即可，其余文件零改动。
+
+对照 HOL ELLLNYZ.hl:548-587（`ELLLNYZ`）：陈述的 ∃-侧 = `hypermap_of_list y` 的
+构造 + iso 析取。HOL 的 iso 函数是面级 cong 类匹配下的 pair-lift `φ̂ d = (φ d.1, φ d.2)`；
+本 kit 的核心 = `ell_isoOfHom`（跨图 findFace 唯一性论证，替代 HOL 的
+`CONG_hypermap_of_list` 字面超映射等式——Lean 侧 `hypermapOfList` 构造带
+`GoodList` 证明字段，字面等式路线需再走一遍 rotate 运输，不划算）。 -/
+
+/-- `List.rotate 1` 的 drop/take 展开式（listPairs 的定义体形态）。 -/
+private theorem ell_rotateOne (l : List ℕ) : l.rotate 1 = l.drop 1 ++ l.take 1 := by
+  cases l with
+  | nil => simp [List.rotate]
+  | cons a t =>
+    cases t with
+    | nil => simp [List.rotate]
+    | cons b s =>
+      have hmod : 1 % (s.length + 2) = 1 := Nat.mod_eq_of_lt (by omega)
+      simp [List.rotate, hmod]
+
+/-- dart 的两个分量都落在 `L.flatten` 里（lift 单射性的燃料）。 -/
+private theorem ell_mem_flatten_of_dart {L : fgraph ℕ} {d : ℕ × ℕ}
+    (hd : d ∈ listOfDarts L) : d.1 ∈ L.flatten ∧ d.2 ∈ L.flatten := by
+  unfold listOfDarts at hd
+  obtain ⟨s, hs, hds⟩ := List.mem_flatten.mp hd
+  obtain ⟨F, hF, hsF⟩ := List.mem_map.mp hs
+  rw [← hsF] at hds
+  have hdF : (d.1, d.2) ∈ listPairs F := hds
+  obtain ⟨h1, h2⟩ := List.of_mem_zip hdF
+  rw [← ell_rotateOne] at h2
+  exact ⟨List.mem_flatten.mpr ⟨F, hF, h1⟩, List.mem_flatten.mpr ⟨F, hF, List.mem_rotate.mp h2⟩⟩
+
+/-- pair-lift 在 dart 集上单射（φ 在 `L.flatten` 上单射时）。 -/
+private theorem ell_lift_inj {φ : ℕ → ℕ} {L : fgraph ℕ}
+    (hinj : ∀ u ∈ L.flatten, ∀ v ∈ L.flatten, φ u = φ v → u = v)
+    {a b : ℕ × ℕ} (ha : a ∈ listOfDarts L) (hb : b ∈ listOfDarts L)
+    (h : (φ a.1, φ a.2) = (φ b.1, φ b.2)) : a = b := by
+  obtain ⟨ha1, ha2⟩ := ell_mem_flatten_of_dart ha
+  obtain ⟨hb1, hb2⟩ := ell_mem_flatten_of_dart hb
+  rw [Prod.mk.injEq] at h
+  exact Prod.ext (hinj a.1 ha1 b.1 hb1 h.1) (hinj a.2 ha2 b.2 hb2 h.2)
+
+/-- 面内的 pair 都是 dart。 -/
+private theorem ell_listPairs_sub_darts {L : fgraph ℕ} {F : List ℕ} (hF : F ∈ L) :
+    ∀ d ∈ listPairs F, d ∈ listOfDarts L := by
+  intro d hd
+  exact List.mem_flatten.mpr ⟨listPairs F, List.mem_map.mpr ⟨F, hF, rfl⟩, hd⟩
+
+/-- `prevEl` 的旋转不变式（一般 n；`la7_prevEl_rotOne` 的归纳版）。 -/
+private theorem ell_prevEl_rotate {l : List (ℕ × ℕ)} (hn : l.Nodup) (n : ℕ) {x : ℕ × ℕ}
+    (hx : x ∈ l) : prevEl (l.rotate n) x = prevEl l x := by
+  induction n with
+  | zero => simp
+  | succ k ih =>
+    calc prevEl (l.rotate (k + 1)) x
+        = prevEl ((l.rotate k).rotate 1) x := by rw [List.rotate_rotate]
+      _ = prevEl (l.rotate k) x :=
+          TameLp.la7_prevEl_rotOne (List.nodup_rotate.mpr hn) (List.mem_rotate.mpr hx)
+      _ = prevEl l x := ih
+
+/-- `nextEl` 的旋转不变式（一般 n；`la7_nextEl_rotOne` 的归纳版）。 -/
+private theorem ell_nextEl_rotate {l : List (ℕ × ℕ)} (hn : l.Nodup) (n : ℕ) (x : ℕ × ℕ) :
+    nextEl (l.rotate n) x = nextEl l x := by
+  induction n with
+  | zero => simp
+  | succ k ih =>
+    calc nextEl (l.rotate (k + 1)) x
+        = nextEl ((l.rotate k).rotate 1) x := by rw [List.rotate_rotate]
+      _ = nextEl (l.rotate k) x :=
+          TameLp.la7_nextEl_rotOne (List.nodup_rotate.mpr hn) x
+      _ = nextEl l x := ih
+
+/-- `listPairs` 与 `map` 交换（HOL `list_pairs2` 的 map 形）。 -/
+private theorem ell_listPairs_map (g : ℕ → ℕ) (l : List ℕ) :
+    listPairs (l.map g) = (listPairs l).map (fun p : ℕ × ℕ => (g p.1, g p.2)) := by
+  unfold listPairs
+  rw [← List.map_drop, ← List.map_take, ← List.map_append, List.zip_map]
+  rfl
+
+/-- `listPairs` 与 `rotate` 交换（cong 搬面的钥匙）。 -/
+private theorem ell_listPairs_rotate (l : List ℕ) (n : ℕ) :
+    listPairs (l.rotate n) = (listPairs l).rotate n := by
+  have hlen : l.length = (l.drop 1 ++ l.take 1).length := by simp; omega
+  have hfold : listPairs l = List.zipWith Prod.mk l (l.drop 1 ++ l.take 1) :=
+    List.zip_eq_zipWith
+  calc listPairs (l.rotate n)
+      = List.zipWith Prod.mk (l.rotate n) ((l.rotate n).drop 1 ++ (l.rotate n).take 1) :=
+        List.zip_eq_zipWith
+    _ = List.zipWith Prod.mk (l.rotate n) ((l.rotate n).rotate 1) := by
+        rw [ell_rotateOne]
+    _ = List.zipWith Prod.mk (l.rotate n) (l.rotate (n + 1)) := by rw [List.rotate_rotate]
+    _ = List.zipWith Prod.mk (l.rotate n) ((l.rotate 1).rotate n) := by
+        rw [List.rotate_rotate, Nat.add_comm]
+    _ = (List.zipWith Prod.mk l (l.rotate 1)).rotate n :=
+        (List.zipWith_rotate_distrib Prod.mk l (l.rotate 1) n
+          (List.length_rotate l 1).symm).symm
+    _ = (List.zipWith Prod.mk l (l.drop 1 ++ l.take 1)).rotate n := by rw [ell_rotateOne l]
+    _ = (listPairs l).rotate n := by rw [hfold]
+
+/-- `hypermapOfList` 的 edge 置换是对合（dart 上 eList 自逆、dart 外恒等）。 -/
+private theorem ell_edgeMulSelf (L : fgraph ℕ) (hL : GoodList L) :
+    (TameLp.hypermapOfList L hL).edgeMap * (TameLp.hypermapOfList L hL).edgeMap = 1 := by
+  refine Equiv.Perm.ext fun d => ?_
+  by_cases hd : d ∈ (TameLp.hypermapOfList L hL).darts
+  · have hmem : eList d ∈ ((TameLp.hypermapOfList L hL).darts : Set (ℕ × ℕ)) := by
+      rw [TameLp.darts_hypermapOfList]
+      have hd' : d ∈ (↑(TameLp.hypermapOfList L hL).darts : Set (ℕ × ℕ)) := hd
+      rw [TameLp.darts_hypermapOfList] at hd'
+      exact hL.2.2 d hd'
+    rw [Equiv.Perm.mul_apply, TameLp.edgeMap_hypermapOfList L hL hd,
+      TameLp.edgeMap_hypermapOfList L hL hmem]
+    rfl
+  · rw [Equiv.Perm.mul_apply]
+    rw [(TameLp.hypermapOfList L hL).edgeMap_permutes d hd]
+    rw [(TameLp.hypermapOfList L hL).edgeMap_permutes d hd]
+    rfl
+
+/-- edge 对合超映射的群律一：`N·F = E`。 -/
+private theorem ell_nf_eq_e {α : Type*} [DecidableEq α] (K : Hypermap α)
+    (hE : K.edgeMap * K.edgeMap = 1) : K.nodeMap * K.faceMap = K.edgeMap := by
+  have h1 : K.edgeMap * (K.nodeMap * K.faceMap) = 1 := by
+    rw [← mul_assoc]; exact K.comp_eq_one
+  rw [eq_inv_of_mul_eq_one_right h1]
+  exact (eq_inv_of_mul_eq_one_right hE).symm
+
+/-- edge 对合超映射的群律二：`F·E = N⁻¹`。 -/
+private theorem ell_fe_eq_nsymm {α : Type*} [DecidableEq α] (K : Hypermap α)
+    (hE : K.edgeMap * K.edgeMap = 1) : K.faceMap * K.edgeMap = K.nodeMap.symm := by
+  have hNF := ell_nf_eq_e K hE
+  have hF : K.faceMap = K.nodeMap⁻¹ * K.edgeMap := by
+    calc K.faceMap = K.nodeMap⁻¹ * (K.nodeMap * K.faceMap) := (inv_mul_cancel_left _ _).symm
+      _ = K.nodeMap⁻¹ * K.edgeMap := by rw [hNF]
+  rw [hF, mul_assoc, hE, mul_one]
+  rfl
+
+/-- edge 对合超映射的群律三：`E·N = F⁻¹`。 -/
+private theorem ell_en_eq_fsymm {α : Type*} [DecidableEq α] (K : Hypermap α)
+    (hE : K.edgeMap * K.edgeMap = 1) : K.edgeMap * K.nodeMap = K.faceMap.symm := by
+  have hNF := ell_nf_eq_e K hE
+  have hN : K.nodeMap = K.edgeMap * K.faceMap⁻¹ := by
+    calc K.nodeMap = K.nodeMap * K.faceMap * K.faceMap⁻¹ := (mul_inv_cancel_right _ _).symm
+      _ = K.edgeMap * K.faceMap⁻¹ := by rw [hNF]
+  rw [hN, ← mul_assoc, hE, one_mul]
+  rfl
+
+/-- 主件：proper 同构（跨图 findFace 共轭）。
+面级 cong 匹配（`hForw`/`hBack`）+ φ 在 `x.flatten` 上单射 ⟹
+`Hx ≅ hypermapOfList y`，同构函数 = pair-lift `d ↦ (φ d.1, φ d.2)`。
+node/face 交换的核心：y 侧包含面经 `findFaceDarts_ex_of_self` + `hBack` 写成
+`(listPairs F).map lift` 的旋转，再经 `ell_prevEl_rotate` + `la7_prevEl_map`
+两级搬运回到 x 侧（HOL `CONG_hypermap_of_list` 的 Lean 替代形态）。 -/
+private theorem ell_isoOfHom (x y : fgraph ℕ) (φ : ℕ → ℕ)
+    (hx : GoodList x) (hy : GoodList y)
+    (hinj : ∀ u ∈ x.flatten, ∀ v ∈ x.flatten, φ u = φ v → u = v)
+    (hForw : ∀ F ∈ x, ∃ F' ∈ y, cong (F.map φ) F')
+    (hBack : ∀ F' ∈ y, ∃ F ∈ x, cong (F.map φ) F')
+    (Hx : Hypermap (ℕ × ℕ)) (hHx : TameLp.IsHypermapOfListTl x Hx) :
+    HypermapIso Hx (TameLp.hypermapOfList y hy) := by
+  have hxMem : ∀ d ∈ Hx.darts, d ∈ listOfDarts x := by
+    intro d hd
+    have h : d ∈ (↑Hx.darts : Set (ℕ × ℕ)) := hd
+    rw [hHx.darts_eq] at h
+    exact h
+  have hyMem : ∀ d ∈ listOfDarts y, d ∈ (TameLp.hypermapOfList y hy).darts := by
+    intro d hd
+    have h : d ∈ (↑(TameLp.hypermapOfList y hy).darts : Set (ℕ × ℕ)) := by
+      rw [TameLp.darts_hypermapOfList]; exact hd
+    exact h
+  -- 面旋转搬运：cong (F.map φ) F' 给出 pair 列表的旋转等式
+  have faceRot : ∀ F ∈ x, ∀ F' ∈ y, cong (F.map φ) F' →
+      ∃ n, listPairs F' =
+        ((listPairs F).map (fun d : ℕ × ℕ => (φ d.1, φ d.2))).rotate n := by
+    intro F hF F' hF' hc
+    obtain ⟨n, hn⟩ := hc
+    refine ⟨n, ?_⟩
+    rw [hn, ell_listPairs_rotate, ell_listPairs_map]
+  -- x-dart 的像落在 y-dart 集
+  have fwdMem : ∀ d ∈ listOfDarts x,
+      (φ d.1, φ d.2) ∈ listOfDarts y := by
+    intro d hd
+    obtain ⟨F, hF, hdF⟩ : ∃ F ∈ x, d ∈ listPairs F := by
+      obtain ⟨s, hs, hds⟩ := List.mem_flatten.mp hd
+      obtain ⟨F, hF, hsF⟩ := List.mem_map.mp hs
+      rw [← hsF] at hds
+      exact ⟨F, hF, hds⟩
+    obtain ⟨F', hF'y, hc⟩ := hForw F hF
+    obtain ⟨n, hn⟩ := faceRot F hF F' hF'y hc
+    have hm : (φ d.1, φ d.2) ∈ (listPairs F).map (fun d : ℕ × ℕ => (φ d.1, φ d.2)) :=
+      List.mem_map.mpr ⟨d, hdF, rfl⟩
+    have h2 : (φ d.1, φ d.2) ∈
+        ((listPairs F).map (fun e : ℕ × ℕ => (φ e.1, φ e.2))).rotate n :=
+      List.mem_rotate.mpr hm
+    rw [← hn] at h2
+    exact ell_listPairs_sub_darts hF'y _ h2
+  -- y-dart 的原像存在
+  have bwdMem : ∀ d' ∈ listOfDarts y, ∃ d ∈ listOfDarts x, (φ d.1, φ d.2) = d' := by
+    intro d' hd'
+    obtain ⟨F', hF'y, hdF'⟩ : ∃ F' ∈ y, d' ∈ listPairs F' := by
+      obtain ⟨s, hs, hds⟩ := List.mem_flatten.mp hd'
+      obtain ⟨F, hF, hsF⟩ := List.mem_map.mp hs
+      rw [← hsF] at hds
+      exact ⟨F, hF, hds⟩
+    obtain ⟨F, hFx, hc⟩ := hBack F' hF'y
+    obtain ⟨n, hn⟩ := faceRot F hFx F' hF'y hc
+    rw [hn] at hdF'
+    have hm : d' ∈ (listPairs F).map (fun d : ℕ × ℕ => (φ d.1, φ d.2)) :=
+      List.mem_rotate.mp hdF'
+    obtain ⟨p, hpf, hpl⟩ := List.mem_map.mp hm
+    exact ⟨p, ell_listPairs_sub_darts hFx p hpf, hpl⟩
+  refine ⟨(fun d => (φ d.1, φ d.2)), ?_, ?_⟩
+  · rw [hHx.darts_eq, TameLp.darts_hypermapOfList]
+    refine ⟨?_, ?_, ?_⟩
+    · intro d hd
+      exact fwdMem d hd
+    · intro a ha b hb heq
+      exact ell_lift_inj hinj ha hb heq
+    · intro d' hd'
+      obtain ⟨d, hd, hEq⟩ := bwdMem d' hd'
+      exact ⟨d, hd, hEq⟩
+  · intro d hd
+    have hdL : d ∈ listOfDarts x := hxMem d hd
+    have hdlift : (φ d.1, φ d.2) ∈ listOfDarts y := fwdMem d hdL
+    have hself : (φ d.1, φ d.2) ∈ findFaceDarts y (φ d.1, φ d.2) :=
+      (TameLp.dart_in_face y (φ d.1, φ d.2)).mpr hdlift
+    obtain ⟨F', hF'y, heqF', hmemF'⟩ := TameLp.findFaceDarts_ex_of_self hself
+    obtain ⟨F, hFx, hc⟩ := hBack F' hF'y
+    obtain ⟨n, hn⟩ := faceRot F hFx F' hF'y hc
+    rw [hn] at hmemF'
+    have hliftmem : (φ d.1, φ d.2) ∈ (listPairs F).map (fun e : ℕ × ℕ => (φ e.1, φ e.2)) :=
+      List.mem_rotate.mp hmemF'
+    obtain ⟨p, hpf, hpl⟩ := List.mem_map.mp hliftmem
+    have hpd : p = d := ell_lift_inj hinj (ell_listPairs_sub_darts hFx p hpf) hdL hpl
+    have hdF : d ∈ listPairs F := by rw [← hpd]; exact hpf
+    have hfdx : findFaceDarts x d = listPairs F := by
+      have h0 := TameLp.findFaceDarts_eq_of_mem hx.1 hFx hpf
+      rw [hpd] at h0
+      exact h0
+    have hinjF : ∀ u ∈ listPairs F, ∀ v ∈ listPairs F,
+        (φ u.1, φ u.2) = (φ v.1, φ v.2) → u = v := fun u hu v hv huv =>
+      ell_lift_inj hinj (ell_listPairs_sub_darts hFx u hu) (ell_listPairs_sub_darts hFx v hv) huv
+    have hndFF : (listPairs F).Nodup :=
+      TameLp.flatten_nodup_mem hx.1 (List.mem_map.mpr ⟨F, hFx, rfl⟩)
+    have hnodM : ((listPairs F).map (fun e : ℕ × ℕ => (φ e.1, φ e.2))).Nodup :=
+      TameLp.la7_nodup_map_on (l := listPairs F)
+        (f := fun e : ℕ × ℕ => (φ e.1, φ e.2)) hinjF hndFF
+    refine ⟨?_, ?_, ?_⟩
+    · -- edge
+      rw [TameLp.edgeMap_hypermapOfList y hy (hyMem _ hdlift), hHx.edgeMap_eq d hd]
+      rfl
+    · -- node
+      rw [TameLp.nodeMap_hypermapOfList y hy (hyMem _ hdlift), hHx.nodeMap_eq d hd]
+      show nList y (φ d.1, φ d.2) = (fun e : ℕ × ℕ => (φ e.1, φ e.2)) (nList x d)
+      unfold nList
+      rw [heqF', hn, ell_prevEl_rotate hnodM n hliftmem,
+        TameLp.la7_prevEl_map (f := fun e : ℕ × ℕ => (φ e.1, φ e.2)) hinjF hdF, hfdx]
+      rfl
+    · -- face
+      rw [TameLp.faceMap_hypermapOfList y hy (hyMem _ hdlift), hHx.faceMap_eq d hd]
+      show fList y (φ d.1, φ d.2) = (fun e : ℕ × ℕ => (φ e.1, φ e.2)) (fList x d)
+      unfold fList
+      rw [heqF', hn, ell_nextEl_rotate hnodM n (φ d.1, φ d.2),
+        TameLp.la7_nextEl_map (f := fun e : ℕ × ℕ => (φ e.1, φ e.2)) hinjF hdF, hfdx]
+
+/-- 私件：`HypermapIso` 传递（组合两同构，见证 `g ∘ f`）。 -/
+private theorem ell_isoTrans {α β γ : Type*} [DecidableEq α] [DecidableEq β] [DecidableEq γ]
+    {A : Hypermap α} {B : Hypermap β} {C : Hypermap γ}
+    (h1 : HypermapIso A B) (h2 : HypermapIso B C) : HypermapIso A C := by
+  obtain ⟨f, hbij, hcom⟩ := h1
+  obtain ⟨g, hbij', hcom'⟩ := h2
+  refine ⟨g ∘ f, Set.BijOn.comp hbij' hbij, ?_⟩
+  intro x hx
+  obtain ⟨he, hn, hfa⟩ := hcom x hx
+  have hfx : f x ∈ B.darts := hbij.1 hx
+  obtain ⟨he', hn', hfa'⟩ := hcom' (f x) hfx
+  refine ⟨?_, ?_, ?_⟩
+  · show C.edgeMap (g (f x)) = g (f (A.edgeMap x))
+    rw [he', he]
+  · show C.nodeMap (g (f x)) = g (f (A.nodeMap x))
+    rw [hn', hn]
+  · show C.faceMap (g (f x)) = g (f (A.faceMap x))
+    rw [hfa', hfa]
+
+/-- 私件：REVERSE 共轭件——`H_y' ≅ opposite H_y`，见证 `nodeMap.symm`。
+    点态群律 `N·F = E` / `F·E = N⁻¹` / `F⁻¹·N⁻¹ = E` + la7 face/node reverse 平移。 -/
+private theorem ell_reverseIso (y : fgraph ℕ) (hy : GoodList y) :
+    HypermapIso (TameLp.hypermapOfList (y.map List.reverse) (TameLp.la7_goodList_reverse y hy))
+      (oppositeHypermap (TameLp.hypermapOfList y hy)) := by
+  have hgood' : GoodList (y.map List.reverse) := TameLp.la7_goodList_reverse y hy
+  have hE := ell_edgeMulSelf y hy
+  have hNF : ∀ z : ℕ × ℕ, (TameLp.hypermapOfList y hy).nodeMap ((TameLp.hypermapOfList y hy).faceMap z)
+      = (TameLp.hypermapOfList y hy).edgeMap z := by
+    intro z
+    have := congrArg (fun q : Equiv.Perm (ℕ × ℕ) => q z) (ell_nf_eq_e _ hE)
+    rw [Equiv.Perm.mul_apply] at this
+    exact this
+  have hFE : ∀ z : ℕ × ℕ, (TameLp.hypermapOfList y hy).faceMap ((TameLp.hypermapOfList y hy).edgeMap z)
+      = (TameLp.hypermapOfList y hy).nodeMap.symm z := by
+    intro z
+    have := congrArg (fun q : Equiv.Perm (ℕ × ℕ) => q z) (ell_fe_eq_nsymm _ hE)
+    rw [Equiv.Perm.mul_apply] at this
+    exact this
+  have hFsN : ∀ z : ℕ × ℕ,
+      (TameLp.hypermapOfList y hy).faceMap.symm ((TameLp.hypermapOfList y hy).nodeMap.symm z)
+      = (TameLp.hypermapOfList y hy).edgeMap z := by
+    intro z
+    have h1 := ell_nf_eq_e (TameLp.hypermapOfList y hy) hE
+    have hEE : (TameLp.hypermapOfList y hy).edgeMap = (TameLp.hypermapOfList y hy).edgeMap.symm :=
+      eq_inv_of_mul_eq_one_right hE
+    have h2 : (TameLp.hypermapOfList y hy).faceMap⁻¹ * (TameLp.hypermapOfList y hy).nodeMap⁻¹
+        = (TameLp.hypermapOfList y hy).edgeMap := by
+      calc (TameLp.hypermapOfList y hy).faceMap⁻¹ * (TameLp.hypermapOfList y hy).nodeMap⁻¹
+          = ((TameLp.hypermapOfList y hy).nodeMap * (TameLp.hypermapOfList y hy).faceMap)⁻¹ :=
+            (mul_inv_rev _ _).symm
+        _ = (TameLp.hypermapOfList y hy).edgeMap⁻¹ := by rw [h1]
+        _ = (TameLp.hypermapOfList y hy).edgeMap := hEE.symm
+    have := congrArg (fun q : Equiv.Perm (ℕ × ℕ) => q z) h2
+    rw [Equiv.Perm.mul_apply] at this
+    exact this
+  refine ⟨(TameLp.hypermapOfList y hy).nodeMap.symm, ?_, ?_⟩
+  · rw [TameLp.darts_hypermapOfList_reverse y hy]
+    refine ⟨?_, ?_, ?_⟩
+    · intro d hd
+      exact (TameLp.hypermapOfList y hy).nodeMap_permutes.symm_apply_mem hd
+    · intro a _ b _ heq
+      exact Equiv.injective _ heq
+    · intro y' hy'
+      exact ⟨(TameLp.hypermapOfList y hy).nodeMap y',
+        (TameLp.hypermapOfList y hy).nodeMap_permutes.apply_mem hy',
+        Equiv.symm_apply_apply _ _⟩
+  · intro u hu
+    have huD : u ∈ (↑(TameLp.hypermapOfList y hy).darts : Set (ℕ × ℕ)) := by
+      rw [← TameLp.darts_hypermapOfList_reverse y hy]; exact hu
+    have huL : u ∈ listOfDarts y := by
+      rw [TameLp.darts_hypermapOfList] at huD; exact huD
+    have hEu : eList u ∈ (↑(TameLp.hypermapOfList y hy).darts : Set (ℕ × ℕ)) := by
+      rw [TameLp.darts_hypermapOfList]; exact hy.2.2 u huL
+    have hspecE : (TameLp.hypermapOfList y hy).edgeMap u = eList u :=
+      TameLp.edgeMap_hypermapOfList y hy huD
+    have hspecEu : (TameLp.hypermapOfList y hy).edgeMap (eList u) = eList (eList u) :=
+      TameLp.edgeMap_hypermapOfList y hy hEu
+    have hspecNu : (TameLp.hypermapOfList y hy).nodeMap (eList u) = nList y (eList u) :=
+      TameLp.nodeMap_hypermapOfList y hy hEu
+    have hspecF : (TameLp.hypermapOfList y hy).faceMap u = fList y u :=
+      TameLp.faceMap_hypermapOfList y hy huD
+    have hspecE' : (TameLp.hypermapOfList (y.map List.reverse) hgood').edgeMap u = eList u :=
+      TameLp.edgeMap_hypermapOfList (y.map List.reverse) hgood' hu
+    have hspecN' : (TameLp.hypermapOfList (y.map List.reverse) hgood').nodeMap u
+        = nList (y.map List.reverse) u :=
+      TameLp.nodeMap_hypermapOfList (y.map List.reverse) hgood' hu
+    have hspecF' : (TameLp.hypermapOfList (y.map List.reverse) hgood').faceMap u
+        = fList (y.map List.reverse) u :=
+      TameLp.faceMap_hypermapOfList (y.map List.reverse) hgood' hu
+    have hFEu : (TameLp.hypermapOfList y hy).faceMap (eList u)
+        = (TameLp.hypermapOfList y hy).nodeMap.symm u := by
+      have h1 := hFE u
+      rw [hspecE] at h1
+      exact h1
+    have hN'u : (TameLp.hypermapOfList (y.map List.reverse) hgood').nodeMap u
+        = (TameLp.hypermapOfList y hy).nodeMap.symm u := by
+      rw [show (TameLp.hypermapOfList (y.map List.reverse) hgood').nodeMap u
+          = (TameLp.hypermapOfList (y.map List.reverse) hgood').nodeMap (eList (eList u)) from rfl,
+        TameLp.nodeMap_hypermapOfList_reverse y hy (d := eList u) hEu]
+      exact hFEu
+    have hF'u : (TameLp.hypermapOfList (y.map List.reverse) hgood').faceMap u
+        = (TameLp.hypermapOfList y hy).nodeMap (eList u) := by
+      rw [show (TameLp.hypermapOfList (y.map List.reverse) hgood').faceMap u
+          = (TameLp.hypermapOfList (y.map List.reverse) hgood').faceMap (eList (eList u)) from rfl,
+        TameLp.faceMap_hypermapOfList_reverse y hy (d := eList u) hEu]
+    have hF'u' : fList (y.map List.reverse) u = (TameLp.hypermapOfList y hy).nodeMap (eList u) :=
+      hspecF'.symm.trans hF'u
+    refine ⟨?_, ?_, ?_⟩
+    · -- edge
+      rw [show (oppositeHypermap (TameLp.hypermapOfList y hy)).edgeMap
+          = (TameLp.hypermapOfList y hy).faceMap * (TameLp.hypermapOfList y hy).nodeMap from rfl,
+        Equiv.Perm.mul_apply, Equiv.apply_symm_apply, hspecF, hspecE']
+      rw [← hFE (eList u), hspecEu, ← hspecF]
+      rfl
+    · -- node
+      rw [show (oppositeHypermap (TameLp.hypermapOfList y hy)).nodeMap
+          = (TameLp.hypermapOfList y hy).nodeMap.symm from rfl, hN'u]
+    · -- face
+      rw [show (oppositeHypermap (TameLp.hypermapOfList y hy)).faceMap
+          = (TameLp.hypermapOfList y hy).faceMap.symm from rfl, hspecF', hF'u',
+        Equiv.symm_apply_apply, ← hspecE]
+      exact hFsN u
+
+/-- **接口 → 真证明（2026-10-12 A7 填证 lane）**：HOL `Elllnyz.ELLLNYZ`
+（ELLLNYZ.hl:548-587）——镜像析取形，脊柱的图桥必须保持此形（phase6-spine.md §5）。
+`hypermap_of_list y` 侧为存在性产出。HOL 两支：proper 支 =
+`good_list_iso_fgraph_proper`（面 cong 类匹配 ⟹ 跨图 `n_list`/`f_list` 共轭，
+本文件 `ell_isoOfHom`；Lean 侧无需 HOL 的 `CONG_hypermap_of_list` 字面等式——
+同构见证 pair-lift 直接构造）；improper 支 = iso 换向 `MAP REVERSE y`
+（`ell_isoOfHom` 作用于 y'）+ `hypermap_of_list_reverse` 的 eList-共轭语义
+（本文件 `ell_reverseIso`：REVERSE 束 + 三条点态群律）+
+`iso_opposite_adjoint`（= `hypermapIsoOpposite` + `oppositeHypermapOpposite`，
+均为本文件 §2c.4 件）。 -/
+theorem elllnyz (x y : fgraph ℕ) (hx : GoodList x) (hy : GoodList y)
+    (hiso : iso_fgraph x y) (Hx : Hypermap (ℕ × ℕ)) (hHx : IsHypermapOfList x Hx) :
+    ∃ Hy : Hypermap (ℕ × ℕ), IsHypermapOfList y Hy ∧
+      (HypermapIso Hx Hy ∨ HypermapIso (oppositeHypermap Hx) Hy) := by
+  obtain ⟨φ, hφ⟩ := hiso
+  unfold is_iso is_Iso at hφ
+  rcases hφ with hpr | himp
+  · -- proper 支
+    obtain ⟨hhom, hinjOn⟩ := hpr
+    have hflat : (⋃ F ∈ {F | F ∈ x}, {v | v ∈ F}) = {u | u ∈ x.flatten} := by
+      ext u
+      constructor
+      · intro hu
+        obtain ⟨F, hFx, huF⟩ := Set.mem_iUnion₂.mp hu
+        exact List.mem_flatten.mpr ⟨F, hFx, huF⟩
+      · intro hu
+        obtain ⟨F, hFx, huF⟩ := List.mem_flatten.mp hu
+        exact Set.mem_iUnion₂.mpr ⟨F, hFx, huF⟩
+    have hinj : ∀ u ∈ x.flatten, ∀ v ∈ x.flatten, φ u = φ v → u = v := by
+      intro u hu v hv huv
+      exact hinjOn (by rw [hflat]; exact hu) (by rw [hflat]; exact hv) huv
+    refine ⟨TameLp.hypermapOfList y hy,
+      ⟨(TameLp.hypermapOfList_isHypermapOfListTl y hy).darts_eq,
+        (TameLp.hypermapOfList_isHypermapOfListTl y hy).edgeMap_eq,
+        (TameLp.hypermapOfList_isHypermapOfListTl y hy).nodeMap_eq,
+        (TameLp.hypermapOfList_isHypermapOfListTl y hy).faceMap_eq⟩,
+      Or.inl (ell_isoOfHom x y φ hx hy hinj hhom.1 hhom.2 Hx
+        ⟨hHx.darts_eq, hHx.edgeMap_eq, hHx.nodeMap_eq, hHx.faceMap_eq⟩)⟩
+  · -- improper 支
+    obtain ⟨hhom, hinjOn⟩ := himp
+    rw [← set_map_reverse y] at hhom
+    have hy' : GoodList (y.map List.reverse) := TameLp.la7_goodList_reverse y hy
+    have hflat : (⋃ F ∈ {F | F ∈ x}, {v | v ∈ F}) = {u | u ∈ x.flatten} := by
+      ext u
+      constructor
+      · intro hu
+        obtain ⟨F, hFx, huF⟩ := Set.mem_iUnion₂.mp hu
+        exact List.mem_flatten.mpr ⟨F, hFx, huF⟩
+      · intro hu
+        obtain ⟨F, hFx, huF⟩ := List.mem_flatten.mp hu
+        exact Set.mem_iUnion₂.mpr ⟨F, hFx, huF⟩
+    have hinj : ∀ u ∈ x.flatten, ∀ v ∈ x.flatten, φ u = φ v → u = v := by
+      intro u hu v hv huv
+      exact hinjOn (by rw [hflat]; exact hu) (by rw [hflat]; exact hv) huv
+    have hHxTl : TameLp.IsHypermapOfListTl x Hx :=
+      ⟨hHx.darts_eq, hHx.edgeMap_eq, hHx.nodeMap_eq, hHx.faceMap_eq⟩
+    have comp := ell_isoTrans
+      (ell_isoOfHom x (y.map List.reverse) φ hx hy' hinj hhom.1 hhom.2 Hx hHxTl)
+      (ell_reverseIso y hy)
+    have conv := hypermapIsoOpposite comp
+    refine ⟨TameLp.hypermapOfList y hy,
+      ⟨(TameLp.hypermapOfList_isHypermapOfListTl y hy).darts_eq,
+        (TameLp.hypermapOfList_isHypermapOfListTl y hy).edgeMap_eq,
+        (TameLp.hypermapOfList_isHypermapOfListTl y hy).nodeMap_eq,
+        (TameLp.hypermapOfList_isHypermapOfListTl y hy).faceMap_eq⟩,
+      Or.inr ?_⟩
+    rw [oppositeHypermapOpposite] at conv
+    exact conv
 
 /-! ### 2c.5 `contravening_negative` 数据合取项私件（2026-09-28 脊柱 lane）
 
