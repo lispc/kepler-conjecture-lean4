@@ -252,10 +252,13 @@ theorem nliTskBank : tsk_bank := sorry
 
 /-- 中层骨架 1c：GRKIBMP 切片组（merge_ineq.hl:3795 add_hyp 序；
 PackingAuto21.lean:389，`GRKIBMP A V2` + `GRKIBMP B V2`，ineq.hl:1520/1537）。
-资产状态：**真缺口**——`GRKIBMP B V2` 属 16 条真残余清单（尖锐边界组：
-有真反例叶，需 ε 余量或弱编码，STATUS.md Phase 4）。
--- NEEDS: A V2 出证书；B V2 定策略（ε 余量/弱编码/域剖分）后重解。 -/
-theorem nliGrkBank : grk_bank := sorry
+资产状态：**两半均已 PA21 解析手证闭合**（2026-10-12：A V2 =
+`bank_GRKIBMPAV2_proof` h0cut 三分+三倍角 arccos 种子+mm1 双侧围闭；
+B V2 = `bank_GRKIBMPBV2_proof` 因式分解+单调+mm1<4/3 种子——尖锐边界组
+两枚 residue16 销账，81 条记账"1c 两条"清零）。
+-- RESOLVED: nliGrkBank := ⟨A V2, B V2⟩ 一行装配（编排者机械收口）。 -/
+theorem nliGrkBank : grk_bank :=
+  ⟨bank_GRKIBMPAV2_proof, bank_GRKIBMPBV2_proof⟩
 
 /-- 中层骨架 1d：81 条清单的其余 62 条 rest 叶（PackingAuto21.lean:395
 `PLACEHOLDER(G4)`；JSPEVYT/IXPOTPA/TXQTPVC/TEWNSCJ/QITNPEA 家族/
