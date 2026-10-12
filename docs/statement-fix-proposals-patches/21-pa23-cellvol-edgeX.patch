@@ -1,3 +1,11 @@
+# 【2026-10-12 应用波核账】本补丁(执行版)已随 3aef75fa + 2bc2134c(2026-09-30,
+#   用户已批准, GATE_MODE=STATEMENT-FIX 过)应用落地: index 行 346893c1..935add32
+#   与两 commit 的 PA23 blob 逐一对上(3aef75fa 的 PA23 blob = 2bc2134c^ 同 blob,
+#   中间 commit 未触 PA23), 以 346893c1 为基 patch -p1 应用产物与 935add32
+#   逐字节一致(机器实证); 现树 PA23:4309 grutoti_cell_vol 签名已带
+#   (he : {u0,u1} ∈ edgeX V X) 且 (X : Set V3) 在 he 之前(binder 换序修正,
+#   见 2bc2134c)。lake build Kepler.Text.PackingAuto23 自然退出 0 error
+#   (2026-10-12)。【不可再贴/勿再走闸】——留档备查(提案 §21(d))。
 diff --git a/lean/Kepler/Text/PackingAuto23.lean b/lean/Kepler/Text/PackingAuto23.lean
 index 346893c1..935add32 100644
 --- a/lean/Kepler/Text/PackingAuto23.lean

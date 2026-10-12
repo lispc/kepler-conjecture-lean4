@@ -952,6 +952,22 @@ capstone `GRUTOTI` 内一处（补丁 ③）。属 GT-2/GT-3/GT-4 收口时
 ### (f) 状态：草案待审（2026-09-29 GT-2 lane 产出；补丁可贴性已验，
 编译 0 error；应用待编排者 GATE_MODE=STATEMENT-FIX）。
 
+### (g) 状态（2026-10-12 用户批准；应用波复核记录）：批准见
+docs/projects/sf-decision-batch-2026-10-12.md 项 18。续作车道（PA23）复核
+发现本修复**已随 `54fe4ee2`（2026-09-30，用户批准 2026-09-30）应用落地**，
+(f) 的"草案待审"状态行已过时：机器实证——以 54fe4ee2^ 为基 `git apply`
+本补丁成功，且应用产物与 54fe4ee2 树的 PackingAuto23.lean **逐字节一致**
+（对现树 `git apply --check` 拒贴，真因是修复已在树而非行号漂移）。现树
+PA23:6386-6388 `grutoti_volD_pos` 已带 `(hne : u0 ≠ u1)`、体 =
+`volumeConicCapPos hr hd hd1 hne`（零 sorry），capstone 调用点 PA23:6407
+已补传 `hne`，`import Kepler.Text.ConicCapVolume` 已在（PA23:205）；
+全树零外部代码消费者复核依旧成立（ConicCapVolume 两处提及均为 docstring；
+其后 GT-3d/e/f、SF 28/29/31/32/33 诸波均在该基线上继续演进，本修复无再
+应用面）。`lake build Kepler.Text.PackingAuto23` 自然退出 0 error
+（2026-10-12）。**工作树对该文件零 diff——无重起草应用波可执行，
+STATEMENT-FIX 闸无需再走**；补丁 18-grutoti_volD_pos.patch 转历史存档
+（头注已核账），不可再贴。
+
 ## 附：GT-2 lane 同批侦察发现（未立项，供编排者定夺）
 
 **`grutoti_sum_volD`（PA23:283-289）冻结签名缺 `Packing V`/`saturated V`**：
@@ -1020,6 +1036,24 @@ k=2 核走 `volumeConicCapWedge` + mcell2 形；k=3 走 `AZIM_COMPL_EXT`
 ### (c) 状态：**草案待审**（2026-09-30 GT-3b/c 波立案 `11 私件已落
 （公理全净），cell_vol 退化臂已内联闭合；应用建议与 ②③ 及 pivot 填充波
 同批，待用户拍板）。
+
+### (d) 状态（2026-10-12 用户批准；应用波复核记录）：批准见
+docs/projects/sf-decision-batch-2026-10-12.md 项 21。续作车道（PA23）复核
+发现本修复**已随 `3aef75fa`（2026-09-30，用户已批准，GATE_MODE=STATEMENT-FIX
+过）应用落地**——签名补 `(he : {u0, u1} ∈ edgeX V X)`（执行形把 (b) 节
+`e ∈ edgeX V X` 具象为 `{u0,u1} ∈ edgeX V X`，与 (a) 节 §D–§H 边胞语境
+等价）；同日 `2bc2134c` 修正 binder 换序（`(X : Set V3)` 提到 `he` 之前——
+autoImplicit 下 `he` 类型里的 X 曾炼成哑变量致前提空转；SF 28/29 立案随该波
+记档）。机器实证：归档补丁 21-pa23-cellvol-edgeX.patch 即 `2bc2134c` 执行版
+diff——patch index 行 `346893c1..935add32` 与 `git rev-parse` 取自
+3aef75fa / 2bc2134c 两 commit 的 PA23 blob 逐一对上（3aef75fa 的 PA23 blob
+= 2bc2134c^ 同 blob，中间 commit 未触 PA23），以 346893c1 为基 `patch -p1`
+应用产物与 935add32 **逐字节一致**；对现树 `git apply --check` 拒贴，真因是
+修复已在树而非行号漂移。现树 PA23:4309-4312 前提面就位（X 在 he 前）；前提
+面后由 SF 28/29 续补（hp/hw1/hw3/hw4/hjunk），k=2/3/4 本体已随 GT-3f 收口
+（`0c0df90b`，本体 sorry 3→0）。`lake build Kepler.Text.PackingAuto23`
+自然退出 0 error（2026-10-12）。**工作树对该文件零 diff——无重起草应用波
+可执行，STATEMENT-FIX 闸无需再走**；补丁转历史存档（头注已核账），不可再贴。
 
 ## 22. PA22 `ARG_ORDER` 用 `Complex.arg`（值域 (−π,π]）而 flyspeck 依赖 [0,2π) 的 `Arg`——为假
 

@@ -1,3 +1,10 @@
+# 【2026-10-12 应用波核账】本补丁已随 54fe4ee2(2026-09-30, STATEMENT-FIX 项 18,
+#   用户批准)应用落地; 机器实证: 以 54fe4ee2^ 为基 git apply 本品成功且产物与
+#   54fe4ee2 树的 PackingAuto23.lean 逐字节一致; 现树 PA23:6386 grutoti_volD_pos
+#   已带 (hne : u0 ≠ u1)、体 = volumeConicCapPos hr hd hd1 hne(零 sorry),
+#   capstone PA23:6407 已补传 hne, import ConicCapVolume 已在(PA23:205)。
+#   lake build Kepler.Text.PackingAuto23 自然退出 0 error(2026-10-12)。
+#   【不可再贴/勿再走闸】——留档备查(提案 §18(g))。
 --- a/lean/Kepler/Text/PackingAuto23.lean
 +++ b/lean/Kepler/Text/PackingAuto23.lean
 @@ -58,6 +58,7 @@
