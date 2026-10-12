@@ -5,6 +5,23 @@
 > 实时看板 = `STATUS.md`，债务刻度 = `DEBT.md`，决策日志 = `DECISIONS.md`。
 > 车道工人开工另必读 `docs/fill-worker-playbook.md`。
 
+
+---
+
+## ⚡ 当前状态速览（2026-10-13，编排者更新；细节见 e2e-debt-map 2026-10-12/13 两增量节）
+
+- **三件真数学全部清账**（GRKIBMP 组 / PA24 B2 / AJRIPQN；§4 风险排序已过时——
+  真数学缺口已被 AJRIPQN 顶替后也清账，pivot 反向勘误为早已闭合）。
+- **脊柱接口**：A1/A2/A3/A4/A5 已清；剩 A6（柱①✅柱②过半柱③ GIANT）/A7/A8/A9
+  （tame GIANT，B1 地基 9 批 :23-5579 全落）/A10（arc kit 五步路线在盘）/A11/A12（数据）。
+- **A12/C1**：C1 收官（钉定 schema/Farkas checker/infeasible 占位退役/试点+编译
+  区间钉窄 [34,61]s）；**root 区 19,237 条预灌装 runner 长跑中**（/Users/zhangzhuo/lprun/
+  PID 50866，~184 条/时，监控 MONITOR.md）；C1.5 G6 生成器已落；余 G5 族解析+批末收口。
+- **Phase 4**：常驻车道滚动（W1-W3：stage-A 根因修复+首次完整 TM 遍历；BIXPCGW
+  split_0_2 前半 CLOSED；sqrt 族 BBTreeGD 裁决不成立=第三武器立项依据）。
+- **周配额事件**：10-13 凌晨 1310 三线阵亡，续波队列在编排者 todo；root runner
+  不受影响。
+
 ---
 
 ## 0. 30 秒速览

@@ -817,3 +817,38 @@ Subtype 命名空间；㉑`div_mul_cancel` 是 Group 类（ℚ 不可用，field
 - **闸门方法论**：九闸级联循环（动态 LANE_FILES+每 5-7 分钟探绿窗）扛住
   六线热写；规则 ② 判"删除定理声明"违规→声明移除必须走 SF（跨文件正本
   不可见）；PA17 shim 破坏由链构建抓出。
+
+### 5.4'' 2026-10-12/13 mega 会话累计雷区（LA5/PA7/PA15/PA24/PA25/A2/A6/A10/TameSpine/LP/编排者实录）
+
+**编排者/闸**：①salvage 探针退出码禁经管道取（`$?` 是 tail 的）；②salvage 提交前
+核 staged 集（TameList8 误卷两犯→路径限定 commit 强制）；③`set_option…in` 插
+docstring 后报错位置误导看 token；④gate EV24=bullet 前缀 sorry 识别、EV22/23=
+DF_ANCHORS 可覆盖+DEF-FIX $cmt 兜底；⑤STATEMENT-FIX 多文件补丁的闸只验
+positional 文件节，其余文件靠 root 闭包构建背书；⑥周/月配额（1310）与小 时帽
+（1308）双轨：周帽阵亡线的 /tmp 遗产在重置后仍可用。
+
+**LA5/azim 族**：⑦`hl` 遮蔽陷阱（obtain 清 binder 后裸名解析到全局 `hl :
+List V3 → ℝ`，先 have hlkeep）；⑧azimSpec 运输防 isDefEq 下潜：先 rw [hpθ] 换
+纯 θ 再 apply；⑨`linear_combination (norm := module)` 对向量系数方程不可靠走
+确定性 rw；⑩Convex ℝ intro 参序 sum 在最后；⑪`_root_.Equiv.refl` 全限定
+（Hypermap:6221/Fan:1095 前缀占用）。
+
+**WithLp/V3 点积族**：⑫Finset-和陈述必须 `((∑ j ∈ s, f j : V3)) ⬝ᵥ c` 形防拉到
+pi 层（PA7 p7_sum_dot_left kit 全树首件）；⑬dotProduct_smul 产 `x • (标量)` 需
+smul_eq_mul；⑭Hypothesis 里点积固化为 `.ofLp ⬝ᵥ (q.ofLp - x.ofLp)` Pi 投影形，
+跨形状须 congrArg 造镜像方程；⑮add_dotProduct=左加/dotProduct_add=右加。
+
+**TameSpine 族**：⑯`List.mem_map` 本版 `∃ a ∈ l, f a = b` 形；⑰Prop 谓词 filter
+的 decide 桥+def noncomputable 忠实镜像；⑱res 裸名被 Kepler.Text.res 遮蔽（全限定
+Fan.res）；⑲Perm 幂应用写 ((π^n) d)；⑳statement 位 (by…) 只见声明绑定器——
+zip-len 事实作显式假设绑定器传入（批 9 §5 处方）；㉑res 裸名/Graph 撞名/
+PermutesOn 双参。
+
+**LP 管线**：㉒`String.split` 返回 Std.Iter 非 List（内核可判字符串走
+toList+List 递归）、`String.mk`→ofList；㉓Farkas decide 161 实例规模默认心跳
+超时（发射模板必须 maxHeartbeats 0）；㉔SoPlex 8.1.0 vs 8.0.3 证书位宽差 3.5×
+（强机器波钉版本+D_bits 入账）。
+
+**根式/数值族**：㉕field_simp 对 √8 幂形状漂移——确定性路线=mul_right_cancel₀
+乘正因子+mul_self_sqrt calc+ring；㉖数值种子用半角双角或三倍角（模板
+p21_arccos_one_third_le_1231），Mathlib 只有 sin 下界 Taylor。
