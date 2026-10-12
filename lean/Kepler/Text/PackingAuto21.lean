@@ -366,6 +366,17 @@ def bank_GRKIBMPAV2 : Prop :=
     1 ≤ y3 → y3 ≤ 1 → 1 ≤ y4 → y4 ≤ 1 → 1 ≤ y5 → y5 ≤ 1 → 1 ≤ y6 → y6 ≤ 1 →
     0.008 < yOfX (gamma2x1DivAV2 (h0cut y1)) y1 y2 y3 y4 y5 y6
 
+-- NEEDS (grkibmb scout lane W1, 2026-10-12): A V2 stays deferred to the
+-- certificate-data wave (G4).  bb_arb closed the entry at the solver level
+-- (rc=0, 21 leaves; dReal unsat — pipeline/interval/out/bbarb_results2.txt:118,
+-- dreal_results.txt:133), but those are run logs, not per-leaf certificates:
+-- no emit_lean.py output for this idv exists in the tree to glue against the
+-- §2a lookup table.  An analytic route also exists (h0cut split at 2*h0:
+-- m=1 arm linear-lfun, m=0 arm shares the B V2 kernel factored in
+-- `bank_GRKIBMPBV2_proof`; ~120-300 lines, scout §2.2) but is out of this
+-- wave's scope by charter.  Update the Assembly-side ledger (Assembly.lean
+-- `nliGrkBank` NEEDS note) accordingly once the B V2 half lands.
+
 /-- HOL ineq entry `GRKIBMP B V2` (ineq.hl:1537).  Box
 [2hplus,√8]×[1,1]⁵. -/
 def bank_GRKIBMPBV2 : Prop :=
@@ -1055,6 +1066,190 @@ theorem GRKIBMP : grk_bank → GRKIBMP_concl := by
     rw [p21_h0cutB y (by linarith [p21_h0_lt_hplus, hge])]
     exact hB y 1 1 1 1 1 hge hy8 le_rfl le_rfl le_rfl le_rfl le_rfl
       le_rfl le_rfl le_rfl le_rfl le_rfl
+
+/-! ## MERGE-INEQ wave 1+: the GRKIBMP B V2 bank entry, proved by hand
+(grkibmb scout lane W1, 2026-10-12; docs/scouts/grkibmb-scout.md §2.1)
+
+`bank_GRKIBMPBV2` is the sharp-edge entry: its kernel vanishes exactly at
+the box corner y1 = √8 (both the `8 - x` and the `1 - √x/√8` factors die
+there), so no interval subdivision can separate 0 — the hand proof walks
+the factorization instead.  Structure (scout §2.1): for `y = y1 ∈
+[2hplus, √8]`, `gamma2_x_div_azim_v2 0 (y*y) = (√8-y) * [(√8+y)y/24 -
+4·mm1/(π·√8)]`; the first factor is ≥ 0 by the box, and the bracket is
+minimized at y = 2hplus where the numeric seed `p21_mm1_lt_four_thirds`
+(mm1 ≈ 1.0121 < 4/3) leaves a comfortable slack after cross-multiplication.
+
+The seed upgrades the PA20 `HJKDESR1a_1cell` bound (mm1 < π√2/3): the
+crude `arccos(1/3) ≤ π/2 - 1/3` is not enough for `mm1 < 4/3`, so we take
+the sin-Taylor one step further via Mathlib's cubic lower bound
+`Real.sin_ge_sub_cube` at the half angle — `cos(2u) = 1 - 2·sin²u ≤
+1 - 2(u - u³/6)² < 1/3` for `u = 247/400` — giving `arccos(1/3) ≤ 247/200`
+and hence `sol0 ≤ 3·247/200 - π`. -/
+
+/-- Stepping stone for `p21_mm1_lt_four_thirds`: `arccos(1/3) ≤ 247/200`.
+From `Real.sin_ge_sub_cube` at `u = 247/400` (`sin u ≥ u - u³/6 > 0`),
+`cos(247/200) = 1 - 2·sin²u ≤ 1 - 2(u - u³/6)² < 1/3` (rational check),
+then antitonicity of `arccos`. -/
+private theorem p21_arccos_one_third_le : Real.arccos (1 / 3 : ℝ) ≤ 247 / 200 := by
+  have hpi : (3.14:ℝ) < Real.pi := Real.pi_gt_d2
+  have hcos : Real.cos (247 / 200) ≤ 1 / 3 := by
+    have hsb := Real.sin_ge_sub_cube (by norm_num : (0:ℝ) ≤ 247 / 400)
+    have hpos : (0:ℝ) < 247 / 400 - (247 / 400) ^ 3 / 6 := by norm_num
+    have hsq : (247 / 400 - (247 / 400) ^ 3 / 6) ^ 2 ≤ (Real.sin (247 / 400)) ^ 2 :=
+      pow_le_pow_left₀ (by norm_num) hsb 2
+    have hhalf := Real.sin_sq_eq_half_sub (x := 247 / 400)
+    have h2 : (2:ℝ) * (247 / 400) = 247 / 200 := by norm_num
+    have hE : Real.cos (247 / 200) = 1 - 2 * (Real.sin (247 / 400)) ^ 2 := by
+      rw [← h2, hhalf]; ring
+    rw [hE]
+    have hkey : (1:ℝ) / 3 < (247 / 400 - (247 / 400) ^ 3 / 6) ^ 2 := by norm_num
+    linarith
+  have hstep : Real.arccos (1 / 3) ≤ Real.arccos (Real.cos (247 / 200)) :=
+    Real.arccos_le_arccos hcos
+  rw [Real.arccos_cos (by linarith) (by linarith)] at hstep
+  exact hstep
+
+/-- Numeric seed for the GRKIBMP slice: `mm1 < 4/3` (mm1 ≈ 1.0121).
+Strengthens PA20's `HJKDESR1a_1cell` (`mm1 < π·√2/3`), which is insufficient
+here.  Chain: `sol0 = 3·arccos(1/3) - π ≤ 3·247/200 - π` (stepping stone
+above), then `mm1 < 4/3 ⟺ sol0·(3√8+80) < 16π` via `tau0 = 4π - 20·sol0`,
+closed by the everywhere-positive split `π(3√8+96) - 3·(247/200)(3√8+80)
+= (3√8+96)(π - 3.14) + (5.04 - 1.695·√8)` with `3.14 < π` and `√8 ≤ 2.829`
+(positive remainder ≈ 0.245). -/
+private theorem p21_mm1_lt_four_thirds : mm1 < 4 / 3 := by
+  have hpi : (3.14:ℝ) < Real.pi := Real.pi_gt_d2
+  have hs8le : Real.sqrt 8 ≤ (2.829:ℝ) :=
+    (Real.sqrt_le_left (by norm_num)).mpr (by norm_num)
+  have har := p21_arccos_one_third_le
+  have hsol : sol0 ≤ 3 * (247 / 200) - Real.pi := by
+    have h0 : sol0 = 3 * Real.arccos (1 / 3) - Real.pi := rfl
+    linarith
+  have htaupos : (0:ℝ) < tau0 := by
+    have h0 : tau0 = 4 * Real.pi - 20 * sol0 := rfl
+    linarith
+  have hs8nn : (0:ℝ) ≤ Real.sqrt 8 := Real.sqrt_nonneg 8
+  have hkey : sol0 * (3 * Real.sqrt 8 + 80) < 16 * Real.pi := by
+    have hmul : sol0 * (3 * Real.sqrt 8 + 80)
+        ≤ (3 * (247 / 200) - Real.pi) * (3 * Real.sqrt 8 + 80) :=
+      mul_le_mul_of_nonneg_right hsol (by linarith)
+    have hE1 : (3 * (247 / 200) - Real.pi) * (3 * Real.sqrt 8 + 80)
+        = 3 * (247 / 200) * (3 * Real.sqrt 8 + 80)
+          - Real.pi * (3 * Real.sqrt 8 + 80) := by ring
+    have hE2 : Real.pi * (3 * Real.sqrt 8 + 96)
+        = Real.pi * (3 * Real.sqrt 8 + 80) + 16 * Real.pi := by ring
+    have hE3 : Real.pi * (3 * Real.sqrt 8 + 96)
+        - 3 * (247 / 200) * (3 * Real.sqrt 8 + 80)
+        = (3 * Real.sqrt 8 + 96) * (Real.pi - 3.14)
+          + (5.04 - 1.695 * Real.sqrt 8) := by ring
+    have h1 : (0:ℝ) ≤ (3 * Real.sqrt 8 + 96) * (Real.pi - 3.14) :=
+      mul_nonneg (by linarith) (by linarith)
+    have h2 : (0:ℝ) < 5.04 - 1.695 * Real.sqrt 8 := by linarith
+    have hpos1 : (0:ℝ) < Real.pi * (3 * Real.sqrt 8 + 96)
+        - 3 * (247 / 200) * (3 * Real.sqrt 8 + 80) := by
+      rw [hE3]; linarith
+    rw [hE1] at hmul
+    linarith
+  have hmm1 : mm1 = sol0 * Real.sqrt 8 / tau0 := rfl
+  have h3 : (0:ℝ) < 3 := by norm_num
+  have hstep : sol0 * Real.sqrt 8 < (4 / 3) * tau0 := by
+    rw [show (4/3:ℝ) * tau0 = 4 * tau0 / 3 from by ring, lt_div_iff₀ h3]
+    have hsplit : 4 * tau0 = 16 * Real.pi - 80 * sol0 := by
+      have h0 : tau0 = 4 * Real.pi - 20 * sol0 := rfl
+      rw [h0]; ring
+    have hprod : sol0 * Real.sqrt 8 * 3 = sol0 * (3 * Real.sqrt 8 + 80)
+        - 80 * sol0 := by ring
+    linarith
+  rw [hmm1]
+  exact (div_lt_iff₀ htaupos).mpr hstep
+
+/-- The sharp-edge GRKIBMP B V2 bank entry (HOL `GRKIBMP B V2`,
+ineq.hl:1537-1552; sharp.hl:246 proves the corner equality), PROVED by hand
+— no certificate needed.  Proof: the `y2..y6 ∈ [1,1]` box closes by
+`le_rfl` inside `gamma2x1DivAV2` (projection to `y1`, via the rfl bridge
+`p21_nonf_gamma2x1DivAV2_yOfX`); with `m = 0` the mm2/lfun term dies and
+`√(y1²) = y1`; the kernel factors as `(√8-y1)·[(√8+y1)y1/24 -
+4mm1/(π√8)]`; the first factor is nonnegative by the box, the bracket is
+bounded below at `y1 = 2hplus` by monotone growth of `(√8+y)y`, and
+`96·mm1 < 128 ≤ (√8+2hplus)·2hplus·π·√8` (numeric seed
+`p21_mm1_lt_four_thirds` + `π > 3.14`, `√8 > 2.828`, `(√8)² = 8`)
+cross-multiplies to the bracket's nonnegativity. -/
+theorem bank_GRKIBMPBV2_proof : bank_GRKIBMPBV2 := by
+  intro y1 y2 y3 y4 y5 y6 hy1 hy8 _ _ _ _ _ _ _ _ _ _
+  have hppos : (0:ℝ) < hplus := by norm_num [hplus]
+  have hpi : (3.14:ℝ) < Real.pi := Real.pi_gt_d2
+  have hs8nn : (0:ℝ) ≤ Real.sqrt 8 := Real.sqrt_nonneg 8
+  have h0y1 : 0 ≤ y1 := by linarith
+  have hsqrt1 : Real.sqrt (y1 * y1) = y1 := Real.sqrt_mul_self h0y1
+  have hrw : (8 - y1 * y1) * y1 / 24
+        - 2 * (2 * mm1 / Real.pi) * (1 - y1 / Real.sqrt 8)
+      = (Real.sqrt 8 - y1)
+        * ((Real.sqrt 8 + y1) * y1 / 24 - 4 * mm1 / (Real.pi * Real.sqrt 8)) := by
+    have hsq8 : Real.sqrt 8 * Real.sqrt 8 = 8 := Real.mul_self_sqrt (by norm_num)
+    have hquad : (Real.sqrt 8 - y1) * (Real.sqrt 8 + y1) = 8 - y1 * y1 := by
+      calc (Real.sqrt 8 - y1) * (Real.sqrt 8 + y1)
+          = Real.sqrt 8 * Real.sqrt 8 - y1 * y1 := by ring
+        _ = 8 - y1 * y1 := by rw [hsq8]
+    have hden : (24:ℝ) * (Real.pi * Real.sqrt 8) ≠ 0 := by positivity
+    refine mul_right_cancel₀ hden ?_
+    have e1 : ((8 - y1 * y1) * y1 / 24
+          - 2 * (2 * mm1 / Real.pi) * (1 - y1 / Real.sqrt 8))
+        * ((24:ℝ) * (Real.pi * Real.sqrt 8))
+        = (8 - y1 * y1) * y1 * (Real.pi * Real.sqrt 8)
+          - 96 * mm1 * (Real.sqrt 8 - y1) := by
+      field_simp
+      ring
+    have e2 : ((Real.sqrt 8 - y1)
+          * ((Real.sqrt 8 + y1) * y1 / 24 - 4 * mm1 / (Real.pi * Real.sqrt 8)))
+        * ((24:ℝ) * (Real.pi * Real.sqrt 8))
+        = (Real.sqrt 8 - y1) * (Real.sqrt 8 + y1) * y1 * (Real.pi * Real.sqrt 8)
+          - 96 * mm1 * (Real.sqrt 8 - y1) := by
+      field_simp
+      ring
+    rw [hquad] at e2
+    rw [e1, e2]
+  have hbr : 0 ≤ (Real.sqrt 8 + y1) * y1 / 24
+      - 4 * mm1 / (Real.pi * Real.sqrt 8) := by
+    have hden : 0 < (24:ℝ) * (Real.pi * Real.sqrt 8) := by positivity
+    have h43 : mm1 < 4 / 3 := p21_mm1_lt_four_thirds
+    have hseed : (96:ℝ) * mm1 < 128 :=
+      (mul_lt_mul_of_pos_left h43 (by norm_num : (0:ℝ) < 96)).trans_le (by norm_num)
+    have hnum : (128:ℝ) ≤ (Real.sqrt 8 + 2 * hplus) * (2 * hplus)
+        * (Real.pi * Real.sqrt 8) := by
+      rw [show (2:ℝ) * hplus = 2.6508 from by norm_num [hplus]]
+      have hs8ge : (2.828:ℝ) < Real.sqrt 8 := Real.lt_sqrt_of_sq_lt (by norm_num)
+      have hE : (Real.sqrt 8 + 2.6508) * 2.6508 * (Real.pi * Real.sqrt 8)
+          = (2.6508:ℝ) * (Real.sqrt 8 * Real.sqrt 8) * Real.pi
+            + (2.6508 * 2.6508) * (Real.pi * Real.sqrt 8) := by ring
+      rw [Real.mul_self_sqrt (by norm_num)] at hE
+      have hC : (3.14 * 2.828:ℝ) ≤ Real.pi * Real.sqrt 8 :=
+        mul_le_mul hpi.le hs8ge.le (by norm_num) (by positivity)
+      linarith
+    have hmono : (Real.sqrt 8 + 2 * hplus) * (2 * hplus)
+        ≤ (Real.sqrt 8 + y1) * y1 :=
+      mul_le_mul (by linarith) hy1 (by linarith) (by linarith)
+    have hchain : (96:ℝ) * mm1 < (Real.sqrt 8 + y1) * y1
+        * (Real.pi * Real.sqrt 8) := by
+      calc (96:ℝ) * mm1 < 128 := hseed
+        _ ≤ (Real.sqrt 8 + 2 * hplus) * (2 * hplus) * (Real.pi * Real.sqrt 8) := hnum
+        _ ≤ (Real.sqrt 8 + y1) * y1 * (Real.pi * Real.sqrt 8) :=
+              mul_le_mul_of_nonneg_right hmono (by positivity)
+    have hcross : 0 ≤ (Real.sqrt 8 + y1) * y1 * (Real.pi * Real.sqrt 8)
+        - 96 * mm1 := by linarith
+    have hX0 : (Real.sqrt 8 + y1) * y1 / 24 - 4 * mm1 / (Real.pi * Real.sqrt 8)
+        = ((Real.sqrt 8 + y1) * y1 * (Real.pi * Real.sqrt 8) - 96 * mm1)
+          / ((24:ℝ) * (Real.pi * Real.sqrt 8)) := by
+      field_simp
+      ring
+    rw [hX0]
+    exact div_nonneg hcross hden.le
+  rw [show yOfX (gamma2x1DivAV2 0) y1 y2 y3 y4 y5 y6
+      = gamma2_x_div_azim_v2 0 (y1 * y1) from rfl]
+  rw [show gamma2_x_div_azim_v2 0 (y1 * y1)
+      = (8 - y1 * y1) * Real.sqrt (y1 * y1) / 24
+        - (2 * (2 * mm1 / Real.pi) * (1 - Real.sqrt (y1 * y1) / Real.sqrt 8)
+          - (8 * mm2 / Real.pi) * 0 * lfun (Real.sqrt (y1 * y1) / 2)) from rfl,
+    hsqrt1, mul_zero, zero_mul, sub_zero, hrw]
+  exact mul_nonneg (by linarith) hbr
 
 /-! ## MERGE-INEQ wave 2a: the cell3 kit (docs/merge-ineq-channel.md §4.2-3)
 
