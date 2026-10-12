@@ -716,26 +716,18 @@ theorem elllnyz (x y : fgraph ℕ) (hx : GoodList x) (hy : GoodList y)
       (HypermapIso Hx Hy ∨ HypermapIso (oppositeHypermap Hx) Hy) := by
   sorry
 
-/-! NEEDS(hypermapOfFanNeg，2026-09-28 脊柱 lane)：HOL ASFUTBF.hl:1007
-`hypermap_of_fan_neg` 的结论是 `iso (hypermap_of_fan (IMAGE -- …)) (opposite_hypermap …)`
-——负号 fan 是镜像（V ↦ -V 定向反转），Lean 侧需整套 negation-equivariance 工具链：
-①`azim_mirror`（azim (−v) (−w) (−w1) (−w2) = 2π − azim v w w1 w2，零情形单独；
-经 Geom/Azim.lean 的 AzimSpec + azim_eq_of_spec，frame 取 e_i ↦ −e_i 时右手性翻转，
-ψ ↦ −ψ）；②`sigmaFan` 镜像/逆（sigmaFan(−V)(−E)(−v)(−w) = −σ⁻¹(V)(v,w)，需
-azim_mirror + argmin 最小值传递，即 HOL Localization 的 ivs_azim_cycle 群）；
-③setOfEdge/dartOfFan 像集引理（机械）；④hypermapOfFan 构造层（dartsetLeadsInto
-三个 permutes 字段的像集搬运）。HOL 全套在 ASFUTBF.hl:182-699（scriptL_negative/
-CARD_NEGATIVE/ESTD_NEG/ECTC_NEG/set_of_edge_neg/dart_of_fan_neg/azim_fan_neg/
-azim_dart_neg）；数据合取项的 Lean 私件已备（见 `contraveningNegative` 上方
-`negInjOn`—`scriptLMaxNegative` 块），镜像链三件（①②④）仍缺。 -/
-
-/-- 接口占位：HOL `Asfutbf.hypermap_of_fan_neg`（ASFUTBF.hl）。 -/
-theorem hypermapOfFanNeg (V : Set V3) (hc : Contravening V) (hfan : FAN 0 V (ESTD V))
-    (hfan' : FAN 0 ((fun v => -v) '' V) (ESTD ((fun v => -v) '' V))) :
-    HypermapIso
-      (hypermapOfFan 0 ((fun v => -v) '' V) (ESTD ((fun v => -v) '' V)) hfan')
-      (oppositeHypermap (hypermapOfFan 0 V (ESTD V) hfan)) := by
-  sorry
+/-! 收获记录（hypermapOfFanNeg，2026-10-12 A5 填证 lane；原 2026-09-28 NEEDS 注记
+转此归档）：HOL ASFUTBF.hl:1007 `hypermap_of_fan_neg` 已收口。原四件套的实战分解：
+①`azimMirror`（AzimSpec 级 `azimSpecNeg` + `on3Mirror`/`mirrorRep`，末两参换位形，
+非 2π−azim）；②sigmaFan 镜像共轭 = `sigmaFanNeg`（本文件 §2c.8：σ'_(-v)(-w) =
+−inv1_v w——核心是「前驱方位角极小性」descent（`azimPredLe`：σ-坏集有限 + 单射 +
+逐点方位角严格递降 ⟹ 无周期点），单射化由 `unique_azim_point_fan` 闭合，无需
+Localization 的 cyclic_set/ivs_azim_cycle 群论）；③setOfEdge 像集 = `setOfEdgeNegEq`
+（A2 已备）；④hypermapOfFan 构造层 = §2c.8 的 dart 层求值件（`memDartsHypermapOfFan`
++ `evalEdge/evalNode/evalFace/evalNodeSymm/evalFaceSymm`，extendPerm/res 在 dart1 上
+逐点展开）。同构映射不是 N=(--,--)：f(-v,-w) = (v, inv1_v w)（HOL 的 hyp_conj 复合
+同款），三交换中 edge 侧纯代数、node 侧用 σ-共轭、face 侧用 inv1-共轭。定理本体
+依依赖序移至 §2c.8（`surroundedNodeImageNeg` 之后），陈述冻结逐字未动。 -/
 
 /-- 私件：`oppositeHypermap` 对合（HOL `Tame_opposite.opposite_opposite_hypermap_eq_hypermap`）。
 数据字段：`edgeMap = faceMap.symm * nodeMap.symm` 由 `comp_eq_one`（E·N·F = 1 ⇒
@@ -990,10 +982,12 @@ private theorem mirrorRep (e1 e2 u t : V3) (α β h : ℝ)
 
 /-! ### 2c.6 镜像 kit（2026-10-12 A2 填证 lane）：azim 镜像与 neg''V 传输件
 
-已证部分（`azimSpecNeg` 为核心件，可被 A5 `hypermapOfFanNeg`
-与 tamespine-port-plan §4 B-D4 复用）；`azimMirror` 本体亦已落地
+已证部分（`azimSpecNeg` 为核心件）；`azimMirror` 本体亦已落地
 （收获记录见上方「已收口」注记：Collinear3 侧条件 `intro`+`simpa` 传输 +
-`azimSpec_exists` 取不透明 θ 槽，默认心跳限额内 elaboration）。-/
+`azimSpec_exists` 取不透明 θ 槽，默认心跳限额内 elaboration）。
+【2026-10-12 A5 填证 lane 刷新】本 kit 已被 A5 `hypermapOfFanNeg` 消费收口
+（见下方 §2c.8：σ-镜像共轭走 `azimPredLe` descent + `unique_azim_point_fan`
+单射化，无需 cyclic_set 群论）；tamespine-port-plan §4 B-D4 仍可复用。-/
 
 /-- HOL `AZIM_NEG`（YXIONXL2.hl:2014）的 AzimSpec 级形态：
 `AzimSpec 0 v w2 w1 θ → AzimSpec 0 (-v) (-w1) (-w2) θ`。证明：解构源 spec
@@ -1305,6 +1299,624 @@ private theorem surroundedNodeImageNeg {V : Set V3} {E : Set (Set V3)} {v : V3} 
     linarith [Real.pi_pos]
   · exact azimDartNegLt hfan hfan' hsur hd1
 
+/-! ### 2c.8 `hypermapOfFanNeg` 镜像共轭 kit（2026-10-12 A5 填证 lane）
+
+HOL ASFUTBF.hl:1007 `hypermap_of_fan_neg` 的 Lean 全套。四层：
+(1) `hypermapOfFan` 的 dart 层求值件（`memDartsHypermapOfFan` +
+`evalEdgeHypermapOfFan`/`evalNodeHypermapOfFan`/`evalFaceHypermapOfFan`/
+`evalNodeSymmHypermapOfFan`/`evalFaceSymmHypermapOfFan`——extendPerm/res 在
+dart1 上逐点展开，symm 侧经 `Equiv.symm_apply_eq` 归约为正侧求值）；
+(2) `azimPredLe`：前驱方位角极小性——σ-坏集（`azimPredLe` 内 T）有限 + σ 单射 +
+沿 σ 每步方位角严格递降（`sum2_azim_fan` 分解 + `unique_azim0_point_fan` 正性）
+⟹ 坏集非空即导出 σ-周期点与严格递降链矛盾（鸽笼：`Set.InjOn.ncard_image` +
+`Set.ncard_le_ncard`）；
+(3) σ / inv1 镜像共轭 `sigmaFanNeg`/`inv1FanNeg`：SIGMA_FAN 镜像极小性经
+`azimMirror` 回传 + (2) 的前驱极小性 + `azim_compl` 换向 + `unique_azim_point_fan`
+单射化；inv1 侧由 σ 侧经镜像 `mono_sigma_fan` 传递；
+(4) `hypermapOfFanNeg` 装配：同构映射 f(-v,-w) = (v, inv1_v w)（HOL 的
+hyp_conj (node_map) 复合同款），edge 交换纯代数（σ_v(inv1_v w) = w）、node 交换
+用 (3)σ-共轭、face 交换用 (3)inv1-共轭。陈述冻结逐字未动（依依赖序自 §2c 上段
+移入本节）。-/
+
+/-- `hypermapOfFan` 的 dart 集（coe 后）= `dart1OfFan`。 -/
+private theorem memDartsHypermapOfFan {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) (d : V3 × V3) :
+    d ∈ (hypermapOfFan x V E hfan).darts ↔ d ∈ dart1OfFan V E := by
+  have hcoe : (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) = dart1OfFan V E :=
+    (finite_dart1_fan hfan).coe_toFinset
+  constructor
+  · intro hmem
+    have h2 : d ∈ (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) :=
+      Finset.mem_coe.mp hmem
+    rw [hcoe] at h2
+    exact h2
+  · intro hmem
+    have h2 : d ∈ (↑(hypermapOfFan x V E hfan).darts : Set (V3 × V3)) := by
+      rw [hcoe]
+      exact hmem
+    exact Finset.mem_coe.mpr h2
+
+private theorem evalEdgeHypermapOfFan {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    (hypermapOfFan x V E hfan).edgeMap d = (d.2, d.1) := by
+  have hif : (hypermapOfFan x V E hfan).edgeMap d
+      = if d ∈ dart1OfFan V E then eFanPair V E d else d := by
+    show (@Hypermap.edgeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan x V E hfan)) d = _
+    unfold hypermapOfFan extendPerm
+    simp only [Equiv.ofBijective_apply]
+    unfold Kepler.Text.Fan.res
+    rw [(finite_dart1_fan hfan).coe_toFinset]
+  rw [hif, if_pos hd]
+  rfl
+
+private theorem evalNodeHypermapOfFan {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    (hypermapOfFan x V E hfan).nodeMap d = (d.1, sigmaFan x V E d.1 d.2) := by
+  have hif : (hypermapOfFan x V E hfan).nodeMap d
+      = if d ∈ dart1OfFan V E then nFanPair x V E d else d := by
+    show (@Hypermap.nodeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan x V E hfan)) d = _
+    unfold hypermapOfFan extendPerm
+    simp only [Equiv.ofBijective_apply]
+    unfold Kepler.Text.Fan.res
+    rw [(finite_dart1_fan hfan).coe_toFinset]
+  rw [hif, if_pos hd]
+  rfl
+
+private theorem evalFaceHypermapOfFan {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    (hypermapOfFan x V E hfan).faceMap d
+      = (d.2, inverse1SigmaFan x V E d.2 d.1) := by
+  have hif : (hypermapOfFan x V E hfan).faceMap d
+      = if d ∈ dart1OfFan V E then fFanPair x V E d else d := by
+    show (@Hypermap.faceMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan x V E hfan)) d = _
+    unfold hypermapOfFan extendPerm
+    simp only [Equiv.ofBijective_apply]
+    unfold Kepler.Text.Fan.res
+    rw [(finite_dart1_fan hfan).coe_toFinset]
+  rw [hif, if_pos hd]
+  show (d.2, inverseSigmaFan x V E d.2 d.1) = _
+  rw [inverse_sigma_fan_eq_inverse1 hfan (v := d.2) (w := d.1)
+    (by rw [pairSetComm]; exact hd)]
+
+private theorem evalNodeSymmHypermapOfFan {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    (hypermapOfFan x V E hfan).nodeMap.symm d
+      = (d.1, inverse1SigmaFan x V E d.1 d.2) := by
+  rw [Equiv.symm_apply_eq]
+  have hmem : (d.1, inverse1SigmaFan x V E d.1 d.2) ∈ dart1OfFan V E :=
+    (INVERSE1_SIGMA_FAN (x := x) (V := V) (E := E) (v := d.1) hfan).1 d.2 hd
+  rw [evalNodeHypermapOfFan hfan hmem]
+  show d = (d.1, sigmaFan x V E d.1 (inverse1SigmaFan x V E d.1 d.2))
+  exact Prod.ext rfl ((INVERSE1_SIGMA_FAN (x := x) (V := V) (E := E) (v := d.1)
+    hfan).2.1 d.2 hd).symm
+
+private theorem evalFaceSymmHypermapOfFan {x : V3} {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN x V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    (hypermapOfFan x V E hfan).faceMap.symm d
+      = (sigmaFan x V E d.1 d.2, d.1) := by
+  rw [Equiv.symm_apply_eq]
+  have hsoe : d.2 ∈ setOfEdge d.1 V E :=
+    (properties_of_setOfEdge_fan x V E d.1 d.2 hfan).mp hd
+  have hsoe2 : sigmaFan x V E d.1 d.2 ∈ setOfEdge d.1 V E :=
+    sigma_fan_in_setOfEdge hfan hsoe
+  have hmem : (sigmaFan x V E d.1 d.2, d.1) ∈ dart1OfFan V E := by
+    show ({(sigmaFan x V E d.1 d.2, d.1).1, (sigmaFan x V E d.1 d.2, d.1).2} : Set V3) ∈ E
+    rw [pairSetComm]
+    exact (properties_of_setOfEdge_fan x V E d.1 _ hfan).mpr hsoe2
+  rw [evalFaceHypermapOfFan hfan hmem]
+  show d = (d.1, inverse1SigmaFan x V E d.1 (sigmaFan x V E d.1 d.2))
+  exact Prod.ext rfl ((INVERSE1_SIGMA_FAN (x := x) (V := V) (E := E) (v := d.1)
+    hfan).2.2 d.2 hd).symm
+
+/-- 前驱方位角极小性（descent 核心）：p = inv1_v w 最小化 `azim 0 v · w`。
+坏集（方位角严格更小者）经 σ 映入自身且逐点严格递降，有限集中无严格递降
+无限链（σ 单射 + 鸽笼导出周期点矛盾）。 -/
+private theorem azimPredLe {V : Set V3} {E : Set (Set V3)} (hfan : FAN 0 V E)
+    {v w : V3} (hw : ({v, w} : Set V3) ∈ E) :
+    ∀ z : V3, z ∈ setOfEdge v V E → z ≠ w →
+      azim 0 v (inverse1SigmaFan 0 V E v w) w ≤ azim 0 v z w := by
+  classical
+  set p : V3 := inverse1SigmaFan 0 V E v w with hpdef
+  have hSw : w ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan 0 V E v w hfan).mp hw
+  have hinv := INVERSE1_SIGMA_FAN (x := 0) (V := V) (E := E) (v := v) hfan
+  have hpE : {v, p} ∈ E := hinv.1 w hw
+  have hSp : p ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan 0 V E v _ hfan).mp hpE
+  have hσp : sigmaFan 0 V E v p = w := hinv.2.1 w hw
+  by_cases hpw : p = w
+  · intro z _ _
+    rw [hpw]
+    have hn := azim_nonneg 0 v z w
+    rw [azim_self 0 v w]
+    exact hn
+  · have hSne : ∀ y : V3, setOfEdge v V E ≠ {y} := by
+      intro y hEq
+      refine hpw ?_
+      rw [hEq] at hSw hSp
+      have h1 : w = y := Set.mem_singleton_iff.mp hSw
+      have h2 : p = y := Set.mem_singleton_iff.mp hSp
+      rw [h2, h1]
+    have hpos : 0 < azim 0 v p w := by
+      rcases lt_trichotomy (azim 0 v p w) 0 with hlt | heq | hgt
+      · exact absurd hlt (by linarith [azim_nonneg 0 v p w])
+      · exact absurd heq (by
+          intro h0
+          exact hpw (unique_azim0_point_fan hfan hpE hw h0))
+      · exact hgt
+    have hσmin : ∀ y ∈ setOfEdge v V E, ∀ z ∈ setOfEdge v V E, z ≠ y →
+        azim 0 v y (sigmaFan 0 V E v y) ≤ azim 0 v y z := by
+      intro y hy z hz hzy
+      exact (SIGMA_FAN (hSne y) hfan hy).2.2 z hz hzy
+    have hδ : ∀ y ∈ setOfEdge v V E, 0 < azim 0 v y (sigmaFan 0 V E v y) := by
+      intro y hy
+      have hyE : {v, y} ∈ E := (properties_of_setOfEdge_fan 0 V E v y hfan).mpr hy
+      have hσyE : {v, sigmaFan 0 V E v y} ∈ E :=
+        (properties_of_setOfEdge_fan 0 V E v _ hfan).mpr (sigma_fan_in_setOfEdge hfan hy)
+      rcases lt_trichotomy (azim 0 v y (sigmaFan 0 V E v y)) 0 with hlt | heq | hgt
+      · exact absurd hlt (by linarith [azim_nonneg 0 v y (sigmaFan 0 V E v y)])
+      · exact absurd ((unique_azim0_point_fan hfan hyE hσyE heq).symm)
+          ((SIGMA_FAN (hSne y) hfan hy).2.1)
+      · exact hgt
+    have hstep : ∀ y ∈ setOfEdge v V E, y ≠ w →
+        azim 0 v y w = azim 0 v y (sigmaFan 0 V E v y) + azim 0 v (sigmaFan 0 V E v y) w := by
+      intro y hy hyw
+      exact sum2_azim_fan hfan ((properties_of_setOfEdge_fan 0 V E v y hfan).mpr hy)
+        ((properties_of_setOfEdge_fan 0 V E v _ hfan).mpr (sigma_fan_in_setOfEdge hfan hy))
+        hw (hσmin y hy w hSw hyw.symm)
+    by_contra hcon
+    push_neg at hcon
+    obtain ⟨z₀, hz₀S, hz₀w, hz₀lt⟩ := hcon
+    set T : Set V3 := {z | z ∈ setOfEdge v V E ∧ z ≠ w ∧ azim 0 v p w > azim 0 v z w} with hTdef
+    have hTfin : T.Finite :=
+      (remark_finite_fan1 v V E hfan.2.2.1.1).subset (fun z hz => hz.1)
+    have hσT : ∀ z ∈ T, sigmaFan 0 V E v z ∈ T := by
+      intro z hz
+      have hσzS : sigmaFan 0 V E v z ∈ setOfEdge v V E := sigma_fan_in_setOfEdge hfan hz.1
+      have hσzw : sigmaFan 0 V E v z ≠ w := by
+        intro he
+        have hzp : z = p := mono_sigma_fan hfan hz.1 hSp (he.trans hσp.symm)
+        rw [hzp] at hz
+        exact absurd hz.2.2 (lt_irrefl _)
+      have hσlt : azim 0 v p w > azim 0 v (sigmaFan 0 V E v z) w := by
+        have h1 := hstep z hz.1 hz.2.1
+        have h2 := hδ z hz.1
+        have h3 := hz.2.2
+        linarith
+      exact ⟨hσzS, hσzw, hσlt⟩
+    have hchainS : ∀ k : ℕ, (sigmaFan 0 V E v)^[k] z₀ ∈ setOfEdge v V E := by
+      intro k
+      induction k with
+      | zero => exact hz₀S
+      | succ m ih =>
+        rw [Function.iterate_succ_apply']
+        exact sigma_fan_in_setOfEdge hfan ih
+    have hchainT : ∀ k : ℕ, (sigmaFan 0 V E v)^[k] z₀ ∈ T := by
+      intro k
+      induction k with
+      | zero => exact ⟨hz₀S, hz₀w, hz₀lt⟩
+      | succ m ih =>
+        rw [Function.iterate_succ_apply']
+        exact hσT _ ih
+    have hdec : ∀ k : ℕ, azim 0 v ((sigmaFan 0 V E v)^[k] z₀) w
+        > azim 0 v ((sigmaFan 0 V E v)^[k + 1] z₀) w := by
+      intro k
+      have h1 := hstep _ (hchainS k) (hchainT k).2.1
+      have h2 := hδ _ (hchainS k)
+      rw [Function.iterate_succ_apply' (sigmaFan 0 V E v) k z₀]
+      linarith
+    have hanti : ∀ (i j : ℕ), i < j →
+        azim 0 v ((sigmaFan 0 V E v)^[j] z₀) w
+          < azim 0 v ((sigmaFan 0 V E v)^[i] z₀) w := by
+      intro i j
+      induction j with
+      | zero => intro hij; exact absurd hij (Nat.not_lt_zero i)
+      | succ m ih =>
+        intro hij
+        rcases Nat.lt_succ_iff_lt_or_eq.mp hij with h | h
+        · exact lt_trans (hdec m) (ih h)
+        · rw [h]
+          exact hdec m
+    have hinj : ∀ (i j : ℕ), (sigmaFan 0 V E v)^[i] z₀ = (sigmaFan 0 V E v)^[j] z₀ →
+        i = j := by
+      intro i j heq
+      rcases lt_trichotomy i j with h | h | h
+      · exact absurd (hanti i j h) (by rw [heq]; exact lt_irrefl _)
+      · exact h
+      · exact absurd (hanti j i h) (by rw [heq]; exact lt_irrefl _)
+    have hinjOn : Set.InjOn (fun k : ℕ => (sigmaFan 0 V E v)^[k] z₀)
+        ((Finset.range (T.ncard + 1) : Finset ℕ) : Set ℕ) := by
+      intro i _ j _ heq
+      exact hinj i j heq
+    have himg : ((fun k : ℕ => (sigmaFan 0 V E v)^[k] z₀) ''
+          ((Finset.range (T.ncard + 1) : Finset ℕ) : Set ℕ)).ncard = T.ncard + 1 := by
+      rw [hinjOn.ncard_image, Set.ncard_coe_finset, Finset.card_range]
+    have hsub : ((fun k : ℕ => (sigmaFan 0 V E v)^[k] z₀) ''
+          ((Finset.range (T.ncard + 1) : Finset ℕ) : Set ℕ)) ⊆ T := by
+      intro y hy
+      obtain ⟨k, hk, rfl⟩ := hy
+      exact hchainT k
+    have hle := Set.ncard_le_ncard hsub hTfin
+    rw [himg] at hle
+    omega
+
+/-- σ 的镜像共轭：`sigmaFan 0 (-''V) (-''E) (-v) (-w) = -(inv1_v w)`。
+镜像侧 σ 的极小性经 `azimMirror` 回传为 z' = -σ' 的反向方位角极小性，与前驱的
+极小性（`azimPredLe`）夹出方位角相等；`azim_compl` 换向后由
+`unique_azim_point_fan` 闭合。 -/
+private theorem sigmaFanNeg {V : Set V3} {E : Set (Set V3)} {v w : V3}
+    (hfan : FAN 0 V E)
+    (hfan' : FAN 0 ((fun u : V3 => -u) '' V)
+        ((fun e : Set V3 => (fun u : V3 => -u) '' e) '' E))
+    (hw : ({v, w} : Set V3) ∈ E) :
+    sigmaFan 0 ((fun u : V3 => -u) '' V)
+        ((fun e : Set V3 => (fun u : V3 => -u) '' e) '' E) (-v) (-w)
+      = -(inverse1SigmaFan 0 V E v w) := by
+  classical
+  set V' : Set V3 := (fun u : V3 => -u) '' V with hV'def
+  set E' : Set (Set V3) := (fun e : Set V3 => (fun u : V3 => -u) '' e) '' E with hE'def
+  set σ' : V3 := sigmaFan 0 V' E' (-v) (-w) with hσ'def
+  have hSw : w ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan 0 V E v w hfan).mp hw
+  have hinv := INVERSE1_SIGMA_FAN (x := 0) (V := V) (E := E) (v := v) hfan
+  have hpE : {v, inverse1SigmaFan 0 V E v w} ∈ E := hinv.1 w hw
+  have hSp : inverse1SigmaFan 0 V E v w ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan 0 V E v _ hfan).mp hpE
+  have hS'mem : ∀ z : V3, z ∈ setOfEdge v V E → -z ∈ setOfEdge (-v) V' E' := by
+    intro z hz
+    rw [setOfEdgeNegEq v V E]
+    exact ⟨z, hz, rfl⟩
+  have hS'inv : ∀ q : V3, q ∈ setOfEdge (-v) V' E' → -q ∈ setOfEdge v V E := by
+    intro q hq
+    rw [setOfEdgeNegEq v V E] at hq
+    obtain ⟨z, hz, hzq⟩ := hq
+    rw [← hzq]
+    simp only [neg_neg]
+    exact hz
+  by_cases hSing : setOfEdge v V E = ({w} : Set V3)
+  · have hpw : inverse1SigmaFan 0 V E v w = w := by
+      have h1 : inverse1SigmaFan 0 V E v w ∈ ({w} : Set V3) := hSing ▸ hSp
+      exact Set.mem_singleton_iff.mp h1
+    have hS'eq : setOfEdge (-v) V' E' = ({-w} : Set V3) := by
+      rw [setOfEdgeNegEq v V E, hSing]
+      ext u
+      simp only [Set.mem_image, Set.mem_singleton_iff]
+      constructor
+      · rintro ⟨z, hz, rfl⟩
+        rw [Set.mem_singleton_iff.mp hz]
+      · intro hu
+        exact ⟨w, by simp, by simpa using hu.symm⟩
+    have hσ'eq : sigmaFan 0 V' E' (-v) (-w) = -w := by
+      rw [sigmaFan, if_pos hS'eq]
+    rw [hpw, hσ'def, hσ'eq]
+  · have hσw : sigmaFan 0 V E v w ≠ w := (SIGMA_FAN hSing hfan hSw).2.1
+    have hwp : w ≠ inverse1SigmaFan 0 V E v w := by
+      intro he
+      have h2 : sigmaFan 0 V E v w = w := by rw [he, hinv.2.1 w hw]; exact he
+      exact hσw h2
+    have hne' : setOfEdge (-v) V' E' ≠ ({-w} : Set V3) := by
+      intro heq
+      refine hSing (Set.eq_singleton_iff_unique_mem.mpr ⟨hSw, fun u hu => ?_⟩)
+      have hu2 : -u ∈ setOfEdge (-v) V' E' := hS'mem u hu
+      rw [heq] at hu2
+      have h3 : -u = -w := Set.mem_singleton_iff.mp hu2
+      simpa using congrArg Neg.neg h3
+    obtain ⟨h₁, h₂, h₃⟩ := SIGMA_FAN hne' hfan' (hS'mem w hSw)
+    have hz'S : -σ' ∈ setOfEdge v V E := hS'inv σ' h₁
+    have hz'w : -σ' ≠ w := by
+      intro he
+      refine h₂ ?_
+      have h5 : -(-σ') = -w := congrArg Neg.neg he
+      rw [neg_neg] at h5
+      exact h5
+    have hz'E : {v, -σ'} ∈ E :=
+      (properties_of_setOfEdge_fan 0 V E v _ hfan).mpr hz'S
+    have hncw : ¬ Collinear3 0 v w := fan_not_collinear hfan hw
+    have hncz' : ¬ Collinear3 0 v (-σ') := fan_not_collinear hfan hz'E
+    have hncp : ¬ Collinear3 0 v (inverse1SigmaFan 0 V E v w) := fan_not_collinear hfan hpE
+    have hminz' : ∀ z ∈ setOfEdge v V E, z ≠ w →
+        azim 0 v (-σ') w ≤ azim 0 v z w := by
+      intro z hz hzw
+      have hncz : ¬ Collinear3 0 v z := fan_not_collinear hfan
+        ((properties_of_setOfEdge_fan 0 V E v z hfan).mpr hz)
+      have hne2 : -z ≠ -w := fun hh => hzw (negInj3 hh)
+      have hmin := h₃ (-z) (hS'mem z hz) hne2
+      rw [hσ'def.symm, show σ' = -(-σ') from (neg_neg σ').symm,
+        azimMirror hncw hncz', azimMirror hncw hncz] at hmin
+      exact hmin
+    have hminp := azimPredLe hfan hw
+    have hEq : azim 0 v (-σ') w = azim 0 v (inverse1SigmaFan 0 V E v w) w :=
+      le_antisymm (hminz' _ hSp hwp.symm) (hminp _ hz'S hz'w)
+    have hnz' : azim 0 v (-σ') w ≠ 0 := by
+      intro h0
+      exact hz'w (unique_azim0_point_fan hfan hz'E hw h0)
+    have hnp : azim 0 v (inverse1SigmaFan 0 V E v w) w ≠ 0 := by
+      intro h0
+      exact hwp (unique_azim0_point_fan hfan hpE hw h0).symm
+    have hcom1 : azim 0 v w (-σ') = 2 * Real.pi - azim 0 v (-σ') w := by
+      rw [azim_compl hncz' hncw, if_neg hnz']
+    have hcom2 : azim 0 v w (inverse1SigmaFan 0 V E v w)
+        = 2 * Real.pi - azim 0 v (inverse1SigmaFan 0 V E v w) w := by
+      rw [azim_compl hncp hncw, if_neg hnp]
+    have hkey : azim 0 v w (-σ') = azim 0 v w (inverse1SigmaFan 0 V E v w) := by
+      rw [hcom1, hcom2, hEq]
+    have hfinal := unique_azim_point_fan hfan hw hz'E hpE hkey
+    have h8 : σ' = -(inverse1SigmaFan 0 V E v w) := by
+      have h7 := congrArg Neg.neg hfinal
+      rw [neg_neg] at h7
+      exact h7
+    rw [hσ'def]
+    exact h8
+
+/-- inv1 的镜像共轭：`inverse1SigmaFan 0 (-''V) (-''E) (-v) (-w) = -(σ_v w)`，
+由 σ-共轭（`sigmaFanNeg`）+ 镜像 `mono_sigma_fan` 传递。 -/
+private theorem inv1FanNeg {V : Set V3} {E : Set (Set V3)} {v w : V3}
+    (hfan : FAN 0 V E)
+    (hfan' : FAN 0 ((fun u : V3 => -u) '' V)
+        ((fun e : Set V3 => (fun u : V3 => -u) '' e) '' E))
+    (hw : ({v, w} : Set V3) ∈ E) :
+    inverse1SigmaFan 0 ((fun u : V3 => -u) '' V)
+        ((fun e : Set V3 => (fun u : V3 => -u) '' e) '' E) (-v) (-w)
+      = -(sigmaFan 0 V E v w) := by
+  classical
+  have hSw : w ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan 0 V E v w hfan).mp hw
+  have hσS : sigmaFan 0 V E v w ∈ setOfEdge v V E := sigma_fan_in_setOfEdge hfan hSw
+  have hσE : {v, sigmaFan 0 V E v w} ∈ E :=
+    (properties_of_setOfEdge_fan 0 V E v _ hfan).mpr hσS
+  have hE'vw : ({-v, -w} : Set V3) ∈ ((fun e : Set V3 => (fun u : V3 => -u) '' e) '' E) :=
+    ⟨{v, w}, hw, by simp⟩
+  have hmem : -(sigmaFan 0 V E v w) ∈ setOfEdge (-v) ((fun u : V3 => -u) '' V)
+      ((fun e : Set V3 => (fun u : V3 => -u) '' e) '' E) := by
+    rw [setOfEdgeNegEq]
+    exact ⟨sigmaFan 0 V E v w, hσS, rfl⟩
+  have hmem2 : inverse1SigmaFan 0 ((fun u : V3 => -u) '' V)
+      ((fun e : Set V3 => (fun u : V3 => -u) '' e) '' E) (-v) (-w)
+      ∈ setOfEdge (-v) ((fun u : V3 => -u) '' V)
+        ((fun e : Set V3 => (fun u : V3 => -u) '' e) '' E) :=
+    (properties_of_setOfEdge_fan 0 _ _ (-v) _ hfan').mp
+      ((INVERSE1_SIGMA_FAN (x := 0) (V := _) (E := _) (v := -v) hfan').1 (-w) hE'vw)
+  have hB : sigmaFan 0 ((fun u : V3 => -u) '' V)
+      ((fun e : Set V3 => (fun u : V3 => -u) '' e) '' E) (-v)
+        (-(sigmaFan 0 V E v w)) = -w := by
+    rw [sigmaFanNeg hfan hfan' hσE,
+      (INVERSE1_SIGMA_FAN (x := 0) (V := V) (E := E) (v := v) hfan).2.2 w hw]
+  exact mono_sigma_fan hfan' hmem2 hmem
+    (((INVERSE1_SIGMA_FAN (x := 0) (V := (fun u : V3 => -u) '' V)
+      (E := (fun e : Set V3 => (fun u : V3 => -u) '' e) '' E) (v := -v)
+      hfan').2.1 (-w) hE'vw).trans hB.symm)
+
+/-- Graph 版边不等：边的两端相异（Graph 的 card = 2 约定）。 -/
+private theorem edgeNeOfGraph {E : Set (Set V3)} (hG : Graph E) {v w : V3}
+    (h : ({v, w} : Set V3) ∈ E) : v ≠ w := by
+  intro hveq
+  subst hveq
+  obtain ⟨hf, hcard⟩ := hG _ h
+  have h5 : hf.toFinset ⊆ ({v} : Finset V3) := by
+    intro x hx
+    have hx2 : x ∈ ({v, v} : Set V3) := (Set.Finite.mem_toFinset (a := x) hf).mp hx
+    simpa using hx2
+  have h6 : hf.toFinset.card ≤ 1 := by simpa using Finset.card_le_card h5
+  omega
+
+/-- 镜像边集隶属的往返：{v,w} ∈ E ↔ {-v,-w} ∈ (-'')E（v ≠ w）。 -/
+private theorem memNegPairImageIff {v w : V3} {E : Set (Set V3)} (hne : v ≠ w) :
+    ({-v, -w} : Set V3) ∈ ((fun e : Set V3 => (fun u : V3 => -u) '' e) '' E)
+      ↔ ({v, w} : Set V3) ∈ E := by
+  constructor
+  · rintro ⟨e₀, he₀, hEq⟩
+    have hEq' : (fun u : V3 => -u) '' e₀ = ({-v, -w} : Set V3) := hEq
+    have hmemv : v ∈ e₀ := by
+      have h1 : (-v : V3) ∈ (fun u : V3 => -u) '' e₀ := by rw [hEq']; simp
+      obtain ⟨x, hx, hx'⟩ := h1
+      have hx'' : -x = -v := hx'
+      have hxv : x = v := negInj3 hx''
+      rw [← hxv]
+      exact hx
+    have hmemw : w ∈ e₀ := by
+      have h1 : (-w : V3) ∈ (fun u : V3 => -u) '' e₀ := by rw [hEq']; simp
+      obtain ⟨x, hx, hx'⟩ := h1
+      have hx'' : -x = -w := hx'
+      have hxw : x = w := negInj3 hx''
+      rw [← hxw]
+      exact hx
+    have hsub : e₀ ⊆ ({v, w} : Set V3) := by
+      intro x hx
+      have h1 : (-x : V3) ∈ (fun u : V3 => -u) '' e₀ := ⟨x, hx, rfl⟩
+      rw [hEq'] at h1
+      rcases Set.mem_insert_iff.mp h1 with hc | hc
+      · exact Or.inl (negInj3 hc)
+      · exact Or.inr (negInj3 hc)
+    have heq : e₀ = ({v, w} : Set V3) :=
+      Set.eq_of_subset_of_subset hsub
+        (Set.insert_subset hmemv (Set.singleton_subset_iff.mpr hmemw))
+    rw [← heq]
+    exact he₀
+  · intro he
+    exact ⟨{v, w}, he, by simp⟩
+
+/-- 镜像 dart 的对应拆解：镜像侧 dart 必为 (-v,-w) 且 {v,w} ∈ E。 -/
+private theorem dartCorrNeg {V : Set V3} {E : Set (Set V3)}
+    (hfan : FAN 0 V E)
+    (hfan' : FAN 0 ((fun u : V3 => -u) '' V)
+        ((fun e : Set V3 => (fun u : V3 => -u) '' e) '' E))
+    {d : V3 × V3} (hd : d ∈ dart1OfFan ((fun u : V3 => -u) '' V)
+        ((fun e : Set V3 => (fun u : V3 => -u) '' e) '' E)) :
+    ∃ v w : V3, d = (-v, -w) ∧ ({v, w} : Set V3) ∈ E ∧ v ≠ w := by
+  obtain ⟨v, w, rfl⟩ : ∃ v w : V3, d = (-v, -w) := ⟨-d.1, -d.2, by simp⟩
+  have hne : v ≠ w := by
+    intro hc
+    rw [hc] at hd
+    exact edgeNeOfGraph hfan'.2.1 hd rfl
+  exact ⟨v, w, rfl, (memNegPairImageIff hne).mp hd, hne⟩
+
+/-- σ-共轭的 ESTD 形式（镜像 fan 的邻边集等式 `estdNegative` 运输）。 -/
+private theorem sigmaFanNegESTD {V : Set V3} {E : Set (Set V3)}
+    (hEeq : ESTD ((fun v : V3 => -v) '' V)
+      = (fun e : Set V3 => (fun u : V3 => -u) '' e) '' E)
+    (h1 : sigmaFan 0 ((fun u : V3 => -u) '' V)
+        ((fun e : Set V3 => (fun u : V3 => -u) '' e) '' E) (-v) (-w)
+      = -(inverse1SigmaFan 0 V E v w)) :
+    sigmaFan 0 ((fun u : V3 => -u) '' V) (ESTD ((fun u : V3 => -u) '' V)) (-v) (-w)
+      = -(inverse1SigmaFan 0 V E v w) := by
+  rw [hEeq]
+  exact h1
+
+/-- inv1-共轭的 ESTD 形式（同上运输）。 -/
+private theorem inv1FanNegESTD {V : Set V3} {E : Set (Set V3)}
+    (hEeq : ESTD ((fun v : V3 => -v) '' V)
+      = (fun e : Set V3 => (fun u : V3 => -u) '' e) '' E)
+    (h1 : inverse1SigmaFan 0 ((fun u : V3 => -u) '' V)
+        ((fun e : Set V3 => (fun u : V3 => -u) '' e) '' E) (-v) (-w)
+      = -(sigmaFan 0 V E v w)) :
+    inverse1SigmaFan 0 ((fun u : V3 => -u) '' V)
+        (ESTD ((fun u : V3 => -u) '' V)) (-v) (-w)
+      = -(sigmaFan 0 V E v w) := by
+  rw [hEeq]
+  exact h1
+
+/-- 同构映射：镜像 dart ↦ (原侧第一分量, 原侧前驱)。 -/
+noncomputable def isoMapFanNeg (V : Set V3) (E : Set (Set V3)) :
+    V3 × V3 → V3 × V3 :=
+  fun d => (-d.1, inverse1SigmaFan 0 V E (-d.1) (-d.2))
+
+private theorem isoMapFanNeg_neg {V : Set V3} {E : Set (Set V3)} {v w : V3} :
+    isoMapFanNeg V E (-v, -w) = (v, inverse1SigmaFan 0 V E v w) := by
+  simp only [isoMapFanNeg, neg_neg]
+
+/-- 接口 → 真证明（2026-10-12 A5 填证 lane）：HOL `Asfutbf.hypermap_of_fan_neg`
+（ASFUTBF.hl:1007）。陈述自 §2c 上段依依赖序移入本节（逐字冻结）。
+证明 = 四层 kit 装配（见本节头注）：BijOn 三件（映入/单射/满射）+ 三映射交换
+（edge 纯代数 / node 经 `sigmaFanNeg` / face 经 `inv1FanNeg`）。 -/
+theorem hypermapOfFanNeg (V : Set V3) (hc : Contravening V) (hfan : FAN 0 V (ESTD V))
+    (hfan' : FAN 0 ((fun v => -v) '' V) (ESTD ((fun v => -v) '' V))) :
+    HypermapIso
+      (hypermapOfFan 0 ((fun v => -v) '' V) (ESTD ((fun v => -v) '' V)) hfan')
+      (oppositeHypermap (hypermapOfFan 0 V (ESTD V) hfan)) := by
+  classical
+  have hE'img : ESTD ((fun v : V3 => -v) '' V)
+      = (fun e : Set V3 => (fun u : V3 => -u) '' e) '' (ESTD V) := estdNegative V
+  have hfanI0 : FAN 0 ((fun v : V3 => -v) '' V) (ESTD ((fun v : V3 => -v) '' V)) := hfan'
+  rw [hE'img] at hfanI0
+  have hfanI : FAN 0 ((fun v : V3 => -v) '' V)
+      ((fun e : Set V3 => (fun u : V3 => -u) '' e) '' (ESTD V)) := hfanI0
+  refine ⟨isoMapFanNeg V (ESTD V), ?_, ?_⟩
+  · -- BijOn (↑H'.darts) (↑H.darts)
+    refine ⟨?_, ?_, ?_⟩
+    · -- 映入
+      intro d hd
+      have hd1 : d ∈ dart1OfFan ((fun v : V3 => -v) '' V) (ESTD ((fun v => -v) '' V)) :=
+        (memDartsHypermapOfFan hfan' d).mp hd
+      rw [hE'img] at hd1
+      obtain ⟨v, w, hdvw, hwE, hvw⟩ := dartCorrNeg hfan hfanI hd1
+      rw [hdvw]
+      refine (memDartsHypermapOfFan hfan (isoMapFanNeg V (ESTD V) (-v, -w))).mpr ?_
+      rw [isoMapFanNeg_neg]
+      exact (properties_of_setOfEdge_fan 0 V (ESTD V) v _ hfan).mpr
+        ((properties_of_setOfEdge_fan 0 V (ESTD V) v _ hfan).mp
+          ((INVERSE1_SIGMA_FAN (x := 0) (V := V) (E := ESTD V) (v := v) hfan).1 w hwE))
+    · -- 单射
+      intro a ha b hb heq
+      obtain ⟨v₁, w₁, hav₁, hwE₁, -⟩ :=
+        dartCorrNeg hfan hfanI (by
+          have h := (memDartsHypermapOfFan hfan' a).mp ha
+          rw [hE'img] at h
+          exact h)
+      obtain ⟨v₂, w₂, hav₂, hwE₂, -⟩ :=
+        dartCorrNeg hfan hfanI (by
+          have h := (memDartsHypermapOfFan hfan' b).mp hb
+          rw [hE'img] at h
+          exact h)
+      rw [hav₁, hav₂, isoMapFanNeg_neg, isoMapFanNeg_neg] at heq
+      have h11 : v₁ = v₂ := congrArg Prod.fst heq
+      subst h11
+      have h22 : inverse1SigmaFan 0 V (ESTD V) v₁ w₁
+          = inverse1SigmaFan 0 V (ESTD V) v₁ w₂ := congrArg Prod.snd heq
+      have hw₁w₂ : w₁ = w₂ := by
+        rw [← (INVERSE1_SIGMA_FAN (x := 0) (V := V) (E := ESTD V) (v := v₁)
+          hfan).2.1 w₁ hwE₁, h22,
+          (INVERSE1_SIGMA_FAN (x := 0) (V := V) (E := ESTD V) (v := v₁)
+          hfan).2.1 w₂ hwE₂]
+      rw [hav₁, hav₂, hw₁w₂]
+    · -- 满射
+      intro y hy
+      have hy1 : y ∈ dart1OfFan V (ESTD V) := (memDartsHypermapOfFan hfan y).mp hy
+      refine ⟨(-y.1, -(sigmaFan 0 V (ESTD V) y.1 y.2)), ?_, ?_⟩
+      · have hσE : {y.1, sigmaFan 0 V (ESTD V) y.1 y.2} ∈ ESTD V :=
+          (properties_of_setOfEdge_fan 0 V (ESTD V) y.1 _ hfan).mpr
+            (sigma_fan_in_setOfEdge hfan
+              ((properties_of_setOfEdge_fan 0 V (ESTD V) y.1 y.2 hfan).mp hy1))
+        have hm : (-y.1, -(sigmaFan 0 V (ESTD V) y.1 y.2))
+            ∈ dart1OfFan ((fun v : V3 => -v) '' V)
+              ((fun e : Set V3 => (fun u : V3 => -u) '' e) '' (ESTD V)) :=
+          ⟨{y.1, sigmaFan 0 V (ESTD V) y.1 y.2}, hσE, by simp⟩
+        rw [← hE'img] at hm
+        exact (memDartsHypermapOfFan hfan' _).mpr hm
+      · show (-(-y.1),
+          inverse1SigmaFan 0 V (ESTD V) (-(-y.1))
+            (-(-(sigmaFan 0 V (ESTD V) y.1 y.2)))) = y
+        simp only [neg_neg]
+        exact Prod.ext rfl
+          ((INVERSE1_SIGMA_FAN (x := 0) (V := V) (E := ESTD V) (v := y.1)
+            hfan).2.2 y.2 hy1)
+  · -- 三映射交换
+    intro x hx
+    have hd1 : x ∈ dart1OfFan ((fun v : V3 => -v) '' V) (ESTD ((fun v => -v) '' V)) :=
+      (memDartsHypermapOfFan hfan' x).mp hx
+    obtain ⟨v, w, hxvw, hwE, hvw⟩ := dartCorrNeg hfan hfanI (by
+      have h := (memDartsHypermapOfFan hfan' x).mp hx
+      rw [hE'img] at h
+      exact h)
+    rw [hxvw] at hd1
+    have hpE : {v, inverse1SigmaFan 0 V (ESTD V) v w} ∈ ESTD V :=
+      (INVERSE1_SIGMA_FAN (x := 0) (V := V) (E := ESTD V) (v := v) hfan).1 w hwE
+    have hpmem : inverse1SigmaFan 0 V (ESTD V) v w ∈ setOfEdge v V (ESTD V) :=
+      (properties_of_setOfEdge_fan 0 V (ESTD V) v _ hfan).mp hpE
+    have hσp : sigmaFan 0 V (ESTD V) v (inverse1SigmaFan 0 V (ESTD V) v w) = w :=
+      (INVERSE1_SIGMA_FAN (x := 0) (V := V) (E := ESTD V) (v := v) hfan).2.1 w hwE
+    have hwE' : ({w, v} : Set V3) ∈ ESTD V := Set.pair_comm _ _ ▸ hwE
+    have hσpE : {v, sigmaFan 0 V (ESTD V) v (inverse1SigmaFan 0 V (ESTD V) v w)}
+        ∈ ESTD V :=
+      (properties_of_setOfEdge_fan 0 V (ESTD V) v _ hfan).mpr
+        (sigma_fan_in_setOfEdge hfan hpmem)
+    have hL : (oppositeHypermap (hypermapOfFan 0 V (ESTD V) hfan)).edgeMap
+        (v, inverse1SigmaFan 0 V (ESTD V) v w)
+        = (hypermapOfFan 0 V (ESTD V) hfan).faceMap
+            ((hypermapOfFan 0 V (ESTD V) hfan).nodeMap
+              (v, inverse1SigmaFan 0 V (ESTD V) v w)) := rfl
+    have hN : (oppositeHypermap (hypermapOfFan 0 V (ESTD V) hfan)).nodeMap
+        (v, inverse1SigmaFan 0 V (ESTD V) v w)
+        = (hypermapOfFan 0 V (ESTD V) hfan).nodeMap.symm
+            (v, inverse1SigmaFan 0 V (ESTD V) v w) := rfl
+    have hF : (oppositeHypermap (hypermapOfFan 0 V (ESTD V) hfan)).faceMap
+        (v, inverse1SigmaFan 0 V (ESTD V) v w)
+        = (hypermapOfFan 0 V (ESTD V) hfan).faceMap.symm
+            (v, inverse1SigmaFan 0 V (ESTD V) v w) := rfl
+    rw [hxvw]
+    refine ⟨?_, ?_, ?_⟩
+    · -- edge：两面皆化至 (w, inv1_w v)
+      rw [evalEdgeHypermapOfFan hfan' hd1]
+      rw [show isoMapFanNeg V (ESTD V) ((-v, -w).2, (-v, -w).1)
+          = isoMapFanNeg V (ESTD V) (-w, -v) from rfl]
+      rw [isoMapFanNeg_neg (v := v) (w := w), hL,
+        evalNodeHypermapOfFan hfan (by exact hpE),
+        evalFaceHypermapOfFan hfan (by exact hσpE), hσp,
+        isoMapFanNeg_neg (v := w) (w := v)]
+    · -- node：σ'-镜像共轭
+      rw [isoMapFanNeg_neg (v := v) (w := w), evalNodeHypermapOfFan hfan' hd1,
+        sigmaFanNegESTD hE'img (sigmaFanNeg hfan hfanI hwE),
+        isoMapFanNeg_neg (v := v) (w := inverse1SigmaFan 0 V (ESTD V) v w), hN,
+        evalNodeSymmHypermapOfFan hfan (by exact hpE)]
+    · -- face：inv1'-镜像共轭
+      rw [isoMapFanNeg_neg (v := v) (w := w), evalFaceHypermapOfFan hfan' hd1]
+      simp only [neg_neg]
+      rw [inv1FanNegESTD hE'img (inv1FanNeg hfan hfanI hwE'),
+        isoMapFanNeg_neg (v := w) (w := sigmaFan 0 V (ESTD V) w v), hF,
+        evalFaceSymmHypermapOfFan hfan (by exact hpE), hσp,
+        (INVERSE1_SIGMA_FAN (x := 0) (V := V) (E := ESTD V) (v := w) hfan).2.2 v hwE']
 /-- **接口 → 真证明（2026-10-12 A2 填证 lane）**：HOL
 `Asfutbf.contravening_negative`（ASFUTBF.hl:699）。前五数据合取项由 §2c.5
 私件直接装配；第 6/7 合取项（`surroundedNode` 镜像链）经 §2c.7 kit：
