@@ -327,15 +327,17 @@ theorem WQPRRDY_concl_discharged :
           {p : Equiv.Perm ℕ | permutes p (Set.Icc 0 k)}) :=
   fun V ul k _ hP hbar hl2 => WQPRRDY V ul k hP hbar hl2
 
-/-- `PackingAuto2.MXI_EXISTS_concl` (Auto2:708).  NO USABLE TWIN: the
+/-- `PackingAuto2.MXI_EXISTS_concl` (SF37 form: the pack_concl.hl:120-123
+interface plus the marchal2.hl:2516 truncation guard).  NO USABLE TWIN: the
 only downstream carrier, `PackingAuto12.MXI_EXPLICIT` (marchal2.hl:2516),
-consumes THIS interface in its own proof (self-loop) and additionally
-needs `ul = [u0,u1,u2,u3]` and `hl (truncateSimplex 2 ul) < sqrt 2`,
-neither derivable from the interface's hypotheses (barV does not bound
-proper truncations). -/
+consumes THIS interface in its own proof (self-loop); of its two extra
+needs the truncation guard is now an interface hypothesis (SF37 — barV
+does not bound proper truncations), while `ul = [u0,u1,u2,u3]` is
+`BARV_3_EXPLICIT`-derivable from `barV V 3 ul`. -/
 theorem MXI_EXISTS_concl_discharged :
     ∀ (V : Set V3) (ul : List V3), saturated V → Packing V →
-      barV V 3 ul → Real.sqrt 2 ≤ hl ul →
+      barV V 3 ul → hl (truncateSimplex 2 ul) < Real.sqrt 2 →
+      Real.sqrt 2 ≤ hl ul →
       mxi V ul ∈ convexHull ℝ {omegaListN V ul 2, omegaListN V ul 3} ∧
         dist (mxi V ul) (hdV ul) = Real.sqrt 2 := by
   sorry

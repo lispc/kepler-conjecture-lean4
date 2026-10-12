@@ -5474,9 +5474,16 @@ theorem IVFICRK_concl : ∀ {A : Type} [Inhabited A] (k : ℕ),
           (leftActionList σ (dropIth ul i)).getD j default := by
   sorry
 
-/-- HOL `MXI_EXISTS_concl` (pack_concl.hl:120-123). -/
+/-- HOL `MXI_EXPLICIT` (marchal2.hl:2516) in the pack_concl.hl:120-123
+interface form: the interface hypotheses plus the truncation guard the HOL
+carrier carries. SF37 (PA24 B2-branch recon, `p24_caseB2_mxi_eq`): without
+`hl (truncateSimplex 2 ul) < sqrt 2` the second conjunct is false — in the
+B2 branch (`r₃ := hl (truncateSimplex 2 ul) ≥ sqrt 2`) `mxi V ul` equals
+`omegaListN V ul 2`, at Pythagorean distance `≥ r₃` from `hdV ul` — so the
+guard is not droppable and `barV V 3 ul` does not bound proper truncations. -/
 theorem MXI_EXISTS_concl : ∀ (V : Set V3) (ul : List V3), saturated V → Packing V →
-    barV V 3 ul → Real.sqrt 2 ≤ hl ul →
+    barV V 3 ul → hl (truncateSimplex 2 ul) < Real.sqrt 2 →
+    Real.sqrt 2 ≤ hl ul →
     mxi V ul ∈ convexHull ℝ {omegaListN V ul 2, omegaListN V ul 3} ∧
       dist (mxi V ul) (hdV ul) = Real.sqrt 2 := by
   sorry

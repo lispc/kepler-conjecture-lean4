@@ -4644,7 +4644,7 @@ private theorem p24_caseB3_aux (V : Set V3) (u0 u1 : V3) (vl : List V3)
   obtain ⟨hEae3, hEaP⟩ := p24_axial_eqs u0 u1 v mid e3 P (dist u0 u1) t h wg
     a haxd hdne h33 hmiddef hv' hPe3 hPn hhpos hgam heqa1 heqav
   -- 7. mxi 数据 + segment 权重线性传播
-  obtain ⟨hmx1, hmx2⟩ := MXI_EXISTS_concl V [u0, u1, v, w] hs hp hbar hr4
+  obtain ⟨hmx1, hmx2⟩ := MXI_EXISTS_concl V [u0, u1, v, w] hs hp hbar hr3 hr4
   have hmx2' : dist (mxi V [u0, u1, v, w]) u0 = Real.sqrt 2 := by
     rwa [show hdV [u0, u1, v, w] = u0 from rfl] at hmx2
   rw [convexHull_pair, hw3eq] at hmx1

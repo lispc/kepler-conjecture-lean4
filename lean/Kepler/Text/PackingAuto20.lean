@@ -2028,7 +2028,7 @@ private theorem p20g_apex_dist3 (V X : Set V3) (a b c d : V3)
   have hw3'' := hw3
   rw [hT3] at hw3''
   have hw3' : omegaListN V [a, b, c, d] 3 ∈ voronoiList V [a, b, c] := hmono hw3''
-  have hm := MXI_EXISTS_concl V [a, b, c, d] hs hp hbarW hhigh
+  have hm := MXI_EXISTS_concl V [a, b, c, d] hs hp hbarW hlow hhigh
   have hSS : ({omegaListN V [a, b, c, d] 2, omegaListN V [a, b, c, d] 3} : Set V3) ⊆
       voronoiList V [a, b, c] := by
     intro z hz

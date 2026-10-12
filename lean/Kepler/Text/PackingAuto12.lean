@@ -1946,7 +1946,7 @@ theorem MXI_EXPLICIT (V : Set V3) (ul : List V3) (u0 u1 u2 u3 : V3)
     (h3 : Real.sqrt 2 ≤ hl ul) :
     ∃ s : V3, s ∈ segment ℝ (omegaListN V ul 2) (omegaListN V ul 3) ∧
       dist (hdV ul) s = Real.sqrt 2 ∧ s = mxi V ul := by
-  have hm := MXI_EXISTS_concl V ul hs hp hb h3
+  have hm := MXI_EXISTS_concl V ul hs hp hb h2 h3
   have h2' : dist (hdV ul) (mxi V ul) = Real.sqrt 2 :=
     (dist_comm _ _).trans hm.2
   refine ⟨mxi V ul, ?_, h2', rfl⟩

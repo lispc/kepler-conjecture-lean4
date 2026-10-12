@@ -454,7 +454,7 @@ private theorem mxiExplicit (V : Set V3) (u0 u1 u2 u3 : V3)
     ∃ s : V3, s ∈ segment ℝ (omegaListN V [u0, u1, u2, u3] 2)
         (omegaListN V [u0, u1, u2, u3] 3) ∧
       dist u0 s = Real.sqrt 2 ∧ mxi V [u0, u1, u2, u3] = s := by
-  have hm := MXI_EXISTS_concl V [u0, u1, u2, u3] hs hp hb hc2
+  have hm := MXI_EXISTS_concl V [u0, u1, u2, u3] hs hp hb hc1 hc2
   rw [show hdV [u0, u1, u2, u3] = u0 from rfl] at hm
   refine ⟨mxi V [u0, u1, u2, u3], ?_, ?_, rfl⟩
   · rw [← p11_hull_pair]
