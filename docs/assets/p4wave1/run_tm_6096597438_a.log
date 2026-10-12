@@ -1,0 +1,8 @@
+[bb_arb] case: 6096597438 a  vars=1  prec=64  max_nodes=4000000
+[bb_arb] root box: h in [1/1, 1/1]
+[bb_arb] CLOSED: leaves=1  nodes=1  (阶梯128=0 256=0  union=0)
+[bb_arb] TM: att=1  valid=1  invalid=0  closed=1  thresh=0.25
+[bb_arb] TM invalid 原因: guard-INDET=0  guard跨0=0  div越零=0  abs跨0=0  sqrt/log底非正=0  未知=0
+real 0.01
+user 0.00
+sys 0.00

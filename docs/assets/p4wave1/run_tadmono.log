@@ -1,0 +1,9 @@
+[bb_arb] case: TSKAJXY-TADIAMB  vars=6  prec=64  max_nodes=4000000
+[bb_arb] root box: y1 in [2846274827/1073741824, 759250125/268435456], y2 in [2846274827/1073741824, 759250125/268435456], y3 in [2/1, 759250125/268435456], y4 in [2/1, 759250125/268435456], y5 in [2/1, 759250125/268435456], y6 in [2/1, 759250125/268435456]
+[bb_arb] CLOSED: leaves=251054  nodes=502107  (阶梯128=251053 256=251053  union=0)
+[bb_arb] TM: att=502107  valid=502049  invalid=58  closed=251054  thresh=1
+[bb_arb] mono: att=250995  closed=0
+[bb_arb] TM invalid 原因: guard-INDET=0  guard跨0=0  div越零=58  abs跨0=0  sqrt/log底非正=0  未知=0
+real 94.13
+user 93.57
+sys 0.29

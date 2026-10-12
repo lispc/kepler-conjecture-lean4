@@ -1,0 +1,6 @@
+[bb_arb] case: 6096597438 a  vars=1  prec=64  max_nodes=4000000
+[bb_arb] root box: h in [1/1, 1/1]
+[bb_arb] CLOSED: leaves=1  nodes=1  (阶梯128=0 256=0  union=0)
+real 0.02
+user 0.00
+sys 0.00
