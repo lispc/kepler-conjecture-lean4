@@ -89,6 +89,15 @@ CARD/sum 无限集约定）：`setSum` 的按集合 junk 约定与 HOL 支撑集
 
 **(e) 分级：A**（加前提即闭合，反例已核，零消费者波及）。
 
+**(f) 状态（2026-10-12 用户批准；应用波复核记录）**：批准见
+docs/projects/sf-decision-batch-2026-10-12.md 项 1。应用波（LocalAuto38
+车道）复核发现本修复**已随 `ddc3683e`（2026-09-29，STATEMENT-FIX 闸 PASS）
+落地**：以 ddc3683e^ 为基 `git apply` 本补丁成功，且应用产物 SUM_INTER 区域
+与现树 LocalAuto38.lean:426-454 逐字节一致；全树零消费者复核依旧成立；
+`lake build Kepler.Text.LocalAuto38` 自然退出 0 error（2026-10-12）。
+**工作树对该文件零 diff——无重起草应用波可执行，STATEMENT-FIX 闸无需再走**；
+补丁 01-SUM_INTER.patch 转历史存档（头注已核账），不可再贴。
+
 ## 2. `regular_spherical_polygon_area_asnFnhk` — 分级 B
 
 **(a)** Lean PackingAuto22.lean:729-737；HOL `counting_spheres.hl:945-947`
@@ -765,6 +774,18 @@ theorem tau3_taum_dfun (d : ℝ) (a01 a12 a02 b01 b12 b02 : ℝ) (f : ℝ → �
 
 ### (f) 状态：草案待审（2026-09-28 officer lane 产出；补丁可贴性已验，
 编译与闸门验收待修复波）。
+
+### (g) 状态（2026-10-12 用户批准；应用波复核记录）：批准见
+docs/projects/sf-decision-batch-2026-10-12.md 项 17。应用波（LocalAuto38
+车道）复核发现本修复**已于 2026-09-29 落地且超出本提案**：陈述补陈随
+`5bcb4e11`（STATEMENT-FIX 闸 PASS，h1-h6 与 (c) 节提案陈述逐字一致），
+两定理证明体已随 `8939b636` 填成真证零 sorry（ballAnnulus 成员 + `tau3_taum`
+重写 + `h` 消费于 y=(‖v0‖,‖v1‖,‖v2‖,dist v1 v2, dist v0 v2, dist v0 v1) +
+`p38_deltaY_pos_4 0 v0 v1 v2` 供 deltaY 支；sorry 净 −2，闸 PASS；现树
+LocalAuto38.lean:1492-1574）；全树零直接消费点复核依旧成立；
+`lake build Kepler.Text.LocalAuto38` 自然退出 0 error（2026-10-12）。
+**工作树对该文件零 diff——无重起草应用波可执行，STATEMENT-FIX 闸无需再走**；
+补丁 17-tau3_taum_dist_bound.patch 转历史存档（头注已核账），不可再贴。
 
 ## merge-ineq-bank. 波 0 ——银行结构化 + eta_y 重指向（Merge_ineq 通道章程 §2）
 

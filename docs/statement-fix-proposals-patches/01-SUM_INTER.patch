@@ -1,3 +1,7 @@
+# 【2026-10-12 应用波核账】本补丁已随 ddc3683e(2026-09-29, STATEMENT-FIX 闸 PASS)
+#   应用落地; 现树 LocalAuto38.lean:433 SUM_INTER 已含 (hA : A.Finite) 且与本品逐字节
+#   一致(以 ddc3683e^ 为基 apply 实证), 全树零消费者复核成立, lake build 0 error。
+#   【不可再贴/勿再走闸】——留档备查(提案 §1(f))。
 # Item 1 — SUM_INTER (grade A: 可立即修)
 # 文件: lean/Kepler/Text/LocalAuto38.lean:415-445
 # 反例(机器已核, scratch 波): A = univ(Set ℕ), B = {0}, f = const 1
