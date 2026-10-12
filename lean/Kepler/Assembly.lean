@@ -3095,6 +3095,415 @@ private theorem perturbationLemma (d : ℝ) (hd : 0 < d) {n : Kepler.Geom.V3} (h
     rw [dist_eq_norm]
     exact hlt
 
+/-! ### 2c''. FCDJDOT 柱②门钥匙：JBDNJJB 正弦符号桥（2026-10-12 A6 续三波）
+
+HOL FNJLBXS-compiled.hl:714-745 `not_surrounded_imp_on_one_side_of_plane` 的
+v cross w 分离平面路线需要两件上游：正弦/叉积符号桥（Trigonometry2.JBDNJJB 的
+符号内容，trig2.hl:4253，全树零移植——LA5 `SIN_AZIM_MUTUAL_CROSS` 与 LA9
+`JBDNJJB3_p9` 均为开放债务，不可依赖）与 azim/dart 机器
+（`DART1_NOT_COLLINEAR` + `azim_ge_azim_dart`，下一块落地）。
+
+本块路线：`azim_master`（Geom/Azim.lean，零债）给出 azim 在任意右手 ON 标架
+下的极坐标表示，取 `exists_on3_eq_smul` 的标架（u 轴向），从表示式纯代数推出
+`(u cross v)·w = ‖u‖·r1·r2·sin(azim 0 u v w)`，其中 `‖u‖ > 0`、`r1 > 0`
+（非共线支）、`r2 ≥ 0`（azim_master 的条件正性）；w 共线退化支
+`azim = 0` 且叉积点 w = 0，取 c = 0。符号端 `π ≤ azim < 2π ⟹ sin ≤ 0`
+（HOL SIN_NEG_PI_2PI，`Real.sin_nonneg_of_nonneg_of_le_pi` + 移角）。
+-/
+
+
+/-! ## V3 → Pi 的 coe 辅助（rfl 桥） -/
+
+private theorem fnCoeZero : ((0 : V3) : Fin 3 → ℝ) = 0 := rfl
+
+private theorem fnCoeSub (a b : V3) :
+    ((a - b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) - (b : Fin 3 → ℝ) := rfl
+
+private theorem fnCoeAdd (a b : V3) :
+    ((a + b : V3) : Fin 3 → ℝ) = (a : Fin 3 → ℝ) + (b : Fin 3 → ℝ) := rfl
+
+private theorem fnCoeSmul (t : ℝ) (a : V3) :
+    ((t • a : V3) : Fin 3 → ℝ) = t • ((a : V3) : Fin 3 → ℝ) := rfl
+
+/-! ## Pi 侧 crossProduct 分配律 -/
+
+private theorem fnCrossAdd (p q r : Fin 3 → ℝ) :
+    crossProduct (p + q) r = crossProduct p r + crossProduct q r := by
+  funext i
+  fin_cases i <;> simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_two, Matrix.tail_cons, Matrix.head_cons, Pi.add_apply]
+
+private theorem fnCrossSmul (t : ℝ) (p r : Fin 3 → ℝ) :
+    crossProduct (t • p) r = t • crossProduct p r := by
+  funext i
+  fin_cases i <;> simp [cross_apply, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_two, Matrix.tail_cons, Matrix.head_cons, Pi.smul_apply]
+
+private theorem fnCrossAdd' (p q r : Fin 3 → ℝ) :
+    crossProduct p (q + r) = crossProduct p q + crossProduct p r := by
+  rw [← cross_anticomm (q + r) p, ← cross_anticomm q p, ← cross_anticomm r p, fnCrossAdd,
+    neg_add]
+
+private theorem fnCrossSmul' (t : ℝ) (p r : Fin 3 → ℝ) :
+    crossProduct p (t • r) = t • crossProduct p r := by
+  rw [← cross_anticomm (t • r) p, fnCrossSmul, ← cross_anticomm p r, smul_neg, neg_neg]
+
+/-! ## 右手 ON 标架的循环 cross 恒等式 -/
+
+private theorem fnCrossE3E1 {f1 f2 f3 : V3} (h : Orthonormal3 f1 f2 f3) :
+    crossProduct (f3 : Fin 3 → ℝ) (f1 : Fin 3 → ℝ) = (f2 : Fin 3 → ℝ) := by
+  have hXf1 : (crossProduct (f3 : Fin 3 → ℝ) (f1 : Fin 3 → ℝ)) ⬝ᵥ (f1 : Fin 3 → ℝ) = 0 := by
+    rw [dotProduct_comm]
+    exact dot_cross_self _ _
+  have hXf2 : (crossProduct (f3 : Fin 3 → ℝ) (f1 : Fin 3 → ℝ)) ⬝ᵥ (f2 : Fin 3 → ℝ) = 1 := by
+    rw [dotProduct_comm, triple_product_permutation, on3_cross h]
+    have h33 : ((f3 : Fin 3 → ℝ)) ⬝ᵥ ((f3 : Fin 3 → ℝ)) = 1 := h.2.2.1
+    exact h33
+  have hXf3 : (crossProduct (f3 : Fin 3 → ℝ) (f1 : Fin 3 → ℝ)) ⬝ᵥ (f3 : Fin 3 → ℝ) = 0 := by
+    rw [dotProduct_comm]
+    exact dot_self_cross _ _
+  have hexp := on3_expand h (WithLp.toLp 2 (crossProduct (f3 : Fin 3 → ℝ) (f1 : Fin 3 → ℝ)) : V3)
+  rw [hXf1, hXf2, hXf3] at hexp
+  simp only [zero_smul, one_smul, zero_add, add_zero] at hexp
+  have hcoe : ((WithLp.toLp 2 (crossProduct (f3 : Fin 3 → ℝ) (f1 : Fin 3 → ℝ)) : V3) :
+      Fin 3 → ℝ) = (f2 : Fin 3 → ℝ) := by rw [hexp]
+  rwa [coe_toLp] at hcoe
+
+private theorem fnCrossE3E2 {f1 f2 f3 : V3} (h : Orthonormal3 f1 f2 f3) :
+    crossProduct (f3 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ) = -(f1 : Fin 3 → ℝ) := by
+  have hXf1 : (crossProduct (f3 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ)) ⬝ᵥ (f1 : Fin 3 → ℝ) = -1 := by
+    rw [dotProduct_comm, triple_product_permutation,
+      ← cross_anticomm (f1 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ), dotProduct_comm, neg_dotProduct,
+      on3_cross h]
+    have h33 : ((f3 : Fin 3 → ℝ)) ⬝ᵥ ((f3 : Fin 3 → ℝ)) = 1 := h.2.2.1
+    rw [h33]
+  have hXf2 : (crossProduct (f3 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ)) ⬝ᵥ (f2 : Fin 3 → ℝ) = 0 := by
+    rw [dotProduct_comm]
+    exact dot_cross_self _ _
+  have hXf3 : (crossProduct (f3 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ)) ⬝ᵥ (f3 : Fin 3 → ℝ) = 0 := by
+    rw [dotProduct_comm]
+    exact dot_self_cross _ _
+  have hexp := on3_expand h (WithLp.toLp 2 (crossProduct (f3 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ)) : V3)
+  rw [hXf1, hXf2, hXf3] at hexp
+  simp only [zero_smul, zero_add, add_zero, neg_smul, one_smul] at hexp
+  have hcoe : ((WithLp.toLp 2 (crossProduct (f3 : Fin 3 → ℝ) (f2 : Fin 3 → ℝ)) : V3) :
+      Fin 3 → ℝ) = -(f1 : Fin 3 → ℝ) := by
+    rw [hexp]
+    rfl
+  rwa [coe_toLp] at hcoe
+
+/-! ## 主恒等式：cross·w = c · sin(azim)（c ≥ 0；JBDNJJB 的符号内容） -/
+
+private theorem crossDotEqSmulSin (u v w : V3) (hu : u ≠ 0) (hnc : ¬ Collinear3 0 u v) :
+    ∃ c : ℝ, 0 ≤ c ∧
+      (crossProduct (u : Fin 3 → ℝ) (v : Fin 3 → ℝ)) ⬝ᵥ (w : Fin 3 → ℝ)
+        = c * Real.sin (azim 0 u v w) := by
+  classical
+  obtain ⟨g1, g2, g3, hf, halign⟩ := exists_on3_eq_smul u hu
+  have huc : (u : Fin 3 → ℝ) = ‖u‖ • (g3 : Fin 3 → ℝ) := by
+    have h := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) halign
+    simpa using h
+  have hax : (u - 0 : V3) = dist u 0 • g3 := by
+    rw [dist_eq_norm]
+    simpa using halign
+  have hθ := azim_master 0 u v w
+  obtain ⟨-, hθ2, hmain⟩ := hθ
+  obtain ⟨k1, k2, hframe⟩ := hmain
+  obtain ⟨ψ, r1, r2, hv, hw, hr1, hr2⟩ := hframe g1 g2 g3 hf hax hu
+  have hr1pos : 0 < r1 := hr1 hnc
+  -- ON 标架正交坐标（Pi 侧）
+  have o11 : ((g1 : Fin 3 → ℝ)) ⬝ᵥ ((g1 : Fin 3 → ℝ)) = 1 := hf.1
+  have o22 : ((g2 : Fin 3 → ℝ)) ⬝ᵥ ((g2 : Fin 3 → ℝ)) = 1 := hf.2.1
+  have o12 : ((g1 : Fin 3 → ℝ)) ⬝ᵥ ((g2 : Fin 3 → ℝ)) = 0 := hf.2.2.2.1
+  have o13 : ((g1 : Fin 3 → ℝ)) ⬝ᵥ ((g3 : Fin 3 → ℝ)) = 0 := hf.2.2.2.2.1
+  have o23 : ((g2 : Fin 3 → ℝ)) ⬝ᵥ ((g3 : Fin 3 → ℝ)) = 0 := hf.2.2.2.2.2.1
+  have o21 : ((g2 : Fin 3 → ℝ)) ⬝ᵥ ((g1 : Fin 3 → ℝ)) = 0 := by
+    rw [dotProduct_comm]
+    exact o12
+  have o1u : ((g1 : Fin 3 → ℝ)) ⬝ᵥ (u : Fin 3 → ℝ) = 0 := by
+    rw [huc, dotProduct_smul, o13, smul_zero]
+  have o2u : ((g2 : Fin 3 → ℝ)) ⬝ᵥ (u : Fin 3 → ℝ) = 0 := by
+    rw [huc, dotProduct_smul, o23, smul_zero]
+  -- v/w 的 g-坐标（Pi 侧）
+  have hv' : (v : Fin 3 → ℝ) = (r1 * Real.cos ψ) • (g1 : Fin 3 → ℝ)
+      + (r1 * Real.sin ψ) • (g2 : Fin 3 → ℝ) + k1 • (u : Fin 3 → ℝ) := by
+    have hcc := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hv
+    rw [fnCoeAdd, fnCoeSmul, fnCoeAdd, fnCoeSmul, fnCoeSmul, fnCoeSub, fnCoeZero,
+      sub_zero, fnCoeSub, fnCoeZero, sub_zero] at hcc
+    exact hcc
+  have hw' : (w : Fin 3 → ℝ) = (r2 * Real.cos (ψ + azim 0 u v w)) • (g1 : Fin 3 → ℝ)
+      + (r2 * Real.sin (ψ + azim 0 u v w)) • (g2 : Fin 3 → ℝ)
+      + k2 • (u : Fin 3 → ℝ) := by
+    have hcc := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hw
+    rw [fnCoeAdd, fnCoeSmul, fnCoeAdd, fnCoeSmul, fnCoeSmul, fnCoeSub, fnCoeZero,
+      sub_zero, fnCoeSub, fnCoeZero, sub_zero] at hcc
+    exact hcc
+  -- W 的 g1/g2 坐标
+  have hd1 : (g1 : Fin 3 → ℝ) ⬝ᵥ (w : Fin 3 → ℝ)
+      = r2 * Real.cos (ψ + azim 0 u v w) := by
+    rw [hw', dotProduct_add, dotProduct_add, dotProduct_smul, dotProduct_smul,
+      dotProduct_smul]
+    rw [o11, o12, o1u]
+    ring
+  have hd2 : (g2 : Fin 3 → ℝ) ⬝ᵥ (w : Fin 3 → ℝ)
+      = r2 * Real.sin (ψ + azim 0 u v w) := by
+    rw [hw', dotProduct_add, dotProduct_add, dotProduct_smul, dotProduct_smul,
+      dotProduct_smul]
+    rw [o21, o22, o2u]
+    ring
+  -- cross 积展开
+  have hcross : crossProduct (u : Fin 3 → ℝ) (v : Fin 3 → ℝ)
+      = (‖u‖ * (r1 * Real.cos ψ)) • (g2 : Fin 3 → ℝ)
+        + (-(‖u‖ * (r1 * Real.sin ψ))) • (g1 : Fin 3 → ℝ) := by
+    rw [hv', huc, fnCrossSmul, fnCrossAdd', fnCrossAdd', fnCrossSmul', fnCrossSmul',
+      fnCrossSmul', fnCrossSmul', fnCrossE3E1 hf, fnCrossE3E2 hf, cross_self, smul_zero,
+      smul_zero, add_zero, smul_add, smul_smul, smul_neg, smul_neg, smul_smul, neg_smul]
+  have hkey : (crossProduct (u : Fin 3 → ℝ) (v : Fin 3 → ℝ)) ⬝ᵥ (w : Fin 3 → ℝ)
+      = (‖u‖ * r1 * r2) * Real.sin (azim 0 u v w) := by
+    rw [hcross, add_dotProduct, neg_smul, neg_dotProduct, smul_dotProduct,
+      smul_dotProduct, hd2, hd1]
+    have hsub : Real.sin ((ψ + azim 0 u v w) - ψ)
+        = Real.sin (ψ + azim 0 u v w) * Real.cos ψ
+          - Real.cos (ψ + azim 0 u v w) * Real.sin ψ := Real.sin_sub _ _
+    rw [show (ψ + azim 0 u v w) - ψ = azim 0 u v w from by ring] at hsub
+    rw [hsub]
+    ring
+  by_cases hcolw : Collinear3 0 u w
+  · -- 退化支：w 在轴上，sin azim = 0 且 cross·w = 0
+    have hazim0 : azim 0 u v w = 0 := by
+      show (if Collinear3 0 u v ∨ Collinear3 0 u w then (0:ℝ)
+        else Classical.epsilon (AzimSpec 0 u v w)) = 0
+      rw [if_pos (Or.inr hcolw)]
+    obtain ⟨kk, hkw⟩ := (collinear3_iff_smul hu).mp hcolw
+    have haxw : (w : Fin 3 → ℝ) = kk • (u : Fin 3 → ℝ) := by
+      have hcc := congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hkw
+      rw [fnCoeSub, fnCoeZero, sub_zero, fnCoeSmul, fnCoeSub, fnCoeZero, sub_zero] at hcc
+      exact hcc
+    refine ⟨0, le_refl 0, ?_⟩
+    rw [hazim0, Real.sin_zero, haxw, dotProduct_smul, dotProduct_comm,
+      dot_self_cross (u : Fin 3 → ℝ) (v : Fin 3 → ℝ), smul_zero]
+    ring
+  · refine ⟨‖u‖ * r1 * r2,
+      mul_nonneg (mul_nonneg (norm_nonneg u) hr1pos.le) (hr2 hcolw).le, hkey⟩
+
+/-- 正弦符号桥（FNJLBXS-compiled.hl:714-745 消费的 JBDNJJB 符号内容 +
+SIN_NEG_PI_2PI）：`π ≤ azim 0 u v w` 时 `u cross v · w ≤ 0`。 -/
+private theorem sinAzimCrossSign (u v w : V3) (hu : u ≠ 0) (hnc : ¬ Collinear3 0 u v)
+    (hge : Real.pi ≤ azim 0 u v w) :
+    (crossProduct (u : Fin 3 → ℝ) (v : Fin 3 → ℝ)) ⬝ᵥ (w : Fin 3 → ℝ) ≤ 0 := by
+  obtain ⟨c, hc0, hcid⟩ := crossDotEqSmulSin u v w hu hnc
+  have hθ2 := azim_lt_two_pi 0 u v w
+  have h1 : 0 ≤ azim 0 u v w - Real.pi := by linarith
+  have h2 : azim 0 u v w - Real.pi ≤ Real.pi := by linarith
+  have h3 := Real.sin_nonneg_of_nonneg_of_le_pi h1 h2
+  have h4 : Real.sin (azim 0 u v w) = -Real.sin (azim 0 u v w - Real.pi) := by
+    rw [show azim 0 u v w = (azim 0 u v w - Real.pi) + Real.pi from by ring]
+    rw [Real.sin_add]
+    simp
+  have hs : Real.sin (azim 0 u v w) ≤ 0 := by rw [h4]; linarith
+  rw [hcid]
+  exact mul_nonpos_of_nonneg_of_nonpos hc0 hs
+
+
+/-! ### 2c′′′. FCDJDOT 柱②门钥钥匙落地（2026-10-12 A6 续三波）
+
+**门钥匙① `dart1NotCollinear`**（HOL Hypermap_and_fan.hl:2679
+`DART1_NOT_COLLINEAR`）：真 dart 的 `{v,w} ∈ E` 经 fan6 直接给出
+`¬Collinear3 0 v w`（HOL 经 PAIR_IN_DART1_OF_FAN 展开，Lean 的
+`dart1OfFan` 定义即集合形式，零内容）。
+
+**门钥匙② `azimGeAzimDart`**（HOL Fatugpd.hl:394 `azim_ge_azim_dart`）：
+FAN + 双邻居 + 互异下 `azim 0 w u v2 ≥ azimDart V E (w, u)`。路线：
+card 计数（两互异邻居 ⟹ ncard > 1，`Set.ncard_le_ncard`）展开
+`azimFan` 的 if 取 σ-分支，`SIGMA_FAN`（Fan.lean:317，零债）第三分量
+即最小性。
+
+**主件 `notSurroundedImpOnOneSideOfPlane`**（FNJLBXS-compiled.hl:714-745
+`not_surrounded_imp_on_one_side_of_plane`）：非 surrounded 取 azimDart ≥ π
+的 dart（v, w），取 n := v cross w（`fnCrossNeZero` 经
+`crossProduct_ne_zero_iff_linearIndependent` + pair 线性无关证 n ≠ 0，
+即 HOL CROSS_EQ_0 反向），`inner v n = 0`（dot_self_cross），任一邻居
+w2 按 w2 = w 分支（dot_cross_self = 0）或 azim_ge_azim_dart 链 +
+`sinAzimCrossSign` 得 inner w2 n ≤ 0。
+-/
+
+/-! ## 门钥匙①：DART1_NOT_COLLINEAR（Hypermap_and_fan.hl:2679） -/
+
+private theorem dart1NotCollinear {V : Set V3} {E : Set (Set V3)} {v w : V3}
+    (hfan : FAN 0 V E) (hd : (v, w) ∈ dart1OfFan V E) : ¬ Collinear3 0 v w :=
+  fan_not_collinear hfan hd
+
+/-! ## ¬collinear {0,v,w} 的射线性展开与 cross 非零（CROSS_EQ_0 反向） -/
+
+private theorem fnNotCollinearSmul {v w : V3}
+    (h : ¬ Collinear ℝ ({0, v, w} : Set V3)) :
+    v ≠ 0 ∧ w ≠ 0 ∧ ∀ c : ℝ, w ≠ c • v := by
+  have hv0 : v ≠ 0 := by
+    intro he
+    refine h ?_
+    have hset : ({0, v, w} : Set V3) = ({0, w} : Set V3) := by
+      rw [he]
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset]
+    exact collinear_pair ℝ (0:V3) w
+  have hw0 : w ≠ 0 := by
+    intro he
+    refine h ?_
+    have hset : ({0, v, w} : Set V3) = ({0, v} : Set V3) := by
+      rw [he]
+      ext z
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset]
+    exact collinear_pair ℝ (0:V3) v
+  refine ⟨hv0, hw0, ?_⟩
+  intro c hc
+  refine h ?_
+  rw [collinear_iff_exists_forall_eq_smul_vadd]
+  refine ⟨(0:V3), v, ?_⟩
+  intro x hx
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+  rcases hx with rfl | hx
+  · exact ⟨0, by rw [zero_smul, vadd_eq_add, add_zero]⟩
+  rcases hx with rfl | hx
+  · exact ⟨1, by rw [one_smul, vadd_eq_add, add_zero]⟩
+  · exact ⟨c, by rw [hx, hc, vadd_eq_add, add_zero]⟩
+
+private theorem fnCoeInj {x y : V3} (h : (x : Fin 3 → ℝ) = (y : Fin 3 → ℝ)) : x = y := by
+  rw [← WithLp.toLp_ofLp 2 x, ← WithLp.toLp_ofLp 2 y, h]
+
+private theorem fnCrossNeZero {v w : V3} (h : ¬ Collinear3 0 v w) :
+    (WithLp.toLp 2 (crossProduct (v : Fin 3 → ℝ) (w : Fin 3 → ℝ)) : V3) ≠ 0 := by
+  obtain ⟨hv0, hw0, hc⟩ := fnNotCollinearSmul h
+  have hindep : LinearIndependent ℝ ![(v : Fin 3 → ℝ), (w : Fin 3 → ℝ)] := by
+    rw [LinearIndependent.pair_iff]
+    intro s t hst
+    have hv3 : (s • v + t • w : V3) = 0 := by
+      apply fnCoeInj
+      rw [WithLp.ofLp_add, fnCoeSmul, fnCoeSmul]
+      simpa using hst
+    rcases eq_or_ne s 0 with hs0 | hs0
+    · rw [hs0, zero_smul, zero_add, smul_eq_zero] at hv3
+      rcases hv3 with h1 | h1
+      · exact ⟨hs0, h1⟩
+      · exact absurd h1 hw0
+    · rcases eq_or_ne t 0 with ht0 | ht0
+      · rw [ht0, zero_smul, add_zero, smul_eq_zero] at hv3
+        rcases hv3 with h1 | h1
+        · exact absurd h1 hs0
+        · exact absurd h1 hv0
+      · have hyw : w = (-(s / t)) • v := by
+          have hst' : t • w = -(s • v) := eq_neg_iff_add_eq_zero.mpr
+            (by rw [add_comm]; exact hv3)
+          have h2 := congrArg (fun z : V3 => (t⁻¹) • z) hst'
+          rw [inv_smul_smul₀ ht0, smul_neg, smul_smul] at h2
+          have hsc : (t:ℝ)⁻¹ * s = s / t := by field_simp
+          rw [h2, hsc, neg_smul]
+        exact (hc (-(s / t)) hyw).elim
+  intro hzero
+  have hcne : crossProduct (v : Fin 3 → ℝ) (w : Fin 3 → ℝ) ≠ 0 :=
+    (crossProduct_ne_zero_iff_linearIndependent (v := (v : Fin 3 → ℝ))
+      (w := (w : Fin 3 → ℝ))).mpr hindep
+  have hcoe : ((WithLp.toLp 2 (crossProduct (v : Fin 3 → ℝ) (w : Fin 3 → ℝ)) : V3) :
+      Fin 3 → ℝ) = crossProduct (v : Fin 3 → ℝ) (w : Fin 3 → ℝ) := coe_toLp _
+  rw [← hcoe, hzero] at hcne
+  simpa using hcne
+
+/-! ## dot_toLp 的右置形 -/
+
+private theorem fnDotToLpRight (p : Fin 3 → ℝ) (y : V3) :
+    y ⬝ᵥ (WithLp.toLp 2 p : V3) = (y : Fin 3 → ℝ) ⬝ᵥ p := by
+  rw [dotProduct_comm, dot_toLp, dotProduct_comm]
+
+/-! ## 门钥匙②：azim_ge_azim_dart（Fatugpd.hl:394） -/
+
+private theorem azimGeAzimDart {V : Set V3} {E : Set (Set V3)} {w u v2 : V3}
+    (hfan : FAN 0 V E) (hu : u ∈ setOfEdge w V E) (hv2 : v2 ∈ setOfEdge w V E)
+    (hwu : w ≠ u) (hvu : v2 ≠ u) : azim 0 w u v2 ≥ azimDart V E (w, u) := by
+  have hVfin : V.Finite := hfan.2.2.1.1
+  have huv2 : u ≠ v2 := fun he => hvu he.symm
+  have hne : setOfEdge w V E ≠ {u} := by
+    intro he
+    rw [he] at hv2
+    exact hvu (Set.mem_singleton_iff.mp hv2)
+  have hdart : azimDart V E (w, u) = Fan.azimFan 0 V E w u := by
+    show (if (w, u).1 = (w, u).2 then (2:ℝ) * Real.pi
+      else Fan.azimFan 0 V E (w, u).1 (w, u).2) = Fan.azimFan 0 V E w u
+    rw [if_neg hwu]
+  rw [hdart]
+  show (if (setOfEdge w V E).ncard > 1 then azim 0 w u (sigmaFan 0 V E w u)
+    else (2:ℝ) * Real.pi) ≤ azim 0 w u v2
+  by_cases hcard : (setOfEdge w V E).ncard > 1
+  · rw [if_pos hcard]
+    exact (SIGMA_FAN hne hfan hu).2.2 v2 hv2 hvu
+  · push_neg at hcard
+    exfalso
+    have hsub2 : ({u, v2} : Set V3) ⊆ setOfEdge w V E := by
+      intro x hx
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+      rcases hx with rfl | hx
+      · exact hu
+      · rw [hx]
+        exact hv2
+    have hle : ({u, v2} : Set V3).ncard ≤ (setOfEdge w V E).ncard :=
+      Set.ncard_le_ncard hsub2 (remark_finite_fan1 w V E hVfin)
+    have h2 : ({u, v2} : Set V3).ncard = 2 := by
+      rw [Set.ncard_insert_of_notMem (by simp [huv2] : u ∉ ({v2} : Set V3))]
+      simp
+    omega
+
+/-! ## 主件：not_surrounded_imp_on_one_side_of_plane（FNJLBXS-compiled.hl:714-745） -/
+
+private theorem notSurroundedImpOnOneSideOfPlane {V : Set V3} {E : Set (Set V3)} {v : V3}
+    (hfan : FAN 0 V E) (hv : v ∈ V) (hiso : setOfEdge v V E ≠ ∅)
+    (hns : ¬ surroundedNode V E v) :
+    ∃ n : V3, n ≠ 0 ∧ inner ℝ v n = 0 ∧ ∀ w ∈ setOfEdge v V E, inner ℝ w n ≤ 0 := by
+  classical
+  unfold surroundedNode at hns
+  push_neg at hns
+  obtain ⟨d, hdD, hd1v, hdge⟩ := hns
+  have hd : (v, d.2) ∈ dartOfFan V E := by rw [← hd1v]; exact hdD
+  have hd1 : (v, d.2) ∈ dart1OfFan V E := by
+    have hunion : dartOfFan V E
+        = {x | x.1 = x.2 ∧ x.1 ∈ V ∧ setOfEdge x.1 V E = ∅} ∪ dart1OfFan V E := rfl
+    rw [hunion] at hd
+    rcases (Set.mem_union _ _ _).mp hd with h0 | h1
+    · exact absurd (Set.mem_setOf_eq.mp h0).2.2 hiso
+    · exact h1
+  have he : {v, d.2} ∈ E := hd1
+  have hvw : v ≠ d.2 := edge_ne_of_fan hfan he
+  have hncol : ¬ Collinear3 0 v d.2 := fan_not_collinear hfan he
+  have hv0 : v ≠ 0 := fun hzero => hfan.2.2.2.1 (hzero ▸ hv)
+  have hmem2 : d.2 ∈ setOfEdge v V E :=
+    (properties_of_setOfEdge_fan 0 V E v d.2 hfan).mp he
+  have h2dart : azimDart V E d = Fan.azimFan 0 V E v d.2 := by
+    show (if d.1 = d.2 then (2:ℝ) * Real.pi
+      else Fan.azimFan 0 V E d.1 d.2) = Fan.azimFan 0 V E v d.2
+    rw [if_neg (show d.1 ≠ d.2 from by rw [hd1v]; exact hvw), hd1v]
+  rw [h2dart] at hdge
+  refine ⟨(WithLp.toLp 2 (crossProduct (v : Fin 3 → ℝ) (d.2 : Fin 3 → ℝ)) : V3),
+    fnCrossNeZero hncol, ?_, ?_⟩
+  · rw [inner_eq_dot, fnDotToLpRight]
+    exact dot_self_cross (v : Fin 3 → ℝ) (d.2 : Fin 3 → ℝ)
+  · intro w2 hw2
+    by_cases hw2d2 : w2 = d.2
+    · rw [hw2d2]
+      rw [inner_eq_dot, fnDotToLpRight]
+      exact le_of_eq (dot_cross_self (v : Fin 3 → ℝ) (d.2 : Fin 3 → ℝ))
+    · have h1 := azimGeAzimDart hfan hmem2 hw2 hvw hw2d2
+      have heq2 : (v, d.2) = d := by
+        calc (v, d.2) = (d.1, d.2) := by rw [hd1v]
+          _ = d := Prod.mk.eta
+      rw [heq2, h2dart] at h1
+      have hge : Real.pi ≤ azim 0 v d.2 w2 := by
+        calc Real.pi ≤ Fan.azimFan 0 V E v d.2 := hdge
+          _ ≤ azim 0 v d.2 w2 := h1.le
+      rw [inner_eq_dot, fnDotToLpRight, dotProduct_comm]
+      exact sinAzimCrossSign v d.2 w2 hv0 hncol hge
+
+
 /-- **CPNKNXN**（flyspeck_devol.hl:135，2026-10-12 A4 填证 lane）：
 packing 可扩为 saturated packing 超集（Zorn：`zorn_subset_nonempty`，链并
 仍是 packing；饱和性经极大性的单点扩充论证，HOL :135-167 逐步镜像）。 -/
