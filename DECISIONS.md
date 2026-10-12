@@ -3,6 +3,25 @@
 > 依据 PLAN.md §2：任何偏离已锁定决策的变更必须先在此记录理由并向人类汇报。
 > 新条目追加在顶部（倒序）。
 
+## 2026-10-13 — Phase 4 求解策略路由表批准（用户"按建议全部批准"）
+
+- **原问题形式废止**："TM vs BBTreeGD 二选一"经 W1/W1b/W2 三波受控实验修正为
+  **按表达式族路由的混合策略**（详见 docs/projects/phase4-routing-decision.md）。
+  实证：TM 多项式族碾压（TADIAMB 251k 叶 100%@101.2s）与 sqrt 族结构性无力
+  （TEWNSCJ closed=0 非正底 100%）并存；BBTreeGD 广覆盖骨干（BIX 92.9%）与
+  锐边界 438× 叶膨胀并存——二选一必有一半错。
+- **路由表**：R1 多项式/有理→TM 主攻；R2 ite/guard→BB 域切分+ite-hull2+TM 临界带
+  （BIX 实证混合管线）；R3 sqrt/log→第三武器（radicand 零等值面预切分/t=√u 换元，
+  QZECFIC 探针证切负底半域后 TM 即闭合）；R4 非严格/角点→手证路线（B V2 先例）；
+  残叶归 G4 数据波。Lean 侧 CertTM/BBTreeD 双内核均在树，路由表零新基建。
+- **已批准执行项**：①第三武器 R&D 立项（Phase4 常驻车道 W4-W5，formal_ineqs
+  考古先行，验收锚=TEWNSCJ/QZECFIC 对照组闭合）；②92 prep 族成分画像车道
+  （812 记录按表达式族分类，半天脚本）；③强机器日 runbook 引用本路由表分批灌装。
+- **对既有决策的关系**：不改变"证书化计算/native_decide 禁用"信任模型
+  （第三武器的证书仍是 Lean 内核可回放的 interval/TM 数据）；2026-08-09 的
+  "非线性：dReal 优先，Arb 球算术兜底"为旧机时代求解器选型，本文的 TM/BBTreeGD
+  是其证书发射层策略细化，不冲突。
+
 ## 2026-10-09 — SF 31 批准（用户"31 批，方案 a1"）
 
 - **项 31**（PA23 `grutoti_sum_volD` 前提面不足——冻结陈述可反驳，M）：方案
