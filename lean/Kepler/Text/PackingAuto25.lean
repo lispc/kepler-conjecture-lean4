@@ -158,8 +158,11 @@ Remaining sorries, classified:
       and the wedge-uniqueness chain), `HL_IMP_BARV`/`AFF_DEP_COPLANAR`
       (need full voronoi-face dimension theory),
       `coplanar_delta_y`/`RADV_ETAY`/`ETA_Y_*` (need the eta_y body /
-      Cayley-Menger bridge), `ORDER_AZIM_SUM2Pi0` (needs azim fan-sum
-      induction), `MCELL4_REPARAM` (permuted-prefix barV transfer),
+      Cayley-Menger bridge), `MCELL4_REPARAM` (permuted-prefix barV transfer),
+      （2026-10-12 更新：`ORDER_AZIM_SUM2Pi0` 已转真——azim 链算术
+      `AZIM_BASE_SHIFT_LE`+`azim_compl` 望远镜；`S_LEAF_IN_WEDGE_GE`/
+      `MCELL4_LEAF2`/`MCELL4_LEAF3`/`MCELL4_FI_EL`/`MCELL4_FI`/
+      `MCELL4_BARV_FI` 同波转真）,
       `MCELL{2,3}_DIHX*`/`MCELL3_DOMAIN`/`MCELL4_*`-cell-structure cluster
       (need the VX/cellParams characterization of edgeX/dihX).
   - 卡外部锚 (certified banks / external anchors, skip):
@@ -1898,14 +1901,29 @@ theorem TSKAJXY_3 (V : Set V3) (X : Set V3) (ul : List V3)
   sorry
 
 /-- HOL `MCELL4_LEAF2`.
--- NEEDS: barV V 2 面（`hl [EL 0;EL 1;EL 2] < sqrt 2` 经 `RADV_MONO` 自
-`MCELL4_CONVEX_HULL`/4 点集，voronoi 条款经 `barV V 3` 初始子表闭包；
-HOL leaf_cell.hl:1881）。leaf-rank 波的 S_LEAF_CARD2 / LEAF_RANK_ONTO /
-LEAF_IN_WEDGE_GE 已装配到本件。 -/
+2026-10-12 转真（零新债）：HOL leaf_cell.hl:1881 原路线照搬——`hl ul < sqrt 2`
+支取 `barV V 2` 面（`TRUNCATE_SIMPLEX_BARV` PA5:1381 + `BARV3_TRUNC2`
+PA18:1692 换形）与 `hl` 单调（`HL_DECREASE` PA7:1305，已在库全证）；
+空支经 `mcell4 = ∅` 与 `hn` 矛盾。 -/
 theorem MCELL4_LEAF2 (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturated V)
     (hb : barV V 3 ul) (hn : ¬ nullSet (mcell4 V ul)) :
     leaf V [elV ul 0, elV ul 1, elV ul 2] := by
-  sorry
+  by_cases hlt : hl ul < Real.sqrt 2
+  · refine ⟨?_, ?_⟩
+    · have hbar : barV V 2 (truncateSimplex 2 ul) :=
+        TRUNCATE_SIMPLEX_BARV V 2 3 ul hb (by omega)
+      rw [BARV3_TRUNC2 hb] at hbar
+      exact hbar
+    · have hdec := HL_DECREASE V ul 3 2 hp hb (by omega)
+      rw [BARV3_TRUNC2 hb] at hdec
+      have hlist : [elV ul 0, elV ul 1, elV ul 2]
+          = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0] := rfl
+      rw [hlist]
+      linarith
+  · exfalso
+    have heq : mcell4 V ul = ∅ := by unfold mcell4; rw [if_neg hlt]
+    rw [heq] at hn
+    exact absurd measure_empty hn
 
 /-- HOL `MCELL4_CONVEX_HULL`.  Proof: a null `mcell4` is the empty branch of
 its `if`, so the `hl ul < sqrt 2` branch must hold and the cell is the hull
@@ -1941,12 +1959,81 @@ theorem MCELL4_CARD4 (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturate
   · exact measure_mono_null (convexHull_mono hsub) (p25_null_conv3 _ _ _)
 
 /-- HOL `MCELL4_LEAF3`.
--- NEEDS: 同 `MCELL4_LEAF2`（把 `EL 2` 换成 `EL 3`；HOL leaf_cell.hl:1934，
-经 `MCELL4_LEAF2` + 列表置换）。 -/
+2026-10-12 转真（装配级）：对换置换 `Equiv.swap 2 3` 的显式装配——
+`YIFVQDV_1`（PA7:1936，具名桩）给置换后 `barV V 3`，`RVFXZBU`（PA10，i=4 支
+已证）给 `mcell4` 不变性，套 `MCELL4_LEAF2` 后经四点表 `[EL 0, EL 1, EL 3,
+EL 2] = leftActionList (swap 2 3) ul` 换回。债走账本：闭包含 YIFVQDV_1 的
+上游桩债（PA7 具名桩，非本波引入）。 -/
 theorem MCELL4_LEAF3 (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturated V)
     (hb : barV V 3 ul) (hn : ¬ nullSet (mcell4 V ul)) :
     leaf V [elV ul 0, elV ul 1, elV ul 3] := by
-  sorry
+  by_cases hlt : hl ul < Real.sqrt 2
+  · have h4 : ul.length = 4 := hb.1
+    have hsw : ∀ i : ℕ, Equiv.swap (2:ℕ) 3 i
+        = (if i = 2 then 3 else if i = 3 then 2 else i) := by
+      intro i
+      by_cases h2 : i = 2
+      · subst h2; simp
+      · by_cases h3 : i = 3
+        · subst h3; simp
+        · rw [if_neg h2, if_neg h3]
+          exact Equiv.swap_apply_of_ne_of_ne h2 h3
+    have hs0 : (Equiv.swap (2:ℕ) 3).symm 0 = 0 := by
+      rw [Equiv.symm_apply_eq]; simp [hsw]
+    have hs1 : (Equiv.swap (2:ℕ) 3).symm 1 = 1 := by
+      rw [Equiv.symm_apply_eq]; simp [hsw]
+    have hs2 : (Equiv.swap (2:ℕ) 3).symm 2 = 3 := by
+      rw [Equiv.symm_apply_eq]; simp [hsw]
+    have hs3 : (Equiv.swap (2:ℕ) 3).symm 3 = 2 := by
+      rw [Equiv.symm_apply_eq]; simp [hsw]
+    have hwl : leftActionList (Equiv.swap (2:ℕ) 3) ul
+        = [elV ul 0, elV ul 1, elV ul 3, elV ul 2] := by
+      unfold leftActionList
+      rw [h4, show List.range 4 = [0, 1, 2, 3] from by decide]
+      show [ul.getD ((Equiv.swap (2:ℕ) 3).symm 0) default,
+            ul.getD ((Equiv.swap (2:ℕ) 3).symm 1) default,
+            ul.getD ((Equiv.swap (2:ℕ) 3).symm 2) default,
+            ul.getD ((Equiv.swap (2:ℕ) 3).symm 3) default]
+          = [elV ul 0, elV ul 1, elV ul 3, elV ul 2]
+      rw [hs0, hs1, hs2, hs3]
+      rfl
+    have hperm : permutes (Equiv.swap (2:ℕ) 3) (Set.Icc 0 3) := by
+      intro x
+      simp only [Set.mem_Icc]
+      have hx3 : Equiv.swap (2:ℕ) 3 x ≤ 3 ↔ x ≤ 3 := by
+        rw [hsw x]
+        split
+        · omega
+        · split
+          · omega
+          · omega
+      constructor
+      · intro hc; exact ⟨by omega, hx3.mpr hc.2⟩
+      · intro hc; exact ⟨by omega, hx3.mp hc.2⟩
+    have hfix : ∀ j, 4 ≤ j → Equiv.swap (2:ℕ) 3 j = j := by
+      intro j hj
+      rw [hsw j]
+      split
+      · omega
+      · split
+        · omega
+        · rfl
+    have hbP : barV V 3 (leftActionList (Equiv.swap (2:ℕ) 3) ul) :=
+      YIFVQDV_1 V ul 3 (Equiv.swap (2:ℕ) 3) hp hb hlt hperm
+    have hmc : mcell 4 V (leftActionList (Equiv.swap (2:ℕ) 3) ul)
+        = mcell 4 V ul := RVFXZBU (i := 4) (by simp) hs hp hb hperm hfix
+    have hn4 : ¬ nullSet (mcell4 V (leftActionList (Equiv.swap (2:ℕ) 3) ul)) := by
+      rw [show mcell4 V (leftActionList (Equiv.swap (2:ℕ) 3) ul)
+            = mcell 4 V (leftActionList (Equiv.swap (2:ℕ) 3) ul) from rfl,
+          hmc, show mcell 4 V ul = mcell4 V ul from rfl]
+      exact hn
+    have hleaf := MCELL4_LEAF2 V (leftActionList (Equiv.swap (2:ℕ) 3) ul) hp hs hbP hn4
+    rw [hwl] at hleaf
+    exact hleaf
+  · exfalso
+    have heq : mcell4 V ul = ∅ := by unfold mcell4; rw [if_neg hlt]
+    rw [heq] at hn
+    exact absurd measure_empty hn
 
 /-- HOL `MCELL4_LEAF_S_LEAF`.
 -- NEEDS: `ccKe` 分派（`CC_KE_34` PA18 ✅）后逐案 `AJRIPQN`（PA18 ⬜ 链）/
@@ -1963,8 +2050,9 @@ theorem MCELL4_LEAF_S_LEAF (V : Set V3) (ul : List V3) (u : V3) (hp : Packing V)
 leaf-rank 波（2026-10-08）转真（装配级）：`{EL 2, EL 3}` 两点互异（`MCELL4_CARD4`
 ✅ 的 4 点互异性）且都是茎叶（`MCELL4_LEAF2/3/LEAF_S_LEAF`），故
 `2 = ncard {EL 2, EL 3} ≤ ncard (s_leaf ...)`（`S_LEAF_FINITE` ✅）。
--- NEEDS: 仅欠 MCELL4_LEAF2/LEAF3/LEAF_S_LEAF 三件在库具名叶（leaf-cell 链，
-PA18 车道债的延伸）。 -/
+-- NEEDS: 仅欠 MCELL4_LEAF_S_LEAF 一件在库具名叶（2026-10-12 起——
+MCELL4_LEAF2/LEAF3 已转真，见该两件 docstring；LEAF_S_LEAF 仍卡 PA18
+leaf-cell 链的 AJRIPQN/CFFONNL）。 -/
 theorem S_LEAF_CARD2 (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturated V)
     (hb : barV V 3 ul) (hn : ¬ nullSet (mcell4 V ul)) :
     2 ≤ Set.ncard (s_leaf V [elV ul 0, elV ul 1]) := by
@@ -2001,8 +2089,8 @@ of the 4-cell.
 leaf-rank 波（2026-10-08）转真（装配级）：4-cell 顶点是茎叶
 （`MCELL4_LEAF2/3` + `MCELL4_LEAF_S_LEAF`），落进 `leaf_rank` 的满射像
 （`hr.1`），再经周期性折回 `j % n < n`（`p25_f_mod`）。
--- NEEDS: 同 `S_LEAF_CARD2`——仅欠 MCELL4_LEAF2/LEAF3/LEAF_S_LEAF 三件在库
-具名叶（leaf-cell 链，PA18 车道债的延伸）。 -/
+-- NEEDS: 同 `S_LEAF_CARD2`——仅欠 MCELL4_LEAF_S_LEAF 一件在库具名叶
+（2026-10-12 起，leaf-cell 链，PA18 车道债的延伸）。 -/
 theorem LEAF_RANK_ONTO (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
     (u : V3) (hp : Packing V) (hs : saturated V) (hb : barV V 3 ul)
     (hr : leaf_rank V [elV ul 0, elV ul 1] w0 n f) (hn : n ≠ 0)
@@ -2022,13 +2110,14 @@ theorem LEAF_RANK_ONTO (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ 
   exact ⟨j % n, Nat.mod_lt j (by omega), (p25_f_mod (LEAF_RANK_PERIODIC _ _ _ _ _ hr) j).symm⟩
 
 /-- HOL `S_LEAF_IN_WEDGE_GE`.
--- NEEDS: azim 链算术（真证位，非结构缺口）。HOL OXLZLEZ3.hl:2279：分
-`i = n-1`（经 `WEDGE_COMPLEMENT` PA18 :2526 ⬜ + 周期回卷）与 `i < n-1`
-（经 `wedgeGe` 的 azim 区间展开 = `wedgeSimple`/`wedgeGeWedge`（PA24
-:156/:172 ✅，不在本件 import 闭包，需入网）+ `sum4_azim_fan`
-（TopologyFan :1105 ✅，PA18 `AZIM_BASE_SHIFT_LE` :2167 ✅ 可替代）+
-`hr.2.2` 严格环序的 0 / 中段 / n-1 三案实数算术）。本波
-LEAF_IN_WEDGE_GE（:2039 ✅）已装配到本件。 -/
+leaf-rank 波（2026-10-12）转真：azim 链算术。周期归一 `j := j % n`
+（`PERIODIC_REDUCE_MOD` ✅）后分两案，都只吃移位恒等式（`AZIM_BASE_SHIFT_LE`
+PA18:2766 两点法，`hnc` 供 w0 侧、`LEAF_RANK_COLLINEAR` ✅ 供叶侧）+
+补角恒等式（`azim_compl`，Geom.AzimLemmas ✅，在 import 闭包内经
+TopologyFan→Fan→AzimLemmas 可见，无需 `WEDGE_COMPLEMENT`）+ `hr.2.2`
+严格环序实数算术：`j < n-1` 时楔内叶 `i' < j` / `j+1 < i'` 均与楔上界矛盾；
+`j = n-1` 时 `f (j+1) = f 0`，其余叶落在开楔 `(f 0, f (n-1))` 内亦与
+楔上界矛盾。本波 LEAF_IN_WEDGE_GE（:2039 ✅）装配到本件。 -/
 theorem S_LEAF_IN_WEDGE_GE (V : Set V3) (ul : List V3) (u w0 : V3) (n : ℕ)
     (f : ℕ → V3) (j i' : ℕ) (hp : Packing V) (hs : saturated V)
     (hr : leaf_rank V [elV ul 0, elV ul 1] w0 n f)
@@ -2037,14 +2126,95 @@ theorem S_LEAF_IN_WEDGE_GE (V : Set V3) (ul : List V3) (u w0 : V3) (n : ℕ)
     (hu : u = f i') (hi' : i' < n)
     (hw : u ∈ wedgeGe (elV ul 0) (elV ul 1) (f j) (f (j + 1))) :
     u = f j ∨ u = f (j + 1) := by
-  sorry
+  obtain ⟨k, hk, hjk, hjk1⟩ := PERIODIC_REDUCE_MOD (by omega) hr.2.1 j
+  rw [hjk, hjk1] at hw ⊢
+  have hcol : ∀ m, ¬ Collinear3 (elV ul 0) (elV ul 1) (f m) :=
+    fun m => LEAF_RANK_COLLINEAR V [elV ul 0, elV ul 1] w0 n f m hp hs hr
+  have key : ∀ p q, p < q → q < n →
+      azim (elV ul 0) (elV ul 1) (f p) (f q)
+        = azim (elV ul 0) (elV ul 1) w0 (f q)
+          - azim (elV ul 0) (elV ul 1) w0 (f p) := by
+    intro p q hpq hqn
+    have hchain : azim (elV ul 0) (elV ul 1) w0 (f p)
+        < azim (elV ul 0) (elV ul 1) w0 (f q) := hr.2.2 p q (by omega) hqn hpq
+    have h := AZIM_BASE_SHIFT_LE (elV ul 0) (elV ul 1) w0 (f p) (f p) (f q)
+      hnc (hcol p) (hcol p) (hcol q) (le_refl _) hchain.le
+    rw [azim_self] at h
+    linarith
+  have comp : ∀ p q, p < q → q < n →
+      azim (elV ul 0) (elV ul 1) (f q) (f p)
+        = 2 * Real.pi - (azim (elV ul 0) (elV ul 1) w0 (f q)
+          - azim (elV ul 0) (elV ul 1) w0 (f p)) := by
+    intro p q hpq hqn
+    have hchain : azim (elV ul 0) (elV ul 1) w0 (f p)
+        < azim (elV ul 0) (elV ul 1) w0 (f q) := hr.2.2 p q (by omega) hqn hpq
+    have hpos : (0:ℝ) < azim (elV ul 0) (elV ul 1) (f p) (f q) := by
+      rw [key p q hpq hqn]; linarith
+    have hc := azim_compl (hcol p) (hcol q)
+    rw [key p q hpq hqn,
+      if_neg (by rw [← key p q hpq hqn]; exact ne_of_gt hpos)] at hc
+    exact hc
+  rcases Nat.lt_or_ge k (n - 1) with hklt | hkge
+  · have hk1 : k + 1 < n := by omega
+    rw [wedgeGe, Set.mem_setOf_eq] at hw
+    rw [hu] at hw
+    rcases Nat.lt_trichotomy i' k with hlt | heq | hgt
+    · exfalso
+      have hc1 := comp i' k hlt hk
+      have hc2 := key k (k + 1) (Nat.lt_succ_self k) hk1
+      have hw2 := hw.2
+      rw [hc1, hc2] at hw2
+      have hch : azim (elV ul 0) (elV ul 1) w0 (f k)
+          < azim (elV ul 0) (elV ul 1) w0 (f (k + 1)) :=
+        hr.2.2 k (k + 1) hk hk1 (Nat.lt_succ_self k)
+      have h2p := azim_lt_two_pi (elV ul 0) (elV ul 1) w0 (f (k + 1))
+      have h0 := azim_nonneg (elV ul 0) (elV ul 1) w0 (f i')
+      linarith
+    · exact Or.inl (by rw [hu, heq])
+    · by_cases heq1 : i' = k + 1
+      · exact Or.inr (by rw [hu, heq1])
+      · exfalso
+        have hgt2 : k + 1 < i' := by omega
+        have hc1 := key k i' (by omega) hi'
+        have hc2 := key k (k + 1) (Nat.lt_succ_self k) hk1
+        have hw2 := hw.2
+        rw [hc1, hc2] at hw2
+        have hch : azim (elV ul 0) (elV ul 1) w0 (f (k + 1))
+            < azim (elV ul 0) (elV ul 1) w0 (f i') :=
+          hr.2.2 (k + 1) i' hk1 hi' hgt2
+        linarith
+  · have hk_eq : k = n - 1 := by omega
+    have hfn0 : f (k + 1) = f 0 := by
+      have h := hr.2.1 0
+      rw [Nat.zero_add] at h
+      have he : k + 1 = n := by omega
+      rw [he]
+      exact h
+    rw [wedgeGe, Set.mem_setOf_eq] at hw
+    rw [hu] at hw
+    by_cases hi0 : i' = 0
+    · exact Or.inr (by rw [hu, hi0, hfn0])
+    · by_cases hin1 : i' = n - 1
+      · exact Or.inl (by rw [hu, hin1, hk_eq])
+      · exfalso
+        have h01 : 0 < i' := by omega
+        have hin1' : i' < n - 1 := by omega
+        have hc1 := comp i' (n - 1) hin1' (by omega)
+        have hc2 := comp 0 (n - 1) (by omega) (by omega)
+        have hw2 := hw.2
+        rw [hfn0, hk_eq] at hw2
+        rw [hc1, hc2] at hw2
+        have hch : azim (elV ul 0) (elV ul 1) w0 (f 0)
+            < azim (elV ul 0) (elV ul 1) w0 (f i') :=
+          hr.2.2 0 i' (by omega) hi' h01
+        linarith
 
 /-- HOL `LEAF_IN_WEDGE_GE`.
 leaf-rank 波（2026-10-08）转真（装配级）：4-cell 顶点先被参数化命中
 （`LEAF_RANK_ONTO`，本波已转真），再由 `S_LEAF_IN_WEDGE_GE` 的楔形边界二择
 收尾。
--- NEEDS: 仅欠 `S_LEAF_IN_WEDGE_GE`（⬜ azim 链算术，见该件 NEEDS 注记）；
-其余件均在库/本波已转真。 -/
+2026-10-12：`S_LEAF_IN_WEDGE_GE` 已转真（azim 链算术，见该件 docstring），
+本件成为完整真证、零在库欠件。 -/
 theorem LEAF_IN_WEDGE_GE (V : Set V3) (ul : List V3) (u w0 : V3) (n : ℕ)
     (f : ℕ → V3) (i : ℕ) (hp : Packing V) (hs : saturated V)
     (hr : leaf_rank V [elV ul 0, elV ul 1] w0 n f)
@@ -2057,7 +2227,11 @@ theorem LEAF_IN_WEDGE_GE (V : Set V3) (ul : List V3) (u w0 : V3) (n : ℕ)
     LEAF_RANK_ONTO V ul w0 n f u hp hs hb hr (by omega) hnn hu
   exact S_LEAF_IN_WEDGE_GE V ul (f i') w0 n f i i' hp hs hr hl' hnc hn rfl hi' hw
 
-/-- HOL `MCELL4_FI_EL`. -/
+/-- HOL `MCELL4_FI_EL`.
+2026-10-12 转真（装配级）：4-cell 的 `{EL 2, EL 3}` 就是其楔的两个端点叶——
+`MCELL4_CONVEX_HULL`/`MCELL4_CARD4`（已证）给凸包成员与 `EL 2 ≠ EL 3`，
+`MCELL4_LEAF2/LEAF3`（本波转真）+ `LEAF_IN_WEDGE_GE`（本波转真）给两点各为
+`f i` 或 `f (i+1)` 的二择。 -/
 theorem MCELL4_FI_EL (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
     (i : ℕ) (hp : Packing V) (hs : saturated V)
     (hr : leaf_rank V [elV ul 0, elV ul 1] w0 n f) (hb : barV V 3 ul)
@@ -2065,9 +2239,55 @@ theorem MCELL4_FI_EL (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ �
     (hnn : ¬ nullSet (mcell4 V ul))
     (hw : mcell4 V ul ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))) :
     ({elV ul 2, elV ul 3} : Set V3) = {f i, f (i + 1)} := by
-  sorry
+  have hcv := MCELL4_CONVEX_HULL V ul hp hs hb hnn
+  have hne23 : (elV ul 2 : V3) ≠ elV ul 3 := by
+    have hcard := MCELL4_CARD4 V ul hp hs hb hnn
+    intro he
+    have hle : Set.ncard ({elV ul 0, elV ul 1, elV ul 2} : Set V3) ≤ 3 := by
+      have e1 := Set.ncard_insert_le (elV ul 0) ({elV ul 1, elV ul 2} : Set V3)
+      have e2 := Set.ncard_insert_le (elV ul 1) ({elV ul 2} : Set V3)
+      have e3 : Set.ncard ({elV ul 2} : Set V3) = 1 := Set.ncard_singleton _
+      omega
+    rw [show ({elV ul 0, elV ul 1, elV ul 2, elV ul 3} : Set V3)
+          = ({elV ul 0, elV ul 1, elV ul 2} : Set V3) from by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; rw [he]; tauto] at hcard
+    omega
+  have hmem : ∀ x ∈ ({elV ul 2, elV ul 3} : Set V3), x = f i ∨ x = f (i + 1) := by
+    intro x hx
+    have hxleaf : leaf V [elV ul 0, elV ul 1, x] := by
+      rcases Set.mem_insert_iff.mp hx with hx' | hx'
+      · subst hx'
+        exact MCELL4_LEAF2 V ul hp hs hb hnn
+      · rw [Set.mem_singleton_iff] at hx'
+        subst hx'
+        exact MCELL4_LEAF3 V ul hp hs hb hnn
+    have hx4 : x ∈ ({elV ul 0, elV ul 1, elV ul 2, elV ul 3} : Set V3) := by
+      rcases Set.mem_insert_iff.mp hx with hx' | hx'
+      · subst hx'; simp
+      · rw [Set.mem_singleton_iff] at hx'
+        subst hx'; simp
+    have hxin : x ∈ mcell4 V ul := by rw [hcv]; exact subset_convexHull ℝ _ hx4
+    exact LEAF_IN_WEDGE_GE V ul x w0 n f i hp hs hr hxleaf hb hnc hn hnn hx (hw hxin)
+  have h23cases : (elV ul 2 = f i ∧ elV ul 3 = f (i + 1)) ∨
+      (elV ul 2 = f (i + 1) ∧ elV ul 3 = f i) := by
+    rcases hmem _ (Set.mem_insert _ _) with h2 | h2
+    · rcases hmem _ (Or.inr (Set.mem_singleton _)) with h3 | h3
+      · rw [h2] at hne23
+        rw [h3] at hne23
+        exact absurd rfl hne23
+      · exact Or.inl ⟨h2, h3⟩
+    · rcases hmem _ (Or.inr (Set.mem_singleton _)) with h3 | h3
+      · exact Or.inr ⟨h2, h3⟩
+      · rw [h2] at hne23
+        rw [h3] at hne23
+        exact absurd rfl hne23
+  rcases h23cases with ⟨e2, e3⟩ | ⟨e2, e3⟩
+  · ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; rw [e2, e3]
+  · ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; rw [e2, e3]; tauto
 
-/-- HOL `MCELL4_FI`. -/
+/-- HOL `MCELL4_FI`.
+2026-10-12 转真（装配级）：`MCELL4_CONVEX_HULL` + `MCELL4_FI_EL`（本波转真）
+的两点集替换。 -/
 theorem MCELL4_FI (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
     (i : ℕ) (hp : Packing V) (hs : saturated V)
     (hr : leaf_rank V [elV ul 0, elV ul 1] w0 n f) (hb : barV V 3 ul)
@@ -2075,9 +2295,41 @@ theorem MCELL4_FI (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V
     (hnn : ¬ nullSet (mcell4 V ul))
     (hw : mcell4 V ul ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))) :
     mcell4 V ul = convexHull ℝ ({elV ul 0, elV ul 1, f i, f (i + 1)} : Set V3) := by
-  sorry
+  have hcv := MCELL4_CONVEX_HULL V ul hp hs hb hnn
+  have hfe := MCELL4_FI_EL V ul w0 n f i hp hs hr hb hnc hn hnn hw
+  have h4set : ({elV ul 0, elV ul 1, elV ul 2, elV ul 3} : Set V3)
+      = ({elV ul 0, elV ul 1} : Set V3) ∪ ({elV ul 2, elV ul 3} : Set V3) := by
+    ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff, Set.mem_union]; tauto
+  have h4set' : ({elV ul 0, elV ul 1, f i, f (i + 1)} : Set V3)
+      = ({elV ul 0, elV ul 1} : Set V3) ∪ ({f i, f (i + 1)} : Set V3) := by
+    ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff, Set.mem_union]; tauto
+  rw [hcv, h4set, hfe, ← h4set']
 
-/-- HOL `MCELL4_BARV_FI`. -/
+/-- Helper: a 4-point list equals its `getD`-entries (PA18 私件 `list4_eq`
+的同款显式 cases 论证，本文件自备以免跨文件私件）。 -/
+private theorem p25_list4_eq (ul : List V3) (h : ul.length = 4) :
+    ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0, ul.getD 3 0] := by
+  cases ul with
+  | nil => simp at h
+  | cons a t1 =>
+    cases t1 with
+    | nil => simp at h
+    | cons b t2 =>
+      cases t2 with
+      | nil => simp at h
+      | cons c t3 =>
+        cases t3 with
+        | nil => simp at h
+        | cons d t4 =>
+          cases t4 with
+          | nil => rfl
+          | cons _ _ => exact absurd h (by simp)
+
+/-- HOL `MCELL4_BARV_FI`.
+2026-10-12 转真（装配级）：由 `MCELL4_FI_EL`（本波转真）的两序两案——
+`el 2 = f i` 时表即 `ul`（`p25_list4_eq`）零成本；`el 2 = f (i+1)` 时表是
+`leftActionList (Equiv.swap 2 3) ul`（同 `MCELL4_LEAF3` 的 swap 套件），经
+`YIFVQDV_1`（PA7 具名桩）+ `RVFXZBU`（PA10，i=4 支已证）搬移。 -/
 theorem MCELL4_BARV_FI (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
     (i : ℕ) (hp : Packing V) (hs : saturated V)
     (hr : leaf_rank V [elV ul 0, elV ul 1] w0 n f) (hb : barV V 3 ul)
@@ -2086,7 +2338,113 @@ theorem MCELL4_BARV_FI (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ 
     (hw : mcell4 V ul ⊆ wedgeGe (elV ul 0) (elV ul 1) (f i) (f (i + 1))) :
     barV V 3 [elV ul 0, elV ul 1, f i, f (i + 1)] ∧
       mcell4 V ul = mcell4 V [elV ul 0, elV ul 1, f i, f (i + 1)] := by
-  sorry
+  have h4 : ul.length = 4 := hb.1
+  have hfe := MCELL4_FI_EL V ul w0 n f i hp hs hr hb hnc hn hnn hw
+  have hne23 : (elV ul 2 : V3) ≠ elV ul 3 := by
+    have hcard := MCELL4_CARD4 V ul hp hs hb hnn
+    intro he
+    have hle : Set.ncard ({elV ul 0, elV ul 1, elV ul 2} : Set V3) ≤ 3 := by
+      have e1 := Set.ncard_insert_le (elV ul 0) ({elV ul 1, elV ul 2} : Set V3)
+      have e2 := Set.ncard_insert_le (elV ul 1) ({elV ul 2} : Set V3)
+      have e3 : Set.ncard ({elV ul 2} : Set V3) = 1 := Set.ncard_singleton _
+      omega
+    rw [show ({elV ul 0, elV ul 1, elV ul 2, elV ul 3} : Set V3)
+          = ({elV ul 0, elV ul 1, elV ul 2} : Set V3) from by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; rw [he]; tauto] at hcard
+    omega
+  have hcases : (elV ul 2 = f i ∧ elV ul 3 = f (i + 1)) ∨
+      (elV ul 2 = f (i + 1) ∧ elV ul 3 = f i) := by
+    have h2in : elV ul 2 ∈ ({f i, f (i + 1)} : Set V3) := by
+      have h2m : elV ul 2 ∈ ({elV ul 2, elV ul 3} : Set V3) := Set.mem_insert _ _
+      exact hfe ▸ h2m
+    have h3in : elV ul 3 ∈ ({f i, f (i + 1)} : Set V3) := by
+      have h3m : elV ul 3 ∈ ({elV ul 2, elV ul 3} : Set V3) :=
+        Or.inr (Set.mem_singleton _)
+      exact hfe ▸ h3m
+    rcases Set.mem_insert_iff.mp h2in with h2 | h2
+    · rcases Set.mem_insert_iff.mp h3in with h3 | h3
+      · rw [h2] at hne23
+        rw [h3] at hne23
+        exact absurd rfl hne23
+      · exact Or.inl ⟨h2, h3⟩
+    · rw [Set.mem_singleton_iff] at h2
+      rcases Set.mem_insert_iff.mp h3in with h3 | h3
+      · exact Or.inr ⟨h2, h3⟩
+      · rw [Set.mem_singleton_iff] at h3
+        rw [h2] at hne23
+        rw [h3] at hne23
+        exact absurd rfl hne23
+  have hsw : ∀ m : ℕ, Equiv.swap (2:ℕ) 3 m
+      = (if m = 2 then 3 else if m = 3 then 2 else m) := by
+    intro m
+    by_cases h2 : m = 2
+    · subst h2; simp
+    · by_cases h3 : m = 3
+      · subst h3; simp
+      · rw [if_neg h2, if_neg h3]
+        exact Equiv.swap_apply_of_ne_of_ne h2 h3
+  have hs0 : (Equiv.swap (2:ℕ) 3).symm 0 = 0 := by
+    rw [Equiv.symm_apply_eq]; simp [hsw]
+  have hs1 : (Equiv.swap (2:ℕ) 3).symm 1 = 1 := by
+    rw [Equiv.symm_apply_eq]; simp [hsw]
+  have hs2 : (Equiv.swap (2:ℕ) 3).symm 2 = 3 := by
+    rw [Equiv.symm_apply_eq]; simp [hsw]
+  have hs3 : (Equiv.swap (2:ℕ) 3).symm 3 = 2 := by
+    rw [Equiv.symm_apply_eq]; simp [hsw]
+  have hwl : leftActionList (Equiv.swap (2:ℕ) 3) ul
+      = [elV ul 0, elV ul 1, elV ul 3, elV ul 2] := by
+    unfold leftActionList
+    rw [h4, show List.range 4 = [0, 1, 2, 3] from by decide]
+    show [ul.getD ((Equiv.swap (2:ℕ) 3).symm 0) default,
+          ul.getD ((Equiv.swap (2:ℕ) 3).symm 1) default,
+          ul.getD ((Equiv.swap (2:ℕ) 3).symm 2) default,
+          ul.getD ((Equiv.swap (2:ℕ) 3).symm 3) default]
+        = [elV ul 0, elV ul 1, elV ul 3, elV ul 2]
+    rw [hs0, hs1, hs2, hs3]
+    rfl
+  have hperm : permutes (Equiv.swap (2:ℕ) 3) (Set.Icc 0 3) := by
+    intro x
+    simp only [Set.mem_Icc]
+    have hx3 : Equiv.swap (2:ℕ) 3 x ≤ 3 ↔ x ≤ 3 := by
+      rw [hsw x]
+      split
+      · omega
+      · split
+        · omega
+        · omega
+    constructor
+    · intro hc; exact ⟨by omega, hx3.mpr hc.2⟩
+    · intro hc; exact ⟨by omega, hx3.mp hc.2⟩
+  have hfix : ∀ j, 4 ≤ j → Equiv.swap (2:ℕ) 3 j = j := by
+    intro j hj
+    rw [hsw j]
+    split
+    · omega
+    · split
+      · omega
+      · rfl
+  have hlt : hl ul < Real.sqrt 2 := by
+    by_contra hcon
+    have heq : mcell4 V ul = ∅ := by unfold mcell4; rw [if_neg hcon]
+    rw [heq] at hnn
+    exact absurd measure_empty hnn
+  rcases hcases with ⟨e2, e3⟩ | ⟨e2, e3⟩
+  · have hul : ul = [elV ul 0, elV ul 1, f i, f (i + 1)] := by
+      conv_lhs => rw [p25_list4_eq ul h4]
+      show [elV ul 0, elV ul 1, elV ul 2, elV ul 3]
+          = [elV ul 0, elV ul 1, f i, f (i + 1)]
+      rw [e2, e3]
+    rw [← hul]
+    exact ⟨hb, rfl⟩
+  · have hwlB : [elV ul 0, elV ul 1, f i, f (i + 1)]
+        = leftActionList (Equiv.swap (2:ℕ) 3) ul := by
+      rw [hwl, e3, e2]
+    rw [hwlB]
+    refine ⟨YIFVQDV_1 V ul 3 (Equiv.swap (2:ℕ) 3) hp hb hlt hperm, ?_⟩
+    rw [show mcell4 V ul = mcell 4 V ul from rfl,
+        show mcell4 V (leftActionList (Equiv.swap (2:ℕ) 3) ul)
+          = mcell 4 V (leftActionList (Equiv.swap (2:ℕ) 3) ul) from rfl,
+        RVFXZBU (i := 4) (by simp) hs hp hb hperm hfix]
 
 /-- HOL `MCELL4_AZIM_LT_PI`. -/
 theorem MCELL4_AZIM_LT_PI (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -3334,8 +3692,9 @@ leaf-rank 波（2026-10-08，PA25 #4/#5 榜）：LEAF_RANKING_LEMMA 转真（引
 STRICT_SORT_FINITE :539 ✅ + 模 n 环参数化），另转真装配级四件 S_LEAF_CARD2
 :1951 ✅、LEAF_RANK_ONTO :1964 ✅、LEAF_IN_WEDGE_GE :1978 ✅、LEAF_DOMAIN
 :2350 ✅；新残余债面 = p25_leaf_azim_inj（→FCHKUGT，PA18 车道）+
-MCELL4_LEAF2/LEAF3/LEAF_S_LEAF（leaf-cell 链）+ S_LEAF_IN_WEDGE_GE（azim 链
-算术，HOL OXLZLEZ3.hl:2279）+ RADV_ETAY（sphere.hl）。 -/
+MCELL4_LEAF_S_LEAF（leaf-cell 链，LEAF2/LEAF3 已于 2026-10-12 转真）+
+S_LEAF_IN_WEDGE_GE（已于 2026-10-12 转真，azim 链算术，HOL
+OXLZLEZ3.hl:2279）+ RADV_ETAY（sphere.hl）。 -/
 
 /-- T4 骨架 W1 `pkLeafRankCriticalEdge`：失败 cell-cluster 不等式的临界边
 见证与 `leaf_rank` 参数化（含负 gg 和）。HOL Oxl_real.hl（CELL_CLUSTER_ESTIMATE
@@ -5036,13 +5395,70 @@ theorem AZIM_ZERO_SHIFT (u0 u1 u2 w w' : V3)
     (azim u0 u1 u2 w = azim u0 u1 u2 w' ↔ azim u0 u1 w w' = 0) :=
   (azim_eq_azim_iff h1 h2 h3).trans (azim_eq_zero_iff_alt h2 h3).symm
 
-/-- HOL `ORDER_AZIM_SUM2Pi0`: the azim-sorted leaf walk winds once. -/
+/-- HOL `ORDER_AZIM_SUM2Pi0`: the azim-sorted leaf walk winds once.
+2026-10-12 转真（零新债）：azim 链算术（与 `S_LEAF_IN_WEDGE_GE` 同款工具）——
+移位恒等式（`AZIM_BASE_SHIFT_LE`）+ 补角（`azim_compl`）给出
+`azim (g i) (g (i+1)) = a_{i+1} - a_i` 与回卷项 `2π - (a_{n-1} - a_0)`，
+`Finset.range` 上归纳望远镜求和即得 2π。 -/
 theorem ORDER_AZIM_SUM2Pi0 (x y z : V3) (n : ℕ) (g : ℕ → V3)
     (h1 : ¬ Collinear3 x y z) (h2 : ∀ i, i < n → ¬ Collinear3 x y (g i))
     (h3 : g n = g 0) (hn : 1 < n)
     (h4 : ∀ j k, j < n → k < n → j < k → azim x y z (g j) < azim x y z (g k)) :
     ∑ i ∈ Finset.Icc 0 (n - 1), azim x y (g i) (g (i + 1)) = 2 * Real.pi := by
-  sorry
+  have hcol : ∀ i, i < n → ¬ Collinear3 x y (g i) := h2
+  have key : ∀ p q, p < q → q < n →
+      azim x y (g p) (g q) = azim x y z (g q) - azim x y z (g p) := by
+    intro p q hpq hqn
+    have hchain : azim x y z (g p) < azim x y z (g q) := h4 p q (by omega) hqn hpq
+    have h := AZIM_BASE_SHIFT_LE x y z (g p) (g p) (g q)
+      h1 (hcol p (by omega)) (hcol p (by omega)) (hcol q (by omega)) (le_refl _) hchain.le
+    rw [azim_self] at h
+    linarith
+  have comp : ∀ p q, p < q → q < n →
+      azim x y (g q) (g p)
+        = 2 * Real.pi - (azim x y z (g q) - azim x y z (g p)) := by
+    intro p q hpq hqn
+    have hchain : azim x y z (g p) < azim x y z (g q) := h4 p q (by omega) hqn hpq
+    have hpos : (0:ℝ) < azim x y (g p) (g q) := by
+      rw [key p q hpq hqn]; linarith
+    have hc := azim_compl (hcol p (by omega)) (hcol q (by omega))
+    rw [key p q hpq hqn,
+      if_neg (by rw [← key p q hpq hqn]; exact ne_of_gt hpos)] at hc
+    exact hc
+  have hIcc : Finset.Icc 0 (n - 1) = Finset.range n := by
+    ext i
+    simp only [Finset.mem_Icc, Finset.mem_range]
+    omega
+  rw [hIcc]
+  -- telescope: sum over range m of azim (g i) (g (i+1)) = a_m - a_0
+  have tel : ∀ m, 1 ≤ m → m ≤ n - 1 →
+      ∑ i ∈ Finset.range m, azim x y (g i) (g (i + 1))
+        = azim x y z (g m) - azim x y z (g 0) := by
+    intro m hm1 hm2
+    induction m with
+    | zero => omega
+    | succ k ih =>
+      rw [Finset.sum_range_succ]
+      rcases Nat.eq_zero_or_pos k with hk0 | hk1
+      · subst hk0
+        simp only [Finset.sum_range_zero, Finset.sum_empty, zero_add]
+        have hstep := key 0 1 (by omega) (by omega)
+        linarith
+      · have hkm : k ≤ n - 1 := by omega
+        have hstep := key k (k + 1) (by omega) (by omega)
+        linarith [ih hk1 hkm]
+  have hsplit : ∑ i ∈ Finset.range n, azim x y (g i) (g (i + 1))
+      = (∑ i ∈ Finset.range (n - 1), azim x y (g i) (g (i + 1)))
+        + azim x y (g (n - 1)) (g n) := by
+    have hs := Finset.sum_range_succ (fun i => azim x y (g i) (g (i + 1))) (n - 1)
+    rw [show n - 1 + 1 = n from by omega] at hs
+    exact hs
+  rw [hsplit]
+  have hwrap : azim x y (g (n - 1)) (g n) = 2 * Real.pi
+      - (azim x y z (g (n - 1)) - azim x y z (g 0)) := by
+    rw [h3]
+    exact comp 0 (n - 1) (by omega) (by omega)
+  linarith [tel (n - 1) (by omega) (Nat.le_refl _)]
 
 private theorem p25_take_append_cancel {α : Type*} {l1 l2 : List α} (n : ℕ)
     (h : n ≤ l1.length) : (l1 ++ l2).take n = l1.take n := by
