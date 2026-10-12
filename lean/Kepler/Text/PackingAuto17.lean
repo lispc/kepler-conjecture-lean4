@@ -875,7 +875,8 @@ the capstone = one application of `p17_ajripqn_of_pieces` with
 /-- HOL `AJRIPQN` (AJRIPQN.hl:32-37, proof 89-1048): two Marchal cells of
 index `≤ 4` whose intersection has positive volume are equal.
 
-`sorry`ed capstone (it has NO `pack_concl` interface; DISCHARGES: none).
+capstone CLOSED 2026-10-12 (五阶段装配 `p17_ajripqn_of_pieces` + SF-38
+tail-fixed `QZKSYKG2`; it has NO `pack_concl` interface; DISCHARGES: none).
 The supporting chain proved in this file: `measurePosIff_p17`
 (`MEASURABLE_MEASURE_POS_LT` interface), `volPosLtAffDim3_p17`
 (`VOL_POS_LT_AFF_DIM_3`, feeds `DDZUPHJ`'s `affDim = 3` side condition),
@@ -930,6 +931,7 @@ theorem AJRIPQN (V : Set V3) (ul vl : List V3) (i j : ℕ)
     (hi : i ∈ ({0, 1, 2, 3, 4} : Set ℕ)) (hj : j ∈ ({0, 1, 2, 3, 4} : Set ℕ))
     (hvol : ¬nullSet (mcell i V ul ∩ mcell j V vl)) :
     i = j ∧ mcell i V ul = mcell j V vl := by
-  sorry
+  exact p17_ajripqn_of_tailfix V ul vl i j hs hp hb1 hb2 hi hj hvol
+    (fun w k hbw hk => qzksykg2_p17 hs hp hbw (by simp; omega))
 
 end Kepler.Text
