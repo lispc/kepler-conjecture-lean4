@@ -437,8 +437,33 @@ fi # STATEMENT-FIX else
 #    NB: use [+] not \+ — \+ is undefined in POSIX ERE; BSD grep errors out
 #    (silently empty adds => check void) while GNU grep accepts it.
 adds=$(git diff HEAD -- "$FILE" | grep -E '^[+]' | grep -v '^[+][+][+]' || true)
-nsorry_dels=$(printf '%s\n' "$dels" | grep -cE '^-[[:space:]]*sorry\b')
-nsorry_adds=$(printf '%s\n' "$adds" | grep -cE '^[+][[:space:]]*sorry\b')
+# EVOLUTION 21 (2026-10-12): sorry-line counting is CODE-only. Docstring
+# interiors that merely start with the word "sorry" (prose such as
+# "sorry 计数不增" bookkeeping notes) must not count as tactic lines on
+# either side of the diff — EV19's bare-netting then pushed the HEAD-side
+# false positive into other_new (live case: PA24 4th wave, file-level sorry
+# flat 2→2 but gate read adds=2>dels=1). $wcmt mirrors HEAD-side $cmt above.
+wcmt=$(awk '
+  !incmt && /^\/(-!)?/ { incmt = 1; next }
+  incmt {
+    print
+    if ($0 ~ /-\//) incmt = 0
+    next
+  }' "$FILE" | sort -u)
+filter_not_in(){ # usage: lines | filter_not_in <cmtset> — pass through lines
+                 # whose body (leading +/- stripped) is NOT in the set
+  local set="$1" line body
+  while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    body="${line#-}"; body="${body#+}"
+    if [ -n "$set" ] && printf '%s\n' "$set" | grep -qF -- "$body"; then
+      continue
+    fi
+    printf '%s\n' "$line"
+  done
+}
+nsorry_dels=$(printf '%s\n' "$dels" | grep -E '^-[[:space:]]*sorry\b' | filter_not_in "$cmt" | grep -c . || true)
+nsorry_adds=$(printf '%s\n' "$adds" | grep -E '^[+][[:space:]]*sorry\b' | filter_not_in "$wcmt" | grep -c . || true)
 if [ "${GATE_MODE:-}" = "DEF-FIX" ]; then
   # DEF-FIX: the net refill debt is charter-specified (§3a/§3b), not forbidden
   [ "$((nsorry_adds - nsorry_dels))" -eq "${DF_SORRY_NET:-15}" ] \
