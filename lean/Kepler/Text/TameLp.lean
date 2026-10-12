@@ -915,6 +915,13 @@ theorem sum_tauVEF_upper_bound (V : Set V3) (E : Set (Set V3))
     (hscript : 12 ≤ scriptL V) :
     setSum (hypermapOfFanTl V E hfan).faceSet (fun f => tauVEF_p2 V E f)
       ≤ 4 * Real.pi - 20 * sol0 := by
+  -- NEEDS（B6-U2 记账 2026-10-12）：HOL 九步的实质前置在树中缺位——
+  -- (a) confV（FAN + fully_surrounded → conformingFan，含 conformingSolidAngleFan 的
+  --     sol/dartsetLeadsIntoFan 章；dartsetLeadsIntoFan 仅 P22 ∅ 桩）或
+  -- (b) fan 超映射的 Euler 关系 F − E + N = 2（无 twin；fully_surrounded_sum_sol
+  --     本质即它的 sol 外衣）。
+  -- 二者任一落地后，帽石装配 = 展开tauVEF_p2 + §7b 的 HRXEFDM_lemma1 + 有限和重排
+  -- + 纯算术（sol0 > 0 与 hscript 收尾），预计 ≤ 120 行。
   sorry
 
 /-! ### 3a. ineq_tauK_tauVEF_std 群（lp_main_estimate-compiled.hl，
@@ -2003,7 +2010,463 @@ theorem CRTTXAT
     (V : Set V3) (hc : Contravening V) (hfan : FAN 0 V (ESTD V))
     (hpb : PerimeterBound V (ESTD V) hfan) :
     Tame9a (hypermapOfFanTl V (ESTD V) hfan) := by
+  -- NEEDS（B6-U1 记账 2026-10-12）：帽石卡 arc_properties 全章（B2 叶，
+  -- arc_lemma1/3/4/5 + arc_concave + estimate0 数值，1,091 行实分析）。
+  -- 3 ≤ card(face) 半边可由 CARD_FACE_GE_3_TL + hc.2.2.2.2.2.1 现成闭合；
+  -- k ≤ 6 半边的逐 dart 距离界 2 ≤ ‖·‖,dist ≤ 2.52 由 hc.2.1（ballAnnulus）+
+  -- packing 现成。本波已落 §7b 的 CRTTXAT_lemma1（face 上 lmfun 下界，即
+  -- HOL CRTTXAT_lemma1）与 arc_sym 同源件；剩余缺口 = arc 四件套自证
+  -- （cosine-law acos 公式 + arccos antitone + 凹性二阶导 + π/4 加法公式
+  -- 数值界，路线已写入交付报告），落齐后装配预计 ≤ 200 行。
   sorry
+
+/-! ## 7b. HRXEFDM 章（tame/HRXEFDM.hl）与 CRTTXAT 支撑（tame/CRTTXAT.hl:90-225）
+
+2026-10-12 B6-U1/U2 首波落地：orbit 划分和工具 + node 轨道 azim·lmfun 和 +
+`HRXEFDM_lemma1`（face 集双和 = 2π·scriptL V）+ `CRTTXAT_lemma1`
+（face 上 lmfun∘h_dart ≥ 12 + card f − card V）。
+帽石（CRTTXAT 本体 / sum_tauVEF_upper_bound）的前置缺口见各自原位 NEEDS 注记。-/
+
+/-! ### 轨道划分和（generic） -/
+
+private theorem setSum_setOfOrbits {α : Type*} [DecidableEq α] (D : Finset α)
+    (f : Equiv.Perm α) (hf : PermutesOn f D) (g : α → ℝ) :
+    setSum (setOfOrbits D f) (fun o => setSum o g) = setSum (↑D : Set α) g := by
+  classical
+  have hFO : (setOfOrbits D f).Finite := setOfOrbits_finite D f
+  set S : Finset (Set α) := hFO.toFinset with hSdef
+  have hmemS : ∀ o ∈ S, o ∈ setOfOrbits D f := by
+    intro o ho
+    exact (Set.Finite.mem_toFinset hFO).mp (Finset.mem_coe.mp ho)
+  have hdisj : (↑S : Set (Set α)).PairwiseDisjoint
+      (fun o : Set α => if h : o.Finite then h.toFinset else ∅) := by
+    intro o₁ h₁ o₂ h₂ hne
+    obtain ⟨x, hx, rfl⟩ := hmemS o₁ h₁
+    obtain ⟨y, hy, rfl⟩ := hmemS o₂ h₂
+    rcases orbitMap_disjoint_or_eq hf x y with hd | he
+    · refine Finset.disjoint_left.mpr ?_
+      intro a ha hab
+      simp only [dif_pos (orbitMap_finite hf x), dif_pos (orbitMap_finite hf y)] at ha hab
+      have hm : a ∈ (orbitMap f x ∩ orbitMap f y : Set α) :=
+        ⟨(Set.Finite.mem_toFinset (orbitMap_finite hf x)).mp ha,
+          (Set.Finite.mem_toFinset (orbitMap_finite hf y)).mp hab⟩
+      rw [hd] at hm
+      exact absurd hm (by simp)
+    · exact absurd he hne
+  have hinner : ∀ o ∈ S, setSum o g
+      = ∑ y ∈ (fun o : Set α => if h : o.Finite then h.toFinset else ∅) o, g y := by
+    intro o ho
+    obtain ⟨x, hx, rfl⟩ := hmemS o ho
+    rw [setSum, dif_pos (orbitMap_finite hf x)]
+    simp only [dif_pos (orbitMap_finite hf x)]
+  have huni : (S.biUnion (fun o : Set α => if h : o.Finite then h.toFinset else ∅) : Finset α)
+      = D := by
+    ext y
+    simp only [Finset.mem_biUnion]
+    constructor
+    · rintro ⟨o, ho, hyo⟩
+      obtain ⟨x, hx, rfl⟩ := hmemS o ho
+      simp only [dif_pos (orbitMap_finite hf x)] at hyo
+      have hyD : y ∈ (orbitMap f x : Set α) :=
+        (Set.Finite.mem_toFinset (orbitMap_finite hf x)).mp hyo
+      have hsub := orbitMap_subset_of_permutesOn hf hx hyD
+      simpa using hsub
+    · intro hy
+      refine ⟨orbitMap f y, ?_, ?_⟩
+      · rw [hSdef]
+        exact Set.Finite.mem_toFinset hFO |>.mpr ⟨y, by simpa using hy, rfl⟩
+      · simp only [dif_pos (orbitMap_finite hf y)]
+        exact (Set.Finite.mem_toFinset (orbitMap_finite hf y)).mpr
+          (pow_apply_mem_orbitMap f 0 y)
+  have hstep : ∑ o ∈ S,
+      ∑ y ∈ (fun o : Set α => if h : o.Finite then h.toFinset else ∅) o, g y
+      = ∑ y ∈ D, g y := by
+    rw [← huni]
+    exact (Finset.sum_biUnion (t := fun (o : Set α) => if h : o.Finite then h.toFinset else ∅)
+      (f := fun y => g y) hdisj).symm
+  have hD : Set.Finite.toFinset D.finite_toSet = D := by ext y; simp
+  rw [setSum, setSum, dif_pos hFO, dif_pos D.finite_toSet, hD, ← hSdef]
+  rw [Finset.sum_congr rfl (fun o ho => hinner o ho)]
+  exact hstep
+
+/-! ### SUM_IMAGE 双生 -/
+
+private theorem setSum_image_injOn {α β : Type*} [DecidableEq β] {s : Set α} (hs : s.Finite)
+    {φ : α → β} (hφ : Set.InjOn φ s) (g : β → ℝ) :
+    setSum (φ '' s) g = setSum s (fun x => g (φ x)) := by
+  have hfin : (φ '' s).Finite := hs.image φ
+  rw [setSum, setSum, dif_pos hfin, dif_pos hs]
+  refine (Finset.sum_bij (fun x _ => φ x) ?_ ?_ ?_ ?_).symm
+  · intro x hx
+    exact (Set.Finite.mem_toFinset hfin).mpr
+      ⟨x, (Set.Finite.mem_toFinset hs).mp hx, rfl⟩
+  · intro x hx y hy heq
+    exact hφ ((Set.Finite.mem_toFinset hs).mp hx) ((Set.Finite.mem_toFinset hs).mp hy) heq
+  · intro y hy
+    obtain ⟨x, hx, hex⟩ := (Set.mem_image φ s y).mp
+      ((Set.Finite.mem_toFinset hfin).mp hy)
+    exact ⟨x, (Set.Finite.mem_toFinset hs).mpr hx, hex⟩
+  · intro x hx
+    rfl
+
+/-! ### lmfun 辅助 -/
+
+private theorem lmfun_nonneg (h : ℝ) : 0 ≤ lmfun h := by
+  have h0126 : h0 = 1.26 := rfl
+  unfold lmfun
+  split
+  · next hh =>
+    exact div_nonneg (sub_nonneg.mpr hh) (sub_nonneg.mpr (by rw [h0126]; norm_num))
+  · next => exact le_refl 0
+
+private theorem lmfun_le_one_of_one_le {h : ℝ} (hh : 1 ≤ h) : lmfun h ≤ 1 := by
+  have h0126 : h0 = 1.26 := rfl
+  unfold lmfun
+  split
+  · next hhle =>
+    have hd : (0:ℝ) < h0 - 1 := by rw [h0126]; norm_num
+    rw [div_le_one hd]
+    linarith
+  · next => linarith
+
+private theorem two_le_norm_of_mem_ballAnnulus {v : V3} (hv : v ∈ ballAnnulus) :
+    2 ≤ ‖v‖ := by
+  simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball] at hv
+  push_neg at hv
+  have h2 : dist v 0 = ‖v‖ := by rw [dist_eq_norm, sub_zero]
+  linarith [h2]
+
+/-! ### face 上 fst 单射（SIMPLE_HYPERMAP_lemma 折算） -/
+
+section FanLemmas
+
+variable {V : Set V3} {E : Set (Set V3)}
+
+private theorem face_fst_injOn (hfan : FAN 0 V E)
+    (hsimple : (hypermapOfFanTl V E hfan).Simple) {x : V3 × V3}
+    (hx : x ∈ (hypermapOfFanTl V E hfan).darts) :
+    Set.InjOn (Prod.fst : V3 × V3 → V3) ((hypermapOfFanTl V E hfan).face x) := by
+  set H := hypermapOfFanTl V E hfan with hHdef
+  intro y hy z hz heq
+  have hface_eq : H.face y = H.face x := orbitMap_eq_of_mem H.faceMap_permutes hy
+  have hyd : y ∈ dart1OfFan V E := dartsTl_mem (H.face_subset_darts hx hy)
+  have hzy : z ∈ H.face y := by rw [hface_eq]; exact hz
+  have hydarts : y ∈ H.darts := Finset.mem_coe.mpr (H.face_subset_darts hx hy)
+  have hzd : z ∈ dart1OfFan V E := by
+    have h := H.face_subset_darts hydarts hzy
+    rw [hHdef, dartsTl_coe] at h
+    exact h
+  have hzwV : z.2 ∈ V := (FAN_in_setOfEdge 0 V E z.1 z.2 hfan hzd).2.1
+  have hznode : z ∈ H.node y := by
+    rw [nodeTl_eq_image hfan hyd]
+    refine ⟨z.2, ⟨?_, hzwV⟩, ?_⟩
+    · rw [heq]; exact hzd
+    · rw [heq]
+  have hydarts : y ∈ H.darts := H.face_subset_darts hx hy
+  have hmem : z ∈ H.node y ∩ H.face y := ⟨hznode, by rw [hface_eq]; exact hz⟩
+  rw [hsimple y hydarts] at hmem
+  exact (Set.mem_singleton_iff.mp hmem).symm
+
+end FanLemmas
+
+/-! ### node 轨道 azim 和（FAN-only；SUM_AZIM_DART node 形的去 surrounded 版） -/
+
+section NodeSum
+
+variable {V : Set V3} {E : Set (Set V3)}
+
+private theorem node_sum_azim (hfan : FAN 0 V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    setSum ((hypermapOfFanTl V E hfan).node d) (fun y => azimDart V E y) = 2 * Real.pi := by
+  set H := hypermapOfFanTl V E hfan with hHdef
+  rcases Nat.lt_or_ge (setOfEdge d.1 V E).ncard 2 with h1 | h2
+  · -- card(soe d.1) ≤ 1：card = 1，node d = {d}，azimDart d = 2π
+    have hdm : d.2 ∈ setOfEdge d.1 V E := (FAN_in_setOfEdge 0 V E d.1 d.2 hfan hd).2.2.1
+    have hpos : 0 < (setOfEdge d.1 V E).ncard :=
+      Iff.mpr (Set.ncard_pos (hs := remark_finite_fan1 d.1 V E hfan.2.2.1.1)) ⟨d.2, hdm⟩
+    have hcard1 : (setOfEdge d.1 V E).ncard = 1 := by omega
+    obtain ⟨x, hx⟩ := Set.ncard_eq_one.mp hcard1
+    have hx2 : x = d.2 := by
+      have h2' : d.2 ∈ setOfEdge d.1 V E := hdm
+      rw [hx] at h2'
+      exact (Set.mem_singleton_iff.mp h2').symm
+    have hsoe : setOfEdge d.1 V E = {d.2} := by rw [hx, hx2]
+    have hnode : H.node d = {d} := by
+      rw [nodeTl_eq_image hfan hd, hsoe, Set.image_singleton]
+    have hncard1 : ¬ ((setOfEdge d.1 V E).ncard > 1) := by
+      rw [hsoe, Set.ncard_singleton]
+      simp
+    have hazim : azimDart V E d = 2 * Real.pi := by
+      show (if d.1 = d.2 then 2 * Real.pi
+        else if (setOfEdge d.1 V E).ncard > 1 then
+          azim 0 d.1 d.2 (sigmaFan 0 V E d.1 d.2)
+        else 2 * Real.pi) = 2 * Real.pi
+      rw [if_neg (edge_ne_of_fan hfan hd), if_neg hncard1]
+    rw [hnode, setSum, dif_pos (Set.finite_singleton d), Set.Finite.toFinset_singleton,
+      Finset.sum_singleton]
+    exact hazim
+  · -- card ≥ 2：σ-循环双射 + sum_azims_eq_2pi
+    have hne_u : setOfEdge d.1 V E ≠ {d.2} := by
+      intro he
+      rw [he, Set.ncard_singleton] at h2
+      omega
+    have hdE : {d.1, d.2} ∈ E := hd
+    have hfin : (H.node d).Finite := orbitMap_finite H.nodeMap_permutes d
+    have step1 : (∑ i ∈ Finset.range (setOfEdge d.1 V E).ncard,
+          azimDart V E (d.1, (sigmaFan 0 V E d.1)^[i] d.2))
+        = setSum (H.node d) (fun y => azimDart V E y) := by
+      rw [setSum, dif_pos hfin]
+      refine Finset.sum_bij (fun i _ => (d.1, (sigmaFan 0 V E d.1)^[i] d.2)) ?_ ?_ ?_ ?_
+      · intro i hi
+        have hmem : (d.1, (sigmaFan 0 V E d.1)^[i] d.2) ∈ H.node d := by
+          have h1' : H.nodeMap^[i] d = (d.1, (sigmaFan 0 V E d.1)^[i] d.2) :=
+            nodeMapTl_iterate hd i
+          rw [← h1']
+          exact pow_apply_mem_orbitMap H.nodeMap i d
+        exact (Set.Finite.mem_toFinset hfin).mpr hmem
+      · intro i hi j hj heq
+        have hin : i < (setOfEdge d.1 V E).ncard := Finset.mem_range.mp hi
+        have hjn : j < (setOfEdge d.1 V E).ncard := Finset.mem_range.mp hj
+        simp only [Prod.mk.injEq] at heq
+        rcases lt_trichotomy i j with hlt | heqi | hgt
+        · exact absurd heq.2.symm (cyclic_power_sigmaFan 0 V E hfan hdE j i hjn hlt)
+        · exact heqi
+        · exact absurd heq.2 (cyclic_power_sigmaFan 0 V E hfan hdE i j hin hgt)
+      · intro y hy
+        have hyn : y ∈ H.node d := (Set.Finite.mem_toFinset hfin).mp hy
+        simp only [Hypermap.node, orbitMap, Set.mem_setOf_eq] at hyn
+        obtain ⟨n, hn⟩ := hyn
+        rw [Equiv.Perm.coe_pow] at hn
+        rw [nodeMapTl_iterate hd n] at hn
+        have hsoe : (sigmaFan 0 V E d.1)^[n] d.2 ∈ setOfEdge d.1 V E :=
+          iterates_mem_setOfEdge hfan d.1 d.2
+            ((properties_of_setOfEdge_fan 0 V E d.1 d.2 hfan).mp hdE) n
+        obtain ⟨j, hj, hj_eq⟩ := iterates_mem_sigmaFan hfan hdE hsoe
+        refine ⟨j, Finset.mem_range.mpr hj, ?_⟩
+        rw [hj_eq]
+        exact hn
+      · intro i hi
+        rfl
+    have step2 : (∑ i ∈ Finset.range (setOfEdge d.1 V E).ncard,
+          azimDart V E (d.1, (sigmaFan 0 V E d.1)^[i] d.2))
+        = (∑ i ∈ Finset.range (setOfEdge d.1 V E).ncard, azimIfan 0 V E d.1 d.2 i) :=
+      Finset.sum_congr rfl (fun i hi =>
+        azimDart_iterate_eq hfan hdE (by omega) i (Finset.mem_range.mp hi))
+    calc setSum (H.node d) (fun y => azimDart V E y)
+        = ∑ i ∈ Finset.range (setOfEdge d.1 V E).ncard,
+            azimDart V E (d.1, (sigmaFan 0 V E d.1)^[i] d.2) := step1.symm
+      _ = ∑ i ∈ Finset.range (setOfEdge d.1 V E).ncard, azimIfan 0 V E d.1 d.2 i := step2
+      _ = 2 * Real.pi := sum_azims_eq_2pi hfan hdE hne_u
+
+/-- node 轨道上 azim·lmfun 的和 = 2π·lmfun(hDart d)（HRXEFDM_lemma1 的
+逐 node 核：node 轨道首分量恒定 + `node_sum_azim`）。 -/
+private theorem node_sum_azim_lmfun (hfan : FAN 0 V E) {d : V3 × V3} (hd : d ∈ dart1OfFan V E) :
+    setSum ((hypermapOfFanTl V E hfan).node d)
+        (fun y => azimDart V E y * lmfun (hDart_p2 y))
+      = 2 * Real.pi * lmfun (hDart_p2 d) := by
+  set H := hypermapOfFanTl V E hfan with hHdef
+  have hfin : (H.node d).Finite := orbitMap_finite H.nodeMap_permutes d
+  have hconst : ∀ y ∈ H.node d, lmfun (hDart_p2 y) = lmfun (hDart_p2 d) := by
+    intro y hy
+    rw [nodeTl_eq_image hfan hd] at hy
+    obtain ⟨q, hq, hyq⟩ := hy
+    have hy1 : y.1 = d.1 := by rw [← hyq]
+    show lmfun (‖y.1‖ / 2) = lmfun (‖d.1‖ / 2)
+    rw [hy1]
+  calc setSum (H.node d) (fun y => azimDart V E y * lmfun (hDart_p2 y))
+      = setSum (H.node d) (fun y => azimDart V E y * lmfun (hDart_p2 d)) := by
+        rw [setSum, setSum, dif_pos hfin, dif_pos hfin]
+        exact Finset.sum_congr rfl (fun y hy => by
+          rw [hconst y ((Set.Finite.mem_toFinset hfin).mp hy)])
+    _ = setSum (H.node d) (fun y => azimDart V E y) * lmfun (hDart_p2 d) := by
+        rw [setSum, setSum, dif_pos hfin, dif_pos hfin, Finset.sum_mul]
+    _ = 2 * Real.pi * lmfun (hDart_p2 d) := by rw [node_sum_azim hfan hd]
+
+end NodeSum
+
+/-! ### HRXEFDM_lemma1 与 CRTTXAT_lemma1 -/
+
+/-- HOL `HRXEFDM_lemma1`（`tame/HRXEFDM.hl:109-199`）：face 集上
+`azim_dart·lmfun(h_dart)` 的两层和 = `2π·scriptL V`。
+偏差注记：HOL `hypermap_of_fan` 的 dart 集含孤立 `(v,v)`，Lean 折算取
+`dart1OfFan`，孤立顶点由 `hns` 排除（contravening/fully_surrounded 消费者
+处自由：card(setOfEdge) ≥ 3 / dart_of_fan = dart1）。 -/
+theorem HRXEFDM_lemma1 (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (hns : ∀ v ∈ V, (setOfEdge v V E).Nonempty) :
+    setSum (hypermapOfFanTl V E hfan).faceSet
+        (fun o => setSum o (fun x => azimDart V E x * lmfun (hDart_p2 x)))
+      = 2 * Real.pi * scriptL V := by
+  classical
+  set H := hypermapOfFanTl V E hfan with hHdef
+  have hVfin : V.Finite := hfan.2.2.1.1
+  have hex : ∀ v : V3, v ∈ V → ∃ w, (v, w) ∈ dart1OfFan V E := by
+    intro v hv
+    obtain ⟨w, hw⟩ := hns v hv
+    exact ⟨w, (properties_of_setOfEdge_fan 0 V E v w hfan).mpr hw⟩
+  set dd : V3 → V3 × V3 :=
+    fun v => if h : v ∈ V then (v, Classical.choose (hex v h)) else (v, v) with hdddef
+  have hdd : ∀ v : V3, v ∈ V → dd v ∈ dart1OfFan V E := by
+    intro v hv
+    simp only [hdddef, dif_pos hv]
+    exact Classical.choose_spec (hex v hv)
+  have hddfst : ∀ v : V3, v ∈ V → (dd v).1 = v := by
+    intro v hv
+    simp only [hdddef, dif_pos hv]
+  have himg : H.nodeSet = (fun v : V3 => H.node (dd v)) '' V := by
+    ext S
+    constructor
+    · intro hS
+      obtain ⟨d, hd, rfl⟩ := hS.out
+      have hvV : d.1 ∈ V := (FAN_in_setOfEdge 0 V E d.1 d.2 hfan (dartsTl_mem hd)).1
+      refine ⟨d.1, hvV, ?_⟩
+      show H.node (dd d.1) = H.node d
+      rw [nodeTl_eq_image hfan (dartsTl_mem hd), nodeTl_eq_image hfan (hdd d.1 hvV),
+        hddfst d.1 hvV]
+    · rintro ⟨v, hv, rfl⟩
+      exact ⟨dd v, mem_dartsTl (hdd v hv),
+        (by rfl : orbitMap H.nodeMap (dd v) = (fun v : V3 => H.node (dd v)) v)⟩
+  have hinj : Set.InjOn (fun v : V3 => H.node (dd v)) V := by
+    intro v hv w hw heq
+    simp only [] at heq
+    have hmem0 : dd v ∈ H.node (dd v) := mem_orbitMap_self H.nodeMap (dd v)
+    rw [nodeTl_eq_image hfan (hdd v hv)] at hmem0
+    simp only [Set.mem_image, Set.mem_setOf_eq] at hmem0
+    obtain ⟨q, hq, hprod⟩ := hmem0
+    rw [hddfst v hv] at hq
+    have hddv : dd v = (v, q) := by rw [hprod.symm, hddfst v hv]
+    rw [hddv] at heq
+    have hmq : (v, q) ∈ H.node (dd w) := by
+      rw [← heq, nodeTl_eq_image hfan (by rw [← hddv]; exact hdd v hv)]
+      exact ⟨q, hq, rfl⟩
+    rw [nodeTl_eq_image hfan (hdd w hw)] at hmq
+    simp only [Set.mem_image, Set.mem_setOf_eq] at hmq
+    obtain ⟨q2, hq2, hprod2⟩ := hmq
+    injection hprod2 with h5 h6
+    exact h5.symm.trans (hddfst w hw)
+  calc setSum H.faceSet (fun o => setSum o (fun x => azimDart V E x * lmfun (hDart_p2 x)))
+      = setSum (↑H.darts : Set (V3 × V3)) (fun x => azimDart V E x * lmfun (hDart_p2 x)) :=
+        setSum_setOfOrbits H.darts H.faceMap H.faceMap_permutes _
+    _ = setSum H.nodeSet (fun o => setSum o (fun x => azimDart V E x * lmfun (hDart_p2 x))) :=
+        (setSum_setOfOrbits H.darts H.nodeMap H.nodeMap_permutes _).symm
+    _ = setSum ((fun v : V3 => H.node (dd v)) '' V)
+          (fun o => setSum o (fun x => azimDart V E x * lmfun (hDart_p2 x))) := by rw [himg]
+    _ = setSum V (fun v => setSum (H.node (dd v))
+          (fun x => azimDart V E x * lmfun (hDart_p2 x))) :=
+        setSum_image_injOn hVfin hinj _
+    _ = setSum V (fun v => 2 * Real.pi * lmfun (hDart_p2 (dd v))) := by
+        rw [setSum, setSum, dif_pos hVfin, dif_pos hVfin]
+        exact Finset.sum_congr rfl (fun v hv => node_sum_azim_lmfun hfan
+          (hdd v ((Set.Finite.mem_toFinset hVfin).mp hv)))
+    _ = setSum V (fun v => 2 * Real.pi * lmfun (‖v‖ / 2)) := by
+        rw [setSum, setSum, dif_pos hVfin, dif_pos hVfin]
+        exact Finset.sum_congr rfl (fun v hv => by
+          show 2 * Real.pi * lmfun (‖(dd v).1‖ / 2) = 2 * Real.pi * lmfun (‖v‖ / 2)
+          rw [hddfst v ((Set.Finite.mem_toFinset hVfin).mp hv)])
+    _ = 2 * Real.pi * setSum V (fun v => lmfun (‖v‖ / 2)) := by
+        rw [setSum, setSum, dif_pos hVfin, dif_pos hVfin]
+        exact (Finset.mul_sum _ _ _).symm
+    _ = 2 * Real.pi * scriptL V := by rw [scriptL, dif_pos hVfin, setSum, dif_pos hVfin]
+
+
+/-- HOL `CRTTXAT_lemma1`（`tame/CRTTXAT.hl:90-225`）：simple 超映射下
+contravening 的 face 上 `lmfun∘h_dart` 的和 ≥ `12 + card f − card V`。
+证明骨架同 HOL：face 像单射换元 → scriptL 按 `V \ (fst '' f)` 拆分 →
+`lmfun ≤ 1`（ballAnnulus）+ 基数差 + `scriptL V > 12`。 -/
+theorem CRTTXAT_lemma1 (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (hsimple : (hypermapOfFanTl V E hfan).Simple) (hc : Contravening V)
+    {f : Set (V3 × V3)} (hf : f ∈ (hypermapOfFanTl V E hfan).faceSet)
+    (hff : f.Finite) :
+    12 + (f.ncard : ℝ) - (V.ncard : ℝ) ≤ setSum f (fun x => lmfun (hDart_p2 x)) := by
+  classical
+  have hVfin : V.Finite := hfan.2.2.1.1
+  obtain ⟨x, hx, hfxeq⟩ := hf
+  rw [← hfxeq]
+  have hffe : ((hypermapOfFanTl V E hfan).face x).Finite := by
+    have hsub := (hypermapOfFanTl V E hfan).face_subset_darts hx
+    rw [dartsTl_coe] at hsub
+    exact (finite_dart1_fan hfan).subset hsub
+  have hsubd : ∀ y ∈ (hypermapOfFanTl V E hfan).face x, y ∈ dart1OfFan V E := by
+    intro y hy
+    have hmem := (hypermapOfFanTl V E hfan).face_subset_darts hx hy
+    rw [dartsTl_coe] at hmem
+    exact hmem
+  have hsubA : (Prod.fst '' (hypermapOfFanTl V E hfan).face x) ⊆ V := by
+    intro v hv
+    obtain ⟨y, hy, rfl⟩ := hv
+    exact (FAN_in_setOfEdge 0 V E y.1 y.2 hfan (hsubd y hy)).1
+  have hAj : Set.InjOn (Prod.fst : V3 × V3 → V3) ((hypermapOfFanTl V E hfan).face x) :=
+    face_fst_injOn hfan hsimple hx
+  have hcardA : (Prod.fst '' (hypermapOfFanTl V E hfan).face x).ncard
+      = ((hypermapOfFanTl V E hfan).face x).ncard := Set.InjOn.ncard_image hAj
+  have hAfin : (Prod.fst '' (hypermapOfFanTl V E hfan).face x).Finite := hffe.image Prod.fst
+  have hVAdiff : (V \ Prod.fst '' (hypermapOfFanTl V E hfan).face x).Finite := hVfin.sdiff
+  have hfun0 : setSum ((hypermapOfFanTl V E hfan).face x) (fun y => lmfun (hDart_p2 y))
+      = setSum ((hypermapOfFanTl V E hfan).face x) (fun y => lmfun (‖y.1‖ / 2)) := by
+    rw [setSum, setSum, dif_pos hffe, dif_pos hffe]
+    exact Finset.sum_congr rfl (fun y _ => rfl)
+  have hkey : setSum ((hypermapOfFanTl V E hfan).face x) (fun y => lmfun (hDart_p2 y))
+      = setSum (Prod.fst '' (hypermapOfFanTl V E hfan).face x)
+          (fun v : V3 => lmfun (‖v‖ / 2)) := by
+    rw [hfun0, setSum_image_injOn hffe hAj]
+  have hscript : scriptL V = setSum V (fun v : V3 => lmfun (‖v‖ / 2)) := by
+    rw [scriptL, dif_pos hVfin, setSum, dif_pos hVfin]
+  have hA : Prod.fst '' (hypermapOfFanTl V E hfan).face x
+        ∪ (V \ Prod.fst '' (hypermapOfFanTl V E hfan).face x) = V := by
+    ext v
+    simp only [Set.mem_union, Set.mem_sdiff]
+    constructor
+    · rintro (h | ⟨h1, -⟩)
+      · exact hsubA h
+      · exact h1
+    · intro h
+      rcases Classical.em (v ∈ Prod.fst '' (hypermapOfFanTl V E hfan).face x) with h' | h'
+      · exact Or.inl h'
+      · exact Or.inr ⟨h, h'⟩
+  have hd : Disjoint (Prod.fst '' (hypermapOfFanTl V E hfan).face x)
+      (V \ Prod.fst '' (hypermapOfFanTl V E hfan).face x) :=
+    (disjoint_sdiff_self_left : Disjoint _ _).symm
+  have hsplit : setSum V (fun v : V3 => lmfun (‖v‖ / 2))
+      = setSum (Prod.fst '' (hypermapOfFanTl V E hfan).face x)
+          (fun v : V3 => lmfun (‖v‖ / 2))
+        + setSum (V \ Prod.fst '' (hypermapOfFanTl V E hfan).face x)
+          (fun v : V3 => lmfun (‖v‖ / 2)) := by
+    have hs : setSum ((Prod.fst '' (hypermapOfFanTl V E hfan).face x)
+          ∪ (V \ Prod.fst '' (hypermapOfFanTl V E hfan).face x))
+        (fun v : V3 => lmfun (‖v‖ / 2))
+        = setSum (Prod.fst '' (hypermapOfFanTl V E hfan).face x)
+            (fun v : V3 => lmfun (‖v‖ / 2))
+          + setSum (V \ Prod.fst '' (hypermapOfFanTl V E hfan).face x)
+            (fun v : V3 => lmfun (‖v‖ / 2)) :=
+      setSum_union_disjoint hd hAfin hVAdiff
+    rwa [hA] at hs
+  have hbd : setSum (V \ Prod.fst '' (hypermapOfFanTl V E hfan).face x)
+        (fun v : V3 => lmfun (‖v‖ / 2))
+      ≤ ((V \ Prod.fst '' (hypermapOfFanTl V E hfan).face x).ncard : ℝ) * 1 := by
+    refine setSum_le_of_le hVAdiff (fun v hv => ?_)
+    have h2n := two_le_norm_of_mem_ballAnnulus (hc.2.1 ((Set.mem_sdiff v).mp hv).1)
+    exact lmfun_le_one_of_one_le (by linarith)
+  have hnc' : (((V \ Prod.fst '' (hypermapOfFanTl V E hfan).face x).ncard : ℝ)
+        + ((Prod.fst '' (hypermapOfFanTl V E hfan).face x).ncard : ℝ))
+      = ((V.ncard : ℝ)) := by
+    rw [← Nat.cast_add, Set.ncard_sdiff_add_ncard_of_subset hsubA hVfin]
+  have hgt : 12 < scriptL V := hc.2.2.1
+  calc 12 + (((hypermapOfFanTl V E hfan).face x).ncard : ℝ) - (V.ncard : ℝ)
+      = 12 + ((Prod.fst '' (hypermapOfFanTl V E hfan).face x).ncard : ℝ)
+          - (V.ncard : ℝ) := by
+        rw [hcardA]
+    _ ≤ setSum (Prod.fst '' (hypermapOfFanTl V E hfan).face x)
+          (fun v : V3 => lmfun (‖v‖ / 2)) := by
+        have h1 : setSum (Prod.fst '' (hypermapOfFanTl V E hfan).face x)
+              (fun v : V3 => lmfun (‖v‖ / 2))
+            = scriptL V - setSum (V \ Prod.fst '' (hypermapOfFanTl V E hfan).face x)
+              (fun v : V3 => lmfun (‖v‖ / 2)) := by
+          rw [hscript, hsplit]
+          ring
+        rw [h1]
+        have h2 := hbd
+        linarith
+    _ ≤ setSum ((hypermapOfFanTl V E hfan).face x) (fun x => lmfun (hDart_p2 x)) :=
+      le_of_eq hkey.symm
+
 
 /-! ## 8. 债务图锚点备忘
 
