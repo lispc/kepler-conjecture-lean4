@@ -30,7 +30,15 @@ push 待命"。全天落地账（含晨间 22 笔，详见各 commit）：
   语句前缀空白归一化全等；证明体不比对）；EV21 sorry 计数代码行口径
   （docstring 散文行双侧剔除，修 EV19 假阳性暴露）。
 - LA5 晨间四波 73→48（`43bf4829` 等）；POS_DIRECT→SUCCESEOR 根系攻坚
-  收口中（落地另账）。
+  线死于 API 连接超时（基础设施），**盘上 salvage 走闸落地**（末笔）：
+  RHO_NODE_SET_IN_A_PLANE_IMP_POS_DIRECT（:689 根件）+FAN_IN_AFF_GE_IMP_EQ
+  +AFF_GE22+AZIM_EQ_0_GE_ALT2+WEDGE_GE_EQ_AFF_GE 五件骨架转真
+  （+815/−18，骨架 38→33，闸 PASS @全七根）；SUCCESEOR 下游 10 件解锁面
+  已开，续攻留给下一波。
+- **DEBT.md 口径跳变说明**：账本总量 1,713→44,717 系 LP 叶户（43,078 枚
+  `lpT<id>`，53acc49c）首次被 ledger 计入；**可比口径**（Text 非LP+root+Geom）
+  实际 1,713→1,639（−74，今日全波）；Geom 区清零（SimplexVolume 反向
+  import 后无 sorry 文件）。PA20 0 / PA24 2 / PA7 22 / LA5 43。
 
 ## 2026-10-08 增量（滚动 sub-agent 稳态制首日；编排者账）
 
