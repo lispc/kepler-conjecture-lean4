@@ -9,19 +9,53 @@ Everything here is UNTRUSTED codegen; trust comes from the Lean kernel
 re-check (`decide`) on the emitted Bench.lean.
 
 （2026-09-06 重启后重建版：从 /dev/shm 迁入 git 持久化；OUTROOT 仍指
-/dev/shm/lprun，可用环境变量 LPRUN_ROOT 覆盖。）
+LPRUN_ROOT，默认 /dev/shm/lprun，无 /dev/shm 的机器退到 <tmpdir>/lprun。
+2026-10-12 C1d 跨机适配：旧机绝对路径全部环境变量化——
+  GLPSOL      glpsol 可执行（默认 /opt/homebrew/bin/glpsol，其次 repo
+              pipeline/tools/glpk-5.0，再退 PATH；macOS: brew install glpk）
+  KEPLER_REF  Flyspeck glpk 参考目录（默认 <repo>/reference/.../glpk）
+  LPRUN_ROOT  工作根；LPRUN_REPO 上游 pipeline/lp（driver.py 同名变量）
+SoPlex 由 socert.SOPLEX / socert --soplex 控制（钉定 8.1.0，见 README.md）。
+generate() 返回 (dirpath, D, G)——D 位宽进 results.jsonl 一行账。）
 """
-import argparse, shutil, subprocess, sys, time
+import argparse, os, shutil, subprocess, sys, time, tempfile
 from pathlib import Path
 
-sys.path.insert(0, "/home/scroll/repos/kepler-conjecture-lean4/pipeline/lp")
+HERE = Path(__file__).resolve().parent          # .../pipeline/lp/run
+REPO_LP = Path(os.environ.get("LPRUN_REPO", str(HERE.parent)))  # .../pipeline/lp
+REPO = REPO_LP.parents[1]                       # repo root
+sys.path.insert(0, str(REPO_LP))
 import socert
 import gen_data
 
-GLPSOL = "/home/scroll/repos/kepler-conjecture-lean4/pipeline/tools/glpk-5.0/bin/glpsol"
-REF = Path("/dev/shm/kepler-ref/flyspeck/formal_lp/glpk")
-import os
-ROOT = Path(os.environ.get("LPRUN_ROOT", "/dev/shm/lprun"))
+
+def _default_glpsol() -> str:
+    env = os.environ.get("GLPSOL")
+    if env:
+        return env
+    for cand in ("/opt/homebrew/bin/glpsol", "/usr/local/bin/glpsol",
+                 str(REPO / "pipeline/tools/glpk-5.0/bin/glpsol")):
+        if Path(cand).exists():
+            return cand
+    found = shutil.which("glpsol")
+    return found or "glpsol"
+
+
+GLPSOL = _default_glpsol()
+REF = Path(os.environ.get("KEPLER_REF",
+                          str(REPO / "reference/flyspeck/formal_lp/glpk")))
+
+
+def _default_root() -> Path:
+    env = os.environ.get("LPRUN_ROOT")
+    if env:
+        return Path(env)
+    if Path("/dev/shm").is_dir():
+        return Path("/dev/shm/lprun")
+    return Path(tempfile.gettempdir()) / "lprun"
+
+
+ROOT = _default_root()
 WORK = ROOT / "work"       # scratch per job
 GEN = ROOT / "gen"         # socert output root (REPO stand-in)
 
@@ -159,7 +193,12 @@ def add_slacks_flat(flat_path: Path, out_path: Path) -> tuple[Path, list[str]]:
 
 def generate(hypermap_string: str, mod: str, terminal_bound: int | None,
              workdir: Path, verbose=False, data_text: str | None = None,
-             slack_infeasible: bool = False) -> Path:
+             slack_infeasible: bool = False,
+             record_id: str | None = None) -> tuple[Path, int, int]:
+    """Full chain for one terminal; returns (module dir, D, G) — D.bit_width
+    goes into the results.jsonl line (driver.py D_bits accounting).
+    `record_id` (canonical `<graphId>_t<ti>`) additionally emits the LPSchema
+    pin (fill-manual step 2) so the output is --emit-closure-ready."""
     workdir.mkdir(parents=True, exist_ok=True)
     (workdir / "model2.mod").write_text(build_model2())
     data = data_text if data_text is not None else \
@@ -172,8 +211,7 @@ def generate(hypermap_string: str, mod: str, terminal_bound: int | None,
     if r.returncode != 0:
         raise RuntimeError(f"glpsol failed: {r.stdout[-2000:]} {r.stderr[-2000:]}")
     flat = workdir / "root_flat.lp"
-    r = subprocess.run([sys.executable,
-                        "/home/scroll/repos/kepler-conjecture-lean4/pipeline/lp/flatten_lp.py",
+    r = subprocess.run([sys.executable, str(REPO_LP / "flatten_lp.py"),
                         str(lp), str(flat)], capture_output=True, text=True)
     if r.returncode != 0:
         raise RuntimeError(f"flatten failed: {r.stdout[-2000:]} {r.stderr[-2000:]}")
@@ -227,11 +265,12 @@ def generate(hypermap_string: str, mod: str, terminal_bound: int | None,
 
     socert.REPO = GEN  # emit under $LPRUN_ROOT/gen/lean/Kepler/LP/<mod>
     dirpath = socert.emit_col_major_sharded(
-        mod, lpdata, D, Y, G, flat, None, terminal_bound)
+        mod, lpdata, D, Y, G, flat, None, terminal_bound,
+        record_id=record_id)
     gamma = socert.Fraction(G, D)
     if verbose:
-        print(f"[gen] {mod}: gamma={float(gamma):.8f}")
-    return dirpath
+        print(f"[gen] {mod}: gamma={float(gamma):.8f} D_bits={D.bit_length()}")
+    return dirpath, D, G
 
 
 if __name__ == "__main__":
@@ -243,12 +282,17 @@ if __name__ == "__main__":
     ap.add_argument("--terminal-bound", type=int, default=12)
     ap.add_argument("--infeasible", action="store_true",
                     help="slack-column infeasibility certificate (bound 0)")
+    ap.add_argument("--record-id", default=None,
+                    help="canonical record id `<graphId>_t<ti>`: emit the "
+                         "LPSchema pin (fill-manual step 2) into the product "
+                         "module + leaf-forward root alias")
     ap.add_argument("--workdir", default=None)
     a = ap.parse_args()
     wd = Path(a.workdir or str(WORK / a.module))
     t0 = time.time()
     dt = Path(a.data_text_file).read_text() if a.data_text_file else None
-    d = generate(a.hypermap_string, a.module,
-                 0 if a.infeasible else a.terminal_bound, wd,
-                 data_text=dt, slack_infeasible=a.infeasible)
-    print(f"wrote {d} in {time.time()-t0:.1f}s")
+    d, D, G = generate(a.hypermap_string, a.module,
+                       0 if a.infeasible else a.terminal_bound, wd,
+                       data_text=dt, slack_infeasible=a.infeasible,
+                       record_id=a.record_id)
+    print(f"wrote {d} in {time.time()-t0:.1f}s (D_bits={D.bit_length()})")

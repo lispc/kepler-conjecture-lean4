@@ -27,12 +27,18 @@ hard 批 19,438/148 可用二者 --stats 交叉复核）。
 用法：
   python3 lean/scripts/gen_lp_skeleton.py [--limit N]   # 试点批/全量
   python3 lean/scripts/gen_lp_skeleton.py --check       # 只盘点，不落盘
+  python3 lean/scripts/gen_lp_skeleton.py --emit-closure  # 补丁模式：已发射
+    # 产物模块（socert.py --col-major --record-id，T<id 去 _>，见 PRODDIR）
+    # 的叶占位行原地换单行转发（LPSchema 手册第 3 步；叶名不变 → LPAll
+    # exact 转发零改动；幂等，LPIds/LPAll 不动）。输出树可用环境变量
+    # LPGEN_OUTDIR 重定向（/tmp 彩排用；产物模块根随之取 OUTDIR.parents[1]/LP）。
 
 探针（每生成文件，逐错迭代到零；依赖 olean 的先 lake build 单模块）：
   cd lean && ~/.elan/bin/lake env lean Kepler/Text/LP/<file>.lean
 """
 import argparse
 import json
+import os
 import sys
 import tarfile
 import tempfile
@@ -46,7 +52,14 @@ sys.path.insert(0, str(REPO / "pipeline" / "lp"))
 import parse_lpcert as P  # noqa: E402
 
 BIN = REPO / "reference" / "flyspeck" / "formal_lp" / "glpk" / "binary"
-OUTDIR = REPO / "lean" / "Kepler" / "Text" / "LP"
+# LPGEN_OUTDIR redirects the OUTPUT tree (LPIds/leaf files/LPAll) — used by the
+# --emit-closure lane to rehearse fill patches in /tmp without touching the
+# repo; the product-module root is derived as OUTDIR.parents[1] / "LP"
+# (i.e. <root>/lean/Kepler/LP, where `socert.py --col-major --record-id`
+# emits the pin modules).
+OUTDIR = Path(os.environ.get(
+    "LPGEN_OUTDIR", str(REPO / "lean" / "Kepler" / "Text" / "LP")))
+PRODDIR = OUTDIR.parents[1] / "LP"
 
 # 盘点基线（STATUS.md 2026-09-24 LP 收官口径 + P6-C STATUS 19,715 图口径）
 # root/easy/hard = 原始批终端数（infeasible 重分类前）；
@@ -204,6 +217,95 @@ def write_leaf_file(path, recs, seg, i):
         f.write(f"  · exact {leaf_name(recs[-1])}\n\n")
 
 
+# --------------- --emit-closure：LPSchema 手册第 3 步的批量叶改写（C1d 2026-10-12）
+
+
+def product_pin_module(rid: str):
+    """产物模块名 `T<id 去 _>`，前提是其 Assembly 已发射手册第 2 步的
+    `def pin`（`socert.py --col-major --record-id <id> --terminal-bound 12`
+    的产物，位于 PRODDIR）。无 pin 模块时返回 None（叶保持占位）。"""
+    mod = "T" + rid.replace("_", "")
+    asm = PRODDIR / mod / "Assembly.lean"
+    if asm.exists() and "\ndef pin : Kepler.Text.LP.LpTerminalPin " \
+            in asm.read_text():
+        return mod
+    return None
+
+
+def close_leaf_file(path: Path, recs):
+    """叶文件原地补丁：该叶占位 `:= by\\n  sorry` 换成
+    `LpTerminalPin.toCertified Kepler.LP.<mod>.pin` 单行转发（叶名不变 →
+    LPAll 的 exact 转发零改动）；同时补 import（LPSchema + 产物模块）并把
+    NEEDS 注记换成闭合记账。无新闭合时不写文件（幂等，可重复跑）。
+    返回 (closed, skipped)。"""
+    text = path.read_text()
+    sorry_before = text.count("sorry")
+    closed = skipped = 0
+    new_imports = []
+    for r in recs:
+        if r["batch"] == "infeas":
+            skipped += 1  # Farkas 通道未落地（infeas 叶走 C1b 定形通道），保持占位
+            continue
+        mod = product_pin_module(r["id"])
+        if mod is None:
+            skipped += 1  # 产物模块未发射（或无 pin）：下一波再收
+            continue
+        leaf = leaf_name(r)
+        placeholder = (
+            f"/-- `{r['id']}`（{r['dat']}#{r['gi']}）\n"
+            f"NEEDS(deferred-compute): LP 重跑（SoPlex 主批/glpsol 对偶尾部）"
+            f"产物转发闭合。 -/\n"
+            f"theorem {leaf} : LpTerminalCertified \"{r['id']}\" := by\n"
+            f"  sorry\n")
+        closure = (
+            f"/-- `{r['id']}`（{r['dat']}#{r['gi']}）— 闭合：产物模块单行转发"
+            f"（LPSchema 手册第 3 步；gen_lp_skeleton --emit-closure 落账）。 -/\n"
+            f"theorem {leaf} : LpTerminalCertified \"{r['id']}\" :=\n"
+            f"  LpTerminalPin.toCertified Kepler.LP.{mod}.pin\n")
+        if placeholder not in text:
+            skipped += 1  # 已闭合或内容漂移：不重复补丁
+            continue
+        text = text.replace(placeholder, closure, 1)
+        new_imports.append(f"import Kepler.LP.{mod}")
+        closed += 1
+    assert text.count("sorry") == sorry_before - closed, \
+        f"{path.name}: sorry accounting broke"
+    if closed:
+        add = [l for l in ["import Kepler.Text.LP.LPSchema"] + sorted(set(new_imports))
+               if l + "\n" not in text]
+        if add:
+            text = text.replace("import Kepler.Text.LP.LPIds\n",
+                                "import Kepler.Text.LP.LPIds\n"
+                                + "\n".join(add) + "\n", 1)
+        path.write_text(text)
+    return closed, skipped
+
+
+def emit_closure(segrecs):
+    """--emit-closure 主入口：逐叶文件补丁，汇总记账。LPIds/LPAll 不动。"""
+    n_files = n_closed = n_skip = 0
+    for seg in SEGS:
+        cs = chunks(segrecs.get(seg, []), CHUNK)
+        for i, c in enumerate(cs):
+            path = OUTDIR / f"{leaf_file_stem(seg, i)}.lean"
+            if not path.exists():
+                print(f"[gen_lp_skeleton] --emit-closure: {path.name} missing "
+                      f"(run the generator first)", flush=True)
+                continue
+            closed, skip = close_leaf_file(path, c)
+            if closed:
+                n_files += 1
+                n_closed += closed
+            n_skip += skip
+    print(f"[gen_lp_skeleton] --emit-closure: {n_closed} leaf(s) closed in "
+          f"{n_files} file(s); {n_skip} skipped (infeas / no pin module / "
+          f"already closed)", flush=True)
+    if n_closed == 0:
+        print(f"[gen_lp_skeleton] --emit-closure: nothing to close — emit "
+              f"product modules first via `socert.py --col-major --record-id "
+              f"<id> --terminal-bound 12` (products under {PRODDIR})", flush=True)
+
+
 def emit_ids(path, segrecs):
     """LPIds.lean：chunk 数据（250/def）+ 段 concat + 长度定理（norm_num 链）。"""
     out = [HEADER.format(mod="Kepler/Text/LP/LPIds",
@@ -320,6 +422,11 @@ def main():
     ap.add_argument("--limit", type=int, default=None,
                     help="试点批：每段只取前 N 条（默认全量 43,078）")
     ap.add_argument("--check", action="store_true", help="只盘点，不落盘")
+    ap.add_argument("--emit-closure", action="store_true",
+                    help="补丁模式（不重生成）：对已发射产物模块（socert.py "
+                         "--col-major --record-id，见 PRODDIR）的记录，把叶"
+                         "文件占位行原地换单行转发（LPSchema 手册第 3 步；叶"
+                         "名不变 → LPAll exact 转发零改动）；LPIds/LPAll 不动")
     args = ap.parse_args()
 
     with tempfile.TemporaryDirectory() as td:
@@ -343,6 +450,13 @@ def main():
         RESULT["exit"] = 2
         return
     if args.check:
+        return
+
+    if args.emit_closure:
+        full = {}
+        for r in sorted(records, key=lambda r: SEGS.index(r["batch"])):
+            full.setdefault(r["batch"], []).append(r)
+        emit_closure(full)
         return
 
     recs = sorted(records, key=lambda r: SEGS.index(r["batch"]))

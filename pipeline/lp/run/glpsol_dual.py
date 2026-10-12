@@ -26,21 +26,25 @@ Usage:
   glpsol_dual.py --id 206218905887_t0 [--terminal-bound 12]
   glpsol_dual.py --id 62586200165_t0007 --lp slack_flat.lp --terminal-bound 0
 
-Defaults: workdir /dev/shm/retry/<id>, lp <workdir>/root_flat.lp,
-solution <workdir>/glpk_exact_sol.txt, module "T"+id (sanitized).
+Defaults: workdir $LPRUN_ROOT/retry/<id>, lp <workdir>/root_flat.lp,
+solution <workdir>/glpk_exact_sol.txt, module "T"+id (sanitized, `_` dropped
+to match the LPSchema leaf-forward form).  All old-machine absolute paths are
+env-var-ized (C1d 2026-10-12): LPRUN_ROOT / LPRUN_REPO / GLPSOL / KEPLER_REF /
+SOPLEX — see README.md; REPO_LP/GLPSOL/ROOT are inherited from gen_one.
 """
 import argparse, os, re, subprocess, sys, time
 from fractions import Fraction
 from pathlib import Path
 
-REPO_LP = "/home/scroll/repos/kepler-conjecture-lean4/pipeline/lp"
-sys.path.insert(0, REPO_LP)
-sys.path.insert(0, REPO_LP + "/run")
+HERE = Path(__file__).resolve().parent          # .../pipeline/lp/run
+REPO_LP = Path(os.environ.get("LPRUN_REPO", str(HERE.parent)))
+sys.path.insert(0, str(REPO_LP))
+sys.path.insert(0, str(HERE))
 import socert
 import gen_one
 
-GLPSOL = REPO_LP + "/../tools/glpk-5.0/bin/glpsol"
-ROOT = Path(os.environ.get("LPRUN_ROOT", "/dev/shm/lprun"))
+GLPSOL = gen_one.GLPSOL
+ROOT = gen_one.ROOT
 GEN = ROOT / "gen"
 
 _STAT = {"B", "NL", "NU", "NF", "NS"}
@@ -212,7 +216,8 @@ def exact_dual(lpdata, row_st, col_st):
     return y
 
 
-def integerize_emit(lpdata, y, mod, lp_path, terminal_bound, verbose=True):
+def integerize_emit(lpdata, y, mod, lp_path, terminal_bound, verbose=True,
+                    record_id=None):
     """Same semantics as the second half of gen_one.generate()."""
     def denom_lcm(vals):
         d = 1
@@ -246,7 +251,8 @@ def integerize_emit(lpdata, y, mod, lp_path, terminal_bound, verbose=True):
 
     socert.REPO = GEN  # emit under $LPRUN_ROOT/gen/lean/Kepler/LP/<mod>
     dirpath = socert.emit_col_major_sharded(
-        mod, lpdata, D, Y, G, lp_path, None, terminal_bound)
+        mod, lpdata, D, Y, G, lp_path, None, terminal_bound,
+        record_id=record_id)
     if verbose:
         print(f"[emit] {mod}: D={D.bit_length()} bits, "
               f"gamma=G/D={float(Fraction(G, D)):.10f} -> {dirpath}")
@@ -267,14 +273,16 @@ def main():
     ap.add_argument("--run-glpsol", action="store_true",
                     help="run glpsol --exact first if the solution is missing")
     a = ap.parse_args()
-    wd = Path(a.workdir or f"/dev/shm/retry/{a.id}")
+    wd = Path(a.workdir or str(ROOT / "retry" / a.id))
     lp = Path(a.lp) if a.lp and os.path.isabs(a.lp) else wd / (a.lp or "root_flat.lp")
     sol = Path(a.sol) if a.sol else wd / "glpk_exact_sol.txt"
-    mod = a.module or "T" + a.id.replace(".", "_").replace("-", "_")
+    # LPSchema 手册 T<id 消毒>（去 `_`；与 gen_one.generate/driver 的模块名同构）
+    mod = a.module or "T" + a.id.replace("_", "")
 
     if not sol.exists():
         if not a.run_glpsol:
             raise SystemExit(f"missing {sol} (pass --run-glpsol to solve)")
+        wd.mkdir(parents=True, exist_ok=True)
         log = open(wd / "glpk_exact.log", "w")
         r = subprocess.run([GLPSOL, "--lp", str(lp), "--exact",
                             "-o", str(sol)], stdout=log,
@@ -300,7 +308,9 @@ def main():
         raise RuntimeError("b^Ty inconsistent with glpsol objective")
     if not obj < a.terminal_bound:
         raise RuntimeError(f"terminal condition fails: b^Ty={obj} !< {a.terminal_bound}")
-    integerize_emit(lpdata, y, mod, lp, a.terminal_bound)
+    # pin 随发（LPSchema 手册第 2 步）：bound 支（γ<12）带记录 id 即可
+    integerize_emit(lpdata, y, mod, lp, a.terminal_bound,
+                    record_id=(a.id if a.terminal_bound == 12 else None))
     print(f"[done] {a.id} in {time.time()-t0:.1f}s")
 
 

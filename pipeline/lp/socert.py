@@ -34,14 +34,26 @@ of a maximization).
 
 Usage:
   socert.py INPUT.lp [-o OUT.lean] [--module NAME] [--soplex PATH] [--settings PATH]
+  socert.py INPUT.lp --col-major [--terminal-bound 12] [--record-id <graphId>_t<ti>]
 
-Defaults: soplex = <repo>/pipeline/tools/soplex-8.0.3/bin/soplex,
+Defaults: soplex = $SOPLEX, else <repo>/pipeline/tools/soplex-8.0.3/bin/soplex,
+else `soplex` from PATH (macOS runners: `brew install soplex`, pinned 8.1.0 —
+see pipeline/lp/run/README.md);
 settings = <repo>/pipeline/lp/exact.set,
 OUT = <repo>/lean/Kepler/LP/Cert<Name>.lean (name from the .lp file stem).
+
+`--record-id` (with `--col-major --terminal-bound 12`) additionally emits the
+LPSchema fill-manual step-2 pin into the Assembly (6th item, plus the
+graphId/ti constants), enabling the step-3 single-line leaf closure.  The
+infeasible-record channel template is `emit_farkas_module` (library entry for
+the C3 G5 family-resolution layer; carries the mandatory
+`set_option maxHeartbeats 0` header).
 """
 
 import argparse
+import os
 import re
+import shutil
 import subprocess
 import sys
 from fractions import Fraction
@@ -49,7 +61,24 @@ from math import gcd
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-DEFAULT_SOPLEX = REPO / "pipeline/tools/soplex-8.0.3/bin/soplex"
+
+
+def _default_soplex() -> Path:
+    """`SOPLEX` env var wins; else the repo-pinned build; else PATH.
+    (The repo-pinned soplex-8.0.3 tree only exists on the original batch
+    machine; macOS runners use `brew install soplex`, pinned 8.1.0 —
+    see pipeline/lp/run/README.md.)"""
+    env = os.environ.get("SOPLEX")
+    if env:
+        return Path(env)
+    pinned = REPO / "pipeline/tools/soplex-8.0.3/bin/soplex"
+    if pinned.exists():
+        return pinned
+    found = shutil.which("soplex")
+    return Path(found) if found else pinned
+
+
+DEFAULT_SOPLEX = _default_soplex()
 DEFAULT_SETTINGS = REPO / "pipeline/lp/exact.set"
 
 
@@ -477,7 +506,8 @@ def _chunk_indices(n: int, size: int) -> list[tuple[int, int]]:
 
 def emit_col_major_sharded(mod: str, data: LPData, D: int, Y: list[int], G: int,
                            lp_path: Path, k: int | None,
-                           terminal_bound: int | None) -> Path:
+                           terminal_bound: int | None,
+                           record_id: str | None = None) -> Path:
     """Column-major (transposed) emission: a directory
     `lean/Kepler/LP/<mod>/` with
 
@@ -493,6 +523,14 @@ def emit_col_major_sharded(mod: str, data: LPData, D: int, Y: list[int], G: int,
     - `Bench.lean`    — self-contained single-file variant (imports only
                         `Kepler.LP.ColMajor`; everything inline) for
                         `lake env lean` wall-clock benchmarking.
+
+    With `record_id` (canonical `"<graphId>_t<ti>"`, requires
+    `terminal_bound == 12`) the Assembly also emits the LPSchema-fill-manual
+    step-2 6th item `def pin` — the record-level pin
+    (`Kepler.Text.LP.LpTerminalPin`) packaging `(lp, d, certY, certD, certG,
+    dual_check, gamma_lt)` plus the `graphId`/`ti` constants and an
+    `idCanonical` decide — so leaves close by the manual's single-line
+    forward `LpTerminalPin.toCertified Kepler.LP.<mod>.pin`.
 
     With the transposed layout the kernel work of the dual check is O(nnz):
     each column inequality scans only that column's support.  The dual
@@ -616,7 +654,55 @@ end Kepler.LP.{mod}
     (dirpath / "Data.lean").write_text(data_lean)
 
     # ------------------------------------------------------- Assembly.lean
-    asm_head = header + f"""import Kepler.LP.{mod}.Data
+    pin_block = ""
+    asm_imports = f"import Kepler.LP.{mod}.Data"
+    if record_id is not None:
+        # LPSchema 灌装手册第 2 步：产物模块第 6 件 `def pin`（全机械）。
+        # The leaf fill wave closes by the manual's step-3 single-line forward
+        # `LpTerminalPin.toCertified Kepler.LP.{mod}.pin`, so the module name
+        # must be the sanitized record id and `bound` must be the Flyspeck
+        # terminal condition (γ < 12) that `LpTerminalPin.bound` states.
+        if terminal_bound != 12:
+            raise ValueError("--record-id pins `bound := gamma_lt` (γ < 12, the "
+                             "Flyspeck terminal condition); got "
+                             f"--terminal-bound {terminal_bound}")
+        if mod != "T" + record_id.replace("_", ""):
+            raise ValueError(f"--module {mod!r} is not the sanitized record id "
+                             f"{'T' + record_id.replace('_', '')!r}; the leaf "
+                             f"forward would not resolve")
+        m = re.fullmatch(r"(.+)_t(\d+)", record_id)
+        if not m:
+            raise ValueError(f"--record-id {record_id!r} not in canonical "
+                             f"'<graphId>_t<ti>' form")
+        graph_id, ti = m.group(1), int(m.group(2))
+        asm_imports += "\nimport Kepler.Text.LP.LPSchema"
+        pin_block = f"""
+/-! ### 记录级钉定（LPSchema 手册第 2 步：产物模块第 6 件，全机械） -/
+
+/-- 图 id（hypermap 串首 token 去 `_`，`lpHypermapId` 同构）。 -/
+def graphId : String := "{graph_id}"
+
+/-- DFS 终端序（记录 id 的 `t%04d` 分量）。 -/
+def ti : ℕ := {ti}
+
+/-- 常量对账：id 是 graphId/ti 的规范推导值（decide 闭合）。 -/
+theorem id_canonical : "{record_id}" = Kepler.Text.LP.lpRecordId graphId ti := by
+  decide
+
+/-- 记录级钉定包装：id 类型索引 + graph/ti 对账（写错任一 = 编译期拒绝）。 -/
+def pin : Kepler.Text.LP.LpTerminalPin "{record_id}" where
+  graphId := "{graph_id}"
+  ti := {ti}
+  idCanonical := by decide
+  lp := lp
+  d := d
+  Y := certY
+  D := certD
+  G := certG
+  check := dual_check
+  bound := gamma_lt
+"""
+    asm_head = header + asm_imports + f"""
 
 set_option maxRecDepth 100000
 set_option maxHeartbeats 0
@@ -664,8 +750,26 @@ theorem bound_lt (x : List Rat) (hxlen : x.length = lp.cs.length)
         Int.cast_lt.mpr gamma_lt
     _ = {B} * ((certD : ℕ) : Rat) := by push_cast; ring
 """
-    asm = asm_head + asm_tail + f"\nend Kepler.LP.{mod}\n"
+    asm = asm_head + asm_tail + pin_block + f"\nend Kepler.LP.{mod}\n"
     (dirpath / "Assembly.lean").write_text(asm)
+    if record_id is not None:
+        # Root module: the fill-manual step-3 forward references the pin as
+        # `Kepler.LP.{mod}.pin` (full name — Assembly.lean already declares
+        # `namespace Kepler.LP.{mod}`), and the leaf imports the root name,
+        # so the dir layout (`.Data`/`.Assembly` submodules) needs this thin
+        # root file to exist.
+        alias = dirpath.parent / f"{mod}.lean"
+        alias.write_text(f"""/-
+AUTO-GENERATED leaf-forward root module — do not edit
+
+Root module for the LPSchema fill-manual step-3 leaf closure (`theorem
+lpT… : LpTerminalCertified "<id>" := LpTerminalPin.toCertified
+Kepler.LP.{mod}.pin`).  Only re-links the `{mod}/` directory product
+(Data/Assembly/Bench submodules); `pin` is declared there in namespace
+`Kepler.LP.{mod}`.
+-/
+import Kepler.LP.{mod}.Assembly
+""")
 
     # ---------------------------------------------------------- Bench.lean
     # Self-contained single-file variant for wall-clock benchmarking with
@@ -709,6 +813,117 @@ theorem dual_check : checkDualCMTF lp d (ITree.ofList certY d) certY certD certG
     return dirpath
 
 
+# ------------------------------------------------------------- Farkas channel
+
+
+def emit_farkas_module(mod: str, nvars: int, rows: list[list[int]],
+                       rhs: list[int], mult: list[int],
+                       record_id: str | None = None,
+                       case_lean: str | None = None,
+                       source: str = "G5 family resolution (C3)") -> Path:
+    """Farkas (infeasible-record) product module emission — the C3 infeas
+    channel template, one Lean file `lean/Kepler/LP/<mod>.lean` carrying
+
+    - `core : Kepler.Text.LP.LpFarkasCore` — the scaled integer row system
+      `(nvars, rows, rhs, mult)` produced by the G5 family-resolution layer
+      (this function takes the final integers; it does no family decoding);
+    - `core_check : Kepler.Text.LP.farkasCheck core = true := by decide`;
+    - with `record_id` + `case_lean` (the decoded `LpTerminalCase` literal):
+      the LPSchemaFarkas §4 pin `def pin : LpTerminalInfeasiblePin "<id>"`
+      (graphId/ti constants + idCanonical decide + `hcheck := ⟨rfl,
+      core_check⟩`), so the infeas leaf closes by the mirrored single-line
+      forward `LpTerminalPin.toCertified`-style shell.
+
+    MANDATORY `set_option maxHeartbeats 0` in this template: the kernel
+    `decide` of `farkasCheck` on a real-record core times out at the default
+    200000 heartbeats (smallest real record: 161 family instances; measured
+    on the pilot B synthetic core — C1c, and rerun with negative control in
+    the C1d toolchain lane).  Do not "optimize" the header away.
+
+    Python-side sanity checks (untrusted; trust = the kernel `decide`):
+    rectangular rows, nonnegative multipliers, multiplier/row counts.
+    """
+    if not (len(rows) == len(rhs) == len(mult)):
+        raise ValueError(f"shape mismatch: {len(rows)} rows, {len(rhs)} rhs, "
+                         f"{len(mult)} multipliers")
+    if any(mm < 0 for mm in mult):
+        raise ValueError("negative Farkas multiplier (must be nonnegative)")
+    if any(len(r) != nvars for r in rows):
+        raise ValueError("row width mismatch with nvars")
+    if record_id is not None:
+        if case_lean is None:
+            raise ValueError("--record-id needs case_lean (decoded "
+                             "LpTerminalCase literal)")
+        if not re.fullmatch(r"(.+)_t(\d+)", record_id):
+            raise ValueError(f"--record-id {record_id!r} not in canonical "
+                             f"'<graphId>_t<ti>' form")
+
+    def int_list(vals) -> str:
+        return "[" + ", ".join(_int(v) for v in vals) + "]"
+
+    rows_lean = ",\n  ".join(int_list(r) for r in rows)
+    pin_part = ""
+    if record_id is not None:
+        m = re.fullmatch(r"(.+)_t(\d+)", record_id)
+        assert m is not None
+        graph_id, ti = m.group(1), int(m.group(2))
+        pin_part = f"""
+/-- 记录原案（parse_lpcert 解码的 `LpTerminalCase` 全量字面量；C3 灌入）。 -/
+def infeasCase : Kepler.Text.LP.LpTerminalCase := {case_lean}
+
+/-- 图 id（hypermap 串首 token 去 `_`）。 -/
+def graphId : String := "{graph_id}"
+
+/-- DFS 终端序（记录 id 的 `t%04d` 分量）。 -/
+def ti : ℕ := {ti}
+
+/-- 记录级钉定包装（LPSchemaFarkas §4；bound 支 `LpTerminalPin` 同构）。 -/
+def pin : Kepler.Text.LP.LpTerminalInfeasiblePin "{record_id}" where
+  graphId := "{graph_id}"
+  ti := {ti}
+  idCanonical := by decide
+  cert := ⟨infeasCase, core⟩
+  hcheck := ⟨rfl, core_check⟩
+"""
+    header = f"""/-
+AUTO-GENERATED Farkas certificate (infeasible record) — do not edit
+
+Generated by `pipeline/lp/socert.py emit_farkas_module` ({source}).
+Infeasibility semantics (LPSchemaFarkas 模块头): the nonnegative integer
+combination `mult·rows` collapses every column to 0 while `mult·rhs < 0`,
+i.e. the LP row system implies `0 ≤ < 0` — a Farkas contradiction.
+Trust model: the kernel `decide` re-checks `farkasCheck` from scratch.
+
+⚠ `set_option maxHeartbeats 0` below is MANDATORY: the core `decide` times
+out at the default 200000 heartbeats (161-instance core, measured C1c +
+C1d negative control).  Do not remove.
+-/
+import Kepler.Text.LP.LPSchemaFarkas
+
+-- deep list literals and the kernel `decide` re-check need headroom
+set_option maxRecDepth 100000
+set_option maxHeartbeats 0
+
+namespace Kepler.LP.{mod}
+
+/-- Farkas core: `{nvars}` variables × {len(rows)} rows (scaled integers). -/
+def core : Kepler.Text.LP.LpFarkasCore :=
+  ⟨{nvars}, [
+  {rows_lean}],
+  {int_list(rhs)},
+  {int_list(mult)}⟩
+
+/-- Kernel re-check of the Farkas certificate. -/
+theorem core_check : Kepler.Text.LP.farkasCheck core = true := by
+  decide
+"""
+    out_dir = REPO / "lean/Kepler/LP"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / f"{mod}.lean"
+    path.write_text(header + pin_part + f"\nend Kepler.LP.{mod}\n")
+    return path
+
+
 # ---------------------------------------------------------------------- main
 
 
@@ -731,6 +946,12 @@ def main() -> int:
     ap.add_argument("--terminal-bound", type=int, default=None, metavar="B",
                     help="also emit `gamma_lt`/`bound_lt`: the certificate bound "
                          "γ < B (Flyspeck terminal condition; B=12)")
+    ap.add_argument("--record-id", default=None, metavar="ID",
+                    help="canonical record id `\"<graphId>_t<ti>\"` (col-major "
+                         "only): emit the LPSchema fill-manual step-2 pin — "
+                         "`def pin : LpTerminalPin \"<id>\"` (+ graphId/ti "
+                         "constants) as the Assembly 6th item; requires "
+                         "--terminal-bound 12 and --module T<id sans '_'>")
     args = ap.parse_args()
 
     data = parse_lp(args.lp)
@@ -785,17 +1006,35 @@ def main() -> int:
     data.rows = [(name, row, rhs)
                  for (name, _, _), (row, rhs) in zip(data.rows, rows_int)]
 
-    mod = args.module or module_name_for(args.lp.stem)
+    if args.module:
+        mod = args.module
+    elif args.record_id:
+        # default the module to the sanitized record id (leaf-forward form)
+        mod = "T" + args.record_id.replace("_", "")
+    else:
+        mod = module_name_for(args.lp.stem)
     nnz = sum(1 for _, row, _ in data.rows for k in row if k != 0)
     print(f"[socert] {args.lp.name}: {len(data.vars)} vars, {len(data.rows)} rows, "
           f"{nnz} nonzeros; D={D}, G={G}, γ={Fraction(G, D)}; "
           f"validation OK (x≥0, Ax≤b, y≥0, Aᵀy≥c, cᵀx=bᵀy)")
     if args.col_major:
+        if args.record_id and args.shard_cols is not None:
+            print("[socert] note: --shard-cols is ignored with --col-major "
+                  "(record-id pin targets the col-major Assembly)")
         dirpath = emit_col_major_sharded(mod, data, D, Y, G, args.lp,
-                                         args.shard_cols, args.terminal_bound)
+                                         args.shard_cols, args.terminal_bound,
+                                         record_id=args.record_id)
+        pin_note = " + pin (LPSchema manual step 2) + leaf-forward root alias" \
+            if args.record_id else ""
         print(f"[socert] column-major: wrote {dirpath}/ "
-              f"(Data + Assembly + Bench); base_check in Data.lean, "
+              f"(Data + Assembly + Bench{pin_note}); base_check in Data.lean, "
               f"cols_check in Assembly.lean")
+        if args.record_id:
+            print(f"[socert] leaf fill (manual step 3): replace the "
+                  f"lpT{args.record_id.replace('_', '')} placeholder with\n"
+                  f"  theorem lpT{args.record_id.replace('_', '')} : "
+                  f"LpTerminalCertified \"{args.record_id}\" :=\n"
+                  f"    LpTerminalPin.toCertified Kepler.LP.{mod}.pin")
         print(f"[socert] build: lake env lean {dirpath}/Bench.lean   "
               f"(single-file benchmark)")
     elif args.shard_cols is not None:
