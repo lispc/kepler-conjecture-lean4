@@ -5154,6 +5154,917 @@ private theorem p24_caseB2_ends_mem (V : Set V3) (u0 u1 v w : V3)
       (Set.mem_inter (p24_mem_rconeGe_cross ha1) (p24_mem_rconeGe_apex ha1))
       (p24_mem_affGe_base hfin u1 (Or.inr rfl))
 
+/-! ### 新件 1：affGe 四点组合成员 -/
+
+private theorem p24_mem_affGe_quad {a b c d y : V3} (hab : a ≠ b) (hac : a ≠ c)
+    (had : a ≠ d) (hbc : b ≠ c) (hbd : b ≠ d) (hcd : c ≠ d) (w1 w2 w3 w4 : ℝ)
+    (hsum : w1 + w2 + w3 + w4 = 1) (hw3 : 0 ≤ w3) (hw4 : 0 ≤ w4)
+    (hy : y = w1 • a + w2 • b + w3 • c + w4 • d) :
+    y ∈ affGe {a, b} {c, d} := by
+  have hfin : (({a, b} : Set V3) ∪ {c, d}).Finite :=
+    ((Set.finite_singleton b).insert a).union ((Set.finite_singleton d).insert c)
+  have h4 : hfin.toFinset = ({a, b} : Finset V3) ∪ ({c, d} : Finset V3) := by
+    ext z
+    simp only [Set.Finite.mem_toFinset, Set.mem_union, Finset.mem_union,
+      Set.mem_insert_iff, Set.mem_singleton_iff, Finset.mem_insert,
+      Finset.mem_singleton]
+  have hdisj : Disjoint ({a, b} : Finset V3) ({c, d} : Finset V3) := by
+    rw [Finset.disjoint_iff_ne]
+    intro x hx y hy
+    simp only [Finset.mem_insert, Finset.mem_singleton] at hx hy
+    rcases hx with hx | hx <;> rcases hy with hy | hy
+    · rw [hx, hy]; exact hac
+    · rw [hx, hy]; exact had
+    · rw [hx, hy]; exact hbc
+    · rw [hx, hy]; exact hbd
+  have hins1 : (a : V3) ∉ ({b} : Finset V3) := by simp [hab]
+  have hins2 : (c : V3) ∉ ({d} : Finset V3) := by simp [hcd]
+  have h2sum : ∑ x ∈ ({a, b} : Finset V3),
+      (fun z : V3 => if z = a then w1 else if z = b then w2
+        else if z = c then w3 else w4) x = w1 + w2 := by
+    rw [Finset.sum_insert hins1, Finset.sum_singleton]
+    show (if a = a then w1 else if a = b then w2 else if a = c then w3 else w4)
+      + (if b = a then w1 else if b = b then w2 else if b = c then w3 else w4) = w1 + w2
+    rw [if_pos (rfl : a = a), if_neg (Ne.symm hab), if_pos (rfl : b = b)]
+  have hcdsum : ∑ x ∈ ({c, d} : Finset V3),
+      (fun z : V3 => if z = a then w1 else if z = b then w2
+        else if z = c then w3 else w4) x = w3 + w4 := by
+    rw [Finset.sum_insert hins2, Finset.sum_singleton]
+    show (if c = a then w1 else if c = b then w2 else if c = c then w3 else w4)
+      + (if d = a then w1 else if d = b then w2 else if d = c then w3 else w4) = w3 + w4
+    rw [if_neg (Ne.symm hac), if_neg (Ne.symm hbc), if_pos (rfl : c = c),
+      if_neg (Ne.symm had), if_neg (Ne.symm hbd), if_neg (Ne.symm hcd)]
+  have h2vsum : ∑ x ∈ ({a, b} : Finset V3),
+      (fun z : V3 => if z = a then w1 else if z = b then w2
+        else if z = c then w3 else w4) x • x = w1 • a + w2 • b := by
+    rw [Finset.sum_insert hins1, Finset.sum_singleton]
+    show (if a = a then w1 else if a = b then w2 else if a = c then w3 else w4) • a
+      + (if b = a then w1 else if b = b then w2 else if b = c then w3 else w4) • b
+        = w1 • a + w2 • b
+    rw [if_pos (rfl : a = a), if_neg (Ne.symm hab), if_pos (rfl : b = b)]
+  have hcdvsum : ∑ x ∈ ({c, d} : Finset V3),
+      (fun z : V3 => if z = a then w1 else if z = b then w2
+        else if z = c then w3 else w4) x • x = w3 • c + w4 • d := by
+    rw [Finset.sum_insert hins2, Finset.sum_singleton]
+    show (if c = a then w1 else if c = b then w2 else if c = c then w3 else w4) • c
+      + (if d = a then w1 else if d = b then w2 else if d = c then w3 else w4) • d
+        = w3 • c + w4 • d
+    rw [if_neg (Ne.symm hac), if_neg (Ne.symm hbc), if_pos (rfl : c = c),
+      if_neg (Ne.symm had), if_neg (Ne.symm hbd), if_neg (Ne.symm hcd)]
+  refine ⟨fun z => if z = a then w1 else if z = b then w2 else if z = c then w3 else w4,
+    hfin, ?_, ?_, ?_⟩
+  · rw [h4, Finset.sum_union hdisj, h2vsum, hcdvsum, hy]
+    module
+  · intro z hz
+    rcases Set.mem_insert_iff.mp hz with hzc | hzd
+    · rw [hzc]
+      simp only
+      rw [if_neg (Ne.symm hac), if_neg (Ne.symm hbc), if_pos trivial]
+      exact hw3
+    · rw [hzd]
+      simp only
+      rw [if_neg (Ne.symm had), if_neg (Ne.symm hbd), if_neg (Ne.symm hcd)]
+      exact hw4
+  · rw [h4, Finset.sum_union hdisj, h2sum, hcdsum]
+    linarith
+
+/-! ### 新件 2：affGe 凸性 -/
+
+private theorem p24_affGe_convex (s t : Set V3) (hfin : (s ∪ t).Finite) :
+    Convex ℝ (affGe s t) := by
+  rw [convex_iff_add_mem]
+  intro x hx y hy a b hα hβ hab
+  have hx' : Affsign (fun x : ℝ => 0 ≤ x) s t x := hx
+  have hy' : Affsign (fun x : ℝ => 0 ≤ x) s t y := hy
+  obtain ⟨f1, hf1, hs1, hp1, ho1⟩ := hx'
+  obtain ⟨f2, hf2, hs2, hp2, ho2⟩ := hy'
+  have e1 : a • x = ∑ w ∈ hf1.toFinset, (a * f1 w) • w := by
+    rw [hs1, Finset.smul_sum]
+    exact Finset.sum_congr rfl (fun w _ => by module)
+  have e2 : b • y = ∑ w ∈ hf2.toFinset, (b * f2 w) • w := by
+    rw [hs2, Finset.smul_sum]
+    exact Finset.sum_congr rfl (fun w _ => by module)
+  have heq : hf1.toFinset = hf2.toFinset := by
+    ext z
+    simp only [Set.Finite.mem_toFinset]
+  refine ⟨fun z => a * f1 z + b * f2 z, hfin, ?_, ?_, ?_⟩
+  · rw [e1, e2, heq, ← Finset.sum_add_distrib]
+    exact Finset.sum_congr rfl (fun w _ => (add_smul _ _ _).symm)
+  · intro z hz
+    exact add_nonneg (mul_nonneg hα (hp1 z hz)) (mul_nonneg hβ (hp2 z hz))
+  · rw [heq, Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum, ho1, ho2]
+    linarith
+
+/-! ### 新件 3：近轴 ε 点的双 rcone 成员（e3 标架形） -/
+
+private theorem p24_rconeGe_eps_mem (u0 u1 mid ζ e3 : V3) (d a : ℝ)
+    (hax : (u1 - u0 : V3) = d • e3) (h33 : e3 ⬝ᵥ e3 = 1)
+    (hmid : (mid : V3) = u0 + (d / 2) • e3)
+    (hd : 0 < d) (ha0 : 0 ≤ a) (ha1 : a < 1)
+    (hζ : (ζ : V3) ⬝ᵥ e3 = 0) (hζ0 : (ζ : V3) ≠ 0) :
+    ∃ ε : ℝ, 0 < ε ∧ (mid + ε • ζ : V3) ∈ rconeGe u0 u1 a ∧
+      (mid + ε • ζ : V3) ∈ rconeGe u1 u0 a := by
+  have hζ' : e3 ⬝ᵥ (ζ : V3) = 0 := by rw [dotProduct_comm]; exact hζ
+  have hζsq : ‖(ζ : V3)‖ ^ 2 = ((ζ : V3) ⬝ᵥ (ζ : V3)) := norm_sq_eq_dot (ζ : V3)
+  have hζnpos : 0 < ‖(ζ : V3)‖ := norm_pos_iff.mpr hζ0
+  have hzn : ‖(ζ : V3)‖ ≠ 0 := ne_of_gt hζnpos
+  have he3n : ‖e3‖ = 1 := by
+    have h4 : ‖e3‖ ^ 2 = (1:ℝ) ^ 2 := by rw [norm_sq_eq_dot e3, h33]; norm_num
+    exact (sq_eq_sq₀ (norm_nonneg e3) (by norm_num)).mp h4
+  have hmd : ‖(u1 - u0 : V3)‖ = d := by
+    have h1 : ‖(u1 - u0 : V3)‖ = ‖(d : ℝ) • e3‖ := by rw [hax]
+    rw [h1, norm_smul, Real.norm_eq_abs, abs_of_nonneg (le_of_lt hd), he3n]
+    ring
+  set ε : ℝ := d * Real.sqrt (1 - a ^ 2) / (4 * (a + 1 / 2) * ‖(ζ : V3)‖) with hεdef
+  have hpos1 : 0 < 1 - a ^ 2 := by nlinarith [ha1]
+  have hεpos : 0 < ε := by
+    rw [hεdef]
+    refine div_pos (mul_pos hd (Real.sqrt_pos.mpr hpos1)) ?_
+    have hap : (0:ℝ) < a + 1 / 2 := by linarith
+    exact mul_pos (mul_pos (by norm_num) hap) hζnpos
+  have hεsq : ε ^ 2 * ‖(ζ : V3)‖ ^ 2 = d ^ 2 * (1 - a ^ 2) / (16 * (a + 1 / 2) ^ 2) := by
+    rw [hεdef]
+    field_simp [hzn]
+    rw [Real.sq_sqrt (le_of_lt hpos1)]
+    ring
+  have hnsq1 : ‖(((d / 2) • e3 + ε • ζ : V3))‖ ^ 2 = d ^ 2 / 4 + ε ^ 2 * ‖(ζ : V3)‖ ^ 2 := by
+    rw [norm_sq_eq_dot (x := (((d / 2) • e3 + ε • ζ : V3))), hζsq]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+      dotProduct_smul, smul_dotProduct, dotProduct_smul, smul_eq_mul, hζ, hζ', h33]
+    ring
+  have hnsq2 : ‖((-(d / 2)) • e3 + ε • ζ : V3)‖ ^ 2 = d ^ 2 / 4 + ε ^ 2 * ‖(ζ : V3)‖ ^ 2 := by
+    rw [norm_sq_eq_dot (x := (((-(d / 2)) • e3 + ε • ζ : V3))), hζsq]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+      dotProduct_smul, smul_dotProduct, dotProduct_smul, smul_eq_mul, hζ, hζ', h33]
+    ring
+  have hbound : ∀ X : V3, ‖X‖ ^ 2 = d ^ 2 / 4 + ε ^ 2 * ‖(ζ : V3)‖ ^ 2 →
+      a * ‖X‖ ≤ d / 2 := by
+    intro X hX
+    have hnn : 0 ≤ ‖X‖ := norm_nonneg _
+    have h2 : a ^ 2 ≤ 4 * (a + 1 / 2) ^ 2 := by nlinarith [ha0, sq_nonneg a]
+    have hnon : 0 ≤ d ^ 2 * (1 - a ^ 2) / (16 * (a + 1 / 2) ^ 2) :=
+      div_nonneg (mul_nonneg (sq_nonneg d) hpos1.le) (by positivity)
+    have hx : a ^ 2 * (d ^ 2 * (1 - a ^ 2) / (16 * (a + 1 / 2) ^ 2))
+        ≤ (4 * (a + 1 / 2) ^ 2) * (d ^ 2 * (1 - a ^ 2) / (16 * (a + 1 / 2) ^ 2)) :=
+      mul_le_mul_of_nonneg_right h2 hnon
+    have hreform : (4 * (a + 1 / 2) ^ 2) * (d ^ 2 * (1 - a ^ 2) / (16 * (a + 1 / 2) ^ 2))
+        = d ^ 2 * (1 - a ^ 2) / 4 := by
+      field_simp
+      ring
+    have hfinal : a ^ 2 * (d ^ 2 / 4) + a ^ 2 * (d ^ 2 * (1 - a ^ 2)
+        / (16 * (a + 1 / 2) ^ 2)) ≤ d ^ 2 / 4 := by
+      have h3 : a ^ 2 * (d ^ 2 / 4) + (4 * (a + 1 / 2) ^ 2)
+          * (d ^ 2 * (1 - a ^ 2) / (16 * (a + 1 / 2) ^ 2)) = d ^ 2 / 4 := by
+        field_simp
+        ring
+      linarith [hx, hreform, h3]
+    have hsq : (a * ‖X‖) ^ 2 ≤ (d / 2) ^ 2 := by
+      have h4 : (a * ‖X‖) ^ 2 = a ^ 2 * (d ^ 2 / 4)
+          + a ^ 2 * (d ^ 2 * (1 - a ^ 2) / (16 * (a + 1 / 2) ^ 2)) := by
+        rw [mul_pow, hX, hεsq]
+        ring
+      have h5 : (d / 2) ^ 2 = d ^ 2 / 4 := by ring
+      rw [h4, h5]
+      exact hfinal
+    have hres := Real.sqrt_le_sqrt hsq
+    rw [Real.sqrt_sq (mul_nonneg ha0 hnn), Real.sqrt_sq (by linarith)] at hres
+    exact hres
+  have hbd1 := hbound _ hnsq1
+  have hbd2 := hbound _ hnsq2
+  refine ⟨ε, hεpos, ?_, ?_⟩
+  · have hsplit : ((mid + ε • ζ : V3) - u0) = ((d / 2) • e3 + ε • ζ) := by
+      rw [hmid]; module
+    have hdot : ((mid + ε • ζ : V3) - u0) ⬝ᵥ (u1 - u0 : V3) = d ^ 2 / 2 := by
+      rw [hsplit, hax]
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+        dotProduct_smul, smul_dotProduct, dotProduct_smul, smul_eq_mul, hζ, h33]
+      ring
+    have hdist : dist (mid + ε • ζ) u0 = ‖(((d / 2) • e3 + ε • ζ : V3))‖ := by
+      rw [dist_eq_norm, hsplit]
+    have hdc : dist u1 u0 = d := by rw [dist_eq_norm u1 u0, hmd]
+    have hfin1 : ((mid + ε • ζ : V3) - u0) ⬝ᵥ (u1 - u0 : V3)
+        ≥ dist (mid + ε • ζ) u0 * dist u1 u0 * a := by
+      rw [hdot, hdist, hdc]
+      calc d ^ 2 / 2 = (d / 2) * d := by ring
+        _ ≥ (a * ‖(((d / 2) • e3 + ε • ζ : V3))‖) * d :=
+            mul_le_mul_of_nonneg_right hbd1 (le_of_lt hd)
+        _ = ‖(((d / 2) • e3 + ε • ζ : V3))‖ * d * a := by ring
+    exact hfin1
+  · have hu1 : (u1 : V3) = u0 + d • e3 := by
+      have h1 : (u1 : V3) = u0 + (u1 - u0 : V3) := by module
+      rw [h1, hax]
+    have hsplit : ((mid + ε • ζ : V3) - u1) = ((-(d / 2)) • e3 + ε • ζ) := by
+      rw [hmid, hu1]; module
+    have hζneg : (ζ : V3) ⬝ᵥ (u0 - u1 : V3) = 0 := by
+      have h2 : ((u0 - u1 : V3)) = -(d • e3) := by rw [← hax]; module
+      rw [h2, WithLp.ofLp_neg, WithLp.ofLp_smul, dotProduct_neg, dotProduct_smul,
+        smul_eq_mul, hζ]
+      ring
+    have he3neg : e3 ⬝ᵥ (u0 - u1 : V3) = -d := by
+      have h2 : ((u0 - u1 : V3)) = -(d • e3) := by rw [← hax]; module
+      rw [h2, WithLp.ofLp_neg, WithLp.ofLp_smul, dotProduct_neg, dotProduct_smul,
+        smul_eq_mul, h33]
+      ring
+    have hdot : ((mid + ε • ζ : V3) - u1) ⬝ᵥ (u0 - u1 : V3) = d ^ 2 / 2 := by
+      rw [hsplit]
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+        dotProduct_smul, smul_dotProduct, dotProduct_smul, smul_eq_mul, hζneg,
+        he3neg, h33]
+      ring
+    have hdist : dist (mid + ε • ζ) u1 = ‖((-(d / 2)) • e3 + ε • ζ : V3)‖ := by
+      rw [dist_eq_norm, hsplit]
+    have hfin2 : ((mid + ε • ζ : V3) - u1) ⬝ᵥ (u0 - u1 : V3)
+        ≥ dist (mid + ε • ζ) u1 * dist u0 u1 * a := by
+      have h2 : (d / 2) * d = d ^ 2 / 2 := by ring
+      have h3 : ‖((-(d / 2)) • e3 + ε • ζ : V3)‖ * d * a
+          = (a * ‖((-(d / 2)) • e3 + ε • ζ : V3)‖) * d := by ring
+      have hdc : dist u0 u1 = d := by
+        have hn : ((u0 - u1 : V3)) = -((u1 - u0 : V3)) := by module
+        rw [dist_eq_norm u0 u1, hn, norm_neg, hmd]
+      rw [hdot, hdist, hdc, h3]
+      exact le_trans (mul_le_mul_of_nonneg_right hbd2 (le_of_lt hd)) h2.le
+    exact hfin2
+
+/-! ### 新件 4：近轴点离轴（非共线） -/
+
+private theorem p24_offaxis_of_orth (u0 u1 mid x ζ e3 : V3) (d ε : ℝ)
+    (hne : u0 ≠ u1) (hax : (u1 - u0 : V3) = d • e3) (h33 : e3 ⬝ᵥ e3 = 1)
+    (hmid : (mid : V3) = u0 + (d / 2) • e3)
+    (hx : (x : V3) = mid + ε • ζ) (hε : ε ≠ 0)
+    (hζ : (ζ : V3) ⬝ᵥ e3 = 0) (hζ0 : (ζ : V3) ≠ 0) :
+    ¬ Collinear3 u0 u1 x := by
+  intro hcol
+  obtain ⟨c, hc⟩ := (collinear3_iff_smul (Ne.symm hne)).mp hcol
+  have hd0 : (d : ℝ) ≠ 0 := by
+    intro hcon
+    rw [hcon] at hax
+    simp only [zero_smul] at hax
+    exact hne (sub_eq_zero.mp hax).symm
+  have hsplit : ((x - u0 : V3)) = (ε • ζ + (d / 2) • e3) := by
+    rw [hx, hmid]; module
+  have hcd : ((x - u0 : V3)) ⬝ᵥ e3 = d / 2 := by
+    rw [hsplit]
+    simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+      dotProduct_smul, smul_dotProduct, smul_eq_mul, hζ, h33]
+    ring
+  have hcval : ((x - u0 : V3)) ⬝ᵥ e3 = c * d := by
+    rw [hc, hax]
+    simp only [WithLp.ofLp_smul, dotProduct_smul, smul_dotProduct, smul_eq_mul, h33]
+    ring
+  have hchalf : c = 1 / 2 := by
+    have h2 : c * d = (1 / 2) * d := by rw [← hcval, hcd]; ring
+    exact mul_right_cancel₀ hd0 h2
+  have hxeq : ((x - u0 : V3)) = ((d / 2) • e3) := by
+    rw [hc, hchalf, hax]; module
+  have hsplit2 : (ε • ζ + (d / 2) • e3 : V3) = ((d / 2) • e3) := hsplit.symm.trans hxeq
+  have hzero : (ε • ζ : V3) = 0 := by
+    have h1 : ((ε • ζ + (d / 2) • e3 : V3) - ((d / 2) • e3)) = 0 := by
+      rw [hsplit2]; simp
+    have h2 : ((ε • ζ + (d / 2) • e3 : V3) - ((d / 2) • e3)) = (ε • ζ) := by module
+    rw [h2] at h1
+    exact h1
+  exact hζ0 ((smul_eq_zero.mp hzero).resolve_left hε)
+
+/-! ### 新件 5：γ·h > 0（wg·h 非零的算术核） -/
+
+private theorem p24_caseB2_gamma_pos (t h wg d : ℝ) (hh : 0 < h)
+    (hgam : 2 * wg * h = h ^ 2 + t ^ 2 - d * t)
+    (hu0 : (4 : ℝ) ≤ t ^ 2 + h ^ 2) (hu1 : (4 : ℝ) ≤ (t - d) ^ 2 + h ^ 2)
+    (hd8 : d ^ 2 < 8) :
+    0 < wg * h := by
+  have hexp : (t - d) ^ 2 = t ^ 2 - 2 * t * d + d ^ 2 := by ring
+  have h1 : 2 * (wg * h) = h ^ 2 + t ^ 2 - d * t := by linarith [hgam]
+  have h2 : (t ^ 2 + h ^ 2) + ((t - d) ^ 2 + h ^ 2) ≥ 8 := by linarith
+  have hkey : 4 * (wg * h) ≥ 8 - d ^ 2 := by
+    nlinarith [h1, h2, hexp, sq_nonneg d]
+  nlinarith
+
+/-! ### 新件 6：双楔点方位角相异 ⟹ 不能同时为零 -/
+
+private theorem p24_caseB2_azim_kill (u0 u1 q mid z1 z2 : V3) (e3 : V3) (d ε1 ε2 : ℝ)
+    (hne : u0 ≠ u1) (hax : (u1 - u0 : V3) = d • e3) (h33 : e3 ⬝ᵥ e3 = 1)
+    (hmid : (mid : V3) = u0 + (d / 2) • e3) (hd : 0 < d)
+    (hq : ¬ Collinear3 u0 u1 q)
+    (hy1 : ¬ Collinear3 u0 u1 z1) (hy2 : ¬ Collinear3 u0 u1 z2)
+    (ha1 : azim u0 u1 q z1 = 0) (ha2 : azim u0 u1 q z2 = 0)
+    (hε1 : 0 < ε1) (hε2 : 0 < ε2)
+    (hζ1 : (z1 - mid : V3) ⬝ᵥ e3 = 0) (hζ2 : (z2 - mid : V3) ⬝ᵥ e3 = 0)
+    (hindep : ∀ r : ℝ, (z2 - mid : V3) ≠ r • (z1 - mid : V3)) :
+    False := by
+  have hzsub : ∀ w : V3, w = u0 → Collinear3 u0 u1 w := fun w hw =>
+    (collinear3_iff_smul (Ne.symm hne)).mpr ⟨0, by rw [hw, zero_smul, sub_self]⟩
+  have hq0 : (q : V3) ≠ u0 := fun hcon => hq (hzsub q hcon)
+  have hq1 : (q : V3) ≠ u1 := by
+    intro hcon
+    exact hq ((collinear3_iff_smul (Ne.symm hne)).mpr ⟨1, by rw [hcon, one_smul]⟩)
+  have hmidcol : Collinear3 u0 u1 mid := by
+    refine (collinear3_iff_smul (Ne.symm hne)).mpr ⟨(1 / 2 : ℝ), ?_⟩
+    rw [hmid, hax]; module
+  have hz10 : (z1 : V3) ≠ u0 := fun hcon => hy1 (hzsub z1 hcon)
+  have hz11 : (z1 : V3) ≠ u1 := by
+    intro hcon
+    exact hy1 ((collinear3_iff_smul (Ne.symm hne)).mpr ⟨1, by rw [hcon, one_smul]⟩)
+  have hz20 : (z2 : V3) ≠ u0 := fun hcon => hy2 (hzsub z2 hcon)
+  have hz21 : (z2 : V3) ≠ u1 := by
+    intro hcon
+    exact hy2 ((collinear3_iff_smul (Ne.symm hne)).mpr ⟨1, by rw [hcon, one_smul]⟩)
+  have hmem1 : (z1 : V3) ∈ affGt {u0, u1} {q} := (azim_eq_zero_iff_alt hq hy1).mp ha1
+  have hmem2 : (z2 : V3) ∈ affGt {u0, u1} {q} := (azim_eq_zero_iff_alt hq hy2).mp ha2
+  obtain ⟨c1, hc1, g1, hg1⟩ := (affGt_pair_iff hne hq0 hq1).mp hmem1
+  obtain ⟨c2, hc2, g2, hg2⟩ := (affGt_pair_iff hne hq0 hq1).mp hmem2
+  have hkey : (c2 • ((z1 : V3) - u0) - c1 • ((z2 : V3) - u0) : V3)
+      = ((c2 * g1 - c1 * g2) • (u1 - u0 : V3)) := by
+    rw [hg1, hg2]; module
+  have hsplit : (c2 • ((z1 : V3) - u0) - c1 • ((z2 : V3) - u0) : V3)
+      = (c2 • ((z1 : V3) - mid) - c1 • ((z2 : V3) - mid))
+        + (((c2 - c1) * (d / 2)) • e3) := by
+    rw [hmid]; module
+  rw [hax, smul_smul] at hkey
+  have h8 : ((c2 • ((z1 : V3) - mid) - c1 • ((z2 : V3) - mid) : V3))
+      + (((c2 - c1) * (d / 2)) • e3) = ((c2 * g1 - c1 * g2) * d) • e3 := by
+    rw [← hkey]; rw [hsplit]
+  have hcomb : (c2 • ((z1 : V3) - mid) - c1 • ((z2 : V3) - mid) : V3)
+      = (((c2 * g1 - c1 * g2) * d - (c2 - c1) * (d / 2)) • e3) := by
+    have h9 : (((c2 * g1 - c1 * g2) * d - (c2 - c1) * (d / 2)) • e3 : V3)
+        = ((c2 * g1 - c1 * g2) * d) • e3 - ((c2 - c1) * (d / 2)) • e3 := sub_smul _ _ _
+    rw [h9]
+    exact eq_sub_of_add_eq h8
+  have hdot0 : (((c2 * g1 - c1 * g2) * d - (c2 - c1) * (d / 2)) • e3 : V3) ⬝ᵥ e3 = 0 := by
+    have h1 : ((c2 • ((z1 : V3) - mid) : V3)) ⬝ᵥ e3 = c2 * (((z1 : V3) - mid) ⬝ᵥ e3) := by
+      rw [WithLp.ofLp_smul, smul_dotProduct]
+      rfl
+    have h2' : ((c1 • ((z2 : V3) - mid) : V3)) ⬝ᵥ e3 = c1 * (((z2 : V3) - mid) ⬝ᵥ e3) := by
+      rw [WithLp.ofLp_smul, smul_dotProduct]
+      rfl
+    have hB : ((c2 • ((z1 : V3) - mid) - c1 • ((z2 : V3) - mid) : V3)) ⬝ᵥ e3 = 0 := by
+      rw [WithLp.ofLp_sub, sub_dotProduct, h1, h2', hζ1, hζ2]
+      ring
+    rw [← hcomb]
+    exact hB
+  have hk : ((c2 * g1 - c1 * g2) * d - (c2 - c1) * (d / 2) : ℝ) = 0 := by
+    have h2 : (((c2 * g1 - c1 * g2) * d - (c2 - c1) * (d / 2)) • e3 : V3) ⬝ᵥ e3
+        = ((c2 * g1 - c1 * g2) * d - (c2 - c1) * (d / 2)) := by
+      rw [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul, h33, mul_one]
+    rw [← h2, hdot0]
+  have hzero : (c2 • ((z1 : V3) - mid) - c1 • ((z2 : V3) - mid) : V3) = 0 := by
+    rw [hcomb, hk, zero_smul]
+  rw [sub_eq_zero] at hzero
+  rcases eq_or_ne (c1 : ℝ) 0 with hc1z | hc1nz
+  · rw [hc1z, zero_smul] at hzero
+    have hζ1z : ((z1 : V3) - mid) = 0 := by
+      rcases smul_eq_zero.mp hzero with h | h
+      · exact absurd h hc2.ne'
+      · exact h
+    have hz1m : (z1 : V3) = mid := sub_eq_zero.mp hζ1z
+    apply hy1
+    rw [hz1m]
+    exact hmidcol
+  · have h7 : ((ε2 * c1 : ℝ)) • ((z2 : V3) - mid) = ((ε2 * c2 : ℝ)) • ((z1 : V3) - mid) := by
+      rw [mul_smul, mul_smul, ← hzero]
+    have hnez : (ε2 * c1 : ℝ) ≠ 0 := mul_ne_zero (ne_of_gt hε2) hc1nz
+    have h8' : ((z2 : V3) - mid) = ((ε2 * c1 : ℝ)⁻¹ * (ε2 * c2)) • ((z1 : V3) - mid) := by
+      rw [mul_smul, eq_inv_smul_iff₀ hnez]
+      exact h7
+    exact hindep ((ε2 * c1 : ℝ)⁻¹ * (ε2 * c2)) h8'
+
+
+/-! ### 主装配：B2 泛具支 -/
+
+private theorem p24_caseB2_general (V : Set V3) (u0 u1 : V3) (vl : List V3)
+    (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
+    (hne : u0 ≠ u1) (hbar : barV V 3 vl) (htr : truncateSimplex 1 vl = [u0, u1])
+    (hd8 : dist u0 u1 < Real.sqrt 8)
+    (hr4 : Real.sqrt 2 ≤ hl vl)
+    (hr3 : Real.sqrt 2 ≤ hl (truncateSimplex 2 vl))
+    (hw23 : omegaListN V vl 2 ≠ omegaListN V vl 3) :
+    ∃ X : Set V3, X ∈ mcellSet V ∧ ({u0, u1} : Set V3) ∈ edgeX V X ∧
+      ∀ q : V3, ¬ Collinear3 u0 u1 q →
+        ¬ ((X : Set V3) ⊆ {z : V3 | azim u0 u1 q z = 0}) := by
+  -- 0. 四元组显式化 + u0/u1 识别
+  obtain ⟨q0, q1, q2, q3, hvll⟩ := BARV_3_EXPLICIT V vl hbar
+  subst hvll
+  have htrq : truncateSimplex 1 [q0, q1, q2, q3] = [q0, q1] := by
+    rw [truncateSimplex1_pair [q0, q1, q2, q3] (by norm_num)]
+    simp [elV]
+  have hpair01 : [u0, u1] = [q0, q1] := htr.symm.trans htrq
+  injection hpair01 with e0 e1l
+  injection e1l with e1 e1nil
+  subst e0
+  subst e1
+  obtain ⟨v, hvdef⟩ : ∃ v : V3, v = q2 := ⟨q2, rfl⟩
+  obtain ⟨w, hwdef⟩ : ∃ w : V3, w = q3 := ⟨q3, rfl⟩
+  rw [← hvdef, ← hwdef] at hbar hr4 hr3 hw23
+  have h82 : (Real.sqrt 8 : ℝ) / 2 = Real.sqrt 2 := by
+    have h8 : (Real.sqrt 8 : ℝ) = 2 * Real.sqrt 2 := by
+      rw [show (8 : ℝ) = 4 * 2 from by norm_num, Real.sqrt_mul (by norm_num)]
+      norm_num
+    rw [h8]
+    field_simp
+  -- 1. 截断与 barV 数据
+  have htr1 : truncateSimplex 1 [u0, u1, v, w] = [u0, u1] := by
+    rw [truncateSimplex1_pair [u0, u1, v, w] (by norm_num)]
+    simp [elV]
+  have htr2 : truncateSimplex 2 [u0, u1, v, w] = [u0, u1, v] :=
+    (TRUNCATE_SIMPLEX_EXPLICIT_2 u0 u1 v w).2
+  have htr3 : truncateSimplex 3 [u0, u1, v, w] = [u0, u1, v, w] :=
+    TRUNCATE_SIMPLEX_EXPLICIT_3 u0 u1 v w
+  have hbar2 : barV V 2 [u0, u1, v] := by
+    have hb := TRUNCATE_SIMPLEX_BARV V 2 3 [u0, u1, v, w] hbar (by norm_num)
+    rwa [htr2] at hb
+  have htr1' : setOfList (truncateSimplex 1 [u0, u1, v]) = ({u0, u1} : Set V3) := by
+    rw [truncateSimplex1_pair [u0, u1, v] (by have := hbar2.1; omega)]
+    ext x
+    simp [setOfList, elV]
+  obtain ⟨-, -, hnc⟩ := p24_REUHADY_extract (v := v) hp hbar2 htr1' rfl
+  -- v, w ∈ V；v 离两端
+  have hvn4 : voronoiNondg V [u0, u1, v, w] :=
+    hbar.2 [u0, u1, v, w] ⟨⟨[], by rw [List.append_nil]⟩, by simp⟩
+  have hsubV : setOfList [u0, u1, v, w] ⊆ V := hvn4.2.1
+  have hvV : v ∈ V := hsubV (by rw [hvdef]; simp [setOfList])
+  have hv0ne : u0 ≠ v := by
+    intro hcon
+    rw [← hcon] at hnc
+    exact hnc ((collinear3_iff_smul (Ne.symm hne)).mpr
+      ⟨0, by rw [zero_smul, sub_self]⟩)
+  have hv1ne : u1 ≠ v := by
+    intro hcon
+    rw [← hcon] at hnc
+    exact hnc ((collinear3_iff_smul (Ne.symm hne)).mpr
+      ⟨1, by rw [one_smul]⟩)
+  -- 2. 标架
+  have hdgt : 2 ≤ dist u0 u1 := hp.dist_ge_two hu0 hu1 hne
+  have hdne : (dist u0 u1 : ℝ) ≠ 0 := ne_of_gt (lt_of_lt_of_le (by norm_num) hdgt)
+  have hu0u1n : (u1 - u0 : V3) ≠ 0 := sub_ne_zero.mpr (Ne.symm hne)
+  obtain ⟨e1, e2, e3, hon, hax0⟩ := exists_on3_eq_smul (u1 - u0) hu0u1n
+  have haxd : (u1 - u0 : V3) = dist u0 u1 • e3 := by
+    have hn : ‖u1 - u0‖ = dist u0 u1 := (dist_eq_norm u1 u0).symm.trans (dist_comm u1 u0)
+    rw [hn] at hax0
+    exact hax0
+  have h33 : e3 ⬝ᵥ e3 = 1 := hon.2.2.1
+  have hmd : ‖(u1 - u0 : V3)‖ = dist u0 u1 :=
+    (dist_eq_norm u1 u0).symm.trans (dist_comm u1 u0)
+  have hmnn : ((u1 - u0 : V3)) ⬝ᵥ (u1 - u0) = dist u0 u1 ^ 2 := by
+    have h1 : ((u1 - u0 : V3)) ⬝ᵥ (u1 - u0) = ‖(u1 - u0 : V3)‖ ^ 2 :=
+      (norm_sq_eq_dot _).symm
+    rw [h1, hmd]
+  have he3n : ‖e3‖ = 1 := by
+    have h4 : ‖e3‖ ^ 2 = (1 : ℝ) ^ 2 := by rw [norm_sq_eq_dot e3, h33]; norm_num
+    exact (sq_eq_sq₀ (norm_nonneg e3) (by norm_num)).mp h4
+  set mid : V3 := u0 + (dist u0 u1 / 2) • e3 with hmiddef
+  -- 3. tri-数据与垂分量 P
+  obtain ⟨h, t, wg, hhpos, hteq, hPn0, hrad, hgam, hnn⟩ :=
+    p24_tri_gamma u0 u1 v hon haxd hne hnc (p24_cc_exists u0 u1 v hne hnc)
+  obtain ⟨P, hv', hPe3, hPn⟩ : ∃ P : V3, (v - u0 : V3) = t • e3 + P ∧ P ⬝ᵥ e3 = 0 ∧ ‖P‖ = h := by
+    refine ⟨(v - u0 : V3) - t • e3, ?_, ?_, ?_⟩
+    · have e0 : (((v - u0 : V3) - t • e3 : V3) + t • e3) = (v - u0 : V3) := by module
+      rw [add_comm, e0]
+    · have hsmul : ((t • e3 : V3) ⬝ᵥ e3) = t * (e3 ⬝ᵥ e3) := by
+        rw [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul]
+      have hsub' : (((v - u0 : V3) - t • e3 : V3) ⬝ᵥ e3)
+          = ((v - u0 : V3) ⬝ᵥ e3) - ((t • e3 : V3) ⬝ᵥ e3) := by
+        rw [WithLp.ofLp_sub, sub_dotProduct]
+      rw [hsub', hsmul, hteq, h33]
+      ring
+    · have he : ((v - u0 : V3) - t • e3 : V3)
+        = (v - u0) - ((v - u0) ⬝ᵥ e3) • e3 := by rw [hteq]
+      rw [he]
+      exact hPn0
+  -- 4a. 距离平方
+  have hdu0v : 2 ≤ dist u0 v := hp.dist_ge_two hu0 hvV hv0ne
+  have hdu1v : 2 ≤ dist u1 v := hp.dist_ge_two hu1 hvV hv1ne
+  have hdu1v' : dist u1 v = ‖((v - u1 : V3))‖ := by
+    have hn : ((u1 - v : V3)) = -((v - u1 : V3)) := by module
+    rw [dist_eq_norm u1 v, hn, norm_neg]
+  have hvsq0 : ‖(v - u0 : V3)‖ ^ 2 = t ^ 2 + h ^ 2 := by
+    have horth : ((t • e3 : V3)) ⬝ᵥ P = 0 := by
+      rw [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul, show e3 ⬝ᵥ P = 0 from by rw [dotProduct_comm]; exact hPe3]
+      ring
+    rw [hv', p24_norm_sq_of_orth horth]
+    have e1 : ‖((t • e3 : V3))‖ ^ 2 = t ^ 2 := by
+      rw [norm_smul, Real.norm_eq_abs, mul_pow, sq_abs, he3n, one_pow, mul_one]
+    have e2 : ‖((P : V3))‖ ^ 2 = h ^ 2 := by rw [hPn]
+    rw [e1, e2]
+  have hvsq1 : ‖((v - u1 : V3))‖ ^ 2 = (t - dist u0 u1) ^ 2 + h ^ 2 := by
+    have hv1' : ((v - u1 : V3)) = ((t - dist u0 u1) • e3 + P) := by
+      have h1 : ((v - u1 : V3)) = ((v - u0 : V3)) - ((u1 - u0 : V3)) := by module
+      rw [h1, hv', haxd]; module
+    have horth : (((t - dist u0 u1) • e3 : V3)) ⬝ᵥ P = 0 := by
+      rw [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul, show e3 ⬝ᵥ P = 0 from by rw [dotProduct_comm]; exact hPe3]
+      ring
+    rw [hv1', p24_norm_sq_of_orth horth]
+    have e1 : ‖(((t - dist u0 u1) • e3 : V3))‖ ^ 2 = (t - dist u0 u1) ^ 2 := by
+      rw [norm_smul, Real.norm_eq_abs, mul_pow, sq_abs, he3n, one_pow, mul_one]
+    have e2 : ‖((P : V3))‖ ^ 2 = h ^ 2 := by rw [hPn]
+    rw [e1, e2]
+  -- 4. wg·h > 0（线性独立核）
+  have hwgpos : 0 < wg * h :=
+    p24_caseB2_gamma_pos t h wg (dist u0 u1) hhpos hgam
+      (by
+        have hb : (dist u0 v : ℝ) = ‖((v - u0 : V3))‖ := by
+          have hn : ((u0 - v : V3)) = -((v - u0 : V3)) := by module
+          rw [dist_eq_norm u0 v, hn, norm_neg]
+        have h4 : (2 : ℝ) ^ 2 ≤ (dist u0 v) ^ 2 := by
+          nlinarith [hdu0v, sq_nonneg (dist u0 v)]
+        norm_num at h4
+        rw [hb, hvsq0] at h4
+        exact h4)
+      (by
+        have hb : (dist u1 v : ℝ) = ‖((v - u1 : V3))‖ := by rw [hdu1v']
+        have h4 : (2 : ℝ) ^ 2 ≤ (dist u1 v) ^ 2 := by
+          nlinarith [hdu1v, sq_nonneg (dist u1 v)]
+        norm_num at h4
+        rw [hb, hvsq1] at h4
+        exact h4)
+      (by
+        nlinarith [hd8, show (Real.sqrt 8 : ℝ) ^ 2 = 8 from Real.sq_sqrt (le_of_lt (by norm_num))])
+  -- 5. omega2、omega3 的 Voronoi 成员与等距
+  have hw2mem := OMEGA_LIST_N_IN_VORONOI_LIST V [u0, u1, v, w] 3 2 hbar (by norm_num)
+  rw [htr2] at hw2mem
+  have hw2cell : ∀ z ∈ ({u0, u1, v} : Set V3), ∀ y ∈ V,
+      dist (omegaListN V [u0, u1, v, w] 2) z
+        ≤ dist (omegaListN V [u0, u1, v, w] 2) y := by
+    intro z hz y hy
+    have h0 : (omegaListN V [u0, u1, v, w] 2 : V3)
+        ∈ ⋂₀ {voronoiClosed V p | p ∈ setOfList [u0, u1, v]} := hw2mem
+    have hset3 : setOfList [u0, u1, v] = ({u0, u1, v} : Set V3) := by
+      ext y; simp [setOfList]
+    exact h0 (voronoiClosed V z) ⟨z, by rw [hset3]; exact hz, rfl⟩ y hy
+  have heqw2u1 : dist (omegaListN V [u0, u1, v, w] 2) u0
+      = dist (omegaListN V [u0, u1, v, w] 2) u1 :=
+    le_antisymm (hw2cell u0 (by simp) u1 hu1) (hw2cell u1 (by simp) u0 hu0)
+  have heqw2v : dist (omegaListN V [u0, u1, v, w] 2) u0
+      = dist (omegaListN V [u0, u1, v, w] 2) v :=
+    le_antisymm (hw2cell u0 (by simp) v hvV) (hw2cell v (by simp) u0 hu0)
+  -- 6. omega3 = a（四点 Voronoi 单点）与 a 的等距
+  obtain ⟨a, ha1, ha2, ha3⟩ := VORONOI_LIST_3_SINGLETON_EXPLICIT V [u0, u1, v, w] hp hs hbar
+  have hw3eq : omegaListN V [u0, u1, v, w] 3 = a := by
+    have h3 := OMEGA_LIST_IN_VORONOI_LIST (V := V) (ul := [u0, u1, v, w]) (k := 3) hbar
+    rw [ha1] at h3
+    exact Set.mem_singleton_iff.mp h3
+  have hamem : (a : V3) ∈ voronoiList V [u0, u1, v, w] := by rw [ha1]; simp
+  have hacell : ∀ z ∈ ({u0, u1, v, w} : Set V3), ∀ y ∈ V, dist a z ≤ dist a y := by
+    intro z hz y hy
+    have h0 : (a : V3) ∈ ⋂₀ {voronoiClosed V p | p ∈ setOfList [u0, u1, v, w]} := hamem
+    exact h0 (voronoiClosed V z) ⟨z, by simp [setOfList]; exact hz, rfl⟩ y hy
+  have heqa1 : dist a u0 = dist a u1 :=
+    le_antisymm (hacell u0 (by simp) u1 hu1) (hacell u1 (by simp) u0 hu0)
+  have heqav : dist a u0 = dist a v :=
+    le_antisymm (hacell u0 (by simp) v hvV) (hacell v (by simp) u0 hu0)
+  -- 7. 轴方程（axial_eqs 双应用）
+  obtain ⟨hE2e3, hE2P⟩ := p24_axial_eqs u0 u1 v mid e3 P (dist u0 u1) t h wg
+    (omegaListN V [u0, u1, v, w] 2) haxd hdne h33 hmiddef hv' hPe3 hPn hhpos hgam
+    heqw2u1 heqw2v
+  obtain ⟨hEae3, hEaP⟩ := p24_axial_eqs u0 u1 v mid e3 P (dist u0 u1) t h wg
+    a haxd hdne h33 hmiddef hv' hPe3 hPn hhpos hgam heqa1 heqav
+  have hnez : (wg * h : ℝ) ≠ 0 := ne_of_gt hwgpos
+  have hz2n : (omegaListN V [u0, u1, v, w] 2 - mid : V3) ≠ 0 := by
+    intro hcon
+    rw [hcon] at hE2P
+    have h4 : ((0 : V3)) ⬝ᵥ P = 0 := by simp
+    rw [h4] at hE2P
+    linarith
+  have hz3n : (a - mid : V3) ≠ 0 := by
+    intro hcon
+    rw [hcon] at hEaP
+    have h4 : ((0 : V3)) ⬝ᵥ P = 0 := by simp
+    rw [h4] at hEaP
+    linarith
+  -- 8. 两 ζ 线性无关（omega2 ≠ omega3 直接读出）
+  have hindep : ∀ r : ℝ, (a - mid : V3) ≠ r • (omegaListN V [u0, u1, v, w] 2 - mid : V3) := by
+    intro r hr
+    apply hw23
+    have h1 := hEaP
+    rw [hr] at h1
+    rw [WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul, hE2P] at h1
+    have hr1 : r = 1 := by
+      have h9 := mul_right_cancel₀ hnez (show (r : ℝ) * (wg * h) = 1 * (wg * h) from by rw [h1]; ring)
+      exact h9
+    rw [hr1, one_smul] at hr
+    have haeq : (a : V3) = omegaListN V [u0, u1, v, w] 2 := by
+      have h3 : (((a - mid : V3)) - ((omegaListN V [u0, u1, v, w] 2 - mid : V3))) = 0 := by
+        rw [hr]; simp
+      have h4 : (((a - mid : V3)) - ((omegaListN V [u0, u1, v, w] 2 - mid : V3)))
+          = (a - omegaListN V [u0, u1, v, w] 2 : V3) := by module
+      rw [h4] at h3
+      exact sub_eq_zero.mp h3
+    exact haeq.symm.trans hw3eq.symm
+  -- 9. mcell2 显式形 + 两端成员
+  have hcond : hl (truncateSimplex 1 [u0, u1, v, w]) < Real.sqrt 2 ∧
+      Real.sqrt 2 ≤ hl [u0, u1, v, w] :=
+    ⟨by rw [htr1]; exact p24_hl_pair_lt_sqrt2 hd8, hr4⟩
+  have ends := p24_caseB2_ends_mem V u0 u1 v w hcond (by
+    rw [htr1, p24_hl_pair u0 u1]
+    exact (div_le_one (Real.sqrt_pos.mpr (by norm_num))).mpr (by linarith [hd8, h82]))
+  have hr3' : Real.sqrt 2 ≤ hl (truncateSimplex 2 [u0, u1, v, w]) := hr3
+  -- 10. ε-点构造（双 rcone）
+  have ha0' : 0 ≤ hl (truncateSimplex 1 [u0, u1, v, w]) / Real.sqrt 2 := by
+    have hpos : 0 < Real.sqrt 2 := Real.sqrt_pos.mpr (by norm_num)
+    apply div_nonneg _ hpos.le
+    rw [htr1, p24_hl_pair u0 u1]
+    linarith [hdgt]
+  have ha1lt : hl (truncateSimplex 1 [u0, u1, v, w]) / Real.sqrt 2 < 1 := by
+    rw [htr1, p24_hl_pair u0 u1]
+    exact (div_lt_one (Real.sqrt_pos.mpr (by norm_num))).mpr (by linarith [hd8, h82])
+  obtain ⟨eps2, heps2, hx2r1, hx2r2⟩ :=
+    p24_rconeGe_eps_mem u0 u1 mid (omegaListN V [u0, u1, v, w] 2 - mid) e3
+      (dist u0 u1) (hl (truncateSimplex 1 [u0, u1, v, w]) / Real.sqrt 2)
+      haxd h33 hmiddef (lt_of_lt_of_le (by norm_num) hdgt) ha0' ha1lt hE2e3 hz2n
+  obtain ⟨eps3, heps3, hx3r1, hx3r2⟩ :=
+    p24_rconeGe_eps_mem u0 u1 mid (a - mid) e3
+      (dist u0 u1) (hl (truncateSimplex 1 [u0, u1, v, w]) / Real.sqrt 2)
+      haxd h33 hmiddef (lt_of_lt_of_le (by norm_num) hdgt) ha0' ha1lt hEae3 hz3n
+  -- 11. affGe 成员（四点组合）
+  have hw2ne0 : (omegaListN V [u0, u1, v, w] 2 : V3) ≠ u0 := by
+    intro hcon
+    rw [hcon] at heqw2u1
+    rw [dist_self] at heqw2u1
+    exact hne (dist_eq_zero.mp heqw2u1.symm)
+  have hw2ne1 : (omegaListN V [u0, u1, v, w] 2 : V3) ≠ u1 := by
+    intro hcon
+    rw [hcon] at heqw2u1
+    rw [dist_self] at heqw2u1
+    exact hne (dist_eq_zero.mp heqw2u1).symm
+  have hw3ne0 : (omegaListN V [u0, u1, v, w] 3 : V3) ≠ u0 := by
+    intro hcon
+    rw [hw3eq] at hcon
+    rw [hcon] at heqa1
+    rw [dist_self] at heqa1
+    exact hne (dist_eq_zero.mp heqa1.symm)
+  have hw3ne1 : (omegaListN V [u0, u1, v, w] 3 : V3) ≠ u1 := by
+    intro hcon
+    rw [hw3eq] at hcon
+    rw [hcon] at heqa1
+    rw [dist_self] at heqa1
+    exact hne (dist_eq_zero.mp heqa1).symm
+  have hmid' : (mid : V3) = u0 + (1 / 2 : ℝ) • (u1 - u0 : V3) := by
+    rw [hmiddef, haxd]; module
+  have hfin' : (({u0, u1} : Set V3) ∪ {omegaListN V [u0, u1, v, w] 2,
+      omegaListN V [u0, u1, v, w] 3}).Finite :=
+    ((Set.finite_singleton u1).insert u0).union
+      ((Set.finite_singleton (omegaListN V [u0, u1, v, w] 3)).insert
+        (omegaListN V [u0, u1, v, w] 2))
+  have hsum2 : (1 - eps2) / 2 + (1 - eps2) / 2 + eps2 + 0 = 1 := by ring
+  have hx2aff : (mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3)
+      ∈ affGe {u0, u1} {omegaListN V [u0, u1, v, w] 2, omegaListN V [u0, u1, v, w] 3} := by
+    refine p24_mem_affGe_quad (hab := hne) (hac := Ne.symm hw2ne0) (had := Ne.symm hw3ne0)
+      (hbc := Ne.symm hw2ne1) (hbd := Ne.symm hw3ne1) (hcd := hw23)
+      (w1 := (1 - eps2) / 2) (w2 := (1 - eps2) / 2) (w3 := eps2) (w4 := 0)
+      (hsum := hsum2) (hw3 := le_of_lt heps2) (hw4 := by norm_num) (hy := ?_)
+    have h1 : ((mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3))
+        = ((1 - eps2) • mid + eps2 • (omegaListN V [u0, u1, v, w] 2)) := by module
+    rw [h1, hmid']
+    module
+  have hsum3 : (1 - eps3) / 2 + (1 - eps3) / 2 + 0 + eps3 = 1 := by ring
+  have hx3aff : (mid + eps3 • (a - mid) : V3)
+      ∈ affGe {u0, u1} {omegaListN V [u0, u1, v, w] 2, omegaListN V [u0, u1, v, w] 3} := by
+    refine p24_mem_affGe_quad (hab := hne) (hac := Ne.symm hw2ne0) (had := Ne.symm hw3ne0)
+      (hbc := Ne.symm hw2ne1) (hbd := Ne.symm hw3ne1) (hcd := hw23)
+      (w1 := (1 - eps3) / 2) (w2 := (1 - eps3) / 2) (w3 := 0) (w4 := eps3)
+      (hsum := hsum3) (hw3 := le_refl 0) (hw4 := le_of_lt heps3) (hy := ?_)
+    have h1 : ((mid + eps3 • (a - mid) : V3))
+        = ((1 - eps3) • mid + eps3 • a) := by module
+    have h2 : ((1 - eps3 : ℝ)) • (u0 + (1 / 2 : ℝ) • (u1 - u0 : V3))
+        = ((1 - eps3) / 2) • u0 + ((1 - eps3) / 2) • u1 := by module
+    rw [h1, hmid', hw3eq.symm, h2, zero_smul, add_zero]
+  -- 12. X 的四点成员与凸性
+  have hXeq : mcell2 V [u0, u1, v, w]
+      = ((rconeGe u0 u1 (hl (truncateSimplex 1 [u0, u1, v, w]) / Real.sqrt 2)
+          ∩ rconeGe u1 u0 (hl (truncateSimplex 1 [u0, u1, v, w]) / Real.sqrt 2))
+        ∩ affGe {u0, u1} {omegaListN V [u0, u1, v, w] 2, omegaListN V [u0, u1, v, w] 3}) := by
+    rw [mcell2, if_pos hcond, p24_caseB2_mxi_eq V [u0, u1, v, w] hr3']
+    rfl
+  have hx2X : (mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3)
+      ∈ mcell2 V [u0, u1, v, w] := by
+    rw [hXeq]
+    exact ⟨⟨hx2r1, hx2r2⟩, hx2aff⟩
+  have hx3X : (mid + eps3 • (a - mid) : V3)
+      ∈ mcell2 V [u0, u1, v, w] := by
+    rw [hXeq]
+    exact ⟨⟨hx3r1, hx3r2⟩, hx3aff⟩
+  have hconv : Convex ℝ (mcell2 V [u0, u1, v, w]) := by
+    rw [hXeq]
+    refine Convex.inter
+      (Convex.inter (p24_rconeGe_convex u0 u1 _ ha0') (p24_rconeGe_convex u1 u0 _ ha0'))
+      (p24_affGe_convex _ _ hfin')
+  -- 13. x_i − u0 分解 + 三向量线性无关
+  have hxs2 : ((mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3)) - u0
+      = ((dist u0 u1 / 2) • e3
+        + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid : V3)) := by
+    rw [hmiddef]; module
+  have hxs3 : ((mid + eps3 • (a - mid) : V3)) - u0
+      = ((dist u0 u1 / 2) • e3 + eps3 • (a - mid : V3)) := by
+    rw [hmiddef]; module
+  have hvec3 : ∀ α β γ : ℝ,
+      α • (u1 - u0 : V3) + β • ((mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3) - u0)
+        + γ • ((mid + eps3 • (a - mid) : V3) - u0) = 0 →
+      α = 0 ∧ β = 0 ∧ γ = 0 := by
+    intro α β γ hvec
+    have hAB : ((α • (u1 - u0 : V3)
+        + β • ((mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3) - u0)
+        + γ • ((mid + eps3 • (a - mid) : V3) - u0) : V3))
+        = (((α * dist u0 u1 + (β + γ) * (dist u0 u1 / 2)) • e3
+          + (β * eps2) • (omegaListN V [u0, u1, v, w] 2 - mid)
+          + (γ * eps3) • (a - mid) : V3)) := by
+      rw [hxs2, hxs3, haxd]
+      module
+    have hexp : (((α * dist u0 u1 + (β + γ) * (dist u0 u1 / 2)) • e3
+        + (β * eps2) • (omegaListN V [u0, u1, v, w] 2 - mid)
+        + (γ * eps3) • (a - mid) : V3)) = 0 := by
+      rw [← hAB]
+      exact hvec
+    have hdote : (((α * dist u0 u1 + (β + γ) * (dist u0 u1 / 2)) • e3
+        + (β * eps2) • (omegaListN V [u0, u1, v, w] 2 - mid)
+        + (γ * eps3) • (a - mid) : V3)) ⬝ᵥ e3 = 0 := by
+      rw [← hAB, hvec]
+      simp [zero_dotProduct]
+    have hsc : (((β * eps2) • (omegaListN V [u0, u1, v, w] 2 - mid)
+        + (γ * eps3) • (a - mid) : V3)) ⬝ᵥ e3 = 0 := by
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+        dotProduct_smul, smul_dotProduct, smul_eq_mul, hE2e3, hEae3]
+      ring
+    have hs0 : (α * dist u0 u1 + (β + γ) * (dist u0 u1 / 2) : ℝ) = 0 := by
+      have hD : (((α * dist u0 u1 + (β + γ) * (dist u0 u1 / 2)) • e3
+          + (β * eps2) • (omegaListN V [u0, u1, v, w] 2 - mid)
+          + (γ * eps3) • (a - mid) : V3)) ⬝ᵥ e3
+          = (α * dist u0 u1 + (β + γ) * (dist u0 u1 / 2)) * ((e3 : V3) ⬝ᵥ e3) := by
+        simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+          dotProduct_smul, smul_dotProduct, dotProduct_smul, smul_eq_mul, hE2e3, hEae3, h33]
+        ring
+      rw [hdote, h33] at hD
+      linarith
+    have hsc : (((β * eps2) • (omegaListN V [u0, u1, v, w] 2 - mid)
+        + (γ * eps3) • (a - mid) : V3)) ⬝ᵥ e3 = 0 := by
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, add_dotProduct, dotProduct_add,
+        dotProduct_smul, smul_dotProduct, smul_eq_mul, hE2e3, hEae3]
+      ring
+    have hres : (((β * eps2) • (omegaListN V [u0, u1, v, w] 2 - mid)
+        + (γ * eps3) • (a - mid) : V3)) = 0 := by
+      have h7 := hexp
+      rw [hs0, zero_smul, zero_add] at h7
+      exact h7
+    have hβz : (β : ℝ) = 0 ∧ (γ : ℝ) = 0 := by
+      rcases eq_or_ne (β * eps2 : ℝ) 0 with hbz | hbn
+      · have hb : (β : ℝ) = 0 := by
+          rcases mul_eq_zero.mp hbz with h | h
+          · exact h
+          · exact absurd h (ne_of_gt heps2)
+        rw [hb, zero_mul, zero_smul, zero_add] at hres
+        rcases smul_eq_zero.mp hres with h | h
+        · refine ⟨hb, ?_⟩
+          rcases mul_eq_zero.mp h with h1 | h1
+          · exact h1
+          · exact absurd h1 (ne_of_gt heps3)
+        · exact absurd h hz3n
+      · have hres' : (((γ * eps3 : ℝ)) • ((a - mid : V3)))
+          = -(((β * eps2 : ℝ)) • ((omegaListN V [u0, u1, v, w] 2 - mid : V3))) :=
+          eq_neg_of_add_eq_zero_right hres
+        rcases eq_or_ne ((γ * eps3 : ℝ)) 0 with hgz | hgn
+        · rw [hgz, zero_smul, eq_comm, neg_eq_zero] at hres'
+          rcases smul_eq_zero.mp hres' with h | h
+          · exact absurd h hbn
+          · exact absurd h hz2n
+        · have h11 : ((a - mid : V3))
+            = -(((γ * eps3 : ℝ)⁻¹ * (β * eps2)) •
+              ((omegaListN V [u0, u1, v, w] 2 - mid : V3))) := by
+            have h5 := congrArg
+              (fun x : V3 => ((γ * eps3 : ℝ)⁻¹) • x) hres'
+            simp only [smul_smul, mul_comm (γ * eps3 : ℝ) ((γ * eps3 : ℝ)⁻¹),
+              inv_mul_cancel₀ hgn, one_smul, smul_neg, ← mul_smul, neg_smul] at h5
+            exact h5
+          exact absurd (by
+            rw [h11, neg_smul]) (hindep (-(((γ * eps3 : ℝ)⁻¹ * (β * eps2)))))
+    have hα : (α : ℝ) = 0 := by
+      rw [hβz.1, hβz.2] at hs0
+      simp only [mul_zero, zero_mul, add_zero, zero_add] at hs0
+      exact Or.resolve_right (mul_eq_zero.mp hs0) hdne
+    exact ⟨hα, hβz⟩
+  -- 14. 线性无关族 → span = ⊤
+  have hli : LinearIndependent ℝ (![(u1 - u0 : V3),
+      (mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3) - u0,
+      (mid + eps3 • (a - mid) : V3) - u0]) := by
+    rw [Fintype.linearIndependent_iff]
+    intro g hg
+    rw [Fin.sum_univ_three] at hg
+    simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+      Matrix.cons_val_fin_one] at hg
+    have h5 := hvec3 (g 0) (g 1) (g 2) hg
+    intro i
+    fin_cases i
+    · exact h5.1
+    · exact h5.2.1
+    · exact h5.2.2
+  have hspan3 : Submodule.span ℝ
+      (Set.range (![(u1 - u0 : V3),
+        (mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3) - u0,
+        (mid + eps3 • (a - mid) : V3) - u0])) = ⊤ :=
+    hli.span_eq_top_of_card_eq_finrank (by simp [finrank_euclideanSpace_fin])
+  -- 15. vectorSpan = ⊤ → affineSpan = ⊤ → 正体积 → 非 nullSet
+  have hu0S : (u0 : V3) ∈ ({u0, u1, (mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3),
+      (mid + eps3 • (a - mid) : V3)} : Set V3) := Set.mem_insert _ _
+  have hvtop : vectorSpan
+      ℝ ({u0, u1, (mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3),
+        (mid + eps3 • (a - mid) : V3)} : Set V3) = ⊤ := by
+    rw [vectorSpan_eq_span_vsub_set_right ℝ hu0S]
+    refine top_le_iff.mp ?_
+    rw [← hspan3]
+    exact Submodule.span_le.mpr (by
+      rintro y ⟨i, rfl⟩
+      fin_cases i
+      · exact Submodule.subset_span (Set.mem_image_of_mem _ (by simp))
+      · exact Submodule.subset_span (Set.mem_image_of_mem _ (by simp))
+      · exact Submodule.subset_span (Set.mem_image_of_mem _ (by simp)))
+  have hfr : Module.finrank ℝ (vectorSpan
+      ℝ ({u0, u1, (mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3),
+        (mid + eps3 • (a - mid) : V3)} : Set V3)) = 3 := by
+    rw [hvtop]
+    simp [finrank_euclideanSpace_fin]
+  have htop : affineSpan
+      ℝ ({u0, u1, (mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3),
+        (mid + eps3 • (a - mid) : V3)} : Set V3) = ⊤ :=
+    p24_affineSpan_top_of_finrank (⟨u0, hu0S⟩ :
+      ({u0, u1, (mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3),
+        (mid + eps3 • (a - mid) : V3)} : Set V3).Nonempty) hfr
+  have hvpos : 0 < volume (convexHull
+      ℝ ({u0, u1, (mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3),
+        (mid + eps3 • (a - mid) : V3)} : Set V3)) := p24_volume_pos_of_affineSpan htop
+  -- 16. hull ⊆ X 与非 nullSet
+  have hsub4 : ({u0, u1, (mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3),
+      (mid + eps3 • (a - mid) : V3)} : Set V3) ⊆ mcell2 V [u0, u1, v, w] := by
+    intro z hz
+    simp only [Set.mem_insert_iff] at hz
+    rcases hz with rfl | hz
+    · exact ends.1
+    · rcases hz with rfl | hz
+      · exact ends.2
+      · rcases hz with rfl | rfl
+        · exact hx2X
+        · exact hx3X
+  have hsubX : convexHull
+      ℝ ({u0, u1, (mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3),
+        (mid + eps3 • (a - mid) : V3)} : Set V3) ⊆ mcell2 V [u0, u1, v, w] :=
+    convexHull_min hsub4 hconv
+  have hnull : ¬ nullSet (mcell2 V [u0, u1, v, w]) := by
+    intro hc
+    rw [nullSet] at hc
+    have hle : volume (convexHull
+        ℝ ({u0, u1, (mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3),
+          (mid + eps3 • (a - mid) : V3)} : Set V3)) ≤ volume (mcell2 V [u0, u1, v, w]) :=
+      measure_mono hsubX
+    have hpos2 : 0 < volume (mcell2 V [u0, u1, v, w]) :=
+      lt_of_lt_of_le hvpos hle
+    rw [hc] at hpos2
+    exact lt_irrefl _ hpos2
+  -- 17. HDTFNFZ → edgeX
+  have hvxeq : VX V (mcell2 V [u0, u1, v, w]) = V ∩ mcell2 V [u0, u1, v, w] :=
+    HDTFNFZ (v := u0) hs hp hbar (show mcell2 V [u0, u1, v, w] = mcell 2 V [u0, u1, v, w] from rfl)
+      hnull
+  refine ⟨mcell2 V [u0, u1, v, w], Set.mem_setOf.mpr ⟨2, [u0, u1, v, w], rfl, hbar⟩, ?_, ?_⟩
+  · rw [edgeX, hvxeq]
+    exact Set.mem_setOf.mpr ⟨u0, u1, rfl, ⟨hu0, ends.1⟩, ⟨hu1, ends.2⟩, hne⟩
+  · intro q hq hsub
+    -- 18. x_i 离轴 + 方位角双零矛盾
+    have hx2off : ¬ Collinear3 u0 u1 (mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3) :=
+      p24_offaxis_of_orth u0 u1 mid _ (omegaListN V [u0, u1, v, w] 2 - mid) e3
+        (dist u0 u1) eps2 hne haxd h33 hmiddef rfl (ne_of_gt heps2) hE2e3 hz2n
+    have hx3off : ¬ Collinear3 u0 u1 (mid + eps3 • (a - mid) : V3) :=
+      p24_offaxis_of_orth u0 u1 mid _ (a - mid) e3
+        (dist u0 u1) eps3 hne haxd h33 hmiddef rfl (ne_of_gt heps3) hEae3 hz3n
+    have ha2x2 : azim u0 u1 q (mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3) = 0 :=
+      hsub hx2X
+    have ha2x3 : azim u0 u1 q (mid + eps3 • (a - mid) : V3) = 0 :=
+      hsub hx3X
+    have hz1' : (((mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3)) - mid)
+        = (eps2 • (omegaListN V [u0, u1, v, w] 2 - mid : V3)) := by module
+    have hz3' : (((mid + eps3 • (a - mid) : V3)) - mid)
+        = (eps3 • (a - mid : V3)) := by module
+    have hζ1x : (((mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3)) - mid) ⬝ᵥ e3 = 0 := by
+      rw [hz1', WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul, hE2e3]
+      ring
+    have hζ3x : (((mid + eps3 • (a - mid) : V3)) - mid) ⬝ᵥ e3 = 0 := by
+      rw [hz3', WithLp.ofLp_smul, smul_dotProduct, smul_eq_mul, hEae3]
+      ring
+    have hindep' : ∀ r : ℝ, (((mid + eps3 • (a - mid) : V3)) - mid) ≠
+        r • (((mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3)) - mid) := by
+      intro r hr
+      have hz3'' : (((mid + eps3 • (a - mid) : V3)) - mid)
+          = (eps3 • (a - mid : V3)) := by module
+      have hz2'' : (((mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3)) - mid)
+          = (eps2 • (omegaListN V [u0, u1, v, w] 2 - mid : V3)) := by module
+      rw [hz3'', hz2''] at hr
+      have h6 : ((a - mid : V3)) = (eps3⁻¹) • (r • (eps2 •
+        ((omegaListN V [u0, u1, v, w] 2 - mid : V3)))) := by
+        have h7 := congrArg (fun x : V3 => ((eps3 : ℝ)⁻¹) • x) hr
+        rw [smul_smul, inv_mul_cancel₀ (ne_of_gt heps3), one_smul] at h7
+        exact h7
+      have hfinal := hindep (eps3⁻¹ * (r * eps2))
+      rw [mul_smul, mul_smul] at hfinal
+      exact absurd h6 hfinal
+    exact p24_caseB2_azim_kill u0 u1 q mid
+      (mid + eps2 • (omegaListN V [u0, u1, v, w] 2 - mid) : V3)
+      (mid + eps3 • (a - mid) : V3) e3 (dist u0 u1) eps2 eps3
+      hne haxd h33 hmiddef (lt_of_lt_of_le (by norm_num) hdgt) hq hx2off hx3off
+      ha2x2 ha2x3 heps2 heps3 hζ1x hζ3x hindep'
+
 /-- **情形 B2 全支**（capstone 的 `r₄ ≥ √2 ∧ r₃ ≥ √2` 分支，capstone 形）：
 X := `mcell 2 V vl`。
 **precisely-scoped 残余缺口（本件 `sorry`，2026-10-12 第四波记账）**：
@@ -5163,10 +6074,14 @@ X := `mcell 2 V vl`。
 (2) 分支条件：`hl (truncateSimplex 1 vl) = hl [u0,u1] = d/2 < √2`
   （`p24_hl_pair_lt_sqrt2`）∧ `√2 ≤ hl vl = hr4`（本波形态）；
 (3) edgeX：两端点成员 `p24_caseB2_ends_mem`（本波真证）+ 非 nullSet
-  （泛具子情形的四点凸包正体积 / 退化子情形换叶——**残缺**）+ HDTFNFZ；
-(4) 非平坦：泛具子情形的扇形方位角分离 / 退化子情形换叶——**残缺**；
+  （泛具子情形的四点凸包正体积——`p24_caseB2_general` 真证 /
+  退化子情形（ω₂ = ω₃）换叶——**残缺**）+ HDTFNFZ；
+(4) 非平坦：泛具子情形的扇形方位角分离——`p24_caseB2_general` 真证 /
+  退化子情形换叶——**残缺**；
 (5) `mxi = ω₂` 读出 = `p24_caseB2_mxi_eq`（本波真证）。
-本件闭合后 capstone 全支闭合、收窄移除。 -/
+泛具支（ω₂ ≠ ω₃）经 `p24_caseB2_general` 全真证收口；残件收窄至
+退化子情形（ω₂ = ω₃，需支撑面引理换叶）。 -/
+
 private theorem p24_caseB2_branch (V : Set V3) (u0 u1 : V3) (vl : List V3)
     (hs : saturated V) (hp : Packing V) (hu0 : u0 ∈ V) (hu1 : u1 ∈ V)
     (hne : u0 ≠ u1) (hbar : barV V 3 vl) (htr : truncateSimplex 1 vl = [u0, u1])
@@ -5176,7 +6091,9 @@ private theorem p24_caseB2_branch (V : Set V3) (u0 u1 : V3) (vl : List V3)
     ∃ X : Set V3, X ∈ mcellSet V ∧ ({u0, u1} : Set V3) ∈ edgeX V X ∧
       ∀ q : V3, ¬ Collinear3 u0 u1 q →
         ¬ ((X : Set V3) ⊆ {z : V3 | azim u0 u1 q z = 0}) := by
-  sorry
+  by_cases hw23 : omegaListN V vl 2 = omegaListN V vl 3
+  · sorry
+  · exact p24_caseB2_general V u0 u1 vl hs hp hu0 hu1 hne hbar htr hd8 hr4 hr3 hw23
 
 
 /-- NEEDS（(β) 支独立存在性引理——**残余缺口已收窄至情形 B2 单支**，
