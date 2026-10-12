@@ -592,6 +592,20 @@ ROGERS_EQ 唯一性链，GIANT；该链 5 枚同病桥的修复波同批处理�
 
 **(e) 分级：A′**。
 
+**(f) 状态（2026-10-12 用户批准；应用波复核记录）**：复核发现本修复**已随
+2026-09-30 batch A 落地**（PA7:2389 `KSOQKWL` 签名已带 `hpout`，文件头注
+:42 记 ENCODING-FIX；消费侧 PackingConcl:293 `KSOQKWL_concl_discharged` 与
+PA2:5456 孪生（项 25）同步带参）。批准附带的"应用前反例几何实例化机器验证"
+前置件**已补齐**（验证车道 /tmp/sf15-verify，exit 0 零 sorryAx）：反例取
+更省的合法实例 `k:=0, ul:=[0], V:={0}, p:=swap 1 2`（提案 (b) 的
+V:={0,2e₁,2e₂,2e₃} 不再需要）——弱前提全部真证（Packing 单点平凡/barV V 0 [0]
+经 voronoi 胞=univ 给 affDim=3/hl=radV{0}=0<√2/permutes 固定 0/leftActionList
+平凡相等），结论 p≠refl 与 `¬hpout` 同时机器确立；三条公开定理
+`sf15_KSOQKWL_weak_false`/`sf15_counterexample_witness`/`sf15_hpout_blocks`
+公理面 = 标准三。验证探针归档
+`docs/assets/sf15-ksoqkwl-counterexample-probe.lean`（192 行，可作回归锚：
+任何人回退 hpout 即撞机器证伪）。零工作树 diff，无需再走闸。
+
 ## 20'. 项 16 `IVFICRK` — 裁决：无病（解除，附重构注记）
 
 **(a) 疑点**：工人报"同编码可疑"。裁决：**假指控不成立，但 HOL 的显式 g
