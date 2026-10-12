@@ -216,6 +216,52 @@ v0 系导致 5M heartbeat isDefEq 超时）；`zOf_ne_zero_iff` 需 `v1 ≠ v0` 
 Iff 且 R 显式→`(Submodule.mem_bot ℝ).1`；vectorSpan 成员匿名构造走
 `vectorSpan_eq_span_vsub_set_right` + `subset_span ⟨z, hz, rfl⟩`。
 
+
+### 5.4' 2026-10-12 实测雷区汇总（mega 波沉淀，按线归档）
+
+**全 lanes 通用**：①管道退出码陷阱——`lake build X | tail; echo $?` 取的是 tail 的，
+退出码必须不经管道取（`lake build X; echo EXIT=$?`）；②`set_option … in` 插在
+docstring 与声明之间报"expected 'lemma'"，且报错位置误导（CJK 列偏移），token 名
+才是真相；③field_simp 对含 √8 幂多项式形状漂移不稳定——根式恒等式走
+"mul_right_cancel₀ 乘正因子 + mul_self_sqrt calc + 纯 ring"确定性路线；④共享
+olean 竞争实录升级：多车道并发会删除/重建他道 olean（"object file does not
+exist"/"Unknown constant"），sleep 30-60 重试自愈勿自修环境。
+
+**WithLp/V3 族**：⑤点积 Finset-和运输 kit 见 PA7 p7_sum_dot_left 系（陈述必须
+写 `((∑ j ∈ s, f j : V3)) ⬝ᵥ c` 形防 elaborator 拉到 pi 层；跨形状原子相等经
+`inner_eq_dot`+`inner_sub_left/right`+`real_inner_comm` 桥接再 linarith）；
+⑥`•`-链 smul_smul/mul_smul/smul_assoc 方向易混，rw-fail 优先 simp only [显式hyp]
+或 module 收尾；⑦add_dotProduct=左加、dotProduct_add=右加、dotProduct_smul=
+右 smul 且产出 `x • (标量)` 需 smul_eq_mul 归一。
+
+**AzimSpec/镜像族（A2/A5/B-D4）**：⑧凡 exact/refine 触及"AzimSpec 类 Prop-def
+且参数含 azim 类非 Computable 应用项"的统一会 isDefEq 无限下潜（Collinear3
+setOf/insert 实例比较 12M 心跳）——对策=intro 侧条件+collinear3_zero_neg.mp+
+simpa 传输、azimSpec_exists 取不透明 θ₀、simp only 展开、@显式参、文件局部
+`attribute [irreducible] azim in`；⑨HOL AZIM_NEG 是末两参换位形
+`azim 0 (-v1) (-w1) (-w2) = azim 0 v1 w2 w1` 非 2π−azim（YXIONXL2.hl:2014）；
+⑩`_root_.Equiv.refl` 必须全限定（Hypermap:6221/Fan:1095 在 Kepler.Text 内
+创建 Equiv/Perm 前缀）。
+
+**数值种子族**：⑪Mathlib 只有 sin 下界 Taylor（sin_ge_sub_cube）无上界——
+上界用半角双角 `cos 2u = 1−2sin²(u/2…)` 把下界变上界；三倍角
+`cos 3w = 4cos³w−3cos w` 在 [1/2,∞) 单调更优（模板 p21_arccos_one_third_le_1231）。
+
+**TameSpine 族**：⑫`List.mem_map` 本版是 `∃ a ∈ l, f a = b` 形；⑬Prop 谓词
+`List.filter` 第二合取项是 `decide (p a) = true`（decide_eq_true_iff.mp 桥接，
+def 会 noncomputable——忠实镜像用显式 decide）；⑭`Hypermap.mem_dartsInFinalLoops`
+的 H 是显式首位参；⑮rw 参数里带参点调用触发 eta-lambda 陷阱（让 rw 自行实例化
+或 show 换形）；⑯omega 不证嵌套变量模（先 rotate_mod 归模再夹逼）；⑰induction
+自动 revert 具名假设使 ih 成蕴含式（rw [ih hjk] 显式喂）；⑱res 裸名被
+Kepler.Text.res 遮蔽（全限定 Fan.res）、Graph 撞 Mathlib（Kepler.Graphs.Graph）、
+PermutesOn 应用双参。
+
+**杂项**：⑲`String.split` 返回 Std.Iter 非 List String（内核可判字符串走
+toList+List 递归）、`String.mk`→`String.ofList`；⑳`Subtype.range_val` 在
+Subtype 命名空间；㉑`div_mul_cancel` 是 Group 类（ℚ 不可用，field_simp 唯一稳路）；
+㉒`Bool.and_eq_true` 是 Eq 形（用 Bool.and_eq_true_iff）、`Finset.range_succ`
+不存在（用 sum_range_succ'）。
+
 ### 5.4 各 lane 已知卡点速查（收工后追加）
 
 - **LA38**（52 remaining @二轮后：38 tactic sorry + 14 def 桩）：二轮闭合 6 枚

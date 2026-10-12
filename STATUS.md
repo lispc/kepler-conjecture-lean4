@@ -1,4 +1,4 @@
-# 项目总进度（Status）— 2026-10-10
+# 项目总进度（Status）— 2026-10-12
 
 > **⚠️ 环境变更（2026-09-28）：旧生产服务器（128 核/503G）报废**，磁盘不可恢复。
 > 仅存本机外部存储的产物丢失（cert549_tight.json / LP 43,078 持久化产物 / bb_arb 重跑
@@ -328,3 +328,17 @@ P1-P5 分段流水攻克）。**polyhedron.hl 100% 达成（71/71 定理零 sorr
 1. main 分支：`lake build Kepler` 全绿；**2026-09-17 政策变更（DECISIONS.md）：main 允许携带 sorry 债务，债务刻度 = `DEBT.md`（`lean/scripts/debt_ledger.py --with-spine` 生成，基线 2400，**2026-10-10 账本现值 1719**（09-29 账面 1951 → 净 −232；脊柱公理探针首次本机全闭包跑通：主定理 axiom 面 = sorryAx(3 冻结接口)+624 shard+标准三，异常项无））**；终验标准不变只是推迟——项目终点要求主定理证明本体零 sorry 可达 + `#print axioms` 仅 `[propext, Classical.choice, Quot.sound]`（+ Phase 2 限定 native_decide）；陈述保真审查（`docs/statement-fidelity.md`）是唯一质量阀门，不随本政策放宽；
 2. 批次闭合标准：该批全部定理零 sorry + 根模块构建绿 + 陈述保真抽查；
 3. 自动化 harness 的提交由机械闸背书 + 主 agent 审计兜底；人工派工的提交由主 agent 逐块验收。
+
+
+## 2026-10-12 mega 波（三件真数学日）
+
+**三件真数学全部清账**（用户令，详见 docs/projects/milestones-and-risks-2026-10-12.md
+与 docs/e2e-debt-map.md 2026-10-12 增量节）：①GRKIBMP 组全套闭合（B V2/A V2
+解析手证+一行装配，residue16 销账 2/16）；②PA24 B2 支收口（泛具+退化换叶，
+capstone p24_exists_mcell_not_flat 本体全真）；③AJRIPQN 闭合（SF-38 + 一行
+机械闭合，GT 区最后一件真数学；勘误：pivot 反向早已闭合 GT-6）。其余：A2
+脊柱接口收口（Assembly 49→22）；PA7 19→13（V3 点积 Finset-kit 全树首件）；
+PA25 141→127；TameSpine 批 4-8 五批 ~3,600 行零 sorry（B1 :2936-5579）；
+C1 立项+三波落地（LP 钉定 schema/Farkas checker/infeasible 占位退役，
+A12 降为纯数据绑定）；SF 备忘录六件终账+项 37/38 应用；闸 EV22-24 三笔演进；
+Phase4 常驻车道设立（用户指令二）+ 5h 配额帽五线阵亡 salvage 全胜实录。

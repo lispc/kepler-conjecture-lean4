@@ -168,3 +168,60 @@ Phase 2 `tame_classification`、LA16 `nonlinear_imp_lp_main_estimate_p16`。
 1. token 口径：`python3 lean/scripts/debt_ledger.py . > DEBT.md`（自动）。
 2. 本文件：编排者每波收工后按闸门 commit 手工更新 A/B 表（自动探针待 Graphs
    olean，见 DEBT.md 脊柱节）。
+
+
+## 2026-10-12 增量节（三件真数学日 + C1 立项日 + salvage 压力测试日）
+
+**三件真数学全部清账**（milestones-and-risks-2026-10-12.md §0 用户令）：
+- **GRKIBMP 组**（侦察 d1ef3913 勘误：'GRKIBMB'系拼写讹误，实体=A/B V2 两条 bank，
+  尖锐真相=单变量函数角点 y=√8 真下确界=0 不可分离——手证恰绕开区间求解器）：
+  B V2 手证 `06aaf94e`（四段：剥壳/确定性因式分解/单调/数值收口 + G1 种子
+  mm1<4/3 半角双角法）→ A V2 手证 `bb1d4923`（h0cut 三分 + delicate 近消支
+  三倍角种子 arccos(1/3)≤1231/1000 + mm1 双侧围闭 [5023/5000,507/500]）→
+  nliGrkBank 一行装配 `3fa2eb85`。residue16 销账 2/16，81 条记账"1c 两条"清零。
+- **PA24 B2 支**：泛具支 `8c8ce8f5`（p24_caseB2_general ~250 行，wg·h>0 直接给
+  线性无关免外心参数）+ 退化支换叶 `fdfae86d`（p24_nondeg_leaf_exists 支撑面
+  引理等效路线 ~230 行：叶集有限+bisector 方向子模+逃逸方向+fan 分解逼叶）——
+  capstone `p24_exists_mcell_not_flat` 本体全真证，PA24 仅剩 :1096 REUHADY1
+  外部锚一枚。
+- **AJRIPQN**（pivot 侦察 52f52713 勘误：pivot 反向 k=3/4 早已闭合 GT-6，
+  AJRIPQN 顶替入列）：五阶段覆盖装配 salvage `cc84d423` + 续二验证/隔离
+  `de843eb9`（p17_ajripqn_of_tailfix 单假设定理）→ SF-38 应用后一行闭合
+  `4e3450cb`（**零 sorryAx**）。GT 区 axiom 面最后一块具名 taint 源头闭合，
+  PA23 p23_cover_C 21 处消费点自动受益。
+
+**SF 账**：决策备忘录六件终账（17/1/15/18/21 五件"已落地销账"——提案状态行
+滞后致误判的教训在案 + 22 方向批挂起）；项 37 起草 `c80f6456` + 应用 `9f916218`
+（MXI_EXISTS_concl 补 hl(trunc 2)<√2，六文件，pack_concl 接口版假陈述纠正）；
+项 38 起草+应用 `3eab5066`/`0c0a2d91`（QZKSYKG2 补尾固定，weak permutes 族
+第 N 例）。用户双批一次性兑现。
+
+**C1/A12 线**：侦察 `22c39ef9`（形态重估：非从零移植而是四缺口收尾；Flyspeck
+二进制证书 404MB 在库）→ C1a LPSchema `0e788792`（钉定=类型索引位，错 id
+发射点即编译错）→ C1b LPSchemaFarkas `393d0421`（精确整数 Farkas checker
++soundness）→ DEF-FIX `e8a7fa8e`（LpTerminalInfeasibleCertified 占位退役，
+LPFarkas 内核下沉）→ 余 C1c 三试点。**A12 从"硬件+数据+移植"三重绑定降为
+纯数据绑定**。
+
+**脊柱与 PA 系**：A2 contraveningNegative 收口（kit `409c054c` + salvage 修复
+`f84b4a19`，Assembly 49→22，azimSpecNeg=AZIM_NEG AzimSpec 级正本；重大勘误：
+AZIM_NEG 是末两参换位形非 2π−azim，镜像链大幅简化；公理面唯一来路=
+ContraFan.lean:605 路线 B 孪生件）；PA7 XNHPWAB1 波 `ecf8ef0c` + r3
+SEPARATES 链收官 `cd0627b1`（19→13，全树首个 V3 点积 Finset-和运输 kit）；
+PA25 mcell3 gammaX 波 `c4593766`（141→133）+ S_LEAF_IN_WEDGE_GE 续作
+`52e28639`（127，azim 链算术工位定型）。
+
+**TameSpine B1**：批 4-8 五批连落（`2749df2a`/`c86eb1d8`/`3f9e204e`/`f9a0b6ad`/
+`86f20731`）≈ 3,600 行 / 120+ 件零 sorry，tame_list.hl :2936-5579；node 显式
+刻画链拆除（批 7 第三条直构路线）；旗塔 final_list 合取块上游打通（批 8
+FinalDartListSpine）；批 9 在飞（:5580 起）。
+
+**闸演进**：EV22（DF_ANCHORS 环境可覆盖）+ EV23（DEF-FIX 路径 $cmt 兜底）
+`62e59aa8`；EV24（bullet 前缀 · sorry 识别，八处模式点）`fc09311f`。
+
+**事故与教训**：5h 配额帽一波带走五线（salvage 协议全胜：PA17/PA24 两绿走闸
+`cc84d423`/`83e7a3c9`、Assembly 烂尾留盘续修、TameList8 传染 blocked 实录；
+LA5 /tmp 黄金遗产回收式再验证）；1302 限流同秒双杀（并发管控阈值制度）；管道
+退出码陷阱（$? 取 tail 的假绿探针）；staged 误卷两犯（路径限定 commit 强制化）；
+Phase4 收敛风险单列 ①b + Phase4 常驻车道设立（用户指令二 `b3a846cc`，
+TADIAMB 实证 251,054 叶 101.2s 全闭——Taylor 线在该族 100% 可验证）。
