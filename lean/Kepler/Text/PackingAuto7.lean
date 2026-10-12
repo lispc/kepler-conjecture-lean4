@@ -1317,14 +1317,212 @@ theorem HL_DECREASE (V : Set V3) (ul : List V3) (k i : ℕ) (hV : Packing V)
     (Set.nonempty_iff_ne_empty.mp ⟨hdV (truncateSimplex i ul),
       HD_IN_SET_OF_LIST _ (by rw [LENGTH_TRUNCATE_SIMPLEX i ul hlen]; omega)⟩)
 
+/-- Auxiliary for `XNHPWAB1` (existence half of HOL `CLOSEST_POINT_EXISTS`,
+sphere.hl): for a nonempty closed convex set the `closestPoint` epsilon is a
+genuine nearest point (Mathlib Hilbert projection theorem). -/
+private theorem p7_closest_point_exists (K : Set V3) (x : V3)
+    (hne : K.Nonempty) (hc : IsClosed K) (hcv : Convex ℝ K) :
+    closestPoint K x ∈ K ∧ ∀ z ∈ K, dist x (closestPoint K x) ≤ dist x z := by
+  obtain ⟨v, hvK, hnorm⟩ :=
+    exists_norm_eq_iInf_of_complete_convex hne hc.isComplete hcv x
+  have hstep : ∀ w : {y // y ∈ K}, ‖x - v‖ ≤ ‖x - (w : V3)‖ := by
+    intro w
+    rw [hnorm]
+    exact ciInf_le ⟨0, Set.forall_mem_range.2 fun y => norm_nonneg _⟩ w
+  have hmin : ∀ z ∈ K, dist x v ≤ dist x z := by
+    intro z hz
+    rw [dist_eq_norm, dist_eq_norm]
+    exact hstep ⟨z, hz⟩
+  exact Classical.epsilon_spec (p := fun y : V3 => y ∈ K ∧ ∀ z ∈ K, dist x y ≤ dist x z)
+    ⟨v, hvK, hmin⟩
+
+/-- Auxiliary for `XNHPWAB1` (HOL `CLOSEST_POINT_UNIQUE`, sphere.hl): nearest
+points on convex sets are unique (first-order condition via the real inner
+product). -/
+private theorem p7_closest_point_unique (K : Set V3) (x p : V3)
+    (hcv : Convex ℝ K) (hpK : p ∈ K) (hp : ∀ z ∈ K, dist x p ≤ dist x z) :
+    closestPoint K x = p := by
+  have hbd : BddBelow (Set.range fun w : {z // z ∈ K} => ‖x - (w : V3)‖) :=
+    ⟨0, Set.forall_mem_range.2 fun w => norm_nonneg _⟩
+  haveI : Nonempty {z // z ∈ K} := ⟨⟨p, hpK⟩⟩
+  have hspec : ∀ y : V3, y ∈ K → (∀ z ∈ K, dist x y ≤ dist x z) → y = p := by
+    intro y hyK hy
+    have hymin : ‖x - y‖ = ⨅ w : {z // z ∈ K}, ‖x - (w : V3)‖ :=
+      le_antisymm
+        (le_ciInf fun w => by simpa only [dist_eq_norm] using hy w w.2)
+        (ciInf_le hbd ⟨y, hyK⟩)
+    have hpmin : ‖x - p‖ = ⨅ w : {z // z ∈ K}, ‖x - (w : V3)‖ :=
+      le_antisymm
+        (le_ciInf fun w => by simpa only [dist_eq_norm] using hp w w.2)
+        (ciInf_le hbd ⟨p, hpK⟩)
+    have hch1 := (norm_eq_iInf_iff_real_inner_le_zero hcv hyK).mp hymin
+    have hch2 := (norm_eq_iInf_iff_real_inner_le_zero hcv hpK).mp hpmin
+    have h1 : inner ℝ (x - y) (p - y) ≤ 0 := hch1 p hpK
+    have hC : 0 ≤ inner ℝ (x - p) (p - y) := by
+      have h2 : inner ℝ (x - p) (y - p) ≤ 0 := hch2 y hyK
+      have e2 : inner ℝ (x - p) (y - p) = -(inner ℝ (x - p) (p - y)) := by
+        rw [show ((y - p : V3)) = -(p - y) from by abel, inner_neg_right]
+      linarith
+    have hnn : 0 ≤ inner ℝ (p - y) (p - y) := real_inner_self_nonneg
+    have hkey : inner ℝ (p - y) (p - y) = 0 := by
+      have hsum : inner ℝ (p - y) (p - y)
+          = inner ℝ (x - y) (p - y) - inner ℝ (x - p) (p - y) := by
+        rw [← inner_sub_left, show (((x - y) - (x - p) : V3)) = p - y from by abel]
+      rw [hsum]
+      linarith
+    have hzero : (p - y : V3) = 0 := inner_self_eq_zero.mp hkey
+    exact (sub_eq_zero.mp hzero).symm
+  have heq : (fun y : V3 => y ∈ K ∧ ∀ z ∈ K, dist x y ≤ dist x z) = (fun y : V3 => y = p) := by
+    funext y
+    exact propext ⟨fun h => hspec y h.1 h.2, fun h => by subst h; exact ⟨hpK, hp⟩⟩
+  show (Classical.epsilon fun y : V3 => y ∈ K ∧ ∀ z ∈ K, dist x y ≤ dist x z) = p
+  rw [heq]
+  exact Classical.epsilon_singleton p
+
+/-- Auxiliary for `XNHPWAB1`: affine-hull variant of
+`AFFINE_HULL_PROJECTION_DIST_LT` (the public lemma freezes `v ∈ S`; here
+`v` may be any point of the affine hull, as in Rogers.hl:6889). -/
+private theorem p7_proj_dist_lt_affine (S : Set V3) (p v x n : V3)
+    (hv : v ∈ (affineSpan ℝ S : Set V3)) (hp : ¬ p ∈ (affineSpan ℝ S : Set V3))
+    (hpxn : p = x + n) (hx : x ∈ (affineSpan ℝ S : Set V3))
+    (hn : ∀ u ∈ S, ∀ z ∈ S, (u - z) ⬝ᵥ n = 0) : dist x v < dist p v := by
+  have horth := (ORTHOGONAL_TO_AFFINE_HULL_EQ S n).mp hn x hx v hv
+  have hn0 : n ≠ 0 := by
+    intro h0
+    apply hp
+    rw [hpxn, h0, add_zero]
+    exact hx
+  have hdeq : (p - v : V3) = (x - v) + n := by rw [hpxn]; abel
+  have hpos : (0 : ℝ) < ‖n‖ ^ 2 := by
+    have h1 : 0 < ‖n‖ := norm_pos_iff.mpr hn0
+    nlinarith [sq_nonneg ‖n‖]
+  have hsq : ‖x - v‖ ^ 2 < ‖(x - v) + n‖ ^ 2 := by
+    rw [norm_add_sq_real, inner_eq_dot, horth]
+    linarith [sq_nonneg ‖x - v‖, hpos]
+  rw [dist_eq_norm, dist_eq_norm, hdeq]
+  exact (sq_lt_sq₀ (norm_nonneg _) (norm_nonneg _)).mp hsq
+
 /-- HL `XNHPWAB1` (Rogers.hl:7194). -/
 theorem XNHPWAB1 (V : Set V3) (ul : List V3) (k : ℕ) (hV : Packing V)
     (hb : barV V k ul) (hl2 : hl ul < Real.sqrt 2) :
     omegaList V ul = circumcenter (setOfList ul) := by
-  sorry
+  classical
+  revert hb
+  revert hl2
+  revert ul
+  induction k with
+  | zero =>
+    intro ul hl2 hb
+    have hlen : ul.length = 1 := hb.1
+    have hset : setOfList ul = {hdV ul} := by
+      have h1 : ul = [hdV ul] := LENGTH_1_LEMMA ul hlen
+      rw [h1, show hdV [hdV ul] = hdV ul from by simp [hdV]]
+      ext x
+      simp [setOfList]
+    have hw : omegaList V ul = hdV ul := by
+      have hzero : ul.length - 1 = 0 := by omega
+      calc omegaList V ul = omegaListN V ul (ul.length - 1) := rfl
+        _ = omegaListN V ul 0 := by rw [hzero]
+        _ = hdV ul := rfl
+    rw [hw, hset, CIRCUMCENTER_1]
+  | succ k ih =>
+    intro ul hl2 hb
+    have hlenU : ul.length = k + 1 + 1 := hb.1
+    have hvb : barV V k (truncateSimplex k ul) :=
+      TRUNCATE_SIMPLEX_BARV V k (k + 1) ul hb (by omega)
+    have hlm : hl (truncateSimplex k ul) ≤ hl ul :=
+      HL_DECREASE V ul (k + 1) k hV hb (by omega)
+    have hlt : hl (truncateSimplex k ul) < Real.sqrt 2 := lt_of_le_of_lt hlm hl2
+    have hihr : omegaList V (truncateSimplex k ul)
+        = circumcenter (setOfList (truncateSimplex k ul)) :=
+      ih (truncateSimplex k ul) hlt hvb
+    have hsubV : setOfList (truncateSimplex k ul) ⊆ setOfList ul :=
+      SET_OF_LIST_TRUNCATE_SIMPLEX_SUBSET ul k (by rw [hlenU]; omega)
+    have hp0 : circumcenter (setOfList (truncateSimplex k ul)) ∈
+        (affineSpan ℝ (setOfList ul) : Set V3) := by
+      have h1 : (affineSpan ℝ (setOfList (truncateSimplex k ul)) : AffineSubspace ℝ V3) ≤
+          (affineSpan ℝ (setOfList ul) : AffineSubspace ℝ V3) := affineSpan_mono ℝ hsubV
+      exact h1 (BARV_CIRCUMCENTER_EXISTS V (truncateSimplex k ul) k hV hvb)
+    have hvne : (voronoiList V ul).Nonempty := Set.nonempty_iff_ne_empty.mpr
+      (BARV_IMP_VORONOI_LIST_NOT_EMPTY V ul (k + 1) hb)
+    have hAne : ((affineSpan ℝ (voronoiList V ul) : AffineSubspace ℝ V3) : Set V3).Nonempty :=
+      ⟨hvne.some, mem_affineSpan ℝ hvne.some_mem⟩
+    have hAcv : Convex ℝ ((affineSpan ℝ (voronoiList V ul) : AffineSubspace ℝ V3) : Set V3) :=
+      AffineSubspace.convex _
+    have hAcl : IsClosed ((affineSpan ℝ (voronoiList V ul) : AffineSubspace ℝ V3) : Set V3) :=
+      AffineSubspace.closed_of_finiteDimensional _
+    obtain ⟨p, hpA, hpclose⟩ :
+        ∃ q : V3, q ∈ ((affineSpan ℝ (voronoiList V ul) : AffineSubspace ℝ V3) : Set V3) ∧
+          ∀ z ∈ ((affineSpan ℝ (voronoiList V ul) : AffineSubspace ℝ V3) : Set V3),
+            dist (circumcenter (setOfList (truncateSimplex k ul))) q ≤
+              dist (circumcenter (setOfList (truncateSimplex k ul))) z :=
+      ⟨closestPoint _ _, p7_closest_point_exists _ _ hAne hAcl hAcv⟩
+    have hhdmem : hdV ul ∈ setOfList ul := HD_IN_SET_OF_LIST ul (by rw [hlenU]; omega)
+    have hpspan : p ∈ (affineSpan ℝ (setOfList ul) : Set V3) := by
+      by_contra hcontra
+      obtain ⟨x, n, hpxn, hx, horth⟩ := AFFINE_HULL_PROJECTION_EXISTS (setOfList ul) p
+        (Set.nonempty_iff_ne_empty.mp ⟨hdV ul, hhdmem⟩)
+      have hlt2 : dist x (circumcenter (setOfList (truncateSimplex k ul))) <
+          dist p (circumcenter (setOfList (truncateSimplex k ul))) :=
+        p7_proj_dist_lt_affine (setOfList ul) p
+          (circumcenter (setOfList (truncateSimplex k ul))) x n
+          hp0 hcontra hpxn hx horth
+      have hxeq : ∀ u ∈ setOfList ul, dist x u = dist x (hdV ul) := by
+        intro u hu
+        have hpbis : dist p (hdV ul) = dist p u :=
+          (MHFTTZN2 V ul (k + 1) hV hb p).mp hpA u hu
+        exact AFFINE_HULL_PROJECTION_DIST_EQ (setOfList ul) p u (hdV ul) x n hu hhdmem
+          hpbis.symm hpxn horth
+      have hxA : x ∈ ((affineSpan ℝ (voronoiList V ul) : AffineSubspace ℝ V3) : Set V3) :=
+        (MHFTTZN2 V ul (k + 1) hV hb x).mpr (fun u hu => (hxeq u hu).symm)
+      rw [dist_comm x, dist_comm p] at hlt2
+      exact absurd hlt2 (not_lt.mpr (hpclose x hxA))
+    have hc : p = circumcenter (setOfList ul) := by
+      have h2 := MHFTTZN3 V ul (k + 1) hV hb
+      have hmem : p ∈ ((affineSpan ℝ (voronoiList V ul) : AffineSubspace ℝ V3) : Set V3) ∩
+          (affineSpan ℝ (setOfList ul) : Set V3) := ⟨hpA, hpspan⟩
+      rw [h2] at hmem
+      exact Set.mem_singleton_iff.mp hmem
+    have hpvl : p ∈ voronoiList V ul := by
+      rw [hc]
+      show (circumcenter (setOfList ul) : V3) ∈ ⋂₀ {voronoiClosed V v | v ∈ setOfList ul}
+      rw [Set.mem_sInter]
+      intro T hT
+      obtain ⟨v, hv, rfl⟩ := by simpa using hT
+      intro w hw
+      by_cases hwS : w ∈ setOfList ul
+      · have h1 := HL_PROPERTIES V ul (k + 1) hV hb v hv
+        have h2 := HL_PROPERTIES V ul (k + 1) hV hb w hwS
+        rw [h1, h2]
+      · rw [dist_comm (circumcenter (setOfList ul)) v,
+          dist_comm (circumcenter (setOfList ul)) w]
+        exact le_of_lt (XYOFCGX V (setOfList ul) (circumcenter (setOfList ul)) hV
+          (BARV_SUBSET V (k + 1) ul hb) (BARV_AFFINE_INDEPENDENT V ul (k + 1) hV hb) rfl hl2
+          v w hv ⟨hw, hwS⟩)
+    have homega : omegaListN V ul k = circumcenter (setOfList (truncateSimplex k ul)) := by
+      rw [← hihr]
+      exact (OMEGA_LIST_LEMMA V ul k (by rw [hlenU]; omega)).symm
+    have htrunc : truncateSimplex (k + 1) ul = ul :=
+      ((TRUNCATE_SIMPLEX_INITIAL_SUBLIST (k + 1) ul ul).mpr
+        ⟨⟨[], by simp⟩, hb.1⟩).1
+    have hfinal : omegaList V ul = p := by
+      have e1 : omegaList V ul = omegaListN V ul (k + 1) := by
+        show omegaListN V ul (ul.length - 1) = omegaListN V ul (k + 1)
+        rw [show ul.length - 1 = k + 1 from by rw [hlenU]; omega]
+      rw [e1, omegaListN, htrunc, homega]
+      exact p7_closest_point_unique (voronoiList V ul) _ p (CONVEX_VORONOI_LIST V ul) hpvl
+        (fun z hz => hpclose z (subset_affineSpan ℝ (voronoiList V ul) hz))
+    rw [hfinal, hc]
 
 /-! ## AFFINE_HULL_PROJECTION_SEPARATES .. AFFINE_HULL_VORONOI_LIST_SUBSET_INTERS_BIS -/
 
+-- NEEDS (2026-10-12 PA7 r3 lane): HOL 用 CONVEX_HULL_FINITE 权重表示. Lean 路线:
+-- `mem_affineSpan_iff_eq_affineCombination` (Mathlib Combination.lean:916, 对
+-- `Set.range (fun x : ↥S => (x : V3))`) 抽仿射组合权重 + 负权重抽取 (p 不在凸包
+-- ⟹ 某权重 < 0; 凸包侧 `Finset.convexHull_eq` + `Finset.centerMass_mem_convexHull`).
+-- 卡点: V3 = WithLp 上 `⬝ᵥ` 的 Finset-和交换无现成引理 (Data/Matrix/Mul.lean 的
+-- sum_dotProduct 是纯 pi 型), 需按 Geom/LuneVolume.lean:137 的 coe 模式逐项展开,
+-- 属分量法沼泽, 待专门 lane.
 /-- HL `AFFINE_HULL_PROJECTION_SEPARATES` (Rogers.hl:7431). -/
 theorem AFFINE_HULL_PROJECTION_SEPARATES (S : Set V3) (p : V3) (hfin : S.Finite)
     (hp : p ∈ (affineSpan ℝ S : Set V3)) (hnc : ¬ p ∈ convexHull ℝ S) :
@@ -1333,6 +1531,10 @@ theorem AFFINE_HULL_PROJECTION_SEPARATES (S : Set V3) (p : V3) (hfin : S.Finite)
         (p - x) ⬝ᵥ (u - x) ≤ 0 := by
   sorry
 
+-- NEEDS (2026-10-12 PA7 r3 lane): 依赖 AFFINE_HULL_PROJECTION_SEPARATES (HOL 原证
+-- 路线, 卡点见其上方注记). 替代路线侦察过并否决: 把 p 正交投影到 aff span
+-- (setOfList ul) 得 x, n (AFFINE_HULL_PROJECTION_EXISTS), 但 x 不必在凸包内; 又
+-- "取 conv S 最近点 q" 路线不通: 法锥不等式 ⟨p-q, z-q⟩ ≤ 0 不蕴含 ⊥ 差分.
 /-- HL `XNHPWAB2` (Rogers.hl:7497). -/
 theorem XNHPWAB2 (V : Set V3) (ul : List V3) (k : ℕ) (hV : Packing V)
     (hb : barV V k ul) (hl2 : hl ul < Real.sqrt 2) :
@@ -1345,8 +1547,88 @@ theorem XNHPWAB4 (V : Set V3) (ul : List V3) (k : ℕ) (hV : Packing V)
     (hb : barV V k ul) (hl2 : hl ul < Real.sqrt 2) :
     ∀ i j : ℕ, i < j → j ≤ k →
       hl (truncateSimplex i ul) < hl (truncateSimplex j ul) := by
-  sorry
+  intro i j hij hjk
+  have hblen : ul.length = k + 1 := hb.1
+  have hbj : barV V j (truncateSimplex j ul) := TRUNCATE_SIMPLEX_BARV V j k ul hb hjk
+  have hbi : barV V i (truncateSimplex i ul) :=
+    TRUNCATE_SIMPLEX_BARV V i k ul hb (le_trans (le_of_lt hij) hjk)
+  have hlenj : (truncateSimplex j ul).length = j + 1 := hbj.1
+  have hleni : (truncateSimplex i ul).length = i + 1 := hbi.1
+  have hlsj : hl (truncateSimplex j ul) < Real.sqrt 2 :=
+    lt_of_le_of_lt (HL_DECREASE V ul k j hV hb hjk) hl2
+  have hlsi : hl (truncateSimplex i ul) < Real.sqrt 2 :=
+    lt_of_le_of_lt (HL_DECREASE V ul k i hV hb (le_trans (le_of_lt hij) hjk)) hl2
+  have htr : truncateSimplex i (truncateSimplex j ul) = truncateSimplex i ul :=
+    TRUNCATE_TRUNCATE_SIMPLEX ul i j (le_of_lt hij) (by omega)
+  have hsub : setOfList (truncateSimplex i ul) ⊆ setOfList (truncateSimplex j ul) := by
+    rw [← htr]
+    exact SET_OF_LIST_TRUNCATE_SIMPLEX_SUBSET (truncateSimplex j ul) i (by rw [hlenj]; omega)
+  have hyne : setOfList (truncateSimplex i ul) ≠ ∅ :=
+    Set.nonempty_iff_ne_empty.mp ⟨hdV (truncateSimplex i ul),
+      HD_IN_SET_OF_LIST _ (by rw [hleni]; omega)⟩
+  have hinx : ¬ affineDependent (setOfList (truncateSimplex j ul)) :=
+    BARV_AFFINE_INDEPENDENT V (truncateSimplex j ul) j hV hbj
+  have hiny : ¬ affineDependent (setOfList (truncateSimplex i ul)) :=
+    BARV_AFFINE_INDEPENDENT V (truncateSimplex i ul) i hV hbi
+  obtain ⟨v, hvx, hvy⟩ : ∃ v ∈ setOfList (truncateSimplex j ul),
+      v ∉ setOfList (truncateSimplex i ul) := by
+    by_contra hcon
+    push_neg at hcon
+    have heq : setOfList (truncateSimplex j ul) = setOfList (truncateSimplex i ul) :=
+      Set.Subset.antisymm hcon hsub
+    have h1 := MHFTTZN1 V (truncateSimplex j ul) j hV hbj
+    have h2 := MHFTTZN1 V (truncateSimplex i ul) i hV hbi
+    rw [heq] at h1
+    have h3 : (i : ℤ) = (j : ℤ) := h2.symm.trans h1
+    omega
+  by_cases hd0 : dist (circumcenter (setOfList (truncateSimplex i ul)))
+      (circumcenter (setOfList (truncateSimplex j ul))) = 0
+  · -- same circumcenter: strict inequality from the XYOFCGX gap at the extra vertex
+    have hcxy : circumcenter (setOfList (truncateSimplex i ul))
+        = circumcenter (setOfList (truncateSimplex j ul)) := dist_eq_zero.mp hd0
+    have hxy := XYOFCGX V (setOfList (truncateSimplex i ul))
+      (circumcenter (setOfList (truncateSimplex i ul))) hV
+      (BARV_SUBSET V i (truncateSimplex i ul) hbi) hiny rfl hlsi
+      (hdV (truncateSimplex i ul)) v
+      (HD_IN_SET_OF_LIST _ (by rw [hleni]; omega))
+      ⟨BARV_SUBSET V j (truncateSimplex j ul) hbj hvx, hvy⟩
+    have hdydx : hdV (truncateSimplex i ul) = hdV (truncateSimplex j ul) := by
+      rw [HD_TRUNCATE_SIMPLEX ul i (by omega),
+        HD_TRUNCATE_SIMPLEX ul j (by omega)]
+    have hr1 : radV (setOfList (truncateSimplex i ul))
+        = dist (circumcenter (setOfList (truncateSimplex i ul)))
+            (hdV (truncateSimplex i ul)) :=
+      OAPVION2_concl _ hiny _ (HD_IN_SET_OF_LIST _ (by rw [hleni]; omega))
+    have hr2 : radV (setOfList (truncateSimplex j ul))
+        = dist (circumcenter (setOfList (truncateSimplex j ul))) v :=
+      OAPVION2_concl _ hinx _ hvx
+    rw [hcxy, hdydx] at hxy
+    show radV (setOfList (truncateSimplex i ul)) < radV (setOfList (truncateSimplex j ul))
+    rw [hr1, hr2, hcxy, hdydx,
+      dist_comm (circumcenter (setOfList (truncateSimplex j ul)))
+        (hdV (truncateSimplex j ul)),
+      dist_comm (circumcenter (setOfList (truncateSimplex j ul))) v]
+    exact hxy
+  · -- different centers: Pythagoras gives the strict square inequality
+    have hA := AFFINE_HULL_RADV (setOfList (truncateSimplex j ul))
+      (setOfList (truncateSimplex i ul)) hinx hsub hyne
+    have hd : 0 < dist (circumcenter (setOfList (truncateSimplex i ul)))
+        (circumcenter (setOfList (truncateSimplex j ul))) :=
+      lt_of_le_of_ne dist_nonneg (Ne.symm hd0)
+    have hsq : radV (setOfList (truncateSimplex i ul)) ^ 2
+        < radV (setOfList (truncateSimplex j ul)) ^ 2 := by
+      rw [hA.1]
+      have hdp : 0 < dist (circumcenter (setOfList (truncateSimplex i ul)))
+          (circumcenter (setOfList (truncateSimplex j ul))) ^ 2 :=
+        pow_pos hd 2
+      linarith [hA.2.2]
+    show radV (setOfList (truncateSimplex i ul)) < radV (setOfList (truncateSimplex j ul))
+    exact (sq_lt_sq₀ hA.2.2 hA.2.1).mp hsq
 
+-- NEEDS (2026-10-12 PA7 r3 lane): 纯机械, 唯一卡点是 XNHPWAB2 (同链上游).
+-- 路线: `omegaListN V ul i = omegaList V (truncateSimplex i ul)` (经 PA5
+-- OMEGA_LIST_N_LEMMA ... 0 分支) → 对截断表用 XNHPWAB2 →
+-- SET_OF_LIST_TRUNCATE_SIMPLEX_SUBSET + convexHull 单调.
 /-- HL `OMEGA_LIST_N_IN_CONVEX_HULL` (Rogers.hl:7869). -/
 theorem OMEGA_LIST_N_IN_CONVEX_HULL (V : Set V3) (ul : List V3) (k i : ℕ)
     (hV : Packing V) (hb : barV V k ul) (hik : i ≤ k)
@@ -1417,7 +1699,7 @@ theorem WAUFCHE1 (V : Set V3) (ul : List V3) (k : ℕ) (hV : Packing V)
 theorem WAUFCHE2 (V : Set V3) (ul : List V3) (k : ℕ) (hV : Packing V)
     (hb : barV V k ul) (hl2 : hl ul < Real.sqrt 2) :
     hl ul = dist (omegaList V ul) (hdV ul) := by
-  sorry
+  rw [HL_EQ_DIST0 V k ul hV hb, XNHPWAB1 V ul k hV hb hl2]
 
 /-- HL `CIRCUMCENTER_IN_VORONOI_SET` (Rogers.hl:8276). -/
 theorem CIRCUMCENTER_IN_VORONOI_SET (V S : Set V3) (hV : Packing V)
