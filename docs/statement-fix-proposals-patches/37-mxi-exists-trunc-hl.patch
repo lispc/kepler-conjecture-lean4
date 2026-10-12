@@ -1,0 +1,103 @@
+diff --git a/lean/Kepler/Text/PackingAuto2.lean b/lean/Kepler/Text/PackingAuto2.lean
+index 801b0abd..1ab245ce 100644
+--- a/lean/Kepler/Text/PackingAuto2.lean
++++ b/lean/Kepler/Text/PackingAuto2.lean
+@@ -5474,9 +5474,16 @@ theorem IVFICRK_concl : ∀ {A : Type} [Inhabited A] (k : ℕ),
+           (leftActionList σ (dropIth ul i)).getD j default := by
+   sorry
+ 
+-/-- HOL `MXI_EXISTS_concl` (pack_concl.hl:120-123). -/
++/-- HOL `MXI_EXPLICIT` (marchal2.hl:2516) in the pack_concl.hl:120-123
++interface form: the interface hypotheses plus the truncation guard the HOL
++carrier carries. SF37 (PA24 B2-branch recon, `p24_caseB2_mxi_eq`): without
++`hl (truncateSimplex 2 ul) < sqrt 2` the second conjunct is false — in the
++B2 branch (`r₃ := hl (truncateSimplex 2 ul) ≥ sqrt 2`) `mxi V ul` equals
++`omegaListN V ul 2`, at Pythagorean distance `≥ r₃` from `hdV ul` — so the
++guard is not droppable and `barV V 3 ul` does not bound proper truncations. -/
+ theorem MXI_EXISTS_concl : ∀ (V : Set V3) (ul : List V3), saturated V → Packing V →
+-    barV V 3 ul → Real.sqrt 2 ≤ hl ul →
++    barV V 3 ul → hl (truncateSimplex 2 ul) < Real.sqrt 2 →
++    Real.sqrt 2 ≤ hl ul →
+     mxi V ul ∈ convexHull ℝ {omegaListN V ul 2, omegaListN V ul 3} ∧
+       dist (mxi V ul) (hdV ul) = Real.sqrt 2 := by
+   sorry
+diff --git a/lean/Kepler/Text/PackingConcl.lean b/lean/Kepler/Text/PackingConcl.lean
+index e6abb936..ba26647d 100644
+--- a/lean/Kepler/Text/PackingConcl.lean
++++ b/lean/Kepler/Text/PackingConcl.lean
+@@ -327,15 +327,17 @@ theorem WQPRRDY_concl_discharged :
+           {p : Equiv.Perm ℕ | permutes p (Set.Icc 0 k)}) :=
+   fun V ul k _ hP hbar hl2 => WQPRRDY V ul k hP hbar hl2
+ 
+-/-- `PackingAuto2.MXI_EXISTS_concl` (Auto2:708).  NO USABLE TWIN: the
++/-- `PackingAuto2.MXI_EXISTS_concl` (SF37 form: the pack_concl.hl:120-123
++interface plus the marchal2.hl:2516 truncation guard).  NO USABLE TWIN: the
+ only downstream carrier, `PackingAuto12.MXI_EXPLICIT` (marchal2.hl:2516),
+-consumes THIS interface in its own proof (self-loop) and additionally
+-needs `ul = [u0,u1,u2,u3]` and `hl (truncateSimplex 2 ul) < sqrt 2`,
+-neither derivable from the interface's hypotheses (barV does not bound
+-proper truncations). -/
++consumes THIS interface in its own proof (self-loop); of its two extra
++needs the truncation guard is now an interface hypothesis (SF37 — barV
++does not bound proper truncations), while `ul = [u0,u1,u2,u3]` is
++`BARV_3_EXPLICIT`-derivable from `barV V 3 ul`. -/
+ theorem MXI_EXISTS_concl_discharged :
+     ∀ (V : Set V3) (ul : List V3), saturated V → Packing V →
+-      barV V 3 ul → Real.sqrt 2 ≤ hl ul →
++      barV V 3 ul → hl (truncateSimplex 2 ul) < Real.sqrt 2 →
++      Real.sqrt 2 ≤ hl ul →
+       mxi V ul ∈ convexHull ℝ {omegaListN V ul 2, omegaListN V ul 3} ∧
+         dist (mxi V ul) (hdV ul) = Real.sqrt 2 := by
+   sorry
+diff --git a/lean/Kepler/Text/PackingAuto11.lean b/lean/Kepler/Text/PackingAuto11.lean
+index 10c62947..c626954b 100644
+--- a/lean/Kepler/Text/PackingAuto11.lean
++++ b/lean/Kepler/Text/PackingAuto11.lean
+@@ -454,7 +454,7 @@ private theorem mxiExplicit (V : Set V3) (u0 u1 u2 u3 : V3)
+     ∃ s : V3, s ∈ segment ℝ (omegaListN V [u0, u1, u2, u3] 2)
+         (omegaListN V [u0, u1, u2, u3] 3) ∧
+       dist u0 s = Real.sqrt 2 ∧ mxi V [u0, u1, u2, u3] = s := by
+-  have hm := MXI_EXISTS_concl V [u0, u1, u2, u3] hs hp hb hc2
++  have hm := MXI_EXISTS_concl V [u0, u1, u2, u3] hs hp hb hc1 hc2
+   rw [show hdV [u0, u1, u2, u3] = u0 from rfl] at hm
+   refine ⟨mxi V [u0, u1, u2, u3], ?_, ?_, rfl⟩
+   · rw [← p11_hull_pair]
+diff --git a/lean/Kepler/Text/PackingAuto12.lean b/lean/Kepler/Text/PackingAuto12.lean
+index f517142e..d8d8fd3e 100644
+--- a/lean/Kepler/Text/PackingAuto12.lean
++++ b/lean/Kepler/Text/PackingAuto12.lean
+@@ -1946,7 +1946,7 @@ theorem MXI_EXPLICIT (V : Set V3) (ul : List V3) (u0 u1 u2 u3 : V3)
+     (h3 : Real.sqrt 2 ≤ hl ul) :
+     ∃ s : V3, s ∈ segment ℝ (omegaListN V ul 2) (omegaListN V ul 3) ∧
+       dist (hdV ul) s = Real.sqrt 2 ∧ s = mxi V ul := by
+-  have hm := MXI_EXISTS_concl V ul hs hp hb h3
++  have hm := MXI_EXISTS_concl V ul hs hp hb h2 h3
+   have h2' : dist (hdV ul) (mxi V ul) = Real.sqrt 2 :=
+     (dist_comm _ _).trans hm.2
+   refine ⟨mxi V ul, ?_, h2', rfl⟩
+diff --git a/lean/Kepler/Text/PackingAuto20.lean b/lean/Kepler/Text/PackingAuto20.lean
+index 35e4f29c..de7041b3 100644
+--- a/lean/Kepler/Text/PackingAuto20.lean
++++ b/lean/Kepler/Text/PackingAuto20.lean
+@@ -2028,7 +2028,7 @@ private theorem p20g_apex_dist3 (V X : Set V3) (a b c d : V3)
+   have hw3'' := hw3
+   rw [hT3] at hw3''
+   have hw3' : omegaListN V [a, b, c, d] 3 ∈ voronoiList V [a, b, c] := hmono hw3''
+-  have hm := MXI_EXISTS_concl V [a, b, c, d] hs hp hbarW hhigh
++  have hm := MXI_EXISTS_concl V [a, b, c, d] hs hp hbarW hlow hhigh
+   have hSS : ({omegaListN V [a, b, c, d] 2, omegaListN V [a, b, c, d] 3} : Set V3) ⊆
+       voronoiList V [a, b, c] := by
+     intro z hz
+diff --git a/lean/Kepler/Text/PackingAuto24.lean b/lean/Kepler/Text/PackingAuto24.lean
+index b25c3ee4..cd330a3e 100644
+--- a/lean/Kepler/Text/PackingAuto24.lean
++++ b/lean/Kepler/Text/PackingAuto24.lean
+@@ -4644,7 +4644,7 @@ private theorem p24_caseB3_aux (V : Set V3) (u0 u1 : V3) (vl : List V3)
+   obtain ⟨hEae3, hEaP⟩ := p24_axial_eqs u0 u1 v mid e3 P (dist u0 u1) t h wg
+     a haxd hdne h33 hmiddef hv' hPe3 hPn hhpos hgam heqa1 heqav
+   -- 7. mxi 数据 + segment 权重线性传播
+-  obtain ⟨hmx1, hmx2⟩ := MXI_EXISTS_concl V [u0, u1, v, w] hs hp hbar hr4
++  obtain ⟨hmx1, hmx2⟩ := MXI_EXISTS_concl V [u0, u1, v, w] hs hp hbar hr3 hr4
+   have hmx2' : dist (mxi V [u0, u1, v, w]) u0 = Real.sqrt 2 := by
+     rwa [show hdV [u0, u1, v, w] = u0 from rfl] at hmx2
+   rw [convexHull_pair, hw3eq] at hmx1

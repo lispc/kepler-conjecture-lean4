@@ -1300,3 +1300,91 @@ docstring 既定消除顺序原文："先填六个 ID 清单与 `CertifiedIneqHo
 else-True 警告注记明确防线：不得经回落/空清单平凡闭合）。
 
 ### (c) 状态：**已批准（2026-10-10 用户第一批）；执行版补丁随 T1 工作区 diff 生成**
+
+## 37. PA2:5477 `MXI_EXISTS_concl`（+ PackingConcl:336 穿透 + 4 调用点加参）— 分级 A（STATEMENT 修正：concl-shim 欠 `r₃ < √2` 卫兵，为假）
+
+### (a) HOL 出处与裁决
+
+- **现 shim 镜像**：`pack_concl.hl:120-123` `MXI_EXISTS_concl` —— 该件在 HOL
+  只是**结论陈述模板**（backquote 注册件，非 `prove_by_refinement`）：
+  `saturated V /\ packing V /\ barV V 3 ul /\ sqrt(&2) <= hl ul ==> (mxi V ul IN
+  convex hull {omega_list_n V ul 2, omega_list_n V ul 3}) /\ (dist(mxi V ul,
+  HD ul) = sqrt(&2))`。HOL 侧**没有任何前提下按此弱前提集使用它**——它的实际
+  载体是 marchal2.hl:2516 `MXI_EXPLICIT`（**Lemma 46**，`prove_by_refinement`）：
+  前提为 `packing V /\ saturated V /\ barV V 3 ul /\ ul = [u0;u1;u2;u3] /\
+  hl (truncate_simplex 2 ul) < sqrt(&2) /\ sqrt(&2) <= hl ul`。**pack_concl
+  模板是丢失截断卫兵的有损接口；PA2 立项期照模板冻结，即照丢**。
+- **缺陷**：shim 陈述在现前提集下**为假**——B2 形反例（PA24 第四波侦察纠错
+  2026-10-12，PA24:4983-4996 记档；判别件 `p24_caseB2_mxi_eq`（PA24:5122，
+  **真证**）：`√2 ≤ hl (truncateSimplex 2 vl) → mxi V vl = omegaListN V vl 2`）：
+  取 `r₃ := hl (truncateSimplex 2 ul) ≥ √2`（mxi 定义 if 正支翻转），则
+  `mxi V ul = ω₂`；ω₂ ∈ 三点 voronoi 胞 ⊆ 外轴线 `L = {x | dist x u0 = dist x u1
+  = dist x v}`（⊥ 三角形外心 cc），毕氏恒等式 `dist(u0, ω₂)² = r₃² +
+  ‖ω₂ − cc‖² ≥ r₃²`，一般严格 > 2，与结论 `dist(mxi, HD ul) = √2` 矛盾。
+  `barV V 3 ul` 不可补救：barV 只约束整表（`BARV_3_EXPLICIT`（PA8:207，真证）
+  给四元组形），不约束**真截断** `truncateSimplex 2 ul` 的高度。
+- **分级 A**（为假陈述 + 有真实消费者），SF25 同型穿透（PA2 concl-shim +
+  PackingConcl 镜像 + 调用点）。
+
+### (b) 修复补丁
+
+执行版补丁
+`docs/statement-fix-proposals-patches/37-mxi-exists-trunc-hl.patch`
+（已过 `git apply --check`，对生成时工作树可干净应用；6 文件 21+/12−）：
+
+1. **PA2:5477（主件）**：陈述补前提
+   `hl (truncateSimplex 2 ul) < Real.sqrt 2 →`（Lean 侧名 `truncateSimplex
+   (j : ℕ) (ul : List V3)`，PA2:216；插在 `barV V 3 ul →` 与
+   `Real.sqrt 2 ≤ hl ul →` 之间，**与 HOL MXI_EXPLICIT 前提序一致**）；
+   docstring 改记 marchal2.hl:2516 出处与不可去性。**两个结论合取支零改动**；
+   证明体 `sorry` 原位。
+2. **PackingConcl:336（镜像穿透，SF25 教训同款）**：
+   `MXI_EXISTS_concl_discharged` 陈述同步补参 + docstring 修正（原文称
+   `ul = [u0,u1,u2,u3]` "not derivable" 不确——`BARV_3_EXPLICIT` 可从
+   `barV V 3 ul` 导出四元组形；不可导的只是截断卫兵）。该镜像现无下游消费者
+   （全树仅定义处一 hit）。
+3. **4 个调用点加参（同一 patch，防半应用破树）**：PA11:457、PA12:1949、
+   PA20:2031、PA24:4647（见 (c)，各 1 行）。
+
+### (c) 消费面核实（4 代码调用点 + 1 镜像；逐点"能否供出新前提"）
+
+| 消费点 | 外层定理 | 新前提实参 | 供出方式 | 判定 |
+| --- | --- | --- | --- | --- |
+| PA24:4647 | `p24_caseB3_aux`（private） | `hr3` | 外层假设 `(hr3 : hl (truncateSimplex 2 vl) < Real.sqrt 2)` 即 B3 支判别式；`subst`/`set` 后型恰为 `hl (truncateSimplex 2 [u0,u1,v,w]) < √2`，插 `hr3 hr4` | **能供，零改写** |
+| PA11:457 | `mxiExplicit`（private，marchal2.hl:2516 装配） | `hc1` | 外层假设 `(hc1 : hl (truncateSimplex 2 [u0,u1,u2,u3]) < Real.sqrt 2)` 本就在 scope（此前 shim 用不上它），插 `hc1 hc2` | **能供，零改写** |
+| PA12:1949 | `MXI_EXPLICIT`（public，marchal2.hl:2516 正本） | `h2` | 外层假设 `(h2 : hl (truncateSimplex 2 ul) < Real.sqrt 2)`，插 `h2 h3`；MXI_EXPLICIT 自身签名不动 → 其下游（PA12:2014 OLD、PA13:729、PA15:1095、PA18:1886、PA18:2094）**零波及** | **能供，零改写** |
+| PA20:2031 | `p20g_apex_dist3`（private） | `hlow` | 调用前 3 行自 `mcell 3` ite 展开 + `hneX` 内部已导出 `hcond : hl (truncateSimplex 2 [a,b,c,d]) < √2 ∧ √2 ≤ hl [a,b,c,d]`，`obtain ⟨hlow, hhigh⟩`，插 `hlow hhigh` | **能供，零改写** |
+| PackingConcl:336 | `MXI_EXISTS_concl_discharged`（陈述孪生） | — | 陈述同步补参（同 patch） | 已同步 |
+
+docstring 纯提及（零代码改动）：PA11:59/445、PA13:67/591、PA20:2312/2326、
+PA23:6009、PA24:4216/4517/4985/4991/5200/5203（后四者为 PA24 侦察纠错记档，
+历史记录保留）。
+
+**类型级验证**：探针（`lake env lean` 单进程，axiom 替身复刻新签名）验证
+新前提面良构 + 四调用形（含各点实参实名 hr3/hr4、hc1/hc2、h2/h3、hlow/hhigh）
+全部 typecheck，exit 0。
+
+### (d) 保真论证
+
+补后 shim 陈述 ≡ marchal2 `MXI_EXPLICIT` 的合取形，差仅两处无损重排：
+(i) HOL 的 `ul = [u0;u1;u2;u3]` 在 shim 中省去——`barV V 3 ul` 经
+`BARV_3_EXPLICIT`（PA8:207，真证）给 `∃ u0 u1 u2 u3, ul = [u0,u1,u2,u3]`，
+∃-形重打包无损（HD/omegaListN/mxi 均按表索引，与具体顶点名无关）；
+(ii) HOL 结论 `?s. between s (ω₂,ω₃) ∧ dist (u0,s) = √2 ∧ mxi V ul = s`
+经 between↔convexHull-pair 与 `s = mxi` 化为 shim 的两合取支（PA11:458-462 /
+PA12:1950-1953 现有装配即此换向，可互为见证）。前提序与 HOL 逐项一致。
+
+### (e) 风险
+
+- **陈述修正 ≠ 闭合**：`sorry` 原位不动，**sorry 净变化 0**；闭合另行走
+  PA12 `MXI_EXPLICIT` 正本或 SEGMENT_INTER_CBALL_LEMMA 路线。
+- 4 调用点必须与主件**同 patch 同车**（SF20/SF25 教训：半应用 = 4 处编译错；
+  PA11/PA12/PA20/PA24 均直接 import PA2，无环依赖，应用顺序无关）。
+- PA24 `p24_caseB3_aux` 的 B3 支路线图不受影响（其分支判别式恰含新卫兵，
+  PA24:4985 记档"记账待 PA2 车道修"即本项；B2 支改道路线与 PA24:4991 之后的
+  修正后处方照旧执行，不受本项牵动）。
+
+### (f) 状态：**已立项起草（2026-10-12 用户批）；补丁草案就绪待应用波**
+（应用时闸参数建议：`SF_ITEM=37`，审计对象 `Kepler.Text.MXI_EXISTS_concl` +
+`Kepler.Text.MXI_EXISTS_concl_discharged`，namespace `Kepler.Text`；验收 =
+六文件 `lake build` 零新错 + `sorry` 计数差 0）。
