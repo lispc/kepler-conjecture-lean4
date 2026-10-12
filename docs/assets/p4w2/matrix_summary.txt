@@ -1,0 +1,35 @@
+# W2 对照组 2×2 决策矩阵（sqrt 族尾部 · TM vs BBTreeGD 决策材料补测）
+# 2026-10-12 · 车道：计算 2 核 · 二进制 bb_arb（两臂同二进制，受控对照）
+# 上限：4M 节点或 1800s 先到为准 · CEX=0 全场（无一案出反例，均为零收敛未闭合）
+
+## 矩阵（closed? | 叶数 | 墙钟 | 失败模式）
+                  | BB 裸档（无 TM 旗标）                      | BB+TM 档（--tm --ite-hull2 --gsplit2）
+TEWNSCJ           | NOT CLOSED | 4M 节点超限, 11 未闭合叶 | 146s  | NOT CLOSED | 4M 节点超限, 11 未闭合叶（叶盒与裸档逐字节一致）| 145s
+                  | 失败模式: 纯区间过估爆叶                        | TM: att=256 valid=64 invalid=192 closed=0
+                  |                                                | invalid 原因: sqrt/log底非正=192（100%）guard跨0=0 div越零=0
+                  |                                                | gsplit2: guard敏感度选维=0（guard 已被 ite-hull2 清零，无跨0可劈）
+QZECFIC_wt0       | NOT CLOSED | 4M 节点超限, 17 未闭合叶 | 1464s | NOT CLOSED | 1800s 墙钟击杀 rc=137（4M 未跑满，输出缓冲丢失）
+                  | 失败模式: y1/y2/y3 退化[1,1], y4-y6 宽维爆叶     | 200k 探针（matrix_probe_tmih_QZECFIC_200k.log）:
+                  | （~366 µs/节点，比 TEWNSCJ 重 10×）             | TM: att=199994 valid=99987 invalid=100007 closed=99987
+                  |                                                | invalid 原因: sqrt/log底非正=100007（100%）guard跨0=0 div越零=0
+                  |                                                | 即: TM 有效即闭合（valid=closed），但 50% 尝试 sqrt 负底结构性无效
+                  |                                                | gsplit2: guard敏感度选维=100007 最宽维回退=6
+
+## 裁决：BBTreeGD（裸区间 B&B 求解侧）对 sqrt 族不成立
+- 4 格全未闭合；裸档在 4M 节点（TEWNSCJ 11 叶 / QZECFIC 17 叶）同爆。
+- TM 档对 sqrt 族零改善：TEWNSCJ TM closed=0 且叶盒与裸档全同；
+  QZECFIC TM 虽闭掉可证半域（99,987/199,994）但 sqrt 负底半域无限二分，且单节点
+  成本更高（1800s 打不满裸档 1464s 的节点量）。
+- sqrt 族需第三武器：radicand 零等值面预切分 / t=√u 换元（发射器改造）。
+  QZECFIC 探针给立项利好：切掉负底半域后，剩余域 TM valid=closed 100%。
+- 对照组数据即立项依据。W1b TEWNSCJ 97.6% 非正底由本轮 4M 全量复证（100%/192）。
+
+## 交叉印证
+- matrix_tmih_TEWNSCJ vs W1b w1b_tmih_TEWNSCJ.log：同一搜索、同一 11 叶盒，结果复现。
+- 并行 W2 工位（945/split_1_2）：x2/x5 预切 8 案 bare 全 rc=2 未闭（x25_summary.txt），
+  w2_s12_tmddf.log 诊断进行中——深度 TM 成本问题归该工位。
+
+## 产物
+matrix_runner.sh matrix_extract.sh matrix_bare_TEWNSCJ.log matrix_tmih_TEWNSCJ.log
+matrix_bare_QZECFIC_wt0.log matrix_tmih_QZECFIC_wt0.log(0B, wallcap击杀)
+matrix_probe_tmih_QZECFIC_200k.log matrix_summary.txt

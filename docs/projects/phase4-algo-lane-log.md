@@ -42,3 +42,18 @@ i5-2.67GHz/2009；官方全章 5,000 核时/遍）：
 68/176 → +0.5；②split_1_2/945 先 --tm-ddf 诊断；③sqrt 族尾部立项 radicand
 零点预切分或 t=√u 换元发射器改造。
 **遗产归档**：docs/assets/p4wave1/（两 pilot .lean + 测量 log 全套；证书不入 git）。
+
+
+## W2 计算车道 · BBTreeGD 对照组 2×2 决策矩阵（2026-10-12，决策材料补齐）
+
+协议：两臂同二进制 bb_arb 受控对照；4M 节点/1800s 双上限；并发 ≤2；CEX=0（全部零收敛未闭合，无反例）。
+
+| | BB 裸档 | BB+TM 档 |
+|---|---|---|
+| TEWNSCJ | NOT CLOSED，4M 超限，11 未闭合叶，146s | NOT CLOSED，11 叶盒与裸档逐字节一致，145s；TM invalid 192 全为 sqrt/log 非正底（ite-hull2 已清 guard 跨 0） |
+| QZECFIC_wt0 | NOT CLOSED，4M 超限，17 未闭合叶，1464s（366µs/节点） | NOT CLOSED，1800s 击杀；200k 探针：invalid 100,007（100% 非正底），但 valid=closed 100%——切掉负底半域即闭合 |
+
+**裁决：sqrt 族 BBTreeGD 路线不成立**（4 格全灭：裸档叶数爆炸+TM 零改善且更贵）。**主武器 TM + sqrt 尾部立项第三武器**（radicand 零等值面预切分 / t=√u 换元）——QZECFIC 探针给出立项利好：负底半域切掉后剩余域 TM 有效即闭合。BBTreeGD 的多项式族快路径（4717061266 0.02s）不受影响。
+
+**决策材料完成度：可以拍板**。证据双侧齐：TM ite 族 ω-complete（TADIAMB 251k 叶全闭 + split_0_2 49,869 叶）与 sqrt 族结构性无力（4 格全灭 + 非正底 100%）。
+产物归档：docs/assets/p4w2/（矩阵 summary + 全部 run log）。未测残余：4M 外行为（预期 MKFKWU 级 ≥10⁹，不值得测）。
