@@ -249,13 +249,20 @@ SHIM (2026-09-19): the parallel-owned PackingAuto14 olean HAS landed in this
 checkout, so the verbatim `_p17` copy discharges to
 `Kepler.Text.PackingAuto14.QZKSYKG2` (still `sorry`ed upstream there — a
 documented transitive shim, deleting the statement duplication; delete the
-copy at merge when Auto14's giants land). -/
+copy at merge when Auto14's giants land).
+STATEMENT-FIX 项 38 (2026-10-12): 上游 `QZKSYKG2` comprehension 补
+tail-fixed 合取项 `∧ ∀ n, k ≤ n → p n = n`（HOL `permutes` 为
+complement-fixing，azure/hol-light-nat/Library/permutations.ml:9；弱式并集
+含 junk simplex，`p17_ajripqn_of_tailfix` 的 `hQ2` 无法从弱式供给），本
+shim 同步透传（项 20 `qzksykg1_p17` 先例；全树无本 shim 代码调用点，同步
+零波及）。 -/
 private theorem qzksykg2_p17 {V : Set V3} {ul : List V3} {k : ℕ}
     (hsat : saturated V) (hpack : Packing V) (hbar : barV V 3 ul)
     (hk : k ∈ ({0, 1, 2, 3, 4} : Set ℕ)) :
     mcell k V ul ⊆
       ⋃₀ ((fun p => rogers V (leftActionList p ul)) ''
-        {p : Equiv.Perm ℕ | permutes p (Set.Icc 0 (k - 1))}) :=
+        {p : Equiv.Perm ℕ | permutes p (Set.Icc 0 (k - 1)) ∧
+          ∀ n : ℕ, k ≤ n → p n = n}) :=
   QZKSYKG2 hsat hpack hbar hk
 
 /-! ### measure pigeonhole helpers -/
