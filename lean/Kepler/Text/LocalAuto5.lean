@@ -4821,6 +4821,12 @@ theorem EXISTS_INTERSECTION_PROPERPLY {x z u v w : V3} (hxz : z ≠ x)
     ∃ a b t : V3, ({a, b} : Set V3) ⊆ ({u, v, w} : Set V3) ∧
       t ∈ ((affineSpan ℝ ({x, z} : Set V3) : Set V3) ∩ conv0_p2 ({a, b} : Set V3)) ∧
       ¬(a ∈ (affineSpan ℝ ({x, z} : Set V3) : Set V3)) := sorry
+  -- NEEDS (LA5 recon 2026-10-12): the HOL 2897 proof consumes
+  -- `INTERSECTION_LEMMA` (hl:2261) at step 1; that bank item is the same-file
+  -- placeholder at INTERSECTION_LEMMA below (GIANT per lane order). Once it
+  -- lands, the remainder is mechanical: INTER_AFF_GT_LT_IMP_INTER_AFF_CONV0 +
+  -- AFF2_ITR_CONV0_IMP_SAME_ENDS + AFF2_DET_BY_TWO_POINTS + SUBSET_AFF2_IMP_COLL
+  -- + AFF_GT_LT_INTER_SYM, three cases on `a ∈ {v, w}`.
 
 /-- HOL `LOFA_V_SUBSET_AFF_HULL` (local_lemmas.hl:2990). -/
 theorem LOFA_V_SUBSET_AFF_HULL {v w u : V3} (hFF : (v, w) ∈ FF)
@@ -4829,6 +4835,11 @@ theorem LOFA_V_SUBSET_AFF_HULL {v w u : V3} (hFF : (v, w) ∈ FF)
       affLt ({0} : Set V3) ({u} : Set V3) = ∅)) :
     V ⊆ (affineSpan ℝ ({v, w, 0} : Set V3) : Set V3) ∧
       ¬ Collinear ℝ ({0, v, w} : Set V3) := sorry
+  -- NEEDS (LA5 recon 2026-10-12): HOL 2990 is an orbit induction — per step
+  -- it instantiates EXISTS_INTERSECTION_PROPERPLY (above; blocked by the
+  -- INTERSECTION_LEMMA bank item) and OZQVSFF (placeholder) for the plane
+  -- bookkeeping, plus IN_AFF_HULL_3 for `{a,b} ⊆ aff {v,w,0}`. Not attackable
+  -- before those two upstream items land.
 
 /-- HOL `DETER_RHO_NODE` (local_lemmas.hl:3093): the rho-node is determined
 by the dart. -/
@@ -5076,11 +5087,50 @@ theorem AZIM_PI_CONVEX_WEDGE {u v w ww : V3} (h : azim u v w ww = Real.pi) :
   exact la5_convex_halfspace_dot (WithLp.toLp 2 (crossProduct ((v - u : V3) : Fin 3 → ℝ)
     ((w - u : V3) : Fin 3 → ℝ))) u
 
-/-- HOL `CONVEX_WEDGE_LE_PI` (local_lemmas.hl:3735). -/
+/-- Lane support (LA5): `affGe` is convex — blends of admissible weight
+functions are admissible (copy of PackingAuto12's private
+`p12_convex_affGe`, not importable from here). -/
+private theorem la5_convex_affGe {s t : Set V3} (hfin : (s ∪ t).Finite) :
+    Convex ℝ (affGe s t) := by
+  intro x hx y hy a b ha hb hab
+  simp only [affGe, Affsign, Set.mem_setOf_eq] at hx hy
+  obtain ⟨f1, _, hx1, hx2, hx3⟩ := hx
+  obtain ⟨f2, _, hy1, hy2, hy3⟩ := hy
+  refine ⟨fun p => a * f1 p + b * f2 p, hfin, ?_, ?_, ?_⟩
+  · have key : ∀ (g : V3 → ℝ) (c : ℝ), ∑ q ∈ hfin.toFinset, (c * g q) • q
+        = c • ∑ q ∈ hfin.toFinset, g q • q := by
+      intro g c
+      rw [Finset.smul_sum]
+      exact Finset.sum_congr rfl fun q _ => by rw [smul_smul]
+    have hsum1 : ∑ q ∈ hfin.toFinset, (a * f1 q + b * f2 q) • q
+        = ∑ q ∈ hfin.toFinset, ((a * f1 q) • q + (b * f2 q) • q) := by
+      exact Finset.sum_congr rfl fun q _ => by rw [add_smul]
+    rw [hsum1, Finset.sum_add_distrib, key, key, hx1, hy1]
+  · intro p hp
+    have h1 : 0 ≤ f1 p := hx2 p hp
+    have h2 : 0 ≤ f2 p := hy2 p hp
+    show 0 ≤ a * f1 p + b * f2 p
+    exact add_nonneg (mul_nonneg ha h1) (mul_nonneg hb h2)
+  · show (∑ q ∈ hfin.toFinset, (a * f1 q + b * f2 q)) = 1
+    have h3' : ∑ q ∈ hfin.toFinset, (a * f1 q + b * f2 q)
+        = a * ∑ q ∈ hfin.toFinset, f1 q + b * ∑ q ∈ hfin.toFinset, f2 q := by
+      rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
+    rw [h3', hx3, hy3]
+    simp
+    linarith
+
+/-- HOL `CONVEX_WEDGE_LE_PI` (local_lemmas.hl:3735) — filled (LA5 wave
+2026-10-12): the `azim < π` branch is `WEDGE_GE_EQ_AFF_GE` (real) plus
+convexity of `affGe` (`la5_convex_affGe`); the `azim = π` branch is
+`AZIM_PI_CONVEX_WEDGE` (real). -/
 theorem CONVEX_WEDGE_LE_PI {v0 v1 w1 w2 : V3} (h : azim v0 v1 w1 w2 ≤ Real.pi)
     (hw1 : ¬ Collinear ℝ ({v0, v1, w1} : Set V3))
     (hw2 : ¬ Collinear ℝ ({v0, v1, w2} : Set V3)) :
-    Convex ℝ (wedgeGe_p2 v0 v1 w1 w2) := sorry
+    Convex ℝ (wedgeGe_p2 v0 v1 w1 w2) := by
+  rcases lt_or_eq_of_le h with hlt | heq
+  · rw [WEDGE_GE_EQ_AFF_GE hlt hw1 hw2]
+    exact la5_convex_affGe (by simp)
+  · exact AZIM_PI_CONVEX_WEDGE heq
 
 /-- HOL `wedge_in_fan_ge2` (local_lemmas.hl:3749). -/
 theorem wedge_in_fan_ge2 (x : V3 × V3) (E : Set (Set V3)) :
@@ -5134,6 +5184,18 @@ theorem CONDS_IN_CONV2 {v w : V3} {t2 t3 : ℝ} (ht2 : 0 ≤ t2) (ht3 : 0 ≤ t3
 theorem PGSQVBL (h : convexLocalFan_p2 V E FF) {v w : V3} (hvw : {v, w} ⊆ V)
     (hx : x ∈ FF) :
     affGe ({0} : Set V3) ({v, w} : Set V3) ⊆ wedgeInFanGe_p2 x E := sorry
+  -- NEEDS (LA5 recon 2026-10-12): fan-kit side is fully real after this
+  -- wave — wedge_in_fan_ge2/azim_in_fan2, DETER_RHO_NODE, LOFA_CARD_EE_V_1,
+  -- EXISTS_INVERSE_OF_V, LOFA_IMP_EE_TWO_ELMS, AZIM_CYCLE_TWO_POINT_SET
+  -- (azimCycle_p2 {a,b} v w a = b), LOCAL_FAN_IN_FF_NOT_COLLINEAR,
+  -- CONDS_IN_CONV2, AZIM_SPEC_DEGENERATE, LOFA_IMP_NOT_INCLUDE_VEC0 and
+  -- CONVEX_WEDGE_LE_PI (landed this wave). Sole remaining blocker = the HOL
+  -- `Topology.th1` azim ray-scaling bridge: azim 0 a b (t • p) = azim 0 a b p
+  -- for 0 < t (v0 = 0 suffices here). Absent from the tree; a port needs the
+  -- AzimSpec frame machinery (Geom/Azim.lean azimSpec_exists/azimSpec_unique
+  -- on the rescaled point) — an independent ~60-100 line azim-machinery
+  -- piece, recommended as its own work item before the PGSQVBL assembly
+  -- (whose remaining skeleton follows HOL 3815 verbatim).
 
 
 /-- HOL `FST_EQ_IF_SAME_SND` (local_lemmas.hl:3939). -/
@@ -7559,26 +7621,164 @@ theorem DIHV_NOT_CHANGE {x y v w : V3} {a b c : ℝ} (hc : 0 < c) (hsum : a + b 
     = arcV 0 VA VBP
   rw [hvap, hscale]
 
-/-- HOL `LUNAR_IMP_INTERIOR_ANGLE_EQQ` (local_lemmas.hl:5915).  NEEDS
-(updated LA5 downstream wave 2026-10-08): of the four gaps, two are now
-real — `AZIM_LE_PI_EQ_DIHV` (LuneVolume azim_dihv_same/azim_dihv_compl)
-and `LOFA_IMP_NOT_COLL_IVS` (cycle predecessor + IVS_RHO_IDD). Remaining:
-`IVS_RNODE_IN_AFF_V` (← AFF_IVS_RHO_NODE_EQQ ← GT100, cyclicSet kit) and
-`CONVEX_LOFA_IMP_INANGLE_LE_PI` (its EE-card prerequisite chain went real in
-the EE-chain wave 2026-10-08) — see the `-- NEEDS`
-lines at those items. Already real: `NOT_COLL_RHONODE_SND_POINT` (B5
-wave), `LUNAR_COMM`, `LOCAL_FAN_CHARACTER_OF_RHO_NODE2` (purified),
-`DIHV_NOT_CHANGE`, `FOR_AFF_GT_NOT_INTERSECTION2`, `sum4_azim_fan`. -/
+/-- Lane support (LA5): `dihV` is symmetric in its last two arguments
+(HOL `Trigonometry2.DIHV_SYM`, trig2.hl:482; same proof as LocalAuto38's
+private `dihV_swap23_p38`). -/
+private theorem la5_dihv_swap23 (w0 w1 w2 w3 : V3) :
+    dihV w0 w1 w2 w3 = dihV w0 w1 w3 w2 := by
+  have hflip : ∀ u w : V3, arcV 0 u w = arcV 0 w u := by
+    intro u w
+    simp only [arcV, dist_zero_right]
+    congr 1
+    simp [dotProduct_comm, mul_comm]
+  simp only [dihV, hflip]
+
+/-- Lane support (LA5): `arcV` at the origin ignores a common positive
+scaling of both arguments (pair form of HOL `WHEN_K_POS_ARCV_STABLE`). -/
+private theorem la5_arcV_scale2 {v u : V3} {c : ℝ} (hc : 0 < c) :
+    arcV 0 (c • v) (c • u) = arcV 0 v u := by
+  have dot_smul_l : ∀ (t : ℝ) (a b : V3), (t • a).ofLp ⬝ᵥ b.ofLp = t * (a.ofLp ⬝ᵥ b.ofLp) :=
+    fun t a b => smul_dotProduct t (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+  have dot_smul_r : ∀ (a : V3) (t : ℝ) (b : V3),
+      a.ofLp ⬝ᵥ (t • b).ofLp = t * (a.ofLp ⬝ᵥ b.ofLp) := by
+    intro a t b
+    rw [show (t • b).ofLp = t • (b : Fin 3 → ℝ) from rfl, dotProduct_smul, smul_eq_mul]
+  rw [arcV, arcV]
+  have coez : ((0 : V3) : Fin 3 → ℝ) = 0 := rfl
+  simp only [coez, sub_zero, dist_eq_norm, dot_smul_l, dot_smul_r, norm_smul,
+    Real.norm_eq_abs, abs_of_pos hc]
+  field_simp
+
+/-- HOL `DIHV_SPECIAL_SCALE` (flyspeck_multivariate.ml:3035): with the first
+vertex at the origin, rescaling the edge direction does not move the dihedral
+angle — both Gram-Schmidt projections pick up the same `t * t > 0`. -/
+private theorem la5_dihv_special_scale {x z w : V3} {t : ℝ} (ht : t ≠ 0) :
+    dihV 0 (t • x) z w = dihV 0 x z w := by
+  have dsmull : ∀ (tt : ℝ) (a b : Fin 3 → ℝ), (tt • a) ⬝ᵥ b = tt * (a ⬝ᵥ b) :=
+    smul_dotProduct
+  have dsmulr : ∀ (a : Fin 3 → ℝ) (tt : ℝ) (b : Fin 3 → ℝ), a ⬝ᵥ (tt • b) = tt * (a ⬝ᵥ b) := by
+    intro a tt b
+    rw [dotProduct_smul, smul_eq_mul]
+  have dot_smul_l : ∀ (tt : ℝ) (a b : V3), (tt • a).ofLp ⬝ᵥ b.ofLp = tt * (a.ofLp ⬝ᵥ b.ofLp) :=
+    fun tt a b => smul_dotProduct tt (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+  have hsq : 0 < t * t := by
+    have h1 : 0 < |t| := abs_pos.mpr ht
+    have h2 : |t| * |t| = t * t := abs_mul_abs_self t
+    rw [← h2]
+    exact mul_pos h1 h1
+  have key : ∀ u : V3,
+      (((t • x - (0:V3) : V3) ⬝ᵥ (t • x - (0:V3))) • (u - (0:V3))
+        - ((u - (0:V3)) ⬝ᵥ (t • x - (0:V3))) • (t • x - (0:V3)))
+      = (t * t) • (((x - (0:V3) : V3) ⬝ᵥ (x - (0:V3))) • (u - (0:V3))
+        - ((u - (0:V3)) ⬝ᵥ (x - (0:V3))) • (x - (0:V3))) := by
+    intro u
+    have coez : WithLp.ofLp (0:V3) = (0 : Fin 3 → ℝ) := rfl
+    simp only [coez, sub_zero, dot_smul_l, dsmulr, smul_smul, smul_sub]
+    module
+  show arcV 0
+      (((t • x - (0:V3) : V3) ⬝ᵥ (t • x - (0:V3))) • (z - (0:V3))
+        - ((z - (0:V3)) ⬝ᵥ (t • x - (0:V3))) • (t • x - (0:V3)))
+      (((t • x - (0:V3) : V3) ⬝ᵥ (t • x - (0:V3))) • (w - (0:V3))
+        - ((w - (0:V3)) ⬝ᵥ (t • x - (0:V3))) • (t • x - (0:V3)))
+    = arcV 0
+      (((x - (0:V3) : V3) ⬝ᵥ (x - (0:V3))) • (z - (0:V3))
+        - ((z - (0:V3)) ⬝ᵥ (x - (0:V3))) • (x - (0:V3)))
+      (((x - (0:V3) : V3) ⬝ᵥ (x - (0:V3))) • (w - (0:V3))
+        - ((w - (0:V3)) ⬝ᵥ (x - (0:V3))) • (x - (0:V3)))
+  rw [key z, key w]
+  exact la5_arcV_scale2 hsq
+
+/-- HOL `LUNAR_IMP_INTERIOR_ANGLE_EQQ` (local_lemmas.hl:5915) — filled
+(LA5 wave 2026-10-12): both interior angles are azims (definitional) and
+`AZIM_LE_PI_EQ_DIHV` (convex bound `≤ π` + the two noncollinearities per
+side) turns them into `dihV` values. The lunar coin
+`0 = fv • v + fw • w` with `fv, fw > 0` (`LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI`,
+extracted by `la5_conv02_extract`) identifies the two edge lines; the two
+affGt memberships `ivs w ∈ affGt {0,v} {ρ v}`, `ivs v ∈ affGt {0,w} {ρ w}`
+(`IVS_RNODE_IN_AFF_V`, coefficient form via `la5_affGt212_extract`)
+transport each side onto the shared edge `fw • w = (-fv) • v`: swap last
+two args (`la5_dihv_swap23`), rescale the edge (`la5_dihv_special_scale`),
+then `DIHV_NOT_CHANGE` consumes the affGt expansion of the `ivs` point;
+one final rescale + swap closes `dihV 0 v (ρ v) (ρ w) = dihV 0 w (ρ w) (ρ v)`. -/
 theorem LUNAR_IMP_INTERIOR_ANGLE_EQQ (h : convexLocalFan_p2 V E FF)
     (hl : lunar_p2 v w V E) : interiorAngle1_p2 0 FF v = interiorAngle1_p2 0 FF w := by
-  -- NEEDS (LA5 downstream wave 2026-10-08): mirrors HOL 5915 once the two
-  -- remaining gaps land. Skeleton: CONVEX_LOFA_IMP_INANGLE_LE_PI (v and w)
-  -- + AZIM_LE_PI_EQ_DIHV (real) rewrite interiorAngle1_p2 0 FF v and
-  -- interiorAngle1_p2 0 FF w as dihV values; IVS_RNODE_IN_AFF_V on both
-  -- sides (via LUNAR_COMM) + Fan.th3a/AFF_GT_2_1 extraction
-  -- (la5_affGt212_extract, real) + 0 ∈ conv0 {w,v} (LUNAR's coin, real)
-  -- feed the DIHV_SPECIAL_SCALE / DIHV_NOT_CHANGE (real) transport.
-  sorry
+  obtain ⟨hlo, -⟩ := CVLF_LF_F h
+  have hvV : v ∈ V := hl.2.1 (Set.mem_insert v ({w} : Set V3))
+  have hwV : w ∈ V := hl.2.1 (by simp)
+  -- the lunar coin: 0 sits in the open cone over {v, w}
+  obtain ⟨fv, fw, hfv, hfw, -, hfzero⟩ :=
+    la5_conv02_extract ((LUNAR_IMP_INTERIOR_ANGLE1_EQ_PI h hl).1)
+  have hfv0 : fv ≠ 0 := ne_of_gt hfv
+  have hfw0 : fw ≠ 0 := ne_of_gt hfw
+  have hwv : fw • w = (-fv) • v := by
+    have h2 : fw • w + fv • v = (0:V3) := by
+      rw [hfzero]
+      module
+    rw [neg_smul, eq_neg_iff_add_eq_zero]
+    exact h2
+  have hvw2 : fv • v = (-fw) • w := by
+    have h2 : fv • v + fw • w = (0:V3) := by
+      rw [hfzero]
+    rw [neg_smul, eq_neg_iff_add_eq_zero]
+    exact h2
+  -- the two affGt memberships with their gt-coefficients
+  obtain ⟨gx, gy, gz, hgz, hsum1, hiw⟩ :=
+    la5_affGt212_extract (IVS_RNODE_IN_AFF_V h hl)
+  obtain ⟨gx', gy', gz', hgz', hsum2, hiv⟩ :=
+    la5_affGt212_extract (IVS_RNODE_IN_AFF_V h (LUNAR_COMM v w V E |>.mp hl))
+  -- interior angles are azims; both azims are dihVs (convex bound ≤ π)
+  have hπv : azim 0 v (rhoNode1_p2 FF v) (ivsRhoNode1_p2 FF v) ≤ Real.pi :=
+    CONVEX_LOFA_IMP_INANGLE_LE_PI h hvV
+  have hπw : azim 0 w (rhoNode1_p2 FF w) (ivsRhoNode1_p2 FF w) ≤ Real.pi :=
+    CONVEX_LOFA_IMP_INANGLE_LE_PI h hwV
+  have heqv : azim 0 v (rhoNode1_p2 FF v) (ivsRhoNode1_p2 FF v)
+      = dihV 0 v (rhoNode1_p2 FF v) (ivsRhoNode1_p2 FF v) :=
+    AZIM_LE_PI_EQ_DIHV (LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hlo hvV)
+      (LOFA_IMP_NOT_COLL_IVS hlo hvV) hπv
+  have heqw : azim 0 w (rhoNode1_p2 FF w) (ivsRhoNode1_p2 FF w)
+      = dihV 0 w (rhoNode1_p2 FF w) (ivsRhoNode1_p2 FF w) :=
+    AZIM_LE_PI_EQ_DIHV (LOCAL_FAN_CHARACTER_OF_RHO_NODE2 hlo hwV)
+      (LOFA_IMP_NOT_COLL_IVS hlo hwV) hπw
+  show azim 0 v (rhoNode1_p2 FF v) (ivsRhoNode1_p2 FF v)
+      = azim 0 w (rhoNode1_p2 FF w) (ivsRhoNode1_p2 FF w)
+  rw [heqv, heqw]
+  -- the w-side angle: through the shared edge onto the (0, v) shape
+  have hW : dihV 0 w (rhoNode1_p2 FF w) (ivsRhoNode1_p2 FF w)
+      = dihV 0 v (rhoNode1_p2 FF v) (rhoNode1_p2 FF w) := by
+    rw [la5_dihv_swap23 0 w (rhoNode1_p2 FF w) (ivsRhoNode1_p2 FF w)]
+    have hlift : dihV 0 w (ivsRhoNode1_p2 FF w) (rhoNode1_p2 FF w)
+        = dihV 0 (fw • w) (ivsRhoNode1_p2 FF w) (rhoNode1_p2 FF w) :=
+      (la5_dihv_special_scale (x := w) (z := ivsRhoNode1_p2 FF w)
+        (w := rhoNode1_p2 FF w) (t := fw) hfw0).symm
+    rw [hlift, hwv, la5_dihv_special_scale (x := v) (z := ivsRhoNode1_p2 FF w)
+      (w := rhoNode1_p2 FF w) (t := -fv) (neg_ne_zero.mpr hfv0), hiw]
+    exact DIHV_NOT_CHANGE (x := (0:V3)) (y := v) (v := rhoNode1_p2 FF v)
+      (w := rhoNode1_p2 FF w) hgz hsum1
+  -- the v-side angle: likewise onto the (0, w) shape
+  have hV : dihV 0 v (rhoNode1_p2 FF v) (ivsRhoNode1_p2 FF v)
+      = dihV 0 w (rhoNode1_p2 FF w) (rhoNode1_p2 FF v) := by
+    rw [la5_dihv_swap23 0 v (rhoNode1_p2 FF v) (ivsRhoNode1_p2 FF v)]
+    have hlift : dihV 0 v (ivsRhoNode1_p2 FF v) (rhoNode1_p2 FF v)
+        = dihV 0 (fv • v) (ivsRhoNode1_p2 FF v) (rhoNode1_p2 FF v) :=
+      (la5_dihv_special_scale (x := v) (z := ivsRhoNode1_p2 FF v)
+        (w := rhoNode1_p2 FF v) (t := fv) hfv0).symm
+    rw [hlift, hvw2, la5_dihv_special_scale (x := w) (z := ivsRhoNode1_p2 FF v)
+      (w := rhoNode1_p2 FF v) (t := -fw) (neg_ne_zero.mpr hfw0), hiv]
+    exact DIHV_NOT_CHANGE (x := (0:V3)) (y := w) (v := rhoNode1_p2 FF w)
+      (w := rhoNode1_p2 FF v) hgz' hsum2
+  -- both sides read dihV 0 v (ρ v) (ρ w) / dihV 0 w (ρ w) (ρ v);
+  -- rescale v onto the w-line (coin) and swap the last two arguments
+  have hclose : dihV 0 v (rhoNode1_p2 FF v) (rhoNode1_p2 FF w)
+      = dihV 0 w (rhoNode1_p2 FF w) (rhoNode1_p2 FF v) := by
+    have hv1 : v = ((1:ℝ) / fv) • (fv • v) := by
+      rw [smul_smul, show (1:ℝ) / fv * fv = 1 from by field_simp, one_smul]
+    nth_rewrite 1 [hv1]
+    rw [hvw2, smul_smul, la5_dihv_special_scale (x := w)
+      (z := rhoNode1_p2 FF v) (w := rhoNode1_p2 FF w)
+      (t := (1:ℝ) / fv * -fw)
+      (mul_ne_zero (div_ne_zero one_ne_zero hfv0) (neg_ne_zero.mpr hfw0)),
+      la5_dihv_swap23 0 w (rhoNode1_p2 FF v) (rhoNode1_p2 FF w)]
+  rw [hW, hV, hclose]
 
 /-- HOL `HKIRPEP` (local_lemmas.hl:6027): the master lunar-fan inventory. -/
 theorem HKIRPEP (h : convexLocalFan_p2 V E FF) (hl : lunar_p2 v w V E) :
