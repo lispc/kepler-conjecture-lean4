@@ -2500,23 +2500,349 @@ theorem fcdjdot (hpa : PackIneqDefA)
     ∃ V : Set V3, Contravening V := by
   sorry
 
-/-! NEEDS（2026-09-28 脊柱 lane 定级确认「中等」，三件套）：
-①`FLYSPECK_DEVOLUTION`（flyspeck_devol.hl:25）——体积形界 ⟹ 计数形界：对
-saturated V，V∩ball(0,r) 中每点的单位球互斥且含于 ball(0,r+1)，故
-`CARD(V∩ball(0,r)) * vol(ball 1) ≤ vol(⋃ unit balls ∩ ball(0,r+1))`，再由体积界
-在 r+1 处折算（c ↦ π/√18·7 + |c|·4）；Lean 侧需测度论侧条件
-（MEASURE_SUBSET/MEASURABLE_UNIONS + FINITE_PACK_LEMMA 的有限性——
-PackingAuto19 的 `Finite` 套件或 PA2 `Upfzbzm` 支撑引理群）。
-②`CPNKNXN`（flyspeck_devol.hl:135）——packing ⟹ saturated 超集（Zorn：
-ZL_SUBSETS_UNIONS_NONEMPTY，链并的 packing 论证），Mathlib Zorn 可移植。
-③`KIUMVTC`（Pack2）——V ⊆ V' ⟹ CARD(V∩ball) ≤ CARD(V'∩ball)（机械：
-Set.inter_subset_inter + ncard mono）。HOL 证明体 the_main_statement.hl:84-110
-为 ~25 行装配（ENOUGH_TO_SHOW + REAL_ARITH）。 -/
+/-! NEEDS（2026-09-28 脊柱 lane 定级；2026-10-12 A4 填证 lane 依赖图更新）：
+A4 侧三件套已全部闭合于本文件（见下 `cpnknxn`/`flyspeckDevolution` 与
+`Set.ncard_le_ncard` 直接消费），`kcImpTheKc` 已转真证。
+A6 本体（FCDJDOT，FNJLBXS-compiled.hl:1766）仍是开放接口，其证明依赖四根
+HOL 柱子，全树零移植（2026-10-12 侦察，grep 实证）：
+①`scriptL_attains_max_in_ball_annulus`（FNJLBXS-compiled.hl:1296）：存在
+scriptL 最大元的 packing。HOL 经 ℝ^150 配置空间章（compactS/max_onS/
+set_of_listS/scriptL_continuous/type150_ineq/card_packing_ball_annulus）紧致性
+论证。Lean 路线（可用）：对每个 k ≤ card 界（测度计数可得显式界，如 27：
+unit 球互斥含于 ball 0 3），packing k-元组集 `{f : Fin k → V3 | ∀ i, f i ∈
+ballAnnulus ∧ 两两 dist ≥ 2}` 是紧集（annulus 紧 + 闭条件）且 scriptL 连续，
+最大值存在；再对 k 有限取最大。
+②`FNJLBXS`（FNJLBXS-compiled.hl:1324）：归一化——∃W φ，双射 + 保范数 +
+每点孤立或 surrounded。HOL ~215 行：同一 ℝ^150 紧致集上极小化 min_k 距离
+向量 + 扰动论证（not_surrounded_ECTC:1547 + perturbation_lemma +
+not_surrounded_imp_on_one_side_of_plane + isolated_node_norm_ECTC:1631 +
+not_surrounded_node_norm_ECTC:1727，其中 FCDJDOT section :1543-1806 的三件
+系中等档几何，可移植）。
+③Counting_spheres：`DLWCHEM`（counting_spheres.hl:7063）与 `XULJEPR`
+（:7191）——消费 pack_ineq_def_a 的计数柱：card ∈ {13,14,15} 与最大性转移，
+内部是球面几何计数（EXISTS_M_POLYHEDRON/YSSKQOY_VECTOR/THETA_BOUNDS），
+深 GIANT。
+④`bij_scriptL`——双射 + 保范数 ⟹ scriptL 相等；已由本文件 `bijScriptL`
+闭合（见下）。`local_annulus_inequality_scriptL` 已闭合（本文件
+`localAnnulusInequalityScriptL`）。 -/
 
-/-- 接口占位：HOL `kc_imp_the_kc`（the_main_statement.hl:82）——
-Pack_defs `kepler_conjecture`（体积形）⟹ 密度计数形。 -/
+/-- **annulus 有限性**（2026-10-12 A6 填证 lane 落地；HOL
+`finite_packing_ball_annulus` 的替代路线）：packing + 含于 annulus ⟹ 有限
+（annulus ⊆ closedBall 0 (2·h0) ⊆ ball 0 3，经 `Packing.finite_inter_ball`）。 -/
+private theorem packingFiniteOfBallAnnulus {V : Set V3} (hV : Packing V)
+    (hsub : V ⊆ ballAnnulus) : V.Finite := by
+  have hVb : V ⊆ Metric.ball 0 3 := by
+    intro v hv
+    have hmem : ‖v‖ ≤ 2 * h0 := by
+      have hp := hsub hv
+      simp only [ballAnnulus, Set.mem_sdiff] at hp
+      have h'd := Metric.mem_closedBall.mp hp.1
+      rw [dist_zero_right] at h'd
+      exact h'd
+    have hh0 : (2:ℝ) * h0 < 3 := by
+      show (2:ℝ) * 1.26 < 3
+      norm_num
+    rw [Metric.mem_ball, dist_zero_right]
+    linarith [hmem]
+  have hveq : V = V ∩ Metric.ball 0 3 := (Set.inter_eq_left.mpr hVb).symm
+  rw [hveq]
+  exact hV.finite_inter_ball 3
+
+/-- **card ≥ 13 下界**（2026-10-12 A6 填证 lane 落地；HOL
+`LMFUN_INEQ_CENTER_IMP_13` + `fat_lemma1` 的消费侧内容）：annulus 中每点的
+scriptL 贡献 `lmfun (‖v‖/2) ≤ 1`，故 `scriptL V > 12` 强制 `ncard V ≥ 13`。 -/
+private theorem thirteenLeCardOfScriptLGt12 {V : Set V3} (hsub : V ⊆ ballAnnulus)
+    (hfin : V.Finite) (hgt : 12 < scriptL V) : 13 ≤ V.ncard := by
+  rw [scriptL, dif_pos hfin] at hgt
+  have hterm : ∀ v ∈ V, lmfun (‖v‖ / 2) ≤ 1 := by
+    intro v hv
+    have hp := hsub hv
+    simp only [ballAnnulus, Set.mem_sdiff] at hp
+    have hlo : (2:ℝ) ≤ ‖v‖ := by
+      have h' := hp.2
+      rw [Metric.mem_ball, dist_zero_right] at h'
+      exact le_of_not_gt h'
+    have hup : ‖v‖ ≤ 2 * h0 := by
+      have h'd := Metric.mem_closedBall.mp hp.1
+      rw [dist_zero_right] at h'd
+      exact h'd
+    have hbranch : ‖v‖ / 2 ≤ h0 := by
+      rw [div_le_iff₀ (show (0:ℝ) < 2 by norm_num)]
+      linarith
+    rw [lmfun, if_pos hbranch, div_le_iff₀ (show (0:ℝ) < h0 - 1 by norm_num [h0])]
+    have hge1 : (1:ℝ) ≤ ‖v‖ / 2 := by
+      rw [le_div_iff₀ (show (0:ℝ) < 2 by norm_num)]
+      linarith
+    linarith
+  have hsum : ∑ v ∈ hfin.toFinset, lmfun (‖v‖ / 2) ≤ (hfin.toFinset.card : ℝ) := by
+    have h0' : ∑ v ∈ hfin.toFinset, lmfun (‖v‖ / 2) ≤
+        ∑ v ∈ hfin.toFinset, 1 :=
+      Finset.sum_le_sum (fun v hv => hterm v (hfin.mem_toFinset.mp hv))
+    rw [Finset.sum_const, nsmul_eq_mul, mul_one] at h0'
+    exact h0'
+  rw [Set.ncard_eq_toFinset_card _ hfin]
+  by_contra hcon
+  have h1 : (12:ℝ) < (hfin.toFinset.card : ℝ) := by linarith [hgt, hsum]
+  have h2 : 12 < hfin.toFinset.card := Nat.cast_lt.mp h1
+  omega
+
+/-- **bij_scriptL**（FNJLBXS 章，2026-10-12 A6 填证 lane 落地）：双射且
+逐点保范数 ⟹ scriptL 相等。有限性由 `V.Finite` 显式给出（消费语境
+packing + annulus 有界性即得，见上 `packingFiniteOfBallAnnulus`；W 的
+有限性经 BijOn 传递）。 -/
+private theorem bijScriptL {V W : Set V3} (hV : V.Finite) (f : V3 → V3)
+    (hbij : Set.BijOn f V W) (hnorm : ∀ u ∈ V, ‖u‖ = ‖f u‖) :
+    scriptL V = scriptL W := by
+  -- W = f '' V 且有限
+  have himg : f '' V = W := by
+    ext x
+    constructor
+    · rintro ⟨v, hv, rfl⟩
+      exact hbij.1 hv
+    · exact fun hx => hbij.2.2 hx
+  have hfin : (f '' V).Finite := Finite.image f hV
+  rw [himg] at hfin
+  have hW : W.Finite := hfin
+  rw [scriptL, scriptL, dif_pos hV, dif_pos hW]
+  -- W 的枚举 = V 的枚举在 f 下的像
+  have himgEq : hW.toFinset = hV.toFinset.image f := by
+    ext x
+    simp only [Finset.mem_image, Set.Finite.mem_toFinset]
+    constructor
+    · exact fun hx => hbij.2.2 hx
+    · rintro ⟨v, hvT, rfl⟩
+      exact hbij.1 hvT
+  rw [himgEq, Finset.sum_image (fun x hx y hy hxy =>
+    hbij.2.1 (hV.mem_toFinset.mp hx) (hV.mem_toFinset.mp hy) hxy)]
+  exact Finset.sum_congr rfl fun v hv => by rw [hnorm v (hV.mem_toFinset.mp hv)]
+
+/-- **CPNKNXN**（flyspeck_devol.hl:135，2026-10-12 A4 填证 lane）：
+packing 可扩为 saturated packing 超集（Zorn：`zorn_subset_nonempty`，链并
+仍是 packing；饱和性经极大性的单点扩充论证，HOL :135-167 逐步镜像）。 -/
+private theorem cpnknxn {V : Set V3} (hV : Packing V) :
+    ∃ V' : Set V3, Packing V' ∧ saturated V' ∧ V ⊆ V' := by
+  classical
+  have hchain : ∀ c ⊆ {W : Set V3 | Packing W ∧ V ⊆ W}, IsChain (· ⊆ ·) c → c.Nonempty →
+      ∃ ub ∈ ({W : Set V3 | Packing W ∧ V ⊆ W} : Set (Set V3)), ∀ s ∈ c, s ⊆ ub := by
+    intro c hcsub hchain hcne
+    refine ⟨⋃₀ c, ⟨?_, ?_⟩, fun s hs => Set.subset_sUnion_of_mem hs⟩
+    · -- packing (⋃₀ c)：两点落在链的同一（较大）元内
+      intro u hu v hv hd
+      obtain ⟨W₁, hW₁c, hu₁⟩ := hu
+      obtain ⟨W₂, hW₂c, hv₁⟩ := hv
+      by_cases hWeq : W₁ = W₂
+      · subst hWeq
+        exact (hcsub hW₂c).1 u hu₁ v hv₁ hd
+      · rcases hchain hW₁c hW₂c hWeq with hsub | hsub
+        · exact (hcsub hW₂c).1 u (hsub hu₁) v hv₁ hd
+        · exact (hcsub hW₁c).1 u hu₁ v (hsub hv₁) hd
+    · -- V ⊆ ⋃₀ c
+      intro x hx
+      obtain ⟨W₀, hW₀c⟩ := hcne
+      exact ⟨W₀, hW₀c, (hcsub hW₀c).2 hx⟩
+  obtain ⟨V', hxin, hmax⟩ :=
+    zorn_subset_nonempty ({W : Set V3 | Packing W ∧ V ⊆ W} : Set (Set V3)) hchain V
+      ⟨hV, Subset.rfl⟩
+  refine ⟨V', hmax.1.1, ?_, hmax.1.2⟩
+  -- saturated：单点扩充的极大性论证
+  intro x
+  by_contra hx0
+  have hx0 : ∀ y ∈ V', 2 ≤ dist x y := by
+    intro y hy
+    by_contra hlt
+    exact hx0 ⟨y, hy, not_le.mp hlt⟩
+  have hins : insert x V' ∈ ({W : Set V3 | Packing W ∧ V ⊆ W} : Set (Set V3)) := by
+    refine ⟨?_, Subset.trans hmax.1.2 (Set.subset_insert x V')⟩
+    intro u hu v hv hd
+    rcases Set.mem_insert_iff.mp hu with rfl | hu' <;>
+      rcases Set.mem_insert_iff.mp hv with rfl | hv'
+    · rfl
+    · exact absurd hd (not_lt.2 (hx0 v hv'))
+    · exact absurd hd (not_lt.2 (by rw [dist_comm]; exact hx0 u hu'))
+    · exact hmax.1.1 u hu' v hv' hd
+  have heq : insert x V' = V' :=
+    (hmax.eq_of_subset hins (Set.subset_insert x V')).symm
+  have hxin' : x ∈ insert x V' := Set.mem_insert x V'
+  rw [heq] at hxin'
+  have hxx := hx0 x hxin'
+  rw [dist_self] at hxx
+  linarith
+
+/-- 单位球体积（实值测度；`EuclideanSpace.volume_ball_fin_three` 的 toReal
+折算，2026-10-12 A4 填证 lane）。 -/
+private theorem kcUnitBallVol (v : V3) :
+    MeasureTheory.volume.real (Metric.ball v 1) = Real.pi * 4 / 3 := by
+  rw [MeasureTheory.Measure.real_def, EuclideanSpace.volume_ball_fin_three,
+    ENNReal.toReal_mul, ENNReal.toReal_pow,
+    ENNReal.toReal_ofReal (show (0:ℝ) ≤ 1 by norm_num),
+    ENNReal.toReal_ofReal (show (0:ℝ) ≤ Real.pi * 4 / 3 by linarith [Real.pi_pos])]
+  norm_num
+
+/-- **FLYSPECK_DEVOLUTION**（flyspeck_devol.hl:25，2026-10-12 A4 填证 lane）：
+体积形界 ⟹ 计数形界。测度论证：V∩ball(0,r) 中每点的单位球互斥且含于
+ball(0,r+1)，`card · vol(ball 1) = vol(⋃ unit balls) ≤ vol(体积界集)`，在 r+1
+处折算 c ↦ π/√18·7 + |c|·4；有限性用 `Packing.finite_inter_ball`
+（HOL FINITE_PACK_LEMMA 对应）。注：HOL 原文以 saturated V 为前提，但证明
+只消费 packing（有限性/互斥性），饱和性不在本步使用。 -/
+private theorem flyspeckDevolution {V : Set V3} (hV : Packing V)
+    (hvol : ∃ c : ℝ, ∀ r : ℝ, 1 ≤ r →
+      MeasureTheory.volume.real ((⋃ v ∈ V, Metric.ball v 1) ∩ Metric.ball 0 r) /
+        MeasureTheory.volume.real (Metric.ball (0 : V3) r) ≤
+          Real.pi / Real.sqrt 18 + c / r) :
+    ∃ c : ℝ, ∀ r : ℝ, 1 ≤ r → ((V ∩ Metric.ball 0 r).ncard : ℝ) ≤
+      Real.pi * r ^ 3 / Real.sqrt 18 + c * r ^ 2 := by
+  obtain ⟨c₀, hc₀⟩ := hvol
+  refine ⟨Real.pi / Real.sqrt 18 * 7 + |c₀| * 4, fun r hr => ?_⟩
+  have hfF : (V ∩ Metric.ball 0 r).Finite := hV.finite_inter_ball r
+  set T : Finset V3 := hfF.toFinset with hTeq
+  have hmem : ∀ v ∈ T, v ∈ V := fun v hv => (hfF.mem_toFinset.mp hv).1
+  have hballr : ∀ v ∈ T, dist v 0 < r := fun v hv => Metric.mem_ball.mp
+    ((hfF.mem_toFinset.mp hv).2)
+  -- 单位球族互斥（packing ⇒ 距离 ≥ 2）
+  have hdisj : ((T : Set V3)).PairwiseDisjoint (fun v => Metric.ball v 1) := by
+    intro u hu v hv hne
+    simp only [Function.onFun]
+    rw [disjoint_iff_inter_eq_empty]
+    by_contra hne'
+    obtain ⟨w, hwu, hwv⟩ := Set.nonempty_iff_ne_empty.mpr hne'
+    have hdist := hV.dist_ge_two (hmem u hu) (hmem v hv) hne
+    have htri : dist u v ≤ dist u w + dist w v := dist_triangle u w v
+    rw [Metric.mem_ball] at hwu hwv
+    linarith [dist_comm u w ▸ hwu]
+  -- 计数 = 测度
+  have htopEach : ∀ v ∈ T, MeasureTheory.volume (Metric.ball v 1) ≠ (⊤:ENNReal) := by
+    intro v _
+    rw [EuclideanSpace.volume_ball_fin_three]
+    exact ENNReal.mul_ne_top (ENNReal.pow_ne_top ENNReal.ofReal_ne_top)
+      ENNReal.ofReal_ne_top
+  have hcount : MeasureTheory.volume.real (⋃ v ∈ T, Metric.ball v 1)
+      = (T.card : ℝ) * (Real.pi * 4 / 3) := by
+    rw [MeasureTheory.Measure.real_def,
+      MeasureTheory.measure_biUnion_finset hdisj
+        (fun v _ => measurableSet_ball),
+      ENNReal.toReal_sum htopEach]
+    have hsumreal : ∀ v ∈ T,
+        (MeasureTheory.volume (Metric.ball v 1)).toReal = Real.pi * 4 / 3 :=
+      fun v _ => kcUnitBallVol v
+    rw [Finset.sum_congr rfl hsumreal, Finset.sum_const, nsmul_eq_mul]
+  -- 包含
+  have hsub : (⋃ v ∈ T, Metric.ball v 1) ⊆
+      ((⋃ v ∈ V, Metric.ball v 1) ∩ Metric.ball 0 (r + 1) : Set V3) := by
+    intro w hw
+    refine ⟨?_, ?_⟩
+    · simp only [mem_iUnion, exists_prop] at hw ⊢
+      obtain ⟨v, hvT, hwv⟩ := hw
+      exact ⟨v, hmem v hvT, hwv⟩
+    · simp only [mem_iUnion, exists_prop] at hw
+      obtain ⟨v, hvT, hwv⟩ := hw
+      rw [Metric.mem_ball] at hwv ⊢
+      have hvr := hballr v hvT
+      calc dist w 0 ≤ dist w v + dist v 0 := dist_triangle w v 0
+        _ < 1 + r := by linarith
+        _ = r + 1 := by ring
+  -- 体积界在 r+1 处
+  have hm : (0:ℝ) < Real.pi * 4 / 3 := by linarith [Real.pi_pos]
+  have hr1 : 1 ≤ r + 1 := by linarith
+  have hvkc := hc₀ (r + 1) hr1
+  have hbig : MeasureTheory.volume.real (Metric.ball (0 : V3) (r + 1))
+      = (r + 1) ^ 3 * (Real.pi * 4 / 3) := by
+    rw [MeasureTheory.Measure.real_def, EuclideanSpace.volume_ball_fin_three,
+      ENNReal.toReal_mul, ENNReal.toReal_pow,
+      ENNReal.toReal_ofReal (by linarith : (0:ℝ) ≤ r + 1),
+      ENNReal.toReal_ofReal (show (0:ℝ) ≤ Real.pi * 4 / 3 by linarith [Real.pi_pos])]
+  have hbpos : (0:ℝ) < MeasureTheory.volume.real (Metric.ball (0 : V3) (r + 1)) := by
+    rw [hbig]
+    exact mul_pos (pow_pos (by linarith : (0:ℝ) < r + 1) 3)
+      (by linarith [Real.pi_pos] : (0:ℝ) < Real.pi * 4 / 3)
+  have hballtop : MeasureTheory.volume (Metric.ball (0 : V3) (r + 1)) ≠ (⊤:ENNReal) := by
+    rw [EuclideanSpace.volume_ball_fin_three]
+    exact ENNReal.mul_ne_top (ENNReal.pow_ne_top ENNReal.ofReal_ne_top)
+      ENNReal.ofReal_ne_top
+  have hBIGsub : ((⋃ v ∈ V, Metric.ball v 1) ∩ Metric.ball 0 (r + 1) : Set V3) ⊆
+      Metric.ball (0 : V3) (r + 1) := Set.inter_subset_right
+  have hmonoENN := MeasureTheory.measure_mono hBIGsub (μ := MeasureTheory.volume)
+  have hBIGtop : MeasureTheory.volume
+      ((⋃ v ∈ V, Metric.ball v 1) ∩ Metric.ball 0 (r + 1) : Set V3) ≠ (⊤:ENNReal) := by
+    intro h
+    rw [h] at hmonoENN
+    exact hballtop (top_le_iff.mp hmonoENN)
+  have hmono : MeasureTheory.volume.real (⋃ v ∈ T, Metric.ball v 1) ≤
+      MeasureTheory.volume.real ((⋃ v ∈ V, Metric.ball v 1) ∩ Metric.ball 0 (r + 1) : Set V3) := by
+    rw [MeasureTheory.Measure.real_def, MeasureTheory.Measure.real_def]
+    refine (ENNReal.toReal_le_toReal ?_ hBIGtop).mpr
+      (MeasureTheory.measure_mono hsub (μ := MeasureTheory.volume))
+    intro h
+    have h1 := MeasureTheory.measure_mono hsub (μ := MeasureTheory.volume)
+    rw [h] at h1
+    exact hballtop (top_le_iff.mp (le_trans h1 hmonoENN))
+  -- 折算链
+  have h2 := (div_le_iff₀ hbpos).mp hvkc
+  rw [hbig] at h2
+  have hchain : (T.card : ℝ) * (Real.pi * 4 / 3) ≤
+      (Real.pi / Real.sqrt 18 * (r + 1) ^ 3 + c₀ * (r + 1) ^ 2) * (Real.pi * 4 / 3) := by
+    have hsplit : (Real.pi / Real.sqrt 18 + c₀ / (r + 1)) *
+        ((r + 1) ^ 3 * (Real.pi * 4 / 3))
+        = (Real.pi / Real.sqrt 18 * (r + 1) ^ 3 + c₀ * (r + 1) ^ 2) *
+            (Real.pi * 4 / 3) := by
+      have hrne : (r + 1 : ℝ) ≠ 0 := by linarith
+      field_simp
+      all_goals { ring }
+    rw [hsplit] at h2
+    have h1 : (T.card : ℝ) * (Real.pi * 4 / 3) ≤
+        MeasureTheory.volume.real
+          ((⋃ v ∈ V, Metric.ball v 1) ∩ Metric.ball 0 (r + 1) : Set V3) := by
+      rw [← hcount]
+      exact hmono
+    linarith
+  have hstep : (T.card : ℝ) ≤
+      Real.pi / Real.sqrt 18 * (r + 1) ^ 3 + c₀ * (r + 1) ^ 2 :=
+    le_of_mul_le_mul_right hchain hm
+  -- 初等不等式收尾（(r+1)³ ≤ r³+7r²、(r+1)² ≤ 4r²，r ≥ 1）
+  have hsq1 : (0:ℝ) ≤ 4 * r ^ 2 - 3 * r - 1 := by nlinarith
+  have h41 : (r + 1) ^ 3 ≤ r ^ 3 + 7 * r ^ 2 := by
+    have e : (r + 1) ^ 3 = r ^ 3 + 3 * r ^ 2 + 3 * r + 1 := by ring
+    rw [e]
+    linarith [sq_nonneg r, hsq1]
+  have hsq2 : (0:ℝ) ≤ 3 * r ^ 2 - 2 * r - 1 := by nlinarith
+  have h42 : (r + 1) ^ 2 ≤ 4 * r ^ 2 := by
+    have e : (r + 1) ^ 2 = r ^ 2 + 2 * r + 1 := by ring
+    rw [e]
+    linarith
+  have hK : (0:ℝ) ≤ Real.pi / Real.sqrt 18 :=
+    div_nonneg Real.pi_nonneg (le_of_lt (by positivity))
+  have hfin1 : Real.pi / Real.sqrt 18 * (r + 1) ^ 3
+      ≤ Real.pi / Real.sqrt 18 * r ^ 3 + Real.pi / Real.sqrt 18 * (7 * r ^ 2) :=
+    (mul_le_mul_of_nonneg_left h41 hK).trans (by rw [mul_add])
+  have hfin2 : c₀ * (r + 1) ^ 2 ≤ |c₀| * (r + 1) ^ 2 :=
+    mul_le_mul_of_nonneg_right (le_abs_self c₀) (sq_nonneg _)
+  have hfin3 : |c₀| * (r + 1) ^ 2 ≤ |c₀| * (4 * r ^ 2) :=
+    mul_le_mul_of_nonneg_left h42 (abs_nonneg _)
+  rw [Set.ncard_eq_toFinset_card _ hfF]
+  rw [hTeq] at hstep
+  have hnorm : Real.pi * r ^ 3 / Real.sqrt 18 = Real.pi / Real.sqrt 18 * r ^ 3 := by ring
+  rw [hnorm]
+  have hdistr : (Real.pi / Real.sqrt 18 * 7 + |c₀| * 4) * r ^ 2
+      = Real.pi / Real.sqrt 18 * (7 * r ^ 2) + |c₀| * (4 * r ^ 2) := by ring
+  rw [hdistr]
+  linarith [hstep, hfin1, hfin2, hfin3]
+
+/-- 接口 → 真证明（2026-10-12 A4 填证 lane）：HOL `kc_imp_the_kc`
+（the_main_statement.hl:82-107 逐步镜像）——CPNKNXN 扩 saturated 超集 →
+hkc 给体积形界 → FLYSPECK_DEVOLUTION 折计数形界 → KIUMVTC（ncard 单调）
+回传 V。 -/
 theorem kcImpTheKc (hkc : keplerConjecture) : TheKeplerConjecture := by
-  sorry
+  intro V hpackV
+  obtain ⟨V', hpackV', hsatV', hsub⟩ := cpnknxn hpackV
+  obtain ⟨cv, hcv⟩ := hkc V' ⟨hpackV', hsatV'⟩
+  obtain ⟨c, hc⟩ := flyspeckDevolution hpackV' ⟨cv, hcv⟩
+  exact ⟨c, fun r hr => by
+    have hsubr : V ∩ Metric.ball 0 r ⊆ V' ∩ Metric.ball 0 r := by
+      intro z hz
+      exact ⟨hsub hz.1, hz.2⟩
+    have hnc : ((V ∩ Metric.ball 0 r).ncard : ℝ) ≤
+        ((V' ∩ Metric.ball 0 r).ncard : ℝ) := by
+      exact_mod_cast Set.ncard_le_ncard hsubr (hpackV'.finite_inter_ball r)
+    linarith [hnc, hc r hr]⟩
 
 /-- 骨架辅助：`Hypermap.Iso` 传递性（**已闭合 2026-09-21 填证波**；纯逻辑：
 同构 = 双射 + 三映射交换，复合 `g ∘ f` 即得。对应 HOL `ISO_TRANS`/
