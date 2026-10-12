@@ -5,6 +5,33 @@
 > 里程碑定义与四步路线：`docs/phase6-spine.md` §6。**度量 = 下表"在账"数，
 > lane 排序依据 = 本图**；每波收工后编排者更新。
 
+## 2026-10-12 增量（五线满负荷日 + 收口令；编排者账）
+
+用户晨令改 steady-state 5-6 线自调度，午后令"本波全部收口后不再起新线，总结
+push 待命"。全天落地账（含晨间 22 笔，详见各 commit）：
+
+- **PA20 文件级 sorry 归零**（`4d676cbf`+`67f5c1aa`）：gammaX 章双件全闭——
+  `gammaX_gamm4fgcy`（k=4，SimplexVolume 反向 import）与 `gammaX_gamma3f`
+  （k=3，绕开 HL 未移植 MCELL_ID_*，voronoiList 隶属自证 apex √2 等距）。
+  唯一下游 PA25:3287 `mcell3_gammaX_gamma3f` 移交 leaf_rank 车道。
+- **PA7 XYOFCGX 本体闭合**（`5127ecf1`，sorry 36→21）：XYOFCGX 家族 +
+  BARV 前置两件 + 投影件八条；四重复定理经 PA6 同名提供（EV20 豁免）。
+  残余 21 = GIANT 链（WQPRRDY capstone/WAUFCHE2/KSOQKWL/YIFVQDV/
+  XNHPWAB1-4/omegaList 链），下一工位 XNHPWAB1（前置已就位）。
+- **PA24 情形 A/B3 全证 + B2 单支残件化**（`8b5bd3d3`+`e4eda77d`）：
+  capstone 三分装配；侦察纠错 = `MXI_EXISTS_concl` 在 B2 支为假（r₃<√2
+  仅 B3 支成立），**移交 PA2 车道补 `r₃<√2` 假设**；B2 泛具子情形需四点
+  凸包装配（~300-400 行），退化子情形（ω₂=ω₃）换叶走支撑面引理
+  （~200-300 行，下一整波）。
+- **TameSpine 第三批落地**（`cdcc3ea2`）：TameList3.lean 1,309 行/84 件/零
+  sorry（tame_list.hl:1469-2934 indexf/split_at/take·drop/betwn 家族）；
+  三批累计 ~4,050 行/323 件。
+- **闸演进 EV20/EV21**：EV20 重复件豁免（干净直接 import 提供同名声明+
+  语句前缀空白归一化全等；证明体不比对）；EV21 sorry 计数代码行口径
+  （docstring 散文行双侧剔除，修 EV19 假阳性暴露）。
+- LA5 晨间四波 73→48（`43bf4829` 等）；POS_DIRECT→SUCCESEOR 根系攻坚
+  收口中（落地另账）。
+
 ## 2026-10-08 增量（滚动 sub-agent 稳态制首日；编排者账）
 
 运行方式切为恒定 5-6 线在飞（用户令），落地节奏从"批次"变"流水"。当日八笔
