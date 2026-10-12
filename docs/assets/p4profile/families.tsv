@@ -1,0 +1,210 @@
+family	n	classes	routes	flags	struct	pure_sqrt	res16
+OXLZLEZ	230	{"mixed": 184, "poly": 46}	{"R2": 184, "R1": 46}	atnacs,ite,sqrt	sqrt_delta_num,sqrt_var	False	False
+ZTGIJCF4	162	{"mixed": 162}	{"R2": 162}	atnacs,ite,sqrt	disj,sqrt_delta_num,sqrt_var	False	False
+GLFVCVK4	78	{"mixed": 78}	{"R2": 78}	atnacs,ite,sqrt	disj,sqrt_delta_num,sqrt_var	False	False
+7550003505	35	{"mixed": 35}	{"R2": 20, "R3": 15}	atnacs,ite,sqrt	disj,mud_sqrt,sqrt_var	False	False
+QITNPEA	24	{"poly": 1, "mixed": 23}	{"R1": 1, "R2": 23}	atnacs,ite,sqrt	disj,sqrt_delta_num,sqrt_var	False	False
+QITNPEA1	24	{"mixed": 24}	{"R2": 24}	atnacs,ite,sqrt	disj,sqrt_delta_num,sqrt_var	False	False
+QZECFIC	9	{"sqrt": 7, "poly": 2}	{"R3": 7, "R4": 1, "R1": 1}	sqrt	disj,gamma23,inv_sqrtdelta,nonstrict,sqrt_var	True	True
+BIXPCGW	8	{"mixed": 7, "poly": 1}	{"R2": 7, "R1": 1}	atnacs,ite,sqrt	disj,sqrt_delta_num,sqrt_var	False	False
+181212899	6	{"mixed": 6}	{"R2": 6}	atnacs,ite,sqrt	sqrt_var	False	False
+4680581274	6	{"poly": 5, "mixed": 1}	{"R1": 5, "R2": 1}	atnacs,ite,sqrt	disj	False	False
+FHBVYXZ	4	{"mixed": 4}	{"R2": 4}	atnacs,ite,sqrt	disj,sqrt_delta_num,sqrt_var	False	False
+GLFVCVK4a	4	{"mixed": 4}	{"R2": 4}	atnacs,ite,sqrt	disj,sqrt_delta_num,sqrt_var	False	False
+3862621143	3	{"mixed": 3}	{"R2": 3}	atnacs,ite,sqrt		False	True
+8673686234	3	{"sqrt": 3}	{"R2": 3}	sqrt	disj,sqrt_var	True	True
+9563139965	3	{"mixed": 3}	{"R2": 3}	atnacs,ite,sqrt	sqrt_var	False	False
+GRKIBMP	3	{"sqrt": 3}	{"R4": 1, "R2": 2}	sqrt	nonstrict	True	True
+1348932091	2	{"poly": 1, "mixed": 1}	{"R1": 1, "R2": 1}	atnacs,ite,sqrt		False	False
+1965189142	2	{"sqrt": 1, "poly": 1}	{"R2": 1, "R1": 1}	otherf,sqrt		True	False
+4652969746	2	{"mixed": 2}	{"R2": 2}	atnacs,ite,sqrt		False	False
+5550839403	2	{"poly": 1, "mixed": 1}	{"R1": 1, "R2": 1}	atnacs,ite,sqrt		False	False
+5557288534	2	{"poly": 1, "mixed": 1}	{"R1": 1, "R2": 1}	atnacs,ite,sqrt		False	False
+6096597438	2	{"poly": 2}	{"R1": 2}	otherf		False	False
+FHBVYXZv2	2	{"mixed": 2}	{"R2": 2}	atnacs,ite,sqrt	disj,sqrt_delta_num,sqrt_var	False	False
+IXPOTPA	2	{"mixed": 2}	{"R3": 2}	atnacs,ite,sqrt	disj,gamma23,sqrt_var	False	True
+MKFKQWU	2	{"poly": 2}	{"R1": 2}			False	False
+PEMKWKU	2	{"mixed": 2}	{"R3": 2}	atnacs,ite,sqrt	disj,gamma23,sqrt_var	False	True
+QITNPEAv2	2	{"mixed": 2}	{"R3": 2}	atnacs,ite,sqrt	disj,gamma23,sqrt_var	False	False
+RQWUDDU	2	{"mixed": 2}	{"R2": 2}	atnacs,ite,sqrt	disj,sqrt_var	False	False
+SDCCMGA	2	{"mixed": 2}	{"R2": 2}	atnacs,ite,sqrt	sqrt_var	False	False
+TEWNSCJ	2	{"mixed": 2}	{"R3": 2}	atnacs,ite,sqrt	disj,gamma23,sqrt_var	False	True
+TSKAJXY-IYOUOBF	2	{"mixed": 2}	{"R4": 2}	atnacs,ite,sqrt	disj,nonstrict,sqrt_delta_num,sqrt_var	False	True
+TSKAJXY-RIBCYXU	2	{"mixed": 2}	{"R2": 1, "R4": 1}	atnacs,ite,sqrt	disj,nonstrict,sqrt_delta_num,sqrt_var	False	True
+TXQTPVC	2	{"mixed": 2}	{"R3": 2}	atnacs,ite,sqrt	disj,gamma23,sqrt_var	False	True
+1008824382	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj,sqrt_var	False	False
+1085358243	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+1117202051	1	{"poly": 1}	{"R1": 1}			False	False
+1248932983	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+1284543870	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+1347067436	1	{"poly": 1}	{"R1": 1}		disj	False	False
+1395142356	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+1550635295	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+1586903463	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj,sqrt_var	False	False
+1611600345x	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj,sqrt_var	False	False
+1642527039	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+1834976363	1	{"poly": 1}	{"R1": 1}		disj	False	False
+1836408787	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+1894886027	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+1948775510	1	{"mixed": 1}	{"R3": 1}	atnacs,ite,sqrt	disj,mud_sqrt	False	False
+1968758929	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj	False	False
+2073661826	1	{"poly": 1}	{"R1": 1}			False	False
+2125338128	1	{"poly": 1}	{"R1": 1}			False	False
+2151506422	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+2171548893	1	{"poly": 1}	{"R1": 1}			False	False
+2314572187	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj	False	False
+2320951108	1	{"mixed": 1}	{"R3": 1}	atnacs,ite,sqrt	mud_sqrt	False	False
+2327525027	1	{"poly": 1}	{"R1": 1}		disj	False	False
+2390583444	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+2445657182	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+2468307358	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+2485876245a	1	{"poly": 1}	{"R1": 1}			False	False
+2485876245b	1	{"poly": 1}	{"R1": 1}		disj	False	False
+2513405547	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj	False	False
+2563100177	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+2565248885	1	{"mixed": 1}	{"R3": 1}	atnacs,ite,sqrt	disj,mud_sqrt	False	False
+2570626711	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+2608321088x	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj,sqrt_var	False	False
+2763799127	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+2923748598	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+3020140039	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+3078028960	1	{"poly": 1}	{"R1": 1}		disj	False	False
+3137600529	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+3139693500	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+3253650737	1	{"poly": 1}	{"R1": 1}			False	False
+3287695934	1	{"poly": 1}	{"R1": 1}			False	False
+3296257235	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+3318775219	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+3425739813	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+3508342905	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj	False	False
+3526497018	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+3566713650	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+3603097872	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj,sqrt_var	False	False
+3636849632	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+3665919985	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+3872614111	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+4002562507	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+4010906068	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+4041673283	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+4047599236	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+4092227918	1	{"poly": 1}	{"R1": 1}		disj	False	False
+4222324842	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+4240815464	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+4306175952	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+4491491732	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+4559601669	1	{"poly": 1}	{"R1": 1}			False	False
+4559601669b	1	{"poly": 1}	{"R1": 1}			False	False
+4667071578	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+4717061266	1	{"poly": 1}	{"R1": 1}			False	False
+4750199435	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+4821120729	1	{"sqrt": 1}	{"R2": 1}	sqrt		True	False
+4828966562	1	{"poly": 1}	{"R1": 1}			False	False
+4840774900	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+4841020453	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+4887115291	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+5000076558	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+5026777310a	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj	False	False
+5202826650	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,otherf,sqrt	disj	False	False
+5298513205	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+5405130650	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj,sqrt_var	False	False
+5429228381	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj	False	False
+5429238960	1	{"mixed": 1}	{"R3": 1}	atnacs,ite,sqrt	disj,mud_sqrt	False	False
+5451229371	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+5490182221	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+5541487347	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+5546286427	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj	False	False
+5584033259	1	{"sqrt": 1}	{"R2": 1}	sqrt	disj,sqrt_var	True	False
+5691615370	1	{"sqrt": 1}	{"R2": 1}	sqrt	disj,sqrt_var	True	False
+5708641738	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj	False	False
+5735387903	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+5744538693	1	{"poly": 1}	{"R1": 1}		disj	False	False
+5756588587	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+5760733457	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+5835568093	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+5943578801	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+5957966880	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+6078657299	1	{"poly": 1}	{"R1": 1}		disj	False	False
+6170936724	1	{"poly": 1}	{"R1": 1}			False	False
+6184614449	1	{"poly": 1}	{"R1": 1}			False	False
+6224332984	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj,sqrt_var	False	False
+6284721194	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+6404645741	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj	False	False
+6410081357	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+6459846571	1	{"sqrt": 1}	{"R2": 1}	sqrt	disj,sqrt_var	True	False
+6601228004	1	{"poly": 1}	{"R1": 1}		disj	False	False
+6619134733	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+6723997360	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj	False	False
+6725783616	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+6762190381	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj	False	False
+6789182745	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+6833979866	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+6836427086	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+6843920790	1	{"poly": 1}	{"R1": 1}			False	False
+6877738680	1	{"poly": 1}	{"R1": 1}		disj	False	False
+6944699408	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	True
+6987934000	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+6988401556	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+7043724150	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	True
+7175074394	1	{"poly": 1}	{"R1": 1}		disj	False	False
+7291663656	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+7316455966	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+7394240696	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+7409690040	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+7439076204	1	{"sqrt": 1}	{"R2": 1}	sqrt	disj	True	False
+7718591733	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+7726998381	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+7743522046	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+7761782916	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj,sqrt_var	False	False
+7796879304	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,otherf,sqrt	disj,sqrt_var	False	False
+7819193535	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+7823243247	1	{"sqrt": 1}	{"R2": 1}	sqrt	disj	True	False
+7863247282	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+7881254908	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+7903347843	1	{"mixed": 1}	{"R3": 1}	atnacs,ite,sqrt	mud_sqrt	False	False
+7931207804	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+7997589055	1	{"mixed": 1}	{"R3": 1}	atnacs,ite,sqrt	mud_sqrt	False	False
+8055810915	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+8082208587	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+8248508703	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+8282573160	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+8293089898	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj	False	False
+8346775862	1	{"poly": 1}	{"R1": 1}		disj	False	False
+8384429938	1	{"poly": 1}	{"R1": 1}		disj	False	False
+8384511215	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+8405387449	1	{"poly": 1}	{"R1": 1}		disj	False	False
+8425800388	1	{"poly": 1}	{"R1": 1}		disj	False	False
+8495326405	1	{"poly": 1}	{"R1": 1}			False	False
+8519146937	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+8611785756	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj,sqrt_var	False	False
+8631418063	1	{"poly": 1}	{"R1": 1}			False	False
+8657368829	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+8875146520	1	{"mixed": 1}	{"R3": 1}	atnacs,ite,sqrt	disj,mud_sqrt,sqrt_var	False	False
+9096461391	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+9185711902	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+9225295803	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+9229542852	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+9251360200	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+9291937879	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+9368433105	1	{"poly": 1}	{"R1": 1}			False	False
+9414951439	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+9641946727	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+9692636487	1	{"poly": 1}	{"R1": 1}		disj	False	False
+9756015945	1	{"sqrt": 1}	{"R2": 1}	sqrt	sqrt_var	True	False
+9893763499	1	{"poly": 1}	{"R1": 1}		disj	False	False
+9922699028	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+9925287433	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+9995621667	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_var	False	False
+CIHTIUM	1	{"sqrt": 1}	{"R2": 1}	sqrt	sqrt_var	True	False
+CJFZZDW	1	{"sqrt": 1}	{"R2": 1}	sqrt	sqrt_var	True	False
+FWGKMBZ	1	{"poly": 1}	{"R1": 1}			False	False
+GCKBQEA	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt		False	False
+JNTEFVP	1	{"poly": 1}	{"R1": 1}			False	False
+JSPEVYT	1	{"sqrt": 1}	{"R2": 1}	sqrt	sqrt_var	True	False
+OMKYNLT	1	{"mixed": 1}	{"R4": 1}	atnacs,ite,sqrt	nonstrict	False	False
+TSKAJXY-GXSABWC	1	{"mixed": 1}	{"R4": 1}	atnacs,ite,otherf,sqrt	disj,inv_sqrtdelta,nonstrict	False	False
+TSKAJXY-TADIAMB	1	{"poly": 1}	{"R1": 1}			False	False
+TSKAJXY-WKGUESB	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	disj,sqrt_delta_num,sqrt_var	False	True
+TSKAJXY-XLLIPLS	1	{"mixed": 1}	{"R2": 1}	atnacs,ite,sqrt	sqrt_delta_num,sqrt_var	False	False
+TSKAJXY-delta_x4	1	{"poly": 1}	{"R1": 1}			False	False
+TSKAJXY-eulerA	1	{"sqrt": 1}	{"R2": 1}	sqrt		True	False
+ZTGIJCF0	1	{"poly": 1}	{"R1": 1}			False	False

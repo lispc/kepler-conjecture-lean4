@@ -1,0 +1,3976 @@
+[
+ {
+  "family": "OXLZLEZ",
+  "n": 230,
+  "classes": {
+   "mixed": 184,
+   "poly": 46
+  },
+  "routes": {
+   "R2": 184,
+   "R1": 46
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_delta_num",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "ZTGIJCF4",
+  "n": 162,
+  "classes": {
+   "mixed": 162
+  },
+  "routes": {
+   "R2": 162
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_delta_num",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "GLFVCVK4",
+  "n": 78,
+  "classes": {
+   "mixed": 78
+  },
+  "routes": {
+   "R2": 78
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_delta_num",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7550003505",
+  "n": 35,
+  "classes": {
+   "mixed": 35
+  },
+  "routes": {
+   "R2": 20,
+   "R3": 15
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "mud_sqrt",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "QITNPEA",
+  "n": 24,
+  "classes": {
+   "poly": 1,
+   "mixed": 23
+  },
+  "routes": {
+   "R1": 1,
+   "R2": 23
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_delta_num",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "QITNPEA1",
+  "n": 24,
+  "classes": {
+   "mixed": 24
+  },
+  "routes": {
+   "R2": 24
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_delta_num",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "QZECFIC",
+  "n": 9,
+  "classes": {
+   "sqrt": 7,
+   "poly": 2
+  },
+  "routes": {
+   "R3": 7,
+   "R4": 1,
+   "R1": 1
+  },
+  "flags": [
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "gamma23",
+   "inv_sqrtdelta",
+   "nonstrict",
+   "sqrt_var"
+  ],
+  "pure_sqrt": true,
+  "res16": true
+ },
+ {
+  "family": "BIXPCGW",
+  "n": 8,
+  "classes": {
+   "mixed": 7,
+   "poly": 1
+  },
+  "routes": {
+   "R2": 7,
+   "R1": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_delta_num",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "181212899",
+  "n": 6,
+  "classes": {
+   "mixed": 6
+  },
+  "routes": {
+   "R2": 6
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4680581274",
+  "n": 6,
+  "classes": {
+   "poly": 5,
+   "mixed": 1
+  },
+  "routes": {
+   "R1": 5,
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "FHBVYXZ",
+  "n": 4,
+  "classes": {
+   "mixed": 4
+  },
+  "routes": {
+   "R2": 4
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_delta_num",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "GLFVCVK4a",
+  "n": 4,
+  "classes": {
+   "mixed": 4
+  },
+  "routes": {
+   "R2": 4
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_delta_num",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3862621143",
+  "n": 3,
+  "classes": {
+   "mixed": 3
+  },
+  "routes": {
+   "R2": 3
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": true
+ },
+ {
+  "family": "8673686234",
+  "n": 3,
+  "classes": {
+   "sqrt": 3
+  },
+  "routes": {
+   "R2": 3
+  },
+  "flags": [
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_var"
+  ],
+  "pure_sqrt": true,
+  "res16": true
+ },
+ {
+  "family": "9563139965",
+  "n": 3,
+  "classes": {
+   "mixed": 3
+  },
+  "routes": {
+   "R2": 3
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "GRKIBMP",
+  "n": 3,
+  "classes": {
+   "sqrt": 3
+  },
+  "routes": {
+   "R4": 1,
+   "R2": 2
+  },
+  "flags": [
+   "sqrt"
+  ],
+  "struct": [
+   "nonstrict"
+  ],
+  "pure_sqrt": true,
+  "res16": true
+ },
+ {
+  "family": "1348932091",
+  "n": 2,
+  "classes": {
+   "poly": 1,
+   "mixed": 1
+  },
+  "routes": {
+   "R1": 1,
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "1965189142",
+  "n": 2,
+  "classes": {
+   "sqrt": 1,
+   "poly": 1
+  },
+  "routes": {
+   "R2": 1,
+   "R1": 1
+  },
+  "flags": [
+   "otherf",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": true,
+  "res16": false
+ },
+ {
+  "family": "4652969746",
+  "n": 2,
+  "classes": {
+   "mixed": 2
+  },
+  "routes": {
+   "R2": 2
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5550839403",
+  "n": 2,
+  "classes": {
+   "poly": 1,
+   "mixed": 1
+  },
+  "routes": {
+   "R1": 1,
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5557288534",
+  "n": 2,
+  "classes": {
+   "poly": 1,
+   "mixed": 1
+  },
+  "routes": {
+   "R1": 1,
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6096597438",
+  "n": 2,
+  "classes": {
+   "poly": 2
+  },
+  "routes": {
+   "R1": 2
+  },
+  "flags": [
+   "otherf"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "FHBVYXZv2",
+  "n": 2,
+  "classes": {
+   "mixed": 2
+  },
+  "routes": {
+   "R2": 2
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_delta_num",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "IXPOTPA",
+  "n": 2,
+  "classes": {
+   "mixed": 2
+  },
+  "routes": {
+   "R3": 2
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "gamma23",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": true
+ },
+ {
+  "family": "MKFKQWU",
+  "n": 2,
+  "classes": {
+   "poly": 2
+  },
+  "routes": {
+   "R1": 2
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "PEMKWKU",
+  "n": 2,
+  "classes": {
+   "mixed": 2
+  },
+  "routes": {
+   "R3": 2
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "gamma23",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": true
+ },
+ {
+  "family": "QITNPEAv2",
+  "n": 2,
+  "classes": {
+   "mixed": 2
+  },
+  "routes": {
+   "R3": 2
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "gamma23",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "RQWUDDU",
+  "n": 2,
+  "classes": {
+   "mixed": 2
+  },
+  "routes": {
+   "R2": 2
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "SDCCMGA",
+  "n": 2,
+  "classes": {
+   "mixed": 2
+  },
+  "routes": {
+   "R2": 2
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "TEWNSCJ",
+  "n": 2,
+  "classes": {
+   "mixed": 2
+  },
+  "routes": {
+   "R3": 2
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "gamma23",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": true
+ },
+ {
+  "family": "TSKAJXY-IYOUOBF",
+  "n": 2,
+  "classes": {
+   "mixed": 2
+  },
+  "routes": {
+   "R4": 2
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "nonstrict",
+   "sqrt_delta_num",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": true
+ },
+ {
+  "family": "TSKAJXY-RIBCYXU",
+  "n": 2,
+  "classes": {
+   "mixed": 2
+  },
+  "routes": {
+   "R2": 1,
+   "R4": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "nonstrict",
+   "sqrt_delta_num",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": true
+ },
+ {
+  "family": "TXQTPVC",
+  "n": 2,
+  "classes": {
+   "mixed": 2
+  },
+  "routes": {
+   "R3": 2
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "gamma23",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": true
+ },
+ {
+  "family": "1008824382",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "1085358243",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "1117202051",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "1248932983",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "1284543870",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "1347067436",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "1395142356",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "1550635295",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "1586903463",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "1611600345x",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "1642527039",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "1834976363",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "1836408787",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "1894886027",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "1948775510",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R3": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "mud_sqrt"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "1968758929",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2073661826",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2125338128",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2151506422",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2171548893",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2314572187",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2320951108",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R3": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "mud_sqrt"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2327525027",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2390583444",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2445657182",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2468307358",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2485876245a",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2485876245b",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2513405547",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2563100177",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2565248885",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R3": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "mud_sqrt"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2570626711",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2608321088x",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2763799127",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "2923748598",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3020140039",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3078028960",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3137600529",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3139693500",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3253650737",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3287695934",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3296257235",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3318775219",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3425739813",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3508342905",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3526497018",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3566713650",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3603097872",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3636849632",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3665919985",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "3872614111",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4002562507",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4010906068",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4041673283",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4047599236",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4092227918",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4222324842",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4240815464",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4306175952",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4491491732",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4559601669",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4559601669b",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4667071578",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4717061266",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4750199435",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4821120729",
+  "n": 1,
+  "classes": {
+   "sqrt": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": true,
+  "res16": false
+ },
+ {
+  "family": "4828966562",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4840774900",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4841020453",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "4887115291",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5000076558",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5026777310a",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5202826650",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "otherf",
+   "sqrt"
+  ],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5298513205",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5405130650",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5429228381",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5429238960",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R3": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "mud_sqrt"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5451229371",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5490182221",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5541487347",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5546286427",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5584033259",
+  "n": 1,
+  "classes": {
+   "sqrt": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_var"
+  ],
+  "pure_sqrt": true,
+  "res16": false
+ },
+ {
+  "family": "5691615370",
+  "n": 1,
+  "classes": {
+   "sqrt": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_var"
+  ],
+  "pure_sqrt": true,
+  "res16": false
+ },
+ {
+  "family": "5708641738",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5735387903",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5744538693",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5756588587",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5760733457",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5835568093",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5943578801",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "5957966880",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6078657299",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6170936724",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6184614449",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6224332984",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6284721194",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6404645741",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6410081357",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6459846571",
+  "n": 1,
+  "classes": {
+   "sqrt": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_var"
+  ],
+  "pure_sqrt": true,
+  "res16": false
+ },
+ {
+  "family": "6601228004",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6619134733",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6723997360",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6725783616",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6762190381",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6789182745",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6833979866",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6836427086",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6843920790",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6877738680",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6944699408",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": true
+ },
+ {
+  "family": "6987934000",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "6988401556",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7043724150",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": true
+ },
+ {
+  "family": "7175074394",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7291663656",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7316455966",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7394240696",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7409690040",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7439076204",
+  "n": 1,
+  "classes": {
+   "sqrt": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "sqrt"
+  ],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": true,
+  "res16": false
+ },
+ {
+  "family": "7718591733",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7726998381",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7743522046",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7761782916",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7796879304",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "otherf",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7819193535",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7823243247",
+  "n": 1,
+  "classes": {
+   "sqrt": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "sqrt"
+  ],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": true,
+  "res16": false
+ },
+ {
+  "family": "7863247282",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7881254908",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7903347843",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R3": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "mud_sqrt"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7931207804",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "7997589055",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R3": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "mud_sqrt"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "8055810915",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "8082208587",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "8248508703",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "8282573160",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "8293089898",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "8346775862",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "8384429938",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "8384511215",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "8405387449",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "8425800388",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "8495326405",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "8519146937",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "8611785756",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "8631418063",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "8657368829",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "8875146520",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R3": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "mud_sqrt",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "9096461391",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "9185711902",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "9225295803",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "9229542852",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "9251360200",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "9291937879",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "9368433105",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "9414951439",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "9641946727",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "9692636487",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "9756015945",
+  "n": 1,
+  "classes": {
+   "sqrt": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": true,
+  "res16": false
+ },
+ {
+  "family": "9893763499",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [
+   "disj"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "9922699028",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "9925287433",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "9995621667",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "CIHTIUM",
+  "n": 1,
+  "classes": {
+   "sqrt": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": true,
+  "res16": false
+ },
+ {
+  "family": "CJFZZDW",
+  "n": 1,
+  "classes": {
+   "sqrt": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": true,
+  "res16": false
+ },
+ {
+  "family": "FWGKMBZ",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "GCKBQEA",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "JNTEFVP",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "JSPEVYT",
+  "n": 1,
+  "classes": {
+   "sqrt": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_var"
+  ],
+  "pure_sqrt": true,
+  "res16": false
+ },
+ {
+  "family": "OMKYNLT",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R4": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "nonstrict"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "TSKAJXY-GXSABWC",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R4": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "otherf",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "inv_sqrtdelta",
+   "nonstrict"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "TSKAJXY-TADIAMB",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "TSKAJXY-WKGUESB",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "disj",
+   "sqrt_delta_num",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": true
+ },
+ {
+  "family": "TSKAJXY-XLLIPLS",
+  "n": 1,
+  "classes": {
+   "mixed": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "atnacs",
+   "ite",
+   "sqrt"
+  ],
+  "struct": [
+   "sqrt_delta_num",
+   "sqrt_var"
+  ],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "TSKAJXY-delta_x4",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ },
+ {
+  "family": "TSKAJXY-eulerA",
+  "n": 1,
+  "classes": {
+   "sqrt": 1
+  },
+  "routes": {
+   "R2": 1
+  },
+  "flags": [
+   "sqrt"
+  ],
+  "struct": [],
+  "pure_sqrt": true,
+  "res16": false
+ },
+ {
+  "family": "ZTGIJCF0",
+  "n": 1,
+  "classes": {
+   "poly": 1
+  },
+  "routes": {
+   "R1": 1
+  },
+  "flags": [],
+  "struct": [],
+  "pure_sqrt": false,
+  "res16": false
+ }
+]

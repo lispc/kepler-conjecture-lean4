@@ -1,0 +1,152 @@
+====================================================================================================
+① 全量分布（812 记录 / 209 家族）——任务口径五桶
+====================================================================================================
+类别            记录数      占比    家族数  说明
+poly          102   12.6%     50  纯多项式/有理（R1，TADIAMB 口径）
+ite             0    0.0%      0  纯 ite/guard 无超越（空！ite 均与 sqrt+atn 并存于 mixed）
+sqrt           25    3.1%     15  仅 sqrt 无 atn/acs（正底 √x 或 √δ-num 型）
+atn-acs         0    0.0%      0  仅 atan/acos 无 sqrt（空！）
+mixed         685   84.4%    153  多类并存（sqrt+atn2(+ite) 为主流：dih/gchi/vol 形态）
+
+====================================================================================================
+② 结构标注分布（路由相关；一条记录可多标）
+====================================================================================================
+sqrt_var           635 ( 78.2%)  √x 型（gchi/eta2/sqrt_x；正底）
+sqrt_delta_num     490 ( 60.3%)  √δ 仅分子（vol_x 型；BIX 实证 R2 可闭）
+disj               405 ( 49.9%)  顶层析取 \/（R2 域切分标记）
+mud_sqrt            22 (  2.7%)  mud_*_v1 = mu·√δ_sub（delta-top-issue 族）
+gamma23             19 (  2.3%)  gamma23_full8/keep135/gamma3f_div_sqrtdelta（TEWNSCJ/QZECFIC 病灶）
+inv_sqrtdelta       10 (  1.2%)  1/√δ 型（δ 过零病灶，QZECFIC 实证 TM 出局）
+nonstrict            7 (  0.9%)  含 <= 非严格（R4 角点候选）
+
+====================================================================================================
+③ 路由分配预估（静态画像口径；核时为 M3 Pro 单核标定外推）
+====================================================================================================
+路由      记录      占比  武器                                     估时口径
+R1:  101 ( 12.4%)  TM（TADIAMB 251k 叶 100% @101.2s）
+     估时口径: 10-101.2s/件
+R2:  665 ( 81.9%)  BB 域切分 + ite-hull2 + TM 临界带（BIX split 49,869 叶 @86.7s / TM @142.4s / 裸 54.8s）
+     估时口径: 55-142.4s/切分件
+R3:   39 (  4.8%)  第三武器（未建）：radicand 零等值面预切分 / t=√u 换元
+     估时口径: 87-142s/TM 件 × radicand 域因子 2-8（纯外推）
+R4:    7 (  0.9%)  手证（GRKIBMP B V2 角点四段先例）
+     估时口径: 0 核时（人工）
+
+切分件数（按顶层析取支数）: R1=138  R2=1233  R3=184
+R1 核时: 138件 × [10,101.2]s = 0.4 - 3.9 core-h
+R2 核时: 1233件 × [55,142.4]s = 18.8 - 48.8 core-h
+R3 核时(未建武器外推): 184件 × 2-8 radicand 域 × [87,142.4]s = 9 - 58 core-h（不含 W4-W5 R&D 工程成本）
+
+R3 严格占比: 4.8% (39/812)  <5% 降级线 = 41 条
+灵敏度上界: R2 中 √δ-num-only 487 条若 ite-hull2 失效需 R3 兜底 -> R3 上界 64.8%
+R3 分组: 实证组（TEWNSCJ/QZECFIC W2 实测 radicand 病 + 7550003505 delta-top 构造性 δ→0）= 24 条/3 家族；疑似组（gamma23 携带但 W2 病症为 guard 主导或未实测）= 15 条/11 家族
+疑似组家族: 1948775510,2320951108,2565248885,5429238960,7903347843,7997589055,8875146520,IXPOTPA,PEMKWKU,QITNPEAv2,TXQTPVC
+注: IXPOTPA/PEMKWKU/TXQTPVC 的 W2 TM invalid 主因=guard跨0（IXPOTPA TM 全 valid）-> 建议先走 R2 武器实测再升级 R3
+
+====================================================================================================
+④ residue16 交叉（16 条真残余的 prep 族邻居：同族大概率同病）
+====================================================================================================
+TSKAJXY-DERIVED          -> （无同名 prep 族）
+TSKAJXY-RIBCYXU          -> TSKAJXY-RIBCYXU(n=2,{'mixed': 2},路由{'R2': 1, 'R4': 1})
+TSKAJXY-IYOUOBF          -> TSKAJXY-IYOUOBF(n=2,{'mixed': 2},路由{'R4': 2})
+TSKAJXY-WKGUESB          -> TSKAJXY-WKGUESB(n=1,{'mixed': 1},路由{'R2': 1})
+TEWNSCJ                  -> TEWNSCJ(n=2,{'mixed': 2},路由{'R3': 2})
+PEMKWKU                  -> PEMKWKU(n=2,{'mixed': 2},路由{'R3': 2})
+TXQTPVC                  -> TXQTPVC(n=2,{'mixed': 2},路由{'R3': 2})
+IXPOTPA                  -> IXPOTPA(n=2,{'mixed': 2},路由{'R3': 2})
+QZECFIC wt0              -> QZECFIC(n=9,{'sqrt': 7, 'poly': 2},路由{'R3': 7, 'R4': 1, 'R1': 1})
+QZECFIC wt0 corner       -> QZECFIC(n=9,{'sqrt': 7, 'poly': 2},路由{'R3': 7, 'R4': 1, 'R1': 1})
+GRKIBMP B V2             -> GRKIBMP(n=3,{'sqrt': 3},路由{'R4': 1, 'R2': 2})
+8673686234               -> 8673686234(n=3,{'sqrt': 3},路由{'R2': 3})
+7043724150 a             -> 7043724150(n=1,{'mixed': 1},路由{'R2': 1})
+6944699408 a             -> 6944699408(n=1,{'mixed': 1},路由{'R2': 1})
+3862621143 a reduced     -> 3862621143(n=3,{'mixed': 3},路由{'R2': 3})
+9563139965D              -> （无同名 prep 族）
+
+====================================================================================================
+⑤ R3 第三武器（W4）靶标清单 —— 命中 δ 过零载体（inv_sqrtdelta ∨ gamma23 ∨ mud_sqrt）的家族
+====================================================================================================
+家族                       n  classes                      结构标注
+7550003505              35  {'mixed': 35}                disj,mud_sqrt,sqrt_var
+QZECFIC                  9  {'sqrt': 7, 'poly': 2}       disj,gamma23,inv_sqrtdelta,nonstrict,sqrt_var
+IXPOTPA                  2  {'mixed': 2}                 disj,gamma23,sqrt_var
+PEMKWKU                  2  {'mixed': 2}                 disj,gamma23,sqrt_var
+QITNPEAv2                2  {'mixed': 2}                 disj,gamma23,sqrt_var
+TEWNSCJ                  2  {'mixed': 2}                 disj,gamma23,sqrt_var
+TXQTPVC                  2  {'mixed': 2}                 disj,gamma23,sqrt_var
+1948775510               1  {'mixed': 1}                 disj,mud_sqrt
+2320951108               1  {'mixed': 1}                 mud_sqrt
+2565248885               1  {'mixed': 1}                 disj,mud_sqrt
+5429238960               1  {'mixed': 1}                 disj,mud_sqrt
+7903347843               1  {'mixed': 1}                 mud_sqrt
+7997589055               1  {'mixed': 1}                 mud_sqrt
+8875146520               1  {'mixed': 1}                 disj,mud_sqrt,sqrt_var
+
+合计: 14 家族 / 61 记录
+
+====================================================================================================
+⑥ 纯 sqrt 族（全记录核心旗标 ⊆ {sqrt}，无 atn/acs）——第三武器换元直用型
+====================================================================================================
+QZECFIC                n=  9  routes={'R3': 7, 'R4': 1, 'R1': 1}  struct=disj,gamma23,inv_sqrtdelta,nonstrict,sqrt_var
+8673686234             n=  3  routes={'R2': 3}  struct=disj,sqrt_var
+GRKIBMP                n=  3  routes={'R4': 1, 'R2': 2}  struct=nonstrict
+1965189142             n=  2  routes={'R2': 1, 'R1': 1}  struct=
+4821120729             n=  1  routes={'R2': 1}  struct=
+5584033259             n=  1  routes={'R2': 1}  struct=disj,sqrt_var
+5691615370             n=  1  routes={'R2': 1}  struct=disj,sqrt_var
+6459846571             n=  1  routes={'R2': 1}  struct=disj,sqrt_var
+7439076204             n=  1  routes={'R2': 1}  struct=disj
+7823243247             n=  1  routes={'R2': 1}  struct=disj
+9756015945             n=  1  routes={'R2': 1}  struct=sqrt_var
+CIHTIUM                n=  1  routes={'R2': 1}  struct=sqrt_var
+CJFZZDW                n=  1  routes={'R2': 1}  struct=sqrt_var
+JSPEVYT                n=  1  routes={'R2': 1}  struct=sqrt_var
+TSKAJXY-eulerA         n=  1  routes={'R2': 1}  struct=
+合计: 15 家族 / 28 记录
+
+====================================================================================================
+⑦ 209 家族全表（前 40 行；全量见 families.tsv）
+====================================================================================================
+家族                        n  classes                              route分布            结构标注
+OXLZLEZ                 230  {'mixed': 184, 'poly': 46}           {'R2': 184, 'R1': 46} sqrt_delta_num,sqrt_var
+ZTGIJCF4                162  {'mixed': 162}                       {'R2': 162}        disj,sqrt_delta_num,sqrt_var
+GLFVCVK4                 78  {'mixed': 78}                        {'R2': 78}         disj,sqrt_delta_num,sqrt_var
+7550003505               35  {'mixed': 35}                        {'R2': 20, 'R3': 15} disj,mud_sqrt,sqrt_var
+QITNPEA                  24  {'poly': 1, 'mixed': 23}             {'R1': 1, 'R2': 23} disj,sqrt_delta_num,sqrt_var
+QITNPEA1                 24  {'mixed': 24}                        {'R2': 24}         disj,sqrt_delta_num,sqrt_var
+QZECFIC                   9  {'sqrt': 7, 'poly': 2}               {'R3': 7, 'R4': 1, 'R1': 1} disj,gamma23,inv_sqrtdelta,nonstrict,sqrt_var
+BIXPCGW                   8  {'mixed': 7, 'poly': 1}              {'R2': 7, 'R1': 1} disj,sqrt_delta_num,sqrt_var
+181212899                 6  {'mixed': 6}                         {'R2': 6}          sqrt_var
+4680581274                6  {'poly': 5, 'mixed': 1}              {'R1': 5, 'R2': 1} disj
+FHBVYXZ                   4  {'mixed': 4}                         {'R2': 4}          disj,sqrt_delta_num,sqrt_var
+GLFVCVK4a                 4  {'mixed': 4}                         {'R2': 4}          disj,sqrt_delta_num,sqrt_var
+3862621143                3  {'mixed': 3}                         {'R2': 3}          
+8673686234                3  {'sqrt': 3}                          {'R2': 3}          disj,sqrt_var
+9563139965                3  {'mixed': 3}                         {'R2': 3}          sqrt_var
+GRKIBMP                   3  {'sqrt': 3}                          {'R4': 1, 'R2': 2} nonstrict
+1348932091                2  {'poly': 1, 'mixed': 1}              {'R1': 1, 'R2': 1} 
+1965189142                2  {'sqrt': 1, 'poly': 1}               {'R2': 1, 'R1': 1} 
+4652969746                2  {'mixed': 2}                         {'R2': 2}          
+5550839403                2  {'poly': 1, 'mixed': 1}              {'R1': 1, 'R2': 1} 
+5557288534                2  {'poly': 1, 'mixed': 1}              {'R1': 1, 'R2': 1} 
+6096597438                2  {'poly': 2}                          {'R1': 2}          
+FHBVYXZv2                 2  {'mixed': 2}                         {'R2': 2}          disj,sqrt_delta_num,sqrt_var
+IXPOTPA                   2  {'mixed': 2}                         {'R3': 2}          disj,gamma23,sqrt_var
+MKFKQWU                   2  {'poly': 2}                          {'R1': 2}          
+PEMKWKU                   2  {'mixed': 2}                         {'R3': 2}          disj,gamma23,sqrt_var
+QITNPEAv2                 2  {'mixed': 2}                         {'R3': 2}          disj,gamma23,sqrt_var
+RQWUDDU                   2  {'mixed': 2}                         {'R2': 2}          disj,sqrt_var
+SDCCMGA                   2  {'mixed': 2}                         {'R2': 2}          sqrt_var
+TEWNSCJ                   2  {'mixed': 2}                         {'R3': 2}          disj,gamma23,sqrt_var
+TSKAJXY-IYOUOBF           2  {'mixed': 2}                         {'R4': 2}          disj,nonstrict,sqrt_delta_num,sqrt_var
+TSKAJXY-RIBCYXU           2  {'mixed': 2}                         {'R2': 1, 'R4': 1} disj,nonstrict,sqrt_delta_num,sqrt_var
+TXQTPVC                   2  {'mixed': 2}                         {'R3': 2}          disj,gamma23,sqrt_var
+1008824382                1  {'mixed': 1}                         {'R2': 1}          disj,sqrt_var
+1085358243                1  {'mixed': 1}                         {'R2': 1}          sqrt_var
+1117202051                1  {'poly': 1}                          {'R1': 1}          
+1248932983                1  {'mixed': 1}                         {'R2': 1}          sqrt_var
+1284543870                1  {'mixed': 1}                         {'R2': 1}          sqrt_var
+1347067436                1  {'poly': 1}                          {'R1': 1}          disj
+1395142356                1  {'mixed': 1}                         {'R2': 1}          sqrt_var
+
+未解析 app（展开遇到，旗标可能低估）: {'f': 120, 'mud_126_x_v1': 12, 'mud_135_x_v1': 11, 'mud_234_x_v1': 6, 'fx': 6, 'g': 4}
