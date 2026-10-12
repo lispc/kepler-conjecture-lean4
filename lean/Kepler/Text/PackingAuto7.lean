@@ -1516,30 +1516,214 @@ theorem XNHPWAB1 (V : Set V3) (ul : List V3) (k : ℕ) (hV : Packing V)
 
 /-! ## AFFINE_HULL_PROJECTION_SEPARATES .. AFFINE_HULL_VORONOI_LIST_SUBSET_INTERS_BIS -/
 
--- NEEDS (2026-10-12 PA7 r3 lane): HOL 用 CONVEX_HULL_FINITE 权重表示. Lean 路线:
--- `mem_affineSpan_iff_eq_affineCombination` (Mathlib Combination.lean:916, 对
--- `Set.range (fun x : ↥S => (x : V3))`) 抽仿射组合权重 + 负权重抽取 (p 不在凸包
--- ⟹ 某权重 < 0; 凸包侧 `Finset.convexHull_eq` + `Finset.centerMass_mem_convexHull`).
--- 卡点: V3 = WithLp 上 `⬝ᵥ` 的 Finset-和交换无现成引理 (Data/Matrix/Mul.lean 的
--- sum_dotProduct 是纯 pi 型), 需按 Geom/LuneVolume.lean:137 的 coe 模式逐项展开,
--- 属分量法沼泽, 待专门 lane.
+/-! ### 私件：V3 (WithLp) 点积运输 kit
+
+`⬝ᵥ` 是 pi 型 `dotProduct`（参数自动插入 `WithLp.ofLp`），V3 上没有现成的
+Finset-和交换引理（Mathlib 的 `sum_dotProduct` 是纯 pi 型）。以下私件经
+coercion 搬运 add/smul/sum，采用 `Kepler/Geom/AzimLemmas.lean` 的
+`WithLp.ofLp_*` 模式。 -/
+
+/-- Dot symmetry at `V3`. -/
+private theorem p7_dot_comm (a b : V3) : a ⬝ᵥ b = b ⬝ᵥ a :=
+  dotProduct_comm (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+
+/-- Scalar action in the left dot argument at `V3`. -/
+private theorem p7_smul_dot_left (t : ℝ) (a b : V3) : (t • a) ⬝ᵥ b = t * (a ⬝ᵥ b) :=
+  smul_dotProduct t (a : Fin 3 → ℝ) (b : Fin 3 → ℝ)
+
+/-- Distributivity in the left dot argument at `V3`. -/
+private theorem p7_add_dot_left (a b c : V3) : (a + b) ⬝ᵥ c = a ⬝ᵥ c + b ⬝ᵥ c := by
+  simp only [WithLp.ofLp_add, add_dotProduct]
+
+/-- Finset-sum exchange in the left dot argument at `V3` (by Finset induction,
+since the `V3`-sum and the pi-sum live in different `AddCommMonoid` instances). -/
+private theorem p7_sum_dot_left {ι : Type*} (s : Finset ι) (f : ι → V3) (c : V3) :
+    ((∑ j ∈ s, f j : V3)) ⬝ᵥ c = ∑ j ∈ s, (f j ⬝ᵥ c) := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp
+  | insert j s hj ih =>
+    rw [Finset.sum_insert hj, Finset.sum_insert hj, p7_add_dot_left, ih]
+
+-- RESOLVED (2026-10-12 PA7 r3 lane): 权重分解走 `mem_affineSpan_iff_eq_affineCombination`
+-- (ι := ↥S, p := Subtype.val) + 负权重抽取用 `Finset.centerMass_mem_convexHull`
+-- (凸包侧); V3 点积-和交换由上方 p7_ 私件 kit 解决 (Finset 归纳 + WithLp.ofLp 模式).
 /-- HL `AFFINE_HULL_PROJECTION_SEPARATES` (Rogers.hl:7431). -/
 theorem AFFINE_HULL_PROJECTION_SEPARATES (S : Set V3) (p : V3) (hfin : S.Finite)
     (hp : p ∈ (affineSpan ℝ S : Set V3)) (hnc : ¬ p ∈ convexHull ℝ S) :
     ∃ u ∈ S, ∀ x n : V3, p = x + n → x ∈ (affineSpan ℝ (S \ {u}) : Set V3) →
       (∀ v ∈ S \ {u}, ∀ w ∈ S \ {u}, (v - w) ⬝ᵥ n = 0) →
         (p - x) ⬝ᵥ (u - x) ≤ 0 := by
-  sorry
+  classical
+  have hne : S.Nonempty := by
+    by_contra hcon
+    push_neg at hcon
+    rw [hcon, AffineSubspace.span_empty, AffineSubspace.bot_coe] at hp
+    exact absurd hp (Set.notMem_empty p)
+  have hrange : Set.range (Subtype.val : S → V3) = S := Subtype.range_val
+  rw [← hrange] at hp
+  obtain ⟨s, w, hwsum, hpw⟩ :=
+    (mem_affineSpan_iff_eq_affineCombination (k := ℝ) (V := V3) (P := V3) (p1 := p)
+      (p := (Subtype.val : S → V3))).mp hp
+  have h1 : s.affineCombination ℝ (Subtype.val : S → V3) w = ∑ j ∈ s, w j • ((j : V3)) :=
+    s.affineCombination_eq_linear_combination (Subtype.val : S → V3) w hwsum
+  have hpc : ∑ j ∈ s, w j • ((j : V3)) = p := h1.symm.trans hpw.symm
+  have hall : ∃ j ∈ s, w j < 0 := by
+    by_contra hcon
+    push_neg at hcon
+    refine hnc ?_
+    have hcm : s.centerMass w (fun x : S => (x : V3)) ∈ convexHull ℝ S :=
+      s.centerMass_mem_convexHull hcon (by rw [hwsum]; positivity) (fun j _ => j.property)
+    have hcmeq : s.centerMass w (fun x : S => (x : V3)) = p := by
+      have hz : s.centerMass w (fun x : S => (x : V3))
+          = ∑ j ∈ s, w j • ((j : V3)) :=
+        s.centerMass_eq_of_sum_1 (fun x : S => (x : V3)) hwsum
+      rw [hz, hpc]
+    rwa [hcmeq] at hcm
+  obtain ⟨i, his, hwi⟩ := hall
+  refine ⟨(i : V3), i.property, ?_⟩
+  intro x n hpxn hxspan horth
+  have hsubn : n = p - x := by rw [hpxn]; abel
+  have hsum : ∑ j ∈ s, w j • ((j : V3) - x) = n := by
+    calc ∑ j ∈ s, w j • ((j : V3) - x)
+        = ∑ j ∈ s, (w j • (j : V3) - w j • x) :=
+          Finset.sum_congr rfl (fun j _ => smul_sub _ _ _)
+      _ = (∑ j ∈ s, w j • (j : V3)) - (∑ j ∈ s, w j • x) :=
+          Finset.sum_sub_distrib (fun j => w j • (j : V3)) (fun j => w j • x)
+      _ = p - (∑ j ∈ s, w j) • x := by rw [hpc, Finset.sum_smul]
+      _ = p - x := by rw [hwsum, one_smul]
+      _ = n := hsubn.symm
+  have hdot : n ⬝ᵥ n = ∑ j ∈ s, w j * (((j : V3) - x) ⬝ᵥ n) := by
+    calc n ⬝ᵥ n = ((∑ j ∈ s, w j • ((j : V3) - x) : V3)) ⬝ᵥ n := by rw [hsum]
+      _ = ∑ j ∈ s, ((w j • ((j : V3) - x)) ⬝ᵥ n) := p7_sum_dot_left _ _ _
+      _ = ∑ j ∈ s, w j * (((j : V3) - x) ⬝ᵥ n) :=
+          Finset.sum_congr rfl
+            (fun j _ => p7_smul_dot_left (w j) ((j : V3) - x) n)
+  have hzero : ∀ j ∈ s, (j : V3) ≠ (i : V3) → ((j : V3) - x) ⬝ᵥ n = 0 := by
+    intro j hj hjne
+    have hjS : (j : V3) ∈ S \ {(i : V3)} :=
+      ⟨j.property, fun hh => hjne (Set.mem_singleton_iff.mp hh)⟩
+    exact (ORTHOGONAL_TO_AFFINE_HULL_EQ (S \ {(i : V3)}) n).mp horth (j : V3)
+      (mem_affineSpan ℝ hjS) x hxspan
+  have hnn : 0 ≤ n ⬝ᵥ n := by rw [← norm_sq_eq_dot n]; exact sq_nonneg _
+  have hkey : ((i : V3) - x) ⬝ᵥ n ≤ 0 := by
+    by_contra hcon
+    push_neg at hcon
+    have hneg : w i * (((i : V3) - x) ⬝ᵥ n) < 0 := mul_neg_of_neg_of_pos hwi hcon
+    have hsingle : ∑ j ∈ s, w j * (((j : V3) - x) ⬝ᵥ n)
+        = w i * (((i : V3) - x) ⬝ᵥ n) :=
+      Finset.sum_eq_single_of_mem i his
+        (fun j hj hjne => by
+          rw [hzero j hj (fun hh => hjne (Subtype.ext hh)), mul_zero])
+    rw [hsingle] at hdot
+    linarith
+  rw [← hsubn, p7_dot_comm]
+  exact hkey
 
--- NEEDS (2026-10-12 PA7 r3 lane): 依赖 AFFINE_HULL_PROJECTION_SEPARATES (HOL 原证
--- 路线, 卡点见其上方注记). 替代路线侦察过并否决: 把 p 正交投影到 aff span
--- (setOfList ul) 得 x, n (AFFINE_HULL_PROJECTION_EXISTS), 但 x 不必在凸包内; 又
--- "取 conv S 最近点 q" 路线不通: 法锥不等式 ⟨p-q, z-q⟩ ≤ 0 不蕴含 ⊥ 差分.
+-- RESOLVED (2026-10-12 PA7 r3 lane): 按 HOL 原证路线 (AFFINE_HULL_PROJECTION_
+-- SEPARATES + AFFINE_HULL_CIRCUMCENTER_PROJECTION + OAPVION1/2 + XYOFCGX) 填证.
+-- 历史侦察记录: "取 conv S 最近点 q" 替代路线不通 (法锥不等式 ⟨p-q, z-q⟩ ≤ 0
+-- 不蕴含 ⊥ 差分), 未采用.
 /-- HL `XNHPWAB2` (Rogers.hl:7497). -/
 theorem XNHPWAB2 (V : Set V3) (ul : List V3) (k : ℕ) (hV : Packing V)
     (hb : barV V k ul) (hl2 : hl ul < Real.sqrt 2) :
     omegaList V ul ∈ convexHull ℝ (setOfList ul) := by
-  sorry
+  classical
+  by_cases hmem : omegaList V ul ∈ convexHull ℝ (setOfList ul)
+  · exact hmem
+  · have hc : omegaList V ul = circumcenter (setOfList ul) := XNHPWAB1 V ul k hV hb hl2
+    have hind : ¬ affineDependent (setOfList ul) := BARV_AFFINE_INDEPENDENT V ul k hV hb
+    have hSV : setOfList ul ⊆ V := BARV_SUBSET V k ul hb
+    have hfin : (setOfList ul).Finite :=
+      finite_set_of_fin_dim_affineIndependent (k := ℝ) (not_not.mp hind)
+    obtain ⟨u, huS, husep⟩ := AFFINE_HULL_PROJECTION_SEPARATES (setOfList ul)
+      (omegaList V ul) hfin
+      (by rw [hc]; exact BARV_CIRCUMCENTER_EXISTS V ul k hV hb) hmem
+    by_cases hdel : setOfList ul \ {u} = ∅
+    · -- `S` is a singleton: `omegaList = u ∈ convex hull {u}`
+      have hSu : setOfList ul = {u} :=
+        Set.Subset.antisymm (fun x hx => by
+          by_contra hne
+          have hxx : x ∈ setOfList ul \ {u} := ⟨hx, hne⟩
+          rw [hdel] at hxx
+          exact absurd hxx (Set.notMem_empty x)) (Set.singleton_subset_iff.mpr huS)
+      have hpu : omegaList V ul = u := by
+        rw [hc, hSu, CIRCUMCENTER_1]
+      refine absurd ?_ hmem
+      rw [hpu, hSu, convexHull_singleton]
+      exact Set.mem_singleton u
+    · -- main case: project the circumcenter of `S \ {u}`
+      have hne : setOfList ul \ {u} ≠ ∅ := hdel
+      have hind_t : ¬ affineDependent (setOfList ul \ {u}) :=
+        p7_hind_subset (setOfList ul) (setOfList ul \ {u}) hind (Set.diff_subset)
+      obtain ⟨n0, hdec, hn0⟩ := AFFINE_HULL_CIRCUMCENTER_PROJECTION (setOfList ul)
+        (setOfList ul \ {u}) hind (Set.diff_subset) hne
+      obtain ⟨v, hvdel⟩ := Set.nonempty_iff_ne_empty.mpr hne
+      set p0 : V3 := circumcenter (setOfList ul \ {u}) with hp0def
+      have hvS : v ∈ setOfList ul := Set.diff_subset hvdel
+      have hp0mem : p0 ∈ (affineSpan ℝ (setOfList ul \ {u}) : Set V3) :=
+        OAPVION1 (setOfList ul \ {u}) hne hind_t
+      have hvmem : v ∈ (affineSpan ℝ (setOfList ul \ {u}) : Set V3) :=
+        mem_affineSpan ℝ hvdel
+      have horth := (ORTHOGONAL_TO_AFFINE_HULL_EQ (setOfList ul \ {u}) n0).mp hn0
+      have hpe : omegaList V ul = p0 + n0 := hc.trans hdec
+      have hsubn : (p0 - omegaList V ul : V3) = -n0 := by rw [hpe]; abel
+      have hnn0 : dist p0 (omegaList V ul) = ‖n0‖ := by
+        rw [dist_eq_norm, hsubn, norm_neg]
+      have hdec1 : ((p0 + n0) - v : V3) = (p0 - v) + n0 := by abel
+      have hA : dist (omegaList V ul) v ^ 2 = dist p0 v ^ 2 + ‖n0‖ ^ 2 := by
+        rw [dist_eq_norm, dist_eq_norm, hpe, hdec1, norm_add_sq_real, inner_eq_dot,
+          horth p0 hp0mem v hvmem]
+        ring
+      have hdec2 : ((p0 + n0) - u : V3) = (p0 - u) + n0 := by abel
+      have hB : dist (omegaList V ul) u ^ 2
+          = dist p0 u ^ 2 + ‖n0‖ ^ 2 + 2 * ((p0 - u) ⬝ᵥ n0) := by
+        rw [dist_eq_norm, dist_eq_norm, hpe, hdec2, norm_add_sq_real, inner_eq_dot]
+        ring
+      have hpu : dist (omegaList V ul) u = dist (omegaList V ul) v := by
+        rw [hc, ← OAPVION2_concl (setOfList ul) hind u huS,
+          ← OAPVION2_concl (setOfList ul) hind v hvS]
+      have hsep := husep p0 n0 hpe hp0mem hn0
+      have hcross : 0 ≤ (p0 - u) ⬝ᵥ n0 := by
+        have h1' : (omegaList V ul - p0 : V3) = n0 := by rw [hpe]; abel
+        have h0 : ((n0 : V3)) ⬝ᵥ ((u - p0 : V3))
+            = ((u - p0 : V3)) ⬝ᵥ ((n0 : V3)) := p7_dot_comm n0 (u - p0)
+        have hsep2 : (u - p0) ⬝ᵥ n0 ≤ 0 := by
+          rw [← h0]
+          have h5 : ((n0 : V3)) ⬝ᵥ ((u - p0 : V3))
+              = ((omegaList V ul - p0 : V3)) ⬝ᵥ ((u - p0 : V3)) := by rw [h1']
+          rw [h5]
+          exact hsep
+        have hcomm : (p0 - u) ⬝ᵥ n0 + (u - p0) ⬝ᵥ n0 = 0 := by
+          have e1 : (p0 - u) ⬝ᵥ n0 = (p0 ⬝ᵥ n0) - (u ⬝ᵥ n0) := by
+            rw [← inner_eq_dot (p0 - u) n0, ← inner_eq_dot p0 n0, ← inner_eq_dot u n0,
+              inner_sub_left]
+          have e3 : (u - p0) ⬝ᵥ n0 = (u ⬝ᵥ n0) - (p0 ⬝ᵥ n0) := by
+            rw [← inner_eq_dot (u - p0) n0, ← inner_eq_dot u n0, ← inner_eq_dot p0 n0,
+              inner_sub_left]
+          rw [e1, e3]
+          ring
+        linarith
+      have hsq : dist p0 u ^ 2 ≤ dist p0 v ^ 2 := by
+        have hpu2 : dist (omegaList V ul) u ^ 2 = dist (omegaList V ul) v ^ 2 := by
+          rw [hpu]
+        have e2 : dist p0 u ^ 2
+            = dist (omegaList V ul) u ^ 2 - ‖n0‖ ^ 2 - 2 * ((p0 - u) ⬝ᵥ n0) := by
+          linarith [hB]
+        linarith [hA, hpu2, hcross, e2]
+      have hr2 : radV (setOfList ul \ {u}) < Real.sqrt 2 :=
+        lt_of_le_of_lt (RADV_MONO (setOfList ul) (setOfList ul \ {u}) hind
+          (Set.diff_subset) hne) hl2
+      have hu' : u ∈ V \ (setOfList ul \ {u}) :=
+        ⟨hSV huS, fun hh => hh.2 rfl⟩
+      have hxy := XYOFCGX V (setOfList ul \ {u}) p0 hV
+        (Set.diff_subset.trans hSV) hind_t rfl hr2 v u hvdel hu'
+      rw [dist_comm u p0, dist_comm v p0] at hxy
+      have hle : dist p0 u ≤ dist p0 v := by
+        have g1 := dist_nonneg (x := p0) (y := u)
+        have g2 := dist_nonneg (x := p0) (y := v)
+        nlinarith
+      linarith
 
 /-- HL `XNHPWAB4` (Rogers.hl:7691): the truncated circumradii increase
 strictly. -/
@@ -1625,22 +1809,233 @@ theorem XNHPWAB4 (V : Set V3) (ul : List V3) (k : ℕ) (hV : Packing V)
     show radV (setOfList (truncateSimplex i ul)) < radV (setOfList (truncateSimplex j ul))
     exact (sq_lt_sq₀ hA.2.2 hA.2.1).mp hsq
 
--- NEEDS (2026-10-12 PA7 r3 lane): 纯机械, 唯一卡点是 XNHPWAB2 (同链上游).
--- 路线: `omegaListN V ul i = omegaList V (truncateSimplex i ul)` (经 PA5
--- OMEGA_LIST_N_LEMMA ... 0 分支) → 对截断表用 XNHPWAB2 →
--- SET_OF_LIST_TRUNCATE_SIMPLEX_SUBSET + convexHull 单调.
 /-- HL `OMEGA_LIST_N_IN_CONVEX_HULL` (Rogers.hl:7869). -/
 theorem OMEGA_LIST_N_IN_CONVEX_HULL (V : Set V3) (ul : List V3) (k i : ℕ)
     (hV : Packing V) (hb : barV V k ul) (hik : i ≤ k)
     (hl2 : hl ul < Real.sqrt 2) :
     omegaListN V ul i ∈ convexHull ℝ (setOfList ul) := by
-  sorry
+  have hblen : ul.length = k + 1 := hb.1
+  have hbvl : barV V i (truncateSimplex i ul) := TRUNCATE_SIMPLEX_BARV V i k ul hb hik
+  have heq : omegaListN V ul i = omegaList V (truncateSimplex i ul) :=
+    (OMEGA_LIST_LEMMA V ul i (by rw [hblen]; omega)).symm
+  rw [heq]
+  have hl2i : hl (truncateSimplex i ul) < Real.sqrt 2 :=
+    lt_of_le_of_lt (HL_DECREASE V ul k i hV hb hik) hl2
+  have hsub : setOfList (truncateSimplex i ul) ⊆ setOfList ul :=
+    SET_OF_LIST_TRUNCATE_SIMPLEX_SUBSET ul i (by rw [hblen]; omega)
+  exact convexHull_mono hsub (XNHPWAB2 V (truncateSimplex i ul) i hV hbvl hl2i)
 
-/-- HL `XNHPWAB3` (Rogers.hl:7926). -/
+/-- Re-splice of PackingAuto6/18's private `p6/pa18_affDim_insert` (HOL
+`AFF_DIM_INSERT` content): inserting a point outside the affine span raises
+the affine dimension by one. -/
+private theorem p7_affDim_insert (S : Set V3) (y : V3) (hne : S.Nonempty)
+    (hy : y ∉ (affineSpan ℝ S : Set V3)) :
+    affDim (insert y S) = affDim S + 1 := by
+  obtain ⟨y0, hy0⟩ := hne
+  have hy0S : y0 ∈ (affineSpan ℝ S : Set V3) := subset_affineSpan ℝ S hy0
+  set D := vectorSpan ℝ S with hD
+  have mD : ∀ a ∈ S, ∀ b ∈ S, (a - b) ∈ D := by
+    intro a ha b hb
+    rw [hD, vectorSpan_def]
+    exact Submodule.subset_span (Set.mem_vsub.2 ⟨a, ha, b, hb, rfl⟩)
+  have hvec : vectorSpan ℝ (insert y S) = D ⊔ Submodule.span ℝ {y - y0} := by
+    have hgen : (y - y0) ∈ vectorSpan ℝ (insert y S) := by
+      rw [vectorSpan_def]
+      exact Submodule.subset_span (Set.mem_vsub.2 ⟨y, Set.mem_insert _ _,
+        y0, Set.mem_insert_of_mem _ hy0, rfl⟩)
+    have hmono : vectorSpan ℝ S ≤ vectorSpan ℝ (insert y S) :=
+      vectorSpan_mono (k := ℝ) (Set.subset_insert y S)
+    have hsb : ∀ r ∈ Submodule.span ℝ {y - y0}, r ∈ vectorSpan ℝ (insert y S) := by
+      intro r hm
+      rw [Submodule.mem_span_singleton] at hm
+      obtain ⟨s, rfl⟩ := hm
+      exact Submodule.smul_mem _ s hgen
+    refine le_antisymm ?_ ?_
+    · rw [vectorSpan_def, Submodule.span_le]
+      intro g hg
+      obtain ⟨x, hx, x', hx', rfl⟩ := Set.mem_vsub.1 hg
+      rw [SetLike.mem_coe]
+      rcases Set.mem_insert_iff.1 hx with hxe | hx
+      · rcases Set.mem_insert_iff.1 hx' with hxe' | hx'
+        · rw [hxe, hxe', vsub_self]
+          exact Submodule.zero_mem _
+        · rw [hxe, vsub_eq_sub]
+          have hv : (y - x' : V3) = (y - y0) + -(x' - y0) := by abel
+          have hA : (x' - y0 : V3) ∈ D ⊔ Submodule.span ℝ {y - y0} :=
+            Submodule.mem_sup_left (mD x' hx' y0 hy0)
+          have hC : (y - y0 : V3) ∈ D ⊔ Submodule.span ℝ {y - y0} :=
+            Submodule.mem_sup_right (Submodule.subset_span
+              (Set.mem_singleton (y - y0)))
+          rw [hv]
+          exact Submodule.add_mem (D ⊔ Submodule.span ℝ {y - y0}) hC
+            (Submodule.neg_mem (D ⊔ Submodule.span ℝ {y - y0}) hA)
+      · rcases Set.mem_insert_iff.1 hx' with hxe' | hx'
+        · rw [hxe', vsub_eq_sub]
+          have hv : (x - y : V3) = (x - y0) + -(y - y0) := by abel
+          have hA : (x - y0 : V3) ∈ D ⊔ Submodule.span ℝ {y - y0} :=
+            Submodule.mem_sup_left (mD x hx y0 hy0)
+          have hC : (y - y0 : V3) ∈ D ⊔ Submodule.span ℝ {y - y0} :=
+            Submodule.mem_sup_right (Submodule.subset_span
+              (Set.mem_singleton (y - y0)))
+          rw [hv]
+          exact Submodule.add_mem (D ⊔ Submodule.span ℝ {y - y0}) hA
+            (Submodule.neg_mem (D ⊔ Submodule.span ℝ {y - y0}) hC)
+        · exact Submodule.mem_sup_left (mD x hx x' hx')
+    · intro w hw
+      rcases Submodule.mem_sup.1 hw with ⟨a, ha, b, hb, hab⟩
+      have haD : a ∈ vectorSpan ℝ (insert y S) := hmono ha
+      have hbD : b ∈ vectorSpan ℝ (insert y S) := hsb b hb
+      rw [← hab]
+      exact add_mem haD hbD
+  have hvD : y - y0 ∉ D := by
+    intro h
+    apply hy
+    have hmem : (y - y0) +ᵥ y0 ∈ (affineSpan ℝ S : Set V3) :=
+      AffineSubspace.vadd_mem_of_mem_direction
+        (by rw [direction_affineSpan]; exact h) hy0S
+    have h2 : (y - y0 : V3) +ᵥ y0 = y := by rw [vadd_eq_add]; abel
+    rw [h2] at hmem
+    exact hmem
+  have hinf : D ⊓ Submodule.span ℝ {y - y0} = ⊥ := by
+    rw [Submodule.eq_bot_iff]
+    intro w hw
+    have hwK : w ∈ D := (Submodule.mem_inf.1 hw).1
+    have hwS := (Submodule.mem_inf.1 hw).2
+    obtain ⟨s, rfl⟩ := Submodule.mem_span_singleton.1 hwS
+    have hs0 : s = 0 := by
+      by_contra hs0
+      have hinv : s⁻¹ * s = 1 := inv_mul_cancel₀ hs0
+      have h2 : (s⁻¹ • (s • (y - y0)) : V3) ∈ D := Submodule.smul_mem _ _ hwK
+      rw [smul_smul, hinv, one_smul] at h2
+      exact hvD h2
+    rw [hs0, zero_smul]
+  have hvyne : (y - y0 : V3) ≠ 0 := by
+    intro h0
+    rw [h0] at hvD
+    exact hvD (Submodule.zero_mem D)
+  have hfr : Module.finrank ℝ (vectorSpan ℝ (insert y S))
+      = Module.finrank ℝ (vectorSpan ℝ S) + 1 := by
+    have h2 := Submodule.finrank_sup_add_finrank_inf_eq D (Submodule.span ℝ {y - y0})
+    rw [hinf, finrank_bot] at h2
+    have h3 : Module.finrank ℝ (Submodule.span ℝ {y - y0}) = 1 :=
+      finrank_span_singleton hvyne
+    rw [h3] at h2
+    rw [hvec]
+    omega
+  have hneI : (insert y S).Nonempty := ⟨y0, Set.mem_insert_of_mem _ hy0⟩
+  have hneI' : insert y S ≠ ∅ := Set.nonempty_iff_ne_empty.mp hneI
+  simp only [affDim, if_neg hneI', if_neg (Set.nonempty_iff_ne_empty.mp ⟨y0, hy0⟩)]
+  rw [hfr]
+  omega
+
+/-- HL `XNHPWAB3` (Rogers.hl:7926). RESOLVED (2026-10-12 PA7 r3 lane): HOL 的
+k-归纳 — 归纳步将 `S_{k+1}` 拆为插入点 `omegaListN V ul (k+1)`（= circumcenter
+ul，经 XNHPWAB1）与 `S_k(vl)`（vl = truncate k ul，经 OMEGA_LIST_N_LEMMA），
+插入点在 `S_k(vl)` 的仿射包之外由反证：若在则经
+`OMEGA_LIST_N_IN_CONVEX_HULL` + `AFFINE_HULL_CIRCUMCENTER_EQ` 得
+circumcenter ul = circumcenter vl，与 `HL_PROPERTIES` + `XNHPWAB4` 的严格
+递增矛盾；插入分支用 `p7_affDim_insert`（PA6/PA18 私件的重接副本）。-/
 theorem XNHPWAB3 (V : Set V3) (ul : List V3) (k : ℕ) (hV : Packing V)
     (hb : barV V k ul) (hl2 : hl ul < Real.sqrt 2) :
     affDim {omegaListN V ul j | j ∈ Finset.Icc 0 k} = (k : ℤ) := by
-  sorry
+  classical
+  revert hb
+  revert hl2
+  revert ul
+  induction k with
+  | zero =>
+    intro ul hl2 hb
+    have hset : {omegaListN V ul j | j ∈ Finset.Icc 0 0} = {omegaListN V ul 0} := by
+      ext x
+      constructor
+      · rintro ⟨j, hj, rfl⟩
+        have h0 : j = 0 :=
+          le_antisymm (Finset.mem_Icc.mp hj).2 (Finset.mem_Icc.mp hj).1
+        rw [h0]
+        rfl
+      · intro h
+        exact ⟨0, Finset.mem_Icc.2 ⟨Nat.zero_le 0, Nat.zero_le 0⟩, h.symm⟩
+    rw [hset, affDim_singleton]
+    norm_num
+  | succ k ih =>
+    intro ul hl2 hb
+    have hlenU : ul.length = k + 1 + 1 := hb.1
+    set vl := truncateSimplex k ul with hvldef
+    have hbvl : barV V k vl := TRUNCATE_SIMPLEX_BARV V k (k + 1) ul hb (by omega)
+    have hlenV : vl.length = k + 1 := hbvl.1
+    have hl2v : hl vl < Real.sqrt 2 :=
+      lt_of_le_of_lt (HL_DECREASE V ul (k + 1) k hV hb (by omega)) hl2
+    have ihv := ih vl hl2v hbvl
+    have hstep : ∀ j ≤ k, omegaListN V vl j = omegaListN V ul j := by
+      intro j hj
+      have h1 := OMEGA_LIST_N_LEMMA V ul j (k - j) (by rw [hlenU]; omega)
+      rw [show j + (k - j) = k from by omega] at h1
+      exact h1.symm
+    have hSset : {omegaListN V ul j | j ∈ Finset.Icc 0 (k + 1)}
+        = insert (omegaListN V ul (k + 1))
+            {omegaListN V vl j | j ∈ Finset.Icc 0 k} := by
+      ext x
+      simp only [Set.mem_setOf_eq, Set.mem_insert_iff]
+      constructor
+      · rintro ⟨j, hj, rfl⟩
+        have hjle : j ≤ k + 1 := (Finset.mem_Icc.mp hj).2
+        rcases eq_or_lt_of_le hjle with hjk | hjk
+        · rw [hjk]
+          exact Or.inl rfl
+        · have hjk1 : j ≤ k := by omega
+          exact Or.inr ⟨j, Finset.mem_Icc.2 ⟨Nat.zero_le j, hjk1⟩, hstep j hjk1⟩
+      · rintro (rfl | ⟨j, hj, rfl⟩)
+        · exact ⟨k + 1, Finset.mem_Icc.2 ⟨Nat.zero_le _, by omega⟩, rfl⟩
+        · have hjk1 : j ≤ k := (Finset.mem_Icc.mp hj).2
+          exact ⟨j, Finset.mem_Icc.2 ⟨Nat.zero_le j, by omega⟩, (hstep j hjk1).symm⟩
+    have hcvsub : (convexHull ℝ (setOfList vl) : Set V3) ⊆
+        (affineSpan ℝ (setOfList vl) : Set V3) :=
+      convexHull_min (subset_affineSpan ℝ (setOfList vl)) (AffineSubspace.convex _)
+    have hspanle : ∀ x ∈ {omegaListN V vl j | j ∈ Finset.Icc 0 k},
+        x ∈ (affineSpan ℝ (setOfList vl) : Set V3) := by
+      intro x hx
+      rcases hx with ⟨j, hj, rfl⟩
+      have hjk1 : j ≤ k := (Finset.mem_Icc.mp hj).2
+      exact hcvsub (OMEGA_LIST_N_IN_CONVEX_HULL V vl k j hV hbvl hjk1 hl2v)
+    have hind : ¬ affineDependent (setOfList ul) :=
+      BARV_AFFINE_INDEPENDENT V ul (k + 1) hV hb
+    have hvlne : setOfList vl ≠ ∅ :=
+      Set.nonempty_iff_ne_empty.mp ⟨hdV vl, HD_IN_SET_OF_LIST vl (by rw [hlenV]; omega)⟩
+    have hsub2 : setOfList vl ⊆ setOfList ul :=
+      SET_OF_LIST_TRUNCATE_SIMPLEX_SUBSET ul k (by rw [hlenU]; omega)
+    have hxomega : omegaListN V ul (k + 1) = omegaList V ul := by
+      rw [show omegaList V ul = omegaListN V ul (ul.length - 1) from rfl,
+        show ul.length - 1 = k + 1 from by rw [hlenU]; omega]
+    have hx1 : omegaList V ul = circumcenter (setOfList ul) := XNHPWAB1 V ul (k + 1) hV hb hl2
+    have hxnotmem : omegaListN V ul (k + 1) ∉
+        (affineSpan ℝ {omegaListN V vl j | j ∈ Finset.Icc 0 k} : Set V3) := by
+      intro hmem
+      rw [hxomega, hx1] at hmem
+      have hle : (affineSpan ℝ {omegaListN V vl j | j ∈ Finset.Icc 0 k} :
+          AffineSubspace ℝ V3) ≤ (affineSpan ℝ (setOfList vl) : AffineSubspace ℝ V3) :=
+        affineSpan_le.mpr (fun x hx => hspanle x hx)
+      have hceq : circumcenter (setOfList ul) = circumcenter (setOfList vl) := by
+        refine AFFINE_HULL_CIRCUMCENTER_EQ (setOfList ul) (setOfList vl) hind hsub2 hvlne ?_
+        exact hle hmem
+      have hHd : hdV vl ∈ setOfList vl := HD_IN_SET_OF_LIST vl (by rw [hlenV]; omega)
+      have hdVeq : hdV vl = hdV ul := HD_TRUNCATE_SIMPLEX ul k (by omega)
+      have hlU : dist (circumcenter (setOfList ul)) (hdV vl) = hl ul := by
+        rw [hdVeq]
+        exact HL_PROPERTIES V ul (k + 1) hV hb (hdV ul)
+          (HD_IN_SET_OF_LIST ul (by rw [hlenU]; omega))
+      have hlV : dist (circumcenter (setOfList vl)) (hdV vl) = hl vl :=
+        HL_PROPERTIES V vl k hV hbvl (hdV vl) hHd
+      have htru : truncateSimplex (k + 1) ul = ul :=
+        ((TRUNCATE_SIMPLEX_INITIAL_SUBLIST (k + 1) ul ul).mpr ⟨⟨[], by simp⟩, hlenU⟩).1
+      have hstrict := XNHPWAB4 V ul (k + 1) hV hb hl2 k (k + 1) (by omega) (by omega)
+      rw [htru] at hstrict
+      rw [hceq] at hlU
+      linarith
+    rw [hSset, p7_affDim_insert {omegaListN V vl j | j ∈ Finset.Icc 0 k}
+      (omegaListN V ul (k + 1))
+      ⟨omegaListN V vl 0, ⟨0, Finset.mem_Icc.2 ⟨Nat.zero_le 0, by omega⟩, rfl⟩⟩
+      hxnotmem, ihv]
+    norm_num
 
 /-- HL `IN_VORONOI_LIST_IMP_IN_BIS` (Rogers.hl:8145). -/
 theorem IN_VORONOI_LIST_IMP_IN_BIS (V : Set V3) (ul : List V3) (k : ℕ) (x : V3)
@@ -2069,21 +2464,63 @@ resolved by adding `hfix` — the complement-fixing conjunct of HL's `permutes`
 (Library/permutations.ml:9) that the weak pointwise-on-set
 `PackingAuto2.permutes` lacks (see the `PERMUTES_TRIVIAL` encoding note in
 PackingAuto5; sweep report docs/encoding-risk-sweep.md §2.1 C2-1, probe
-P1-P3). With `hfix` the statement matches the HOL original; the proof body
-stays `sorry` (GIANT, later wave). -/
+P1-P3). With `hfix` the statement matches the HOL original.
+RESOLVED (2026-10-12 PA7 r3 lane): a moved point `j` exists (`hpid` + `hfix`),
+and `ul = leftActionList p ul` forces `elV ul j = elV ul (p j)` via
+`EL_LEFT_ACTION_LIST`, contradicting the all-distinct property from
+`CARD_SET_OF_LIST_EQ_LENGTH_IMP_ALL_DISTINCT` (both PA5 public kit). -/
 theorem NOT_ID_IMP_LISTS_NOT_EQ (ul : List V3) (p : Equiv.Perm ℕ) (k : ℕ)
     (hlen : ul.length = k + 1) (hcard : Nat.card (setOfList ul) = k + 1)
     (hperm : permutes p (Set.Icc 0 k))
     (hfix : ∀ j : ℕ, k < j → p j = j) (hpid : ¬ (p = Equiv.refl ℕ)) :
     ¬ (ul = leftActionList p ul) := by
-  sorry
+  intro heq
+  obtain ⟨j, hjlt, hjne⟩ : ∃ j : ℕ, j < k + 1 ∧ p j ≠ j := by
+    by_contra hcon
+    push_neg at hcon
+    refine hpid (Equiv.ext (fun j => ?_))
+    rcases Nat.lt_or_ge j (k + 1) with h | h
+    · exact hcon j h
+    · exact hfix j (by omega)
+  have hp' : permutes p {i : ℕ | i < ul.length} := by
+    intro x
+    have hx := hperm x
+    simp only [Set.mem_setOf_eq, Set.mem_Icc] at hx ⊢
+    constructor
+    · intro h0
+      rw [hlen] at h0
+      have hxI : x ∈ Set.Icc 0 k := ⟨Nat.zero_le x, by omega⟩
+      have hpx := hx.1 hxI
+      rw [hlen]
+      omega
+    · intro h0
+      rw [hlen] at h0
+      have hxI : p x ∈ Set.Icc 0 k := ⟨Nat.zero_le (p x), by omega⟩
+      have hpx := hx.2 hxI
+      rw [hlen]
+      omega
+  have hj : j < ul.length := by rw [hlen]; omega
+  have hpj : p j < ul.length := by
+    have h1 := (hperm j).1 ⟨Nat.zero_le j, by omega⟩
+    simp only [Set.mem_Icc] at h1
+    rw [hlen]
+    omega
+  have hdist := CARD_SET_OF_LIST_EQ_LENGTH_IMP_ALL_DISTINCT ul
+    (by rw [hlen]; exact hcard) j (p j) hj hpj (Ne.symm hjne)
+  have hEL := EL_LEFT_ACTION_LIST ul p hp' j hj
+  rw [← heq] at hEL
+  exact hdist hEL
 
 /-- HL `NOT_ID_IMP_EXISTS_MAX_EQ_TRUNCATE_SIMPLEX` (Rogers.hl:9490).
 ENCODING-FIX (SF item 24, 2026-09-30, user-approved batch A): same shape as
 `NOT_ID_IMP_LISTS_NOT_EQ` — complement-fixing `hfix` added (sweep report
 docs/encoding-risk-sweep.md §2.1 C2-2, same probe P1-P3 counterexample
-engine); with `hfix` the statement matches the HOL original; proof body
-`sorry` (GIANT, later wave). -/
+engine); with `hfix` the statement matches the HOL original.
+RESOLVED (2026-10-12 PA7 r3 lane): heads-equal case runs the maximal-truncation
+argument of HOL — `K = {j ≤ k | trunc j ul = trunc j vl}` contains 0
+(`TRUNCATE_0_EQ_HEAD`), its maximum `i` is `< k` (else `ul = vl = leftActionList`
+contradicts `NOT_ID_IMP_LISTS_NOT_EQ`), and `EL (i+1)` equality would push
+`i+1 ∈ K` past the maximum via `TRUNCATE_SIMPLEX_ADD1_ALT`. -/
 theorem NOT_ID_IMP_EXISTS_MAX_EQ_TRUNCATE_SIMPLEX (ul : List V3)
     (p : Equiv.Perm ℕ) (k : ℕ) (hlen : ul.length = k + 1)
     (hcard : Nat.card (setOfList ul) = k + 1)
@@ -2093,7 +2530,54 @@ theorem NOT_ID_IMP_EXISTS_MAX_EQ_TRUNCATE_SIMPLEX (ul : List V3)
       ∃ j : ℕ, j < k ∧
         truncateSimplex j ul = truncateSimplex j (leftActionList p ul) ∧
         ¬ ((ul.getD (j + 1) default) = ((leftActionList p ul).getD (j + 1) default)) := by
-  sorry
+  classical
+  have hvlen : (leftActionList p ul).length = k + 1 := by
+    rw [LENGTH_LEFT_ACTION_LIST ul p]
+    exact hlen
+  by_cases hhd : hdV ul = hdV (leftActionList p ul)
+  · set vl := leftActionList p ul with hvl
+    set K : Set ℕ := {j : ℕ | j ≤ k ∧ truncateSimplex j ul = truncateSimplex j vl} with hK
+    have hK0 : (0:ℕ) ∈ K := by
+      have h1 : truncateSimplex 0 ul = [hdV ul] := TRUNCATE_0_EQ_HEAD ul (by rw [hlen]; omega)
+      have h2 : truncateSimplex 0 vl = [hdV vl] :=
+        TRUNCATE_0_EQ_HEAD vl (by rw [hvlen]; omega)
+      refine ⟨Nat.zero_le _, ?_⟩
+      rw [h1, h2, hhd]
+    have hKfin : K.Finite :=
+      Set.Finite.subset (Finset.finite_toSet (Finset.Icc 0 k))
+        (fun j hj => Finset.mem_coe.2 (Finset.mem_Icc.mpr ⟨Nat.zero_le j, hj.1⟩))
+    have hKne : K ≠ ∅ := by
+      intro h0
+      have h5 : K.Nonempty := ⟨0, hK0⟩
+      rw [h0] at h5
+      obtain ⟨x, hx⟩ := h5
+      exact absurd hx (Set.notMem_empty x)
+    obtain ⟨i, hiK, himax⟩ := NUM_FINITE_IMP_MAX_EXISTS K hKfin hKne
+    have hik : i < k := by
+      by_contra hcon
+      have hik1 : i ≤ k := hiK.1
+      have hik' : i = k := by omega
+      have he1 : truncateSimplex k ul = ul :=
+        ((TRUNCATE_SIMPLEX_INITIAL_SUBLIST k ul ul).mpr ⟨⟨[], by simp⟩, hlen⟩).1
+      have he2 : truncateSimplex k vl = vl :=
+        ((TRUNCATE_SIMPLEX_INITIAL_SUBLIST k vl vl).mpr ⟨⟨[], by simp⟩, hvlen⟩).1
+      rw [hik'] at hiK
+      have huv : ul = vl := by rw [← he1, ← he2]; exact hiK.2
+      have hne2 := NOT_ID_IMP_LISTS_NOT_EQ ul p k hlen hcard hperm hfix hpid
+      exact absurd (by rw [← hvl]; exact huv) hne2
+    refine Or.inr ⟨i, hik, hiK.2, ?_⟩
+    intro hel
+    have hdef : (default : V3) = 0 := rfl
+    rw [hdef] at hel
+    have hel' : elV ul (i + 1) = elV vl (i + 1) := hel
+    have hi1K : (i + 1) ∈ K := by
+      refine ⟨by omega, ?_⟩
+      rw [TRUNCATE_SIMPLEX_ADD1_ALT ul i (by rw [hlen]; omega),
+        TRUNCATE_SIMPLEX_ADD1_ALT vl i (by rw [hvlen]; omega),
+        hiK.2, hel']
+    have hmax := himax (i + 1) hi1K
+    omega
+  · exact Or.inl hhd
 
 /-- HL `KSOQKWL` (Rogers.hl:9588): Rogers uniqueness forces the identity.
 ENCODING-FIX (SF15 / proposal 19', 2026-09-30, user-approved batch A):
