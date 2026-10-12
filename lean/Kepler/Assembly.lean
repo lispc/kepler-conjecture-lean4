@@ -2524,7 +2524,41 @@ not_surrounded_node_norm_ECTC:1727，其中 FCDJDOT section :1543-1806 的三件
 深 GIANT。
 ④`bij_scriptL`——双射 + 保范数 ⟹ scriptL 相等；已由本文件 `bijScriptL`
 闭合（见下）。`local_annulus_inequality_scriptL` 已闭合（本文件
-`localAnnulusInequalityScriptL`）。 -/
+`localAnnulusInequalityScriptL`）。
+
+**2026-10-12 A6 续作 lane 收获——柱①已落**：`scriptL_attains_max_in_ball_annulus`
+（FNJLBXS-compiled.hl:1296-1299）已作为本文件真证私件
+`scriptLAttainsMaxInBallAnnulus` 落地（公理面 propext/choice/Quot.sound 标准
+三，无新增债务），按 NEEDS 原记的 Lean 路线，且无需 ℝ^150 配置空间章：
+①逐 k 紧致性——`packingConfigCompact`：`(Fin k → V3)` 上 packing 配置集
+（annulus 坐标 + 两两 dist ≥ 2）为 `univ.pi` annulus 紧集（Tychonov
+`isCompact_univ_pi`）的闭子集（annulus 闭 + 距离条件 = `Ici` 的 preimage）；
+②`configScriptL` 连续（`lmfunContinuous`：`lmfun h = max ((h0-h)/(h0-1)) 0`
+恒等绕开 ite 分段）+ `IsCompact.exists_isMaxOn` 取逐 k 最大者
+（`scriptLMaxOfCard`，支配一切 card 恰为 k 的 annulus packing；
+`packingConfigEnumerate` 经 `Finset.equivFinOfCardEq` 枚举）；
+③`packingCardLe64`（HOL `card_packing_ball_annulus` 的 43 界粗化为 64，
+测度计数：单位球互斥含于 ball 0 4，模板同 `flyspeckDevolution`）+
+`Finset.exists_max_image` 对 k ∈ range 65 取有限最大。
+剩余柱②（FNJLBXS 归一化 ~215 行：还需 `not_surrounded_imp_on_one_side_of_plane`
+的 Fan/dart/azim 机器 + `perturbation_lemma` 解析件）与柱③
+（`DLWCHEM`/`XULJEPR` 计数 GIANT，消费 pack_ineq_def_a）未动，
+`fcdjdot` 本体维持冻结接口。
+
+**2026-10-12 A6 续作 lane 补件——柱②解析件已落**：`perturbation_lemma`
+（FNJLBXS-compiled.hl:746-748）已作为本文件真证私件 `perturbationLemma`
+落地（HOL dot 以 `inner ℝ` 镜像，`Kepler.Geom.inner_eq_dot` 桥；
+构造 v2 = a•v + b•n 纯内积代数，无 WithLp 形状坑）。
+**柱②剩余缺口**（诚实降级记账）：`not_surrounded_imp_on_one_side_of_plane`
+（FNJLBXS-compiled.hl:714-745）全树零机器——`DART1_NOT_COLLINEAR`
+（Hypermap_and_fan）与 `azim_ge_azim_dart`（Fatugpd）均未移植，且 Lean
+`surroundedNode`（Fan.lean:215，azimDart/dartOfFan 编码）与 HOL
+`surrounded_node (V,E)`（set_of_edge 求和编码）的桥也未建；FCDJDOT section
+三件（not_surrounded_ECTC :1547 / isolated_node_norm_ECTC :1631 /
+not_surrounded_node_norm_ECTC :1727）全部经它消费，须开专门 Fan-machine
+lane（顺序：dart 机器移植 → not_surrounded_imp_on_one_side_of_plane
+（v cross w 分离平面路线，azim 正弦界 JBDNJJB 已在 LA5/PolyAuto7 可查）
+→ 三件中等档 → FNJLBXS 归一化本体）。 -/
 
 /-- **annulus 有限性**（2026-10-12 A6 填证 lane 落地；HOL
 `finite_packing_ball_annulus` 的替代路线）：packing + 含于 annulus ⟹ 有限
@@ -2615,6 +2649,451 @@ private theorem bijScriptL {V W : Set V3} (hV : V.Finite) (f : V3 → V3)
   rw [himgEq, Finset.sum_image (fun x hx y hy hxy =>
     hbij.2.1 (hV.mem_toFinset.mp hx) (hV.mem_toFinset.mp hy) hxy)]
   exact Finset.sum_congr rfl fun v hv => by rw [hnorm v (hV.mem_toFinset.mp hv)]
+
+/-! ### 2c'. `scriptL_attains_max_in_ball_annulus`（FNJLBXS 章，2026-10-12 A6 续作 lane）
+
+HOL FNJLBXS-compiled.hl:1296-1299。Lean 路线**不需要 ℝ^150 配置空间章**：
+对每个 k，把 k 元组空间 `(Fin k → V3)` 里的 packing 配置集证明为紧集
+（`univ.pi` annulus 紧集的闭子集，`isCompact_univ_pi` Tychonov + 闭条件
+preimage），`scriptL` 在其上连续（`lmfun = max 0 ((h0-h)/(h0-1))` 的连续性
++ 有限和），故取最大；再对 k ∈ range 65（card ≤ 64，测度计数）取有限最大。
+-/
+
+/-- `scriptL` 的配置泛函在 k 元组上的形式：第 i 项为 `lmfun (‖f i‖ / 2)`。 -/
+private noncomputable def configScriptL (k : ℕ) (f : Fin k → V3) : ℝ :=
+  ∑ i, lmfun (‖f i‖ / 2)
+
+/-- `lmfun` 的连续性（h0 = 1.26 > 1）：`lmfun h = max ((h0 - h) / (h0 - 1)) 0`，
+两支在 h0 处同值 0，`max` 型恒等绕开 ite 分段连续性。 -/
+private theorem lmfunEqMax (h : ℝ) : lmfun h = max ((h0 - h) / (h0 - 1)) 0 := by
+  rw [lmfun]
+  by_cases hh : h ≤ h0
+  · rw [if_pos hh]
+    exact (max_eq_left (show (0:ℝ) ≤ (h0 - h) / (h0 - 1) by
+      exact div_nonneg (sub_nonneg.mpr hh) (sub_nonneg.mpr (by norm_num [h0])))).symm
+  · rw [if_neg hh]
+    exact (max_eq_right (show (h0 - h) / (h0 - 1) ≤ (0:ℝ) by
+      exact div_nonpos_of_nonpos_of_nonneg (sub_nonpos.mpr (not_le.mp hh).le)
+        (sub_nonneg.mpr (by norm_num [h0])))).symm
+
+private theorem lmfunContinuous : Continuous lmfun := by
+  have hfun : lmfun = fun h : ℝ => max ((h0 - h) / (h0 - 1)) 0 := funext lmfunEqMax
+  rw [hfun]
+  exact ((continuous_const.sub continuous_id).div
+    (continuous_const.sub continuous_const)
+    (fun _ => sub_ne_zero.mpr (by norm_num [h0]))).max continuous_const
+
+/-- 配置泛函连续：有限和 + 范数连续 + 求值连续。 -/
+private theorem configScriptLContinuous (k : ℕ) :
+    Continuous (configScriptL k) := by
+  unfold configScriptL
+  exact continuous_finsetSum _ (fun i _ =>
+    lmfunContinuous.comp ((continuous_norm.comp (continuous_apply i)).div_const 2))
+
+/-- k 元 packing 配置集：全部坐标在 annulus 内 + 两两距离 ≥ 2。 -/
+private def packingConfig (k : ℕ) : Set (Fin k → V3) :=
+  {f | (∀ i, f i ∈ ballAnnulus) ∧ ∀ i j, i ≠ j → 2 ≤ dist (f i) (f j)}
+
+/-- 距离-条件闭集的显式 iInter 形。 -/
+private theorem packingConfigDistEq (k : ℕ) :
+    {f : Fin k → V3 | ∀ i j, i ≠ j → 2 ≤ dist (f i) (f j)}
+      = ⋂ (p : Fin k × Fin k) (_ : p.1 ≠ p.2),
+          (fun f => dist (f p.1) (f p.2)) ⁻¹' {r : ℝ | 2 ≤ r} := by
+  ext f
+  simp only [Set.mem_setOf_eq, Set.mem_iInter, Set.mem_preimage]
+  constructor
+  · intro h p hp
+    exact h p.1 p.2 hp
+  · intro h i j hij
+    exact h (i, j) hij
+
+/-- annulus 闭（closedBall 减开 ball）。 -/
+private theorem ballAnnulusClosed : IsClosed ballAnnulus :=
+  Metric.isClosed_closedBall.sdiff Metric.isOpen_ball
+
+/-- annulus 紧（有界闭，V3 有限维）。 -/
+private theorem ballAnnulusCompact : IsCompact ballAnnulus :=
+  (isCompact_closedBall (0 : V3) (2 * h0)).of_isClosed_subset ballAnnulusClosed
+    Set.sdiff_subset
+
+/-- 配置集紧：annulus-柱（Tychonov `isCompact_univ_pi`）的闭子集
+（annulus 闭 + 距离条件为 `Ici` 的 preimage）。 -/
+private theorem packingConfigCompact (k : ℕ) : IsCompact (packingConfig k) := by
+  have h1 : IsClosed {f : Fin k → V3 | ∀ i, f i ∈ ballAnnulus} := by
+    have heq : {f : Fin k → V3 | ∀ i, f i ∈ ballAnnulus}
+        = ⋂ i : Fin k, (fun f => f i) ⁻¹' ballAnnulus := by
+      ext f
+      simp only [Set.mem_setOf_eq, Set.mem_iInter, Set.mem_preimage]
+    rw [heq]
+    exact isClosed_iInter (fun i => ballAnnulusClosed.preimage (continuous_apply i))
+  have hKsub : {f : Fin k → V3 | ∀ i, f i ∈ ballAnnulus} ⊆
+      Set.univ.pi (fun _ : Fin k => Metric.closedBall (0 : V3) (2 * h0)) := by
+    intro f hf
+    rw [Set.mem_univ_pi]
+    intro i
+    have hi : f i ∈ ballAnnulus := hf i
+    simp only [ballAnnulus, Set.mem_sdiff] at hi
+    exact hi.1
+  have hKcpt : IsCompact {f : Fin k → V3 | ∀ i, f i ∈ ballAnnulus} :=
+    (isCompact_univ_pi (fun _ : Fin k => isCompact_closedBall (0 : V3) (2 * h0))).of_isClosed_subset
+      h1 hKsub
+  have h2 : IsClosed {f : Fin k → V3 | ∀ i j, i ≠ j → 2 ≤ dist (f i) (f j)} := by
+    rw [packingConfigDistEq k]
+    refine isClosed_iInter (fun p => isClosed_iInter (fun _ => ?_))
+    exact (isClosed_Ici : IsClosed {r : ℝ | 2 ≤ r}).preimage
+      (Continuous.dist (continuous_apply p.1) (continuous_apply p.2))
+  unfold packingConfig
+  exact hKcpt.of_isClosed_subset (h1.inter h2) Set.inter_subset_left
+
+/-- **枚举**（card k 的 packing 配置可实现为 k 元组）：card k 的 annulus packing
+V 可枚举为单射 `f : Fin k → V3`，`range f = V` 且 `f` 是合法配置
+（injectivity 由 packing 的距离条件给出）。`Finset.equivFinOfCardEq` 取枚举。 -/
+private theorem packingConfigEnumerate {V : Set V3} (hV : Packing V) (hsub : V ⊆ ballAnnulus)
+    {k : ℕ} (hk : V.ncard = k) :
+    ∃ f : Fin k → V3, Set.range f = V ∧ Function.Injective f ∧ f ∈ packingConfig k := by
+  classical
+  have hfin : V.Finite := packingFiniteOfBallAnnulus hV hsub
+  rw [Set.ncard_eq_toFinset_card V hfin] at hk
+  have he : ↥hfin.toFinset ≃ Fin k := Fintype.equivFinOfCardEq (by rw [Fintype.card_coe]; exact hk)
+  refine ⟨fun i => ((he.symm i : V3)), ?_, ?_, ?_⟩
+  · ext x
+    simp only [Set.mem_range]
+    constructor
+    · rintro ⟨i, rfl⟩
+      exact hfin.mem_toFinset.mp (he.symm i).property
+    · rintro hx
+      exact ⟨he ⟨x, hfin.mem_toFinset.mpr hx⟩, by simp⟩
+  · intro i j hij
+    exact he.symm.injective (Subtype.ext hij)
+  · refine ⟨fun i => hsub (hfin.mem_toFinset.mp (he.symm i).property), fun i j hij => ?_⟩
+    have hne : (he.symm i : V3) ≠ (he.symm j : V3) := fun hc => hij (he.symm.injective (Subtype.ext hc))
+    exact hV.dist_ge_two (hfin.mem_toFinset.mp (he.symm i).property)
+      (hfin.mem_toFinset.mp (he.symm j).property) hne
+
+/-- **card ≤ 64**（card_packing_ball_annulus 的替代路线，FNJLBXS-compiled.hl:674
+只用任意显式界即可）：annulus packing 的单位球互斥且含于 ball 0 4
+（annulus ⊆ closedBall 0 (2·h0) ⊆ ball 0 3），测度计数
+`card · (4π/3) ≤ 64 · (4π/3)` 给 `card ≤ 64`（HOL 界 43 的粗化，收口用）。 -/
+private theorem packingCardLe64 {V : Set V3} (hV : Packing V) (hsub : V ⊆ ballAnnulus) :
+    V.ncard ≤ 64 := by
+  classical
+  have hfin : V.Finite := packingFiniteOfBallAnnulus hV hsub
+  set T : Finset V3 := hfin.toFinset with hTeq
+  have hmem : ∀ v ∈ T, v ∈ V := fun v hv => hfin.mem_toFinset.mp hv
+  -- 单位球族互斥（packing ⇒ 距离 ≥ 2）
+  have hdisj : ((T : Set V3)).PairwiseDisjoint (fun v => Metric.ball v 1) := by
+    intro u hu v hv hne
+    simp only [Function.onFun]
+    rw [disjoint_iff_inter_eq_empty]
+    by_contra hne'
+    obtain ⟨w, hwu, hwv⟩ := Set.nonempty_iff_ne_empty.mpr hne'
+    have hdist := hV.dist_ge_two (hmem u hu) (hmem v hv) hne
+    have htri : dist u v ≤ dist u w + dist w v := dist_triangle u w v
+    rw [Metric.mem_ball] at hwu hwv
+    linarith [dist_comm u w ▸ hwu]
+  -- 计数 = 测度
+  have htopEach : ∀ v ∈ T, MeasureTheory.volume (Metric.ball v 1) ≠ (⊤:ENNReal) := by
+    intro v _
+    rw [EuclideanSpace.volume_ball_fin_three]
+    exact ENNReal.mul_ne_top (ENNReal.pow_ne_top ENNReal.ofReal_ne_top)
+      ENNReal.ofReal_ne_top
+  have hcount : MeasureTheory.volume.real (⋃ v ∈ T, Metric.ball v 1)
+      = (T.card : ℝ) * (Real.pi * 4 / 3) := by
+    rw [MeasureTheory.Measure.real_def,
+      MeasureTheory.measure_biUnion_finset hdisj
+        (fun v _ => measurableSet_ball),
+      ENNReal.toReal_sum htopEach]
+    have hsumreal : ∀ v ∈ T,
+        (MeasureTheory.volume (Metric.ball v 1)).toReal = Real.pi * 4 / 3 := by
+      intro v _
+      rw [EuclideanSpace.volume_ball_fin_three,
+        ENNReal.toReal_mul, ENNReal.toReal_pow,
+        ENNReal.toReal_ofReal (show (0:ℝ) ≤ 1 by norm_num),
+        ENNReal.toReal_ofReal (show (0:ℝ) ≤ Real.pi * 4 / 3 by linarith [Real.pi_pos])]
+      norm_num
+    rw [Finset.sum_congr rfl hsumreal, Finset.sum_const, nsmul_eq_mul]
+  -- 单位球并 ⊆ ball 0 4（annulus ⊆ ball 0 3）
+  have hvb : ∀ v ∈ T, dist v 0 < 3 := by
+    intro v hv
+    have hp := hsub (hmem v hv)
+    simp only [ballAnnulus, Set.mem_sdiff] at hp
+    have h' := Metric.mem_closedBall.mp hp.1
+    rw [dist_zero_right] at h' ⊢
+    have hh0 : (2:ℝ) * h0 < 3 := by
+      show (2:ℝ) * 1.26 < 3
+      norm_num
+    linarith
+  have hsub4 : (⋃ v ∈ T, Metric.ball v 1) ⊆ Metric.ball (0 : V3) 4 := by
+    intro w hw
+    simp only [mem_iUnion, exists_prop] at hw
+    obtain ⟨v, hvT, hwv⟩ := hw
+    rw [Metric.mem_ball] at hwv ⊢
+    calc dist w 0 ≤ dist w v + dist v 0 := dist_triangle w v 0
+      _ < 4 := by linarith [hvb v hvT]
+  have hvol4 : MeasureTheory.volume.real (Metric.ball (0 : V3) 4)
+      = 64 * (Real.pi * 4 / 3) := by
+    rw [MeasureTheory.Measure.real_def, EuclideanSpace.volume_ball_fin_three,
+      ENNReal.toReal_mul, ENNReal.toReal_pow,
+      ENNReal.toReal_ofReal (show (0:ℝ) ≤ 4 by norm_num),
+      ENNReal.toReal_ofReal (show (0:ℝ) ≤ Real.pi * 4 / 3 by linarith [Real.pi_pos])]
+    norm_num
+  have hbigtop : MeasureTheory.volume (Metric.ball (0 : V3) 4) ≠ (⊤:ENNReal) := by
+    rw [EuclideanSpace.volume_ball_fin_three]
+    exact ENNReal.mul_ne_top (ENNReal.pow_ne_top ENNReal.ofReal_ne_top)
+      ENNReal.ofReal_ne_top
+  have hmono : MeasureTheory.volume.real (⋃ v ∈ T, Metric.ball v 1) ≤
+      MeasureTheory.volume.real (Metric.ball (0 : V3) 4) := by
+    rw [MeasureTheory.Measure.real_def, MeasureTheory.Measure.real_def]
+    refine (ENNReal.toReal_le_toReal ?_ hbigtop).mpr
+      (MeasureTheory.measure_mono hsub4 (μ := MeasureTheory.volume))
+    intro h
+    have h1 := MeasureTheory.measure_mono hsub4 (μ := MeasureTheory.volume)
+    rw [h] at h1
+    exact hbigtop (top_le_iff.mp h1)
+  have hc : (0:ℝ) < Real.pi * 4 / 3 := by linarith [Real.pi_pos]
+  have h4 := hmono
+  rw [hcount, hvol4] at h4
+  have hcard : (T.card : ℝ) ≤ 64 := le_of_mul_le_mul_right h4 hc
+  rw [Set.ncard_eq_toFinset_card V hfin]
+  exact_mod_cast hcard
+
+/-- **scriptL 在 range 上 = 配置泛函**（单射枚举下 scriptL 与 k 元组形式重合）。 -/
+private theorem scriptLRangeConfig (k : ℕ) (f : Fin k → V3) (hinj : Function.Injective f) :
+    scriptL (Set.range f) = configScriptL k f := by
+  have hfin : (Set.range f).Finite := Set.finite_range f
+  rw [scriptL, dif_pos hfin, configScriptL]
+  have he : hfin.toFinset = Finset.univ.image f := by
+    ext x
+    simp only [Set.Finite.mem_toFinset, Finset.mem_image, Set.mem_range]
+    exact ⟨fun h => ⟨h.choose, Finset.mem_univ _, h.choose_spec⟩,
+      fun h => ⟨h.choose, h.choose_spec.2⟩⟩
+  rw [he, Finset.sum_image (fun x _ y _ hxy => hinj hxy)]
+
+/-- **每个 k 的最大者**（FNJLBXS-compiled.hl:1296 的逐 k 版本）：card 恰为 k 的
+annulus packing 的 scriptL 被某个 annulus packing 支配。 -/
+private theorem scriptLMaxOfCard (k : ℕ) :
+    ∃ W : Set V3, Packing W ∧ W ⊆ ballAnnulus ∧
+      ∀ V : Set V3, Packing V → V ⊆ ballAnnulus → V.ncard = k → scriptL V ≤ scriptL W := by
+  by_cases hne : (packingConfig k).Nonempty
+  · obtain ⟨z, hzcfg, hzmax⟩ :=
+      (packingConfigCompact k).exists_isMaxOn hne (configScriptLContinuous k).continuousOn
+    have hz2 : (∀ i, z i ∈ ballAnnulus) ∧ ∀ i j, i ≠ j → 2 ≤ dist (z i) (z j) := hzcfg
+    obtain ⟨hzann, hzdist⟩ := hz2
+    have hzinj : Function.Injective z := by
+      intro i j hij
+      by_contra hne'
+      have h2 := hzdist i j hne'
+      rw [hij, dist_self] at h2
+      norm_num at h2
+    refine ⟨Set.range z, ?_, ?_, ?_⟩
+    · intro u hu v hv hd
+      obtain ⟨i, rfl⟩ := hu
+      obtain ⟨j, rfl⟩ := hv
+      rcases eq_or_ne i j with rfl | hij
+      · rfl
+      · exact absurd hd (not_lt.2 (hzdist i j hij))
+    · intro x hx
+      obtain ⟨i, rfl⟩ := hx
+      exact hzann i
+    · intro V hpack hsub hk
+      obtain ⟨f, hfr, hfinj, hfcfg⟩ := packingConfigEnumerate hpack hsub hk
+      have hfinV : V.Finite := packingFiniteOfBallAnnulus hpack hsub
+      have hfinW : (Set.range z).Finite := Set.finite_range z
+      rw [scriptL, dif_pos hfinV, scriptL, dif_pos hfinW]
+      have eV : hfinV.toFinset = Finset.univ.image f := by
+        ext x
+        rw [Set.Finite.mem_toFinset, ← hfr]
+        simp [Set.mem_range, Finset.mem_image]
+      have eW : hfinW.toFinset = Finset.univ.image z := by
+        ext x
+        simp [Set.Finite.mem_toFinset, Set.mem_range, Finset.mem_image]
+      rw [eV, eW, Finset.sum_image (fun x _ y _ hxy => hfinj hxy),
+        Finset.sum_image (fun x _ y _ hxy => hzinj hxy)]
+      exact isMaxOn_iff.mp hzmax f hfcfg
+  · refine ⟨∅, ?_, ?_, ?_⟩
+    · intro u hu
+      exact absurd hu (by simp)
+    · intro x hx
+      exact absurd hx (by simp)
+    · intro V hpack hsub hk
+      exfalso
+      obtain ⟨f, _, _, hfcfg⟩ := packingConfigEnumerate hpack hsub hk
+      exact hne ⟨f, hfcfg⟩
+
+/-- **scriptL_attains_max_in_ball_annulus**（FNJLBXS-compiled.hl:1296-1299，
+2026-10-12 A6 续作 lane 落地）：存在 annulus packing 达到 scriptL 全局最大。
+Lean 路线无需 ℝ^150 配置空间章：逐 k 紧致性（`packingConfigCompact` 的
+`(Fin k → V3)` Tychonov 闭子集）+ `configScriptL` 连续取最大
+（`IsCompact.exists_isMaxOn`），再对 k ∈ range 65（`packingCardLe64` 测度计数界）
+取有限最大（`Finset.exists_max_image`）。 -/
+private theorem scriptLAttainsMaxInBallAnnulus :
+    ∃ W : Set V3, Packing W ∧ W ⊆ ballAnnulus ∧
+      ∀ V : Set V3, Packing V → V ⊆ ballAnnulus → scriptL V ≤ scriptL W := by
+  classical
+  have key : ∀ k : ℕ, ∃ W : Set V3, Packing W ∧ W ⊆ ballAnnulus ∧
+      ∀ V : Set V3, Packing V → V ⊆ ballAnnulus → V.ncard = k → scriptL V ≤ scriptL W :=
+    scriptLMaxOfCard
+  choose Wf hWp hWs hWd using key
+  have hfam : (Finset.range 65).Nonempty := ⟨0, Finset.mem_range.mpr (by omega)⟩
+  obtain ⟨k, hkmem, hkmax⟩ := Finset.exists_max_image (Finset.range 65)
+    (fun j => scriptL (Wf j)) hfam
+  refine ⟨Wf k, hWp k, hWs k, ?_⟩
+  intro V hpack hsub
+  have hle : V.ncard ≤ 64 := packingCardLe64 hpack hsub
+  have hmem : V.ncard ∈ Finset.range 65 := Finset.mem_range.mpr (by omega)
+  have h1 := hWd V.ncard V hpack hsub rfl
+  have h2 := hkmax V.ncard hmem
+  linarith
+
+
+/-- **perturbation_lemma**（FNJLBXS-compiled.hl:746-748，2026-10-12 A6 续作 lane
+落地）：HOL 逐句镜像——存在与 v 等长、离 S 中每点更远、且位移 < d 的 v2。
+折算说明：HOL dot 以 `inner ℝ` 镜像（`Kepler.Geom.inner_eq_dot` 桥）；
+构造 v2 = a•v + b•n（a = max 0 (1 - d²/(4⟪v,v⟫))，b = √(⟪v,v⟫(1-a²)/⟪n,n⟫)），
+等长性经 ⟪v2,v2⟫ = ⟪v,v⟫ 的内积展开 + `sq_eq_sq₀`，远离性经二次差
+2(1-a)⟪w,v⟫ - 2b⟪w,n⟫ ≥ 0 分解，位移界经 ‖v-v2‖² = 2(1-a)⟪v,v⟫ ≤ d²/2。
+供 FNJLBXS 归一化（柱②）消费。 -/
+private theorem perturbationLemma (d : ℝ) (hd : 0 < d) {n : Kepler.Geom.V3} (hn : n ≠ 0)
+    {v : Kepler.Geom.V3} (hvn : inner ℝ v n = 0) (S : Set Kepler.Geom.V3)
+    (hS : ∀ w ∈ S, inner ℝ w n ≤ 0 ∧ 0 < inner ℝ w v) :
+    ∃ v2 : Kepler.Geom.V3, ‖v2‖ = ‖v‖ ∧ (∀ w ∈ S, dist v w < dist v2 w) ∧ dist v v2 < d := by
+  classical
+  by_cases hS0 : S = ∅
+  · refine ⟨v, rfl, ?_, by rw [dist_self]; exact hd⟩
+    intro w hw
+    exact absurd hw (by rw [hS0]; simp)
+  have hv0 : v ≠ 0 := by
+    rintro rfl
+    obtain ⟨w, hwS⟩ := Set.nonempty_iff_ne_empty.mpr hS0
+    have h3 := (hS w hwS).2
+    rw [inner_zero_right] at h3
+    exact absurd h3 (by norm_num)
+  have hnpos : (0:ℝ) < ‖v‖ := norm_pos_iff.mpr hv0
+  have hvv : 0 < inner ℝ v v := by
+    rw [real_inner_self_eq_norm_sq]
+    exact pow_pos hnpos 2
+  have hnn : 0 < inner ℝ n n := by
+    rw [real_inner_self_eq_norm_sq]
+    exact pow_pos (norm_pos_iff.mpr hn) 2
+  have hvn' : inner ℝ n v = 0 := by rw [real_inner_comm]; exact hvn
+  obtain ⟨a, ha_def⟩ : ∃ a : ℝ, a = max 0 (1 - d ^ 2 / (4 * inner ℝ v v)) := ⟨_, rfl⟩
+  have ha0 : 0 ≤ a := by rw [ha_def]; exact le_max_left _ _
+  have ha1 : a < 1 := by
+    rw [ha_def]
+    refine max_lt (by norm_num) ?_
+    have hquot : 0 < d ^ 2 / (4 * inner ℝ v v) :=
+      div_pos (pow_pos hd 2) (by linarith)
+    linarith
+  have ha2 : a * a ≤ 1 := by nlinarith
+  obtain ⟨b, hb_def⟩ : ∃ b : ℝ,
+      b = Real.sqrt (inner ℝ v v * (1 - a * a) / inner ℝ n n) := ⟨_, rfl⟩
+  have hb0 : 0 ≤ b := by rw [hb_def]; exact Real.sqrt_nonneg _
+  have hbdef : b * b * inner ℝ n n = (1 - a * a) * inner ℝ v v := by
+    rw [hb_def, Real.mul_self_sqrt]
+    · field_simp
+    · exact div_nonneg (mul_nonneg hvv.le (by linarith)) hnn.le
+  refine ⟨a • v + b • n, ?_, ?_, ?_⟩
+  · have hvv2 : inner ℝ (a • v + b • n) (a • v + b • n)
+        = a * a * inner ℝ v v + b * b * inner ℝ n n := by
+      simp only [inner_add_left, inner_add_right, real_inner_smul_left, real_inner_smul_right,
+        hvn, hvn']
+      ring
+    have hn2 : ‖a • v + b • n‖ ^ 2 = ‖v‖ ^ 2 := by
+      rw [← real_inner_self_eq_norm_sq, ← real_inner_self_eq_norm_sq, hvv2, hbdef]
+      ring
+    exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp hn2
+  · intro w hw
+    obtain ⟨hwn, hwv⟩ := hS w hw
+    have hvv2 : inner ℝ (a • v + b • n) (a • v + b • n)
+        = a * a * inner ℝ v v + b * b * inner ℝ n n := by
+      simp only [inner_add_left, inner_add_right, real_inner_smul_left, real_inner_smul_right,
+        hvn, hvn']
+      ring
+    have hinnerwX : inner ℝ w (a • v + b • n)
+        = a * inner ℝ w v + b * inner ℝ w n := by
+      rw [inner_add_right, real_inner_smul_right, real_inner_smul_right]
+    have hnormeq : inner ℝ (a • v + b • n) (a • v + b • n) = inner ℝ v v := by
+      rw [hvv2, hbdef]
+      ring
+    have hI : ‖w - (a • v + b • n)‖ ^ 2
+        = inner ℝ w w - 2 * inner ℝ w (a • v + b • n)
+          + inner ℝ (a • v + b • n) (a • v + b • n) := by
+      rw [show ‖w - (a • v + b • n)‖ ^ 2
+          = inner ℝ (w - (a • v + b • n)) (w - (a • v + b • n))
+          from (real_inner_self_eq_norm_sq _).symm,
+        inner_sub_left, inner_sub_right, inner_sub_right,
+        real_inner_comm (a • v + b • n) w]
+      ring
+    have hJ : ‖w - v‖ ^ 2 = inner ℝ w w - 2 * inner ℝ w v + inner ℝ v v := by
+      rw [show ‖w - v‖ ^ 2 = inner ℝ (w - v) (w - v)
+          from (real_inner_self_eq_norm_sq _).symm,
+        inner_sub_left, inner_sub_right, inner_sub_right, real_inner_comm v w]
+      ring
+    obtain ⟨u', hu'def⟩ : ∃ u' : ℝ, u' = -(b * inner ℝ w n) := ⟨_, rfl⟩
+    have hu'0 : 0 ≤ u' := by
+      rw [hu'def]
+      exact neg_nonneg.mpr (mul_nonpos_of_nonneg_of_nonpos hb0 hwn)
+    have hfinal : ‖w - (a • v + b • n)‖ ^ 2 - ‖w - v‖ ^ 2
+        = 2 * ((1 - a) * inner ℝ w v) + 2 * ((1 - a) * u') + 2 * (a * u') := by
+      rw [hI, hJ, hinnerwX, hnormeq, hu'def]
+      ring
+    have e1 : (0:ℝ) < 2 * ((1 - a) * inner ℝ w v) := by
+      have : (0:ℝ) < (1 - a) * inner ℝ w v := mul_pos (by linarith) hwv
+      linarith
+    have e2 : (0:ℝ) ≤ 2 * ((1 - a) * u') :=
+      mul_nonneg (by linarith) (mul_nonneg (by linarith) hu'0)
+    have e3 : (0:ℝ) ≤ 2 * (a * u') :=
+      mul_nonneg (by norm_num) (mul_nonneg ha0 hu'0)
+    have hdiff : (0:ℝ) < ‖w - (a • v + b • n)‖ ^ 2 - ‖w - v‖ ^ 2 := by
+      rw [hfinal]
+      linarith
+    have hlt : ‖w - v‖ < ‖w - (a • v + b • n)‖ :=
+      (sq_lt_sq₀ (norm_nonneg _) (norm_nonneg _)).mp (by linarith)
+    rw [dist_eq_norm, dist_eq_norm, norm_sub_rev (a • v + b • n) w, norm_sub_rev v w]
+    exact hlt
+  · have hvv2 : inner ℝ (a • v + b • n) (a • v + b • n)
+        = a * a * inner ℝ v v + b * b * inner ℝ n n := by
+      simp only [inner_add_left, inner_add_right, real_inner_smul_left, real_inner_smul_right,
+        hvn, hvn']
+      ring
+    have hinner_vX : inner ℝ v (a • v + b • n) = a * inner ℝ v v := by
+      simp only [inner_add_right, real_inner_smul_right, hvn]
+      ring
+    have hvv2 : inner ℝ (a • v + b • n) (a • v + b • n)
+        = a * a * inner ℝ v v + b * b * inner ℝ n n := by
+      simp only [inner_add_left, inner_add_right, real_inner_smul_left, real_inner_smul_right,
+        hvn, hvn']
+      ring
+    rw [hbdef] at hvv2
+    have hdd : ‖v - (a • v + b • n)‖ ^ 2 = 2 * ((1 - a) * inner ℝ v v) := by
+      rw [show ‖v - (a • v + b • n)‖ ^ 2
+          = inner ℝ (v - (a • v + b • n)) (v - (a • v + b • n))
+          from (real_inner_self_eq_norm_sq _).symm]
+      simp only [inner_sub_left, inner_sub_right, inner_add_left, inner_add_right,
+        real_inner_smul_left, real_inner_smul_right, hvn, hvn']
+      have hcancel : inner ℝ v v * a ^ 2 + b ^ 2 * inner ℝ n n = inner ℝ v v := by
+        have h2 : b ^ 2 * inner ℝ n n = (1 - a * a) * inner ℝ v v := by
+          rw [pow_two, hbdef]
+        rw [h2]
+        ring
+      linarith [hcancel]
+    have hsub : 1 - a ≤ d ^ 2 / (4 * inner ℝ v v) := by
+      have := le_max_right (0:ℝ) (1 - d ^ 2 / (4 * inner ℝ v v))
+      linarith
+    have hmul : (1 - a) * inner ℝ v v ≤ d ^ 2 / 4 := by
+      have h1 := mul_le_mul_of_nonneg_left hsub hvv.le
+      have h2 : (d ^ 2 / (4 * inner ℝ v v)) * inner ℝ v v = d ^ 2 / 4 := by
+        field_simp
+      linarith [h1, h2]
+    have hbound : ‖v - (a • v + b • n)‖ ^ 2 < d ^ 2 := by
+      rw [hdd]
+      have h2 : (0:ℝ) < d ^ 2 := pow_pos hd 2
+      have hle : 2 * ((1 - a) * inner ℝ v v) ≤ d ^ 2 / 2 := by linarith
+      linarith
+    have hlt : ‖v - (a • v + b • n)‖ < d :=
+      (sq_lt_sq₀ (norm_nonneg _) hd.le).mp hbound
+    rw [dist_eq_norm]
+    exact hlt
 
 /-- **CPNKNXN**（flyspeck_devol.hl:135，2026-10-12 A4 填证 lane）：
 packing 可扩为 saturated packing 超集（Zorn：`zorn_subset_nonempty`，链并
