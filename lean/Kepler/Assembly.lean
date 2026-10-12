@@ -901,15 +901,148 @@ private theorem scriptLMaxNegative (V : Set V3)
     rw [scriptLNegative V]
     exact hmax W hW hsub
 
-/-! NEEDS（2026-09-28 脊柱 lane）：前五数据合取项已由上方私件装配齐
-（`contraveningNegative` 证明体只剩
-`refine ⟨packingNegative hc.1, ballAnnulusNegative hc.2.1, scriptLNegative V ▸ hc.2.2.1,
-  scriptLMaxNegative V hc.2.2.1, cardNegative V ▸ hc.2.2.2.2.1, ?_, ?_⟩`），
-第 6/7 合取项 `surroundedNode (neg''V) (ESTD/ECTC (neg''V)) v` 卡**镜像链**：
-V ↦ -V 定向反转，azim 非不变而是 `azim(−) = 2π − azim`，需 `azim_mirror`
-（AzimSpec frame 取反版）+ `sigmaFan` 镜像逆（HOL Localization.ivs_azim_cycle 群，
-全树未移植）+ setOfEdge/dartOfFan 像集 + AZIM_LT_PI_IMP_CARD_GT_1 对应物
-（HOL ASFUTBF.hl:182-699，~500 行）。工具链落地后本占位即机械装配。 -/
+/-- `Pi` 级点积负号桥（分量法，`mirrorRep`/`on3Mirror` 的地基）。 -/
+private theorem dotPi_neg_left (f g : Fin 3 → ℝ) : (-f) ⬝ᵥ g = -(f ⬝ᵥ g) := by
+  simp [dotProduct, Pi.neg_apply, Finset.sum_neg_distrib]
+
+private theorem dotPi_neg_right (f g : Fin 3 → ℝ) : f ⬝ᵥ (-g) = -(f ⬝ᵥ g) := by
+  simp [dotProduct, Pi.neg_apply, Finset.sum_neg_distrib, mul_comm]
+
+private theorem dotPi_neg_neg (f g : Fin 3 → ℝ) : (-f) ⬝ᵥ (-g) = f ⬝ᵥ g := by
+  simp [dotProduct, Pi.neg_apply, neg_mul, mul_neg]
+
+private theorem cross_neg_left (f g : Fin 3 → ℝ) :
+    crossProduct (-f) g = -(crossProduct f g) := by
+  funext i
+  fin_cases i <;> simp [cross_apply, Pi.neg_apply] <;> ring
+
+/-- 镜像标架 `(-e1, e2, -e3)` 保持标准正交 + 右手性。 -/
+private theorem on3Mirror {e1 e2 e3 : V3} (he : Orthonormal3 e1 e2 e3) :
+    Orthonormal3 (-e1) e2 (-e3) := by
+  obtain ⟨h11, h22, h33, h12, h13, h23, hc⟩ := he
+  refine ⟨?_, h22, ?_, ?_, ?_, ?_, ?_⟩
+  · simp only [WithLp.ofLp_neg]
+    rw [dotPi_neg_neg, h11]
+  · simp only [WithLp.ofLp_neg]
+    rw [dotPi_neg_neg, h33]
+  · simp only [WithLp.ofLp_neg]
+    rw [dotPi_neg_left, h12, neg_zero]
+  · simp only [WithLp.ofLp_neg]
+    rw [dotPi_neg_neg, h13]
+  · simp only [WithLp.ofLp_neg]
+    rw [dotPi_neg_right, h23, neg_zero]
+  · have h1 : (((-e1 : V3) : Fin 3 → ℝ)) = -(e1 : Fin 3 → ℝ) := by simp
+    have h2 : (((-e3 : V3) : Fin 3 → ℝ)) = -(e3 : Fin 3 → ℝ) := by simp
+    rw [h1, cross_neg_left, h2, dotPi_neg_left, dotPi_neg_right, neg_neg]
+    exact hc
+
+/-- 共线三点集取反稳定性（原点固定）：`{0,a,b}` ↔ `{0,-a,-b}`。 -/
+private theorem collinear3_zero_neg {a b : V3} :
+    Collinear3 0 a b ↔ Collinear3 0 (-a) (-b) := by
+  by_cases ha : a = 0
+  · subst ha
+    simp only [neg_zero]
+    exact ⟨fun _ => collinear3_of_eq rfl, fun _ => collinear3_of_eq rfl⟩
+  · rw [collinear3_iff_smul ha, collinear3_iff_smul (by simpa using ha)]
+    constructor
+    · rintro ⟨c, hc⟩
+      refine ⟨c, ?_⟩
+      have hc' : (b : V3) = c • a := by simpa using hc
+      rw [sub_zero, sub_zero, smul_neg, hc']
+    · rintro ⟨c, hc⟩
+      refine ⟨c, ?_⟩
+      have hc' : (-b : V3) = c • (-a) := by simpa using hc
+      rw [smul_neg] at hc'
+      have h2 := congrArg Neg.neg hc'
+      simpa using h2
+
+/-- 镜像坐标传输：neg 取反把 `(cos β, sin β)` 分量变为 `(cos (-β), sin (-β))`。 -/
+private theorem mirrorRep (e1 e2 u t : V3) (α β h : ℝ)
+    (hrep : u - 0 = (α * Real.cos β) • (-e1) + (α * Real.sin β) • e2 + h • (t - 0)) :
+    -u - 0 = (α * Real.cos (-β)) • e1 + (α * Real.sin (-β)) • e2 + h • (-t - 0) := by
+  have hsub : (-u : V3) - 0 = -(u - 0) := by simp
+  have key : (-u : V3) - 0
+      = -((α * Real.cos β) • (-e1) + (α * Real.sin β) • e2 + h • (t - 0)) := by
+    rw [hsub, hrep]
+  rw [Real.cos_neg, Real.sin_neg, key]
+  simp [neg_smul, smul_neg, mul_neg]
+  abel
+/-! NEEDS（2026-10-12 A2 填证 lane 更新，替代 2026-09-28 旧注记）：
+前五数据合取项已装配齐；第 6/7 合取项（`surroundedNode` 镜像链）施工图如下。
+
+**数学已完成推导（蓝图，非猜测）**：
+1. `azimMirror`（唯一卡点）：`azim 0 (-v) (-w1) (-w2) = azim 0 v w2 w1`
+   （HOL AZIM_NEG 是末两参换位形，不是 2π−azim）。证明 =
+   `azim_eq_of_spec hn1 hn2 (azimSpecNeg h1 h2 hsp)`，其中
+   `hsp : AzimSpec 0 v w2 w1 (azim 0 v w2 w1)` 由 ε 路线构造
+   （`unfold azim` + `if_neg` + `Classical.epsilon_spec (azimSpec_exists h2 h1)`）。
+2. `setOfEdgeNeg` / `dartOfFanNeg`：neg''V 传输（机械，已写好草稿）。
+3. 合取项收口**无需** σ 镜像方程（AzimSpecNeg 之外零群论）：设
+   ψ := σ_neg(−v,−w)（ε 见证），其极小性经 `azimSpecNeg` 逐点镜像后即
+   "−w 的前驱最化"；取前驱 z₀（`INVERSE1_SIGMA_FAN`，Fan.lean:821，已证）
+   满足 σ(v,z₀) = w 且 z₀ ≠ w，对 dart (v,z₀) 用被包围假设得
+   `azim 0 v z₀ w < π`，再由极小性 `azim 0 (-v) (-w) ψ ≤ azim 0 (-v) (-w) (-z₀)`
+   经镜像 = `azim 0 v z₀ w < π` 收口。σ_neg 的 ε 见证由 `existsSoeMin`
+   型最小元（可在 LA3 `EXIS_SMALLEST_WITH_AZIM_ORD` 已证核心上重构）供给。
+4. ECTC 版同构；`‖v‖ = 2` 逃逸支直接传 ‖-v‖。
+
+**卡点（elaborator 病理，非数学）**：`azimMirror` 终装行
+`exact azim_eq_of_spec hn1 hn2 (azimSpecNeg h1 h2 hsp)`（及一切含
+AzimSpec-θ-slot 为 azim 应用项的匿名构造/refine 变体）触发 isDefEq
+无限下潜：Collinear3 集合项（setOf/insert/Membership）的 Decidable
+实例比较不终止，12M 心跳不减。最小复现 /tmp/mirror_probe54.lean
+（azimSpecNeg 已证 + 三行组合）。已试五种结构全灭：⟨⟩ refine、
+And/Exists 显式项、θ₀ 存在匿名化、frameBody 因式分解、
+simp only [azim] + azimSpec_unique。下一波建议：①独立新文件重试
+（排除文件级状态）；②给 `azim`（Geom/Azim.lean:60）加 `@[irreducible]`
+或 `Set.option`-类隔离；③以 AzimSpec 结构体直构（ε-free）替代现有
+Classical.epsilon 定义；④`@azim_eq_of_spec` 显式参数形式。`azimSpecNeg`
+（上方已证）本身即 HOL AZIM_NEG 的 AzimSpec 级正本，A5
+`hypermapOfFanNeg` 与 B-D4 批可直接复用；其 `on3Mirror`/`mirrorRep`/
+`collinear3_zero_neg` 支撑件同理。 -/
+
+/-! ### 2c.6 镜像 kit（2026-10-12 A2 填证 lane）：azim 镜像与 neg''V 传输件
+
+已证部分（`azimSpecNeg` 为核心件，可被 A5 `hypermapOfFanNeg`
+与 tamespine-port-plan §4 B-D4 复用）；`azimMirror` 本体的证明蓝图见
+下方 NEEDS 注记（数学已完成，卡 elaborator 病理）。-/
+
+/-- HOL `AZIM_NEG`（YXIONXL2.hl:2014）的 AzimSpec 级形态：
+`AzimSpec 0 v w2 w1 θ → AzimSpec 0 (-v) (-w1) (-w2) θ`。证明：解构源 spec
+（高度 hh1/hh2 随交换对调），帧取镜像 `(-e1, e2, -e3)`（`on3Mirror` 保持
+右手性），坐标恒等式 `mirrorRep` 传输，角度 `ψ' := -(ψ + θ)`。 -/
+private theorem azimSpecNeg {v w1 w2 : V3} {θ : ℝ}
+    (h1 : ¬ Collinear3 0 v w1) (h2 : ¬ Collinear3 0 v w2)
+    (hsp : AzimSpec 0 v w2 w1 θ) : AzimSpec 0 (-v) (-w1) (-w2) θ := by
+  obtain ⟨hb1, hb2, hh1, hh2, hbody⟩ := hsp
+  refine ⟨hb1, hb2, hh2, hh1, fun e1 e2 e3 he hax hvn => ?_⟩
+  have hdd : dist (-v) 0 = dist v 0 := by
+    rw [dist_eq_norm, dist_eq_norm, sub_zero, sub_zero, norm_neg]
+  have h2v : (-v - 0 : V3) = dist v 0 • e3 := hax.trans (congrArg (fun d : ℝ => d • e3) hdd)
+  have h3v : (-((-v) - 0 : V3)) = -(dist v 0 • e3) := congrArg Neg.neg h2v
+  have h1v : (v - 0 : V3) = -((-v) - 0) := by simp
+  have haxv : (v - 0 : V3) = dist v 0 • (-e3) :=
+    h1v.trans (h3v.trans (smul_neg (dist v 0) e3).symm)
+  have hv0 : v ≠ 0 := fun he => hvn (by simpa using he)
+  obtain ⟨ψ, rA, rB, hw2rep, hw1rep, hposA', hposB'⟩ :=
+    hbody (-e1) e2 (-e3) (on3Mirror he) haxv hv0
+  have key1 : (-w1 - 0 : V3) = (rB * Real.cos (-(ψ + θ))) • e1
+      + (rB * Real.sin (-(ψ + θ))) • e2 + hh2 • ((-v) - 0) :=
+    mirrorRep e1 e2 w1 v rB (ψ + θ) hh2 hw1rep
+  have key2 : (-w2 - 0 : V3) = (rA * Real.cos (-(ψ + θ) + θ)) • e1
+      + (rA * Real.sin (-(ψ + θ) + θ)) • e2 + hh1 • ((-v) - 0) := by
+    have hring : (-(ψ + θ) + θ : ℝ) = -ψ := by ring
+    have eqA : (rA * Real.cos (-(ψ + θ) + θ) : ℝ) = rA * Real.cos (-ψ) :=
+      congrArg (fun x : ℝ => rA * Real.cos x) hring
+    have eqB : (rA * Real.sin (-(ψ + θ) + θ) : ℝ) = rA * Real.sin (-ψ) :=
+      congrArg (fun x : ℝ => rA * Real.sin x) hring
+    have hb : (-w2 - 0 : V3) = (rA * Real.cos (-ψ)) • e1
+        + (rA * Real.sin (-ψ)) • e2 + hh1 • ((-v) - 0) :=
+      mirrorRep e1 e2 w2 v rA ψ hh1 hw2rep
+    rw [eqA, eqB]
+    exact hb
+  exact ⟨-(ψ + θ), rB, rA, key1, key2, hposB', hposA'⟩
+
 
 /-- 接口占位：HOL `Asfutbf.contravening_negative`（ASFUTBF.hl；
 `contravening_negative_concl`）。 -/
