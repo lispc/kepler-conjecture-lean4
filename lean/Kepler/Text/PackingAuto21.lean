@@ -366,16 +366,13 @@ def bank_GRKIBMPAV2 : Prop :=
     1 ≤ y3 → y3 ≤ 1 → 1 ≤ y4 → y4 ≤ 1 → 1 ≤ y5 → y5 ≤ 1 → 1 ≤ y6 → y6 ≤ 1 →
     0.008 < yOfX (gamma2x1DivAV2 (h0cut y1)) y1 y2 y3 y4 y5 y6
 
--- NEEDS (grkibmb scout lane W1, 2026-10-12): A V2 stays deferred to the
--- certificate-data wave (G4).  bb_arb closed the entry at the solver level
--- (rc=0, 21 leaves; dReal unsat — pipeline/interval/out/bbarb_results2.txt:118,
--- dreal_results.txt:133), but those are run logs, not per-leaf certificates:
--- no emit_lean.py output for this idv exists in the tree to glue against the
--- §2a lookup table.  An analytic route also exists (h0cut split at 2*h0:
--- m=1 arm linear-lfun, m=0 arm shares the B V2 kernel factored in
--- `bank_GRKIBMPBV2_proof`; ~120-300 lines, scout §2.2) but is out of this
--- wave's scope by charter.  Update the Assembly-side ledger (Assembly.lean
--- `nliGrkBank` NEEDS note) accordingly once the B V2 half lands.
+-- RESOLVED (GRKIBMP A V2 hand-proof lane, 2026-10-12): the entry is proved
+-- analytically below as `bank_GRKIBMPAV2_proof` — no certificate data needed.
+-- Route (scout §2.2): h0cut split at 2*h0; m=1 arm linear-lfun with the
+-- sharpened seed `arccos(1/3) ≤ 1231/1000` (two-sided `mm1` enclosure); m=0
+-- arm reuses the B V2 factored kernel (`p21_av2_grk_factor`).  Assembly:
+-- `nliGrkBank := ⟨bank_GRKIBMPAV2_proof, bank_GRKIBMPBV2_proof⟩` closes the
+-- grk slice (the old "needs ε-margin/weak encoding" note is obsolete).
 
 /-- HOL ineq entry `GRKIBMP B V2` (ineq.hl:1537).  Box
 [2hplus,√8]×[1,1]⁵. -/
@@ -1251,6 +1248,371 @@ theorem bank_GRKIBMPBV2_proof : bank_GRKIBMPBV2 := by
     hsqrt1, mul_zero, zero_mul, sub_zero, hrw]
   exact mul_nonneg (by linarith) hbr
 
+
+/-! ## MERGE-INEQ wave 2: the GRKIBMP A V2 bank entry, hand-proved
+analytically (grkibmb scout lane W2, 2026-10-12; docs/scouts/grkibmb-scout.md
+§2.2)
+
+`bank_GRKIBMPAV2` needs `0.008 < gamma2_x_div_azim_v2 (h0cut y1) (y1*y1)` on
+`y1 ∈ [2, 2hplus]`, `y2..y6 ∈ [1,1]` (the lift ignores the last five
+coordinates).  Fully elementary route, no certificates: split at the
+`h0cut` breakpoint `2·h0 = 2.52` —
+* m = 1 arm (`y1 ≤ 2·h0`): the weight is 1, `lfun` is linear
+  (`lfun(y1/2) = (2h0−y1)/(2(h0−1))`, PA2:466), and after collecting terms
+  the bound is affine in `y1` with positive slope and value `≈ 0.0091` at
+  `y1 = 2` — one chord bound for the cubic `(8−y²)y/24` (exact identity
+  `g(y) = 1/3 − (y−2)(y²+2y−4)/24` with `y²+2y−4 ≤ 7.3904` on the box) plus
+  rational two-sided enclosures of `mm1`/`mm2`.
+* m = 0 arm (`2·h0 < y1 ≤ 2·hplus`): the weight dies and the kernel is
+  exactly the B V2 factorization `(√8−y1)·[(√8+y1)y1/24 − 4mm1/(π√8)]`
+  (lemmatized below as `p21_av2_grk_factor`, the `hrw` of
+  `bank_GRKIBMPBV2_proof`); both factors are bounded at their interval ends,
+  product `≥ 0.1776·0.105 ≈ 0.0186 > 0.008`.
+
+The numeric seed both arms consume is a sharpening of wave W1's
+`p21_arccos_one_third_le` (247/200): the triple-angle identity
+`cos 3w = 4cos³w − 3cos w` at `w = 1231/3000` (increasing on `[1/2,∞)`,
+fed by the same sin-cubic half-angle bound) gives `arccos(1/3) ≤ 1.231`,
+which through `sol0`/`tau0` yields the two-sided enclosure
+`5023/5000 ≤ mm1 ≤ 507/500` (true value ≈ 1.0121) needed because the m = 1
+arm cancels to within 2% of the target.  All numeric margins are exact
+rational checks (`norm_num`), π bounds are Mathlib's `pi_gt_d6`/`pi_lt_d4`. -/
+
+/-- Stepping stone for the A V2 slice: `arccos(1/3) ≤ 1231/1000` (true value
+1.23096).  From `Real.sin_ge_sub_cube` at `w/2` with `w = 1231/3000`:
+`cos w = 1 − 2sin²(w/2) ≤ 1 − 2(w/2 − w³/48)² =: c`, `cos w ≥ 1 − w²/2 ≥ 1/2`,
+and `4x³ − 3x` is increasing on `[1/2, ∞)`, so by `Real.cos_three_mul`
+`cos(3w) = 4cos³w − 3cos w ≤ 4c³ − 3c ≤ 1/3` (rational check); antitonicity
+of `arccos` on `0 < 3w = 1231/1000 < π` finishes. -/
+private theorem p21_arccos_one_third_le_1231 : Real.arccos (1 / 3 : ℝ) ≤ 1231 / 1000 := by
+  have hw0 : (0 : ℝ) ≤ 1231 / 3000 / 2 := by norm_num
+  have hsb := Real.sin_ge_sub_cube hw0
+  have hpos : (0 : ℝ) < 1231 / 3000 / 2 - (1231 / 3000 / 2) ^ 3 / 6 := by norm_num
+  have hsq : (1231 / 3000 / 2 - (1231 / 3000 / 2) ^ 3 / 6) ^ 2
+      ≤ (Real.sin (1231 / 3000 / 2)) ^ 2 := pow_le_pow_left₀ (by norm_num) hsb 2
+  have hhalf := Real.sin_sq_eq_half_sub (x := 1231 / 3000 / 2)
+  have hcw : Real.cos (1231 / 3000)
+      = 1 - 2 * (Real.sin (1231 / 3000 / 2)) ^ 2 := by
+    conv_lhs => rw [← show (2 : ℝ) * (1231 / 3000 / 2) = 1231 / 3000 from by norm_num]
+    rw [hhalf]
+    ring
+  have hcwUB : Real.cos (1231 / 3000)
+      ≤ 1 - 2 * (1231 / 3000 / 2 - (1231 / 3000 / 2) ^ 3 / 6) ^ 2 := by
+    rw [hcw]
+    linarith
+  have hsinle : Real.sin (1231 / 3000 / 2) ≤ 1231 / 3000 / 2 := by
+    have := Real.sin_lt (by norm_num : (0 : ℝ) < 1231 / 3000 / 2)
+    linarith
+  have hsinpos : (0 : ℝ) ≤ Real.sin (1231 / 3000 / 2) := by linarith
+  have hsin2 : (Real.sin (1231 / 3000 / 2)) ^ 2 ≤ (1231 / 3000 / 2) ^ 2 :=
+    pow_le_pow_left₀ hsinpos hsinle 2
+  have hcwLB : (1 : ℝ) / 2 ≤ Real.cos (1231 / 3000) := by
+    rw [hcw]
+    have h2 : (1231 / 3000 / 2) ^ 2 ≤ (41 : ℝ) / 100 := by norm_num
+    linarith
+  have hf : ∀ x y : ℝ, (1 : ℝ) / 2 ≤ x → x ≤ y → 4 * x ^ 3 - 3 * x ≤ 4 * y ^ 3 - 3 * y := by
+    intro x y hx hxy
+    have hd : 4 * y ^ 3 - 3 * y - (4 * x ^ 3 - 3 * x)
+        = (y - x) * (4 * (x * x + y * x + y * y) - 3) := by ring
+    have hp1 : (0 : ℝ) ≤ y - x := by linarith
+    have hp2 : (0 : ℝ) ≤ 4 * (x * x + y * x + y * y) - 3 := by
+      nlinarith [hx, hx, hxy]
+    have hprod : (0 : ℝ) ≤ (y - x) * (4 * (x * x + y * x + y * y) - 3) :=
+      mul_nonneg hp1 hp2
+    linarith [hd, hprod]
+  have hmono : 4 * (Real.cos (1231 / 3000)) ^ 3 - 3 * Real.cos (1231 / 3000)
+      ≤ 4 * (1 - 2 * (1231 / 3000 / 2 - (1231 / 3000 / 2) ^ 3 / 6) ^ 2) ^ 3
+        - 3 * (1 - 2 * (1231 / 3000 / 2 - (1231 / 3000 / 2) ^ 3 / 6) ^ 2) :=
+    hf _ _ hcwLB hcwUB
+  have hfin : 4 * (1 - 2 * (1231 / 3000 / 2 - (1231 / 3000 / 2) ^ 3 / 6) ^ 2) ^ 3
+      - 3 * (1 - 2 * (1231 / 3000 / 2 - (1231 / 3000 / 2) ^ 3 / 6) ^ 2) ≤ (1 : ℝ) / 3 := by
+    norm_num
+  have hcos3 : Real.cos (3 * (1231 / 3000))
+      = 4 * (Real.cos (1231 / 3000)) ^ 3 - 3 * Real.cos (1231 / 3000) :=
+    Real.cos_three_mul _
+  have hcosT : Real.cos (1231 / 1000) ≤ (1 : ℝ) / 3 := by
+    rw [show (1231 : ℝ) / 1000 = 3 * (1231 / 3000) from by norm_num, hcos3]
+    exact le_trans hmono hfin
+  have hstep : Real.arccos (1 / 3) ≤ Real.arccos (Real.cos (1231 / 1000)) :=
+    Real.arccos_le_arccos hcosT
+  rw [Real.arccos_cos (by norm_num) (by linarith [Real.pi_gt_d2])] at hstep
+  exact hstep
+
+/-- Second stepping stone: `arcsin(1/3) ≤ 17/50`.  From `Real.sin_ge_sub_cube`
+at `17/50` (`sin(0.34) ≥ 0.34 − 0.34³/6 ≥ 1/3`, exact rational check) and
+monotonicity of `arcsin` (`Real.arcsin_le_iff_le_sin`). -/
+private theorem p21_av2_arcsin_le_17_50 : Real.arcsin (1 / 3 : ℝ) ≤ 17 / 50 := by
+  have hmem : (1 : ℝ) / 3 ∈ Set.Icc (-1 : ℝ) 1 := ⟨by norm_num, by norm_num⟩
+  have hmem2 : (17 / 50 : ℝ) ∈ Set.Icc (-(Real.pi / 2)) (Real.pi / 2) :=
+    ⟨by linarith [Real.pi_pos], by linarith [Real.pi_gt_d2]⟩
+  have hsb := Real.sin_ge_sub_cube (by norm_num : (0 : ℝ) ≤ 17 / 50)
+  have hval : (1 : ℝ) / 3 ≤ 17 / 50 - (17 / 50) ^ 3 / 6 := by norm_num
+  have hsin : (1 : ℝ) / 3 ≤ Real.sin (17 / 50) := by linarith
+  exact (Real.arcsin_le_iff_le_sin hmem hmem2).mpr hsin
+
+/-! ### sol0 / tau0 enclosures (both arms' numeric seed)
+
+`sol0 = 3·arccos(1/3) − π ∈ [0.550796, 0.551408]`,
+`tau0 = 4π − 20·sol0 ∈ [1.538208, 1.55048]` (true values 0.5507963 / 1.540658);
+lower bound via `arccos_eq_pi_div_two_sub_arcsin` + `arcsin ≤ 17/50`,
+upper via `arccos ≤ 1231/1000`, with `π ∈ (3.141592, 3.1416)`
+(`Real.pi_gt_d6` / `Real.pi_lt_d4`). -/
+
+private theorem p21_av2_sol0_le : sol0 ≤ 551408 / 1000000 := by
+  have h0 : sol0 = 3 * Real.arccos (1 / 3) - Real.pi := rfl
+  linarith [h0, p21_arccos_one_third_le_1231, Real.pi_gt_d6]
+
+private theorem p21_av2_sol0_ge : 550796 / 1000000 ≤ sol0 := by
+  have h0 : sol0 = 3 * Real.arccos (1 / 3) - Real.pi := rfl
+  rw [h0, Real.arccos_eq_pi_div_two_sub_arcsin]
+  linarith [p21_av2_arcsin_le_17_50, Real.pi_gt_d6]
+
+private theorem p21_av2_tau0_pos : (0 : ℝ) < tau0 := by
+  have h0 : tau0 = 4 * Real.pi - 20 * sol0 := rfl
+  linarith [h0, p21_av2_sol0_le, Real.pi_gt_d6]
+
+private theorem p21_av2_tau0_ge : 1538208 / 1000000 ≤ tau0 := by
+  have h0 : tau0 = 4 * Real.pi - 20 * sol0 := rfl
+  linarith [h0, p21_av2_sol0_le, Real.pi_gt_d6]
+
+private theorem p21_av2_tau0_le : tau0 ≤ 155048 / 100000 := by
+  have h0 : tau0 = 4 * Real.pi - 20 * sol0 := rfl
+  linarith [h0, p21_av2_sol0_ge, Real.pi_lt_d4]
+
+/-! ### the mm1 two-sided enclosure
+
+`mm1 = sol0·√8/tau0 ∈ [5023/5000, 507/500]` (true value ≈ 1.01203): the m = 1
+arm's near-cancellation (kernel ≈ 0.0207 against target 0.008 at `y1 = 2`)
+needs mm1 to ~0.2% accuracy, unattainable from wave W1's `mm1 < 4/3`.
+Cross-multiplications `sol0·√8 ≤ (507/500)·tau0` resp.
+`(5023/5000)·tau0 ≤ sol0·√8` close with margins ≈ 1.2e-4 / 2.6e-4. -/
+
+private theorem p21_av2_mm1_le : mm1 ≤ 507 / 500 := by
+  have hs8u : Real.sqrt 8 ≤ 282843 / 100000 :=
+    (Real.sqrt_le_left (by norm_num)).mpr (by norm_num)
+  have hn1 : sol0 * Real.sqrt 8
+      ≤ (551408 : ℝ) / 1000000 * (282843 / 100000) :=
+    mul_le_mul p21_av2_sol0_le hs8u (by norm_num) (by positivity)
+  have hmm1 : mm1 = sol0 * Real.sqrt 8 / tau0 := rfl
+  rw [hmm1]
+  exact (div_le_iff₀ p21_av2_tau0_pos).mpr (by linarith [p21_av2_tau0_ge])
+
+private theorem p21_av2_mm1_ge : 5023 / 5000 ≤ mm1 := by
+  have hs8lo : (7071 : ℝ) / 2500 < Real.sqrt 8 :=
+    Real.lt_sqrt_of_sq_lt (by norm_num)
+  have hn1 : (550796 : ℝ) / 1000000 * (7071 / 2500) ≤ sol0 * Real.sqrt 8 :=
+    mul_le_mul p21_av2_sol0_ge hs8lo.le (by norm_num) (by linarith [p21_av2_sol0_ge])
+  have hmm1 : mm1 = sol0 * Real.sqrt 8 / tau0 := rfl
+  rw [hmm1]
+  exact (le_div_iff₀ p21_av2_tau0_pos).mpr (by linarith [p21_av2_tau0_le])
+
+/-- The B V2 kernel identity, lemmatized (the `hrw` step inside
+`bank_GRKIBMPBV2_proof`, proved the same way: multiply by the positive
+`24·π·√8`, `ring`). -/
+private theorem p21_av2_grk_factor (y1 : ℝ) : (8 - y1 * y1) * y1 / 24
+      - 2 * (2 * mm1 / Real.pi) * (1 - y1 / Real.sqrt 8)
+    = (Real.sqrt 8 - y1)
+      * ((Real.sqrt 8 + y1) * y1 / 24 - 4 * mm1 / (Real.pi * Real.sqrt 8)) := by
+  have hsq8 : Real.sqrt 8 * Real.sqrt 8 = 8 := Real.mul_self_sqrt (by norm_num)
+  have hquad : (Real.sqrt 8 - y1) * (Real.sqrt 8 + y1) = 8 - y1 * y1 := by
+    calc (Real.sqrt 8 - y1) * (Real.sqrt 8 + y1)
+        = Real.sqrt 8 * Real.sqrt 8 - y1 * y1 := by ring
+      _ = 8 - y1 * y1 := by rw [hsq8]
+  have hden : (24 : ℝ) * (Real.pi * Real.sqrt 8) ≠ 0 := by positivity
+  refine mul_right_cancel₀ hden ?_
+  have e1 : ((8 - y1 * y1) * y1 / 24
+        - 2 * (2 * mm1 / Real.pi) * (1 - y1 / Real.sqrt 8))
+      * ((24 : ℝ) * (Real.pi * Real.sqrt 8))
+      = (8 - y1 * y1) * y1 * (Real.pi * Real.sqrt 8)
+        - 96 * mm1 * (Real.sqrt 8 - y1) := by
+    field_simp
+    ring
+  have e2 : ((Real.sqrt 8 - y1)
+        * ((Real.sqrt 8 + y1) * y1 / 24 - 4 * mm1 / (Real.pi * Real.sqrt 8)))
+      * ((24 : ℝ) * (Real.pi * Real.sqrt 8))
+      = (Real.sqrt 8 - y1) * (Real.sqrt 8 + y1) * y1 * (Real.pi * Real.sqrt 8)
+        - 96 * mm1 * (Real.sqrt 8 - y1) := by
+    field_simp
+    ring
+  rw [hquad] at e2
+  rw [e1, e2]
+
+/-- The m = 1 arm of `bank_GRKIBMPAV2` (`h0cut y1 = 1`, `y1 ∈ [2, 2·h0]`).
+The `lfun` weight is the exact linear function `lfun(y1/2) = (2h0−y1)/(2(h0−1))`
+(PA2:466), so after the `hexp` collection the goal is a cubic plus three
+linear pieces in `y1`.  Bounds (all exact-rational, π ∈ (3.141592, 3.1416),
+√8 ∈ (2.8284, 2.8285)): the cubic chord `g(y1) ≥ 1/3 − (y1−2)·(7.3904/24)`;
+`−4mm1/π ≥ −1.2917` and `4mm1/(π√8)·y1 ≥ 0.45215·y1` (two-sided mm1);
+`8mm2/(π·2(h0−1)) ≥ 0.1214` (mm2 = (6sol0−π)√2/(6tau0) ≥ 0.0248).  The
+resulting affine under-estimate has positive slope 0.0228 and value
+`≈ 0.0091 > 0.008` at `y1 = 2` — `linarith` closes. -/
+private theorem p21_av2_arm1 (y1 : ℝ) (hy2 : 2 ≤ y1) (hle : y1 ≤ 2 * h0)
+    (hM : mm1 ≤ 507 / 500) (hmlow : 5023 / 5000 ≤ mm1) :
+    (0.008 : ℝ) < gamma2_x_div_azim_v2 1 (y1 * y1) := by
+  have hpi1 : (3.141592 : ℝ) < Real.pi := Real.pi_gt_d6
+  have hpi2 : Real.pi < 3.1416 := Real.pi_lt_d4
+  have hy0 : (0 : ℝ) ≤ y1 := by linarith
+  have hsqrt1 : Real.sqrt (y1 * y1) = y1 := Real.sqrt_mul_self hy0
+  have h252 : (2 : ℝ) * h0 = 2.52 := by norm_num [h0]
+  have h26 : (2 : ℝ) * (h0 - 1) = 0.52 := by norm_num [h0]
+  have h252le : y1 ≤ 2.52 := by linarith
+  have hlf2 : lfun (y1 / 2) = (2 * h0 - y1) / (2 * (h0 - 1)) := by
+    show (h0 - y1 / 2) / (h0 - 1) = (2 * h0 - y1) / (2 * (h0 - 1))
+    have hd : (h0 : ℝ) - 1 ≠ 0 := by norm_num [h0]
+    refine div_eq_div_iff hd (by positivity) |>.mpr ?_
+    ring
+  have hexp : gamma2_x_div_azim_v2 1 (y1 * y1)
+      = (8 - y1 * y1) * y1 / 24 - 4 * mm1 / Real.pi
+        + 4 * mm1 / (Real.pi * Real.sqrt 8) * y1
+        + 8 * mm2 / (Real.pi * (2 * (h0 - 1))) * (2 * h0 - y1) := by
+    have h1 : gamma2_x_div_azim_v2 1 (y1 * y1)
+        = (8 - y1 * y1) * Real.sqrt (y1 * y1) / 24
+          - (2 * (2 * mm1 / Real.pi) * (1 - Real.sqrt (y1 * y1) / Real.sqrt 8)
+            - (8 * mm2 / Real.pi) * 1 * lfun (Real.sqrt (y1 * y1) / 2)) := rfl
+    rw [h1, hsqrt1, mul_one, hlf2]
+    field_simp
+    ring
+  rw [hexp]
+  -- g-chord: (8 − y²)y/24 is exactly 1/3 − (y−2)(y²+2y−4)/24, and y²+2y−4 ≤ 7.3904
+  have h1 : y1 * y1 ≤ 2.52 * y1 := by nlinarith [h252le, hy0]
+  have h2 : y1 * y1 + 2 * y1 - 4 ≤ 73904 / 10000 := by linarith
+  have hg : (8 - y1 * y1) * y1 / 24
+      ≥ (1 : ℝ) / 3 - (y1 - 2) * ((73904 : ℝ) / 10000 / 24) := by
+    have hid : (8 - y1 * y1) * y1 / 24
+        = (1 : ℝ) / 3 - (y1 - 2) * ((y1 * y1 + 2 * y1 - 4) / 24) := by ring
+    have h3 : (y1 * y1 + 2 * y1 - 4) / 24 ≤ (73904 : ℝ) / 10000 / 24 := by
+      have he : (y1 * y1 + 2 * y1 - 4) / 24 = (y1 * y1 + 2 * y1 - 4) * (1 / 24) := by ring
+      have he2 : ((73904 : ℝ) / 10000) / 24 = (73904 : ℝ) / 10000 * (1 / 24) := by ring
+      rw [he, he2]
+      exact mul_le_mul_of_nonneg_right h2 (by norm_num : (0 : ℝ) ≤ (1 : ℝ) / 24)
+    have hpos : (0 : ℝ) ≤ y1 - 2 := by linarith
+    have h3' : (y1 - 2) * ((y1 * y1 + 2 * y1 - 4) / 24)
+        ≤ (y1 - 2) * ((73904 : ℝ) / 10000 / 24) :=
+      mul_le_mul_of_nonneg_left h3 hpos
+    rw [hid]
+    linarith
+  -- mm1 upper: 4·mm1/π ≤ 1.2917
+  have hpN : 4 * mm1 / Real.pi ≤ 12917 / 10000 := by
+    have h5 : (4 : ℝ) * (507 / 500) ≤ (12917 : ℝ) / 10000 * Real.pi := by
+      linarith
+    exact (div_le_iff₀ (by positivity)).mpr (by linarith [hM, h5])
+  -- mm1 lower: 4·mm1/(π·√8) ≥ 0.45215
+  have hpP : (45215 : ℝ) / 100000 ≤ 4 * mm1 / (Real.pi * Real.sqrt 8) := by
+    have hs8u : Real.sqrt 8 ≤ 28285 / 10000 :=
+      (Real.sqrt_le_left (by norm_num)).mpr (by norm_num)
+    have hU : Real.pi * Real.sqrt 8 ≤ 3.1416 * (28285 / 10000) :=
+      mul_le_mul hpi2.le hs8u (by norm_num) (by positivity)
+    have hq1 : (45215 : ℝ) / 100000 * (3.1416 * (28285 / 10000))
+        ≤ (4 : ℝ) * (5023 / 5000) := by norm_num
+    exact (le_div_iff₀ (by positivity)).mpr (by linarith [hU, hq1, hmlow])
+  -- mm2 lower: 8·mm2/(π·2(h0−1)) ≥ 0.1214
+  have hq2 : (1214 : ℝ) / 10000 ≤ 8 * mm2 / (Real.pi * (2 * (h0 - 1))) := by
+    have hsq2 : (1.4142 : ℝ) < Real.sqrt 2 := Real.lt_sqrt_of_sq_lt (by norm_num)
+    have hsol6 : (163176 : ℝ) / 1000000 ≤ 6 * sol0 - Real.pi := by
+      linarith [p21_av2_sol0_ge, hpi2]
+    have hprod : (163176 : ℝ) / 1000000 * 1.4142
+        ≤ (6 * sol0 - Real.pi) * Real.sqrt 2 :=
+      mul_le_mul hsol6 hsq2.le (by norm_num) (by linarith)
+    have h0 : mm2 = (6 * sol0 - Real.pi) * Real.sqrt 2 / (6 * tau0) := rfl
+    rw [h26]
+    have hA : (1214 : ℝ) / 10000 * (Real.pi * 0.52) ≤ 1984 / 10000 := by
+      linarith
+    have hB : (1984 : ℝ) / 10000 ≤ 8 * mm2 := by
+      have hden : (0 : ℝ) < 6 * tau0 := by linarith [p21_av2_tau0_pos]
+      have hcore : (31 : ℝ) / 1250 * (6 * tau0)
+          ≤ (6 * sol0 - Real.pi) * Real.sqrt 2 := by
+        linarith [hprod, p21_av2_tau0_le]
+      have h1 : (31 : ℝ) / 1250
+          ≤ (6 * sol0 - Real.pi) * Real.sqrt 2 / (6 * tau0) :=
+        (le_div_iff₀ hden).mpr hcore
+      linarith [h1]
+    have hden2 : (0 : ℝ) < Real.pi * 0.52 := by positivity
+    have hT : (1214 : ℝ) / 10000 * (Real.pi * 0.52) ≤ 8 * mm2 := by
+      linarith [hB, hpi2]
+    exact (le_div_iff₀ hden2).mpr hT
+  -- assemble: the bound is affine in y1 with value > 0.008 at y1 = 2
+  have hpN' : -(4 * mm1 / Real.pi) ≥ -(12917 : ℝ) / 10000 := by linarith
+  have hpP' : (45215 : ℝ) / 100000 * y1 ≤ 4 * mm1 / (Real.pi * Real.sqrt 8) * y1 :=
+    mul_le_mul_of_nonneg_right hpP hy0
+  have hqpos : (0 : ℝ) ≤ 2 * h0 - y1 := by linarith
+  have hq' : (1214 : ℝ) / 10000 * (2 * h0 - y1)
+      ≤ 8 * mm2 / (Real.pi * (2 * (h0 - 1))) * (2 * h0 - y1) :=
+    mul_le_mul_of_nonneg_right hq2 hqpos
+  linarith [hg, hpN', hpP', hq', hy2, h252, h252le]
+
+/-- The m = 0 arm of `bank_GRKIBMPAV2` (`h0cut y1 = 0`, `2·h0 < y1 ≤ 2·hplus`):
+the weight dies, and the kernel is the B V2 factorization
+`(√8−y1)·[(√8+y1)y1/24 − 4mm1/(π√8)]` (via `p21_av2_grk_factor`).  On the
+interval: `√8−y1 ≥ 2.8284−2.6508 = 0.1776`, the bracket `≥ 0.561582−0.4565 =
+0.105082 ≥ 0.105` (bracket numerator minimized at `y1 = 2h0`, `4mm1/(π√8) ≤
+0.4565` from `mm1 ≤ 507/500`), so the product `≥ 0.0186 > 0.008`. -/
+private theorem p21_av2_arm0 (y1 : ℝ) (hgt : 2 * h0 < y1) (hhp : y1 ≤ 2 * hplus)
+    (hM : mm1 ≤ 507 / 500) :
+    (0.008 : ℝ) < gamma2_x_div_azim_v2 0 (y1 * y1) := by
+  have hpi1 : (3.141592 : ℝ) < Real.pi := Real.pi_gt_d6
+  have h26508 : (2 : ℝ) * hplus = 2.6508 := by norm_num [hplus]
+  have h252 : (2 : ℝ) * h0 = 2.52 := by norm_num [h0]
+  have hy0 : (0 : ℝ) ≤ y1 := by linarith
+  have hsqrt1 : Real.sqrt (y1 * y1) = y1 := Real.sqrt_mul_self hy0
+  have hgt2 : (2.52 : ℝ) < y1 := by linarith
+  have hle : y1 ≤ 2.6508 := by linarith
+  have hs8lo : (2.8284 : ℝ) < Real.sqrt 8 := Real.lt_sqrt_of_sq_lt (by norm_num)
+  have hexp0 : gamma2_x_div_azim_v2 0 (y1 * y1)
+      = (Real.sqrt 8 - y1)
+        * ((Real.sqrt 8 + y1) * y1 / 24 - 4 * mm1 / (Real.pi * Real.sqrt 8)) := by
+    have h1 : gamma2_x_div_azim_v2 0 (y1 * y1)
+        = (8 - y1 * y1) * Real.sqrt (y1 * y1) / 24
+          - (2 * (2 * mm1 / Real.pi) * (1 - Real.sqrt (y1 * y1) / Real.sqrt 8)
+            - (8 * mm2 / Real.pi) * 0 * lfun (Real.sqrt (y1 * y1) / 2)) := rfl
+    rw [h1, hsqrt1, mul_zero, zero_mul, sub_zero]
+    exact p21_av2_grk_factor y1
+  rw [hexp0]
+  have e2 : (0.1776 : ℝ) ≤ Real.sqrt 8 - y1 := by linarith
+  have hA : (2.8284 : ℝ) + 2.52 ≤ Real.sqrt 8 + y1 := by linarith
+  have hB1 : ((2.8284 : ℝ) + 2.52) * 2.52 ≤ (Real.sqrt 8 + y1) * y1 :=
+    mul_le_mul hA hgt2.le (by norm_num) (by linarith)
+  have hB2 : 4 * mm1 / (Real.pi * Real.sqrt 8) ≤ 4565 / 10000 := by
+    refine (div_le_iff₀ (by positivity)).mpr ?_
+    have hpL : (4 : ℝ) * (507 / 500)
+        ≤ (4565 : ℝ) / 10000 * (3.141592 * 2.8284) := by norm_num
+    have hpU : 3.141592 * 2.8284 ≤ Real.pi * Real.sqrt 8 :=
+      mul_le_mul hpi1.le hs8lo.le (by norm_num) (by positivity)
+    linarith [hpL, hpU, hM]
+  have e4 : (0.105 : ℝ)
+      ≤ (Real.sqrt 8 + y1) * y1 / 24 - 4 * mm1 / (Real.pi * Real.sqrt 8) := by
+    linarith [hB1, hB2]
+  have hmul : (0.1776 : ℝ) * 0.105
+      ≤ (Real.sqrt 8 - y1)
+        * ((Real.sqrt 8 + y1) * y1 / 24 - 4 * mm1 / (Real.pi * Real.sqrt 8)) :=
+    mul_le_mul e2 e4 (by linarith) (by linarith [e2])
+  linarith
+
+/-- The sharp-edge group's A V2 bank entry (HOL `GRKIBMP A V2`,
+ineq.hl:1520-1535, doc "gamma2 at least 0.008 per azim along critical edge"),
+PROVED by hand — fully analytic, no certificate data.  Proof: the `y2..y6 ∈
+[1,1]` box closes inside `gamma2x1DivAV2` via the rfl bridge
+`p21_nonf_gamma2x1DivAV2_yOfX`; then `lt_trichotomy` on `y1` against the
+`h0cut` breakpoint `2·h0`: at or below it the weight is `1` and the linear
+`lfun` term carries the left part of the box (`p21_av2_arm1`, affine bound
+`≈ 0.0091` at `y1 = 2`); above it the weight dies and the B V2 factored
+kernel gives `≥ 0.0186` (`p21_av2_arm0`).  Numeric seed: the triple-angle
+`arccos(1/3) ≤ 1231/1000` and the two-sided `mm1 ∈ [1.0046, 1.014]` (doc of
+`p21_av2_mm1_le`).  Assembles with `bank_GRKIBMPBV2_proof` into
+`grk_bank` (Assembly `nliGrkBank := ⟨bank_GRKIBMPAV2_proof,
+bank_GRKIBMPBV2_proof⟩`). -/
+theorem bank_GRKIBMPAV2_proof : bank_GRKIBMPAV2 := by
+  intro y1 y2 y3 y4 y5 y6 hy2 hhp _ _ _ _ _ _ _ _ _ _
+  have hM := p21_av2_mm1_le
+  have hmlow := p21_av2_mm1_ge
+  rw [show yOfX (gamma2x1DivAV2 (h0cut y1)) y1 y2 y3 y4 y5 y6
+      = gamma2_x_div_azim_v2 (h0cut y1) (y1 * y1) from rfl]
+  rcases lt_trichotomy y1 (2 * h0) with hlt | heq | hgt
+  · rw [p21_h0cutA y1 (le_of_lt hlt)]
+    exact p21_av2_arm1 y1 hy2 (le_of_lt hlt) hM hmlow
+  · rw [p21_h0cutA y1 (le_of_eq heq)]
+    exact p21_av2_arm1 y1 hy2 (le_of_eq heq) hM hmlow
+  · rw [p21_h0cutB y1 hgt]
+    exact p21_av2_arm0 y1 hgt hhp hM
 /-! ## MERGE-INEQ wave 2a: the cell3 kit (docs/merge-ineq-channel.md §4.2-3)
 
 The thirteen 2a kit items for `cell3_from_ineq_thm` (wave 2b), each with its
