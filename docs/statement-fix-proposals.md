@@ -1436,3 +1436,93 @@ PA12:1950-1953 现有装配即此换向，可互为见证）。前提序与 HOL 
 （应用时闸参数建议：`SF_ITEM=37`，审计对象 `Kepler.Text.MXI_EXISTS_concl` +
 `Kepler.Text.MXI_EXISTS_concl_discharged`，namespace `Kepler.Text`；验收 =
 六文件 `lake build` 零新错 + `sorry` 计数差 0）。
+
+## 38. PA14 `QZKSYKG2` 冻结 comprehension 欠尾固定合取项（弱 permutes 族不可消费，AJRIPQN 闭合最后一块）— 分级 A（STATEMENT 修正）
+
+### (a) HOL 出处与裁决
+
+- **HOL 正本**：`QZKSYKG2`（QZKSYKG.hl:255-262 concl，proof 325-2251，~1900
+  行巨案）：`mcell k V ul` 被全体 `left_action_list p ul`（`p` 取遍 `0..k-1`
+  的排列）的 Rogers 单形并覆盖。HL `permutes`
+  （azure/hol-light-nat/Library/permutations.ml:9）为 **complement-fixing**
+  双射（`!x. ~(x IN s) ==> p x = x` 合取支；`PERMUTES_TRIVIAL`：
+  `p permutes 0..0 <=> p = I`）——PA10:183 已裁定此为本体前提。故 HOL
+  结论的被并集族 = **尾固定**排列族。
+- **缺陷**：Lean 冻结陈述（PA14:932-937）的被并集族只按弱按点
+  `permutes`（`∀ x, x ∈ Icc 0 (k-1) ↔ p x ∈ Icc 0 (k-1)`，PackingAuto2
+  编码）筛，junk 尾排列（如 k = 1 时 p 1 ↦ 7 把 getD-default 点甩进
+  `leftActionList` 尾槽）混入族内。与 SF-20（QZKSYKG1）的"为假"**不同
+  类**：弱式并集更大 ⇒ 覆盖更弱 ⇒ 冻结陈述**不假**，但**不可消费**——从
+  弱式并集取出的 p 无尾固定性，无法交给带 `hfix` 的下游 `QZKSYKG1`/
+  `RVFXZBU`（PA17:802-804 已记档："neither QZKSYKG1 nor RVFXZBU can
+  consume them"）。AJRIPQN 五阶段装配（PA17 `p17_ajripqn_of_pieces`:
+  683-687 / `p17_ajripqn_of_tailfix`:824-827 的 `hQ2` 参数）恰按补后形
+  冻结参数型，弱式供不出 ⇒ PA17:810 的
+  `exact p17_ajripqn_of_tailfix … (QZKSYKG2-补后形 …)` 闭合路径断链。
+- **分级 A**（真实消费者 + 陈述修正方向唯一）；同病先例：SF-20（同文件
+  同家族 `QZKSYKG1`，2026-09-30 用户批准已应用）。
+
+### (b) 修复补丁
+
+草案 `docs/statement-fix-proposals-patches/38-qzksykg2-tailfix.patch`
+（2 文件 +31/−9；对生成时工作树 `git apply --check` 干净可贴）：
+
+1. **PA14 `QZKSYKG2`（主件，:932-937）**：comprehension 补合取项
+   `{p : Equiv.Perm ℕ | permutes p (Set.Icc 0 (k - 1)) ∧ ∀ n : ℕ,
+   k ≤ n → p n = n}`——合取项逐字 = `p17_ajripqn_of_tailfix` 的 `hQ2`
+   消费形（PA17:826-827，`∀ n : ℕ` 显式类型同款）。**前提面零改动**；
+   证明体 `sorry` 原位。docstring 补 Statement 记档行 + NEEDS 注记同步。
+2. **PA17 `qzksykg2_p17`（:253-259 转发 shim）**：statement 同步补同款
+   合取项，转发 term `QZKSYKG2 hsat hpack hbar hk` **一字不动**（SF-20
+   `qzksykg1_p17` 同步透传先例）。**必须同 patch 同车**：弱式下 shim 的
+   声明型是冻结形，主件补强后转发 term 型不匹配（两 set-comprehension
+   差一合取支，非 defeq），半应用 = PA17 编译错——SF-20 教训同款。
+3. **注记同步（同 patch，纯注释）**：PA14 头部 ENCODING-FIX 段
+   （"keep the plain `permutes` form" 对两件已双料过时）与 Proof status
+   行；PA17 shim docstring 补项 38 记档。
+
+### (c) 消费面核实（全树 grep `QZKSYKG2` + comprehension 形状扫描）
+
+| 消费点 | 性质 | 判定 |
+| --- | --- | --- |
+| PA17:259 `qzksykg2_p17` 转发 term | `QZKSYKG2` **唯一代码调用点** | **破损点**：补强后 term 型与 shim 声明型不匹配 ⇒ 同车同步（(b)2）；shim 为 private 且**全树零代码调用点**（仅 PA17:64/876/897/918 docstring 提及），同步零波及 |
+| PA17:824-827 `p17_ajripqn_of_tailfix` 的 `hQ2` | 新消费（参数化假设） | 本项动机；补后 `QZKSYKG2` 经 `k ≤ 4 → k ∈ {0,1,2,3,4}` 转换（`upTo4KyLemma_p17`）直接供给；探针已验证 |
+| PA17:683-687 `p17_ajripqn_of_pieces` 的 `hQ2` 参数 | 新消费 | 参数型本就按补后形冻结（PA17:686-687），不受影响 |
+| PA14 文件内 | 无其他调用 | 主件 `sorry` 原位，文件内无第二消费点 |
+| PA4:1370-1495 / PA15:521 / LocalAuto38Bridge:42 | 纯注释提及 | 零代码改动；PA4 记的"QZKSYKG1-2 仍未证"指本体 sorry（仍成立） |
+| PA20:816/2102 | 消费的是 `QZKSYKG1` | 已带 `hfix`（SF-20 产物），本项不触 |
+| 单调回退通道 | 补后式 ⇒ 冻结弱式 | 逐元素重打包（`hp.1` 舍弃合取支）即得（探针 4）；任何未来弱式消费者有一条行补救 |
+
+### (d) 保真论证
+
+补后 comprehension 族 = HL `permutes` 本义下的排列族：complement-fixing
+的 `∀ n ≥ k, p n = n` 逐字展开即所补合取支。冻结陈述是丢编码前提的有损
+接口，补后式才是 HOL `QZKSYKG2` concl 的忠实编码——与 SF-20 给
+`QZKSYKG1` 补 `hfix` 前提同一裁据（PA10:183 ruling）。方向性差异记档：
+SF-20 是"补前提 = 变弱"，本项是"收窄结论族 = 变强"，两者同朝 HOL 收敛
+（"补合取支 = 加参变弱 = HOL 忠实方向"在本项的落实形为：弱编码相对 HOL
+少了限制，补上即回正本）。
+
+### (e) 风险
+
+- **陈述修正 ≠ 闭合**：`sorry` 原位，两文件 sorry 计数差 0（探针实测：
+  PA14 三处 sorry 同位平移 705→709 / 895→899 / 932→942；PA17 一处
+  `AJRIPQN` 不动）。k ≤ 3 本体仍卡 `LEFT_ACTION_LIST_PROPERTIES`
+  （marchal2.hl:4460 S₃ 巨案，`ynhyjit_p14` i = 3 NEEDS）；k = 4 仍卡
+  `YIFVQDV_1`（与 `QZKSYKG1` 的 k = 4 案共享）——两巨案不受本项影响。
+- **补强与 HL 证结构同向**：HL 原证在 k = 2/3 案经
+  `LEFT_ACTION_LIST_PROPERTIES`（"permutations fixing indices ≥ i-1"）
+  本就只对尾固定族工作，闭合时无需重排证法、无新增数学义务。
+- 主件与 shim 必须同车（(b)2）；PA17 直接 import PA14，无环依赖，应用
+  顺序无关。尾部固定语义与 PA10 `RVFXZBU`/SF-20 `QZKSYKG1` 的既有
+  `hfix` 前提逐字同族（`∀ j/n : ℕ, k ≤ j/n → p j/n = j/n`），无新概念。
+
+### (f) 状态：**已立项起草（2026-10-12 用户批）；补丁草案就绪待应用波**
+（应用时闸参数建议：`SF_ITEM=38`，GATE_MODE=STATEMENT-FIX；审计对象
+`Kepler.Text.QZKSYKG2`（主件）+ `Kepler.Text.qzksykg2_p17`（同步 shim，
+private）；namespace `Kepler.Text`；验收 = `lake build
+Kepler.Text.PackingAuto14 Kepler.Text.PackingAuto17` 零新错 + sorry 计数
+差 0。起草期已单进程预演（`lake env lean`，工作树零改动）：修补后 PA14
+整文件 exit 0；axiom 替身复刻新签名 + shim 转发形 + `hQ2` 消费形 + 单调
+回退四项 typecheck exit 0；LEAN_PATH 前置 /tmp olean 的配对编译（补后
+PA14 + 补后 PA17）exit 0。）

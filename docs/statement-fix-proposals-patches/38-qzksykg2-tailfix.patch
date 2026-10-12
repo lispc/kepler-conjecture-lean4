@@ -1,0 +1,89 @@
+diff --git a/lean/Kepler/Text/PackingAuto14.lean b/lean/Kepler/Text/PackingAuto14.lean
+index 208bdff..6aa9549 100644
+--- a/lean/Kepler/Text/PackingAuto14.lean
++++ b/lean/Kepler/Text/PackingAuto14.lean
+@@ -29,9 +29,13 @@ Encoding notes.
+   HL `permutes` is complement-fixing, so the faithful encoding carries the
+   tail-fixedness side condition `∀ j, i ≤ j → p j = j`).
+   ENCODING-FIX 2026-09-19: private `ynhyjit_p14` now carries `hfix`,
+-  matching the PA10 fix; `QZKSYKG1`/`QZKSYKG2` keep the plain `permutes`
+-  form (verbatim to HOL concl) — at discharge time their HL proofs must
++  matching the PA10 fix; `QZKSYKG1`/`QZKSYKG2` were frozen with the plain
++  `permutes` form — at discharge time their HL proofs must
+   supply the tail-fixedness from `LEFT_ACTION_LIST_PROPERTIES`.
++  STATEMENT-FIX 项 20 (2026-09-30, `QZKSYKG1` 补 `hfix` 前提) / 项 38
++  (2026-10-12, `QZKSYKG2` comprehension 补 `∧ ∀ n, k ≤ n → p n = n`) 已把
++  两件冻结陈述先后补到 HOL-faithful 形（HL `permutes` 本为
++  complement-fixing，azure/hol-light-nat/Library/permutations.ml:9）。
+ - `MXI_EXPLICIT` (marchal2.hl:2516): MERGED 2026-09-19 — PA12's proved
+   public `MXI_EXPLICIT` is importable; the unused private `mxiExplicit_p14`
+   copy was deleted (PA11 still holds its own private copy, out of scope).
+@@ -42,9 +46,9 @@ Encoding notes.
+   named bridges `LEFT_ACTION_LIST_1_PROPERTIES_ALT` and
+   `MCELL2_PERMUTE_01` are proved (sorry-free; the LEFT_ACTION copy carries
+   the PA10-style tail-fixedness side condition, see its ENCODING-FIX note).
+-  `QZKSYKG1`/`QZKSYKG2` remain `sorry`ed with NEEDS accounting (statement
+-  unprovable as weak-`permutes` encoded for k ≤ 3; k = 4 is the YIFVQDV_1
+-  giant; ~1900 HOL lines for QZKSYKG2).
++  `QZKSYKG1`/`QZKSYKG2` remain `sorry`ed with NEEDS accounting (statements
++  now HOL-faithful via SF-20/38; k ≤ 3 is the LEFT_ACTION_LIST_PROPERTIES
++  S₃ giant; k = 4 is the YIFVQDV_1 giant; ~1900 HOL lines for QZKSYKG2).
+ -/
+ 
+ import Kepler.Text.PackingAuto2
+@@ -927,6 +931,12 @@ proved in PackingAuto6/7/8, but `MXI_EXPLICIT` and
+ the `k = 2, 3` cases again go through `YNHYJIT` (its i = 2 case is closed
+ by `MCELL2_PERMUTE_01` above, i = 3 open).
+ 
++Statement 2026-10-12 (STATEMENT-FIX 项 38 立项起草): comprehension 补
++tail-fixed 合取项 `∧ ∀ n, k ≤ n → p n = n`——弱 `permutes` 编码下 junk 尾
++排列把 getD-default 点甩进 `leftActionList`，弱式并集含下游（`QZKSYKG1`/
++`RVFXZBU` 均带 `hfix`）无法消费的 junk simplex；PA17
++`p17_ajripqn_of_tailfix` 的 `hQ2` 消费形即补后式。补后式 ⇒ 原冻结式
++（image/sUnion 单调），现有弱式消费者可单调回退。
+ Status 2026-09-30: still `sorry`ed (giant).
+ DISCHARGES: none (feeds marchal3/KIZHLTL downstream). -/
+ theorem QZKSYKG2 {V : Set V3} {ul : List V3} {k : ℕ}
+@@ -934,8 +944,13 @@ theorem QZKSYKG2 {V : Set V3} {ul : List V3} {k : ℕ}
+     (hk : k ∈ ({0, 1, 2, 3, 4} : Set ℕ)) :
+     mcell k V ul ⊆
+       ⋃₀ ((fun p => rogers V (leftActionList p ul)) ''
+-        {p : Equiv.Perm ℕ | permutes p (Set.Icc 0 (k - 1))}) := by
+-  -- NEEDS: giant (QZKSYKG.hl:325-2251, ~1900 HOL lines). Case status:
++        {p : Equiv.Perm ℕ | permutes p (Set.Icc 0 (k - 1)) ∧
++          ∀ n : ℕ, k ≤ n → p n = n}) := by
++  -- NEEDS: giant (QZKSYKG.hl:325-2251, ~1900 HOL lines). STATEMENT-FIX 项 38
++  -- 已应用（comprehension 补 `∧ ∀ n, k ≤ n → p n = n`，与 PA17
++  -- `p17_ajripqn_of_tailfix` 的 hQ2 逐字一致；HL 侧 LEFT_ACTION_LIST_
++  -- PROPERTIES 在 k = 2/3 案本就供给此 tail-fixedness，补强与 HL 证结构
++  -- 同向）。Case status:
+   -- k = 2 — the 01-swap mirror is now available (MCELL2_PERMUTE_01 above);
+   -- k = 3 — blocked by LEFT_ACTION_LIST_PROPERTIES (ynhyjit_p14's i = 3
+   -- NEEDS); k = 0/1 — mcell0/mcell1 coverings; k = 4 — `YIFVQDV_1` (also
+diff --git a/lean/Kepler/Text/PackingAuto17.lean b/lean/Kepler/Text/PackingAuto17.lean
+index 18548d8..d6aa140 100644
+--- a/lean/Kepler/Text/PackingAuto17.lean
++++ b/lean/Kepler/Text/PackingAuto17.lean
+@@ -249,13 +249,20 @@ SHIM (2026-09-19): the parallel-owned PackingAuto14 olean HAS landed in this
+ checkout, so the verbatim `_p17` copy discharges to
+ `Kepler.Text.PackingAuto14.QZKSYKG2` (still `sorry`ed upstream there — a
+ documented transitive shim, deleting the statement duplication; delete the
+-copy at merge when Auto14's giants land). -/
++copy at merge when Auto14's giants land).
++STATEMENT-FIX 项 38 (2026-10-12): 上游 `QZKSYKG2` comprehension 补
++tail-fixed 合取项 `∧ ∀ n, k ≤ n → p n = n`（HOL `permutes` 为
++complement-fixing，azure/hol-light-nat/Library/permutations.ml:9；弱式并集
++含 junk simplex，`p17_ajripqn_of_tailfix` 的 `hQ2` 无法从弱式供给），本
++shim 同步透传（项 20 `qzksykg1_p17` 先例；全树无本 shim 代码调用点，同步
++零波及）。 -/
+ private theorem qzksykg2_p17 {V : Set V3} {ul : List V3} {k : ℕ}
+     (hsat : saturated V) (hpack : Packing V) (hbar : barV V 3 ul)
+     (hk : k ∈ ({0, 1, 2, 3, 4} : Set ℕ)) :
+     mcell k V ul ⊆
+       ⋃₀ ((fun p => rogers V (leftActionList p ul)) ''
+-        {p : Equiv.Perm ℕ | permutes p (Set.Icc 0 (k - 1))}) :=
++        {p : Equiv.Perm ℕ | permutes p (Set.Icc 0 (k - 1)) ∧
++          ∀ n : ℕ, k ≤ n → p n = n}) :=
+   QZKSYKG2 hsat hpack hbar hk
+ 
+ /-! ### measure pigeonhole helpers -/
