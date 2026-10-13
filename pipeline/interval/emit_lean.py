@@ -46,6 +46,7 @@ Usage: emit_lean.py <case.json> <cert.json> <out.lean> [--name NAME]
        [--disj-dummy]
 """
 import json
+import math
 import sys
 from fractions import Fraction
 
@@ -1293,6 +1294,375 @@ def hull_main(case, cid, mod, n, args, params_file, gran, rung_n, rung_out,
 
 
 
+# ---------------------------------------------------------------------------
+# W4 route (a): mirror gsplit (`--gsplit=a` / `--gsplit=b`, W3 fix route for
+# guard-straddle NEG leaves).  The C side closes straddle leaves with
+# `--gsplit2` (bb_arb_mono.c: gsplit2_dim guard-sensitivity bisection), but
+# the gsplit sub-boxes never enter the certificate — mirroring the split on
+# the Lean side keeps the solver certificates untouched.  The split itself is
+# done here in exact rational interval arithmetic (no solver rerun): per NEG
+# tm leaf, the guards straddling on the leaf box are bisected away (each step
+# halves the dim with the smallest post-split straddle sum = largest
+# straddle-width decrease; exact midpoints; depth cap 12), leaving
+# guard-signed single-branch sub-boxes + at most one residual.
+#
+#   stage A round 2:  emit_lean.py <case.json> <cert.json> <outA2.lean> --hull \
+#                     --gsplit=a --params=<round-1 params> \
+#                     [--manifest=<round-1 manifest>] [--gsplit-depth=12]
+#     reads the round-1 stage-A probe output, finds the NEG leaves, runs the
+#     mirror bisection on each, and writes
+#       <outA2 base>.manifest.json   sub-box manifest (schema gsplit-subboxes)
+#       <outA2.lean>                 round-2 probe driver over all sub-boxes
+#     (line-flushed: every result line to stdout *and* stderr with explicit
+#     flushes — W3 minefield: redirected stdout is block-buffered, and a
+#     killed run must keep its partial params).
+#   stage B:  emit_lean.py <case.json> <cert.json> <outB.lean> --hull \
+#             --gsplit=b --params=<round-2 params> [--max-leaves=N]
+#     emits the kernel certificate over the sub-boxes from the round-2
+#     manifest (auto-detected next to the round-2 params): per sub-box
+#       theorem <mod>LeafK : checkPosTMHull ... = true|false := by decide
+#     (NEG sub-boxes keep `= false`: the proven lemma is the compiled-run /
+#     kernel agreement).  Residual sub-boxes stay NEG by construction.
+#
+#   Mirror validity anchor (W3/W4): on split_0_2 leaf 0 at rung (128, -80),
+#   gran -80, this reproduces the W3 13-sub-box partition
+#   (/tmp/p4w3/subboxes.json: 12 guard-signed + 1 residual sb0) exactly.
+# ---------------------------------------------------------------------------
+
+class GSplitError(Exception):
+    pass
+
+
+def gsplit_guards(case):
+    """All ite guard progs of the case, traversal order."""
+    guards = []
+
+    def walk(prog):
+        for op in prog:
+            if isinstance(op, dict):
+                it = op["ite"]
+                guards.append(it["cond"])
+                walk(it["cond"])
+                walk(it["then"])
+                walk(it["else"])
+
+    walk(case["prog"])
+    return guards
+
+
+def gsplit_eval(prog, bx):
+    """Exact-rational interval evaluation of a guard prog on a Fraction box
+    (mirror of the C bare-interval guard probe; ite polarity per the kernel:
+    guard interval negative -> then, nonnegative -> else, straddle -> hull of
+    both branches; sqrt floors/ceilings via isqrt).  Raises GSplitError on
+    ops the mirror cannot soundly evaluate (atan/trans guards)."""
+    def isqrt_hi(x):
+        n, d = x.numerator, x.denominator
+        return Fraction(0) if n <= 0 else Fraction(math.isqrt(n * d - 1) + 1, d)
+
+    def isqrt_lo(x):
+        n, d = x.numerator, x.denominator
+        return Fraction(0) if n <= 0 else Fraction(math.isqrt(n * d), d)
+
+    st = []
+    for op in prog:
+        if isinstance(op, dict):
+            it = op["ite"]
+            cc = gsplit_eval(it["cond"], bx)
+            if cc[1] < 0:
+                st.append(gsplit_eval(it["then"], bx))
+            elif cc[0] >= 0:
+                st.append(gsplit_eval(it["else"], bx))
+            else:
+                t = gsplit_eval(it["then"], bx)
+                e = gsplit_eval(it["else"], bx)
+                st.append((min(t[0], e[0]), max(t[1], e[1])))
+            continue
+        o = op[0]
+        if o == "push_const":
+            q = Fraction(op[1]["num"], op[1]["den"])
+            st.append((q, q))
+        elif o == "push_var":
+            st.append(bx[op[1]])
+        elif o == "mul":
+            b = st.pop()
+            a = st.pop()
+            st.append((min(a[0] * b[0], a[0] * b[1], a[1] * b[0], a[1] * b[1]),
+                       max(a[0] * b[0], a[0] * b[1], a[1] * b[0], a[1] * b[1])))
+        elif o == "add":
+            b = st.pop()
+            a = st.pop()
+            st.append((a[0] + b[0], a[1] + b[1]))
+        elif o == "sub":
+            b = st.pop()
+            a = st.pop()
+            st.append((a[0] - b[1], a[1] - b[0]))
+        elif o == "neg":
+            a = st.pop()
+            st.append((-a[1], -a[0]))
+        elif o == "abs":
+            a = st.pop()
+            if a[1] <= 0:
+                st.append((-a[1], -a[0]))
+            elif a[0] >= 0:
+                st.append(a)
+            else:
+                st.append((Fraction(0), max(-a[0], a[1])))
+        elif o == "sqrt":
+            a = st.pop()
+            st.append((isqrt_lo(max(Fraction(0), a[0])),
+                       isqrt_hi(max(Fraction(0), a[1]))))
+        elif o == "div":
+            b = st.pop()
+            a = st.pop()
+            if b[0] <= 0 <= b[1]:
+                raise GSplitError("guard divides by a 0-straddling interval")
+            qs = [a[0] / b[0], a[0] / b[1], a[1] / b[0], a[1] / b[1]]
+            st.append((min(qs), max(qs)))
+        else:
+            raise GSplitError(f"guard op {o!r} unsupported in the gsplit "
+                              "mirror (no trans/atan guards)")
+    return st[-1]
+
+
+def gsplit_subboxes(guards, frbox, depth):
+    """Guard-guided bisection (mirror of gsplit2_dim's intent, W3 make_subboxes
+    semantics): priority queue by guard-straddle width; each step bisects the
+    dim whose post-split straddle sum is smallest (= straddle-width decrease
+    largest) at the exact midpoint; a box is terminal when the guard set is
+    signed on it, or at the depth cap (residual).  Returns
+    [(residual, Fraction box), ...] in completion order."""
+    def strad(bx):
+        w = Fraction(0)
+        for g in guards:
+            r = gsplit_eval(g, bx)
+            if r[0] <= 0 <= r[1]:
+                w += r[1] - r[0]
+        return w
+
+    def split(bx):
+        best, bw = None, None
+        for d in range(len(bx)):
+            lo, hi = bx[d]
+            if lo == hi:
+                continue
+            mid = (lo + hi) / 2
+            w = Fraction(0)
+            for half in ((lo, mid), (mid, hi)):
+                nb = list(bx)
+                nb[d] = half
+                w += strad(nb)
+            if bw is None or w < bw:
+                best, bw = d, w
+        return best
+
+    work = [(strad(frbox), 0, frbox)]
+    done = []
+    while work:
+        work.sort(key=lambda t: -t[0])
+        w, dep, bx = work.pop(0)
+        if w == 0 or dep >= depth:
+            done.append((w > 0, bx))
+            continue
+        d = split(bx)
+        lo, hi = bx[d]
+        mid = (lo + hi) / 2
+        for half in ((lo, mid), (mid, hi)):
+            nb = list(bx)
+            nb[d] = half
+            work.append((strad(nb), dep + 1, nb))
+    return done
+
+
+def frac_dyadic_at(fr, e, upper):
+    """Fraction -> ((m, e), rounded?) with value m*2^e: exact when fr*2^-e is
+    integral, otherwise floor/ceil (sound outer rounding — lower bounds round
+    down, upper bounds round up)."""
+    if e <= 0:
+        m, r = divmod(fr.numerator * (1 << -e), fr.denominator)
+    else:
+        m, r = divmod(fr.numerator, fr.denominator * (1 << e))
+    if r and upper:
+        m += 1
+    return (m, e), bool(r)
+
+
+def gsplit_stage_a_file(mod, n, expr, boxes, gran, rung_n, rung_out,
+                        nsqrt, ndiv, ntrans, meta, extra):
+    """Stage-A round-2 probe driver over the gsplit sub-boxes.  Same
+    probe-loop shape as the plain hull stage A, but every output line goes
+    through `probeOut` (stdout + stderr, both explicitly flushed): redirected
+    stdout is block-buffered, and a killed run must keep its partial params
+    (W3 diagSB post-mortem).  stderr additionally carries per-box progress."""
+    g = f"({gran})"
+    boxes_lean = ",\n    ".join(
+        f"({box_lit(b)} : Fin {n} → DInterval)" for b in boxes)
+    return (HDR.format(nleaves=len(boxes), extra=extra, **meta) +
+            "import Kepler.Interval.CertTM\n\n"
+            "set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
+            "open Kepler.Interval\n\n"
+            "/-- Local default (for `Array.get!` in the probe loop only). -/\n"
+            "instance : Inhabited DInterval := ⟨⟨⟨0, 0⟩, ⟨0, 0⟩⟩⟩\n\n"
+            "/-- Line-flushed output: each line to stdout *and* stderr with\n"
+            "explicit flushes.  Redirected stdout is block-buffered (W3\n"
+            "minefield: a 3 h run looked dead at 0 bytes), and a killed run\n"
+            "must keep its partial params — stderr is the live mirror. -/\n"
+            "def probeOut (s : String) : IO Unit := do\n"
+            "  let out ← IO.getStdout\n"
+            "  out.putStr s\n"
+            "  out.flush\n"
+            "  let err ← IO.getStderr\n"
+            "  err.putStr s\n"
+            "  err.flush\n\n"
+            "/-- The case expression for the hull route: dummy `(0, 0)`\n"
+            "sqrt slots (mantissas are carried in `TMParams.sqrtCerts`,\n"
+            "not in the AST); closed atan args pinned at (2048, -64),\n"
+            f"open atan args at the pilot rung ({rung_n}, {rung_out}). -/\n"
+            f"def {mod}Expr : IExpr {n} :=\n  {expr}\n\n"
+            "/-- Template TMParams: dummy mantissas, pilot recip\n"
+            f"granularity {gran} everywhere. -/\n"
+            f"def {mod}Ps : TMParams :=\n"
+            f"  ⟨List.replicate {nsqrt} ⟨0, 0, 0, {g}, {g}⟩,\n"
+            f"   List.replicate {ndiv} ⟨{g}, {g}, {g}⟩,\n"
+            f"   List.replicate {ntrans} ⟨{g}, {g}⟩⟩\n\n"
+            f"/-- The {len(boxes)} gsplit sub-boxes (guard-guided bisection\n"
+            "of the round-1 NEG leaves; see the emitted manifest). -/\n"
+            f"def {mod}Boxes : Array (Fin {n} → DInterval) :=\n  #["
+            + boxes_lean + "]\n\n"
+            f"def main : List String → IO UInt32 := fun _ => do\n"
+            f"  probeOut \"RUNG {rung_n} {rung_out} {g} {g} {g} {g} {g} {g} {g}\\n\"\n"
+            "  let err ← IO.getStderr\n"
+            f"  for i in [0:{mod}Boxes.size] do\n"
+            "    let tms ← IO.monoMsNow\n"
+            f"    err.putStr s!\"[gsplit] sub-box {{i}}/{{{mod}Boxes.size}} ms={{tms}}\\n\"\n"
+            "    err.flush\n"
+            f"    match tmHullLeafProbe {mod}Expr {mod}Boxes[i]! {mod}Ps with\n"
+            "    | some (p, m, e, l) =>\n"
+            "        let v := if p then \"PASS\" else \"NEG\"\n"
+            "        let trip := String.intercalate \" \"\n"
+            "          (l.map fun t => s!\"{t.1} {t.2.1} {t.2.2}\")\n"
+            "        probeOut s!\"{i} {v} {m} {e} {trip}\\n\"\n"
+            "    | none => probeOut s!\"{i} FAIL\\n\"\n"
+            "  return 0\n")
+
+
+def gsplit_main(case, cid, mod, n, args, params_file, manifest_file, gran,
+                rung_n, rung_out, depth, stage_b, max_leaves=None):
+    """`--gsplit` driver: stage A round 2 (NEG leaves -> sub-boxes + probe
+    driver) or stage B (kernel decide theorems over the sub-boxes)."""
+    if params_file is None:
+        die("--gsplit needs --params=FILE (round-1 stage-A output for "
+            "stage A round 2, round-2 stage-A output for stage B)")
+    expr, nsqrt, ndiv, ntrans = hull_expr(case, rung_n, rung_out)
+    meta = dict(caseid=cid, origop=case.get("orig_op"), vars=case["vars"],
+                prec="-")
+    if not stage_b:
+        # ---- stage A round 2 ------------------------------------------------
+        mfpath = (manifest_file or
+                  os.path.splitext(params_file)[0] + ".manifest.json")
+        if not os.path.exists(mfpath):
+            die(f"round-1 manifest not found: {mfpath} (pass --manifest=)")
+        r1mf = json.load(open(mfpath))
+        if r1mf.get("schema") == "gsplit-subboxes":
+            die(f"{mfpath} is a gsplit-subboxes manifest; --gsplit=a needs "
+                "the ROUND-1 stage-A params/manifest")
+        for key in ("want", "stride"):
+            if key not in r1mf:
+                die(f"round-1 manifest missing {key}")
+        rung1, verdicts = parse_hull_params(params_file, nsqrt)
+        if rung1 != (rung_n, rung_out) + tuple([gran] * 7):
+            die(f"round-1 params rung {rung1} != CLI rung/gran "
+                f"{(rung_n, rung_out, gran)} — pass the discovering rung")
+        neg = [k for k in sorted(verdicts) if verdicts[k][0] == "NEG"]
+        if not neg:
+            die("no NEG leaves in the round-1 output — nothing to gsplit")
+        boxes, ntm, stride = hull_sel_boxes(
+            args[1], r1mf["want"], stride=r1mf["stride"])
+        if len(boxes) < max(neg) + 1:
+            die(f"sample reproduced only {len(boxes)} boxes, need "
+                f"{max(neg) + 1} (round-1 manifest want/stride mismatch?)")
+        subs, nrounded = [], 0
+        for k in neg:
+            frbox = [(dval(lo), dval(hi)) for lo, hi in boxes[k]]
+            strad = []
+            for g in gsplit_guards(case):
+                try:
+                    r = gsplit_eval(g, frbox)
+                except GSplitError as ex:
+                    die(f"leaf {k}: {ex}")
+                if r[0] <= 0 <= r[1]:
+                    strad.append(g)
+            if not strad:
+                die(f"leaf {k}: no guard straddles on the leaf box — not a "
+                    "gsplit target (re-run stage A?)")
+            for residual, fb in gsplit_subboxes(strad, frbox, depth):
+                pairs, bad = [], False
+                for lo, hi in fb:
+                    dlo, r1 = frac_dyadic_at(lo, gran, False)
+                    dhi, r2 = frac_dyadic_at(hi, gran, True)
+                    bad = bad or r1 or r2
+                    pairs.append([list(dlo), list(dhi)])
+                nrounded += bad
+                subs.append({"src": k, "residual": residual, "box": pairs})
+        gs_mf = {"schema": "gsplit-subboxes", "case": cid,
+                 "src_leaves": neg, "depth": depth, "gran": gran,
+                 "rung": [rung_n, rung_out], "nsqrt": nsqrt, "ndiv": ndiv,
+                 "ntrans": ntrans, "n": len(subs),
+                 "nresidual": sum(1 for s in subs if s["residual"]),
+                 "rounded_endpoints": nrounded,
+                 "subboxes": subs}
+        mf_out = os.path.splitext(args[2])[0] + ".manifest.json"
+        open(mf_out, "w").write(json.dumps(gs_mf, indent=1))
+        open(args[2], "w").write(gsplit_stage_a_file(
+            mod, n, expr, [tuple(tuple(p) for p in s["box"]) for s in subs],
+            gran, rung_n, rung_out, nsqrt, ndiv, ntrans, meta,
+            f" — GSPLIT stage A round 2: {len(subs)} sub-boxes of NEG leaves "
+            f"{neg} (depth {depth}, {gs_mf['nresidual']} residual)"))
+        print(f"emit_lean: wrote {args[2]} + {mf_out} (gsplit stage A round 2: "
+              f"{len(subs)} sub-boxes from NEG leaves {neg}, depth {depth}, "
+              f"{gs_mf['nresidual']} residual; run `lake env lean --run "
+              f"{args[2]} > params.txt 2> progress.txt`)")
+        return
+    # ---- stage B over the sub-boxes -----------------------------------------
+    mfpath = (manifest_file or
+              os.path.splitext(params_file)[0] + ".manifest.json")
+    if not os.path.exists(mfpath):
+        die(f"gsplit manifest not found: {mfpath} (run --gsplit=a first, or "
+            "pass --manifest=)")
+    mf = json.load(open(mfpath))
+    if mf.get("schema") != "gsplit-subboxes":
+        die(f"{mfpath} is not a gsplit-subboxes manifest — --gsplit=b "
+            "consumes the round-2 params written next to it")
+    if mf["nsqrt"] != nsqrt or mf["ndiv"] != ndiv or mf["ntrans"] != ntrans:
+        die("manifest node counts mismatch the case prog — wrong inputs?")
+    subs = mf["subboxes"]
+    boxes = [tuple((tuple(s["box"][d][0]), tuple(s["box"][d][1]))
+                   for d in range(n)) for s in subs]
+    rung, verdicts = parse_hull_params(params_file, nsqrt)
+    if not verdicts:
+        die("no evaluated sub-boxes in stage-A round-2 output")
+    rows = []
+    for j, s in enumerate(subs):
+        if max_leaves is not None and len(rows) >= max_leaves:
+            break
+        if j not in verdicts:
+            continue
+        verdict, lo_m, lo_e, trip = verdicts[j]
+        rows.append((j, boxes[j], verdict, lo_m, lo_e, trip, s))
+    n_pos = sum(1 for r in rows if r[2] == "PASS")
+    n_res = sum(1 for r in rows if r[6]["residual"])
+    rows6 = [r[:6] for r in rows]
+    open(args[2], "w").write(hull_stage_b_file(
+        mod, n, expr, rows6, rung, nsqrt, ndiv, ntrans, meta,
+        f" — GSPLIT stage B: kernel verdicts on {len(rows)} of {len(subs)} "
+        f"sub-boxes ({n_pos} PASS, {len(rows) - n_pos} NEG, {n_res}\n"
+        "  residual); NEG rows are NOT certificates — the lemma proven per\n"
+        "  row is the kernel/compiled-run agreement (CertTM M2b section)"))
+    print(f"emit_lean: wrote {args[2]} (gsplit stage B: {len(rows)} of "
+          f"{len(subs)} sub-boxes — {n_pos} PASS, {len(rows) - n_pos} NEG, "
+          f"{n_res} residual)")
+
+
 def main():
     shard_leaves = 128
     sample_n = None
@@ -1304,6 +1674,8 @@ def main():
     disj_gd = False
     disj_dummy = False
     hull = False
+    gsplit = None
+    gsplit_depth = 12
     gran = -80
     rung_n = 128
     rung_out = -80
@@ -1332,6 +1704,14 @@ def main():
             disj_dummy = True
         elif a == "--hull":
             hull = True
+        elif a == "--gsplit=a":
+            hull = True
+            gsplit = "a"
+        elif a == "--gsplit=b":
+            hull = True
+            gsplit = "b"
+        elif a.startswith("--gsplit-depth="):
+            gsplit_depth = int(a.split("=", 1)[1])
         elif a.startswith("--gran="):
             gran = int(a.split("=", 1)[1])
         elif a.startswith("--rung="):
@@ -1350,7 +1730,10 @@ def main():
         die("usage: emit_lean.py <case.json> <cert.json> <out.lean> [--shard-leaves=N]\n"
             "                [--leaves=N] [--fill] [--stage-a] [--bbg --params=FILE]\n"
             "                [--bbg --disj-gd --params=FILE [--manifest=FILE]] [--disj-dummy]\n"
-            "                [--hull --params=FILE --gran=G --rung=N --rung-out=O]")
+            "                [--hull --params=FILE --gran=G --rung=N --rung-out=O]\n"
+            "                [--hull --gsplit=a --params=ROUND1 [--manifest=ROUND1MF]\n"
+            "                      [--gsplit-depth=12]]\n"
+            "                [--hull --gsplit=b --params=ROUND2 [--manifest=MF] [--max-leaves=N]]")
     if disj_gd and not bbg:
         die("--disj-gd is a stage-B mode: pass --bbg --disj-gd --params=FILE")
     fill = fill or stage_a or bbg
@@ -1368,6 +1751,11 @@ def main():
         # ---- M2b/schema-v3 hull pilot (stage A driver / stage B kernel
         # certificate, route `checkPosTMHull` = evalTMHullD; see the
         # M2b/schema-v3 section of CertTM.lean) ----
+        if gsplit:
+            gsplit_main(case, cid, mod, n, args, params_file, manifest_file,
+                        gran, rung_n, rung_out, gsplit_depth, gsplit == "b",
+                        max_leaves)
+            return
         hull_main(case, cid, mod, n, args, params_file, gran, rung_n,
                   rung_out, sample_n or 20, max_leaves, manifest_file)
         return

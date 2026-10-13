@@ -115,3 +115,18 @@ i5-2.67GHz/2009；官方全章 5,000 核时/遍）：
 `base_file_bbgd` 补 `maxHeartbeats 0 / maxRecDepth 1000000`（+6 行，7 叶 Base
 主 prog Expr elaboration 即超 200k 心跳——W3 实测，disj stage-B 发射的必要修）；
 ③scratch 探针与 13 子盒实验产物全在 /tmp/p4w3/（易失，结论已抄录于上）。
+
+## W4 线二任（2026-10-13 晚，gsplit 两轮协议审计+13 盒对拍——**修复路线 (a) 机制成立、目标证伪，W3 根因归因推翻**）
+
+**前任 +389 行遗产审计 = 采纳零修伤**：gsplit_guards/gsplit_eval 与 W3 金标准生成器逐算子等价（ite 极性/sqrt 负底钳制镜像内核语义）、isqrt 精确有理开方、优先队列切盒与 gsplit2_dim 同构（启发式差异不影响 soundness）、frac_dyadic_at 对 W3 f2d 的外圆整改进、straddle guard 自动发现 {27,48,51} 与硬编码全一致。功能单元测试：**13 子盒与 /tmp/p4w3/subboxes.json 逐字节相等**。
+
+**13 盒对拍结果（round-2 探针 ~33.7 分/盒 + stage-B 内核 decide 13/13 全绿 [propext, Quot.sound]）**：
+13/13 **全 NEG**（enclosure ≈ −6.04，全叶 −6.30 几乎没动）——「12 定号+1 残差」预测证伪。控制变量：sb1 @(2048,−80) 与 @(128,−80) 数值 5 位有效数字相同（尾数前 22 位一致）→ rung 轴无关。
+
+**根因修正（本波最重要的结论）**：guard 定号在精确算术下确实达成（sb1 guard 27 = [−32,−16]，非贴零），但 enclosure 仍 ≈−6——**straddle ite 双支 hull 宽不是 ≈−6 的主因**；≈−6 来源于叶宽盒上表达式本身的区间 enclosure 宽度（sum 各项剧烈变化）。**缺的武器 = monotonicity 降维/角点验证（HOL m_mono_pass_gen 路线，W3 工位 4 考古已指认）**——切盒只解决函数分段，不解决分段函数在宽盒上的 enclosure 宽度。第三武器立项的直接证据。
+
+**W3 附记勘误两处**：①diagC0.out 实际 = −6.2244（526 位尾数×2^−1742），「≈−10⁻²²²」系位数误读；②diagC0.lean 烤的是叶 0 全盒非 sb0 子盒（结论方向不变：细配置下仍 NEG）。
+
+**机械资产**：`--gsplit=a|b` 两轮协议接口可复用（13 盒×33.7 分批量探针驱动已备）；13 枚 AGREEMENT 内核定理全绿证明两段式链路端到端可靠。
+
+**新雷区 ㉚-㉝**：㉚长跑 lean 进程被环境收割（30-85 分钟级三次被外部 kill）——对策实证=逐叶拆文件每叶 ~2 分钟前台跑；㉛共享 /tmp 车道目录孤儿 harvest 协议（接手先 ps+progress 盘点，先收孤儿产出再补缺口——本轮 12/13 探针系孤儿白捡省 6.5 CPU 时）；㉜前任手编 .lean 驱动不可信（一律经 emit_lean.py 重发射）；㉝数百位尾数眼测必错，数量级一律 Decimal 精算。
