@@ -8,19 +8,28 @@
 
 ---
 
-## ⚡ 当前状态速览（2026-10-13，编排者更新；细节见 e2e-debt-map 2026-10-12/13 两增量节）
+## ⚡ 当前状态速览（2026-10-13 收波更新；细节见 e2e-debt-map 2026-10-12/13 三增量节）
 
-- **三件真数学全部清账**（GRKIBMP 组 / PA24 B2 / AJRIPQN；§4 风险排序已过时——
-  真数学缺口已被 AJRIPQN 顶替后也清账，pivot 反向勘误为早已闭合）。
-- **脊柱接口**：A1/A2/A3/A4/A5 已清；剩 A6（柱①✅柱②过半柱③ GIANT）/A7/A8/A9
-  （tame GIANT，B1 地基 9 批 :23-5579 全落）/A10（arc kit 五步路线在盘）/A11/A12（数据）。
-- **A12/C1**：C1 收官（钉定 schema/Farkas checker/infeasible 占位退役/试点+编译
-  区间钉窄 [34,61]s）；**root 区 19,237 条预灌装 runner 长跑中**（/Users/zhangzhuo/lprun/
-  PID 50866，~184 条/时，监控 MONITOR.md）；C1.5 G6 生成器已落；余 G5 族解析+批末收口。
-- **Phase 4**：常驻车道滚动（W1-W3：stage-A 根因修复+首次完整 TM 遍历；BIXPCGW
-  split_0_2 前半 CLOSED；sqrt 族 BBTreeGD 裁决不成立=第三武器立项依据）。
-- **周配额事件**：10-13 凌晨 1310 三线阵亡，续波队列在编排者 todo；root runner
-  不受影响。
+- **停等令**：用户令"本批 sub agents 结束后不再启动新线"——2026-10-13 波三线
+  全收（TameSpine 批 12 `50b35415` / C1.6-G5 `1f3da927` / Phase4-W3 `aaae330c`）
+  后编排者停等新指令。root runner 例外继续跑（2,170/19,237 pass 100% @175/h，
+  ETA ≈ 3.9 天，PID 50866 脱离进程，监控 /Users/zhangzhuo/lprun/MONITOR.md）。
+- **三件真数学全部清账**（GRKIBMP 组 / PA24 B2 / AJRIPQN；pivot 反向勘误为
+  早已闭合）。
+- **脊柱接口**：A1/A2/A3/A4/A5 已清；剩 A6（柱①✅柱②仅剩归一化本体一件、
+  spec 已入 NEEDS）/A7/A8/A9（tame GIANT，**B1 地基 12 批 :23-8920 全落**）/
+  A10（**CRTTXAT 帽石全清 = B6 出口件一号解锁**，mqmsmab 装配波待立项）/
+  A11/A12（数据）。
+- **A12/C1**：**C1.6 G5 已收官**（gen_farkas.py，189/189 精确预检+试点 B 端到端
+  [propext]，93 族零 UNKNOWN）；root runner 长跑如上；余 C1.7 批量发射（处方
+  在 G5 报告）+批末收口。
+- **Phase 4**：W3 四工位落账——guard-straddle=证书结构缺口（13 子盒修复路线
+  量化 12 定号+1 残差）、disj 端到端首绿、decide 成本 122.7 s/叶、formal_ineqs
+  考古（monotonicity 降维=我方全缺的免费武器）；路由表已批（R1-R4 混合），
+  92 prep 画像 94.3% 可立即灌装；余 W4（镜像 gsplit 实施+第三武器 R&D+decide
+  成本工程）。
+- **周配额事件**：10-13 凌晨 1310 三线阵亡已全部 salvage 落地；新故障模式入册
+  （孤儿进程/解释跑块缓冲/探针-内核分层，见 playbook §5.4''）。
 
 ---
 
@@ -34,7 +43,7 @@
 用 5-6 个并发 sub agent 车道滚动生产，编排者统一闸/提交/推送。终局 = 会师
 （M5″）后清叶，零 sorry 组装（M5/G5），干净机器复现交付（M6/G6）。
 
-## 1. 现状（2026-10-12 收口时点，main @ `b1ab2803`，工作树干净）
+## 1. 现状（2026-10-13 收波时点，main @ `aaae330c`+文档笔，工作树干净；编排者停等中）
 
 ### 1.1 阶段完成度
 
@@ -52,30 +61,32 @@ M5″ 会师 🟡（T/B 线推进中）、M5=G5 零 sorry 组装 ⬜、M6 交付
 
 ### 1.2 债务与覆盖度账
 
-- **DEBT.md 总量 44,717**——其中 43,078 是 LP 叶户（deferred-compute，灌数据
-  即清，**勿当文字债攻击**）；**可比口径（Text 非LP + root + Geom）= 1,639**
-  （上周 1,713）。Geom 区已清零。
+- **DEBT.md 总量 44,646**（2026-10-13 收波重生成）——其中 43,078 是 LP 叶户
+  （deferred-compute，灌数据即清，**勿当文字债攻击**）；**可比口径（Text 非LP +
+  root）= 1,568**（前波 1,639，净 −71：LA5 −10 / PA15 −2 / Assembly −3 /
+  TameLp −1 等本波真实清偿）。Geom 区已清零。
 - 非 LP 大户（按新账本）：PA25 131 / LA1 82 / LA22 82 / LA32 65 / LA28 63 /
-  LA34 60 / LA6 60 / LA24 53 / PA18 53 / LA38 47 / LA5 43 / PA7 22。
+  LA34 60 / LA6 60 / LA24 53 / PA18 53 / LA38 47 / PA7 22。
   但**派工顺序不看这个表**——看贪心排名（§2.4 重排名循环）。
 - 全库三态覆盖度（`docs/module-map.md` 普查节，2026-10-12 实测）：
   HOL 6,540 定理 / 686k 行 → 已移植 38% / 证书替代 20% / 未移植 42%
   （按行 40/28/32）。结论：无半成品章；证书替代类=计算性内容等灌装；
   tame 章按需求批移植、无需全搬。
 
-### 1.3 刚发生的事（2026-10-12 五线波，全部已落地推送）
+### 1.3 刚发生的事（2026-10-13 收波：三线全落地推送后停等）
 
 | 线 | 结果 |
 |---|---|
-| TameList3 | TameSpine 第三批 1,309 行/84 件零 sorry（indexf/split_at/betwn 家族）；三批累计 ~4,050 行/323 件 |
-| PA7 | **XYOFCGX 本体闭合**（sorry 36→21，残余=GIANT 链）；BARV 前置两件+投影件八条就位 |
-| PA20 | **文件级 sorry 归零**（gammaX 章 k=3/k=4 双件全闭） |
-| PA24 | 情形 A/B3 全证，capstone 三分装配，B2 收窄为单支残件；侦察纠错 `MXI_EXISTS_concl` 在 B2 支为假 |
-| POS_DIRECT | 线死于 API 超时，**盘上 salvage 走闸落地**：POS_DIRECT 根系五件真证（+815 行） |
+| TameSpine 批 10-12 | 三连批 +2,232 行/94 件零 sorry，**B1 链 :23-8920 无缺口**（批 10=阵亡草稿独立机械验收零编辑采用）；批 13 起点=HOL :8921 contour_list_cons 旗塔章 |
+| A10 | **CRTTXAT 帽石装配完成 = B6 出口件一号全清**；arc kit 五件套全零；鸽笼原理替代 SUM_ORBIT 方法论突破；TameLp 7→6 |
+| A6 | 柱② 三件中等档+钥匙件 salvage 落地，**柱② 仅剩归一化本体一件**（Lean 路线 spec 已入 NEEDS） |
+| C1.6-G5 | **收官**：gen_farkas.py 1035 行——189/189 精确 Farkas 预检+试点 B 端到端 [propext]，93 族零 UNKNOWN；C1.7 批量发射处方已给 |
+| Phase4-W3 | 四工位落账：**guard-straddle=证书结构缺口**（根因钉死+13 子盒修复路线量化）；disj stage-A/B 端到端首绿；decide 成本 122.7 s/叶实测；formal_ineqs 考古（monotonicity 降维=免费武器） |
+| 决策 | Phase 4 路由表批准（R1-R4 混合）；92 prep 画像 94.3% 可立即灌装（R1 101/R2 665/R3 39/R4 7） |
 
-闸门本次演进两笔（离线双向验证后入闸）：**EV20 重复件豁免**（被删声明由干净
-直接 import 同名提供+语句空白归一化全等）、**EV21 sorry 计数代码行口径**
-（docstring 散文行双侧剔除）。
+闸门本次无演进（EV22-24 已在前波）；新雷区 3 条入 playbook §5.4''
+（孤儿进程 PPID→1 / 解释跑 stdout 块缓冲假死象 / 探针层 Nat.sqrt 与内核层
+baked 证书的分层纪律——decide 只吃后者）。
 
 ### 1.4 环境与基础设施
 
@@ -163,24 +174,30 @@ pin 死）。
 
 ## 3. 短期计划（接手即干，按优先级）
 
-### 3.1 可立即派工的车道
+### 3.1 可立即派工的车道（2026-10-13 收波时点队列，**全部待用户令**）
 
-1. **PA25 leaf_rank 车道**：`PackingAuto25.lean:3287 mcell3_gammaX_gamma3f`
-   可接——其依赖 `gammaX_gamma3f` 本日已转真；ccCell/leaf_rank 机械照旧。
-2. **PA7 下工位 XNHPWAB1**（编排者移交建议）：两大前置（BARV_AFFINE_INDEPENDENT、
-   投影件八条）本日就位，预计中等规模；其后 omegaList 链（KSOQKWL/YIFVQDV/
-   WAUFCHE2）与 WQPRRDY capstone（体量最大，单独立项）。
-3. **LA5 SUCCESEOR 下游 10 件**：POS_DIRECT 根系五件已填，解锁面已开；
-   LA2/LA5 链独立于 Packing 链，可随时并行。
-4. **PA24 B2 两整波**：①泛具子情形四点凸包装配（~300-400 行，路线记档
-   PA24 :4984-5026）；②退化子情形换叶=支撑面引理本体（~200-300 行，
-   `docs/projects/pa24-nonflat-roadmap.md`）。
-5. **TameSpine 下一批**：批次表在 `docs/projects/tamespine-port-plan.md`；
-   T3 线已改"A7/A8/A9 前提树驱动的需求批"（防孤儿移植）。
-6. **顺手账**（下一碰该文件的车道顺带）：PA21 :89-106 "PROVED" 降格诚实
-   措辞；PA14 :42-43 "sorry-free"→"locally sorry-free"。
-7. **重排名**：上述根波落地后局部重扫 PA18/PA25/PA21/LA2/LA5 → 重排名 →
-   按新 TOP-N 派工（§2.4 循环）。
+1. **TameSpine 批 13**：HOL :8921 `contour_list_cons` 起旗塔章（contour_list_cons/
+   contour_list_is_contour/face_map_list_power/hyp_S_list/marked_list_empty_flagged）；
+   `ContourListSpine` 载体批 8 已备，`hyp_S_list` 差件（hypMLm+faceMap 幂桥）批 12
+   已就位公开。批次表 `docs/projects/tamespine-port-plan.md`。
+2. **C1.7 189 条批量发射**：遍历 /tmp/p4g5/batch_results.json 逐条 `gen_farkas.py
+   --lean` 出 LpInfeasCert 套 pin 模板；排产=小编译批次+长预算（最大 327×230
+   decide >40 分钟；注意 hard_7 解包副本 /tmp/p4g5/hard7 易失须先补）。
+3. **W4 线（Phase 4）**：①镜像 gsplit 实施（Lean 侧 stage-A 批量驱动+子盒 params
+   +stage-B 发射 BBTreeGD 分裂节点，`emit_lean.py --hull` 两段式现成）；
+   ②第三武器 R&D（radicand 预切分/t=√u 换元，R3 39 条靶标已定标）；
+   ③decide 成本工程（shard 粒度/并行/rung 降档）。
+4. **A6 续五**：柱② 归一化本体一件（Lean 路线全文 spec 在 Assembly NEEDS：
+   packingConfig 紧致机器+字典序极小化 k 步递归+末步扰动矛盾）；其后柱③
+   DLWCHEM/XULJEPR 侦察。
+5. **A10 装配波**：mqmsmab 章 CRTTXAT 消费点已解锁（B6 出口件一号全清）。
+6. **PA25 leaf_rank 车道**：`PackingAuto25.lean` mcell3_gammaX_gamma3f 链照旧
+   （127 残余，s_leaf/leaf_rank 贪心头）。
+7. **INTERSECTION_LEMMA GIANT**（解锁 LA5 剩 6 件中的 2 件；LA5 可填面其余已清零）。
+8. **顺手账**（下一碰该文件的车道顺带）：PA21 :89-106 "PROVED" 降格诚实措辞；
+   PA14 :42-43 "sorry-free"→"locally sorry-free"。
+9. **重排名**：上述根波落地后局部重扫受影响模块 → 重排名 → 按新 TOP-N 派工
+   （§2.4 循环）。
 
 ### 3.2 待用户拍板项（不要自行做）
 

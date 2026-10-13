@@ -1,12 +1,12 @@
 # DEBT.md — sorry 债务账本
 
-> 由 `lean/scripts/debt_ledger.py` 生成；勿手改。总计 **44662** 个 sorry。
+> 由 `lean/scripts/debt_ledger.py` 生成；勿手改。总计 **44646** 个 sorry。
 
 | 区域 | sorry 数 | 涉及文件数 |
 |---|---|---|
-| Text | 44640 | 238 |
-| (root) | 22 | 2 |
-| **合计** | **44662** | **240** |
+| Text | 44627 | 238 |
+| (root) | 19 | 2 |
+| **合计** | **44646** | **240** |
 
 <details><summary>逐文件明细</summary>
 
@@ -215,13 +215,12 @@
 | Text/LocalAuto37.lean | 27 |
 | Text/LocalAuto33.lean | 25 |
 | Text/LocalAuto35.lean | 22 |
-| Assembly.lean | 21 |
 | Text/LocalAuto18.lean | 20 |
-| Text/PackingAuto15.lean | 18 |
+| Assembly.lean | 18 |
 | Text/LocalAuto10.lean | 17 |
 | Text/LocalAuto16.lean | 17 |
 | Text/LocalAuto31.lean | 17 |
-| Text/LocalAuto5.lean | 16 |
+| Text/PackingAuto15.lean | 16 |
 | Text/LocalAuto36.lean | 13 |
 | Text/LocalAuto8.lean | 13 |
 | Text/PackingAuto7.lean | 13 |
@@ -234,7 +233,8 @@
 | Text/LocalAuto27.lean | 8 |
 | Text/LocalAuto20.lean | 7 |
 | Text/PackingAuto10.lean | 7 |
-| Text/TameLp.lean | 7 |
+| Text/LocalAuto5.lean | 6 |
+| Text/TameLp.lean | 6 |
 | Text/LocalAuto25.lean | 4 |
 | Text/LocalAnchors.lean | 3 |
 | Text/PackingAuto11.lean | 3 |

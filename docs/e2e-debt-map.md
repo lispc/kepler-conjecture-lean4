@@ -268,3 +268,53 @@ quad×5+hard 117/117 零发散端到端）。
 第二次四线阵亡——PA15 前任自愈遗产审计落库、TameList9 续二修伤 11 处、
 Assembly 零遗产重发）+ 周/月配额帽（1310，三线阵亡：A6 柱②钥匙件 salvage
 `0ab0bc73`、TameList10 未写、W3 在 /tmp）——**周帽重置后按队列续波**。
+
+## 2026-10-13 增量节二（三线全收日：TameSpine 三连批 / A10 帽石 / G5 收官 / W3 四工位；用户令收波停等）
+
+承上节（`fcd80a84` 后计九笔 + root runner 长跑账）。
+
+**TameSpine B1 三连批（:5580→:8920，累计 +2,232 行 / 94 件全真证零 sorry）**：
+批 10 `1baa5d6d`（TameList10 1,129 行 42 件——**前任限额阵亡完整草稿的端到端独立
+机械验收后零编辑采用**，salvage 验收模式再验证；tame_list.hl :6607-7514 全落账）；
+批 11 `93181878`（TameList11 473 行 24 件——原子理论章全量 :7515-8043，atomListBij
+BijOn 三段帽石；TameLp 首次反向消费四件）；批 12 `50b35415`（TameList12 630 行
+28 件——MEM_EXTENSION→min_num 块 :8365-8920，lQSpine 证明参折算诚实记账）。
+**B1 链 :23-8920 无缺口**；批 13 起点 = HOL :8921 `contour_list_cons` 旗塔章
+（ContourListSpine 载体批 8 已备，差件批 12 已就位）。
+
+**脊柱波（A6/A10/A4 线）**：A10 第二波 `a54ebb61`（TameLp +998——**CRTTXAT
+帽石装配完成 = B6 出口件一号全清**，mqmsmab 章 CRTTXAT 消费点解锁；arc kit
+五件套全零 sorry；方法论突破 `face_sum_snd_eq_fst`：HOL SUM_ORBIT 轨道周期性
+全树未移植，改走鸽笼原理 faceMap 有限轨道单射自映射+Finset.sum_bij 整体重排；
+TameLp 7→6）；A6 续四 `daa89ba9`（柱② 三件中等档收口，**柱② 仅剩归一化本体
+一件**，Lean 路线全文 spec 已入 NEEDS——无需 ℝ^150：packingConfig 紧致机器+
+字典序极小化 k 步递归+末步扰动矛盾）+ 柱② 钥匙件 salvage `0ab0bc73`。
+
+**Phase 4 决策与实验**：路由表批准 `715addd3`（R1 多项式→TM / R2 ite→BB 切分+
+ite-hull2 / R3 sqrt→第三武器 / R4 角点手证）；92 prep 族画像 `7bc4cbb7`（812 记录
+五桶分布，**94.3% 可用已实证武器立即灌装**；真判别式=δ 过零病灶，已二次标注）；
+W3 四工位 `aaae330c`（①rung/gran 阶梯三轴扫尽判负+**根因钉死：guard-straddle
+系证书结构缺口非精度缺口**，C 侧 --gsplit2 子盒不进证书→镜面重放结构性不可能；
+修复路线量化=guard 引导二分 13 子盒/12 定号+1 残差；②disj 主体解耦 stage-A/B
+端到端首次全绿+emit_lean.py maxHeartbeats 必要修；③decide 成本 122.7 s/叶实测
+→3,626 叶批量真瓶颈=kernel decide，W4 立项 decide 成本工程；④formal_ineqs
+sqrt/atn/monotonicity 三板斧考古——monotonicity 降维是我方全缺的免费武器）。
+**diagSB 事件**（编排者代收附记）：13 子盒解释跑=孤儿进程（PPID→1）3h 零落盘，
+用户令杀；重编译跑复核=直接 decide 结构性不可能（Nat.sqrt 不 kernel-reduce，
+探针=证书发现层）→ 正规路线 `--hull` 两段式 ≈4-8h 与 W4 镜像 gsplit 实施本是一事。
+
+**C1/A12 线**：**C1.6 G5 收官 `1f3da927`**（gen_farkas.py 1035 行纯 stdlib——
+189 条 infeasible 记录的真实 FarkasCore 导出层，**试点 B 端到端 Lean 机器验证绿**
+farkasCheck=true 公理=[propext]，189/189 精确预检全过，93 族零 UNKNOWN；
+头号发现=nodes 去重保末次出现 C# 语义；C1c 试点 B 等的"真实叶不闭合"缺口关闭；
+C1.7 批量发射处方已给——p3 规模数分钟/条，最大 327×230 decide >40 分钟需排产）。
+root runner 长跑：**2,170/19,237 pass 100% @174.9/h，ETA ≈ 3.9 天**（脱离进程
+不受本波停令影响，继续跑）。
+
+**新故障模式入册**：①agent 阵亡后 `lake env lean --run` 子进程孤儿化（PPID→1）
+继续烧核——杀前查进程树；②`lean --run` 解释模式跑重计算=小时级 + stdout 块
+缓冲零落盘假死象——重计算实验须走编译/原生路径，探针输出须行刷；③探针层
+（Nat.sqrt 现算证书）与内核层（消费 baked 证书）的分层纪律——decide 只吃后者。
+
+**本波收官状态**：用户令"本批 sub agents 结束后不再启动新线"，三线全收
+（批 12 `50b35415` / G5 `1f3da927` / W3 `aaae330c`），编排者停等新指令。

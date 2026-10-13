@@ -852,3 +852,17 @@ toList+List 递归）、`String.mk`→ofList；㉓Farkas decide 161 实例规模
 **根式/数值族**：㉕field_simp 对 √8 幂形状漂移——确定性路线=mul_right_cancel₀
 乘正因子+mul_self_sqrt calc+ring；㉖数值种子用半角双角或三倍角（模板
 p21_arccos_one_third_le_1231），Mathlib 只有 sin 下界 Taylor。
+
+**编排者/重计算族（2026-10-13 收波日增补）**：㉗**孤儿进程**——车道 agent 阵亡后
+其 `lake env lean --run` 子进程被 launchd 收养（PPID→1）继续独烧一核数小时；
+编排者杀前必查进程树（`ps -o pid,ppid -p <pid>` 逐级上溯），车道死≠其探针死；
+㉘**解释跑假死象**——`lean --run` 跑重计算=小时级（解释 IR 比原生慢 10-100×），
+且 stdout 重定向后块缓冲（几行输出凑不满 4KB 全程零落盘），"0 字节"≠卡死、
+也≠没跑——长实验必须：行刷（写 stderr 或显式 fsync）+编译/原生路径优先；
+㉙**探针-内核分层纪律**——`tmHullLeafProbe`/`evalIParamsFill` 探针层用
+`sqrtMantissa` 现算证书（内含 `Nat.sqrt`，**不 kernel-reduce**，CertTM :4187
+docstring 明写 Compiled runs only），`by decide` 只吃消费 baked 证书的内核层
+（`checkPosTMHull`）——正确流程=`emit_lean.py --hull` 两段式（stage-A 逐盒探针
+发现证书三元组 → bake 进 TMParams.sqrtCerts → stage-B decide，NEG 叶收
+`= false` 证 AGREEMENT）；直接 decide 探针=结构性不可能（13 定理实测全
+reduction got stuck），原生 exe=死路（连带 Mathlib 全量原生编译天级）。
