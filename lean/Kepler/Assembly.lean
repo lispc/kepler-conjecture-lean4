@@ -2558,7 +2558,34 @@ not_surrounded_node_norm_ECTC:1727，其中 FCDJDOT section :1543-1806 的三件
 not_surrounded_node_norm_ECTC :1727）全部经它消费，须开专门 Fan-machine
 lane（顺序：dart 机器移植 → not_surrounded_imp_on_one_side_of_plane
 （v cross w 分离平面路线，azim 正弦界 JBDNJJB 已在 LA5/PolyAuto7 可查）
-→ 三件中等档 → FNJLBXS 归一化本体）。 -/
+→ 三件中等档 → FNJLBXS 归一化本体）。
+
+**2026-10-12 A6 续四波收获——柱②前置件全部在树**：本节 2c⁗ 五件真证落地
+（`ectrPairMem` 边隶属刻画 + HOL :1547/:1631/:1727 三件中等档，含
+`notSurroundedECTC` 的 u-插入换元构造与 `isolatedNodeNormECTC` 的单点集
+对径点对 / 多点集径向内移两分支）。至此 FCDJDOT 的四柱距离精确化：
+①柱 scriptL_attains_max ✅（`scriptLAttainsMaxInBallAnnulus`）；
+②柱 FNJLBXS 归一化 = **仅剩本体一件**：FNJLBXS-compiled.hl:1324-1537
+（~213 行，ℝ^150 配置空间章）。HOL 内容 = 在「annulus packing 且范数剖面
+与 V 匹配」的紧配置集上，对 min-距离向量 (min_dist_k j) 作字典序极小化
+（嵌套紧集链 C i + CONTINUOUS_ATTAINS_SUP），末步对「既不孤立又不
+surrounded」的配置点经 not_surrounded_imp_on_one_side_of_plane +
+perturbation_lemma 扰动一点，与字典序极小矛盾。Lean 路线（无需 ℝ^150，
+模板 = 本文件柱①的 `packingConfig`/`packingConfigCompact`/
+`packingConfigEnumerate`/`scriptLMaxOfCard`）：配置集 = `(Fin k → V3)` 的
+annulus 坐标 + 两两 dist ≥ 2 + 范数剖面匹配（经 `Finset.equivFinOfCardEq`
+枚举 V），c : Fin k → ℝ 连续（`min_k`-向量 = 逐点 min 有限和，连续性初
+等），字典序极小 = k 步递归取 argmin（每步 `IsCompact.exists_isMinOn`，
+步进集仍紧非空），末步扰动矛盾 = 本节三件 + `perturbationLemma` +
+`notSurroundedImpOnOneSideOfPlane` 直接拼装。规模评估：~600-900 行 Lean，
+独立专项波（非本波尾巴）；其中 bijection 簿记（HOL BIJ_from_lists/indexl）
+经枚举 equiv 大幅简化。③柱 DLWCHEM/XULJEPR 计数维持 GIANT（不在近期波）；
+④bij_scriptL ✅ + local_annulus_inequality_scriptL ✅。
+**公理面记账**：`isolatedNodeNormECTC` 标准三无债；`notSurroundedECTC`/
+`notSurroundedNodeNormECTC` 经 `ContraFan.contraveningFanTl`（CKQOWSA 链）
+继承树内既有债务 `ContraFan.LEMMA_4_POINTS_FINAL`（ContraFan.lean:605，
+骨架占位桩）——该件落地后此二件自动转标准三。 -/
+
 
 /-- **annulus 有限性**（2026-10-12 A6 填证 lane 落地；HOL
 `finite_packing_ball_annulus` 的替代路线）：packing + 含于 annulus ⟹ 有限
@@ -3503,6 +3530,546 @@ private theorem notSurroundedImpOnOneSideOfPlane {V : Set V3} {E : Set (Set V3)}
       rw [inner_eq_dot, fnDotToLpRight, dotProduct_comm]
       exact sinAzimCrossSign v d.2 w2 hv0 hncol hge
 
+
+/-! ### 2c⁗. FCDJDOT 柱②三件中等档（2026-10-12 A6 续四波）
+
+镜像 FNJLBXS-compiled.hl 的 FCDJDOT section 三件：
+①`not_surrounded_ECTC`（:1547）——非 surrounded 点经分离平面 + 扰动迁移
+（消费 `notSurroundedImpOnOneSideOfPlane` + `perturbationLemma`，双件已在树）；
+②`isolated_node_norm_ECTC`（:1631）——孤立点必落球面 `‖v‖ = 2`（单点集取
+对径点对 / 多点集径向内移 + 距离-最小值松弛）；
+③`not_surrounded_node_norm_ECTC`（:1727）——②经保范双射的转移。 -/
+
+/-! ## ECTC 边隶属刻画（HOL in_set_of_edge_ECTC，FNJLBXS-compiled.hl:504） -/
+
+private theorem ectrPairMem {V : Set V3} {v w : V3} :
+    ({v, w} : Set V3) ∈ ECTC V ↔ v ∈ V ∧ w ∈ V ∧ v ≠ w ∧ dist v w = 2 := by
+  constructor
+  · rintro ⟨a, b, hab, haV, hbV, hne, hd⟩
+    have hv' : v = a ∨ v = b := by
+      have hmem : v ∈ ({a, b} : Set V3) := by rw [← hab]; simp
+      simpa using hmem
+    have hw' : w = a ∨ w = b := by
+      have hmem : w ∈ ({a, b} : Set V3) := by rw [← hab]; simp
+      simpa using hmem
+    rcases hv' with hv1 | hv1
+    · have hwb : w = b := by
+        rcases hw' with h | h
+        · exfalso
+          have hmem : b ∈ ({v, w} : Set V3) := by rw [hab]; simp
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+          rcases hmem with h2 | h2
+          · exact hne (hv1.symm.trans h2.symm)
+          · exact hne (h.symm.trans h2.symm)
+        · exact h
+      refine ⟨?_, ?_, ?_, ?_⟩
+      · rw [hv1]; exact haV
+      · rw [hwb]; exact hbV
+      · intro hc
+        rw [hv1, hwb] at hc
+        exact hne hc
+      · rw [hv1, hwb, hd]
+    · have hwa : w = a := by
+        rcases hw' with h | h
+        · exact h
+        · exfalso
+          have hmem : a ∈ ({v, w} : Set V3) := by rw [hab]; simp
+          simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hmem
+          rcases hmem with h2 | h2
+          · exact hne (h2.trans hv1)
+          · exact hne (h2.trans h)
+      refine ⟨?_, ?_, ?_, ?_⟩
+      · rw [hv1]; exact hbV
+      · rw [hwa]; exact haV
+      · intro hc
+        rw [hv1, hwa] at hc
+        exact hne hc.symm
+      · rw [hv1, hwa, dist_comm, hd]
+  · rintro ⟨hvV, hwV, hne, hd⟩
+    exact ⟨v, w, rfl, hvV, hwV, hne, hd⟩
+
+/-! ## 中档①：not_surrounded_ECTC（FNJLBXS-compiled.hl:1547）
+
+非 surrounded ⟹ 存在保范双射迁移 W 使 f v 孤立。X = v 的 ECTC-邻居，
+Y = V \ {v} 中 dist > 2 的点（有限），e 取 Y 上 dist 余量的最小（Y 空取 1），
+`perturbationLemma` 沿分离平面 n 把 v 推离全部 X-点得 u；W = {u} ∪ (V \ {v})
+换元 v ↦ u：远离性使 W 仍 packing 且 f v = u 无 ECTC 边。 -/
+
+private theorem notSurroundedECTC {V : Set V3} (hpack : Packing V) (hsub : V ⊆ ballAnnulus)
+    {v : V3} (hv : v ∈ V) (hns : ¬ surroundedNode V (ECTC V) v) :
+    ∃ W : Set V3, ∃ f : V3 → V3, Set.BijOn f V W ∧ Packing W ∧ W ⊆ ballAnnulus ∧
+      (∀ u ∈ V, ‖u‖ = ‖f u‖) ∧ setOfEdge (f v) W (ECTC W) = ∅ := by
+  classical
+  have hfin : V.Finite := packingFiniteOfBallAnnulus hpack hsub
+  have hVne : V ≠ ∅ := fun hmem => by rw [hmem] at hv; exact hv.elim
+  have hvb : v ∈ ballAnnulus := hsub hv
+  obtain ⟨hvh2, hvh0⟩ := ContraFan.inBallAnnulus hvb
+  -- ECTC-fan（HOL UBHDEUU2：contraveningFanTl + ECTC ⊆ ESTD + CTVTAQA）
+  have hECTCsub : ECTC V ⊆ ESTD V := by
+    intro e he
+    obtain ⟨a, b, rfl, ha, hb, hne, hd⟩ := he
+    exact ⟨a, b, rfl, ha, hb, hne, by rw [hd]; norm_num [ContraFan.two_h0]⟩
+  have hfan : FAN 0 V (ECTC V) :=
+    CTVTAQA (ContraFan.contraveningFanTl V hpack hsub hVne) hECTCsub
+  by_cases hX0 : setOfEdge v V (ECTC V) = ∅
+  · -- 已孤立：恒等迁移
+    refine ⟨V, fun x => x, ⟨fun x hx => hx, fun x y _ _ hxy => hxy, fun x hx => ⟨x, hx, rfl⟩⟩,
+      hpack, hsub, fun u _ => rfl, hX0⟩
+  obtain ⟨n, hn0, hvn, hwn⟩ := notSurroundedImpOnOneSideOfPlane hfan hv hX0 hns
+  have inX : ∀ x : V3, x ∈ setOfEdge v V (ECTC V) ↔ (x ∈ V ∧ x ≠ v ∧ dist x v = 2) := by
+    intro x
+    simp only [setOfEdge, Set.mem_setOf_eq, ectrPairMem]
+    constructor
+    · rintro ⟨⟨-, hxV, hvx, hd⟩, -⟩
+      exact ⟨hxV, fun hh => hvx hh.symm, by rw [dist_comm]; exact hd⟩
+    · rintro ⟨hxV, hxv, hd⟩
+      exact ⟨⟨hv, hxV, fun hh => hxv hh.symm, by rw [dist_comm]; exact hd⟩, hxV⟩
+  have hXne : (setOfEdge v V (ECTC V)).Nonempty := Set.nonempty_iff_ne_empty.mpr hX0
+  obtain ⟨Y, hYdef⟩ : ∃ Y : Set V3, Y = (V \ {v}) \ setOfEdge v V (ECTC V) := ⟨_, rfl⟩
+  have finY : Y.Finite := by
+    rw [hYdef]
+    exact (hfin.subset Set.sdiff_subset).subset (Set.sdiff_subset)
+  have inY : ∀ y : V3, y ∈ Y ↔ (y ∈ V ∧ y ≠ v ∧ 2 < dist y v) := by
+    intro y
+    rw [hYdef, Set.mem_diff, Set.mem_diff, Set.mem_singleton_iff]
+    constructor
+    · rintro ⟨⟨hyV, hyv⟩, hx⟩
+      have h2 : 2 ≤ dist y v := hpack.dist_ge_two hyV hv hyv
+      rcases lt_or_eq_of_le h2 with hlt | heq
+      · exact ⟨hyV, hyv, hlt⟩
+      · exact absurd ((inX y).mpr ⟨hyV, hyv, heq.symm⟩) hx
+    · rintro ⟨hyV, hyv, hgt⟩
+      refine ⟨⟨hyV, fun hh => hyv (Set.mem_singleton_iff.mp hh)⟩, fun hx => ?_⟩
+      obtain ⟨-, -, hd⟩ := (inX y).mp hx
+      linarith
+  -- e：Y 空取 1，非空取 dist 余量最小；0 < e ≤ 1 且 Y 上 e + 2 ≤ dist y v
+  obtain ⟨e, he0, he1, hYbound⟩ :
+      ∃ e : ℝ, 0 < e ∧ e ≤ 1 ∧ ∀ y ∈ Y, e + 2 ≤ dist y v := by
+    by_cases hY0 : Y = ∅
+    · refine ⟨1, by norm_num, by norm_num, ?_⟩
+      rw [hY0]
+      rintro y hy
+      exact absurd hy (Set.notMem_empty y)
+    · have hYpos : ∀ y ∈ Y, 0 < dist y v - 2 := by
+        intro y hy
+        have hy' := (inY y).mp hy
+        linarith
+      obtain ⟨y0, hy0Y⟩ := Set.nonempty_iff_ne_empty.mpr hY0
+      have hTne : ((finY.toFinset.image fun y : V3 => dist y v - 2)).Nonempty :=
+        ⟨dist y0 v - 2, Finset.mem_image.mpr ⟨y0, finY.mem_toFinset.mpr hy0Y, rfl⟩⟩
+      have hmin' : ∀ z ∈ finY.toFinset.image (fun y : V3 => dist y v - 2),
+          (finY.toFinset.image (fun y : V3 => dist y v - 2)).min' hTne ≤ z := by
+        intro z hz
+        exact Finset.min'_le (finY.toFinset.image (fun y : V3 => dist y v - 2)) z hz
+      have hminMem : (finY.toFinset.image (fun y : V3 => dist y v - 2)).min' hTne
+          ∈ finY.toFinset.image (fun y : V3 => dist y v - 2) := Finset.min'_mem _ hTne
+      obtain ⟨y1, hy1, hy1v⟩ := Finset.mem_image.mp hminMem
+      have hy1v' : (finY.toFinset.image (fun y : V3 => dist y v - 2)).min' hTne
+          = dist y1 v - 2 := hy1v.symm
+      have hmpos : 0 < (finY.toFinset.image (fun y : V3 => dist y v - 2)).min' hTne := by
+        rw [hy1v']
+        exact hYpos y1 (finY.mem_toFinset.mp hy1)
+      refine ⟨min ((finY.toFinset.image (fun y : V3 => dist y v - 2)).min' hTne) 1,
+        lt_min hmpos (by norm_num), min_le_right _ _, ?_⟩
+      intro y hy
+      have hz' : (finY.toFinset.image (fun y : V3 => dist y v - 2)).min' hTne
+          ≤ dist y v - 2 :=
+        hmin' _ (Finset.mem_image.mpr ⟨y, finY.mem_toFinset.mpr hy, rfl⟩)
+      have he' : min ((finY.toFinset.image (fun y : V3 => dist y v - 2)).min' hTne) 1
+          ≤ (finY.toFinset.image (fun y : V3 => dist y v - 2)).min' hTne :=
+        min_le_left _ _
+      linarith
+  -- 扰动前提：X 上 0 < w·v（dot_pos_lemma）+ w·n ≤ 0（分离平面）
+  have hXv : ∀ w ∈ setOfEdge v V (ECTC V), 0 < inner ℝ w v := by
+    intro w hw
+    obtain ⟨hwV, hwv, hd⟩ := (inX w).mp hw
+    have hwb : w ∈ ballAnnulus := hsub hwV
+    have hdle : dist w v ≤ 2 * h0 := by
+      rw [hd]
+      have h1 : (1:ℝ) ≤ h0 := by norm_num [h0]
+      linarith
+    exact ContraFan.dot_pos_lemma hwb hvb hdle
+  obtain ⟨u, hunorm, hdlt, hduv⟩ :=
+    perturbationLemma e he0 hn0 hvn (setOfEdge v V (ECTC V))
+      (fun w hw => ⟨hwn w hw, hXv w hw⟩)
+  have hvu : v ≠ u := by
+    intro hcon
+    obtain ⟨x, hx⟩ := hXne
+    have h1 := hdlt x hx
+    rw [hcon] at h1
+    exact lt_irrefl _ h1
+  have huV : u ∉ V := by
+    intro hu
+    have h2 := hpack.dist_ge_two hu hv (fun hh => hvu hh.symm)
+    have h3 : dist v u < e := hduv
+    rw [dist_comm] at h3
+    linarith
+  -- u 离 V \ {v} 中每点 > 2（ packing 与 u-孤立共用）
+  have hgt : ∀ z : V3, z ∈ V → z ≠ v → 2 < dist u z := by
+    intro z hz hzv
+    by_cases hzX : z ∈ setOfEdge v V (ECTC V)
+    · have h2 : dist z v = 2 := ((inX z).mp hzX).2.2
+      calc (2:ℝ) = dist v z := by rw [dist_comm]; exact h2.symm
+        _ < dist u z := hdlt z hzX
+    · have hyz : z ∈ Y := by
+        rw [hYdef, Set.mem_diff, Set.mem_diff, Set.mem_singleton_iff]
+        exact ⟨⟨hz, hzv⟩, hzX⟩
+      have hbound := hYbound z hyz
+      have htri : dist z v ≤ dist z u + dist u v := dist_triangle z u v
+      have hdc : dist u v = dist v u := dist_comm u v
+      rw [dist_comm]
+      linarith
+  refine ⟨insert u (V \ {v}), fun x => if x = v then u else x, ?_, ?_, ?_, ?_, ?_⟩
+
+  · -- BijOn
+    refine ⟨?_, ?_, ?_⟩
+    · intro x hx
+      show (if x = v then u else x) ∈ insert u (V \ {v})
+      by_cases hxv : x = v
+      · rw [if_pos hxv]
+        exact Set.mem_insert u (V \ {v})
+      · rw [if_neg hxv]
+        exact Set.mem_insert_of_mem u ⟨hx, hxv⟩
+    · intro x hx y hy hxy
+      have hxy' : (if x = v then u else x) = (if y = v then u else y) := hxy
+      by_cases hxv : x = v
+      · by_cases hyv : y = v
+        · exact hxv.trans hyv.symm
+        · rw [if_pos hxv, if_neg hyv] at hxy'
+          exact absurd (hxy'.symm ▸ hy) huV
+      · by_cases hyv : y = v
+        · rw [if_neg hxv, if_pos hyv] at hxy'
+          exact absurd (hxy' ▸ hx) huV
+        · rw [if_neg hxv, if_neg hyv] at hxy'
+          exact hxy'
+    · intro z hz
+      by_cases hzu : z = u
+      · refine ⟨v, hv, ?_⟩
+        show (if v = v then u else v) = z
+        rw [if_pos rfl, hzu]
+      · have hz' : z ∈ V ∧ z ≠ v := by
+          rcases Set.mem_insert_iff.mp hz with h | h
+          · exact absurd h hzu
+          · exact ⟨h.1, fun hh => h.2 (by rw [hh]; simp)⟩
+        refine ⟨z, hz'.1, ?_⟩
+        show (if z = v then u else z) = z
+        rw [if_neg hz'.2]
+  · -- packing：u 离 V \ {v} 中每点 > 2
+    intro a ha b hb hab
+    rcases Set.mem_insert_iff.mp ha with ha0 | ha' <;>
+      rcases Set.mem_insert_iff.mp hb with hb0 | hb'
+    · rw [ha0, hb0]
+    · have h2 : (2:ℝ) ≤ dist a b := by
+        rw [ha0]
+        exact le_of_lt (hgt b hb'.1 hb'.2)
+      exact absurd hab (not_lt.mpr h2)
+    · have h2 : (2:ℝ) ≤ dist a b := by
+        rw [hb0, dist_comm]
+        exact le_of_lt (hgt a ha'.1 ha'.2)
+      exact absurd hab (not_lt.mpr h2)
+    · exact hpack a ha'.1 b hb'.1 hab
+  · -- ⊆ ballAnnulus：u 与 v 等长
+    intro x hx
+    rcases Set.mem_insert_iff.mp hx with hx0 | hx'
+    · rw [hx0, ballAnnulus, Set.mem_diff, Metric.mem_closedBall, Metric.mem_ball,
+        dist_zero_right]
+      refine ⟨?_, ?_⟩
+      · rw [hunorm]; exact hvh0
+      · rw [hunorm]; exact not_lt.mpr hvh2
+    · exact hsub hx'.1
+  · -- 保范
+    intro x hx
+    show ‖x‖ = ‖(if x = v then u else x)‖
+    by_cases hxv : x = v
+    · rw [if_pos hxv, hunorm, hxv]
+    · rw [if_neg hxv]
+  · -- f v = u 孤立
+    show setOfEdge (if v = v then u else v) (insert u (V \ {v}))
+      (ECTC (insert u (V \ {v}))) = ∅
+    rw [if_pos rfl, setOfEdge, Set.eq_empty_iff_forall_notMem]
+    intro z hz
+    obtain ⟨he, hzW⟩ := hz
+    obtain ⟨-, hzW', huz, hduz⟩ := ectrPairMem.mp he
+    have hzu : z ≠ u := fun hh => huz hh.symm
+    have hz' : z ∈ V \ {v} := by
+      rcases Set.mem_insert_iff.mp hzW with h | h
+      · exact absurd h hzu
+      · exact h
+    have h2 := hgt z hz'.1 hz'.2
+    rw [hduz] at h2
+    linarith
+
+/-! ## 中档②：isolated_node_norm_ECTC（FNJLBXS-compiled.hl:1631）
+
+v 无 ECTC-邻居 ⟹ ‖v‖ = 2。反设 2 < ‖v‖：单点集取对径点对 {w, -w}；
+否则 D = {dist(u,v) - 2 | u ∈ V, u ≠ v} 有限非空且全正，取最小 m，把 v 径向
+内移 (1-e)·v（e = min(m, ‖v‖-2)/‖v‖）：新点仍在 annulus、与其余点距离 ≥ 2，
+scriptL 严格增大（lmfun 在 ≤ h0 段递减），与最大性矛盾。 -/
+
+private theorem isolatedNodeNormECTC {V : Set V3} (hpack : Packing V) (hsub : V ⊆ ballAnnulus)
+    (hmax : ∀ W : Set V3, Packing W → W ⊆ ballAnnulus → scriptL W ≤ scriptL V)
+    {v : V3} (hv : v ∈ V) (hedges : setOfEdge v V (ECTC V) = ∅) : ‖v‖ = 2 := by
+  classical
+  have hvb : v ∈ ballAnnulus := hsub hv
+  obtain ⟨hvh2, hvh0⟩ := ContraFan.inBallAnnulus hvb
+  by_cases hgt2 : 2 < ‖v‖
+  · exfalso
+    have hfin : V.Finite := packingFiniteOfBallAnnulus hpack hsub
+    have hnormpos : (0:ℝ) < ‖v‖ := by linarith
+    by_cases hV0 : V = {v}
+    · -- 情形 A：单点集，{w, -w} 的 scriptL = 2 > 1 ≥ scriptL V
+      set w : V3 := (2 / ‖v‖) • v with hwdef
+      have hvne : ‖v‖ ≠ 0 := ne_of_gt hnormpos
+      have hwnorm : ‖w‖ = 2 := by
+        rw [hwdef, norm_smul, Real.norm_eq_abs,
+          abs_of_pos (div_pos (by norm_num : (0:ℝ) < 2) hnormpos)]
+        field_simp
+      have hwne : w ≠ -w := by
+        intro hcon
+        have hsum : w + w = 0 := eq_neg_iff_add_eq_zero.mp hcon
+        have hprod : (2:ℝ) • w = (0:V3) := by rw [two_smul ℝ]; exact hsum
+        have hnorm0 : ‖w‖ = 0 := by
+          have h2 : ‖(2:ℝ) • w‖ = ‖(0:V3)‖ := by rw [hprod]
+          rw [norm_smul, Real.norm_eq_abs,
+            abs_of_pos (show (0:ℝ) < 2 by norm_num), norm_zero] at h2
+          linarith
+        rw [hwnorm] at hnorm0
+        norm_num at hnorm0
+      have h4 : dist w (-w) = 4 := by
+        have he : w - (-w) = (2:ℝ) • w := by rw [sub_eq_add_neg, neg_neg, ← two_smul ℝ]
+        rw [dist_eq_norm, he, norm_smul, Real.norm_eq_abs,
+          abs_of_pos (show (0:ℝ) < 2 by norm_num), hwnorm]
+        norm_num
+      have hWpack : Packing ({w, -w} : Set V3) := by
+        intro a ha b hb hab
+        rcases Set.mem_insert_iff.mp ha with ha0 | ha1
+        · rcases Set.mem_insert_iff.mp hb with hb0 | hb1
+          · rw [ha0, hb0]
+          · rw [ha0] at hab
+            have hb2 : b = -w := Set.mem_singleton_iff.mp hb1
+            rw [hb2, h4] at hab
+            norm_num at hab
+        · rcases Set.mem_insert_iff.mp hb with hb0 | hb1
+          · have ha2 : a = -w := Set.mem_singleton_iff.mp ha1
+            rw [ha2] at hab
+            rw [hb0, dist_comm, h4] at hab
+            norm_num at hab
+          · have ha2 : a = -w := Set.mem_singleton_iff.mp ha1
+            have hb2 : b = -w := Set.mem_singleton_iff.mp hb1
+            rw [ha2, hb2]
+      have hWsub : ({w, -w} : Set V3) ⊆ ballAnnulus := by
+        intro x hx
+        rcases Set.mem_insert_iff.mp hx with hx0 | hx1
+        · rw [hx0, ballAnnulus, Set.mem_diff, Metric.mem_closedBall, Metric.mem_ball,
+            dist_zero_right, hwnorm]
+          exact ⟨by norm_num [ContraFan.two_h0], not_lt.mpr le_rfl⟩
+        · have hx2 : x = -w := Set.mem_singleton_iff.mp hx1
+          rw [hx2, ballAnnulus, Set.mem_diff, Metric.mem_closedBall, Metric.mem_ball,
+            dist_zero_right, norm_neg, hwnorm]
+          exact ⟨by norm_num [ContraFan.two_h0], not_lt.mpr le_rfl⟩
+      have hWfin : ({w, -w} : Set V3).Finite := Set.Finite.insert w (Set.finite_singleton (-w))
+      have hWtofin : hWfin.toFinset = insert w ({-w} : Finset V3) := by
+        ext x
+        simp only [Set.Finite.mem_toFinset, Finset.mem_insert, Finset.mem_singleton,
+          Set.mem_insert_iff, Set.mem_singleton_iff]
+      have hWscript : scriptL ({w, -w} : Set V3) = 2 := by
+        rw [scriptL, dif_pos hWfin, hWtofin,
+          Finset.sum_insert (fun hc => hwne (Finset.mem_singleton.mp hc)),
+          Finset.sum_singleton, norm_neg]
+        have h1 : lmfun 1 = 1 := by
+          rw [lmfun, if_pos (show (1:ℝ) ≤ h0 by norm_num [h0])]
+          exact div_self (show (h0:ℝ) - 1 ≠ 0 by norm_num [h0])
+        rw [show ‖w‖ / 2 = (1:ℝ) from by rw [hwnorm]; norm_num, h1]
+        norm_num
+      have hV1 : ({v} : Set V3).Finite := Set.finite_singleton v
+      have hVscript : scriptL ({v} : Set V3) = lmfun (‖v‖ / 2) := by
+        rw [scriptL, dif_pos hV1]
+        have hto : hV1.toFinset = {v} := by ext x; simp
+        rw [hto, Finset.sum_singleton]
+      have hVsc : scriptL V = lmfun (‖v‖ / 2) := by rw [hV0]; exact hVscript
+      have hcon := hmax ({w, -w} : Set V3) hWpack hWsub
+      rw [hWscript, hVsc] at hcon
+      have hlt1 : lmfun (‖v‖ / 2) < 1 := by
+        rw [lmfun, if_pos (by linarith : ‖v‖ / 2 ≤ h0),
+          div_lt_one (show (0:ℝ) < h0 - 1 by norm_num [h0])]
+        linarith
+      linarith
+    · -- 情形 B：V ≠ {v}，径向内移
+      obtain ⟨u0, hu0V, hu0v⟩ : ∃ u : V3, u ∈ V ∧ u ≠ v := by
+        by_contra hcon
+        push_neg at hcon
+        exact hV0 (Set.eq_singleton_iff_unique_mem.mpr ⟨hv, fun x hx => hcon x hx⟩)
+      have hmin : ∀ y ∈ V, y ≠ v → dist y v - 2
+          ∈ (hfin.toFinset.erase v).image (fun z : V3 => dist z v - 2) := by
+        intro y hy hyv
+        exact Finset.mem_image.mpr ⟨y, Finset.mem_erase.mpr ⟨hyv, hfin.mem_toFinset.mpr hy⟩,
+          rfl⟩
+      have hEne : ((hfin.toFinset.erase v).image fun z : V3 => dist z v - 2).Nonempty :=
+        ⟨dist u0 v - 2, hmin u0 hu0V hu0v⟩
+      obtain ⟨m, hmpos, hminle⟩ : ∃ m : ℝ, 0 < m ∧ ∀ y ∈ V, y ≠ v → m ≤ dist y v - 2 := by
+        obtain ⟨y1, hy1, hy1v⟩ :=
+          Finset.mem_image.mp (((hfin.toFinset.erase v).image
+            fun z : V3 => dist z v - 2).min'_mem hEne)
+        obtain ⟨hy1v', hy1D⟩ := Finset.mem_erase.mp hy1
+        have hy1V : y1 ∈ V := hfin.mem_toFinset.mp hy1D
+        have hy1eq : ((hfin.toFinset.erase v).image
+            fun z : V3 => dist z v - 2).min' hEne = dist y1 v - 2 := hy1v.symm
+        refine ⟨((hfin.toFinset.erase v).image fun z : V3 => dist z v - 2).min' hEne, ?_, ?_⟩
+        · rw [hy1eq]
+          by_contra hcon
+          push_neg at hcon
+          have h2le : dist y1 v ≤ 2 := by linarith
+          have h2ge : 2 ≤ dist y1 v := hpack.dist_ge_two hy1V hv hy1v'
+          have hy1edge : y1 ∈ setOfEdge v V (ECTC V) := by
+            refine ⟨?_, hy1V⟩
+            exact ectrPairMem.mpr ⟨hv, hy1V, fun hh => hy1v' hh.symm,
+              by rw [dist_comm]; linarith⟩
+          rw [hedges] at hy1edge
+          exact hy1edge
+        · intro y hy hyv
+          exact Finset.min'_le ((hfin.toFinset.erase v).image fun z : V3 => dist z v - 2)
+            (dist y v - 2) (hmin y hy hyv)
+      obtain ⟨e, he0, he1, hedvw⟩ :
+          ∃ e : ℝ, 0 < e ∧ e < 1 ∧ dist v ((1 - e) • v) = min m (‖v‖ - 2) := by
+        refine ⟨min m (‖v‖ - 2) / ‖v‖, ?_, ?_, ?_⟩
+        · apply div_pos _ hnormpos
+          exact lt_min hmpos (by linarith)
+        · have h1 : min m (‖v‖ - 2) / ‖v‖ ≤ (‖v‖ - 2) / ‖v‖ :=
+            (div_le_div_iff_of_pos_right hnormpos).mpr (min_le_right m (‖v‖ - 2))
+          have h2 : (‖v‖ - 2) / ‖v‖ < 1 := by
+            rw [div_lt_one hnormpos]
+            linarith
+          linarith
+        · have hsub : v - (1 - min m (‖v‖ - 2) / ‖v‖) • v
+              = (min m (‖v‖ - 2) / ‖v‖) • v := by
+            have hexpand : (1 - min m (‖v‖ - 2) / ‖v‖) • v
+                = v - (min m (‖v‖ - 2) / ‖v‖) • v := by rw [sub_smul, one_smul]
+            rw [hexpand, sub_sub_cancel]
+          rw [dist_eq_norm, hsub, norm_smul, Real.norm_eq_abs,
+            abs_of_pos (div_pos (lt_min hmpos (by linarith)) hnormpos), mul_comm]
+          exact mul_div_cancel₀ (min m (‖v‖ - 2)) (ne_of_gt hnormpos)
+      obtain ⟨w, hwdef⟩ : ∃ w : V3, w = (1 - e) • v := ⟨_, rfl⟩
+      have hdvw' : dist v w = min m (‖v‖ - 2) := by rw [hwdef]; exact hedvw
+      have hdisteq : dist v w = e * ‖v‖ := by
+        rw [hwdef, dist_eq_norm]
+        have hsub : v - (1 - e) • v = e • v := by
+          have hexpand : (1 - e) • v = v - e • v := by rw [sub_smul, one_smul]
+          rw [hexpand, sub_sub_cancel]
+        rw [hsub, norm_smul, Real.norm_eq_abs, abs_of_pos (by linarith : 0 < e)]
+      have hnormeq : ‖w‖ + dist v w = ‖v‖ := by
+        have h1 : ‖w‖ = (1 - e) * ‖v‖ := by
+          rw [hwdef, norm_smul, Real.norm_eq_abs,
+            abs_of_nonneg (show (0:ℝ) ≤ 1 - e by linarith)]
+        rw [h1, hdisteq]
+        have h2 : (1 - e) * ‖v‖ + e * ‖v‖ = (1 - e + e) * ‖v‖ := by ring
+        rw [h2]
+        have h3 : (1 - e + e : ℝ) = 1 := by ring
+        rw [h3, one_mul]
+      have hwnormge : (2:ℝ) ≤ ‖w‖ := by
+        have hle : min m (‖v‖ - 2) ≤ ‖v‖ - 2 := min_le_right m (‖v‖ - 2)
+        linarith [hnormeq, hdvw', hle]
+      have hwnormlt : ‖w‖ < ‖v‖ := by
+        have hposd : 0 < dist v w := by
+          rw [hdisteq]
+          exact mul_pos he0 hnormpos
+        linarith [hnormeq, hposd]
+      have hwne : w ≠ v := fun hcon => lt_irrefl _ (hcon ▸ hwnormlt)
+      have hwVd : w ∉ V \ {v} := by
+        rintro ⟨hwV, hwv⟩
+        have hminle' := hminle w hwV hwv
+        have hle : min m (‖v‖ - 2) ≤ dist w v - 2 :=
+          le_trans (min_le_left m (‖v‖ - 2)) hminle'
+        rw [dist_comm, hdvw'] at hle
+        linarith
+      have hdgw : ∀ z : V3, z ∈ V → z ≠ v → 2 ≤ dist z w := by
+        intro z hz hzv
+        have hminle' := hminle z hz hzv
+        have htri : dist z v ≤ dist z w + dist w v := dist_triangle z w v
+        have hdwv : dist w v = dist v w := dist_comm w v
+        rw [hdwv] at htri
+        have hle : min m (‖v‖ - 2) ≤ m := min_le_left m (‖v‖ - 2)
+        linarith [htri, hminle', hle, hdvw']
+      have hWpack : Packing (insert w (V \ {v})) := by
+        intro a ha b hb hab
+        rcases Set.mem_insert_iff.mp ha with ha0 | ha' <;>
+          rcases Set.mem_insert_iff.mp hb with hb0 | hb'
+        · rw [ha0, hb0]
+        · have h2 : (2:ℝ) ≤ dist a b := by
+            rw [ha0, dist_comm]
+            exact hdgw b hb'.1 hb'.2
+          exact absurd hab (not_lt.mpr h2)
+        · have h2 : (2:ℝ) ≤ dist a b := by
+            rw [hb0]
+            exact hdgw a ha'.1 ha'.2
+          exact absurd hab (not_lt.mpr h2)
+        · exact hpack a ha'.1 b hb'.1 hab
+      have hWsub : insert w (V \ {v}) ⊆ ballAnnulus := by
+        intro x hx
+        rcases Set.mem_insert_iff.mp hx with hx0 | hx'
+        · rw [hx0, ballAnnulus, Set.mem_diff, Metric.mem_closedBall, Metric.mem_ball,
+            dist_zero_right]
+          refine ⟨?_, ?_⟩
+          · linarith [hwnormge, hwnormlt, hvh0]
+          · exact not_lt.mpr hwnormge
+        · exact hsub hx'.1
+      have hcon := hmax (insert w (V \ {v})) hWpack hWsub
+      have hVsum : scriptL V
+          = lmfun (‖v‖ / 2) + ∑ x ∈ hfin.toFinset.erase v, lmfun (‖x‖ / 2) := by
+        rw [scriptL, dif_pos hfin]
+        have hsplit : insert v (hfin.toFinset.erase v) = hfin.toFinset :=
+          Finset.insert_erase (hfin.mem_toFinset.mpr hv)
+        nth_rewrite 1 [← hsplit]
+        rw [Finset.sum_insert (fun hc => (Finset.mem_erase.mp hc).1 rfl)]
+      have hWsum : scriptL (insert w (V \ {v}))
+          = lmfun (‖w‖ / 2) + ∑ x ∈ hfin.toFinset.erase v, lmfun (‖x‖ / 2) := by
+        have hWfin : (insert w (V \ {v})).Finite :=
+          Set.Finite.insert w (hfin.subset Set.sdiff_subset)
+        have htofin : hWfin.toFinset = insert w (hfin.toFinset.erase v) := by
+          ext x
+          simp only [Set.Finite.mem_toFinset, Finset.mem_insert, Set.mem_insert_iff,
+            Finset.mem_erase, Set.mem_diff, Set.mem_singleton_iff]
+          tauto
+        rw [scriptL, dif_pos hWfin, htofin,
+          Finset.sum_insert (fun hc => hwVd ⟨hfin.mem_toFinset.mp (Finset.mem_erase.mp hc).2,
+            (Finset.mem_erase.mp hc).1⟩)]
+      have hlmgood : lmfun (‖v‖ / 2) < lmfun (‖w‖ / 2) := by
+        have hb1 : ‖v‖ / 2 ≤ h0 := by linarith
+        have hb2 : ‖w‖ / 2 ≤ h0 := by linarith
+        have e1 : lmfun (‖v‖ / 2) = (h0 - ‖v‖ / 2) / (h0 - 1) := by
+          rw [lmfun, if_pos hb1]
+        have e2 : lmfun (‖w‖ / 2) = (h0 - ‖w‖ / 2) / (h0 - 1) := by
+          rw [lmfun, if_pos hb2]
+        rw [e1, e2]
+        have hd : (0:ℝ) < h0 - 1 := by norm_num [h0]
+        have k1 : (0:ℝ) ≤ h0 - ‖w‖ / 2 := by linarith
+        have k2 : h0 - ‖v‖ / 2 < h0 - ‖w‖ / 2 := by linarith
+        exact (div_lt_div_iff_of_pos_right hd).mpr k2
+      rw [hWsum, hVsum] at hcon
+      linarith
+  · -- ‖v‖ ≤ 2：与 annulus 下界 2 ≤ ‖v‖ 夹出等式
+    linarith
+
+/-! ## 中档③：not_surrounded_node_norm_ECTC（FNJLBXS-compiled.hl:1727）
+
+中档①给出保范双射迁移（f v 孤立），中档②给孤立点落球面；
+bijScriptL 把最大性转移到 W 上，范数回传即得。 -/
+
+private theorem notSurroundedNodeNormECTC {V : Set V3} (hpack : Packing V)
+    (hsub : V ⊆ ballAnnulus)
+    (hmax : ∀ W : Set V3, Packing W → W ⊆ ballAnnulus → scriptL W ≤ scriptL V)
+    {v : V3} (hv : v ∈ V) (hns : ¬ surroundedNode V (ECTC V) v) : ‖v‖ = 2 := by
+  classical
+  have hfin : V.Finite := packingFiniteOfBallAnnulus hpack hsub
+  obtain ⟨W, f, hbij, hWp, hWs, hnorm, hiso⟩ := notSurroundedECTC hpack hsub hv hns
+  have hmaxW : ∀ U : Set V3, Packing U → U ⊆ ballAnnulus → scriptL U ≤ scriptL W := by
+    intro U hUp hUs
+    have h1 := hmax U hUp hUs
+    rw [bijScriptL hfin f hbij hnorm] at h1
+    exact h1
+  have hfvW : f v ∈ W := hbij.1 hv
+  have hfvnorm := isolatedNodeNormECTC hWp hWs hmaxW hfvW hiso
+  rw [hnorm v hv]
+  exact hfvnorm
 
 /-- **CPNKNXN**（flyspeck_devol.hl:135，2026-10-12 A4 填证 lane）：
 packing 可扩为 saturated packing 超集（Zorn：`zorn_subset_nonempty`，链并
