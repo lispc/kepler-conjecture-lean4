@@ -2540,10 +2540,9 @@ not_surrounded_node_norm_ECTC:1727，其中 FCDJDOT section :1543-1806 的三件
 ③`packingCardLe64`（HOL `card_packing_ball_annulus` 的 43 界粗化为 64，
 测度计数：单位球互斥含于 ball 0 4，模板同 `flyspeckDevolution`）+
 `Finset.exists_max_image` 对 k ∈ range 65 取有限最大。
-剩余柱②（FNJLBXS 归一化 ~215 行：还需 `not_surrounded_imp_on_one_side_of_plane`
-的 Fan/dart/azim 机器 + `perturbation_lemma` 解析件）与柱③
-（`DLWCHEM`/`XULJEPR` 计数 GIANT，消费 pack_ineq_def_a）未动，
-`fcdjdot` 本体维持冻结接口。
+剩余柱②（FNJLBXS 归一化）与柱③（`DLWCHEM`/`XULJEPR` 计数 GIANT，
+消费 pack_ineq_def_a）；`fcdjdot` 本体维持冻结接口。
+【2026-10-14 更新：柱② 已清，见下段。】
 
 **2026-10-12 A6 续作 lane 补件——柱②解析件已落**：`perturbation_lemma`
 （FNJLBXS-compiled.hl:746-748）已作为本文件真证私件 `perturbationLemma`
@@ -2584,7 +2583,28 @@ annulus 坐标 + 两两 dist ≥ 2 + 范数剖面匹配（经 `Finset.equivFinOf
 **公理面记账**：`isolatedNodeNormECTC` 标准三无债；`notSurroundedECTC`/
 `notSurroundedNodeNormECTC` 经 `ContraFan.contraveningFanTl`（CKQOWSA 链）
 继承树内既有债务 `ContraFan.LEMMA_4_POINTS_FINAL`（ContraFan.lean:605，
-骨架占位桩）——该件落地后此二件自动转标准三。 -/
+骨架占位桩）——该件落地后此二件自动转标准三。
+
+**2026-10-14 A6 柱② 落地——柱② 全清**：FNJLBXS 本体已作为本文件私件
+`fnjlbxsCore`（本节末，`notSurroundedNodeNormECTC` 之后）真证落地，
+零桩、零新增公理（全部前置件树内已有），陈述逐字对照 HOL
+FNJLBXS-compiled.hl:1324-1537。Lean 路线（按 NEEDS 原记，无需 ℝ^150）：
+配置空间 = `(Fin k → V3)` 的 annulus 坐标 + 两两 dist ≥ 2 + 范数剖面匹配
+（经 `packingConfigEnumerate` 枚举），min-距离向量的字典序极小化 =
+`fnxOrdStat`（第 j 小值 = 各 j+1 元子集最大值之最小，Master-iff
+`fnxOrdStatLeIff`：第 j 小 ≤ t ⟺ 至少 j+1 项 ≤ t；连续性
+`fnxOrdStatCont`）+ `fnxChain` 紧集链逐级 argmax（`fnxChainProps`）；
+末步对「既不孤立又不 surrounded」的配置点 r：`contraveningFanTl` 的
+ESTD 扇 + `notSurroundedImpOnOneSideOfPlane` 取分离法向量，S = 边邻居 +
+`perturbationLemma` 沿之推离，扰动配置 `Function.update xst r u` 仍是
+合法配置（hK：所有 i ≠ r 的距离被推过 dy ≥ 2，packing 存活），dy-以下
+计数严格减 1（hPa：r 行移出），分歧级 n0 = fp 侧 dy-以下计数处
+`c n0 xst ≤ dy < c n0 fp`，与 `xst ∈ C (n0+1)` 的 argmax 性质矛盾。
+五个前置桩消费树内真证：`packingConfigCompact`/`packingFiniteOfBallAnnulus`/
+`perturbationLemma`/`notSurroundedImpOnOneSideOfPlane`/`packingConfigEnumerate`。
+`fnjlbxsCore` 继承 `ContraFan.contraveningFanTl` 的 CKQOWSA 链债务
+（同 `notSurroundedECTC`）；目前零消费者——`fcdjdot` 装配等柱③
+（`DLWCHEM`/`XULJEPR` 计数 GIANT）。 -/
 
 
 /-- **annulus 有限性**（2026-10-12 A6 填证 lane 落地；HOL
@@ -4070,6 +4090,840 @@ private theorem notSurroundedNodeNormECTC {V : Set V3} (hpack : Packing V)
   have hfvnorm := isolatedNodeNormECTC hWp hWs hmaxW hfvW hiso
   rw [hnorm v hv]
   exact hfvnorm
+/-! ## 柱②：FNJLBXS 归一化本体（FNJLBXS-compiled.hl:1324-1537，2026-10-14 A6 柱② lane 落地）
+
+配置空间 = `(Fin k → V3)` 的 annulus-坐标 + 两两 dist ≥ 2 + 范数剖面匹配（经
+`packingConfigEnumerate` 枚举 V）；`fnxOrdStat`（第 j 小值 = 各 j+1 元子集最大值的
+最小值）给 min-距离向量的字典序极小化机器（Master-iff：第 j 小值 ≤ t ⟺ 至少 j+1 项
+≤ t），`fnxChain` 紧集链逐级取 argmax；末步对「既不孤立又不 surrounded」的配置点经
+`notSurroundedImpOnOneSideOfPlane` + `perturbationLemma` 扰动一点 r，与字典序极小矛盾。
+五个前置桩全部消费树内真证（`packingConfigCompact`/`packingFiniteOfBallAnnulus`/
+`perturbationLemma`/`notSurroundedImpOnOneSideOfPlane`/`packingConfigEnumerate`）。 -/
+
+/-! ### 基建：阶次统计量与最近邻距离 -/
+
+section
+variable {k : ℕ}
+
+/-- inf' 的求取归属（经 image + min'）。 -/
+private theorem fnxInfAttained {ι : Type*} {P : Finset ι} {h : P.Nonempty} {g : ι → ℝ} :
+    ∃ x, x ∈ P ∧ g x = P.inf' h g := by
+  have himg : (P.image g).Nonempty := h.image g
+  have hmem : (P.image g).min' himg ∈ P.image g := Finset.min'_mem _ himg
+  obtain ⟨x, hx, hxg⟩ := Finset.mem_image.mp hmem
+  refine ⟨x, hx, ?_⟩
+  have hEq : P.inf' h g = (P.image g).min' himg := by
+    rw [Finset.min'_eq_inf', Finset.inf'_image]
+    rfl
+  rw [hEq, hxg]
+
+private theorem fnxLtInf' {ι : Type*} {P : Finset ι} {h : P.Nonempty} {g : ι → ℝ} {t : ℝ}
+    (hlt : ∀ i ∈ P, t < g i) : t < P.inf' h g := by
+  obtain ⟨x, hx, hxg⟩ := fnxInfAttained
+  exact (hlt x hx).trans_le (le_of_eq hxg)
+
+/-- 有限集上的最大值（带 junk 0 分支）。 -/
+private noncomputable def fnxFinSup (s : Finset (Fin k)) (d : Fin k → ℝ) : ℝ :=
+  if hs : s.Nonempty then s.sup' hs (fun i => d i) else 0
+
+private theorem fnxFinSupLe {s : Finset (Fin k)} (hs : s.Nonempty) {d : Fin k → ℝ} {t : ℝ}
+    (h : ∀ i ∈ s, d i ≤ t) : fnxFinSup s d ≤ t := by
+  unfold fnxFinSup
+  rw [dif_pos hs]
+  exact Finset.sup'_le hs (fun i => d i) h
+
+private theorem fnxFinSupGe {s : Finset (Fin k)} (hs : s.Nonempty) {d : Fin k → ℝ} {t : ℝ}
+    (h : ∃ i ∈ s, t ≤ d i) : t ≤ fnxFinSup s d := by
+  unfold fnxFinSup
+  rw [dif_pos hs]
+  obtain ⟨i, hi, hle⟩ := h
+  exact hle.trans (Finset.le_sup' (f := fun i => d i) (b := i) hi)
+
+private theorem fnxContSup' {ι : Type*} {X : Type*} [TopologicalSpace X] (P : Finset ι) :
+    ∀ (h : P.Nonempty) (g : ι → X → ℝ), (∀ i, Continuous (g i)) →
+      Continuous (fun x => P.sup' h (fun i => g i x)) := by
+  classical
+  intro h
+  induction P using Finset.cons_induction_on with
+  | empty => exact absurd h (by simp)
+  | @cons a P hpa ih =>
+      intro g hg
+      rcases Finset.eq_empty_or_nonempty P with hP0 | hPne
+      · subst hP0
+        have hset : (Finset.cons a ∅ hpa : Finset ι) = {a} := by
+          ext x
+          simp
+        simp only [hset] at h ⊢
+        have hE : ∀ x, ({a} : Finset ι).sup' h (fun i => g i x) = g a x := fun x =>
+          Finset.sup'_singleton (b := a) (f := fun i => g i x)
+        exact Continuous.congr (hg a) (fun x => (hE x).symm)
+      · have hE : ∀ x, (Finset.cons a P hpa).sup' h (fun i => g i x)
+            = g a x ⊔ P.sup' hPne (fun i => g i x) := fun x =>
+          Finset.sup'_cons hPne (fun i => g i x)
+        exact Continuous.congr (Continuous.max (hg a) (ih hPne g hg))
+          (fun x => (hE x).symm)
+
+private theorem fnxContInf' {ι : Type*} {X : Type*} [TopologicalSpace X] (P : Finset ι) :
+    ∀ (h : P.Nonempty) (g : ι → X → ℝ), (∀ i, Continuous (g i)) →
+      Continuous (fun x => P.inf' h (fun i => g i x)) := by
+  classical
+  intro h
+  induction P using Finset.cons_induction_on with
+  | empty => exact absurd h (by simp)
+  | @cons a P hpa ih =>
+      intro g hg
+      rcases Finset.eq_empty_or_nonempty P with hP0 | hPne
+      · subst hP0
+        have hset : (Finset.cons a ∅ hpa : Finset ι) = {a} := by
+          ext x
+          simp
+        simp only [hset] at h ⊢
+        have hE : ∀ x, ({a} : Finset ι).inf' h (fun i => g i x) = g a x := fun x =>
+          Finset.inf'_singleton (b := a) (f := fun i => g i x)
+        exact Continuous.congr (hg a) (fun x => (hE x).symm)
+      · have hE : ∀ x, (Finset.cons a P hpa).inf' h (fun i => g i x)
+            = g a x ⊓ P.inf' hPne (fun i => g i x) := fun x =>
+          Finset.inf'_cons hPne (fun i => g i x)
+        exact Continuous.congr (Continuous.min (hg a) (ih hPne g hg))
+          (fun x => (hE x).symm)
+
+private theorem fnxFinSupCont (s : Finset (Fin k)) :
+    Continuous (fun d : Fin k → ℝ => fnxFinSup s d) := by
+  unfold fnxFinSup
+  split_ifs with hs
+  · exact fnxContSup' s hs (fun (i : Fin k) (d : Fin k → ℝ) => d i)
+      (fun i => continuous_apply i)
+  · exact continuous_const
+
+/-- 阶次统计量：`d` 的第 `j` 小值 = 各 `j+1` 元子集最大值的最小值。 -/
+private noncomputable def fnxOrdStat (j : ℕ) (d : Fin k → ℝ) : ℝ :=
+  if h : ((Finset.univ : Finset (Fin k)).powersetCard (j + 1)).Nonempty then
+    (Finset.univ.powersetCard (j + 1)).inf' h (fun s => fnxFinSup s d)
+  else 0
+
+private theorem fnxOrdStatNonempty {j : ℕ} (hj : j < k) :
+    ((Finset.univ : Finset (Fin k)).powersetCard (j + 1)).Nonempty := by
+  have hcard : (Finset.univ : Finset (Fin k)).card = k :=
+    Finset.card_univ.trans (Fintype.card_fin k)
+  refine Finset.powersetCard_nonempty.mpr ?_
+  rw [hcard]
+  exact hj
+
+private theorem fnxOrdStatCont (j : ℕ) :
+    Continuous (fun d : Fin k → ℝ => fnxOrdStat j d) := by
+  unfold fnxOrdStat
+  split_ifs with h
+  · exact fnxContInf' _ h (fun s d => fnxFinSup s d) (fun s => fnxFinSupCont s)
+  · exact continuous_const
+
+/-- Master 刻画：第 `j` 小值 ≤ t ⟺ 至少 `j+1` 项 ≤ t。 -/
+private theorem fnxOrdStatLeIff {j : ℕ} (hj : j < k) (d : Fin k → ℝ) (t : ℝ) :
+    fnxOrdStat j d ≤ t ↔ j + 1 ≤ (Finset.univ.filter (fun i => d i ≤ t)).card := by
+  constructor
+  · -- ordStat ≤ t → 计数 ≥ j+1
+    intro h
+    by_contra hcon
+    push_neg at hcon
+    have hall : ∀ S ∈ Finset.univ.powersetCard (j + 1), t < fnxFinSup S d := by
+      intro S hS
+      obtain ⟨hSsub, hScard⟩ := Finset.mem_powersetCard.mp hS
+      have hex : ∃ i ∈ S, t < d i := by
+        by_contra hcon2
+        push_neg at hcon2
+        have hSsub2 : S ⊆ Finset.univ.filter (fun i => d i ≤ t) :=
+          fun i hi => Finset.mem_filter.mpr ⟨Finset.mem_univ i, hcon2 i hi⟩
+        have hcard := Finset.card_le_card hSsub2
+        rw [hScard] at hcard
+        exact absurd hcard (not_le.mpr hcon)
+      obtain ⟨i, hi, hlt⟩ := hex
+      exact lt_of_lt_of_le hlt
+        (fnxFinSupGe (hs := ⟨i, hi⟩) (h := Exists.intro i (And.intro hi (le_refl _))))
+    have hgt : t < fnxOrdStat j d := by
+      unfold fnxOrdStat
+      rw [dif_pos (fnxOrdStatNonempty hj)]
+      exact fnxLtInf' hall
+    exact absurd hgt (not_lt.mpr h)
+  · -- 计数 ≥ j+1 → ordStat ≤ t
+    intro h
+    obtain ⟨S, hSsub, hScard⟩ := Finset.exists_subset_card_eq h
+    have hSne : S.Nonempty := by
+      refine Finset.nonempty_iff_ne_empty.mpr (fun he => ?_)
+      rw [he, Finset.card_empty] at hScard
+      omega
+    refine le_trans ?_ (fnxFinSupLe hSne (fun i hi => (Finset.mem_filter.mp (hSsub hi)).2))
+    unfold fnxOrdStat
+    rw [dif_pos (fnxOrdStatNonempty hj)]
+    exact Finset.inf'_le (fun s => fnxFinSup s d)
+      (Finset.mem_powersetCard.mpr ⟨hSsub.trans (Finset.subset_univ _), hScard⟩)
+
+private theorem fnxOrdStatEqOfCount {j : ℕ} (hj : j < k) {d₁ d₂ : Fin k → ℝ}
+    (h : ∀ t, (j + 1 ≤ (Finset.univ.filter (fun i => d₁ i ≤ t)).card ↔
+      j + 1 ≤ (Finset.univ.filter (fun i => d₂ i ≤ t)).card)) :
+    fnxOrdStat j d₁ = fnxOrdStat j d₂ := by
+  refine le_antisymm ?_ ?_
+  · exact (fnxOrdStatLeIff hj d₁ (fnxOrdStat j d₂)).2
+      ((h (fnxOrdStat j d₂)).2 ((fnxOrdStatLeIff hj d₂ _).1 le_rfl))
+  · exact (fnxOrdStatLeIff hj d₂ (fnxOrdStat j d₁)).2
+      ((h (fnxOrdStat j d₁)).1 ((fnxOrdStatLeIff hj d₁ _).1 le_rfl))
+
+/-- 最近邻距离。 -/
+private noncomputable def fnxNnDist {k : ℕ} (f : Fin k → V3) (i : Fin k) : ℝ :=
+  if h : (Finset.univ.erase i).Nonempty then
+    (Finset.univ.erase i).inf' h (fun j => dist (f i) (f j))
+  else 0
+
+private theorem fnxNnDistLe {k : ℕ} {f : Fin k → V3} {i : Fin k} {t : ℝ}
+    (h : ∃ j₀, j₀ ≠ i ∧ dist (f i) (f j₀) ≤ t) : fnxNnDist f i ≤ t := by
+  obtain ⟨j₀, hj₀, hle⟩ := h
+  unfold fnxNnDist
+  rw [dif_pos (by
+    refine Finset.nonempty_iff_ne_empty.mpr ?_
+    intro he
+    rw [Finset.eq_empty_iff_forall_notMem] at he
+    exact he j₀ (Finset.mem_erase.mpr ⟨hj₀, Finset.mem_univ j₀⟩))]
+  exact le_trans (Finset.inf'_le (fun j => dist (f i) (f j))
+    (Finset.mem_erase.mpr ⟨hj₀, Finset.mem_univ j₀⟩)) hle
+
+private theorem fnxNnDistGe {k : ℕ} {f : Fin k → V3} {i : Fin k} {t : ℝ}
+    (hne : (Finset.univ.erase i).Nonempty) (h : ∀ j, j ≠ i → t ≤ dist (f i) (f j)) :
+    t ≤ fnxNnDist f i := by
+  unfold fnxNnDist
+  rw [dif_pos hne]
+  exact Finset.le_inf' hne (fun j => dist (f i) (f j))
+    (fun j hj => h j (Finset.ne_of_mem_erase hj))
+
+private theorem fnxNnDistAttained {k : ℕ} {f : Fin k → V3} {i : Fin k}
+    (hne : (Finset.univ.erase i).Nonempty) :
+    ∃ j₀, j₀ ≠ i ∧ dist (f i) (f j₀) = fnxNnDist f i := by
+  unfold fnxNnDist
+  rw [dif_pos hne]
+  obtain ⟨x, hx, hxg⟩ := fnxInfAttained (P := Finset.univ.erase i) (h := hne)
+    (g := fun j => dist (f i) (f j))
+  exact ⟨x, Finset.ne_of_mem_erase hx, hxg⟩
+
+private theorem fnxUpdNnDistLe {k : ℕ} {f : Fin k → V3} {r : Fin k} {u : V3} {i : Fin k}
+    {t : ℝ} (hir : i ≠ r) (h : ∃ j₀, j₀ ≠ i ∧ j₀ ≠ r ∧ dist (f i) (f j₀) ≤ t) :
+    fnxNnDist (Function.update f r u) i ≤ t := by
+  obtain ⟨j₀, hji, hjr, hle⟩ := h
+  refine fnxNnDistLe ⟨j₀, hji, ?_⟩
+  rw [Function.update_of_ne hir, Function.update_of_ne hjr]
+  exact hle
+
+private theorem fnxUpdNnDistGe {k : ℕ} {f : Fin k → V3} {r : Fin k} {u : V3} {i : Fin k}
+    {t : ℝ} (hir : i ≠ r) (hne : (Finset.univ.erase i).Nonempty)
+    (h1 : ∀ j, j ≠ i → j ≠ r → t ≤ dist (f i) (f j))
+    (h2 : t ≤ dist (f i) u) :
+    t ≤ fnxNnDist (Function.update f r u) i := by
+  refine fnxNnDistGe hne (fun j hj => ?_)
+  rcases eq_or_ne j r with rfl | hjr
+  · rw [Function.update_self, Function.update_of_ne hir]
+    exact h2
+  · rw [Function.update_of_ne hir, Function.update_of_ne hjr]
+    exact h1 j hj hjr
+
+private theorem fnxNnDistCont {k : ℕ} (i : Fin k) :
+    Continuous (fun f : Fin k → V3 => fnxNnDist f i) := by
+  unfold fnxNnDist
+  split_ifs with h
+  · exact fnxContInf' _ h (fun (j : Fin k) (f : Fin k → V3) => dist (f i) (f j))
+      (fun j => (continuous_apply i).dist (continuous_apply j))
+  · exact continuous_const
+
+/-- 链集：`C 0 = R`，`C (j+1) = C j ∩ argmax (c j) (C j)`。 -/
+private noncomputable def fnxChain {k : ℕ} (R : Set (Fin k → V3))
+    (c : ℕ → (Fin k → V3) → ℝ) : ℕ → Set (Fin k → V3)
+  | 0 => R
+  | j + 1 => {x | x ∈ fnxChain R c j ∧ ∀ y ∈ fnxChain R c j, c j y ≤ c j x}
+
+private theorem fnxChainSuccSub {k : ℕ} {R : Set (Fin k → V3)} {c : ℕ → (Fin k → V3) → ℝ}
+    (j : ℕ) : fnxChain R c (j + 1) ⊆ fnxChain R c j := fun _ hx => hx.1
+
+private theorem fnxChainMemZero {k : ℕ} {R : Set (Fin k → V3)} {c : ℕ → (Fin k → V3) → ℝ}
+    {x : Fin k → V3} (hx : x ∈ R) : x ∈ fnxChain R c 0 := hx
+
+private theorem fnxChainSuccMem {k : ℕ} {R : Set (Fin k → V3)} {c : ℕ → (Fin k → V3) → ℝ}
+    {x : Fin k → V3} {j : ℕ} (hx : x ∈ fnxChain R c j)
+    (hmax : ∀ y ∈ fnxChain R c j, c j y ≤ c j x) :
+    x ∈ fnxChain R c (j + 1) := ⟨hx, hmax⟩
+
+private theorem fnxChainSuccMemImp {k : ℕ} {R : Set (Fin k → V3)} {c : ℕ → (Fin k → V3) → ℝ}
+    {x : Fin k → V3} {j : ℕ} (hx : x ∈ fnxChain R c (j + 1)) :
+    x ∈ fnxChain R c j ∧ ∀ y ∈ fnxChain R c j, c j y ≤ c j x := hx
+
+private theorem fnxChainSubOfLe {k : ℕ} {R : Set (Fin k → V3)} {c : ℕ → (Fin k → V3) → ℝ} :
+    ∀ j m, m ≤ j → fnxChain R c j ⊆ fnxChain R c m := by
+  intro j
+  induction j with
+  | zero =>
+      intro m hm x hx
+      have h0 : m = 0 := Nat.le_zero.mp hm
+      subst h0
+      exact hx
+  | succ j ih =>
+      intro m hm x hx
+      rcases Nat.eq_or_lt_of_le hm with rfl | hlt
+      · exact hx
+      · exact ih m (Nat.le_of_lt_succ hlt) (fnxChainSuccSub j hx)
+
+private theorem fnxChainProps {k : ℕ} {R : Set (Fin k → V3)} {c : ℕ → (Fin k → V3) → ℝ}
+    (hR : IsCompact R) (hRne : R.Nonempty) (hc : ∀ j, Continuous (c j)) (j : ℕ) :
+    (fnxChain R c j).Nonempty ∧ IsCompact (fnxChain R c j) := by
+  induction j with
+  | zero => exact ⟨hRne, hR⟩
+  | succ j ih =>
+      obtain ⟨hne, hcpt⟩ := ih
+      obtain ⟨x, hx, hxmax⟩ := hcpt.exists_isMaxOn hne (hc j).continuousOn
+      refine ⟨⟨x, hx, hxmax⟩, ?_⟩
+      have hclosed : IsClosed (fnxChain R c (j + 1)) := by
+        have heq : fnxChain R c (j + 1)
+            = fnxChain R c j ∩ ⋂ y ∈ fnxChain R c j, (c j) ⁻¹' Set.Ici (c j y) := by
+          ext z
+          simp only [Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_iInter, Set.mem_preimage,
+            Set.mem_Ici]
+          exact ⟨fun hx => ⟨hx.1, fun y hy => hx.2 y hy⟩,
+            fun hx => ⟨hx.1, fun y hy => hx.2 y hy⟩⟩
+        rw [heq]
+        exact IsClosed.inter hcpt.isClosed
+          (isClosed_iInter fun y => isClosed_iInter fun _ =>
+            (isClosed_Ici (a := c j y)).preimage (hc j))
+      exact hcpt.of_isClosed_subset hclosed Set.inter_subset_left
+
+/-- 双点集等式的端点互换（四情形统一引理）。 -/
+private theorem fnxPairEnds {a b x y : V3} (hab : ({a, b} : Set V3) = ({x, y} : Set V3))
+    (hne : a ≠ b) : (x = a ∧ y = b) ∨ (x = b ∧ y = a) := by
+  have hx : x = a ∨ x = b := by
+    have h1 : x ∈ ({x, y} : Set V3) := by simp
+    have h2 : x ∈ ({a, b} : Set V3) := hab ▸ h1
+    simpa using h2
+  have hy : y = a ∨ y = b := by
+    have h1 : y ∈ ({x, y} : Set V3) := by simp
+    have h2 : y ∈ ({a, b} : Set V3) := hab ▸ h1
+    simpa using h2
+  rcases hx with hx | hx <;> rcases hy with hy | hy
+  · -- x = a, y = a
+    exfalso
+    have h0 : b ∈ ({a, b} : Set V3) := by simp
+    have hmem : b ∈ ({x, y} : Set V3) := hab ▸ h0
+    rw [hx, hy] at hmem
+    simp at hmem
+    exact hne hmem.symm
+  · -- x = a, y = b
+    exact Or.inl ⟨hx, hy⟩
+  · -- x = b, y = a
+    exact Or.inr ⟨hx, hy⟩
+  · -- x = b, y = b
+    exfalso
+    have h0 : a ∈ ({a, b} : Set V3) := by simp
+    have hmem : a ∈ ({x, y} : Set V3) := hab ▸ h0
+    rw [hx, hy] at hmem
+    simp at hmem
+    exact hne hmem
+
+end
+/-- 余量存在（HOL FNJLBXS:1411 `e_cond` 的指标形式）：`dy` 为第 `r` 行最近邻距离，
+`j ≠ r` 的距离要么恰为 `dy`，要么以 `dy + e` 为下界（`e` 取有限正差集的最小元，
+空集时取 1）。 -/
+private theorem fnxMarginExists {k : ℕ} (xst : Fin k → V3) (r : Fin k) (dy : ℝ)
+    (hdy : ∀ j : Fin k, j ≠ r → dy ≤ dist (xst j) (xst r)) :
+    ∃ e : ℝ, 0 < e ∧ ∀ i : Fin k, i ≠ r → dist (xst i) (xst r) ≠ dy →
+      dy + e ≤ dist (xst i) (xst r) := by
+  by_cases hE : (Finset.univ.filter
+      (fun j : Fin k => j ≠ r ∧ dist (xst j) (xst r) ≠ dy)).Nonempty
+  · obtain ⟨j₀, hj₀⟩ := hE
+    obtain ⟨-, hjr₀, hne₀⟩ := Finset.mem_filter.mp hj₀
+    have hge : dy ≤ dist (xst j₀) (xst r) := hdy j₀ hjr₀
+    have hlt : dy < dist (xst j₀) (xst r) := lt_of_le_of_ne hge hne₀.symm
+    have hmem : dist (xst j₀) (xst r) - dy ∈ (Finset.univ.filter
+        (fun j : Fin k => j ≠ r ∧ dist (xst j) (xst r) ≠ dy)).image
+        (fun j => dist (xst j) (xst r) - dy) :=
+      Finset.mem_image.mpr ⟨j₀, hj₀, rfl⟩
+    refine ⟨((Finset.univ.filter
+        (fun j : Fin k => j ≠ r ∧ dist (xst j) (xst r) ≠ dy)).image
+        (fun j => dist (xst j) (xst r) - dy)).min'
+        ⟨dist (xst j₀) (xst r) - dy, hmem⟩, ?_, ?_⟩
+    · obtain ⟨j, hj, hEq⟩ := Finset.mem_image.mp (Finset.min'_mem _ ⟨dist (xst j₀) (xst r) - dy, hmem⟩)
+      obtain ⟨-, hjr, hne⟩ := Finset.mem_filter.mp hj
+      have hlt2 : dy < dist (xst j) (xst r) :=
+        lt_of_le_of_ne (hdy j hjr) hne.symm
+      rw [← hEq]
+      linarith
+    · intro i hir hdne
+      have hmem2 : dist (xst i) (xst r) - dy ∈ (Finset.univ.filter
+          (fun j : Fin k => j ≠ r ∧ dist (xst j) (xst r) ≠ dy)).image
+          (fun j => dist (xst j) (xst r) - dy) :=
+        Finset.mem_image.mpr ⟨i, Finset.mem_filter.mpr ⟨Finset.mem_univ i, hir, hdne⟩, rfl⟩
+      have hle := Finset.min'_le ((Finset.univ.filter
+          (fun j : Fin k => j ≠ r ∧ dist (xst j) (xst r) ≠ dy)).image
+          (fun j => dist (xst j) (xst r) - dy)) (dist (xst i) (xst r) - dy) hmem2
+      linarith
+  · refine ⟨1, one_pos, ?_⟩
+    intro i hir hdne
+    exact (hE ⟨i, Finset.mem_filter.mpr ⟨Finset.mem_univ i, hir, hdne⟩⟩).elim
+
+
+
+/-! ### 本体：FNJLBXS（FNJLBXS-compiled.hl:1324-1537） -/
+
+set_option maxHeartbeats 1000000 in
+private theorem fnjlbxsCore {V : Set V3} (hpack : Packing V) (hsub : V ⊆ ballAnnulus) :
+    ∃ W : Set V3, ∃ φ : V3 → V3, Set.BijOn φ V W ∧ Packing W ∧ W ⊆ ballAnnulus ∧
+      (∀ v ∈ V, ‖v‖ = ‖φ v‖) ∧
+      ∀ w ∈ W, setOfEdge w W (ESTD W) = ∅ ∨ surroundedNode W (ESTD W) w := by
+  classical
+  have hfin : V.Finite := packingFiniteOfBallAnnulus hpack hsub
+  by_cases hk0 : V.ncard = 0
+  · have hV : V = ∅ := (Set.ncard_eq_zero (s := V) (hs := hfin)).mp hk0
+    subst hV
+    exact ⟨∅, id, ⟨fun x hx => hx.elim, fun x _ y _ hxy => hxy, fun x hx => hx.elim⟩,
+      fun a ha _ _ _ => ha.elim, fun x hx => hx.elim, fun v hv => hv.elim, fun w hw => hw.elim⟩
+  by_cases hk1 : V.ncard = 1
+  · obtain ⟨v, hV⟩ := (Set.ncard_eq_one (s := V)).mp hk1
+    refine ⟨V, id, ⟨fun z hz => hz, fun z _ y _ hxy => hxy, fun z hz => ⟨z, hz, rfl⟩⟩,
+      hpack, hsub, fun z _ => rfl, ?_⟩
+    intro w hw
+    refine Or.inl (Set.eq_empty_iff_forall_notMem.mpr fun z hz => ?_)
+    obtain ⟨hedge, -⟩ := hz
+    obtain ⟨a, b, hab, haV, hbV, hne, -⟩ := hedge
+    rw [hV] at haV hbV
+    rw [Set.mem_singleton_iff.mp haV, Set.mem_singleton_iff.mp hbV] at hne
+    exact hne rfl
+  -- 主情形：2 ≤ k
+  have hk2 : (2:ℕ) ≤ V.ncard := by omega
+  set k := V.ncard with hkdef
+  have hk2' : (2:ℕ) ≤ k := hk2
+  haveI hkne : Nonempty (Fin k) := ⟨⟨0, by omega⟩⟩
+  obtain ⟨enum, henumrange, henuminj, -⟩ := packingConfigEnumerate hpack hsub rfl
+  set R : Set (Fin k → V3) :=
+    {f | (∀ i, f i ∈ ballAnnulus) ∧ (∀ i j, i ≠ j → 2 ≤ dist (f i) (f j)) ∧
+      ∃ σ : Equiv.Perm (Fin k), ∀ i, ‖f (σ i)‖ = ‖enum i‖} with hRdef
+  have hRsub : R ⊆ {f : Fin k → V3 | (∀ i, f i ∈ ballAnnulus) ∧
+      ∀ i j, i ≠ j → 2 ≤ dist (f i) (f j)} := fun f hf => ⟨hf.1, hf.2.1⟩
+  have hRclosed : IsClosed R := by
+    have heq : R = {f : Fin k → V3 | (∀ i, f i ∈ ballAnnulus) ∧
+        ∀ i j, i ≠ j → 2 ≤ dist (f i) (f j)} ∩
+        {f : Fin k → V3 | ∃ σ : Equiv.Perm (Fin k), ∀ i, ‖f (σ i)‖ = ‖enum i‖} := by
+      ext f
+      simp only [hRdef, Set.mem_inter_iff, Set.mem_setOf_eq]
+      tauto
+    have hbij : ∀ σ : Equiv.Perm (Fin k),
+        IsClosed {f : Fin k → V3 | ∀ i, ‖f (σ i)‖ = ‖enum i‖} := by
+      intro σ
+      have heq2 : {f : Fin k → V3 | ∀ i, ‖f (σ i)‖ = ‖enum i‖}
+          = ⋂ i : Fin k, (fun f : Fin k → V3 => ‖f (σ i)‖) ⁻¹' {‖enum i‖} := by
+        ext f
+        simp only [Set.mem_setOf_eq, Set.mem_iInter, Set.mem_preimage, Set.mem_singleton_iff]
+      rw [heq2]
+      exact isClosed_iInter fun i =>
+        isClosed_singleton.preimage ((continuous_norm.comp (continuous_apply (σ i))))
+    rw [heq]
+    refine IsClosed.inter (packingConfigCompact k).isClosed ?_
+    have heq0 : {f : Fin k → V3 | ∃ σ : Equiv.Perm (Fin k), ∀ i, ‖f (σ i)‖ = ‖enum i‖}
+        = ⋃ σ ∈ (Set.univ : Set (Equiv.Perm (Fin k))),
+          {f : Fin k → V3 | ∀ i, ‖f (σ i)‖ = ‖enum i‖} := by
+      ext f
+      rw [Set.mem_iUnion₂]
+      simp only [Set.mem_setOf_eq]
+      constructor
+      · rintro ⟨σ, hf⟩; exact ⟨σ, trivial, hf⟩
+      · rintro ⟨σ, -, hf⟩; exact ⟨σ, hf⟩
+    rw [heq0]
+    exact Set.Finite.isClosed_biUnion (Set.finite_univ (α := Equiv.Perm (Fin k)))
+      (fun σ (_ : σ ∈ Set.univ) => hbij σ)
+  have hRcpt : IsCompact R :=
+    (packingConfigCompact k).of_isClosed_subset hRclosed hRsub
+  have hRne : R.Nonempty := by
+    have hmem : ∀ i, enum i ∈ V := by
+      intro i
+      rw [← henumrange]
+      exact Set.mem_range_self i
+    have hm1 : ∀ i, enum i ∈ ballAnnulus := fun i => hsub (hmem i)
+    have hm2 : ∀ i j, i ≠ j → 2 ≤ dist (enum i) (enum j) := fun i j hij =>
+      hpack.dist_ge_two (hmem i) (hmem j) (fun hcon => hij (henuminj hcon))
+    exact ⟨enum, hm1, hm2, ⟨_root_.Equiv.refl (α := Fin k), fun i => rfl⟩⟩
+  set d : (Fin k → V3) → Fin k → ℝ := fun f i => fnxNnDist f i with hdd
+  set c : ℕ → (Fin k → V3) → ℝ := fun j f => fnxOrdStat j (d f) with hcc
+  have hcd : ∀ j, Continuous (c j) := fun j =>
+    (fnxOrdStatCont j).comp (continuous_pi fun i => fnxNnDistCont i)
+  obtain ⟨hneC, hcptC⟩ := fnxChainProps hRcpt hRne hcd k
+  obtain ⟨xst, hxst⟩ := hneC
+  have hxstR : xst ∈ R := fnxChainSubOfLe k 0 (Nat.zero_le _) hxst
+  obtain ⟨hann, hpair, σ, hnorm⟩ := hxstR
+  have hxinj : Function.Injective xst := by
+    intro i j hij
+    by_contra hne
+    have h2 := hpair i j hne
+    rw [hij] at h2
+    norm_num at h2
+  have hWpack : Packing (Set.range xst) := by
+    intro u hu v hv hd
+    obtain ⟨i, rfl⟩ := hu
+    obtain ⟨j, rfl⟩ := hv
+    rcases eq_or_ne i j with rfl | hij
+    · rfl
+    · exact absurd hd (not_lt.2 (hpair i j hij))
+  have hWsub : Set.range xst ⊆ ballAnnulus := fun z hz => by
+    obtain ⟨i, rfl⟩ := hz
+    exact hann i
+  have hWne : Set.range xst ≠ ∅ := by
+    intro hcon
+    have hw : xst ⟨0, by omega⟩ ∈ Set.range xst := Set.mem_range_self (⟨0, by omega⟩ : Fin k)
+    rw [hcon] at hw
+    exact absurd hw (by simp)
+  refine ⟨Set.range xst, fun v => xst (σ (Function.invFun enum v)), ?_, hWpack, hWsub, ?_, ?_⟩
+  · refine ⟨fun z hz => Set.mem_range_self _, ?_, ?_⟩
+    · intro u hu v hv huv
+      have h1 : σ (Function.invFun enum u) = σ (Function.invFun enum v) := hxinj huv
+      have h2 : Function.invFun enum u = Function.invFun enum v := by
+        have h3 := congrArg (fun x : Fin k => σ.symm x) h1
+        simpa using h3
+      rw [← henumrange] at hu hv
+      calc u = enum (Function.invFun enum u) :=
+            (Function.invFun_eq (Set.mem_range.mp hu)).symm
+        _ = enum (Function.invFun enum v) := by rw [h2]
+        _ = v := Function.invFun_eq (Set.mem_range.mp hv)
+    · intro z hz
+      obtain ⟨i, rfl⟩ := hz
+      have hmem : enum (σ.symm i) ∈ V := by
+        rw [← henumrange]
+        exact Set.mem_range_self _
+      refine ⟨enum (σ.symm i), hmem, ?_⟩
+      have hinv : ∀ j : Fin k, Function.invFun enum (enum j) = j := fun j =>
+        henuminj (Function.invFun_eq ⟨j, rfl⟩)
+      show xst (σ (Function.invFun enum (enum (σ.symm i)))) = xst i
+      rw [hinv, Equiv.apply_symm_apply]
+  · intro v hv
+    rw [← henumrange] at hv
+    have hv' : enum (Function.invFun enum v) = v := Function.invFun_eq (Set.mem_range.mp hv)
+    have h1 : ‖v‖ = ‖enum (Function.invFun enum v)‖ := by rw [hv']
+    calc ‖v‖ = ‖enum (Function.invFun enum v)‖ := h1
+      _ = ‖xst (σ (Function.invFun enum v))‖ := (hnorm (Function.invFun enum v)).symm
+      _ = ‖(fun w => xst (σ (Function.invFun enum w))) v‖ := rfl
+  · -- 逐点二分
+    intro w hw
+    obtain ⟨r, rfl⟩ := hw
+    by_cases hiso : setOfEdge (xst r) (Set.range xst) (ESTD (Set.range xst)) = ∅
+    · exact Or.inl hiso
+    by_cases hsurr : surroundedNode (Set.range xst) (ESTD (Set.range xst)) (xst r)
+    · exact Or.inr hsurr
+    exfalso
+    set W : Set V3 := Set.range xst with hWdef
+    -- 分离法向量（contraveningFanTl 的 ESTD 折算到 Assembly.ESTD）
+    have hfanW' : FAN 0 W (ESTD W) := ContraFan.contraveningFanTl W hWpack hWsub hWne
+    obtain ⟨nrm, hn0, hydot, hwnle⟩ :=
+      notSurroundedImpOnOneSideOfPlane hfanW' (Set.mem_range_self r) hiso hsurr
+    have hWrAnn : xst r ∈ ballAnnulus := hann r
+    set S : Set V3 := setOfEdge (xst r) W (ESTD W) with hSdef
+    have hEstDMem : ∀ z : V3, z ∈ W → xst r ≠ z → dist z (xst r) ≤ 2 * h0 →
+        z ∈ S := by
+      intro z hzW hzne hdle
+      have hdle' : dist (xst r) z ≤ 2 * h0 := by
+        rw [dist_comm]
+        exact hdle
+      exact ⟨⟨xst r, z, rfl, Set.mem_range_self r, hzW, hzne, hdle'⟩, hzW⟩
+    have hSsub : ∀ z : V3, z ∈ S → z ∈ W ∧ z ≠ xst r ∧ dist z (xst r) ≤ 2 * h0 := by
+      intro z hz
+      obtain ⟨hedge, hzW⟩ := hz
+      obtain ⟨a, b, hab, haW, hbW, hne, hd⟩ := hedge
+      refine ⟨hzW, ?_, ?_⟩
+      · rcases fnxPairEnds (x := xst r) (y := z) hab.symm hne with ⟨hzc, hvc⟩ | ⟨hzc, hvc⟩
+        · intro hcon
+          exact hne ((hzc.symm.trans hcon.symm).trans hvc)
+        · intro hcon
+          exact hne.symm ((hzc.symm.trans hcon.symm).trans hvc)
+      · rcases fnxPairEnds (x := xst r) (y := z) hab.symm hne with ⟨hzc, hvc⟩ | ⟨hzc, hvc⟩
+        · rw [hvc, hzc, dist_comm b a]; exact hd
+        · rw [hvc, hzc]; exact hd
+    have hSip : ∀ z : V3, z ∈ S → inner ℝ z nrm ≤ 0 ∧ (0:ℝ) < inner ℝ z (xst r) := by
+      intro z hz
+      obtain ⟨hzW, hzWne, hdle⟩ := hSsub z hz
+      exact ⟨hwnle z hz, ContraFan.dot_pos_lemma (hWsub hzW) hWrAnn hdle⟩
+    -- 最近邻行索引的擦除集恒非空（k ≥ 2）
+    have hneEr : ∀ i : Fin k, (Finset.univ.erase i).Nonempty := by
+      intro i
+      by_cases hi0 : i.val = 0
+      · refine ⟨⟨1, by omega⟩, Finset.mem_erase.mpr ⟨?_, Finset.mem_univ _⟩⟩
+        intro hc
+        have hv : (1:ℕ) = Fin.val i := congrArg Fin.val hc
+        omega
+      · refine ⟨⟨0, by omega⟩, Finset.mem_erase.mpr ⟨?_, Finset.mem_univ _⟩⟩
+        intro hc
+        have hv : (0:ℕ) = Fin.val i := congrArg Fin.val hc
+        omega
+    -- dy := 第 r 行最近邻距离，及其上界 hdyh0（S 非空给出一条 ≤ 2·h0 的边）
+    set dy : ℝ := fnxNnDist xst r with hdydef
+    have hdyEq : fnxNnDist xst r = dy := hdydef.symm
+    have hdyh0 : dy ≤ 2 * h0 := by
+      obtain ⟨z, hz⟩ := Set.nonempty_iff_ne_empty.mpr hiso
+      obtain ⟨hedge, hzW⟩ := hz
+      obtain ⟨a, b, hab, haW, hbW, hne, hd⟩ := hedge
+      have hzne : z ≠ xst r := by
+        rcases fnxPairEnds (x := xst r) (y := z) hab.symm hne with ⟨hzc, hvc⟩ | ⟨hzc, hvc⟩
+        · intro hcon
+          exact hne ((hzc.symm.trans hcon.symm).trans hvc)
+        · intro hcon
+          exact hne.symm ((hzc.symm.trans hcon.symm).trans hvc)
+      rw [hWdef] at hzW
+      obtain ⟨j₀, hj₀⟩ := hzW
+      have j₀ne : j₀ ≠ r := fun hc => hzne (by rw [hc] at hj₀; exact hj₀.symm)
+      have hdle : dist (xst r) z ≤ 2 * h0 := by
+        rcases fnxPairEnds (x := xst r) (y := z) hab.symm hne with ⟨hzc, hvc⟩ | ⟨hzc, hvc⟩
+        · rw [hzc, hvc]; exact hd
+        · rw [hzc, hvc, dist_comm b a]; exact hd
+      rw [hdydef]
+      calc fnxNnDist xst r ≤ dist (xst r) z :=
+          fnxNnDistLe (f := xst) (i := r) (t := dist (xst r) z)
+            ⟨j₀, j₀ne, by rw [← hj₀]⟩
+        _ ≤ 2 * h0 := hdle
+    have hdyGe2 : (2:ℝ) ≤ dy := by
+      rw [hdydef]
+      exact fnxNnDistGe (hneEr r) (fun j hj => hpair r j hj.symm)
+    -- 余量 e（HOL e_cond 指标形式）
+    obtain ⟨e, he0, hem⟩ := fnxMarginExists xst r dy (fun j hj => by
+      rw [hdydef]
+      exact fnxNnDistLe (f := xst) (i := r) (t := dist (xst j) (xst r))
+        ⟨j, hj, by rw [dist_comm]⟩)
+    -- 扰动 u（经 perturbationLemma：等范数 + S 上远离 + 位移 < e）
+    obtain ⟨u, hunorm, haway, hdu⟩ := perturbationLemma e he0 hn0 hydot S hSip
+    have hdur : dist (xst r) u < e := hdu
+    -- 关键估计 hK：dy < dist (xst i, u) 对一切 i ≠ r（= dy 者经扰动远离；≠ dy 者经余量）
+    have hK : ∀ i, i ≠ r → dy < dist (xst i) u := by
+      intro i hir
+      by_cases hiD : dist (xst i) (xst r) = dy
+      · have hiS : xst i ∈ S :=
+          hEstDMem (xst i) (Set.mem_range_self i) (fun h => hir (hxinj h.symm))
+            (by rw [hiD]; exact hdyh0)
+        have h1 := haway (xst i) hiS
+        rw [dist_comm (xst r) (xst i), hiD, dist_comm u (xst i)] at h1
+        exact h1
+      · have hm := hem i hir hiD
+        have htri : dist (xst i) (xst r) ≤ dist (xst i) u + dist u (xst r) :=
+          dist_triangle (xst i) u (xst r)
+        have hdur' : dist u (xst r) < e := by
+          rw [dist_comm]
+          exact hdur
+        linarith
+    -- hPa：扰动后 r 行最近邻距离严格增大
+    have hPa : dy < fnxNnDist (Function.update xst r u) r := by
+      obtain ⟨j₀, hj₀r, hd0⟩ := fnxNnDistAttained
+        (f := Function.update xst r u) (i := r) (hneEr r)
+      rw [Function.update_self, Function.update_of_ne hj₀r, dist_comm u (xst j₀)] at hd0
+      rw [← hd0]
+      exact hK j₀ hj₀r
+    -- hD：dy 以下的行为保持严格在 dy 之上
+    have hD : ∀ i : Fin k, i ≠ r → dy < fnxNnDist xst i →
+        dy < fnxNnDist (Function.update xst r u) i := by
+      intro i hir hgt
+      by_contra hcon
+      push_neg at hcon
+      obtain ⟨j₀, hj₀i, hd0⟩ := fnxNnDistAttained
+        (f := Function.update xst r u) (i := i) (hneEr i)
+      rcases eq_or_ne j₀ r with hj₀r | hj₀r
+      · rw [hj₀r, Function.update_of_ne hir, Function.update_self] at hd0
+        rw [← hd0] at hcon
+        exact absurd (hK i hir) (not_lt.mpr hcon)
+      · rw [Function.update_of_ne hir, Function.update_of_ne hj₀r] at hd0
+        rw [← hd0] at hcon
+        have hle : fnxNnDist xst i ≤ dist (xst i) (xst j₀) :=
+          fnxNnDistLe (f := xst) (i := i) (t := dist (xst i) (xst j₀))
+            ⟨j₀, hj₀i, le_refl _⟩
+        exact absurd hgt (not_lt.mpr (hle.trans hcon))
+    -- annulus 成员只依赖范数
+    have hAnnNorm : ∀ v w : V3, v ∈ ballAnnulus → ‖w‖ = ‖v‖ → w ∈ ballAnnulus := by
+      intro v w hv hweq
+      simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball,
+        dist_zero_right] at hv ⊢
+      rw [hweq]
+      exact hv
+    -- 扰动配置 fp := update xst r u 仍是合法配置
+    have hfpAnn : ∀ i, Function.update xst r u i ∈ ballAnnulus := by
+      intro i
+      by_cases hir : i = r
+      · rw [hir, Function.update_self]
+        exact hAnnNorm _ _ (hann r) hunorm
+      · rw [Function.update_of_ne hir]
+        exact hann i
+    have hfpPair : ∀ i j : Fin k, i ≠ j →
+        2 ≤ dist (Function.update xst r u i) (Function.update xst r u j) := by
+      intro i j hij
+      by_cases hir : i = r
+      · have hjr : j ≠ r := fun hc => hij (hir.trans hc.symm)
+        rw [hir, Function.update_self, Function.update_of_ne hjr, dist_comm u (xst j)]
+        exact hdyGe2.trans (hK j hjr).le
+      · by_cases hjr : j = r
+        · rw [Function.update_of_ne hir, hjr, Function.update_self]
+          exact hdyGe2.trans (hK i hir).le
+        · rw [Function.update_of_ne hir, Function.update_of_ne hjr]
+          exact hpair i j hij
+    have hfpR : Function.update xst r u ∈ R :=
+      ⟨hfpAnn, hfpPair, σ, fun i => by
+        by_cases hir : σ i = r
+        · have h1 := hnorm i
+          rw [hir] at h1
+          rw [hir, Function.update_self, hunorm]
+          exact h1
+        · rw [Function.update_of_ne hir]
+          exact hnorm i⟩
+    -- 计数：fp 侧 dy-以下计数比 xst 侧严格小（r 行移出），以此定出分歧级 n0
+    have hfrnotin : r ∉ Finset.univ.filter
+        (fun i => fnxNnDist (Function.update xst r u) i ≤ dy) := by
+      intro hmem
+      have hle : fnxNnDist (Function.update xst r u) r ≤ dy :=
+        (Finset.mem_filter.mp hmem).2
+      linarith
+    set n0 : ℕ := (Finset.univ.filter
+      (fun i => fnxNnDist (Function.update xst r u) i ≤ dy)).card with hn0def
+    have hn0lt : n0 < k := by
+      have hsub : Finset.univ.filter (fun i => fnxNnDist (Function.update xst r u) i ≤ dy)
+          ⊆ Finset.univ.erase r := by
+        intro i hi
+        refine Finset.mem_erase.mpr ⟨?_, Finset.mem_univ i⟩
+        intro hc
+        rw [hc] at hi
+        exact hfrnotin hi
+      have h1 := Finset.card_le_card hsub
+      have h2 := Finset.card_erase_of_mem (Finset.mem_univ (α := Fin k) r)
+      have h3 : (Finset.univ : Finset (Fin k)).card = k :=
+        Finset.card_univ.trans (Fintype.card_fin k)
+      omega
+    have hDsub : ∀ i : Fin k, fnxNnDist (Function.update xst r u) i ≤ dy →
+        fnxNnDist xst i ≤ dy := by
+      intro i hi
+      by_cases hir : i = r
+      · rw [hir, hdyEq]
+      · rcases lt_or_ge dy (fnxNnDist xst i) with hlt | hle'
+        · have hcon := hD i hir hlt
+          linarith
+        · exact hle'
+    have hcntxdy : n0 + 1 ≤ (Finset.univ.filter (fun i => fnxNnDist xst i ≤ dy)).card := by
+      have hsub : insert r (Finset.univ.filter
+          (fun i => fnxNnDist (Function.update xst r u) i ≤ dy))
+          ⊆ Finset.univ.filter (fun i => fnxNnDist xst i ≤ dy) := by
+        intro i hi
+        rcases Finset.mem_insert.mp hi with hc | hi
+        · rw [hc]
+          exact Finset.mem_filter.mpr ⟨Finset.mem_univ r, hdyEq.le⟩
+        · exact Finset.mem_filter.mpr ⟨Finset.mem_univ i,
+            hDsub i (Finset.mem_filter.mp hi).2⟩
+      have hcard := Finset.card_insert_of_notMem hfrnotin
+      have hle := Finset.card_le_card hsub
+      omega
+    -- 低于 dy 处两侧计数逐点相等
+    have hLowSetEq : ∀ t : ℝ, t < dy →
+        (Finset.univ.filter (fun i => fnxNnDist xst i ≤ t))
+          = Finset.univ.filter (fun i => fnxNnDist (Function.update xst r u) i ≤ t) := by
+      intro t htlt
+      refine Finset.ext fun i => ?_
+      simp only [Finset.mem_filter, Finset.mem_univ, true_and]
+      by_cases hir : i = r
+      · constructor
+        · intro hx
+          rw [hir, hdyEq] at hx
+          have hx' : dy ≤ t := hx
+          linarith
+        · intro hf
+          rw [hir] at hf
+          have hf' : fnxNnDist (Function.update xst r u) r ≤ t := hf
+          have hgt := htlt.trans hPa
+          linarith
+      · constructor
+        · intro hx
+          obtain ⟨j₀, hj₀i, hd0⟩ := fnxNnDistAttained (f := xst) (i := i) (hneEr i)
+          rcases eq_or_ne j₀ r with hj₀r | hj₀r
+          · rw [hj₀r] at hd0
+            have hdy : dy ≤ dist (xst r) (xst i) :=
+              fnxNnDistLe (f := xst) (i := r) (t := dist (xst r) (xst i))
+                ⟨i, hir, le_refl _⟩
+            rw [dist_comm (xst r) (xst i), hd0] at hdy
+            have hdy' : dy ≤ fnxNnDist xst i := hdy
+            have hx' : fnxNnDist xst i ≤ t := hx
+            linarith
+          · refine fnxUpdNnDistLe hir ⟨j₀, hj₀i, hj₀r, ?_⟩
+            rw [hd0]
+            exact hx
+        · intro hf
+          obtain ⟨j₀, hj₀i, hd0⟩ := fnxNnDistAttained
+            (f := Function.update xst r u) (i := i) (hneEr i)
+          rcases eq_or_ne j₀ r with hj₀r | hj₀r
+          · rw [hj₀r, Function.update_of_ne hir, Function.update_self] at hd0
+            rw [← hd0] at hf
+            have hf' : dist (xst i) u ≤ t := hf
+            have hgt := htlt.trans (hK i hir)
+            linarith
+          · rw [Function.update_of_ne hir, Function.update_of_ne hj₀r] at hd0
+            rw [← hd0] at hf
+            have hf' : dist (xst i) (xst j₀) ≤ t := hf
+            exact fnxNnDistLe (f := xst) (i := i) (t := t) ⟨j₀, hj₀i, hf'⟩
+    have hCntMono : ∀ (d : Fin k → V3) (s t : ℝ), s ≤ t →
+        (Finset.univ.filter (fun i => fnxNnDist d i ≤ s)).card ≤
+          (Finset.univ.filter (fun i => fnxNnDist d i ≤ t)).card := by
+      intro d s t hst
+      refine Finset.card_le_card ?_
+      intro i hi
+      exact Finset.mem_filter.mpr ⟨Finset.mem_univ i, (Finset.mem_filter.mp hi).2.trans hst⟩
+    -- Master-iff：n0 以下各级阶次统计量相等
+    have hcEq : ∀ j : ℕ, j < n0 →
+        fnxOrdStat j (fun i => fnxNnDist (Function.update xst r u) i)
+          = fnxOrdStat j (fun i => fnxNnDist xst i) := by
+      intro j hj
+      refine fnxOrdStatEqOfCount (j := j) (hj := by have := hn0lt; omega) ?_
+      intro t
+      by_cases ht : t < dy
+      · rw [hLowSetEq t ht]
+      · push_neg at ht
+        constructor
+        · intro _
+          have h1 : j + 1 ≤ n0 + 1 := by omega
+          have h3 := hCntMono xst dy t ht
+          have h4 := hcntxdy
+          omega
+        · intro _
+          have h1 : j + 1 ≤ n0 := by omega
+          have h2 : n0 ≤ (Finset.univ.filter
+              (fun i => fnxNnDist (Function.update xst r u) i ≤ t)).card := by
+            rw [hn0def]
+            exact hCntMono (Function.update xst r u) dy t ht
+          omega
+    -- 分歧级：xst 侧 n0 级 ≤ dy < fp 侧 n0 级
+    have hF2b : fnxOrdStat n0 (fun i => fnxNnDist xst i) ≤ dy :=
+      (fnxOrdStatLeIff (hj := hn0lt) (d := fun i => fnxNnDist xst i) (t := dy)).2 hcntxdy
+    have hF2a : dy < fnxOrdStat n0
+        (fun i => fnxNnDist (Function.update xst r u) i) := by
+      by_contra hcon
+      push_neg at hcon
+      have hle := (fnxOrdStatLeIff (hj := hn0lt)
+        (d := fun i => fnxNnDist (Function.update xst r u) i) (t := dy)).1 hcon
+      rw [hn0def] at hle
+      omega
+    -- c 与 fnxOrdStat 的桥（绕 set-不透明）
+    have hcjFp : ∀ j : ℕ, c j (Function.update xst r u)
+        = fnxOrdStat j (fun i => fnxNnDist (Function.update xst r u) i) := by
+      intro j
+      simp only [hcc, hdd]
+    have hcjXs : ∀ j : ℕ, c j xst = fnxOrdStat j (fun i => fnxNnDist xst i) := by
+      intro j
+      simp only [hcc, hdd]
+    -- fp 沿链逐级驻留（前 n0 级统计量与 xst 相同）
+    have hfpChain : ∀ j : ℕ, j ≤ n0 →
+        Function.update xst r u ∈ fnxChain R c j := by
+      intro j
+      induction j with
+      | zero => intro _; exact fnxChainMemZero hfpR
+      | succ j ih =>
+          intro hj
+          refine fnxChainSuccMem (ih (by omega)) ?_
+          intro y hy
+          have hxs : xst ∈ fnxChain R c (j + 1) :=
+            fnxChainSubOfLe k (j + 1) (by have := hn0lt; omega) hxst
+          have hmax := (fnxChainSuccMemImp hxs).2 y hy
+          rw [hcjFp j, hcEq j (by omega), ← hcjXs j]
+          exact hmax
+    -- 末步矛盾：xst ∈ C (n0+1) 的 argmax 性质撞上 c n0 xst ≤ dy < c n0 fp
+    have hxsC : xst ∈ fnxChain R c (n0 + 1) :=
+      fnxChainSubOfLe k (n0 + 1) (by omega) hxst
+    have hcon := (fnxChainSuccMemImp hxsC).2
+      (Function.update xst r u) (hfpChain n0 (le_refl _))
+    rw [hcjFp n0, hcjXs n0] at hcon
+    exact absurd hF2a (not_lt.mpr (hcon.trans hF2b))
 
 /-- **CPNKNXN**（flyspeck_devol.hl:135，2026-10-12 A4 填证 lane）：
 packing 可扩为 saturated packing 超集（Zorn：`zorn_subset_nonempty`，链并
