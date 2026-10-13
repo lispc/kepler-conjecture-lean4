@@ -3,8 +3,9 @@
   JGTDEBU / SZIPOAS / CDTETAT 群 + `lp_fan` 支撑件）的定理陈述层移植。
   填实状态：JGTDEBU 全组 + CDTETAT/SZIPOAS + KCBLRQC/BDJYFFB1/BDJYFFB2
   已真证明；剩余 sorry = fully_surrounded_perimeter_bound /
-  sum_tauVEF_upper_bound / ineq_tauK_tauVEF_std 群 / CRTTXAT（各依赖
-  未移植深章，见 §8 债务图）。
+  sum_tauVEF_upper_bound / ineq_tauK_tauVEF_std 群（各依赖未移植深章，
+  见 §8 债务图）。CRTTXAT 已于 2026-10-12 第二波真证明（arc kit 五件套
+  自证 + face_sum_snd_eq_fst 鸽笼换元，见 §7/§7c）。
 
   依赖清单来源：`text_formalization/tame/ssreflect/MQMSMAB-compiled.hl`
   头部 needs（lp_ineqs_proofs / lp_main_estimate / CDTETAT / KCBLRQC）+
@@ -1998,27 +1999,808 @@ theorem BDJYFFB2 (V : Set V3) (hc : Contravening V)
 
 /-! ## 7. CRTTXAT（tame/CRTTXAT.hl，tame_9a 出口，Solovyev 2010） -/
 
-/-- HOL `CRTTXAT`（`tame/CRTTXAT.hl:311-320`，assumption 形
-`CRTTXAT_assum`：`(!V. contravening V ==> simple_hypermap …) ==> (!V.
-contravening V /\ perimeterbound (V,ESTD V) ==> tame_9a …)`）。
-DISCHARGES：骨架占位；HOL 证明本体 :320-470（`CRTTXAT_lemma1/2/1'` +
-`arc_properties` 章 + `per` 周长和的轨道求和），规模 >250 行 tactic，
-为桥章最重单件。 -/
-theorem CRTTXAT
-    (hsimple : ∀ (V : Set V3) (hfan : FAN 0 V (ESTD V)),
-      Contravening V → (hypermapOfFanTl V (ESTD V) hfan).Simple)
-    (V : Set V3) (hc : Contravening V) (hfan : FAN 0 V (ESTD V))
-    (hpb : PerimeterBound V (ESTD V) hfan) :
-    Tame9a (hypermapOfFanTl V (ESTD V) hfan) := by
-  -- NEEDS（B6-U1 记账 2026-10-12）：帽石卡 arc_properties 全章（B2 叶，
-  -- arc_lemma1/3/4/5 + arc_concave + estimate0 数值，1,091 行实分析）。
-  -- 3 ≤ card(face) 半边可由 CARD_FACE_GE_3_TL + hc.2.2.2.2.2.1 现成闭合；
-  -- k ≤ 6 半边的逐 dart 距离界 2 ≤ ‖·‖,dist ≤ 2.52 由 hc.2.1（ballAnnulus）+
-  -- packing 现成。本波已落 §7b 的 CRTTXAT_lemma1（face 上 lmfun 下界，即
-  -- HOL CRTTXAT_lemma1）与 arc_sym 同源件；剩余缺口 = arc 四件套自证
-  -- （cosine-law acos 公式 + arccos antitone + 凹性二阶导 + π/4 加法公式
-  -- 数值界，路线已写入交付报告），落齐后装配预计 ≤ 200 行。
-  sorry
+/-! ### arc kit 五件套自证（tame/arc_properties.hl，B2 叶；2026-10-12 第二波）
+
+HOL `arc_properties.hl` 的五件套 Lean 自证（绕开 B2 叶 1091 行移植）：
+① `arcV_eq_arcLen`（cosine-law 纯算术，无范围前提）② `arc_lemma1`（arccos antitone）
+③ `arc_lemma3`（凹性 ConcaveOn 插值 + `arc_lmfun_*` 权重）④ `arc_lemma4`
+（∂ₓ 单调 + estimate0 链）⑤ `estimate0`/`arc_lemma5_num`（认证 Taylor 数值，无浮点）。
+`arcLen a b c = arccos((a²+b²−c²)/(2ab))` 为局部副本（复用 `arcV`/LuneVolume）。 -/
+
+
+/-! ===== Taylor cos bounds (certified, no floating point) ===== -/
+
+/-- One-step monotone descent: f(0)=0, f' ≥ 0 on [0,X] ⟹ f ≥ 0 on [0,X]. -/
+private theorem nonneg_of_deriv_chain (f f₁ : ℝ → ℝ) {X : ℝ} (hX : 0 ≤ X)
+    (hstep : ∀ t : ℝ, HasDerivAt f (f₁ t) t)
+    (hpos : ∀ t ∈ Set.Icc 0 X, 0 ≤ f₁ t)
+    (hzero : f 0 = 0) :
+    ∀ t ∈ Set.Icc 0 X, 0 ≤ f t := by
+  have hdiff : Differentiable ℝ f := fun t => (hstep t).differentiableAt
+  have hmono : MonotoneOn f (Set.Icc 0 X) :=
+    monotoneOn_of_deriv_nonneg (convex_Icc 0 X) hdiff.continuous.continuousOn
+      hdiff.differentiableOn (fun t ht => by
+        rw [(hstep t).deriv]
+        have ht' : t ∈ Set.Ioo 0 X := by rw [← interior_Icc]; exact ht
+        exact hpos t (Set.Ioo_subset_Icc_self ht'))
+  intro t ht
+  have h00 : (0:ℝ) ∈ Set.Icc 0 X := ⟨le_refl 0, hX⟩
+  have hv := hmono h00 ht (le_trans (le_refl 0) ht.1)
+  rwa [hzero] at hv
+
+/-! ### derivative atoms for the Taylor chains -/
+
+private theorem hpow2d2 : ∀ t : ℝ, HasDerivAt (fun t : ℝ => t * t / 2) t t := by
+  intro t
+  have h := ((hasDerivAt_id t).mul (hasDerivAt_id t)).div_const 2
+  simp only [Pi.mul_apply, id_eq, one_mul, mul_one] at h
+  rw [show (t + t : ℝ) / 2 = t by ring] at h
+  exact h
+
+private theorem hpow3d6 : ∀ t : ℝ, HasDerivAt (fun t : ℝ => t * t * t / 6) (t * t / 2) t := by
+  intro t
+  have h := ((hasDerivAt_id t).mul (hpow2d2 t)).div_const 3
+  simp only [Pi.mul_apply, id_eq, one_mul] at h
+  rw [show (t * t / 2 + t * t : ℝ) / 3 = t * t / 2 by ring] at h
+  exact HasDerivAt.congr_of_eventuallyEq h
+    (Filter.eventuallyEq_of_mem Filter.univ_mem (fun y _ => by ring))
+
+private theorem hpow4d24 : ∀ t : ℝ,
+    HasDerivAt (fun t : ℝ => t * t * t * t / 24) (t * t * t / 6) t := by
+  intro t
+  have h := ((hasDerivAt_id t).mul (hpow3d6 t)).div_const 4
+  simp only [Pi.mul_apply, id_eq, one_mul] at h
+  rw [show (t * t * t / 6 + t * (t * t / 2) : ℝ) / 4 = t * t * t / 6 by ring] at h
+  exact HasDerivAt.congr_of_eventuallyEq h
+    (Filter.eventuallyEq_of_mem Filter.univ_mem (fun y _ => by ring))
+
+private theorem hpow5d120 : ∀ t : ℝ,
+    HasDerivAt (fun t : ℝ => t * t * t * t * t / 120) (t * t * t * t / 24) t := by
+  intro t
+  have h := ((hasDerivAt_id t).mul (hpow4d24 t)).div_const 5
+  simp only [Pi.mul_apply, id_eq, one_mul] at h
+  rw [show (t * t * t * t / 24 + t * (t * t * t / 6) : ℝ) / 5 = t * t * t * t / 24 by ring] at h
+  exact HasDerivAt.congr_of_eventuallyEq h
+    (Filter.eventuallyEq_of_mem Filter.univ_mem (fun y _ => by ring))
+
+private theorem hpow6d720 : ∀ t : ℝ,
+    HasDerivAt (fun t : ℝ => t * t * t * t * t * t / 720) (t * t * t * t * t / 120) t := by
+  intro t
+  have h := ((hasDerivAt_id t).mul (hpow5d120 t)).div_const 6
+  simp only [Pi.mul_apply, id_eq, one_mul] at h
+  rw [show (t * t * t * t * t / 120 + t * (t * t * t * t / 24) : ℝ) / 6
+      = t * t * t * t * t / 120 by ring] at h
+  exact HasDerivAt.congr_of_eventuallyEq h
+    (Filter.eventuallyEq_of_mem Filter.univ_mem (fun y _ => by ring))
+
+private theorem hpow7d5040 : ∀ t : ℝ,
+    HasDerivAt (fun t : ℝ => t * t * t * t * t * t * t / 5040)
+      (t * t * t * t * t * t / 720) t := by
+  intro t
+  have h := ((hasDerivAt_id t).mul (hpow6d720 t)).div_const 7
+  simp only [Pi.mul_apply, id_eq, one_mul] at h
+  rw [show (t * t * t * t * t * t / 720 + t * (t * t * t * t * t / 120) : ℝ) / 7
+      = t * t * t * t * t * t / 720 by ring] at h
+  exact HasDerivAt.congr_of_eventuallyEq h
+    (Filter.eventuallyEq_of_mem Filter.univ_mem (fun y _ => by ring))
+
+private theorem hpow8d40320 : ∀ t : ℝ,
+    HasDerivAt (fun t : ℝ => t * t * t * t * t * t * t * t / 40320)
+      (t * t * t * t * t * t * t / 5040) t := by
+  intro t
+  have h := ((hasDerivAt_id t).mul (hpow7d5040 t)).div_const 8
+  simp only [Pi.mul_apply, id_eq, one_mul] at h
+  rw [show (t * t * t * t * t * t * t / 5040 + t * (t * t * t * t * t * t / 720) : ℝ) / 8
+      = t * t * t * t * t * t * t / 5040 by ring] at h
+  exact HasDerivAt.congr_of_eventuallyEq h
+    (Filter.eventuallyEq_of_mem Filter.univ_mem (fun y _ => by ring))
+
+/-- 4th-order cos upper bound on [0,1]: `cos t ≤ 1 − t²/2 + t⁴/24`
+(半角 double angle + `Real.sin_ge_sub_cube`). -/
+private theorem cos_le_1_sub_sq_div_two_add (t : ℝ) (ht : 0 ≤ t) (ht1 : t ≤ 1) :
+    Real.cos t ≤ 1 - t * t / 2 + t * t * t * t / 24 := by
+  have h2 : (t / 2) ^ 2 ≤ 1 := by nlinarith
+  have hs := Real.sin_ge_sub_cube (show (0:ℝ) ≤ t / 2 by linarith)
+  have hsq : (t / 2 - (t / 2) ^ 3 / 6) ^ 2 ≤ Real.sin (t / 2) ^ 2 := by
+    have hspos : (0:ℝ) ≤ t / 2 - (t / 2) ^ 3 / 6 := by
+      have h6 : (0:ℝ) ≤ 6 - (t / 2) ^ 2 := by linarith
+      have hexp : t / 2 - (t / 2) ^ 3 / 6 = (t / 2) * (6 - (t / 2) ^ 2) / 6 := by ring
+      rw [hexp]
+      exact div_nonneg (mul_nonneg (by linarith) h6) (by norm_num)
+    exact pow_le_pow_left₀ hspos hs 2
+  have hcos : Real.cos t = 1 - 2 * Real.sin (t / 2) ^ 2 := by
+    have h2t : Real.cos (2 * (t / 2)) = Real.cos t := by
+      rw [show 2 * (t / 2) = t by ring]
+    rw [← h2t, Real.cos_two_mul_eq_one_sub]
+  rw [hcos]
+  have hp6 : (0:ℝ) ≤ t * t * t * t * t * t := by
+    have h1 : (0:ℝ) ≤ t * t * t := mul_nonneg (mul_self_nonneg t) ht
+    calc t * t * t * t * t * t = (t * t * t) * (t * t * t) := by ring
+      _ ≥ 0 := mul_nonneg h1 h1
+  have hex : 2 * (t / 2 - (t / 2) ^ 3 / 6) ^ 2
+      = t * t / 2 - t * t * t * t / 24 + t * t * t * t * t * t / 1152 := by ring
+  linarith [hex, hp6]
+
+/-- cos t ≥ 1 − t²/2 + t⁴/24 − t⁶/720（六阶 Taylor 下界，t ∈ [0,1]）. -/
+private theorem taylor_cos_lo (t : ℝ) (ht : 0 ≤ t) (ht1 : t ≤ 1) :
+    1 - t * t / 2 + t * t * t * t / 24 - t * t * t * t * t * t / 720 ≤ Real.cos t := by
+  have hpos3 : ∀ s ∈ Set.Icc 0 t, 0 ≤ Real.sin s + 0 - s + s * s * s / 6 + 0 := by
+    intro s hs
+    have h := Real.sin_ge_sub_cube hs.1
+    have heq : s ^ 3 / 6 = s * s * s / 6 := by ring
+    rw [heq] at h
+    linarith
+  have h3 : ∀ s ∈ Set.Icc 0 t,
+      0 ≤ -Real.cos s + 1 - s * s / 2 + s * s * s * s / 24 + 0 :=
+    nonneg_of_deriv_chain
+      (fun s => -Real.cos s + 1 - s * s / 2 + s * s * s * s / 24 + 0)
+      (fun s => Real.sin s + 0 - s + s * s * s / 6 + 0) ht
+      (fun s => ((((Real.hasDerivAt_cos s).neg.congr_deriv
+          (show -(-Real.sin s) = Real.sin s by ring)).add (hasDerivAt_const s 1)).sub
+        (hpow2d2 s)).add (hpow4d24 s) |>.add (hasDerivAt_const s 0))
+      hpos3 (by simp)
+  have h2 : ∀ s ∈ Set.Icc 0 t,
+      0 ≤ -Real.sin s + s - s * s * s / 6 + s * s * s * s * s / 120 + 0 :=
+    nonneg_of_deriv_chain
+      (fun s => -Real.sin s + s - s * s * s / 6 + s * s * s * s * s / 120 + 0)
+      (fun s => -Real.cos s + 1 - s * s / 2 + s * s * s * s / 24 + 0) ht
+      (fun s => ((((Real.hasDerivAt_sin s).neg.add (hasDerivAt_id s)).sub
+        (hpow3d6 s)).add (hpow5d120 s)).add (hasDerivAt_const s 0))
+      h3 (by simp)
+  have h1 : ∀ s ∈ Set.Icc 0 t,
+      0 ≤ Real.cos s + s * s / 2 - s * s * s * s / 24
+        + s * s * s * s * s * s / 720 + -1 :=
+    nonneg_of_deriv_chain
+      (fun s => Real.cos s + s * s / 2 - s * s * s * s / 24
+        + s * s * s * s * s * s / 720 + -1)
+      (fun s => -Real.sin s + s - s * s * s / 6 + s * s * s * s * s / 120 + 0) ht
+      (fun s => ((((Real.hasDerivAt_cos s).add (hpow2d2 s)).sub (hpow4d24 s)).add
+        (hpow6d720 s)).add (hasDerivAt_const s (-1:ℝ)))
+      h2 (by simp [Real.cos_zero])
+  have h0 := h1 t ⟨ht, le_refl t⟩
+  linarith
+
+/-- cos t ≤ 1 − t²/2 + t⁴/24 − t⁶/720 + t⁸/40320（六阶 Taylor 上界，t ∈ [0,1]）. -/
+private theorem taylor_cos_hi (t : ℝ) (ht : 0 ≤ t) (ht1 : t ≤ 1) :
+    Real.cos t ≤ 1 - t * t / 2 + t * t * t * t / 24 - t * t * t * t * t * t / 720
+      + t * t * t * t * t * t * t * t / 40320 := by
+  have hposA : ∀ s ∈ Set.Icc 0 t,
+      0 ≤ 0 + 0 + 1 + -(s * s / 2) + s * s * s * s / 24 + -Real.cos s := by
+    intro s hs
+    have h := cos_le_1_sub_sq_div_two_add s hs.1 (le_trans hs.2 ht1)
+    linarith
+  have hA : ∀ s ∈ Set.Icc 0 t,
+      0 ≤ 0 + 0 + s + -(s * s * s / 6) + s * s * s * s * s / 120 + -Real.sin s :=
+    nonneg_of_deriv_chain
+      (fun s => 0 + 0 + s + -(s * s * s / 6) + s * s * s * s * s / 120 + -Real.sin s)
+      (fun s => 0 + 0 + 1 + -(s * s / 2) + s * s * s * s / 24 + -Real.cos s) ht
+      (fun s => ((hasDerivAt_const s 0).add (hasDerivAt_const s 0)).add (hasDerivAt_id s)
+        |>.add ((hpow3d6 s).neg) |>.add (hpow5d120 s)
+        |>.add ((Real.hasDerivAt_sin s).neg))
+      hposA (by simp)
+  have hB : ∀ s ∈ Set.Icc 0 t,
+      0 ≤ -1 + 0 + s * s / 2 + -(s * s * s * s / 24) + s * s * s * s * s * s / 720
+        + Real.cos s :=
+    nonneg_of_deriv_chain
+      (fun s => -1 + 0 + s * s / 2 + -(s * s * s * s / 24) + s * s * s * s * s * s / 720
+        + Real.cos s)
+      (fun s => 0 + 0 + s + -(s * s * s / 6) + s * s * s * s * s / 120 + -Real.sin s) ht
+      (fun s => ((hasDerivAt_const s (-1:ℝ)).add (hasDerivAt_const s 0)).add (hpow2d2 s)
+        |>.add ((hpow4d24 s).neg) |>.add (hpow6d720 s)
+        |>.add (Real.hasDerivAt_cos s))
+      hA (by simp)
+  have hC : ∀ s ∈ Set.Icc 0 t,
+      0 ≤ -s + 0 + s * s * s / 6 + -(s * s * s * s * s / 120)
+        + s * s * s * s * s * s * s / 5040 + Real.sin s :=
+    nonneg_of_deriv_chain
+      (fun s => -s + 0 + s * s * s / 6 + -(s * s * s * s * s / 120)
+        + s * s * s * s * s * s * s / 5040 + Real.sin s)
+      (fun s => -1 + 0 + s * s / 2 + -(s * s * s * s / 24) + s * s * s * s * s * s / 720
+        + Real.cos s) ht
+      (fun s => (((hasDerivAt_id s).neg).add (hasDerivAt_const s 0)).add (hpow3d6 s)
+        |>.add ((hpow5d120 s).neg) |>.add (hpow7d5040 s)
+        |>.add (Real.hasDerivAt_sin s))
+      hB (by simp)
+  have hD : ∀ s ∈ Set.Icc 0 t,
+      0 ≤ -(s * s / 2) + 1 + s * s * s * s / 24 + -(s * s * s * s * s * s / 720)
+        + s * s * s * s * s * s * s * s / 40320 + -Real.cos s :=
+    nonneg_of_deriv_chain
+      (fun s => -(s * s / 2) + 1 + s * s * s * s / 24
+        + -(s * s * s * s * s * s / 720) + s * s * s * s * s * s * s * s / 40320
+        + -Real.cos s)
+      (fun s => -s + 0 + s * s * s / 6 + -(s * s * s * s * s / 120)
+        + s * s * s * s * s * s * s / 5040 + Real.sin s) ht
+      (fun s => (((hpow2d2 s).neg.add (hasDerivAt_const s 1)).add (hpow4d24 s)
+        |>.add ((hpow6d720 s).neg) |>.add (hpow8d40320 s)).add
+        ((Real.hasDerivAt_cos s).neg.congr_deriv
+          (show -(-Real.sin s) = Real.sin s by ring)))
+      hC (by simp)
+  have := hD t ⟨ht, le_refl t⟩
+  linarith
+
+
+/-! ===== arcLen 与数值种子（件⑤） ===== -/
+
+/-- HOL `arclength a b c`（余弦式 acos）：`arcLen a b c = acos((a²+b²−c²)/(2ab))`. -/
+private noncomputable def arcLen (a b c : ℝ) : ℝ :=
+  Real.arccos ((a * a + b * b - c * c) / (2 * a * b))
+
+/-- `arcLen` 前两参对称（`arc_sym`）. -/
+private theorem arcLen_sym (a b c : ℝ) : arcLen a b c = arcLen b a c := by
+  unfold arcLen
+  congr 1
+  ring
+
+/-- 件⑤a：`arcLen 2 2.52 2 = acos(63/100)`，`arcLen 2.52 2.52 2 = acos(2719/3969)`. -/
+private theorem arcLen_num_eqs :
+    arcLen 2 2.52 2 = Real.arccos (63 / 100) ∧
+      arcLen 2.52 2.52 2 = Real.arccos (2719 / 3969) := by
+  unfold arcLen
+  constructor <;> congr 1 <;> norm_num
+
+/-- 件⑤b：estimate0 的两个 acos 数值界（认证 Taylor，无浮点）. -/
+private theorem cos_8892_ge_063 : Real.cos (8892 / 10000) ≥ 63 / 100 := by
+  have h := taylor_cos_lo (8892 / 10000) (by norm_num) (by norm_num)
+  norm_num at h ⊢
+  linarith
+
+private theorem cos_8162_le_2719_3969 : Real.cos (4081 / 5000) ≤ 2719 / 3969 := by
+  have h := taylor_cos_hi (4081 / 5000) (by norm_num) (by norm_num)
+  norm_num at h ⊢
+  linarith
+
+private theorem cos_816_ge_2719_3969 : Real.cos (204 / 250) ≥ 2719 / 3969 := by
+  have h := taylor_cos_lo (204 / 250) (by norm_num) (by norm_num)
+  norm_num at h ⊢
+  linarith
+
+/-- estimate0：`arcLen 2 2.52 2 − arcLen 2.52 2.52 2 ≥ 0.073`. -/
+private theorem estimate0 : arcLen 2 2.52 2 - arcLen 2.52 2.52 2 ≥ 0.073 := by
+  obtain ⟨e1, e2⟩ := arcLen_num_eqs
+  have h1 : Real.arccos (63 / 100) ≥ 8892 / 10000 := by
+    have h := cos_8892_ge_063
+    have h2 : Real.arccos (Real.cos (8892 / 10000)) ≤ Real.arccos (63 / 100) :=
+      Real.arccos_le_arccos h
+    rw [Real.arccos_cos (by norm_num) (by linarith [Real.pi_gt_three])] at h2
+    exact le_trans (le_refl _) h2
+  have h2 : Real.arccos (2719 / 3969) ≤ 4081 / 5000 := by
+    have h := cos_8162_le_2719_3969
+    have h3 : Real.arccos (2719 / 3969) ≤ Real.arccos (Real.cos (4081 / 5000)) :=
+      Real.arccos_le_arccos h
+    rw [Real.arccos_cos (by norm_num) (by linarith [Real.pi_gt_three])] at h3
+    exact h3
+  rw [e1, e2]
+  linarith
+
+/-- 件⑤c：arc_lemma5，`arcLen 2.52 2.52 2 ≥ 0.816`. -/
+private theorem arc_lemma5_num : arcLen 2.52 2.52 2 ≥ 0.816 := by
+  obtain ⟨_, e2⟩ := arcLen_num_eqs
+  have h := cos_816_ge_2719_3969
+  have h3 : Real.arccos (Real.cos (204 / 250)) ≤ Real.arccos (2719 / 3969) :=
+    Real.arccos_le_arccos h
+  rw [Real.arccos_cos (by norm_num) (by linarith [Real.pi_gt_three])] at h3
+  rw [e2]
+  linarith
+
+
+/-! ===== 件①：cosine law（arcV 折算 arcLen）===== -/
+
+/-- 线性代数核：`2(v·w) = ‖v‖² + ‖w‖² − ‖v−w‖²`（恒真，无范围前提）. -/
+private theorem dot_eq_two_norm (v w : V3) :
+    (v ⬝ᵥ w) * 2 = ‖v‖ ^ 2 + ‖w‖ ^ 2 - ‖v - w‖ ^ 2 := by
+  have hv : inner ℝ v v = ‖v‖ ^ 2 := real_inner_self_eq_norm_sq v
+  have hw : inner ℝ w w = ‖w‖ ^ 2 := real_inner_self_eq_norm_sq w
+  have hd : inner ℝ (v - w) (v - w) = ‖v - w‖ ^ 2 := real_inner_self_eq_norm_sq (v - w)
+  have hc : inner ℝ v w = inner ℝ w v := real_inner_comm w v
+  have hed : inner ℝ (v - w) (v - w)
+      = inner ℝ v v - inner ℝ v w - inner ℝ w v + inner ℝ w w := by
+    rw [inner_sub_left, inner_sub_right, inner_sub_right]
+    ring
+  have hid : inner ℝ v w = v ⬝ᵥ w := inner_eq_dot v w
+  linarith
+
+/-- 件①：cosine law。`arcV 0 v w = arcLen ‖v‖ ‖w‖ (dist v w)`（纯算术恒等，
+无范围前提——零向量两侧同为 junk 值）. -/
+private theorem arcV_eq_arcLen (v w : V3) :
+    arcV 0 v w = arcLen ‖v‖ ‖w‖ (dist v w) := by
+  rw [arcV, arcLen, dist_zero_right, dist_zero_right, dist_eq_norm]
+  refine congrArg Real.arccos ?_
+  have hl : ((v - (0:V3)) ⬝ᵥ (w - (0:V3))) = v ⬝ᵥ w := by
+    rw [← inner_eq_dot, ← inner_eq_dot]
+    simp
+  rw [hl]
+  have hkey : (v ⬝ᵥ w) * (2 * ‖v‖ * ‖w‖)
+      = (‖v‖ * ‖v‖ + ‖w‖ * ‖w‖ - ‖v - w‖ * (‖v - w‖)) * (‖w‖ * ‖v‖) := by
+    calc (v ⬝ᵥ w) * (2 * ‖v‖ * ‖w‖) = ((v ⬝ᵥ w) * 2) * (‖v‖ * ‖w‖) := by ring
+      _ = (‖v‖ ^ 2 + ‖w‖ ^ 2 - ‖v - w‖ ^ 2) * (‖v‖ * ‖w‖) := by rw [dot_eq_two_norm]
+      _ = (‖v‖ * ‖v‖ + ‖w‖ * ‖w‖ - ‖v - w‖ * (‖v - w‖)) * (‖w‖ * ‖v‖) := by ring
+  by_cases h0 : ‖w‖ * ‖v‖ = 0
+  · rcases mul_eq_zero.mp h0 with hc | hc <;>
+      [rw [norm_eq_zero.mp hc]; rw [norm_eq_zero.mp hc]] <;> simp
+  · have hvn : ‖v‖ ≠ 0 := fun hc => h0 (by rw [hc, mul_zero])
+    have hwn : ‖w‖ ≠ 0 := fun hc => h0 (by rw [hc, zero_mul])
+    have h2vn : (2:ℝ) * ‖v‖ ≠ 0 := mul_ne_zero (by norm_num) hvn
+    refine div_eq_div_iff (mul_ne_zero hvn hwn) (mul_ne_zero h2vn hwn) |>.mpr ?_
+    exact hkey.trans (by ring)
+
+/-- 件②：arc_lemma1（arccos antitone）：`arcLen a b 2 ≤ arcLen a b c`. -/
+private theorem arc_lemma1 {a b c : ℝ} (ha : 2 ≤ a) (hb : 2 ≤ b) (hc : 2 ≤ c) :
+    arcLen a b 2 ≤ arcLen a b c := by
+  have h2ab : (0:ℝ) < 2 * a * b := by nlinarith
+  have hc4 : (4:ℝ) ≤ c * c := by nlinarith
+  refine Real.arccos_le_arccos ?_
+  exact div_le_div_of_nonneg_right (by linarith) h2ab.le
+
+/-! ===== 件③④：φ-机器、凹性、单调性 ===== -/
+
+private noncomputable def arcPhi (b t : ℝ) : ℝ := (t * t + (b * b - 4)) / (2 * b * t)
+private noncomputable def arcPhiD (b t : ℝ) : ℝ := (t * t - (b * b - 4)) / (2 * b * (t * t))
+private noncomputable def arcPhiDD (b t : ℝ) : ℝ := (b * b - 4) / (b * t * t * t)
+
+private theorem hasDerivAt_arcPhi (b t : ℝ) (hb : b ≠ 0) (ht : t ≠ 0) :
+    HasDerivAt (fun x => arcPhi b x) (arcPhiD b t) t := by
+  have h2bt : (2:ℝ) * b * t ≠ 0 := mul_ne_zero (mul_ne_zero (by norm_num) hb) ht
+  have h1 : HasDerivAt (fun t => t * t + (b * b - 4)) (2 * t) t :=
+    (((hasDerivAt_id t).mul (hasDerivAt_id t)).congr_deriv
+      (show 1 * t + t * 1 = 2 * t by ring)).add (hasDerivAt_const t (b * b - 4))
+    |>.congr_deriv (show 2 * t + 0 = 2 * t by ring)
+  have h2 : HasDerivAt (fun t => 2 * b * t) (2 * b) t :=
+    ((hasDerivAt_const t (2 * b)).mul (hasDerivAt_id t)).congr_deriv
+      (show 0 * id t + 2 * b * 1 = 2 * b by ring)
+  have h := h1.fun_div h2 h2bt
+  rw [show ((2 * t * (2 * b * t) - (t * t + (b * b - 4)) * (2 * b)) / (2 * b * t) ^ 2)
+      = (t * t - (b * b - 4)) / (2 * b * (t * t)) by
+    rw [div_eq_div_iff (pow_ne_zero 2 (mul_ne_zero (mul_ne_zero (by norm_num) hb) ht))
+      (mul_ne_zero (mul_ne_zero (by norm_num) hb) (mul_ne_zero ht ht))]
+    ring] at h
+  exact h
+
+private theorem hasDerivAt_arcPhiD (b t : ℝ) (hb : b ≠ 0) (ht : t ≠ 0) :
+    HasDerivAt (fun x => arcPhiD b x) (arcPhiDD b t) t := by
+  have hbtt : 2 * b * (t * t) ≠ 0 :=
+    mul_ne_zero (mul_ne_zero (by norm_num) hb) (mul_ne_zero ht ht)
+  have hbttt : b * t * t * t ≠ 0 :=
+    mul_ne_zero (mul_ne_zero (mul_ne_zero hb ht) ht) ht
+  have h1 : HasDerivAt (fun t => t * t - (b * b - 4)) (2 * t) t :=
+    (((hasDerivAt_id t).mul (hasDerivAt_id t)).congr_deriv
+      (show 1 * t + t * 1 = 2 * t by ring)).sub (hasDerivAt_const t (b * b - 4))
+    |>.congr_deriv (show 2 * t - 0 = 2 * t by ring)
+  have hA : HasDerivAt (fun t => t * t) (2 * t) t :=
+    ((hasDerivAt_id t).mul (hasDerivAt_id t)).congr_deriv
+      (show 1 * t + t * 1 = 2 * t by ring)
+  have h2 : HasDerivAt (fun t => 2 * b * (t * t)) (4 * b * t) t :=
+    (HasDerivAt.const_mul (2 * b) hA).congr_deriv
+      (show (2:ℝ) * b * (2 * t) = 4 * b * t by ring)
+  have h := h1.fun_div h2 hbtt
+  rw [show ((2 * t * (2 * b * (t * t)) - (t * t - (b * b - 4)) * (4 * b * t))
+        / (2 * b * (t * t)) ^ 2) = (b * b - 4) / (b * t * t * t) by
+    rw [div_eq_div_iff (pow_ne_zero 2 hbtt) hbttt]
+    ring] at h
+  exact h
+
+/-- `arcPhi b t ∈ (0, 1)` 对 `b, t ∈ [2, 2.52]`（Cauchy–Schwarz 形）. -/
+private theorem arcPhi_mem_Ioo (hb : 2 ≤ b) (hb' : b ≤ 2.52) (ht : 2 ≤ t) (ht' : t ≤ 2.52) :
+    arcPhi b t ∈ Set.Ioo (0:ℝ) 1 := by
+  have hpos : (0:ℝ) < 2 * b * t := by nlinarith
+  have hnum : (0:ℝ) < t * t + (b * b - 4) := by
+    have h1 : (4:ℝ) ≤ t * t := by nlinarith
+    have h2 : (4:ℝ) ≤ b * b := by nlinarith
+    linarith
+  have hsb : (t - b) ^ 2 < 4 := by
+    have q1 : -(2:ℝ) < t - b := by linarith
+    have q2 : t - b < 2 := by linarith
+    refine lt_of_lt_of_eq (sq_lt_sq' q1 q2) ?_
+    norm_num
+  constructor
+  · unfold arcPhi
+    exact div_pos hnum hpos
+  · unfold arcPhi
+    rw [div_lt_iff₀ hpos]
+    nlinarith
+
+
+/-! ### 件③：凹性（arcLen x b 2 对 x 凹） -/
+
+private theorem concaveOn_arcLen_x {b : ℝ} (hb : 2 ≤ b) (hb' : b ≤ 2.52) :
+    ConcaveOn ℝ (Set.Icc 2 2.52) (fun x => arcLen x b 2) := by
+  have hb0 : (b:ℝ) ≠ 0 := fun hc => absurd (hb.trans_eq hc) (by norm_num)
+  have hmem : ∀ t ∈ Set.Icc 2 2.52, arcPhi b t ∈ Set.Ioo (0:ℝ) 1 :=
+    fun t ht => arcPhi_mem_Ioo hb hb' ht.1 ht.2
+  have hd1 : ∀ t ∈ Set.Icc 2 2.52, HasDerivAt (arcPhi b) (arcPhiD b t) t :=
+    fun t ht => hasDerivAt_arcPhi b t hb0 (by linarith [ht.1])
+  have hd2 : ∀ t ∈ Set.Icc 2 2.52, HasDerivAt (arcPhiD b) (arcPhiDD b t) t :=
+    fun t ht => hasDerivAt_arcPhiD b t hb0 (by linarith [ht.1])
+  have hf'has : ∀ t ∈ Set.Icc 2 2.52,
+      HasDerivAt (fun x => arcLen x b 2)
+        (-(arcPhiD b t) / Real.sqrt (1 - arcPhi b t * arcPhi b t)) t := by
+    intro t ht
+    have hc : HasDerivAt (fun x => Real.arccos (arcPhi b x))
+        (-(1 / Real.sqrt (1 - arcPhi b t ^ 2)) * arcPhiD b t) t :=
+      (Real.hasDerivAt_arccos (by linarith [(hmem t ht).1]) (hmem t ht).2.ne).comp t
+        (hd1 t ht)
+    have hfe : (fun x => arcLen x b 2)
+        = (fun x => Real.arccos (arcPhi b x)) := by
+      funext x
+      unfold arcLen arcPhi
+      congr 1
+      ring
+    rw [hfe]
+    exact hc.congr_deriv (show -(1 / Real.sqrt (1 - arcPhi b t ^ 2)) * arcPhiD b t
+      = -(arcPhiD b t) / Real.sqrt (1 - arcPhi b t * arcPhi b t) by ring)
+  have hf''has : ∀ t ∈ Set.Icc 2 2.52,
+      HasDerivAt (fun x => -(arcPhiD b x) / Real.sqrt (1 - arcPhi b x * arcPhi b x))
+        ((-(arcPhiDD b t) * Real.sqrt (1 - arcPhi b t * arcPhi b t)
+          - (-(arcPhiD b t))
+            * (1 / (2 * Real.sqrt (1 - arcPhi b t * arcPhi b t))
+              * -(2 * arcPhi b t * arcPhiD b t)))
+        / (Real.sqrt (1 - arcPhi b t * arcPhi b t)) ^ 2) t := by
+    intro t ht
+    have hWpos : 0 < 1 - arcPhi b t * arcPhi b t := by
+      have h2 := hmem t ht
+      have hsq : arcPhi b t ^ 2 < 1 ^ 2 :=
+        sq_lt_sq' (by linarith [(hmem t ht).1]) (hmem t ht).2
+      rw [show (1:ℝ) ^ 2 = 1 by norm_num] at hsq
+      nlinarith [hsq]
+    have hWne : 1 - arcPhi b t * arcPhi b t ≠ 0 := ne_of_gt hWpos
+    have hu : HasDerivAt (fun x => -(arcPhiD b x)) (-(arcPhiDD b t)) t := (hd2 t ht).neg
+    have hW' : HasDerivAt (fun x => 1 - arcPhi b x * arcPhi b x)
+        (-(2 * arcPhi b t * arcPhiD b t)) t :=
+      ((hasDerivAt_const t 1).sub ((hd1 t ht).mul (hd1 t ht))).congr_deriv
+        (show 0 - (arcPhiD b t * arcPhi b t + arcPhi b t * arcPhiD b t)
+          = -(2 * arcPhi b t * arcPhiD b t) by ring)
+    have hs : HasDerivAt (fun x => Real.sqrt (1 - arcPhi b x * arcPhi b x))
+        (1 / (2 * Real.sqrt (1 - arcPhi b t * arcPhi b t))
+          * -(2 * arcPhi b t * arcPhiD b t)) t :=
+      (Real.hasDerivAt_sqrt hWne).comp t hW'
+    exact hu.fun_div hs (ne_of_gt (Real.sqrt_pos.mpr hWpos))
+  have hf''neg : ∀ t ∈ Set.Icc 2 2.52,
+      ((-(arcPhiDD b t) * Real.sqrt (1 - arcPhi b t * arcPhi b t)
+          - (-(arcPhiD b t))
+            * (1 / (2 * Real.sqrt (1 - arcPhi b t * arcPhi b t))
+              * -(2 * arcPhi b t * arcPhiD b t)))
+        / (Real.sqrt (1 - arcPhi b t * arcPhi b t)) ^ 2) ≤ 0 := by
+    intro t ht
+    have hWpos : 0 < 1 - arcPhi b t * arcPhi b t := by
+      have h2 := hmem t ht
+      have hsq : arcPhi b t ^ 2 < 1 ^ 2 :=
+        sq_lt_sq' (by linarith [(hmem t ht).1]) (hmem t ht).2
+      rw [show (1:ℝ) ^ 2 = 1 by norm_num] at hsq
+      nlinarith [hsq]
+    have hsWpos : (0:ℝ) < Real.sqrt (1 - arcPhi b t * arcPhi b t) :=
+      Real.sqrt_pos.mpr hWpos
+    have hphi := hmem t ht
+    have hphiDpos : (0:ℝ) < arcPhiD b t := by
+      unfold arcPhiD
+      have tt : (4:ℝ) ≤ t * t := by
+        have h2 : (2:ℝ) ^ 2 ≤ t ^ 2 := sq_le_sq' (by linarith [ht.1]) ht.1
+        have he : t ^ 2 = t * t := pow_two t
+        rw [he] at h2
+        linarith [h2, (show (2:ℝ) ^ 2 = 4 by norm_num)]
+      have bb : b * b ≤ 2.52 * 2.52 := by
+        have h2 : b ^ 2 ≤ (2.52:ℝ) ^ 2 := sq_le_sq' (by linarith) hb'
+        have he : b ^ 2 = b * b := pow_two b
+        rw [he] at h2
+        linarith [h2, (show (2.52:ℝ) ^ 2 = 6.3504 by norm_num)]
+      exact div_pos (by linarith [tt, bb])
+        (mul_pos (show (0:ℝ) < 2 * b by linarith)
+          (show (0:ℝ) < t * t by linarith [tt]))
+    have hphiDDnn : 0 ≤ arcPhiDD b t := by
+      unfold arcPhiDD
+      have h22 : (2:ℝ) ≤ b := hb
+      have k1 : (4:ℝ) ≤ 2 * b := by
+        have h := mul_le_mul_of_nonneg_left h22 (show (0:ℝ) ≤ 2 by norm_num)
+        rwa [show (2:ℝ) * 2 = 4 by norm_num] at h
+      have k2 : (2:ℝ) * b ≤ b * b :=
+        mul_le_mul_of_nonneg_right h22 (show (0:ℝ) ≤ b by linarith)
+      have hbb : (4:ℝ) ≤ b * b := le_trans k1 k2
+      exact div_nonneg (sub_nonneg.mpr hbb)
+        (le_of_lt (mul_pos (mul_pos (mul_pos (by linarith) (by linarith [ht.1]))
+          (by linarith [ht.1])) (by linarith [ht.1])))
+    rw [Real.sq_sqrt hWpos.le, div_le_iff₀ hWpos, zero_mul]
+    have h1 : -(arcPhiDD b t) * Real.sqrt (1 - arcPhi b t * arcPhi b t) ≤ 0 :=
+      mul_nonpos_of_nonpos_of_nonneg (neg_nonpos.mpr hphiDDnn) hsWpos.le
+    have h2 : -(arcPhiD b t)
+        * (1 / (2 * Real.sqrt (1 - arcPhi b t * arcPhi b t))
+          * -(2 * arcPhi b t * arcPhiD b t)) ≥ 0 := by
+      have h2p : (0:ℝ) ≤ 2 * arcPhi b t * arcPhiD b t :=
+        mul_nonneg (mul_nonneg (by norm_num) (le_of_lt hphi.1)) (le_of_lt hphiDpos)
+      have h2s : (0:ℝ) < 2 * Real.sqrt (1 - arcPhi b t * arcPhi b t) :=
+        mul_pos (show (0:ℝ) < 2 by norm_num) hsWpos
+      have hinner : (1 / (2 * Real.sqrt (1 - arcPhi b t * arcPhi b t))
+          * -(2 * arcPhi b t * arcPhiD b t)) ≤ 0 :=
+        mul_nonpos_of_nonneg_of_nonpos (le_of_lt (div_pos (by norm_num) h2s))
+          (neg_nonpos.mpr h2p)
+      exact mul_nonneg_of_nonpos_of_nonpos (neg_nonpos.mpr (le_of_lt hphiDpos)) hinner
+    linarith
+  refine concaveOn_of_hasDerivWithinAt2_nonpos (D := Set.Icc 2 2.52)
+    (f := fun x => arcLen x b 2)
+    (f' := fun x => -(arcPhiD b x) / Real.sqrt (1 - arcPhi b x * arcPhi b x))
+    (f'' := fun x => ((-(arcPhiDD b x) * Real.sqrt (1 - arcPhi b x * arcPhi b x)
+      - (-(arcPhiD b x)) * (1 / (2 * Real.sqrt (1 - arcPhi b x * arcPhi b x))
+        * -(2 * arcPhi b x * arcPhiD b x)))
+      / (Real.sqrt (1 - arcPhi b x * arcPhi b x)) ^ 2))
+    (convex_Icc 2 2.52) ?_ ?_ ?_ ?_
+  · have hd : DifferentiableOn ℝ (arcPhi b) (Set.Icc 2 2.52) :=
+      fun t ht => (hd1 t ht).differentiableAt.differentiableWithinAt
+    refine (Real.continuous_arccos.continuousOn.comp hd.continuousOn
+      (fun t _ => Set.mem_univ _)).congr (fun x _ => ?_)
+    show arcLen x b 2 = Real.arccos (arcPhi b x)
+    unfold arcLen arcPhi
+    congr 1
+    ring
+  · intro t ht
+    have ht' : t ∈ Set.Ioo 2 2.52 := by rw [← interior_Icc]; exact ht
+    exact HasDerivAt.hasDerivWithinAt (s := interior (Set.Icc (2:ℝ) 2.52))
+      (hf'has t ⟨ht'.1.le, ht'.2.le⟩)
+  · intro t ht
+    have ht' : t ∈ Set.Ioo 2 2.52 := by rw [← interior_Icc]; exact ht
+    exact HasDerivAt.hasDerivWithinAt (s := interior (Set.Icc (2:ℝ) 2.52))
+      (hf''has t ⟨ht'.1.le, ht'.2.le⟩)
+  · intro t ht
+    have ht' : t ∈ Set.Ioo 2 2.52 := by rw [← interior_Icc]; exact ht
+    exact hf''neg t ⟨ht'.1.le, ht'.2.le⟩
+
+/-! ### 件③b：arc_lemma3（lmfun 插值下界，HOL arc_properties.hl:720） -/
+
+-- 注记：本节自带两枚 lmfun 辅助件副本（`lmfun_nonneg`/`lmfun_le_one_of_one_le`
+-- 在本文件 §7b :2114 声明，位于本节之后，前向引用不可用，故改名自带）。
+private theorem arc_lmfun_nonneg (h : ℝ) : 0 ≤ lmfun h := by
+  have h0126 : h0 = 1.26 := rfl
+  unfold lmfun
+  split
+  · next hh =>
+    exact div_nonneg (sub_nonneg.mpr hh) (sub_nonneg.mpr (by rw [h0126]; norm_num))
+  · next => exact le_refl 0
+
+private theorem arc_lmfun_le_one {h : ℝ} (hh : 1 ≤ h) : lmfun h ≤ 1 := by
+  have h0126 : h0 = 1.26 := rfl
+  unfold lmfun
+  split
+  · next hhle =>
+    have hd : (0:ℝ) < h0 - 1 := by rw [h0126]; norm_num
+    rw [div_le_one hd]
+    linarith
+  · next => linarith
+
+/-- 件③b：`arcLen x b 2 ≥ arcLen 2.52 b 2 + lmfun(x/2)·(arcLen 2 b 2 − arcLen 2.52 b 2)`
+（凹性 + 插值恒等式 `lmfun(x/2)·2 + (1−lmfun(x/2))·2.52 = x`，lmfun 递减形
+`(h0−h)/(h0−1)` 使权重对齐）. -/
+private theorem arc_lemma3 {x b : ℝ} (hx : 2 ≤ x) (hx' : x ≤ 2.52)
+    (hb : 2 ≤ b) (hb' : b ≤ 2.52) :
+    arcLen 2.52 b 2 + lmfun (x / 2) * (arcLen 2 b 2 - arcLen 2.52 b 2) ≤ arcLen x b 2 := by
+  have hconc := concaveOn_arcLen_x hb hb'
+  have hmem2 : (2:ℝ) ∈ Set.Icc 2 2.52 := ⟨le_refl 2, by norm_num⟩
+  have hmem252 : (2.52:ℝ) ∈ Set.Icc 2 2.52 := ⟨by norm_num, le_refl 2.52⟩
+  have h01 : h0 = (1.26:ℝ) := rfl
+  have hxs : x / 2 ≤ h0 := by linarith
+  have hu01 : 0 ≤ lmfun (x / 2) := arc_lmfun_nonneg _
+  have hu1 : lmfun (x / 2) ≤ 1 := arc_lmfun_le_one (by linarith)
+  have huxt : lmfun (x / 2) * 2 + (1 - lmfun (x / 2)) * 2.52 = x := by
+    have hp : (0:ℝ) < h0 - 1 := by rw [h01]; norm_num
+    unfold lmfun
+    rw [if_pos hxs, h01]
+    field_simp
+    ring
+  have hinterp : (lmfun (x / 2)) • arcLen 2 b 2
+      + (1 - lmfun (x / 2)) • arcLen 2.52 b 2
+      ≤ arcLen (lmfun (x / 2) • 2 + (1 - lmfun (x / 2)) • 2.52) b 2 :=
+    hconc.2 hmem2 hmem252 hu01 (by linarith) (by ring)
+  simp only [smul_eq_mul] at hinterp
+  rw [huxt] at hinterp
+  have hrearr : lmfun (x / 2) * arcLen 2 b 2 + (1 - lmfun (x / 2)) * arcLen 2.52 b 2
+      = arcLen 2.52 b 2 + lmfun (x / 2) * (arcLen 2 b 2 - arcLen 2.52 b 2) := by
+    ring
+  rw [hrearr] at hinterp
+  exact hinterp
+
+/-! ### 件④：arc_lemma4（F 单调 + estimate0 链） -/
+
+/-- `arcPhi 2 t = t / 4`（退化形）. -/
+private theorem arcPhi_2_eq (t : ℝ) (ht : t ≠ 0) : arcPhi 2 t = t / 4 := by
+  unfold arcPhi
+  field_simp
+  ring
+
+/-- `arcPhiD 2 t = 1 / 4`. -/
+private theorem arcPhiD_2_eq (t : ℝ) (ht : t ≠ 0) : arcPhiD 2 t = 1 / 4 := by
+  unfold arcPhiD
+  field_simp
+  ring
+
+/-- arcLen x b 2 对 x 的导数（件④用）. -/
+private theorem hasDerivAt_arcLen_x (b t : ℝ) (hb : 2 ≤ b) (hb' : b ≤ 2.52)
+    (ht : 2 ≤ t) (ht' : t ≤ 2.52) :
+    HasDerivAt (fun x => arcLen x b 2)
+      (-(arcPhiD b t) / Real.sqrt (1 - arcPhi b t * arcPhi b t)) t := by
+  have hphi : HasDerivAt (arcPhi b) (arcPhiD b t) t :=
+    hasDerivAt_arcPhi b t (by linarith) (by linarith)
+  have hmem : arcPhi b t ∈ Set.Ioo (0:ℝ) 1 := arcPhi_mem_Ioo hb hb' ht ht'
+  have hc : HasDerivAt (fun x => Real.arccos (arcPhi b x))
+      (-(1 / Real.sqrt (1 - arcPhi b t ^ 2)) * arcPhiD b t) t :=
+    (Real.hasDerivAt_arccos (by linarith [hmem.1]) hmem.2.ne).comp t hphi
+  have hfe : (fun x => arcLen x b 2) = (fun x => Real.arccos (arcPhi b x)) := by
+    funext x
+    unfold arcLen arcPhi
+    congr 1
+    ring
+  rw [hfe]
+  exact hc.congr_deriv (show -(1 / Real.sqrt (1 - arcPhi b t ^ 2)) * arcPhiD b t
+    = -(arcPhiD b t) / Real.sqrt (1 - arcPhi b t * arcPhi b t) by ring)
+
+/-- 件④：arc_lemma4。`arcLen 2 x 2 − arcLen 2.52 x 2 ≥ 0.073`. -/
+private theorem arc_lemma4 {x : ℝ} (hx : 2 ≤ x) (hx' : x ≤ 2.52) :
+    0.073 ≤ arcLen 2 x 2 - arcLen 2.52 x 2 := by
+  have hx0 : (x:ℝ) ≠ 0 := by linarith
+  have htt : (4:ℝ) ≤ x * x := by nlinarith [hx]
+  have htt' : x * x ≤ 6.3504 := by
+    have hx2 : (0:ℝ) ≤ x := by linarith
+    have k1 : x * x ≤ x * 2.52 := mul_le_mul_of_nonneg_left hx' hx2
+    have k2 : x * 2.52 ≤ (2.52:ℝ) * 2.52 := mul_le_mul_of_nonneg_right hx' (by norm_num)
+    have he2 : (2.52:ℝ) * 2.52 = 6.3504 := by norm_num
+    calc x * x ≤ x * 2.52 := k1
+      _ ≤ (2.52:ℝ) * 2.52 := k2
+      _ = 6.3504 := he2
+  have hmono : MonotoneOn (fun t => arcLen t 2.52 2 - arcLen t 2 2) (Set.Icc 2 2.52) := by
+    refine monotoneOn_of_deriv_nonneg (convex_Icc 2 2.52) ?_ ?_ ?_
+    · intro t ht
+      have ht2 : (2:ℝ) ≤ t := ht.1
+      have hd1 : DifferentiableAt ℝ (fun u => arcLen u 2.52 2) t :=
+        (hasDerivAt_arcLen_x 2.52 t (by norm_num) (by norm_num) ht2 ht.2).differentiableAt
+      have hd2 : DifferentiableAt ℝ (fun u => arcLen u 2 2) t :=
+        (hasDerivAt_arcLen_x 2 t (by norm_num) (by norm_num) ht2 ht.2).differentiableAt
+      exact (hd1.sub hd2).continuousAt.continuousWithinAt
+    · intro t ht
+      have ht' : t ∈ Set.Ioo 2 2.52 := by rw [← interior_Icc]; exact ht
+      have ht2 : (2:ℝ) ≤ t := by linarith [ht'.1]
+      have hbm : (2:ℝ) ≤ 2.52 := by norm_num
+      exact DifferentiableAt.differentiableWithinAt
+        (s := interior (Set.Icc (2:ℝ) 2.52))
+        (((hasDerivAt_arcLen_x 2.52 t hbm (by norm_num) ht2 ht'.2.le).differentiableAt).sub
+          ((hasDerivAt_arcLen_x 2 t (by norm_num) hbm ht2 ht'.2.le).differentiableAt))
+    · intro t ht
+      have ht' : t ∈ Set.Ioo 2 2.52 := by rw [← interior_Icc]; exact ht
+      have ht2 : (2:ℝ) ≤ t := by linarith [ht'.1]
+      have ht2' : t ≤ 2.52 := ht'.2.le
+      have hD1le : arcPhiD 2.52 t ≤ 13 / 100 := by
+        unfold arcPhiD
+        rw [div_le_iff₀ (by nlinarith [ht2, ht2'])]
+        nlinarith [ht2, ht2']
+      have hphi0 : 0 < arcPhi 2.52 t := by
+        unfold arcPhi
+        have hnum : (0:ℝ) < t * t + (2.52 * 2.52 - 4) := by
+          have h1 : (4:ℝ) ≤ t * t := by nlinarith [ht2]
+          linarith
+        exact div_pos hnum (by nlinarith [ht2, ht2'])
+      have hphi34 : arcPhi 2.52 t ≤ 3 / 4 := by
+        unfold arcPhi
+        rw [div_le_iff₀ (by nlinarith [ht2, ht2'])]
+        have hp : (t - 2) * (t - 2.52) ≤ 0 := by nlinarith [ht2, ht2']
+        have hgoal : t * t + (2.52 * 2.52 - 4) - (3 / 4) * (2 * 2.52 * t) ≤ 0 := by
+          have hexp : t * t + (2.52 * 2.52 - 4) - (3 / 4) * (2 * 2.52 * t)
+              = (t - 2) * (t - 2.52) + 0.74 * t - 2.6896 := by ring
+          rw [hexp]
+          nlinarith [hp, ht2, ht2']
+        linarith [hgoal]
+      have hW : (1:ℝ) / 4 ≤ 1 - arcPhi 2.52 t * arcPhi 2.52 t := by
+        have hsq : arcPhi 2.52 t * arcPhi 2.52 t ≤ arcPhi 2.52 t * (3 / 4) :=
+          mul_le_mul_of_nonneg_left hphi34 (le_of_lt hphi0)
+        linarith [hsq, hphi34]
+      have hs12 : (1:ℝ) / 2 ≤ Real.sqrt (1 - arcPhi 2.52 t * arcPhi 2.52 t) := by
+        have hsq1 : ((1:ℝ) / 2) ^ 2 = 1 / 4 := by norm_num
+        exact (Real.le_sqrt (by norm_num) (by linarith [hW])).mpr (by
+          rw [hsq1]; exact hW)
+      have hs1pos : (0:ℝ) < Real.sqrt (1 - arcPhi 2.52 t * arcPhi 2.52 t) :=
+        lt_of_lt_of_le (by norm_num) hs12
+      have ht0 : t ≠ 0 := by linarith [ht'.1]
+      have hF : HasDerivAt (fun u => arcLen u 2.52 2 - arcLen u 2 2)
+          (-(arcPhiD 2.52 t) / Real.sqrt (1 - arcPhi 2.52 t * arcPhi 2.52 t)
+            - -(arcPhiD 2 t) / Real.sqrt (1 - arcPhi 2 t * arcPhi 2 t)) t :=
+        (hasDerivAt_arcLen_x 2.52 t (by norm_num) (by norm_num) ht2 ht2').sub
+          (hasDerivAt_arcLen_x 2 t (by norm_num) (by norm_num) ht2 ht2')
+      rw [hF.deriv, arcPhiD_2_eq t ht0, arcPhi_2_eq t ht0]
+      simp only [neg_div]
+      have hu : (arcPhiD 2.52 t) / Real.sqrt (1 - arcPhi 2.52 t * arcPhi 2.52 t)
+          ≤ 13 / 50 := by
+        rw [div_le_iff₀ hs1pos]
+        calc arcPhiD 2.52 t ≤ 13 / 100 := hD1le
+          _ = (13 / 50) * (1 / 2) := by norm_num
+          _ ≤ (13 / 50) * Real.sqrt (1 - arcPhi 2.52 t * arcPhi 2.52 t) :=
+            mul_le_mul_of_nonneg_left hs12 (by norm_num)
+      have hv : (7:ℝ) / 25 ≤ (1:ℝ) / 4 / Real.sqrt (1 - (t / 4) * (t / 4)) := by
+        have hs2pos : (0:ℝ) < Real.sqrt (1 - (t / 4) * (t / 4)) :=
+          Real.sqrt_pos.mpr (by nlinarith [htt])
+        have hq28 : Real.sqrt (1 - (t / 4) * (t / 4)) ≤ 25 / 28 := by
+          refine (Real.sqrt_le_left (by positivity)).mpr ?_
+          nlinarith [htt]
+        rw [le_div_iff₀ hs2pos]
+        have hmul : (7:ℝ) / 25 * Real.sqrt (1 - (t / 4) * (t / 4))
+            ≤ (7:ℝ) / 25 * (25 / 28) := mul_le_mul_of_nonneg_left hq28 (by norm_num)
+        exact hmul.trans (by norm_num)
+      linarith
+  have hFge := hmono ⟨hx, hx'⟩ ⟨by norm_num, le_refl 2.52⟩ (le_trans hx' (by norm_num))
+  have hE' : arcLen 2.52 2 2 - arcLen 2.52 2.52 2 ≥ 0.073 := by
+    rw [← arcLen_sym 2 2.52 2]
+    exact estimate0
+  rw [arcLen_sym 2 x 2, arcLen_sym 2.52 x 2]
+  linarith
+
+
+/-! ### 帽石装配：face 轨道 fst/snd 和互换（HOL FACE_SUM_lemma 的鸽笼路线，
+绕开 SUM_ORBIT 的轨道周期性（WRGCVDR 内容）） -/
+
+private theorem arc_two_le_norm_of_mem_ballAnnulus {v : V3} (hv : v ∈ ballAnnulus) :
+    2 ≤ ‖v‖ := by
+  simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball] at hv
+  push_neg at hv
+  have h2 : dist v 0 = ‖v‖ := by rw [dist_eq_norm, sub_zero]
+  linarith [h2]
+
+/-- HOL `SUM_LE`：有限集上逐点 ≤ ⟹ 和 ≤（setSum 对 setSum 版单调性；
+`setSum_le_of_le` 是对 `card * c` 的形状，不适用）. -/
+private theorem setSum_mono_pt {α : Type*} {s : Set α} {g h : α → ℝ}
+    (hs : s.Finite) (hle : ∀ y ∈ s, g y ≤ h y) : setSum s g ≤ setSum s h := by
+  rw [setSum, setSum, dif_pos hs, dif_pos hs]
+  exact Finset.sum_le_sum (fun y hy => hle y ((Set.Finite.mem_toFinset hs).mp hy))
+
+/-- face 轨道上的和换元：`Σ g(snd) = Σ g(fst)`。faceMap 限制在 face 轨道上
+是单射自映射（`faceMap d.1 = d.2`），有限集上单射自映射满（鸽笼），
+故可整体重排——不需要轨道周期性。 -/
+private theorem face_sum_snd_eq_fst (hfan : FAN 0 V E) {x : V3 × V3}
+    (hx : x ∈ (hypermapOfFanTl V E hfan).darts) (g : V3 → ℝ) :
+    setSum ((hypermapOfFanTl V E hfan).face x) (fun d => g d.2)
+      = setSum ((hypermapOfFanTl V E hfan).face x) (fun d => g d.1) := by
+  classical
+  set H := hypermapOfFanTl V E hfan with hHdef
+  have hsubd : ∀ y ∈ H.face x, y ∈ dart1OfFan V E := by
+    intro y hy
+    have hmem := H.face_subset_darts hx hy
+    rwa [dartsTl_coe] at hmem
+  have hffe : (H.face x).Finite := by
+    have hsub := H.face_subset_darts hx
+    rw [dartsTl_coe] at hsub
+    exact (finite_dart1_fan hfan).subset hsub
+  -- 前向封闭：fMap 保持 face 轨道
+  have hfw : ∀ y ∈ (H.face x : Set (V3 × V3)),
+      H.faceMap y ∈ (H.face x : Set (V3 × V3)) := by
+    intro y hy
+    simp only [Hypermap.face, orbitMap, Set.mem_setOf_eq] at hy ⊢
+    obtain ⟨n, hn⟩ := hy
+    exact ⟨n + 1, by
+      rw [Equiv.Perm.coe_pow, Function.iterate_succ_apply', ← Equiv.Perm.coe_pow, hn]⟩
+  rw [setSum, setSum, dif_pos hffe, dif_pos hffe]
+  refine Finset.sum_bij (fun y _ => H.faceMap y) ?_ ?_ ?_ ?_
+  · -- 前向封闭：fMap y ∈ face x
+    intro y hy
+    exact (Set.Finite.mem_toFinset hffe).mpr
+      (hfw y ((Set.Finite.mem_toFinset hffe).mp hy))
+  · intro y _ z _ hcon
+    exact H.faceMap.injective hcon
+  · -- 鸽笼满射：face 上单射自映射的像 = 自身
+    intro z hz
+    have hinjF : Set.InjOn (fun d : V3 × V3 => H.faceMap d)
+        (↑(hffe.toFinset) : Set (V3 × V3)) :=
+      fun a _ b _ hcon => H.faceMap.injective hcon
+    have hcardimg : (hffe.toFinset.image (fun d : V3 × V3 => H.faceMap d)).card
+        = hffe.toFinset.card := Finset.card_image_of_injOn hinjF
+    have himg : hffe.toFinset.image (fun d : V3 × V3 => H.faceMap d)
+        = hffe.toFinset := by
+      refine Finset.eq_of_subset_of_card_le (Finset.image_subset_iff.mpr
+        (fun y hy => ?_)) ?_
+      · exact (Set.Finite.mem_toFinset hffe).mpr
+          (hfw y ((Set.Finite.mem_toFinset hffe).mp hy))
+      · rw [hcardimg]
+    have hzin : z ∈ hffe.toFinset.image (fun d : V3 × V3 => H.faceMap d) := by
+      rw [himg]; exact hz
+    obtain ⟨y, hy, hyz⟩ := Finset.mem_image.mp hzin
+    exact ⟨y, hy, hyz⟩
+  · -- 点态：fMap y 的第一分量 = y 的第二分量
+    intro y hy
+    have hd : y ∈ dart1OfFan V E := hsubd y ((Set.Finite.mem_toFinset hffe).mp hy)
+    show g y.2 = g (H.faceMap y).1
+    rw [faceMapTl_apply hd]
+    rfl
+
+/-! `theorem CRTTXAT` 本体移至 §7c（依赖 §7b 的 `CRTTXAT_lemma1`，文内禁止前向引用）。 -/
 
 /-! ## 7b. HRXEFDM 章（tame/HRXEFDM.hl）与 CRTTXAT 支撑（tame/CRTTXAT.hl:90-225）
 
@@ -2468,6 +3250,202 @@ theorem CRTTXAT_lemma1 (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
       le_of_eq hkey.symm
 
 
+/-! ## 7c. CRTTXAT 帽石装配（tame/CRTTXAT.hl:320-470） -/
+
+/-- HOL `CRTTXAT`（`tame/CRTTXAT.hl:311-320`，assumption 形
+`CRTTXAT_assum`：`(!V. contravening V ==> simple_hypermap …) ==> (!V.
+contravening V /\ perimeterbound (V,ESTD V) ==> tame_9a …)`）。
+DISCHARGES：已真证明（2026-10-12 第二波）：HOL :320-470 的 s1/s2/s3 链逐句
+装配——`arcV_eq_arcLen`（件①）+ `arc_lemma1`（件②）+ `arc_lemma3`（件③，
+凹性插值）+ `arc_lemma4`（件④）+ `estimate0`/`arc_lemma5_num`（件⑤）+
+`CRTTXAT_lemma1`（第一波）+ `face_sum_snd_eq_fst`（FACE_SUM_lemma 的鸽笼路线，
+绕开 SUM_ORBIT 轨道周期性）+ `Real.pi_lt_d4`；3≤card 半边走
+`CARD_FACE_GE_3_TL` + `SURROUNDED_IMP_CARD_SET_OF_EDGE_GE_3_TL`。 -/
+theorem CRTTXAT
+    (hsimple : ∀ (V : Set V3) (hfan : FAN 0 V (ESTD V)),
+      Contravening V → (hypermapOfFanTl V (ESTD V) hfan).Simple)
+    (V : Set V3) (hc : Contravening V) (hfan : FAN 0 V (ESTD V))
+    (hpb : PerimeterBound V (ESTD V) hfan) :
+    Tame9a (hypermapOfFanTl V (ESTD V) hfan) := by
+  classical
+  set H := hypermapOfFanTl V (ESTD V) hfan with hHdef
+  have hpack : Packing V := hc.1
+  -- contravening 的范数/距离界
+  have hnb : ∀ v ∈ V, 2 ≤ ‖v‖ ∧ ‖v‖ ≤ 2.52 := by
+    intro v hv
+    have h2 := arc_two_le_norm_of_mem_ballAnnulus (hc.2.1 hv)
+    refine ⟨h2, ?_⟩
+    have hba : v ∈ ballAnnulus := hc.2.1 hv
+    simp only [ballAnnulus, Set.mem_sdiff, Metric.mem_closedBall] at hba
+    have h52 : (2:ℝ) * h0 = 2.52 := by
+      have h0126 : h0 = (1.26:ℝ) := rfl
+      rw [h0126]; norm_num
+    have hd0 : dist v 0 = ‖v‖ := by rw [dist_eq_norm, sub_zero]
+    linarith [hba.1, h52, hd0]
+  have hdb : ∀ d ∈ dart1OfFan V (ESTD V), 2 ≤ dist d.1 d.2 := by
+    intro d hd
+    have hvV : d.1 ∈ V := (FAN_in_setOfEdge 0 V (ESTD V) d.1 d.2 hfan hd).1
+    have hwV : d.2 ∈ V := (FAN_in_setOfEdge 0 V (ESTD V) d.1 d.2 hfan hd).2.1
+    exact Packing.dist_ge_two hpack hvV hwV (edge_ne_of_fan hfan hd)
+  intro x hx
+  have hxd : x ∈ dart1OfFan V (ESTD V) := dartsTl_mem hx
+  refine ⟨CARD_FACE_GE_3_TL hfan hxd
+    (fun v hv => SURROUNDED_IMP_CARD_SET_OF_EDGE_GE_3_TL hfan hv
+      (hc.2.2.2.2.2.1 v hv)), ?_⟩
+  set f := H.face x with hfeq
+  have hsubd : ∀ y ∈ f, y ∈ dart1OfFan V (ESTD V) := by
+    intro y hy
+    have hmem := H.face_subset_darts hx hy
+    rwa [dartsTl_coe] at hmem
+  have hffe : f.Finite := by
+    have hsub := H.face_subset_darts hx
+    rw [dartsTl_coe] at hsub
+    exact (finite_dart1_fan hfan).subset hsub
+  have hbd : ∀ d ∈ f, 2 ≤ ‖d.1‖ ∧ ‖d.1‖ ≤ 2.52 ∧ 2 ≤ ‖d.2‖ ∧ ‖d.2‖ ≤ 2.52
+      ∧ 2 ≤ dist d.1 d.2 := by
+    intro d hd
+    have hvV : d.1 ∈ V := (FAN_in_setOfEdge 0 V (ESTD V) d.1 d.2 hfan (hsubd d hd)).1
+    have hwV : d.2 ∈ V := (FAN_in_setOfEdge 0 V (ESTD V) d.1 d.2 hfan (hsubd d hd)).2.1
+    exact ⟨(hnb d.1 hvV).1, (hnb d.1 hvV).2, (hnb d.2 hwV).1, (hnb d.2 hwV).2,
+      hdb d (hsubd d hd)⟩
+  have hfset : f ∈ H.faceSet := ⟨x, hx, rfl⟩
+  have hper : setSum f (fun d => arcV 0 d.1 d.2) ≤ 2 * Real.pi := hpb f hfset
+  -- CRTTXAT_lemma1（fst 权重版）+ 换元到 snd 权重版
+  have hbase := CRTTXAT_lemma1 V (ESTD V) hfan (hsimple V hfan hc) hc hfset hffe
+  have hswap := face_sum_snd_eq_fst hfan hx (fun v => lmfun (‖v‖ / 2))
+  have hlm2 : 12 + (f.ncard : ℝ) - (V.ncard : ℝ)
+      ≤ setSum f (fun d => lmfun (‖d.2‖ / 2)) := by
+    rw [hswap]
+    exact hbase
+  -- 主链：s2 + s3 ≤ 2π
+  have hstepA : setSum f (fun d => arcLen 2.52 ‖d.2‖ 2
+        + lmfun (‖d.1‖ / 2) * (arcLen 2 ‖d.2‖ 2 - arcLen 2.52 ‖d.2‖ 2))
+      ≤ setSum f (fun d => arcLen ‖d.1‖ ‖d.2‖ 2) :=
+    setSum_mono_pt hffe (fun d hd =>
+      arc_lemma3 (hbd d hd).1 (hbd d hd).2.1 (hbd d hd).2.2.1 (hbd d hd).2.2.2.1)
+  have hstepB : setSum f (fun d => arcLen ‖d.1‖ ‖d.2‖ 2)
+      ≤ setSum f (fun d => arcLen ‖d.1‖ ‖d.2‖ (dist d.1 d.2)) :=
+    setSum_mono_pt hffe (fun d hd =>
+      arc_lemma1 (hbd d hd).1 (hbd d hd).2.2.1 (hbd d hd).2.2.2.2)
+  have hstepC : setSum f (fun d => arcLen ‖d.1‖ ‖d.2‖ (dist d.1 d.2))
+      = setSum f (fun d => arcV 0 d.1 d.2) := by
+    rw [setSum, setSum, dif_pos hffe, dif_pos hffe]
+    exact Finset.sum_congr rfl (fun d _ => (arcV_eq_arcLen d.1 d.2).symm)
+  have hsplit : setSum f (fun d => arcLen 2.52 ‖d.2‖ 2)
+        + setSum f (fun d => lmfun (‖d.1‖ / 2)
+            * (arcLen 2 ‖d.2‖ 2 - arcLen 2.52 ‖d.2‖ 2))
+      = setSum f (fun d => arcLen 2.52 ‖d.2‖ 2
+          + lmfun (‖d.1‖ / 2) * (arcLen 2 ‖d.2‖ 2 - arcLen 2.52 ‖d.2‖ 2)) := by
+    rw [setSum, setSum, setSum, dif_pos hffe, dif_pos hffe, dif_pos hffe]
+    exact Finset.sum_add_distrib.symm
+  have hchain : setSum f (fun d => arcLen 2.52 ‖d.2‖ 2
+        + lmfun (‖d.1‖ / 2) * (arcLen 2 ‖d.2‖ 2 - arcLen 2.52 ‖d.2‖ 2))
+      ≤ 2 * Real.pi := by
+    calc setSum f (fun d => arcLen 2.52 ‖d.2‖ 2
+          + lmfun (‖d.1‖ / 2) * (arcLen 2 ‖d.2‖ 2 - arcLen 2.52 ‖d.2‖ 2))
+        ≤ setSum f (fun d => arcLen ‖d.1‖ ‖d.2‖ 2) := hstepA
+      _ ≤ setSum f (fun d => arcLen ‖d.1‖ ‖d.2‖ (dist d.1 d.2)) := hstepB
+      _ = setSum f (fun d => arcV 0 d.1 d.2) := hstepC
+      _ ≤ 2 * Real.pi := hper
+  -- s1 ≤ s2（arc_lemma3 在 x = ‖d.2‖ + arc_sym）
+  have hs1s2 : setSum f (fun d => arcLen 2.52 2.52 2
+        + lmfun (‖d.2‖ / 2) * (arcLen 2.52 2 2 - arcLen 2.52 2.52 2))
+      ≤ setSum f (fun d => arcLen 2.52 ‖d.2‖ 2) := by
+    refine setSum_mono_pt hffe (fun d hd => ?_)
+    have hb := (hbd d hd).2.2.1
+    have hb' := (hbd d hd).2.2.2.1
+    have h3 := arc_lemma3 (x := ‖d.2‖) (b := 2.52) hb hb' (by norm_num) (by norm_num)
+    rw [arcLen_sym ‖d.2‖ 2.52 2, arcLen_sym 2 2.52 2] at h3
+    linarith
+  -- s3 下界：lemma1 × arc_lemma4 逐点
+  have hpt4 : ∀ d ∈ f, 0.073 ≤ arcLen 2 ‖d.2‖ 2 - arcLen 2.52 ‖d.2‖ 2 := fun d hd =>
+    arc_lemma4 (hbd d hd).2.2.1 (hbd d hd).2.2.2.1
+  have hs3lo : (12 + (f.ncard : ℝ) - (V.ncard : ℝ)) * 0.073
+      ≤ setSum f (fun d => lmfun (‖d.1‖ / 2)
+          * (arcLen 2 ‖d.2‖ 2 - arcLen 2.52 ‖d.2‖ 2)) := by
+    have hstep1 : setSum f (fun d => lmfun (‖d.1‖ / 2)) * 0.073
+        ≤ setSum f (fun d => lmfun (‖d.1‖ / 2)
+            * (arcLen 2 ‖d.2‖ 2 - arcLen 2.52 ‖d.2‖ 2)) := by
+      rw [setSum, setSum, dif_pos hffe, dif_pos hffe, Finset.sum_mul]
+      exact Finset.sum_le_sum (fun d hd =>
+        mul_le_mul_of_nonneg_left (hpt4 d ((Set.Finite.mem_toFinset hffe).mp hd))
+          (lmfun_nonneg _))
+    calc (12 + (f.ncard : ℝ) - (V.ncard : ℝ)) * 0.073
+        ≤ setSum f (fun d => lmfun (‖d.1‖ / 2)) * 0.073 :=
+          mul_le_mul_of_nonneg_right hbase (by norm_num)
+      _ ≤ setSum f (fun d => lmfun (‖d.1‖ / 2)
+            * (arcLen 2 ‖d.2‖ 2 - arcLen 2.52 ‖d.2‖ 2)) := hstep1
+  -- s1 下界：k·arc + lemma1 × arc_lemma4(2.52)
+  have hpt452 : 0.073 ≤ arcLen 2.52 2 2 - arcLen 2.52 2.52 2 := by
+    have h := arc_lemma4 (x := (2.52:ℝ)) (by norm_num) (by norm_num)
+    rwa [arcLen_sym 2 2.52 2] at h
+  have hs1lo : (f.ncard : ℝ) * arcLen 2.52 2.52 2
+        + (12 + (f.ncard : ℝ) - (V.ncard : ℝ)) * 0.073
+      ≤ setSum f (fun d => arcLen 2.52 2.52 2
+          + lmfun (‖d.2‖ / 2) * (arcLen 2.52 2 2 - arcLen 2.52 2.52 2)) := by
+    have hsplit1 : setSum f (fun d => arcLen 2.52 2.52 2
+          + lmfun (‖d.2‖ / 2) * (arcLen 2.52 2 2 - arcLen 2.52 2.52 2))
+        = setSum f (fun _ : V3 × V3 => arcLen 2.52 2.52 2)
+          + setSum f (fun d => lmfun (‖d.2‖ / 2)
+              * (arcLen 2.52 2 2 - arcLen 2.52 2.52 2)) := by
+      rw [setSum, setSum, setSum, dif_pos hffe, dif_pos hffe, dif_pos hffe]
+      exact Finset.sum_add_distrib
+    have hcard'' : ((hffe.toFinset.card : ℕ) : ℝ) = (f.ncard : ℝ) := by
+      congr 1
+      rw [Set.ncard_eq_toFinset_card f hffe]
+    have hconstsum : setSum f (fun _ : V3 × V3 => arcLen 2.52 2.52 2)
+        = (f.ncard : ℝ) * arcLen 2.52 2.52 2 := by
+      rw [setSum, dif_pos hffe, Finset.sum_const, nsmul_eq_mul, hcard'']
+    have hsplit2 : setSum f (fun d => lmfun (‖d.2‖ / 2)
+            * (arcLen 2.52 2 2 - arcLen 2.52 2.52 2))
+        = setSum f (fun d => lmfun (‖d.2‖ / 2))
+            * (arcLen 2.52 2 2 - arcLen 2.52 2.52 2) := by
+      rw [setSum, setSum, dif_pos hffe, dif_pos hffe, Finset.sum_mul]
+    have hlmw : (12 + (f.ncard : ℝ) - (V.ncard : ℝ)) * 0.073
+        ≤ setSum f (fun d => lmfun (‖d.2‖ / 2)) * 0.073 :=
+      mul_le_mul_of_nonneg_right hlm2 (by norm_num)
+    have hw0 : 0 ≤ setSum f (fun d => lmfun (‖d.2‖ / 2)) := by
+      rw [setSum, dif_pos hffe]
+      exact Finset.sum_nonneg (fun d _ => lmfun_nonneg _)
+    have hstep2 : setSum f (fun d => lmfun (‖d.2‖ / 2)) * 0.073
+        ≤ setSum f (fun d => lmfun (‖d.2‖ / 2))
+            * (arcLen 2.52 2 2 - arcLen 2.52 2.52 2) :=
+      mul_le_mul_of_nonneg_left hpt452 hw0
+    rw [hsplit1, hconstsum, hsplit2]
+    linarith [hlmw, hstep2]
+  -- 合并：k·(arc + 0.146) ≤ 2π + (cardV − 12)·0.146
+  have hfinal : (f.ncard : ℝ) * (arcLen 2.52 2.52 2 + 0.146)
+      ≤ 2 * Real.pi + ((V.ncard : ℝ) - 12) * 0.146 := by
+    have hboth : setSum f (fun d => arcLen 2.52 2.52 2
+          + lmfun (‖d.2‖ / 2) * (arcLen 2.52 2 2 - arcLen 2.52 2.52 2))
+        + setSum f (fun d => lmfun (‖d.1‖ / 2)
+            * (arcLen 2 ‖d.2‖ 2 - arcLen 2.52 ‖d.2‖ 2)) ≤ 2 * Real.pi := by
+      calc setSum f (fun d => arcLen 2.52 2.52 2
+              + lmfun (‖d.2‖ / 2) * (arcLen 2.52 2 2 - arcLen 2.52 2.52 2))
+            + setSum f (fun d => lmfun (‖d.1‖ / 2)
+                * (arcLen 2 ‖d.2‖ 2 - arcLen 2.52 ‖d.2‖ 2))
+          ≤ setSum f (fun d => arcLen 2.52 ‖d.2‖ 2)
+              + setSum f (fun d => lmfun (‖d.1‖ / 2)
+                  * (arcLen 2 ‖d.2‖ 2 - arcLen 2.52 ‖d.2‖ 2)) :=
+            by linarith [hs1s2]
+        _ = setSum f (fun d => arcLen 2.52 ‖d.2‖ 2
+              + lmfun (‖d.1‖ / 2) * (arcLen 2 ‖d.2‖ 2 - arcLen 2.52 ‖d.2‖ 2)) :=
+            hsplit
+        _ ≤ 2 * Real.pi := hchain
+    linarith [hs1lo, hs3lo, hboth]
+  -- 数值收口：arc ≥ 0.816，cardV ≤ 15，2π ≤ 6.2832 ⟹ k < 7
+  have hcardV : (V.ncard : ℝ) ≤ 15 := by
+    rcases hc.2.2.2.2.1 with h13 | h14 | h15
+    · rw [h13]; norm_num
+    · rw [h14]; norm_num
+    · rw [h15]; norm_num
+  have hpi : 2 * Real.pi ≤ 6.2832 := by linarith [Real.pi_lt_d4]
+  have hkarc : (f.ncard : ℝ) * 0.816 ≤ (f.ncard : ℝ) * arcLen 2.52 2.52 2 :=
+    mul_le_mul_of_nonneg_left arc_lemma5_num (Nat.cast_nonneg _)
+  have hk : (f.ncard : ℝ) < 7 := by linarith [hfinal, hkarc, hpi, hcardV]
+  exact Nat.le_of_lt_succ (Nat.cast_lt.mp hk)
+
+
 /-! ## 8. 债务图锚点备忘
 
 `Kepler/Assembly.lean` 消费对应：
@@ -2494,7 +3472,12 @@ theorem CRTTXAT_lemma1 (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
    仅欠此一步，其余由 `contravening_lp_fan_of_fan` 真证明）→ `CDTETAT`
    （21 情形算术 + kcblrqc_ineq_def 两条 azim 边界）→ `SZIPOAS` →
    `KCBLRQC`/`BDJYFFB1/2`（b_tame 表逐情形算术）。
-6. `CRTTXAT`（最重，依赖 arc_properties / per 周长和移植，独立子工程）。
+6. ★ `CRTTXAT`（2026-10-12 第二波已真证明：arc kit 五件套自证（§7，
+   `arcV_eq_arcLen`/`arc_lemma1`/`arc_lemma3`/`arc_lemma4`/`estimate0`+
+   `arc_lemma5_num`）+ `face_sum_snd_eq_fst`（FACE_SUM_lemma 的鸽笼路线，
+   绕开 SUM_ORBIT 轨道周期性=WRGCVDR 内容）+ `CRTTXAT_lemma1`（§7b）+
+   `Real.pi_lt_d4`；3≤card 半边 = `CARD_FACE_GE_3_TL` +
+   `SURROUNDED_IMP_CARD_SET_OF_EDGE_GE_3_TL`）。
 7. `fully_surrounded_perimeter_bound`、`sum_tauVEF_upper_bound`、
    `ineq_tauK_tauVEF_std`（各依赖 Polar_fan / HRXEFDM / FaceK 分支不等式，
    属 formal_lp 侧子工程）。
