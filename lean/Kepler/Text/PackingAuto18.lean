@@ -782,10 +782,110 @@ def Plane (x : Set V3) : Prop :=
 /-- HOL `coplanar_alt` (collect_geom.hl:222). -/
 def CoplanarAlt (S : Set V3) : Prop := ∃ x : Set V3, Plane x ∧ S ⊆ x
 
-/-- HOL `coplanar_eq_coplanar_alt` (leaf_cell.hl:23-27); the ← direction
-needs a non-collinear triple spanning the hull of a collinear one. -/
+/-- `finrank` of the span of a single vector in `V3` is at most 1, so the span
+is a proper subspace and some vector lies outside (helper for
+`coplanar_eq_coplanar_alt`). -/
+private theorem pa18_exists_notMem_span_single (d : V3) :
+    ∃ e : V3, e ∉ Submodule.span ℝ ({d} : Set V3) := by
+  have h1 : Module.finrank ℝ (Submodule.span ℝ ({d} : Set V3)) ≤ 1 := by
+    refine le_trans (finrank_span_le_card (R := ℝ) (M := V3) (s := ({d} : Set V3))) ?_
+    simp
+  have hne : Submodule.span ℝ ({d} : Set V3) ≠ ⊤ := by
+    intro htop
+    have h3 : Module.finrank ℝ (⊤ : Submodule ℝ V3) = 3 := by
+      rw [finrank_top]
+      exact finrank_euclideanSpace_fin
+    rw [htop] at h1
+    omega
+  exact SetLike.exists_not_mem_of_ne_top _ hne
+
+/-- HOL `coplanar_eq_coplanar_alt` (leaf_cell.hl:23-27); the → direction
+needs a non-collinear triple spanning the hull of a collinear one: a common
+line `p₀ + ℝ·d` is completed to the plane `affineSpan {p₀, p₀+d, p₀+e}` with
+`e ∉ span {d}` (degenerate case `d = 0` uses two independent offsets). -/
 theorem coplanar_eq_coplanar_alt {s : Set V3} : Coplanar s ↔ CoplanarAlt s := by
-  sorry
+  constructor
+  · rintro ⟨u, v, w, hsub⟩
+    by_cases hnc : Collinear3 u v w
+    · obtain ⟨p₀, d, hd⟩ :=
+        (collinear_iff_exists_forall_eq_smul_vadd ({u, v, w} : Set V3)).mp hnc
+      rcases eq_or_ne d 0 with hd0 | hdne
+      · -- all three points coincide with p₀; any plane through p₀ works
+        obtain ⟨e, he⟩ := pa18_exists_notMem_span_single d
+        have he0 : e ≠ 0 := by
+          intro h0
+          apply he
+          rw [h0, hd0, Submodule.span_singleton_eq_bot.mpr rfl]
+          exact Submodule.zero_mem _
+        obtain ⟨f, hf⟩ := pa18_exists_notMem_span_single e
+        refine ⟨affineSpan ℝ ({p₀, p₀ + e, p₀ + f} : Set V3),
+          ⟨p₀, p₀ + e, p₀ + f, ?_, rfl⟩, ?_⟩
+        · intro hcol
+          have hpe : p₀ + e ≠ p₀ := by
+            intro h0
+            rw [add_eq_left] at h0
+            exact he0 h0
+          obtain ⟨c₀, hc₀⟩ := (collinear3_iff_smul hpe).mp hcol
+          apply hf
+          rw [Submodule.mem_span_singleton]
+          refine ⟨c₀, ?_⟩
+          rw [show ((p₀ + e : V3) - p₀) = e from by simp,
+            show ((p₀ + f : V3) - p₀) = f from by simp] at hc₀
+          exact hc₀.symm
+        · have h3 : ({u, v, w} : Set V3) ⊆ {p₀} := by
+            intro q hq
+            obtain ⟨c, hc⟩ := hd q hq
+            rw [hd0] at hc
+            simpa using hc
+          have hle : affineSpan ℝ ({u, v, w} : Set V3) ≤
+              affineSpan ℝ ({p₀, p₀ + e, p₀ + f} : Set V3) := by
+            refine affineSpan_mono ℝ (Set.Subset.trans h3 ?_)
+            intro q hq
+            rw [Set.mem_singleton_iff.1 hq]
+            exact Set.mem_insert p₀ ({p₀ + e, p₀ + f} : Set V3)
+          intro q hq
+          exact hle (hsub hq)
+      · -- the three points sit on the line p₀ + ℝ·d; complete it to a plane
+        obtain ⟨e, he⟩ := pa18_exists_notMem_span_single d
+        refine ⟨affineSpan ℝ ({p₀, p₀ + d, p₀ + e} : Set V3),
+          ⟨p₀, p₀ + d, p₀ + e, ?_, rfl⟩, ?_⟩
+        · intro hcol
+          have hpd : p₀ + d ≠ p₀ := by
+            intro h0
+            rw [add_eq_left] at h0
+            exact hdne h0
+          obtain ⟨c₀, hc₀⟩ := (collinear3_iff_smul hpd).mp hcol
+          apply he
+          rw [Submodule.mem_span_singleton]
+          refine ⟨c₀, ?_⟩
+          rw [show ((p₀ + e : V3) - p₀) = e from by simp,
+            show ((p₀ + d : V3) - p₀) = d from by simp] at hc₀
+          exact hc₀.symm
+        · have hpair : affineSpan ℝ ({p₀, p₀ + d} : Set V3) ≤
+            affineSpan ℝ ({p₀, p₀ + d, p₀ + e} : Set V3) :=
+            affineSpan_mono ℝ (by
+              intro x hx
+              simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+              rcases hx with rfl | rfl
+              · exact Set.mem_insert _ _
+              · exact Set.mem_insert_of_mem _ (Set.mem_insert _ _))
+          have hle : affineSpan ℝ ({u, v, w} : Set V3) ≤
+              affineSpan ℝ ({p₀, p₀ + d, p₀ + e} : Set V3) := by
+            refine affineSpan_le_of_subset_coe ?_
+            intro q hq
+            obtain ⟨c, hc⟩ := hd q hq
+            have h1 : q ∈ (affineSpan ℝ ({p₀, p₀ + d} : Set V3) : Set V3) := by
+              refine SetLike.mem_coe.2 ?_
+              rw [mem_affineSpan_pair_iff_exists_lineMap_eq]
+              refine ⟨c, ?_⟩
+              rw [hc, AffineMap.lineMap_apply, vsub_eq_sub,
+                show ((p₀ + d : V3) - p₀) = d from by simp]
+            exact SetLike.mem_coe.mp (hpair h1)
+          intro q hq
+          exact hle (hsub hq)
+    · exact ⟨affineSpan ℝ ({u, v, w} : Set V3), ⟨u, v, w, hnc, rfl⟩, hsub⟩
+  · rintro ⟨x, ⟨u, v, w, -, rfl⟩, hsub⟩
+    exact ⟨u, v, w, hsub⟩
 
 /-- HOL `RE_EQVL_IMP_SYM` (leaf_cell.hl:28-41). -/
 theorem RE_EQVL_IMP_SYM {a b : ℝ} (h : reEqvl a b) : reEqvl b a := by
@@ -1455,19 +1555,105 @@ theorem AFFINE_IMP_CHI_MSB_0 (ul : List V3) (p : V3) (hlen : ul.length = 3)
     coe_sub18, Pi.sub_apply, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
   ring
 
-/-- HOL `CHI_MSB_IMP_COPLANAR` (leaf_cell.hl:935-942). -/
+/-- The cross of two vectors dotted against their own span is zero (helper for
+`pa18_coplanar_chi_zero`). -/
+private theorem pa18_span_cross_dot (P1 P2 : Fin 3 → ℝ) (s1 s2 : ℝ) :
+    crossProduct P1 P2 ⬝ᵥ (s1 • P1 + s2 • P2) = 0 := by
+  rw [dotProduct_add, dotProduct_smul, dotProduct_smul,
+    dotProduct_comm (crossProduct P1 P2) P1, dotProduct_comm (crossProduct P1 P2) P2,
+    dot_self_cross, dot_cross_self, smul_zero, smul_zero, add_zero]
+
+/-- Any four points inside `affineSpan {u, v, w}` have vanishing scalar triple
+product: all pairwise differences live in the 2-dimensional direction
+`span {v - u, w - u}`, where the cross degenerates (helper for
+`POS_EQ_NOT_COPLANANR`). -/
+private theorem pa18_coplanar_chi_zero {x1 x2 x3 x4 u v w : V3}
+    (hsub : ({x1, x2, x3, x4} : Set V3) ⊆ (affineSpan ℝ ({u, v, w} : Set V3) : Set V3)) :
+    crossProduct ((x2 - x1 : V3) : Fin 3 → ℝ) ((x3 - x1 : V3) : Fin 3 → ℝ) ⬝ᵥ
+        ((x4 - x1 : V3) : Fin 3 → ℝ) = 0 := by
+  have hdir : ∀ p ∈ ({x1, x2, x3, x4} : Set V3), ∀ q ∈ ({x1, x2, x3, x4} : Set V3),
+      (p - q : V3) ∈ (affineSpan ℝ ({u, v, w} : Set V3)).direction := by
+    intro p hp q hq
+    exact AffineSubspace.vsub_mem_direction
+      (SetLike.mem_coe.2 (hsub hp)) (SetLike.mem_coe.2 (hsub hq))
+  have hspan : (affineSpan ℝ ({u, v, w} : Set V3)).direction
+      ≤ Submodule.span ℝ ({v - u, w - u} : Set V3) := by
+    rw [direction_affineSpan,
+      vectorSpan_eq_span_vsub_set_right ℝ (Set.mem_insert u ({v, w} : Set V3)),
+      Submodule.span_le]
+    rintro d ⟨q, hq, rfl⟩
+    rcases hq with rfl | rfl | rfl
+    · simp
+    · exact Submodule.subset_span (by left; rfl)
+    · exact Submodule.subset_span (by right; rfl)
+  obtain ⟨α1, α2, hA⟩ := Submodule.mem_span_pair.mp
+    (hspan (hdir x2 (by simp) x1 (by simp)))
+  obtain ⟨β1, β2, hB⟩ := Submodule.mem_span_pair.mp
+    (hspan (hdir x3 (by simp) x1 (by simp)))
+  obtain ⟨γ1, γ2, hC⟩ := Submodule.mem_span_pair.mp
+    (hspan (hdir x4 (by simp) x1 (by simp)))
+  have hA' : ((x2 - x1 : V3) : Fin 3 → ℝ) = α1 • ((v - u : V3) : Fin 3 → ℝ) +
+      α2 • ((w - u : V3) : Fin 3 → ℝ) := by
+    simpa only [coe_add18, coe_smul18] using
+      (congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hA).symm
+  have hB' : ((x3 - x1 : V3) : Fin 3 → ℝ) = β1 • ((v - u : V3) : Fin 3 → ℝ) +
+      β2 • ((w - u : V3) : Fin 3 → ℝ) := by
+    simpa only [coe_add18, coe_smul18] using
+      (congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hB).symm
+  have hC' : ((x4 - x1 : V3) : Fin 3 → ℝ) = γ1 • ((v - u : V3) : Fin 3 → ℝ) +
+      γ2 • ((w - u : V3) : Fin 3 → ℝ) := by
+    simpa only [coe_add18, coe_smul18] using
+      (congrArg (fun z : V3 => (z : Fin 3 → ℝ)) hC).symm
+  rw [hA', hB', hC']
+  have hlin : crossProduct (α1 • ((v - u : V3) : Fin 3 → ℝ) + α2 • ((w - u : V3) : Fin 3 → ℝ))
+        (β1 • ((v - u : V3) : Fin 3 → ℝ) + β2 • ((w - u : V3) : Fin 3 → ℝ))
+      = (α1 * β2 - α2 * β1) •
+        crossProduct ((v - u : V3) : Fin 3 → ℝ) ((w - u : V3) : Fin 3 → ℝ) := by
+    simp only [map_add, LinearMap.add_apply, map_smul, LinearMap.smul_apply, cross_self,
+      smul_zero, zero_add, add_zero, smul_smul]
+    rw [(cross_anticomm ((v - u : V3) : Fin 3 → ℝ) ((w - u : V3) : Fin 3 → ℝ)).symm]
+    module
+  rw [hlin, smul_dotProduct, pa18_span_cross_dot ((v - u : V3) : Fin 3 → ℝ)
+      ((w - u : V3) : Fin 3 → ℝ) γ1 γ2, smul_zero]
+
+/-- `chi_msb` on a general list as the cross-dot of the `getD`-stem
+(case analysis on the list length; the degenerate tails give the zero vector). -/
+private theorem pa18_chiMsb_getD (ul : List V3) (p : V3) :
+    chiMsb ul p = crossProduct ((ul.getD 1 0 - ul.getD 0 0 : V3) : Fin 3 → ℝ)
+      ((ul.getD 2 0 - ul.getD 0 0 : V3) : Fin 3 → ℝ) ⬝ᵥ
+      ((p - ul.getD 0 0 : V3) : Fin 3 → ℝ) := by
+  cases ul with
+  | nil => simp [chiMsb]
+  | cons a tl =>
+    cases tl with
+    | nil => simp [chiMsb]
+    | cons b tl2 =>
+      cases tl2 with
+      | nil =>
+        have hd : (default : V3) = 0 := rfl
+        simp [chiMsb, hd]
+      | cons c _ => simp [chiMsb]
+
+/-- HOL `CHI_MSB_IMP_COPLANAR` (leaf_cell.hl:935-942): contrapositive of
+`coplanar_cross_dot` (PlanarityAuto12) at the stem triple. -/
 theorem CHI_MSB_IMP_COPLANAR (ul : List V3) (p : V3) (h : chiMsb ul p = 0) :
     Coplanar ({ul.getD 0 0, ul.getD 1 0, ul.getD 2 0, p} : Set V3) := by
--- NEEDS: coplanar <-> chi_msb = 0 needs the cross-dot equivalence
--- (local_lemmas.hl:203; LocalAuto5 has a lane-local copy built on its
--- private kit); unlocks JDHAWAY_0/JDWAWAY and CFFONNL.
-  sorry
+  rw [pa18_chiMsb_getD] at h
+  by_contra hnc
+  exact (coplanar_cross_dot (ul.getD 0 0) (ul.getD 1 0) (ul.getD 2 0) p hnc) h
 
-/-- HOL `CHI_MSB_COPLANAR` (leaf_cell.hl:943-1011). -/
+/-- HOL `CHI_MSB_COPLANAR` (leaf_cell.hl:943-1011): forward via
+`pa18_coplanar_chi_zero` (the witness triple `a b c` itself), backward via the
+contrapositive of `coplanar_cross_dot`. -/
 theorem CHI_MSB_COPLANAR (a b c d : V3) :
     Coplanar ({a, b, c, d} : Set V3) ↔ chiMsb [a, b, c] d = 0 := by
--- NEEDS: same cross-dot equivalence as CHI_MSB_IMP_COPLANAR.
-  sorry
+  constructor
+  · rintro ⟨u, v, w, hsub⟩
+    simp only [chiMsb, List.getElem!_cons_succ, List.getElem!_cons_zero]
+    exact pa18_coplanar_chi_zero hsub
+  · intro h
+    by_contra hnc
+    exact (coplanar_cross_dot a b c d hnc) h
 
 /-- HOL `JDHAWAY_0` (leaf_cell.hl:1012-1051). -/
 theorem JDHAWAY_0 {V : Set V3} {ul : List V3} {p1 p2 : V3} {t1 t2 : ℝ}
@@ -2022,6 +2208,104 @@ theorem delta_delta_x (x1 x2 x3 x4 x5 x6 : ℝ) :
     deltaP x1 x2 x3 x6 x5 x4 = deltaX x1 x2 x3 x4 x5 x6 := by
   simp only [deltaP, deltaX]
   ring
+
+/-! ### Collect_geom2: the delta ↔ coplanarity bridge -/
+
+/-- The Cayley–Menger style `delta` on the six squared pairwise distances of a
+tetrahedron equals four times the squared scalar triple product (helper for
+`POS_EQ_NOT_COPLANANR`); split as a 6-variable polynomial identity plus the
+Gram determinant identity `chi² = det[⟨a,a⟩ …]`. -/
+private theorem pa18_deltaP_eq_chi (x1 x2 x3 x4 : V3) :
+    deltaP (dist x1 x2 ^ 2) (dist x1 x3 ^ 2) (dist x1 x4 ^ 2)
+        (dist x2 x3 ^ 2) (dist x2 x4 ^ 2) (dist x3 x4 ^ 2)
+      = 4 * (crossProduct ((x2 - x1 : V3) : Fin 3 → ℝ)
+          ((x3 - x1 : V3) : Fin 3 → ℝ) ⬝ᵥ ((x4 - x1 : V3) : Fin 3 → ℝ)) ^ 2 := by
+  set a : Fin 3 → ℝ := ((x2 - x1 : V3) : Fin 3 → ℝ) with hda
+  set b : Fin 3 → ℝ := ((x3 - x1 : V3) : Fin 3 → ℝ) with hdb
+  set c : Fin 3 → ℝ := ((x4 - x1 : V3) : Fin 3 → ℝ) with hdc
+  have e12 : dist x1 x2 ^ 2 = a ⬝ᵥ a := by
+    rw [dist_eq_norm, show ((x1 : V3) - x2) = -(x2 - x1) from by abel, norm_neg,
+      norm_sq_eq_dot, ← hda]
+  have e13 : dist x1 x3 ^ 2 = b ⬝ᵥ b := by
+    rw [dist_eq_norm, show ((x1 : V3) - x3) = -(x3 - x1) from by abel, norm_neg,
+      norm_sq_eq_dot, ← hdb]
+  have e14 : dist x1 x4 ^ 2 = c ⬝ᵥ c := by
+    rw [dist_eq_norm, show ((x1 : V3) - x4) = -(x4 - x1) from by abel, norm_neg,
+      norm_sq_eq_dot, ← hdc]
+  have h32 : ((x2 - x3 : V3) : Fin 3 → ℝ) = a - b := by
+    have h := congrArg (fun z : V3 => (z : Fin 3 → ℝ))
+      (show (x2 : V3) - x3 = (x2 - x1) - (x3 - x1) from by abel)
+    rw [h, hda, hdb]
+    exact coe_sub18 _ _
+  have h42 : ((x2 - x4 : V3) : Fin 3 → ℝ) = a - c := by
+    have h := congrArg (fun z : V3 => (z : Fin 3 → ℝ))
+      (show (x2 : V3) - x4 = (x2 - x1) - (x4 - x1) from by abel)
+    rw [h, hda, hdc]
+    exact coe_sub18 _ _
+  have h43 : ((x3 - x4 : V3) : Fin 3 → ℝ) = b - c := by
+    have h := congrArg (fun z : V3 => (z : Fin 3 → ℝ))
+      (show (x3 : V3) - x4 = (x3 - x1) - (x4 - x1) from by abel)
+    rw [h, hdb, hdc]
+    exact coe_sub18 _ _
+  have e23 : dist x2 x3 ^ 2 = (a - b) ⬝ᵥ (a - b) := by
+    rw [dist_eq_norm, norm_sq_eq_dot, h32]
+  have e24 : dist x2 x4 ^ 2 = (a - c) ⬝ᵥ (a - c) := by
+    rw [dist_eq_norm, norm_sq_eq_dot, h42]
+  have e34 : dist x3 x4 ^ 2 = (b - c) ⬝ᵥ (b - c) := by
+    rw [dist_eq_norm, norm_sq_eq_dot, h43]
+  have dmix : ∀ f g : Fin 3 → ℝ, (f - g) ⬝ᵥ (f - g) = f ⬝ᵥ f + g ⬝ᵥ g - 2 * (f ⬝ᵥ g) := by
+    intro f g
+    rw [sub_dotProduct, dotProduct_sub, dotProduct_sub, dotProduct_comm f g]
+    ring
+  have k1 : ∀ (A B C AB AC BC : ℝ),
+      deltaP A B C (A + B - 2 * AB) (A + C - 2 * AC) (B + C - 2 * BC)
+        = 4 * (A * B * C + 2 * (AB * AC * BC) - A * (BC * BC) - B * (AC * AC) - C * (AB * AB)) := by
+    intro A B C AB AC BC
+    simp only [deltaP]
+    ring
+  have k2 : ∀ (a b c : Fin 3 → ℝ),
+      (crossProduct a b ⬝ᵥ c) ^ 2
+        = (a ⬝ᵥ a) * (b ⬝ᵥ b) * (c ⬝ᵥ c) + 2 * ((a ⬝ᵥ b) * (a ⬝ᵥ c) * (b ⬝ᵥ c))
+          - (a ⬝ᵥ a) * (b ⬝ᵥ c) ^ 2 - (b ⬝ᵥ b) * (a ⬝ᵥ c) ^ 2 - (c ⬝ᵥ c) * (a ⬝ᵥ b) ^ 2 := by
+    intro a b c
+    rw [cross_apply]
+    simp only [dotProduct, Fin.sum_univ_three, Matrix.head_cons, Matrix.cons_val_zero,
+      Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons]
+    ring
+  have step : deltaP (a ⬝ᵥ a) (b ⬝ᵥ b) (c ⬝ᵥ c) ((a - b) ⬝ᵥ (a - b)) ((a - c) ⬝ᵥ (a - c))
+        ((b - c) ⬝ᵥ (b - c))
+      = 4 * (crossProduct a b ⬝ᵥ c) ^ 2 := by
+    rw [dmix a b, dmix a c, dmix b c,
+      k1 (a ⬝ᵥ a) (b ⬝ᵥ b) (c ⬝ᵥ c) (a ⬝ᵥ b) (a ⬝ᵥ c) (b ⬝ᵥ c), k2 a b c]
+    ring
+  rw [e12, e13, e14, e23, e24, e34, step]
+
+/-- HOL `POS_EQ_NOT_COPLANANR` (Collect_geom2, collect_geom2.hl:979-988):
+positivity of the Cayley–Menger delta on the squared distances of four points
+is equivalent to the points not being coplanar. Bridge: `deltaP = 4 * chi²`
+(`pa18_deltaP_eq_chi`), `chi = 0 → Coplanar` (contrapositive of
+`coplanar_cross_dot`), and `Coplanar → chi = 0`
+(`pa18_coplanar_chi_zero`) via `coplanar_eq_coplanar_alt`. -/
+theorem POS_EQ_NOT_COPLANANR (x1 x2 x3 x4 : V3) :
+    0 < deltaP (dist x1 x2 ^ 2) (dist x1 x3 ^ 2) (dist x1 x4 ^ 2)
+        (dist x2 x3 ^ 2) (dist x2 x4 ^ 2) (dist x3 x4 ^ 2) ↔
+      ¬ CoplanarAlt ({x1, x2, x3, x4} : Set V3) := by
+  have hchi := pa18_deltaP_eq_chi x1 x2 x3 x4
+  constructor
+  · intro h hcopalt
+    obtain ⟨u, v, w, hsub⟩ := coplanar_eq_coplanar_alt.mpr hcopalt
+    have h0 : deltaP (dist x1 x2 ^ 2) (dist x1 x3 ^ 2) (dist x1 x4 ^ 2)
+        (dist x2 x3 ^ 2) (dist x2 x4 ^ 2) (dist x3 x4 ^ 2) = 0 := by
+      rw [hchi, pa18_coplanar_chi_zero hsub]
+      norm_num
+    rw [h0] at h
+    norm_num at h
+  · intro hnc
+    have hncop : ¬ Coplanar ({x1, x2, x3, x4} : Set V3) :=
+      fun hc => hnc (coplanar_eq_coplanar_alt.mp hc)
+    have hne := coplanar_cross_dot x1 x2 x3 x4 hncop
+    rw [hchi]
+    exact mul_pos (by norm_num) (sq_pos_iff.2 hne)
 
 /-- HOL `ZWVCBMN` (leaf_cell.hl:1585-1629). -/
 theorem ZWVCBMN (a b c d : V3) (h : ¬Coplanar ({a, b, c, d} : Set V3)) :
