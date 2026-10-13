@@ -913,6 +913,12 @@ def mkexpr_bbgd(prog, sj, rung):
 
 def base_file_bbgd(mod, n, goals, exprs, box):
     out = [HDR + "import Kepler.Interval.CertGD\n\n"
+           # the dummy ExprK globals elaborate the full goal ASTs (the main
+           # prog alone is 1.5k ops) — the default 200k-heartbeat budget
+           # times out inside `synthesize pending MVars` (7-leaf BIXPCGW
+           # pilot, W3); shards/top already carry the same options
+           "set_option maxHeartbeats 0\n"
+           "set_option maxRecDepth 1000000\n\n"
            "namespace Kepler.Interval.Cases\n\n"]
     for g in goals:
         if g["kind"] != "pos":
