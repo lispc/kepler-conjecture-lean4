@@ -4676,19 +4676,243 @@ theorem real_model_pemb (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
       a_spine5 + b_spine5 * azim_mcell V f u0 u1 i ≤ gg_mcell V f u0 u1 i := by
   sorry
 
-/-- HOL `c2089`: `atn (sqrt 3.07) < pi - 2.089` (needs certified interval
-arithmetic; Flyspeck uses `Flyspeck_constants.calc`). -/
-theorem c2089 : Real.arctan (Real.sqrt 3.07) < Real.pi - 2.089 := by
-  sorry
+/-- Taylor 下界包络：`arctan t ≥ t - t³/3 + t⁵/5 - t⁷/7 + t⁹/9 - t¹¹/11`（`[0,∞)`）。
+导数误差 `+u¹²/(1+u²) ≥ 0`，FTC 于 `0`。 -/
+private theorem p25_arctan_ge_taylor6 (t : ℝ) (ht : 0 ≤ t) :
+    t - t ^ 3 / 3 + t ^ 5 / 5 - t ^ 7 / 7 + t ^ 9 / 9 - t ^ 11 / 11 ≤ Real.arctan t := by
+  have h3 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 3 / 3) (u ^ 2) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 3).div_const 3
+  have h5 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 5 / 5) (u ^ 4) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 5).div_const 5
+  have h7 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 7 / 7) (u ^ 6) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 7).div_const 7
+  have h9 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 9 / 9) (u ^ 8) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 9).div_const 9
+  have h11 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 11 / 11) (u ^ 10) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 11).div_const 11
+  have hpoly : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7
+      + v ^ 9 / 9 - v ^ 11 / 11) (1 - u ^ 2 + u ^ 4 - u ^ 6 + u ^ 8 - u ^ 10) u := by
+    intro u
+    have s1 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3) (1 - u ^ 2) u :=
+      (hasDerivAt_id u).sub (h3 u)
+    have s2 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5)
+        (1 - u ^ 2 + u ^ 4) u := s1.add (h5 u)
+    have s3 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7)
+        (1 - u ^ 2 + u ^ 4 - u ^ 6) u := s2.sub (h7 u)
+    have s4 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7
+        + v ^ 9 / 9) (1 - u ^ 2 + u ^ 4 - u ^ 6 + u ^ 8) u := s3.add (h9 u)
+    exact s4.sub (h11 u)
+  have hf' : deriv (fun u => Real.arctan u
+      - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9 - u ^ 11 / 11))
+      = fun u => u ^ 12 / (1 + u ^ 2) := by
+    funext u
+    have hd : HasDerivAt (fun v : ℝ => Real.arctan v
+        - (v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7 + v ^ 9 / 9 - v ^ 11 / 11))
+        (1 / (1 + u ^ 2) - (1 - u ^ 2 + u ^ 4 - u ^ 6 + u ^ 8 - u ^ 10)) u :=
+      HasDerivAt.sub (Real.hasDerivAt_arctan u) (hpoly u)
+    rw [hd.deriv]
+    field_simp
+    ring
+  have hdiff : ∀ x ∈ uIcc (0:ℝ) t, DifferentiableAt ℝ (fun u => Real.arctan u
+      - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9 - u ^ 11 / 11)) x := by
+    intro x _
+    exact DifferentiableAt.sub (Real.differentiableAt_arctan x) (by fun_prop)
+  have hcont : Continuous (fun u : ℝ => u ^ 12 / (1 + u ^ 2)) :=
+    Continuous.div (by fun_prop) (by fun_prop)
+      (fun u => ne_of_gt (by positivity : (0:ℝ) < 1 + u ^ 2))
+  have hftc := intervalIntegral.integral_deriv_eq_sub'
+    (fun u => Real.arctan u
+      - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9 - u ^ 11 / 11)) hf' hdiff
+    hcont.continuousOn
+  have hint : ∫ y in (0:ℝ)..t, y ^ 12 / (1 + y ^ 2)
+      = Real.arctan t - (t - t ^ 3 / 3 + t ^ 5 / 5 - t ^ 7 / 7 + t ^ 9 / 9 - t ^ 11 / 11) := by
+    have hzero : (fun u => Real.arctan u
+        - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9 - u ^ 11 / 11)) (0:ℝ) = 0 := by
+      simp [Real.arctan_zero]
+    simpa [hzero] using hftc
+  have hnonneg : (0:ℝ) ≤ ∫ y in (0:ℝ)..t, y ^ 12 / (1 + y ^ 2) :=
+    intervalIntegral.integral_nonneg ht
+      (fun y (hy : y ∈ Icc (0:ℝ) t) => div_nonneg (pow_nonneg hy.1 12) (by positivity))
+  linarith
 
-/-- HOL `c1946`: `pi - 1.946 < atn (sqrt 6.45)` (same).  Proof sketch
-(certified-interval, not yet formalized): `arctan √6.45 = π/2 - arctan z` with
-`z = (√6.45)⁻¹`, `z² = 20/129 ≤ (63/160)²`; the Taylor envelope
-`arctan z ≤ z·(1 - z²/3 + z⁴/5 - z⁶/7 + z⁸/9)` (pointwise
-`(1+t²)(1-t²+t⁴-t⁶+t⁸) = 1+t¹⁰`) evaluates to `0.3751097… < 1.946 - π/2 ≤
-1.946 - 3.1416/2 = 0.3752` (`Real.pi_lt_d4`). -/
+/-- Taylor 上界包络：`arctan t ≤ t - t³/3 + t⁵/5 - t⁷/7 + t⁹/9`（`[0,∞)`）。
+导数误差 `-u¹⁰/(1+u²) ≤ 0`，FTC 于 `0`。 -/
+private theorem p25_arctan_le_taylor5 (t : ℝ) (ht : 0 ≤ t) :
+    Real.arctan t ≤ t - t ^ 3 / 3 + t ^ 5 / 5 - t ^ 7 / 7 + t ^ 9 / 9 := by
+  have h3 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 3 / 3) (u ^ 2) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 3).div_const 3
+  have h5 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 5 / 5) (u ^ 4) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 5).div_const 5
+  have h7 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 7 / 7) (u ^ 6) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 7).div_const 7
+  have h9 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 9 / 9) (u ^ 8) u := by
+    intro u; simpa using ((hasDerivAt_id u).pow 9).div_const 9
+  have hpoly : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7
+      + v ^ 9 / 9) (1 - u ^ 2 + u ^ 4 - u ^ 6 + u ^ 8) u := by
+    intro u
+    have s1 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3) (1 - u ^ 2) u :=
+      (hasDerivAt_id u).sub (h3 u)
+    have s2 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5)
+        (1 - u ^ 2 + u ^ 4) u := s1.add (h5 u)
+    have s3 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7)
+        (1 - u ^ 2 + u ^ 4 - u ^ 6) u := s2.sub (h7 u)
+    exact s3.add (h9 u)
+  have hf' : deriv (fun u => Real.arctan u
+      - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9))
+      = fun u => -(u ^ 10 / (1 + u ^ 2)) := by
+    funext u
+    have hd : HasDerivAt (fun v : ℝ => Real.arctan v
+        - (v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7 + v ^ 9 / 9))
+        (1 / (1 + u ^ 2) - (1 - u ^ 2 + u ^ 4 - u ^ 6 + u ^ 8)) u :=
+      HasDerivAt.sub (Real.hasDerivAt_arctan u) (hpoly u)
+    rw [hd.deriv]
+    field_simp
+    ring
+  have hdiff : ∀ x ∈ uIcc (0:ℝ) t, DifferentiableAt ℝ (fun u => Real.arctan u
+      - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9)) x := by
+    intro x _
+    exact DifferentiableAt.sub (Real.differentiableAt_arctan x) (by fun_prop)
+  have hcont : Continuous (fun u : ℝ => -(u ^ 10 / (1 + u ^ 2))) :=
+    (Continuous.div (by fun_prop) (by fun_prop)
+      (fun u => ne_of_gt (by positivity : (0:ℝ) < 1 + u ^ 2))).neg
+  have hftc := intervalIntegral.integral_deriv_eq_sub'
+    (fun u => Real.arctan u
+      - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9)) hf' hdiff hcont.continuousOn
+  have hint : ∫ y in (0:ℝ)..t, -(y ^ 10 / (1 + y ^ 2))
+      = Real.arctan t - (t - t ^ 3 / 3 + t ^ 5 / 5 - t ^ 7 / 7 + t ^ 9 / 9) := by
+    have hzero : (fun u => Real.arctan u
+        - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9)) (0:ℝ) = 0 := by
+      simp [Real.arctan_zero]
+    simpa [hzero] using hftc
+  have hpos : (0:ℝ) ≤ ∫ y in (0:ℝ)..t, y ^ 10 / (1 + y ^ 2) :=
+    intervalIntegral.integral_nonneg ht
+      (fun y (hy : y ∈ Icc (0:ℝ) t) => div_nonneg (pow_nonneg hy.1 10) (by positivity))
+  have hneg : (∫ y in (0:ℝ)..t, -(y ^ 10 / (1 + y ^ 2))) ≤ 0 := by
+    have hne : (∫ y in (0:ℝ)..t, -(y ^ 10 / (1 + y ^ 2)))
+        = -(∫ y in (0:ℝ)..t, y ^ 10 / (1 + y ^ 2)) :=
+      intervalIntegral.integral_neg (f := fun y : ℝ => y ^ 10 / (1 + y ^ 2))
+    linarith [hne, hpos]
+  linarith
+
+/-- 补角恒等式：`arctan x + arctan x⁻¹ = π/2`（`0 < x`）。
+`sin a sin b = cos a cos b`（`sin_arctan`/`cos_arctan` 精确式）给
+`cos(a+b) = 0`，而 `a+b ∈ (0,π)` 且 `cos` 在 `[0,π]` 严格反单调。 -/
+private theorem p25_arctan_add_arctan_inv (x : ℝ) (hx : 0 < x) :
+    Real.arctan x + Real.arctan (x⁻¹) = Real.pi / 2 := by
+  have hpos1 : (0:ℝ) < Real.arctan x := by
+    have h := Real.arctan_lt_arctan_iff.2 hx
+    rwa [Real.arctan_zero] at h
+  have hpos2 : (0:ℝ) < Real.arctan (x⁻¹) := by
+    have h := Real.arctan_lt_arctan_iff.2 (inv_pos.2 hx)
+    rwa [Real.arctan_zero] at h
+  have hcos : Real.cos (Real.arctan x + Real.arctan (x⁻¹)) = 0 := by
+    rw [Real.cos_add]
+    have e1 : Real.sin (Real.arctan x) * Real.sin (Real.arctan (x⁻¹))
+        = Real.cos (Real.arctan x) * Real.cos (Real.arctan (x⁻¹)) := by
+      rw [Real.sin_arctan, Real.sin_arctan, Real.cos_arctan, Real.cos_arctan]
+      field_simp
+    linarith
+  have hrange1 : Real.arctan x + Real.arctan (x⁻¹) ∈ Icc (0:ℝ) Real.pi :=
+    ⟨le_of_lt (by linarith),
+      by linarith [Real.arctan_lt_pi_div_two x, Real.arctan_lt_pi_div_two (x⁻¹),
+        Real.pi_pos]⟩
+  have hrange2 : (Real.pi / 2 : ℝ) ∈ Icc (0:ℝ) Real.pi :=
+    ⟨by linarith [Real.pi_pos], by linarith [Real.pi_pos]⟩
+  have heq := Real.strictAntiOn_cos.injOn hrange1 hrange2
+    (by rw [Real.cos_pi_div_two]; exact hcos)
+  linarith
+
+/-- HOL `c2089`: `atn (sqrt 3.07) < pi - 2.089`。2026-10-13 转真（零证书链）：
+补角恒等式 + `arctan z ≥ S₆(z)`（六项 Taylor 下界，私件
+`p25_arctan_ge_taylor6`）在 `z = (√3.07)⁻¹`（`z² = 100/307` 精确、
+`z ≥ 190/333`）处取值，数值夹逼只用 `Real.pi_gt_d6`。 -/
+theorem c2089 : Real.arctan (Real.sqrt 3.07) < Real.pi - 2.089 := by
+  have hcomp := p25_arctan_add_arctan_inv (Real.sqrt 3.07) (by positivity)
+  have hz2 : (Real.sqrt 3.07)⁻¹ * (Real.sqrt 3.07)⁻¹ = 100 / 307 := by
+    have hsq : Real.sqrt 3.07 * Real.sqrt 3.07 = 3.07 := Real.mul_self_sqrt (by norm_num)
+    calc (Real.sqrt 3.07)⁻¹ * (Real.sqrt 3.07)⁻¹
+        = (Real.sqrt 3.07 * Real.sqrt 3.07)⁻¹ := by field_simp
+      _ = 100 / 307 := by rw [hsq]; norm_num
+  have hfact : (Real.sqrt 3.07)⁻¹ - ((Real.sqrt 3.07)⁻¹) ^ 3 / 3
+      + ((Real.sqrt 3.07)⁻¹) ^ 5 / 5 - ((Real.sqrt 3.07)⁻¹) ^ 7 / 7
+      + ((Real.sqrt 3.07)⁻¹) ^ 9 / 9 - ((Real.sqrt 3.07)⁻¹) ^ 11 / 11
+      = (Real.sqrt 3.07)⁻¹ * (1 - ((Real.sqrt 3.07)⁻¹ * (Real.sqrt 3.07)⁻¹) / 3
+        + ((Real.sqrt 3.07)⁻¹ * (Real.sqrt 3.07)⁻¹) ^ 2 / 5
+        - ((Real.sqrt 3.07)⁻¹ * (Real.sqrt 3.07)⁻¹) ^ 3 / 7
+        + ((Real.sqrt 3.07)⁻¹ * (Real.sqrt 3.07)⁻¹) ^ 4 / 9
+        - ((Real.sqrt 3.07)⁻¹ * (Real.sqrt 3.07)⁻¹) ^ 5 / 11) := by
+    ring
+  have hlow := p25_arctan_ge_taylor6 ((Real.sqrt 3.07)⁻¹)
+    (inv_nonneg.2 (Real.sqrt_nonneg 3.07))
+  rw [hfact, hz2] at hlow
+  have hFpos : (0:ℝ) < 1 - (100:ℝ)/307/3 + ((100:ℝ)/307) ^ 2 / 5 - ((100:ℝ)/307) ^ 3 / 7
+      + ((100:ℝ)/307) ^ 4 / 9 - ((100:ℝ)/307) ^ 5 / 11 := by norm_num
+  have hzge : (190 / 333 : ℝ) ≤ (Real.sqrt 3.07)⁻¹ := by
+    have h1 : Real.sqrt 3.07 ≤ 333 / 190 := by
+      calc Real.sqrt 3.07 ≤ Real.sqrt ((333 / 190 : ℝ) ^ 2) :=
+            Real.sqrt_le_sqrt (by norm_num : (3.07:ℝ) ≤ (333 / 190) ^ 2)
+        _ = 333 / 190 := Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 333 / 190)
+    calc (190:ℝ) / 333 = (333 / 190)⁻¹ := by field_simp
+      _ ≤ (Real.sqrt 3.07)⁻¹ :=
+            (inv_le_inv₀ (by norm_num : (0:ℝ) < 333 / 190) (by positivity)).2 h1
+  have hL0 : (190:ℝ) * 9086 / (333 * 10000) ≤ Real.arctan ((Real.sqrt 3.07)⁻¹) := by
+    calc (190:ℝ) * 9086 / (333 * 10000)
+        = (190 / 333) * (9086 / 10000) := by norm_num
+      _ ≤ (190 / 333) * (1 - (100:ℝ)/307/3 + ((100:ℝ)/307) ^ 2 / 5 - ((100:ℝ)/307) ^ 3 / 7
+            + ((100:ℝ)/307) ^ 4 / 9 - ((100:ℝ)/307) ^ 5 / 11) :=
+            mul_le_mul_of_nonneg_left (by norm_num) (by norm_num)
+      _ ≤ (Real.sqrt 3.07)⁻¹ * (1 - (100:ℝ)/307/3 + ((100:ℝ)/307) ^ 2 / 5
+            - ((100:ℝ)/307) ^ 3 / 7 + ((100:ℝ)/307) ^ 4 / 9 - ((100:ℝ)/307) ^ 5 / 11) :=
+            mul_le_mul_of_nonneg_right hzge hFpos.le
+      _ ≤ Real.arctan ((Real.sqrt 3.07)⁻¹) := hlow
+  have h1 : Real.arctan (Real.sqrt 3.07) = Real.pi / 2 - Real.arctan ((Real.sqrt 3.07)⁻¹) := by
+    linarith
+  rw [h1]
+  linarith [hL0, Real.pi_gt_d6]
+
+/-- HOL `c1946`: `pi - 1.946 < atn (sqrt 6.45)`。2026-10-13 转真（零证书链）：
+补角恒等式 + `arctan z ≤ S₅(z)`（五项 Taylor 上界，私件
+`p25_arctan_le_taylor5`）在 `z = (√6.45)⁻¹`（`z² = 20/129` 精确、
+`z ≤ 1969/5000`）处取值，数值夹逼只用 `Real.pi_lt_d4`。 -/
 theorem c1946 : Real.pi - 1.946 < Real.arctan (Real.sqrt 6.45) := by
-  sorry
+  have hcomp := p25_arctan_add_arctan_inv (Real.sqrt 6.45) (by positivity)
+  have hz2 : (Real.sqrt 6.45)⁻¹ * (Real.sqrt 6.45)⁻¹ = 20 / 129 := by
+    have hsq : Real.sqrt 6.45 * Real.sqrt 6.45 = 6.45 := Real.mul_self_sqrt (by norm_num)
+    calc (Real.sqrt 6.45)⁻¹ * (Real.sqrt 6.45)⁻¹
+        = (Real.sqrt 6.45 * Real.sqrt 6.45)⁻¹ := by field_simp
+      _ = 20 / 129 := by rw [hsq]; norm_num
+  have hfact : (Real.sqrt 6.45)⁻¹ - ((Real.sqrt 6.45)⁻¹) ^ 3 / 3
+      + ((Real.sqrt 6.45)⁻¹) ^ 5 / 5 - ((Real.sqrt 6.45)⁻¹) ^ 7 / 7
+      + ((Real.sqrt 6.45)⁻¹) ^ 9 / 9
+      = (Real.sqrt 6.45)⁻¹ * (1 - ((Real.sqrt 6.45)⁻¹ * (Real.sqrt 6.45)⁻¹) / 3
+        + ((Real.sqrt 6.45)⁻¹ * (Real.sqrt 6.45)⁻¹) ^ 2 / 5
+        - ((Real.sqrt 6.45)⁻¹ * (Real.sqrt 6.45)⁻¹) ^ 3 / 7
+        + ((Real.sqrt 6.45)⁻¹ * (Real.sqrt 6.45)⁻¹) ^ 4 / 9) := by
+    ring
+  have hupp := p25_arctan_le_taylor5 ((Real.sqrt 6.45)⁻¹)
+    (inv_nonneg.2 (Real.sqrt_nonneg 6.45))
+  rw [hfact, hz2] at hupp
+  have hzle : (Real.sqrt 6.45)⁻¹ ≤ 1969 / 5000 := by
+    have h1 : (5000:ℝ) / 1969 ≤ Real.sqrt 6.45 := Real.le_sqrt_of_sq_le (by norm_num)
+    calc (Real.sqrt 6.45)⁻¹ ≤ (5000 / 1969)⁻¹ :=
+          (inv_le_inv₀ (by positivity) (by norm_num : (0:ℝ) < 5000 / 1969)).2 h1
+      _ = 1969 / 5000 := by field_simp
+  have hgle : 1 - (20:ℝ)/129/3 + ((20:ℝ)/129) ^ 2 / 5 - ((20:ℝ)/129) ^ 3 / 7
+      + ((20:ℝ)/129) ^ 4 / 9 ≤ 95266 / 100000 := by norm_num
+  have hL0 : Real.arctan ((Real.sqrt 6.45)⁻¹)
+      ≤ (1969:ℝ) * 95266 / (5000 * 100000) := by
+    calc Real.arctan ((Real.sqrt 6.45)⁻¹)
+        ≤ (Real.sqrt 6.45)⁻¹ * (1 - (20:ℝ)/129/3 + ((20:ℝ)/129) ^ 2 / 5
+            - ((20:ℝ)/129) ^ 3 / 7 + ((20:ℝ)/129) ^ 4 / 9) := hupp
+      _ ≤ (1969 / 5000) * (1 - (20:ℝ)/129/3 + ((20:ℝ)/129) ^ 2 / 5
+            - ((20:ℝ)/129) ^ 3 / 7 + ((20:ℝ)/129) ^ 4 / 9) :=
+            mul_le_mul_of_nonneg_right hzle (by positivity)
+      _ ≤ (1969 / 5000) * (95266 / 100000) := mul_le_mul_of_nonneg_left hgle (by norm_num)
+      _ = (1969:ℝ) * 95266 / (5000 * 100000) := by norm_num
+  have h1 : Real.arctan (Real.sqrt 6.45) = Real.pi / 2 - Real.arctan ((Real.sqrt 6.45)⁻¹) := by
+    linarith
+  rw [h1]
+  linarith [hL0, Real.pi_lt_d4]
 /-- HOL `IXPOTPA_MERGED`. -/
 theorem IXPOTPA_MERGED (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1h)
     (hcey : criticalEdgeY y1) (hb2 : 2 ≤ y2) (hb2' : y2 ≤ 2 * hminus)
@@ -5579,17 +5803,47 @@ theorem NOT_COPLANAR_AFF_3 (s : Set V3) (hnc : ¬ Coplanar s) :
   exact AffineSubspace.vadd_mem_of_mem_direction (hdir (hspan hqp))
     (mem_affineSpan ℝ (by simp : p ∈ ({p, p + v1, p + v2} : Set V3)))
 
-/-- HOL `AFF_DEP_COPLANAR`.  NEEDS (r2): only the backward direction is
-open (Coplanar + `ncard = 4` -> affineDependent).  Route: transfer
-`AffineIndependent` to `S.toFinset` (`affineIndependent_equiv` with
-`Equiv.Set.toFinset`) and contradict
-`AffineIndependent.card_le_card_of_subset_affineSpan` (Mathlib
-FiniteDimensional.lean:252, `#s ≤ #t`) with the Coplanar witness triple.
-The forward direction is private `p25_affdep4_coplanar` (proved, below). -/
+/-- HOL `AFF_DEP_COPLANAR`.  2026-10-13 转真：backward 方向 = 独立性沿
+`Set.Finite.subtypeEquivToFinset` 传输到 `toFinset`，再以
+`AffineIndependent.card_le_card_of_subset_affineSpan`（Mathlib
+FiniteDimensional.lean:256，`#s ≤ #t`）对 Coplanar 见证三元组（`#t ≤ 3`）
+夹出 `4 ≤ 3` 矛盾；forward 方向即私有件 `p25_affdep4_coplanar`。 -/
 theorem AFF_DEP_COPLANAR (a b c d : V3)
     (hc : Set.ncard ({a, b, c, d} : Set V3) = 4) :
     (affineDependent ({a, b, c, d} : Set V3) ↔ Coplanar ({a, b, c, d} : Set V3)) := by
-  sorry
+  constructor
+  · exact p25_affdep4_coplanar
+  · intro hcop
+    obtain ⟨u, v, w, hsub⟩ := hcop
+    by_contra hnd
+    have hindep : AffineIndependent ℝ (fun x : ({a, b, c, d} : Set V3) => (x : V3)) :=
+      not_not.mp hnd
+    have hfin : ({a, b, c, d} : Set V3).Finite :=
+      Set.Finite.insert a (Set.Finite.insert b (Set.Finite.insert c (Set.finite_singleton d)))
+    have htfin : ({u, v, w} : Set V3).Finite :=
+      Set.Finite.insert u (Set.Finite.insert v (Set.finite_singleton w))
+    -- transfer independence along the canonical subtype equivalence
+    have hco : AffineIndependent ℝ
+        ((fun x : ({a, b, c, d} : Set V3) => (x : V3)) ∘ hfin.subtypeEquivToFinset.symm) :=
+      (affineIndependent_equiv (p := fun x : ({a, b, c, d} : Set V3) => (x : V3))
+        hfin.subtypeEquivToFinset.symm).2 hindep
+    have hst : ((hfin.toFinset : Set V3)) ⊆
+        (affineSpan ℝ ((htfin.toFinset : Set V3))) := by
+      rw [Set.Finite.coe_toFinset hfin, Set.Finite.coe_toFinset htfin]
+      exact hsub
+    have hle := AffineIndependent.card_le_card_of_subset_affineSpan (k := ℝ) hco hst
+    have hcard1 : hfin.toFinset.card = 4 := by
+      rw [← Set.ncard_eq_toFinset_card ({a, b, c, d} : Set V3) hfin]; exact hc
+    have hcard2 : htfin.toFinset.card ≤ 3 := by
+      rw [← Set.ncard_eq_toFinset_card ({u, v, w} : Set V3) htfin]
+      have q1 := Set.ncard_insert_le (u : V3) ({v, w} : Set V3)
+      have q2 := Set.ncard_insert_le (v : V3) ({w} : Set V3)
+      have q3 : Set.ncard ({w} : Set V3) = 1 := Set.ncard_singleton _
+      omega
+    have hcon : (4 : ℕ) ≤ 3 := by
+      rw [← hcard1]
+      exact hle.trans hcard2
+    exact absurd hcon (by omega)
 
 /-- HOL `HL_IMP_BARV`. -/
 theorem HL_IMP_BARV (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturated V)
