@@ -5069,4 +5069,197 @@ theorem hypermapOfList_iso_map (L : fgraph ℕ) {phi : ℕ → ℕ}
 
 end HypermapTypeBridge
 
+/-! ## 9. MQMSMAB 装配章（tame/ssreflect/MQMSMAB-compiled.hl，HOL `Mqmsmab.MQMSMAB`
+= `contravening V → tame_planar_hypermap (hypermap_of_fan (V,ESTD V))`）。
+Lean 折算为 `hypermapOfFanTl` 版帽石 `MQMSMAB`（§0b 重标转移已备，Assembly 侧
+`mqmsmab` 消费时经 §0b congr 家族换实例）。结构五段对照（HOL 步 1-46）：
+步 1-14 十二合取逐项（`contravening_lp_fan` + JGTDEBU1-8/10/11 + SZIPOAS +
+BDJYFFB1 + `CRTTXAT (JGTDEBU4 contrV) (fully_surrounded_perimeter_bound …)`
+收 tame_9a——本章 CRTTXAT 消费点）；步 15-20 tame_13a 权重
+（`sum_tauVEF_upper_bound` + Flyspeck 常数算术 4π−20sol0 < tgt）；步 21-41
+adm_1（3≤card≤6 枚举 × `ineq_tauK_tauVEF_std`×4，JEJTVGB 前提由 `hmain` 分量
+直接供给）；步 42-47 adm_2（`KCBLRQC` r=0 分支）；步 48-55 adm_3（`BDJYFFB2`
++ EXTENSION 集合等换元）。上游 5 枚外部锚占位件（fully_surrounded_perimeter_bound /
+sum_tauVEF_upper_bound / ineq_tauK×4）以「消费含占位前提定理」形式流动，
+本节零新增占位行。 -/
+
+/-! ### 9a. Flyspeck 常数算术种子（步 18：`Flyspeck_constants.bounds` + arith_tac）。
+全树无可见的 sol0 下界件（`LocalAuto19.sol0Bounds_p19` 自身 NEEDS 双占位且
+模块不在本文件可见闭包），此处以件⑤ Taylor 机自证够用的弱化版 `0.55127 < sol0`：
+`arccos(1/3) ≥ 1.2309544` 经半角恒等式 + `taylor_cos_lo` 认证（0.6154772 = 半角，
+六阶 Taylor 余项 ≈ 5.1e-7 ≪ 有理余量 5.2e-7 量级安全），配 `Real.pi_lt_d6`
+（π < 3.141593）收 `4π − 20·sol0 < 1.541 = tgt`。 -/
+
+/-- 半角数值种子：`0.816497 ≤ cos 0.6154772`（六阶 Taylor 下界 + 有理收口；
+0.6154772 = 1.2309544 的半角）。 -/
+private theorem cos_6154772_ge : (816497 / 10 ^ 6 : ℝ) ≤ Real.cos (6154772 / 10 ^ 7) := by
+  have hlo := taylor_cos_lo (6154772 / 10 ^ 7) (by norm_num) (by norm_num)
+  have h2 : (816497 / 10 ^ 6 : ℝ) ≤ 1 - (6154772 / 10 ^ 7 : ℝ) * (6154772 / 10 ^ 7) / 2
+      + (6154772 / 10 ^ 7) * (6154772 / 10 ^ 7) * (6154772 / 10 ^ 7)
+        * (6154772 / 10 ^ 7) / 24
+      - (6154772 / 10 ^ 7) * (6154772 / 10 ^ 7) * (6154772 / 10 ^ 7)
+        * (6154772 / 10 ^ 7) * (6154772 / 10 ^ 7) * (6154772 / 10 ^ 7) / 720 := by
+    norm_num
+  exact le_trans h2 hlo
+
+/-- 数值：`1/3 ≤ cos 1.2309544`（半角倍角恒等式 + 上条；倍角界
+2·(816497/10⁶)² − 1 = 0.66666812… ≥ 1/3 余量充足）。 -/
+private theorem cos_12309544_ge_third : (1 / 3 : ℝ) ≤ Real.cos (12309544 / 10 ^ 7) := by
+  have hhalf := cos_6154772_ge
+  have hsq : (816497 / 10 ^ 6 : ℝ) ^ 2 ≤ Real.cos (6154772 / 10 ^ 7) ^ 2 :=
+    pow_le_pow_left₀ (by norm_num) hhalf 2
+  have h2t : (2 : ℝ) * (6154772 / 10 ^ 7) = 12309544 / 10 ^ 7 := by norm_num
+  rw [← h2t, Real.cos_two_mul (6154772 / 10 ^ 7)]
+  have hr : (1 / 3 + 1 : ℝ) ≤ 2 * (816497 / 10 ^ 6 : ℝ) ^ 2 := by norm_num
+  linarith [hsq, hr]
+
+/-- 数值：`arccos(1/3) ≥ 1.2309544`（cos antitone；1.2309544 < π 经
+`Real.pi_gt_d4`）。 -/
+private theorem arccos_one_third_ge_12309544 :
+    (12309544 / 10 ^ 7 : ℝ) ≤ Real.arccos (1 / 3) := by
+  have hc := cos_12309544_ge_third
+  have hmem : 12309544 / 10 ^ 7 ≤ Real.pi := by linarith [Real.pi_gt_d4]
+  rw [← Real.arccos_cos (by norm_num) hmem]
+  exact Real.arccos_le_arccos hc
+
+/-- Flyspeck 常数算术（`Flyspeck_constants.bounds` 弱化消费版）：`0.55127 < sol0`。
+（HOL 原件用 `0.551285 < sol0`；0.55127 已足收口 4π−20sol0 < tgt，
+诚实例化注记：下游如需 0.551285 需六阶以上 Taylor。） -/
+private theorem sol0_gt_55127 : (0.55127 : ℝ) < sol0 := by
+  have hA := arccos_one_third_ge_12309544
+  have hpi : Real.pi < 3.141593 := Real.pi_lt_d6
+  have hdef : sol0 = 3 * Real.arccos (1 / 3) - Real.pi := rfl
+  linarith
+
+/-- Flyspeck 常数算术（MQMSMAB 步 18 `Flyspeck_constants.bounds` + arith_tac 的
+Lean 落地）：`4π − 20·sol0 < tgt`。 -/
+theorem four_pi_sub_20_sol0_lt_tgt : 4 * Real.pi - 20 * sol0 < tgt := by
+  have h1 := sol0_gt_55127
+  have hpi : Real.pi < 3.141593 := Real.pi_lt_d6
+  have h3 : tgt = 1.541 := rfl
+  linarith
+
+/-! ### 9b. adm_1 / adm_2 / adm_3 三分量（步 21-55）. -/
+
+/-- MQMSMAB 步 53-55（EXTENSION 集合等换元）：限定子集
+`{f ∈ set_of_face_meeting_node H d | card f = 3}` 与
+`set_of_triangles_meeting_node H d` 是同一个集合，setSum 相等。
+（本引理对任意 `Hypermap α` 成立，供 `MQMSMAB_adm3` 与 Assembly 侧复用。） -/
+theorem setSum_setOfTrianglesMeetingNode_eq {α : Type*} [DecidableEq α]
+    (H : Hypermap α) (d : α) (w : Set α → ℝ) :
+    setSum {f | f ∈ setOfFaceMeetingNode H d ∧ f.ncard = 3} w
+      = setSum (setOfTrianglesMeetingNode H d) w := by
+  have hset : {f : Set α | f ∈ setOfFaceMeetingNode H d ∧ f.ncard = 3}
+      = setOfTrianglesMeetingNode H d := by
+    ext F
+    simp only [setOfFaceMeetingNode, setOfTrianglesMeetingNode, Set.mem_setOf_eq]
+    constructor
+    · rintro ⟨⟨y, hy, rfl, hyn⟩, hcard⟩
+      exact ⟨y, hy, rfl, hcard, hyn⟩
+    · rintro ⟨y, hy, rfl, hcard, hyn⟩
+      exact ⟨⟨y, hy, rfl, hyn⟩, hcard⟩
+  rw [hset]
+
+/-- MQMSMAB 步 21-41（adm_1）：`w f = tauVEF` 时 adm_1 成立——tame_9a 给
+`3 ≤ card(face d) ≤ 6`，枚举 {3,4,5,6} 各引 `ineq_tauK_tauVEF_std`
+（JEJTVGB 前提由 `hmain.2.1`/`hmain.1` 分量直接供给，= HOL :60-64 的
+h_main 重写步）。 -/
+theorem MQMSMAB_adm1 (V : Set V3) (hlpfan : LpFan V (ESTD V))
+    (hmain : lp_main_estimate)
+    (h9a : Tame9a (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
+    Adm1 (hypermapOfFanTl V (ESTD V) hlpfan.1) (fun f => tauVEF_p2 V (ESTD V) f) := by
+  intro d hd
+  obtain ⟨h3, h6⟩ := h9a d hd
+  by_cases hn3 : ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d).ncard = 3
+  · rw [hn3]
+    show (0 : ℝ) ≤ tauVEF_p2 V (ESTD V)
+      ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d)
+    exact ineq_tau3_tauVEF_std V hlpfan hmain.2.1 d (Set.mem_setOf_eq.mpr ⟨hd, hn3⟩)
+  by_cases hn4 : ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d).ncard = 4
+  · rw [hn4]
+    show (0.206 : ℝ) ≤ tauVEF_p2 V (ESTD V)
+      ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d)
+    exact ineq_tau4_tauVEF_std V hlpfan hmain.1 d (Set.mem_setOf_eq.mpr ⟨hd, hn4⟩)
+  by_cases hn5 : ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d).ncard = 5
+  · rw [hn5]
+    show (0.4819 : ℝ) ≤ tauVEF_p2 V (ESTD V)
+      ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d)
+    exact ineq_tau5_tauVEF_std V hlpfan hmain.1 d (Set.mem_setOf_eq.mpr ⟨hd, hn5⟩)
+  by_cases hn6 : ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d).ncard = 6
+  · rw [hn6]
+    show (0.712 : ℝ) ≤ tauVEF_p2 V (ESTD V)
+      ((hypermapOfFanTl V (ESTD V) hlpfan.1).face d)
+    exact ineq_tau6_tauVEF_std V hlpfan hmain.1 d (Set.mem_setOf_eq.mpr ⟨hd, hn6⟩)
+  · have hb := h3
+    have hb2 := h6
+    omega
+
+/-- MQMSMAB 步 42-47（adm_2 的 r=0 分支）：`set_of_exceptional_meeting_node`
+基数为零时引 `KCBLRQC`（let-形以 defeq 断言展开消费），`0 < r` 支与 r=0
+矛盾，取 `bTame` 支即得。 -/
+theorem MQMSMAB_adm2 (V : Set V3) (hc : Contravening V) (hlpfan : LpFan V (ESTD V))
+    (hmain : lp_main_estimate) (hineq : KcblrqcIneqDef) :
+    Adm2 (hypermapOfFanTl V (ESTD V) hlpfan.1) (fun f => tauVEF_p2 V (ESTD V) f) := by
+  intro d hd hr0
+  have hdc : d ∈ dartOfFan V (ESTD V) := Set.mem_union_right _ (dartsTl_mem hd)
+  have hk : (0 : ℕ) < (typeOfNode (hypermapOfFanTl V (ESTD V) hlpfan.1) d).2.2 ∨
+      bTame (typeOfNode (hypermapOfFanTl V (ESTD V) hlpfan.1) d).1
+          (typeOfNode (hypermapOfFanTl V (ESTD V) hlpfan.1) d).2.1 ≤
+        setSum (setOfFaceMeetingNode (hypermapOfFanTl V (ESTD V) hlpfan.1) d)
+          (fun f => tauVEF_p2 V (ESTD V) f) :=
+    KCBLRQC V hc hmain hineq hlpfan.1 d hdc
+  rcases hk with h0 | hge
+  · exfalso
+    have hproj : (typeOfNode (hypermapOfFanTl V (ESTD V) hlpfan.1) d).2.2
+        = (setOfExceptionalMeetingNode
+            (hypermapOfFanTl V (ESTD V) hlpfan.1) d).ncard := rfl
+    omega
+  · exact hge
+
+/-- MQMSMAB 步 48-55（adm_3）：type = (5,0,1) 时引 `BDJYFFB2`（严格版
+`aTame < …`），经 `setSum_setOfTrianglesMeetingNode_eq` 换元收 `≤`。 -/
+theorem MQMSMAB_adm3 (V : Set V3) (hc : Contravening V) (hlpfan : LpFan V (ESTD V))
+    (hmain : lp_main_estimate) (hineq : KcblrqcIneqDef) :
+    Adm3 (hypermapOfFanTl V (ESTD V) hlpfan.1) (fun f => tauVEF_p2 V (ESTD V) f) := by
+  intro d hd htype
+  have hdc : d ∈ dartOfFan V (ESTD V) := Set.mem_union_right _ (dartsTl_mem hd)
+  have h := BDJYFFB2 V hc hmain hineq hlpfan.1 d hdc htype
+  rw [← setSum_setOfTrianglesMeetingNode_eq]
+  exact le_of_lt h
+
+/-- MQMSMAB 步 15-20（tame_13a）：见证 `w f = tauVEF`，adm_1/2/3 三分量
++ `sum_tauVEF_upper_bound`（≤ 4π−20sol0）+ Flyspeck 常数算术收
+`total_weight < tgt`（步 18-19：12 ≤ scriptL V 由 contravening 第三合取项）。 -/
+theorem MQMSMAB_tame13a (V : Set V3) (hc : Contravening V) (hlpfan : LpFan V (ESTD V))
+    (hmain : lp_main_estimate) (hineq : KcblrqcIneqDef)
+    (h9a : Tame9a (hypermapOfFanTl V (ESTD V) hlpfan.1)) :
+    Tame13a (hypermapOfFanTl V (ESTD V) hlpfan.1) := by
+  refine ⟨fun f => tauVEF_p2 V (ESTD V) f, ⟨MQMSMAB_adm1 V hlpfan hmain h9a,
+    MQMSMAB_adm2 V hc hlpfan hmain hineq, MQMSMAB_adm3 V hc hlpfan hmain hineq⟩, ?_⟩
+  have hscript : (12 : ℝ) ≤ scriptL V := le_of_lt hc.2.2.1
+  have hsum := sum_tauVEF_upper_bound V (ESTD V) hlpfan.1 hlpfan.2.1 hscript
+  show setSum (hypermapOfFanTl V (ESTD V) hlpfan.1).faceSet
+      (fun f => tauVEF_p2 V (ESTD V) f) < tgt
+  exact lt_of_le_of_lt hsum four_pi_sub_20_sol0_lt_tgt
+
+/-- HOL `Mqmsmab.MQMSMAB`（MQMSMAB-compiled.hl:30-80）本章帽石（`hypermapOfFanTl`
+折算版）：`contravening V` + `FAN 0 V (ESTD V)` + `lp_main_estimate` +
+`kcblrqc_ineq_def` 消费切片 ⟹ `tame_planar_hypermap`。十二合取逐项：tame_1 ←
+JGTDEBU2（plain）+JGTDEBU1（planar）；tame_2 ← JGTDEBU3+JGTDEBU4；tame_3/4/5a/8 ←
+JGTDEBU5/6/7/8；tame_9a ← **CRTTXAT**（消费点，HOL 步 5：
+`CRTTXAT (JGTDEBU4 contrV) (fully_surrounded_perimeter_bound fanV f_surr)`）；
+tame_10/11a ← JGTDEBU10/11；tame_11b/12o ← SZIPOAS/BDJYFFB1；tame_13a ←
+`MQMSMAB_tame13a`。Assembly 侧 `mqmsmab` 消费时经 §0b congr 家族换实例。 -/
+theorem MQMSMAB (V : Set V3) (hc : Contravening V) (hfan : FAN 0 V (ESTD V))
+    (hmain : lp_main_estimate) (hineq : KcblrqcIneqDef) :
+    TamePlanarHypermap (hypermapOfFanTl V (ESTD V) hfan) := by
+  have hlpfan : LpFan V (ESTD V) := contravening_lp_fan V hc
+  have h9a := CRTTXAT (fun V' hfan' hc' => JGTDEBU4 V' hc' hfan') V hc hfan
+    (fully_surrounded_perimeter_bound V (ESTD V) hlpfan.1 hlpfan.2.1)
+  exact ⟨⟨JGTDEBU2 V hc hfan, JGTDEBU1 V hc hfan⟩,
+    ⟨JGTDEBU3 V hc hfan, JGTDEBU4 V hc hfan⟩, JGTDEBU5 V hc hfan, JGTDEBU6 V hc hfan,
+    JGTDEBU7 V hc hfan, JGTDEBU8 V hc hfan, h9a, JGTDEBU10 V hc hfan,
+    JGTDEBU11 V hc hfan, SZIPOAS hineq V hc hfan, BDJYFFB1 V hc hmain hineq hfan,
+    MQMSMAB_tame13a V hc hlpfan hmain hineq h9a⟩
+
 end Kepler.Text.TameLp
