@@ -2198,6 +2198,407 @@ theorem mi_REAL_WLOG_SIMPLEX_3d {P : ℝ → ℝ → ℝ → Prop}
       · rw [h2]; exact h3 y5 y6 y4 h46 h65
     · rw [h2, h2, h1]; exact h3 y6 y5 y4 h45 h56
 
+/-! ## MERGE-INEQ wave 2c: the lindihpi / gamma3_x channel
+
+The merge_ineq.hl items consumed by PackingAuto25's
+`IXPOTPA_MERGED`/`TXQTPVC_MERGED`/`TEWNSCJ_MERGED` (OXLZLEZ3.hl:8484/8572/8623):
+`lindihpi_lt` (:2709-2734) / `lindihpi_gt` (:2735-2760) x-space cores,
+`dih_gt_pi2` (:2761-2782), the y-space variants `lindihpi_lt_y` (:2783-2824) /
+`lindihpi_gt_y` (:2825-2866) stated in the `bank_IXPOTPA` `yOfX` spelling, and
+`gamma3_x_gamma3f` (:4101-4126).  The atn2 quadrant analysis follows
+`Trigonometry1.ATN2_BREAKDOWN` (trig1.hl:341-353); the tan/arctan monotone
+bridge is Mathlib `strictMonoOn_tan` + `tan_arctan`.  The same-root
+`lp_details` variants on the LocalAuto11 lane (`lindihpi_lt_small_p11`, the
+`delta_x4 > 0` quadrant) stay on that lane's own debt registry. -/
+
+/-- HOL `Trigonometry1.ATN2_BREAKDOWN` first clause (trig1.hl:341-353): on
+the positive-argument half-plane `atn2` is the plain arctangent of the
+slope. -/
+private theorem mi_atn2_pos_x {x y : ℝ} (hx : 0 < x) :
+    atn2 x y = Real.arctan (y / x) := by
+  rw [atn2]
+  by_cases h1 : |y| < x
+  · rw [if_pos h1]
+  · rw [if_neg h1]
+    rcases lt_trichotomy y 0 with hy | hy | hy
+    · rw [if_neg (show ¬(0 : ℝ) < y from by linarith), if_pos hy]
+      have hxy : x / y < 0 := by
+        have h2 : x / y = -(x / (-y)) := by field_simp
+        rw [h2, neg_lt_zero]
+        exact div_pos hx (neg_pos.mpr hy)
+      have hinv := Real.arctan_inv_of_neg hxy
+      rw [inv_div] at hinv
+      exact hinv.symm
+    · exact absurd (show |y| < x by rw [hy]; simpa using hx) h1
+    · rw [if_pos hy]
+      have hinv := Real.arctan_inv_of_pos (div_pos hy hx)
+      rw [inv_div] at hinv
+      linarith
+
+/-- HOL `Trigonometry1.ATN2_BREAKDOWN` second clause (trig1.hl:341-353). -/
+private theorem mi_atn2_pos_y {x y : ℝ} (hy : 0 < y) :
+    atn2 x y = Real.pi / 2 - Real.arctan (x / y) := by
+  rw [atn2]
+  by_cases h1 : |y| < x
+  · rw [if_pos h1]
+    have hx : 0 < x := by linarith [le_abs_self y]
+    have hinv := Real.arctan_inv_of_pos (div_pos hy hx)
+    rw [inv_div] at hinv
+    linarith
+  · rw [if_neg h1, if_pos hy]
+
+/-- HOL `dih_gt_pi2` (merge_ineq.hl:2761-2782). -/
+theorem mi_dih_gt_pi2 {x1 x2 x3 x4 x5 x6 : ℝ} (h1 : 0 < x1)
+    (hd : 0 < deltaX x1 x2 x3 x4 x5 x6)
+    (hdih : Real.pi / 2 < dihXf x1 x2 x3 x4 x5 x6) :
+    deltaX4 x1 x2 x3 x4 x5 x6 < 0 := by
+  have hsqrt : 0 < Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) :=
+    Real.sqrt_pos.mpr (by positivity)
+  have h0 : 0 < atn2 (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
+      (-(deltaX4 x1 x2 x3 x4 x5 x6)) := by
+    have hdih' : Real.pi / 2 < Real.pi / 2 + atn2
+        (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
+        (-(deltaX4 x1 x2 x3 x4 x5 x6)) := hdih
+    linarith
+  rw [mi_atn2_pos_x hsqrt] at h0
+  rcases div_pos_iff.mp (Real.arctan_pos.mp h0) with ⟨hpos, -⟩ | ⟨-, hneg⟩
+  · linarith
+  · linarith [hsqrt]
+
+/-- The slot symmetry of `dihXf` used by the `lindihpi` line (HOL
+`Nonlinear_lemma.dih_x_sym2`, nonlinear_lemma.hl:493-505; polynomial
+identity level). -/
+private theorem mi_dihXf_sym2 (x1 x2 x3 x4 x5 x6 : ℝ) :
+    dihXf x1 x2 x3 x4 x5 x6 = dihXf x1 x5 x6 x4 x2 x3 := by
+  have hd : deltaX x1 x5 x6 x4 x2 x3 = deltaX x1 x2 x3 x4 x5 x6 := by
+    simp only [deltaX]; ring
+  have hd4 : deltaX4 x1 x5 x6 x4 x2 x3 = deltaX4 x1 x2 x3 x4 x5 x6 := by
+    simp only [deltaX4]; ring
+  simp only [dihXf, hd, hd4]
+
+/-- The 3-cycle slot symmetry of `solX` (HOL `sol_x_sym2`,
+merge_ineq.hl:1122-1131; the three `dihXf` summands permute, so this is
+plain commutativity). -/
+private theorem mi_solX_cycle (x1 x2 x3 x4 x5 x6 : ℝ) :
+    solX x1 x2 x3 x4 x5 x6 = solX x2 x3 x1 x5 x6 x4 := by
+  simp only [solX]
+  ring
+
+/-- HOL `lindihpi_lt` (merge_ineq.hl:2709-2734). -/
+theorem mi_lindihpi_lt {u x1 x2 x3 x4 x5 x6 : ℝ} (hu : |u| < Real.pi / 2)
+    (h1 : 0 < x1) (hd4 : deltaX4 x1 x2 x3 x4 x5 x6 < 0) :
+    (dihXf x1 x2 x3 x4 x5 x6 < Real.pi - u ↔
+      -(Real.tan u) * deltaX4 x1 x2 x3 x4 x5 x6
+        < Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)) := by
+  have htpos : 0 < -(deltaX4 x1 x2 x3 x4 x5 x6) := by linarith
+  have hbreak : dihXf x1 x2 x3 x4 x5 x6
+      = Real.pi - Real.arctan (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+          / -(deltaX4 x1 x2 x3 x4 x5 x6)) := by
+    show Real.pi / 2 + atn2 (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
+      (-(deltaX4 x1 x2 x3 x4 x5 x6))
+      = Real.pi - Real.arctan (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+          / -(deltaX4 x1 x2 x3 x4 x5 x6))
+    rw [mi_atn2_pos_y htpos]
+    ring
+  have hu_mem : u ∈ Set.Ioo (-(Real.pi / 2)) (Real.pi / 2) :=
+    ⟨by linarith [abs_lt.mp hu], by linarith [abs_lt.mp hu]⟩
+  have hmono : Real.tan u
+      < Real.tan (Real.arctan (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+          / -(deltaX4 x1 x2 x3 x4 x5 x6))) ↔
+      u < Real.arctan (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+          / -(deltaX4 x1 x2 x3 x4 x5 x6)) :=
+    Real.strictMonoOn_tan.lt_iff_lt hu_mem (Real.arctan_mem_Ioo _)
+  rw [Real.tan_arctan] at hmono
+  have hbridge : Real.tan u * -(deltaX4 x1 x2 x3 x4 x5 x6)
+      = -(Real.tan u) * deltaX4 x1 x2 x3 x4 x5 x6 := by ring
+  constructor
+  · intro hlt
+    rw [hbreak] at hlt
+    have h2 := hmono.mpr (by linarith)
+    have h3 := (lt_div_iff₀ htpos).mp h2
+    rw [← hbridge]
+    exact h3
+  · intro hR
+    have h3 : Real.tan u * -(deltaX4 x1 x2 x3 x4 x5 x6)
+        < Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) := by
+      rw [hbridge]
+      exact hR
+    have h2 := (lt_div_iff₀ htpos).mpr h3
+    rw [hbreak]
+    linarith [hmono.mp h2]
+
+/-- HOL `lindihpi_gt` (merge_ineq.hl:2735-2760). -/
+theorem mi_lindihpi_gt {u x1 x2 x3 x4 x5 x6 : ℝ} (hu : |u| < Real.pi / 2)
+    (h1 : 0 < x1) (hd4 : deltaX4 x1 x2 x3 x4 x5 x6 < 0) :
+    (Real.pi - u < dihXf x1 x2 x3 x4 x5 x6 ↔
+      Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+        < -(Real.tan u) * deltaX4 x1 x2 x3 x4 x5 x6) := by
+  have htpos : 0 < -(deltaX4 x1 x2 x3 x4 x5 x6) := by linarith
+  have hbreak : dihXf x1 x2 x3 x4 x5 x6
+      = Real.pi - Real.arctan (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+          / -(deltaX4 x1 x2 x3 x4 x5 x6)) := by
+    show Real.pi / 2 + atn2 (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
+      (-(deltaX4 x1 x2 x3 x4 x5 x6))
+      = Real.pi - Real.arctan (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+          / -(deltaX4 x1 x2 x3 x4 x5 x6))
+    rw [mi_atn2_pos_y htpos]
+    ring
+  have hu_mem : u ∈ Set.Ioo (-(Real.pi / 2)) (Real.pi / 2) :=
+    ⟨by linarith [abs_lt.mp hu], by linarith [abs_lt.mp hu]⟩
+  have hmono : Real.tan u
+      < Real.tan (Real.arctan (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+          / -(deltaX4 x1 x2 x3 x4 x5 x6))) ↔
+      u < Real.arctan (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+          / -(deltaX4 x1 x2 x3 x4 x5 x6)) :=
+    Real.strictMonoOn_tan.lt_iff_lt hu_mem (Real.arctan_mem_Ioo _)
+  rw [Real.tan_arctan] at hmono
+  have hmono2 : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+        / -(deltaX4 x1 x2 x3 x4 x5 x6) < Real.tan u ↔
+      Real.arctan (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+          / -(deltaX4 x1 x2 x3 x4 x5 x6)) < u := by
+    have h := Real.strictMonoOn_tan.lt_iff_lt
+      (Real.arctan_mem_Ioo (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+          / -(deltaX4 x1 x2 x3 x4 x5 x6))) hu_mem
+    rw [Real.tan_arctan] at h
+    exact h
+  have hbridge : Real.tan u * -(deltaX4 x1 x2 x3 x4 x5 x6)
+      = -(Real.tan u) * deltaX4 x1 x2 x3 x4 x5 x6 := by ring
+  constructor
+  · intro hlt
+    rw [hbreak] at hlt
+    have h2 := hmono2.mpr (by linarith)
+    have h3 := (div_lt_iff₀ htpos).mp h2
+    rw [← hbridge]
+    exact h3
+  · intro hR
+    have h3 : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+        < Real.tan u * -(deltaX4 x1 x2 x3 x4 x5 x6) := by
+      rw [hbridge]
+      exact hR
+    have h2 := (div_lt_iff₀ htpos).mpr h3
+    rw [hbreak]
+    linarith [hmono2.mp h2]
+
+/-- The squared-form bridge of the `lindihpi_y` line: `-(a)·delta4_y <
+sqrt(4·y1²·delta_y)` (both sides nonnegative) iff `a²·delta4_y² <
+4·y1²·delta_y` — the squaring step of HOL `lindihpi_lt_y`
+(merge_ineq.hl:2783-2824, via `SQRT_POW_2` + `LT_POW2_EQ_LT`). -/
+private theorem mi_lindihpi_y_bridge {a y1 y2 y3 y4 y5 y6 : ℝ} (ha : 0 < a)
+    (hy1 : 0 < y1) (hd : 0 < deltaY y1 y2 y3 y4 y5 y6)
+    (hd4 : delta4Y y1 y2 y3 y4 y5 y6 < 0) :
+    (-(a) * delta4Y y1 y2 y3 y4 y5 y6
+        < Real.sqrt (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6)) ↔
+    a ^ 2 * delta4Y y1 y2 y3 y4 y5 y6 ^ 2
+      < 4 * (y1 * y1 * deltaY y1 y2 y3 y4 y5 y6) := by
+  have hprod : (-(a) * delta4Y y1 y2 y3 y4 y5 y6) ^ 2
+      = a ^ 2 * delta4Y y1 y2 y3 y4 y5 y6 ^ 2 := by ring
+  have hA : 4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6
+      = 4 * (y1 * y1 * deltaY y1 y2 y3 y4 y5 y6) := by ring
+  have hA0 : 0 ≤ 4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6 := by
+    nlinarith [hd]
+  have hpos : 0 < -(a) * delta4Y y1 y2 y3 y4 y5 y6 := by nlinarith
+  constructor
+  · intro h0
+    have hsq : (-(a) * delta4Y y1 y2 y3 y4 y5 y6) ^ 2
+        < Real.sqrt (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6) ^ 2 :=
+      sq_lt_sq'
+        (by linarith [Real.sqrt_nonneg (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6)])
+        h0
+    rw [Real.sq_sqrt hA0, hA, hprod] at hsq
+    exact hsq
+  · intro h
+    have h2 : (-(a) * delta4Y y1 y2 y3 y4 y5 y6) ^ 2
+        < Real.sqrt (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6) ^ 2 := by
+      rw [hprod, Real.sq_sqrt hA0, hA]
+      exact h
+    exact (abs_lt_of_sq_lt_sq' h2 (Real.sqrt_nonneg _)).2
+
+/-- HOL `lindihpi_lt_y` (merge_ineq.hl:2783-2824), stated in the
+`bank_IXPOTPA` `yOfX` spelling. -/
+theorem mi_lindihpi_lt_y {a y1 y2 y3 y4 y5 y6 : ℝ} (hy1 : 0 < y1) (ha : 0 < a)
+    (hd : 0 < deltaY y1 y2 y3 y4 y5 y6) (hd4 : delta4Y y1 y2 y3 y4 y5 y6 < 0) :
+    (dihY y1 y2 y3 y4 y5 y6 < Real.pi - Real.arctan a ↔
+      a ^ 2 * yOfX delta4SquaredX y1 y2 y3 y4 y5 y6
+        < 4 * yOfX x1DeltaX y1 y2 y3 y4 y5 y6) := by
+  have hx1 : 0 < y1 * y1 := by positivity
+  have hcore := mi_lindihpi_lt (u := Real.arctan a)
+    (abs_lt.mpr ⟨Real.neg_pi_div_two_lt_arctan a, Real.arctan_lt_pi_div_two a⟩)
+    hx1 hd4
+  rw [Real.tan_arctan] at hcore
+  have hcore' : (dihY y1 y2 y3 y4 y5 y6 < Real.pi - Real.arctan a ↔
+      -(a) * delta4Y y1 y2 y3 y4 y5 y6
+        < Real.sqrt (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6)) := hcore
+  constructor
+  · intro h
+    exact (mi_lindihpi_y_bridge ha hy1 hd hd4).mp (hcore'.mp h)
+  · intro h
+    exact hcore'.mpr ((mi_lindihpi_y_bridge ha hy1 hd hd4).mpr h)
+
+/-- The mirrored squared-form bridge for the `lindihpi_gt_y` line. -/
+private theorem mi_lindihpi_y_bridge_gt {a y1 y2 y3 y4 y5 y6 : ℝ} (ha : 0 < a)
+    (hd : 0 < deltaY y1 y2 y3 y4 y5 y6) (hd4 : delta4Y y1 y2 y3 y4 y5 y6 < 0) :
+    (Real.sqrt (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6)
+        < -(a) * delta4Y y1 y2 y3 y4 y5 y6) ↔
+    4 * (y1 * y1 * deltaY y1 y2 y3 y4 y5 y6)
+      < a ^ 2 * delta4Y y1 y2 y3 y4 y5 y6 ^ 2 := by
+  have hprod : (-(a) * delta4Y y1 y2 y3 y4 y5 y6) ^ 2
+      = a ^ 2 * delta4Y y1 y2 y3 y4 y5 y6 ^ 2 := by ring
+  have hA : 4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6
+      = 4 * (y1 * y1 * deltaY y1 y2 y3 y4 y5 y6) := by ring
+  have hA0 : 0 ≤ 4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6 := by
+    nlinarith [hd]
+  have hpos : 0 < -(a) * delta4Y y1 y2 y3 y4 y5 y6 := by nlinarith
+  constructor
+  · intro h0
+    have hsq : Real.sqrt (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6) ^ 2
+        < (-(a) * delta4Y y1 y2 y3 y4 y5 y6) ^ 2 :=
+      sq_lt_sq'
+        (by linarith [Real.sqrt_nonneg (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6)])
+        h0
+    rw [Real.sq_sqrt hA0, hprod, hA] at hsq
+    exact hsq
+  · intro h
+    have h2 : Real.sqrt (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6) ^ 2
+        < (-(a) * delta4Y y1 y2 y3 y4 y5 y6) ^ 2 := by
+      rw [Real.sq_sqrt hA0, hprod, hA]
+      exact h
+    exact (abs_lt_of_sq_lt_sq' h2 hpos.le).2
+
+/-- HOL `lindihpi_gt_y` (merge_ineq.hl:2825-2866), stated in the
+`bank_IXPOTPA` `yOfX` spelling. -/
+theorem mi_lindihpi_gt_y {a y1 y2 y3 y4 y5 y6 : ℝ} (hy1 : 0 < y1) (ha : 0 < a)
+    (hd : 0 < deltaY y1 y2 y3 y4 y5 y6) (hd4 : delta4Y y1 y2 y3 y4 y5 y6 < 0) :
+    (Real.pi - Real.arctan a < dihY y1 y2 y3 y4 y5 y6 ↔
+      4 * yOfX x1DeltaX y1 y2 y3 y4 y5 y6
+        < a ^ 2 * yOfX delta4SquaredX y1 y2 y3 y4 y5 y6) := by
+  have hx1 : 0 < y1 * y1 := by positivity
+  have hcore := mi_lindihpi_gt (u := Real.arctan a)
+    (abs_lt.mpr ⟨Real.neg_pi_div_two_lt_arctan a, Real.arctan_lt_pi_div_two a⟩)
+    hx1 hd4
+  rw [Real.tan_arctan] at hcore
+  have hcore' : (Real.pi - Real.arctan a < dihY y1 y2 y3 y4 y5 y6 ↔
+      Real.sqrt (4 * (y1 * y1) * deltaY y1 y2 y3 y4 y5 y6)
+        < -(a) * delta4Y y1 y2 y3 y4 y5 y6) := hcore
+  constructor
+  · intro h
+    exact (mi_lindihpi_y_bridge_gt ha hd hd4).mp (hcore'.mp h)
+  · intro h
+    exact hcore'.mpr ((mi_lindihpi_y_bridge_gt ha hd hd4).mpr h)
+
+/-- Named projection of rest entry 7 `bank_IXPOTPA`
+(PackingAuto25 `IXPOTPA_MERGED` consumer). -/
+theorem proj_bank_IXPOTPA (h : pack_nonlinear_non_ox3q1h) : bank_IXPOTPA :=
+  h.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 8 `bank_TXQTPVC`
+(PackingAuto25 `TXQTPVC_MERGED` consumer). -/
+theorem proj_bank_TXQTPVC (h : pack_nonlinear_non_ox3q1h) : bank_TXQTPVC :=
+  h.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 12 `bank_TEWNSCJ`
+(PackingAuto25 `TEWNSCJ_MERGED` consumer). -/
+theorem proj_bank_TEWNSCJ (h : pack_nonlinear_non_ox3q1h) : bank_TEWNSCJ :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Explicit form of `vol3f456` (operator unfolding; matches the body of
+HOL `Functional_equation.nonf_gamma3_x`, functional_equation.hl:1327-1340). -/
+private theorem mi_vol3f456_eq (m x1 x2 x3 x4 x5 x6 : ℝ) :
+    vol3f456 m x1 x2 x3 x4 x5 x6
+      = (2 * mm1 / Real.pi) * (solX x5 2 x4 2 x6 2 + solX x6 2 x5 2 x4 2
+            + solX x4 2 x6 2 x5 2)
+        - (8 * mm2 / Real.pi) * (lfun (Real.sqrt x4 * 0.5) * m
+              * dihXf x4 2 x6 2 x5 2
+            + lfun (Real.sqrt x5 * 0.5) * dihXf x5 2 x4 2 x6 2
+            + lfun (Real.sqrt x6 * 0.5) * dihXf x6 2 x5 2 x4 2) := by
+  simp only [vol3f456, scalar6, uni, mk456, compose6, projX4, projX5, projX6,
+    projY4, projY5, projY6, constant6, two6, rotate4, rotate5, rotate6,
+    Pi.add_apply, Pi.mul_apply, Pi.sub_apply]
+  ring
+
+/-- HOL `gamma3_x_gamma3f` (merge_ineq.hl:4101-4126). -/
+theorem mi_gamma3_x_gamma3f (a b c y4 y5 y6 : ℝ)
+    (h4 : 2 * hminus ≤ y4) (h5 : 2 ≤ y5) (h5' : y5 ≤ 2 * hminus)
+    (h6 : 2 ≤ y6) (h6' : y6 ≤ 2 * hminus) :
+    gamma3f y4 y5 y6 (Real.sqrt 2) lmfun
+      = gamma3X (h0cut y4) a b c (y4 * y4) (y5 * y5) (y6 * y6) := by
+  have hsq2 : (Real.sqrt 2 * Real.sqrt 2 : ℝ) = 2 := Real.mul_self_sqrt (by norm_num)
+  have h2le4 : (2 : ℝ) ≤ y4 := le_trans mi_two_le_two_hminus h4
+  have hs4 : Real.sqrt (y4 * y4) = y4 := by
+    rw [show y4 * y4 = y4 ^ 2 from by ring]
+    exact Real.sqrt_sq (by linarith)
+  have hs5 : Real.sqrt (y5 * y5) = y5 := by
+    rw [show y5 * y5 = y5 ^ 2 from by ring]
+    exact Real.sqrt_sq (by linarith)
+  have hs6 : Real.sqrt (y6 * y6) = y6 := by
+    rw [show y6 * y6 = y6 ^ 2 from by ring]
+    exact Real.sqrt_sq (by linarith)
+  have h05 : ∀ z : ℝ, z * 0.5 = z / 2 := by
+    intro z
+    rw [div_eq_mul_inv]
+    norm_num
+  have hc5 : h0cut y5 = 1 := p21_h0cutA y5 (le_trans h5' mi_two_hminus_le_two_h0)
+  have hc6 : h0cut y6 = 1 := p21_h0cutA y6 (le_trans h6' mi_two_hminus_le_two_h0)
+  have hb4 : lfun (Real.sqrt (y4 * y4) * 0.5) * h0cut y4 = lmfun (y4 / 2) := by
+    rw [hs4, h05]
+    exact (mi_lmfun_h0cut y4).symm
+  have hb5 : lfun (Real.sqrt (y5 * y5) * 0.5) = lmfun (y5 / 2) := by
+    rw [hs5, h05, mi_lmfun_h0cut y5, hc5, mul_one]
+  have hb6 : lfun (Real.sqrt (y6 * y6) * 0.5) = lmfun (y6 / 2) := by
+    rw [hs6, h05, mi_lmfun_h0cut y6, hc6, mul_one]
+  have hvol : vol3r y4 y5 y6 (Real.sqrt 2)
+      = volXf 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6) := by
+    show volY (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4 y5 y6 = _
+    unfold volY
+    rw [hsq2]
+  have e1 : solY y4 y5 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6
+      = solX (y5 * y5) 2 (y4 * y4) 2 (y6 * y6) 2 := by
+    have h0 : solY y4 y5 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6
+        = solX (y4 * y4) (y5 * y5) (Real.sqrt 2 * Real.sqrt 2)
+            (Real.sqrt 2 * Real.sqrt 2) (Real.sqrt 2 * Real.sqrt 2) (y6 * y6) := rfl
+    rw [h0, hsq2]
+    exact mi_solX_cycle (y4 * y4) (y5 * y5) 2 2 2 (y6 * y6)
+  have e2 : solY y5 y6 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4
+      = solX (y6 * y6) 2 (y5 * y5) 2 (y4 * y4) 2 := by
+    have h0 : solY y5 y6 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4
+        = solX (y5 * y5) (y6 * y6) (Real.sqrt 2 * Real.sqrt 2)
+            (Real.sqrt 2 * Real.sqrt 2) (Real.sqrt 2 * Real.sqrt 2) (y4 * y4) := rfl
+    rw [h0, hsq2]
+    exact mi_solX_cycle (y5 * y5) (y6 * y6) 2 2 2 (y4 * y4)
+  have e3 : solY y6 y4 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y5
+      = solX (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2 := by
+    have h0 : solY y6 y4 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y5
+        = solX (y6 * y6) (y4 * y4) (Real.sqrt 2 * Real.sqrt 2)
+            (Real.sqrt 2 * Real.sqrt 2) (Real.sqrt 2 * Real.sqrt 2) (y5 * y5) := rfl
+    rw [h0, hsq2]
+    exact mi_solX_cycle (y6 * y6) (y4 * y4) 2 2 2 (y5 * y5)
+  have e4 : dihY y4 y5 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6
+      = dihXf (y4 * y4) 2 (y6 * y6) 2 (y5 * y5) 2 := by
+    show dihXf (y4 * y4) (y5 * y5) (Real.sqrt 2 * Real.sqrt 2)
+      (Real.sqrt 2 * Real.sqrt 2) (Real.sqrt 2 * Real.sqrt 2) (y6 * y6) = _
+    rw [hsq2]
+    exact mi_dihXf_sym2 (y4 * y4) (y5 * y5) 2 2 2 (y6 * y6)
+  have e5 : dihY y5 y6 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y4
+      = dihXf (y5 * y5) 2 (y4 * y4) 2 (y6 * y6) 2 := by
+    show dihXf (y5 * y5) (y6 * y6) (Real.sqrt 2 * Real.sqrt 2)
+      (Real.sqrt 2 * Real.sqrt 2) (Real.sqrt 2 * Real.sqrt 2) (y4 * y4) = _
+    rw [hsq2]
+    exact mi_dihXf_sym2 (y5 * y5) (y6 * y6) 2 2 2 (y4 * y4)
+  have e6 : dihY y6 y4 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y5
+      = dihXf (y6 * y6) 2 (y5 * y5) 2 (y4 * y4) 2 := by
+    show dihXf (y6 * y6) (y4 * y4) (Real.sqrt 2 * Real.sqrt 2)
+      (Real.sqrt 2 * Real.sqrt 2) (Real.sqrt 2 * Real.sqrt 2) (y5 * y5) = _
+    rw [hsq2]
+    exact mi_dihXf_sym2 (y6 * y6) (y4 * y4) 2 2 2 (y5 * y5)
+  show vol3r y4 y5 y6 (Real.sqrt 2) - vol3f y4 y5 y6 (Real.sqrt 2) lmfun
+      = gamma3X (h0cut y4) a b c (y4 * y4) (y5 * y5) (y6 * y6)
+  rw [show gamma3X (h0cut y4) a b c (y4 * y4) (y5 * y5) (y6 * y6)
+      = volXf 2 2 2 (y4 * y4) (y5 * y5) (y6 * y6)
+        - vol3f456 (h0cut y4) a b c (y4 * y4) (y5 * y5) (y6 * y6) from rfl,
+    hvol, mi_vol3f456_eq]
+  unfold vol3f
+  rw [e1, e2, e3, e4, e5, e6, ← hb4, ← hb5, ← hb6]
+
+
 /-! ## MERGE-INEQ wave 2b: `cell3_from_ineq_thm` (the cell3 dispatcher)
 
 The GIANT refinement (merge_ineq.hl:3507-3745) over the nine COMMENT tracks
