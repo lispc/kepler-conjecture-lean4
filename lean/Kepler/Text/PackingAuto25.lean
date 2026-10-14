@@ -228,6 +228,18 @@ FILL-ROUND STATUS r3 (2026-10-13 wave: 119 -> 116 sorries, MERGE-INEQ channel)
   - `TEWNSCJ_MERGED` 仍记账（NEEDS: PA3 opaque `a_spine5`/`b_spine5` ↔
     数值 `aSpine5`/`bSpine5` 桥，见其 docstring）；其余 blocker 面不变。
 
+FILL-ROUND STATUS r4 (2026-10-13 wave: 116 -> 114, 楔形证书面/LEAF_S_LEAF 装配)
+  - `MCELL4_LEAF_S_LEAF` 转真（装配级，零新增记账行）: PA18 冻结版 `CFFONNL`
+    （真证，内部经规则⑤白名单流动 `pa18_ccCell_swap`/`ZWVCBMN`）以
+    `X := mcell4 V ul` 二分装配——等式支经 PA17 `AJRIPQN`+`CC_KE_34`/
+    `ZASUVOR`/`cc_uh_exists` 钉派单值 4，不等式支恰为其 `hne` 反得爆炸；
+    楔边证书 `HDTFNFZ`+`LEPJBDJ`(k=4) 内联 + 私件 `p25m_list4_eq`/
+    `p25m_card4_ne`。`S_LEAF_CARD2`/`LEAF_RANK_ONTO` 随之零在库欠件。
+  - `MCELL4_DOMAIN` 转真（装配级）: `CC_4_PROPS` 十二合取全数消费，delta
+    合取与 `coplanar_delta_y` 逐字同形直接实例化；记账件 `CC_4_PROPS`
+    （上游 PA18 `MCELL4_EDGE_FIRST`/`STEM_EDGEX` edge-rigidity kit 未落地）
+    与 `GDRQXLGv3`（radV² 桥）消费面在案，本体不动。
+
 -/
 
 /-! ## DEFINITIONS -/
@@ -2294,25 +2306,158 @@ theorem MCELL4_LEAF3 (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturate
     rw [heq] at hn
     exact absurd measure_empty hn
 
+/-- 私件（PA18 私件 `list4_eq` 的本文件同款显式 cases 拷贝，供 :2303 装配在
+:2570 的 `p25_list4_eq` 之前取用；查重后无公开同件，命名错开）。 -/
+private theorem p25m_list4_eq (ul : List V3) (h : ul.length = 4) :
+    ul = [ul.getD 0 0, ul.getD 1 0, ul.getD 2 0, ul.getD 3 0] := by
+  cases ul with
+  | nil => simp at h
+  | cons a t1 =>
+    cases t1 with
+    | nil => simp at h
+    | cons b t2 =>
+      cases t2 with
+      | nil => simp at h
+      | cons c t3 =>
+        cases t3 with
+        | nil => simp at h
+        | cons d t4 =>
+          cases t4 with
+          | nil => rfl
+          | cons _ _ => exact absurd h (by simp)
+
+/-- 私件：四点集基数 4 排除前两点相等（`S_LEAF_CARD2` 的三集上界模式）。 -/
+private theorem p25m_ncard4_ne {x y z w : V3}
+    (h : Set.ncard ({x, y, z, w} : Set V3) = 4) : x ≠ y := by
+  intro he
+  rw [he] at h
+  have hsub : ({y, y, z, w} : Set V3) ⊆ ({y, z, w} : Set V3) := by
+    intro q hq
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hq ⊢
+    tauto
+  have hle := Set.ncard_le_ncard hsub (Set.toFinite _)
+  have h3 : Set.ncard ({y, z, w} : Set V3) ≤ 3 := by
+    have e1 := Set.ncard_insert_le y ({z, w} : Set V3)
+    have e2 := Set.ncard_insert_le z ({w} : Set V3)
+    have e3 : Set.ncard ({w} : Set V3) = 1 := Set.ncard_singleton w
+    omega
+  omega
+
+/-- 私件：四点集基数 4 给两两互异（`MCELL4_DOMAIN` 距离域与楔边证书共用）。 -/
+private theorem p25m_card4_ne {a b c d : V3}
+    (h : Set.ncard ({a, b, c, d} : Set V3) = 4) :
+    a ≠ b ∧ a ≠ c ∧ a ≠ d ∧ b ≠ c ∧ b ≠ d ∧ c ≠ d := by
+  have peq : ∀ (p q r s : V3), ({p, q, r, s} : Set V3) = ({a, b, c, d} : Set V3) →
+      Set.ncard ({p, q, r, s} : Set V3) = 4 := by
+    intro p q r s he
+    rw [he]
+    exact h
+  refine ⟨p25m_ncard4_ne (peq a b c d rfl), p25m_ncard4_ne (peq a c b d ?_),
+    p25m_ncard4_ne (peq a d b c ?_), p25m_ncard4_ne (peq b c a d ?_),
+    p25m_ncard4_ne (peq b d a c ?_), p25m_ncard4_ne (peq c d a b ?_)⟩
+  repeat' ext q
+  repeat' simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+  all_goals tauto
+
 /-- HOL `MCELL4_LEAF_S_LEAF`.
--- NEEDS: `ccKe` 分派（`CC_KE_34` PA18 ✅）后逐案 `AJRIPQN`（PA18 ✅ 链已净：
-PA17:929 真证 → PA18 `AJRIPQN_0` 真证）/ `ZASUVOR`（PA18 ✅ 2026-10-14 定义闭
-真证，零上游债）；锥相离半边经 `CFFONNL`（PA18 ⬜，CFFONNL 本体——唯一剩余
-实质阻塞，C2 扫尾 + C3 装配两波即达）+
-`MCELL4_CONVEX_HULL`/`MCELL4_CARD4` ✅（HOL OXLZLEZ3.hl:1980）。 -/
+2026-10-13 转真（装配级，零新增记账行）：`u ∈ {EL 2, EL 3}` 先定型，然后按
+PA18 冻结版 `CFFONNL`（leaf_cell.hl:2178-2514 真证；其内部经规则⑤白名单流动
+`pa18_ccCell_swap`/`ZWVCBMN` 两笔已记账债）做二分装配——以 `X := mcell4 V ul`、
+叶表 `ul := [EL 0 ul, EL 1 ul, u]` 实例化。PA18 冻结陈述的 `hne` 恰为结论之
+否定，故：(a) `mcell4 = ccCell [EL 1 ul, EL 0 ul, u]` 成立时经 `AJRIPQN`
+（PA17:929 真证）配 `CC_KE_34`/`ZASUVOR`/`cc_uh_exists` 把派单值钉到 4
+（右析取支）；(b) 不成立时该不等式正是 CFFONNL 之 `hne`，反得等式而爆炸。
+楔边证书 `stem ∈ edgeX` 由 `HDTFNFZ`+`LEPJBDJ`(k=4)+`MCELL4_CARD4` 内联
+（`MCELL4_EDGE_EXPLICIT` 在本件之后，取其 VX 论证内联版）；`u ∈ ccA0` 走
+`MCELL4_CONVEX_HULL`+`U2_IN_AFF_GT`（HOL Local_lemmas.DISJOINT_IMP_Z_IN_AFF_GT
+的杠杆件）。 -/
 theorem MCELL4_LEAF_S_LEAF (V : Set V3) (ul : List V3) (u : V3) (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 ul) (hn : ¬ nullSet (mcell4 V ul))
     (hl' : leaf V [elV ul 0, elV ul 1, u]) (hu : u ∈ ({elV ul 2, elV ul 3} : Set V3)) :
     u ∈ s_leaf V [elV ul 0, elV ul 1] := by
-  sorry
+  -- 楔边证书：VX 钉死为见证四点（MCELL4_EDGE_EXPLICIT 的 VX 论证内联）
+  have hne' : mcell4 V ul ≠ ∅ := by
+    intro h0
+    apply hn
+    rw [h0]
+    exact measure_empty
+  have h4 : ul.length = 4 := hb.1
+  have hul4 := p25m_list4_eq ul h4
+  have htr : setOfList (truncateSimplex 3 ul)
+      = ({elV ul 0, elV ul 1, elV ul 2, elV ul 3} : Set V3) := by
+    conv_lhs => rw [hul4]
+    rw [TRUNCATE_SIMPLEX_EXPLICIT_3 (ul.getD 0 0) (ul.getD 1 0) (ul.getD 2 0)
+      (ul.getD 3 0)]
+    ext q
+    simp only [setOfList, elV, Set.mem_setOf_eq, List.mem_cons, List.not_mem_nil,
+      Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  have hVX : VX V (mcell4 V ul) = setOfList (truncateSimplex 3 ul) := by
+    have h1 : VX V (mcell4 V ul) = V ∩ mcell4 V ul :=
+      HDTFNFZ (v := elV ul 0) (k := 4) hs hp hb rfl hn
+    rw [h1, show mcell4 V ul = mcell 4 V ul from rfl,
+      LEPJBDJ V ul 4 hs hp hb (by omega) (by omega) hne']
+  have hVX4 : ∀ z : V3, z ∈ VX V (mcell4 V ul) ↔
+      z ∈ ({elV ul 0, elV ul 1, elV ul 2, elV ul 3} : Set V3) := by
+    intro z
+    rw [hVX, htr]
+  have hdd := p25m_card4_ne (MCELL4_CARD4 V ul hp hs hb hn)
+  -- CFFONNL 实例的非平凡前提
+  obtain ⟨e0, e1, e2⟩ := EL_CC_UH (V := V) (ul := [elV ul 0, elV ul 1, u]) hp hs hl'
+  have hedge : ({(ccUh V [elV ul 0, elV ul 1, u]).getD 0 0,
+      (ccUh V [elV ul 0, elV ul 1, u]).getD 1 0} : Set V3) ∈ edgeX V (mcell4 V ul) := by
+    rw [e0, e1]
+    exact ⟨elV ul 0, elV ul 1, rfl, (hVX4 _).mpr (by simp), (hVX4 _).mpr (by simp), hdd.1⟩
+  have h4m : mcell4 V ul = mcell 4 V ul := by simp [mcell]
+  have hX : mcell4 V ul ∈ mcellSet V := ⟨4, ul, h4m, hb⟩
+  have hA : mcell4 V ul ∩ ccA0 [elV ul 0, elV ul 1, u] ≠ ∅ := by
+    refine Set.nonempty_iff_ne_empty.mp ⟨u, Set.mem_inter ?_ ?_⟩
+    · rw [MCELL4_CONVEX_HULL V ul hp hs hb hn]
+      refine subset_convexHull ℝ _ ?_
+      rcases Set.mem_insert_iff.mp hu with hx | hx
+      · exact Or.inr (Or.inr (Or.inl hx))
+      · rw [Set.mem_singleton_iff] at hx
+        exact Or.inr (Or.inr (Or.inr hx))
+    · unfold ccA0
+      have hU := U2_IN_AFF_GT (V := V) (ul := [elV ul 0, elV ul 1, u]) hp hs hl'
+      rw [e0, e1, e2] at hU
+      exact hU
+  by_cases hEq : mcell4 V ul = ccCell V [elV ul 1, elV ul 0, u]
+  · -- 等式情形：AJRIPQN 钉出派单值 4（右析取支）
+    refine Set.mem_setOf_eq.mpr ⟨hl', Or.inr ?_⟩
+    unfold ccCell at hEq
+    obtain ⟨hij, -⟩ := AJRIPQN V ul (ccUh V [elV ul 1, elV ul 0, u]) 4
+      (ccKe V [elV ul 1, elV ul 0, u]) hs hp hb
+      ((Classical.choose_spec (cc_uh_exists V [elV ul 1, elV ul 0, u]) hp hs
+        (ZASUVOR hp hs hl').1).1)
+      (by simp)
+      (by rcases CC_KE_34 V [elV ul 1, elV ul 0, u] with h | h <;> simp [h])
+      (by
+        intro hcon
+        have hI : mcell 4 V ul ∩ mcell (ccKe V [elV ul 1, elV ul 0, u])
+              V (ccUh V [elV ul 1, elV ul 0, u]) = mcell4 V ul := by
+          rw [← h4m, ← hEq, Set.inter_self]
+        rw [hI] at hcon
+        exact hn hcon)
+    exact hij.symm
+  · -- 不等式情形：正是 PA18 冻结 CFFONNL 的 hne，反得等式而爆炸
+    exfalso
+    have hne : mcell4 V ul ≠ ccCell V [(ccUh V [elV ul 0, elV ul 1, u]).getD 1 0,
+        (ccUh V [elV ul 0, elV ul 1, u]).getD 0 0,
+        (ccUh V [elV ul 0, elV ul 1, u]).getD 2 0] := by
+      rw [e1, e0, e2]
+      exact hEq
+    exact absurd
+      (CFFONNL (V := V) (ul := [elV ul 0, elV ul 1, u]) (X := mcell4 V ul)
+        hp hs hl' hX hedge hA hne)
+      hne
 
 /-- HOL `S_LEAF_CARD2`.
 leaf-rank 波（2026-10-08）转真（装配级）：`{EL 2, EL 3}` 两点互异（`MCELL4_CARD4`
 ✅ 的 4 点互异性）且都是茎叶（`MCELL4_LEAF2/3/LEAF_S_LEAF`），故
 `2 = ncard {EL 2, EL 3} ≤ ncard (s_leaf ...)`（`S_LEAF_FINITE` ✅）。
--- NEEDS: 仅欠 MCELL4_LEAF_S_LEAF 一件在库具名叶（2026-10-12 起——
-MCELL4_LEAF2/LEAF3 已转真，见该两件 docstring；LEAF_S_LEAF 仍卡 PA18
-leaf-cell 链的 AJRIPQN/CFFONNL）。 -/
+2026-10-13：MCELL4_LEAF_S_LEAF 已转真（见该件 docstring），本件成为完整真证、
+零在库欠件。 -/
 theorem S_LEAF_CARD2 (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturated V)
     (hb : barV V 3 ul) (hn : ¬ nullSet (mcell4 V ul)) :
     2 ≤ Set.ncard (s_leaf V [elV ul 0, elV ul 1]) := by
@@ -2349,8 +2494,7 @@ of the 4-cell.
 leaf-rank 波（2026-10-08）转真（装配级）：4-cell 顶点是茎叶
 （`MCELL4_LEAF2/3` + `MCELL4_LEAF_S_LEAF`），落进 `leaf_rank` 的满射像
 （`hr.1`），再经周期性折回 `j % n < n`（`p25_f_mod`）。
--- NEEDS: 同 `S_LEAF_CARD2`——仅欠 MCELL4_LEAF_S_LEAF 一件在库具名叶
-（2026-10-12 起，leaf-cell 链，PA18 车道债的延伸）。 -/
+2026-10-13：MCELL4_LEAF_S_LEAF 已转真，本件成为完整真证、零在库欠件。 -/
 theorem LEAF_RANK_ONTO (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ → V3)
     (u : V3) (hp : Packing V) (hs : saturated V) (hb : barV V 3 ul)
     (hr : leaf_rank V [elV ul 0, elV ul 1] w0 n f) (hn : n ≠ 0)
@@ -3692,7 +3836,17 @@ theorem radius_le_circumradius_all (u0 u1 u2 u3 : V3)
   repeat' simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
   all_goals tauto
 
-/-- HOL `MCELL4_DOMAIN`: the 4-cell wedge distance certificate. -/
+/-- HOL `MCELL4_DOMAIN`: the 4-cell wedge distance certificate.
+2026-10-13 转真（装配级）：`CC_4_PROPS` 十二合取全数消费——`hl < √2` 支经
+`hl` 定义性展开（`radV ∘ setOfList`）+`BARV3_SET_OF_LIST4` 给 `radV < √2`；
+`¬Coplanar` 支喂 `radius_le_circumradius_all`（弦长 ≤ 2r，六连）与
+`coplanar_delta_y`（delta 合取与该 Iff 逐字同形，`.mp` 直接实例化）与
+`NOT_COPLANAR_IMP_CARD4_ALT`（4 互异 → packing 分离给 `2 ≤ dist` 六连）；
+`rad2_y` 支经 `GDRQXLGv3`（radV² ↔ rad2XP25 平方长解析桥）+ 弦不等式。
+`barV` 支走 `BARV_SUBSET` 给四点 ∈ V。债走账本：消费在库具名记账件
+`CC_4_PROPS`（其上游 PA18 `MCELL4_EDGE_FIRST`/`STEM_EDGEX` edge-rigidity kit
+未落地，本文件在案）与 `GDRQXLGv3`（radV² 桥，本文件 :1105 在案）；本波
+零新增记账行。 -/
 theorem MCELL4_DOMAIN (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
     (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V) (hs : saturated V)
     (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V) (h1 : u1 ∈ V)
@@ -3709,7 +3863,73 @@ theorem MCELL4_DOMAIN (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i
           (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) < 2 ∧
       0 < deltaY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
         (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) := by
-  sorry
+  obtain ⟨-, hhl4, -, hncop, -, hcc4, -, -, -, -, hnull4, hbar4⟩ :=
+    CC_4_PROPS V u0 u1 w0 n f i hp hs hr hnc hn h4
+  have hnn4 : ¬ nullSet (mcell4 V [u0, u1, f i, f (i + 1)]) := by
+    rw [← hcc4]
+    exact hnull4
+  have hcard4 := NOT_COPLANAR_IMP_CARD4_ALT u0 u1 (f i) (f (i + 1)) hncop
+  obtain ⟨hd01, hd02, hd03, hd12, hd13, hd23⟩ := p25m_card4_ne hcard4
+  have hset4 : setOfList [u0, u1, f i, f (i + 1)]
+      = ({u0, u1, f i, f (i + 1)} : Set V3) :=
+    BARV3_SET_OF_LIST4 V [u0, u1, f i, f (i + 1)] hp hbar4
+  have hsub : setOfList [u0, u1, f i, f (i + 1)] ⊆ V :=
+    BARV_SUBSET V 3 [u0, u1, f i, f (i + 1)] hbar4
+  have hinV : ∀ z : V3, z ∈ ({u0, u1, f i, f (i + 1)} : Set V3) → z ∈ V := by
+    intro z hz
+    rw [← hset4] at hz
+    exact hsub hz
+  have hge2 : ∀ p q : V3, p ∈ ({u0, u1, f i, f (i + 1)} : Set V3) →
+      q ∈ ({u0, u1, f i, f (i + 1)} : Set V3) → p ≠ q → 2 ≤ dist p q := by
+    intro p q hp1 hp2 hne
+    exact hp.dist_ge_two (hinV _ hp1) (hinV _ hp2) hne
+  have hrad : radV ({u0, u1, f i, f (i + 1)} : Set V3) < Real.sqrt 2 := by
+    have hcv : hl [u0, u1, f i, f (i + 1)] < Real.sqrt 2 := hhl4
+    unfold hl at hcv
+    rw [hset4] at hcv
+    exact hcv
+  have haff : ¬ affineDependent ({u0, u1, f i, f (i + 1)} : Set V3) :=
+    fun hd => hncop (p25_affdep4_coplanar hd)
+  have hnn0 : 0 ≤ radV ({u0, u1, f i, f (i + 1)} : Set V3) := by
+    rw [OAPVION2_concl ({u0, u1, f i, f (i + 1)} : Set V3) haff u0 (by simp)]
+    exact dist_nonneg
+  have h6 := radius_le_circumradius_all u0 u1 (f i) (f (i + 1)) hncop
+  have hlt2 : ∀ x : ℝ, x ≤ 2 * radV ({u0, u1, f i, f (i + 1)} : Set V3) →
+      x < 2 * Real.sqrt 2 := by
+    intro x hx
+    linarith [hrad]
+  refine ⟨hcey.1, hcey.2, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact hge2 u0 (f i) (by simp) (by simp) hd02
+  · exact hlt2 _ h6.2.1
+  · exact hge2 u0 (f (i + 1)) (by simp) (by simp) hd03
+  · exact hlt2 _ h6.2.2.1
+  · exact hge2 (f i) (f (i + 1)) (by simp) (by simp) hd23
+  · exact hlt2 _ h6.2.2.2.2.2
+  · exact hge2 u1 (f i) (by simp) (by simp) hd12
+  · exact hlt2 _ h6.2.2.2.1
+  · exact hge2 u1 (f (i + 1)) (by simp) (by simp) hd13
+  · exact hlt2 _ h6.2.2.2.2.1
+  · have hG := GDRQXLGv3 u0 u1 (f i) (f (i + 1)) hncop
+    simp only [pow_two] at hG
+    have hY : rad2YP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+          (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i))
+        = rad2XP25 (dist u0 u1 * dist u0 u1) (dist u0 (f i) * dist u0 (f i))
+            (dist u0 (f (i + 1)) * dist u0 (f (i + 1)))
+            (dist (f i) (f (i + 1)) * dist (f i) (f (i + 1)))
+            (dist u1 (f (i + 1)) * dist u1 (f (i + 1)))
+            (dist u1 (f i) * dist u1 (f i)) := rfl
+    rw [hY, ← hG]
+    have hmul1 : radV ({u0, u1, f i, f (i + 1)} : Set V3)
+        * radV ({u0, u1, f i, f (i + 1)} : Set V3)
+        ≤ radV ({u0, u1, f i, f (i + 1)} : Set V3) * Real.sqrt 2 :=
+      mul_le_mul_of_nonneg_left (le_of_lt hrad) hnn0
+    have hmul2 : radV ({u0, u1, f i, f (i + 1)} : Set V3) * Real.sqrt 2
+        < Real.sqrt 2 * Real.sqrt 2 :=
+      mul_lt_mul_of_pos_right hrad (by norm_num : (0:ℝ) < Real.sqrt 2)
+    have hsqrt : Real.sqrt 2 * Real.sqrt 2 = 2 :=
+      Real.mul_self_sqrt (by norm_num : (0:ℝ) ≤ 2)
+    linarith
+  · exact (coplanar_delta_y u0 u1 (f i) (f (i + 1))).mp hncop
 
 /-- HOL `real_model_azim_c4`. -/
 theorem real_model_azim_c4 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
