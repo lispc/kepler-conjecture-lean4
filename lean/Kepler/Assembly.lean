@@ -209,7 +209,7 @@ def PackIneqDefA : Prop := True
 
 /-- PLACEHOLDER(P6-E)：HOL `kcblrqc_ineq_def` 分量（无既有 Lean 对应物；
 新造占位，语义由 G4/P6-E 填实）。 -/
-def KcblrqcIneqDef : Prop := True
+def KcblrqcIneqDef : Prop := Kepler.Text.TameLp.KcblrqcIneqDef
 
 /-- **接口 1**：HOL `the_nonlinear_inequalities`（the_main_statement.hl:55-59）
 的六件合取。前三分量已用 Lean 侧真 Prop 真化（2026-09-21 骨架化精化，取代
@@ -807,7 +807,7 @@ textCapstone 消费链（:5263 调用点）随之转真（上游 TameLp 六枚�
 theorem mqmsmab (V : Set V3) (hkcblrqc : KcblrqcIneqDef) (hmain : lp_main_estimate)
     (hfan : FAN 0 V (ESTD V)) (hc : Contravening V) :
     TamePlanarHypermap (hypermapOfFan 0 V (ESTD V) hfan) := by
-  sorry
+  exact mqmsmabWired V hkcblrqc hmain hfan hc
 
 /-- **接口 → 真证明（2026-09-21 填证波）**：HOL `tame_planar_hypermap_restricted`
 （the_main_statement.hl:143-170；ssreflect/tms.hl 同名引理）。HOL 脚本四步：

@@ -1537,7 +1537,7 @@ lane 纪律禁止本波自行动用陈述变更权，接线按「凡依赖该裁
 `mqmsmabWired` 已在 `lean/Kepler/Assembly.lean` §2c' 全绿落地
 （`lake build Kepler.Assembly` EXIT=0），`mqmsmab` 本体原位待批。
 
-### (a) 缺陷
+### (a) HOL 出处与缺陷
 
 `Assembly.lean:212`：`def KcblrqcIneqDef : Prop := True`（`PLACEHOLDER(P6-E)`）。
 HOL `kcblrqc_ineq_def`（`tame/ssreflect/tame_lemmas-compiled.hl:34-46`）是
@@ -1610,7 +1610,7 @@ SF-36（Assembly `CertifiedIneqHolds` 占位语义落实，def 语义修正类�
 - 同族不在范围：Assembly `Adm3` `True` 尾（:570）与 `GoodGraphV4` 四
   `True`（:445-455 一带）是 A9 债务（scout §6.1 已记），本项不触。
 
-### (f) 状态：**已立项起草（2026-10-13，A10 第四波 lane 交付）；备件全绿，待批一行应用**
+### (f) 状态：**已批准并应用（2026-10-14 用户批准 SF-39；执行版补丁 docs/statement-fix-proposals-patches/39-kcblrqcineqdef-mqmsmab.patch 同车，STATEMENT-FIX 闸）**
 （应用时闸参数建议：`SF_ITEM=39`，GATE_MODE=STATEMENT-FIX；审计对象
 `Kepler.Assembly.mqmsmabWired`（全绿在位）+ 批准后的 `Kepler.Assembly.mqmsmab`；
 namespace `Kepler.Assembly`；验收 = `lake build Kepler.Assembly` 零新错 +
