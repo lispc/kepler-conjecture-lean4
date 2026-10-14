@@ -87,6 +87,47 @@ def Contravening (V : Set V3) : Prop :=
     (∀ v ∈ V, surroundedNode V (ESTD V) v) ∧
     (∀ v ∈ V, surroundedNode V (ECTC V) v ∨ ‖v‖ = 2)
 
+/-! **Contravening 七合取具名投影族（2026-10-13 nli 接线波前置；纯 addition）**：
+七分量逐一具名化（对照 PA21 `proj_bank_*` 家族章程 §6.5 "no bare chains"）。
+消费点样板 = §2c `contraveningFan` 的 `hc.2.2.2.2.1` 裸链（:660 附近）与
+`contraveningNegative` 的 `hc.2.2…` 裸链族（:2557/:2587-2603 附近，本波时
+行号）；本波只补件不改写消费点（改写属后续波，涉语句冻结面）。 -/
+
+/-- Named projection of `Contravening` component 1/7（HOL `packing V`）. -/
+theorem proj_nliContrav_Packing (V : Set V3) (hc : Contravening V) :
+    Packing V := hc.1
+
+/-- Named projection of `Contravening` component 2/7
+（HOL `V SUBSET ball_annulus`）. -/
+theorem proj_nliContrav_BallAnnulus (V : Set V3) (hc : Contravening V) :
+    V ⊆ ballAnnulus := hc.2.1
+
+/-- Named projection of `Contravening` component 3/7（HOL `scriptL V > &12`）. -/
+theorem proj_nliContrav_ScriptL (V : Set V3) (hc : Contravening V) :
+    scriptL V > 12 := hc.2.2.1
+
+/-- Named projection of `Contravening` component 4/7（HOL scriptL 极大性）. -/
+theorem proj_nliContrav_ScriptLMax (V : Set V3) (hc : Contravening V) :
+    ∀ W : Set V3, Packing W → W ⊆ ballAnnulus → scriptL W ≤ scriptL V :=
+  hc.2.2.2.1
+
+/-- Named projection of `Contravening` component 5/7（HOL
+`CARD V = 13 \/ CARD V = 14 \/ CARD V = 15`；:660 裸链位 `hc.2.2.2.2.1`
+的具名形态）. -/
+theorem proj_nliContrav_Card (V : Set V3) (hc : Contravening V) :
+    V.ncard = 13 ∨ V.ncard = 14 ∨ V.ncard = 15 := hc.2.2.2.2.1
+
+/-- Named projection of `Contravening` component 6/7（HOL
+`surrounded_node (V, ESTD V)`；:2598 裸链位 `hc.2.2.2.2.2.1` 的具名形态）. -/
+theorem proj_nliContrav_SurroundedESTD (V : Set V3) (hc : Contravening V) :
+    ∀ v ∈ V, surroundedNode V (ESTD V) v := hc.2.2.2.2.2.1
+
+/-- Named projection of `Contravening` component 7/7（HOL
+`surrounded_node (V, ECTC V) \/ (norm v = &2)`；:2603 裸链位
+`hc.2.2.2.2.2.2` 的具名形态）. -/
+theorem proj_nliContrav_SurroundedECTC (V : Set V3) (hc : Contravening V) :
+    ∀ v ∈ V, surroundedNode V (ECTC V) v ∨ ‖v‖ = 2 := hc.2.2.2.2.2.2
+
 /-! ### 1a. list_hypermap 机器（`formal_lp/hypermap/ssreflect/list_hypermap-compiled.hl`）
 
 `listPairs` / `listOfDarts` / `nextEl` / `prevEl` / `findFaceDarts` /
@@ -221,6 +262,40 @@ def TheNonlinearInequalities : Prop :=
   pack_nonlinear_non_ox3q1h ∧ ox3q1hP25 ∧ main_nonlinear_terminal_v11 ∧ LpIneqs ∧
     PackIneqDefA ∧ KcblrqcIneqDef
 
+/-! **六分接口具名投影族（2026-10-13 nli 接线波前置；纯 addition）**：
+`TheNonlinearInequalities` 六分量逐一具名化（对照 PA21 `proj_bank_*` 家族，
+章程 §6.5 "no bare chains"）。消费点样板 = §3 `linearProgrammingResults` 的
+`hnl.2.2.2.1` 裸链（:5381 附近，本波时行号）；本波只补件不改写消费点
+（改写属 nli 28+127 接线主波，涉语句冻结面）。 -/
+
+/-- Named projection of `TheNonlinearInequalities` component 1/6
+（`pack_nonlinear_non_ox3q1h`）. -/
+theorem proj_nli_PackNonlinearNonOx3q1h (h : TheNonlinearInequalities) :
+    pack_nonlinear_non_ox3q1h := h.1
+
+/-- Named projection of `TheNonlinearInequalities` component 2/6
+（`ox3q1hP25`）. -/
+theorem proj_nli_Ox3q1hP25 (h : TheNonlinearInequalities) : ox3q1hP25 := h.2.1
+
+/-- Named projection of `TheNonlinearInequalities` component 3/6
+（`main_nonlinear_terminal_v11`）. -/
+theorem proj_nli_MainNonlinearTerminalV11 (h : TheNonlinearInequalities) :
+    main_nonlinear_terminal_v11 := h.2.2.1
+
+/-- Named projection of `TheNonlinearInequalities` component 4/6（`LpIneqs`；
+:5381 裸链位 `hnl.2.2.2.1` 的具名形态）. -/
+theorem proj_nli_LpIneqs (h : TheNonlinearInequalities) : LpIneqs := h.2.2.2.1
+
+/-- Named projection of `TheNonlinearInequalities` component 5/6
+（`PackIneqDefA`）. -/
+theorem proj_nli_PackIneqDefA (h : TheNonlinearInequalities) : PackIneqDefA :=
+  h.2.2.2.2.1
+
+/-- Named projection of `TheNonlinearInequalities` component 6/6
+（`KcblrqcIneqDef`）. -/
+theorem proj_nli_KcblrqcIneqDef (h : TheNonlinearInequalities) :
+    KcblrqcIneqDef := h.2.2.2.2.2
+
 /-! ### 2a'. T1 中层骨架 —— 单根接口 sorry 的六分量展开（2026-10-08，
 自上而下第一波）
 
@@ -267,14 +342,465 @@ B V2 = `bank_GRKIBMPBV2_proof` 因式分解+单调+mm1<4/3 种子——尖锐边
 theorem nliGrkBank : grk_bank :=
   ⟨bank_GRKIBMPAV2_proof, bank_GRKIBMPBV2_proof⟩
 
-/-- 中层骨架 1d：81 条清单的其余 62 条 rest 叶（PackingAuto21.lean:395
-`PLACEHOLDER(G4)`；JSPEVYT/IXPOTPA/TXQTPVC/TEWNSCJ/QITNPEA 家族/
-ZTGIJCF0/4 生成族/GCKBQEA/RQWUDDU/6096597438/1965189142 等）。
-资产状态：混合——`QITNPEA 3725403817` 已内核闭合（964,984 叶，2026-09-18，
-公理标准三）；`1965189142 34` 证书在库（Interval/Cases/C1965189142x34）；
-其余 deferred-compute（92 prep 家族重做口径覆盖其中多数）。
--- NEEDS: PA21 rest 叶拆单条时同步展开本骨架；在库两案补粘合引理入查表。 -/
-theorem nliPackNonlinearRest : pack_nonlinear_rest := sorry
+/-! **中层骨架 1d（2026-10-13 nli 接线波前置展开）：81 条清单的其余 62 条
+rest 叶**。PA21 已把 rest 叶拆为 62 条显式盒式 `bank_*` 合取
+（PackingAuto21.lean:935 `pack_nonlinear_rest`，顺序 = IdLists 注册序；
+PackingAuto21.lean:395 原 `PLACEHOLDER(G4)` 桩已废）并备齐 62 枚具名投影
+`proj_bank_*`（PackingAuto21.lean:2488 起；消费样板 = PA25
+`IXPOTPA_MERGED` 的 `proj_bank_IXPOTPA hnl y1 …` 逐应用法）。本节按"拆
+单条"口径同步展开：62 枚具名骨架件 `nliRest*`（↔ PA21 62 枚 `proj_bank_*`
+一一对应，rest 位次 k/62 记于各 docstring）+ 末端显式合取装配
+`nliPackNonlinearRest`（签名至 `:=` 与冻结版逐字一致）。
+应用签名审计（照 PA25 逐应用法逐条过）：60/62 为标准 6 变量盒（应用 =
+`proj_bank_* hnl y1 … y6` + 12 盒前件）；例外 rest 2 `6096597438 a` 与
+rest 60 `ZTGIJCF0` 为 1 变量盒（应用 = `proj_bank_* hnl h hh hhh` 形，
+bank 定义体 delta 展开后照常逐应用，不构成接线障碍）。
+本波真闭合 3/62（`#print axioms` = 标准三公理）：rest 2 `6096597438 a`
+（常数算术）、rest 4 `1965189142 34`（`lfunY1 ≤ 1` 上界 + 线艺；
+Interval/Cases.C1965189142x34 的 G4 证书在库冗余，其粘合引理归量产波，
+与本体闭合互不依赖）、rest 60 `ZTGIJCF0`（spine 常数 + `Real.pi_lt_d4`
+夹逼，真余量 ≈3.9e-5）。其余 59 条 deferred-compute（92 prep 家族重做
+口径覆盖其中多数）；rest 9 `QITNPEA 3725403817` 内核闭合证书（964,984 叶，
+2026-09-18，公理标准三）不在本仓，粘合引理归 nli 28+127 接线主波。 -/
+
+/-- rest 1/62：HOL ineq entry `6096597438 b`（ineq.hl:1661，盒
+[3,64]×[1,1]⁵；PA21 `bank_6096597438b` / `proj_bank_6096597438b`）。
+资产状态：deferred-compute（`asn797k` 实分析内容，证书不在库）。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRest6096597438b : bank_6096597438b := sorry
+
+/-- rest 2/62：HOL ineq entry `6096597438 a`（ineq.hl:1650，1 变量盒
+[1,1]；PA21 `bank_6096597438a` / `proj_bank_6096597438a`）。
+本波真闭合：`lfun 1 = 1`（`div_self`）后纯常数算术
+（0.591 − 0.0331·64 + 0.506 + 1 = −0.0214 < 0）。 -/
+theorem nliRest6096597438a : bank_6096597438a := by
+  intro _h _hl _hh
+  have hne : (h0 - 1 : ℝ) ≠ 0 := by norm_num [h0]
+  have hlf : lfun 1 = 1 := by
+    unfold lfun
+    exact div_self hne
+  rw [hlf]
+  norm_num
+
+/-- rest 3/62：HOL ineq entry `1965189142 a`（ineq.hl:1598，盒
+[1.0,1.26]×[3,34]×[1,1]⁴；PA21 `bank_1965189142a` /
+`proj_bank_1965189142a`）。资产状态：deferred-compute（`asnFnhk` 实分析
+内容，证书不在库）。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRest1965189142a : bank_1965189142a := sorry
+
+/-- rest 4/62：HOL ineq entry `1965189142 34`（ineq.hl:1587，盒
+[1.0,1.26]×[1,1]⁵；PA21 `bank_1965189142x34` /
+`proj_bank_1965189142x34`）。
+本波真闭合：x1 ≥ 1 给 `lfunY1 … ≤ 1`，常数部 0.591 − 0.0331·34 = −0.5344
+主导（余量 ≈0.0284）。Interval/Cases.C1965189142x34 的 G4 证书在库冗余
+（其粘合引理归量产接线波，与本体闭合互不依赖）。 -/
+theorem nliRest1965189142x34 : bank_1965189142x34 := by
+  intro x1 x2 x3 x4 x5 x6 h1l _h1h _h2l _h2h _h3l _h3h _h4l _h4h _h5l _h5h _h6l _h6h
+  have hlf : lfunY1 x1 x2 x3 x4 x5 x6 ≤ 1 := by
+    unfold lfunY1 lfun h0
+    exact (div_le_one (by norm_num : (0 : ℝ) < 1.26 - 1)).mpr (by linarith)
+  have hc : (0.591 : ℝ) - 0.0331 * 34 = -0.5344 := by norm_num
+  linarith
+
+/-- rest 5/62：HOL ineq entry `JSPEVYT`（ineq.hl:1495，盒
+[1,1]³×[2hmin,√8]²×[2,√8]；PA21 `bank_JSPEVYT` / `proj_bank_JSPEVYT`）。
+资产状态：deferred-compute（证书不在库）。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestJSPEVYT : bank_JSPEVYT := sorry
+
+/-- rest 6/62：HOL ineq entry `QITNPEA 4003532128 a`（ineq.hl:1290，盒
+[2hmin,2hplus]×[2,√8]×[√2,√2]³×[2,√8]；PA21 `bank_QITNPEA4003532128a` /
+`proj_bank_QITNPEA4003532128a`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestQITNPEA4003532128a : bank_QITNPEA4003532128a := sorry
+
+/-- rest 7/62：HOL ineq entry `IXPOTPA`（ineq.hl:1265，盒
+[2hmin,2hplus]×[2,2hmin]²×[√8,4hmin]×[2,2hmin]²；PA21 `bank_IXPOTPA` /
+`proj_bank_IXPOTPA`——PA25 `IXPOTPA_MERGED` 已按逐应用法消费此投影）。
+资产状态：deferred-compute（证书不在库）。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestIXPOTPA : bank_IXPOTPA := sorry
+
+/-- rest 8/62：HOL ineq entry `TXQTPVC`（ineq.hl:1241，盒
+[2hmin,2hplus]×[2,2hmin]²×[2,√8]×[2,2hmin]²；PA21 `bank_TXQTPVC` /
+`proj_bank_TXQTPVC`——PA25 `TXQTPVC_MERGED` 已消费）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestTXQTPVC : bank_TXQTPVC := sorry
+
+/-- rest 9/62：HOL ineq entry `QITNPEA 3725403817`（ineq.hl:1221，盒
+[2hmin,2hplus]×[2,2hmin]³×[2,2.1]×[2,2hmin]²；PA21
+`bank_QITNPEA3725403817` / `proj_bank_QITNPEA3725403817`）。
+资产状态：内核闭合证书在库外（964,984 叶，2026-09-18，公理标准三），
+本仓无证书件。
+-- NEEDS: 在库外证书移植或重发射 + 粘合引理入 §2a 查表（量产主波）。 -/
+theorem nliRestQITNPEA3725403817 : bank_QITNPEA3725403817 := sorry
+
+/-- rest 10/62：HOL ineq entry `QITNPEAv2 4003532128`（ineq.hl:1193，盒
+[2hmin,2hplus]×[2,2hmin]³×[2,√8]×[2,2hmin]²；PA21
+`bank_QITNPEAv24003532128` / `proj_bank_QITNPEAv24003532128`）。
+资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestQITNPEAv24003532128 : bank_QITNPEAv24003532128 := sorry
+
+/-- rest 11/62：HOL ineq entry `PEMKWKU`（ineq.hl:1169，盒
+[2hmin,2hplus]×[2,√8]×[2,2hmin]×[2,√8]×[2,2hmin]×[2,√8]；PA21
+`bank_PEMKWU` / `proj_bank_PEMKWU`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestPEMKWU : bank_PEMKWU := sorry
+
+/-- rest 12/62：HOL ineq entry `TEWNSCJ`（ineq.hl:1146，盒
+[2hmin,2hplus]×[2,2hmin]³×[2,√8]×[2,2hmin]²；PA21 `bank_TEWNSCJ` /
+`proj_bank_TEWNSCJ`——PA25 `TEWNSCJ_MERGED` 已消费，hrad/he1/he2 桥
+`p25_gamma23Full8X_yOfX_eq` 就位）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestTEWNSCJ : bank_TEWNSCJ := sorry
+
+/-- rest 13/62：HOL ineq entry `QITNPEA 5400790175 b`（ineq.hl:1121，盒
+[2hmin,2hplus]×[2,2hmin]³×[2hmin,√8]×[2,2hmin]²；PA21
+`bank_QITNPEA5400790175b` / `proj_bank_QITNPEA5400790175b`）。
+资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestQITNPEA5400790175b : bank_QITNPEA5400790175b := sorry
+
+/-- rest 14/62：HOL ineq entry `QITNPEA 5400790175 a`（ineq.hl:1103，
+盒同 rest 13；PA21 `bank_QITNPEA5400790175a` /
+`proj_bank_QITNPEA5400790175a`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestQITNPEA5400790175a : bank_QITNPEA5400790175a := sorry
+
+/-- rest 15/62：HOL ineq entry `QITNPEA 3848804089`（ineq.hl:1059，盒
+[2hmin,2hplus]×[2,2hmin]⁵；PA21 `bank_QITNPEA3848804089` /
+`proj_bank_QITNPEA3848804089`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestQITNPEA3848804089 : bank_QITNPEA3848804089 := sorry
+
+/-- rest 16/62：HOL ineq entry `QITNPEA 5814748276`（ineq.hl:1041，盒同
+rest 15；PA21 `bank_QITNPEA5814748276` / `proj_bank_QITNPEA5814748276`）。
+资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestQITNPEA5814748276 : bank_QITNPEA5814748276 := sorry
+
+/-- rest 17/62：HOL ineq entry `QITNPEA 6206775865`（ineq.hl:1023，盒同
+rest 15；PA21 `bank_QITNPEA6206775865` / `proj_bank_QITNPEA6206775865`）。
+资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestQITNPEA6206775865 : bank_QITNPEA6206775865 := sorry
+
+/-- rest 18/62：HOL ineq entry `QITNPEA 5653753305`（ineq.hl:1004，盒
+[2hmin,2hplus]×[2,2hmin]⁵；PA21 `bank_QITNPEA5653753305` /
+`proj_bank_QITNPEA5653753305`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestQITNPEA5653753305 : bank_QITNPEA5653753305 := sorry
+
+/-- rest 19/62：HOL ineq entry `BIXPCGW 9455898160`（ineq.hl:985，盒
+[2hmin,2hplus]×[2,2hmin]⁵，HOL 字面 `-- #0.00569` 双重负号；PA21
+`bank_BIXPCGW9455898160` / `proj_bank_BIXPCGW9455898160`）。
+资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestBIXPCGW9455898160 : bank_BIXPCGW9455898160 := sorry
+
+/-- rest 20/62：HOL ineq entry `FWGKMBZ`（ineq.hl:967，盒
+[2hmin,2hplus]×[2,√8]⁵；PA21 `bank_FWGKMBZ` / `proj_bank_FWGKMBZ`）。
+资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestFWGKMBZ : bank_FWGKMBZ := sorry
+
+/-- rest 21/62：HOL ineq entry `FHBVYXZ b`（ineq.hl:942；PA21
+`bank_FHBVYXZb` / `proj_bank_FHBVYXZb`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestFHBVYXZb : bank_FHBVYXZb := sorry
+
+/-- rest 22/62：HOL ineq entry `FHBVYXZ a`（ineq.hl:914；PA21
+`bank_FHBVYXZa` / `proj_bank_FHBVYXZa`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestFHBVYXZa : bank_FHBVYXZa := sorry
+
+/-- rest 23/62：HOL ineq entry `FHBVYXZv2 a`（ineq.hl:888；PA21
+`bank_FHBVYXZv2a` / `proj_bank_FHBVYXZv2a`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestFHBVYXZv2a : bank_FHBVYXZv2a := sorry
+
+/-- rest 24/62：HOL ineq entry `QITNPEA 2134082733`（ineq.hl:864，盒
+[2hmin,2hplus]×[2,2hmin]³×[2hmin,√8]×[2,2hmin]²；PA21
+`bank_QITNPEA2134082733` / `proj_bank_QITNPEA2134082733`）。
+资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestQITNPEA2134082733 : bank_QITNPEA2134082733 := sorry
+
+/-- rest 25/62：HOL idv `QITNPEA1 2 2 9063653052 A`（ineq.hl:845-862
+make_F4/add_QITNPEA1 循环；PA21 `bank_QITNPEA1_2_2 = bank_QITNPEA1tmpl
+2 2` / `proj_bank_QITNPEA1_2_2`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestQITNPEA1_2_2 : bank_QITNPEA1_2_2 := sorry
+
+/-- rest 26/62：HOL idv `QITNPEA1 2 1 9063653052 A`（同循环；PA21
+`bank_QITNPEA1_2_1` / `proj_bank_QITNPEA1_2_1`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestQITNPEA1_2_1 : bank_QITNPEA1_2_1 := sorry
+
+/-- rest 27/62：HOL idv `QITNPEA1 2 0 9063653052 A`（同循环；PA21
+`bank_QITNPEA1_2_0` / `proj_bank_QITNPEA1_2_0`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestQITNPEA1_2_0 : bank_QITNPEA1_2_0 := sorry
+
+/-- rest 28/62：HOL idv `QITNPEA1 1 2 9063653052 A`（同循环；PA21
+`bank_QITNPEA1_1_2` / `proj_bank_QITNPEA1_1_2`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestQITNPEA1_1_2 : bank_QITNPEA1_1_2 := sorry
+
+/-- rest 29/62：HOL idv `QITNPEA1 1 1 9063653052 A`（同循环；PA21
+`bank_QITNPEA1_1_1` / `proj_bank_QITNPEA1_1_1`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestQITNPEA1_1_1 : bank_QITNPEA1_1_1 := sorry
+
+/-- rest 30/62：HOL idv `QITNPEA1 1 0 9063653052 A`（同循环；PA21
+`bank_QITNPEA1_1_0` / `proj_bank_QITNPEA1_1_0`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestQITNPEA1_1_0 : bank_QITNPEA1_1_0 := sorry
+
+/-- rest 31/62：HOL ineq entry `QITNPEA 9939613598`（ineq.hl:798，盒
+[2hmin,2hplus]×[2,2hmin]³×[2hplus,√8]×[2,2hmin]²；PA21
+`bank_QITNPEA9939613598` / `proj_bank_QITNPEA9939613598`）。
+资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestQITNPEA9939613598 : bank_QITNPEA9939613598 := sorry
+
+/-- rest 32/62：HOL ineq entry `BIXPCGW 7274157868 a`（ineq.hl:776，盒同
+rest 31；PA21 `bank_BIXPCGW7274157868a` /
+`proj_bank_BIXPCGW7274157868a`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestBIXPCGW7274157868a : bank_BIXPCGW7274157868a := sorry
+
+/-- rest 33/62：HOL ineq entry `BIXPCGW b`（ineq.hl:758，盒
+[2hmin,2hplus]×[2,√8]²×[2,2hplus]×[2,√8]²；PA21 `bank_BIXPCGWb` /
+`proj_bank_BIXPCGWb`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestBIXPCGWb : bank_BIXPCGWb := sorry
+
+/-- rest 34/62：HOL ineq entry `BIXPCGW 1738910218 a2`（ineq.hl:739，盒
+同 rest 33；PA21 `bank_BIXPCGW1738910218a2` /
+`proj_bank_BIXPCGW1738910218a2`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestBIXPCGW1738910218a2 : bank_BIXPCGW1738910218a2 := sorry
+
+/-- rest 35/62：HOL ineq entry `BIXPCGW 7080972881 a2`（ineq.hl:721，盒
+[2hmin,2hplus]×[2hmin,√8]×[2,√8]⁴；PA21 `bank_BIXPCGW7080972881a2` /
+`proj_bank_BIXPCGW7080972881a2`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestBIXPCGW7080972881a2 : bank_BIXPCGW7080972881a2 := sorry
+
+/-- rest 36/62：HOL ineq entry `BIXPCGW 6652007036 a2`（ineq.hl:701，盒
+[2hmin,2hplus]×[2,√8]⁵；PA21 `bank_BIXPCGW6652007036a2` /
+`proj_bank_BIXPCGW6652007036a2`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestBIXPCGW6652007036a2 : bank_BIXPCGW6652007036a2 := sorry
+
+/-- rest 37/62：HOL ineq entry `GLFVCVK4 2477216213 y4subcrit`
+（ineq.hl:675，盒 [2hmin,2hplus]×[2hmin,√8]×[2,2hmin]⁴；PA21
+`bank_GLFVCVK4y4subcrit` / `proj_bank_GLFVCVK4y4subcrit`）。
+资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestGLFVCVK4y4subcrit : bank_GLFVCVK4y4subcrit := sorry
+
+/-- rest 38/62：HOL ineq entry `GLFVCVK4 2477216213 y4supercrit`
+（ineq.hl:649，盒 [2hmin,2hplus]×[2,2h0]×[2,2hmin]×[2hplus,√8]×
+[2,2hmin]²；PA21 `bank_GLFVCVK4y4supercrit` /
+`proj_bank_GLFVCVK4y4supercrit`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestGLFVCVK4y4supercrit : bank_GLFVCVK4y4supercrit := sorry
+
+/-- rest 39/62：HOL ineq entry `GLFVCVK4 2477216213 y4crit`
+（ineq.hl:623，盒 [2hmin,2hplus]×[2hmin,2hplus]×[2,2hmin]×
+[2hmin,2hplus]×[2,2hmin]²；PA21 `bank_GLFVCVK4y4crit` /
+`proj_bank_GLFVCVK4y4crit`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestGLFVCVK4y4crit : bank_GLFVCVK4y4crit := sorry
+
+/-- rest 40/62：HOL ineq entry `GLFVCVK4a 8328676778`（ineq.hl:586，盒
+[2hmin,2hplus]×[2,2hmin]²×[2hmin,2hplus]×[2,2hmin]²；PA21
+`bank_GLFVCVK4a8328676778` / `proj_bank_GLFVCVK4a8328676778`）。
+资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestGLFVCVK4a8328676778 : bank_GLFVCVK4a8328676778 := sorry
+
+/-- rest 41/62：HOL ineq entry `GLFVCVK4 2477216213`（ineq.hl:559，盒
+[2hmin,2hplus]×[2,√8]⁵；PA21 `bank_GLFVCVK4` / `proj_bank_GLFVCVK4`）。
+资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestGLFVCVK4 : bank_GLFVCVK4 := sorry
+
+/-- rest 42/62：HOL ineq entry `MKFKQWU halfwt`（ineq.hl:523，盒
+[2hmin,2hplus]×[2hplus,√8]×[2,√8]×[2hmin,√8]×[2,√8]²；PA21
+`bank_MKFKQWUhalfwt` / `proj_bank_MKFKQWUhalfwt`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestMKFKQWUhalfwt : bank_MKFKQWUhalfwt := sorry
+
+/-- rest 43/62：HOL ineq entry `MKFKQWU`（ineq.hl:502，盒
+[2hmin,2hplus]×[2hmin,√8]²×[2,√8]×[2hmin,√8]²；PA21 `bank_MKFKQWU` /
+`proj_bank_MKFKQWU`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestMKFKQWU : bank_MKFKQWU := sorry
+
+/-- rest 44/62：HOL idv `ZTGIJCF4 1 1 1 1 1821661595`（ineq.hl:486-499
+make_F4 循环；PA21 `bank_ZTGIJCF4_1_1_1_1 = bank_ZTGIJCF4tmpl 1 1 1 1` /
+`proj_bank_ZTGIJCF4_1_1_1_1`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestZTGIJCF4_1_1_1_1 : bank_ZTGIJCF4_1_1_1_1 := sorry
+
+/-- rest 45/62：HOL idv `ZTGIJCF4 1 1 1 0 1821661595`（同循环；PA21
+`bank_ZTGIJCF4_1_1_1_0` / `proj_bank_ZTGIJCF4_1_1_1_0`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestZTGIJCF4_1_1_1_0 : bank_ZTGIJCF4_1_1_1_0 := sorry
+
+/-- rest 46/62：HOL idv `ZTGIJCF4 1 1 0 1 1821661595`（同循环；PA21
+`bank_ZTGIJCF4_1_1_0_1` / `proj_bank_ZTGIJCF4_1_1_0_1`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestZTGIJCF4_1_1_0_1 : bank_ZTGIJCF4_1_1_0_1 := sorry
+
+/-- rest 47/62：HOL idv `ZTGIJCF4 1 1 0 0 1821661595`（同循环；PA21
+`bank_ZTGIJCF4_1_1_0_0` / `proj_bank_ZTGIJCF4_1_1_0_0`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestZTGIJCF4_1_1_0_0 : bank_ZTGIJCF4_1_1_0_0 := sorry
+
+/-- rest 48/62：HOL idv `ZTGIJCF4 1 0 1 1 1821661595`（同循环；PA21
+`bank_ZTGIJCF4_1_0_1_1` / `proj_bank_ZTGIJCF4_1_0_1_1`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestZTGIJCF4_1_0_1_1 : bank_ZTGIJCF4_1_0_1_1 := sorry
+
+/-- rest 49/62：HOL idv `ZTGIJCF4 1 0 1 0 1821661595`（同循环；PA21
+`bank_ZTGIJCF4_1_0_1_0` / `proj_bank_ZTGIJCF4_1_0_1_0`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestZTGIJCF4_1_0_1_0 : bank_ZTGIJCF4_1_0_1_0 := sorry
+
+/-- rest 50/62：HOL idv `ZTGIJCF4 1 0 0 1 1821661595`（同循环；PA21
+`bank_ZTGIJCF4_1_0_0_1` / `proj_bank_ZTGIJCF4_1_0_0_1`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestZTGIJCF4_1_0_0_1 : bank_ZTGIJCF4_1_0_0_1 := sorry
+
+/-- rest 51/62：HOL idv `ZTGIJCF4 1 0 0 0 1821661595`（同循环；PA21
+`bank_ZTGIJCF4_1_0_0_0` / `proj_bank_ZTGIJCF4_1_0_0_0`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestZTGIJCF4_1_0_0_0 : bank_ZTGIJCF4_1_0_0_0 := sorry
+
+/-- rest 52/62：HOL idv `ZTGIJCF4 0 1 1 1 1821661595`（同循环；PA21
+`bank_ZTGIJCF4_0_1_1_1` / `proj_bank_ZTGIJCF4_0_1_1_1`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestZTGIJCF4_0_1_1_1 : bank_ZTGIJCF4_0_1_1_1 := sorry
+
+/-- rest 53/62：HOL idv `ZTGIJCF4 0 1 1 0 1821661595`（同循环；PA21
+`bank_ZTGIJCF4_0_1_1_0` / `proj_bank_ZTGIJCF4_0_1_1_0`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestZTGIJCF4_0_1_1_0 : bank_ZTGIJCF4_0_1_1_0 := sorry
+
+/-- rest 54/62：HOL idv `ZTGIJCF4 0 1 0 1 1821661595`（同循环；PA21
+`bank_ZTGIJCF4_0_1_0_1` / `proj_bank_ZTGIJCF4_0_1_0_1`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestZTGIJCF4_0_1_0_1 : bank_ZTGIJCF4_0_1_0_1 := sorry
+
+/-- rest 55/62：HOL idv `ZTGIJCF4 0 1 0 0 1821661595`（同循环；PA21
+`bank_ZTGIJCF4_0_1_0_0` / `proj_bank_ZTGIJCF4_0_1_0_0`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestZTGIJCF4_0_1_0_0 : bank_ZTGIJCF4_0_1_0_0 := sorry
+
+/-- rest 56/62：HOL idv `ZTGIJCF4 0 0 1 1 1821661595`（同循环；PA21
+`bank_ZTGIJCF4_0_0_1_1` / `proj_bank_ZTGIJCF4_0_0_1_1`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestZTGIJCF4_0_0_1_1 : bank_ZTGIJCF4_0_0_1_1 := sorry
+
+/-- rest 57/62：HOL idv `ZTGIJCF4 0 0 1 0 1821661595`（同循环；PA21
+`bank_ZTGIJCF4_0_0_1_0` / `proj_bank_ZTGIJCF4_0_0_1_0`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestZTGIJCF4_0_0_1_0 : bank_ZTGIJCF4_0_0_1_0 := sorry
+
+/-- rest 58/62：HOL idv `ZTGIJCF4 0 0 0 1 1821661595`（同循环；PA21
+`bank_ZTGIJCF4_0_0_0_1` / `proj_bank_ZTGIJCF4_0_0_0_1`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestZTGIJCF4_0_0_0_1 : bank_ZTGIJCF4_0_0_0_1 := sorry
+
+/-- rest 59/62：HOL idv `ZTGIJCF4 0 0 0 0 1821661595`（同循环；PA21
+`bank_ZTGIJCF4_0_0_0_0` / `proj_bank_ZTGIJCF4_0_0_0_0`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestZTGIJCF4_0_0_0_0 : bank_ZTGIJCF4_0_0_0_0 := sorry
+
+/-- rest 60/62：HOL ineq entry `ZTGIJCF0`（ineq.hl:446，1 变量盒 [1,1]，
+5-叶以上聚簇常数核算 `5a + b·2π > 0`；PA21 `bank_ZTGIJCF0` /
+`proj_bank_ZTGIJCF0`）。
+本波真闭合：spine 常数（`aSpine5 = 0.0560305`、`bSpine5 = −0.0445813`）
++ `Real.pi_lt_d4`（π < 3.1416）夹逼，真余量 ≈3.9e-5。 -/
+theorem nliRestZTGIJCF0 : bank_ZTGIJCF0 := by
+  intro _d _hl _hh
+  have hm : (0.0891626 : ℝ) * Real.pi < 0.0891626 * 3.1416 :=
+    mul_lt_mul_of_pos_left Real.pi_lt_d4 (by norm_num)
+  unfold aSpine5 bSpine5
+  norm_num at hm ⊢
+  linarith
+
+/-- rest 61/62：HOL ineq entry `GCKBQEA`（ineq.hl:1352，盒
+[2hmin,2hplus]×[2,√8]⁵；PA21 `bank_GCKBQEA` / `proj_bank_GCKBQEA`）。
+资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestGCKBQEA : bank_GCKBQEA := sorry
+
+/-- rest 62/62：HOL ineq entry `RQWUDDU`（ineq.hl:1332，盒同 rest 61；
+PA21 `bank_RQWUDDU` / `proj_bank_RQWUDDU`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliRestRQWUDDU : bank_RQWUDDU := sorry
+
+/-- 中层骨架 1d 本体：62 条 rest 叶的显式合取装配（照 PA21
+`pack_nonlinear_rest` 逐位对齐，位次 = IdLists 注册序；每枚组件 =
+上方具名骨架件，与 PA21 62 枚 `proj_bank_*` 一一对应）。
+-- NEEDS: 无独立债务——骨架债仅自上方 59 枚开放组件流入。 -/
+theorem nliPackNonlinearRest : pack_nonlinear_rest :=
+  ⟨nliRest6096597438b, nliRest6096597438a, nliRest1965189142a,
+    nliRest1965189142x34, nliRestJSPEVYT, nliRestQITNPEA4003532128a,
+    nliRestIXPOTPA, nliRestTXQTPVC, nliRestQITNPEA3725403817,
+    nliRestQITNPEAv24003532128, nliRestPEMKWU, nliRestTEWNSCJ,
+    nliRestQITNPEA5400790175b, nliRestQITNPEA5400790175a,
+    nliRestQITNPEA3848804089, nliRestQITNPEA5814748276,
+    nliRestQITNPEA6206775865, nliRestQITNPEA5653753305,
+    nliRestBIXPCGW9455898160, nliRestFWGKMBZ, nliRestFHBVYXZb,
+    nliRestFHBVYXZa, nliRestFHBVYXZv2a, nliRestQITNPEA2134082733,
+    nliRestQITNPEA1_2_2, nliRestQITNPEA1_2_1, nliRestQITNPEA1_2_0,
+    nliRestQITNPEA1_1_2, nliRestQITNPEA1_1_1, nliRestQITNPEA1_1_0,
+    nliRestQITNPEA9939613598, nliRestBIXPCGW7274157868a, nliRestBIXPCGWb,
+    nliRestBIXPCGW1738910218a2, nliRestBIXPCGW7080972881a2,
+    nliRestBIXPCGW6652007036a2, nliRestGLFVCVK4y4subcrit,
+    nliRestGLFVCVK4y4supercrit, nliRestGLFVCVK4y4crit,
+    nliRestGLFVCVK4a8328676778, nliRestGLFVCVK4, nliRestMKFKQWUhalfwt,
+    nliRestMKFKQWU, nliRestZTGIJCF4_1_1_1_1, nliRestZTGIJCF4_1_1_1_0,
+    nliRestZTGIJCF4_1_1_0_1, nliRestZTGIJCF4_1_1_0_0,
+    nliRestZTGIJCF4_1_0_1_1, nliRestZTGIJCF4_1_0_1_0,
+    nliRestZTGIJCF4_1_0_0_1, nliRestZTGIJCF4_1_0_0_0,
+    nliRestZTGIJCF4_0_1_1_1, nliRestZTGIJCF4_0_1_1_0,
+    nliRestZTGIJCF4_0_1_0_1, nliRestZTGIJCF4_0_1_0_0,
+    nliRestZTGIJCF4_0_0_1_1, nliRestZTGIJCF4_0_0_1_0,
+    nliRestZTGIJCF4_0_0_0_1, nliRestZTGIJCF4_0_0_0_0, nliRestZTGIJCF0,
+    nliRestGCKBQEA, nliRestRQWUDDU⟩
 
 /-! **A11 车道记账（2026-10-08，纯注释块，骨架代码逐字零改动）**：上游 PA21
 的 GIANT 已诚实收窄——`pack_nonlinear_rest` 的 def 体从 unknown-Prop
