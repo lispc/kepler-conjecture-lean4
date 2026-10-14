@@ -1663,6 +1663,774 @@ def gsplit_main(case, cid, mod, n, args, params_file, manifest_file, gran,
           f"{n_res} residual)")
 
 
+# ---------------------------------------------------------------------------
+# W6 route A prototype: mono dimension reduction over guard-split sub-boxes
+# (Python-side SEARCH only; the emitted artifacts are a certificate plan.
+# The kernel side — evalReal chain rule + the mono-corner lemma — is W7
+# scope; see docs/scouts/mono-corner-scout.md §5 for the route design).
+#
+#   emit_lean.py <case.json> <subboxes.json> <out> --mono
+#                [--mono-budget=N] [--mono-max-depth=N] [--mono-subbox=K]
+#
+# Per sub-box, recursively:
+#   (1) whole-expr TM hull on an exact-rational mirror of the kernel
+#       evalTMHullD2 (W5 tm_probe3 semantics: Fractions instead of Dyadic,
+#       isqrt at 2^-150, atan exact endpoints; looser than the kernel only
+#       by the kernel's own extra slack, never tighter); POS (loBound > 0)
+#       -> certificate leaf.
+#   (2) ite guard straddle -> bisect a straddling guard's variable (mono
+#       needs the branch resolved; sub-boxes of a decided box stay decided).
+#   (3) symbolic d/dx_j (branch-resolved; div rule d(l/r) = (r*dl - l*dr)/r^2
+#       — the W5 probe version had the numerator sign flipped, W6 finite-
+#       difference-verified) + TM hull on the same box -> verdict:
+#       flat [0,0] -> free restrict, incr -> restrict to the lo face,
+#       decr -> restrict to the hi face (f >= f(face) on the box).
+#   (4) no new sign -> single-dim bisection of the dim with the largest
+#       promise |mid|/hw of its df enclosure.
+#   (5) point box -> TM degenerates to the exact value (err = 0, W5 §5.1
+#       fact 2) -> corner certificate.
+#
+# Every sign/enclosure verdict is replayable kernel-side by checkPosTMHull
+# on the same box (subject to the W5 §2.3 kernel-looser fidelity gap), so
+# the emitted manifest is directly the W7 stage-A/B work list.
+# ---------------------------------------------------------------------------
+
+_MonoSQK = 150  # sqrt precision bits (kernel sqrtI certs are gran -80-ish)
+_MONO_REFRESH_AGE = 4  # v5 df refresh policy (see _mono_certify)
+_MONO_REFRESH_NEAR = Fraction(1, 2)
+
+
+def _mono_isqrt_hi(x):
+    n, d = x.numerator, x.denominator
+    if n <= 0:
+        return Fraction(0)
+    s = math.isqrt(n * (1 << (2 * _MonoSQK)) * d)
+    if s * s < n * (1 << (2 * _MonoSQK)) * d:
+        s += 1
+    return Fraction(s, (1 << _MonoSQK) * d)
+
+
+def _mono_isqrt_lo(x):
+    n, d = x.numerator, x.denominator
+    if n <= 0:
+        return Fraction(0)
+    return Fraction(math.isqrt(n * (1 << (2 * _MonoSQK)) * d),
+                    (1 << _MonoSQK) * d)
+
+
+def _mono_atan(x):
+    """atan endpoints with 2^-300 mpmath slack (atan is not exact-rational
+    computable; the kernel instead replays the trans rung ladder — the
+    search-side verdict is re-certified kernel-side regardless)."""
+    import mpmath
+    v = mpmath.mpf(x.numerator) / x.denominator
+    a = mpmath.atan(v)
+    s, man, exp, bc = a._mpf_
+    val = Fraction(man) * (Fraction(2) ** exp)
+    val = -val if s else val
+    slack = Fraction(1) / (Fraction(2) ** 300)
+    return val - slack, val + slack
+
+
+class _MonoNotes:
+    def __init__(self):
+        self.div_fallback = 0
+        self.div_fail = 0
+        self.sqrt_fail = 0
+        self.ite_straddle = 0
+        self.atan_n = 0
+        self.guard_fail = 0
+
+
+def _mono_iv_mul(I, J):
+    a = [I[0] * J[0], I[0] * J[1], I[1] * J[0], I[1] * J[1]]
+    return (min(a), max(a))
+
+
+def _mono_iv_add(I, J):
+    return (I[0] + J[0], I[1] + J[1])
+
+
+def _mono_hull(I, J):
+    return (min(I[0], J[0]), max(I[1], J[1]))
+
+
+def _mono_abs_hi(I):
+    return max(abs(I[0]), abs(I[1]))
+
+
+def _mono_jump(I, J):
+    return max(abs(I[0] - J[1]), abs(I[1] - J[0]), Fraction(0))
+
+
+class _MonoTM:
+    """kernel TaylorM mirror node: fB interval, dfB slope intervals, err."""
+    __slots__ = ("fB", "dfB", "err", "n")
+
+    def __init__(self, fB, dfB, err):
+        self.fB = fB
+        self.dfB = dfB
+        self.err = err
+        self.n = len(dfB)
+
+    def W0(self, ws):
+        s = Fraction(0)
+        for d, w in zip(self.dfB, ws):
+            s += _mono_abs_hi(d) * w
+        return s
+
+    def Wr(self, ws):
+        return max(self.W0(ws) + self.err, Fraction(0))
+
+    def valueRange(self, ws):
+        w = self.Wr(ws)
+        return (self.fB[0] - w, self.fB[1] + w)
+
+    def loBound(self, box, y):
+        s = self.fB[0]
+        for d, (lo, hi), yi in zip(self.dfB, box, y):
+            if lo == hi:
+                continue
+            a, b = lo - yi, hi - yi
+            s += min(d[0] * a, d[0] * b, d[1] * a, d[1] * b)
+        return s - self.err
+
+
+def _mono_const(d, n):
+    return _MonoTM((d, d), [(Fraction(0), Fraction(0))] * n, Fraction(0))
+
+
+def _mono_var(k, box):
+    dfB = [(Fraction(0), Fraction(0))] * len(box)
+    dfB[k] = (Fraction(1), Fraction(1))
+    return _MonoTM(box[k], dfB, Fraction(0))
+
+
+def _mono_neg(M):
+    return _MonoTM((-M.fB[1], -M.fB[0]),
+                   [(-d[1], -d[0]) for d in M.dfB], M.err)
+
+
+def _mono_add(Mf, Mg):
+    return _MonoTM(_mono_iv_add(Mf.fB, Mg.fB),
+                   [_mono_iv_add(a, b) for a, b in zip(Mf.dfB, Mg.dfB)],
+                   Mf.err + Mg.err)
+
+
+def _mono_mul(Mf, Mg, ws):
+    fB = _mono_iv_mul(Mf.fB, Mg.fB)
+    dfB = [_mono_iv_add(_mono_iv_mul(a, Mg.fB), _mono_iv_mul(Mf.fB, b))
+           for a, b in zip(Mf.dfB, Mg.dfB)]
+    W0f, W0g = Mf.W0(ws), Mg.W0(ws)
+    ef, eg = Mf.err, Mg.err
+    err = (W0f * W0g + ef * (_mono_abs_hi(Mg.fB) + W0g + eg)
+           + eg * (_mono_abs_hi(Mf.fB) + W0f))
+    return _MonoTM(fB, dfB, err)
+
+
+def _mono_sqrt(M, ws, nt):
+    W = M.Wr(ws)
+    c = M.fB[0] - W
+    if c <= 0:
+        nt.sqrt_fail += 1
+        return None
+    Jl, Jh = _mono_isqrt_lo(M.fB[0]), _mono_isqrt_hi(M.fB[1])
+    if Jl > Jh:
+        Jl = Fraction(0)
+    twoJl, twoJh = 2 * Jl, 2 * Jh
+    if twoJl <= 0 <= twoJh:
+        nt.sqrt_fail += 1
+        return None
+    J = (Fraction(1) / twoJh, Fraction(1) / twoJl)
+    dfB = [_mono_iv_mul(d, J) for d in M.dfB]
+    K = Fraction(1) / (8 * c * _mono_isqrt_hi(c))
+    return _MonoTM((Jl, Jh), dfB, M.err * J[1] + W * W * K)
+
+
+def _mono_inv(M, ws, nt):
+    W = M.Wr(ws)
+    cpos = M.fB[0] - W
+    cneg = -(M.fB[1] + W)
+    if cpos > 0:
+        c = cpos
+    elif cneg > 0:
+        c = cneg
+    else:
+        nt.div_fail += 1
+        return None
+    a = _mono_abs_hi(M.fB)
+    V = (Fraction(1) / M.fB[1], Fraction(1) / M.fB[0])
+    Jp = (Fraction(1) / (a * a), Fraction(1) / (c * c))
+    dfB = [_mono_iv_mul(d, (-Jp[1], -Jp[0])) for d in M.dfB]
+    K = Fraction(1) / (c * c * c)
+    return _MonoTM(V, dfB, M.err * Jp[1] + W * W * K)
+
+
+def _mono_div(Mf, Mg, ws, nt):
+    Mi = _mono_inv(Mg, ws, nt)
+    if Mi is not None:
+        return _mono_mul(Mf, Mi, ws)
+    J = Mg.fB
+    if J[0] <= 0 <= J[1]:
+        nt.div_fail += 1
+        return None
+    qs = [Mf.fB[0] / J[0], Mf.fB[0] / J[1], Mf.fB[1] / J[0], Mf.fB[1] / J[1]]
+    nt.div_fallback += 1
+    return _MonoTM((min(qs), max(qs)), [(Fraction(0), Fraction(0))] * Mf.n,
+                   Fraction(0))
+
+
+def _mono_atan_tm(M, ws, nt, closed):
+    nt.atan_n += 1
+    if closed:
+        lo = _mono_atan(M.fB[0])[0]
+        hi = _mono_atan(M.fB[1])[1]
+        return _MonoTM((lo, hi), [(Fraction(0), Fraction(0))] * M.n,
+                       Fraction(0))
+    W = M.Wr(ws)
+    alo, ahi = _mono_atan(M.fB[0])[0], _mono_atan(M.fB[1])[1]
+    al2 = _mono_abs_hi(M.fB)
+    J = (Fraction(1) / (1 + al2 * al2), Fraction(1))
+    dfB = [_mono_iv_mul(d, J) for d in M.dfB]
+    C = min(Fraction(7, 8), 2 * (_mono_abs_hi(M.fB) + W))
+    return _MonoTM((alo, ahi), dfB, M.err * J[1] + W * W * C)
+
+
+def _mono_closed_map(prog):
+    """per op-index: is the subtree ending at this op var-free?"""
+    out = {}
+    st = []
+    for i, op in enumerate(prog):
+        if isinstance(op, dict):
+            it = op["ite"]
+            cl = all(
+                not any(isinstance(o, dict) or o[0] == "push_var" for o in sub)
+                for sub in (it["cond"], it["then"], it["else"]))
+            st.append(cl)
+            out[i] = cl
+            continue
+        o = op[0]
+        if o in ("push_const", "push_var"):
+            cl = (o == "push_const")
+        elif o in ("neg", "abs", "sqrt", "atan"):
+            cl = st.pop()
+        else:
+            b = st.pop()
+            a = st.pop()
+            cl = a and b
+        st.append(cl)
+        out[i] = cl
+    return out
+
+
+def _mono_teval(prog, box, y, ws, nt, cmap):
+    st = []
+    for i, op in enumerate(prog):
+        if isinstance(op, dict):
+            it = op["ite"]
+            cc = gsplit_eval(it["cond"], box)
+            if cc is None:
+                nt.guard_fail += 1
+                st.append(None)
+            elif cc[1] < 0:
+                st.append(_mono_teval(it["then"], box, y, ws, nt,
+                                      _mono_closed_map(it["then"])))
+            elif cc[0] >= 0:
+                st.append(_mono_teval(it["else"], box, y, ws, nt,
+                                      _mono_closed_map(it["else"])))
+            else:
+                nt.ite_straddle += 1
+                Mt = _mono_teval(it["then"], box, y, ws, nt,
+                                 _mono_closed_map(it["then"]))
+                Me = _mono_teval(it["else"], box, y, ws, nt,
+                                 _mono_closed_map(it["else"]))
+                if Mt is None or Me is None:
+                    st.append(None)
+                else:
+                    vrT, vrE = Mt.valueRange(ws), Me.valueRange(ws)
+                    fB = _mono_hull(vrT, vrE)
+                    dfB = [_mono_hull(a, b)
+                           for a, b in zip(Mt.dfB, Me.dfB)]
+                    nt_err = max(Mt.err, Me.err) + _mono_jump(vrT, vrE)
+                    st.append(_MonoTM(fB, dfB, nt_err))
+            continue
+        o = op[0]
+        if o == "push_const":
+            st.append(_mono_const(Fraction(op[1]["num"], op[1]["den"]),
+                                  len(box)))
+        elif o == "push_var":
+            st.append(_mono_var(op[1], box))
+        elif o == "add":
+            b = st.pop()
+            a = st.pop()
+            st.append(None if (a is None or b is None) else _mono_add(a, b))
+        elif o == "sub":
+            b = st.pop()
+            a = st.pop()
+            st.append(None if (a is None or b is None)
+                      else _mono_add(a, _mono_neg(b)))
+        elif o == "mul":
+            b = st.pop()
+            a = st.pop()
+            st.append(None if (a is None or b is None)
+                      else _mono_mul(a, b, ws))
+        elif o == "neg":
+            a = st.pop()
+            st.append(None if a is None else _mono_neg(a))
+        elif o == "abs":
+            a = st.pop()
+            st.append(None if a is None else
+                      _MonoTM(_mono_hull((-a.fB[1], -a.fB[0])
+                                         if a.fB[1] <= 0 else
+                                         ((Fraction(0), _mono_abs_hi(a.fB))
+                                          if a.fB[0] < 0 else a.fB)),
+                              [(Fraction(0), Fraction(0))] * a.n,
+                              Fraction(0)))
+        elif o == "sqrt":
+            a = st.pop()
+            st.append(None if a is None else _mono_sqrt(a, ws, nt))
+        elif o == "div":
+            b = st.pop()
+            a = st.pop()
+            st.append(None if (a is None or b is None)
+                      else _mono_div(a, b, ws, nt))
+        elif o == "atan":
+            a = st.pop()
+            st.append(None if a is None
+                      else _mono_atan_tm(a, ws, nt, cmap[i]))
+        else:
+            raise ValueError(o)
+    return st[-1]
+
+
+class _MonoT2:
+    __slots__ = ("kind", "op", "l", "r", "start", "end", "prog")
+
+    def __init__(self, kind, op=None, l=None, r=None, start=0, end=0,
+                 prog=None):
+        self.kind, self.op, self.l, self.r = kind, op, l, r
+        self.start, self.end, self.prog = start, end, prog
+
+
+def _mono_parse2(prog):
+    """expression tree with RPN slices (mul/div/sqrt/atan diff rules splice
+    the ORIGINAL slices back together around the derivative progs)."""
+    st = []
+    for i, op in enumerate(prog):
+        if isinstance(op, dict):
+            st.append(_MonoT2("ite", op, start=i, end=i, prog=[op]))
+        elif op[0] in ("push_const", "push_var"):
+            st.append(_MonoT2("leaf", op, start=i, end=i, prog=[op]))
+        elif op[0] in ("neg", "abs", "sqrt", "atan"):
+            a = st.pop()
+            st.append(_MonoT2(op[0], op, l=a, start=a.start, end=i,
+                              prog=prog[a.start:i + 1]))
+        else:
+            b = st.pop()
+            a = st.pop()
+            st.append(_MonoT2(op[0], op, l=a, r=b, start=a.start, end=i,
+                              prog=prog[a.start:i + 1]))
+    assert len(st) == 1
+    return st[0]
+
+
+def _mono_diff(t, j, box):
+    """branch-resolved symbolic d/dx_j as an RPN prog; 'ok' | 'nondiff'.
+    (Finite-difference-verified W6: all rules exact on split_0_2 leaf 0,
+    including div — the W5 probe numerator l*dr - r*dl was sign-flipped.)"""
+    if t.kind == "leaf":
+        op = t.op
+        if op[0] == "push_var":
+            return ([["push_const", {"num": 1, "den": 1}]] if op[1] == j
+                    else [["push_const", {"num": 0, "den": 1}]]), "ok"
+        return [["push_const", {"num": 0, "den": 1}]], "ok"
+    if t.kind == "neg":
+        dp, s = _mono_diff(t.l, j, box)
+        return dp + [["neg"]], s
+    if t.kind in ("add", "sub"):
+        dp1, s1 = _mono_diff(t.l, j, box)
+        dp2, s2 = _mono_diff(t.r, j, box)
+        return (dp1 + dp2 + [[t.kind]],
+                "nondiff" if "nondiff" in (s1, s2) else "ok")
+    if t.kind == "mul":
+        dp1, s1 = _mono_diff(t.l, j, box)
+        dp2, s2 = _mono_diff(t.r, j, box)
+        return (t.l.prog + dp2 + [["mul"]] + t.r.prog + dp1 + [["mul"]]
+                + [["add"]],
+                "nondiff" if "nondiff" in (s1, s2) else "ok")
+    if t.kind == "div":
+        dp1, s1 = _mono_diff(t.l, j, box)
+        dp2, s2 = _mono_diff(t.r, j, box)
+        num = (t.l.prog + dp2 + [["mul"]] + t.r.prog + dp1 + [["mul"]]
+               + [["sub"], ["neg"]])
+        return (num + t.r.prog + t.r.prog + [["mul"]] + [["div"]],
+                "nondiff" if "nondiff" in (s1, s2) else "ok")
+    if t.kind == "sqrt":
+        dp, s = _mono_diff(t.l, j, box)
+        return (dp + [["push_const", {"num": 2, "den": 1}]] + t.l.prog
+                + [["sqrt"], ["mul"], ["div"]], s)
+    if t.kind == "atan":
+        dp, s = _mono_diff(t.l, j, box)
+        den = ([["push_const", {"num": 1, "den": 1}]] + t.l.prog + t.l.prog
+               + [["mul"], ["add"]])
+        return dp + den + [["div"]], s
+    if t.kind == "abs":
+        dp, s = _mono_diff(t.l, j, box)
+        return dp + [["abs"]], "nondiff"
+    if t.kind == "ite":
+        it = t.op["ite"]
+        cc = gsplit_eval(it["cond"], box)
+        if cc[1] < 0:
+            return _mono_diff(_mono_parse2(it["then"]), j, box)
+        if cc[0] >= 0:
+            return _mono_diff(_mono_parse2(it["else"]), j, box)
+        return None, "straddle"
+    raise ValueError(t.kind)
+
+
+class _MonoBudget(Exception):
+    pass
+
+
+def _mono_eval_prog(prog, box, budget):
+    """TM-eval prog on box -> (M, nt, y, ws); raises _MonoBudget."""
+    if budget[0] <= 0:
+        raise _MonoBudget()
+    budget[0] -= 1
+    y = [(lo + hi) / 2 for lo, hi in box]
+    ws = [(hi - lo) / 2 for lo, hi in box]
+    nt = _MonoNotes()
+    M = _mono_teval(prog, box, y, ws, nt, _mono_closed_map(prog))
+    return M, nt, y, ws
+
+
+def _mono_collect_vars(prog, acc):
+    for op in prog:
+        if isinstance(op, dict):
+            it = op["ite"]
+            for sub in (it["cond"], it["then"], it["else"]):
+                _mono_collect_vars(sub, acc)
+        elif op[0] == "push_var":
+            acc.add(op[1])
+
+
+def _mono_guard_split_dim(guards, box):
+    """a max-width dim of some straddling guard (None if all fixed)."""
+    best, bw = None, Fraction(0)
+    for g in guards:
+        try:
+            r = gsplit_eval(g, box)
+        except GSplitError:
+            continue
+        if r[0] <= 0 <= r[1]:
+            vs = set()
+            _mono_collect_vars(g, vs)
+            for j in vs:
+                w = box[j][1] - box[j][0]
+                if w > bw:
+                    best, bw = j, w
+    return best
+
+
+def _mono_df_enclosure(root, box, j, budget, st):
+    """sound df_j enclosure + its loBound folded in, or None on any failure."""
+    try:
+        dp, status = _mono_diff(root, j, box)
+    except (GSplitError, ValueError):
+        return None
+    if dp is None or status != "ok":
+        return None
+    try:
+        Md, ntd, yd, wsd = _mono_eval_prog(dp, box, budget)
+    except _MonoBudget:
+        raise
+    except (GSplitError, ZeroDivisionError, ValueError):
+        return None
+    if Md is None:
+        return None
+    st["df_evals"] += 1
+    vr = Md.valueRange(wsd)
+    dlb = Md.loBound(box, yd)
+    return (min(vr[0], dlb), vr[1])
+
+
+def _mono_verdict_of(enc):
+    """'incr' | 'decr' | 'flat' | None from a df enclosure."""
+    if enc is None:
+        return None
+    elo, ehi = enc
+    if elo == 0 and ehi == 0:
+        return "flat"
+    if elo > 0:
+        return "incr"
+    if ehi < 0:
+        return "decr"
+    return None
+
+
+def _mono_promise_of(enc):
+    elo, ehi = enc
+    mid, hw = (elo + ehi) / 2, (ehi - elo) / 2
+    return abs(mid) / hw if hw > 0 else Fraction(10) ** 30
+
+
+def _mono_certify(prog, root, box, guards, budget, st, depth, max_depth,
+                  log, df_cache=None, age=None):
+    """recursive mono reduction, v5.  st: mutable stats/cert accumulator.
+    Returns 'POS' | 'NEG' | 'FAIL' | 'CAP'.
+
+    df enclosures INHERITED via df_cache remain sound on subboxes (an
+    interval over a superset box is a valid enclosure over the subset), so
+    sign checks at every node are FREE cache reads; a dim's df is actually
+    re-evaluated only (a) at the root, (b) after a restrict event, (c) when
+    its cached promise is near-signing and the cache is stale
+    (_MONO_REFRESH_AGE cuts, one dim per node max).  Signed/flat dims
+    restrict to their min face for free; otherwise bisect the free dim
+    picked by a STRICT round-robin cycle over the promise-ordered dims
+    (promise fixes only the cycle start): the W6-measured df enclosures
+    are cross-share dominated (own-dim share ~6% per halving), and a
+    max-promise rule with near-equal promises degenerates into 2-dim
+    alternation — a balanced kd-tree spread needs every dim cut (leaf
+    count C(d+5,5), polynomial in depth)."""
+    if depth > max_depth:
+        st["cap"] += 1
+        return "CAP"
+    if df_cache is None:
+        df_cache = {}
+        age = {}
+    try:
+        M, nt, y, ws = _mono_eval_prog(prog, box, budget)
+    except _MonoBudget:
+        raise
+    except (GSplitError, ZeroDivisionError, ValueError) as ex:
+        st["fails"] += 1
+        log(f"      teval error d{depth}: {type(ex).__name__}")
+        return "FAIL"
+    if M is None:
+        st["fails"] += 1
+        return "FAIL"
+    lb = M.loBound(box, y)
+    if lb > 0:
+        st["corners"] += 1
+        st["certs"].append({"kind": "enclosure", "depth": depth,
+                            "box": _mono_box_str(box),
+                            "loBound": _mono_fmt(lb)})
+        log(f"      d{depth} POS lb={_mono_fmt(lb)} corners={st['corners']}")
+        return "POS"
+    if nt.ite_straddle > 0:
+        d = _mono_guard_split_dim(guards, box)
+        if d is None:
+            d = max(range(len(box)), key=lambda j: box[j][1] - box[j][0])
+        st["guard_splits"] += 1
+        log(f"      d{depth} guard-bisect dim={d}")
+        return _mono_split_two(prog, root, box, guards, budget, st, depth,
+                               max_depth, d, log, df_cache, age)
+    free = [j for j in range(len(box)) if box[j][0] != box[j][1]]
+    if not free:
+        st["neg_points"] += 1
+        st["certs"].append({"kind": "point-NEG", "depth": depth,
+                            "box": _mono_box_str(box),
+                            "loBound": _mono_fmt(lb)})
+        log(f"      d{depth} POINT NEG lb={_mono_fmt(lb)}")
+        return "NEG"
+    if not df_cache:
+        # root: measure every free dim once
+        for j in free:
+            fresh = _mono_df_enclosure(root, box, j, budget, st)
+            if fresh is not None:
+                df_cache[j] = fresh
+                age[j] = 0
+    # near-signing refresh: at most one dim per node, aged caches only
+    # (df tevals dominate the mirror cost: ~54k-op derivative programs,
+    # W6-measured 163 s each at 2^-150 endpoints vs 4 s for the whole expr)
+    cand = None
+    for j in free:
+        enc = df_cache.get(j)
+        if (enc is not None and age.get(j, 0) > _MONO_REFRESH_AGE
+                and _mono_promise_of(enc) > _MONO_REFRESH_NEAR):
+            cand = j
+            break
+    if cand is not None:
+        fresh = _mono_df_enclosure(root, box, cand, budget, st)
+        if fresh is not None:
+            df_cache[cand] = fresh
+            age[cand] = 0
+    signs = {}
+    promise = {}
+    for j in free:
+        enc = df_cache.get(j)
+        v = _mono_verdict_of(enc)
+        if v is not None:
+            signs[j] = v
+        elif enc is not None:
+            promise[j] = _mono_promise_of(enc)
+    if signs:
+        nb = list(box)
+        ncache, nage = dict(df_cache), dict(age)
+        for j, s in signs.items():
+            nb[j] = ((box[j][0], box[j][0]) if s in ("incr", "flat")
+                     else (box[j][1], box[j][1]))
+            ncache.pop(j, None)
+            nage.pop(j, None)
+        st["mono_restricts"] += len(signs)
+        st["certs"].append({"kind": "mono", "depth": depth,
+                            "box": _mono_box_str(box),
+                            "signs": {str(j): s for j, s in signs.items()}})
+        log(f"      d{depth} mono restrict {signs}")
+        return _mono_certify(prog, root, nb, guards, budget, st, depth + 1,
+                             max_depth, log, ncache, nage)
+    if not promise:
+        log(f"      d{depth} no df verdicts on free dims {free} -> FAIL")
+        st["fails"] += 1
+        return "FAIL"
+    order = sorted(free, key=lambda j: -promise[j])
+    d = order[depth % len(order)]
+    st["sign_splits"] += 1
+    log(f"      d{depth} bisect dim={d} promise={float(promise[d]):.4g}")
+    nage = {j: a + 1 for j, a in age.items()}
+    return _mono_split_two(prog, root, box, guards, budget, st, depth,
+                           max_depth, d, log, df_cache, nage)
+
+
+def _mono_split_two(prog, root, box, guards, budget, st, depth, max_depth, d,
+                    log, df_cache, age):
+    lo, hi = box[d]
+    mid = (lo + hi) / 2
+    r1 = _mono_certify(prog, root, box[:d] + [(lo, mid)] + box[d + 1:],
+                       guards, budget, st, depth + 1, max_depth, log,
+                       df_cache, age)
+    if r1 == "CAP":
+        return "CAP"
+    r2 = _mono_certify(prog, root, box[:d] + [(mid, hi)] + box[d + 1:],
+                       guards, budget, st, depth + 1, max_depth, log,
+                       df_cache, age)
+    if r1 == "POS" and r2 == "POS":
+        return "POS"
+    if "CAP" in (r1, r2):
+        return "CAP"
+    if "FAIL" in (r1, r2):
+        return "FAIL"
+    return "NEG"
+
+
+def _mono_box_str(box):
+    return [[str(lo), str(hi)] for lo, hi in box]
+
+
+def _mono_fmt(f):
+    import mpmath
+    x = mpmath.mpf(f.numerator) / f.denominator
+    return mpmath.nstr(x, 6, strip_zeros=True)
+
+
+def mono_main(case, cid, mod, n, args, budget_n, max_depth, subbox_filter):
+    """`--mono` driver: run the route-A reduction over the sub-box manifest
+    and write the certificate-plan report (text) + .mono.json (machine)."""
+    if hasattr(sys, "set_int_max_str_digits"):
+        sys.set_int_max_str_digits(200000)  # huge Fractions in certs
+    try:
+        import mpmath
+        mpmath.mp.dps = 120  # covers the 2^-300 atan endpoint slack
+    except ImportError:
+        die("--mono needs mpmath (pip3 install mpmath)")
+    mf = json.load(open(args[1]))
+    if mf.get("schema") == "gsplit-subboxes":
+        raw = [s["box"] for s in mf["subboxes"]]
+    elif "subboxes" in mf:
+        raw = mf["subboxes"]
+    else:
+        die(f"{args[1]}: no subboxes (expected gsplit-subboxes manifest or "
+            "the raw W3 make_subboxes dump)")
+    boxes = []
+    for bx in raw:
+        pairs = []
+        for dim in bx:
+            (m1, e1), (m2, e2) = dim
+            pairs.append((Fraction(m1) * (Fraction(2) ** e1),
+                          Fraction(m2) * (Fraction(2) ** e2)))
+        boxes.append(pairs)
+    if subbox_filter is not None:
+        boxes = [(k, b) for k, b in enumerate(boxes) if k == subbox_filter]
+    else:
+        boxes = list(enumerate(boxes))
+    prog = case["prog"]
+    guards = gsplit_guards(case)
+    root = _mono_parse2(prog)
+    rows, totals = [], {"corners": 0, "sign_splits": 0, "guard_splits": 0,
+                        "mono_restricts": 0, "fails": 0, "cap": 0,
+                        "neg_points": 0, "tevals": 0}
+    import time
+    for k, bx in boxes:
+        budget = [budget_n]
+        st = {"corners": 0, "sign_splits": 0, "guard_splits": 0,
+              "mono_restricts": 0, "fails": 0, "cap": 0, "neg_points": 0,
+              "df_evals": 0, "certs": []}
+        w = [hi - lo for lo, hi in bx]
+        print(f"emit_lean: [mono] sub-box {k}/{len(boxes)} "
+              f"w=[{', '.join(_mono_fmt(x) for x in w)}]", flush=True)
+        t0 = time.time()
+        try:
+            status = _mono_certify(prog, root, bx, guards, budget, st, 0,
+                                   max_depth,
+                                   lambda m: print(f"emit_lean: [mono {k}]"
+                                                   f" {m}", flush=True))
+        except _MonoBudget:
+            status = "CAP"
+            st["cap"] += 1
+            print(f"emit_lean: [mono {k}] budget exhausted", flush=True)
+        rows.append({"sb": k, "status": status, "box": _mono_box_str(bx),
+                     "counts": {kk: st[kk] for kk in
+                                ("corners", "sign_splits", "guard_splits",
+                                 "mono_restricts", "fails", "cap",
+                                 "neg_points", "df_evals")},
+                     "tevals": budget_n - budget[0],
+                     "events": st["certs"]})
+        for kk in ("corners", "sign_splits", "guard_splits", "mono_restricts",
+                   "fails", "cap", "neg_points"):
+            totals[kk] += st[kk]
+        totals["tevals"] += budget_n - budget[0]
+        print(f"emit_lean: [mono {k}] -> {status} "
+              f"(corners={st['corners']} bisect={st['sign_splits']} "
+              f"guards={st['guard_splits']} "
+              f"tevals={budget_n - budget[0]}, {time.time() - t0:.0f}s)",
+              flush=True)
+    npos = sum(1 for r in rows if r["status"] == "POS")
+    out_json = os.path.splitext(args[2])[0] + ".mono.json"
+    manifest = {"schema": "mono-corner-certs", "case": cid,
+                "source_manifest": args[1], "n": len(boxes),
+                "budget": budget_n, "max_depth": max_depth,
+                "totals": totals,
+                "n_pos": npos,
+                "subboxes": rows}
+    open(out_json, "w").write(json.dumps(manifest, indent=1))
+    with open(args[2], "w") as f:
+        f.write(f"/- mono route-A prototype report for {cid}\n")
+        f.write(f"    sub-boxes: {len(rows)} ({npos} POS, "
+                f"{len(rows) - npos} not-POS)\n")
+        f.write(f"    totals: {totals}\n")
+        f.write("    kernel replay (W7): per-event checkPosTMHull on the\n")
+        f.write("    recorded box; per-corner point-box TM = exact value;\n")
+        f.write("    assembly via the mono-corner lemma (scout §5.3). -/\n")
+        for r in rows:
+            f.write(f"\n== sb{r['sb']}: {r['status']}"
+                    f"  corners={r['counts']['corners']}"
+                    f" sign_bisects={r['counts']['sign_splits']}"
+                    f" guard_splits={r['counts']['guard_splits']}"
+                    f" tevals={r['tevals']}\n")
+            for ev in r["events"]:
+                if ev["kind"] == "mono":
+                    f.write(f"   d{ev['depth']} MONO {ev['signs']}\n")
+                elif ev["kind"] == "enclosure":
+                    f.write(f"   d{ev['depth']} CORNER lb=+{ev['loBound']}"
+                            f" box={ev['box']}\n")
+                else:
+                    f.write(f"   d{ev['depth']} {ev['kind']}\n")
+    print(f"emit_lean: wrote {args[2]} + {out_json} (mono route A: {npos}/{len(rows)} "
+          f"sub-boxes POS, {totals['corners']} corner certs, "
+          f"{totals['sign_splits']} sign bisects, {totals['guard_splits']} "
+          f"guard splits, {totals['tevals']} mirror tevals)")
+
+
 def main():
     shard_leaves = 128
     sample_n = None
@@ -1682,6 +2450,10 @@ def main():
     max_leaves = None
     params_file = None
     manifest_file = None
+    mono = False
+    mono_budget = 20000
+    mono_max_depth = 48
+    mono_subbox = None
     args = []
     for a in sys.argv[1:]:
         if a.startswith("--shard-leaves="):
@@ -1690,6 +2462,14 @@ def main():
             stage_a_shards = int(a.split("=", 1)[1])
         elif a.startswith("--leaves="):
             sample_n = int(a.split("=", 1)[1])
+        elif a == "--mono":
+            mono = True
+        elif a.startswith("--mono-budget="):
+            mono_budget = int(a.split("=", 1)[1])
+        elif a.startswith("--mono-max-depth="):
+            mono_max_depth = int(a.split("=", 1)[1])
+        elif a.startswith("--mono-subbox="):
+            mono_subbox = int(a.split("=", 1)[1])
         elif a == "--fill":
             fill = True
         elif a == "--stage-a":
@@ -1733,7 +2513,9 @@ def main():
             "                [--hull --params=FILE --gran=G --rung=N --rung-out=O]\n"
             "                [--hull --gsplit=a --params=ROUND1 [--manifest=ROUND1MF]\n"
             "                      [--gsplit-depth=12]]\n"
-            "                [--hull --gsplit=b --params=ROUND2 [--manifest=MF] [--max-leaves=N]]")
+            "                [--hull --gsplit=b --params=ROUND2 [--manifest=MF] [--max-leaves=N]]\n"
+            "                [--mono --mono-budget=N --mono-max-depth=N [--mono-subbox=K]]\n"
+            "                (mono: <arg2> = sub-box manifest, <out> = report)")
     if disj_gd and not bbg:
         die("--disj-gd is a stage-B mode: pass --bbg --disj-gd --params=FILE")
     fill = fill or stage_a or bbg
@@ -1746,6 +2528,14 @@ def main():
         mod = "C" + "".join(ch if ch.isalnum() else "x" for ch in cid)
     n = len(case["vars"])
     extra = ""
+
+    if mono:
+        # ---- W6 route-A prototype: mono dimension reduction over the
+        # sub-boxes (Python-side TM mirror search; emits a certificate
+        # plan report + .mono.json manifest, kernel replay is W7) ----
+        mono_main(case, cid, mod, n, args, mono_budget, mono_max_depth,
+                  mono_subbox)
+        return
 
     if hull:
         # ---- M2b/schema-v3 hull pilot (stage A driver / stage B kernel
