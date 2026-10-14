@@ -2431,6 +2431,219 @@ def mono_main(case, cid, mod, n, args, budget_n, max_depth, subbox_filter):
           f"guard splits, {totals['tevals']} mirror tevals)")
 
 
+# ---------------------------------------------------------------------------
+# W7: kernel-side replay emission for the mono route (Lean MonoCorner.lean).
+# Appended after the W6a mono block; consumes the in-memory cert plan and
+# emits <out>.monolean.lean.  Per sub-box with an ALL-MONO path (only
+# restrict events, no bisections, no flat dims) it emits:
+#   - dfⱼ sign certificates as `checkPosTMHull (IExpr.derivExpr F j) box
+#     TMParams.empty = true` — the kernel computes the symbolic derivative
+#     ITSELF (MonoCorner.derivExpr); the Python `_mono_diff` df is
+#     search-side only and is never trusted by the kernel;
+#   - the corner point-box certificate `checkPosTMHull F (pointBox corner)`;
+#   - the assembly through `MonoCorner.checkMonoCorner` (chain rule +
+#     monotone slices + corner telescope ⇒ ∀ρ∈box, 0 < F.evalReal ρ).
+# Restricted to polynomials (no sqrt/div/atan/abs/ite in the prog): a
+# df/derivative carrying sqrt/div/atan nodes needs re-baked stage-A
+# mantissa certificates for the kernel replay (W8 scope), and abs/ite need
+# the derivSafe/DomOK guard-discharge emission (W8 scope).
+# ---------------------------------------------------------------------------
+
+_MONOLEAN_MIN_DIMS = 1
+
+
+def _mono_lean_scan(prog, acc):
+    """collect the op names of a prog (recursive over ite dicts)."""
+    for op in prog:
+        if isinstance(op, dict):
+            it = op["ite"]
+            for sub in (it["cond"], it["then"], it["else"]):
+                _mono_lean_scan(sub, acc)
+        else:
+            acc.add(op[0])
+
+
+def _mono_lean_dyadic(fr):
+    """Fraction -> '⟨m, e⟩' dyadic literal text; None if not dyadic."""
+    fr = Fraction(fr)
+    num, den = fr.numerator, fr.denominator
+    e = 0
+    while den % 2 == 0:
+        den //= 2
+        e -= 1
+    if den != 1:
+        return None
+    while num != 0 and num % 2 == 0:
+        num //= 2
+        e += 1
+    return f"⟨{num}, {e}⟩"
+
+
+def _mono_lean_fin_lit(j, n):
+    """0-based index j -> Fin n literal text."""
+    return f"({j} : Fin {n})"
+
+
+def mono_lean_main(case, cid, n, args, mono_json):
+    """emit <out>.monolean.lean from the mono-corner-certs manifest that the
+    --mono run just wrote (mono_json = parsed manifest)."""
+    import re
+    nsp = "MonoReplay_" + re.sub(r"\W", "_", cid)
+    expr = RPN().emit(case["prog"])
+    ops = set()
+    _mono_lean_scan(case["prog"], ops)
+    hard = {"sqrt", "div", "atan", "abs", "ite"}
+    bad = sorted(ops & hard)
+    if bad:
+        print(f"emit_lean: [mono-lean] prog carries {bad}: kernel replay of "
+              f"dfⱼ needs W8 stage-A re-bake (sqrt/div/atan certs) and/or "
+              f"derivSafe/DomOK guard discharge (abs/ite) — nothing emitted")
+        return
+    rows = [r for r in mono_json["subboxes"] if r["status"] == "POS"]
+    emitted, skipped = 0, 0
+    chunks = []
+    for r in rows:
+        events = [ev for ev in r["events"] if ev["kind"] == "mono"
+                  or ev["kind"] == "enclosure"]
+        if (len(events) < _MONOLEAN_MIN_DIMS + 1
+                or events[-1]["kind"] != "enclosure"
+                or any(ev["kind"] != "mono" for ev in events[:-1])):
+            skipped += 1
+            continue
+        signs = []
+        ok = True
+        for ev in events[:-1]:
+            for j, s in ev["signs"].items():
+                if s not in ("incr", "decr"):
+                    ok = False  # flat dims need a df≡0 certificate (W8)
+                    break
+                signs.append((int(j), s))
+            if not ok:
+                break
+        if not ok or not signs:
+            skipped += 1
+            continue
+        k = r["sb"]
+        box = [[Fraction(v) for v in side] for side in r["box"]]
+        corner = list(box)
+        for j, s in signs:
+            corner[j] = [box[j][0], box[j][0]] if s == "incr" \
+                else [box[j][1], box[j][1]]
+        enc = events[-1]["box"]
+        if any(Fraction(enc[j][0]) != corner[j][0]
+               or Fraction(enc[j][1]) != corner[j][1] for j in range(n)):
+            skipped += 1  # enclosure fired on a non-corner box
+            continue
+        dy_box = [[_mono_lean_dyadic(v) for v in side] for side in box]
+        dy_cor = [_mono_lean_dyadic(c[0]) for c in corner]
+        if any(d is None for side in dy_box for d in side) \
+                or any(d is None for d in dy_cor):
+            skipped += 1  # non-dyadic box endpoints
+            continue
+        sgn_vec = ["true"] * n
+        for j, s in signs:
+            sgn_vec[j] = "false" if s == "decr" else "true"
+        dims = [j for j, _ in signs]
+        body = [f"namespace {nsp}_sb{k}", "",
+                f"/-- mono route-A sub-box {k} (mirror depth {events[-1]['depth']}), "
+                f"lb=+{events[-1]['loBound']} at the corner. -/",
+                f"def sb{k}Box : Fin {n} → DInterval := "
+                f"![" + ", ".join(f"⟨{lo}, {hi}⟩" for lo, hi in dy_box) + "]",
+                f"def sb{k}Corner : Fin {n} → Kepler.Interval.Dyadic := "
+                f"![" + ", ".join(dy_cor) + "]",
+                f"def sb{k}F : IExpr {n} := {expr}",
+                f"def sb{k}Sgn : Fin {n} → Bool := "
+                f"![" + ", ".join(sgn_vec) + "]", "",
+                f"theorem sb{k}_safe : sb{k}F.derivSafe = true := by decide",
+                f"theorem sb{k}_dom : DomOK sb{k}Box sb{k}F :=",
+                f"  domOK_of_domTrivial _ _ (by decide)"]
+        for j in dims:
+            body.append(
+                f"theorem sb{k}_df{j} : checkPosTMHull "
+                f"(IExpr.derivExpr sb{k}F {_mono_lean_fin_lit(j, n)}) "
+                f"sb{k}Box TMParams.empty = true := by decide")
+        body.append(
+            f"theorem sb{k}_corner : checkPosTMHull sb{k}F "
+            f"(pointBox sb{k}Corner) TMParams.empty = true := by decide")
+        incr_body, decr_body = [], []
+        for j in range(n):
+            if j in dims:
+                incr_body.append(f"· exact ⟨sb{k}_df{j}, rfl⟩")
+                decr_body.append("· exact Bool.noConfusion hj")
+            else:
+                incr_body.append("· exact Bool.noConfusion hj")
+                decr_body.append("· exact Bool.noConfusion hj")
+        # dims without a recorded sign cannot appear in an all-mono chain
+        # (every free dim was signed or restricted before the enclosure);
+        # guard the emission anyway:
+        missing = [j for j in range(n) if j not in dims]
+        if missing:
+            skipped += 1
+            continue
+        body.append(
+            f"theorem sb{k}_incr : ∀ j, sb{k}Sgn j = true →")
+        body.append(
+            f"    checkPosTMHull (IExpr.derivExpr sb{k}F j) sb{k}Box "
+            f"TMParams.empty = true ∧ sb{k}Corner j = (sb{k}Box j).lo := by")
+        body.append("  intro j hj")
+        body.append("  fin_cases j")
+        body.extend(["  " + b for b in incr_body])
+        body.append(
+            f"theorem sb{k}_decr : ∀ j, sb{k}Sgn j = false →")
+        body.append(
+            f"    checkPosTMHull (IExpr.neg (IExpr.derivExpr sb{k}F j)) "
+            f"sb{k}Box TMParams.empty = true ∧ sb{k}Corner j = "
+            f"(sb{k}Box j).hi := by")
+        body.append("  intro j hj")
+        body.append("  fin_cases j")
+        body.extend(["  " + b for b in decr_body])
+        cmem = []
+        for j in range(n):
+            cmem.append(
+                "· simp only [sb%dBox, sb%dCorner, DInterval.mem, "
+                "Kepler.Interval.Dyadic.toReal_def]\n    norm_num" % (k, k))
+        body.append(
+            f"theorem sb{k}_cmem : ∀ i, (sb{k}Box i).mem (sb{k}Corner i)"
+            f".toReal := by")
+        body.append("  intro i")
+        body.append("  fin_cases i")
+        body.extend(["  " + b for b in cmem])
+        body.append("")
+        body.append(
+            f"/-- End to end: dfⱼ sign + corner POS ⇒ the whole sub-box is "
+            f"positive (kernel-checked chain rule + mono-corner assembly). -/")
+        body.append(
+            f"theorem sb{k}_end_to_end (ρ : Fin {n} → ℝ) "
+            f"(hρ : boxMem sb{k}Box ρ) : 0 < sb{k}F.evalReal ρ :=")
+        body.append(
+            f"  checkMonoCorner sb{k}F sb{k}Box sb{k}Sgn sb{k}Corner")
+        body.append(
+            f"    (fun _ => TMParams.empty) TMParams.empty sb{k}_safe "
+            f"sb{k}_dom sb{k}_incr sb{k}_decr sb{k}_corner sb{k}_cmem ρ hρ")
+        body.append("")
+        body.append(f"end {nsp}_sb{k}")
+        body.append("")
+        chunks.append("\n".join(body))
+        emitted += 1
+    if not chunks:
+        print(f"emit_lean: [mono-lean] no all-mono sub-box qualified "
+              f"({skipped} skipped) — nothing emitted")
+        return
+    outpath = os.path.splitext(args[2])[0] + ".monolean.lean"
+    hdr = (f"/- W7 kernel replay for the mono route-A plan ({cid}).\n"
+           f"    Generated by emit_lean.py --mono --mono-lean from the\n"
+           f"    mono-corner-certs manifest ({len(mono_json['subboxes'])} "
+           f"sub-boxes, {emitted} all-mono emitted, {skipped} skipped).\n"
+           f"    dfⱼ is computed by the kernel itself (IExpr.derivExpr,\n"
+           f"    Kepler.Interval.MonoCorner); the Python-side df is\n"
+           f"    search-only.  Assembly: checkMonoCorner. -/\n"
+           f"import Kepler.Interval.MonoCorner\n\n"
+           f"open Kepler.Interval\n\n")
+    open(outpath, "w").write(hdr + "\n".join(chunks))
+    print(f"emit_lean: wrote {outpath} (mono-lean kernel replay: {emitted} "
+          f"all-mono sub-boxes, {skipped} skipped)")
+
+
 def main():
     shard_leaves = 128
     sample_n = None
@@ -2454,6 +2667,7 @@ def main():
     mono_budget = 20000
     mono_max_depth = 48
     mono_subbox = None
+    monolean = False
     args = []
     for a in sys.argv[1:]:
         if a.startswith("--shard-leaves="):
@@ -2464,6 +2678,8 @@ def main():
             sample_n = int(a.split("=", 1)[1])
         elif a == "--mono":
             mono = True
+        elif a == "--mono-lean":
+            monolean = True
         elif a.startswith("--mono-budget="):
             mono_budget = int(a.split("=", 1)[1])
         elif a.startswith("--mono-max-depth="):
@@ -2515,6 +2731,8 @@ def main():
             "                      [--gsplit-depth=12]]\n"
             "                [--hull --gsplit=b --params=ROUND2 [--manifest=MF] [--max-leaves=N]]\n"
             "                [--mono --mono-budget=N --mono-max-depth=N [--mono-subbox=K]]\n"
+            "                [--mono-lean] (with --mono: also emit the W7 kernel\n"
+            "                replay <out>.monolean.lean from the cert plan)\n"
             "                (mono: <arg2> = sub-box manifest, <out> = report)")
     if disj_gd and not bbg:
         die("--disj-gd is a stage-B mode: pass --bbg --disj-gd --params=FILE")
@@ -2535,6 +2753,11 @@ def main():
         # plan report + .mono.json manifest, kernel replay is W7) ----
         mono_main(case, cid, mod, n, args, mono_budget, mono_max_depth,
                   mono_subbox)
+        if monolean:
+            # ---- W7: kernel replay emission (consumes the .mono.json the
+            # run just wrote; zero effect without --mono-lean) ----
+            out_json = os.path.splitext(args[2])[0] + ".mono.json"
+            mono_lean_main(case, cid, n, args, json.load(open(out_json)))
         return
 
     if hull:
