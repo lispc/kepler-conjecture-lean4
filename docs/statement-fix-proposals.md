@@ -1526,3 +1526,94 @@ Kepler.Text.PackingAuto14 Kepler.Text.PackingAuto17` 零新错 + sorry 计数
 整文件 exit 0；axiom 替身复刻新签名 + shim 转发形 + `hQ2` 消费形 + 单调
 回退四项 typecheck exit 0；LEAN_PATH 前置 /tmp olean 的配对编译（补后
 PA14 + 补后 PA17）exit 0。）
+
+---
+
+## 39. Assembly `KcblrqcIneqDef` 占位统一（`:= True` → TameLp 真切片，MQMSMAB 终接线唯一缺口）— 分级 A（def 语义修正）
+
+**立案：2026-10-13，A10 第四波（MQMSMAB Assembly 终接线 lane）交付随件。**
+lane 纪律禁止本波自行动用陈述变更权，接线按「凡依赖该裁决的路径诚实记账
+卡 SF 待批，其余能落全落」完成：B4 十二短引理 + B3 语义桥 + 装配件
+`mqmsmabWired` 已在 `lean/Kepler/Assembly.lean` §2c' 全绿落地
+（`lake build Kepler.Assembly` EXIT=0），`mqmsmab` 本体原位待批。
+
+### (a) 缺陷
+
+`Assembly.lean:212`：`def KcblrqcIneqDef : Prop := True`（`PLACEHOLDER(P6-E)`）。
+HOL `kcblrqc_ineq_def`（`tame/ssreflect/tame_lemmas-compiled.hl:34-46`）是
+Ineq 数据库 28 条机器不等式的 mk_conj 大合取（MQMSMAB-compiled.hl:24 的
+section 前提 `ineqs := kcblrqc_ineq_def` 消费）。`Kepler.Text.TameLp.lean:512-532`
+已有其 **MQMSMAB/KCBLRQC/BDJYFFB 消费切片真形**（四类：azim 双边界、
+`get_b_tame_ineq` 表 r=0 情形 20 对、6 个 r>0 node-type 的数值矛盾、
+(5,0,1) 行 tauVEF 和 ≥ 0.6366；TameLp:495-509 保真注记 + :506 自认
+「两处接口在 G4 落地后统一」）。
+
+占位的两类病并发（scout `docs/scouts/mqmsmab-scout.md` §6.1 分类）：
+①**不可证**——`mqmsmab` 的 `hkcblrqc` 前提需供出 `TameLp.KcblrqcIneqDef`
+真切片（`KCBLRQC`/`BDJYFFB1/2`/`SZIPOAS`/`CDTETAT` 的 `hineq` 前提是
+DIH_Y_INEQ 等机器不等式，**不可能从 `True` 推出**），A10 终接线死锁；
+②**接口虚设**——`TheNonlinearInequalities`（Assembly:222）第 6 分量在
+占位语义下空洞成立，textCapstone 的三前提链第 3 腿名存实虚。
+
+### (b) 修复补丁
+
+单文件单行 def 体替换（scout §4 Step 0 方案 a）：
+
+```
+- def KcblrqcIneqDef : Prop := True
++ def KcblrqcIneqDef : Prop := Kepler.Text.TameLp.KcblrqcIneqDef
+```
+
+**零 import 变更**（`import Kepler.Text.TameLp` 已于 A10 第三波前置在位，
+Assembly:15；TameLp 不 import Assembly，无环）。随批同车一行：`mqmsmab`
+证明体占位行替换为 `mqmsmabWired V hkcblrqc hmain hfan hc`（备件已全绿）。
+受控孪生（§5.2 playbook「不要新增孪生」条款的反向清偿）：两处接口统一于
+TameLp 正本。
+
+### (c) 消费面核实（全树 grep `KcblrqcIneqDef`）
+
+| 消费点 | 性质 | 判定 |
+| --- | --- | --- |
+| Assembly:222 `TheNonlinearInequalities` def 第 6 合取项 | def 体引用 | 语义自动增强，文本零改 |
+| Assembly:384 `nliKcblrqcIneqDef`（骨架占位） | 唯一以占位语义受益的声明 | 陈述文本零改；其真化 = 28 条证书接线（IdLists.lean:630-658 `kcblrqcIneqDefIds`），独立波不随本项 |
+| Assembly:393 `nliKcblrqcIneqDefIds`（清单侧） | `AllCertified` | 不受影响 |
+| Assembly:667 `mqmsmab` 的 `hkcblrqc` 前提 | **受益主体** | 批准后证明体 = `mqmsmabWired …` 一行（已备件） |
+| Assembly:5232 `nonlinearInequalities` 聚合 | 引用 | 文本零改 |
+| textCapstone（Assembly:5248 起）经 `hNL` 第 6 分量传递 | 间接 | 自动受益；MQMSMAB 调用点 :5263 已在位 |
+| Assembly/IdLists.lean:629 | 纯注释 | 零改动 |
+| 单调回退通道 | 补后式 ⇒ 占位式 | `True` 由任意命题平凡蕴含；当前无人从 `KcblrqcIneqDef` 抽取具体事实（纯前提位），回退一行可补 |
+
+### (d) 保真论证
+
+补后 def 体 = `TameLp.lean:512-532` 真切片逐字引用，其四类切片与 HOL
+`tame_lemmas-compiled.hl:34-46` 大合取的对应保真论证已在该处注记 + scout
+§4 Step 0 记档（两条 azim 边界 = `TRIANGULAR_FACE_AZIM_DART_BOUNDS`
+（tame_general.hl:739-746，机器 ineq `5735387903`/`5490182221`）与
+`non_triangular_face_azim_dart_bound`（ssreflect/tame_lemmas-compiled.hl:895-918，
+机器 DIH_Y_INEQ）的结论形；b_tame 表 r=0 情形 = KCBLRQC.vhl `lp_data`；
+6 类型矛盾 = 同表机器不等式数值组合；(5,0,1) 行 ≥ 0.6366 = BDJYFFB2
+消费形）。本项属「前提侧省略内容」型占位（非语义分歧、非弱编码偏置）：
+修复方向唯一（换入真切片），无 SUM_INTER 式 junk 语义风险；同分级先例 =
+SF-36（Assembly `CertifiedIneqHolds` 占位语义落实，def 语义修正类）。
+
+### (e) 风险
+
+- **陈述修正 ≠ 闭合**：def 体替换本身 sorry 计数差 0；两骨架
+  （nliKcblrqcIneqDef/Ids）原位，28 条 G4 证书接线是独立工作量。本项落地
+  即解锁的是**结构接线**（mqmsmab → textCapstone 脊柱贯通），数值内容沿
+  TameLp 六枚上游占位件（fully_surrounded_perimeter_bound / sum_tauVEF /
+  ineq_tauK×4）按「消费含占位前提定理」惯例合法流动（Assembly:449-451
+  先例）。
+- 语义增强面 = `TheNonlinearInequalities` 第 6 分量 + `mqmsmab` 可证性；
+  无任何既有证明会因前提变强而破损（唯一消费 `hkcblrqc` 的 `mqmsmab`
+  当前的证明体就是待替换占位行）。
+- 同族不在范围：Assembly `Adm3` `True` 尾（:570）与 `GoodGraphV4` 四
+  `True`（:445-455 一带）是 A9 债务（scout §6.1 已记），本项不触。
+
+### (f) 状态：**已立项起草（2026-10-13，A10 第四波 lane 交付）；备件全绿，待批一行应用**
+（应用时闸参数建议：`SF_ITEM=39`，GATE_MODE=STATEMENT-FIX；审计对象
+`Kepler.Assembly.mqmsmabWired`（全绿在位）+ 批准后的 `Kepler.Assembly.mqmsmab`；
+namespace `Kepler.Assembly`；验收 = `lake build Kepler.Assembly` 零新错 +
+sorry 计数差 0（mqmsmab 占位行减 1 为预期）。接线波已单进程验证：桥层
+探针（/tmp，import Kepler.Assembly + 实例盾复制）exit 0，落位后
+`lake build Kepler.Assembly` EXIT=0。）

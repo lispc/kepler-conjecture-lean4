@@ -662,8 +662,148 @@ theorem contraveningFan (V : Set V3) (hc : Contravening V) : FAN 0 V (ESTD V) :=
     simp at hcard
   exact ContraFan.contraveningFanTl V hc.1 hc.2.1 hne
 
+/-! #### 2c' MQMSMAB 终接线桥层（2026-10-13 A10 第四波；scout §4 B3/B4 规格）
+
+消费 `Kepler.Text.TameLp.MQMSMAB`（hypermapOfFanTl 版帽石，commit 67f65438），
+经 B4 十二短引理换实例（`dartDecEq2` → 裸 `instDecidableEqProd`，§0b congr
+家族 + 字段函数相等搬运）+ B3 语义桥（TameLp 十二合取 → §2b orbitSet 版十二
+合取；轨道 `orbitSet` ≡ `Hypermap.orbitMap` 定义等价、`setSumSpec` ≡
+`setSum`、`dTame`/`bTame`/`tgt` 表值同体，唯一非等价项 `Adm3` 尾以 `True`
+占位支承接）。装配体 `mqmsmabWired` 即 `mqmsmab` 证明体的备件；`mqmsmab`
+当前唯一前提缺口 = `KcblrqcIneqDef` 占位统一（STATEMENT-FIX 提案 SF-39，
+`docs/statement-fix-proposals.md` 待批）。 -/
+
+/-- B4-1a plain 换实例（§0b 字段函数相等搬运；TameLp §0b `edgeMapTl_eq`
+rfl 桥为同型先证）。 -/
+private theorem b4_plain (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (h : @Hypermap.Plain (V3 × V3) dartDecEq2 (TameLp.hypermapOfFanTl V E hfan)) :
+    @Hypermap.Plain (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan) := by
+  show (@Hypermap.edgeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan)) *
+    (@Hypermap.edgeMap (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan)) = 1
+  rw [← TameLp.edgeMapTl_eq]
+  exact h
+
+/-- B4-1 tame_1 换实例（plain 走字段搬运，planar 走 §0b `Planar_congr_inst`）；
+其余合取项对 `DecidableEq` 实例不敏感（字段投影不用实例），定义等价直传。 -/
+private theorem b4_tame1 (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (h : @TameLp.Tame1 (V3 × V3) dartDecEq2 (TameLp.hypermapOfFanTl V E hfan)) :
+    @TameLp.Tame1 (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan) :=
+  ⟨b4_plain V E hfan h.1,
+    (TameLp.Planar_congr_inst TameLp.dartsTl_eq TameLp.edgeMapTl_eq
+      TameLp.nodeMapTl_eq TameLp.faceMapTl_eq).mp h.2⟩
+
+/-- B4-2 tame_2 换实例（§0b `Connected_congr_inst`/`Simple_congr_inst`）。 -/
+private theorem b4_tame2 (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (h : @TameLp.Tame2 (V3 × V3) dartDecEq2 (TameLp.hypermapOfFanTl V E hfan)) :
+    @TameLp.Tame2 (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan) :=
+  ⟨(TameLp.Connected_congr_inst TameLp.dartsTl_eq TameLp.edgeMapTl_eq
+      TameLp.nodeMapTl_eq TameLp.faceMapTl_eq).mp h.1,
+    (TameLp.Simple_congr_inst TameLp.dartsTl_eq TameLp.edgeMapTl_eq
+      TameLp.nodeMapTl_eq TameLp.faceMapTl_eq).mp h.2⟩
+
+/-- B4-3 tame_3 换实例（定义等价直传）。 -/
+private theorem b4_tame3 (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (h : @TameLp.Tame3 (V3 × V3) dartDecEq2 (TameLp.hypermapOfFanTl V E hfan)) :
+    @TameLp.Tame3 (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan) := h
+
+/-- B4-4 tame_4 换实例（定义等价直传）。 -/
+private theorem b4_tame4 (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (h : @TameLp.Tame4 (V3 × V3) dartDecEq2 (TameLp.hypermapOfFanTl V E hfan)) :
+    @TameLp.Tame4 (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan) := h
+
+/-- B4-5 tame_5a 换实例（定义等价直传）。 -/
+private theorem b4_tame5a (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (h : @TameLp.Tame5a (V3 × V3) dartDecEq2 (TameLp.hypermapOfFanTl V E hfan)) :
+    @TameLp.Tame5a (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan) := h
+
+/-- B4-6 tame_8 换实例（定义等价直传）。 -/
+private theorem b4_tame8 (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (h : @TameLp.Tame8 (V3 × V3) dartDecEq2 (TameLp.hypermapOfFanTl V E hfan)) :
+    @TameLp.Tame8 (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan) := h
+
+/-- B4-7 tame_9a 换实例（定义等价直传）。 -/
+private theorem b4_tame9a (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (h : @TameLp.Tame9a (V3 × V3) dartDecEq2 (TameLp.hypermapOfFanTl V E hfan)) :
+    @TameLp.Tame9a (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan) := h
+
+/-- B4-8 tame_10 换实例（定义等价直传）。 -/
+private theorem b4_tame10 (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (h : @TameLp.Tame10 (V3 × V3) dartDecEq2 (TameLp.hypermapOfFanTl V E hfan)) :
+    @TameLp.Tame10 (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan) := h
+
+/-- B4-9 tame_11a 换实例（定义等价直传）。 -/
+private theorem b4_tame11a (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (h : @TameLp.Tame11a (V3 × V3) dartDecEq2 (TameLp.hypermapOfFanTl V E hfan)) :
+    @TameLp.Tame11a (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan) := h
+
+/-- B4-10 tame_11b 换实例（定义等价直传）。 -/
+private theorem b4_tame11b (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (h : @TameLp.Tame11b (V3 × V3) dartDecEq2 (TameLp.hypermapOfFanTl V E hfan)) :
+    @TameLp.Tame11b (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan) := h
+
+/-- B4-11 tame_12o 换实例（定义等价直传）。 -/
+private theorem b4_tame12o (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (h : @TameLp.Tame12o (V3 × V3) dartDecEq2 (TameLp.hypermapOfFanTl V E hfan)) :
+    @TameLp.Tame12o (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan) := h
+
+/-- B4-12 tame_13a 换实例（定义等价直传）。 -/
+private theorem b4_tame13a (V : Set V3) (E : Set (Set V3)) (hfan : FAN 0 V E)
+    (h : @TameLp.Tame13a (V3 × V3) dartDecEq2 (TameLp.hypermapOfFanTl V E hfan)) :
+    @TameLp.Tame13a (V3 × V3) (fun a b => instDecidableEqProd a b)
+      (hypermapOfFan 0 V E hfan) := h
+
+/-- B3：语义桥——TameLp 十二合取（`Hypermap.node/face` 轨道版）→ §2b 十二
+合取（`orbitSet` 轨道版）。同一 H 同一实例，逐槽定义等价；`Adm3` 尾
+（§2b `True` 占位较 TameLp 忠实原形弱）以平凡支承接，下游 A9 真化时同步。 -/
+private theorem b3_tamePlanarHypermap {α : Type*} [DecidableEq α] {H : Hypermap α}
+    (h : TameLp.TamePlanarHypermap H) : TamePlanarHypermap H := by
+  obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12⟩ := h
+  refine ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, ?_⟩
+  obtain ⟨w, ha, hlt⟩ := h12
+  obtain ⟨ha1, ha2, ha3⟩ := ha
+  exact ⟨w, ⟨ha1, ha2, fun x _ _ => trivial⟩, hlt⟩
+
+/-- MQMSMAB 终接线本体：消费 TameLp `hypermapOfFanTl` 版帽石 `MQMSMAB`
+（commit 67f65438），经 B4 十二短引理换实例 + B3 语义桥收 §2b 裸版结论。
+前提 `hkcblrqc` 取 TameLp 真切片——`KcblrqcIneqDef` 占位统一（SF-39）
+批准后，`mqmsmab` 证明体即 `mqmsmabWired V hkcblrqc hmain hfan hc` 一行。 -/
+theorem mqmsmabWired (V : Set V3) (hkcblrqc : TameLp.KcblrqcIneqDef)
+    (hmain : lp_main_estimate) (hfan : FAN 0 V (ESTD V)) (hc : Contravening V) :
+    TamePlanarHypermap (hypermapOfFan 0 V (ESTD V) hfan) := by
+  have htl := TameLp.MQMSMAB V hc hfan hmain hkcblrqc
+  obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12⟩ := htl
+  have htc : TameLp.TamePlanarHypermap (hypermapOfFan 0 V (ESTD V) hfan) :=
+    ⟨b4_tame1 V (ESTD V) hfan h1, b4_tame2 V (ESTD V) hfan h2,
+      b4_tame3 V (ESTD V) hfan h3, b4_tame4 V (ESTD V) hfan h4,
+      b4_tame5a V (ESTD V) hfan h5, b4_tame8 V (ESTD V) hfan h6,
+      b4_tame9a V (ESTD V) hfan h7, b4_tame10 V (ESTD V) hfan h8,
+      b4_tame11a V (ESTD V) hfan h9, b4_tame11b V (ESTD V) hfan h10,
+      b4_tame12o V (ESTD V) hfan h11, b4_tame13a V (ESTD V) hfan h12⟩
+  exact b3_tamePlanarHypermap htc
+
 /-- 接口占位：HOL `Mqmsmab.MQMSMAB`（tame_concl / MQMSMAB-compiled.hl；section
-前提 `kcblrqc_ineq_def` ∧ `lp_main_estimate` 显式化）。 -/
+前提 `kcblrqc_ineq_def` ∧ `lp_main_estimate` 显式化）。
+-- NEEDS（A10 第四波接线记账 2026-10-13）：证明体已备于本文件 §2c'
+`mqmsmabWired`（B4 十二短引理换实例 + B3 语义桥全绿，探针/构建零错）。
+唯一前提缺口 = `KcblrqcIneqDef`（本文件 `:= True` 占位 → `TameLp.KcblrqcIneqDef`
+真切片）的统一裁决 = **SF-39**（`docs/statement-fix-proposals.md`，待批）。
+SF-39 批准后本定理证明体一行替换为 `mqmsmabWired V hkcblrqc hmain hfan hc`，
+textCapstone 消费链（:5263 调用点）随之转真（上游 TameLp 六枚占位件按
+「消费含占位前提定理」惯例合法流动）。 -/
 theorem mqmsmab (V : Set V3) (hkcblrqc : KcblrqcIneqDef) (hmain : lp_main_estimate)
     (hfan : FAN 0 V (ESTD V)) (hc : Contravening V) :
     TamePlanarHypermap (hypermapOfFan 0 V (ESTD V) hfan) := by
