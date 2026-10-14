@@ -157,8 +157,11 @@ Remaining sorries, classified:
       `OXLZLEZ`-adjacent assembly (need PA18 `cc_uh_exists`/`cc_pe_exists`
       and the wedge-uniqueness chain), `HL_IMP_BARV`/`AFF_DEP_COPLANAR`
       (need full voronoi-face dimension theory),
-      `coplanar_delta_y`/`RADV_ETAY`/`ETA_Y_*` (need the eta_y body /
-      Cayley-Menger bridge), `MCELL4_REPARAM` (permuted-prefix barV transfer),
+      `coplanar_delta_y`/`RADV_ETAY`/`ETA_Y_LEMMA(2)`——2026-10-13 四件已转真
+      （coplanar_delta_y 经 PA18 `delta_delta_x`+`POS_EQ_NOT_COPLANANR`+
+      `coplanar_eq_coplanar_alt` 全 rw 链；RADV_ETAY 经显式外心见证+Gram 行列式
+      `p25_radv_etay_core`；ETA_Y 双件经 `hl=radV∘setOfList`+`pow` 单调）,
+      `MCELL4_REPARAM` (permuted-prefix barV transfer),
       （2026-10-12 更新：`ORDER_AZIM_SUM2Pi0` 已转真——azim 链算术
       `AZIM_BASE_SHIFT_LE`+`azim_compl` 望远镜；`S_LEAF_IN_WEDGE_GE`/
       `MCELL4_LEAF2`/`MCELL4_LEAF3`/`MCELL4_FI_EL`/`MCELL4_FI`/
@@ -822,14 +825,254 @@ theorem coplanar_delta_y (u0 u1 u2 u3 : V3) :
     ¬ Coplanar ({u0, u1, u2, u3} : Set V3) ↔
       0 < deltaY (dist u0 u1) (dist u0 u2) (dist u0 u3) (dist u2 u3)
         (dist u1 u3) (dist u1 u2) := by
-  sorry
+  have hdelta : deltaY (dist u0 u1) (dist u0 u2) (dist u0 u3) (dist u2 u3)
+        (dist u1 u3) (dist u1 u2)
+      = deltaP (dist u0 u1 ^ 2) (dist u0 u2 ^ 2) (dist u0 u3 ^ 2)
+          (dist u1 u2 ^ 2) (dist u1 u3 ^ 2) (dist u2 u3 ^ 2) := by
+    simp only [deltaY, pow_two, delta_delta_x]
+  rw [hdelta, POS_EQ_NOT_COPLANANR, coplanar_eq_coplanar_alt]
 
-/-- HOL `RADV_ETAY`.
--- NEEDS: sphere.hl 本体（`radV {三点} = eta_y`，Cartan/行列式桥；本波
-LEAF_DOMAIN :2350 ✅ 已装配到本件）。 -/
+/-- RADV_ETAY 的核心（无 eta_y 依赖形态）：三角形外心半径 = 三边长平方积
+除以 upsX（Heron 行列式），即 `radV {三点}² = a²b²c²/upsX a² b² c²`。路线：
+显式外心见证 `q = (α•a + β•b) +ᵥ u0`（α = b(b−c)/2Δ, β = a(b−c)/2Δ，
+Δ = Gram 行列式 > 0 由非平行性给出）经 `OAPVION3_concl` 唯一性认定为
+`circumcenter`，`OAPVION2_concl` 给 `radV = dist q u0`，平方后代数收口。 -/
+private theorem p25_radv_etay_core (u0 u1 u2 : V3) (hnc : ¬ Collinear3 u0 u1 u2)
+    (haff : ¬ affineDependent ({u0, u1, u2} : Set V3))
+    (h01 : u0 ≠ u1) (h02 : u0 ≠ u2) (h12 : u1 ≠ u2) :
+    radV ({u0, u1, u2} : Set V3) =
+      Real.sqrt ((dist u0 u1 * dist u0 u1) * (dist u0 u2 * dist u0 u2)
+          * (dist u1 u2 * dist u1 u2)
+        / upsX (dist u0 u1 * dist u0 u1) (dist u0 u2 * dist u0 u2)
+          (dist u1 u2 * dist u1 u2)) := by
+  -- inner-product algebra helpers (atomic args; no vector collapse)
+  have hgram : ∀ x y : V3, inner ℝ (x - y) (x - y)
+      = inner ℝ x x + inner ℝ y y - 2 * inner ℝ x y := by
+    intro x y
+    rw [inner_sub_left, inner_sub_right, inner_sub_right, real_inner_comm y x]
+    ring
+  have hgram2 : ∀ (x y : V3) (t : ℝ), inner ℝ (x - t • y) (x - t • y)
+      = inner ℝ x x - 2 * t * inner ℝ x y + t * t * inner ℝ y y := by
+    intro x y t
+    have e : (x - t • y : V3) = x + (-t) • y := by
+      rw [neg_smul]; abel
+    rw [e]
+    simp only [inner_add_left, inner_add_right, real_inner_smul_left,
+      real_inner_smul_right, real_inner_comm y x]
+    ring
+  have hexp : ∀ (r s : ℝ) (x y : V3),
+      inner ℝ (r • x + s • y) (r • x + s • y)
+        = r * r * inner ℝ x x + 2 * r * s * inner ℝ x y + s * s * inner ℝ y y := by
+    intro r s x y
+    simp only [inner_add_left, inner_add_right, real_inner_smul_left,
+      real_inner_smul_right, real_inner_comm y x]
+    ring
+  -- Gram atoms
+  obtain ⟨gaa, hga⟩ : ∃ x, x = inner ℝ (u1 - u0) (u1 - u0) := ⟨_, rfl⟩
+  obtain ⟨gbb, hgb⟩ : ∃ x, x = inner ℝ (u2 - u0) (u2 - u0) := ⟨_, rfl⟩
+  obtain ⟨gab, hgc⟩ : ∃ x, x = inner ℝ (u1 - u0) (u2 - u0) := ⟨_, rfl⟩
+  obtain ⟨gde, hgd⟩ : ∃ x, x = gaa * gbb - gab * gab := ⟨_, rfl⟩
+  -- links to distances
+  have dA : gaa = dist u0 u1 * dist u0 u1 := by
+    rw [hga, real_inner_self_eq_norm_sq, dist_eq_norm u0 u1,
+      show (u0 : V3) - u1 = -(u1 - u0) from by abel, norm_neg, pow_two]
+  have dB : gbb = dist u0 u2 * dist u0 u2 := by
+    rw [hgb, real_inner_self_eq_norm_sq, dist_eq_norm u0 u2,
+      show (u0 : V3) - u2 = -(u2 - u0) from by abel, norm_neg, pow_two]
+  have hCc : dist u1 u2 * dist u1 u2 = gaa + gbb - 2 * gab := by
+    have h1 : dist u1 u2 * dist u1 u2
+        = inner ℝ ((u1 - u0) - (u2 - u0)) ((u1 - u0) - (u2 - u0)) := by
+      rw [real_inner_self_eq_norm_sq, dist_eq_norm u1 u2,
+        show (u1 : V3) - u2 = (u1 - u0) - (u2 - u0) from by abel, pow_two]
+    rw [h1, hgram, ← hga, ← hgb, ← hgc]
+  -- positivity of the Gram determinant
+  have hApos : 0 < gaa := by
+    rw [dA]; exact mul_pos (dist_pos.2 h01) (dist_pos.2 h01)
+  have hDpos : 0 < gde := by
+    have hbna : ((u2 - u0 : V3) - (gab / gaa) • (u1 - u0)) ≠ 0 := by
+      intro hz
+      have hbpara : (u2 - u0 : V3) = (gab / gaa) • (u1 - u0) := sub_eq_zero.mp hz
+      refine hnc (show Collinear ℝ ({u0, u1, u2} : Set V3) from ?_)
+      rw [collinear_iff_exists_forall_eq_smul_vadd]
+      refine ⟨u0, u1 - u0, ?_⟩
+      intro x hx
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+      rcases hx with rfl | hx
+      · exact ⟨0, by rw [zero_smul, vadd_eq_add, zero_add]⟩
+      rcases hx with rfl | hx
+      · exact ⟨1, by rw [one_smul, vadd_eq_add]; abel⟩
+      · have hu2 : (u2 : V3) = (u2 - u0) + u0 := by abel
+        exact ⟨gab / gaa, by rw [hx, hu2, hbpara, vadd_eq_add]⟩
+    have hpos : 0 < inner ℝ ((u2 - u0) - (gab / gaa) • (u1 - u0))
+        ((u2 - u0) - (gab / gaa) • (u1 - u0)) := by
+      rw [real_inner_self_eq_norm_sq]
+      exact sq_pos_iff.2 (norm_ne_zero_iff.mpr hbna)
+    have hexpD : inner ℝ ((u2 - u0) - (gab / gaa) • (u1 - u0))
+        ((u2 - u0) - (gab / gaa) • (u1 - u0)) = gbb - gab * gab / gaa := by
+      rw [hgram2, real_inner_comm (u1 - u0) (u2 - u0), ← hgb, ← hgc, ← hga]
+      field_simp
+      ring
+    rw [hexpD] at hpos
+    have h2 : gab * gab / gaa < gbb := by linarith
+    have h3 : gab * gab < gaa * gbb := by
+      have h3' : gab * gab < gbb * gaa := (div_lt_iff₀ hApos).mp h2
+      rwa [mul_comm gbb gaa] at h3'
+    rw [hgd]; linarith
+  have hDne : gde ≠ 0 := ne_of_gt hDpos
+  -- explicit circumcenter witness: q = (al•a + be•b) +ᵥ u0
+  obtain ⟨al, hal⟩ : ∃ x, x = gbb * (gaa - gab) / (2 * gde) := ⟨_, rfl⟩
+  obtain ⟨be, hbe⟩ : ∃ x, x = gaa * (gbb - gab) / (2 * gde) := ⟨_, rfl⟩
+  have k1 : 2 * (gaa * al + gab * be) = gaa := by
+    rw [hal, hbe]; field_simp; rw [hgd]; ring
+  have k2 : 2 * (gab * al + gbb * be) = gbb := by
+    rw [hal, hbe]; field_simp; rw [hgd]; ring
+  set q : V3 := (al • (u1 - u0) + be • (u2 - u0)) +ᵥ u0 with hqdef
+  -- q is on the affine hull
+  have hdir : (affineSpan ℝ ({u0, u1, u2} : Set V3)).direction
+      = Submodule.span ℝ ({u1 - u0, u2 - u0} : Set V3) := by
+    rw [direction_affineSpan,
+      vectorSpan_eq_span_vsub_set_right ℝ (show u0 ∈ ({u0, u1, u2} : Set V3) from by simp)]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro p ⟨z, hz, rfl⟩
+      rcases hz with rfl | rfl | rfl
+      · simp
+      · exact Submodule.subset_span (by simp)
+      · exact Submodule.subset_span (by simp)
+    · rw [Submodule.span_le]
+      rintro p (rfl | rfl)
+      · exact Submodule.subset_span ⟨u1, by simp, rfl⟩
+      · exact Submodule.subset_span ⟨u2, by simp, rfl⟩
+  have hxmem : al • (u1 - u0) + be • (u2 - u0)
+      ∈ (affineSpan ℝ ({u0, u1, u2} : Set V3)).direction := by
+    rw [hdir]
+    exact Submodule.mem_span_pair.mpr ⟨al, be, by abel⟩
+  have hqmem : q ∈ (affineSpan ℝ ({u0, u1, u2} : Set V3) : Set V3) :=
+    AffineSubspace.vadd_mem_of_mem_direction hxmem
+      (subset_affineSpan ℝ ({u0, u1, u2} : Set V3) (by simp))
+  -- key distances
+  have hx0 : (q : V3) - u0 = al • (u1 - u0) + be • (u2 - u0) := by
+    rw [hqdef, vadd_eq_add]; abel
+  have hx1 : (q : V3) - u1 = (al - 1) • (u1 - u0) + be • (u2 - u0) := by
+    have hu1 : (u1 : V3) = (u1 - u0) + u0 := by abel
+    rw [hqdef, vadd_eq_add, hu1]
+    module
+  have hx2 : (q : V3) - u2 = al • (u1 - u0) + (be - 1) • (u2 - u0) := by
+    have hu2 : (u2 : V3) = (u2 - u0) + u0 := by abel
+    rw [hqdef, vadd_eq_add, hu2]
+    module
+  have n0 : ‖(q : V3) - u0‖ ^ 2
+      = al * (gaa * al + gab * be) + be * (gab * al + gbb * be) := by
+    rw [hx0, ← real_inner_self_eq_norm_sq, hexp, ← hga, ← hgb, ← hgc]
+    ring
+  have n1 : ‖(q : V3) - u1‖ ^ 2
+      = al * (gaa * al + gab * be) + be * (gab * al + gbb * be) := by
+    rw [hx1, ← real_inner_self_eq_norm_sq, hexp, ← hga, ← hgb, ← hgc]
+    have hstep : ((al - 1) * (al - 1) * gaa + 2 * (al - 1) * be * gab
+          + be * be * gbb)
+        = al * (gaa * al + gab * be) + be * (gab * al + gbb * be)
+          - (2 * (gaa * al + gab * be) - gaa) := by ring
+    rw [hstep, k1]; ring
+  have n2 : ‖(q : V3) - u2‖ ^ 2
+      = al * (gaa * al + gab * be) + be * (gab * al + gbb * be) := by
+    rw [hx2, ← real_inner_self_eq_norm_sq, hexp, ← hga, ← hgb, ← hgc]
+    have hstep : (al * al * gaa + 2 * al * (be - 1) * gab
+          + (be - 1) * (be - 1) * gbb)
+        = al * (gaa * al + gab * be) + be * (gab * al + gbb * be)
+          - (2 * (gab * al + gbb * be) - gbb) := by ring
+    rw [hstep, k2]; ring
+  have d01 : dist q u0 = dist q u1 := by
+    rw [dist_eq_norm, dist_eq_norm]
+    exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp
+      (by rw [n0, n1])
+  have d02 : dist q u0 = dist q u2 := by
+    rw [dist_eq_norm, dist_eq_norm]
+    exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp
+      (by rw [n0, n2])
+  -- q is THE circumcenter
+  have hcd : ∃ c : ℝ, ∀ w ∈ ({u0, u1, u2} : Set V3), dist q w = c := by
+    refine ⟨dist q u0, ?_⟩
+    rintro w (rfl | rfl | rfl)
+    · rfl
+    · exact d01.symm
+    · exact d02.symm
+  have hqcc : q = circumcenter ({u0, u1, u2} : Set V3) :=
+    OAPVION3_concl _ haff q hqmem hcd
+  have hR := OAPVION2_concl ({u0, u1, u2} : Set V3) haff u0 (by simp)
+  rw [← hqcc] at hR
+  -- final computation
+  have hups : upsX gaa gbb (gaa + gbb - 2 * gab) = 4 * gde := by
+    simp only [upsX]
+    rw [hgd]
+    ring
+  have hfin : ‖(q : V3) - u0‖ ^ 2
+      = (gaa * gbb * (gaa + gbb - 2 * gab)) / (4 * gde) := by
+    rw [n0, hal, hbe]
+    field_simp
+    rw [hgd]
+    ring
+  rw [hR, dist_eq_norm, ← Real.sqrt_sq (norm_nonneg _)]
+  congr 1
+  rw [← dA, ← dB, hCc, hups, hfin]
+
+/-- HOL `RADV_ETAY`（2026-10-13 转真：`p25_radv_etay_core`（外心-Heron 代数，
+自身零债）+ `eta_y` 体定义性展开（`ETA_Y_POS_LE_ALT` 同款 rfl 钉扎）；
+LEAF_DOMAIN 尾步的具名欠叶同步解除）。 -/
 theorem RADV_ETAY (u0 u1 u2 : V3) (hnc : ¬ Collinear3 u0 u1 u2) :
     radV {u0, u1, u2} = eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2) := by
-  sorry
+  have h01 : u0 ≠ u1 := by
+    intro he
+    refine hnc (show Collinear ℝ ({u0, u1, u2} : Set V3) from ?_)
+    have hset : ({u0, u1, u2} : Set V3) = ({u0, u2} : Set V3) := by
+      rw [he]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact collinear_pair ℝ u0 u2
+  have h02 : u0 ≠ u2 := by
+    intro he
+    refine hnc (show Collinear ℝ ({u0, u1, u2} : Set V3) from ?_)
+    have hset : ({u0, u1, u2} : Set V3) = ({u0, u1} : Set V3) := by
+      rw [he]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact collinear_pair ℝ u0 u1
+  have h12 : u1 ≠ u2 := by
+    intro he
+    refine hnc (show Collinear ℝ ({u0, u1, u2} : Set V3) from ?_)
+    have hset : ({u0, u1, u2} : Set V3) = ({u0, u1} : Set V3) := by
+      rw [he]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact collinear_pair ℝ u0 u1
+  have haff : ¬ affineDependent ({u0, u1, u2} : Set V3) := by
+    -- `p25_not_affdep3` 的内联副本（该件定义在本文件后段，Lean 无前向引用）
+    intro haff
+    have hmem_a : (u0 : V3) ∈ ({u0, u1, u2} : Set V3) := by simp
+    refine haff ((affineIndependent_set_iff_linearIndependent_vsub (k := ℝ) hmem_a).mpr ?_)
+    have hdiff : (({u0, u1, u2} : Set V3) \ {u0}) = ({u1, u2} : Set V3) := by
+      ext z
+      by_cases hz : z = u0
+      · subst hz; simp [h01, h02]
+      · simp only [Set.mem_sdiff, Set.mem_insert_iff, Set.mem_singleton_iff, hz,
+          not_false_iff]
+        by_cases h1 : z = u1 <;> by_cases h2 : z = u2 <;> simp [h1, h2]
+    have himg : ((fun p : V3 => (p -ᵥ u0)) '' ({u1, u2} : Set V3))
+        = ({u1 - u0, u2 - u0} : Set V3) := by
+      rw [Set.image_insert_eq, Set.image_singleton]
+      rfl
+    rw [hdiff, himg]
+    apply (linearIndependent_subtype_iff).mpr
+    refine LinearIndepOn.id_insert (s := ({u2 - u0} : Set V3)) ?_ ?_
+    · exact LinearIndepOn.singleton
+        (show (u2 - u0 : V3) ≠ 0 from sub_ne_zero.mpr h02.symm)
+    · intro hm
+      obtain ⟨c, hc⟩ := Submodule.mem_span_singleton.mp hm
+      by_cases hc0 : c = 0
+      · rw [hc0, zero_smul] at hc
+        exact h01 (sub_eq_zero.mp hc.symm).symm
+      · exact hnc ((collinear3_iff_smul (hw := Ne.symm h01)).mpr ⟨c⁻¹, by
+          rw [hc.symm, smul_smul, inv_mul_cancel₀ hc0, one_smul]⟩)
+  have hform : eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2)
+      = Real.sqrt ((dist u0 u1 * dist u0 u1) * (dist u0 u2 * dist u0 u2)
+          * (dist u1 u2 * dist u1 u2)
+        / upsX (dist u0 u1 * dist u0 u1) (dist u0 u2 * dist u0 u2)
+          (dist u1 u2 * dist u1 u2)) := rfl
+  rw [hform]
+  exact p25_radv_etay_core u0 u1 u2 hnc haff h01 h02 h12
 
 /-- HOL `RADV2`. -/
 theorem RADV2 (u v : V3) : radV {u, v} = (1 / 2 : ℝ) * dist u v := by
@@ -2036,10 +2279,11 @@ theorem MCELL4_LEAF3 (V : Set V3) (ul : List V3) (hp : Packing V) (hs : saturate
     exact absurd measure_empty hn
 
 /-- HOL `MCELL4_LEAF_S_LEAF`.
--- NEEDS: `ccKe` 分派（`CC_KE_34` PA18 ✅）后逐案 `AJRIPQN`（PA18 ⬜ 链）/
-`ZASUVOR`（PA18 ⬜）；锥相离半边经 `CFFONNL`（PA18 ⬜，CFFONNL 本体）+
-`MCELL4_CONVEX_HULL`/`MCELL4_CARD4` ✅（HOL OXLZLEZ3.hl:1980）。上游三件
-全在 PA18 leaf-cell 链。 -/
+-- NEEDS: `ccKe` 分派（`CC_KE_34` PA18 ✅）后逐案 `AJRIPQN`（PA18 ✅ 链已净：
+PA17:929 真证 → PA18 `AJRIPQN_0` 真证）/ `ZASUVOR`（PA18 ✅ 2026-10-14 定义闭
+真证，零上游债）；锥相离半边经 `CFFONNL`（PA18 ⬜，CFFONNL 本体——唯一剩余
+实质阻塞，C2 扫尾 + C3 装配两波即达）+
+`MCELL4_CONVEX_HULL`/`MCELL4_CARD4` ✅（HOL OXLZLEZ3.hl:1980）。 -/
 theorem MCELL4_LEAF_S_LEAF (V : Set V3) (ul : List V3) (u : V3) (hp : Packing V)
     (hs : saturated V) (hb : barV V 3 ul) (hn : ¬ nullSet (mcell4 V ul))
     (hl' : leaf V [elV ul 0, elV ul 1, u]) (hu : u ∈ ({elV ul 2, elV ul 3} : Set V3)) :
@@ -2723,7 +2967,7 @@ leaf-rank 波（2026-10-08）转真（装配级）：叶面非退化由 `GBEWYFX
 三组弦长 `dist < 2 * radV < 2 * sqrt 2` 由外心桥 `OAPVION2_concl`（PA2 ✅）+
 三角不等式（`S_LEAF_BOUNDED` 同款套路），下界由 packing 分离
 （`BARV_SUBSET` PA5 ✅ + `Packing.dist_ge_two`），`eta_y` 界由 `RADV_ETAY`。
--- NEEDS: 仅欠在库具名叶 `RADV_ETAY`（本文件 :825 ⬜，sphere.hl 债）。 -/
+-- 2026-10-13：原欠叶 `RADV_ETAY` 已转真（本文件，外心-Heron 代数），全链零债。 -/
 theorem LEAF_DOMAIN (V : Set V3) (ul : List V3) (hs : saturated V) (hp : Packing V)
     (hl' : leaf V ul) :
     ¬ Collinear3 (elV ul 0) (elV ul 1) (elV ul 2) ∧
@@ -3565,17 +3809,36 @@ theorem ETA_Y_POS_LE_ALT (u0 u1 u2 : V3) :
   rw [hform]
   exact Real.sqrt_nonneg _
 
-/-- HOL `ETA_Y_LEMMA`. -/
+/-- HOL `ETA_Y_LEMMA`（2026-10-13 转真：`RADV_ETAY` 把 `eta_y` 折算为
+`radV {三点}`，`hl` 定义性展开后即 `pow_le_pow_left` 单调）。 -/
 theorem ETA_Y_LEMMA (u0 u1 u2 : V3) (r : ℝ) (hnc : ¬ Collinear3 u0 u1 u2)
     (hr : 0 < r) (hrl : r ≤ hl [u0, u1, u2]) :
     r ^ 2 ≤ eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2) ^ 2 := by
-  sorry
+  have hset : setOfList [u0, u1, u2] = ({u0, u1, u2} : Set V3) := by
+    ext x; simp [setOfList]
+  have hrl' : r ≤ radV (setOfList [u0, u1, u2]) := hrl
+  rw [hset] at hrl'
+  rw [← RADV_ETAY u0 u1 u2 hnc]
+  have hnn : 0 ≤ radV ({u0, u1, u2} : Set V3) := by
+    rw [RADV_ETAY u0 u1 u2 hnc]
+    exact ETA_Y_POS_LE_ALT u0 u1 u2
+  exact (sq_le_sq₀ (le_of_lt hr) hnn).mpr hrl'
 
-/-- HOL `ETA_Y_LEMMA_ALT`. -/
+/-- HOL `ETA_Y_LEMMA_ALT`（2026-10-13 转真：同 `ETA_Y_LEMMA`，非负性由
+`ETA_Y_POS_LE_ALT` 供）。 -/
 theorem ETA_Y_LEMMA_ALT (u0 u1 u2 : V3) (r : ℝ) (hnc : ¬ Collinear3 u0 u1 u2)
     (hrl : hl [u0, u1, u2] ≤ r) :
     eta_y (dist u0 u1) (dist u0 u2) (dist u1 u2) ^ 2 ≤ r ^ 2 := by
-  sorry
+  have hset : setOfList [u0, u1, u2] = ({u0, u1, u2} : Set V3) := by
+    ext x; simp [setOfList]
+  have hrl' : radV (setOfList [u0, u1, u2]) ≤ r := hrl
+  rw [hset] at hrl'
+  rw [← RADV_ETAY u0 u1 u2 hnc]
+  have hnn : 0 ≤ radV ({u0, u1, u2} : Set V3) := by
+    rw [RADV_ETAY u0 u1 u2 hnc]
+    exact ETA_Y_POS_LE_ALT u0 u1 u2
+  have hr0 : (0 : ℝ) ≤ r := le_trans hnn hrl'
+  exact (sq_le_sq₀ hnn hr0).mpr hrl'
 
 /-- HOL `real_model_fhbv2`. -/
 theorem real_model_fhbv2 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
