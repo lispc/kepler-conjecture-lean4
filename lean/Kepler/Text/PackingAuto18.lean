@@ -1284,11 +1284,135 @@ theorem PERMUTE_BARV3 {V : Set V3} {ul : List V3} (hp : Packing V)
     barV V 3 (leftActionList p ul) := by
   sorry
 
+private theorem pa18_initSublist_three {a b c : V3} {zl : List V3}
+    (hini : initialSublist zl [a, b, c]) (hz : 0 < zl.length) :
+    zl = [a, b, c] ∨ zl = [a, b] ∨ zl = [a] := by
+  obtain ⟨yl, hyl0⟩ := hini
+  have hlen0 : ([a, b, c] : List V3).length = zl.length + yl.length := by
+    rw [hyl0, List.length_append]
+  cases zl with
+  | nil => exact absurd hz (by simp)
+  | cons x t =>
+    simp only [List.cons_append, List.nil_append] at hyl0
+    cases t with
+    | nil =>
+      simp only [List.cons_append, List.nil_append] at hyl0
+      cases yl with
+      | nil =>
+        injection hyl0 with e1 e2
+        exact absurd e2 (List.cons_ne_nil b [c])
+      | cons y tl =>
+        cases tl with
+        | nil =>
+          injection hyl0 with e1 e2
+          injection e2 with e3 e4
+          exact absurd e4 (List.cons_ne_nil c [])
+        | cons z tl2 =>
+          cases tl2 with
+          | nil =>
+            injection hyl0 with e1 e2
+            injection e2 with e3 e4
+            injection e4 with e5 e6
+            exact Or.inr (Or.inr (by rw [e1]))
+          | cons w tl3 =>
+            injection hyl0 with e1 e2
+            injection e2 with e3 e4
+            injection e4 with e5 e6
+            exact absurd e6.symm (List.cons_ne_nil w tl3)
+    | cons y t2 =>
+      simp only [List.cons_append, List.nil_append] at hyl0
+      cases t2 with
+      | nil =>
+        simp only [List.cons_append, List.nil_append] at hyl0
+        cases yl with
+        | nil =>
+          injection hyl0 with e1 e2
+          injection e2 with e3 e4
+          exact absurd e4 (List.cons_ne_nil c [])
+        | cons z tl =>
+          cases tl with
+          | nil =>
+            injection hyl0 with e1 e2
+            injection e2 with e3 e4
+            injection e4 with e5 e6
+            exact Or.inr (Or.inl (by rw [e1, e3]))
+          | cons w tl2 =>
+            injection hyl0 with e1 e2
+            injection e2 with e3 e4
+            injection e4 with e5 e6
+            exact absurd e6.symm (List.cons_ne_nil w tl2)
+      | cons z t3 =>
+        simp only [List.cons_append, List.nil_append] at hyl0
+        cases t3 with
+        | nil =>
+          simp only [List.cons_append, List.nil_append] at hyl0
+          cases yl with
+          | nil =>
+            injection hyl0 with e1 e2
+            injection e2 with e3 e4
+            injection e4 with e5 e6
+            exact Or.inl (by rw [e1, e3, e5])
+          | cons w tl =>
+            exfalso
+            have h3' : ([a, b, c] : List V3).length = 3 := by simp
+            have hzl' : ((x :: y :: z :: [] : List V3).length) = 3 := by simp
+            have hyl1' : 1 ≤ (w :: tl).length := by simp
+            omega
+        | cons w t4 =>
+          exfalso
+          have h4 : 4 ≤ (x :: y :: z :: w :: t4).length := by simp
+          have h3 : ([a, b, c] : List V3).length = 3 := by simp
+          omega
+
+private theorem pa18_voronoiNondg_congr {V : Set V3} {a b : List V3}
+    (hset : setOfList a = setOfList b) (hlen : a.length = b.length) :
+    voronoiNondg V a ↔ voronoiNondg V b := by
+  simp only [voronoiNondg, voronoiList, hset, hlen]
+
 /-- HOL `ZASUVOR` (leaf_cell.hl:530-?). -/
 theorem ZASUVOR {V : Set V3} {u0 u1 u2 : V3} (hp : Packing V) (hs : saturated V)
     (hl' : leaf V [u0, u1, u2]) :
     leaf V [u1, u0, u2] ∧ stem [u0, u1, u2] = stem [u1, u0, u2] := by
-  sorry
+  obtain ⟨hbar, hhl⟩ := hl'
+  have hset : setOfList [u1, u0, u2] = setOfList [u0, u1, u2] := by
+    ext x
+    simp [setOfList]
+    tauto
+  have hsetp : setOfList [u1, u0] = setOfList [u0, u1] := by
+    ext x
+    simp [setOfList]
+    tauto
+  have hfull : voronoiNondg V [u0, u1, u2] :=
+    hbar.2 [u0, u1, u2] ⟨⟨[], (List.append_nil _).symm⟩, by simp⟩
+  have hu1V : u1 ∈ V := hfull.2.1 (by simp [setOfList])
+  have hhl' : hl [u1, u0, u2] < Real.sqrt 2 := by
+    unfold hl
+    rw [hset]
+    exact hhl
+  have hbar' : barV V 2 [u1, u0, u2] := by
+    refine ⟨rfl, fun vl hv => ?_⟩
+    obtain ⟨hini, hpos⟩ := hv
+    rcases pa18_initSublist_three hini hpos with rfl | rfl | rfl
+    · exact (pa18_voronoiNondg_congr hset rfl).2 hfull
+    · exact (pa18_voronoiNondg_congr hsetp rfl).2
+        (hbar.2 [u0, u1] ⟨⟨[u2], rfl⟩, by simp⟩)
+    · refine ⟨by norm_num, ?_, ?_⟩
+      · intro x hx
+        rcases List.mem_cons.1 hx with rfl | hx'
+        · exact hu1V
+        · exact absurd hx' (by simp)
+      · show affDim (voronoiList V [u1]) + ((1 : ℕ) : ℤ) = 4
+        rw [VORONOI_LIST_SING V u1, AFF_DIM_VORONOI_CLOSED V u1 hp]
+        norm_num
+  refine ⟨⟨hbar', hhl'⟩, ?_⟩
+  · unfold stem
+    rw [((TRUNCATE_SIMPLEX_INITIAL_SUBLIST 1 [u0, u1] [u0, u1, u2]).2
+      ⟨⟨[u2], rfl⟩, by simp⟩).1,
+      ((TRUNCATE_SIMPLEX_INITIAL_SUBLIST 1 [u1, u0] [u1, u0, u2]).2
+      ⟨⟨[u2], rfl⟩, by simp⟩).1]
+    ext x
+    simp [setOfList]
+    tauto
 
 /-- HOL `truncate_set_of_list` (leaf_cell.hl:530-554). -/
 theorem truncate_set_of_list {vl : List V3} {k : ℕ}
@@ -2482,7 +2606,12 @@ theorem MCELL3_NONPLANAR {V : Set V3} {vl : List V3} (hp : Packing V)
 /-- HOL `MCELL2_SUBSET_AFF_GE` (leaf_cell.hl:1870-?). -/
 theorem MCELL2_SUBSET_AFF_GE (V : Set V3) (ul : List V3) :
     mcell2 V ul ⊆ affGe {hdV ul, hdV ul.tail} {mxi V ul, omegaListN V ul 3} := by
-  sorry
+  by_cases h : hl (truncateSimplex 1 ul) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl ul
+  · rw [mcell2, if_pos h]
+    intro x hx
+    exact hx.2
+  · rw [mcell2, if_neg h]
+    exact Set.empty_subset _
 
 /-- HOL `CONDS_IN_CONV2` (leaf_cell.hl:1870-?). -/
 theorem CONDS_IN_CONV2 {v w : V3} {t2 t3 : ℝ} (h2 : 0 ≤ t2) (h3 : 0 ≤ t3)
@@ -2507,11 +2636,47 @@ theorem AFFINE_DEPENDENT_EXPLICIT_4 (a b c d : V3) (ta tb tc td : ℝ)
     ta = 0 ∧ tb = 0 ∧ tc = 0 ∧ td = 0 := by
   sorry
 
+private theorem pa18_mem_convexHull_triple {a b c p : V3} :
+    c ∈ convexHull ℝ ({a, b, p} : Set V3) ↔
+      ∃ u v w : ℝ, 0 ≤ u ∧ 0 ≤ v ∧ 0 ≤ w ∧ u + v + w = 1 ∧
+        c = u • a + v • b + w • p := by
+  have hset : ({a, b, p, p} : Set V3) = ({a, b, p} : Set V3) := by
+    ext x
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  rw [← hset, CONVEX_HULL_4]
+  constructor
+  · rintro ⟨t1, t2, t3, t4, hh1, hh2, hh3, hh4, hsum, hc⟩
+    refine ⟨t1, t2, t3 + t4, hh1, hh2, add_nonneg hh3 hh4, by linarith, ?_⟩
+    rw [hc]
+    module
+  · rintro ⟨u, v, w, hh1, hh2, hh3, hsum, hc⟩
+    refine ⟨u, v, w, 0, hh1, hh2, hh3, le_refl _, by linarith, ?_⟩
+    rw [hc]
+    module
+
 /-- HOL `CONVEX_PLANE_INTER` (leaf_cell.hl:1870-2053). -/
 theorem CONVEX_PLANE_INTER (a b p q : V3) (hab : a ≠ b) (hd : a ≠ p ∧ b ≠ p)
     (hq : q ∈ affGt {a, b} {p}) :
     ∃ c, c ∈ affGt {a, b} {p} ∧
       c ∈ convexHull ℝ ({a, b, p} : Set V3) ∩ convexHull ℝ ({a, b, q} : Set V3) := by
+-- NEEDS (medium, 2 attack rounds spent 2026-10-13, reverted per the 2-strike rule):
+-- witness and full skeleton verified structurally; the sole blocker is a
+-- binop-elaboration mismatch: for the tip weight τ := t3 / D with
+-- D := 2 * max (1 - t2 - t3) 0 + 2 * max t2 0 + t3 + 1 (t3 > 0 from
+-- affGt_pair_iff, D > 0 by max-nonneg), the crossing point
+-- c := (1 - τ) • ((1/2) • (a + b)) + τ • p lies in affGt {a,b} {p}
+-- (Affsign witness over insert a (insert b {p}), tip weight τ > 0),
+-- in hull {a,b,p} (pa18_mem_convexHull_triple with weights
+-- (1-τ)/2, (1-τ)/2, τ) and in hull {a,b,q} (weights
+-- (1-τ)/2 - τ(1-t2-t3)/t3, (1-τ)/2 - τ t2 / t3, τ / t3 ≥ 0: the base
+-- weights are (2 max t2 0 + 1)/(2D) resp. (2 max (1-t2-t3) 0 + 1)/(2D) plus a
+-- nonneg bracket, via div_le_div₀ and t_i ≤ max t_i 0). The module-closing
+-- step of the Affsign combo-equality leaves a spurious scalar residue
+-- `0 = (1 - τ)/2` (both if-chains fully reduce; root cause not isolated --
+-- suspect binop% instance-delta between the two combo elaborations). Next
+-- wave: try `Finset.sum_insert` with per-slot `if_pos`/`if_neg` proven
+-- OUTSIDE the simp call, or state the combo-eq at the det level.
   sorry
 
 /-- HOL `CONVEX_R3_INTER` (leaf_cell.hl:1870-2053). -/
@@ -2519,30 +2684,348 @@ theorem CONVEX_R3_INTER (a b c p q : V3) (hnc : ¬Coplanar ({a, b, c, p} : Set V
     (hq : q ∈ affGt {a, b, c} {p}) :
     ∃ d : V3, ¬Coplanar ({a, b, c, d} : Set V3) ∧
       d ∈ convexHull ℝ ({a, b, c, p} : Set V3) ∩ convexHull ℝ ({a, b, c, q} : Set V3) := by
+-- NEEDS (medium, route scouted 2026-10-13, not attempted this wave):
+-- disj := fun hcon => hnc ((CHI_MSB_COPLANAR a b c p).2 hcon) gives
+-- χ[a,b,c] p ≠ 0 and p ∉ {a,b,c}. Extract (t1..t4, 0 < t4, sum = 1) from
+-- AFF_GT_3_1 a b c p (PlanarityAuto11) under that Disjoint. Witness
+-- d := (1 - s) • ((1/3) • (a + b + c)) + s • q with
+-- s := 1 / (4 + 3 * max t1 0 + 3 * max t2 0 + 3 * max t3 0):
+-- hull {a,b,c,p}-weights ((1-s)/3 + s*t1, (1-s)/3 + s*t2, (1-s)/3 + s*t3, s*t4)
+-- and hull {a,b,c,q}-weights ((1-s)/3, (1-s)/3, (1-s)/3, s) are all ≥ 0
+-- (1 - s ≥ 3 s * max t_i 0 holds since 1 - s = (3 + 3Σmax)/D) and sum to 1
+-- (CONVEX_HULL_4, proved above in this file). Non-coplanarity:
+-- χ[a,b,c] d = (s * t4) * χ[a,b,c] p ≠ 0 by the det-level pattern proven in
+-- CHI_MSB_POS2 above (rw chiMsb_det twice + d-rep + q-rep + det_fin_three simp
+-- + ring), then CHI_MSB_COPLANAR backward. All pieces exist; ~80 lines.
   sorry
+
+private theorem pa18_convex_affGe {s t : Set V3} (hfin : (s ∪ t).Finite) :
+    Convex ℝ (affGe s t) := by
+  intro x hx y hy a b ha hb hab
+  simp only [affGe, Affsign, Set.mem_setOf_eq] at hx hy
+  obtain ⟨f1, _, hx1, hx2, hx3⟩ := hx
+  obtain ⟨f2, _, hy1, hy2, hy3⟩ := hy
+  refine ⟨fun p => a * f1 p + b * f2 p, hfin, ?_, ?_, ?_⟩
+  · have key : ∀ (g : V3 → ℝ) (c : ℝ), ∑ q ∈ hfin.toFinset, (c * g q) • q
+        = c • ∑ q ∈ hfin.toFinset, g q • q := by
+      intro g c
+      rw [Finset.smul_sum]
+      exact Finset.sum_congr rfl fun q _ => by rw [smul_smul]
+    have hsum1 : ∑ q ∈ hfin.toFinset, (a * f1 q + b * f2 q) • q
+        = ∑ q ∈ hfin.toFinset, ((a * f1 q) • q + (b * f2 q) • q) := by
+      exact Finset.sum_congr rfl fun q _ => by rw [add_smul]
+    rw [hsum1, Finset.sum_add_distrib, key, key, hx1, hy1]
+  · intro p hp
+    have h1 : 0 ≤ f1 p := hx2 p hp
+    have h2 : 0 ≤ f2 p := hy2 p hp
+    show 0 ≤ a * f1 p + b * f2 p
+    exact add_nonneg (mul_nonneg ha h1) (mul_nonneg hb h2)
+  · show (∑ q ∈ hfin.toFinset, (a * f1 q + b * f2 q)) = 1
+    have h3' : ∑ q ∈ hfin.toFinset, (a * f1 q + b * f2 q)
+        = a * ∑ q ∈ hfin.toFinset, f1 q + b * ∑ q ∈ hfin.toFinset, f2 q := by
+      rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
+    rw [h3', hx3, hy3]
+    simp only [mul_one]
+    exact hab
 
 /-- HOL `MCELL2_CONVEX` (leaf_cell.hl:2054-2131). -/
 theorem MCELL2_CONVEX {V : Set V3} {vl : List V3} (hs : saturated V) (hp : Packing V)
     (hb : barV V 3 vl) : Convex ℝ (mcell2 V vl) := by
-  sorry
+  by_cases h : hl (truncateSimplex 1 vl) < Real.sqrt 2 ∧ Real.sqrt 2 ≤ hl vl
+  · rw [mcell2, if_pos h]
+    show Convex ℝ (((rconeGe (hdV vl) (hdV vl.tail)
+        (hl (truncateSimplex 1 vl) / Real.sqrt 2) ∩
+      rconeGe (hdV vl.tail) (hdV vl) (hl (truncateSimplex 1 vl) / Real.sqrt 2)) ∩
+      affGe {hdV vl, hdV vl.tail} {mxi V vl, omegaListN V vl 3}))
+    have hrcone : 0 ≤ hl (truncateSimplex 1 vl) / Real.sqrt 2 :=
+      div_nonneg (BARV_IMP_HL_1_POS_LT V vl hs hp hb).le (Real.sqrt_nonneg 2)
+    have hafffin : (({hdV vl, hdV vl.tail} ∪ {mxi V vl, omegaListN V vl 3} : Set V3).Finite) :=
+      Set.Finite.union (Set.Finite.insert _ (Set.finite_singleton _))
+        (Set.Finite.insert _ (Set.finite_singleton _))
+    exact ((CONVEX_RCONE_GE _ _ _ hrcone).inter
+      (CONVEX_RCONE_GE _ _ _ hrcone)).inter (pa18_convex_affGe hafffin)
+  · rw [mcell2, if_neg h]
+    exact convex_empty
 
 /-- HOL `MCELL_CONVEX` (leaf_cell.hl:2054-2131). -/
 theorem MCELL_CONVEX {V : Set V3} {vl : List V3} {k : ℕ} (hs : saturated V)
     (hp : Packing V) (hb : barV V 3 vl) (hk : 2 ≤ k) : Convex ℝ (mcell k V vl) := by
-  sorry
+  rcases Nat.lt_or_ge k 3 with hk3 | hk3
+  · have h2 : k = 2 := by omega
+    subst h2
+    exact MCELL2_CONVEX hs hp hb
+  · rcases Nat.lt_or_ge k 4 with hk4 | hk4
+    · have h3 : k = 3 := by omega
+      subst h3
+      show Convex ℝ (mcell3 V vl)
+      unfold mcell3
+      split
+      · exact convex_convexHull ℝ _
+      · exact convex_empty
+    · have h0 : ¬(k = 0) := by omega
+      have h1 : ¬(k = 1) := by omega
+      have h2 : ¬(k = 2) := by omega
+      have h3 : ¬(k = 3) := by omega
+      simp only [mcell, if_neg h0, if_neg h1, if_neg h2, if_neg h3]
+      unfold mcell4
+      split
+      · exact convex_convexHull ℝ _
+      · exact convex_empty
+
+private theorem pa18_mem_affineSpan_triple {u v w z : V3} {s1 s2 : ℝ}
+    (hz : z = (1 - s1 - s2) • u + s1 • v + s2 • w) :
+    z ∈ (affineSpan ℝ ({u, v, w} : Set V3) : Set V3) := by
+  rw [SetLike.mem_coe, mem_affineSpan_iff_exists]
+  refine ⟨v, Or.inr (Set.mem_insert v ({w} : Set V3)), z -ᵥ v, ?_, by rw [vsub_vadd]⟩
+  have hvsub : (z -ᵥ v : V3) = z - v := rfl
+  have hle : Submodule.span ℝ ({u - v, w - v} : Set V3) ≤
+      vectorSpan ℝ ({u, v, w} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_right (k := ℝ)
+      (Set.mem_insert_of_mem u (Set.mem_insert v ({w} : Set V3))), Submodule.span_le]
+    rintro y (rfl | rfl)
+    · exact Submodule.subset_span ⟨u, Set.mem_insert u ({v, w} : Set V3), rfl⟩
+    · exact Submodule.subset_span ⟨w, Or.inr (Or.inr (Set.mem_singleton w)), rfl⟩
+  show (z -ᵥ v : V3) ∈ vectorSpan ℝ ({u, v, w} : Set V3)
+  rw [hvsub]
+  refine hle (Submodule.mem_span_pair.2 ⟨1 - s1 - s2, s2, ?_⟩)
+  rw [hz]
+  module
+
+private theorem pa18_linearIndependent_of_notCoplanar (a b c q : V3)
+    (hnc : ¬Coplanar ({a, b, c, q} : Set V3)) :
+    LinearIndependent ℝ ![q - a, b - a, c - a] := by
+  rw [Fintype.linearIndependent_iff]
+  intro g hg
+  by_contra hcon
+  push_neg at hcon
+  obtain ⟨i, hi⟩ := hcon
+  have hrel : g 0 • (q - a) + g 1 • (b - a) + g 2 • (c - a) = (0 : V3) := by
+    simpa [Fin.sum_univ_three] using hg
+  fin_cases i
+  · have hg0 : g 0 ≠ 0 := hi
+    have hstep : q - a = (-g 1 / g 0) • (b - a) + (-g 2 / g 0) • (c - a) := by
+      refine smul_right_injective (M := V3) hg0 ?_
+      simp only
+      rw [smul_add, smul_smul, smul_smul]
+      have h1 : g 0 * (-g 1 / g 0) = -g 1 := by field_simp
+      have h2 : g 0 * (-g 2 / g 0) = -g 2 := by field_simp
+      rw [h1, h2]
+      linear_combination (norm := module) hrel
+    have hq : q = (1 - -g 1 / g 0 - -g 2 / g 0) • a + (-g 1 / g 0) • b + (-g 2 / g 0) • c := by
+      have hqa : q = a + (q - a) := by module
+      rw [hqa, hstep]
+      module
+    refine hnc ⟨a, b, c, fun t ht => ?_⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht
+    rcases ht with h1 | h2 | h3 | h4
+    · rw [h1]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (Set.mem_insert a ({b, c} : Set V3)))
+    · rw [h2]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (Or.inr (Set.mem_insert b ({c} : Set V3))))
+    · rw [h3]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (Or.inr (Or.inr (Set.mem_singleton c))))
+    · rw [h4]
+      exact pa18_mem_affineSpan_triple (u := a) (v := b) (w := c)
+        (s1 := -g 1 / g 0) (s2 := -g 2 / g 0) hq
+  · have hg1 : g 1 ≠ 0 := hi
+    have hstep : b - a = (-g 0 / g 1) • (q - a) + (-g 2 / g 1) • (c - a) := by
+      refine smul_right_injective (M := V3) hg1 ?_
+      simp only
+      rw [smul_add, smul_smul, smul_smul]
+      have h1 : g 1 * (-g 0 / g 1) = -g 0 := by field_simp
+      have h2 : g 1 * (-g 2 / g 1) = -g 2 := by field_simp
+      rw [h1, h2]
+      linear_combination (norm := module) hrel
+    have hb : b = (1 - -g 0 / g 1 - -g 2 / g 1) • a + (-g 0 / g 1) • q + (-g 2 / g 1) • c := by
+      have hba : b = a + (b - a) := by module
+      rw [hba, hstep]
+      module
+    refine hnc ⟨a, q, c, fun t ht => ?_⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht
+    rcases ht with h1 | h2 | h3 | h4
+    · rw [h1]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (Set.mem_insert a ({q, c} : Set V3)))
+    · rw [h2]
+      exact pa18_mem_affineSpan_triple (u := a) (v := q) (w := c)
+        (s1 := -g 0 / g 1) (s2 := -g 2 / g 1) hb
+    · rw [h3]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (Or.inr (Or.inr (Set.mem_singleton c))))
+    · rw [h4]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (Or.inr (Set.mem_insert q ({c} : Set V3))))
+  · have hg2 : g 2 ≠ 0 := hi
+    have hstep : c - a = (-g 0 / g 2) • (q - a) + (-g 1 / g 2) • (b - a) := by
+      refine smul_right_injective (M := V3) hg2 ?_
+      simp only
+      rw [smul_add, smul_smul, smul_smul]
+      have h1 : g 2 * (-g 0 / g 2) = -g 0 := by field_simp
+      have h2 : g 2 * (-g 1 / g 2) = -g 1 := by field_simp
+      rw [h1, h2]
+      linear_combination (norm := module) hrel
+    have hc : c = (1 - -g 0 / g 2 - -g 1 / g 2) • a + (-g 0 / g 2) • q + (-g 1 / g 2) • b := by
+      have hca : c = a + (c - a) := by module
+      rw [hca, hstep]
+      module
+    refine hnc ⟨a, q, b, fun t ht => ?_⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht
+    rcases ht with h1 | h2 | h3 | h4
+    · rw [h1]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (Set.mem_insert a ({q, b} : Set V3)))
+    · rw [h2]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (Or.inr (Or.inr (Set.mem_singleton b))))
+    · rw [h3]
+      exact pa18_mem_affineSpan_triple (u := a) (v := q) (w := b)
+        (s1 := -g 0 / g 2) (s2 := -g 1 / g 2) hc
+    · rw [h4]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (Or.inr (Set.mem_insert q ({b} : Set V3))))
 
 /-- HOL `CHI_MSB_AFF_GT_0` (leaf_cell.hl:2132-2177). -/
 theorem CHI_MSB_AFF_GT_0 (a b c q q' : V3)
     (hnc : ¬Coplanar ({a, b, c, q} : Set V3))
     (hq : 0 < chiMsb [a, b, c] q) (hq' : 0 < chiMsb [a, b, c] q') :
     q' ∈ affGt {a, b, c} {q} := by
-  sorry
+  have hchi : chiMsb [a, b, c] q ≠ 0 := by
+    intro hcon
+    exact hnc ((CHI_MSB_COPLANAR a b c q).2 hcon)
+  have hli := pa18_linearIndependent_of_notCoplanar a b c q hnc
+  have hspan : Submodule.span ℝ (Set.range ![q - a, b - a, c - a]) = (⊤ : Submodule ℝ V3) := by
+    have h1 : Module.finrank ℝ (Submodule.span ℝ (Set.range ![q - a, b - a, c - a])) = 3 := by
+      rw [finrank_span_eq_card hli]
+      simp
+    have h2 : Module.finrank ℝ V3 = 3 := finrank_euclideanSpace_fin
+    exact Submodule.eq_top_of_finrank_eq (by rw [h1, h2])
+  obtain ⟨f, hf⟩ := (Submodule.mem_span_range_iff_exists_fun (R := ℝ)
+    (x := (q' - a : V3)) (v := ![q - a, b - a, c - a])).1
+    (by rw [hspan]; exact Submodule.mem_top)
+  have hdec : f 0 • (q - a) + f 1 • (b - a) + f 2 • (c - a) = q' - a := by
+    simpa [Fin.sum_univ_three] using hf
+  have hrep : q' = (1 - f 0 - f 1 - f 2) • a + f 1 • b + f 2 • c + f 0 • q := by
+    have hqa : q' = a + (q' - a) := by module
+    rw [hqa, ← hdec]
+    module
+  have hchiq' : chiMsb [a, b, c] q' = f 0 * chiMsb [a, b, c] q := by
+    rw [hrep]
+    exact chi_msb_additive_d a b c q _ _ _ _ (by ring)
+  have hf0 : 0 < f 0 := by
+    by_contra hcon
+    push_neg at hcon
+    have hle : f 0 * chiMsb [a, b, c] q ≤ 0 := by nlinarith
+    rw [hchiq'] at hq'
+    linarith
+  have hdis : Disjoint ({a, b, c} : Set V3) {q} := by
+    rw [Set.disjoint_singleton_right]
+    intro hqin
+    refine hnc ⟨a, b, c, fun t ht => ?_⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht
+    rcases ht with h1 | h2 | h3 | h4
+    · rw [h1]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (Set.mem_insert a ({b, c} : Set V3)))
+    · rw [h2]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (Or.inr (Set.mem_insert b ({c} : Set V3))))
+    · rw [h3]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (Or.inr (Or.inr (Set.mem_singleton c))))
+    · rw [h4]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ hqin)
+  rw [AFF_GT_3_1 a b c q hdis]
+  exact ⟨1 - f 0 - f 1 - f 2, f 1, f 2, f 0, hf0, by ring, hrep⟩
 
 /-- HOL `CHI_MSB_POS2` (leaf_cell.hl:2132-2177). -/
 theorem CHI_MSB_POS2 (a b c d p : V3) (hd : a ≠ b ∧ b ≠ c)
     (hd' : d ∈ affGt {a, b} {c}) :
     reEqvl (chiMsb [a, b, d] p) (chiMsb [a, b, c] p) := by
-  sorry
+  by_cases hcab : c = a ∨ c = b
+  · -- degenerate: the tip collapses into the base pair, both sides vanish
+    obtain hca | hcb := hcab
+    · have hzc : chiMsb [a, b, c] p = 0 := by
+        rw [hca, chiMsb_det]
+        exact Matrix.det_eq_zero_of_row_eq_zero 2 (by intro j; simp)
+      have hd0 : chiMsb [a, b, d] p = 0 := by
+        rw [chi_msb_swap_23 a b d p, neg_eq_zero]
+        obtain ⟨f, hfin, hdsum, -, hdsum1⟩ := hd'
+        have hpts : ∀ w ∈ ({a, b} : Set V3) ∪ {c}, w = a ∨ w = b := by
+          intro w hw
+          rcases hw with hw | hw
+          · rcases hw with hw | hw
+            · exact Or.inl hw
+            · exact Or.inr hw
+          · exact Or.inl (hw.trans hca)
+        have hE : hfin.toFinset = insert a ({b} : Finset V3) := by
+          ext w
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton, hca]
+          tauto
+        have hnb : a ∉ ({b} : Finset V3) := by simp [hd.1]
+        rw [hE, Finset.sum_insert hnb, Finset.sum_singleton] at hdsum hdsum1
+        have hfa : f a = 1 - f b := by linarith
+        have hd2 : d = (1 - f b) • a + f b • b := by
+          rw [hdsum, hfa]
+        refine AFFINE_IMP_CHI_MSB_0 [a, b, p] d (by norm_num) ?_
+        have hset : setOfList [a, b, p] = ({a, b, p} : Set V3) := by
+          ext t
+          simp [setOfList]
+        rw [hset]
+        refine pa18_mem_affineSpan_triple (u := a) (v := b) (w := p) (s1 := f b) (s2 := 0) ?_
+        rw [hd2]
+        module
+      rw [hd0, hzc]
+      exact ⟨1, one_pos, by ring⟩
+    · have hzc : chiMsb [a, b, c] p = 0 := by
+        rw [chi_msb_swap_23 a b c p, neg_eq_zero]
+        refine AFFINE_IMP_CHI_MSB_0 [a, b, p] c (by norm_num) ?_
+        have hset : setOfList [a, b, p] = ({a, b, p} : Set V3) := by
+          ext t
+          simp [setOfList]
+        rw [hset]
+        exact pa18_mem_affineSpan_triple (u := a) (v := b) (w := p)
+          (s1 := 1) (s2 := 0) (by rw [hcb]; module)
+      have hd0 : chiMsb [a, b, d] p = 0 := by
+        rw [chi_msb_swap_23 a b d p, neg_eq_zero]
+        obtain ⟨f, hfin, hdsum, -, hdsum1⟩ := hd'
+        have hpts : ∀ w ∈ ({a, b} : Set V3) ∪ {c}, w = a ∨ w = b := by
+          intro w hw
+          rcases hw with hw | hw
+          · rcases hw with hw | hw
+            · exact Or.inl hw
+            · exact Or.inr hw
+          · exact Or.inr (hw.trans hcb)
+        have hE : hfin.toFinset = insert a ({b} : Finset V3) := by
+          ext w
+          simp only [Set.Finite.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+            Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton, hcb]
+          tauto
+        have hnb : a ∉ ({b} : Finset V3) := by simp [hd.1]
+        rw [hE, Finset.sum_insert hnb, Finset.sum_singleton] at hdsum hdsum1
+        have hfa : f a = 1 - f b := by linarith
+        have hd2 : d = (1 - f b) • a + f b • b := by
+          rw [hdsum, hfa]
+        refine AFFINE_IMP_CHI_MSB_0 [a, b, p] d (by norm_num) ?_
+        have hset : setOfList [a, b, p] = ({a, b, p} : Set V3) := by
+          ext t
+          simp [setOfList]
+        rw [hset]
+        refine pa18_mem_affineSpan_triple (u := a) (v := b) (w := p) (s1 := f b) (s2 := 0) ?_
+        rw [hd2]
+        module
+      rw [hd0, hzc]
+      exact ⟨1, one_pos, by ring⟩
+  · -- non-degenerate: pull the tip out via affGt_pair_iff and chi additivity
+    obtain ⟨t3, ht3, hcoe, hdvec⟩ :=
+      (affGt_pair_iff (v0 := a) (v1 := b) (x := c) hd.1
+        (fun hcon => hcab (Or.inl hcon))
+        (fun hcon => hcab (Or.inr hcon))).1 hd'
+    have hdrep : d = (1 - hcoe - t3) • a + hcoe • b + 0 • p + t3 • c := by
+      have hda : d = a + (d - a) := by module
+      rw [hda, hdvec]
+      module
+    have hadd : chiMsb [a, b, p] d = t3 * chiMsb [a, b, p] c := by
+      rw [chiMsb_det a b p d, chiMsb_det a b p c, hdvec]
+      simp only [Matrix.det_fin_three, Matrix.head_cons, Matrix.tail_cons, Matrix.cons_val_zero,
+        Matrix.cons_val_one, Matrix.cons_val_two, Matrix.cons_val_succ, Matrix.cons_val',
+        WithLp.ofLp_add, WithLp.ofLp_smul, coe_sub18, Pi.sub_apply, Pi.add_apply,
+        Pi.smul_apply, smul_eq_mul]
+      ring
+    refine ⟨t3, ht3, ?_⟩
+    linear_combination (chi_msb_swap_23 a b d p) - hadd
+      - t3 * (chi_msb_swap_23 a b c p)
 
 /-- HOL `MCELL_ARG_REDUCE` (leaf_cell.hl:2132-2177): every Marchal cell is
 one of `mcell j`, `j ≤ 4`. -/
