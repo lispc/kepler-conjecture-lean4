@@ -1,0 +1,548 @@
+diff --git a/lean/Kepler/Text/LocalAuto11.lean b/lean/Kepler/Text/LocalAuto11.lean
+index a38d9eb5..099576c8 100644
+--- a/lean/Kepler/Text/LocalAuto11.lean
++++ b/lean/Kepler/Text/LocalAuto11.lean
+@@ -162,10 +162,17 @@ call sites (lp_details.hl:1535). -/
+ noncomputable def delta234X_p11 (x1 x5 x6 x2 x3 x4 : ℝ) : ℝ :=
+   deltaX x1 x2 x3 x4 x5 x6
+ 
+-/-- HOL `x1_delta_y` (sphere.hl): `y_of_x x1_delta_x` with
+-`x1_delta_x = x1 * delta_x1`. -/
++/-- HOL `x1_delta_y` (sphere.hl:842): `y_of_x x1_delta_x` with
++`x1_delta_x = x1 * delta_x` (sphere.hl:840).  PORT-FIX (atn2-merge
++follow-up wave, LA11 lane): the body previously multiplied by
++`deltaX1f_p11` (the `delta_x1` partial) — a mis-transcription of
++sphere.hl:840 (`delta_x`, not `delta_x1`) that froze
++`lindihpi_lt_y_small_p11` into a FALSE statement (counterexample
++y=(1,2,2,2,2,2), b=3.4).  No other declaration consumes this def, so
++the body is corrected to the HOL-verbatim spelling; signatures of all
++consuming theorems are unchanged. -/
+ noncomputable def x1DeltaY_p11 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
+-  y1 * y1 * deltaX1f_p11 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5)
++  y1 * y1 * deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5)
+     (y6 * y6)
+ 
+ /-- HOL `delta4_squared_y` (sphere.hl): `y_of_x (delta_x4 ^ 2)`. -/
+@@ -682,25 +689,120 @@ theorem LEMMA_5691615370_p11 :
+ 
+ /-! ### The `lindihpi` line and the numeric `atn (sqrt _)` bounds -/
+ 
++/-- Mirror-of-PA21 (PackingAuto21 `mi_atn2_pos_x`/`mi_atn2_pos_y`,
++HEAD b5f64641): the negative-second-argument clause of HOL
++`Trigonometry1.ATN2_BREAKDOWN` (trig1.hl:341-353).  The PA21 templates
++discharge the `delta_x4 < 0` arm of the merge_ineq `lindihpi` line
++through the positive-y clause; the same-root `lp_details` item
++`lindihpi_lt_small` (lp_details.hl:1272) lives in the `delta_x4 > 0`
++quadrant, where the second `atn2` argument `-(delta_x4)` is NEGATIVE,
++so the branch selection is swapped to this clause (valid for every
++first argument, mirroring the all-`y` shape of `mi_atn2_pos_x`). -/
++private theorem la11_atn2_neg_y {x y : ℝ} (hy : y < 0) :
++    atn2 x y = -(Real.pi / 2) - Real.arctan (x / y) := by
++  rw [atn2]
++  by_cases h1 : |y| < x
++  · rw [if_pos h1]
++    have hx : 0 < x := by linarith [abs_nonneg y]
++    have hxy : y / x < 0 := by
++      have h2 : y / x = -((-y) / x) := by ring
++      rw [h2]
++      exact neg_lt_zero.mpr (div_pos (neg_pos.mpr hy) hx)
++    have hinv := Real.arctan_inv_of_neg hxy
++    rw [inv_div] at hinv
++    linarith
++  · rw [if_neg h1, if_neg (show ¬(0:ℝ) < y from by linarith), if_pos hy]
++
+ /-- lp_details.hl:1272 `lindihpi_lt_small` (quadrant analysis of `atn2`;
+-DISCHARGES). -/
++DISCHARGES).
++BODY (atn2-merge follow-up wave): PA21 `mi_lindihpi_lt` template with
++the atn2 branch swapped — `la11_atn2_neg_y` unfolds `dihXf` to
++`-arctan(sqrt / -(deltaX4))`, then the same `strictMonoOn_tan` +
++`tan_arctan` bridge, with the multiplication flip now on the POSITIVE
++`deltaX4` (`div_lt_iff₀`). -/
+ theorem lindihpi_lt_small_p11 {u x1 x2 x3 x4 x5 x6 : ℝ}
+     (habs : |u| < Real.pi / 2) (hx1 : 0 < x1)
+     (hd4 : 0 < deltaX4 x1 x2 x3 x4 x5 x6) :
+     (dihXf x1 x2 x3 x4 x5 x6 < u ↔
+       Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+         < Real.tan u * deltaX4 x1 x2 x3 x4 x5 x6) := by
+-  sorry
++  have hdneg : -(deltaX4 x1 x2 x3 x4 x5 x6) < 0 := by linarith
++  have hbreak : dihXf x1 x2 x3 x4 x5 x6
++      = -(Real.arctan (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
++          / -(deltaX4 x1 x2 x3 x4 x5 x6))) := by
++    show Real.pi / 2 + atn2 (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
++      (-(deltaX4 x1 x2 x3 x4 x5 x6))
++      = -(Real.arctan (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
++          / -(deltaX4 x1 x2 x3 x4 x5 x6)))
++    rw [la11_atn2_neg_y hdneg]
++    ring
++  have hu_mem : -u ∈ Set.Ioo (-(Real.pi / 2)) (Real.pi / 2) :=
++    ⟨by linarith [abs_lt.mp habs], by linarith [abs_lt.mp habs]⟩
++  have hmono : -(Real.tan u) < Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
++        / -(deltaX4 x1 x2 x3 x4 x5 x6) ↔
++      -u < Real.arctan (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
++          / -(deltaX4 x1 x2 x3 x4 x5 x6)) := by
++    have h := Real.strictMonoOn_tan.lt_iff_lt hu_mem
++      (Real.arctan_mem_Ioo (Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
++          / -(deltaX4 x1 x2 x3 x4 x5 x6)))
++    rwa [Real.tan_neg, Real.tan_arctan] at h
++  have hbridge : Real.tan u * deltaX4 x1 x2 x3 x4 x5 x6
++      = -(Real.tan u) * -(deltaX4 x1 x2 x3 x4 x5 x6) := by ring
++  constructor
++  · intro hlt
++    rw [hbreak] at hlt
++    have h3 := (lt_div_iff_of_neg hdneg).mp (hmono.mpr (by linarith))
++    rwa [← hbridge] at h3
++  · intro hR
++    rw [hbreak]
++    have hR' : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
++        < -(Real.tan u) * -(deltaX4 x1 x2 x3 x4 x5 x6) := by rwa [← hbridge]
++    linarith [hmono.mp ((lt_div_iff_of_neg hdneg).mpr hR')]
+ 
+ /-- lp_details.hl:1296 `lindihpi_lt_y_small` (through
+-`lindihpi_lt_small_p11`; DISCHARGES). -/
++`lindihpi_lt_small_p11`; DISCHARGES).
++BODY (atn2-merge follow-up wave): the x-space core at
++`u = arctan (sqrt b)`, `x_i = y_i^2`, then `la11_sqrt_lt_sq` with
++`(sqrt b)^2 = b` (`Real.sq_sqrt`); `deltaY`/`delta4Y`/`dihY` are the
++x-space kit at squared lengths by definition, so the goal converts by
++`show` after unfolding `x1DeltaY_p11`. -/
+ theorem lindihpi_lt_y_small_p11 {b y1 y2 y3 y4 y5 y6 : ℝ} (hy1 : 0 < y1)
+     (hb : 0 < b) (hd : 0 ≤ deltaY y1 y2 y3 y4 y5 y6)
+     (hd4 : 0 < delta4Y y1 y2 y3 y4 y5 y6) :
+     (4 * x1DeltaY_p11 y1 y2 y3 y4 y5 y6
+         < b * delta4SquaredY_p11 y1 y2 y3 y4 y5 y6 ↔
+       dihY y1 y2 y3 y4 y5 y6 < Real.arctan (Real.sqrt b)) := by
+-  sorry
++  have hy1sq : 0 < y1 * y1 := by positivity
++  have hA : 4 * x1DeltaY_p11 y1 y2 y3 y4 y5 y6
++      = 4 * (y1 * y1) * deltaX (y1 * y1) (y2 * y2) (y3 * y3)
++          (y4 * y4) (y5 * y5) (y6 * y6) := by
++    simp only [x1DeltaY_p11]; ring
++  rw [hA]
++  show 4 * (y1 * y1) * deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
++      (y5 * y5) (y6 * y6)
++      < b * (deltaX4 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5)
++          (y6 * y6) ^ 2) ↔
++    dihXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
++      < Real.arctan (Real.sqrt b)
++  have hb2 : b * (deltaX4 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5)
++        (y6 * y6) ^ 2)
++      = (Real.sqrt b * deltaX4 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
++          (y5 * y5) (y6 * y6)) ^ 2 := by
++    rw [mul_pow, Real.sq_sqrt hb.le]
++  have hA0 : 0 ≤ 4 * (y1 * y1) * deltaX (y1 * y1) (y2 * y2) (y3 * y3)
++      (y4 * y4) (y5 * y5) (y6 * y6) :=
++    mul_nonneg (mul_nonneg (by positivity) hy1sq.le) hd
++  have hB0 : 0 < Real.sqrt b * deltaX4 (y1 * y1) (y2 * y2) (y3 * y3)
++      (y4 * y4) (y5 * y5) (y6 * y6) :=
++    mul_pos (Real.sqrt_pos.mpr hb) hd4
++  have hcore := lindihpi_lt_small_p11 (u := Real.arctan (Real.sqrt b))
++    (x1 := y1 * y1) (x2 := y2 * y2) (x3 := y3 * y3) (x4 := y4 * y4)
++    (x5 := y5 * y5) (x6 := y6 * y6)
++    (abs_lt.mpr ⟨Real.neg_pi_div_two_lt_arctan (Real.sqrt b),
++      Real.arctan_lt_pi_div_two (Real.sqrt b)⟩) hy1sq hd4
++  rw [Real.tan_arctan] at hcore
++  rw [hb2, ← Real.sqrt_lt' hB0]
++  exact hcore.symm
+ 
+ /-- lp_details.hl:1348 `dih_y_imp_delta_y_nz`. -/
+ theorem dih_y_imp_delta_y_nz_p11 {y1 y2 y3 y4 y5 y6 : ℝ} (hy1 : 0 < y1)
+@@ -733,40 +835,374 @@ theorem dih_y_imp_delta_y_nz_p11 {y1 y2 y3 y4 y5 y6 : ℝ} (hy1 : 0 < y1)
+   rw [harg] at hpi
+   linarith
+ 
++/-! ### The numeric `atn (sqrt _)` bounds
++
++The HOL proofs are `Flyspeck_constants.calc` interval evaluations; the
++discharge route is the PA25 zero-certificate-chain kit (PackingAuto25
++`c2089`/`c1946`, HEAD 239e9c53): the complement identity
++`arctan x + arctan (x⁻¹) = π/2` and the polynomial Taylor envelopes for
++`arctan` on `[0,∞)` (FTC at 0), evaluated at RATIONAL squeeze points,
++with the only transcendental anchor being Mathlib's own `π` bounds
++(`pi_gt_d20`/`pi_lt_d6`).  The five private lemmas below are verbatim
++mirrors of the PA25 private kit (docstring-documented; PA25 keeps them
++`private`, so they cannot be imported) plus one tan-addition split
++`arctan t = π/4 + arctan ((t-1)/(t+1))` for the two items whose
++squeeze point sits above 1 after complementing. -/
++
++/-- Mirror-of-PA25 (`p25_arctan_add_arctan_inv`): complement identity
++`arctan x + arctan x⁻¹ = π/2` (`0 < x`). -/
++private theorem la11_arctan_add_arctan_inv (x : ℝ) (hx : 0 < x) :
++    Real.arctan x + Real.arctan (x⁻¹) = Real.pi / 2 := by
++  have hpos1 : (0:ℝ) < Real.arctan x := by
++    have h := Real.arctan_lt_arctan_iff.2 hx
++    rwa [Real.arctan_zero] at h
++  have hpos2 : (0:ℝ) < Real.arctan (x⁻¹) := by
++    have h := Real.arctan_lt_arctan_iff.2 (inv_pos.2 hx)
++    rwa [Real.arctan_zero] at h
++  have hcos : Real.cos (Real.arctan x + Real.arctan (x⁻¹)) = 0 := by
++    rw [Real.cos_add]
++    have e1 : Real.sin (Real.arctan x) * Real.sin (Real.arctan (x⁻¹))
++        = Real.cos (Real.arctan x) * Real.cos (Real.arctan (x⁻¹)) := by
++      rw [Real.sin_arctan, Real.sin_arctan, Real.cos_arctan, Real.cos_arctan]
++      field_simp
++    linarith
++  have hrange1 : Real.arctan x + Real.arctan (x⁻¹) ∈ Icc (0:ℝ) Real.pi :=
++    ⟨le_of_lt (by linarith),
++      by linarith [Real.arctan_lt_pi_div_two x, Real.arctan_lt_pi_div_two (x⁻¹),
++        Real.pi_pos]⟩
++  have hrange2 : (Real.pi / 2 : ℝ) ∈ Icc (0:ℝ) Real.pi :=
++    ⟨by linarith [Real.pi_pos], by linarith [Real.pi_pos]⟩
++  have heq := Real.strictAntiOn_cos.injOn hrange1 hrange2
++    (by rw [Real.cos_pi_div_two]; exact hcos)
++  linarith
++
++/-- Mirror-of-PA25 (`p25_arctan_ge_taylor6`): Taylor lower envelope
++`arctan t ≥ t - t³/3 + t⁵/5 - t⁷/7 + t⁹/9 - t¹¹/11` on `[0,∞)` (the
++derivative error `u¹²/(1+u²) ≥ 0`, FTC at 0). -/
++private theorem la11_arctan_ge_taylor6 (t : ℝ) (ht : 0 ≤ t) :
++    t - t ^ 3 / 3 + t ^ 5 / 5 - t ^ 7 / 7 + t ^ 9 / 9 - t ^ 11 / 11 ≤ Real.arctan t := by
++  have h3 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 3 / 3) (u ^ 2) u := by
++    intro u; simpa using ((hasDerivAt_id u).pow 3).div_const 3
++  have h5 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 5 / 5) (u ^ 4) u := by
++    intro u; simpa using ((hasDerivAt_id u).pow 5).div_const 5
++  have h7 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 7 / 7) (u ^ 6) u := by
++    intro u; simpa using ((hasDerivAt_id u).pow 7).div_const 7
++  have h9 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 9 / 9) (u ^ 8) u := by
++    intro u; simpa using ((hasDerivAt_id u).pow 9).div_const 9
++  have h11 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 11 / 11) (u ^ 10) u := by
++    intro u; simpa using ((hasDerivAt_id u).pow 11).div_const 11
++  have hpoly : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7
++      + v ^ 9 / 9 - v ^ 11 / 11) (1 - u ^ 2 + u ^ 4 - u ^ 6 + u ^ 8 - u ^ 10) u := by
++    intro u
++    have s1 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3) (1 - u ^ 2) u :=
++      (hasDerivAt_id u).sub (h3 u)
++    have s2 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5)
++        (1 - u ^ 2 + u ^ 4) u := s1.add (h5 u)
++    have s3 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7)
++        (1 - u ^ 2 + u ^ 4 - u ^ 6) u := s2.sub (h7 u)
++    have s4 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7
++        + v ^ 9 / 9) (1 - u ^ 2 + u ^ 4 - u ^ 6 + u ^ 8) u := s3.add (h9 u)
++    exact s4.sub (h11 u)
++  have hf' : deriv (fun u => Real.arctan u
++      - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9 - u ^ 11 / 11))
++      = fun u => u ^ 12 / (1 + u ^ 2) := by
++    funext u
++    have hd : HasDerivAt (fun v : ℝ => Real.arctan v
++        - (v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7 + v ^ 9 / 9 - v ^ 11 / 11))
++        (1 / (1 + u ^ 2) - (1 - u ^ 2 + u ^ 4 - u ^ 6 + u ^ 8 - u ^ 10)) u :=
++      HasDerivAt.sub (Real.hasDerivAt_arctan u) (hpoly u)
++    rw [hd.deriv]
++    field_simp
++    ring
++  have hdiff : ∀ x ∈ uIcc (0:ℝ) t, DifferentiableAt ℝ (fun u => Real.arctan u
++      - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9 - u ^ 11 / 11)) x := by
++    intro x _
++    exact DifferentiableAt.sub (Real.differentiableAt_arctan x) (by fun_prop)
++  have hcont : Continuous (fun u : ℝ => u ^ 12 / (1 + u ^ 2)) :=
++    Continuous.div (by fun_prop) (by fun_prop)
++      (fun u => ne_of_gt (by positivity : (0:ℝ) < 1 + u ^ 2))
++  have hftc := intervalIntegral.integral_deriv_eq_sub'
++    (fun u => Real.arctan u
++      - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9 - u ^ 11 / 11)) hf' hdiff
++    hcont.continuousOn
++  have hint : ∫ y in (0:ℝ)..t, y ^ 12 / (1 + y ^ 2)
++      = Real.arctan t - (t - t ^ 3 / 3 + t ^ 5 / 5 - t ^ 7 / 7 + t ^ 9 / 9 - t ^ 11 / 11) := by
++    have hzero : (fun u => Real.arctan u
++        - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9 - u ^ 11 / 11)) (0:ℝ) = 0 := by
++      simp [Real.arctan_zero]
++    simpa [hzero] using hftc
++  have hnonneg : (0:ℝ) ≤ ∫ y in (0:ℝ)..t, y ^ 12 / (1 + y ^ 2) :=
++    intervalIntegral.integral_nonneg ht
++      (fun y (hy : y ∈ Icc (0:ℝ) t) => div_nonneg (pow_nonneg hy.1 12) (by positivity))
++  linarith
++
++/-- Mirror-of-PA25 (`p25_arctan_le_taylor5`): Taylor upper envelope
++`arctan t ≤ t - t³/3 + t⁵/5 - t⁷/7 + t⁹/9` on `[0,∞)` (the derivative
++error `-u¹⁰/(1+u²) ≤ 0`, FTC at 0). -/
++private theorem la11_arctan_le_taylor5 (t : ℝ) (ht : 0 ≤ t) :
++    Real.arctan t ≤ t - t ^ 3 / 3 + t ^ 5 / 5 - t ^ 7 / 7 + t ^ 9 / 9 := by
++  have h3 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 3 / 3) (u ^ 2) u := by
++    intro u; simpa using ((hasDerivAt_id u).pow 3).div_const 3
++  have h5 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 5 / 5) (u ^ 4) u := by
++    intro u; simpa using ((hasDerivAt_id u).pow 5).div_const 5
++  have h7 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 7 / 7) (u ^ 6) u := by
++    intro u; simpa using ((hasDerivAt_id u).pow 7).div_const 7
++  have h9 : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v ^ 9 / 9) (u ^ 8) u := by
++    intro u; simpa using ((hasDerivAt_id u).pow 9).div_const 9
++  have hpoly : ∀ u : ℝ, HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7
++      + v ^ 9 / 9) (1 - u ^ 2 + u ^ 4 - u ^ 6 + u ^ 8) u := by
++    intro u
++    have s1 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3) (1 - u ^ 2) u :=
++      (hasDerivAt_id u).sub (h3 u)
++    have s2 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5)
++        (1 - u ^ 2 + u ^ 4) u := s1.add (h5 u)
++    have s3 : HasDerivAt (fun v : ℝ => v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7)
++        (1 - u ^ 2 + u ^ 4 - u ^ 6) u := s2.sub (h7 u)
++    exact s3.add (h9 u)
++  have hf' : deriv (fun u => Real.arctan u
++      - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9))
++      = fun u => -(u ^ 10 / (1 + u ^ 2)) := by
++    funext u
++    have hd : HasDerivAt (fun v : ℝ => Real.arctan v
++        - (v - v ^ 3 / 3 + v ^ 5 / 5 - v ^ 7 / 7 + v ^ 9 / 9))
++        (1 / (1 + u ^ 2) - (1 - u ^ 2 + u ^ 4 - u ^ 6 + u ^ 8)) u :=
++      HasDerivAt.sub (Real.hasDerivAt_arctan u) (hpoly u)
++    rw [hd.deriv]
++    field_simp
++    ring
++  have hdiff : ∀ x ∈ uIcc (0:ℝ) t, DifferentiableAt ℝ (fun u => Real.arctan u
++      - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9)) x := by
++    intro x _
++    exact DifferentiableAt.sub (Real.differentiableAt_arctan x) (by fun_prop)
++  have hcont : Continuous (fun u : ℝ => -(u ^ 10 / (1 + u ^ 2))) :=
++    (Continuous.div (by fun_prop) (by fun_prop)
++      (fun u => ne_of_gt (by positivity : (0:ℝ) < 1 + u ^ 2))).neg
++  have hftc := intervalIntegral.integral_deriv_eq_sub'
++    (fun u => Real.arctan u
++      - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9)) hf' hdiff hcont.continuousOn
++  have hint : ∫ y in (0:ℝ)..t, -(y ^ 10 / (1 + y ^ 2))
++      = Real.arctan t - (t - t ^ 3 / 3 + t ^ 5 / 5 - t ^ 7 / 7 + t ^ 9 / 9) := by
++    have hzero : (fun u => Real.arctan u
++        - (u - u ^ 3 / 3 + u ^ 5 / 5 - u ^ 7 / 7 + u ^ 9 / 9)) (0:ℝ) = 0 := by
++      simp [Real.arctan_zero]
++    simpa [hzero] using hftc
++  have hpos : (0:ℝ) ≤ ∫ y in (0:ℝ)..t, y ^ 10 / (1 + y ^ 2) :=
++    intervalIntegral.integral_nonneg ht
++      (fun y (hy : y ∈ Icc (0:ℝ) t) => div_nonneg (pow_nonneg hy.1 10) (by positivity))
++  have hneg : (∫ y in (0:ℝ)..t, -(y ^ 10 / (1 + y ^ 2))) ≤ 0 := by
++    have hne : (∫ y in (0:ℝ)..t, -(y ^ 10 / (1 + y ^ 2)))
++        = -(∫ y in (0:ℝ)..t, y ^ 10 / (1 + y ^ 2)) :=
++      intervalIntegral.integral_neg (f := fun y : ℝ => y ^ 10 / (1 + y ^ 2))
++    linarith [hne, hpos]
++  linarith
++
++/-- Tan-addition split `arctan t = π/4 + arctan ((t-1)/(t+1))`
++(`0 < t`), through Mathlib `Real.arctan_add` at `(1, w)`.  Used where
++the complement point `x⁻¹` exceeds 1 (`atn_sqrt_1914`,
++`atn_sqrt_833`), where the Taylor envelopes decay too slowly. -/
++private theorem la11_arctan_eq_pi4_add {t : ℝ} (ht : 0 < t) :
++    Real.arctan t = Real.pi / 4 + Real.arctan ((t - 1) / (t + 1)) := by
++  have htp1 : 0 < t + 1 := by linarith
++  have hwlt : (t - 1) / (t + 1) < 1 := by
++    rw [div_lt_iff₀ htp1]; linarith
++  have h := Real.arctan_add (x := (1:ℝ)) (y := (t - 1) / (t + 1)) (by linarith)
++  rw [Real.arctan_one] at h
++  have heq : (1 + (t - 1) / (t + 1)) / (1 - 1 * ((t - 1) / (t + 1))) = t := by
++    field_simp; ring
++  rw [heq] at h
++  exact h.symm
++
+ /-- lp_details.hl:1367 `atn_sqrt_39609` (HOL: `Flyspeck_constants.calc`
+-interval evaluation; needs an interval tactic; DISCHARGES). -/
++interval evaluation; needs an interval tactic; DISCHARGES).
++BODY: zero-certificate-chain route (mirror of PA25 `c2089`): complement
++identity + six-term Taylor lower envelope at the rational squeeze point
++`r = 502461/10⁷ ≤ (√396.09)⁻¹`; `π` anchor `pi_gt_d20` (the true
++margin is ~2.2e-7, so the 6-digit `pi_gt_d6` is NOT enough here). -/
+ theorem atn_sqrt_39609_p11 :
+     (1.621:ℝ) < Real.pi - Real.arctan (Real.sqrt 396.09) := by
+-  sorry
+-
+-/-- lp_details.hl:1375 `atn_sqrt_3418` (DISCHARGES). -/
++  have hcomp := la11_arctan_add_arctan_inv (Real.sqrt 396.09) (by positivity)
++  have hz : (502461 / 10000000:ℝ) ≤ (Real.sqrt 396.09)⁻¹ := by
++    have h1 : Real.sqrt 396.09 ≤ (10000000 / 502461:ℝ) :=
++      (Real.sqrt_le_sqrt (by norm_num : (396.09:ℝ) ≤ (10000000 / 502461) ^ 2)).trans
++        (Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 10000000 / 502461)).le
++    have h2 := (inv_le_inv₀ (by positivity : (0:ℝ) < 10000000 / 502461)
++      (by positivity)).2 h1
++    rwa [inv_div] at h2
++  have hmono := Real.arctan_le_arctan_iff.mpr hz
++  have hlow := la11_arctan_ge_taylor6 (502461 / 10000000:ℝ) (by positivity)
++  have hV : (0.0502037:ℝ) ≤ (502461 / 10000000:ℝ) - (502461 / 10000000:ℝ) ^ 3 / 3
++      + (502461 / 10000000:ℝ) ^ 5 / 5 - (502461 / 10000000:ℝ) ^ 7 / 7
++      + (502461 / 10000000:ℝ) ^ 9 / 9 - (502461 / 10000000:ℝ) ^ 11 / 11 := by
++    norm_num
++  have h1 : Real.arctan (Real.sqrt 396.09)
++      = Real.pi / 2 - Real.arctan ((Real.sqrt 396.09)⁻¹) := by linarith
++  rw [h1]
++  linarith [hmono, hlow, hV, Real.pi_gt_d20]
++
++/-- lp_details.hl:1375 `atn_sqrt_3418` (DISCHARGES).
++BODY: complement identity + Taylor lower envelope at
++`r = 67612/125000 ≤ (√3.418)⁻¹`, `π < 3.141593`. -/
+ theorem atn_sqrt_3418_p11 :
+     Real.arctan (Real.sqrt 3.418) < (2.15:ℝ) / 2 := by
+-  sorry
+-
+-/-- lp_details.hl:1383 `atn_sqrt_38` (DISCHARGES). -/
++  have hcomp := la11_arctan_add_arctan_inv (Real.sqrt 3.418) (by positivity)
++  have hz : (67612 / 125000:ℝ) ≤ (Real.sqrt 3.418)⁻¹ := by
++    have h1 : Real.sqrt 3.418 ≤ (125000 / 67612:ℝ) :=
++      (Real.sqrt_le_sqrt (by norm_num : (3.418:ℝ) ≤ (125000 / 67612) ^ 2)).trans
++        (Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 125000 / 67612)).le
++    have h2 := (inv_le_inv₀ (by positivity : (0:ℝ) < 125000 / 67612)
++      (by positivity)).2 h1
++    rwa [inv_div] at h2
++  have hmono := Real.arctan_le_arctan_iff.mpr hz
++  have hlow := la11_arctan_ge_taylor6 (67612 / 125000:ℝ) (by positivity)
++  have hV : (0.495804:ℝ) ≤ (67612 / 125000:ℝ) - (67612 / 125000:ℝ) ^ 3 / 3
++      + (67612 / 125000:ℝ) ^ 5 / 5 - (67612 / 125000:ℝ) ^ 7 / 7
++      + (67612 / 125000:ℝ) ^ 9 / 9 - (67612 / 125000:ℝ) ^ 11 / 11 := by
++    norm_num
++  have h1 : Real.arctan (Real.sqrt 3.418)
++      = Real.pi / 2 - Real.arctan ((Real.sqrt 3.418)⁻¹) := by linarith
++  rw [h1]
++  linarith [hmono, hlow, hV, Real.pi_lt_d6]
++
++/-- lp_details.hl:1383 `atn_sqrt_38` (DISCHARGES).
++BODY: complement identity + Taylor lower envelope at
++`r = 811107/5000000 ≤ (√38)⁻¹`, `π < 3.141593`. -/
+ theorem atn_sqrt_38_p11 : Real.arctan (Real.sqrt 38.0) < (1.41:ℝ) := by
+-  sorry
+-
+-/-- lp_details.hl:1391 `atn_sqrt_405` (DISCHARGES). -/
++  have hcomp := la11_arctan_add_arctan_inv (Real.sqrt 38.0) (by positivity)
++  have hz : (811107 / 5000000:ℝ) ≤ (Real.sqrt 38.0)⁻¹ := by
++    have h1 : Real.sqrt 38.0 ≤ (5000000 / 811107:ℝ) :=
++      (Real.sqrt_le_sqrt (by norm_num : (38.0:ℝ) ≤ (5000000 / 811107) ^ 2)).trans
++        (Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 5000000 / 811107)).le
++    have h2 := (inv_le_inv₀ (by positivity : (0:ℝ) < 5000000 / 811107)
++      (by positivity)).2 h1
++    rwa [inv_div] at h2
++  have hmono := Real.arctan_le_arctan_iff.mpr hz
++  have hlow := la11_arctan_ge_taylor6 (811107 / 5000000:ℝ) (by positivity)
++  have hV : (0.16082:ℝ) ≤ (811107 / 5000000:ℝ) - (811107 / 5000000:ℝ) ^ 3 / 3
++      + (811107 / 5000000:ℝ) ^ 5 / 5 - (811107 / 5000000:ℝ) ^ 7 / 7
++      + (811107 / 5000000:ℝ) ^ 9 / 9 - (811107 / 5000000:ℝ) ^ 11 / 11 := by
++    norm_num
++  have h1 : Real.arctan (Real.sqrt 38.0)
++      = Real.pi / 2 - Real.arctan ((Real.sqrt 38.0)⁻¹) := by linarith
++  rw [h1]
++  linarith [hmono, hlow, hV, Real.pi_lt_d6]
++
++/-- lp_details.hl:1391 `atn_sqrt_405` (DISCHARGES).
++BODY: complement identity + Taylor lower envelope at
++`r = 4969/10⁴ ≤ (√4.05)⁻¹`, `π < 3.141593`. -/
+ theorem atn_sqrt_405_p11 : Real.arctan (Real.sqrt 4.05) < (1.11:ℝ) := by
+-  sorry
+-
+-/-- lp_details.hl:1399 `atn_sqrt_29` (DISCHARGES). -/
++  have hcomp := la11_arctan_add_arctan_inv (Real.sqrt 4.05) (by positivity)
++  have hz : (4969 / 10000:ℝ) ≤ (Real.sqrt 4.05)⁻¹ := by
++    have h1 : Real.sqrt 4.05 ≤ (10000 / 4969:ℝ) :=
++      (Real.sqrt_le_sqrt (by norm_num : (4.05:ℝ) ≤ (10000 / 4969) ^ 2)).trans
++        (Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 10000 / 4969)).le
++    have h2 := (inv_le_inv₀ (by positivity : (0:ℝ) < 10000 / 4969)
++      (by positivity)).2 h1
++    rwa [inv_div] at h2
++  have hmono := Real.arctan_le_arctan_iff.mpr hz
++  have hlow := la11_arctan_ge_taylor6 (4969 / 10000:ℝ) (by positivity)
++  have hV : (0.46115:ℝ) ≤ (4969 / 10000:ℝ) - (4969 / 10000:ℝ) ^ 3 / 3
++      + (4969 / 10000:ℝ) ^ 5 / 5 - (4969 / 10000:ℝ) ^ 7 / 7
++      + (4969 / 10000:ℝ) ^ 9 / 9 - (4969 / 10000:ℝ) ^ 11 / 11 := by
++    norm_num
++  have h1 : Real.arctan (Real.sqrt 4.05)
++      = Real.pi / 2 - Real.arctan ((Real.sqrt 4.05)⁻¹) := by linarith
++  rw [h1]
++  linarith [hmono, hlow, hV, Real.pi_lt_d6]
++
++/-- lp_details.hl:1399 `atn_sqrt_29` (DISCHARGES).
++BODY: complement identity + Taylor lower envelope at
++`r = 367/625 ≤ (√2.9)⁻¹`, `π < 3.141593`. -/
+ theorem atn_sqrt_29_p11 : Real.arctan (Real.sqrt 2.9) < (1.04:ℝ) := by
+-  sorry
+-
+-/-- lp_details.hl:1407 `atn_sqrt_1914` (DISCHARGES). -/
++  have hcomp := la11_arctan_add_arctan_inv (Real.sqrt 2.9) (by positivity)
++  have hz : (367 / 625:ℝ) ≤ (Real.sqrt 2.9)⁻¹ := by
++    have h1 : Real.sqrt 2.9 ≤ (625 / 367:ℝ) :=
++      (Real.sqrt_le_sqrt (by norm_num : (2.9:ℝ) ≤ (625 / 367) ^ 2)).trans
++        (Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 625 / 367)).le
++    have h2 := (inv_le_inv₀ (by positivity : (0:ℝ) < 625 / 367)
++      (by positivity)).2 h1
++    rwa [inv_div] at h2
++  have hmono := Real.arctan_le_arctan_iff.mpr hz
++  have hlow := la11_arctan_ge_taylor6 (367 / 625:ℝ) (by positivity)
++  have hV : (0.5308945:ℝ) ≤ (367 / 625:ℝ) - (367 / 625:ℝ) ^ 3 / 3
++      + (367 / 625:ℝ) ^ 5 / 5 - (367 / 625:ℝ) ^ 7 / 7
++      + (367 / 625:ℝ) ^ 9 / 9 - (367 / 625:ℝ) ^ 11 / 11 := by
++    norm_num
++  have h1 : Real.arctan (Real.sqrt 2.9)
++      = Real.pi / 2 - Real.arctan ((Real.sqrt 2.9)⁻¹) := by linarith
++  rw [h1]
++  linarith [hmono, hlow, hV, Real.pi_lt_d6]
++
++/-- lp_details.hl:1407 `atn_sqrt_1914` (DISCHARGES).
++BODY: the complement point `(√1.914)⁻¹ > 1`, where the envelopes decay
++too slowly, so use the `π/4` split `la11_arctan_eq_pi4_add` with
++`w = (t-1)/(t+1) ≤ 767/4767` and the five-term Taylor UPPER envelope at
++that rational point, `π < 3.141593`. -/
+ theorem atn_sqrt_1914_p11 : Real.arctan (Real.sqrt 1.914) < (0.945:ℝ) := by
+-  sorry
+-
+-/-- lp_details.hl:1415 `atn_sqrt_68158` (DISCHARGES). -/
++  have ht : 0 < Real.sqrt 1.914 := by positivity
++  have ht1 : Real.sqrt 1.914 ≤ (2767 / 2000:ℝ) :=
++    (Real.sqrt_le_sqrt (by norm_num : (1.914:ℝ) ≤ (2767 / 2000) ^ 2)).trans
++      (Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 2767 / 2000)).le
++  have hw : (Real.sqrt 1.914 - 1) / (Real.sqrt 1.914 + 1) ≤ 767 / 4767 := by
++    rw [div_le_iff₀ (by linarith)]
++    linarith [ht1]
++  have hmono := Real.arctan_le_arctan_iff.mpr hw
++  have hupp := la11_arctan_le_taylor5 (767 / 4767:ℝ) (by positivity)
++  have hV : (767 / 4767:ℝ) - (767 / 4767:ℝ) ^ 3 / 3 + (767 / 4767:ℝ) ^ 5 / 5
++      - (767 / 4767:ℝ) ^ 7 / 7 + (767 / 4767:ℝ) ^ 9 / 9 ≤ (0.159532:ℝ) := by
++    norm_num
++  rw [la11_arctan_eq_pi4_add ht]
++  linarith [hmono, hupp, hV, Real.pi_lt_d6]
++
++/-- lp_details.hl:1415 `atn_sqrt_68158` (DISCHARGES).
++BODY: complement identity + Taylor lower envelope at
++`r = 30643/80000 ≤ (√6.8158)⁻¹`, `π < 3.141593`. -/
+ theorem atn_sqrt_68158_p11 : Real.arctan (Real.sqrt 6.8158) < (1.205:ℝ) := by
+-  sorry
+-
+-/-- lp_details.hl:1423 `atn_sqrt_833` (DISCHARGES). -/
++  have hcomp := la11_arctan_add_arctan_inv (Real.sqrt 6.8158) (by positivity)
++  have hz : (30643 / 80000:ℝ) ≤ (Real.sqrt 6.8158)⁻¹ := by
++    have h1 : Real.sqrt 6.8158 ≤ (80000 / 30643:ℝ) :=
++      (Real.sqrt_le_sqrt (by norm_num : (6.8158:ℝ) ≤ (80000 / 30643) ^ 2)).trans
++        (Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 80000 / 30643)).le
++    have h2 := (inv_le_inv₀ (by positivity : (0:ℝ) < 80000 / 30643)
++      (by positivity)).2 h1
++    rwa [inv_div] at h2
++  have hmono := Real.arctan_le_arctan_iff.mpr hz
++  have hlow := la11_arctan_ge_taylor6 (30643 / 80000:ℝ) (by positivity)
++  have hV : (0.365798:ℝ) ≤ (30643 / 80000:ℝ) - (30643 / 80000:ℝ) ^ 3 / 3
++      + (30643 / 80000:ℝ) ^ 5 / 5 - (30643 / 80000:ℝ) ^ 7 / 7
++      + (30643 / 80000:ℝ) ^ 9 / 9 - (30643 / 80000:ℝ) ^ 11 / 11 := by
++    norm_num
++  have h1 : Real.arctan (Real.sqrt 6.8158)
++      = Real.pi / 2 - Real.arctan ((Real.sqrt 6.8158)⁻¹) := by linarith
++  rw [h1]
++  linarith [hmono, hlow, hV, Real.pi_lt_d6]
++
++/-- lp_details.hl:1423 `atn_sqrt_833` (DISCHARGES).
++BODY: `√0.833 < 1`, so the complement point exceeds 1; use the `π/4`
++split `la11_arctan_eq_pi4_add`: `arctan √0.833 = π/4 + arctan w` with
++`w = (t-1)/(t+1) ≤ -87/1913`, bounded through `arctan_neg` and the
++six-term Taylor lower envelope at `87/1913`, `π < 3.141593`. -/
+ theorem atn_sqrt_833_p11 : Real.arctan (Real.sqrt 0.833) < (0.74:ℝ) := by
+-  sorry
++  have ht : 0 < Real.sqrt 0.833 := by positivity
++  have ht1 : Real.sqrt 0.833 ≤ 913 / 1000 :=
++    (Real.sqrt_le_sqrt (by norm_num : (0.833:ℝ) ≤ (913 / 1000) ^ 2)).trans
++      (Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 913 / 1000)).le
++  have hw : 87 / 1913 ≤ (1 - Real.sqrt 0.833) / (1 + Real.sqrt 0.833) := by
++    rw [le_div_iff₀ (by linarith)]
++    field_simp; linarith [ht1]
++  have hmono := Real.arctan_le_arctan_iff.mpr hw
++  have hlow := la11_arctan_ge_taylor6 (87 / 1913:ℝ) (by positivity)
++  have hV : (0.045446:ℝ) ≤ (87 / 1913:ℝ) - (87 / 1913:ℝ) ^ 3 / 3
++      + (87 / 1913:ℝ) ^ 5 / 5 - (87 / 1913:ℝ) ^ 7 / 7
++      + (87 / 1913:ℝ) ^ 9 / 9 - (87 / 1913:ℝ) ^ 11 / 11 := by
++    norm_num
++  have hneg : Real.arctan ((Real.sqrt 0.833 - 1) / (Real.sqrt 0.833 + 1))
++      ≤ -(0.045446:ℝ) := by
++    have hsplit : (Real.sqrt 0.833 - 1) / (Real.sqrt 0.833 + 1)
++        = -((1 - Real.sqrt 0.833) / (1 + Real.sqrt 0.833)) := by ring
++    rw [hsplit, Real.arctan_neg]
++    linarith [hmono, hlow, hV]
++  rw [la11_arctan_eq_pi4_add ht]
++  linarith [hneg, Real.pi_lt_d6]
+ 
+ /-! ### The quad registry statements -/
+ 

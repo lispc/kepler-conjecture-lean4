@@ -1617,3 +1617,34 @@ namespace `Kepler.Assembly`；验收 = `lake build Kepler.Assembly` 零新错 +
 sorry 计数差 0（mqmsmab 占位行减 1 为预期）。接线波已单进程验证：桥层
 探针（/tmp，import Kepler.Assembly + 实例盾复制）exit 0，落位后
 `lake build Kepler.Assembly` EXIT=0。）
+
+## 40. LA11 `x1DeltaY_p11` def 体误抄纠正（δ_x1 偏导 → HOL 逐字 `delta_x`；冻结定理在其上为假）— 分级 A（def 语义修正）
+
+**立案：2026-10-14，LA11 atn2-merge 同根清偿车道交付随件。** 车道纪律禁止
+自行动用陈述/定义变更权；本波十件填实（`lindihpi_lt_small_p11` 家族，36→26）
+已在隔离 clone 全绿验证（`lake build Kepler.Text.LocalAuto11` EXIT=0），
+原位待批。
+
+### (a) HOL 出处与缺陷
+
+`LocalAuto11.lean:171`（HEAD 口径）：`x1DeltaY_p11` def 体为
+`y1 * y1 * deltaX1f_p11 …`，即乘的是 **delta_x1 偏导**；而 HOL 原文
+`x1_delta_y`（sphere.hl:842）= `y_of_x x1_delta_x`，其中
+`x1_delta_x = x1 * delta_x`（sphere.hl:840，**全量 delta_x**，非偏导）。
+def 体与 docstring 同错（误抄）。
+
+病：在该体下，本波冻结陈述 `lindihpi_lt_y_small_p11`
+（lp_details.hl:1296）为**假命题**——反例 y=(1,2,2,2,2,2), b=3.4：
+左边 4·y1²·δ_x1 = 160 < 166.6 为真，而右边 dihY ≈ 1.0855 ≥
+arctan√3.4 ≈ 1.0743 为假，蕴含式不成立。十件填实中的 y-变体与其
+数值族均消费此 def，不纠正则填实件无法全数转真。
+
+影响面：全仓 grep 验证 `x1DeltaY_p11` **零其他消费者**；def 签名
+（类型）不变，所有消费定理签名逐字冻结不变——纯 def 体一行替换
+（`deltaX1f_p11` → `deltaX`）+ docstring 重写。
+
+### (b) 修复补丁
+
+存档 `docs/statement-fix-proposals-patches/40-x1deltay-lat11.patch`
+（git diff 全量：def 体一行 + docstring + 本波十件填实 + 5 枚新私件）。
+SF 闸锚 `lindihpi_lt_small_p11`；公理面规则⑤白名单。
