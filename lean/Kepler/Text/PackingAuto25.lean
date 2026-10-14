@@ -240,6 +240,35 @@ FILL-ROUND STATUS r4 (2026-10-13 wave: 116 -> 114, 楔形证书面/LEAF_S_LEAF �
     （上游 PA18 `MCELL4_EDGE_FIRST`/`STEM_EDGEX` edge-rigidity kit 未落地）
     与 `GDRQXLGv3`（radV² 桥）消费面在案，本体不动。
 
+FILL-ROUND STATUS r5 (2026-10-13 wave: 114 -> 111, GDRQXLGv3 解析桥 + rad2 双件)
+  - `GDRQXLGv3` 转真（M4 车道判词兑现：OAPVION2+代数，独立可装、不依赖
+    edge-rigidity GIANT）: `¬Coplanar` 经 `p25g_affdep4_coplanar` 给
+    `¬affineDependent`；Cayley–Menger 行列式 `deltaX > 0` 经 PA18
+    `POS_EQ_NOT_COPLANANR`+`delta_delta_x`；Gram 矩阵（差向量内积组）行列式
+    Δ>0，显式 Cramer 见证 q = (t₁•e₁+t₂•e₂+t₃•e₃)+ᵥv₀（tᵢ=nᵢ/2Δ）经
+    `OAPVION3_concl` 认定 circumcenter、`OAPVION2_concl` 取
+    `radV = dist q v₀`；平方后由多项式恒等式 `deltaX = 4Δ`、
+    `rhoX = 4·Σgᵢ·nᵢ`（纯 ring）收口——与 `p25_radv_etay_core` 三点
+    Heron 版同构，自身零债。
+  - 新私件两枚（全零债）: `p25g_mem_affSpan3`/`p25g_affdep4_coplanar`
+    （`p25_mem_affSpan3`/`p25_affdep4_coplanar` 的内联副本——原件定义在
+    本文件后段，Lean 无前向引用；主体逐字未动）。
+  - `MCELL4_DOMAIN` 对 `GDRQXLGv3` 的消费随本体升真（rad2_y 支出账，
+    消费处代码一字未动）；`CC_4_PROPS` 记账仍在账（上游 edge-rigidity
+    kit 未动）。本波零新增记账行。
+  - `EDGE_LE_2RAD` 转真（纯代数零债）: RHUFIIB 型多项式恒等式
+    `rhoX·upsX = chi_x² + 4·deltaX·x4x5x6`（chi_x = sphere.hl:142 逐字，
+    纯 ring 展开）+ 面半弦 `4x5x6 − upsX = (x5+x6−x4)²`（Heron 面式纯
+    ring）+ 面外接圆不等式 `x4x5x6/upsX ≤ rhoX/(4·deltaX)`（div_le_div_iff₀
+    交叉相乘）——即 HOL OXLZLEZ3.hl:599 的 `4·eta_x² ≤ 4·rad2_x` 通往
+    `x4 ≤ 4·rad2_x` 的代数直达线。
+  - `RAD2_Y_SQRT8` 转真（零债）: `deltaY`/`rad2YP25` 定义性展开 + `(√8)² = 8`
+    （`Real.mul_self_sqrt`）+ `UPS_X8_POS`（本文件真件）直接消费
+    `EDGE_LE_2RAD`——WEDGE3_Y4 的 rad2 支自此就绪。
+  - 本地预算: `GDRQXLGv3` 单件声明级 `set_option maxHeartbeats 25000000 in`
+    （六变量 degree-4 ring 核 ×5 + field_simp ×3 超出文件级 5M；
+    陈述与签名一字未动）。
+
 -/
 
 /-! ## DEFINITIONS -/
@@ -1113,12 +1142,328 @@ theorem RADV2 (u v : V3) : radV {u, v} = (1 / 2 : ℝ) * dist u v := by
   rw [h]
   ring
 
-/-- HOL `GDRQXLGv3`. -/
+/-- Span-成员升入三点仿射包（`p25_mem_affSpan3` 的本处内联副本：该件定义在
+本文件后段，Lean 无前向引用）。 -/
+private theorem p25g_mem_affSpan3 {a u v p : V3}
+    (hp : (p - a : V3) ∈ Submodule.span ℝ ({u - a, v - a} : Set V3)) :
+    p ∈ (affineSpan ℝ ({a, u, v} : Set V3) : Set V3) := by
+  have hpv : (p : V3) = (p -ᵥ a) +ᵥ a := (vsub_vadd p a).symm
+  rw [hpv]
+  refine AffineSubspace.vadd_mem_of_mem_direction ?_ (mem_affineSpan ℝ (by simp))
+  rw [direction_affineSpan,
+    vectorSpan_eq_span_vsub_set_right ℝ (show (a : V3) ∈ ({a, u, v} : Set V3) from by simp)]
+  have hsub : ({u - a, v - a} : Set V3) ⊆
+      ((fun q : V3 => (q -ᵥ a)) '' ({a, u, v} : Set V3)) := by
+    intro z hz
+    rcases Set.mem_insert_iff.mp hz with rfl | hz
+    · exact ⟨u, by simp, rfl⟩
+    · rcases Set.mem_singleton_iff.mp hz with rfl
+      exact ⟨v, by simp, rfl⟩
+  exact Submodule.span_mono hsub hp
+
+/-- 仿射相关四点组共面（`p25_affdep4_coplanar` 的本处内联副本：该件定义在
+本文件后段，Lean 无前向引用）。 -/
+private theorem p25g_affdep4_coplanar {a b c d : V3}
+    (h : affineDependent ({a, b, c, d} : Set V3)) :
+    Coplanar ({a, b, c, d} : Set V3) := by
+  -- degenerate stem coincidences: the set drops to three points, which is
+  -- coplanar outright
+  rcases eq_or_ne a b with hab | hab
+  · have hset : ({a, b, c, d} : Set V3) = ({b, c, d} : Set V3) := by
+      rw [hab]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact coplanar_triple b c d
+  rcases eq_or_ne a c with hac | hac
+  · have hset : ({a, b, c, d} : Set V3) = ({b, c, d} : Set V3) := by
+      rw [hac]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact coplanar_triple b c d
+  rcases eq_or_ne a d with had | had
+  · have hset : ({a, b, c, d} : Set V3) = ({b, c, d} : Set V3) := by
+      rw [had]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hset]; exact coplanar_triple b c d
+  have hmem_a : (a : V3) ∈ ({a, b, c, d} : Set V3) := by simp
+  have hdiff : (({a, b, c, d} : Set V3) \ {a}) = ({b, c, d} : Set V3) := by
+    ext z
+    by_cases hz : z = a
+    · subst hz; simp [hab, hac, had]
+    · simp only [Set.mem_sdiff, Set.mem_insert_iff, Set.mem_singleton_iff, hz,
+        not_false_iff]
+      tauto
+  have himg : ((fun p : V3 => (p -ᵥ a)) '' ({b, c, d} : Set V3))
+      = ({b - a, c - a, d - a} : Set V3) := by
+    rw [Set.image_insert_eq, Set.image_insert_eq, Set.image_singleton]
+    rfl
+  rw [affineDependent,
+    affineIndependent_set_iff_linearIndependent_vsub (k := ℝ) hmem_a, hdiff, himg] at h
+  have h' : ¬ LinearIndepOn ℝ id ({b - a, c - a, d - a} : Set V3) := h
+  by_cases hbb : (b - a : V3) ∈ Submodule.span ℝ ({c - a, d - a} : Set V3)
+  · refine ⟨a, c, d, ?_⟩
+    intro p hp
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with he | he | he | he
+    · rw [he]; exact mem_affineSpan ℝ (by simp)
+    · rw [he]; exact p25g_mem_affSpan3 hbb
+    · rw [he]; exact mem_affineSpan ℝ (by simp)
+    · rw [he]; exact mem_affineSpan ℝ (by simp)
+  · by_cases hcc : (c - a : V3) ∈ Submodule.span ℝ ({b - a, d - a} : Set V3)
+    · refine ⟨a, b, d, ?_⟩
+      intro p hp
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+      rcases hp with he | he | he | he
+      · rw [he]; exact mem_affineSpan ℝ (by simp)
+      · rw [he]; exact mem_affineSpan ℝ (by simp)
+      · rw [he]; exact p25g_mem_affSpan3 hcc
+      · rw [he]; exact mem_affineSpan ℝ (by simp)
+    · by_cases hdd : (d - a : V3) ∈ Submodule.span ℝ ({b - a, c - a} : Set V3)
+      · refine ⟨a, b, c, ?_⟩
+        intro p hp
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+        rcases hp with he | he | he | he
+        · rw [he]; exact mem_affineSpan ℝ (by simp)
+        · rw [he]; exact mem_affineSpan ℝ (by simp)
+        · rw [he]; exact mem_affineSpan ℝ (by simp)
+        · rw [he]; exact p25g_mem_affSpan3 hdd
+      · exfalso
+        have hda : d ≠ a := fun heq => hdd (by rw [heq]; simp)
+        have hca : c ≠ a := fun heq => hcc (by rw [heq]; simp)
+        have s1 : LinearIndepOn ℝ id ({d - a} : Set V3) :=
+          LinearIndepOn.singleton (show (d - a : V3) ≠ 0 from sub_ne_zero.mpr hda)
+        have s2 : LinearIndepOn ℝ id ({c - a, d - a} : Set V3) :=
+          LinearIndepOn.id_insert (s := ({d - a} : Set V3)) s1
+            (fun hm => hcc (Submodule.span_mono (Set.subset_insert _ _) hm))
+        exact h' (LinearIndepOn.id_insert (s := ({c - a, d - a} : Set V3)) s2 hbb)
+
+set_option maxHeartbeats 25000000 in
+/-- HOL `GDRQXLGv3`（2026-10-13 转真：radV²↔rad2XP25 解析桥，外心-Cramer
+代数路线——OAPVION2+代数，自身零债、不依赖 edge-rigidity GIANT）：
+`¬Coplanar` 经 `p25g_affdep4_coplanar` 给 `¬affineDependent`，经 PA18
+`POS_EQ_NOT_COPLANANR`+`delta_delta_x` 给 Cayley–Menger 行列式 `deltaX > 0`；
+Gram 矩阵（差向量 e₁=v₁−v₀、e₂=v₂−v₀、e₃=v₃−v₀ 的内积组）行列式 Δ>0，
+显式 Cramer 见证 `q = (t₁•e₁+t₂•e₂+t₃•e₃)+ᵥv₀`（tᵢ=nᵢ/2Δ）经
+`OAPVION3_concl` 认定为 circumcenter、`OAPVION2_concl` 给 `radV = dist q v₀`；
+平方后由多项式恒等式 `deltaX = 4Δ`、`rhoX = 4·Σgᵢ·nᵢ` 纯 `ring` 收口
+（与 `p25_radv_etay_core` 三点 Heron 版同构）。 -/
 theorem GDRQXLGv3 (v0 v1 v2 v3 : V3) (hnc : ¬ Coplanar ({v0, v1, v2, v3} : Set V3)) :
     radV {v0, v1, v2, v3} ^ 2 =
       rad2XP25 (dist v0 v1 ^ 2) (dist v0 v2 ^ 2) (dist v0 v3 ^ 2)
         (dist v2 v3 ^ 2) (dist v1 v3 ^ 2) (dist v1 v2 ^ 2) := by
-  sorry
+  have haff : ¬ affineDependent ({v0, v1, v2, v3} : Set V3) :=
+    fun hd => hnc (p25g_affdep4_coplanar hd)
+  -- inner-product algebra helper (atomic args; no vector collapse)
+  have hgram : ∀ x y : V3, inner ℝ (x - y) (x - y)
+      = inner ℝ x x + inner ℝ y y - 2 * inner ℝ x y := by
+    intro x y
+    rw [inner_sub_left, inner_sub_right, inner_sub_right, real_inner_comm y x]
+    ring
+  -- Gram atoms of e1 = v1 - v0, e2 = v2 - v0, e3 = v3 - v0
+  obtain ⟨ga, hga⟩ : ∃ x, x = inner ℝ (v1 - v0) (v1 - v0) := ⟨_, rfl⟩
+  obtain ⟨gb, hgb⟩ : ∃ x, x = inner ℝ (v2 - v0) (v2 - v0) := ⟨_, rfl⟩
+  obtain ⟨gc, hgc⟩ : ∃ x, x = inner ℝ (v3 - v0) (v3 - v0) := ⟨_, rfl⟩
+  obtain ⟨gab, hgab⟩ : ∃ x, x = inner ℝ (v1 - v0) (v2 - v0) := ⟨_, rfl⟩
+  obtain ⟨gac, hgac⟩ : ∃ x, x = inner ℝ (v1 - v0) (v3 - v0) := ⟨_, rfl⟩
+  obtain ⟨gbc, hgbc⟩ : ∃ x, x = inner ℝ (v2 - v0) (v3 - v0) := ⟨_, rfl⟩
+  -- Cramer numerators n1, n2, n3 (2Δ·tᵢ) and the Gram determinant Δ
+  obtain ⟨n1, hn1⟩ : ∃ x, x = ga * gb * gc - ga * (gbc * gbc)
+      - gb * (gab * gc) + gb * (gac * gbc) + gc * (gab * gbc)
+      - gc * (gac * gb) := ⟨_, rfl⟩
+  obtain ⟨n2, hn2⟩ : ∃ x, x = ga * gb * gc - ga * (gbc * gc)
+      - ga * (gab * gc) + ga * (gbc * gac) + gc * (gab * gac)
+      - gb * (gac * gac) := ⟨_, rfl⟩
+  obtain ⟨n3, hn3⟩ : ∃ x, x = ga * gb * gc - ga * (gb * gbc)
+      - ga * (gb * gac) + ga * (gab * gbc) + gb * (gab * gac)
+      - gc * (gab * gab) := ⟨_, rfl⟩
+  obtain ⟨dda, hdda⟩ : ∃ x, x = ga * gb * gc + 2 * (gbc * gac * gab)
+      - ga * (gbc * gbc) - gb * (gac * gac) - gc * (gab * gab) := ⟨_, rfl⟩
+  -- the algebraic kernel: Cramer column identities + the rho/delta pins
+  have hc1 : ga * n1 + gab * n2 + gac * n3 = ga * dda := by
+    rw [hn1, hn2, hn3, hdda]
+    ring
+  have hc2 : gab * n1 + gb * n2 + gbc * n3 = gb * dda := by
+    rw [hn1, hn2, hn3, hdda]
+    ring
+  have hc3 : gac * n1 + gbc * n2 + gc * n3 = gc * dda := by
+    rw [hn1, hn2, hn3, hdda]
+    ring
+  have hdelt : deltaX ga gb gc (gb + gc - 2 * gbc) (ga + gc - 2 * gac)
+      (ga + gb - 2 * gab) = 4 * dda := by
+    simp only [deltaX]
+    rw [hdda]
+    ring
+  have hrho : rhoX ga gb gc (gb + gc - 2 * gbc) (ga + gc - 2 * gac)
+      (ga + gb - 2 * gab) = 4 * (ga * n1 + gb * n2 + gc * n3) := by
+    simp only [rhoX]
+    rw [hn1, hn2, hn3]
+    ring
+  -- distance links
+  have dA : dist v0 v1 ^ 2 = ga := by
+    rw [hga, real_inner_self_eq_norm_sq, dist_eq_norm v0 v1,
+      show (v0 : V3) - v1 = -(v1 - v0) from by abel, norm_neg]
+  have dB : dist v0 v2 ^ 2 = gb := by
+    rw [hgb, real_inner_self_eq_norm_sq, dist_eq_norm v0 v2,
+      show (v0 : V3) - v2 = -(v2 - v0) from by abel, norm_neg]
+  have dC : dist v0 v3 ^ 2 = gc := by
+    rw [hgc, real_inner_self_eq_norm_sq, dist_eq_norm v0 v3,
+      show (v0 : V3) - v3 = -(v3 - v0) from by abel, norm_neg]
+  have d12 : dist v1 v2 ^ 2 = ga + gb - 2 * gab := by
+    rw [dist_eq_norm v1 v2, show (v1 : V3) - v2 = (v1 - v0) - (v2 - v0) from by abel,
+      ← real_inner_self_eq_norm_sq, hgram (v1 - v0) (v2 - v0), ← hga, ← hgb, ← hgab]
+  have d13 : dist v1 v3 ^ 2 = ga + gc - 2 * gac := by
+    rw [dist_eq_norm v1 v3, show (v1 : V3) - v3 = (v1 - v0) - (v3 - v0) from by abel,
+      ← real_inner_self_eq_norm_sq, hgram (v1 - v0) (v3 - v0), ← hga, ← hgc, ← hgac]
+  have d23 : dist v2 v3 ^ 2 = gb + gc - 2 * gbc := by
+    rw [dist_eq_norm v2 v3, show (v2 : V3) - v3 = (v2 - v0) - (v3 - v0) from by abel,
+      ← real_inner_self_eq_norm_sq, hgram (v2 - v0) (v3 - v0), ← hgb, ← hgc, ← hgbc]
+  -- Δ > 0 via the PA18 Cayley–Menger bridge
+  have hDpos : 0 < dda := by
+    have hd : 0 < deltaX (dist v0 v1 ^ 2) (dist v0 v2 ^ 2) (dist v0 v3 ^ 2)
+        (dist v2 v3 ^ 2) (dist v1 v3 ^ 2) (dist v1 v2 ^ 2) := by
+      rw [← delta_delta_x]
+      exact (POS_EQ_NOT_COPLANANR v0 v1 v2 v3).mpr
+        (fun hca => hnc (coplanar_eq_coplanar_alt.mpr hca))
+    rw [dA, dB, dC, d23, d13, d12, hdelt] at hd
+    linarith
+  -- Cramer weights tᵢ = nᵢ / (2Δ)
+  obtain ⟨t1, ht1⟩ : ∃ x, x = n1 / (2 * dda) := ⟨_, rfl⟩
+  obtain ⟨t2, ht2⟩ : ∃ x, x = n2 / (2 * dda) := ⟨_, rfl⟩
+  obtain ⟨t3, ht3⟩ : ∃ x, x = n3 / (2 * dda) := ⟨_, rfl⟩
+  -- the Cramer column identities in weight form
+  have hdda0 : dda ≠ 0 := ne_of_gt hDpos
+  have col1 : t1 * ga + t2 * gab + t3 * gac = ga / 2 := by
+    rw [ht1, ht2, ht3]
+    field_simp
+    linear_combination hc1
+  have col2 : t1 * gab + t2 * gb + t3 * gbc = gb / 2 := by
+    rw [ht1, ht2, ht3]
+    field_simp
+    linear_combination hc2
+  have col3 : t1 * gac + t2 * gbc + t3 * gc = gc / 2 := by
+    rw [ht1, ht2, ht3]
+    field_simp
+    linear_combination hc3
+  -- explicit circumcenter witness q = (t1•e1 + t2•e2 + t3•e3) +ᵥ v0
+  set q : V3 := (t1 • (v1 - v0) + t2 • (v2 - v0) + t3 • (v3 - v0)) +ᵥ v0 with hqdef
+  have hx0 : (q : V3) - v0 = t1 • (v1 - v0) + t2 • (v2 - v0) + t3 • (v3 - v0) := by
+    rw [hqdef, vadd_eq_add]
+    abel
+  -- inner products of (q - v0) against the edge vectors
+  have M1 : inner ℝ ((q : V3) - v0) (v1 - v0) = ga / 2 := by
+    rw [hx0]
+    simp only [inner_add_left, real_inner_smul_left]
+    rw [real_inner_comm (v1 - v0) (v2 - v0), real_inner_comm (v1 - v0) (v3 - v0),
+      ← hga, ← hgab, ← hgac]
+    exact col1
+  have M2 : inner ℝ ((q : V3) - v0) (v2 - v0) = gb / 2 := by
+    rw [hx0]
+    simp only [inner_add_left, real_inner_smul_left]
+    rw [real_inner_comm (v2 - v0) (v3 - v0), ← hgab, ← hgb, ← hgbc]
+    exact col2
+  have M3 : inner ℝ ((q : V3) - v0) (v3 - v0) = gc / 2 := by
+    rw [hx0]
+    simp only [inner_add_left, real_inner_smul_left, ← hgac, ← hgbc, ← hgc]
+    exact col3
+  -- equidistance of q from the four vertices
+  have nA : ‖v1 - v0‖ ^ 2 = ga := by rw [hga, real_inner_self_eq_norm_sq]
+  have nB : ‖v2 - v0‖ ^ 2 = gb := by rw [hgb, real_inner_self_eq_norm_sq]
+  have nC : ‖v3 - v0‖ ^ 2 = gc := by rw [hgc, real_inner_self_eq_norm_sq]
+  have nrm1 : ‖(q : V3) - v1‖ ^ 2 = ‖(q : V3) - v0‖ ^ 2 := by
+    have e : ((q : V3) - v1) = ((q : V3) - v0) - (v1 - v0) := by abel
+    have e2 : ‖((q : V3) - v0) - (v1 - v0)‖ ^ 2
+        = ‖(q : V3) - v0‖ ^ 2 + ‖v1 - v0‖ ^ 2
+          - 2 * inner ℝ ((q : V3) - v0) (v1 - v0) := by
+      simp only [← real_inner_self_eq_norm_sq, hgram (q - v0) (v1 - v0)]
+    rw [e, e2, M1, nA]
+    ring
+  have nrm2 : ‖(q : V3) - v2‖ ^ 2 = ‖(q : V3) - v0‖ ^ 2 := by
+    have e : ((q : V3) - v2) = ((q : V3) - v0) - (v2 - v0) := by abel
+    have e2 : ‖((q : V3) - v0) - (v2 - v0)‖ ^ 2
+        = ‖(q : V3) - v0‖ ^ 2 + ‖v2 - v0‖ ^ 2
+          - 2 * inner ℝ ((q : V3) - v0) (v2 - v0) := by
+      simp only [← real_inner_self_eq_norm_sq, hgram (q - v0) (v2 - v0)]
+    rw [e, e2, M2, nB]
+    ring
+  have nrm3 : ‖(q : V3) - v3‖ ^ 2 = ‖(q : V3) - v0‖ ^ 2 := by
+    have e : ((q : V3) - v3) = ((q : V3) - v0) - (v3 - v0) := by abel
+    have e2 : ‖((q : V3) - v0) - (v3 - v0)‖ ^ 2
+        = ‖(q : V3) - v0‖ ^ 2 + ‖v3 - v0‖ ^ 2
+          - 2 * inner ℝ ((q : V3) - v0) (v3 - v0) := by
+      simp only [← real_inner_self_eq_norm_sq, hgram (q - v0) (v3 - v0)]
+    rw [e, e2, M3, nC]
+    ring
+  have dd1 : dist (q : V3) v1 = dist (q : V3) v0 := by
+    rw [dist_eq_norm, dist_eq_norm]
+    exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp nrm1
+  have dd2 : dist (q : V3) v2 = dist (q : V3) v0 := by
+    rw [dist_eq_norm, dist_eq_norm]
+    exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp nrm2
+  have dd3 : dist (q : V3) v3 = dist (q : V3) v0 := by
+    rw [dist_eq_norm, dist_eq_norm]
+    exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp nrm3
+  have hcd : ∃ c : ℝ, ∀ w ∈ ({v0, v1, v2, v3} : Set V3), dist (q : V3) w = c := by
+    refine ⟨dist (q : V3) v0, ?_⟩
+    rintro w (rfl | rfl | rfl | rfl)
+    · rfl
+    · exact dd1
+    · exact dd2
+    · exact dd3
+  -- q sits on the affine hull
+  have hdir : (affineSpan ℝ ({v0, v1, v2, v3} : Set V3)).direction
+      = Submodule.span ℝ ({v1 - v0, v2 - v0, v3 - v0} : Set V3) := by
+    rw [direction_affineSpan,
+      vectorSpan_eq_span_vsub_set_right ℝ (show v0 ∈ ({v0, v1, v2, v3} : Set V3) from by simp)]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro p ⟨z, hz, rfl⟩
+      rcases hz with rfl | rfl | rfl | rfl
+      · simp
+      · exact Submodule.subset_span (by simp)
+      · exact Submodule.subset_span (by simp)
+      · exact Submodule.subset_span (by simp)
+    · rw [Submodule.span_le]
+      rintro p (rfl | rfl | rfl)
+      · exact Submodule.subset_span ⟨v1, by simp, rfl⟩
+      · exact Submodule.subset_span ⟨v2, by simp, rfl⟩
+      · exact Submodule.subset_span ⟨v3, by simp, rfl⟩
+  have h1m : t1 • (v1 - v0) ∈ Submodule.span ℝ ({v1 - v0, v2 - v0, v3 - v0} : Set V3) :=
+    Submodule.smul_mem _ t1 (Submodule.subset_span (by simp))
+  have h2m : t2 • (v2 - v0) ∈ Submodule.span ℝ ({v1 - v0, v2 - v0, v3 - v0} : Set V3) :=
+    Submodule.smul_mem _ t2 (Submodule.subset_span (by simp))
+  have h3m : t3 • (v3 - v0) ∈ Submodule.span ℝ ({v1 - v0, v2 - v0, v3 - v0} : Set V3) :=
+    Submodule.smul_mem _ t3 (Submodule.subset_span (by simp))
+  have hxmem : t1 • (v1 - v0) + t2 • (v2 - v0) + t3 • (v3 - v0)
+      ∈ (affineSpan ℝ ({v0, v1, v2, v3} : Set V3)).direction := by
+    rw [hdir]
+    exact Submodule.add_mem _ (Submodule.add_mem _ h1m h2m) h3m
+  have hqmem : (q : V3) ∈ (affineSpan ℝ ({v0, v1, v2, v3} : Set V3) : Set V3) :=
+    AffineSubspace.vadd_mem_of_mem_direction hxmem
+      (subset_affineSpan ℝ ({v0, v1, v2, v3} : Set V3) (by simp))
+  -- q is THE circumcenter; OAPVION2 hands radV to it
+  have hqcc : (q : V3) = circumcenter ({v0, v1, v2, v3} : Set V3) :=
+    OAPVION3_concl _ haff q hqmem hcd
+  have hR := OAPVION2_concl ({v0, v1, v2, v3} : Set V3) haff v0 (by simp)
+  rw [← hqcc] at hR
+  -- the squared circumradius as a Cramer quotient
+  have Xinner : ∀ y : V3, inner ℝ ((q : V3) - v0) y
+      = t1 * inner ℝ (v1 - v0) y + t2 * inner ℝ (v2 - v0) y
+        + t3 * inner ℝ (v3 - v0) y := by
+    intro y
+    rw [hx0]
+    simp only [inner_add_left, real_inner_smul_left]
+  have M1' : inner ℝ (v1 - v0) ((q : V3) - v0) = ga / 2 := by
+    rw [real_inner_comm]
+    exact M1
+  have M2' : inner ℝ (v2 - v0) ((q : V3) - v0) = gb / 2 := by
+    rw [real_inner_comm]
+    exact M2
+  have M3' : inner ℝ (v3 - v0) ((q : V3) - v0) = gc / 2 := by
+    rw [real_inner_comm]
+    exact M3
+  have nfin : ‖(q : V3) - v0‖ ^ 2
+      = (ga * n1 + gb * n2 + gc * n3) / (4 * dda) := by
+    rw [← real_inner_self_eq_norm_sq, Xinner, M1', M2', M3', ht1, ht2, ht3]
+    ring
+  -- final assembly
+  rw [hR, dist_eq_norm, nfin]
+  simp only [rad2XP25, rad2X, dA, dB, dC, d23, d13, d12, hdelt, hrho]
+  ring
 
 /-- HOL `DIST_IMP_COLLINEAR`. -/
 theorem DIST_IMP_COLLINEAR (u0 u1 u2 : V3)
@@ -3842,11 +4187,11 @@ theorem radius_le_circumradius_all (u0 u1 u2 u3 : V3)
 `¬Coplanar` 支喂 `radius_le_circumradius_all`（弦长 ≤ 2r，六连）与
 `coplanar_delta_y`（delta 合取与该 Iff 逐字同形，`.mp` 直接实例化）与
 `NOT_COPLANAR_IMP_CARD4_ALT`（4 互异 → packing 分离给 `2 ≤ dist` 六连）；
-`rad2_y` 支经 `GDRQXLGv3`（radV² ↔ rad2XP25 平方长解析桥）+ 弦不等式。
+`rad2_y` 支经 `GDRQXLGv3`（radV² ↔ rad2XP25 平方长解析桥，2026-10-13 r5 波
+转真：外心-Cramer 代数，见其 docstring）+ 弦不等式。
 `barV` 支走 `BARV_SUBSET` 给四点 ∈ V。债走账本：消费在库具名记账件
 `CC_4_PROPS`（其上游 PA18 `MCELL4_EDGE_FIRST`/`STEM_EDGEX` edge-rigidity kit
-未落地，本文件在案）与 `GDRQXLGv3`（radV² 桥，本文件 :1105 在案）；本波
-零新增记账行。 -/
+未落地，本文件在案）；`GDRQXLGv3` 已 r5 同波转真出账（本体消费处不改）。 -/
 theorem MCELL4_DOMAIN (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
     (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V) (hs : saturated V)
     (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V) (h1 : u1 ∈ V)
@@ -6143,14 +6488,65 @@ order flattened; all giants) -/
 theorem EDGE_LE_2RAD {x1 x2 x3 x4 x5 x6 : ℝ} (hd : 0 < deltaX x1 x2 x3 x4 x5 x6)
     (h4 : 0 < x4) (h5 : 0 < x5) (h6 : 0 < x6) (hup : 0 < upsX x4 x5 x6) :
     x4 ≤ 4 * rad2XP25 x1 x2 x3 x4 x5 x6 := by
-  sorry
+  -- RHUFIIB 型恒等式（leg/collect_geom2.hl:1510）：rho·ups = chi² + 4·delta·x4x5x6
+  have hchi0 : (x4 * x5 * x6) * (4 * deltaX x1 x2 x3 x4 x5 x6)
+      ≤ upsX x4 x5 x6 * rhoX x1 x2 x3 x4 x5 x6 := by
+    have hid : rhoX x1 x2 x3 x4 x5 x6 * upsX x4 x5 x6
+        = (-x1*x4*x4 + x1*x4*x5 + x2*x4*x5 - x2*x5*x5 + x1*x4*x6 + x3*x4*x6
+            + x2*x5*x6 + x3*x5*x6 - 2*x4*x5*x6 - x3*x6*x6) ^ 2
+          + 4 * deltaX x1 x2 x3 x4 x5 x6 * (x4 * x5 * x6) := by
+      simp only [rhoX, deltaX, upsX]
+      ring
+    have hcomm : 4 * deltaX x1 x2 x3 x4 x5 x6 * (x4 * x5 * x6)
+        = (x4 * x5 * x6) * (4 * deltaX x1 x2 x3 x4 x5 x6) := by ring
+    have hsq := sq_nonneg ((-x1*x4*x4 + x1*x4*x5 + x2*x4*x5 - x2*x5*x5 + x1*x4*x6
+      + x3*x4*x6 + x2*x5*x6 + x3*x5*x6 - 2*x4*x5*x6 - x3*x6*x6 : ℝ))
+    linarith
+  -- 面半弦：4x5x6 − ups = (x5+x6−x4)² ≥ 0
+  have hface : upsX x4 x5 x6 ≤ 4 * x5 * x6 := by
+    have h : 4 * x5 * x6 - upsX x4 x5 x6 = (x5 + x6 - x4) ^ 2 := by
+      simp only [upsX]
+      ring
+    have hsq := sq_nonneg ((x5 + x6 - x4 : ℝ))
+    linarith
+  have hchord : x4 * upsX x4 x5 x6 ≤ 4 * x4 * x5 * x6 := by
+    calc x4 * upsX x4 x5 x6 ≤ x4 * (4 * x5 * x6) :=
+          mul_le_mul_of_nonneg_left hface (le_of_lt h4)
+      _ = 4 * x4 * x5 * x6 := by ring
+  have hchord' : x4 ≤ 4 * x4 * x5 * x6 / upsX x4 x5 x6 :=
+    (le_div_iff₀ hup).mpr hchord
+  have hd0 : 0 < 4 * deltaX x1 x2 x3 x4 x5 x6 := by linarith
+  have heta : x4 * x5 * x6 / upsX x4 x5 x6
+      ≤ rhoX x1 x2 x3 x4 x5 x6 / (4 * deltaX x1 x2 x3 x4 x5 x6) := by
+    rw [div_le_div_iff₀ hup hd0]
+    linarith [hchi0]
+  calc x4 ≤ 4 * x4 * x5 * x6 / upsX x4 x5 x6 := hchord'
+    _ = 4 * (x4 * x5 * x6 / upsX x4 x5 x6) := by ring
+    _ ≤ 4 * (rhoX x1 x2 x3 x4 x5 x6 / (4 * deltaX x1 x2 x3 x4 x5 x6)) :=
+          mul_le_mul_of_nonneg_left heta (by norm_num)
+    _ = 4 * rad2XP25 x1 x2 x3 x4 x5 x6 := by
+          simp only [rad2XP25, rad2X]
+          field_simp
 
 /-- HOL `RAD2_Y_SQRT8`. -/
 theorem RAD2_Y_SQRT8 {y1 y2 y3 y5 y6 : ℝ} (h5 : 2 ≤ y5) (h6 : 2 ≤ y6)
     (h5' : y5 < 4) (h6' : y6 < 4)
     (hd : 0 < deltaY y1 y2 y3 (Real.sqrt 8) y5 y6) :
     2 ≤ rad2YP25 y1 y2 y3 (Real.sqrt 8) y5 y6 := by
-  sorry
+  have hs8 : (Real.sqrt 8) * (Real.sqrt 8) = 8 :=
+    Real.mul_self_sqrt (by norm_num : (0:ℝ) ≤ 8)
+  have hd' : 0 < deltaX (y1 * y1) (y2 * y2) (y3 * y3) 8 (y5 * y5) (y6 * y6) := by
+    have h : 0 < deltaY y1 y2 y3 (Real.sqrt 8) y5 y6 := hd
+    rw [deltaY, hs8] at h
+    exact h
+  have hr : rad2YP25 y1 y2 y3 (Real.sqrt 8) y5 y6
+      = rad2XP25 (y1 * y1) (y2 * y2) (y3 * y3) 8 (y5 * y5) (y6 * y6) := by
+    rw [rad2YP25, hs8]
+  rw [hr]
+  have h8 : (0:ℝ) < 8 := by norm_num
+  have e := EDGE_LE_2RAD hd' h8 (by positivity) (by positivity)
+    (UPS_X8_POS h5 h5' h6 h6')
+  linarith
 
 /-- HOL `DIHV_EQ_0_PI_EQ_COPLANAR_ALT`.  Proof: `dihV = 0` forces
 `azim v0 v1 w1 w2 = 0` (below `pi` via AZIM_DIHV_SAME; above `pi` the
