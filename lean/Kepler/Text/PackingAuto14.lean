@@ -39,13 +39,16 @@ Encoding notes.
 - `MXI_EXPLICIT` (marchal2.hl:2516): MERGED 2026-09-19 — PA12's proved
   public `MXI_EXPLICIT` is importable; the unused private `mxiExplicit_p14`
   copy was deleted (PA11 still holds its own private copy, out of scope).
-- Proof status (2026-09-30 wave): the five supporting lemmas are proved;
-  `ynhyjit_p14` is closed for i = 2 (the LEFT_ACTION bridge, via the
-  private 01-swap kit below) and i = 4 (contradiction); i = 3 remains
-  `sorry`ed (the `LEFT_ACTION_LIST_PROPERTIES` S₃ giant). The two public
-  named bridges `LEFT_ACTION_LIST_1_PROPERTIES_ALT` and
-  `MCELL2_PERMUTE_01` are proved (sorry-free; the LEFT_ACTION copy carries
-  the PA10-style tail-fixedness side condition, see its ENCODING-FIX note).
+- Proof status (2026-09-30 wave; 措辞降级 2026-10-14 #print axioms 核查):
+  the five supporting lemmas are proved; `ynhyjit_p14` is closed for
+  i = 2 (the LEFT_ACTION bridge, via the private 01-swap kit below) and
+  i = 4 (contradiction); i = 3 remains `sorry`ed (the
+  `LEFT_ACTION_LIST_PROPERTIES` S₃ giant). The two public named bridges
+  `LEFT_ACTION_LIST_1_PROPERTIES_ALT` and `MCELL2_PERMUTE_01` are **NOT
+  sorry-free**（2026-10-14 核查 axiom 面均含 sorryAx）: 二者消费
+  `p14_swap_pack`，其 i = 3 情形即上述 S₃ giant `sorry`（:763）——
+  "证法落地、债经 01-swap kit 上行"；the LEFT_ACTION copy carries
+  the PA10-style tail-fixedness side condition, see its ENCODING-FIX note.
   `QZKSYKG1`/`QZKSYKG2` remain `sorry`ed with NEEDS accounting (statements
   now HOL-faithful via SF-20/38; k ≤ 3 is the LEFT_ACTION_LIST_PROPERTIES
   S₃ giant; k = 4 is the YIFVQDV_1 giant; ~1900 HOL lines for QZKSYKG2).
