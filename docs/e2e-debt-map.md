@@ -269,6 +269,36 @@ quad×5+hard 117/117 零发散端到端）。
 Assembly 零遗产重发）+ 周/月配额帽（1310，三线阵亡：A6 柱②钥匙件 salvage
 `0ab0bc73`、TameList10 未写、W3 在 /tmp）——**周帽重置后按队列续波**。
 
+## 2026-10-15 增量节三（mega 八线全收日：楔形证书面清零 / nli 接线地基 / SF-40 / W7 内核武器；环境事故+负载治理日）
+
+**结构性突破（按 reachable 口径）**：
+- **楔形证书面（textCapstone packing 支的 mcell4 环节）阻塞面清零**：CFFONNL
+  十槽装配真证（内部余 pa18_ccCell_swap/ZWVCBMN 两笔已记账）→ 当日连续收割
+  MCELL4_LEAF_S_LEAF + MCELL4_DOMAIN + GDRQXLGv3 → S_LEAF_CARD2 / LEAF_DOMAIN /
+  LEAF_RANK_ONTO 全链解锁。剩余总闸 = PA18 edge-rigidity GIANT kit
+  （MCELL4_EDGE_FIRST/STEM_EDGEX，leaf_cell.hl:3281-3432）——落地后
+  cc_4_cc_ke4→cc_4_UL→CC_4_PROPS→real_model_azim_c4 一整片批量装配。
+- **nli 28+127 接线波地基全就绪**：PA21 bank 具名投影 62/62（禁止裸位置链
+  章程 §6.5 清账）→ Assembly nliPackNonlinearRest 62/62 展开（3 条真闭合：
+  rest 2/4/60，59 具名骨架待 G4 证书发射+§2a 查表粘合）+ 13 枚裸链位投影
+  （六分接口 ×6 + Contravening ×7，消费点改写留待语句冻结面解除波）。
+- **merge-ineq 通道清偿**：lindihpi/dih_gt_pi2/gamma3_x_gamma3f 四件 +
+  LA11 同根十件（SF-40 def 纠正后全转真）；PA25 MERGED 双件转真；
+  TEWNSCJ_MERGED 唯余 PA3 opaque 常数桥（a_spine5/b_spine5 ↔ 数值体，
+  Flyspeck_constants 级，待 SF 立项）——桥落十行机械收口。
+- **mono 路线 A 双级推进**：W6a Python 原型 13/13 盒实证翻 POS（锚未达，
+  根因=df-enclosure 16× 污染 → 先紧 enclosure：W6b 方案 A √ mantissa 填充
+  待拍板）→ W7 Lean 内核侧全链（evalReal_deriv + checkMonoCorner 全 decide
+  总装 + --mono-lean 重放发射），单盒端到端绿；W8 批量化（sqrt re-bake/
+  分树/flat 维）。
+- **B1 链**：批 15（Hypermap_iso 桥章）+批 16（quotient_list 章）→ HOL
+  :9903+收束件；批 17 起点 :10100，前置 = transform 定义层（tame_defs2.hl
+  :435-472）随旗塔波进场。
+
+**账**：DEBT 44,646→44,674（nli 59 具名骨架细粒度记账债压过填实净额；
+PA25 −22/PA18 −22/LA11 −10/Assembly +58）。SF-40 应用（用户批准）。
+C1.7 长尾自治（A 54 绿/12 非 ok @B067；B 38 绿/4 非 ok @B039）。
+
 ## 2026-10-13 增量节二（三线全收日：TameSpine 三连批 / A10 帽石 / G5 收官 / W3 四工位；用户令收波停等）
 
 承上节（`fcd80a84` 后计九笔 + root runner 长跑账）。

@@ -1,4 +1,4 @@
-# 项目总进度（Status）— 2026-10-13
+# 项目总进度（Status）— 2026-10-15
 
 > **⚠️ 环境变更（2026-09-28）：旧生产服务器（128 核/503G）报废**，磁盘不可恢复。
 > 仅存本机外部存储的产物丢失（cert549_tight.json / LP 43,078 持久化产物 / bb_arb 重跑
@@ -329,6 +329,53 @@ P1-P5 分段流水攻克）。**polyhedron.hl 100% 达成（71/71 定理零 sorr
 2. 批次闭合标准：该批全部定理零 sorry + 根模块构建绿 + 陈述保真抽查；
 3. 自动化 harness 的提交由机械闸背书 + 主 agent 审计兜底；人工派工的提交由主 agent 逐块验收。
 
+
+## 2026-10-14/15 mega 波（八线两班全收日 + 环境事故 + 负载治理）
+
+**Lean 侧 15 提交十四闸全绿**（0f4999e8..f40cfe4c），两批八线全收：
+- **PA18 双波**：ZASUVOR+CFFONNL kit（`bdd93009`，ZASUVOR 定义闭真证零上游债）→
+  **CFFONNL C2+C3 收官**（`6c37299c`，+519）——CONVEX_PLANE_INTER 第三击
+  （WithLp 分量级 funext+ring 收口）+ CONVEX_R3_INTER（**纠前任 NEEDS 处方之
+  错**：max-形 s 会出负权，改 HOL 同款 abs-形）+ CFFONNL 十槽全装配 =
+  **MCELL4_LEAF_S_LEAF 阻塞面清零**；C4 侦察判死 MHFTTZN1 消除路线（通用
+  VoronoiList-affDim 桥不存在）。grep 口径 64→42。
+- **PA25 四波**（123→101）：coplanar 消费（`488f688f`）→ MERGED 双件转真
+  （`239e9c53`；TEWNSCJ 卡 PA3 opaque 常数桥待 SF 立项）→ **楔形双件
+  MCELL4_LEAF_S_LEAF+MCELL4_DOMAIN**（`5c09ab9f`，阻塞清零当日收割）→
+  **GDRQXLGv3 解析桥**（`0509d5dc`，rad2 支升真+WEDGE3_Y4 rad2 支就绪）。
+- **PA21+Assembly 接线地基**：merge-ineq 四件+三投影（`b5f64641`，11 新件全
+  零债）→ **bank 具名投影 62/62**（`ed9b939a`）→ **Assembly
+  nliPackNonlinearRest 62/62 展开**（`f79c0fb4`，3 条真闭合零债 rest
+  2/4/60 + 59 具名骨架 + 13 裸链位投影，nli 28+127 主波就绪）。
+- **SF-40**（`72dcf9a1`，用户批准）：LA11 `x1DeltaY_p11` def 体误抄纠正
+  （旧体下冻结定理为假命题有反例）+ atn2 同根十件填实（36→26）。
+- **措辞诚实化 ×2**（`a23b86dc`/`3d2e9b64`）：PA21 MCELL2_SOL、PA14 双桥的
+  "PROVED/sorry-free" 虚标经 #print axioms 核查降级。
+- **Phase 4 双武器**：W6a mono 原型（`17474eae`，**13/13 盒实证翻 POS**，锚
+  未达=df-enclosure 16× 污染先紧 enclosure；顺手抓 W5 div 反号真 bug）→
+  **W7 evalReal 链式法则**（`9b191a85`，MonoCorner.lean 880 行八主定理零债，
+  checkMonoCorner 全 decide 总装 + `--mono-lean` 内核重放单盒端到端；W8
+  批量化接续：sqrt re-bake/分树/flat 维）。
+- **TameSpine 双批**：批 15（`c4cf64bb`，Hypermap_iso 桥章）+ 批 16
+  （`f40cfe4c`，quotient_list 章 :9375-:9903，9 真证+7 记账）；B1 链至
+  HOL :9903+收束件；批 17 起点 :10100（前置 transform 定义层）。
+- **DEBT 44,646→44,674**：nli 59 具名骨架（细粒度记账债）压过填实净额
+  （PA25 −22 / PA18 −22 / LA11 −10 / Assembly +58 记账）。
+
+**环境事故 + 负载治理（双入册）**：mathlib 删包事故（根因链：车道软链
+packages 进隔离 clone → lake URL 校验 rm -rf；深层：全局 gitconfig
+`insteadOf` https→git@ 致 lake 判 URL 变更）——确定性恢复（浅克隆
+@905b9581 + cache 8639 oleans + 冒烟绿 20s），新纪律：**隔离 clone 禁软链
+packages，cp -Rc only**。负载两轮：renice 降载（p4asm 九工人 nice 15）→
+B 道 nohup nice-5 继承饿死（starvation 3× 实测，renice 无法升优先级）→
+**fresh 重启 nice 0 + --timeout-min 180 平权续跑**；假超时账目手术（B031-033
+剔除重队）编排者亲办。
+
+**C1.7 长尾（自治在跑）**：A 道 54 绿/12 非 ok @B067；B 道 38 绿/4 非 ok
+@B039；root runner 独立环境照常。跑空后编排者统一假超时重队。
+
+**收口令执行**：两批八线全收零在飞 Lean 线，停等用户指令。待拍板三项：
+W6b 方案 A（√ mantissa 填充）、TEWNSCJ PA3 opaque 桥 SF 立项、W8 mono 批量化。
 
 ## 2026-10-13 波（三线全收日 + 收波停等令）
 

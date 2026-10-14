@@ -866,3 +866,36 @@ docstring 明写 Compiled runs only），`by decide` 只吃消费 baked 证书�
 发现证书三元组 → bake 进 TMParams.sqrtCerts → stage-B decide，NEG 叶收
 `= false` 证 AGREEMENT）；直接 decide 探针=结构性不可能（13 定理实测全
 reduction got stuck），原生 exe=死路（连带 Mathlib 全量原生编译天级）。
+
+**编排者/环境族（2026-10-15 mega 波增补）**：㉚**隔离 clone 禁软链/共享
+.lake/packages**——lake 物化依赖时按 URL/哈希校验，直接 `rm -rf` 链接目标
+（本日删主仓 mathlib 事故主因）；必须 `cp -Rc`（APFS clonefile 秒级）文件级
+拷贝或让 clone 自行拉依赖；㉛**lake trace 跨工作区不迁移**——拷贝 .lake/build
+仍全量判 stale 并重编译 decide 巨石件（OOM 源），金标 `lake build` 只能在本
+工作区或静默机跑，touch/mtime 捷径全无效（trace 含环境指纹）；应急仪器=
+全文件编译探针 `lake env lean -o <平铺模块路径>.olean <文件>`（写嵌套路径
+不报错但 import 不加载）；㉜**"URL has changed" 删包重克隆**——全局
+gitconfig `insteadOf`（https→git@）使 manifest URL 与实际 origin 失配；
+fresh fetch 后必核 `.git/config` origin 为 manifest 形；恢复 SOP=杀光并发
+clone → 单次确定性浅克隆 pinned tag（核对 rev）→ `lake exe cache get!` →
+小模块冒烟；㉝**多车道并存期共享仓 .lake 的依赖变更（clone/update/fetch）
+编排者串行独占**——并发 `lake env lean` 触发自动重取=删包竞态；㉞**nohup
+后台挂法继承 nice 值**（nice 5 → 三倍饥饿实测），有墙钟死线的计算车道必须
+fresh shell 启动并核验子进程 NI=0；非 root 不能升优先级，**重启是唯一重置
+手段**；㉟**墙钟死线在饱和下成批假超时**（starvation 比率=CPU 烧录/墙钟
+可判），死线按"纯 CPU 上限×饱和系数"放大（B 道修正案 --timeout-min 180）；
+假超时账目手术=从 results 剔条使 --resume 重做。
+
+**工人 tactic 族（2026-10-15 精选增补）**：㊱**binop% 组合项**（s1•a+…+s4•d
+型）rw/kabstract 失配、exact 级 whnf 爆心跳——det 级收口（chiMsb_det×2 +
+Matrix.det_fin_three simp 集 + ring）唯一稳路线；带除法 V3 组合等式走
+`WithLp.ofLp_injective + funext + simp only [ofLp_*] + ring`；㊲**rfl-rcases
+消错变量**（`obtain rfl | rfl`/`rcases hz with rfl` 在双变量 in-scope 时消的
+是定理级变量）——一律 h-pattern + `rw`；仅等式一侧为非变量原子时 rfl 才
+安全；㊳**`Function.update σ j (σ j) ≠ σ`**（update_self 是定理非 rfl）+
+纯 lambda def 的 `simp only` 不展开（无方程引理）——n 维 mono/望远镜类证明
+必建显式桥引理；㊴**π 锚粒度**——真余量 <3.3e-7 的数值件必须
+`Real.pi_gt_d20`（d6 不够，atn_sqrt_39609 实例余量 2.2e-7）；㊵**符号验证
+双律**——宽度型对拍抓不到符号翻转（W5 div 分子反号漏网），"已验证"的符号
+微分必须过有限差分对拍；内核 Dyadic 是 repr-敏感的（同值异表示宽度差 10⁹），
+精确分数镜像看不见 [s,s+1] 型机制，TM 镜像必须 dyadic 逐位。
