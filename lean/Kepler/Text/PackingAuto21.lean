@@ -2500,6 +2500,301 @@ theorem proj_bank_TXQTPVC (h : pack_nonlinear_non_ox3q1h) : bank_TXQTPVC :=
 theorem proj_bank_TEWNSCJ (h : pack_nonlinear_non_ox3q1h) : bank_TEWNSCJ :=
   h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
 
+/-- Named projection of rest entry 1 `bank_6096597438b`
+(HOL ineq entry `6096597438 b` (ineq.hl:1661)). -/
+theorem proj_bank_6096597438b (h : pack_nonlinear_non_ox3q1h) : bank_6096597438b :=
+  h.2.2.2.1
+
+/-- Named projection of rest entry 2 `bank_6096597438a`
+(HOL ineq entry `6096597438 a` (ineq.hl:1650)). -/
+theorem proj_bank_6096597438a (h : pack_nonlinear_non_ox3q1h) : bank_6096597438a :=
+  h.2.2.2.2.1
+
+/-- Named projection of rest entry 3 `bank_1965189142a`
+(HOL ineq entry `1965189142 a` (ineq.hl:1598)). -/
+theorem proj_bank_1965189142a (h : pack_nonlinear_non_ox3q1h) : bank_1965189142a :=
+  h.2.2.2.2.2.1
+
+/-- Named projection of rest entry 4 `bank_1965189142x34`
+(HOL ineq entry `1965189142 34` (ineq.hl:1587)). -/
+theorem proj_bank_1965189142x34 (h : pack_nonlinear_non_ox3q1h) : bank_1965189142x34 :=
+  h.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 5 `bank_JSPEVYT`
+(HOL ineq entry `JSPEVYT` (ineq.hl:1495)). -/
+theorem proj_bank_JSPEVYT (h : pack_nonlinear_non_ox3q1h) : bank_JSPEVYT :=
+  h.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 6 `bank_QITNPEA4003532128a`
+(HOL ineq entry `QITNPEA 4003532128 a` (ineq.hl:1290)). -/
+theorem proj_bank_QITNPEA4003532128a (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEA4003532128a :=
+  h.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 9 `bank_QITNPEA3725403817`
+(HOL ineq entry `QITNPEA 3725403817` (ineq.hl:1221)). -/
+theorem proj_bank_QITNPEA3725403817 (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEA3725403817 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 10 `bank_QITNPEAv24003532128`
+(HOL ineq entry `QITNPEAv2 4003532128` (ineq.hl:1193)). -/
+theorem proj_bank_QITNPEAv24003532128 (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEAv24003532128 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 11 `bank_PEMKWU`
+(HOL ineq entry `PEMKWKU` (ineq.hl:1169)). -/
+theorem proj_bank_PEMKWU (h : pack_nonlinear_non_ox3q1h) : bank_PEMKWU :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 13 `bank_QITNPEA5400790175b`
+(HOL ineq entry `QITNPEA 5400790175 b` (ineq.hl:1121)). -/
+theorem proj_bank_QITNPEA5400790175b (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEA5400790175b :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 14 `bank_QITNPEA5400790175a`
+(HOL ineq entry `QITNPEA 5400790175 a` (ineq.hl:1103)). -/
+theorem proj_bank_QITNPEA5400790175a (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEA5400790175a :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 15 `bank_QITNPEA3848804089`
+(HOL ineq entry `QITNPEA 3848804089` (ineq.hl:1059)). -/
+theorem proj_bank_QITNPEA3848804089 (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEA3848804089 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 16 `bank_QITNPEA5814748276`
+(HOL ineq entry `QITNPEA 5814748276` (ineq.hl:1041)). -/
+theorem proj_bank_QITNPEA5814748276 (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEA5814748276 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 17 `bank_QITNPEA6206775865`
+(HOL ineq entry `QITNPEA 6206775865` (ineq.hl:1023)). -/
+theorem proj_bank_QITNPEA6206775865 (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEA6206775865 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 18 `bank_QITNPEA5653753305`
+(HOL ineq entry `QITNPEA 5653753305` (ineq.hl:1004)). -/
+theorem proj_bank_QITNPEA5653753305 (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEA5653753305 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 19 `bank_BIXPCGW9455898160`
+(HOL ineq entry `BIXPCGW 9455898160` (ineq.hl:985)). -/
+theorem proj_bank_BIXPCGW9455898160 (h : pack_nonlinear_non_ox3q1h) : bank_BIXPCGW9455898160 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 20 `bank_FWGKMBZ`
+(HOL ineq entry `FWGKMBZ` (ineq.hl:967)). -/
+theorem proj_bank_FWGKMBZ (h : pack_nonlinear_non_ox3q1h) : bank_FWGKMBZ :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 21 `bank_FHBVYXZb`
+(HOL ineq entry `FHBVYXZ b` (ineq.hl:942)). -/
+theorem proj_bank_FHBVYXZb (h : pack_nonlinear_non_ox3q1h) : bank_FHBVYXZb :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 22 `bank_FHBVYXZa`
+(HOL ineq entry `FHBVYXZ a` (ineq.hl:914)). -/
+theorem proj_bank_FHBVYXZa (h : pack_nonlinear_non_ox3q1h) : bank_FHBVYXZa :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 23 `bank_FHBVYXZv2a`
+(HOL ineq entry `FHBVYXZv2 a` (ineq.hl:888)). -/
+theorem proj_bank_FHBVYXZv2a (h : pack_nonlinear_non_ox3q1h) : bank_FHBVYXZv2a :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 24 `bank_QITNPEA2134082733`
+(HOL ineq entry `QITNPEA 2134082733` (ineq.hl:864)). -/
+theorem proj_bank_QITNPEA2134082733 (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEA2134082733 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 25 `bank_QITNPEA1_2_2`
+(HOL idv `QITNPEA1 2 2 9063653052 A` (ineq.hl:845-862 loop)). -/
+theorem proj_bank_QITNPEA1_2_2 (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEA1_2_2 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 26 `bank_QITNPEA1_2_1`
+(HOL idv `QITNPEA1 2 1 9063653052 A` (ineq.hl:845-862 loop)). -/
+theorem proj_bank_QITNPEA1_2_1 (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEA1_2_1 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 27 `bank_QITNPEA1_2_0`
+(HOL idv `QITNPEA1 2 0 9063653052 A` (ineq.hl:845-862 loop)). -/
+theorem proj_bank_QITNPEA1_2_0 (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEA1_2_0 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 28 `bank_QITNPEA1_1_2`
+(HOL idv `QITNPEA1 1 2 9063653052 A` (ineq.hl:845-862 loop)). -/
+theorem proj_bank_QITNPEA1_1_2 (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEA1_1_2 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 29 `bank_QITNPEA1_1_1`
+(HOL idv `QITNPEA1 1 1 9063653052 A` (ineq.hl:845-862 loop)). -/
+theorem proj_bank_QITNPEA1_1_1 (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEA1_1_1 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 30 `bank_QITNPEA1_1_0`
+(HOL idv `QITNPEA1 1 0 9063653052 A` (ineq.hl:845-862 loop)). -/
+theorem proj_bank_QITNPEA1_1_0 (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEA1_1_0 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 31 `bank_QITNPEA9939613598`
+(HOL ineq entry `QITNPEA 9939613598` (ineq.hl:798)). -/
+theorem proj_bank_QITNPEA9939613598 (h : pack_nonlinear_non_ox3q1h) : bank_QITNPEA9939613598 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 32 `bank_BIXPCGW7274157868a`
+(HOL ineq entry `BIXPCGW 7274157868 a` (ineq.hl:776)). -/
+theorem proj_bank_BIXPCGW7274157868a (h : pack_nonlinear_non_ox3q1h) : bank_BIXPCGW7274157868a :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 33 `bank_BIXPCGWb`
+(HOL ineq entry `BIXPCGW b` (ineq.hl:758)). -/
+theorem proj_bank_BIXPCGWb (h : pack_nonlinear_non_ox3q1h) : bank_BIXPCGWb :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 34 `bank_BIXPCGW1738910218a2`
+(HOL ineq entry `BIXPCGW 1738910218 a2` (ineq.hl:739)). -/
+theorem proj_bank_BIXPCGW1738910218a2 (h : pack_nonlinear_non_ox3q1h) : bank_BIXPCGW1738910218a2 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 35 `bank_BIXPCGW7080972881a2`
+(HOL ineq entry `BIXPCGW 7080972881 a2` (ineq.hl:721)). -/
+theorem proj_bank_BIXPCGW7080972881a2 (h : pack_nonlinear_non_ox3q1h) : bank_BIXPCGW7080972881a2 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 36 `bank_BIXPCGW6652007036a2`
+(HOL ineq entry `BIXPCGW 6652007036 a2` (ineq.hl:701)). -/
+theorem proj_bank_BIXPCGW6652007036a2 (h : pack_nonlinear_non_ox3q1h) : bank_BIXPCGW6652007036a2 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 37 `bank_GLFVCVK4y4subcrit`
+(HOL ineq entry `GLFVCVK4 2477216213 y4subcrit` (ineq.hl:675)). -/
+theorem proj_bank_GLFVCVK4y4subcrit (h : pack_nonlinear_non_ox3q1h) : bank_GLFVCVK4y4subcrit :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 38 `bank_GLFVCVK4y4supercrit`
+(HOL ineq entry `GLFVCVK4 2477216213 y4supercrit` (ineq.hl:649)). -/
+theorem proj_bank_GLFVCVK4y4supercrit (h : pack_nonlinear_non_ox3q1h) : bank_GLFVCVK4y4supercrit :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 39 `bank_GLFVCVK4y4crit`
+(HOL ineq entry `GLFVCVK4 2477216213 y4crit` (ineq.hl:623)). -/
+theorem proj_bank_GLFVCVK4y4crit (h : pack_nonlinear_non_ox3q1h) : bank_GLFVCVK4y4crit :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 40 `bank_GLFVCVK4a8328676778`
+(HOL ineq entry `GLFVCVK4a 8328676778` (ineq.hl:586)). -/
+theorem proj_bank_GLFVCVK4a8328676778 (h : pack_nonlinear_non_ox3q1h) : bank_GLFVCVK4a8328676778 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 41 `bank_GLFVCVK4`
+(HOL ineq entry `GLFVCVK4 2477216213` (ineq.hl:559)). -/
+theorem proj_bank_GLFVCVK4 (h : pack_nonlinear_non_ox3q1h) : bank_GLFVCVK4 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 42 `bank_MKFKQWUhalfwt`
+(HOL ineq entry `MKFKQWU halfwt` (ineq.hl:523)). -/
+theorem proj_bank_MKFKQWUhalfwt (h : pack_nonlinear_non_ox3q1h) : bank_MKFKQWUhalfwt :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 43 `bank_MKFKQWU`
+(HOL ineq entry `MKFKQWU` (ineq.hl:502)). -/
+theorem proj_bank_MKFKQWU (h : pack_nonlinear_non_ox3q1h) : bank_MKFKQWU :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 44 `bank_ZTGIJCF4_1_1_1_1`
+(HOL idv `ZTGIJCF4 1 1 1 1 1821661595` (ineq.hl:486-499 loop)). -/
+theorem proj_bank_ZTGIJCF4_1_1_1_1 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF4_1_1_1_1 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 45 `bank_ZTGIJCF4_1_1_1_0`
+(HOL idv `ZTGIJCF4 1 1 1 0 1821661595` (ineq.hl:486-499 loop)). -/
+theorem proj_bank_ZTGIJCF4_1_1_1_0 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF4_1_1_1_0 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 46 `bank_ZTGIJCF4_1_1_0_1`
+(HOL idv `ZTGIJCF4 1 1 0 1 1821661595` (ineq.hl:486-499 loop)). -/
+theorem proj_bank_ZTGIJCF4_1_1_0_1 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF4_1_1_0_1 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 47 `bank_ZTGIJCF4_1_1_0_0`
+(HOL idv `ZTGIJCF4 1 1 0 0 1821661595` (ineq.hl:486-499 loop)). -/
+theorem proj_bank_ZTGIJCF4_1_1_0_0 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF4_1_1_0_0 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 48 `bank_ZTGIJCF4_1_0_1_1`
+(HOL idv `ZTGIJCF4 1 0 1 1 1821661595` (ineq.hl:486-499 loop)). -/
+theorem proj_bank_ZTGIJCF4_1_0_1_1 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF4_1_0_1_1 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 49 `bank_ZTGIJCF4_1_0_1_0`
+(HOL idv `ZTGIJCF4 1 0 1 0 1821661595` (ineq.hl:486-499 loop)). -/
+theorem proj_bank_ZTGIJCF4_1_0_1_0 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF4_1_0_1_0 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 50 `bank_ZTGIJCF4_1_0_0_1`
+(HOL idv `ZTGIJCF4 1 0 0 1 1821661595` (ineq.hl:486-499 loop)). -/
+theorem proj_bank_ZTGIJCF4_1_0_0_1 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF4_1_0_0_1 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 51 `bank_ZTGIJCF4_1_0_0_0`
+(HOL idv `ZTGIJCF4 1 0 0 0 1821661595` (ineq.hl:486-499 loop)). -/
+theorem proj_bank_ZTGIJCF4_1_0_0_0 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF4_1_0_0_0 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 52 `bank_ZTGIJCF4_0_1_1_1`
+(HOL idv `ZTGIJCF4 0 1 1 1 1821661595` (ineq.hl:486-499 loop)). -/
+theorem proj_bank_ZTGIJCF4_0_1_1_1 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF4_0_1_1_1 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 53 `bank_ZTGIJCF4_0_1_1_0`
+(HOL idv `ZTGIJCF4 0 1 1 0 1821661595` (ineq.hl:486-499 loop)). -/
+theorem proj_bank_ZTGIJCF4_0_1_1_0 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF4_0_1_1_0 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 54 `bank_ZTGIJCF4_0_1_0_1`
+(HOL idv `ZTGIJCF4 0 1 0 1 1821661595` (ineq.hl:486-499 loop)). -/
+theorem proj_bank_ZTGIJCF4_0_1_0_1 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF4_0_1_0_1 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 55 `bank_ZTGIJCF4_0_1_0_0`
+(HOL idv `ZTGIJCF4 0 1 0 0 1821661595` (ineq.hl:486-499 loop)). -/
+theorem proj_bank_ZTGIJCF4_0_1_0_0 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF4_0_1_0_0 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 56 `bank_ZTGIJCF4_0_0_1_1`
+(HOL idv `ZTGIJCF4 0 0 1 1 1821661595` (ineq.hl:486-499 loop)). -/
+theorem proj_bank_ZTGIJCF4_0_0_1_1 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF4_0_0_1_1 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 57 `bank_ZTGIJCF4_0_0_1_0`
+(HOL idv `ZTGIJCF4 0 0 1 0 1821661595` (ineq.hl:486-499 loop)). -/
+theorem proj_bank_ZTGIJCF4_0_0_1_0 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF4_0_0_1_0 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 58 `bank_ZTGIJCF4_0_0_0_1`
+(HOL idv `ZTGIJCF4 0 0 0 1 1821661595` (ineq.hl:486-499 loop)). -/
+theorem proj_bank_ZTGIJCF4_0_0_0_1 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF4_0_0_0_1 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 59 `bank_ZTGIJCF4_0_0_0_0`
+(HOL idv `ZTGIJCF4 0 0 0 0 1821661595` (ineq.hl:486-499 loop)). -/
+theorem proj_bank_ZTGIJCF4_0_0_0_0 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF4_0_0_0_0 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 60 `bank_ZTGIJCF0`
+(HOL ineq entry `ZTGIJCF0` (ineq.hl:446)). -/
+theorem proj_bank_ZTGIJCF0 (h : pack_nonlinear_non_ox3q1h) : bank_ZTGIJCF0 :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 61 `bank_GCKBQEA`
+(HOL ineq entry `GCKBQEA` (ineq.hl:1352)). -/
+theorem proj_bank_GCKBQEA (h : pack_nonlinear_non_ox3q1h) : bank_GCKBQEA :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+
+/-- Named projection of rest entry 62 `bank_RQWUDDU`
+(HOL ineq entry `RQWUDDU` (ineq.hl:1332)). -/
+theorem proj_bank_RQWUDDU (h : pack_nonlinear_non_ox3q1h) : bank_RQWUDDU :=
+  h.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2
+
 /-- Explicit form of `vol3f456` (operator unfolding; matches the body of
 HOL `Functional_equation.nonf_gamma3_x`, functional_equation.hl:1327-1340). -/
 private theorem mi_vol3f456_eq (m x1 x2 x3 x4 x5 x6 : ℝ) :
