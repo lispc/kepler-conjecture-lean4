@@ -86,9 +86,11 @@ NEEDS (wave-B3 state, 2026-09-30): closed in-file — GAMMAX_MCELL1,
   NOT_COPLANAR_R3, BARV_DISTINCT, OMEGA_LIST_BISECTOR,
   CONVEX_HULL_4_AFF_GE, CONVEX_HULL_SCALE; B3-wave assemblies: GAMMAX_MCELL2,
   MCELL2_VOL, TSKAJXY_2.
-CLOSED (2026-09-30 wedge GIANT lane): `MCELL2_VOL_SPLIT_EXPLICIT` and
-  `MCELL2_SOL` are PROVED (wedge closed forms section: slicing closed form
-  `VOLUME_FRUSTT_WEDGE` port + `WEDGE_GE_EQ_AFF_GE` port + radial kit).
+CLOSED (2026-09-30 wedge GIANT lane; 措辞降级 2026-10-14 #print axioms
+  核查): `MCELL2_VOL_SPLIT_EXPLICIT` PROVED（axiom 面标准三，真零债）;
+  `MCELL2_SOL` 证法落地但 **axiom 面含 sorryAx**（消费上游债, 非零债 PROVED）——
+  二者同以 wedge closed forms 件装配（slicing closed form `VOLUME_FRUSTT_WEDGE`
+  port + `WEDGE_GE_EQ_AFF_GE` port + radial kit）。
 REMAINING sorry (2 sites; A11 lane 2026-10-08: `pack_nonlinear_rest` def
   body honestly narrowed from unknown-Prop stub to the explicit 62-entry
   `bank_*` conjunction — see "bank rest" section, `#print axioms` = standard
