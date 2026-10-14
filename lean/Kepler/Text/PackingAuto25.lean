@@ -55,8 +55,8 @@ ENCODING NOTES
     `ox3q1hP25` (Oxl_def.hl `ox3q1h`: the certified 4-cardinality gg-sum
       inequality of the cc_v11 real model — inside `cc_real_model_v11`'s
       `n = 4` conjunct; PackagingAuto3 has it only inline),
-    `rad2XP25`/`rad2YP25` (sphere.hl `rad2_x`, `rad2_y = y_of_x rad2_x`;
-      use sites only need `rad2_y ... = radV {...}^2`, TSKAJXY2.hl:455),
+    2026-10-13 wave: `rad2XP25`/`rad2YP25` left this list — `rad2XP25` is
+      re-pointed to the verbatim `IneqClosureDefs.rad2X` (sphere.hl:271-273),
     `beta_bumpA_yP25` (Merge_ineq.hl `beta_bumpA_y`, the y-space bump),
     `c2089/c1946` need certified interval bounds (`Flyspeck_constants.calc`).
   - `MOD_INJ1_ALT` is `MOD_INJ1_ALT_p25` here (name taken by
@@ -88,12 +88,17 @@ open Kepler.Geom Set Classical MeasureTheory
 ported elsewhere.  NEEDS: exact Oxl_def.hl body. -/
 def ox3q1hP25 : Prop := sorry
 
-/-- HOL `rad2_x` (sphere.hl): squared circumradius from squared edge
-lengths.  NEEDS: exact sphere.hl body. -/
-noncomputable def rad2XP25 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ := sorry
+/-- HOL `rad2_x` (sphere.hl:271-273): squared circumradius from squared edge
+lengths, `rho_x / (4 * delta_x)`.  2026-10-13 wave: the former opaque stub is
+re-pointed to the verbatim body `IneqClosureDefs.rad2X` (on this file's
+import closure) — same shape as the MERGE-INEQ charter §2.1 `eta_y`
+precedent; unlocks the `rad2_y` disjunct refutation in
+`TXQTPVC_MERGED` (`rad2YP25 = yOfX rad2X` is now `rfl`). -/
+noncomputable def rad2XP25 (x1 x2 x3 x4 x5 x6 : ℝ) : ℝ :=
+  rad2X x1 x2 x3 x4 x5 x6
 
-/-- HOL `rad2_y` (sphere.hl): `y_of_x rad2_x` — rad2_x at squared lengths.
-NEEDS: sphere.hl body (only used through `radV {...}^2`, TSKAJXY2.hl:455). -/
+/-- HOL `rad2_y` (sphere.hl:541): `y_of_x rad2_x` — rad2_x at squared
+lengths.  (Only used through `radV {...}^2`, TSKAJXY2.hl:455.) -/
 noncomputable def rad2YP25 (y1 y2 y3 y4 y5 y6 : ℝ) : ℝ :=
   rad2XP25 (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
 
@@ -211,6 +216,17 @@ Remaining blockers unchanged from the r1 lists above, except:
     affineSpan` (Mathlib FiniteDimensional.lean:252) with S.toFinset card 4
     vs the Coplanar witness triple. `p25_affdep4_coplanar` is its forward
     half and is done.
+
+FILL-ROUND STATUS r3 (2026-10-13 wave: 119 -> 116 sorries, MERGE-INEQ channel)
+  - `rad2XP25` stub re-pointed to `IneqClosureDefs.rad2X` (def-faithful,
+    statement unchanged; unlocks the rad2 disjunct refutation).
+  - `IXPOTPA_MERGED`/`TXQTPVC_MERGED` 转真（axiom 面标准三）: 消费 PA21
+    wave-2c 的 `mi_dih_gt_pi2`/`mi_lindihpi_lt_y`/`mi_lindihpi_gt_y`/
+    `mi_gamma3_x_gamma3f` (merge_ineq.hl:2761/2783/2825/4101) + 本文件
+    `p25_gamma23Full8X_yOfX_eq` 桥 + 数值臂 `c2089`/`c1946` + bank 投影
+    `proj_bank_IXPOTPA`/`proj_bank_TXQTPVC`。
+  - `TEWNSCJ_MERGED` 仍记账（NEEDS: PA3 opaque `a_spine5`/`b_spine5` ↔
+    数值 `aSpine5`/`bSpine5` 桥，见其 docstring）；其余 blocker 面不变。
 
 -/
 
@@ -5176,6 +5192,50 @@ theorem c1946 : Real.pi - 1.946 < Real.arctan (Real.sqrt 6.45) := by
     linarith
   rw [h1]
   linarith [hL0, Real.pi_lt_d4]
+/-- The `gamma23_full8_x` ↔ y-space composite consumed by the three MERGED
+proofs (OXLZLEZ3.hl:8520-8528 etc.: the `GSYM Merge_ineq.gamma3_x_gamma3f` +
+`Functional_equation.nonf_gamma23_full8_x` + `Sphere.y_of_x` +
+`Nonlin_def.sqrt2_sqrt2` rewrite chain over `Merge_ineq.gamma3_x_gamma3f`,
+merge_ineq.hl:4101). -/
+private theorem p25_gamma23Full8X_yOfX_eq (y1 y2 y3 y4 y5 y6 : ℝ)
+    (hy1 : criticalEdgeY y1) (hb2 : 2 ≤ y2) (hb2' : y2 ≤ 2 * hminus)
+    (hb3 : 2 ≤ y3) (hb3' : y3 ≤ 2 * hminus)
+    (hb5 : 2 ≤ y5) (hb5' : y5 ≤ 2 * hminus)
+    (hb6 : 2 ≤ y6) (hb6' : y6 ≤ 2 * hminus) :
+    yOfX (gamma23Full8X (h0cut y1)) y1 y2 y3 y4 y5 y6
+      = gamma3f y1 y2 y6 (Real.sqrt 2) lmfun
+        + gamma3f y1 y3 y5 (Real.sqrt 2) lmfun
+        + (dihY y1 y2 y3 y4 y5 y6
+            - (dihY y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6
+              + dihY y1 (Real.sqrt 2) y3 (Real.sqrt 2) y5 (Real.sqrt 2)))
+          * 0.008 := by
+  have hsq2 : (Real.sqrt 2 * Real.sqrt 2 : ℝ) = 2 := Real.mul_self_sqrt (by norm_num)
+  have he0 : dihY y1 y2 y3 y4 y5 y6
+      = dihXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) := rfl
+  have hd1 : dihY y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6
+      = dihXf (y1 * y1) (y2 * y2) 2 2 2 (y6 * y6) := by
+    show dihXf (y1 * y1) (y2 * y2) (Real.sqrt 2 * Real.sqrt 2)
+      (Real.sqrt 2 * Real.sqrt 2) (Real.sqrt 2 * Real.sqrt 2) (y6 * y6) = _
+    rw [hsq2]
+  have hd2 : dihY y1 (Real.sqrt 2) y3 (Real.sqrt 2) y5 (Real.sqrt 2)
+      = dihXf (y1 * y1) 2 (y3 * y3) 2 (y5 * y5) 2 := by
+    show dihXf (y1 * y1) (Real.sqrt 2 * Real.sqrt 2) (y3 * y3)
+      (Real.sqrt 2 * Real.sqrt 2) (y5 * y5) (Real.sqrt 2 * Real.sqrt 2) = _
+    rw [hsq2]
+  rw [show yOfX (gamma23Full8X (h0cut y1)) y1 y2 y3 y4 y5 y6
+      = gamma23Full8X (h0cut y1) (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+          (y5 * y5) (y6 * y6) from rfl,
+    show gamma23Full8X (h0cut y1) (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+          (y5 * y5) (y6 * y6)
+      = gamma3X (h0cut y1) 0 0 0 (y1 * y1) (y2 * y2) (y6 * y6)
+        + gamma3X (h0cut y1) 0 0 0 (y1 * y1) (y3 * y3) (y5 * y5)
+        + (dihXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6)
+            - (dihXf (y1 * y1) (y2 * y2) 2 2 2 (y6 * y6)
+              + dihXf (y1 * y1) 2 (y3 * y3) 2 (y5 * y5) 2)) * 0.008 from rfl,
+    mi_gamma3_x_gamma3f 0 0 0 y1 y2 y6 hy1.1 hb2 hb2' hb6 hb6',
+    mi_gamma3_x_gamma3f 0 0 0 y1 y3 y5 hy1.1 hb3 hb3' hb5 hb5',
+    ← he0, hd1, hd2]
+
 /-- HOL `IXPOTPA_MERGED`. -/
 theorem IXPOTPA_MERGED (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1h)
     (hcey : criticalEdgeY y1) (hb2 : 2 ≤ y2) (hb2' : y2 ≤ 2 * hminus)
@@ -5191,7 +5251,57 @@ theorem IXPOTPA_MERGED (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1
       (dihY y1 y2 y3 y4 y5 y6 -
           (dihY y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 +
             dihY y1 (Real.sqrt 2) y3 (Real.sqrt 2) y5 (Real.sqrt 2))) * 0.008 := by
-  sorry
+  -- prelims (OXLZLEZ3.hl:8502-8519)
+  obtain ⟨hy1lo, hy1hi⟩ := id hcey
+  have hy4ub : y4 ≤ 4 * hminus := by linarith
+  have hy1pos : (0 : ℝ) < y1 := by
+    have h12 := mi_hminus_prop.1
+    linarith
+  have hpi2 : Real.pi / 2 < dihY y1 y2 y3 y4 y5 y6 := by
+    have hpi : Real.pi < (3.892 : ℝ) := by linarith [Real.pi_lt_d4]
+    linarith
+  have hd4neg : delta4Y y1 y2 y3 y4 y5 y6 < 0 :=
+    mi_dih_gt_pi2 (x1 := y1 * y1) (by positivity)
+      (show 0 < deltaX (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5)
+        (y6 * y6) from hd)
+      (show Real.pi / 2 < dihXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4)
+        (y5 * y5) (y6 * y6) from hpi2)
+  -- the two tan² arms (OXLZLEZ3.hl:8555-8571, via c2089/c1946 +
+  -- Merge_ineq.lindihpi_lt_y / lindihpi_gt_y)
+  have hsq3 : Real.sqrt 3.07 ^ 2 = (3.07 : ℝ) := by
+    rw [pow_two]; exact Real.mul_self_sqrt (by norm_num)
+  have hsq6 : Real.sqrt 6.45 ^ 2 = (6.45 : ℝ) := by
+    rw [pow_two]; exact Real.mul_self_sqrt (by norm_num)
+  have h307 : (3.07 : ℝ) * yOfX delta4SquaredX y1 y2 y3 y4 y5 y6
+      < 4 * yOfX x1DeltaX y1 y2 y3 y4 y5 y6 := by
+    have hdihlt : dihY y1 y2 y3 y4 y5 y6
+        < Real.pi - Real.arctan (Real.sqrt 3.07) := by
+      linarith [hdi1, c2089]
+    have hif := (mi_lindihpi_lt_y (a := Real.sqrt 3.07) hy1pos (by positivity) hd
+      hd4neg).mp hdihlt
+    rwa [hsq3] at hif
+  have h645 : 4 * yOfX x1DeltaX y1 y2 y3 y4 y5 y6
+      < (6.45 : ℝ) * yOfX delta4SquaredX y1 y2 y3 y4 y5 y6 := by
+    have hdihgt : Real.pi - Real.arctan (Real.sqrt 6.45)
+        < dihY y1 y2 y3 y4 y5 y6 := by
+      linarith [hdi2, c1946]
+    have hif := (mi_lindihpi_gt_y (a := Real.sqrt 6.45) hy1pos (by positivity) hd
+      hd4neg).mp hdihgt
+    rwa [hsq6] at hif
+  -- bank dispatch (OXLZLEZ3.hl:8520-8554)
+  have hbank := proj_bank_IXPOTPA hnl y1 y2 y3 y4 y5 y6 hcey.1 hcey.2 hb2 hb2' hb3
+    hb3' hb4 hy4ub hb5 hb5' hb6 hb6'
+  rcases hbank with h1 | h2 | h3 | h4 | h5 | h6 | h7
+  · exact absurd h1 (by linarith)
+  · linarith
+  · exact absurd h3 (by linarith)
+  · linarith
+  · exact absurd h5 (by linarith)
+  · exact absurd h6 (by linarith)
+  · have hbr := p25_gamma23Full8X_yOfX_eq y1 y2 y3 y4 y5 y6 hcey hb2 hb2' hb3 hb3'
+      hb5 hb5' hb6 hb6'
+    rw [hbr] at h7
+    linarith
 
 /-- HOL `TXQTPVC_MERGED`. -/
 theorem TXQTPVC_MERGED (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1h)
@@ -5209,9 +5319,40 @@ theorem TXQTPVC_MERGED (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1
       (dihY y1 y2 y3 y4 y5 y6 -
           (dihY y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 +
             dihY y1 (Real.sqrt 2) y3 (Real.sqrt 2) y5 (Real.sqrt 2))) * 0.008 := by
-  sorry
+  rcases lt_trichotomy (Real.sqrt 8) y4 with hsup | heq | hsub
+  · -- the y4 > sqrt8 arm is IXPOTPA (OXLZLEZ3.hl:8585-8587)
+    exact IXPOTPA_MERGED y1 y2 y3 y4 y5 y6 hnl hcey hb2 hb2' hb3 hb3'
+      (le_of_lt hsup) hb4' hb5 hb5' hb6 hb6' hd hdi1 hdi2 he1 he2
+  · -- the y4 = sqrt8 boundary joins the IXPOTPA arm
+    exact IXPOTPA_MERGED y1 y2 y3 y4 y5 y6 hnl hcey hb2 hb2' hb3 hb3'
+      (le_of_eq heq) hb4' hb5 hb5' hb6 hb6' hd hdi1 hdi2 he1 he2
+  · -- the sub-critical arm consumes the TXQTPVC bank entry
+    -- (OXLZLEZ3.hl:8588-8608)
+    have hy4ub : y4 ≤ Real.sqrt 8 := le_of_lt hsub
+    have hbank := proj_bank_TXQTPVC hnl y1 y2 y3 y4 y5 y6 hcey.1 hcey.2 hb2 hb2'
+      hb3 hb3' hb4 (le_of_lt hsub) hb5 hb5' hb6 hb6'
+    have hbr := p25_gamma23Full8X_yOfX_eq y1 y2 y3 y4 y5 y6 hcey hb2 hb2' hb3 hb3'
+      hb5 hb5' hb6 hb6'
+    have hrad2 : rad2YP25 y1 y2 y3 y4 y5 y6 = yOfX rad2X y1 y2 y3 y4 y5 y6 := rfl
+    rcases hbank with h1 | h2 | h3 | h4 | h5 | h6
+    · rw [hbr] at h1
+      linarith
+    · have hrad' : (2 : ℝ) ≤ yOfX rad2X y1 y2 y3 y4 y5 y6 := by
+        rw [← hrad2]; exact hrad
+      linarith
+    · linarith
+    · linarith
+    · exact absurd h5 (by linarith)
+    · exact absurd h6 (by linarith)
 
-/-- HOL `TEWNSCJ_MERGED`. -/
+/-- HOL `TEWNSCJ_MERGED`.  NEEDS (2026-10-13 wave, 记账): 证明管线已全部
+就位——`p25_gamma23Full8X_yOfX_eq` 桥 + `proj_bank_TEWNSCJ` 投影 + hrad/he1/he2
+否证支与本波 IXPOTPA/TXQTPVC 装配同构——但本件冻结陈述使用 PackingAuto3 的
+**opaque** 常数 `a_spine5`/`b_spine5`（PA3.lean:49-54 的编码决策），而
+bank_TEWNSCJ 首析取支携带数值体 `aSpine5 = 0.0560305`/`bSpine5 = -0.0445813`
+（IneqClosureDefs，sphere.hl:632 逐字）；opaque 常数无定义等式，桥
+`a_spine5 = aSpine5 ∧ b_spine5 = bSpine5` 不可证（Flyspeck_constants 级外部
+锚，G4 主案口径）。桥落地后本件为十行机械装配。 -/
 theorem TEWNSCJ_MERGED (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1h)
     (hcey : criticalEdgeY y1) (hb2 : 2 ≤ y2) (hb2' : y2 ≤ 2 * hminus)
     (hb3 : 2 ≤ y3) (hb3' : y3 ≤ 2 * hminus)
