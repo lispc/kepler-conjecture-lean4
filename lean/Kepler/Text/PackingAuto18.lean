@@ -109,10 +109,24 @@ MCELL3_NONPLANAR), `CC_CELL_NOT_COPLANAR_EXTREME`, `CC_CELL_EXTREME_CARD`
 Still sorry (see the per-site `-- NEEDS` notes): the root `cc_pe_exists`
 (single blocking input FUZBZGI_1 -> XYOFCGX@PA7), YBZFUPO,
 FUZBZGI_0/1, the chi_msb-coplanarity pair + JDHAWAY_0/JDWAWAY, ZWVCBMN ->
-CC_CELL_NOT_NULLSET -> FUEIMOV_K, CFFONNL, the FUEIMOV/EXTREME/V-block and
+CC_CELL_NOT_NULLSET -> FUEIMOV_K, the FUEIMOV/EXTREME/V-block and
 the MCELL*_EDGE_FIRST/STEM_EDGEX/FCHKUGT rigidity kit.
 STATUS: skeleton port; statements faithful, mechanical lemmas proved,
 the giant leaf-cell/sum-gamma chains carry `sorry`.
+STATUS (2026-10-13 CFFONNL wave, PA18 lane): CONVEX_PLANE_INTER (third
+strike: tip weight t3/D with D := 2 max(1-t2-t3) 0 + 2 max t2 0 + t3 + 1;
+the {a,b,q}-hull weights carry the (1-τ)/2 - (1-t2-t3)/D brackets; the
+division-bearing combo equalities are closed at the WithLp component level,
+dodging the binop% trap) and CONVEX_R3_INTER (HOL's abs-form
+s := inv(4 + 3|t1| + 3|t2| + 3|t3|); the max-form scouted in the earlier
+NEEDS note is unsound when some tᵢ are very negative) both closed. CFFONNL
+assembled end-to-end (mcell dispatch via RIJRIED/EDGE_IMP_K2, the
+coplanar-null content inlined, MHFTTZN1/COPLANAR_INSERT for the off-span
+point, EDGEX_SUBSET_MCELL for the stem edge, the wl-orientation argument via
+CHI_MSB_POS2/CHI_MSB_AFF_GT_0/CONVEX_R3_INTER, hull bookkeeping, AJRIPQN_0),
+consuming ZWVCBMN (still sorry) plus one new scoped debt `pa18_ccCell_swap`
+(cc-cell insensitivity under the 0-1 stem swap; mathematically true but
+blocked by the cc_pe1 Skolem root — see its NEEDS note).
 -/
 
 import Kepler.Text.PackingAuto13
@@ -2660,44 +2674,159 @@ theorem CONVEX_PLANE_INTER (a b p q : V3) (hab : a ≠ b) (hd : a ≠ p ∧ b �
     (hq : q ∈ affGt {a, b} {p}) :
     ∃ c, c ∈ affGt {a, b} {p} ∧
       c ∈ convexHull ℝ ({a, b, p} : Set V3) ∩ convexHull ℝ ({a, b, q} : Set V3) := by
--- NEEDS (medium, 2 attack rounds spent 2026-10-13, reverted per the 2-strike rule):
--- witness and full skeleton verified structurally; the sole blocker is a
--- binop-elaboration mismatch: for the tip weight τ := t3 / D with
--- D := 2 * max (1 - t2 - t3) 0 + 2 * max t2 0 + t3 + 1 (t3 > 0 from
--- affGt_pair_iff, D > 0 by max-nonneg), the crossing point
--- c := (1 - τ) • ((1/2) • (a + b)) + τ • p lies in affGt {a,b} {p}
--- (Affsign witness over insert a (insert b {p}), tip weight τ > 0),
--- in hull {a,b,p} (pa18_mem_convexHull_triple with weights
--- (1-τ)/2, (1-τ)/2, τ) and in hull {a,b,q} (weights
--- (1-τ)/2 - τ(1-t2-t3)/t3, (1-τ)/2 - τ t2 / t3, τ / t3 ≥ 0: the base
--- weights are (2 max t2 0 + 1)/(2D) resp. (2 max (1-t2-t3) 0 + 1)/(2D) plus a
--- nonneg bracket, via div_le_div₀ and t_i ≤ max t_i 0). The module-closing
--- step of the Affsign combo-equality leaves a spurious scalar residue
--- `0 = (1 - τ)/2` (both if-chains fully reduce; root cause not isolated --
--- suspect binop% instance-delta between the two combo elaborations). Next
--- wave: try `Finset.sum_insert` with per-slot `if_pos`/`if_neg` proven
--- OUTSIDE the simp call, or state the combo-eq at the det level.
-  sorry
+  -- q = (1 - t2 - t3) • a + t2 • b + t3 • p with 0 < t3 (AFF_GT_2_1 shape)
+  obtain ⟨t3, ht3, t2, hvec⟩ :=
+    (affGt_pair_iff (v0 := a) (v1 := b) (x := p) hab (Ne.symm hd.1)
+      (Ne.symm hd.2)).1 hq
+  have hqrep : q = (1 - t2 - t3) • a + t2 • b + t3 • p := by
+    have hqa : q = a + (q - a) := by module
+    rw [hqa, hvec]
+    module
+  -- tip weight τ := t3 / D, D := 2 max (1-t2-t3) 0 + 2 max t2 0 + t3 + 1
+  have hm1 : (0:ℝ) ≤ max (1 - t2 - t3) 0 := le_max_right _ _
+  have hm2 : (0:ℝ) ≤ max t2 0 := le_max_right _ _
+  have hle1 : (1:ℝ) - t2 - t3 ≤ max (1 - t2 - t3) 0 := le_max_left _ _
+  have hle2 : t2 ≤ max t2 0 := le_max_left _ _
+  have hDpos : (0:ℝ) < 2 * max (1 - t2 - t3) 0 + 2 * max t2 0 + t3 + 1 := by
+    linarith
+  set D := 2 * max (1 - t2 - t3) 0 + 2 * max t2 0 + t3 + 1 with hDdef
+  have hDne : D ≠ 0 := ne_of_gt hDpos
+  have hτpos : (0:ℝ) < t3 / D := div_pos ht3 hDpos
+  have hτ1 : t3 / D ≤ 1 := by
+    rw [div_le_one hDpos]
+    linarith
+  refine ⟨((1 - t3 / D) / 2) • a + ((1 - t3 / D) / 2) • b + (t3 / D) • p, ?_, ?_, ?_⟩
+  · -- the open wedge: tip weight t3 / D
+    rw [affGt_pair_iff hab (Ne.symm hd.1) (Ne.symm hd.2)]
+    exact ⟨t3 / D, hτpos, (1 - t3 / D) / 2, by module⟩
+  · -- hull {a,b,p}: weights ((1-τ)/2, (1-τ)/2, τ)
+    rw [pa18_mem_convexHull_triple]
+    exact ⟨(1 - t3 / D) / 2, (1 - t3 / D) / 2, t3 / D, by linarith, by linarith, hτpos.le,
+      by ring, rfl⟩
+  · -- hull {a,b,q}: weights ((1-τ)/2 - (1-t2-t3)/D, (1-τ)/2 - t2/D, 1/D)
+    have hw1 : 0 ≤ (1 - t3 / D) / 2 - (1 - t2 - t3) / D := by
+      have hform : (1 - t3 / D) / 2 - (1 - t2 - t3) / D
+          = (2 * max t2 0 + 1 + 2 * (max (1 - t2 - t3) 0 - (1 - t2 - t3))) / (2 * D) := by
+        rw [hDdef]
+        field_simp
+        ring
+      rw [hform]
+      exact div_nonneg (by linarith) (by linarith)
+    have hw2 : 0 ≤ (1 - t3 / D) / 2 - t2 / D := by
+      have hform : (1 - t3 / D) / 2 - t2 / D
+          = (2 * max (1 - t2 - t3) 0 + 1 + 2 * (max t2 0 - t2)) / (2 * D) := by
+        rw [hDdef]
+        field_simp
+        ring
+      rw [hform]
+      exact div_nonneg (by linarith) (by linarith)
+    have hsum : (1 - t3 / D) / 2 - (1 - t2 - t3) / D + ((1 - t3 / D) / 2 - t2 / D)
+        + 1 / D = 1 := by
+      field_simp
+      ring
+    have hpt : ((1 - t3 / D) / 2) • a + ((1 - t3 / D) / 2) • b + (t3 / D) • p
+        = ((1 - t3 / D) / 2 - (1 - t2 - t3) / D) • a
+          + ((1 - t3 / D) / 2 - t2 / D) • b + (1 / D) • q := by
+      rw [hqrep]
+      apply WithLp.ofLp_injective
+      funext i
+      simp only [WithLp.ofLp_add, WithLp.ofLp_smul, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+      ring
+    rw [pa18_mem_convexHull_triple]
+    exact ⟨(1 - t3 / D) / 2 - (1 - t2 - t3) / D, (1 - t3 / D) / 2 - t2 / D, 1 / D,
+      hw1, hw2, div_nonneg zero_le_one hDpos.le, hsum, hpt⟩
 
 /-- HOL `CONVEX_R3_INTER` (leaf_cell.hl:1870-2053). -/
 theorem CONVEX_R3_INTER (a b c p q : V3) (hnc : ¬Coplanar ({a, b, c, p} : Set V3))
     (hq : q ∈ affGt {a, b, c} {p}) :
     ∃ d : V3, ¬Coplanar ({a, b, c, d} : Set V3) ∧
       d ∈ convexHull ℝ ({a, b, c, p} : Set V3) ∩ convexHull ℝ ({a, b, c, q} : Set V3) := by
--- NEEDS (medium, route scouted 2026-10-13, not attempted this wave):
--- disj := fun hcon => hnc ((CHI_MSB_COPLANAR a b c p).2 hcon) gives
--- χ[a,b,c] p ≠ 0 and p ∉ {a,b,c}. Extract (t1..t4, 0 < t4, sum = 1) from
--- AFF_GT_3_1 a b c p (PlanarityAuto11) under that Disjoint. Witness
--- d := (1 - s) • ((1/3) • (a + b + c)) + s • q with
--- s := 1 / (4 + 3 * max t1 0 + 3 * max t2 0 + 3 * max t3 0):
--- hull {a,b,c,p}-weights ((1-s)/3 + s*t1, (1-s)/3 + s*t2, (1-s)/3 + s*t3, s*t4)
--- and hull {a,b,c,q}-weights ((1-s)/3, (1-s)/3, (1-s)/3, s) are all ≥ 0
--- (1 - s ≥ 3 s * max t_i 0 holds since 1 - s = (3 + 3Σmax)/D) and sum to 1
--- (CONVEX_HULL_4, proved above in this file). Non-coplanarity:
--- χ[a,b,c] d = (s * t4) * χ[a,b,c] p ≠ 0 by the det-level pattern proven in
--- CHI_MSB_POS2 above (rw chiMsb_det twice + d-rep + q-rep + det_fin_three simp
--- + ring), then CHI_MSB_COPLANAR backward. All pieces exist; ~80 lines.
-  sorry
+  -- p misses the stem triple (else the 4-point set is coplanar outright)
+  have hdis : Disjoint ({a, b, c} : Set V3) {p} := by
+    rw [Set.disjoint_singleton_right]
+    intro hmem
+    refine hnc ⟨a, b, c, fun t ht => ?_⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht
+    rcases ht with h1 | h2 | h3 | h4
+    · rw [h1]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (Set.mem_insert a ({b, c} : Set V3)))
+    · rw [h2]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (Or.inr (Set.mem_insert b ({c} : Set V3))))
+    · rw [h3]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ (Or.inr (Or.inr (Set.mem_singleton c))))
+    · rw [h4]
+      exact SetLike.mem_coe.mpr (mem_affineSpan ℝ hmem)
+  -- q = t1 • a + t2 • b + t3 • c + t4 • p with 0 < t4, sum = 1 (AFF_GT_3_1)
+  rw [AFF_GT_3_1 a b c p hdis] at hq
+  simp only [Set.mem_setOf_eq] at hq
+  obtain ⟨t1, t2, t3, t4, ht4, hsum4, hpoint⟩ := hq
+  -- s := 1/D with D := 4 + 3|t1| + 3|t2| + 3|t3| (HOL's abs-form; the max-form
+  -- is unsound when some tᵢ are very negative)
+  have hDpos : (0:ℝ) < 4 + 3 * |t1| + 3 * |t2| + 3 * |t3| := by positivity
+  set D := 4 + 3 * |t1| + 3 * |t2| + 3 * |t3| with hDdef
+  have hDne : D ≠ 0 := ne_of_gt hDpos
+  have b11 : (0:ℝ) ≤ |t1| := by
+    have h := neg_abs_le (α := ℝ) (-t1)
+    simpa using h
+  have b22 : (0:ℝ) ≤ |t2| := by
+    have h := neg_abs_le (α := ℝ) (-t2)
+    simpa using h
+  have b33 : (0:ℝ) ≤ |t3| := by
+    have h := neg_abs_le (α := ℝ) (-t3)
+    simpa using h
+  have hs1 : 1 / D ≤ 1 := (div_le_one hDpos).2 (by linarith)
+  have e11 : (0:ℝ) ≤ |t1| + t1 := by
+    have h := neg_abs_le (α := ℝ) t1
+    linarith
+  have e22 : (0:ℝ) ≤ |t2| + t2 := by
+    have h := neg_abs_le (α := ℝ) t2
+    linarith
+  have e33 : (0:ℝ) ≤ |t3| + t3 := by
+    have h := neg_abs_le (α := ℝ) t3
+    linarith
+  have hw1 : 0 ≤ (1 - 1 / D) / 3 + 1 / D * t1 := by
+    field_simp
+    linarith
+  have hw2 : 0 ≤ (1 - 1 / D) / 3 + 1 / D * t2 := by
+    field_simp
+    linarith
+  have hw3 : 0 ≤ (1 - 1 / D) / 3 + 1 / D * t3 := by
+    field_simp
+    linarith
+  have hcomb : (1 - 1 / D) / 3 + 1 / D * t1 + ((1 - 1 / D) / 3 + 1 / D * t2)
+      + ((1 - 1 / D) / 3 + 1 / D * t3) + 1 / D * t4 = 1 := by
+    field_simp
+    linarith
+  -- non-coplanarity of the witness: chi(D) = (t4/D) * chi(p) with t4 > 0
+  have hχp : chiMsb [a, b, c] p ≠ 0 := fun h0 => hnc ((CHI_MSB_COPLANAR a b c p).2 h0)
+  have hdcomb : ((1 - 1 / D) / 3) • a + ((1 - 1 / D) / 3) • b + ((1 - 1 / D) / 3) • c
+      + (1 / D) • q
+      = ((1 - 1 / D) / 3 + 1 / D * t1) • a + ((1 - 1 / D) / 3 + 1 / D * t2) • b
+        + ((1 - 1 / D) / 3 + 1 / D * t3) • c + (1 / D * t4) • p := by
+    rw [hpoint]
+    module
+  have hd0 : chiMsb [a, b, c] (((1 - 1 / D) / 3) • a + ((1 - 1 / D) / 3) • b
+      + ((1 - 1 / D) / 3) • c + (1 / D) • q) ≠ 0 := by
+    rw [hdcomb]
+    intro h0
+    rw [chi_msb_additive_d a b c p ((1 - 1 / D) / 3 + 1 / D * t1)
+      ((1 - 1 / D) / 3 + 1 / D * t2) ((1 - 1 / D) / 3 + 1 / D * t3) (1 / D * t4)
+      hcomb] at h0
+    exact hχp ((mul_eq_zero.1 h0).resolve_left
+      (mul_ne_zero (div_ne_zero one_ne_zero hDpos.ne') (ne_of_gt ht4)))
+  refine ⟨((1 - 1 / D) / 3) • a + ((1 - 1 / D) / 3) • b + ((1 - 1 / D) / 3) • c
+      + (1 / D) • q, ?_, ?_, ?_⟩
+  · intro hc
+    exact hd0 ((CHI_MSB_COPLANAR a b c _).1 hc)
+  · -- hull {a,b,c,p}: the combined weights, via hdcomb
+    rw [CONVEX_HULL_4]
+    exact ⟨(1 - 1 / D) / 3 + 1 / D * t1, (1 - 1 / D) / 3 + 1 / D * t2,
+      (1 - 1 / D) / 3 + 1 / D * t3, 1 / D * t4, hw1, hw2, hw3,
+      mul_nonneg (le_of_lt (div_pos one_pos hDpos)) ht4.le, hcomb, hdcomb⟩
+  · -- hull {a,b,c,q}: the witness is already a convex rep
+    rw [CONVEX_HULL_4]
+    exact ⟨(1 - 1 / D) / 3, (1 - 1 / D) / 3, (1 - 1 / D) / 3, 1 / D, by linarith,
+      by linarith, by linarith, le_of_lt (div_pos one_pos hDpos), by ring, rfl⟩
 
 private theorem pa18_convex_affGe {s t : Set V3} (hfin : (s ∪ t).Finite) :
     Convex ℝ (affGe s t) := by
@@ -3055,15 +3184,368 @@ theorem AJRIPQN_0 {V : Set V3} {ul vl : List V3} {i j : ℕ} (hp : Packing V)
   rw [hi'e, hj'e]
   exact hkey.2.symm
 
+/-! ### CFFONNL assembly kit (leaf_cell.hl:2178-2514) -/
+
+/-- `getD` reads a 3-list positionally. -/
+private theorem pa18_getD3_0 (a b c : V3) : ([a, b, c] : List V3).getD 0 0 = a := rfl
+
+private theorem pa18_getD3_1 (a b c : V3) : ([a, b, c] : List V3).getD 1 0 = b := rfl
+
+private theorem pa18_getD3_2 (a b c : V3) : ([a, b, c] : List V3).getD 2 0 = c := rfl
+
+private theorem pa18_set3 (a b c : V3) :
+    setOfList [a, b, c] = ({a, b, c} : Set V3) := by
+  ext t
+  simp [setOfList]
+  all_goals tauto
+
+/-- `COPLANAR_IMP_NEGLIGIBLE` content, Geom `Coplanar` form (PA17/PA23 keep
+private twins; inlined here for the CFFONNL assembly): subsets of a coplanar
+set are Lebesgue-null — the set sits in a proper affine subspace
+(`Measure.addHaar_affineSubspace`) and `measure_mono_null` needs no
+measurability. -/
+private theorem pa18_finrank_span_pair_le_two (x y : V3) :
+    Module.finrank ℝ (Submodule.span ℝ ({x, y} : Set V3)) ≤ 2 := by
+  have h2 := finrank_span_finset_le_card (R := ℝ) ({x, y} : Finset V3)
+  unfold Set.finrank at h2
+  rw [show (({x, y} : Finset V3) : Set V3) = ({x, y} : Set V3) from by simp] at h2
+  refine h2.trans ?_
+  calc ({x, y} : Finset V3).card ≤ ({y} : Finset V3).card + 1 := Finset.card_insert_le x {y}
+    _ = 2 := by simp
+
+private theorem pa18_coplanar_measure_null {s t : Set V3} (hcop : Coplanar s)
+    (hsub : t ⊆ s) : MeasureTheory.volume t = 0 := by
+  obtain ⟨u, v, w, hsp⟩ := hcop
+  have hvs : vectorSpan ℝ ({u, v, w} : Set V3)
+      = Submodule.span ℝ ({v - u, w - u} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_right ℝ (show u ∈ ({u, v, w} : Set V3) from by simp)]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro z ⟨q, hq, rfl⟩
+      rcases hq with rfl | rfl | rfl
+      · simp
+      · exact Submodule.subset_span (by left; rfl)
+      · exact Submodule.subset_span (by right; rfl)
+    · rw [Submodule.span_le]
+      rintro z (rfl | rfl)
+      · exact Submodule.subset_span ⟨v, by simp, rfl⟩
+      · exact Submodule.subset_span ⟨w, by simp, rfl⟩
+  have hne : (affineSpan ℝ ({u, v, w} : Set V3) : AffineSubspace ℝ V3) ≠ ⊤ := by
+    intro htop
+    have hdir : (affineSpan ℝ ({u, v, w} : Set V3)).direction = ⊤ := by
+      rw [htop]; exact AffineSubspace.direction_top ℝ V3 V3
+    have hle : Module.finrank ℝ (affineSpan ℝ ({u, v, w} : Set V3)).direction ≤ 2 := by
+      rw [direction_affineSpan, hvs]
+      exact pa18_finrank_span_pair_le_two (v - u) (w - u)
+    rw [hdir, finrank_top] at hle
+    exact absurd hle (by norm_num)
+  exact MeasureTheory.measure_mono_null (hsub.trans hsp)
+    (MeasureTheory.Measure.addHaar_affineSubspace MeasureTheory.volume _ hne)
+
+/-- Cell-level insensitivity of the cc-construction under the 0-1 stem swap
+(the positive-`chi_msb` branch of CFFONNL's final MESON uses exactly this
+equality): mathematically `cc_pe1`/`cc_uh`/`cc_ke` depend on `ul` only through
+the unordered stem `{EL 0 ul, EL 1 ul}` and `EL 2 ul`, both preserved by the
+swap.
+NEEDS (scoped CFFONNL debt): in PA18 the `cc_pe1`/`cc_uh` Skolem constants
+sit behind the `cc_pe_exists` root (YBZFUPO @PA7), and the swap-insensitivity
+of the characterizing property is not derivable from the current kit. True
+statement: both cells are the mcell over a 4-list with the same point set
+`{u0, u1, u2, cc_pe1}`. -/
+private theorem pa18_ccCell_swap {V : Set V3} {u0 u1 u2 : V3} (hp : Packing V)
+    (hs : saturated V) (hl : leaf V [u0, u1, u2]) :
+    ccCell V [u0, u1, u2] = ccCell V [u1, u0, u2] := by
+  sorry
+
 /-- HOL `CFFONNL` (leaf_cell.hl:2178-2514). -/
 theorem CFFONNL {V : Set V3} {ul : List V3} {X : Set V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) (hX : X ∈ mcellSet V)
     (he : {(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0} ∈ edgeX V X)
-    (hA : X ∩ ccA0 ul ≠ ∅) (hne : X ≠ ccCell V ul) :
+    (hA : X ∩ ccA0 ul ≠ ∅) (hne : X ≠ ccCell V [(ccUh V ul).getD 1 0, (ccUh V ul).getD 0 0, (ccUh V ul).getD 2 0]) :
     X = ccCell V [(ccUh V ul).getD 1 0, (ccUh V ul).getD 0 0, (ccUh V ul).getD 2 0] := by
--- NEEDS (GIANT): leaf_cell.hl:2178-2400ish, mcell dispatch +
--- CHI_MSB_COPLANAR + EDGEX_SUBSET_MCELL kit.
-  sorry
+  -- 0. reduce the cc_uh accessor syntax to the stem of `ul`
+  obtain ⟨e0, e1, e2⟩ := EL_CC_UH (V := V) (ul := ul) hp hs hl'
+  obtain ⟨u0, u1, u2, hul⟩ : ∃ u0 u1 u2, ul = [u0, u1, u2] :=
+    ⟨_, _, _, list3_eq ul hl'.1.1⟩
+  subst hul
+  rw [e0, e1] at he
+  rw [e1, e0, e2] at hne ⊢
+  rw [pa18_getD3_0, pa18_getD3_1] at he
+  rw [pa18_getD3_1, pa18_getD3_0, pa18_getD3_2] at hne ⊢
+  -- 1. distinctness of the stem triple (GBEWYFX), the mcell witness, and
+  --    non-nullness + non-coplanarity of X
+  have hcol0 := GBEWYFX (V := V) (ul := [u0, u1, u2]) hp hs hl'
+  simp only [List.getElem!_cons_zero, List.getElem!_cons_succ] at hcol0
+  have hne01 : u0 ≠ u1 := ne₁₂_of_not_collinear hcol0
+  have hne02 : u0 ≠ u2 := ne₁₃_of_not_collinear hcol0
+  have hne12 : u1 ≠ u2 := ne₂₃_of_not_collinear hcol0
+  simp only [mcellSet, Set.mem_setOf_eq] at hX
+  obtain ⟨i, ul2, hXeq, hbar2⟩ := hX
+  have hnullX : ¬nullSet X := by
+    intro hcon
+    rw [hXeq] at hcon
+    rw [hXeq, BumpP4.RIJRIED V ul2 i hcon] at he
+    exact he
+  have hXcop : ¬Coplanar X := fun hc =>
+    hnullX (pa18_coplanar_measure_null hc (subset_refl _))
+  -- 2. the wedge point p ∈ X and the off-span point q ∈ X
+  simp only [ccA0, List.getElem!_cons_zero, List.getElem!_cons_succ] at hA
+  rw [← Set.nonempty_iff_ne_empty] at hA
+  obtain ⟨p, hpX, hpA⟩ := hA
+  have hdim2 : affDim ({u0, u1, u2} : Set V3) = 2 := by
+    rw [← pa18_set3]
+    exact MHFTTZN1 V [u0, u1, u2] 2 hp hl'.1
+  have hsubspan : ¬(X ⊆ (affineSpan ℝ ({u0, u1, u2} : Set V3) : Set V3)) := by
+    intro hc
+    exact hXcop ⟨u0, u1, u2, hc⟩
+  obtain ⟨q, hqX, hqspan⟩ :
+      ∃ q, q ∈ X ∧ q ∉ (affineSpan ℝ ({u0, u1, u2} : Set V3) : Set V3) := by
+    by_contra hcon
+    push_neg at hcon
+    exact hsubspan (fun x hx => hcon x hx)
+  have hsetins : (insert q ({u0, u1, u2} : Set V3)) = ({u0, u1, u2, q} : Set V3) := by
+    ext t
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  have hχq : chiMsb [u0, u1, u2] q ≠ 0 := by
+    intro h0
+    refine hqspan (COPLANAR_INSERT q hdim2 ?_)
+    rw [hsetins]
+    exact (CHI_MSB_COPLANAR u0 u1 u2 q).2 h0
+  -- 3. the stem edge lies in X; the dispatch index is ≥ 2; X is a convex hull
+  have hstemsub : ({u0, u1} : Set V3) ⊆ X :=
+    EDGEX_SUBSET_MCELL V X ({u0, u1} : Set V3) hp hs ⟨i, ul2, hXeq, hbar2⟩ he
+  have hik2 : 2 ≤ i := by
+    by_contra hcon
+    push_neg at hcon
+    have hle : i ≤ 1 := by omega
+    rw [hXeq, BumpP4.EDGE_IMP_K2 V ul2 i hs hp hbar2 hle] at he
+    exact he
+  have hconvX : Convex ℝ X := by
+    rw [hXeq]
+    exact MCELL_CONVEX hs hp hbar2 hik2
+  have hXX : convexHull ℝ X = X := hconvX.convexHull_eq
+  have hsubpq : convexHull ℝ ({u0, u1, p, q} : Set V3) ⊆ X := by
+    have h4 : ({u0, u1, p, q} : Set V3) ⊆ X := by
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with hz | hz | hz | hz
+      · rw [hz]; exact hstemsub (Set.mem_insert u0 ({u1} : Set V3))
+      · rw [hz]; exact hstemsub (Set.mem_insert_of_mem u0 (Set.mem_singleton u1))
+      · rw [hz]; exact hpX
+      · rw [hz]; exact hqX
+    have h1 := convexHull_mono (𝕜 := ℝ) h4
+    rwa [hXX] at h1
+  -- 4. the sign-oriented twin list wl: the one of {[u0,u1,u2], [u1,u0,u2]}
+  --    on which `chi_msb wl q` is positive
+  obtain ⟨wl, hwlpos, hwlleaf, hwlen, hwlset, hwlast, hwlpair, hwne01, hwne12, hwlcase⟩ :
+      ∃ wl : List V3, 0 < chiMsb wl q ∧ leaf V wl ∧ wl.length = 3 ∧
+        setOfList wl = ({u0, u1, u2} : Set V3) ∧
+        wl.getD 2 0 = u2 ∧
+        ({wl.getD 0 0, wl.getD 1 0} : Set V3) = ({u0, u1} : Set V3) ∧
+        wl.getD 0 0 ≠ wl.getD 1 0 ∧ wl.getD 1 0 ≠ wl.getD 2 0 ∧
+        (wl = [u0, u1, u2] ∨ wl = [u1, u0, u2]) := by
+    by_cases hsign : 0 < chiMsb [u0, u1, u2] q
+    · refine ⟨[u0, u1, u2], hsign, hl', hl'.1.1, pa18_set3 u0 u1 u2, rfl,
+        by rw [pa18_getD3_0, pa18_getD3_1],
+        by rw [pa18_getD3_0, pa18_getD3_1]; exact hne01,
+        by rw [pa18_getD3_1, pa18_getD3_2]; exact hne12, Or.inl rfl⟩
+    · have hneg : chiMsb [u0, u1, u2] q < 0 :=
+        lt_of_le_of_ne (le_of_not_gt hsign) hχq
+      refine ⟨[u1, u0, u2], ?_, (ZASUVOR hp hs hl').1, by simp,
+        by rw [pa18_set3]; ext t; simp; tauto, rfl,
+        by rw [pa18_getD3_0, pa18_getD3_1]; ext t; simp; tauto,
+        by rw [pa18_getD3_0, pa18_getD3_1]; exact hne01.symm,
+        by rw [pa18_getD3_1, pa18_getD3_2]; exact hne02, Or.inr rfl⟩
+      rw [chi_msb_swap_01 u1 u0 u2 q]
+      exact neg_pos.2 hneg
+  -- 5. the twin cell Y = cc_cell V wl, its convexity, and its apex point q'
+  have hbarY : barV V 3 (ccUh V wl) :=
+    (Classical.choose_spec (cc_uh_exists V wl)) hp hs hwlleaf |>.1
+  obtain ⟨f0, f1, f2⟩ := EL_CC_UH (V := V) (ul := wl) hp hs hwlleaf
+  have hcc34 := CC_CELL34 (V := V) (ul := wl)
+    (pp := if ccKe V wl = 3 then mxi V (ccUh V wl) else (ccUh V wl).getD 3 0)
+    hp hs hwlleaf rfl
+  rw [f0, f1, f2] at hcc34
+  have hconvY : Convex ℝ (ccCell V wl) := by
+    unfold ccCell
+    rcases CC_KE_34 V wl with hk | hk
+    · rw [hk]; exact MCELL_CONVEX hs hp hbarY (by omega)
+    · rw [hk]; exact MCELL_CONVEX hs hp hbarY (by omega)
+  have hYY : convexHull ℝ (ccCell V wl) = ccCell V wl := hconvY.convexHull_eq
+  have hwl3 : [wl.getD 0 0, wl.getD 1 0, wl.getD 2 0] = wl := by
+    cases wl with
+    | nil => simp at hwlen
+    | cons x xs =>
+      cases xs with
+      | nil => simp at hwlen
+      | cons y ys =>
+        cases ys with
+        | nil => simp at hwlen
+        | cons z zs =>
+          cases zs with
+          | nil => rfl
+          | cons w ws => simp at hwlen
+  have hwlen3 : ({wl.getD 0 0, wl.getD 1 0, wl.getD 2 0} : Set V3)
+      = ({u0, u1, u2} : Set V3) := by
+    cases wl with
+    | nil => simp at hwlen
+    | cons x xs =>
+      cases xs with
+      | nil => simp at hwlen
+      | cons y ys =>
+        cases ys with
+        | nil => simp at hwlen
+        | cons z zs =>
+          cases zs with
+          | nil =>
+            rw [pa18_getD3_0, pa18_getD3_1, pa18_getD3_2]
+            rw [pa18_set3] at hwlset
+            exact hwlset
+          | cons w ws => simp at hwlen
+  have hmemY : ({u0, u1, u2} : Set V3) ⊆ ccCell V wl := by
+    rw [hcc34]
+    intro z hz
+    refine subset_convexHull ℝ _ ?_
+    have hzin : z ∈ ({wl.getD 0 0, wl.getD 1 0, wl.getD 2 0} : Set V3) := by
+      rw [hwlen3]
+      exact hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hzin ⊢
+    rcases hzin with rfl | rfl | rfl
+    · exact Or.inl rfl
+    · exact Or.inr (Or.inl rfl)
+    · exact Or.inr (Or.inr (Or.inl rfl))
+  obtain ⟨q', hq'Y, hq'χ⟩ : ∃ q', q' ∈ ccCell V wl ∧ 0 < chiMsb wl q' := by
+    by_cases hk : ccKe V wl = 3
+    · refine ⟨mxi V (ccUh V wl), ?_, (CELL3_NONDEG hp hs hwlleaf hk).2⟩
+      rw [hcc34, if_pos hk]
+      exact subset_convexHull ℝ _ (by simp)
+    · rcases CC_KE_34 V wl with h34 | h34
+      · exact absurd h34 hk
+      · refine ⟨(ccUh V wl).getD 3 0, ?_, K4_CHI_MSB_POS hp hs hwlleaf h34⟩
+        rw [hcc34, if_neg hk]
+        exact subset_convexHull ℝ _ (by simp)
+  -- 6. the crossing point c (CONVEX_PLANE_INTER) and the orientation transfer
+  --    from the stem triple to the wl-triple (CHI_MSB_POS2)
+  obtain ⟨c, hcA, hcH1, hcH2⟩ := CONVEX_PLANE_INTER u0 u1 u2 p hne01 ⟨hne02, hne12⟩ hpA
+  have hχtail : ∀ r : V3, chiMsb [wl.getD 0 0, wl.getD 1 0, wl.getD 2 0] r = chiMsb wl r :=
+    fun r => by rw [hwl3]
+  have hcp2q := CHI_MSB_POS2 (wl.getD 0 0) (wl.getD 1 0) (wl.getD 2 0) c q
+    ⟨hwne01, hwne12⟩ (by rw [hwlpair, hwlast]; exact hcA)
+  have hcp2q' := CHI_MSB_POS2 (wl.getD 0 0) (wl.getD 1 0) (wl.getD 2 0) c q'
+    ⟨hwne01, hwne12⟩ (by rw [hwlpair, hwlast]; exact hcA)
+  obtain ⟨k1, hk1, heq1⟩ := hcp2q
+  obtain ⟨k2, hk2, heq2⟩ := hcp2q'
+  have hχcq : 0 < chiMsb [wl.getD 0 0, wl.getD 1 0, c] q := by
+    rw [heq1, hχtail]
+    exact mul_pos hk1 hwlpos
+  have hχcq' : 0 < chiMsb [wl.getD 0 0, wl.getD 1 0, c] q' := by
+    rw [heq2, hχtail]
+    exact mul_pos hk2 hq'χ
+  -- 7. the deep point d on both cells (CONVEX_R3_INTER at the wl-triple)
+  have hncq : ¬Coplanar ({wl.getD 0 0, wl.getD 1 0, c, q} : Set V3) := fun hc =>
+    ne_of_gt hχcq ((CHI_MSB_COPLANAR (wl.getD 0 0) (wl.getD 1 0) c q).1 hc)
+  have hq'aff : q' ∈ affGt ({wl.getD 0 0, wl.getD 1 0, c} : Set V3) ({q} : Set V3) :=
+    CHI_MSB_AFF_GT_0 (wl.getD 0 0) (wl.getD 1 0) c q q' hncq hχcq hχcq'
+  obtain ⟨d, hdnc, hdH1, hdH2⟩ :=
+    CONVEX_R3_INTER (wl.getD 0 0) (wl.getD 1 0) c q q' hncq hq'aff
+  -- 8. hull bookkeeping: {wl0, wl1, c, d} sits inside X ∩ Y
+  have hwl0u : wl.getD 0 0 ∈ ({u0, u1} : Set V3) := by rw [← hwlpair]; simp
+  have hwl1u : wl.getD 1 0 ∈ ({u0, u1} : Set V3) := by rw [← hwlpair]; simp
+  have hwl02 : wl.getD 0 0 ∈ ({u0, u1, u2} : Set V3) := by
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hwl0u ⊢
+    rcases hwl0u with h | h
+    · exact Or.inl h
+    · exact Or.inr (Or.inl h)
+  have hwl12 : wl.getD 1 0 ∈ ({u0, u1, u2} : Set V3) := by
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hwl1u ⊢
+    rcases hwl1u with h | h
+    · exact Or.inl h
+    · exact Or.inr (Or.inl h)
+  have hcX : c ∈ X := hsubpq (by
+    refine convexHull_mono (s := ({u0, u1, p} : Set V3))
+      (t := ({u0, u1, p, q} : Set V3)) ?_ hcH2
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with hz | hz | hz
+    · rw [hz]; exact Or.inl rfl
+    · rw [hz]; exact Or.inr (Or.inl rfl)
+    · rw [hz]; exact Or.inr (Or.inr (Or.inl rfl)))
+  have hcY : c ∈ ccCell V wl := by
+    have h5 : convexHull ℝ ({u0, u1, u2} : Set V3) ⊆ ccCell V wl := by
+      have := convexHull_mono (𝕜 := ℝ) hmemY
+      rw [hYY] at this
+      exact this
+    exact h5 hcH1
+  have hdX : d ∈ X := by
+    have h4 : ({wl.getD 0 0, wl.getD 1 0, c, q} : Set V3) ⊆ X := by
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with hz | hz | hz | hz
+      · rw [hz]; exact hstemsub hwl0u
+      · rw [hz]; exact hstemsub hwl1u
+      · rw [hz]; exact hcX
+      · rw [hz]; exact hqX
+    have h5 := convexHull_mono (𝕜 := ℝ) h4
+    rw [hXX] at h5
+    exact h5 hdH1
+  have hdY : d ∈ ccCell V wl := by
+    have h4 : ({wl.getD 0 0, wl.getD 1 0, c, q'} : Set V3) ⊆ ccCell V wl := by
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with hz | hz | hz | hz
+      · rw [hz]; exact hmemY hwl02
+      · rw [hz]; exact hmemY hwl12
+      · rw [hz]; exact hcY
+      · rw [hz]; exact hq'Y
+    have h5 := convexHull_mono (𝕜 := ℝ) h4
+    rw [hYY] at h5
+    exact h5 hdH2
+  have h4dX : ({wl.getD 0 0, wl.getD 1 0, c, d} : Set V3) ⊆ X := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with hz | hz | hz | hz
+    · rw [hz]; exact hstemsub hwl0u
+    · rw [hz]; exact hstemsub hwl1u
+    · rw [hz]; exact hcX
+    · rw [hz]; exact hdX
+  have h4dY : ({wl.getD 0 0, wl.getD 1 0, c, d} : Set V3) ⊆ ccCell V wl := by
+    intro z hz
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with hz | hz | hz | hz
+    · rw [hz]; exact hmemY hwl02
+    · rw [hz]; exact hmemY hwl12
+    · rw [hz]; exact hcY
+    · rw [hz]; exact hdY
+  have hsubXY : convexHull ℝ ({wl.getD 0 0, wl.getD 1 0, c, d} : Set V3)
+      ⊆ X ∩ ccCell V wl := by
+    intro z hz
+    refine ⟨?_, ?_⟩
+    · have h6 := convexHull_mono h4dX hz
+      rwa [hXX] at h6
+    · have h6 := convexHull_mono h4dY hz
+      rwa [hYY] at h6
+  -- 9. the intersection is not null (ZWVCBMN on the off-plane point d), so
+  --    AJRIPQN_0 identifies the two cells
+  have hvolpos := ZWVCBMN (wl.getD 0 0) (wl.getD 1 0) c d hdnc
+  have hnullXY : ¬nullSet (X ∩ ccCell V wl) := by
+    intro h0
+    rw [nullSet] at h0
+    have hle : MeasureTheory.volume
+        (convexHull ℝ ({wl.getD 0 0, wl.getD 1 0, c, d} : Set V3))
+        ≤ MeasureTheory.volume (X ∩ ccCell V wl) :=
+      MeasureTheory.measure_mono hsubXY
+    rw [h0] at hle
+    exact absurd hvolpos (not_lt.2 hle)
+  have hres := AJRIPQN_0 (V := V) (ul := ul2) (vl := ccUh V wl) (i := i)
+    (j := ccKe V wl) hp hs hbar2 hbarY (by rw [← hXeq]; exact hnullXY)
+  have hXYc : X = ccCell V wl := by
+    rw [hXeq]
+    exact hres.symm
+  -- 10. resolve the orientation
+  rcases hwlcase with rfl | rfl
+  · rw [hXYc, pa18_ccCell_swap hp hs hl']
+  · exact hXYc
 
 /-- HOL `CC_CELL_IN_MCELL_SET` (leaf_cell.hl:2515-2584). -/
 theorem CC_CELL_IN_MCELL_SET {V : Set V3} {ul : List V3} (hs : saturated V)
