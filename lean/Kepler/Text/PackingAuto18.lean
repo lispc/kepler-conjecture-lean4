@@ -4335,28 +4335,1029 @@ theorem pa18e_affInd_of_barV3 (V : Set V3) (a b c d : V3) (hp : Packing V)
     exact_mod_cast hle
   omega
 
+/-! ## MCELL4_EDGE_FIRST assembly kit: the k = 3 slice of the YIFVQDV_1
+giant (Rogers.hl:8777).  Every input below is a proved public theorem
+(NEIGHBORHOOD_lemma / XYOFCGX / VORONOI_LIST_EQ_INTERS_BIS /
+AFFINE_HULL_VORONOI_LIST_SUBSET_INTERS_BIS / CIRCUMCENTER_IN_VORONOI_SET in
+PackingAuto7; OAPVION1/2 in PackingAuto6; BIS_EQ_HYPERPLANE, AFFINE_BIS,
+AFFINE_HULL_INTERS_BIS, BARV_SUBSET in PackingAuto5; affDim_hyperplane in
+Polytope; BumpP4.MCELL4_EDGE in PackingAuto4), plus Mathlib affine-subspace
+and finrank API. -/
+
+/-- The inner-product functional on `V3` (the `p15_dotR` pattern, stated
+through `inner` so that kernel memberships are definitionally inner
+equations). -/
+private def pa18e_dotR (a : V3) : V3 →ₗ[ℝ] ℝ where
+  toFun x := inner ℝ a x
+  map_add' x y := inner_add_right a x y
+  map_smul' r x := real_inner_smul_right a x r
+
+/-- The coe family on a set has the set as its range. -/
+private theorem pa18e_range_coe {S : Set V3} :
+    Set.range (fun x : ↥S => (x : V3)) = S := by
+  ext y
+  constructor
+  · rintro ⟨x, rfl⟩; exact x.2
+  · intro hy; exact ⟨⟨y, hy⟩, rfl⟩
+
+/-- Three-point cardinality from pairwise distinctness. -/
+private theorem pa18_card3_of_distinct {a b c : V3} (h1 : a ≠ b) (h2 : a ≠ c)
+    (h3 : b ≠ c) : Nat.card ({a, b, c} : Set V3) = 3 := by
+  have e1 : ({a, b, c} : Set V3).ncard = ({b, c} : Set V3).ncard + 1 :=
+    Set.ncard_insert_of_notMem (by simp; tauto)
+  have e2 : ({b, c} : Set V3).ncard = ({c} : Set V3).ncard + 1 :=
+    Set.ncard_insert_of_notMem (by simp; tauto)
+  have e3 : ({c} : Set V3).ncard = 1 := Set.ncard_singleton c
+  have he : Nat.card ({a, b, c} : Set V3) = ({a, b, c} : Set V3).ncard := rfl
+  omega
+
+/-- For `a ≠ 0` the kernel of the inner-product functional has finrank `2`
+(rank-nullity: the range is a nonzero subspace of `ℝ`; the
+`p15_finrank_ker_dot` pattern). -/
+private theorem pa18e_finrank_ker_dot {a : V3} (ha : a ≠ 0) :
+    Module.finrank ℝ (LinearMap.ker (pa18e_dotR a)) = 2 := by
+  have hDpos : (0:ℝ) < pa18e_dotR a a := by
+    show 0 < inner ℝ a a
+    rw [real_inner_self_eq_norm_sq]
+    exact pow_pos (norm_pos_iff.mpr ha) 2
+  have hrange_ne : LinearMap.range (pa18e_dotR a) ≠ ⊥ := by
+    intro hbot
+    have hx : pa18e_dotR a a ∈ LinearMap.range (pa18e_dotR a) := ⟨a, rfl⟩
+    rw [hbot] at hx
+    exact hDpos.ne' (Submodule.mem_bot (R := ℝ) |>.mp hx)
+  have hnk := LinearMap.finrank_range_add_finrank_ker (pa18e_dotR a)
+  have h3 : Module.finrank ℝ V3 = 3 := finrank_euclideanSpace_fin
+  rw [h3] at hnk
+  have hfrle : Module.finrank ℝ (LinearMap.range (pa18e_dotR a)) ≤ 1 := by
+    refine le_trans (Submodule.finrank_mono (le_top : LinearMap.range (pa18e_dotR a) ≤ _)) ?_
+    simp
+  have hfrne : Module.finrank ℝ (LinearMap.range (pa18e_dotR a)) ≠ 0 := by
+    intro h
+    apply hrange_ne
+    exact (Submodule.finrank_eq_zero).mp h
+  omega
+
+/-- `affDim` of an affine hull (HOL `AFF_DIM_AFFINE_HULL`; the
+`p6_affDim_affineSpan` pattern). -/
+private theorem pa18e_affDim_affineSpan (s : Set V3) :
+    affDim ((affineSpan ℝ s : Set V3)) = affDim s := by
+  rcases s.eq_empty_or_nonempty with hs | hs
+  · rw [hs, affDim_empty, AffineSubspace.span_empty, AffineSubspace.bot_coe, affDim_empty]
+  · have hne : s ≠ ∅ := Set.nonempty_iff_ne_empty.mp hs
+    have hne2 : (affineSpan ℝ s : Set V3) ≠ ∅ := by
+      intro h0
+      exact hne (Set.subset_empty_iff.1 (h0 ▸ subset_affineSpan ℝ s))
+    simp only [affDim, if_neg hne, if_neg hne2]
+    rw [← AffineSubspace.direction_eq_vectorSpan (affineSpan ℝ s), direction_affineSpan]
+
+/-- `affDim` of a nondegenerate bisector is `2` (the `p15_affDim_bis_pair`
+pattern: `BIS_EQ_HYPERPLANE` + `affDim_hyperplane`). -/
+private theorem pa18e_affDim_bis_pair {u0 u1 : V3} (hne : u0 ≠ u1) :
+    affDim (bis u0 u1) = 2 := by
+  have hsub : u1 - u0 ≠ 0 := sub_ne_zero.mpr (Ne.symm hne)
+  rw [BIS_EQ_HYPERPLANE]
+  have heq : {x : V3 | 2 * ((u1 - u0) ⬝ᵥ x) = u1 ⬝ᵥ u1 - u0 ⬝ᵥ u0} =
+      {x : V3 | (u1 - u0) ⬝ᵥ x = (u1 ⬝ᵥ u1 - u0 ⬝ᵥ u0) / 2} := by
+    ext x
+    simp only [Set.mem_setOf_eq]
+    constructor <;> intro h <;> linarith
+  rw [heq]
+  exact affDim_hyperplane hsub _
+
+/-- `radV` is monotone along subsets of an affinely independent point set
+(HOL `RADV_MONO`, Rogers.hl:7030).  The subset circumcenter sees the
+ambient circumcenter offset by a vector orthogonal to every chord of the
+subset (equidistance algebra), and Pythagoras on any subset point then
+compares the squared radii. -/
+private theorem pa18e_radv_mono {s t : Set V3} (hs : ¬ affineDependent s)
+    (hsub : t ⊆ s) (hne : t.Nonempty) : radV t ≤ radV s := by
+  classical
+  have hainds : AffineIndependent ℝ (fun x : ↥s => (x : V3)) := not_not.mp hs
+  have haindt : AffineIndependent ℝ (fun x : ↥t => (x : V3)) :=
+    hainds.comp_embedding
+      (⟨fun x => ⟨(x : V3), hsub x.2⟩,
+        fun a b h => Subtype.ext (by simpa using h)⟩ :
+        ↥t ↪ ↥s)
+  have hctd : ∀ w ∈ t, radV t = dist (circumcenter t) w :=
+    fun w hw => OAPVION2_concl t (not_not.mpr haindt) w hw
+  have hcsd : ∀ w ∈ s, radV s = dist (circumcenter s) w :=
+    fun w hw => OAPVION2_concl s hs w hw
+  -- orthogonality of the center offset to every chord of `t`
+  have horth : ∀ w ∈ t, ∀ w' ∈ t,
+      inner ℝ (circumcenter s - circumcenter t) (w - w') = 0 := by
+    intro w hw w' hw'
+    have eqT : ∀ z ∈ t, ‖z‖ ^ 2 - 2 * inner ℝ z (circumcenter t) +
+        ‖circumcenter t‖ ^ 2 = radV t ^ 2 := by
+      intro z hz
+      have h1 : ‖z - circumcenter t‖ ^ 2 = radV t ^ 2 := by
+        rw [← dist_eq_norm, dist_comm, hctd z hz]
+      have h2 := norm_sub_sq_real z (circumcenter t)
+      rw [h1] at h2
+      exact h2.symm
+    have eqS : ∀ z ∈ t, ‖z‖ ^ 2 - 2 * inner ℝ z (circumcenter s) +
+        ‖circumcenter s‖ ^ 2 = radV s ^ 2 := by
+      intro z hz
+      have h1 : ‖z - circumcenter s‖ ^ 2 = radV s ^ 2 := by
+        rw [← dist_eq_norm, dist_comm, hcsd z (hsub hz)]
+      have h2 := norm_sub_sq_real z (circumcenter s)
+      rw [h1] at h2
+      exact h2.symm
+    have t1 := eqT w hw
+    have t1' := eqT w' hw'
+    have s1 := eqS w hw
+    have s1' := eqS w' hw'
+    have c1 : inner ℝ (circumcenter s) w = inner ℝ w (circumcenter s) := real_inner_comm _ _
+    have c2 : inner ℝ (circumcenter s) w' = inner ℝ w' (circumcenter s) := real_inner_comm _ _
+    have c3 : inner ℝ (circumcenter t) w = inner ℝ w (circumcenter t) := real_inner_comm _ _
+    have c4 : inner ℝ (circumcenter t) w' = inner ℝ w' (circumcenter t) := real_inner_comm _ _
+    rw [inner_sub_right, inner_sub_left, inner_sub_left]
+    linarith
+  -- the subset circumcenter lies in the affine hull of `t`; the chords span
+  -- its direction, so the center offset is orthogonal to it
+  have hctHull : circumcenter t ∈ (affineSpan ℝ t : Set V3) :=
+    OAPVION1 t (Set.nonempty_iff_ne_empty.mp hne) (not_not.mpr haindt)
+  have hperp : ∀ w ∈ t, inner ℝ (circumcenter s - circumcenter t) (w - circumcenter t) = 0 := by
+    intro w hw
+    have h1 : (w - circumcenter t : V3) ∈ (affineSpan ℝ t).direction :=
+      AffineSubspace.vsub_mem_direction (subset_affineSpan ℝ t hw) hctHull
+    rw [direction_affineSpan] at h1
+    have hle : vectorSpan ℝ t ≤ LinearMap.ker (pa18e_dotR (circumcenter s - circumcenter t)) := by
+      rw [vectorSpan_def, Submodule.span_le]
+      rintro z ⟨p, hp, p', hp', rfl⟩
+      show (p -ᵥ p' : V3) ∈ LinearMap.ker (pa18e_dotR (circumcenter s - circumcenter t))
+      rw [vsub_eq_sub]
+      exact horth p hp p' hp'
+    have hz := LinearMap.mem_ker.mp (hle h1)
+    show inner ℝ (circumcenter s - circumcenter t) (w - circumcenter t) = 0
+    exact hz
+  -- Pythagoras at the subset circumcenter compares the squared radii
+  obtain ⟨w0, hw0⟩ := hne
+  have hpyth : ‖w0 - circumcenter s‖ ^ 2 =
+      ‖w0 - circumcenter t‖ ^ 2 + ‖circumcenter s - circumcenter t‖ ^ 2 := by
+    have hsplit : (w0 - circumcenter s : V3) =
+        (w0 - circumcenter t) - (circumcenter s - circumcenter t) := by module
+    have hstep := norm_sub_sq_real (w0 - circumcenter t) (circumcenter s - circumcenter t)
+    have hcomm : inner ℝ (w0 - circumcenter t) (circumcenter s - circumcenter t)
+        = inner ℝ (circumcenter s - circumcenter t) (w0 - circumcenter t) := real_inner_comm _ _
+    rw [hsplit, hstep]
+    linarith [hcomm, hperp w0 hw0]
+  have h2s : radV t ^ 2 ≤ radV s ^ 2 := by
+    have h1 : ‖w0 - circumcenter t‖ = radV t := by
+      rw [← dist_eq_norm, dist_comm]; exact (hctd w0 hw0).symm
+    have h2 : ‖w0 - circumcenter s‖ = radV s := by
+      rw [← dist_eq_norm, dist_comm]; exact (hcsd w0 (hsub hw0)).symm
+    have h3 : (0:ℝ) ≤ ‖circumcenter s - circumcenter t‖ ^ 2 :=
+      pow_nonneg (norm_nonneg _) 2
+    rw [← h1, ← h2]
+    linarith
+  have hp0 : (0:ℝ) ≤ radV t := by rw [hctd w0 hw0]; exact dist_nonneg
+  have hq0 : (0:ℝ) ≤ radV s := by rw [hcsd w0 (hsub hw0)]; exact dist_nonneg
+  rcases le_or_gt (radV t) (radV s) with h | h
+  · exact h
+  · exfalso
+    have hpos : (0:ℝ) < radV t + radV s := by linarith
+    have hm := mul_pos (sub_pos.mpr h) hpos
+    have hexpand : (radV t - radV s) * (radV t + radV s) = radV t ^ 2 - radV s ^ 2 := by ring
+    rw [hexpand] at hm
+    linarith
+
+/-- HOL `AFFINES_INTER_BALL_EQ_IMP_EQ` (Rogers.hl:8527): two affine sets
+meeting a common open ball around a point of the first coincide.  Shift by
+the point, apply the linear-subspace rigidity lemma
+`SUBSPACES_INTER_BALL_EQ_IMP_EQ` to the directions, and shift back. -/
+private theorem pa18e_affines_inter_ball_eq (s t : Set V3) (x : V3) (r : ℝ)
+    (hs : ∃ K : AffineSubspace ℝ V3, (K : Set V3) = s)
+    (ht : ∃ K : AffineSubspace ℝ V3, (K : Set V3) = t)
+    (hr : 0 < r) (heq : s ∩ Metric.ball x r = t ∩ Metric.ball x r)
+    (hx : x ∈ s) : s = t := by
+  have hxt : x ∈ t := by
+    have h1 : x ∈ s ∩ Metric.ball x r := ⟨hx, Metric.mem_ball.mpr (by simpa using hr)⟩
+    rw [heq] at h1
+    exact h1.1
+  obtain ⟨Ks, rfl⟩ := hs
+  obtain ⟨Kt, rfl⟩ := ht
+  -- the shift `p ↦ p - x` carries a carrier through `x` onto its direction
+  have shift : ∀ K : AffineSubspace ℝ V3, x ∈ K →
+      ∃ L : Submodule ℝ V3, (L : Set V3) = (fun p : V3 => p - x) '' (K : Set V3) := by
+    intro K hxK
+    refine ⟨K.direction, ?_⟩
+    ext q
+    constructor
+    · intro hq
+      exact ⟨q + x, AffineSubspace.vadd_mem_of_mem_direction hq hxK, by simp⟩
+    · rintro ⟨p, hp, rfl⟩
+      exact AffineSubspace.vsub_mem_direction hp hxK
+  obtain ⟨Ls, hLs⟩ := shift Ks hx
+  obtain ⟨Lt, hLt⟩ := shift Kt hxt
+  -- the ball intersection transfers through the shift
+  have key : ∀ K₁ K₂ : AffineSubspace ℝ V3,
+      (K₁ : Set V3) ∩ Metric.ball x r = (K₂ : Set V3) ∩ Metric.ball x r →
+      ((fun p : V3 => p - x) '' (K₁ : Set V3)) ∩ Metric.ball 0 r =
+        ((fun p : V3 => p - x) '' (K₂ : Set V3)) ∩ Metric.ball 0 r := by
+    intro K₁ K₂ h'
+    ext q
+    rw [Set.mem_inter_iff, Set.mem_inter_iff, Set.mem_image, Set.mem_image]
+    constructor
+    · rintro ⟨⟨p, hpK, rfl⟩, hqb⟩
+      have hpx : dist p x < r := by
+        rw [dist_eq_norm]
+        simpa using hqb
+      have hp2 : p ∈ (K₂ : Set V3) ∩ Metric.ball x r := by
+        rw [← h']
+        exact ⟨hpK, hpx⟩
+      exact ⟨⟨p, hp2.1, rfl⟩, hqb⟩
+    · rintro ⟨⟨p, hpK, rfl⟩, hqb⟩
+      have hpx : dist p x < r := by
+        rw [dist_eq_norm]
+        simpa using hqb
+      have hp2 : p ∈ (K₁ : Set V3) ∩ Metric.ball x r := by
+        rw [h']
+        exact ⟨hpK, hpx⟩
+      exact ⟨⟨p, hp2.1, rfl⟩, hqb⟩
+  have hshift := key Ks Kt heq
+  have hsubspace := SUBSPACES_INTER_BALL_EQ_IMP_EQ
+    ((fun p : V3 => p - x) '' (Ks : Set V3)) ((fun p : V3 => p - x) '' (Kt : Set V3)) r
+    ⟨Ls, hLs⟩ ⟨Lt, hLt⟩ hr hshift
+  -- translate back
+  ext p
+  constructor
+  · intro hp
+    have h1 : (p - x : V3) ∈ (fun p : V3 => p - x) '' (Ks : Set V3) := ⟨p, hp, rfl⟩
+    have h2 : (p - x : V3) ∈ (fun p : V3 => p - x) '' (Kt : Set V3) := by
+      rw [← hsubspace]
+      exact h1
+    obtain ⟨p', hp'Kt, hp'q⟩ := h2
+    have hp'p : p' = p := by simpa using hp'q
+    rw [hp'p] at hp'Kt
+    exact hp'Kt
+  · intro hp
+    have h1 : (p - x : V3) ∈ (fun p : V3 => p - x) '' (Kt : Set V3) := ⟨p, hp, rfl⟩
+    have h2 : (p - x : V3) ∈ (fun p : V3 => p - x) '' (Ks : Set V3) := by
+      rw [hsubspace]
+      exact h1
+    obtain ⟨p', hp'Ks, hp'q⟩ := h2
+    have hp'p : p' = p := by simpa using hp'q
+    rw [hp'p] at hp'Ks
+    exact hp'Ks
+
+/-- The bisector family over a set is itself an affine set (the carrier of
+its affine hull, by `AFFINE_HULL_INTERS_BIS`). -/
+private theorem pa18e_inters_bis_affine (p : V3) (s : Set V3) :
+    ∃ K : AffineSubspace ℝ V3, (K : Set V3) = ⋂₀ {bis p v | v ∈ s} :=
+  ⟨affineSpan ℝ (⋂₀ {bis p v | v ∈ s}), AFFINE_HULL_INTERS_BIS p s⟩
+
+/-- The pa18 copy of HOL `YIFVQDV_lemma_aff_dim` (Rogers.hl:8656): inside
+the `hl < √2` margin the Voronoi list and the bisector intersection share
+their affine hull, hence their affine dimension (`NEIGHBORHOOD_lemma` +
+`XYOFCGX` + `pa18e_affines_inter_ball_eq`). -/
+private theorem pa18e_YIFVQDV_lemma (V : Set V3) (vl : List V3) (hV : Packing V)
+    (hsub : setOfList vl ⊆ V) (hind : ¬ affineDependent (setOfList vl))
+    (hhl : hl vl < Real.sqrt 2) :
+    affDim (voronoiList V vl) =
+      affDim (⋂₀ {bis (hdV vl) v | v ∈ setOfList vl}) := by
+  classical
+  rcases eq_or_ne (setOfList vl) (∅ : Set V3) with hE | hne
+  · -- the empty list: both families are empty, both sides are `univ`
+    cases vl with
+    | nil =>
+      have h1 : voronoiList V ([] : List V3) = (univ : Set V3) := by
+        rw [voronoiList]
+        ext q
+        simp [voronoiSet, setOfList]
+      have h2 : (⋂₀ {bis (hdV ([] : List V3)) v | v ∈ setOfList ([] : List V3)}) =
+          (univ : Set V3) := by
+        ext q
+        simp [setOfList]
+      rw [h1, h2]
+    | cons a t =>
+      have hmem : (a : V3) ∈ setOfList (a :: t) := by simp [setOfList]
+      rw [hE] at hmem
+      simp at hmem
+  · -- the gap ball around the circumcenter
+    have hgap : ∀ u ∈ setOfList vl, ∀ v ∈ V \ setOfList vl,
+        dist v (circumcenter (setOfList vl)) > dist u (circumcenter (setOfList vl)) := by
+      intro u hu v hv
+      exact XYOFCGX V (setOfList vl) (circumcenter (setOfList vl)) hV hsub hind rfl hhl u v
+        hu hv
+    obtain ⟨r, hrpos, hrgap⟩ := NEIGHBORHOOD_lemma V (setOfList vl)
+      (circumcenter (setOfList vl)) hV hsub hgap
+    have hdm : hdV vl ∈ setOfList vl := by
+      cases vl with
+      | nil =>
+        have hE0 : setOfList ([] : List V3) = ∅ := by
+          rw [Set.eq_empty_iff_forall_notMem]
+          intro q hq
+          exact absurd (Set.mem_setOf.mp hq) List.not_mem_nil
+        exact absurd hE0 hne
+      | cons a t => simp [setOfList, hdV]
+    have hlen1 : 1 ≤ vl.length := by
+      cases vl with
+      | nil =>
+        exact absurd (Set.eq_empty_of_forall_notMem fun q hq => by
+          simp [setOfList] at hq) hne
+      | cons a t => simp
+    have hpH : circumcenter (setOfList vl) ∈
+        (affineSpan ℝ (voronoiList V vl) : Set V3) :=
+      subset_affineSpan ℝ _ (CIRCUMCENTER_IN_VORONOI_SET V (setOfList vl) hV hsub hind hhl)
+    have heq : (affineSpan ℝ (voronoiList V vl) : Set V3) ∩ Metric.ball
+        (circumcenter (setOfList vl)) r =
+        (⋂₀ {bis (hdV vl) v | v ∈ setOfList vl}) ∩ Metric.ball
+        (circumcenter (setOfList vl)) r := by
+      ext q
+      rw [Set.mem_inter_iff, Set.mem_inter_iff]
+      constructor
+      · rintro ⟨hqa, hqb⟩
+        exact ⟨AFFINE_HULL_VORONOI_LIST_SUBSET_INTERS_BIS V vl hsub hqa, hqb⟩
+      · rintro ⟨hqt, hqb⟩
+        have hqvc : q ∈ voronoiClosed V (hdV vl) := by
+          intro w hw
+          by_cases hwS : w ∈ setOfList vl
+          · have h2 : dist q (hdV vl) = dist q w :=
+              Set.mem_sInter.mp hqt _ (by simpa using ⟨w, hwS, rfl⟩)
+            show dist q (hdV vl) ≤ dist q w
+            linarith
+          · have hg := hrgap q hqb (hdV vl) hdm w ⟨hw, hwS⟩
+            rw [dist_comm w q, dist_comm (hdV vl) q] at hg
+            exact le_of_lt hg
+        have hqvl : q ∈ voronoiList V vl := by
+          rw [VORONOI_LIST_EQ_INTERS_BIS V vl hsub hlen1]
+          exact ⟨hqvc, hqt⟩
+        exact ⟨subset_affineSpan ℝ _ hqvl, hqb⟩
+    have hspaneq := pa18e_affines_inter_ball_eq
+      (affineSpan ℝ (voronoiList V vl) : Set V3)
+      (⋂₀ {bis (hdV vl) v | v ∈ setOfList vl})
+      (circumcenter (setOfList vl)) r
+      ⟨affineSpan ℝ (voronoiList V vl), rfl⟩
+      (pa18e_inters_bis_affine (hdV vl) (setOfList vl)) hrpos heq hpH
+    calc affDim (voronoiList V vl)
+        = affDim ((affineSpan ℝ (voronoiList V vl) : Set V3)) :=
+          (pa18e_affDim_affineSpan (voronoiList V vl)).symm
+      _ = affDim (⋂₀ {bis (hdV vl) v | v ∈ setOfList vl}) := by rw [hspaneq]
+
+/-- The bisector family over a pair collapses to the one nontrivial
+bisector (`bis u u = univ`). -/
+private theorem pa18e_inters_bis_pair (u v : V3) :
+    ⋂₀ {bis u w | w ∈ ({u, v} : Set V3)} = bis u v := by
+  ext q
+  rw [Set.mem_sInter]
+  constructor
+  · intro h
+    exact h (bis u v) (by simpa using ⟨v, by simp, rfl⟩)
+  · intro h T hT
+    rw [Set.mem_setOf_eq] at hT
+    obtain ⟨w, hw, rfl⟩ := hT
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+    rcases hw with hwu | hwv
+    · rw [hwu]
+      show dist q u = dist q u
+      rfl
+    · rw [hwv]
+      exact h
+
+/-- The bisector family over a triple collapses to the pair of nontrivial
+bisectors. -/
+private theorem pa18e_inters_bis_triple (u v w : V3) :
+    ⋂₀ {bis u z | z ∈ ({u, v, w} : Set V3)} = bis u v ∩ bis u w := by
+  ext q
+  rw [Set.mem_sInter, Set.mem_inter_iff]
+  constructor
+  · intro h
+    exact ⟨h (bis u v) (by simpa using ⟨v, by simp, rfl⟩),
+      h (bis u w) (by simpa using ⟨w, by simp, rfl⟩)⟩
+  · rintro ⟨h1, h2⟩ T hT
+    rw [Set.mem_setOf_eq] at hT
+    obtain ⟨z, hz, rfl⟩ := hT
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+    rcases hz with hzu | hzv | hzw
+    · rw [hzu]
+      show dist q u = dist q u
+      rfl
+    · rw [hzv]
+      exact h1
+    · rw [hzw]
+      exact h2
+
+/-- A bisector is the carrier of the affine subspace through the midpoint
+with direction the kernel of the inner-product functional (the
+`AFFINE_BIS` construction, with the carrier equality exposed). -/
+private theorem pa18e_bis_mk' (a b : V3) :
+    (AffineSubspace.mk' ((2⁻¹ : ℝ) • (a + b))
+        (LinearMap.ker (pa18e_dotR (b - a))) : Set V3) = bis a b := by
+  ext x
+  rw [SetLike.mem_coe, AffineSubspace.mem_mk', LinearMap.mem_ker]
+  show inner ℝ (b - a) (x - (2⁻¹ : ℝ) • (a + b)) = 0 ↔ dist x a = dist x b
+  have hsqinj : ‖x - a‖ = ‖x - b‖ ↔ ‖x - a‖ ^ 2 = ‖x - b‖ ^ 2 := by
+    constructor
+    · intro hh; rw [hh]
+    · intro hh
+      have hA : 0 ≤ ‖x - a‖ := norm_nonneg _
+      have hB : 0 ≤ ‖x - b‖ := norm_nonneg _
+      have hmul : (‖x - a‖ + ‖x - b‖) * (‖x - a‖ - ‖x - b‖) = 0 := by
+        have key : ‖x - a‖ * ‖x - a‖ - ‖x - b‖ * ‖x - b‖ = 0 := by
+          rw [← pow_two, ← pow_two, hh, sub_self]
+        nlinarith [key]
+      rcases mul_eq_zero.1 hmul with h | h
+      · linarith
+      · linarith
+  rw [inner_sub_right, real_inner_smul_right, dist_eq_norm, dist_eq_norm, hsqinj,
+    norm_sub_sq_real x a, norm_sub_sq_real x b]
+  have hL : inner ℝ (b - a) x = inner ℝ b x - inner ℝ a x := inner_sub_left b a x
+  have hE : inner ℝ (b - a) (a + b) = ‖b‖ ^ 2 - ‖a‖ ^ 2 := by
+    rw [inner_add_right, inner_sub_left, inner_sub_left, real_inner_comm b a,
+      real_inner_self_eq_norm_sq a, real_inner_self_eq_norm_sq b]
+    ring
+  rw [hL, hE]
+  constructor <;> intro h
+  · linarith [real_inner_comm x a, real_inner_comm x b]
+  · linarith [real_inner_comm x a, real_inner_comm x b]
+
+/-- The vector span of a three-point set is the span of the two differences
+off the first point. -/
+private theorem pa18e_vectorSpan_triple (x y z : V3) :
+    vectorSpan ℝ ({x, y, z} : Set V3) = Submodule.span ℝ ({y - x, z - x} : Set V3) := by
+  rw [vectorSpan_eq_span_vsub_set_right ℝ (show x ∈ ({x, y, z} : Set V3) from by simp)]
+  apply le_antisymm
+  · rw [Submodule.span_le]
+    rintro q ⟨p, hp, rfl⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | rfl | rfl
+    · simp
+    · exact Submodule.subset_span (by simp)
+    · exact Submodule.subset_span (by simp)
+  · rw [Submodule.span_le]
+    rintro q (rfl | rfl)
+    · exact Submodule.subset_span ⟨y, by simp, rfl⟩
+    · exact Submodule.subset_span ⟨z, by simp, rfl⟩
+
+/-- Three pairwise distinct, non-collinear points: the two bisectors `bis u v`
+and `bis u w` meet in a line, `affDim = 1` (the `p15_finrank_ker_dot`
+pattern: submodularity for the lower bound, the orthogonal complement of
+the difference span for the upper bound). -/
+private theorem pa18e_affDim_bis2 {u v w : V3} (huv : u ≠ v) (huw : u ≠ w)
+    (hvw : v ≠ w) (hnc : Module.finrank ℝ (vectorSpan ℝ ({u, v, w} : Set V3)) = 2) :
+    affDim (bis u v ∩ bis u w) = 1 := by
+  classical
+  have hcard3 : Nat.card ({u, v, w} : Set V3) = 3 := by
+    have e1 : ({u, v, w} : Set V3).ncard = ({v, w} : Set V3).ncard + 1 :=
+      Set.ncard_insert_of_notMem (by simp; tauto)
+    have e2 : ({v, w} : Set V3).ncard = ({w} : Set V3).ncard + 1 :=
+      Set.ncard_insert_of_notMem (by simp; tauto)
+    have e3 : ({w} : Set V3).ncard = 1 := Set.ncard_singleton w
+    have he : Nat.card ({u, v, w} : Set V3) = ({u, v, w} : Set V3).ncard := rfl
+    omega
+  have hind3 : ¬ affineDependent ({u, v, w} : Set V3) := by
+    rw [affineDependent, not_not]
+    have hfin : ({u, v, w} : Set V3).Finite :=
+      Set.Finite.insert _ (Set.Finite.insert _ (Set.finite_singleton w))
+    haveI : Fintype ↥({u, v, w} : Set V3) := hfin.fintype
+    have hcf : Fintype.card ↥({u, v, w} : Set V3) = 1 + 2 := by
+      rw [← Nat.card_eq_fintype_card]
+      exact hcard3
+    rw [affineIndependent_iff_not_finrank_vectorSpan_le ℝ
+      (fun x : ↥({u, v, w} : Set V3) => (x : V3)) hcf, pa18e_range_coe, hnc]
+    norm_num
+  -- nonempty: the triple circumcenter is equidistant from all three points
+  have d0 := OAPVION2_concl ({u, v, w} : Set V3) hind3 u (by simp)
+  have d1 := OAPVION2_concl ({u, v, w} : Set V3) hind3 v (by simp)
+  have d2 := OAPVION2_concl ({u, v, w} : Set V3) hind3 w (by simp)
+  have hc0 : circumcenter ({u, v, w} : Set V3) ∈ bis u v ∩ bis u w := by
+    constructor
+    · show dist (circumcenter ({u, v, w} : Set V3)) u =
+        dist (circumcenter ({u, v, w} : Set V3)) v
+      linarith
+    · show dist (circumcenter ({u, v, w} : Set V3)) u =
+        dist (circumcenter ({u, v, w} : Set V3)) w
+      linarith
+  have hne2 : (bis u v ∩ bis u w : Set V3).Nonempty := ⟨_, hc0⟩
+  have hK1 : (AffineSubspace.mk' ((2⁻¹ : ℝ) • (u + v))
+      (LinearMap.ker (pa18e_dotR (v - u))) : Set V3) = bis u v := pa18e_bis_mk' u v
+  have hK2 : (AffineSubspace.mk' ((2⁻¹ : ℝ) • (u + w))
+      (LinearMap.ker (pa18e_dotR (w - u))) : Set V3) = bis u w := pa18e_bis_mk' u w
+  have hdir1 : (AffineSubspace.mk' ((2⁻¹ : ℝ) • (u + v))
+      (LinearMap.ker (pa18e_dotR (v - u)))).direction =
+      LinearMap.ker (pa18e_dotR (v - u)) := AffineSubspace.direction_mk' _ _
+  have hdir2 : (AffineSubspace.mk' ((2⁻¹ : ℝ) • (u + w))
+      (LinearMap.ker (pa18e_dotR (w - u)))).direction =
+      LinearMap.ker (pa18e_dotR (w - u)) := AffineSubspace.direction_mk' _ _
+  have hc0mem : circumcenter ({u, v, w} : Set V3) ∈
+      ↑(AffineSubspace.mk' ((2⁻¹ : ℝ) • (u + v)) (LinearMap.ker (pa18e_dotR (v - u))) ⊓
+        AffineSubspace.mk' ((2⁻¹ : ℝ) • (u + w)) (LinearMap.ker (pa18e_dotR (w - u)))) := by
+    rw [AffineSubspace.mem_inf_iff]
+    refine ⟨?_, ?_⟩
+    · have h' : circumcenter ({u, v, w} : Set V3) ∈ bis u v := hc0.1
+      rw [← hK1] at h'
+      exact h'
+    · have h' : circumcenter ({u, v, w} : Set V3) ∈ bis u w := hc0.2
+      rw [← hK2] at h'
+      exact h'
+  have hcarrier : (bis u v ∩ bis u w : Set V3) =
+      ↑(AffineSubspace.mk' ((2⁻¹ : ℝ) • (u + v)) (LinearMap.ker (pa18e_dotR (v - u))) ⊓
+        AffineSubspace.mk' ((2⁻¹ : ℝ) • (u + w)) (LinearMap.ker (pa18e_dotR (w - u)))) := by
+    rw [← hK1, ← hK2, ← AffineSubspace.coe_inf]
+    rfl
+  have hdirEq : (AffineSubspace.mk' ((2⁻¹ : ℝ) • (u + v))
+      (LinearMap.ker (pa18e_dotR (v - u))) ⊓
+      AffineSubspace.mk' ((2⁻¹ : ℝ) • (u + w))
+      (LinearMap.ker (pa18e_dotR (w - u)))).direction =
+      LinearMap.ker (pa18e_dotR (v - u)) ⊓ LinearMap.ker (pa18e_dotR (w - u)) := by
+    rw [AffineSubspace.direction_inf_of_mem_inf hc0mem, hdir1, hdir2]
+  rw [affDim, if_neg (Set.nonempty_iff_ne_empty.mp hne2), hcarrier,
+    ← AffineSubspace.direction_eq_vectorSpan, hdirEq]
+  have h2K : Module.finrank ℝ (LinearMap.ker (pa18e_dotR (v - u))) = 2 :=
+    pa18e_finrank_ker_dot (a := v - u) (sub_ne_zero.mpr (Ne.symm huv))
+  have h2K' : Module.finrank ℝ (LinearMap.ker (pa18e_dotR (w - u))) = 2 :=
+    pa18e_finrank_ker_dot (a := w - u) (sub_ne_zero.mpr (Ne.symm huw))
+  have hspanspan : Submodule.span ℝ ({v - u, w - u} : Set V3) =
+      vectorSpan ℝ ({u, v, w} : Set V3) := (pa18e_vectorSpan_triple u v w).symm
+  -- upper bound: the kernel intersection sits in the orthogonal complement
+  have hle : LinearMap.ker (pa18e_dotR (v - u)) ⊓
+      LinearMap.ker (pa18e_dotR (w - u)) ≤
+      (Submodule.span ℝ ({v - u, w - u} : Set V3))ᗮ := by
+    intro q hq
+    rw [Submodule.mem_orthogonal]
+    intro y hy
+    rw [Submodule.mem_span_pair] at hy
+    obtain ⟨a, b, hb⟩ := hy
+    have hq1 : inner ℝ (v - u) q = 0 := LinearMap.mem_ker.mp (Submodule.mem_inf.mp hq).1
+    have hq2 : inner ℝ (w - u) q = 0 := LinearMap.mem_ker.mp (Submodule.mem_inf.mp hq).2
+    rw [← hb, inner_add_left, real_inner_smul_left, real_inner_smul_left, hq1, hq2]
+    ring
+  have hleFr : Module.finrank ℝ ↥(LinearMap.ker (pa18e_dotR (v - u)) ⊓
+      LinearMap.ker (pa18e_dotR (w - u))) ≤
+      Module.finrank ℝ ↥((Submodule.span ℝ ({v - u, w - u} : Set V3))ᗮ) :=
+    Submodule.finrank_mono hle
+  have horthrank : Module.finrank ℝ
+      ((Submodule.span ℝ ({v - u, w - u} : Set V3))ᗮ) = 1 := by
+    have h := Submodule.finrank_add_finrank_orthogonal
+      (Submodule.span ℝ ({v - u, w - u} : Set V3))
+    have h3 : Module.finrank ℝ V3 = 3 := finrank_euclideanSpace_fin
+    rw [hspanspan, hnc] at h
+    rw [hspanspan]
+    omega
+  -- lower bound: submodularity of finrank
+  have hsubmod := Submodule.finrank_sup_add_finrank_inf_eq
+    (LinearMap.ker (pa18e_dotR (v - u))) (LinearMap.ker (pa18e_dotR (w - u)))
+  have htop : Module.finrank ℝ ↥(LinearMap.ker (pa18e_dotR (v - u)) ⊔
+      LinearMap.ker (pa18e_dotR (w - u))) ≤ 3 := by
+    refine le_trans (Submodule.finrank_mono (le_top : _ ≤ ⊤)) ?_
+    rw [finrank_top]
+    exact (finrank_euclideanSpace_fin).le
+  rw [h2K, h2K'] at hsubmod
+  rw [horthrank] at hleFr
+  omega
+
+/-- Three members of an affinely independent four-point set are
+non-collinear: a collinear triple would trap the fourth point in a plane. -/
+private theorem pa18e_nc3_of_affInd4 {q0 q1 q2 q3 y x0 x1 x2 : V3}
+    (hind : ¬ affineDependent ({q0, q1, q2, q3} : Set V3))
+    (hcard : Nat.card ({q0, q1, q2, q3} : Set V3) = 4)
+    (hyq : y ∈ ({q0, q1, q2, q3} : Set V3))
+    (hsub : ({x0, x1, x2} : Set V3) ⊆ ({q0, q1, q2, q3} : Set V3))
+    (hyne : ∀ t ∈ ({x0, x1, x2} : Set V3), t ≠ y)
+    (hd : x0 ≠ x1 ∧ x0 ≠ x2 ∧ x1 ≠ x2) :
+    Module.finrank ℝ (vectorSpan ℝ ({x0, x1, x2} : Set V3)) = 2 := by
+  classical
+  have hup : Module.finrank ℝ (vectorSpan ℝ ({x0, x1, x2} : Set V3)) ≤ 2 := by
+    rw [pa18e_vectorSpan_triple]
+    exact pa18_vol4_span_pair_le (x1 - x0) (x2 - x0)
+  have hdown : (2 : ℕ) ≤ Module.finrank ℝ (vectorSpan ℝ ({x0, x1, x2} : Set V3)) := by
+    by_contra hc
+    -- the fourth point `y` completes the 4-set
+    have hfin4 : ({q0, q1, q2, q3} : Set V3).Finite :=
+      Set.Finite.insert _ (Set.Finite.insert _ (Set.Finite.insert _ (Set.finite_singleton q3)))
+    have hy3 : y ∉ ({x0, x1, x2} : Set V3) := fun hm => hyne y hm rfl
+    have hcardT : Nat.card ({y, x0, x1, x2} : Set V3) = 4 := by
+      have e1 : ({y, x0, x1, x2} : Set V3).ncard = ({x0, x1, x2} : Set V3).ncard + 1 :=
+        Set.ncard_insert_of_notMem hy3
+      have he : Nat.card ({y, x0, x1, x2} : Set V3) = ({y, x0, x1, x2} : Set V3).ncard := rfl
+      have he3 : Nat.card ({x0, x1, x2} : Set V3) = ({x0, x1, x2} : Set V3).ncard := rfl
+      have h3 := pa18_card3_of_distinct hd.1 hd.2.1 hd.2.2
+      omega
+    have hysub : ({y, x0, x1, x2} : Set V3) ⊆ ({q0, q1, q2, q3} : Set V3) := by
+      intro t ht
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht
+      rcases ht with rfl | rfl | rfl | rfl
+      · exact hyq
+      · exact hsub (by simp)
+      · exact hsub (by simp)
+      · exact hsub (by simp)
+    have h4eq : ({y, x0, x1, x2} : Set V3) = ({q0, q1, q2, q3} : Set V3) :=
+      Set.eq_of_subset_of_ncard_le hysub (by
+        have he4 : Nat.card ({q0, q1, q2, q3} : Set V3) =
+            ({q0, q1, q2, q3} : Set V3).ncard := rfl
+        have hei : Nat.card ({y, x0, x1, x2} : Set V3) =
+            ({y, x0, x1, x2} : Set V3).ncard := rfl
+        omega) hfin4
+    have hsplit : ∀ t ∈ ({q0, q1, q2, q3} : Set V3),
+        t ∈ ({x0, x1, x2} : Set V3) ∨ t = y := by
+      intro t ht
+      rw [← h4eq] at ht
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at ht
+      rcases ht with ht1 | ht1 | ht1 | ht1
+      · exact Or.inr ht1
+      · exact Or.inl (by rw [ht1]; simp)
+      · exact Or.inl (by rw [ht1]; simp)
+      · exact Or.inl (by rw [ht1]; simp)
+    -- the 4-set's chords live in `vectorSpan {x0,x1,x2} ⊔ span {y - x0}`
+    have hchord : vectorSpan ℝ ({q0, q1, q2, q3} : Set V3) ≤
+        (vectorSpan ℝ ({x0, x1, x2} : Set V3) ⊔
+          Submodule.span ℝ ({y - x0} : Set V3)) := by
+      rw [vectorSpan_def, Submodule.span_le]
+      rintro z ⟨p, hp, p', hp', rfl⟩
+      simp only [vsub_eq_sub]
+      have hpT : p ∈ ({x0, x1, x2} : Set V3) ∨ p = y := hsplit p hp
+      have hp'T : p' ∈ ({x0, x1, x2} : Set V3) ∨ p' = y := hsplit p' hp'
+      rcases hpT with hpT | hpY
+      · rcases hp'T with hp'T | hpY'
+        · have hm : (p -ᵥ p' : V3) ∈ vectorSpan ℝ ({x0, x1, x2} : Set V3) :=
+            vsub_mem_vectorSpan ℝ hpT hp'T
+          rw [vsub_eq_sub] at hm
+          exact Submodule.mem_sup_left hm
+        · have h1 : (p -ᵥ x0 : V3) ∈ vectorSpan ℝ ({x0, x1, x2} : Set V3) :=
+            vsub_mem_vectorSpan ℝ hpT (by simp)
+          have h2 : (y -ᵥ x0 : V3) ∈ Submodule.span ℝ ({y - x0} : Set V3) :=
+            Submodule.subset_span (by simp)
+          rw [vsub_eq_sub] at h1 h2
+          have h3 : (p - p' : V3) = (p - x0) - (y - x0) := by
+            rw [hpY']
+            module
+          rw [h3]
+          exact Submodule.sub_mem _
+            (Submodule.mem_sup_left h1) (Submodule.mem_sup_right h2)
+      · rcases hp'T with hp'T | hpY'
+        · have h1 : (p' -ᵥ x0 : V3) ∈ vectorSpan ℝ ({x0, x1, x2} : Set V3) :=
+            vsub_mem_vectorSpan ℝ hp'T (by simp)
+          have h2 : (y -ᵥ x0 : V3) ∈ Submodule.span ℝ ({y - x0} : Set V3) :=
+            Submodule.subset_span (by simp)
+          rw [vsub_eq_sub] at h1 h2
+          have h3 : (p - p' : V3) = (y - x0) - (p' - x0) := by
+            rw [hpY]
+            module
+          rw [h3]
+          exact Submodule.sub_mem _
+            (Submodule.mem_sup_right h2) (Submodule.mem_sup_left h1)
+        · have hpz : (p - p' : V3) = 0 := by
+            rw [hpY, hpY', sub_self]
+          exact Submodule.mem_sup_left (by rw [hpz]; exact Submodule.zero_mem _)
+    have hQ1 : Module.finrank ℝ ↥(vectorSpan ℝ ({x0, x1, x2} : Set V3) ⊔
+        Submodule.span ℝ ({y - x0} : Set V3)) ≤
+        Module.finrank ℝ (vectorSpan ℝ ({x0, x1, x2} : Set V3)) + 1 := by
+      have hsm := Submodule.finrank_sup_add_finrank_inf_eq
+        (vectorSpan ℝ ({x0, x1, x2} : Set V3)) (Submodule.span ℝ ({y - x0} : Set V3))
+      have hyx : (y - x0 : V3) ≠ 0 := by
+        intro h
+        apply hy3
+        have hz : y = x0 := sub_eq_zero.mp h
+        rw [hz]
+        simp
+      have h1 : Module.finrank ℝ (Submodule.span ℝ ({y - x0} : Set V3)) ≤ 1 := by
+        rw [finrank_span_singleton hyx]
+      have h0 : (0:ℕ) ≤ Module.finrank ℝ ↥(vectorSpan ℝ ({x0, x1, x2} : Set V3) ⊓
+        Submodule.span ℝ ({y - x0} : Set V3)) := Nat.zero_le _
+      omega
+    have hind' : AffineIndependent ℝ
+        (fun x : ↥({q0, q1, q2, q3} : Set V3) => (x : V3)) := not_not.mp hind
+    haveI : Fintype ↥({q0, q1, q2, q3} : Set V3) := hfin4.fintype
+    have hcf : Fintype.card ↥({q0, q1, q2, q3} : Set V3) = 4 := by
+      rw [Nat.card_eq_fintype_card] at hcard
+      exact hcard
+    have hge : (3 : ℕ) ≤ Module.finrank ℝ (vectorSpan ℝ ({q0, q1, q2, q3} : Set V3)) := by
+      rw [affineIndependent_iff_not_finrank_vectorSpan_le ℝ
+        (fun x : ↥({q0, q1, q2, q3} : Set V3) => (x : V3)) hcf, pa18e_range_coe] at hind'
+      omega
+    have hmono : Module.finrank ℝ (vectorSpan ℝ ({q0, q1, q2, q3} : Set V3)) ≤
+        Module.finrank ℝ ↥(vectorSpan ℝ ({x0, x1, x2} : Set V3) ⊔
+          Submodule.span ℝ ({y - x0} : Set V3)) := Submodule.finrank_mono hchord
+    omega
+  omega
+
+/-- Initial sublists of a four-point list. -/
+private theorem pa18e_initSublist_four {a b c d : V3} {zl : List V3}
+    (hini : initialSublist zl [a, b, c, d]) (hz : 0 < zl.length) :
+    zl = [a, b, c, d] ∨ zl = [a, b, c] ∨ zl = [a, b] ∨ zl = [a] := by
+  obtain ⟨yl, hyl0⟩ := hini
+  have h4 : ([a, b, c, d] : List V3).length = 4 := by simp
+  have hlen0 : ([a, b, c, d] : List V3).length = zl.length + yl.length := by
+    rw [hyl0, List.length_append]
+  cases zl with
+  | nil => exact absurd hz (by simp)
+  | cons x t =>
+    simp only [List.cons_append, List.nil_append] at hyl0
+    cases t with
+    | nil =>
+      injection hyl0 with e1 _
+      exact Or.inr (Or.inr (Or.inr (by rw [e1])))
+    | cons y t2 =>
+      cases t2 with
+      | nil =>
+        injection hyl0 with e1 e2
+        injection e2 with e3 _
+        exact Or.inr (Or.inr (Or.inl (by rw [e1, e3])))
+      | cons z t3 =>
+        cases t3 with
+        | nil =>
+          injection hyl0 with e1 e2
+          injection e2 with e3 e4
+          injection e4 with e5 _
+          exact Or.inr (Or.inl (by rw [e1, e3, e5]))
+        | cons w t4 =>
+          cases t4 with
+          | nil =>
+            injection hyl0 with e1 e2
+            injection e2 with e3 e4
+            injection e4 with e5 e6
+            injection e6 with e7 _
+            exact Or.inl (by rw [e1, e3, e5, e7])
+          | cons v t5 =>
+            exfalso
+            have h5 : 5 ≤ (x :: y :: z :: w :: v :: t5).length := by simp
+            omega
+
+/-- A list's point set is contained in the point set of any extension. -/
+private theorem pa18e_setOfList_append {l1 l2 : List V3} :
+    setOfList l1 ⊆ setOfList (l1 ++ l2) := by
+  intro t ht
+  have ht' : t ∈ l1 := ht
+  exact List.mem_append.mpr (Or.inl ht')
+
+/-- HOL `YIFVQDV_1` (Rogers.hl:8777), the k = 3 slice: the `barV V 3`
+property of a four-point list depends only on the underlying point set.
+The prefix conditions are discharged dimension by dimension: the full
+prefix by set congruence, singletons by `AFF_DIM_VORONOI_CLOSED`, pairs and
+triples by `pa18e_YIFVQDV_lemma` plus the bisector dimension arithmetic,
+with the `hl` bounds from `pa18e_radv_mono`. -/
+private theorem pa18e_barV3_of_set (V : Set V3) (w0 w1 w2 w3 : V3) (hp : Packing V)
+    (hsub : setOfList [w0, w1, w2, w3] ⊆ V)
+    (hd : w0 ≠ w1 ∧ w0 ≠ w2 ∧ w0 ≠ w3 ∧ w1 ≠ w2 ∧ w1 ≠ w3 ∧ w2 ≠ w3)
+    (hind : ¬ affineDependent (setOfList [w0, w1, w2, w3]))
+    (hhl : hl [w0, w1, w2, w3] < Real.sqrt 2)
+    (hfull : voronoiNondg V [w0, w1, w2, w3])
+    (x0 x1 x2 x3 : V3) (hset : setOfList [x0, x1, x2, x3] = setOfList [w0, w1, w2, w3])
+    (hdistx : x0 ≠ x1 ∧ x0 ≠ x2 ∧ x0 ≠ x3 ∧ x1 ≠ x2 ∧ x1 ≠ x3 ∧ x2 ≠ x3) :
+    barV V 3 [x0, x1, x2, x3] := by
+  classical
+  rw [hl] at hhl
+  have hsab : setOfList [w0, w1, w2, w3] = ({w0, w1, w2, w3} : Set V3) := by
+    ext t; simp [setOfList]
+  have hcardw : Nat.card ({w0, w1, w2, w3} : Set V3) = 4 :=
+    pa18_card4_of_distinct hd.1 hd.2.1 hd.2.2.1 hd.2.2.2.1 hd.2.2.2.2.1 hd.2.2.2.2.2
+  have hs4 : ({x0, x1, x2, x3} : Set V3) = setOfList [x0, x1, x2, x3] := by
+    ext t; simp [setOfList]
+  have hcardx : Nat.card ({x0, x1, x2, x3} : Set V3) = 4 := by
+    rw [hs4, hset, hsab, hcardw]
+  have hindx : ¬ affineDependent ({x0, x1, x2, x3} : Set V3) := by
+    rw [hs4, hset]
+    exact hind
+  have hsubmem : ∀ t ∈ ({x0, x1, x2, x3} : Set V3), t ∈ setOfList [w0, w1, w2, w3] := by
+    intro t ht
+    rw [hs4] at ht
+    rw [hset] at ht
+    exact ht
+  refine ⟨rfl, fun vl hv => ?_⟩
+  obtain ⟨hini, hpos⟩ := hv
+  rcases pa18e_initSublist_four hini hpos with heq | heq | heq | heq
+  · -- the full prefix: the same point set as the original list
+    rw [heq]
+    exact (pa18_voronoiNondg_congr hset rfl).2 hfull
+  · -- the triple prefix
+    rw [heq]
+    refine ⟨by norm_num, ?_, ?_⟩
+    · intro t ht
+      have ht' : t ∈ setOfList [x0, x1, x2, x3] := pa18e_setOfList_append ht
+      rw [hset] at ht'
+      exact hsub ht'
+    · have hs3 : setOfList [x0, x1, x2] = ({x0, x1, x2} : Set V3) := by
+        ext t; simp [setOfList]
+      have hsubq : ({x0, x1, x2} : Set V3) ⊆ ({x0, x1, x2, x3} : Set V3) := by
+        intro t ht
+        rcases Set.mem_insert_iff.mp (Set.mem_insert_iff.mp ht) with ht1 | ht1 | ht1
+        · rw [ht1]; simp
+        · rw [ht1]; simp
+        · rw [ht1]; simp
+      have hne3 : ∀ t ∈ ({x0, x1, x2} : Set V3), t ≠ x3 := by
+        intro t ht
+        rcases Set.mem_insert_iff.mp (Set.mem_insert_iff.mp ht) with ht1 | ht1 | ht1
+        · rw [ht1]; exact hdistx.2.2.1
+        · rw [ht1]; exact hdistx.2.2.2.2.1
+        · rw [ht1]; exact hdistx.2.2.2.2.2
+      have hfr3 : Module.finrank ℝ (vectorSpan ℝ ({x0, x1, x2} : Set V3)) = 2 :=
+        pa18e_nc3_of_affInd4 hindx hcardx (by simp) hsubq hne3
+          ⟨hdistx.1, hdistx.2.1, hdistx.2.2.2.1⟩
+      have hcard3 : Nat.card ({x0, x1, x2} : Set V3) = 3 :=
+        pa18_card3_of_distinct hdistx.1 hdistx.2.1 hdistx.2.2.2.1
+      have hind3 : ¬ affineDependent (setOfList [x0, x1, x2]) := by
+        rw [hs3, affineDependent, not_not]
+        have hfin : ({x0, x1, x2} : Set V3).Finite :=
+          Set.Finite.insert _ (Set.Finite.insert _ (Set.finite_singleton x2))
+        haveI : Fintype ↥({x0, x1, x2} : Set V3) := hfin.fintype
+        have hcf : Fintype.card ↥({x0, x1, x2} : Set V3) = 1 + 2 := by
+          have h := hcard3
+          rw [Nat.card_eq_fintype_card] at h
+          exact h
+        rw [affineIndependent_iff_not_finrank_vectorSpan_le ℝ
+          (fun x : ↥({x0, x1, x2} : Set V3) => (x : V3)) hcf, pa18e_range_coe, hfr3]
+        norm_num
+      have hsub3 : setOfList [x0, x1, x2] ⊆ V := fun t ht => by
+        have ht' : t ∈ setOfList [x0, x1, x2, x3] := pa18e_setOfList_append ht
+        rw [hset] at ht'
+        exact hsub ht'
+      have hhl3 : hl [x0, x1, x2] < Real.sqrt 2 := by
+        rw [hl, hs3]
+        have hh : ∀ t ∈ ({x0, x1, x2} : Set V3), t ∈ setOfList [w0, w1, w2, w3] := by
+          intro t ht
+          rw [← hs3] at ht
+          have ht' : t ∈ setOfList [x0, x1, x2, x3] := pa18e_setOfList_append ht
+          rw [hset] at ht'
+          exact ht'
+        have hle := pa18e_radv_mono hind hh ⟨x0, by simp [setOfList]⟩
+        linarith
+      have hdim3 := pa18e_YIFVQDV_lemma V [x0, x1, x2] hp hsub3 hind3 hhl3
+      show affDim (voronoiList V [x0, x1, x2]) + ((3 : ℕ) : ℤ) = 4
+      rw [hdim3, hs3]
+      show affDim (⋂₀ {bis x0 v | v ∈ ({x0, x1, x2} : Set V3)}) + ((3 : ℕ) : ℤ) = 4
+      rw [pa18e_inters_bis_triple,
+        pa18e_affDim_bis2 hdistx.1 hdistx.2.1 hdistx.2.2.2.1 hfr3]
+      norm_num
+  · -- the pair prefix
+    rw [heq]
+    refine ⟨by norm_num, ?_, ?_⟩
+    · intro t ht
+      have ht' : t ∈ setOfList [x0, x1, x2, x3] := pa18e_setOfList_append ht
+      rw [hset] at ht'
+      exact hsub ht'
+    · have hs2 : setOfList [x0, x1] = ({x0, x1} : Set V3) := by
+        ext t; simp [setOfList]
+      have hcard2 : Nat.card ({x0, x1} : Set V3) = 2 := by
+        have e1 : ({x0, x1} : Set V3).ncard = ({x1} : Set V3).ncard + 1 :=
+          Set.ncard_insert_of_notMem (by simp [hdistx.1])
+        have e2 : ({x1} : Set V3).ncard = 1 := Set.ncard_singleton x1
+        have he : Nat.card ({x0, x1} : Set V3) = ({x0, x1} : Set V3).ncard := rfl
+        omega
+      have hind2 : ¬ affineDependent (setOfList [x0, x1]) := by
+        rw [hs2, affineDependent, not_not]
+        have hfin : ({x0, x1} : Set V3).Finite :=
+          Set.Finite.insert _ (Set.finite_singleton x1)
+        haveI : Fintype ↥({x0, x1} : Set V3) := hfin.fintype
+        have hcf : Fintype.card ↥({x0, x1} : Set V3) = 0 + 2 := by
+          have h := hcard2
+          rw [Nat.card_eq_fintype_card] at h
+          exact h
+        rw [affineIndependent_iff_not_finrank_vectorSpan_le ℝ
+          (fun x : ↥({x0, x1} : Set V3) => (x : V3)) hcf, pa18e_range_coe,
+          vectorSpan_pair_rev, finrank_span_singleton
+          (show (x1 -ᵥ x0 : V3) ≠ 0 from sub_ne_zero.mpr (Ne.symm hdistx.1))]
+        norm_num
+      have hsub2 : setOfList [x0, x1] ⊆ V := fun t ht => by
+        have ht' : t ∈ setOfList [x0, x1, x2, x3] := pa18e_setOfList_append ht
+        rw [hset] at ht'
+        exact hsub ht'
+      have hhl2 : hl [x0, x1] < Real.sqrt 2 := by
+        rw [hl, hs2]
+        have hh : ∀ t ∈ ({x0, x1} : Set V3), t ∈ setOfList [w0, w1, w2, w3] := by
+          intro t ht
+          rw [← hs2] at ht
+          have ht' : t ∈ setOfList [x0, x1, x2, x3] := pa18e_setOfList_append ht
+          rw [hset] at ht'
+          exact ht'
+        have hle := pa18e_radv_mono hind hh ⟨x0, by simp [setOfList]⟩
+        linarith
+      have hdimp := pa18e_YIFVQDV_lemma V [x0, x1] hp hsub2 hind2 hhl2
+      show affDim (voronoiList V [x0, x1]) + ((2 : ℕ) : ℤ) = 4
+      rw [hdimp, hs2]
+      show affDim (⋂₀ {bis x0 v | v ∈ ({x0, x1} : Set V3)}) + ((2 : ℕ) : ℤ) = 4
+      rw [pa18e_inters_bis_pair, pa18e_affDim_bis_pair hdistx.1]
+      norm_num
+  · -- the singleton prefix
+    rw [heq]
+    refine ⟨by norm_num, ?_, ?_⟩
+    · intro t ht
+      have ht' : t ∈ setOfList [x0, x1, x2, x3] := pa18e_setOfList_append ht
+      rw [hset] at ht'
+      exact hsub ht'
+    · show affDim (voronoiList V [x0]) + ((1 : ℕ) : ℤ) = 4
+      rw [VORONOI_LIST_SING V x0, AFF_DIM_VORONOI_CLOSED V x0 hp]
+      norm_num
+
 /-- HOL `MCELL4_EDGE_FIRST` (leaf_cell.hl:3375-?). -/
 theorem MCELL4_EDGE_FIRST {V : Set V3} {ul : List V3} {u v : V3} (hs : saturated V)
     (hp : Packing V) (hb : barV V 3 ul)
     (he : {u, v} ∈ edgeX V (mcell4 V ul)) :
     ∃ vl, barV V 3 vl ∧ u = vl.getD 0 0 ∧ v = vl.getD 1 0 ∧ mcell4 V ul = mcell4 V vl := by
--- NEEDS (GIANT): leaf_cell.hl:3281-3374 mcell edge-rigidity kit. The
--- assembly is now fully mapped: (i) hl ul < sqrt 2 (else mcell4 = empty and
--- VX = empty kills the edgeX hypothesis); (ii) BumpP4.MCELL4_EDGE gives
--- u ≠ v and {u,v} ⊆ setOfList ul; (iii) `pa18e_barV3_distinct` +
--- `pa18_card4_of_distinct` + `SET2_INSERT2` give c d with
--- {a,b,c,d} = {u,v,c,d}; (iv) vl := [u,v,c,d] has mcell4 V vl = mcell4 V ul
--- for free (hl = radV over the same set, convexHull over the same set); the
--- single missing input is `barV V 3 vl` for the permuted list, i.e. the
--- YIFVQDV_1 giant: barV-invariance of a 4-point list under the same
--- point set (Rogers.hl:8777, still sorry in PackingAuto7). Reduced route:
--- PA7's proved NEIGHBORHOOD_lemma + XYOFCGX + SUBSPACES_INTER_BALL_EQ_IMP_EQ
--- give a pa18 copy of AFFINES_INTER_BALL_EQ_IMP_EQ (PA7's own AFFINES copy
--- is sorry, out of scope), thence YIFVQDV_lemma_aff_dim (Rogers.hl:8656),
--- thence affDim (voronoiList V [w0,w1,w2]) = affDim (bis w0 w1 ∩ bis w0 w2)
--- = 1 for the non-collinear triple (BIS_EQ_HYPERPLANE x2 + finrank-kernel
--- arithmetic, the p15_finrank_ker_dot pattern).
-  sorry
+-- The assembly: (i) the edge forces the cell to be a genuine `mcell4`
+-- (non-null), hence `hl ul < sqrt 2`; (ii) `BumpP4.MCELL4_EDGE` pins the
+-- edge endpoints as a stem pair of `ul`; (iii) `BARV_3_EXPLICIT` names the
+-- witness quadruple and `SET2_INSERT2` completes `{u, v}` to it;
+-- (iv) `pa18e_barV3_of_set` re-roots the `barV` data at the permuted list
+-- (the k = 3 slice of the YIFVQDV_1 giant), and the two cells agree since
+-- they are hulls of the same point set.
+  have hnn : ¬ nullSet (mcell4 V ul) := by
+    intro hnull
+    obtain ⟨u', v', heq', hu', hv', hne'⟩ := he
+    have hvx : VX V (mcell4 V ul) = (∅ : Set V3) := by rw [VX, if_pos hnull]
+    rw [hvx] at hu' hv'
+    simp at hu'
+  have hhl : hl ul < Real.sqrt 2 := by
+    by_contra hcon
+    refine hnn ?_
+    show MeasureTheory.volume (mcell4 V ul) = 0
+    rw [mcell4, if_neg hcon]
+    exact MeasureTheory.measure_empty
+  obtain ⟨hune, husub⟩ := (BumpP4.MCELL4_EDGE V ul u v hp hs hnn hb).mp he
+  obtain ⟨a, b, c, d, hul4⟩ := BARV_3_EXPLICIT V ul hb
+  subst hul4
+  have hdw := pa18e_barV3_distinct V a b c d hp hb
+  have hcard := pa18_card4_of_distinct hdw.1 hdw.2.1 hdw.2.2.1 hdw.2.2.2.1 hdw.2.2.2.2.1
+    hdw.2.2.2.2.2
+  have hind := pa18e_affInd_of_barV3 V a b c d hp hb hdw
+  have hsab : setOfList [a, b, c, d] = ({a, b, c, d} : Set V3) := by
+    ext t; simp [setOfList]
+  rw [hsab] at husub
+  obtain ⟨e, f, hset4⟩ := SET2_INSERT2 husub hune hcard
+  -- the permuted quadruple is pairwise distinct (cardinality arguments)
+  have hcard4 : Nat.card ({u, v, e, f} : Set V3) = 4 := by rw [← hset4]; exact hcard
+  have htwo3 : ∀ p q r : V3, Nat.card ({p, q, r} : Set V3) ≤ 3 := by
+    intro p q r
+    have e1 : ({p, q, r} : Set V3).ncard ≤ ({q, r} : Set V3).ncard + 1 :=
+      Set.ncard_insert_le p {q, r}
+    have e2 : ({q, r} : Set V3).ncard ≤ ({r} : Set V3).ncard + 1 :=
+      Set.ncard_insert_le q {r}
+    have e3 : ({r} : Set V3).ncard ≤ 1 := by
+      rw [Set.ncard_singleton r]
+    have he2 : Nat.card ({p, q, r} : Set V3) = ({p, q, r} : Set V3).ncard := rfl
+    omega
+  have hde : u ≠ e := by
+    intro hce
+    have h2 : Nat.card ({u, v, e, f} : Set V3) ≤ 3 := by
+      have hseteq : ({u, v, e, f} : Set V3) = ({e, v, f} : Set V3) := by
+        rw [hce]
+        ext t
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      rw [hseteq]
+      exact htwo3 e v f
+    omega
+  have hdf : u ≠ f := by
+    intro hcf
+    have h2 : Nat.card ({u, v, e, f} : Set V3) ≤ 3 := by
+      have hseteq : ({u, v, e, f} : Set V3) = ({f, v, e} : Set V3) := by
+        rw [hcf]
+        ext t
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      rw [hseteq]
+      exact htwo3 f v e
+    omega
+  have hdve : v ≠ e := by
+    intro hce
+    have h2 : Nat.card ({u, v, e, f} : Set V3) ≤ 3 := by
+      have hseteq : ({u, v, e, f} : Set V3) = ({u, e, f} : Set V3) := by
+        rw [hce]
+        ext t
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      rw [hseteq]
+      exact htwo3 u e f
+    omega
+  have hdvf : v ≠ f := by
+    intro hcf
+    have h2 : Nat.card ({u, v, e, f} : Set V3) ≤ 3 := by
+      have hseteq : ({u, v, e, f} : Set V3) = ({u, f, e} : Set V3) := by
+        rw [hcf]
+        ext t
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      rw [hseteq]
+      exact htwo3 u f e
+    omega
+  have hdef : e ≠ f := by
+    intro hcf
+    have h2 : Nat.card ({u, v, e, f} : Set V3) ≤ 3 := by
+      have hseteq : ({u, v, e, f} : Set V3) = ({u, v, f} : Set V3) := by
+        rw [hcf]
+        ext t
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+        tauto
+      rw [hseteq]
+      exact htwo3 u v f
+    omega
+  -- the full-prefix nondg datum of the original list
+  have hfull : voronoiNondg V [a, b, c, d] :=
+    hb.2 [a, b, c, d] ⟨⟨[], (List.append_nil _).symm⟩, by simp⟩
+  have hset4' : setOfList [u, v, e, f] = setOfList [a, b, c, d] := by
+    have hsuf : setOfList [u, v, e, f] = ({u, v, e, f} : Set V3) := by
+      ext t; simp [setOfList]
+    rw [hsuf, ← hset4, hsab]
+  have hhl' : hl [u, v, e, f] < Real.sqrt 2 := by
+    rw [hl, hset4']
+    exact hhl
+  have hind' : ¬ affineDependent (setOfList [a, b, c, d]) := by
+    rw [hsab]
+    exact hind
+  have hbar' := pa18e_barV3_of_set V a b c d hp (BARV_SUBSET V 3 [a, b, c, d] hb) hdw
+    hind' hhl hfull u v e f hset4'
+    ⟨hune, hde, hdf, hdve, hdvf, hdef⟩
+  refine ⟨[u, v, e, f], hbar', rfl, rfl, ?_⟩
+  rw [mcell4, mcell4, if_pos hhl, if_pos hhl', hset4']
 
 /-- HOL `STEM_EDGEX` (leaf_cell.hl:3375-3432): the stem edge lies in the
 edgeX of the cc cell — case split on the dispatch value (CC_KE_34), pin the
