@@ -225,8 +225,8 @@ FILL-ROUND STATUS r3 (2026-10-13 wave: 119 -> 116 sorries, MERGE-INEQ channel)
     `mi_gamma3_x_gamma3f` (merge_ineq.hl:2761/2783/2825/4101) + 本文件
     `p25_gamma23Full8X_yOfX_eq` 桥 + 数值臂 `c2089`/`c1946` + bank 投影
     `proj_bank_IXPOTPA`/`proj_bank_TXQTPVC`。
-  - `TEWNSCJ_MERGED` 仍记账（NEEDS: PA3 opaque `a_spine5`/`b_spine5` ↔
-    数值 `aSpine5`/`bSpine5` 桥，见其 docstring）；其余 blocker 面不变。
+  - `TEWNSCJ_MERGED` 转真（SF-41 桥：PA3 `a_spine5`/`b_spine5` 重指向
+    sphere.hl:632/634 逐字体，见其 docstring）；其余 blocker 面不变。
 
 FILL-ROUND STATUS r4 (2026-10-13 wave: 116 -> 114, 楔形证书面/LEAF_S_LEAF 装配)
   - `MCELL4_LEAF_S_LEAF` 转真（装配级，零新增记账行）: PA18 冻结版 `CFFONNL`
@@ -5910,14 +5910,11 @@ theorem TXQTPVC_MERGED (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1
     · exact absurd h5 (by linarith)
     · exact absurd h6 (by linarith)
 
-/-- HOL `TEWNSCJ_MERGED`.  NEEDS (2026-10-13 wave, 记账): 证明管线已全部
-就位——`p25_gamma23Full8X_yOfX_eq` 桥 + `proj_bank_TEWNSCJ` 投影 + hrad/he1/he2
-否证支与本波 IXPOTPA/TXQTPVC 装配同构——但本件冻结陈述使用 PackingAuto3 的
-**opaque** 常数 `a_spine5`/`b_spine5`（PA3.lean:49-54 的编码决策），而
-bank_TEWNSCJ 首析取支携带数值体 `aSpine5 = 0.0560305`/`bSpine5 = -0.0445813`
-（IneqClosureDefs，sphere.hl:632 逐字）；opaque 常数无定义等式，桥
-`a_spine5 = aSpine5 ∧ b_spine5 = bSpine5` 不可证（Flyspeck_constants 级外部
-锚，G4 主案口径）。桥落地后本件为十行机械装配。 -/
+/-- HOL `TEWNSCJ_MERGED`.  2026-10-13 wave (SF-41): PA3 opaque-constant 桥
+落地——`a_spine5`/`b_spine5` 已重指向 sphere.hl:632/634 逐字体（PackingAuto3
+re-point，`rad2XP25` 先例），桥 `a_spine5 = aSpine5 ∧ b_spine5 = bSpine5` 为
+`rfl`；收口消费 `proj_bank_TEWNSCJ` 投影 + `p25_gamma23Full8X_yOfX_eq` 桥 +
+hrad/he1/he2 否证支，与 TXQTPVC_MERGED 装配同构。 -/
 theorem TEWNSCJ_MERGED (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1h)
     (hcey : criticalEdgeY y1) (hb2 : 2 ≤ y2) (hb2' : y2 ≤ 2 * hminus)
     (hb3 : 2 ≤ y3) (hb3' : y3 ≤ 2 * hminus)
@@ -5931,7 +5928,22 @@ theorem TEWNSCJ_MERGED (y1 y2 y3 y4 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1
         (dihY y1 y2 y3 y4 y5 y6 -
             (dihY y1 y2 (Real.sqrt 2) (Real.sqrt 2) (Real.sqrt 2) y6 +
               dihY y1 (Real.sqrt 2) y3 (Real.sqrt 2) y5 (Real.sqrt 2))) * 0.008 := by
-  sorry
+  -- SF-41 常数桥（PA3 体揭示后 rfl）；首析取支 = gamma23Full8X 复合下界
+  have hbank := proj_bank_TEWNSCJ hnl y1 y2 y3 y4 y5 y6 hcey.1 hcey.2 hb2 hb2'
+    hb3 hb3' hb4 hb4' hb5 hb5' hb6 hb6'
+  have hrad2 : rad2YP25 y1 y2 y3 y4 y5 y6 = yOfX rad2X y1 y2 y3 y4 y5 y6 := rfl
+  rcases hbank with h1 | h2 | h3 | h4
+  · have hbr := p25_gamma23Full8X_yOfX_eq y1 y2 y3 y4 y5 y6 hcey hb2 hb2' hb3 hb3'
+      hb5 hb5' hb6 hb6'
+    rw [hbr] at h1
+    rw [show a_spine5 = aSpine5 from rfl, show b_spine5 = bSpine5 from rfl]
+    linarith
+  · -- rad2 否证支（rad2XP25 = yOfX rad2X 为 rfl，TXQTPVC_MERGED 同款）
+    have hrad' : (2 : ℝ) ≤ yOfX rad2X y1 y2 y3 y4 y5 y6 := by
+      rw [← hrad2]; exact hrad
+    linarith
+  · linarith
+  · linarith
 
 /-- HOL `CC_3_AZIM_LT_PI_COPLANAR`. -/
 theorem CC_3_AZIM_LT_PI_COPLANAR (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)

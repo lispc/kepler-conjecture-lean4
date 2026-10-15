@@ -45,13 +45,19 @@ def half_spaces (a : V3) (b : ℝ) : Set V3 :=
 /-- HOL `cc_eps` (OXLZLEZ1.hl:23). -/
 def cc_eps : ℝ := 0.0057
 
-/-- Flyspeck constant `a_spine5` (defined in Flyspeck_constants outside
-OXLZLEZ1.hl; kept opaque here — together with `b_spine5` it only occurs
-inside `cc_real_model_v11`, and every theorem below is conditional on it). -/
-opaque a_spine5 : ℝ
+/-- Flyspeck constant `a_spine5` (sphere.hl:632, verbatim body `#0.0560305`;
+twins: `aSpine5` (IneqClosureDefs.lean:598), `aSpine5P4` (PackingAuto4.lean:178,
+private)).  2026-10-13 wave (SF-41): the former `opaque` declaration is
+re-pointed to the verbatim body — `rad2XP25` precedent
+(PackingAuto25.lean:91-98).  Statement sites are textually unchanged (the two
+constants occur only inside `cc_real_model_v11` here) and the
+`TEWNSCJ_MERGED` bridge `a_spine5 = aSpine5` is now `rfl`. -/
+def a_spine5 : ℝ := 0.0560305
 
-/-- Flyspeck constant `b_spine5`. -/
-opaque b_spine5 : ℝ
+/-- Flyspeck constant `b_spine5` (sphere.hl:634, verbatim body
+`--#0.0445813`; twins: `bSpine5` (IneqClosureDefs.lean:601), `bSpine5P4`
+(PackingAuto4.lean:181, private)). -/
+def b_spine5 : ℝ := -0.0445813
 
 /-- HOL type `cc_v11` (OXLZLEZ1.hl:25-27): represented by the tuple
 `((num->real) list) # ((num->bool) list) # num` that `pair_of_cc_v11`

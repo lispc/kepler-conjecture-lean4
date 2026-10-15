@@ -1648,3 +1648,103 @@ arctan√3.4 ≈ 1.0743 为假，蕴含式不成立。十件填实中的 y-变�
 存档 `docs/statement-fix-proposals-patches/40-x1deltay-lat11.patch`
 （git diff 全量：def 体一行 + docstring + 本波十件填实 + 5 枚新私件）。
 SF 闸锚 `lindihpi_lt_small_p11`；公理面规则⑤白名单。
+
+## 41. PA3 `a_spine5`/`b_spine5` opaque 常数体揭示（sphere.hl:632/634 逐字；`TEWNSCJ_MERGED` 桥唯一缺口）— 分级 A（def 语义修正 · 常数重指向）
+
+**立案：2026-10-13，PA25 merge-ineq 波记账随件 + 侦察车道（TEWNSCJ PA3
+opaque 桥，HANDOFF 待拍板项清偿）交付随件。** 车道纪律禁止本波自行动用
+陈述/定义变更权（PA3 实际变更待批准后另行走闸）；全部验证在隔离 clone
+（/tmp/p4tew，`git clone` + `cp -Rc` .lake，零软链 packages）以探针仪器
+完成（playbook 雷区 ㉚/㉛/㉜）。
+
+### (a) HOL 出处与缺陷
+
+`PackingAuto3.lean:51/54`（HEAD 口径）：`opaque a_spine5 : ℝ` /
+`opaque b_spine5 : ℝ`——真 opaque（无体），docstring 自述 "kept opaque
+here … every theorem below is conditional on it"。但本仓持久参考件
+**sphere.hl:632/634 是 `new_definition` 而非外部公理**，逐字引文
+（reference/flyspeck/text_formalization/general/sphere.hl，
+"(* nonlinear inequalities *)" 节）：
+
+    let a_spine5 = new_definition `a_spine5 = #0.0560305`;;
+    let b_spine5 = new_definition `b_spine5 = -- #0.0445813`;;
+
+且仓库已两处携带同值体：`aSpine5`/`bSpine5`（IneqClosureDefs.lean:598/601，
+sphere.hl:632/634 记档，:603 `rfl` 数值自检；PA21 bank 系消费）与 private
+`aSpine5P4`/`bSpine5P4`（PackingAuto4.lean:178/181，同值）。PA3 opaque 是
+全仓第三处、唯一无体形态——搬运时省体（docstring 记 "defined in
+Flyspeck_constants outside OXLZLEZ1.hl"，与参考件内联定义口径不符）。
+
+病：PA25 `TEWNSCJ_MERGED`（:5921，冻结陈述）结论携带 `a_spine5 + b_spine5
+* dihY …`，证明唯一通道 `bank_TEWNSCJ`（PA21:526，rest 12/62）首析取支是
+数值体 `yOfX (gamma23Full8X (h0cut y1)) … > aSpine5 + bSpine5 * dihY …`；
+opaque 常数无定义等式，桥 `a_spine5 = aSpine5 ∧ b_spine5 = bSpine5` 不可证
+⇒ 十行机械收口卡死（PA25:5913-5920 记账、头部 :227-228、e2e-debt-map:287
+同源）。
+
+### (b) 修复补丁
+
+存档 `docs/statement-fix-proposals-patches/41-pa3-spine5-tewnescj.patch`
+（git diff 全量，两文件）：
+
+1. **PA3（声明体改动，陈述文本零改动）**：`opaque` → `def` 带 sphere.hl
+   632/634 逐字体 + docstring 重写。两常数的全文件代码出现点仅
+   `cc_real_model_v11` 四合取支（:168/:191/:193/:195），文本不变；零
+   import 变更（数值逐字内联，不引 IneqClosureDefs 名，PA3 导入闭包不动）。
+2. **PA25（受益面收口，同车）**：`TEWNSCJ_MERGED` `sorry` → 十八行战术体
+   （`proj_bank_TEWNSCJ` 投影 + `p25_gamma23Full8X_yOfX_eq` 复合桥 +
+   `rad2YP25 = yOfX rad2X` rfl 桥（TXQTPVC_MERGED:5901 同款）+ hrad/he1/he2
+   否证支；常数桥以 `show a_spine5 = aSpine5 from rfl` 两改写落实）+ 冻结
+   陈述签名一字不改 + 头部记账行（:227-228）与本件 docstring 同步（纯注释）。
+
+先例对照：**rad2XP25 形最接近**（PA25:91-98，def 体改逐字重指向、陈述零
+改动、解锁 rfl 桥）；分级同 SF-39（占位语义 → 真内容，def 语义修正类）；
+SF-40 为误抄纠正，本案非误抄而是搬运省体，"揭示逐字体"动作同形。
+
+### (c) 消费面核实（全树 grep `a_spine5`/`b_spine5`，代码消费全图）
+
+| 消费点 | 性质 | 判定 |
+| --- | --- | --- |
+| PA3 `cc_real_model_v11` 四合取支（:168/:191/:193/:195） | def 体引用 | 文本零改；语义不变（opaque→def 保守扩张：常数符号不变，仅增 defeq 展开面） |
+| PA25 `real_model_ztg4`(:5040)/`pema`(:5508)/`pemb`(:5520)/`tew`(:5967) | 冻结陈述引用 | 文本零改；各自 sorry 待 G4 证书（独立债，不随本项） |
+| PA25 `pkrmQu`(:6157)/`pkrmQy`(:6333/:6339/:6344) | 装配引用 | 文本零改；下游自动受益（未来数值证书可经 defeq 转移） |
+| PA25 `TEWNSCJ_MERGED`(:5928) | **受益主体** | 收口转真（axiom 面标准三） |
+| PA4 `aSpine5P4`/`bSpine5P4`(:178/:181, private) | 独立私有拷贝（同值） | 不受影响（后续统一可选，不在本项） |
+| IneqClosureDefs `aSpine5`/`bSpine5`(:598/:601) | 桥的对端（bank 系数值体） | 不动 |
+| PA21 `bank_TEWNSCJ`(:526)/`proj_bank_TEWNSCJ`(:2500) | 投影层 | 不动 |
+| Assembly `nliRestTEWNSCJ`(:458) | G4 证书骨架 | 不动（证书债独立） |
+| 单调回退通道 | 补后式 ⇒ 冻结前式 | opaque→def 保守：一切旧证明保持有效；反向（def→opaque）才破损 |
+
+### (d) 保真论证
+
+补后体 = sphere.hl:632/634 逐字（(a) 引文），与 in-repo 两处同值互证
+（IneqClosureDefs:603 `example : (aSpine5, bSpine5) = (0.0560305,
+-0.0445813) := rfl`）。`TEWNSCJ_MERGED` 冻结陈述文本一字不改。
+axiom 面无回归（clone 探针实测：opaque 常数本就不进 `#print axioms`——
+修复前 `real_model_tew` = [propext, sorryAx, Classical.choice, Quot.sound]，
+修复后 `TEWNSCJ_MERGED` = [propext, Classical.choice, Quot.sound] 标准三，
+无自引入 axiom）。修复方向唯一（换入参考件逐字体），无 junk 语义风险。
+
+### (e) 风险
+
+- **陈述修正 ≠ 全闭合**：`real_model_tew`/`pema`/`pemb`/`ztg4` 四切片仍
+  sorry（各自 G4 证书债）；`nliRestTEWNSCJ` 骨架原位。PA25 sorry 计数
+  101 → 100（clone 实测 100 条 "declaration uses sorry"）。
+- **金标 build 待应用波**：clone 验证走探针仪器（㉛：拷贝 .lake/build 跨
+  工作区 trace 判 stale，金标 `lake build` 只能在主工作区跑）；应用波验收
+  `lake build Kepler.Text.PackingAuto25`，下游重编面 = clone 实测
+  {PA3, PA4, PA18, PA21, PA25} 五件（PA25 导入闭包 59 件中 PA3 下游仅
+  PA4/PA18/PA21 三件 + 本件）。
+- **雷区预演**：隔离 clone 曾触发 ㉜ "URL has changed" 删包重克隆
+  （mathlib）；已按 SOP 处置（杀并发 → pinned rev `905b9581` 核对 → 主仓
+  构建产物 `cp -Rc` 回填 → 探针冒烟双跑稳定）。应用波若重建 clone 照抄
+  本车环境配方。
+
+### (f) 状态：**待批准**
+（应用时闸参数建议：`SF_ITEM=41`，GATE_MODE=STATEMENT-FIX；审计对象
+`Kepler.Text.a_spine5`/`Kepler.Text.b_spine5` +
+`Kepler.Text.TEWNSCJ_MERGED`；namespace `Kepler.Text`；验收 = `lake build
+Kepler.Text.PackingAuto25` 零新错 + `#print axioms TEWNSCJ_MERGED` 标准
+三 + sorry 计数差 −1。隔离 clone 验证（2026-10-13）：探针链
+PA3→PA4→PA18→PA21→PA25 全绿 exit 0（20s/10s/23s/32s/17s，零新警告，仅
+既有 sorry/linter 噪）；桥 `rfl` 三例 + `#print axioms` 探针 exit 0。）
