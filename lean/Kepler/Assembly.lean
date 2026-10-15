@@ -318,19 +318,199 @@ C2570626711p200 / C549*）。 -/
 route A' 结构化：19 条消费切片 = cell3 7 + TSKAJXY 10 + GRKIBMP 2，加 62 条
 rest 叶） -/
 
-/-- 中层骨架 1a：cell3 切片组（HOL `cell3_hyp` merge_ineq.hl:3490-3495；
-PackingAuto21.lean:376 显式盒式 `∀ y…` 七条：QZECFIC wt0/wt0corner/wt0sqrt8/
-wt1/wt2A + CIHTIUM + CJFZZDW）。
-资产状态：deferred-compute——语句已在 PA21 显式成形，证书不在库（68 例
-旧机丢失口径）。
--- NEEDS: 七条逐条 G4 证书 + 粘合入 §2a 查表（对接 IneqPilot 样板链）。 -/
-theorem nliCell3Bank : cell3_bank := sorry
+/-! **中层骨架 1a/1b 拆条波（2026-10-13 nli 接线波前置展开，rest 波样式套用）**：
+`cell3_bank` 七条与 `tsk_bank` 十条逐条具名拆单——`nliCell3<NAME>` /
+`nliTsk<NAME>` 共 17 枚，与 PA21 对应 `bank_*` def 一一对应（盒形/结论直录
+PackingAuto21.lean:205-355），位次 1a k/7、1b k/10 = bank 合取序
+（PackingAuto21.lean:388/382；cell3_hyp = merge_ineq.hl:3490-3495、
+tsk_hyp = merge_ineq.hl:1370-1377 string 序）。本波真闭合 2/17
+（`#print axioms` = 标准三公理，路线照 rest 2 常数算术先例）：1b-9
+`TSKAJXY-delta_x4`（`deltaX4` 二次型盒区间算术，十枚单项 `mul_le_mul`
+界 + linarith，最坏角组合 ≈58.58 > 0）与 1b-10 `TSKAJXY-eulerA`
+（`Real.le_sqrt` 单调性 + 常数区间算术，`eulerAX` 四项逐项下界
+11.2+0+7.7999+7.7999，真余量 ≈26.8）。其余 15 条为几何/实分析内容件
+（`gamma3fXDivSqrtdelta`/`gamma4fgcy`/`eta_y`/`solEuler*`/`rad2X`/
+`lmfun` 族，需逐条 G4 证书），维持 NEEDS 记账骨架。 -/
 
-/-- 中层骨架 1b：TSKAJXY 切片组（merge_ineq.hl:1370-1377 string 序；
-PackingAuto21.lean:381 十条显式盒式不等式）。
-资产状态：deferred-compute（同 1a）。
--- NEEDS: 十条逐条 G4 证书 + 粘合入查表。 -/
-theorem nliTskBank : tsk_bank := sorry
+/-- 1a 1/7：HOL ineq entry `QZECFIC wt0`（ineq.hl:1372；PA21
+`bank_QZECFICwt0`，盒 [1,1]³×[2.01,2hmin]×[2,2hmin]²）。资产状态：
+deferred-compute（`gamma3fXDivSqrtdelta` 实分析内容，证书不在库）。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliCell3QZECFICwt0 : bank_QZECFICwt0 := sorry
+
+/-- 1a 2/7：HOL ineq entry `QZECFIC wt0 corner`（ineq.hl:1389；PA21
+`bank_QZECFICwt0corner`，盒 [1,1]³×[2,2.01]³）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliCell3QZECFICwt0corner : bank_QZECFICwt0corner := sorry
+
+/-- 1a 3/7：HOL ineq entry `QZECFIC wt0 sqrt8`（ineq.hl:1406；PA21
+`bank_QZECFICwt0sqrt8`，盒 [1,1]³×[2hplus,√8]×[2,2hmin]²，析取第二支
+`eta_y y4 y5 y6 ^ 2 > 2`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliCell3QZECFICwt0sqrt8 : bank_QZECFICwt0sqrt8 := sorry
+
+/-- 1a 4/7：HOL ineq entry `QZECFIC wt1`（ineq.hl:1425；PA21
+`bank_QZECFICwt1`，盒 [√2,√2]³×[2hmin,2hplus]×[2,2hmin]²，`h0cut y4`
+参数化双支）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliCell3QZECFICwt1 : bank_QZECFICwt1 := sorry
+
+/-- 1a 5/7：HOL ineq entry `QZECFIC wt2 A`（ineq.hl:1443；PA21
+`bank_QZECFICwt2A`，盒 [√2,√2]³×[2hmin,√8]²×[2,2hmin]，`h0cut y4/y5`
+参数化双支）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliCell3QZECFICwt2A : bank_QZECFICwt2A := sorry
+
+/-- 1a 6/7：HOL ineq entry `CIHTIUM`（ineq.hl:1462；PA21 `bank_CIHTIUM`，
+盒 [1,1]³×[2hmin,√8]³，结论 `eta_y y4 y5 y6 ^ 2 > 2`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliCell3CIHTIUM : bank_CIHTIUM := sorry
+
+/-- 1a 7/7：HOL ineq entry `CJFZZDW`（ineq.hl:1479；PA21 `bank_CJFZZDW`，
+盒 [1,1]³×[2hplus,√8]²×[2,√8]，结论同 CIHTIUM）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliCell3CJFZZDW : bank_CJFZZDW := sorry
+
+/-- 中层骨架 1a 本体：cell3 七条的显式合取装配（照 PA21 `cell3_bank` def
+逐位对齐；每枚组件 = 上方具名骨架件）。
+-- NEEDS: 无独立债务——骨架债仅自上方 7 枚开放组件流入。 -/
+theorem nliCell3Bank : cell3_bank :=
+  ⟨nliCell3QZECFICwt0, nliCell3QZECFICwt0corner, nliCell3QZECFICwt0sqrt8,
+    nliCell3QZECFICwt1, nliCell3QZECFICwt2A, nliCell3CIHTIUM, nliCell3CJFZZDW⟩
+
+/-- 1b 1/10：HOL ineq entry `TSKAJXY-GXSABWC DIV`（ineq.hl:359；PA21
+`bank_TSKAJXYGXSA`，x-空间盒 [2.8²,8]×[4,2.01²]²×[2.8²,8]×[4,2.01²]²，
+solEuler/ldih 四项和折减 `1/12`，析取第二支 `deltaX < 0`）。资产状态：
+deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliTskGXSA : bank_TSKAJXYGXSA := sorry
+
+/-- 1b 2/10：HOL ineq entry `TSKAJXY-IYOUOBF sharp v2`（ineq.hl:242；PA21
+`bank_TSKAJXYIYOUOBFsharpv2`，盒 [2hplus,√8]×[2,2.001]²×[2,2hmin]×
+[2,2.001]²）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliTskIYOUOBFsharpv2 : bank_TSKAJXYIYOUOBFsharpv2 := sorry
+
+/-- 1b 3/10：HOL ineq entry `TSKAJXY-IYOUOBF sym`（ineq.hl:223；PA21
+`bank_TSKAJXYIYOUOBFsym`，盒 [2hplus,√8]×[2.001,2hmin]×[2,2hmin]⁴，析取
+三排序支 `y2 < y3/y5/y6`）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliTskIYOUOBFsym : bank_TSKAJXYIYOUOBFsym := sorry
+
+/-- 1b 4/10：HOL ineq entry `TSKAJXY-RIBCYXU sharp`（ineq.hl:165；PA21
+`bank_TSKAJXYRIBCYXUsharp`，盒 [2,2.001]⁶）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliTskRIBCYXUsharp : bank_TSKAJXYRIBCYXUsharp := sorry
+
+/-- 1b 5/10：HOL ineq entry `TSKAJXY-RIBCYXU sym`（ineq.hl:183；PA21
+`bank_TSKAJXYRIBCYXUsym`，盒 [2.001,2hmin]×[2,2hmin]⁵，析取八排序支）。
+资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliTskRIBCYXUsym : bank_TSKAJXYRIBCYXUsym := sorry
+
+/-- 1b 6/10：HOL ineq entry `TSKAJXY-TADIAMB`（ineq.hl:127；PA21
+`bank_TSKAJXYTADIAMB`，盒 [2hplus,√8]²×[2,√8]⁴，结论
+`2 < yOfX rad2X …`（外接半径平方））。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliTskTADIAMB : bank_TSKAJXYTADIAMB := sorry
+
+/-- 1b 7/10：HOL ineq entry `TSKAJXY-WKGUESB sym`（ineq.hl:281；PA21
+`bank_TSKAJXYWKGUESBsym`，盒 [2hplus,√8]×[2.01,2hmin]×[2,2hmin]×
+[2hplus,√8]×[2,2hmin]²，析取四排序支）。资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliTskWKGUESBsym : bank_TSKAJXYWKGUESBsym := sorry
+
+/-- 1b 8/10：HOL ineq entry `TSKAJXY-XLLIPLS`（ineq.hl:304；PA21
+`bank_TSKAJXYXLLIPLS`，盒 [2hplus,√8]×[2,2.01]²×[2hplus,2.8]×[2,2.01]²）。
+资产状态：deferred-compute。
+-- NEEDS: G4 证书发射 + 粘合入 §2a 查表（nli 28+127 接线主波）。 -/
+theorem nliTskXLLIPLS : bank_TSKAJXYXLLIPLS := sorry
+
+/-- 1b 9/10：HOL ineq entry `TSKAJXY-delta_x4`（ineq.hl:341；PA21
+`bank_TSKAJXYdx4`，x-空间盒 [4,2.01²]²×[2.8²,8]×[4,2.01²]²×[2.8²,8]）。
+本波真闭合：`deltaX4` 二次型逐单项盒区间算术——`mul_le_mul` 十枚单项界
+（x1² ≤ 4.0401²、x2x3/x5x6 ≤ 4.0401·8、x3x6 ≥ 2.8²·2.8² 等）+ linarith，
+最坏角组合下界 ≈58.58 > 0（常数余量）。 -/
+theorem nliTskdx4 : bank_TSKAJXYdx4 := by
+  intro x1 x2 x3 x4 x5 x6 h1l h1h h2l h2h h3l h3h h4l h4h h5l h5h h6l h6h
+  have e : (2.01 : ℝ) ^ 2 = 4.0401 := by norm_num
+  have h1h' : x1 ≤ 4.0401 := by linarith [h1h, e]
+  have h2h' : x2 ≤ 4.0401 := by linarith [h2h, e]
+  have h4h' : x4 ≤ 4.0401 := by linarith [h4h, e]
+  have h5h' : x5 ≤ 4.0401 := by linarith [h5h, e]
+  have n1 : (0 : ℝ) ≤ x1 := by linarith
+  have n2 : (0 : ℝ) ≤ x2 := by linarith
+  have n3 : (0 : ℝ) ≤ x3 := by linarith
+  have n4 : (0 : ℝ) ≤ x4 := by linarith
+  have n5 : (0 : ℝ) ≤ x5 := by linarith
+  have n6 : (0 : ℝ) ≤ x6 := by linarith
+  have p11 : x1 * x1 ≤ 4.0401 * 4.0401 := mul_le_mul h1h' h1h' n1 (by norm_num)
+  have p12 : (4 : ℝ) * 4 ≤ x1 * x2 := mul_le_mul h1l h2l (by norm_num) n1
+  have p13 : (4 : ℝ) * (2.8 : ℝ) ^ 2 ≤ x1 * x3 :=
+    mul_le_mul h1l h3l (by norm_num) n1
+  have p14 : x1 * x4 ≤ 4.0401 * 4.0401 :=
+    mul_le_mul h1h' h4h' n4 (by norm_num)
+  have p15 : (4 : ℝ) * 4 ≤ x1 * x5 := mul_le_mul h1l h5l (by norm_num) n1
+  have p16 : (4 : ℝ) * (2.8 : ℝ) ^ 2 ≤ x1 * x6 :=
+    mul_le_mul h1l h6l (by norm_num) n1
+  have p23 : x2 * x3 ≤ 4.0401 * 8 := mul_le_mul h2h' h3h n3 (by norm_num)
+  have p25 : (4 : ℝ) * 4 ≤ x2 * x5 := mul_le_mul h2l h5l (by norm_num) n2
+  have p36 : (2.8 : ℝ) ^ 2 * (2.8 : ℝ) ^ 2 ≤ x3 * x6 :=
+    mul_le_mul h3l h6l (by norm_num) n3
+  have p56 : x5 * x6 ≤ 4.0401 * 8 := mul_le_mul h5h' h6h n6 (by norm_num)
+  unfold deltaX4
+  linarith [p11, p12, p13, p14, p15, p16, p23, p25, p36, p56]
+
+/-- 1b 10/10：HOL ineq entry `TSKAJXY-eulerA`（ineq.hl:324；PA21
+`bank_TSKAJXYeulerA`，x-空间盒 [2.8²,8]×[4,2.01²]²×[2.8²,8]×[4,2.01²]²）。
+本波真闭合：√ 单调性（`Real.le_sqrt`：√x1 ≥ 2.8、√x2/√x3 ≥ 2）+ 常数
+区间算术——`eulerAX` 四项逐项下界 11.2 + 0 + 7.7999 + 7.7999（首项
+√x1√x2√x3 ≥ 2.8·2·2；第二项线性因子 x2+x3−x4 ≥ 0；三/四项线性因子
+x1+x3−x5、x1+x2−x6 ≥ 7.84+4−4.0401），真余量 ≈26.8。 -/
+theorem nliTskeulerA : bank_TSKAJXYeulerA := by
+  intro x1 x2 x3 x4 x5 x6 h1l h1h h2l h2h h3l h3h h4l h4h h5l h5h h6l h6h
+  have e : (2.01 : ℝ) ^ 2 = 4.0401 := by norm_num
+  have h5h' : x5 ≤ 4.0401 := by linarith [h5h, e]
+  have h6h' : x6 ≤ 4.0401 := by linarith [h6h, e]
+  have r1 : (2.8 : ℝ) ≤ Real.sqrt x1 :=
+    (Real.le_sqrt (by norm_num) (by linarith)).mpr h1l
+  have r2 : (2 : ℝ) ≤ Real.sqrt x2 :=
+    (Real.le_sqrt (by norm_num) (by linarith)).mpr (by linarith)
+  have r3 : (2 : ℝ) ≤ Real.sqrt x3 :=
+    (Real.le_sqrt (by norm_num) (by linarith)).mpr (by linarith)
+  have hsx1 : (0 : ℝ) ≤ Real.sqrt x1 := Real.sqrt_nonneg x1
+  have hsx2 : (0 : ℝ) ≤ Real.sqrt x2 := Real.sqrt_nonneg x2
+  have hsx3 : (0 : ℝ) ≤ Real.sqrt x3 := Real.sqrt_nonneg x3
+  have t2 : (0 : ℝ) ≤ x2 + x3 - x4 := by linarith
+  have t3 : (7.84 : ℝ) + 4 - 4.0401 ≤ x1 + x3 - x5 := by
+    have e1 : (2.8 : ℝ) ^ 2 = 7.84 := by norm_num
+    linarith [e1, h1l, h3l, h5h']
+  have t4 : (7.84 : ℝ) + 4 - 4.0401 ≤ x1 + x2 - x6 := by
+    have e1 : (2.8 : ℝ) ^ 2 = 7.84 := by norm_num
+    linarith [e1, h1l, h2l, h6h']
+  have p12 : (2.8 : ℝ) * 2 ≤ Real.sqrt x1 * Real.sqrt x2 :=
+    mul_le_mul r1 r2 (by norm_num) hsx1
+  have p123 : (2.8 : ℝ) * 2 * 2 ≤ Real.sqrt x1 * Real.sqrt x2 * Real.sqrt x3 :=
+    mul_le_mul p12 r3 (by norm_num) (mul_nonneg hsx1 hsx2)
+  have z2 : (0 : ℝ) ≤ Real.sqrt x1 * (x2 + x3 - x4) :=
+    mul_nonneg hsx1 t2
+  have q3 : (2 : ℝ) * ((7.84 : ℝ) + 4 - 4.0401) ≤ Real.sqrt x2 * (x1 + x3 - x5) :=
+    mul_le_mul r2 t3 (by linarith [t3]) hsx2
+  have q4 : (2 : ℝ) * ((7.84 : ℝ) + 4 - 4.0401) ≤ Real.sqrt x3 * (x1 + x2 - x6) :=
+    mul_le_mul r3 t4 (by linarith [t4]) hsx3
+  unfold eulerAX
+  linarith [p12, p123, z2, q3, q4]
+
+/-- 中层骨架 1b 本体：TSKAJXY 十条的显式合取装配（照 PA21 `tsk_bank` def
+逐位对齐 = merge_ineq.hl:1370-1377 string 序）。
+-- NEEDS: 无独立债务——骨架债仅自上方 8 枚开放组件流入。 -/
+theorem nliTskBank : tsk_bank :=
+  ⟨nliTskGXSA, nliTskIYOUOBFsharpv2, nliTskIYOUOBFsym, nliTskRIBCYXUsharp,
+    nliTskRIBCYXUsym, nliTskTADIAMB, nliTskWKGUESBsym, nliTskXLLIPLS,
+    nliTskdx4, nliTskeulerA⟩
 
 /-- 中层骨架 1c：GRKIBMP 切片组（merge_ineq.hl:3795 add_hyp 序；
 PackingAuto21.lean:389，`GRKIBMP A V2` + `GRKIBMP B V2`，ineq.hl:1520/1537）。
