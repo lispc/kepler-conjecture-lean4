@@ -69,9 +69,9 @@ def IExpr.derivExpr {n : ℕ} : IExpr n → Fin n → IExpr n
       .div (.sub (.mul (e₁.derivExpr j) e₂) (.mul e₁ (e₂.derivExpr j)))
         (.mul e₂ e₂) out
   | .sqrt e s₁ s₂, j =>
-      .div (e.derivExpr j) (.mul (.const ⟨2, 0⟩) (.sqrt e s₁ s₂)) 0
+      .div (e.derivExpr j) (.mul (.const ⟨2, 0⟩) (.sqrt e s₁ s₂)) (-80)
   | .trans .arctanK e _ _, j =>
-      .div (e.derivExpr j) (.add (.const ⟨1, 0⟩) (.mul e e)) 0
+      .div (e.derivExpr j) (.add (.const ⟨1, 0⟩) (.mul e e)) (-80)
   | .trans _ _ _ _, _ => .const ⟨0, 0⟩
 
 /-- The node whitelist of `derivExpr`: no `.abs`, and `arctanK` is the only

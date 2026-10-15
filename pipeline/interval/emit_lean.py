@@ -293,21 +293,68 @@ class RPN:
     so the sound atan TM rule runs instead (its model over the constant
     submodel has `W = 0`, i.e. the same exact quality; the rule cannot
     fail — `1/(1+f²)` reciprocals are always away from 0).  Plain-atan
-    closed args keep the fast path."""
+    closed args keep the fast path.
+
+    `sqrt_const_pad_bits`: W6b plan A (W8 phase 0).  When set, every
+    `push_const` whose (num, den) value directly feeds a `sqrt` node
+    somewhere in the program (RPN order, per program list; `ite`
+    subprograms are their own lists) is emitted with its mantissa scaled UP
+    by factors of 4 (exponent down by 2 — value unchanged, parity of `e`
+    preserved) until it reaches `2^sqrt_const_pad_bits`.  Padding is by
+    VALUE, not by occurrence position (simpler; other occurrences of the
+    same rational are inert — the value is identical, only the mantissa
+    scale grows, which costs nothing but slightly larger `Int`s).  `Dyadic.sqrtI` certifies `√d` as
+    `[s, s+1] · 2^(e/2)` with `s = ⌊√(m·2^(e%2))⌋`, so a small-mantissa
+    radicand (`√8 = ⟨8,0⟩ → [2,3]`) certifies at whole-number granularity;
+    a ≥2^120 mantissa (`8 = ⟨2^123, -120⟩`) certifies at 2^-60 — a ~10^9x
+    tighter plain-eval enclosure for sqrt-of-const subtrees.  The injection
+    happens AFTER `dyadic()` normalization, in the text layer (scaling the
+    num/den fraction before `dyadic()` would be normalized away — W6b
+    minefield).  Default None = v1/v2 byte-identical behavior."""
 
     def __init__(self, div_out=-64, sqrt_slot=None, trans=None,
-                 trans_unclose_sqrt=False):
+                 trans_unclose_sqrt=False, sqrt_const_pad_bits=None):
         self.div_out = div_out
         self.sqrt_slot = sqrt_slot
         self.trans = trans
         self.trans_unclose_sqrt = trans_unclose_sqrt
+        self.sqrt_const_pad_bits = sqrt_const_pad_bits
+        self._pad_vals = None
         self.sqrt_count = 0
+
+    @staticmethod
+    def _sqrt_fed_consts(prog, acc):
+        """collect the (num, den) of push_consts immediately followed by a
+        `sqrt` in RPN order (ite subprograms scanned recursively)."""
+        prev = None
+        for ins in prog:
+            if isinstance(ins, dict):
+                it = ins["ite"]
+                for sub in (it["cond"], it["then"], it["else"]):
+                    RPN._sqrt_fed_consts(sub, acc)
+                prev = None
+                continue
+            if (prev is not None and ins[0] == "sqrt"
+                    and prev[0] == "push_const"):
+                acc.add((prev[1]["num"], prev[1]["den"]))
+            prev = ins
 
     def const(self, c):
         num, den = c["num"], c["den"]
         d = dyadic(num, den)
         if d is not None:
-            return f"(.const ⟨{d[0]}, {d[1]}⟩)"
+            m, e = d
+            if (self.sqrt_const_pad_bits is not None
+                    and self._pad_vals is not None
+                    and (num, den) in self._pad_vals):
+                # W6b plan A: scale mantissa to >= 2^bits, value-preserving,
+                # e-parity preserved (factors of 4).  Post-normalization text
+                # layer only (see class docstring).
+                while abs(m) < (1 << self.sqrt_const_pad_bits):
+                    m *= 4
+                    e -= 2
+                return f"(.const ⟨{m}, {e}⟩)"
+            return f"(.const ⟨{m}, {e}⟩)"
         # non-dyadic rational: exact interval division of int consts
         return (f"(.div (.const ⟨{num}, 0⟩) (.const ⟨{den}, 0⟩) "
                 f"({self.div_out}))")
@@ -316,10 +363,20 @@ class RPN:
         """RPN prog -> IExpr term text."""
         return self.emit_pair(prog)[0]
 
+    @staticmethod
+    def _pad_const_text(num, den, bits):
+        """(num, den) dyadic -> padded literal text: mantissa scaled by
+        factors of 4 to >= 2^bits (value and e-parity preserved)."""
+        m, e = dyadic(num, den)
+        while abs(m) < (1 << bits):
+            m *= 4
+            e -= 2
+        return f"(.const \u27e8{m}, {e}\u27e9)"
+
     def emit_pair(self, prog):
         """RPN prog -> (IExpr term text, closed): `closed` marks var-free
         subterms (leaf-constant), used by the `trans` callback."""
-        # stack entries: (Lean term text, closed=var-free)
+        # stack entries: (Lean term text, closed=var-free, const tag or None)
         st = []
         for ins in prog:
             if isinstance(ins, dict):
@@ -329,32 +386,45 @@ class RPN:
                 t = self.emit_pair(ins["ite"]["then"])
                 e = self.emit_pair(ins["ite"]["else"])
                 st.append((f"(.ite {c[0]} {t[0]} {e[0]})",
-                           c[1] and t[1] and e[1]))
+                           c[1] and t[1] and e[1], None))
                 continue
             op = ins[0]
             if op == "push_var":
-                st.append((f"(.var {ins[1]})", False))
+                st.append((f"(.var {ins[1]})", False, None))
             elif op == "push_const":
-                st.append((self.const(ins[1]), True))
+                c = ins[1]
+                st.append((self.const(c), True,
+                           (c["num"], c["den"])
+                           if self.sqrt_const_pad_bits is not None else None))
             elif op in ("add", "sub", "mul"):
                 b, a = st.pop(), st.pop()
-                st.append((f"(.{op} {a[0]} {b[0]})", a[1] and b[1]))
+                st.append((f"(.{op} {a[0]} {b[0]})", a[1] and b[1], None))
             elif op == "neg":
                 a = st.pop()
-                st.append((f"(.neg {a[0]})", a[1]))
+                st.append((f"(.neg {a[0]})", a[1], None))
             elif op == "abs":
                 a = st.pop()
-                st.append((f"(.abs {a[0]})", a[1]))
+                st.append((f"(.abs {a[0]})", a[1], None))
             elif op == "div":
                 b, a = st.pop(), st.pop()
-                st.append((f"(.div {a[0]} {b[0]} ({self.div_out}))", a[1] and b[1]))
+                st.append((f"(.div {a[0]} {b[0]} ({self.div_out}))",
+                           a[1] and b[1], None))
             elif op == "sqrt":
                 if self.sqrt_slot is None:
                     die("op sqrt: not supported without --fill (see module docstring)")
                 a = st.pop()
+                if (self.sqrt_const_pad_bits is not None
+                        and a[2] is not None):
+                    # W6b plan A, surgical: only the DIRECT const radicand is
+                    # scaled (atan-arg consts keep small mantissas, so the
+                    # N=2048 closed Taylor terms stay cheap).
+                    num, den = a[2]
+                    a = (self._pad_const_text(num, den,
+                                              self.sqrt_const_pad_bits),
+                         a[1], None)
                 s1, s2 = self.sqrt_slot(self.sqrt_count)
                 self.sqrt_count += 1
-                st.append((f"(.sqrt {a[0]} {s1} {s2})", a[1]))
+                st.append((f"(.sqrt {a[0]} {s1} {s2})", a[1], None))
             elif op in TRANS_KIND:
                 if self.trans is None:
                     die(f"op {op}: not supported without --fill (see module docstring)")
@@ -369,7 +439,7 @@ class RPN:
                     text = (f"(.add {text} (.mul (.var 0) (.const ⟨0, 0⟩)))")
                     closed = False
                 st.append((f"(.trans .{TRANS_KIND[op]} {text} {N} {out})",
-                           closed))
+                           closed, None))
             else:
                 die(f"unknown op {op}")
         if len(st) != 1:
@@ -2484,12 +2554,12 @@ def _mono_lean_fin_lit(j, n):
     return f"({j} : Fin {n})"
 
 
-def mono_lean_main(case, cid, n, args, mono_json):
+def mono_lean_main(case, cid, n, args, mono_json, pad_bits=None):
     """emit <out>.monolean.lean from the mono-corner-certs manifest that the
     --mono run just wrote (mono_json = parsed manifest)."""
     import re
     nsp = "MonoReplay_" + re.sub(r"\W", "_", cid)
-    expr = RPN().emit(case["prog"])
+    expr = RPN(sqrt_const_pad_bits=pad_bits).emit(case["prog"])
     ops = set()
     _mono_lean_scan(case["prog"], ops)
     hard = {"sqrt", "div", "atan", "abs", "ite"}
@@ -2644,6 +2714,381 @@ def mono_lean_main(case, cid, n, args, mono_json):
           f"all-mono sub-boxes, {skipped} skipped)")
 
 
+# ---------------------------------------------------------------------------
+# W8: mixed restrict×bisect tree emission for real leaves (route A, phase 2).
+#
+#   emit_lean.py <case.json> <spec.json> <out.lean> --mono-tree
+#                [--pad-sqrt-const=N]
+#   emit_lean.py <case.json> <spec.json> <out.lean> --mono-tree \
+#                --params=<stage-A output>
+#
+# <spec.json> (schema "mono-tree-spec") describes ONE closed subtree of the
+# W6a search over a guard-resolved, abs-eliminated program e* (the "expr"
+# field; guards decided and abs signed on the ROOT box — premises the
+# certificate is stated for):
+#
+#   {"schema": "mono-tree-spec", "n": 7,
+#    "expr": <RPN prog of e*>,
+#    "pad_sqrt_const": 120,
+#    "gran": -80, "rung_n": 2048, "rung_out": -64,
+#    "root": [[m,e],[m,e],...],
+#    "tree": {"kind": "leaf", "box": [[m,e],...], "id": "L1"}
+#           | {"kind": "restrict", "box": [...], "sgn": ["+",null,"-",...],
+#              "id": "R1", "sub": {...}}
+#           | {"kind": "split", "box": [...], "dim": d, "id": "S1",
+#              "l": {...}, "r": {...}}}
+#
+# Stage A emits a compiled driver that (a) computes the REAL sqrt mantissa
+# slots of e* over the root box (`Tools.FillParams.evalFill` — kernel-native,
+# nested sqrts bottom-up; valid on every subtree by monotone narrowing) and
+# (b) probes every certificate the tree needs — `tmHullLeafProbe` on
+# `IExpr.derivExpr E j` (restrict dims, on the node box) and on `E` (leaves).
+# Stage B bakes the reported mantissa triples + template granularities into
+# `TMParams`, states the tree over `Kepler.Interval.MonoTree` and closes with
+# `monoTree_sound`.  All decides are kernel checks of exactly the emitted
+# data; wrong Python-side verdicts can only fail a decide, never pass.
+# ---------------------------------------------------------------------------
+
+def _monotree_nodes(node, acc, path="T"):
+    acc.append((path, node))
+    if node["kind"] == "restrict":
+        _monotree_nodes(node["sub"], acc, path + "s")
+    elif node["kind"] == "split":
+        _monotree_nodes(node["l"], acc, path + "l")
+        _monotree_nodes(node["r"], acc, path + "r")
+
+
+def _monotree_dyadic_pair(me):
+    m, e = int(me[0]), int(me[1])
+    return f"\u27e8{m}, ({e})\u27e9"
+
+
+def _monotree_box_lit(box):
+    return ("![" + ", ".join(
+        f"\u27e8{_monotree_dyadic_pair(lo)}, {_monotree_dyadic_pair(hi)}\u27e9"
+        for lo, hi in box) + "]")
+
+
+def _monotree_sgn_lit(sgn):
+    return ("![" + ", ".join(
+        {"+": "some true", "-": "some false", None: "none"}[sg]
+        for sg in sgn) + "]")
+
+
+def _monotree_collect_probes(node, acc):
+    if node["kind"] == "leaf":
+        acc.append(("leaf", node["id"], None, node["box"]))
+    elif node["kind"] == "restrict":
+        for j, sg in enumerate(node["sgn"]):
+            if sg in ("+", "-"):
+                acc.append(("df", node["id"], j, node["box"]))
+        _monotree_collect_probes(node["sub"], acc)
+    elif node["kind"] == "split":
+        _monotree_collect_probes(node["l"], acc)
+        _monotree_collect_probes(node["r"], acc)
+
+
+def _monotree_count_ops(expr_text):
+    return (expr_text.count("(.sqrt "), expr_text.count("(.div "),
+            expr_text.count("(.trans "))
+
+
+def em_RPN(pad_bits, slots=None, rung=(2048, -64), unclose=False):
+    """The W8 mono-tree RPN policy: sqrt slots from `slots` when given
+    (`slots(ms)(i)` returns the (s1, s2) TEXT of the i-th sqrt node in RPN
+    order — real mantissas computed kernel-side by `slotsDeep`, so closed
+    trans args KEEP the fast path, no `trans_unclose_sqrt`), dummy `(0, 0)`
+    otherwise; trans rung (N, out) for closed and open args alike; W6b
+    plan-A const padding behind `pad_bits`."""
+    if slots is None:
+        sq = lambda i: ("0", "0")
+    else:
+        sq = slots
+    return RPN(sqrt_slot=sq,
+               trans=lambda op, closed: (str(rung[0]), f"({rung[1]})"),
+               trans_unclose_sqrt=unclose,
+               sqrt_const_pad_bits=pad_bits)
+
+
+def monotree_main(case, cid, n, args, spec, params_file):
+    import re
+    nsp = "MonoTree_" + re.sub(r"\W", "_", cid)
+    pad_bits = spec.get("pad_sqrt_const")
+    rung = (int(spec.get("rung_n", 2048)), int(spec.get("rung_out", -64)))
+    rpn = em_RPN(pad_bits, rung=rung)
+    expr0 = rpn.emit(spec["expr"])
+    nsq0, ndiv0, ntrans0 = _monotree_count_ops(expr0)
+    gran = int(spec.get("gran", -80))
+    root = spec["root"]
+    tree = spec["tree"]
+    probes = []
+    _monotree_collect_probes(tree, probes)
+    root_lit = _monotree_box_lit(root)
+    g = f"({gran})"
+    iv_rep = f"List.replicate 8000 \u27e8{gran}, {gran}, {gran}\u27e9"
+    tv_rep = f"List.replicate 8000 \u27e8{gran}, {gran}\u27e9"
+    prelude = (
+        "/- W8 mono-tree certificate: a closed restrict\u00d7bisect subtree "
+        "of the\n    W6a search over " + cid + " (route A; assembly via "
+        "Kepler.Interval.MonoTree).\n    Generated by emit_lean.py "
+        "--mono-tree" +
+        (" --params (stage-B bake)." if params_file else
+         " (stage-A driver).") + "\n"
+        "    e* = the leaf program with all ite guards resolved and all abs\n"
+        "    nodes eliminated on the tree-root box (kernel-side the certifi-\n"
+        "    cate is stated for e*; the guard/abs sign facts are search-side\n"
+        "    premises re-verified by the mirror).  Plan-A padded consts;\n"
+        "    real sqrt slots computed kernel-side by evalFill (stage A) and\n"
+        "    baked as `sbMs`.  All decides are kernel checks. -/\n"
+        "import Kepler.Interval.CertTM\n"
+        "import Kepler.Interval.MonoTree\n\n"
+        "set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
+        "open Kepler.Interval\n\n"
+        "/-- Local default (structural only). -/\n"
+        "instance : Inhabited DInterval := \u27e8\u27e8\u27e80, 0\u27e9, "
+        "\u27e80, 0\u27e9\u27e9\u27e9\n\n"
+        "instance : Inhabited (Int \u00d7 Int) := \u27e8(0, 0)\u27e9\n\n"
+        f"instance : Inhabited (IExpr {n}) := \u27e8.const \u27e80, 0\u27e9"
+        "\u27e9\n\n"
+        "/-- e* with dummy sqrt slots. -/\n"
+        f"def E0 : IExpr {n} :=\n  {expr0}\n\n"
+        "/-- The tree-root box. -/\n"
+        f"def B0 : Fin {n} \u2192 DInterval := {root_lit}\n")
+
+    if params_file is None:
+        boxes_lean = ",\n    ".join(
+            f"({_monotree_box_lit(b)} : Fin {n} \u2192 DInterval)"
+            for _, _, _, b in probes)
+        tags_lean = ", ".join(
+            (f'"df_{pid}_{j}"' if kind == "df" else f'"leaf_{pid}"')
+            for kind, pid, j, _ in probes)
+        open(args[2], "w").write(prelude +
+            "/-- Template TMParams: dummy sqrt mantissas, recip granularity\n"
+            f"    {gran}; lengths over-provision the visited node counts\n"
+            f"    (E0 static counts: sqrt {nsq0}, div {ndiv0}, trans "
+            f"{ntrans0};\n    the df's duplicate E0's const forest). -/\n"
+            "def Ps : TMParams :=\n"
+            f"  \u27e8List.replicate 40000 \u27e80, 0, 0, {g}, {g}\u27e9,\n"
+            f"   {iv_rep},\n"
+            f"   {tv_rep}\u27e9\n\n"
+            "/-- Real sqrt slots of E0 over the root box (kernel-native\n"
+            "slotsDeep: plain-interval walk, all sqrt nodes, no Taylor;\n"
+            "valid on every subtree by monotone narrowing). -/\n"
+            "def sbMs : List (Int \u00d7 Int) := (slotsDeep B0 E0).2.1\n"
+            +            "/-- E0 with slots read from the computed list (RPN order). -/\n"
+            f"def MkE (ms : List (Int \u00d7 Int)) : IExpr {n} :=\n  "
+            + em_RPN(pad_bits, rung=rung, slots=lambda i:
+                     (f"(ms[{i}]!).1", f"(ms[{i}]!).2")).emit(spec["expr"])
+            + "\n\n"
+            "/-- The certified expression: E0 with real slots baked. -/\n"
+            f"def E : IExpr {n} := MkE sbMs\n\n"
+            "/-- One probe per tree certificate: \u2202\u2c7cE on restrict "
+            "boxes, E on\nleaf boxes. -/\n"
+            f"def probeExprs : Array (IExpr {n}) := #[" +
+            ", ".join((f"(IExpr.derivExpr E {j})" if kind == "df" else "E")
+                      for kind, _, j, _ in probes) + "]\n\n"
+            f"def probeBoxes : Array (Fin {n} \u2192 DInterval) := #["
+            + boxes_lean + "]\n\n"
+            f"def probeTags : Array String := #[{tags_lean}]\n\n"
+            "def main : List String \u2192 IO UInt32 := fun _ => do\n"
+            "  let stdout \u2190 IO.getStdout\n"
+            "  IO.println \"START\"\n"
+            "  stdout.flush\n"
+            "  IO.println s!\"FILL nsqrt={sbMs.length}\"\n"
+            "  stdout.flush\n"
+            "  IO.println (\"MS \" ++ String.intercalate \",\"\n"
+            "    (sbMs.map fun p => s!\"({p.1},{p.2})\"))\n"
+            "  for i in [0:probeExprs.size] do\n"
+            "    match tmHullLeafProbe probeExprs[i]! probeBoxes[i]! Ps with\n"
+            "    | some (p, m, e, l) =>\n"
+            "        let v := if p then \"PASS\" else \"NEG\"\n"
+            "        let trip := String.intercalate \" \"\n"
+            "          (l.map fun t => s!\"{t.1} {t.2.1} {t.2.2}\")\n"
+            "        IO.println s!\"PROBE {probeTags[i]!} {v} {m} {e} "
+            "{trip}\"\n"
+            "        stdout.flush\n"
+            "    | none =>\n"
+            "        IO.println s!\"PROBE {probeTags[i]!} FAIL\"\n"
+            "        stdout.flush\n"
+            "  return 0\n")
+        print(f"emit_lean: wrote {args[2]} (W8 mono-tree stage A: "
+              f"{len(probes)} probes; E0 static sqrt {nsq0}, div {ndiv0}, "
+              f"trans {ntrans0}; run `lake env lean --run {args[2]} > "
+              f"params.txt`)")
+        return
+
+    # ---- stage B: parse the stage-A output ----
+    ms, verdicts = None, {}
+    for ln in open(params_file):
+        ln = ln.strip()
+        if ln.startswith("MS"):
+            body = ln[2:].strip()
+            if body.startswith("(") and body.endswith(")"):
+                body = body[1:-1]
+            ms = [tuple(int(x) for x in tok.split(","))
+                  for tok in body.split("),(") if tok]
+        elif ln.startswith("PROBE"):
+            tk = ln.split()
+            if tk[2] == "FAIL":
+                die(f"probe {tk[1]} FAILED (queue exhausted or domain fail) "
+                    "— raise the template counts or adjust gran/rung")
+            triples = [tuple(int(v) for v in tk[5:][j:j + 3])
+                       for j in range(0, len(tk) - 5, 3)]
+            verdicts[tk[1]] = (tk[2], int(tk[3]), int(tk[4]), triples)
+    if ms is None:
+        die("no MS line in params file")
+    nsq = len(ms)
+
+    if nsq != nsq0:
+        die(f"stage-A reported {nsq} sqrt slots but E0 has {nsq0} sqrt "
+            "nodes (guard-resolved programs must traverse every node)")
+    slots_txt = [None] * nsq
+
+    def _slot(i):
+        return (str(ms[i][0]), str(ms[i][1]))
+    expr_conc = em_RPN(pad_bits, rung=rung, slots=_slot).emit(spec["expr"])
+    out = [prelude +
+        "/-- The certified expression (real sqrt slots baked concretely;\n"
+        f"    stage-A ms, {nsq} sqrt nodes, RPN order). -/\n"
+        f"def E : IExpr {n} :=\n  {expr_conc}\n"]
+    def ps_lit(triples):
+        trip = ", ".join(f"\u27e8{a}, {b}, {c}, {g}, {g}\u27e9"
+                         for a, b, c in triples)
+        return (f"\u27e8[{trip}], {iv_rep}, {tv_rep}\u27e9")
+
+    def emit_node(node, box_expr=None):
+        kind = node["kind"]
+        nid = node["id"]
+        bl = box_expr or _monotree_box_lit(node["box"])
+        if kind == "leaf":
+            tag = f"leaf_{nid}"
+            v = verdicts[tag]
+            out.append(
+                f"/-- Leaf {nid}: kernel TM-hull positivity on its box\n"
+                f"    (stage-A margin {v[1]}*2^({v[2]}); {len(v[3])} visited\n"
+                f"    sqrt certs baked). -/\n"
+                f"def {nid}Box : Fin {n} \u2192 DInterval := {bl}\n\n"
+                f"def {nid}Ps : TMParams := {ps_lit(v[3])}\n\n"
+                f"theorem {nid}_cert : checkPosTMHull E {nid}Box {nid}Ps"
+                f" = true := by decide\n")
+            return f"(MonoTree.leaf {nid}Box {nid}Ps {nid}_cert)"
+        if kind == "restrict":
+            sgn = node["sgn"]
+            out.append(f"/-- Restrict node {nid}, sgn {sgn} (+ = \u2191 to "
+                       f"the lo face). -/\n"
+                       f"def {nid}Box : Fin {n} \u2192 DInterval := {bl}\n\n"
+                       f"def {nid}Sgn : Fin {n} \u2192 Option Bool := "
+                       f"{_monotree_sgn_lit(sgn)}\n")
+            sub_term = emit_node(node["sub"],
+                                 f"restrictBox {nid}Box {nid}Sgn")
+            incr, decr = [], []
+            for j, sg in enumerate(sgn):
+                if sg not in ("+", "-"):
+                    continue
+                tag = f"df_{nid}_{j}"
+                v = verdicts[tag]
+                side = "IExpr.derivExpr E" if sg == "+" else \
+                    "(IExpr.neg (IExpr.derivExpr E))"
+                out.append(
+                    f"/-- \u2202\u2c7cE at {nid} (stage-A margin {v[1]}"
+                    f"*2^({v[2]}); {len(v[3])} sqrt certs). -/\n"
+                    f"theorem {nid}_df{j} : checkPosTMHull ({side} {j}) "
+                    f"{nid}Box {ps_lit(v[3])} = true := by decide\n")
+                (incr if sg == "+" else decr).append(j)
+            psd_parts = []
+            for j in range(n):
+                if j in incr or j in decr:
+                    psd_parts.append(ps_lit(verdicts[f"df_{nid}_{j}"][3]))
+                else:
+                    psd_parts.append("TMParams.empty")
+            out.append(f"def {nid}Psd : Fin {n} \u2192 TMParams := !["
+                       + ", ".join(psd_parts) + "]\n")
+            incr_body, decr_body = [], []
+            for j in range(n):
+                if j in incr:
+                    incr_body.append(f"\u00b7 exact \u27e8{nid}_df{j}, rfl"
+                                     f"\u27e9")
+                    decr_body.append("\u00b7 exact Bool.noConfusion hj")
+                elif j in decr:
+                    incr_body.append("\u00b7 exact Bool.noConfusion hj")
+                    decr_body.append(f"\u00b7 exact \u27e8{nid}_df{j}, rfl"
+                                     f"\u27e9")
+                else:
+                    incr_body.append("\u00b7 exact Bool.noConfusion hj")
+                    decr_body.append("\u00b7 exact Bool.noConfusion hj")
+            out.append(
+                f"theorem {nid}_incr : \u2200 j, {nid}Sgn j = some true "
+                f"\u2192\n    checkPosTMHull (IExpr.derivExpr E j) {nid}Box "
+                f"({nid}Psd j) = true := by\n"
+                f"  intro j hj\n  fin_cases j\n"
+                + "\n".join("  " + b for b in incr_body) + "\n\n"
+                f"theorem {nid}_decr : \u2200 j, {nid}Sgn j = some false "
+                f"\u2192\n    checkPosTMHull (IExpr.neg (IExpr.derivExpr E"
+                f" j)) {nid}Box ({nid}Psd j) = true := by\n"
+                f"  intro j hj\n  fin_cases j\n"
+                + "\n".join("  " + b for b in decr_body) + "\n\n"
+                f"theorem {nid}_hwf : \u2200 j, {nid}Sgn j \u2260 none "
+                f"\u2192 ({nid}Box j).wf = true := by\n"
+                f"  intro j hj\n  fin_cases j <;> decide\n\n"
+                f"theorem {nid}_safe : E.derivSafe = true := by decide\n\n"
+                f"theorem {nid}_dom : DomOK {nid}Box E := "
+                f"domOK_of_domByInterval _ _ (by decide)\n")
+            return (f"(MonoTree.restrict {nid}Box {nid}Sgn {nid}Psd {nid}_hwf"
+                    f" {nid}_incr {nid}_decr {nid}_safe {nid}_dom {sub_term})")
+        if kind == "split":
+            lterm = emit_node(node["l"])
+            rterm = emit_node(node["r"])
+            d = int(node["dim"])
+            lid, rid = node["l"]["id"], node["r"]["id"]
+            out.append(
+                f"/-- Split node {nid} along dim {d} (exact dyadic midpoint)."
+                f" -/\n"
+                f"def {nid}Box : Fin {n} \u2192 DInterval := {bl}\n\n"
+                f"theorem {nid}_splitOK : splitOK {nid}Box {d} {lid}Box "
+                f"{rid}Box := by\n"
+                f"  refine \u27e8?_, ?_, ?_, ?_, ?_\u27e9\n"
+                f"  \u00b7 intro i hi\n    fin_cases i\n"
+                + "".join("    \u00b7 exact absurd rfl hi\n" if j == d else
+                          "    \u00b7 exact \u27e8rfl, rfl\u27e9\n"
+                          for j in range(n))
+                + "  \u00b7 decide\n  \u00b7 decide\n  \u00b7 decide\n"
+                "  \u00b7 decide\n")
+            return (f"(MonoTree.split {nid}Box {d} {lterm} {rterm} "
+                    f"{nid}_splitOK)")
+        die(f"unknown tree node kind {kind}")
+
+    def covers_term(node):
+        if node["kind"] == "leaf":
+            return "trivial"
+        if node["kind"] == "restrict":
+            return f"\u27e8{covers_term(node['sub'])}, rfl\u27e9"
+        return (f"\u27e8{node['id']}_splitOK, "
+                f"\u27e8{covers_term(node['l'])}, rfl\u27e9, "
+                f"\u27e8{covers_term(node['r'])}, rfl\u27e9\u27e9")
+    tree_term = emit_node(tree)
+    nleaf = sum(1 for k, _, _, _ in probes if k == "leaf")
+    ndf = sum(1 for k, _, _, _ in probes if k == "df")
+    out.append(
+        "/-- The certificate tree. -/\n"
+        f"def sbTree : MonoTree {n} E := {tree_term}\n\n"
+        "/-- The covering structure (kernel-checked structural equalities)."
+        "\n-/\n"
+        "theorem sbTree_covers : sbTree.covers := by\n"
+        "  unfold sbTree\n"
+        f"  exact {covers_term(tree)}\n\n"
+        "/-- End to end: every real point of the root box sees a strictly\n"
+        "positive value (the W8 assembly). -/\n"
+        f"theorem sb_end_to_end (\u03c1 : Fin {n} \u2192 \u211d)\n"
+        f"    (h\u03c1 : boxMem B0 \u03c1) : 0 < E.evalReal \u03c1 :=\n"
+        "  monoTree_sound sbTree sbTree_covers \u03c1 h\u03c1\n\n"
+        "/-- Plain interval arithmetic fails on the root box (the reason the\n"
+        "tree is needed). -/\n"
+        "theorem B0_interval_neg : checkPos E B0 = false := by decide\n")
+    open(args[2], "w").write("\n".join(out))
+    print(f"emit_lean: wrote {args[2]} (W8 mono-tree stage B: {nleaf} leaf "
+          f"certs + {ndf} df certs; {nsq} sqrt slots baked)")
+
+
 def main():
     shard_leaves = 128
     sample_n = None
@@ -2668,6 +3113,8 @@ def main():
     mono_max_depth = 48
     mono_subbox = None
     monolean = False
+    monotree = False
+    pad_sqrt_const = None
     args = []
     for a in sys.argv[1:]:
         if a.startswith("--shard-leaves="):
@@ -2680,12 +3127,16 @@ def main():
             mono = True
         elif a == "--mono-lean":
             monolean = True
+        elif a == "--mono-tree":
+            monotree = True
         elif a.startswith("--mono-budget="):
             mono_budget = int(a.split("=", 1)[1])
         elif a.startswith("--mono-max-depth="):
             mono_max_depth = int(a.split("=", 1)[1])
         elif a.startswith("--mono-subbox="):
             mono_subbox = int(a.split("=", 1)[1])
+        elif a.startswith("--pad-sqrt-const="):
+            pad_sqrt_const = int(a.split("=", 1)[1])
         elif a == "--fill":
             fill = True
         elif a == "--stage-a":
@@ -2733,6 +3184,8 @@ def main():
             "                [--mono --mono-budget=N --mono-max-depth=N [--mono-subbox=K]]\n"
             "                [--mono-lean] (with --mono: also emit the W7 kernel\n"
             "                replay <out>.monolean.lean from the cert plan)\n"
+            "                [--pad-sqrt-const=N] (W6b plan A: scale sqrt-fed\n"
+            "                const mantissas to >= 2^N in mono-lean replays)\n"
             "                (mono: <arg2> = sub-box manifest, <out> = report)")
     if disj_gd and not bbg:
         die("--disj-gd is a stage-B mode: pass --bbg --disj-gd --params=FILE")
@@ -2747,6 +3200,14 @@ def main():
     n = len(case["vars"])
     extra = ""
 
+    if monotree:
+        # ---- W8: mixed restrict×bisect tree for a real leaf (two-stage:
+        # stage A = compiled slot/probe driver, stage B = kernel bake) ----
+        spec = json.load(open(args[1]))
+        nsp_n = int(spec.get("n", n))
+        monotree_main(case, cid, nsp_n, args, spec, params_file)
+        return
+
     if mono:
         # ---- W6 route-A prototype: mono dimension reduction over the
         # sub-boxes (Python-side TM mirror search; emits a certificate
@@ -2757,7 +3218,8 @@ def main():
             # ---- W7: kernel replay emission (consumes the .mono.json the
             # run just wrote; zero effect without --mono-lean) ----
             out_json = os.path.splitext(args[2])[0] + ".mono.json"
-            mono_lean_main(case, cid, n, args, json.load(open(out_json)))
+            mono_lean_main(case, cid, n, args, json.load(open(out_json)),
+                           pad_bits=pad_sqrt_const)
         return
 
     if hull:
