@@ -130,3 +130,18 @@ i5-2.67GHz/2009；官方全章 5,000 核时/遍）：
 **机械资产**：`--gsplit=a|b` 两轮协议接口可复用（13 盒×33.7 分批量探针驱动已备）；13 枚 AGREEMENT 内核定理全绿证明两段式链路端到端可靠。
 
 **新雷区 ㉚-㉝**：㉚长跑 lean 进程被环境收割（30-85 分钟级三次被外部 kill）——对策实证=逐叶拆文件每叶 ~2 分钟前台跑；㉛共享 /tmp 车道目录孤儿 harvest 协议（接手先 ps+progress 盘点，先收孤儿产出再补缺口——本轮 12/13 探针系孤儿白捡省 6.5 CPU 时）；㉜前任手编 .lean 驱动不可信（一律经 emit_lean.py 重发射）；㉝数百位尾数眼测必错，数量级一律 Decimal 精算。
+
+## W9：第三武器（sqrt radicand 预切/换元）mirror 原型对拍——裁决：预切是必要非充分组件（2026-10-15）
+
+**裁决一句话**：W2 立项利好（QZECFIC"负底半域切掉后剩余域 TM 有效即闭合"）是 **C 侧真理（Arb 精确 sqrt），不是内核侧真理**——内核 TM 在保留域上被**复合 sqrtI 证书粒度**挡死：小 delta 叶瓣上每个活跃 sqrt 证书 relw≈12.5%，6 节点复合后 loBound 饱和于 −0.0325（真值 +0.018），且**盒宽不变（w→2⁻¹⁰ 仍 −0.0325）**——域切掉后内核侧不自动闭合。**与 W6b 方案 A（√ mantissa 填充）方向独立交叉证实**：QZECFIC 闭合需要 预切（C 侧，O(1) 切/丢替代 50% 的 TM-invalid 螺旋）+ W8 pad-bits（内核粒度）+ W4 mono 角点证书（点盒上粒度 ~1/s 消失）三者互补。
+
+**对拍矩阵**（5 叶：QZECFIC_wt0 root/leaf0、TEWNSCJ root/leaf0、split02 sb0 对照）：
+- 预切臂（newton slab 切 + plain 丢弃，cap 6000）：全部未闭（域相 ≤6k 盒不收敛；TEWNSCJ radicand 含 atan → plain 区间全盲，两臂无差异）。
+- C 求解器对照锚（50k 节点）：同样不收敛（QZECFIC leaf0 valid=24,989/invalid=25,006 全 sqrt/log 非正底；TEWNSCJ leaf0 TM 仅 att=192 全 invalid）——**整叶尺度是搜索量级问题，≤10³ 锚只在"每表面胞"尺度成立**。
+- **正数据**：逐盒 AGREEMENT 15/16（mirror FAIL ↔ C INVALID 同对角线，1 mismatch=C 更强）；负底丢弃侧可廉价分辨（2984 盒/78s vs C 25k 次 invalid 螺旋零进展）；对角线扫描定位多叶瓣有效域结构。
+- **split02 族预切无用确认**：sb0 radicand 全正（sqrt_fail=0），−6 是 enclosure-宽度型 = mono-corner 武器靶（W4 结论复核成立，第三武器与此正交）。
+- **换元 t=√u 机制级裁决**：恰打中内核粒度机制（换元后 t 的 fB 是点，sqrtI 粒度消失），但需内核 IExpr 加维+存在变量桥+发射器+求解器四处新件——顺序建议：预切 → W8 pad-bits → 换元（仅当仍不闭合）。
+
+**发射器集成 spec**（下一波，等 W8 落地）：C 侧 `bb_arb_mono.c` 主循环 TM-invalid 处理点（fail_reason==5）——fail_ip 反查 radicand 子式 → 精确有理区间 Newton → 零等值面 slab 三切，provably<0 侧整支丢弃；证书形状 = {POS 子盒} ∪ {丢弃盒 + radicand 区间证书}，丢弃侧 Lean 消费走现成 `checkPosTMHull (neg u)`（无新内核件）。**前置必核**：丢弃区须对应形式命题的 radicand 前件结构（QZECFIC sqrt 原子全 ite 嵌套，branch-correct 语义——本轮 15/20 过切实测已修）。
+
+**新雷区**：①W5→W9 mirror 谱系 tm_var 非内核忠实（内核 fB=点 ⟨c,c⟩，镜像 fB=全盒区间）——镜像 NEG margin 只能读作内核宽度保守上界（W9_FM=1 忠实模式已补，收紧 2-3×）；②分支失活原子丢弃=过切（15/20 实测），域原子必须 branch-correct；③W2 案卷 solver-native 形态（eq-mode ite/log 算子/radicand 内 atan）与 prep 文件不同构（w9core 三件扩展已补）；④引擎工程：DFS 折叠面深潜饿死须 FIFO、hint 切维按 df 宽轮转、trace valueRange 被 TM 噪声支配须 plain 优先。工件全在 /tmp/p4w9/（w9core/w9split/w9leaves/w9run/w9carm/w9agree + ARM-A 验证 PASS）。
