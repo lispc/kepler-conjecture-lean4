@@ -310,6 +310,26 @@ FILL-ROUND STATUS r6 (2026-10-13 wave: 100 -> 97, 楔形 3-cell 面三连)
     ⑥ `Collinear3` 为 def，set-重写前须 `show Collinear ℝ ({...})`；
     ⑦ 全量 `simp [elV]` 换自备 rfl 三引理 `simp only [eV0, eV1, eV2]`。
 
+FILL-ROUND STATUS r8 (2026-10-13 收官波: 90 -> 89, RAD_PI_IMP_WEDGE4 转真):
+  - `RAD_PI_IMP_WEDGE4` 转真（探针车道 P4rpi 全程验证后移植，~420 行 kit）：
+    非共面支 = 维数夹逼（`Coplanar` 第 4 点入 `{u0,u1,w1}` 平面向量 span，
+    `azim_frame_spec` 极坐标 + `Real.sin_eq_zero_iff` + 值域夹逼收口
+    azim ∈ {0,π}，mirror-of-Planarity 私件）；楔包含支 = `affGe` 2-2 ⊆
+    `wedgeGe`（LocalAuto5 `WEDGE_GE_EQ_AFF_GE` ⊆ 方向移植，mirror-of-
+    LocalAuto5，闭包不含 LocalAuto5 故本件重述）；barV 支 = `leaf V [u0,u1,f i]`
+    的 `barV V 2` 子表下降 + 四元表 voronoi 面 = 外心单点（正交唯一性 +
+    `vectorSpan = ⊤` + `affDim` 单点收口，`CIRCUMCENTER_IN_VORONOI_SET`
+    供非空）；零测 = `ZWVCBMN`；edgeX = `BumpP4.MCELL4_EDGE`。
+    `NOT_COPLANAR_AFF_3`/`LEAF_RANK_LEAF` 上移至 kit 之前（无前向引用）。
+    消费的具名记账兄弟：无新增（`MCELL4_CONVEX_HULL`/`ZWVCBMN`/
+    `BumpP4.MCELL4_EDGE`/`CONVEX_HULL_4_SUBSET_AFF_GE_2_2` 均为在库真叶）。
+  - `critical_weight_wtcount6_y` 二次止损维持记账（CARD_INSERT_INTER 六步
+    剥离 kit 已在探针车道 P4rpi 成型至最后 `split_ifs` 对齐：15 对互异事实、
+    `p25rpi_critEdge_mem`/`p25rpi_critEdge_count` 全部走通，唯 final
+    numerical-goal 的 finisher（rfl/omega/decide/norm_num/simp）全部意外
+    失败待查——纯 ℕ 数值等式全部 tactic 失败为本次新雷区候选；
+    接续点 = 探针文件 /tmp/p4rpi/lean/Kepler/Text/P4rpiProbe.lean）。
+
 FILL-ROUND STATUS r7 (2026-10-13 wave: 97 -> 90, M4 车道批量装配·骨架式预消费)
   - 装配链 7 件转真（`cc_4_cc_ke4`→`cc_4_UL`→`CC_4_PROPS`→`cc_4_cc_cell`/
     `c_4_azim_mcell_dih_y`/`real_model_azim_c4`/`GG_MCELL_QUARTER`），全部
@@ -3740,28 +3760,668 @@ theorem CELL_CLUSTER_N_LE_1 (V : Set V3) (u0 u1 : V3) (hnl : pack_nonlinear_non_
       gammaX V X lmfun * criticalWeight V X + betaBumpV1 V {u0, u1} X := by
   sorry
 
+/-- HOL `NOT_COPLANAR_AFF_3`.  Proof: if the direction of the affine span
+had rank `< 3`, it would be spanned by two vectors `v1, v2` (a basis of the
+rank-2 case, `finrank_le_one_iff` twice for the rank-`≤ 1` case), and `s`
+would sit inside the plane `affineSpan {p, p + v1, p + v2}` — contradicting
+non-coplanarity. -/
+theorem NOT_COPLANAR_AFF_3 (s : Set V3) (hnc : ¬ Coplanar s) :
+    affDim s = 3 := by
+  by_contra hne
+  have hsne : s ≠ ∅ := by
+    intro he
+    rw [he] at hnc
+    exact hnc coplanar_empty
+  have haff : affDim s = ((Module.finrank ℝ (vectorSpan ℝ s) : ℕ) : ℤ) := by
+    rw [affDim, if_neg hsne]
+  have hcast : ((Module.finrank ℝ (vectorSpan ℝ s) : ℕ) : ℤ) ≠ 3 := by
+    rw [← haff]; exact hne
+  have hle : Module.finrank ℝ (vectorSpan ℝ s) ≤ 3 := by
+    simpa [finrank_euclideanSpace_fin] using Submodule.finrank_le (vectorSpan ℝ s)
+  have hlt : Module.finrank ℝ (vectorSpan ℝ s) < 3 := by omega
+  obtain ⟨v1, v2, hspan⟩ : ∃ v1 v2 : V3,
+      (vectorSpan ℝ s : Submodule ℝ V3) ≤ Submodule.span ℝ ({v1, v2} : Set V3) := by
+    by_cases h2 : Module.finrank ℝ (vectorSpan ℝ s) = 2
+    · have hb : Module.Basis (Fin 2) ℝ ↥(vectorSpan ℝ s) :=
+        Module.finBasisOfFinrankEq ℝ (vectorSpan ℝ s) h2
+      refine ⟨(hb 0 : V3), (hb 1 : V3), ?_⟩
+      intro w hw
+      have hwspan : (⟨w, hw⟩ : ↥(vectorSpan ℝ s)) ∈
+          (Submodule.span ℝ (Set.range hb) :
+            Submodule ℝ ↥(vectorSpan ℝ s)) := by
+        rw [Module.Basis.span_eq]
+        exact Submodule.mem_top
+      have hrng : Set.range hb ⊆
+          ({(hb 0 : ↥(vectorSpan ℝ s)), (hb 1 : ↥(vectorSpan ℝ s))} :
+            Set ↥(vectorSpan ℝ s)) := by
+        intro y hy
+        obtain ⟨i, rfl⟩ := hy
+        fin_cases i
+        · simp
+        · simp
+      have hwpairW : (⟨w, hw⟩ : ↥(vectorSpan ℝ s)) ∈
+          (Submodule.span ℝ ({(hb 0 : ↥(vectorSpan ℝ s)), (hb 1 : ↥(vectorSpan ℝ s))} :
+            Set ↥(vectorSpan ℝ s))) := Submodule.span_mono hrng hwspan
+      obtain ⟨r, t, hrt⟩ := Submodule.mem_span_pair.mp hwpairW
+      refine Submodule.mem_span_pair.mpr ⟨r, t, ?_⟩
+      exact congrArg (fun x : ↥(vectorSpan ℝ s) => (x : V3)) hrt
+    · have h1 : Module.finrank ℝ (vectorSpan ℝ s) ≤ 1 := by omega
+      obtain ⟨v, hv⟩ := (finrank_le_one_iff (K := ℝ) (V := ↥(vectorSpan ℝ s))).mp h1
+      refine ⟨(v : V3), 0, fun w hw => ?_⟩
+      obtain ⟨c, hc⟩ := hv ⟨w, hw⟩
+      refine Submodule.mem_span_pair.mpr ⟨c, 0, ?_⟩
+      rw [zero_smul, add_zero]
+      have hcoe : ((c • v : ↥(vectorSpan ℝ s)) : V3)
+          = (c : ℝ) • ((v : V3)) := rfl
+      rw [← hcoe, hc]
+  obtain ⟨p, hp⟩ := Set.nonempty_iff_ne_empty.mpr hsne
+  refine absurd ?_ hnc
+  refine ⟨p, p + v1, p + v2, ?_⟩
+  intro q hq
+  have hqp : q -ᵥ p ∈ (vectorSpan ℝ s) := by
+    have hvd := AffineSubspace.vsub_mem_direction (subset_affineSpan ℝ s hq)
+      (subset_affineSpan ℝ s hp)
+    rwa [direction_affineSpan] at hvd
+  have hdir : Submodule.span ℝ ({v1, v2} : Set V3) ≤
+      (affineSpan ℝ ({p, p + v1, p + v2} : Set V3)).direction := by
+    rw [direction_affineSpan,
+      vectorSpan_eq_span_vsub_set_right ℝ (show p ∈ ({p, p + v1, p + v2} : Set V3) from by simp)]
+    refine Submodule.span_mono ?_
+    intro z hz
+    rcases Set.mem_insert_iff.mp hz with hz1 | hz1
+    · rw [hz1]
+      exact ⟨p + v1, by simp, by simp⟩
+    · rw [Set.mem_singleton_iff.mp hz1]
+      exact ⟨p + v2, by simp, by simp⟩
+  rw [show (q : V3) = (q -ᵥ p) +ᵥ p from (vsub_vadd ..).symm]
+  exact AffineSubspace.vadd_mem_of_mem_direction (hdir (hspan hqp))
+    (mem_affineSpan ℝ (by simp : p ∈ ({p, p + v1, p + v2} : Set V3)))
+
+
+/-- HOL `LEAF_RANK_LEAF`. -/
+theorem LEAF_RANK_LEAF (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
+    (hr : leaf_rank V [u0, u1] w0 n f) : leaf V [u0, u1, f i] := by
+  have h := LEAF_RANK_S_LEAF V [u0, u1] w0 n f i hr
+  exact h.1
+
+
+/-! ### Kit A: wedge inclusion (`affGe` 2-2 ⊆ `wedgeGe`; mirror of
+LocalAuto5 `WEDGE_GE_EQ_AFF_GE` direction 2) -/
+
+/-- A1: member of `affGe {v0,v1} {w}` has zero azimuth off the `w` boundary
+(LocalAuto5 `AZIM_EQ_0_GE_ALT2`, ← direction only). -/
+private theorem p25rpi_azim0_of_affGe {v0 v1 w z : V3} (hw : ¬ Collinear3 v0 v1 w)
+    (hv0v1 : v0 ≠ v1) (hw0 : w ≠ v0) (hw1 : w ≠ v1) (t1 t2 t3 : ℝ) (ht3 : 0 ≤ t3)
+    (hsum : t1 + t2 + t3 = 1) (hz : z = t1 • v0 + t2 • v1 + t3 • w) :
+    azim v0 v1 w z = 0 := by
+  by_cases hcolz : Collinear3 v0 v1 z
+  · unfold azim
+    exact if_pos (Or.inr hcolz)
+  · have ht3pos : 0 < t3 := by
+      by_contra hle
+      have ht3z : t3 = 0 := le_antisymm (not_lt.mp hle) ht3
+      refine hcolz ?_
+      have hz2 : z - v0 = t2 • (v1 - v0) := by
+        rw [hz, ht3z, zero_smul, add_zero, show t1 = 1 - t2 from by linarith]
+        module
+      exact (collinear3_iff_smul (v := v0) (w := v1) (w1 := z)
+        (Ne.symm hv0v1)).mpr ⟨t2, hz2⟩
+    refine (azim_eq_zero_iff_alt hw hcolz).mpr ?_
+    refine (affGt_pair_iff hv0v1 hw0 hw1).mpr ⟨t3, ht3pos, t2, ?_⟩
+    rw [hz, show t1 = 1 - t2 - t3 from by linarith]
+    module
+
+/-- A2: coefficient extraction from `affGe {a,b} {x,y}` (LocalAuto5 `AFF_GE22`,
+→ direction only, with both pairs distinct). -/
+private theorem p25rpi_affGe22_coeffs {a b x y z : V3}
+    (hab : a ≠ b) (hxy : x ≠ y) (hax : a ≠ x) (hay : a ≠ y) (hbx : b ≠ x) (hby : b ≠ y)
+    (hz : z ∈ affGe ({a, b} : Set V3) ({x, y} : Set V3)) :
+    ∃ aa bb xx yy : ℝ, 0 ≤ xx ∧ 0 ≤ yy ∧ aa + bb + xx + yy = 1 ∧
+      z = aa • a + bb • b + xx • x + yy • y := by
+  obtain ⟨f, hfin, hval, hpos, hone⟩ := hz
+  have hT : hfin.toFinset = ({a, b, x, y} : Finset V3) := by
+    ext w
+    simp only [hfin.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  rw [hT] at hval hone
+  rw [Finset.sum_insert (by simp [hax, hay, hab]),
+    Finset.sum_insert (by simp [hbx, hby]),
+    Finset.sum_insert (by simp [hxy]), Finset.sum_singleton] at hval hone
+  refine ⟨f a, f b, f x, f y, hpos x (by simp), hpos y (by simp), by linarith, ?_⟩
+  rw [hval]
+  abel
+
+/-- A3: `affGt {a,b} {x,y}` membership by the four-coefficient witness
+(mirror of LocalAuto5 `AFF_GE22` reverse direction; only the `x,y` coefficients
+are sign-constrained). -/
+private theorem p25rpi_mem_affGt22 {a b x y z : V3}
+    (hab : a ≠ b) (hxy : x ≠ y) (hax : a ≠ x) (hay : a ≠ y) (hbx : b ≠ x) (hby : b ≠ y)
+    (aa bb xx yy : ℝ) (hxx : 0 < xx) (hyy : 0 < yy) (hsum : aa + bb + xx + yy = 1)
+    (hz : z = aa • a + bb • b + xx • x + yy • y) :
+    z ∈ affGt ({a, b} : Set V3) ({x, y} : Set V3) := by
+  have hfin : (({a, b} : Set V3) ∪ ({x, y} : Set V3)).Finite :=
+    ((Set.finite_singleton b).insert a).union ((Set.finite_singleton y).insert x)
+  have hT : hfin.toFinset = ({a, b, x, y} : Finset V3) := by
+    ext w
+    simp only [hfin.mem_toFinset, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff, Finset.mem_insert, Finset.mem_singleton]
+    tauto
+  refine ⟨fun w => if w = x then xx else if w = y then yy else
+    if w = b then bb else aa, hfin, ?_, ?_, ?_⟩
+  · rw [hT, hz, Finset.sum_insert (by simp [hax, hay, hab]),
+      Finset.sum_insert (by simp [hbx, hby]),
+      Finset.sum_insert (by simp [hxy]), Finset.sum_singleton]
+    simp only
+    rw [if_neg hax, if_neg hay, if_neg hab, if_neg hbx, if_neg hby,
+      if_neg (Ne.symm hxy)]
+    simp only [if_true]
+    abel
+  · intro w hw
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+    rcases hw with hw | hw
+    · rw [hw]
+      show 0 < (if x = x then xx else if x = y then yy else
+        if x = b then bb else aa)
+      rw [if_pos (rfl : x = x)]
+      exact hxx
+    · rw [hw]
+      show 0 < (if y = x then xx else if y = y then yy else
+        if y = b then bb else aa)
+      rw [if_neg (Ne.symm hxy), if_pos (rfl : y = y)]
+      exact hyy
+  · rw [hT, Finset.sum_insert (by simp [hax, hay, hab]),
+      Finset.sum_insert (by simp [hbx, hby]),
+      Finset.sum_insert (by simp [hxy]), Finset.sum_singleton]
+    simp only
+    rw [if_neg hax, if_neg hay, if_neg hab, if_neg hbx, if_neg hby,
+      if_neg (Ne.symm hxy)]
+    simp only [if_true]
+    linarith
+
+/-- A4: the closed two-sided cone sits in the closed wedge (LocalAuto5
+`WEDGE_GE_EQ_AFF_GE`, ⊆ direction). -/
+private theorem p25rpi_affGe22_subset_wedgeGe (u0 u1 w1 w2 : V3)
+    (hw1 : ¬ Collinear3 u0 u1 w1) (hw2 : ¬ Collinear3 u0 u1 w2)
+    (hpos : 0 < azim u0 u1 w1 w2) (hpi : azim u0 u1 w1 w2 < Real.pi) :
+    affGe ({u0, u1} : Set V3) ({w1, w2} : Set V3) ⊆ wedgeGe u0 u1 w1 w2 := by
+  have hu0u1 : u0 ≠ u1 := fun he => hw1 (collinear3_of_eq he.symm)
+  have hw1v0 : w1 ≠ u0 := fun he => hw1 (collinear3_pair_left he)
+  have hw1v1 : w1 ≠ u1 := fun he => hw1 (collinear3_pair_right he)
+  have hw2v0 : w2 ≠ u0 := fun he => hw2 (collinear3_pair_left he)
+  have hw2v1 : w2 ≠ u1 := fun he => hw2 (collinear3_pair_right he)
+  have hw1w2 : w1 ≠ w2 := by
+    intro he
+    subst he
+    rw [azim_self] at hpos
+    exact lt_irrefl 0 hpos
+  intro z hz
+  obtain ⟨aa, bb, xx, yy, hxx0, hyy0, hone, hzy⟩ :=
+    p25rpi_affGe22_coeffs hu0u1 hw1w2 (Ne.symm hw1v0) (Ne.symm hw2v0) (Ne.symm hw1v1)
+      (Ne.symm hw2v1) hz
+  rw [wedgeGe, Set.mem_setOf_eq]
+  by_cases hyyz : yy = 0
+  · -- w1 侧：z 落在 {u0,u1,w1} 闭半平面，azim w1 z = 0
+    have hzy0 : z = aa • u0 + bb • u1 + xx • w1 := by
+      rw [hyyz] at hzy
+      simpa using hzy
+    have hz0 : azim u0 u1 w1 z = 0 :=
+      p25rpi_azim0_of_affGe hw1 hu0u1 hw1v0 hw1v1 aa bb xx hxx0
+        (by rw [hyyz] at hone; linarith) hzy0
+    refine ⟨azim_nonneg u0 u1 w1 z, ?_⟩
+    rw [hz0]
+    exact azim_nonneg u0 u1 w1 w2
+  · -- yy > 0
+    have hyypos : 0 < yy := lt_of_le_of_ne hyy0 (Ne.symm hyyz)
+    by_cases hxxz : xx = 0
+    · -- w2 侧边界：azim w1 z = azim w1 w2
+      have haa : aa = 1 - bb - yy := by rw [hxxz] at hone; linarith
+      have hzy2 : z - u0 = yy • (w2 - u0) + bb • (u1 - u0) := by
+        rw [hzy, hxxz, haa]
+        module
+      have hzGt : z ∈ affGt ({u0, u1} : Set V3) ({w2} : Set V3) :=
+        (affGt_pair_iff hu0u1 hw2v0 hw2v1).mpr ⟨yy, hyypos, bb, hzy2⟩
+      have hncz : ¬ Collinear3 u0 u1 z := by
+        intro hcol
+        obtain ⟨t, ht⟩ :=
+          (collinear3_iff_smul (v := u0) (w := u1) (w1 := z) (Ne.symm hu0u1)).mp hcol
+        rw [hzy2] at ht
+        have hstep : yy • (w2 - u0) = ((t - bb) • (u1 - u0) : V3) := by
+          rw [sub_smul]
+          linear_combination (norm := module) ht
+        have h5 : yy • (w2 - u0) = yy • (((t - bb) / yy) • (u1 - u0) : V3) := by
+          rw [smul_smul, mul_comm yy ((t - bb) / yy),
+            div_mul_cancel₀ (t - bb) (ne_of_gt hyypos)]
+          exact hstep
+        have h6 : (w2 - u0 : V3) = ((t - bb) / yy) • (u1 - u0) :=
+          smul_right_injective _ (ne_of_gt hyypos) h5
+        exact hw2 ((collinear3_iff_smul (v := u0) (w := u1) (w1 := w2)
+          (Ne.symm hu0u1)).mpr ⟨(t - bb) / yy, h6⟩)
+      exact ⟨azim_nonneg u0 u1 w1 z,
+        le_of_eq ((azim_eq_azim_iff_alt hw1 hncz hw2).mpr hzGt)⟩
+    · -- 严格内侧：wedge = affGt 2-2
+      have hzGt : z ∈ affGt ({u0, u1} : Set V3) ({w1, w2} : Set V3) :=
+        p25rpi_mem_affGt22 hu0u1 hw1w2 (Ne.symm hw1v0) (Ne.symm hw2v0) (Ne.symm hw1v1)
+          (Ne.symm hw2v1) aa bb xx yy (lt_of_le_of_ne hxx0 (Ne.symm hxxz)) hyypos hone hzy
+      have hzW : z ∈ Kepler.Geom.wedge u0 u1 w1 w2 := by
+        rw [wedge_eq_affGt hw1 hw2 hpos hpi]
+        exact hzGt
+      exact WEDGE_SUBSET_WEDGE_GE u0 u1 w1 w2 hzW
+
+/-! ### Kit B: coplanar fourth point into the stem-leaf plane, then the
+azimuth collapses into {0, π} (Planarity `azim_eq_0_or_pi_of_coplanar`
+independent route: dimension sandwich + `azim_frame_spec` polar). -/
+
+/-- finrank of a two-generator span is at most 2 (PA25
+`p25_finrank_span_pair_le_two` in-file twin). -/
+private theorem p25rpi_finrank_span_pair_le_two (a b : V3) :
+    Module.finrank ℝ (Submodule.span ℝ ({a, b} : Set V3)) ≤ 2 := by
+  have h2 := finrank_span_finset_le_card (R := ℝ) ({a, b} : Finset V3)
+  unfold Set.finrank at h2
+  rw [show (({a, b} : Finset V3) : Set V3) = ({a, b} : Set V3) from by simp] at h2
+  refine h2.trans ?_
+  calc ({a, b} : Finset V3).card ≤ ({b} : Finset V3).card + 1 := Finset.card_insert_le a {b}
+    _ = 2 := by simp
+
+/-- finrank monotone on submodules. -/
+private theorem p25rpi_finrank_mono {S T : Submodule ℝ V3} (h : S ≤ T) :
+    Module.finrank ℝ S ≤ Module.finrank ℝ T :=
+  Submodule.finrank_mono h
+
+/-- B1: a coplanar fourth point lies in the stem-leaf plane vector span:
+`∃ β γ, w2 - u0 = β • (u1 - u0) + γ • (w1 - u0)`. -/
+private theorem p25rpi_coplanar_combo {u0 u1 w1 w2 : V3}
+    (hw1 : ¬ Collinear3 u0 u1 w1)
+    (hcop : Coplanar ({u0, u1, w1, w2} : Set V3)) :
+    ∃ β γ : ℝ, w2 - u0 = β • (u1 - u0) + γ • (w1 - u0) := by
+  obtain ⟨p, q, r, hsp⟩ := hcop
+  set T : Set V3 := ({u0, u1, w1} : Set V3) with hTdef
+  set U : Set V3 := ({u0, u1, w1, w2} : Set V3) with hUdef
+  have hleUP : affineSpan ℝ U ≤ affineSpan ℝ ({p, q, r} : Set V3) :=
+    affineSpan_le.mpr hsp
+  have hdUle : vectorSpan ℝ U ≤ Submodule.span ℝ ({q - p, r - p} : Set V3) := by
+    have h1 : vectorSpan ℝ U ≤ vectorSpan ℝ ({p, q, r} : Set V3) := by
+      have hd := AffineSubspace.direction_le hleUP
+      rwa [direction_affineSpan, direction_affineSpan] at hd
+    refine h1.trans ?_
+    rw [vectorSpan_eq_span_vsub_set_right ℝ (show p ∈ ({p, q, r} : Set V3) from by simp)]
+    rw [Submodule.span_le]
+    rintro d ⟨y, hy, rfl⟩
+    rcases hy with rfl | rfl | rfl
+    · simp
+    · exact Submodule.subset_span (by left; rfl)
+    · exact Submodule.subset_span (by right; rfl)
+  have hTsubU : T ⊆ U := by
+    intro x hx
+    simp only [hTdef, hUdef, Set.mem_insert_iff, Set.mem_singleton_iff] at hx ⊢
+    tauto
+  have hu0T : u0 ∈ T := by simp [hTdef]
+  have hdT : Module.finrank ℝ (vectorSpan ℝ T) = 2 := by
+    have hne : T ≠ ∅ := by
+      intro he
+      rw [he] at hu0T
+      exact hu0T
+    have hdim := NOT_COLLINEAR_AFF_DIM2 u0 u1 w1 hw1
+    rw [affDim, if_neg hne] at hdim
+    exact_mod_cast hdim
+  have hdU2 : Module.finrank ℝ (vectorSpan ℝ U) = 2 := by
+    have hle := p25rpi_finrank_mono (vectorSpan_mono (k := ℝ) hTsubU)
+    have hle2 := p25rpi_finrank_mono hdUle
+    have hpair := p25rpi_finrank_span_pair_le_two (q - p) (r - p)
+    omega
+  -- vectorSpan T is exactly the two-difference span
+  have hTeq : vectorSpan ℝ T = Submodule.span ℝ ({u1 - u0, w1 - u0} : Set V3) := by
+    rw [vectorSpan_eq_span_vsub_set_right ℝ (show u0 ∈ T from hu0T)]
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro d ⟨y, hy, rfl⟩
+      rcases hy with rfl | rfl | rfl
+      · simp
+      · exact Submodule.subset_span (by left; rfl)
+      · exact Submodule.subset_span (by right; rfl)
+    · rw [Submodule.span_le]
+      rintro d (rfl | rfl)
+      · exact Submodule.subset_span ⟨u1, by simp [hTdef], rfl⟩
+      · exact Submodule.subset_span ⟨w1, by simp [hTdef], rfl⟩
+  -- membership and pin-down
+  have hm1 : (u1 - u0 : V3) ∈ vectorSpan ℝ U := by
+    refine vsub_mem_vectorSpan_of_mem_affineSpan_of_mem_affineSpan
+      (s := U) (p₁ := u1) (p₂ := u0) ?_ ?_
+    · exact mem_affineSpan ℝ (by simp [hUdef])
+    · exact mem_affineSpan ℝ (by simp [hUdef])
+  have hm2 : (w1 - u0 : V3) ∈ vectorSpan ℝ U := by
+    refine vsub_mem_vectorSpan_of_mem_affineSpan_of_mem_affineSpan
+      (s := U) (p₁ := w1) (p₂ := u0) ?_ ?_
+    · exact mem_affineSpan ℝ (by simp [hUdef])
+    · exact mem_affineSpan ℝ (by simp [hUdef])
+  have hspEq : Submodule.span ℝ ({u1 - u0, w1 - u0} : Set V3) = vectorSpan ℝ U :=
+    Submodule.eq_of_le_of_finrank_eq (Submodule.span_le.mpr (by
+      intro a ha
+      rcases Set.mem_insert_iff.mp ha with rfl | rfl
+      · exact hm1
+      · exact hm2))
+      (by rw [← hTeq, hdT, hdU2])
+  have hm4 : (w2 - u0 : V3) ∈ vectorSpan ℝ U := by
+    refine vsub_mem_vectorSpan_of_mem_affineSpan_of_mem_affineSpan
+      (s := U) (p₁ := w2) (p₂ := u0) ?_ ?_
+    · exact mem_affineSpan ℝ (by simp [hUdef])
+    · exact mem_affineSpan ℝ (by simp [hUdef])
+  rw [← hspEq] at hm4
+  obtain ⟨β, γ, hcombo⟩ := Submodule.mem_span_pair.mp hm4
+  exact ⟨β, γ, hcombo.symm⟩
+
+/-- B2: with the fourth point in the stem-leaf plane, the azimuth collapses
+into `{0, π}` (polar frame argument; sin A = 0 with `0 ≤ A < 2π`). -/
+private theorem p25rpi_azim_0_or_pi_of_combo {u0 u1 w1 w2 : V3}
+    (hw1 : ¬ Collinear3 u0 u1 w1) (hw2 : ¬ Collinear3 u0 u1 w2)
+    (hu0u1 : u0 ≠ u1)
+    (hcombo : ∃ β γ : ℝ, w2 - u0 = β • (u1 - u0) + γ • (w1 - u0)) :
+    azim u0 u1 w1 w2 = 0 ∨ azim u0 u1 w1 w2 = Real.pi := by
+  obtain ⟨β, γ, hβγ⟩ := hcombo
+  obtain ⟨f1, f2, f3, hon, halign⟩ :=
+    exists_on3_eq_smul (u1 - u0) (sub_ne_zero.mpr (Ne.symm hu0u1))
+  have hax : (u1 - u0 : V3) = dist u1 u0 • f3 := by
+    rw [dist_eq_norm]
+    exact halign
+  obtain ⟨psi, r1, r2, hr1, hr2, hz1, hz2⟩ :=
+    azim_frame_spec hw1 hw2 hon hax (Ne.symm hu0u1)
+  have hzline : zOf f1 f2 (w2 - u0)
+      = ((γ : ℝ) : ℂ) * (((r1 : ℝ) : ℂ) * Complex.exp (((psi : ℝ) : ℂ) * Complex.I)) := by
+    rw [hβγ, zOf_add, zOf_smul, zOf_smul, zOf_axis hax hon, hz1]
+    push_cast
+    ring
+  rw [exp_add_I] at hz2
+  have hkey : (r2 : ℂ) * Complex.exp (((azim u0 u1 w1 w2 : ℝ) : ℂ) * Complex.I)
+      = ((γ : ℝ) : ℂ) * ((r1 : ℝ) : ℂ) := by
+    refine mul_left_cancel₀ (Complex.exp_ne_zero (((psi : ℝ) : ℂ) * Complex.I)) ?_
+    linear_combination (norm := ring_nf) (hz2.symm.trans hzline)
+  have hsin : Real.sin (azim u0 u1 w1 w2) = 0 := by
+    have him := congrArg Complex.im hkey
+    rcases (by simpa using him :
+        (r2 = 0) ∨ (Real.sin (azim u0 u1 w1 w2) = 0)) with h | h
+    · exact absurd h hr2.ne'
+    · exact h
+  have h0 : 0 ≤ azim u0 u1 w1 w2 := azim_nonneg u0 u1 w1 w2
+  have h2pi : azim u0 u1 w1 w2 < 2 * Real.pi := azim_lt_two_pi u0 u1 w1 w2
+  rcases (Real.sin_eq_zero_iff).mp hsin with ⟨n, hn⟩
+  rcases lt_trichotomy (n : ℤ) 0 with hneg | hzero | hposn
+  · exfalso
+    have hnz : (n : ℤ) ≤ -1 := by omega
+    have hle : ((n : ℤ) : ℝ) ≤ ((-1 : ℤ) : ℝ) := by exact_mod_cast hnz
+    have hmul := mul_le_mul_of_nonneg_right hle Real.pi_pos.le
+    have hppi : (0:ℝ) < Real.pi := Real.pi_pos
+    push_cast at hmul ⊢
+    linarith
+  · refine Or.inl ?_
+    rw [← hn, hzero]
+    push_cast
+    ring
+  · rcases lt_trichotomy (n : ℤ) 1 with hone | hn1 | hge
+    · refine Or.inr ?_
+      have hn2 : n = 1 := by omega
+      rw [← hn, hn2]
+      push_cast
+      ring
+    · refine Or.inr ?_
+      rw [← hn, hn1]
+      push_cast
+      ring
+    · exfalso
+      have hnz : 2 ≤ (n : ℤ) := by omega
+      have hle : ((2 : ℤ) : ℝ) ≤ ((n : ℤ) : ℝ) := by exact_mod_cast hnz
+      have h2p : ((2 : ℤ) : ℝ) = 2 := by push_cast; ring
+      rw [h2p] at hle
+      have hmul : (2:ℝ) * Real.pi ≤ ((n : ℤ) : ℝ) * Real.pi :=
+        mul_le_mul_of_nonneg_right hle Real.pi_pos.le
+      linarith
+
+/-! ### Kit C: the 4-point voronoi face is the circumcenter singleton
+(non-coplanar + packing separation), giving the `barV V 3` face clause. -/
+
+/-- C1: `affDim` of a singleton is 0. -/
+private theorem p25rpi_affDim_singleton (a : V3) : affDim ({a} : Set V3) = 0 := by
+  have hne : ({a} : Set V3) ≠ ∅ := by
+    intro he
+    have hm : a ∈ ({a} : Set V3) := Set.mem_singleton a
+    rw [he] at hm
+    exact hm
+  rw [affDim, if_neg hne,
+    vectorSpan_eq_span_vsub_set_right ℝ (Set.mem_singleton a)]
+  have hgen : ((fun x : V3 => x -ᵥ a) '' ({a} : Set V3)) = ({0} : Set V3) := by
+    ext d
+    simp only [Set.mem_image, Set.mem_singleton_iff, Set.mem_singleton_iff, vsub_eq_sub]
+    constructor
+    · rintro ⟨y, rfl, hdy⟩
+      rw [← hdy]
+      simp
+    · rintro rfl
+      exact ⟨a, rfl, by simp⟩
+  rw [hgen, Submodule.span_singleton_eq_bot.mpr rfl]
+  exact_mod_cast Submodule.finrank_eq_zero.mpr rfl
+
+/-- C2: the voronoi face of a non-coplanar tetrahedron `S ⊆ V` (circumradius
+`< √2`) is the circumcenter singleton, hence `affDim = 0`. -/
+private theorem p25rpi_vor4_affDim0 (V : Set V3) (hp : Packing V) (u0 u1 w1 w2 : V3)
+    (hSV : ({u0, u1, w1, w2} : Set V3) ⊆ V)
+    (hncop : ¬ Coplanar ({u0, u1, w1, w2} : Set V3))
+    (hrad : radV ({u0, u1, w1, w2} : Set V3) < Real.sqrt 2) :
+    voronoiSet V ({u0, u1, w1, w2} : Set V3)
+        = {circumcenter ({u0, u1, w1, w2} : Set V3)} ∧
+      affDim (voronoiSet V ({u0, u1, w1, w2} : Set V3)) = 0 := by
+  set S : Set V3 := ({u0, u1, w1, w2} : Set V3) with hSdef
+  have hu0S : u0 ∈ S := by simp [hSdef]
+  have hfin : S.Finite := by simp [hSdef]
+  have hne : S ≠ ∅ := by
+    intro he
+    rw [he] at hu0S
+    exact hu0S
+  have haff3 : affDim S = 3 := NOT_COPLANAR_AFF_3 S hncop
+  have hind : ¬ affineDependent S := by
+    refine p6_affdep_of_dim S hfin ?_
+    have hsub : S ⊆ Set.range ![u0, u1, w1, w2] := by
+      intro x hx
+      rw [hSdef] at hx
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+      rcases hx with rfl | hx
+      · exact ⟨0, rfl⟩
+      rcases hx with rfl | hx
+      · exact ⟨1, rfl⟩
+      rcases hx with rfl | hx
+      · exact ⟨2, rfl⟩
+      · exact ⟨3, hx.symm⟩
+    have hle : Nat.card S ≤ Nat.card (Set.range ![u0, u1, w1, w2]) := by
+      refine Nat.card_le_card_of_injective (f := fun x : S => ⟨x, hsub x.2⟩) ?_
+      intro a b hab
+      exact Subtype.ext (by simpa using hab)
+    have hdrange : Nat.card (Set.range (![u0, u1, w1, w2] : Fin 4 → V3))
+        ≤ Nat.card (Set.univ : Set (Fin 4)) := by
+      refine Nat.card_le_card_of_injective
+        (f := fun y : { y // y ∈ Set.range (![u0, u1, w1, w2] : Fin 4 → V3) } =>
+          (⟨Classical.choose
+              ((Set.mem_range (f := (![u0, u1, w1, w2] : Fin 4 → V3))).mp y.property),
+            Set.mem_univ _⟩ :
+            { x // x ∈ (Set.univ : Set (Fin 4)) })) ?_
+      intro a b hab
+      simp only at hab
+      have hab' : (Classical.choose ((Set.mem_range (f := (![u0, u1, w1, w2] : Fin 4 → V3))).mp a.property))
+          = (Classical.choose ((Set.mem_range (f := (![u0, u1, w1, w2] : Fin 4 → V3))).mp b.property)) :=
+        Subtype.ext_iff.mp hab
+      have ha := Classical.choose_spec ((Set.mem_range (f := (![u0, u1, w1, w2] : Fin 4 → V3))).mp a.property)
+      have hb := Classical.choose_spec ((Set.mem_range (f := (![u0, u1, w1, w2] : Fin 4 → V3))).mp b.property)
+      rw [hab'] at ha
+      exact Subtype.ext (ha.symm.trans hb)
+    have h4 : (Nat.card (Set.range ![u0, u1, w1, w2]) : ℤ) ≤ 4 := by
+      have hcr := hdrange
+      have hfin4 : Nat.card (Set.univ : Set (Fin 4)) = 4 := by simp
+      omega
+    omega
+  have hcc := CIRCUMCENTER_IN_VORONOI_SET V S hp hSV hind hrad
+  have hmem : ∀ x ∈ voronoiSet V S, ∀ u ∈ S, ∀ v ∈ V, dist x u ≤ dist x v := by
+    intro x hx u hu v hv
+    rw [voronoiSet, Set.mem_sInter] at hx
+    exact hx (voronoiClosed V u) ⟨u, hu, rfl⟩ v hv
+  have hdist0 : ∀ x ∈ voronoiSet V S, ∀ u ∈ S, dist x u = dist x u0 := by
+    intro x hx u hu
+    exact le_antisymm (hmem x hx u hu u0 (hSV hu0S)) (hmem x hx u0 hu0S u (hSV hu))
+  have hcceq : ∀ u ∈ S, dist (circumcenter S) u = radV S := fun u hu =>
+    (OAPVION2_concl S hind u hu).symm
+  -- the pairwise differences span the whole space
+  have htop : vectorSpan ℝ S = ⊤ := by
+    refine Submodule.eq_top_of_finrank_eq ?_
+    have hdim : ((Module.finrank ℝ (vectorSpan ℝ S) : ℕ) : ℤ) = 3 := by
+      rw [← haff3, affDim, if_neg hne]
+    have hV3 : Module.finrank ℝ V3 = 3 := finrank_euclideanSpace_fin
+    have h1 : Module.finrank ℝ (vectorSpan ℝ S) = 3 := by exact_mod_cast hdim
+    rw [h1, hV3]
+  -- a vector orthogonal to all pairwise differences is zero
+  have hperp : ∀ z : V3, (∀ u ∈ S, ∀ u' ∈ S, inner ℝ z (u' - u) = 0) → z = 0 := by
+    intro z hz
+    have hzker : ∀ d ∈ vectorSpan ℝ S, inner ℝ z d = 0 := by
+      intro d hd
+      rw [vectorSpan_def] at hd
+      refine Submodule.span_induction
+        (p := fun e (_ : e ∈ Submodule.span ℝ (S -ᵥ S)) => inner ℝ z e = 0) ?_ ?_ ?_ ?_ hd
+      · rintro d ⟨u, hu, u', hu', rfl⟩
+        show inner ℝ z (u -ᵥ u') = 0
+        rw [vsub_eq_sub]
+        exact hz u' hu' u hu
+      · simp
+      · intro x y _ _ hx hy
+        rw [inner_add_right, hx, hy, add_zero]
+      · intro c x _ hx
+        rw [inner_smul_right, hx, mul_zero]
+    have hzin : z ∈ vectorSpan ℝ S := by rw [htop]; exact Submodule.mem_top
+    exact inner_self_eq_zero.mp (hzker z hzin)
+  -- uniqueness: any face member is equidistant from S, hence the circumcenter
+  have huniq : ∀ x ∈ voronoiSet V S, x = circumcenter S := by
+    intro x hx
+    have hz := hperp (circumcenter S - x) ?_
+    · rw [sub_eq_zero.mp hz]
+    · intro u hu u' hu'
+      have hxN : ‖x - u'‖ = ‖x - u‖ := by
+        rw [← dist_eq_norm, ← dist_eq_norm, hdist0 x hx u' hu', hdist0 x hx u hu]
+      have hcN : ‖circumcenter S - u'‖ = ‖circumcenter S - u‖ := by
+        rw [← dist_eq_norm, ← dist_eq_norm, hcceq u' hu', hcceq u hu]
+      have hXE : inner ℝ x u - inner ℝ x u' = (‖u‖ ^ 2 - ‖u'‖ ^ 2) / 2 := by
+        have h1 := norm_sub_sq_real x u
+        have h2 := norm_sub_sq_real x u'
+        rw [congrArg (fun v => v ^ 2) hxN] at h2
+        linear_combination (norm := ring_nf) (-(1 / 2)) * h1.symm.trans h2
+      have hCE : inner ℝ (circumcenter S) u - inner ℝ (circumcenter S) u'
+          = (‖u‖ ^ 2 - ‖u'‖ ^ 2) / 2 := by
+        have h1 := norm_sub_sq_real (circumcenter S) u
+        have h2 := norm_sub_sq_real (circumcenter S) u'
+        rw [congrArg (fun v => v ^ 2) hcN] at h2
+        linear_combination (norm := ring_nf) (-(1 / 2)) * h1.symm.trans h2
+      rw [inner_sub_right, inner_sub_left, inner_sub_left]
+      linear_combination (norm := ring_nf) (hXE - hCE)
+  have hsing : voronoiSet V S = {circumcenter S} := by
+    ext q
+    simp only [Set.mem_singleton_iff]
+    constructor
+    · exact fun hq => huniq q hq
+    · intro hq
+      rw [hq]
+      exact hcc
+  refine ⟨hsing, ?_⟩
+  rw [hsing]
+  exact p25rpi_affDim_singleton (circumcenter S)
+
+/-! ### Kit D: initial-sublist plumbing and the `barV V 3` clause for the
+tetrahedron list. -/
+
+private theorem p25rpi_init_len {xl zl : List V3} (h : initialSublist xl zl) :
+    xl.length ≤ zl.length := by
+  obtain ⟨t, ht⟩ := h
+  rw [ht, List.length_append]
+  omega
+
+private theorem p25rpi_init_unique {xl yl zl : List V3} {n : ℕ}
+    (h1 : initialSublist xl zl) (h2 : initialSublist yl zl)
+    (hl1 : xl.length = n) (hl2 : yl.length = n) : xl = yl := by
+  obtain ⟨t1, ht1⟩ := h1
+  obtain ⟨t2, ht2⟩ := h2
+  have heq : xl ++ t1 = yl ++ t2 := by rw [← ht1, ht2]
+  rcases List.append_eq_append_iff.1 heq with ⟨t, rfl, -⟩ | ⟨t, rfl, -⟩
+  · rw [List.length_append, hl1] at hl2
+    have ht0 : t.length = 0 := by omega
+    rw [List.length_eq_zero_iff.1 ht0, List.append_nil]
+  · rw [List.length_append, hl2] at hl1
+    have ht0 : t.length = 0 := by omega
+    rw [List.length_eq_zero_iff.1 ht0, List.append_nil]
+
+private theorem p25rpi_init_self {vl ul : List V3} (h : initialSublist vl ul)
+    (hlen : vl.length = ul.length) : vl = ul :=
+  p25rpi_init_unique h (⟨[], by simp⟩ : initialSublist ul ul) hlen rfl
+
+private theorem p25rpi_init_shift {vl : List V3} {a b c d : V3}
+    (h : initialSublist vl [a, b, c, d]) (h3 : vl.length ≤ 3) :
+    initialSublist vl [a, b, c] := by
+  have hv : vl = [a, b, c, d].take vl.length := by
+    obtain ⟨t, ht⟩ := h
+    rw [ht, List.take_left]
+  have htk : [a, b, c, d].take vl.length = [a, b, c].take vl.length := by
+    have e : (([a, b, c] : List V3)) = [a, b, c, d].take 3 := rfl
+    rw [e, List.take_take]
+    congr 1
+    omega
+  have hlen3 : ([a, b, c].take vl.length).length = vl.length := by
+    rw [List.length_take, show (([a, b, c] : List V3).length = 3) from rfl]
+    omega
+  refine ⟨[a, b, c].drop vl.length, ?_⟩
+  rw [hv, htk, hlen3, List.take_append_drop vl.length ([a, b, c] : List V3)]
+
+/-- D1: the `barV V 3` clause for the tetrahedron list `[u0, u1, w1, w2]`:
+the three short prefixes come from `leaf V [u0, u1, w1]`; the full prefix's
+voronoi face is the circumcenter singleton (Kit C). -/
+private theorem p25rpi_barV3_of_ncop (V : Set V3) (hp : Packing V) (u0 u1 w1 w2 : V3)
+    (hleaf1 : leaf V [u0, u1, w1]) (hw2V : w2 ∈ V)
+    (hncop : ¬ Coplanar ({u0, u1, w1, w2} : Set V3))
+    (hrad : radV ({u0, u1, w1, w2} : Set V3) < Real.sqrt 2) :
+    barV V 3 [u0, u1, w1, w2] := by
+  have hfull : initialSublist [u0, u1, w1, w2] [u0, u1, w1, w2] := ⟨[], by simp⟩
+  have hvn3 : voronoiNondg V [u0, u1, w1] := hleaf1.1.2 _ ⟨⟨[], rfl⟩, by simp⟩
+  have hV3 : setOfList [u0, u1, w1] ⊆ V := hvn3.2.1
+  have hSV : setOfList [u0, u1, w1, w2] ⊆ V := by
+    intro x hx
+    simp only [setOfList, Set.mem_setOf_eq, List.mem_cons, List.mem_singleton,
+      List.not_mem_nil] at hx
+    rcases hx with rfl | rfl | rfl | rfl | hx
+    · exact hV3 (by simp [setOfList])
+    · exact hV3 (by simp [setOfList])
+    · exact hV3 (by simp [setOfList])
+    · exact hw2V
+    · exact absurd hx (by simp)
+  have hset : setOfList [u0, u1, w1, w2] = ({u0, u1, w1, w2} : Set V3) := by
+    ext x
+    simp [setOfList]
+  have hVset : ({u0, u1, w1, w2} : Set V3) ⊆ V := by rw [← hset]; exact hSV
+  refine ⟨rfl, ?_⟩
+  intro vl hinit
+  obtain ⟨hinit, hpos⟩ := hinit
+  rcases Nat.lt_or_ge vl.length 4 with h4 | h4
+  · exact hleaf1.1.2 vl ⟨p25rpi_init_shift hinit (by omega), hpos⟩
+  · have heq : vl = [u0, u1, w1, w2] :=
+      p25rpi_init_self hinit (by
+        have hf : ([u0, u1, w1, w2] : List V3).length = 4 := rfl
+        have := p25rpi_init_len hinit
+        omega)
+    subst heq
+    refine ⟨by simp, hSV, ?_⟩
+    have h0 := p25rpi_vor4_affDim0 V hp u0 u1 w1 w2 hVset hncop hrad
+    rw [voronoiList, hset]
+    have h4 : ([u0, u1, w1, w2] : List V3).length = 4 := rfl
+    omega
 /-- HOL `RAD_PI_IMP_WEDGE4`: an angle under `pi` with radius `< sqrt 2`
-forces a 4-cell in the wedge.  2026-10-13 M4 波侦察+攻件两波不下，2-strike
-止损维持记账。缺口=两件不可达 kit 的移植（其余支线已全数走通）：
-(1) 楔包含支 `mcell4 V [u0,u1,f i,f (i+1)] ⊆ wedgeGe`：HOL 走
-`Local_lemmas.WEDGE_GE_EQ_AFF_GE`，其 Lean 正本在 `LocalAuto5.lean:2024`
-（70 行）——PA25 import 闭包（PA21→PA18/PA15/PA12/…）**不含 LocalAuto5**，
-其依赖 `AZIM_EQ_0_GE_ALT2`（LocalAuto5:1951，mem_affGe_pair 线参数私有 kit）
-同在闭包外；可达替代 `PA18.AFF_GE_SUBSET_WEDGE_GE`（:4682，单侧半平面）+
-`CONVEX_HULL_4_SUBSET_AFF_GE_2_2`（两侧锥）只盖一半，二侧锥→闭楔需
-`azim_master` 框架的扇形单调（本波侦查确认无既有件）。
-(2) 非共面支 `¬Coplanar {u0,u1,f i,f (i+1)}`：coplanar → azim ∈ {0,π} 的
-Lean 正本是 `Planarity.azim_eq_0_or_pi_of_coplanar`（:2272，private，zOf
-复坐标 kit 同文件私有）；独立路线 = `azim_master` 框架 + coplanar 给
-`w2 ∈ affineSpan {u0,u1,w1}`（平面维数夹逼，`p25_finrank_span_pair_le_two`
-与 `NOT_COLLINEAR_AFF_DIM2` 均可达）+ `azim_frame_spec` 极坐标 +
-`exp_pos_mul_eq`/`angle_eq_of_exp_eq`（AzimLemmas 均可达），估 100 行；
-azim = 0 支撞 `LEAF_RANK_AZIM_NZ` ✅、azim = π 支撞 `hapi` ✅。
-已走通支线（后续波次可直接复用）：叶性 ✅（LEAF_RANK_S_LEAF）、
-setOfList ⊆ V ✅（BARV_SUBSET）、barV V 3 ✅（HL_IMP_BARV 论证可内联为
-真证：CIRCUMCENTER_IN_VORONOI_SET+OAPVION3+NOT_COPLANAR_AFF_3+vadd 方向
-论证，voronoiList={外心} 单点 affDim 收口）、非零测 ✅（ZWVCBMN）、edgeX ✅
-（BumpP4.MCELL4_EDGE+茎互异）。 -/
+forces a 4-cell in the wedge.  2026-10-13 收官波转真（探针车道 P4rpi 全程
+验证后移植）：非共面支 = 维数夹逼（`Coplanar` 第 4 点入 `{u0,u1,w1}` 平面向量
+span，`azim_frame_spec` 极坐标 + `Real.sin_eq_zero_iff` + 值域夹逼收口
+azim ∈ {0,π}）；楔包含支 = `CONVEX_HULL_4_SUBSET_AFF_GE_2_2` + `affGe` 2-2 ⊆
+`wedgeGe`（LocalAuto5 `WEDGE_GE_EQ_AFF_GE` ⊆ 方向的本件移植，mirror-of-
+LocalAuto5）；barV 支 = `leaf V [u0,u1,f i]` 的 `barV V 2` 子表 + 四元表
+voronoi 面 = 外心单点（`CIRCUMCENTER_IN_VORONOI_SET` + 正交唯一性 +
+`affDim` 单点收口）；零测 = `ZWVCBMN`；edgeX = `BumpP4.MCELL4_EDGE`。 -/
+
 theorem RAD_PI_IMP_WEDGE4 (V : Set V3) (f : ℕ → V3) (w0 : V3) (n : ℕ) (i : ℕ)
     (u0 u1 : V3) (hn : 1 < n) (hp : Packing V) (hs : saturated V)
     (hnc : ¬ Collinear3 u0 u1 w0) (hr : leaf_rank V [u0, u1] w0 n f)
@@ -3769,7 +4429,71 @@ theorem RAD_PI_IMP_WEDGE4 (V : Set V3) (f : ℕ → V3) (w0 : V3) (n : ℕ) (i :
     (hrad : radV {u0, u1, f i, f (i + 1)} < Real.sqrt 2) :
     ∃ ul, mcell4 V ul ⊆ wedgeGe u0 u1 (f i) (f (i + 1)) ∧ barV V 3 ul ∧
       {u0, u1} ∈ edgeX V (mcell4 V ul) := by
-  sorry
+  -- 基础叶事实
+  have hli : leaf V [u0, u1, f i] := LEAF_RANK_LEAF V u0 u1 w0 n f i hr
+  have hlip : leaf V [u0, u1, f (i + 1)] := LEAF_RANK_LEAF V u0 u1 w0 n f (i + 1) hr
+  have hcolA : ¬ Collinear3 u0 u1 (f i) := (LEAF_DOMAIN V [u0, u1, f i] hs hp hli).1
+  have hcolB : ¬ Collinear3 u0 u1 (f (i + 1)) :=
+    (LEAF_DOMAIN V [u0, u1, f (i + 1)] hs hp hlip).1
+  have hu0u1 : u0 ≠ u1 := fun he => hnc (collinear3_of_eq he.symm)
+  have hA : ¬ (azim u0 u1 (f i) (f (i + 1)) = 0) :=
+    LEAF_RANK_AZIM_NZ V [u0, u1] w0 n f i hs hp hr hn hnc
+  have hposA : 0 < azim u0 u1 (f i) (f (i + 1)) :=
+    lt_of_le_of_ne (azim_nonneg u0 u1 (f i) (f (i + 1))) (Ne.symm hA)
+  have hw1v0 : f i ≠ u0 := fun he => hcolA (collinear3_pair_left he)
+  have hw1v1 : f i ≠ u1 := fun he => hcolA (collinear3_pair_right he)
+  have hw2v0 : f (i + 1) ≠ u0 := fun he => hcolB (collinear3_pair_left he)
+  have hw2v1 : f (i + 1) ≠ u1 := fun he => hcolB (collinear3_pair_right he)
+  -- 第 1 步：非共面（共面 ⇒ azim ∈ {0, π}，撞 hA / hapi）
+  have hncop : ¬ Coplanar ({u0, u1, f i, f (i + 1)} : Set V3) := by
+    intro hcop
+    obtain ⟨β, γ, hcombo⟩ := p25rpi_coplanar_combo hcolA hcop
+    rcases p25rpi_azim_0_or_pi_of_combo hcolA hcolB hu0u1 ⟨β, γ, hcombo⟩ with h0 | hπ
+    · exact hA h0
+    · rw [hπ] at hapi
+      exact lt_irrefl Real.pi hapi
+  -- 第 2 步：barV V 3 四元表
+  have hw2V : f (i + 1) ∈ V := by
+    have hmem := hlip.1.2 [u0, u1, f (i + 1)] ⟨⟨[], rfl⟩, by simp⟩
+    exact hmem.2.1 (by simp [setOfList])
+  have hbar : barV V 3 [u0, u1, f i, f (i + 1)] :=
+    p25rpi_barV3_of_ncop V hp u0 u1 (f i) (f (i + 1)) hli hw2V hncop hrad
+  -- 第 3 步：mcell4 非零测（ZWVCBMN）
+  have hset4 : setOfList [u0, u1, f i, f (i + 1)] = ({u0, u1, f i, f (i + 1)} : Set V3) := by
+    ext x
+    simp [setOfList]
+  have hlt : hl [u0, u1, f i, f (i + 1)] < Real.sqrt 2 := by
+    show radV (setOfList [u0, u1, f i, f (i + 1)]) < Real.sqrt 2
+    rw [hset4]
+    exact hrad
+  have hnn : ¬ nullSet (mcell4 V [u0, u1, f i, f (i + 1)]) := by
+    intro h0
+    rw [mcell4, if_pos hlt, hset4] at h0
+    exact absurd h0 (ne_of_gt (ZWVCBMN u0 u1 (f i) (f (i + 1)) hncop))
+  refine ⟨[u0, u1, f i, f (i + 1)], ?_, hbar, ?_⟩
+  · -- 第 4 步：楔包含（MCELL4_CONVEX_HULL + CONVEX_HULL_4_SUBSET + Kit A4）
+    have hhull := MCELL4_CONVEX_HULL V [u0, u1, f i, f (i + 1)] hp hs hbar hnn
+    rw [hhull]
+    have helV : ({elV [u0, u1, f i, f (i + 1)] 0, elV [u0, u1, f i, f (i + 1)] 1,
+        elV [u0, u1, f i, f (i + 1)] 2, elV [u0, u1, f i, f (i + 1)] 3} : Set V3)
+        = ({u0, u1, f i, f (i + 1)} : Set V3) := by
+      ext x
+      simp [elV]
+    rw [helV]
+    exact (CONVEX_HULL_4_SUBSET_AFF_GE_2_2 u0 u1 (f i) (f (i + 1))).trans
+      (p25rpi_affGe22_subset_wedgeGe u0 u1 (f i) (f (i + 1)) hcolA hcolB hposA hapi)
+  · -- 第 5 步：edgeX（MCELL4_EDGE）
+    rw [BumpP4.MCELL4_EDGE V [u0, u1, f i, f (i + 1)] u0 u1 hp hs hnn hbar]
+    refine ⟨hu0u1, ?_⟩
+    intro x hx
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+    rcases hx with rfl | rfl
+    · exact by simp [setOfList]
+    · exact by simp [setOfList]
+
+
+/-! ### critical_weight_wtcount6_y 装配（CARD_INSERT_INTER 六步剥离） -/
+
 
 /-- HOL `LEAF_RANK_SUC_INJ`. -/
 theorem LEAF_RANK_SUC_INJ (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
@@ -4450,12 +5174,6 @@ theorem real_periodic_data (V : Set V3) (u0 u1 : V3) (f : ℕ → V3) (n : ℕ)
     simp only [hper i]
   · intro i
     simp only [show (i + n) + 1 = i + 1 + n from by omega, hper (i + 1)]
-
-/-- HOL `LEAF_RANK_LEAF`. -/
-theorem LEAF_RANK_LEAF (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
-    (hr : leaf_rank V [u0, u1] w0 n f) : leaf V [u0, u1, f i] := by
-  have h := LEAF_RANK_S_LEAF V [u0, u1] w0 n f i hr
-  exact h.1
 
 /-- HOL `cc_4_UL`.  2026-10-13 M4 波转真（装配级）：`cc_4_cc_ke4` 钉派单值 4 +
 `CC_CELL_WEDGE_MATCH_UH`（楔匹配，具名记账件在案）给 `cc_uh` 第 4 槽 =
@@ -7635,83 +8353,6 @@ theorem INITIAL_SUBLIST_TRUNCATE (vl ul : List V3) (hl : ul.length = 4)
       exact ⟨(truncateSimplex 2 ul).drop vl.length,
         (List.take_append_drop vl.length (truncateSimplex 2 ul)).symm⟩
     exact absurd e3 h2
-
-/-- HOL `NOT_COPLANAR_AFF_3`.  Proof: if the direction of the affine span
-had rank `< 3`, it would be spanned by two vectors `v1, v2` (a basis of the
-rank-2 case, `finrank_le_one_iff` twice for the rank-`≤ 1` case), and `s`
-would sit inside the plane `affineSpan {p, p + v1, p + v2}` — contradicting
-non-coplanarity. -/
-theorem NOT_COPLANAR_AFF_3 (s : Set V3) (hnc : ¬ Coplanar s) :
-    affDim s = 3 := by
-  by_contra hne
-  have hsne : s ≠ ∅ := by
-    intro he
-    rw [he] at hnc
-    exact hnc coplanar_empty
-  have haff : affDim s = ((Module.finrank ℝ (vectorSpan ℝ s) : ℕ) : ℤ) := by
-    rw [affDim, if_neg hsne]
-  have hcast : ((Module.finrank ℝ (vectorSpan ℝ s) : ℕ) : ℤ) ≠ 3 := by
-    rw [← haff]; exact hne
-  have hle : Module.finrank ℝ (vectorSpan ℝ s) ≤ 3 := by
-    simpa [finrank_euclideanSpace_fin] using Submodule.finrank_le (vectorSpan ℝ s)
-  have hlt : Module.finrank ℝ (vectorSpan ℝ s) < 3 := by omega
-  obtain ⟨v1, v2, hspan⟩ : ∃ v1 v2 : V3,
-      (vectorSpan ℝ s : Submodule ℝ V3) ≤ Submodule.span ℝ ({v1, v2} : Set V3) := by
-    by_cases h2 : Module.finrank ℝ (vectorSpan ℝ s) = 2
-    · have hb : Module.Basis (Fin 2) ℝ ↥(vectorSpan ℝ s) :=
-        Module.finBasisOfFinrankEq ℝ (vectorSpan ℝ s) h2
-      refine ⟨(hb 0 : V3), (hb 1 : V3), ?_⟩
-      intro w hw
-      have hwspan : (⟨w, hw⟩ : ↥(vectorSpan ℝ s)) ∈
-          (Submodule.span ℝ (Set.range hb) :
-            Submodule ℝ ↥(vectorSpan ℝ s)) := by
-        rw [Module.Basis.span_eq]
-        exact Submodule.mem_top
-      have hrng : Set.range hb ⊆
-          ({(hb 0 : ↥(vectorSpan ℝ s)), (hb 1 : ↥(vectorSpan ℝ s))} :
-            Set ↥(vectorSpan ℝ s)) := by
-        intro y hy
-        obtain ⟨i, rfl⟩ := hy
-        fin_cases i
-        · simp
-        · simp
-      have hwpairW : (⟨w, hw⟩ : ↥(vectorSpan ℝ s)) ∈
-          (Submodule.span ℝ ({(hb 0 : ↥(vectorSpan ℝ s)), (hb 1 : ↥(vectorSpan ℝ s))} :
-            Set ↥(vectorSpan ℝ s))) := Submodule.span_mono hrng hwspan
-      obtain ⟨r, t, hrt⟩ := Submodule.mem_span_pair.mp hwpairW
-      refine Submodule.mem_span_pair.mpr ⟨r, t, ?_⟩
-      exact congrArg (fun x : ↥(vectorSpan ℝ s) => (x : V3)) hrt
-    · have h1 : Module.finrank ℝ (vectorSpan ℝ s) ≤ 1 := by omega
-      obtain ⟨v, hv⟩ := (finrank_le_one_iff (K := ℝ) (V := ↥(vectorSpan ℝ s))).mp h1
-      refine ⟨(v : V3), 0, fun w hw => ?_⟩
-      obtain ⟨c, hc⟩ := hv ⟨w, hw⟩
-      refine Submodule.mem_span_pair.mpr ⟨c, 0, ?_⟩
-      rw [zero_smul, add_zero]
-      have hcoe : ((c • v : ↥(vectorSpan ℝ s)) : V3)
-          = (c : ℝ) • ((v : V3)) := rfl
-      rw [← hcoe, hc]
-  obtain ⟨p, hp⟩ := Set.nonempty_iff_ne_empty.mpr hsne
-  refine absurd ?_ hnc
-  refine ⟨p, p + v1, p + v2, ?_⟩
-  intro q hq
-  have hqp : q -ᵥ p ∈ (vectorSpan ℝ s) := by
-    have hvd := AffineSubspace.vsub_mem_direction (subset_affineSpan ℝ s hq)
-      (subset_affineSpan ℝ s hp)
-    rwa [direction_affineSpan] at hvd
-  have hdir : Submodule.span ℝ ({v1, v2} : Set V3) ≤
-      (affineSpan ℝ ({p, p + v1, p + v2} : Set V3)).direction := by
-    rw [direction_affineSpan,
-      vectorSpan_eq_span_vsub_set_right ℝ (show p ∈ ({p, p + v1, p + v2} : Set V3) from by simp)]
-    refine Submodule.span_mono ?_
-    intro z hz
-    rcases Set.mem_insert_iff.mp hz with hz1 | hz1
-    · rw [hz1]
-      exact ⟨p + v1, by simp, by simp⟩
-    · rw [Set.mem_singleton_iff.mp hz1]
-      exact ⟨p + v2, by simp, by simp⟩
-  rw [show (q : V3) = (q -ᵥ p) +ᵥ p from (vsub_vadd ..).symm]
-  exact AffineSubspace.vadd_mem_of_mem_direction (hdir (hspan hqp))
-    (mem_affineSpan ℝ (by simp : p ∈ ({p, p + v1, p + v2} : Set V3)))
 
 /-- HOL `AFF_DEP_COPLANAR`.  2026-10-13 转真：backward 方向 = 独立性沿
 `Set.Finite.subtypeEquivToFinset` 传输到 `toFinset`，再以
