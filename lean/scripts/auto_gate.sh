@@ -16,8 +16,15 @@ timeout(){ local t=$1; shift; perl -e 'alarm shift; exec @ARGV' "$t" "$@"; }
 
 # 1. only $FILE has tracked modifications vs HEAD
 #    (--relative: paths shown relative to cwd, matching $FILE)
+#    EVOLUTION 25 (2026-10-15): pipeline/ lanes live OUTSIDE lean/ — --relative
+#    (cwd=lean/) hides them entirely, making pipeline-only changes ungatable.
+#    Gate accepts when EITHER a lean/-relative change exists OR any tracked
+#    change exists outside lean/ (the latter still must be declared in
+#    LANE_FILES by the coverage check below, and the build/axiom steps are
+#    unaffected: pure-pipeline lanes gate on tree-integrity + anchor axioms).
 changed=$(git diff HEAD --name-only --relative)
-[ -n "$changed" ] || fail "no tracked changes (nothing to gate?)"
+outside=$(git -C "$REPO_ROOT" diff HEAD --name-only | grep -v '^lean/' || true)
+[ -n "$changed" ] || [ -n "$outside" ] || fail "no tracked changes (nothing to gate?)"
 # LANE_FILES: comma-separated extra files allowed to be dirty (parallel lanes
 # gated one at a time by the orchestrator). Default: only $FILE.
 ALLOW=$(printf '%s' "${LANE_FILES:-$FILE}" | tr ',' '\n' | sort)

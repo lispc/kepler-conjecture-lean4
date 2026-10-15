@@ -359,6 +359,51 @@ class RPN:
         return (f"(.div (.const ⟨{num}, 0⟩) (.const ⟨{den}, 0⟩) "
                 f"({self.div_out}))")
 
+    @staticmethod
+    def _pad_closed_text(text, bits):
+        """W8.1: rescale EVERY dyadic literal ⟨m, e⟩ in a closed (var-free)
+        sqrt radicand to |m| >= 2^bits (value and e-parity preserved).
+        Rationale: `Dyadic.sqrtI` certifies at granularity `2^(e/2)` of the
+        radicand representation, so small-mantissa const composites
+        (e.g. sqrt(1024*2) = sqrt 2048 -> [45,46]) inject huge sqrt junk
+        that survives the whole TM chain (the W8.1 root cause: the W6a
+        mirror's 2^-80 isqrt is tight while the kernel's is coarse).
+        Literals inside `.trans ...` subterms are NOT scaled: their value
+        already sits at the rung's output granularity (~2^-64), and padded
+        atan args would inflate the closed Taylor BigInt cost.  Value- and
+        parity-preserving (factors of 4), so certificates baked elsewhere
+        stay sound; only mantissa representations grow."""
+        out = []
+        i = 0
+        n = len(text)
+        while i < n:
+            j = text.find("⟨", i)
+            if j < 0:
+                out.append(text[i:])
+                break
+            k = text.find("⟩", j)
+            if k < 0:
+                out.append(text[i:])
+                break
+            body = text[j + 1:k]
+            parts = body.split(",")
+            if len(parts) == 2:
+                try:
+                    m = int(parts[0].strip())
+                    e = int(parts[1].strip())
+                    while m != 0 and abs(m) < (1 << bits):
+                        m *= 4
+                        e -= 2
+                    out.append(text[i:j])
+                    out.append(f"⟨{m}, {e}⟩")
+                    i = k + 1
+                    continue
+                except ValueError:
+                    pass
+            out.append(text[i:k + 1])
+            i = k + 1
+        return "".join(out)
+
     def emit(self, prog):
         """RPN prog -> IExpr term text."""
         return self.emit_pair(prog)[0]
@@ -422,8 +467,29 @@ class RPN:
                     a = (self._pad_const_text(num, den,
                                               self.sqrt_const_pad_bits),
                          a[1], None)
+                elif (self.sqrt_const_pad_bits is not None and a[1]
+                      and ".trans" not in a[0]):
+                    # W8.1: closed COMPOSITE radicands without trans (pure
+                    # const +,-,*,/ trees) certify sqrtI at the smallest
+                    # literal's granularity -- pad every literal in the
+                    # radicand (value-preserving; trans-free so no Taylor
+                    # BigInt blowup).  Closes the W8.1 kernel-vs-mirror df
+                    # divergence root cause (sqrt(2048) = [45,46] junk).
+                    a = (self._pad_closed_text(a[0],
+                                               self.sqrt_const_pad_bits),
+                         a[1], None)
                 s1, s2 = self.sqrt_slot(self.sqrt_count)
                 self.sqrt_count += 1
+                # W8.1 NEGATIVE RESULT (recorded): a value-exact scale-up/
+                # scale-down rewrite sqrt(x) -> sqrt(x*2^120)*2^-60 was tried
+                # here and REVERTED: it fixes sqrtI granularity but the
+                # resulting TM model carries a 2^60 ABSOLUTE width factor
+                # (sqrt of the scaled radicand: W ~ 2^60 * w^2/(8v^1.5)),
+                # which destroys every additive context downstream (observed
+                # sqrt-gate junk c = -1.2e222 on R1).  The var-at-point sqrt
+                # granularity blocker (sqrt(var @ [4,4]) = [2,3]) needs a
+                # CertTM sqrt-rule granularity fix (orchestrator gate) or a
+                # tree-aware emitter substitution -- NOT a value rewrite.
                 st.append((f"(.sqrt {a[0]} {s1} {s2})", a[1], None))
             elif op in TRANS_KIND:
                 if self.trans is None:
