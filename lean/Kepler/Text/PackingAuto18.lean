@@ -108,9 +108,26 @@ MCELL3_NONPLANAR), `CC_CELL_NOT_COPLANAR_EXTREME`, `CC_CELL_EXTREME_CARD`
 `CC_CELL_CONVEX_HULL_INJ` (CONVEX_HULL_EQ_EQ_SET_EQ).
 Still sorry (see the per-site `-- NEEDS` notes): the root `cc_pe_exists`
 (single blocking input FUZBZGI_1 -> XYOFCGX@PA7), YBZFUPO,
-FUZBZGI_0/1, the chi_msb-coplanarity pair + JDHAWAY_0/JDWAWAY, ZWVCBMN ->
-CC_CELL_NOT_NULLSET -> FUEIMOV_K, the FUEIMOV/EXTREME/V-block and
-the MCELL*_EDGE_FIRST/STEM_EDGEX/FCHKUGT rigidity kit.
+FUZBZGI_0/1, the chi_msb-coplanarity pair + JDHAWAY_0/JDWAWAY, FUEIMOV_K
+(its CC_CELL_NOT_NULLSET half is now closed; the other half is
+PA17.AJRIPQN), the FUEIMOV/EXTREME/V-block and the
+MCELL*_EDGE_FIRST/FCHKUGT rigidity kit.
+STATUS (2026-10-13 edge-rigidity wave, PA18 lane): `ZWVCBMN` closed
+(positive volume of a non-coplanar tetrahedron hull: linear independence of
+the difference vectors via the `AFF_DIM_LE_2_IMP_COPLANAR` finrank bridge +
+Haar preimage scaling of the coordinate-simplex image under the linear
+equiv carrying the standard basis to the differences), thence
+`CC_CELL_NOT_NULLSET` (CC_CELL34 + CC_CELL_NOT_COPLANAR_EXTREME + ZWVCBMN)
+and `STEM_EDGEX` (CC_KE_34 case split + BumpP4.MCELL3/4_EDGE + GBEWYFX
+through EL_CC_UH; no permutation content needed). New edge-kit support:
+`pa18e_barV3_distinct` (pairwise distinctness of a barV V 3 list: prefix
+voronoiNondg collapses + MHFTTZN1 vs the 3-point affDim bound
+`pa18e_affDim3_le`) and `pa18e_affInd_of_barV3` (affine independence of the
+point set, CC_CELL_INDEPENDENT pattern over pa18_card4_of_distinct).
+`MCELL4_EDGE_FIRST` is reduced to a single input: `barV V 3` of the
+permuted witness list (the YIFVQDV_1 giant) — its NEEDS note carries the
+full reduced route (NEIGHBORHOOD_lemma + XYOFCGX + SUBSPACES bridge, all
+proved, are public).
 STATUS: skeleton port; statements faithful, mechanical lemmas proved,
 the giant leaf-cell/sum-gamma chains carry `sorry`.
 STATUS (2026-10-13 CFFONNL wave, PA18 lane): CONVEX_PLANE_INTER (third
@@ -124,7 +141,8 @@ assembled end-to-end (mcell dispatch via RIJRIED/EDGE_IMP_K2, the
 coplanar-null content inlined, MHFTTZN1/COPLANAR_INSERT for the off-span
 point, EDGEX_SUBSET_MCELL for the stem edge, the wl-orientation argument via
 CHI_MSB_POS2/CHI_MSB_AFF_GT_0/CONVEX_R3_INTER, hull bookkeeping, AJRIPQN_0),
-consuming ZWVCBMN (still sorry) plus one new scoped debt `pa18_ccCell_swap`
+consuming ZWVCBMN (closed in the edge-rigidity wave below) plus one new
+scoped debt `pa18_ccCell_swap`
 (cc-cell insensitivity under the 0-1 stem swap; mathematically true but
 blocked by the cc_pe1 Skolem root — see its NEEDS note).
 -/
@@ -2445,13 +2463,206 @@ theorem POS_EQ_NOT_COPLANANR (x1 x2 x3 x4 : V3) :
     rw [hchi]
     exact mul_pos (by norm_num) (sq_pos_iff.2 hne)
 
-/-- HOL `ZWVCBMN` (leaf_cell.hl:1585-1629). -/
-theorem ZWVCBMN (a b c d : V3) (h : ¬Coplanar ({a, b, c, d} : Set V3)) :
+/-- The vectorSpan of a 4-point set is the span of the three difference
+vectors off the first point (ZWVCBMN support). -/
+private theorem pa18_vol4_vectorSpan4 (a b c d : V3) :
+    vectorSpan ℝ ({a, b, c, d} : Set V3)
+      = Submodule.span ℝ ({b - a, c - a, d - a} : Set V3) := by
+  rw [vectorSpan_eq_span_vsub_set_right ℝ (show a ∈ ({a, b, c, d} : Set V3) from by simp)]
+  apply le_antisymm
+  · rw [Submodule.span_le]
+    rintro z ⟨p, hp, rfl⟩
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+    rcases hp with rfl | rfl | rfl | rfl
+    · simp
+    · exact Submodule.subset_span (by simp)
+    · exact Submodule.subset_span (by simp)
+    · exact Submodule.subset_span (by simp)
+  · rw [Submodule.span_le]
+    rintro z (rfl | rfl | rfl)
+    · exact Submodule.subset_span ⟨b, by simp, rfl⟩
+    · exact Submodule.subset_span ⟨c, by simp, rfl⟩
+    · exact Submodule.subset_span ⟨d, by simp, rfl⟩
+
+/-- The finrank of the span of two vectors is at most two (ZWVCBMN support;
+local copy since the file's own `pa18_finrank_span_pair_le_two` sits below). -/
+private theorem pa18_vol4_span_pair_le (x y : V3) :
+    Module.finrank ℝ (Submodule.span ℝ ({x, y} : Set V3)) ≤ 2 := by
+  have h2 := finrank_span_finset_le_card (R := ℝ) ({x, y} : Finset V3)
+  unfold Set.finrank at h2
+  rw [show (({x, y} : Finset V3) : Set V3) = ({x, y} : Set V3) from by simp] at h2
+  refine h2.trans ?_
+  calc ({x, y} : Finset V3).card ≤ ({y} : Finset V3).card + 1 := Finset.card_insert_le x {y}
+    _ = 2 := by simp
+
+/-- A non-coplanar 4-point set has linearly independent difference vectors
+(ZWVCBMN support; contrapositive through the coplanar finrank bridge). -/
+private theorem pa18_vol4_linInd {a b c d : V3}
+    (h : ¬Coplanar ({a, b, c, d} : Set V3)) :
+    LinearIndependent ℝ ![b - a, c - a, d - a] := by
+  set S : Set V3 := ({a, b, c, d} : Set V3) with hS
+  have hne : S.Nonempty := ⟨a, by simp [hS]⟩
+  rw [linearIndependent_iff_card_eq_finrank_span]
+  rw [show Set.range ![b - a, c - a, d - a] = ({b - a, c - a, d - a} : Set V3) from by
+    ext x; simp; tauto]
+  by_contra hfr
+  simp only [Fintype.card_fin] at hfr
+  have h3le : ({b - a, c - a, d - a} : Set V3).finrank ℝ ≤ 3 := by
+    unfold Set.finrank
+    have h1 : Submodule.span ℝ ({b - a, c - a, d - a} : Set V3)
+        ≤ (⊤ : Submodule ℝ V3) := Submodule.span_le.2 (Set.subset_univ _)
+    exact le_trans (Submodule.finrank_mono h1) (by simp)
+  have h2 : ({b - a, c - a, d - a} : Set V3).finrank ℝ ≤ 2 := by omega
+  have h2' : Module.finrank ℝ (vectorSpan ℝ S) ≤ 2 := by
+    rw [pa18_vol4_vectorSpan4 a b c d]
+    exact h2
+  have haff : affDim S ≤ 2 := by
+    rw [affDim]
+    split
+    · norm_num
+    · exact_mod_cast h2'
+  exact h (AFF_DIM_LE_2_IMP_COPLANAR S haff)
+
+/-- Positive volume of the hull of four points with linearly independent
+difference vectors: the linear equiv carrying the standard basis to the
+three difference vectors maps the coordinate simplex (which contains a
+ball, hence has positive volume) into the hull, and Haar preimage scaling
+under the equiv transfers positivity (ZWVCBMN support). -/
+private theorem pa18_vol4_hull_pos {a b c d : V3}
+    (hind : LinearIndependent ℝ ![b - a, c - a, d - a]) :
     0 < MeasureTheory.volume (convexHull ℝ ({a, b, c, d} : Set V3)) := by
--- NEEDS: positive volume of a non-coplanar tetrahedron hull. HOL route
--- (VOLUME_OF_CLOSED_TETRAHEDRON + POLFLZY + DELTA_POS_4POINTS) has no
--- repo/Mathlib counterpart; blocks CC_CELL_NOT_NULLSET/FUEIMOV_K.
-  sorry
+  classical
+  set b0 := (EuclideanSpace.basisFun (Fin 3) ℝ).toBasis with hb0
+  set w : Fin 3 → V3 := ![b - a, c - a, d - a] with hw
+  set f : V3 →ₗ[ℝ] V3 := b0.constr ℝ w with hfdef
+  have hfapp : ∀ i, f (b0 i) = w i := fun i => b0.constr_basis (S := ℝ) w i
+  have hfeq : ∀ t, f t = ∑ i, b0.equivFun t i • w i := by
+    intro t
+    have h1 : f t = f (∑ i, b0.equivFun t i • b0 i) := by
+      congr 1
+      exact (b0.sum_equivFun t).symm
+    rw [h1, map_sum]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [map_smul, hfapp]
+  have hker : LinearMap.ker f = ⊥ := by
+    rw [LinearMap.ker_eq_bot']
+    intro t ht
+    have h0 : ∀ i, b0.equivFun t i = 0 := fun i =>
+      Fintype.linearIndependent_iff.mp hind (b0.equivFun t) (hfeq t ▸ ht) i
+    have h2 : b0.equivFun t = 0 := funext h0
+    have h3 : t = b0.equivFun.symm (b0.equivFun t) := (b0.equivFun.symm_apply_apply t).symm
+    rw [h3, h2, LinearEquiv.map_zero]
+  have hkerinj : Function.Injective f := LinearMap.ker_eq_bot.mp hker
+  have hbij : Function.Bijective f :=
+    ⟨hkerinj, (LinearMap.injective_iff_surjective).mp hkerinj⟩
+  set e : V3 ≃ₗ[ℝ] V3 := LinearEquiv.ofBijective f hbij with he
+  -- the coordinate simplex
+  set σ : Set V3 := {t | ∀ i, 0 ≤ b0.equivFun t i ∧
+    b0.equivFun t 0 + b0.equivFun t 1 + b0.equivFun t 2 ≤ 1} with hσ
+  set u : V3 := b0.equivFun.symm (fun _ => (1 / 4 : ℝ)) with hu
+  have hucoord : ∀ i, b0.equivFun u i = 1 / 4 := by
+    intro i
+    rw [hu, b0.equivFun.apply_symm_apply]
+  -- coordinate bound: |coord(t) i - coord(u) i| ≤ ‖t - u‖
+  have hcoord : ∀ (t : V3) (i : Fin 3),
+      |b0.equivFun t i - b0.equivFun u i| ≤ ‖t - u‖ := by
+    intro t i
+    have hmap : b0.equivFun (t - u) i = b0.equivFun t i - b0.equivFun u i := by
+      rw [map_sub]; rfl
+    have hsq : (b0.equivFun t i - b0.equivFun u i) ^ 2 ≤ ‖t - u‖ ^ 2 := by
+      rw [← hmap, EuclideanSpace.real_norm_sq_eq]
+      exact Finset.single_le_sum (f := fun j : Fin 3 => (b0.equivFun (t - u) j) ^ 2)
+        (fun j _ => sq_nonneg _) (Finset.mem_univ i)
+    exact abs_le_of_sq_le_sq hsq (norm_nonneg _)
+  -- the ball inside the simplex
+  have hball : Metric.ball u (1 / 12) ⊆ σ := by
+    intro t ht
+    have hnorm : ‖t - u‖ < (1:ℝ)/12 := Metric.mem_ball.1 ht
+    have hi0 := hcoord t 0
+    have hi1 := hcoord t 1
+    have hi2 := hcoord t 2
+    rw [hucoord 0] at hi0
+    rw [hucoord 1] at hi1
+    rw [hucoord 2] at hi2
+    refine fun i => ?_
+    have hi : |b0.equivFun t i - 1 / 4| ≤ ‖t - u‖ := by
+      have hx := hcoord t i
+      rw [hucoord i] at hx
+      exact hx
+    have hile := abs_le.1 hi
+    constructor
+    · linarith
+    · have a0 := abs_le.1 hi0
+      have a1 := abs_le.1 hi1
+      have a2 := abs_le.1 hi2
+      have e0 : b0.equivFun t 0 ≤ 1 / 4 + 1 / 12 := by linarith
+      have e1 : b0.equivFun t 1 ≤ 1 / 4 + 1 / 12 := by linarith
+      have e2 : b0.equivFun t 2 ≤ 1 / 4 + 1 / 12 := by linarith
+      linarith
+  -- positive volume of the simplex
+  have hone : (0 : ℝ) < 1 / 12 := by norm_num
+  have hballpos : 0 < MeasureTheory.volume (Metric.ball u (1 / 12)) :=
+    IsOpen.measure_pos _ Metric.isOpen_ball ⟨u, Metric.mem_ball_self hone⟩
+  have hσpos : 0 < MeasureTheory.volume σ :=
+    lt_of_lt_of_le hballpos (MeasureTheory.measure_mono hball)
+  -- the simplex maps into the hull
+  have hσsub : σ ⊆ e ⁻¹' ((fun x => a + x) ⁻¹'
+      (convexHull ℝ ({a, b, c, d} : Set V3))) := by
+    intro t ht
+    rw [Set.mem_preimage, Set.mem_preimage]
+    have htc0 : 0 ≤ b0.repr t 0 := (ht 0).1
+    have htc1 : 0 ≤ b0.repr t 1 := (ht 1).1
+    have htc2 : 0 ≤ b0.repr t 2 := (ht 2).1
+    have htcsum : b0.repr t 0 + b0.repr t 1 + b0.repr t 2 ≤ 1 := (ht 0).2
+    refine mem_convexHull_of_exists_fintype
+      (w := ![1 - (b0.repr t 0 + b0.repr t 1 + b0.repr t 2),
+        b0.repr t 0, b0.repr t 1, b0.repr t 2]) (z := ![a, b, c, d]) ?_ ?_ ?_ ?_
+    · intro i
+      fin_cases i
+      · show 0 ≤ 1 - (b0.repr t 0 + b0.repr t 1 + b0.repr t 2)
+        linarith
+      · show 0 ≤ b0.repr t 0
+        omega
+      · show 0 ≤ b0.repr t 1
+        omega
+      · show 0 ≤ b0.repr t 2
+        omega
+    · rw [Fin.sum_univ_four]
+      show (1 - (b0.repr t 0 + b0.repr t 1 + b0.repr t 2)) + b0.repr t 0 + b0.repr t 1
+        + b0.repr t 2 = 1
+      ring
+    · intro i
+      fin_cases i <;> simp
+    · have heq' : (e : V3 ≃ₗ[ℝ] V3) t = f t := rfl
+      rw [heq', hfeq t, hw, Fin.sum_univ_three, Fin.sum_univ_four]
+      simp only [Matrix.head_cons, Matrix.cons_val_zero, Matrix.cons_val_one,
+        Matrix.cons_val_two, Matrix.tail_cons]
+      show (1 - (b0.equivFun t 0 + b0.equivFun t 1 + b0.equivFun t 2)) • a
+          + b0.equivFun t 0 • b + b0.equivFun t 1 • c + b0.equivFun t 2 • d
+        = a + (b0.equivFun t 0 • (b - a) + b0.equivFun t 1 • (c - a)
+          + b0.equivFun t 2 • (d - a))
+      module
+  -- the measure chain
+  have hdetsymm : LinearMap.det (e.symm : V3 →ₗ[ℝ] V3) ≠ 0 :=
+    (LinearEquiv.isUnit_det' e.symm).ne_zero
+  have hcpos : 0 < ENNReal.ofReal |LinearMap.det (e.symm : V3 →ₗ[ℝ] V3)| :=
+    ENNReal.ofReal_pos.2 (abs_pos.2 hdetsymm)
+  by_contra h0
+  have hzero : MeasureTheory.volume (convexHull ℝ ({a, b, c, d} : Set V3)) = 0 :=
+    le_antisymm (not_lt.1 h0) (by simp)
+  have hle : MeasureTheory.volume σ ≤ 0 := by
+    refine le_trans (MeasureTheory.measure_mono hσsub) ?_
+    rw [MeasureTheory.Measure.addHaar_preimage_linearEquiv MeasureTheory.volume e _,
+      MeasureTheory.measure_preimage_add _ _ _, hzero, mul_zero]
+  exact absurd hσpos (not_lt.2 hle)
+
+/-- HOL `ZWVCBMN` (leaf_cell.hl:1585-1629): positive volume of a
+non-coplanar tetrahedron hull, via linear independence of the difference
+vectors (contrapositive of the `AFF_DIM_LE_2_IMP_COPLANAR` finrank bridge)
+and Haar scaling of the coordinate-simplex image. -/
+theorem ZWVCBMN (a b c d : V3) (h : ¬Coplanar ({a, b, c, d} : Set V3)) :
+    0 < MeasureTheory.volume (convexHull ℝ ({a, b, c, d} : Set V3)) :=
+  pa18_vol4_hull_pos (pa18_vol4_linInd h)
 
 /-- `¬Collinear3` for a triple keeps the triple-set affinely independent
 (the bridge `OAPVION2_concl` needs; direction finrank 2 on both sides). -/
@@ -3715,12 +3926,19 @@ theorem CC_CELL_NOT_COPLANAR_EXTREME {V : Set V3} {ul : List V3} {pp : V3}
   refine convexHull_min ?_ (AffineSubspace.convex _)
   exact hcpsub
 
-/-- HOL `CC_CELL_NOT_NULLSET` (leaf_cell.hl:2641-2661). -/
+/-- HOL `CC_CELL_NOT_NULLSET` (leaf_cell.hl:2641-2661): the cc cell is the
+hull of the four non-coplanar extreme points (CC_CELL34 +
+CC_CELL_NOT_COPLANAR_EXTREME), so ZWVCBMN gives positive volume. -/
 theorem CC_CELL_NOT_NULLSET {V : Set V3} {ul : List V3} (hp : Packing V)
     (hs : saturated V) (hl' : leaf V ul) : ¬nullSet (ccCell V ul) := by
--- NEEDS: waits on ZWVCBMN; the rest is CC_CELL34 +
--- CC_CELL_NOT_COPLANAR_EXTREME (both proved).
-  sorry
+  intro hnull
+  rw [nullSet] at hnull
+  have h34 := CC_CELL34 (V := V) (ul := ul)
+    (pp := if ccKe V ul = 3 then mxi V (ccUh V ul) else (ccUh V ul).getD 3 0) hp hs hl' rfl
+  have hnc := CC_CELL_NOT_COPLANAR_EXTREME (V := V) (ul := ul)
+    (pp := if ccKe V ul = 3 then mxi V (ccUh V ul) else (ccUh V ul).getD 3 0) hp hs hl' rfl
+  rw [h34] at hnull
+  exact absurd hnull (Ne.symm (ZWVCBMN _ _ _ _ hnc).ne)
 
 /-- Four pairwise-distinct points give a 4-element set. -/
 private theorem pa18_card4_of_distinct {a b c d : V3} (h1 : a ≠ b) (h2 : a ≠ c)
@@ -3986,21 +4204,206 @@ theorem SET2_INSERT2 {a b w x y z : V3} (hsub : ({a, b} : Set V3) ⊆ {w, x, y, 
     · exact ⟨w, x, by ext t; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; all_goals tauto⟩
     · exact absurd rfl hne
 
+/-- The affine dimension of a 3-point set is at most two (span of the two
+differences off the first point; MCELL4_EDGE_FIRST support). -/
+private theorem pa18e_affDim3_le (x y z : V3) : affDim ({x, y, z} : Set V3) ≤ 2 := by
+  rw [affDim]
+  split
+  · norm_num
+  · have hvs : vectorSpan ℝ ({x, y, z} : Set V3)
+        = Submodule.span ℝ ({y - x, z - x} : Set V3) := by
+      rw [vectorSpan_eq_span_vsub_set_right ℝ (show x ∈ ({x, y, z} : Set V3) from by simp)]
+      apply le_antisymm
+      · rw [Submodule.span_le]
+        rintro q ⟨p, hp, rfl⟩
+        simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hp
+        rcases hp with rfl | rfl | rfl
+        · simp
+        · exact Submodule.subset_span (by simp)
+        · exact Submodule.subset_span (by simp)
+      · rw [Submodule.span_le]
+        rintro q (rfl | rfl)
+        · exact Submodule.subset_span ⟨y, by simp, rfl⟩
+        · exact Submodule.subset_span ⟨z, by simp, rfl⟩
+    rw [hvs]
+    exact_mod_cast pa18_vol4_span_pair_le (y - x) (z - x)
+
+/-- The four entries of a `barV V 3` list are pairwise distinct (from the
+prefix `voronoiNondg` dimensions, the set-only dependence of `voronoiList`,
+and `MHFTTZN1`; MCELL4_EDGE_FIRST support). -/
+theorem pa18e_barV3_distinct (V : Set V3) (a b c d : V3) (hp : Packing V)
+    (hb : barV V 3 [a, b, c, d]) :
+    a ≠ b ∧ a ≠ c ∧ a ≠ d ∧ b ≠ c ∧ b ≠ d ∧ c ≠ d := by
+  have hnd1 := hb.2 [a] ⟨⟨[b, c, d], rfl⟩, by simp⟩
+  have hnd2 := hb.2 [a, b] ⟨⟨[c, d], rfl⟩, by simp⟩
+  have hnd3 := hb.2 [a, b, c] ⟨⟨[d], rfl⟩, by simp⟩
+  have hnd4 := hb.2 [a, b, c, d] ⟨⟨[], rfl⟩, by simp⟩
+  have hd1 : affDim (voronoiList V [a]) + ((1 : ℕ) : ℤ) = 4 := hnd1.2.2
+  have hd2 : affDim (voronoiList V [a, b]) + ((2 : ℕ) : ℤ) = 4 := by
+    simpa using hnd2.2.2
+  have hd3 : affDim (voronoiList V [a, b, c]) + ((3 : ℕ) : ℤ) = 4 := by
+    simpa using hnd3.2.2
+  have hd4 : affDim (voronoiList V [a, b, c, d]) + ((4 : ℕ) : ℤ) = 4 := by
+    simpa using hnd4.2.2
+  -- the singleton Voronoi face is full-dimensional
+  have hsing : affDim (voronoiList V [a]) = 3 := by
+    show affDim (voronoiSet V (setOfList [a])) = 3
+    rw [show (setOfList [a] : Set V3) = {a} from by ext x; simp [setOfList], VORONOI_SET_SING]
+    exact AFF_DIM_VORONOI_CLOSED V a hp
+  -- a collision collapses a prefix face onto a shorter certified one
+  have hab : a ≠ b := by
+    intro h; subst h
+    have hset : voronoiList V [a, a] = voronoiList V [a] := by
+      show voronoiSet V (setOfList [a, a]) = voronoiSet V (setOfList [a])
+      congr 1
+      ext x; simp [setOfList]
+    rw [hset, hsing] at hd2
+    omega
+  have hac : a ≠ c := by
+    intro h; subst h
+    have hset : voronoiList V [a, b, a] = voronoiList V [a, b] := by
+      show voronoiSet V (setOfList [a, b, a]) = voronoiSet V (setOfList [a, b])
+      congr 1
+      ext x; simp [setOfList]; tauto
+    rw [hset] at hd3
+    have h2 := hd2
+    omega
+  have hbc : b ≠ c := by
+    intro h; subst h
+    have hset : voronoiList V [a, b, b] = voronoiList V [a, b] := by
+      show voronoiSet V (setOfList [a, b, b]) = voronoiSet V (setOfList [a, b])
+      congr 1
+      ext x; simp [setOfList]
+    rw [hset] at hd3
+    have h2 := hd2
+    omega
+  have had : a ≠ d := by
+    intro h; subst h
+    have hset : voronoiList V [a, b, c, a] = voronoiList V [a, b, c] := by
+      show voronoiSet V (setOfList [a, b, c, a]) = voronoiSet V (setOfList [a, b, c])
+      congr 1
+      ext x; simp [setOfList]; tauto
+    rw [hset] at hd4
+    have h3 := hd3
+    omega
+  -- the remaining collisions drop the 4-point set to a 3-point set, whose
+  -- affine dimension is at most two, contradicting MHFTTZN1
+  have hdim3 : affDim (setOfList [a, b, c, d]) = 3 := MHFTTZN1 V [a, b, c, d] 3 hp hb
+  have hbd : b ≠ d := by
+    intro h; subst h
+    have h2 := pa18e_affDim3_le a b c
+    rw [show (setOfList [a, b, c, b] : Set V3) = {a, b, c} from by ext x; simp [setOfList]; tauto] at hdim3
+    omega
+  have hcd : c ≠ d := by
+    intro h; subst h
+    have h2 := pa18e_affDim3_le a b c
+    rw [show (setOfList [a, b, c, c] : Set V3) = {a, b, c} from by ext x; simp [setOfList]] at hdim3
+    omega
+  exact ⟨hab, hac, had, hbc, hbd, hcd⟩
+
+/-- The entries of a `barV V 3` list are affinely independent as a point set
+(MCELL4_EDGE_FIRST support, `CC_CELL_INDEPENDENT` pattern). -/
+theorem pa18e_affInd_of_barV3 (V : Set V3) (a b c d : V3) (hp : Packing V)
+    (hb : barV V 3 [a, b, c, d]) (hd : a ≠ b ∧ a ≠ c ∧ a ≠ d ∧ b ≠ c ∧ b ≠ d ∧ c ≠ d) :
+    ¬affineDependent ({a, b, c, d} : Set V3) := by
+  set S : Set V3 := ({a, b, c, d} : Set V3) with hS
+  obtain ⟨h1, h2, h3, h4, h5, h6⟩ := hd
+  have hcard := pa18_card4_of_distinct h1 h2 h3 h4 h5 h6
+  have hne : S ≠ ∅ := by
+    intro hc
+    have hmem : a ∈ S := by simp [hS]
+    rw [hc] at hmem
+    simp at hmem
+  have hfin : S.Finite := by
+    refine Set.Finite.insert _ (Set.Finite.insert _ (Set.Finite.insert _ (Set.finite_singleton d)))
+  haveI : Fintype ↥S := hfin.fintype
+  have hcardfi : Fintype.card ↥S = 4 := by rwa [Nat.card_eq_fintype_card] at hcard
+  have hrange : Set.range (fun x : ↥S => (x : V3)) = S := by
+    ext y
+    constructor
+    · rintro ⟨x, rfl⟩; exact x.2
+    · intro hy; exact ⟨⟨y, hy⟩, rfl⟩
+  refine fun hdep => hdep ?_
+  rw [affineIndependent_iff_not_finrank_vectorSpan_le ℝ
+    (fun x : ↥S => (x : V3)) (n := 2) hcardfi, hrange]
+  intro hle
+  have hdim3 := MHFTTZN1 V [a, b, c, d] 3 hp hb
+  rw [show (setOfList [a, b, c, d] : Set V3) = S from by
+    rw [hS]; ext x; simp [setOfList]] at hdim3
+  have hdim : affDim S ≤ 2 := by
+    rw [affDim, if_neg hne]
+    exact_mod_cast hle
+  omega
+
 /-- HOL `MCELL4_EDGE_FIRST` (leaf_cell.hl:3375-?). -/
 theorem MCELL4_EDGE_FIRST {V : Set V3} {ul : List V3} {u v : V3} (hs : saturated V)
     (hp : Packing V) (hb : barV V 3 ul)
     (he : {u, v} ∈ edgeX V (mcell4 V ul)) :
     ∃ vl, barV V 3 vl ∧ u = vl.getD 0 0 ∧ v = vl.getD 1 0 ∧ mcell4 V ul = mcell4 V vl := by
--- NEEDS (GIANT): leaf_cell.hl:3281-3374 mcell edge-rigidity kit.
+-- NEEDS (GIANT): leaf_cell.hl:3281-3374 mcell edge-rigidity kit. The
+-- assembly is now fully mapped: (i) hl ul < sqrt 2 (else mcell4 = empty and
+-- VX = empty kills the edgeX hypothesis); (ii) BumpP4.MCELL4_EDGE gives
+-- u ≠ v and {u,v} ⊆ setOfList ul; (iii) `pa18e_barV3_distinct` +
+-- `pa18_card4_of_distinct` + `SET2_INSERT2` give c d with
+-- {a,b,c,d} = {u,v,c,d}; (iv) vl := [u,v,c,d] has mcell4 V vl = mcell4 V ul
+-- for free (hl = radV over the same set, convexHull over the same set); the
+-- single missing input is `barV V 3 vl` for the permuted list, i.e. the
+-- YIFVQDV_1 giant: barV-invariance of a 4-point list under the same
+-- point set (Rogers.hl:8777, still sorry in PackingAuto7). Reduced route:
+-- PA7's proved NEIGHBORHOOD_lemma + XYOFCGX + SUBSPACES_INTER_BALL_EQ_IMP_EQ
+-- give a pa18 copy of AFFINES_INTER_BALL_EQ_IMP_EQ (PA7's own AFFINES copy
+-- is sorry, out of scope), thence YIFVQDV_lemma_aff_dim (Rogers.hl:8656),
+-- thence affDim (voronoiList V [w0,w1,w2]) = affDim (bis w0 w1 ∩ bis w0 w2)
+-- = 1 for the non-collinear triple (BIS_EQ_HYPERPLANE x2 + finrank-kernel
+-- arithmetic, the p15_finrank_ker_dot pattern).
   sorry
 
-/-- HOL `STEM_EDGEX` (leaf_cell.hl:3375-?). -/
+/-- HOL `STEM_EDGEX` (leaf_cell.hl:3375-3432): the stem edge lies in the
+edgeX of the cc cell — case split on the dispatch value (CC_KE_34), pin the
+cell down with CC_CELL_NOT_NULLSET + PA4's `MCELL3_EDGE`/`MCELL4_EDGE`, and
+take the distinctness of the stem from GBEWYFX through `EL_CC_UH`. -/
 theorem STEM_EDGEX {V : Set V3} {ul : List V3} (hp : Packing V) (hs : saturated V)
     (hl' : leaf V ul) :
     {(ccUh V ul).getD 0 0, (ccUh V ul).getD 1 0} ∈ edgeX V (ccCell V ul) := by
--- NEEDS: leaf_cell.hl:3375-3432; stem edge in edgeX of cc_cell, waits on
--- the EDGE_FIRST kit.
-  sorry
+  -- barV and truncation for the cc_uh list (from the cc_uh_exists spec)
+  have hspec := (Classical.choose_spec (cc_uh_exists V ul)) hp hs hl'
+  obtain ⟨hbarU, htrU, -⟩ := hspec
+  -- the stem entries coincide with ul's, which are distinct (GBEWYFX)
+  obtain ⟨he0, he1, -⟩ := EL_CC_UH (V := V) (ul := ul) hp hs hl'
+  obtain ⟨u0, u1, u2, hul⟩ : ∃ u0 u1 u2, ul = [u0, u1, u2] :=
+    ⟨_, _, _, list3_eq ul hl'.1.1⟩
+  subst hul
+  have htrU2 : truncateSimplex 2 (ccUh V [u0, u1, u2]) = [u0, u1, u2] := htrU
+  have h0 : (ccUh V [u0, u1, u2]).getD 0 0 = u0 := by rw [he0]; simp
+  have h1 : (ccUh V [u0, u1, u2]).getD 1 0 = u1 := by rw [he1]; simp
+  rw [h0, h1]
+  have hcol := GBEWYFX (V := V) (ul := [u0, u1, u2]) hp hs hl'
+  simp only [List.getElem!_cons_zero, List.getElem!_cons_succ] at hcol
+  have hne01 : u0 ≠ u1 := ne₁₂_of_not_collinear hcol
+  rcases CC_KE_34 V [u0, u1, u2] with h3 | h4
+  · have hd3 : mcell 3 V (ccUh V [u0, u1, u2]) = mcell3 V (ccUh V [u0, u1, u2]) := by
+      rw [mcell]; simp
+    have hnull := CC_CELL_NOT_NULLSET hp hs hl'
+    rw [ccCell, h3, hd3] at hnull
+    have he := BumpP4.MCELL3_EDGE V (ccUh V [u0, u1, u2]) u0 u1 hp hs hnull hbarU
+    rw [ccCell, h3, hd3, he]
+    refine ⟨hne01, ?_⟩
+    rw [htrU2]
+    intro z hz
+    rcases hz with rfl | rfl <;> simp [setOfList]
+  · have hd4 : mcell 4 V (ccUh V [u0, u1, u2]) = mcell4 V (ccUh V [u0, u1, u2]) := by
+      rw [mcell]; simp
+    have hnull := CC_CELL_NOT_NULLSET hp hs hl'
+    rw [ccCell, h4, hd4] at hnull
+    have he := BumpP4.MCELL4_EDGE V (ccUh V [u0, u1, u2]) u0 u1 hp hs hnull hbarU
+    rw [ccCell, h4, hd4, he, LIST_OF_CC_UH hs hp hl']
+    refine ⟨hne01, ?_⟩
+    rw [h0, h1]
+    intro z hz
+    simp only [setOfList, Set.mem_setOf_eq, List.mem_cons]
+    rcases hz with rfl | rfl
+    · exact Or.inl rfl
+    · exact Or.inr (Or.inl rfl)
 
 /-- HOL `FCHKUGT` (leaf_cell.hl:3432-3528). -/
 theorem FCHKUGT {V : Set V3} {u0 u1 u2 u2' : V3} (hs : saturated V) (hp : Packing V)
