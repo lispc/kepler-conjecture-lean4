@@ -310,6 +310,28 @@ FILL-ROUND STATUS r6 (2026-10-13 wave: 100 -> 97, 楔形 3-cell 面三连)
     ⑥ `Collinear3` 为 def，set-重写前须 `show Collinear ℝ ({...})`；
     ⑦ 全量 `simp [elV]` 换自备 rfl 三引理 `simp only [eV0, eV1, eV2]`。
 
+FILL-ROUND STATUS r7 (2026-10-13 wave: 97 -> 90, M4 车道批量装配·骨架式预消费)
+  - 装配链 7 件转真（`cc_4_cc_ke4`→`cc_4_UL`→`CC_4_PROPS`→`cc_4_cc_cell`/
+    `c_4_azim_mcell_dih_y`/`real_model_azim_c4`/`GG_MCELL_QUARTER`），全部
+    骨架式预消费：消费的具名记账兄弟 = PA18 `MCELL4_EDGE_FIRST`（E8 车道在
+    攻，落地时 `cc_4_cc_ke4`/`cc_4_UL`/`CC_4_PROPS`/`cc_4_cc_cell` 自动升零债）+
+    本文件 `K3_CC_WI_ALT`/`MCELL4_FULL_WEDGE`/`K4_CC_WI_ALT`/
+    `CC_CELL_WEDGE_MATCH_UH`/`MCELL4_GG`/`MCELL4_AZIM_LT_PI`/`LEAF_RANK_REUHADY`
+    /`critical_weight_wtcount6_y`/`CC_4_BETA_BUMP_0`（兄弟翻转各自自动升零债）。
+  - 关键新私件 `p25m_coplanar_hull_null`（零债）：Coplanar t → hull Haar 零测
+    （affineSpan_le_of_subset_coe + addHaar_affineSubspace），CC_4_PROPS 的
+    ¬Coplanar 合取由 `mcell4` 空支+零测反推。
+  - 装配级技巧沉淀：`MCELL4_EDGE_FIRST` 见证表 getD 槽与目标 `elV` 槽不
+    定义等价（vl 不透明）——所有 hnc/hr/hw 类前提先 `simp only [elV, ← hv0,
+    ← hv1]` 改写再 exact；`f (i % n)` 必须带括号（`f i % n` 解析为 `(f i) % n`
+    爆 HMod V3 ℕ）；bank 盒约束的 y5/y6 与 `MCELL4_DOMAIN` 合取序错位
+    （y5=d(u1,f(i+1)) 在合取 11-12 而非 9-10）。
+  - `RAD_PI_IMP_WEDGE4` 两波不下 2-strike 止损（本件 docstring 记账）：楔
+    包含支与非共面支各卡一件闭包外 kit（LocalAuto5 的 WEDGE_GE_EQ_AFF_GE /
+    Planarity 的 zOf 私件），五条支线侦察已走通、路线图写入 docstring。
+  - `critical_weight_wtcount6_y` 一波止损（六边剥离计数需 15 对两两互异 +
+    符号 if 对齐，预算不济；`GG_MCELL_QUARTER` 已按预消费模式吃其记账位）。
+
 -/
 
 /-! ## DEFINITIONS -/
@@ -3719,7 +3741,27 @@ theorem CELL_CLUSTER_N_LE_1 (V : Set V3) (u0 u1 : V3) (hnl : pack_nonlinear_non_
   sorry
 
 /-- HOL `RAD_PI_IMP_WEDGE4`: an angle under `pi` with radius `< sqrt 2`
-forces a 4-cell in the wedge. -/
+forces a 4-cell in the wedge.  2026-10-13 M4 波侦察+攻件两波不下，2-strike
+止损维持记账。缺口=两件不可达 kit 的移植（其余支线已全数走通）：
+(1) 楔包含支 `mcell4 V [u0,u1,f i,f (i+1)] ⊆ wedgeGe`：HOL 走
+`Local_lemmas.WEDGE_GE_EQ_AFF_GE`，其 Lean 正本在 `LocalAuto5.lean:2024`
+（70 行）——PA25 import 闭包（PA21→PA18/PA15/PA12/…）**不含 LocalAuto5**，
+其依赖 `AZIM_EQ_0_GE_ALT2`（LocalAuto5:1951，mem_affGe_pair 线参数私有 kit）
+同在闭包外；可达替代 `PA18.AFF_GE_SUBSET_WEDGE_GE`（:4682，单侧半平面）+
+`CONVEX_HULL_4_SUBSET_AFF_GE_2_2`（两侧锥）只盖一半，二侧锥→闭楔需
+`azim_master` 框架的扇形单调（本波侦查确认无既有件）。
+(2) 非共面支 `¬Coplanar {u0,u1,f i,f (i+1)}`：coplanar → azim ∈ {0,π} 的
+Lean 正本是 `Planarity.azim_eq_0_or_pi_of_coplanar`（:2272，private，zOf
+复坐标 kit 同文件私有）；独立路线 = `azim_master` 框架 + coplanar 给
+`w2 ∈ affineSpan {u0,u1,w1}`（平面维数夹逼，`p25_finrank_span_pair_le_two`
+与 `NOT_COLLINEAR_AFF_DIM2` 均可达）+ `azim_frame_spec` 极坐标 +
+`exp_pos_mul_eq`/`angle_eq_of_exp_eq`（AzimLemmas 均可达），估 100 行；
+azim = 0 支撞 `LEAF_RANK_AZIM_NZ` ✅、azim = π 支撞 `hapi` ✅。
+已走通支线（后续波次可直接复用）：叶性 ✅（LEAF_RANK_S_LEAF）、
+setOfList ⊆ V ✅（BARV_SUBSET）、barV V 3 ✅（HL_IMP_BARV 论证可内联为
+真证：CIRCUMCENTER_IN_VORONOI_SET+OAPVION3+NOT_COPLANAR_AFF_3+vadd 方向
+论证，voronoiList={外心} 单点 affDim 收口）、非零测 ✅（ZWVCBMN）、edgeX ✅
+（BumpP4.MCELL4_EDGE+茎互异）。 -/
 theorem RAD_PI_IMP_WEDGE4 (V : Set V3) (f : ℕ → V3) (w0 : V3) (n : ℕ) (i : ℕ)
     (u0 u1 : V3) (hn : 1 < n) (hp : Packing V) (hs : saturated V)
     (hnc : ¬ Collinear3 u0 u1 w0) (hr : leaf_rank V [u0, u1] w0 n f)
@@ -4230,16 +4272,68 @@ theorem WEDGE3_Y4 (V : Set V3) (f : ℕ → V3) (w0 : V3) (n : ℕ) (i : ℕ) (u
       · intro _ hle2
         linarith
 
-/-- HOL `cc_4_cc_ke4`. -/
+/-- HOL `cc_4_cc_ke4`.  2026-10-13 M4 波转真（装配级）：`MCELL4_EDGE_FIRST`
+把楔胞见证改写为茎前置列表，`k = 3` 支经 `STEM_EDGEX`（茎边入胞 edgeX，PA18
+真件）+ `K3_CC_WI_ALT`（胞入楔）喂 `MCELL4_FULL_WEDGE` 唯一性得
+`ccCell = mcell4`，再以 `AJRIPQN` 的 `4 = 3` 撞死。骨架式预消费：具名记账件
+= PA18 `MCELL4_EDGE_FIRST`（E8 车道在攻，随其落地自动升零债）+ 本文件
+`K3_CC_WI_ALT`/`MCELL4_FULL_WEDGE`。 -/
 theorem cc_4_cc_ke4 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
     (hp : Packing V) (hs : saturated V) (hr : leaf_rank V [u0, u1] w0 n f)
     (hnc : ¬ Collinear3 u0 u1 w0) (hper : periodic f n) (hn : 1 < n)
     (hl' : leaf V [u0, u1, f i]) (h4 : cc_4 V u0 u1 f i) :
     ccKe V [u0, u1, f i] = 4 := by
-  sorry
+  obtain ⟨ul, hbarU, hedge, hwedge⟩ := h4
+  obtain ⟨vl, hbarV, hv0, hv1, hswap⟩ :=
+    MCELL4_EDGE_FIRST (V := V) (ul := ul) (u := u0) (v := u1) hs hp hbarU hedge
+  rcases CC_KE_34 V [u0, u1, f i] with h3 | h4k
+  · exfalso
+    have hj := F_DEMOD hper hn i
+    obtain ⟨he0, he1, -⟩ := EL_CC_UH (V := V) (ul := [u0, u1, f i]) hp hs hl'
+    have e0 : (ccUh V [u0, u1, f i]).getD 0 0 = u0 := by rw [he0]; simp
+    have e1 : (ccUh V [u0, u1, f i]).getD 1 0 = u1 := by rw [he1]; simp
+    have hstem := STEM_EDGEX (V := V) (ul := [u0, u1, f i]) hp hs hl'
+    rw [e0, e1] at hstem
+    have hd4 : mcell 4 V ul = mcell4 V ul := by simp [mcell]
+    have hnnV : ¬ nullSet (mcell4 V vl) := by
+      intro hc
+      rw [← hswap] at hc
+      rw [← hd4, BumpP4.RIJRIED V ul 4 hc] at hedge
+      simpa using hedge
+    have hrV : leaf_rank V [elV vl 0, elV vl 1] w0 n f := by
+      simp only [elV, ← hv0, ← hv1]
+      exact hr
+    have hncV : ¬ Collinear3 (elV vl 0) (elV vl 1) w0 := by
+      simp only [elV, ← hv0, ← hv1]
+      exact hnc
+    have hjw : mcell4 V vl ⊆ wedgeGe (elV vl 0) (elV vl 1) (f (i % n)) (f (i % n + 1)) := by
+      simp only [elV, ← hv0, ← hv1, hj.1, hj.2, ← hswap]
+      exact hwedge
+    have hk3' : ccCell V [u0, u1, f i] ⊆
+        wedgeGe (elV vl 0) (elV vl 1) (f (i % n)) (f (i % n + 1)) := by
+      simp only [elV, ← hv0, ← hv1, hj.1, hj.2]
+      exact K3_CC_WI_ALT V [u0, u1] w0 n f i hp hs hr hnc hn h3
+    have hstem' : ({elV vl 0, elV vl 1} : Set V3) ∈ edgeX V (ccCell V [u0, u1, f i]) := by
+      simp only [elV, ← hv0, ← hv1]
+      exact hstem
+    have huniq := MCELL4_FULL_WEDGE V (ccCell V [u0, u1, f i]) vl w0 n f (i % n) hp hs
+      hrV hbarV hncV hn hnnV (CC_CELL_IN_MCELL_SET hs hp hl') hk3' hstem' hjw
+    obtain ⟨hbarUh, -, -⟩ := (Classical.choose_spec (cc_uh_exists V [u0, u1, f i])) hp hs hl'
+    have hj4 : mcell 4 V vl = mcell4 V vl := by simp [mcell]
+    have hj3 : mcell 3 V (ccUh V [u0, u1, f i]) = ccCell V [u0, u1, f i] := by
+      rw [ccCell, h3]
+    have hvol : ¬ nullSet (mcell 4 V vl ∩ mcell 3 V (ccUh V [u0, u1, f i])) := by
+      rw [hj4, hj3, huniq, Set.inter_self]
+      exact hnnV
+    obtain ⟨heqij, -⟩ := AJRIPQN V vl (ccUh V [u0, u1, f i]) 4 3 hs hp hbarV hbarUh
+      (by simp) (by simp) hvol
+    exact absurd heqij (by norm_num)
+  · exact h4k
 
 /-- HOL `cc_4_cc_cell`: on a 4-cell wedge, `gg_mcell` equals the cc-cell
-weight. -/
+weight.  2026-10-13 M4 波转真（装配级）：`cc_4_cc_ke4`（本波装配）钉派单值 4，
+`MCELL4_GG`（具名记账件，唯一楔胞 gg 塌缩——随楔 kit 落地自动升零债）作用在
+`cc_uh` 表上，`EL_CC_UH` 茎钉死 + `mcell4 (cc_uh) = ccCell` 改写。 -/
 theorem cc_4_cc_cell (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
     (hp : Packing V) (hs : saturated V) (hper : periodic f n)
     (hl' : leaf V [u0, u1, f i]) (hr : leaf_rank V [u0, u1] w0 n f)
@@ -4248,7 +4342,36 @@ theorem cc_4_cc_cell (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i 
       gammaX V (ccCell V [u0, u1, f i]) lmfun *
           criticalWeight V (ccCell V [u0, u1, f i]) +
         betaBumpV1 V {u0, u1} (ccCell V [u0, u1, f i]) := by
-  sorry
+  have hk4 := cc_4_cc_ke4 V u0 u1 w0 n f i hp hs hr hnc hper hn hl' h4
+  obtain ⟨hbarUh, -, -⟩ := (Classical.choose_spec (cc_uh_exists V [u0, u1, f i])) hp hs hl'
+  obtain ⟨he0, he1, -⟩ := EL_CC_UH (V := V) (ul := [u0, u1, f i]) hp hs hl'
+  have e0 : (ccUh V [u0, u1, f i]).getD 0 0 = u0 := by rw [he0]; simp
+  have e1 : (ccUh V [u0, u1, f i]).getD 1 0 = u1 := by rw [he1]; simp
+  have hj4 : mcell 4 V (ccUh V [u0, u1, f i]) = mcell4 V (ccUh V [u0, u1, f i]) := by
+    rw [mcell]; simp
+  have hmcc : mcell4 V (ccUh V [u0, u1, f i]) = ccCell V [u0, u1, f i] := by
+    rw [ccCell, hk4, hj4]
+  have hnnU : ¬ nullSet (mcell4 V (ccUh V [u0, u1, f i])) := by
+    rw [hmcc]
+    exact CC_CELL_NOT_NULLSET hp hs hl'
+  have hrU : leaf_rank V [elV (ccUh V [u0, u1, f i]) 0, elV (ccUh V [u0, u1, f i]) 1]
+      w0 n f := by
+    simp only [elV, e0, e1]
+    exact hr
+  have hncU : ¬ Collinear3 (elV (ccUh V [u0, u1, f i]) 0)
+      (elV (ccUh V [u0, u1, f i]) 1) w0 := by
+    simp only [elV, e0, e1]
+    exact hnc
+  have hwU : mcell4 V (ccUh V [u0, u1, f i]) ⊆
+      wedgeGe (elV (ccUh V [u0, u1, f i]) 0) (elV (ccUh V [u0, u1, f i]) 1)
+        (f i) (f (i + 1)) := by
+    simp only [hmcc, elV, e0, e1]
+    exact K4_CC_WI_ALT V [u0, u1] w0 n f i hp hs hr hnc hn hk4
+  have hgg := MCELL4_GG V (ccUh V [u0, u1, f i]) w0 n f i hp hs hrU hbarUh hncU hn
+    (rfl : mcell4 V (ccUh V [u0, u1, f i]) = mcell4 V (ccUh V [u0, u1, f i])) hnnU hwU
+  simp only [elV, e0, e1] at hgg
+  rw [hmcc] at hgg
+  exact hgg
 
 /-- Helper: `setSum` respects set equality. -/
 private theorem p25_setSum_congr {α : Type*} {s t : Set α} {g : α → ℝ} (h : s = t) :
@@ -4334,12 +4457,31 @@ theorem LEAF_RANK_LEAF (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (
   have h := LEAF_RANK_S_LEAF V [u0, u1] w0 n f i hr
   exact h.1
 
-/-- HOL `cc_4_UL`. -/
+/-- HOL `cc_4_UL`.  2026-10-13 M4 波转真（装配级）：`cc_4_cc_ke4` 钉派单值 4 +
+`CC_CELL_WEDGE_MATCH_UH`（楔匹配，具名记账件在案）给 `cc_uh` 第 4 槽 =
+`f (i+1)`（另一支 `f i = f (i+1)` 撞 `LEAF_RANK_SUC_INJ`），`LIST_OF_CC_UH` +
+`EL_CC_UH` 收口。 -/
 theorem cc_4_UL (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
     (hp : Packing V) (hs : saturated V) (hr : leaf_rank V [u0, u1] w0 n f)
     (hnc : ¬ Collinear3 u0 u1 w0) (hn : 1 < n) (h4 : cc_4 V u0 u1 f i) :
     ccCell V [u0, u1, f i] = mcell4 V [u0, u1, f i, f (i + 1)] := by
-  sorry
+  have hl' : leaf V [u0, u1, f i] := LEAF_RANK_LEAF V u0 u1 w0 n f i hr
+  have hper : periodic f n := LEAF_RANK_PERIODIC V [u0, u1] w0 n f hr
+  have hk4 := cc_4_cc_ke4 V u0 u1 w0 n f i hp hs hr hnc hper hn hl' h4
+  have hw := K4_CC_WI_ALT V [u0, u1] w0 n f i hp hs hr hnc hn hk4
+  have he : ({u0, u1} : Set V3) = {elV [u0, u1] 0, elV [u0, u1] 1} := rfl
+  have hmatch := CC_CELL_WEDGE_MATCH_UH V [u0, u1, f i] u0 u1 w0 n f i i hp hs hr hnc hn
+    he hw hk4
+  have hsuc := LEAF_RANK_SUC_INJ V u0 u1 w0 n f i hp hs hr hnc hn
+  rcases Set.pair_eq_pair_iff.mp hmatch with ⟨-, h3d⟩ | ⟨hbad, -⟩
+  · obtain ⟨he0, he1, he2⟩ := EL_CC_UH (V := V) (ul := [u0, u1, f i]) hp hs hl'
+    have e0 : (ccUh V [u0, u1, f i]).getD 0 0 = u0 := by rw [he0]; simp
+    have e1 : (ccUh V [u0, u1, f i]).getD 1 0 = u1 := by rw [he1]; simp
+    have e2 : (ccUh V [u0, u1, f i]).getD 2 0 = f i := by rw [he2]; simp
+    have hd4 : mcell 4 V (ccUh V [u0, u1, f i]) = mcell4 V (ccUh V [u0, u1, f i]) := by
+      rw [mcell]; simp
+    rw [ccCell, hk4, hd4, LIST_OF_CC_UH hs hp hl', e0, e1, e2, h3d]
+  · exact absurd hbad hsuc
 
 /-- HOL `EDGEX_PAIR`. -/
 theorem EDGEX_PAIR (V : Set V3) (X : Set V3) (e : Set V3) (he : e ∈ edgeX V X) :
@@ -4487,7 +4629,24 @@ theorem MCELL4_EDGE_EXPLICIT (V : Set V3) (u0 u1 u2 u3 : V3) (hp : Packing V)
         exact ⟨u2, u3, rfl, (hVX4 u2).mpr (by simp), (hVX4 u3).mpr (by simp),
           hdd.2.2.2.2.2⟩
 
-/-- HOL `CC_4_PROPS`: the full 4-cell wedge certificate. -/
+/-- 私件（M4 波 2026-10-13，零债）：共面集的凸包 Haar 零测——包 ⊆ 仿射包 ⊆
+三点仿射平面（`affineSpan_mono`），后者 `p25_affineSpan_three_ne_top` 给非全空间，
+`addHaar_affineSubspace` 收口（HOL `COPLANAR_IMP_NEGLIGIBLE` 的凸包形态）。 -/
+private theorem p25m_coplanar_hull_null {t : Set V3} (hcop : Coplanar t) :
+    MeasureTheory.volume (convexHull ℝ t) = 0 := by
+  obtain ⟨u, v, w, hsp⟩ := hcop
+  have hsub : (affineSpan ℝ t : Set V3) ⊆ (affineSpan ℝ ({u, v, w} : Set V3) : Set V3) :=
+    affineSpan_le_of_subset_coe hsp
+  exact measure_mono_null ((convexHull_subset_affineSpan (s := t)).trans hsub)
+    (Measure.addHaar_affineSubspace volume
+      (affineSpan ℝ ({u, v, w} : Set V3)) (p25_affineSpan_three_ne_top u v w))
+
+/-- HOL `CC_4_PROPS`: the full 4-cell wedge certificate.  2026-10-13 M4 波转真
+（装配级）：派单值 4（`cc_4_cc_ke4`，本波装配）+ 胞改写（`cc_4_UL`，本波装配，
+预消费具名记账件 `K4_CC_WI_ALT` 胞入楔——随 E8/楔 kit 落地自动升零债）+
+`CC_CELL_NOT_NULLSET` 真件反推 `hl < √2`（`mcell4` 空支归零）与 `¬Coplanar`
+（`p25m_coplanar_hull_null` 新私件）；`barV` 支经 `MCELL4_BARV_FI` 作用于
+`cc_uh` 表（`cc_uh_exists` 见证 + `EL_CC_UH` 茎钉死）。 -/
 theorem CC_4_PROPS (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
     (hp : Packing V) (hs : saturated V) (hr : leaf_rank V [u0, u1] w0 n f)
     (hnc : ¬ Collinear3 u0 u1 w0) (hn : 1 < n) (h4 : cc_4 V u0 u1 f i) :
@@ -4501,7 +4660,65 @@ theorem CC_4_PROPS (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : 
       leaf V [u0, u1, f i] ∧ leaf V [u0, u1, f (i + 1)] ∧
       ¬ nullSet (ccCell V [u0, u1, f i]) ∧
       barV V 3 [u0, u1, f i, f (i + 1)] := by
-  sorry
+  have hl' : leaf V [u0, u1, f i] := LEAF_RANK_LEAF V u0 u1 w0 n f i hr
+  have hl'B : leaf V [u0, u1, f (i + 1)] := LEAF_RANK_LEAF V u0 u1 w0 n f (i + 1) hr
+  have hper : periodic f n := LEAF_RANK_PERIODIC V [u0, u1] w0 n f hr
+  have hk4 := cc_4_cc_ke4 V u0 u1 w0 n f i hp hs hr hnc hper hn hl' h4
+  have hcc4 := cc_4_UL V u0 u1 w0 n f i hp hs hr hnc hn h4
+  have hnull : ¬ nullSet (ccCell V [u0, u1, f i]) := CC_CELL_NOT_NULLSET hp hs hl'
+  have hset4 : setOfList [u0, u1, f i, f (i + 1)]
+      = ({u0, u1, f i, f (i + 1)} : Set V3) := by
+    ext z
+    simp only [setOfList, Set.mem_setOf_eq, List.mem_cons, List.not_mem_nil,
+      Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  have hhl4 : hl [u0, u1, f i, f (i + 1)] < Real.sqrt 2 := by
+    by_contra hcon
+    have he4 : mcell4 V [u0, u1, f i, f (i + 1)] = ∅ := by
+      unfold mcell4
+      rw [if_neg hcon]
+    rw [hcc4, he4] at hnull
+    exact hnull measure_empty
+  have hncop : ¬ Coplanar ({u0, u1, f i, f (i + 1)} : Set V3) := by
+    intro hcop
+    refine hnull ?_
+    rw [hcc4, mcell4, if_pos hhl4, hset4]
+    exact p25m_coplanar_hull_null hcop
+  refine ⟨hk4, hhl4, ?_, hncop, ?_, hcc4, ?_, ?_, hl', hl'B, hnull, ?_⟩
+  · rw [hcc4, mcell4, if_pos hhl4, hset4]
+  · exact K4_CC_WI_ALT V [u0, u1] w0 n f i hp hs hr hnc hn hk4
+  · exact (LEAF_DOMAIN V [u0, u1, f i] hs hp hl').1
+  · exact (LEAF_DOMAIN V [u0, u1, f (i + 1)] hs hp hl'B).1
+  · -- barV 支：MCELL4_BARV_FI 作用于 cc_uh 表（cc_uh_exists 见证）
+    obtain ⟨hbarUh, -, -⟩ :=
+      (Classical.choose_spec (cc_uh_exists V [u0, u1, f i])) hp hs hl'
+    have hj4 : mcell 4 V (ccUh V [u0, u1, f i]) = mcell4 V (ccUh V [u0, u1, f i]) := by
+      rw [mcell]; simp
+    have hmcc : mcell4 V (ccUh V [u0, u1, f i]) = ccCell V [u0, u1, f i] := by
+      rw [ccCell, hk4, hj4]
+    have hnnU : ¬ nullSet (mcell4 V (ccUh V [u0, u1, f i])) := by
+      rw [hmcc]
+      exact hnull
+    obtain ⟨he0, he1, he2⟩ := EL_CC_UH (V := V) (ul := [u0, u1, f i]) hp hs hl'
+    have e0 : (ccUh V [u0, u1, f i]).getD 0 0 = u0 := by rw [he0]; simp
+    have e1 : (ccUh V [u0, u1, f i]).getD 1 0 = u1 := by rw [he1]; simp
+    have hrU : leaf_rank V [elV (ccUh V [u0, u1, f i]) 0, elV (ccUh V [u0, u1, f i]) 1]
+        w0 n f := by
+      simp only [elV, e0, e1]
+      exact hr
+    have hncU : ¬ Collinear3 (elV (ccUh V [u0, u1, f i]) 0)
+        (elV (ccUh V [u0, u1, f i]) 1) w0 := by
+      simp only [elV, e0, e1]
+      exact hnc
+    have hwU : mcell4 V (ccUh V [u0, u1, f i]) ⊆
+        wedgeGe (elV (ccUh V [u0, u1, f i]) 0) (elV (ccUh V [u0, u1, f i]) 1)
+          (f i) (f (i + 1)) := by
+      simp only [hmcc, elV, e0, e1]
+      exact K4_CC_WI_ALT V [u0, u1] w0 n f i hp hs hr hnc hn hk4
+    have hbar := MCELL4_BARV_FI V (ccUh V [u0, u1, f i]) w0 n f i hp hs hrU hbarUh hncU
+      hn hnnU hwU
+    simp only [elV, e0, e1] at hbar
+    exact hbar.1
 
 /-- HOL `CC_4_BETA_BUMP_EXPLICIT`. -/
 theorem CC_4_BETA_BUMP_EXPLICIT (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -4557,7 +4774,10 @@ theorem critical_weight_wtcount6_y (V : Set V3) (u0 u1 w0 : V3) (n : ℕ)
   sorry
 
 /-- HOL `c_4_azim_mcell_dih_y`: the 4-cell wedge dihedral is the `dih_y`
-value. -/
+value.  2026-10-13 M4 波转真（装配级）：`LEAF_RANK_REUHADY`（azim_mcell 塌缩，
+具名记账件在案——随 REUHADY/GRUTOTI 车道落地自动升零债）+ `CC_4_PROPS`（本波
+装配）供 `barV`/非零测/楔子集 + `MCELL4_AZIM_LT_PI`（具名记账件在案）供
+`azim < π`，`azim_dihv_same` + `DIHV_EQ_DIH_Y_4PT_B` 收口。 -/
 theorem c_4_azim_mcell_dih_y (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
     (i : ℕ) (hn : 1 < n) (hp : Packing V) (hs : saturated V)
     (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V) (h1 : u1 ∈ V)
@@ -4567,7 +4787,20 @@ theorem c_4_azim_mcell_dih_y (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ →
     azim_mcell V f u0 u1 i =
       dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
         (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) := by
-  sorry
+  obtain ⟨hke, hhl4, hcvx, hncop, hwsub, hcc4, hcolA, hcolB, hleafA, hleafB, hnull,
+    hbar4⟩ := CC_4_PROPS V u0 u1 w0 n f i hp hs hr hnc hn h4
+  have hreu : azim_mcell V f u0 u1 i = azim u0 u1 (f i) (f (i + 1)) :=
+    LEAF_RANK_REUHADY V [u0, u1] w0 n f i hn hp hs hsize hnc hr
+  have hnn4 : ¬ nullSet (mcell4 V [u0, u1, f i, f (i + 1)]) := by
+    rw [← hcc4]
+    exact hnull
+  have hsub4 : mcell4 V [u0, u1, f i, f (i + 1)] ⊆ wedgeGe u0 u1 (f i) (f (i + 1)) := by
+    rw [← hcc4]
+    exact hwsub
+  have hlt := MCELL4_AZIM_LT_PI V [u0, u1, f i, f (i + 1)] w0 n f i hp hs hr hbar4 hnc
+    hn hnn4 hsub4
+  rw [hreu, azim_dihv_same hcolA hcolB hlt]
+  exact DIHV_EQ_DIH_Y_4PT_B u0 u1 (f i) (f (i + 1)) hcolA hcolB
 
 /-- HOL `NOT_COPLANAR_IMP_CARD4_ALT`. -/
 theorem NOT_COPLANAR_IMP_CARD4_ALT (u0 u1 u2 u3 : V3)
@@ -4862,14 +5095,37 @@ theorem MCELL4_DOMAIN (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i
     linarith
   · exact (coplanar_delta_y u0 u1 (f i) (f (i + 1))).mp hncop
 
-/-- HOL `real_model_azim_c4`. -/
+/-- HOL `real_model_azim_c4`.  2026-10-13 M4 波转真（装配级）：`c_4_azim_mcell_dih_y`
+（本波装配）塌缩 azim_mcell 到 `dih_y` + `MCELL4_DOMAIN`（r4 真件）供盒约束 +
+bank 投影 `proj_bank_BIXPCGW6652007036a2`（dih_y < 2.8 于盒 `[2hmin,2hplus]×[2,√8]⁵`）
+——`2√2 = √8` 桥收口，零新增记账债。 -/
 theorem real_model_azim_c4 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
     (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n) (hp : Packing V) (hs : saturated V)
     (hsize : HasSizeP25 (s_leaf V [u0, u1]) n) (h0 : u0 ∈ V) (h1 : u1 ∈ V)
     (hper : periodic f n) (hnc : ¬ Collinear3 u0 u1 w0)
     (hcey : criticalEdgeY (dist u0 u1)) (hr : leaf_rank V [u0, u1] w0 n f) :
     ∀ i, cc_4 V u0 u1 f i → azim_mcell V f u0 u1 i < 2.8 := by
-  sorry
+  intro i h4
+  have hdih := c_4_azim_mcell_dih_y V u0 u1 w0 n f i hn hp hs hsize h0 h1 hper hnc hcey
+    hr h4
+  have hbox := MCELL4_DOMAIN V u0 u1 w0 n f i hnl hn hp hs hsize h0 h1 hper hnc hcey hr
+    h4
+  have hbank := proj_bank_BIXPCGW6652007036a2 hnl
+  have hs8 : Real.sqrt 8 = 2 * Real.sqrt 2 := by
+    have h42 : (8:ℝ) = 4 * 2 := by norm_num
+    have hge : (0:ℝ) ≤ 4 := by norm_num
+    rw [h42, Real.sqrt_mul hge]
+    norm_num
+  have hle8 : ∀ q : ℝ, q < 2 * Real.sqrt 2 → q ≤ Real.sqrt 8 := by
+    intro q hq
+    rw [hs8]
+    exact le_of_lt hq
+  rw [hdih]
+  refine hbank _ _ _ _ _ _ hbox.1 hbox.2.1 hbox.2.2.1 (hle8 _ hbox.2.2.2.1)
+    hbox.2.2.2.2.1 (hle8 _ hbox.2.2.2.2.2.1) hbox.2.2.2.2.2.2.1
+    (hle8 _ hbox.2.2.2.2.2.2.2.1) hbox.2.2.2.2.2.2.2.2.2.2.1
+    (hle8 _ hbox.2.2.2.2.2.2.2.2.2.2.2.1) hbox.2.2.2.2.2.2.2.2.1
+    (hle8 _ hbox.2.2.2.2.2.2.2.2.2.1)
 
 /-- HOL `gammaX_gamma4fgcy_ALT` (renamed from gammaX_gamm4fgcy_ALT). -/
 theorem gammaX_gamma4fgcy_ALT (V : Set V3) (X : Set V3) (u0 u1 u2 u3 : V3)
@@ -4900,7 +5156,39 @@ theorem GG_MCELL_QUARTER (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
     gg_mcell V f u0 u1 i =
       gamma4fgcyP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
         (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) lmfun := by
-  sorry
+  -- 装配（2026-10-13 M4 波）：cc_4_cc_cell（本波装配，其债面 = MCELL4_GG 记账）
+  -- + gammaX_gamma4fgcy_ALT（真件，barV/非零测取自 CC_4_PROPS）+ 具名记账件
+  -- critical_weight_wtcount6_y / CC_4_BETA_BUMP_0（随 wtcount/Bump 车道落地自动
+  -- 升零债）+ wtcount6 = 1 算术（茎临界、其余五边 < 2·hminus 非临界）。
+  have hl' : leaf V [u0, u1, f i] := LEAF_RANK_LEAF V u0 u1 w0 n f i hr
+  have hcc := cc_4_cc_cell V u0 u1 w0 n f i hp hs hper hl' hr hnc hn h4
+  obtain ⟨hke, hhl4, hcvx, hncop, hwsub, hcc4, hcolA, hcolB, hleafA, hleafB, hnull,
+    hbar4⟩ := CC_4_PROPS V u0 u1 w0 n f i hp hs hr hnc hn h4
+  have hcey' : criticalEdgeY (dist (f i) (f (i + 1))) → False := fun hc =>
+    absurd hd4 (not_lt.mpr hc.1)
+  have hnc2 : ¬ criticalEdgeY (dist u0 (f i)) := fun hc =>
+    absurd hd1.1 (not_lt.mpr hc.1)
+  have hnc3 : ¬ criticalEdgeY (dist u0 (f (i + 1))) := fun hc =>
+    absurd hd2 (not_lt.mpr hc.1)
+  have hnc5 : ¬ criticalEdgeY (dist u1 (f (i + 1))) := fun hc =>
+    absurd hd3 (not_lt.mpr hc.1)
+  have hnc6 : ¬ criticalEdgeY (dist u1 (f i)) := fun hc =>
+    absurd hd1.2 (not_lt.mpr hc.1)
+  have hwt : wtcount6Y (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+      (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) = 1 := by
+    unfold wtcount6Y wtcount3Y
+    rw [if_pos hcey, if_neg hnc2, if_neg hnc3, if_neg hcey', if_neg hnc5, if_neg hnc6]
+  have hnot0 : ¬ (criticalEdgeY (dist u0 u1) ∧
+      criticalEdgeY (dist (f i) (f (i + 1))) ∧
+      dist u0 (f i) < 2 * hminus ∧ dist u0 (f (i + 1)) < 2 * hminus ∧
+      dist u1 (f i) < 2 * hminus ∧ dist u1 (f (i + 1)) < 2 * hminus) :=
+    fun hc => hcey' hc.2.1
+  have hwb := CC_4_BETA_BUMP_0 V u0 u1 w0 n f i hp hs hr hnc hn h4 hnot0
+  have hgw := critical_weight_wtcount6_y V u0 u1 w0 n f i hp hs hr hnc hn h4 hcey
+  have hgam := gammaX_gamma4fgcy_ALT V (ccCell V [u0, u1, f i]) u0 u1 (f i) (f (i + 1))
+    hs hp hbar4 hcc4 hnull
+  rw [hcc, hgw, hwt, hwb, hgam]
+  all_goals norm_num
 
 /-- HOL `GG_MCELL_BETA`: the beta-wedge gg value. -/
 theorem GG_MCELL_BETA (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
