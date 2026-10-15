@@ -269,6 +269,47 @@ FILL-ROUND STATUS r5 (2026-10-13 wave: 114 -> 111, GDRQXLGv3 解析桥 + rad2 �
     （六变量 degree-4 ring 核 ×5 + field_simp ×3 超出文件级 5M；
     陈述与签名一字未动）。
 
+FILL-ROUND STATUS r6 (2026-10-13 wave: 100 -> 97, 楔形 3-cell 面三连)
+  - `NO_4CELL_IMP_K3` 装配级转真（HOL OXLZLEZ3.hl:3705 同构）: `k = 4` 反证
+    经 `K4_CC_WI_ALT`/`K4_CC_WIM`（胞入楔）+ PA18 `STEM_EDGEX`（茎边入胞
+    edgeX）+ `cc_uh`/`ccCell` 定义改写撞 `hno4`；`k = 3` 双胞入楔取
+    `K3_CC_WI_ALT`/`K3_CC_WIM_ALT`（b-侧指标经 `F_SUC_PRE` 周期回卷）；互异
+    取 PA18 `FUEIMOV_3`（首两点相等 ⟹ 共线撞 `hnc`）。债面 = PA18
+    `K3/K4` 家族 + `STEM_EDGEX` + `FUEIMOV_3`（leaf_cell edge-rigidity kit，
+    PA18 车道在案）。既有消费面 `p25m_cc3_wit`/`p25m_cc3_wit_b` 随本体升真。
+  - `WEDGE3_Y4` 装配级转真（HOL OXLZLEZ3.hl:4388 同构；dih 支收官）:
+    三分 witness——`pi ≤ azim` 与 `2√2 < d` 两枝取 `√8`（delta 支 =
+    `proj_bank_FWGKMBZ`；dih 支 = 新 dih 单调 kit + `DIHV_EQ_DIH_Y_4PT_B` +
+    `DIHV_LE_AZIM`；`delta_y(d) ≥ 0` 由 `DELTA_Y_POS_4POINTS_B` 无条件给出；
+    rad2 支 = `RAD2_Y_SQRT8`），末枝（`azim < pi ∧ d ≤ 2√2`）取 `d` 本身，
+    rad2 ≥ 2 经 `coplanar_delta_y` + `GDRQXLGv3` + `RAD_PI_IMP_WEDGE4`
+    反证撞 `hno4`。债面 = `RAD_PI_IMP_WEDGE4`（本文件在案）。
+  - 新 dih 单调 kit 七枚（全零债，真证）: `p25w_atn2_eq_arctan`（atn2 右半
+    平面分支消解）、`p25w_delta_inv`（判别式不变量 `P² + 4x1·Δ = const`，
+    纯 ring）、`p25w_dX4_sub`/`p25w_dX_mid`（仿射差 + 中点恒等式，纯
+    ring）、`p25w_ratio_le`（比值比较，正分子支 `abs_le_of_sq_le_sq'`）、
+    `p25w_dihXf_mono_x4`/`p25w_dihY_mono_y4`——即 HOL
+    `Tame_inequalities.DIH_X_MONO_LT_4` + `dih_y_mono`（CUXVZOZ.hl:3206）的
+    本文件解析版（纯代数，无微积分），可供 TSKAJXY 侧单调需求复用。
+  - `CC_3_PROPS` 装配级转真（HOL OXLZLEZ3.hl:5908 同构，三十三合取全数）:
+    `NO_4CELL_IMP_K3` 分派 + `WEDGE3_Y4` 收口 + `LEAF_RANK_REUHADY`
+    （azim 塌缩，在案 sorried）+ 真件 `LEAF_DOMAIN`/`CC_CELL_NOT_NULLSET`/
+    `ZASUVOR`/`BumpP4.MCELL_BUMP_0`（k = 3 胞 bump 归零）+ `cc_uh_exists`
+    见证。债面 = 上述两件 + `LEAF_RANK_REUHADY`。
+  - 既有件搬移（陈述逐字未动，字节级一致）: `EDGE_LE_2RAD`/`RAD2_Y_SQRT8`
+    自 Backfill 段上移至 `WEDGE3_Y4` 之前（Lean 无前向引用；消费面
+    `MCELL4_DOMAIN` 等不受影响）。
+  - 新雷区沉淀: ① 本 Mathlib 快照改名族——`le_or_lt`→`le_or_gt`、
+    `lt_or_le`→`lt_or_ge`、`div_le_div_iff`→`div_le_div_iff₀`（带 0< 参数）、
+    `div_le_div_right` 已消失、`sq_neg`→`neg_sq`、`push_neg` deprecated；
+    ② `rw [L (by tac)]` 内嵌 by-块在 pattern-metavariable 未解时即报
+    unsolved goals——提为前置 have；③ tactic 参数内 `_` 占位不与目标联解；
+    ④ 跨行 term-`by` 块（续行缩进低于 by 所在列）解析断裂；⑤
+    `GBEWYFX`（`l[i]!` 记法陈述）在 getD-归一上下文中应用会 whnf 爆心跳
+    （10M 不够）——改用 `LEAF_DOMAIN` 首合取支（同为 ¬Collinear3）；
+    ⑥ `Collinear3` 为 def，set-重写前须 `show Collinear ℝ ({...})`；
+    ⑦ 全量 `simp [elV]` 换自备 rfl 三引理 `simp only [eV0, eV1, eV2]`。
+
 -/
 
 /-! ## DEFINITIONS -/
@@ -3384,7 +3425,14 @@ theorem K3_CC_WIM_ALT (V : Set V3) (ul : List V3) (w0 : V3) (n : ℕ) (f : ℕ �
       wedgeGe (elV ul 0) (elV ul 1) (f (i + (n - 1))) (f i) := by
   sorry
 
-/-- HOL `NO_4CELL_IMP_K3`: a wedge with no 4-cell carries two 3-cells. -/
+/-- HOL `NO_4CELL_IMP_K3`: a wedge with no 4-cell carries two 3-cells.
+楔形 3-cell 面 2026-10-13 波转真（装配级）：HOL OXLZLEZ3.hl:3705 逐支移植——
+`k = 4` 反证经 `K4_CC_WI_ALT`/`K4_CC_WIM`（胞入楔）+ `STEM_EDGEX`（茎边入胞
+edgeX）+ `cc_uh`/`ccCell` 定义改写（`mcell 4 = mcell4`）撞 `hno4`；
+`k = 3` 双胞入楔取 `K3_CC_WI_ALT`/`K3_CC_WIM_ALT`（b-侧指标经
+`F_SUC_PRE` 周期回卷）；互异取 `FUEIMOV_3`（同 stem 同胞 ⟹ 表相等 ⟹
+首两点相等 ⟹ 共线撞 `hnc`）。债面 = PA18 `K3/K4` 家族 + `STEM_EDGEX`/
+`FUEIMOV_3`（leaf_cell.hl edge-rigidity kit，PA18 在案）。 -/
 theorem NO_4CELL_IMP_K3 (V : Set V3) (W : Set V3) (ul : List V3) (w0 : V3) (n : ℕ)
     (f : ℕ → V3) (i : ℕ) (hp : Packing V) (hs : saturated V)
     (hr : leaf_rank V [elV ul 0, elV ul 1] w0 n f)
@@ -3398,7 +3446,98 @@ theorem NO_4CELL_IMP_K3 (V : Set V3) (W : Set V3) (ul : List V3) (w0 : V3) (n : 
       ccCell V [elV ul 1, elV ul 0, f (i + 1)] ⊆ W ∧
       ccCell V [elV ul 0, elV ul 1, f i] ≠
         ccCell V [elV ul 1, elV ul 0, f (i + 1)] := by
-  sorry
+  have hleafA : ∀ j : ℕ, leaf V [elV ul 0, elV ul 1, f j] := by
+    intro j
+    have hmem := LEAF_RANK_S_LEAF V [elV ul 0, elV ul 1] w0 n f j hr
+    simp only [s_leaf, Set.mem_setOf_eq] at hmem
+    exact hmem.1
+  have hleafB : ∀ j : ℕ, leaf V [elV ul 1, elV ul 0, f j] := fun j =>
+    (ZASUVOR hp hs (hleafA j)).1
+  have hper : periodic f n := LEAF_RANK_PERIODIC V [elV ul 0, elV ul 1] w0 n f hr
+  -- getD projections of `ccUh` on a 3-point leaf list (p25m_cc3_wit pattern)
+  have hget3 : ∀ (a b c : V3), leaf V [a, b, c] →
+      (ccUh V [a, b, c]).getD 0 0 = a ∧ (ccUh V [a, b, c]).getD 1 0 = b ∧
+        (ccUh V [a, b, c]).getD 2 0 = c := by
+    intro a b c hlf
+    have htr : truncateSimplex 2 (ccUh V [a, b, c]) = [a, b, c] :=
+      (Classical.choose_spec (cc_uh_exists V [a, b, c])) hp hs hlf |>.2.1
+    have hlist := LIST_OF_CC_UH (V := V) (ul := [a, b, c]) hs hp hlf
+    have htrI := htr
+    rw [hlist, (TRUNCATE_SIMPLEX_EXPLICIT_2 _ _ _ _).2] at htrI
+    obtain ⟨e0, e12⟩ := List.cons.inj htrI
+    obtain ⟨e1, e2t⟩ := List.cons.inj e12
+    obtain ⟨e2, -⟩ := List.cons.inj e2t
+    exact ⟨e0, e1, e2⟩
+  -- the k = 4 refutation: a stem-pair 4-cell inside W collides with hno4
+  have hkey : ∀ (a b c : V3), leaf V [a, b, c] → ccKe V [a, b, c] = 4 →
+      ({(ccUh V [a, b, c]).getD 0 0, (ccUh V [a, b, c]).getD 1 0} : Set V3)
+        = {elV ul 0, elV ul 1} →
+      ccCell V [a, b, c] ⊆ W → False := by
+    intro a b c hlf hk4 hpair hsub
+    have hcc : ccCell V [a, b, c] = mcell4 V (ccUh V [a, b, c]) := by
+      show mcell (ccKe V [a, b, c]) V (ccUh V [a, b, c]) = _
+      rw [hk4]
+      simp [mcell]
+    rw [hcc] at hsub
+    have hst := STEM_EDGEX hp hs hlf
+    rw [hcc] at hst
+    rw [hpair] at hst
+    exact hno4 ⟨ccUh V [a, b, c],
+      (Classical.choose_spec (cc_uh_exists V [a, b, c])) hp hs hlf |>.1, hst, hsub⟩
+  -- k = 3 for both stem orientations (4 refuted via the K4 routes)
+  have hpairB : ({(ccUh V [elV ul 1, elV ul 0, f (i + 1)]).getD 0 0,
+      (ccUh V [elV ul 1, elV ul 0, f (i + 1)]).getD 1 0} : Set V3)
+      = {elV ul 0, elV ul 1} := by
+    obtain ⟨g0, g1, -⟩ := hget3 _ _ _ (hleafB (i + 1))
+    rw [g0, g1]
+    ext q
+    simp
+    tauto
+  have hpairA : ({(ccUh V [elV ul 0, elV ul 1, f i]).getD 0 0,
+      (ccUh V [elV ul 0, elV ul 1, f i]).getD 1 0} : Set V3)
+      = {elV ul 0, elV ul 1} := by
+    obtain ⟨g0, g1, -⟩ := hget3 _ _ _ (hleafA i)
+    rw [g0, g1]
+  have hkB : ccKe V [elV ul 1, elV ul 0, f (i + 1)] = 3 := by
+    rcases CC_KE_34 V [elV ul 1, elV ul 0, f (i + 1)] with hk | hk
+    · exact hk
+    · exfalso
+      have hsub := K4_CC_WIM V ul w0 n f (i + 1) hp hs hr hnc hn hk
+      rw [show (i + 1) + (n - 1) = i + n - 1 + 1 from by omega,
+        F_SUC_PRE (by omega) hper i] at hsub
+      refine hkey _ _ _ (hleafB (i + 1)) hk hpairB ?_
+      rw [hW]
+      exact hsub
+  have hkA : ccKe V [elV ul 0, elV ul 1, f i] = 3 := by
+    rcases CC_KE_34 V [elV ul 0, elV ul 1, f i] with hk | hk
+    · exact hk
+    · exfalso
+      refine hkey _ _ _ (hleafA i) hk hpairA ?_
+      rw [hW]
+      exact K4_CC_WI_ALT V ul w0 n f i hp hs hr hnc hn hk
+  refine ⟨hkB, hkA, ?_, ?_, ?_⟩
+  · rw [hW]; exact K3_CC_WI_ALT V ul w0 n f i hp hs hr hnc hn hkA
+  · rw [hW]
+    have hsub := K3_CC_WIM_ALT V ul w0 n f (i + 1) hp hs hr hnc hn hkB
+    rw [show (i + 1) + (n - 1) = i + n - 1 + 1 from by omega,
+      F_SUC_PRE (by omega) hper i] at hsub
+    exact hsub
+  · intro heq
+    obtain ⟨gA0, gA1, -⟩ := hget3 _ _ _ (hleafA i)
+    obtain ⟨gB0, gB1, -⟩ := hget3 _ _ _ (hleafB (i + 1))
+    have heq' := FUEIMOV_3 (V := V) (ul := [elV ul 0, elV ul 1, f i])
+      (vl := [elV ul 1, elV ul 0, f (i + 1)]) hs hp (hleafA i) (hleafB (i + 1)) hkA
+      (by rw [gA0, gA1, gB0, gB1]; ext q; simp; tauto) heq
+    obtain ⟨h01, -⟩ := List.cons.inj heq'
+    refine hnc ?_
+    show Collinear ℝ ({elV ul 0, elV ul 1, w0} : Set V3)
+    have hset : ({elV ul 0, elV ul 1, w0} : Set V3) = ({elV ul 1, w0} : Set V3) := by
+      rw [h01]
+      ext q
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+      tauto
+    rw [hset]
+    exact collinear_pair _ (elV ul 1) w0
 
 /-- HOL `JSPEVYT_EXPLICIT`. -/
 theorem JSPEVYT_EXPLICIT (u0 u1 u2 : V3) (hnl : pack_nonlinear_non_ox3q1h)
@@ -3626,7 +3765,296 @@ theorem DIST_I_SUCI (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i :
   have hne := LEAF_RANK_SUC_INJ V u0 u1 w0 n f i hp hs hr hnc hn
   exact hp.dist_ge_two (hmem i) (hmem (i + 1)) hne
 
-/-- HOL `WEDGE3_Y4`: a 3-cell wedge yields the analytic `y4` certificate. -/
+/-! ### 楔形 3-cell 面 2026-10-13 波：`dihY` 第 4 槽单调 kit（真证，自含）
+
+HOL `Tame_inequalities.DIH_X_MONO_LT_4`（WEDGE3_Y4 的 dih 支核心）与
+`dih_y_mono`（CUXVZOZ.hl:3206）的本文件解析版。路线：`atn2` 右半平面分支
+消解（Mathlib `arctan_inv_of_pos`/`arctan_inv_of_neg`）把 `dih_x` 化为
+`π/2 + arctan(-P/√(4·x1·Δ))` 的比值比较；比值单调由二次型 `delta_x` 与
+仿射 `delta_x4` 的判别式不变量 `P^2 + 4*x1*Δ = const`（纯 `ring`）与中点
+恒等式 `2*(Δ'-Δ) = (P+P')*(x4'-x4)` 纯代数收口，无需微积分。 -/
+
+/-- 楔形 kit：`atn2` 右半平面分支消解。 -/
+private theorem p25w_atn2_eq_arctan {A B : ℝ} (hA : 0 < A) :
+    atn2 A B = Real.arctan (B / A) := by
+  unfold atn2
+  split_ifs with hb hb2 hb3
+  · rfl
+  · have hBA : 0 < B / A := div_pos hb2 hA
+    have hrec : A / B = (B / A)⁻¹ := by field_simp
+    rw [hrec, Real.arctan_inv_of_pos hBA]
+    ring
+  · have hBA : B / A < 0 := div_neg_of_neg_of_pos hb3 hA
+    have hrec : A / B = (B / A)⁻¹ := by field_simp
+    rw [hrec, Real.arctan_inv_of_neg hBA]
+    ring
+  · have hB : B = 0 := le_antisymm (not_lt.mp hb2) (not_lt.mp hb3)
+    have hle : A ≤ |B| := le_of_not_gt hb
+    rw [hB, abs_zero] at hle
+    linarith
+
+/-- 楔形 kit：`delta_x` 的两点判别式不变量（`P^2 + 4*x1*Δ` 与第 4 槽无关）。 -/
+private theorem p25w_delta_inv (x1 x2 x3 x4 x4' x5 x6 : ℝ) :
+    (deltaX4 x1 x2 x3 x4 x5 x6) ^ 2 + 4 * x1 * deltaX x1 x2 x3 x4 x5 x6
+      = (deltaX4 x1 x2 x3 x4' x5 x6) ^ 2 + 4 * x1 * deltaX x1 x2 x3 x4' x5 x6 := by
+  simp only [deltaX, deltaX4]
+  ring
+
+/-- 楔形 kit：`delta_x4` 沿第 4 槽的仿射差（斜率 `-2*x1`）。 -/
+private theorem p25w_dX4_sub (x1 x2 x3 x4 x4' x5 x6 : ℝ) :
+    deltaX4 x1 x2 x3 x4' x5 x6
+      = deltaX4 x1 x2 x3 x4 x5 x6 - 2 * x1 * (x4' - x4) := by
+  simp only [deltaX4]
+  ring
+
+/-- 楔形 kit：`delta_x` 的两点中点恒等式。 -/
+private theorem p25w_dX_mid (x1 x2 x3 x4 x4' x5 x6 : ℝ) :
+    2 * (deltaX x1 x2 x3 x4' x5 x6 - deltaX x1 x2 x3 x4 x5 x6)
+      = (deltaX4 x1 x2 x3 x4 x5 x6 + deltaX4 x1 x2 x3 x4' x5 x6) * (x4' - x4) := by
+  simp only [deltaX, deltaX4]
+  ring
+
+/-- 楔形 kit：`-delta_x4 / sqrt(4*x1*delta_x)` 沿第 4 槽的比值比较
+（判别式不变量消平方，正分子支 `abs_le_of_sq_le_sq'` 收口）。 -/
+private theorem p25w_ratio_le {x1 x2 x3 x4 x4' x5 x6 : ℝ} (hx1 : 0 < x1)
+    (h44 : x4 ≤ x4') (hd : 0 < deltaX x1 x2 x3 x4 x5 x6)
+    (hd' : 0 < deltaX x1 x2 x3 x4' x5 x6) :
+    -(deltaX4 x1 x2 x3 x4 x5 x6) / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+      ≤ -(deltaX4 x1 x2 x3 x4' x5 x6)
+          / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6) := by
+  have h4 : (0:ℝ) < 4 := by norm_num
+  have hdec : deltaX4 x1 x2 x3 x4' x5 x6 ≤ deltaX4 x1 x2 x3 x4 x5 x6 := by
+    have h2 := p25w_dX4_sub x1 x2 x3 x4 x4' x5 x6
+    have hprod : 0 ≤ 2 * x1 * (x4' - x4) :=
+      mul_nonneg (mul_nonneg zero_le_two hx1.le) (sub_nonneg.mpr h44)
+    linarith
+  have hmid := p25w_dX_mid x1 x2 x3 x4 x4' x5 x6
+  have hs0p : 0 ≤ 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 :=
+    le_of_lt (mul_pos (mul_pos h4 hx1) hd)
+  have hs1p : 0 ≤ 4 * x1 * deltaX x1 x2 x3 x4' x5 x6 :=
+    le_of_lt (mul_pos (mul_pos h4 hx1) hd')
+  have hs0lt : 0 < 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 :=
+    mul_pos (mul_pos h4 hx1) hd
+  have hs1lt : 0 < 4 * x1 * deltaX x1 x2 x3 x4' x5 x6 :=
+    mul_pos (mul_pos h4 hx1) hd'
+  have hs0 : 0 ≤ Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) := Real.sqrt_nonneg _
+  have hs1 : 0 ≤ Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6) := Real.sqrt_nonneg _
+  rcases le_or_gt 0 (deltaX4 x1 x2 x3 x4' x5 x6) with hP1 | hP1
+  · -- both P ≥ 0: delta increases along the slot, negative numerators compare
+    have hP0 : 0 ≤ deltaX4 x1 x2 x3 x4 x5 x6 := hP1.trans hdec
+    have hDle : deltaX x1 x2 x3 x4 x5 x6 ≤ deltaX x1 x2 x3 x4' x5 x6 := by
+      nlinarith [hmid, hP0, hP1, h44]
+    have hsq : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+        ≤ Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6) :=
+      Real.sqrt_le_sqrt (by nlinarith [hDle, hx1.le])
+    have hnp0 : -(deltaX4 x1 x2 x3 x4 x5 x6) ≤ -(deltaX4 x1 x2 x3 x4' x5 x6) := by linarith
+    have hnp1 : -(deltaX4 x1 x2 x3 x4' x5 x6) ≤ 0 := by linarith
+    refine le_trans ((div_le_div_iff₀ (Real.sqrt_pos.mpr hs0lt)
+      (Real.sqrt_pos.mpr hs0lt)).mpr
+      (mul_le_mul_of_nonneg_right hnp0 (Real.sqrt_nonneg _)))
+      ((div_le_div_iff₀ (Real.sqrt_pos.mpr hs0lt) (Real.sqrt_pos.mpr hs1lt)).mpr
+        (mul_le_mul_of_nonpos_left hsq hnp1))
+  · rcases le_or_gt 0 (deltaX4 x1 x2 x3 x4 x5 x6) with hP0 | hP0
+    · -- P1 < 0 ≤ P0: left side nonpositive, right side positive
+      have hL : -(deltaX4 x1 x2 x3 x4 x5 x6)
+            / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) ≤ 0 :=
+        (div_nonpos_iff).mpr (Or.inr ⟨by linarith, hs0⟩)
+      have hR : 0 ≤ -(deltaX4 x1 x2 x3 x4' x5 x6)
+            / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6) :=
+        (div_nonneg_iff).mpr (Or.inl ⟨by linarith, hs1⟩)
+      linarith
+    · -- both numerators positive: compare squares via the discriminant invariant
+      have hnp0 : 0 < -(deltaX4 x1 x2 x3 x4 x5 x6) := by linarith
+      have hnp1 : 0 < -(deltaX4 x1 x2 x3 x4' x5 x6) := by linarith
+      have hDle : deltaX x1 x2 x3 x4' x5 x6 ≤ deltaX x1 x2 x3 x4 x5 x6 := by
+        nlinarith [hmid, hdec, hP0, h44]
+      have hcert : (deltaX x1 x2 x3 x4' x5 x6 - deltaX x1 x2 x3 x4 x5 x6)
+          * ((deltaX4 x1 x2 x3 x4' x5 x6) ^ 2
+              + 4 * x1 * deltaX x1 x2 x3 x4' x5 x6) * (4 * x1) ≤ 0 := by
+        have hbase : 0 ≤ 4 * x1 := by linarith
+        have hdiff : deltaX x1 x2 x3 x4' x5 x6 - deltaX x1 x2 x3 x4 x5 x6 ≤ 0 := by
+          nlinarith [hmid, hdec, hP0, h44]
+        have hpos : 0 ≤ (deltaX4 x1 x2 x3 x4' x5 x6) ^ 2
+            + 4 * x1 * deltaX x1 x2 x3 x4' x5 x6 := by nlinarith
+        have hp1 : (deltaX x1 x2 x3 x4' x5 x6 - deltaX x1 x2 x3 x4 x5 x6)
+            * ((deltaX4 x1 x2 x3 x4' x5 x6) ^ 2
+                + 4 * x1 * deltaX x1 x2 x3 x4' x5 x6) ≤ 0 :=
+          mul_nonpos_of_nonpos_of_nonneg hdiff hpos
+        exact mul_nonpos_of_nonpos_of_nonneg hp1 hbase
+      have heq : (deltaX4 x1 x2 x3 x4 x5 x6) ^ 2
+            * (4 * x1 * deltaX x1 x2 x3 x4' x5 x6)
+          = (deltaX4 x1 x2 x3 x4' x5 x6) ^ 2
+              * (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)
+            + (deltaX x1 x2 x3 x4' x5 x6 - deltaX x1 x2 x3 x4 x5 x6)
+              * ((deltaX4 x1 x2 x3 x4' x5 x6) ^ 2
+                  + 4 * x1 * deltaX x1 x2 x3 x4' x5 x6) * (4 * x1) := by
+        linear_combination (4 * x1 * deltaX x1 x2 x3 x4' x5 x6) *
+          p25w_delta_inv x1 x2 x3 x4 x4' x5 x6
+      have hsqnum : (deltaX4 x1 x2 x3 x4 x5 x6) ^ 2
+            * (4 * x1 * deltaX x1 x2 x3 x4' x5 x6)
+          ≤ (deltaX4 x1 x2 x3 x4' x5 x6) ^ 2
+              * (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) := by linarith
+      have hsq0 : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) ^ 2
+          = 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 := Real.sq_sqrt hs0p
+      have hsq1 : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6) ^ 2
+          = 4 * x1 * deltaX x1 x2 x3 x4' x5 x6 := Real.sq_sqrt hs1p
+      have hA2 : (-(deltaX4 x1 x2 x3 x4 x5 x6)
+              / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)) ^ 2
+          ≤ (-(deltaX4 x1 x2 x3 x4' x5 x6)
+              / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6)) ^ 2 := by
+        have h1 : (-(deltaX4 x1 x2 x3 x4 x5 x6)
+              / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)) ^ 2
+            = (deltaX4 x1 x2 x3 x4 x5 x6) ^ 2
+                / (4 * x1 * deltaX x1 x2 x3 x4 x5 x6) := by
+          rw [div_pow, neg_sq, hsq0]
+        have h2 : (-(deltaX4 x1 x2 x3 x4' x5 x6)
+              / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6)) ^ 2
+            = (deltaX4 x1 x2 x3 x4' x5 x6) ^ 2
+                / (4 * x1 * deltaX x1 x2 x3 x4' x5 x6) := by
+          rw [div_pow, neg_sq, hsq1]
+        rw [h1, h2]
+        exact (div_le_div_iff₀ hs0lt hs1lt).mpr hsqnum
+      exact (abs_le_of_sq_le_sq' hA2
+        (le_of_lt (div_pos hnp1 (Real.sqrt_pos.mpr hs1lt)))).2
+
+/-- 楔形 kit 主件：`dih_x` 沿第 4 槽单调（起点 `delta_x > 0`，终点 `≥ 0`；
+终点退化时右侧值只增不减，`delta_x4 > 0` 支由中点恒等式排除）。 -/
+private theorem p25w_dihXf_mono_x4 {x1 x2 x3 x4 x4' x5 x6 : ℝ} (hx1 : 0 < x1)
+    (h44 : x4 ≤ x4') (hd : 0 < deltaX x1 x2 x3 x4 x5 x6)
+    (hd' : 0 ≤ deltaX x1 x2 x3 x4' x5 x6) :
+    dihXf x1 x2 x3 x4 x5 x6 ≤ dihXf x1 x2 x3 x4' x5 x6 := by
+  have h4 : (0:ℝ) < 4 := by norm_num
+  have hs0 : 0 < 4 * x1 * deltaX x1 x2 x3 x4 x5 x6 :=
+    mul_pos (mul_pos h4 hx1) hd
+  unfold dihXf
+  rcases lt_or_ge 0 (deltaX x1 x2 x3 x4' x5 x6) with hD1 | hD1
+  · have hs1 : 0 < 4 * x1 * deltaX x1 x2 x3 x4' x5 x6 :=
+      mul_pos (mul_pos h4 hx1) hD1
+    rw [p25w_atn2_eq_arctan (A := Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
+        (B := -(deltaX4 x1 x2 x3 x4 x5 x6)) (Real.sqrt_pos.mpr hs0),
+      p25w_atn2_eq_arctan (A := Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6))
+        (B := -(deltaX4 x1 x2 x3 x4' x5 x6)) (Real.sqrt_pos.mpr hs1)]
+    linarith [Real.arctan_le_arctan_iff.mpr (p25w_ratio_le hx1 h44 hd hD1)]
+  · -- degenerate right endpoint: sqrt = 0, atn2 value only grows
+    have hP1le : deltaX4 x1 x2 x3 x4' x5 x6 ≤ 0 := by
+      by_contra hcon
+      push_neg at hcon
+      have h2 := p25w_dX4_sub x1 x2 x3 x4 x4' x5 x6
+      have hprod : 0 ≤ 2 * x1 * (x4' - x4) :=
+        mul_nonneg (mul_nonneg zero_le_two hx1.le) (sub_nonneg.mpr h44)
+      have hP0pos : 0 < deltaX4 x1 x2 x3 x4 x5 x6 := by linarith
+      have hsum : 0 < deltaX4 x1 x2 x3 x4 x5 x6 + deltaX4 x1 x2 x3 x4' x5 x6 := by
+        linarith
+      have hprod2 : 0 ≤ (deltaX4 x1 x2 x3 x4 x5 x6
+            + deltaX4 x1 x2 x3 x4' x5 x6) * (x4' - x4) :=
+        mul_nonneg (le_of_lt hsum) (sub_nonneg.mpr h44)
+      have hm := p25w_dX_mid x1 x2 x3 x4 x4' x5 x6
+      linarith [hm, hprod2, hd]
+    have hz : Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4' x5 x6) = 0 :=
+      Real.sqrt_eq_zero_of_nonpos (by nlinarith [hD1, hx1.le])
+    rw [hz, p25w_atn2_eq_arctan (A := Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6))
+        (B := -(deltaX4 x1 x2 x3 x4 x5 x6)) (Real.sqrt_pos.mpr hs0)]
+    have hArcL : Real.arctan (-(deltaX4 x1 x2 x3 x4 x5 x6)
+        / Real.sqrt (4 * x1 * deltaX x1 x2 x3 x4 x5 x6)) ≤ Real.pi / 2 :=
+      (Real.arctan_lt_pi_div_two _).le
+    unfold atn2
+    split_ifs with hb1 hb2 hb3
+    · linarith [abs_nonneg (-(deltaX4 x1 x2 x3 x4' x5 x6)), hArcL]
+    · simp only [zero_div, Real.arctan_zero]
+      linarith [hArcL]
+    · linarith
+    · linarith [Real.pi_pos, hArcL]
+
+/-- 楔形 kit：`dih_y` 沿第 4 槽单调（y 空间版，即 HOL `dih_y_mono`）。 -/
+private theorem p25w_dihY_mono_y4 {y1 y2 y3 y4 y4' y5 y6 : ℝ} (hy1 : 0 < y1)
+    (hy4 : 0 ≤ y4) (h44 : y4 ≤ y4') (hd : 0 < deltaY y1 y2 y3 y4 y5 y6)
+    (hd' : 0 ≤ deltaY y1 y2 y3 y4' y5 y6) :
+    dihY y1 y2 y3 y4 y5 y6 ≤ dihY y1 y2 y3 y4' y5 y6 := by
+  show dihXf (y1 * y1) (y2 * y2) (y3 * y3) (y4 * y4) (y5 * y5) (y6 * y6) ≤
+    dihXf (y1 * y1) (y2 * y2) (y3 * y3) (y4' * y4') (y5 * y5) (y6 * y6)
+  refine p25w_dihXf_mono_x4 (mul_pos hy1 hy1) ?_ hd hd'
+  have hstep1 : y4 * y4 ≤ y4' * y4 := mul_le_mul_of_nonneg_right h44 hy4
+  have hstep2 : y4' * y4 ≤ y4' * y4' := by
+    refine mul_le_mul_of_nonneg_left h44 ?_
+    linarith
+  linarith
+
+/-- HOL `EDGE_LE_2RAD`. -/
+theorem EDGE_LE_2RAD {x1 x2 x3 x4 x5 x6 : ℝ} (hd : 0 < deltaX x1 x2 x3 x4 x5 x6)
+    (h4 : 0 < x4) (h5 : 0 < x5) (h6 : 0 < x6) (hup : 0 < upsX x4 x5 x6) :
+    x4 ≤ 4 * rad2XP25 x1 x2 x3 x4 x5 x6 := by
+  -- RHUFIIB 型恒等式（leg/collect_geom2.hl:1510）：rho·ups = chi² + 4·delta·x4x5x6
+  have hchi0 : (x4 * x5 * x6) * (4 * deltaX x1 x2 x3 x4 x5 x6)
+      ≤ upsX x4 x5 x6 * rhoX x1 x2 x3 x4 x5 x6 := by
+    have hid : rhoX x1 x2 x3 x4 x5 x6 * upsX x4 x5 x6
+        = (-x1*x4*x4 + x1*x4*x5 + x2*x4*x5 - x2*x5*x5 + x1*x4*x6 + x3*x4*x6
+            + x2*x5*x6 + x3*x5*x6 - 2*x4*x5*x6 - x3*x6*x6) ^ 2
+          + 4 * deltaX x1 x2 x3 x4 x5 x6 * (x4 * x5 * x6) := by
+      simp only [rhoX, deltaX, upsX]
+      ring
+    have hcomm : 4 * deltaX x1 x2 x3 x4 x5 x6 * (x4 * x5 * x6)
+        = (x4 * x5 * x6) * (4 * deltaX x1 x2 x3 x4 x5 x6) := by ring
+    have hsq := sq_nonneg ((-x1*x4*x4 + x1*x4*x5 + x2*x4*x5 - x2*x5*x5 + x1*x4*x6
+      + x3*x4*x6 + x2*x5*x6 + x3*x5*x6 - 2*x4*x5*x6 - x3*x6*x6 : ℝ))
+    linarith
+  -- 面半弦：4x5x6 − ups = (x5+x6−x4)² ≥ 0
+  have hface : upsX x4 x5 x6 ≤ 4 * x5 * x6 := by
+    have h : 4 * x5 * x6 - upsX x4 x5 x6 = (x5 + x6 - x4) ^ 2 := by
+      simp only [upsX]
+      ring
+    have hsq := sq_nonneg ((x5 + x6 - x4 : ℝ))
+    linarith
+  have hchord : x4 * upsX x4 x5 x6 ≤ 4 * x4 * x5 * x6 := by
+    calc x4 * upsX x4 x5 x6 ≤ x4 * (4 * x5 * x6) :=
+          mul_le_mul_of_nonneg_left hface (le_of_lt h4)
+      _ = 4 * x4 * x5 * x6 := by ring
+  have hchord' : x4 ≤ 4 * x4 * x5 * x6 / upsX x4 x5 x6 :=
+    (le_div_iff₀ hup).mpr hchord
+  have hd0 : 0 < 4 * deltaX x1 x2 x3 x4 x5 x6 := by linarith
+  have heta : x4 * x5 * x6 / upsX x4 x5 x6
+      ≤ rhoX x1 x2 x3 x4 x5 x6 / (4 * deltaX x1 x2 x3 x4 x5 x6) := by
+    rw [div_le_div_iff₀ hup hd0]
+    linarith [hchi0]
+  calc x4 ≤ 4 * x4 * x5 * x6 / upsX x4 x5 x6 := hchord'
+    _ = 4 * (x4 * x5 * x6 / upsX x4 x5 x6) := by ring
+    _ ≤ 4 * (rhoX x1 x2 x3 x4 x5 x6 / (4 * deltaX x1 x2 x3 x4 x5 x6)) :=
+          mul_le_mul_of_nonneg_left heta (by norm_num)
+    _ = 4 * rad2XP25 x1 x2 x3 x4 x5 x6 := by
+          simp only [rad2XP25, rad2X]
+          field_simp
+
+/-- HOL `RAD2_Y_SQRT8`. -/
+theorem RAD2_Y_SQRT8 {y1 y2 y3 y5 y6 : ℝ} (h5 : 2 ≤ y5) (h6 : 2 ≤ y6)
+    (h5' : y5 < 4) (h6' : y6 < 4)
+    (hd : 0 < deltaY y1 y2 y3 (Real.sqrt 8) y5 y6) :
+    2 ≤ rad2YP25 y1 y2 y3 (Real.sqrt 8) y5 y6 := by
+  have hs8 : (Real.sqrt 8) * (Real.sqrt 8) = 8 :=
+    Real.mul_self_sqrt (by norm_num : (0:ℝ) ≤ 8)
+  have hd' : 0 < deltaX (y1 * y1) (y2 * y2) (y3 * y3) 8 (y5 * y5) (y6 * y6) := by
+    have h : 0 < deltaY y1 y2 y3 (Real.sqrt 8) y5 y6 := hd
+    rw [deltaY, hs8] at h
+    exact h
+  have hr : rad2YP25 y1 y2 y3 (Real.sqrt 8) y5 y6
+      = rad2XP25 (y1 * y1) (y2 * y2) (y3 * y3) 8 (y5 * y5) (y6 * y6) := by
+    rw [rad2YP25, hs8]
+  rw [hr]
+  have h8 : (0:ℝ) < 8 := by norm_num
+  have e := EDGE_LE_2RAD hd' h8 (by positivity) (by positivity)
+    (UPS_X8_POS h5 h5' h6 h6')
+  linarith
+
+set_option maxHeartbeats 10000000 in
+/-- HOL `WEDGE3_Y4`: a 3-cell wedge yields the analytic `y4` certificate.
+楔形 3-cell 面 2026-10-13 波转真（装配级）：三分 witness 对照 HOL
+OXLZLEZ3.hl:4388。`pi ≤ azim` 与 `2√2 < d` 两枝取 `√8`：delta 支 =
+`proj_bank_FWGKMBZ` 投影（盒 `[2hmin,2hplus]×[2,√8]⁵`），dih 支 =
+`p25w_dihY_mono_y4`（`delta_y(d) ≥ 0` 由 `DELTA_Y_POS_4POINTS` 无条件给出）
++ `DIHV_EQ_DIH_Y_4PT_B` + `DIHV_LE_AZIM`，rad2 支 = `RAD2_Y_SQRT8`（解析，
+r5 波）；末枝（`azim < pi ∧ d ≤ 2√2`）取 `d` 本身，rad2 ≥ 2 经
+`coplanar_delta_y`（delta > 0 ⟹ ¬共面）+ `GDRQXLGv3`（radV² 桥）+
+`RAD_PI_IMP_WEDGE4` 反证撞 `hno4`——与 HOL 同构，债面即 `RAD_PI_IMP_WEDGE4`
+（本文件在案 sorried 兄弟）。本地预算：单件声明级心跳扩容（照 GDRQXLGv3
+先例）。 -/
 theorem WEDGE3_Y4 (V : Set V3) (f : ℕ → V3) (w0 : V3) (n : ℕ) (i : ℕ) (u0 u1 : V3)
     (y1 y2 y3 y5 y6 : ℝ) (hnl : pack_nonlinear_non_ox3q1h) (hn : 1 < n)
     (hp : Packing V) (hs : saturated V) (hnc : ¬ Collinear3 u0 u1 w0)
@@ -3642,7 +4070,165 @@ theorem WEDGE3_Y4 (V : Set V3) (f : ℕ → V3) (w0 : V3) (n : ℕ) (i : ℕ) (u
       2 ≤ rad2YP25 y1 y2 y3 y4 y5 y6 ∧
       (azim u0 u1 (f i) (f (i + 1)) < Real.pi →
         dist (f i) (f (i + 1)) ≤ 2 * Real.sqrt 2 → y4 = dist (f i) (f (i + 1))) := by
-  sorry
+  obtain rfl := hy1
+  obtain rfl := hy2
+  obtain rfl := hy3
+  obtain rfl := hy5
+  obtain rfl := hy6
+  -- leaves and their box facts
+  have hleafA : leaf V [u0, u1, f i] := by
+    have hmem := LEAF_RANK_S_LEAF V [u0, u1] w0 n f i hr
+    simp only [s_leaf, Set.mem_setOf_eq] at hmem
+    exact hmem.1
+  have hleafB : leaf V [u0, u1, f (i + 1)] := by
+    have hmem := LEAF_RANK_S_LEAF V [u0, u1] w0 n f (i + 1) hr
+    simp only [s_leaf, Set.mem_setOf_eq] at hmem
+    exact hmem.1
+  obtain ⟨hcolA, h2_6, h2_2, h2_1, lt6, lt2, -, -⟩ :=
+    LEAF_DOMAIN V [u0, u1, f i] hs hp hleafA
+  obtain ⟨hcolB, h2_5, h2_3, -, lt5, lt3, -, -⟩ :=
+    LEAF_DOMAIN V [u0, u1, f (i + 1)] hs hp hleafB
+  have eV0 : ∀ (p q r : V3), elV [p, q, r] 0 = p := fun _ _ _ => rfl
+  have eV1 : ∀ (p q r : V3), elV [p, q, r] 1 = q := fun _ _ _ => rfl
+  have eV2 : ∀ (p q r : V3), elV [p, q, r] 2 = r := fun _ _ _ => rfl
+  simp only [eV0, eV1, eV2] at hcolA hcolB h2_6 h2_2 h2_1 lt6 lt2 h2_5 h2_3 lt5 lt3
+  -- distinctness
+  have hu0u1 : u0 ≠ u1 := by
+    intro he
+    refine hcolA ?_
+    show Collinear ℝ ({u0, u1, f i} : Set V3)
+    have hs' : ({u0, u1, f i} : Set V3) = ({u1, f i} : Set V3) := by
+      rw [he]; ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [hs']; exact collinear_pair _ u1 (f i)
+  have hu0i : u0 ≠ f i := by
+    intro he
+    refine hcolA ?_
+    show Collinear ℝ ({u0, u1, f i} : Set V3)
+    have hs' : ({f i, u1, f i} : Set V3) = ({u1, f i} : Set V3) := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [he]; rw [hs']; exact collinear_pair _ u1 (f i)
+  have hu1i : u1 ≠ f i := by
+    intro he
+    refine hcolA ?_
+    show Collinear ℝ ({u0, u1, f i} : Set V3)
+    have hs' : ({u0, f i, f i} : Set V3) = ({u0, f i} : Set V3) := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [he]; rw [hs']; exact collinear_pair _ u0 (f i)
+  have hu0s : u0 ≠ f (i + 1) := by
+    intro he
+    refine hcolB ?_
+    show Collinear ℝ ({u0, u1, f (i + 1)} : Set V3)
+    have hs' : ({f (i + 1), u1, f (i + 1)} : Set V3) = ({u1, f (i + 1)} : Set V3) := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [he]; rw [hs']; exact collinear_pair _ u1 (f (i + 1))
+  have hu1s : u1 ≠ f (i + 1) := by
+    intro he
+    refine hcolB ?_
+    show Collinear ℝ ({u0, u1, f (i + 1)} : Set V3)
+    have hs' : ({u0, f (i + 1), f (i + 1)} : Set V3) = ({u0, f (i + 1)} : Set V3) := by
+      ext q; simp only [Set.mem_insert_iff, Set.mem_singleton_iff]; tauto
+    rw [he]; rw [hs']; exact collinear_pair _ u0 (f (i + 1))
+  -- the successor edge and the sqrt-8 bridge
+  have hdsuc : 2 ≤ dist (f i) (f (i + 1)) :=
+    DIST_I_SUCI V u0 u1 w0 n f i hnl hn hp hs hnc hr
+  have hs8 : Real.sqrt 8 = 2 * Real.sqrt 2 := by
+    have h42 : (8:ℝ) = 4 * 2 := by norm_num
+    have hge : (0:ℝ) ≤ 4 := by norm_num
+    rw [h42, Real.sqrt_mul hge]
+    norm_num
+  have hone : (1:ℝ) ≤ Real.sqrt 2 :=
+    (Real.le_sqrt (show (0:ℝ) ≤ 1 by norm_num) (show (0:ℝ) ≤ 2 by norm_num)).mpr
+      (by norm_num)
+  have h28 : (2:ℝ) ≤ Real.sqrt 8 := by rw [hs8]; linarith [hone]
+  have hsq2lt4 : (2:ℝ) * Real.sqrt 2 < 4 := by
+    have h22 : Real.sqrt 2 < 2 :=
+      lt_of_lt_of_eq (Real.sqrt_lt_sqrt (show (0:ℝ) ≤ 2 by norm_num)
+        (show (2:ℝ) < 4 by norm_num)) (by norm_num)
+    linarith
+  -- FWGKMBZ bank projection: delta_y > 0 on the box
+  have hbank := proj_bank_FWGKMBZ hnl
+  have hd8 : ∀ z : ℝ, 2 ≤ z → z ≤ Real.sqrt 8 →
+      0 < deltaY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) z
+        (dist u1 (f (i + 1))) (dist u1 (f i)) := by
+    intro z hz hz'
+    exact hbank _ _ _ _ _ _ hcey.1 hcey.2 h2_2 (by rw [hs8]; exact lt2.le) h2_3
+      (by rw [hs8]; exact lt3.le) hz hz' h2_5 (by rw [hs8]; exact lt5.le) h2_6
+      (by rw [hs8]; exact lt6.le)
+  -- the analytic block shared by the √8 witnesses
+  have hrad8 : 2 ≤ rad2YP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+      (Real.sqrt 8) (dist u1 (f (i + 1))) (dist u1 (f i)) :=
+    RAD2_Y_SQRT8 h2_5 h2_6 (by linarith [lt5, hsq2lt4]) (by linarith [lt6, hsq2lt4])
+      (hd8 _ h28 le_rfl)
+  have hdih8lt : dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) (Real.sqrt 8)
+      (dist u1 (f (i + 1))) (dist u1 (f i)) < Real.pi :=
+    DIH_Y_LT_PI (by linarith [h2_1]) (hd8 _ h28 le_rfl)
+  rcases le_or_gt Real.pi (azim u0 u1 (f i) (f (i + 1))) with hapi | hlt
+  · -- case 1: pi <= azim: witness sqrt 8
+    refine ⟨Real.sqrt 8, by rw [hs8]; linarith [hone], by rw [hs8], hd8 _ h28 le_rfl,
+      le_trans (le_of_lt hdih8lt) hapi, hrad8, ?_⟩
+    intro hcon _
+    exact absurd hcon (not_lt.mpr hapi)
+  · -- azim < pi
+    rcases le_or_gt (dist (f i) (f (i + 1))) (2 * Real.sqrt 2) with hle | hbig
+    · -- case 3: witness d itself; rad2 via the 4-cell refutation (HOL isomorphic)
+      have hd3 := hd8 _ hdsuc (by rw [hs8]; exact hle)
+      have hncop := (coplanar_delta_y u0 u1 (f i) (f (i + 1))).mpr hd3
+      have haff : ¬ affineDependent ({u0, u1, f i, f (i + 1)} : Set V3) :=
+        fun hdep => hncop (p25g_affdep4_coplanar hdep)
+      have hnn : 0 ≤ radV ({u0, u1, f i, f (i + 1)} : Set V3) := by
+        rw [OAPVION2_concl ({u0, u1, f i, f (i + 1)} : Set V3) haff u0 (by simp)]
+        exact dist_nonneg
+      refine ⟨dist (f i) (f (i + 1)), hdsuc, hle, hd3, ?_, ?_, ?_⟩
+      · calc dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+              (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i))
+            = dihV u0 u1 (f i) (f (i + 1)) :=
+              (DIHV_EQ_DIH_Y_4PT_B u0 u1 (f i) (f (i + 1)) hcolA hcolB).symm
+          _ ≤ azim u0 u1 (f i) (f (i + 1)) :=
+              DIHV_LE_AZIM u0 u1 (f i) (f (i + 1)) hcolA hcolB
+      · by_contra hcon
+        push_neg at hcon
+        have hG := GDRQXLGv3 u0 u1 (f i) (f (i + 1)) hncop
+        have hY1 : rad2YP25 (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+            (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i))
+          = rad2XP25 (dist u0 u1 * dist u0 u1) (dist u0 (f i) * dist u0 (f i))
+              (dist u0 (f (i + 1)) * dist u0 (f (i + 1)))
+              (dist (f i) (f (i + 1)) * dist (f i) (f (i + 1)))
+              (dist u1 (f (i + 1)) * dist u1 (f (i + 1)))
+              (dist u1 (f i) * dist u1 (f i)) := rfl
+        have hY2 : rad2XP25 (dist u0 u1 * dist u0 u1) (dist u0 (f i) * dist u0 (f i))
+              (dist u0 (f (i + 1)) * dist u0 (f (i + 1)))
+              (dist (f i) (f (i + 1)) * dist (f i) (f (i + 1)))
+              (dist u1 (f (i + 1)) * dist u1 (f (i + 1)))
+              (dist u1 (f i) * dist u1 (f i))
+          = rad2XP25 (dist u0 u1 ^ 2) (dist u0 (f i) ^ 2)
+              (dist u0 (f (i + 1)) ^ 2) (dist (f i) (f (i + 1)) ^ 2)
+              (dist u1 (f (i + 1)) ^ 2) (dist u1 (f i) ^ 2) := by
+          simp only [pow_two]
+        have hY := hY1.trans hY2
+        rw [hY, ← hG] at hcon
+        have hrad : radV ({u0, u1, f i, f (i + 1)} : Set V3) < Real.sqrt 2 :=
+          (Real.lt_sqrt hnn).mpr hcon
+        obtain ⟨vl, hsub4, hbar4, hedge4⟩ :=
+          RAD_PI_IMP_WEDGE4 V f w0 n i u0 u1 hn hp hs hnc hr hlt hrad
+        exact hno4 ⟨vl, hbar4, hedge4, hsub4⟩
+      · intro _ _
+        rfl
+    · -- case 2: witness sqrt 8; dihedral via the slot-4 monotonicity kit
+      have hmono := p25w_dihY_mono_y4 (by linarith [h2_1]) (Real.sqrt_nonneg 8)
+        (by rw [hs8]; exact le_of_lt hbig)
+        (hd8 _ h28 le_rfl) (DELTA_Y_POS_4POINTS_B u0 u1 (f i) (f (i + 1)))
+      refine ⟨Real.sqrt 8, by rw [hs8]; linarith [hone], by rw [hs8],
+        hd8 _ h28 le_rfl, ?_, hrad8, ?_⟩
+      · calc dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1))) (Real.sqrt 8)
+              (dist u1 (f (i + 1))) (dist u1 (f i)) ≤
+            dihY (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+              (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) := hmono
+          _ = dihV u0 u1 (f i) (f (i + 1)) :=
+              (DIHV_EQ_DIH_Y_4PT_B u0 u1 (f i) (f (i + 1)) hcolA hcolB).symm
+          _ ≤ azim u0 u1 (f i) (f (i + 1)) :=
+              DIHV_LE_AZIM u0 u1 (f i) (f (i + 1)) hcolA hcolB
+      · intro _ hle2
+        linarith
 
 /-- HOL `cc_4_cc_ke4`. -/
 theorem cc_4_cc_ke4 (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : ℕ)
@@ -4491,7 +5077,75 @@ theorem CC_3_PROPS (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3) (i : 
         (azim u0 u1 (f i) (f (i + 1)) < Real.pi ∧
             dist (f i) (f (i + 1)) ≤ 2 * Real.sqrt 2 →
           y4 = dist (f i) (f (i + 1)))) := by
-  sorry
+  -- NO_4CELL_IMP_K3 dispatch (HOL OXLZLEZ3.hl:5965)
+  simp only [cc_4] at hno4
+  have hd := NO_4CELL_IMP_K3 V (wedgeGe u0 u1 (f i) (f (i + 1))) [u0, u1] w0 n f i
+    hp hs hr hnc rfl hn hno4
+  obtain ⟨hk3b, hk3a, hsubA, hsubB, hne⟩ := hd
+  simp [elV] at hk3b hk3a hsubA hsubB hne
+  -- leaves
+  have hleafA : leaf V [u0, u1, f i] := LEAF_RANK_LEAF V u0 u1 w0 n f i hr
+  have hleafB : leaf V [u0, u1, f (i + 1)] := LEAF_RANK_LEAF V u0 u1 w0 n f (i + 1) hr
+  have hleafB2 : leaf V [u1, u0, f (i + 1)] := (ZASUVOR hp hs hleafB).1
+  -- ccUh witnesses (p25m_cc3_wit pattern, inlined: the private kit sits below)
+  have hbarA : barV V 3 (ccUh V [u0, u1, f i]) :=
+    (Classical.choose_spec (cc_uh_exists V [u0, u1, f i])) hp hs hleafA |>.1
+  have hbarB : barV V 3 (ccUh V [u1, u0, f (i + 1)]) :=
+    (Classical.choose_spec (cc_uh_exists V [u1, u0, f (i + 1)])) hp hs hleafB2 |>.1
+  -- cell equations and beta-bump nullity (k = 3 cells carry no bump)
+  have hccA3 : ccCell V [u0, u1, f i] = mcell 3 V (ccUh V [u0, u1, f i]) := by
+    show mcell (ccKe V [u0, u1, f i]) V (ccUh V [u0, u1, f i]) = _
+    rw [hk3a]
+  have hccB3 : ccCell V [u1, u0, f (i + 1)] = mcell 3 V (ccUh V [u1, u0, f (i + 1)]) := by
+    show mcell (ccKe V [u1, u0, f (i + 1)]) V (ccUh V [u1, u0, f (i + 1)]) = _
+    rw [hk3b]
+  have hnnA : ¬ nullSet (ccCell V [u0, u1, f i]) :=
+    CC_CELL_NOT_NULLSET (V := V) (ul := [u0, u1, f i]) hp hs hleafA
+  have hnnB : ¬ nullSet (ccCell V [u1, u0, f (i + 1)]) :=
+    CC_CELL_NOT_NULLSET (V := V) (ul := [u1, u0, f (i + 1)]) hp hs hleafB2
+  have hbbA : betaBumpV1 V {u0, u1} (ccCell V [u0, u1, f i]) = 0 := by
+    have heq : betaBumpV1 V {u0, u1} (ccCell V [u0, u1, f i]) =
+        betaBump V {u0, u1} (mcell 3 V (ccUh V [u0, u1, f i])) := by rw [hccA3]; rfl
+    rw [heq]
+    refine BumpP4.MCELL_BUMP_0 V (ccUh V [u0, u1, f i]) {u0, u1} 3 (by omega) hp hs
+      hbarA ?_
+    rw [← hccA3]
+    exact hnnA
+  have hbbB : betaBumpV1 V {u0, u1} (ccCell V [u1, u0, f (i + 1)]) = 0 := by
+    have heq : betaBumpV1 V {u0, u1} (ccCell V [u1, u0, f (i + 1)]) =
+        betaBump V {u0, u1} (mcell 3 V (ccUh V [u1, u0, f (i + 1)])) := by
+      rw [hccB3]; rfl
+    rw [heq]
+    refine BumpP4.MCELL_BUMP_0 V (ccUh V [u1, u0, f (i + 1)]) {u0, u1} 3 (by omega) hp hs
+      hbarB ?_
+    rw [← hccB3]
+    exact hnnB
+  -- leaf box facts
+  obtain ⟨-, hd12i, hd02i, hd01i, hi12, hi02, hi01, hetai⟩ :=
+    LEAF_DOMAIN V [u0, u1, f i] hs hp hleafA
+  obtain ⟨-, hd12s, hd02s, -, hi12s, hi02s, -, hetas⟩ :=
+    LEAF_DOMAIN V [u0, u1, f (i + 1)] hs hp hleafB
+  have eV0 : ∀ (p q r : V3), elV [p, q, r] 0 = p := fun _ _ _ => rfl
+  have eV1 : ∀ (p q r : V3), elV [p, q, r] 1 = q := fun _ _ _ => rfl
+  have eV2 : ∀ (p q r : V3), elV [p, q, r] 2 = r := fun _ _ _ => rfl
+  simp only [eV0, eV1, eV2] at hd12i hd02i hd01i hi12 hi02 hetai
+  simp only [eV0, eV1, eV2] at hd12s hd02s hi12s hi02s hetas
+  have hcolA : ¬ Collinear3 u0 u1 (f i) := by
+    simpa using GBEWYFX (V := V) (ul := [u0, u1, f i]) hp hs hleafA
+  have hcolB : ¬ Collinear3 u0 u1 (f (i + 1)) := by
+    simpa using GBEWYFX (V := V) (ul := [u0, u1, f (i + 1)]) hp hs hleafB
+  -- assembly
+  refine ⟨hk3a, hbarA, hbarB, hbbA, hbbB, hk3b, hsubA, hsubB, hne, hcolA, hcolB,
+    hleafA.2, hleafB.2, hleafB2.2, hleafA, hleafB, hleafB2,
+    hd01i, hd02i, hd02s, hd12i, hd12s, hi01.le, hi02.le, hi02s.le, hi12.le, hi12s.le,
+    hetai, hetas,
+    hnnA, hnnB,
+    LEAF_RANK_REUHADY V [u0, u1] w0 n f i hn hp hs hsize hnc hr, ?_⟩
+  obtain ⟨y4, hy4a, hy4b, hy4c, hy4d, hy4e, hy4f⟩ :=
+    WEDGE3_Y4 V f w0 n i u0 u1 (dist u0 u1) (dist u0 (f i))
+      (dist u0 (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) hnl hn hp hs hnc hr
+      hcey hno4 rfl rfl rfl rfl rfl
+  exact ⟨y4, hy4a, hy4b, hy4c, hy4d, hy4e, fun h => hy4f h.1 h.2⟩
 
 /-- HOL `real_model_gckb`. -/
 theorem real_model_gckb (V : Set V3) (u0 u1 w0 : V3) (n : ℕ) (f : ℕ → V3)
@@ -6495,70 +7149,6 @@ theorem PACKING_CHAPTER_MAIN_CONCLUSION (hkc : ¬ keplerConjecture)
 
 /-! ## Backfill: remaining source statements (kept with the file's section
 order flattened; all giants) -/
-
-/-- HOL `EDGE_LE_2RAD`. -/
-theorem EDGE_LE_2RAD {x1 x2 x3 x4 x5 x6 : ℝ} (hd : 0 < deltaX x1 x2 x3 x4 x5 x6)
-    (h4 : 0 < x4) (h5 : 0 < x5) (h6 : 0 < x6) (hup : 0 < upsX x4 x5 x6) :
-    x4 ≤ 4 * rad2XP25 x1 x2 x3 x4 x5 x6 := by
-  -- RHUFIIB 型恒等式（leg/collect_geom2.hl:1510）：rho·ups = chi² + 4·delta·x4x5x6
-  have hchi0 : (x4 * x5 * x6) * (4 * deltaX x1 x2 x3 x4 x5 x6)
-      ≤ upsX x4 x5 x6 * rhoX x1 x2 x3 x4 x5 x6 := by
-    have hid : rhoX x1 x2 x3 x4 x5 x6 * upsX x4 x5 x6
-        = (-x1*x4*x4 + x1*x4*x5 + x2*x4*x5 - x2*x5*x5 + x1*x4*x6 + x3*x4*x6
-            + x2*x5*x6 + x3*x5*x6 - 2*x4*x5*x6 - x3*x6*x6) ^ 2
-          + 4 * deltaX x1 x2 x3 x4 x5 x6 * (x4 * x5 * x6) := by
-      simp only [rhoX, deltaX, upsX]
-      ring
-    have hcomm : 4 * deltaX x1 x2 x3 x4 x5 x6 * (x4 * x5 * x6)
-        = (x4 * x5 * x6) * (4 * deltaX x1 x2 x3 x4 x5 x6) := by ring
-    have hsq := sq_nonneg ((-x1*x4*x4 + x1*x4*x5 + x2*x4*x5 - x2*x5*x5 + x1*x4*x6
-      + x3*x4*x6 + x2*x5*x6 + x3*x5*x6 - 2*x4*x5*x6 - x3*x6*x6 : ℝ))
-    linarith
-  -- 面半弦：4x5x6 − ups = (x5+x6−x4)² ≥ 0
-  have hface : upsX x4 x5 x6 ≤ 4 * x5 * x6 := by
-    have h : 4 * x5 * x6 - upsX x4 x5 x6 = (x5 + x6 - x4) ^ 2 := by
-      simp only [upsX]
-      ring
-    have hsq := sq_nonneg ((x5 + x6 - x4 : ℝ))
-    linarith
-  have hchord : x4 * upsX x4 x5 x6 ≤ 4 * x4 * x5 * x6 := by
-    calc x4 * upsX x4 x5 x6 ≤ x4 * (4 * x5 * x6) :=
-          mul_le_mul_of_nonneg_left hface (le_of_lt h4)
-      _ = 4 * x4 * x5 * x6 := by ring
-  have hchord' : x4 ≤ 4 * x4 * x5 * x6 / upsX x4 x5 x6 :=
-    (le_div_iff₀ hup).mpr hchord
-  have hd0 : 0 < 4 * deltaX x1 x2 x3 x4 x5 x6 := by linarith
-  have heta : x4 * x5 * x6 / upsX x4 x5 x6
-      ≤ rhoX x1 x2 x3 x4 x5 x6 / (4 * deltaX x1 x2 x3 x4 x5 x6) := by
-    rw [div_le_div_iff₀ hup hd0]
-    linarith [hchi0]
-  calc x4 ≤ 4 * x4 * x5 * x6 / upsX x4 x5 x6 := hchord'
-    _ = 4 * (x4 * x5 * x6 / upsX x4 x5 x6) := by ring
-    _ ≤ 4 * (rhoX x1 x2 x3 x4 x5 x6 / (4 * deltaX x1 x2 x3 x4 x5 x6)) :=
-          mul_le_mul_of_nonneg_left heta (by norm_num)
-    _ = 4 * rad2XP25 x1 x2 x3 x4 x5 x6 := by
-          simp only [rad2XP25, rad2X]
-          field_simp
-
-/-- HOL `RAD2_Y_SQRT8`. -/
-theorem RAD2_Y_SQRT8 {y1 y2 y3 y5 y6 : ℝ} (h5 : 2 ≤ y5) (h6 : 2 ≤ y6)
-    (h5' : y5 < 4) (h6' : y6 < 4)
-    (hd : 0 < deltaY y1 y2 y3 (Real.sqrt 8) y5 y6) :
-    2 ≤ rad2YP25 y1 y2 y3 (Real.sqrt 8) y5 y6 := by
-  have hs8 : (Real.sqrt 8) * (Real.sqrt 8) = 8 :=
-    Real.mul_self_sqrt (by norm_num : (0:ℝ) ≤ 8)
-  have hd' : 0 < deltaX (y1 * y1) (y2 * y2) (y3 * y3) 8 (y5 * y5) (y6 * y6) := by
-    have h : 0 < deltaY y1 y2 y3 (Real.sqrt 8) y5 y6 := hd
-    rw [deltaY, hs8] at h
-    exact h
-  have hr : rad2YP25 y1 y2 y3 (Real.sqrt 8) y5 y6
-      = rad2XP25 (y1 * y1) (y2 * y2) (y3 * y3) 8 (y5 * y5) (y6 * y6) := by
-    rw [rad2YP25, hs8]
-  rw [hr]
-  have h8 : (0:ℝ) < 8 := by norm_num
-  have e := EDGE_LE_2RAD hd' h8 (by positivity) (by positivity)
-    (UPS_X8_POS h5 h5' h6 h6')
-  linarith
 
 /-- HOL `DIHV_EQ_0_PI_EQ_COPLANAR_ALT`.  Proof: `dihV = 0` forces
 `azim v0 v1 w1 w2 = 0` (below `pi` via AZIM_DIHV_SAME; above `pi` the
