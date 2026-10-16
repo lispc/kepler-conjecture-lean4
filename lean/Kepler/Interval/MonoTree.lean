@@ -453,6 +453,801 @@ theorem domOK_of_domByInterval {n : ℕ} (box : Fin n → DInterval) (e : IExpr 
       exact domOK_sqrt_of_certs box e s₁ s₂ h ih
   | trans k e N out ih => exact .trans (ih (by simpa [domByInterval] using h))
 
+/-! ## DomOK v2: the mono-batched decide precondition
+
+`domOK_of_domByInterval` reduces `DomOK box e` to the kernel check
+`domByInterval box e = true`, but that check re-evaluates a full subtree
+interval at EVERY `div`/`sqrt`/`ite` node (`IExpr.eval` of the divisor,
+radicand, or guard) - an O(n*depth) kernel computation that dominated the
+W8 stage-B builds (the sb12-heavy leaf did not finish in >67 min).  This
+section batches the discharge:
+
+- `domTable` computes every node's interval exactly ONCE in a single
+  bottom-up pass (an `IExpr.eval` mirror threading the values upward -
+  the threaded value is exactly what the parent consumes) and collects
+  the domain witnesses into a table in `domEvals` order: the node's own
+  witness first, then the subtrees' segments (consumption order for
+  `div`/`ite`: head element, then the two subtrees);
+- `domByTable` is a pure table consumer (no interval arithmetic); Bool
+  has no bind, so the remainder threading is an explicit `Option` with
+  `match`es;
+- `domOK_of_domByIntervalTable` keeps the honesty: the baked table must
+  be exactly the kernel-computed one (`domTable`'s single-pass table -
+  one O(n) reduction; `domTable_correct` ties it to the `domEvals` spec)
+  AND the consumer must accept it - and the soundness core is the
+  existing `domOK_of_domByInterval`, reused verbatim.
+
+The emitter's stage A computes the tables compiled-side (the same driver
+run that bakes the sqrt slots) and stage B bakes them as literals; a
+wrong pipeline-side table can only fail a `decide`, never pass. -/
+
+/-- The reference witness list: the plain-interval eval of every `div`
+divisor / `sqrt` radicand / `ite` guard, in the order the consumer reads
+them (the node's own witness first, then the subtrees' segments).  Guard
+interiors are not recursed into - exactly the nodes `domByInterval`
+checks. -/
+def domEvals {n : ℕ} (box : Fin n → DInterval) : IExpr n → List (Option DInterval)
+  | .const _ => []
+  | .var _ => []
+  | .neg e => domEvals box e
+  | .abs e => domEvals box e
+  | .ite c t e => [c.eval box] ++ domEvals box t ++ domEvals box e
+  | .add e₁ e₂ => domEvals box e₁ ++ domEvals box e₂
+  | .sub e₁ e₂ => domEvals box e₁ ++ domEvals box e₂
+  | .mul e₁ e₂ => domEvals box e₁ ++ domEvals box e₂
+  | .div e₁ e₂ _ => [e₂.eval box] ++ domEvals box e₁ ++ domEvals box e₂
+  | .sqrt e _ _ => [e.eval box] ++ domEvals box e
+  | .trans _ e _ _ => domEvals box e
+
+/-- Head-shape driver equations (used with `rw`, so the unfold stays
+one-step and never recurses into the subexpressions' own tables). -/
+theorem domEvals_ite {n : ℕ} (box : Fin n → DInterval) (c t e : IExpr n) :
+    domEvals box (.ite c t e)
+      = c.eval box :: (domEvals box t ++ domEvals box e) := rfl
+
+theorem domEvals_add {n : ℕ} (box : Fin n → DInterval) (e₁ e₂ : IExpr n) :
+    domEvals box (.add e₁ e₂)
+      = domEvals box e₁ ++ domEvals box e₂ := rfl
+
+theorem domEvals_sub {n : ℕ} (box : Fin n → DInterval) (e₁ e₂ : IExpr n) :
+    domEvals box (.sub e₁ e₂)
+      = domEvals box e₁ ++ domEvals box e₂ := rfl
+
+theorem domEvals_mul {n : ℕ} (box : Fin n → DInterval) (e₁ e₂ : IExpr n) :
+    domEvals box (.mul e₁ e₂)
+      = domEvals box e₁ ++ domEvals box e₂ := rfl
+
+theorem domEvals_div {n : ℕ} (box : Fin n → DInterval) (e₁ e₂ : IExpr n) (out : Int) :
+    domEvals box (.div e₁ e₂ out)
+      = e₂.eval box :: (domEvals box e₁ ++ domEvals box e₂) := rfl
+
+theorem domEvals_sqrt {n : ℕ} (box : Fin n → DInterval) (e : IExpr n) (s₁ s₂ : Int) :
+    domEvals box (.sqrt e s₁ s₂)
+      = e.eval box :: domEvals box e := rfl
+
+/-- The single bottom-up pass: every node's plain-interval value computed
+exactly once (an `IExpr.eval` mirror), together with the witness table in
+`domEvals` order.  The `ite` guard's value is read by one direct
+`c.eval box` (its interior contributes no witnesses, matching
+`domByInterval`). -/
+def domTable {n : ℕ} (box : Fin n → DInterval) :
+    IExpr n → Option DInterval × List (Option DInterval)
+  | .const d => (some ⟨d, d⟩, [])
+  | .var k => (some (box k), [])
+  | .neg e =>
+      let (I, t) := domTable box e
+      (I.map DInterval.neg, t)
+  | .abs e =>
+      let (I, t) := domTable box e
+      (I.map DInterval.abs, t)
+  | .ite c t e =>
+      let C := c.eval box
+      let (T, tt) := domTable box t
+      let (E₂, te) := domTable box e
+      (match C with
+        | some C' =>
+            if C'.hi.isNeg then T
+            else if C'.lo.isNN then E₂
+            else
+              match T, E₂ with
+              | some T', some E' => some (DInterval.hull T' E')
+              | _, _ => none
+        | none => none,
+       [C] ++ tt ++ te)
+  | .add e₁ e₂ =>
+      let (I₁, t₁) := domTable box e₁
+      let (I₂, t₂) := domTable box e₂
+      (match I₁, I₂ with
+        | some I, some J => some (I.add J)
+        | _, _ => none,
+       t₁ ++ t₂)
+  | .sub e₁ e₂ =>
+      let (I₁, t₁) := domTable box e₁
+      let (I₂, t₂) := domTable box e₂
+      (match I₁, I₂ with
+        | some I, some J => some (I.sub J)
+        | _, _ => none,
+       t₁ ++ t₂)
+  | .mul e₁ e₂ =>
+      let (I₁, t₁) := domTable box e₁
+      let (I₂, t₂) := domTable box e₂
+      (match I₁, I₂ with
+        | some I, some J => some (I.mul J)
+        | _, _ => none,
+       t₁ ++ t₂)
+  | .div e₁ e₂ out =>
+      let (I₁, t₁) := domTable box e₁
+      let (I₂, t₂) := domTable box e₂
+      (match I₁, I₂ with
+        | some I, some J => DInterval.div I J out
+        | _, _ => none,
+       [I₂] ++ t₁ ++ t₂)
+  | .sqrt e s₁ s₂ =>
+      let (I, t) := domTable box e
+      (match I with
+        | some I' =>
+            match Dyadic.sqrtI I'.lo s₁, Dyadic.sqrtI I'.hi s₂ with
+            | some Jl, some Jh => some ⟨Jl.lo, Jh.hi⟩
+            | _, _ => none
+        | none => none,
+       [I] ++ t)
+  | .trans k e N out =>
+      let (I, t) := domTable box e
+      (match I with
+        | some I' => transOn k I' N out
+        | none => none,
+       t)
+
+/-- `domTable` head-shape driver equations (for `rw`; see `domEvals_*`). -/
+theorem domTable_ite {n : ℕ} (box : Fin n → DInterval) (c t e : IExpr n) :
+    domTable box (.ite c t e)
+      = let C := c.eval box
+        let (T, tt) := domTable box t
+        let (E₂, te) := domTable box e
+        (match C with
+          | some C' =>
+              if C'.hi.isNeg then T
+              else if C'.lo.isNN then E₂
+              else
+                match T, E₂ with
+                | some T', some E' => some (DInterval.hull T' E')
+                | _, _ => none
+          | none => none,
+         [C] ++ tt ++ te) := rfl
+
+theorem domTable_add {n : ℕ} (box : Fin n → DInterval) (e₁ e₂ : IExpr n) :
+    domTable box (.add e₁ e₂)
+      = let (I₁, t₁) := domTable box e₁
+        let (I₂, t₂) := domTable box e₂
+        (match I₁, I₂ with
+          | some I, some J => some (I.add J)
+          | _, _ => none,
+         t₁ ++ t₂) := rfl
+
+theorem domTable_sub {n : ℕ} (box : Fin n → DInterval) (e₁ e₂ : IExpr n) :
+    domTable box (.sub e₁ e₂)
+      = let (I₁, t₁) := domTable box e₁
+        let (I₂, t₂) := domTable box e₂
+        (match I₁, I₂ with
+          | some I, some J => some (I.sub J)
+          | _, _ => none,
+         t₁ ++ t₂) := rfl
+
+theorem domTable_mul {n : ℕ} (box : Fin n → DInterval) (e₁ e₂ : IExpr n) :
+    domTable box (.mul e₁ e₂)
+      = let (I₁, t₁) := domTable box e₁
+        let (I₂, t₂) := domTable box e₂
+        (match I₁, I₂ with
+          | some I, some J => some (I.mul J)
+          | _, _ => none,
+         t₁ ++ t₂) := rfl
+
+theorem domTable_div {n : ℕ} (box : Fin n → DInterval) (e₁ e₂ : IExpr n) (out : Int) :
+    domTable box (.div e₁ e₂ out)
+      = let (I₁, t₁) := domTable box e₁
+        let (I₂, t₂) := domTable box e₂
+        (match I₁, I₂ with
+          | some I, some J => DInterval.div I J out
+          | _, _ => none,
+         [I₂] ++ t₁ ++ t₂) := rfl
+
+theorem domTable_sqrt {n : ℕ} (box : Fin n → DInterval) (e : IExpr n) (s₁ s₂ : Int) :
+    domTable box (.sqrt e s₁ s₂)
+      = let (I, t) := domTable box e
+        (match I with
+          | some I' =>
+              match Dyadic.sqrtI I'.lo s₁, Dyadic.sqrtI I'.hi s₂ with
+              | some Jl, some Jh => some ⟨Jl.lo, Jh.hi⟩
+              | _, _ => none
+          | none => none,
+         [I] ++ t) := rfl
+
+theorem domTable_trans {n : ℕ} (box : Fin n → DInterval) (k : TKind) (e : IExpr n)
+    (N : ℕ) (out : Int) :
+    domTable box (.trans k e N out)
+      = let (I, t) := domTable box e
+        (match I with
+          | some I' => transOn k I' N out
+          | none => none,
+         t) := rfl
+
+/-- `domTable`'s value component, one step (same matcher as the def). -/
+theorem domTable_ite_fst {n : ℕ} (box : Fin n → DInterval) (c t e : IExpr n) :
+    (domTable box (.ite c t e)).1
+      = match c.eval box with
+        | some C' =>
+            if C'.hi.isNeg then (domTable box t).1
+            else if C'.lo.isNN then (domTable box e).1
+            else
+              match (domTable box t).1, (domTable box e).1 with
+              | some T', some E' => some (DInterval.hull T' E')
+              | _, _ => none
+        | none => none := rfl
+
+theorem domTable_add_fst {n : ℕ} (box : Fin n → DInterval) (e₁ e₂ : IExpr n) :
+    (domTable box (.add e₁ e₂)).1
+      = match (domTable box e₁).1, (domTable box e₂).1 with
+        | some I, some J => some (I.add J)
+        | _, _ => none := rfl
+
+theorem domTable_sub_fst {n : ℕ} (box : Fin n → DInterval) (e₁ e₂ : IExpr n) :
+    (domTable box (.sub e₁ e₂)).1
+      = match (domTable box e₁).1, (domTable box e₂).1 with
+        | some I, some J => some (I.sub J)
+        | _, _ => none := rfl
+
+theorem domTable_mul_fst {n : ℕ} (box : Fin n → DInterval) (e₁ e₂ : IExpr n) :
+    (domTable box (.mul e₁ e₂)).1
+      = match (domTable box e₁).1, (domTable box e₂).1 with
+        | some I, some J => some (I.mul J)
+        | _, _ => none := rfl
+
+theorem domTable_div_fst {n : ℕ} (box : Fin n → DInterval) (e₁ e₂ : IExpr n) (out : Int) :
+    (domTable box (.div e₁ e₂ out)).1
+      = match (domTable box e₁).1, (domTable box e₂).1 with
+        | some I, some J => DInterval.div I J out
+        | _, _ => none := rfl
+
+theorem domTable_sqrt_fst {n : ℕ} (box : Fin n → DInterval) (e : IExpr n) (s₁ s₂ : Int) :
+    (domTable box (.sqrt e s₁ s₂)).1
+      = match (domTable box e).1 with
+        | some I' =>
+            match Dyadic.sqrtI I'.lo s₁, Dyadic.sqrtI I'.hi s₂ with
+            | some Jl, some Jh => some ⟨Jl.lo, Jh.hi⟩
+            | _, _ => none
+        | none => none := rfl
+
+theorem domTable_trans_fst {n : ℕ} (box : Fin n → DInterval) (k : TKind) (e : IExpr n)
+    (N : ℕ) (out : Int) :
+    (domTable box (.trans k e N out)).1
+      = match (domTable box e).1 with
+        | some I' => transOn k I' N out
+        | none => none := rfl
+
+/-- `IExpr.eval`, one step per head constructor (same matcher as the
+def) - the rewrites that keep every unfold one-step and matcher-aligned
+with the `domTable_*_fst` equations. -/
+theorem eval_ite_eq {n : ℕ} (box : Fin n → DInterval) (c t e : IExpr n) :
+    (IExpr.ite c t e).eval box
+      = match c.eval box with
+        | some C =>
+            if C.hi.isNeg then t.eval box
+            else if C.lo.isNN then e.eval box
+            else
+              match t.eval box, e.eval box with
+              | some T, some E => some (DInterval.hull T E)
+              | _, _ => none
+        | none => none := rfl
+
+theorem eval_add_eq {n : ℕ} (box : Fin n → DInterval) (e₁ e₂ : IExpr n) :
+    (IExpr.add e₁ e₂).eval box
+      = match e₁.eval box, e₂.eval box with
+        | some I, some J => some (I.add J)
+        | _, _ => none := rfl
+
+theorem eval_sub_eq {n : ℕ} (box : Fin n → DInterval) (e₁ e₂ : IExpr n) :
+    (IExpr.sub e₁ e₂).eval box
+      = match e₁.eval box, e₂.eval box with
+        | some I, some J => some (I.sub J)
+        | _, _ => none := rfl
+
+theorem eval_mul_eq {n : ℕ} (box : Fin n → DInterval) (e₁ e₂ : IExpr n) :
+    (IExpr.mul e₁ e₂).eval box
+      = match e₁.eval box, e₂.eval box with
+        | some I, some J => some (I.mul J)
+        | _, _ => none := rfl
+
+theorem eval_div_eq {n : ℕ} (box : Fin n → DInterval) (e₁ e₂ : IExpr n) (out : Int) :
+    (IExpr.div e₁ e₂ out).eval box
+      = match e₁.eval box, e₂.eval box with
+        | some I, some J => DInterval.div I J out
+        | _, _ => none := rfl
+
+theorem eval_sqrt_eq {n : ℕ} (box : Fin n → DInterval) (e : IExpr n) (s₁ s₂ : Int) :
+    (IExpr.sqrt e s₁ s₂).eval box
+      = match e.eval box with
+        | some I =>
+            match Dyadic.sqrtI I.lo s₁, Dyadic.sqrtI I.hi s₂ with
+            | some Jl, some Jh => some ⟨Jl.lo, Jh.hi⟩
+            | _, _ => none
+        | none => none := rfl
+
+theorem eval_trans_eq {n : ℕ} (box : Fin n → DInterval) (k : TKind) (e : IExpr n)
+    (N : ℕ) (out : Int) :
+    (IExpr.trans k e N out).eval box
+      = match e.eval box with
+        | some I => transOn k I N out
+        | none => none := rfl
+
+/-- **`domTable` is an exact `IExpr.eval` mirror**: the threaded value is
+the node's plain-interval eval and the collected table is the `domEvals`
+spec list.  This is the bridge that lets stage B bake `domTable`'s
+single-pass table while the theory reasons about `domEvals` (and it makes
+the baked-table check `T = (domTable box e).2` the O(n) kernel reduction
+the v2 design needs - `domEvals` itself re-evaluates subtrees and is spec
+only). -/
+theorem domTable_correct {n : ℕ} (box : Fin n → DInterval) (e : IExpr n) :
+    (domTable box e).1 = e.eval box ∧ (domTable box e).2 = domEvals box e := by
+  induction e with
+  | const d => exact ⟨rfl, rfl⟩
+  | var i => exact ⟨rfl, rfl⟩
+  | neg a ih =>
+      refine ⟨?_, ?_⟩
+      · show (domTable box a).1.map DInterval.neg = (a.eval box).map DInterval.neg
+        rw [ih.1]
+      · simpa only [domTable, domEvals] using ih.2
+  | abs a ih =>
+      refine ⟨?_, ?_⟩
+      · show (domTable box a).1.map DInterval.abs = (a.eval box).map DInterval.abs
+        rw [ih.1]
+      · simpa only [domTable, domEvals] using ih.2
+  | ite c a b ihc iha ihb =>
+      refine ⟨?_, ?_⟩
+      · rw [domTable_ite_fst, eval_ite_eq, iha.1, ihb.1]
+      · simp only [domTable, domEvals, List.append_assoc, iha.2, ihb.2]
+  | add a b iha ihb =>
+      refine ⟨?_, ?_⟩
+      · rw [domTable_add_fst, eval_add_eq, iha.1, ihb.1]
+      · simp only [domTable, domEvals, iha.2, ihb.2]
+  | sub a b iha ihb =>
+      refine ⟨?_, ?_⟩
+      · rw [domTable_sub_fst, eval_sub_eq, iha.1, ihb.1]
+      · simp only [domTable, domEvals, iha.2, ihb.2]
+  | mul a b iha ihb =>
+      refine ⟨?_, ?_⟩
+      · rw [domTable_mul_fst, eval_mul_eq, iha.1, ihb.1]
+      · simp only [domTable, domEvals, iha.2, ihb.2]
+  | div a b out iha ihb =>
+      refine ⟨?_, ?_⟩
+      · rw [domTable_div_fst, eval_div_eq, iha.1, ihb.1]
+      · simp only [domTable, domEvals, List.cons_append, List.append_assoc,
+          iha.1, ihb.1, iha.2, ihb.2]
+  | sqrt a s₁ s₂ ih =>
+      refine ⟨?_, ?_⟩
+      · rw [domTable_sqrt_fst, eval_sqrt_eq, ih.1]
+      · simp only [domTable, domEvals, List.cons_append, ih.1, ih.2]
+  | trans k a N out ih =>
+      refine ⟨?_, ?_⟩
+      · rw [domTable_trans_fst, eval_trans_eq, ih.1]
+      · simpa only [domTable, domEvals] using ih.2
+
+/-- The pure table consumer: walks `e` against the witness table, checking
+every domain condition from the table alone - no interval arithmetic.
+Returns the unconsumed suffix, or `none` on a failed check or a short
+table. -/
+def domByTable {n : ℕ} :
+    IExpr n → List (Option DInterval) → Option (List (Option DInterval))
+  | .const _, t => some t
+  | .var _, t => some t
+  | .neg e, t => domByTable e t
+  | .abs e, t => domByTable e t
+  | .add e₁ e₂, t =>
+      match domByTable e₁ t with
+      | some t' => domByTable e₂ t'
+      | none => none
+  | .sub e₁ e₂, t =>
+      match domByTable e₁ t with
+      | some t' => domByTable e₂ t'
+      | none => none
+  | .mul e₁ e₂, t =>
+      match domByTable e₁ t with
+      | some t' => domByTable e₂ t'
+      | none => none
+  | .div _e₁ _e₂ _, [] => none
+  | .div e₁ e₂ _, J :: rest =>
+      if optCert J (fun J' => J'.hi.isNeg || J'.lo.isPos) then
+        match domByTable e₁ rest with
+        | some rest' => domByTable e₂ rest'
+        | none => none
+      else none
+  | .sqrt _e _ _, [] => none
+  | .sqrt e _ _, I :: rest =>
+      if optCert I (fun I' => I'.lo.isPos) then domByTable e rest else none
+  | .trans _ e _ _, t => domByTable e t
+  | .ite _c _t _e, [] => none
+  | .ite _c t e, C :: rest =>
+      if optCert C (fun C' => C'.hi.isNeg || C'.lo.isNN) then
+        match domByTable t rest with
+        | some rest' => domByTable e rest'
+        | none => none
+      else none
+
+/-- `domByTable` head-shape driver equations (for `rw`). -/
+theorem domByTable_add {n : ℕ} (e₁ e₂ : IExpr n) (t : List (Option DInterval)) :
+    domByTable (.add e₁ e₂) t
+      = match domByTable e₁ t with
+        | some t' => domByTable e₂ t'
+        | none => none := rfl
+
+theorem domByTable_sub {n : ℕ} (e₁ e₂ : IExpr n) (t : List (Option DInterval)) :
+    domByTable (.sub e₁ e₂) t
+      = match domByTable e₁ t with
+        | some t' => domByTable e₂ t'
+        | none => none := rfl
+
+theorem domByTable_mul {n : ℕ} (e₁ e₂ : IExpr n) (t : List (Option DInterval)) :
+    domByTable (.mul e₁ e₂) t
+      = match domByTable e₁ t with
+        | some t' => domByTable e₂ t'
+        | none => none := rfl
+
+theorem domByTable_div_nil {n : ℕ} (e₁ e₂ : IExpr n) (out : Int) :
+    domByTable (.div e₁ e₂ out) [] = none := rfl
+
+theorem domByTable_div_cons {n : ℕ} (e₁ e₂ : IExpr n) (out : Int)
+    (J : Option DInterval) (rest : List (Option DInterval)) :
+    domByTable (.div e₁ e₂ out) (J :: rest)
+      = if optCert J (fun J' => J'.hi.isNeg || J'.lo.isPos) then
+          match domByTable e₁ rest with
+          | some rest' => domByTable e₂ rest'
+          | none => none
+        else none := rfl
+
+theorem domByTable_sqrt_nil {n : ℕ} (e : IExpr n) (s₁ s₂ : Int) :
+    domByTable (.sqrt e s₁ s₂) [] = none := rfl
+
+theorem domByTable_sqrt_cons {n : ℕ} (e : IExpr n) (s₁ s₂ : Int)
+    (I : Option DInterval) (rest : List (Option DInterval)) :
+    domByTable (.sqrt e s₁ s₂) (I :: rest)
+      = if optCert I (fun I' => I'.lo.isPos) then domByTable e rest else none := rfl
+
+theorem domByTable_ite_nil {n : ℕ} (c t e : IExpr n) :
+    domByTable (.ite c t e) [] = none := rfl
+
+theorem domByTable_ite_cons {n : ℕ} (c t e : IExpr n)
+    (C : Option DInterval) (rest : List (Option DInterval)) :
+    domByTable (.ite c t e) (C :: rest)
+      = if optCert C (fun C' => C'.hi.isNeg || C'.lo.isNN) then
+          match domByTable t rest with
+          | some rest' => domByTable e rest'
+          | none => none
+        else none := rfl
+
+/-! ### Consumer bookkeeping
+
+The three facts the bridge needs: a successful consumption never grows
+the list, leaves a genuine suffix `t.drop k` with the EXACT length
+account `r.length + k = t.length`, and consumes exactly the expression's
+own witness count. -/
+
+/-- Dropping within the head of a cons. -/
+theorem dom_drop_cons_succ {α : Type} (a : α) (l : List α) (k : ℕ) :
+    (a :: l).drop (k + 1) = l.drop k := rfl
+
+/-- A successful consumption leaves a genuine suffix with exact length
+accounting: `r = t.drop k` and `r.length + k = t.length`. -/
+theorem domByTable_drop_len {n : ℕ} (e : IExpr n) :
+    ∀ t r : List (Option DInterval), domByTable e t = some r →
+      ∃ k, r = t.drop k ∧ r.length + k = t.length := by
+  induction e with
+  | const d =>
+      intro t r h
+      simp only [domByTable, Option.some.injEq] at h
+      refine ⟨0, ?_, ?_⟩
+      · rw [List.drop_zero]; exact h.symm
+      · rw [h]; simp
+  | var i =>
+      intro t r h
+      simp only [domByTable, Option.some.injEq] at h
+      refine ⟨0, ?_, ?_⟩
+      · rw [List.drop_zero]; exact h.symm
+      · rw [h]; simp
+  | neg a ih => intro t r h; obtain ⟨k, hk, hl⟩ := ih t r h; exact ⟨k, hk, hl⟩
+  | abs a ih => intro t r h; obtain ⟨k, hk, hl⟩ := ih t r h; exact ⟨k, hk, hl⟩
+  | add a b iha ihb =>
+      intro t r h
+      rw [domByTable_add] at h
+      split at h
+      · rename_i t' ht'
+        obtain ⟨k₁, hk₁, hl₁⟩ := iha t t' ht'
+        obtain ⟨k₂, hk₂, hl₂⟩ := ihb t' r h
+        exact ⟨k₁ + k₂, by rw [hk₂, hk₁, List.drop_drop], by omega⟩
+      · exact absurd h (by simp)
+  | sub a b iha ihb =>
+      intro t r h
+      rw [domByTable_sub] at h
+      split at h
+      · rename_i t' ht'
+        obtain ⟨k₁, hk₁, hl₁⟩ := iha t t' ht'
+        obtain ⟨k₂, hk₂, hl₂⟩ := ihb t' r h
+        exact ⟨k₁ + k₂, by rw [hk₂, hk₁, List.drop_drop], by omega⟩
+      · exact absurd h (by simp)
+  | mul a b iha ihb =>
+      intro t r h
+      rw [domByTable_mul] at h
+      split at h
+      · rename_i t' ht'
+        obtain ⟨k₁, hk₁, hl₁⟩ := iha t t' ht'
+        obtain ⟨k₂, hk₂, hl₂⟩ := ihb t' r h
+        exact ⟨k₁ + k₂, by rw [hk₂, hk₁, List.drop_drop], by omega⟩
+      · exact absurd h (by simp)
+  | div a b out iha ihb =>
+      intro t r h
+      cases t with
+      | nil => rw [domByTable_div_nil] at h; exact absurd h (by simp)
+      | cons J rest =>
+          rw [domByTable_div_cons] at h
+          split at h
+          · rename_i hcond
+            split at h
+            · rename_i t' ht'
+              obtain ⟨k₁, hk₁, hl₁⟩ := iha rest t' ht'
+              obtain ⟨k₂, hk₂, hl₂⟩ := ihb t' r h
+              refine ⟨k₁ + k₂ + 1, ?_, ?_⟩
+              · rw [hk₂, hk₁, List.drop_drop, dom_drop_cons_succ]
+              · simp only [List.length_cons]
+                omega
+            · exact absurd h (by simp)
+          · exact absurd h (by simp)
+  | sqrt a s₁ s₂ ih =>
+      intro t r h
+      cases t with
+      | nil => rw [domByTable_sqrt_nil] at h; exact absurd h (by simp)
+      | cons I rest =>
+          rw [domByTable_sqrt_cons] at h
+          split at h
+          · obtain ⟨k, hk, hl⟩ := ih rest r h
+            refine ⟨k + 1, ?_, ?_⟩
+            · rw [hk, dom_drop_cons_succ]
+            · simp only [List.length_cons]
+              omega
+          · exact absurd h (by simp)
+  | trans k a N out ih => intro t r h; obtain ⟨k', hk', hl'⟩ := ih t r h; exact ⟨k', hk', hl'⟩
+  | ite c a b ihc iha ihb =>
+      intro t r h
+      cases t with
+      | nil => rw [domByTable_ite_nil] at h; exact absurd h (by simp)
+      | cons C rest =>
+          rw [domByTable_ite_cons] at h
+          split at h
+          · rename_i hcond
+            split at h
+            · rename_i t' ht'
+              obtain ⟨k₁, hk₁, hl₁⟩ := iha rest t' ht'
+              obtain ⟨k₂, hk₂, hl₂⟩ := ihb t' r h
+              refine ⟨k₁ + k₂ + 1, ?_, ?_⟩
+              · rw [hk₂, hk₁, List.drop_drop, dom_drop_cons_succ]
+              · simp only [List.length_cons]
+                omega
+            · exact absurd h (by simp)
+          · exact absurd h (by simp)
+
+/-- A successful consumption consumes exactly the expression's own
+witness count. -/
+theorem domByTable_length_eq {n : ℕ} (box : Fin n → DInterval) (e : IExpr n) :
+    ∀ t r : List (Option DInterval), domByTable e t = some r →
+      r.length + (domEvals box e).length = t.length := by
+  induction e with
+  | const d =>
+      intro t r h
+      simp only [domByTable, Option.some.injEq] at h
+      rw [h]
+      simp [domEvals]
+  | var i =>
+      intro t r h
+      simp only [domByTable, Option.some.injEq] at h
+      rw [h]
+      simp [domEvals]
+  | neg a ih => intro t r h; simpa only [domByTable, domEvals] using ih t r h
+  | abs a ih => intro t r h; simpa only [domByTable, domEvals] using ih t r h
+  | add a b iha ihb =>
+      intro t r h
+      rw [domByTable_add] at h
+      split at h
+      · rename_i t' ht'
+        have h1 := iha t t' ht'
+        have h2 := ihb t' r h
+        simp only [domEvals, List.length_append] at h1 h2 ⊢
+        omega
+      · exact absurd h (by simp)
+  | sub a b iha ihb =>
+      intro t r h
+      rw [domByTable_sub] at h
+      split at h
+      · rename_i t' ht'
+        have h1 := iha t t' ht'
+        have h2 := ihb t' r h
+        simp only [domEvals, List.length_append] at h1 h2 ⊢
+        omega
+      · exact absurd h (by simp)
+  | mul a b iha ihb =>
+      intro t r h
+      rw [domByTable_mul] at h
+      split at h
+      · rename_i t' ht'
+        have h1 := iha t t' ht'
+        have h2 := ihb t' r h
+        simp only [domEvals, List.length_append] at h1 h2 ⊢
+        omega
+      · exact absurd h (by simp)
+  | div a b out iha ihb =>
+      intro t r h
+      cases t with
+      | nil => rw [domByTable_div_nil] at h; exact absurd h (by simp)
+      | cons J rest =>
+          rw [domByTable_div_cons] at h
+          split at h
+          · rename_i hcond
+            split at h
+            · rename_i t' ht'
+              have h1 := iha rest t' ht'
+              have h2 := ihb t' r h
+              simp only [domEvals, List.cons_append, List.nil_append,
+                List.length_cons, List.length_append] at h1 h2 ⊢
+              omega
+            · exact absurd h (by simp)
+          · exact absurd h (by simp)
+  | sqrt a s₁ s₂ ih =>
+      intro t r h
+      cases t with
+      | nil => rw [domByTable_sqrt_nil] at h; exact absurd h (by simp)
+      | cons I rest =>
+          rw [domByTable_sqrt_cons] at h
+          split at h
+          · have h1 := ih rest r h
+            simp only [domEvals, List.cons_append, List.nil_append,
+              List.length_cons, List.length_append] at h1 ⊢
+            omega
+          · exact absurd h (by simp)
+  | trans k a N out ih => intro t r h; simpa only [domByTable, domEvals] using ih t r h
+  | ite c a b ihc iha ihb =>
+      intro t r h
+      cases t with
+      | nil => rw [domByTable_ite_nil] at h; exact absurd h (by simp)
+      | cons C rest =>
+          rw [domByTable_ite_cons] at h
+          split at h
+          · rename_i hcond
+            split at h
+            · rename_i t' ht'
+              have h1 := iha rest t' ht'
+              have h2 := ihb t' r h
+              simp only [domEvals, List.cons_append, List.nil_append,
+                List.length_cons, List.length_append] at h1 h2 ⊢
+              omega
+            · exact absurd h (by simp)
+          · exact absurd h (by simp)
+
+/-- The one-step bridge: if `e` consumed its own table segment out of
+`domEvals box e ++ X` and left `mid`, then `mid` is exactly `X` (the
+consumer is table-exact, never short or long). -/
+theorem dom_mid_eq {n : ℕ} {box : Fin n → DInterval} {e : IExpr n}
+    {X mid : List (Option DInterval)}
+    (h : domByTable e (domEvals box e ++ X) = some mid) :
+    mid = X := by
+  obtain ⟨k, hk, hkl⟩ := domByTable_drop_len e (domEvals box e ++ X) mid h
+  have hl := domByTable_length_eq box e (domEvals box e ++ X) mid h
+  simp only [List.length_append] at hkl hl
+  have hkeq : k = (domEvals box e).length := by omega
+  rw [hk, hkeq, List.drop_append]
+  simp
+
+/-- `optCert` respects extensionally equal predicates. -/
+theorem optCert_congr {α : Type} {o : Option α} {k₁ k₂ : α → Bool}
+    (h : ∀ a, k₁ a = k₂ a) : optCert o k₁ = optCert o k₂ := by
+  cases o with
+  | none => rfl
+  | some a => simp only [optCert_of_some, h]
+
+/-- **The v2 bridge**: if the pure consumer accepts `e` against its own
+witness table (plus any suffix), then `domByInterval box e` is true -
+every domain condition the recursive definition checks is decided by a
+table entry that is exactly the kernel-computed witness. -/
+theorem domByInterval_of_domByTable {n : ℕ} (box : Fin n → DInterval) (e : IExpr n) :
+    ∀ t : List (Option DInterval),
+      domByTable e (domEvals box e ++ t) = some t →
+      domByInterval box e = true := by
+  induction e with
+  | const d => intro t _; rfl
+  | var i => intro t _; rfl
+  | neg a ih => intro t h; exact ih t h
+  | abs a ih => intro t h; exact ih t h
+  | ite c a b ihc iha ihb =>
+      intro t h
+      rw [domEvals_ite, List.cons_append, List.append_assoc, domByTable_ite_cons] at h
+      split at h
+      · rename_i hcond
+        split at h
+        · rename_i mid hm
+          have hmeq : mid = domEvals box b ++ t := dom_mid_eq hm
+          rw [hmeq] at hm h
+          have h1 := iha (domEvals box b ++ t) hm
+          have h2 := ihb t h
+          exact Eq.trans (optCert_congr fun J => by rw [h1, h2]; simp) hcond
+        · exact absurd h (by simp)
+      · exact absurd h (by simp)
+  | add a b iha ihb =>
+      intro t h
+      rw [domEvals_add, List.append_assoc, domByTable_add] at h
+      split at h
+      · rename_i mid hm
+        have hmeq : mid = domEvals box b ++ t := dom_mid_eq hm
+        rw [hmeq] at hm h
+        have h1 := iha (domEvals box b ++ t) hm
+        have h2 := ihb t h
+        exact (Bool.and_eq_true _ _).mpr ⟨h1, h2⟩
+      · exact absurd h (by simp)
+  | sub a b iha ihb =>
+      intro t h
+      rw [domEvals_sub, List.append_assoc, domByTable_sub] at h
+      split at h
+      · rename_i mid hm
+        have hmeq : mid = domEvals box b ++ t := dom_mid_eq hm
+        rw [hmeq] at hm h
+        have h1 := iha (domEvals box b ++ t) hm
+        have h2 := ihb t h
+        exact (Bool.and_eq_true _ _).mpr ⟨h1, h2⟩
+      · exact absurd h (by simp)
+  | mul a b iha ihb =>
+      intro t h
+      rw [domEvals_mul, List.append_assoc, domByTable_mul] at h
+      split at h
+      · rename_i mid hm
+        have hmeq : mid = domEvals box b ++ t := dom_mid_eq hm
+        rw [hmeq] at hm h
+        have h1 := iha (domEvals box b ++ t) hm
+        have h2 := ihb t h
+        exact (Bool.and_eq_true _ _).mpr ⟨h1, h2⟩
+      · exact absurd h (by simp)
+  | div a b out iha ihb =>
+      intro t h
+      rw [domEvals_div, List.cons_append, List.append_assoc, domByTable_div_cons] at h
+      split at h
+      · rename_i hcond
+        split at h
+        · rename_i mid hm
+          have hmeq : mid = domEvals box b ++ t := dom_mid_eq hm
+          rw [hmeq] at hm h
+          have h1 := iha (domEvals box b ++ t) hm
+          have h2 := ihb t h
+          exact Eq.trans (optCert_congr fun J => by rw [h1, h2]; simp) hcond
+        · exact absurd h (by simp)
+      · exact absurd h (by simp)
+  | sqrt a s₁ s₂ ih =>
+      intro t h
+      rw [domEvals_sqrt, List.cons_append, domByTable_sqrt_cons] at h
+      split at h
+      · rename_i hcond
+        have h1 := ih t h
+        exact Eq.trans (optCert_congr fun J => by rw [h1]; simp) hcond
+      · exact absurd h (by simp)
+  | trans k a N out ih =>
+      intro t h; exact ih t h
+
+/-- **The v2 discharge**: a baked witness table certifies `DomOK` when
+(a) it is exactly the kernel-computed single-pass table - one O(n)
+`decide`, and (b) the pure consumer accepts it - one O(n) `decide`.  A
+wrong pipeline-baked table can only fail one of the two decides, never
+pass; the soundness core is `domOK_of_domByInterval`, reused verbatim. -/
+theorem domOK_of_domByIntervalTable {n : ℕ} (box : Fin n → DInterval) (e : IExpr n)
+    (T : List (Option DInterval)) (hT : T = (domTable box e).2)
+    (hok : domByTable e T = some []) : DomOK box e := by
+  have hspec := (domTable_correct box e).2
+  refine domOK_of_domByInterval box e
+    (domByInterval_of_domByTable box e [] ?_)
+  rw [← hspec, ← hT, List.append_nil]
+  exact hok
+
 /-! ## abs elimination rewrite facts -/
 
 /-- `|u| = u` at every point where `u > 0` (the emitter's abs-elimination

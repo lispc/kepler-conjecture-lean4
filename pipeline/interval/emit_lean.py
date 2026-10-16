@@ -2809,10 +2809,19 @@ def mono_lean_main(case, cid, n, args, mono_json, pad_bits=None):
 # nested sqrts bottom-up; valid on every subtree by monotone narrowing) and
 # (b) probes every certificate the tree needs — `tmHullLeafProbe` on
 # `IExpr.derivExpr E j` (restrict dims, on the node box) and on `E` (leaves).
+# It also prints one `DOM <nid> <entries>` line per restrict node: the node's
+# DomOK v2 witness table, computed compiled-side by `Kepler.Interval.MonoTree`'s
+# single-pass `domTable` (entries `(lo_m,lo_e,hi_m,hi_e)` or `N` for `none`).
 # Stage B bakes the reported mantissa triples + template granularities into
-# `TMParams`, states the tree over `Kepler.Interval.MonoTree` and closes with
-# `monoTree_sound`.  All decides are kernel checks of exactly the emitted
-# data; wrong Python-side verdicts can only fail a decide, never pass.
+# `TMParams`, the DOM tables as `List (Option DInterval)` literals, states the
+# tree over `Kepler.Interval.MonoTree` and closes with `monoTree_sound`.  The
+# per-restrict `DomOK` discharge is `domOK_of_domByIntervalTable`: the baked
+# table must equal the kernel-recomputed `(domTable box E).2` AND be accepted
+# by the pure consumer `domByTable` — both one O(n) kernel `decide` (the old
+# `domOK_of_domByInterval` decide re-evaluated a full subtree interval at
+# every div/sqrt/ite node, O(n·depth), the sb12-heavy leaf's >67 min blowup).
+# All decides are kernel checks of exactly the emitted data; wrong Python-side
+# verdicts/tables can only fail a decide, never pass.
 # ---------------------------------------------------------------------------
 
 def _monotree_nodes(node, acc, path="T"):
@@ -2839,6 +2848,25 @@ def _monotree_sgn_lit(sgn):
     return ("![" + ", ".join(
         {"+": "some true", "-": "some false", None: "none"}[sg]
         for sg in sgn) + "]")
+
+
+def _monotree_collect_doms(node, acc):
+    """The restrict nodes in RPN order: (id, box) pairs needing a DomOK
+    v2 witness table (one stage-A `DOM` line each)."""
+    if node["kind"] == "restrict":
+        acc.append((node["id"], node["box"]))
+        _monotree_collect_doms(node["sub"], acc)
+    elif node["kind"] == "split":
+        _monotree_collect_doms(node["l"], acc)
+        _monotree_collect_doms(node["r"], acc)
+
+
+def _monotree_dom_entry_lit(entry):
+    """DOM entry -> `Option DInterval` literal text (`None` = `none`)."""
+    if entry is None:
+        return "none"
+    lm, le, hm, he = entry
+    return f"some \u27e8\u27e8{lm}, ({le})\u27e9, \u27e8{hm}, ({he})\u27e9\u27e9"
 
 
 def _monotree_collect_probes(node, acc):
@@ -2889,6 +2917,8 @@ def monotree_main(case, cid, n, args, spec, params_file):
     tree = spec["tree"]
     probes = []
     _monotree_collect_probes(tree, probes)
+    doms = []
+    _monotree_collect_doms(tree, doms)
     root_lit = _monotree_box_lit(root)
     g = f"({gran})"
     iv_rep = f"List.replicate 8000 \u27e8{gran}, {gran}, {gran}\u27e9"
@@ -2908,7 +2938,8 @@ def monotree_main(case, cid, n, args, spec, params_file):
         "    baked as `sbMs`.  All decides are kernel checks. -/\n"
         "import Kepler.Interval.CertTM\n"
         "import Kepler.Interval.MonoTree\n\n"
-        "set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n\n"
+        "set_option maxHeartbeats 0\nset_option maxRecDepth 1000000\n"
+        "set_option exponentiation.threshold 4096\n\n"
         "open Kepler.Interval\n\n"
         "/-- Local default (structural only). -/\n"
         "instance : Inhabited DInterval := \u27e8\u27e8\u27e80, 0\u27e9, "
@@ -2956,13 +2987,31 @@ def monotree_main(case, cid, n, args, spec, params_file):
             f"def probeBoxes : Array (Fin {n} \u2192 DInterval) := #["
             + boxes_lean + "]\n\n"
             f"def probeTags : Array String := #[{tags_lean}]\n\n"
-            "def main : List String \u2192 IO UInt32 := fun _ => do\n"
+            "/-- DomOK v2: one witness-table box per restrict node.  Stage A\n"
+            "prints `domTable box E`'s list per box; stage B bakes it as a\n"
+            "literal and the kernel re-derives it (mismatch = decide fail). -/\n"
+            + ((f"def domBoxes : Array (Fin {n} \u2192 DInterval) := #["
+                + ", ".join((f"({_monotree_box_lit(b)} : Fin {n} \u2192 DInterval)")
+                            for _, b in doms) + "]\n\n"
+                f"def domIds : Array String := #["
+                + ", ".join(f'"{nid}"' for nid, _ in doms) + "]\n\n")
+              if doms else "")
+            + "def main : List String \u2192 IO UInt32 := fun _ => do\n"
             "  let stdout \u2190 IO.getStdout\n"
             "  IO.println \"START\"\n"
             "  stdout.flush\n"
             "  IO.println s!\"FILL nsqrt={sbMs.length}\"\n"
             "  stdout.flush\n"
-            "  IO.println (\"MS \" ++ String.intercalate \",\"\n"
+            + (("  for i in [0:domBoxes.size] do\n"
+                "    let tbl := (domTable domBoxes[i]! E).2\n"
+                "    IO.println (s!\"DOM {domIds[i]!} \" ++\n"
+                "      String.intercalate \",\" (tbl.map fun o =>\n"
+                "        match o with\n"
+                "        | some I => s!\"({I.lo.m},{I.lo.e},{I.hi.m},{I.hi.e})\"\n"
+                "        | none => \"N\"))\n"
+                "    stdout.flush\n")
+              if doms else "")
+            + "  IO.println (\"MS \" ++ String.intercalate \",\"\n"
             "    (sbMs.map fun p => s!\"({p.1},{p.2})\"))\n"
             "  for i in [0:probeExprs.size] do\n"
             "    match tmHullLeafProbe probeExprs[i]! probeBoxes[i]! Ps with\n"
@@ -2978,16 +3027,31 @@ def monotree_main(case, cid, n, args, spec, params_file):
             "        stdout.flush\n"
             "  return 0\n")
         print(f"emit_lean: wrote {args[2]} (W8 mono-tree stage A: "
-              f"{len(probes)} probes; E0 static sqrt {nsq0}, div {ndiv0}, "
-              f"trans {ntrans0}; run `lake env lean --run {args[2]} > "
-              f"params.txt`)")
+              f"{len(probes)} probes + {len(doms)} DOM tables; E0 static "
+              f"sqrt {nsq0}, div {ndiv0}, trans {ntrans0}; run "
+              f"`lake env lean --run {args[2]} > params.txt`)")
         return
 
     # ---- stage B: parse the stage-A output ----
-    ms, verdicts = None, {}
+    ms, verdicts, doms = None, {}, {}
     for ln in open(params_file):
         ln = ln.strip()
-        if ln.startswith("MS"):
+        if ln.startswith("DOM"):
+            tk = ln.split()
+            if len(tk) < 2:
+                die(f"malformed DOM line: {ln[:80]}")
+            body = tk[2] if len(tk) > 2 else ""
+            entries = []
+            for tok in re.findall(r"\([^)]*\)|N", body):
+                if tok == "N":
+                    entries.append(None)
+                    continue
+                parts = tok[1:-1].split(",")
+                if len(parts) != 4:
+                    die(f"malformed DOM entry {tok!r} for {tk[1]}")
+                entries.append(tuple(int(v) for v in parts))
+            doms[tk[1]] = entries
+        elif ln.startswith("MS"):
             body = ln[2:].strip()
             if body.startswith("(") and body.endswith(")"):
                 body = body[1:-1]
@@ -3072,16 +3136,14 @@ def monotree_main(case, cid, n, args, spec, params_file):
             incr_body, decr_body = [], []
             for j in range(n):
                 if j in incr:
-                    incr_body.append(f"\u00b7 exact \u27e8{nid}_df{j}, rfl"
-                                     f"\u27e9")
-                    decr_body.append("\u00b7 exact Bool.noConfusion hj")
+                    incr_body.append(f"\u00b7 exact {nid}_df{j}")
+                    decr_body.append(f"\u00b7 simp [{nid}Sgn] at hj")
                 elif j in decr:
-                    incr_body.append("\u00b7 exact Bool.noConfusion hj")
-                    decr_body.append(f"\u00b7 exact \u27e8{nid}_df{j}, rfl"
-                                     f"\u27e9")
+                    incr_body.append(f"\u00b7 simp [{nid}Sgn] at hj")
+                    decr_body.append(f"\u00b7 exact {nid}_df{j}")
                 else:
-                    incr_body.append("\u00b7 exact Bool.noConfusion hj")
-                    decr_body.append("\u00b7 exact Bool.noConfusion hj")
+                    incr_body.append(f"\u00b7 simp [{nid}Sgn] at hj")
+                    decr_body.append(f"\u00b7 simp [{nid}Sgn] at hj")
             out.append(
                 f"theorem {nid}_incr : \u2200 j, {nid}Sgn j = some true "
                 f"\u2192\n    checkPosTMHull (IExpr.derivExpr E j) {nid}Box "
@@ -3096,9 +3158,26 @@ def monotree_main(case, cid, n, args, spec, params_file):
                 f"theorem {nid}_hwf : \u2200 j, {nid}Sgn j \u2260 none "
                 f"\u2192 ({nid}Box j).wf = true := by\n"
                 f"  intro j hj\n  fin_cases j <;> decide\n\n"
-                f"theorem {nid}_safe : E.derivSafe = true := by decide\n\n"
-                f"theorem {nid}_dom : DomOK {nid}Box E := "
-                f"domOK_of_domByInterval _ _ (by decide)\n")
+                f"theorem {nid}_safe : E.derivSafe = true := by decide\n\n")
+            # DomOK v2 (witness-table batch discharge): stage A computed the
+            # table compiled-side by `domTable`; stage B bakes it as a literal
+            # and the two kernel decides re-derive + consume it (O(n) each).
+            if nid not in doms:
+                die(f"no DOM line for restrict node {nid} — stale stage-A "
+                    "params (pre-DOM run); rerun emit_lean --mono-tree "
+                    "stage A")
+            entries = ", ".join(_monotree_dom_entry_lit(e) for e in doms[nid])
+            out.append(
+                f"/-- DomOK v2 witness table for restrict node {nid}: the\n"
+                f"    stage-A `domTable {nid}Box E` list ({len(doms[nid])}\n"
+                "    entries).  Honesty: the kernel re-derives the table from\n"
+                f"    `{nid}Box E` (`hT` decide) and the pure consumer accepts\n"
+                "    it (`hok` decide) — a baked-table bug can only fail a\n"
+                "    decide, never pass. -/\n"
+                f"def {nid}DomTable : List (Option DInterval) := [{entries}]\n\n"
+                f"theorem {nid}_dom : DomOK {nid}Box E :=\n"
+                f"  domOK_of_domByIntervalTable {nid}Box E {nid}DomTable\n"
+                f"    (by decide) (by decide)\n")
             return (f"(MonoTree.restrict {nid}Box {nid}Sgn {nid}Psd {nid}_hwf"
                     f" {nid}_incr {nid}_decr {nid}_safe {nid}_dom {sub_term})")
         if kind == "split":
