@@ -330,6 +330,25 @@ FILL-ROUND STATUS r8 (2026-10-13 收官波: 90 -> 89, RAD_PI_IMP_WEDGE4 转真):
     失败待查——纯 ℕ 数值等式全部 tactic 失败为本次新雷区候选；
     接续点 = 探针文件 /tmp/p4rpi/lean/Kepler/Text/P4rpiProbe.lean）。
 
+FILL-ROUND STATUS r9 (2026-10-16 wave: 87 -> 86, critical_weight_wtcount6_y 转真):
+  - `critical_weight_wtcount6_y` 转真（finisher 落地，P4rpiMini2 配方在克隆
+    /tmp/p4rpi 全程验证后移植）：新私件 `p25rpi_mem4`/`p25rpi_sub4`/
+    `p25rpi_mem6`/`p25rpi_wtcount6_core` 六步 `CARD_INSERT_INTER` 剥离，
+    ∉-合取项走 `simp only [nK, not_false_iff, and_true]`（`rw [nK]` 撞 False
+    陷阱），末尾 `unfold wtcount6Y wtcount3Y; split_ifs <;> omega` 收口；
+    六边链 ∩ 临界边集的集合等式由 16 分支枚举（对角支 `absurd rfl hpq`，
+    其余 `simp [Set.pair_eq_pair_iff, hu01..hu34]`；纯 rfl-梯子撞 subst
+    方向不定——新雷区候选）。
+  - r8 雷区「0+1+1+1+1+1+1 = 1+1+1+(1+1+1) 双侧为 6 却 rfl/omega/decide/
+    norm_num 全拒（疑卡死 mvar）」破解 = `congrArg` 绕开：`criticalWeight`
+    先 rfl-化为 `1 / ((criticalEdgeX …).ncard : ℝ)`，`rw` 集合等式后把
+    `ncard = wtcount6Y` 等式整只推过 `Nat.cast`——分式两侧的 ℕ 求和从不
+    展开，卡死 mvar 的数值 finisher 根本不被调用。
+  - 消费的具名记账兄弟：无新增（`CC_4_PROPS`/`LEAF_DOMAIN`/
+    `LEAF_RANK_SUC_INJ`/`critical_edgeX_critical_edge_y`/`BumpP4.MCELL4_EDGE`
+    均为在库件；`GG_MCELL_QUARTER` 的 hgw 消费位自动升零债）。
+    剩余裸 sorry = 86（计数口径：行首裸 `sorry`）。
+
 FILL-ROUND STATUS r7 (2026-10-13 wave: 97 -> 90, M4 车道批量装配·骨架式预消费)
   - 装配链 7 件转真（`cc_4_cc_ke4`→`cc_4_UL`→`CC_4_PROPS`→`cc_4_cc_cell`/
     `c_4_azim_mcell_dih_y`/`real_model_azim_c4`/`GG_MCELL_QUARTER`），全部
@@ -5481,7 +5500,129 @@ theorem critical_edgeX_critical_edge_y (V : Set V3) (X : Set V3) (u v : V3) :
     have hhl := HL_2 u v
     exact ⟨u, v, rfl, hmem, by linarith, by linarith⟩
 
-/-- HOL `critical_weight_wtcount6_y`. -/
+/-! ### critical_weight_wtcount6_y finisher（P4rpiMini2 配方，2026-10-16 落地）
+
+六步 `CARD_INSERT_INTER` 剥离把六边插入链交临界边集的 `ncard` 化成 `wtcount6Y`；
+∉-合取项走 `simp only [nK, not_false_iff, and_true]`（`rw [nK]` 撞 False 陷阱）；
+末尾 `unfold wtcount6Y wtcount3Y; split_ifs <;> omega` 收口。r8 雷区「0+1+…=
+1+1+1+(1+1+1) 双侧为 6 却 rfl/omega/decide/norm_num 全拒（疑卡死 mvar）」由
+`congrArg` 绕开：`1/` 分式两侧不展开 ℕ 求和，`criticalWeight` 化为 `ncard`-cast
+后把 `ncard = wtcount6Y` 等式整只推过 `Nat.cast`。 -/
+
+/-- 四元表成员枚举。 -/
+private theorem p25rpi_mem4 (u0 u1 : V3) (f : ℕ → V3) (i : ℕ) (z : V3)
+    (hz : z ∈ setOfList [u0, u1, f i, f (i + 1)]) :
+    z = u0 ∨ z = u1 ∨ z = f i ∨ z = f (i + 1) := by
+  simp only [setOfList, Set.mem_setOf_eq, List.mem_cons, List.not_mem_nil] at hz
+  rcases hz with h | h | h | h | h
+  · exact Or.inl h
+  · exact Or.inr (Or.inl h)
+  · exact Or.inr (Or.inr (Or.inl h))
+  · exact Or.inr (Or.inr (Or.inr h))
+  · exact h.elim
+
+/-- 二元 `{p, q}` 落在四点表内。 -/
+private theorem p25rpi_sub4 (u0 u1 : V3) (f : ℕ → V3) (i : ℕ) (p q : V3)
+    (hp4 : p = u0 ∨ p = u1 ∨ p = f i ∨ p = f (i + 1))
+    (hq4 : q = u0 ∨ q = u1 ∨ q = f i ∨ q = f (i + 1)) :
+    ({p, q} : Set V3) ⊆ setOfList [u0, u1, f i, f (i + 1)] := by
+  intro z hz
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+  rcases hz with rfl | rfl
+  · rcases hp4 with rfl | rfl | rfl | rfl <;> simp [setOfList]
+  · rcases hq4 with rfl | rfl | rfl | rfl <;> simp [setOfList]
+
+/-- 六条候选边成员 ⟺ `criticalEdgeY`（p, q 取遍四点表；`BumpP4.MCELL4_EDGE` +
+`critical_edgeX_critical_edge_y` 装配）。 -/
+private theorem p25rpi_mem6 (V : Set V3) (u0 u1 : V3) (f : ℕ → V3) (i : ℕ)
+    (hp : Packing V) (hs : saturated V)
+    (hcc4 : ccCell V [u0, u1, f i] = mcell4 V [u0, u1, f i, f (i + 1)])
+    (hnull : ¬ nullSet (ccCell V [u0, u1, f i]))
+    (hbar4 : barV V 3 [u0, u1, f i, f (i + 1)])
+    (p q : V3) (hp4 : p = u0 ∨ p = u1 ∨ p = f i ∨ p = f (i + 1))
+    (hq4 : q = u0 ∨ q = u1 ∨ q = f i ∨ q = f (i + 1)) (hpq : p ≠ q) :
+    (({p, q} : Set V3) ∈ criticalEdgeX V (ccCell V [u0, u1, f i]) ↔
+      criticalEdgeY (dist p q)) := by
+  have hnn4 : ¬ nullSet (mcell4 V [u0, u1, f i, f (i + 1)]) := by
+    rw [← hcc4]
+    exact hnull
+  rw [critical_edgeX_critical_edge_y V (ccCell V [u0, u1, f i]) p q]
+  refine ⟨fun h => h.2, fun hc => ⟨?_, hc⟩⟩
+  rw [hcc4]
+  exact (BumpP4.MCELL4_EDGE V [u0, u1, f i, f (i + 1)] p q hp hs hnn4 hbar4).mpr
+    ⟨hpq, p25rpi_sub4 u0 u1 f i p q hp4 hq4⟩
+
+/-- 临界边计数核心（P4rpiMini2 配方）：B 有限且六条候选边成员恰由
+`criticalEdgeY` 判定时，六边插入链交 B 的基数即 `wtcount6Y`。 -/
+private theorem p25rpi_wtcount6_core (B : Set (Set V3)) (u0 u1 : V3) (f : ℕ → V3)
+    (i : ℕ) (hB : B.Finite)
+    (hE0 : ({u0, u1} : Set V3) ∈ B ↔ criticalEdgeY (dist u0 u1))
+    (hE1 : ({u0, f i} : Set V3) ∈ B ↔ criticalEdgeY (dist u0 (f i)))
+    (hE2 : ({u0, f (i + 1)} : Set V3) ∈ B ↔ criticalEdgeY (dist u0 (f (i + 1))))
+    (hE3 : ({u1, f i} : Set V3) ∈ B ↔ criticalEdgeY (dist u1 (f i)))
+    (hE4 : ({u1, f (i + 1)} : Set V3) ∈ B ↔ criticalEdgeY (dist u1 (f (i + 1))))
+    (hE5 : ({f i, f (i + 1)} : Set V3) ∈ B ↔ criticalEdgeY (dist (f i) (f (i + 1))))
+    (h01 : u0 ≠ u1) (h02 : u0 ≠ f i) (h03 : u0 ≠ f (i + 1))
+    (h13 : u1 ≠ f i) (h14 : u1 ≠ f (i + 1)) (h34 : f i ≠ f (i + 1)) :
+    Set.ncard ((insert ({f i, f (i + 1)} : Set V3) (insert ({u1, f (i + 1)} : Set V3)
+      (insert ({u1, f i} : Set V3) (insert ({u0, f (i + 1)} : Set V3)
+        (insert ({u0, f i} : Set V3) (insert ({u0, u1} : Set V3)
+          (∅ : Set (Set V3)))))))) ∩ B) =
+      wtcount6Y (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
+        (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i)) := by
+  rw [CARD_INSERT_INTER ({f i, f (i + 1)} : Set V3)
+    (insert ({u1, f (i + 1)} : Set V3) (insert ({u1, f i} : Set V3)
+      (insert ({u0, f (i + 1)} : Set V3)
+        (insert ({u0, f i} : Set V3) (insert ({u0, u1} : Set V3) (∅ : Set (Set V3))))))) B hB]
+  rw [hE5]
+  have n5 : ({f i, f (i + 1)} : Set V3) ∉ (insert ({u1, f (i + 1)} : Set V3)
+      (insert ({u1, f i} : Set V3) (insert ({u0, f (i + 1)} : Set V3)
+        (insert ({u0, f i} : Set V3) (insert ({u0, u1} : Set V3) (∅ : Set (Set V3))))))) := by
+    simp [Set.pair_eq_pair_iff, ne_comm, eq_comm, h01, h02, h03, h13, h14, h34]
+  simp only [n5, not_false_iff, and_true]
+  rw [CARD_INSERT_INTER ({u1, f (i + 1)} : Set V3)
+    (insert ({u1, f i} : Set V3) (insert ({u0, f (i + 1)} : Set V3)
+      (insert ({u0, f i} : Set V3) (insert ({u0, u1} : Set V3) (∅ : Set (Set V3)))))) B hB]
+  rw [hE4]
+  have n4 : ({u1, f (i + 1)} : Set V3) ∉ (insert ({u1, f i} : Set V3)
+      (insert ({u0, f (i + 1)} : Set V3)
+        (insert ({u0, f i} : Set V3) (insert ({u0, u1} : Set V3) (∅ : Set (Set V3)))))) := by
+    simp [Set.pair_eq_pair_iff, ne_comm, eq_comm, h01, h02, h03, h13, h14, h34]
+  simp only [n4, not_false_iff, and_true]
+  rw [CARD_INSERT_INTER ({u1, f i} : Set V3)
+    (insert ({u0, f (i + 1)} : Set V3)
+      (insert ({u0, f i} : Set V3) (insert ({u0, u1} : Set V3) (∅ : Set (Set V3))))) B hB]
+  rw [hE3]
+  have n3 : ({u1, f i} : Set V3) ∉ (insert ({u0, f (i + 1)} : Set V3)
+      (insert ({u0, f i} : Set V3) (insert ({u0, u1} : Set V3) (∅ : Set (Set V3))))) := by
+    simp [Set.pair_eq_pair_iff, ne_comm, eq_comm, h01, h02, h03, h13, h14, h34]
+  simp only [n3, not_false_iff, and_true]
+  rw [CARD_INSERT_INTER ({u0, f (i + 1)} : Set V3)
+    (insert ({u0, f i} : Set V3) (insert ({u0, u1} : Set V3) (∅ : Set (Set V3)))) B hB]
+  rw [hE2]
+  have n2 : ({u0, f (i + 1)} : Set V3) ∉ (insert ({u0, f i} : Set V3)
+      (insert ({u0, u1} : Set V3) (∅ : Set (Set V3)))) := by
+    simp [Set.pair_eq_pair_iff, ne_comm, eq_comm, h01, h02, h03, h13, h14, h34]
+  simp only [n2, not_false_iff, and_true]
+  rw [CARD_INSERT_INTER ({u0, f i} : Set V3)
+    (insert ({u0, u1} : Set V3) (∅ : Set (Set V3))) B hB]
+  rw [hE1]
+  have n1 : ({u0, f i} : Set V3) ∉ (insert ({u0, u1} : Set V3) (∅ : Set (Set V3))) := by
+    simp [Set.pair_eq_pair_iff, ne_comm, eq_comm, h01, h02, h03, h13, h14, h34]
+  simp only [n1, not_false_iff, and_true]
+  rw [CARD_INSERT_INTER ({u0, u1} : Set V3) (∅ : Set (Set V3)) B hB]
+  rw [hE0]
+  have n0 : ({u0, u1} : Set V3) ∉ (∅ : Set (Set V3)) := by simp
+  simp only [n0, not_false_iff, and_true]
+  simp only [Set.empty_inter, Set.ncard_empty]
+  unfold wtcount6Y wtcount3Y
+  split_ifs <;> omega
+
+/-- HOL `critical_weight_wtcount6_y`.  2026-10-16 finisher 落地（P4rpiMini2
+配方克隆验证后移植）：`CC_4_PROPS` 供 `ccCell = mcell4`/非零测/`barV`/双叶，
+`LEAF_DOMAIN` + `LEAF_RANK_SUC_INJ` 供六点互异，`p25rpi_mem6` 供六对候选边
+成员 ⟺ `criticalEdgeY`，`p25rpi_wtcount6_core` 六步剥离计数；末步 `congrArg`
+把 `ncard = wtcount6Y` 等式整只推过 `Nat.cast`（绕开 ℕ 求和 finisher 雷区）。 -/
 theorem critical_weight_wtcount6_y (V : Set V3) (u0 u1 w0 : V3) (n : ℕ)
     (f : ℕ → V3) (i : ℕ) (hp : Packing V) (hs : saturated V)
     (hr : leaf_rank V [u0, u1] w0 n f) (hnc : ¬ Collinear3 u0 u1 w0) (hn : 1 < n)
@@ -5489,7 +5630,104 @@ theorem critical_weight_wtcount6_y (V : Set V3) (u0 u1 w0 : V3) (n : ℕ)
     criticalWeight V (ccCell V [u0, u1, f i]) =
       1 / (wtcount6Y (dist u0 u1) (dist u0 (f i)) (dist u0 (f (i + 1)))
         (dist (f i) (f (i + 1))) (dist u1 (f (i + 1))) (dist u1 (f i))) := by
-  sorry
+  obtain ⟨-, -, -, -, -, hcc4, -, -, hleafA, hleafB, hnull, hbar4⟩ :=
+    CC_4_PROPS V u0 u1 w0 n f i hp hs hr hnc hn h4
+  have hnn4 : ¬ nullSet (mcell4 V [u0, u1, f i, f (i + 1)]) := by
+    rw [← hcc4]
+    exact hnull
+  -- 六点互异（LEAF_DOMAIN 距离下界 + LEAF_RANK_SUC_INJ）
+  have hdA := LEAF_DOMAIN V [u0, u1, f i] hs hp hleafA
+  have hdB := LEAF_DOMAIN V [u0, u1, f (i + 1)] hs hp hleafB
+  have eA0 : elV [u0, u1, f i] 0 = u0 := rfl
+  have eA1 : elV [u0, u1, f i] 1 = u1 := rfl
+  have eA2 : elV [u0, u1, f i] 2 = f i := rfl
+  have eB0 : elV [u0, u1, f (i + 1)] 0 = u0 := rfl
+  have eB1 : elV [u0, u1, f (i + 1)] 1 = u1 := rfl
+  have eB2 : elV [u0, u1, f (i + 1)] 2 = f (i + 1) := rfl
+  simp only [eA0, eA1, eA2] at hdA
+  simp only [eB0, eB1, eB2] at hdB
+  have hu01 : u0 ≠ u1 := by
+    intro he
+    have h2 := hdA.2.2.2.1
+    rw [he] at h2
+    rw [dist_self] at h2
+    linarith
+  have hu02 : u0 ≠ f i := by
+    intro he
+    have h2 := hdA.2.2.1
+    rw [he] at h2
+    rw [dist_self] at h2
+    linarith
+  have hu03 : u0 ≠ f (i + 1) := by
+    intro he
+    have h2 := hdB.2.2.1
+    rw [he] at h2
+    rw [dist_self] at h2
+    linarith
+  have hu13 : u1 ≠ f i := by
+    intro he
+    have h2 := hdA.2.1
+    rw [he] at h2
+    rw [dist_self] at h2
+    linarith
+  have hu14 : u1 ≠ f (i + 1) := by
+    intro he
+    have h2 := hdB.2.1
+    rw [he] at h2
+    rw [dist_self] at h2
+    linarith
+  have hu34 : f i ≠ f (i + 1) := LEAF_RANK_SUC_INJ V u0 u1 w0 n f i hp hs hr hnc hn
+  -- 六对候选边成员 ⟺ criticalEdgeY
+  have hE0 := p25rpi_mem6 V u0 u1 f i hp hs hcc4 hnull hbar4 u0 u1
+    (Or.inl rfl) (Or.inr (Or.inl rfl)) hu01
+  have hE1 := p25rpi_mem6 V u0 u1 f i hp hs hcc4 hnull hbar4 u0 (f i)
+    (Or.inl rfl) (Or.inr (Or.inr (Or.inl rfl))) hu02
+  have hE2 := p25rpi_mem6 V u0 u1 f i hp hs hcc4 hnull hbar4 u0 (f (i + 1))
+    (Or.inl rfl) (Or.inr (Or.inr (Or.inr rfl))) hu03
+  have hE3 := p25rpi_mem6 V u0 u1 f i hp hs hcc4 hnull hbar4 u1 (f i)
+    (Or.inr (Or.inl rfl)) (Or.inr (Or.inr (Or.inl rfl))) hu13
+  have hE4 := p25rpi_mem6 V u0 u1 f i hp hs hcc4 hnull hbar4 u1 (f (i + 1))
+    (Or.inr (Or.inl rfl)) (Or.inr (Or.inr (Or.inr rfl))) hu14
+  have hE5 := p25rpi_mem6 V u0 u1 f i hp hs hcc4 hnull hbar4 (f i) (f (i + 1))
+    (Or.inr (Or.inr (Or.inl rfl))) (Or.inr (Or.inr (Or.inr rfl))) hu34
+  -- 临界边集有限（六边链的子集），且恰为六边链之交
+  have hfin6 : Set.Finite (insert ({f i, f (i + 1)} : Set V3)
+      (insert ({u1, f (i + 1)} : Set V3) (insert ({u1, f i} : Set V3)
+        (insert ({u0, f (i + 1)} : Set V3) (insert ({u0, f i} : Set V3)
+          (insert ({u0, u1} : Set V3) (∅ : Set (Set V3)))))))) := by simp
+  have hsub6 : ∀ e ∈ criticalEdgeX V (ccCell V [u0, u1, f i]),
+      e ∈ insert ({f i, f (i + 1)} : Set V3) (insert ({u1, f (i + 1)} : Set V3)
+        (insert ({u1, f i} : Set V3) (insert ({u0, f (i + 1)} : Set V3)
+          (insert ({u0, f i} : Set V3) (insert ({u0, u1} : Set V3)
+            (∅ : Set (Set V3))))))) := by
+    intro e he
+    simp only [criticalEdgeX, Set.mem_setOf_eq] at he
+    obtain ⟨p, q, rfl, hEd, -, -⟩ := he
+    rw [hcc4, BumpP4.MCELL4_EDGE V [u0, u1, f i, f (i + 1)] p q hp hs hnn4 hbar4] at hEd
+    obtain ⟨hpq, hsub⟩ := hEd
+    have hp4 := p25rpi_mem4 u0 u1 f i p (hsub (by simp))
+    have hq4 := p25rpi_mem4 u0 u1 f i q (hsub (by simp))
+    rcases hp4 with rfl | rfl | rfl | rfl <;>
+      rcases hq4 with rfl | rfl | rfl | rfl <;>
+        first
+          | (simp [Set.pair_eq_pair_iff, hu01, hu02, hu03, hu13, hu14, hu34]; done)
+          | exact absurd rfl hpq
+  have hBfin : (criticalEdgeX V (ccCell V [u0, u1, f i])).Finite :=
+    hfin6.subset hsub6
+  have heq : criticalEdgeX V (ccCell V [u0, u1, f i]) =
+      insert ({f i, f (i + 1)} : Set V3) (insert ({u1, f (i + 1)} : Set V3)
+        (insert ({u1, f i} : Set V3) (insert ({u0, f (i + 1)} : Set V3)
+          (insert ({u0, f i} : Set V3) (insert ({u0, u1} : Set V3) ∅))))) ∩
+        criticalEdgeX V (ccCell V [u0, u1, f i]) := by
+    ext e
+    exact ⟨fun he => ⟨hsub6 e he, he⟩, fun h => h.2⟩
+  -- congrArg 直推分式（不展开 ℕ 求和——绕开 r8 数值 finisher 雷区）
+  have hCW : criticalWeight V (ccCell V [u0, u1, f i]) =
+      1 / ((criticalEdgeX V (ccCell V [u0, u1, f i])).ncard : ℝ) := rfl
+  rw [hCW, heq]
+  exact congrArg (fun x : ℕ => (1 : ℝ) / (x : ℝ))
+    (p25rpi_wtcount6_core (criticalEdgeX V (ccCell V [u0, u1, f i])) u0 u1 f i hBfin
+      hE0 hE1 hE2 hE3 hE4 hE5 hu01 hu02 hu03 hu13 hu14 hu34)
 
 /-- HOL `c_4_azim_mcell_dih_y`: the 4-cell wedge dihedral is the `dih_y`
 value.  2026-10-13 M4 波转真（装配级）：`LEAF_RANK_REUHADY`（azim_mcell 塌缩，
