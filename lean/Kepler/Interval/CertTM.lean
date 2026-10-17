@@ -38,7 +38,8 @@ import Kepler.Interval.Cert
 namespace Kepler.Interval
 
 /-- Per-`sqrt`-node certificate bundle for `evalTM`: `slo`/`shi` are the
-`Dyadic.sqrtI` mantissas for the center enclosure endpoints `fB.lo`/`fB.hi`
+`Dyadic.sqrtRel` mantissas (fixed `2^-80` relative granularity, i.e.
+`≈ ⌊√(radicand · 2^160)⌋`) for the center enclosure endpoints `fB.lo`/`fB.hi`
 of the sub-model, `sc` the mantissa for `√c` where `c := fB.lo − W` is the
 certified positive lower bound of the sub-expression over the box; `o1`/`o2`
 are the `DInterval.recip` granularities for the slope interval
@@ -171,7 +172,136 @@ theorem sqrtI_lo_nonneg {d : Dyadic} {s : Int} {I : DInterval}
       exact mul_nonneg (by exact_mod_cast hs0) (zpow_nonneg (by norm_num) _)
   · exact absurd h (by simp)
 
+/-- Exponent shift by `−80` scales the semantics by `2^-80` (a pure
+representation change: `Dyadic` needs no normal form). -/
+theorem toReal_e_sub_80 (x : Dyadic) : toReal ⟨x.m, x.e - 80⟩
+    = x.toReal * (2 : ℝ)^(-(80 : ℤ)) := by
+  rw [toReal_def, toReal_def, sub_eq_add_neg,
+    zpow_add₀ (by norm_num : (2 : ℝ) ≠ 0)]
+  ring
+
+/-- Mantissa-shift lemma (SF-42): shifting the mantissa up by `2^k` at fixed
+exponent scales the semantics by `2^k`. -/
+theorem toReal_mul_pow (d : Dyadic) (k : ℕ) :
+    toReal ⟨d.m * 2 ^ k, d.e⟩ = d.toReal * (2 : ℝ)^((k : ℤ)) := by
+  rw [toReal_def, toReal_def, Int.cast_mul, Int.cast_pow, Int.cast_ofNat,
+    zpow_natCast]
+  ring
+
+/-- **Fixed-relative-granularity sqrt certificate** (`TaylorM.sqrt`'s
+consumption form since SF-42).  The radicand's mantissa is first shifted up
+by `2^160` — a *value* shift (`⟨d.m * 2^160, d.e⟩ = d · 2^160`), so the
+granularity of the answer no longer depends on the radicand's
+*representation* — then `sqrtI` certifies the root mantissa
+`s ≈ √d · 2^80`, and the returned interval is descaled by `2^-80`:
+`sqrtRel d s = some ⟨⟨s, d.e/2 - 80⟩, ⟨s+1, d.e/2 - 80⟩⟩` with
+`s² ≤ d.m · 2^(d.e % 2) · 2^160 < (s+1)²`.  Relative width ~`2^-80` for
+every radicand however small its mantissa (e.g. `√8 = ⟨8,0⟩` certifies
+`[2.8284…, 2.8284… + 2^-80]` where plain `sqrtI` gives the representation
+bound `[2, 3]`). -/
+def sqrtRel (d : Dyadic) (s : Int) : Option DInterval :=
+  (Dyadic.sqrtI ⟨d.m * 2 ^ (160 : ℕ), d.e⟩ s).map fun J =>
+    ⟨⟨J.lo.m, J.lo.e - 80⟩, ⟨J.hi.m, J.hi.e - 80⟩⟩
+
+/-- **Soundness of `sqrtRel`** (over `ℝ`): the returned interval contains the
+real square root of the radicand's semantics — the bracketing of `sqrtI`
+after undoing the `2^160` value shift (`√(d·2^160) · 2^-80 = √d`). -/
+theorem sqrtRel_sound {d : Dyadic} {s : Int} {I : DInterval}
+    (h : d.sqrtRel s = some I) :
+    I.lo.toReal ≤ Real.sqrt d.toReal ∧ Real.sqrt d.toReal ≤ I.hi.toReal := by
+  unfold sqrtRel at h
+  rw [Option.map_eq_some_iff] at h
+  obtain ⟨J, hJ, rfl⟩ := h
+  obtain ⟨hs0, hm0, _, _⟩ := sqrtI_cases hJ
+  obtain ⟨h1, h2⟩ := sqrtI_sound hJ
+  -- the scaled radicand's semantics: ⟨d.m·2^160, d.e⟩ = d·2^160
+  have hrad : toReal (⟨d.m * 2 ^ (160 : ℕ), d.e⟩ : Dyadic)
+      = d.toReal * (2 : ℝ)^(((160 : ℕ) : ℤ)) :=
+    toReal_mul_pow d 160
+  -- the scaled root is 2^80·√d (the `sqrtI` scale law)
+  have hdm : 0 ≤ d.m := by
+    by_contra hneg
+    push_neg at hneg
+    exact absurd (mul_neg_of_neg_of_pos hneg (by positivity)) (not_lt.2 hm0)
+  have hdnn : 0 ≤ d.toReal := by
+    rw [toReal_def]
+    exact mul_nonneg (by exact_mod_cast hdm) (zpow_nonneg (by norm_num) d.e)
+  have h160 : (((160 : ℕ) : ℤ)) = 2 * (80 : ℤ) := by norm_num
+  have hsqrt : Real.sqrt (toReal (⟨d.m * 2 ^ (160 : ℕ), d.e⟩ : Dyadic))
+      = (2 : ℝ)^((80 : ℤ)) * Real.sqrt d.toReal := by
+    rw [hrad, h160, sqrt_scale_pow hdnn (80 : ℤ)]
+  -- descale both endpoints by 2^-80 and bracket
+  dsimp only
+  have hK := zpow_nonneg (by norm_num : (0 : ℝ) ≤ 2) (-(80 : ℤ))
+  have hcomb : (2 : ℝ)^((80 : ℤ)) * (2 : ℝ)^(-(80 : ℤ)) = 1 := by
+    rw [← zpow_add₀ (by norm_num : (2 : ℝ) ≠ 0)]
+    norm_num
+  constructor
+  · calc toReal ⟨J.lo.m, J.lo.e - 80⟩
+      = J.lo.toReal * (2 : ℝ)^(-(80 : ℤ)) := toReal_e_sub_80 J.lo
+    _ ≤ Real.sqrt (toReal (⟨d.m * 2 ^ (160 : ℕ), d.e⟩ : Dyadic))
+          * (2 : ℝ)^(-(80 : ℤ)) := mul_le_mul_of_nonneg_right h1 hK
+    _ = ((2 : ℝ)^((80 : ℤ)) * Real.sqrt d.toReal) * (2 : ℝ)^(-(80 : ℤ)) := by rw [hsqrt]
+    _ = Real.sqrt d.toReal * ((2 : ℝ)^((80 : ℤ)) * (2 : ℝ)^(-(80 : ℤ))) := by ring
+    _ = Real.sqrt d.toReal := by rw [hcomb, mul_one]
+  · calc Real.sqrt d.toReal
+      = Real.sqrt d.toReal * ((2 : ℝ)^((80 : ℤ)) * (2 : ℝ)^(-(80 : ℤ))) := by
+          rw [hcomb, mul_one]
+    _ = ((2 : ℝ)^((80 : ℤ)) * Real.sqrt d.toReal) * (2 : ℝ)^(-(80 : ℤ)) := by ring
+    _ = Real.sqrt (toReal (⟨d.m * 2 ^ (160 : ℕ), d.e⟩ : Dyadic))
+          * (2 : ℝ)^(-(80 : ℤ)) := by rw [hsqrt]
+    _ ≤ J.hi.toReal * (2 : ℝ)^(-(80 : ℤ)) := mul_le_mul_of_nonneg_right h2 hK
+    _ = toReal ⟨J.hi.m, J.hi.e - 80⟩ := (toReal_e_sub_80 J.hi).symm
+
+/-- The lower endpoint of a successful `sqrtRel` certificate is nonnegative. -/
+theorem sqrtRel_lo_nonneg {d : Dyadic} {s : Int} {I : DInterval}
+    (h : d.sqrtRel s = some I) : 0 ≤ I.lo.toReal := by
+  unfold sqrtRel at h
+  rw [Option.map_eq_some_iff] at h
+  obtain ⟨J, hJ, rfl⟩ := h
+  have hJlo := sqrtI_lo_nonneg hJ
+  show 0 ≤ toReal ⟨J.lo.m, J.lo.e - 80⟩
+  rw [toReal_e_sub_80 J.lo]
+  exact mul_nonneg hJlo (zpow_nonneg (by norm_num) _)
+
 end Dyadic
+
+/-! ## SF-42 pilots: fixed-relative-granularity sqrt certificates (kernel `decide` only)
+
+`⌊2^80·√8⌋ = 3419358580004036860274166` and `⌊2^80·√4⌋ = 2^81` — the kernel
+verifies each by two big-integer comparisons (no `Int.sqrt`), and the
+certificate intervals have ~`2^-80` relative width regardless of the
+radicand's mantissa (plain `sqrtI ⟨8,0⟩ 2` would give `[2, 3]`). -/
+
+/-- The certificate: `√8 ∈ [2.82842712474619…, 2.82842712474619… + 2^-80]`. -/
+theorem sqrt8_rel_cert :
+    (⟨8, 0⟩ : Dyadic).sqrtRel 3419358580004036860274166
+      = some ⟨⟨3419358580004036860274166, -80⟩, ⟨3419358580004036860274167, -80⟩⟩ := by
+  decide
+
+/-- The certificate: `√4 = 2` exactly at the left endpoint,
+`[2, 2 + 2^-80]`. -/
+theorem sqrt4_rel_cert :
+    (⟨4, 0⟩ : Dyadic).sqrtRel 2417851639229258349412352
+      = some ⟨⟨2417851639229258349412352, -80⟩, ⟨2417851639229258349412353, -80⟩⟩ := by
+  decide
+
+/-- The square-root semantics of the two certificates over `ℝ`
+(`lo(√8) = 2.8284271247461900976033773230368002…·2^0`): the certificates
+bracket `Real.sqrt 8` and `Real.sqrt 4` at ~`2^-80` relative width. -/
+theorem sqrt8_rel_bounds :
+    Dyadic.toReal ⟨(3419358580004036860274166 : ℤ), -80⟩ ≤ Real.sqrt 8
+      ∧ Real.sqrt 8 ≤ Dyadic.toReal ⟨(3419358580004036860274167 : ℤ), -80⟩ := by
+  have h := Dyadic.sqrtRel_sound sqrt8_rel_cert
+  rw [Dyadic.toReal_int] at h
+  exact h
+
+theorem sqrt4_rel_bounds :
+    Dyadic.toReal ⟨(2417851639229258349412352 : ℤ), -80⟩ ≤ Real.sqrt 4
+      ∧ Real.sqrt 4 ≤ Dyadic.toReal ⟨(2417851639229258349412353 : ℤ), -80⟩ := by
+  have h := Dyadic.sqrtRel_sound sqrt4_rel_cert
+  rw [Dyadic.toReal_int] at h
+  exact h
 
 /-- The curvature band threshold `5/8`: `5/8 ≥ 1/√3` (since `25/64 ≥ 1/3`),
 so `2|x|/(1+x²)²` is antitone in `|x|` beyond it. -/
@@ -244,17 +374,22 @@ def mul {n : ℕ} (Mf Mg : TaylorM n) : TaylorM n :=
       ((Mf.err.mul ((Mg.fB.abs.hi.add Mg.W0).add Mg.err)).add
         (Mg.err.mul (Mf.fB.abs.hi.add Mf.W0)))).chopCeilTo Mf.errScale⟩
 
-/-- Model of `√f`, certificate-based.  `none` (safe failure) when the
-certified lower bound `c := fB.lo − W` of `f` over the box is not positive or
-any certificate check fails.  Remainder: with `q = 1/(2·√f(y))`,
+/-- Model of `√f`, certificate-based (SF-42: the three root mantissas are
+consumed at **fixed `2^-80` relative granularity** via `Dyadic.sqrtRel` —
+the radicand is shifted by value to `d·2^160` before the certificate check
+and the bracket descaled by `2^-80` — so small-mantissa radicands such as the
+var-at-point pin `⟨4, 0⟩` no longer collapse to representation-bound
+certificates like `[2, 3]`).  `none` (safe failure) when the certified lower
+bound `c := fB.lo − W` of `f` over the box is not positive or any certificate
+check fails.  Remainder: with `q = 1/(2·√f(y))`,
 `√f(ρ) − √f(y) − q·Σaᵢuᵢ
   = Δf·(1/(√f(ρ)+√f(y)) − q) + q·(Δf − Σaᵢuᵢ)`; the first term is bounded by
 `W²/(8·c·√c)` (`sqrt_slope_diff`), the second by `err·q ≤ err·J.hi`. -/
 def sqrt {n : ℕ} (M : TaylorM n) (p : SqrtTMP) : Option (TaylorM n) :=
   if (M.fB.lo.add (-M.W)).isPos = true then
-    (Dyadic.sqrtI M.fB.lo p.slo).bind fun Jl =>
-    (Dyadic.sqrtI M.fB.hi p.shi).bind fun Jh =>
-    (Dyadic.sqrtI (M.fB.lo.add (-M.W)) p.sc).bind fun Jc =>
+    (Dyadic.sqrtRel M.fB.lo p.slo).bind fun Jl =>
+    (Dyadic.sqrtRel M.fB.hi p.shi).bind fun Jh =>
+    (Dyadic.sqrtRel (M.fB.lo.add (-M.W)) p.sc).bind fun Jc =>
     (DInterval.recip ⟨(⟨2, 0⟩ : Dyadic).mul Jl.lo, (⟨2, 0⟩ : Dyadic).mul Jh.hi⟩
       p.o1).bind fun J =>
     (DInterval.recip
@@ -829,12 +964,12 @@ theorem valid_sqrt {n : ℕ} {M : TaylorM n} {box : Fin n → DInterval}
     have hfy_le : f (fun i => (M.y i).toReal) ≤ M.fB.hi.toReal := hfB.2
     have hfBlo : 0 ≤ M.fB.lo.toReal := le_trans hc0.le hc_le
     have hfy_pos : 0 < f (fun i => (M.y i).toReal) := lt_of_lt_of_le hc0 (le_trans hc_le hfy_ge)
-    -- sqrt certificates
-    have hJl1 : Jl.lo.toReal ≤ Real.sqrt M.fB.lo.toReal := (Dyadic.sqrtI_sound hJl).1
-    have hJh2 : Real.sqrt M.fB.hi.toReal ≤ Jh.hi.toReal := (Dyadic.sqrtI_sound hJh).2
+    -- sqrt certificates (SF-42: fixed-relative-granularity brackets)
+    have hJl1 : Jl.lo.toReal ≤ Real.sqrt M.fB.lo.toReal := (Dyadic.sqrtRel_sound hJl).1
+    have hJh2 : Real.sqrt M.fB.hi.toReal ≤ Jh.hi.toReal := (Dyadic.sqrtRel_sound hJh).2
     have hJc1 : Jc.lo.toReal ≤ Real.sqrt (M.fB.lo.add (-M.W)).toReal :=
-      (Dyadic.sqrtI_sound hJc).1
-    have hJclo : 0 ≤ Jc.lo.toReal := Dyadic.sqrtI_lo_nonneg hJc
+      (Dyadic.sqrtRel_sound hJc).1
+    have hJclo : 0 ≤ Jc.lo.toReal := Dyadic.sqrtRel_lo_nonneg hJc
     -- the slope interval J contains 1/(2·√f(y))
     have hJmem : J.mem (1 / (2 * Real.sqrt (f fun i => (M.y i).toReal))) := by
       have hmem2 : (⟨(⟨2, 0⟩ : Dyadic).mul Jl.lo, (⟨2, 0⟩ : Dyadic).mul Jh.hi⟩ :
@@ -3994,6 +4129,22 @@ gate).  Compiled runs only (`Nat.sqrt` does not kernel-reduce). -/
 def sqrtMantissa (d : Dyadic) : Int :=
   if 0 ≤ d.m then Int.ofNat (Nat.sqrt (d.m * 2 ^ (d.e % 2).toNat).toNat) else 0
 
+/-- Exact **fixed-relative-granularity** root mantissa (SF-42): the mantissa
+`Dyadic.sqrtRel` — hence `TaylorM.sqrt` — consumes,
+`⌊√(d.m · 2^(d.e % 2) · 2^160)⌋ ≈ ⌊√d · 2^80⌋`, so
+`Dyadic.sqrtRel d (sqrtMantissaRel d)` passes its kernel check whenever
+`d.m ≥ 0` (the check sees the value-shifted radicand `⟨d.m·2^160, d.e⟩`).
+The reported granularity is ~`2^-80` relative regardless of the radicand's
+mantissa size, unlike `sqrtMantissa` (representation-bound, still used for
+the in-guard interval arm, whose kernel consumer `evalIParams` stays on
+plain `sqrtI`).  `0` for `d.m < 0` (`sqrtRel` fails there for every
+certificate, matching `TaylorM.sqrt`'s positivity gate).  Compiled runs only
+(`Nat.sqrt` does not kernel-reduce). -/
+def sqrtMantissaRel (d : Dyadic) : Int :=
+  if 0 ≤ d.m then
+    Int.ofNat (Nat.sqrt ((d.m * 2 ^ (160 : ℕ) * 2 ^ (d.e % 2).toNat).toNat))
+  else 0
+
 /-- Compiled-run mirror of `evalIParams` for the certificate generator: the
 same control flow and the same `ps` threading (one `SqrtTMP` consumed per
 `sqrt` node, so the kernel's queue layout matches), except that the two root
@@ -4087,9 +4238,9 @@ def evalTMHullFill {n : ℕ} (box : Fin n → DInterval) :
       (evalTMHullFill box e ps).bind fun (M₀, ps₀, l) =>
       ps₀.sqrtCerts.head?.bind fun t =>
       ((if (M₀.fB.lo.add (-M₀.W)).isPos = true then
-          let slo := sqrtMantissa M₀.fB.lo
-          let shi := sqrtMantissa M₀.fB.hi
-          let sc := sqrtMantissa (M₀.fB.lo.add (-M₀.W))
+          let slo := sqrtMantissaRel M₀.fB.lo
+          let shi := sqrtMantissaRel M₀.fB.hi
+          let sc := sqrtMantissaRel (M₀.fB.lo.add (-M₀.W))
           (M₀.sqrt ⟨slo, shi, sc, t.o1, t.o2⟩).map fun M' =>
             (M', ⟨ps₀.sqrtCerts.tail, ps₀.invCerts, ps₀.transCerts⟩,
               l ++ [(slo, shi, sc)])
@@ -4158,9 +4309,9 @@ def evalTMHullFill2 {n : ℕ} (box : Fin n → DInterval) :
       (evalTMHullFill2 box e ps).bind fun (M₀, ps₀, l) =>
       ps₀.sqrtCerts.head?.bind fun t =>
       ((if (M₀.fB.lo.add (-M₀.W)).isPos = true then
-          let slo := sqrtMantissa M₀.fB.lo
-          let shi := sqrtMantissa M₀.fB.hi
-          let sc := sqrtMantissa (M₀.fB.lo.add (-M₀.W))
+          let slo := sqrtMantissaRel M₀.fB.lo
+          let shi := sqrtMantissaRel M₀.fB.hi
+          let sc := sqrtMantissaRel (M₀.fB.lo.add (-M₀.W))
           (M₀.sqrt ⟨slo, shi, sc, t.o1, t.o2⟩).map fun M' =>
             (M', ⟨ps₀.sqrtCerts.tail, ps₀.invCerts, ps₀.transCerts⟩,
               l ++ [(slo, shi, sc)])
@@ -4852,9 +5003,9 @@ def evalTMHullFill2B {n k : ℕ} (box : Fin n → DInterval)
       (evalTMHullFill2B box tbl env a ps).bind fun (M₀, ps₀, l) =>
       ps₀.sqrtCerts.head?.bind fun t =>
       ((if (M₀.fB.lo.add (-M₀.W)).isPos = true then
-          let slo := sqrtMantissa M₀.fB.lo
-          let shi := sqrtMantissa M₀.fB.hi
-          let sc := sqrtMantissa (M₀.fB.lo.add (-M₀.W))
+          let slo := sqrtMantissaRel M₀.fB.lo
+          let shi := sqrtMantissaRel M₀.fB.hi
+          let sc := sqrtMantissaRel (M₀.fB.lo.add (-M₀.W))
           (M₀.sqrt ⟨slo, shi, sc, t.o1, t.o2⟩).map fun M' =>
             (M', ⟨ps₀.sqrtCerts.tail, ps₀.invCerts, ps₀.transCerts⟩,
               l ++ [(slo, shi, sc)])

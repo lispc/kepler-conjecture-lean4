@@ -1748,3 +1748,121 @@ Kepler.Text.PackingAuto25` 零新错 + `#print axioms TEWNSCJ_MERGED` 标准
 三 + sorry 计数差 −1。隔离 clone 验证（2026-10-13）：探针链
 PA3→PA4→PA18→PA21→PA25 全绿 exit 0（20s/10s/23s/32s/17s，零新警告，仅
 既有 sorry/linter 噪）；桥 `rfl` 三例 + `#print axioms` 探针 exit 0。）
+
+## 42. CertTM `TaylorM.sqrt` 证书粒度根治（`Dyadic.sqrtRel` 固定 2⁻⁸⁰ 相对粒度；var-at-point 宽度记账发散根治）— 分级 A（def 语义修正 · 内核证书基建）
+
+**立案：2026-10-15，W8.1 df 发散破案随件（6ba98ca4 待批项"CertTM sqrt 粒度
+修复提案"）+ 第三次发车执行波。** 前两波死于机器事故（1310 三线阵亡），WIP
+全量打捞于 `/Users/zhangzhuo/c17_backup/clone_salvage/p4sf42.CertTM.diff`
+（+172/−21，当日记账："sqrtRel 章主体"）。本波新 clone
+（/tmp/p4sf42b，HEAD f75c305d；CertTM.lean 自 6ba98ca4 未动，diff 干净
+应用）续完：sqrtRel 主实现 + reducibility decide 测试 + 受影响 leaf 重烤。
+
+(a) HOL：无对应 HOL 语句——本件为纯机器侧内核证书基建（Dyadic 证书层是
+Lean 侧新增设施，非 Flyspeck 移植物；reference/flyspeck 全树无 sqrt 证书
+定义），故无 HOL 误抄可能；语义锚 = 在库 `Kepler/Interval/Sqrt.lean` 的
+`Dyadic.sqrtI` 定义（本件不动其语句，仅新增 sqrtRel 相对粒度模式并将
+`TaylorM.sqrt` 的证书源切换过去，切换前后的语义等价由 §(b) 内
+`sqrtRel_sound`/`valid_sqrt` 内核证成）。
+
+### (a) 出处与缺陷（机器侧；无 HOL 误抄，语义对应物 = Interval/Sqrt.lean 证书定义）
+
+`Dyadic.sqrtI d s`（Sqrt.lean）返回证书 `⟨⟨s, d.e/2⟩, ⟨s+1, d.e/2⟩⟩`——
+粒度按 **表示**（radicand mantissa 位数）取，不按 **值**：同一实数值，
+mantissa 越小证书越肥。极端案 = var-at-point / 面盒退化 radicand：
+`√⟨4,0⟩` 拿 `[2, 3]`（绝对宽 1，相对宽 ~50%），而 mantissa ≥ 2⁸⁰ 的
+radicand 拿 ~2⁻⁸⁰ 相对宽。后果两级：
+
+1. **宽度记账发散**：内核 `TaylorM.sqrt` 模型与镜像在同值不同表示的
+   radicand 上走出不同宽度（emit_lean.py:489-495 W8.1 var-at-point 阻塞
+   记档；6ba98ca4 雷区三条"var-at-point 粒度需 CertTM 提案走闸"）。
+2. **值重写救不了**（已否决记录在案）：mul-wrap √(x·2^120)·2^−60 门爆
+   c=−1.2e222——sqrtI 粒度按表示，值重写只挪表示不改宽度记账，且 TM 模型
+   携 2^60 绝对宽度因子毁下游加性语境。
+
+### (b) 修复补丁
+
+存档 `docs/statement-fix-proposals-patches/42-certtm-sqrtrel-granularity.patch`
+（git diff 全量，两文件；对 f75c305d 干净应用已验）：
+
+1. **CertTM.lean（+172/−21，打捞件 + 本章收口）**：
+   - `Dyadic.sqrtRel`：**固定相对粒度 sqrt 证书**——radicand 先按 **值**
+     上移 `⟨d.m·2^160, d.e⟩`（`toReal_mul_pow`：mantissa 移 = 值缩），
+     `sqrtI` 验 `s′² ≤ d.m·2^(d.e%2)·2^160 < (s′+1)²`，返回
+     `[s′, s′+1]·2^(e/2−80)`（`toReal_e_sub_80`：指数移 = 纯表示去缩）：
+     每个 radicand 无论 mantissa 多小，相对宽度恒 ~2⁻⁸⁰
+     （`√8 = ⟨8,0⟩`：`[2.8284…, 2.8284…+2⁻⁸⁰]`，裸 `sqrtI` 给 `[2, 3]`）。
+   - 私件四枚 `toReal_e_sub_80`/`toReal_mul_pow`/`sqrtRel_sound`（ℝ 括号
+     逐端去缩，√(d·2^160)·2⁻⁸⁰ = √d）/`sqrtRel_lo_nonneg`。
+   - **reducibility decide 测试两枚**：`sqrt8_rel_cert`
+     （⌊2^80·√8⌋ = 3419358580004036860274166）与 `sqrt4_rel_cert`
+     （⌊2^80·√4⌋ = 2^81）——纯内核 BigInt 双比较（无 Int.sqrt）；
+     `sqrt8_rel_bounds`/`sqrt4_rel_bounds` 转 ℝ 语义括号。
+   - 消费面切换：`TaylorM.sqrt` 三证书 `sqrtI` → `sqrtRel`；生成器镜像
+     `evalTMHullFill`/`evalTMHullFill2`/`evalTMHullFill2B` 的
+     `sqrtMantissa` → `sqrtMantissaRel`（新增 def
+     ⌊√(d.m·2^(d.e%2)·2^160)⌋，d.m < 0 时 0，与正性门同形）；
+     `valid_sqrt` 证明体换引新私件，**冻结语句一字不改**。
+   - 区间路线零改动：`evalIParams`/`evalIParamsFill`/`MonoTree.slotsDeep`
+     照旧裸 `sqrtI`/`sqrtMantissa`（b661ff07 DomOK 区不踩，emit_lean.py
+     本波零改动——pad 路径无需动：重烤走内核 `evalTMHullFill2` 编译跑，
+     不经 Python 镜像）。
+2. **C549Mono.lean（受影响 leaf 重烤示范，+15/−15）**：新码下 12 枚
+   `checkPosTMHull decide` 翻假（`M₀.sqrt p` 拒旧证书 → orElse fallback →
+   零阶模型过宽失正性；重烤前 broken 中间态实测 `C549MonoFold5` 泄漏
+   sorryAx）——用新 `evalTMHullFill2` 于同一 (expr, box) 编译跑重算
+   三元组（miniP/miniDP/C549MonoPF1-5/DP1-5；粒度字段一字不动仅换
+   mantissa 值；mini 试金 radicand ⟨1,−1⟩：22 →
+   27354868640032294882193329 ≈ 22·2^80）+ docstring 记重烤出处。
+   **全部定理陈述文本零改动**（decide 命题逐字同，仅参数 def 体换值）。
+
+先例对照：SF-39（占位语义 → 真内容）；本件无 HOL 误抄，是机器侧 def 体
+修正（证书粒度语义），分级同 SF-39/40（def 语义修正类）。
+
+### (c) 消费面核实（全树 grep + clone 实测）
+
+| 消费点 | 性质 | 判定 |
+| --- | --- | --- |
+| `TaylorM.sqrt`（CertTM:377） | 内核消费体 | sqrtI → sqrtRel（本件主体） |
+| `evalTMHullFill`/`2`/`2B` | 生成器镜像 | sqrtMantissa → sqrtMantissaRel |
+| `valid_sqrt` | 冻结语句 | 语句零改；证明体引 sqrtRel_sound/lo_nonneg |
+| `evalIParams`/`evalIParamsFill`/`MonoTree.slotsDeep` | 区间路线 | 零改动（DomOK 区不踩） |
+| C549Mono 12 decide（TM 路线 leaf 链） | 受影响主体 | 重烤后重建绿 12/12，axioms 无 sorryAx |
+| TM 路线舰队（197 模块/18,477 站点，grep checkPosTMHull/evalTMHullD2 口径） | 下游 | 需逐模块重编定账：C549ProdS0040 诚实重编实测 40 枚翻假（DP/PF 同病，重烤处方同 C549Mono）；舰队重烤 = 应用波 |
+| checkPosI 舰队（区间路线） | 下游 | 零影响（证书语义不变） |
+
+### (d) 保真论证
+
+`sqrtRel_sound`：√(d·2^160)·2⁻⁸⁰ = √d（值移可去），bracket 逐端去缩；
+`sqrt8_rel_cert`/`sqrt4_rel_cert` 内核 decide 实证 reducibility；
+`#print axioms` 全零自引（clone 实测：sqrt8/sqrt4_rel_cert 与
+sqrtMantissaRel 仅 [propext]；sqrtRel_sound/sqrtRel_lo_nonneg/
+toReal_e_sub_80/toReal_mul_pow/valid_sqrt/checkPosTMHull_sound/miniSemantic
+= 标准三；重烤后 C549MonoFold1/3/5 = [propext, Quot.sound]，miniFolded
+= [propext, Quot.sound]）。方向保守：成功的新证书区间恒不肥于旧证书
+（相对 2⁻⁸⁰ vs 表示界），`M₀.sqrt` 失败则 orElse 裸区间 fallback 原样
+保底——soundness 面无新径，纯紧化。
+
+### (e) 风险
+
+- **舰队重烤波未完（主要尾债）**：197 模块全量重编未跑（decide 成本
+  10⁻¹–10² s/枚）；已探二件：C549Mono 翻 12 枚（已烤绿）、
+  C549ProdS0040 翻 40 枚（处方同，未烤）。舰队免烤/需烤名单须整舰队
+  诚实重编后定账；重烤全机械（`evalTMHullFill2` 编译跑 → 三元组换值），
+  可批量。
+- **trace 毒缓存雷区升级（入册建议：㉛ 增补）**：`cp -Rc` 拷 .lake/build
+  跨工作区后 lake 对源变更判 fresh（CertTM 首趟全量 build 假绿 ~60s）、
+  乃至 olean 缺失仍判 fresh（ProdS0040 首趟跳建假绿）——诚实重编前必须
+  rm 目标 {olean,ilean,trace,*.hash}；clone 验证一律以
+  "Building <目标>" 行为准。
+- **decide 成本**：rel mantissa 增 ~80 二进制位，内核双比较上浮
+  ~20-30%（mini 22 → 26 位十进制）；实测无爆炸（C549Mono 全模块重建
+  与旧码同量级）。
+
+### (f) 状态：**已批准（用户 SF-42 批规格）；本波=模式落地+受影响 leaf 重烤示范完成；舰队重烤=应用波待命**
+（隔离 clone /tmp/p4sf42b 实测：CertTM 自新源重建绿；C549Mono 重烤重建
+绿 12/12；默认闭包 `lake build` 9359 jobs 绿；axiom 审计标准三零。
+闸参数建议：`SF_ITEM=42`，GATE_MODE=STATEMENT-FIX；审计对象
+`Kepler.Interval.Dyadic.sqrtRel_sound` + `Kepler.Interval.Cases.C549MonoFold1`；
+验收 = `lake build Kepler.Interval.Cases.C549Mono` 零新错 + 上述 axiom
+标准三零 + 舰队重烤波按 (e) 清单续。）
