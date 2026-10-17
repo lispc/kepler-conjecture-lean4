@@ -348,3 +348,21 @@ root runner 长跑：**2,170/19,237 pass 100% @174.9/h，ETA ≈ 3.9 天**（脱
 
 **本波收官状态**：用户令"本批 sub agents 结束后不再启动新线"，三线全收
 （批 12 `50b35415` / G5 `1f3da927` / W3 `aaae330c`），编排者停等新指令。
+
+**C1.7 终章（2026-10-17）**：189/189 全绿入库 `7ba6b5b7`——G5 收官处方经
+三段执行落地。①**列主序手术**（`f75c305d` LPFarkas.lean §3 纯追加+gen_farkas
+`--col-major`）：行主序 coreColSum 每列重走全行+行内 `r.getD i` 位置游走
+（B087 ≈2×10⁹ 链表访问→物理足迹 65.8GB>36GB RAM+30GB swap，6h 攒 65min
+CPU 不可完成；B086 同病 14 亿次侥幸 4h22m）；列主序单列一趟乘加后 **B086
+4h22m→7m45s（33.8×）、B087 9m10s**，axioms 均干净。②**落地波**：189 闭合
+模块 `lean/Kepler/LP/T<id>.lean`（41,440 行）+ 列→行桥 `LPFarkasCM.lean`
+（rowsFromCols 转置，纯 List 归纳，不经行主序 decide）+ LPLeafInfeas00 189
+叶 sorry→转发（gen_lp_skeleton `--emit-closure` 补 infeas 分支）；
+**infeas 段 sorry 清零**，lpAllInfeas00=[propext,Classical.choice,Quot.sound]
+三零，LPIds/LPAll/LPFarkas/LPCert 零改动。③**统一终账扫波**：全队列 189 条
+列主序重刷 **189/189 全绿零失败**（axioms 全 propext，最慢单条 662.6s≈11min，
+双实例并行插曲两行 -15 由另一实例自愈覆盖），ledger 备份 c17_backup/
+c17sweep_final/。历史 A/B 切片碎片账（含 t60 重编号）作废，以本扫波为准。
+**尾账**：C549 类 TM 舰队重烤波（197 模块/18,477 站点，SF-42 落地后翻假待
+重烤）排队；root runner 3,485/8,283 本轮 done（含历史 fail 重试消化中），
+144/h，ETA ≈ 34h。
