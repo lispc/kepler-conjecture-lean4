@@ -926,3 +926,10 @@ env 不跨 Bash 调用存续（LANE_FILES 必须与闸同一命令内联生成�
 LANE_FILES 锚文件也要列入（ALLOW 不自动含锚）；LANE_FILES 是 lean-relative。
 ㊿**双实例扫波写同一 ledger**：行交错/重复无害，终账 dedupe 取 ok 优先；
 环境性 SIGTERM（-15）同秒双杀=进程组清理波及（<0.1% trickle），ok 行覆盖即愈。
+
+㊱**闸不适用注释-only 车道**：freeze 检查要求"至少消费一个 sorry"，纯注释/
+纯 docs 改动会被 `no sorry consumed (theorem untouched?)` 拒——这类交付用
+干净未动 .lean 作锚 + LANE_FILES 申报真实改动面，或自行跑改动文件的
+`lake build` 验证并在报告附日志；**勘误**：2d1f38fa 提交信息中"闸 PASS
+@p24_nondeg_leaf_exists"有误（闸实拒于此项），内容正确性以同内容克隆
+build 绿×2 + 主仓 build 绿（8697 jobs，2026-10-17 补验）为准。
