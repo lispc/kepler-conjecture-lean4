@@ -256,3 +256,229 @@ theorem farkasCheck_scaled_sound (d : LpFarkasCore) (h : farkasCheck d = true) (
     farkasCheck_sound d h w fun j hj => (decimal_scale_le_iff _ _ _).mp (hsat j hj)
 
 end Kepler.Text.LP
+
+/-! ## §3 列主序内核（C1.7 B087 修复件，2026-10-16）
+
+**动机（求值结构病，非证书肥大）**：行主序 `coreColSum`（§1）对每列 i 遍历
+全部行、并在每行做 `r.getD i 0` 行内位置游走——C1.7 批 189 条中 B087
+（hard_1.dat #0 t0998，prec p4，327 行 × 230 列，75,210 cells）在干净机器上
+内核检查内存爆炸（物理足迹 65.8GB > 36GB RAM + 30GB swap；B086 同病但
+侥幸 4h22m 跑完）。本章给出**列主序**镜像：系数按列存储（`cols`：恰
+`nvars` 列、每列等长 = 行数），第 i 列一次定位后整列一趟乘加
+`∑ⱼ mⱼ·cols[i][j]`，全检查 O(cells)；数学量与 §1 逐点相同（转置不改线性
+代数），正确性经桥引理（照 `coreColSum_cast` 的归纳法逐字镜像列版）接到
+既有 §2 的 ℚ 层同一汇合点（`farkasCheckCol_sound` 与 `farkasCheck_sound`
+同形，`farkasCheckCol_scaled_sound` 同样复用 §2 `decimal_scale_le_iff`
+承接 10^p 口径）。
+
+**追加方式**：既有 def/theorem 语句冻结（DEF-FIX 章程，§1-§2 一行不改），
+本章整章在文件末尾纯追加并重开 namespace；下游消费者零感知。内核探针的
+axiom 审计目标与 §1 相同（decide 探针 `#print axioms` = [propext]）。 -/
+
+namespace Kepler.Text.LP
+
+/-! ### 列主序数据载体与 checker（四步路径 ① 的列版） -/
+
+/-- **Farkas 证书核（列主序）**：`LpFarkasCore`（行主序）的转置存储。
+`cols` = 按列存储的系数表（恰 `nvars` 列，每列等长 = 行数）；
+`rhs`/`mults` 仍按行平行（与每列等长一致）。
+
+不变式（checker 合取项，见 `coreShapeCol`/`farkasCheckCol`）：cols 恰
+nvars 列 + rhs/mults 按行平行 + 每列长 = 行数 + 每列加权和为零 +
+rhs 加权和为负。 -/
+structure LpFarkasCoreCol where
+  /-- 变量数（列数；= cols 长） -/
+  nvars : Nat
+  /-- 系数列（10^p 缩放整系数；恰 nvars 列，每列长 = 行数） -/
+  cols : List (List Int)
+  /-- 右端项（10^p 缩放整数值；按行平行） -/
+  rhs : List Int
+  /-- Farkas 乘子（非负由类型承担；按行平行） -/
+  mults : List Nat
+
+/-- 列乘加 `∑_j mⱼ · a[j]`：单列与乘子表的成对直读结构递归
+（与 §1 `coreRhsSum` 同构；任一侧越界读 0）。 -/
+def coreColDot : List Int → List Nat → Int
+  | [], [] => 0
+  | [], _ :: _ => 0
+  | _ :: _, [] => 0
+  | a :: as, m :: ms => a * (m : Int) + coreColDot as ms
+
+/-- 列主序列和 `∑_j mⱼ · cols[i][j]`（越界读 0；内核可求值）：第 i 列
+一次 `getD` 定位后整列一趟乘加——列内 cons 直读、无行内位置游走，
+与行主序 `coreColSum` 同一数学量而求值 O(列位 + 列长）。 -/
+def coreColSumCol (cols : List (List Int)) (ms : List Nat) (i : Nat) : Int :=
+  coreColDot (cols.getD i []) ms
+
+/-- 形状检查（列主序）：cols 恰 nvars 列 + rhs/mults 按行平行 + 每列
+等长（等长值 = 行数 = rhs 长）。 -/
+def coreShapeCol (d : LpFarkasCoreCol) : Bool :=
+  d.cols.length == d.nvars && d.rhs.length == d.mults.length &&
+    d.cols.all (fun c => c.length == d.rhs.length)
+
+/-- **Farkas checker 内核（列主序）**：形状良好 + 每列加权和为零（系数
+恒等式）+ rhs 加权和为负（复用 §1 `coreRhsSum`——rhs/mults 按行平行，
+与列主序无关）。纯 Int 结构递归，decide 可求值，全检查 O(cells)。 -/
+def farkasCheckCol (d : LpFarkasCoreCol) : Bool :=
+  coreShapeCol d &&
+    (List.range d.nvars).all (fun i => coreColSumCol d.cols d.mults i == 0) &&
+    coreRhsSum d.rhs d.mults < 0
+
+/-! ### List.getD 备件（列主序版；自证，零 API 依赖） -/
+
+private theorem getD_mem_self' {α : Type u} :
+    ∀ (l : List α) (i : Nat) (d : α), i < l.length → l.getD i d ∈ l
+  | [], i, _, hi => absurd hi (Nat.not_lt_zero _)
+  | _ :: _, 0, _, _ => List.Mem.head _
+  | a :: t, k + 1, d, hi =>
+      List.Mem.tail a (getD_mem_self' t k d (Nat.le_of_succ_le_succ hi))
+
+/-! ### 桥引理（递归内核 ↔ Finset 和，ℚ 口径；§2 `coreRhsSum_cast`/
+`coreColSum_cast` 的列主序逐字镜像） -/
+
+/-- 列乘加桥：内核列乘加 = 非负乘子加权的 Finset 和（无条件成立——
+两侧越界读 0 使 range 取列长即精确）。 -/
+theorem coreColDot_cast (a : List Int) (ms : List Nat) :
+    (coreColDot a ms : ℚ) =
+      ∑ j ∈ Finset.range a.length, (ms.getD j 0 : ℚ) * ((a.getD j 0 : ℚ)) := by
+  induction a generalizing ms with
+  | nil =>
+    cases ms with
+    | nil => simp [coreColDot]
+    | cons m ms => simp [coreColDot]
+  | cons x xs ih =>
+    cases ms with
+    | nil =>
+      simp only [coreColDot]
+      rw [List.length_cons, Finset.sum_range_succ']
+      simp
+    | cons m ms =>
+      have hgoal : (coreColDot (x :: xs) (m :: ms) : ℚ)
+          = ((x : ℚ) * (m : ℚ)) + (coreColDot xs ms : ℚ) := by
+        simp only [coreColDot]
+        push_cast
+        rfl
+      rw [hgoal, ih ms, List.length_cons, Finset.sum_range_succ']
+      simp only [getD_cons_succ', getD_cons_zero']
+      ring
+
+/-- 列主序列和桥：内核列和 = 非负乘子加权的第 i 列 Finset 和
+（`coreColSum_cast` 的列主序镜像；range 取第 i 列自身长——形状良好时
+= 行数 = rhs 长）。 -/
+theorem coreColSumCol_cast (cols : List (List Int)) (ms : List Nat) (i : Nat) :
+    (coreColSumCol cols ms i : ℚ) =
+      ∑ j ∈ Finset.range (cols.getD i []).length,
+        (ms.getD j 0 : ℚ) * ((cols.getD i []).getD j 0 : ℚ) := by
+  simp only [coreColSumCol]
+  exact coreColDot_cast _ ms
+
+/-! ### 主组合定理（列主序） -/
+
+/-- **Farkas 组合求值（列主序）**：`farkas_combo_eval` 的列主序镜像——
+形状良好的列主序系统（rhs/mults 平行、每列长 = rhs 长）在任何 ℚ 赋值与
+可行假设（每行 ≤ rhs，行为 `cols[i]` 的第 j 个元素）下，非负乘子组合的
+行和 = 加权列和的点积 ≤ 加权 rhs 和。 -/
+theorem farkas_combo_evalCol (d : LpFarkasCoreCol)
+    (hlen : d.rhs.length = d.mults.length)
+    (hcols : ∀ i < d.nvars, (d.cols.getD i []).length = d.rhs.length)
+    (w : Nat → ℚ)
+    (hsat : ∀ j < d.rhs.length,
+      (∑ i ∈ Finset.range d.nvars, ((d.cols.getD i []).getD j 0 : ℚ) * w i)
+        ≤ ((d.rhs.getD j 0 : ℚ))) :
+    (∑ i ∈ Finset.range d.nvars, (coreColSumCol d.cols d.mults i : ℚ) * w i)
+      ≤ (coreRhsSum d.rhs d.mults : ℚ) := by
+  have key : ∀ j ∈ Finset.range d.rhs.length,
+      (d.mults.getD j 0 : ℚ) * (∑ i ∈ Finset.range d.nvars,
+        ((d.cols.getD i []).getD j 0 : ℚ) * w i)
+        ≤ (d.mults.getD j 0 : ℚ) * ((d.rhs.getD j 0 : ℚ)) := by
+    intro j hj
+    exact mul_le_mul_of_nonneg_left (hsat j (Finset.mem_range.mp hj)) (Nat.cast_nonneg _)
+  have hsum2 : (∑ j ∈ Finset.range d.rhs.length,
+      (d.mults.getD j 0 : ℚ) * (∑ i ∈ Finset.range d.nvars,
+        ((d.cols.getD i []).getD j 0 : ℚ) * w i))
+      ≤ (∑ j ∈ Finset.range d.rhs.length, (d.mults.getD j 0 : ℚ) * ((d.rhs.getD j 0 : ℚ))) :=
+    Finset.sum_le_sum key
+  have hlhs : ∑ j ∈ Finset.range d.rhs.length,
+      (d.mults.getD j 0 : ℚ) * (∑ i ∈ Finset.range d.nvars,
+        ((d.cols.getD i []).getD j 0 : ℚ) * w i)
+      = ∑ i ∈ Finset.range d.nvars, (coreColSumCol d.cols d.mults i : ℚ) * w i := by
+    have step1 : ∑ j ∈ Finset.range d.rhs.length,
+        (d.mults.getD j 0 : ℚ) * (∑ i ∈ Finset.range d.nvars,
+          ((d.cols.getD i []).getD j 0 : ℚ) * w i)
+        = ∑ j ∈ Finset.range d.rhs.length, ∑ i ∈ Finset.range d.nvars,
+          (d.mults.getD j 0 : ℚ) * (((d.cols.getD i []).getD j 0 : ℚ) * w i) :=
+      Finset.sum_congr rfl fun j _ => Finset.mul_sum _ _ _
+    have step2 : ∑ j ∈ Finset.range d.rhs.length, ∑ i ∈ Finset.range d.nvars,
+        (d.mults.getD j 0 : ℚ) * (((d.cols.getD i []).getD j 0 : ℚ) * w i)
+        = ∑ i ∈ Finset.range d.nvars, ∑ j ∈ Finset.range d.rhs.length,
+          (d.mults.getD j 0 : ℚ) * (((d.cols.getD i []).getD j 0 : ℚ) * w i) :=
+      Finset.sum_comm
+    refine step1.trans (step2.trans ?_)
+    refine Finset.sum_congr rfl fun i hi => ?_
+    have hNi : (d.cols.getD i []).length = d.rhs.length := hcols i (Finset.mem_range.mp hi)
+    have step4 : (∑ j ∈ Finset.range d.rhs.length,
+        (d.mults.getD j 0 : ℚ) * ((d.cols.getD i []).getD j 0 : ℚ)) * w i
+        = ∑ j ∈ Finset.range d.rhs.length,
+          ((d.mults.getD j 0 : ℚ) * ((d.cols.getD i []).getD j 0 : ℚ)) * w i :=
+      Finset.sum_mul _ _ _
+    calc ∑ j ∈ Finset.range d.rhs.length,
+        (d.mults.getD j 0 : ℚ) * (((d.cols.getD i []).getD j 0 : ℚ) * w i)
+        = ∑ j ∈ Finset.range d.rhs.length,
+          ((d.mults.getD j 0 : ℚ) * ((d.cols.getD i []).getD j 0 : ℚ)) * w i :=
+          Finset.sum_congr rfl fun j _ => (mul_assoc _ _ _).symm
+      _ = (∑ j ∈ Finset.range d.rhs.length,
+          (d.mults.getD j 0 : ℚ) * ((d.cols.getD i []).getD j 0 : ℚ)) * w i := step4.symm
+      _ = (coreColSumCol d.cols d.mults i : ℚ) * w i := by
+          rw [coreColSumCol_cast, hNi]
+  rw [← hlhs, coreRhsSum_cast d.rhs d.mults hlen]
+  exact hsum2
+
+/-- **Farkas 正确性（列主序主定理）**：`farkasCheck_sound` 的列主序镜像、
+同一 ℚ 层汇合点——列主序 checker 通过 ⟹ 该系统在任何 ℚ 赋值下不可满足
+（任一满足全行的赋值导出 `0 ≤ Σ mⱼ bⱼ < 0` 矛盾；行 = 各列第 j 个元素）。 -/
+theorem farkasCheckCol_sound (d : LpFarkasCoreCol) (h : farkasCheckCol d = true)
+    (w : Nat → ℚ) :
+    ¬ ∀ j < d.rhs.length,
+      (∑ i ∈ Finset.range d.nvars, ((d.cols.getD i []).getD j 0 : ℚ) * w i)
+        ≤ ((d.rhs.getD j 0 : ℚ)) := by
+  intro hsat
+  have h1 : (d.cols.length == d.nvars) = true ∧ (d.rhs.length == d.mults.length) = true ∧
+      (d.cols.all (fun c => c.length == d.rhs.length)) = true ∧
+      ((List.range d.nvars).all (fun i => coreColSumCol d.cols d.mults i == 0) = true) ∧
+      coreRhsSum d.rhs d.mults < 0 := by
+    simp only [farkasCheckCol, coreShapeCol, Bool.and_assoc, Bool.and_eq_true_iff,
+      decide_eq_true_eq] at h
+    exact h
+  obtain ⟨hcn, hbm, hlen, hall, hrhs⟩ := h1
+  have hcols : ∀ i < d.nvars, (d.cols.getD i []).length = d.rhs.length := by
+    intro i hi
+    have hic : i < d.cols.length := by
+      rw [beq_iff_eq.mp hcn]
+      exact hi
+    have hmem := List.all_eq_true.mp hlen _ (getD_mem_self' d.cols i [] hic)
+    rw [beq_iff_eq] at hmem
+    exact hmem
+  have hcolQ : ∀ i < d.nvars, (coreColSumCol d.cols d.mults i : ℚ) = 0 := by
+    intro i hi
+    have hi' := List.all_eq_true.mp hall i (List.mem_range.mpr hi)
+    rw [beq_iff_eq] at hi'
+    rw [hi', Int.cast_zero]
+  have hrhsQ : (coreRhsSum d.rhs d.mults : ℚ) < 0 := Int.cast_lt.mpr hrhs
+  have hcombo := farkas_combo_evalCol d (beq_iff_eq.mp hbm) hcols w hsat
+  have hzero : (∑ i ∈ Finset.range d.nvars, (coreColSumCol d.cols d.mults i : ℚ) * w i) = 0 :=
+    Finset.sum_eq_zero fun i hi => by rw [hcolQ i (Finset.mem_range.mp hi), zero_mul]
+  rw [hzero] at hcombo
+  exact absurd hrhsQ (not_lt.mpr hcombo)
+
+/-- 缩放不可行性推论（列主序）：`farkasCheck_scaled_sound` 的列主序镜像，
+复用 §2 `decimal_scale_le_iff`——整数列主序 checker 通过 ⟹ 10^p 十进制
+缩放系统同样不可行（与 LpPrecision p3..p7 缩放口径衔接）。 -/
+theorem farkasCheckCol_scaled_sound (d : LpFarkasCoreCol) (h : farkasCheckCol d = true)
+    (p : Nat) (w : Nat → ℚ) :
+    ¬ ∀ j < d.rhs.length,
+      (∑ i ∈ Finset.range d.nvars, ((d.cols.getD i []).getD j 0 : ℚ) / (10 : ℚ) ^ p * w i)
+        ≤ ((d.rhs.getD j 0 : ℚ) / (10 : ℚ) ^ p) :=
+  fun hsat =>
+    farkasCheckCol_sound d h w fun j hj => (decimal_scale_le_iff _ _ _).mp (hsat j hj)
+
+end Kepler.Text.LP

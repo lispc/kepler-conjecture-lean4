@@ -36,6 +36,9 @@
   gen_farkas.py --stats                          # 全 easy_*.dat infeasible 终端族分布
   gen_farkas.py --record easy_1.dat 392 0        # 解析单终端 + Python 侧 Farkas 预检
   gen_farkas.py --lean easy_1.dat 392 0 out.lean # 发射 Lean 探针模块
+  gen_farkas.py --lean hard_1.dat 0 82 out.lean C17B086C --col-major
+                                                 # 列主序发射（rows 转置为 cols 的
+                                                 # LpFarkasCoreCol，对接 farkasCheckCol）
 """
 
 import argparse
@@ -952,7 +955,7 @@ def _fmt_list(xs, per=16):
     return "[\n" + " ,\n".join(lines) + "]"
 
 
-def emit_lean(core, ns, out_path, hs, gi, ti):
+def emit_lean(core, ns, out_path, hs, gi, ti, col_major=False):
     n, rows, rhs, mults = core["nvars"], core["rows"], core["rhs"], core["mults"]
     assert all(len(r) == n for r in rows)
     assert len(rows) == len(rhs) == len(mults)
@@ -961,6 +964,21 @@ def emit_lean(core, ns, out_path, hs, gi, ti):
     L.append(f"-- G5 gen_farkas.py 发射：{hs} #{gi} t{ti:04d} "
              f"(hid {core['hid']}, precision p{core['prec']}, "
              f"{len(rows)} 行 × {n} 列)。/tmp 隔离探针，非 tracked。")
+    if col_major:
+        # 列主序发射：行主序 rows 转置为 cols（cols[i][j] = rows[j][i]），
+        # mults/rhs 按行平行不动、rhs 不动——转置不改变数学，farkasCheckCol
+        # 逐列直读消去行主序求值的行内位置游走。prec 不变式照旧：系数仍为
+        # 10^prec 缩放整数（prec 与行主序发射一致，转置不改 prec），10^p 口径
+        # 由 Kepler.Text.LP.farkasCheckCol_scaled_sound 承接。
+        cols = [[r[i] for r in rows] for i in range(n)]
+        assert len(cols) == n and all(len(c) == len(rows) for c in cols)
+        assert all(cols[i][j] == rows[j][i] for i in range(n)
+                   for j in range(len(rows)))
+        cols_s = ",\n   ".join("[" + ", ".join(map(str, c)) + "]" for c in cols)
+        L.append("-- 列主序：rows 转置为 cols（cols[i][j] = rows[j][i]），"
+                 "mults/rhs 按行平行不动；转置不改变数学。")
+        L.append(f"-- prec 不变式：系数仍为 10^{core['prec']} 缩放整数（prec 未变），"
+                 "10^p 口径由 farkasCheckCol_scaled_sound 承接。")
     L.append("import Kepler.Text.LP.LPSchemaFarkas")
     L.append("")
     L.append("set_option maxRecDepth 100000")
@@ -968,15 +986,26 @@ def emit_lean(core, ns, out_path, hs, gi, ti):
     L.append("")
     L.append(f"namespace {ns}")
     L.append("")
-    L.append("def core : Kepler.Text.LP.LpFarkasCore :=")
-    L.append("  ⟨" + str(n) + ", [")
-    L.append("   " + rows_s + "],")
+    if col_major:
+        L.append("def core : Kepler.Text.LP.LpFarkasCoreCol :=")
+        L.append("  ⟨" + str(n) + ", [")
+        L.append("   " + cols_s + "],")
+    else:
+        L.append("def core : Kepler.Text.LP.LpFarkasCore :=")
+        L.append("  ⟨" + str(n) + ", [")
+        L.append("   " + rows_s + "],")
     L.append("   " + _fmt_list(rhs) + ",")
     L.append("   " + _fmt_list(mults) + "⟩")
     L.append("")
-    L.append("theorem core_shape : Kepler.Text.LP.coreShape core = true := by decide")
-    L.append("")
-    L.append("theorem core_farkasCheck : Kepler.Text.LP.farkasCheck core = true := by decide")
+    if col_major:
+        L.append("theorem core_shape : Kepler.Text.LP.coreShapeCol core = true := by decide")
+        L.append("")
+        L.append(
+            "theorem core_farkasCheck : Kepler.Text.LP.farkasCheckCol core = true := by decide")
+    else:
+        L.append("theorem core_shape : Kepler.Text.LP.coreShape core = true := by decide")
+        L.append("")
+        L.append("theorem core_farkasCheck : Kepler.Text.LP.farkasCheck core = true := by decide")
     L.append("")
     L.append("#print axioms " + ns + ".core_farkasCheck")
     L.append("")
@@ -990,6 +1019,10 @@ def _cli(argv=None):
     ap.add_argument("--stats", action="store_true")
     ap.add_argument("--record", nargs=3, metavar=("DAT", "GI", "TI"))
     ap.add_argument("--lean", nargs=5, metavar=("DAT", "GI", "TI", "OUT", "NS"))
+    ap.add_argument("--col-major", action="store_true",
+                    help="--lean 伴生旗标：行主序 rows 转置为 cols 发射 "
+                         "LpFarkasCoreCol（mults/rhs 按行平行不动、rhs 不动；"
+                         "转置不改变数学，对接 farkasCheckCol 列主序内核）")
     args = ap.parse_args(argv)
     if args.stats:
         stats()
@@ -1013,8 +1046,12 @@ def _cli(argv=None):
         hs, gi, ti, out, ns = (args.lean[0], int(args.lean[1]), int(args.lean[2]),
                                args.lean[3], args.lean[4])
         core = core_of(hs, gi, ti)
-        emit_lean(core, ns, out, hs, gi, ti)
-        print(f"emitted {out}: rows={len(core['rows'])} nvars={core['nvars']}")
+        emit_lean(core, ns, out, hs, gi, ti, col_major=args.col_major)
+        if args.col_major:
+            print(f"emitted {out} [col-major]: rows={len(core['rows'])} "
+                  f"nvars={core['nvars']}")
+        else:
+            print(f"emitted {out}: rows={len(core['rows'])} nvars={core['nvars']}")
         return 0
     ap.print_help()
     return 1
