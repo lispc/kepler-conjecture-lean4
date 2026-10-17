@@ -8,37 +8,36 @@
 
 ---
 
-## ⚡ 当前状态速览（2026-10-15 收波更新；细节见 STATUS 2026-10-14/15 mega 波节 + e2e-debt-map 增量节三）
+## ⚡ 当前状态速览（2026-10-17 收波更新；细节见 STATUS 2026-10-16/17 mega 波节 + e2e-debt-map 增量节四）
 
-> **2026-10-14/15 mega 波**：两批八线全收（15 提交十四闸全绿，0f4999e8..f40cfe4c）。
-> 楔形证书面阻塞清零（CFFONNL→MCELL4_LEAF_S_LEAF/MCELL4_DOMAIN/GDRQXLGv3 当日
-> 连收）；nli 接线地基（bank 62/62 投影 + Assembly nliPackNonlinearRest 展开，
-> 3/62 真闭合）；SF-40 应用（LA11 def 纠正+十件填实）；W7 evalReal 链式法则
-> （mono 路线 A 内核武器就位）；批 15/16（B1 链至 HOL :9903）。环境事故
-> （mathlib 删包，根因 insteadOf+软链 packages）确定性恢复+双雷区入册；负载
-> 治理（nice 饥饿→fresh 重启+180 分死线）。DEBT 44,674。C1.7 长尾自治。
-> 待拍板：W6b 方案 A / TEWNSCJ PA3 opaque 桥 SF 立项 / W8 mono 批量化。
+> **2026-10-16/17 mega 波**：**C1.7 全线收官**（七 commit 全闸绿，7b492f63..51f3403a）。
+> 189 条 LP 不可行 Farkas 证书：列主序手术（B086 4h22m→7m45s = 33.8×；B087
+> 6h+65.8GB 不可完成→9m10s）→ 189 闭合模块入库+列→行桥 LPFarkasCM →
+> **infeas 段 sorry 清零** → 统一终账扫波 **189/189 全绿零失败**。SF-42 落地
+> （sqrtRel 相对粒度，C549Mono 12/12 重烤；TM 舰队 197 模块重烤=尾波排队）；
+> DomOK v2（mono stage-B 批化，真瓶颈=rung 2048 atan，witness 位降 rung 移交
+> W8）；批 20（含前批脚手架虚账勘误）；PA25 wwtcount6_y finisher（行首裸
+> sorry 87→86）。**16:13 内存打穿强重启事故**：五 lane 并发+巨物同机 → swap
+> 打穿；/tmp 全清靠 diff 快照打捞零损失续跑；顺手破案"环境收割者"= 磁盘满→
+> jetsam。**内存三规**（lane 串行/≥12GB/巨物禁并行）。DEBT 44,481（−193）。
+> 六小时巡检 automation 在岗。
 
-- **停等令**：用户令"本批 sub agents 结束后不再启动新线"——2026-10-13 波三线
-  全收（TameSpine 批 12 `50b35415` / C1.6-G5 `1f3da927` / Phase4-W3 `aaae330c`）
-  后编排者停等新指令。root runner 例外继续跑（2,170/19,237 pass 100% @175/h，
-  ETA ≈ 3.9 天，PID 50866 脱离进程，监控 /Users/zhangzhuo/lprun/MONITOR.md）。
-- **三件真数学全部清账**（GRKIBMP 组 / PA24 B2 / AJRIPQN；pivot 反向勘误为
-  早已闭合）。
-- **脊柱接口**：A1/A2/A3/A4/A5 已清；剩 A6（柱①✅柱②仅剩归一化本体一件、
-  spec 已入 NEEDS）/A7/A8/A9（tame GIANT，**B1 地基 12 批 :23-8920 全落**）/
-  A10（**CRTTXAT 帽石全清 = B6 出口件一号解锁**，mqmsmab 装配波待立项）/
-  A11/A12（数据）。
-- **A12/C1**：**C1.6 G5 已收官**（gen_farkas.py，189/189 精确预检+试点 B 端到端
-  [propext]，93 族零 UNKNOWN）；root runner 长跑如上；余 C1.7 批量发射（处方
-  在 G5 报告）+批末收口。
-- **Phase 4**：W3 四工位落账——guard-straddle=证书结构缺口（13 子盒修复路线
-  量化 12 定号+1 残差）、disj 端到端首绿、decide 成本 122.7 s/叶、formal_ineqs
-  考古（monotonicity 降维=我方全缺的免费武器）；路由表已批（R1-R4 混合），
-  92 prep 画像 94.3% 可立即灌装；余 W4（镜像 gsplit 实施+第三武器 R&D+decide
-  成本工程）。
-- **周配额事件**：10-13 凌晨 1310 三线阵亡已全部 salvage 落地；新故障模式入册
-  （孤儿进程/解释跑块缓冲/探针-内核分层，见 playbook §5.4''）。
+- **在飞**：EULER_TRIANGLE 三代车道（GIANT 级：:2081 需闭式立体角定理本体，
+  W-乘积法施工图已备，dih 桥已证，二代 sympy 双验证）；root runner 长跑
+  （16:13 阵亡当日复活账本零损失，~3,500/8,283 本轮 done 含历史 fail 重试，
+  ETA ≈ 34h，配方 /Users/zhangzhuo/lprun/MONITOR.md §4，巡检自动化每 6h
+  查活救活）。
+- **脊柱接口**：A1-A5 已清；A6（柱②归一化本体一件）/A7/A8/A9（tame GIANT，
+  **B1 地基 20 批全落，批 21 起点 = HOL :10595 fgraph_seed**）/A10（帽石全清，
+  mqmsmab 装配波待立项）/A11/A12（C1.7 已收官，A12 数据绑定收口）。
+- **A12/C1**：**C1.7 已全线收官**（189/189 内核验证+入库+骨架闭合+统一终账，
+  见上）；root runner 长跑如上。
+- **Phase 4**：DomOK v2 落地（sb12 真瓶颈=rung 2048 闭式 atan 内核 Taylor），
+  **下一杆 = witness 位 trans 降 rung**（移交 W8 拍板）；TM 舰队重烤波
+  （197 模块/18,477 站点，SF-42 后机械批量）排队；W9 判定的第三武器 C 侧
+  集成仍 deferred。
+- **排队待派**：舰队重烤波 / A6③（DLWCHEM/XULJEPR GIANT）/ PA24 B2 续 /
+  W8 witness 位降 rung / EULER 三代（已在飞）。
 
 ---
 

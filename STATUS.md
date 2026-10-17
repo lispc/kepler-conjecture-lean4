@@ -1,4 +1,4 @@
-# 项目总进度（Status）— 2026-10-15
+# 项目总进度（Status）— 2026-10-17
 
 > **⚠️ 环境变更（2026-09-28）：旧生产服务器（128 核/503G）报废**，磁盘不可恢复。
 > 仅存本机外部存储的产物丢失（cert549_tight.json / LP 43,078 持久化产物 / bb_arb 重跑
@@ -376,6 +376,43 @@ B 道 nohup nice-5 继承饿死（starvation 3× 实测，renice 无法升优先
 
 **收口令执行**：两批八线全收零在飞 Lean 线，停等用户指令。待拍板三项：
 W6b 方案 A（√ mantissa 填充）、TEWNSCJ PA3 opaque 桥 SF 立项、W8 mono 批量化。
+
+## 2026-10-16/17 mega 波（C1.7 全线收官日 + 内存事故 + 七 commit）
+
+**C1.7 全线收官**（用户令"都发"波）：①**PA25 wwtcount6_y finisher**（`7b492f63`，
++240/−2，闸 PASS）——"两侧同 6 被判等器全拒"是烟幕弹，真解法 = congrArg 把
+ncard 等式整只推过 Nat.cast 让数值等式不被调用；②**批 20 TameList20**（`9a4406d5`，
+六件全真证；勘误：交接脚手架从未编译过，"已过审计"是虚账）；③**DomOK v2**（`b661ff07`，
++896/−22）——mono stage-B 批化（domTable 单趟+纯表消费器+双 O(n) decide 错表
+只能 fail），sb12 A/B 定位真瓶颈 = W8 默认 rung 2048 闭式 atan 内核 Taylor
+（witness 冗余仅 1.6×），下一杆 witness 位降 rung 移交 W8；④**SF-42**（`3e8cdca6`，
+STATEMENT-FIX 闸 PASS）——sqrtRel 相对粒度 2⁻⁸⁰ 恒宽根治 var-at-point 发散，
+C549Mono 12/12 重烤转绿，**TM 舰队 197 模块/18,477 站点重烤=尾波排队**；⑤
+**Text/LP infeas 落地**（`7ba6b5b7`，193 文件 +42,761/−950，闸 PASS）——189
+闭合模块+列→行桥 LPFarkasCM+骨架转发，**infeas 段 sorry 清零**；⑥**统一终账**
+（`51f3403a`）：全队列 189 条列主序重刷 **189/189 全绿零失败**（最慢 662.6s）。
+DEBT 44,481（−193：infeas 清账 189+本波收官 4；debt_ledger.py 重生成）。
+
+**列主序手术（本波方法论主角）**：行主序 coreColSum 每列重走全行+行内位置游走
+= O(列×行²) 内核遍历（B087 ≈2×10⁹ 链表访问→足迹 65.8GB>36GB RAM+30GB swap
+不可完成；B086 侥幸 4h22m）；列主序单列一趟乘加后 **B086 33.8×/B087 9m10s**
+——与 DomOK v1→v2 同款病理第二次以重排/批化治好（大核 decide 的嵌套表布局
+= 结构性内存陷阱，巨表一律列主序或批化）。
+
+**16:13 内存打穿强重启事故**：五 lane 并发构建+双驱动+巨物同机 → swap 打穿 →
+WindowServer 看门狗强重启；**/tmp 全清**（五车道克隆+redo 工作区损失）；
+排查顺手破案：此前"环境收割者"25-55min 杀 lean = 磁盘满→swap 断供→jetsam
+（15 车道克隆 ×16G 塞满 460G 盘）。**内存三规立**（入 playbook）：lane 串行/
+起 build 前查空闲 ≥12GB/B 级巨物禁与构建并行。打捞纪律验证：删除前 diff
+快照存 c17_backup → SF-42/wwtcount6/批20 三线全部从打捞物零损失续跑
+（wwtcount6 死前 11 分钟刚编译通的 Mini2 直接成了交付钥匙）。
+
+**EULER_TRIANGLE**：二代诚实止损——:2081 真实需求 = EULER_TRIANGLE 闭式
+立体角定理本体（HOL ~1300 行微积分 GIANT，全仓无立体角闭式资产），非三角链；
+W-乘积法设计+sympy 符号/数值双验证完成、dih 桥已证、工件备份；三代按施工图
+在飞。**root runner**：16:13 阵亡→当日复活，账本零损失，3,485/8,283 本轮
+done（含 1,791 历史 fail 重试消化中命中率 ~100%），ETA ≈ 34h；**六小时巡检
+automation 上岗**（CronCreate，自动救活双驱动+系统越线只报不动）。
 
 ## 2026-10-13 波（三线全收日 + 收波停等令）
 

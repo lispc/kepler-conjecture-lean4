@@ -899,3 +899,30 @@ Matrix.det_fin_three simp 集 + ring）唯一稳路线；带除法 V3 组合等�
 双律**——宽度型对拍抓不到符号翻转（W5 div 分子反号漏网），"已验证"的符号
 微分必须过有限差分对拍；内核 Dyadic 是 repr-敏感的（同值异表示宽度差 10⁹），
 精确分数镜像看不见 [s,s+1] 型机制，TM 镜像必须 dyadic 逐位。
+
+**环境与资源（2026-10-16/17 增补，16:13 内存打穿强重启事故随件）**：
+㊶**内存三规（血泪主线）**——多 lane 并发构建+B 级巨物 lean 同机 = swap 打穿
+→ WindowServer 饿死 → 看门狗强重启（/tmp 全清）；铁律：lane 串行、起任何
+build 前查 `memory_pressure -Q` 空闲 ≥12GB、B 级巨物在飞禁并行构建。㊷**"环境
+收割者"真身 = 磁盘满→swap 断供→jetsam**（exit 137 @25-55min 与进程架构无关）；
+/tmp 车道克隆每个 ~16G（.lake 构建），落地波后即时清，死克隆删除前先
+`git diff`+untracked tgz 快照进 home 备份（打捞纪律：SF-42/wwtcount6/批 20
+三线全靠它零损失续跑）。㊸**/tmp 重启即清**——车道终稿/账本/plan 一律先抄
+home 再动 /tmp。㊹**克隆三件套**：`cp -Rc` packages + **lake-manifest.json
+（gitignored！漏拷=lake 重解析 URL+insteadOf→删 mathlib）**+ 数据文件
+（gen_farkas 除 dat 还要 glpk/body.mod + LP-HL/000.txt，漏=GEN_FAIL 全队列）；
+禁 symlink packages。
+
+**大核与工具（同波）**：㊺**行主序嵌套表大核 decide = 内存陷阱**——O(列×行²)
+链表访问（B087 ≈2×10⁹→足迹 65.8GB 不可完成），巨表一律列主序
+（gen_farkas `--col-major`，33.8×）或批化（DomOK v2 domTable 模式）；同款病理
+两次以重排/批化治好（DomOK v1→v2、Farkas row→col）。㊻**重建 plan/queue JSON
+必逐字段对照原 schema**（redo_plan 漏 hid → KeyError 在记账路径，驱动死于
+成功之后）；原件在 /tmp 的先抄 home。㊼**lake 5.0 无 -j 并发旗标**（-J=
+--json），并发度靠分批+固定 target 数封顶。㊽**cp -Rc build 目录后 lake 判
+fresh**（源变更甚至 olean 缺失都 fresh=假绿）——诚实重编前 rm 目标
+{olean,ilean,trace,hash}，以日志 `Building <t>` 行为准。㊾**闸操作双教训**：
+env 不跨 Bash 调用存续（LANE_FILES 必须与闸同一命令内联生成）；设了
+LANE_FILES 锚文件也要列入（ALLOW 不自动含锚）；LANE_FILES 是 lean-relative。
+㊿**双实例扫波写同一 ledger**：行交错/重复无害，终账 dedupe 取 ok 优先；
+环境性 SIGTERM（-15）同秒双杀=进程组清理波及（<0.1% trickle），ok 行覆盖即愈。
