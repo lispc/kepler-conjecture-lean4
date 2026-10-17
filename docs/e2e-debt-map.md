@@ -366,3 +366,16 @@ c17sweep_final/。历史 A/B 切片碎片账（含 t60 重编号）作废，以�
 **尾账**：C549 类 TM 舰队重烤波（197 模块/18,477 站点，SF-42 落地后翻假待
 重烤）排队；root runner 3,485/8,283 本轮 done（含历史 fail 重试消化中），
 144/h，ETA ≈ 34h。
+
+**PA24/B 链 taint 普查（2026-10-17，PA24 B2 车道随件）**：任务书勘误——
+`p24_caseB2_branch` 已于 `fdfae86d` 闭合（:1118 判读源自 REUHADY1 docstring
+过时段落，本次已诚实化）；PA24 唯一文件级 sorry = **REUHADY1 本体 (d) 二面角
+分裂主体**（HL REUHADY.hl 239-8356，8100 行/634 NEW_GOALS）。B 链公理 taint
+三根（全在他车道辖域）：**R1** PA11 `LEPJBDJ` k=2/3 bites → PA10 `HDTFNFZ` →
+A/B3/B2 全支；**R2** PA2 `XNHPWAB1_concl`(:5408)/`XNHPWAB4_concl`(:5391)
+（Rogers omega=外心层 |S|≤3 gap）→ PA7 四件 → B3 aux 与 ω₂ 距离恒等式
+（SF37 只修了 MXI_EXISTS_concl 陈述，函数体仍 sorry @PA2:5494）；**R3**
+REUHADY1 (d) ← PA17 `AJRIPQN` ← Rogers 覆盖链（TIWWFYQ→SLTSTLO1/2+DDZUPHJ→
+RVFXZBU）。接续处方：闭 R1/R2 后 PA24 侧零编辑真化（mxi 私证 ~90 行处方在
+案）；REUHADY1 (d) 依赖序 = Rogers 覆盖链 → AJRIPQN 五阶段 → HL 400-8356
+移植（消费 PA24 在飞 kit）。

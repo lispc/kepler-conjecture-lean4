@@ -87,9 +87,12 @@ SORRY INVENTORY (giants, with blockers)
     `WEDGE_GE_ALMOST_DISJOINT_p24` (genuine, gives `REUHADY1`'s closed
     wedge-intersection hypothesis), `p24_REUHADY_extract` (barV/pair
     extraction: `u0,u1 ∈ V` + `¬Collinear3`), `p24_hl_pair_lt_sqrt2`
-    (pair half-length, `HL_2` local copy). REMAINING sorryAx inputs:
-    `REUHADY1` itself + the non-flat-cell existence
-    `p24_exists_mcell_not_flat` (the (β) `v1 = v2` residual). The (α)
+    (pair half-length, `HL_2` local copy). REMAINING file-level `sorry`
+    input: `REUHADY1` itself only — the non-flat-cell existence
+    `p24_exists_mcell_not_flat` (the (β) `v1 = v2` residual) is GENUINE
+    since the 2026-10-10..12 waves (branch assembly `p24_caseB2_branch`;
+    axiom-level taint persists only via upstream PA2/PA10/PA11 interface
+    stubs, see the capstone docstrings). The (α)
     `v1 ≠ v2` azimuth exclusion is GENUINE (2026-10-08/09 wave):
     `p24_nondeg_azim_ne` (coordinate kit `p24_tri_data` + the strengthened
     `p24_tri_gamma` with the γ-relation, disk+cone bounds, final packing
@@ -1089,9 +1092,11 @@ exclusion `p24_nondeg_azim_ne` for `v1 ≠ v2` — GENUINE 2026-10-08/09: the co
 kit `p24_tri_data` + the strengthened `p24_tri_gamma` (γ-relation
 `2wh = h² + t² − dt`) + disk/cone bounds + the final `dist v1 v2 < 2`
 contradiction) and the non-flat-cell existence `p24_exists_mcell_not_flat`
-for `v1 = v2` (still a precisely-scoped `sorry`). Both branches are wired
-into `p24_REUHADY_nondeg_azim`, which is now genuinely closed modulo that
-single lemma. Statement (REUHADY_concl1_new) itself needs only PA2 defs,
+for `v1 = v2` — GENUINE since the 2026-10-10..12 waves (branch assembly
+`p24_caseB2_branch`; see its docstring). Both branches are wired into
+`p24_REUHADY_nondeg_azim`, which is genuinely closed. The file's single
+remaining `sorry` is THIS theorem's (d) body below (the dihedral-splitting
+bulk). Statement (REUHADY_concl1_new) itself needs only PA2 defs,
 no voronoi. -/
 theorem REUHADY1 : REUHADY_concl1_new := by
   intro V u0 u1 vl1 vl2 n1 n2 e hs hp hu0 hu1 hne hhl he hwedge haz hvlne
@@ -6812,9 +6817,10 @@ private theorem p24_exists_mcell_not_flat (V : Set V3) (u0 u1 : V3)
       -- 情形装配 = precisely-scoped 残余缺口（p24_caseB2_branch 记账）。
       exact p24_caseB2_branch V u0 u1 vl hs hp hu0 hu1 hne hbar htr hd8 hr4 hr3
 
-/-- capstone 退化支排除（2026-10-08/09 波两支收口，本件本体真证——剩余
-`sorryAx` 输入恰为 `(β)` 支独立存在性引理
-`p24_exists_mcell_not_flat` 一件；HL OXLZLEZ3 `FCHKUGT`/`EWYBJUA` 对应物，
+/-- capstone 退化支排除（2026-10-08/09 波两支收口，本件本体真证——文件级
+`sorry` 零：`(β)` 支独立存在性引理 `p24_exists_mcell_not_flat` 已于
+2026-10-10..12 波全真证（公理面残余 taint 仅经上游 PA2/PA10/PA11 接口桩
+传入，PA24 侧零 `sorry` 项）；HL OXLZLEZ3 `FCHKUGT`/`EWYBJUA` 对应物，
 PA18:2159/:2532 有同名 `ported sorry` 孪生）：capstone 假设组下
 `azim u0 u1 v1 v2 ≠ 0`。
 (α) `v1 ≠ v2` 支——GENUINE（2026-10-08/09 波）：`azim = 0` 经
@@ -6827,8 +6833,8 @@ PA18:2159/:2532 有同名 `ported sorry` 孪生）：capstone 假设组下
 （`p24_nondeg_azim_ne`，真证）。
 (β) `v1 = v2` 支——两闭楔同为平坦半平面
 `wedgeGe u0 u1 v v = {z | azim u0 u1 v z = 0}`，`heX` 把所有以 `e` 为边的胞
-压进该半平面，与独立存在性引理 `p24_exists_mcell_not_flat`（上方，`sorry`
-残件——饱和 packing 短棱处存在以 `e` 为边、不落在任一过轴平坦半平面内的
+压进该半平面，与独立存在性引理 `p24_exists_mcell_not_flat`（上方，真证
+——饱和 packing 短棱处存在以 `e` 为边、不落在任一过轴平坦半平面内的
 mcell）相抵。 -/
 private theorem p24_REUHADY_nondeg_azim (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
     (v1 v2 : V3) (e : Set V3) (hs : saturated V) (hp : Packing V)
@@ -6905,8 +6911,8 @@ private theorem p24_REUHADY_nondeg_azim (V : Set V3) (u0 u1 : V3) (vl1 vl2 : Lis
 `p24_exists_mcell_not_flat` 两支，见 `p24_REUHADY_nondeg_azim` docstring
 的 (α)/(β) 记账；坐标工具链已真证落盘）。PA18:2159/:2532 的
 `FCHKUGT`/`EWYBJUA` 同名孪生仍为 `ported sorry`；本件的两支收口中
-(α) 支已真证（`p24_nondeg_azim_ne`），(β) 支为 `p24_exists_mcell_not_flat`
-一件（precisely-scoped `sorry`）。 -/
+(α) 支已真证（`p24_nondeg_azim_ne`），(β) 支 `p24_exists_mcell_not_flat`
+亦已真证（2026-10-10..12 波）——本件两支零缺口、PA24 侧零 `sorry` 项。 -/
 private theorem p24_REUHADY_nondeg (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
     (v1 v2 : V3) (e : Set V3) (hs : saturated V) (hp : Packing V)
     (hdist : dist u0 u1 < Real.sqrt 8) (he : e = {u0, u1})
@@ -6947,11 +6953,13 @@ synthesized genuinely in this file:
     the OXLZLEZ3 `FCHKUGT`/`EWYBJUA` leaf-cell chain; note this
     statement's `azim ≠ 0` hypothesis is about FREE points `w1 w2`, so it
     yields `u0 ≠ u1` only).
-REMAINING `sorryAx` inputs: `REUHADY1` (giant) +
-`p24_exists_mcell_not_flat` (the (β) `v1 = v2` non-flat-cell existence).
+REMAINING file-level `sorry` input: `REUHADY1` (giant) only —
+`p24_exists_mcell_not_flat` (the (β) `v1 = v2` non-flat-cell existence)
+is GENUINE since the 2026-10-10..12 waves.
 The (α) `v1 ≠ v2` azimuth exclusion `p24_nondeg_azim_ne` is GENUINE
 (2026-10-08/09 wave; the shim `p24_REUHADY_nondeg_azim` is wired to it).
-When the last lemma lands, each capstone closes with zero further edits. -/
+When `REUHADY1`'s (d) body lands, each capstone closes with zero further
+edits. -/
 theorem REUHADY_p24 : ∀ (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3) (v1 v2 : V3)
     (e : Set V3) (w1 w2 : V3), saturated V → Packing V → dist u0 u1 < Real.sqrt 8 →
     e = {u0, u1} → ¬(azim u0 u1 w1 w2 = 0) →
@@ -7000,11 +7008,13 @@ is NOT derivable from the visible hypotheses: at `azim = 0` the
 wedge-intersection hypothesis degenerates to a trivial half-plane
 inclusion — the exclusion is the OXLZLEZ3 `FCHKUGT`/`EWYBJUA`
 leaf-cell chain, see `p24_wedgeGe_flat_subset` for the flat degeneration).
-REMAINING `sorryAx` inputs: `REUHADY1` (giant) +
-`p24_exists_mcell_not_flat` (the (β) `v1 = v2` non-flat-cell existence).
+REMAINING file-level `sorry` input: `REUHADY1` (giant) only —
+`p24_exists_mcell_not_flat` (the (β) `v1 = v2` non-flat-cell existence)
+is GENUINE since the 2026-10-10..12 waves.
 The (α) `v1 ≠ v2` azimuth exclusion `p24_nondeg_azim_ne` is GENUINE
 (2026-10-08/09 wave; the shim `p24_REUHADY_nondeg_azim` is wired to it).
-When the last lemma lands, each capstone closes with zero further edits. -/
+When `REUHADY1`'s (d) body lands, each capstone closes with zero further
+edits. -/
 theorem REUHADY_version2_p24 : ∀ (V : Set V3) (u0 u1 : V3) (vl1 vl2 : List V3)
     (v1 v2 : V3) (e : Set V3), saturated V → Packing V → dist u0 u1 < Real.sqrt 8 →
     e = {u0, u1} →
