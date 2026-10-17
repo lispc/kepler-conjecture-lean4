@@ -28,10 +28,13 @@ hard 批 19,438/148 可用二者 --stats 交叉复核）。
   python3 lean/scripts/gen_lp_skeleton.py [--limit N]   # 试点批/全量
   python3 lean/scripts/gen_lp_skeleton.py --check       # 只盘点，不落盘
   python3 lean/scripts/gen_lp_skeleton.py --emit-closure  # 补丁模式：已发射
-    # 产物模块（socert.py --col-major --record-id，T<id 去 _>，见 PRODDIR）
-    # 的叶占位行原地换单行转发（LPSchema 手册第 3 步；叶名不变 → LPAll
-    # exact 转发零改动；幂等，LPIds/LPAll 不动）。输出树可用环境变量
-    # LPGEN_OUTDIR 重定向（/tmp 彩排用；产物模块根随之取 OUTDIR.parents[1]/LP）。
+    # 产物模块的叶占位行原地换单行转发（LPSchema 手册第 3 步；叶名不变 →
+    # LPAll exact 转发零改动；幂等，LPIds/LPAll 不动）。bound 支产物 =
+    # socert.py --col-major --record-id（PRODDIR/<mod>/Assembly.lean pin），
+    # infeas 支产物 = gen_farkas.py --lean --col-major --land
+    # （PRODDIR/T<id 去 _>.lean 平文件 rowCore/row_check，C3 数据波）。
+    # 输出树可用环境变量 LPGEN_OUTDIR 重定向（/tmp 彩排用；产物模块根
+    # 随之取 OUTDIR.parents[1]/LP）。
 
 探针（每生成文件，逐错迭代到零；依赖 olean 的先 lake build 单模块）：
   cd lean && ~/.elan/bin/lake env lean Kepler/Text/LP/<file>.lean
@@ -232,6 +235,19 @@ def product_pin_module(rid: str):
     return None
 
 
+def farkas_product_module(rec):
+    """infeas 支产物模块名（C3 数据波）：PRODDIR/T<id 去 _>.lean 平文件
+    （`gen_farkas.py --lean --col-major --land` 产物，含 row_check 列→行桥
+    转发件）。命名同 bound 支 `T<id 去 _>`（bound 产物为 PRODDIR/<mod>/
+    Assembly.lean 目录形，本支为平文件形；记录 id 全库唯一，两支互斥）。
+    无产物时返回 None（叶保持占位）。"""
+    mod = "T" + rec["id"].replace("_", "")
+    f = PRODDIR / (mod + ".lean")
+    if f.exists() and "theorem row_check" in f.read_text():
+        return mod
+    return None
+
+
 def close_leaf_file(path: Path, recs):
     """叶文件原地补丁：该叶占位 `:= by\\n  sorry` 换成
     `LpTerminalPin.toCertified Kepler.LP.<mod>.pin` 单行转发（叶名不变 →
@@ -242,9 +258,32 @@ def close_leaf_file(path: Path, recs):
     sorry_before = text.count("sorry")
     closed = skipped = 0
     new_imports = []
+    bound_closed = 0
     for r in recs:
         if r["batch"] == "infeas":
-            skipped += 1  # Farkas 通道未落地（infeas 叶走 C1b 定形通道），保持占位
+            mod = farkas_product_module(r)
+            if mod is None:
+                skipped += 1  # Farkas 产物模块未发射（gen_farkas --land），保持占位
+                continue
+            leaf = leaf_name(r)
+            placeholder = (
+                f"/-- `{r['id']}`（{r['dat']}#{r['gi']} · infeasible 支）\n"
+                f"NEEDS(deferred-compute): 不可行性证书通道（PLACEHOLDER(LP-infeas)，"
+                f"退化防线见 LPCert）定形后转发闭合。 -/\n"
+                f"theorem {leaf} : LpTerminalInfeasibleCertified \"{r['id']}\" := by\n"
+                f"  sorry\n")
+            closure = (
+                f"/-- `{r['id']}`（{r['dat']}#{r['gi']} · infeasible 支）— 闭合："
+                f"Farkas 重跑产物模块转发（列主序证书 + 列→行桥 LPFarkasCM；"
+                f"gen_lp_skeleton --emit-closure 落账）。 -/\n"
+                f"theorem {leaf} : LpTerminalInfeasibleCertified \"{r['id']}\" :=\n"
+                f"  ⟨Kepler.LP.{mod}.rowCore, Kepler.LP.{mod}.row_check⟩\n")
+            if placeholder not in text:
+                skipped += 1  # 已闭合或内容漂移：不重复补丁
+                continue
+            text = text.replace(placeholder, closure, 1)
+            new_imports.append(f"import Kepler.LP.{mod}")
+            closed += 1
             continue
         mod = product_pin_module(r["id"])
         if mod is None:
@@ -268,10 +307,12 @@ def close_leaf_file(path: Path, recs):
         text = text.replace(placeholder, closure, 1)
         new_imports.append(f"import Kepler.LP.{mod}")
         closed += 1
+        bound_closed += 1
     assert text.count("sorry") == sorry_before - closed, \
         f"{path.name}: sorry accounting broke"
     if closed:
-        add = [l for l in ["import Kepler.Text.LP.LPSchema"] + sorted(set(new_imports))
+        add = [l for l in (["import Kepler.Text.LP.LPSchema"] if bound_closed else []) \
+               + sorted(set(new_imports))
                if l + "\n" not in text]
         if add:
             text = text.replace("import Kepler.Text.LP.LPIds\n",
