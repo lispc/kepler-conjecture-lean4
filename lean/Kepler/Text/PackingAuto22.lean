@@ -10103,4 +10103,581 @@ theorem XULJEPR (V : Set V3) (hP : Packing V) (hV : V ⊆ ballAnnulus)
     (hv : ∃ v ∈ V, ‖v‖ = 2 ∧ ∀ u ∈ V, u ≠ v → 2 * h0 ≤ dist u v) :
     localAnnulusInequalityP22 V := trivial
 
+/-! ## A6③ wave (2026-10-19): the DLWCHEM / XULJEPR counting chain — 骨架章
+
+HOL counting_spheres.hl:7063 `DLWCHEM` / :7191 `XULJEPR` 的计数装配链，全部对照
+**真定义** `localAnnulusInequality`（PackingAuto2:541 = pack_defs.hl:202
+`sum V (λ v. lmfun (hl [vec 0; v])) ≤ 12`）搭建。文件头部 :302 的
+`localAnnulusInequalityP22` 目前是 `True` 桩（NEEDS pack1.hl），这正是
+:10053/:10065/:10095/:10101 四件既有占位能 `absurd trivial hloc`/`trivial`
+空转的根源：`¬ True` 即荒谬。本波零改动既有语句（换桩属 SF 辖区），只新增：
+
+  A. `setSum` 辅助三件（PackingAuto2 的同名件是 private）。
+  B. `lmfun` 基本式 + `hl [0, v] = ‖v‖ / 2`（经 PackingAuto15:553 公开 `HL_2`，
+     即 marchal3.hl:1034）。
+  C. `cosg_p22` = HOL `COSG`（counting_spheres.hl:6289）：theta 的余弦恒等式。
+  D. `LMFUN_INEQ_CENTER_IMP_13` / `LMFUN_INEQ_CENTER_SUBSET`
+     （counting_spheres.hl:6175/:6194）真证。
+  E. `SATURATE_BALL_ANNULUS`（counting_spheres.hl:6221）真证（消费 :6783
+     `weak_saturation`；其 `weaklySaturatedP22` 部分维持桩依赖记账）。
+  F. `POLYHEDRON_FACET_SUM_4Pi`（counting_spheres.hl:6252）NEEDS 脚手架
+     （Conforming lane；in-tree 桥件 ConformingAuto6.lean:735）。
+  G. `DLWCHEM_VECTOR_sumReal` / `XULJEPR_VECTOR_sumReal`
+     （counting_spheres.hl:6814/:6905）：求和层全量搬运（经 :5716/:5769
+     已真证的算术端 `DLWCHEM_sum`/`XULJEPR_sum`——BIEFJHU/UKBRPFE 已于
+     PA22g/PA22d 清偿，本组零新增债）。
+  H. `DLWCHEM_full` / `XULJEPR_full`（counting_spheres.hl:7063/:7191）：真定义
+     版装配，逐条对应 HOL 的 LMFUN→SATURATE→YSSKQOY→EXISTS_M_POLYHEDRON→
+     facet 计数→6n-12→4π→VECTOR_sum 链。
+  I. SF 换桩桥 `DLWCHEM_of_stub_bridge` / `XULJEPR_of_stub_bridge`：给定
+     `∀ U, localAnnulusInequalityP22 U ↔ localAnnulusInequality U` 即得
+     :10095/:10101 既有语句的真证明——SF 把 :302 桩换成
+     `localAnnulusInequality V` 后，两件既有占位即可零成本闭合。
+
+公理债分层（`#print axioms` 实测见交付报告）：
+  - A/B/C/D/E 组本体（含全部辅助件）仅标准三公理（propext/choice/Quot.sound），
+    零 `sorryAx`。
+  - F/G/H 组经既有 sorry-GIANT 继承 `sorryAx`：GOTCJAH(:9248)、
+    polyhedron_edge_sum(:9675)、EXISTS_M_POLYHEDRON(:9781)、facet_3_facets(:9867)、
+    YSSKQOY_VECTOR(:9875)、YSSKQOY_VECTOR2_ALT(:9902)、FCHANGED_MEASURABLE(:7864，
+    经 FACET_SOL_NN)，外加 F 组脚手架一处。无新增数学 sorry（F 组一处记账见其注释）。
+-/
+
+/-! ### A. `setSum` helpers（PackingAuto2 同名件为 private，此处独立微件） -/
+
+private theorem setSum_le_p22 {α : Type*} {s : Set α} (hf : s.Finite) {f g : α → ℝ}
+    (h : ∀ x ∈ s, f x ≤ g x) : setSum s f ≤ setSum s g := by
+  rw [setSum, dif_pos hf, setSum, dif_pos hf]
+  exact Finset.sum_le_sum fun x hx => h x (hf.mem_toFinset.mp hx)
+
+private theorem setSum_const_p22 {α : Type*} {s : Set α} (hf : s.Finite) (c : ℝ) :
+    setSum s (fun _ => c) = c * s.ncard := by
+  rw [setSum, dif_pos hf, Finset.sum_const, nsmul_eq_mul,
+    ← Set.ncard_eq_toFinset_card s hf]
+  ring
+
+/-- Sum transport along a bijection `ab : A → B`（HOL `BIJ_SUM` 的 setSum
+对照；`setSum` 本体 ℝ 特化，故此处亦取 ℝ）。-/
+private theorem setSumBijOn_p22 {α ι : Type*}
+    {A : Set α} {B : Set ι} (hA : A.Finite) (hB : B.Finite) (ab : α → ι) (g : ι → ℝ)
+    (h : Set.BijOn ab A B) :
+    (∑ x ∈ hA.toFinset, g (ab x)) = setSum B g := by
+  classical
+  rw [setSum, dif_pos hB]
+  have hab : ∀ x ∈ hA.toFinset, ∀ y ∈ hA.toFinset, ab x = ab y → x = y := fun x hx y hy he =>
+    h.injOn (hA.mem_toFinset.mp hx) (hA.mem_toFinset.mp hy) he
+  have himg : hA.toFinset.image ab = hB.toFinset := by
+    ext y
+    simp only [Finset.mem_image, hA.mem_toFinset, hB.mem_toFinset]
+    constructor
+    · rintro ⟨x, hx, rfl⟩
+      exact h.mapsTo hx
+    · intro hy
+      obtain ⟨x, hx, hex⟩ := h.surjOn hy
+      exact ⟨x, hx, hex⟩
+  rw [← Finset.sum_image hab, himg]
+
+/-- ℕ 枚举域特例：`range n` 经 `j` 双射搬运到 `V` 上的 setSum。 -/
+private theorem setSumRangeBijOn_p22 (g : V3 → ℝ)
+    {V : Set V3} {n : ℕ} (hV : V.Finite) (j : ℕ → V3)
+    (hj : Set.BijOn j ((Finset.range n : Finset ℕ) : Set ℕ) V) :
+    (∑ i ∈ Finset.range n, g (j i)) = setSum V g := by
+  have hA : ((Finset.range n : Finset ℕ) : Set ℕ).Finite := Finset.finite_toSet _
+  have hEq : Finset.range n = hA.toFinset := by
+    ext i
+    simp [Set.Finite.mem_toFinset, Finset.mem_coe]
+  rw [hEq]
+  exact setSumBijOn_p22 hA hV j g hj
+
+/-! ### B. `lmfun` basics and the center-pair `hl` identity -/
+
+private theorem lmfun_nonneg_p22 (h : ℝ) : 0 ≤ lmfun h := by
+  unfold lmfun
+  split
+  · next hle => exact div_nonneg (by linarith) (by norm_num [h0])
+  · next => rfl
+
+private theorem lmfun_eq_lfun_p22 {h : ℝ} (hle : h ≤ h0) : lmfun h = lfun h := by
+  simp only [lmfun, lfun, if_pos hle]
+
+/-- marchal3.hl:1034 `HL_2` 的中心化特例（经 PackingAuto15:553 公开 `HL_2`）。 -/
+private theorem hl_center_p22 (v : V3) : hl [0, v] = ‖v‖ / 2 := by
+  rw [HL_2, dist_zero_left]
+
+/-! ### C. HOL `COSG`（counting_spheres.hl:6289）：theta 的余弦恒等式 -/
+
+private theorem cosg_p22 (h : ℝ) (hb : -2 ≤ h ∧ h ≤ 2) :
+    Real.cos (acs (h / 2) - Real.pi / 6) =
+      h * sqrt3 / 4 + Real.sqrt (1 - (h / 2) ^ 2) / 2 := by
+  have h1 : -1 ≤ h / 2 ∧ h / 2 ≤ 1 := ⟨by linarith, by linarith⟩
+  have hac : Real.cos (acs (h / 2)) = h / 2 := by
+    rw [acs, Real.cos_arccos h1.1 h1.2]
+  have hasin : Real.sin (acs (h / 2)) = Real.sqrt (1 - (h / 2) ^ 2) := by
+    rw [acs, Real.sin_arccos (h / 2)]
+  rw [Real.cos_sub, hac, hasin, Real.cos_pi_div_six, Real.sin_pi_div_six]
+  unfold sqrt3
+  field_simp
+  ring
+
+/-! ### D. HOL `LMFUN_INEQ_CENTER_IMP_13` / `LMFUN_INEQ_CENTER_SUBSET`
+（counting_spheres.hl:6175/:6194），对照真定义 `localAnnulusInequality` -/
+
+theorem LMFUN_INEQ_CENTER_IMP_13 (V : Set V3) (hf : V.Finite) (hV : V ⊆ ballAnnulus)
+    (hloc : ¬ localAnnulusInequality V) : 13 ≤ V.ncard := by
+  unfold localAnnulusInequality at hloc
+  have hterm : ∀ v ∈ V, lmfun (hl [0, v]) ≤ (1 : ℝ) := by
+    intro v hv
+    have h2 : (2 : ℝ) ≤ ‖v‖ := ((ckq_in_ball_annulus v).mp (hV hv)).1
+    rw [hl_center_p22]
+    exact LMFUN_LE_1 (‖v‖ / 2) (by linarith [norm_nonneg v])
+  have hsum : setSum V (fun v => lmfun (hl [0, v])) ≤ setSum V (fun _ => (1 : ℝ)) :=
+    setSum_le_p22 hf hterm
+  rw [setSum_const_p22 hf 1, one_mul] at hsum
+  by_contra hge
+  have h12 : V.ncard ≤ 12 := by omega
+  exact hloc (le_trans hsum (by exact_mod_cast h12))
+
+theorem LMFUN_INEQ_CENTER_SUBSET (V W : Set V3) (hfV : V.Finite) (hfW : W.Finite)
+    (hWV : W ⊆ V) (h : localAnnulusInequality V) : localAnnulusInequality W := by
+  unfold localAnnulusInequality at h ⊢
+  refine le_trans ?_ h
+  rw [setSum, dif_pos hfW, setSum, dif_pos hfV]
+  exact Finset.sum_le_sum_of_subset_of_nonneg
+    (fun x hx => hfV.mem_toFinset.mpr (hWV (hfW.mem_toFinset.mp hx)))
+    (fun i _ _ => lmfun_nonneg_p22 _)
+
+/-! ### E. HOL `SATURATE_BALL_ANNULUS`（counting_spheres.hl:6221）
+真证：经 :6783 `weak_saturation`（其 `weaklySaturatedP22` 合取维持桩依赖，
+其余合取全部实装）+ D 组两件。-/
+
+theorem SATURATE_BALL_ANNULUS (W S : Set V3) (r : ℝ) (hP : Packing W)
+    (hW : W ⊆ ballAnnulus) (hloc : ¬ localAnnulusInequality W) (hSW : S ⊆ W)
+    (hr : 2 ≤ r ∧ r ≤ 2 * h0)
+    (hsep : ∀ v w : V3, S v → W w → dist v w < r → v = w) :
+    ∃ V : Set V3, V ⊆ ballAnnulus ∧ Packing V ∧ weaklySaturatedP22 V r (2 * h0) ∧
+      V.Finite ∧ W ⊆ V ∧ (∀ v w : V3, S v → V w → dist v w < r → v = w) ∧
+      ¬ localAnnulusInequality V ∧ 13 ≤ V.ncard := by
+  obtain ⟨V, hVa, hVp, hVws, hVfin, hWV, hVsep⟩ :=
+    weak_saturation W S r hr hSW hP hW hsep
+  have hnot : ¬ localAnnulusInequality V := fun hlocV =>
+    hloc (LMFUN_INEQ_CENTER_SUBSET V W hVfin (fat_lemma1 W hP hW) hWV hlocV)
+  exact ⟨V, hVa, hVp, hVws, hVfin, hWV, hVsep, hnot,
+    LMFUN_INEQ_CENTER_IMP_13 V hVfin hVa hnot⟩
+
+/-! ### F. HOL `POLYHEDRON_FACET_SUM_4Pi`（counting_spheres.hl:6252）—— NEEDS
+Conforming lane：HOL 证路 = `POLYHEDRON_FAN` + `POLYHEDRON_CONFORMING_FAN` +
+`AMHFNXP_BIJ` + `SUM_SOL_IN_FACE_SET_EQ_4PI`；后者 Lean 侧已有 in-tree 桥
+（ConformingAuto6.lean:735，`hypermapOfFan` API），但 PA22 的
+vertices/edges/topologicalComponentYfan 仍是桩（见文件头部 NEEDS 清单），
+须等 fan lane 接线后回填。脚手架 `sorry` 逐条记账。-/
+
+theorem POLYHEDRON_FACET_SUM_4Pi (P : Set V3) (hp : polyhedron P)
+    (hb : Bornology.IsBounded P) (hi : (0 : V3) ∈ interior P) :
+    setSum {c : Set V3 | FacetOf c P} (fun c => sol 0 (fchanged c)) = 4 * Real.pi := by
+  -- NEEDS Conforming lane: POLYHEDRON_FAN + POLYHEDRON_CONFORMING_FAN +
+  -- AMHFNXP_BIJ + SUM_SOL_IN_FACE_SET_EQ_4PI (ConformingAuto6.lean:735)
+  sorry
+
+/-! ### G. HOL `DLWCHEM_VECTOR_sum` / `XULJEPR_VECTOR_sum`
+（counting_spheres.hl:6814/:6905），对照真定义 `localAnnulusInequality` 的
+全量搬运：枚举双射（`BIJ_EXTENDS_INJ`，∅/单点种子两型）+ `cosg_p22` 逐项
+恒等 + setSum 搬运 + `hl`/`lmfun` 化归，喂给已真证的算术端
+`DLWCHEM_sum`（:5716）/`XULJEPR_sum`（:5769）。零新增债。 -/
+
+open Classical in
+/-- HOL `DLWCHEM_VECTOR_sum`（counting_spheres.hl:6814）。 -/
+theorem DLWCHEM_VECTOR_sumReal (k : V3 → ℕ) (V : Set V3) (n : ℕ) (theta : V3 → ℝ)
+    (hpa : packIneqDefAP22)
+    (htheta : (fun v => acs (‖v‖ / 4) - Real.pi / 6) = theta)
+    (hk : ∀ v ∈ V, 3 ≤ k v)
+    (hn : 12 < n) (hsize : V.Finite ∧ V.ncard = n) (hV : V ⊆ ballAnnulus)
+    (hksum : setSum V (fun v => (k v : ℝ)) ≤ ((6 * n - 12 : ℕ) : ℝ))
+    (hasum : setSum V (fun v => max 0 (regularSphericalPolygonAreaP22
+      (Real.cos (theta v)) (k v))) ≤ 4 * Real.pi)
+    (hloc : ¬ localAnnulusInequality V) : n < 16 := by
+  classical
+  -- 枚举双射 (0..n-1) ↔ V（HOL: BIJ_EXTENDS_INJ 以 ∅ 为种子）
+  have hrangeF : (((Finset.range n : Finset ℕ) : Set ℕ)).Finite := Finset.finite_toSet _
+  have hcard : (((Finset.range n : Finset ℕ) : Set ℕ)).ncard = n := by
+    rw [Set.ncard_coe_finset, Finset.card_range]
+  obtain ⟨j, hj, -⟩ := BIJ_EXTENDS_INJ ((Finset.range n : Finset ℕ) : Set ℕ) V ∅
+    (fun _ => (0 : V3)) hrangeF hsize.1 (Set.empty_subset _)
+    ⟨fun a ha => absurd ha (Set.notMem_empty a), fun x hx => absurd hx (Set.notMem_empty x)⟩
+    (by rw [hcard, hsize.2])
+  have hmem : ∀ i ∈ Finset.range n, j i ∈ V := fun i hi =>
+    hj.mapsTo (Finset.mem_coe.mpr hi)
+  refine DLWCHEM_sum (fun i => ‖j i‖ / 2) (fun i => k (j i)) n hpa hn ?_ ?_ ?_ ?_
+  · -- hik：3 ≤ k，1 ≤ h ≤ h0（annulus 坐标）
+    intro i hi
+    have hin : i ∈ Finset.range n := Finset.mem_range.mpr hi
+    have hb : j i ∈ ballAnnulus := hV (hmem i hin)
+    have h2 : (2 : ℝ) ≤ ‖j i‖ := ((ckq_in_ball_annulus (j i)).mp hb).1
+    have h2b : ‖j i‖ ≤ 2 * h0 := ((ckq_in_ball_annulus (j i)).mp hb).2.1
+    refine ⟨hk (j i) (hmem i hin), ?_, ?_⟩
+    · exact one_le_div_iff.mpr (Or.inl ⟨by norm_num, h2⟩)
+    · linarith
+  · -- hksum（ℕ）：经 setSum 搬运 + Nat.cast
+    have htr : (∑ i ∈ Finset.range n, ((k (j i) : ℕ) : ℝ))
+        = setSum V (fun v => (k v : ℝ)) :=
+      setSumRangeBijOn_p22 (fun v => (k v : ℝ)) hsize.1 j hj
+    have h12n : (12 : ℕ) ≤ 6 * n := by omega
+    have hcast : (((6 * n - 12 : ℕ) : ℝ)) = (6 : ℝ) * n - 12 := by
+      rw [Nat.cast_sub h12n]; push_cast; ring
+    have hk' : setSum V (fun v => (k v : ℝ)) ≤ (6 : ℝ) * n - 12 := by
+      rwa [hcast] at hksum
+    refine (Nat.cast_le (α := ℝ)).mp ?_
+    rw [Nat.cast_sum, htr, hcast]
+    exact hk'
+  · -- hasum：逐项 cosg_p22 恒等 + setSum 搬运
+    have hcos : ∀ i ∈ Finset.range n, max 0 (regularSphericalPolygonAreaP22
+        (Real.cos (theta (j i))) (k (j i)))
+        = max 0 (regularSphericalPolygonAreaP22
+          (‖j i‖ / 2 * sqrt3 / 4 + Real.sqrt (1 - (‖j i‖ / 2 / 2) ^ 2) / 2) (k (j i))) := by
+      intro i hi
+      have hb : j i ∈ ballAnnulus := hV (hmem i hi)
+      have h2b : ‖j i‖ ≤ 2 * h0 := ((ckq_in_ball_annulus (j i)).mp hb).2.1
+      have htv : theta (j i) = acs (‖j i‖ / 4) - Real.pi / 6 := by
+        have hb0 := congrFun htheta (j i)
+        simpa using hb0.symm
+      rw [htv, show (‖j i‖ : ℝ) / 4 = ‖j i‖ / 2 / 2 by ring,
+        cosg_p22 (‖j i‖ / 2) ⟨by linarith [norm_nonneg (j i)], by
+          linarith [h2b, show (2 : ℝ) * h0 < 4 from by norm_num [h0]]⟩]
+    rw [Finset.sum_congr rfl fun i hi => (hcos i hi).symm,
+      setSumRangeBijOn_p22 (fun v => max 0 (regularSphericalPolygonAreaP22
+        (Real.cos (theta v)) (k v))) hsize.1 j hj]
+    exact hasum
+  · -- hlsum：¬localAnnulusInequality 展开 + lmfun=lfun + setSum 搬运
+    have hun : ∀ v ∈ V, lmfun (hl [0, v]) = lfun (‖v‖ / 2) := by
+      intro v hv
+      have hb : v ∈ ballAnnulus := hV hv
+      have h2b : ‖v‖ ≤ 2 * h0 := ((ckq_in_ball_annulus v).mp hb).2.1
+      rw [hl_center_p22, lmfun_eq_lfun_p22 (by linarith)]
+    have e1 : (∑ i ∈ Finset.range n, lmfun (hl [0, j i]))
+        = setSum V (fun v => lmfun (hl [0, v])) :=
+      setSumRangeBijOn_p22 (fun v => lmfun (hl [0, v])) hsize.1 j hj
+    have e2 : (∑ i ∈ Finset.range n, lmfun (hl [0, j i]))
+        = ∑ i ∈ Finset.range n, lfun (‖j i‖ / 2) :=
+      Finset.sum_congr rfl fun i hi => hun (j i) (hmem i hi)
+    rw [← e2, e1]
+    exact not_le.mp hloc
+
+open Classical in
+/-- HOL `XULJEPR_VECTOR_sum`（counting_spheres.hl:6905）。单点 `v0` 钉住型：
+枚举双射满足 `j 0 = v0`，`range n` 分裂为 `{0} ∪ Icc 1 (n-1)`（同 :5769
+`XULJEPR_sum` 自身的分裂编排）。 -/
+theorem XULJEPR_VECTOR_sumReal (k : V3 → ℕ) (V : Set V3) (n : ℕ) (theta : V3 → ℝ)
+    (v0 : V3) (hpa : packIneqDefAP22) (hv0 : v0 ∈ V)
+    (htheta : (fun v => if v = v0 then (0.797 : ℝ) else acs (‖v‖ / 4) - Real.pi / 6) = theta)
+    (hn : 12 < n) (hv0n : ‖v0‖ = 2) (hk : ∀ v ∈ V, 3 ≤ k v)
+    (hsize : V.Finite ∧ V.ncard = n) (hV : V ⊆ ballAnnulus)
+    (hksum : setSum V (fun v => (k v : ℝ)) ≤ ((6 * n - 12 : ℕ) : ℝ))
+    (hasum : setSum V (fun v => max 0 (regularSphericalPolygonAreaP22
+      (Real.cos (theta v)) (k v))) ≤ 4 * Real.pi)
+    (hloc : ¬ localAnnulusInequality V) : False := by
+  classical
+  -- 钉住 v0 的枚举双射（HOL: BIJ_EXTENDS_INJ 以 {0}/常值 v0 为种子）
+  have hrangeF : (((Finset.range n : Finset ℕ) : Set ℕ)).Finite := Finset.finite_toSet _
+  have hcard : (((Finset.range n : Finset ℕ) : Set ℕ)).ncard = n := by
+    rw [Set.ncard_coe_finset, Finset.card_range]
+  obtain ⟨j, hj, hj0⟩ := BIJ_EXTENDS_INJ ((Finset.range n : Finset ℕ) : Set ℕ) V {0}
+    (fun _ => v0) hrangeF hsize.1 (Set.singleton_subset_iff.mpr
+      (Finset.mem_coe.mpr (Finset.mem_range.mpr (by omega))))
+    ⟨fun a ha b hb _ => by
+      have ha0 : a = 0 := Set.mem_singleton_iff.mp ha
+      have hb0 : b = 0 := Set.mem_singleton_iff.mp hb
+      simp only [ha0, hb0], fun x hx => by
+      have hx0 : x = 0 := Set.mem_singleton_iff.mp hx
+      subst hx0
+      exact hv0⟩ (by rw [hcard, hsize.2])
+  have hj0v : j 0 = v0 := by
+    have h0 := hj0 0 rfl
+    simpa using h0.symm
+  have hmem : ∀ i ∈ Finset.range n, j i ∈ V := fun i hi =>
+    hj.mapsTo (Finset.mem_coe.mpr hi)
+  -- j i ≠ v0 对 i ≥ 1（单射回传）
+  have hne : ∀ i ∈ Finset.range n, 1 ≤ i → j i ≠ v0 := by
+    intro i hi h1i he
+    have h0in : (0 : ℕ) ∈ Finset.range n := Finset.mem_range.mpr (by omega)
+    have := hj.injOn (Finset.mem_coe.mpr hi) (Finset.mem_coe.mpr h0in)
+      (by rw [he, hj0v])
+    omega
+  refine XULJEPR_sum (fun i => ‖j i‖ / 2) (fun i => k (j i)) n hpa hn ?_ ?_ ?_ ?_ ?_
+  · -- h0eq：v0 的平坦球信用 ‖v0‖/2 = 1
+    rw [hj0v, hv0n]; norm_num
+  · -- hik
+    intro i hi
+    have hin : i ∈ Finset.range n := Finset.mem_range.mpr hi
+    have hb : j i ∈ ballAnnulus := hV (hmem i hin)
+    have h2 : (2 : ℝ) ≤ ‖j i‖ := ((ckq_in_ball_annulus (j i)).mp hb).1
+    have h2b : ‖j i‖ ≤ 2 * h0 := ((ckq_in_ball_annulus (j i)).mp hb).2.1
+    refine ⟨hk (j i) (hmem i hin), ?_, ?_⟩
+    · exact one_le_div_iff.mpr (Or.inl ⟨by norm_num, h2⟩)
+    · linarith
+  · -- hksum（ℕ）
+    have htr : (∑ i ∈ Finset.range n, ((k (j i) : ℕ) : ℝ))
+        = setSum V (fun v => (k v : ℝ)) :=
+      setSumRangeBijOn_p22 (fun v => (k v : ℝ)) hsize.1 j hj
+    have h12n : (12 : ℕ) ≤ 6 * n := by omega
+    have hcast : (((6 * n - 12 : ℕ) : ℝ)) = (6 : ℝ) * n - 12 := by
+      rw [Nat.cast_sub h12n]; push_cast; ring
+    have hk' : setSum V (fun v => (k v : ℝ)) ≤ (6 : ℝ) * n - 12 := by
+      rwa [hcast] at hksum
+    refine (Nat.cast_le (α := ℝ)).mp ?_
+    rw [Nat.cast_sum, htr, hcast]
+    exact hk'
+  · -- hasum：i = 0 项经 theta v0 = 0.797，i ≥ 1 项经 cosg_p22；range 分裂
+    -- htheta 的逐点形式（htheta 本体是 λ-等式，逐项改写需先取值）
+    have hthpt : ∀ v : V3, theta v =
+        (if v = v0 then (0.797 : ℝ) else acs (‖v‖ / 4) - Real.pi / 6) := by
+      intro v
+      have hlam : theta v =
+          (fun v => if v = v0 then (0.797 : ℝ) else acs (‖v‖ / 4) - Real.pi / 6) v := by
+        rw [htheta]
+      simpa using hlam
+    have hth0 : theta (j 0) = (0.797 : ℝ) := by
+      rw [hj0v]; simpa using hthpt v0
+    have hthne : ∀ i ∈ Finset.range n, 1 ≤ i →
+        theta (j i) = acs (‖j i‖ / 4) - Real.pi / 6 := by
+      intro i hi h1i
+      rw [hthpt (j i), if_neg (hne i hi h1i)]
+    -- range n = {0} ∪ Icc 1 (n-1) 分裂（同 XULJEPR_sum hsplit2 编排）
+    have hIcc : Finset.Icc 1 (n - 1) = Finset.Ico 1 n := by
+      ext i; simp only [Finset.mem_Icc, Finset.mem_Ico]; omega
+    have hrw : Finset.range n = Finset.range (1 + (n - 1)) := by congr 1; omega
+    have hsplit : (∑ i ∈ Finset.range n, max 0 (regularSphericalPolygonAreaP22
+        (Real.cos (theta (j i))) (k (j i))))
+        = max 0 (regularSphericalPolygonAreaP22 (Real.cos (theta (j 0))) (k (j 0)))
+          + ∑ i ∈ Finset.Icc 1 (n - 1), max 0 (regularSphericalPolygonAreaP22
+            (Real.cos (theta (j i))) (k (j i))) := by
+      rw [hrw, Finset.sum_range_add, Finset.sum_range_one, ←
+        Finset.sum_Ico_eq_sum_range (f := fun i => max 0 (regularSphericalPolygonAreaP22
+          (Real.cos (theta (j i))) (k (j i)))) 1 n, hIcc]
+    -- setSum 搬运 + 分裂 + 逐项 cosg_p22 恒等，恰好拼出 hasum 的左端
+    have hEq : max 0 (regularSphericalPolygonAreaP22 (Real.cos 0.797) (k (j 0)))
+        + ∑ i ∈ Finset.Icc 1 (n - 1), max 0 (regularSphericalPolygonAreaP22
+          (‖j i‖ / 2 * sqrt3 / 4 + Real.sqrt (1 - (‖j i‖ / 2 / 2) ^ 2) / 2) (k (j i)))
+        = setSum V (fun v => max 0 (regularSphericalPolygonAreaP22
+            (Real.cos (theta v)) (k v))) := by
+      rw [← setSumRangeBijOn_p22 (fun v => max 0 (regularSphericalPolygonAreaP22
+        (Real.cos (theta v)) (k v))) hsize.1 j hj, hsplit, hth0]
+      refine congrArg (fun s => max 0 (regularSphericalPolygonAreaP22
+        (Real.cos 0.797) (k (j 0))) + s) ?_
+      refine Finset.sum_congr rfl fun i hi => ?_
+      have hi1 : 1 ≤ i ∧ i ≤ n - 1 := Finset.mem_Icc.mp hi
+      have hin : i < n := by have := hn; omega
+      have hb : j i ∈ ballAnnulus := hV (hmem i (Finset.mem_range.mpr hin))
+      rw [hthne i (Finset.mem_range.mpr hin) hi1.1,
+        show (‖j i‖ : ℝ) / 4 = ‖j i‖ / 2 / 2 by ring,
+        cosg_p22 (‖j i‖ / 2)
+          ⟨by linarith [norm_nonneg (j i)], by
+            linarith [((ckq_in_ball_annulus (j i)).mp hb).2.1,
+              show (2 : ℝ) * h0 < 4 from by norm_num [h0]]⟩]
+    rw [hEq]
+    exact hasum
+  · -- hlsum
+    have hun : ∀ v ∈ V, lmfun (hl [0, v]) = lfun (‖v‖ / 2) := by
+      intro v hv
+      have hb : v ∈ ballAnnulus := hV hv
+      have h2b : ‖v‖ ≤ 2 * h0 := ((ckq_in_ball_annulus v).mp hb).2.1
+      rw [hl_center_p22, lmfun_eq_lfun_p22 (by linarith)]
+    have e1 : (∑ i ∈ Finset.range n, lmfun (hl [0, j i]))
+        = setSum V (fun v => lmfun (hl [0, v])) :=
+      setSumRangeBijOn_p22 (fun v => lmfun (hl [0, v])) hsize.1 j hj
+    have e2 : (∑ i ∈ Finset.range n, lmfun (hl [0, j i]))
+        = ∑ i ∈ Finset.range n, lfun (‖j i‖ / 2) :=
+      Finset.sum_congr rfl fun i hi => hun (j i) (hmem i hi)
+    rw [← e2, e1]
+    exact not_le.mp hloc
+
+/-! ### H. `DLWCHEM_full` / `XULJEPR_full`（counting_spheres.hl:7063/:7191）
+真定义装配：EXISTS_M_POLYHEDRON（:9784）→ facet 计数（facet_3_facets :9864）
+→ polyhedron_edge_sum（:9668）→ 6n-12；POLYHEDRON_FACET_SUM_4Pi（F 组脚手架）
++ FACET_SOL_NN + GOTCJAH（:9241）→ 4π；喂 G 组 `DLWCHEM_VECTOR_sumReal` /
+`XULJEPR_VECTOR_sumReal`。继承的 sorryAx 上游即 F 组一处 +
+EXISTS_M_POLYHEDRON/polyhedron_edge_sum/GOTCJAH/facet_3_facets 既有记账。 -/
+
+/-- DLWCHEM/XULJEPR 的公共装配层：饱和集 `V'` 与 theta 交给
+`EXISTS_M_POLYHEDRON` 造多面体 `P` 与 facet 双射 `f`，再以 `k v = |facets (f v)|`
+落实两条和式界（6n-12 与 4π）。 -/
+private theorem existsM_polyhedron_sums (V' : Set V3) (theta : V3 → ℝ) (r : ℝ)
+    (hV' : V' ⊆ ballAnnulus) (hP' : Packing V')
+    (hws : weaklySaturatedP22 V' r (2 * h0))
+    (hfin : V'.Finite) (hne : V' ≠ ∅)
+    (hr : 2 ≤ r ∧ r ≤ 2 * h0)
+    (htheta : ∀ v ∈ V', ∀ w ∈ V', v ≠ w → theta v + theta w ≤ arcV 0 v w)
+    (hthetapos : ∀ v ∈ V', 0 < theta v ∧ theta v < Real.pi / 2)
+    (hn2 : 2 ≤ V'.ncard) :
+    ∃ f : V3 → Set V3, ∃ P : Set V3, ∃ b : V3 → ℝ,
+      Set.BijOn f V' {c : Set V3 | FacetOf c P} ∧
+      polyhedron P ∧ Bornology.IsBounded P ∧ (0 : V3) ∈ interior P ∧
+      (∀ v ∈ V', f v = P ∩ {p : V3 | v ⬝ᵥ p = b v}) ∧
+      (∀ v ∈ V', rconeGt 0 v (Real.cos (theta v)) ⊆ fchanged (f v)) ∧
+      (∀ v ∈ V', 0 < Real.cos (theta v) ∧ Real.cos (theta v) < 1) ∧
+      setSum V' (fun v => ((({e : Set V3 | FacetOf e (f v)}).ncard : ℕ) : ℝ)) ≤
+        ((6 * V'.ncard - 12 : ℕ) : ℝ) ∧
+      setSum V' (fun v => max 0 (regularSphericalPolygonAreaP22
+        (Real.cos (theta v)) (({e : Set V3 | FacetOf e (f v)}).ncard))) ≤ 4 * Real.pi := by
+  classical
+  obtain ⟨b, f, h, P, -, -, hbpos, hpoly, hbdd, hint0, hfbij, hfdef, -, hrc, hcospos⟩ :=
+    EXISTS_M_POLYHEDRON V' theta r ((V'.ncard : ℝ)) hV' hP' hws ⟨hfin, rfl⟩ hne hr
+      htheta hthetapos
+  have hFfin : ({c : Set V3 | FacetOf c P}).Finite :=
+    Set.Finite.subset (hfin.image f) fun c hc => hfbij.surjOn hc
+  have hFncard : ({c : Set V3 | FacetOf c P}).ncard = V'.ncard := hfbij.ncard_eq.symm
+  -- 6n-12 端：polyhedron_edge_sum + cast 处理
+  have hps := polyhedron_edge_sum P ((V'.ncard : ℝ)) hbdd hpoly hint0 ⟨hFfin, by rw [hFncard]⟩
+    (by exact_mod_cast hn2)
+  have hcast : (((6 * V'.ncard - 12 : ℕ) : ℝ)) = (6 : ℝ) * (V'.ncard : ℝ) - 12 := by
+    have h12 : (12 : ℕ) ≤ 6 * V'.ncard := by omega
+    rw [Nat.cast_sub h12]; push_cast; ring
+  -- 逐点：max 0 (rspa (cos θ v) k) ≤ sol 0 (fchanged (f v))（FACET_SOL_NN + GOTCJAH）
+  have hver : ∀ v ∈ V', max 0 (regularSphericalPolygonAreaP22 (Real.cos (theta v))
+      (({e : Set V3 | FacetOf e (f v)}).ncard)) ≤ sol 0 (fchanged (f v)) := by
+    intro v hv
+    have hfm : FacetOf (f v) P := hfbij.mapsTo hv
+    have hff := facet_3_facets P (f v) hpoly hbdd hint0 hfm
+    -- 点积方向归一（HOL 侧 MESON_TAC[DOT_SYM]）
+    have hcd : f v = P ∩ {p : V3 | p ⬝ᵥ v = b v} := by
+      rw [hfdef v hv]
+      congr 1
+      exact Set.ext fun p => by simp only [Set.mem_setOf_eq, dotV_comm]
+    exact max_le (FACET_SOL_NN P (f v) hpoly hbdd hint0 hfm)
+      (GOTCJAH (f v) v (b v) P (fchanged (f v)) (Real.cos (theta v))
+        (({e : Set V3 | FacetOf e (f v)}).ncard) hpoly hbdd (hbpos v hv) hint0 hfm rfl
+        (hcospos v hv) ⟨hcd, hrc v hv⟩ ⟨hff.1, rfl⟩)
+  refine ⟨f, P, b, hfbij, hpoly, hbdd, hint0, hfdef, hrc, hcospos, ?_, ?_⟩
+  · -- 6n-12
+    have hsum6 : setSum V' (fun v => ((({e : Set V3 | FacetOf e (f v)}).ncard : ℕ) : ℝ))
+        = setSum {c : Set V3 | FacetOf c P}
+          (fun c => ((({e : Set V3 | FacetOf e c}).ncard : ℕ) : ℝ)) := by
+      rw [setSum, dif_pos hfin,
+        setSumBijOn_p22 hfin hFfin f (fun c => ((({e : Set V3 | FacetOf e c}).ncard : ℕ) : ℝ))
+          hfbij]
+    refine le_trans (le_of_eq hsum6) (le_trans ?_ hcast.symm.le)
+    simp only [setSum, dif_pos hFfin]
+    exact hps
+  · -- 4π
+    have h4pi : setSum {c : Set V3 | FacetOf c P} (fun c => sol 0 (fchanged c))
+        = 4 * Real.pi := POLYHEDRON_FACET_SUM_4Pi P hpoly hbdd hint0
+    have hsumle : setSum V' (fun v => max 0 (regularSphericalPolygonAreaP22
+        (Real.cos (theta v)) (({e : Set V3 | FacetOf e (f v)}).ncard)))
+        ≤ setSum V' (fun v => sol 0 (fchanged (f v))) := setSum_le_p22 hfin hver
+    have heq : setSum V' (fun v => sol 0 (fchanged (f v)))
+        = setSum {c : Set V3 | FacetOf c P} (fun c => sol 0 (fchanged c)) := by
+      rw [setSum, dif_pos hfin,
+        setSumBijOn_p22 hfin hFfin f (fun c => sol 0 (fchanged c)) hfbij]
+    refine le_trans hsumle ?_
+    rw [heq, h4pi]
+
+/-- HOL `DLWCHEM`（counting_spheres.hl:7063）真定义版装配：LMFUN 13 ≤、
+SATURATE 饱和扩张 V'（¬local V' 继承）、theta 角条件（YSSKQOY_VECTOR）与
+正性（THETA_BOUNDS）→ 装配层 → n' < 16 → 回传 W 三分。 -/
+theorem DLWCHEM_full (V : Set V3) (hP : Packing V) (hpa : packIneqDefAP22)
+    (hV : V ⊆ ballAnnulus) (hloc : ¬ localAnnulusInequality V) :
+    V.ncard = 13 ∨ V.ncard = 14 ∨ V.ncard = 15 := by
+  classical
+  have hfin : V.Finite := fat_lemma1 V hP hV
+  have h13 : 13 ≤ V.ncard := LMFUN_INEQ_CENTER_IMP_13 V hfin hV hloc
+  -- 饱和扩张：种子 ∅，r = 2
+  obtain ⟨V', hV'a, hV'p, hV'ws, hV'fin, hWV, -, hV'loc, hV'13⟩ :=
+    SATURATE_BALL_ANNULUS V ∅ 2 hP hV hloc (Set.empty_subset _)
+      ⟨le_refl 2, show (2 : ℝ) ≤ 2 * h0 from by norm_num [h0]⟩
+      fun a w ha _ _ => absurd ha (Set.notMem_empty a)
+  -- theta 角条件 + 正性
+  have hangle : ∀ v ∈ V', ∀ w ∈ V', v ≠ w →
+      (acs (‖v‖ / 4) - Real.pi / 6) + (acs (‖w‖ / 4) - Real.pi / 6) ≤ arcV 0 v w := by
+    intro v hv w hw hvw
+    exact YSSKQOY_VECTOR v w (fun z => acs (‖z‖ / 4) - Real.pi / 6) (hV'a hv) (hV'a hw)
+      hvw (le_of_not_gt fun h => hvw (hV'p v hv w hw h)) rfl
+  have htpos : ∀ v ∈ V', 0 < (acs (‖v‖ / 4) - Real.pi / 6) ∧
+      (acs (‖v‖ / 4) - Real.pi / 6) < Real.pi / 2 := fun v hv =>
+    THETA_BOUNDS v (fun z => acs (‖z‖ / 4) - Real.pi / 6) (hV'a hv) rfl
+  obtain ⟨f, P, b, hfbij, hpoly, hbdd, hint0, hfdef, hrc, hcospos, hksum, hasum⟩ :=
+    existsM_polyhedron_sums V' (fun v => acs (‖v‖ / 4) - Real.pi / 6) 2 hV'a hV'p hV'ws
+      hV'fin (fun he => by rw [he] at hV'13; simp at hV'13)
+      ⟨le_refl 2, show (2 : ℝ) ≤ 2 * h0 from by norm_num [h0]⟩ hangle htpos (by omega)
+  -- 计数收尾：n' < 16 → n ≤ n' < 16 与 13 ≤ n
+  have hn16 : V'.ncard < 16 :=
+    DLWCHEM_VECTOR_sumReal (fun v => ({e : Set V3 | FacetOf e (f v)}).ncard) V' V'.ncard
+      (fun v => acs (‖v‖ / 4) - Real.pi / 6) hpa rfl
+      (fun v hv => (facet_3_facets P (f v) hpoly hbdd hint0 (hfbij.mapsTo hv)).2)
+      (by omega) ⟨hV'fin, rfl⟩ hV'a hksum hasum hV'loc
+  have hV16 : V.ncard < 16 := lt_of_le_of_lt (Set.ncard_le_ncard hWV hV'fin) hn16
+  omega
+
+/-- HOL `XULJEPR`（counting_spheres.hl:7191）真定义版装配：种子 {v0}、
+r = 2·h0 的饱和扩张；隔离条件回传 far，theta 在 v0 取 0.797
+（YSSKQOY_VECTOR2_ALT），喂 XULJEPR_VECTOR_sumReal 得 False。 -/
+theorem XULJEPR_full (V : Set V3) (hP : Packing V) (hV : V ⊆ ballAnnulus)
+    (hpa : packIneqDefAP22)
+    (hv : ∃ v ∈ V, ‖v‖ = 2 ∧ ∀ u ∈ V, u ≠ v → 2 * h0 ≤ dist u v) :
+    localAnnulusInequality V := by
+  classical
+  by_contra hloc
+  obtain ⟨v0, hv0V, hv0n, hfar⟩ := hv
+  have hfin : V.Finite := fat_lemma1 V hP hV
+  obtain ⟨V', hV'a, hV'p, hV'ws, hV'fin, hWV, hV'sep, hV'loc, hV'13⟩ :=
+    SATURATE_BALL_ANNULUS V {v0} (2 * h0) hP hV hloc
+      (fun a ha => by rw [Set.mem_singleton_iff.mp ha]; exact hv0V)
+      ⟨show (2 : ℝ) ≤ 2 * h0 from by norm_num [h0], le_refl _⟩
+      (by
+        intro a w ha hw hlt
+        have ha0 : a = v0 := Set.mem_singleton_iff.mp ha
+        subst ha0
+        by_contra hne
+        have hle : 2 * h0 ≤ dist w a := hfar w hw fun he => hne he.symm
+        rw [dist_comm a w] at hlt
+        exact absurd hlt (not_lt.mpr hle))
+  -- 隔离条件 → far（新点近于 2·h0 必为 v0 自身）
+  have hfarV' : ∀ w ∈ V', w ≠ v0 → 2 * h0 ≤ dist w v0 := by
+    intro w hw' hne
+    by_contra hlt
+    exact hne (hV'sep v0 w (Set.mem_singleton v0) hw'
+      (show dist v0 w < 2 * h0 from by rw [dist_comm]; exact not_le.mp hlt)).symm
+  have hangle : ∀ v ∈ V', ∀ w ∈ V', v ≠ w →
+      ((if v = v0 then (0.797 : ℝ) else acs (‖v‖ / 4) - Real.pi / 6) +
+        (if w = v0 then (0.797 : ℝ) else acs (‖w‖ / 4) - Real.pi / 6) ≤ arcV 0 v w) := by
+    intro v hv w hw hvw
+    exact YSSKQOY_VECTOR2_ALT V' v w v0
+      (fun z => if z = v0 then (0.797 : ℝ) else acs (‖z‖ / 4) - Real.pi / 6)
+      hV'a hV'p hv hw (hWV hv0V) hvw hfarV' hpa hv0n rfl
+  have htpos : ∀ v ∈ V', 0 < (if v = v0 then (0.797 : ℝ) else acs (‖v‖ / 4) - Real.pi / 6) ∧
+      (if v = v0 then (0.797 : ℝ) else acs (‖v‖ / 4) - Real.pi / 6) < Real.pi / 2 := by
+    intro v hv
+    show 0 < (if v = v0 then (0.797 : ℝ) else acs (‖v‖ / 4) - Real.pi / 6) ∧
+      (if v = v0 then (0.797 : ℝ) else acs (‖v‖ / 4) - Real.pi / 6) < Real.pi / 2
+    by_cases hv0 : v = v0
+    · rw [if_pos hv0]
+      exact ⟨by norm_num, by linarith [Real.pi_gt_three]⟩
+    · rw [if_neg hv0]
+      exact THETA_BOUNDS v (fun z => acs (‖z‖ / 4) - Real.pi / 6) (hV'a hv) rfl
+  obtain ⟨f, P, b, hfbij, hpoly, hbdd, hint0, hfdef, hrc, hcospos, hksum, hasum⟩ :=
+    existsM_polyhedron_sums V'
+      (fun z => if z = v0 then (0.797 : ℝ) else acs (‖z‖ / 4) - Real.pi / 6) (2 * h0)
+      hV'a hV'p hV'ws hV'fin (fun he => by rw [he] at hV'13; simp at hV'13)
+      ⟨show (2 : ℝ) ≤ 2 * h0 from by norm_num [h0], le_refl _⟩ hangle htpos (by omega)
+  exact (XULJEPR_VECTOR_sumReal (fun v => ({e : Set V3 | FacetOf e (f v)}).ncard) V' V'.ncard
+      (fun z => if z = v0 then (0.797 : ℝ) else acs (‖z‖ / 4) - Real.pi / 6) v0 hpa
+      (hWV hv0V) rfl (by omega) hv0n
+      (fun v hv => (facet_3_facets P (f v) hpoly hbdd hint0 (hfbij.mapsTo hv)).2)
+      ⟨hV'fin, rfl⟩ hV'a hksum hasum hV'loc).elim
+
+/-! ### I. SF 换桩桥：给定 `∀ U, localAnnulusInequalityP22 U ↔ localAnnulusInequality U`，
+:10095/:10101 既有语句即得真证明——SF 把 :302 桩换成本体后零成本闭合。 -/
+
+/-- DLWCHEM 的 SF 换桩桥（stub → 真定义）。 -/
+theorem DLWCHEM_of_stub_bridge (V : Set V3) (hP : Packing V) (hpa : packIneqDefAP22)
+    (hV : V ⊆ ballAnnulus) (hloc : ¬ localAnnulusInequalityP22 V)
+    (hiff : ∀ U : Set V3, localAnnulusInequalityP22 U ↔ localAnnulusInequality U) :
+    V.ncard = 13 ∨ V.ncard = 14 ∨ V.ncard = 15 :=
+  DLWCHEM_full V hP hpa hV fun h => hloc ((hiff V).2 h)
+
+/-- XULJEPR 的 SF 换桩桥（真定义 → stub）。 -/
+theorem XULJEPR_of_stub_bridge (V : Set V3) (hP : Packing V) (hV : V ⊆ ballAnnulus)
+    (hpa : packIneqDefAP22)
+    (hv : ∃ v ∈ V, ‖v‖ = 2 ∧ ∀ u ∈ V, u ≠ v → 2 * h0 ≤ dist u v)
+    (hiff : ∀ U : Set V3, localAnnulusInequalityP22 U ↔ localAnnulusInequality U) :
+    localAnnulusInequalityP22 V :=
+  (hiff V).2 (XULJEPR_full V hP hV hpa hv)
+
 end Kepler.Text
