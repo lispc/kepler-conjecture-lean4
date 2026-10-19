@@ -3075,7 +3075,8 @@ def em_RPN(pad_bits, slots=None, rung=(2048, -64), unclose=False,
 
 
 def monotree_main(case, cid, n, args, spec, params_file,
-                  dom_rung=None, witness_rung=None, keepconst_rung=None):
+                  dom_rung=None, witness_rung=None, keepconst_rung=None,
+                  split_fix=False):
     import re
     nsp = "MonoTree_" + re.sub(r"\W", "_", cid)
     pad_bits = spec.get("pad_sqrt_const")
@@ -3459,6 +3460,8 @@ def monotree_main(case, cid, n, args, spec, params_file,
                           for j in range(n))
                 + "  \u00b7 decide\n  \u00b7 decide\n  \u00b7 decide\n"
                 "  \u00b7 decide\n")
+            if split_fix:
+                return (f"(MonoTree.split {nid}Box {d} {lterm} {rterm})")
             return (f"(MonoTree.split {nid}Box {d} {lterm} {rterm} "
                     f"{nid}_splitOK)")
         die(f"unknown tree node kind {kind}")
@@ -3468,6 +3471,17 @@ def monotree_main(case, cid, n, args, spec, params_file,
             return "trivial"
         if node["kind"] == "restrict":
             return f"\u27e8{covers_term(node['sub'])}, rfl\u27e9"
+        if split_fix:
+            # covers of a split = splitOK ∧ l.covers ∧ r.covers (right-nested
+            # And): three flat fields.  The v2 wrapper `⟨ct, rfl⟩` around each
+            # child assumes the child's covers is an And with an equality
+            # second field (restrict shape); a leaf child's covers is `True`
+            # and a split child's is a plain And — both break under the
+            # wrapper ("Constructor True.intro does not have explicit
+            # fields").  Flat fields are correct for every child kind.
+            return (f"\u27e8{node['id']}_splitOK, "
+                    f"{covers_term(node['l'])}, "
+                    f"{covers_term(node['r'])}\u27e9")
         return (f"\u27e8{node['id']}_splitOK, "
                 f"\u27e8{covers_term(node['l'])}, rfl\u27e9, "
                 f"\u27e8{covers_term(node['r'])}, rfl\u27e9\u27e9")
@@ -3490,6 +3504,17 @@ def monotree_main(case, cid, n, args, spec, params_file,
         "/-- Plain interval arithmetic fails on the root box (the reason the\n"
         "tree is needed). -/\n"
         "theorem B0_interval_neg : checkPos E B0 = false := by decide\n")
+    if split_fix:
+        # The v2 diagnostic `B0_interval_neg` presumes plain interval FAILS on
+        # the root; on merged (split-root) boxes it may as well SUCCEED (the
+        # decide then refutes the stated `= false`, killing the file).  It is
+        # diagnostic, not load-bearing (monoTree_sound never consumes it) —
+        # omit it under the fix flag.
+        out[-1] = out[-1].replace(
+            "/-- Plain interval arithmetic fails on the root box (the reason"
+            " the\ntree is needed). -/\n"
+            "theorem B0_interval_neg : checkPos E B0 = false := by decide\n",
+            "")
     open(args[2], "w").write("\n".join(out))
     pol = ""
     if dom_rung_eff is not None:
@@ -3547,6 +3572,12 @@ def main():
     dom_rung = None
     witness_rung = None
     keepconst_rung = None
+    # W8 gen-7: fixed split-node skeleton (the constructor takes box/d/l/r;
+    # the splitOK proof is consumed by `covers`, not by the constructor).
+    # OFF by default = byte-identical emission (the v2 5-arg skeleton is kept
+    # for provenance; it never elaborates -- the split path was never exercised
+    # before gen-7).
+    split_fix = False
     args = []
     for a in sys.argv[1:]:
         if a.startswith("--shard-leaves="):
@@ -3577,6 +3608,8 @@ def main():
         elif a.startswith("--mono-dom-rung-keepconst="):
             keepconst_rung = _parse_rung_arg(a.split("=", 1)[1],
                                              "--mono-dom-rung-keepconst")
+        elif a == "--mono-split-fix":
+            split_fix = True
         elif a == "--fill":
             fill = True
         elif a == "--stage-a":
@@ -3656,7 +3689,7 @@ def main():
         nsp_n = int(spec.get("n", n))
         monotree_main(case, cid, nsp_n, args, spec, params_file,
                       dom_rung=dom_rung, witness_rung=witness_rung,
-                      keepconst_rung=keepconst_rung)
+                      keepconst_rung=keepconst_rung, split_fix=split_fix)
         return
 
     if mono:
