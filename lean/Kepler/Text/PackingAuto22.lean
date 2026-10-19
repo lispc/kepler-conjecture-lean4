@@ -297,9 +297,9 @@ noncomputable def volSolidTriangleP22 (x u v w : V3) (r : ℝ) : ℝ := 0
 Stub. -/
 def weaklySaturatedP22 (V : Set V3) (r c : ℝ) : Prop := True
 
-/-- NEEDS HOL `local_annulus_inequality V` (pack1.hl; PackingAuto1, no olean).
-Stub. -/
-def localAnnulusInequalityP22 (V : Set V3) : Prop := True
+/-- HOL `local_annulus_inequality` (pack_defs.hl:202-203) — SF-43: stub 换
+本体 = PA2:541 `localAnnulusInequality`（定义转发，下游签名零改）。 -/
+def localAnnulusInequalityP22 (V : Set V3) : Prop := localAnnulusInequality V
 
 /-- NEEDS HOL `pack_ineq_def_a` (pack1.hl: the numerical packing-inequality
 conjunction). Stub. -/
@@ -10048,30 +10048,6 @@ theorem BIJ_EXTENDS_INJ {α β : Type*} [DecidableEq α] [DecidableEq β] [Nonem
   show B ⊆ j '' A
   rw [himgB]
 
-open Classical in
-/-- HOL `DLWCHEM_VECTOR_sum` (counting_spheres.hl:6814). GIANT. -/
-theorem DLWCHEM_VECTOR_sum (k : V3 → ℕ) (theta : V3 → ℝ)
-    (hpa : packIneqDefAP22)
-    (htheta : (fun v => acs (‖v‖ / 4) - Real.pi / 6) = theta)
-    (hk : ∀ v ∈ V, 3 ≤ k v) (hn : 12 < n)
-    (hsize : V.Finite ∧ V.ncard = n) (hV : V ⊆ ballAnnulus)
-    (hksum : ∑ v ∈ hsize.1.toFinset, (k v : ℝ) ≤ 6 * n - 12)
-    (hasum : ∑ v ∈ hsize.1.toFinset,
-        max 0 (regularSphericalPolygonAreaP22 (Real.cos (theta v)) (k v)) ≤ 4 * Real.pi)
-    (hloc : ¬ localAnnulusInequalityP22 V) : n < 16 := absurd trivial hloc
-
-open Classical in
-/-- HOL `XULJEPR_VECTOR_sum` (counting_spheres.hl:6905). GIANT. -/
-theorem XULJEPR_VECTOR_sum (k : V3 → ℕ) (V : Set V3) (n : ℝ) (theta : V3 → ℝ)
-    (v0 : V3) (hpa : packIneqDefAP22) (hv0 : v0 ∈ V)
-    (htheta : (fun v => if v = v0 then (0.797 : ℝ) else acs (‖v‖ / 4) - Real.pi / 6) = theta)
-    (hn : 12 < n) (hv0n : ‖v0‖ = 2) (hk : ∀ v ∈ V, 3 ≤ k v)
-    (hsize : V.Finite ∧ V.ncard = n) (hV : V ⊆ ballAnnulus)
-    (hksum : ∑ v ∈ hsize.1.toFinset, (k v : ℝ) ≤ 6 * n - 12)
-    (hasum : ∑ v ∈ hsize.1.toFinset,
-        max 0 (regularSphericalPolygonAreaP22 (Real.cos (theta v)) (k v)) ≤ 4 * Real.pi)
-    (hloc : ¬ localAnnulusInequalityP22 V) : False := hloc trivial
-
 /-- HOL `SOL_NN` (counting_spheres.hl:7026). Filled from `sol_spec` and
 nonnegativity of real-valued measure. -/
 theorem SOL_NN (x : V3) (U : Set V3)
@@ -10089,19 +10065,6 @@ theorem FACET_SOL_NN (p c : Set V3) (hp : polyhedron p) (hb : Bornology.IsBounde
   exact SOL_NN 0 (fchanged c)
     ⟨1, by norm_num, FCHANGED_MEASURABLE p c 1 hb hp hi hc,
       FCHANGED_RADIAL p c 1 hb hp hi hc⟩
-
-/-- HOL `DLWCHEM` (counting_spheres.hl:7063): the saturated annulus packing has
-13, 14 or 15 points. GIANT (the counting endgame). -/
-theorem DLWCHEM (V : Set V3) (hP : Packing V) (hpa : packIneqDefAP22)
-    (hV : V ⊆ ballAnnulus) (hloc : ¬ localAnnulusInequalityP22 V) :
-    V.ncard = 13 ∨ V.ncard = 14 ∨ V.ncard = 15 := absurd trivial hloc
-
-/-- HOL `XULJEPR` (counting_spheres.hl:7191): a unit-diameter center forces the
-local annulus inequality. GIANT. -/
-theorem XULJEPR (V : Set V3) (hP : Packing V) (hV : V ⊆ ballAnnulus)
-    (hpa : packIneqDefAP22)
-    (hv : ∃ v ∈ V, ‖v‖ = 2 ∧ ∀ u ∈ V, u ≠ v → 2 * h0 ≤ dist u v) :
-    localAnnulusInequalityP22 V := trivial
 
 /-! ## A6③ wave (2026-10-19): the DLWCHEM / XULJEPR counting chain — 骨架章
 
@@ -10679,5 +10642,79 @@ theorem XULJEPR_of_stub_bridge (V : Set V3) (hP : Packing V) (hV : V ⊆ ballAnn
     (hiff : ∀ U : Set V3, localAnnulusInequalityP22 U ↔ localAnnulusInequality U) :
     localAnnulusInequalityP22 V :=
   (hiff V).2 (XULJEPR_full V hP hV hpa hv)
+
+
+open Classical in
+/-- HOL `DLWCHEM_VECTOR_sum` (counting_spheres.hl:6814). GIANT. -/
+theorem DLWCHEM_VECTOR_sum (k : V3 → ℕ) (theta : V3 → ℝ)
+    (hpa : packIneqDefAP22)
+    (htheta : (fun v => acs (‖v‖ / 4) - Real.pi / 6) = theta)
+    (hk : ∀ v ∈ V, 3 ≤ k v) (hn : 12 < n)
+    (hsize : V.Finite ∧ V.ncard = n) (hV : V ⊆ ballAnnulus)
+    (hksum : ∑ v ∈ hsize.1.toFinset, (k v : ℝ) ≤ 6 * n - 12)
+    (hasum : ∑ v ∈ hsize.1.toFinset,
+        max 0 (regularSphericalPolygonAreaP22 (Real.cos (theta v)) (k v)) ≤ 4 * Real.pi)
+    (hloc : ¬ localAnnulusInequalityP22 V) : n < 16 := by
+  have hncard : (V.ncard : ℝ) = n := hsize.2
+  have hnN : 12 < V.ncard := by
+    refine (Nat.cast_lt (α := ℝ)).mp ?_
+    rw [hncard]; exact hn
+  have hcast : ((6 * V.ncard - 12 : ℕ) : ℝ) = 6 * n - 12 := by
+    have h12 : (12 : ℕ) ≤ 6 * V.ncard := by omega
+    rw [Nat.cast_sub h12, Nat.cast_mul, Nat.cast_ofNat, hncard]; ring
+  have hksum' : setSum V (fun v => (k v : ℝ)) ≤ ((6 * V.ncard - 12 : ℕ) : ℝ) := by
+    rw [setSum, dif_pos hsize.1, hcast]; exact hksum
+  have hasum' : setSum V (fun v => max 0 (regularSphericalPolygonAreaP22
+      (Real.cos (theta v)) (k v))) ≤ 4 * Real.pi := by
+    rw [setSum, dif_pos hsize.1]; exact hasum
+  have hres : V.ncard < 16 := DLWCHEM_VECTOR_sumReal k V V.ncard theta hpa htheta hk
+    hnN ⟨hsize.1, rfl⟩ hV hksum' hasum' (fun h => hloc h)
+  rw [← hncard]
+  exact Nat.cast_lt (α := ℝ).mpr hres
+
+
+open Classical in
+/-- HOL `XULJEPR_VECTOR_sum` (counting_spheres.hl:6905). GIANT. -/
+theorem XULJEPR_VECTOR_sum (k : V3 → ℕ) (V : Set V3) (n : ℝ) (theta : V3 → ℝ)
+    (v0 : V3) (hpa : packIneqDefAP22) (hv0 : v0 ∈ V)
+    (htheta : (fun v => if v = v0 then (0.797 : ℝ) else acs (‖v‖ / 4) - Real.pi / 6) = theta)
+    (hn : 12 < n) (hv0n : ‖v0‖ = 2) (hk : ∀ v ∈ V, 3 ≤ k v)
+    (hsize : V.Finite ∧ V.ncard = n) (hV : V ⊆ ballAnnulus)
+    (hksum : ∑ v ∈ hsize.1.toFinset, (k v : ℝ) ≤ 6 * n - 12)
+    (hasum : ∑ v ∈ hsize.1.toFinset,
+        max 0 (regularSphericalPolygonAreaP22 (Real.cos (theta v)) (k v)) ≤ 4 * Real.pi)
+    (hloc : ¬ localAnnulusInequalityP22 V) : False := by
+  have hncard : (V.ncard : ℝ) = n := hsize.2
+  have hnN : 12 < V.ncard := by
+    refine (Nat.cast_lt (α := ℝ)).mp ?_
+    rw [hncard]; exact hn
+  have hcast : ((6 * V.ncard - 12 : ℕ) : ℝ) = 6 * n - 12 := by
+    have h12 : (12 : ℕ) ≤ 6 * V.ncard := by omega
+    rw [Nat.cast_sub h12, Nat.cast_mul, Nat.cast_ofNat, hncard]; ring
+  have hksum' : setSum V (fun v => (k v : ℝ)) ≤ ((6 * V.ncard - 12 : ℕ) : ℝ) := by
+    rw [setSum, dif_pos hsize.1, hcast]; exact hksum
+  have hasum' : setSum V (fun v => max 0 (regularSphericalPolygonAreaP22
+      (Real.cos (theta v)) (k v))) ≤ 4 * Real.pi := by
+    rw [setSum, dif_pos hsize.1]; exact hasum
+  exact XULJEPR_VECTOR_sumReal k V V.ncard theta v0 hpa hv0 htheta hnN hv0n hk
+    ⟨hsize.1, rfl⟩ hV hksum' hasum' (fun h => hloc h)
+
+
+/-- HOL `DLWCHEM` (counting_spheres.hl:7063): the saturated annulus packing has
+13, 14 or 15 points. GIANT (the counting endgame). SF-43: 迁至桥/Real 版之后（原 :10099 带）。 -/
+theorem DLWCHEM (V : Set V3) (hP : Packing V) (hpa : packIneqDefAP22)
+    (hV : V ⊆ ballAnnulus) (hloc : ¬ localAnnulusInequalityP22 V) :
+    V.ncard = 13 ∨ V.ncard = 14 ∨ V.ncard = 15 :=
+  DLWCHEM_of_stub_bridge V hP hpa hV hloc fun U => ⟨fun h => h, fun h => h⟩
+
+
+/-- HOL `XULJEPR` (counting_spheres.hl:7191): a unit-diameter center forces the
+local annulus inequality. GIANT. SF-43: 迁至桥/Real 版之后（原 :10105 带）。 -/
+theorem XULJEPR (V : Set V3) (hP : Packing V) (hV : V ⊆ ballAnnulus)
+    (hpa : packIneqDefAP22)
+    (hv : ∃ v ∈ V, ‖v‖ = 2 ∧ ∀ u ∈ V, u ≠ v → 2 * h0 ≤ dist u v) :
+    localAnnulusInequalityP22 V :=
+  XULJEPR_of_stub_bridge V hP hV hpa hv fun U => ⟨fun h => h, fun h => h⟩
+
 
 end Kepler.Text

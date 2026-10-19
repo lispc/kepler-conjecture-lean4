@@ -1866,3 +1866,52 @@ toReal_e_sub_80/toReal_mul_pow/valid_sqrt/checkPosTMHull_sound/miniSemantic
 `Kepler.Interval.Dyadic.sqrtRel_sound` + `Kepler.Interval.Cases.C549MonoFold1`；
 验收 = `lake build Kepler.Interval.Cases.C549Mono` 零新错 + 上述 axiom
 标准三零 + 舰队重烤波按 (e) 清单续。）
+## 43. PA22 `localAnnulusInequalityP22` 桩换本体（pack_defs.hl:202-203 逐字；四占位消费件真证闭合）— 分级 A（def 语义修正 · 桩换本体）
+
+**立案：2026-10-19，A6③ 落地随件待批项（d82bc7d1 记档："待批项: :302 桩换
+PackingAuto2:541 localAnnulusInequality 本体(语句级 SF)后两桥闭合占位"），
+用户批准（"：302 桩的 SF 提案：批准"）。** 执行 clone /tmp/p4a63（A6③ 原
+clone，包 origin 已 fix_pkg_origins 归一），build 绿 8698 jobs。
+
+(a) HOL：pack_defs.hl:202-203 逐字 `let local_annulus_inequality =
+new_definition \`!(V:real^N->bool). local_annulus_inequality V =
+sum V ( \v. lmfun (hl [vec 0;v]) ) <= &12`;;`——PA22 :302 桩
+`localAnnulusInequalityP22 (V : Set V3) : Prop := True` 换为 PA2:541-542
+真定义 `localAnnulusInequality`（同一 HOL 定义的一次性 Lean 移植：
+`setSum V (fun v => lmfun (hl [0, v])) ≤ 12`）的定义转发；下游四件签名零改。
+
+### (a) 出处与缺陷（桩空转）
+
+:302 桩 `:= True` 使四件既有占位消费件空转：DLWCHEM/DLWCHEM_VECTOR_sum 的
+`absurd trivial hloc`（`¬True` 即荒谬）与 XULJEPR/XULJEPR_VECTOR_sum 的
+`trivial`——证明与真身无关，语句在桩语义下为空壳。A6③ 已对照真定义搭好
+全链（DLWCHEM_full/XULJEPR_full/DLWCHEM_VECTOR_sumReal/XULJEPR_VECTOR_sumReal
+零欠债真证 + 两枚换桩桥 `DLWCHEM_of_stub_bridge`/`XULJEPR_of_stub_bridge`，
+给定 `∀ U, P22 U ↔ localAnnulusInequality U` 即零成本闭合占位），只欠此
+定义本体到位。
+
+### (b) 修复补丁
+
+存档 `docs/statement-fix-proposals-patches/43-pa22-localannulus-stub.patch`
+（对 d82bc7d1 干净应用已验；65+/54−，单文件）：
+
+1. **:302 桩换本体**：`:= True` → `:= localAnnulusInequality V`（定义
+   转发；docstring 同步 NEEDS→HOL 记档）。
+2. **四占位消费件迁至桥/Real 版之后真证**（原 :10050-10110 带迁至文件尾，
+   语句逐字冻结）：
+   - `DLWCHEM_VECTOR_sum`/`XULJEPR_VECTOR_sum`：ℕ-transport 胶水——冻结
+     陈述的自动绑定 `n` 被 binrel% 上抬为 ℝ（`hsize.2 : ↑V.ncard = n`），
+     `hncard`/`hnN`（Nat.cast_lt）/`hcast`（Nat.cast_sub 链）三件 cast
+     搬运后喂 Real 版；axiom 探针**零 sorryAx**（本波核心增量：两 GIANT
+     由占位空壳转零欠债真证）。
+   - `DLWCHEM`/`XULJEPR`：经 A6③ 换桩桥闭合（iff 取平凡方向），携带
+     DLWCHEM_full/XULJEPR_full 链内既有上游债（A6③ 已记档，非本波新增）。
+3. **既有语句逐字冻结**：四件定理签名一字未动；:302 仅换体。
+
+### (c) 验收
+
+clone build 绿 8698 jobs；axiom 探针：`DLWCHEM_VECTOR_sum`/
+`XULJEPR_VECTOR_sum` 零 sorryAx，`DLWCHEM`/`XULJEPR` 仅 propext/
+Classical.choice/Quot.sound/sorryAx 白名单轴（上游债既记）；文件 sorry
+面持平（本波零新增债）。闸参数：`SF_ITEM=43`，GATE_MODE=STATEMENT-FIX，
+验收定理 `DLWCHEM`。
